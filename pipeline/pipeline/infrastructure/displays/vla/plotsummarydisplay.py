@@ -5,6 +5,7 @@ import os
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.renderer.logger as logger
 import casa
+import itertools
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -79,8 +80,31 @@ class plotsummarySummaryChart(object):
 
         plotfields.extend(targetfields)
 
+        # get IDs for all science spectral windows
+        intent = 'TARGET'
+        ms = m
+        spw_ids = set()
+        for scan in ms.get_scans(scan_intent=intent):
+            scan_spw_ids = set([dd.spw.id for dd in scan.data_descriptions])
+            spw_ids.update(scan_spw_ids)
 
-        for field in plotfields:
+        if intent == 'TARGET':
+            science_ids = set([spw.id for spw in ms.get_spectral_windows()])
+            spw_ids = spw_ids.intersection(science_ids)
+
+        by_source_id = lambda field: field.source.id
+        fields_by_source_id = sorted(ms.get_fields(intent=intent),
+                                     key=by_source_id)
+
+
+        #for field in plotfields:
+        for source_id, source_fields in itertools.groupby(fields_by_source_id, by_source_id):
+
+            fields = list(source_fields)
+
+            field = fields[0]
+
+
             figfile = self.get_figfile('field'+str(field.id)+'_amp_uvdist')
             #figfile = self.get_figfile('targetflag')
             
