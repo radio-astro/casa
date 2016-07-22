@@ -125,11 +125,9 @@ see detailed plots per spectral window and antenna.</p>
 	        	plot = amp_refant[ms]
 	        %>
 			<h4>Amplitude vs frequency
-		        % if plot is not None:
 				(<a class="replace"
-                    data-vis="${plot.parameters['vis']}"
-		            href="${os.path.relpath(os.path.join(dirname, amp_subpages[ms]), pcontext.report_dir)}">show ${plot.parameters['vis']}</a>)
-                % endif
+                    data-vis="${ms}"
+		            href="${os.path.relpath(os.path.join(dirname, amp_subpages[ms]), pcontext.report_dir)}">show ${ms}</a>)
 			</h4>
 			<p>The plots below show amplitude vs frequency for the
 			bandpass correction, overlayed for all spectral windows
@@ -140,10 +138,19 @@ see detailed plots per spectral window and antenna.</p>
 		<div class="row">
 			<div class="col-md-6">
 		        % if plot is None or not os.path.exists(plot.thumbnail):
-		        <img data-src="holder.js/255x188/text:Not Available">	
+				<a href="${os.path.relpath(os.path.join(dirname, amp_subpages[ms]), pcontext.report_dir)}"
+                   class="fancybox"
+                   rel="plots-${ms}">
+		            <img data-src="holder.js/255x188/text:Not Available">
+                </a>
 				<div class="caption">
-					<h5>Reference antenna</h5>
-                    <p>The amplitude vs frequency plot for the reference antenna 
+					<h5>Reference antenna
+                        (<a href="${os.path.relpath(os.path.join(dirname, amp_subpages[ms]), pcontext.report_dir)}"
+ 	                        class="replace"
+	                        data-vis="${ms}">
+	                        show all detail plots</a>)
+                    </h5>
+                    <p>The amplitude vs frequency plot for the reference antenna
                     is not available.</p>
 				</div>
 		        % else:
@@ -175,10 +182,19 @@ see detailed plots per spectral window and antenna.</p>
 	        %>
 			<div class="col-md-6">
 		        % if plot is None or not os.path.exists(plot.thumbnail):
-		        <img data-src="holder.js/255x188/text:Not Available">	
+				<a href="${os.path.relpath(os.path.join(dirname, amp_subpages[ms]), pcontext.report_dir)}"
+                   class="fancybox"
+                   rel="plots-${ms}">
+		            <img data-src="holder.js/255x188/text:Not Available">
+                </a>
 				<div class="caption">
-					<h5>Typical antenna</h5>
-                    <p>The amplitude vs frequency plot for a typical antenna 
+					<h5>Typical antenna
+                        (<a href="${os.path.relpath(os.path.join(dirname, amp_subpages[ms]), pcontext.report_dir)}"
+ 	                        class="replace"
+	                        data-vis="${ms}">
+	                        show all detail plots</a>)
+                    </h5>
+                    <p>The amplitude vs frequency plot for a typical antenna
                     is not available.</p>
 				</div>
 		        % else:
@@ -218,11 +234,9 @@ see detailed plots per spectral window and antenna.</p>
                 plot = phase_mode[ms]
             %>
 			<h4>Phase vs frequency
-                % if plot is not None:
 				(<a class="replace"
-                    data-vis="${plot.parameters['vis']}"
-		            href="${os.path.relpath(os.path.join(dirname, phase_subpages[ms]), pcontext.report_dir)}">show ${plot.parameters['vis']}</a>)
-                % endif
+                    data-vis="${ms}"
+		            href="${os.path.relpath(os.path.join(dirname, phase_subpages[ms]), pcontext.report_dir)}">show ${ms}</a>)
 			</h4>
 			<p>The plot below shows phase vs frequency for the
 			bandpass correction, overlayed for all spectral windows
@@ -233,10 +247,19 @@ see detailed plots per spectral window and antenna.</p>
 		<div class="row">
 			<div class="col-md-12">
 		        % if plot is None or not os.path.exists(plot.thumbnail):
-		        <img data-src="holder.js/255x188/text:Not Available">	
+				<a href="${os.path.relpath(os.path.join(dirname, phase_subpages[ms]), pcontext.report_dir)}"
+                   class="fancybox"
+                   rel="plots-${ms}">
+		            <img data-src="holder.js/255x188/text:Not Available">
+                </a>
 				<div class="caption">
-					<h5>Typical Antenna</h5>
-					<p>The phase vs frequency plot is not available.</p>
+					<h5>Typical antenna
+                        (<a href="${os.path.relpath(os.path.join(dirname, phase_subpages[ms]), pcontext.report_dir)}"
+ 	                        class="replace"
+	                        data-vis="${ms}">
+	                        show all detail plots</a>)
+                    </h5>
+                    <p>The phase vs frequency plot is not available.</p>
 				</div>
 		        % else:
 				<a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
