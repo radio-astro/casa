@@ -152,6 +152,20 @@ String MSMetaInfoForCal::antennaName(uInt iant) const {
   }
 }
 
+// Antenna names list, by index
+void MSMetaInfoForCal::antennaNames(Vector<String>& antnames) const {
+  if (msOk_ && msmd_) {
+    std::map<String, uInt> mymap;
+    Vector<String> asV(msmd_->getAntennaNames(mymap));
+    antnames.reference(asV);
+  }
+  else {
+    antnames.resize(nAnt_);
+    for (uInt iant=0;iant<nAnt_;++iant)
+      antnames[iant]="AntennaId"+String::toString(iant);
+  }
+}
+
 // Field name, by index
 String MSMetaInfoForCal::spwName(uInt ispw) const {
 
@@ -208,6 +222,18 @@ String MSMetaInfoForCal::fieldName(uInt ifld) const {
 		      String::toString(nFld_)));
     }
 
+}
+
+void MSMetaInfoForCal::fieldNames(Vector<String>& fldnames) const {
+  if (msOk_ && msmd_) {
+    Vector<String> asV(msmd_->getFieldNames());
+    fldnames.reference(asV);
+  }
+  else {
+    fldnames.resize(nFld_);
+    for (uInt ifld=0;ifld<nFld_;++ifld)
+      fldnames[ifld]="FieldId"+String::toString(ifld);
+  }
 }
 
 // Field id at time

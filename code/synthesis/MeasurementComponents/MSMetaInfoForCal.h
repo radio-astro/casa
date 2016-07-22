@@ -71,6 +71,9 @@ public:
   // Antenna name, by index
   String antennaName(uInt iant) const;
 
+  // All antenna names, as vector
+  void antennaNames(Vector<String>& antnames) const;
+
   // The number of spws
   uInt nSpw() const { return nSpw_;};
 
@@ -82,6 +85,9 @@ public:
 
   // Field name, by index
   String fieldName(uInt ifld) const;
+
+  // All field names, as vector
+  void fieldNames(Vector<String>& fldnames) const;
 
   // Field id at time
   Int fieldIdAtTime(Double time) const;

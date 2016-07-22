@@ -31,6 +31,8 @@
 //#include <msvis/MSVis/VisBuffer2.h>
 //#include <casa/Arrays/ArrayMath.h>
 //#include <casa/OS/Timer.h>
+#include <casa/Arrays/Vector.h>
+#include <casa/Arrays/ArrayIO.h>
 #include <casacore/casa/OS/EnvVar.h>
 #include <casacore/casa/OS/Path.h>
 #include <synthesis/MeasurementComponents/MSMetaInfoForCal.h>
@@ -64,6 +66,20 @@ TEST(MSMetaInfoForCal, NoMS) {
     ASSERT_EQ(String("AntennaId1"),msm.antennaName(1));
     ASSERT_EQ(String("FieldId0"),msm.fieldName(0));
     ASSERT_EQ(String("SpwId0"),msm.spwName(0));
+    
+    Vector<String> antnames, fldnames;
+    msm.antennaNames(antnames);
+    msm.fieldNames(fldnames);
+    //cout << "antnames = " << antnames << endl;
+    //cout << "fldnames = " << fldnames << endl;
+    ASSERT_EQ(uInt(4),antnames.nelements());
+    for (Int iant=0;iant<4;++iant) 
+      ASSERT_EQ(String("AntennaId"+String::toString(iant)),antnames[iant]);
+
+    ASSERT_EQ(uInt(1),fldnames.nelements());
+    ASSERT_EQ(String("FieldId0"),fldnames[0]);
+
+
 
     // These are information-free, essentially, for the "<noms>" case
     //cout << "msm.fieldIdAtTime(123456789.0) = " << msm.fieldIdAtTime(123456789.0) << endl;
@@ -89,6 +105,19 @@ TEST(MSMetaInfoForCal, NoMS) {
     ASSERT_EQ(String("AntennaId9"),msm.antennaName(9));
     ASSERT_EQ(String("FieldId4"),msm.fieldName(4));
     ASSERT_EQ(String("SpwId0"),msm.spwName(0));
+
+    Vector<String> antnames, fldnames;
+    msm.antennaNames(antnames);
+    msm.fieldNames(fldnames);
+    //cout << "antnames = " << antnames << endl;
+    //cout << "fldnames = " << fldnames << endl;
+    ASSERT_EQ(uInt(10),antnames.nelements());
+    for (Int iant=0;iant<10;++iant) 
+      ASSERT_EQ(String("AntennaId"+String::toString(iant)),antnames[iant]);
+
+    ASSERT_EQ(uInt(5),fldnames.nelements());
+    for (Int ifld=0;ifld<5;++ifld)
+      ASSERT_EQ(String("FieldId"+String::toString(ifld)),fldnames[ifld]);
 
     // These are information-free, essentially, for the "<noms>" case
     //cout << "msm.fieldIdAtTime(123456789.0) = " << msm.fieldIdAtTime(123456789.0) << endl;
@@ -133,6 +162,20 @@ TEST(MSMetaInfoForCal, MSbyName) {
     ASSERT_EQ(String("3C286_A"),msm.fieldName(1));
     //  cout << "msm.spwName(0)=" << msm.spwName(5) << endl;
     ASSERT_EQ(String("Subband:5"),msm.spwName(5));
+
+    Vector<String> antnames, fldnames;
+    msm.antennaNames(antnames);
+    msm.fieldNames(fldnames);
+    //cout << "antnames = " << antnames << endl;
+    //cout << "fldnames = " << fldnames << endl;
+    ASSERT_EQ(uInt(4),antnames.nelements());
+    ASSERT_EQ(String("ea01"),antnames[0]);
+    ASSERT_EQ(String("ea11"),antnames[1]);
+    ASSERT_EQ(String("ea19"),antnames[2]);
+    ASSERT_EQ(String("ea24"),antnames[3]);
+    ASSERT_EQ(uInt(2),fldnames.nelements());
+    ASSERT_EQ(String("3C286_A"),fldnames[0]);
+    ASSERT_EQ(String("3C286_A"),fldnames[1]);
 
     //cout << "msm.fieldIdAtTime(4793957198.) = " << msm.fieldIdAtTime(4793957198.0) << endl;
     ASSERT_EQ(1,msm.fieldIdAtTime(4793957190.0));  // near end of scan 30
@@ -192,6 +235,20 @@ TEST(MSMetaInfoForCal, MSbyMS) {
   ASSERT_EQ(String("3C286_A"),msm.fieldName(1));
   //  cout << "msm.spwName(0)=" << msm.spwName(5) << endl;
   ASSERT_EQ(String("Subband:5"),msm.spwName(5));
+
+  Vector<String> antnames, fldnames;
+  msm.antennaNames(antnames);
+  msm.fieldNames(fldnames);
+  //cout << "antnames = " << antnames << endl;
+  //cout << "fldnames = " << fldnames << endl;
+  ASSERT_EQ(uInt(4),antnames.nelements());
+  ASSERT_EQ(String("ea01"),antnames[0]);
+  ASSERT_EQ(String("ea11"),antnames[1]);
+  ASSERT_EQ(String("ea19"),antnames[2]);
+  ASSERT_EQ(String("ea24"),antnames[3]);
+  ASSERT_EQ(uInt(2),fldnames.nelements());
+  ASSERT_EQ(String("3C286_A"),fldnames[0]);
+  ASSERT_EQ(String("3C286_A"),fldnames[1]);
 
 
   //cout << "msm.fieldIdAtTime(4793957198.) = " << msm.fieldIdAtTime(4793957198.0) << endl;
