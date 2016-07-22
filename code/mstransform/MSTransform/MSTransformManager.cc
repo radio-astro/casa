@@ -608,7 +608,18 @@ void MSTransformManager::parseChanAvgParams(Record &configuration)
 		{
 			Int freqbin;
 			configuration.get (exists, freqbin);
-			freqbin_p = Vector<Int>(1,freqbin);
+
+			if (freqbin < 2)
+			{
+				logger_p << LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
+						<< "Channel bin is " << freqbin << " disabling channel average" << LogIO::POST;
+				channelAverage_p = False;
+			}
+			else
+			{
+				freqbin_p = Vector<Int>(1,freqbin);
+
+			}
 		}
 		else if ( configuration.type(exists) == casa::TpArrayInt)
 		{
@@ -7623,7 +7634,7 @@ template <class T> void MSTransformManager::average(	Int inputSpw,
 	uInt outChanIndex = 0;
 	uInt tail = inputDataStripe.size() % width;
 	uInt limit = inputDataStripe.size() - tail;
-	while (startChan < limit)
+	while (outChanIndex < outputDataStripe.size())
 	{
 		averageKernel(	inputDataStripe,inputFlagsStripe,inputWeightsStripe,
 						outputDataStripe,outputFlagsStripe,startChan,outChanIndex,width);

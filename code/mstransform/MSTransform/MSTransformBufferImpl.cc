@@ -1454,7 +1454,10 @@ Vector<Int> MSTransformBufferImpl::getChannelNumbersSelected (Int outputChannelI
 			for (uInt outChanIdx=0;outChanIdx<channelNumbers.size();outChanIdx++)
 			{
 				selectedChannel = manager_p->inputOutputChanIndexMap_p[inputSpw].at(outChanIdx);
-				outputInputChannelMap_p[channelNumbers(outChanIdx)] = Vector<Int>(1,selectedChannel);
+				// CAS-8018: If there is not channel average (also trigger by chanbin=1)
+				//           Then getChannelNumbers are not an index ranging from 0 to nOutChans
+				//           but the actual channel selection from the inner VI/VB
+				outputInputChannelMap_p[outChanIdx] = Vector<Int>(1,selectedChannel);
 			}
 		}
 		// If there channel average map all selected channels falling in each bin
@@ -1462,7 +1465,10 @@ Vector<Int> MSTransformBufferImpl::getChannelNumbersSelected (Int outputChannelI
 		{
 			for (uInt outChanIdx=0;outChanIdx<channelNumbers.size();outChanIdx++)
 			{
-				outputInputChannelMap_p[channelNumbers_p(outChanIdx)] = manager_p->dataHandler_p->getSelectedChannelsMap()[inputSpw][outChanIdx];
+				// CAS-8018: If there is channel average then getChannelNumbers
+				//           is just an index ranging from 0 to nOutChans so there
+				//           is no need to re-map it.
+				outputInputChannelMap_p[outChanIdx] = manager_p->dataHandler_p->getSelectedChannelsMap()[inputSpw][outChanIdx];
 			}
 		}
 
