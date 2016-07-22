@@ -10,7 +10,6 @@ import types
 from mpi4casa.MPICommandClient import MPICommandClient
 from mpi4casa.MPIEnvironment import MPIEnvironment
 
-from . import api
 from . import logging
 
 # global variable for toggling MPI usage
@@ -135,7 +134,8 @@ class Tier0PipelineTask(Tier1Executable):
             context = pickle.load(context_file)
         inputs = self.__task_cls.Inputs(context, **self.__task_args)
         task = self.__task_cls(inputs)
-        return task
+
+        return lambda: task.execute(dry_run=False)
 
     def __str__(self):
         return 'Tier0PipelineTask(%s, %s, %s)' % (self.__task_cls,
@@ -156,10 +156,43 @@ class Tier0CASATask(Tier1Executable):
         self.__task_args = task_args
 
     def get_executable(self):
-        return self.__task_cls(**self.__task_args)
+        job_request = self.__task_cls(**self.__task_args)
+        return lambda: job_request.execute(dry_run=False)
 
     def __str__(self):
         return 'Tier0CASATask(%s, %s)' % (self.__task_cls, self.__task_args)
+
+
+class Tier0FunctionCall(object):
+    def __init__(self, fn, *args, **kwargs):
+        """
+        Create a new Tier0FunctionCall for a function to be executed on an MPI
+        server.
+        """
+        self.__fn = fn
+        self.__args = args
+        self.__kwargs = kwargs
+
+        # the following code is used to get a nice repr format
+        code = fn.func_code
+        arg_count = code.co_argcount
+        arg_names = code.co_varnames[:arg_count]
+
+        def format_arg_value(arg_val):
+            arg, val = arg_val
+            return '%s=%r' % (arg, val)
+
+        self.__positional = map(format_arg_value, zip(arg_names, args))
+        self.__nameless = map(repr, args[arg_count:])
+        self.__keyword = map(format_arg_value, kwargs.items())
+
+    def get_executable(self):
+        return lambda: self.__fn(*self.__args, **self.__kwargs)
+
+    def __repr__(self):
+        args = self.__positional + self.__nameless + self.__keyword
+        args.insert(0, self.__fn.__name__)
+        return 'Tier0FunctionCall({!s})'.format(', '.join(args))
 
 
 def mpiexec(tier0_executable):
@@ -177,7 +210,7 @@ def mpiexec(tier0_executable):
     executable = tier0_executable.get_executable()
     LOG.info('Executing %s on rank%s@%s', tier0_executable,
              MPIEnvironment.mpi_processor_rank, MPIEnvironment.hostname)
-    return executable.execute(dry_run=False)
+    return executable()
 
 
 def is_mpi_ready():

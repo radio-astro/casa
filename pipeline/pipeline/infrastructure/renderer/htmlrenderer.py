@@ -14,8 +14,8 @@ import casadef
 import mako
 
 import pipeline as pipeline
-from pipeline.extern import analysis_scripts
 import pipeline.domain.measures as measures
+import pipeline.extern.adopted as adopted
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.casataskdict as casataskdict
@@ -601,8 +601,8 @@ class T2_1DetailsRenderer(object):
         el_vs_time_plot = task.plot()
 
         # Get min, max elevation
-        el_min = "%.2f" % analysis_scripts.analysisUtils.computeAzElForMS(ms.name, value='min')[1]
-        el_max = "%.2f" % analysis_scripts.analysisUtils.computeAzElForMS(ms.name, value='max')[1]
+        el_min = "%.2f" % adopted.computeAzElForMS(ms.name, value='min')[1]
+        el_max = "%.2f" % adopted.computeAzElForMS(ms.name, value='max')[1]
         
         if is_singledish_ms(context):
             LOG.debug('TPSampling plot is enabled for single dish MS')
@@ -787,11 +787,11 @@ class T2_2_3Renderer(T2_2_XRendererBase):
     @staticmethod
     def get_display_context(context, ms):
         # Create regular antenna positions plot.
-        task = summary.PlotAntsChart2(context, ms)
+        task = summary.PlotAntsChart(context, ms)
         plot_ants = task.plot()
         
         # Create polar-log antenna positions plot.
-        task = summary.PlotAntsChart2(context, ms, polarlog=True)
+        task = summary.PlotAntsChart(context, ms, polarlog=True)
         plot_ants_plog = task.plot()
 
         dirname = os.path.join('session%s' % ms.session,

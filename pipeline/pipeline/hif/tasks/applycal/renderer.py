@@ -11,6 +11,7 @@ import os
 import pipeline.domain.measures as measures
 import pipeline.infrastructure
 import pipeline.infrastructure.displays.applycal as applycal
+import pipeline.infrastructure.displays.plotatmosphere as plotatmosphere
 import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
@@ -66,6 +67,19 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             'filesizes': filesizes
         })
 
+        transmission_plots = utils.OrderedDefaultdict(utils.OrderedDefaultdict)
+        for intents in [['PHASE'], ['BANDPASS'], ['CHECK'], ['AMPLITUDE'], ['TARGET']]:
+            plots, _ = self.create_plots(
+                context,
+                result,
+                plotatmosphere.TransmissionSummaryChart,
+                intents
+            )
+
+            key = utils.commafy(intents, quotes=False)
+            for vis, vis_plots in plots.items():
+                transmission_plots[vis][key] = vis_plots
+
         # these dicts map vis to the hrefs of the detail pages
         amp_vs_freq_subpages = {}
         phase_vs_freq_subpages = {}
@@ -118,12 +132,12 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         # CAS-7659: Add plots of all calibrator calibrated amp vs uvdist to
         # the WebLog applycal page
         amp_vs_uv_summary_plots = utils.OrderedDefaultdict(utils.OrderedDefaultdict)
-        for intents in ['AMPLITUDE', 'PHASE', 'BANDPASS', 'CHECK']:
+        for intents in [['AMPLITUDE'], ['PHASE'], ['BANDPASS'], ['CHECK']]:
             plots, amp_vs_uv_subpages = self.create_plots(
                 context,
                 result,
                 applycal.AmpVsUVSummaryChart,
-                [intents]
+                intents
             )
 
             key = utils.commafy(intents, quotes=False)
@@ -263,6 +277,7 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             'amp_vs_time_subpages': amp_vs_time_subpages,
             'amp_vs_uv_subpages': amp_vs_uv_subpages,
             'phase_vs_time_subpages': phase_vs_time_subpages,
+            'transmission_plots': transmission_plots
         })
         
     def create_science_plots(self, context, results):
@@ -310,20 +325,20 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                                                       applycal.AmpVsFrequencySummaryChart,
                                                       [brightest_field.id],
                                                       uv_range, correlation=correlation)
-                amp_vs_freq_summary_plots[vis][source_id] = plots
+                amp_vs_freq_summary_plots[vis]['TARGET'] = plots
     
                 plots = self.science_plots_for_result(context, 
                                                       result, 
                                                       applycal.PhaseVsFrequencySummaryChart,
                                                       [brightest_field.id],
                                                       uv_range, correlation=correlation)
-                phase_vs_freq_summary_plots[vis][source_id] = plots
+                phase_vs_freq_summary_plots[vis]['TARGET'] = plots
     
                 plots = self.science_plots_for_result(context, 
                                                       result, 
                                                       applycal.AmpVsUVSummaryChart,
                                                       [brightest_field.id], correlation=correlation)
-                amp_vs_uv_summary_plots[vis][source_id] = plots
+                amp_vs_uv_summary_plots[vis]['TARGET'] = plots
 
             if pipeline.infrastructure.generate_detail_plots(result):
                 scans = ms.get_scans(scan_intent='TARGET')
@@ -643,7 +658,7 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 for i in scan_ids:
                     # workaround for KeyError exception when summary 
                     # dictionary doesn't contain the scan
-                    if not summary['scan'].has_key(i):
+                    if i not in summary['scan']:
                         continue
 
                     flagcount += int(summary['scan'][i]['flagged'])

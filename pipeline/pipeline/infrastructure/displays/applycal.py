@@ -682,7 +682,6 @@ class VLAAmpVsFrequencySummaryChart(BasebandSummaryChart):
                 **plot_args)
 
 
-
 class PhaseVsFrequencySummaryChart(BasebandSummaryChart):
     """
     Create an amplitude vs time plot for each spw, overplotting by antenna.
@@ -918,5 +917,3 @@ class RealVsFrequencySummaryChart(SpwSummaryChart):
         super(RealVsFrequencySummaryChart, self).__init__(
                 context, result, xaxis='freq', yaxis='real', intent=intent, 
                 **plot_args)
-
-

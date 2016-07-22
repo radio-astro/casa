@@ -279,6 +279,7 @@ def format_spwmap(spwmap, scispws):
 				  data_spw="${True}"
                   data_vis="${True}"
 				  plot_accessor="${lambda ms_plots: ms_plots.items()}"
+                  transmission="${transmission_plots}"
 				  title_id="calampvsfreq">
 
 	<%def name="title()">
@@ -287,10 +288,14 @@ def format_spwmap(spwmap, scispws):
 
 	<%def name="preamble()">
 		Plots of calibrated amplitude vs frequency for all antennas and
-		correlations, coloured by antenna.
+		correlations, coloured by antenna. The atmospheric transmission
+        for each spectral window is displayed above each plot, calculated
+        using data from the first scan of each calibrator type.
 	</%def>
 
 	<%def name="mouseover(plot)">Click to show amplitude vs frequency for spw ${plot.parameters['spw']}</%def>
+
+	<%def name="transmission_mouseover(plot)">Click to show atmospheric transmission for spw ${plot.parameters['spw']}</%def>
 
 	<%def name="fancybox_caption(plot)">
 		Receiver: ${utils.commafy(plot.parameters['receiver'], quotes=False)}<br>
@@ -558,6 +563,7 @@ def format_spwmap(spwmap, scispws):
 				  data_field="${True}"
                   data_vis="${True}"
 				  plot_accessor="${lambda ms_plots: ms_plots.items()}"
+                  transmission="${transmission_plots}"
 				  title_id="scicalampvsfreq">
 
 	<%def name="title()">
@@ -568,7 +574,9 @@ def format_spwmap(spwmap, scispws):
 		<p>Calibrated amplitude vs frequency plots for a representative
 		science field in each measurement set. The science field displayed
 		here is the one with the brightest average amplitude over all spectral
-		windows.</p>
+		windows. The atmospheric transmission for each spectral window is
+        displayed above each plot, calculated using data from the first scan
+        with science target intent in each measurement set.</p>
 
 		<p>Note: due to a technical problem with visstat, the science field
 		displayed here not the brightest field for the source but the first 
@@ -584,6 +592,8 @@ def format_spwmap(spwmap, scispws):
 	</%def>
 
 	<%def name="mouseover(plot)">Click to show amplitude vs frequency for spw ${plot.parameters['spw']}</%def>
+
+    <%def name="transmission_mouseover(plot)">Click to show atmospheric transmission for spw ${plot.parameters['spw']}</%def>
 
 	<%def name="fancybox_caption(plot)">
 		Receiver: ${utils.commafy(plot.parameters['receiver'], quotes=False)}<br>

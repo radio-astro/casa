@@ -23,9 +23,9 @@ import casa
 
 LOG = infrastructure.get_logger(__name__)
 DISABLE_PLOTMS = False
-#DISABLE_PLOTMS = True
 
 ticker.TickHelper.MAXTICKS = 10000
+
 
 class SummaryDisplayInputs(basetask.StandardInputs):
     def __init__(self, context, vis=None, output=None):
@@ -38,35 +38,6 @@ class SummaryDisplayInputs(basetask.StandardInputs):
         return os.path.join(self.context.report_dir, session_part, ms_part)
         
 
-class PlotAntsChart(object):
-    def __init__(self, context, ms):
-        self.context = context
-        self.ms = ms
-        self.figfile = self._get_figfile()
-
-    def plot(self):
-        if os.path.exists(self.figfile):
-            return self._get_plot_object()
-
-        c = analysis_scripts.analysisUtils.stuffForScienceDataReduction()
-        c.plotAntennas(self.ms, figfile=self.figfile)
-
-        return self._get_plot_object()
-
-    def _get_figfile(self):
-        session_part = self.ms.session
-        ms_part = self.ms.basename
-        return os.path.join(self.context.report_dir, 
-                            'session%s' % session_part, 
-                            ms_part, 'plotants.png')
-
-    def _get_plot_object(self):
-        return logger.Plot(self.figfile,
-                           x_axis='Antenna Longitude',
-                           y_axis='Antenna Latitude',
-                           parameters={'vis' : self.ms.basename})
-
-
 class AzElChart(object):
     def __init__(self, context, ms):
         self.context = context
@@ -77,28 +48,30 @@ class AzElChart(object):
         self.spwlist = ''
         for spw in ms.get_spectral_windows(science_windows_only=True):
             if self.spwlist == '':
-                self.spwlist = self.spwlist + '%d:0~0' % spw.id
+                self.spwlist += '%d:0~0' % spw.id
             else:
-                self.spwlist = self.spwlist + ',%d:0~0' % spw.id
+                self.spwlist += ',%d:0~0' % spw.id
 
     def plot(self):
         if DISABLE_PLOTMS:
             LOG.debug('Disabling AzEl plot due to problems with plotms')
             return None
 
-        #inputs based on analysisUtils.plotElevationSummary
-        task_args = {'vis'             : self.ms.name,
-                     'xaxis'           : 'azimuth',
-                     'yaxis'           : 'elevation',
-                     'title'           : 'Elevation vs Azimuth for %s' % self.ms.basename,
-                     'coloraxis'       : 'field',
-                     'avgchannel'      : '9000',
-                     'avgtime'         : '10',
-                     'antenna'         : '0&&*',
-                     'spw'             : self.spwlist,
-                     'plotfile'        : self.figfile,
-                     'clearplots'      : True,
-                     'showgui'         : False}
+        # inputs based on analysisUtils.plotElevationSummary
+        task_args = {
+            'vis': self.ms.name,
+            'xaxis': 'azimuth',
+            'yaxis': 'elevation',
+            'title': 'Elevation vs Azimuth for %s' % self.ms.basename,
+            'coloraxis': 'field',
+            'avgchannel': '9000',
+            'avgtime': '10',
+            'antenna': '0&&*',
+            'spw': self.spwlist,
+            'plotfile': self.figfile,
+            'clearplots': True,
+            'showgui': False
+        }
 
         task = casa_tasks.plotms(**task_args)
 
@@ -136,27 +109,16 @@ class WeatherChart(object):
 
         LOG.debug('Creating new Weather plot')
         try:
-            analysis_scripts.analysisUtils.plotWeather(vis=self.ms.name,
-                                                       figfile=self.figfile)
+            analysisUtils.plotWeather(vis=self.ms.name, figfile=self.figfile)
         except:
-            pylab.close()
             return None
-
-        # plot weather does not close the plot! work around that here rather
-        # than editing the code as we might lose the fix (again..)
-        try:
-            pylab.close()
-        except Exception:
-            pass
-            
-        #Use plotweather task output for the VLA
-        '''
-        try:
-            origfile = self.ms.basename+'.plotweather.png'
-            shutil.copy2(origfile, self.figfile)
-        except:
-            LOG.debug('Not a VLA dataset')
-        '''
+        finally:
+            # plot weather does not close the plot! work around that here rather
+            # than editing the code as we might lose the fix (again..)
+            try:
+                pylab.close()
+            except:
+                pass
 
         return self._get_plot_object()
 
@@ -574,7 +536,7 @@ class MosaicChart(object):
                            parameters={'vis' : self.ms.basename})
 
 
-class PlotAntsChart2(object):
+class PlotAntsChart(object):
     def __init__(self, context, ms, polarlog=False):
         self.context = context
         self.ms = ms
