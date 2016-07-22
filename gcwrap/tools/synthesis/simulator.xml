@@ -42,9 +42,11 @@
   times. After this, you have a MeasurementSet that is complete but
   empty. In the next phase, you fill the MeasurementSet with data from a
   model and then corrupt the measurements (if desired). To fill it in
-  with a model, use the predict method. Finally, to apply errors, first
-  set up the various effects using the relevant {\tt set*} methods, and
-  then call corrupt.
+  with a model, use the predict method. 
+    NOTE: sm.predict assumes the model image units are Jy/pixel, and 
+      in fact will overwrite the brightness units of the image itself!
+  Finally, to apply errors, first set up the various effects using the 
+  relevant {\tt set*} methods, and then call corrupt.
   
   Some important points (mostly for the {\em cognoscenti}):
   \begin{itemize}
@@ -126,8 +128,10 @@
     do this, you must also run {\tt setconfig}, {\tt setfield}, 
     {\tt setspwindow}, {\tt setfeed}, and {\tt settimes}.  Creating the
     actual MS is performed by {\tt observe}.  Data can be {\tt predict}-ed
-    and then {\tt corrupted}-ed.  In this
-    example, we read in the antenna coordinates from an ASCII file:
+    and then {\tt corrupted}-ed.  
+    NOTE: sm.predict assumes the model image units are Jy/pixel, and 
+      in fact will overwrite the brightness units of the image itself!
+    In this example, we read in the antenna coordinates from an ASCII file:
   </description>
   <input>
     
@@ -202,6 +206,8 @@
   <description>
     This is used to construct {\tt simulator} tools operating on
     an existing MS.  Data can be predicted and/or corrupted on the MS's given coordinates.
+    NOTE: sm.predict assumes the model image units are Jy/pixel, and 
+      in fact will overwrite the brightness units of the image itself!
   </description>
   <input>
     
@@ -243,7 +249,7 @@
   <shortdescription>Close the newsimulator tool</shortdescription>
   
   <description>
-    This is used to close and {\tt newsimulator} tools. Note that the
+    This is used to close {\tt newsimulator} tools. Note that the
     data is written to disk. This is a synonym for close.
   </description>
   <returns type="bool">Bool</returns>
@@ -968,6 +974,8 @@ Predict astronomical data from an image.  The (u,v) coordinates already
 exist, either from a MeasurementSet we have read in or by generating the
 MeasurementSet coordinates and empty data through {\tt create()}.  We
 simply predict onto these coordinates.
+    NOTE: sm.predict assumes the model image units are Jy/pixel, and 
+      in fact will overwrite the brightness units of the image itself!
 </description>
 <input>
 
@@ -1146,8 +1154,8 @@ pointing errors and voltage patterns, which get applied in {\tt predict}.
 Note, the function applies errors to both cross- and auto-correlation
 data; The auto-correlation data are corrupted properly only for
 the thermalnoise set by {\tt setnoise}.
-
-
+    NOTE: sm.predict assumes the model image units are Jy/pixel, and 
+      in fact will overwrite the brightness units of the image itself!
 </description>
 
 <returns type="bool">Boolean</returns>

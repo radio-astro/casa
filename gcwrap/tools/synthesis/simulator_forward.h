@@ -1,4 +1,7 @@
+#include <imageanalysis/ImageTypedefs.h>
 #include <stdcasa/StdCasa/CasacSupport.h>
+#include <casa/namespace.h> //as in ImageDecimatorData.h
+
 namespace casa 
 {
   class Simulator;
@@ -8,4 +11,5 @@ namespace casa
   class MPosition;
   class MeasurementSet;
   class String;
+
 };

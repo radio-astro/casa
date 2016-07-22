@@ -24,6 +24,7 @@
 #include<casa/Quanta/QuantumHolder.h>
 #include<ms/MeasurementSets.h>
 #include <casa/Logging/LogIO.h>
+#include <imageanalysis/ImageAnalysis/ImageFactory.h>
 
 using namespace std;
 using namespace casa;
@@ -629,6 +630,29 @@ simulator::predict(const std::vector<std::string>& modelImage, const std::string
   Bool rstat(False);
   try {
     
+    //Bool allJypix(True);
+    for (uInt i=0; i<modelImage.size(); i++) { 
+      _imageF.reset();
+      _imageC.reset();
+    
+      auto ret = ImageFactory::fromFile(modelImage[i]);
+      _imageF = ret.first;
+      _imageC = ret.second;
+      
+      auto unit =_imageF
+	? _imageF->units().getName()
+	: _imageC->units().getName();
+      String jyPix("Jy/pixel");
+
+      if (unit!=jyPix) {
+	LogIO os(LogOrigin("simulator", "predict"));	
+	os << LogIO::WARN 
+	   << "sm.predict will overwrite the brightness unit " << unit 
+	   << " in your image " << modelImage[i]
+	   << LogIO::POST;
+	}
+    }
+  
     if(itsSim !=0){
       rstat=itsSim->predict(toVectorString(modelImage), complist, incremental);
     }
