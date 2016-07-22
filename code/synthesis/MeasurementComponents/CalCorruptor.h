@@ -268,6 +268,7 @@ class AtmosCorruptor : public CalCorruptor {
    inline Matrix<Float>& screen() { return *screen_p; };
    inline Float screen(const Int i, const Int j) { 
      return screen_p->operator()(i,j); };
+   using CalCorruptor::initialize;
    virtual void initialize(const Int rxType);
    // use ATM but no time dependence - e.g. for B[Tsys]
    void initialize(const VisIter& vi, const Record& simpar, VisCal::Type type, const Int rxType);
