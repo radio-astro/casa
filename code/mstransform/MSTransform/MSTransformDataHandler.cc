@@ -1074,7 +1074,7 @@ Bool MSTransformDataHandler::makeSelection()
 	if (mssel_p.nrow() == 0) return False;
 
 	// Setup antNewIndex_p now that mssel_p is ready.
-	if (antennaSel_p)
+	if (antennaSel_p and reindex_p)
 	{
 		/*
 		// Watch out! getAntenna*List() and getBaselineList() return negative numbers for negated antennas!
