@@ -53,6 +53,7 @@ public:
   // Constructor
   StandardTsys(VisSet& vs);
   StandardTsys(String msname,Int MSnAnt,Int MSnSpw);
+  StandardTsys(const MSMetaInfoForCal& msmc);
   StandardTsys(const Int& nAnt);
 
   virtual ~StandardTsys();

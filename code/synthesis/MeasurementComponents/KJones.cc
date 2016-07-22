@@ -377,6 +377,14 @@ KJones::KJones(String msname,Int MSnAnt,Int MSnSpw) :
 
 }
 
+KJones::KJones(const MSMetaInfoForCal& msmc) :
+  VisCal(msmc),             // virtual base
+  VisMueller(msmc),         // virtual base
+  GJones(msmc)             // immediate parent
+{
+  if (prtlev()>2) cout << "K::K(msmc)" << endl;
+}
+
 KJones::KJones(const Int& nAnt) :
   VisCal(nAnt), 
   VisMueller(nAnt),
@@ -772,6 +780,23 @@ KcrossJones::KcrossJones(String msname,Int MSnAnt,Int MSnSpw) :
   */
 }
 
+KcrossJones::KcrossJones(const MSMetaInfoForCal& msmc) :
+  VisCal(msmc),             // virtual base
+  VisMueller(msmc),         // virtual base
+  KJones(msmc)              // immediate parent
+{
+  if (prtlev()>2) cout << "Kx::Kx(msmc)" << endl;
+
+  // Extract per-spw ref Freq for phase(delay) calculation
+  //  TBD: these should be in the caltable!!
+  /*  DEPRECATED, because we get it from ct_?
+  MSSpectralWindow msSpw(vs.spectralWindowTableName());
+  ROMSSpWindowColumns msCol(msSpw);
+  msCol.refFrequency().getColumn(KrefFreqs_,True);
+  KrefFreqs_/=1.0e9;  // in GHz
+  */
+}
+
 KcrossJones::KcrossJones(const Int& nAnt) :
   VisCal(nAnt), 
   VisMueller(nAnt),
@@ -909,6 +934,18 @@ KMBDJones::KMBDJones(String msname,Int MSnAnt,Int MSnSpw) :
   KrefFreqs_.set(0.0);
 }
 
+KMBDJones::KMBDJones(const MSMetaInfoForCal& msmc) :
+  VisCal(msmc),             // virtual base
+  VisMueller(msmc),         // virtual base
+  KJones(msmc)             // immediate parent
+{
+  if (prtlev()>2) cout << "Kmbd::Kmbd(msmc)" << endl;
+
+  // For MBD, the ref frequencies are zero
+  KrefFreqs_.resize(nSpw());
+  KrefFreqs_.set(0.0);
+}
+
 KMBDJones::KMBDJones(const Int& nAnt) :
   VisCal(nAnt), 
   VisMueller(nAnt),
@@ -956,6 +993,17 @@ KAntPosJones::KAntPosJones(String msname,Int MSnAnt,Int MSnSpw) :
   KJones(msname,MSnAnt,MSnSpw)              // immediate parent
 {
   if (prtlev()>2) cout << "Kap::Kap(msname,MSnAnt,MSnSpw)" << endl;
+
+  epochref_p="UTC";
+
+}
+
+KAntPosJones::KAntPosJones(const MSMetaInfoForCal& msmc) :
+  VisCal(msmc),             // virtual base
+  VisMueller(msmc),         // virtual base
+  KJones(msmc)              // immediate parent
+{
+  if (prtlev()>2) cout << "Kap::Kap(msmc)" << endl;
 
   epochref_p="UTC";
 

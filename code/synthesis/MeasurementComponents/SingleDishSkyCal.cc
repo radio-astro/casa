@@ -40,6 +40,7 @@
 #include <ms/MeasurementSets/MSState.h>
 #include <ms/MeasurementSets/MSSpectralWindow.h>
 #include <ms/MeasurementSets/MSIter.h>
+#include <synthesis/MeasurementComponents/MSMetaInfoForCal.h>
 #include <synthesis/MeasurementComponents/SingleDishSkyCal.h>
 #include <synthesis/CalTables/CTGlobals.h>
 #include <synthesis/CalTables/CTMainColumns.h>
@@ -475,7 +476,22 @@ SingleDishSkyCal::SingleDishSkyCal(VisSet& vs)
 
   initializeSky();
 }
-  
+
+SingleDishSkyCal::SingleDishSkyCal(const MSMetaInfoForCal& msmc)
+  : VisCal(msmc),
+    SolvableVisCal(msmc),
+    currAnt_(-1),
+    engineC_(msmc.nSpw(), NULL),
+    engineF_(msmc.nSpw(), NULL),
+    currentSky_(msmc.nSpw(), NULL),
+    currentSkyOK_(msmc.nSpw(), NULL)
+{
+  debuglog << "SingleDishSkyCal::SingleDishSkyCal(const MSMetaInfoForCal& msmc)" << debugpost;
+  append() = False;
+
+  initializeSky();
+}
+
 SingleDishSkyCal::SingleDishSkyCal(const Int& nAnt)
   : VisCal(nAnt),
     SolvableVisCal(nAnt),
@@ -1050,6 +1066,13 @@ SingleDishPositionSwitchCal::SingleDishPositionSwitchCal(VisSet& vs)
 {
   debuglog << "SingleDishPositionSwitchCal::SingleDishPositionSwitchCal(VisSet& vs)" << debugpost;
 }
+
+SingleDishPositionSwitchCal::SingleDishPositionSwitchCal(const MSMetaInfoForCal& msmc)
+  : VisCal(msmc),
+    SingleDishSkyCal(msmc)
+{
+  debuglog << "SingleDishPositionSwitchCal::SingleDishPositionSwitchCal(const MSMetaInfoForCal& msmc)" << debugpost;
+}
   
 SingleDishPositionSwitchCal::SingleDishPositionSwitchCal(const Int& nAnt)
   : VisCal(nAnt),
@@ -1087,7 +1110,16 @@ SingleDishRasterCal::SingleDishRasterCal(VisSet& vs)
 {
   debuglog << "SingleDishRasterCal::SingleDishRasterCal(VisSet& vs)" << debugpost;
 }
-  
+
+SingleDishRasterCal::SingleDishRasterCal(const MSMetaInfoForCal& msmc)
+  : VisCal(msmc),
+    SingleDishSkyCal(msmc),
+    fraction_(0.1),
+    numEdge_(-1)
+{
+  debuglog << "SingleDishRasterCal::SingleDishRasterCal(const MSMetaInfoForCal& msmc)" << debugpost;
+}
+
 SingleDishRasterCal::SingleDishRasterCal(const Int& nAnt)
   : VisCal(nAnt),
     SingleDishSkyCal(nAnt)
@@ -1176,6 +1208,17 @@ SingleDishOtfCal::SingleDishOtfCal(VisSet& vs)
   debuglog << "SingleDishOtfCal::SingleDishOtfCal(VisSet& vs)" << debugpost;
 }
 
+/*
+SingleDishOtfCal::SingleDishOtfCal(const MSMetaInfoForCal& msmc)
+  : VisCal(msmc),
+    SingleDishSkyCal(msmc),
+    fraction_(0.1),
+	pixel_scale_(0.5),
+	msSel_(vs.iter().ms()) ************need MS!
+{
+  debuglog << "SingleDishOtfCal::SingleDishOtfCal(VisSet& vs)" << debugpost;
+}
+*/
 void SingleDishOtfCal::setSolve(const Record& solve)
 {
   // edge detection parameter for otfraster mode

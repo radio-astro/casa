@@ -27,6 +27,7 @@
 
 #include <synthesis/MeasurementComponents/VisCal.h>
 
+#include <synthesis/MeasurementComponents/MSMetaInfoForCal.h>
 #include <msvis/MSVis/VisBuffer.h>
 
 #include <casa/Arrays/ArrayMath.h>
@@ -60,6 +61,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 VisCal::VisCal(VisSet& vs) :
   msName_(vs.msName()),
+  msmc_(NULL),
   nSpw_(vs.numberSpw()),
   nAnt_(vs.numberAnt()),
   nBln_(0),
@@ -89,12 +91,16 @@ VisCal::VisCal(VisSet& vs) :
 {
   if (prtlev()>2) cout << "VC::VC(vs)" << endl;
 
+  // Make a local msmc_ via this ctor
+  msmc_= new MSMetaInfoForCal(msName_);
+
   // Initialize
   initVisCal();
 }
 
 VisCal::VisCal(String msname,Int MSnAnt,Int MSnSpw) :
   msName_(msname),
+  msmc_(NULL),
   nSpw_(MSnSpw),
   nAnt_(MSnAnt),
   nBln_(0),
@@ -124,12 +130,52 @@ VisCal::VisCal(String msname,Int MSnAnt,Int MSnSpw) :
 {
   if (prtlev()>2) cout << "VC::VC(msname,MSnAnt,MSnSpw)" << endl;
 
+  // Make a local msmc_ via this ctor
+  msmc_= new MSMetaInfoForCal(msName_);
+
+  // Initialize
+  initVisCal();
+}
+
+VisCal::VisCal(const MSMetaInfoForCal& msmc) :
+  msName_(msmc.msname()),  // from the msmc (it is still used in some places)
+  msmc_(&msmc),
+  nSpw_(msmc.nSpw()),
+  nAnt_(msmc.nAnt()),
+  nBln_(0),
+  currSpw_(0),
+  currTime_(nSpw_,0.0),
+  currScan_(nSpw_,-1),
+  currObs_(nSpw_,-1),
+  currField_(nSpw_,-1),
+  currFreq_(nSpw_,-1),
+  lastTime_(nSpw_,0.0),
+  refTime_(0.0),
+  refFreq_(0.0),
+  nChanPar_(nSpw_,1),
+  nChanMat_(nSpw_,1),
+  startChan_(nSpw_,0),
+  interval_(0.0),
+  applied_(False),
+  V_(nSpw_,NULL),
+  currCPar_(nSpw_,NULL),
+  currRPar_(nSpw_,NULL),
+  currParOK_(nSpw_,NULL),
+  PValid_(nSpw_,False),
+  calWt_(False),
+  currWtScale_(nSpw_,NULL),
+  prtlev_(PRTLEV),
+  extratag_("")
+{
+  if (prtlev()>2) cout << "VC::VC(MSMetaInfoForCal)" << endl;
+
   // Initialize
   initVisCal();
 }
 
 VisCal::VisCal(const Int& nAnt) :
   msName_(""),
+  msmc_(NULL),
   nSpw_(1),
   nAnt_(nAnt),
   nBln_(0),
@@ -778,6 +824,20 @@ VisMueller::VisMueller(String msname,Int MSnAnt,Int MSnSpw) :
   initVisMueller();
 }
 
+VisMueller::VisMueller(const MSMetaInfoForCal& msmc) :
+  VisCal(msmc),
+  M_(nSpw(),NULL),
+  currMElem_(nSpw(),NULL),
+  currMElemOK_(nSpw(),NULL),
+  MValid_(nSpw(),False)
+{
+
+  if (prtlev()>2) cout << "VM::VM(MSMetaInfoForCal)" << endl;
+
+  initVisMueller();
+}
+
+
 VisMueller::VisMueller(const Int& nAnt) :
   VisCal(nAnt),
   M_(1,NULL),
@@ -1304,6 +1364,20 @@ VisJones::VisJones(String msname,Int MSnAnt,Int MSnSpw) :
   initVisJones();
 }
 
+
+VisJones::VisJones(const MSMetaInfoForCal& msmc) :
+  VisCal(msmc),
+  VisMueller(msmc),
+  J1_(nSpw(),NULL),
+  J2_(nSpw(),NULL),
+  currJElem_(nSpw(),NULL),
+  currJElemOK_(nSpw(),NULL),
+  JValid_(nSpw(),False)
+{
+  if (prtlev()>2) cout << "VJ::VJ(MSMetaInfoForCal)" << endl;
+
+  initVisJones();
+}
 
 VisJones::VisJones(const Int& nAnt) :
   VisCal(nAnt), 

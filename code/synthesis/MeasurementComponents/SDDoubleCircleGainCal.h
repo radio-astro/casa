@@ -19,6 +19,7 @@ class VisEquation;
 class SDDoubleCircleGainCal: public GJones {
 public:
   SDDoubleCircleGainCal(VisSet& vs);
+  SDDoubleCircleGainCal(const MSMetaInfoForCal& msmc);
   virtual ~SDDoubleCircleGainCal();
 
   // Return type name as string (ditto)

@@ -25,6 +25,8 @@
 //#
 
 #include <synthesis/MeasurementComponents/TsysGainCal.h>
+
+#include <synthesis/MeasurementComponents/MSMetaInfoForCal.h>
 // not yet: #include <synthesis/MeasurementComponents/CalCorruptor.h>
 
 #include <ms/MeasurementSets/MSColumns.h>
@@ -79,6 +81,27 @@ StandardTsys::StandardTsys(String msname,Int MSnAnt,Int MSnSpw) :
 
   // Set the SYSCAL table name
   MeasurementSet ms(msname);
+  sysCalTabName_ = ms.sysCalTableName();
+
+  // OK?
+  ROMSColumns mscol(ms);
+  const ROMSSpWindowColumns& spwcols = mscol.spectralWindow();
+  nChanParList()=spwcols.numChan().getColumn();
+  startChanList().set(0);
+
+}
+
+StandardTsys::StandardTsys(const MSMetaInfoForCal& msmc) :
+  VisCal(msmc),             // virtual base
+  VisMueller(msmc),         // virtual base
+  BJones(msmc),              // immediate parent
+  sysCalTabName_(""),
+  freqDepCalWt_(False)
+{
+  if (prtlev()>2) cout << "StandardTsys::StandardTsys(msmc)" << endl;
+
+  // Set the SYSCAL table name
+  MeasurementSet ms(this->msmc().msname());
   sysCalTabName_ = ms.sysCalTableName();
 
   // OK?
@@ -205,7 +228,8 @@ void StandardTsys::specify(const Record&) {
     // Now prepare to store in a caltable
     currSpw()=ispw; // registers everything else!
     refTime()=timestamp-interval/2.0;
-    currField()=-1;  // don't know this yet
+    currField()=msmc().fieldIdAtTime(refTime());
+    currScan()=msmc().scanNumberAtTime(refTime());
 
     // Initialize solveAllRPar, etc.
     solveAllRPar()=0.0;
@@ -251,7 +275,7 @@ void StandardTsys::specify(const Record&) {
   }
 
   // Assign scan and fieldid info
-  assignCTScanField(*ct_,msName());
+  //  assignCTScanField(*ct_,msName());
 
   logSink() << "Tsys spectra counts per spw for antenna Ids 0-"<<nElem()-1<<" (per pol):" << LogIO::POST;
   for (Int ispw=0;ispw<nSpw();++ispw) {

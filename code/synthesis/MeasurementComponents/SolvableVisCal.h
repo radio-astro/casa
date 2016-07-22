@@ -88,6 +88,8 @@ public:
   
   SolvableVisCal(String msname,Int MSnAnt,Int MSnSpw);
 
+  SolvableVisCal(const MSMetaInfoForCal& msmc);
+
   SolvableVisCal(const Int& nAnt);
 
   virtual ~SolvableVisCal();
@@ -444,8 +446,6 @@ protected:
   CLPatchPanel *cpp_;
   Vector<Bool> spwOK_;
 
-  CalSetMetaInfo csmi;
-
   Double maxTimePerSolution_p, minTimePerSolution_p, avgTimePerSolution_p;
   Float userPrintActivityInterval_p, userPrintActivityFraction_p;
   uInt caiRC_p, cafRC_p;
@@ -578,6 +578,8 @@ public:
   SolvableVisMueller(VisSet& vs);
 
   SolvableVisMueller(String msname,Int MSnAnt,Int MSnSpw);
+
+  SolvableVisMueller(const MSMetaInfoForCal& msmc);
 
   SolvableVisMueller(const Int& nAnt);
 
@@ -726,6 +728,8 @@ public:
   SolvableVisJones(VisSet& vs);
 
   SolvableVisJones(String msname,Int MSnAnt,Int MSnSpw);
+
+  SolvableVisJones(const MSMetaInfoForCal& msmc);
 
   SolvableVisJones(const Int& nAnt);
 

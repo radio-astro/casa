@@ -26,6 +26,8 @@
 
 #include <synthesis/MeasurementComponents/EVLASwPow.h>
 
+#include <synthesis/MeasurementComponents/MSMetaInfoForCal.h>
+
 #include <ms/MeasurementSets/MSColumns.h>
 #include <casa/BasicMath/Math.h>
 #include <tables/Tables/Table.h>
@@ -139,6 +141,39 @@ EVLASwPow::EVLASwPow(String msname,Int MSnAnt,Int MSnSpw) :
 
   // Temporary MS to get some info
   MeasurementSet ms(msname);
+
+  // The relevant subtable names (there must be a better way...)
+  sysPowTabName_ = ms.rwKeywordSet().asTable("SYSPOWER").tableName();
+  calDevTabName_ = ms.rwKeywordSet().asTable("CALDEVICE").tableName();
+
+  // Get spw total bandwidths
+  ROMSColumns mscol(ms);
+  const ROMSSpWindowColumns& spwcols = mscol.spectralWindow();
+  effChBW_.resize(nSpw());
+  for (Int ispw=0;ispw<nSpw();++ispw) 
+    effChBW_(ispw)=Vector<Double>(spwcols.effectiveBW()(0))(0);
+  
+}
+
+EVLASwPow::EVLASwPow(const MSMetaInfoForCal& msmc) :
+  VisCal(msmc),             // virtual base
+  VisMueller(msmc),         // virtual base
+  GJones(msmc),             // immediate parent
+  sysPowTabName_(""),
+  calDevTabName_(""),
+  correff_(Float(0.932)),     // EVLA-specific net corr efficiency (4bit)
+  frgrotscale_(Float(1.176)), // EVLA-specific fringe rotation mean _scale_
+  nyquist_(1.0),
+  effChBW_()
+
+{
+  if (prtlev()>2) cout << "EVLASwPow::EVLASwPow(msmc)" << endl;
+
+  nChanParList().set(1);
+  startChanList().set(0);
+
+  // Temporary MS to get some info
+  MeasurementSet ms(this->msmc().msname());
 
   // The relevant subtable names (there must be a better way...)
   sysPowTabName_ = ms.rwKeywordSet().asTable("SYSPOWER").tableName();
@@ -296,8 +331,8 @@ void EVLASwPow::specify(const Record& specify) {
     // Now prepare to record pars in the caltable
     currSpw()=ispw;
     refTime()=timestamp;
-    currField()=-1;  // TBD
-    // currScan()=??
+    currField()=msmc().fieldIdAtTime(timestamp);
+    currScan()=msmc().scanNumberAtTime(timestamp);
 
     // Initialize solveAllRPar, etc.
     solveAllRPar()=1.0;
@@ -400,7 +435,7 @@ void EVLASwPow::specify(const Record& specify) {
   }
 
   // Set scan and fieldid info
-  assignCTScanField(*ct_,msName());
+  //  assignCTScanField(*ct_,msName());
 
   logSink() << "GOOD gain counts per spw for antenna Ids 0-"<<nElem()-1<<":" << LogIO::POST;
   for (Int ispw=0;ispw<nSpw();++ispw) {

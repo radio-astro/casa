@@ -43,6 +43,7 @@ public:
   // Constructor
   AMueller(VisSet& vs);
   AMueller(String msname,Int MSnAnt,Int MSnSpw);
+  AMueller(const MSMetaInfoForCal& msmc);
   AMueller(const Int& nAnt);
 
   virtual ~AMueller();
@@ -159,6 +160,7 @@ public:
   // Constructor
   ANoise(VisSet& vs);
   ANoise(String msname,Int MSnAnt,Int MSnSpw);
+  ANoise(const MSMetaInfoForCal& msmc);
   ANoise(const Int& nAnt);
 
   virtual ~ANoise();

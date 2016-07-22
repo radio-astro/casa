@@ -155,6 +155,7 @@ public:
 
   // Constructor
   SingleDishSkyCal(VisSet& vs);
+  SingleDishSkyCal(const MSMetaInfoForCal& msmc);  // preferred ctor
   SingleDishSkyCal(const Int& nAnt);
 
   // Destructor
@@ -340,6 +341,7 @@ public:
 
   // Constructor
   SingleDishPositionSwitchCal(VisSet& vs);
+  SingleDishPositionSwitchCal(const MSMetaInfoForCal& msmc);  // preferred ctor
   SingleDishPositionSwitchCal(const Int& nAnt);
 
   // Destructor
@@ -360,6 +362,7 @@ public:
 
   // Constructor
   SingleDishRasterCal(VisSet& vs);
+  SingleDishRasterCal(const MSMetaInfoForCal& msmc);  // preferred ctor
   SingleDishRasterCal(const Int& nAnt);
 
   // Destructor
@@ -387,6 +390,7 @@ public:
 
   // Constructor
   SingleDishOtfCal(VisSet& vs);
+  //  SingleDishOtfCal(const MSMetaInfoForCal& msmc);  // preferred ctor   ****ctor needs an MS!
   // Renaud: disabledSingleDishOtfCal(const Int& nAnt);
 
   // Destructor

@@ -107,6 +107,29 @@ FJones::FJones(String msname,Int MSnAnt,Int MSnSpw) :
 
 }
 
+FJones::FJones(const MSMetaInfoForCal& msmc) :
+  VisCal(msmc), 
+  VisMueller(msmc),
+  SolvableVisJones(msmc),
+  tectype_(""),
+  mframe_(),
+  emm_(NULL),
+  ionhgt_(450.,"km"),
+  tecimname_("unspecified"),
+  za_(),
+  radper_(2.3649)   // rad*Hz2/G
+{
+  if (prtlev()>2) cout << "FJones::FJones(msmc)" << endl;
+
+  // Prepare zenith angle storage
+  za().resize(nAnt());
+  za().set(0.0);
+
+  // Prepare line-of-sight B field (G) storage
+  BlosG_.resize(nAnt());
+  BlosG_.set(0.0);
+
+}
 
 FJones::~FJones() {
   if (prtlev()>2) cout << "FJones::~FJones()" << endl;

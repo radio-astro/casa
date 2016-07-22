@@ -32,6 +32,7 @@
 //#include <synthesis/MeasurementComponents/SolveDataBuffer.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/OS/Timer.h>
+#include <synthesis/MeasurementComponents/MSMetaInfoForCal.h>
 #include <synthesis/MeasurementComponents/StandardVisCal.h>
 #include <synthesis/MeasurementComponents/DJones.h>
 #include <synthesis/MeasurementComponents/KJones.h>
@@ -63,8 +64,12 @@ int main(int argc, char **argv) {
 
 TEST_F(VisCalTest, PJones) {
 
-  VisCal *P = new PJones("<noms>",nAnt,nSpw);
+  MSMetaInfoForCal msmc("<noms>");
+
+  VisCal *P = new PJones(msmc);
   P->setApply();
+
+  //P->state();
 
   ASSERT_EQ(VisCalEnum::JONES,P->matrixType());
   ASSERT_EQ(VisCal::P,P->type());
@@ -82,10 +87,12 @@ TEST_F(VisCalTest, PJones) {
 
 
 
-TEST_F(VisCalTest, GJones) {
+TEST_F(VisCalTest, GJonesApplyState) {
   
   VisCal *G = new GJones("<noms>",nAnt,nSpw);
   G->setApply();
+
+  G->state();
 
   ASSERT_EQ(VisCalEnum::JONES,G->matrixType());
   ASSERT_EQ(VisCal::G,G->type());
@@ -100,6 +107,45 @@ TEST_F(VisCalTest, GJones) {
 
   delete G;
 }
+
+
+TEST_F(VisCalTest, GJonesSolveState) {
+  
+  MSMetaInfoForCal msmc("<noms>");
+  SolvableVisCal *G = new GJones(msmc);
+
+  Record solvePar;
+  String caltablename("test.G"); solvePar.define("table",caltablename);
+  String solint("int");          solvePar.define("solint",solint);
+  Vector<Int> refantlist(1,3);   solvePar.define("refant",refantlist);
+
+  G->setSolve(solvePar);
+  
+  G->state();
+
+  ASSERT_EQ(VisCalEnum::JONES,G->matrixType());
+  ASSERT_EQ(VisCal::G,G->type());
+  ASSERT_EQ(String("G Jones"),G->typeName());
+  ASSERT_EQ(2,G->nPar());
+  ASSERT_EQ(False,G->freqDepPar());
+  ASSERT_EQ(False,G->freqDepMat());
+  ASSERT_EQ(False,G->freqDepCalWt());
+  ASSERT_EQ(False,G->timeDepMat());
+  ASSERT_EQ(False,G->isApplied());
+  ASSERT_EQ(True,G->isSolved());
+  ASSERT_EQ(True,G->isSolvable());
+  
+  ASSERT_EQ(caltablename,G->calTableName());
+  ASSERT_EQ(solint,G->solint());
+  ASSERT_EQ(refantlist[0],G->refant());
+  ASSERT_TRUE(allEQ(refantlist,G->refantlist()));
+  
+  
+
+  delete G;
+}
+
+/*
 
 TEST_F(VisCalTest, BJones) {
   
@@ -177,6 +223,8 @@ TEST_F(VisCalTest, KJones) {
 
   delete K;
 }
+*/
+
 
 
   /*

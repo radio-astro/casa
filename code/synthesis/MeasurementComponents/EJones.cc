@@ -76,6 +76,17 @@ EGainCurve::EGainCurve(String msname,Int MSnAnt,Int MSnSpw) :
   if (prtlev()>2) cout << "EGainCurve::EGainCurve(msname,MSnAnt,MSnSpw)" << endl;
 }
 
+EGainCurve::EGainCurve(const MSMetaInfoForCal& msmc) :
+  VisCal(msmc), 
+  VisMueller(msmc),
+  SolvableVisJones(msmc),
+  za_(),
+  eff_(nSpw(),1.0),
+  spwOK_()
+{
+  if (prtlev()>2) cout << "EGainCurve::EGainCurve(msmc)" << endl;
+}
+
 
 
 EGainCurve::~EGainCurve() {

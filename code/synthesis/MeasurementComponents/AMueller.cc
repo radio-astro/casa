@@ -70,6 +70,20 @@ AMueller::AMueller(String msname,Int MSnAnt,Int MSnSpw) :
 }
 
 
+AMueller::AMueller(const MSMetaInfoForCal& msmc) :
+  VisCal(msmc),             // virtual base
+  VisMueller(msmc),         // virtual base
+  MMueller(msmc),            // immediate parent
+  fitorder_p(0),
+  doSub_p(true),
+  nCorr_p(-1)
+{
+  if (prtlev()>2) cout << "A::A(msmc)" << endl;
+
+  init();
+}
+
+
 AMueller::AMueller(const Int& nAnt) :
   VisCal(nAnt),
   VisMueller(nAnt),
@@ -430,6 +444,14 @@ ANoise::ANoise(String msname,Int MSnAnt,Int MSnSpw) :
   SolvableVisMueller(msname,MSnAnt,MSnSpw)  // immediate parent
 {
   if (prtlev()>2) cout << "ANoise::ANoise(msname,MSnAnt,MSnSpw)" << endl;
+}
+
+ANoise::ANoise(const MSMetaInfoForCal& msmc) :
+  VisCal(msmc),             // virtual base
+  VisMueller(msmc),         // virtual base
+  SolvableVisMueller(msmc)  // immediate parent
+{
+  if (prtlev()>2) cout << "ANoise::ANoise(msmc)" << endl;
 }
 
 ANoise::ANoise(const Int& nAnt) :

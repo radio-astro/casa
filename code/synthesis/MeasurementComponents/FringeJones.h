@@ -41,6 +41,7 @@ public:
   //  TBD:  MSMetaInfoForCal-aware version; deprecate older ones
   FringeJones(VisSet& vs);
   FringeJones(String msname,Int MSnAnt,Int MSnSpw);
+  FringeJones(const MSMetaInfoForCal& msmc);
   FringeJones(const Int& nAnt);
 
   virtual ~FringeJones();

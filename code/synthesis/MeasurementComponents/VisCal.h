@@ -44,6 +44,7 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+class MSMetaInfoForCal;
 
 // **********************************************************
 //  VisCal
@@ -84,6 +85,8 @@ public:
   VisCal(VisSet& vs);
   
   VisCal(String msname,Int MSnAnt,Int MSnSpw);
+
+  VisCal(const MSMetaInfoForCal& msmc);
   
   VisCal(const Int& nAnt);
   
@@ -294,6 +297,9 @@ protected:
   // set current field index vector to given field id
   void setCurrField(const Int& ifld);
 
+  // Access to the MSMetaInfoForCal (throws if none)
+  const MSMetaInfoForCal& msmc() const { if (msmc_) return *msmc_; else throw(AipsError("VisCal::msmc(): No MSMetaInfoForCal object!")); };
+
 private:
 
   // Defalt ctor is private
@@ -307,6 +313,9 @@ private:
 
   // Associated MS name
   String msName_;
+
+  // The MSMetaInfoForCal pointer
+  const MSMetaInfoForCal* msmc_;
   
   // Number of Spectral windows
   Int nSpw_;
@@ -384,6 +393,8 @@ public:
   VisMueller(VisSet& vs);
 
   VisMueller(String msname,Int MSnAnt,Int MSnSpw);
+
+  VisMueller(const MSMetaInfoForCal& msmc);
 
   VisMueller(const Int& nAnt);
 
@@ -510,6 +521,8 @@ public:
   VisJones(VisSet& vs);
 
   VisJones(String msname,Int MSnAnt,Int MSnSpw);
+
+  VisJones(const MSMetaInfoForCal& msmc);
 
   VisJones(const Int& nAnt);
 

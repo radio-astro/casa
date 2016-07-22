@@ -87,6 +87,17 @@ PJones::PJones(String msname,Int MSnAnt,Int MSnSpw) :
   if (prtlev()>2) cout << "P::P(msname,MSnAnt,MSnSpw)" << endl;
 }
 
+PJones::PJones(const MSMetaInfoForCal& msmc) : 
+  VisCal(msmc),
+  VisMueller(msmc),
+  VisJones(msmc),
+  pjonestype_(Jones::Diagonal),
+  pa_()
+{
+  if (prtlev()>2) cout << "P::P(msmc)" << endl;
+}
+
+
 PJones::~PJones() {
   if (prtlev()>2) cout << "P::~P()" << endl;
 }
@@ -210,6 +221,16 @@ TJones::TJones(String msname,Int MSnAnt,Int MSnSpw) :
 {
   if (prtlev()>2) cout << "T::T(msname,MSnAnt,MSnSpw)" << endl;
 }
+
+TJones::TJones(const MSMetaInfoForCal& msmc) : 
+  VisCal(msmc),
+  VisMueller(msmc),
+  SolvableVisJones(msmc),
+  tcorruptor_p(NULL)
+{
+  if (prtlev()>2) cout << "T::T(msmc)" << endl;
+}
+
 
 TJones::TJones(const Int& nAnt) :
   VisCal(nAnt), 
@@ -490,6 +511,15 @@ TfJones::TfJones(String msname,Int MSnAnt,Int MSnSpw) :
   if (prtlev()>2) cout << "Tf::Tf(msname,MSnAnt,MSnSpw)" << endl;
 }
 
+TfJones::TfJones(const MSMetaInfoForCal& msmc) :
+  VisCal(msmc),             // virtual base
+  VisMueller(msmc),         // virtual base
+  TJones(msmc)              // immediate parent
+{
+  if (prtlev()>2) cout << "Tf::Tf(msmc)" << endl;
+}
+
+
 TfJones::TfJones(const Int& nAnt) :
   VisCal(nAnt), 
   VisMueller(nAnt),
@@ -523,6 +553,15 @@ GJones::GJones(String msname,Int MSnAnt,Int MSnSpw) :
   gcorruptor_p(NULL)
 {
   if (prtlev()>2) cout << "G::G(msname,MSnAnt,MSnSpw)" << endl;
+}
+
+GJones::GJones(const MSMetaInfoForCal& msmc) :
+  VisCal(msmc),             // virtual base
+  VisMueller(msmc),         // virtual base
+  SolvableVisJones(msmc),    // immediate parent
+  gcorruptor_p(NULL)
+{
+  if (prtlev()>2) cout << "G::G(msmc)" << endl;
 }
 
 GJones::GJones(const Int& nAnt) :
@@ -783,6 +822,15 @@ BJones::BJones(String msname,Int MSnAnt,Int MSnSpw) :
   maxchangap_p(0)
 {
   if (prtlev()>2) cout << "B::B(msname,MSnAnt,MSnSpw)" << endl;
+}
+
+BJones::BJones(const MSMetaInfoForCal& msmc) :
+  VisCal(msmc),             // virtual base
+  VisMueller(msmc),         // virtual base
+  GJones(msmc),             // immediate parent
+  maxchangap_p(0)
+{
+  if (prtlev()>2) cout << "B::B(msmc)" << endl;
 }
 
 BJones::BJones(const Int& nAnt) :
@@ -1082,6 +1130,14 @@ JJones::JJones(String msname,Int MSnAnt,Int MSnSpw) :
   if (prtlev()>2) cout << "J::J(msname,MSnAnt,MSnSpw)" << endl;
 }
 
+JJones::JJones(const MSMetaInfoForCal& msmc) :
+  VisCal(msmc),             // virtual base
+  VisMueller(msmc),         // virtual base
+  SolvableVisJones(msmc)    // immediate parent
+{
+  if (prtlev()>2) cout << "J::J(msmc)" << endl;
+}
+
 JJones::JJones(const Int& nAnt) :
   VisCal(nAnt), 
   VisMueller(nAnt),
@@ -1206,6 +1262,14 @@ MMueller::MMueller(String msname,Int MSnAnt,Int MSnSpw) :
   SolvableVisMueller(msname,MSnAnt,MSnSpw)    // immediate parent
 {
   if (prtlev()>2) cout << "M::M(msname,MSnAnt,MSnSpw)" << endl;
+}
+
+MMueller::MMueller(const MSMetaInfoForCal& msmc) :
+  VisCal(msmc),             // virtual base
+  VisMueller(msmc),         // virtual base
+  SolvableVisMueller(msmc)  // immediate parent
+{
+  if (prtlev()>2) cout << "M::M(msmc)" << endl;
 }
 
 MMueller::MMueller(const Int& nAnt) :
@@ -1471,6 +1535,14 @@ MfMueller::MfMueller(String msname,Int MSnAnt,Int MSnSpw) :
   if (prtlev()>2) cout << "Mf::Mf(msname,MSnAnt,MSnSpw)" << endl;
 }
 
+MfMueller::MfMueller(const MSMetaInfoForCal& msmc) :
+  VisCal(msmc),             // virtual base
+  VisMueller(msmc),         // virtual base
+  MMueller(msmc)            // immediate parent
+{
+  if (prtlev()>2) cout << "Mf::Mf(msmc)" << endl;
+}
+
 MfMueller::MfMueller(const Int& nAnt) :
   VisCal(nAnt), 
   VisMueller(nAnt),
@@ -1550,6 +1622,15 @@ TOpac::TOpac(String msname,Int MSnAnt,Int MSnSpw) :
   za_()
 {
   if (prtlev()>2) cout << "TOpac::TOpac(msname,MSnAnt,MSnSpw)" << endl;
+}
+
+TOpac::TOpac(const MSMetaInfoForCal& msmc) :
+  VisCal(msmc), 
+  VisMueller(msmc),
+  TJones(msmc),
+  za_()
+{
+  if (prtlev()>2) cout << "TOpac::TOpac(msmc)" << endl;
 }
 
 TOpac::~TOpac() {
@@ -1723,6 +1804,14 @@ TfOpac::TfOpac(String msname,Int MSnAnt,Int MSnSpw) :
   TOpac(msname,MSnAnt,MSnSpw)              // immediate parent
 {
   if (prtlev()>2) cout << "TfOpac::TfOpac(msname,MSnAnt,MSnSpw)" << endl;
+}
+
+TfOpac::TfOpac(const MSMetaInfoForCal& msmc) :
+  VisCal(msmc),             // virtual base
+  VisMueller(msmc),         // virtual base
+  TOpac(msmc)              // immediate parent
+{
+  if (prtlev()>2) cout << "TfOpac::TfOpac(msmc)" << endl;
 }
 
 

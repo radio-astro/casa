@@ -93,6 +93,7 @@ public:
   // Constructor
   KJones(VisSet& vs);
   KJones(String msname,Int MSnAnt,Int MSnSpw);
+  KJones(const MSMetaInfoForCal& msmc);
   KJones(const Int& nAnt);
 
   virtual ~KJones();
@@ -197,6 +198,7 @@ public:
   // Constructor
   KcrossJones(VisSet& vs);
   KcrossJones(String msname,Int MSnAnt,Int MSnSpw);
+  KcrossJones(const MSMetaInfoForCal& msmc);
   KcrossJones(const Int& nAnt);
 
   virtual ~KcrossJones();
@@ -227,6 +229,7 @@ public:
   // Constructor
   KMBDJones(VisSet& vs);
   KMBDJones(String msname,Int MSnAnt,Int MSnSpw);
+  KMBDJones(const MSMetaInfoForCal& msmc);
   KMBDJones(const Int& nAnt);
 
   virtual ~KMBDJones();
@@ -252,6 +255,7 @@ public:
   // Constructor
   KAntPosJones(VisSet& vs);
   KAntPosJones(String msname,Int MSnAnt,Int MSnSpw);
+  KAntPosJones(const MSMetaInfoForCal& msmc);
   KAntPosJones(const Int& nAnt);
 
   virtual ~KAntPosJones();

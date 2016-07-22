@@ -37,6 +37,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Forward declaration:
 class VisCal;
 class VisSet;
+class MSMetaInfoForCal;
 
 // Create a specialized VisCal from VisSet
 VisCal* createVisCal(const String& type, VisSet& vs);
@@ -44,14 +45,20 @@ VisCal* createVisCal(const String& type, VisSet& vs);
 // Create a specialized VisCal from msname, nAnt, nSpw
 VisCal* createVisCal(const String& type, String msname, Int MSnAnt, Int MSnSpw);
 
+// Create a specialized VisCal from MSMetaInfoForCal
+VisCal* createVisCal(const String& type, const MSMetaInfoForCal& msmc);
+
 // Create a specialized VisCal from nAnt
 VisCal* createVisCal(const String& type, const Int& nAnt);
 
 // Create a specialized SolvableVisCal from VisSet
 SolvableVisCal* createSolvableVisCal(const String& type, VisSet& vs);
 
-// Create a specialized VisCal from msname, nAnt, nSpw
+// Create a specialized SolvableVisCal from msname, nAnt, nSpw
 SolvableVisCal* createSolvableVisCal(const String& type, String msname, Int MSnAnt, Int MSnSpw);
+
+// Create a specialized SolvableVisCal from MSMetaInfoForCal
+SolvableVisCal* createSolvableVisCal(const String& type, const MSMetaInfoForCal& msmc);
 
 // Create a specialized SolvableVisCal from nAnt
 SolvableVisCal* createSolvableVisCal(const String& type, const Int& nAnt);

@@ -179,6 +179,12 @@ SDDoubleCircleGainCal::SDDoubleCircleGainCal(VisSet &vs) :
     GJones(vs), central_disk_size_(0.0), smooth_(True) {
 }
 
+SDDoubleCircleGainCal::SDDoubleCircleGainCal(const MSMetaInfoForCal& msmc) :
+    VisCal(msmc),             // virtual base
+    VisMueller(msmc),         // virtual base
+    GJones(msmc), central_disk_size_(0.0), smooth_(True) {
+}
+
 SDDoubleCircleGainCal::~SDDoubleCircleGainCal() {
 }
 
@@ -213,7 +219,7 @@ void SDDoubleCircleGainCal::setSolve(const Record &solve) {
   SolvableVisCal::setSolve(solve);
 }
 
-void SDDoubleCircleGainCal::selfGatherAndSolve(VisSet& vs, VisEquation& ve) {
+void SDDoubleCircleGainCal::selfGatherAndSolve(VisSet& vs, VisEquation& /* ve */) {
   SDDoubleCircleGainCalImpl sdcalib;
   debuglog<< "SDDoubleCircleGainCal::selfGatherAndSolve()" << debugpost;
 

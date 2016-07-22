@@ -27,6 +27,7 @@
 
 #include <synthesis/MeasurementComponents/CalCorruptor.h>
 #include <synthesis/MeasurementComponents/SolvableVisCal.h>
+#include <synthesis/MeasurementComponents/MSMetaInfoForCal.h>
 
 #include <msvis/MSVis/VisBuffer.h>
 
@@ -208,6 +209,75 @@ SolvableVisCal::SolvableVisCal(String msname,Int MSnAnt,Int MSnSpw) :
   initSVC();
 
 };
+
+  
+
+SolvableVisCal::SolvableVisCal(const MSMetaInfoForCal& msmc) :
+  VisCal(msmc),
+  corruptor_p(NULL),
+  ct_(NULL),
+  ci_(NULL),
+  cpp_(NULL),
+  spwOK_(nSpw(),False),
+  maxTimePerSolution_p(0), 
+  minTimePerSolution_p(10000000), 
+  avgTimePerSolution_p(0),
+  timer_p(),
+  calTableName_(""),
+  calTableSelect_(""),
+  append_(False),
+  tInterpType_(""),
+  fInterpType_(""),
+  spwMap_(1,-1),
+  urefantlist_(1,-1),
+  minblperant_(4),
+  solved_(False),
+  byCallib_(False),
+  apmode_(""),
+  solint_("inf"),
+  fsolint_("none"),
+  fintervalHz_(-1.0),
+  fintervalCh_(nSpw(),0.0),
+  chanAveBounds_(nSpw(),Matrix<Int>()),
+  minSNR_(0.0f),
+  combine_(""),
+  focusChan_(0),
+  dataInterval_(0.0),
+  fitWt_(0.0),
+  fit_(0.0),
+  solveCPar_(nSpw(),NULL),  // TBD: move inflation into ctor body
+  solveRPar_(nSpw(),NULL),
+  solveParOK_(nSpw(),NULL),
+  solveParErr_(nSpw(),NULL),
+  solveParSNR_(nSpw(),NULL),
+  solveAllCPar_(nSpw(),NULL),
+  solveAllRPar_(nSpw(),NULL),
+  solveAllParOK_(nSpw(),NULL),
+  solveAllParErr_(nSpw(),NULL),
+  solveAllParSNR_(nSpw(),NULL),
+  srcPolPar_(),
+  chanmask_(NULL),
+  simulated_(False),
+  simint_("integration"),
+  onthefly_(False)
+{
+  if (prtlev()>2) cout << "SVC::SVC(msmc)" << endl;
+
+  caiRC_p = Aipsrc::registerRC("calibrater.activity.interval", "3600.0");
+  cafRC_p = Aipsrc::registerRC("calibrater.activity.fraction", "0.00001");
+  String ca_str = Aipsrc::get(caiRC_p);
+  std::sscanf(std::string(ca_str).c_str(), "%f", &userPrintActivityInterval_p);
+  userPrintActivityInterval_p = abs(userPrintActivityInterval_p);
+
+  ca_str = Aipsrc::get(cafRC_p);
+  std::sscanf(std::string(ca_str).c_str(), "%f", &userPrintActivityFraction_p);
+  userPrintActivityFraction_p = abs(userPrintActivityFraction_p);
+
+  initSVC();
+
+};
+
+
 
 SolvableVisCal::SolvableVisCal(const Int& nAnt) :
   VisCal(nAnt),
@@ -1163,13 +1233,13 @@ void SolvableVisCal::setSolve(const Record& solve)
 String SolvableVisCal::solveinfo() {
 
   // Get the refant name from the MS
-  String refantName("none");
+  String refantNames("none");
   if (refant()>-1) {
-    refantName="";
+    refantNames="";
     Int nra=refantlist().nelements();
     for (Int i=0;i<nra;++i) {
-      refantName+=csmi.getAntName(refantlist()(i));
-      if (i<nra-1) refantName+=",";
+      refantNames+=msmc().antennaName(refantlist()(i));
+      if (i<nra-1) refantNames+=",";
     }
   }
 
@@ -1182,7 +1252,7 @@ String SolvableVisCal::solveinfo() {
     << (freqDepPar() ? (","+fsolint()) : "")
     //    << " t="          << interval()
     //    << " preavg="     << preavg()
-    << " refant="     << "'" << refantName << "'" // (id=" << refant() << ")"
+    << " refant="     << "'" << refantNames << "'" // (id=" << refant() << ")"
     << " minsnr=" << minSNR()
     << " apmode="  << apmode()
     << " solnorm=" << solnorm();
@@ -2969,12 +3039,7 @@ void SolvableVisCal::calcParByCLPP() {
 // Report solved-for QU
 void SolvableVisCal::reportSolvedQU() {
 
-  /*
-  MeasurementSet ms(msName());
-  ROMSFieldColumns msfldcol(ms.field());
-  String fldname(msfldcol.name()(currField()));
-  */
-  String fldname(csmi.getFieldName(currField()));
+  String fldname(msmc().fieldName(currField()));
 
   if (solvePol()==2) {
     Float Q=real(srcPolPar()(0));
@@ -3553,9 +3618,6 @@ void SolvableVisCal::initSVC() {
   
   parType_=VisCalEnum::COMPLEX;
 
-  // Temporary trap for _tests_:  an MS-agnostic state
-  if (msName()!="<noms>")
-    csmi.reset(msName());
 }
 
 void SolvableVisCal::deleteSVC() {
@@ -3704,6 +3766,17 @@ SolvableVisMueller::SolvableVisMueller(String msname,Int MSnAnt,Int MSnSpw) :
   DMValid_(False)
 {
   if (prtlev()>2) cout << "SVM::SVM(msname,MSnAnt,MSnSpw)" << endl;
+}
+
+SolvableVisMueller::SolvableVisMueller(const MSMetaInfoForCal& msmc) :
+  VisCal(msmc),
+  VisMueller(msmc),
+  SolvableVisCal(msmc),
+  dM_(NULL),
+  diffMElem_(),
+  DMValid_(False)
+{
+  if (prtlev()>2) cout << "SVM::SVM(msmc)" << endl;
 }
 
 SolvableVisMueller::SolvableVisMueller(const Int& nAnt) :
@@ -3987,6 +4060,21 @@ SolvableVisJones::SolvableVisJones(String msname,Int MSnAnt,Int MSnSpw) :
 {
   if (prtlev()>2) cout << "SVJ::SVJ(msname,MSnAnt,MSnSpw)" << endl;
 }
+
+SolvableVisJones::SolvableVisJones(const MSMetaInfoForCal& msmc) :
+  VisCal(msmc),             // virtual base
+  VisMueller(msmc),         // virtual base
+  SolvableVisMueller(msmc), // immediate parent
+  VisJones(msmc),           // immediate parent
+  dJ1_(NULL),               // data...
+  dJ2_(NULL),
+  diffJElem_(),
+  DJValid_(False),
+  plotter_(NULL)
+{
+  if (prtlev()>2) cout << "SVJ::SVJ(msmc)" << endl;
+}
+
 
 SolvableVisJones::SolvableVisJones(const Int& nAnt) : 
   VisCal(nAnt),               // virtual base
@@ -4925,11 +5013,11 @@ void SolvableVisJones::applyRefAnt() {
   Int nUserRefant=refantlist().nelements();
 
   // Get the preferred refant names from the MS
-  String refantName(csmi.getAntName(refantlist()(0)));
+  String refantName(msmc().antennaName(refantlist()(0)));
   if (nUserRefant>1) {
     refantName+=" (";
     for (Int i=1;i<nUserRefant;++i) {
-      refantName+=csmi.getAntName(refantlist()(i));
+      refantName+=msmc().antennaName(refantlist()(i));
       if (i<nUserRefant-1) refantName+=",";
     }
     refantName+=")";
@@ -5114,7 +5202,7 @@ void SolvableVisJones::applyRefAnt() {
 	  << "Spw=" << ctiter.thisSpw()
 	  << ", Fld=" << ctiter.thisField()
 	  << ")"
-	  << ", using refant " << csmi.getAntName(currrefant)
+	  << ", using refant " << msmc().antennaName(currrefant)
 	  << " (id=" << currrefant 
 	  << ")" << " (alternate)"
 	  << LogIO::POST;
@@ -6542,8 +6630,10 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
                   << LogIO::POST;
     }
     
-    Vector<String> antname=csmi.getAntNames();
-    Vector<String> fldname=csmi.getFieldNames();
+    Vector<String> antname;
+    msmc().antennaNames(antname);
+    Vector<String> fldname;
+    msmc().fieldNames(fldname);
 
     // Default header info.
     logSink() << LogIO::NORMAL1 << "MS name = " << msName() << LogIO::POST;        

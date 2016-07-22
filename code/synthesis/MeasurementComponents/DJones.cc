@@ -26,11 +26,10 @@
 
 #include <synthesis/MeasurementComponents/DJones.h>
 #include <synthesis/MeasurementComponents/CalCorruptor.h>
-
+#include <synthesis/MeasurementComponents/MSMetaInfoForCal.h>
 #include <msvis/MSVis/VisBuffer.h>
 #include <msvis/MSVis/VisBuffAccumulator.h>
 #include <synthesis/CalTables/CTIter.h>
-#include <ms/MeasurementSets/MSColumns.h>
 #include <synthesis/MeasurementEquations/VisEquation.h>
 #include <scimath/Fitting/LSQFit.h>
 #include <scimath/Fitting/LinearFit.h>
@@ -78,6 +77,7 @@ DJones::DJones(VisSet& vs) :
 
 }
 
+
 DJones::DJones(String msname,Int MSnAnt,Int MSnSpw) :
   VisCal(msname,MSnAnt,MSnSpw),             // virtual base
   VisMueller(msname,MSnAnt,MSnSpw),         // virtual base
@@ -86,6 +86,16 @@ DJones::DJones(String msname,Int MSnAnt,Int MSnSpw) :
 {
   if (prtlev()>2) cout << "D::D(msname,MSnAnt,MSnSpw)" << endl;
 }
+
+DJones::DJones(const MSMetaInfoForCal& msmc) :
+  VisCal(msmc),             // virtual base
+  VisMueller(msmc),         // virtual base
+  SolvableVisJones(msmc),   // immediate parent
+  solvePol_(0)
+{
+  if (prtlev()>2) cout << "D::D(msmc)" << endl;
+}
+
 
 DJones::DJones(const Int& nAnt) :
   VisCal(nAnt), 
@@ -448,6 +458,14 @@ DfJones::DfJones(String msname,Int MSnAnt,Int MSnSpw) :
   if (prtlev()>2) cout << "Df::Df(msname,MSnAnt,MSnSpw)" << endl;
 }
 
+DfJones::DfJones(const MSMetaInfoForCal& msmc) :
+  VisCal(msmc),             // virtual base
+  VisMueller(msmc),         // virtual base
+  DJones(msmc)              // immediate parent
+{
+  if (prtlev()>2) cout << "Df::Df(msmc)" << endl;
+}
+
 DfJones::DfJones(const Int& nAnt) :
   VisCal(nAnt), 
   VisMueller(nAnt),
@@ -481,6 +499,14 @@ DlinJones::DlinJones(String msname,Int MSnAnt,Int MSnSpw) :
   DJones(msname,MSnAnt,MSnSpw)              // immediate parent
 {
   if (prtlev()>2) cout << "Dlin::Dlin(msname,MSnAnt,MSnSpw)" << endl;
+}
+
+DlinJones::DlinJones(const MSMetaInfoForCal& msmc) :
+  VisCal(msmc),             // virtual base
+  VisMueller(msmc),         // virtual base
+  DJones(msmc)              // immediate parent
+{
+  if (prtlev()>2) cout << "Dlin::Dlin(msmc)" << endl;
 }
 
 DlinJones::DlinJones(const Int& nAnt) :
@@ -517,6 +543,14 @@ DflinJones::DflinJones(String msname,Int MSnAnt,Int MSnSpw) :
   if (prtlev()>2) cout << "Dflin::Dflin(msname,MSnAnt,MSnSpw)" << endl;
 }
 
+DflinJones::DflinJones(const MSMetaInfoForCal& msmc) :
+  VisCal(msmc),             // virtual base
+  VisMueller(msmc),         // virtual base
+  DlinJones(msmc)             // immediate parent
+{
+  if (prtlev()>2) cout << "Dflin::Dflin(msmc)" << endl;
+}
+
 DflinJones::DflinJones(const Int& nAnt) :
   VisCal(nAnt), 
   VisMueller(nAnt),
@@ -551,6 +585,14 @@ DllsJones::DllsJones(String msname,Int MSnAnt,Int MSnSpw) :
   DJones(msname,MSnAnt,MSnSpw)              // immediate parent
 {
   if (prtlev()>2) cout << "Dlls::Dlls(msname,MSnAnt,MSnSpw)" << endl;
+}
+
+DllsJones::DllsJones(const MSMetaInfoForCal& msmc) :
+  VisCal(msmc),             // virtual base
+  VisMueller(msmc),         // virtual base
+  DJones(msmc)              // immediate parent
+{
+  if (prtlev()>2) cout << "Dlls::Dlls(msmc)" << endl;
 }
 
 DllsJones::DllsJones(const Int& nAnt) :
@@ -684,6 +726,14 @@ DfllsJones::DfllsJones(String msname,Int MSnAnt,Int MSnSpw) :
   if (prtlev()>2) cout << "Dflls::Dflls(msname,MSnAnt,MSnSpw)" << endl;
 }
 
+DfllsJones::DfllsJones(const MSMetaInfoForCal& msmc) :
+  VisCal(msmc),             // virtual base
+  VisMueller(msmc),         // virtual base
+  DllsJones(msmc)           // immediate parent
+{
+  if (prtlev()>2) cout << "Dflls::Dflls(msmc)" << endl;
+}
+
 DfllsJones::DfllsJones(const Int& nAnt) :
   VisCal(nAnt), 
   VisMueller(nAnt),
@@ -716,6 +766,14 @@ XMueller::XMueller(String msname,Int MSnAnt,Int MSnSpw) :
   SolvableVisMueller(msname,MSnAnt,MSnSpw)    // immediate parent
 {
   if (prtlev()>2) cout << "X::X(msname,MSnAnt,MSnSpw)" << endl;
+}
+
+XMueller::XMueller(const MSMetaInfoForCal& msmc) :
+  VisCal(msmc),             // virtual base
+  VisMueller(msmc),         // virtual base
+  SolvableVisMueller(msmc)    // immediate parent
+{
+  if (prtlev()>2) cout << "X::X(msmc)" << endl;
 }
 
 XMueller::XMueller(const Int& nAnt) :
@@ -762,9 +820,6 @@ void XMueller::setSolve(const Record& solvepar) {
 void XMueller::newselfSolve(VisSet& vs, VisEquation& ve) {
 
   if (prtlev()>4) cout << "   M::selfSolve(ve)" << endl;
-
-  MeasurementSet ms(msName());
-  ROMSFieldColumns msfldcol(ms.field());
 
   // Inform logger/history
   logSink() << "Solving for " << typeName()
@@ -862,14 +917,14 @@ void XMueller::newselfSolve(VisSet& vs, VisEquation& ve) {
 
       if (solveParOK()(0,0,0))
 	logSink() << "Position angle offset solution for " 
-		  << msfldcol.name()(currField())
+		  << msmc().fieldName(currField())
 		  << " (spw = " << currSpw() << ") = "
 		  << arg(solveCPar()(0,0,0))*180.0/C::pi/2.0
 		  << " deg."
 		  << LogIO::POST;
       else
 	logSink() << "Position angle offset solution for " 
-		  << msfldcol.name()(currField())
+		  << msmc().fieldName(currField())
 		  << " (spw = " << currSpw() << ") "
 		  << " was not determined (insufficient data)."
 		  << LogIO::POST;
@@ -1018,6 +1073,14 @@ XJones::XJones(String msname,Int MSnAnt,Int MSnSpw) :
   if (prtlev()>2) cout << "X::X(msname,MSnAnt,MSnSpw)" << endl;
 }
 
+XJones::XJones(const MSMetaInfoForCal& msmc) :
+  VisCal(msmc),             // virtual base
+  VisMueller(msmc),         // virtual base
+  SolvableVisJones(msmc)    // immediate parent
+{
+  if (prtlev()>2) cout << "X::X(msmc)" << endl;
+}
+
 XJones::XJones(const Int& nAnt) :
   VisCal(nAnt), 
   VisMueller(nAnt),
@@ -1066,9 +1129,6 @@ void XJones::setSolve(const Record& solvepar) {
 void XJones::newselfSolve(VisSet& vs, VisEquation& ve) {
 
   if (prtlev()>4) cout << "   Xj::newselfSolve(ve)" << endl;
-
-  MeasurementSet ms(msName());
-  ROMSFieldColumns msfldcol(ms.field());
 
   // Inform logger/history
   logSink() << "Solving for " << typeName()
@@ -1169,7 +1229,7 @@ void XJones::newselfSolve(VisSet& vs, VisEquation& ve) {
 
 
 	logSink() << "Mean position angle offset solution for " 
-		  << msfldcol.name()(currField())
+		  << msmc().fieldName(currField())
 		  << " (spw = " << currSpw() << ") = "
 		  << ang
 		  << " deg."
@@ -1177,7 +1237,7 @@ void XJones::newselfSolve(VisSet& vs, VisEquation& ve) {
       }
       else
 	logSink() << "Position angle offset solution for " 
-		  << msfldcol.name()(currField())
+		  << msmc().fieldName(currField())
 		  << " (spw = " << currSpw() << ") "
 		  << " was not determined (insufficient data)."
 		  << LogIO::POST;
@@ -1238,9 +1298,6 @@ void XJones::solveOneVB(const VisBuffer& vb) {
 
   // This just a simple average of the cross-hand
   //  visbilities...
-
-  MeasurementSet ms(msName());
-  ROMSFieldColumns msfldcol(ms.field());
 
   // We are actually solving for all channels simultaneously
   solveCPar().reference(solveAllCPar());
@@ -1332,7 +1389,7 @@ void XJones::solveOneVB(const VisBuffer& vb) {
     
     
     logSink() << "Mean position angle offset solution for " 
-	      << msfldcol.name()(currField())
+	      << msmc().fieldName(currField())
 	      << " (spw = " << currSpw() << ") = "
 	      << ang
 	      << " deg."
@@ -1340,7 +1397,7 @@ void XJones::solveOneVB(const VisBuffer& vb) {
   }
   else
     logSink() << "Position angle offset solution for " 
-	      << msfldcol.name()(currField())
+	      << msmc().fieldName(currField())
 	      << " (spw = " << currSpw() << ") "
 	      << " was not determined (insufficient data)."
 	      << LogIO::POST;
@@ -1365,6 +1422,14 @@ XfJones::XfJones(String msname,Int MSnAnt,Int MSnSpw) :
   XJones(msname,MSnAnt,MSnSpw)              // immediate parent
 {
   if (prtlev()>2) cout << "Xf::Xf(msname,MSnAnt,MSnSpw)" << endl;
+}
+
+XfJones::XfJones(const MSMetaInfoForCal& msmc) :
+  VisCal(msmc),             // virtual base
+  VisMueller(msmc),         // virtual base
+  XJones(msmc)              // immediate parent
+{
+  if (prtlev()>2) cout << "Xf::Xf(msmc)" << endl;
 }
 
 XfJones::XfJones(const Int& nAnt) :
@@ -1409,6 +1474,15 @@ GlinXphJones::GlinXphJones(String msname,Int MSnAnt,Int MSnSpw) :
   QU_()
 {
   if (prtlev()>2) cout << "GlinXph::GlinXph(msname,MSnAnt,MSnSpw)" << endl;
+}
+
+GlinXphJones::GlinXphJones(const MSMetaInfoForCal& msmc) :
+  VisCal(msmc),             // virtual base
+  VisMueller(msmc),         // virtual base
+  GJones(msmc),             // immediate parent
+  QU_()
+{
+  if (prtlev()>2) cout << "GlinXph::GlinXph(msmc)" << endl;
 }
 
 GlinXphJones::GlinXphJones(const Int& nAnt) :
@@ -1835,6 +1909,14 @@ GlinXphfJones::GlinXphfJones(String msname,Int MSnAnt,Int MSnSpw) :
   GlinXphJones(msname,MSnAnt,MSnSpw)        // immediate parent
 {
   if (prtlev()>2) cout << "GlinXphf::GlinXphf(msname,MSnAnt,MSnSpw)" << endl;
+}
+
+GlinXphfJones::GlinXphfJones(const MSMetaInfoForCal& msmc) :
+  VisCal(msmc),             // virtual base
+  VisMueller(msmc),         // virtual base
+  GlinXphJones(msmc)        // immediate parent
+{
+  if (prtlev()>2) cout << "GlinXphf::GlinXphf(msmc)" << endl;
 }
 
 GlinXphfJones::GlinXphfJones(const Int& nAnt) :

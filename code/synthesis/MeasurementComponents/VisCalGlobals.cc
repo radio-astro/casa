@@ -26,6 +26,7 @@
 //#
 
 #include <synthesis/MeasurementComponents/VisCalGlobals.h>
+#include <synthesis/MeasurementComponents/MSMetaInfoForCal.h>
 #include <synthesis/MeasurementComponents/StandardVisCal.h>
 #include <synthesis/MeasurementComponents/DJones.h>
 #include <synthesis/MeasurementComponents/GSpline.h>
@@ -43,6 +44,7 @@
 #include <synthesis/MeasurementComponents/SDDoubleCircleGainCal.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
+
 
 // Create a specialized VisCal from VisSet
 VisCal* createVisCal(const String& type, VisSet& vs) {
@@ -70,6 +72,20 @@ VisCal* createVisCal(const String& type, String msname, Int MSnAnt, Int MSnSpw) 
   else
     // Try request as a solvable type
     return createSolvableVisCal(type,msname,MSnAnt,MSnSpw);
+};
+
+// Create a specialized VisCal from MSMetaInfoForCal
+VisCal* createVisCal(const String& type, const MSMetaInfoForCal& msmc) {
+
+  String uptype=type;
+  uptype.upcase();
+
+  if (uptype=="P" || uptype=="P JONES") 
+    return new PJones(msmc);
+
+  else
+    // Try request as a solvable type
+    return createSolvableVisCal(type,msmc);
 };
 
 
@@ -245,7 +261,7 @@ SolvableVisCal* createSolvableVisCal(const String& type, String msname, Int MSnA
     return new GJones(msname,MSnAnt,MSnSpw);
 
   else if (uptype=="GSPLINE") 
-    throw(AipsError(uptype+" not yet supported via BJonesPoly(msname,MSnAnt,MSnSpw)"));
+    throw(AipsError(uptype+" not yet supported via GJonesSpline(msname,MSnAnt,MSnSpw)"));
   //    return new GJonesSpline(msname,MSnAnt,MSnSpw);
   
   else if (uptype=="TF" || uptype=="TF JONES" || uptype=="TF NOISE") 
@@ -286,11 +302,11 @@ SolvableVisCal* createSolvableVisCal(const String& type, String msname, Int MSnA
     return new JJones(msname,MSnAnt,MSnSpw);
 
   else if (uptype == "EP" || uptype == "EP JONES")
-    throw(AipsError(uptype+" not yet supported via BJonesPoly(msname,MSnAnt,MSnSpw)"));
+    throw(AipsError(uptype+" not yet supported via EPJones(msname,MSnAnt,MSnSpw)"));
   //    return new EPJones(msname,MSnAnt,MSnSpw);
 
   else if (uptype == "LJ" || uptype == "LJ JONES")
-    throw(AipsError(uptype+" not yet supported via BJonesPoly(msname,MSnAnt,MSnSpw)"));
+    throw(AipsError(uptype+" not yet supported via LJJones(msname,MSnAnt,MSnSpw)"));
   //    return new LJJones(msname,MSnAnt,MSnSpw);
 
   else if (uptype=="M" || uptype=="M MUELLER")
@@ -359,16 +375,164 @@ SolvableVisCal* createSolvableVisCal(const String& type, String msname, Int MSnA
     return new FringeJones(msname,MSnAnt,MSnSpw);
 
   else if (uptype.contains("SDSKY_PS"))
-    throw(AipsError(uptype+" not yet supported via BJonesPoly(msname,MSnAnt,MSnSpw)"));
+    throw(AipsError(uptype+" not yet supported via SingleDishPositionSwitchCal(msname,MSnAnt,MSnSpw)"));
   //    return new SingleDishPositionSwitchCal(msname,MSnAnt,MSnSpw);
 
   else if (uptype.contains("SDSKY_RASTER"))
-    throw(AipsError(uptype+" not yet supported via BJonesPoly(msname,MSnAnt,MSnSpw)"));
+    throw(AipsError(uptype+" not yet supported via SingleDishRasterCal(msname,MSnAnt,MSnSpw)"));
   //    return new SingleDishRasterCal(msname,MSnAnt,MSnSpw);
 
   else if (uptype.contains("SDSKY_OTF"))
-    throw(AipsError(uptype+" not yet supported via BJonesPoly(msname,MSnAnt,MSnSpw)"));
+    throw(AipsError(uptype+" not yet supported via SingleDishOtfCal(msname,MSnAnt,MSnSpw)"));
   //    return new SingleDishOtfCal(msname,MSnAnt,MSnSpw);
+  
+  else {
+    throw(AipsError("Unknown calibration type: '"+type+"'"));
+  }
+};
+
+
+// Create a specialized VisCal from MSMetaInfoForCal
+SolvableVisCal* createSolvableVisCal(const String& type, const MSMetaInfoForCal& msmc) {
+  String uptype=type;
+  uptype.upcase();
+
+  if      (uptype=="B" || uptype=="B JONES") 
+    return new BJones(msmc);
+
+  else if (uptype=="BPOLY") 
+    throw(AipsError(uptype+" not yet supported via BJonesPoly(msmc)"));
+  //    return new BJonesPoly(msmc);
+
+  else if (uptype=="G" || uptype=="G JONES") 
+    return new GJones(msmc);
+
+  else if (uptype=="GSPLINE") 
+    throw(AipsError(uptype+" not yet supported via GJonesSpline(msmc)"));
+  //    return new GJonesSpline(msmc);
+  
+  else if (uptype=="TF" || uptype=="TF JONES" || uptype=="TF NOISE") 
+    return new TfJones(msmc);
+
+  else if (uptype=="T" || uptype=="T JONES" || uptype=="T NOISE") 
+    return new TJones(msmc);
+
+  else if (uptype.before('+')=="DLIN" ||
+	   uptype.before('+')=="D" || 
+	   uptype=="D JONES") 
+    return new DlinJones(msmc);
+
+  else if (uptype.before('+')=="DFLIN" || 
+	   uptype.before('+')=="DF" || 
+	   uptype=="DF JONES") 
+    return new DflinJones(msmc);
+
+  else if (uptype.before('+')=="DLLS" || 
+	   uptype=="DLLS JONES")
+    return new DllsJones(msmc);
+
+  else if (uptype.before('+')=="DFLLS" || 
+	   uptype=="DFLLS JONES")
+    return new DfllsJones(msmc);
+
+  else if (uptype.before('+')=="DGEN" ||
+	   uptype.before('+')=="DGENERAL" || 
+	   uptype=="DGEN JONES") 
+    return new DJones(msmc);
+
+  else if (uptype.before('+')=="DFGEN" || 
+	   uptype.before('+')=="DFGENERAL" || 
+	   uptype=="DFGEN JONES") 
+    return new DfJones(msmc);
+
+  else if (uptype=="J" || uptype=="J JONES") 
+    return new JJones(msmc);
+
+  else if (uptype == "EP" || uptype == "EP JONES")
+    throw(AipsError(uptype+" not yet supported via EPJones(msmc)"));
+  //    return new EPJones(msmc);
+
+  else if (uptype == "LJ" || uptype == "LJ JONES")
+    throw(AipsError(uptype+" not yet supported via LJJones(msmc)"));
+  //    return new LJJones(msmc);
+
+  else if (uptype=="M" || uptype=="M MUELLER")
+    return new MMueller(msmc);
+
+  else if (uptype=="A" || uptype=="A MUELLER")
+    return new AMueller(msmc);
+
+  else if (uptype=="N" || uptype=="A NOISE")
+    return new ANoise(msmc);
+
+  else if (uptype=="MF" || uptype=="MF MUELLER")
+    return new MfMueller(msmc);
+     
+  else if (uptype=="X" || uptype=="X MUELLER")
+    return new XMueller(msmc);
+
+  else if (uptype=="XJ" || uptype=="X JONES")
+    return new XJones(msmc);
+
+  else if (uptype=="XF" || uptype=="XF JONES")
+    return new XfJones(msmc);
+
+  else if (uptype=="K" || uptype=="K JONES")
+    return new KJones(msmc);
+
+  else if (uptype=="KCROSS" || uptype=="KCROSS JONES")
+    return new KcrossJones(msmc);
+
+  else if (uptype=="GLINXPH" || uptype=="GLINXPH JONES" ||
+	   uptype=="XY+QU")
+    return new GlinXphJones(msmc);
+
+  else if (uptype=="GLINXPHF" || uptype=="GLINXPHF JONES" ||
+	   uptype=="XYF+QU")
+    return new GlinXphfJones(msmc);
+
+  else if (uptype=="KMBD" || uptype=="KMBD JONES")
+    return new KMBDJones(msmc);
+
+  else if (uptype.contains("KANTPOS") || uptype.contains("KANTPOS JONES"))
+    return new KAntPosJones(msmc);
+
+  else if (uptype.contains("TSYS"))
+    return new StandardTsys(msmc);
+
+  else if (uptype.contains("EVLASWP"))
+    return new EVLASwPow(msmc);
+
+  else if (uptype=="TFOPAC")  // Not yet solvable (even though an SVJ)
+    return new TfOpac(msmc);
+
+  else if (uptype=="TOPAC")  // Not yet solvable (even though an SVJ)
+    return new TOpac(msmc);
+
+  else if (uptype.contains("GAINCURVE"))  // Not yet solvable (even though an SVJ)
+    return new EGainCurve(msmc);
+  
+  else if (uptype.contains("EVLAGAIN"))
+    throw(AipsError("Please regenerate EVLA Sw Pow table using gencal."));
+
+  else if (uptype.contains("TEC") || uptype.contains("F JONES") )  // Ionosphere
+    return new FJones(msmc);
+
+  else if (uptype.contains("FRINGE"))  // Fringe-fitting
+    return new FringeJones(msmc);
+
+  else if (uptype.contains("SDSKY_PS"))
+    return new SingleDishPositionSwitchCal(msmc);
+
+  else if (uptype.contains("SDSKY_RASTER"))
+    return new SingleDishRasterCal(msmc);
+
+  else if (uptype.contains("SDSKY_OTF"))
+    throw(AipsError(uptype+" not yet supported via SingleDishOtfCal(msmc)"));
+  //return new SingleDishOtfCal(msmc);
+  
+  else if (uptype.contains("SDGAIN_OTFD"))
+    return new SDDoubleCircleGainCal(msmc);
   
   else {
     throw(AipsError("Unknown calibration type: '"+type+"'"));

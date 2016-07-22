@@ -1,4 +1,4 @@
-//# StandardVisCal.h: Declaration of standard (Solvable)VisCal types
+//# DJones.h: Declaration of standard Polarization Calibration types
 //# Copyright (C) 1996,1997,2000,2001,2002,2003,2011
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -51,6 +51,7 @@ public:
   // Constructor
   DJones(VisSet& vs);
   DJones(String msname,Int MSnAnt,Int MSnSpw);
+  DJones(const MSMetaInfoForCal& msmc);
   DJones(const Int& nAnt);
 
   virtual ~DJones();
@@ -140,6 +141,7 @@ public:
   // Constructor
   DfJones(VisSet& vs);
   DfJones(String msname,Int MSnAnt,Int MSnSpw);
+  DfJones(const MSMetaInfoForCal& msmc);
   DfJones(const Int& nAnt);
 
   virtual ~DfJones();
@@ -166,6 +168,7 @@ public:
   // Constructor
   DlinJones(VisSet& vs);
   DlinJones(String msname,Int MSnAnt,Int MSnSpw);
+  DlinJones(const MSMetaInfoForCal& msmc);
   DlinJones(const Int& nAnt);
 
   virtual ~DlinJones();
@@ -190,6 +193,7 @@ public:
   // Constructor
   DflinJones(VisSet& vs);
   DflinJones(String msname,Int MSnAnt,Int MSnSpw);
+  DflinJones(const MSMetaInfoForCal& msmc);
   DflinJones(const Int& nAnt);
 
   virtual ~DflinJones();
@@ -214,6 +218,7 @@ public:
   // Constructor
   DllsJones(VisSet& vs);
   DllsJones(String msname,Int MSnAnt,Int MSnSpw);
+  DllsJones(const MSMetaInfoForCal& msmc);
   DllsJones(const Int& nAnt);
 
   virtual ~DllsJones();
@@ -251,6 +256,7 @@ public:
   // Constructor
   DfllsJones(VisSet& vs);
   DfllsJones(String msname,Int MSnAnt,Int MSnSpw);
+  DfllsJones(const MSMetaInfoForCal& msmc);
   DfllsJones(const Int& nAnt);
 
   virtual ~DfllsJones();
@@ -276,6 +282,7 @@ public:
   // Constructor
   XMueller(VisSet& vs);
   XMueller(String msname,Int MSnAnt,Int MSnSpw);
+  XMueller(const MSMetaInfoForCal& msmc);
   XMueller(const Int& nAnt);
 
   virtual ~XMueller();
@@ -340,6 +347,7 @@ public:
   // Constructor
   XJones(VisSet& vs);
   XJones(String msname,Int MSnAnt,Int MSnSpw);
+  XJones(const MSMetaInfoForCal& msmc);
   XJones(const Int& nAnt);
 
   virtual ~XJones();
@@ -407,6 +415,7 @@ public:
   // Constructor
   XfJones(VisSet& vs);
   XfJones(String msname,Int MSnAnt,Int MSnSpw);
+  XfJones(const MSMetaInfoForCal& msmc);
   XfJones(const Int& nAnt);
 
   virtual ~XfJones();
@@ -439,6 +448,7 @@ public:
   // Constructor
   GlinXphJones(VisSet& vs);
   GlinXphJones(String msname,Int MSnAnt,Int MSnSpw);
+  GlinXphJones(const MSMetaInfoForCal& msmc);
   GlinXphJones(const Int& nAnt);
 
   virtual ~GlinXphJones();
@@ -493,6 +503,7 @@ public:
   // Constructor
   GlinXphfJones(VisSet& vs);
   GlinXphfJones(String msname,Int MSnAnt,Int MSnSpw);
+  GlinXphfJones(const MSMetaInfoForCal& msmc);
   GlinXphfJones(const Int& nAnt);
 
   virtual ~GlinXphfJones();

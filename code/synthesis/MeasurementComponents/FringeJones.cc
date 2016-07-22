@@ -75,6 +75,14 @@ FringeJones::FringeJones(String msname,Int MSnAnt,Int MSnSpw) :
   if (prtlev()>2) cout << "FringeJones::FringeJones(msname,MSnAnt,MSnSpw)" << endl;
 }
 
+FringeJones::FringeJones(const MSMetaInfoForCal& msmc) :
+  VisCal(msmc),             // virtual base
+  VisMueller(msmc),         // virtual base
+  SolvableVisJones(msmc)    // immediate parent
+{
+  if (prtlev()>2) cout << "FringeJones::FringeJones(msmc)" << endl;
+}
+
 FringeJones::FringeJones(const Int& nAnt) :
   VisCal(nAnt), 
   VisMueller(nAnt),
