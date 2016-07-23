@@ -41,7 +41,8 @@
 
 using namespace std;
 using namespace casa;
-using namespace casa::vi;
+using namespace casacore;
+//using namespace casa::vi;
 
 class VisCalTest : public ::testing::Test {
 
@@ -92,7 +93,7 @@ TEST_F(VisCalTest, GJonesApplyState) {
   VisCal *G = new GJones("<noms>",nAnt,nSpw);
   G->setApply();
 
-  G->state();
+  //  G->state();
 
   ASSERT_EQ(VisCalEnum::JONES,G->matrixType());
   ASSERT_EQ(VisCal::G,G->type());
@@ -121,7 +122,7 @@ TEST_F(VisCalTest, GJonesSolveState) {
 
   G->setSolve(solvePar);
   
-  G->state();
+  //  G->state();
 
   ASSERT_EQ(VisCalEnum::JONES,G->matrixType());
   ASSERT_EQ(VisCal::G,G->type());
