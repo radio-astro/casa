@@ -17,6 +17,8 @@ from pipeline.hif.tasks.common import calibrationtableaccess as caltableaccess
 from pipeline.hif.tasks.common import commonhelpermethods
 from pipeline.hif.tasks.common import viewflaggers
 
+from pipeline.hifa.heuristics.tsysnormalize import tsysNormalize
+
 from .resultobjects import TsysflagResults, TsysflagspectraResults, TsysflagDataResults, TsysflagViewResults
 
 LOG = infrastructure.get_logger(__name__)
@@ -31,7 +33,7 @@ class TsysflagInputs(basetask.StandardInputs):
       flag_fieldshape=None, ff_refintent=None, ff_max_limit=None,
       flag_birdies=None, fb_sharps_limit=None, 
       flag_toomany=None, tmf1_limit=None, tmef1_limit=None,
-      metric_order=None):
+      metric_order=None, normalize_tsys=None):
 
         # set the properties to the values given as input arguments
         self._init_properties(vars())
@@ -220,6 +222,16 @@ class TsysflagInputs(basetask.StandardInputs):
             value = 'nmedian, derivative, edgechans, fieldshape, birdies, toomany'
         self._metric_order = value
 
+    @property
+    def normalize_tsys(self):
+        return self._normalize_tsys
+
+    @normalize_tsys.setter
+    def normalize_tsys(self, value):
+        if value is None:
+            value = False
+        self._normalize_tsys = value
+
 
 class Tsysflag(basetask.StandardTaskTemplate):
     Inputs = TsysflagInputs
@@ -228,7 +240,7 @@ class Tsysflag(basetask.StandardTaskTemplate):
         
         inputs = self.inputs
         
-        # Initialize the final result and store caltable in result
+        # Initialize the final result and store caltable to flag in result.
         result = TsysflagResults()
         result.caltable = inputs.caltable
 
@@ -236,6 +248,20 @@ class Tsysflag(basetask.StandardTaskTemplate):
         tsystable = caltableaccess.CalibrationTableDataFiller.getcal(inputs.caltable)        
         result.vis = tsystable.vis
 
+        # If requested, create a new Tsys table with normalized Tsys,
+        # and mark this as the table to use for determining flags.
+        if inputs.normalize_tsys:
+            norm_caltable = inputs.caltable + '_normalized'
+            LOG.info("Creating normalized Tsys table {0} to use for assessing new flags.".format(norm_caltable))
+            LOG.info("Newly found flags will also be applied to Tsys table {0}.".format(inputs.caltable))
+            tsysNormalize(inputs.vis, tsysTable=inputs.caltable, newTsysTable=norm_caltable)
+            caltable_to_assess = norm_caltable
+        else:
+            caltable_to_assess = inputs.caltable
+
+        # Store caltable used to determine flags in result.
+        result.caltable_assessed = caltable_to_assess
+        
         # Collect requested flag metrics from inputs into a dictionary.
         # NOTE: each key in the dictionary below should have been added to 
         # the default value for the "metric_order" property in TsysflagInputs,
@@ -282,7 +308,7 @@ class Tsysflag(basetask.StandardTaskTemplate):
 
         # Run flagger for each metric.
         for metric in ordered_list_metrics_to_evaluate:
-            result.add(metric, self._run_flagger(metric))
+            result.add(metric, self._run_flagger(metric, caltable_to_assess))
 
         # Extract before and after flagging summaries from individual results:
         stats_before = result.components[ordered_list_metrics_to_evaluate[0]].summaries[0]
@@ -291,6 +317,23 @@ class Tsysflag(basetask.StandardTaskTemplate):
         # Add the "before" and "after" flagging summaries to the final result
         result.summaries = [stats_before, stats_after]
 
+        # If the caltable to apply differs from the caltable that was used
+        # to assess flagging, then apply the newly found flags to the caltable
+        # to apply.
+        if caltable_to_assess != inputs.caltable:
+            LOG.info("Applying flags found for {0} to the original caltable {1}".format(
+                     caltable_to_assess, inputs.caltable))
+            allflagcmds = []
+            for metric in result.components.keys():
+                allflagcmds.extend(result.components[metric].flagging)
+            
+            # Create and execute flagsetter task.
+            flagsetterinputs = FlagdataSetter.Inputs(context=inputs.context,
+              vis=inputs.vis, table=inputs.caltable, inpfile=[])
+            flagsettertask = FlagdataSetter(flagsetterinputs)                
+            flagsettertask.flags_to_set(allflagcmds)
+            self._executor.execute(flagsettertask)
+            
         return result
 
 
@@ -510,7 +553,7 @@ class Tsysflag(basetask.StandardTaskTemplate):
         return result
     
     
-    def _run_flagger(self, metric):
+    def _run_flagger(self, metric, caltable_to_assess):
         """
         Evaluates the Tsys spectra for a specified flagging metric.
         
@@ -518,6 +561,8 @@ class Tsysflag(basetask.StandardTaskTemplate):
         metric      -- string : represents the flagging metric to evaluate. 
                        Valid values: 'nmedian', 'derivative', 'edgechans', 
                        'fieldshape', 'birdies', 'toomany'.
+        caltable_to_assess -- string : represents the caltable that is to 
+                              used for assessing required flagging. 
         
         Returns:
         TsysflagspectraResults object containing the flagging views and flagging
@@ -531,8 +576,8 @@ class Tsysflag(basetask.StandardTaskTemplate):
         result = TsysflagspectraResults()
         result.view_by_field = False
         
-        # Load the input tsys caltable
-        tsystable = caltableaccess.CalibrationTableDataFiller.getcal(inputs.caltable)        
+        # Load the tsys caltable to assess.
+        tsystable = caltableaccess.CalibrationTableDataFiller.getcal(caltable_to_assess)        
 
         # Store the vis from the tsystable in the result
         result.vis = tsystable.vis
@@ -545,14 +590,14 @@ class Tsysflag(basetask.StandardTaskTemplate):
         # created and merged into the context by tsyscal, but we recreate it here
         # since it is needed by the weblog renderer to create a Tsys summary chart.
         calto = callibrary.CalTo(vis=tsystable.vis)
-        calfrom = callibrary.CalFrom(inputs.caltable, caltype='tsys', spwmap=spwmap)
+        calfrom = callibrary.CalFrom(caltable_to_assess, caltype='tsys', spwmap=spwmap)
         calapp = callibrary.CalApplication(calto, calfrom)
         result.final = [calapp]
                 
         # Construct the task that will read the data and create the
         # view of the data that is the basis for flagging.
         datainputs = TsysflagDataInputs(context=inputs.context, vis=inputs.vis,
-          caltable=inputs.caltable)
+          caltable=caltable_to_assess)
         datatask = TsysflagData(datainputs)
 
         # Construct the generator that will create the view of the data
@@ -572,7 +617,7 @@ class Tsysflag(basetask.StandardTaskTemplate):
         # Construct the task that will set any flags raised in the
         # underlying data.
         flagsetterinputs = FlagdataSetter.Inputs(context=inputs.context,
-          vis=inputs.vis, table=inputs.caltable, inpfile=[])
+          vis=inputs.vis, table=caltable_to_assess, inpfile=[])
         flagsettertask = FlagdataSetter(flagsetterinputs)
 
         # Depending on the flagging metric, select the appropriate type of 
