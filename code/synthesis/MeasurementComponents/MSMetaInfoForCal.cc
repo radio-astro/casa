@@ -31,8 +31,6 @@
 #include <synthesis/MeasurementComponents/MSMetaInfoForCal.h>
 #include <casa/aips.h>
 #include <casa/iostream.h>
-//#include <casa/namespace.h>
-
 
 namespace casa { //# NAMESPACE CASA - BEGIN
   

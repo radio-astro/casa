@@ -33,8 +33,6 @@
 #include <casa/BasicSL/String.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 
-using namespace casacore;
-
 class MSMetaData;
 
 namespace casa { //# NAMESPACE CASA - BEGIN
