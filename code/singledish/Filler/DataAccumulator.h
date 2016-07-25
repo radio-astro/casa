@@ -865,8 +865,10 @@ public:
     }
 
 //    std::cout << "status = " << status << std::endl;
-//    std::cout << "key " << key << "(index " << indexer_.asuInt(key)
-//        << "): TIME=" << time_ << " INTERVAL=" << interval << std::endl;
+//    std::cout << "key (a" << key.antenna_id << ",f" << key.field_id << ",s"
+//        << key.spw_id << ",i" << key.intent << ",p" << key.pol_type << ",d"
+//        << key.feed_id << "(index " << indexer_[key] << "): TIME="
+//        << time_ << " INTERVAL=" << interval << " polno=" << record.polno << std::endl;
     POST_END;
     return status;
   }
