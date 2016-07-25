@@ -404,7 +404,7 @@ class T2_4MDetailsVLAApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                     #'science_phase_vs_freq_plots' : science_phase_vs_freq_summary_plots,
                     #'science_amp_vs_uv_plots' : science_amp_vs_uv_summary_plots,
                     'uv_max' : uv_max})
-        
+
     def create_science_plots(self, context, results, correlation):
         """
         Create plots for the science targets, returning two dictionaries of 
@@ -494,12 +494,14 @@ class T2_4MDetailsVLAApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                                               renderer_cls=ApplycalAmpVsUVSciencePlotRenderer, correlation=correlation)
 
         # sort plots by baseband so that the summary plots appear in baseband order
+        '''
         for vis, source_plots in amp_vs_freq_summary_plots.items():
             self.sort_plots_by_baseband(source_plots)
         for vis, source_plots in phase_vs_freq_summary_plots.items():
             self.sort_plots_by_baseband(source_plots)
         for vis, source_plots in amp_vs_uv_summary_plots.items():
             self.sort_plots_by_baseband(source_plots)
+        '''
 
         return (amp_vs_freq_summary_plots, phase_vs_freq_summary_plots, 
                 amp_vs_uv_summary_plots, max_uvs)

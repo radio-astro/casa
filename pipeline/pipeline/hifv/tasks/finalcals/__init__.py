@@ -19,4 +19,4 @@ from . import qa
 
 weblog.add_renderer(Finalcals, renderer.T2_4MDetailsfinalcalsRenderer(), group_by='ungrouped')
 # weblog.add_renderer(Applycals, applycal_renderer.T2_4MDetailsApplycalRenderer(uri='applycals.mako'), group_by='ungrouped')
-weblog.add_renderer(Applycals, renderer.T2_4MDetailsVLAApplycalRenderer(always_rerender=False, uri='applycals.mako'), group_by='ungrouped') 
+weblog.add_renderer(Applycals, renderer.T2_4MDetailsVLAApplycalRenderer(always_rerender=True, uri='applycals.mako'), group_by='ungrouped')

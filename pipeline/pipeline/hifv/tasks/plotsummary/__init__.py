@@ -24,5 +24,5 @@ weblog.add_renderer(PlotSummary,  basetemplates.T2_4MDetailsDefaultRenderer(uri=
                                       description='VLA Plot Summary'), group_by='ungrouped')
 '''
 
-weblog.add_renderer(PlotSummary, renderer.T2_4MDetailsplotsummaryRenderer(), group_by='ungrouped')
+weblog.add_renderer(PlotSummary, renderer.T2_4MDetailsplotsummaryRenderer(always_rerender=True, uri='plotsummary.mako'), group_by='ungrouped')
 
