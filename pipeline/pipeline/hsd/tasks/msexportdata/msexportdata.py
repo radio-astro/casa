@@ -65,7 +65,8 @@ class SDMSExportData(hif_exportdata.ExportData):
         LOG.debug('manifest file is \'%s\''%(manifest))
         
         jyperk = self._export_jyperk(self.inputs.context, self.inputs.context.products_dir)
-        self._add_jyperk_to_manifest(manifest, jyperk)
+        if jyperk is not None:
+            self._add_jyperk_to_manifest(manifest, jyperk)
         
         return results
      
@@ -138,11 +139,19 @@ class SDMSExportData(hif_exportdata.ExportData):
         reffile_list = set(self.__get_reffile(context.results))
         
         if len(reffile_list) == 0:
+            # if no reffile is found, return None
+            LOG.debug('No K2Jy factor file found.')
             return None
         if len(reffile_list) > 1:
             raise RuntimeError("K2Jy conversion file must be only one. %s found."%(len(reffile_list)))
         
         jyperk = reffile_list.pop()
+        
+        if not os.path.exists(jyperk):
+            # if reffile doesn't exist, return None
+            LOG.debug('K2Jy file \'%s\' not found'%(jyperk))
+            return None
+        
         shutil.copy(jyperk, products_dir)
         return jyperk
     
