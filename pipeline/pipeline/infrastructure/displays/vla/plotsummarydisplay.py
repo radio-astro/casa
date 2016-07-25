@@ -118,7 +118,7 @@ class plotsummarySummaryChart(object):
 
                 plot = logger.Plot(figfile, x_axis='uvwave', y_axis='amp',
                               parameters={'vis'      : self.ms.basename,
-                                          'type'     : 'Field '+str(source_id),
+                                          'type'     : 'Field '+str(source_id)+', '+str(m.get_fields(field_id=field)[0].name),
                                           'field'    : str(field),
                                           'spw'      : ''})
 
@@ -127,12 +127,13 @@ class plotsummarySummaryChart(object):
                           'plot.')
 
                     try:
+                        LOG.info("PLOTSUMMARYPLOTTING: "+'Field '+str(source_id)+', '+str(m.get_fields(field_id=field)[0].name))
                         casa.plotms(vis=ms_active,  xaxis='uvwave',  yaxis='amp',  ydatacolumn='corrected',
                                     selectdata=True, field=str(field),  correlation=corrstring,
                                     averagedata=True,    avgchannel=str(max(channels)),   avgtime='1e8',
                                     avgscan=False,   transform=False,        extendflag=False,   iteraxis='',
                                     coloraxis='spw',  plotrange=[],
-                                    title='Field '+str(source_id),  xlabel='',
+                                    title='Field '+str(source_id)+', '+str(m.get_fields(field_id=field)[0].name),   xlabel='',
                                     ylabel='',  showmajorgrid=False,  showminorgrid=False,  plotfile=figfile,
                                     overwrite=True, clearplots=True, showgui=False)
 
