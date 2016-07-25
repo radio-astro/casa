@@ -309,7 +309,7 @@ private:
 struct FloatDataStorage {
   size_t const kNumRow = 24;
   Double const time_[4] = { 4.0e9, 4.1e9, 4.2e9, 4.3e9 };
-  Int const antenna_[2] = { 0, 1 };
+  Int const antenna_[2] = { 1, 0 };
   Int const spw_[2] = { 0, 1 };
   Int const num_pol_[2] = { 2, 1 };
   Int const num_chan_[2] = { 4, 8 };

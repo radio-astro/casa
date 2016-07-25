@@ -1478,14 +1478,14 @@ TEST_F(SingleDishMSFillerTestWithStub, FillerTest) {
     // verify SYSCAL table
     // TSYS should be same per antenna, per feed, per spw
     // ANTENNA FEED SPW TSYS
-    //    0      0   0  [100, 200] (scalar)
-    //    0      0   1  [200] (scalar)
-    //    0      1   0  [100, 200] (spectral)
-    //    0      1   1  [200] (spectral)
     //    1      0   0  [200, 400] (scalar)
     //    1      0   1  [300] (scalar)
     //    1      1   0  [200, 400] (spectral)
     //    1      1   1  [300] (spectral)
+    //    0      0   0  [100, 200] (scalar)
+    //    0      0   1  [200] (scalar)
+    //    0      1   0  [100, 200] (spectral)
+    //    0      1   1  [200] (spectral)
     {
       std::cout << "Verify SYSCAL table" << std::endl;
       auto const mytable = myms.sysCal();
@@ -1505,79 +1505,35 @@ TEST_F(SingleDishMSFillerTestWithStub, FillerTest) {
           - (time0 - interval0 / 2);
       // row 0
       uInt irow = 0;
-      EXPECT_EQ(0, mycolumns.antennaId()(irow));
+      EXPECT_EQ(1, mycolumns.antennaId()(irow));
       EXPECT_EQ(0, mycolumns.feedId()(irow));
       EXPECT_EQ(0, mycolumns.spectralWindowId()(irow));
       EXPECT_EQ(expected_time, mycolumns.time()(irow));
       EXPECT_EQ(expected_interval, mycolumns.interval()(irow));
       Vector<Float> tsys_dualpol_scalar(2);
-      tsys_dualpol_scalar[0] = 100.0;
-      tsys_dualpol_scalar[1] = 200.0;
+      tsys_dualpol_scalar[0] = 200.0;
+      tsys_dualpol_scalar[1] = 400.0;
       EXPECT_TRUE(allEQ(tsys_dualpol_scalar, mycolumns.tsys()(irow)));
 
       // row 1
       ++irow;
-      EXPECT_EQ(0, mycolumns.antennaId()(irow));
+      EXPECT_EQ(1, mycolumns.antennaId()(irow));
       EXPECT_EQ(0, mycolumns.feedId()(irow));
       EXPECT_EQ(1, mycolumns.spectralWindowId()(irow));
       EXPECT_EQ(expected_time, mycolumns.time()(irow));
       EXPECT_EQ(expected_interval, mycolumns.interval()(irow));
       Vector<Float> tsys_singlepol_scalar(1);
-      tsys_singlepol_scalar[0] = 200.0;
+      tsys_singlepol_scalar[0] = 300.0;
       EXPECT_TRUE(allEQ(tsys_singlepol_scalar, mycolumns.tsys()(irow)));
 
       // row 2
       ++irow;
-      EXPECT_EQ(0, mycolumns.antennaId()(irow));
+      EXPECT_EQ(1, mycolumns.antennaId()(irow));
       EXPECT_EQ(1, mycolumns.feedId()(irow));
       EXPECT_EQ(0, mycolumns.spectralWindowId()(irow));
       EXPECT_EQ(expected_time, mycolumns.time()(irow));
       EXPECT_EQ(expected_interval, mycolumns.interval()(irow));
       Matrix<Float> tsys_dualpol_spectral(2, num_chan_map[0]);
-      tsys_dualpol_spectral.row(0) = 100.0;
-      tsys_dualpol_spectral.row(1) = 200.0;
-      EXPECT_TRUE(allEQ(tsys_dualpol_spectral, mycolumns.tsysSpectrum()(irow)));
-
-      // row 3
-      ++irow;
-      EXPECT_EQ(0, mycolumns.antennaId()(irow));
-      EXPECT_EQ(1, mycolumns.feedId()(irow));
-      EXPECT_EQ(1, mycolumns.spectralWindowId()(irow));
-      EXPECT_EQ(expected_time, mycolumns.time()(irow));
-      EXPECT_EQ(expected_interval, mycolumns.interval()(irow));
-      Matrix<Float> tsys_singlepol_spectral(1, num_chan_map[1]);
-      tsys_singlepol_spectral.row(0) = 200.0;
-      EXPECT_TRUE(
-          allEQ(tsys_singlepol_spectral, mycolumns.tsysSpectrum()(irow)));
-
-      // row 4
-      ++irow;
-      EXPECT_EQ(1, mycolumns.antennaId()(irow));
-      EXPECT_EQ(0, mycolumns.feedId()(irow));
-      EXPECT_EQ(0, mycolumns.spectralWindowId()(irow));
-      EXPECT_EQ(expected_time, mycolumns.time()(irow));
-      EXPECT_EQ(expected_interval, mycolumns.interval()(irow));
-      tsys_dualpol_scalar[0] = 200.0;
-      tsys_dualpol_scalar[1] = 400.0;
-      EXPECT_TRUE(allEQ(tsys_dualpol_scalar, mycolumns.tsys()(irow)));
-
-      // row 5
-      ++irow;
-      EXPECT_EQ(1, mycolumns.antennaId()(irow));
-      EXPECT_EQ(0, mycolumns.feedId()(irow));
-      EXPECT_EQ(1, mycolumns.spectralWindowId()(irow));
-      EXPECT_EQ(expected_time, mycolumns.time()(irow));
-      EXPECT_EQ(expected_interval, mycolumns.interval()(irow));
-      tsys_singlepol_scalar[0] = 300.0;
-      EXPECT_TRUE(allEQ(tsys_singlepol_scalar, mycolumns.tsys()(irow)));
-
-      // row 6
-      ++irow;
-      EXPECT_EQ(1, mycolumns.antennaId()(irow));
-      EXPECT_EQ(1, mycolumns.feedId()(irow));
-      EXPECT_EQ(0, mycolumns.spectralWindowId()(irow));
-      EXPECT_EQ(expected_time, mycolumns.time()(irow));
-      EXPECT_EQ(expected_interval, mycolumns.interval()(irow));
       tsys_dualpol_spectral.row(0) = 200.0;
       tsys_dualpol_spectral.row(1) = 400.0;
       EXPECT_TRUE(allEQ(tsys_dualpol_spectral, mycolumns.tsysSpectrum()(irow)));
@@ -1589,7 +1545,51 @@ TEST_F(SingleDishMSFillerTestWithStub, FillerTest) {
       EXPECT_EQ(1, mycolumns.spectralWindowId()(irow));
       EXPECT_EQ(expected_time, mycolumns.time()(irow));
       EXPECT_EQ(expected_interval, mycolumns.interval()(irow));
+      Matrix<Float> tsys_singlepol_spectral(1, num_chan_map[1]);
       tsys_singlepol_spectral.row(0) = 300.0;
+      EXPECT_TRUE(
+          allEQ(tsys_singlepol_spectral, mycolumns.tsysSpectrum()(irow)));
+
+      // row 4
+      ++irow;
+      EXPECT_EQ(0, mycolumns.antennaId()(irow));
+      EXPECT_EQ(0, mycolumns.feedId()(irow));
+      EXPECT_EQ(0, mycolumns.spectralWindowId()(irow));
+      EXPECT_EQ(expected_time, mycolumns.time()(irow));
+      EXPECT_EQ(expected_interval, mycolumns.interval()(irow));
+      tsys_dualpol_scalar[0] = 100.0;
+      tsys_dualpol_scalar[1] = 200.0;
+      EXPECT_TRUE(allEQ(tsys_dualpol_scalar, mycolumns.tsys()(irow)));
+
+      // row 5
+      ++irow;
+      EXPECT_EQ(0, mycolumns.antennaId()(irow));
+      EXPECT_EQ(0, mycolumns.feedId()(irow));
+      EXPECT_EQ(1, mycolumns.spectralWindowId()(irow));
+      EXPECT_EQ(expected_time, mycolumns.time()(irow));
+      EXPECT_EQ(expected_interval, mycolumns.interval()(irow));
+      tsys_singlepol_scalar[0] = 200.0;
+      EXPECT_TRUE(allEQ(tsys_singlepol_scalar, mycolumns.tsys()(irow)));
+
+      // row 6
+      ++irow;
+      EXPECT_EQ(0, mycolumns.antennaId()(irow));
+      EXPECT_EQ(1, mycolumns.feedId()(irow));
+      EXPECT_EQ(0, mycolumns.spectralWindowId()(irow));
+      EXPECT_EQ(expected_time, mycolumns.time()(irow));
+      EXPECT_EQ(expected_interval, mycolumns.interval()(irow));
+      tsys_dualpol_spectral.row(0) = 100.0;
+      tsys_dualpol_spectral.row(1) = 200.0;
+      EXPECT_TRUE(allEQ(tsys_dualpol_spectral, mycolumns.tsysSpectrum()(irow)));
+
+      // row 7
+      ++irow;
+      EXPECT_EQ(0, mycolumns.antennaId()(irow));
+      EXPECT_EQ(1, mycolumns.feedId()(irow));
+      EXPECT_EQ(1, mycolumns.spectralWindowId()(irow));
+      EXPECT_EQ(expected_time, mycolumns.time()(irow));
+      EXPECT_EQ(expected_interval, mycolumns.interval()(irow));
+      tsys_singlepol_spectral.row(0) = 200.0;
       EXPECT_TRUE(
           allEQ(tsys_singlepol_spectral, mycolumns.tsysSpectrum()(irow)));
 
@@ -1605,9 +1605,10 @@ TEST_F(SingleDishMSFillerTestWithStub, FillerTest) {
       Float const expected_temperature[expected_nrow] = { 100.0f, 150.0f };
       Double const expected_time = 0.5 * (4.0e9 - 5.0 + 4.1e9 + 5.0);
       Double const expected_interval = 4.1e9 - 4.0e9 + 10.0;
+      Int antenna_id[expected_nrow] = { 1, 0 };
       for (uInt i = 0; i < expected_nrow; ++i) {
         std::cout << "Verifying row " << i << std::endl;
-        EXPECT_EQ((Int )i, mycolumns.antennaId()(i));
+        EXPECT_EQ((Int )antenna_id[i], mycolumns.antennaId()(i));
         EXPECT_EQ(expected_time, mycolumns.time()(i));
         EXPECT_EQ(expected_interval, mycolumns.interval()(i));
         EXPECT_EQ(expected_temperature[i], mycolumns.temperature()(i));

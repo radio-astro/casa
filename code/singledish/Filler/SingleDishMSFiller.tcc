@@ -1320,7 +1320,7 @@ void SingleDishMSFiller<T>::sortPointing() {
       direction[i] = mycolumns.direction()(i);
     }
     for (uInt i = 0; i < nrow; ++i) {
-      mycolumns.direction().put(index_vector[i], direction[i]);
+      mycolumns.direction().put(i, direction[index_vector[i]]);
     }
   }
 
