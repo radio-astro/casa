@@ -61,7 +61,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 VisCal::VisCal(VisSet& vs) :
   msName_(vs.msName()),
-  msmc_(NULL),
+  msmc_( new MSMetaInfoForCal(vs.msName()) ),  // a local one
+  delmsmc_(True),                              // must be delete in dtor
   nSpw_(vs.numberSpw()),
   nAnt_(vs.numberAnt()),
   nBln_(0),
@@ -91,16 +92,14 @@ VisCal::VisCal(VisSet& vs) :
 {
   if (prtlev()>2) cout << "VC::VC(vs)" << endl;
 
-  // Make a local msmc_ via this ctor
-  msmc_= new MSMetaInfoForCal(msName_);
-
   // Initialize
   initVisCal();
 }
 
 VisCal::VisCal(String msname,Int MSnAnt,Int MSnSpw) :
   msName_(msname),
-  msmc_(NULL),
+  msmc_( new MSMetaInfoForCal(msname) ),       // a local one
+  delmsmc_(True),                              // must be delete in dtor
   nSpw_(MSnSpw),
   nAnt_(MSnAnt),
   nBln_(0),
@@ -130,9 +129,6 @@ VisCal::VisCal(String msname,Int MSnAnt,Int MSnSpw) :
 {
   if (prtlev()>2) cout << "VC::VC(msname,MSnAnt,MSnSpw)" << endl;
 
-  // Make a local msmc_ via this ctor
-  msmc_= new MSMetaInfoForCal(msName_);
-
   // Initialize
   initVisCal();
 }
@@ -140,6 +136,7 @@ VisCal::VisCal(String msname,Int MSnAnt,Int MSnSpw) :
 VisCal::VisCal(const MSMetaInfoForCal& msmc) :
   msName_(msmc.msname()),  // from the msmc (it is still used in some places)
   msmc_(&msmc),
+  delmsmc_(False),   //  not local, don't delete
   nSpw_(msmc.nSpw()),
   nAnt_(msmc.nAnt()),
   nBln_(0),
@@ -176,6 +173,7 @@ VisCal::VisCal(const MSMetaInfoForCal& msmc) :
 VisCal::VisCal(const Int& nAnt) :
   msName_(""),
   msmc_(NULL),
+  delmsmc_(False),
   nSpw_(1),
   nAnt_(nAnt),
   nBln_(0),
@@ -212,6 +210,9 @@ VisCal::~VisCal() {
   if (prtlev()>2) cout << "VC::~VC()" << endl;
 
   deleteVisCal();
+
+  if (delmsmc_)
+    delete msmc_;
 
 }
 

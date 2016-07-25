@@ -316,7 +316,8 @@ private:
 
   // The MSMetaInfoForCal pointer
   const MSMetaInfoForCal* msmc_;
-  
+  const Bool delmsmc_;  // must delete _only_ if locally formed
+
   // Number of Spectral windows
   Int nSpw_;
 
