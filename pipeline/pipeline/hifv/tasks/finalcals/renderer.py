@@ -514,13 +514,17 @@ class T2_4MDetailsVLAApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                      'correlation': correlation}
         if uvrange is not None:
             overrides['uvrange'] = uvrange
-        
+
+        m = context.observing_run.measurement_sets[0]
+
         plots = []
         for field in fields:
             # override field when plotting amp/phase vs frequency, as otherwise
             # the field is resolved to a list of all field IDs  
             overrides['field'] = field
-            
+
+            LOG.info("APPLYCALPLOTTING: "+'Field '+str(field)+', '+str(m.get_fields(field_id=field)[0].name))
+
             plotter = plotter_cls(context, result, ['TARGET'], **overrides)
             plots.extend(plotter.plot())
 
