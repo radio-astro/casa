@@ -242,6 +242,61 @@ file:///opt/casa/code/tools/xml/casa.xsd">
   <example>casalog.ompSetNumThreads(2)</example>
 </method>
 
+<method type="function" name="setMemoryTotal">
+  <shortdescription>Sets the memory total value to be returned by HostInfo</shortdescription>
+  <input>
+  	<param type="int" direction="in" name="memory">
+  		<value>0</value>
+  	</param>
+  </input>
+  <returns type="int"/>
+  <example>casalog.setMemoryTotal(4*1024)</example>
+</method>
+
+<method type="function" name="setMemoryFraction">
+  <shortdescription>Sets the memory fraction value to be returned by HostInfo</shortdescription>
+  <input>
+  	<param type="int" direction="in" name="memfrac">
+  		<value>0</value>
+  	</param>
+  </input>
+  <returns type="int"/>
+  <example>casalog.setMemoryFraction(50)</example>
+</method>
+
+<method type="function" name="setNumCPUs">
+  <shortdescription>Sets the number of CPUs to be returned by HostInfo</shortdescription>
+  <input>
+  	<param type="int" direction="in" name="cores">
+  		<value>0</value>
+  	</param>
+  </input>
+  <returns type="int"/>
+  <example>casalog.setNumCPUs(4)</example>
+</method>
+
+<method type="function" name="getMemoryTotal">
+  <shortdescription>Returns the memory total value from HostInfo</shortdescription>
+  <input>
+  	<param type="bool" direction="in" name="use_aipsrc">
+  		<value>true</value>
+  	</param>
+  </input>
+  <returns type="int"/>
+  <example>casalog.getMemoryTotal(true)</example>
+</method>
+
+<method type="function" name="getNumCPUs">
+  <shortdescription>Returns the number of CPUs from HostInfo</shortdescription>
+  <input>
+  	<param type="bool" direction="in" name="use_aipsrc">
+  		<value>true</value>
+  	</param>
+  </input>
+  <returns type="int"/>
+  <example>casalog.getNumCPUs(true)</example>
+</method>
+
 </tool>
 
 </casaxml>

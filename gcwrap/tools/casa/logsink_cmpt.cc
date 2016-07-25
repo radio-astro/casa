@@ -26,6 +26,7 @@
 #include <casa/OS/File.h>
 #include <casa/BasicMath/Random.h>
 #include <casa/System/Aipsrc.h>
+#include <casa/OS/HostInfo.h>
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -397,6 +398,37 @@ logsink::ompSetNumThreads(int numThreads)
 
 	return res;
 }
+
+int
+logsink::setMemoryTotal(int memory)
+{
+	return HostInfo::setMemoryTotal(memory);
+}
+
+int
+logsink::setMemoryFraction(int memfrac)
+{
+	return HostInfo::setMemoryFraction(memfrac);
+}
+
+int
+logsink::setNumCPUs(int numCPUs)
+{
+	return HostInfo::setNumCPUs(numCPUs);
+}
+
+int
+logsink::getMemoryTotal(bool use_aipsrc)
+{
+	return HostInfo::memoryTotal(use_aipsrc);
+}
+
+int
+logsink::getNumCPUs(bool use_aipsrc)
+{
+	return HostInfo::numCPUs(use_aipsrc);
+}
+
 
 
 } // casac namespace

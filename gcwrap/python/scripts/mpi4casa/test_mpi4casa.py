@@ -1799,6 +1799,127 @@ class test_mpi4casa_runtime_settings(unittest.TestCase):
         self.client.set_omp_num_threads(2,self.server_list)
         omp_num_threads = self.client.push_command_request("casalog.ompNumThreadsTest()",True,self.server_list)[server]['ret']
         self.assertEqual(omp_num_threads, 2, "OpenMP settings not re-configured")     
+        
+    def test_mpi4casa_memory_settings_client(self):
+        """Change memory settings at run time on the client side"""
+        
+        memoryTotal = casalog.getMemoryTotal(False) 
+        memoryTotalAipsrc = casalog.getMemoryTotal(True)  
+        numCPUs = casalog.getNumCPUs(False)       
+        numCPUsAipsrc = casalog.getNumCPUs(True)
+        
+        # Test changing memory total value
+        casalog.setMemoryTotal(4)
+        self.assertEqual(casalog.getMemoryTotal(False) , memoryTotal, 
+                         "memoryTotal(use_aipsrc=False) changed after setMemoryTotal(1024)")
+        self.assertEqual(casalog.getMemoryTotal(True) , 4*1024, 
+                         "memoryTotal(use_aipsrc=True) wrong after setMemoryTotal(1024)")  
+        
+        # Reset memory total value
+        casalog.setMemoryTotal(-1)
+        self.assertEqual(casalog.getMemoryTotal(False) , memoryTotal, 
+                         "memoryTotal(use_aipsrc=False) changed after setMemoryTotal(-1)")
+        self.assertEqual(casalog.getMemoryTotal(True) , memoryTotalAipsrc, 
+                         "memoryTotal(use_aipsrc=True) not reset after setMemoryTotal(-1)")  
+        
+        # Test changing memory fraction value
+        casalog.setMemoryFraction(50)    
+        self.assertEqual(casalog.getMemoryTotal(False) , memoryTotal, 
+                         "memoryTotal(use_aipsrc=False) changed after setMemoryFraction(50)")
+        self.assertEqual(casalog.getMemoryTotal(True) , 0.5*memoryTotal, 
+                         "memoryTotal(use_aipsrc=True) wrong after setMemoryFraction(50)")  
+        
+        # Reset memory fraction value
+        casalog.setMemoryFraction(-1)
+        self.assertEqual(casalog.getMemoryTotal(False) , memoryTotal, 
+                         "memoryTotal(use_aipsrc=False) changed after setMemoryFraction(-1)")
+        self.assertEqual(casalog.getMemoryTotal(True) , memoryTotalAipsrc, 
+                         "memoryTotal(use_aipsrc=True) not rest after setMemoryFraction(-1)")  
+        
+        # Test changing number of CPUs
+        casalog.setNumCPUs(3)    
+        self.assertEqual(casalog.getNumCPUs(False) , numCPUs, 
+                         "getNumCPUs(use_aipsrc=False) changed after setNumCPUs(3)")
+        self.assertEqual(casalog.getNumCPUs(True) , 3, 
+                         "getNumCPUs(use_aipsrc=True) wrong after setNumCPUs(3)")  
+        
+        # Reset number of CPUs
+        casalog.setNumCPUs(-1)    
+        self.assertEqual(casalog.getNumCPUs(False) , numCPUs, 
+                         "getNumCPUs(use_aipsrc=False) changed after setNumCPUs(-1)")
+        self.assertEqual(casalog.getNumCPUs(True) , numCPUsAipsrc, 
+                         "getNumCPUs(use_aipsrc=True) not reset after setNumCPUs(-1)")           
+        
+    def test_mpi4casa_memory_settings_server(self):
+        """Change memory settings at run time on the server side"""
+        
+        server = self.server_list[0]
+        
+        memoryTotal = self.client.getMemoryTotal(False,server) 
+        memoryTotalAipsrc = self.client.getMemoryTotal(True,server)
+        numCPUs = self.client.getNumCPUs(False,server)       
+        numCPUsAipsrc = self.client.getNumCPUs(True,server)
+        
+        # Test changing memory total value
+        self.client.setMemoryTotal(4,server)
+        self.assertEqual(self.client.getMemoryTotal(False,server) , memoryTotal, 
+                         "memoryTotal(use_aipsrc=False) changed after setMemoryTotal(4,server)")
+        self.assertEqual(self.client.getMemoryTotal(True,server) , 4*1024, 
+                         "memoryTotal(use_aipsrc=True) wrong after setMemoryTotal(4,server)")  
+        
+        # Reset memory total value
+        self.client.setMemoryTotal(-1,server)
+        self.assertEqual(self.client.getMemoryTotal(False,server) , memoryTotal, 
+                         "memoryTotal(use_aipsrc=False) changed after setMemoryTotal(-1,server)")
+        self.assertEqual(self.client.getMemoryTotal(True,server) , memoryTotalAipsrc, 
+                         "memoryTotal(use_aipsrc=True) not reset after setMemoryTotal(-1,server)")  
+        
+        # Test changing memory fraction value
+        self.client.setMemoryFraction(50,server)    
+        self.assertEqual(self.client.getMemoryTotal(False,server) , memoryTotal, 
+                         "memoryTotal(use_aipsrc=False) changed after setMemoryFraction(50,server)")
+        self.assertEqual(self.client.getMemoryTotal(True,server) , 0.5*memoryTotal, 
+                         "memoryTotal(use_aipsrc=True) wrong after setMemoryFraction(50,server)")  
+        
+        # Reset memory fraction value
+        self.client.setMemoryFraction(-1,server)
+        self.assertEqual(self.client.getMemoryTotal(False,server) , memoryTotal, 
+                         "memoryTotal(use_aipsrc=False) changed after setMemoryFraction(-1,server)")
+        self.assertEqual(self.client.getMemoryTotal(True,server) , memoryTotalAipsrc, 
+                         "memoryTotal(use_aipsrc=True) not reset after setMemoryFraction(-1,server)")
+        
+        # Test changing number of CPUs
+        self.client.setNumCPUs(3,server)    
+        self.assertEqual(self.client.getNumCPUs(False,server) , numCPUs, 
+                         "getNumCPUs(use_aipsrc=False) changed after setNumCPUs(3,server)")
+        self.assertEqual(self.client.getNumCPUs(True,server) , 3, 
+                         "getNumCPUs(use_aipsrc=True) wrong after setNumCPUs(3,server)")  
+        
+        # Reset number of CPUs
+        self.client.setNumCPUs(-1,server)    
+        self.assertEqual(self.client.getNumCPUs(False,server) , numCPUs, 
+                         "getNumCPUs(use_aipsrc=False) changed after setNumCPUs(-1,server)")
+        self.assertEqual(self.client.getNumCPUs(True,server) , numCPUsAipsrc, 
+                         "getNumCPUs(use_aipsrc=True) not reset after setNumCPUs(-1,server)")         
+        
+        # Test setting memory limits in various servers
+        nServers = len(self.server_list)
+        if nServers > 1:
+                memoryTotalList = [memoryTotal]*nServers
+                memoryTotalAipsrcList = [8*1024]*nServers
+                numCPUsList = [numCPUs]*nServers
+                numCPUsAipsrcList = [3]*nServers
+                self.client.setMemoryTotal(8,self.server_list)
+                self.client.setNumCPUs(3,self.server_list)
+                self.assertEqual(self.client.getMemoryTotal(False,self.server_list) , memoryTotalList, 
+                         "memoryTotal(use_aipsrc=False) changed after setMemoryTotal(8,self.server_list)")     
+                self.assertEqual(self.client.getMemoryTotal(True,self.server_list) , memoryTotalAipsrcList, 
+                         "memoryTotal(use_aipsrc=True) wrong after setMemoryTotal(8,self.server_list)")       
+                self.assertEqual(self.client.getNumCPUs(False,self.server_list) , numCPUsList, 
+                         "getNumCPUs(use_aipsrc=False) changed after setNumCPUs(3,self.server_list)")
+                self.assertEqual(self.client.getNumCPUs(True,self.server_list) , numCPUsAipsrcList, 
+                         "getNumCPUs(use_aipsrc=True) wrong after setNumCPUs(3,self.server_list)")                                      
+        
 
 def suite():
     return [test_MPICommandClient,

@@ -928,6 +928,92 @@ class MPICommandClient:
             self.push_command_request("self.omp_set_num_threads(%s)" % str(omp_max_threads),
                                       block=True,target_server=target_server)
             
+        def setMemoryTotal(self,memory,target_server):
+            
+            casalog_call_origin = "MPICommandClient::setMemoryTotal"    
+            
+            if self.__life_cycle_state == 0:
+                casalog.post("Services not started","WARN",casalog_call_origin)
+                return       
+            elif self.__life_cycle_state == 2:
+                casalog.post("MPICommandClient life cycle finalized","WARN",casalog_call_origin)
+                return
+            
+            self.push_command_request("casalog.setMemoryTotal(%s)" % str(memory),
+                                      block=True,target_server=target_server)
+            
+        def setMemoryFraction(self,memfrac,target_server):
+            
+            casalog_call_origin = "MPICommandClient::setMemoryFraction"    
+            
+            if self.__life_cycle_state == 0:
+                casalog.post("Services not started","WARN",casalog_call_origin)
+                return       
+            elif self.__life_cycle_state == 2:
+                casalog.post("MPICommandClient life cycle finalized","WARN",casalog_call_origin)
+                return
+            
+            self.push_command_request("casalog.setMemoryFraction(%s)" % str(memfrac),
+                                      block=True,target_server=target_server)     
+            
+        def setNumCPUs(self,numCPUs,target_server):
+            
+            casalog_call_origin = "MPICommandClient::setNumCPUs"    
+            
+            if self.__life_cycle_state == 0:
+                casalog.post("Services not started","WARN",casalog_call_origin)
+                return       
+            elif self.__life_cycle_state == 2:
+                casalog.post("MPICommandClient life cycle finalized","WARN",casalog_call_origin)
+                return
+            
+            self.push_command_request("casalog.setNumCPUs(%s)" % str(numCPUs),
+                                      block=True,target_server=target_server)              
+            
+        def getMemoryTotal(self,use_aipsrc,target_server):
+            
+            casalog_call_origin = "MPICommandClient::getMemoryTotal"    
+            
+            if self.__life_cycle_state == 0:
+                casalog.post("Services not started","WARN",casalog_call_origin)
+                return       
+            elif self.__life_cycle_state == 2:
+                casalog.post("MPICommandClient life cycle finalized","WARN",casalog_call_origin)
+                return
+            
+            res = self.push_command_request("casalog.getMemoryTotal(%s)" % str(use_aipsrc),
+                                            block=True,target_server=target_server)
+            
+            if len(res) == 1:
+                return res[0]['ret']
+            else:
+                res_list = []
+                for res_i in res:
+                    res_list.append(res_i['ret'])
+                return res_list
+            
+        def getNumCPUs(self,use_aipsrc,target_server):
+            
+            casalog_call_origin = "MPICommandClient::getNumCPUs"    
+            
+            if self.__life_cycle_state == 0:
+                casalog.post("Services not started","WARN",casalog_call_origin)
+                return       
+            elif self.__life_cycle_state == 2:
+                casalog.post("MPICommandClient life cycle finalized","WARN",casalog_call_origin)
+                return
+            
+            res = self.push_command_request("casalog.getNumCPUs(%s)" % str(use_aipsrc),
+                                            block=True,target_server=target_server)
+            
+            if len(res) == 1:
+                return res[0]['ret']
+            else:
+                res_list = []
+                for res_i in res:
+                    res_list.append(res_i['ret'])
+                return res_list            
+            
         def wait_for_command_request_sent(self,command_request_id_list):
             
             casalog_call_origin = "MPICommandClient::wait_for_command_request_sent"    
