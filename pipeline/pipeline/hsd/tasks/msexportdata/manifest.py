@@ -10,7 +10,8 @@ class SingleDishPipelineManifest(manifest.PipelineManifest):
         
     def import_xml(self, xmlfile):
         with open(xmlfile, 'r') as f:
-            self.piperesults = eltree.fromstring(f.read())
+            lines = map(lambda x: x.replace('\n', '').strip(), f.readlines())
+            self.piperesults = eltree.fromstring(''.join(lines))
             
     def get_ous(self):
         return self.piperesults.getchildren()[0]
