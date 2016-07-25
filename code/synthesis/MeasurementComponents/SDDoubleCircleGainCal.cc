@@ -63,10 +63,6 @@ inline NullLogger &operator<<(NullLogger &logger, T /*value*/) {
 #endif
 
 namespace {
-inline void doSomething() {
-  return;
-}
-
 inline void fillNChanParList(casacore::String const &msName,
 casacore::Vector<casacore::Int> &nChanParList) {
   casacore::MeasurementSet const ms(msName);
