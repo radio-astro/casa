@@ -349,13 +349,13 @@ class ImportData(basetask.StandardTaskTemplate):
 
         self._executor.execute(task)
 
-        for xml_filename in ['Source.xml', 'SpectralWindow.xml', 'DataDescription.xml']:
-            asdm_source = os.path.join(asdm, xml_filename)
-            if os.path.exists(asdm_source):
-                vis_source = os.path.join(vis, xml_filename)
-                LOG.info('Copying %s from ASDM to measurement set', xml_filename)
-                LOG.trace('Copying %s: %s to %s', xml_filename, asdm_source, vis_source)
-                shutil.copyfile(asdm_source, vis_source)
+        asdm_source = os.path.join(asdm, 'Source.xml')
+        if os.path.exists(asdm_source):
+            vis_source = os.path.join(vis, 'Source.xml')
+            LOG.info('Copying Source.xml from ASDM to measurement set')
+            LOG.trace('Copying Source.xml: %s to %s' % (asdm_source,
+                                                        vis_source))
+            shutil.copyfile(asdm_source, vis_source)
 
     def _make_template_flagfile(self, asdm):
         inputs = self.inputs
@@ -404,58 +404,63 @@ def read_fluxes(ms, dbservice=True):
 
     source_table = os.path.join(ms.name, 'Source.xml')
     if not os.path.exists(source_table):
-        LOG.info('No Source XML found at %s. No flux import performed. '
-                 'Attempting database query.', source_table)
-        return flux_nosourcexml(ms, dbservice=dbservice)
+        LOG.info('No Source XML found at %s. No flux import performed.  Attempting database query.'
+                 % source_table)
+
+        result = flux_nosourcexml(ms, dbservice=dbservice)
+
+        return result
 
     source_element = ElementTree.parse(source_table)
     if not source_element:
-        LOG.info('Could not parse Source XML at %s. No flux import performed. '
-                 'Attempting database query.', source_table)
-        return flux_nosourcexml(ms, dbservice=dbservice)
+        LOG.info('Could not parse Source XML at %s. No flux import performed.  Attempting database query.'
+                 % source_table)
+
+        result = flux_nosourcexml(ms, dbservice=dbservice)
+
+        return result
 
     for row in source_element.findall('row'):
         flux_text = row.findtext('flux')
         frequency_text = row.findtext('frequency')
         source_id = row.findtext('sourceId')
-        spw_element = row.findtext('spectralWindowId')
+        spw_id = row.findtext('spectralWindowId')
 
-        if spw_element is None:
-            continue
-        _, asdm_spw_id = string.split(spw_element, '_')
-
-        # SCIREQ-852: MS spw IDs != ASDM spw ids
-        asdm_to_ms_spw_map = get_asdm_to_ms_spw_mapping(ms)
-        spw_id = asdm_to_ms_spw_map.get(int(asdm_spw_id), None)
         if spw_id is None:
-            LOG.warning('Could not map ASDM spectral window {!s} to MS '
-                        'spectral window'.format(asdm_spw_id))
             continue
+        else:
+            spw_id = string.split(spw_id, '_')[1]
 
         if source_id is None:
             continue
-        source_id = int(source_id)
-        if source_id >= len(ms.sources):
-            LOG.warning('Source.xml refers to source #%s, which was not '
-                        'found in the measurement set' % source_id)
-            continue
-        source = ms.sources[int(source_id)]
-        sourcename = source.name
+        else:
+            source_id = int(source_id)
+            if source_id >= len(ms.sources):
+                LOG.warning('Source.xml refers to source #%s, which was not '
+                            'found in the measurement set' % source_id)
+                continue
+            source = ms.sources[int(source_id)]
+            sourcename = source.name
 
         # all elements must contain data to proceed
         if None in (flux_text, frequency_text, source_id, spw_id):
-            # See what elements can be used
+            #See what elements can be used
+
             if dbservice:
+
                 try:
-                    if spw_id and frequency_text is None:
+
+                    if ((spw_id) and frequency_text == None):
                         spw = ms.get_spectral_windows(spw_id)
                         frequency = str(spw[0].centre_frequency.value)
+
                 except:
                     continue
             else:
                 continue
 
         else:
+
             # spws can overlap, so rather than looking up spw by frequency,
             # extract the spw id from the element text. I assume the format uses
             # underscores, eg. 'SpectralWindow_13'
@@ -515,9 +520,12 @@ def read_fluxes(ms, dbservice=True):
 
 
 def flux_nosourcexml(ms, dbservice=True):
-    """
+
+    '''
     Call the flux service and get the frequencies from the ms if no Source.xml is available
-    """
+    
+    '''
+
     result = collections.defaultdict(list)
 
     if dbservice:
@@ -842,68 +850,3 @@ def import_flux(output_dir, observing_run, filename=None):
                     result.measurements[field.name].append(flux)
             results.append(result)
         return results
-
-
-def parse_spectral_window_ids_from_xml(xml_path):
-    """
-    Extract the spectral window ID element from each row of an XML file.
-
-    :param xml_path: path for XML file
-    :return: list of integer spectral window IDs
-    """
-    root_element = ElementTree.parse(xml_path)
-
-    ids = []
-    for row in root_element.findall('row'):
-        element = row.findtext('spectralWindowId')
-        _, str_id = string.split(element, '_')
-        ids.append(int(str_id))
-
-    return ids
-
-
-def get_data_description_spw_ids(ms):
-    """
-    Extract a list of spectral window IDs from the DataDescription XML for an
-    ASDM.
-
-    This function assumes the XML has been copied across to the measurement
-    set directory.
-
-    :param ms: measurement set to inspect
-    :return: list of integers corresponding to ASDM spectral window IDs
-    """
-    xml_path = os.path.join(ms.name, 'DataDescription.xml')
-    return parse_spectral_window_ids_from_xml(xml_path)
-
-
-def get_spectral_window_spw_ids(ms):
-    """
-    Extract a list of spectral window IDs from the SpectralWindow XML for an
-    ASDM.
-
-    This function assumes the XML has been copied across to the measurement
-    set directory.
-
-    :param ms: measurement set to inspect
-    :return: list of integers corresponding to ASDM spectral window IDs
-    """
-    xml_path = os.path.join(ms.name, 'SpectralWindow.xml')
-    return parse_spectral_window_ids_from_xml(xml_path)
-
-
-def get_asdm_to_ms_spw_mapping(ms):
-    """
-    Get the mapping of ASDM spectral window ID to Measurement Set spectral
-    window ID.
-
-    This function requires the SpectralWindow and DataDescription ASDM XML
-    files to have been copied across to the measurement set directory.
-
-    :param ms: measurement set to inspect
-    :return: dict of ASDM spw: MS spw
-    """
-    dd_spws = get_data_description_spw_ids(ms)
-    spw_spws = get_spectral_window_spw_ids(ms)
-    ms_ids = [i for i in spw_spws if i in dd_spws] + [i for i in spw_spws if i not in dd_spws]
-    return {k: v for k,v in zip(ms_ids, spw_spws)}
