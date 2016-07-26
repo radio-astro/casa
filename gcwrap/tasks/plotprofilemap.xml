@@ -52,6 +52,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       </allowed>
     </param>
     
+    <param type="string" name="restfreq" subparam="true">
+      <description>Rest frequency</description>
+      <value></value>
+    </param>
+    
     <param type="string" name="title">
       <description>Title of the plot</description>
       <value></value>
@@ -126,6 +131,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
           <default param="transparent"><value type="bool">False</value></default>
         </notequals>
       </when>
+      <when param="spectralaxis">
+        <equals type="string" value="velocity">
+          <default param="restfreq"><value type="string"></value></default>
+        </equals>
+      </when>
       <when param="plotmasked">
         <equals type="string" value="empty"/>
         <equals type="string" value="plot">
@@ -171,6 +181,9 @@ if you don't want to overwrite existing file.
     spectralaxis -- spectral axis type
                     default: '' (use image's spectral axis)
                     options: 'channel', 'freuquency', 'velocity'
+    restfreq -- rest frequency 
+                default: '' (use image's rest frequency)
+                example: '100GHz'
     title -- title of the plot
              default: '' (no title)
     linecolor -- line color in matplotlib format

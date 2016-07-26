@@ -5,7 +5,7 @@ import pylab as pl
 from taskinit import casalog, gentools, qa
 
 def plotprofilemap(imagename=None, figfile=None, overwrite=None, transparent=None,
-                   pol=None, spectralaxis=None, title=None, 
+                   pol=None, spectralaxis=None, restfreq=None, title=None, 
                    linecolor=None, linestyle=None, linewidth=None,
                    separatepanel=None, plotmasked=None, maskedcolor=None, 
                    showaxislabel=None, showtick=None, showticklabel=None,
@@ -23,7 +23,9 @@ def plotprofilemap(imagename=None, figfile=None, overwrite=None, transparent=Non
 
         parsed_size = parse_figsize(figsize)
         nx, ny = parse_numpanels(numpanels)
-        plot_profile_map(image, figfile, pol, spectralaxis, title, linecolor, linestyle, linewidth,
+        if (not isinstance(restfreq, str)) or len(restfreq) == 0:
+            restfreq = None 
+        plot_profile_map(image, figfile, pol, spectralaxis, restfreq, title, linecolor, linestyle, linewidth,
                          separatepanel, plotmasked, maskedcolor,
                          showaxislabel, showtick, showticklabel, parsed_size,
                          nx, ny, transparent)
@@ -344,7 +346,7 @@ class ProfileMapAxesManager(object):
                     horizontalalignment='center', verticalalignment='bottom',
                     size=self.ticksize+4)
 
-def plot_profile_map(image, figfile, pol, spectralaxis='', title=None, 
+def plot_profile_map(image, figfile, pol, spectralaxis='', restfreq=None, title=None, 
                      linecolor='b', linestyle='-', linewidth=0.2,
                      separatepanel=True, plotmasked=None, maskedcolor=None,
                      showaxislabel=False, showtick=False, showticklabel=False,
@@ -430,8 +432,12 @@ def plot_profile_map(image, figfile, pol, spectralaxis='', title=None,
             spectral_data = numpy.fromiter((image.to_frequency(v, freq_unit='GHz') \
                                             for v in default_spectral_data), dtype=numpy.float64)
         elif spectralaxis == 'velocity':
+            if restfreq is not None:
+                casalog.post('User-specified rest frequency %s'%(restfreq))
+            else:
+                casalog.post('Default rest frequency from input image %s'%(image.coordsys.restfrequency()))
             spectral_unit = 'km/s'
-            spectral_data = numpy.fromiter((image.to_velocity(f, freq_unit='GHz') \
+            spectral_data = numpy.fromiter((image.to_velocity(f, freq_unit='GHz', restfreq=restfreq) \
                                             for f in default_spectral_data), dtype=numpy.float64)
         
     plotter = SDProfileMapPlotter(NH, NV, xSTEP, ySTEP, image.brightnessunit, 
@@ -743,9 +749,12 @@ class SpectralImage(object):
     def spectral_unit(self):
         return self.units[self.id_spectral]
         
-    def to_velocity(self, frequency, freq_unit='GHz'):
+    def to_velocity(self, frequency, freq_unit='GHz', restfreq=None):
         rest_frequency = self.coordsys.restfrequency()
-        if rest_frequency['unit'] != freq_unit:
+        # user-defined rest frequency takes priority 
+        if restfreq is not None:
+            vrf = qa.convert(qa.quantity(restfreq), freq_unit)['value']
+        elif rest_frequency['unit'] != freq_unit:
             vrf = qa.convert(rest_frequency, freq_unit)['value']
         else:
             vrf = rest_frequency['value']
