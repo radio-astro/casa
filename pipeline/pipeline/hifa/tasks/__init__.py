@@ -5,6 +5,7 @@ from .bandpass import ALMAPhcorBandpass
 from .bpsolint import BpSolint
 from .flagging import FlagDeterALMA
 from .flagging import ALMAAgentFlagger
+from .flagging import FlagTargetsALMA
 from .gaincal import TimeGaincal
 from .gaincalsnr import GaincalSnr
 from .fluxcalflag import FluxcalFlag
