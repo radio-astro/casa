@@ -835,7 +835,7 @@ void Importmiriad::fillMSMainTable()
           w1 = factor/(systemp[ant1]*systemp[ant2]);  // see uvio::uvinfo_variance()
           w2 = sqrt(systemp[ant1]*systemp[ant2])/sqrt(factor);
         }
-        os_p << w1 << " " << w2 << " " << jyperk_p << " "<< chnbw<< " "<< interval<< LogIO::POST;
+        // os_p << w1 << " " << w2 << " " << jyperk_p << " "<< chnbw<< " "<< interval<< LogIO::POST;
         msc.weight().put(row,w1);
         msc.sigma().put(row,w2);        
       } else {
