@@ -182,7 +182,7 @@ TEST_F(LineFinderTest, LineFinding) {
     cout << "[Line finding result]" << endl;
     PrintLine(line_list);
   }
-  LineRangeList line_ref = {LineRange(490, 533), LineRange(754, 781)};
+  LineRangeList line_ref = {LineRange(494, 529), LineRange(757, 778)};
   AssertLineRanges(line_list, line_ref);
 }
 
