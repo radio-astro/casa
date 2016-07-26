@@ -327,7 +327,14 @@ class ImportData(basetask.StandardTaskTemplate):
                                os.path.basename(asdm) + "_flagonline.txt")
 
         if inputs.save_flagonline:
-            self._make_template_flagfile(asdm)
+            # Create the standard calibration flagging template file
+            template_flagsfile = os.path.join(inputs.output_dir,
+                os.path.basename(asdm) + "_flagtemplate.txt")
+            self._make_template_flagfile(asdm, template_flagsfile, 'User flagging commands file for the calibration pipeline')
+            # Create the imaging targets file
+            template_flagsfile = os.path.join(inputs.output_dir,
+                os.path.basename(asdm) + "_flagtargetstemplate.txt")
+            self._make_template_flagfile(asdm, template_flagsfile, 'User flagging commands file for the imaging pipeline')
 
         createmms = mpihelpers.parse_mpi_input_parameter(inputs.createmms)
 
@@ -357,16 +364,14 @@ class ImportData(basetask.StandardTaskTemplate):
                 LOG.trace('Copying %s: %s to %s', xml_filename, asdm_source, vis_source)
                 shutil.copyfile(asdm_source, vis_source)
 
-    def _make_template_flagfile(self, asdm):
-        inputs = self.inputs
-        outfile = os.path.join(inputs.output_dir,
-                               os.path.basename(asdm) + "_flagtemplate.txt")
+    def _make_template_flagfile(self, asdm, outfile, titlestr):
 
         # Create a new file if overwrite is true and the file
         # does not already exist.
+        inputs = self.inputs
         if inputs.overwrite or not os.path.exists(outfile):
             with open(outfile, 'w') as f:
-                f.writelines(['# User flagging commands file\n'])
+                f.writelines(['# ' + titlestr + '\n'])
                 f.writelines(['#\n'])
                 f.writelines(['# Examples\n'])
                 f.writelines(['# Note: Do not put spaces inside the reason string !\n'])
