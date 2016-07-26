@@ -600,9 +600,13 @@ class SDProfileMapPlotter(object):
     def plot(self, figfile, map_data, frequency, 
              linecolor='b', linestyle='-', linewidth=0.2,
              plotmasked='none', maskedcolor='gray', transparent=False,
-             user_xmin=None, user_xmax=None):        
-        global_xmin = min(frequency[0], frequency[-1])
-        global_xmax = max(frequency[0], frequency[-1])
+             user_xmin=None, user_xmax=None):
+        if len(frequency) == 1:
+            global_xmin = frequency[0] - 1.
+            global_xmax = frequency[0] + 1.
+        else:
+            global_xmin = min(frequency[0], frequency[-1])
+            global_xmax = max(frequency[0], frequency[-1])
         casalog.post('full spectral range: global_xmin=%s, global_xmax=%s'%(global_xmin,global_xmax))
         
         if user_xmin is not None:
