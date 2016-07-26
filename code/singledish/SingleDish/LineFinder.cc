@@ -138,11 +138,11 @@ list<pair<size_t,size_t>> MADLineFinder(size_t const num_data,
       LineFinderUtils::calculateMAD(num_binned, binned_data_p,
 				    search_mask_p, mad_data_p);
       // use lower 80% of mad_array and use median of the array as a criteria.
-      float mad_threshold = threshold*LineFinderUtils::maskedMedian(num_binned, mad_data_p,
+      float mad_threshold = threshold*sqrt(average_factor)*LineFinderUtils::maskedMedian(num_binned, mad_data_p,
 								    search_mask_p,0.8);
 //       cout << "mad_threshold = " << mad_threshold << endl;
 #if defined(KS_DEBUG)
-      os << LogIO::DEBUG1 << "mad = " << mad_threshold/threshold << ", mad_threshold = " << mad_threshold << " (factor: " << threshold << ")"  << LogIO::POST;
+      os << LogIO::DEBUG1 << "mad = " << mad_threshold/threshold/sqrt(average_factor) << ", mad_threshold = " << mad_threshold << " (factor: " << threshold << ", bin=" << average_factor << ")"  << LogIO::POST;
 #endif
       if (mad_threshold >= prev_mad_threshold){
 #if defined(KS_DEBUG)
