@@ -57,6 +57,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value></value>
     </param>
     
+    <param type="string" name="plotrange">
+      <description>Spectral axis range to plot</description>
+      <value></value>
+    </param>
+    
     <param type="string" name="title">
       <description>Title of the plot</description>
       <value></value>
@@ -184,6 +189,13 @@ if you don't want to overwrite existing file.
     restfreq -- rest frequency 
                 default: '' (use image's rest frequency)
                 example: '100GHz'
+    plotrange -- spectral axis range to plot. unit for the range depends on 
+                 what spectral axis is chosen: channel for 'channel', GHz for 
+                 'frequency', and km/s for 'velocity'
+                 default: '' (whole range)
+                 example: '0~1000' (from 0.0 to 1000.0)
+                          '~1000' (from minimul value to 1000.0)
+                          '24~' (from 24.0 to maximum value)
     title -- title of the plot
              default: '' (no title)
     linecolor -- line color in matplotlib format

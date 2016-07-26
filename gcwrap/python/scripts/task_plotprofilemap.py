@@ -5,7 +5,7 @@ import pylab as pl
 from taskinit import casalog, gentools, qa
 
 def plotprofilemap(imagename=None, figfile=None, overwrite=None, transparent=None,
-                   pol=None, spectralaxis=None, restfreq=None, title=None, 
+                   pol=None, spectralaxis=None, restfreq=None, plotrange=None, title=None, 
                    linecolor=None, linestyle=None, linewidth=None,
                    separatepanel=None, plotmasked=None, maskedcolor=None, 
                    showaxislabel=None, showtick=None, showticklabel=None,
@@ -28,7 +28,7 @@ def plotprofilemap(imagename=None, figfile=None, overwrite=None, transparent=Non
         plot_profile_map(image, figfile, pol, spectralaxis, restfreq, title, linecolor, linestyle, linewidth,
                          separatepanel, plotmasked, maskedcolor,
                          showaxislabel, showtick, showticklabel, parsed_size,
-                         nx, ny, transparent)
+                         nx, ny, transparent, plotrange)
     except Exception, e:
         casalog.post('Error: %s'%(str(e)), priority='SEVERE')
         import traceback
@@ -350,7 +350,7 @@ def plot_profile_map(image, figfile, pol, spectralaxis='', restfreq=None, title=
                      linecolor='b', linestyle='-', linewidth=0.2,
                      separatepanel=True, plotmasked=None, maskedcolor=None,
                      showaxislabel=False, showtick=False, showticklabel=False,
-                     figsize=None, nx=-1, ny=-1, transparent=False):
+                     figsize=None, nx=-1, ny=-1, transparent=False, user_xlim=None):
     """
     image 
     figfile
@@ -384,6 +384,16 @@ def plot_profile_map(image, figfile, pol, spectralaxis='', restfreq=None, title=
         showticklabel = False
     if transparent is None:
         transparent = False
+        
+    # user-specified range for horizontal (spectral) axis
+    user_xmin = None
+    user_xmax = None
+    if isinstance(user_xlim, str) and user_xlim.find('~') != -1:
+        user_range = user_xlim.split('~')
+        if len(user_range[0]) > 0:
+            user_xmin = float(user_range[0])
+        if len(user_range[1]) > 0:
+            user_xmax = float(user_range[1]) 
 
     x_max = image.nx - 1
     x_min = 0
@@ -500,7 +510,9 @@ def plot_profile_map(image, figfile, pol, spectralaxis='', restfreq=None, title=
                           linewidth=linewidth,
                           plotmasked=plotmasked,
                           maskedcolor=maskedcolor,
-                          transparent=transparent)
+                          transparent=transparent,
+                          user_xmin=user_xmin,
+                          user_xmax=user_xmax)
         
     plotter.done()
     
@@ -582,10 +594,23 @@ class SDProfileMapPlotter(object):
         
     def plot(self, figfile, map_data, frequency, 
              linecolor='b', linestyle='-', linewidth=0.2,
-             plotmasked='none', maskedcolor='gray', transparent=False):        
+             plotmasked='none', maskedcolor='gray', transparent=False,
+             user_xmin=None, user_xmax=None):        
         global_xmin = min(frequency[0], frequency[-1])
         global_xmax = max(frequency[0], frequency[-1])
-        casalog.post('global_xmin=%s, global_xmax=%s'%(global_xmin,global_xmax))
+        casalog.post('full spectral range: global_xmin=%s, global_xmax=%s'%(global_xmin,global_xmax))
+        
+        if user_xmin is not None:
+            casalog.post('user-specified global_xmin %s'%(user_xmin))
+            global_xmin = user_xmin
+        if user_xmax is not None:
+            casalog.post('user-specified global_xmax %s'%(user_xmax))
+            global_xmax = user_xmax
+            
+        if global_xmin == global_xmax:
+            raise RuntimeError('Wrong spectral axis range: no range to plot.')
+        elif global_xmin > global_xmax:
+            raise RuntimeError('Wrong spectral axis range: minimum > maximum')
 
         # Auto scaling
         # to eliminate max/min value due to bad pixel or bad fitting,
