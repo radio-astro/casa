@@ -375,6 +375,9 @@ private:
   //split the name  
   void split_bloutputname(string str);
 
+  //max number of rows to get in each iteration
+  constexpr static Int kNRowBlocking = 1000;
+
 public:
   static bool importAsap(string const &infile, string const &outfile, bool const parallel=false);
   static bool importNRO(string const &infile, string const &outfile, bool const parallel=false);

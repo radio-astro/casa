@@ -341,7 +341,10 @@ bool SingleDishMS::prepare_for_process(string const &in_column_name,
   Double timeBin;
   int exists = configure_param.fieldNumber("timebin");
   if (exists < 0) {
-    timeBin = 1.0e8;
+    // Avoid TIME col being added to sort columns in MSIter::construct.
+    // TIME is automatically added to sort column when
+    // timebin is not 0, even if addDefaultSortCols=false.
+    timeBin = 0.0;
   } else {
     String timebin_string;
     configure_param.get(exists, timebin_string);
@@ -837,7 +840,7 @@ void SingleDishMS::doSubtractBaseline(string const& in_column_name,
                                       LogIO os) {
 
 
-    cout << "Calling SingleDishMS::doSubtractBaseline " << endl;
+  os << LogIO::DEBUG2 << "Calling SingleDishMS::doSubtractBaseline " << LogIO::POST;
 
 // in_ms = out_ms
   // in_column = [FLOAT_DATA|DATA|CORRECTED_DATA], out_column=new MS
@@ -852,6 +855,7 @@ void SingleDishMS::doSubtractBaseline(string const& in_column_name,
   columns[0] = MS::DATA_DESC_ID;
   prepare_for_process(in_column_name, out_ms_name, columns, false);
   vi::VisibilityIterator2 *vi = sdh_->getVisIter();
+  vi->setRowBlocking(kNRowBlocking);
   vi::VisBuffer2 *vb = vi->getVisBuffer();
 
   split_bloutputname(out_bloutput_name);
@@ -1904,6 +1908,7 @@ void SingleDishMS::applyBaselineTable(string const& in_column_name,
   columns[0] = MS::TIME;
   prepare_for_process(in_column_name, out_ms_name, columns, false);
   vi::VisibilityIterator2 *vi = sdh_->getVisIter();
+  vi->setRowBlocking(kNRowBlocking);
   vi::VisBuffer2 *vb = vi->getVisBuffer();
 
   Vector<Int> recspw;
@@ -2100,6 +2105,7 @@ void SingleDishMS::fitLine(string const& in_column_name, string const& in_spw,
   columns[0] = MS::DATA_DESC_ID;
   prepare_for_process(in_column_name, temp_out_ms_name, columns, false);
   vi::VisibilityIterator2 *vi = sdh_->getVisIter();
+  vi->setRowBlocking(kNRowBlocking);
   vi::VisBuffer2 *vb = vi->getVisBuffer();
   ofstream ofs(tempfile_name);
 
@@ -2409,6 +2415,7 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
   columns[0] = MS::DATA_DESC_ID;
   prepare_for_process(in_column_name, out_ms_name, columns, false);
   vi::VisibilityIterator2 *vi = sdh_->getVisIter();
+  vi->setRowBlocking(kNRowBlocking);
   vi::VisBuffer2 *vb = vi->getVisBuffer();
 
   split_bloutputname(out_bloutput_name);
@@ -3054,6 +3061,7 @@ void SingleDishMS::scale(float const factor, string const& in_column_name,
   // 4. put single spectrum (or a block of spectra) to out_column
   prepare_for_process(in_column_name, out_ms_name);
   vi::VisibilityIterator2 *vi = sdh_->getVisIter();
+  vi->setRowBlocking(kNRowBlocking);
   vi::VisBuffer2 *vb = vi->getVisBuffer();
 
   // //DEBUG
@@ -3123,6 +3131,7 @@ void SingleDishMS::smooth(string const &kernelType, float const kernelWidth,
 
   // get VI/VB2 access
   vi::VisibilityIterator2 *visIter = sdh_->getVisIter();
+  visIter->setRowBlocking(kNRowBlocking);
   vi::VisBuffer2 *vb = visIter->getVisBuffer();
 
   double startTime = gettimeofday_sec();
