@@ -417,11 +417,14 @@ def read_fluxes(ms, dbservice=True):
     for row in source_element.findall('row'):
         flux_text = row.findtext('flux')
         frequency_text = row.findtext('frequency')
-        source_id = row.findtext('sourceId')
+        source_element = row.findtext('sourceId')
         spw_element = row.findtext('spectralWindowId')
 
-        if spw_element is None:
+        if spw_element is None or source_element is None:
             continue
+        # spws can overlap, so rather than looking up spw by frequency,
+        # extract the spw id from the element text. I assume the format uses
+        # underscores, eg. 'SpectralWindow_13'
         _, asdm_spw_id = string.split(spw_element, '_')
 
         # SCIREQ-852: MS spw IDs != ASDM spw ids
@@ -432,44 +435,68 @@ def read_fluxes(ms, dbservice=True):
                         'spectral window'.format(asdm_spw_id))
             continue
 
-        if source_id is None:
-            continue
-        source_id = int(source_id)
+        source_id = int(source_element)
         if source_id >= len(ms.sources):
-            LOG.warning('Source.xml refers to source #%s, which was not '
-                        'found in the measurement set' % source_id)
+            LOG.warning('Source.xml refers to source #{!s}, which was not '
+                        'found in the measurement set'.format(source_id))
             continue
         source = ms.sources[int(source_id)]
-        sourcename = source.name
 
         # all elements must contain data to proceed
-        if None in (flux_text, frequency_text, source_id, spw_id):
+        if flux_text is None or frequency_text is None:
+            if not dbservice:
+                continue
+
             # See what elements can be used
-            if dbservice:
-                try:
-                    if spw_id and frequency_text is None:
-                        spw = ms.get_spectral_windows(spw_id)
-                        frequency = str(spw[0].centre_frequency.value)
-                except:
-                    continue
-            else:
+            try:
+                if spw_id and frequency_text is None:
+                    spw = ms.get_spectral_windows(spw_id)
+                    frequency = str(spw[0].centre_frequency.value)
+            except:
                 continue
 
         else:
-            # spws can overlap, so rather than looking up spw by frequency,
-            # extract the spw id from the element text. I assume the format uses
-            # underscores, eg. 'SpectralWindow_13'
-            # we are mapping to spw rather than frequency, so should only take
-            # one flux density.
-            iquv = to_jansky(flux_text)[0]
-            m = domain.FluxMeasurement(spw_id, *iquv)
+            # more than one measurement can be registered against the spectral
+            # window. These functions give a lists of frequencies and IQUV
+            # 4-tuples
+            row_frequencies = to_hertz(frequency_text)
+            row_iquvs = to_jansky(flux_text)
+            # zip to give a list of (frequency, [I,Q,U,V]) tuples
+            zipped = zip(row_frequencies, row_iquvs)
 
-            try:
-                spw = ms.get_spectral_windows(spw_id)
-                frequency = str(spw[0].centre_frequency.value)
-            except:
-                frequencyobject = to_hertz(frequency_text)[0]
-                frequency = str(frequencyobject.value)  #In Hertz
+            spw = ms.get_spectral_window(spw_id)
+
+            # Task: select flux measurement closest to spectral window centre
+            # frequency, taking the mean when measurements are equally distant
+
+            # first, sort the measurements by distance to spw centre
+            # frequency, annotating each tuple with the delta frequency
+            by_delta = sorted([(abs(spw.centre_frequency - f), f, iquv) for f, iquv in zipped])
+
+            # identify all measurements equally as close as this provisionally
+            # 'closest' measurement
+            min_delta, closest_frequency, _ = by_delta[0]
+            joint_closest = [iquv for delta_f, _, iquv in by_delta if delta_f == min_delta]
+
+            if len(joint_closest) > 1:
+                LOG.trace('Averaging {!s} equally close measurements: {!s}'.format(len(joint_closest), joint_closest))
+
+            # calculate the mean of these equally distant measurements.
+            # joint_closest has at least one item, so we don't need to prime
+            # the reduce function with an empty accumulator
+            mean_iquv = [reduce(lambda x, y: x + y, stokes)/len(joint_closest) for stokes in zip(*joint_closest)]
+
+            LOG.info('Closest flux measurement for spw {!s} found {!s} '
+                     'distant from centre of spw)'.format(spw_id, min_delta))
+
+            # Even if a mean was calculated, any alternative selection should
+            # be equally distant and therefore outside the sow range too
+            if not spw.min_frequency < closest_frequency < spw.max_frequency:
+                # This might become a warning once the PRTSPR-20823 fix is active
+                LOG.info('Closest flux measurement for spw {!s} falls outside'
+                         'spw, {!s} distant from spectral window centre'.format(spw_id, min_delta))
+
+            m = domain.FluxMeasurement(spw_id, *mean_iquv)
 
         # At this point we take:
         #  - the frequency of the spw_id in Hz
@@ -478,16 +505,16 @@ def read_fluxes(ms, dbservice=True):
         #  and attempt to call the online flux catalog web service, and use the flux result
         #  and spectral index
         if dbservice:
+            source_name = source.name
 
             try:
-
-                fluxdict = fluxservice(ms, frequency, sourcename)
+                fluxdict = fluxservice(ms, frequency, source_name)
                 f = fluxdict['fluxdensity']
                 try:
                     iquv_db = (measures.FluxDensity(float(f),measures.FluxDensityUnits.JANSKY),
                                iquv[1], iquv[2], iquv[3])
-                    if (int(spw_id) in science_spw_ids):
-                        LOG.info("Source: "+sourcename +" spw: "+spw_id+"    ASDM Flux: "+str(iquv[0])+"    Online catalog Flux: "+str(f) +" Jy")
+                    if int(spw_id) in science_spw_ids:
+                        LOG.info("Source: "+source_name +" spw: "+spw_id+"    ASDM Flux: "+str(iquv[0])+"    Online catalog Flux: "+str(f) +" Jy")
                 except:
                     #No flux values from Source.xml
                     iquv_db = (measures.FluxDensity(float(f),measures.FluxDensityUnits.JANSKY),
@@ -495,7 +522,7 @@ def read_fluxes(ms, dbservice=True):
                                measures.FluxDensity(0.0,measures.FluxDensityUnits.JANSKY),
                                measures.FluxDensity(0.0,measures.FluxDensityUnits.JANSKY))
                     if (int(spw_id) in science_spw_ids):
-                        LOG.info("Source: "+sourcename +" spw: "+spw_id+"    No ASDM Flux, Online Catalog Flux: "+str(f))
+                        LOG.info("Source: "+source_name +" spw: "+spw_id+"    No ASDM Flux, Online Catalog Flux: "+str(f))
                 m = domain.FluxMeasurement(spw_id, *iquv_db)
 
             except:
@@ -507,7 +534,7 @@ def read_fluxes(ms, dbservice=True):
                     #Use Source.xml values since nothing was returned from the online database
                     m = domain.FluxMeasurement(spw_id, *iquv)
                     if (int(spw_id) in science_spw_ids):
-                        LOG.info("Source: "+sourcename +" spw: "+spw_id+"    ASDM Flux: "+str(iquv[0]) +"     No online catalog information.")
+                        LOG.info("Source: "+source_name +" spw: "+spw_id+"    ASDM Flux: "+str(iquv[0]) +"     No online catalog information.")
 
         result[source].append(m)
 
@@ -605,9 +632,9 @@ def buildparams(sourcename, date, frequency):
        Inputs are all strings, in the format:
        NAME=3c279&DATE=04-Apr-2014&FREQUENCY=231.435E9
     """
-    params = {'NAME' : sourcename,
-              'DATE' : date,
-              'FREQUENCY' : frequency}
+    params = {'NAME': sourcename,
+              'DATE': date,
+              'FREQUENCY': frequency}
 
     urlparams = urllib.urlencode(params)
 
@@ -905,5 +932,5 @@ def get_asdm_to_ms_spw_mapping(ms):
     """
     dd_spws = get_data_description_spw_ids(ms)
     spw_spws = get_spectral_window_spw_ids(ms)
-    ms_ids = [i for i in spw_spws if i in dd_spws] + [i for i in spw_spws if i not in dd_spws]
-    return {k: v for k,v in zip(ms_ids, spw_spws)}
+    asdm_ids = [i for i in spw_spws if i in dd_spws] + [i for i in spw_spws if i not in dd_spws]
+    return {k: v for k, v in zip(asdm_ids, spw_spws)}

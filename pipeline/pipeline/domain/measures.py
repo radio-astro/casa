@@ -120,6 +120,12 @@ class ComparableUnit(object):
     def __ne__(self, other):
         return not self.__eq__(other)
 
+    def __abs__(self):
+        if self.value < 0:
+            return self.__class__(-self.value, self.units)
+        else:
+            return self.__class__(self.value, self.units)
+
     def __add__(self, other):
         if not isinstance(other, self.__class__):
             raise TypeError, "unsupported operand type(s) for +: '%s' and '%s'" % (self.__class__.__name__, other.__class__.__name__)
