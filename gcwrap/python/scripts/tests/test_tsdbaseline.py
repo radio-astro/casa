@@ -3590,18 +3590,18 @@ class tsdbaseline_autoTest(tsdbaseline_unittest_base):
     edge = [500,500]
     spw = '2'
     spwchan = '2:500~7691'
-    spwfreq = '2:44052978522~44096874062Hz'
+    spwfreq = '2:44052975469.940445~44096877113.524124Hz'#44052978522~44096874062Hz'
     # in either tests,
     statrange = [[1000, 7191]]
-    polystat = {'rms': 0.20157476770091848, 'min': -0.42546176910400391,
-                'max': 2.0252509117126465, 'median': 0.0037202835083007812,
-                'stddev': 0.20157476770091848}
-    chebstat = {'rms': 0.20157476770091848, 'min': -0.42546176910400391,
-                'max': 2.0252509117126465, 'median': 0.0037202835083007812,
-                'stddev': 0.20157476770091848}
-    csplstat = {'rms': 0.20177889322245066, 'min': -0.42428779602050781,
-                'max': 2.0271072387695312, 'median': 0.0038208961486816406,
-                'stddev': 0.20177889322245066}
+    polystat = {'rms': 0.20054661234635102, 'min': -0.43640756607055664,
+                'max': 2.0107593536376953, 'median': 0.000232696533203125,
+                'stddev': 0.20054661234635102}
+    chebstat = {'rms': 0.20054661234635102, 'min': -0.43640756607055664,
+                'max': 2.0107593536376953, 'median': 0.000232696533203125,
+                'stddev': 0.20054661234635102}
+    csplstat = {'rms': 0.20121228140648922, 'min': -0.43334531784057617,
+                'max': 2.0169997215270996, 'median': 0.00011682510375976562,
+                'stddev': 0.20121228140648922}
 #     sinustat = {'max': , 'min': , 'median': , 'rms': , 'stddev': }
 
     def setUp(self):
@@ -3615,10 +3615,10 @@ class tsdbaseline_autoTest(tsdbaseline_unittest_base):
 
     def tearDown(self):
         if (os.path.exists(self.infile)):
-            shutil.rmtree(self.infile)
+           shutil.rmtree(self.infile)
         for outname in glob.glob(self.outroot+'*'):
-            if os.path.isdir(outname): shutil.rmtree(outname)
-            else: os.remove(outname)
+           if os.path.isdir(outname): shutil.rmtree(outname)
+           else: os.remove(outname)
 
     def flag(self, infile, edge=None, rowidx=None):
         rowflag = True if edge is None else False
