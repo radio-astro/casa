@@ -70,15 +70,15 @@ TEST( RecursiveVi2LayersTest , ChanAve_Sim ) {
   facts[0]=&ssfac;
   facts[1]=&chanave;
 
-  VisibilityIterator2 *vi = new VisibilityIterator2(facts);
-  VisBuffer2 *vb = vi->getImpl()->getVisBuffer();
+  VisibilityIterator2 vi(facts);
+  VisBuffer2 *vb = vi.getImpl()->getVisBuffer();
 
-  cout << "VI Layers: " << vi->ViiType() << endl;
+  cout << "VI Layers: " << vi.ViiType() << endl;
 
   // Has a viable VI2 been generated?
   Int niter(0);
-  for (vi->originChunks();vi->moreChunks();vi->nextChunk()) {
-    for (vi->origin();vi->more();vi->next()) {
+  for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
+    for (vi.origin();vi.more();vi.next()) {
 
       /*      
       cout << "nAntennas=" << vb->nAntennas() << endl;
@@ -168,15 +168,15 @@ TEST( RecursiveVi2LayersTest , TimeAve_ChanAve_Sim ) {
   facts[1]=&chanave;
   facts[2]=&timeave;
 
-  VisibilityIterator2 *vi = new VisibilityIterator2(facts);
-  VisBuffer2 *vb = vi->getImpl()->getVisBuffer();
+  VisibilityIterator2 vi(facts);
+  VisBuffer2 *vb = vi.getImpl()->getVisBuffer();
 
-  cout << "VI Layers: " << vi->ViiType() << endl;
+  cout << "VI Layers: " << vi.ViiType() << endl;
 
   // Has a viable VI2 been generated?
   Int niter(0);
-  for (vi->originChunks();vi->moreChunks();vi->nextChunk()) {
-    for (vi->origin();vi->more();vi->next()) {
+  for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
+    for (vi.origin();vi.more();vi.next()) {
 
       /*
       cout << "nAntennas=" << vb->nAntennas() << endl;
