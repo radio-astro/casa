@@ -441,8 +441,42 @@ class T2_4MDetailsVLAApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
 
             # Limit to 30 sources via CAS-8737
             # MAX_PLOTS = 30
-            Nplots = (len(brightest_fields.items())/30)+1
+            ## Nplots = (len(brightest_fields.items())/30)+1
 
+            m = context.observing_run.measurement_sets[0]
+            alltargetfields = m.get_fields(intent='TARGET')
+            Nplots = (len(alltargetfields)/30)+1
+
+            targetfields = [field for field in alltargetfields[0:len(alltargetfields):Nplots]]
+
+            plotfields = targetfields
+
+            LOG.info("APPLYCALPLOTFIELDS:")
+            print plotfields
+
+            for field in plotfields:
+                plots = self.science_plots_for_result(context,
+                                                      result,
+                                                      applycal.VLAAmpVsFrequencySummaryChart,
+                                                      [field.id],
+                                                      uv_range, correlation=correlation)
+                amp_vs_freq_summary_plots[vis][field.id] = plots
+
+            for field in plotfields:
+                plots = self.science_plots_for_result(context,
+                                                      result,
+                                                      applycal.PhaseVsFrequencySummaryChart,
+                                                      [field.id],
+                                                      uv_range, correlation=correlation)
+                phase_vs_freq_summary_plots[vis][field.id] = plots
+
+                plots = self.science_plots_for_result(context,
+                                                      result,
+                                                      applycal.AmpVsUVBasebandSummaryChart,
+                                                      [field.id], correlation=correlation)
+                amp_vs_uv_summary_plots[vis][field.id] = plots
+
+            '''
             for source_id, brightest_field in brightest_fields.items()[0:len(brightest_fields.items()):Nplots]:
                 plots = self.science_plots_for_result(context,
                                                       result, 
@@ -464,8 +498,10 @@ class T2_4MDetailsVLAApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                                                       applycal.AmpVsUVBasebandSummaryChart,
                                                       [brightest_field.id], correlation=correlation)
                 amp_vs_uv_summary_plots[vis][source_id] = plots
+            '''
 
             if pipeline.infrastructure.generate_detail_plots(result):
+                LOG.info("RENDERER_DETAIL_INFORMATION")
                 scans = ms.get_scans(scan_intent='TARGET')
                 fields = set()
                 for scan in scans:

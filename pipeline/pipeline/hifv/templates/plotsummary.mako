@@ -54,7 +54,7 @@ $(document).ready(function() {
         </%def>
 
         <%def name="preamble()">
-           Phase vs. time for all calibrators, as well as a representative selection of fields with intent='TARGET'.
+           Phase vs. time for all calibrators, Amp vs. UVwave for all calibrators, as well as a representative selection of fields with intent='TARGET' with Amp vs. UVwave plots.
 
         </%def>
 

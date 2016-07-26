@@ -5,8 +5,6 @@ import os
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.renderer.logger as logger
 import casa
-import itertools
-import collections
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -22,7 +20,7 @@ class plotsummarySummaryChart(object):
         plots = []
         context = self.context
         result = self.result
-        
+
         m = context.observing_run.measurement_sets[0]
         numAntenna = len(m.antennas)
         bandpass_field_select_string = context.evla['msinfo'][m.name].bandpass_field_select_string
@@ -34,12 +32,12 @@ class plotsummarySummaryChart(object):
         field_ids = m.get_vla_field_ids()
         field_names = m.get_vla_field_names()
         channels = m.get_vla_numchan()
-    
+
         ms_active=m.name
-        
+
         #create phase time plot for all calibrators
         figfile = self.get_figfile('all_calibrators_phase_time')
-                            
+
         plot = logger.Plot(figfile, x_axis='time', y_axis='phase',
                           parameters={'vis'      : self.ms.basename,
                                       'type'     : 'All calibrators',
@@ -61,9 +59,9 @@ class plotsummarySummaryChart(object):
                 LOG.error('Could not create plotsummary plot.')
                 LOG.exception(ex)
                 plot = None
-        
+
         plots.append(plot)
-        
+
         # create amp vs. UVwave plots of each cal field and then max 30 targets
 
         calfields = m.get_fields(intent='BANDPASS,PHASE,AMPLITUDE')
@@ -81,68 +79,39 @@ class plotsummarySummaryChart(object):
 
         plotfields.extend(targetfields)
 
-        # get IDs for all science spectral windows
-        intent = 'TARGET'
-        ms = m
-        spw_ids = set()
-        for scan in ms.get_scans(scan_intent=intent):
-            scan_spw_ids = set([dd.spw.id for dd in scan.data_descriptions])
-            spw_ids.update(scan_spw_ids)
+        LOG.info("PLOTSUMMARY PLOTSFIELDS:")
+        print plotfields
 
-        if intent == 'TARGET':
-            science_ids = set([spw.id for spw in ms.get_spectral_windows()])
-            spw_ids = spw_ids.intersection(science_ids)
+        for field in plotfields:
+            figfile = self.get_figfile('field'+str(field.id)+'_amp_uvdist')
+            #figfile = self.get_figfile('targetflag')
 
-        by_source_id = lambda field: field.source.id
-        fields_by_source_id = sorted(ms.get_fields(intent=intent),
-                                     key=by_source_id)
+            plot = logger.Plot(figfile, x_axis='uvwave', y_axis='amp',
+                          parameters={'vis'      : self.ms.basename,
+                                      'type'     : 'Field '+str(field.id)+', '+field.name,
+                                      'field'    : str(field.id),
+                                      'spw'      : ''})
 
-        resultfields = collections.OrderedDict()
+            if not os.path.exists(figfile):
+                LOG.trace('Plotting amp vs. uvwave for field id='+str(field.id)+'.  Creating new '
+                      'plot.')
 
-        for source_id, source_fields in itertools.groupby(fields_by_source_id, by_source_id):
-            fields = list(source_fields)
+                try:
+                    casa.plotms(vis=ms_active,  xaxis='uvwave',  yaxis='amp',  ydatacolumn='corrected',
+                                selectdata=True, field=str(field.id),  correlation=corrstring,
+                                averagedata=True,    avgchannel=str(max(channels)),   avgtime='1e8',
+                                avgscan=False,   transform=False,        extendflag=False,   iteraxis='',
+                                coloraxis='spw',  plotrange=[],
+                                title='Field '+str(field.id)+', '+field.name,   xlabel='',
+                                ylabel='',  showmajorgrid=False,  showminorgrid=False,  plotfile=figfile,
+                                overwrite=True, clearplots=True, showgui=False)
 
-            field = fields[0]
-            resultfields[source_id] = field
+                except Exception as ex:
+                    LOG.error('Could not create plot for field '+str(field.id))
+                    LOG.exception(ex)
+                    plot = None
 
-        Nplots = (len(resultfields.items())/30)+1
-
-        # for field in plotfields:
-        for source_id, brightest_field in resultfields.items()[0:len(resultfields.items()):Nplots]:
-
-
-            for field in [brightest_field.id]:
-
-                figfile = self.get_figfile('field'+str(source_id)+'_amp_uvdist')
-                #figfile = self.get_figfile('targetflag')
-
-                plot = logger.Plot(figfile, x_axis='uvwave', y_axis='amp',
-                              parameters={'vis'      : self.ms.basename,
-                                          'type'     : 'Field '+str(source_id)+', '+str(m.get_fields(field_id=field)[0].name),
-                                          'field'    : str(field),
-                                          'spw'      : ''})
-
-                if not os.path.exists(figfile):
-                    LOG.trace('Plotting amp vs. uvwave for field id='+str(source_id)+'.  Creating new '
-                          'plot.')
-
-                    try:
-                        LOG.info("PLOTSUMMARYPLOTTING: "+'Field '+str(source_id)+', '+str(m.get_fields(field_id=field)[0].name))
-                        casa.plotms(vis=ms_active,  xaxis='uvwave',  yaxis='amp',  ydatacolumn='corrected',
-                                    selectdata=True, field=str(field),  correlation=corrstring,
-                                    averagedata=True,    avgchannel=str(max(channels)),   avgtime='1e8',
-                                    avgscan=False,   transform=False,        extendflag=False,   iteraxis='',
-                                    coloraxis='spw',  plotrange=[],
-                                    title='Field '+str(source_id)+', '+str(m.get_fields(field_id=field)[0].name),   xlabel='',
-                                    ylabel='',  showmajorgrid=False,  showminorgrid=False,  plotfile=figfile,
-                                    overwrite=True, clearplots=True, showgui=False)
-
-                    except Exception as ex:
-                        LOG.error('Could not create plot for field '+str(field))
-                        LOG.exception(ex)
-                        plot = None
-
-                plots.append(plot)
+            plots.append(plot)
 
 
         return [p for p in plots if p is not None]
