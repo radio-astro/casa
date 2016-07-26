@@ -474,9 +474,10 @@ def plot_profile_map(image, figfile, pol, spectralaxis='', restfreq=None, title=
     
     stokes = image.stokes[pol]
     casalog.post('Generate profile map for pol {stokes}'.format(stokes=stokes))
-    masked_data_p = masked_data.take([pol], axis=image.id_stokes).squeeze()
+    casalog.post('masked_data.shape=%s id_stokes=%s'%(list(masked_data.shape),image.id_stokes), priority='DEBUG')
+    masked_data_p = masked_data.take([pol], axis=image.id_stokes).squeeze(axis=image.id_stokes)
     Plot = numpy.zeros((NH, NV, (chan1 - chan0)), numpy.float32) + NoData
-    mask_p = image.mask.take([pol], axis=image.id_stokes).squeeze()
+    mask_p = image.mask.take([pol], axis=image.id_stokes).squeeze(axis=image.id_stokes)
     isvalid = numpy.any(mask_p, axis=2)
     Nsp = sum(isvalid.flatten())
     casalog.post('Nsp=%s'%(Nsp))
@@ -490,10 +491,14 @@ def plot_profile_map(image, figfile, pol, spectralaxis='', restfreq=None, title=
             valid_index = isvalid[x0:x1,y0:y1].nonzero()
             chunk = masked_data_p[x0:x1,y0:y1]
             valid_sp = chunk[valid_index[0],valid_index[1],:]
-            Plot[x][y] = valid_sp.mean(axis=0)
+            if len(valid_sp) == 0:
+                Plot[x][y] = NoData
+            else:
+                Plot[x][y] = valid_sp.mean(axis=0)
             
     # normalize plot data
-    max_data = numpy.abs(Plot).max()
+    plot_mask = numpy.logical_and(numpy.isfinite(Plot), Plot != NoData)
+    max_data = numpy.abs(Plot[plot_mask]).max()
     casalog.post('max_data = %s'%(max_data), priority='DEBUG')
     normalization_factor = numpy.power(10.0, int(numpy.log10(max_data)))
     if normalization_factor < 1.0:
@@ -501,7 +506,7 @@ def plot_profile_map(image, figfile, pol, spectralaxis='', restfreq=None, title=
     casalog.post('normalization_factor = %s'%(normalization_factor), priority='DEBUG')
     plotter.set_normalization_factor(normalization_factor)
     
-    Plot /= normalization_factor
+    Plot[plot_mask] /= normalization_factor
 
     status = plotter.plot(figfile, Plot, 
                           spectral_data, 
@@ -714,12 +719,26 @@ class SpectralImage(object):
             self.id_direction = coord_types.index('Direction')
             self.id_direction = [self.id_direction, self.id_direction+1]
             self.id_spectral = coord_types.index('Spectral')
-            self.id_stokes = coord_types.index('Stokes')
-            casalog.post('id_direction=%s'%(self.id_direction))
-            casalog.post('id_spectral=%s'%(self.id_spectral))
-            casalog.post('id_stokes=%s'%(self.id_stokes))
+            try:
+                self.id_stokes = coord_types.index('Stokes')
+                stokes_axis_exists = True
+            except:
+                # if no Stokes axis exists, set dummy axis at the end
+                self.id_stokes = len(coord_types)
+                stokes_axis_exists = False
+            casalog.post('id_direction=%s'%(self.id_direction), priority='DEBUG')
+            casalog.post('id_spectral=%s'%(self.id_spectral), priority='DEBUG')
+            casalog.post('id_stokes=%s (%s stokes axis)'%(self.id_stokes,('real' if stokes_axis_exists else 'dummy')), 
+                         priority='DEBUG')
             self.data = ia.getchunk()
             self.mask = ia.getchunk(getmask=True)
+            if not stokes_axis_exists:
+                # put degenerate Stokes axis at the end
+                self.data = numpy.expand_dims(self.data, axis=-1)
+                self.mask = numpy.expand_dims(self.mask, axis=-1)
+                casalog.post('add dummy Stokes axis to data and mask since input image doesn\'t have it.')
+                casalog.post('data.shape={}'.format(self.data.shape), priority='DEBUG')
+                casalog.post('mask.shape={}'.format(self.mask.shape), priority='DEBUG')
             bottom = ia.toworld(numpy.zeros(len(self.image_shape),dtype=int), 'q')['quantity']
             top = ia.toworld(self.image_shape-1, 'q')['quantity']
             key = lambda x: '*%s'%(x+1)
@@ -737,8 +756,12 @@ class SpectralImage(object):
                 self.spectral_data = numpy.array([refval+increment*(i-refpix) for i in xrange(self.nchan)])
             elif self.spectral_label == 'Velocity':
                 refpix, refval, increment = self.spectral_axis(unit='km/s')
-                self.spectral_data = numpy.array([refval+increment*(i-refpix) for i in xrange(self.nchan)])                
-            self.stokes = self.coordsys.stokes()
+                self.spectral_data = numpy.array([refval+increment*(i-refpix) for i in xrange(self.nchan)])
+            if stokes_axis_exists:
+                self.stokes = self.coordsys.stokes()
+            else:
+                # if no Stokes axis exists, set ['I']
+                self.stokes = ['I']
         finally:
             ia.close()
         
