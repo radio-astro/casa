@@ -137,6 +137,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         </notequals>
       </when>
       <when param="spectralaxis">
+        <equals type="string" value=""/>
         <equals type="string" value="velocity">
           <default param="restfreq"><value type="string"></value></default>
         </equals>
