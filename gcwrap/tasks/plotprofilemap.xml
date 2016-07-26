@@ -149,13 +149,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
   <example>
 
-    The plotprofilemap makes spectral profile map from specified image. 
-    The task accepts both CASA image and FITS cube as an input.
+The plotprofilemap makes spectral profile map from specified image. 
+The task accepts both CASA image and FITS cube as an input.
     
-    It is necessary to specify existing CASA image or FITS cube as an 
-    imagename. Otherwise, the task will fail. If figfile is specified, 
-    profile map is saved as an PNG image. Please set overwrite to False 
-    if you don't want to overwrite existing file. 
+It is necessary to specify existing CASA image or FITS cube as an 
+imagename. Otherwise, the task will fail. If figfile is specified, 
+profile map is saved as an PNG image. Please set overwrite to False 
+if you don't want to overwrite existing file. 
 
     Keyword arguments:
     imagename -- input image name (CASA image or FITS cube)
@@ -205,6 +205,30 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                  default: '' (auto)
                  example: '6,8' (nx=6, ny=8)
                           '8' (nx=8, ny=8)
+                          
+Number of panels along horizontal and vertical direction can be specified 
+via the parameter 'numpanels'. It should be a string containing numerical 
+value indicating number of panels. If only one number is given it will be 
+applied to both axes. If you want to provide different numbers to horizontal 
+and vertical axes, you should give two numbers as a string separated by comma. 
+See example of the above parameter description section. 
+
+If the number of panels is less than the number of pixels of input image, 
+more than one pixels are assigned to one panel. In that case, spectra to be 
+shown are the average of the assigned spectra in each pixel.
+   	  
+Default value for numpanels is empty string ('') which corresponds to an auto 
+calculation of the number of panels based on the number of pixels of input 
+image. Formula for the number of horizontal and vertical panels, nh and nv, 
+are as follows:
+
+    npanel = min(max(nx, ny), 8)
+    step = (max(nx, ny) - 1) / npanel + 1
+    nh = nx / step + 1
+    nv = ny / step + 1
+   	    
+where nx and ny are the number of pixels along direction axes. In the above 
+calculation, upper limit for nh and nv is 9.
 
   </example>
 
