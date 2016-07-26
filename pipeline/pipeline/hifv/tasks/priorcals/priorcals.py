@@ -283,35 +283,35 @@ class Priorcals(basetask.StandardTaskTemplate):
     def _do_gaincurves(self):
         """Run gaincurves task"""
 
-        inputs = GainCurves.Inputs(self.inputs.context)
+        inputs = GainCurves.Inputs(self.inputs.context, output_dir='')
         task = GainCurves(inputs)
         return self._executor.execute(task)
 
     def _do_opcal(self):
         """Run opcal task"""
 
-        inputs = Opcal.Inputs(self.inputs.context)
+        inputs = Opcal.Inputs(self.inputs.context, output_dir='')
         task = Opcal(inputs)
         return self._executor.execute(task)
 
     def _do_rqcal(self):
         """Run requantizer gains task"""
 
-        inputs = Rqcal.Inputs(self.inputs.context)
+        inputs = Rqcal.Inputs(self.inputs.context, output_dir='')
         task = Rqcal(inputs)
         return self._executor.execute(task)
 
     def _do_swpowcal(self):
         """Run switched power task"""
 
-        inputs = Swpowcal.Inputs(self.inputs.context)
+        inputs = Swpowcal.Inputs(self.inputs.context, output_dir='')
         task = Swpowcal(inputs)
         return self._executor.execute(task)
 
     def _do_antpos(self):
         """Run hif_antpos to correct for antenna positions"""
 
-        inputs = Antpos.Inputs(self.inputs.context)
+        inputs = Antpos.Inputs(self.inputs.context, output_dir='')
         task = Antpos(inputs)
         result = self._executor.execute(task)
         

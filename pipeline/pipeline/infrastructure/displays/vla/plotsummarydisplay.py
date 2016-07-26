@@ -79,8 +79,6 @@ class plotsummarySummaryChart(object):
 
         plotfields.extend(targetfields)
 
-        LOG.info("PLOTSUMMARY PLOTSFIELDS:")
-        print plotfields
 
         for field in plotfields:
             figfile = self.get_figfile('field'+str(field.id)+'_amp_uvdist')

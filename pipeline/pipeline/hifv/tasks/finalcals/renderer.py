@@ -351,8 +351,8 @@ class T2_4MDetailsVLAApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
 
         # CAS-5970: add science target plots to the applycal page
         (science_amp_vs_freq_summary_plots, 
-         science_phase_vs_freq_summary_plots,
-         science_amp_vs_uv_summary_plots,
+         #science_phase_vs_freq_summary_plots,
+         #science_amp_vs_uv_summary_plots,
          uv_max) = self.create_science_plots(context, result, correlation=corrstring) 
 
         if pipeline.infrastructure.generate_detail_plots(result):
@@ -451,8 +451,7 @@ class T2_4MDetailsVLAApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
 
             plotfields = targetfields
 
-            LOG.info("APPLYCALPLOTFIELDS:")
-            print plotfields
+
 
             for field in plotfields:
                 plots = self.science_plots_for_result(context,
@@ -462,6 +461,7 @@ class T2_4MDetailsVLAApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                                                       uv_range, correlation=correlation)
                 amp_vs_freq_summary_plots[vis][field.id] = plots
 
+            '''
             for field in plotfields:
                 plots = self.science_plots_for_result(context,
                                                       result,
@@ -475,6 +475,7 @@ class T2_4MDetailsVLAApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                                                       applycal.AmpVsUVBasebandSummaryChart,
                                                       [field.id], correlation=correlation)
                 amp_vs_uv_summary_plots[vis][field.id] = plots
+            '''
 
             '''
             for source_id, brightest_field in brightest_fields.items()[0:len(brightest_fields.items()):Nplots]:
@@ -539,8 +540,7 @@ class T2_4MDetailsVLAApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
             self.sort_plots_by_baseband(source_plots)
         '''
 
-        return (amp_vs_freq_summary_plots, phase_vs_freq_summary_plots, 
-                amp_vs_uv_summary_plots, max_uvs)
+        return (amp_vs_freq_summary_plots,  max_uvs)
 
     def science_plots_for_result(self, context, result, plotter_cls, fields, 
                                  uvrange=None, renderer_cls=None, correlation=''):
