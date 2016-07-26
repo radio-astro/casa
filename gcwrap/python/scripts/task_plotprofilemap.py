@@ -602,6 +602,8 @@ class SDProfileMapPlotter(object):
              plotmasked='none', maskedcolor='gray', transparent=False,
              user_xmin=None, user_xmax=None):
         if len(frequency) == 1:
+            casalog.post('Number of spectral channels is 1. Resulting profile map will be useless.',
+                         priority='WARN')
             global_xmin = frequency[0] - 1.
             global_xmax = frequency[0] + 1.
         else:
