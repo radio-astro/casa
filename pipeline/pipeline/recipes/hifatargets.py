@@ -21,6 +21,7 @@ __rethrow_casa_exceptions = True
 from h_init_cli import h_init_cli as h_init
 from hifa_importdata_cli import hifa_importdata_cli as hifa_importdata
 from hif_mstransform_cli import hif_mstransform_cli as hif_mstransform
+from hifa_flagtargets_cli import hifa_flagtargets_cli as hifa_flagtargets
 from hif_findcont_cli import hif_findcont_cli as hif_findcont
 from hif_uvcontfit_cli import hif_uvcontfit_cli as hif_uvcontfit
 from hif_uvcontsub_cli import hif_uvcontsub_cli as hif_uvcontsub
@@ -51,6 +52,9 @@ def hifatargets (vislist, importonly=False, pipelinemode='automatic', interactiv
 
         # Split out the target data
         hif_mstransform (pipelinemode=pipelinemode)
+
+        # Flag the target data
+        hifa_flagtargets (pipelinemode=pipelinemode)
  
         # Make a list of expected targets to be cleaned in mfs mode (used for continuum subtraction)
         hif_makeimlist (specmode='mfs', pipelinemode=pipelinemode)
