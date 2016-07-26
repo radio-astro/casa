@@ -310,7 +310,8 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
                         ms.deviation_mask = {}
                     if not ms.deviation_mask.has_key((fieldid,antennaid,spwid)):
                         LOG.debug('Evaluating deviation mask for %s field %s antenna %s spw %s' % (ms.basename, fieldid, antennaid, spwid))
-                        mask_list = self.evaluate_deviation_mask(ms.name, fieldid, antennaid, spwid)
+                        mask_list = self.evaluate_deviation_mask(ms.name, fieldid, antennaid, spwid, 
+                                                                 consider_flag=True)
                         LOG.debug('deviation mask = %s' % (mask_list))
                         ms.deviation_mask[(fieldid, antennaid, spwid)] = mask_list
                     deviation_mask[ms.basename][(fieldid, antennaid, spwid)] = ms.deviation_mask[(fieldid, antennaid, spwid)]
@@ -509,12 +510,13 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
     def analyse(self, result):
         return result
 
-    def evaluate_deviation_mask(self, vis, field_id, antenna_id, spw_id):
+    def evaluate_deviation_mask(self, vis, field_id, antenna_id, spw_id, consider_flag=False):
         """
         Create deviation mask using MaskDeviation heuristic
         """
         h = MaskDeviationHeuristicForMS()
-        mask_list = h.calculate(vis=vis, field_id=field_id, antenna_id=antenna_id, spw_id=spw_id)
+        mask_list = h.calculate(vis=vis, field_id=field_id, antenna_id=antenna_id, spw_id=spw_id, 
+                                consider_flag=consider_flag)
         return mask_list
 
     def _generate_storage_for_baselined(self, context, reduction_group):

@@ -12,11 +12,11 @@ import pipeline.infrastructure.casatools as casatools
 
 LOG = infrastructure.get_logger(__name__)
 
-def _calculate(worker):
-    worker.SubtractMedian(threshold=3.0)
-    worker.CalcStdSpectrum()
+def _calculate(worker, consider_flag=False):
+    worker.SubtractMedian(threshold=3.0, consider_flag=consider_flag)
+    worker.CalcStdSpectrum(consider_flag=consider_flag)
     #worker.PlotSpectrum()
-    worker.CalcRange(threshold=3.0, detection=5.0, extension=2.0, iteration=10)
+    worker.CalcRange(threshold=3.0, detection=5.0, extension=2.0, iteration=10, consider_flag=consider_flag)
     #worker.SavePlot()
     mask_list = worker.masklist
     return mask_list
@@ -37,10 +37,10 @@ class MaskDeviationHeuristic(api.Heuristic):
         return mask_list
     
 class MaskDeviationHeuristicForMS(api.Heuristic):
-    def calculate(self, vis, field_id='', antenna_id='', spw_id=''):
+    def calculate(self, vis, field_id='', antenna_id='', spw_id='', consider_flag=False):
         worker = MaskDeviation(vis, spw_id)
         worker.ReadDataFromMS(field=field_id, antenna=antenna_id)
-        mask_list = _calculate(worker)
+        mask_list = _calculate(worker, consider_flag=consider_flag)
         del worker
         return mask_list
         
@@ -136,31 +136,18 @@ class MaskDeviation(object):
             npol, nchan = cellshape
             array_shape = (nrow * npol, nchan)
             self.data = NP.zeros(array_shape, NP.float)
+            # flag: True => invalid, False => valid
+            self.flag = NP.zeros(array_shape, NP.bool)
             self.nrow, self.nchan = array_shape
             for i in xrange(nrow):
                 cell = tbsel.getcell(colname, i)
                 self.data[i * npol:(i + 1) * npol] = NP.real(cell)
+                self.flag[i * npol:(i + 1) * npol] = tbsel.getcell('FLAG', i)
         
-#         ss = sd.scantable(self.infile, average=False)
-#         sel = sd.selector(types=[sd.srctype.pson])
-#         if self.spw is not None:
-#             sel.set_ifs([self.spw])
-#         ss.set_selection(sel)
-#         self.nrow = ss.nrow()
-#         s = ss._getspectrum(0)
-#         #self.nchan = ss.nchan()
-#         self.nchan = len(s)
         LOG.debug('MaskDeviation.ReadDataFromMS: %s %s'%(self.nrow, self.nchan))
-#         self.data = NP.zeros((self.nrow, self.nchan), NP.float)
-#         for i in range(self.nrow):
-#             #sp = ss._getspectrum(i)
-#             #self.data[i] = NP.array(sp, NP.float)
-#             self.data[i] = NP.array(ss._getspectrum(i))
-#         ss.set_selection()
-#         del ss, s, sel
-                
 
-    def SubtractMedian(self, threshold=3.0):
+
+    def SubtractMedian(self, threshold=3.0, consider_flag=False):
         """
         Subtract median value of the spectrum from the spectrum: re-bias the spectrum.
 
@@ -168,27 +155,53 @@ class MaskDeviation(object):
         spectrum. Final median value is determined by using the channels having the value
         inside the range: MED_0 - threshold * STD < VALUE < MED_0 + threshold * STD
         """
+        if hasattr(self, 'flag') and consider_flag == True:
+            with_flag = True
+        else:
+            with_flag = False
         for i in range(self.nrow):
-            median = NP.median(self.data[i])
-            std = self.data[i].std()
+            if with_flag:
+                if NP.all(self.flag[i] == True):
+                    continue
+                median = NP.median(self.data[i][self.flag[i] == False])
+                std = self.data[i][self.flag[i] == False].std()
+            else:
+                median = NP.median(self.data[i])
+                std = self.data[i].std()
+            # mask: True => valid, False => invalid
             mask = (self.data[i]<(median+threshold*std)) * (self.data[i]>(median-threshold*std))
-            medianval = NP.median(self.data[i][NP.where(mask == True)])
-            LOG.trace('MaskDeviation.SubtractMedian: %s %s %s %s %s'%(median, std, medianval, mask.sum(), self.nchan))
+            if with_flag:
+                medianval = NP.median(self.data[i][NP.logical_and(mask == True, self.flag[i] == False)])
+            else:
+                medianval = NP.median(self.data[i][NP.where(mask == True)])
+            LOG.trace('MaskDeviation.SubtractMedian: row %s %s %s %s %s %s'%(i, median, std, medianval, mask.sum(), self.nchan))
             self.data[i] -= medianval
 
-    def CalcStdSpectrum(self):
+    def CalcStdSpectrum(self, consider_flag=False):
         """
         meanSP, maxSP, minSP, ymax, ymin: used only for plotting and should be
          commented out when implemented in the pipeline
         """
-        self.stdSP = self.data.std(axis=0)
-        self.meanSP = self.data.mean(axis=0)
-        self.maxSP = self.data.max(axis=0)
-        self.minSP = self.data.min(axis=0)
+        if hasattr(self, 'flag') and consider_flag == True:
+            with_flag = True
+        else:
+            with_flag = False
+            
+        if with_flag:
+            work_data = NP.ma.masked_array(self.data, self.flag)
+        else:
+            work_data = self.data
+            
+        self.stdSP = work_data.std(axis=0)
+        self.meanSP = work_data.mean(axis=0)
+        self.maxSP = work_data.max(axis=0)
+        self.minSP = work_data.min(axis=0)
         self.ymax = self.maxSP.max()
         self.ymin = self.minSP.min()
+        
+        LOG.trace('std %s\nmean %s\n max %s\n min %s\n ymax %s ymin %s'%(self.stdSP,self.meanSP,self.maxSP,self.minSP,self.ymax,self.ymin))
 
-    def CalcRange(self, threshold=3.0, detection=5.0, extension=2.0, iteration=10):
+    def CalcRange(self, threshold=3.0, detection=5.0, extension=2.0, iteration=10, consider_flag=False):
         """
         Find regions which value is greater than threshold.
         'threshold' is used for median calculation
@@ -198,22 +211,43 @@ class MaskDeviation(object):
             self.stdSp: 1D spectrum with self.nchan channels calculated in CalcStdSpectrum
                         Each channel records standard deviation of the channel in all original spectra
         """
-        mask = (self.stdSP>-99999)
+        if hasattr(self.stdSP, 'mask') and consider_flag == True:
+            with_flag = True
+            stdSP = self.stdSP.data
+        else:
+            with_flag = False
+            stdSP = self.stdSP
+            
+        # mask: True => valid, False => invalid
+        mask = (stdSP>-99999)
+        
+        if with_flag:
+            mask = NP.logical_and(mask, self.stdSP.mask == False)
+        
         Nmask0 = 0
         for i in range(iteration):
-            median = NP.median(self.stdSP[NP.where(mask == True)])
-            std = self.stdSP[NP.where(mask == True)].std()
-            mask = self.stdSP<(median+threshold*std)
+            median = NP.median(stdSP[NP.where(mask == True)])
+            std = stdSP[NP.where(mask == True)].std()
+            mask = stdSP<(median+threshold*std)
             #mask = (self.stdSP<(median+threshold*std)) * (self.stdSP>(median-threshold*std))
+            if with_flag:
+                mask = NP.logical_and(mask, self.stdSP.mask == False)
             Nmask = mask.sum()
             LOG.trace('MaskDeviation.CalcRange: %s %s %s %s'%(median, std, Nmask, self.nchan))
             if Nmask == Nmask0: break
             else: Nmask0 = Nmask
-        mask = self.stdSP<(median+detection*std)
+        # TODO
+        mask = stdSP<(median+detection*std)
+        if with_flag:
+            mask = NP.logical_and(mask, self.stdSP.mask == False)
+        LOG.trace('MaskDeviation.CalcRange: before ExtendMask %s'%(mask))
         mask = self.ExtendMask(mask, median+extension*std)
+        LOG.trace('MaskDeviation.CalcRange: after ExtendMask %s'%(mask))
 
         self.mask = NP.arange(self.nchan)[NP.where(mask == False)]
+        LOG.trace('MaskDeviation.CalcRange: self.mask=%s'%(self.mask))
         RL = (mask*1)[1:]-(mask*1)[:-1]
+        LOG.trace('MaskDeviation.CalcRange: RL=%s'%(RL))
         L = NP.arange(self.nchan)[NP.where(RL==-1)]+1
         R = NP.arange(self.nchan)[NP.where(RL==1)]
         if len(self.mask) > 0 and self.mask[0] == 0: L = NP.insert(L, 0, 0)
@@ -232,6 +266,7 @@ class MaskDeviation(object):
         """
         Extend the mask region as long as Standard Deviation value is higher than the given threshold
         """
+        LOG.trace('MaskDeviation.ExtendMask: threshold = %s'%(threshold))
         for i in range(len(mask)-1):
             if mask[i] == False and self.stdSP[i+1]>threshold: mask[i+1] = False
         for i in range(len(mask)-1, 1, -1):
