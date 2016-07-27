@@ -366,12 +366,12 @@ void SDDoubleCircleGainCal::executeDoubleCircleGainCal(
       OrthographicProjector projector(1.0f);
       projector.setDirection(direction);
       Vector<MDirection> md = dirCol.convert(ifield, MDirection::J2000);
-      logSink() << "md.shape() = " << md.shape() << LogIO::POST;
+      //logSink() << "md.shape() = " << md.shape() << LogIO::POST;
       auto const qd = md[0].getAngle("rad");
       auto const d = qd.getValue();
       auto const lat = d[0];
       auto const lon = d[1];
-      logSink() << "lat = " << lat << " lon = " << lon << LogIO::POST;
+      logSink() << "reference coordinate: lat = " << lat << " lon = " << lon << LogIO::POST;
       projector.setReferencePixel(0.0, 0.0);
       projector.setReferenceCoordinate(lat, lon);
       offset_direction = projector.project();
@@ -449,7 +449,7 @@ void SDDoubleCircleGainCal::executeDoubleCircleGainCal(
     for (size_t i = 0; i < numGain; ++i) {
       refTime() = gainTime[i];
       solveAllRPar() = gain(corrSlice, chanSlice, Slice(i, 1));
-      solveAllParOK() = gain_flag(corrSlice, chanSlice, Slice(i, 1));
+      solveAllParOK() = !gain_flag(corrSlice, chanSlice, Slice(i, 1));
 
       keepNCT();
     }
