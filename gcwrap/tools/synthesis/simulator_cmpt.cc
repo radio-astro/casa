@@ -653,6 +653,8 @@ simulator::predict(const std::vector<std::string>& modelImage, const std::string
 	}
       }
     }
+    _imageF.reset();
+    _imageC.reset();
     
     if(itsSim !=0){
       rstat=itsSim->predict(toVectorString(modelImage), complist, incremental);
