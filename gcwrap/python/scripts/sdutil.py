@@ -1498,11 +1498,28 @@ def get_ms_sampling_arcsec(msname, spw='', antenna='', field='',
         row_idx = row_idx[:row_gap[100]]
         row_gap = row_gap[:101]
     casalog.post("Using %d pointings to define sampling interval" % len(row_idx))
+    times = times.tolist()
     # get pointing direction of the time
     msmd_loc.open(msname)
-    inframe = msmd_loc.pointingdirection(row_idx[0])['antenna1']['pointingdirection']['refer']
-    direction_raw = [ msmd_loc.pointingdirection(idx,True,(idx if initial_guess else 0))['antenna1']['pointingdirection'] for idx in row_idx ]
+    badtime_idx = [] # id of rows with out corresponding pointing
+    direction_raw = []
+    for i in xrange(len(row_idx)):
+        try:
+            pointing = msmd_loc.pointingdirection(row_idx[i],True,(row_idx[i] if initial_guess else 0))
+        except:
+            badtime_idx.append(i)
+            casalog.post("Coud not get pointings of row %d. skipping the row" % row_idx[i], priority="DEBUG")
+            continue
+        direction_raw.append(pointing['antenna1']['pointingdirection'])
     msmd_loc.close()
+    inframe = direction_raw[0]['refer']
+    # adjust time and row_gap for rows without valid pointing
+    for i in badtime_idx:
+        times.pop(i)
+        for j in xrange(len(row_gap)):
+            if i <= row_gap[j]:
+                row_gap[j] -=1
+    #direction_raw = [ msmd_loc.pointingdirection(idx,True,(idx if initial_guess else 0))['antenna1']['pointingdirection'] for idx in row_idx ]
     if inframe==outref:
         ra_rad = [ dir['m0']['value'] for dir in direction_raw ]
         dec_rad = [ dir['m1']['value'] for dir in direction_raw ]
