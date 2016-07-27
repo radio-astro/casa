@@ -1666,7 +1666,9 @@ void ATCAFiller::checkField() {
       msc_p->source().calibrationGroup().put(ns,-1);
     }
 
-    if (fieldId_p != prev_fieldId_p || newPointingCorr_p) {
+    Bool fillPointingTable=False; //Imaging fails with pointing table filled
+    if (fillPointingTable && 
+        (fieldId_p != prev_fieldId_p || newPointingCorr_p)) {
       prev_fieldId_p = fieldId_p;
       Double epoch=mjd0_p+Double(proper_.pm_epoch);
       Int np=atms_p.pointing().nrow();
@@ -1682,13 +1684,14 @@ void ATCAFiller::checkField() {
           pointingOffset(0, 0)=pointingCorr_p(0,i)*C::arcsec;
           pointingOffset(1, 0)=pointingCorr_p(0,i)*C::arcsec;
         }    
-              if (i==0) { // ISM storage
-                msc_p->pointing().time().put(np,epoch);
-                msc_p->pointing().interval().put(np,DBL_MAX);
-                msc_p->pointing().numPoly().put(np, 1);
-                msc_p->pointing().direction().put(np,pointingDir);
+        if (i==0) { // ISM storage
+          msc_p->pointing().time().put(np,epoch);
+          msc_p->pointing().interval().put(np,DBL_MAX);
+          msc_p->pointing().numPoly().put(np, 1);
+          msc_p->pointing().direction().put(np,pointingDir);
           msc_p->pointing().pointingOffset().put(np,pointingOffset);
-              } else {
+          msc_p->pointing().tracking().put(np,True);
+        } else {
           if (newPointingCorr_p) {
             msc_p->pointing().pointingOffset().put(np,pointingOffset);
           }           
@@ -2132,7 +2135,8 @@ void ATCAFiller::storeData()
   }
 
   msc_p->data().put(n,VIS);
-
+  // CASA wants all flags set if flagRow is set
+  if (flagData) flags=flagData;
   msc_p->flag().put(n,flags);
   msc_p->flagCategory().put(n,flagCat);
   
