@@ -360,7 +360,7 @@ void SDDoubleCircleGainCalImpl::calibrate(Cube<Float> const &data,
       //work_data = mean_value / smoothed_data;
       for (size_t idata = 0; idata < num_gain; ++idata) {
         if (work_data[idata] != 0.0) {
-          work_data[idata] /= mean_value;
+          work_data[idata] = mean_value / smoothed_data[idata];
         }
         else {
           work_data[idata] = 0.0;
