@@ -85,8 +85,7 @@ inline casacore::String toString(casacore::Vector<T> const &v) {
   return casacore::String(oss);
 }
 
-inline casacore::String selectOnSourceAutoCorr(casacore::String const &msName) {
-  casacore::MeasurementSet const ms(msName);
+inline casacore::String selectOnSourceAutoCorr(casacore::MeasurementSet const &ms) {
   debuglog<< "selectOnSource" << debugpost;
   casa::String taqlForState(
       "SELECT FLAG_ROW FROM $1 WHERE UPPER(OBS_MODE) ~ m/^OBSERVE_TARGET#ON_SOURCE/");
@@ -94,8 +93,7 @@ inline casacore::String selectOnSourceAutoCorr(casacore::String const &msName) {
   casa::Vector<casa::uInt> stateIdList = stateSel.rowNumbers();
   debuglog<< "stateIdList = " << stateIdList << debugpost;
   std::ostringstream oss;
-  oss << "SELECT FROM \"" << msName
-      << "\" WHERE ANTENNA1 == ANTENNA2 && STATE_ID IN "
+  oss << "SELECT FROM $1 WHERE ANTENNA1 == ANTENNA2 && STATE_ID IN "
       << toString(stateIdList)
       << " ORDER BY FIELD_ID, ANTENNA1, FEED1, DATA_DESC_ID, TIME";
   return casacore::String(oss);
@@ -233,22 +231,24 @@ void SDDoubleCircleGainCal::selfGatherAndSolve(VisSet& vs, VisEquation& /* ve */
   initSolvePar();
 
   // Pick up OFF spectra using STATE_ID
+  auto const msSel = vs.iter().ms();
   debuglog<< "configure data selection for specific calibration mode" << debugpost;
-  String taql = selectOnSourceAutoCorr(msName());
+  auto const taql = selectOnSourceAutoCorr(msSel);
   debuglog<< "taql = \"" << taql << "\"" << debugpost;
-  MeasurementSet msSel(tableCommand(taql, vs.iter().ms()));
-  debuglog<< "msSel.nrow()=" << msSel.nrow() << debugpost;
-  if (msSel.nrow() == 0) {
+  MeasurementSet msOnSource(tableCommand(taql, msSel));
+  logSink() << LogIO::DEBUGGING << "msSel.nrow()=" << msSel.nrow()
+      << " msOnSource.nrow()=" << msOnSource.nrow() << LogIO::POST;
+  if (msOnSource.nrow() == 0) {
     throw AipsError("No reference integration in the data.");
   }
   String dataColName =
-      (msSel.tableDesc().isColumn("FLOAT_DATA")) ? "FLOAT_DATA" : "DATA";
-  debuglog<< "dataColName = " << dataColName << debugpost;
+      (msOnSource.tableDesc().isColumn("FLOAT_DATA")) ? "FLOAT_DATA" : "DATA";
+  logSink() << LogIO::DEBUGGING << "dataColName = " << dataColName << LogIO::POST;
 
-  if (msSel.tableDesc().isColumn("FLOAT_DATA")) {
-    executeDoubleCircleGainCal<FloatDataColumnAccessor>(msSel);
+  if (msOnSource.tableDesc().isColumn("FLOAT_DATA")) {
+    executeDoubleCircleGainCal<FloatDataColumnAccessor>(msOnSource);
   } else {
-    executeDoubleCircleGainCal<DataColumnAccessor>(msSel);
+    executeDoubleCircleGainCal<DataColumnAccessor>(msOnSource);
   }
 
   //assignCTScanField(*ct_, msName());
@@ -332,9 +332,8 @@ void SDDoubleCircleGainCal::executeDoubleCircleGainCal(
       << debugpost;
       continue;
     }
-    debuglog<< "Process " << ispw
-    << "(nchan " << nChanParList()[ispw] << ")"
-    << debugpost;
+    logSink() << "Process spw " << ispw
+        << "(nchan " << nChanParList()[ispw] << ")" << LogIO::POST;
 
     Int ifield = msIter.fieldId();
     ROScalarColumn<Int> antennaCol(currentMS, "ANTENNA1");
@@ -424,7 +423,7 @@ void SDDoubleCircleGainCal::executeDoubleCircleGainCal(
         << " (" << rad2arcsec(effective_radius) << " arcsec)"<< LogIO::POST;
     if (worker.isSmoothingActive()) {
       auto const effective_smoothing_size = worker.getEffectiveSmoothingSize();
-      logSink() << "smoothing activated. effective size = " << effective_smoothing_size << " channels" << LogIO::POST;
+      logSink() << "smoothing activated. effective size = " << effective_smoothing_size << LogIO::POST;
     }
     else {
       logSink() << "smoothing deactivated." << LogIO::POST;
