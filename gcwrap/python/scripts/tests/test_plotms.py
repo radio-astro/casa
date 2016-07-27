@@ -656,7 +656,7 @@ class plotms_test_calplots(plotms_test_base):
     def test_calplot_iteration(self):
         '''test_calplot_iteration: caltable with corr iteraxis'''
         self.plotfile_jpg = self.outputDir + "testCalPlot03.jpg"
-        plotfile1 = self.outputDir + "testCalPlot03_CorrL_2.jpg"
+        plotfile1 = self.outputDir + "testCalPlot03_Poln1_2.jpg"
         self.removeFiles(self.outputDir, "testCalPlot03_")
         time.sleep(5)
         res = plotms(vis=self.caltable, plotfile=self.plotfile_jpg, expformat="jpg", 
