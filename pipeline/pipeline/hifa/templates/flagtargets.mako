@@ -18,7 +18,7 @@ def template_agent_header1(agent):
 	return '<th %sspan=2>%s</th>' % (span, agent_description[agent])
 
 def template_agent_header2(agent):
-	if agent in ('online', 'template'):
+	if agent in ('template'):
 		return '<th>File</th><th>Number of Statements</th>'
 	else:
 		return ''		
