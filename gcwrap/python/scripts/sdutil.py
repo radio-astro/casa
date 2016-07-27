@@ -1468,6 +1468,7 @@ def get_ms_sampling_arcsec(msname, spw='', antenna='', field='',
     if len(selected_intent) > 0:
         taqlstr += (' && STATE_ID IN %s' % str(list(selected_intent)))
     seltb = tb_loc.query(query=taqlstr,sortlist='TIME',columns='TIME')
+    nrow_sel = seltb.nrows()
     row_idx = seltb.rownumbers()
     times = seltb.getcol("TIME")
     tb_loc.close()
@@ -1475,7 +1476,8 @@ def get_ms_sampling_arcsec(msname, spw='', antenna='', field='',
     tb_loc.open(msname+'/POINTING')
     nrow_ptg = tb_loc.nrows()
     tb_loc.close()
-    initial_guess = (nrow_org==nrow_ptg) #indicates MS converted back from ASAP.
+    #initial_guess = (nrow_org==nrow_ptg) #indicates MS converted back from ASAP.
+    initial_guess = (nrow_sel==nrow_ptg) #indicates MS converted back from ASAP.
     #ms_loc.open(msname)
     #ms_loc.msselect(items=dict(spw=str(spw0),baseline=bl0,field=field,
     #                       scan=scan,time=timerange,scanintent=intent))

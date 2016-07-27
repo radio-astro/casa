@@ -346,7 +346,7 @@ def _detect_gap_raster(timestamp, alldir, row_gap=None, threshold_row=None, thre
 
 def _get_sampling(alldir,row_gap_idx):
     """
-    Returns sampling sampling interval of raster scan.
+    Returns sampling interval of raster scan.
     Input
       pointing direction array in unit of radian ([[ra0,ra1,...],[dec0,dec1,...]])
       indices of raster row gap
@@ -363,6 +363,9 @@ def _get_sampling(alldir,row_gap_idx):
     dra = numpy.array([ numpy.sign(val)*max(abs(val),1.e-8) for val in dra ])
     dtan = ddec/dra
     pa_rad = numpy.arctan(numpy.median(dtan))
+    if (len(row_gap_idx) <= 2): # no gap detected
+        return alongScan, 0.0, pa_rad*180./numpy.pi
+        
     # orthogonal unit vector
     uvec = [numpy.cos(pa_rad+numpy.pi*0.5), numpy.sin(pa_rad+numpy.pi*0.5)]
     # direction vector at row gap
