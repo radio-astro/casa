@@ -214,23 +214,18 @@ class FlagTargetsALMA(basetask.StandardTaskTemplate):
         
         # the empty list which will hold the flagging commands
         flag_cmds = []        
+        flag_cmds.append("mode='summary' name='before'")
         
         # flag template?
         if inputs.template:
             if not os.path.exists(inputs.filetemplate):
-                LOG.warning('Template flag file \'%s\' was not found. Template '
-                            'flagging for %s disabled.' % (inputs.filetemplate, 
-                                                           inputs.ms.basename))
+                LOG.warning('Template flag file \'%s\' for \'%s\' not found.'
+                             % (inputs.filetemplate, inputs.ms.basename))
             else:
                 flag_cmds.extend(self._read_flagfile(inputs.filetemplate))
-                flag_cmds.append("mode='summary' name='template'")
+            flag_cmds.append("mode='summary' name='template'")
     
         
-        # summarise the state before flagging rather than assuming the initial
-        # state is unflagged
-        if flag_cmds:
-            flag_cmds.insert(0, "mode='summary' name='before'")
-
         return flag_cmds
 
     def _read_flagfile(self, filename):
