@@ -587,23 +587,42 @@ Slice calParSliceByType(String caltype, String what, String pol)
 
   Int s(0),n(0),i(1);
 
-  if (caltype=="G JONES" ||
-      caltype=="B JONES") {
+  if (caltype=="B TSYS") {
+    if (what=="TSYS") {
+      s=0;
+      i=1;
+    }
+    else
+      throw(AipsError("Unsupported value type: "+what));
+  }
+  else if (caltype=="TOPAC") {
+    if (what=="OPAC") {
+      if (pol=="")
+	return Slice(0,1,1); // trivial
+      else
+	throw(AipsError("Can't select with pol='"+pol+"' on unpolarized OPAC table."));
+    }
+    else
+      throw(AipsError("Unsupported value type: "+what));
+  }
+  else if ((caltype[0]=='G' && caltype!="GSPLINE") ||
+            caltype[0]=='B' ||
+            caltype[0]=='D') {
     if (what=="AMP" ||
-	what=="PHASE" ||
-	what=="REAL" ||
-	what=="IMAG") {
+	    what=="PHASE" ||
+	    what=="REAL" ||
+	    what=="IMAG") {
       s=0;  // nominal start is first pol
       i=1;  // increment is nominally 1 (only good for 1-par-per-pol caltypes
     }
     else
       throw(AipsError("Unsupported value type: "+what));
   } 
-  else if (caltype=="T JONES") {
+  else if (caltype[0]=='T') {
     if (what=="AMP" ||
-	what=="PHASE" ||
-	what=="REAL" ||
-	what=="IMAG") {
+	    what=="PHASE" ||
+	    what=="REAL" ||
+	    what=="IMAG") {
       if (pol=="")
 	return Slice(0,1,1); // trivial
       else
@@ -612,7 +631,15 @@ Slice calParSliceByType(String caltype, String what, String pol)
     else
       throw(AipsError("Unsupported value type: "+what));
   }
-  else if (caltype=="EVLASWP") {
+  else if (caltype[0]=='K' && caltype!="KAntPos Jones") {
+      if (what=="DELAY") {
+        s=0;
+        i=1;
+      } else {
+        throw(AipsError("Unsupported value type: "+what));
+      }
+  }
+  else if (caltype=="EVLASWPOW") {
     i=2;  // 2 pars-per-pol
     if (what=="GAINAMP")
       s=0;
@@ -621,15 +648,8 @@ Slice calParSliceByType(String caltype, String what, String pol)
     else
       throw(AipsError("Unsupported value type: "+what));
   }
-  else if (caltype=="TSYS") {
-    if (what=="TSYS") {
-      s=0;
-      i=1;
-    }
-    else
-      throw(AipsError("Unsupported value type: "+what));
-  }
-  else if (caltype=="TEC") {
+  
+  else if (caltype[0]=='F') {
     if (what=="TEC") {
       if (pol=="")
 	return Slice(0,1,1); // trivial
@@ -639,6 +659,7 @@ Slice calParSliceByType(String caltype, String what, String pol)
     else
       throw(AipsError("Unsupported value type: "+what));
   }
+  
   else
     throw(AipsError("Unsupported cal type: "+caltype));
 
@@ -652,7 +673,7 @@ Slice calParSliceByType(String caltype, String what, String pol)
 	   pol=="X") {
     n=1;  // for _all_ single-pol selections
   }
-  else if (pol=="") {
+  else if (pol=="" || pol=="RL" || pol=="XY") {
     n=2;  // both pols
   }
   else

@@ -158,6 +158,8 @@ public:
     // indicate which data column to use or not.  Currently false except for
     // AMP, PHASE, REAL, and IMAG.
     static bool axisIsData(Axis axis);
+    // Cal table axes which need validation/slicing for poln selection
+    static bool axisNeedsCalSlice(Axis axis);
     // Need datacolumn for averaging weight axes          
     static bool axisIsWeight(Axis axis);
               

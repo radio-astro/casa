@@ -72,6 +72,7 @@ public:
   //  void setUpIndexer(PMS::Axis iteraxis=PMS::SCAN,
   //		    Bool globalXRange=False, Bool globalYRange=False);
 
+  void setFilename(String filename) { filename_ = filename; };
   virtual String polname(Int ipol);
 
 protected:

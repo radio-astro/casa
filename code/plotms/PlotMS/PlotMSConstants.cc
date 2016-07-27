@@ -56,6 +56,17 @@ bool PMS::axisIsData(Axis axis) {
     }
 }
 
+bool PMS::axisNeedsCalSlice(Axis axis) {
+    switch(axis) {
+    case AMP: case PHASE: case REAL: case IMAG: 
+    case GAMP: case GPHASE: case GREAL: case GIMAG:
+    case DELAY: case SWP: case TSYS: case OPAC: case SNR: case TEC:
+    case FLAG:
+        return true;
+    default: return false;
+    }
+}
+
 bool PMS::axisIsWeight(Axis axis) {
     switch(axis) {
     case WT: case WTSP: case SIGMA: case SIGMASP: return true;

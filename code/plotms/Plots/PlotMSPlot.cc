@@ -318,7 +318,8 @@ vector<PMS::Axis> PlotMSPlot::getCachedAxes() {
 	for(int i = 0; i < xAxisCount; i++){
         axis = c->xAxis(i);
         if (axis == PMS::NONE) {
-            defaultAxis = getDefaultXAxis();
+            String caltype = itsCache_->calType();
+            defaultAxis = getDefaultXAxis(caltype);
             axes[i] = defaultAxis;
             c->setXAxis(defaultAxis, i);
         } else
@@ -331,13 +332,13 @@ vector<PMS::Axis> PlotMSPlot::getCachedAxes() {
 	return axes;
 }
 
-PMS::Axis PlotMSPlot::getDefaultXAxis() {
+PMS::Axis PlotMSPlot::getDefaultXAxis(String caltype) {
     PMS::Axis xaxis = PMS::TIME;
     if (itsCache_->cacheType() == PlotMSCacheBase::CAL) {
-        String caltype = itsCache_->calType();
         if (caltype.contains("BPOLY"))
             xaxis = PMS::FREQUENCY;
-        if (caltype.contains("TSYS") || caltype[0]=='B')
+        if (caltype.contains("TSYS") || caltype[0]=='B' ||
+            caltype.contains("Mf") || caltype[0]=='X' )
             xaxis = PMS::CHANNEL;
         if (caltype[0]=='D')
             xaxis = PMS::ANTENNA1;
@@ -455,24 +456,24 @@ bool PlotMSPlot::updateCache() {
 		return false;
 	}
 
-
-
 	itsParent_->getLogger()->markMeasurement(PMS::LOG_ORIGIN,
 			PMS::LOG_ORIGIN_LOAD_CACHE,
 			PMS::LOG_EVENT_LOAD_CACHE);
 	itsTCLParams_.endCacheLog = true;
 
 	// Delete existing cache if it doesn't match
-	if (CacheFactory::needNewCache(itsCache_, data->filename())) {
+    String filename = data->filename();
+	if (CacheFactory::needNewCache(itsCache_, filename)) {
 		if(itsCache_) {
             clearPlotData();  // plot has ptr to cache indexer about to be deleted
 			delete itsCache_;
 			itsCache_ = NULL;
 		}
-		itsCache_ = CacheFactory::getCache(data->filename(), itsParent_);
+		itsCache_ = CacheFactory::getCache(filename, itsParent_);
 		if(itsCache_ == NULL) {
 			throw AipsError("Failed to create a new Cache object!");
-		}
+		} else
+            itsCache_->setFilename(filename);
 	}
 
 	bool result = true;
@@ -1192,7 +1193,6 @@ bool PlotMSPlot::parametersHaveChanged_(const PlotMSWatchedParameters &p,
 		}
 	}
 
-
 	// Update cache if needed
 	bool handled = true;
 	if( dataSet && updateData ) {
@@ -1725,6 +1725,8 @@ void PlotMSPlot::setCanvasProperties (int row, int col,
             xLabelSingle = addFreqFrame(xLabelSingle);
         if (axisIsAveraged(x, averaging))
             xLabelSingle = "Average " + xLabelSingle;
+        if (isCalTable && xLabelSingle.contains("Correlation"))
+            xLabelSingle.replace(xLabelSingle.find("Correlation"), 11, "Polarization");
 		canvas->setAxisLabel(cx, xLabelSingle);
 		PlotFontPtr xFont = canvas->axisFont(cx);
         pointsize = (canvParams->xFontSet()) ? canvParams->xAxisFont(): std::max(12. - rows*cols+1., 8.);
@@ -1756,6 +1758,8 @@ void PlotMSPlot::setCanvasProperties (int row, int col,
                     yLabelSingle = addFreqFrame(yLabelSingle);
                 if (axisIsAveraged(y, averaging))
                     yLabelSingle = "Average " + yLabelSingle;
+                if (isCalTable && yLabelSingle.contains("Correlation"))
+                    yLabelSingle.replace(yLabelSingle.find("Correlation"), 11, "Polarization");
 
 				if ( cy == Y_LEFT ){
 					if ( yLabelLeft.size() > 0 ){
@@ -1869,8 +1873,8 @@ void PlotMSPlot::setCanvasProperties (int row, int col,
 		title = canvParams->titleFormat().getLabel(x, yAxes, xref,
 				xrefval, yRefs, yRefVals, xDataColumn, yDatas, polnRatio)
 				+ " " + iterTxt;
-        //if (isCalTable && title.contains("Amp"))
-        //    title.replace(title.find("Amp"), 3, "Gain Amplitude");
+        if (isCalTable && title.contains("Correlation"))
+            title.replace(title.find("Correlation"), 11, "Polarization");
 		canvas->setTitle(title);
 	}
 
@@ -1922,8 +1926,9 @@ PMS::Axis PlotMSPlot::getCalAxis(String calType, PMS::Axis axis) {
     if (axis==PMS::AMP) {
         if (calType.contains("TSYS")) return PMS::TSYS;
         if (calType.contains("SWPOW")) return PMS::SWP;
-        if (calType.contains("F")) return PMS::TEC;
-        if (calType == "K Jones") return PMS::DELAY;
+        if (calType[0]=='F') return PMS::TEC;
+        if (calType[0]=='K' && calType!="KAntPos") return PMS::DELAY;
+        if (calType.contains("Opac")) return PMS::OPAC;
         return PMS::GAMP;
     }
     if (axis==PMS::PHASE) return PMS::GPHASE;

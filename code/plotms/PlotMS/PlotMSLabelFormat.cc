@@ -103,15 +103,21 @@ void PlotMSLabelFormat::addPolnRatioToTag( String& tag, PMS::Axis axis ) {
         case PMS::AMP:
         case PMS::REAL:
         case PMS::IMAG:
+        case PMS::GAMP:
+        case PMS::GREAL:
+        case PMS::GIMAG:
         case PMS::TSYS:
         case PMS::SWP:
         case PMS::SNR:
             tag += " POLN Ratio";
             break;
         case PMS::PHASE:
+        case PMS::GPHASE:
         case PMS::DELAY:
             tag += " POLN Difference";
             break;
+        case PMS::CORR:
+            tag += " Ratio";
         default:
             break;
     }

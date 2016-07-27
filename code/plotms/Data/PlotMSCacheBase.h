@@ -80,6 +80,8 @@ public:
   // Access to pol names
   virtual String polname(Int ipol)=0;
 
+  // keep MS/CT filename (set cal type for CT)
+  virtual void setFilename(String filename) = 0;
   String calType() const { return calType_; };
   bool polnRatio() const { return polnRatio_; };
 
@@ -432,7 +434,7 @@ protected:
 
   // The calibration type (Table subType)
   String calType_;
-  // Polarization selection is ratio
+  // polarization selection is ratio ("/")
   bool polnRatio_;
 
 private:

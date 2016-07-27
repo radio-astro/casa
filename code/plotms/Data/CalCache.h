@@ -54,7 +54,7 @@ class CalCache : public PlotMSCacheBase {
 public:    
   
   // Constructor which takes parent PlotMS.
-  CalCache(PlotMSApp* parent, String caltype);
+  CalCache(PlotMSApp* parent);
   
   // Destructor
   virtual ~CalCache();
@@ -75,6 +75,9 @@ public:
 
   // Convert poln index->name and name->index
   virtual String polname(Int ipol);
+
+  // given filename, get cal type
+  void setFilename(String filename); 
 
 protected:
 
@@ -107,7 +110,13 @@ private:
 		  ThreadCommunication* thread);
 
   // Loads the specific axis/metadata into the cache using the given VisBuffer.
-  void loadCalAxis(ROCTIter& cti, Int chunk, PMS::Axis axis);
+  void loadCalAxis(ROCTIter& cti, Int chunk, PMS::Axis axis, String pol);
+
+  // Get axis string for VisCal Slice code
+  String toVisCalAxis(PMS::Axis axis);
+
+  // Check for divide-by-zero (=inf); set to 1.0 and flag it
+  void checkRatioArray(Array<Float>& array, Int chunk);
 
   // Set flags in the CalTable
   virtual void flagToDisk(const PlotMSFlagging& flagging,
@@ -125,9 +134,8 @@ private:
  
   // The polarization basis
   String basis_;
-  // Polarization selection index
-  Int polnIndex_;
-  Int polIndex(String polname);
+  // Had to adjust for divide-by-zero in ratio plot (checkRatioArray)
+  Bool divZero_;
 
   // VisIterator pointer
   ROCTIter* ci_p;

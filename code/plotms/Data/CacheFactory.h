@@ -44,7 +44,7 @@ public:
             Table tab(filename);
             // Construct proper empty cache if necessary
             if(tab.tableInfo().type() == "Calibration")
-                return new CalCache(parent, tab.tableInfo().subType());
+                return new CalCache(parent);
             else
                 return new MSCache(parent);
         }

@@ -1461,6 +1461,9 @@ Double PlotMSIndexer::computeBaselineLength(Int ant1, Int ant2) {
 
 String PlotMSIndexer::iterLabel() {
 	String itername(PMS::axis(iterAxis_));
+    if ((plotmscache_->cacheType()==PlotMSCacheBase::CAL) &&
+        (itername=="Corr"))
+        itername="Poln";
 	String iterVal = iterValue();
 	String iterLabel = itername + ": " +iterVal;
 	if (iterAxis_ == PMS::TIME ) {
@@ -1471,6 +1474,9 @@ String PlotMSIndexer::iterLabel() {
 
 String PlotMSIndexer::fileLabel(){
 	String itername(PMS::axis(iterAxis_));
+    if ((plotmscache_->cacheType()==PlotMSCacheBase::CAL) &&
+        (itername=="Corr"))
+        itername="Poln";
 	String iterVal = iterValue();
 	String iterLabel = itername +iterVal;
 	if (iterAxis_ == PMS::TIME ) {
