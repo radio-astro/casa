@@ -75,11 +75,19 @@ public:
   CalibratingVi2( vi::ViImplementation2 * inputVii,
                   const CalibratingParameters& calpar);
 
+  // From cal pars and an MS (used by OTF calibration outside synthesis)
   CalibratingVi2( vi::ViImplementation2 * inputVii,
                   const CalibratingParameters& calpar,
                   String msname);
 
+  // From a VE pointer (used within synthesis, e.g., for solving)
+  CalibratingVi2( vi::ViImplementation2 * inputVii,
+                  VisEquation *ve);
+
   ~CalibratingVi2();
+  
+  // Report the the ViImplementation type
+  virtual String ViiType() const { return String("Cal( ")+getVii()->ViiType()+" )"; };
 
 
   // Iterating management
@@ -97,10 +105,10 @@ public:
   //  (because this class provides it, even if it doesn't exist physically!)
   virtual Bool existsColumn (VisBufferComponent2 id) const;
   
-private:
+protected:
 
   // Correct the current VB
-  void correctCurrentVB() const;
+  virtual void calibrateCurrentVB() const;
 
   // Calibrater and VisEquation
   Calibrater cb_p;
@@ -110,9 +118,97 @@ private:
   Float corrFactor_p;  
 
   // signals whether or not correctCurrentVB has been called
-  mutable Bool visCorrOK_p;
+  mutable Bool visCalibrationOK_p;
 
 };
+
+class CalVi2LayerFactory : public ViiLayerFactory {
+
+ public:
+
+  CalVi2LayerFactory(const CalibratingParameters& calpars);
+
+  virtual ~CalVi2LayerFactory () {}
+
+ protected:
+
+  // CalVi2-specific layer-creater
+  //   
+  virtual ViImplementation2 * createInstance (ViImplementation2* vii0) const;
+
+  // Store a reference to the parameters
+  const CalibratingParameters& calpars_;
+
+
+};
+
+class CalSolvingVi2 : public vi::CalibratingVi2
+{
+
+public:
+
+  CalSolvingVi2( vi::ViImplementation2 * inputVii,
+		 const CalibratingParameters& calpar);
+
+  CalSolvingVi2( vi::ViImplementation2 * inputVii,
+		 const CalibratingParameters& calpar,
+		 String msname);
+
+  CalSolvingVi2( vi::ViImplementation2 * inputVii,
+		 VisEquation *ve);
+
+  ~CalSolvingVi2();
+
+  // Report the the ViImplementation type
+  virtual String ViiType() const { return String("CalForSolve( ")+getVii()->ViiType()+" )"; };
+
+  // Cal solving also involve modified model data
+  virtual void visibilityModel(Cube<Complex>& vis) const;
+  
+private:
+
+  // specialized cal application for solving
+  virtual void calibrateCurrentVB() const;
+
+};
+
+
+class CalSolvingVi2LayerFactory : public CalVi2LayerFactory {
+
+ public:
+
+  CalSolvingVi2LayerFactory(const CalibratingParameters& calpars);
+
+  virtual ~CalSolvingVi2LayerFactory () {}
+
+ protected:
+
+  // CalSolvingVi2-specific layer-creater
+  virtual ViImplementation2 * createInstance (ViImplementation2* vii0) const;
+
+};
+
+class CalSolvingVi2LayerFactoryByVE : public ViiLayerFactory {
+
+ public:
+
+  CalSolvingVi2LayerFactoryByVE(VisEquation* ve);  // From a VE pointer in calling scope
+
+  virtual ~CalSolvingVi2LayerFactoryByVE () {}
+
+ protected:
+
+  // CalSolvingVi2-specific layer-creater
+  virtual ViImplementation2 * createInstance (ViImplementation2* vii0) const;
+
+ private:
+  
+  VisEquation *ve_p;
+
+};
+
+
+
 
 } //# NAMESPACE VI - END
 } //# NAMESPACE CASA - END

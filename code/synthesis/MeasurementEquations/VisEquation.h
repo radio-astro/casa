@@ -142,6 +142,7 @@ public:
   // Correct/Corrupt in place the OBSERVED/MODEL visibilities in a VisBuffer
   //  with the apply-able VisCals on either side of the SolvableVisCal
   void collapse(VisBuffer& vb);
+  void collapse2(vi::VisBuffer2& vb); // VB2 version
 
 
   // This collapse avoids I/O (assumes the vb data/model are ready),
@@ -167,7 +168,6 @@ public:
                      VisBuffer& dR1,
                      Matrix<Bool>& Rflg);
 
- 
   // Report the VisEq's state
   void state();
 
@@ -186,6 +186,10 @@ protected:
 
   // Detect freq dependence along the Vis Equation
   void setFreqDep();
+
+  // Divide corr data by model 
+  void divideCorrByModel(vi::VisBuffer2& vb);
+
 
 private:
 

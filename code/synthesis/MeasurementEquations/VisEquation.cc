@@ -351,6 +351,95 @@ void VisEquation::collapse(VisBuffer& vb) {
 }
 
 //----------------------------------------------------------------------
+void VisEquation::collapse2(vi::VisBuffer2& vb) {
+
+  if (prtlev()>0) cout << "VE::collapse2(VB2)" << endl;
+
+  cout << "VE::collapse2: Is model ok?" << endl;
+
+  // Handle origin of model data here:
+  if (useInternalModel_)
+    // Use specified (point-source) stokes model
+    throw(AipsError("Use of smodel not yet supported in VE::collapse2"));
+    //    vb.setVisCubeModel(stokesModel_);
+  else
+    // from MS
+    vb.visCubeModel();
+
+  // initialize LHS/RHS indices
+  Int lidx=0;
+  Int ridx=napp_-1;
+
+  // Correct DATA up to solved-for term
+  while (lidx<napp_ && vc()[lidx]->type() < svc().type()) {
+    vc()[lidx]->correct2(vb,False,True);
+    lidx++;
+  }
+  
+  // Corrupt MODEL down to solved-for term (incl. same type as solved-for term)
+  while (ridx>-1    && vc()[ridx]->type() >= svc().type()) {
+    vc()[ridx]->corrupt2(vb);
+    ridx--;
+  }
+
+  if (svc().normalizable())
+    divideCorrByModel(vb);
+
+  
+}
+
+void VisEquation::divideCorrByModel(vi::VisBuffer2& vb) {
+
+  // This divides corrected data by model 
+  //  ... and updates weightspec accordingly
+
+  Cube<Complex> c(vb.visCubeCorrected());
+  Cube<Complex> m(vb.visCubeModel());
+  Cube<Bool> fl(vb.flagCube());
+  Cube<Float> w(vb.weightSpectrum());
+
+  for (Int irow=0;irow<vb.nRows();++irow) {
+    if (vb.flagRow()(irow)) {
+      // Row flagged, make sure cube also flagged, weight/data zeroed
+      c(Slice(),Slice(),Slice(irow,1,1))=0.0f;
+      w(Slice(),Slice(),Slice(irow,1,1))=0.0f;
+      fl(Slice(),Slice(),Slice(irow,1,1))=True;
+    }
+    else {
+      for (Int ichan=0;ichan<vb.nChannels();++ichan) {
+	for (Int icorr=0;icorr<vb.nCorrelations();++icorr) {
+	  Bool& Fl(fl(icorr,ichan,irow));
+	  Float& W(w(icorr,ichan,irow));
+	  if (!Fl) {
+	    // Not flagged...
+	    Float A=abs(m(icorr,ichan,irow));
+	    if (A >0.0f) {
+	      // ...and model non-zero
+	      Complex& C(c(icorr,ichan,irow));
+	      Complex& M(m(icorr,ichan,irow));
+	      C=Complex(DComplex(C)/DComplex(M));  // divide corr data by model
+	      W*=square(A);                        // multiply weight by model**2
+	      M=Complex(1.0f);                     // divide model by itself
+	    }
+	  }
+	  else {
+	    // be sure it is flagged and weightless
+	    Fl=True;
+	    W=0.0f;
+	  }
+	} // icorr
+      }	// ichan  
+    } // !flagRow
+  } // irow
+  
+  cout << "VE::divideCorrByModel:  update unchan'd weight" << endl;
+
+}
+
+
+
+
+//----------------------------------------------------------------------
 // void VisEquation::collapseForSim(VisBuffer& vb) {
 void VisEquation::collapseForSim(VisBuffer& vb) {
 

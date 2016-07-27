@@ -24,6 +24,7 @@
 #include <synthesis/MeasurementComponents/Calibrater.h>
 #include <synthesis/CalLibrary/CalLibraryTools.h>
 #include <casa/Arrays/ArrayPartMath.h>
+#include <casa/Arrays/MaskArrMath.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -133,19 +134,19 @@ void CalibratingParameters::validate() const
 
 // -----------------------------------------------------------------------
 CalibratingVi2::CalibratingVi2(	vi::ViImplementation2 * inputVii,
-				                const CalibratingParameters& calpar) :
+				const CalibratingParameters& calpar) :
   TransformingVi2 (inputVii),
   cb_p(),
   ve_p(0),
   corrFactor_p(calpar.getCorrFactor()), // temporary
-  visCorrOK_p(False)
+  visCalibrationOK_p(False)
 {
 
   // Initialize underlying ViImpl2
   getVii()->originChunks();
   getVii()->origin();
  
-  // Make a VisBuffer for CalibratingVi2 clients (it is connected to the vi interface)
+  // Make the internal VisBuffer2 for CalibratingVi2 clients
   setVisBuffer(createAttachedVisBuffer (VbPlain,VbRekeyable));
 
 }
@@ -158,7 +159,7 @@ CalibratingVi2::CalibratingVi2( vi::ViImplementation2 * inputVii,
   cb_p(msname),
   ve_p(0),
   corrFactor_p(1.0),
-  visCorrOK_p(False)
+  visCalibrationOK_p(False)
 {
 
   if (calpar.byCalLib()) {
@@ -178,7 +179,25 @@ CalibratingVi2::CalibratingVi2( vi::ViImplementation2 * inputVii,
   getVii()->originChunks();
   getVii()->origin();
  
-  // Make a VisBuffer for CalibratingVi2 clients (it is connected to the vi interface)
+  // Make a VisBuffer for CalibratingVi2 clients 
+  setVisBuffer(createAttachedVisBuffer (VbPlain,VbRekeyable));
+
+}
+// -----------------------------------------------------------------------
+CalibratingVi2::CalibratingVi2( vi::ViImplementation2 * inputVii,
+                                VisEquation *ve) :
+  TransformingVi2 (inputVii),
+  cb_p(),
+  ve_p(ve),
+  corrFactor_p(1.0),
+  visCalibrationOK_p(False)
+{
+
+  // Initialize underlying ViImpl2
+  getVii()->originChunks();
+  getVii()->origin();
+ 
+  // Make a VisBuffer for CalibratingVi2 clients
   setVisBuffer(createAttachedVisBuffer (VbPlain,VbRekeyable));
 
 }
@@ -188,6 +207,9 @@ CalibratingVi2::CalibratingVi2( vi::ViImplementation2 * inputVii,
 // -----------------------------------------------------------------------
 CalibratingVi2::~CalibratingVi2()
 {
+  //  cout << "  ~CalVi2:      " << this << endl;
+
+  // ve_p is a borrowed pointer, so need not delete here
   ve_p=0;
 }
 
@@ -208,7 +230,7 @@ CalibratingVi2::origin()
   configureNewSubchunk();
 
   // Data/wts not yet corrected
-  visCorrOK_p=False;
+  visCalibrationOK_p=False;
 }
 
 // -----------------------------------------------------------------------
@@ -225,7 +247,7 @@ void CalibratingVi2::next()
   configureNewSubchunk();
 
   // Data/wts not yet corrected
-  visCorrOK_p=False;
+  visCalibrationOK_p=False;
 
 }
 
@@ -237,38 +259,12 @@ void CalibratingVi2::flag(Cube<Bool>& flagC) const
   //  cout << "CVI2::flag(Cube)...";
 
   // Call for correction, which might set some flags
-  correctCurrentVB();
+  calibrateCurrentVB();
 
   // copy result to caller's Cube<Bool>
   flagC.assign(getVii()->getVisBuffer()->flagCube());
 
 }
-
-
-
-// -----------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------
-/* DEPRECATED?
-void CalibratingVi2::flag(Matrix<Bool>& flagM) const
-{
-  // Corr-indep flags
-  //  cout << "CVI2::flag(Matrix)...";
-
-  // Get corr-dep flags
-  Cube<Bool> flagC;
-  this->flag(flagC);
-
-  // sum on corr axis
-  uInt nr=flagC.shape()(2);
-  uInt nch=flagC.shape()(1);
-  flagM.resize(nch,nr);
-  flagM=partialMaxs(flagC,IPosition(1,0)); 
-
-
-}
-*/
-
 
 
 // -----------------------------------------------------------------------
@@ -281,7 +277,7 @@ void CalibratingVi2::weight(Matrix<Float>& wt) const
 
   // Call for correction
   //   TBD: optimize w.r.t. calibrating only the weights?
-  correctCurrentVB();
+  calibrateCurrentVB();
 
   // copy result to caller's Matrix<Float>
   wt.assign(getVii()->getVisBuffer()->weight());
@@ -301,7 +297,7 @@ void CalibratingVi2::weightSpectrum(Cube<Float>& wtsp) const
 
     // Call for correction
     //   TBD: optimize w.r.t. calibrating only the weights?
-    correctCurrentVB();
+    calibrateCurrentVB();
     
     // copy result to caller's Matrix<Float>
     wtsp.assign(getVii()->getVisBuffer()->weightSpectrum());
@@ -332,7 +328,7 @@ void CalibratingVi2::visibilityCorrected(Cube<Complex>& vis) const
 
   // Call the actual correction method
   //  (only does the actual work, if needed)
-  correctCurrentVB();
+  calibrateCurrentVB();
 
   // copy result to caller's Cube<Complex>
   vis.assign(getVii()->getVisBuffer()->visCubeCorrected());
@@ -367,7 +363,7 @@ Bool CalibratingVi2::existsColumn(VisBufferComponent2 id) const
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-void CalibratingVi2::correctCurrentVB() const
+void CalibratingVi2::calibrateCurrentVB() const
 {
   // This method must call NO ordinary VB2 accessors that require ViImpl 
   //   methods that are defined in this class, _even_implicitly_, because 
@@ -376,29 +372,20 @@ void CalibratingVi2::correctCurrentVB() const
   // One way to avoid this is to ensure that every method in this class 
   //   initializes the VB2 fields via getVii() methods.....
 
-  //  cout << " correctCurrentVB(): " << boolalpha << visCorrOK_p;
+  //  cout << " calibrateCurrentVB(): " << boolalpha << visCalibrationOK_p;
 
   // Do the correction, if not done yet
-  if (!visCorrOK_p) {
+  if (!visCalibrationOK_p) {
 
-    // Get the underlying ViImpl2's VisBuffer, to munge it
+    // We will operate on the underlying VB
     VisBuffer2 *vb = getVii()->getVisBuffer();
 
     // sense if WEIGHT_SPECTRUM exists
     Bool doWtSp = getVii()->weightSpectrumExists();
 
-    // Init the flagCube from below
-    //   This does not use any CVi2 overloads
-    Cube<Bool> flC;
-    getVii()->flag(flC);
-    vb->setFlagCube(flC);
-
-    // Initialize the to-be-calibrated weights (this is smart re spec weights or not)
-    //   This does not use any CVi2 overloads  (luckily)
-    vb->resetWeightsUsingSigma();
-    
-    // Initialize corrected data w/ data
-    //   This does not use any CVi2 overloads
+    // Fill current flags, raw weights, and raw vis
+    vb->flagCube();
+    vb->resetWeightsUsingSigma();  //  this is smart re spec weights or not
     vb->setVisCubeCorrected(vb->visCube());
 
     // If the VisEquation is set, use it, otherwise use the corrFactor_p
@@ -414,7 +401,6 @@ void CalibratingVi2::correctCurrentVB() const
     else {
     
       // Use supplied corrFactor_p to make this corrected data look changed
-      //  In leiu of working VisEquation that is TBD
       Cube<Complex> vCC(vb->visCubeCorrected());
       vCC*=corrFactor_p;
       vb->setVisCubeCorrected(vCC);
@@ -436,13 +422,216 @@ void CalibratingVi2::correctCurrentVB() const
     }
 
     // Signal that we have applied the correction, to avoid unnecessary redundancy
-    visCorrOK_p=True;
+    visCalibrationOK_p=True;
 
-    //    cout << "-->" << visCorrOK_p;
+    //    cout << "-->" << visCalibrationOK_p;
 
   }    
   //  cout << endl;
 }
+
+CalVi2LayerFactory::CalVi2LayerFactory(const CalibratingParameters& pars)
+  : ViiLayerFactory(),
+    calpars_(pars)
+{}
+
+
+// CalVi2-specific layer-creater
+ViImplementation2 * CalVi2LayerFactory::createInstance (ViImplementation2* vii0) const {
+  // Make the CalibratingVi2, using supplied ViImplementation2, and return it
+  ViImplementation2 *vii = new CalibratingVi2(vii0,calpars_);
+  return vii;
+}
+
+
+ /********************************/
+
+
+// -----------------------------------------------------------------------
+CalSolvingVi2::CalSolvingVi2(	vi::ViImplementation2 * inputVii,
+				const CalibratingParameters& calpar) :
+  CalibratingVi2 (inputVii,calpar)
+
+{
+  corrFactor_p=sqrt(corrFactor_p);
+}
+
+// -----------------------------------------------------------------------
+CalSolvingVi2::CalSolvingVi2( vi::ViImplementation2 * inputVii,
+                                const CalibratingParameters& calpar,
+                                String msname) :
+  CalibratingVi2 (inputVii,calpar,msname)
+{
+  // Nothing specialized to do here (except ctor parent, above)
+}
+
+// -----------------------------------------------------------------------
+CalSolvingVi2::CalSolvingVi2( vi::ViImplementation2 * inputVii,
+			      VisEquation *ve) :
+  CalibratingVi2 (inputVii,ve)
+{
+  // Nothing specialized to do here (except ctor parent, above)
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+CalSolvingVi2::~CalSolvingVi2()
+{
+  //  cout << "   ~CalSolVi2:  " << this << endl;
+  cout << "CSVi2::calibrateCurrentVB: Is WtSpec automatic?" << endl;
+
+  // Nothing specialized to do here (except ctor parent, above)
+}
+
+// -----------------------------------------------------------------------
+void CalSolvingVi2::visibilityModel(Cube<Complex>& mod) const
+{
+
+  //  cout << "CSVI2::visibilityModel...";
+
+  // Call the actual correction method
+  //  (only does the actual work, if needed)
+  calibrateCurrentVB();
+
+  // copy result to caller's Cube<Complex>
+  //  (this is no-op when mod has same data address as visCubeModel())
+  mod.assign(getVii()->getVisBuffer()->visCubeModel());
+
+}
+
+// -----------------------------------------------------------------------
+void CalSolvingVi2::calibrateCurrentVB() const
+{
+
+  //  cout << " CalSolvingVi2::calibrateCurrentVB(): " << boolalpha << visCalibrationOK_p;
+
+  // Do the correction, if not done yet
+  if (!visCalibrationOK_p) {
+
+    // Get the underlying ViImpl2's VisBuffer, to munge it
+    VisBuffer2 *vb = getVii()->getVisBuffer();
+
+    // sense if WEIGHT_SPECTRUM exists
+    Bool doWtSp = getVii()->weightSpectrumExists();
+
+    // Fill flags
+    vb->flagCube();
+
+    // Fill model
+    // NB:  model-filling handled below, in ve_p (or on-demand)
+    //vb->visCubeModel();
+
+    // Initialize the to-be-calibrated weights 
+    //   (this is smart re spec weights or not)
+    //  TBD: better semantics: vb->setCorrDataWtSpec(vb->dataWtSpec()); 
+
+    vb->resetWeightsUsingSigma();
+    
+    // Initialize corrected data w/ data
+    vb->setVisCubeCorrected(vb->visCube());
+
+    // If the VisEquation is set, use it, otherwise use the corrFactor_p
+    if (ve_p) {
+      // Apply calibration via the VisEquation
+      ve_p->collapse2(*vb);   // ,False,doWtSp);
+
+      // Set unchan'd weights, in case they are requested
+      if (doWtSp)
+	vb->setWeight(partialMedians(vb->weightSpectrum(),IPosition(1,1)));
+	
+    }
+    else {
+    
+      // Use supplied corrFactor_p to make this corrected data look changed
+      //  In leiu of working VisEquation that is TBD
+
+      // Correct data
+      Cube<Complex> vCC(vb->visCubeCorrected());
+      vCC*=corrFactor_p;
+      vb->setVisCubeCorrected(vCC);
+
+      // Corrupt the model
+      Cube<Complex> vCM(vb->visCubeModel());
+      vCM/=corrFactor_p;
+      vb->setVisCubeModel(vCM);
+
+      Cube<Float> modA2(square(amplitude(vCM)));
+      Cube<Bool> modmask(modA2>0.0f);
+
+      MaskedArray<Complex> vCCm=vCC(modmask);
+      MaskedArray<Complex> vCMm=vCM(modmask);
+      MaskedArray<Float> modA2m(modA2(modmask));
+
+      // Divide corr data by mod data (where mod non-zero)
+      vCCm=vCCm/vCMm;
+      vCMm=Complex(1.0);  // model now unity
+      //vCMm=vCMm/vCMm;        // less efficient?
+     
+      if (doWtSp) {
+	// Calibrate the WS
+	Cube<Float> wS(vb->weightSpectrum());   // Was set above
+	wS/=(corrFactor_p*corrFactor_p);
+
+	// adjust for model division
+	MaskedArray<Float> wSm(wS(modmask));
+	wSm=wSm*modA2m;
+
+	vb->setWeightSpectrum(wS);
+	// Set W via median on chan axis
+	vb->setWeight(partialMedians(wS,IPosition(1,1)));
+      }
+      else {
+	// Just calibrate the W
+	Matrix<Float> w(vb->weight());          // Was set above
+	w/=(corrFactor_p*corrFactor_p);
+	vb->setWeight(w);
+      }
+    }
+
+    // Signal that we have applied the correction, to avoid unnecessary redundancy
+    visCalibrationOK_p=True;
+
+    //    cout << "-->" << visCalibrationOK_p;
+
+  }    
+  //  cout << endl;
+}
+
+
+CalSolvingVi2LayerFactory::CalSolvingVi2LayerFactory(const CalibratingParameters& pars)
+  : CalVi2LayerFactory(pars)
+{}
+
+
+// CalSolvingVi2-specific layer-creater
+ViImplementation2 * CalSolvingVi2LayerFactory::createInstance (ViImplementation2* vii0) const {
+  // Make the CalibratingVi2, using supplied ViImplementation2, and return it
+  ViImplementation2 *vii = new CalSolvingVi2(vii0,calpars_);
+  return vii;
+}
+
+
+
+CalSolvingVi2LayerFactoryByVE::CalSolvingVi2LayerFactoryByVE(VisEquation *ve)
+  : ViiLayerFactory(),
+    ve_p(ve)
+{
+  
+  ve_p->state();
+
+}
+
+// CalSolvingVi2-specific layer-creater
+ViImplementation2 * CalSolvingVi2LayerFactoryByVE::createInstance (ViImplementation2* vii0) const {
+  // Make the CalibratingVi2, using supplied ViImplementation2, and return it
+  ViImplementation2 *vii = new CalSolvingVi2(vii0,ve_p);
+  return vii;
+}
+
+
+
+
 
 
 
