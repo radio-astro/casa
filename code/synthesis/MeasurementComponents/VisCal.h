@@ -159,12 +159,13 @@ public:
   virtual void correct(VisBuffer& vb, Bool trial=False);
   virtual void correct2(vi::VisBuffer2& vb, Bool trial=False, Bool doWtSp=False);
   virtual void corrupt(VisBuffer& vb);
+  virtual void corrupt2(vi::VisBuffer2& vb);
 
   // Apply calibration to data in VisBuffer; 
   //  (alternate output versions)
   virtual void correct(VisBuffer& vb, Cube<Complex>& Vout,Bool trial=False);
-  //  virtual void corrupt(VisBuffer& vb, Cube<Complex>& Mout);
   virtual void corrupt(VisBuffer& vb, Cube<Complex>& Mout);
+  virtual void corrupt2(vi::VisBuffer2& vb, Cube<Complex>& Mout);
 
   // Flag counting
   virtual void initCalFlagCount();

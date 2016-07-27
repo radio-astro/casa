@@ -334,13 +334,22 @@ void VisCal::correct2(vi::VisBuffer2& vb, Bool trial, Bool doWtSp) {
 
 }
 
-// void VisCal::corrupt(VisBuffer& vb) {
 void VisCal::corrupt(VisBuffer& vb) {
 
   if (prtlev()>3) cout << "VC::corrupt(vb)" << endl;
 
   // Call non-in-place version, in-place-wise:
   corrupt(vb,vb.modelVisCube());
+}
+
+void VisCal::corrupt2(vi::VisBuffer2& vb) {
+
+  if (prtlev()>3) cout << "VC::corrupt(vb2)" << endl;
+
+  // Call non-in-place version, in-place-wise:
+  Cube<Complex> m;
+  m.reference(vb.visCubeModel());  // access model non-const
+  corrupt2(vb,m);
 }
 
 void VisCal::correct(VisBuffer& vb, Cube<Complex>& Vout, Bool trial) {
@@ -381,6 +390,33 @@ void VisCal::corrupt(VisBuffer& vb, Cube<Complex>& Mout) {
 
   // Call generic row-by-row apply, with inversion turned OFF
   applyCal(vb,Mout);
+
+  // Restore user's calWt()
+  calWt()=userCalWt;
+
+}
+
+void VisCal::corrupt2(vi::VisBuffer2& vb, Cube<Complex>& Mout) {
+
+  if (prtlev()>3) cout << " VC::corrupt2(VB2)" << endl;
+
+
+  // Ensure weight calibration off internally for corrupt
+  //   (corruption doesn't re-scale the data!)
+  Bool userCalWt=calWt();
+  calWt()=False;
+
+  // Prepare output Cube<Complex> for its own in-place apply:
+  //  (this is a no-op if referencing same storage)
+  Mout = vb.visCubeModel();
+
+  // Bring calibration up-to-date with the vb, 
+  //   with inversion turned OFF
+  syncCal2(vb,False);
+
+  // Call generic row-by-row apply, with inversion turned OFF
+  Cube<Float> w0;  // place-holder
+  applyCal2(vb,Mout,w0);
 
   // Restore user's calWt()
   calWt()=userCalWt;
