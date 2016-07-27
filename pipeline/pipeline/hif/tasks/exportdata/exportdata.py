@@ -31,6 +31,7 @@ task = pipeline.tasks.exportdata.ExportData (inputs)
 """
 from __future__ import absolute_import
 import os
+import glob
 import errno
 import tarfile
 import shutil
@@ -386,16 +387,29 @@ class ExportData(basetask.StandardTaskTemplate):
         pipemanifest.add_restorescript (ouss, os.path.basename(casa_restore_script))
 
         # Export the flux.csv file
+        #    Does not need to be exported to the archive because the information
+        #    is encapsulated in the calibration tables
+        #    Relies on file name convention
         flux_file = self._export_flux_file (inputs.context, oussid, 'flux.csv',
             inputs.products_dir)
         pipemanifest.add_flux_file (ouss, os.path.basename(flux_file))
 
         # Export the antennapos.csv file.
+        #    Does not need to be exported to the archive because the information
+        #    is encapsulated in the calibration tables
+        #    Relies on file name convention
         antenna_file = self._export_antpos_file (inputs.context, oussid, 'antennapos.csv',
             inputs.products_dir)
         pipemanifest.add_antennapos_file (ouss, os.path.basename(antenna_file))
 
+        # Export the target source template flagging files
+        #    Whether or not these should be exported to the archive depends on
+        #    the final plage of the target flagging step in the work flow
+        targetflags_list = self._export_targetflags_files (inputs.context, oussid,
+            '*_flagtargetstemplate.txt', inputs.products_dir)
+
         # Export calibrator images to FITS
+        #    Should check sources be added here.
         LOG.info ('Exporting calibrator source images')
         if inputs.calintents == '':
             calintents_list = ['PHASE', 'BANDPASS', 'AMPLITUDE']
@@ -839,12 +853,41 @@ class ExportData(basetask.StandardTaskTemplate):
         else:
             return 'Undefined'
 
+    def _export_targetflags_files (self, context, oussid, pattern, products_dir):
+
+        """
+        Export the target flags files
+        """
+
+        output_filelist = []
+        ps = context.project_structure
+        for file_name in glob.glob(pattern):
+            if ps is None:
+                flags_file = os.path.join (context.output_dir, file_name)
+                out_flags_file = os.path.join (products_dir, file_name)
+            elif ps.ousstatus_entity_id == 'unknown':
+                flags_file = os.path.join (context.output_dir, file_name)
+                out_flags_file = os.path.join (products_dir, file_name)
+            else:
+                flags_file = os.path.join (context.output_dir, file_name)
+                out_flags_file = os.path.join (products_dir, oussid + '.' + file_name)
+            if os.path.exists(flags_file):
+                LOG.info('Copying science target flags file %s to %s' % \
+                     (flags_file, out_flags_file))
+                shutil.copy (flags_file, out_flags_file)
+                output_filelist.append(os.path.basename(out_flags_file))
+            else:
+                output_filelist.append('Undefined')
+
+        return output_filelist
 
     def _export_casa_restore_script (self, context, script_name, products_dir, oussid, vislist, session_list):
 
         """
         Save the CASA restore scropt.
         """
+
+        # Generate the file list
 
         # Get the output file name
         ps = context.project_structure
