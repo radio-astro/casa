@@ -356,7 +356,17 @@ void SDDoubleCircleGainCalImpl::calibrate(Cube<Float> const &data,
       // derive gain factor: mean(smoothed_data) / smoothed_data
       //work_data = mean(smoothed_data) / smoothed_data;
       auto mean_value = ::average(0, num_gain, smoothed_data, work_flag);
-      work_data = mean_value / smoothed_data;
+
+      //work_data = mean_value / smoothed_data;
+      for (size_t idata = 0; idata < num_gain; ++idata) {
+        if (work_data[idata] != 0.0) {
+          work_data[idata] /= mean_value;
+        }
+        else {
+          work_data[idata] = 0.0;
+          work_flag[idata] = True;
+        }
+      }
 
       LOG << LogIO::DEBUGGING << "mean value = " << mean_value
           << " (simple mean " << mean(smoothed_data) << ")" << POSTLOG;
@@ -371,6 +381,7 @@ void SDDoubleCircleGainCalImpl::calibrate(Cube<Float> const &data,
           work_data[idata] = 1.0 / sqrt(work_data[idata]);
         } else {
           work_data[idata] = 0.0;
+          work_flag[idata] = True;
         }
       }
 
@@ -379,6 +390,7 @@ void SDDoubleCircleGainCalImpl::calibrate(Cube<Float> const &data,
 
       for (size_t idata = 0; idata < num_gain; ++idata) {
         gain(ipol, ichan, idata) = work_data[idata];
+        gain_flag(ipol, ichan, idata) = work_flag[idata];
       }
     }
   }
