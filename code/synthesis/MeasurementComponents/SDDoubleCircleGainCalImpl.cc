@@ -371,13 +371,13 @@ void SDDoubleCircleGainCalImpl::calibrate(Cube<Float> const &data,
       LOG << LogIO::DEBUGGING << "mean value = " << mean_value
           << " (simple mean " << mean(smoothed_data) << ")" << POSTLOG;
 
-//      LOG << "gfactor[" << ipol << "," << ichan << "]=" << work_data
+//      LOG << LogIO::DEBUGGING << "gfactor[" << ipol << "," << ichan << "]=" << work_data
 //          << POSTLOG;
 
       // conversion for G type calibration
       //work_data = 1.0 / sqrt(work_data);
       for (size_t idata = 0; idata < num_gain; ++idata) {
-        if (work_data[idata] != 0.0) {
+        if (work_data[idata] > 0.0) {
           work_data[idata] = 1.0 / sqrt(work_data[idata]);
         } else {
           work_data[idata] = 0.0;
@@ -385,7 +385,7 @@ void SDDoubleCircleGainCalImpl::calibrate(Cube<Float> const &data,
         }
       }
 
-//      LOG << "fparam[" << ipol << "," << ichan << "]=" << work_data
+//      LOG << LogIO::DEBUGGING << "fparam[" << ipol << "," << ichan << "]=" << work_data
 //          << POSTLOG;
 
       for (size_t idata = 0; idata < num_gain; ++idata) {
