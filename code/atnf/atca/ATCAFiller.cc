@@ -1410,13 +1410,14 @@ Int ATCAFiller::checkSpW(Int ifNumber,Bool log) {
          chanSpac*=2;
          refChan = (refChan - edge)/2;
       }    
-      Vector<Double> chanFreq(nchan), resolution(nchan);
+      Vector<Double> chanFreq(nchan), resolution(nchan),width(nchan);
       for (Int ichan=0; ichan<nchan; ichan++)
         chanFreq(ichan)=refFreq+(ichan-refChan)*chanSpac;
       msc_p->spectralWindow().chanFreq().put(n,chanFreq);
       resolution=chanBW;
+      width=chanSpac;
       msc_p->spectralWindow().resolution().put(n,resolution);
-      msc_p->spectralWindow().chanWidth().put(n, resolution);
+      msc_p->spectralWindow().chanWidth().put(n, width);
       msc_p->spectralWindow().effectiveBW().put(n, resolution);
       msc_p->spectralWindow().totalBandwidth().put(n,
           (nchan<33 ? abs(nchan*chanSpac) : doubles_.if_bw[ifNumber]));
