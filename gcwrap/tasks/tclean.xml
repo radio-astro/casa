@@ -230,12 +230,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                        try.model         - Model image (contains only flux components)
                        try.sumwt        - Single pixel image containing sum-of-weights.
                                                  (for natural weighting, sensitivity=1/sqrt(sumwt))
+                       try.pb              - Primary beam model (values depend on the gridder used)
 
                        Widefield projection algorithms (gridder=mosaic,awproject) will
                        compute the following images too.
                        try.weight        - FT of gridded weights or the 
-                                                  un-normalized sum of PB-square (for all pointings)
-                       try.pb               -  PB = sqrt(weight) normalized to a maximum of 1.0
+                                                 un-normalized sum of PB-square (for all pointings)
+                                                 Here, PB = sqrt(weight) normalized to a maximum of 1.0
 
                        For multi-term wideband imaging, all relevant images above will 
                        have additional .tt0,.tt1, etc suffixes to indicate Taylor terms,
@@ -259,9 +260,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                                 To automatically change 'imagename' with a numerical 
                                 increment, set restart=False (see tclean docs for 'restart').
 
-                        Note : An imaging run with niter=0 will not produce an output restored
-                                  image (extension .image) since there is no .model to restore. 
-                                  The .residual image is the (un-deconvolved or dirty) output image.
+                        Note : All imaging runs will by default produce restored images.
+                                  For a niter=0 run, this will be redundant and can optionally
+                                  be turned off via the 'restoration=T/F' parameter.
 
 </description>
       <any type="variant" limittypes="int string stringArray"/>
@@ -399,6 +400,8 @@ HPX HEALPix grid.  -->
                        to resample the input image onto the target coordinate system.
 
                        A common usage is to set this parameter equal to a single dish image
+
+                       Negative components in the model image will be included as is. 
 
                       [ Note : If an error occurs during image resampling/regridding, 
                                    please try using task imregrid to resample the starting model
