@@ -1074,18 +1074,22 @@ void MSCache::loadAxis(vi::VisBuffer2* vb, Int vbnum, PMS::Axis axis,
 	    if (averaging_.channel()) {
             int numBins = chans.size();
             int numChans = vb->getChannelNumbersSelected(0).size();
-            // Rather than bin/index, save averaged channel number
-            Vector<Int> avgChanNum(numBins);
-            // Save which channels are being averaged, for Locate
-            Array<Int> chansPerBin(IPosition(2, numChans, numBins));
-
-            for (Int bin=0; bin < numBins; ++bin) {
-                Vector<Int> selChanNums = vb->getChannelNumbersSelected(bin);
-                avgChanNum[bin] = mean(selChanNums);
-                chansPerBin[bin] = selChanNums;
+            if (numChans > 0) { // cannot get mean of 0-element array
+                // Rather than bin/index, save averaged channel number
+                Vector<Int> avgChanNum(numBins);
+                // Save which channels are being averaged, for Locate
+                Array<Int> chansPerBin(IPosition(2, numChans, numBins));
+                for (Int bin=0; bin < numBins; ++bin) {
+                    Vector<Int> selChanNums = vb->getChannelNumbersSelected(bin);
+                    avgChanNum[bin] = mean(selChanNums);
+                    chansPerBin[bin] = selChanNums;
+                }
+                *chan_[vbnum] = avgChanNum;
+                *chansPerBin_[vbnum] = chansPerBin;
+            } else {  // this should not happen! just use bin number
+                *chan_[vbnum] = chans;
+                *chansPerBin_[vbnum] = chans;
             }
-            *chan_[vbnum] = avgChanNum;
-            *chansPerBin_[vbnum] = chansPerBin;
         } else {
             *chan_[vbnum] = chans;
         }
