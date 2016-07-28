@@ -1508,11 +1508,12 @@ Constraints
               default: ''  (all scans)
               scan='1,2,6,43'; scans 1, 2, 6, and 43
               scan='3~14'; scans 3 through 14, inclusive
-      correlation -- Select by correlation
-                     default: ''  (all correlations)
-                     options: 'RR','RL','LR','LL','XX','XY','YX','YY',
-                               or any comma-separated combination; use
-                               basis (R/L or X/Y) appropriate to the MS)
+      correlation -- Select by correlation (polarization when plotting cal tables)
+                default: ''  (all correlations/polarizations)
+                For measurement sets: 'RR','RL','LR','LL','XX','XY','YX','YY'
+                For cal tables: 'R','L','RL','X','Y','XY','/' (for ratio plots)
+                or any comma-separated combination;
+                use basis (R/L or X/Y) appropriate to the table
       array -- Select the array id
                default: ''  (all array ids)
       observation -- Select by observation ID(s).
