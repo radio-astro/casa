@@ -639,7 +639,7 @@ Slice calParSliceByType(String caltype, String what, String pol)
         throw(AipsError("Unsupported value type: "+what));
       }
   }
-  else if (caltype=="EVLASWPOW") {
+  else if (caltype.contains("EVLASWP")) {
     i=2;  // 2 pars-per-pol
     if (what=="GAINAMP")
       s=0;
