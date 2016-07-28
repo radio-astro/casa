@@ -75,9 +75,6 @@ class AzElChart(object):
 
         task = casa_tasks.plotms(**task_args)
 
-        LOG.info("AZELFIGFILE::")
-        print self.figfile
-
         if not os.path.exists(self.figfile):
             task.execute()
         
