@@ -763,13 +763,6 @@ class PyParallelContSynthesisImager(PySynthesisImager):
         joblist.append( self.PH.runcmd("toolsi.makepb()",self.listOfNodes[0]) )
         self.PH.checkJobs( joblist )
 
-        for immod in range(0,self.NF):
-            partname = self.allimpars[str(immod)]['imagename']+'.n'+str(self.listOfNodes[0]) + '.pb'
-            fullname = self.allimpars[str(immod)]['imagename']+'.pb'
-            if os.path.exists( partname ):
-                shutil.rmtree( fullname , True )
-                shutil.copytree( partname, fullname )
-
 #############################################
 
     def runMajorCycleCore(self, lastcycle):

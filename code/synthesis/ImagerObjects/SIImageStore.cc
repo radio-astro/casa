@@ -696,6 +696,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   void SIImageStore::releaseImage( SHARED_PTR<ImageInterface<Float> > im )
   {
+    //im->flush();
     im->clearCache();
     im->unlock();
     im->tempClose();

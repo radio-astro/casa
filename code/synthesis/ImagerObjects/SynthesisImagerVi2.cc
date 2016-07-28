@@ -1650,6 +1650,7 @@ void SynthesisImagerVi2::unlockMSs()
 	    }
 	  }
       }
+    itsMappers.releaseImageLocks();
     unlockMSs();
 
     return True;

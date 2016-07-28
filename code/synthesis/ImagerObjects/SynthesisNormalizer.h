@@ -67,6 +67,9 @@ class SynthesisNormalizer
   // Gather all part images to the 'full' one
   void gatherImages(Bool dopsf, Bool doresidual, Bool dodensity);
 
+  // 'Gather' the pb ( just one node makes it.. )
+  void gatherPB();
+
   // Copy out model to all pieces. Currently a No-Op.
   void scatterModel();
 

@@ -2574,7 +2574,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  }
 	  
 	}
- 
       return False;
   }
   
@@ -2671,7 +2670,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
       }
     }
-      unlockMSs();
+ 
+    itsMappers.releaseImageLocks();
+    unlockMSs();
 
       return True;
   }// end makePB

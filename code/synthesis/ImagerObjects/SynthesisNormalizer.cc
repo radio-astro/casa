@@ -181,6 +181,33 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }// end of gatherImages
 
+  void SynthesisNormalizer::gatherPB()
+  {
+    if( itsPartImageNames.nelements()>0 )
+      {
+
+	try
+	  {
+	    itsPartImages[0] = makeImageStore( itsPartImageNames[0] );
+	  }
+	catch(AipsError &x)
+	  {
+	    throw(AipsError("Cannot construct ImageStore for "+itsPartImageNames[0]+". "+x.what()));
+	  }
+
+	try{
+	    LatticeExpr<Float> thepb( *(itsPartImages[0]->pb()) );
+	    itsImages->pb()->copyData(thepb);
+
+	  }
+	catch(AipsError &x)
+	  {
+	    throw(AipsError("Cannot copy the PB : "+x.getMesg()));
+	  }
+
+      }
+  }
+
   void SynthesisNormalizer::scatterModel()
   {
 
@@ -282,6 +309,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     if( itsImages==NULL ) { itsImages = makeImageStore( itsImageName ); }
 
+    gatherPB();
 
     // Irrespective of facets.
     itsImages->normalizePrimaryBeam(itsPBLimit);
