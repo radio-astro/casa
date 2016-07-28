@@ -45,7 +45,8 @@ VisBuffAccumulator::VisBuffAccumulator(const Int& nAnt, const Double& interval,
     prenorm_p(prenorm),
     prtlev_(PRTLEV_VBA),
     nBuf_p(0),
-    fillModel_p(fillModel)
+    fillModel_p(fillModel),
+    tvi_debug(False)
 {
 // Construct from the number of antennas and the averaging interval
 // Input:
@@ -218,7 +219,7 @@ void VisBuffAccumulator::accumulate (const VisBuffer& vb)
 
       Int goodChan(0);
       for (Int chn=0; chn<vb.nChannel(); chn++) {
-	if (!vb.flag()(chn,row)) {
+	if (!vb.flag()(chn,row) or tvi_debug) {
 	  goodChan++;
 	  avBuf_p.flag()(chn,outrow) = False;
 	  for (Int cor=0;cor<nCorr;cor++) {
@@ -255,6 +256,23 @@ void VisBuffAccumulator::accumulate (const VisBuffer& vb)
     } // if (row < vb.nRow())
   } // while (row < vb.nRow())
   ++nBuf_p;
+
+  if (nBuf_p==1 and tvi_debug)
+  {
+	  for (uInt outrow_idx=0;outrow_idx<outToInRow_p.size();outrow_idx++)
+	  {
+		  if (outToInRow_p(outrow_idx) > -1)
+		  {
+			  avBuf_p.rowIds()(outrow_idx) = vb.rowIds()(outToInRow_p(outrow_idx));
+			  avBuf_p.flagCube().xyPlane(outrow_idx) = vb.flagCube().xyPlane(outToInRow_p(outrow_idx));
+		  }
+		  else
+		  {
+			  avBuf_p.rowIds()(outrow_idx) = -1;
+			  avBuf_p.flagCube().xyPlane(outrow_idx) = True;
+		  }
+	  }
+  }
 }
 
 //----------------------------------------------------------------------------
@@ -321,6 +339,12 @@ void VisBuffAccumulator::initialize(const Bool& copydata)
   avBuf_p.flagRow().resize(nRow, copydata); 
 
   avBuf_p.flag().resize(nChan_p, nRow,copydata);
+
+  if (tvi_debug)
+  {
+	  avBuf_p.rowIds().resize(nRow, copydata);
+	  avBuf_p.flagCube().resize(nCorr_p,nChan_p, nRow,copydata);
+  }
 
   // Setup the map from avBuf_p's row numbers to input row numbers.
   outToInRow_p.resize(nRow, copydata);

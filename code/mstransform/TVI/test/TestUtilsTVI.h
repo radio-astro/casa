@@ -101,16 +101,19 @@ protected:
 template <class T> Bool compareVector(	const Char* column,
 										const Vector<T> &inp,
 										const Vector<T> &ref,
+										const Vector<uInt> &rowIds,
 										Float tolerance = FLT_EPSILON);
 
 template <class T> Bool compareMatrix(	const Char* column,
 										const Matrix<T> &inp,
 										const Matrix<T> &ref,
+										const Vector<uInt> &rowIds,
 										Float tolerance = FLT_EPSILON);
 
 template <class T> Bool compareCube(const Char* column,
 									const Cube<T> &inp,
 									const Cube<T> &ref,
+									const Vector<uInt> &rowIds,
 									Float tolerance = FLT_EPSILON);
 
 Bool compareVisibilityIterators(VisibilityIterator2 &testTVI,

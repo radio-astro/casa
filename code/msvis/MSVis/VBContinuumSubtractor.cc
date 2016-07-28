@@ -148,6 +148,12 @@ void VBContinuumSubtractor::fit(VisBuffGroupAcc& vbga, const Int fitorder,
 {
   LogIO os(LogOrigin("VBContinuumSubtractor", "fit()", WHERE));
 
+  // jagonzal: Debug code
+  /*
+  uInt row_debug = 0;
+  uInt corr_debug = 0;
+  */
+
   fitorder_p = fitorder;
 
   if(!(whichcol == MS::DATA || whichcol == MS::MODEL_DATA ||
@@ -256,11 +262,15 @@ void VBContinuumSubtractor::fit(VisBuffGroupAcc& vbga, const Int fitorder,
           if(isnan(w) || w < 1.0e-20 || w > 1.0e20)
             w = 1.0;  // Emit a warning?
 
+          Bool chanFlag;
           for(uInt c = 0; c < nchan; ++c){
             // AAARRGGGHHH!!  With Calibrater you have to use vb.flag(), not
             // flagCube(), to get the channel selection!
             //if(!vb.flagCube()(corrind, c, vbrow)){
-            if(!vb.flag()(c, blind)){
+        	  chanFlag = tvi_debug? vb.flagCube()(corrind, c, blind) : vb.flagCube()(corrind, c, blind);
+            //if(!vb.flag()(c, blind)){
+        	// if(!vb.flagCube()(corrind, c, blind)){
+        	  if (!chanFlag) {
               unflaggedfreqs[totunflaggedchan] = freqs[totchan];
               // if(haveWS){
               //   Double ws = vb.weightSpectrum()(corrind, c, vbrow);
@@ -278,6 +288,19 @@ void VBContinuumSubtractor::fit(VisBuffGroupAcc& vbga, const Int fitorder,
         else
           totchan += nchan;
       }
+
+      // jagonzal: Debug code
+      /*
+      if (tvi_debug)
+      {
+          VisBuffer& vb(vbga(0));
+          uInt rowId = vb.rowIds()[blind];
+          if (rowId == row_debug and corrind == corr_debug and totunflaggedchan <= 0)
+          {
+          	os << LogIO::WARN << "All channels flagged" << LogIO::POST;
+          }
+      }
+      */
 
       if(totunflaggedchan > 0){                 // OK, try a fit.
         // Truncate the Vectors.
@@ -309,6 +332,25 @@ void VBContinuumSubtractor::fit(VisBuffGroupAcc& vbga, const Int fitorder,
 
         fitter.setFunction(pnom);
         realsolution(Slice(0,locFitOrd+1,1)) = fitter.fit(unflaggedfreqs, floatvs, wt);
+
+        // jagonzal: Debug code
+        /*
+        if (tvi_debug)
+        {
+            VisBuffer& vb(vbga(0));
+            uInt rowId = vb.rowIds()[blind];
+            if (rowId == row_debug and corrind == corr_debug)
+            {
+            	os << "locFitOrd=" << locFitOrd << LogIO::POST;
+            	os << "flag=" << vb.flag().column(blind) << LogIO::POST;
+            	os << "flagCube=" << vb.flagCube().xyPlane(blind).row(corrind) << LogIO::POST;
+        		os << "unflaggedfreqs=" << unflaggedfreqs << LogIO::POST;
+        		os << "wt=" << wt<< LogIO::POST;
+        		os << "real floatvs=" << floatvs << LogIO::POST;
+        		os << "real realsolution=" << realsolution << LogIO::POST;
+            }
+        }
+        */
 
         // if(isnan(realsolution[0])){
         //   os << LogIO::DEBUG1 << "NaN found." << LogIO::POST;
@@ -342,6 +384,19 @@ void VBContinuumSubtractor::fit(VisBuffGroupAcc& vbga, const Int fitorder,
         fitter.setFunction(pnom);
         imagsolution(Slice(0,locFitOrd+1,1)) = fitter.fit(unflaggedfreqs, floatvs, wt);
 
+        // jagonzal: Debug code
+        /*
+        if (tvi_debug)
+        {
+            VisBuffer& vb(vbga(0));
+            uInt rowId = vb.rowIds()[blind];
+            if (rowId == row_debug and corrind == corr_debug)
+            {
+            	os << "imag floatvs=" << floatvs << LogIO::POST;
+        		os << "imag solution=" << imagsolution << LogIO::POST;
+            }
+        }
+        */
           
 
         for(Int ordind = 0; ordind <= locFitOrd; ++ordind){      // Note <=.

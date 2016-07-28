@@ -50,7 +50,8 @@ VBGContinuumSubtractor::VBGContinuumSubtractor(MeasurementSet& outms,
   fitorder_p(fitorder),
   datacol_p(datacol),
   outspw_p(outspw),
-  rowsdone_p(0)
+  rowsdone_p(0),
+  tvi_debug(False)
 {
   doWS_p = invi.existsWeightSpectrum();
   doFC_p = invi.existsFlagCategory();
@@ -165,6 +166,8 @@ Bool VBGContinuumSubtractor::process(VisBuffGroup& vbg)
                        false);        // VBGA is very Calibrater-centric when
                                       // it comes to MODEL_DATA.
 
+  vbga.setTVIDebug(tvi_debug);
+
   for(uInt bufnum = 0; bufnum < nvbs; ++bufnum)
     if(fitmask_p.count(vbg(bufnum).spectralWindow()) > 0)
       vbga.accumulate(vbg(bufnum));
@@ -181,6 +184,8 @@ Bool VBGContinuumSubtractor::process(VisBuffGroup& vbg)
   // It might be better later to cache the known lo and hi freqs, and use
   // vbcs.init().  See AMueller::selfSolveOne().
   vbcs.initFromVBGA(vbga);
+
+  vbcs.setTVIDebug(tvi_debug);
 
   // datacol_p is in DATA now.
   vbcs.fit(vbga, fitorder_p, MS::DATA, coeffs_p, coeffsOK_p, false, true, false);

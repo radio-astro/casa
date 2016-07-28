@@ -145,7 +145,8 @@ Double sigToWeight(Double sig)
     fitorder_p(-1),
     fitspw_p("*"),
     fitoutspw_p("*"),
-    fillMainTable_p(True)
+    fillMainTable_p(True),
+    tvi_debug(False)
   {
   }
   
@@ -169,7 +170,8 @@ Double sigToWeight(Double sig)
     fitorder_p(-1),
     fitspw_p("*"),
     fitoutspw_p("*"),
-    fillMainTable_p(True)
+    fillMainTable_p(True),
+    tvi_debug(False)
   {
   }
   
@@ -7384,6 +7386,7 @@ Bool SubMS::subtractContinuum(const Vector<MS::PredefinedColumns>& colNames,
 
   VBGContinuumSubtractor vbgcs(msOut_p, msc_p, vbmaps, viIn, fitorder_p,
                                colNames[0], fitspw_p, fitoutspw_p);
+  vbgcs.setTVIDebug(tvi_debug);
   GroupProcessor gp(viIn, &vbgcs);
 
   retval = gp.go();

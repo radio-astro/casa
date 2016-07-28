@@ -108,6 +108,8 @@ public:
   // This is where all the work gets done!
   virtual Bool process(VisBuffGroup& vbg);
 
+  void setTVIDebug(Bool debug) {tvi_debug = debug;}
+
 private:
   // Disable null c'tor.
   VBGContinuumSubtractor();
@@ -143,6 +145,8 @@ private:
   std::set<Int> appliedSpWs_p;
 
   std::map<Int, Vector<Bool>*> fitmask_p;      // spw -> a list of flags by chan
+
+  Bool tvi_debug;
 };
 
 } //# NAMESPACE CASA - END

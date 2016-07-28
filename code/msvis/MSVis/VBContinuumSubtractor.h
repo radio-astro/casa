@@ -213,6 +213,8 @@ public:
     return hifreq_p > midfreq_p ? 1.0 / (hifreq_p - midfreq_p) : 1.0;
   }
 
+  void setTVIDebug(Bool debug) {tvi_debug = debug;}
+
 private:
   // Disable default copying, and assignment.
   VBContinuumSubtractor& operator=(VBContinuumSubtractor& other);
@@ -242,6 +244,8 @@ private:
   uInt      totnumchan_p;
 
   PtrBlock<Vector<Bool> * > chanmask_p;
+
+  Bool tvi_debug;
 };
 
 } //# NAMESPACE CASA - END

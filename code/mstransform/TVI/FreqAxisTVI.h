@@ -135,8 +135,11 @@ protected:
 
     // Method implementing main loop  (with auxiliary data)
 	template <class T> void transformFreqAxis2(	const IPosition &inputShape,
-												FreqAxisTransformEngine2<T> &transformer) const
+												FreqAxisTransformEngine2<T> &transformer,
+												VisBuffer2 *vb=NULL) const
 	{
+		vb = NULL;// jagonzal: Debug code
+
 		uInt nRows = inputShape(2);
 		uInt nCorrs = inputShape(0);
 
@@ -147,6 +150,19 @@ protected:
 			for (uInt corr=0; corr < nCorrs; corr++)
 			{
 				transformer.setCorrIndex(corr);
+
+				// jagonzal: Debug code
+				/*
+				if (vb->rowIds()(row)==3 and corr==0)
+				{
+					transformer.setDebug(True);
+				}
+				else
+				{
+					transformer.setDebug(False);
+				}
+				*/
+
 				transformer.transform();
 			}
 		}
@@ -197,6 +213,7 @@ public:
 
 	FreqAxisTransformEngine2(DataCubeMap *inputData,DataCubeMap *outputData)
 	{
+		debug_p = False;
 		inputData_p = inputData;
 		outputData_p = outputData;
 	}
@@ -219,10 +236,13 @@ public:
 		return;
 	}
 
+	void setDebug(Bool debug) { debug_p = debug;}
+
 	virtual void transform() {}
 
 protected:
 
+	Bool debug_p;
 	uInt rowIndex_p;
 	uInt corrIndex_p;
 	DataCubeMap *inputData_p;

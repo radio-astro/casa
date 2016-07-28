@@ -49,7 +49,8 @@ VisBuffGroupAcc::VisBuffGroupAcc(const Int& nAnt,
     prenorm_p(False),
     globalTimeStamp_p(0.0),
     VBA_p(),
-    spwfldids_p(nSpw,nFld,-1)
+    spwfldids_p(nSpw,nFld,-1),
+    tvi_debug(False)
 {
   // Interval MUST be strictly greater than zero
   if (subinterval_p < DBL_EPSILON)
@@ -165,6 +166,7 @@ void VisBuffGroupAcc::accumulate (const VisBuffer& vb)
     VBA_p.resize(nBuf_p, False, True);
     spwfldids_p(spw, fld) = ibuf;
     VBA_p[ibuf] = new VisBuffAccumulator(nAnt_p, subinterval_p, prenorm_p, fillModel_p);
+    VBA_p[ibuf]->setTVIDebug(tvi_debug);
   }
 
   // ibuf should be non-negative now

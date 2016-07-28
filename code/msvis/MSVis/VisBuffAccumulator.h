@@ -116,6 +116,8 @@ public:
     return outToInRow_p;
   }
 
+  void setTVIDebug(Bool debug) {tvi_debug = debug;}
+
 protected:
   // Averaging buffer
   CalVisBuffer avBuf_p;
@@ -182,6 +184,8 @@ private:
   // A map from avBuf_p's row numbers to row numbers in the VisBuffer used to
   // fill avBuf_p.  Only useful if nBuf_p == 1.  Unfilled rows point to -1.
   Vector<Int> outToInRow_p;
+
+  Bool tvi_debug;
 };
 
 

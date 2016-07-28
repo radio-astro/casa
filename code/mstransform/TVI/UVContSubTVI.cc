@@ -180,12 +180,19 @@ template<class T> void UVContSubTVI::transformDataCube(	const Cube<T> &inputVis,
 	if (inputFrequencyMap_p.find(spwId) == inputFrequencyMap_p.end())
 	{
 		const Vector<Double> &inputFrequencies = vb->getFrequencies(0);
-		inputFrequencyMap_p[spwId] = Matrix<Float>(fitOrder_p+1,inputFrequencies.size(),0);
+		inputFrequencyMap_p[spwId] = Matrix<Float>(fitOrder_p==0? 1:fitOrder_p,inputFrequencies.size(),0);
 
+		Double midfreq,lofreq,hifreq,freqscale;
+		lofreq = inputFrequencies(0);
+		hifreq = inputFrequencies(inputFrequencies.size()-1);
+		midfreq = 0.5 * (lofreq + hifreq);
+		freqscale = 1.0 / (hifreq - midfreq);
 		// First row is always input frequencies
 		for (uInt chan_idx = 0; chan_idx < inputFrequencies.size(); chan_idx++)
 		{
-			inputFrequencyMap_p[spwId](0,chan_idx) = inputFrequencies(chan_idx);
+			//inputFrequencyMap_p[spwId](0,chan_idx) = inputFrequencies(chan_idx);
+			//inputFrequencyMap_p[spwId](0,chan_idx) = -1.0 + chan_idx*(2.0/(inputFrequencies.size()-1));
+			inputFrequencyMap_p[spwId](0,chan_idx) = freqscale*(inputFrequencies(chan_idx)-midfreq);
 		}
 
 		// For fit order 2 and above we calculate pows
@@ -193,7 +200,7 @@ template<class T> void UVContSubTVI::transformDataCube(	const Cube<T> &inputVis,
 		{
 			for (uInt chan_idx = 0; chan_idx < inputFrequencies.size(); chan_idx++)
 			{
-				inputFrequencyMap_p[spwId](order_idx-1,chan_idx) = pow(inputFrequencies(chan_idx),order_idx);
+				inputFrequencyMap_p[spwId](order_idx-1,chan_idx) = pow(inputFrequencyMap_p[spwId](0,chan_idx),order_idx);
 			}
 		}
 	}
@@ -221,13 +228,13 @@ template<class T> void UVContSubTVI::transformDataCube(	const Cube<T> &inputVis,
 	{
 		UVContEstimationKernel<T> kernel(fitOrder_p,&fitter_p,&(inputFrequencyMap_p[spwId]));
 		UVContSubTransformEngine<T> transformer(&kernel,&inputData,&outputData);
-		transformFreqAxis2(vb->getShape(),transformer);
+		transformFreqAxis2(vb->getShape(),transformer,vb);
 	}
 	else
 	{
 		UVContSubtractionKernel<T> kernel(fitOrder_p,&fitter_p,&(inputFrequencyMap_p[spwId]));
 		UVContSubTransformEngine<T> transformer(&kernel,&inputData,&outputData);
-		transformFreqAxis2(vb->getShape(),transformer);
+		transformFreqAxis2(vb->getShape(),transformer,vb);
 	}
 
 	return;
@@ -283,6 +290,7 @@ template<class T> UVContSubTransformEngine<T>::UVContSubTransformEngine(	UVContS
 // -----------------------------------------------------------------------
 template<class T> void UVContSubTransformEngine<T>::transform(	)
 {
+	uvContSubKernel_p->setDebug(debug_p);
 	uvContSubKernel_p->kernel(inputData_p,outputData_p);
 }
 
@@ -301,6 +309,7 @@ template<class T> UVContSubKernel<T>::UVContSubKernel(	uInt fitOrder,
 	fitOrder_p = fitOrder;
 	freqPows_p = freqPows;
 	frequencies_p.reference(freqPows->row(0));
+	debug_p = False;
 }
 
 
@@ -325,15 +334,50 @@ template<class T> UVContSubtractionKernel<T>::UVContSubtractionKernel(	uInt fitO
 template<class T> void UVContSubtractionKernel<T>::kernel(	DataCubeMap *inputData,
 															DataCubeMap *outputData)
 {
-	Vector<T> &inputVector = inputData->getVector<T>(MS::DATA);
-	Vector<Bool> &inputFlags = inputData->getVector<Bool>(MS::FLAG);
-	Vector<Float> &inputSigma = inputData->getVector<Float>(MS::SIGMA);
+	// Get input/output data
 	Vector<T> &outputVector = outputData->getVector<T>(MS::DATA);
+	Vector<T> &inputVector = inputData->getVector<T>(MS::DATA);
 
-	// Convert flags to mask
-	Vector<Bool> mask = !inputFlags;
+	// Calculate number of valid data points
+	Vector<Bool> &inputFlags = inputData->getVector<Bool>(MS::FLAG);
+	size_t validPoints = nfalse(inputFlags);
 
-	kernelCore(inputVector,mask,inputSigma,outputVector);
+	if (validPoints > 0)
+	{
+		Bool restoreDefaultPoly = False;
+		uInt tmpFitOrder = fitOrder_p;
+
+		// Reduce fit order to match number of valid points
+		if (validPoints <= fitOrder_p)
+		{
+			fitOrder_p = validPoints-1;
+			Polynomial<AutoDiff<Float> > poly(fitOrder_p);
+			fitter_p->setFunction(poly);
+			restoreDefaultPoly = True;
+		}
+
+		// Get weights
+		Vector<Float> &inputSigma = inputData->getVector<Float>(MS::SIGMA);
+
+		// Convert flags to mask
+		Vector<Bool> mask = !inputFlags;
+
+		// Calculate and subtract continuum
+		kernelCore(inputVector,mask,inputSigma,outputVector);
+
+		// Go back to default fit order to match number of valid points
+		if (restoreDefaultPoly)
+		{
+			fitOrder_p = tmpFitOrder;
+			Polynomial<AutoDiff<Float> > poly(fitOrder_p);
+			fitter_p->setFunction(poly);
+		}
+	}
+	else
+	{
+		// Continuum is 0, therefore output data equals input data
+		outputVector = inputVector;
+	}
 
 	return;
 }
@@ -355,13 +399,31 @@ template<class T> void UVContSubtractionKernel<T>::kernelCore(	Vector<Complex> &
 	// Fill output data
 	outputVector = inputVector;
 	outputVector -= Complex(realCoeff(0),imagCoeff(0));
-	for (uInt order_idx = 1; order_idx < fitOrder_p; order_idx++)
+	for (uInt order_idx = 1; order_idx <= fitOrder_p; order_idx++)
 	{
+		Complex coeff(realCoeff(order_idx),imagCoeff(order_idx));
 		for (uInt chan_idx=0; chan_idx < outputVector.size(); chan_idx++)
 		{
-			outputVector(chan_idx) -= ((*freqPows_p)(chan_idx,order_idx))*Complex(realCoeff(order_idx),imagCoeff(order_idx));
+			outputVector(chan_idx) -= ((*freqPows_p)(order_idx-1,chan_idx))*coeff;
 		}
 	}
+
+	// jagonzal: Debug code
+	/*
+	if (debug_p)
+	{
+		LogIO logger;
+		logger << "frequencies_p=" << frequencies_p << LogIO::POST;
+		logger << "inputSigma=" << inputSigma << LogIO::POST;
+		logger << "inputFlags=" << inputFlags << LogIO::POST;
+		logger << "real(inputVector)=" << real(inputVector) << LogIO::POST;
+		logger << "realCoeff=" << realCoeff << LogIO::POST;
+		logger << "imag(inputVector)=" << imag(inputVector) << LogIO::POST;
+		logger << "imagCoeff=" << imagCoeff << LogIO::POST;
+		logger << "outputVector=" << outputVector << LogIO::POST;
+	}
+	*/
+
 
 	return;
 }
@@ -374,17 +436,18 @@ template<class T> void UVContSubtractionKernel<T>::kernelCore(	Vector<Float> &in
 																Vector<Float> &inputSigma,
 																Vector<Float> &outputVector)
 {
-	// Fit for imaginary and real components separately
-	Vector<Float> coeff = fitter_p->fit(frequencies_p, inputVector, inputSigma, &inputFlags);
+	// Fit model
+	Vector<Float> coeff;
+	coeff = fitter_p->fit(frequencies_p, inputVector, inputSigma, &inputFlags);
 
 	// Fill output data
 	outputVector = inputVector;
 	outputVector -= coeff(0);
-	for (uInt order_idx = 1; order_idx < fitOrder_p; order_idx++)
+	for (uInt order_idx = 1; order_idx <= fitOrder_p; order_idx++)
 	{
 		for (uInt chan_idx=0; chan_idx < outputVector.size(); chan_idx++)
 		{
-			outputVector(chan_idx) += ((*freqPows_p)(chan_idx,order_idx))*coeff(order_idx);
+			outputVector(chan_idx) -= ((*freqPows_p)(order_idx-1,chan_idx))*coeff(order_idx);
 		}
 	}
 
@@ -413,15 +476,50 @@ template<class T> UVContEstimationKernel<T>::UVContEstimationKernel(	uInt fitOrd
 template<class T> void UVContEstimationKernel<T>::kernel(	DataCubeMap *inputData,
 															DataCubeMap *outputData)
 {
-	Vector<T> &inputVector = inputData->getVector<T>(MS::DATA);
-	Vector<Bool> &inputFlags = inputData->getVector<Bool>(MS::FLAG);
-	Vector<Float> &inputSigma = inputData->getVector<Float>(MS::SIGMA);
+	// Get input/output data
 	Vector<T> &outputVector = outputData->getVector<T>(MS::DATA);
+	Vector<T> &inputVector = inputData->getVector<T>(MS::DATA);
 
-	// Convert flags to mask
-	Vector<Bool> mask = !inputFlags;
+	// Calculate number of valid data points
+	Vector<Bool> &inputFlags = inputData->getVector<Bool>(MS::FLAG);
+	size_t validPoints = nfalse(inputFlags);
 
-	kernelCore(inputVector,mask,inputSigma,outputVector);
+	if (validPoints > 0)
+	{
+		Bool restoreDefaultPoly = False;
+		uInt tmpFitOrder = fitOrder_p;
+
+		// Reduce fit order to match number of valid points
+		if (validPoints <= fitOrder_p)
+		{
+			fitOrder_p = validPoints-1;
+			Polynomial<AutoDiff<Float> > poly(fitOrder_p);
+			fitter_p->setFunction(poly);
+			restoreDefaultPoly = True;
+		}
+
+		// Get weights
+		Vector<Float> &inputSigma = inputData->getVector<Float>(MS::SIGMA);
+
+		// Convert flags to mask
+		Vector<Bool> mask = !inputFlags;
+
+		// Calculate and subtract continuum
+		kernelCore(inputVector,mask,inputSigma,outputVector);
+
+		// Go back to default fit order to match number of valid points
+		if (restoreDefaultPoly)
+		{
+			fitOrder_p = tmpFitOrder;
+			Polynomial<AutoDiff<Float> > poly(fitOrder_p);
+			fitter_p->setFunction(poly);
+		}
+	}
+	else
+	{
+		// Continuum is 0, therefore output data equals input data
+		outputVector = 0;
+	}
 
 	return;
 }
@@ -435,18 +533,38 @@ template<class T> void UVContEstimationKernel<T>::kernelCore(	Vector<Complex> &i
 																Vector<Complex> &outputVector)
 {
 	// Fit for imaginary and real components separately
-	Vector<Float> realCoeff = fitter_p->fit(frequencies_p, real(inputVector), inputSigma, &inputFlags);
-	Vector<Float> imagCoeff = fitter_p->fit(frequencies_p, imag(inputVector), inputSigma, &inputFlags);
+	Vector<Float> realCoeff;
+	Vector<Float> imagCoeff;
+	realCoeff = fitter_p->fit(frequencies_p, real(inputVector), inputSigma, &inputFlags);
+	imagCoeff = fitter_p->fit(frequencies_p, imag(inputVector), inputSigma, &inputFlags);
 
 	// Fill output data
 	outputVector = Complex(realCoeff(0),imagCoeff(0));
-	for (uInt order_idx = 1; order_idx < fitOrder_p; order_idx++)
+	for (uInt order_idx = 1; order_idx <= fitOrder_p; order_idx++)
 	{
+		Complex coeff(realCoeff(order_idx),imagCoeff(order_idx));
 		for (uInt chan_idx=0; chan_idx < outputVector.size(); chan_idx++)
 		{
-			outputVector(chan_idx) += ((*freqPows_p)(chan_idx,order_idx))*Complex(realCoeff(order_idx),imagCoeff(order_idx));
+			outputVector(chan_idx) += ((*freqPows_p)(order_idx-1,chan_idx))*coeff;
 		}
 	}
+
+	// jagonzal: Debug code
+	/*
+	if (debug_p)
+	{
+		LogIO logger;
+		logger << "frequencies_p=" << frequencies_p << LogIO::POST;
+		logger << "inputSigma=" << inputSigma << LogIO::POST;
+		logger << "inputFlags=" << inputFlags << LogIO::POST;
+		logger << "real(inputVector)=" << real(inputVector) << LogIO::POST;
+		logger << "realCoeff=" << realCoeff << LogIO::POST;
+		logger << "imag(inputVector)=" << imag(inputVector) << LogIO::POST;
+		logger << "imagCoeff=" << imagCoeff << LogIO::POST;
+		logger << "outputVector=" << outputVector << LogIO::POST;
+	}
+	*/
+
 
 	return;
 }
@@ -459,16 +577,17 @@ template<class T> void UVContEstimationKernel<T>::kernelCore(	Vector<Float> &inp
 																Vector<Float> &inputSigma,
 																Vector<Float> &outputVector)
 {
-	// Fit for imaginary and real components separately
-	Vector<Float> coeff = fitter_p->fit(frequencies_p, inputVector, inputSigma, &inputFlags);
+	// Fit model
+	Vector<Float> coeff;
+	coeff = fitter_p->fit(frequencies_p, inputVector, inputSigma, &inputFlags);
 
 	// Fill output data
 	outputVector = coeff(0);
-	for (uInt order_idx = 1; order_idx < fitOrder_p; order_idx++)
+	for (uInt order_idx = 1; order_idx <= fitOrder_p; order_idx++)
 	{
 		for (uInt chan_idx=0; chan_idx < outputVector.size(); chan_idx++)
 		{
-			outputVector(chan_idx) += ((*freqPows_p)(chan_idx,order_idx))*coeff(order_idx);
+			outputVector(chan_idx) += ((*freqPows_p)(order_idx-1,chan_idx))*coeff(order_idx);
 		}
 	}
 

@@ -82,6 +82,7 @@ Bool GroupProcessor::go()
         vb.fetch(gw_p->prefetchColumns());
         // cerr << "     " << vb.rowIds()[0] << "          " << (vb.time()[0] - 4.65136e9)
         //     << "         " << vb.spectralWindow() << endl;
+        vb.rowIds();
         vbg.store(vb);
       }
       vbg.endChunk();                   // Record the end of a chunk.

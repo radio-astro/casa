@@ -98,6 +98,7 @@ template<class T> class UVContSubTransformEngine : public FreqAxisTransformEngin
 {
 	using FreqAxisTransformEngine2<T>::inputData_p;
 	using FreqAxisTransformEngine2<T>::outputData_p;
+	using FreqAxisTransformEngine2<T>::debug_p;
 
 public:
 
@@ -133,8 +134,11 @@ public:
 	virtual void kernel(DataCubeMap *inputData,
 						DataCubeMap *outputData) = 0;
 
+	void setDebug(Bool debug) { debug_p = debug;}
+
 protected:
 
+	Bool debug_p;
 	uInt fitOrder_p;
 	LinearFitSVD<Float> *fitter_p;
 	Matrix<Float> *freqPows_p;
@@ -151,6 +155,7 @@ template<class T> class UVContSubtractionKernel : public UVContSubKernel<T>
 	using UVContSubKernel<T>::fitter_p;
 	using UVContSubKernel<T>::freqPows_p;
 	using UVContSubKernel<T>::frequencies_p;
+	using UVContSubKernel<T>::debug_p;
 
 
 public:
@@ -184,6 +189,7 @@ template<class T> class UVContEstimationKernel : public UVContSubKernel<T>
 	using UVContSubKernel<T>::fitter_p;
 	using UVContSubKernel<T>::freqPows_p;
 	using UVContSubKernel<T>::frequencies_p;
+	using UVContSubKernel<T>::debug_p;
 
 public:
 

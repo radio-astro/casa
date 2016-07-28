@@ -503,6 +503,8 @@ class SubMS
 			    uInt ntok,
 			    const Vector<MS::PredefinedColumns>& colEnums); 
 
+  void setTVIDebug(Bool debug) {tvi_debug = debug;}
+
  protected:
 
   //method that returns the selected ms (?! - but it's Boolean - RR)
@@ -768,6 +770,8 @@ class SubMS
   Vector<Slice> corrSlice_p;
   Vector<Vector<Slice> > corrSlices_p;  // Used by VisIterator::selectCorrelation()
   Matrix<Double> selTimeRanges_p;
+
+  Bool tvi_debug;
 };
 
 } //# NAMESPACE CASA - END

@@ -142,6 +142,8 @@ public:
   // Empties chanmask (which may have some newed elements).
   static void clearChanMask(std::map<Int, Vector<Bool>*>& chanmask);
 
+  void setTVIDebug(Bool debug) {tvi_debug = debug;}
+
 private:
 
   // Prohibit in-public null constructor, copy constructor and assignment
@@ -168,6 +170,8 @@ private:
   
   // Map spw,fld to the buffer id
   Matrix<Int> spwfldids_p;
+
+  Bool tvi_debug;
 };
 
 

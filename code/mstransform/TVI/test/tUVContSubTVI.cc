@@ -67,6 +67,7 @@ void UVContSubTVITest::generateReferenceFile()
 		SubMS subtractor(ms);
 		subtractor.setFitOrder(fitorder);
 		subtractor.setmsselect();
+		subtractor.setTVIDebug(True);
 		subtractor.makeSubMS(referenceFile_p, datacolumn);
 	}
 	catch (AipsError ex)
@@ -114,11 +115,11 @@ UVContSubTVITest::UVContSubTVITest(): FreqAxisTVITest ()
     referenceFile_p = String("Four_ants_3C286.ms.ref");
 
     Record configuration;
-    configuration.define ("spw", "0");
-    configuration.define ("scan", "30");
-    configuration.define ("fitorder", 0);
+    //configuration.define ("spw", "0");
+    //configuration.define ("scan", "30");
+    configuration.define ("fitorder", 1);
     configuration.define ("want_cont", False);
-    configuration.define ("datacolumn", String("MODEL_DATA"));
+    configuration.define ("datacolumn", String("CORRECTED_DATA"));
 
 	init(configuration);
 }
@@ -149,7 +150,7 @@ void UVContSubTVITest::TestBody()
 void UVContSubTVITest::testCompareTransformedData()
 {
 	// Declare working variables
-	Float tolerance = 1E-5; // FLT_EPSILON is 1.19209290e-7F
+	Float tolerance = 1E-4; // FLT_EPSILON is 1.19209290e-7F
 
 	// Generate configuration record for reference file
     Record refConfiguration;
@@ -158,7 +159,7 @@ void UVContSubTVITest::testCompareTransformedData()
 
     // Prepare datacolmap
     dataColMap datacolmap;
-    datacolmap[MS::MODEL_DATA] =  MS::DATA;
+    datacolmap[MS::CORRECTED_DATA] =  MS::DATA;
 
 	// Use MSTransformFactory to create a plain input VII
 	MSTransformIteratorFactory refFactory(refConfiguration);
@@ -172,7 +173,8 @@ void UVContSubTVITest::testCompareTransformedData()
 
 	// Determine columns to check
 	VisBufferComponents2 columns;
-	columns += VisBufferComponent2::VisibilityCubeModel;
+	columns += VisBufferComponent2::VisibilityCubeCorrected;
+	columns += VisBufferComponent2::FlagCube;
 
 	// Compare
 	Bool res = compareVisibilityIterators(testTVI,refTVI,columns,tolerance,&datacolmap);
