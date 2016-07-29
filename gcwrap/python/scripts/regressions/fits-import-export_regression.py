@@ -395,7 +395,7 @@ print myname, ' Test of import with use of parameter defaultaxes:'
 passed = True
 for name in ['dir_and_stokes.fits', 'dir_stokes_and_freq.fits', 'onlydir.fits', 'dir_and_freq.fits', 'dir_freq_and_stokes.fits', 'freq.fits']:
     print name
-    importfits(fitsimage=name, imagename=name+'.im', overwrite=True, defaultaxes=True, defaultaxesvalues=[1.,2.,'6GHz', 'Q'])
+    importfits(fitsimage=name, imagename=name+'.im', overwrite=True, defaultaxes=True, defaultaxesvalues=['19h30m00',2.,'6GHz', 'Q'])
     ia.open(name+'.im')
     mycs = ia.coordsys()
     ia.close()
@@ -413,6 +413,10 @@ for name in ['dir_and_stokes.fits', 'dir_stokes_and_freq.fits', 'onlydir.fits', 
             if not ((mycsr.has_key('stokes1') and mycsr['stokes1']['stokes'][0]=='Q') \
                     or (mycsr.has_key('stokes2') and mycsr['stokes2']['stokes'][0]=='Q')):
                 print "Error: Stokes axis CRVAL should be Q"
+                passed = False
+        if name in ['freq.fits']:
+            if not (mycsr.has_key('direction1') and (mycsr['direction1']['crval'][0]==292.5)):
+                print "Error: RA axis CRVAL should be 292.5"
                 passed = False
 
 if passed:

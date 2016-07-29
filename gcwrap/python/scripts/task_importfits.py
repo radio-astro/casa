@@ -49,7 +49,7 @@ def importfits(fitsimage,imagename,whichrep,whichhdu,zeroblanks,overwrite,defaul
 
 		if defaultaxes:
 			if len(defaultaxesvalues)!=4:
-				raise TypeError, 'When defaultaxes==True, parameter defaultaxesvalues must be provided as a list of 4 values: RA, Dec, Freq, Stokes,\n e.g. [\'13.5h\', \'-2.5deg\', \'88.5GHz\', \'I\']'
+				raise TypeError, 'When defaultaxes==True, parameter defaultaxesvalues must be provided as a list of 4 values: RA, Dec, Freq, Stokes,\n e.g. [\'13.5h\', \'-2.5deg\', \'88.5GHz\', \'I\']\nFor existing axes, empty strings can be given as values.'
 			_myia.open(fitsimage)
 			_mycs=_myia.coordsys()
 			acts = _mycs.axiscoordinatetypes()
@@ -133,6 +133,7 @@ def importfits(fitsimage,imagename,whichrep,whichhdu,zeroblanks,overwrite,defaul
 						raise TypeError, "DEC default value is not a valid angle quantity " %dec
 					decval = qadec['value']
 					
+                                _mynewcs.setunits(value='deg deg', type='direction')
 				_mynewcs.setreferencevalue(type='direction', value=[raval,decval])
 				
 			if addfreq:
@@ -144,6 +145,7 @@ def importfits(fitsimage,imagename,whichrep,whichhdu,zeroblanks,overwrite,defaul
 					if qafreq['unit'].find('Hz') < 0:
 						raise TypeError, "Freq default value is not a valid frequency quantity " %freq
 					freqval = qa.convertfreq(qafreq,'Hz')['value']
+                                _mynewcs.setunits(value='Hz', type='spectral')
 				_mynewcs.setreferencevalue(type='spectral', value=freqval)
 				_mynewcs.setrestfrequency(freqval)
 

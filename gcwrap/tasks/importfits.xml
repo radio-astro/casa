@@ -26,7 +26,9 @@
 	defaultaxes -- Add the default 4D coordinate axes where they are missing
 	        default=False, example: defaultaxes=True
 	defaultaxesvalues -- List of values to assign to added degenerate axes when defaultaxes==True (ra,dec,freq,stokes)
-	        default = [], example: defaultaxesvalues=['13.5h', '-2.5deg', '88.5GHz', 'Q'] 
+                For existing axes, empty strings can be given as values.
+		For the directions and spectral values, any valid angle/frequency expressions can be given.
+	        default = [], example: defaultaxesvalues=['19h30m00', '-02d30m00', '88.5GHz', 'Q'] 
 	beam -- List of values to be used to define the synthesized beam [BMAJ,BMIN,BPA] (as in the FITS keywords)
 	        default = [] (i.e.take from FITS file), example: beam=['0.35arcsec', '0.24arcsec', '25deg']
 
