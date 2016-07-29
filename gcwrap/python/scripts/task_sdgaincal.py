@@ -31,8 +31,9 @@ def sdgaincal(infile=None, calmode=None, radius=None, smooth=None,
         # TODO: pre-application functionality is not supported yet
         if type(applytable) == types.ListType or \
           (isinstance(applytable, str) and len(applytable) > 0):
-            casalog.post('Pre-application of calibration solutions is not supported yet.'
-                         + 'Just ignore specified caltables.')
+            msg = 'Pre-application of calibration solutions is not supported yet.'
+            casalog.post(msg, priority='SEVERE')
+            raise RuntimeError(msg)
         
         # open MS
         if isinstance(infile, str) and os.path.exists(infile):
