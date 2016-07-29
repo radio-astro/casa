@@ -201,6 +201,11 @@ def _calcPBAlpha(pbtay=[], pbthreshold=0.1,pbalphaname='pbalpha.im'):
 #################################################
 def _makePBList(msname='',pbprefix='',field='',spwlist=[],chanlist=[], imsize=[], cellx='10.0arcsec', celly='10.0arcsec',phasecenter=''):
    #print 'Making PB List from the following spw,chan pairs';
+#   vp.setpbpoly(telescope='EVLA', coeff=[1.0, -1.529e-3, 8.69e-7, -1.88e-10])  #1GHz
+#   vp.setpbpoly(telescope='EVLA', coeff=[1.0, -1.486e-3, 8.26e-7, -1.75e-10])  #1.8GHz
+
+#   vp.saveastable('evlavp.tab')
+
    pblist = []
    try:
      for aspw in range(0,len(spwlist)):
@@ -215,13 +220,16 @@ def _makePBList(msname='',pbprefix='',field='',spwlist=[],chanlist=[], imsize=[]
                              nchan=1,start=chanlist[aspw], stokes='I',
                              mode='channel',spw=[spwlist[aspw]],phasecenter=phasecenter);
          im.setvp(dovp=True,usedefaultvp=True,telescope='EVLA');
+#         im.setvp(dovp=True,usedefaultvp=False,vptable='evlavp.tab',telescope='EVLA');
          pbname = pbprefix + str(spwlist[aspw])+'.'+str(chanlist[aspw])
          im.makeimage(type='pb', image=pbname, compleximage="", verbose=False);
          pblist.append(pbname)
          im.close();
-   except:
-       casalog.post('Error in constructing PBs at the specified frequencies. Please check spwlist/chanlist','SEVERE')
-       return []
+#     shutil.rmtree('evlavp.tab')
+   except Exception as e:
+      casalog.post('Exception from task widebandpbcor : ' + str(e), "SEVERE", "task_widebandpbcor")
+      casalog.post('Error in constructing PBs at the specified frequencies. Please check spwlist/chanlist','SEVERE','task_widebandpbcor')
+      return []
    return pblist
     
 
@@ -544,6 +552,7 @@ def  _compute_alpha_beta(imagename, nterms, taylorlist, residuallist, threshold,
    #ia.putchunk(intensity);
    #ia.close();
 
+   ptay[0][ptay[0]<1e-06]=1.0;
    ptay[0][ptay[0]<threshold]=1.0;
    ptay[1][ptay[0]<threshold]=0.0;
    if(nterms>2):
@@ -568,6 +577,10 @@ def  _compute_alpha_beta(imagename, nterms, taylorlist, residuallist, threshold,
 
    # calc error
    if(calcerror):
+
+      pres[1][ptay[1]==0.0]=0.0
+      ptay[1][pres[1]==0.0]=1.0
+
       aerror =  np.abs(alpha) * np.sqrt( (pres[0]/ptay[0])**2 + (pres[1]/ptay[1])**2 );
       ia.open(nameerror);
       ia.putchunk(aerror);
