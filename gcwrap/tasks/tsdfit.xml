@@ -56,7 +56,7 @@ or sdreduce.
     </param>
 
     <param type="string" name="pol">
-        <description>select data by polarization IDs, e.g. \'0,1\' (\'\'=all)</description>
+        <description>select data by polarization IDs, e.g. \'XX,YY\' (\'\'=all)</description>
         <value></value>
     </param>
 
@@ -192,7 +192,7 @@ scan -- select data by scan numbers
         this selection is in addition to the other selections to data
 pol -- select data by polarization IDs
         default: '' (use all polarizations)
-        example: pol='0,1' (polarization IDs 0,1)
+        example: pol='XX,YY' (polarizations XX and YY)
         this selection is in addition to the other selections to data
 intent -- select data by observational intent, also referred to as 'scan intent'
         default: '' (use all scan intents)
