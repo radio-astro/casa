@@ -133,6 +133,8 @@ void CalCache::setUpCalIter(const String& ctname,
     if (calType_ == "BPOLY" || calType_[0] == 'T' || calType_[0] == 'F')
       throw(AipsError("Polarization ratio plots not supported for " + calType_ + " tables."));
     polnRatio_ = true;
+  } else {
+    polnRatio_ = false;
   }
 
   Int nsortcol(4);
