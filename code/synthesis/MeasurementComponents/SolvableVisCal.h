@@ -199,7 +199,6 @@ public:
   // Size up the solving arrays, etc.  (supports combine)
   virtual Int sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol);
 
-
   // These inflate methods soon to deprecate (gmoellen, 20121212)
   // Inflate the pristine CalSet (from VisSet info)
   void inflate(VisSet& vs, const Bool& fillMeta=False);
@@ -382,6 +381,26 @@ public:
 
   // calculate # required slots to simulate this SVC
   Int sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Double>& solTimes);
+
+
+  // VI2-related refactor--------------------------------------
+
+  // Set "current" meta info, so internals are registered
+  //  (VI2: replaces meta-inf part of syncSolveMeta; 
+  //   NB: does _NOT_ check sum(wt)>0 older syncSolveMeta!)
+  virtual void setMeta(Int obs, Int scan, Double time,
+		       Int spw, const Vector<Double>& freq,
+		       Int fld);
+
+  // Reshape solvePar* arrays for the currSpw()  
+  //  (ensitive to freqDepPar())
+  //  (VI2: replaces initSolvePar part of sizeUpSolve)
+  virtual void sizeSolveParCurrSpw(Int nVisChan);
+
+  // Set parameters to def values in the currSpw(), 
+  //   and optionally sync everything
+  virtual void setDefSolveParCurrSpw(Bool sync=False);
+
 
 protected:
 

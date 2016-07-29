@@ -47,7 +47,7 @@ SimpleSimVi2Parameters::SimpleSimVi2Parameters() :
   date0_("2016/01/06/00:00:00."),
   dt_(1.0),
   refFreq_(Vector<Double>(1,100.0e9)),
-  df_(Vector<Double>(1,1.0e9)),
+  df_(Vector<Double>(1,1.0e6)),  // 1 MHz chans
   doNoise_(False),
   stokes_(Matrix<Float>(1,1,1.0)),
   gain_(Matrix<Float>(1,1,1.0)),
@@ -83,7 +83,7 @@ SimpleSimVi2Parameters::SimpleSimVi2Parameters(Int nField,Int nScan,Int nSpw,Int
   date0_("2016/01/06/00:00:00."),   //  the rest are defaulted
   dt_(1.0),
   refFreq_(Vector<Double>(1,100.0e9)),
-  df_(Vector<Double>(1,1.0e9)),
+  df_(Vector<Double>(1,1.0e6)),  // 1 MHz chans
   doNoise_(False),
   stokes_(Matrix<Float>(1,1,1.0)),
   gain_(Matrix<Float>(1,1,1.0)),
@@ -207,6 +207,16 @@ void SimpleSimVi2Parameters::summary() const {
   cout << "*  doAC     = " << doAC_ << endl;
   cout << "***************************************************" << endl << endl;
 }
+
+  // Return frequencies for specified spw
+Vector<Double> SimpleSimVi2Parameters::freqs(Int spw) const {
+  Vector<Double> f(nChan_(spw));
+  indgen(f);
+  f*=df_(spw);
+  f+=(df_(spw)/2. + refFreq_(spw));
+  return f;
+}
+
 
 
 void SimpleSimVi2Parameters::initialize(const Vector<Int>& nTimePerField,const Vector<Int>& nChan,
@@ -349,7 +359,7 @@ SimpleSimVi2::SimpleSimVi2 (const SimpleSimVi2Parameters& pars)
 }
 
 // Destructor
-SimpleSimVi2::~SimpleSimVi2 () {}
+SimpleSimVi2::~SimpleSimVi2 () { /*cout << " ~SSVi2:        " << this << endl;*/ }
 
 
   //   +==================================+
@@ -725,11 +735,14 @@ Vector<Int> SimpleSimVi2::getChannels (Double, Int, Int spw, Int) const {
 }
 
 Vector<Double> SimpleSimVi2::getFrequencies (Double, Int, Int spw, Int) const { 
+  return pars_.freqs(spw);
+  /*
   Vector<Double> freqs(pars_.nChan_(spw));
   indgen(freqs);
   freqs*=pars_.df_(spw);
   freqs+=(pars_.df_(spw)/2. + pars_.refFreq_(spw));
   return freqs;
+  */
 }
 
   // get back the selected spectral windows and spectral channels for

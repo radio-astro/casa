@@ -1653,8 +1653,6 @@ void SolvableVisCal::specify(const Record& specify) {
 
 }
 
-
-
 Int SolvableVisCal::sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol) {
 
   // New version that counts solutions (which may overlap in 
@@ -2123,6 +2121,116 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
 
 }
 
+//  VI2-related refactorings------------------
+
+void SolvableVisCal::setMeta(Int obs, Int scan, Double time,
+			     Int spw, const Vector<Double>& freq,
+			     Int fld) {
+
+  VisCal::setMeta(obs,scan,time,spw,freq,fld);
+
+  refTime()=time;  // current time for solving is _refTime()_
+  
+  //  refFreq()=???
+
+}
+
+
+// Setup solvePar shape for a spw
+void SolvableVisCal::sizeSolveParCurrSpw(Int nVisChan) {
+
+  // Sizes the solvePar arrays for the currSpw()
+  
+  if (prtlev()>3) cout << " SVJ::sizeSolveParCurrSpw()" << endl;
+
+  // Use nVisChan only for freqDepPar() types
+  Int nChan = ( freqDepPar() ? nVisChan : 1);
+
+  // Keep old way informed (needed?)
+  nChanPar()=nChan;
+
+  // Now, size the arrays:
+
+  IPosition parsh(3,nPar(),nChan,nElem());  // multi-chan
+  IPosition parsh1(3,nPar(),1,nElem());     // single-chan
+  switch (parType()) {
+  case VisCalEnum::COMPLEX: {
+    solveAllCPar().resize(parsh);
+    solveAllCPar()=Complex(1.0);
+    if (nChan==1)
+      solveCPar().reference(solveAllCPar());
+    else {
+      solveCPar().resize(parsh1);
+      solveCPar()=Complex(1.0);
+    }
+    break;
+  }
+  case VisCalEnum::REAL: {
+    solveAllRPar().resize(parsh);
+    solveAllRPar()=0.0;
+    if (nChanPar()==1)
+      solveRPar().reference(solveAllRPar());
+    else {
+      solveRPar().resize(parsh1);
+      solveRPar()=0.0;
+    }
+    break;
+  }
+  default:
+    throw(AipsError("Internal error(Calibrater Module): Unsupported parameter type "
+		    "COMPLEXREAL found in SVC::sizeSolveParCurrSpw"));
+  }
+    
+  solveAllParOK().resize(parsh);
+  solveAllParErr().resize(parsh);
+  solveAllParSNR().resize(parsh);
+  solveAllParOK()=True;
+  solveAllParErr()=0.0;
+  solveAllParSNR()=0.0;
+  if (nChan==1) {
+      solveParOK().reference(solveAllParOK());
+      solveParErr().reference(solveAllParErr());
+      solveParSNR().reference(solveAllParSNR());
+  }
+  else {
+    // solving many channels, one at a time
+    solveParOK().resize(parsh1);
+    solveParErr().resize(parsh1);
+    solveParSNR().resize(parsh1);
+    solveParOK()=True;
+    solveParErr()=0.0;
+    solveParSNR()=0.0;
+  }
+
+}
+
+void SolvableVisCal::setDefSolveParCurrSpw(Bool sync) {
+
+  // TBD: generalize for type-dep def values, etc.
+
+  switch (parType()) {
+  case VisCalEnum::COMPLEX: {
+    AlwaysAssert(solveCPar().nelements()>0,AipsError);
+    solveCPar().set(1.0);  //  def=1+0j
+    break;
+  }
+  case VisCalEnum::REAL: {
+    AlwaysAssert(solveRPar().nelements()>0,AipsError);
+    solveRPar().set(0.0);  //  def=0
+    break;
+  }
+  default:
+    throw(AipsError("Internal error(Calibrater Module): Unsupported parameter type "
+		    "COMPLEXREAL found in SVC::setDefSolveParCurrSpw"));
+  }
+  solveParOK().set(True);
+
+  if (sync)
+    syncSolveCal();
+
+}
+
+
 // The inflate methods will soon deprecate (gmoellen, 20121212)
 //   (the are assumed to exist only by LJJones and EPJones, which
 //    are not yet NewCalTable-compliant)
@@ -2177,9 +2285,6 @@ void SolvableVisCal::inflate(const Vector<Int>& /*nChan*/,
   throw(AipsError("Attempt to use deprecated SVC::inflate method."));
 
 }
-
-
-
 
 void SolvableVisCal::setSolveChannelization(VisSet& vs) {
 
@@ -2354,7 +2459,6 @@ void SolvableVisCal::inflateNCTwithMetaData(VisSet& vs) {
   }
 
 }
-
 
 Bool SolvableVisCal::syncSolveMeta(VisBuffGroupAcc& vbga) {
 
@@ -3524,9 +3628,9 @@ void SolvableVisCal::stateSVC(const Bool& doVC) {
 
   // Now SVC-specific stuff:
   cout << "  isSolved() = " << isSolved() << endl;
-  cout << "  apmode() = " << apmode() << endl;
   cout << "  calTableName() = " << calTableName() << endl;
   cout << "  calTableSelect() = " << calTableSelect() << endl;
+  cout << "  apmode() = " << apmode() << endl;
   cout << "  tInterpType() = " << tInterpType() << endl;
   cout << "  fInterpType() = " << fInterpType() << endl;
   cout << "  spwMap() = " << spwMap() << endl;

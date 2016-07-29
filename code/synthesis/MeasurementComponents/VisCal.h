@@ -184,7 +184,24 @@ public:
 		    const Int& a2) { return  a1*nAnt() - a1*(a1+1)/2 + a2; };
 
   inline String& extraTag() { return extratag_; };
+
  
+  // VI2-related refactor--------------------------------------
+
+  // Set "current" meta info, so internals can be registered
+  virtual void setMeta(Int obs, Int scan, Double time,
+		       Int spw, const Vector<Double>& freq,
+		       Int fld);
+
+  // Reshape solvePar* arrays for the currSpw()  
+  //  (sensitive to freqDepPar())
+  virtual void sizeApplyParCurrSpw(Int nVisChan);
+
+  // Set parameters to def values in the currSpw(), 
+  //   and optionally sync everything
+  virtual void setDefApplyParCurrSpw(Bool sync=False, Bool doInv=False);
+
+
 protected:
 
   // Set applied state flag

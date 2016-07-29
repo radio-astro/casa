@@ -227,22 +227,24 @@ void VisCal::setApply() {
   for (Int ispw=0;ispw<nSpw();ispw++) {
     currSpw()=ispw;
 
-    switch (parType()) {
-    case VisCalEnum::COMPLEX: {
-      currCPar().resize(nPar(),nChanPar(),nElem());
-      currCPar()=Complex(1.0);
-      break;
-    } 
-    case VisCalEnum::REAL: {
-      currRPar().resize(nPar(),nChanPar(),nElem());
-      currRPar()=1.0;
-      break;
+    if (nChanPar()>0) {
+      switch (parType()) {
+      case VisCalEnum::COMPLEX: {
+	currCPar().resize(nPar(),nChanPar(),nElem());
+	currCPar()=Complex(1.0);
+	break;
+      } 
+      case VisCalEnum::REAL: {
+	currRPar().resize(nPar(),nChanPar(),nElem());
+	currRPar()=1.0;
+	break;
+      }
+      default:
+	throw(AipsError("Parameters must be entirely Real or entirely Complex for now!"));
+      }
+      currParOK().resize(nPar(),nChanPar(),nElem());
+      currParOK()=True;
     }
-    default:
-      throw(AipsError("Parameters must be entirely Real or entirely Complex for now!"));
-    }
-    currParOK().resize(nPar(),nChanPar(),nElem());
-    currParOK()=True;
   }
 
 }
@@ -420,6 +422,87 @@ void VisCal::corrupt2(vi::VisBuffer2& vb, Cube<Complex>& Mout) {
 
   // Restore user's calWt()
   calWt()=userCalWt;
+
+}
+
+// VI2-related refactorings-----------
+
+void VisCal::setMeta(Int obs, Int scan, Double time,
+		     Int spw, const Vector<Double>& freq,
+		     Int fld) {
+
+  currSpw()=spw;
+
+  currField()=fld;
+  currScan()=scan;
+  currObs()=obs;
+  currFreq().assign(freq);
+  currTime()=time;  // current time for apply is _currTime()_
+  
+}
+
+// Setup solvePar shape for a spw
+void VisCal::sizeApplyParCurrSpw(Int nVisChan) {
+
+  // Sizes the solvePar arrays for the currSpw()
+  
+  if (prtlev()>3) cout << " VC::sizeApplyParCurrSpw()" << endl;
+
+  // Use nVisChan only for freqDepPar() types
+  Int nChan = ( freqDepPar() ? nVisChan : 1);
+
+  // Keep old way informed (needed?)
+  nChanPar()=nChan;
+
+  // Now, size the arrays:
+
+  IPosition parsh(3,nPar(),nChan,nElem());  // multi-chan
+  switch (parType()) {
+  case VisCalEnum::COMPLEX: {
+    currCPar().resize(parsh);
+    currCPar()=Complex(1.0);
+    break;
+  }
+  case VisCalEnum::REAL: {
+    currRPar().resize(parsh);
+    currRPar()=0.0;
+    break;
+  }
+  default:
+    throw(AipsError("Internal error(Calibrater Module): Unsupported parameter type "
+		    "COMPLEXREAL found in VC::sizeApplyParCurrSpw()"));
+  }
+    
+  currParOK().resize(parsh);
+  currParOK()=True;
+
+}
+
+void VisCal::setDefApplyParCurrSpw(Bool sync, Bool doInv) {
+
+  // TBD: generalize for type-dep def values, etc.
+
+  switch (parType()) {
+  case VisCalEnum::COMPLEX: {
+    AlwaysAssert(currCPar().nelements()>0,AipsError);
+    currCPar().set(1.0);
+    break;
+  }
+  case VisCalEnum::REAL: {
+    AlwaysAssert(currRPar().nelements()>0,AipsError);
+    currRPar().set(0.0);
+    break;
+  }
+  default:
+    throw(AipsError("Internal error(Calibrater Module): Unsupported parameter type "
+		    "COMPLEXREAL found in VC::setDefApplyParCurrSpw()"));
+  }
+
+  currParOK().set(True);
+  validateP();
+  
+  if (sync)
+    syncCal(doInv);
 
 }
 

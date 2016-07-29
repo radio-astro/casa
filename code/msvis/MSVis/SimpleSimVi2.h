@@ -105,6 +105,9 @@ public:
   String polBasis_;
   Bool doAC_;
 
+  // Return frequencies for specified spw
+  Vector<Double> freqs(Int spw) const;
+
 private:
   void initialize(const Vector<Int>& nTimePerField, const Vector<Int>& nChan,
 		  const Vector<Double>& refFreq, const Vector<Double>& df,

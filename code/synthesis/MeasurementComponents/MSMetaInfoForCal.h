@@ -32,6 +32,7 @@
 #include <casa/iostream.h>
 #include <casa/BasicSL/String.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
+#include <msvis/MSVis/SimpleSimVi2.h>
 
 class MSMetaData;
 
@@ -50,7 +51,11 @@ public:
 
   // Construct from nAnt,nSpw
   MSMetaInfoForCal(uInt nAnt,uInt nSpw,uInt nFld);
-  
+
+  // Construct from SimpleSimVi2Paremeters
+  //   (useful for testing w/ actual (spoofed) data iteration
+  MSMetaInfoForCal(const vi::SimpleSimVi2Parameters& sspar);
+
   // Dtor
   ~MSMetaInfoForCal();
 

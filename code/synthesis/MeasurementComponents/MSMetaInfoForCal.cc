@@ -29,10 +29,14 @@
 #include <casacore/ms/MSOper/MSMetaData.h>
 #include <casacore/ms/MeasurementSets/MeasurementSet.h>
 #include <synthesis/MeasurementComponents/MSMetaInfoForCal.h>
+#include <msvis/MSVis/SimpleSimVi2.h>
 #include <casa/aips.h>
 #include <casa/iostream.h>
 
+
 namespace casa { //# NAMESPACE CASA - BEGIN
+
+using namespace vi;
   
 // Constructor
 MSMetaInfoForCal::MSMetaInfoForCal(String msname) : 
@@ -92,15 +96,25 @@ MSMetaInfoForCal::MSMetaInfoForCal(uInt nAnt,uInt nSpw,uInt nFld) :
   ms_(NULL),
   msmd_(NULL)
 {
-
-  // If the specified MS is available, make non-trivial meta-info accessors
-  if (Table::isReadable(msname_) &&
-      Table::tableInfo(msname_).type()=="Measurement Set") {
-    ms_ = new MeasurementSet(msname_);
-    msmd_ = new MSMetaData(ms_,50.0f);
-  }
-  // else, String output will be spoofed
+  // Nothing to do
 }
+
+
+// Construct from SimpleSimVi2Paremeters
+//   (useful for testing w/ actual (spoofed) data iteration
+MSMetaInfoForCal::MSMetaInfoForCal(const vi::SimpleSimVi2Parameters& sspar) :
+  msname_("<noms>"), 
+  msOk_(False),
+  nAnt_(sspar.nAnt_),
+  nSpw_(sspar.nSpw_),
+  nFld_(sspar.nField_),
+  ms_(NULL),
+  msmd_(NULL)
+{
+  // Nothing to do
+}
+
+
 
 // Destructor
 MSMetaInfoForCal::~MSMetaInfoForCal()

@@ -29,6 +29,7 @@
 //#include <casa/Exceptions/Error.h>
 #include <casa/iostream.h>
 #include <msvis/MSVis/VisBuffer2.h>
+#include <msvis/MSVis/SimpleSimVi2.h>
 //#include <synthesis/MeasurementComponents/SolveDataBuffer.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/OS/Timer.h>
@@ -39,19 +40,30 @@
 
 #include <gtest/gtest.h>
 
+#define SHOWSTATE False
+
 using namespace casa::vi;
 using namespace casa;
 
 class VisCalTest : public ::testing::Test {
 
 public:
+  
+  VisCalTest() :
+    nFld(1),
+    nScan(1),
+    nSpw(1),
+    nAnt(5),
+    nCorr(4),
+    nChan(1,32),
+    ss(nFld,nScan,nSpw,nAnt,nCorr,Vector<Int>(1,1),nChan),
+    msmc(ss)
+  {}
 
-  virtual void SetUp() {
-    nAnt=5;
-    nSpw=1;
-  }
-
-  Int nAnt,nSpw;
+  Int nFld,nScan,nSpw,nAnt,nCorr;
+  Vector<Int> nChan;
+  SimpleSimVi2Parameters ss;
+  MSMetaInfoForCal msmc;
 
 };
 
@@ -64,12 +76,11 @@ int main(int argc, char **argv) {
 
 TEST_F(VisCalTest, PJones) {
 
-  MSMetaInfoForCal msmc("<noms>");
-
   VisCal *P = new PJones(msmc);
   P->setApply();
 
-  //P->state();
+  if (SHOWSTATE)
+    P->state();
 
   ASSERT_EQ(VisCalEnum::JONES,P->matrixType());
   ASSERT_EQ(VisCal::P,P->type());
@@ -88,10 +99,17 @@ TEST_F(VisCalTest, PJones) {
 
 TEST_F(VisCalTest, GJonesApplyState) {
   
-  VisCal *G = new GJones("<noms>",nAnt,nSpw);
+  VisCal *G = new GJones(msmc);
   G->setApply();
 
-  //  G->state();
+  G->setMeta(0,0,0.0,
+	     0,ss.freqs(0),
+	     0);
+  G->sizeApplyParCurrSpw(ss.nChan_(0));
+  G->setDefApplyParCurrSpw(True,True);  // sync, w/ doInv=T
+
+  if (SHOWSTATE)
+    G->state();
 
   ASSERT_EQ(VisCalEnum::JONES,G->matrixType());
   ASSERT_EQ(VisCal::G,G->type());
@@ -104,13 +122,22 @@ TEST_F(VisCalTest, GJonesApplyState) {
   ASSERT_EQ(True,G->isApplied());
   ASSERT_EQ(True,G->isSolvable());
 
+  /*
+  IPosition sh(3,2,1,nAnt);  // nChan=1 for G
+  ASSERT_TRUE(G->currCPar().shape()==sh);
+  ASSERT_TRUE(G->currParOK().shape()==sh);
+  ASSERT_TRUE(G->currJElem().shape()==sh);
+  ASSERT_TRUE(G->currJElemOK().shape()==sh);
+  ASSERT_EQ(G->currParOK().data(),G->currJElemOK().data()); // ok addr equal
+  */
+
   delete G;
 }
 
 
 TEST_F(VisCalTest, GJonesSolveState) {
-  
-  MSMetaInfoForCal msmc("<noms>");
+
+  //  MSMetaInfoForCal msmc(ss);
   SolvableVisCal *G = new GJones(msmc);
 
   Record solvePar;
@@ -119,8 +146,15 @@ TEST_F(VisCalTest, GJonesSolveState) {
   Vector<Int> refantlist(1,3);   solvePar.define("refant",refantlist);
 
   G->setSolve(solvePar);
-  
-  //  G->state();
+
+  G->setMeta(0,0,0.0,
+	     0,ss.freqs(0),
+	     0);
+  G->sizeSolveParCurrSpw(ss.nChan_(0));
+  G->setDefSolveParCurrSpw(True);
+
+  if (SHOWSTATE)
+    G->state();
 
   ASSERT_EQ(VisCalEnum::JONES,G->matrixType());
   ASSERT_EQ(VisCal::G,G->type());
@@ -139,18 +173,24 @@ TEST_F(VisCalTest, GJonesSolveState) {
   ASSERT_EQ(refantlist[0],G->refant());
   ASSERT_TRUE(allEQ(refantlist,G->refantlist()));
   
-  
+  //  cout << "G->solveAllCPar().shape() = " << G->solveAllCPar().shape() << endl;
 
   delete G;
 }
 
-
-/*
-
-TEST_F(VisCalTest, BJones) {
+TEST_F(VisCalTest, BJonesApplyState) {
   
-  VisCal *B = new BJones("<noms>",nAnt,nSpw);
+  VisCal *B = new BJones(msmc);
   B->setApply();
+
+  B->setMeta(0,0,0.0,
+	     0,ss.freqs(0),
+	     0);
+  B->sizeApplyParCurrSpw(ss.nChan_(0));
+  B->setDefApplyParCurrSpw(True,True);  // sync, w/ doInv=T
+
+  if (SHOWSTATE)
+    B->state();
 
   ASSERT_EQ(VisCalEnum::JONES,B->matrixType());
   ASSERT_EQ(VisCal::B,B->type());
@@ -166,10 +206,63 @@ TEST_F(VisCalTest, BJones) {
   delete B;
 }
 
-TEST_F(VisCalTest, TJones) {
+TEST_F(VisCalTest, BJonesSolveState) {
+  
+  MSMetaInfoForCal msmc("<noms>");
+  SolvableVisCal *B = new BJones(msmc);
 
-  VisCal *T = new TJones("<noms>",nAnt,nSpw);
+  Record solvePar;
+  String caltablename("test.B"); solvePar.define("table",caltablename);
+  String solint("int");          solvePar.define("solint",solint);
+  Vector<Int> refantlist(1,3);   solvePar.define("refant",refantlist);
+
+  B->setSolve(solvePar);
+
+  B->setMeta(0,0,0.0,
+	     0,ss.freqs(0),
+	     0);
+  B->sizeSolveParCurrSpw(ss.nChan_(0));
+  B->setDefSolveParCurrSpw(True);
+  
+  if (SHOWSTATE)
+    B->state();
+
+  ASSERT_EQ(VisCalEnum::JONES,B->matrixType());
+  ASSERT_EQ(VisCal::B,B->type());
+  ASSERT_EQ(String("B Jones"),B->typeName());
+  ASSERT_EQ(2,B->nPar());
+  ASSERT_EQ(True,B->freqDepPar());
+  ASSERT_EQ(True,B->freqDepMat());
+  ASSERT_EQ(False,B->freqDepCalWt());
+  ASSERT_EQ(False,B->timeDepMat());
+  ASSERT_EQ(False,B->isApplied());
+  ASSERT_EQ(True,B->isSolved());
+  ASSERT_EQ(True,B->isSolvable());
+  
+  ASSERT_EQ(caltablename,B->calTableName());
+  ASSERT_EQ(solint,B->solint());
+  ASSERT_EQ(refantlist[0],B->refant());
+  ASSERT_TRUE(allEQ(refantlist,B->refantlist()));
+  
+  //cout << "B->solveAllCPar().shape() = " << B->solveAllCPar().shape() << endl;
+  
+
+  delete B;
+}
+
+TEST_F(VisCalTest, TJonesApplyState) {
+
+  VisCal *T = new TJones(msmc);
   T->setApply();
+
+  T->setMeta(0,0,0.0,
+	     0,ss.freqs(0),
+	     0);
+  T->sizeApplyParCurrSpw(ss.nChan_(0));
+  T->setDefApplyParCurrSpw(True,True);  // sync, w/ doInv=T
+
+  if (SHOWSTATE)
+    T->state();
 
   ASSERT_EQ(VisCalEnum::JONES,T->matrixType());
   ASSERT_EQ(VisCal::T,T->type());
@@ -185,7 +278,47 @@ TEST_F(VisCalTest, TJones) {
   delete T;
 }
 
+TEST_F(VisCalTest, TJonesSolveState) {
 
+  SolvableVisCal *T = new TJones(msmc);
+
+  Record solvePar;
+  String caltablename("test.T"); solvePar.define("table",caltablename);
+  String solint("int");          solvePar.define("solint",solint);
+  Vector<Int> refantlist(1,3);   solvePar.define("refant",refantlist);
+  T->setSolve(solvePar);
+
+  T->setMeta(0,0,0.0,
+	     0,ss.freqs(0),
+	     0);
+  T->sizeSolveParCurrSpw(ss.nChan_(0));
+  T->setDefSolveParCurrSpw(True);  // sync
+
+  if (SHOWSTATE)
+    T->state();
+
+  ASSERT_EQ(VisCalEnum::JONES,T->matrixType());
+  ASSERT_EQ(VisCal::T,T->type());
+  ASSERT_EQ(String("T Jones"),T->typeName());
+  ASSERT_EQ(1,T->nPar());
+  ASSERT_EQ(False,T->freqDepPar());
+  ASSERT_EQ(False,T->freqDepMat());
+  ASSERT_EQ(False,T->freqDepCalWt());
+  ASSERT_EQ(False,T->timeDepMat());
+  ASSERT_EQ(False,T->isApplied());
+  ASSERT_EQ(True,T->isSolvable());
+  ASSERT_EQ(True,T->isSolved());
+
+  ASSERT_EQ(caltablename,T->calTableName());
+  ASSERT_EQ(solint,T->solint());
+  ASSERT_EQ(refantlist[0],T->refant());
+  ASSERT_TRUE(allEQ(refantlist,T->refantlist()));
+
+
+  delete T;
+}
+
+/*
 TEST_F(VisCalTest, DJones) {
 
   VisCal *D = new DJones("<noms>",nAnt,nSpw);
@@ -265,4 +398,38 @@ TEST_F(VisCalTest, KJones) {
   */  
 
   
+/*
+TEST(MISC, MISC0) {
 
+  Int n=6;
+
+  Double df(31.25e6/32);   // chan width
+  Double lo(100.0e9);   // total LO  (100GHz)
+
+  Vector<Double> F(n);
+  indgen(F);  //  [0,1,2,3,...]
+  F*=df;     
+  F+=lo;
+
+  Vector<Float> f(n);
+  // Convert:  Float <- Double
+  convertArray(f,F);
+
+  Vector<Float> f0(n);
+  // Convert:  Float <- Double w/ offset
+  convertArray(f0,F-F(0));
+
+  cout.precision(16);
+  cout << "F=" << F << endl;
+  cout.precision(8);
+  cout << "f=" << f << endl;
+
+  cout << "F-F(0)=" << F-F(0) << " " << (F-F(0))/df << endl;
+  cout << "f-f(0)=" << f-f(0) << " " << (f-f(0))/Float(df) << endl;
+  cout << "f0    =" << f0     << " " << f0/Float(df) << endl;
+
+
+
+
+}
+*/
