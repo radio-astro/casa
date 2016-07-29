@@ -136,6 +136,7 @@ test_sdcoadd                    kana.sugi@nao.ac.jp
 test_sdfit                      wataru.kawasaki@nao.ac.jp
 test_sdflag                     wataru.kawasaki@nao.ac.jp
 test_sdflagmanager              wataru.kawasaki@nao.ac.jp
+test_sdaincal                   takeshi.nakazato@nao.ac.jp
 test_sdgrid                     takeshi.nakazato@nao.ac.jp
 test_sdimaging                  takeshi.nakazato@nao.ac.jp
 test_sdimprocess                takeshi.nakazato@nao.ac.jp
