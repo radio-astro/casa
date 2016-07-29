@@ -23,12 +23,12 @@ public:
   virtual ~SDDoubleCircleGainCal();
 
   // Return type name as string (ditto)
-  virtual casacore::String typeName() {
-    return "SDGAIN_OTFD";
-  }
-  virtual casacore::String longTypeName() {
-    return "SDGAIN_OTFD (Single Dish gain calibration for double circle fast scan";
-  }
+//  virtual casacore::String typeName() {
+//    return "SDGAIN_OTFD";
+//  }
+//  virtual casacore::String longTypeName() {
+//    return "SDGAIN_OTFD (Single Dish gain calibration for double circle fast scan";
+//  }
 
   // Return the parameter type
   // so far single dish calibration is real
@@ -42,6 +42,9 @@ public:
   // Set the solving parameters
   virtual void setSolve();
   virtual void setSolve(const Record& solve);
+
+  // Report solve info/params, e.g., for logging
+  virtual String solveinfo();
 
   // Self- gather and/or solve prototypes
   //  (triggered by useGenericGatherForSolve=F or useGenericSolveOne=F)

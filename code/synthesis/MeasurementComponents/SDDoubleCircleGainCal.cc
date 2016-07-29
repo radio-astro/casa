@@ -209,8 +209,25 @@ void SDDoubleCircleGainCal::setSolve(const Record &solve) {
       << " rad" << "(" << rad2arcsec(central_disk_size_) << " arcsec)"
       << LogIO::POST;
 
+  if (central_disk_size_ < 0.0) {
+    logSink() << "Negative central disk size is given" << LogIO::EXCEPTION;
+  }
+
   // call parent setSolve
   SolvableVisCal::setSolve(solve);
+}
+
+String SDDoubleCircleGainCal::solveinfo() {
+  ostringstream o;
+  o << typeName()
+      << ": " << calTableName()
+      << " smooth=" << (smooth_?"True":"False") << endl
+      << " radius=" << central_disk_size_;
+  if (central_disk_size_ == 0.0) {
+    o << " (half of primary beam will be used)";
+  }
+  o << endl;
+  return String(o);
 }
 
 void SDDoubleCircleGainCal::selfGatherAndSolve(VisSet& vs, VisEquation& /* ve */) {
