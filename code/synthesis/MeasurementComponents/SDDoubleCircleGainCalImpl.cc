@@ -38,7 +38,7 @@ inline Double getPrimaryBeamSize(Double const observing_frequency,
     beam_size = 0.0;
   } else {
     beam_size = kFactorALMA * speed_of_light // * rad2arcsec
-        / (antenna_diameter * observing_frequency);
+    / (antenna_diameter * observing_frequency);
   }
   return beam_size;
 }
@@ -358,18 +358,26 @@ void SDDoubleCircleGainCalImpl::calibrate(Cube<Float> const &data,
       auto mean_value = ::average(0, num_gain, smoothed_data, work_flag);
 
       //work_data = mean_value / smoothed_data;
-      for (size_t idata = 0; idata < num_gain; ++idata) {
-        if (work_data[idata] != 0.0) {
-          work_data[idata] = mean_value / smoothed_data[idata];
+      if (mean_value < 0.0) {
+        LOG << LogIO::WARN
+            << "Negative reference value for gain calibration is found. "
+            << "No valid calibration solution will be provided" << POSTLOG;
+        work_data = 0.0;
+        work_flag = True;
+      } else {
+        for (size_t idata = 0; idata < num_gain; ++idata) {
+          if (work_data[idata] != 0.0) {
+            work_data[idata] = mean_value / smoothed_data[idata];
+          }
+          else {
+            work_data[idata] = 0.0;
+            work_flag[idata] = True;
+          }
         }
-        else {
-          work_data[idata] = 0.0;
-          work_flag[idata] = True;
-        }
-      }
 
-      LOG << LogIO::DEBUGGING << "mean value = " << mean_value
-          << " (simple mean " << mean(smoothed_data) << ")" << POSTLOG;
+        LOG << LogIO::DEBUGGING << "mean value = " << mean_value
+            << " (simple mean " << mean(smoothed_data) << ")" << POSTLOG;
+      }
 
 //      LOG << LogIO::DEBUGGING << "gfactor[" << ipol << "," << ichan << "]=" << work_data
 //          << POSTLOG;
