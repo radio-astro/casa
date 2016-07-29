@@ -1176,7 +1176,7 @@ void Importmiriad::fillSpectralWindowTable(String vel)
       if(not keep[i]) continue;
       ddid++;
       Int n = win[k].nschan[i];
-      Vector<Double> f(n), w(n);
+      Vector<Double> f(n), w(n),cs(n);
       
       ms_p.spectralWindow().addRow();
       ms_p.dataDescription().addRow();
@@ -1196,6 +1196,7 @@ void Importmiriad::fillSpectralWindowTable(String vel)
       for (Int j=0; j < win[k].nschan[i]; j++) {
         f(j) = fwin + j * win[k].sdf[i] * 1e9;
         w(j) = abs(win[k].sdf[i]*1e9);
+        cs(j) = win[k].sdf[i]*1e9;
         BW += w(j);
       }
 
@@ -1210,16 +1211,10 @@ void Importmiriad::fillSpectralWindowTable(String vel)
         } 
       } else
         msSpW.refFrequency().put(ddid,freq_p);            // no reference for wide band???
-
-      if (win[k].sdf[i] > 0)      side = 1;
-      else if (win[k].sdf[i] < 0) side = -1;
-      else                     side = 0;
-      
       
       msSpW.resolution().put(ddid,w);
+      msSpW.chanWidth().put(ddid,cs); // MSSelection wants width<0 if spectrum inverted
       msSpW.effectiveBW().put(ddid,w);
-      w*=side // MSSelection requires width<0 if spectrum inverted
-      msSpW.chanWidth().put(ddid,w);
       msSpW.totalBandwidth().put(ddid,BW);
       Int ifchain = win[k].chain[i];
       msSpW.ifConvChain().put(ddid,ifchain);
@@ -1230,6 +1225,10 @@ void Importmiriad::fillSpectralWindowTable(String vel)
       else
         msSpW.dopplerId().put(ddid,-1);    // no ref
 
+      if (win[k].sdf[i] > 0)      side = 1;
+      else if (win[k].sdf[i] < 0) side = -1;
+      else                     side = 0;
+      
       switch (win[k].code[i]) {
       case 'N':
         msSpW.netSideband().put(ddid,side);
