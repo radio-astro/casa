@@ -504,6 +504,8 @@ class SubMS
 			    const Vector<MS::PredefinedColumns>& colEnums); 
 
   void setTVIDebug(Bool debug) {tvi_debug = debug;}
+  void setWantCont(Bool want_cont) {want_cont_p = want_cont;}
+
 
  protected:
 
@@ -772,6 +774,7 @@ class SubMS
   Matrix<Double> selTimeRanges_p;
 
   Bool tvi_debug;
+  Bool want_cont_p;
 };
 
 } //# NAMESPACE CASA - END

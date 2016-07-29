@@ -146,7 +146,8 @@ Double sigToWeight(Double sig)
     fitspw_p("*"),
     fitoutspw_p("*"),
     fillMainTable_p(True),
-    tvi_debug(False)
+    tvi_debug(False),
+    want_cont_p(False)
   {
   }
   
@@ -7387,6 +7388,7 @@ Bool SubMS::subtractContinuum(const Vector<MS::PredefinedColumns>& colNames,
   VBGContinuumSubtractor vbgcs(msOut_p, msc_p, vbmaps, viIn, fitorder_p,
                                colNames[0], fitspw_p, fitoutspw_p);
   vbgcs.setTVIDebug(tvi_debug);
+  vbgcs.setWantCont(want_cont_p);
   GroupProcessor gp(viIn, &vbgcs);
 
   retval = gp.go();

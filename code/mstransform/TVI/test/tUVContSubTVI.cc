@@ -57,8 +57,12 @@ void UVContSubTVITest::generateReferenceFile()
 	// Get parameters
 	uInt fitorder;
 	String datacolumn;
+	String fitspw;
+	Bool want_cont;
 	refConfiguration_p.get (refConfiguration_p.fieldNumber ("fitorder"), fitorder);
 	refConfiguration_p.get (refConfiguration_p.fieldNumber ("datacolumn"), datacolumn);
+	refConfiguration_p.get (refConfiguration_p.fieldNumber ("fitspw"), fitspw);
+	refConfiguration_p.get (refConfiguration_p.fieldNumber ("want_cont"), want_cont);
 
 	// Run uvcontsub (uvcontsub3 implementation)
 	try
@@ -66,6 +70,8 @@ void UVContSubTVITest::generateReferenceFile()
 		MeasurementSet ms(inpFile_p);
 		SubMS subtractor(ms);
 		subtractor.setFitOrder(fitorder);
+		subtractor.setFitSpw(fitspw);
+		subtractor.setWantCont(want_cont);
 		subtractor.setmsselect();
 		subtractor.setTVIDebug(True);
 		subtractor.makeSubMS(referenceFile_p, datacolumn);
@@ -119,6 +125,7 @@ UVContSubTVITest::UVContSubTVITest(): FreqAxisTVITest ()
     //configuration.define ("scan", "30");
     configuration.define ("fitorder", 1);
     configuration.define ("want_cont", False);
+    configuration.define ("fitspw", "*:0~30");
     configuration.define ("datacolumn", String("CORRECTED_DATA"));
 
 	init(configuration);

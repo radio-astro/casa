@@ -109,6 +109,7 @@ public:
   virtual Bool process(VisBuffGroup& vbg);
 
   void setTVIDebug(Bool debug) {tvi_debug = debug;}
+  void setWantCont(Bool want_cont) {want_cont_p = want_cont;}
 
 private:
   // Disable null c'tor.
@@ -147,6 +148,7 @@ private:
   std::map<Int, Vector<Bool>*> fitmask_p;      // spw -> a list of flags by chan
 
   Bool tvi_debug;
+  Bool want_cont_p;
 };
 
 } //# NAMESPACE CASA - END

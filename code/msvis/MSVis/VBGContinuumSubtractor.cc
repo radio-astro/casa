@@ -51,7 +51,8 @@ VBGContinuumSubtractor::VBGContinuumSubtractor(MeasurementSet& outms,
   datacol_p(datacol),
   outspw_p(outspw),
   rowsdone_p(0),
-  tvi_debug(False)
+  tvi_debug(False),
+  want_cont_p(False)
 {
   doWS_p = invi.existsWeightSpectrum();
   doFC_p = invi.existsFlagCategory();
@@ -196,7 +197,7 @@ Bool VBGContinuumSubtractor::process(VisBuffGroup& vbg)
 
     if(outspws_p.find(spw) != outspws_p.end()){
       // datacol_p is in DATA now.  Is this repetitious?  Yes it is.
-      if(!vbcs.apply(vbg(bufnum), MS::DATA, coeffs_p, coeffsOK_p, true,
+      if(!vbcs.apply(vbg(bufnum), MS::DATA, coeffs_p, coeffsOK_p, !want_cont_p,
                      appliedSpWs_p.count(spw) < 1)){
         worked = false;
         break;

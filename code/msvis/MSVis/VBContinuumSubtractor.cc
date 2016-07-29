@@ -266,8 +266,19 @@ void VBContinuumSubtractor::fit(VisBuffGroupAcc& vbga, const Int fitorder,
           for(uInt c = 0; c < nchan; ++c){
             // AAARRGGGHHH!!  With Calibrater you have to use vb.flag(), not
             // flagCube(), to get the channel selection!
-            //if(!vb.flagCube()(corrind, c, vbrow)){
-        	  chanFlag = tvi_debug? vb.flagCube()(corrind, c, blind) : vb.flagCube()(corrind, c, blind);
+            //if(!vb.flagCube()(corrind, c, vbrow)){0
+        	  if (!tvi_debug)
+        	  {
+        		  chanFlag = vb.flag()(c, blind);
+        	  }
+        	  else
+        	  {
+        		  // jagonzal: Use flagCube, meaning that each correlation is fit
+        		  // independently even if the other correlations are fully flagged
+        		  chanFlag = vb.flagCube()(corrind, c, blind);
+        		  // jagonzal: Apparently line-free chan mask is contained in vb.flag()
+        		  chanFlag = vb.flagCube()(corrind, c, blind) |  vb.flag()(c, blind);
+        	  }
             //if(!vb.flag()(c, blind)){
         	// if(!vb.flagCube()(corrind, c, blind)){
         	  if (!chanFlag) {
@@ -577,7 +588,15 @@ Bool VBContinuumSubtractor::apply(VisBuffer& vb,
           // SIGMA.
         }
         else
-          vb.flagCube()(corrind, c, vbrow) = true;
+        {
+            // jagonzal: Do not flag data in case of not successful
+            // sfit because it might be cause by the line-free mask
+        	// and we may end up flagging 'good' line channels
+            if (!tvi_debug) vb.flagCube()(corrind, c, vbrow) = true;
+            // jagonzal: When returning the continuum, in case of not
+            // successful fit we should return 0, not the input data
+            if (tvi_debug and !doSubtraction) viscube(corrind, c, vbrow) = 0;
+        }
         //vb.flag()(c, vbrow) = true;
       }
     }

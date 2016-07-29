@@ -64,7 +64,9 @@ protected:
 
     mutable uInt fitOrder_p;
     mutable Bool want_cont_p;
+    mutable String fitspw_p;
     mutable LinearFitSVD<Float> fitter_p;
+    mutable map<Int,Vector<Bool> > lineFreeChannelMaskMap_p;
 	mutable map<Int, Matrix<Float> > inputFrequencyMap_p;
 };
 
@@ -129,7 +131,8 @@ public:
 
 	UVContSubKernel(	uInt fitOrder,
 						LinearFitSVD<Float> *fitter,
-						Matrix<Float> *freqPows);
+						Matrix<Float> *freqPows,
+						Vector<Bool> *lineFreeChannelMask);
 
 	virtual void kernel(DataCubeMap *inputData,
 						DataCubeMap *outputData) = 0;
@@ -143,6 +146,7 @@ protected:
 	LinearFitSVD<Float> *fitter_p;
 	Matrix<Float> *freqPows_p;
 	Vector<Float> frequencies_p;
+	Vector<Bool> *lineFreeChannelMask_p;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -155,6 +159,7 @@ template<class T> class UVContSubtractionKernel : public UVContSubKernel<T>
 	using UVContSubKernel<T>::fitter_p;
 	using UVContSubKernel<T>::freqPows_p;
 	using UVContSubKernel<T>::frequencies_p;
+	using UVContSubKernel<T>::lineFreeChannelMask_p;
 	using UVContSubKernel<T>::debug_p;
 
 
@@ -162,7 +167,8 @@ public:
 
 	UVContSubtractionKernel(	uInt fitOrder,
 								LinearFitSVD<Float> *fitter,
-								Matrix<Float> *freqPows);
+								Matrix<Float> *freqPows,
+								Vector<Bool> *lineFreeChannelMask=NULL);
 
 	void kernel(DataCubeMap *inputData,
 				DataCubeMap *outputData);
@@ -189,13 +195,15 @@ template<class T> class UVContEstimationKernel : public UVContSubKernel<T>
 	using UVContSubKernel<T>::fitter_p;
 	using UVContSubKernel<T>::freqPows_p;
 	using UVContSubKernel<T>::frequencies_p;
+	using UVContSubKernel<T>::lineFreeChannelMask_p;
 	using UVContSubKernel<T>::debug_p;
 
 public:
 
 	UVContEstimationKernel(	uInt fitOrder,
 							LinearFitSVD<Float> *fitter,
-							Matrix<Float> *freqPows);
+							Matrix<Float> *freqPows,
+							Vector<Bool> *lineFreeChannelMask=NULL);
 
 	void kernel(DataCubeMap *inputData,
 				DataCubeMap *outputData);

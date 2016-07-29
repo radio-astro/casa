@@ -39,6 +39,7 @@ UVContSubTVI::UVContSubTVI(	ViImplementation2 * inputVii,
 {
 	fitOrder_p = 0;
 	want_cont_p = False;
+	fitspw_p = String("");
 	inputFrequencyMap_p.clear();
 
 	// Parse and check configuration parameters
@@ -80,6 +81,15 @@ Bool UVContSubTVI::parseConfiguration(const Record &configuration)
 					<< "want_cont is " << want_cont_p << LogIO::POST;
 	}
 
+	exists = configuration.fieldNumber ("fitspw");
+	if (exists >= 0)
+	{
+		configuration.get (exists, fitspw_p);
+
+		logger_p 	<< LogIO::NORMAL << LogOrigin("UVContSubTVI", __FUNCTION__)
+					<< "Line-free channel selection is " << fitspw_p << LogIO::POST;
+	}
+
 	return ret;
 }
 
@@ -103,6 +113,55 @@ void UVContSubTVI::initialize()
 	// Initialize fitting model (we assume there is always enough data for the requested order)
 	Polynomial<AutoDiff<Float> > poly(fitOrder_p);
 	fitter_p.setFunction(poly);
+
+	if (fitspw_p.size() > 0)
+	{
+		// Parse line-free channel selection
+		MSSelection mssel;
+		mssel.setSpwExpr(fitspw_p);
+		Matrix<Int> spwchan = mssel.getChanList(&(inputVii_p->ms()));
+
+		// Create line-free channel map
+	    uInt nSelections = spwchan.shape()[0];
+	    map<Int,vector<Int> > lineFreeChannelMap;
+		Int channelStart,channelStop,channelStep;
+		for(uInt selection_i=0;selection_i<nSelections;selection_i++)
+		{
+			spw = spwchan(selection_i,0);
+			channelStart = spwchan(selection_i,1);
+			channelStop = spwchan(selection_i,2);
+			channelStep = spwchan(selection_i,3);
+
+			if (lineFreeChannelMap.find(spw) == lineFreeChannelMap.end())
+			{
+				lineFreeChannelMap[spw].clear(); // Accessing the vector creates it
+			}
+
+			for (Int inpChan=channelStart;inpChan<=channelStop;inpChan += channelStep)
+			{
+				lineFreeChannelMap[spw].push_back(inpChan);
+			}
+		}
+
+
+		// Create line-free channel mask
+		uInt selChan;
+		for(iter=spwInpChanIdxMap_p.begin();iter!=spwInpChanIdxMap_p.end();iter++)
+		{
+			spw = iter->first;
+			if (lineFreeChannelMaskMap_p.find(spw) == lineFreeChannelMaskMap_p.end())
+			{
+				lineFreeChannelMaskMap_p[spw] = Vector<Bool>(spwInpChanIdxMap_p[spw].size(),True);
+				for (uInt selChanIdx=0;selChanIdx<lineFreeChannelMap[spw].size();selChanIdx++)
+				{
+					selChan = lineFreeChannelMap[spw][selChanIdx];
+					lineFreeChannelMaskMap_p[spw](selChan) = False;
+				}
+			}
+			spw_idx++;
+		}
+
+	}
 
 	return;
 }
@@ -205,6 +264,17 @@ template<class T> void UVContSubTVI::transformDataCube(	const Cube<T> &inputVis,
 		}
 	}
 
+	// Get input line-free channel mask
+	Vector<Bool> *lineFreeChannelMask;
+	if (lineFreeChannelMaskMap_p.find(spwId) != lineFreeChannelMaskMap_p.end())
+	{
+		lineFreeChannelMask = &(lineFreeChannelMaskMap_p[spwId]);
+	}
+	else
+	{
+		lineFreeChannelMask = NULL;
+	}
+
 	// Reshape output data before passing it to the DataCubeHolder
 	outputVis.resize(getVisBufferConst()->getShape(),False);
 
@@ -226,15 +296,15 @@ template<class T> void UVContSubTVI::transformDataCube(	const Cube<T> &inputVis,
 	fitter_p.asWeight(sigmaAsWeight); // We are using sigma spectrum
 	if (want_cont_p)
 	{
-		UVContEstimationKernel<T> kernel(fitOrder_p,&fitter_p,&(inputFrequencyMap_p[spwId]));
+		UVContEstimationKernel<T> kernel(fitOrder_p,&fitter_p,&(inputFrequencyMap_p[spwId]),lineFreeChannelMask);
 		UVContSubTransformEngine<T> transformer(&kernel,&inputData,&outputData);
-		transformFreqAxis2(vb->getShape(),transformer,vb);
+		transformFreqAxis2(vb->getShape(),transformer);
 	}
 	else
 	{
-		UVContSubtractionKernel<T> kernel(fitOrder_p,&fitter_p,&(inputFrequencyMap_p[spwId]));
+		UVContSubtractionKernel<T> kernel(fitOrder_p,&fitter_p,&(inputFrequencyMap_p[spwId]),lineFreeChannelMask);
 		UVContSubTransformEngine<T> transformer(&kernel,&inputData,&outputData);
-		transformFreqAxis2(vb->getShape(),transformer,vb);
+		transformFreqAxis2(vb->getShape(),transformer);
 	}
 
 	return;
@@ -303,12 +373,14 @@ template<class T> void UVContSubTransformEngine<T>::transform(	)
 // -----------------------------------------------------------------------
 template<class T> UVContSubKernel<T>::UVContSubKernel(	uInt fitOrder,
 														LinearFitSVD<Float> *fitter,
-														Matrix<Float> *freqPows)
+														Matrix<Float> *freqPows,
+														Vector<Bool> *lineFreeChannelMask)
 {
 	fitter_p = fitter;
 	fitOrder_p = fitOrder;
 	freqPows_p = freqPows;
 	frequencies_p.reference(freqPows->row(0));
+	lineFreeChannelMask_p = lineFreeChannelMask != NULL? lineFreeChannelMask : NULL;
 	debug_p = False;
 }
 
@@ -322,8 +394,10 @@ template<class T> UVContSubKernel<T>::UVContSubKernel(	uInt fitOrder,
 // -----------------------------------------------------------------------
 template<class T> UVContSubtractionKernel<T>::UVContSubtractionKernel(	uInt fitOrder,
 																		LinearFitSVD<Float> *fitter,
-																		Matrix<Float> *freqPows):
-																		UVContSubKernel<T>(fitOrder,fitter,freqPows)
+																		Matrix<Float> *freqPows,
+																		Vector<Bool> *lineFreeChannelMask):
+																		UVContSubKernel<T>(fitOrder,fitter,
+																				freqPows,lineFreeChannelMask)
 {
 
 }
@@ -338,10 +412,12 @@ template<class T> void UVContSubtractionKernel<T>::kernel(	DataCubeMap *inputDat
 	Vector<T> &outputVector = outputData->getVector<T>(MS::DATA);
 	Vector<T> &inputVector = inputData->getVector<T>(MS::DATA);
 
-	// Calculate number of valid data points
+	// Apply line-free channel mask
 	Vector<Bool> &inputFlags = inputData->getVector<Bool>(MS::FLAG);
-	size_t validPoints = nfalse(inputFlags);
+	if (lineFreeChannelMask_p != NULL) inputFlags |= *lineFreeChannelMask_p;
 
+	// Calculate number of valid data points and adapt fit
+	size_t validPoints = nfalse(inputFlags);
 	if (validPoints > 0)
 	{
 		Bool restoreDefaultPoly = False;
@@ -464,8 +540,10 @@ template<class T> void UVContSubtractionKernel<T>::kernelCore(	Vector<Float> &in
 // -----------------------------------------------------------------------
 template<class T> UVContEstimationKernel<T>::UVContEstimationKernel(	uInt fitOrder,
 																		LinearFitSVD<Float> *fitter,
-																		Matrix<Float> *freqPows):
-																		UVContSubKernel<T>(fitOrder,fitter,freqPows)
+																		Matrix<Float> *freqPows,
+																		Vector<Bool> *lineFreeChannelMask):
+																		UVContSubKernel<T>(fitOrder,fitter,
+																				freqPows,lineFreeChannelMask)
 {
 
 }
@@ -480,10 +558,12 @@ template<class T> void UVContEstimationKernel<T>::kernel(	DataCubeMap *inputData
 	Vector<T> &outputVector = outputData->getVector<T>(MS::DATA);
 	Vector<T> &inputVector = inputData->getVector<T>(MS::DATA);
 
-	// Calculate number of valid data points
+	// Apply line-free channel mask
 	Vector<Bool> &inputFlags = inputData->getVector<Bool>(MS::FLAG);
-	size_t validPoints = nfalse(inputFlags);
+	if (lineFreeChannelMask_p != NULL) inputFlags |= *lineFreeChannelMask_p;
 
+	// Calculate number of valid data points and adapt fit
+	size_t validPoints = nfalse(inputFlags);
 	if (validPoints > 0)
 	{
 		Bool restoreDefaultPoly = False;

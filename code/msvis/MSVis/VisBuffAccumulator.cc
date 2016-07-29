@@ -219,7 +219,7 @@ void VisBuffAccumulator::accumulate (const VisBuffer& vb)
 
       Int goodChan(0);
       for (Int chn=0; chn<vb.nChannel(); chn++) {
-	if (!vb.flag()(chn,row) or tvi_debug) {
+	if (!vb.flag()(chn,row) or tvi_debug) {// jagonzal: Always copy inputVis to outputVis
 	  goodChan++;
 	  avBuf_p.flag()(chn,outrow) = False;
 	  for (Int cor=0;cor<nCorr;cor++) {
@@ -257,6 +257,8 @@ void VisBuffAccumulator::accumulate (const VisBuffer& vb)
   } // while (row < vb.nRow())
   ++nBuf_p;
 
+  // jagonzal: Fill rowId and flagCube (flag only provides
+  // an OR of the flags corresponding to all corrs per chan)
   if (nBuf_p==1 and tvi_debug)
   {
 	  for (uInt outrow_idx=0;outrow_idx<outToInRow_p.size();outrow_idx++)
@@ -340,6 +342,8 @@ void VisBuffAccumulator::initialize(const Bool& copydata)
 
   avBuf_p.flag().resize(nChan_p, nRow,copydata);
 
+  // jagonzal: Fill rowId and flagCube (flag only provides
+  // an OR of the flags corresponding to all corrs per chan)
   if (tvi_debug)
   {
 	  avBuf_p.rowIds().resize(nRow, copydata);

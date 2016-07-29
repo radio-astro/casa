@@ -135,11 +135,8 @@ protected:
 
     // Method implementing main loop  (with auxiliary data)
 	template <class T> void transformFreqAxis2(	const IPosition &inputShape,
-												FreqAxisTransformEngine2<T> &transformer,
-												VisBuffer2 *vb=NULL) const
+												FreqAxisTransformEngine2<T> &transformer) const
 	{
-		vb = NULL;// jagonzal: Debug code
-
 		uInt nRows = inputShape(2);
 		uInt nCorrs = inputShape(0);
 
@@ -153,7 +150,8 @@ protected:
 
 				// jagonzal: Debug code
 				/*
-				if (vb->rowIds()(row)==3 and corr==0)
+				VisBuffer2 *vb = getVii()->getVisBuffer();
+				if (vb->rowIds()(row)==0 and corr==0)
 				{
 					transformer.setDebug(True);
 				}

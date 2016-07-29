@@ -122,7 +122,7 @@ void FreqAxisTVI::initialize()
 
 		if (spwInpChanIdxMap_p.find(spw) == spwInpChanIdxMap_p.end())
 		{
-			spwInpChanIdxMap_p[spw].clear(); // Accesing the vector creates it
+			spwInpChanIdxMap_p[spw].clear(); // Accessing the vector creates it
 		}
 
 		for (Int inpChan=channelStart;inpChan<=channelStop;inpChan += channelStep)
