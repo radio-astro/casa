@@ -153,6 +153,7 @@ protected:
   String itsMaskResolution;
   Float itsMaskResByBeam;
   Int itsNMask;
+  Bool itsAutoAdjust;
   Bool itsIsMaskLoaded; // Try to get rid of this state variable ! 
   Bool itsIsInteractive;
  

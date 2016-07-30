@@ -1767,11 +1767,12 @@ HPX HEALPix grid.  -->
 
                        auto-thresh: automask by threshold for deconvolution (binned residual imagei is used for
                                     to defining masks)
-                          subparameters : maskthreshold, maskresolution, pbmask, nmask
+                          subparameters : maskthreshold, maskresolution, pbmask, nmask, autoadjust
                           
                           if pbmask is >0.0, the region outside the specified pb gain level is exculded from
                           image statistics in determination of the threshold. 
                           if nmask > 0, 'pruning' of the found automask regions will be applied. 
+                          autoadjust = True will adjust maskthreshold to higher threshold as iteration                          progresses.
                         <!--  if pbmask is >0.0, after automask algorithm is run, it limits the mask to within 
                                              a pb gain level of pbmask (This option will work only with 
                                              gridders that produce .pb (i.e. mosaic and awproject)
@@ -1911,6 +1912,14 @@ HPX HEALPix grid.  -->
                                   nmask=0  (default, set no limit on the number of mask regions to be added)
 </description>
 	    <value type="int">0</value>
+    </param>
+    <param type="bool" name="autoadjust" subparam="true">
+	   <shortdescription>Automatically adjust threshold level of automasking at the first itertaion and as iteration progresses </shortdescription>
+<description>Automatically adjust automask threshold to a higher value at the begging and when the rms value change from the previous value becomes less than 10%. 
+                       Examples : autoadjust = True
+                                  (default is False)
+</description>
+	    <value type="bool">False</value>
     </param>
            
 
@@ -2437,6 +2446,7 @@ HPX HEALPix grid.  -->
          <default param="maskthreshold"><value>""</value></default>
          <default param="maskresolution"><value>""</value></default>
          <default param="nmask"><value>0</value></default>
+         <default param="autoadjust"><value>False</value></default>
        </equals>
        <!-- auto mask by direct threshold -->
        <equals type="string" value="auto-thresh2"> 

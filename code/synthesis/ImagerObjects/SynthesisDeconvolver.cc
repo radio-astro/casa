@@ -174,6 +174,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         itsMaskResolution = decpars.maskResolution;
         itsMaskResByBeam = decpars.maskResByBeam;
         itsNMask = decpars.nMask;
+        itsAutoAdjust = decpars.autoAdjust;
 	itsIsInteractive = decpars.interactive;
       }
     catch(AipsError &x)
@@ -454,10 +455,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      //modify mask using automask otherwise no-op
      if ( itsAutoMaskAlgorithm != "" )  {
        if ( itsPBMask > 0.0 ) {
-         itsMaskHandler->autoMaskWithinPB( itsImages, itsAutoMaskAlgorithm, itsMaskThreshold, itsFracOfPeak, itsMaskResolution, itsMaskResByBeam, itsNMask, itsPBMask);
+         itsMaskHandler->autoMaskWithinPB( itsImages, itsAutoMaskAlgorithm, itsMaskThreshold, itsFracOfPeak, itsMaskResolution, itsMaskResByBeam, itsNMask, itsAutoAdjust,  itsPBMask);
        }
        else {
-         itsMaskHandler->autoMask( itsImages, itsAutoMaskAlgorithm, itsMaskThreshold, itsFracOfPeak, itsMaskResolution, itsMaskResByBeam, itsNMask);
+         itsMaskHandler->autoMask( itsImages, itsAutoMaskAlgorithm, itsMaskThreshold, itsFracOfPeak, itsMaskResolution, itsMaskResByBeam, itsNMask, itsAutoAdjust);
        }
      }
   }

@@ -106,6 +106,7 @@ public:
                 const String& resolution="",
                 const Float& resbybeam=0.0,
                 const Int nmask=0, 
+                const Bool autoadjust=False,
                 Float pblimit=0.0);
   // automask algorithms...  
   void autoMaskByThreshold (ImageInterface<Float>& mask,
@@ -117,7 +118,8 @@ public:
                            const Float& fracofpeak, 
                            const Record& theStats,
                            const Float& sigma=3.0,
-                           const Int nmask=0);
+                           const Int nmask=0, 
+                           const Bool autoadjust=False);
 
   // no binning version
   void autoMaskByThreshold2 (ImageInterface<Float>& mask,
@@ -138,6 +140,7 @@ public:
                                const Float& fracofpeak,
                                const Float& sigma, 
                                const Int nmask,
+                               const Bool autoadjust,
                                Double thresh=0.0);
 
   SHARED_PTR<ImageInterface<Float> > convolveMask(const ImageInterface<Float>& inmask, 
@@ -156,6 +159,7 @@ public:
                         const String& resolution="",
                         const Float& resbybeam=0.0,
                         const Int nmask=0,
+                        const Bool autoadjust=False,
                         Float pblimit=0.1);
 
   // check if input image is a mask image with 0 or a value (if normalize=true, 1)
@@ -166,7 +170,14 @@ public:
 
 protected:
   InteractiveMasking *interactiveMasker_p;
+
+private:
+  Double itsRms;
+  Double itsMax;
+  Float itsSidelobeLevel;
 };
+
+
 
 } //# NAMESPACE CASA - END
 

@@ -76,6 +76,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   SDMaskHandler::SDMaskHandler()
   {
     interactiveMasker_p = new InteractiveMasking();
+    itsMax = DBL_MAX;
+    itsRms = DBL_MAX;
+    itsSidelobeLevel = 0.0;
   }
   
   SDMaskHandler::~SDMaskHandler()
@@ -717,6 +720,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                                const String& resolution,
                                const Float& resbybeam,
                                const Int nmask,
+                               const Bool autoadjust,
                                Float pblimit)
   {
     LogIO os( LogOrigin("SDMaskHandler","autoMask",WHERE) );
@@ -837,13 +841,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     thestats.get(RecordFieldId("rms"), rms);
     os<< LogIO::DEBUG1 << "All rms's on the input image -- rms.nelements()="<<rms.nelements()<<" rms="<<rms<<LogIO::POST;
     os<< LogIO::DEBUG1 << "All max's on the input image -- max.nelements()="<<max.nelements()<<" max="<<max<<LogIO::POST;
+
+    //os<<"SidelobeLevel = "<<imstore->getPSFSidelobeLevel()<<LogIO::POST;
+    //itsSidelobeLevel = imstore->getPSFSidelobeLevel();
     //os<< "mask algortihm ="<<alg<< LogIO::POST;
     if (alg==String("") || alg==String("onebox")) {
       //cerr<<" calling makeAutoMask(), simple 1 cleanbox around the max"<<endl;
       makeAutoMask(imstore);
     }
     else if (alg==String("thresh")) {
-      autoMaskByThreshold(*tempmask, *tempres, *temppsf, qreso, resbybeam, qthresh, fracofpeak, thestats, sigma, nmask);
+      autoMaskByThreshold(*tempmask, *tempres, *temppsf, qreso, resbybeam, qthresh, fracofpeak, thestats, sigma, nmask, autoadjust);
     }
     else if (alg==String("thresh2")) {
       autoMaskByThreshold2(*tempmask, *tempres, *temppsf, qreso, resbybeam, qthresh, fracofpeak, thestats, sigma, nmask);
@@ -870,7 +877,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                                           const Float& fracofpeak,
                                           const Record& stats, 
                                           const Float& sigma, 
-                                          const Int nmask) 
+                                          const Int nmask,
+                                          const Bool autoadjust) 
   {
     LogIO os( LogOrigin("SDMaskHandler","autoMaskByThreshold",WHERE) );
     Array<Double> rms, max;
@@ -974,7 +982,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     //binning stage
     if (dobin) {
-      tempIm_ptr =  makeMaskFromBinnedImage(res, npix, npix, fracofpeak, sigma, nmask, rmsthresh);
+      tempIm_ptr =  makeMaskFromBinnedImage(res, npix, npix, fracofpeak, sigma, nmask, autoadjust, rmsthresh);
       //for debugging: save the mask at this stage
       if (debug) {
         PagedImage<Float> tempBinIm(TiledShape(tempIm_ptr.get()->shape()), tempIm_ptr.get()->coordinates(), "binnedThresh.Im");
@@ -1160,9 +1168,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                                                                              const Float& fracofpeak,
                                                                              const Float& sigma, 
                                                                              const Int nmask,
+                                                                             const Bool autoadjust,
                                                                              Double thresh)
   {
     Bool debug(False);
+    Bool firstrun(False);
     LogIO os( LogOrigin("SDMaskHandler","makeMaskfromBinnedImage",WHERE) );
     RebinImage<Float> tempRebinnedIm( image, IPosition(4,nx, ny,1,1) );
     // for debug
@@ -1178,9 +1188,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //thresh = thresh / sqrt(nx);
 
     //stats on the binned image (the info not used for mask criteria yet)
-    Array<Double> rms, max, min;
+    Array<Double> rmses, maxes, mins;
     // vars to store min,max values of extrema and rms in all planes
     Double minRmsVal, maxRmsVal, minMaxVal, maxMaxVal, minMinVal, maxMinVal;
+    IPosition minRmsPos, maxRmsPos, minMaxPos, maxMaxPos, minMinPos, maxMinPos;
     TempImage<Float>* tempImForStat = new TempImage<Float>(tempRebinnedIm.shape(), tempRebinnedIm.coordinates() );
     tempImForStat->copyData(tempRebinnedIm);
     SHARED_PTR<casa::ImageInterface<float> > temprebin_ptr(tempImForStat);
@@ -1191,30 +1202,113 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     stataxes[1] = 1;
     imcalc.setAxes(stataxes);
     Record imstats = imcalc.statistics();
-    imstats.get(RecordFieldId("rms"),rms);
-    imstats.get(RecordFieldId("max"),max);
-    imstats.get(RecordFieldId("min"),min);
-    minMax(minRmsVal,maxRmsVal,rms);
-    minMax(minMaxVal,maxMaxVal,max);
-    minMax(minMinVal,maxMinVal,min);
+    imstats.get(RecordFieldId("rms"),rmses);
+    imstats.get(RecordFieldId("max"),maxes);
+    imstats.get(RecordFieldId("min"),mins);
+    minMax(minRmsVal,maxRmsVal,minRmsPos, maxRmsPos,rmses);
+    minMax(minMaxVal,maxMaxVal,minMaxPos, maxMaxPos,maxes);
+    minMax(minMinVal,maxMinVal,minMinPos, maxMinPos,mins);
+    
 
-    //os << LogIO::DEBUG1 <<" thresh for binned image (modified by sqrt(npix))   ="<<thresh<<LogIO::POST;
-    os << LogIO::NORMAL <<"Statistics on binned image: max="<<maxMaxVal<<" rms="<<maxRmsVal<<LogIO::POST;
+    //os << LogIO::NORMAL <<"Statistics on binned image: max="<<maxMaxVal<<" rms="<<maxRmsVal<<LogIO::POST;
+    os << LogIO::NORMAL <<"Statistics on binned image: Peak (max)="<<maxMaxVal<<"@"<<maxMaxPos
+                        <<"rms (max) ="<<maxRmsVal<<"@"<<maxRmsPos<<LogIO::POST;
+    //os << LogIO::NORMAL <<"Statistics on binned image: min of Max="<<minMaxVal<<"@"<<minMaxPos<<LogIO::POST;
+    //os << LogIO::NORMAL <<"Statistics on binned image: min of rms="<<minRmsVal<<"@"<<minRmsPos<<LogIO::POST;
 
     TempImage<Float>* tempMask = new TempImage<Float> (tempRebinnedIm.shape(), tempRebinnedIm.coordinates() );
 
+
+    //Double dr =  maxMaxVal/rmses(maxMaxPos);
+    
+    // save only the first time
+    if (itsMax==DBL_MAX) { 
+        itsMax = maxMaxVal;
+        firstrun = True;
+    }
+    else {
+        firstrun = False;
+    }
+
+    Float adjFact = 0.0;
+
+    //Float fracDiffMax = (itsMax - maxMaxVal)/itsMax;
+    Float fracDiffRms = (itsRms - maxRmsVal)/itsRms;
+    //os<<"fractional changes in max:"<<fracDiffMax<<" in rms:"<<fracDiffRms<<LogIO::POST;
+    os<<LogIO::DEBUG1<<"fractional changes in rms from previous one:"<<fracDiffRms<<LogIO::POST;
+    if (autoadjust) {
+      //os <<"autoAdjust is on "<<LogIO::POST;
+      // automatically adjust threshold for the initial round and when fractional rms change is
+      // is less than 10%
+      if (fracDiffRms < 0.1 ) {
+        adjFact = (Float) Int(log(1.0/abs(fracDiffRms))-1.0);
+      }
+     // else if (dr < 10.0) {
+     //   os<<LogIO::DEBUG1<<"dynamic range:max/rms = "<<dr<<LogIO::POST;
+     //   adjFact = sigma!=0 && sigma <= 3.0? 2: 0;
+     // }
+      else if (firstrun) {
+        adjFact = 3;
+      }
+    }
     if (fracofpeak) {
       thresh = fracofpeak * maxMaxVal;
-      os << LogIO::NORMAL <<"thresh="<<thresh<<" ( "<<fracofpeak<<"* max peak )"<<LogIO::POST;
-    }
+      Double prevthresh = thresh;
+      if (adjFact >0.0 ) {
+        thresh = max((adjFact + 3) * maxRmsVal,thresh);
+        if (firstrun) {
+          // adjustment at 1st iteration cycle, if threshold is too big, make cutoff at 50% peak 
+          if (thresh < itsMax) {
+            if (prevthresh != thresh) {
+              os << LogIO::NORMAL <<"first iteration automatically adjusted thresh="<<thresh<<"( "<<" * (adj fact.="<<adjFact+3<<") * rms )"<<LogIO::POST;
+            }
+          }
+          else {
+            thresh=prevthresh;
+          }
+        } 
+        else {
+          if (prevthresh != thresh) {
+            os << LogIO::NORMAL <<"thresh="<<thresh<<" ( adj fact.="<<adjFact+3<<") * rms )"<<LogIO::POST;
+          }
+        }
+      }
+      // if sidelobe level is set and if it is larger than the current thresh use that value
+      //thresh = max( itsSidelobeLevel*itsMax, thresh );
+      if (adjFact != 0.0) {
+      }
+      else {
+        os << LogIO::NORMAL <<"thresh="<<thresh<<" ( "<<fracofpeak<<"* max peak )"<<LogIO::POST;
+      }
+    } 
     else if (sigma) {
-      thresh = sigma * maxRmsVal;
-      os << LogIO::NORMAL <<"thresh="<<thresh<<" ( "<<sigma<<"* rms )"<<LogIO::POST;
+      thresh = (sigma + adjFact)* maxRmsVal;
+      // if sidelobe level is set and if it is larger than the current thresh use that value
+      //thresh = max( itsSidelobeLevel*itsMax, thresh);
+      if (firstrun && adjFact != 0.0) {
+        if (thresh < itsMax) { 
+          os << LogIO::NORMAL <<"first iteration automatically adjusted thresh="<<thresh
+             <<" ( "<<sigma<<"+adjustment factor:"<<adjFact<<")* rms )"<<LogIO::POST;
+        }
+        else {
+          thresh = 0.5*itsMax;
+          os << LogIO::NORMAL <<"first iteration automatically adjusted thresh="<<thresh
+             <<" (0.5*peak )"<<LogIO::POST;
+        }
+      } 
+      if (adjFact != 0.0) {
+        os << LogIO::NORMAL <<"thresh="<<thresh<<" ( "<<sigma<<"+adjustment factor:"<<adjFact<<")* rms )"<<LogIO::POST;
+      }
+      else {
+        os << LogIO::NORMAL <<"thresh="<<thresh<<" ( "<<sigma<<"* rms )"<<LogIO::POST;
+      }
     }
 
+
+    itsRms = maxRmsVal;
 
     if (thresh > maxMaxVal) {
-      os << LogIO::WARN <<" The threshold value,"<<thresh<<" for making a mask is greater than max value in the image. No mask will be added by automask."<< LogIO::POST;
+      os << LogIO::WARN <<" The threshold value,"<<thresh<<" for making a mask is greater than max value in the image. No new mask will be added by automask."<< LogIO::POST;
       tempMask->set(0.0);
     }
     else {
@@ -1474,6 +1568,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                                        const String& resolution,
                                        const Float& resbybeam, 
                                        const Int nmask,
+                                       const Bool autoadjust,
                                        Float pblimit)
   { 
     LogIO os( LogOrigin("SDMaskHandler","autoMaskWithinPB",WHERE) );
@@ -1481,7 +1576,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     os <<LogIO::DEBUG1<<"Calling autoMaskWithinPB .."<<LogIO::POST;
     // changed to do automask ater pb mask is generated so automask do stats within pb mask
-    autoMask( imstore, alg, threshold, fracofpeak, resolution, resbybeam, nmask, pblimit);
+    autoMask( imstore, alg, threshold, fracofpeak, resolution, resbybeam, nmask, autoadjust, pblimit);
 
     if( imstore->hasPB() )
       {

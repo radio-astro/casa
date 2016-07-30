@@ -347,6 +347,7 @@ public:
   Float fracOfPeak;
   Float maskResByBeam;
   Int nMask;
+  Bool autoAdjust;
 
 
  

@@ -3236,6 +3236,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                 err+= "nmask must be an integer\n";
               }
           }
+        if( inrec.isDefined("autoadjust") )
+          {
+            if( inrec.dataType("autoadjust")==TpBool )
+              {
+                err+= readVal(inrec, String("autoadjust"), autoAdjust );
+              }
+            else 
+              {
+                err+= "autoadjust must be a bool\n";
+              }
+          }
 
         if( inrec.isDefined("restoringbeam") )     
 	  {
@@ -3363,6 +3374,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     maskResolution="";
     fracOfPeak=0.0; 
     nMask=0;
+    autoAdjust=False;
     interactive=False;
   }
 
@@ -3396,6 +3408,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     decpar.define("maskresolution",maskResolution);
     decpar.define("nmask",nMask);
+    decpar.define("autoadjust",autoAdjust);
     decpar.define("interactive",interactive);
 
     return decpar;
