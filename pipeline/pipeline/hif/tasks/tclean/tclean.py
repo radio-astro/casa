@@ -356,7 +356,7 @@ class Tclean(cleanbase.CleanBase):
         dirty_dynamic_range = residual_max / sequence_manager.sensitivity
 
         old_threshold = qaTool.convert(sequence_manager.threshold, 'Jy')['value']
-        if (inputs.intent == 'TARGET'):
+        if (inputs.intent == 'TARGET' ) or (inputs.intent == 'CHECK'):
             n_dr_max = 2.5
             if (context.observing_run.get_measurement_sets()[0].antennas[0].diameter == 12.0):
                 if (dirty_dynamic_range > 150.):
