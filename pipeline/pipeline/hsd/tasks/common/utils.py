@@ -547,12 +547,15 @@ def make_row_map(src_ms, derived_vis):
     
     # make polarization map between src MS and derived MS
     to_derived_polid = make_polid_map(vis0, vis1)
+    LOG.trace('to_derived_polid=%s'%(to_derived_polid))
     
     # make spw map between src MS and derived MS
     to_derived_spwid = make_spwid_map(vis0, vis1)
+    LOG.trace('to_derived_spwid=%s'%(to_derived_spwid))
     
     # make a map between (polid, spwid) pair and ddid for derived MS
     derived_ddid_map = make_ddid_map(vis1)
+    LOG.trace('derived_ddid_map=%s'%(derived_ddid_map))
     
     with casatools.TableReader(vis0) as tb:
         observation_ids = set(tb.getcol('OBSERVATION_ID'))
