@@ -6,6 +6,7 @@ import numpy
 import contextlib
 import re
 import time
+import collections
 
 from logging import CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET
 
@@ -29,6 +30,7 @@ import pipeline.infrastructure.mpihelpers as mpihelpers
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
 from pipeline.domain.datatable import OnlineFlagIndex
+import pipeline.infrastructure.tablereader as tablereader
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -542,6 +544,16 @@ def make_row_map(src_ms, derived_vis):
     
     start_time = time.time()
     LOG.debug('START processing "%s" and "%s"'%(vis0, vis1))
+    
+    # make polarization map between src MS and derived MS
+    to_derived_polid = make_polid_map(vis0, vis1)
+    
+    # make spw map between src MS and derived MS
+    to_derived_spwid = make_spwid_map(vis0, vis1)
+    
+    # make a map between (polid, spwid) pair and ddid for derived MS
+    derived_ddid_map = make_ddid_map(vis1)
+    
     with casatools.TableReader(vis0) as tb:
         observation_ids = set(tb.getcol('OBSERVATION_ID'))
         processor_ids = set(tb.getcol('PROCESSOR_ID'))
@@ -568,46 +580,141 @@ def make_row_map(src_ms, derived_vis):
                         for spw in ms.get_spectral_windows(science_windows_only=True):
                             data_desc = ms.get_data_description(spw=spw)
                             data_desc_id = data_desc.id
-                            LOG.trace('DATA_DESC_ID %s (SPW %s)'%(data_desc_id, spw.id))
+                            pol_id = data_desc.pol_id
+                            spw_id = spw.id
+                            derived_pol_id = to_derived_polid[pol_id]
+                            derived_spw_id = to_derived_spwid[spw_id]
+                            derived_dd_id = derived_ddid_map[(derived_pol_id, derived_spw_id)]
+                            LOG.trace('SRC DATA_DESC_ID %s (SPW %s)'%(data_desc_id, spw.id))
+                            LOG.trace('DERIVED DATA_DESC_ID %s (SPW %s)'%(derived_dd_id, derived_spw_id))
                             for state in states:
                                 state_id = state.id
                                 LOG.trace('STATE_ID %s'%(state_id))
-                                taql = generate_taql(processor_id=processor_id,
-                                                     observation_id=observation_id,
-                                                     field_id=field_id,
-                                                     antenna1=antenna_id,
-                                                     antenna2=antenna_id,
-                                                     data_desc_id=data_desc_id,
-                                                     scan_number=scan_number,
-                                                     state_id=state_id)
 
+                                # get time stamp and row numbers for selected rows of vis0
+                                taql0 = generate_taql(processor_id=processor_id,
+													observation_id=observation_id,
+													field_id=field_id,
+													antenna1=antenna_id,
+													antenna2=antenna_id,
+													data_desc_id=data_desc_id,
+													scan_number=scan_number,
+													state_id=state_id)
                                 with casatools.TableReader(vis0) as ti:
-                                    tisel = ti.query(taql, sortlist='TIME')
-                                    LOG.trace('NROW = %s'%(tisel.nrows()))
-                                    if tisel.nrows() > 0:
-                                        with casatools.TableReader(vis1) as to:
-                                            tosel = to.query(taql, sortlist='TIME')
+                                    tisel = ti.query(taql0, sortlist='TIME')
+                                    try:
+                                        LOG.trace('NROW = %s'%(tisel.nrows()))
+                                        if tisel.nrows() > 0:
                                             time_in = tisel.getcol('TIME')
-                                            time_out = tosel.getcol('TIME')
                                             row_in = tisel.rownumbers()
-                                            row_out = tosel.rownumbers()
-                                    else:
-                                        time_in = None
-                                        time_out = None
-                                        row_in = None
-                                        row_out = None
+                                        else:
+                                            time_in = None
+                                            row_in = None
+                                    finally:
+                                        tisel.close()
+                                        
+                                LOG.trace('obtained time and row numbers for state %s'%(state.id))
 
                                 if time_in is not None:
+                                    # get time stamp and row numbers for selected rows of vis1
+                                    taql1 = generate_taql(processor_id=processor_id,
+                                                         observation_id=observation_id,
+                                                         field_id=field_id,
+                                                         antenna1=antenna_id,
+                                                         antenna2=antenna_id,
+                                                         data_desc_id=derived_dd_id,
+                                                         scan_number=scan_number,
+                                                         state_id=state_id)
+                                    with casatools.TableReader(vis1) as to:
+                                        tosel = to.query(taql1, sortlist='TIME')
+                                        try:
+                                            time_out = tosel.getcol('TIME')
+                                            row_out = tosel.rownumbers()
+                                        finally:
+                                            tosel.close()
+                                            
                                     assert numpy.all(time_in == time_out)
 
                                     for (rin, rout) in zip(row_in, row_out):
                                         rowmap[rin] = rout
                                 else:
                                     LOG.trace('NOTE: no rows')
+                                    
+                                LOG.trace('DONE State %s'%(state.id))
 
     end_time = time.time()
     LOG.debug('Elapsed %s sec'%(end_time - start_time))
     return rowmap
+
+def __read_table(reader, method, vis):
+    if reader is None:
+        result = method(vis)
+    else:
+        with reader(vis) as readerobj:
+            result = method(readerobj)
+    return result
+
+def _read_table(reader, table, vis):
+    rows = __read_table(reader, table._read_table, vis)
+    return rows
+
+def make_spwid_map(srcvis, dstvis):
+    src_spws = __read_table(casatools.MSMDReader, 
+                            tablereader.SpectralWindowTable.get_spectral_windows,
+                            srcvis)
+    dst_spws = __read_table(casatools.MSMDReader, 
+                            tablereader.SpectralWindowTable.get_spectral_windows,
+                            dstvis)
+    for spw in src_spws:
+        LOG.trace('SRC SPWID %s NAME %s'%(spw.id,spw.name))
+    for spw in dst_spws:
+        LOG.trace('DST SPWID %s NAME %s'%(spw.id,spw.name))
+        
+    map_byname = collections.defaultdict(list)
+    for src_spw in src_spws:
+        for dst_spw in dst_spws:
+            if src_spw.name == dst_spw.name:
+                map_byname[src_spw].append(dst_spw)
+    
+    spwid_map = {}
+    for (src,dst) in map_byname.items():
+        LOG.trace('map_byname src spw %s: dst spws %s'%(src.id, [spw.id for spw in dst]))    
+        if len(dst) == 0:
+            continue
+        elif len(dst) == 1:
+            # mapping by name worked
+            spwid_map[src.id] = dst[0].id
+        else:
+            # need more investigation
+            for spw in dst:
+                if src.num_channels == spw.num_channels \
+                    and src.ref_frequency == spw.ref_frequency \
+                    and src.min_frequency == spw.min_frequency \
+                    and src.max_frequency == spw.max_frequency:
+                    if spwid_map.has_key(src.id):
+                        raise RuntimeError('Failed to create spw map for MSs \'%s\' and \'%s\''%(vis0,vis1))
+                    spwid_map[src.id] = spw.id
+    return spwid_map
+    
+
+def make_polid_map(srcvis, dstvis):
+    src_rows = _read_table(None, tablereader.PolarizationTable, srcvis)
+    dst_rows = _read_table(None, tablereader.PolarizationTable, dstvis)
+    for (src_polid, src_numpol, src_poltype, _, _) in src_rows:
+        LOG.trace('SRC: POLID %s NPOL %s POLTYPE %s'%(src_polid, src_numpol, src_poltype))
+    for (dst_polid, dst_numpol, dst_poltype, _, _) in dst_rows:
+        LOG.trace('DST: POLID %s NPOL %s POLTYPE %s'%(dst_polid, dst_numpol, dst_poltype))
+    polid_map = {}
+    for (src_polid, src_numpol, src_poltype, _, _) in src_rows:
+        for (dst_polid, dst_numpol, dst_poltype, _, _) in dst_rows:
+            if src_numpol == dst_numpol and numpy.all(src_poltype == dst_poltype):
+                polid_map[src_polid] = dst_polid
+    LOG.trace('polid_map = %s'%(polid_map))
+    return polid_map
+
+def make_ddid_map(vis):
+    table_rows = _read_table(casatools.MSMDReader, tablereader.DataDescriptionTable, vis)
+    return dict((((polid,spwid),ddid) for ddid,spwid,polid in table_rows))
 
 def get_datacolumn_name(vis):
     colname_candidates = ['CORRECTED_DATA', 'FLOAT_DATA', 'DATA']
