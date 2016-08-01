@@ -367,36 +367,31 @@ Fit baseline and subtract it from selected spectra
       <value></value>
     </param>
 
-    <param type="intArray" name="addwn">
+    <param type="string" name="addwn">
       <description>additional wave numbers to use</description>
-      <value type="vector"><value>5</value><value>7</value></value>
+      <value>0</value>
     </param>
 
-
-
-    <param type="intArray" name="rejwn">
+    <param type="string" name="rejwn">
       <description>reject wave numbers Not to use</description>
-      <value type="vector"><value>5</value><value>7</value></value>
+      <value></value>
     </param>
 
-    
     <param type="bool" name="applyfft">
       <description>automatically set wave numbers of sinusoids</description>
       <value>false</value>
     </param>
-
 
     <param type="string" name="fftmethod">
       <description>method for automatically set wave numbers of sinusoids ['fft']</description>
       <value>fft</value>
     </param>
 
-
-    <param type="float" name="fftthresh">
+    <param type="any" name="fftthresh">
       <description>threshold to select wave numbers of sinusoids</description>
+      <any type="variant"/>
       <value>3.0</value>
     </param>
-
 
     <param type="float" name="clip_threshold_sigma">
       <description>threshold for clipping in unit of sigma</description>
@@ -433,8 +428,6 @@ Fit baseline and subtract it from selected spectra
         <value type="vector"><value>0</value><value>0</value></value>
     </param>
 
-
-
   </input>
   <returns type="bool"/>
   <example>
@@ -443,10 +436,6 @@ sdms.set_selection(field='M100')
 sdms.subtract_baseline(order=3,clip_threshold_sigma=5.0,num_fitting_max=6)
   </example>
 </method>
-
-
-
-
 
 <method type="function" name="subtract_baseline_variable">
   <shortdescription>Invoke baseline subtraction by parameters stored in a file.

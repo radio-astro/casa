@@ -148,7 +148,6 @@ pipeline processing for huge dataset.
     <param type="string" name="blfunc" ignorecase="true">
         <shortdescription>baseline model function</shortdescription>
         <description>baseline model function [\'poly\', \'chebyshev\', \'cspline\', \'sinusoid\', or \'variable\'(expert mode)]</description>
-        <!--description>baseline model function [\'poly\', \'chebyshev\', \'cspline\', or \'variable\'(expert mode)]</description-->
         <value>poly</value>
         <allowed kind="enum">
             <value>poly</value>
@@ -170,13 +169,13 @@ pipeline processing for huge dataset.
     </param>
 
     <param type="bool" name="applyfft" subparam="true">
-        <description>automatically set wave numbers of sinusoids (not implemented yet)</description>
+        <description>automatically set wave numbers of sinusoids</description>
         <value>True</value>
     </param>
 
-    <param type="string" name="fftmethod" subparam="true" ignorecase="true">
+    <param type="string" name="fftmethod" ignorecase="true" subparam="true">
         <shortdescription>method for automatically set wave numbers of sinusoids [\'fft\']</shortdescription>
-        <description>method for automatically set wave numbers of sinusoids (not implemented yet)</description>
+        <description>method for automatically set wave numbers of sinusoids</description>
         <value>fft</value>
         <allowed kind="enum">
             <value>fft</value>
@@ -184,16 +183,13 @@ pipeline processing for huge dataset.
     </param>
 
     <param type="any" name="fftthresh" subparam="true">
-        <description>threshold to select wave numbers of sinusoids (not implemented yet)</description>
+        <description>threshold to select wave numbers of sinusoids</description>
         <value type="double">3.0</value>
     </param>
 
     <param type="any" name="addwn" subparam="true">
         <description>additional wave numbers to use</description>
-        <!--any type="variant" limittypes="string vector"/-->
-        <any type="variant" limittypes="string intArray"/>
-        <!--value type="vector"><value>0</value></value-->
-        <value type="intArray"><value>0</value></value>
+        <value type="vector"><value>0</value></value>
     </param>
 
     <param type="any" name="rejwn" subparam="true">

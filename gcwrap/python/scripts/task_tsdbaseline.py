@@ -5,9 +5,7 @@ import sdutil
 from collections import Counter
 ms,sdms,tb,msmd = gentools(['ms','sdms','tb', 'msmd'])
 
-def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None, timerange=None, scan=None, pol=None, intent=None, maskmode=None, thresh=None, avg_limit=None, minwidth=None, edge=None, blmode=None, dosubtract=None, blformat=None, bloutput=None, bltable=None, blfunc=None, order=None, npiece=None, 
-applyfft=None, fftmethod=None, fftthresh=None, 
-addwn=None, rejwn=None, clipthresh=None, clipniter=None, blparam=None, verbose=None, showprogress=None, minnrow=None, outfile=None, overwrite=None):
+def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None, timerange=None, scan=None, pol=None, intent=None, maskmode=None, thresh=None, avg_limit=None, minwidth=None, edge=None, blmode=None, dosubtract=None, blformat=None, bloutput=None, bltable=None, blfunc=None, order=None, npiece=None, applyfft=None, fftmethod=None, fftthresh=None, addwn=None, rejwn=None, clipthresh=None, clipniter=None, blparam=None, verbose=None, showprogress=None, minnrow=None, outfile=None, overwrite=None):
 
     casalog.origin('tsdbaseline')
     try:
@@ -49,11 +47,11 @@ addwn=None, rejwn=None, clipthresh=None, clipniter=None, blparam=None, verbose=N
             
         elif (blmode == 'fit'):
 
-            #if(blfunc=='sinusoid'):
-            #    addwn=sdutil._parse_wn(addwn)
-            #    rejwn=sdutil._parse_wn(rejwn)
-      
+            if(blfunc == 'sinusoid'):
+                addwn = sdutil.parse_wavenumber_param(addwn)
+                rejwn = sdutil.parse_wavenumber_param(rejwn)
 
+            """
             sep=['-','<=','<','>=','>']
             addwn_tmp=[]
 
@@ -91,6 +89,7 @@ addwn=None, rejwn=None, clipthresh=None, clipniter=None, blparam=None, verbose=N
                             
                 #print addwn_tmp
                     addwn=addwn_tmp
+            """
 
             blformat, bloutput = prepare_for_blformat_bloutput(infile, blformat, bloutput, overwrite)
 
@@ -119,21 +118,21 @@ addwn=None, rejwn=None, clipthresh=None, clipniter=None, blparam=None, verbose=N
                                                   dosubtract=dosubtract,
                                                   spw=spw,
                                                   pol=pol,
-                                                  order=order,
-                                                  npiece=npiece,
-                                                  blparam=blparam,
-                                                  clip_threshold_sigma=clipthresh,
-                                                  num_fitting_max=clipniter+1,
                                                   linefinding=(maskmode=='auto'),
                                                   threshold=thresh,
                                                   avg_limit=avg_limit,
                                                   minwidth=minwidth,
                                                   edge=edge,
-                                                  applyfft=applyfft,###############
-                                                  fftmethod=fftmethod,############
-                                                  fftthresh=fftthresh,############
-                                                  addwn=addwn,###################
-                                                  rejwn=rejwn)####################
+                                                  order=order,
+                                                  npiece=npiece,
+                                                  applyfft=applyfft,
+                                                  fftmethod=fftmethod,
+                                                  fftthresh=fftthresh,
+                                                  addwn=addwn,
+                                                  rejwn=rejwn,
+                                                  clip_threshold_sigma=clipthresh,
+                                                  num_fitting_max=clipniter+1,
+                                                  blparam=blparam)
             func(**params)
             sdms.close()
             
@@ -148,6 +147,7 @@ blformat_item = ['csv', 'text', 'table']
 blformat_ext  = ['csv', 'txt',  'bltable']
 
 
+"""
 def addwn_string_greaterthan(infile, addwn, spw, inequality): 
     
     addwn2=[]
@@ -172,7 +172,7 @@ def addwn_string_greaterthan(infile, addwn, spw, inequality):
         addwn2.remove(i)
 
     return addwn2 
-
+"""
 
 
 
@@ -270,12 +270,12 @@ def output_bloutput_text_header(blformat, bloutput, blfunc, maskmode, infile, ou
         ftitles = ['Fit order']
     elif (blf == 'cspline'):
         ftitles = ['nPiece']
-    elif (blf=='sinusoid'): # sinusoid########################
+    elif (blf=='sinusoid'):
         ftitles = ['applyFFT', 'fftMethod', 'fftThresh', 'addWaveN', 'rejWaveN']
-    elif (blf=='variable'):#######
-        ftitles=[]##########
-    else:#############
-        raise ValueError, "Unsupported blfunc = %s" % blfunc ############
+    elif (blf=='variable'):
+        ftitles = []
+    else:
+        raise ValueError, "Unsupported blfunc = %s" % blfunc
         
 
     mm = maskmode.lower()
@@ -308,23 +308,20 @@ def prepare_for_baselining(**keywords):
     blfunc = keywords['blfunc']
     keys = ['datacolumn', 'outfile', 'bloutput', 'dosubtract', 'spw']
     if blfunc in ['poly', 'chebyshev']:
-        keys += ['blfunc', 'order', 'clip_threshold_sigma', 'num_fitting_max']
+        keys += ['blfunc', 'order']
     elif blfunc == 'cspline':
-        print 'blfunc=cspline'
-        keys += ['npiece', 'clip_threshold_sigma', 'num_fitting_max']
-        funcname += ('_' + blfunc)
-    elif blfunc == 'variable':
-        print 'blfunc=variable'
-        keys += ['blparam']
+        keys += ['npiece']
         funcname += ('_' + blfunc)
     elif blfunc =='sinusoid':
-        keys +=[
-        'applyfft','fftmethod','fftthresh', 
-        'addwn','rejwn', 'clip_threshold_sigma', 'num_fitting_max'] #############
+        keys += ['applyfft', 'fftmethod', 'fftthresh', 'addwn', 'rejwn']
+        funcname += ('_' + blfunc)
+    elif blfunc == 'variable':
+        keys += ['blparam']
         funcname += ('_' + blfunc)
     else:
         raise ValueError, "Unsupported blfunc = %s" % blfunc
     if blfunc!= 'variable':
+        keys += ['clip_threshold_sigma', 'num_fitting_max']
         keys += ['linefinding', 'threshold', 'avg_limit', 'minwidth', 'edge']
     for key in keys: params[key] = keywords[key]
 

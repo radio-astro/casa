@@ -149,8 +149,7 @@ singledishms::subtract_baseline(string const& datacolumn,
                                 bool const dosubtract,
                                 ::casac::variant const& spw,
                                 string const& blfunc,
-                                int const order,//----------------------
-                                //vector<int> const& order,//---------------
+                                int const order,
                                 float const clip_threshold_sigma,
                                 int const num_fitting_max,
                                 bool const linefinding,
@@ -159,9 +158,6 @@ singledishms::subtract_baseline(string const& datacolumn,
                                 int const minwidth,
                                 vector<int> const& edge)
 {
-
-  //cout << "subtract_baseline############" << endl;
-    
   bool rstat(false);
   *itsLog << _ORIGIN;
   try {
@@ -195,8 +191,7 @@ singledishms::subtract_baseline_cspline(string const& datacolumn,
                                         string const& bloutput,
                                         bool const dosubtract,
                                         ::casac::variant const& spw,
-                                        int const npiece,//--------------------------
-                                        //vector<int> const& npiece,//--------------------
+                                        int const npiece,
                                         float const clip_threshold_sigma,
                                         int const num_fitting_max,
                                         bool const linefinding,
@@ -231,46 +226,30 @@ singledishms::subtract_baseline_cspline(string const& datacolumn,
   return rstat;
 }
 
-/*
 bool
-singledishms::subtract_baseline_sinusoid(const  string& datacolumn, const  string& outfile, const  string& bloutput,  bool  dosubtract,  const variant& spw,  const variant& pol,  const std::vector<int>& addwn,  const std::vector<int>& rejwn,  bool  applyfft, const  string& fftmethod,  float  fftthresh,  float  clip_threshold_sigma,  int  num_fitting_max,  bool  linefinding,  float  threshold,  int  avg_limit,  int  minwidth,  const std::vector<int>& edge)
-*/
-
-
-bool
-singledishms::subtract_baseline_sinusoid(
-                                         string const& datacolumn,
+singledishms::subtract_baseline_sinusoid(string const& datacolumn,
                                          string const& outfile,
                                          string const& bloutput,
                                          bool const dosubtract,
                                          ::casac::variant const& spw,
-                                         vector<int> const& addwn,
-                                         vector<int> const& rejwn,
+                                         string const& addwn,
+                                         //vector<int> const& addwn,
+                                         string const& rejwn,
+                                         //vector<int> const& rejwn,
                                          bool const applyfft,
                                          string const& fftmethod,
-                                         float const fftthresh,
+                                         ::casac::variant const& fftthresh,
                                          float const clip_threshold_sigma,
                                          int const num_fitting_max,
                                          bool const linefinding,
                                          float const threshold,
                                          int const avg_limit,
                                          int const minwidth,
-                                         vector<int> const& edge
-                                        
-                                         
-                                         
-
-                                         )
-
+                                         vector<int> const& edge)
 {
-
-  cout << "_cmp1#######" << endl;
-
   bool rstat(false);
   *itsLog << _ORIGIN;
   try {
-
-
     assert_valid_ms();
     itsSd->subtractBaselineSinusoid(datacolumn,
                                     outfile,
@@ -281,15 +260,14 @@ singledishms::subtract_baseline_sinusoid(
                                     rejwn,
                                     applyfft,
                                     fftmethod,
-                                    fftthresh,
+                                    toCasaString(fftthresh),
                                     clip_threshold_sigma,
                                     num_fitting_max,
                                     linefinding,
                                     threshold,
                                     avg_limit,
                                     minwidth,
-                                    edge
-                                    );
+                                    edge);
     rstat = true;
   } catch  (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported1: " << x.getMesg() 
@@ -298,7 +276,6 @@ singledishms::subtract_baseline_sinusoid(
   }
   return rstat;
 }
-
 
 bool
 singledishms::subtract_baseline_variable(string const& datacolumn,
