@@ -283,6 +283,7 @@ casa_add_library( synthesis
  MeasurementComponents/VisCal.cc
  MeasurementComponents/VisCalGlobals.cc
  MeasurementComponents/VisCalSolver.cc
+ MeasurementComponents/VisCalSolver2.cc
  MeasurementComponents/VisVector.cc
  TransformMachines/VisibilityResamplerBase.cc
  TransformMachines/VisibilityResampler.cc
@@ -547,6 +548,7 @@ install (FILES
 	MeasurementComponents/VisCal.h
 	MeasurementComponents/VisCalGlobals.h
 	MeasurementComponents/VisCalSolver.h
+	MeasurementComponents/VisCalSolver2.h
 	MeasurementComponents/VisVector.h
 	MeasurementComponents/WBCleanImageSkyModel.h
 	MeasurementComponents/WFCleanImageSkyModel.h

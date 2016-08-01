@@ -67,6 +67,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Forward
 class VisEquation;
+class SolveDataBuffer;
+class SDBList;
 
 class SolvableVisCal : virtual public VisCal {
 public:
@@ -210,6 +212,7 @@ public:
 
   // Hazard a guess at the parameters (solveCPar) given the data
   virtual void guessPar(VisBuffer& vb)=0;
+  virtual void guessPar(SDBList&) { throw(AipsError("SVC::guessPar(SDBList&) NYI!!")); };  // VI2
 
   // Freq-dep solint values 
   inline Double& fintervalHz() { return fintervalHz_; };
@@ -236,6 +239,7 @@ public:
   //   (returns False if VisBuffer has no valid data)
   Bool syncSolveMeta(VisBuffer& vb, const Int& fieldId);
   Bool syncSolveMeta(VisBuffGroupAcc& vbga);
+  Bool syncSolveMeta(SDBList& sdbs);  // VI2
 
   // Provide for override of currScan and currObs
   void overrideObsScan(Int obs, Int scan);
@@ -247,6 +251,7 @@ public:
 
   // Verify VisBuffer data sufficient for solving (wts, etc.)
   virtual Bool verifyConstraints(VisBuffGroupAcc& vbag);
+  virtual Bool verifyConstraints(SDBList& sdbs);  // VI2 
   virtual Bool verifyForSolve(VisBuffer& vb);
   
   // Self- gather and/or solve prototypes
@@ -260,6 +265,7 @@ public:
 
   // Differentiate VB model w.r.t. Cal  parameters (no 2nd derivative yet)
   virtual void differentiate(CalVisBuffer& cvb)=0;
+  virtual void differentiate(SolveDataBuffer&) { throw(AipsError("SVC::differentiate(SDB)  NYI!")); };  // VI2
   virtual void differentiate(VisBuffer& vb,        
 			     Cube<Complex>& V,     
 			     Array<Complex>& dV,
@@ -276,6 +282,7 @@ public:
 
   // Update solve parameters incrementally (additive)
   virtual void updatePar(const Vector<Complex> dCalPar,const Vector<Complex> dSrcPar);
+  virtual void updatePar(const Vector<Complex> dCalPar);  //  (VI2)
 
   // Form solution SNR
   virtual void formSolveSNR();
@@ -400,6 +407,15 @@ public:
   // Set parameters to def values in the currSpw(), 
   //   and optionally sync everything
   virtual void setDefSolveParCurrSpw(Bool sync=False);
+
+  // Determine VI2 Sort for solving
+  //   (based on comb*())
+  //   also parses interval()
+  void deriveVI2Sort(Block<Int>& sortcols,Double& iterInverval);
+
+  // Generate the in-memory caltable (empty)
+  //  NB: no subtable revisions
+  virtual void createMemCalTable2();
 
 
 protected:
@@ -615,7 +631,8 @@ public:
   virtual void guessPar(VisBuffer& ) { throw(AipsError("NYI")); };
 
   // Differentiate VB model w.r.t. Mueller parameters (no 2nd derivative yet)
-  virtual void differentiate(CalVisBuffer& ) {throw(AipsError("NYI")); };
+  virtual void differentiate(CalVisBuffer& ) {throw(AipsError("SVM::differentiate(CVB): NYI")); };
+  virtual void differentiate(SolveDataBuffer& ) {throw(AipsError("SVM::differentiate(SDB): NYI")); };  // VI2
   virtual void differentiate(VisBuffer& ,          // input data
 			     Cube<Complex>& ,       // trial apply (nCorr,nChan,nRow)
 			     Array<Complex>& ,     // 1st deriv   (nCorr,nPar,nChan,nRow)
@@ -763,6 +780,7 @@ public:
 
   // Differentiate VB model w.r.t. Jones parameters
   virtual void differentiate(CalVisBuffer& cvb);
+  virtual void differentiate(SolveDataBuffer& sdb);  // VI2
   virtual void differentiate(VisBuffer& vb,          // input data
 			     Cube<Complex>& V,       // trial apply (nCorr,nChan,nRow)
 			     Array<Complex>& dV,     // 1st deriv   (nCorr,nPar,nChan,nRow,2)

@@ -139,6 +139,7 @@ public:
 
   // Hazard a guess at parameters
   virtual void guessPar(VisBuffer& vb);
+  virtual void guessPar(SDBList& sdbs);  //  VI2
 
   // Set up corruptor
   virtual void createCorruptor(const VisIter& vi, const Record& simpar, const Int nSim);
@@ -250,6 +251,7 @@ public:
 
   // Hazard a guess at parameters
   virtual void guessPar(VisBuffer& vb);
+  virtual void guessPar(SDBList& sdbs);   // VI2
 
   virtual void createCorruptor(const VisIter& vi, const Record& simpar, const Int nSim);
 

@@ -87,6 +87,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <todo asof="">
 // </todo>
 
+  class SolveDataBuffer;  // VI2
+
 class VisEquation {
 public:
 
@@ -168,6 +170,9 @@ public:
                      VisBuffer& dR1,
                      Matrix<Bool>& Rflg);
 
+  // SolveDataBuffer version
+  void differentiate(SolveDataBuffer& sdb);  // VI2
+ 
   // Report the VisEq's state
   void state();
 

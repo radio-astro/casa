@@ -27,6 +27,7 @@
 
 
 #include <synthesis/MeasurementEquations/VisEquation.h>
+#include <synthesis/MeasurementComponents/SolveDataBuffer.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/BasicSL/String.h>
@@ -63,7 +64,12 @@ VisEquation::VisEquation() :
 };
 
 //----------------------------------------------------------------------
-VisEquation::~VisEquation() {};
+VisEquation::~VisEquation() {
+
+  cout << "VE::divideCorrByModel:  update unchan'd weight" << endl;
+  cout << "VE::collapse2: Is model ok?" << endl;
+
+};
 
 //---------------------------------------------------------------------- 
 VisEquation& VisEquation::operator=(const VisEquation& other)
@@ -355,7 +361,6 @@ void VisEquation::collapse2(vi::VisBuffer2& vb) {
 
   if (prtlev()>0) cout << "VE::collapse2(VB2)" << endl;
 
-  cout << "VE::collapse2: Is model ok?" << endl;
 
   // Handle origin of model data here:
   if (useInternalModel_)
@@ -384,7 +389,6 @@ void VisEquation::collapse2(vi::VisBuffer2& vb) {
 
   if (svc().normalizable())
     divideCorrByModel(vb);
-
   
 }
 
@@ -432,7 +436,6 @@ void VisEquation::divideCorrByModel(vi::VisBuffer2& vb) {
     } // !flagRow
   } // irow
   
-  cout << "VE::divideCorrByModel:  update unchan'd weight" << endl;
 
 }
 
@@ -679,6 +682,21 @@ void VisEquation::diffResiduals(CalVisBuffer& cvb) {
   svc().differentiate(cvb);
   
 }
+
+// Calculate residuals and differentiated residuals
+void VisEquation::differentiate(SolveDataBuffer& sdb) {
+
+  if (prtlev()>3) cout << "VE::differentiate(SDB)" << endl;
+
+  // Trap unspecified solvable term
+  if (!svc_)
+    throw(AipsError("No calibration term to differentiate."));
+
+  // Delegate to the SVC
+  svc().differentiate(sdb);
+  
+}
+
 
 // Calculate residuals and differentiated residuals
 void VisEquation::diffResiduals(VisBuffer& vb, 

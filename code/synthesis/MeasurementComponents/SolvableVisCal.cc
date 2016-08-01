@@ -55,6 +55,7 @@
 #include <synthesis/CalTables/CTGlobals.h>
 #include <synthesis/CalTables/CTIter.h>
 #include <synthesis/CalTables/CTInterface.h>
+#include <synthesis/MeasurementComponents/SolveDataBuffer.h>
 #include <ms/MSSel/MSSelection.h>
 #include <ms/MSSel/MSSelectionTools.h>
 #include <casa/sstream.h>
@@ -2231,6 +2232,68 @@ void SolvableVisCal::setDefSolveParCurrSpw(Bool sync) {
 }
 
 
+
+void SolvableVisCal::deriveVI2Sort(Block<Int>& sortcols,Double& iterInterval) 
+{
+  // Interpret solution interval for the VI2
+  iterInterval=(max(interval(),DBL_MIN));
+  if (interval() < 0.0) {   // means no interval (infinite solint)
+    iterInterval=0.0;
+    interval()=DBL_MAX;
+  }
+
+  Bool verbose(False);
+  if (verbose) {
+    cout << "   interval()=" << interval() ;
+    cout << boolalpha << "; combobs()=" << combobs();
+    cout << boolalpha << "; combscan()=" << combscan();
+    cout << boolalpha << "; combfld()=" << combfld() ;
+    cout << boolalpha << "; combspw()=" << combspw() ;
+    cout << endl;
+  }
+
+  Int nsortcol(4+(combscan()?0:1)+(combobs()?0:1) );  // include room for scan,obs
+  sortcols.resize(nsortcol);
+  Int i(0);
+  sortcols[i++]=MS::ARRAY_ID;
+  if (!combobs()) sortcols[i++]=MS::OBSERVATION_ID;  // force obsid boundaries
+  if (!combscan()) sortcols[i++]=MS::SCAN_NUMBER;  // force scan boundaries
+  if (!combfld()) sortcols[i++]=MS::FIELD_ID;      // force field boundaries
+  if (!combspw()) sortcols[i++]=MS::DATA_DESC_ID;  // force spw boundaries
+  sortcols[i++]=MS::TIME;
+  if (combspw() || combfld()) iterInterval=DBL_MIN;  // force per-timestamp chunks
+  if (combfld()) sortcols[i++]=MS::FIELD_ID;      // effectively ignore field boundaries
+  if (combspw()) sortcols[i++]=MS::DATA_DESC_ID;  // effectively ignore spw boundaries
+  
+  if (verbose) {
+    cout << " sort sortcols: ";
+    for (Int i=0;i<nsortcol;++i) 
+      cout << sortcols[i] << " ";
+    cout << endl;
+    cout << "iterInterval = " << iterInterval << endl;
+  }
+
+}
+
+
+// Generate the in-memory caltable (empty)
+//  NB: no subtable revisions
+void SolvableVisCal::createMemCalTable2() {
+
+  //  cout << "createMemCalTable" << endl;
+
+  // Set up description
+  String partype = ((parType()==VisCalEnum::COMPLEX) ? "Complex" : "Float");
+  CTDesc caltabdesc(partype,Path(msName()).baseName(),typeName(),"unknown");
+  ct_ = new NewCalTable("tempNCT.tab",caltabdesc,Table::Scratch,Table::Memory);
+  ct_->setMetaInfo(msName());
+
+}
+
+//  VI2------------------------^
+
+
+
 // The inflate methods will soon deprecate (gmoellen, 20121212)
 //   (the are assumed to exist only by LJJones and EPJones, which
 //    are not yet NewCalTable-compliant)
@@ -2476,6 +2539,28 @@ Bool SolvableVisCal::syncSolveMeta(VisBuffGroupAcc& vbga) {
     return False;
 
 }
+
+Bool SolvableVisCal::syncSolveMeta(SDBList& sdbs) {  // VI2
+
+  // Adopt meta data from FIRST SolveDataBuffer for now
+  SolveDataBuffer& sdb(sdbs(0));
+
+  currSpw()=sdb.spectralWindow()(0);
+  currField()=sdb.fieldId()(0);
+
+  // The timestamp really is global, in any case
+  //  TBD: calculate the time
+  const Double& rTime(sdb.time()(0));
+  if (rTime > 0.0) {
+    refTime()=rTime;
+    return True;
+  }
+  else
+    return False;
+
+}
+
+
 
 Bool SolvableVisCal::syncSolveMeta(VisBuffer& vb, 
 				   const Int&) {
@@ -2739,6 +2824,109 @@ Bool SolvableVisCal::verifyConstraints(VisBuffGroupAcc& vbag) {
 
 }
 
+Bool SolvableVisCal::verifyConstraints(SDBList& sdbs) {  // VI2
+
+  // TBD: handle multi-channel infocusFlag properly
+  // TBD: optimize array access
+  
+  // Assemble nominal baseline weights distribution
+  Matrix<Double> blwtsum(nAnt(),nAnt(),0.0);
+  for (Int isdb=0;isdb<sdbs.nSDB();++isdb) {
+    SolveDataBuffer& sdb(sdbs(isdb));
+
+    sdb.setFocusChan(focusChan());
+
+    // TBD: do this per cal parameter, rather than just per ant
+
+    Int nRow(sdb.nRows());
+    Int nCorr(sdb.nCorrelations());
+
+    for (Int irow=0;irow<nRow;++irow) {
+      const Int& a1(sdb.antenna1()(irow));
+      const Int& a2(sdb.antenna2()(irow));
+      if (!sdb.flagRow()(irow) && a1!=a2) {
+	// Currently insist _any_ unflagged correlations; need to refine!
+	if (sum(sdb.infocusFlagCube()(Slice(),Slice(),irow))<nCorr) {
+	  Double wt=Double(sum(sdb.infocusWtSpec()(Slice(),Slice(),irow)));
+	  blwtsum(a2,a1)+=wt;
+	  blwtsum(a1,a2)+=wt;
+	} // flag
+      } // flagRow 
+    } // irow
+  } // ivb
+
+  // Recursively apply threshold on baselines per antenna
+  Vector<Bool> antOK(nAnt(),True);  // nominally OK
+  Vector<Int> blperant(nAnt(),0);
+  Int iant=0;
+  while (iant<nAnt()) {
+    if (antOK(iant)) {   // avoid reconsidering already bad ones
+      Int nbl=ntrue(blwtsum.column(iant)>0.0);
+      blperant(iant)=nbl;
+      if (nbl<minblperant()) {
+	// some baselines available, but not enough
+	//  so eliminate this antenna 
+	antOK(iant)=False;
+	blwtsum.row(iant)=0.0;
+	blwtsum.column(iant)=0.0;
+	blperant(iant)=0;
+	// ensure we begin recount at first antenna again
+	iant=-1;
+      }
+    }      
+    ++iant;
+  }
+
+  //  cout << "  blperant = " << blperant << " (minblperant = " << minblperant() << endl;
+  cout << "  antOK    = " << antOK << endl;
+  //  cout << "  ntrue(antOK) = " << ntrue(antOK) << endl;
+
+  // Apply constraints results to solutions and data
+  solveParOK()=False;   // Solutions nominally bad
+  for (Int iant=0;iant<nAnt();++iant) {
+    if (antOK(iant)) {
+      // set solution good
+      solveParOK().xyPlane(iant) = True;
+    }
+    else {
+      // This ant not ok, set soln to zero
+      if (parType()==VisCalEnum::COMPLEX)
+      	solveCPar().xyPlane(iant)=1.0;
+      else if (parType()==VisCalEnum::REAL)
+      	solveRPar().xyPlane(iant)=0.0;
+
+      // Flag corresponding data
+      for (Int isdb=0;isdb<sdbs.nSDB();++isdb) {
+	SolveDataBuffer& sdb(sdbs(isdb));
+	const Vector<Int>& a1(sdb.antenna1());
+	const Vector<Int>& a2(sdb.antenna2());
+	for (Int irow=0;irow<sdb.nRows();++irow) {
+	  if (a1(irow)==iant || a2(irow)==iant)
+	    sdb.infocusFlagCube()(Slice(),Slice(),irow)=True;
+	}
+	// the following didn't work because row(0) behaved
+	//  as contiguous and set the wrong flags for multi-chan data!
+	//	cvb.infocusFlag().row(0)(a1==iant)=True;
+	//	cvb.infocusFlag().row(0)(a2==iant)=True;
+      } // ivb
+
+    } // antOK
+  } // iant
+  
+  // We return sum(antOK)>0 here because it is not how many 
+  //  good ants there are, but rather how many good baselines 
+  //  per ant there are.  The above counting exercise will 
+  //  reduce sum(antOK) to zero when the baseline counts 
+  //  constraint is violated over enough of the whole array.  
+  //  so as to make the solution impossible.  Otherwise
+  //  there will be at least blperant+1 (>0) good antennas.
+
+  return (ntrue(antOK)>0);
+
+}
+
+
+
 // Verify VisBuffer data sufficient for solving (wts, etc.)
 Bool SolvableVisCal::verifyForSolve(VisBuffer& vb) {
 
@@ -2889,6 +3077,40 @@ void SolvableVisCal::updatePar(const Vector<Complex> dCalPar,const Vector<Comple
     }
   }
 }
+
+void SolvableVisCal::updatePar(const Vector<Complex> dPar) { // VI2
+
+  AlwaysAssert((solveCPar().nelements()==dPar.nelements()),AipsError);
+
+  Cube<Complex> dparcube(dPar.reform(solveCPar().shape()));
+
+  // zero flagged increments
+  dparcube(!solveParOK())=Complex(0.0);
+  
+  // Add the increment
+  solveCPar()+=dparcube;
+
+  // The matrices are nominally out-of-sync now
+  invalidateCalMat();
+
+  // Ensure phaseonly-ness, if necessary
+  //  if (apmode()=='P') {   
+  //  NB: Disable this, for the moment (07May24); testing a fix for
+  //      a problem Kumar noticed.  See VC::makeSolnPhaseOnly(), etc.
+  if (False) {
+    Float amp(0.0);
+    for (Int iant=0;iant<nAnt();++iant) {
+      for (Int ipar=0;ipar<nPar();++ipar) {
+	if (solveParOK()(ipar,0,iant)) {
+	  amp=abs(solveCPar()(ipar,0,iant));
+	  if (amp>0.0)
+	    solveCPar()(ipar,0,iant)/=amp;
+	}
+      }
+    }
+  }
+}
+
 
 void SolvableVisCal::formSolveSNR() {
 
@@ -4428,6 +4650,167 @@ void SolvableVisJones::differentiate(CalVisBuffer& cvb) {
   cvb.finalizeResiduals();
 
 }
+
+void SolvableVisJones::differentiate(SolveDataBuffer& sdb) {  // VI2
+
+  if (prtlev()>3) cout << "  SVJ::differentiate(SDB)" << endl;
+
+  // NB: For freqDepPar()=True, the data and solutions are
+  //     multi-channel, but nChanMat()=1 because we only 
+  //     consider one channel at a time.  In this case,
+  //     focusChan is the specific channel under consideration.
+  //     Otherwise, we will use all channels in the vb 
+  //     simultaneously
+
+  // Some vb shape info
+  const Int& nRow(sdb.nRows());
+  const Int& nCorr(sdb.nCorrelations());
+
+  // Size (diff)residuals workspace in the CVB
+  sdb.setFocusChan(focusChan());
+  sdb.sizeResiduals(nPar(),2);    // 2 sets of nPar() derivatives per baseline
+
+  // Copy in-focus model to residual workspace
+  sdb.initResidWithModel();
+
+  // References to workspaces
+  Cube<Complex>& Vout(sdb.residuals());
+  Array<Complex>& dVout(sdb.diffResiduals());
+  
+  // "Apply" the current Q,U or X estimates to the crosshand model
+  // NB:  This is circular-basis specific!!
+  if (solvePol()>0) {
+    Complex pol(1.0);
+
+    if (solvePol()==2)  // pol = Q+iU
+      pol=Complex(real(srcPolPar()(0)),real(srcPolPar()(1)));
+    else if (solvePol()==1)   // pol = exp(iX)
+      pol=exp(Complex(0.0,real(srcPolPar()(0))));
+    
+    IPosition blc(3,1,0,0), trc(3,1,nChanMat()-1,nRow-1);
+    Array<Complex> RL(Vout(blc,trc));
+    RL*=pol;
+    blc(0)=trc(0)=2;
+    Array<Complex> LR(Vout(blc,trc));
+    LR*=conj(pol);
+  }
+  
+  // Visibility vector renderers
+  VisVector::VisType vt(visType(nCorr));
+  VisVector cVm(vt);  // The model data corrupted by trial solution
+  VisVector dV1(vt);  // The deriv of V wrt pars of 1st ant in bln 
+  VisVector dV2(vt);  // The deriv of V wrt pars of 2nd ant in bln 
+
+  // Temporary non-iterating VisVectors to hold partial applies
+  VisVector J1V(vt,True);
+  VisVector VJ2(vt,True);
+
+  // Starting synchronization for output visibility data
+  cVm.sync(Vout(0,0,0));
+  dV1.sync(dVout(IPosition(5,0,0,0,0,0)));
+  dV2.sync(dVout(IPosition(5,0,0,0,0,1)));
+
+  // Synchronize current calibration pars/matrices
+  syncSolveCal();
+
+  // Nominal synchronization of dJs
+  dJ1().sync(diffJElem()(IPosition(4,0,0,0,0)));
+  dJ2().sync(diffJElem()(IPosition(4,0,0,0,0)));
+
+  // Inform Jones matrices if data is scalar
+  Bool scalar(vt==VisVector::One);
+  J1().setScalarData(scalar);
+  J2().setScalarData(scalar);
+  dJ1().setScalarData(scalar);
+  dJ2().setScalarData(scalar);
+
+  // VisBuffer indices
+  const Double* time=  sdb.time().data();
+  const Int*    a1=    sdb.antenna1().data();
+  const Int*    a2=    sdb.antenna2().data();
+  const Bool*   flagR= sdb.flagRow().data();
+  
+  // TBD: set weights according to flags??
+
+  // iterate rows
+  for (Int irow=0; irow<nRow; irow++,flagR++,a1++,a2++,time++) {
+    
+    // Avoid ACs and flagged rows
+    if (*a1!=*a2 && !*flagR) {  
+	
+      // Re-update matrices if time changes
+      //  E.g.?
+      if (timeDepMat() && *time != lastTime()) {
+	currTime()=*time;
+	invalidateDiffCalMat();
+	syncCalMat();
+	syncDiffMat();
+	lastTime()=currTime();
+      }
+
+      // Synchronize Jones renderers for the ants on this baseline
+      J1().sync(currJElem()(0,0,*a1),currJElemOK()(0,0,*a1));
+      J2().sync(currJElem()(0,0,*a2),currJElemOK()(0,0,*a2));
+
+      // Synchronize differentiated Jones renderers for this baseline
+      if (trivialDJ()) {
+	dJ1().origin();
+	dJ2().origin();
+      } else {
+	dJ1().sync(diffJElem()(IPosition(4,0,0,0,*a1)));
+	dJ2().sync(diffJElem()(IPosition(4,0,0,0,*a2)));
+      }
+
+      // Assumes all iterating quantities have nChanMat() channelization
+      for (Int ich=0; ich<nChanMat();ich++,
+	     cVm++, J1()++, J2()++) {
+	     
+	// NB: Ignoring vis flag state  (OK?)
+	  
+	// Partial applies for repeated use below
+	VJ2=cVm;                    
+	J2().applyLeft(VJ2);      // VJ2 = Vm*J2, used below
+
+	J1().applyRight(cVm);     
+	J1V=cVm;                        // J1V = J1*Vm, used below
+
+	// Finish trial corruption
+	J2().applyLeft(cVm);      // cVm = (J1*Vm)*J2
+
+	// Differentiation per par
+	for (Int ip=0;ip<nPar();ip++,
+	       dV1++,dJ1()++,
+	       dV2++,dJ2()++) {
+	  
+	  dV1=VJ2;
+	  dJ1().applyRight(dV1);  // dV1 = dJ1(ip)*(Vm*J2)
+	  
+	  dV2=J1V;
+	  dJ2().applyLeft(dV2);   // dV2 = (J1*Vm)*dJ2(ip)
+	}
+	  
+      } // chn
+		
+    } // !*flagR
+    else {
+      // Must advance all chan-, par-dep pointers over flagged row
+      cVm.advance(nChanMat());
+      J1().advance(nChanMat());
+      J2().advance(nChanMat());
+      Int chpar(nChanMat()*nPar());
+      dV1.advance(chpar);
+      dV2.advance(chpar);
+      dJ1().advance(chpar);
+      dJ2().advance(chpar);
+    }
+  }
+
+  // Subtract the obs'd data from the trial-corrupted model
+  //  to form residuals
+  sdb.finalizeResiduals();
+
+}
+
 
 void SolvableVisJones::differentiate(VisBuffer& vb,
 				     Cube<Complex>& Vout, 

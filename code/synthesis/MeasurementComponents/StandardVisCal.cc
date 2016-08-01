@@ -32,6 +32,7 @@
 #include <synthesis/CalTables/CTIter.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <synthesis/MeasurementEquations/VisEquation.h>
+#include <synthesis/MeasurementComponents/SolveDataBuffer.h>
 #include <scimath/Fitting/LSQFit.h>
 #include <scimath/Fitting/LinearFit.h>
 #include <scimath/Functionals/CompiledFunction.h>
@@ -360,6 +361,131 @@ void TJones::guessPar(VisBuffer& vb) {
        << "amp = " << amplitude(solveCPar())
        << "phase = " << phase(solveCPar())
        << endl;
+  */
+}
+
+
+void TJones::guessPar(SDBList& sdbs) {
+
+  if (prtlev()>4) cout << "   T::guessPar(sdbs)" << endl;
+
+  // Assumes:  1. corrs in canonical order
+  
+  // Use just the first SDB in the SDBList, for now
+  SolveDataBuffer& sdb(sdbs(0));
+  
+  AlwaysAssert(sdb.nChannels()==1,AipsError);
+    
+  // Make an antenna-based guess at T
+  //  Correlation membership-dependence
+  //  nCorr = 1: use icorr=0
+  //  nCorr = 2: use icorr=[0,1]
+  //  nCorr = 4: use icorr=[0,3]
+  
+  Int nCorr(1);
+  Int nDataCorr(sdb.nCorrelations());
+  Vector<Int> corridx(1,0);
+  if (nDataCorr==2) {
+    nCorr=2;
+    corridx.resize(nCorr);
+    corridx(0)=0;
+    corridx(1)=1;
+  } 
+  else if (nDataCorr==4) {
+    nCorr=2;
+    corridx.resize(nCorr);
+    corridx(0)=0;
+    corridx(1)=3;
+  }
+  
+  // Find out which ants are available
+  // TBD: count nominal guessant rows, insist not much less than nAnt
+  Int nRow=sdb.nRows();
+  Vector<Bool> antok(nAnt(),False);
+  Vector<Bool> rowok(nRow,False);
+  for (Int irow=0;irow<nRow;++irow) {
+    const Int& a1(sdb.antenna1()(irow));
+    const Int& a2(sdb.antenna2()(irow));
+    // Is this row ok?
+    rowok(irow)= (!sdb.flagRow()(irow) &&
+		  (a1!=a2) &&
+		  nfalse(sdb.flagCube().xyPlane(irow))> 0 );
+    if (rowok(irow)) {
+      antok(a1)=True;
+      antok(a2)=True;
+    }
+  }
+  
+  // Assume refant is the target ant, for starters
+  Int guessant(refant());
+  
+  // If no refant specified, or no data for refant
+  //   base first guess on first good ant
+  if (guessant<0 || !antok(guessant)) {
+    guessant=0;
+    while (antok(guessant)<1) guessant++;
+  }
+  
+  AlwaysAssert(guessant>-1,AipsError);
+  
+  const Cube<Complex>& V(sdb.visCubeCorrected());
+  Float amp(0.0),ampave(0.0);
+  Int namp(0);
+  solveCPar()=Complex(0.0);
+  for (Int irow=1;irow<nRow;++irow) {  // why not row zero? copied from Calibrator
+    
+    if (rowok(irow)) {
+      const Int& a1(sdb.antenna1()(irow));
+      const Int& a2(sdb.antenna2()(irow));
+      
+      // If this row contains the guessant
+      if (a1 == guessant || a2==guessant) {
+	
+	for (Int icorr=0;icorr<nCorr;icorr++) {
+	  const Complex& Vi(V(corridx(icorr),0,irow));
+	  amp=abs(Vi);
+	  if (amp>0.0f) {
+	    if (a1 == guessant)
+	      solveCPar()(0,0,a2)+=(conj(Vi)/amp/Float(nCorr));
+	    //        solveCPar()(0,0,a2)+=(conj(Vi)/Float(nCorr));
+	    else
+	      solveCPar()(0,0,a1)+=((Vi)/amp/Float(nCorr));
+	    //        solveCPar()(0,0,a1)+=((Vi)/Float(nCorr));
+            
+	    ampave+=amp;
+	    namp++;
+	    //  cout << "          " << abs(Vi) << " " << arg(Vi)*180.0/C::pi << endl;
+	  }
+	}
+      } // guessant in row
+    } // rowok
+  } // irow
+  
+  //  cout << "Guess:" << endl
+  //   << "amp = " << amplitude(solveCPar())
+  //     << endl;
+  
+
+  // Scale them by the mean amplitude
+
+  if (namp>0) {
+    ampave/=Float(namp);
+    ampave=sqrt(ampave);
+    //  solveCPar()*=Complex(ampave);
+    solveCPar()/=Complex(ampave);
+    solveCPar()(0,0,guessant)=Complex(ampave);
+    solveCPar()(LogicalArray(amplitude(solveCPar())==0.0f)) = Complex(ampave);
+  }
+  else
+    solveCPar()=Complex(0.3);
+  
+  solveParOK()=True;
+  
+  /*
+    cout << "Guess:" << endl
+    << "amp = " << amplitude(solveCPar())
+    << "phase = " << phase(solveCPar())
+    << endl;
   */
 }
 
@@ -697,6 +823,141 @@ void GJones::guessPar(VisBuffer& vb) {
   cout << "amplitude(solveCPar())   = " << amplitude(solveCPar()) << endl;
   cout << "phases       = " << phase(solveCPar())*180.0/C::pi << endl;
   cout << "solveParOK() = " << solveParOK() << endl;
+  */
+}
+
+void GJones::guessPar(SDBList& sdbs) {
+
+  if (prtlev()>4) cout << "   G::guessPar(sdbs)" << endl;
+
+  // Use just the first SDB in the SDBList, for now
+  SolveDataBuffer& sdb(sdbs(0));
+
+  // Make a guess at antenna-based G
+  //  Correlation membership-dependencexm
+  //  assumes corrs in canonical order
+  //  nCorr = 1: use icorr=0
+  //  nCorr = 2: use icorr=[0,1]
+  //  nCorr = 4: use icorr=[0,3]
+
+  Int nCorr(2);
+  Int nDataCorr(sdb.nCorrelations());
+  Vector<Int> corridx(nCorr,0);
+  if (nDataCorr==2) {
+    corridx(0)=0;
+    corridx(1)=1;
+  } 
+  else if (nDataCorr==4) {
+    corridx(0)=0;
+    corridx(1)=3;
+  }
+
+  Int guesschan(sdb.nChannels()-1);
+
+  cout << "guesschan = " << guesschan << endl;
+  cout << "nCorr = " << nCorr << endl;
+  cout << "corridx = " << corridx << endl;
+
+
+  // Find out which ants are available
+  Int nRow=sdb.nRows();
+  Vector<Int> antok(nAnt(),0);
+  Vector<Bool> rowok(nRow,False);
+  for (Int irow=0;irow<nRow;++irow) {
+
+    const Int& a1(sdb.antenna1()(irow));
+    const Int& a2(sdb.antenna2()(irow));
+
+    // Is this row ok?
+    rowok(irow)= (!sdb.flagRow()(irow) &&
+		  a1!=a2);
+
+    // All relevant correlations must be good
+    for (Int icorr=0;icorr<nCorr;++icorr)
+      rowok(irow)=(rowok(irow) && !sdb.flagCube()(corridx[icorr],guesschan,irow));
+
+    if (rowok(irow)) {
+      antok(a1)++;
+      antok(a2)++;
+    }
+  }
+
+  // Assume refant is the target ant, for starters
+  Int guessant(refant());
+  //  Int guessant(-1);
+
+  // If no refant specified, or no data for refant
+  //   base first guess on first good ant
+  if (guessant<0 || antok(guessant)<1) {
+    guessant=0;
+    while (antok(guessant)<1) guessant++;
+  }
+
+  cout << "antok = " << antok << endl;
+
+  cout << "guessant = " << guessant << "  (" << currSpw() << ")" << endl;
+
+  AlwaysAssert(guessant>-1,AipsError);
+
+  const Cube<Complex>& V(sdb.visCubeCorrected());
+  Float amp(0.0),ampave(0.0);
+  Int namp(0);
+  solveCPar()=Complex(0.0);
+  for (Int irow=0;irow<nRow;++irow) {
+
+    if (rowok(irow)) {
+      const Int& a1=sdb.antenna1()(irow);
+      const Int& a2=sdb.antenna2()(irow);
+
+      // If this row contains the guessant
+      if (a1 == guessant || a2==guessant) {
+
+	//      cout << a1 << " " << a2 << " " 
+	//           << sdb.visCube().xyPlane(irow).column(guesschan) << " "
+	//           << amplitude(sdb.visCube().xyPlane(irow).column(guesschan)) << " "
+	//           << endl;
+
+        for (Int icorr=0;icorr<nCorr;icorr++) {
+          const Complex& Vi(V(corridx(icorr),guesschan,irow));
+          amp=abs(Vi);
+          if (amp>0.0f) {
+            if (a1 == guessant)
+              solveCPar()(icorr,0,a2)=conj(Vi);
+            else
+              solveCPar()(icorr,0,a1)=(Vi);
+              
+            ampave+=amp;
+            namp++;
+          }
+        }
+      } // guessant
+    } // rowok
+  } // irow
+
+  // Scale them by the mean amplitude
+
+  if (namp>0) {
+    ampave/=Float(namp);
+    ampave=sqrt(ampave);
+    //  solveCPar()*=Complex(ampave);
+    solveCPar()/=Complex(ampave);
+    solveCPar()(0,0,guessant)=solveCPar()(1,0,guessant)=Complex(ampave);
+    solveCPar()(LogicalArray(amplitude(solveCPar())==0.0f)) = Complex(ampave);
+  }
+  else
+    solveCPar()=Complex(0.3);
+
+  solveParOK()=True;
+
+  //For scalar data, Set "other" pol soln to zero
+  if (nDataCorr == 1)
+    solveCPar()(IPosition(3,1,0,0),IPosition(3,1,0,nAnt()-1))=Complex(0.0);
+
+  /*
+    cout << "Guess:" << endl;
+    cout << "amplitude(solveCPar())   = " << amplitude(solveCPar()) << endl;
+    cout << "phases       = " << phase(solveCPar())*180.0/C::pi << endl;
+    cout << "solveParOK() = " << solveParOK() << endl;
   */
 }
 
