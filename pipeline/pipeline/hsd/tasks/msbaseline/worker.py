@@ -476,7 +476,8 @@ class BaselineSubtractionWorker(basetask.StandardTaskTemplate):
                                                                  pol_list, plot_table, 
                                                                  vis, outfile,
                                                                  stage_dir, deviation_mask,
-                                                                 channelmap_range)))
+                                                                 channelmap_range,
+                                                                 rowmap=rowmap)))
             
             
 #             # TODO: use proper source name when we can handle multiple source 
@@ -509,7 +510,7 @@ class BaselineSubtractionWorker(basetask.StandardTaskTemplate):
         return rowmap
 
     
-    def plot_spectra_with_fit(self, source, ant, spwid, pols, grid_table, prefit_data, postfit_data, outdir, deviation_mask, channelmap_range, rowmap):
+    def plot_spectra_with_fit(self, source, ant, spwid, pols, grid_table, prefit_data, postfit_data, outdir, deviation_mask, channelmap_range, rowmap=None):
         #st = self.inputs.context.observing_run[ant]
         ms= self.inputs.ms
         line_range = [[r[0] - 0.5 * r[1], r[0] + 0.5 * r[1]] for r in channelmap_range if r[2] is True]
