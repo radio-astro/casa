@@ -58,7 +58,8 @@ VBContinuumSubtractor::VBContinuumSubtractor():
   maxAnt_p(-1),
   nHashes_p(0),
   ncorr_p(0),
-  totnumchan_p(0)
+  totnumchan_p(0),
+  tvi_debug(False)
 {
 }
 
@@ -72,7 +73,8 @@ VBContinuumSubtractor::VBContinuumSubtractor(const Double lofreq,
   maxAnt_p(-1),
   nHashes_p(0),
   ncorr_p(0),
-  totnumchan_p(0)
+  totnumchan_p(0),
+  tvi_debug(False)
 {
   midfreq_p = 0.5 * (lofreq + hifreq);
   freqscale_p = calcFreqScale();
