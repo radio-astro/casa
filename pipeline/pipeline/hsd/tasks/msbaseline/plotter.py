@@ -125,6 +125,8 @@ def get_data(infile, datatable, num_ra, num_dec, num_chan, rowlist, rowmap=None)
                     LOG.debug('row %s: mapped_row %s'%(row, mapped_row))
                     this_data = tb.getcellslice(colname, mapped_row, [polid, 0], [polid, -1], [1,1]).real.squeeze()
                     this_mask = tb.getcellslice('FLAG', mapped_row, [polid, 0], [polid, -1], [1,1]).squeeze()
+                    LOG.trace('this_mask.shape=%s'%(list(this_mask.shape)))
+                    LOG.trace('all(this_mask==True) = %s'%(numpy.all(this_mask==True)))
                     mask_as_binary = numpy.fromiter((0 if x == True else 1 for x in this_mask), dtype=int)
                     integrated_data += this_data * mask_as_binary
                     #integrated_data += tb.getcellslice(colname, mapped_row, [polid, 0], [polid, -1], [1,1]).real.squeeze()
@@ -178,7 +180,8 @@ def get_lines(datatable, num_ra, rowlist):
 #     plotter.done()
 #     return integrated_data, map_data
 
-def plot_profile_map_with_fit(context, ms, antid, spwid, polid, plot_table, prefit_data, postfit_data, prefit_figfile, postfit_figfile, deviation_mask, line_range):
+def plot_profile_map_with_fit(context, ms, antid, spwid, polid, plot_table, prefit_data, postfit_data, prefit_figfile, postfit_figfile, deviation_mask, line_range,
+                              rowmap=None):
     """
     plot_table format:
     [[0, 0, RA0, DEC0, [IDX00, IDX01, ...]],
@@ -202,7 +205,8 @@ def plot_profile_map_with_fit(context, ms, antid, spwid, polid, plot_table, pref
     frequency = numpy.fromiter((spw.channels.chan_freqs[i] * 1.0e-9 for i in xrange(nchan)), dtype=numpy.float64) # unit in GHz
     LOG.debug('frequency=%s~%s (nchan=%s)'%(frequency[0], frequency[-1], len(frequency)))
 
-    rowmap = utils.make_row_map(ms, postfit_data)
+    if rowmap is None
+        rowmap = utils.make_row_map(ms, postfit_data)
     postfit_integrated_data, postfit_map_data = get_data(postfit_data, datatable, 
                                                          num_ra, num_dec, nchan, rowlist,
                                                          rowmap=rowmap)
@@ -232,7 +236,7 @@ def plot_profile_map_with_fit(context, ms, antid, spwid, polid, plot_table, pref
     
     
     # plot pre-fit spectra
-    plotter.setup_reference_level(None)
+    plotter.setup_reference_level(None) 
     plotter.unset_global_scaling()
     plotter.plot(prefit_map_data, prefit_integrated_data, frequency, fit_result=fit_result, figfile=prefit_figfile)
             

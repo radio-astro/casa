@@ -459,6 +459,9 @@ class BaselineSubtractionWorker(basetask.StandardTaskTemplate):
         if not os.path.exists(stage_dir):
             os.makedirs(stage_dir)
             
+        # get row map between original and baseline-subtracted MS
+        rowmap = self.get_rowmap_for_baseline(ms, outfile)
+            
         #st = self.inputs.context.observing_run[antennaid]
         
         for (field_id, antenna_id, spw_id, grid_table, deviation_mask, channelmap_range) in \
@@ -501,7 +504,12 @@ class BaselineSubtractionWorker(basetask.StandardTaskTemplate):
         
         return results
     
-    def plot_spectra_with_fit(self, source, ant, spwid, pols, grid_table, prefit_data, postfit_data, outdir, deviation_mask, channelmap_range):
+    def get_rowmap_for_baseline(self, ms, postfit_data):
+        rowmap = sdutils.make_row_map(ms, postfit_data)
+        return rowmap
+
+    
+    def plot_spectra_with_fit(self, source, ant, spwid, pols, grid_table, prefit_data, postfit_data, outdir, deviation_mask, channelmap_range, rowmap):
         #st = self.inputs.context.observing_run[ant]
         ms= self.inputs.ms
         line_range = [[r[0] - 0.5 * r[1], r[0] + 0.5 * r[1]] for r in channelmap_range if r[2] is True]
@@ -515,7 +523,7 @@ class BaselineSubtractionWorker(basetask.StandardTaskTemplate):
             LOG.debug('prefit_outfile=\'%s\''%(os.path.basename(prefit_outfile)))
             LOG.debug('postfit_outfile=\'%s\''%(os.path.basename(postfit_outfile)))
             status = plotter.plot_profile_map_with_fit(self.inputs.context, ms, ant, spwid, pol, grid_table, prefit_data, postfit_data, 
-                                                       prefit_outfile, postfit_outfile, deviation_mask, line_range)
+                                                       prefit_outfile, postfit_outfile, deviation_mask, line_range, rowmap=rowmap)
             if os.path.exists(prefit_outfile):
                 parameters = {'intent': 'TARGET',
                               'spw': spwid,
