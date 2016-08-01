@@ -72,6 +72,9 @@ void CalCache::loadIt(vector<PMS::Axis>& loadAxes,
 		      vector<PMS::DataColumn>& /*loadData*/,
 		      ThreadCommunication* thread) {
 
+  // update cal type
+  setFilename(filename_);
+
   if (calType_=="BPOLY" || calType_=="GSPLINE" || 
       calType_[0]=='A' || calType_[0]=='M' || calType_[0]=='X')
     throw AipsError("Cal table type " + calType_ + " is unsupported in plotms.  Please continue to use plotcal.");
@@ -258,40 +261,25 @@ void CalCache::loadCalChunks(ROCTIter& ci,
       //      vb.phaseCenterShift(transformations_.xpcOffset(),
       //			  transformations_.ypcOffset());
 
-      // Current iteration as a NewCalTable object
-      NewCalTable thisct(ci.table());
-
       // Discern npar/nchan shape
-      ROCTMainColumns cmc(thisct);
-      IPosition pshape(cmc.flag().shape(0));
+      IPosition pshape(ci.flag().shape());
       size_t nPol;
       String pol = selection_.corr();
-      try {
-          if (pol=="" || pol=="RL" || pol=="XY") { // no selection
-            nPol = pshape[0];
-          } else {
-              String paramAxis = toVisCalAxis(PMS::AMP);
-              if (polnRatio_) { // pick one!
-                 // use the VisCal calParSlice for poln selection
-                 nPol = viscal::calParSlice(filename_, paramAxis, "R").length();
-              } else {
-                nPol = viscal::calParSlice(filename_, paramAxis, pol).length();
-              }
-          }
-      } catch(AipsError& err) {
-          if (err.getMesg().contains("Unsupported value type")) {
-              // Message a bit vague at top level, add some explanation
-              String errMsg = err.getMesg() + ". Invalid axis or polarization selection for cal table type.";
-              throw(AipsError(errMsg));
-          } else { // unsupported cal type
-              throw(AipsError(err));
-          }
+      if (pol=="" || pol=="RL" || pol=="XY") { // no selection
+        nPol = pshape[0];
+        pol = "";
+      } else { // poln selection using calParSlice
+        String paramAxis = toVisCalAxis(PMS::AMP);
+        if (polnRatio_)  // pick one!
+            nPol = getParSlice(paramAxis, "R").length();
+        else 
+            nPol = getParSlice(paramAxis, pol).length();
       }
-      
+
       // Cache the data shapes
       chshapes_(0,chunk)=nPol;
       chshapes_(1,chunk)=pshape[1];
-      chshapes_(2,chunk)=thisct.nrow();
+      chshapes_(2,chunk)=ci.nrow();
       chshapes_(3,chunk)=nAnt_;
       goodChunk_(chunk)=True;
 
@@ -317,21 +305,11 @@ void CalCache::loadCalChunks(ROCTIter& ci,
     Slice parSlice2 = Slice();
     if (PMS::axisNeedsCalSlice(axis)) {
         String calAxis = toVisCalAxis(axis);
-        try {
-            if (polnRatio_) {
-                parSlice1 = viscal::calParSlice(filename_, calAxis, "R");
-                parSlice2 = viscal::calParSlice(filename_, calAxis, "L");
-            } else {
-                parSlice1 = viscal::calParSlice(filename_, calAxis, pol);
-            }
-        } catch(AipsError& err) {
-          if (err.getMesg().contains("Unsupported value type")) {
-              // Message a bit vague at top level, add some explanation
-              String errMsg = err.getMesg() + ". Invalid axis or polarization selection for cal table type.";
-              throw(AipsError(errMsg));
-          } else { // unsupported cal type
-              throw(AipsError(err));
-          }
+        if (polnRatio_) {
+            parSlice1 = getParSlice(calAxis, "R");
+            parSlice2 = getParSlice(calAxis, "L");
+        } else {
+            parSlice1 = getParSlice(calAxis, pol);
         }
     }
 
@@ -679,9 +657,17 @@ void CalCache::flagToDisk(const PlotMSFlagging& flagging,
       ci_p->antenna1(a1);
       ci_p->antenna2(a2);
 
-      Int npar=ctflag.shape()(0);
-      Int nchan=channel.nelements();
-      Int nrow=ci_p->nrow();
+      // Apply poln selection
+      Int npar;
+      String pol = selection_.corr();
+      if (pol=="" || pol=="RL" || pol=="XY" || pol=="/") { // both axes
+        npar = ctflag.shape()(0);
+      } else { // poln selection using calParSlice
+        String paramAxis = toVisCalAxis(PMS::FLAG);
+        npar = getParSlice(paramAxis, pol).length();
+      }    
+      Int nchan = channel.nelements();
+      Int nrow = ci_p->nrow();
 
       if (True) {
 	Int currChunk=flchunks(order[iflag]);
@@ -703,17 +689,25 @@ void CalCache::flagToDisk(const PlotMSFlagging& flagging,
 	Int currChunk=flchunks(order[ifl]);
 	Int irel=flrelids(order[ifl]);
 
-	Slice par,chan,bsln;
-	
+	Slice par1,chan,bsln;
+	Slice par2 = Slice();
+
 	// Set flag range on par axis:
 	if (netAxesMask_[dataIndex](0) && !flagging.corrAll()) {
 	  // A specific single par
-	  Int ipar=indexer->getIndex1000(currChunk,irel);
-	  par=Slice(ipar,1,1);
+      if (pol=="" || pol=="RL" || pol=="XY") {  // flag both axes
+	    Int ipar=indexer->getIndex1000(currChunk,irel);
+	    par1 = Slice(ipar,1,1);
+      } else if (polnRatio_) {
+        par1 = getParSlice(toVisCalAxis(PMS::AMP), "R");
+        par2 = getParSlice(toVisCalAxis(PMS::AMP), "L");
+      } else {
+        par1 = getParSlice(toVisCalAxis(PMS::AMP), pol);
+      }
 	}
 	else
 	  // all on par axis
-	  par=Slice(0,npar,1);
+	  par1 = Slice(0,npar,1);
 
 	// Set Flag range on channel axis:
 	if (netAxesMask_[dataIndex](1) && !flagging.channel()) {
@@ -742,7 +736,9 @@ void CalCache::flagToDisk(const PlotMSFlagging& flagging,
 	      // match a baseline exactly
 	      if (a1(irow)==thisA1 &&
 		  a2(irow)==thisA2) {
-		ctflag(par,chan,Slice(irow,1,1))=flag;
+		ctflag(par1,chan,Slice(irow,1,1)) = flag;
+        if (par2.length() > 0)
+		    ctflag(par2,chan,Slice(irow,1,1)) = flag;
 		break;  // found the one baseline, escape from for loop
 	      }
 	    }
@@ -751,7 +747,9 @@ void CalCache::flagToDisk(const PlotMSFlagging& flagging,
 	      //  (don't break because there will be more than one)
 	      if (a1(irow)==thisA1 ||
 		  a2(irow)==thisA1) {
-		ctflag(par,chan,Slice(irow,1,1))=flag;
+		ctflag(par1,chan,Slice(irow,1,1)) = flag;
+        if (par2.length() > 0)
+		    ctflag(par2,chan,Slice(irow,1,1)) = flag;
 	      }
 	    }
 	  }
@@ -761,7 +759,9 @@ void CalCache::flagToDisk(const PlotMSFlagging& flagging,
 	  //  is ordinarily implicit in baseline, we've turned on baseline
 	  //  extension, or we've avaraged over all baselines
 	  bsln=Slice(0,nrow,1);
-	  ctflag(par,chan,bsln)=flag;
+	  ctflag(par1,chan,bsln) = flag;
+      if (par2.length() > 0)
+	    ctflag(par2,chan,bsln) = flag;
 	} 
 	
 	++ifl;
@@ -799,7 +799,7 @@ void CalCache::flagToDisk(const PlotMSFlagging& flagging,
 
 String CalCache::toVisCalAxis(PMS::Axis axis) {
     switch (axis) {
-        // Flag and SNR have same shape as AMP 
+        // FLAG and SNR have same shape as AMP 
         // and should be sliced the same way
         case PMS::AMP:
         case PMS::GAMP:
@@ -831,6 +831,22 @@ String CalCache::toVisCalAxis(PMS::Axis axis) {
             return PMS::axis(axis);
             break;
     }
+}
+
+Slice CalCache::getParSlice(String axis, String polnSel) {
+    Slice parSlice = Slice();
+    try {
+        parSlice = viscal::calParSlice(filename_, axis, polnSel);
+    } catch(AipsError& err) {
+        if (err.getMesg().contains("Unsupported value type")) {
+            // Message a bit vague at top level, add some explanation
+            String errMsg = err.getMesg() + ". Invalid axis or polarization selection for cal table type.";
+            throw(AipsError(errMsg));
+        } else { // unsupported cal type
+            throw(AipsError(err));
+        }
+    }
+    return parSlice;
 }
 
 void CalCache::setFilename(String filename) { 

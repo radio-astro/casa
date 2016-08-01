@@ -112,6 +112,8 @@ private:
   // Loads the specific axis/metadata into the cache using the given VisBuffer.
   void loadCalAxis(ROCTIter& cti, Int chunk, PMS::Axis axis, String pol);
 
+  // Check axis and slice param column appropriately
+  Slice getParSlice(String axis, String polnSel);
   // Get axis string for VisCal Slice code
   String toVisCalAxis(PMS::Axis axis);
 
