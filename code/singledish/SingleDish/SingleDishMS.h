@@ -36,7 +36,10 @@
 #include <libsakura/sakura.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <msvis/MSVis/VisBuffer2.h>
+#include <scimath/Mathematics/FFTServer.h>
 #include <singledish/SingleDish/SDMSManager.h>
+
+#define SinusoidWaveNumber_kUpperLimit    -999
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -109,24 +112,24 @@ public:
 
   //Sinusoid  
    void subtractBaselineSinusoid(string const& in_column_name,
-                    string const& out_ms_name,
-                    string const& out_bloutput_name,
-                    bool const& do_subtract,
-                    string const& in_spw,
-                    vector<int> const& addwn,
-                    vector<int> const& rejwn,
-                    bool const applyfft,
-                    string const fftmethod,
-                    float const fftthresh,
-                    float const clip_threshold_sigma,
-                    int const num_fitting_max,
-                    bool const linefinding,
-                    float const threshold,
-                    int const avg_limit,
-                    int const minwidth,
-                    vector<int> const& edge);
-
-   
+				 string const& out_ms_name,
+				 string const& out_bloutput_name,
+				 bool const& do_subtract,
+				 string const& in_spw,
+				 string const& addwn0,
+				 string const& rejwn0,
+				 //vector<int> const& addwn,
+				 //vector<int> const& rejwn,
+				 bool const applyfft,
+				 string const fftmethod,
+				 string const fftthresh,
+				 float const clip_threshold_sigma,
+				 int const num_fitting_max,
+				 bool const linefinding,
+				 float const threshold,
+				 int const avg_limit,
+				 int const minwidth,
+				 vector<int> const& edge);
 
   // variable fitting parameters stored in a text file
   void subtractBaselineVariable(string const& in_column_name,
@@ -251,7 +254,8 @@ private:
       std::vector<size_t> &ctx_nchans,
       std::vector<LIBSAKURA_SYMBOL(LSQFitContextFloat) *> &bl_contexts);
   // Destroy a set of baseline contexts
-  void destroy_baseline_contexts(std::vector<LIBSAKURA_SYMBOL(LSQFitContextFloat) *> &bl_contexts);void check_sakura_status(string const &name, LIBSAKURA_SYMBOL(Status) const status);
+  void destroy_baseline_contexts(std::vector<LIBSAKURA_SYMBOL(LSQFitContextFloat) *> &bl_contexts);
+  void check_sakura_status(string const &name, LIBSAKURA_SYMBOL(Status) const status);
   template<typename T, typename U>
   void set_matrix_for_bltable(size_t const num_pol, size_t const num_data_max,
       std::vector<std::vector<T> > const &in_data, Array<U> &out_data) {
@@ -275,7 +279,47 @@ private:
   size_t get_num_coeff_bloutput(size_t const bltype,
 				size_t order,
                                 size_t &num_coeff_max);
-
+  vector<int> string_to_list(string const &wn_str, char const delim);
+  void get_effective_nwave(std::vector<int> const &addwn,
+			   std::vector<int> const &rejwn,
+			   int const ulimitwn,
+			   std::vector<int> &effwn);
+  void finalise_effective_nwave(std::vector<int> const &blparam_eff_base,
+				std::vector<int> const &blparam_exclude,
+				int const &blparam_upperlimit,
+				size_t const &num_chan,
+				float const *spec, bool const *mask,
+				bool const &applyfft,
+				string const &fftmethod, string const &fftthresh,
+				std::vector<size_t> &blparam_eff);
+  void parse_fftthresh(string const& fftthresh_str,
+		       string& fftthresh_attr,
+		       float& fftthresh_sigma,
+		       int& fftthresh_top);
+  void select_wavenumbers_via_fft(size_t const num_chan,
+				  float const *spec,
+				  bool const *mask,
+				  string const &fftmethod,
+				  string const &fftthresh_attr,
+				  float const fftthresh_sigma,
+				  int const fftthresh_top,
+				  int const blparam_upperlimit,
+				  std::vector<int> &blparam_fft);
+  void exec_fft(size_t const num_chan,
+		float const *in_spec,
+		bool const *in_mask,
+		bool const get_real_imag,
+		bool const get_ampl_only,
+		std::vector<float> &fourier_spec);
+  void interpolate_constant(int const num_chan,
+			    float const *in_spec,
+			    bool const *in_mask,
+			    Vector<Float> &spec);
+  void merge_wavenumbers(std::vector<int> const &blparam_eff_base,
+			 std::vector<int> const &blparam_fft,
+			 std::vector<int> const &blparam_exclude,
+			 std::vector<size_t> &blparam_eff);
+  
   list<pair<size_t, size_t>> findLineAndGetRanges(size_t const num_data,
       float const data[/*num_data*/],
       bool mask[/*num_data*/], float const threshold,
@@ -296,9 +340,12 @@ private:
 			  LIBSAKURA_SYMBOL(Status)& status,
 			  std::vector<LIBSAKURA_SYMBOL(LSQFitContextFloat) *> &bl_contexts,
 			  size_t const bltype,
-			  //int const order,//---------------------------------------------
-			  vector<int> const& order,//--------------------------------
-              float const clip_threshold_sigma,
+			  vector<int> const& blparam,
+			  vector<int> const& blparam_exclude,
+			  bool const& applyfft,
+			  string const& fftmethod,
+			  string const& fftthresh,
+			  float const clip_threshold_sigma,
 			  int const num_fitting_max,
 			  bool const linefinding,
 			  float const threshold,
