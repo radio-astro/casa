@@ -171,6 +171,38 @@ vi::ViImplementation2 * LayeredVi2Factory::createVi () const
 
 }
 
+//////////////////////////////////////////////////////////////////////
+//
+// Class VisIterImpl2LayerFactory
+//
+VisIterImpl2LayerFactory::VisIterImpl2LayerFactory(MeasurementSet* ms,
+                                                   const IteratingParameters& pars,
+                                                   Bool writable)
+  : ViiLayerFactory(),
+    ms_(ms),
+    pars_(pars),
+    writable_(writable)
+{}
+  
+
+// VisIterImpl2-specific layer-creater
+ViImplementation2 * VisIterImpl2LayerFactory::createInstance (ViImplementation2* /*vii0*/) const {
+
+  // No deeper layers   (Uncomment and figure out pesky warning!)
+  //  Assert(!vii0);
+  
+  // Make it and return it
+  ViImplementation2 *vii = new VisibilityIteratorImpl2(Block<const MeasurementSet*>(1,ms_),
+                                                       pars_.getSortColumns(),
+                                                       pars_.getChunkInterval(),
+                                                       vi::VbPlain,
+                                                       writable_); 
+  return vii;
+}
+
+
+
+
 } //# NAMESPACE VI - END
 } //# NAMESPACE CASA - END
 

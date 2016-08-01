@@ -27,8 +27,13 @@
 
 #include <casa/aips.h>
 #include <casa/Exceptions/Error.h>
+#include <casacore/casa/OS/EnvVar.h>
+#include <casacore/casa/OS/Path.h>
+#include <casacore/ms/MeasurementSets/MeasurementSet.h>
 #include <casa/iostream.h>
+#include <msvis/MSVis/IteratingParameters.h>
 #include <msvis/MSVis/ViiLayerFactory.h>
+#include <msvis/MSVis/LayeredVi2Factory.h>
 #include <msvis/MSVis/SimpleSimVi2.h>
 #include <msvis/MSVis/VisBuffer2.h>
 #include <casa/iomanip.h>
@@ -66,5 +71,71 @@ TEST( ViiLayerFactoryTest , ViiLayerFactoryBasicTest ) {
     }
   }
   ASSERT_EQ(1,niter);
+}
+
+
+TEST( ViiLayerFactoryTest , ViiLayerFactoryRealDataBasicTest ) {
+ 
+  // A very rudimentary test of a single layer, using a real MS
+
+
+  String *casapath = new String[2];
+  split(EnvironmentVariable::get("CASAPATH"), casapath, 2, String(" "));
+  // Use of Path().absoluteName() absorbs relative stuff in casapath
+  String mspath(Path(casapath[0]+"/data/regression/unittest/flagdata/Four_ants_3C286.ms").absoluteName());
+
+  MeasurementSet ms(mspath);
+
+  Double interval(60000.0);
+  IteratingParameters ipar(interval);   // seems to include SCAN_NUMBER automatically?
+  VisIterImpl2LayerFactory fac(&ms,ipar,False); 
+
+  Vector<ViiLayerFactory*> facts(1);
+  facts[0]=&fac;
+
+  VisibilityIterator2 *vi = new VisibilityIterator2(facts);
+  VisBuffer2 *vb = vi->getImpl()->getVisBuffer();
+
+  // Has a viable VI2 been generated?
+  Int chunk(0),niter(0);
+  for (vi->originChunks();vi->moreChunks();vi->nextChunk(),++chunk) {
+    vi->origin();
+    /*
+    cout << "ch="<< chunk
+	 << " scan="<<vb->scan()(0)
+	 << " field="<< vb->fieldId()(0)
+	 << " spw="<< vb->spectralWindows()(0)
+	 << endl;
+    */
+
+    for (vi->origin();vi->more();vi->next(),++niter) {
+
+      /*
+      cout << "*************************************" << endl;
+      cout << "chunk="<< chunk << ";  niter=" << niter << endl;
+
+      cout << " scan=" << vb->scan()(0) << endl;
+      cout << " fieldId=" << vb->fieldId()(0) << endl;
+
+      cout << "nAntennas=" << vb->nAntennas() << endl;
+      cout << "nRows=" << vb->nRows() << endl;
+      cout << "nChannels=" << vb->nChannels() << endl;
+      cout << "nCorrelations=" << vb->nCorrelations() << endl;
+      cout << "spectralWindows=" << vb->spectralWindows() << endl;
+      */
+
+      ASSERT_EQ(4,vb->nAntennas());
+      ASSERT_EQ(6,vb->nRows());
+      ASSERT_EQ(64,vb->nChannels());  // all spws
+      ASSERT_EQ(4,vb->nCorrelations());
+
+    }
+  }
+
+  //cout << "chunk=" << chunk << endl;
+  //  cout << "niter=" << niter << endl;
+
+  ASSERT_EQ(32,chunk);
+  ASSERT_EQ(2864,niter);
 }
  

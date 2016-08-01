@@ -25,6 +25,7 @@
 
 // Where ViFactory interface is defined
 #include <msvis/MSVis/VisibilityIterator2.h>
+#include <msvis/MSVis/IteratingParameters.h>
 
 #include <casa/Containers/Record.h>
 
@@ -167,6 +168,45 @@ private:
   CalibratingVi2FactoryI* calvi2factory_p;
 
 };
+
+
+
+//////////////////////////////////////////////////////////////////////
+//
+// Class VisIterImpl2LayerFactory
+//
+//  (Ideally, this should be in ViiLayerFactory.h, but it has include problems there)
+//
+class VisIterImpl2LayerFactory : public ViiLayerFactory {
+
+ public:
+  
+  VisIterImpl2LayerFactory(MeasurementSet* ms,
+                           const IteratingParameters& pars,
+                           Bool writable);
+
+  virtual ~VisIterImpl2LayerFactory () {}
+
+ protected:
+
+  // VisibilityIteratorImpl2-specific layer-creater
+  //   
+  virtual ViImplementation2 * createInstance (ViImplementation2* vii0) const;
+
+ private:
+
+  // Pointer to _external_ ms  (support only one, for now)
+  MeasurementSet* ms_;
+  
+  // Store a copy of the parameters
+  const vi::IteratingParameters pars_;
+  
+  // Should VisibilityIteratorImpl2 be generated w/ write-permission
+  Bool writable_;
+  
+};
+
+
 
 } //# NAMESPACE VI - END
 } //# NAMESPACE CASA - END
