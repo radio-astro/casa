@@ -618,7 +618,7 @@ CalSolvingVi2LayerFactoryByVE::CalSolvingVi2LayerFactoryByVE(VisEquation *ve)
     ve_p(ve)
 {
   
-  ve_p->state();
+  //  ve_p->state();
 
 }
 

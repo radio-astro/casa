@@ -136,8 +136,8 @@ class CalVi2LayerFactory : public ViiLayerFactory {
   //   
   virtual ViImplementation2 * createInstance (ViImplementation2* vii0) const;
 
-  // Store a reference to the parameters
-  const CalibratingParameters& calpars_;
+  // Store a copy of the parameters
+  const CalibratingParameters calpars_;
 
 
 };

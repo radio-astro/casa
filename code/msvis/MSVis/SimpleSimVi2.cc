@@ -824,7 +824,10 @@ ViImplementation2 * SimpleSimVi2Factory::createVi () const {
 SimpleSimVi2LayerFactory::SimpleSimVi2LayerFactory(const SimpleSimVi2Parameters& pars)
   : ViiLayerFactory(),
     pars_(pars)
-{}
+{
+  //  cout << "&pars  = " << &pars << endl;
+  //  cout << "&pars_ = " << &pars_ << endl;
+}
 
 
 // SimpleSimVi2-specific layer-creater

@@ -432,8 +432,8 @@ protected:
 
 private:
 
-  // Store a reference to the parameters
-  const SimpleSimVi2Parameters& pars_;
+  // Store a copy of the parameters
+  const SimpleSimVi2Parameters pars_;
 
 
 };
