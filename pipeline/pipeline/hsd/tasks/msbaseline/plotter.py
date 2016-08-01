@@ -205,7 +205,7 @@ def plot_profile_map_with_fit(context, ms, antid, spwid, polid, plot_table, pref
     frequency = numpy.fromiter((spw.channels.chan_freqs[i] * 1.0e-9 for i in xrange(nchan)), dtype=numpy.float64) # unit in GHz
     LOG.debug('frequency=%s~%s (nchan=%s)'%(frequency[0], frequency[-1], len(frequency)))
 
-    if rowmap is None
+    if rowmap is None:
         rowmap = utils.make_row_map(ms, postfit_data)
     postfit_integrated_data, postfit_map_data = get_data(postfit_data, datatable, 
                                                          num_ra, num_dec, nchan, rowlist,
