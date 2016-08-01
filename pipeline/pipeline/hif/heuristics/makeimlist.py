@@ -400,6 +400,7 @@ class MakeImListHeuristics(object):
     def phasecenter(self, fields, centreonly=True):
 
         cme = casatools.measures
+        cqa = casatools.quanta
 
         mdirections = []
         for ivis, vis in enumerate(self.vislist):
@@ -426,11 +427,16 @@ class MakeImListHeuristics(object):
         # sanity check - for single field images the field centres from
         # different measurement sets should be coincident and can
         # collapse the list 
+        # Set the maximum separation to 200 microarcsec and test via
+        # a tolerance rather than an equality.
+        max_separation = cqa.quantity('200uarcsec')
         if not self._mosaic:
             for mdirection in mdirections:
-                if mdirection != mdirections[0]:
-                    LOG.warning('Separation between field centres: %s' % (
-                      casatools.measures.separation(mdirection, mdirections[0])))
+                separation = cme.separation(mdirection, mdirections[0])
+                #if mdirection != mdirections[0]:
+                if cqa.gt (separation, max_separation):
+                    LOG.warning('Separation between single field centres: %s is greater than %s' % (separation, max_separation))
+#                      casatools.measures.separation(mdirection, mdirections[0])))
 #                    raise Exception, \
 #                      'non-identical field centers in single field image' 
             mdirections = [mdirections[0]]
@@ -442,7 +448,6 @@ class MakeImListHeuristics(object):
         # offset. Consequently, what follows is a bit crude.
 
         # First, find the offset of all field from field 0.
-        cqa = casatools.quanta
         xsep = []
         ysep = []
         for mdirection in mdirections:
