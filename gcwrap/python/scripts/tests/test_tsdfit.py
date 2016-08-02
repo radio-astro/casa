@@ -1008,13 +1008,13 @@ class tsdfit_auto(tsdfit_unittest_base,unittest.TestCase):
     common_param = dict(infile=infile, outfile='',datacolumn='float_data',
                         fitfunc='gaussian',fitmode='auto')
 
-    base_ref = {'cent': [[[15.01435947, 0.04727064], [61.4384346, 0.28429195]],
-                         [[15.01435947, 0.04727064], [61.4384346, 0.28429195], [109.98206329, 0.04793143]]],
-                'fwhm': [[[3.91396165, 0.11442509], [9.12826347, 0.76987672]],
-                         [[3.91396165, 0.11442509], [9.12826347, 0.76987672], [4.15206718, 0.11788968]]],
-                'nfit': [2, 3],
-                'peak': [[[2.57547307, 0.06348492], [0.71636099, 0.04436332]],
-                         [[2.57547307, 0.06348492], [0.71636099, 0.04436332], [2.47170353, 0.05822786]]]}
+    base_ref = {'cent': [[[15.00979614, 0.04770457], [61.38282013, 0.24553408]],
+                         [[15.00979614, 0.04770457], [61.38282013, 0.24553408], [109.980896, 0.05658337]]],
+                'fwhm': [[[3.89398646, 0.11234628], [9.02820969, 0.59809124]],
+                         [[3.89398646, 0.11234628], [9.02820969, 0.59809124], [4.15015697, 0.13328633]]],
+                'peak': [[[2.58062243, 0.06447442], [0.71921641, 0.03993592]],
+                         [[2.58062243, 0.06447442], [0.71921641, 0.03993592], [2.47205806, 0.06873842]]],
+                'nfit': [2, 3]}
     center_id = [1, 1]
 
     def setUp(self):
@@ -1032,7 +1032,7 @@ class tsdfit_auto(tsdfit_unittest_base,unittest.TestCase):
                 if is_center:
                     ref_val[key] = [ 1 for idx in self.center_id ]
                 else:
-                    ref_val[key] = [ len(value[irow])-1 for irow in range(len(self.center_id)) ]
+                    ref_val[key] = [ value[irow]-1 for irow in range(len(self.center_id)) ]
                 continue
             else:
                 ref_val[key] = []
@@ -1074,13 +1074,18 @@ class tsdfit_auto(tsdfit_unittest_base,unittest.TestCase):
         """Test fitmode='auto' with line mask by spw parameter"""
         self.run_test(True, None, spw='6:20~100')
 
-    # def testAutoThres(self):
-    #     """Test fitmode='auto' with threshold"""
-    #     thresh = 15.0
+    def testAutoThres(self):
+        """Test fitmode='auto' with threshold"""
+        self.run_test(False, None, thresh=15.0)
 
     def testAutoMinwidth(self):
         """Test fitmode='auto' with minwidth"""
-        self.run_test(True, None, minwidth=10)
+        ref_stat = {'cent': [[[61.40139389, 0.25993374]], [[61.40139389, 0.25993374]]],
+                    'fwhm': [[[8.92976952, 0.64963025]], [[8.92976952, 0.64963025]]],
+                    'nfit': [1, 1],
+                    'peak': [[[0.7223646, 0.0429684]], [[0.7223646, 0.0429684]]]}
+
+        self.run_test(False, ref_stat, minwidth=12,thresh=4.)
 
     def testAutoEdge(self):
         """Test fitmode='auto' with edge"""
