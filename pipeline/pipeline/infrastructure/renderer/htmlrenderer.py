@@ -603,27 +603,6 @@ class T2_1DetailsRenderer(object):
         # Get min, max elevation
         el_min = "%.2f" % adopted.computeAzElForMS(ms.name, value='min')[1]
         el_max = "%.2f" % adopted.computeAzElForMS(ms.name, value='max')[1]
-        
-        if is_singledish_ms(context):
-            LOG.debug('TPSampling plot is enabled for single dish MS')
-            task = summary.TPSamplingChart(context, ms)
-            tpsampling_plot = task.plot()
-            #LOG.debug('TPSampling plot is disabled for the time being (see CAS-8067)')
-            #tpsampling_plot = None
-            
-            LOG.debug('Pointing plot is enabled for single dish MS')
-            pointing_plots = []
-            for antenna in ms.antennas:
-                task = drawpointing.SingleDishPointingChart(context, ms, antenna, target_only=True)
-                pointing_plots.append(task.plot())
-                task = drawpointing.SingleDishPointingChart(context, ms, antenna, target_only=False)
-                pointing_plots.append(task.plot())
-        else:
-            tpsampling_plot = None
-            pointing_plots = []
-            
-        LOG.trace('tpsampling_plot = %s'%(tpsampling_plot))
-        LOG.trace('pointint_plots = %s'%(pointing_plots))
 
         dirname = os.path.join('session%s' % ms.session,
                                ms.basename)
@@ -681,7 +660,7 @@ class T2_1DetailsRenderer(object):
             'pwv_plot'        : pwv_plot,
             'azel_plot'       : azel_plot,
             'el_vs_time_plot' : el_vs_time_plot,
-            'tpsampling_plot' : tpsampling_plot,
+            'is_singledish'   : is_singledish_ms(context),
             'el_min'          : el_min,
             'el_max'          : el_max,
             'vla_basebands'   : vla_basebands
