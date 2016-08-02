@@ -55,7 +55,7 @@
 #include <synthesis/TransformMachines2/EVLAAperture.h>
 #include <synthesis/TransformMachines2/AWVisResampler.h>
 
-using namespace casa;
+//using namespace casa;
 using namespace casa::refim;
 using namespace casa::test;
 
@@ -66,7 +66,7 @@ void createAWPFTMachine(CountedPtr<refim::FTMachine>& theFT, CountedPtr<refim::F
 			const Int cfOversampling=20,
 			//------------------------------
 			const Int wprojPlane=1,
-			const Float=1.0,
+			//const Float=1.0,
 			const Bool useDoublePrec=True,
 			//------------------------------
 			const Bool aTermOn= True,
@@ -81,7 +81,7 @@ void createAWPFTMachine(CountedPtr<refim::FTMachine>& theFT, CountedPtr<refim::F
 			const Float rotatePAStep=5.0,
 			const Int cache=1000000000,
 			const Int tile=16,
-			const String imageNamePrefix=String("img"))
+			const String imageNamePrefix=String(""))
   
 {
   LogIO os( LogOrigin("tAWPFTM","createAWPFTMachine",WHERE));
@@ -177,7 +177,7 @@ Int main(int argc, char **argv)
       xform = 0.0;
       xform.diagonal() = 1.0;
       DirectionCoordinate dc(MDirection::J2000, Projection::SIN, Quantity(20.0,"deg"), Quantity(20.0, "deg"),
-			     Quantity(0.5, "arcsec"), Quantity(0.5,"arcsec"),
+			     Quantity(10.5, "arcsec"), Quantity(10.5,"arcsec"),
 			     xform, (NX/2.0), (NY/2.0), 999.0, 
 			     999.0);
       Vector<Int> whichStokes(1, Stokes::I);
