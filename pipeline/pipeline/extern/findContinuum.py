@@ -35,7 +35,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: findContinuum.py,v 1.81 2016/07/27 01:53:07 we Exp $" 
+    myversion = "$Id: findContinuum.py,v 1.91 2016/08/02 02:14:40 we Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -77,9 +77,8 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
                   header='', plotAtmosphere='transmission', airmass=1.5, pwv=1.0,
                   channelFractionForSlopeRemoval=0.75, mask='', 
                   invert=False, meanSpectrumMethod='auto',peakFilterFWHM=10,
-                  skyTempThreshold = 3.0,
-                  skyTransmissionThreshold = 0.08, maxGroupsForSkyThreshold=5):
-#                  skyTempThreshold=20):
+                  skyTempThreshold=1.5,
+                  skyTransmissionThreshold=0.08, maxGroupsForSkyThreshold=5):
     """
     This function calls functions to:
     1) compute the mean spectrum of a dirty cube
@@ -255,10 +254,10 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
 #            if (c > skyTempThreshold):
             if (b > skyTransmissionThreshold or e > skyTempThreshold):
                 meanSpectrumMethod = 'peakOverMad'
-                meanSpectrumMethodMessage = "Set meanSpectrumMethod='%s' since atmos. variation %.2f>%.2f or %.1f>%.1fK." % (meanSpectrumMethod,b,skyTransmissionThreshold,e,skyTempThreshold)
+                meanSpectrumMethodMessage = "Set meanSpectrumMethod='%s' since atmos. variation %.2f>%.2f or %.3f>%.1fK." % (meanSpectrumMethod,b,skyTransmissionThreshold,e,skyTempThreshold)
             else:
                 # Maybe comment this out once thresholds are stable
-                meanSpectrumMethodMessage = "Did not change meanSpectrumMethod since atmos. variation %.2f<%.2f and %.1f<%.1fK." % (b,skyTransmissionThreshold,e,skyTempThreshold)
+                meanSpectrumMethodMessage = "Did not change meanSpectrumMethod since atmos. variation %.2f<%.2f and %.3f<%.1fK." % (b,skyTransmissionThreshold,e,skyTempThreshold)
                 if (checkForTriangularWavePattern(img,header)):
                     meanSpectrumMethod = 'peakOverMad'
                     meanSpectrumMethodMessage = "Set meanSpectrumMethod='%s' since triangular wave pattern was seen." % (meanSpectrumMethod)
@@ -268,14 +267,30 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
         npixels = float(nchan)*naxis1*naxis2
         maxpixels = bytes/67 # float(1024)*1024*960
         if (npixels > maxpixels): # and meanSpectrumMethod.find('meanAboveThreshold')>=0):
-            casalogPost("Excessive number of pixels (%.0f > %.0f)" % (npixels,maxpixels))
+            casalogPost("Excessive number of pixels (%.0f > %.0f) %d x %d" % (npixels,maxpixels,naxis1,naxis2))
             totalWidthArcsec = abs(cdelt2*naxis2)
             if (mask == ''):
                 centralArcsecField = totalWidthArcsec*maxpixels/npixels
             else:
                 casalogPost("Finding size of the central square that fully contains the mask.")
                 centralArcsecField = widthOfMaskArcsec(mask)
-            casalogPost("Reducing image width examined from %.2f to %.2f arcsec to avoid memory problems." % (totalWidthArcsec,centralArcsecField))
+            newWidth = int(naxis2*centralArcsecField/totalWidthArcsec)
+            if (header['maxpixpos'][0] > naxis2/2 - newWidth/2 and 
+                header['maxpixpos'][0] < naxis2/2 + newWidth/2 and
+                header['maxpixpos'][1] > naxis2/2 - newWidth/2 and 
+                header['maxpixpos'][1] < naxis2/2 + newWidth/2):
+                casalogPost('Data max is within the smaller field')
+                casalogPost("Reducing image width examined from %.2f to %.2f arcsec to avoid memory problems." % (totalWidthArcsec,centralArcsecField))
+            else:
+                centralArcsecField = centralArcsec
+                if (meanSpectrumMethod == 'peakOverMad'):
+                    casalogPost('Data max is NOT within the smaller field. Keeping meanSpectrumMethod of peakOverMad.')
+                else:
+                    meanSpectrumMethod = 'peakOverMad'
+                    meanSpectrumMethodMessage = "Data max NOT within the smaller field. Switch meanSpectrumMethod='peakOverMad'"
+                    casalogPost(meanSpectrumMethodMessage)
+
+
         else:
             casalogPost("Using whole field since npixels=%d < maxpixels=%d" % (npixels, maxpixels))
             centralArcsecField = -1  # use the whole field
@@ -353,7 +368,7 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
             meanSpectrumMethodMessage = "Reverted to meanSpectrumMethod='%s' because groups>%d." % (meanSpectrumMethod,maxGroupsForSkyThreshold)
         else:
             meanSpectrumMethod = 'peakOverMad'
-        casalogPost("Re-running findContinuum with the other meanSpectrumMethod: %s (because aggregateBW=%e is less than 10kHz)" % (meanSpectrumMethod,aggregateBandwidth))
+        casalogPost("Re-running findContinuum with the other meanSpectrumMethod: %s (because aggregateBW=%eGHz is less than 10kHz, or FDM with many groups)" % (meanSpectrumMethod,aggregateBandwidth))
         iteration += 1
         os.remove(png)
         png = ''
@@ -731,7 +746,7 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
             sigmaFindContinuum = 6.0
     else:
         sigmaFindContinuumAutomatic = False
-    continuumChannels,selection,threshold,median,groups,correctionFactor,medianTrue,mad,medianCorrectionFactor,negativeThreshold,lineStrengthFactor,singleChannelPeaksAboveSFC,allGroupsAboveSFC = \
+    continuumChannels,selection,threshold,median,groups,correctionFactor,medianTrue,mad,medianCorrectionFactor,negativeThreshold,lineStrengthFactor,singleChannelPeaksAboveSFC,allGroupsAboveSFC,spectralDiff, trimChannels = \
         findContinuumChannels(avgSpectrumNansReplaced, nBaselineChannels, sigmaFindContinuum, nanmin, 
                               baselineModeB, trimChannels, narrow, verbose, maxTrim, maxTrimFraction, separator)
     sumAboveMedian, sumBelowMedian, sumRatio, channelsAboveMedian, channelsBelowMedian, channelRatio = \
@@ -756,7 +771,7 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
             factor = 1.5
             sigmaFindContinuum *= factor
             casalogPost("Scaling the threshold upward by a factor of %.2f to avoid apparent noise spikes (%d==%d)." % (factor, singleChannelPeaksAboveSFC,allGroupsAboveSFC))
-            continuumChannels,selection,threshold,median,groups,correctionFactor,medianTrue,mad,medianCorrectionFactor,negativeThreshold,lineStrengthFactor,singleChannelPeaksAboveSFC,allGroupsAboveSFC = \
+            continuumChannels,selection,threshold,median,groups,correctionFactor,medianTrue,mad,medianCorrectionFactor,negativeThreshold,lineStrengthFactor,singleChannelPeaksAboveSFC,allGroupsAboveSFC,spectralDiff,trimChannels = \
                 findContinuumChannels(avgSpectrumNansReplaced, nBaselineChannels, sigmaFindContinuum, nanmin, 
                                       baselineModeB, trimChannels, narrow, verbose, maxTrim, maxTrimFraction, separator)
             sumAboveMedian, sumBelowMedian, sumRatio, channelsAboveMedian, channelsBelowMedian, channelRatio = \
@@ -790,7 +805,7 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
         casalogPost("Scaling the threshold by a factor of %.2f (groups=%d, channelRatio=%f)" % (factor, groups,channelRatio))
         print "---------------------"
         sigmaFindContinuum *= factor
-        continuumChannels,selection,threshold,median,groups,correctionFactor,medianTrue,mad,medianCorrectionFactor,negativeThreshold,lineStrengthFactor,singleChannelPeaksAboveSFC,allGroupsAboveSFC = \
+        continuumChannels,selection,threshold,median,groups,correctionFactor,medianTrue,mad,medianCorrectionFactor,negativeThreshold,lineStrengthFactor,singleChannelPeaksAboveSFC,allGroupsAboveSFC,spectralDiff,trimChannels = \
             findContinuumChannels(avgSpectrumNansReplaced, nBaselineChannels, sigmaFindContinuum, nanmin, 
                                   baselineModeB, trimChannels, narrow, verbose, maxTrim, maxTrimFraction, separator)
         sumAboveMedian, sumBelowMedian, sumRatio, channelsAboveMedian, channelsBelowMedian, channelRatio = \
@@ -802,7 +817,7 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
             casalogPost("Not adjusting sigmaFindContinuum because meanSpectrumMethod = %s" % (meanSpectrumMethod))
         if (newMaxTrim > 0):
             casalogPost("But re-running findContinuumChannels with new maxTrim")
-            continuumChannels,selection,threshold,median,groups,correctionFactor,medianTrue,mad,medianCorrectionFactor,negativeThreshold,lineStrengthFactor,singleChannelPeaksAboveSFC,allGroupsAboveSFC = \
+            continuumChannels,selection,threshold,median,groups,correctionFactor,medianTrue,mad,medianCorrectionFactor,negativeThreshold,lineStrengthFactor,singleChannelPeaksAboveSFC,allGroupsAboveSFC,spectralDiff,trimChannels = \
                 findContinuumChannels(avgSpectrumNansReplaced, nBaselineChannels, sigmaFindContinuum, nanmin, 
                                       baselineModeB, trimChannels, narrow, verbose, maxTrim, maxTrimFraction, separator)
             sumAboveMedian, sumBelowMedian, sumRatio, channelsAboveMedian, channelsBelowMedian, channelRatio = \
@@ -838,7 +853,7 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
 #                maxTrim = maxTrimDefault # prevent overzealous trimming  July 20, 2016
         discardSlopeResult = False
         if rerun:
-            continuumChannels,selection,threshold,median,groups,correctionFactor,medianTrue,mad,medianCorrectionFactor,negativeThreshold,lineStrengthFactor,singleChannelPeaksAboveSFC,allGroupsAboveSFC = \
+            continuumChannels,selection,threshold,median,groups,correctionFactor,medianTrue,mad,medianCorrectionFactor,negativeThreshold,lineStrengthFactor,singleChannelPeaksAboveSFC,allGroupsAboveSFC,spectralDiff,trimChannels = \
             findContinuumChannels(avgSpectrumNansReplaced, nBaselineChannels, sigmaFindContinuum, nanmin, 
                                   baselineModeB, trimChannels, narrow, verbose, maxTrim, maxTrimFraction, 
                                   separator, slope)
@@ -1124,6 +1139,8 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
     casalogPost("Wrote png = %s" % (png))
     donetime = timeUtilities.time()
     casalogPost("%.1f sec elapsed in runFindContinuum" % (donetime-startTime))
+#    sd = open('spectralDiff.dat','a')
+#    sd.write('%f %f %s\n' % (spectralDiff[0],spectralDiff[1],os.path.basename(img)))
     return(selection, png, slope, channelWidth, nchan)
 # end of runFindContinuum
 
@@ -1326,6 +1343,9 @@ def findContinuumChannels(spectrum, nBaselineChannels=16, sigmaFindContinuum=3,
     9  correction factor applied to get the inferred true median
     10 negative threshold used
     11 lineStrength factor
+    12 singleChannelPeaksAboveSFC, 
+    13 allGroupsAboveSFC
+    14 spectralDiff (percentage of median)
     """
     originalSpectrum = spectrum + slope*np.array(range(len(spectrum)))
     if (narrow == 'auto'):
@@ -1400,10 +1420,28 @@ def findContinuumChannels(spectrum, nBaselineChannels=16, sigmaFindContinuum=3,
         mad = MAD(allBaselineChannels)
         median = nanmedian(allBaselineChannels)
         casalogPost("min method: median intensity of %d channels used as the baseline: %f" % (len(allBaselineChannels), median))
-    # will be 1.0 if no lines present and 0.25 if half the channels have lines, etc.
+    # signalRatio will be 1.0 if no lines present and 0.25 if half the channels have lines, etc.
     signalRatio = (1.0 - 1.0*len(np.where(np.abs(spectrum-median)>(sigmaEffective*mad*2.0))[0]) / len(spectrum))**2
+    spectralDiff = 100*np.median(np.abs(np.diff(spectrum)))/median
+    spectralDiff2 = 100*np.median(np.abs(np.diff(spectrum,n=2)))/median
+    casalogPost("spectralDiff = %f and %f percent of the median" % (spectralDiff,spectralDiff2))
     lineStrengthFactor = 1.0/signalRatio
-    medianTrue = medianCorrected(baselineMode, percentile, median, mad, signalRatio, useLowBaseline)
+    if (spectralDiff2 < 0.6 and len(spectrum) > 200):
+        # This appears to be a channel-averaged FDM spectrum with lots of real line emission.
+        # So, don't allow the median to be raised, and reduce the mad to lower the threshold.
+        casalogPost('The spectral difference (n=2) is rather small, so set signalRatio=0 to reduce the baseline level.')
+        signalRatio = 0
+        lineSNR = (np.max(spectrum)-median)/mad
+        casalogPost('lineSNR = %f' % lineSNR)
+        if (lineSNR > 20):
+            casalogPost('The lineSNR > %d, so scaling the mad by 1/3 to reduce the threshold.' % lineSNR)
+            mad *= 0.33
+            if (trimChannels == 'auto'): 
+                trimChannels = 6
+                casalogPost('Setting trimChannels to %d.' % (trimChannels))
+        
+    medianTrue = medianCorrected(baselineMode, percentile, median, mad, 
+                                 signalRatio, useLowBaseline)
     threshold = sigmaEffective*mad + medianTrue
     # Use a 15% lower negative threshold to help prevent false identification of absorption features.
     negativeThreshold = -1.15*sigmaEffective*mad + medianTrue
@@ -1414,8 +1452,8 @@ def findContinuumChannels(spectrum, nBaselineChannels=16, sigmaFindContinuum=3,
         channels2 = np.where(spectrum > negativeThreshold)[0]
         channels = np.intersect1d(channels,channels2)
 
-    # for CAS-8059: remove channels that are equal to the minimum if all channels from 
-    # it toward the nearest edge are also equal to the minimum: 
+    # for CAS-8059: remove channels that are equal to the minimum if all 
+    # channels from it toward the nearest edge are also equal to the minimum: 
     channels = list(channels)
     if (abs(originalSpectrum[np.min(channels)] - np.min(originalSpectrum)) < abs(1e-10*np.min(originalSpectrum))):
         lastmin = np.min(channels)
@@ -1444,6 +1482,17 @@ def findContinuumChannels(spectrum, nBaselineChannels=16, sigmaFindContinuum=3,
         casalogPost("Removed %d channels on high channel edge that were at the minimum." % (removed))
     peakChannels = np.where(spectrum > threshold)[0]
     peakChannelsLists = splitListIntoContiguousLists(peakChannels)
+    widthOfWidestFeature = maxLengthOfLists(peakChannelsLists)
+    casalogPost("Width of widest feature = %d" % (widthOfWidestFeature))
+    if (signalRatio > 0 and signalRatio < 0.6 and spectralDiff2 < 1.2 and 
+        len(spectrum) > 1000  and trimChannels=='auto' and 
+        widthOfWidestFeature < len(spectrum)/8):
+        # This is meant to prevent rich hot cores from returning only 1
+        # or 2 channels of continuum.  signalRatio>0 is to avoid conflict
+        # with the earlier heuristic above where it is set to zero.
+        trimChannels = 13
+        casalogPost('Setting trimChannels to %d since many lines appear to be present.' % (trimChannels))
+
     peakMultiChannelsLists = splitListIntoContiguousListsAndRejectNarrow(peakChannels, narrow=2)
     allGroupsAboveSFC = len(peakChannelsLists)
     singleChannelPeaksAboveSFC = allGroupsAboveSFC - len(peakMultiChannelsLists)
@@ -1464,6 +1513,8 @@ def findContinuumChannels(spectrum, nBaselineChannels=16, sigmaFindContinuum=3,
         else:
             if verbose:
                 casalogPost("Calling splitListIntoContiguousListsAndTrim(channels=%s, trimChannels=%s, maxTrim=%d, maxTrimFraction=%f)" % (str(channels), str(trimChannels), maxTrim, maxTrimFraction))
+            else:
+                casalogPost("Calling splitListIntoContiguousListsAndTrim(trimChannels=%s, maxTrim=%d, maxTrimFraction=%f)" % (str(trimChannels), maxTrim, maxTrimFraction))
             channels = splitListIntoContiguousListsAndTrim(channels, 
                          trimChannels, maxTrim, maxTrimFraction, verbose)
             if verbose:
@@ -1488,6 +1539,8 @@ def findContinuumChannels(spectrum, nBaselineChannels=16, sigmaFindContinuum=3,
             if (groups > 1):
                 if verbose:
                     casalogPost("Calling splitListIntoContiguousListsAndRejectNarrow(channels=%s, narrow=%s)" % (str(channels), str(narrow)))
+                else:
+                    casalogPost("Calling splitListIntoContiguousListsAndRejectNarrow(narrow=%s)" % (str(narrow)))
                 trialChannels = splitListIntoContiguousListsAndRejectNarrow(channels, narrow)
                 if (len(trialChannels) > 0):
                     channels = trialChannels
@@ -1505,7 +1558,7 @@ def findContinuumChannels(spectrum, nBaselineChannels=16, sigmaFindContinuum=3,
     return(channels, selection, threshold, median, groups, correctionFactor, 
            medianTrue, mad, computeMedianCorrectionFactor(baselineMode, percentile)*signalRatio,
            negativeThreshold, lineStrengthFactor, singleChannelPeaksAboveSFC, 
-           allGroupsAboveSFC)
+           allGroupsAboveSFC, [spectralDiff, spectralDiff2], trimChannels)
 
 def rejectNarrowInnerWindowsChannels(channels):
     """
@@ -1553,6 +1606,7 @@ def splitListIntoContiguousListsAndTrim(channels, trimChannels=0.1,
     """
     Split a list of channels into contiguous lists, and trim some number
     of channels from each edge.
+    channels: a list of channels selected for potential continuum
     trimChannels: if integer, use that number of channels.  If float between
         0 and 1, then use that fraction of channels in each contiguous list
         (rounding up). If 'auto', then use 0.1 but not more than maxTrim 
@@ -1568,7 +1622,8 @@ def splitListIntoContiguousListsAndTrim(channels, trimChannels=0.1,
         trimChannels = pickAutoTrimChannels(length, maxTrim)
     mylists = splitListIntoContiguousLists(channels)
     channels = []
-    for mylist in mylists:
+    trimLimitForEdgeRegion = 3
+    for i,mylist in enumerate(mylists):
         trimChan = trimChannels
         if verbose:
             print "trimChan=%d, Checking list = " % (trimChan), mylist
@@ -1585,8 +1640,27 @@ def splitListIntoContiguousListsAndTrim(channels, trimChannels=0.1,
                 # If there was only one list of 1 or 2 channels, then don't trim it away!
                 channels += mylist[:1]
             continue
-        channels += mylist[trimChan:-trimChan]
+        # Limit the trimming of the edge closest to the edge of the spw to 3 channels,
+        # in order to preserve bandwidth.
+        if (i==0 and trimChan > trimLimitForEdgeRegion):
+            if (len(mylists)==1):
+                # It is the only window so limit the trim on the far edge too
+                channels += mylist[trimLimitForEdgeRegion:-trimLimitForEdgeRegion]
+            else:
+                channels += mylist[trimLimitForEdgeRegion:-trimChan]
+        elif (i==len(mylists)-1 and trimChan > trimLimitForEdgeRegion):
+            channels += mylist[trimChan:-trimLimitForEdgeRegion]
+        else:
+            # It is not an edge window, or it is an edge window and trimChan<=3
+            channels += mylist[trimChan:-trimChan]
     return(np.array(channels))
+
+def maxLengthOfLists(lists):
+    maxLength = 0
+    for a in lists:
+        if (len(a) > maxLength):
+            maxLength = len(a)
+    return maxLength
 
 def roundFigures(value, digits):
     """
@@ -1658,13 +1732,15 @@ def sigmaCorrectionFactor(baselineMode, npts, percentile):
         return(edgeValue)
     return(edgeValue*2.8*(percentile/10.)**-0.25)
 
-def medianCorrected(baselineMode, percentile, median, mad, signalRatio, useLowBaseline):
+def medianCorrected(baselineMode, percentile, median, mad, signalRatio, 
+                    useLowBaseline):
     """
-    Computes the true median of a datastream from the observed median and MAD of
-    the lowest Nth percentile points.
-    signalRatio: when there is a lot of signal, we need to reduce the correction 
-                 factor because it is less like Gaussian noise
-                 It is 1.0 if no lines present, 0.25 if half the channels have signal, etc.
+    Computes the true median of a datastream from the observed median and MAD 
+    of the lowest Nth percentile points.
+    signalRatio: when there is a lot of signal, we need to reduce the 
+                 correction factor because it is less like Gaussian noise
+                 It is 1.0 if no lines are present, 0.25 if half the channels 
+                 have signal, etc.
     """
     if useLowBaseline:
         corrected = median + computeMedianCorrectionFactor(baselineMode, percentile)*mad*signalRatio
@@ -2064,15 +2140,24 @@ def meanSpectrum(img='g35.03_KDnh3_11.hline.self.image', nBaselineChannels=16,
             singlePlaneUserMask = True
             if (meanSpectrumMethod.find('meanAboveThreshold') >= 0):
                 casalogPost("single plane user masks not supported by meanSpectrumMethod='meanAboveThreshold', try peakOverMad.")
+                myia.close()
                 return
         myia.close()
     myia.open(img)
     axis = findSpectralAxis(myia)
     if verbose: print "Found spectral axis = ", axis
+    myrg = None
     if (centralArcsec < 0 or centralArcsec == 'auto'):
         centralArcsec = -1
-        pixels = myia.getregion()
-        maskdata = myia.getregion(getmask=True)
+        if (mask != '' or meanSpectrumMethod != 'peakOverMad'):
+            pixels = myia.getregion()
+            maskdata = myia.getregion(getmask=True)
+        else:
+            bmaj, bmin, bpa, cdelt1, cdelt2, naxis1, naxis2, freq = imageInfo
+            blc = [0,0,0,0]
+            trc = [naxis1-1,naxis2-1,0,0]
+            nchan = chanInfo[0]
+            myrg = createCasaTool(rgtool)
     else:
         myrg = createCasaTool(rgtool)
         bmaj, bmin, bpa, cdelt1, cdelt2, naxis1, naxis2, freq = imageInfo
@@ -2081,6 +2166,11 @@ def meanSpectrum(img='g35.03_KDnh3_11.hline.self.image', nBaselineChannels=16,
         x1 = int(np.round(naxis1*0.5 + centralArcsec*0.5/np.abs(cdelt1)))
         y0 = int(np.round(naxis2*0.5 - centralArcsec*0.5/cdelt2))
         y1 = int(np.round(naxis2*0.5 + centralArcsec*0.5/cdelt2))
+        # avoid going off the edge of non-square images
+        if (x0 < 0): x0 = 0
+        if (y0 < 0): y0 = 0
+        if (x0 >= naxis1): x0 = naxis1 - 1
+        if (y0 >= naxis2): y0 = naxis2 - 1
         blc = [x0,y0,0,0]
         trc = [x1,y1,0,0]
         trc[axis] = nchan
@@ -2088,14 +2178,15 @@ def meanSpectrum(img='g35.03_KDnh3_11.hline.self.image', nBaselineChannels=16,
         pixels = myia.getregion(region=region)
         casalogPost("Taking submask for central area of image: blc=%s, trc=%s" % (str(blc),str(trc)))
         maskdata = myia.getregion(region=region,getmask=True)
-        myrg.done()
+#        myrg.done()
         if (mask != ''):
             usermaskdata = submask(usermaskdata, region)
-    if verbose:
-        print "shape of pixels = ", np.array(np.shape(pixels))
+        if verbose:
+            print "shape of pixels = ", np.array(np.shape(pixels))
     if mask != '':
         if not (np.array(np.shape(pixels)) == np.array(np.shape(usermaskdata))).all():
             casalogPost("Mismatch in shape between image (%s) and mask (%s)" % (np.shape(pixels),np.shape(usermaskdata)))
+            if myrg != None: myrg.done()
             return
     if (meanSpectrumMethod.find('OverRms') > 0 or meanSpectrumMethod.find('OverMad') > 0):
         # compute myrms, ignoring masked values
@@ -2104,27 +2195,40 @@ def meanSpectrum(img='g35.03_KDnh3_11.hline.self.image', nBaselineChannels=16,
         else:
             casalogPost("Computing mad on each plane")
         myvalue = []
-        for a in range(np.shape(pixels)[axis]):
-            if verbose:
-                if ((a+1)%100 == 0): 
-                    print "Done %d/%d" % (a+1, np.shape(pixels)[axis])
+#        for a in range(np.shape(pixels)[axis]):
+        for a in range(nchan):
+            if ((a+1)%100 == 0): 
+                print "Done %d/%d" % (a+1, nchan)
+#                    print "Done %d/%d" % (a+1, np.shape(pixels)[axis])
             # Extract this one channel
             if (axis == 2):
-                mypixels = pixels[:,:,a,0]
-                mymask = maskdata[:,:,a,0]
-                if (mask != ''):
+                if mask != '':
+                    mypixels = pixels[:,:,a,0]
+                    mymask = maskdata[:,:,a,0]
                     if (singlePlaneUserMask):
                         myusermask = usermaskdata[:,:,0,0]
                     else:
                         myusermask = usermaskdata[:,:,a,0]
+                else:
+                    blc[axis] = a
+                    trc[axis] = a
+                    mypixels = myia.getregion(blc=blc,trc=trc)
+                    mymask = myia.getregion(blc=blc,trc=trc,getmask=True)
             elif (axis == 3):
-                mypixels = pixels[:,:,0,a]
-                mymask = maskdata[:,:,0,a]
                 if (mask != ''):
+                    mypixels = pixels[:,:,0,a]
+                    mymask = maskdata[:,:,0,a]
                     if (singlePlaneUserMask):
                         myusermask = usermaskdata[:,:,0,0]
                     else:
                         myusermask = usermaskdata[:,:,0,a]
+                else:
+                    blc[axis] = a
+                    trc[axis] = a
+                    myregion = myrg.box(blc=blc,trc=trc)
+                    mypixels = myia.getregion(region=myregion)
+                    mymask = myia.getregion(region=myregion,getmask=True)
+                    
             if (mask != ''):
                 # user mask is typically a clean mask, so we want to use the region outside the
                 # clean mask for computing the MAD, but also avoiding the masked edges of the image,
@@ -2148,20 +2252,35 @@ def meanSpectrum(img='g35.03_KDnh3_11.hline.self.image', nBaselineChannels=16,
         gaussianSigma = peakFilterFWHM/2.355
         myvalue = []
         casalogPost("Smoothing and computing peak on each plane.")
-        for a in range(np.shape(pixels)[axis]):
-            if verbose:
-                if ((a+1)%100 == 0): 
-                    print "Done %d/%d" % (a+1, np.shape(pixels)[axis])
+#        for a in range(np.shape(pixels)[axis]):
+        for a in range(nchan):
+            if ((a+1)%100 == 0): 
+#                    print "Done %d/%d" % (a+1, np.shape(pixels)[axis])
+                    print "Done %d/%d" % (a+1, nchan)
             if (axis == 2):
-                if (gaussianSigma > 1.1/2.355):
-                    myvalue.append(np.max(gaussian_filter(pixels[:,:,a,0],sigma=gaussianSigma)))
+                if mask != '':
+                    mypixels = pixels[:,:,a,0]
                 else:
-                    myvalue.append(np.max(pixels[:,:,a,0]))
+                    blc[axis] = a
+                    trc[axis] = a
+                    myregion = myrg.box(blc=blc,trc=trc)
+                    mypixels = myia.getregion(region=myregion)
+                if (gaussianSigma > 1.1/2.355):
+                    myvalue.append(np.max(gaussian_filter(mypixels,sigma=gaussianSigma)))
+                else:
+                    myvalue.append(np.max(mypixels))
             elif (axis == 3):
-                if (gaussianSigma > 1.1/2.355):
-                    myvalue.append(np.max(gaussian_filter(pixels[:,:,0,a],sigma=gaussianSigma)))
+                if mask != '':
+                    mypixels = pixels[:,:,0,a]
                 else:
-                    myvalue.append(np.max(pixels[:,:,0,a]))
+                    blc[axis] = a
+                    trc[axis] = a
+                    myregion = myrg.box(blc=blc,trc=trc)
+                    mypixels = myia.getregion(region=myregion)
+                if (gaussianSigma > 1.1/2.355):
+                    myvalue.append(np.max(gaussian_filter(mypixels,sigma=gaussianSigma)))
+                else:
+                    myvalue.append(np.max(mypixels))
         print "finished"
         mymax = np.array(myvalue)
         if (meanSpectrumMethod == 'peakOverRms'):
@@ -2218,7 +2337,7 @@ def meanSpectrum(img='g35.03_KDnh3_11.hline.self.image', nBaselineChannels=16,
             blc[axis] = trc[axis] - nEdgeChannels
             region = myrg.box(blc=blc, trc=trc)
             upperEdgePixels = myia.getregion(region=region)
-            myrg.done()
+#            myrg.done()
             # drop all floating point zeros
             upperEdgePixels = upperEdgePixels[np.where(upperEdgePixels!=0.0)]
             stdUpperEdge = MAD(upperEdgePixels)
@@ -2308,6 +2427,7 @@ def meanSpectrum(img='g35.03_KDnh3_11.hline.self.image', nBaselineChannels=16,
         print "Running writeMeanSpectrum"
     writeMeanSpectrum(meanSpectrumFile, frequency, avgspectrum, nansReplaced, threshold,
                       edgesUsed, nchan, nanmin, centralArcsec, mask, iteration)
+    if (myrg != None): myrg.done()
     return(avgspectrum, nansRemoved, nansReplaced, threshold, 
            edgesUsed, nchan, nanmin)
 
@@ -2780,7 +2900,7 @@ def checkForTriangularWavePattern(img, header, fraction=1.0, pad=20):
             return True
     return False
     
-def computeMadSpectrum(img, header, box='', listit=True):
+def computeMadSpectrum(img, header, box='', listit=False):
     """
     Uses the imstat task to compute an array containing the MAD spectrum of a cube.
     """
