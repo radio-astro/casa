@@ -169,10 +169,12 @@ void UVContSubTVITest::testCompareTransformedData()
     datacolmap[MS::CORRECTED_DATA] =  MS::DATA;
 
 	// Use MSTransformFactory to create a plain input VII
+	refConfiguration_p.define("factory",True);
 	MSTransformIteratorFactory refFactory(refConfiguration);
 	VisibilityIterator2 refTVI(refFactory);
 
 	// Generate TVI to test
+	testConfiguration_p.define("factory",True);
 	MSTransformIteratorFactory testPlainVIFactory(testConfiguration_p);
 	ViImplementation2 *testInputVI = testPlainVIFactory.getInputVI()->getImpl();
 	UVContSubTVIFactory testFactory(testConfiguration_p,testInputVI);

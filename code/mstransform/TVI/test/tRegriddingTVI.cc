@@ -131,10 +131,12 @@ void RegriddingTVITest::testCompareTransformedData()
 	Float tolerance = 1E-5; // FLT_EPSILON is 1.19209290e-7F
 
 	// Create MSTransformIterator pointing to reference file
+	refConfiguration_p.define("factory",False);
 	MSTransformIteratorFactory refFactory(refConfiguration_p);
 	VisibilityIterator2 refTVI(refFactory);
 
 	// Use MSTransformFactory to create a plain input VII
+	testConfiguration_p.define("factory",True);
 	MSTransformIteratorFactory plainVIFactory(testConfiguration_p);
 	ViImplementation2 *inputVI = plainVIFactory.getInputVI()->getImpl();
 

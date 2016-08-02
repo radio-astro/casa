@@ -61,7 +61,11 @@ FreqAxisTVI::~FreqAxisTVI()
 	// The parent class destructor (~TransformingVi2) deletes the inner
 	// ViImplementation2 object. However if it might have been already
 	// deleted at the top level context
-	inputVii_p = NULL;
+	// 2/8/2016 (jagonzal): As per request from George M. (via CAS-8220)
+	// I allow TransformingVi2 destructor to delete its inner input VI;
+	// This relies on the application layer that produces the inner VI not
+	// deleting it which can be guaranteed when using the Factory pattern.
+	// inputVii_p = NULL;
 
 	return;
 }

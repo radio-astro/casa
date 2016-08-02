@@ -1323,6 +1323,7 @@ protected:
 	Bool bufferMode_p;
 	Bool userBufferMode_p;
 	Bool reindex_p;
+	Bool factory_p;
 	Bool interactive_p;
 
 	// MS-related members

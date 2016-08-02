@@ -80,7 +80,7 @@ MSTransformManager::~MSTransformManager()
 	close();
 
 	if (channelSelector_p) delete channelSelector_p;
-	if (visibilityIterator_p) delete visibilityIterator_p;
+	if (visibilityIterator_p and !factory_p) delete visibilityIterator_p;
 	if (dataHandler_p) delete dataHandler_p;
 	if (phaseCenterPar_p) delete phaseCenterPar_p;
 
@@ -279,6 +279,7 @@ void MSTransformManager::initialize()
 	bufferMode_p = False;
 	userBufferMode_p = False;
 	reindex_p = True;
+	factory_p = False;
 	interactive_p = False;
 	spectrumReshape_p = False;
 	cubeTransformation_p = False;
@@ -384,6 +385,18 @@ void MSTransformManager::parseMsSpecParams(Record &configuration)
 		{
 			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
 					<< "Re-index is disabled " << LogIO::POST;
+		}
+	}
+
+	exists = configuration.fieldNumber ("factory");
+	if (exists >= 0)
+	{
+		configuration.get (exists, factory_p);
+
+		if (factory_p)
+		{
+			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+					<< "Factory mode enabled " << LogIO::POST;
 		}
 	}
 
