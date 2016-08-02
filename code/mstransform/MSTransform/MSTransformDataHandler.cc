@@ -2113,7 +2113,7 @@ Bool MSTransformDataHandler::fillSPWTable()
 				{
 					Int inpChan = chanStart_p[k] + j * span;
 
-					if (span > 1)
+					if (span >= 1)
 					{
 						Int lastChan = inpChan + span - 1;
 
