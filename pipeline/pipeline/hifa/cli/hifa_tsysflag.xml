@@ -23,6 +23,11 @@ possible error.
         <value></value>
     </param>
 
+    <param type="bool" name="normalize_tsys">
+        <description>Normalize Tsys prior to computing the flagging metric(s)</description>
+        <value>False</value>
+    </param>
+
     <param type="bool" name="flag_nmedian">
         <description>True to flag Tsys spectra with high median value</description>
         <value>True</value>
@@ -233,6 +238,10 @@ pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
 caltable -- List of input Tsys calibration tables
     default: [] - Use the table currently stored in the pipeline context. 
     example: caltable=['X132.ms.tsys.s2.tbl']
+
+normalize_tsys -- Normalize the Tsys measurements prior to computing the
+    flagging metrics
+    default: False
 
 flag_nmedian -- True to flag Tsys spectra with high median value.
     default: True

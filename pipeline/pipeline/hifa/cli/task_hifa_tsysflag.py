@@ -3,7 +3,7 @@ import sys
 import pipeline.h.cli.utils as utils
 
 
-def hifa_tsysflag(vis=None, caltable=None,
+def hifa_tsysflag(vis=None, caltable=None, normalize_tsys=None,
   flag_nmedian=None, fnm_limit=None, fnm_byfield=None,
   flag_derivative=None, fd_max_limit=None,
   flag_edgechans=None, fe_edge_limit=None,
