@@ -138,11 +138,12 @@ list<pair<size_t,size_t>> MADLineFinder(size_t const num_data,
       LineFinderUtils::calculateMAD(num_binned, binned_data_p,
 				    search_mask_p, mad_data_p);
       // use lower 80% of mad_array and use median of the array as a criteria.
-      float mad_threshold = threshold*sqrt(average_factor)*LineFinderUtils::maskedMedian(num_binned, mad_data_p,
-								    search_mask_p,0.8);
+      float mad80 = LineFinderUtils::maskedMedian(num_binned, mad_data_p,
+						     search_mask_p, 0.8);
+      float mad_threshold = threshold*sqrt(average_factor)* mad80;
 //       cout << "mad_threshold = " << mad_threshold << endl;
 #if defined(KS_DEBUG)
-      os << LogIO::DEBUG1 << "mad = " << mad_threshold/threshold/sqrt(average_factor) << ", mad_threshold = " << mad_threshold << " (factor: " << threshold << ", bin=" << average_factor << ")"  << LogIO::POST;
+      os << LogIO::DEBUG1 << "mad = " << mad80 << ", mad_threshold = " << mad_threshold << " (factor: " << threshold << ", bin=" << average_factor << ")"  << LogIO::POST;
 #endif
       if (mad_threshold >= prev_mad_threshold){
 #if defined(KS_DEBUG)
@@ -158,6 +159,11 @@ list<pair<size_t,size_t>> MADLineFinder(size_t const num_data,
 #if defined(KS_DEBUG)
       os << LogIO::DEBUG1 << "raw detection:" <<  LineFinderUtils::FormatLineString(new_lines) << LogIO::POST;
 #endif
+      size_t const binned_min =  max(minwidth/average_factor,1);
+	LineFinderUtils::rejectNarrowRange(binned_min, new_lines);
+#if defined(KS_DEBUG)
+	os << LogIO::DEBUG1 << "rejection by min width (" << binned_min << " chan):" <<  LineFinderUtils::FormatLineString(new_lines) << LogIO::POST;
+#endif
       //rejectByRangeWidth(minwidth_bin,maxwidth_bin,new_lines);
       if ( new_lines.size()>0 ) {
 	// merge flagged gaps
@@ -167,7 +173,8 @@ list<pair<size_t,size_t>> MADLineFinder(size_t const num_data,
 	Vector<int8_t> sign(num_binned);
 	int8_t *sign_p = sign.data();
 	LineFinderUtils::createSignByAThreshold(num_binned, mad_data_p,
-					       mad_threshold, sign_p);
+						//mad_threshold, sign_p);
+						mad80, sign_p);
 	LineFinderUtils::extendRangeBySign(num_binned, sign_p,
 					   binned_mask_p,
 					   new_lines);
