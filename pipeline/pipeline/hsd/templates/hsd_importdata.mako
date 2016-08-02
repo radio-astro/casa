@@ -17,6 +17,10 @@ def get_spwmap(ms):
                 spwmap[l[0]].append(l[1])
             else:
                 spwmap[l[0]] = [l[1]]
+        spwmap_values = [i for l in spwmap.values() for i in l]
+        for spw in ms.get_spectral_windows(science_windows_only=True):
+            if spw.id not in spwmap_values:
+                spwmap[spw.id] = [spw.id]
     else:
         for spw in ms.get_spectral_windows(science_windows_only=True):
             spwmap[spw.id] = [spw.id]
