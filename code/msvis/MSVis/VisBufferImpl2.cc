@@ -1998,62 +1998,57 @@ VisBufferImpl2::getRowMutable (Int row)
 //    cache_p->modelVisibility_p.set (value);
 //}
 
-//void
-//VisBufferImpl2::setVisCubeModel(const Vector<Float>& stokesIn)
-//{
-//
-//  enum {I, Q, U, V};
-//
-//  Vector<Float> stokes (4, 0.0);
-//
-//  stokes [I] = 1.0;  // Stokes parameters, nominally unpolarized, unit I
-//
-//  for (uInt i = 0; i < stokesIn.nelements(); ++i){
-//      stokes [i] = stokesIn [i];
-//  }
-//
-//  // Convert to correlations, according to basis
-//
-//  Vector<Complex> stokesFinal (4, Complex(0.0)); // initially all zero
-//
-//  if (polarizationFrame() == MSIter::Circular){
-//    stokesFinal(0) = Complex(stokes [I] + stokes [V]);
-//    stokesFinal(1) = Complex(stokes [Q], stokes [U]);
-//    stokesFinal(2) = Complex(stokes [Q], -stokes [U]);
-//    stokesFinal(3) = Complex(stokes [I] - stokes [V]);
-//  }
-//  else if (polarizationFrame() == MSIter::Linear) {
-//    stokesFinal(0) = Complex(stokes [I] + stokes [Q]);
-//    stokesFinal(1) = Complex(stokes [U], stokes [V]);
-//    stokesFinal(2) = Complex(stokes [U], -stokes [V]);
-//    stokesFinal(3) = Complex(stokes [I] - stokes [Q]);
-//  }
-//  else {
-//    throw(AipsError("Model-setting only works for CIRCULAR and LINEAR bases, for now."));
-//  }
-//
-//  // A map onto the actual correlations in the VisBuffer
-//
-//  Vector<Int> corrmap = correlationTypes ();
-//  corrmap -= corrmap(0);
-//
-//  ThrowIf (max(corrmap) >= 4,  "HELP! The correlations in the data are not normal!");
-//
-//  // Set the modelVisCube accordingly
-//
-//  Cube<Complex> visCube (getViiP()->visibilityShape(), 0.0);
-//
-//  for (Int icorr = 0; icorr < nCorrelations (); ++icorr){
-//    if (abs(stokesFinal(corrmap(icorr))) > 0.0) {
-//      visCube (Slice (icorr, 1, 1), Slice(), Slice()).set(stokesFinal (corrmap (icorr)));
-//    }
-//  }
-//
-//  cache_p->modelVisCube_p.set (visCube);
-//
-//  // Lookup flux density calibrator scaling, and apply it per channel...
-//  //  TBD
-//}
+void
+VisBufferImpl2::setVisCubeModel(const Vector<Float>& stokesIn)
+{
+
+  enum {I, Q, U, V};
+
+  Vector<Float> stokes (4, 0.0);
+
+  stokes [I] = 1.0;  // Stokes parameters, nominally unpolarized, unit I
+
+  for (uInt i = 0; i < stokesIn.nelements(); ++i){
+      stokes [i] = stokesIn [i];
+  }
+
+  // Convert to correlations, according to basis
+  Vector<Complex> stokesFinal (4, Complex(0.0)); // initially all zero
+
+  if (polarizationFrame() == MSIter::Circular){
+    stokesFinal(0) = Complex(stokes [I] + stokes [V]);
+    stokesFinal(1) = Complex(stokes [Q], stokes [U]);
+    stokesFinal(2) = Complex(stokes [Q], -stokes [U]);
+    stokesFinal(3) = Complex(stokes [I] - stokes [V]);
+  }
+  else if (polarizationFrame() == MSIter::Linear) {
+    stokesFinal(0) = Complex(stokes [I] + stokes [Q]);
+    stokesFinal(1) = Complex(stokes [U], stokes [V]);
+    stokesFinal(2) = Complex(stokes [U], -stokes [V]);
+    stokesFinal(3) = Complex(stokes [I] - stokes [Q]);
+  }
+  else {
+    throw(AipsError("Model-setting only works for CIRCULAR and LINEAR bases, for now."));
+  }
+
+  // A map onto the actual correlations in the VisBuffer  (which may be a subset)
+  Vector<Int> corrmap = correlationTypes ();
+  corrmap -= corrmap(0);
+
+  ThrowIf (max(corrmap) >= 4,  "HELP! The correlations in the data are not normal!");
+
+  // Set the modelVisCube accordingly
+  Cube<Complex> visCube (getViiP()->visibilityShape(), 0.0);
+
+  for (Int icorr = 0; icorr < nCorrelations (); ++icorr){
+    if (abs(stokesFinal(corrmap(icorr))) > 0.0) {
+      visCube (Slice (icorr, 1, 1), Slice(), Slice()).set(stokesFinal (corrmap (icorr)));
+    }
+  }
+
+  cache_p->modelVisCube_p.set (visCube);
+
+}
 
 
 const Cube<Complex> &

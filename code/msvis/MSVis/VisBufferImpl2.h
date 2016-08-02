@@ -337,7 +337,7 @@ public:
     virtual const Cube<Complex> & visCubeModel () const;
     virtual void setVisCubeModel (const Complex & c);
     virtual void setVisCubeModel (const Cube<Complex>& vis);
-//    virtual void setVisCubeModel(const Vector<Float>& stokes);
+    virtual void setVisCubeModel(const Vector<Float>& stokes);  // by supplied Stokes vector
 //    virtual const Matrix<CStokesVector> & visModel () const;
 //    virtual void setVisModel (Matrix<CStokesVector> &);
     virtual const Cube<Complex> & visCube () const;

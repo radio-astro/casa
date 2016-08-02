@@ -365,8 +365,7 @@ void VisEquation::collapse2(vi::VisBuffer2& vb) {
   // Handle origin of model data here:
   if (useInternalModel_)
     // Use specified (point-source) stokes model
-    throw(AipsError("Use of smodel not yet supported in VE::collapse2"));
-    //    vb.setVisCubeModel(stokesModel_);
+    vb.setVisCubeModel(stokesModel_);
   else
     // from MS
     vb.visCubeModel();
