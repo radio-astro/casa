@@ -507,18 +507,19 @@ using namespace casa::vi;
 		    ftRef(1)=cfBuf.shape()(1)/2.0;
 
 		    //tim.mark();
-		    cfNorm=cfWtNorm=1.0;
-		    if ((iw == 0) && (!isDryRun))
+		    cfNorm=cfWtNorm=0.0;
+		    //if ((iw == 0) && (!isDryRun))
+		    if (!isDryRun)
 		      {
-			cfNorm=0; cfWtNorm=0;
 			cfNorm = AWConvFunc::cfArea(cfBufMat, xSupport, ySupport, sampling);
 			cfWtNorm = AWConvFunc::cfArea(cfWtBufMat, xSupportWt, ySupportWt, sampling);
 		      }
 		    //tim.show("Area*2:");
 
 		    //tim.mark();
-		    cfBuf /= cfNorm;
-		    cfWtBuf /= cfWtNorm;
+		    if (cfNorm != Complex(0.0)) cfBuf /= cfNorm;
+		    if (cfWtNorm != Complex(0.0)) cfWtBuf /= cfWtNorm;
+
 		    //tim.show("cfNorm*2:");
 
 		    //tim.mark();
@@ -574,7 +575,8 @@ using namespace casa::vi;
     for (Int ix=-xSupport;ix<xSupport;ix++)
       for (int iy=-ySupport;iy<ySupport;iy++)
 	{
-	  cfNorm += Complex(real(cf(ix*(Int)sampling+origin, iy*(Int)sampling+origin)),0.0);
+	  //cfNorm += Complex(real(cf(ix*(Int)sampling+origin, iy*(Int)sampling+origin)),0.0);
+	  cfNorm += (cf(ix*(Int)sampling+origin, iy*(Int)sampling+origin));
 	  // cerr << cfNorm << " " << ix << " " << iy << " " << ix*(Int)sampling+origin << " " << iy*(Int)sampling+origin
 	  //      << real(cf(ix*(Int)sampling+origin, iy*(Int)sampling+origin)) << endl;
 	}
@@ -1626,8 +1628,10 @@ using namespace casa::vi;
 	  cfBufMat = cfWtBufMat = 1.0;
 	else
 	  {
-	    psTerm.applySky(cfBufMat, False);   // Assign (psScale set in psTerm.init()
-	    psTerm.applySky(cfWtBufMat, False); // Assign
+	    // psTerm.applySky(cfBufMat, False);   // Assign (psScale set in psTerm.init()
+	    // psTerm.applySky(cfWtBufMat, False); // Assign
+	    psTerm.applySky(cfBufMat, s, cfBufMat.shape()(0)/2);   // Assign (psScale set in psTerm.init()
+	    psTerm.applySky(cfWtBufMat, s, cfWtBufMat.shape()(0)/2); // Assign
 	    cfWtBuf *= cfWtBuf;
 	  }
 
@@ -1752,9 +1756,9 @@ using namespace casa::vi;
 	ftRef(1)=cfBuf.shape()(1)/2.0;
 
 	//tim.mark();
-	cfNorm=cfWtNorm=1.0;
+	//cfNorm=cfWtNorm=1.0;
 	// if ((wValue == 0) && (!isDryRun))
-	if (miscInfo.wValue == 0)
+	//if (miscInfo.wValue == 0)
 	  {
 	    cfNorm=0; cfWtNorm=0;
 	    cfNorm = AWConvFunc::cfArea(cfBufMat, xSupport, ySupport, sampling);
@@ -1763,8 +1767,8 @@ using namespace casa::vi;
 	//tim.show("Area*2:");
 	
 	//tim.mark();
-	cfBuf /= cfNorm;
-	cfWtBuf /= cfWtNorm;
+	  if (cfNorm != Complex(0.0))    cfBuf /= cfNorm;
+	  if (cfWtNorm != Complex(0.0)) cfWtBuf /= cfWtNorm;
 	//tim.show("cfNorm*2:");
 
 	//tim.mark();
@@ -1863,7 +1867,7 @@ using namespace casa::vi;
 			 
 			 Int inner=convSize/(convSampling);
 			 //Float psScale = (2*coords.increment()(0))/(nx*image.coordinates().increment()(0));
-			 Float innerQuaterFraction=0.5;
+			 Float innerQuaterFraction=0.25;
 			 
 			 Float psScale = 2.0/(innerQuaterFraction*convSize/convSampling);// nx*image.coordinates().increment()(0)*convSampling/2;
 			 ((static_cast<AWConvFunc &>(*awCF)).psTerm_p)->init(IPosition(2,inner,inner), uvScale, uvOffset,psScale);

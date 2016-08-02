@@ -92,8 +92,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      {
 		Float ypart;
 		ypart = sqrt(xpart + square(j-convOrig))*psScale_local;
-		if (multiply)  screen(i, j) *= SynthesisUtils::libreSpheroidal(ypart);
-		else           screen(i, j)  = SynthesisUtils::libreSpheroidal(ypart);
+		Float val = SynthesisUtils::libreSpheroidal(ypart)*(1.0-ypart*ypart);;
+		if (val > 0)
+		  {
+		    if (multiply)  screen(i, j) *= val;
+		    else           screen(i, j)  = val;
+		  }
 	      }
     }
 	  }
@@ -122,9 +126,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	for (Int iy=-inner/2;iy<inner/2;iy++) 
 	  {
 	    psCtor_p->correctX1D(correction, iy+inner/2);
+	    Int k=0;
 	    for (Int ix=-inner/2;ix<inner/2;ix++) 
 	      {
-		screen(ix+convSize/2,iy+convSize/2)=correction(ix+inner/2);
+		screen(ix+convSize/2,iy+convSize/2)=correction(k++);//correction(ix+inner/2);
 	      }
 	  }
       }

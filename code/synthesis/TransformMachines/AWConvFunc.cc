@@ -311,8 +311,10 @@ namespace casa{
 		      cfBufMat = cfWtBufMat = 1.0;
 		    else
 		      {
-			psTerm.applySky(cfBufMat, False);   // Assign (psScale set in psTerm.init()
-			psTerm.applySky(cfWtBufMat, False); // Assign
+			// psTerm.applySky(cfBufMat, False);   // Assign (psScale set in psTerm.init()
+			// psTerm.applySky(cfWtBufMat, False); // Assign
+            psTerm.applySky(cfBufMat, s, cfBufMat.shape()(0)/s(0));   // Assign (psScale set in psTerm.init()
+	    psTerm.applySky(cfWtBufMat, s, cfWtBufMat.shape()(0)/s(0)); // Assign
 			cfWtBuf *= cfWtBuf;
 		      }
 		    //tim.show("PSTerm*2: ");
@@ -390,13 +392,6 @@ namespace casa{
     		    SpCS.setReferenceValue(refValue);
     		    cs.replaceCoordinate(SpCS,index);
 		    //tim.show("CSStuff:");
-    		    // {
-		    //   ostringstream name;
-		    //   name << "twoDPB.before" << iw << "_" << inu << "_" << muellerElements(imx)(imy) <<".im";
-    		    //   storeImg(name,twoDPB_l);
-		    //   name << "twoDPBSq.before" << iw << "_" << inu << "_" << muellerElements(imx)(imy) <<".im";
-    		    //   storeImg(name,twoDPBSq_l);
-    		    // }
 		    //
 		    // Now FT the function and copy the data from
 		    // TempImages back to the CFBuffer buffers
@@ -412,6 +407,17 @@ namespace casa{
 		    // twoDPBSq_l.get(t0); t0 = abs(t0);
 		    // twoDPBSq_l.put(t0);
 
+    		    // {
+		    //   ostringstream name;
+		    //   name << "twoDPB.before" << iw << "_" << inu << "_" << muellerElements(imx)(imy) <<".im";
+    		    //   storeImg(name,twoDPB_l);
+		    // }
+		    // {
+		    //   ostringstream name;
+		    //   name << "twoDPBSq.before" << iw << "_" << inu << "_" << muellerElements(imx)(imy) <<".im";
+    		    //   storeImg(name,twoDPBSq_l);
+    		    // }
+		    // exit(0);
 
 		    //tim.mark();
 		    IPosition shp(twoDPB_l.shape());
@@ -505,7 +511,8 @@ namespace casa{
 
 		    //tim.mark();
 		    cfNorm=cfWtNorm=1.0;
-		    if ((iw == 0) && (!isDryRun))
+		    //if ((iw == 0) && (!isDryRun))
+		    if (!isDryRun)
 		      {
 			cfNorm=0; cfWtNorm=0;
 			cfNorm = AWConvFunc::cfArea(cfBufMat, xSupport, ySupport, sampling);
@@ -572,7 +579,8 @@ namespace casa{
     for (Int ix=-xSupport;ix<xSupport;ix++)
       for (int iy=-ySupport;iy<ySupport;iy++)
 	{
-	  cfNorm += Complex(real(cf(ix*(Int)sampling+origin, iy*(Int)sampling+origin)),0.0);
+	  //cfNorm += Complex(real(cf(ix*(Int)sampling+origin, iy*(Int)sampling+origin)),0.0);
+	  cfNorm += (cf(ix*(Int)sampling+origin, iy*(Int)sampling+origin));
 	  // cerr << cfNorm << " " << ix << " " << iy << " " << ix*(Int)sampling+origin << " " << iy*(Int)sampling+origin
 	  //      << real(cf(ix*(Int)sampling+origin, iy*(Int)sampling+origin)) << endl;
 	}
@@ -933,14 +941,15 @@ namespace casa{
 	//   (coords.increment()(0)*screen.shape()(0));
 
 	Float psScale = (2*coords.increment()(0))/(nx*image.coordinates().increment()(0)),
-	  innerQuaterFraction=0.5;
+	  innerQuaterFraction=1.0;
 	// psScale when using SynthesisUtils::libreSpheroidal() is
 	// 2.0/nSupport.  nSupport is in pixels and the 2.0 is due to
 	// the center being at Nx/2.  Here the nSupport is determined
 
 	// by the sky-image and is equal to convSize/convSampling.
 	psScale = 2.0/(innerQuaterFraction*convSize/convSampling);// nx*image.coordinates().increment()(0)*convSampling/2;
-	psTerm_p->init(IPosition(2,inner,inner), uvScale, uvOffset,psScale);
+	Vector<Double> uvOffset_cf(3,0); uvOffset_cf(0)=uvOffset_cf(2)=convSize/2; 
+	psTerm_p->init(IPosition(2,inner,inner), uvScale, uvOffset_cf,psScale);
 
 	MuellerElementType muellerElement(0,0);
 	CoordinateSystem cfb_cs=coords;
@@ -1623,8 +1632,10 @@ namespace casa{
 	  cfBufMat = cfWtBufMat = 1.0;
 	else
 	  {
-	    psTerm.applySky(cfBufMat, False);   // Assign (psScale set in psTerm.init()
-	    psTerm.applySky(cfWtBufMat, False); // Assign
+	    // psTerm.applySky(cfBufMat, False);   // Assign (psScale set in psTerm.init()
+	    // psTerm.applySky(cfWtBufMat, False); // Assign
+	    psTerm.applySky(cfBufMat, s, cfBufMat.shape()(0)/s(0));   // Assign (psScale set in psTerm.init()
+	    psTerm.applySky(cfWtBufMat, s, cfWtBufMat.shape()(0)/s(0)); // Assign
 	    cfWtBuf *= cfWtBuf;
 	  }
 
@@ -1748,9 +1759,9 @@ namespace casa{
 	ftRef(1)=cfBuf.shape()(1)/2.0;
 
 	//tim.mark();
-	cfNorm=cfWtNorm=1.0;
+	//cfNorm=cfWtNorm=1.0;
 	// if ((wValue == 0) && (!isDryRun))
-	if (miscInfo.wValue == 0)
+	//	if (miscInfo.wValue == 0)
 	  {
 	    cfNorm=0; cfWtNorm=0;
 	    cfNorm = AWConvFunc::cfArea(cfBufMat, xSupport, ySupport, sampling);

@@ -159,9 +159,9 @@ namespace casa{
     Int paNdx, antNdx;
     getIndex(pa,dPA,ant1,ant2,paNdx, antNdx);
     
-    log_l << "Saving " << storage_p(paNdx,antNdx)->shape().product() << " "
-	  << "CFs for PA = " << pa.getValue("deg") 
-	  << " BaselineType = (" << ant1 << "," << ant2 << ")" 
+    log_l << "Saving CFStore of shape " << storage_p(paNdx,antNdx)->shape() 
+	  << " for PA = " << pa.getValue("deg") 
+	  << " BaselineType(antType1, antType2) = (" << ant1 << "," << ant2 << ")" 
 	  << LogIO::POST;
     ostringstream name;
     name << String(qualifier) << "CFS_" << paNdx << "_" << antNdx;
