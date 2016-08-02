@@ -1126,6 +1126,13 @@ class PyParallelDeconvolver(PySynthesisImager):
         if( stopflag>0 ):
             stopreasons = ['iteration limit', 'threshold', 'force stop','no change in peak residual across two major cycles']
             casalog.post("Reached global stopping criterion : " + stopreasons[stopflag-1], "INFO")
+            if self.iterpars['interactive']:
+                for immod in range(0,self.listOfNodes):
+                    if self.alldecpars[str(immod)]['usemask']=='auto-thresh':
+                        prevmask = self.allimpars[str(immod)]['imagename']+'.prev.mask'
+                        if os.path.isdir(prevmask):
+                            shutil.rmtree(self.allimpars[str(immod)]['imagename']+'.mask')
+                        shutil.move(prevmask,self.allimpars[str(immod)]['imagename']+'.mask')
         return (stopflag>0)
 
 
