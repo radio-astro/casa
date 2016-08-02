@@ -43,8 +43,9 @@ each plane contains the image of one of the polarizations, while
 stokes='I' produces a 'total intensity' or Stokes I image.\n
 
 The task also supports various grid function (convolution kernel) to
-weight spectra. See description below for details of gridfunction
-available.
+weight spectra as well as an option to remove the most extreme minimum 
+and maximum (unweighted) values prior to computing the gridded pixel 
+values. See description below for details of gridfunction available.
 
   </description>
 
@@ -250,7 +251,7 @@ available.
    
    	<param type="bool" name="clipminmax">
    			<shortdescription>Clip minimum and maximum value from each pixel</shortdescription>
-   			<description>Clip minimum and maximum value from each pixel</description>
+   			<description>Clip minimum and maximum value from each pixel. Note the benefit of clipping is lost when the number of integrations contributing to each gridded pixel is small, or where the incidence of spurious datapoints is approximately or greater than the number of beams (in area) encompassed by expected image.</description>
    			<value>False</value>
    	</param>
 
@@ -491,8 +492,14 @@ minweight -- Minimum weight ratio to the median of weight used in
              weight correction and weight based masking
         default: 0.1
         example: minweight = 0.
-clipminmax -- do min/max cliping if True
+clipminmax -- Clip minimum and maximum value from each pixel. 
+              Note the benefit of clipping is lost when the number of 
+              integrations contributing to each gridded pixel is small, 
+              or where the incidence of spurious datapoints is 
+              approximately or greater than the number of beams (in area) 
+              encompassed by expected image.
         default: False
+        option: True, False
 
 
 -----------------
