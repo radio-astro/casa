@@ -39,17 +39,21 @@ import pipeline.infrastructure.renderer.logger as logger
 LOG = infrastructure.get_logger(__name__)
 
 _valid_chars = "_.%s%s" % (string.ascii_letters, string.digits)
+
+
 def _char_replacer(s):
-    '''A small utility function that echoes the argument or returns '_' if the
+    """A small utility function that echoes the argument or returns '_' if the
     argument is in a list of forbidden characters.
-    '''
+    """
     if s not in _valid_chars:
         return '_'
     return s
 
+
 def sanitize(text):
     filename = ''.join(_char_replacer(c) for c in text)
     return filename
+
 
 def plotfilename(image, reportdir):
     name = '%s.sky.png' % (os.path.basename(image))
@@ -61,12 +65,16 @@ def plotfilename(image, reportdir):
 class SkyDisplay(object):
     """Class to plot sky images."""
 
-    def plot(self, context, result, reportdir, intent=None, collapseFunction='mean'):
-
+    def plot(self, context, result, reportdir, intent=None, collapseFunction='mean', vmin=None, vmax=None):
         if not result:
             return []
 
-        plotfile, coord_names, field = self._plot_panel(reportdir, result, collapseFunction=collapseFunction)
+        imshow_args = {}
+        if vmin is not None and vmax is not None:
+            imshow_args['norm'] = plt.normalize(vmin, vmax, clip=True)
+
+        plotfile, coord_names, field = self._plot_panel(reportdir, result, collapseFunction=collapseFunction,
+                                                        **imshow_args)
 
         # field names may not be unique, which leads to incorrectly merged
         # plots in the weblog output. As a temporary fix, change to field +
@@ -75,39 +83,33 @@ class SkyDisplay(object):
             field = '%s (%s)' % (field, intent)
 
         with casatools.ImageReader(result) as image:
-            info = image.miscinfo()
-            parameters = {}
-            if info.has_key('spw'): parameters['spw'] = info['spw']
-            if info.has_key('pol'): parameters['pol'] = info['pol']
-            if info.has_key('field'): parameters['field'] = info['field']
-            if info.has_key('type'): parameters['type'] = info['type']
-            if info.has_key('iter'): parameters['iter'] = info['iter']
-            parameters['ant'] = None
+            miscinfo = image.miscinfo()
 
-        plot = logger.Plot(plotfile,
-          x_axis=coord_names[0], y_axis=coord_names[1], field=field,
-          parameters=parameters)
+        parameters = {k: miscinfo[k] for k in ['spw', 'pol', 'field', 'type', 'iter'] if k in miscinfo}
+        parameters['ant'] = None
+
+        plot = logger.Plot(plotfile, x_axis=coord_names[0],
+                           y_axis=coord_names[1], field=field,
+                           parameters=parameters)
 
         return plot
 
-    def _plot_panel(self, reportdir, result, vmin=None, vmax=None,
-     channelMap=False, collapseFunction='mean'):
+    def _plot_panel(self, reportdir, result, collapseFunction='mean', **imshow_args):
         """Method to plot a map."""
 
-        plotfile = plotfilename(image=os.path.basename(result),
-          reportdir=reportdir)
+        plotfile = plotfilename(image=os.path.basename(result), reportdir=reportdir)
 
         with casatools.ImageReader(result) as image:
             try:
-                if (collapseFunction == 'center'):
-                    collapsed = image.collapse(function='mean', chans=str(image.summary()['shape'][3]/2), axes=[2,3])
+                if collapseFunction == 'center':
+                    collapsed = image.collapse(function='mean', chans=str(image.summary()['shape'][3]/2), axes=[2, 3])
                 else:
-                    collapsed = image.collapse(function=collapseFunction, axes=[2,3])
+                    collapsed = image.collapse(function=collapseFunction, axes=[2, 3])
             except:
                 # All channels flagged or some other error. Make collapsed zero image.
                 collapsed = image.newimagefromimage(infile=result)
                 collapsed.set(pixelmask=True, pixels='0')
-                collapsed = collapsed.collapse(function='mean', axes=[2,3])
+                collapsed = collapsed.collapse(function='mean', axes=[2, 3])
 
             name = image.name(strippath=True)
             coordsys = collapsed.coordsys()
@@ -157,9 +159,8 @@ class SkyDisplay(object):
             # plot data
             cmap = copy.deepcopy(matplotlib.cm.jet)
             cmap.set_bad('k', 1.0)
-            plt.imshow(np.transpose(mdata), cmap=cmap, interpolation='nearest',
-              origin='lower', aspect='equal', extent=[x[0], x[-1], y[0],
-              y[-1]], vmin=vmin, vmax=vmax)
+            plt.imshow(np.transpose(mdata), cmap=cmap, interpolation='nearest', origin='lower', aspect='equal',
+                       extent=[x[0], x[-1], y[0], y[-1]], **imshow_args)
 
             plt.axis('image')
             lims = plt.axis()
@@ -182,13 +183,12 @@ class SkyDisplay(object):
             # image reference pixel    
             yoff = 0.10
             yoff = self.plottext(1.05, yoff, 'Reference position:', 40)
-            for i,k in enumerate(coord_refs['string']):
-                yoff = self.plottext(1.05, yoff, '%s: %s' %
-                  (coord_names[i], k), 40, mult=0.8)
+            for i, k in enumerate(coord_refs['string']):
+                yoff = self.plottext(1.05, yoff, '%s: %s' % (coord_names[i], k), 40, mult=0.8)
 
             # plot beam
             cqa = casatools.quanta
-            if beam.has_key('major'):
+            if 'major' in beam:
                 bpa = beam['positionangle']
                 bpa = cqa.quantity('%s%s' % (bpa['value'], bpa['unit']))
                 bpa = cqa.convert(bpa, 'rad')
@@ -225,10 +225,10 @@ class SkyDisplay(object):
             mode_texts = {'mean': 'mean', 'max': 'peak line int. (mom8)', 'center': 'center slice'}
             image_info = {'display': mode_texts[collapseFunction]}
             image_info.update(miscinfo)
-            if (image_info.get('type')):
-                if (image_info['type'] == 'flux'):
+            if 'type' in image_info:
+                if image_info['type'] == 'flux':
                     image_info['type'] = 'pb'
-                if (image_info['type'] == 'mom0_fc'):
+                if image_info['type'] == 'mom0_fc':
                     image_info['type'] = 'Line-free Moment 0'
 
             label = [TextArea('%s:%s' % (key, image_info[key]), textprops=dict(color=color))
@@ -242,11 +242,11 @@ class SkyDisplay(object):
 
             txt = HPacker(children=label, align="baseline", pad=0, sep=7)
 
-            bbox =  AnnotationBbox(txt, xy=(0.1, 0.5),
-                                   xycoords='data',
-                                   frameon=True,
-                                   box_alignment=(0.5, 0.5), # alignment center, center
-                                   )
+            bbox = AnnotationBbox(txt, xy=(0.1, 0.5),
+                                  xycoords='data',
+                                  frameon=True,
+                                  box_alignment=(0.5, 0.5),  # alignment center, center
+                                  )
 
             ax = plt.Axes(f1, [0.085, 0.9, 0.7, 0.1])
             ax.set_frame_on(False)

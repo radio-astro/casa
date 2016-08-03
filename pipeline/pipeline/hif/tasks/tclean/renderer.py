@@ -1,8 +1,8 @@
-'''
+"""
 Created on 7 Jan 2015
 
 @author: sjw
-'''
+"""
 import collections
 import os
 
@@ -35,6 +35,9 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         # Get results info
         info_dict = {}
 
+        # Holds a mapping of image name to image stats. This information is used to scale the MOM8 images.
+        image_stats = {}
+
         qaTool = casatools.quanta
 
         if results[0]:
@@ -45,19 +48,21 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                     continue
                 if not r.iterations:
                     continue
-                if (r.multiterm):
+                if r.multiterm:
                     extension = '.tt0'
                 else:
                     extension = ''
 
                 maxiter = max(r.iterations.keys())
 
-                with casatools.ImageReader(r.iterations[maxiter]['image']+extension) as image:
+                field = spw = pol = None
+
+                image_path = r.iterations[maxiter]['image'] + extension
+
+                with casatools.ImageReader(image_path) as image:
                     info = image.miscinfo()
-                    spw = pol = field = None
-                    if info.has_key('spw'): 
-                        spw = info['spw']
-                    if info.has_key('field'):
+                    spw = info.get('spw', None)
+                    if 'field' in info:
                         field = '%s (%s)' % (info['field'], r.intent)
 
                     coordsys = image.coordsys()
@@ -69,7 +74,6 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                     info_dict[(field, spw, pol, 'frequency')] = frequency
                     info_dict[(field, spw, pol, 'image name')] = image.name(strippath=True)
                     stats = image.statistics(robust=False)
-                    info_dict[(field, spw, pol, 'max')] = stats.get('max')[0]
                     beam = image.restoringbeam()
                     if 'beams' in beam:
                         # 'beams' dict has results for each channel and
@@ -86,8 +90,11 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                     info_dict[(field, spw, pol, 'beam pa')] = pa
                     info_dict[(field, spw, pol, 'brightness unit')] = image.brightnessunit()
 
-                    stats = image.statistics(robust=False)
-                    info_dict[(field, spw, pol, 'image rms')] = stats.get('rms')[0]
+                    image_rms = stats.get('rms')[0]
+                    image_max = stats.get('max')[0]
+                    info_dict[(field, spw, pol, 'image rms')] = image_rms
+                    info_dict[(field, spw, pol, 'max')] = image_max
+                    image_stats[image_path] = tclean.ImageStats(rms=image_rms, max=image_max)
 
                     summary = image.summary()
                     nchan = summary['shape'][3]
@@ -127,7 +134,7 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 info_dict[(field, spw, pol, 'score')] = r.qa.representative
 
         # Make the plots
-        plotter = tclean.CleanSummary(context, results[0])
+        plotter = tclean.CleanSummary(context, results[0], image_stats)
         plots = plotter.plot()        
 
         fields = sorted(set([p.parameters['field'] for p in plots]))
@@ -149,14 +156,16 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                                     and p.parameters['type'] == t]
                         if matching:
                             plots_dict[field][spw][iteration][t] = matching[0]
-                    
-        ctx.update({'fields'     : fields,
-                    'spws'       : spws,
-                    'iterations' : iterations,
-                    'plots'      : plots,
-                    'plots_dict' : plots_dict,
-                    'info_dict'  : info_dict,
-                    'dirname'    : weblog_dir})
+
+        ctx.update({
+            'fields': fields,
+            'spws': spws,
+            'iterations': iterations,
+            'plots': plots,
+            'plots_dict': plots_dict,
+            'info_dict': info_dict,
+            'dirname': weblog_dir
+        })
 
 
 class TCleanPlotsRenderer(basetemplates.CommonRenderer):
