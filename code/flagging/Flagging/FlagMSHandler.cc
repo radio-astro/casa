@@ -60,7 +60,7 @@ FlagMSHandler::~FlagMSHandler()
 
 	// Delete VisibilityIterator
 	if (visibilityIterator_p) delete visibilityIterator_p;
-	if (preAveragingVI_p) delete preAveragingVI_p;
+	// if (preAveragingVI_p) delete preAveragingVI_p; // No longer needed - Deleted by host TVI
 
 	return;
 }
