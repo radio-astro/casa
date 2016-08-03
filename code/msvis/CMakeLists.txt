@@ -129,7 +129,7 @@ install (FILES
 	MSVis/MSUtil.h
 	MSVis/MsAverager.h
 	MSVis/Partition.h
-	MSVis/PhaseShiftTvi.cc
+	MSVis/PhaseShiftTvi.h
 	MSVis/Reweighter.h
 	MSVis/SelectAverageSpw.h
 	MSVis/SimpleSimVi2.h
