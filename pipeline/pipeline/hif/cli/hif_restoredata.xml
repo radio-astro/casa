@@ -44,6 +44,11 @@
 	<value>True</value>
     </param>
 
+    <param type="string" name="ocorr_mode" subparam="true">
+	<description>ALMA default set to ca</description>
+	<value>ca</value>
+    </param>
+
     <param type="string" name="pipelinemode">
 	<description>The pipeline operating mode</description>
 	<value>automatic</value>
@@ -126,13 +131,17 @@ rawdata_dir -- Name of the rawdata subdirectory.
    default: '../rawdata'
    example: rawdata_dir='myrawdatapath'
 
-lazy -- Use the lazy fillter option
+lazy -- Use the lazy filler option
    default: False
    example: lazy=True
 
 bdfflags -- Set the BDF flags
    default: True
    example: bdfflags=False
+
+ocorr_mode -- Set ocorr_mode
+   default: 'ca'
+   example: ocorr_mode='ca'
 
 
 
@@ -188,7 +197,7 @@ Examples
 
 1. Restore the pipeline results for a single ASDM in a single session 
 
-    hif_restoredata (vis=['uid___A002_X30a93d_X43e'], session=['session_1'])
+    hif_restoredata (vis=['uid___A002_X30a93d_X43e'], session=['session_1'], ocorr_mode='ca')
 
 </example>
 </task>

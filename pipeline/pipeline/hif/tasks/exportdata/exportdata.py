@@ -906,14 +906,21 @@ class ExportData(basetask.StandardTaskTemplate):
 
         # This is hardcoded.
         tmpvislist=[]
+
+        #ALMA default
+        ocorr_mode = 'ca'
+        if context.project_summary.telescope in ('VLA', 'EVLA'):
+            ocorr_mode = 'co'
+
         for vis in vislist:
             filename = os.path.basename(vis)
             if filename.endswith('.ms'):
                 filename, filext = os.path.splitext(filename)
             tmpvislist.append(filename)
-        task_string = '    hif_restoredata (vis=%s, session=%s)' % (tmpvislist, session_list)
+        task_string = "    hif_restoredata (vis=%s, session=%s, ocorr_mode='%s')" % (tmpvislist, session_list, ocorr_mode)
 
         if context.project_summary.telescope in ('VLA', 'EVLA'):
+            task_string += '\n    hifv_targetflag()'
             task_string += '\n    hifv_statwt()'
 
         template = '''__rethrow_casa_exceptions = True

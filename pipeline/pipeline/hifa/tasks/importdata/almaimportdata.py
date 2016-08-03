@@ -16,12 +16,13 @@ class ALMAImportDataInputs(importdata.ImportDataInputs):
     bdfflags  = basetask.property_with_default('bdfflags', True)
     lazy  = basetask.property_with_default('lazy', False)
     dbservice = basetask.property_with_default('dbservice', False)
+    ocorr_mode = basetask.property_with_default('ocorr_mode', 'ca')
 
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, vis=None, output_dir=None, asis=None,
                  process_caldevice=None, session=None, overwrite=None,
                  bdfflags=None, lazy=None, save_flagonline=None, dbservice=None,
-                 createmms=None):
+                 createmms=None, ocorr_mode=None):
         self._init_properties(vars())
 
 

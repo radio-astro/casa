@@ -82,8 +82,7 @@ class RestoreDataInputs(basetask.StandardInputs):
 
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, copytoraw=None, products_dir=None,
-        rawdata_dir=None, output_dir=None, session=None, vis=None,
-	bdfflags=None, lazy=None):
+        rawdata_dir=None, output_dir=None, session=None, vis=None, bdfflags=None, lazy=None, ocorr_mode=None):
 
         """
         Initialise the Inputs, initialising any property values to those given
@@ -195,6 +194,16 @@ class RestoreDataInputs(basetask.StandardInputs):
     @lazy.setter
     def lazy(self, value):
         self._lazy = value
+
+    @property
+    def ocorr_mode(self):
+        if self._ocorr_mode is None:
+            self._ocorr_mode = ''
+        return self._ocorr_mode
+
+    @ocorr_mode.setter
+    def ocorr_mode(self, value):
+        self._ocorr_mode = value
 
 
 
@@ -312,8 +321,14 @@ class RestoreData(basetask.StandardTaskTemplate):
         # and MS,flagversions will contain a copy of the original MS flags,
         # Flags.Original.
         #    TBD: Add error handling
-        import_results = self._do_importasdm(sessionlist=sessionlist,
-            vislist=vislist)
+        import_results = self._do_importasdm(sessionlist=sessionlist, vislist=vislist)
+
+        #Assume ocorr_mode = 'co' for VLA and do hanning smoothing
+        if self.inputs.ocorr_mode == 'co':
+            for ms in self.inputs.context.observing_run.measurement_sets:
+                hanning_results = self._do_hanningsmooth(ms.name)
+                self._move_hanning(ms.name)
+
 
         # Restore final MS.flagversions and flags
         flag_version_name = 'Pipeline_Final'
@@ -355,10 +370,28 @@ class RestoreData(basetask.StandardTaskTemplate):
         # figured out.
         importdata_inputs = importdata.ImportData.Inputs(inputs.context,
             vis=vislist, session=sessionlist, save_flagonline=False,
-	    lazy=inputs.lazy, bdfflags=inputs.bdfflags, dbservice=False,
-            asis='Antenna Station Receiver Source CalAtmosphere CalWVR')
+            lazy=inputs.lazy, bdfflags=inputs.bdfflags, dbservice=False,
+            asis='Antenna Station Receiver Source CalAtmosphere CalWVR', ocorr_mode=inputs.ocorr_mode)
         importdata_task = importdata.ImportData(importdata_inputs)
         return self._executor.execute(importdata_task, merge=True)
+
+    def _do_hanningsmooth(self, vis):
+        # Currently for VLA hanning smoothing
+        task = casa_tasks.hanningsmooth(vis=vis,
+                                        datacolumn='data',
+                                        outputvis='temphanning.ms')
+
+        return self._executor.execute(task)
+
+    def _move_hanning(self, vis):
+        # Currently for VLA hanning smoothing
+        try:
+            LOG.info("Removing original VIS "+vis)
+            shutil.rmtree(vis)
+            LOG.info("Renaming temphanning.ms to "+vis)
+            os.rename('temphanning.ms', vis)
+        except:
+            LOG.warn('Problem encountered with hanning smoothing.')
 
     def  _do_restore_flags(self, flag_version_name='Pipeline_Final'):
         inputs = self.inputs

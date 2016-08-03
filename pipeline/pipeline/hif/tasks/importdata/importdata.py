@@ -35,7 +35,7 @@ class ImportDataInputs(basetask.StandardInputs):
     def __init__(self, context=None, vis=None, output_dir=None,
                  asis=None, process_caldevice=None,
                  session=None, overwrite=None, save_flagonline=None,
-                 bdfflags=None, lazy=None, dbservice=None, createmms=None):
+                 bdfflags=None, lazy=None, dbservice=None, createmms=None, ocorr_mode=None):
         self._init_properties(vars())
 
     # This are ALMA specific settings. Make them generic at some point.
@@ -48,6 +48,7 @@ class ImportDataInputs(basetask.StandardInputs):
     overwrite = basetask.property_with_default('overwrite', False)
     process_caldevice = basetask.property_with_default('process_caldevice', False)
     save_flagonline = basetask.property_with_default('save_flagonline', True)
+    ocorr_mode = basetask.property_with_default('ocorr_mode', 'ca')
 
     @property
     def session(self):
@@ -339,7 +340,7 @@ class ImportData(basetask.StandardTaskTemplate):
         createmms = mpihelpers.parse_mpi_input_parameter(inputs.createmms)
 
         with_pointing_correction = getattr(inputs, 'with_pointing_correction', False)
-        ocorr_mode = getattr(inputs, 'ocorr_mode', 'ca')
+        #ocorr_mode = getattr(inputs, 'ocorr_mode', 'ca')
 
         task = casa_tasks.importasdm(asdm=asdm,
                                      vis=vis,
@@ -351,7 +352,7 @@ class ImportData(basetask.StandardTaskTemplate):
                                      bdfflags=inputs.bdfflags,
                                      lazy=inputs.lazy,
                                      with_pointing_correction=with_pointing_correction,
-                                     ocorr_mode=ocorr_mode,
+                                     ocorr_mode=inputs.ocorr_mode,
                                      createmms=createmms)
 
         self._executor.execute(task)

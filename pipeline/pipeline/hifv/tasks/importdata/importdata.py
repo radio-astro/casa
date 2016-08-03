@@ -99,6 +99,7 @@ class VLAImportDataResults(basetask.Results):
             msinfos = dict((ms.name, self._do_msinfo_heuristics(ms.name, context)) for ms in self.mses)
             context.evla['msinfo'].update(msinfos)
             context.project_summary.telescope = 'EVLA'
+            context.project_summary.observatory = 'Karl G. Jansky Very Large Array'
             #context.evla['msinfo'] = { m.name : msinfo }
             
 
