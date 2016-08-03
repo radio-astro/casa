@@ -1,4 +1,6 @@
 <%!
+rsc_path = ""
+import cgi
 import os.path
 import pipeline.infrastructure.casatools as casatools
 import pipeline.hif.tasks.tclean.renderer as clean_renderer
@@ -20,8 +22,32 @@ def get_plot(plots, field, spw, i, colname):
 	except KeyError:
 		return None
 %>
-
 <%inherit file="t2-4m_details-base.html"/>
+
+<script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
+<script>
+$(document).ready(function(){
+    $(".fancybox").fancybox({
+        type: 'image',
+        prevEffect: 'none',
+        nextEffect: 'none',
+        loop: false,
+        helpers: {
+            title: {
+                type: 'outside'
+            },
+            thumbs: {
+                width: 50,
+                height: 50,
+            }
+        },
+    	beforeShow : function() {
+        	this.title = $(this.element).attr('title');
+       	},
+    });
+});
+</script>
+
 <%block name="header" />
 
 <%block name="title">Tclean/MakeImages</%block>
@@ -45,7 +71,7 @@ def get_plot(plots, field, spw, i, colname):
 
                 <%
                 ## get sorted key lists so that table entries are ordered
-                fields = sorted(set([k[0] for k in info_dict.keys()]))
+                fields = sorted(set([k[0] for k in info_dict]))
                 spws = []
                 for k in info_dict.keys():
                     try:
@@ -53,7 +79,7 @@ def get_plot(plots, field, spw, i, colname):
                     except:
                         spws.append(k[1])
                 spws = sorted(set(spws))
-                pols = sorted(set([k[2] for k in info_dict.keys()]))
+                pols = sorted(set([k[2] for k in info_dict]))
                 %>
                 % for field in fields:
                     % for spw in spws:
@@ -77,14 +103,33 @@ def get_plot(plots, field, spw, i, colname):
                                     renderer = clean_renderer.TCleanPlotsRenderer(pcontext, result, plots_dict, field, str(spw), pol)
                                     with renderer.get_file() as fileobj:
                                         fileobj.write(renderer.render())
+
+                                    fullsize_relpath = os.path.relpath(plot.abspath, pcontext.report_dir)
+                                    thumbnail_relpath = os.path.relpath(plot.thumbnail, pcontext.report_dir)
                                     %>
                                 <td rowspan="10">
-										<a class="replace" href="${os.path.relpath(renderer.path, pcontext.report_dir)}">
-										  <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+										<a class="fancybox"
+                                           href="${fullsize_relpath}"
+                                           rel="clean-summary-images"
+                                           title='<div class="pull-left">Iteration: ${final_iter}<br>
+		                                          Spw: ${plot.parameters['spw']}<br>
+		                                          Field: ${cgi.escape(field, True)}</div><div class="pull-right"><a href="${fullsize_relpath}">Full Size</a></div>'
+                                           data-thumbnail="${thumbnail_relpath}">
+										  <img src="${thumbnail_relpath}"
 										       title="Iteration ${final_iter}: image"
 										       alt="Iteration ${final_iter}: image"
-										       class="img-responsive">
+										       class="img-thumbnail img-responsive"
+                                               data-thumbnail="${thumbnail_relpath}">
 										</a>
+                                        <div class="caption">
+                                            <p>
+                                                <a class="replace"
+                                                   href="${os.path.relpath(renderer.path, pcontext.report_dir)}"
+                                                   role="button">
+                                                    View other clean products...
+                                                </a>
+                                            </p>
+                                        </div>
                                 </td>
                                 %else:
                                 <td>No image available</td>
