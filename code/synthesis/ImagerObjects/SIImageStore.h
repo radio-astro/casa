@@ -140,7 +140,8 @@ class SIImageStore
   GaussianBeam getPSFGaussian();
   //  virtual GaussianBeam restorePlane();
   virtual void restore(GaussianBeam& rbeam, String& usebeam,uInt term=0 );
-  virtual void pbcor();
+  virtual void pbcor(uInt term);
+  virtual void pbcor(){pbcor(0);}
 
 
   ////////// Restoring Beams
@@ -262,7 +263,7 @@ protected:
   Bool itsOverWrite;
   Bool itsUseWeight;
   Record itsMiscInfo;
-  SHARED_PTR<ImageInterface<Float> > itsMask, itsParentMask, itsGridWt, itsPB; // mutliterm shares this...
+  SHARED_PTR<ImageInterface<Float> > itsMask, itsParentMask, itsGridWt; // mutliterm shares this...
   Double itsPBScaleFactor;
 
   Int itsNFacets, itsFacetId;
@@ -283,7 +284,7 @@ protected:
 
 private:
 
-  SHARED_PTR<ImageInterface<Float> > itsPsf, itsModel, itsResidual, itsWeight, itsImage, itsSumWt, itsImagePBcor;
+  SHARED_PTR<ImageInterface<Float> > itsPsf, itsModel, itsResidual, itsWeight, itsImage, itsSumWt, itsImagePBcor, itsPB;
   SHARED_PTR<ImageInterface<Complex> > itsForwardGrid, itsBackwardGrid;
 
   SHARED_PTR<ImageInterface<Float> > itsParentPsf, itsParentModel, itsParentResidual, itsParentWeight, itsParentImage, itsParentSumWt, itsParentGridWt, itsParentPB, itsParentImagePBcor;

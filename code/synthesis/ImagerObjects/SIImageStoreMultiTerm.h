@@ -76,10 +76,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			Block<SHARED_PTR<ImageInterface<Float> > >weightims, 
 			Block<SHARED_PTR<ImageInterface<Float> > >restoredims,
 			Block<SHARED_PTR<ImageInterface<Float> > >sumwtims, 
+			Block<SHARED_PTR<ImageInterface<Float> > >pbims, 
+			Block<SHARED_PTR<ImageInterface<Float> > >restoredpbcorims, 
 			SHARED_PTR<ImageInterface<Float> > newmask,
 			SHARED_PTR<ImageInterface<Float> > newalpha,
 			SHARED_PTR<ImageInterface<Float> > newbeta,
 			SHARED_PTR<ImageInterface<Float> > newalphaerror,
+			SHARED_PTR<ImageInterface<Float> > newalphapbcor,
+			SHARED_PTR<ImageInterface<Float> > newbetapbcor,
 		       CoordinateSystem& csys, 
 		       IPosition imshape, 
 		       String imagename, 
@@ -98,6 +102,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   virtual SHARED_PTR<ImageInterface<Float> > weight(uInt term=0);
   virtual SHARED_PTR<ImageInterface<Float> > model(uInt term=0);
   virtual SHARED_PTR<ImageInterface<Float> > image(uInt term=0);
+  virtual SHARED_PTR<ImageInterface<Float> > pb(uInt term=0);
+  virtual SHARED_PTR<ImageInterface<Float> > imagepbcor(uInt term=0);
   virtual SHARED_PTR<ImageInterface<Float> > sumwt(uInt term=0);
   ///   virtual SHARED_PTR<ImageInterface<Float> > mask(uInt term=0); // take from base class.
   virtual SHARED_PTR<ImageInterface<Complex> > forwardGrid(uInt term=0);
@@ -106,6 +112,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   virtual SHARED_PTR<ImageInterface<Float> > alpha();
   virtual SHARED_PTR<ImageInterface<Float> > beta();
   virtual SHARED_PTR<ImageInterface<Float> > alphaerror();
+  virtual SHARED_PTR<ImageInterface<Float> > alphapbcor();
+  virtual SHARED_PTR<ImageInterface<Float> > betapbcor();
 
   //  virtual SHARED_PTR<ImageInterface<Float> > gridwt(uInt term=0);
 
@@ -139,6 +147,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   uInt getNTaylorTerms(Bool dopsf=False);  // {return dopsf ? (2*itsNTerms-1) : itsNTerms;};
 
   void restore(GaussianBeam& rbeam, String& usebeam,uInt term=0 );
+  void calculateAlphaBeta(String imtype);
   //  GaussianBeam restorePlane();
   void pbcor();
 
@@ -168,6 +177,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   virtual Bool hasResidualImage() {return doesImageExist(itsImageName+imageExts(RESIDUAL)+String(".tt0"));}
   //  virtual Bool hasSumWt() {return doesImageExist(itsImageName+imageExts(SUMWT)+String(".tt0"));}
   virtual Bool hasRestored() {return doesImageExist(itsImageName+imageExts(IMAGE)+String(".tt0"));}
+  virtual Bool hasPB() {return doesImageExist(itsImageName+imageExts(PB)+String(".tt0"));}
 
   //  virtual Bool getUseWeightImage();
   //  {return ( itsParentSumWts.nelements()==0 || itsParentSumWts[0].null() ) ? False : getUseWeightImage( *(itsParentSumWts[0]) ); };
@@ -183,11 +193,11 @@ private:
 
   uInt itsNTerms;
 
-  Block<SHARED_PTR<ImageInterface<Float> > > itsPsfs, itsModels, itsResiduals, itsWeights, itsImages, itsSumWts;
+  Block<SHARED_PTR<ImageInterface<Float> > > itsPsfs, itsModels, itsResiduals, itsWeights, itsImages, itsSumWts, itsImagePBcors, itsPBs;
   Block<SHARED_PTR<ImageInterface<Complex> > > itsForwardGrids, itsBackwardGrids;
-  SHARED_PTR<ImageInterface<Float> > itsAlpha, itsBeta, itsAlphaError;
+  SHARED_PTR<ImageInterface<Float> > itsAlpha, itsBeta, itsAlphaError, itsAlphaPBcor, itsBetaPBcor;
 
-  Block<SHARED_PTR<ImageInterface<Float> > > itsParentPsfs, itsParentModels, itsParentResiduals, itsParentWeights, itsParentImages, itsParentSumWts;
+  Block<SHARED_PTR<ImageInterface<Float> > > itsParentPsfs, itsParentModels, itsParentResiduals, itsParentWeights, itsParentImages, itsParentSumWts, itsParentPBs, itsParentImagePBcors;
 
 };
 

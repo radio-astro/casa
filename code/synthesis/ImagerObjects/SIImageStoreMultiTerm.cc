@@ -75,9 +75,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsWeights.resize(0);
     itsImages.resize(0);
     itsSumWts.resize(0);
+    itsPBs.resize(0);
+    itsImagePBcors.resize(0);
     itsMask.reset( );
     itsGridWt.reset( );
-    itsPB.reset( );
     
     itsForwardGrids.resize(0);
     itsBackwardGrids.resize(0);
@@ -124,10 +125,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsWeights.resize(2 * itsNTerms - 1);
     itsImages.resize(itsNTerms);
     itsSumWts.resize(2 * itsNTerms - 1);
+    itsPBs.resize(itsNTerms);
+    itsImagePBcors.resize(itsNTerms);
 
     itsMask.reset( );
     itsGridWt.reset( );
-    itsPB.reset( );
 
     itsForwardGrids.resize(itsNTerms);
     itsBackwardGrids.resize(2 * itsNTerms - 1);
@@ -170,10 +172,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsResiduals.resize(itsNTerms);
     itsWeights.resize(2 * itsNTerms - 1);
     itsImages.resize(itsNTerms);
+    itsPBs.resize(itsNTerms);
     itsSumWts.resize(2 * itsNTerms - 1);
     itsMask.reset( );
     itsGridWt.reset( );
-    itsPB.reset( );
+    itsImagePBcors.resize(itsNTerms);
 
     itsMiscInfo=Record();
 
@@ -306,10 +309,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					       Block<SHARED_PTR<ImageInterface<Float> > >weightims, 
 					       Block<SHARED_PTR<ImageInterface<Float> > >restoredims,
 					       Block<SHARED_PTR<ImageInterface<Float> > >sumwtims, 
+					       Block<SHARED_PTR<ImageInterface<Float> > >pbims, 
+					       Block<SHARED_PTR<ImageInterface<Float> > >restoredpbcorims, 
 					       SHARED_PTR<ImageInterface<Float> > newmask,
 					       SHARED_PTR<ImageInterface<Float> > newalpha,
 					       SHARED_PTR<ImageInterface<Float> > newbeta,
 					       SHARED_PTR<ImageInterface<Float> > newalphaerror,
+					       SHARED_PTR<ImageInterface<Float> > newalphapbcor,
+					       SHARED_PTR<ImageInterface<Float> > newbetapbcor,
 					       CoordinateSystem& csys,
 					       IPosition imshape,
 					       String imagename,
@@ -328,6 +335,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsAlpha = newalpha;
     itsBeta = newbeta;
     itsAlphaError = newalphaerror;
+    itsAlphaPBcor = newalphapbcor;
+    itsBetaPBcor = newbetapbcor;
+
+    itsPBs=pbims;
+    itsImagePBcors=restoredpbcorims;
 
     itsNTerms = itsResiduals.nelements();
     itsMiscInfo=Record();
@@ -366,6 +378,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsWeights=SHARED_PTR<ImageInterface<Float> >();
     itsImages=SHARED_PTR<ImageInterface<Float> >();
     itsSumWts=SHARED_PTR<ImageInterface<Float> >();
+    itsPBs=SHARED_PTR<ImageInterface<Float> >();
 
     itsMask.reset( );
 
@@ -467,14 +480,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    if( itsModels[tix] ) releaseImage( itsModels[tix] );
 	    if( itsResiduals[tix] ) releaseImage( itsResiduals[tix] );
 	    if( itsImages[tix] ) releaseImage( itsImages[tix] );
+	    if( itsPBs[tix] ) releaseImage( itsPBs[tix] );
+	    if( itsImagePBcors[tix] ) releaseImage( itsImagePBcors[tix] );
 	  }
       }
     if( itsMask ) releaseImage( itsMask );
     if( itsAlpha ) releaseImage( itsAlpha );
     if( itsBeta ) releaseImage( itsBeta );
     if( itsAlphaError ) releaseImage( itsAlphaError );
+    if( itsAlphaPBcor ) releaseImage( itsAlphaPBcor );
+    if( itsBetaPBcor ) releaseImage( itsBetaPBcor );
     if( itsGridWt ) releaseImage( itsGridWt );
-    if( itsPB ) releaseImage( itsPB );
     
     return True; // do something more intelligent here.
   }
@@ -611,6 +627,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return itsImages[term];
   }
 
+  SHARED_PTR<ImageInterface<Float> > SIImageStoreMultiTerm::pb(uInt term)
+  {
+
+    accessImage( itsPBs[term], itsParentPBs[term], imageExts(PB)+".tt"+String::toString(term) );
+    return itsPBs[term];
+  }
+
+  SHARED_PTR<ImageInterface<Float> > SIImageStoreMultiTerm::imagepbcor(uInt term)
+  {
+
+    accessImage( itsImagePBcors[term], itsParentImagePBcors[term], imageExts(IMAGE)+".tt"+String::toString(term)+ ".pbcor" );
+    itsImagePBcors[term]->setUnits("Jy/beam");
+    return itsImagePBcors[term];
+  }
+
     SHARED_PTR<ImageInterface<Complex> > SIImageStoreMultiTerm::forwardGrid(uInt term){
     if( itsForwardGrids[term] )// && (itsForwardGrids[term]->shape() == itsImageShape))
       return itsForwardGrids[term];
@@ -662,6 +693,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsAlphaError = openImage( itsImageName+String(".alpha.error"), False );
     //    itsAlpha->setUnits("Alpha");
     return itsAlphaError;
+  }
+
+  SHARED_PTR<ImageInterface<Float> > SIImageStoreMultiTerm::alphapbcor()
+  {
+    if( itsAlphaPBcor && itsAlphaPBcor->shape() == itsImageShape ) { return itsAlphaPBcor; }
+    //    checkRef( itsAlphaPBcor , "alpha" );
+    itsAlphaPBcor = openImage( itsImageName+String(".alpha.pbcor"), False );
+    //    itsAlphaPBcor->setUnits("Alpha");
+    return itsAlphaPBcor;
+  }
+
+  SHARED_PTR<ImageInterface<Float> > SIImageStoreMultiTerm::betapbcor()
+  {
+    if( itsBetaPBcor && itsBetaPBcor->shape() == itsImageShape ) { return itsBetaPBcor; }
+    //    checkRef( itsBetaPBcor , "beta" );
+    itsBetaPBcor = openImage( itsImageName+String(".beta.pbcor"), False );
+    //    itsBetaPBcor->setUnits("Beta");
+    return itsBetaPBcor;
   }
 
 
@@ -892,19 +941,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     LogIO os( LogOrigin("SIImageStoreMultiTerm","restore",WHERE) );
 
-    /*    if( !hasResidualImage() )
-      {
-	// Cannot restore without residual/dirty image.
-	os << "Cannot restore without residual image" << LogIO::POST;
-	return;
-      }
-    */
-
     for(uInt tix=0; tix<itsNTerms; tix++)
       {
 	SIImageStore::restore(rbeam, usebeam, tix);
       }	
    
+    calculateAlphaBeta("image");
+ 
+  }// restore
+
+  void SIImageStoreMultiTerm::calculateAlphaBeta(String imtype)
+  {
+    LogIO os( LogOrigin("SIImageStoreMultiTerm","calculateAlphaBeta",WHERE) );
     try
       {
 
@@ -927,33 +975,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Float specthreshold = maxres/10.0;  //////////// do something better here..... 
 		
 		os << "Calculating spectral parameters for Intensity > peakresidual/10 = " << specthreshold << " Jy/beam" << LogIO::POST;
-		LatticeExpr<Float> mask1(iif(((*(image(0))))>(specthreshold),1.0,0.0));
-		LatticeExpr<Float> mask0(iif(((*(image(0))))>(specthreshold),0.0,1.0));
-		
-		/////////////////////////////////////////////////////////
-		/////// Calculate alpha
-		LatticeExpr<Float> alphacalc( (((*(image(1))))*mask1)/(((*(image(0))))+(mask0)) );
-		alpha()->copyData(alphacalc);
-		
-		ImageInfo ii = image(0)->imageInfo();
-		// Set the restoring beam for alpha
-		alpha()->setImageInfo(ii);
-		//alpha()->table().unmarkForDelete();
-		
-		// Make a mask for the alpha image
-		LatticeExpr<Bool> lemask(iif(((*(image(0))) > specthreshold) , True, False));
-		removeMask( alpha() );
-		createMask( lemask, (alpha()) );
 
 		/////////////////////////////////////////////////////////
-		/////// Calculate alpha error
-		Bool writeerror=True;
-		if(writeerror)
+		/////// Calculate alpha
+		if(imtype=="image")
 		  {
-		    //		    String alphaerrorname( alpha()->name() + ".error" );
-		    //PagedImage<Float> imalphaerror(itsImageShape,itsCoordSys,alphaerrorname); 
+		    LatticeExpr<Float> mask1(iif(((*(image(0))))>(specthreshold),1.0,0.0));
+		    LatticeExpr<Float> mask0(iif(((*(image(0))))>(specthreshold),0.0,1.0));
+		    LatticeExpr<Float> alphacalc( (((*(image(1))))*mask1)/(((*(image(0))))+(mask0)) );
+		    alpha()->copyData(alphacalc);
+		    
+		    ImageInfo ii = image(0)->imageInfo();
+		    // Set the restoring beam for alpha
+		    alpha()->setImageInfo(ii);
+		    //alpha()->table().unmarkForDelete();
+		    
+		    // Make a mask for the alpha image
+		    LatticeExpr<Bool> lemask(iif(((*(image(0))) > specthreshold) , True, False));
+		    removeMask( alpha() );
+		    createMask( lemask, (alpha()) );
+
+		    /////// Calculate alpha error
 		    alphaerror()->set(0.0);
-		    //	  PagedImage<Float> residual1(residualNames[getModelIndex(field,1)]);
 
 		    LatticeExpr<Float> alphacalcerror( abs(alphacalc) * sqrt( ( (*residual(0)*mask1)/(*image(0)+mask0) )*( (*residual(0)*mask1)/(*image(0)+mask0) ) + ( (*residual(1)*mask1)/(*image(1)+mask0) )*( (*residual(1)*mask1)/(*image(1)+mask0) )  ) );
 		    alphaerror()->copyData(alphacalcerror);
@@ -962,45 +1005,90 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		    createMask(lemask, alphaerror());
 		    //		    alphaerror()->table().unmarkForDelete();      
 		    os << "Written Spectral Index Error Image : " << alphaerror()->name() << LogIO::POST;
-		    
-		  }//if writeerror
 
 		if(itsNTerms>2) // calculate beta too.
 		  {
-		    beta()->set(0.0);
-		    //PagedImage<Float> imtaylor2(restoredNames[getModelIndex(field,2)]);
-		    
-		    LatticeExpr<Float> betacalc( (*image(2)*mask1)/((*image(0))+(mask0))-0.5*(*alpha())*((*alpha())-1.0) );
-		    beta()->copyData(betacalc);
-		    beta()->setImageInfo(ii);
-		    //imbeta.setUnits(Unit("Spectral Curvature"));
-		    removeMask(beta());
-		    createMask(lemask, beta());
-		    //	    beta()->table().unmarkForDelete();
-		    
-		    os << "Written Spectral Curvature Image : " << beta()->name() << LogIO::POST;
-		    
+			beta()->set(0.0);
+			LatticeExpr<Float> betacalc( (*image(2)*mask1)/((*image(0))+(mask0))-0.5*(*alpha())*((*alpha())-1.0) );
+			beta()->copyData(betacalc);
+			beta()->setImageInfo(ii);
+			//imbeta.setUnits(Unit("Spectral Curvature"));
+			removeMask(beta());
+			createMask(lemask, beta());
+			os << "Written Spectral Curvature Image : " << beta()->name() << LogIO::POST;
 		  }
 
-	      }//if nterms>1
+		  }
+		else
+		  {
+		    LatticeExpr<Float> mask1(iif(((*(imagepbcor(0))))>(specthreshold),1.0,0.0));
+		    LatticeExpr<Float> mask0(iif(((*(imagepbcor(0))))>(specthreshold),0.0,1.0));
+		    LatticeExpr<Float> alphacalc( (((*(imagepbcor(1))))*mask1)/(((*(imagepbcor(0))))+(mask0)) );
+		    alphapbcor()->copyData(alphacalc);
+		    
+		    ImageInfo ii = image(0)->imageInfo();
+		    // Set the restoring beam for alpha
+		    alphapbcor()->setImageInfo(ii);
+		    //alpha()->table().unmarkForDelete();
+		    
+		    // Make a mask for the alpha image
+		    LatticeExpr<Bool> lemask(iif(((*(imagepbcor(0))) > specthreshold) , True, False));
+		    removeMask( alphapbcor() );
+		    createMask( lemask, (alphapbcor()) );
 
+		/////////////////////////////////////////////////////////
+		if(itsNTerms>2) // calculate beta too.
+		  {
+			betapbcor()->set(0.0);
+			LatticeExpr<Float> betacalc( (*imagepbcor(2)*mask1)/((*imagepbcor(0))+(mask0))-0.5*(*alphapbcor())*((*alphapbcor())-1.0) );
+			betapbcor()->copyData(betacalc);
+			betapbcor()->setImageInfo(ii);
+			//imbeta.setUnits(Unit("Spectral Curvature"));
+			removeMask(betapbcor());
+			createMask(lemask, betapbcor());
+			os << "Written Spectral Curvature Image : " << betapbcor()->name() << LogIO::POST;
+		  }
+		
+		  }// pbcor
+
+	      }//if nterms>1
       }
     catch(AipsError &x)
       {
-	throw( AipsError("Multi-Term Restoration Error : " + x.getMesg() ) );
+	throw( AipsError("Error in computing Alpha (and Beta) : " + x.getMesg() ) );
       }
- 
-  }
+
+  }// calculateAlphaBeta
 
   void SIImageStoreMultiTerm::pbcor()
   {
 
     LogIO os( LogOrigin("SIImageStoreMultiTerm","pbcorPlane",WHERE) );
 
+    /// Temp Code to prevent this approximate PBCOR from happening for EVLA data
+    if(1)
+      {
+	String telescope = itsCoordSys.obsInfo().telescope();
+	if ( telescope != "ALMA" )
+	  {
+	    os << LogIO::WARN << "Wideband (multi-term) PB correction is not yet available via tclean in the 4.7 release. Please use the widebandpbcor task instead." << LogIO::POST;
+	    return;
+	  }
+	else
+	  {
+	    os << LogIO::WARN << "Wideband (multi-term) PB Correction is currently only an approximation. It assumes no PB frequency dependence. This code has been added for the 4.7 release to support the current ALMA pipeline, which does not need corrections for the frequency dependence of the primary beam across the small fractional bandwidths used. For wide bands where it matters (and for other telescopes), please use the 'widebandpbcor' task instead of the pbcor option in tclean." <<LogIO::POST;
+	  }
+      }
+
+
     // message saying that it's only stokes I for now...
 
-    //    call imstore's version.
-    SIImageStore::pbcor();
+    for(uInt tix=0; tix<itsNTerms; tix++)
+      {
+	SIImageStore::pbcor(tix);
+      }	
+
+    calculateAlphaBeta("pbcor");
 
   }
 
@@ -1129,7 +1217,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 							  const Int chan, const Int nchanchunks, 
 							  const Int pol, const Int npolchunks)
   {
-    return SHARED_PTR<SIImageStore>(new SIImageStoreMultiTerm(itsModels, itsResiduals, itsPsfs, itsWeights, itsImages, itsSumWts, itsMask, itsAlpha, itsBeta, itsAlphaError, itsCoordSys,itsParentImageShape, itsImageName, facet, nfacets,chan,nchanchunks,pol,npolchunks));
+    return SHARED_PTR<SIImageStore>(new SIImageStoreMultiTerm(itsModels, itsResiduals, itsPsfs, itsWeights, itsImages, itsSumWts, itsPBs, itsImagePBcors, itsMask, itsAlpha, itsBeta, itsAlphaError,itsAlphaPBcor, itsBetaPBcor,  itsCoordSys,itsParentImageShape, itsImageName, facet, nfacets,chan,nchanchunks,pol,npolchunks));
   }
 
 
@@ -1155,6 +1243,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     imageExts(PB)=".pb";
     imageExts(FORWARDGRID)=".forward";
     imageExts(BACKWARDGRID)=".backward";
+    //    imageExts(IMAGEPBCOR)=".image.pbcor";
 
     itsParentPsfs.resize(itsPsfs.nelements());
     itsParentModels.resize(itsModels.nelements());
@@ -1162,6 +1251,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsParentWeights.resize(itsWeights.nelements());
     itsParentImages.resize(itsImages.nelements());
     itsParentSumWts.resize(itsSumWts.nelements());
+    itsParentImagePBcors.resize(itsImagePBcors.nelements());
    
     itsParentPsfs = itsPsfs;
     itsParentModels=itsModels;
@@ -1169,6 +1259,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsParentWeights=itsWeights;
     itsParentImages=itsImages;
     itsParentSumWts=itsSumWts;
+    itsParentImagePBcors=itsImagePBcors;
 
     itsParentMask=itsMask;
 

@@ -349,6 +349,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
 
     itsDeconvolver->pbcor(itsImages);
+    itsImages->releaseLocks();
 
   }
 

@@ -333,7 +333,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsImage.reset( );
     itsMask.reset( );
     itsSumWt.reset( );
-
+    itsPB.reset( );
 
     validate();
   }
@@ -2112,7 +2112,7 @@ Float SIImageStore :: calcStd(Vector<Float> &vect, Vector<Bool> &flag, Float mea
   }
 */
 
-  void SIImageStore::pbcor()
+  void SIImageStore::pbcor(uInt term)
   {
 
     LogIO os( LogOrigin("SIImageStore","pbcor",WHERE) );
@@ -2124,7 +2124,6 @@ Float SIImageStore :: calcStd(Vector<Float> &vect, Vector<Bool> &flag, Float mea
 	return;
       }
 
-
 	for(Int pol=0; pol<itsImageShape[2]; pol++)
 	  {
 	    for(Int chan=0; chan<itsImageShape[3]; chan++)
@@ -2133,7 +2132,7 @@ Float SIImageStore :: calcStd(Vector<Float> &vect, Vector<Bool> &flag, Float mea
 		CountedPtr<ImageInterface<Float> > restoredsubim=makeSubImage(0,1, 
 								      chan, itsImageShape[3],
 								      pol, itsImageShape[2], 
-								      *image() );
+								      *image(term) );
 		CountedPtr<ImageInterface<Float> > pbsubim=makeSubImage(0,1, 
 								      chan, itsImageShape[3],
 								      pol, itsImageShape[2], 
@@ -2142,7 +2141,7 @@ Float SIImageStore :: calcStd(Vector<Float> &vect, Vector<Bool> &flag, Float mea
 		CountedPtr<ImageInterface<Float> > pbcorsubim=makeSubImage(0,1, 
 								      chan, itsImageShape[3],
 								      pol, itsImageShape[2], 
-								      *imagepbcor() );
+								      *imagepbcor(term) );
 
 
 		LatticeExprNode pbmax( max( *pbsubim ) );
@@ -2164,15 +2163,13 @@ Float SIImageStore :: calcStd(Vector<Float> &vect, Vector<Bool> &flag, Float mea
 	  }//pol
 
 	// Copy over the PB mask.
-        if((imagepbcor()->getDefaultMask()=="") && hasPB())
-	  {copyMask(pb(),imagepbcor());}
+        if((imagepbcor(term)->getDefaultMask()=="") && hasPB())
+	  {copyMask(pb(),imagepbcor(term));}
 
 	// Set restoring beam info
-	ImageInfo iminf = imagepbcor()->imageInfo();
+	ImageInfo iminf = imagepbcor(term)->imageInfo();
         iminf.setBeams( itsRestoredBeams);
-	imagepbcor()->setImageInfo(iminf);
- 
-
+	imagepbcor(term)->setImageInfo(iminf);
 
   }// end pbcor
 
@@ -2539,6 +2536,7 @@ Bool SIImageStore::findMinMaxLattice(const Lattice<Float>& lattice,
     itsParentImage=itsImage;
     itsParentSumWt=itsSumWt;
     itsParentMask=itsMask;
+    itsParentImagePBcor=itsImagePBcor;
 
     //    cout << "parent shape : " << itsParentImageShape << "   shape : " << itsImageShape << endl;
     itsParentImageShape = itsImageShape;
