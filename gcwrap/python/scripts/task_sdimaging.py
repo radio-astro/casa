@@ -412,9 +412,8 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
                 raise ValueError, "Selection is empty: you may want to review this MS selection"
         else:
             self.close_imager()
-            self.sorted_idx.reverse()
-#             for idx in (len(self.infiles)):
-            for idx in self.sorted_idx:
+            #self.sorted_idx.reverse()
+            for idx in self.sorted_idx.__reversed__():
                 name = self.infiles[idx]
                 selection_ids = self.get_selection_idx_for_ms(idx)
                 spwsel = self.get_selection_param_for_ms(idx, self.spw)
