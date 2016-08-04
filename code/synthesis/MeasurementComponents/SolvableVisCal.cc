@@ -103,7 +103,9 @@ SolvableVisCal::SolvableVisCal(VisSet& vs) :
   solved_(False),
   byCallib_(False),
   apmode_(""),
+  usolint_("inf"),
   solint_("inf"),
+  solTimeInterval_(DBL_MAX),
   fsolint_("none"),
   fintervalHz_(-1.0),
   fintervalCh_(vs.numberSpw(),0.0),
@@ -168,7 +170,9 @@ SolvableVisCal::SolvableVisCal(String msname,Int MSnAnt,Int MSnSpw) :
   solved_(False),
   byCallib_(False),
   apmode_(""),
+  usolint_("inf"),
   solint_("inf"),
+  solTimeInterval_(DBL_MAX),
   fsolint_("none"),
   fintervalHz_(-1.0),
   fintervalCh_(MSnSpw,0.0),
@@ -235,7 +239,9 @@ SolvableVisCal::SolvableVisCal(const MSMetaInfoForCal& msmc) :
   solved_(False),
   byCallib_(False),
   apmode_(""),
+  usolint_("inf"),
   solint_("inf"),
+  solTimeInterval_(DBL_MAX),
   fsolint_("none"),
   fintervalHz_(-1.0),
   fintervalCh_(nSpw(),0.0),
@@ -297,7 +303,9 @@ SolvableVisCal::SolvableVisCal(const Int& nAnt) :
   minblperant_(4),
   solved_(False),
   apmode_(""),
+  usolint_("inf"),
   solint_("inf"),
+  solTimeInterval_(DBL_MAX),
   fsolint_("none"),
   solnorm_(False),
   minSNR_(0.0),
@@ -1096,17 +1104,16 @@ void SolvableVisCal::setSolve(const Record& solve)
   solint()="inf";
   fsolint()="none";
   if (solve.isDefined("solint")) {
-    String usolint=solve.asString("solint");
-    if (usolint.contains(',')) {
+    usolint_=solve.asString("solint");
+    if (usolint_.contains(',')) {
       // both time and freq solint specified
-      solint()=usolint.before(',');
-      fsolint()=usolint.after(',');
+      solint()=usolint_.before(',');
+      fsolint()=usolint_.after(',');
     }
     else
       // interpret as only time-dep solint
-      solint()=usolint;
+      solint()=usolint_;
   }
-
 
   // Handle solint format
   if (upcase(solint()).contains("INF") || solint()=="") {
@@ -2138,7 +2145,7 @@ void SolvableVisCal::setMeta(Int obs, Int scan, Double time,
 
 
 // Setup solvePar shape for a spw
-void SolvableVisCal::sizeSolveParCurrSpw(Int nVisChan) {
+Int SolvableVisCal::sizeSolveParCurrSpw(Int nVisChan) {
 
   // Sizes the solvePar arrays for the currSpw()
   
@@ -2203,6 +2210,9 @@ void SolvableVisCal::sizeSolveParCurrSpw(Int nVisChan) {
     solveParSNR()=0.0;
   }
 
+  // return the realized nChan
+  return nChan;
+
 }
 
 void SolvableVisCal::setDefSolveParCurrSpw(Bool sync) {
@@ -2231,47 +2241,107 @@ void SolvableVisCal::setDefSolveParCurrSpw(Bool sync) {
 
 }
 
+// Parse solint in VI2 context
+void SolvableVisCal::reParseSolintForVI2() {
 
+  // Internal default solint 
+  solint()="inf";
+  fsolint()="none";
+  if (usolint_.contains(',')) {
+    // both time and freq solint specified
+    solint()=usolint_.before(',');
+    fsolint()=usolint_.after(',');
+  }
+  else
+    // interpret as only time-dep solint
+    solint()=usolint_;
 
-void SolvableVisCal::deriveVI2Sort(Block<Int>& sortcols,Double& iterInterval) 
-{
-  // Interpret solution interval for the VI2
-  iterInterval=(max(interval(),DBL_MIN));
-  if (interval() < 0.0) {   // means no interval (infinite solint)
-    iterInterval=0.0;
-    interval()=DBL_MAX;
+  // Handle solint format
+  if (upcase(solint()).contains("INF") || solint()=="") {
+    solint()="inf";
+    solTimeInterval_=DBL_MAX;
+  }
+  else if (upcase(solint()).contains("INT"))
+    solTimeInterval_=DBL_MIN;
+  else {
+    QuantumHolder qhsolint;
+    String error;
+    Quantity qsolint;
+    qhsolint.fromString(error,solint());
+    if (error.length()!=0)
+      throw(AipsError("Unrecognized units for time-dep solint."));
+    qsolint=qhsolint.asQuantumDouble();
+    
+    if (qsolint.isConform("s"))
+      solTimeInterval_=qsolint.get("s").getValue();
+    else {
+      if (qsolint.getUnit().length()==0) {
+        // when no units specified, assume seconds
+        solTimeInterval_=qsolint.getValue();
+        solint()=solint()+"s";
+      }
+      else
+        // unrecognized units:
+        throw(AipsError("Unrecognized units for solint (e.g., use 'min', not 'm', for minutes)"));
+    }
   }
 
-  Bool verbose(False);
-  if (verbose) {
-    cout << "   interval()=" << interval() ;
-    cout << boolalpha << "; combobs()=" << combobs();
-    cout << boolalpha << "; combscan()=" << combscan();
-    cout << boolalpha << "; combfld()=" << combfld() ;
-    cout << boolalpha << "; combspw()=" << combspw() ;
-    cout << endl;
-  }
+  cout << "******* VI2: Review fsolint parsing..." << endl;
 
-  Int nsortcol(4+(combscan()?0:1)+(combobs()?0:1) );  // include room for scan,obs
-  sortcols.resize(nsortcol);
-  Int i(0);
-  sortcols[i++]=MS::ARRAY_ID;
-  if (!combobs()) sortcols[i++]=MS::OBSERVATION_ID;  // force obsid boundaries
-  if (!combscan()) sortcols[i++]=MS::SCAN_NUMBER;  // force scan boundaries
-  if (!combfld()) sortcols[i++]=MS::FIELD_ID;      // force field boundaries
-  if (!combspw()) sortcols[i++]=MS::DATA_DESC_ID;  // force spw boundaries
-  sortcols[i++]=MS::TIME;
-  if (combspw() || combfld()) iterInterval=DBL_MIN;  // force per-timestamp chunks
-  if (combfld()) sortcols[i++]=MS::FIELD_ID;      // effectively ignore field boundaries
-  if (combspw()) sortcols[i++]=MS::DATA_DESC_ID;  // effectively ignore spw boundaries
-  
-  if (verbose) {
-    cout << " sort sortcols: ";
-    for (Int i=0;i<nsortcol;++i) 
-      cout << sortcols[i] << " ";
-    cout << endl;
-    cout << "iterInterval = " << iterInterval << endl;
+  // Maybe should just parse it, and then work out logic re freqDepPar, etc.
+
+  // Handle fsolint format
+  if (upcase(fsolint()).contains("NONE") ||   // unspecified  OR  (should be AND?)
+      !freqDepMat()) {                        // cal is entirely unchannelizedb 
+    fsolint()="none";
+    fintervalCh_.set(1);    // signals full averaging (this is different from old way)
+    fintervalHz_=-1.0;      // don't care
   }
+  else {
+    // something specified OR freqDepMat
+    //   if pars are freq-dep, specification indicates desired soln resolution
+    if (freqDepPar()) {
+      // Try to parse it
+      if (upcase(fsolint()).contains("CH")) {
+	String fsolintstr=upcase(fsolint());
+	fintervalCh_.set(String::toDouble(upcase(fsolint()).before("CH")));
+	fintervalHz_=-1.0;  // Don't know in Hz, and don't really care
+	fsolint()=downcase(fsolint());
+      }
+      else {
+	QuantumHolder qhFsolint;
+	String error;
+	qhFsolint.fromString(error,fsolint());
+	if (error.length()!=0)
+	  throw(AipsError("Unrecognized units for freq-dep solint."));
+	Quantity qFsolint;
+	qFsolint=qhFsolint.asQuantumDouble();
+	
+	if (qFsolint.isConform("Hz")) {
+	  fintervalHz_=qFsolint.get("Hz").getValue();
+	  fintervalCh_.set(-1.0);
+	  throw(AipsError("Can't handle non-channel units in freq solint yet for VI2."));
+	  //	  throw(AipsError("Not able to convert freq-dep solint from Hz to channel yet."));
+	}
+	else {
+	  if (qFsolint.getUnit().length()==0) {
+	    // when no units specified, assume channel
+	    fintervalCh_.set(qFsolint.getValue());
+	    fsolint()=fsolint()+"ch";
+	  }
+	  else
+	    // unrecognized units:
+	    throw(AipsError("Unrecognized units for freq-dep solint"));
+	} // Hz vs. Ch via Quantum
+      } // parse by Quantum
+    } // freqDepPar
+    /*
+    cout << "Freq-dep solint: " << fsolint() 
+	 << " Ch=" << fintervalCh_ 
+	 << " Hz=" << fintervalHz() 
+	 << endl;
+    */
+  } // user set something
 
 }
 
@@ -2286,9 +2356,104 @@ void SolvableVisCal::createMemCalTable2() {
   String partype = ((parType()==VisCalEnum::COMPLEX) ? "Complex" : "Float");
   CTDesc caltabdesc(partype,Path(msName()).baseName(),typeName(),"unknown");
   ct_ = new NewCalTable("tempNCT.tab",caltabdesc,Table::Scratch,Table::Memory);
-  ct_->setMetaInfo(msName());
+
+  if (msmc().msOk())
+    ct_->setMetaInfo(msName());
+  else {
+    ct_->fillGenericObs(1);
+    ct_->fillGenericField(msmc().nFld());
+    ct_->fillGenericAntenna(msmc().nAnt());
+    Vector<Int> nchan(msmc().nSpw(),1);
+    ct_->fillGenericSpw(msmc().nSpw(),nchan);
+  }
+
+  // Flag all SPW subtable rows; we'll set them OTF
+  CTColumns ncc(*ct_);
+
+  Vector<Bool> flr=ncc.spectralWindow().flagRow().getColumn();
+  flr.set(True);
+  ncc.spectralWindow().flagRow().putColumn(flr);
 
 }
+
+void SolvableVisCal::setOrVerifyCTFrequencies(Int spw) {
+
+  // Assumes currFreq() is set properly (see syncSolveMeta)
+
+  // Access SPW subtable columns
+  CTColumns ctcol(*ct_);
+  CTSpWindowColumns& spwcol(ctcol.spectralWindow());
+
+  // If row is flagged, then it hasn't been set yet...
+  Bool needToSet(spwcol.flagRow().get(spw));
+
+  // How many solution channels?
+  Int nChan=currFreq().nelements();
+
+  if (needToSet) {
+
+    cout << "Setting freqs in spw=" << spw << endl;
+    
+    // Existing values (from the MS)
+    Vector<Double> chfr,chwid,chres,cheff;
+    Double totbw;
+    spwcol.chanFreq().get(spw,chfr);
+    spwcol.chanWidth().get(spw,chwid);
+    spwcol.resolution().get(spw,chres);
+    spwcol.effectiveBW().get(spw,cheff);
+    totbw=spwcol.totalBandwidth().get(spw);
+
+    if (freqDepPar() && nChan>1) {
+      // Set chan width,res,effbw is f(1)-f(0)
+      // TBD: do better job here for quirky non-gridded cases!
+      Double df=currFreq()(1)-currFreq()(0);
+      totbw=(currFreq()(nChan-1)-currFreq()(0))+df;  // total span
+      chwid.resize(nChan); chwid.set(df);
+      chres.resize(nChan); chres.set(df);
+      cheff.resize(nChan); cheff.set(df);
+    }
+    else {
+      // Must be exactly _one_  (!freqDepPar())
+      AlwaysAssert(nChan==1,AipsError);
+    
+      // Assume full collapse of existing freq axis
+      // TBD:  this is wrong for partially selected channels....
+      chwid.resize(1);  chwid.set(totbw);
+      chres.resize(1);  chres.set(totbw);
+      cheff.resize(1);  cheff.set(totbw);
+
+    }
+
+    // Export revised values to the table
+    spwcol.chanFreq().setShape(spw,IPosition(1,nChan));
+    spwcol.chanFreq().put(spw,currFreq());
+    spwcol.chanWidth().put(spw,chwid);
+    spwcol.resolution().put(spw,chres);
+    spwcol.effectiveBW().put(spw,cheff);
+    spwcol.numChan().put(spw,nChan);
+    spwcol.totalBandwidth().put(spw,totbw);
+    spwcol.flagRow().put(spw,False);
+
+  }
+  else {
+    // Only verify that freqs haven't changed
+
+    cout << "Verifying freqs in spw=" << spw << endl;
+
+    Vector<Double> currCTFreq;
+    spwcol.chanFreq().get(spw,currCTFreq);
+
+    if (!allEQ(currCTFreq,currFreq())) {
+      cout << "For spw=" << spw << ":" << endl;
+      cout << "Current CalTable nchan= " << currCTFreq.nelements() << endl;
+      cout << "Current CalTable freq = " << currCTFreq << endl;
+      cout << "Current Solution nchan= " << nChan << endl;
+      cout << "Current Solution freq = " << currFreq() << endl;
+      throw(AipsError("Mismatch between Solution frequencies and existing CalTable frequencies for spw="+String::toString(spw)));
+    }
+  }
+}
+
 
 //  VI2------------------------^
 
@@ -2540,24 +2705,17 @@ Bool SolvableVisCal::syncSolveMeta(VisBuffGroupAcc& vbga) {
 
 }
 
-Bool SolvableVisCal::syncSolveMeta(SDBList& sdbs) {  // VI2
-
-  // Adopt meta data from FIRST SolveDataBuffer for now
-  SolveDataBuffer& sdb(sdbs(0));
-
-  currSpw()=sdb.spectralWindow()(0);
-  currField()=sdb.fieldId()(0);
-
-  // The timestamp really is global, in any case
-  //  TBD: calculate the time
-  const Double& rTime(sdb.time()(0));
-  if (rTime > 0.0) {
-    refTime()=rTime;
-    return True;
-  }
-  else
-    return False;
-
+void SolvableVisCal::syncSolveMeta(SDBList& sdbs) {  // VI2
+  
+  //  cout << "spwMap() = " << spwMap() << endl;
+  
+  // Ask the sdbs
+  setMeta(sdbs.aggregateObsId(),
+	  sdbs.aggregateScan(),
+	  sdbs.aggregateTime(),
+	  sdbs.aggregateSpw(),
+	  sdbs.freqs(),
+	  sdbs.aggregateFld());
 }
 
 
@@ -2878,7 +3036,7 @@ Bool SolvableVisCal::verifyConstraints(SDBList& sdbs) {  // VI2
   }
 
   //  cout << "  blperant = " << blperant << " (minblperant = " << minblperant() << endl;
-  cout << "  antOK    = " << antOK << endl;
+  //  cout << "  antOK    = " << antOK << endl;
   //  cout << "  ntrue(antOK) = " << ntrue(antOK) << endl;
 
   // Apply constraints results to solutions and data
@@ -3588,7 +3746,7 @@ void SolvableVisCal::keepNCT() {
   //    setSpwFreqInCT(currSpw(),currFreq());
 
   if (prtlev()>4) 
-    cout << " SVC::keepNCT" << endl;
+    cout << " SVC::keepNCT" << endl;    
 
   // Add some rows to fill 
   //  nElem() gets it right for both baseline- and antenna-based
@@ -3637,6 +3795,9 @@ void SolvableVisCal::globalPostSolveTinker() {
 
 // Divide all solutions by their amplitudes to make them "phase-only"
 void SolvableVisCal::enforceAPonSoln() {
+
+  // VI2: review initializatin of apmode!  (and similar!)
+  if (apmode()=="") return;
 
   // Only if we have a CalTable, and it is not empty
   if (ct_ && ct_->nrow()>0) {
@@ -5524,13 +5685,21 @@ void SolvableVisJones::applyRefAnt() {
   //   alternate, even if nominally higher-priority refants become
   //   available)
 
+
   // Extract antenna positions
   Matrix<Double> xyz;
-  {
+  if (msName()!="<noms>") {
     MeasurementSet ms(msName());
     ROMSAntennaColumns msant(ms.antenna());
     msant.position().getColumn(xyz);
   }
+  else {
+    // TBD RO*
+    CTColumns ctcol(*ct_);
+    CTAntennaColumns& antcol(ctcol.antenna());
+    antcol.position().getColumn(xyz);
+  }
+
   // Calculate (squared) antenna distances, relative
   //  to last preferred antenna
   Vector<Double> dist2(xyz.ncolumn(),0.0);
@@ -5561,7 +5730,7 @@ void SolvableVisJones::applyRefAnt() {
     refantchoices(IPosition(1,2),IPosition(1,nUserRefant))=
       refantlist()(IPosition(1,1),IPosition(1,nUserRefant-1));
 
-  //  cout << "refantchoices = " << refantchoices << endl;
+  //cout << "refantchoices = " << refantchoices << endl;
 
   Vector<Int> nPol(nSpw(),nPar());  // TBD:or 1, if data was single pol
 

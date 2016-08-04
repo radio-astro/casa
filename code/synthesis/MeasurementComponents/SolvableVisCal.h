@@ -214,6 +214,9 @@ public:
   virtual void guessPar(VisBuffer& vb)=0;
   virtual void guessPar(SDBList&) { throw(AipsError("SVC::guessPar(SDBList&) NYI!!")); };  // VI2
 
+  // Time-dep solution interval  (VI2)
+  inline Double solTimeInterval() const { return solTimeInterval_; };
+
   // Freq-dep solint values 
   inline Double& fintervalHz() { return fintervalHz_; };
   inline Double& fintervalCh() { return fintervalCh_(currSpw()); };  // for current Spw
@@ -239,7 +242,7 @@ public:
   //   (returns False if VisBuffer has no valid data)
   Bool syncSolveMeta(VisBuffer& vb, const Int& fieldId);
   Bool syncSolveMeta(VisBuffGroupAcc& vbga);
-  Bool syncSolveMeta(SDBList& sdbs);  // VI2
+  void syncSolveMeta(SDBList& sdbs);  // VI2   (valid data now checked elsewhere)
 
   // Provide for override of currScan and currObs
   void overrideObsScan(Int obs, Int scan);
@@ -259,6 +262,7 @@ public:
   //   must be overridden in derived specializations)
   virtual void selfGatherAndSolve(VisSet& vs, VisEquation& ve);
   virtual void selfSolveOne(VisBuffGroupAcc& vs);
+  virtual void selfSolveOne(SDBList&) { throw(AipsError("selfSolveOne for VI2/SDB usage NYI for "+typeName())); };
 
   // Set up data and model for pol solve
   void setUpForPolSolve(VisBuffer& vb);
@@ -402,20 +406,21 @@ public:
   // Reshape solvePar* arrays for the currSpw()  
   //  (ensitive to freqDepPar())
   //  (VI2: replaces initSolvePar part of sizeUpSolve)
-  virtual void sizeSolveParCurrSpw(Int nVisChan);
+  virtual Int sizeSolveParCurrSpw(Int nVisChan);
 
   // Set parameters to def values in the currSpw(), 
   //   and optionally sync everything
   virtual void setDefSolveParCurrSpw(Bool sync=False);
 
-  // Determine VI2 Sort for solving
-  //   (based on comb*())
-  //   also parses interval()
-  void deriveVI2Sort(Block<Int>& sortcols,Double& iterInverval);
+  // Parse solint in VI2 context
+  void reParseSolintForVI2();
 
   // Generate the in-memory caltable (empty)
   //  NB: no subtable revisions
   virtual void createMemCalTable2();
+
+  // Set (or verify) freq info in output cal table for specified spw
+  virtual void setOrVerifyCTFrequencies(Int spw);
 
 
 protected:
@@ -536,11 +541,19 @@ private:
   // Solving mode
   String apmode_;
 
+  // User-specified full solint string
+  String usolint_;
+
   // User-specified time-dep solint (string)
   String solint_;
 
+  // Derived time-dep solution interval (s) (VI2)
+  Double solTimeInterval_;
+
   // User-specified freq-dep solint info
   String fsolint_;
+
+  // Derived frequency intervals
   Double fintervalHz_;
   Vector<Double> fintervalCh_;   // (nSpw)
 

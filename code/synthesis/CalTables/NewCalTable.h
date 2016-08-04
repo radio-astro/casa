@@ -108,6 +108,9 @@ typedef ROMSHistoryColumns ROCTHistoryColumns;
 
 class NewCalTable : public Table
 {
+
+  friend class SolvableVisCal;
+
  public:
    // Default null constructor, and destructor
    NewCalTable();

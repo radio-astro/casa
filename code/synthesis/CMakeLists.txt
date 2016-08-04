@@ -226,6 +226,7 @@ casa_add_library( synthesis
  MeasurementComponents/Calibrater.cc
  MeasurementComponents/CalibratingVi2.cc
  MeasurementComponents/CalibratingVi2Factory.cc
+ MeasurementComponents/CalSolVi2Organizer.cc
  MeasurementComponents/CEMemImageSkyModel.cc
  MeasurementComponents/ClarkCleanAlgorithm.cc
  MeasurementComponents/ClarkCleanImageSkyModel.cc
@@ -495,6 +496,7 @@ install (FILES
 	MeasurementComponents/Calibrater.h
 	MeasurementComponents/CalibratingVi2.h
 	MeasurementComponents/CalibratingVi2Factory.h
+	MeasurementComponents/CalSolVi2Organizer.h
 	MeasurementComponents/ClarkCleanAlgorithm.h
 	MeasurementComponents/ClarkCleanImageSkyModel.h
 	MeasurementComponents/CleanImageSkyModel.h
@@ -860,6 +862,8 @@ casa_add_google_test( MODULES mstransform SOURCES ../mstransform/TVI/test/tPhase
 casa_add_google_test( NOT_ON_APPLE MODULES mstransform SOURCES ../mstransform/TVI/test/tRegriddingTVI.cc  ../mstransform/TVI/test/TestUtilsTVI.cc)
 casa_add_google_test( NOT_ON_APPLE MODULES mstransform SOURCES ../mstransform/TVI/test/tUVContSubTVI.cc  ../mstransform/TVI/test/TestUtilsTVI.cc)
 
+casa_add_google_test( MODULES synthesis SOURCES MeasurementComponents/test/tCalibraterSolve_GT.cc )
+casa_add_google_test( MODULES synthesis SOURCES MeasurementComponents/test/tCalSolVi2Organizer_GT.cc )
 casa_add_google_test( MODULES synthesis SOURCES MeasurementComponents/test/tRecursiveVi2LayersWithCal_GT.cc )
 casa_add_google_test( MODULES synthesis SOURCES MeasurementComponents/test/tFringeJones_GT.cc )
 casa_add_google_test( MODULES synthesis SOURCES MeasurementComponents/test/tMSMetaInfoForCal_GT.cc )

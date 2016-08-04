@@ -186,8 +186,8 @@ TEST_F(SolveDataBufferTest, SolveDataBufferState) {
   // Play with zeroth channel...
   Int focusChan0(0);
   sdb.setFocusChan(focusChan0);
-  cout << "sdb.infocusVisCube().contiguousStorage() = " 
-       << boolalpha << sdb.infocusVisCube().contiguousStorage() << endl;
+  //  cout << "sdb.infocusVisCube().contiguousStorage() = " 
+  //       << boolalpha << sdb.infocusVisCube().contiguousStorage() << endl;
 
   // infocus* shapes...
 
@@ -327,10 +327,10 @@ TEST_F(SolveDataBufferTest, SolveDataBufferSolve) {
     a.reference(phtest(Slice(1,1,1),Slice(),Slice()));
     a+=1.0f;
     phtest=abs(phtest);
-    cout << "phtest = " << phtest << endl;
+    //    cout << "phtest = " << phtest << endl;
 
     ASSERT_TRUE(allLT(phtest,Float(3e-5)));  // could this be better?
-
+    // it is better if uniform phase offest is smaller....
 
   }
 
