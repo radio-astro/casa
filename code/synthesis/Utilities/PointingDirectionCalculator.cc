@@ -427,7 +427,7 @@ Vector<Double> PointingDirectionCalculator::doGetDirection(uInt irow) {
     } else if (index <= 0) {
         debuglog << "take 0th row" << debugpost;
         direction = accessor_(*pointingColumns_, 0);
-    } else if (index >= (Int) (nrowPointing - 1)) {
+    } else if (index > (Int) (nrowPointing - 1)) {
         debuglog << "take final row" << debugpost;
         direction = accessor_(*pointingColumns_, nrowPointing - 1);
 //            } else if (currentInterval > pointingIntervalColumn(index)) {
