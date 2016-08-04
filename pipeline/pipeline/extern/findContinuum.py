@@ -35,7 +35,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: findContinuum.py,v 1.91 2016/08/02 02:14:40 we Exp $" 
+    myversion = "$Id: findContinuum.py,v 1.92 2016/08/04 11:52:40 we Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -1424,9 +1424,9 @@ def findContinuumChannels(spectrum, nBaselineChannels=16, sigmaFindContinuum=3,
     signalRatio = (1.0 - 1.0*len(np.where(np.abs(spectrum-median)>(sigmaEffective*mad*2.0))[0]) / len(spectrum))**2
     spectralDiff = 100*np.median(np.abs(np.diff(spectrum)))/median
     spectralDiff2 = 100*np.median(np.abs(np.diff(spectrum,n=2)))/median
-    casalogPost("spectralDiff = %f and %f percent of the median" % (spectralDiff,spectralDiff2))
+    casalogPost("signalRatio=%f, spectralDiff = %f and %f percent of the median" % (signalRatio, spectralDiff,spectralDiff2))
     lineStrengthFactor = 1.0/signalRatio
-    if (spectralDiff2 < 0.6 and len(spectrum) > 200):
+    if (spectralDiff2 < 0.6 and len(spectrum) > 200 and signalRatio<0.95):
         # This appears to be a channel-averaged FDM spectrum with lots of real line emission.
         # So, don't allow the median to be raised, and reduce the mad to lower the threshold.
         casalogPost('The spectral difference (n=2) is rather small, so set signalRatio=0 to reduce the baseline level.')
