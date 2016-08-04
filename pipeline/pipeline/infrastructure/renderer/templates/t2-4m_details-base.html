@@ -138,7 +138,11 @@ def format_notification(tr_class, alert, msg, icon_class=None):
                         % endif
                         <a href="${fullsize_relpath}"
                            class="fancybox"
+                           % if relurl:
                            rel="${relurl}"
+                           % else:
+                           rel="${caller.title()}"
+                           % endif
                            % if hasattr(caller, 'fancybox_caption'):
                            title='<div class="pull-left">${caller.fancybox_caption(plot)}</div><div class="pull-right"><a href="${fullsize_relpath}">Full Size</a><br>${rendererutils.get_plot_command_markup(pcontext, plot.command)}</div>'
                            % endif

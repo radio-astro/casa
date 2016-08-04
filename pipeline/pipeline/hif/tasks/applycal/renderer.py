@@ -1,8 +1,8 @@
-'''
+"""
 Created on 24 Oct 2014
 
 @author: sjw
-'''
+"""
 import collections
 import itertools
 import operator
@@ -120,10 +120,9 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             plots, phase_vs_freq_subpages = self.create_plots(
                 context,
                 result,
-                applycal.PhaseVsFrequencySummaryChart,
+                applycal.PhaseVsFrequencyPerSpwSummaryChart,
                 intents
             )
-            self.sort_plots_by_baseband(plots)
 
             key = utils.commafy(intents, quotes=False)
             for vis, vis_plots in plots.items():
@@ -329,7 +328,7 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
     
                 plots = self.science_plots_for_result(context, 
                                                       result, 
-                                                      applycal.PhaseVsFrequencySummaryChart,
+                                                      applycal.PhaseVsFrequencyPerBasebandSummaryChart,
                                                       [brightest_field.id],
                                                       uv_range, correlation=correlation)
                 phase_vs_freq_summary_plots[vis]['TARGET'] = plots
@@ -359,7 +358,7 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
                 plots = self.science_plots_for_result(context,
                                               result, 
-                                              applycal.PhaseVsFrequencySummaryChart,
+                                              applycal.PhaseVsFrequencyPerBasebandSummaryChart,
                                               fields,
                                               uv_range,
                                               ApplycalPhaseVsFreqSciencePlotRenderer,

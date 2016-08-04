@@ -338,22 +338,21 @@ def format_spwmap(spwmap, scispws):
 	</%def>
 
 
-	<%def name="mouseover(plot)">Click to show phase vs frequency for baseband ${plot.parameters['baseband']}</%def>
+	<%def name="mouseover(plot)">Click to show phase vs frequency for spw ${plot.parameters['spw']}</%def>
 
 	<%def name="fancybox_caption(plot)">
 		Receiver: ${utils.commafy(plot.parameters['receiver'], quotes=False)}<br>
-		Baseband: ${plot.parameters['baseband']} (spw ${plot.parameters['spw']})<br>
+		Spectral window: ${plot.parameters['spw']})<br>
 		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br>
 		Fields: ${cgi.escape(plot.parameters['field'], True)}
 	</%def>
 
 	<%def name="caption_title(plot)">
-		Baseband ${plot.parameters['baseband']}
+		Spectral Window ${plot.parameters['spw']}
 	</%def>
 
 	<%def name="caption_subtitle(plot)">
 		${rx_for_plot(plot)}
-		${spws_for_baseband(plot)}
 	</%def>
 
 	<%def name="caption_text(plot, intent)">
