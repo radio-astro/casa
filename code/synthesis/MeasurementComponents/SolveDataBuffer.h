@@ -81,6 +81,9 @@ public:
   // Assignment
   SolveDataBuffer& operator=(const SolveDataBuffer& sdb);
 
+  // Does SDB contain finite weight?
+  Bool Ok();
+
   // Apply amp-only or phase-only to data
   void enforceAPonData(const String& apmode);
 
@@ -102,6 +105,7 @@ public:
 
   // VB2-like data access methods (mostly const)
   Int nRows() const { return vb_->nRows(); };
+  const Vector<Int>& observationId() const { return vb_->observationId(); };
   const Vector<Int>& arrayId() const { return vb_->arrayId(); };
   const Vector<Int>& antenna1() const { return vb_->antenna1(); };
   const Vector<Int>& antenna2() const { return vb_->antenna2(); };
@@ -110,6 +114,7 @@ public:
   const Vector<Int>& scan() const { return vb_->scan(); };
   const Vector<Double>& time() const { return vb_->time(); };
   const Vector<Int>& fieldId() const { return vb_->fieldId(); };
+  const Vector<Double>& freqs() const { return freqs_; };
   Int nChannels() const { return vb_->nChannels(); };
   Int nCorrelations() const { return vb_->nCorrelations(); };
   const Cube<Complex>& visCubeModel() const { return vb_->visCubeModel(); };
@@ -160,6 +165,10 @@ private:
 
   // The underlying VisBuffer2
   vi::VisBuffer2* vb_;
+
+  // The frequencies
+  //  Currently, assumed uniform over rows
+  Vector<Double> freqs_;
   
   // Array reference objects for things in the vb we need to mess with
   Vector<Bool> fR_;
@@ -199,6 +208,25 @@ public:
 
   // Access an SDB by index
   SolveDataBuffer& operator()(Int i);
+
+  // Aggregate meta info
+  Int aggregateObsId() const;
+  Int aggregateScan() const;
+  Int aggregateSpw() const;
+  Int aggregateFld() const;
+  Double aggregateTime() const;
+
+  // How many data chans?
+  //   Currently, this insists on uniformity over all SDBs
+  Int nChannels() const;
+
+  // The frequencies
+  //   Currently, this insists on uniformity over all SDBs
+  const Vector<Double>& freqs() const;
+
+  // Does the SDBList contain usable data?
+  //  (at least one SDB, with non-zero net weight)
+  Bool Ok();
 
   // Aggregated methods
   void enforceAPonData(const String& apmode);

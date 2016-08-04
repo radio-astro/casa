@@ -29,6 +29,7 @@
 #include <msvis/MSVis/VisBuffer2.h>
 #include <msvis/MSVis/VisBufferComponents2.h>
 #include <casa/Arrays/ArrayMath.h>
+#include <casa/Arrays/MaskArrMath.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/Containers/Block.h>
 #include <casa/Utilities/Assert.h>
@@ -39,6 +40,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 SolveDataBuffer::SolveDataBuffer() : 
   vb_(0),
+  freqs_(0),
   focusChan_p(-1),
   infocusFlagCube_p(),
   infocusWtSpec_p(),
@@ -51,6 +53,7 @@ SolveDataBuffer::SolveDataBuffer() :
 
 SolveDataBuffer::SolveDataBuffer(const vi::VisBuffer2& vb) :
   vb_(0),
+  freqs_(0),
   focusChan_p(-1),
   infocusFlagCube_p(),
   infocusWtSpec_p(),
@@ -69,6 +72,7 @@ SolveDataBuffer::SolveDataBuffer(const vi::VisBuffer2& vb) :
 
 SolveDataBuffer::SolveDataBuffer(const SolveDataBuffer& sdb) :
   vb_(),
+  freqs_(0),
   focusChan_p(-1),
   infocusFlagCube_p(),
   infocusWtSpec_p(),
@@ -80,6 +84,9 @@ SolveDataBuffer::SolveDataBuffer(const SolveDataBuffer& sdb) :
 {
   // Copy from the other's VB2
   initFromVB(*(sdb.vb_));
+
+  // copy over freqs_
+  freqs_.assign(sdb.freqs_);
   
 
 }
@@ -94,6 +101,12 @@ SolveDataBuffer::~SolveDataBuffer()
 //SolveDataBuffer& SolveDataBuffer::operator=(const VisBuffer& other)
 
   
+Bool SolveDataBuffer::Ok() {
+  // Ok if net unflagged weight is positive
+  Float wtsum=sum(weightSpectrum()(!flagCube()));
+  return (wtsum>0.0f);
+}
+
 void SolveDataBuffer::enforceAPonData(const String& apmode)
 {
 
@@ -232,7 +245,8 @@ void SolveDataBuffer::initFromVB(const vi::VisBuffer2& vb)
 
   // The required VB2 components
   vi::VisBufferComponents2 comps =
-    vi::VisBufferComponents2::these({VisBufferComponent2::ArrayId,
+    vi::VisBufferComponents2::these({VisBufferComponent2::ObservationId,
+ 	                            VisBufferComponent2::ArrayId,
 				    VisBufferComponent2::Scan,
 				    VisBufferComponent2::FieldId,
 				    VisBufferComponent2::DataDescriptionIds,
@@ -250,10 +264,23 @@ void SolveDataBuffer::initFromVB(const vi::VisBuffer2& vb)
 	  VisBufferComponent2::VisibilityCubeModel});
 
   // Copy required components from the supplied VB2:
-  vb_->copyComponents(vb,comps,True,False);
+  vb_->copyComponents(vb,comps,True,True);   // will fetch things, if needed
 
-  // TBD:  Copy freq info separately?   Needed?  (e.g., KJones?)
-
+  // Store the frequeny info
+  //  TBD: also need bandwidth info....
+  if (vb.isAttached())
+    freqs_.assign(vb.getFrequencies(0));
+  else {
+    // Probably only needed in testing....  (gmoellen, 2016Aug04)
+    cout << "The supplied VisBuffer2 is not attached to a ViImplementation2," << endl
+	 << " which is necessary to generate accurate frequency info." << endl
+	 << " This is probably just a test with a naked VisBuffer2." << endl
+	 << " Spoofing freq axis with 1 MHz channels at 100 GHz." << endl;
+    freqs_.resize(vb.nChannels());
+    indgen(freqs_);
+    freqs_*=1e6;
+    freqs_+=100.0005e9; // _edge_ of first channel at 100 GHz.
+  }
 
 }
 void SolveDataBuffer::cleanUp() 
@@ -308,6 +335,92 @@ SolveDataBuffer& SDBList::operator()(Int i)
     throw(AipsError("SDBList::operator(): requests non-existent SolveDataBuffer."));
 
 }
+
+Int SDBList::aggregateObsId() const {
+  if (nSDB_>0)
+    // Obs Id from first SDB
+    return SDB_[0]->observationId()(0);
+  throw(AipsError("SDBList::aggregateObsId(): No SDBs in this SDBList yet."));
+}
+
+Int SDBList::aggregateScan() const {
+  if (nSDB_>0)
+    // Scan number from first SDB
+    return SDB_[0]->scan()(0);
+  throw(AipsError("SDBList::aggregateScan(): No SDBs in this SDBList yet."));
+}
+
+Int SDBList::aggregateSpw() const {
+  if (nSDB_>0)
+    // from first SDB
+    return SDB_[0]->spectralWindow()(0);
+  throw(AipsError("SDBList::aggregateSpw(): No SDBs in this SDBList yet."));
+}
+
+Int SDBList::aggregateFld() const {
+  if (nSDB_>0)
+    // from first SDB
+    return SDB_[0]->fieldId()(0);
+  throw(AipsError("SDBList::aggregateFld(): No SDBs in this SDBList yet."));
+}
+
+Double SDBList::aggregateTime() const {
+
+  // Simple average of the mean times in each SDB
+  //  (TBD: Improve with attention to flags/weights?)
+  if (nSDB_>0) {
+    Double aTime(0.0);
+    for (Int isdb=0;isdb<nSDB_;++isdb)
+      aTime+=mean(SDB_[isdb]->time());
+    aTime/=nSDB_;
+    return aTime;
+  }
+  else
+    throw(AipsError("SDBList::aggregateFld(): No SDBs in this SDBList yet."));
+}
+
+
+// How many data chans?
+//   Currently, this insists on uniformity over all SDBs
+//   In future, we may _sum_ the SDBs nChans, and
+//    enable forming aggregate spectra (e.g., for common normalization)
+//    This will require focusChan loop over SDBs...
+Int SDBList::nChannels() const {
+
+  Int nChan=SDB_[0]->nChannels();  // from first
+
+  // Trap non-uniformity, for now
+  for (Int isdb=1;isdb<nSDB_;++isdb)
+    AlwaysAssert((SDB_[isdb]->nChannels()==nChan),AipsError);
+
+  // Reach here, then ok
+  return nChan;
+
+}
+
+const Vector<Double>& SDBList::freqs() const {
+
+  const Vector<Double>& f(SDB_[0]->freqs());  // from first SDB
+  
+  // Trap non-uniformity, for now
+  for (Int isdb=1;isdb<nSDB_;++isdb)
+    AlwaysAssert(allEQ(SDB_[isdb]->freqs(),f),AipsError);
+  
+  // Reach here, then ok
+  return f;
+  
+}
+
+Bool SDBList::Ok() {
+
+  for (Int i=0;i<nSDB_;++i)
+    if (SDB_[i]->Ok()) return True;
+
+  // If we get here, either no SDBs, or none have non-zero weight.
+  return False;
+
+}
+
 
 void SDBList::enforceAPonData(const String& apmode)
 {
