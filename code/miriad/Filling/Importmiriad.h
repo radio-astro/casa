@@ -151,7 +151,7 @@ typedef struct window {     // CASA defines everything mid-band mid-interval
 //  the maximum number of fields in mosaicing observations, careful, miriad
 //  often has a smaller value, like 64 or 128.
 #ifndef MAXFIELD
-# define MAXFIELD  2048
+# define MAXFIELD  10000
 #endif
 
 #ifndef MAXMSG
