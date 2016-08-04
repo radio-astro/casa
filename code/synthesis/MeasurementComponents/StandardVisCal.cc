@@ -854,10 +854,11 @@ void GJones::guessPar(SDBList& sdbs) {
 
   Int guesschan(sdb.nChannels()-1);
 
+  /*
   cout << "guesschan = " << guesschan << endl;
   cout << "nCorr = " << nCorr << endl;
   cout << "corridx = " << corridx << endl;
-
+  */
 
   // Find out which ants are available
   Int nRow=sdb.nRows();
@@ -893,9 +894,9 @@ void GJones::guessPar(SDBList& sdbs) {
     while (antok(guessant)<1) guessant++;
   }
 
-  cout << "antok = " << antok << endl;
+  //  cout << "antok = " << antok << endl;
 
-  cout << "guessant = " << guessant << "  (" << currSpw() << ")" << endl;
+  //  cout << "guessant = " << guessant << "  (" << currSpw() << ")" << endl;
 
   AlwaysAssert(guessant>-1,AipsError);
 

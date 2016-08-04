@@ -73,7 +73,8 @@ public:
 
   // Simple, shape-oriented ctor
   SimpleSimVi2Parameters(Int nField,Int nScan,Int nSpw,Int nAnt,Int nCorr,
-			 const Vector<Int>& nTimePerField, const Vector<Int>& nChan);
+			 const Vector<Int>& nTimePerField, const Vector<Int>& nChan,
+			 Complex c0=Complex(0.0f));
 
   // Full control
   SimpleSimVi2Parameters(Int nField,Int nScan,Int nSpw,Int nAnt,Int nCorr,
@@ -84,7 +85,8 @@ public:
 			 Bool doNoise,
 			 const Matrix<Float>& gain, const Matrix<Float>& tsys, 
 			 Bool doNorm=True,
-			 String polBasis="circ", Bool doAC=False);
+			 String polBasis="circ", Bool doAC=False,
+			 Complex c0=Complex(0.0f));
   
   SimpleSimVi2Parameters(const SimpleSimVi2Parameters& other);
   SimpleSimVi2Parameters& operator=(const SimpleSimVi2Parameters& other);
@@ -104,6 +106,7 @@ public:
   Bool doNorm_;
   String polBasis_;
   Bool doAC_;
+  Complex c0_;
 
   // Return frequencies for specified spw
   Vector<Double> freqs(Int spw) const;

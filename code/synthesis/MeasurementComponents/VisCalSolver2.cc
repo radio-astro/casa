@@ -189,7 +189,6 @@ Bool VisCalSolver2::solve(VisEquation& ve, SolvableVisCal& svc, SDBList& sdbs) {
 	// Convergence means we're done!
 	done=True;
 
-	  cout << "Iterations =" << iter << endl;
 	if (prtlev()>0) {
 	  cout << "par()=" << par() << endl;
 	}

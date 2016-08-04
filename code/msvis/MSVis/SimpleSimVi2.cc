@@ -54,7 +54,8 @@ SimpleSimVi2Parameters::SimpleSimVi2Parameters() :
   tsys_(Matrix<Float>(1,1,1.0)),
   doNorm_(False),
   polBasis_("circ"),
-  doAC_(False)
+  doAC_(False),
+  c0_(Complex(0.0))
 {
   
   Vector<Int> nTimePerField(nTimePerField_);
@@ -72,7 +73,8 @@ SimpleSimVi2Parameters::SimpleSimVi2Parameters() :
 }
 
 SimpleSimVi2Parameters::SimpleSimVi2Parameters(Int nField,Int nScan,Int nSpw,Int nAnt,Int nCorr,
-					       const Vector<Int>& nTimePerField,const Vector<Int>& nChan) :
+					       const Vector<Int>& nTimePerField,const Vector<Int>& nChan,
+					       Complex c0) :
   nField_(nField),
   nScan_(nScan),
   nSpw_(nSpw),
@@ -90,7 +92,8 @@ SimpleSimVi2Parameters::SimpleSimVi2Parameters(Int nField,Int nScan,Int nSpw,Int
   tsys_(Matrix<Float>(1,1,1.0)),
   doNorm_(False),
   polBasis_("circ"),
-  doAC_(False)
+  doAC_(False),
+  c0_(c0)
 {
 
   Vector<Double> refFreq(refFreq_);
@@ -114,7 +117,8 @@ SimpleSimVi2Parameters::SimpleSimVi2Parameters(Int nField,Int nScan,Int nSpw,Int
 					       Bool doNoise,
 					       const Matrix<Float>& gain, const Matrix<Float>& tsys, 
 					       Bool doNorm,
-					       String polBasis, Bool doAC) : 
+					       String polBasis, Bool doAC,
+					       Complex c0) : 
   nField_(nField),
   nScan_(nScan),
   nSpw_(nSpw),
@@ -132,7 +136,8 @@ SimpleSimVi2Parameters::SimpleSimVi2Parameters(Int nField,Int nScan,Int nSpw,Int
   tsys_(),
   doNorm_(doNorm),
   polBasis_(polBasis),
-  doAC_(doAC)
+  doAC_(doAC),
+  c0_(c0)
 {
 
   // Generic initialization
@@ -165,6 +170,7 @@ SimpleSimVi2Parameters& SimpleSimVi2Parameters::operator=(const SimpleSimVi2Para
     doNorm_=other.doNorm_;
     polBasis_=other.polBasis_;
     doAC_=other.doAC_;
+    c0_=other.c0_;
   }
   return *this;
 
@@ -205,6 +211,7 @@ void SimpleSimVi2Parameters::summary() const {
 
   cout << "*  polBasis = " << polBasis_ << endl;
   cout << "*  doAC     = " << doAC_ << endl;
+  cout << "*  c0       = " << c0_ << endl;
   cout << "***************************************************" << endl << endl;
 }
 
@@ -237,7 +244,10 @@ void SimpleSimVi2Parameters::initialize(const Vector<Int>& nTimePerField,const V
     nChan_=nChan; // will throw if length mismatch
 
   refFreq_.resize(nSpw_);
-  refFreq_=refFreq;  // will throw if length mismatch
+  if (refFreq.nelements()==1)
+    refFreq_.set(refFreq(0));
+  else
+    refFreq_=refFreq;  // will throw if length mismatch
 
   df_.resize(nSpw_);
   if (df.nelements()==1)
@@ -275,24 +285,6 @@ SimpleSimVi2::SimpleSimVi2 (const SimpleSimVi2Parameters& pars)
 
   : ViImplementation2(),
     pars_(pars),
-    /*
-    nField_(pars.nField_),
-    nScan_(pars.nScan_),
-    pars_.nSpw_(pars.pars_.nSpw_),
-    nAnt_(pars.nAnt_),
-    nCorr_(pars.nCorr_),
-    nTimePerField_(pars.nTimePerField_),
-    nChan_(pars.nChan_),
-    date0_(pars.date0_),
-    dt_(pars.dt_),
-    refFreq_(pars.refFreq_),
-    df_(pars.df_),
-    stokes_(pars.stokes_),
-    sefd_(pars.sefd_),
-    polBasis_(pars.polBasis_),
-    doAC_(pars.doAC_),
-    */
-
     nChunk_(0),
     nBsln_(0),
     t0_(0.0),
@@ -613,11 +605,20 @@ void SimpleSimVi2::visibilityObserved (Cube<Complex> & vis) const {
   // get basic signals from model
   this->visibilityModel(vis);
 
+  if (abs(pars_.c0_)>0.0) {  // Global offset for systematic solve testing
+    Cube<Complex> v(vis(Slice(0,1,1),Slice(),Slice()));
+    v*=(pars_.c0_);
+    if (pars_.nCorr_>1) {
+      v.reference(vis(Slice(pars_.nCorr_-1,1,1),Slice(),Slice()));
+      v*=(conj(pars_.c0_*pars_.c0_));  // twice the phase in the opposite direction
+    }    
+  }
+
   Vector<Int> a1;
   Vector<Int> a2;
   this->antenna1(a1);
   this->antenna2(a2);
-
+  
   Array<Complex> specvis;
   Matrix<Float> G(pars_.gain_);
   Matrix<Float> Tsys(pars_.tsys_);

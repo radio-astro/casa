@@ -29,6 +29,7 @@
 #include <synthesis/MeasurementEquations/VisEquation.h>
 #include <synthesis/MeasurementComponents/SolveDataBuffer.h>
 #include <casa/Arrays/ArrayMath.h>
+#include <casa/Arrays/ArrayPartMath.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/BasicSL/String.h>
 
@@ -64,12 +65,7 @@ VisEquation::VisEquation() :
 };
 
 //----------------------------------------------------------------------
-VisEquation::~VisEquation() {
-
-  cout << "VE::divideCorrByModel:  update unchan'd weight" << endl;
-  cout << "VE::collapse2: Is model ok?" << endl;
-
-};
+VisEquation::~VisEquation() {};
 
 //---------------------------------------------------------------------- 
 VisEquation& VisEquation::operator=(const VisEquation& other)
@@ -435,6 +431,8 @@ void VisEquation::divideCorrByModel(vi::VisBuffer2& vb) {
     } // !flagRow
   } // irow
   
+  // Set unchan'd weight, in case someone wants it
+  vb.setWeight(partialMedians(vb.weightSpectrum(),IPosition(1,1),True));
 
 }
 
