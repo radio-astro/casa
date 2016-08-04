@@ -43,6 +43,9 @@ public:
 	PhaseShiftingTVI(	ViImplementation2 * inputVii,
 						const Record &configuration);
 
+	// Report the the ViImplementation type
+	virtual String ViiType() const { return String("PhaseShifting( ")+getVii()->ViiType()+" )"; };
+
     virtual void visibilityObserved (Cube<Complex> & vis) const;
     virtual void visibilityCorrected (Cube<Complex> & vis) const;
     virtual void visibilityModel (Cube<Complex> & vis) const;

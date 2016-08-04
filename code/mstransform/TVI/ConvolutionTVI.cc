@@ -55,10 +55,11 @@ ConvolutionTVI::ConvolutionTVI(	ViImplementation2 * inputVii,
 // -----------------------------------------------------------------------
 Bool ConvolutionTVI::parseConfiguration(const Record &configuration)
 {
-	int exists = 0;
+	int exists = -1;
 	Bool ret = True;
 
 	// Parse kernel parameter (optional)
+	exists = -1;
 	exists = configuration.fieldNumber ("kernel");
 	if (exists >= 0)
 	{

@@ -55,10 +55,11 @@ ChannelAverageTVI::ChannelAverageTVI(	ViImplementation2 * inputVii,
 // -----------------------------------------------------------------------
 Bool ChannelAverageTVI::parseConfiguration(const Record &configuration)
 {
-	int exists = 0;
+	int exists = -1;
 	Bool ret = True;
 
 	// Parse chanbin parameter (mandatory)
+	exists = -1;
 	exists = configuration.fieldNumber ("chanbin");
 	if (exists >= 0)
 	{

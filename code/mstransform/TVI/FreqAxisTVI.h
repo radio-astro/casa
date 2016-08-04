@@ -66,8 +66,6 @@ public:
 	// General TVI info (common for all sub-classes)
     Bool existsColumn (VisBufferComponent2 id) const;
     Bool flagCategoryExists () const {return False;}
-    Bool weightSpectrumExists () const {return True;}
-    Bool sigmaSpectrumExists () const {return True;}
 
 	// List of methods that should be implemented by derived classes
     // virtual void flag(Cube<Bool>& flagCube) const = 0;

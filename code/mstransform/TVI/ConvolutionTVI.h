@@ -51,6 +51,9 @@ public:
     void weightSpectrum(Cube<Float> &weightSp) const;
     void sigmaSpectrum (Cube<Float> &sigmaSp) const;
 
+    Bool weightSpectrumExists () const {return True;}
+    Bool sigmaSpectrumExists () const {return True;}
+
 protected:
 
     Bool parseConfiguration(const Record &configuration);

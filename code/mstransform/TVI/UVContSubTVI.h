@@ -47,6 +47,9 @@ public:
 	UVContSubTVI(	ViImplementation2 * inputVii,
 						const Record &configuration);
 
+	// Report the the ViImplementation type
+	virtual String ViiType() const { return String("UVContSub( ")+getVii()->ViiType()+" )"; };
+
     virtual void floatData (Cube<Float> & vis) const;
     virtual void visibilityObserved (Cube<Complex> & vis) const;
     virtual void visibilityCorrected (Cube<Complex> & vis) const;
@@ -88,6 +91,26 @@ protected:
 
 	Record configuration_p;
 	ViImplementation2 *inputVii_p;;
+};
+
+//////////////////////////////////////////////////////////////////////////
+// UVContSubTVILayerFactory class  (for _recursive_ layering)
+//////////////////////////////////////////////////////////////////////////
+
+class UVContSubTVILayerFactory : public ViiLayerFactory
+{
+
+public:
+
+	UVContSubTVILayerFactory(Record &configuration);
+	virtual ~UVContSubTVILayerFactory() {};
+
+protected:
+
+	ViImplementation2 * createInstance(ViImplementation2* vii0) const;
+
+	Record configuration_p;
+
 };
 
 //////////////////////////////////////////////////////////////////////////

@@ -78,7 +78,7 @@ RegriddingTVI::RegriddingTVI(	ViImplementation2 * inputVii,
 // -----------------------------------------------------------------------
 Bool RegriddingTVI::parseConfiguration(const Record &configuration)
 {
-	int exists = 0;
+	int exists = -1;
 	Bool ret = True;
 
 	exists = configuration.fieldNumber ("phasecenter");
@@ -106,6 +106,7 @@ Bool RegriddingTVI::parseConfiguration(const Record &configuration)
         }
 	}
 
+	exists = -1;
 	exists = configuration.fieldNumber ("restfreq");
 	if (exists >= 0)
 	{
@@ -125,6 +126,7 @@ Bool RegriddingTVI::parseConfiguration(const Record &configuration)
 				<< "Output reference frame is " << outputReferenceFramePar_p << LogIO::POST;
 	}
 
+	exists = -1;
 	exists = configuration.fieldNumber ("interpolation");
 	if (exists >= 0)
 	{
@@ -164,6 +166,7 @@ Bool RegriddingTVI::parseConfiguration(const Record &configuration)
 		regriddingMethod_p = linear;
 	}
 
+	exists = -1;
 	exists = configuration.fieldNumber ("mode");
 	if (exists >= 0)
 	{
@@ -178,6 +181,7 @@ Bool RegriddingTVI::parseConfiguration(const Record &configuration)
 		}
 	}
 
+	exists = -1;
 	exists = configuration.fieldNumber ("nchan");
 	if (exists >= 0)
 	{
@@ -186,6 +190,7 @@ Bool RegriddingTVI::parseConfiguration(const Record &configuration)
 				<< "Number of channels is " << nChan_p<< LogIO::POST;
 	}
 
+	exists = -1;
 	exists = configuration.fieldNumber ("start");
 	if (exists >= 0)
 	{
@@ -194,6 +199,7 @@ Bool RegriddingTVI::parseConfiguration(const Record &configuration)
 				<< "Start is " << start_p << LogIO::POST;
 	}
 
+	exists = -1;
 	exists = configuration.fieldNumber ("width");
 	if (exists >= 0)
 	{
@@ -202,6 +208,7 @@ Bool RegriddingTVI::parseConfiguration(const Record &configuration)
 				<< "Width is " << width_p << LogIO::POST;
 	}
 
+	exists = -1;
 	exists = configuration.fieldNumber ("veltype");
 	if ((exists >= 0) and (mode_p == "velocity"))
 	{

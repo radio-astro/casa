@@ -43,6 +43,9 @@ public:
 	HanningSmoothTVI(	ViImplementation2 * inputVii,
 						const Record &configuration);
 
+	// Report the the ViImplementation type
+	virtual String ViiType() const { return String("HanningSmooth( ")+getVii()->ViiType()+" )"; };
+
 protected:
 
 	void initialize();

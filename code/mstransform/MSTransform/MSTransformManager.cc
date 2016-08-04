@@ -186,6 +186,10 @@ void MSTransformManager::initialize()
 	callib_p = "";
 	callibRec_p = Record();
 
+	// UVContSub parameters
+	uvcontsub_p = False;
+	uvcontsubRec_p = Record();
+
 	// Spw averaging
 	spwAverage_p = False;
 
@@ -317,6 +321,7 @@ void MSTransformManager::configure(Record &configuration)
 	parsePhaseShiftParams(configuration);
 	parseTimeAvgParams(configuration);
 	parseCalParams(configuration);
+	parseUVContSubParams(configuration);
 	setSpwAvg(configuration);
 
 
@@ -328,8 +333,9 @@ void MSTransformManager::configure(Record &configuration)
 // -----------------------------------------------------------------------
 void MSTransformManager::parseMsSpecParams(Record &configuration)
 {
-	int exists = 0;
+	int exists = -1;
 
+	exists = -1;
 	exists = configuration.fieldNumber ("inputms");
 	if (exists >= 0)
 	{
@@ -338,6 +344,7 @@ void MSTransformManager::parseMsSpecParams(Record &configuration)
 				<< "Input file name is " << inpMsName_p << LogIO::POST;
 	}
 
+	exists = -1;
 	exists = configuration.fieldNumber ("buffermode");
 	if (exists >= 0)
 	{
@@ -349,6 +356,7 @@ void MSTransformManager::parseMsSpecParams(Record &configuration)
 	}
 
 	// In buffer mode this is needed for the time average VI/VB which needs to be informed beforehand
+	exists = -1;
 	exists = configuration.fieldNumber ("datacolumn");
 	if (exists >= 0)
 	{
@@ -358,6 +366,7 @@ void MSTransformManager::parseMsSpecParams(Record &configuration)
 	}
 
 	// In buffer mode outputms is just a random generated filename used as a placeholder for the re-indexed subtables
+	exists = -1;
 	exists = configuration.fieldNumber ("outputms");
 	if (exists >= 0)
 	{
@@ -371,6 +380,7 @@ void MSTransformManager::parseMsSpecParams(Record &configuration)
 		}
 	}
 
+	exists = -1;
 	exists = configuration.fieldNumber ("reindex");
 	if (exists >= 0)
 	{
@@ -388,6 +398,7 @@ void MSTransformManager::parseMsSpecParams(Record &configuration)
 		}
 	}
 
+	exists = -1;
 	exists = configuration.fieldNumber ("factory");
 	if (exists >= 0)
 	{
@@ -404,6 +415,7 @@ void MSTransformManager::parseMsSpecParams(Record &configuration)
 	{
 		interactive_p = True;
 
+		exists = -1;
 		exists = configuration.fieldNumber ("interactive");
 		if (exists >= 0)
 		{
@@ -425,6 +437,7 @@ void MSTransformManager::parseMsSpecParams(Record &configuration)
 	{
 		interactive_p = False;
 
+		exists = -1;
 		exists = configuration.fieldNumber ("realmodelcol");
 		if (exists >= 0)
 		{
@@ -449,6 +462,7 @@ void MSTransformManager::parseMsSpecParams(Record &configuration)
 			}
 		}
 
+		exists = -1;
 		exists = configuration.fieldNumber ("usewtspectrum");
 		if (exists >= 0)
 		{
@@ -460,6 +474,7 @@ void MSTransformManager::parseMsSpecParams(Record &configuration)
 			}
 		}
 
+		exists = -1;
 		exists = configuration.fieldNumber ("tileshape");
 		if (exists >= 0)
 		{
@@ -487,8 +502,9 @@ void MSTransformManager::parseMsSpecParams(Record &configuration)
 // -----------------------------------------------------------------------
 void MSTransformManager::parseDataSelParams(Record &configuration)
 {
-	int exists = 0;
+	int exists = -1;
 
+	exists = -1;
 	exists = configuration.fieldNumber ("array");
 	if (exists >= 0)
 	{
@@ -497,6 +513,7 @@ void MSTransformManager::parseDataSelParams(Record &configuration)
 				<< "array selection is " << arraySelection_p << LogIO::POST;
 	}
 
+	exists = -1;
 	exists = configuration.fieldNumber ("field");
 	if (exists >= 0)
 	{
@@ -505,6 +522,7 @@ void MSTransformManager::parseDataSelParams(Record &configuration)
 				<< "field selection is " << fieldSelection_p << LogIO::POST;
 	}
 
+	exists = -1;
 	exists = configuration.fieldNumber ("scan");
 	if (exists >= 0)
 	{
@@ -513,6 +531,7 @@ void MSTransformManager::parseDataSelParams(Record &configuration)
 				<< "scan selection is " << scanSelection_p << LogIO::POST;
 	}
 
+	exists = -1;
 	exists = configuration.fieldNumber ("timerange");
 	if (exists >= 0)
 	{
@@ -521,6 +540,7 @@ void MSTransformManager::parseDataSelParams(Record &configuration)
 				<< "timerange selection is " << timeSelection_p << LogIO::POST;
 	}
 
+	exists = -1;
 	exists = configuration.fieldNumber ("spw");
 	if (exists >= 0)
 	{
@@ -529,6 +549,7 @@ void MSTransformManager::parseDataSelParams(Record &configuration)
 				<< "spw selection is " << spwSelection_p << LogIO::POST;
 	}
 
+	exists = -1;
 	exists = configuration.fieldNumber ("antenna");
 	if (exists >= 0)
 	{
@@ -537,6 +558,7 @@ void MSTransformManager::parseDataSelParams(Record &configuration)
 				<< "antenna selection is " << baselineSelection_p << LogIO::POST;
 	}
 
+	exists = -1;
 	exists = configuration.fieldNumber ("uvrange");
 	if (exists >= 0)
 	{
@@ -545,6 +567,7 @@ void MSTransformManager::parseDataSelParams(Record &configuration)
 				<< "uvrange selection is " << uvwSelection_p << LogIO::POST;
 	}
 
+	exists = -1;
 	exists = configuration.fieldNumber ("correlation");
 	if (exists >= 0)
 	{
@@ -553,6 +576,7 @@ void MSTransformManager::parseDataSelParams(Record &configuration)
 				<< "correlation selection is " << polarizationSelection_p << LogIO::POST;
 	}
 
+	exists = -1;
 	exists = configuration.fieldNumber ("observation");
 	if (exists >= 0)
 	{
@@ -561,6 +585,7 @@ void MSTransformManager::parseDataSelParams(Record &configuration)
 				<<"observation selection is " << observationSelection_p << LogIO::POST;
 	}
 
+	exists = -1;
 	exists = configuration.fieldNumber ("intent");
 	if (exists >= 0)
 	{
@@ -569,6 +594,7 @@ void MSTransformManager::parseDataSelParams(Record &configuration)
 				<< "scan intent selection is " << scanIntentSelection_p << LogIO::POST;
 	}
 
+	exists = -1;
 	exists = configuration.fieldNumber ("taql");
 	if (exists >= 0)
 	{
@@ -577,6 +603,7 @@ void MSTransformManager::parseDataSelParams(Record &configuration)
 				<< "TaQL selection is " << taqlSelection_p << LogIO::POST;
 	}
 
+	exists = -1;
 	exists = configuration.fieldNumber ("feed");
 	if (exists >= 0)
 	{
@@ -593,8 +620,9 @@ void MSTransformManager::parseDataSelParams(Record &configuration)
 // -----------------------------------------------------------------------
 void MSTransformManager::parseChanAvgParams(Record &configuration)
 {
-	int exists = 0;
+	int exists = -1;
 
+	exists = -1;
 	exists = configuration.fieldNumber ("chanaverage");
 	if (exists >= 0)
 	{
@@ -614,6 +642,7 @@ void MSTransformManager::parseChanAvgParams(Record &configuration)
 		return;
 	}
 
+	exists = -1;
 	exists = configuration.fieldNumber ("chanbin");
 	if (exists >= 0)
 	{
@@ -692,8 +721,9 @@ void MSTransformManager::parseChanAvgParams(Record &configuration)
 // -----------------------------------------------------------------------
 void MSTransformManager::parseFreqTransParams(Record &configuration)
 {
-	int exists = 0;
+	int exists = -1;
 
+	exists = -1;
 	exists = configuration.fieldNumber ("combinespws");
 	if (exists >= 0)
 	{
@@ -706,6 +736,7 @@ void MSTransformManager::parseFreqTransParams(Record &configuration)
 		}
 	}
 
+	exists = -1;
 	exists = configuration.fieldNumber ("ddistart");
 	if (exists >= 0)
 	{
@@ -722,6 +753,7 @@ void MSTransformManager::parseFreqTransParams(Record &configuration)
 
 	}
 
+	exists = -1;
 	exists = configuration.fieldNumber ("hanning");
 	if (exists >= 0)
 	{
@@ -740,6 +772,7 @@ void MSTransformManager::parseFreqTransParams(Record &configuration)
 		}
 	}
 
+	exists = -1;
 	exists = configuration.fieldNumber("smoothFourier");
 	if (exists >= 0)
 	{
@@ -758,8 +791,9 @@ void MSTransformManager::parseFreqTransParams(Record &configuration)
 // -----------------------------------------------------------------------
 void MSTransformManager::parseRefFrameTransParams(Record &configuration)
 {
-	int exists = 0;
+	int exists = -1;
 
+	exists = -1;
 	exists = configuration.fieldNumber ("regridms");
 	if (exists >= 0)
 	{
@@ -776,6 +810,7 @@ void MSTransformManager::parseRefFrameTransParams(Record &configuration)
 		}
 	}
 
+	exists = -1;
 	exists = configuration.fieldNumber ("phasecenter");
 	if (exists >= 0)
 	{
@@ -801,6 +836,7 @@ void MSTransformManager::parseRefFrameTransParams(Record &configuration)
         }
 	}
 
+	exists = -1;
 	exists = configuration.fieldNumber ("restfreq");
 	if (exists >= 0)
 	{
@@ -812,6 +848,7 @@ void MSTransformManager::parseRefFrameTransParams(Record &configuration)
 		}
 	}
 
+	exists = -1;
 	exists = configuration.fieldNumber ("outframe");
 	if (exists >= 0)
 	{
@@ -820,6 +857,7 @@ void MSTransformManager::parseRefFrameTransParams(Record &configuration)
 				<< "Output reference frame is " << outputReferenceFramePar_p << LogIO::POST;
 	}
 
+	exists = -1;
 	exists = configuration.fieldNumber ("interpolation");
 	if (exists >= 0)
 	{
@@ -860,6 +898,7 @@ void MSTransformManager::parseRefFrameTransParams(Record &configuration)
 		interpolationMethod_p = MSTransformations::linear;
 	}
 
+	exists = -1;
 	exists = configuration.fieldNumber ("nspw");
 	if (exists >= 0)
 	{
@@ -887,8 +926,9 @@ void MSTransformManager::parseRefFrameTransParams(Record &configuration)
 // -----------------------------------------------------------------------
 void MSTransformManager::parseFreqSpecParams(Record &configuration)
 {
-	int exists = 0;
+	int exists = -1;
 
+	exists = -1;
 	exists = configuration.fieldNumber ("mode");
 	if (exists >= 0)
 	{
@@ -903,6 +943,7 @@ void MSTransformManager::parseFreqSpecParams(Record &configuration)
 		}
 	}
 
+	exists = -1;
 	exists = configuration.fieldNumber ("nchan");
 	if (exists >= 0)
 	{
@@ -920,6 +961,7 @@ void MSTransformManager::parseFreqSpecParams(Record &configuration)
 		}
 	}
 
+	exists = -1;
 	exists = configuration.fieldNumber ("start");
 	if (exists >= 0)
 	{
@@ -928,6 +970,7 @@ void MSTransformManager::parseFreqSpecParams(Record &configuration)
 				<< "Start is " << start_p << LogIO::POST;
 	}
 
+	exists = -1;
 	exists = configuration.fieldNumber ("width");
 	if (exists >= 0)
 	{
@@ -936,6 +979,7 @@ void MSTransformManager::parseFreqSpecParams(Record &configuration)
 				<< "Width is " << width_p << LogIO::POST;
 	}
 
+	exists = -1;
 	exists = configuration.fieldNumber ("veltype");
 	if ((exists >= 0) and (mode_p == "velocity"))
 	{
@@ -952,14 +996,16 @@ void MSTransformManager::parseFreqSpecParams(Record &configuration)
 // -----------------------------------------------------------------------
 void MSTransformManager::parsePhaseShiftParams(Record &configuration)
 {
-	int exists = 0;
+	int exists = -1;
 
+	exists = -1;
 	exists = configuration.fieldNumber ("XpcOffset");
 	if (exists >= 0)
 	{
 		configuration.get (exists, dx_p);
 	}
 
+	exists = -1;
 	exists = configuration.fieldNumber ("YpcOffset");
 	if (exists >= 0)
 	{
@@ -981,8 +1027,9 @@ void MSTransformManager::parsePhaseShiftParams(Record &configuration)
 // -----------------------------------------------------------------------
 void MSTransformManager::parseTimeAvgParams(Record &configuration)
 {
-	int exists = 0;
+	int exists = -1;
 
+	exists = -1;
 	exists = configuration.fieldNumber ("timeaverage");
 	if (exists >= 0)
 	{
@@ -1001,6 +1048,7 @@ void MSTransformManager::parseTimeAvgParams(Record &configuration)
 
 	if (timeAverage_p)
 	{
+		exists = -1;
 		exists = configuration.fieldNumber ("timebin");
 		if (exists >= 0)
 		{
@@ -1019,6 +1067,7 @@ void MSTransformManager::parseTimeAvgParams(Record &configuration)
 			return;
 		}
 
+		exists = -1;
 		exists = configuration.fieldNumber ("timespan");
 		if (exists >= 0)
 		{
@@ -1069,6 +1118,7 @@ void MSTransformManager::parseTimeAvgParams(Record &configuration)
 		    }
 		}
 
+		exists = -1;
 		exists = configuration.fieldNumber ("maxuvwdistance");
 		if (exists >= 0)
 		{
@@ -1105,12 +1155,9 @@ void MSTransformManager::parseTimeAvgParams(Record &configuration)
 // -----------------------------------------------------------------------
 void MSTransformManager::parseCalParams(Record &configuration)
 {
+	int exists = -1;
 
-	// Nominally no calibration
-	calibrate_p = False;
-
-	int exists = 0;
-
+	exists = -1;
 	exists = configuration.fieldNumber("callib");
 	if (exists >= 0)
 	{
@@ -1147,12 +1194,45 @@ void MSTransformManager::parseCalParams(Record &configuration)
 }
 
 // -----------------------------------------------------------------------
+// Parameter parser for continuum subtraction
+// -----------------------------------------------------------------------
+void MSTransformManager::parseUVContSubParams(Record &configuration)
+{
+	int exists = -1;
+
+	exists = -1;
+	exists = configuration.fieldNumber("uvcontsub");
+	if (exists >= 0)
+	{
+		configuration.get (exists, uvcontsub_p);
+
+		if (uvcontsub_p)
+		{
+			// Extract the callib Record
+			exists = -1;
+			exists = configuration.fieldNumber("uvcontsublib");
+			if (configuration.type(exists) == TpRecord)
+			{
+				uvcontsubRec_p = configuration.subRecord(exists);
+			}
+
+			logger_p 	<< LogIO::NORMAL << LogOrigin("MSTransformManager",__FUNCTION__)
+						<< "Continuum subtraction is activated "
+						<< LogIO::POST;
+		}
+	}
+
+	return;
+}
+
+// -----------------------------------------------------------------------
 // Method to set spw averaging
 // -----------------------------------------------------------------------
 void MSTransformManager::setSpwAvg(Record &configuration)
 {
-	int exists = 0;
+	int exists = -1;
 
+	exists = -1;
 	exists = configuration.fieldNumber ("spwaverage");
 	if (exists >= 0)
 	{
@@ -5161,7 +5241,50 @@ void MSTransformManager::generateIterator()
 	}
 
 	// Calibrating VI
-	if (calibrate_p)
+	if (uvcontsub_p)
+	{
+		// First determine number of layers
+		uInt nTVIs = 1;
+		if (timeAverage_p) nTVIs++;
+		if (uvcontsub_p) nTVIs++;
+
+		// Init vector of TVI factories and populate it
+		uInt TVIFactoryIdx = 0;
+		Vector<vi::ViiLayerFactory*> TVIFactories(nTVIs);
+
+		// Data layer
+		vi::IteratingParameters ipar(timeBin_p,vi::SortColumns(sortColumns_p, false));
+		vi::VisIterImpl2LayerFactory dataLayerTVIFactory(selectedInputMs_p,ipar,isWritable);
+		TVIFactories[TVIFactoryIdx]=&dataLayerTVIFactory;
+		TVIFactoryIdx++;
+
+		// Time avg. layer
+		vi::AveragingVi2LayerFactory *timeAverageTVIFactory = NULL;
+		if (timeAverage_p)
+		{
+			timeAverageTVIFactory = new vi::AveragingVi2LayerFactory(*timeavgParams);
+			TVIFactories[TVIFactoryIdx]=timeAverageTVIFactory;
+			TVIFactoryIdx++;
+		}
+
+		// UVContSub layer
+		vi::UVContSubTVILayerFactory *uvContSubTVIFactory = NULL;
+		if (uvcontsub_p)
+		{
+			uvContSubTVIFactory = new vi::UVContSubTVILayerFactory (uvcontsubRec_p);
+			TVIFactories[TVIFactoryIdx]=uvContSubTVIFactory;
+			TVIFactoryIdx++;
+		}
+
+		visibilityIterator_p = new vi::VisibilityIterator2 (TVIFactories);
+
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+				<< "TVI chain is " << visibilityIterator_p->ViiType() << LogIO::POST;
+
+		if (timeAverageTVIFactory) delete timeAverageTVIFactory;
+		if (uvContSubTVIFactory) delete uvContSubTVIFactory;
+	}
+	else if (calibrate_p)
 	{
 		try
 		{
@@ -7646,7 +7769,6 @@ template <class T> void MSTransformManager::average(	Int inputSpw,
 	uInt startChan = 0;
 	uInt outChanIndex = 0;
 	uInt tail = inputDataStripe.size() % width;
-	uInt limit = inputDataStripe.size() - tail;
 	while (outChanIndex < outputDataStripe.size())
 	{
 		averageKernel(	inputDataStripe,inputFlagsStripe,inputWeightsStripe,

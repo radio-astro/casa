@@ -76,6 +76,9 @@ public:
 	RegriddingTVI(	ViImplementation2 * inputVii,
 					const Record &configuration);
 
+	// Report the the ViImplementation type
+	virtual String ViiType() const { return String("Regridding( ")+getVii()->ViiType()+" )"; };
+
 	// Navigation methods
 	void origin ();
 
@@ -91,6 +94,9 @@ public:
     void visibilityModel (Cube<Complex> & vis) const;
     void weightSpectrum(Cube<Float> &weightSp) const;
     void sigmaSpectrum (Cube<Float> &sigmaSp) const;
+
+    Bool weightSpectrumExists () const {return True;}
+    Bool sigmaSpectrumExists () const {return True;}
 
 protected:
 

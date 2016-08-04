@@ -60,34 +60,47 @@ UVContSubTVI::UVContSubTVI(	ViImplementation2 * inputVii,
 // -----------------------------------------------------------------------
 Bool UVContSubTVI::parseConfiguration(const Record &configuration)
 {
-	int exists = 0;
+	int exists = -1;
 	Bool ret = True;
 
+	exists = -1;
 	exists = configuration.fieldNumber ("fitorder");
 	if (exists >= 0)
 	{
 		configuration.get (exists, fitOrder_p);
 
-		logger_p 	<< LogIO::NORMAL << LogOrigin("UVContSubTVI", __FUNCTION__)
-					<< "Fit order is " << fitOrder_p << LogIO::POST;
+		if (fitOrder_p > 0)
+		{
+			logger_p 	<< LogIO::NORMAL << LogOrigin("UVContSubTVI", __FUNCTION__)
+						<< "Fit order is " << fitOrder_p << LogIO::POST;
+		}
 	}
 
+	exists = -1;
 	exists = configuration.fieldNumber ("want_cont");
 	if (exists >= 0)
 	{
 		configuration.get (exists, want_cont_p);
 
-		logger_p 	<< LogIO::NORMAL << LogOrigin("UVContSubTVI", __FUNCTION__)
-					<< "want_cont is " << want_cont_p << LogIO::POST;
+		if (want_cont_p)
+		{
+			logger_p 	<< LogIO::NORMAL << LogOrigin("UVContSubTVI", __FUNCTION__)
+						<< "Producing continuum estimate instead of continuum subtracted data "
+						<< LogIO::POST;
+		}
 	}
 
+	exists = -1;
 	exists = configuration.fieldNumber ("fitspw");
 	if (exists >= 0)
 	{
 		configuration.get (exists, fitspw_p);
 
-		logger_p 	<< LogIO::NORMAL << LogOrigin("UVContSubTVI", __FUNCTION__)
-					<< "Line-free channel selection is " << fitspw_p << LogIO::POST;
+		if (fitspw_p.size() > 0)
+		{
+			logger_p 	<< LogIO::NORMAL << LogOrigin("UVContSubTVI", __FUNCTION__)
+						<< "Line-free channel selection is " << fitspw_p << LogIO::POST;
+		}
 	}
 
 	return ret;
@@ -338,6 +351,24 @@ vi::ViImplementation2 * UVContSubTVIFactory::createVi(VisibilityIterator2 *) con
 vi::ViImplementation2 * UVContSubTVIFactory::createVi() const
 {
 	return new UVContSubTVI(inputVii_p,configuration_p);
+}
+
+//////////////////////////////////////////////////////////////////////////
+// UVContSubTVILayerFactory class
+//////////////////////////////////////////////////////////////////////////
+
+UVContSubTVILayerFactory::UVContSubTVILayerFactory(Record &configuration) :
+	ViiLayerFactory()
+{
+	configuration_p = configuration;
+}
+
+ViImplementation2*
+UVContSubTVILayerFactory::createInstance(ViImplementation2* vii0) const
+{
+	// Make the UVContSubTVI, using supplied ViImplementation2, and return it
+	ViImplementation2 *vii = new UVContSubTVI(vii0, configuration_p);
+	return vii;
 }
 
 //////////////////////////////////////////////////////////////////////////

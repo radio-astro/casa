@@ -44,11 +44,14 @@
 #include <msvis/MSVis/ViFrequencySelection.h>
 
 // TVI framework
-#include <msvis/MSVis/AveragingVi2Factory.h>
-#include <msvis/MSVis/AveragingTvi2.h>
-
+#include <msvis/MSVis/ViiLayerFactory.h>
 #include <msvis/MSVis/IteratingParameters.h>
+#include <msvis/MSVis/AveragingVi2Factory.h>
 #include <msvis/MSVis/LayeredVi2Factory.h>
+#include <mstransform/TVI/UVContSubTVI.h>
+
+// THis is needed just because of vi::AveragingTvi2::weightToSigma
+#include <msvis/MSVis/AveragingTvi2.h>
 
 // To get observatory position from observatory name
 #include <measures/Measures/MeasTable.h>
@@ -399,6 +402,7 @@ protected:
 	void parsePhaseShiftParams(Record &configuration);
 	void parseTimeAvgParams(Record &configuration);
 	void parseCalParams(Record &configuration);
+	void parseUVContSubParams(Record &configuration);
 	void setSpwAvg(Record &configuration);
 
 	// From input MS
@@ -1312,6 +1316,10 @@ protected:
 	Bool calibrate_p;
 	String callib_p;
 	Record callibRec_p;
+
+	// UVContSub parameters
+	Bool uvcontsub_p;
+	Record uvcontsubRec_p;
 
 	// Spw avergain parameters
 	Bool spwAverage_p;

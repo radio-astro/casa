@@ -75,10 +75,11 @@ FreqAxisTVI::~FreqAxisTVI()
 // -----------------------------------------------------------------------
 Bool FreqAxisTVI::parseConfiguration(const Record &configuration)
 {
-	int exists = 0;
+	int exists = -1;
 	Bool ret = True;
 
 	// Parse spw selection (optional)
+	exists = -1;
 	exists = configuration.fieldNumber ("spw");
 	if (exists >= 0)
 	{
@@ -135,6 +136,39 @@ void FreqAxisTVI::initialize()
 		}
 	}
   }
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void FreqAxisTVI::formSelectedChanMap()
+{
+	// This triggers realization of the channel selection
+	inputVii_p->originChunks();
+
+	// Refresh map
+	spwInpChanIdxMap_p.clear();
+
+	for (Int ispw = 0; ispw < inputVii_p->nSpectralWindows(); ++ispw)
+	{
+
+		// TBD trap unselected spws with a continue
+
+		Vector<Int> chansV;
+		chansV.reference(inputVii_p->getChannels(0.0, -1, ispw, 0));
+
+		Int nChan = chansV.nelements();
+		if (nChan > 0)
+		{
+			spwInpChanIdxMap_p[ispw].clear(); // creates ispw's map
+			for (Int ich = 0; ich < nChan; ++ich)
+			{
+				spwInpChanIdxMap_p[ispw].push_back(chansV[ich]); // accum into map
+			}
+		}
+	} // ispw
 
 	return;
 }
@@ -236,12 +270,19 @@ void FreqAxisTVI::flagRow (Vector<Bool> & flagRow) const
 // -----------------------------------------------------------------------
 void FreqAxisTVI::weight (Matrix<Float> & weight) const
 {
-	// Get flags and weightSpectrum from own VisBuffer
-	const Cube<Bool> &flags = getVisBufferConst()->flagCube();
-	const Cube<Float> &weightSpectrum = getVisBufferConst()->weightSpectrum();
+	if (weightSpectrumExists()) // Defined by each derived class or inner TVI
+	{
+		// Get flags and weightSpectrum from own VisBuffer
+		const Cube<Bool> &flags = getVisBufferConst()->flagCube();
+		const Cube<Float> &weightSpectrum = getVisBufferConst()->weightSpectrum();
 
-	// Calculate output weight
-	accumulateWeightCube(weightSpectrum,flags,weight);
+		// Calculate output weight
+		accumulateWeightCube(weightSpectrum,flags,weight);
+	}
+	else
+	{
+		getVii()->weight (weight);
+	}
 
 	return;
 }
@@ -251,45 +292,22 @@ void FreqAxisTVI::weight (Matrix<Float> & weight) const
 // -----------------------------------------------------------------------
 void FreqAxisTVI::sigma (Matrix<Float> & sigma) const
 {
+	if (sigmaSpectrumExists())
+	{
+		// Get flags and sigmaSpectrum from own VisBuffer
+		const Cube<Bool> &flags = getVisBufferConst()->flagCube();
+		const Cube<Float> &sigmaSpectrum = getVisBufferConst()->sigmaSpectrum();
 
-	// Get flags and sigmaSpectrum from own VisBuffer
-	const Cube<Bool> &flags = getVisBufferConst()->flagCube();
-	const Cube<Float> &sigmaSpectrum = getVisBufferConst()->sigmaSpectrum();
-
-	// Calculate output sigma
-	accumulateWeightCube(sigmaSpectrum,flags,sigma);
+		// Calculate output sigma
+		accumulateWeightCube(sigmaSpectrum,flags,sigma);
+	}
+	else
+	{
+		getVii()->sigma (sigma);
+	}
 
 	return;
 }
-
-// -----------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------
-void FreqAxisTVI::formSelectedChanMap()
-{
-  // This triggers realization of the channel selection
-  inputVii_p->originChunks();
-  
-  // Refresh map
-  spwInpChanIdxMap_p.clear();
-
-  for (Int ispw=0;ispw<inputVii_p->nSpectralWindows();++ispw) {
-
-    // TBD trap unselected spws with a continue
-
-    Vector<Int> chansV;
-    chansV.reference(inputVii_p->getChannels(0.0,-1,ispw,0));
-
-    Int nChan=chansV.nelements();
-    if (nChan>0) {
-      spwInpChanIdxMap_p[ispw].clear();  // creates ispw's map
-      for (Int ich=0;ich<nChan;++ich)
-	spwInpChanIdxMap_p[ispw].push_back(chansV[ich]);  // accum into map
-    }
-
-  } // ispw
-
-} 
 
 } //# NAMESPACE VI - END
 

@@ -55,15 +55,17 @@ PhaseShiftingTVI::PhaseShiftingTVI(	ViImplementation2 * inputVii,
 // -----------------------------------------------------------------------
 Bool PhaseShiftingTVI::parseConfiguration(const Record &configuration)
 {
-	int exists = 0;
+	int exists = -1;
 	Bool ret = True;
 
+	exists = -1;
 	exists = configuration.fieldNumber ("XpcOffset");
 	if (exists >= 0)
 	{
 		configuration.get (exists, dx_p);
 	}
 
+	exists = -1;
 	exists = configuration.fieldNumber ("YpcOffset");
 	if (exists >= 0)
 	{
