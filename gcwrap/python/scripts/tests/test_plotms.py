@@ -621,8 +621,8 @@ class plotms_test_calplots(plotms_test_base):
     def tearDown(self):
         self.tearDowncaldata()
 
-    def test_basic_calplot(self):
-        '''test_basic_calplot: Basic plot of caltable'''
+    def test_calplot_basic(self):
+        '''test_calplot_basic: Basic plot of caltable'''
         self.plotfile_jpg = self.outputDir + "testCalPlot01.jpg"
         self.removePlotfile()
         time.sleep(5)
@@ -678,6 +678,18 @@ class plotms_test_calplots(plotms_test_base):
                      showgui=False, highres=True, correlation='R', overwrite=True)   
         self.assertTrue(res)
         self.checkPlotfile(self.plotfile_jpg, 40000)
+        self.removePlotfile()
+        print
+
+    def test_calplot_ratioplot(self):
+        '''test_calplot_ratioplot: caltable with corr selection'''
+        self.plotfile_jpg = self.outputDir + "testCalPlot05.jpg"
+        self.removePlotfile()
+        time.sleep(5)
+        res = plotms(vis=self.caltable, plotfile=self.plotfile_jpg, expformat="jpg", 
+                     showgui=False, highres=True, correlation='/', overwrite=True)   
+        self.assertTrue(res)
+        self.checkPlotfile(self.plotfile_jpg, 65000)
         self.removePlotfile()
         print
 
