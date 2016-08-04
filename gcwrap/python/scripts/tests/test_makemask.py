@@ -368,6 +368,25 @@ class test_merge(makemaskTestBase):
           ia.done()
         #self.assertTrue(self.compareimpix(self.refimage3,self.outimage1))
 
+    def test5_mergemasks(self):
+        """ (copy mode) mergetest5: same as mergetest1 but uses full paths
+        -merging image mask (1/0 mask) and T/F mask and  overwrite to an
+        existing image(1/0) mask (verification of CAS-8865 fix)"""     
+
+        #Only overwrapped regions is valid (whenever T/F mask involved)
+        try:
+            shutil.copytree(self.inimage,self.outimage1)
+        #    makemask(mode='copy',inpimage=self.inimage,inpmask=[self.inimage,self.inimage2+':maskoo'], output=self.outimage1, overwrite=True)
+            makemask(mode='copy',inpimage=os.path.abspath(self.inimage),inpmask=[os.path.abspath(self.inimage),os.path.abspath(self.inimage2)+':maskformergetest'],
+            output=os.path.abspath(self.outimage1), overwrite=True)
+        except Exception, e:
+            print "\nError running makemask"
+            raise e
+
+        self.assertTrue(os.path.exists(self.outimage1))
+        self.assertTrue(self.compareimpix(self.refimage1,self.outimage1))
+        #shutil.rmtree(self.outimage1)
+
 
 class test_expand(makemaskTestBase):
     """test expand mode"""

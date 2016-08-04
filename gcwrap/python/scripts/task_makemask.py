@@ -688,7 +688,10 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
 		    # summing all the images
                     casalog.post('Summing all mask images in inpmask and  normalized to 1 for mask','INFO')
 		    for img in imgfiles:
-                        tmpregrid='__tmp_regrid.'+img
+                        #tmpregrid='__tmp_regrid.'+img
+                        dirname = os.path.dirname(img)
+                        basename = os.path.basename(img)
+                        tmpregrid= dirname+'/'+'__tmp_regrid.'+basename if len(dirname) else '__tmp_regrid.'+basename
                         if os.path.exists(tmpregrid):
                             shutil.rmtree(tmpregrid)
                         # regrid to output image coords
@@ -907,8 +910,11 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
 
                 if type(inpimage)==list:
                    for im in inpimage:
-                       if os.path.isdir('__tmp_regrid.'+im):
-		            shutil.rmtree('__tmp_regrid.'+im)
+                       basename = os.path.basename(im)
+                       dirname = os.path.dirname(im)
+                       tempregridname = dirname+'/__tmp_regrid.'+basename if len(dirname) else '__tmp_regrid.'+basename
+                       if os.path.isdir(tempregridname):
+		            shutil.rmtree(tempregridname)
                        
              
                  
@@ -954,7 +960,7 @@ def regridmask(inputmask,template,outputmask,axes=[3,0,1],method='linear',chanra
         raise IOError, "template image %s does not exist" % template
     
     (ia,tb,) = gentools(['ia','tb']) 
-    inputmaskcopy = "_tmp_copy_"+inputmask
+    inputmaskcopy = "_tmp_copy_"+os.path.basename(inputmask)
     shutil.copytree(inputmask,inputmaskcopy)
     ia.open(template)
     ocsys = ia.coordsys()
