@@ -1202,6 +1202,27 @@ calibrater::modelfit(const std::vector<bool>& vary,
 }
 
 bool
+calibrater::createcaltable(const std::string& caltable,
+			   const std::string& partype,
+			   const std::string& caltype,
+			   bool singlechan)
+{
+  if (! itsMS) {
+    *itsLog << LogIO::SEVERE << "Must first open a MeasurementSet."
+	    << endl << LogIO::POST;
+    return false;
+  }
+
+  VisCalEnum::VCParType parType = VisCalEnum::REAL;
+  if (partype == "Complex")
+    parType = VisCalEnum::COMPLEX;
+
+  NewCalTable oNCT(caltable, parType, caltype, itsMS->tableName(), singlechan);
+  oNCT.writeToDisk(caltable);
+  return true;
+}
+
+bool
 calibrater::updatecaltable(const std::string& caltable)
 {
 

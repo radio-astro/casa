@@ -2562,6 +2562,44 @@ guess of 15 Jy at the phase center (0,0), with 2.0 arcsec major axis,
 </method>
 
 
+<method type="function" name="createcaltable">
+  <shortdescription>Create an empty calibration table</shortdescription>
+
+<input>
+     <param type="string" direction="in" name="caltable">
+     <description>Calibration table name</description>
+     <allowed kind="enum">
+          <value>Real</value>
+	  <value>Complex</value>
+     </allowed>
+     </param>
+     <param type="string" direction="in" name="partype">
+     <description>Parameter type name</description>
+     </param>
+     <param type="string" direction="in" name="caltype">
+     <description>Calibration type name</description>
+     </param>
+     <param type="bool" direction="in" name="singlechan">
+     <description>Create a calibration table with frequency-independent parameters?</description>
+     </param>
+</input>
+
+<returns type="bool"/>
+
+<description>
+Creates an empty calibration table that can subsequently be filled
+with by using the table tool.
+</description>
+
+<example>
+cb.open('ngc5921.ms',F,F,F)   # don't add MODEL_DATA, etc.
+cb.createcaltable('ngc5921.gcal', 'Complex', 'G Jones', True)
+cb.close()
+</example>
+
+</method>
+
+
 <method type="function" name="updatecaltable">
    <shortdescription>Caltable modernizer.</shortdescription>
 
