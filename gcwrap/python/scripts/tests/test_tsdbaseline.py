@@ -3479,11 +3479,11 @@ Basic unit tests for task tsdbaseline. No interactive testing.
         if len(blformat)==len(bloutput):
             self.check_bloutput(bloutput)
 
-        #diff_value=os.system('diff ' + self.infile + '_blparam.csv ' + self.bloutput_sinusoid_addwn012_rejwn0_csv)
-        #self.assertEqual(diff_value, 0, msg=self.infile + '_blparam.csv' + 'is not equivalent to ' + self.bloutput_sinusoid_addwn012_rejwn0_csv)   
+        diff_value=os.system('diff ' + self.infile + '_blparam.csv ' + self.bloutput_sinusoid_addwn012_rejwn0_csv)
+        self.assertEqual(diff_value, 0, msg=self.infile + '_blparam.csv' + 'is not equivalent to ' + self.bloutput_sinusoid_addwn012_rejwn0_csv)   
 
-        #diff_value=os.system('diff ' + self.infile + '_blparam.txt ' + self.bloutput_sinusoid_addwn012_rejwn0_txt)
-        #self.assertEqual(diff_value, 0, msg=self.infile + '_blparam.txt' + 'is not equivalent to ' + self.bloutput_sinusoid_addwn012_rejwn0_txt)
+        diff_value=os.system('diff ' + self.infile + '_blparam.txt ' + self.bloutput_sinusoid_addwn012_rejwn0_txt)
+        self.assertEqual(diff_value, 0, msg=self.infile + '_blparam.txt' + 'is not equivalent to ' + self.bloutput_sinusoid_addwn012_rejwn0_txt)
 
     def test0125(self):
         """Basic Test 0125: addwn012, rejwn02 test"""
@@ -3499,11 +3499,11 @@ Basic unit tests for task tsdbaseline. No interactive testing.
         if len(blformat)==len(bloutput):
             self.check_bloutput(bloutput)
 
-        #diff_value=os.system('diff ' + self.infile + '_blparam.csv ' + self.bloutput_sinusoid_addwn012_rejwn02_csv)
-        #self.assertEqual(diff_value, 0, msg=self.infile + '_blparam.csv' + 'is not equivalent to ' + self.bloutput_sinusoid_addwn012_rejwn02_csv)   
+        diff_value=os.system('diff ' + self.infile + '_blparam.csv ' + self.bloutput_sinusoid_addwn012_rejwn02_csv)
+        self.assertEqual(diff_value, 0, msg=self.infile + '_blparam.csv' + 'is not equivalent to ' + self.bloutput_sinusoid_addwn012_rejwn02_csv)   
 
-        #diff_value=os.system('diff ' + self.infile + '_blparam.txt ' + self.bloutput_sinusoid_addwn012_rejwn02_txt)
-        #self.assertEqual(diff_value, 0, msg=self.infile + '_blparam.txt' + 'is not equivalent to ' + self.bloutput_sinusoid_addwn012_rejwn02_txt)
+        diff_value=os.system('diff ' + self.infile + '_blparam.txt ' + self.bloutput_sinusoid_addwn012_rejwn02_txt)
+        self.assertEqual(diff_value, 0, msg=self.infile + '_blparam.txt' + 'is not equivalent to ' + self.bloutput_sinusoid_addwn012_rejwn02_txt)
 
     def test0126(self):
         """Basic Test 0126: addwn012, rejwn1 test"""
@@ -3519,11 +3519,11 @@ Basic unit tests for task tsdbaseline. No interactive testing.
         if len(blformat)==len(bloutput):
             self.check_bloutput(bloutput)
 
-        #diff_value=os.system('diff ' + self.infile + '_blparam.csv ' + self.bloutput_sinusoid_addwn012_rejwn1_csv)
-        #self.assertEqual(diff_value, 0, msg=self.infile + '_blparam.csv' + 'is not equivalent to ' + self.bloutput_sinusoid_addwn012_rejwn1_csv)   
+        diff_value=os.system('diff ' + self.infile + '_blparam.csv ' + self.bloutput_sinusoid_addwn012_rejwn1_csv)
+        self.assertEqual(diff_value, 0, msg=self.infile + '_blparam.csv' + 'is not equivalent to ' + self.bloutput_sinusoid_addwn012_rejwn1_csv)   
 
-        #diff_value=os.system('diff ' + self.infile + '_blparam.txt ' + self.bloutput_sinusoid_addwn012_rejwn1_txt)
-        #self.assertEqual(diff_value, 0, msg=self.infile + '_blparam.txt' + 'is not equivalent to ' + self.bloutput_sinusoid_addwn012_rejwn1_txt)
+        diff_value=os.system('diff ' + self.infile + '_blparam.txt ' + self.bloutput_sinusoid_addwn012_rejwn1_txt)
+        self.assertEqual(diff_value, 0, msg=self.infile + '_blparam.txt' + 'is not equivalent to ' + self.bloutput_sinusoid_addwn012_rejwn1_txt)
 
 
     def test0127(self):
@@ -3534,13 +3534,14 @@ Basic unit tests for task tsdbaseline. No interactive testing.
         bloutput=['','']
         addwn='>4000'
         rejwn=[4005]
-        spw='0' 
+        spw='0'
+        applyfft = False
 
-        #result = self.run_test(blfunc=blfunc, blformat=blformat, bloutput=bloutput, addwn=addwn, rejwn=rejwn, spw=spw)
-        #self.assertEqual(result,None, msg="The task returned '"+str(result)+"' instead of None")
+        result = self.run_test(blfunc=blfunc, blformat=blformat, bloutput=bloutput, addwn=addwn, rejwn=rejwn, spw=spw, applyfft=applyfft)
+        self.assertEqual(result,None, msg="The task returned '"+str(result)+"' instead of None")
 
-        #diff_value=os.system('diff ' + self.infile + '_blparam.txt ' + self.bloutput_sinusoid_addwnGt4000_rejwn4005_txt)
-        #self.assertEqual(diff_value, 0, msg=self.infile + '_blparam.txt' + 'is not equivalent to ' + self.bloutput_sinusoid_addwnGt4000_rejwn4005_txt)
+        diff_value=os.system('diff ' + self.infile + '_blparam.txt ' + self.bloutput_sinusoid_addwnGt4000_rejwn4005_txt)
+        self.assertEqual(diff_value, 0, msg=self.infile + '_blparam.txt' + 'is not equivalent to ' + self.bloutput_sinusoid_addwnGt4000_rejwn4005_txt)
 
 
 
