@@ -74,7 +74,7 @@ class GainflagInputs(commoncalinputs.CommonCalibrationInputs):
     @flag_rmsdeviant.setter
     def flag_rmsdeviant(self, value):
         if value is None:
-            value = True
+            value = False
         self._flag_rmsdeviant = value
 
     @property
@@ -84,7 +84,7 @@ class GainflagInputs(commoncalinputs.CommonCalibrationInputs):
     @flag_nrmsdeviant.setter
     def flag_nrmsdeviant(self, value):
         if value is None:
-            value = False
+            value = True
         self._flag_nrmsdeviant = value
 
     @property
@@ -114,7 +114,7 @@ class GainflagInputs(commoncalinputs.CommonCalibrationInputs):
     @fnrmsdev_limit.setter
     def fnrmsdev_limit(self, value):
         if value is None:
-            value = 10.0
+            value = 6.0
         self._fnrmsdev_limit = value
 
     @property
