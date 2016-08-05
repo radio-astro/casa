@@ -680,6 +680,8 @@ void MosaicFT::finalizeToSky()
 
   }
 
+  if(!weightLattice.null()) weightLattice=0;
+  griddedWeight.resize();
   if(pointingToImage) delete pointingToImage; pointingToImage=0;
 }
 

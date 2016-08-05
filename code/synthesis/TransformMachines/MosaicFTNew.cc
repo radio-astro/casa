@@ -214,6 +214,9 @@ ImageInterface<Complex>& MosaicFTNew::getImage(Matrix<Float>& weights,
       image->put(griddedData(blc, trc));
     }
   }
+  
+  if(!arrayLattice.null()) arrayLattice=0;
+  if(!lattice.null()) lattice=0;
   griddedData.resize();
   image->clearCache();
   return *image;
@@ -234,7 +237,6 @@ void MosaicFTNew::getWeightImage(ImageInterface<Float>& weightImage,
 
   weightImage.copyData( (LatticeExpr<Float>) ( (*skyCoverage_p)*inx*iny ) );
  
-
 }
 
 } //# NAMESPACE CASA - END

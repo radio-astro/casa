@@ -682,6 +682,9 @@ void MosaicFT::finalizeToSky()
 
   }
 
+  if(!weightLattice.null()) weightLattice=0;
+  griddedWeight.resize();
+
   if(pointingToImage) delete pointingToImage; pointingToImage=0;
 }
 
@@ -1698,6 +1701,8 @@ ImageInterface<Complex>& MosaicFT::getImage(Matrix<Float>& weights,
       convertArray(griddedData, griddedData2);
       
       //Don't need the double-prec grid anymore...
+      //if(!darrayLattice.null()) 
+      //      darrayLattice.resize();
       griddedData2.resize();
       arrayLattice = new ArrayLattice<Complex>(griddedData);
       lattice=arrayLattice;
@@ -1798,8 +1803,6 @@ void MosaicFT::getWeightImage(ImageInterface<Float>& weightImage,
 			    (*skyCoverage_p),0.0)));
   */
   weightImage.copyData(*skyCoverage_p);
-
- 
 
 }
 
