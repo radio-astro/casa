@@ -919,7 +919,6 @@ void SingleDishMS::finalise_effective_nwave(std::vector<int> const &blparam_eff_
                                blparam_fft);
     merge_wavenumbers(blparam_eff_base, blparam_fft, blparam_exclude, blparam_eff);
   }
-
 }
 
 void SingleDishMS::parse_fftthresh(string const& fftthresh_str, string& fftthresh_attr,
@@ -1214,6 +1213,8 @@ void SingleDishMS::doSubtractBaseline(string const& in_column_name,
       bool *mask_data = mask.data();
       bool *mask2_data = mask2.data();
 
+      auto get_wavenumber_upperlimit = [&](){ return static_cast<int>(num_chan) / 2 - 1; };
+
       uInt final_mask[num_pol];
       uInt final_mask2[num_pol];
       final_mask[0] = 0;
@@ -1227,7 +1228,7 @@ void SingleDishMS::doSubtractBaseline(string const& in_column_name,
       if (new_nchan) {
         int blparam_max = blparam[blparam.size() - 1];
         if (bltype == BaselineType_kSinusoid) {
-          int nwave_ulimit = (num_chan - 1) / 2;
+          int nwave_ulimit = get_wavenumber_upperlimit();
           get_effective_nwave(blparam, blparam_exclude, nwave_ulimit, blparam_eff_base);
           blparam_max = blparam_eff_base[blparam_eff_base.size() - 1];
         }
@@ -1305,7 +1306,7 @@ void SingleDishMS::doSubtractBaseline(string const& in_column_name,
           
           size_t num_coeff;
           if (bltype == BaselineType_kSinusoid) {
-            int nwave_ulimit = (num_chan - 1) / 2;
+            int nwave_ulimit = get_wavenumber_upperlimit();
             finalise_effective_nwave(blparam_eff_base, blparam_exclude,
                                      nwave_ulimit,
                                      num_chan, spec_data, mask_data,
@@ -1492,6 +1493,7 @@ void SingleDishMS::doSubtractBaseline(string const& in_column_name,
             } else if (bltype_mtx2(0, 0) == (uInt)1) {
               bltype_name = "chebyshev";
             } else if (bltype_mtx2(0, 0) == (uInt)2) {
+                blparam_name = " npiece = ";
                 bltype_name = "cspline";
             } else if (bltype_mtx2(0, 0) == (uInt)3) {
                 blparam_name = " nwave = ";
@@ -1526,7 +1528,8 @@ void SingleDishMS::doSubtractBaseline(string const& in_column_name,
               if (fpar_mtx3(ipol, wn) == 0) {
                 ofs_txt << "c" << fpar_mtx3(ipol, wn) << " = " <<setw(13)<<left<< setprecision(8) << coeff_mtx2(ipol, 0) << "  "; 
                 wn = 1;
-                for (size_t icoeff = 1; icoeff < num_coeff_max; ++icoeff) {
+                //for (size_t icoeff = 1; icoeff < num_coeff_max; ++icoeff) {
+                for (size_t icoeff = 1; icoeff < coeff_mtx_tmp[ipol].size(); ++icoeff) {
                   ofs_txt << c_s << fpar_mtx3(ipol, wn) << " = " <<setw(13)<<left<< setprecision(8) << coeff_mtx2(ipol, icoeff) << "  ";
                   c_s == "s" ? (c_s = "c") : (c_s = "s");
                   if (icoeff % 2 == 0) {
@@ -1535,7 +1538,8 @@ void SingleDishMS::doSubtractBaseline(string const& in_column_name,
                 }
               } else {
                 wn = 0;
-                for (size_t icoeff = 0; icoeff < num_coeff_max; ++icoeff) {
+                //for (size_t icoeff = 0; icoeff < num_coeff_max; ++icoeff) {
+                for (size_t icoeff = 0; icoeff < coeff_mtx_tmp[ipol].size(); ++icoeff) {
                   ofs_txt << c_s << fpar_mtx3(ipol, wn) << " = " <<setw(13)<<left<< setprecision(8) << coeff_mtx2(ipol, icoeff) << "  ";
                   c_s == "s" ? (c_s = "c") : (c_s = "s");
                   if (icoeff % 2 != 0) {
@@ -1587,13 +1591,12 @@ void SingleDishMS::doSubtractBaseline(string const& in_column_name,
             } else if (bltype_mtx2(0, 0) == (uInt)1) {
               bltype_name = "chebyshev";
             } else if (bltype_mtx2(0, 0) == (uInt)2) {
-              //bltype_name = "cspline";
+              bltype_name = "cspline";
             } else if (bltype_mtx2(0, 0) == (uInt)3) {
-              //bltype_name = "sinusoid";
+              bltype_name = "sinusoid";
             }
 
             Matrix<Int> fpar_mtx2 = fpar_mtx;
-            Matrix<Float> coeff_mtx2 = coeff_mtx;
             if (bltype_mtx2(0, 0) == (uInt)3) {
               ofs_csv << bltype_name.c_str() << ',' << fpar_mtx2(ipol, 0);
               for (size_t i = 1; i < num_fpar_max; ++i) {
@@ -1604,8 +1607,16 @@ void SingleDishMS::doSubtractBaseline(string const& in_column_name,
               ofs_csv << bltype_name.c_str() << ',' << fpar_mtx2(ipol, 0)
                       << ',';
             }
-            for (size_t icoeff = 0; icoeff < num_coeff_max; ++icoeff) {
-              ofs_csv << setprecision(8) << coeff_mtx2(ipol, icoeff) << ',';
+            
+            Matrix<Float> coeff_mtx2 = coeff_mtx;
+            if (bltype_mtx2(0, 0) == (uInt)3) {
+              for (size_t icoeff = 0; icoeff < coeff_mtx_tmp[ipol].size(); ++icoeff) {
+                ofs_csv << setprecision(8) << coeff_mtx2(ipol, icoeff) << ',';
+              }
+            } else {
+              for (size_t icoeff = 0; icoeff < num_coeff_max; ++icoeff) {
+                ofs_csv << setprecision(8) << coeff_mtx2(ipol, icoeff) << ',';
+              }
             }
             
             Matrix<Float> rms_mtx2 = rms_mtx;
@@ -1851,21 +1862,6 @@ void SingleDishMS::subtractBaselineSinusoid(string const& in_column_name,
   char const delim = ',';
   vector<int> addwn = string_to_list(addwn0, delim);
   vector<int> rejwn = string_to_list(rejwn0, delim);
-  /****************
-  std::cout << "***************************************************" << std::endl;
-  std::cout << "  addwn: " << std::endl;
-  for (size_t i = 0; i < addwn.size(); ++i) {
-    std::cout << addwn[i] << ",  ";
-  }
-  std::cout << std::endl;
-  std::cout << "***************************************************" << std::endl;
-  std::cout << "  rejwn: " << std::endl;
-  for (size_t i = 0; i < rejwn.size(); ++i) {
-    std::cout << rejwn[i] << ",  ";
-  }
-  std::cout << std::endl;
-  std::cout << "***************************************************" << std::endl;
-  ****************/
 
   LogIO os(_ORIGIN);
   os << "Fitting and subtracting sinusoid baseline with wave numbers " << addwn0 << LogIO::POST;

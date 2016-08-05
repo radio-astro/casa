@@ -118,8 +118,6 @@ public:
 				 string const& in_spw,
 				 string const& addwn0,
 				 string const& rejwn0,
-				 //vector<int> const& addwn,
-				 //vector<int> const& rejwn,
 				 bool const applyfft,
 				 string const fftmethod,
 				 string const fftthresh,
