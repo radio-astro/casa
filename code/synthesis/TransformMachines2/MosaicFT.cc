@@ -638,7 +638,7 @@ void MosaicFT::finalizeToSky()
     imshp(2)=npol;
 
 
-    skyCoverage_p=new TempImage<Float> (imshp, coords);
+    skyCoverage_p=new TempImage<Float> (imshp, coords,1.0);
     IPosition blc(4, (nx-image->shape()(0)+(nx%2==0))/2,
 		    (ny-image->shape()(1)+(ny%2==0))/2, 0, 0);
     IPosition stride(4, 1);
