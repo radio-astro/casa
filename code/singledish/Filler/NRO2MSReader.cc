@@ -684,7 +684,8 @@ Bool NRO2MSReader::getSpectralWindowRowImpl(
   record.meas_freq_ref = frame_type;
   record.refpix = obs_header_.CHCAL0[spw_id_counter_][0];
   record.refval = obs_header_.FQCAL0[spw_id_counter_][0];
-  record.increment = obs_header_.CHWID0[spw_id_counter_];
+  Double incr_factor = (obs_header_.SIDBD0[spw_id_counter_] == "USB") ? -1.0 : 1.0;
+  record.increment = incr_factor * obs_header_.CHWID0[spw_id_counter_];
   
   spw_id_counter_++;
   if (obs_header_.NSPWIN <= spw_id_counter_) {
