@@ -77,7 +77,7 @@ def analyze_plot_table(context, datatable, ms, antid, spwid, polid, plot_table):
     return num_ra, num_dec, num_plane, refpix_list, refval_list, increment_list, rowlist 
 
 def create_plotter(num_ra, num_dec, num_plane, refpix, refval, increment):
-    plotter = sparsemap.SDSparseMapPlotter(nh=num_ra, nv=num_dec, step=1, brightnessunit='K')
+    plotter = sparsemap.SDSparseMapPlotter(nh=num_ra, nv=num_dec, step=1, brightnessunit='Jy/beam')
     plotter.setup_labels(refpix, refval, increment)
     return plotter
     
