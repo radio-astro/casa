@@ -682,10 +682,33 @@ Bool NRO2MSReader::getSpectralWindowRowImpl(
     frame_type = MFrequency::N_Types;
   }
   record.meas_freq_ref = frame_type;
+  /*
   record.refpix = obs_header_.CHCAL0[spw_id_counter_][0];
   record.refval = obs_header_.FQCAL0[spw_id_counter_][0];
-  Double incr_factor = (obs_header_.SIDBD0[spw_id_counter_] == "USB") ? -1.0 : 1.0;
-  record.increment = incr_factor * obs_header_.CHWID0[spw_id_counter_];
+  record.increment = obs_header_.CHWID0[spw_id_counter_];
+  */
+  //-----------------------
+  NRODataScanData scan_data;
+  readScanData(spw_id_counter_, scan_data);
+  double freq_offset = scan_data.FRQ00 - obs_header_.F0CAL0[spw_id_counter_];
+  std::vector<double> freqs(2, freq_offset);
+  std::vector<double> chcal(2);
+  for (size_t i = 0; i < 2; ++i) {
+    freqs[i] += obs_header_.FQCAL0[spw_id_counter_][i];
+    chcal[i]  = obs_header_.CHCAL0[spw_id_counter_][i];
+  }
+  double band_width = freqs[1] - freqs[0];
+  double chan_width = band_width / (chcal[1] - chcal[0]);
+  if (scan_data.FQIF10 > 0.0) { // USB
+    double tmp = freqs[1];
+    freqs[1] = freqs[0];
+    freqs[0] = tmp;
+    chan_width *= -1.0;
+  }
+  record.refpix = chcal[0] - 1; // 0-based
+  record.refval = freqs[0];
+  record.increment = chan_width;
+  //-----------------------
   
   spw_id_counter_++;
   if (obs_header_.NSPWIN <= spw_id_counter_) {
