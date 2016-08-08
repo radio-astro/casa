@@ -1477,8 +1477,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  chanchunks=1;
 
           CompositeNumber cn(uInt(imshape[0] * 2));
-          // heuristic, we need around 9 times more than imshape memory
-          size_t fudge_factor = 9;
+          // heuristic factors multiplied to imshape based on gridder
+          size_t fudge_factor = 16;
+          if (ftm->name()=="MosaicFTNew") {
+              fudge_factor = 16;
+          }
+          else if (ftm->name()=="GridFT") {
+              fudge_factor = 9;
+          }
 
           size_t required_mem = fudge_factor * sizeof(Float);
           for (size_t i = 0; i < imshape.nelements(); i++) {
