@@ -48,7 +48,7 @@ class SDBLFlagInputs(common.SingleDishInputs):
                        'plotflag'])
         if self.iteration is None: self.iteration = 5
         ### Default Flag rule
-        from ..msbaselineflag import SDFlagRule
+        from ..baselineflag import SDFlagRule
         reload(SDFlagRule)
         self.FlagRuleDictionary = SDFlagRule.SDFlagRule
         # update FlagRuleDictionary

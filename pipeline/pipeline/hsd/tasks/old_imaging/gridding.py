@@ -9,7 +9,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
 from .. import common 
 
-from ..msimaging.accumulator import Accumulator
+from ..imaging.accumulator import Accumulator
 
 LOG = infrastructure.get_logger(__name__)
 DO_TEST = True

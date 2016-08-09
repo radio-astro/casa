@@ -19,9 +19,9 @@ from .importdata import SDImportData
 from .flagging import FlagDeterALMASingleDish
 from .skycal import SDMSSkyCal
 from .k2jycal import SDK2JyCal
-from .msapplycal import SDMSApplycal
-from .msbaselineflag import SDMSBLFlag
-from .msbaseline import SDMSBaseline
-from .msimaging import SDMSImaging
-from .msexportdata import SDMSExportData
+from .applycal import SDMSApplycal
+from .baselineflag import SDMSBLFlag
+from .baseline import SDMSBaseline
+from .imaging import SDMSImaging
+from .exportdata import SDMSExportData
 

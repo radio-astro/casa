@@ -14,7 +14,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.utils as utils
 from pipeline.domain.datatable import OnlineFlagIndex
 
-from ..msbaselineflag import SDFlagPlotter as SDP
+from ..baselineflag import SDFlagPlotter as SDP
 from .. import common
 
 LOG = infrastructure.get_logger(__name__)

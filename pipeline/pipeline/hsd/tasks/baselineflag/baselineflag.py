@@ -60,7 +60,7 @@ class SDBLFlagInputs(basetask.StandardInputs):
             setattr(self, param, sdutils.to_bool(getattr(self, param)))
         if self.iteration is None: self.iteration = 5
         ### Default Flag rule
-        from ..msbaselineflag import SDFlagRule
+        from . import SDFlagRule
         reload(SDFlagRule)
         self.FlagRuleDictionary = SDFlagRule.SDFlagRule
         # update FlagRuleDictionary

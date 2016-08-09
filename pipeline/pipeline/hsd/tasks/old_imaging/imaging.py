@@ -15,7 +15,7 @@ from . import applyflag
 from . import weighting
 from . import scaling
 from . import worker
-from ..msimaging import sdcombine
+from ..imaging import sdcombine
 from . import jyperk
 from .jyperk import JyPerKItems
 from .. import common

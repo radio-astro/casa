@@ -22,7 +22,7 @@ from .. import common
 
 LOG = infrastructure.get_logger(__name__)
 
-from ..msbaselineflag.SDFlagRule import INVALID_STAT
+from .SDFlagRule import INVALID_STAT
 
 class SDBLFlagWorkerInputs(basetask.StandardInputs):
     """

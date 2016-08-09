@@ -3,8 +3,8 @@ import pipeline.infrastructure.renderer.qaadapter as qaadapter
 import pipeline.infrastructure.pipelineqa as pipelineqa
 import pipeline.infrastructure.renderer.weblog as weblog
 
-from pipeline.hsd.tasks.msbaseline.msbaseline import SDMSBaseline
-from pipeline.hsd.tasks.msbaseline import msbaseline
+from .msbaseline import SDMSBaseline
+from . import msbaseline
 from . import renderer
 from . import qa
 
