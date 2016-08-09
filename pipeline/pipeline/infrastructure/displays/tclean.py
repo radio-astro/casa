@@ -102,7 +102,7 @@ class CleanSummary(object):
                                                    intent=r.intent))
 
                 # MOM0_FC for this iteration (currently only last but allow for others in future).
-                if 'mom_fc' in iteration and os.path.exists(iteration['mom0_fc'] + extension):
+                if 'mom0_fc' in iteration and os.path.exists(iteration['mom0_fc'] + extension):
                     plot_wrappers.append(
                         displays.SkyDisplay().plot(self.context, iteration['mom0_fc'] + extension, reportdir=stage_dir,
                                                    intent=r.intent))
