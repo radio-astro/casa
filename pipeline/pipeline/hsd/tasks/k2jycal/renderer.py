@@ -8,7 +8,7 @@ import pipeline.infrastructure.logging as logging
 LOG = logging.get_logger(__name__)
 
 class T2_4MDetailsSingleDishK2JyCalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
-    def __init__(self, uri='hsdms_k2jycal.mako', 
+    def __init__(self, uri='hsd_k2jycal.mako', 
                  description='Generate Kelvin to Jy calibration table.',
                  always_rerender=False):
         super(T2_4MDetailsSingleDishK2JyCalRenderer, self).__init__(uri=uri,

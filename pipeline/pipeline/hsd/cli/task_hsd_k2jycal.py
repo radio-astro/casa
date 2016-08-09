@@ -1,31 +1,16 @@
-'''
-Created on 2013/06/23
-
-@author: kana
-'''
 import sys
 
 import pipeline.h.cli.utils as utils
 
-def hsdms_blflag(iteration=None, edge=None, flag_tsys=None, tsys_thresh=None,
-                 flag_weath=None, weath_thresh=None,
-                 flag_prfre=None, prfre_thresh=None,
-                 flag_pofre=None, pofre_thresh=None,
-                 flag_prfr=None, prfr_thresh=None,
-                 flag_pofr=None, pofr_thresh=None,
-                 flag_prfrm=None, prfrm_thresh=None, prfrm_nmean=None,
-                 flag_pofrm=None, pofrm_thresh=None, pofrm_nmean=None,
-                 flag_user=None, user_thresh=None,
-                 plotflag=None,
-                 pipelinemode=None, infiles=None, antenna=None, 
-                 field=None, spw=None, pol=None,
-                 dryrun=None, acceptresults=None):
+
+def hsd_k2jycal(reffile=None, pipelinemode=None, infiles=None, caltable=None,
+    dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the
     # constructor
     all_inputs = vars()
 
-    task_name = 'SDMSBLFlag'
+    task_name = 'SDK2JyCal'
 
     ##########################################################################
     #                                                                        #

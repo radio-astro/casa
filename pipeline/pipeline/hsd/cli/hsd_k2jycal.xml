@@ -5,7 +5,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="hsdms_k2jycal" category="pipeline">
+<task type="function" name="hsd_k2jycal" category="pipeline">
 <shortdescription>Derive Kelvin to Jy calibration tables</shortdescription>
 <description>
 Derive the Kelvin to Jy calibration for list of measurement sets

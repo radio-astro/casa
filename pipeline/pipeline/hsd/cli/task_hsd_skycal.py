@@ -2,7 +2,7 @@ import sys
 
 import pipeline.h.cli.utils as utils
 
-def hsdms_skycal(calmode=None, fraction=None, noff=None,
+def hsd_skycal(calmode=None, fraction=None, noff=None,
                  width=None, elongated=None,
                  pipelinemode=None, infiles=None, field=None,
                  spw=None, scan=None, 

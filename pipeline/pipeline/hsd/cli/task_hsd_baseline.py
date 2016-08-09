@@ -2,15 +2,17 @@ import sys
 
 import pipeline.h.cli.utils as utils
 
-def hsdms_imaging(mode=None, pipelinemode=None, 
-                  infiles=None, field=None, spw=None, 
-                  dryrun=None, acceptresults=None):
+def hsd_baseline(fitfunc=None, fitorder=None,
+                   linewindow=None, edge=None, broadline=None, 
+                   clusteringalgorithm=None, deviationmask=None, pipelinemode=None, 
+                   infiles=None, field=None, antenna=None, spw=None, pol=None,
+                   dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the
     # constructor
     all_inputs = vars()
 
-    task_name = 'SDMSImaging'
+    task_name = 'SDMSBaseline'
     
     ##########################################################################
     #                                                                        #

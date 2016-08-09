@@ -1,19 +1,20 @@
 import sys
 
+from taskinit import casalog
+
 import pipeline.h.cli.utils as utils
 
-def hsdms_baseline(fitfunc=None, fitorder=None,
-                   linewindow=None, edge=None, broadline=None, 
-                   clusteringalgorithm=None, deviationmask=None, pipelinemode=None, 
-                   infiles=None, field=None, antenna=None, spw=None, pol=None,
-                   dryrun=None, acceptresults=None):
+
+def hsd_applycal(vis=None, field=None, intent=None, spw=None, antenna=None,
+    applymode=None, calwt=None, flagbackup=None, pipelinemode=None, dryrun=None,
+    acceptresults=None):
 
     # create a dictionary containing all the arguments given in the
     # constructor
     all_inputs = vars()
 
-    task_name = 'SDMSBaseline'
-    
+    task_name = 'SDMSApplycal'
+
     ##########################################################################
     #                                                                        #
     #  CASA task interface boilerplate code starts here. No edits should be  #

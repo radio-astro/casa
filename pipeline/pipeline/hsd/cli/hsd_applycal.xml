@@ -5,7 +5,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="hsdms_applycal" category="pipeline">
+<task type="function" name="hsd_applycal" category="pipeline">
 <shortdescription>Apply the calibration(s) to the data</shortdescription>
 <description>
 Apply the calibration to the data.

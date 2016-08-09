@@ -22,10 +22,13 @@ from hsd_importdata_cli import hsd_importdata_cli as hsd_importdata
 from hsd_flagdata_cli import hsd_flagdata_cli as hsd_flagdata
 from hifa_tsyscal_cli import hifa_tsyscal_cli as hifa_tsyscal
 from hifa_tsysflag_cli import hifa_tsysflag_cli as hifa_tsysflag
-from hsdms_skycal_cli import hsdms_skycal_cli as hsdms_skycal
-from hsdms_k2jycal_cli import hsdms_k2jycal_cli as hsdms_k2jycal
-from hsdms_applycal_cli import hsdms_applycal_cli as hsdms_applycal
-from hsdms_baseline_cli import hsdms_baseline_cli as hsdms_baseline
+from hsd_skycal_cli import hsd_skycal_cli as hsd_skycal
+from hsd_k2jycal_cli import hsd_k2jycal_cli as hsd_k2jycal
+from hsd_applycal_cli import hsd_applycal_cli as hsd_applycal
+from hsd_baseline_cli import hsd_baseline_cli as hsd_baseline
+from hsd_blflag_cli import hsd_blflag_cli as hsd_blflag
+from hsd_imaging_cli import hsd_imaging_cli as hsd_imaging
+from hsd_exportdata_cli import hsd_exportdata_cli as hsd_exportdata
 from h_save_cli import h_save_cli as h_save
 
 
@@ -61,29 +64,29 @@ def hsdms (vislist, importonly=False, pipelinemode='automatic', interactive=True
         hifa_tsysflag (pipelinemode=pipelinemode)
         
         # Compute the sky calibration
-        hsdms_skycal (pipelinemode=pipelinemode)
+        hsd_skycal (pipelinemode=pipelinemode)
     
         # Compute the Kelvin to Jansky calibration
-        hsdms_k2jycal (pipelinemode=pipelinemode)
+        hsd_k2jycal (pipelinemode=pipelinemode)
     
         # Apply the calibrations
-        hsdms_applycal (pipelinemode=pipelinemode)
+        hsd_applycal (pipelinemode=pipelinemode)
         
         # # Improve line mask for baseline subtraction by executing 
         # # hsd_baseline and hsd_blflag iteratively
         for i in xrange(ITERATION):
             
             # Baseline subtraction with automatic line detection
-            hsdms_baseline (pipelinemode=pipelinemode)
+            hsd_baseline (pipelinemode=pipelinemode)
             
             # Flag data based on baseline quality
-            hsdms_blflag (pipelinemode=pipelinemode)
+            hsd_blflag (pipelinemode=pipelinemode)
             
         # Imaging
-        hsdms_imaging (pipelinemode=pipelinemode)
+        hsd_imaging (pipelinemode=pipelinemode)
 
         # Export the data
-        hsdms_exportdata (pipelinemode=pipelinemode)
+        hsd_exportdata (pipelinemode=pipelinemode)
     
     except Exception, e:
         if str(e) == IMPORT_ONLY:

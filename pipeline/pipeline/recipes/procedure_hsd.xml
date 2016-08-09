@@ -29,55 +29,55 @@
     </ProcessingCommand>
 
     <ProcessingCommand>
-        <Command xmlns="">hsdms_skycal</Command>
+        <Command xmlns="">hsd_skycal</Command>
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>
 
     <ProcessingCommand>
-        <Command xmlns="">hsdms_k2jycal</Command>
+        <Command xmlns="">hsd_k2jycal</Command>
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>
 
     <ProcessingCommand>
-        <Command xmlns="">hsdms_applycal</Command>
+        <Command xmlns="">hsd_applycal</Command>
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>
 
     <ProcessingCommand>
-        <Command xmlns="">hsdms_baseline</Command>
+        <Command xmlns="">hsd_baseline</Command>
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>
     
     <ProcessingCommand>
-        <Command xmlns="">hsdms_blflag</Command>
+        <Command xmlns="">hsd_blflag</Command>
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>
 
     <ProcessingCommand>
-        <Command xmlns="">hsdms_baseline</Command>
+        <Command xmlns="">hsd_baseline</Command>
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>
 
     <ProcessingCommand>
-        <Command xmlns="">hsdms_blflag</Command>
+        <Command xmlns="">hsd_blflag</Command>
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>
 
     <ProcessingCommand>
-        <Command xmlns="">hsdms_imaging</Command>
+        <Command xmlns="">hsd_imaging</Command>
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>
 
     <ProcessingCommand>
-        <Command xmlns="">hsdms_exportdata</Command>
+        <Command xmlns="">hsd_exportdata</Command>
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>
