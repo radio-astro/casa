@@ -260,8 +260,8 @@ class SDBLFlagSummary(object):
         PlotData['data'] = NPpdata[1]
         PlotData['flag'] = NPpflag[1]
         PlotData['thre'] = [threshold[1][1]]
-        PlotData['title'] = "Baseline RMS (K) before baseline subtraction\nBlue dots: data points, Red dots: deviator, Cyan H-line: %.1f sigma threshold, Red H-line(s): out of vertical scale limit(s)" % FlagRule_local['RmsPreFitFlag']['Threshold']
-        PlotData['ylabel'] = "Baseline RMS (K)"
+        PlotData['title'] = "Baseline RMS (Jy/beam) before baseline subtraction\nBlue dots: data points, Red dots: deviator, Cyan H-line: %.1f sigma threshold, Red H-line(s): out of vertical scale limit(s)" % FlagRule_local['RmsPreFitFlag']['Threshold']
+        PlotData['ylabel'] = "Baseline RMS (Jy/beam)"
         PlotData['isActive'] = FlagRule_local['RmsPreFitFlag']['isActive']
         SDP.StatisticsPlot(PlotData, FigFileDir, FigFileRoot+'_1')
         plots.append(FigFileRoot+'_1.png')
@@ -270,7 +270,7 @@ class SDBLFlagSummary(object):
         PlotData['data'] = NPpdata[2] if is_baselined else None
         PlotData['flag'] = NPpflag[2]
         PlotData['thre'] = [threshold[0][1]]
-        PlotData['title'] = "Baseline RMS (K) after baseline subtraction\nBlue dots: data points, Red dots: deviator, Cyan H-line: %.1f sigma threshold, Red H-line(s): out of vertical scale limit(s)" % FlagRule_local['RmsPostFitFlag']['Threshold']
+        PlotData['title'] = "Baseline RMS (Jy/beam) after baseline subtraction\nBlue dots: data points, Red dots: deviator, Cyan H-line: %.1f sigma threshold, Red H-line(s): out of vertical scale limit(s)" % FlagRule_local['RmsPostFitFlag']['Threshold']
         PlotData['isActive'] = FlagRule_local['RmsPostFitFlag']['isActive']
         SDP.StatisticsPlot(PlotData, FigFileDir, FigFileRoot+'_2')
         plots.append(FigFileRoot+'_2.png')
@@ -279,7 +279,7 @@ class SDBLFlagSummary(object):
         PlotData['data'] = NPpdata[3]
         PlotData['flag'] = NPpflag[3]
         PlotData['thre'] = [threshold[3][1]]
-        PlotData['title'] = "RMS (K) for Baseline Deviation from the running mean (Nmean=%d) before baseline subtraction\nBlue dots: data points, Red dots: deviator, Cyan H-line: %.1f sigma threshold, Red H-line(s): out of vertical scale limit(s)" % (FlagRule_local['RunMeanPreFitFlag']['Nmean'], FlagRule_local['RunMeanPreFitFlag']['Threshold'])
+        PlotData['title'] = "RMS (Jy/beam) for Baseline Deviation from the running mean (Nmean=%d) before baseline subtraction\nBlue dots: data points, Red dots: deviator, Cyan H-line: %.1f sigma threshold, Red H-line(s): out of vertical scale limit(s)" % (FlagRule_local['RunMeanPreFitFlag']['Nmean'], FlagRule_local['RunMeanPreFitFlag']['Threshold'])
         PlotData['isActive'] = FlagRule_local['RunMeanPreFitFlag']['isActive']
         SDP.StatisticsPlot(PlotData, FigFileDir, FigFileRoot+'_3')
         plots.append(FigFileRoot+'_3.png')
@@ -288,7 +288,7 @@ class SDBLFlagSummary(object):
         PlotData['data'] = NPpdata[4] if is_baselined else None
         PlotData['flag'] = NPpflag[4]
         PlotData['thre'] = [threshold[2][1]]
-        PlotData['title'] = "RMS (K) for Baseline Deviation from the running mean (Nmean=%d) after baseline subtraction\nBlue dots: data points, Red dots: deviator, Cyan H-line: %.1f sigma threshold, Red H-line(s): out of vertical scale limit(s)" % (FlagRule_local['RunMeanPostFitFlag']['Nmean'], FlagRule_local['RunMeanPostFitFlag']['Threshold'])
+        PlotData['title'] = "RMS (Jy/beam) for Baseline Deviation from the running mean (Nmean=%d) after baseline subtraction\nBlue dots: data points, Red dots: deviator, Cyan H-line: %.1f sigma threshold, Red H-line(s): out of vertical scale limit(s)" % (FlagRule_local['RunMeanPostFitFlag']['Nmean'], FlagRule_local['RunMeanPostFitFlag']['Threshold'])
         PlotData['isActive'] = FlagRule_local['RunMeanPostFitFlag']['isActive']
         SDP.StatisticsPlot(PlotData, FigFileDir, FigFileRoot+'_4')
         plots.append(FigFileRoot+'_4.png')
@@ -297,7 +297,7 @@ class SDBLFlagSummary(object):
         PlotData['data'] = NPpdata[1]
         PlotData['flag'] = NPpflag[5]
         PlotData['thre'] = [NPpdata[5]]
-        PlotData['title'] = "Baseline RMS (K) compared with the expected RMS calculated from Tsys before baseline subtraction\nBlue dots: data points, Red dots: deviator, Cyan H-line: threshold with the scaling factor of %.1f, Red H-line(s): out of vertical scale limit(s)" % ThreExpectedRMSPreFit
+        PlotData['title'] = "Baseline RMS (Jy/beam) compared with the expected RMS calculated from Tsys before baseline subtraction\nBlue dots: data points, Red dots: deviator, Cyan H-line: threshold with the scaling factor of %.1f, Red H-line(s): out of vertical scale limit(s)" % ThreExpectedRMSPreFit
         PlotData['isActive'] = FlagRule_local['RmsExpectedPreFitFlag']['isActive']
         PlotData['threType'] = "plot"
         SDP.StatisticsPlot(PlotData, FigFileDir, FigFileRoot+'_5')
@@ -307,7 +307,7 @@ class SDBLFlagSummary(object):
         PlotData['data'] = NPpdata[2] if is_baselined else None
         PlotData['flag'] = NPpflag[6]
         PlotData['thre'] = [NPpdata[6]]
-        PlotData['title'] = "Baseline RMS (K) compared with the expected RMS calculated from Tsys after baseline subtraction\nBlue dots: data points, Red dots: deviator, Cyan H-line: threshold with the scaling factor of %.1f" % ThreExpectedRMSPostFit
+        PlotData['title'] = "Baseline RMS (Jy/beam) compared with the expected RMS calculated from Tsys after baseline subtraction\nBlue dots: data points, Red dots: deviator, Cyan H-line: threshold with the scaling factor of %.1f" % ThreExpectedRMSPostFit
         PlotData['isActive'] = FlagRule_local['RmsExpectedPostFitFlag']['isActive']
         PlotData['threType'] = "plot"
         SDP.StatisticsPlot(PlotData, FigFileDir, FigFileRoot+'_6')
