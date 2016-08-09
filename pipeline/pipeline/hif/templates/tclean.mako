@@ -126,7 +126,7 @@ $(document).ready(function(){
                                                 <a class="replace"
                                                    href="${os.path.relpath(renderer.path, pcontext.report_dir)}"
                                                    role="button">
-                                                    View other clean products...
+                                                    View other QA images...
                                                 </a>
                                             </p>
                                         </div>
