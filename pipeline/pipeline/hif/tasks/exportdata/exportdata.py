@@ -857,20 +857,23 @@ class ExportData(basetask.StandardTaskTemplate):
 
         """
         Export the target flags files
+        Remove file name dependency on oussid but leave argument in place for now
         """
 
         output_filelist = []
         ps = context.project_structure
         for file_name in glob.glob(pattern):
-            if ps is None:
-                flags_file = os.path.join (context.output_dir, file_name)
-                out_flags_file = os.path.join (products_dir, file_name)
-            elif ps.ousstatus_entity_id == 'unknown':
-                flags_file = os.path.join (context.output_dir, file_name)
-                out_flags_file = os.path.join (products_dir, file_name)
-            else:
-                flags_file = os.path.join (context.output_dir, file_name)
-                out_flags_file = os.path.join (products_dir, oussid + '.' + file_name)
+            #if ps is None:
+                #flags_file = os.path.join (context.output_dir, file_name)
+                #out_flags_file = os.path.join (products_dir, file_name)
+            #elif ps.ousstatus_entity_id == 'unknown':
+                #flags_file = os.path.join (context.output_dir, file_name)
+                #out_flags_file = os.path.join (products_dir, file_name)
+            #else:
+                #flags_file = os.path.join (context.output_dir, file_name)
+                #out_flags_file = os.path.join (products_dir, oussid + '.' + file_name)
+            flags_file = os.path.join (context.output_dir, file_name)
+            out_flags_file = os.path.join (products_dir, file_name)
             if os.path.exists(flags_file):
                 LOG.info('Copying science target flags file %s to %s' % \
                      (flags_file, out_flags_file))
