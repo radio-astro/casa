@@ -1,28 +1,61 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" ?>
 <casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="hsd_blflag" category="pipeline">
-<shortdescription>Flag spectra based on predefined criteria of single-dish pipeline</shortdescription>
-
+<task type="function" name="hsdst_flagbaseline" category="pipeline">
+<shortdescription>Composite task consisting of hsd_baseline and hsd_blflag. Iteration loop is encapsulated.</shortdescription>
 <description>
 </description>
 <input>
     <param type="int" name="iteration">
-        <description>Number of iteration to perform sigma clipping to calculate threshold</description>
-        <value>5</value>
+        <description>Number of iteration</description>
+        <value>2</value>
+    </param>
+
+    <param type="string" name="fitfunc">
+        <description>Fitting function for baseline subtraction</description>
+	<value>cspline</value>
+	<allowed kind="enum">
+	    <value>cspline</value>
+	    <value>spline</value>
+	    <value>polynomial</value>
+	    <value>poly</value>
+	    <value>CSPLINE</value>
+	    <value>SPLINE</value>
+	    <value>POLYNOMIAL</value>
+	    <value>POLY</value>
+	</allowed>
+    </param>
+
+    <param type="int" name="fitorder">
+        <description>Fitting order for baseline subtraction</description>
+	<value>-1</value>
+    </param>
+    
+    <param type="intArray" name="linewindow">
+        <description>Pre-defined line window</description>
+	<value></value>
     </param>
 
     <param type="intArray" name="edge">
-        <description>Number of edge channels to be excluded from statistic calculation to flag data</description>
-        <value>0,0</value>
+        <description>Edge channels to be dropped</description>
+	<value></value>
     </param>
 
+    <param type="bool" name="broadline">
+        <description>Try to detect broad component of the line</description>
+	<value>True</value>
+    </param>
+
+    <param type="int" name="flag_iteration">
+        <description>Number of iteration for flagging</description>
+        <value>5</value>
+    </param>
 
     <param type="bool" name="flag_tsys" >
-        <description>Flag data by Tsys value</description>
+        <description>True to flag data by Tsys</description>
         <value>True</value>
     </param>
         
@@ -32,7 +65,7 @@
     </param>
         
     <param type="bool" name="flag_weath">
-        <description>Flag data by weather (not implemented yet)</description>
+        <description>True to flag data by weather (not implemented yet)</description>
         <value>False</value>
     </param>
 
@@ -42,47 +75,47 @@
     </param>
 
     <param type="bool" name="flag_prfre" >
-        <description>Flag data by EXPECTED RMS of pre-fit spectra</description>
+        <description>True to flag data by expected rms of pre-fit spectra</description>
         <value>True</value>
     </param>
 
     <param type="double" name="prfre_thresh" subparam="true">
-        <description>Threshold for EXPECTED RMS of pre-fit spetra flag</description>
+        <description>Threshold for expected rms of pre-fit spetra flag</description>
         <value>3.0</value>
     </param>
 
     <param type="bool" name="flag_pofre" >
-        <description>Flag data by EXPECTED RMS of post-fit spectra</description>
+        <description>True to flag data by expected rms of post-fit spectra</description>
         <value>True</value>
     </param>
 
     <param type="double" name="pofre_thresh"  subparam="true">
-        <description>Threshold for EXPECTED RMS of post-fit spectra flag</description>
+        <description>Threshold for expected rms of post-fit spectra flag</description>
         <value>1.3333</value>
     </param>
 
     <param type="bool" name="flag_prfr" >
-        <description>Flag data by RMS of pre-fit spectra</description>
+        <description>True to flag data by rms of pre-fit spectra</description>
         <value>True</value>
     </param>
 
     <param type="double" name="prfr_thresh"  subparam="true">
-        <description>Threshold for RMS of pre-fit flag</description>
+        <description>Threshold for rms of pre-fit flag</description>
         <value>4.5</value>
     </param>
 
     <param type="bool" name="flag_pofr" >
-        <description>Flag data by RMS of post-fit spectra</description>
+        <description>True to flag data by rms of post-fit spectra</description>
         <value>True</value>
     </param>
 
     <param type="double" name="pofr_thresh" subparam="true">
-        <description>Threshold for RMS of post-fit spectra flag</description>
+        <description>Threshold for rms of post-fit spectra flag</description>
         <value>4.0</value>
     </param>
 
     <param type="bool" name="flag_prfrm" >
-        <description>Flag data by running mean of pre-fit spectra</description>
+        <description>True to flag data by running mean of pre-fit spectra</description>
         <value>True</value>
     </param>
 
@@ -97,7 +130,7 @@
     </param>
 
     <param type="bool" name="flag_pofrm" >
-        <description>Flag data by running mean of post-fit spectra</description>
+        <description>True to flag data by running mean of post-fit spectra</description>
         <value>True</value>
     </param>
 
@@ -112,7 +145,7 @@
     </param>
 
     <param type="bool" name="flag_user">
-        <description>Flag data by user flag (not implemented yet)</description>
+        <description>True to flag data by user flag (not implemented yet)</description>
         <value>False</value>
     </param>
 
@@ -127,34 +160,19 @@
     </param>
 
     <param type="string" name="pipelinemode">
-        <description>The pipeline operating  mode</description>
-        <value>automatic</value>
-        <allowed kind="enum">
-            <value>automatic</value>
-            <value>interactive</value>
-            <value>getinputs</value>
-        </allowed>
+	<description>The pipeline operating mode</description>
+	<value>automatic</value>
+	<allowed kind="enum">
+	    <value>automatic</value>
+	    <value>interactive</value>
+	    <value>getinputs</value>
+	</allowed>
     </param>
 
     <param type="stringArray" name="infiles" subparam="true">
-        <description>List of input files to be flagged (default all)</description>
+        <description>List of input files to be calibrated (default all)</description>
         <value></value>
     </param>
-
-<!--
-    <param type="any" name="antennalist" subparam="true">
-        <description>List of antennas to be processed (-1 stands for all)</description>
-        <any type="variant" limittype="string int stringArray intArray"/>
-        <value type="int">-1</value>
-    </param>
--->
-
-<!--
-    <param type="string" name="field" subparam="true">
-        <description>Field to be calibrated (default all)</description>
-        <value></value>
-    </param>
--->
 
     <param type="any" name="spw" subparam="true">
             <description>select data by IF IDs (spectral windows), e.g. \'3,5,7\' (\'\'=all)</description>
@@ -168,21 +186,14 @@
             <value type="string"></value>
     </param>
 
-<!--
-    <param type="intArray" name="scanlist" subparam="true">
-        <description>List of scans to be calibrated (defalt all)</description>
-        <value></value>
-    </param>
--->
-
     <param type="bool" name="dryrun" subparam="true">
-        <description>Run the task (False) or display the task command (True)</description>
-        <value>False</value>
+	<description>Run the task (False) or display task command (True)</description>
+	<value>False</value>
     </param>
 
     <param type="bool" name="acceptresults" subparam="true">
-        <description>Add the results into the pipeline context</description>
-        <value>True</value>
+	<description>Add the results into the pipeline context</description>
+	<value>True</value>
     </param>
 
     <constraints>
@@ -256,21 +267,15 @@
             </equals>
             <equals type="string" value="interactive">
                 <default param="infiles"><value type="stringArray"></value></default>
-<!--                <default param="antennalist"><value type="int">-1</value></default> -->
-<!--                <default param="field"><value type="string"></value></default> -->
                 <default param="spw"><value type="string"></value></default>
                 <default param="pol"><value type="string"></value></default>
-<!--                <default param="scanlist"><value type="intArray"></value></default> -->
                 <default param="dryrun"><value type="bool">False</value></default>
                 <default param="acceptresults"><value type="bool">True</value></default>
             </equals>
             <equals type="string" value="getinputs">
                 <default param="infiles"><value type="stringArray"></value></default>
-<!--                <default param="antennalist"><value type="int">-1</value></default> -->
-<!--                <default param="field"><value type="string"></value></default> -->
                 <default param="spw"><value type="string"></value></default>
                 <default param="pol"><value type="string"></value></default>
-<!--                <default param="scanlist"><value type="intArray"></value></default> -->
             </equals>
         </when>
     </constraints>
@@ -279,7 +284,7 @@
 
 <output>
     <param type="any" name="results">
-                        <description>The output results object</description>
+        <description>The output results object</description>
         <any type="variant"/>
         <value></value>
     </param>
@@ -288,21 +293,69 @@
 
 
 <example>
+The hsd_flagbaseline task is a composite task consisting of hsd_baseline 
+and hsd_blflag task. It encapsulates iteration loop inside. By defalult 
+(iteration=2), execution of hsd_flagbaseline task is equivalent to the 
+following code:
 
+for i in xrange(iteration):
+    default(hsd_baseline)
+    hsd_baseline()
+    default(hsd_blflag)
+    hsd_blflag()
+    
+For details about hsd_baseline and hsd_blflag, see inline help for 
+those tasks. 
+  
 Keyword arguments:
 
 ---- pipeline parameter arguments which can be set in any pipeline mode
-iteration -- Number of iterations to perform sigma clipping to calculate
-       threshold value of flagging.
-       default: 5
+iteration -- Number of iterations to improve baseline quality for spectral 
+       line data. Usually, two or three iterations are enough to get 
+       nice baseline. 
+       default: 2
 
-edge -- Number of channels to be dropped from the edge.
-       The value must be a list of integer with length of one or two.
-                       If list length is one, same number will be applied both side of 
-       the band.
-       default: [0,0]
-       example: [10,20], [10]
+fitfunc -- fitting function for baseline subtraction. You can choose
+   either cubic spline ('spline' or 'cspline') or polynomial ('polynomial'
+   or 'poly').
+   default: 'cspline'.
 
+fitorder -- Fitting order for polynomial. For cubic spline, it is used
+   to determine how much the spectrum is segmented into. Default (-1) is
+   to determine the order automatically.
+   default: -1 (auto determination)
+
+linewindow -- Pre-defined line window. If this is set, specified line 
+   windows are used as a line mask for baseline subtraction instead to 
+   determine masks based on line detection and validation stage. Two 
+   types of format are acceptable. One is channel-based specification, 
+   
+      [min_chan,max_chan] 
+
+   and the other is specification by central frequency in GHz plus 
+   line range as velocity in km/s, 
+   
+      [center_freq, min_vel, max_vel]
+
+   You can set multiple line windows by using nested list. However, 
+   the above notation must not be mixed in the list for multiple line 
+   windows.
+   default: [] (do line detection and validation)
+   example: [100.0,200.0], [115.0,-10.0,10.0]
+
+edge -- number of edge channels to be dropped from baseline subtraction.
+   the value must be a list with length of 2, whose values specifies
+   left and right edge channels respectively.
+   default: [] ([0,0])
+   example: [10,10]
+
+broadline -- Try to detect broad component of spectral line if True.
+   default: True
+
+flag_iteration -- Number of iterations to perform sigma clipping to calculate
+   threshold value of flagging.
+   default: 5
+   
 flag_tsys -- Activate (True) or deactivate (False) Tsys flag.
        default: True
 
@@ -381,20 +434,20 @@ plotflag -- True to plot result of data flagging.
        default: True
 
 pipelinemode -- The pipeline operating mode. In 'automatic' mode the 
-       pipeline determines the values of all context defined pipeline 
-       inputs automatically.  In interactive mode the user can set the 
-       pipeline context defined parameters manually. In 'getinputs' mode 
-       the user can check the settings of all pipeline parameters without 
-       running the task.
-       default: 'automatic'.
+   pipeline determines the values of all context defined pipeline inputs
+   automatically.  In 'interactive' mode the user can set the pipeline
+   context defined parameters manually.  In 'getinputs' mode the user
+   can check the settings of all pipeline parameters without running
+   the task.
+   default: 'automatic'.
 
 ---- pipeline context defined parameter argument which can be set only in
-'interactive mode' or 'getinputs' modes 
-                
-infiles -- ASDM or MS files to be processed. This parameter behaves as 
-       data selection parameter. The name specified by infiles must be 
-       registered to context before you run hsd_reduce.
-       default: [] (process all data in context)
+'interactive mode'
+
+infiles -- List of data files. These must be a name of Scantables that 
+   are registered to context via hsd_importdata task.
+   default: []
+   example: vis=['X227.PM01.asap', 'X227.PM02.asap']
 
 spw -- Data selection by spw.
    default: '' (all spws)
@@ -407,39 +460,24 @@ pol -- Data selection by pol.
             ['0~1','0'] (pol 0 and 1 for first data, only 0 for second)
 
 --- pipeline task execution modes
+
 dryrun -- Run the commands (True) or generate the commands to be run but
-                       do not execute (False).
-       default: True
+   do not execute (False).
+   default: True
 
-acceptresults -- Add the results of the task to the pipeline context 
-       (True) or reject them (False).
-       default: True
-
+acceptresults -- Add the results of the task to the pipeline context (True) or
+   reject them (False).
+   default: True
 
 Output:
 
 results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
-       the results object for the pipeline task is returned.
-
-
-Description
-
-The hsd_flag
-6. Flagging 
-Data are flagged based on several flagging rules. Available rules are: 
-expected rms, calculated rms, and running mean of both pre-fit and 
-post-fit spectra. Tsys flagging is also available. 
-
-In addition, the heuristics script creates many plots for each stage. 
-Those plots are included in the weblog.
-
-
-Issues
+   the results object for the pipeline task is returned.
 
 
 Examples
-                                
+
+
 </example>
 </task>
 </casaxml>
-

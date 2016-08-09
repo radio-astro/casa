@@ -25,19 +25,19 @@
     </ProcessingCommand>
 
     <ProcessingCommand>
-        <Command xmlns="">hsd_mstoscantable</Command>
+        <Command xmlns="">hsdst_mstoscantable</Command>
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>
 
     <ProcessingCommand>
-        <Command xmlns="">hsd_inspectdata</Command>
+        <Command xmlns="">hsdst_inspectdata</Command>
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>
 
     <ProcessingCommand>
-        <Command xmlns="">hsd_calsky</Command>
+        <Command xmlns="">hsdst_calsky</Command>
         <ParameterSet>
             <Parameter>
                 <Keyword xmlns="">calmode</Keyword>
@@ -47,13 +47,13 @@
     </ProcessingCommand>
 
     <ProcessingCommand>
-        <Command xmlns="">hsd_applycal</Command>
+        <Command xmlns="">hsdst_applycal</Command>
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>
 
     <ProcessingCommand>
-        <Command xmlns="">hsd_imaging</Command>
+        <Command xmlns="">hsdst_imaging</Command>
         <ParameterSet>
             <Parameter>
                 <Keyword xmlns="">mode</Keyword>
@@ -63,7 +63,7 @@
     </ProcessingCommand>
 
     <ProcessingCommand>
-        <Command xmlns="">hsd_exportdata</Command>
+        <Command xmlns="">hsdst_exportdata</Command>
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>

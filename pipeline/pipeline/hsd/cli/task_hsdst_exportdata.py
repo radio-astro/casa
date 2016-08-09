@@ -1,16 +1,19 @@
 import sys
 
+from taskinit import casalog
+
+#import pipeline.cli.utils as utils
 import pipeline.h.cli.utils as utils
 
-def hsd_applycal(pipelinemode=None, infiles=None, field=None,
-                 spw=None, scan=None, pol=None,
-                 dryrun=None, acceptresults=None):
+
+def hsdst_exportdata(pprfile=None,targetimages=None, products_dir=None,
+    pipelinemode=None, dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the
     # constructor
     all_inputs = vars()
 
-    task_name = 'SDApplyCal'
+    task_name = 'SDExportData'
     
     ##########################################################################
     #                                                                        #

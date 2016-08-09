@@ -4,7 +4,7 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="hsd_exportdata" category="pipeline">
+<task type="function" name="hsdst_exportdata" category="pipeline">
 <shortdescription>Prepare singledish data for export</shortdescription>
 <description>
 </description>

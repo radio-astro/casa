@@ -4,7 +4,7 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="hsd_imaging" category="pipeline">
+<task type="function" name="hsdst_imaging" category="pipeline">
 <shortdescription>Apply flags to scantable, convert data to MS, and generate single dish images</shortdescription>
 <description>
 </description>

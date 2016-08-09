@@ -2,14 +2,15 @@ import sys
 
 import pipeline.h.cli.utils as utils
 
-def hsd_mstoscantable(infiles=None, pipelinemode=None, overwrite=None, dryrun=None,
-                      acceptresults=None):
+def hsdst_applycal(pipelinemode=None, infiles=None, field=None,
+                 spw=None, scan=None, pol=None,
+                 dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the
     # constructor
     all_inputs = vars()
 
-    task_name = 'SDMsToScantable'
+    task_name = 'SDApplyCal'
     
     ##########################################################################
     #                                                                        #

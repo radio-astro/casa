@@ -2,15 +2,17 @@ import sys
 
 import pipeline.h.cli.utils as utils
 
-def hsd_simplescale(factor=None, 
-                 pipelinemode=None, infiles=None,# spw=None, pol=None,
-                 dryrun=None, acceptresults=None):
+def hsdst_calsky(calmode=None, fraction=None, noff=None,
+               width=None, elongated=None,
+               pipelinemode=None, infiles=None, field=None,
+               spw=None, scan=None, pol=None,
+               dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the
     # constructor
     all_inputs = vars()
 
-    task_name = 'SDSimpleScale'
+    task_name = 'SDCalSky'
     
     ##########################################################################
     #                                                                        #

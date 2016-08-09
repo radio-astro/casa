@@ -4,17 +4,16 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="hsd_simplescale" category="pipeline">
-<shortdescription>Multiply a scaling factor to spectra in scantables</shortdescription>
+<task type="function" name="hsdst_mstoscantable" category="pipeline">
+<shortdescription>Imports data into the single dish pipeline</shortdescription>
 <description>
 </description>
 <input>
-
-    <param type="double" name="factor">
-        <description>A scaling factor to apply</description>
-	<value>1.25</value>
+    <param type="stringArray" name="infiles">
+	<description>List of input data</description>
+	<value></value>
     </param>
-    
+
     <param type="string" name="pipelinemode">
 	<description>The pipeline operating mode</description>
 	<value>automatic</value>
@@ -25,24 +24,10 @@
 	</allowed>
     </param>
 
-    <param type="stringArray" name="infiles" subparam="true">
-        <description>List of input files to be calibrated (default all)</description>
-        <value></value>
+    <param type="bool" name="overwrite" subparam="true">
+	<description>Overwrite existing files on import</description>
+	<value>True</value>
     </param>
-
-<!--
-    <param type="any" name="spw" subparam="true">
-            <description>select data by IF IDs (spectral windows), e.g. \'3,5,7\' (\'\'=all)</description>
-            <any type="variant" limittypes="string stringArray"/>
-            <value type="string"></value>
-    </param>
-
-    <param type="any" name="pol" subparam="true">
-            <description>select data by polarizations, e.g. \'0~1\' (\'\'=all)</description>
-            <any type="variant" limittypes="string stringArray"/>
-            <value type="string"></value>
-    </param>
--->
 
     <param type="bool" name="dryrun" subparam="true">
 	<description>Run the task (False) or display task command (True)</description>
@@ -59,20 +44,12 @@
 	    <equals type="string" value="automatic">
 	    </equals>
 	    <equals type="string" value="interactive">
-                <default param="infiles"><value type="stringArray"></value></default>
-<!--
-                <default param="spw"><value type="string"></value></default>
-                <default param="pol"><value type="string"></value></default>
--->
+		<default param="overwrite"><value type="bool">True</value></default>
 		<default param="dryrun"><value type="bool">False</value></default>
 		<default param="acceptresults"><value type="bool">True</value></default>
 	    </equals>
 	    <equals type="string" value="getinputs">
-                <default param="infiles"><value type="stringArray"></value></default>
-<!--
-                <default param="spw"><value type="string"></value></default>
-                <default param="pol"><value type="string"></value></default>
--->
+		<default param="overwrite"><value type="bool">True</value></default>
 	    </equals>
 	</when>
     </constraints>
@@ -90,18 +67,24 @@
 
 
 <example>
-The hsd_simplescale task multiplies a scaling factor to spectra in 
-scantables.
-WARNING: this task scales ALL spectra in scantables.
+The hsd_mstoscantable task loads the specified data into the pipeline
+context unpacking and / or converting it as necessary.
 
 Keyword arguments:
 
 ---- pipeline parameter arguments which can be set in any pipeline mode
-factor -- A scaling factor to apply.
-   default: 1.25
 
-pipelinemode -- The pipeline operating mode. In 'automatic' mode the 
-   pipeline determines the values of all context defined pipeline inputs
+infiles -- List of data files. These may be ASDMs, tar files of ASDMs,
+   MSs, tar files of MSs, Scantables, or other types of single dish 
+   data that can be imported by CASA (ATNF SDFITS, RPFITS, NRO raw data). 
+   Whole data will be converted to Scantable format. If ASDM files are 
+   specified, they will be converted to MS format first, then converted 
+   to Scantable format. 
+   default: []
+   example: vis=['X227.ms', 'asdms.tar.gz']
+
+pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
+   determines the values of all context defined pipeline inputs
    automatically.  In 'interactive' mode the user can set the pipeline
    context defined parameters manually.  In 'getinputs' mode the user
    can check the settings of all pipeline parameters without running
@@ -111,10 +94,8 @@ pipelinemode -- The pipeline operating mode. In 'automatic' mode the
 ---- pipeline context defined parameter argument which can be set only in
 'interactive mode'
 
-infiles -- List of data files. These must be a name of Scantables that 
-   are registered to context via hsd_importdata task.
-   default: []
-   example: vis=['X227.PM01.asap', 'X227.PM02.asap']
+overwrite -- Overwrite existing MSs on output.
+   default: True
 
 --- pipeline task execution modes
 
@@ -134,6 +115,37 @@ results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
 
 Examples
 
+1. Load an ASDM list in the ../rawdata subdirectory into the context.
+
+   hsd_importdata (infiles=['../rawdata/uid___A002_X30a93d_X43e',
+                '../rawdata/uid_A002_x30a93d_X44e'])
+
+2. Load an MS in the current directory into the context.
+
+   hsd_importdata (infiles=[uid___A002_X30a93d_X43e.ms])
+
+3. Load a tarred ASDM in ../rawdata into the context.
+
+   hsd_importdata (infiles=['../rawdata/uid___A002_X30a93d_X43e.tar.gz'])
+
+4. Check the hsd_importdata inputs, then import the data
+
+   mylist = ['uid___A002_X30a93d_X43e.ms', 'uid_A002_x30a93d_X44e.ms']
+   hsd_importdata(infiles=mylist, pipelinemode='getinputs')
+   hsd_importdata(infiles=mylist)
+
+5. Load an ASDM but check the results before accepting them into the context.
+
+   results = hsd_importdata (infiles=['uid___A002_X30a93d_X43e.ms'],
+       acceptresults=False)
+   results.accept()
+
+6. Run in dryrun mode before running for real
+   results = hsd_importdata (infiles=['uid___A002_X30a93d_X43e.ms'], dryrun=True)
+   results = hsd_importdata (infiles=['uid___A002_X30a93d_X43e.ms'])
+
+7. Load Scantables
+   results = hsd_importdata (infiles=['X43e.PM01.asap', 'X43e.PM02.asap'])
 
 </example>
 </task>

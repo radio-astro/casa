@@ -37,12 +37,12 @@ from hsd_importdata_cli import hsd_importdata_cli as hsd_importdata
 from hsd_flagdata_cli import hsd_flagdata_cli as hsd_flagdata
 from hifa_tsyscal_cli import hifa_tsyscal_cli as hifa_tsyscal
 from hifa_tsysflag_cli import hifa_tsysflag_cli as hifa_tsysflag
-from hsd_mstoscantable_cli import hsd_mstoscantable_cli as hsd_mstoscantable
-from hsd_inspectdata_cli import hsd_inspectdata_cli as hsd_inspectdata
-from hsd_calsky_cli import hsd_calsky_cli as hsd_calsky
-from hsd_applycal_cli import hsd_applycal_cli as hsd_applycal
-from hsd_imaging_cli import hsd_imaging_cli as hsd_imaging
-from hsd_exportdata_cli import hsd_exportdata_cli as hsd_exportdata
+from hsdst_mstoscantable_cli import hsdst_mstoscantable_cli as hsdst_mstoscantable
+from hsdst_inspectdata_cli import hsdst_inspectdata_cli as hsdst_inspectdata
+from hsdst_calsky_cli import hsdst_calsky_cli as hsdst_calsky
+from hsdst_applycal_cli import hsdst_applycal_cli as hsdst_applycal
+from hsdst_imaging_cli import hsdst_imaging_cli as hsdst_imaging
+from hsdst_exportdata_cli import hsdst_exportdata_cli as hsdst_exportdata
 from h_save_cli import h_save_cli as h_save
 
 # Pipeline imports
@@ -75,22 +75,22 @@ def hsd_cal (vislist, importonly=False, pipelinemode='automatic', interactive=Tr
         hifa_tsysflag (pipelinemode=pipelinemode)
         
         # Convert MSs to Scantables
-        hsd_mstoscantable (pipelinemode=pipelinemode)
+        hsdst_mstoscantable (pipelinemode=pipelinemode)
     
         # Inspect data
-        hsd_inspectdata (pipelinemode=pipelinemode)
+        hsdst_inspectdata (pipelinemode=pipelinemode)
     
         # Compute the sky calibration
-        hsd_calsky (calmode='otfraster', pipelinemode=pipelinemode)
+        hsdst_calsky (calmode='otfraster', pipelinemode=pipelinemode)
         
         # Apply the calibrations
-        hsd_applycal (pipelinemode=pipelinemode)
+        hsdst_applycal (pipelinemode=pipelinemode)
         
         # Imaging
-        hsd_imaging (pipelinemode=pipelinemode, mode='ampcal')
+        hsdst_imaging (pipelinemode=pipelinemode, mode='ampcal')
 
         # Export the data
-        hsd_exportdata (pipelinemode=pipelinemode)
+        hsdst_exportdata (pipelinemode=pipelinemode)
     
     except Exception, e:
         if str(e) == IMPORT_ONLY:
