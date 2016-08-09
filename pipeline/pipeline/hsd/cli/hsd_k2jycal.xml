@@ -171,7 +171,7 @@ Example
 
 1. Compute the Kevin to Jy calibration tables for a list of measurement sets
 
-    hsdms_k2jycal()
+    hsd_k2jycal()
 
 
 </example> 

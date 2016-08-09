@@ -210,7 +210,7 @@ Examples
 
 1. Apply the calibration to the target data
 
-hsdms_applycal (intent='TARGET')
+hsd_applycal (intent='TARGET')
 
 </example> 
 

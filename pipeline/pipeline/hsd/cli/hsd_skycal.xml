@@ -231,8 +231,8 @@ results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
 Examples
 
 1. Generate caltables for all data managed by context.
-   default(hsdms_skycal)
-   hsdms_skycal()
+   default(hsd_skycal)
+   hsd_skycal()
 
 
 </example>

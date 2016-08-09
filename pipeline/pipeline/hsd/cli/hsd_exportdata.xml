@@ -146,7 +146,7 @@ Examples
 directory
 
     !mkdir ../products
-    hsdms_exportdata (products_dir='../products')
+    hsd_exportdata (products_dir='../products')
 
 </example>
 </task>

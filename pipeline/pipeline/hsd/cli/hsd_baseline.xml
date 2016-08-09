@@ -145,7 +145,7 @@
 
 
 <example>
-The hsdms_baseline task subtracts baseline from calibrated spectra.
+The hsd_baseline task subtracts baseline from calibrated spectra.
 By default, the task tries to find spectral line feature using
 line detection and validation algorithms. Then, the task puts a
 mask on detected lines and perform baseline subtraction. The user
