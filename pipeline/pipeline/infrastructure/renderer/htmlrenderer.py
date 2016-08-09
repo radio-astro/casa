@@ -637,6 +637,21 @@ class T2_1DetailsRenderer(object):
 
             vla_basebands = '<tr><th>VLA Bands: Basebands:  Freq range: [spws]</th><td>'+'<br>'.join(vla_basebands)+'</td></tr>'
 
+        if is_singledish_ms(context):
+            # Single dish specific 
+            # to get thumbnail for representative pointing plot
+            antenna = ms.antennas[0]
+            field_strategy = ms.calibration_strategy['field_strategy']
+            target = field_strategy.keys()[0]
+            reference = field_strategy[target]
+            LOG.debug('target field id %s / reference field id %s'%(target,reference))
+            task = drawpointing.SingleDishPointingChart(context, ms, antenna, 
+                                                        target_field_id=target,
+                                                        reference_field_id=reference,
+                                                        target_only=True)
+            pointing_plot = task.plot()
+        else:
+            pointing_plot = None
 
         return {
             'pcontext'        : context,
@@ -661,6 +676,7 @@ class T2_1DetailsRenderer(object):
             'azel_plot'       : azel_plot,
             'el_vs_time_plot' : el_vs_time_plot,
             'is_singledish'   : is_singledish_ms(context),
+            'pointing_plot'   : pointing_plot,
             'el_min'          : el_min,
             'el_max'          : el_max,
             'vla_basebands'   : vla_basebands
