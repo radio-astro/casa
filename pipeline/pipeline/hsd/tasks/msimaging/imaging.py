@@ -15,7 +15,6 @@ from . import weighting
 from . import worker
 from . import sdcombine
 from .. import common
-from ..baseline import baseline
 from ..common import utils as sdutils
 
 LOG = infrastructure.get_logger(__name__)

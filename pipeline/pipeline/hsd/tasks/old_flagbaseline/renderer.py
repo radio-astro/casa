@@ -9,7 +9,7 @@ import pipeline.infrastructure.renderer.basetemplates as basetemplates
 import pipeline.infrastructure.renderer.logger as logger
 import pipeline.infrastructure.renderer.sharedrenderer as sharedrenderer
 
-from ..baseline import renderer as baselinerenderer
+from ..old_baseline import renderer as baselinerenderer
 
 LOG = logging.get_logger(__name__)
 

@@ -4,8 +4,8 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 
 from .. import common
-from ..baseline import baseline
-from ..baselineflag import baselineflag
+from ..old_baseline import baseline
+from ..old_baselineflag import baselineflag
 
 LOG = infrastructure.get_logger(__name__)
 

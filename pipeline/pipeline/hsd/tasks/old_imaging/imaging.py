@@ -19,7 +19,7 @@ from ..msimaging import sdcombine
 from . import jyperk
 from .jyperk import JyPerKItems
 from .. import common
-from ..baseline import baseline
+from ..old_baseline import baseline
 
 LOG = infrastructure.get_logger(__name__)
 

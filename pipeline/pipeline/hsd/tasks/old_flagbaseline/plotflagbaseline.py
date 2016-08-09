@@ -10,9 +10,9 @@ import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.sdfilenamer as filenamer
 import pipeline.infrastructure.casatools as casatools
 from .. import common
-from ..baseline import baseline
-from ..baselineflag import baselineflag
-from ..flagbaseline import flagbaseline
+from ..old_baseline import baseline
+from ..old_baselineflag import baselineflag
+from . import flagbaseline
 
 LOG = infrastructure.get_logger(__name__)
 
