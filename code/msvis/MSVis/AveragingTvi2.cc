@@ -1927,9 +1927,11 @@ VbAvg::setupVbAvg (const VisBuffer2 * vb)
 
     setupArrays (vb->nCorrelations(), vb->nChannels(), nBaselines);
 
-    baselinePresent_p = Vector<Bool> (nBaselines, False);
+    baselinePresent_p.resize(nBaselines);
+    baselinePresent_p = False;
 
-    normalizationFactor_p = Vector<Double> (nBaselines, 0.0);
+    normalizationFactor_p.resize(nBaselines);
+    normalizationFactor_p = 0.0;
 
     empty_p = False;
 }

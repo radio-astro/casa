@@ -697,7 +697,13 @@ void MSCache::loadChunks(vi::VisibilityIterator2& vi,
 	vi::VisBuffer2* vb = vi.getVisBuffer();
 
 	vi.originChunks();
-	vi.origin();
+    try {
+	    vi.origin();
+    } catch (ArraySlicerError & err) {
+	    throw(AipsError("PlotMS averaging error: Data shapes do not conform."));
+    } catch (ArrayConformanceError & err) {
+	    throw(AipsError("PlotMS averaging error: Data shapes do not conform."));
+    }
 
 	nAnt_ = vb->nAntennas();  // needed to set up indexer
 	// set frame; VB2 does not handle N_Types, just passes it along
