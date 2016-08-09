@@ -93,7 +93,12 @@ void CalCache::loadIt(vector<PMS::Axis>& loadAxes,
   // Get various names, properties
   { 	 
     NewCalTable ct(NewCalTable::createCT(filename_,Table::Old,Table::Plain));
-    parsAreComplex_ = ct.isComplex();
+    try {
+        parsAreComplex_ = ct.isComplex();
+    } catch (AipsError & err) {
+        throw AipsError("Plotms does not support calibration tables in the old (pre-CASA 3.4) format.  Please continue to use plotcal.");
+    }
+
     basis_=ct.polBasis();
 
     ROCTColumns ctCol(ct);
@@ -852,7 +857,9 @@ Slice CalCache::getParSlice(String axis, String polnSel) {
 void CalCache::setFilename(String filename) { 
     filename_ = filename;
     NewCalTable ct(NewCalTable::createCT(filename_,Table::Old,Table::Plain));
+    cout << "PDEBUG: get caltype..." << endl;
     calType_= ct.tableInfo().subType();
+    cout << "PDEBUG: get caltype = " << calType_ << endl;
 }
 
 void CalCache::checkRatioArray(Array<Float>& array, Int chunk) {
