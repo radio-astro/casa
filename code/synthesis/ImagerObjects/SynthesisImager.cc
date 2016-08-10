@@ -1478,9 +1478,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
           CompositeNumber cn(uInt(imshape[0] * 2));
           // heuristic factors multiplied to imshape based on gridder
-          size_t fudge_factor = 16;
+          size_t fudge_factor = 15;
           if (ftm->name()=="MosaicFTNew") {
-              fudge_factor = 16;
+              fudge_factor = 15;
           }
           else if (ftm->name()=="GridFT") {
               fudge_factor = 9;
