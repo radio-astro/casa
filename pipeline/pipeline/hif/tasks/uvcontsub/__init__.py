@@ -20,6 +20,6 @@ pipelineqa.registry.add_handler(qa.UVcontFitListQAHandler())
 qaadapter.registry.register_to_dataset_topic(uvcontfit.UVcontFitResults)
 qaadapter.registry.register_to_dataset_topic(applycal.ApplycalResults)
 
-#weblog.add_renderer(UVcontFit, basetemplates.T2_4MDetailsDefaultRenderer(description='Continuum fit the TARGET data'), group_by=weblog.UNGROUPED)
 weblog.add_renderer(UVcontFit, renderer.T2_4MDetailsUVcontFitRenderer(), group_by=weblog.UNGROUPED)
-weblog.add_renderer(UVcontSub, basetemplates.T2_4MDetailsDefaultRenderer(description='Continuum subtract the TARGET data'), group_by=weblog.UNGROUPED)
+weblog.add_renderer(UVcontSub, renderer.T2_4MDetailsUVcontSubRenderer(), group_by=weblog.UNGROUPED)
+#weblog.add_renderer(UVcontSub, basetemplates.T2_4MDetailsDefaultRenderer(description='Continuum subtract the TARGET data'), group_by=weblog.UNGROUPED)
