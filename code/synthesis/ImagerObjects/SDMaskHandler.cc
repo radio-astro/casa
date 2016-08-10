@@ -504,6 +504,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     CoordinateSystem incsys = inImageMask.coordinates(); 
     DirectionCoordinate inDirCsys = incsys.directionCoordinate();
     SpectralCoordinate inSpecCsys = incsys.spectralCoordinate();
+    //Check the conversion layer consistentcy between input and output.
+    //Change the frame of the convesion layer in incsys to that of outcsys if different.
+    if (inSpecCsys.frequencySystem(True)!=outSpecCsys.frequencySystem(True)) {
+      incsys.setSpectralConversion(MFrequency::showType(outSpecCsys.frequencySystem(True)));
+    }
 
     Vector<Int> dirAxes = CoordinateUtil::findDirectionAxes(incsys);
     axes(0) = dirAxes(0); 
