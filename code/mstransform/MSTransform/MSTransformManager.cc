@@ -4437,6 +4437,18 @@ void MSTransformManager::dropNonUniformWidthChannels()
 
     		// Calculate final number of channels
     		uInt nChansFinal = nChans-droppedChannels.size();
+
+    		if (nChansFinal <= 0)
+    		{
+    			logger_p 	<< LogIO::SEVERE << LogOrigin("MSTransformManager", __FUNCTION__)
+    						<< "Channel selection does not allow to produce any output channel with the requested width "
+    						<< LogIO::POST;
+
+    			throw AipsError("Channel selection does not allow to produce any output channel with the requested width ");
+    		}
+
+
+
     		numChanCol.put(spw_idx, nChansFinal);
 
     		// Total BW has to be reduced to account for the dropped channels
@@ -4476,7 +4488,7 @@ void MSTransformManager::dropNonUniformWidthChannels()
     		chanFreqCol.put(spw_idx, newFrequencyVector);
 
     		// Update output number of channels
-    		inputOutputSpwMap_p[spw_idx].second.resize(nChansFinal);
+    		if (regridding_p) inputOutputSpwMap_p[spw_idx].second.resize(nChansFinal);
     	}
 	}
 
