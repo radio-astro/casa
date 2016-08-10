@@ -857,9 +857,7 @@ Slice CalCache::getParSlice(String axis, String polnSel) {
 void CalCache::setFilename(String filename) { 
     filename_ = filename;
     NewCalTable ct(NewCalTable::createCT(filename_,Table::Old,Table::Plain));
-    cout << "PDEBUG: get caltype..." << endl;
     calType_= ct.tableInfo().subType();
-    cout << "PDEBUG: get caltype = " << calType_ << endl;
 }
 
 void CalCache::checkRatioArray(Array<Float>& array, Int chunk) {
