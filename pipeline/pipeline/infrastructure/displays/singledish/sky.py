@@ -143,7 +143,7 @@ class SDSkyDisplay(common.SDCalibrationDisplay):
             off_source = 99
         with casatools.TableReader(scantable.name) as tb:
             if calfrom.caltype == 'ps':
-                tsel = tb.query('SRCTYPE==%s'%(off_source))
+                tsel = tb.query('SRCTYPE==%s && ANY(FLAGTRA == 0)'%(off_source))
                 if tsel.nrows() == 0:
                     time_stamps = tb.getcol('TIME')
                     direction_list = tb.getcol('DIRECTION')
@@ -152,8 +152,14 @@ class SDSkyDisplay(common.SDCalibrationDisplay):
                     direction_list = tsel.getcol('DIRECTION')
                 tsel.close()
             else:
-                time_stamps = tb.getcol('TIME')
-                direction_list = tb.getcol('DIRECTION')
+                tsel = tb.query('ANY(FLAGTRA == 0)')
+                if tsel.nrows() == 0:
+                    time_stamps = tb.getcol('TIME')
+                    direction_list = tb.getcol('DIRECTION')
+                else:
+                    time_stamps = tsel.getcol('TIME')
+                    direction_list = tsel.getcol('DIRECTION')
+                tsel.close()
             
         # generate plots
         plots = []
