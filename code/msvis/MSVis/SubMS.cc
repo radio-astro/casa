@@ -172,7 +172,8 @@ Double sigToWeight(Double sig)
     fitspw_p("*"),
     fitoutspw_p("*"),
     fillMainTable_p(True),
-    tvi_debug(False)
+    tvi_debug(False),
+    want_cont_p(False)
   {
   }
   
