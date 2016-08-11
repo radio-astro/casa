@@ -85,6 +85,21 @@ DataCubeMap::DataCubeMap()
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
+DataCubeMap::DataCubeMap(DataCubeMap& other)
+{
+	dataCubeMap_p.clear();
+
+	for (dataCubeMapIter_p = other.dataCubeMap_p.begin();dataCubeMapIter_p!= other.dataCubeMap_p.end();dataCubeMapIter_p++)
+	{
+		add(dataCubeMapIter_p->first,dataCubeMapIter_p->second->selfReference());
+	}
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
 DataCubeMap::~DataCubeMap()
 {
 	dataCubeMap_p.clear();

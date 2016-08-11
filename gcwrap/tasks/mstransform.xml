@@ -359,6 +359,28 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	        <description>Path to calibration library file</description>
 	        <value type="string"></value>
 	    </param>       
+	    
+        <!-- UVContSub parameters -->
+        
+	    <param type="bool" name="douvcontsub" >
+	        <description>Enable continuum subtraction as in task uvcontsub</description>
+	        <value>False</value>
+	    </param>
+
+	    <param type="string" name="fitspw" subparam="true" >
+	        <description>Spectral window:channel selection for fitting the continuum</description>
+	        <value type="string"></value>
+	    </param>       	    
+	    
+		<param type="int" name="fitorder" subparam="true">
+			<description>Polynomial order for the fits</description>
+			<value type="int">0</value>
+		</param>
+		
+		<param type="bool" name="want_cont" subparam="true">
+			<description>Produce continuum estimate instead of continuum subtracted data</description>
+			<value>False</value>
+		</param>		
 
         <!-- HIDDEN PARAMETERS, UNRELATED to TIME AVERAGING -->
         <param type="bool" name="disableparallel" subparam="true" visibility="hidden">
@@ -436,7 +458,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <equals type="bool" value="True">
                   <default param="callib"><value type="string"></value></default>
             </equals>
-          </when>          
+          </when> 
+        <when param="douvcontsub">
+            <equals type="bool" value="False"/>
+            <equals type="bool" value="True">
+                  <default param="fitspw"><value type="string"></value></default>
+                  <default param="fitorder"><value type="int">0</value></default>
+                  <default param="want_cont"><value type="bool">False</value></default>
+            </equals>
+        </when>                      
     </constraints>
 
 </input>

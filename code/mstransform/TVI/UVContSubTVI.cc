@@ -127,6 +127,7 @@ void UVContSubTVI::initialize()
 	Polynomial<AutoDiff<Float> > poly(fitOrder_p);
 	fitter_p.setFunction(poly);
 
+	// Process line-free channel selection
 	if (fitspw_p.size() > 0)
 	{
 		// Parse line-free channel selection
@@ -315,9 +316,41 @@ template<class T> void UVContSubTVI::transformDataCube(	const Cube<T> &inputVis,
 	}
 	else
 	{
-		UVContSubtractionKernel<T> kernel(fitOrder_p,&fitter_p,&(inputFrequencyMap_p[spwId]),lineFreeChannelMask);
-		UVContSubTransformEngine<T> transformer(&kernel,&inputData,&outputData);
-		transformFreqAxis2(vb->getShape(),transformer);
+		int nThreads = 1;
+#ifdef _OPENMP
+		nThreads = omp_get_max_threads();
+#endif
+		nThreads = 1; // jagonzal: There is a lock in AutoDiff preventing parallelization
+
+		if (nThreads == 1)
+		{
+			UVContSubtractionKernel<T> kernel(fitOrder_p,&fitter_p,&(inputFrequencyMap_p[spwId]),lineFreeChannelMask);
+			UVContSubTransformEngine<T> transformer(&kernel,&inputData,&outputData);
+			transformFreqAxis2(vb->getShape(),transformer);
+		}
+		else
+		{
+#ifdef _OPENMP
+			uInt nCorrs = vb->getShape()(0);
+			#pragma omp parallel for
+			for (uInt corrIdx=0; corrIdx < nCorrs; corrIdx++)
+			{
+				// Create a new fitter for the Transform Engine
+				LinearFitSVD<Float> fitterIdx;
+				Polynomial<AutoDiff<Float> > polyIdx(fitOrder_p);
+				fitterIdx.setFunction(polyIdx);
+
+				// Make reference copy of the input-output DataCube Maps
+				DataCubeMap inputDataIdx(inputData);
+				DataCubeMap outputDataIdx(outputData);
+
+				// Transform data for this correlation
+				UVContSubtractionKernel<T> kernel(fitOrder_p,&fitterIdx,&(inputFrequencyMap_p[spwId]),lineFreeChannelMask);
+				UVContSubTransformEngine<T> transformer(&kernel,&inputDataIdx,&outputDataIdx);
+				transformFreqAxis2(vb->getShape(),transformer,corrIdx);
+			}
+#endif
+		}
 	}
 
 	return;
@@ -513,6 +546,9 @@ template<class T> void UVContSubtractionKernel<T>::kernelCore(	Vector<Complex> &
 		{
 			outputVector(chan_idx) -= ((*freqPows_p)(order_idx-1,chan_idx))*coeff;
 		}
+
+		// jagonzal: This way requires more copies and it is not faster
+		// outputVector -= Complex(realCoeff(order_idx),imagCoeff(order_idx))*(freqPows_p->row(order_idx-1));
 	}
 
 	// jagonzal: Debug code

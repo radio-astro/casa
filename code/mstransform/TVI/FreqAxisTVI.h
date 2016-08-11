@@ -133,33 +133,45 @@ protected:
 
     // Method implementing main loop  (with auxiliary data)
 	template <class T> void transformFreqAxis2(	const IPosition &inputShape,
-												FreqAxisTransformEngine2<T> &transformer) const
+												FreqAxisTransformEngine2<T> &transformer,
+												Int parallelCorrAxis=-1) const
 	{
 		uInt nRows = inputShape(2);
-		uInt nCorrs = inputShape(0);
-
-		for (uInt row=0; row < nRows; row++)
+		if (parallelCorrAxis >= 0)
 		{
-			transformer.setRowIndex(row);
-
-			for (uInt corr=0; corr < nCorrs; corr++)
+			for (uInt row=0; row < nRows; row++)
 			{
-				transformer.setCorrIndex(corr);
-
-				// jagonzal: Debug code
-				/*
-				VisBuffer2 *vb = getVii()->getVisBuffer();
-				if (vb->rowIds()(row)==0 and corr==0)
-				{
-					transformer.setDebug(True);
-				}
-				else
-				{
-					transformer.setDebug(False);
-				}
-				*/
-
+				transformer.setRowIndex(row);
+				transformer.setCorrIndex(parallelCorrAxis);
 				transformer.transform();
+			}
+		}
+		else
+		{
+			uInt nCorrs = inputShape(0);
+			for (uInt row=0; row < nRows; row++)
+			{
+				transformer.setRowIndex(row);
+
+				for (uInt corr=0; corr < nCorrs; corr++)
+				{
+					transformer.setCorrIndex(corr);
+
+					// jagonzal: Debug code
+					/*
+					VisBuffer2 *vb = getVii()->getVisBuffer();
+					if (vb->rowIds()(row)==0 and corr==0)
+					{
+						transformer.setDebug(True);
+					}
+					else
+					{
+						transformer.setDebug(False);
+					}
+					*/
+
+					transformer.transform();
+				}
 			}
 		}
 

@@ -55,6 +55,7 @@ public:
 
 	DataCubeHolderBase() {}
 	virtual ~DataCubeHolderBase() {}
+	virtual DataCubeHolderBase * selfReference() = 0;
 	virtual void setMatrixIndex(uInt matrixIndex) = 0;
 	virtual void setVectorIndex(uInt vectorIndex) = 0;
 	uInt getMatrixIndex();
@@ -140,6 +141,12 @@ public:
 		return;
 	}
 
+	DataCubeHolderBase * selfReference()
+	{
+		DataCubeHolder<T> *selfRef = new DataCubeHolder<T>(cube_p);
+		return static_cast<DataCubeHolderBase*>(selfRef);
+	}
+
 
 protected:
 
@@ -158,6 +165,7 @@ class DataCubeMap
 public:
 
 	DataCubeMap();
+	DataCubeMap(DataCubeMap& other);
 	~DataCubeMap();
 
 	void add(MS::PredefinedColumns key,DataCubeHolderBase* dataCubeHolder);

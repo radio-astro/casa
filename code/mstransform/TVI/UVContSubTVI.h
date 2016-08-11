@@ -30,6 +30,11 @@
 #include <scimath/Fitting/LinearFitSVD.h>
 #include <scimath/Functionals/Polynomial.h>
 
+// OpenMP
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

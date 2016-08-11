@@ -56,6 +56,10 @@ def mstransform(
              maxuvwdistance,
              docallib,
              callib,
+             douvcontsub,
+             fitspw,
+             fitorder,
+             want_cont,
              disableparallel,    # HIDDEN parameter to create MMS in sequential
              ddistart,           # HIDDEN internal parameter for the sub-table re-indexing
              taql,               # HIDDEN internal parameter
@@ -267,6 +271,15 @@ def mstransform(
             mycallib.read(callib)
             config['calibration'] = True
             config['callib'] = mycallib.cld
+            
+        if douvcontsub:
+            casalog.post('Parse uvcontsub parameters')
+            config['uvcontsub'] = True
+            uvcontsub_config = {}
+            uvcontsub_config['fitspw'] = fitspw
+            uvcontsub_config['fitorder'] = fitorder
+            uvcontsub_config['want_cont'] = want_cont
+            config['uvcontsublib'] = dict(uvcontsub_config)
         
         # Configure the tool and all the parameters
         
