@@ -2379,7 +2379,8 @@ void MSTransformManager::initRefFrameTransParams()
     	if (fieldIdForPhaseCenter >= (Int)inputMSFieldCols_p->nrow() || fieldIdForPhaseCenter < 0)
     	{
     		logger_p << LogIO::SEVERE << LogOrigin("MSTransformManager", __FUNCTION__)
-    				<< "Selected FIELD_ID to determine phase center does not exist " << LogIO::POST;
+    				<< "Selected FIELD_ID to determine phase center does not exist "
+    				<< LogIO::POST;
     	}
     	else
     	{
@@ -2413,12 +2414,28 @@ void MSTransformManager::initRefFrameTransParams()
     			fieldCols = new MSFieldColumns(fieldTable);
     		}
 
-    		Int firstSelectedField = reindex_p? 0:selectedInputMsCols_p->fieldId()(0);
+    		// CAS-8870: Mstransform with outframe=’SOURCE’ crashes because of ephemeris type
+    		Int firstSelectedField = selectedInputMsCols_p->fieldId()(0);
+    		if (inputOutputFieldIndexMap_p.find(firstSelectedField) != inputOutputFieldIndexMap_p.end())
+    		{
+    			firstSelectedField = inputOutputFieldIndexMap_p[firstSelectedField];
+    		}
 
     		// CAS-6778: Support for new ref. frame SOURCE that requires radial velocity correction
     		if (radialVelocityCorrection_p)
     		{
     			radialVelocity_p = fieldCols->radVelMeas(firstSelectedField, referenceTime_p.get("s").getValue());
+
+    			if (radialVelocity_p.getRef().getType() != MRadialVelocity::GEO)
+    			{
+    				logger_p << LogIO::SEVERE << LogOrigin("MSTransformManager", __FUNCTION__)
+    						   << "Cannot perform radial velocity correction with ephemerides attached to first selected field "
+    						   << firstSelectedField << " of type "
+    						   << MRadialVelocity::showType(radialVelocity_p.getRef().getType())
+    				   	   	   << ".\nType needs to be GEO."
+    						   << LogIO::EXCEPTION;
+    			}
+
     			phaseCenter_p = fieldCols->phaseDirMeas(firstSelectedField,referenceTime_p.get("s").getValue());
     		}
     		else
@@ -2437,13 +2454,6 @@ void MSTransformManager::initRefFrameTransParams()
         	}
     	}
     }
-
-   if (radialVelocityCorrection_p &&
-		   (radialVelocity_p.getRef().getType() != MRadialVelocity::GEO)) {
-	   logger_p << LogIO::SEVERE << "Cannot perform radial velocity correction with ephemerides of type "
-			   << MRadialVelocity::showType(radialVelocity_p.getRef().getType()) << ".\nType needs to be GEO."
-			   << LogIO::EXCEPTION;
-   }
 
 	return;
 }
