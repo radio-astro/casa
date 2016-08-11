@@ -1003,7 +1003,7 @@ finally:
                 if image['sourcetype'] in intents:
                     if (image['multiterm']):
                         for nt in xrange(image['multiterm']):
-                            images_list.append('%s.tt%d' % (image['imagename'], nt))
+                            images_list.append(image['imagename'].replace('.image', '.image.tt%d' % (nt)))
                         if (image['imagename'].find('.pbcor') != -1):
                             images_list.append(image['imagename'].replace('.image.pbcor', '.alpha'))
                             images_list.append('%s.error' % (image['imagename'].replace('.image.pbcor', '.alpha')))
@@ -1015,9 +1015,15 @@ finally:
 
                     # Add PB
                     if (image['imagename'].find('.pbcor') != -1):
-                        images_list.append(image['imagename'].replace('.image.pbcor', '.pb'))
+                        if (image['multiterm']):
+                            images_list.append(image['imagename'].replace('.image.pbcor', '.pb.tt0'))
+                        else:
+                            images_list.append(image['imagename'].replace('.image.pbcor', '.pb'))
                     else:
-                        images_list.append(image['imagename'].replace('.image', '.pb'))
+                        if (image['multiterm']):
+                            images_list.append(image['imagename'].replace('.image', '.pb.tt0'))
+                        else:
+                            images_list.append(image['imagename'].replace('.image', '.pb'))
         else:
             # Assume only the root image name was given.
             cleanlib = imagelibrary.ImageLibrary()
