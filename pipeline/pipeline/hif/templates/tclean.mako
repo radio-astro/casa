@@ -136,7 +136,7 @@ $(document).ready(function(){
                                 %endif
 							</tr>
                             <tr>
-								<th>beam</th>
+				<th>beam</th>
                                 %if info_dict.get((field,str(spw),pol,'beam major')) is not None:
                                     <%
                                     beam_major = casatools.quanta.tos(info_dict[(field,str(spw),pol,'beam major')],2)
@@ -157,16 +157,16 @@ $(document).ready(function(){
                                 %endif
                             </tr>
                             <tr>
-                                            <th>image maximum </th>
-                                %if info_dict.get((field,str(spw),pol,'max')) is not None:
-                                            <td>${'%.2g %s' % (info_dict[(field,str(spw),pol,'max')],
+                                <th>pbcor image max / min </th>
+                                %if info_dict.get((field,str(spw),pol,'non-masked max')) is not None and info_dict.get((field,str(spw),pol,'non-masked min')) is not None:
+                                            <td>${'%.2g / %.2g %s' % (info_dict[(field,str(spw),pol,'non-masked max')], info_dict[(field,str(spw),pol,'non-masked min')],
                                                 info_dict[(field,str(spw),pol,'brightness unit')])}</td>
                                 %else:
                                             <td>-</td>
                                 %endif
                             </tr>
                             <tr>
-                                <th>image rms</th>
+                                <th>non-pbcor image rms</th>
                                 %if info_dict.get((field,str(spw),pol,'masked rms')) is not None:
                                             <td>${'%.2g %s' % (info_dict[(field,str(spw),pol,'masked rms')],
                                                 info_dict[(field,str(spw),pol,'brightness unit')])}</td>

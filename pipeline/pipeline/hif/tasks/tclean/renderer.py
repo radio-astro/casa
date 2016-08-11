@@ -96,6 +96,8 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
                     info_dict[(field, spw, pol, 'brightness unit')] = image.brightnessunit()
 
+                    # These should be obsolete since we need to measure these quantities
+                    # with proper masking.
                     image_rms = stats.get('rms')[0]
                     image_max = stats.get('max')[0]
                     info_dict[(field, spw, pol, 'image rms')] = image_rms
@@ -132,9 +134,11 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                     stats = residual.statistics(robust=False)
                     info_dict[(field, spw, pol, 'residual rms')] = stats.get('rms')[0]
 
-                # The RMS value needs to be taken with proper masking.
+                # The min, max and RMS values need to be taken with proper masking.
                 # Store the one used for QA scoring.
-                info_dict[(field, spw, pol, 'masked rms')] = r.rms
+                info_dict[(field, spw, pol, 'non-masked min')] = r.image_min
+                info_dict[(field, spw, pol, 'non-masked max')] = r.image_max
+                info_dict[(field, spw, pol, 'masked rms')] = r.image_rms
                 info_dict[(field, spw, pol, 'sensitivity')] = r.sensitivity
                 info_dict[(field, spw, pol, 'threshold')] = r.threshold
                 info_dict[(field, spw, pol, 'score')] = r.qa.representative

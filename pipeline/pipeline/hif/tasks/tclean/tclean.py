@@ -340,7 +340,7 @@ class Tclean(cleanbase.CleanBase):
 
         # Give the result to the sequence_manager for analysis
         model_sum, residual_cleanmask_rms, residual_non_cleanmask_rms, residual_max, residual_min,\
-            rms2d, image_non_cleanmask_rms, image_max = sequence_manager.iteration_result(iter=0,
+            rms2d, nonpbcor_image_non_cleanmask_rms, pbcor_image_min, pbcor_image_max = sequence_manager.iteration_result(iter=0,
                     multiterm = result.multiterm, psf = result.psf, model = result.model,
                     restored = result.image, residual = result.residual,
                     flux = result.flux, cleanmask=None, threshold = None,
@@ -482,17 +482,20 @@ class Tclean(cleanbase.CleanBase):
                     sensitivity=sequence_manager.sensitivity, result=result)
 
             # Give the result to the clean 'sequencer'
-            model_sum, residual_cleanmask_rms, residual_non_cleanmask_rms, residual_max, residual_min, rms2d, image_non_cleanmask_rms, image_max = sequence_manager.iteration_result(
+            model_sum, residual_cleanmask_rms, residual_non_cleanmask_rms, residual_max, residual_min, rms2d, nonpbcor_image_non_cleanmask_rms, pbcor_image_min, pbcor_image_max = sequence_manager.iteration_result(
                 iter=iter, multiterm=result.multiterm, psf=result.psf, model=result.model, restored=result.image, residual=result.residual,
                 flux=result.flux, cleanmask=new_cleanmask, threshold=seq_result.threshold, pblimit_image = self.pblimit_image,
                 pblimit_cleanmask = self.pblimit_cleanmask)
 
-            # Keep image non-cleanmask area RMS for QA
-            result.set_rms(image_non_cleanmask_rms)
+            # Keep image cleanmask area min and max and non-cleanmask area RMS for weblog and QA
+            result.set_image_min(pbcor_image_min)
+            result.set_image_max(pbcor_image_max)
+            result.set_image_rms(nonpbcor_image_non_cleanmask_rms)
 
             LOG.info('Clean image iter %s stats' % iter)
-            LOG.info('    Clean image non-cleanmask area rms: %s', image_non_cleanmask_rms)
-            LOG.info('    Clean image max: %s', image_max)
+            LOG.info('    Clean image non-cleanmask area rms: %s', nonpbcor_image_non_cleanmask_rms)
+            LOG.info('    Clean image min: %s', pbcor_image_min)
+            LOG.info('    Clean image max: %s', pbcor_image_max)
             LOG.info('    Residual non-cleanmask area rms: %s', residual_non_cleanmask_rms)
             LOG.info('    Residual cleanmask area rms: %s', residual_cleanmask_rms)
             LOG.info('    Residual max: %s', residual_max)
@@ -521,37 +524,6 @@ class Tclean(cleanbase.CleanBase):
             self._calc_mom0_fc(result)
 
         return result
-
-    def _do_noise_estimate (self, stokes):
-        """Compute a noise estimate from the specified stokes image.
-        """
-        # Compute the dirty Q or V image.
-        try:
-            LOG.info("Compute the 'noise' image")
-            result = self._do_clean (iter=0, stokes=stokes,
-                                     cleanmask='', niter=0, threshold='0.0mJy', sensitivity=0.0, result=None)
-            if result.empty():
-                raise Exception, '%s/%s/SpW%s Error creating Stokes %s noise image' % (
-                    self.inputs.intent, self.inputs.field, self.inputs.spw, stokes)
-        except Exception, e:
-            raise Exception, '%s/%s/SpW%s Error creating Stokes %s noise image: %s' % (
-                self.inputs.intent, self.inputs.field, self.inputs.spw, stokes, str(e))
-
-        # Create the base sequence manager and use it to get noise stats
-        sequence_manager = BaseCleanSequence()
-        model_sum, cleaned_rms, non_cleaned_rms, residual_max, \
-        residual_min, rms2d, image_max = \
-            sequence_manager.iteration_result(iter=0, multiterm=result.multiterm,
-                                              psf=result.psf, model=result.model, restored=result.image,
-                                              residual=result.residual, flux=result.flux, cleanmask=None)
-
-        LOG.info('Noise image stats')
-        LOG.info('    Rms %s', non_cleaned_rms)
-        LOG.info('    Residual max %s', residual_max)
-        LOG.info('    Residual min %s', residual_min)
-
-        return model_sum, cleaned_rms, non_cleaned_rms, residual_max, \
-               residual_min, rms2d, image_max
 
     def _do_sensitivity(self):
         """Compute sensitivity estimate using CASA."""

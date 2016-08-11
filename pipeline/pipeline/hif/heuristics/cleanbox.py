@@ -787,16 +787,41 @@ def analyse_clean_result(multiterm, model, restored, residual, flux, cleanmask, 
         rms2d = np.std(pixels)
         LOG.debug('2d rms of residual: %s' % rms2d)
 
-    # get max and RMS in non cleanmask area of non-pb corrected cleaned result
-    image_max = None
-    image_non_cleanmask_rms = None
+    pbcor_image_min = None
+    pbcor_image_max = None
+    nonpbcor_image_non_cleanmask_rms = None
     if restored not in [None, '']:
-        with casatools.ImageReader(restored.replace('.pbcor','')+extension) as image:
-            clean_stats = image.statistics()
-            image_max = clean_stats['max'][0]
-            LOG.debug('Clean image max: %s' % image_max)
+        # get min and max of the pb-corrected cleaned result
+        with casatools.ImageReader(restored.replace('.image','.image%s' % (extension))) as image:
+            # define mask outside the cleaned area
+            if flux is not None and os.path.exists(flux+extension):
+                have_mask= True
+                # Default is area pb > 0.3
+                statsmask = '"%s" > %f' % (os.path.basename(flux)+extension, pblimit_cleanmask)
+            elif cleanmask is not None and os.path.exists(cleanmask):
+                have_mask= True
+                # Area inside clean mask
+                statsmask = '"%s" > 0.1' % (os.path.basename(cleanmask))
+            else:
+                have_mask= False
+                statsmask = ''
 
-            # and the rms of the clean image outside the cleaned area
+            image_stats = image.statistics(mask=statsmask)
+
+            pbcor_image_min = image_stats['min'][0]
+            pbcor_image_max = image_stats['max'][0]
+
+            if have_mask:
+                LOG.debug('Clean pb-corrected image min in cleaned area: %s' % pbcor_image_min)
+                LOG.debug('Clean pb-corrected image max in cleaned area: %s' % pbcor_image_max)
+            else:
+                LOG.debug('Clean pb-corrected image min in full area: %s' % pbcor_image_min)
+                LOG.debug('Clean pb-corrected image max in full area: %s' % pbcor_image_max)
+
+        # get RMS in non cleanmask area of non-pb-corrected cleaned result
+        with casatools.ImageReader(restored.replace('.image.pbcor','.image%s' % (extension))) as image:
+
+            # define mask outside the cleaned area
             if flux is not None and os.path.exists(flux+extension):
                 have_mask= True
                 # Default is annulus 0.2 < pb < 0.3
@@ -812,13 +837,13 @@ def analyse_clean_result(multiterm, model, restored, residual, flux, cleanmask, 
             image_stats = image.statistics(mask=statsmask, robust=False)
 
             try:
-                image_non_cleanmask_rms = image_stats['rms'][0]
+                nonpbcor_image_non_cleanmask_rms = image_stats['rms'][0]
                 if have_mask:
-                    LOG.info('Clean image rms at the edge of the cleaned area: %s' % image_non_cleanmask_rms)
+                    LOG.info('Clean image rms at the edge of the cleaned area: %s' % nonpbcor_image_non_cleanmask_rms)
                 else:
-                    LOG.info('Clean image rms across full area: %s' %  image_non_cleanmask_rms)
+                    LOG.info('Clean image rms across full area: %s' % nonpbcor_image_non_cleanmask_rms)
             except:
                 pass
 
     return model_sum, residual_cleanmask_rms, residual_non_cleanmask_rms, residual_max,\
-      residual_min, rms2d, image_non_cleanmask_rms, image_max
+      residual_min, rms2d, nonpbcor_image_non_cleanmask_rms, pbcor_image_min, pbcor_image_max
