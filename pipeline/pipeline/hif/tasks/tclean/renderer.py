@@ -57,7 +57,7 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
                 field = spw = pol = None
 
-                image_path = r.iterations[maxiter]['image'] + extension
+                image_path = r.iterations[maxiter]['image'].replace('.image', '.image%s' % (extension))
 
                 with casatools.ImageReader(image_path) as image:
                     info = image.miscinfo()
@@ -81,13 +81,19 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                         beam = beam['beams']['*0']['*0']
                         LOG.warning('%s has per-plane beam shape, displaying '
                                     'only first', 
-                                    r.iterations[maxiter]['image'])
-                    major = qaTool.convert(beam['major'], 'arcsec')
-                    info_dict[(field, spw, pol, 'beam major')] = major
-                    minor = qaTool.convert(beam['minor'], 'arcsec')
-                    info_dict[(field, spw, pol, 'beam minor')] = minor
-                    pa = qaTool.convert(beam['positionangle'], 'deg')
-                    info_dict[(field, spw, pol, 'beam pa')] = pa
+                                    r.iterations[maxiter]['image'].replace('.image', '.image%s' % (extension)))
+                    try:
+                        major = qaTool.convert(beam['major'], 'arcsec')
+                        info_dict[(field, spw, pol, 'beam major')] = major
+                        minor = qaTool.convert(beam['minor'], 'arcsec')
+                        info_dict[(field, spw, pol, 'beam minor')] = minor
+                        pa = qaTool.convert(beam['positionangle'], 'deg')
+                        info_dict[(field, spw, pol, 'beam pa')] = pa
+                    except:
+                        info_dict[(field, spw, pol, 'beam major')] = None
+                        info_dict[(field, spw, pol, 'beam minor')] = None
+                        info_dict[(field, spw, pol, 'beam pa')] = None
+
                     info_dict[(field, spw, pol, 'brightness unit')] = image.brightnessunit()
 
                     image_rms = stats.get('rms')[0]
@@ -116,7 +122,7 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                         frequency2 = summary['refval'][frequency_axis] + (summary['shape'][frequency_axis] - 0.5 - summary['refpix'][frequency_axis]) * summary['incr'][frequency_axis]
                         full_bw_GHz = qaTool.convert(abs(frequency2 - frequency1), 'GHz')['value']
                         fractional_bw = (frequency2 - frequency1) / (0.5 * (frequency1 + frequency2))
-                        info_dict[(field, spw, pol, 'fractional bandwidth')] = '%.2g %%' % (fractional_bw * 100.)
+                        info_dict[(field, spw, pol, 'fractional bandwidth')] = '%.2g%%' % (fractional_bw * 100.)
                     except:
                         info_dict[(field, spw, pol, 'fractional bandwidth')] = 'N/A'
 

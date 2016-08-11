@@ -333,8 +333,9 @@ class Tclean(cleanbase.CleanBase):
                                 result=None)
 
         # Determine masking limits depending on PB
+        extension = '.tt0' if result.multiterm else ''
         self.pblimit_image, self.pblimit_cleanmask = \
-            inputs.heuristics.pblimits(result.flux)
+            inputs.heuristics.pblimits(result.flux+extension)
         inputs.pblimit = self.pblimit_image
 
         # Give the result to the sequence_manager for analysis
@@ -455,18 +456,17 @@ class Tclean(cleanbase.CleanBase):
             for ptype in ptypes:
                 old_pname = '%s.iter%s.%s' % (rootname, iter-1, ptype)
                 new_pname = '%s.iter%s.%s' % (rootname, iter, ptype)
-                if (ptype == 'pb'):
-                    self.copy_products(old_pname, new_pname)
-                else:
-                    if (inputs.deconvolver == 'mtmfs'):
-                        if (ptype in ['sumwt', 'psf', 'weight']):
-                            exts = ['.tt0', '.tt1', '.tt2']
-                        else:
-                            exts = ['.tt0', '.tt1']
+                if (inputs.deconvolver == 'mtmfs'):
+                    if (ptype in ['sumwt', 'psf', 'weight']):
+                        exts = ['.tt0', '.tt1', '.tt2']
+                    elif (ptype in ['residual']):
+                        exts = ['.tt0', '.tt1']
                     else:
-                        exts = ['']
-                    for ext in exts:
-                        self.copy_products('%s%s' % (old_pname, ext), '%s%s' % (new_pname, ext))
+                        exts = ['.tt0']
+                else:
+                    exts = ['']
+                for ext in exts:
+                    self.copy_products('%s%s' % (old_pname, ext), '%s%s' % (new_pname, ext))
 
             # Determine the cleaning threshold
             threshold = seq_result.threshold

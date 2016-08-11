@@ -48,7 +48,7 @@ class CleanSummary(object):
 
             # flux map
             plot_wrappers.append(displays.SkyDisplay().plot(self.context,
-                                                            r.flux, reportdir=stage_dir, intent=r.intent,
+                                                            r.flux + extension, reportdir=stage_dir, intent=r.intent,
                                                             collapseFunction='mean'))
 
             for i, iteration in [(k, r.iterations[k]) for k in sorted(r.iterations)]:
@@ -57,7 +57,7 @@ class CleanSummary(object):
                     collapse_function = 'max' if 'cube' in iteration['image'] else 'mean'
 
                     # PB corrected
-                    image_path = iteration['image'] + extension
+                    image_path = iteration['image'].replace('.image', '.image%s' % (extension))
                     plot_wrappers.append(
                         displays.SkyDisplay().plot(self.context, image_path, reportdir=stage_dir, intent=r.intent,
                                                    collapseFunction=collapse_function))

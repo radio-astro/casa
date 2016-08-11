@@ -370,7 +370,7 @@ class CleanBase(basetask.StandardTaskTemplate):
 
         # Store the flux image.
         set_miscinfo(name=flux_name, spw=inputs.spw, field=inputs.field,
-                     type='flux', iter=iter)
+                     type='flux', iter=iter, multiterm=result.multiterm)
         result.set_flux(image=flux_name)
 
         # Make sure mask has path name

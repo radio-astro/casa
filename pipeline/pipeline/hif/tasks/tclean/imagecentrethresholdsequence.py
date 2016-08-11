@@ -40,7 +40,7 @@ class ImageCentreThresholdSequence(BaseCleanSequence):
             #   flux > 0.3 (or adjusted for image size) when flux available
             #   centre quarter otherwise
             if self.flux not in (None, ''):
-                cm = casatools.image.newimagefromimage(infile=self.flux,
+                cm = casatools.image.newimagefromimage(infile=self.flux+extension,
                   outfile=new_cleanmask, overwrite=True)
                 # verbose = False to suppress warning message
                 cm.calc('1', verbose=False)
@@ -50,8 +50,8 @@ class ImageCentreThresholdSequence(BaseCleanSequence):
                     # We get here for the case of calmaxpixel limits and
                     # no masked pixel for the default pblimit values in iter0.
                     pass
-                cm.calc('replace("%s"["%s" > %f], 0)' % (os.path.basename(new_cleanmask), self.flux, pblimit_cleanmask), verbose=False)
-                cm.calcmask('"%s" > %s' % (self.flux, str(pblimit_image)))
+                cm.calc('replace("%s"["%s" > %f], 0)' % (os.path.basename(new_cleanmask), self.flux+extension, pblimit_cleanmask), verbose=False)
+                cm.calcmask('"%s" > %s' % (self.flux+extension, str(pblimit_image)))
                 cm.done()
             else:
                 cm = casatools.image.newimagefromimage(infile=self.residuals[0]+extension,
