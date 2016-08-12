@@ -330,7 +330,7 @@ class T2_4MDetailsVLAApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
         for intents in [['PHASE'],['BANDPASS']]:
             plots = self.create_plots(context, 
                                       result, 
-                                      applycal.PhaseVsFrequencySummaryChart, 
+                                      applycal.PhaseVsFrequencyPerBasebandSummaryChart,
                                       intents, correlation=corrstring)
             self.sort_plots_by_baseband(plots)
 
