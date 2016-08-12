@@ -629,7 +629,7 @@ class Tclean(cleanbase.CleanBase):
         if (len(sensitivities) != 0):
             sensitivity = 1.0 / numpy.sqrt(numpy.sum(1.0 / numpy.array(sensitivities)**2))
         else:
-            dummySensitivity = 0.001
+            dummySensitivity = 0.1
             LOG.warning('Exception in calculating sensitivity. Assuming dummy value of %g Jy/beam.' % (dummySensitivity))
             sensitivity = dummySensitivity
 
