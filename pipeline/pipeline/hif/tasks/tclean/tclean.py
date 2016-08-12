@@ -629,9 +629,9 @@ class Tclean(cleanbase.CleanBase):
         if (len(sensitivities) != 0):
             sensitivity = 1.0 / numpy.sqrt(numpy.sum(1.0 / numpy.array(sensitivities)**2))
         else:
-            dummySensitivity = 0.1
-            LOG.warning('Exception in calculating sensitivity. Assuming dummy value of %g Jy/beam.' % (dummySensitivity))
-            sensitivity = dummySensitivity
+            defaultSensitivity = 0.1
+            LOG.warning('Exception in calculating sensitivity. Assuming default value of %g Jy/beam.' % (defaultSensitivity))
+            sensitivity = defaultSensitivity
 
         return sensitivity, min_sensitivity, max_sensitivity, min_field_id, max_field_id, spw_topo_freq_param, spw_topo_chan_param, spw_topo_freq_param_dict, spw_topo_chan_param_dict, total_topo_bw, aggregate_topo_bw
 
