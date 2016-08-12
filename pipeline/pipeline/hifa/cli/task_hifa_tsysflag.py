@@ -3,14 +3,14 @@ import sys
 import pipeline.h.cli.utils as utils
 
 
-def hifa_tsysflag(vis=None, caltable=None, normalize_tsys=None,
+def hifa_tsysflag(vis=None, caltable=None, 
   flag_nmedian=None, fnm_limit=None, fnm_byfield=None,
   flag_derivative=None, fd_max_limit=None,
   flag_edgechans=None, fe_edge_limit=None,
   flag_fieldshape=None, ff_refintent=None, ff_max_limit=None,
   flag_birdies=None, fb_sharps_limit=None,
   flag_toomany=None, tmf1_limit=None, tmef1_limit=None,
-  pipelinemode=None, dryrun=None, acceptresults=None):
+  normalize_tsys=None, pipelinemode=None, dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the
     # constructor

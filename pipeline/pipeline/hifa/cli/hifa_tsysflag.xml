@@ -23,11 +23,6 @@ possible error.
         <value></value>
     </param>
 
-    <param type="bool" name="normalize_tsys">
-        <description>Normalize Tsys prior to computing the flagging metric(s)</description>
-        <value>False</value>
-    </param>
-
     <param type="bool" name="flag_nmedian">
         <description>True to flag Tsys spectra with high median value</description>
         <value>True</value>
@@ -101,6 +96,11 @@ possible error.
     <param type="double" name="tmef1_limit" subparam="true">
         <description>Flag all Tsys spectra for all antennas in a spw, if proportion of antennas that are already entirely flagged in all timestamps &gt; tmef1_limit</description>
         <value>0.666</value>
+    </param>
+
+    <param type="bool" name="normalize_tsys">
+        <description>Normalize Tsys prior to computing the flagging metric(s)</description>
+        <value>False</value>
     </param>
 
     <param type="string" name="pipelinemode">
@@ -239,10 +239,6 @@ caltable -- List of input Tsys calibration tables
     default: [] - Use the table currently stored in the pipeline context. 
     example: caltable=['X132.ms.tsys.s2.tbl']
 
-normalize_tsys -- Normalize the Tsys measurements prior to computing the
-    flagging metrics
-    default: False
-
 flag_nmedian -- True to flag Tsys spectra with high median value.
     default: True
 
@@ -299,6 +295,12 @@ tmef1_limit -- Flag Tsys spectra for all antennas and all timestamps
 in a spw, if proportion of antennas that are already entirely flagged 
 in all timestamps exceeds tmef1_limit.
     default: 0.666
+
+normalize_tsys -- True to create a normalized Tsys table that is used to 
+evaluate the Tsys flagging metrics. All newly found flags are also applied
+to the original Tsys caltable that continues to be used for subsequent 
+calibration.
+    default: False
 
 -- Pipeline task execution modes
 
