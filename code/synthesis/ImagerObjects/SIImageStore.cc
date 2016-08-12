@@ -2168,7 +2168,7 @@ Float SIImageStore :: calcStd(Vector<Float> &vect, Vector<Bool> &flag, Float mea
 
 	// Set restoring beam info
 	ImageInfo iminf = imagepbcor(term)->imageInfo();
-        iminf.setBeams( itsRestoredBeams);
+        iminf.setBeams( getBeamSet() );
 	imagepbcor(term)->setImageInfo(iminf);
 
   }// end pbcor
