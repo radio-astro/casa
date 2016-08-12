@@ -31,7 +31,7 @@ class SDBLFlagWorkerInputs(basetask.StandardInputs):
     """
     def __init__(self, context, clip_niteration,
                  ms_list, antenna_list, fieldid_list, spwid_list, pols_list,
-                 nchan, flagRule, userFlag=[], edge=(0,0)):
+                 nchan, flagRule, userFlag=[], edge=(0,0), rowmap=None):
         self._init_properties(vars())
 
 class SDBLFlagWorkerResults(common.SingleDishResults):
@@ -90,6 +90,7 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate): #object):
         userFlag = self.inputs.userFlag
         edge = self.inputs.edge
         datatable = DataTable(name=context.observing_run.ms_datatable_name, readonly=False)
+        rowmap = self.inputs.rowmap
         
         LOG.debug('Members to be processed in worker class:')
         for (m,a,f,s,p) in zip(ms_list, antid_list, fieldid_list, spwid_list, pols_list):
@@ -135,17 +136,19 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate): #object):
             else:
                 TimeTable = time_table[0]
             LOG.info('Applied time bin for the running mean calculation: %s' % flagRule['Flagging']['ApplicableDuration'])
+            flagRule_local = copy.deepcopy(flagRule)
             # Set is_baselined flag when processing not yet baselined data.
             is_baselined = (_get_iteration(context.observing_run.ms_reduction_group,msobj,antid, fieldid,spwid) > 0)
             if not is_baselined:
                 LOG.debug("No baseline subtraction operated to data. Skipping flag by post fit spectra.")
-            # Reset MASKLIST for the non-baselined DataTable
-            if not is_baselined: self.ResetDataTableMaskList(datatable,TimeTable)
-            flagRule_local = copy.deepcopy(flagRule)
-            if not is_baselined: # force disable post fit flagging (not really effective except for flagSummary)
+                # Reset MASKLIST for the non-baselined DataTable
+                self.ResetDataTableMaskList(datatable,TimeTable)
+                # force disable post fit flagging (not really effective except for flagSummary)
                 flagRule_local['RmsPostFitFlag']['isActive'] = False
                 flagRule_local['RunMeanPostFitFlag']['isActive'] = False
                 flagRule_local['RmsExpectedPostFitFlag']['isActive'] = False
+            elif rowmap is None:
+                rowmap = sdutils.make_row_map_for_baselined_ms(msobj)
             LOG.debug("FLAGRULE = %s" % str(flagRule_local))
             
             for pol in pollist:
@@ -156,7 +159,7 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate): #object):
                 t0 = time.time()
                 dt_idx, tmpdata, _ = self.calcStatistics(datatable, msobj, nchan, nmean,
                                                          TimeTable, polid, edge,
-                                                         is_baselined, deviation_mask)
+                                                         is_baselined, rowmap, deviation_mask)
                 t1 = time.time()
                 LOG.info('Standard Deviation and diff calculation End: Elapse time = %.1f sec' % (t1 - t0))
                 
@@ -213,7 +216,7 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate): #object):
     def analyse(self, result):
         return result
 
-    def calcStatistics(self, DataTable, msobj, NCHAN, Nmean, TimeTable, polid, edge, is_baselined, deviation_mask=None):
+    def calcStatistics(self, DataTable, msobj, NCHAN, Nmean, TimeTable, polid, edge, is_baselined, rowmap, deviation_mask=None):
         DataIn = msobj.name
         DataOut = msobj.work_data
         # Calculate Standard Deviation and Diff from running mean
@@ -237,7 +240,6 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate): #object):
         if not datacolIn:
             raise RuntimeError, 'Could not find any data column in %s' % DataIn
         if is_baselined:
-            inout_rowmap = sdutils.make_row_map_for_baselined_ms(msobj)
             tbOut.open(DataOut)
             datacolOut = self._search_datacol(tbOut)
             if not datacolOut:
@@ -270,7 +272,7 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate): #object):
                 SpIn[index] = tbIn.getcell(datacolIn, data_row_in)[polid]
                 FlIn[index] = tbIn.getcell('FLAG', data_row_in)[polid]
                 if is_baselined: 
-                    data_row_out = inout_rowmap[data_row_in]
+                    data_row_out = rowmap[data_row_in]
                     SpOut[index] = tbOut.getcell(datacolOut, data_row_out)[polid]
                     FlOut[index] = tbOut.getcell('FLAG', data_row_out)[polid]
                 SpIn[index][:edgeL] = 0
@@ -440,6 +442,8 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate): #object):
                 num_masked_array[output_serial_index] = Nmask
             del SpIn, SpOut
             output_array_index += nrow
+        tbIn.close()
+        tbOut.close()
         return datatable_index, statistics_array, num_masked_array
 
     def _calculate_masked_stddev(self, data, mask):

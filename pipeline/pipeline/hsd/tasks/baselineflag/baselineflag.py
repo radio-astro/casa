@@ -242,13 +242,16 @@ class SDBLFlag(basetask.StandardTaskTemplate):
         in_spw = inputs.spw
         in_field = inputs.field
         in_pol = '' if inputs.pol in ['', '*'] else inputs.pol.split(',')
-#         args = inputs.to_casa_args()
         flag_rule = inputs.FlagRuleDictionary
         clip_niteration = inputs.iteration
         reduction_group = context.observing_run.ms_reduction_group
 
+        rowmap = None
         if os.path.abspath(cal_name)==os.path.abspath(bl_name):
             LOG.warn("%s is not yet baselined. Skipping flag by post-fit statistics for the data. MASKLIST will also be cleared up. You may go on flagging but the statistics will contain line emission." % self.inputs.ms.basename)
+        else:
+            # row map generation is very expensive. Do as few time as possible
+            rowmap = sdutils.make_row_map_for_baselined_ms(self.ms)
         # sumarize flag before execution
         full_intent = utils.to_CASA_intent(self.inputs.ms, self.inputs.intent)
         flagdata_summary_job = casa_tasks.flagdata(vis=bl_name, mode='summary',
@@ -306,7 +309,8 @@ class SDBLFlag(basetask.StandardTaskTemplate):
             # Calculate flag and update DataTable
             flagging_inputs = worker.SDBLFlagWorkerInputs(context, clip_niteration,
                                             ms_list, antenna_list, fieldid_list,
-                                            spwid_list, pols_list, nchan, flag_rule)
+                                            spwid_list, pols_list, nchan, flag_rule,
+                                            rowmap=rowmap)
             flagging_task = worker.SDBLFlagWorker(flagging_inputs)
 
             flagging_results = self._executor.execute(flagging_task, merge=False)
@@ -332,7 +336,6 @@ class SDBLFlag(basetask.StandardTaskTemplate):
         results = SDBLFlagResults(task=self.__class__,
                                     success=True,
                                     outcome=outcome)
-                
         return results
  
  
