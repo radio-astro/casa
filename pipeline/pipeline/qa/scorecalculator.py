@@ -15,6 +15,8 @@ import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.renderer.rendererutils as rutils
 
+import pipeline.qa.checksource as checksource
+
 __all__ = ['score_polintents',                                # ALMA specific
            'score_bands',                                     # ALMA specific
            'score_bwswitching',                               # ALMA specific
@@ -1337,3 +1339,71 @@ def score_sd_line_detection_for_ms(group_id_list, field_id_list, spw_id_list, li
             longmsg = 'Spectral lines are detected at ReductionGroups %s'%(','.join(map(str,detected_group)))
         shortmsg = 'Spectral lines are detected'
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
+
+
+@log_qa
+def score_checksources(mses, fieldname, spwid, imagename):
+    """
+    Score a single filed image of a point source by comparing the source
+    catalog position to the fitted position and the derived flux to the
+    fitted image flux
+
+    The source is assumed to be near the center of the image
+    """
+
+    qa = casatools.quanta
+    me = casatools.measures
+
+    # Get the reference direction of the field
+    #    Assume that the same field as defined by its field name
+    #    has the same direction in all the mses that contributed
+    #    to the input image. Loop through the ms(s) and find the
+    #    first occurrence of the specified field. Convert the
+    #    direction to ICRS to match the default image coordinate
+    #    system
+
+    refdirection = None
+    for ms in mses:
+        field = ms.get_fields (name = fieldname)
+        if not field:
+            continue
+        fieldid = str(field[0].id)
+        # Add conversion
+        refdirection = me.measure(field[0].mdirection, 'ICRS')
+        break
+
+    # Get the reference flux of the field
+    #    Loop over all the ms(s) extracting the derived flux
+    #    values for the specified field and spw. Set the reference
+    #    flux to the maximum of these values.
+    reffluxes = []
+    for ms in mses:
+        if not ms.derived_fluxes:
+            continue
+        for field_arg, measurements in ms.derived_fluxes.items():
+            mfieldid = str(ms.get_fields(field_arg)[0].id)
+            if mfieldid != fieldid:
+                continue
+            for measurement in sorted(measurements, key=lambda m: int(m.spw_id)):
+                if int(measurement.spw_id) != spwid:
+                    continue
+                for stokes in ['I']:
+                    try:
+                        flux = getattr(measurement, stokes)
+                        flux_jy = float(flux.to_units(measures.FluxDensityUnits.JANSKY))
+                        reffluxes.append(flux_jy)
+                    except:
+                        pass
+
+    # Use the maximum reference flux
+    if not reffluxes:
+        refflux = None
+    else:
+        refflux = qa.quantity (max(reffluxes), 'Jy')
+
+    fitdict = checksource.checkimage (imagename, refdirection, refflux)
+
+    # Dummy score placehold for now
+    return pqa.QAScore(1.0, longmsg='All OK', shortmsg='All OK')
+
+
