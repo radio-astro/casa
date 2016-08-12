@@ -726,22 +726,28 @@ def score_setjy_measurements (ms, reqfields, reqintents, reqspws, measurements):
 @log_qa
 def score_number_antenna_offsets (ms, antenna, offsets):
     '''
-    Score is equal to the ratio number of antennas without corrections
-    to the number of antennas with them. Make this more sophisticated
-    later
+    Score is 1.0 if no antenna needed a position offset correction, and
+    set to the "suboptimal" threshold if at least one antenna needed a 
+    correction.
     '''
 
     nant_with_offsets = len(offsets) / 3
-    nant = len([ant.id for ant in ms.get_antenna()])
 
     if nant_with_offsets == 0:
         score = 1.0
         longmsg = 'No antenna position offsets for %s ' % ms.basename
-        shortmsg = 'No antenna postion offsets'
+        shortmsg = 'No antenna position offsets'
     else:
-        score = float(nant - nant_with_offsets) / float (nant)
+        # Previous QA: set score to fraction of antennas that did not need a
+        # correction.
+        #nant = len([ant.id for ant in ms.get_antenna()])
+        #score = float(nant - nant_with_offsets) / float (nant)
+        
+        # CAS-8877: if at least 1 antenna needed correction, then set the score
+        # to the "suboptimal" threshold. 
+        score =  rutils.SCORE_THRESHOLD_SUBOPTIMAL   
         longmsg = '%d nonzero antenna position offsets for %s ' % (nant_with_offsets, ms.basename)
-        shortmsg = 'Nonzero antenna postion offsets'
+        shortmsg = 'Nonzero antenna position offsets'
 
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg,
                        vis=ms.basename)
@@ -774,7 +780,7 @@ def score_missing_derived_fluxes (ms, reqfields, reqintents, measurements):
             fluxjy = getattr (flux, 'I').to_units(measures.FluxDensityUnits.JANSKY)
             uncjy = getattr (flux.uncertainty, 'I').to_units(measures.FluxDensityUnits.JANSKY)
             if fluxjy <= 0.0 or uncjy <= 0.0: 
-                 continue
+                continue
             nmeasured = nmeasured + 1
 
     # Compute score
@@ -895,7 +901,7 @@ def score_missing_phaseup_snrs(ms, spwids, phsolints):
     missing_spws = []
     for i in range (len(spwids)):
         if not phsolints[i]:
-            missing_spws.append(spwid[i])
+            missing_spws.append(spwids[i])
     nmissing = len(missing_spws) 
 
     if nexpected <= 0:
@@ -1028,7 +1034,7 @@ def score_missing_phase_snrs(ms, spwids, snrs):
     missing_spws = []
     for i in range (len(spwids)):
         if not snrs[i]:
-            missing_spws.append(spwid[i])
+            missing_spws.append(spwids[i])
     nmissing = len(missing_spws) 
 
     if nexpected <= 0:
