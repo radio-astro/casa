@@ -135,8 +135,10 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
         #ms = inputs.ms
 
         # Initialize results.
-        result = commonfluxresults.FluxCalibrationResults(inputs.vis,
-                resantenna='', uvrange='')
+        #result = commonfluxresults.FluxCalibrationResults(inputs.vis,
+                #resantenna='', uvrange='')
+        print 'inputs vis ', inputs.vis
+        result = GcorFluxscaleResults(inputs.vis, resantenna='', uvrange='')
 
         # Check that the measurement set does have an amplitude calibrator.
         if inputs.reference == '':
@@ -485,3 +487,17 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
                                   spwmap=spwmap,
                                   caltype=old_calfrom.caltype,
                                   calwt=old_calfrom.calwt)
+
+
+class GcorFluxscaleResults(commonfluxresults.FluxCalibrationResults):
+
+    def __init__(self, vis, resantenna=None, uvrange=None, measurements=None):
+        print 'vis ', vis, 'resantenna ', resantenna, 'uvrange ', uvrange, 'measurements ', measurements
+        commonfluxresults.FluxCalibrationResults.__init__(self,
+            vis, resantenna=resantenna, uvrange=uvrange, measurements=measurements)
+
+    def merge_with_context (self, context):
+        ms = context.observing_run.get_ms(self.vis)
+        ms.derived_fluxes = self.measurements
+
+
