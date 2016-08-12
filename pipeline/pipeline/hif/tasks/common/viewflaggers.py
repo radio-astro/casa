@@ -2372,10 +2372,20 @@ class NewVectorFlaggerInputs(basetask.StandardInputs):
 
     def __init__(self, context, output_dir=None, vis=None, datatask=None,
         viewtask=None, flagsettertask=None, rules=None, niter=None, 
-        iter_datatask=None, prepend=''):
+        iter_datatask=None, use_antenna_names=None, prepend=''):
 
         # set the properties to the values given as input arguments
         self._init_properties(vars())
+
+    @property
+    def use_antenna_names(self):
+        return self._use_antenna_names
+
+    @use_antenna_names.setter
+    def use_antenna_names(self, value):
+        if value is None:
+            value = True
+        self._use_antenna_names = value
 
 
 class NewVectorFlaggerResults(basetask.Results,
@@ -2669,6 +2679,28 @@ class NewVectorFlagger(basetask.StandardTaskTemplate):
             antenna = antenna[0]
         table = vector.filename
 
+        # If requested to use antenna names instead of IDs antenna,
+        # create an id-to-name translation and check to make sure this
+        # would result in unique non-empty names for all IDs, otherwise
+        # revert back to flagging by ID
+        if self.inputs.use_antenna_names:
+            
+            # create translation dictionary, reject empty antenna name strings
+            antenna_id_to_name = {ant.id: ant.name for ant in 
+              self.inputs.ms.antennas if ant.name.strip()}
+
+            # Check that each antenna ID is represented by a unique non-empty
+            # name, by testing that the unique set of antenna names is same 
+            # length as list of IDs. If not, then unset the translation 
+            # dictionary to revert back to flagging by ID.
+            if len(set(antenna_id_to_name.values())) != len(
+              self.inputs.ms.antennas):
+                LOG.info('No unique name available for each antenna ID: '
+                         'flagging by antenna ID instead of by name.')
+                antenna_id_to_name = None
+        else:
+            antenna_id_to_name = None
+
         # any flags found will apply to this subset of the data
         axisnames = []
         flagcoords = []
@@ -2731,7 +2763,8 @@ class NewVectorFlagger(basetask.StandardTaskTemplate):
                               reason='edges',
                               filename=table,
                               rulename=rulename, spw=spw, axisnames=axisnames,
-                              flagcoords=flagcoords))
+                              flagcoords=flagcoords,
+                              antenna_id_to_name=antenna_id_to_name))
 
                 elif rulename == 'min abs':
                     limit = rule['limit']
@@ -2759,7 +2792,8 @@ class NewVectorFlagger(basetask.StandardTaskTemplate):
                               filename=table, rulename=rulename,
                               spw=spw, axisnames=axisnames,
                               flagcoords=flagcoords,
-                              channel_axis=vector.axis))
+                              channel_axis=vector.axis,
+                              antenna_id_to_name=antenna_id_to_name))
 
                 elif rulename == 'nmedian':
                     limit = rule['limit']
@@ -2790,7 +2824,8 @@ class NewVectorFlagger(basetask.StandardTaskTemplate):
                               filename=table, rulename=rulename,
                               spw=spw, axisnames=axisnames,
                               flagcoords=flagcoords,
-                              channel_axis=vector.axis))
+                              channel_axis=vector.axis,
+                              antenna_id_to_name=antenna_id_to_name))
 
                 elif rulename == 'outlier':
                     minsample = rule['minsample']
@@ -2822,7 +2857,8 @@ class NewVectorFlagger(basetask.StandardTaskTemplate):
                           reason='outlier',
                           filename=table, rulename=rulename,
                           spw=spw, pol=pol, antenna=antenna,
-                          axisnames=axisnames, flagcoords=flagcoords))
+                          axisnames=axisnames, flagcoords=flagcoords,
+                          antenna_id_to_name=antenna_id_to_name))
 
                 elif rulename == 'sharps':
                     limit = rule['limit']
@@ -2886,7 +2922,8 @@ class NewVectorFlagger(basetask.StandardTaskTemplate):
                               filename=table,
                               rulename=rulename,
                               spw=spw, antenna=antenna, axisnames=axisnames,
-                              flagcoords=flagcoords))
+                              flagcoords=flagcoords,
+                              antenna_id_to_name=antenna_id_to_name))
 
                 elif rulename == 'diffmad':
                     limit = rule['limit']
@@ -2932,7 +2969,8 @@ class NewVectorFlagger(basetask.StandardTaskTemplate):
                               reason='diffmad',
                               filename=table, rulename=rulename,
                               spw=spw, pol=pol, antenna=antenna,
-                              axisnames=axisnames, flagcoords=flagcoords))
+                              axisnames=axisnames, flagcoords=flagcoords,
+                              antenna_id_to_name=antenna_id_to_name))
 
                 elif rulename == 'tmf':
                     frac_limit = rule['frac_limit']
@@ -2963,7 +3001,8 @@ class NewVectorFlagger(basetask.StandardTaskTemplate):
                                   reason='tmf',
                                   filename=table, rulename=rulename,
                                   spw=spw, pol=pol, antenna=antenna,
-                                  axisnames=axisnames, flagcoords=flagcoords))
+                                  axisnames=axisnames, flagcoords=flagcoords,
+                                  antenna_id_to_name=antenna_id_to_name))
 
                 else:           
                     raise NameError, 'bad rule: %s' % rule
