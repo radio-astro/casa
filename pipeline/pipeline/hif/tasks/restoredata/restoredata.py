@@ -529,6 +529,13 @@ class RestoreData(basetask.StandardTaskTemplate):
     def _do_applycal(self):
         inputs = self.inputs
         applycal_inputs = applycal.Applycal.Inputs(inputs.context)
+
+        #Override for VLA
+        if self.inputs.ocorr_mode == 'co':
+            applycal_inputs.intent = ''
+            applycal_inputs.field = ''
+            applycal_inputs.spw = ''
+
         applycal_task = applycal.Applycal(applycal_inputs)
         return self._executor.execute(applycal_task, merge=True)
 
