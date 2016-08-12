@@ -217,6 +217,10 @@ class Tclean(cleanbase.CleanBase):
 
         # Get a noise estimate from the CASA sensitivity calculator
         sensitivity, \
+        min_sensitivity, \
+        max_sensitivity, \
+        min_field_id, \
+        max_field_id, \
         spw_topo_freq_param, \
         spw_topo_chan_param, \
         spw_topo_freq_param_dict, \
@@ -272,10 +276,14 @@ class Tclean(cleanbase.CleanBase):
         result = self._do_iterative_imaging(
             sequence_manager=sequence_manager, result=result)
 
-        # Record aggregate bandwidth for weblog
+        # Record aggregate bandwidth and mosaic field sensitivities for weblog
         # TODO: Record total bandwidth as opposed to range
         #       Save channel selection in result for weblog.
         result.set_aggregate_bw(aggregate_topo_bw)
+        result.set_min_sensitivity(min_sensitivity)
+        result.set_max_sensitivity(max_sensitivity)
+        result.set_min_field_id(min_field_id)
+        result.set_max_field_id(max_field_id)
 
         return result
 
@@ -550,6 +558,10 @@ class Tclean(cleanbase.CleanBase):
         spw_topo_freq_param, spw_topo_chan_param, spw_topo_freq_param_dict, spw_topo_chan_param_dict, total_topo_bw, aggregate_topo_bw = self.inputs.heuristics.calc_topo_ranges(inputs)
 
         detailed_field_sensitivities = {}
+        min_field_id = None
+        max_field_id = None
+        min_sensitivity = None
+        max_sensitivity = None
         for ms in targetmslist:
             detailed_field_sensitivities[os.path.basename(ms.name)] = {}
             for intSpw in [int(s) for s in spw.split(',')]:
@@ -578,18 +590,24 @@ class Tclean(cleanbase.CleanBase):
                             except Exception as e:
                                 LOG.warning('Could not calculate sensitivity for MS %s Field %s (ID %d) SPW %d ChanSel %s' % (os.path.basename(ms.name), utils.dequote(field), field_id, intSpw, chansel))
 
-                        LOG.info('Using median of all mosaic field sensitivities for MS %s, Field %s, SPW %s: %s Jy' % (os.path.basename(ms.name), field, str(intSpw), numpy.median(field_sensitivities)))
+                        median_sensitivity = numpy.median(field_sensitivities)
                         min_field_id, min_sensitivity = min(detailed_field_sensitivities[os.path.basename(ms.name)][intSpw].iteritems(), key=operator.itemgetter(1))
-                        LOG.info('Minimum mosaic field sensitivity for MS %s, Field %s (ID: %s), SPW %s: %s Jy' % (os.path.basename(ms.name), field, min_field_id, str(intSpw), min_sensitivity))
                         max_field_id, max_sensitivity = max(detailed_field_sensitivities[os.path.basename(ms.name)][intSpw].iteritems(), key=operator.itemgetter(1))
-                        LOG.info('Maximum mosaic field sensitivity for MS %s, Field %s (ID: %s), SPW %s: %s Jy' % (os.path.basename(ms.name), field, max_field_id, str(intSpw), max_sensitivity))
 
-                        # Calculate mosaic overlap factor
+                        # Correct for mosaic overlap factor
                         source_name = [f.source.name for f in ms.fields if (utils.dequote(f.name) == utils.dequote(field) and inputs.intent in f.intents)][0]
                         diameter = numpy.median([a.diameter for a in ms.antennas])
                         overlap_factor = mosaicoverlap.mosaicOverlapFactorMS(ms, source_name, intSpw, diameter)
-                        LOG.info('Applying mosaic overlap factor of %s.' % (overlap_factor))
-                        sensitivities.append(numpy.median(field_sensitivities) / overlap_factor)
+                        LOG.info('Dividing by mosaic overlap improvement factor of %s.' % (overlap_factor))
+                        median_sensitivity /= overlap_factor
+                        min_sensitivity /= overlap_factor
+                        max_sensitivity /= overlap_factor
+
+                        # Final values
+                        sensitivities.append(median_sensitivity)
+                        LOG.info('Using median of all mosaic field sensitivities for MS %s, Field %s, SPW %s: %s Jy' % (os.path.basename(ms.name), field, str(intSpw), median_sensitivity))
+                        LOG.info('Minimum mosaic field sensitivity for MS %s, Field %s (ID: %s), SPW %s: %s Jy' % (os.path.basename(ms.name), field, min_field_id, str(intSpw), min_sensitivity))
+                        LOG.info('Maximum mosaic field sensitivity for MS %s, Field %s (ID: %s), SPW %s: %s Jy' % (os.path.basename(ms.name), field, max_field_id, str(intSpw), max_sensitivity))
                     else:
                         # Still need to loop over field ID with proper intent for single field case
                         field_sensitivities = []
@@ -615,7 +633,7 @@ class Tclean(cleanbase.CleanBase):
             LOG.warning('Exception in calculating sensitivity. Assuming dummy value of %g Jy/beam.' % (dummySensitivity))
             sensitivity = dummySensitivity
 
-        return sensitivity, spw_topo_freq_param, spw_topo_chan_param, spw_topo_freq_param_dict, spw_topo_chan_param_dict, total_topo_bw, aggregate_topo_bw
+        return sensitivity, min_sensitivity, max_sensitivity, min_field_id, max_field_id, spw_topo_freq_param, spw_topo_chan_param, spw_topo_freq_param_dict, spw_topo_chan_param_dict, total_topo_bw, aggregate_topo_bw
 
     def _get_sensitivity(self, ms_do, field, spw, chansel):
         """

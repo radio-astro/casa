@@ -187,7 +187,12 @@ $(document).ready(function(){
                                 <th>final theoretical sensitivity</th>
                                 %if info_dict.get((field,str(spw),pol,'sensitivity')) is not None:
                                             <td>${'%.2g %s' % (info_dict[(field,str(spw),pol,'sensitivity')],
-                                                info_dict[(field,str(spw),pol,'brightness unit')])}</td>
+                                                info_dict[(field,str(spw),pol,'brightness unit')])}
+                                    %if info_dict.get((field,str(spw),pol,'min sensitivity')) is not None and info_dict.get((field,str(spw),pol,'max sensitivity')) is not None:
+                                            <br>${'min: %.2g %s (field: %s)' % (info_dict[(field,str(spw),pol,'min sensitivity')], info_dict[(field,str(spw),pol,'brightness unit')], info_dict[(field,str(spw),pol,'min field id')])}
+                                            <br>${'max: %.2g %s (field: %s)' % (info_dict[(field,str(spw),pol,'max sensitivity')], info_dict[(field,str(spw),pol,'brightness unit')], info_dict[(field,str(spw),pol,'max field id')])}
+                                    %endif
+                                            </td>
                                 %else:
                                             <td>-</td>
                                 %endif

@@ -41,6 +41,10 @@ class TcleanResult(basetask.Results):
         self.iterations = collections.defaultdict(dict)
         self._aggregate_bw = 0.0
         self._sensitivity = 0.0
+        self._min_sensitivity = None
+        self._max_sensitivity = None
+        self._min_field_id = None
+        self._max_field_id = None
         self._threshold = 0.0
         self._image_min = 0.0
         self._image_max = 0.0
@@ -153,6 +157,34 @@ class TcleanResult(basetask.Results):
 
     def set_sensitivity(self, sensitivity):
         self._sensitivity = sensitivity
+
+    @property
+    def min_sensitivity(self):
+        return self._min_sensitivity
+
+    def set_min_sensitivity(self, min_sensitivity):
+        self._min_sensitivity = min_sensitivity
+
+    @property
+    def max_sensitivity(self):
+        return self._max_sensitivity
+
+    def set_max_sensitivity(self, max_sensitivity):
+        self._max_sensitivity = max_sensitivity
+
+    @property
+    def min_field_id(self):
+        return self._min_field_id
+
+    def set_min_field_id(self, min_field_id):
+        self._min_field_id = min_field_id
+
+    @property
+    def max_field_id(self):
+        return self._max_field_id
+
+    def set_max_field_id(self, max_field_id):
+        self._max_field_id = max_field_id
 
     @property
     def threshold(self):
