@@ -1862,8 +1862,6 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
         iminf.setBeams( itsRestoredBeams);
 	image(term)->setImageInfo(iminf);
  
-	
-
       }
     catch(AipsError &x)
       {
@@ -2167,8 +2165,8 @@ Float SIImageStore :: calcStd(Vector<Float> &vect, Vector<Bool> &flag, Float mea
 	  {copyMask(pb(),imagepbcor(term));}
 
 	// Set restoring beam info
-	ImageInfo iminf = imagepbcor(term)->imageInfo();
-        iminf.setBeams( getBeamSet() );
+	ImageInfo iminf = image(term)->imageInfo();
+        //iminf.setBeams( itsRestoredBeams );
 	imagepbcor(term)->setImageInfo(iminf);
 
   }// end pbcor
