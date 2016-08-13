@@ -251,7 +251,7 @@ class SDBLFlag(basetask.StandardTaskTemplate):
             LOG.warn("%s is not yet baselined. Skipping flag by post-fit statistics for the data. MASKLIST will also be cleared up. You may go on flagging but the statistics will contain line emission." % self.inputs.ms.basename)
         else:
             # row map generation is very expensive. Do as few time as possible
-            rowmap = sdutils.make_row_map_for_baselined_ms(self.ms)
+            rowmap = sdutils.make_row_map_for_baselined_ms(self.inputs.ms)
         # sumarize flag before execution
         full_intent = utils.to_CASA_intent(self.inputs.ms, self.inputs.intent)
         flagdata_summary_job = casa_tasks.flagdata(vis=bl_name, mode='summary',
