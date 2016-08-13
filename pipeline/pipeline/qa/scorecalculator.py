@@ -7,6 +7,7 @@ import os
 import collections
 import datetime
 import operator
+import math
 
 import pipeline.domain.measures as measures
 import pipeline.infrastructure.utils as utils
@@ -1344,11 +1345,13 @@ def score_sd_line_detection_for_ms(group_id_list, field_id_list, spw_id_list, li
 @log_qa
 def score_checksources(mses, fieldname, spwid, imagename):
     """
-    Score a single filed image of a point source by comparing the source
-    catalog position to the fitted position and the derived flux to the
-    fitted image flux
+    Score a single field image of a point source by comparing the source
+    reference position to the fitted position and the source reference flux
+    to the fitted flux.
 
-    The source is assumed to be near the center of the image
+    The source is assumed to be near the center of the image.
+    The fit is performed using pixels in a circular regions
+    around the center of the image
     """
 
     qa = casatools.quanta
@@ -1368,7 +1371,6 @@ def score_checksources(mses, fieldname, spwid, imagename):
         if not field:
             continue
         fieldid = str(field[0].id)
-        # Add conversion
         refdirection = me.measure(field[0].mdirection, 'ICRS')
         break
 
@@ -1401,9 +1403,28 @@ def score_checksources(mses, fieldname, spwid, imagename):
     else:
         refflux = qa.quantity (max(reffluxes), 'Jy')
 
+    # Do the fit and compute positions offsets and flux ratios
     fitdict = checksource.checkimage (imagename, refdirection, refflux)
 
+    # Compute the scores the default score is the geometric mean of
+    # the position and flux scores if both are available.
+    if not fitdict:
+        score = 0.0
+        longmsg = 'Source fit failed for %s spwd %d' % (fieldname, spwid)
+        shortmsg = 'Source fit failed' 
+    else:
+        if not refflux:
+            score = max (0.0, 1.0 - min(1.0, qa.getvalue(fitdict['beamoffset']))) 
+        else:
+            offsetscore = max (0.0, 1.0 - min(1.0, qa.getvalue(fitdict['beamoffset']))) 
+            fluxscore = max (0.0, 1.0 - qa.getvalue(fitdict['fluxloss']))
+            score = math.sqrt (fluxscore * offsetscore)
+        offset = qa.getvalue(fitdict['positionoffset']) * 1000.0
+        coherence = qa.getvalue(fitdict['fluxloss']) * 100.0
+        longmsg = 'Source fit for %s spwd %d:  offet %0.3f marcsec  decoherence %0.3f percent' % (fieldname, spwid, offset, coherence)
+        shortmsg = 'Source fit successful' 
+
     # Dummy score placehold for now
-    return pqa.QAScore(1.0, longmsg='All OK', shortmsg='All OK')
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
 
 

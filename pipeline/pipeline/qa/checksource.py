@@ -12,7 +12,7 @@ def checkimage (imagename, refdirection, refflux):
     '''
        imagename - The image of the source
     refdirection - The reference direction measure for the source that is imaged
-         refflux - The reference flux quanta for the source that is imaged
+         refflux - The reference flux quanta for the source that is imaged. It may be None
     '''
 
     # Get the fit dictionary
@@ -23,14 +23,24 @@ def checkimage (imagename, refdirection, refflux):
     me = casatools.measures
     qa = casatools.quanta
 
-    # Compare the reference direction to the fitted
-    # direction. Compute the angular separation in
-    # arcseconds and the ratio of the separation to
-    # the estimate of the synthesized beams
+    # Compare the reference direction to the fitted direction. Compute the angular separation in
+    # arcseconds and the ratio of the separation to the estimate of the synthesized beams
 
     positionoffset = qa.convert (me.separation (refdirection, fitdict['fitdirection']), 'arcsec')
     beamoffset = qa.convert(qa.div (positionoffset, fitdict['syntheticbeam']), '')
-    fluxloss = qa.convert(qa.div(qa.abs(qa.sub(refflux, fitdict['fitflux'])), refflux), '')
+
+    # Compare the reference flux to the fitted flux
+    # There is a bit of a discrepancy between the ticket and the script with
+    # respect to the coherence score. Going with the script for now. 
+
+    if not refflux:
+        fluxloss = None
+    else:
+        meanflux = refflux
+        fluxloss = qa.convert(qa.div(qa.abs(qa.sub(refflux, fitdict['fitflux'])), meanflux), '')
+
+    # Add the QA estimates to the dictionary
+
     fitdict['refdirection'] = refdirection
     fitdict['positionoffset'] = positionoffset
     fitdict['beamoffset'] = beamoffset
