@@ -1252,6 +1252,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsParentImages.resize(itsImages.nelements());
     itsParentSumWts.resize(itsSumWts.nelements());
     itsParentImagePBcors.resize(itsImagePBcors.nelements());
+    itsParentPBs.resize(itsPBs.nelements());
    
     itsParentPsfs = itsPsfs;
     itsParentModels=itsModels;
@@ -1260,6 +1261,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsParentImages=itsImages;
     itsParentSumWts=itsSumWts;
     itsParentImagePBcors=itsImagePBcors;
+    itsParentPBs=itsPBs;
 
     itsParentMask=itsMask;
 
