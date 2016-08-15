@@ -16,6 +16,7 @@
 #
 import os
 import taskinit
+import pylab as pl
 
 def qufromgain(caltable,badspw=[],badant=[],fieldids=[],paoffset=None):
 
