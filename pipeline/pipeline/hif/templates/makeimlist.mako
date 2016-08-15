@@ -42,7 +42,7 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 	            <th>nchan</th>
 	    %endif
 	    %if 'restfreq' in target.keys():
-	            <th>restfreq</th>
+	            <th>restfreq (LSRK)</th>
 	    %endif
 	    %if 'weighting' in target.keys():
 	            <th>weighting</th>

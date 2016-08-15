@@ -96,7 +96,7 @@ except:
                                 <td rowspan="11">${field}</td>
                                 <td rowspan="11">${spw}</td>
                                 <td rowspan="11">${pol}</td>
-								<th>frequency</th>
+								<th>frequency (LSRK)</th>
 								<td>${casatools.quanta.tos(info_dict[(field,str(spw),pol,'frequency')], 4)}</td>
                                 <% 
                                 try:
