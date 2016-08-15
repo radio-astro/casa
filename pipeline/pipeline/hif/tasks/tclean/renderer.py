@@ -109,7 +109,7 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                     width = qaTool.quantity(summary['incr'][3], 
                                         summary['axisunits'][3])
                     width = qaTool.convert(width, 'MHz')
-                    width = qaTool.tos(width, 2)
+                    width = qaTool.tos(width, 4)
 
                     info_dict[(field, spw, pol, 'nchan')] = nchan
                     info_dict[(field, spw, pol, 'width')] = width
