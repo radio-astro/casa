@@ -96,8 +96,8 @@ except:
                                 <td rowspan="11">${field}</td>
                                 <td rowspan="11">${spw}</td>
                                 <td rowspan="11">${pol}</td>
-								<th>frequency (LSRK)</th>
-								<td>${casatools.quanta.tos(info_dict[(field,str(spw),pol,'frequency')], 4)}</td>
+								<th>frequency</th>
+								<td>${casatools.quanta.tos(info_dict[(field,str(spw),pol,'frequency')], 4)} LSRK</td>
                                 <% 
                                 try:
                                     final_iter = sorted(plots_dict[field][str(spw)].keys())[-1]
@@ -209,7 +209,7 @@ except:
                                     %if info_dict[(field,str(spw),pol,'nchan')] > 1:
                                         <th>channels</th>
                                             <td>${'%d x %s' % (info_dict[(field,str(spw),pol,'nchan')],
-                                                info_dict[(field,str(spw),pol,'width')])}</td>
+                                                info_dict[(field,str(spw),pol,'width')])} LSRK</td>
                                     %else:
                                         <th>fractional bandwidth / nterms</th>
                                             <td>${'%s / %s' % (info_dict[(field,str(spw),pol,'fractional bandwidth')],
