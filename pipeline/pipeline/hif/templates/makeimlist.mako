@@ -7,7 +7,7 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 
 <%block name="header" />
 
-<%block name="title">Make image list</%block>
+<%block name="title">Make image list<br><small>${result.metadata['long description']}</small></%block>
 
 <h2>List of Clean Targets</h2>
 

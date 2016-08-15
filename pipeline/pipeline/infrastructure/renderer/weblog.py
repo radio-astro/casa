@@ -1,8 +1,8 @@
-'''
+"""
 Created on 8 Sep 2014
 
 @author: sjw
-'''
+"""
 import atexit
 import fnmatch
 import os
@@ -59,33 +59,32 @@ def register_mako_templates(directory, prefix=''):
     # convert them to absolute paths for lookup registration
     abspaths = [os.path.join(directory, t) for t in relpaths]
 
-    for template_path in abspaths:
-        if not os.path.exists(template_path):
-            raise IOError('Template not found: %s', template_path)
-
-    # TODO replace with explicit registration for control over URIs
     if directory not in TEMPLATE_LOOKUP.directories:
         TEMPLATE_LOOKUP.directories.append(directory)
-        
-        # postponed until task import is removed from htmlrenderer
-# 
-#         root, _ = os.path.splitext(os.path.basename(template_path))
-#         uri = os.path.join(prefix, root)
-#
-#         t = mako.template.Template(filename=template_path, 
-#                                    format_exceptions=True,
-#                                    module_directory=TEMPLATE_LOOKUP.module_directory,
-#                                    lookup=TEMPLATE_LOOKUP,
-#                                    uri=uri)
-# 
-#         TEMPLATE_LOOKUP.put_template(uri, t)
-#         LOG.trace('%s registered to URI %s', template_path, uri)
 
-TEMP_RENDERER_MAP = {}
+    # # TODO replace with explicit registration for control over URIs
+    # for template_path in abspaths:
+    #     # postponed until task import is removed from htmlrenderer
+    #     root, _ = os.path.splitext(os.path.basename(template_path))
+    #     uri = os.path.join(prefix, root)
+    #
+    #     t = mako.template.Template(filename=template_path,
+    #                                format_exceptions=True,
+    #                                module_directory=TEMPLATE_LOOKUP.module_directory,
+    #                                lookup=TEMPLATE_LOOKUP,
+    #                                uri=uri)
+    #
+    #     TEMPLATE_LOOKUP.put_template(uri, t)
+    #     LOG.trace('%s registered to URI %s', template_path, uri)
+
+
+_TEMP_RENDERER_MAP = {}
 RENDER_BY_SESSION = set()
 RENDER_UNGROUPED = set()
+
+
 def add_renderer(task_cls, renderer, group_by=None):
-    TEMP_RENDERER_MAP[task_cls] = renderer
+    _TEMP_RENDERER_MAP[task_cls] = renderer
     if group_by == 'session':
         RENDER_BY_SESSION.add(task_cls.__name__)
     elif group_by == 'ungrouped':
@@ -94,3 +93,13 @@ def add_renderer(task_cls, renderer, group_by=None):
         LOG.warning('%s did not register a renderer group type. Assuming it is'
                     ' grouped by session', task_cls.__name__)
         RENDER_BY_SESSION.add(task_cls.__name__)
+
+
+def get_renderer(cls):
+    """
+    Get the registered renderer for a class.
+
+    :param cls:  the class to look up
+    :return: registered renderer class, or KeyError if no renderer was registered
+    """
+    return _TEMP_RENDERER_MAP[cls]

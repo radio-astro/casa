@@ -132,6 +132,10 @@ class Results(object):
 
         the stage number of the task that generated this |Results|
 
+    .. py:attribute:: metadata
+
+        the dict holding metadata describing this result and the generating |Task|
+
 .. |Inputs| replace:: :class:`Inputs`
 .. |Task| replace:: :class:`Task`
 .. |Results| replace:: :class:`Results`
@@ -143,6 +147,19 @@ class Results(object):
     def uuid(self):
         """
         The unique identifier for this results object.
+        """
+        raise NotImplementedError
+
+    @abc.abstractproperty
+    def metadata(self):
+        """
+        Object holding metadata describing this result and the generating task.
+        This information is primarily for presentation and the web log, but it
+        could be used for other purposes in future.
+
+        Note: currently implemented as a Dict, but this could evolve to a more
+        structured or hierarchical object depending on how much information we
+        need to store.
         """
         raise NotImplementedError
 

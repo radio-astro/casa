@@ -39,7 +39,7 @@ def get_task_description(result_obj):
         msg = 'Cannot get description for zero-length results list'
         LOG.error(msg)
         return msg
- 
+
     task_cls = getattr(result_obj[0], 'task', None)
     if task_cls is None:
         results_cls = result_obj[0].__class__.__name__
@@ -47,13 +47,27 @@ def get_task_description(result_obj):
         LOG.warning(msg)
         return msg
 
-    # TODO remove once refactor is complete
-    renderer = renderer_map[T2_4MDetailsRenderer].get(task_cls, None)
-    if renderer:
-        description = getattr(renderer, 'description', None)
+    description = None
+
+    if hasattr(result_obj, 'metadata'):
+        metadata = result_obj.metadata
+    elif hasattr(result_obj[0], 'metadata'):
+        metadata = result_obj[0].metadata
     else:
-        LOG.error('No renderer registered for task %s' % task_cls.__name__)
-        raise TypeError()
+        LOG.trace('No metadata property found on result for task {!s}'.format(task_cls.__name__))
+        metadata = {}
+
+    if 'long description' in metadata:
+        description = metadata['long description']
+
+    if not description:
+        try:
+            renderer = weblog.get_renderer(task_cls)
+        except KeyError:
+            LOG.error('No renderer registered for task %s'.format(task_cls.__name__))
+            raise
+        else:
+            description = getattr(renderer, 'description', None)
 
     if description is None:
         description = _get_task_description_for_class(task_cls)    
@@ -1329,9 +1343,6 @@ class T2_4MDetailsRenderer(object):
     """
     @classmethod
     def render(cls, context):
-        # get the map of t2_4m renderers from the dictionary
-        t2_4m_renderers = renderer_map[T2_4MDetailsRenderer]
-
         # for each result accepted and stored in the context..
         for task_result in context.results:
             # we only handle lists of results, so wrap single objects in a
@@ -1341,7 +1352,11 @@ class T2_4MDetailsRenderer(object):
             
             # find the renderer appropriate to the task..
             task = task_result[0].task
-            renderer = t2_4m_renderers.get(task, cls._default_renderer)
+            try:
+                renderer = weblog.get_renderer(task)
+            except KeyError:
+                LOG.warning('No renderer was registered for task %s'.format(task.__name__))
+                renderer = cls._default_renderer
             LOG.trace('Using %s to render %s result',
                       renderer.__class__.__name__, task.__name__)
 
@@ -1418,6 +1433,8 @@ def wrap_in_resultslist(task_result):
     l.inputs = task_result.inputs
     if hasattr(task_result, 'taskname'):
         l.taskname = task_result.taskname
+    if hasattr(task_result, 'metadata'):
+        l.metadata.update(task_result.metadata)
 
     # the newly-created ResultsList wrapper is missing a QA pool. However,
     # as there is only ever one task added to the list we can safely assume
@@ -1594,9 +1611,6 @@ class WebLogGenerator(object):
 
     @staticmethod
     def render(context):
-        # TODO remove this once all task imports have been removed
-        update_with_temp_renderers()
-        
         # copy CSS, javascript etc. to weblog directory
         WebLogGenerator.copy_resources(context)
 
@@ -1778,30 +1792,12 @@ class LogCopier(object):
 #        return rows[start_idx:end_idx]
 
 
-# renderer_map holds the mapping of tasks to result renderers for
-# task-dependent weblog sections. This lets us write customised output for
-# each task type.
-renderer_map = {
-    T2_4MDetailsRenderer : {
-    }
-}
-
 # adding classes to this tuple always rerenders their content, bypassing the
 # cache or 'existing file' checks. This is useful for developing and debugging
 # as you can just call WebLogGenerator.render(context) 
 DEBUG_CLASSES = []
 
     
-def update_with_temp_renderers():
-    """
-    This is a temporary function built to decouple task import in this 
-    (deprecated) module from weblog functionality. It should be factored out
-    once templates and renderers have been migrated to task packages.
-    """  
-    from . import weblog
-    renderer_map[T2_4MDetailsRenderer].update(weblog.TEMP_RENDERER_MAP)
-
-
 def get_mses_by_time(context):
     return sorted(context.observing_run.measurement_sets,
                   key=lambda ms: ms.start_time['m0']['value'])

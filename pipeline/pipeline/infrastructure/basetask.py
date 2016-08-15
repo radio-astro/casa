@@ -744,7 +744,13 @@ class Results(api.Results):
         # be used to determine whether this results has already been merged 
         # with the context 
         self._uuid = uuid.uuid4()
+
+        # property used to hold pipeline QA values
         self.qa = pipelineqa.QAScorePool()
+
+        # property used to hold metadata and presentation-focused values
+        # destined for the weblog. Currently a dict, but could change.
+        self._metadata = {}
 
     @property
     def uuid(self):
@@ -752,6 +758,13 @@ class Results(api.Results):
         The unique identifier for this results object.
         """
         return self._uuid
+
+    @property
+    def metadata(self):
+        """
+        Object holding presentation-related values destined for the web log
+        """
+        return self._metadata
 
     def merge_with_context(self, context):
         """

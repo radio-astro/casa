@@ -49,6 +49,7 @@ class MakeImagesInputs(basetask.StandardInputs):
 # registering our preference for imaging measurement sets
 basetask.ImagingMeasurementSetsPreferred.register(MakeImagesInputs)
 
+
 class MakeImages(basetask.StandardTaskTemplate):
     Inputs = MakeImagesInputs
 
@@ -72,9 +73,18 @@ class MakeImages(basetask.StandardTaskTemplate):
             for (target, task) in task_queue:
                 try:
                     worker_result = task.get_result()
-                    result.add_result(worker_result, target, outcome='success')
                 except mpihelpers.PipelineError:
                     result.add_result(TcleanResult(), target, outcome='failure')
+                else:
+                    result.add_result(worker_result, target, outcome='success')
+
+        # set of descriptions
+        description = {
+            _get_description_map(target['intent']).get(target['specmode'], 'Calculate clean products')  # map specmode to description..
+            for target in inputs.target_list                       # .. for every clean target..
+        }
+
+        result.metadata['long description'] = ' / '.join(description)
 
         return result
 
@@ -199,3 +209,19 @@ class CleanTaskFactory(object):
             task_args['maxncleans'] = 1
 
         return task_args
+
+
+def _get_description_map(intent):
+    if intent in ('PHASE', 'BANDPASS', 'CHECK'):
+        return {
+            'mfs': 'Make calibrator images'
+        }
+    elif intent == 'TARGET':
+        return {
+            'mfs': 'Make target per-spw continuum images',
+            'cont': 'Make target aggregate continuum images',
+            'cube': 'Make target cubes'
+
+        }
+    else:
+        return {}

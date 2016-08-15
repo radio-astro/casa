@@ -7,10 +7,10 @@ import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.basetask as basetask
 from .resultobjects import MakeImListResult
 from pipeline.hif.heuristics import makeimlist 
-#from pipeline.hif.heuristics import clean
 import pipeline.infrastructure.casatools as casatools
 
 LOG = infrastructure.get_logger(__name__)
+
 
 class MakeImListInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
@@ -27,42 +27,42 @@ class MakeImListInputs(basetask.StandardInputs):
 
     @property
     def imagename(self):
-        if self._imagename is None:
-            return ''
         return self._imagename
 
     @imagename.setter
     def imagename(self, value):
-         self._imagename = value
+        if value is None:
+            value = ''
+        self._imagename = value
 
     @property
     def intent(self):
-        if self._intent is None:
-            return 'TARGET'
         return self._intent
 
     @intent.setter
     def intent(self, value):
+        if value is None:
+            value = 'TARGET'
         self._intent = value
 
     @property
     def field(self):
-        if self._field is None:
-            return ''
         return self._field
 
     @field.setter
     def field(self, value):
+        if value is None:
+            value = ''
         self._field = value
 
     @property
     def spw(self):
-        if self._spw is None:
-            return ''
         return self._spw
 
     @spw.setter
     def spw(self, value):
+        if value is None:
+            value = ''
         self._spw = value
 
     @property
@@ -87,12 +87,12 @@ class MakeImListInputs(basetask.StandardInputs):
 
     @property
     def uvrange(self):
-        if self._uvrange is None:
-            return ''
         return self._uvrange
 
     @uvrange.setter
     def uvrange(self, value):
+        if value is None:
+            value = ''
         self._uvrange = value
 
     @property
@@ -136,12 +136,12 @@ class MakeImListInputs(basetask.StandardInputs):
 
     @property
     def cell(self):
-        if self._cell is None:
-            return []
         return self._cell
 
     @cell.setter
     def cell(self, value):
+        if value is None:
+            value = []
         self._cell = value
 
     @property
@@ -156,50 +156,51 @@ class MakeImListInputs(basetask.StandardInputs):
 
     @property
     def phasecenter(self):
-        if self._phasecenter is None:
-            return ''
         return self._phasecenter
 
     @phasecenter.setter
     def phasecenter(self, value):
+        if value is None:
+            value = ''
         self._phasecenter = value
 
     # optional added parameters start here
 
     @property
     def nchan(self):
-        if self._nchan is None:
-            return -1
         return self._nchan
 
     @nchan.setter
     def nchan(self, value):
+        if value is None:
+            value = -1
         self._nchan = value
 
     @property
     def start(self):
-        if self._start is None:
-            return ''
         return self._start
 
     @start.setter
     def start(self, value):
+        if value is None:
+            value = ''
         self._start = value
 
     @property
     def width(self):
-        if self._width is None:
-            return ''
         return self._width
 
     @width.setter
     def width(self, value):
+        if value is None:
+            value = ''
         self._width = value
 
 
 # tell the infrastructure to give us mstransformed data when possible by
 # registering our preference for imaging measurement sets
 basetask.ImagingMeasurementSetsPreferred.register(MakeImListInputs)
+
 
 class MakeImList(basetask.StandardTaskTemplate):
     Inputs = MakeImListInputs
@@ -227,8 +228,8 @@ class MakeImList(basetask.StandardTaskTemplate):
             spwids = [spw.id for spw in spws]
             spw = ','.join("'%s'" % (spwid) for spwid in spwids)
             spw = '[%s]' % spw
-	else:
-	    spwids = spw.split(',')
+        else:
+            spwids = spw.split(',')
             spw = ','.join("'%s'" % (spwid) for spwid in spwids)
             spw = '[%s]' % spw
 
@@ -435,20 +436,20 @@ class MakeImList(basetask.StandardTaskTemplate):
                       cells[spwspec], imsizes[(field_intent[0],spwspec)],
                       phasecenters[field_intent[0]]))
 
-                    target = {'field':field_intent[0],
-                              'intent':field_intent[1],
+                    target = {'field': field_intent[0],
+                              'intent': field_intent[1],
                               'spw': new_spwspec,
                               'spwsel_lsrk': spwsel,
                               'spwsel_topo': [],
-                              'cell':cells[spwspec],
-                              'imsize':imsizes[(field_intent[0],spwspec)],
-                              'phasecenter':phasecenters[field_intent[0]],
-                              'specmode':inputs.specmode,
-                              'imagename':imagenames[(field_intent,spwspec)],
-                              'start':inputs.start,
-                              'width':widths[(field_intent[0],spwspec)],
-                              'nchan':nchans[(field_intent[0],spwspec)],
-                              'uvrange':inputs.uvrange}
+                              'cell': cells[spwspec],
+                              'imsize': imsizes[(field_intent[0], spwspec)],
+                              'phasecenter': phasecenters[field_intent[0]],
+                              'specmode': inputs.specmode,
+                              'imagename': imagenames[(field_intent, spwspec)],
+                              'start': inputs.start,
+                              'width': widths[(field_intent[0], spwspec)],
+                              'nchan': nchans[(field_intent[0], spwspec)],
+                              'uvrange': inputs.uvrange}
 
                     result.add_target(target)
 
@@ -456,8 +457,22 @@ class MakeImList(basetask.StandardTaskTemplate):
         result.contfile = inputs.contfile
         result.linesfile = inputs.linesfile
 
+        # describe the function of this task by interpreting the inputs
+        # parameters to give an execution context
+        long_description = _DESCRIPTIONS.get((inputs.intent, inputs.specmode),
+                                             'Compile a list of cleaned images to be calculated')
+        result.metadata['long description'] = long_description
+
         return result
 
     def analyse(self, result):
         return result
 
+
+# maps intent and specmode Inputs parameters to textual description of execution context.
+_DESCRIPTIONS = {
+    ('PHASE,BANDPASS,CHECK', 'mfs'): 'Set-up image parameters for calibrator imaging',
+    ('TARGET', 'mfs'): 'Set-up image parameters for target per-spw continuum imaging',
+    ('TARGET', 'cont'): 'Set-up image parameters for target aggregate continuum imaging',
+    ('TARGET', 'cube'): 'Set-up image parameters for target cube imaging',
+}
