@@ -34,6 +34,7 @@ __all__ = ['score_polintents',                                # ALMA specific
            'score_missing_phase_snrs',                        # ALMA specific
            'score_poor_phase_snrs',                           # ALMA specific
            'score_flagging_view_exists',                      # ALMA specific
+           'score_checksources',                              # ALMA specific
            'score_file_exists',
            'score_path_exists',
            'score_flags_exist',
@@ -1413,18 +1414,21 @@ def score_checksources(mses, fieldname, spwid, imagename):
         longmsg = 'Source fit failed for %s spwd %d' % (fieldname, spwid)
         shortmsg = 'Source fit failed' 
     else:
+        offset = fitdict['positionoffset']['value'] * 1000.0
+        beams = fitdict['beamoffset']['value']
+        fitflux = fitdict['fitflux']['value']
         if not refflux:
-            score = max (0.0, 1.0 - min(1.0, qa.getvalue(fitdict['beamoffset']))) 
+            coherence = None
+            score = max (0.0, 1.0 - min(1.0, fitdict['beamoffset']['value'])) 
         else:
-            offsetscore = max (0.0, 1.0 - min(1.0, qa.getvalue(fitdict['beamoffset']))) 
-            fluxscore = max (0.0, 1.0 - qa.getvalue(fitdict['fluxloss']))
+            coherence = fitdict['fluxloss']['value'] * 100.0
+            offsetscore = max (0.0, 1.0 - min(1.0, fitdict['beamoffset']['value'])) 
+            fluxscore = max (0.0, 1.0 - fitdict['fluxloss']['value'])
             score = math.sqrt (fluxscore * offsetscore)
-        offset = qa.getvalue(fitdict['positionoffset']) * 1000.0
-        coherence = qa.getvalue(fitdict['fluxloss']) * 100.0
-        longmsg = 'Source fit for %s spwd %d:  offet %0.3f marcsec  decoherence %0.3f percent' % (fieldname, spwid, offset, coherence)
         shortmsg = 'Source fit successful' 
+        longmsg = 'Source fit for %s spwd %d:  offet %0.3fmarcsec %0.3fbeams  fit flux %0.3fJy  decoherence %0.3f percent' % (fieldname, spwid, offset, beams, fitflux, coherence)
 
     # Dummy score placehold for now
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
+    return pqa.QAScore (score, longmsg=longmsg, shortmsg=shortmsg)
 
 
