@@ -558,10 +558,10 @@ class Tclean(cleanbase.CleanBase):
         spw_topo_freq_param, spw_topo_chan_param, spw_topo_freq_param_dict, spw_topo_chan_param_dict, total_topo_bw, aggregate_topo_bw = self.inputs.heuristics.calc_topo_ranges(inputs)
 
         detailed_field_sensitivities = {}
-        min_field_id = None
-        max_field_id = None
-        min_sensitivity = None
-        max_sensitivity = None
+        min_sensitivities = []
+        max_sensitivities = []
+        min_field_ids = []
+        max_field_ids = []
         for ms in targetmslist:
             detailed_field_sensitivities[os.path.basename(ms.name)] = {}
             for intSpw in [int(s) for s in spw.split(',')]:
@@ -605,6 +605,10 @@ class Tclean(cleanbase.CleanBase):
 
                         # Final values
                         sensitivities.append(median_sensitivity)
+                        min_sensitivities.append(min_sensitivity)
+                        max_sensitivities.append(max_sensitivity)
+                        min_field_ids.append(min_field_id)
+                        max_field_ids.append(max_field_id)
                         LOG.info('Using median of all mosaic field sensitivities for MS %s, Field %s, SPW %s: %s Jy' % (os.path.basename(ms.name), field, str(intSpw), median_sensitivity))
                         LOG.info('Minimum mosaic field sensitivity for MS %s, Field %s (ID: %s), SPW %s: %s Jy' % (os.path.basename(ms.name), field, min_field_id, str(intSpw), min_sensitivity))
                         LOG.info('Maximum mosaic field sensitivity for MS %s, Field %s (ID: %s), SPW %s: %s Jy' % (os.path.basename(ms.name), field, max_field_id, str(intSpw), max_sensitivity))
@@ -626,8 +630,18 @@ class Tclean(cleanbase.CleanBase):
                     # being present in the MS.
                     pass
 
-        if (len(sensitivities) != 0):
+        if (len(sensitivities) > 0):
             sensitivity = 1.0 / numpy.sqrt(numpy.sum(1.0 / numpy.array(sensitivities)**2))
+            if (inputs.gridder == 'mosaic'):
+                min_sensitivity = 1.0 / numpy.sqrt(numpy.sum(1.0 / numpy.array(min_sensitivities)**2))
+                max_sensitivity = 1.0 / numpy.sqrt(numpy.sum(1.0 / numpy.array(max_sensitivities)**2))
+                min_field_id = int(numpy.median(min_field_ids))
+                max_field_id = int(numpy.median(max_field_ids))
+            else:
+                min_sensitivity = None
+                max_sensitivity = None
+                min_field_id = None
+                max_field_id = None
         else:
             defaultSensitivity = 0.1
             if (inputs.specmode == 'cube'):
@@ -635,6 +649,10 @@ class Tclean(cleanbase.CleanBase):
             else:
                 LOG.warning('Exception in calculating sensitivity. Assuming default value of %g Jy/beam.' % (defaultSensitivity))
             sensitivity = defaultSensitivity
+            min_sensitivity = None
+            max_sensitivity = None
+            min_field_id = None
+            max_field_id = None
 
         return sensitivity, min_sensitivity, max_sensitivity, min_field_id, max_field_id, spw_topo_freq_param, spw_topo_chan_param, spw_topo_freq_param_dict, spw_topo_chan_param_dict, total_topo_bw, aggregate_topo_bw
 
