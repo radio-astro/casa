@@ -4,6 +4,7 @@ import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.utils as utils
 
 import pipeline.qa.utility.scorers as scorers
+import pipeline.qa.scorecalculator as scorecalc
 
 from . import resultobjects
 
@@ -23,6 +24,7 @@ class TcleanQAHandler(pqa.QAResultHandler):
 
         imageScorer = scorers.erfScorer(1.0, 5.0)
 
+        # Basic imaging score
         if (result.error != ''):
             result.qa.pool[:] = [pqa.QAScore(0.0, longmsg=result.error.longmsg, shortmsg=result.error.shortmsg)]
         else:
@@ -39,6 +41,16 @@ class TcleanQAHandler(pqa.QAResultHandler):
                 result.qa.pool[:] = [pqa.QAScore(0.0, longmsg='Cleaning diverged. Field: %s SPW: %s' % (result.inputs['field'], result.inputs['spw']), shortmsg='Cleaning diverged')]
             else:
                 result.qa.pool[:] = [pqa.QAScore(rms_score, longmsg='RMS outside mask vs. threshold. Field: %s SPW: %s' % (result.inputs['field'], result.inputs['spw']), shortmsg='RMS vs. threshold')]
+
+            # Check source score
+            #    Be careful about the source name vs field name issue
+            if result.intent == 'CHECK' and result.inputs['specmode'] == 'mfs':
+                mses = [context.observing_run.get_ms(name=vis) for vis in result.inputs['vis']]
+                fieldname = result.sourcename 
+                spwid = int(result.spw)
+                imagename = result.image 
+                checkscore = scorecalc.score_checksources (mses, fieldname, spwid, imagename) 
+                result.qa.pool.append (checkscore)
 
 
 class TcleanListQAHandler(pqa.QAResultHandler):
