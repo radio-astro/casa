@@ -423,7 +423,7 @@ def read_fluxes(ms, dbservice=True):
     # Empty spws that follow non-empty spws can be pruned from MMS data. This
     # set is used to check whether the Source.xml entries refer to spws
     # actually present in the measurement set.
-    all_ms_spw_ids = {str(spw.id) for spw in ms.spectral_windows}
+    all_ms_spw_ids = {spw.id for spw in ms.spectral_windows}
 
     for row in source_element.findall('row'):
         flux_text = row.findtext('flux')
