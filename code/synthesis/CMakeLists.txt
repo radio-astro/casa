@@ -100,6 +100,7 @@ casa_add_library( synthesis
   TransformMachines/PBMath1DAiry.cc
   TransformMachines/PBMath1D.cc
   TransformMachines/PBMath1DCosPoly.cc
+  TransformMachines/PBMath1DEVLA.cc
   TransformMachines/PBMath1DGauss.cc
   TransformMachines/PBMath1DIPoly.cc
   TransformMachines/PBMath1DNumeric.cc
@@ -741,6 +742,7 @@ install (FILES
 	TransformMachines/PBMath1D.h
 	TransformMachines/PBMath1DAiry.h
 	TransformMachines/PBMath1DCosPoly.h
+	TransformMachines/PBMath1DEVLA.h
 	TransformMachines/PBMath1DGauss.h
 	TransformMachines/PBMath1DIPoly.h
 	TransformMachines/PBMath1DNumeric.h
@@ -848,7 +850,8 @@ casa_add_assay( synthesis CalTables/test/tCTGenericFill.cc )
 casa_add_test( synthesis CalLibrary/test/tCalLibraryParse.cc )
 casa_add_unit_test( MODULES synthesis SOURCES TransformMachines2/test/tAWPFTM.cc TransformMachines2/test/MakeMS.cc ) 
 casa_add_unit_test( MODULES synthesis SOURCES TransformMachines2/test/tFTMachine.cc TransformMachines2/test/MakeMS.cc ) 
-casa_add_unit_test( MODULES synthesis SOURCES TransformMachines/test/tGridFT.cc TransformMachines2/test/MakeMS.cc ) 
+casa_add_unit_test( MODULES synthesis SOURCES TransformMachines/test/tGridFT.cc TransformMachines2/test/MakeMS.cc )
+casa_add_unit_test( MODULES synthesis SOURCES TransformMachines/test/tPBMath1DEVLA.cc  ) 
 casa_add_unit_test( MODULES synthesis SOURCES ImagerObjects/test/tSynthesisImager.cc  TransformMachines2/test/MakeMS.cc )
 casa_add_unit_test( MODULES synthesis SOURCES ImagerObjects/test/tSynthesisImagerVi2.cc  TransformMachines2/test/MakeMS.cc )
 casa_add_unit_test( MODULES synthesis SOURCES Utilities/test/tFFT2D.cc  ) 

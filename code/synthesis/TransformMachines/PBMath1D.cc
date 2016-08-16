@@ -438,7 +438,7 @@ PBMath1D::apply(const ImageInterface<Complex>& in,
 
   os << "pointingCenterWorld " << pointingCenterWorld << LogIO::DEBUGGING;
   os << "pointingCenterPixel " << pointingCenterPixel << LogIO::DEBUGGING;
-
+  
   // Fill in a cache of the frequencies & squints
   Vector<Double> spectralWorld(1);
   Vector<Double> spectralPixel(1);
@@ -553,7 +553,7 @@ PBMath1D::apply(const ImageInterface<Complex>& in,
     }
 
     if (istokes != laststokes) {
-      // cout << "Stokes = " << istokes << " pix = " << xPixel << ", " << yPixel << endl;
+      //cerr << "Stokes = " << istokes << " pix = " << xPixel << ", " << yPixel << endl;
       laststokes = istokes;
     }
 
@@ -562,20 +562,8 @@ PBMath1D::apply(const ImageInterface<Complex>& in,
     if (wideFit_p) {
       // fill vp with interpolated values for current frequency
       if (ichan!=lastChan) {
-        Int nFreq = wFreqs_p.nelements();
-	Int ifit;
-        for (ifit=0; ifit<nFreq; ifit++) {
-	  if (spectralCache(ichan)<=wFreqs_p(ifit)) break;
-	}
-	if (ifit==0) {
-	  vp_p = wbvp_p.column(0);
-	} else if (ifit==nFreq) {
-	  vp_p = wbvp_p.column(nFreq-1);
-	} else {
-	  Float l = (spectralCache(ichan) - wFreqs_p(ifit-1))/
-	    (wFreqs_p(ifit)-wFreqs_p(ifit-1));
-	  vp_p = wbvp_p.column(ifit-1)*(1-l) + wbvp_p.column(ifit)*l;
-	}
+	nearestVPArray(spectralCache(ichan));
+	lastChan=ichan;
       }
     }
 		       
@@ -587,6 +575,7 @@ PBMath1D::apply(const ImageInterface<Complex>& in,
     for(Int iy=0;iy<itsShape(1);iy++) {
       ry2(iy) =  square( increment(1)*((Double)(iy+iy0) - yPixel) );
     }
+   
     const Matrix<Complex>& inmat = li.matrixCursor();
     Matrix<Complex>& outmat=oli.rwMatrixCursor();
 
@@ -823,11 +812,14 @@ PBMath1D::apply(const ImageInterface<Float>& in,
 
   // Iterate through in minimum IO/Memory chunks
   IPosition ncs = in.niceCursorShape();
+  // IPosition ncs=in.shape();
+  ncs(2) = 1; ncs(3) = 1;
   ncs(2) = 1; ncs(3) = 1;
   RO_LatticeIterator<Float> li(in, LatticeStepper(in.shape(), ncs, IPosition(4,0,1,2,3) )  );
   LatticeIterator<Float> oli(out, LatticeStepper(in.shape(), ncs, IPosition(4,0,1,2,3)) );
 
-  Float taper;
+  //Vector<Float> taper(vp_p.nelements());
+  Float taper=0.0;
   Float r2=0.0;
   Float r=0.0;
 
@@ -880,23 +872,21 @@ PBMath1D::apply(const ImageInterface<Float>& in,
     if (wideFit_p) {
       // fill vp with interpolated values for current frequency
       if (ichan!=lastChan) {
-	Int ifit=0;
-	Int nFreq=wFreqs_p.nelements();
-        for (ifit=0; ifit<nFreq; ifit++) {
-	  if (spectralCache(ichan)<=wFreqs_p(ifit)) break;
-	}
-	if (ifit==0) {
-	  vp_p = wbvp_p.column(0);
-	} else if (ifit==nFreq) {
-	  vp_p = wbvp_p.column(nFreq-1);
-	} else {
-	  Float l = (spectralCache(ichan) - wFreqs_p(ifit-1))/
-	    (wFreqs_p(ifit)-wFreqs_p(ifit-1));
-	  vp_p = wbvp_p.column(ifit-1)*(1-l) + wbvp_p.column(ifit)*l;
-	}
+	nearestVPArray(spectralCache(ichan));
 	lastChan = ichan;
       }
     }
+    
+    //taper.set(0.0);
+    /*for (uInt inda=0; inda < vp_p.nelements(); ++inda){
+      if (norm(vp_p(inda)) > 0.0) {
+	taper[inda] = real(vp_p(inda)) * real(vp_p(inda)) + imag(vp_p(inda))*imag(vp_p(inda));
+	if(ipower==4)
+	  taper[inda] *= taper[inda];
+      } 
+
+    } 
+    */
 
     Vector<Float> rx2(itsShape(0));
     Vector<Float> ry2(itsShape(1));
@@ -917,13 +907,14 @@ PBMath1D::apply(const ImageInterface<Float>& in,
 	  r = sqrt(r2) * factor;
 	  indx = Int(r*inverseIncrementRadius_p);
 	  if (norm(vp_p(indx)) > 0.0) {
-	    taper = real(vp_p(indx) * conj(vp_p(indx)));
+	    taper = real(vp_p(indx)) * real(vp_p(indx))+ imag(vp_p(indx)) * imag(vp_p(indx));
 	    if(ipower==4)
 	      taper *= taper;
-	  } else {
-	    taper = 0.0;
 	  }
-	  oli.rwMatrixCursor()(ix, iy) = li.matrixCursor()(ix, iy) * taper;
+	  //else {
+	  //  taper = 0.0;
+	  //}
+	  oli.rwMatrixCursor()(ix, iy) = li.matrixCursor()(ix,iy) * taper;
 	}
       }
     }
@@ -989,17 +980,19 @@ PBMath1D::apply(SkyComponent& in,
   // Now taper all polarizations appropriately
   
   // Sort out any frequency interpolation
-  Int ifit=0;
-  Float lfit=0;
-  Int nFreq=wFreqs_p.nelements();
+  //Int ifit=0;
+  //Float lfit=0;
+  //Int nFreq=wFreqs_p.nelements();
   if (wideFit_p) {
     Double freq = frequency.getValue("Hz");
-    for (ifit=0; ifit<nFreq; ifit++) {
+    nearestVPArray(freq);
+    /* for (ifit=0; ifit<nFreq; ifit++) {
       if (freq<=wFreqs_p(ifit)) break;
     }
     if (ifit>0 && ifit<nFreq) {
       lfit=(freq-wFreqs_p(ifit-1)) / (wFreqs_p(ifit)-wFreqs_p(ifit-1));
     }
+    */
   }
   
   MDirection newpointDirE;
@@ -1022,8 +1015,9 @@ PBMath1D::apply(SkyComponent& in,
     double r = sep.getValue("'") * frequency.getValue("Hz") / 1.0e+9;  // arcminutes * GHz 
     Complex taper;
     Int ir = Int(r*inverseIncrementRadius_p);
+    //vp_p is interpolated wvp_p from above 
     Complex vpVal = ir >= Int(vp_p.nelements()) ? Complex(0) : vp_p(ir);
-    if (wideFit_p) {
+    /*if (wideFit_p) {
       if (ifit==0) {
 	vpVal = wbvp_p(ir,0);
       } else if (ifit==nFreq) {
@@ -1032,6 +1026,7 @@ PBMath1D::apply(SkyComponent& in,
 	vpVal = wbvp_p(ir,ifit-1)*(1-lfit) + wbvp_p(ir,ifit)*lfit;
       }
     }
+     */
     
     if (r > maximumRadius_p.getValue("'")) {
       compFlux(pol) = 0.0;
@@ -1112,10 +1107,12 @@ Bool PBMath1D::ok()
 };
 
 
-void PBMath1D::viewPB(Vector<Float>& r, Vector<Float>& pb, Int n_pb)
+void PBMath1D::viewPB(Vector<Float>& r, Vector<Float>& pb, Int n_pb, const Double freq)
 {
   r.resize(n_pb);
   pb.resize(n_pb);
+  if(wideFit_p)
+    nearestVPArray(freq);
   Int nSamples= vp_p.nelements();
   for (Int i=0; i< n_pb; i++) {
     pb(i) = norm( vp_p( (Int) ((nSamples-1)* (((Float)i)/(n_pb-1) ) ) ) );
@@ -1123,7 +1120,24 @@ void PBMath1D::viewPB(Vector<Float>& r, Vector<Float>& pb, Int n_pb)
   }
 
 };
+void PBMath1D::nearestVPArray(Double freq){
+  Int ifit=0;
+  Int nFreq=wFreqs_p.nelements();
+  for (ifit=0; ifit<nFreq; ifit++) {
+    if (freq <=wFreqs_p(ifit)) break;
+  }
+  if (ifit==0) {
+    vp_p = wbvp_p.column(0);
+  } else if (ifit==nFreq) {
+    vp_p = wbvp_p.column(nFreq-1);
+  } else {
+    Float l = (freq - wFreqs_p(ifit-1))/
+      (wFreqs_p(ifit)-wFreqs_p(ifit-1));
+    vp_p = wbvp_p.column(ifit-1)*(1-l) + wbvp_p.column(ifit)*l;
+  }
 
+
+}
 
 } //# NAMESPACE CASA - END
 

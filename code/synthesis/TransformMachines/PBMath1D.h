@@ -166,7 +166,7 @@ public:
   // Get the PB in a vector to look at
   // Concerning n_elements: they are evenly spaced between 0 and maxradius.
   // r is in units of arcminutes at 1 GHz
-  void viewPB(Vector<Float>& r, Vector<Float>& PB, Int n_elements);
+  void viewPB(Vector<Float>& r, Vector<Float>& PB, Int n_elements, const Double freq=1.0e9);
   
   // Summarize the Voltage Pattern;
   // For PBMath1D, list nValues worth of the VP array
@@ -262,6 +262,11 @@ protected:
   // only create and store as they are required
   // Right now: just construct all arrays
   virtual void fillPBArray()=0;
+
+  //// For wideband beams fill the tabulated vp_p by the interpolated beam at the freq
+  
+  virtual void nearestVPArray(Double freq);
+
 
   // Helper method to fit a circularly symmetric beam to the
   // squinted RR + LL beam.  Called upon construction.  Build this later.

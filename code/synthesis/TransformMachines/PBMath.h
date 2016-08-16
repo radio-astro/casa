@@ -134,15 +134,15 @@ public:
 		 HATCREEK,
 		 NRAO12M,
 		 NRAO140FT,
-		 OVRO,
+		 OVRO, 
 		 VLA, VLA_INVERSE, VLA_NVSS, VLA_2NULL, 
 		 VLA_4, VLA_P, VLA_L, VLA_C, VLA_X, VLA_U, VLA_K, VLA_Q, 
 		 WSRT, WSRT_LOW, ALMA, ALMASD, ACA, IRAMPDB, IRAM30M, SMA, 
-		 ATA, ATCA_C_RI, ATCA, ATCA_16, ATCA_K, ATCA_Q, ATCA_W,  NONE
+		 ATA, ATCA_C_RI, ATCA, ATCA_16, ATCA_K, ATCA_Q, ATCA_W,  EVLA, NONE
   };
 
   enum {
-    NumberOfCommonPB=42  };
+    NumberOfCommonPB=43  };
 
   // Default constructor, required for Block<PBMath>
   PBMath();

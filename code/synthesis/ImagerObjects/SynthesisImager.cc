@@ -1249,6 +1249,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// Fill in miscellaneous information needed by FITS
 	//ROMSColumns msc(mss4vi_p[0]);
 	Record info;
+	
 	String objectName=msc.field().name()(msc.fieldId()(0));
 	String telescop=msc.observation().telescopeName()(0);
 	info.define("OBJECT", objectName);
@@ -1990,6 +1991,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     if(rec.empty()){os << LogIO::SEVERE << "Cannot proceed with mosaicft gridder without a valid PB model" << LogIO::POST; }
 
+
     VPSkyJones* vps=NULL;
     if(rec.asString("name")=="COMMONPB" && kpb !=PBMath::UNKNOWN ){
       vps= new VPSkyJones(msc, True, Quantity(rotatePAStep, "deg"), BeamSquint::GOFIGURE, Quantity(360.0, "deg"));
@@ -2013,8 +2015,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if(rec.asString("name")=="IMAGE")
        pbtype=PBMathInterface::IMAGE;
     ///Use Heterogenous array mode for the following
+    ///Added EVLA in it to use different beam models for different frequencies
     if((kpb == PBMath::UNKNOWN) || (kpb==PBMath::OVRO) || (kpb==PBMath::ACA)
-       || (kpb==PBMath::ALMA)){
+       || (kpb==PBMath::ALMA) || (kpb==PBMath::EVLA)){
       CountedPtr<SimplePBConvFunc> mospb=new HetArrayConvFunc(pbtype, "");
       static_cast<MosaicFTNew &>(*theFT).setConvFunc(mospb);
     }

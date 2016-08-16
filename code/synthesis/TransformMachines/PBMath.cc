@@ -34,7 +34,7 @@
 #include <synthesis/TransformMachines/PBMath1DGauss.h>
 #include <synthesis/TransformMachines/PBMath1DNumeric.h>
 #include <synthesis/TransformMachines/PBMath1DPoly.h>
-
+#include <synthesis/TransformMachines/PBMath1DEVLA.h>
 
 #include <measures/Measures/Stokes.h>
 #include <casa/BasicSL/Constants.h>
@@ -663,7 +663,14 @@ PBMath::whichCommonPBtoUse(String &telescope, Quantity &freq,
       band = "UNKNOWN";
     }
   } else if(telescope(0,4)=="EVLA") {
-    whichPB = PBMath::VLA;
+    ////Temporary
+    Bool useEVLABeams;
+    AipsrcValue<Bool>::find(useEVLABeams, "beams.evla", False);
+    //////end Temporary
+    if(useEVLABeams)
+      whichPB = PBMath::EVLA;
+    else
+      whichPB=PBMath::VLA;
     band = "UNKNOWN";
   } else if (telescope(0,4)=="WSRT") {
     if (freqGHz > 3.0 && freqGHz < 6.0) {
@@ -835,6 +842,9 @@ void PBMath::nameCommonPB(const PBMath::CommonPB iPB, String & str)
   case PBMath::OVRO:
     str = "OVRO";
     break;
+  case PBMath::EVLA:
+    str = "EVLA";
+    break;
   case PBMath::VLA:
     str = "VLA";
     break;
@@ -936,7 +946,16 @@ void PBMath::enumerateCommonPB(const String & str, PBMath::CommonPB& ipb)
     ipb = PBMath::HATCREEK;
   } else if (str == "BIMA") {  //  BIMA is a synonym for HATCREEK
     ipb = PBMath::HATCREEK;
-  } else if (str == "VLA" || str == "EVLA") {
+  } else if (str == "EVLA"){
+    ///Temporary
+    Bool useEVLABeams;
+    AipsrcValue<Bool>::find(useEVLABeams, "beams.evla", False);
+    //////end Temporary
+    if(useEVLABeams)
+      ipb = PBMath::EVLA;
+    else
+       ipb = PBMath::VLA;
+  }else if (str == "VLA" ) {
     ipb = PBMath::VLA;
   } else if (str == "VLA_INVERSE") {
     ipb = PBMath::VLA_INVERSE;
@@ -1113,6 +1132,13 @@ void PBMath::initByTelescope(PBMath::CommonPB myPBType,
 
 
   switch (myPBType) {
+   case EVLA:
+    
+ {
+   
+       pb_pointer_p = new PBMath1DEVLA( Quantity(58.0,"'"), True, 1.0e9);
+  }
+  break;
   case VLA:
     // No squint assumed here.
     // This beam has a peak of 1.00000 (unlike Napier and Rots; a refit to their data)
@@ -1123,7 +1149,7 @@ void PBMath::initByTelescope(PBMath::CommonPB myPBType,
       coef(2)= 6.480550e-07;
       coef(3)= -1.267928e-10;
 
-      pb_pointer_p = new PBMath1DPoly( coef, Quantity(43.0,"'"), Quantity(1.0,"GHz"));
+      pb_pointer_p = new PBMath1DPoly( coef, Quantity(58.0,"'"), Quantity(1.0,"GHz"));
     }
   break;
   case VLA_INVERSE:

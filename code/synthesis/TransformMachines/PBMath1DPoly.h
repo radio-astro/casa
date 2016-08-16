@@ -36,7 +36,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //#forward
-
+  class PBMath1DEVLA;
 // <summary> 
 // PBMath1DPoly is a 1-D Polynomial Expansion for a Primary Beam
 // </summary>
@@ -93,7 +93,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 class PBMath1DPoly : public PBMath1D {
 public:
 
-  PBMath1DPoly();
+    PBMath1DPoly();
 
   // Instantiation from arguments; default = no squint
   // squint is the offset from pointing center if the Stokes R beam
@@ -121,7 +121,7 @@ public:
   //  CountedPtr<PBMathInterface> clone();
 
   // Destructor
-  ~PBMath1DPoly();  
+  virtual ~PBMath1DPoly();  
 
   // Get the type of PB this is
   PBMathInterface::PBClass whichPBClass() { return PBMathInterface::POLY; }  
@@ -133,9 +133,9 @@ public:
   void summary(Int nValues=0);
 
 protected:
-
+  friend class PBMath1DEVLA;
   // Fill in vp_p array from construction parameters
-  void fillPBArray();
+  virtual void fillPBArray();
 
 private:    
 
