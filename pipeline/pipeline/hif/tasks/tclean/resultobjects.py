@@ -47,6 +47,9 @@ class TcleanResult(basetask.Results):
         self._min_field_id = None
         self._max_field_id = None
         self._threshold = 0.0
+        self._dirty_dynamic_range = 0.0
+        self._DR_correction_factor = 1.0
+        self._maxEDR_used = False
         self._image_min = 0.0
         self._image_max = 0.0
         self._image_rms = 0.0
@@ -200,6 +203,27 @@ class TcleanResult(basetask.Results):
 
     def set_threshold(self, threshold):
         self._threshold = threshold
+
+    @property
+    def dirty_dynamic_range(self):
+        return self._dirty_dynamic_range
+
+    def set_dirty_dynamic_range(self, dirty_dynamic_range):
+        self._dirty_dynamic_range = dirty_dynamic_range
+
+    @property
+    def DR_correction_factor(self):
+        return self._DR_correction_factor
+
+    def set_DR_correction_factor(self, DR_correction_factor):
+        self._DR_correction_factor = DR_correction_factor
+
+    @property
+    def maxEDR_used(self):
+        return self._maxEDR_used
+
+    def set_maxEDR_used(self, maxEDR_used):
+        self._maxEDR_used = maxEDR_used
 
     @property
     def image_min(self):

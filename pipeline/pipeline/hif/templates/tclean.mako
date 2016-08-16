@@ -185,7 +185,18 @@ except:
                                 <th>cleaning threshold</th>
                                 %if info_dict.get((field,str(spw),pol,'threshold')) is not None:
                                             <td>${'%.2g %s' % (casatools.quanta.convert(info_dict[(field,str(spw),pol,'threshold')], info_dict[(field,str(spw),pol,'brightness unit')])['value'],
-                                                info_dict[(field,str(spw),pol,'brightness unit')])}</td>
+                                                info_dict[(field,str(spw),pol,'brightness unit')])}
+                                    %if info_dict.get((field,str(spw),pol,'dirty DR')) is not None:
+                                            <br>${'Dirty DR: %.2g' % (info_dict[(field,str(spw),pol,'dirty DR')])}
+                                        %if info_dict[(field,str(spw),pol,'maxEDR used')]:
+                                            <br>${'DR correction: %.2g (max EDR heuristic)' % (info_dict[(field,str(spw),pol,'DR correction factor')])}
+                                        %else:
+                                            <br>${'DR correction: %.2g' % (info_dict[(field,str(spw),pol,'DR correction factor')])}
+                                        %endif
+                                    %else:
+                                            <br>No DR information
+                                    %endif
+                                            </td>
                                 %else:
                                             <td>-</td>
                                 %endif

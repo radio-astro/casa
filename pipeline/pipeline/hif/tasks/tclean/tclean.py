@@ -364,6 +364,7 @@ class Tclean(cleanbase.CleanBase):
         # Check dynamic range and adjust threshold
         qaTool = casatools.quanta
         dirty_dynamic_range = residual_max / sequence_manager.sensitivity
+        maxEDR_used = False
 
         old_threshold = qaTool.convert(sequence_manager.threshold, 'Jy')['value']
         if (inputs.intent == 'TARGET' ) or (inputs.intent == 'CHECK'):
@@ -373,6 +374,7 @@ class Tclean(cleanbase.CleanBase):
                     maxSciEDR = 150.0
                     new_threshold = max(n_dr_max * old_threshold, residual_max / maxSciEDR * inputs.tlimit)
                     LOG.info('DR heuristic: Applying maxSciEDR(Main array)=%s' % (maxSciEDR))
+                    maxEDR_used = True
                 else:
                     if (dirty_dynamic_range > 100.):
                         n_dr = 2.5
@@ -389,6 +391,7 @@ class Tclean(cleanbase.CleanBase):
                     maxSciEDR = 30.0
                     new_threshold = max(n_dr_max * old_threshold, residual_max / maxSciEDR * inputs.tlimit)
                     LOG.info('DR heuristic: Applying maxSciEDR(ACA)=%s' % (maxSciEDR))
+                    maxEDR_used = True
                 else:
                     if (dirty_dynamic_range > 20.):
                         n_dr = 2.5
@@ -410,10 +413,14 @@ class Tclean(cleanbase.CleanBase):
                 maxCalEDR = 200.0
             LOG.info('DR heuristic: Applying maxCalEDR=%s' % (maxCalEDR))
             new_threshold = max(old_threshold, residual_max / maxCalEDR * inputs.tlimit)
+            maxEDR_used = True
 
         if (new_threshold != old_threshold):
             sequence_manager.threshold = '%sJy' % (new_threshold)
             LOG.info('DR heuristic: Modified threshold from %s Jy to %s Jy based on dirty dynamic range calculated from dirty peak / final theoretical sensitivity: %.1f' % (old_threshold, new_threshold, dirty_dynamic_range))
+            DR_correction_factor = new_threshold / old_threshold
+        else:
+            DR_correction_factor = 1.0
 
         # Compute automatic niter estimate
         old_niter = sequence_manager.niter
@@ -500,6 +507,11 @@ class Tclean(cleanbase.CleanBase):
             result.set_image_min(pbcor_image_min)
             result.set_image_max(pbcor_image_max)
             result.set_image_rms(nonpbcor_image_non_cleanmask_rms)
+
+            # Keep dirty DR, correction factor and information about maxEDR heuristic for weblog
+            result.set_dirty_dynamic_range(dirty_dynamic_range)
+            result.set_DR_correction_factor(DR_correction_factor)
+            result.set_maxEDR_used(maxEDR_used)
 
             LOG.info('Clean image iter %s stats' % iter)
             LOG.info('    Clean image non-cleanmask area rms: %s', nonpbcor_image_non_cleanmask_rms)

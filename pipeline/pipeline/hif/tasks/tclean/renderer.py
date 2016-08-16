@@ -152,6 +152,9 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 info_dict[(field, spw, pol, 'min field id')] = r.min_field_id
                 info_dict[(field, spw, pol, 'max field id')] = r.max_field_id
                 info_dict[(field, spw, pol, 'threshold')] = r.threshold
+                info_dict[(field, spw, pol, 'dirty DR')] = r.dirty_dynamic_range
+                info_dict[(field, spw, pol, 'DR correction factor')] = r.DR_correction_factor
+                info_dict[(field, spw, pol, 'maxEDR used')] = r.maxEDR_used
                 info_dict[(field, spw, pol, 'score')] = r.qa.representative
 
         # Make the plots
