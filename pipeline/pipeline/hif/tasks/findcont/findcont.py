@@ -3,6 +3,7 @@ import os
 import re
 import subprocess
 import types
+import copy
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.utils as utils
@@ -33,7 +34,7 @@ class FindContInputs(basetask.StandardInputs):
     @target_list.setter
     def target_list(self, value):
         if not value:
-            value = self.context.clean_list_pending
+            value = copy.deepcopy(self.context.clean_list_pending)
         self._target_list = value
 
 # tell the infrastructure to give us mstransformed data when possible by
@@ -141,7 +142,7 @@ class FindCont(basetask.StandardTaskTemplate):
 
                     start = '%sGHz' % ((if0 + channel_width) / 1e9)
                     width = '%sMHz' % ((channel_width) / 1e6)
-                    nchan = int((if1 - if0 - 2 * channel_width) / channel_width)
+                    nchan = int(round((if1 - if0 ) / channel_width - 2))
 
                     # Estimate memory usage and adjust chanchunks parameter to avoid
                     # exceeding the available memory.

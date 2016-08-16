@@ -972,7 +972,6 @@ def chan_selection_to_frequencies(img, selection, unit='GHz'):
     if (selection != ''):
         qaTool = casatools.quanta
 
-
         # Get frequency axis
         try:
             refFreq, deltaFreq, freqUnit, refPix, numPix = get_cube_freq_axis(img)
@@ -985,9 +984,11 @@ def chan_selection_to_frequencies(img, selection, unit='GHz'):
             # Make sure c0 is the lower channel so that the +/-0.5 channel
             # adjustments below go in the right direction.
             if (c1 < c0):
-               ctmp = c0
-               c0 = c1
-               c1 = ctmp
+                c0, c1 = c1, c0
+
+            # Convert the channel range (c0-c1) to the corresponding frequency range 
+            # that spans between the outer edges of this channel range. I.e., from 
+            # the lower frequency edge of c0 to the upper frequency edge of c1.
             f0 = qaTool.convert({'value': refFreq + (c0 - 0.5 - refPix) * deltaFreq, 'unit': freqUnit}, unit)
             f1 = qaTool.convert({'value': refFreq + (c1 + 0.5 - refPix) * deltaFreq, 'unit': freqUnit}, unit)
             if (qaTool.lt(f0, f1)):
@@ -1023,12 +1024,18 @@ def freq_selection_to_channels(img, selection):
         for frange in p.findall(selection.replace(';','')):
             f0 = qaTool.convert('%s%s' % (frange[0], frange[3]), freqUnit)['value']
             f1 = qaTool.convert('%s%s' % (frange[2], frange[3]), freqUnit)['value']
+            # It is assumed here that the frequency ranges are given from 
+            # the lower edge of the lowest frequency channel to the upper
+            # edge of the highest frequency channel, while the reference frequency
+            # is specified at the center of the reference pixel (channel). To calculate 
+            # the corresponding channel range, we need to add 0.5 to the lower channel, 
+            # and subtract 0.5 from the upper channel.
             c0 = (f0 - refFreq) / deltaFreq
             c1 = (f1 - refFreq) / deltaFreq
             if (c0 < c1):
-                channels.append((int(c0 + 0.5), int(c1 - 0.5)))
+                channels.append((int(round(c0 + 0.5)), int(round(c1 - 0.5))))
             else:
-                channels.append((int(c1 + 0.5), int(c0 - 0.5)))
+                channels.append((int(round(c1 + 0.5)), int(round(c0 - 0.5))))
     else:
         channels = ['NONE']
 
