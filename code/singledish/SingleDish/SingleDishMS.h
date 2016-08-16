@@ -254,6 +254,7 @@ private:
   // Destroy a set of baseline contexts
   void destroy_baseline_contexts(std::vector<LIBSAKURA_SYMBOL(LSQFitContextFloat) *> &bl_contexts);
   void check_sakura_status(string const &name, LIBSAKURA_SYMBOL(Status) const status);
+  void check_baseline_status(LIBSAKURA_SYMBOL(LSQFitStatus) const bl_status);
   template<typename T, typename U>
   void set_matrix_for_bltable(size_t const num_pol, size_t const num_data_max,
       std::vector<std::vector<T> > const &in_data, Array<U> &out_data) {
@@ -280,7 +281,7 @@ private:
   vector<int> string_to_list(string const &wn_str, char const delim);
   void get_effective_nwave(std::vector<int> const &addwn,
 			   std::vector<int> const &rejwn,
-			   int const ulimitwn,
+			   int const wn_ulimit,
 			   std::vector<int> &effwn);
   void finalise_effective_nwave(std::vector<int> const &blparam_eff_base,
 				std::vector<int> const &blparam_exclude,

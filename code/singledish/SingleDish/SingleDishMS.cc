@@ -599,13 +599,13 @@ void SingleDishMS::get_baseline_context(size_t const bltype,
     LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(Status_kNG);
     if ((bltype == BaselineType_kPolynomial)||(bltype == BaselineType_kChebyshev)) {
       status = LIBSAKURA_SYMBOL(CreateLSQFitContextPolynomialFloat)(static_cast<LIBSAKURA_SYMBOL(LSQFitType)>(bltype),
-                                                                      static_cast<uint16_t>(order),
-                                                                      num_chan, &context);
+                                                                    static_cast<uint16_t>(order),
+                                                                    num_chan, &context);
     } else if (bltype == BaselineType_kCubicSpline) {
       status = LIBSAKURA_SYMBOL(CreateLSQFitContextCubicSplineFloat)(static_cast<uint16_t>(order),
-                                                                       num_chan, &context);
+                                                                     num_chan, &context);
     } else if (bltype == BaselineType_kSinusoid) {
-    status = LIBSAKURA_SYMBOL(CreateLSQFitContextSinusoidFloat)(static_cast<uint16_t>(order),
+      status = LIBSAKURA_SYMBOL(CreateLSQFitContextSinusoidFloat)(static_cast<uint16_t>(order),
                                                                   num_chan, &context);
     }
     check_sakura_status("sakura_CreateLSQFitContextFloat", status);
@@ -671,8 +671,7 @@ void SingleDishMS::destroy_baseline_contexts(std::vector<LIBSAKURA_SYMBOL(LSQFit
 }
 
 void SingleDishMS::check_sakura_status(string const &name,
-    LIBSAKURA_SYMBOL(Status) const status)
-{
+    LIBSAKURA_SYMBOL(Status) const status) {
   if (status == LIBSAKURA_SYMBOL(Status_kOK)) return;
 
   ostringstream oss;
@@ -687,6 +686,12 @@ void SingleDishMS::check_sakura_status(string const &name,
     oss << "UnknownError";
   }
   throw(AipsError(oss.str()));
+}
+
+void SingleDishMS::check_baseline_status(LIBSAKURA_SYMBOL(LSQFitStatus) const bl_status) {
+  if (bl_status != LIBSAKURA_SYMBOL(LSQFitStatus_kOK)) {
+    throw(AipsError("baseline fitting isn't successful."));
+  }
 }
 
 void SingleDishMS::get_spectrum_from_cube(Cube<Float> &data_cube,
@@ -839,35 +844,43 @@ vector<int> SingleDishMS::string_to_list(string const &wn_str, char const delim)
 
 void SingleDishMS::get_effective_nwave(std::vector<int> const &addwn,
                                        std::vector<int> const &rejwn,
-                                       int const ulimitwn,
+                                       int const wn_ulimit,
                                        std::vector<int> &effwn) {
   effwn.clear();
   if (addwn.size() < 1) {
     throw AipsError("addwn has no elements.");
   }
-  if ((addwn.size() == 2) && (addwn[1] == SinusoidWaveNumber_kUpperLimit)) {
-    if ((rejwn.size() == 2) && (rejwn[1] == SinusoidWaveNumber_kUpperLimit)) {
+
+  auto up_to_nyquist_limit = [&](std::vector<int> const &v){ return ((v.size() == 2) && (v[1] == SinusoidWaveNumber_kUpperLimit)); };
+  auto check_rejwn_add = [&](int const v){
+    bool add = true;
+    for (size_t i = 0; i < rejwn.size(); ++i) {
+      if (rejwn[i] == v) {
+        add = false;
+        break;
+      }
+    }
+    if (add) {
+      effwn.push_back(v);
+    }
+  };
+  
+  if (up_to_nyquist_limit(addwn)) {
+    if (up_to_nyquist_limit(rejwn)) {
       if (addwn[0] < rejwn[0]) {
-        effwn.push_back(rejwn[0] - 1);
+        for (int wn = addwn[0]; wn < rejwn[0]; ++wn) {
+          effwn.push_back(wn);
+        }
       } else {
         throw(AipsError("No effective wave number given for sinusoidal fitting."));
       }
     } else {
-      for (int i = addwn[0]; i <= ulimitwn; ++i) {
-        bool toadd = true;
-        for (size_t j = 0; j < rejwn.size(); ++j) {
-          if (rejwn[j] == i) {
-            toadd = false;
-            break;
-          }
-        }
-        if (toadd) {
-          effwn.push_back(i);
-        }
+      for (int wn = addwn[0]; wn <= wn_ulimit; ++wn) {
+        check_rejwn_add(wn);
       }
     }
   } else {
-    if ((rejwn.size() == 2) && (rejwn[1] == SinusoidWaveNumber_kUpperLimit)) {
+    if (up_to_nyquist_limit(rejwn)) {
       int maxwn = rejwn[0] - 1;
       if (maxwn < 0) {
         throw(AipsError("No effective wave number given for sinusoidal fitting."));
@@ -879,16 +892,7 @@ void SingleDishMS::get_effective_nwave(std::vector<int> const &addwn,
       }
     } else {
       for (size_t i = 0; i < addwn.size(); ++i) {
-        bool toadd = true;
-        for (size_t j = 0; j < rejwn.size(); ++j) {
-          if (rejwn[j] == addwn[i]) {
-            toadd = false;
-            break;
-          }
-        }
-        if (toadd) {
-          effwn.push_back(addwn[i]);
-        }
+        check_rejwn_add(addwn[i]);
       }
     }
   }
@@ -908,6 +912,18 @@ void SingleDishMS::finalise_effective_nwave(std::vector<int> const &blparam_eff_
   blparam_eff.resize(blparam_eff_base.size());
   copy(blparam_eff_base.begin(), blparam_eff_base.end(), blparam_eff.begin());
 
+  //-------
+  /*
+  std::cout << "---------------------------" << std::endl;
+  std::cout << "blparam_eff{BEFORE} : ";
+  for (size_t i = 0; i < blparam_eff.size(); ++i) {
+    std::cout << blparam_eff[i] << " ";
+  }
+  std::cout << std::endl;
+  std::cout << "---------------------------" << std::endl;
+  */
+  //-------
+
   if (applyfft) {
     string fftthresh_attr;
     float fftthresh_sigma;
@@ -917,7 +933,29 @@ void SingleDishMS::finalise_effective_nwave(std::vector<int> const &blparam_eff_
     select_wavenumbers_via_fft(num_chan, spec, mask, fftmethod, fftthresh_attr,
                                fftthresh_sigma, fftthresh_top, blparam_upperlimit,
                                blparam_fft);
+  //-------
+  /*
+  std::cout << "---------------------------" << std::endl;
+  std::cout << "blparam_fft : ";
+  for (size_t i = 0; i < blparam_fft.size(); ++i) {
+    std::cout << blparam_fft[i] << " ";
+  }
+  std::cout << std::endl;
+  std::cout << "---------------------------" << std::endl;
+  */
+  //-------
     merge_wavenumbers(blparam_eff_base, blparam_fft, blparam_exclude, blparam_eff);
+  //-------
+  /*
+  std::cout << "---------------------------" << std::endl;
+  std::cout << "blparam_eff{AFTER} : ";
+  for (size_t i = 0; i < blparam_eff.size(); ++i) {
+    std::cout << blparam_eff[i] << " ";
+  }
+  std::cout << std::endl;
+  std::cout << "---------------------------" << std::endl;
+  */
+  //-------
   }
 }
 
@@ -926,21 +964,21 @@ void SingleDishMS::parse_fftthresh(string const& fftthresh_str, string& fftthres
   size_t idx_sigma = fftthresh_str.find("sigma");
   size_t idx_top   = fftthresh_str.find("top");
 
-  if (idx_sigma == fftthresh_str.size() - 5) {
-    std::istringstream is(fftthresh_str.substr(0, fftthresh_str.size() - 5));
-    is >> fftthresh_sigma;
-    fftthresh_attr = "sigma";
-  } else if (idx_top == 0) {
+  if (idx_top == 0) {
     std::istringstream is(fftthresh_str.substr(3));
     is >> fftthresh_top;
     fftthresh_attr = "top";
+  } else if (idx_sigma == fftthresh_str.size() - 5) {
+    std::istringstream is(fftthresh_str.substr(0, fftthresh_str.size() - 5));
+    is >> fftthresh_sigma;
+    fftthresh_attr = "sigma";
   } else {
     bool is_number = true;
     for (size_t i = 0; i < fftthresh_str.size()-1; ++i) {
       char ch = (fftthresh_str.substr(i, 1).c_str())[0];
       if (!(isdigit(ch) || (fftthresh_str.substr(i, 1) == "."))) {
-	is_number = false;
-	break;
+        is_number = false;
+        break;
       }
     }
     if (is_number) {
@@ -961,12 +999,26 @@ void SingleDishMS::select_wavenumbers_via_fft(size_t const num_chan, float const
   std::vector<float> fourier_spec;
   if (fftmethod == "fft") {
     exec_fft(num_chan, spec, mask, false, true, fourier_spec);
+    //----------------
+    /*
+    std::cout << "**************" << std::endl;
+    std::cout << "fourier_spec : ";
+    for (size_t i = 0; i < 20; ++i) {
+      std::cout << fourier_spec[i] << " ";
+    }
+    std::cout << std::endl;
+    std::cout << "**************" << std::endl;
+    */
+    //----------------
   } else {
     throw AipsError("fftmethod must be 'fft' for now.");
   }
 
   int fourier_spec_size = static_cast<int>(fourier_spec.size());
   if (fftthresh_attr == "sigma") {
+    //----------------
+    //std::cout << "fftthresh_attr = sigma ENTER " << std::endl;;
+    //----------------
     float mean  = 0.0;
     float mean2 = 0.0;
     for (int i = 0; i < fourier_spec_size; ++i) {
@@ -983,6 +1035,9 @@ void SingleDishMS::select_wavenumbers_via_fft(size_t const num_chan, float const
       }
     }
   } else if (fftthresh_attr == "top") {
+    //----------------
+    //std::cout << "fftthresh_attr = top ENTER " << std::endl;;
+    //----------------
     int i = 0;
     while (i < fftthresh_top) {
       float max = 0.0;
@@ -993,6 +1048,9 @@ void SingleDishMS::select_wavenumbers_via_fft(size_t const num_chan, float const
           max_idx = j;
         }
       }
+      //---------------
+      //std::cout << "fft_max_idx[" << i << "] = " << max_idx << ",  max_value = " << fourier_spec[max_idx] << std::endl;
+      //---------------
       fourier_spec[max_idx] = 0.0;
       if (max_idx <= blparam_upperlimit) {
         blparam_fft.push_back(max_idx);
@@ -1031,12 +1089,24 @@ void SingleDishMS::exec_fft(size_t const num_chan,
       if (!get_ampl_only) fourier_spec.push_back(arg(fftres[i]));
     }
   }
+  //-----------------
+  /*
+  std::cout << "###########" << std::endl;
+  std::cout << "fftres.size = " << fftres.size() << std::endl;
+  std::cout << "fourier_spec.size = " << fourier_spec.size() << std::endl;
+  std::cout << "###########" << std::endl;
+  */
+  //-----------------
 }
 
 void SingleDishMS::interpolate_constant(int const num_chan,
                                         float const *in_spec,
                                         bool const *in_mask,
                                         Vector<Float> &spec) {
+  spec.resize(num_chan);
+  for (int i = 0; i < num_chan; ++i) {
+    spec[i] = in_spec[i];
+  }
   int idx_left = -1;
   int idx_right = -1;
   bool masked_region = false;
@@ -1193,6 +1263,9 @@ void SingleDishMS::doSubtractBaseline(string const& in_column_name,
 
   Vector<size_t> ctx_indices(nchan.nelements(), 0ul);
   std::vector<int> blparam_eff_base;
+  auto wn_ulimit_by_rejwn = [&](){
+    return ((blparam_exclude.size() == 2) &&
+            (blparam_exclude[1] == SinusoidWaveNumber_kUpperLimit)); };
 
   for (vi->originChunks(); vi->moreChunks(); vi->nextChunk()) {
     for (vi->origin(); vi->more(); vi->next()) {
@@ -1232,10 +1305,12 @@ void SingleDishMS::doSubtractBaseline(string const& in_column_name,
           get_effective_nwave(blparam, blparam_exclude, nwave_ulimit, blparam_eff_base);
           blparam_max = blparam_eff_base[blparam_eff_base.size() - 1];
         }
-        get_baseline_context(bltype, 
-                             static_cast<uint16_t>(blparam_max),
-                             num_chan, nchan, nchan_set,
-                             ctx_indices, bl_contexts);
+        if ((bltype != BaselineType_kSinusoid) || (!applyfft) || wn_ulimit_by_rejwn()) {
+          get_baseline_context(bltype, 
+                               static_cast<uint16_t>(blparam_max),
+                               num_chan, nchan, nchan_set,
+                               ctx_indices, bl_contexts);
+        }
       }
 
       // get data/flag cubes (npol*nchan*nrow) from VisBuffer
@@ -1322,7 +1397,7 @@ void SingleDishMS::doSubtractBaseline(string const& in_column_name,
             blparam_eff.resize(1);
             blparam_eff[0] = blparam[blparam.size() - 1];
             num_coeff = blparam_eff[0] * 4;
-          } else {
+          } else { // poly, chebyshev
             blparam_eff.resize(1);
             blparam_eff[0] = blparam[blparam.size() - 1];
             status =
@@ -1358,7 +1433,12 @@ void SingleDishMS::doSubtractBaseline(string const& in_column_name,
             double *coeff_data = coeff.data();
 
             //---GetBestFitBaselineCoefficientsFloat()...
-            func0(ctx_indices[idx], num_chan, blparam_eff, spec_data, mask_data, num_coeff, coeff_data, mask2_data, &rms);
+            //func0(ctx_indices[idx], num_chan, blparam_eff, spec_data, mask_data, num_coeff, coeff_data, mask2_data, &rms);
+            LIBSAKURA_SYMBOL(LSQFitContextFloat) *context = nullptr;
+            if ((bltype != BaselineType_kSinusoid) || (!applyfft) || wn_ulimit_by_rejwn()) {
+              context = bl_contexts[ctx_indices[idx]];
+            }
+            func0(context, num_chan, blparam_eff, spec_data, mask_data, num_coeff, coeff_data, mask2_data, &rms);
 
             for (size_t i = 0; i < num_chan; ++i) {
               if (mask_data[i] == false) {
@@ -1400,7 +1480,8 @@ void SingleDishMS::doSubtractBaseline(string const& in_column_name,
             }
 
             //---SubtractBaselineUsingCoefficientsFloat()...
-            func2(ctx_indices[idx], num_chan, fpar_mtx_tmp[ipol], spec_data, num_coeff, coeff_data);
+            //func2(ctx_indices[idx], num_chan, fpar_mtx_tmp[ipol], spec_data, num_coeff, coeff_data);
+            func2(context, num_chan, fpar_mtx_tmp[ipol], spec_data, num_coeff, coeff_data);
 
             rms_mtx[0][ipol] = rms;
 
@@ -1414,7 +1495,12 @@ void SingleDishMS::doSubtractBaseline(string const& in_column_name,
             }
           } else {
             //---SubtractBaselineFloat()...
-            func3(ctx_indices[idx], num_chan, blparam_eff, num_coeff, spec_data, mask_data, &rms);
+            //func3(ctx_indices[idx], num_chan, blparam_eff, num_coeff, spec_data, mask_data, &rms);
+            LIBSAKURA_SYMBOL(LSQFitContextFloat) *context = nullptr;
+            if ((bltype != BaselineType_kSinusoid) || (!applyfft) || wn_ulimit_by_rejwn()) {
+              context = bl_contexts[ctx_indices[idx]];
+            }
+            func3(context, num_chan, blparam_eff, num_coeff, spec_data, mask_data, &rms);
           }
           // set back a spectrum to data cube
           if (do_subtract) {
@@ -1709,11 +1795,12 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
                      avg_limit,
                      minwidth,
                      edge,
-                     [&](size_t const cidx, size_t const num_chan, std::vector<size_t> const &/*nwave*/,
+                     [&](LIBSAKURA_SYMBOL(LSQFitContextFloat) const *context,
+                         size_t const num_chan, std::vector<size_t> const &/*nwave*/,
                          float *spec, bool *mask, size_t const /*num_coeff*/, double *coeff,
                          bool *mask2, float *rms){
                        status = LIBSAKURA_SYMBOL(LSQFitPolynomialFloat)(
-                         bl_contexts[cidx], static_cast<uint16_t>(order_vect[0]),
+                         context, static_cast<uint16_t>(order_vect[0]),
                          num_chan, spec, mask, clip_threshold_sigma, num_fitting_max,
                          order_vect[0] + 1, coeff, nullptr, nullptr, mask2, rms, &bl_status);
                        check_sakura_status("sakura_LSQFitPolynomialFloat", status);
@@ -1725,15 +1812,17 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
                        size_t num_ffpar = get_num_coeff_bloutput(bltype, 0, num_ffpar_max);
                        ffpar_mtx_tmp[ipol].resize(num_ffpar);
                      },
-                     [&](size_t const cidx, size_t const num_chan, std::vector<size_t> const &/*nwave*/,
+                     [&](LIBSAKURA_SYMBOL(LSQFitContextFloat) const *context,
+                         size_t const num_chan, std::vector<size_t> const &/*nwave*/,
                          float *spec, size_t const /*num_coeff*/, double *coeff){
                        status = LIBSAKURA_SYMBOL(SubtractPolynomialFloat)(
-                         bl_contexts[cidx], num_chan, spec, order_vect[0] + 1, coeff, spec);
+                         context, num_chan, spec, order_vect[0] + 1, coeff, spec);
                        check_sakura_status("sakura_SubtractPolynomialFloat", status);},
-                     [&](size_t const cidx, size_t const num_chan, std::vector<size_t> const &/*nwave*/,
+                     [&](LIBSAKURA_SYMBOL(LSQFitContextFloat) const *context,
+                         size_t const num_chan, std::vector<size_t> const &/*nwave*/,
                          size_t const /*num_coeff*/, float *spec, bool *mask, float *rms){
                        status = LIBSAKURA_SYMBOL(LSQFitPolynomialFloat)(
-                         bl_contexts[cidx], static_cast<uint16_t>(order_vect[0]),
+                         context, static_cast<uint16_t>(order_vect[0]),
                          num_chan, spec, mask, clip_threshold_sigma, num_fitting_max,
                          order_vect[0] + 1, nullptr, nullptr, spec, mask, rms, &bl_status);
                        check_sakura_status("sakura_LSQFitPolynomialFloat", status);
@@ -1799,11 +1888,12 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
                      avg_limit,
                      minwidth,
                      edge,
-                     [&](size_t const cidx, size_t const num_chan, std::vector<size_t> const &/*nwave*/,
+                     [&](LIBSAKURA_SYMBOL(LSQFitContextFloat) const *context, 
+                         size_t const num_chan, std::vector<size_t> const &/*nwave*/,
                          float *spec, bool *mask, size_t const /*num_coeff*/, double *coeff,
                          bool *mask2, float *rms) {
                        status = LIBSAKURA_SYMBOL(LSQFitCubicSplineFloat)(
-                         bl_contexts[cidx], static_cast<uint16_t>(npiece_vect[0]),
+                         context, static_cast<uint16_t>(npiece_vect[0]),
                          num_chan, spec, mask, clip_threshold_sigma, num_fitting_max,
                          reinterpret_cast<double (*)[4]>(coeff), nullptr, nullptr,
                          mask2, rms, boundary_data, &bl_status);
@@ -1820,16 +1910,18 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
                          ffpar_mtx_tmp[ipol][ipiece] = boundary_data[ipiece];
                        }
                      },
-                     [&](size_t const cidx, size_t const num_chan, std::vector<size_t> const &/*nwave*/,
+                     [&](LIBSAKURA_SYMBOL(LSQFitContextFloat) const *context, 
+                         size_t const num_chan, std::vector<size_t> const &/*nwave*/,
                          float *spec, size_t const /*num_coeff*/, double *coeff) {
                        status = LIBSAKURA_SYMBOL(SubtractCubicSplineFloat)(
-                         bl_contexts[cidx], num_chan, spec, npiece_vect[0],
+                         context, num_chan, spec, npiece_vect[0],
                          reinterpret_cast<double (*)[4]>(coeff), boundary_data, spec);
                        check_sakura_status("sakura_SubtractCubicSplineFloat", status);},
-                     [&](size_t const cidx, size_t const num_chan, std::vector<size_t> const &/*nwave*/,
+                     [&](LIBSAKURA_SYMBOL(LSQFitContextFloat) const *context, 
+                         size_t const num_chan, std::vector<size_t> const &/*nwave*/,
                          size_t const /*num_coeff*/, float *spec, bool *mask, float *rms) {
                        status = LIBSAKURA_SYMBOL(LSQFitCubicSplineFloat)(
-                         bl_contexts[cidx], static_cast<uint16_t>(npiece_vect[0]),
+                         context, static_cast<uint16_t>(npiece_vect[0]),
                          num_chan, spec, mask, clip_threshold_sigma, num_fitting_max,
                          nullptr, nullptr, spec, mask, rms, boundary_data, &bl_status);
                        check_sakura_status("sakura_LSQFitCubicSplineFloat", status);
@@ -1873,8 +1965,34 @@ void SingleDishMS::subtractBaselineSinusoid(string const& in_column_name,
   LIBSAKURA_SYMBOL(LSQFitStatus) bl_status;
   std::vector<LIBSAKURA_SYMBOL(LSQFitContextFloat) *> bl_contexts;
   bl_contexts.clear();
+  LIBSAKURA_SYMBOL(LSQFitContextFloat) *context = nullptr;
   size_t bltype = BaselineType_kSinusoid;
 
+  auto wn_ulimit_by_rejwn = [&](){
+    return ((rejwn.size() == 2) &&
+            (rejwn[1] == SinusoidWaveNumber_kUpperLimit)); };
+  auto par_spectrum_context = [&](){
+    return (applyfft && !wn_ulimit_by_rejwn());
+  };
+  auto prepare_context = [&](LIBSAKURA_SYMBOL(LSQFitContextFloat) const *context0,
+                             size_t const num_chan, std::vector<size_t> const &nwave){
+    if (par_spectrum_context()) {
+      status = LIBSAKURA_SYMBOL(CreateLSQFitContextSinusoidFloat)(
+                 static_cast<uint16_t>(nwave[nwave.size()-1]),
+                 num_chan, &context);
+      check_sakura_status("sakura_CreateLSQFitContextSinusoidFloat", status);
+    } else {
+      context = const_cast<LIBSAKURA_SYMBOL(LSQFitContextFloat) *>(context0);
+    }
+  };
+  auto clear_context = [&](){
+    if (par_spectrum_context()) {
+      status = LIBSAKURA_SYMBOL(DestroyLSQFitContextFloat)(context);
+      check_sakura_status("sakura_DestoyBaselineContextFloat", status);
+      context = nullptr;
+    }
+  };
+  
   doSubtractBaseline(in_column_name,
                      out_ms_name,
                      out_bloutput_name,
@@ -1895,39 +2013,45 @@ void SingleDishMS::subtractBaselineSinusoid(string const& in_column_name,
                      avg_limit,
                      minwidth,
                      edge,
-                     [&](size_t const cidx, size_t const num_chan, std::vector<size_t> const &nwave,
+                     [&](LIBSAKURA_SYMBOL(LSQFitContextFloat) const *context0,
+                         size_t const num_chan, std::vector<size_t> const &nwave,
                          float *spec, bool *mask, size_t const num_coeff, double *coeff,
                          bool *mask2, float *rms) {
+                       prepare_context(context0, num_chan, nwave);
                        status = LIBSAKURA_SYMBOL(LSQFitSinusoidFloat)(
-                         bl_contexts[cidx], nwave.size(), &nwave[0],
+                         context, nwave.size(), &nwave[0],
                          num_chan, spec, mask, clip_threshold_sigma, num_fitting_max,
                          num_coeff, coeff, nullptr, nullptr, mask2, rms, &bl_status);
                        check_sakura_status("sakura_LSQFitSinusoidFloat", status);
-                       if (bl_status != LIBSAKURA_SYMBOL(LSQFitStatus_kOK)) {
-                         throw(AipsError("baseline fitting isn't successful."));
-                       }
+                       check_baseline_status(bl_status);
                      },
                      [&](size_t ipol, std::vector<std::vector<double> > &ffpar_mtx_tmp, size_t &num_ffpar_max) {
                        size_t num_ffpar = get_num_coeff_bloutput(bltype, addwn.size(), num_ffpar_max);
                        ffpar_mtx_tmp[ipol].resize(num_ffpar);
                      },
-                     [&](size_t const cidx, size_t const num_chan, std::vector<size_t> const &nwave,
+                     [&](LIBSAKURA_SYMBOL(LSQFitContextFloat) const *context0,
+                         size_t const num_chan, std::vector<size_t> const &nwave,
                          float *spec, size_t num_coeff, double *coeff) {
+                       if (!par_spectrum_context()) {
+                         context = const_cast<LIBSAKURA_SYMBOL(LSQFitContextFloat) *>(context0);
+                       }
                        status = LIBSAKURA_SYMBOL(SubtractSinusoidFloat)(
-                         bl_contexts[cidx], num_chan, spec, nwave.size(), &nwave[0],
+                         context, num_chan, spec, nwave.size(), &nwave[0],
                          num_coeff, coeff, spec);
                        check_sakura_status("sakura_SubtractSinusoidFloat", status);
+                       clear_context();
                      },
-                     [&](size_t const cidx, size_t const num_chan, std::vector<size_t> const &nwave,
+                     [&](LIBSAKURA_SYMBOL(LSQFitContextFloat) const *context0,
+                         size_t const num_chan, std::vector<size_t> const &nwave,
                          size_t const num_coeff, float *spec, bool *mask, float *rms) {
+                       prepare_context(context0, num_chan, nwave);
                        status = LIBSAKURA_SYMBOL(LSQFitSinusoidFloat)(
-                         bl_contexts[cidx], nwave.size(), &nwave[0], 
+                         context, nwave.size(), &nwave[0], 
                          num_chan, spec, mask, clip_threshold_sigma, num_fitting_max,
                          num_coeff, nullptr, nullptr, spec, mask, rms, &bl_status);
                        check_sakura_status("sakura_LSQFitSinusoidFloat", status);
-                       if (bl_status != LIBSAKURA_SYMBOL(LSQFitStatus_kOK)) {
-                         throw(AipsError("baseline fitting isn't successful."));
-                       }
+                       check_baseline_status(bl_status);
+                       clear_context();
                      },
                      os
                      );
