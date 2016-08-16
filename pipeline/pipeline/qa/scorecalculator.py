@@ -1343,7 +1343,7 @@ def score_sd_line_detection_for_ms(group_id_list, field_id_list, spw_id_list, li
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
 
 
-@log_qa
+#@log_qa
 def score_checksources(mses, fieldname, spwid, imagename):
     """
     Score a single field image of a point source by comparing the source
