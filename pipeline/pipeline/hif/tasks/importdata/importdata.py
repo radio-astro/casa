@@ -425,6 +425,9 @@ def read_fluxes(ms, dbservice=True):
     # actually present in the measurement set.
     all_ms_spw_ids = {spw.id for spw in ms.spectral_windows}
 
+    # SCIREQ-852: MS spw IDs != ASDM spw ids
+    asdm_to_ms_spw_map = get_asdm_to_ms_spw_mapping(ms)
+
     for row in source_element.findall('row'):
         flux_text = row.findtext('flux')
         frequency_text = row.findtext('frequency')
@@ -439,17 +442,16 @@ def read_fluxes(ms, dbservice=True):
         _, asdm_spw_id = string.split(spw_element, '_')
 
         # SCIREQ-852: MS spw IDs != ASDM spw ids
-        asdm_to_ms_spw_map = get_asdm_to_ms_spw_mapping(ms)
         spw_id = asdm_to_ms_spw_map.get(int(asdm_spw_id), None)
         if spw_id not in all_ms_spw_ids:
             LOG.warning('Could not map ASDM spectral window {!s} to MS '
-                        'spectral window'.format(asdm_spw_id))
+                        'for {!s}'.format(asdm_spw_id, ms.basename))
             continue
 
         source_id = int(source_element)
         if source_id >= len(ms.sources):
             LOG.warning('Source.xml refers to source #{!s}, which was not '
-                        'found in the measurement set'.format(source_id))
+                        'found in {!s}'.format(source_id, ms.basename))
             continue
         source = ms.sources[int(source_id)]
 
@@ -497,15 +499,15 @@ def read_fluxes(ms, dbservice=True):
             # the reduce function with an empty accumulator
             mean_iquv = [reduce(lambda x, y: x + y, stokes)/len(joint_closest) for stokes in zip(*joint_closest)]
 
-            LOG.info('Closest flux measurement for spw {!s} found {!s} '
-                     'distant from centre of spw)'.format(spw_id, min_delta))
+            LOG.info('Closest flux measurement for {!s} spw {!s} found {!s} '
+                     'distant from centre of spw)'.format(ms.basename, spw_id, min_delta))
 
             # Even if a mean was calculated, any alternative selection should
             # be equally distant and therefore outside the sow range too
             if not spw.min_frequency < closest_frequency < spw.max_frequency:
                 # This might become a warning once the PRTSPR-20823 fix is active
-                LOG.info('Closest flux measurement for spw {!s} falls outside'
-                         'spw, {!s} distant from spectral window centre'.format(spw_id, min_delta))
+                LOG.info('Closest flux measurement for {!s} spw {!s} falls outside'
+                         'spw, {!s} distant from spectral window centre'.format(ms.basename, spw_id, min_delta))
 
             m = domain.FluxMeasurement(spw_id, *mean_iquv)
 
