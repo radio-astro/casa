@@ -22,10 +22,6 @@ class MakeImagesQAHandler(pqa.QAResultHandler):
         if (len(result.results) > 0):
             score_objects = reduce(lambda x,y: x+y, [item.qa.pool for item in result.results])
             result.qa.pool[:] = score_objects
-            score_values = [score_object.score for score_object in score_objects]
-            min_score_index = score_values.index(min(score_values))
-            min_score = score_objects[min_score_index]
-            result.qa.representative = min_score
         else:
             result.qa.pool[:] = [pqa.QAScore(-0.1, longmsg='No imaging results found', shortmsg='No imaging results')]
 
