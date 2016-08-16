@@ -251,35 +251,40 @@ Bool StatWT::update_variances(std::map<uInt, Vector<uInt> >& ns,
   Vector<uInt> unflagged(nChan);
   Vector<Int> a1(vb.antenna1());
   Vector<Int> a2(vb.antenna2());
-  Complex vis, vmoldmean, vmmean;
 
   for(uInt r = 0; r < nRows; ++r){
     if(!vb.flagRow()[r]){
       uInt hr = hashFunction(a1[r], a2[r], maxAnt);
+      // setup defaults, clear on all-flagged not needed as variances == 0 is
+      // skipped in apply_variances
+      if(!ns.count(hr)){
+        ns[hr] = Vector<uInt>(nCorr, 0);
+        means[hr] = Vector<Complex>(nCorr, 0);
+        variances[hr] = Vector<Double>(nCorr, 0);
+      }
+      Vector<uInt> & vns = ns[hr];
+      Vector<Complex> & vmeans = means[hr];
+      Vector<Double> & vvariances = variances[hr];
 
       for(uInt corr = 0; corr < nCorr; ++corr){
-	  for(uInt ch = 0; ch < nChan; ++ch){
-	    if(!chanmaskedflags(corr, ch, r) && !vb.flagCube()(corr,ch,r)){
-	      if(!ns.count(hr)){
-		ns[hr] = Vector<uInt>(nCorr, 0);
-		means[hr] = Vector<Complex>(nCorr, 0);
-		variances[hr] = Vector<Double>(nCorr, 0);
-	      }
-	      ++ns[hr][corr];
-	      vis = data(corr, ch, r);
-	      vmoldmean = vis - means[hr][corr];
+        for(uInt ch = 0; ch < nChan; ++ch){
+          if(!chanmaskedflags(corr, ch, r) && !vb.flagCube()(corr,ch,r)){
+            Complex vis, vmoldmean, vmmean;
+            ++vns[corr];
+            vis = data(corr, ch, r);
+            vmoldmean = vis - vmeans[corr];
 
-	      if(!dorms_p)  // It's not that Complex / Int isn't defined, it's
-			    // that it is, along with Complex / Double, creating
-			    // an ambiguity.
-		means[hr][corr] += vmoldmean / static_cast<Double>(ns[hr][corr]);
+            if(!dorms_p)  // It's not that Complex / Int isn't defined, it's
+                          // that it is, along with Complex / Double, creating
+                          // an ambiguity.
+              vmeans[corr] += vmoldmean / static_cast<Double>(vns[corr]);
 
-	      // This term is guaranteed to have its parts be nonnegative.
-	      vmmean = vis - means[hr][corr];
-	      variances[hr][corr] += vmmean.real() * vmoldmean.real() +
-				     vmmean.imag() * vmoldmean.imag();
-	    }
-	  }
+            // This term is guaranteed to have its parts be nonnegative.
+            vmmean = vis - vmeans[corr];
+            vvariances[corr] += vmmean.real() * vmoldmean.real() +
+                                vmmean.imag() * vmoldmean.imag();
+          }
+        }
       }
     }
   }
