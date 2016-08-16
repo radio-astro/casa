@@ -225,7 +225,7 @@ class Tclean(cleanbase.CleanBase):
         spw_topo_chan_param, \
         spw_topo_freq_param_dict, \
         spw_topo_chan_param_dict, \
-        total_topo_bw, aggregate_topo_bw = \
+        total_topo_bw, aggregate_topo_bw, eff_ch_bw = \
             self._do_sensitivity()
         LOG.info('Sensitivity estimate: %s Jy', sensitivity)
 
@@ -280,6 +280,7 @@ class Tclean(cleanbase.CleanBase):
         # TODO: Record total bandwidth as opposed to range
         #       Save channel selection in result for weblog.
         result.set_aggregate_bw(aggregate_topo_bw)
+        result.set_eff_ch_bw(eff_ch_bw)
         result.set_min_sensitivity(min_sensitivity)
         result.set_max_sensitivity(max_sensitivity)
         result.set_min_field_id(min_field_id)
@@ -562,6 +563,7 @@ class Tclean(cleanbase.CleanBase):
         max_sensitivities = []
         min_field_ids = []
         max_field_ids = []
+        eff_ch_bw = 0.0
         for ms in targetmslist:
             detailed_field_sensitivities[os.path.basename(ms.name)] = {}
             for intSpw in [int(s) for s in spw.split(',')]:
@@ -583,7 +585,7 @@ class Tclean(cleanbase.CleanBase):
                         field_sensitivities = []
                         for field_id in [f.id for f in ms.fields if (utils.dequote(f.name) == utils.dequote(field) and inputs.intent in f.intents)]:
                             try:
-                                field_sensitivity = self._get_sensitivity(ms, field_id, intSpw, chansel)
+                                field_sensitivity, eff_ch_bw = self._get_sensitivity(ms, field_id, intSpw, chansel)
                                 if (field_sensitivity > 0.0):
                                     field_sensitivities.append(field_sensitivity)
                                     detailed_field_sensitivities[os.path.basename(ms.name)][intSpw][field_id] = field_sensitivity
@@ -616,7 +618,7 @@ class Tclean(cleanbase.CleanBase):
                         # Still need to loop over field ID with proper intent for single field case
                         field_sensitivities = []
                         for field_id in [f.id for f in ms.fields if (utils.dequote(f.name) == utils.dequote(field) and inputs.intent in f.intents)]:
-                            field_sensitivity = self._get_sensitivity(ms, field_id, intSpw, chansel)
+                            field_sensitivity, eff_ch_bw = self._get_sensitivity(ms, field_id, intSpw, chansel)
                             if (field_sensitivity > 0.0):
                                 field_sensitivities.append(field_sensitivity)
                         # Check if we have anything
@@ -654,7 +656,7 @@ class Tclean(cleanbase.CleanBase):
             min_field_id = None
             max_field_id = None
 
-        return sensitivity, min_sensitivity, max_sensitivity, min_field_id, max_field_id, spw_topo_freq_param, spw_topo_chan_param, spw_topo_freq_param_dict, spw_topo_chan_param_dict, total_topo_bw, aggregate_topo_bw
+        return sensitivity, min_sensitivity, max_sensitivity, min_field_id, max_field_id, spw_topo_freq_param, spw_topo_chan_param, spw_topo_freq_param_dict, spw_topo_chan_param_dict, total_topo_bw, aggregate_topo_bw, eff_ch_bw
 
     def _get_sensitivity(self, ms_do, field, spw, chansel):
         """
@@ -730,9 +732,9 @@ class Tclean(cleanbase.CleanBase):
                     LOG.info('Could not calculate sensitivity for MS %s Field %s SPW %s ChanRange %s: %s' % (os.path.basename(ms_do.name), field, spw, chanrange, e))
 
         if (len(chansel_sensitivities) > 0):
-            return 1.0 / numpy.sqrt(numpy.sum(1.0 / numpy.array(chansel_sensitivities)**2))
+            return 1.0 / numpy.sqrt(numpy.sum(1.0 / numpy.array(chansel_sensitivities)**2)), effectiveBW_of_1chan
         else:
-            return 0.0
+            return 0.0, effectiveBW_of_1chan
 
     def _do_continuum(self, cont_image_name, mode):
         """

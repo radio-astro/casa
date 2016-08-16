@@ -40,6 +40,7 @@ class TcleanResult(basetask.Results):
         self._flux = None
         self.iterations = collections.defaultdict(dict)
         self._aggregate_bw = 0.0
+        self._eff_ch_bw = 0.0
         self._sensitivity = 0.0
         self._min_sensitivity = None
         self._max_sensitivity = None
@@ -150,6 +151,13 @@ class TcleanResult(basetask.Results):
 
     def set_aggregate_bw(self, aggregate_bw):
         self._aggregate_bw = aggregate_bw
+
+    @property
+    def eff_ch_bw(self):
+        return self._eff_ch_bw
+
+    def set_eff_ch_bw(self, eff_ch_bw):
+        self._eff_ch_bw = eff_ch_bw
 
     @property
     def sensitivity(self):

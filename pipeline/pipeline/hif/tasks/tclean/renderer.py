@@ -69,10 +69,8 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                     coord_names = numpy.array(coordsys.names())
                     coord_refs = coordsys.referencevalue(format='s')
                     pol = coord_refs['string'][coord_names == 'Stokes'][0]
-                    frequency = coord_refs['string'][coord_names == 'Frequency'][0]
-                    frequency = qaTool.convert(frequency, 'GHz')
-                    info_dict[(field, spw, pol, 'frequency')] = frequency
                     info_dict[(field, spw, pol, 'image name')] = image.name(strippath=True)
+
                     stats = image.statistics(robust=False)
                     beam = image.restoringbeam()
                     if 'beams' in beam:
@@ -118,8 +116,17 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                     aggregate_bw_text = '%.3g GHz' % (aggregate_bw_GHz)
                     info_dict[(field, spw, pol, 'aggregate bandwidth')] = aggregate_bw_text
 
+                    eff_ch_bw_MHz = qaTool.convert(r.eff_ch_bw, 'MHz')['value']
+                    eff_ch_bw_text = '%.5g MHz (LSRK)' % (eff_ch_bw_MHz)
+                    info_dict[(field, spw, pol, 'effective channel bandwidth')] = eff_ch_bw_text
+
                     try:
                         frequency_axis = list(summary['axisnames']).index('Frequency')
+
+                        center_frequency = summary['refval'][frequency_axis] + (summary['shape'][frequency_axis] / 2.0 - 0.5 - summary['refpix'][frequency_axis]) * summary['incr'][frequency_axis]
+                        center_frequency = qaTool.convert('%s %s' % (center_frequency, summary['axisunits'][frequency_axis]), 'GHz')
+                        info_dict[(field, spw, pol, 'frequency')] = center_frequency
+
                         frequency1 = summary['refval'][frequency_axis] + (-0.5 - summary['refpix'][frequency_axis]) * summary['incr'][frequency_axis]
                         frequency2 = summary['refval'][frequency_axis] + (summary['shape'][frequency_axis] - 0.5 - summary['refpix'][frequency_axis]) * summary['incr'][frequency_axis]
                         full_bw_GHz = qaTool.convert(abs(frequency2 - frequency1), 'GHz')['value']

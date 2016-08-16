@@ -96,7 +96,7 @@ except:
                                 <td rowspan="11">${field}</td>
                                 <td rowspan="11">${spw}</td>
                                 <td rowspan="11">${pol}</td>
-								<th>frequency</th>
+								<th>center frequency of cube</th>
 								<td>${casatools.quanta.tos(info_dict[(field,str(spw),pol,'frequency')], 4)} (LSRK)</td>
                                 <% 
                                 try:
@@ -221,10 +221,24 @@ except:
                                 %endif
                             </tr>
                             <tr>
+                                %if info_dict.get((field,str(spw),pol,'nchan')) is not None:
+                                    %if info_dict[(field,str(spw),pol,'nchan')] > 1:
+                                        <th>effective channel bandwidth</th>
+                                        %if info_dict.get((field,str(spw),pol,'effective channel bandwidth')) is not None:
+                                            <td>${info_dict[(field,str(spw),pol,'effective channel bandwidth')]}</td>
+                                        %else:
+                                            <td>-</td>
+                                        %endif
+                                    %else:
                                         <th>aggregate bandwidth</th>
-                                %if info_dict.get((field,str(spw),pol,'aggregate bandwidth')) is not None:
+                                        %if info_dict.get((field,str(spw),pol,'aggregate bandwidth')) is not None:
                                             <td>${info_dict[(field,str(spw),pol,'aggregate bandwidth')]}</td>
+                                        %else:
+                                            <td>-</td>
+                                        %endif
+                                    %endif
                                 %else:
+                                        <th>No bandwidth information</th>
                                             <td>-</td>
                                 %endif
                             </tr>
