@@ -295,7 +295,7 @@ class getchunk_test(unittest.TestCase):
         myia.done()
         exp = numpy.mean(bb)
         got = res['values'][0]
-        self.assertLess(abs((got - exp)/exp), 1e-5)
+        self.assertLess(abs((got - exp)/exp), 1.25e-5)
 
 def suite():
     return [getchunk_test]
