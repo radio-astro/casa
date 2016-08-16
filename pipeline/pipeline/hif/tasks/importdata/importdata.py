@@ -420,11 +420,6 @@ def read_fluxes(ms, dbservice=True):
                  'Attempting database query.', source_table)
         return flux_nosourcexml(ms, dbservice=dbservice)
 
-    # Empty spws that follow non-empty spws can be pruned from MMS data. This
-    # set is used to check whether the Source.xml entries refer to spws
-    # actually present in the measurement set.
-    all_ms_spw_ids = {spw.id for spw in ms.spectral_windows}
-
     for row in source_element.findall('row'):
         flux_text = row.findtext('flux')
         frequency_text = row.findtext('frequency')
@@ -441,7 +436,7 @@ def read_fluxes(ms, dbservice=True):
         # SCIREQ-852: MS spw IDs != ASDM spw ids
         asdm_to_ms_spw_map = get_asdm_to_ms_spw_mapping(ms)
         spw_id = asdm_to_ms_spw_map.get(int(asdm_spw_id), None)
-        if spw_id not in all_ms_spw_ids:
+        if spw_id is None:
             LOG.warning('Could not map ASDM spectral window {!s} to MS '
                         'spectral window'.format(asdm_spw_id))
             continue
