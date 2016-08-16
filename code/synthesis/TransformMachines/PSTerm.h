@@ -120,7 +120,7 @@ namespace casa{
     {return 0;};
 
     Int getConvSize() {return 0;};
-    Int getOversampling() {return 1;};
+    Int getOversampling() {return 20;};
     Float getConvWeightSizeFactor() {return 1.0;};
 
     Bool rotationallySymmetric() {return True;};

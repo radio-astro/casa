@@ -111,7 +111,7 @@ namespace casa{
 
 
     Int getConvSize() {return 0;};
-    Int getOversampling() {return 1;};
+    Int getOversampling() {return 4;};
     Float getConvWeightSizeFactor() {return 1.0;};
   };
 

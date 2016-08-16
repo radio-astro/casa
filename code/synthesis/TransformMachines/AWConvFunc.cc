@@ -443,7 +443,7 @@ namespace casa{
 		    // support sizes.
 		    //
 		    //tim.mark();
-		    Int supportBuffer = (Int)(aTerm_p->getOversampling()*1.5);
+		    Int supportBuffer = (Int)(getOversampling(psTerm, wTerm, aTerm)*1.5);
 		    if (!isDryRun)
 		      {
 			if (iw==0) wtcpeak = max(cfWtBuf);
@@ -714,7 +714,7 @@ namespace casa{
 				    const CountedPtr<PolOuterProduct>& pop,
 				    const Float pa,
 				    const Float dpa,
-				    const Vector<Double>& uvScale, const Vector<Double>& uvOffset,
+				    const Vector<Double>& uvScale, const Vector<Double>& /*uvOffset*/,
 				    const Matrix<Double>& ,//vbFreqSelection,
 				    CFStore2& cfs2,
 				    CFStore2& cfwts2,
@@ -766,7 +766,8 @@ namespace casa{
     //
     // Set up the convolution function. 
     //
-    convSampling=aTerm_p->getOversampling();
+    //convSampling=aTerm_p->getOversampling();
+    convSampling=getOversampling(*psTerm_p, *wTerm_p, *aTerm_p);
     convSize=aTerm_p->getConvSize();
 //    cout<<"Conv Sampling listed in aipsrc is : "<<convSampling<<endl;
 //    cout<<"Conv Size is : "<<convSize<<endl;
@@ -964,6 +965,8 @@ namespace casa{
 	      {
 		Int npol=0;
 		for (uInt ipolx=0;ipolx<polMap.nelements();ipolx++)
+		  {
+		    npol=0;
 		  for (uInt ipoly=0;ipoly<polMap(ipolx).nelements();ipoly++)
 		    {
 		      // Now make a CS with a single appropriate
@@ -1001,6 +1004,7 @@ namespace casa{
 		      			 freqValues(inu), wValues(iw), polMap(ipolx)(ipoly));
 		      pm.update((Double)cfDone++);
 		    }
+	      }
 		} // End of loop over Mueller elements.
 	  } // End of loop over w
 	//
@@ -1064,7 +1068,7 @@ namespace casa{
       threshold   = real(abs(func(IPosition(4,convFuncOrigin,convFuncOrigin,0,0))));
 
     //threshold *= aTerm_p->getSupportThreshold();
-    threshold *= 1e-3;
+    threshold = 1e-3;
     //    threshold *=  0.1;
     // if (aTerm_p->isNoOp()) 
     //   threshold *= 1e-3; // This is the threshold used in "standard" FTMchines
@@ -1723,7 +1727,8 @@ namespace casa{
 
 	//tim.mark();
 	// if (!isDryRun)
-	Int supportBuffer = (Int)(aTerm.getOversampling()*1.5);
+	//	Int supportBuffer = (Int)(aTerm.getOversampling()*1.5);
+	Int supportBuffer = (Int)(AWConvFunc::getOversampling(psTerm, wTerm, aTerm)*1.5);
 
 	AWConvFunc::resizeCF(cfWtBuf, xSupportWt, ySupportWt, supportBuffer, samplingWt,0.0);
 	//tim.show("Resize:");
@@ -1904,5 +1909,13 @@ namespace casa{
     // Directory dir(uvGridDiskImage);
     // dir.removeRecursive(False);
     // dir.remove();
+  }
+  Int AWConvFunc::getOversampling(PSTerm& psTerm, WTerm& wTerm, ATerm& aTerm)
+  {
+    Int os;
+    if (!aTerm.isNoOp()) os=aTerm.getOversampling();
+    else if (!wTerm.isNoOp()) os=wTerm.getOversampling();
+    else os=psTerm.getOversampling();
+    return os;
   }
 };

@@ -139,6 +139,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			       const Float& sampling, const Complex& peak);
     static Bool resizeCF(Array<Complex>& func,  Int& xSupport, Int& ySupport,
 			 const Int& supportBuffer, const Float& sampling, const Complex& peak);
+    static Int getOversampling(PSTerm& psTerm, WTerm& wTerm, ATerm& aTerm);
     virtual CountedPtr<CFTerms> getTerm(const String& name)
     {if (name=="ATerm") return aTerm_p; else return NULL;}
     
