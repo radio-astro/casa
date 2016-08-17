@@ -272,6 +272,8 @@ void CalCache::loadCalChunks(ROCTIter& ci,
       String pol = selection_.corr();
       if (pol=="" || pol=="RL" || pol=="XY") { // no selection
         nPol = pshape[0];
+        // half the data for EVLASWP table is swp, half is tsys
+        if (calType_.contains("EVLASWP")) nPol = pshape[0]/2;
         pol = "";
       } else { // poln selection using calParSlice
         String paramAxis = toVisCalAxis(PMS::AMP);
@@ -421,6 +423,8 @@ void CalCache::loadCalChunks(ROCTIter& ci,
         } else {        
             *amp_[chunk] = fArray(parSlice1, Slice(), Slice());
         }
+        if (calType_[0] == 'F') // TEC table
+            (*amp_[chunk]) /= Float(1e+16);
     }
     break;
   }
@@ -500,7 +504,7 @@ void CalCache::loadCalChunks(ROCTIter& ci,
   }
 
   case PMS::SWP: {   // "SPGAIN" in plotcal
-    if ( !parsAreComplex() && calType_=="EVLASWPOW") {
+    if ( !parsAreComplex() && calType_.contains("EVLASWPOW")) {
         Cube<Float> fArray = cti.fparam();
         if (polnRatio_) {
             Array<Float> swpRatio = fArray(parSlice1, Slice(), Slice()) / fArray(parSlice2, Slice(), Slice());
@@ -515,7 +519,7 @@ void CalCache::loadCalChunks(ROCTIter& ci,
   }
 
   case PMS::TSYS: {
-	if ( !parsAreComplex() && (calType_=="EVLASWPOW" || calType_.contains("TSYS"))) {
+	if ( !parsAreComplex() && (calType_.contains("EVLASWPOW") || calType_.contains("TSYS"))) {
         Cube<Float> fArray = cti.fparam();
         if (polnRatio_) {
             Array<Float> tsysRatio = fArray(parSlice1, Slice(), Slice()) / fArray(parSlice2, Slice(), Slice());
@@ -543,7 +547,7 @@ void CalCache::loadCalChunks(ROCTIter& ci,
    case PMS::TEC: {
 	if ( !parsAreComplex() && calType_[0]=='F') {
         Cube<Float> fArray = cti.fparam();
-        *par_[chunk] = fArray(parSlice1, Slice(), Slice());
+        *par_[chunk] = (fArray(parSlice1, Slice(), Slice()))/1e+16;
     } else
         throw(AipsError( "TEC has no meaning for this table"));
     break;
@@ -810,7 +814,7 @@ String CalCache::toVisCalAxis(PMS::Axis axis) {
         case PMS::GAMP:
         case PMS::FLAG:
         case PMS::SNR:
-            if (calType_ == "EVLASWP") return "GAINAMP";
+            if (calType_.contains("EVLASWP")) return "GAINAMP";
             if (calType_.contains("TSYS")) return "TSYS";
             if (calType_[0] == 'K') return "DELAY";
             if (calType_[0] == 'F') return "TEC";
@@ -828,9 +832,6 @@ String CalCache::toVisCalAxis(PMS::Axis axis) {
         case PMS::IMAG:
         case PMS::GIMAG:
             return "IMAG";
-            break;
-        case PMS::SWP:
-            return "GAINAMP";
             break;
         default:
             return PMS::axis(axis);

@@ -604,6 +604,16 @@ Slice calParSliceByType(String caltype, String what, String pol)
     else
       throw(AipsError("Unsupported value type: "+what));
   }
+  else if (caltype.contains("EVLASWP")) {
+      // caltype = "G EVLASWPOW" so put before "G" !
+    i=2;  // 2 pars-per-pol
+    if ((what=="GAINAMP") || (what=="SWPOWER"))
+      s=0;
+    else if (what=="TSYS")
+      s=1;
+    else
+      throw(AipsError("Unsupported value type: "+what));
+  }
   else if ((caltype[0]=='G' && caltype!="GSPLINE") ||
             caltype[0]=='B' ||
             caltype[0]=='D') {
@@ -638,16 +648,6 @@ Slice calParSliceByType(String caltype, String what, String pol)
         throw(AipsError("Unsupported value type: "+what));
       }
   }
-  else if (caltype.contains("EVLASWP")) {
-    i=2;  // 2 pars-per-pol
-    if (what=="GAINAMP")
-      s=0;
-    else if (what=="TSYS")
-      s=1;
-    else
-      throw(AipsError("Unsupported value type: "+what));
-  }
-  
   else if (caltype[0]=='F') {
     if (what=="TEC") {
       if (pol=="")
