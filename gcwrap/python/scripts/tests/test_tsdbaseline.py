@@ -553,6 +553,7 @@ class tsdbaseline_unittest_base(unittest.TestCase):
 #                         %(out,reference))
 
 
+
 class tsdbaseline_basicTest(tsdbaseline_unittest_base):
     """
     Basic unit tests for task tsdbaseline. No interactive testing.
@@ -562,22 +563,23 @@ class tsdbaseline_basicTest(tsdbaseline_unittest_base):
     test001 --- polynominal baselining with no mask (maskmode = 'list'). spw and pol specified.
     test002 --- Chebyshev polynominal baselining with no mask (maskmode = 'list'). spw and pol specified.
     test003 --- cubic spline baselining with no mask (maskmode = 'list'). spw and pol specified.
+    test004 --- sinusoidal baselining with no mask (maskmode = 'list'). spw and pol specified.
     test050 --- existing file as outfile with overwrite=False (raises an exception)
     test051 --- no data after selection (raises an exception)
 
-    Note: input data is generated from a single dish regression data,
-    'OrionS_rawACSmod', as follows:
-      default(sdcal)
-      sdcal(infile='OrionS_rawACSmod',scanlist=[20,21,22,23],
+    Note: The input data 'OrionS_rawACSmod_calave.ms' is generated
+          from a single dish regression data 'OrionS_rawACSmod' as follows:
+          
+          default(sdcal)
+          sdcal(infile='OrionS_rawACSmod',scanlist=[20,21,22,23],
                 calmode='ps',tau=0.09,outfile='temp.asap')
-      default(sdcal)
-      sdcal(infile='temp.asap',timeaverage=True,
+          default(sdcal)
+          sdcal(infile='temp.asap',timeaverage=True,
                 tweight='tintsys',outfile='temp2.asap')
-      sdsave(infile='temp2.asap',outformat='MS2',
-                outfile='OrionS_rawACSmod_calave.ms')
+          sdsave(infile='temp2.asap',outformat='MS2',
+                 outfile='OrionS_rawACSmod_calave.ms')
     """
     # Input and output names
-    #infile = 'OrionS_rawACSmod_calTave.asap'
     infile = 'OrionS_rawACSmod_calave.ms'
     outroot = tsdbaseline_unittest_base.taskname+'_basictest'
     blrefroot = tsdbaseline_unittest_base.datapath+'refblparam'
@@ -762,10 +764,10 @@ class tsdbaseline_basicTest(tsdbaseline_unittest_base):
         tb.close()
         variance_pol1 = numpy.var(pol1_value)
 
-        #assert pol1_value < prig_pol1_value
+        #assert pol1_value < orig_pol1_value
         self.assertTrue((pol1_value<orig_pol1_value).all())
         
-        #assert variance of pol1_value < variance of prig_pol1_value
+        #assert variance of pol1_value < variance of orig_pol1_value
         self.assertLess(variance_pol1**0.5, variance_orig_pol1**0.5)
 
         #print '1sigma before cspline (pol1)', variance_orig_pol1**0.5 
@@ -921,6 +923,84 @@ class tsdbaseline_maskTest(tsdbaseline_unittest_base):
             return str(valrange[0])+'~'+str(valrange[1])
         else:
             return False
+
+
+class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
+    """
+    Tests for sinusoidal baseline fitting. No interactive testing.
+
+    List of tests:
+    test000 --- addwn as integer
+    test001 --- addwn as list of integer
+    test002 --- addwn as string
+
+    Note: The input data 'sinusoidal.ms' has just two spectral data,
+          which are actually identical and described as 
+          spec[i] = sin(i*2*PI/8191) + 4 * sin(i*2*PI/8191*3)
+                    + 8 * sin(i*2*PI/8191*5) + 2 * sin(i*2*PI/8191*12).
+          addwn='1,3,5,12' will be enough to perfectly fit this spectrum, but
+          applyfft=True and fftthresh='top4' will also do.
+    """
+    # Input and output names
+    infile = 'sinusoidal.ms'
+    outroot = tsdbaseline_unittest_base.taskname + '_sinusoidtest'
+    tid = None
+
+    def setUp(self):
+        if os.path.exists(self.infile):
+            shutil.rmtree(self.infile)
+        shutil.copytree(self.datapath+self.infile, self.infile)
+
+        default(tsdbaseline)
+
+        if os.path.exists(self.infile+'_blparam.txt'):
+            os.remove(self.infile+ '_blparam.txt')
+        if os.path.exists(self.infile+'_blparam.csv'):
+            os.remove(self.infile+ '_blparam.csv')
+        if os.path.exists(self.infile+'_blparam.btable'):
+            shutil.rmtree(self.infile+ '_blparam.btable')
+
+    def tearDown(self):
+        if (os.path.exists(self.infile)):
+            pass
+            shutil.rmtree(self.infile)
+        os.system('rm -rf '+self.outroot+'*')
+
+    def test000(self):
+        """Sinusoid Test 000: addwn as integer"""
+        tid = '000'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        addwn = 0
+        result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                             blfunc='sinusoid',addwn=addwn,applyfft=True,fftthresh='top4')
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+
+    def test001(self):
+        """Sinusoid Test 001: addwn as list of integer"""
+        tid = '001'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        addwn = [0]
+        result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                             blfunc='sinusoid',addwn=addwn,applyfft=True,fftthresh='top4')
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+
+    def test002(self):
+        """Sinusoid Test 002: addwn as string"""
+        tid = '002'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        addwn = '0'
+        result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                             blfunc='sinusoid',addwn=addwn,applyfft=True,fftthresh='top4')
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
 
 
 class tsdbaseline_multi_IF_test(tsdbaseline_unittest_base):
@@ -3895,6 +3975,7 @@ class tsdbaseline_selection(unittest.TestCase):
 def suite():
     return [tsdbaseline_basicTest, 
             tsdbaseline_maskTest,
+            tsdbaseline_sinusoidTest,
             tsdbaseline_outbltableTest,
             tsdbaseline_applybltableTest,
             tsdbaseline_variableTest,

@@ -1547,21 +1547,25 @@ def get_ms_sampling_arcsec(msname, spw='', antenna='', field='',
 def parse_wavenumber_param(wn):
     if isinstance(wn, list):
         _check_positive_or_zero(wn)
-        #return wn
         wn.sort()
         return ','.join(_get_strlist(wn))
     elif isinstance(wn, tuple):
         _check_positive_or_zero(wn)
-        #return wn
         wn_list = list(wn)
         wn_list.sort()
         return ','.join(_get_strlist(wn_list))
     elif isinstance(wn, int):
         _check_positive_or_zero(wn)
-        #return [ wn ]
         return str(wn)
     elif isinstance(wn, str):
-        if '-' in wn:                            # case 'a-b' : return [a,a+1,...,b-1,b]
+        if ',' in wn:                            # cases 'a,b,c,...'
+            val0 = wn.split(',')
+            _check_positive_or_zero(val0)
+            val = []
+            for v in val0: val.append(int(v))
+            res = list(set(val)) # uniq
+            res.sort()
+        elif '-' in wn:                          # case 'a-b' : return [a,a+1,...,b-1,b]
             val = wn.split('-')
             _check_positive_or_zero(val)
             val = [int(val[0]), int(val[1])]
@@ -1619,6 +1623,9 @@ def parse_wavenumber_param(wn):
             _check_positive_or_zero(val0)
             val = int(val0)+1
             res = [val, -999]
+        else:
+            _check_positive_or_zero(wn)
+            res = [int(wn)]
 
         #return res
         return ','.join(_get_strlist(res))
