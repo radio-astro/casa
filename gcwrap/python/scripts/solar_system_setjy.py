@@ -2,7 +2,7 @@
 #
 # bryan butler
 # nrao
-# spring 2012
+# spring 2012, summer 2016
 #
 # python functions to return expected flux density from solar system
 # bodies.  the flux density depends on the geometry (distance, size of
@@ -22,8 +22,8 @@
 # model calculations should be in the code (for those bodies that have
 # proper models) but for now, just live with the tabulated versions.
 #
-# version 1.1
-# last edited: 2012Oct03
+# version 2.0
+# last edited: 2016Aug15
 # Modified by TT to avoid uncessary file open: 2012Dec13
 
 
@@ -31,7 +31,6 @@ from numpy import searchsorted
 from scipy import array
 from scipy.interpolate import interp1d
 from math import exp, pi, cos, sin, isnan, sqrt
-#from os import environ, listdir
 import os
 from taskinit import gentools
 (tb,me)=gentools(['tb','me'])
@@ -41,12 +40,13 @@ HH = qa.constants('H')['value']
 KK = qa.constants('K')['value']
 CC = qa.constants('C')['value'] 
 
+
 class solar_system_setjy:
     def __init__(self):
         self.models={}
     
 
-    def solar_system_fd (self,source_name, MJDs, frequencies, observatory, casalog=None):
+    def solar_system_fd (self, source_name, MJDs, frequencies, observatory, casalog=None):
 	'''
 	find flux density for solar system bodies:
 	    Venus - Butler et al. 2001
@@ -59,11 +59,11 @@ class solar_system_setjy:
 	    Ganymede - Butler et al. 2012
 	    Titan - Gurwell et al. 2012
 	    Callisto - Butler et al. 2012
-	    Ceres - Keihm et al. 2012
-	    Juno - ?
-	    Pallas - Keihm et al. 2012
-	    Vesta - Keihm et al. 2012
-	    Hygeia - Keihm et al. 2012
+	    Ceres - Mueller (private communication)
+	    Juno - Butler et al. 2012
+	    Pallas - Mueller (private communication)
+	    Vesta - Mueller (private communication)
+	    Lutetia - Mueller (private communication)
 
 	inputs:
 	    source_name = source name string.  example: "Venus"
@@ -96,7 +96,7 @@ class solar_system_setjy:
 
 	bjb
 	nrao
-	spring/summer/fall 2012
+	spring/summer/fall 2012 + spring 2016
 	'''
 
 	RAD2ASEC = 2.0626480624710e5
@@ -104,6 +104,10 @@ class solar_system_setjy:
 	SUPPORTED_BODIES = [ 'Venus', 'Mars', 'Jupiter', 'Uranus', 'Neptune',
 			     'Io', 'Europa', 'Ganymede', 'Callisto', 'Titan',
 			     'Ceres', 'Juno', 'Pallas', 'Vesta', 'Hygeia' ]
+# those which have Tb (or f.d.) that is tabulated vs. time and frequency
+        TIME_VARIABLE_BODIES = [ 'Mars', 'Ceres', 'Pallas', 'Vesta', 'Lutetia' ]
+# those which are tabulations of flux density
+        MODEL_IS_FD_BODIES = [ 'Ceres', 'Pallas', 'Vesta', 'Lutetia' ]
 
 	capitalized_source_name = source_name.capitalize()
 	statuses = []
@@ -111,7 +115,6 @@ class solar_system_setjy:
 	dfds = []
 	Rhats = []
 	directions = []
-
     #
     # check that body is supported
     #
@@ -156,16 +159,12 @@ class solar_system_setjy:
     # only really important for mars, but do it for them all.
     #
 	ephemeris_path = os.environ['CASAPATH'].split()[0]+'/data/ephemerides/JPL-Horizons/'
-    #
-    # for testing only...
-    #
-    #    ephemeris_path = '/home/rishi/ttsutsum/casatest/fluxCal/ephem/'
-	file_list = os.listdir(ephemeris_path)
-	files = []
-	for efile in file_list:
-	    if (efile.split('_')[0] == capitalized_source_name and 'J2000' in efile):
-		files.append(efile)
-	file_OK = 0
+	ephemeris_file_list = os.listdir(ephemeris_path)
+	ephemeris_files = []
+	for ephemeris_file in ephemeris_file_list:
+	    if (ephemeris_file.split('_')[0] == capitalized_source_name and 'J2000' in ephemeris_file):
+		ephemeris_files.append(ephemeris_file)
+	ephemeris_file_OK = False
     #
     # ephemeris tables have the following keywords:
     # GeoDist, GeoLat, GeoLong, MJD0, NAME, VS_CREATE, VS_DATE, VS_TYPE,
@@ -178,22 +177,21 @@ class solar_system_setjy:
     # DiskLat respectively to be consistent with what column names assumed for
     # ephemeris tables by casacore's MeasComet class.
 
-	for efile in files:
-	    ephemeris_file = ephemeris_path + efile
-	    tb.open(ephemeris_file)
+	for ephemeris_file in ephemeris_files:
+	    tb.open(ephemeris_path + ephemeris_file)
 	    table_source_name = tb.getkeyword('NAME').capitalize()
 	    if (table_source_name != capitalized_source_name):
 		continue
 	    first_time = tb.getkeyword('earliest')['m0']['value']
 	    last_time = tb.getkeyword('latest')['m0']['value']
 	    if (first_time < MJDs[0] and last_time > MJDs[-1]):
-		file_OK = 1
+		ephemeris_file_OK = True
 		break
 	    tb.close()
     #
     # if we didn't find an ephemeris file, set the statuses and return.
     #
-	if (file_OK == 0):
+	if (not ephemeris_file_OK):
 	    for MJD in MJDs:
 		estatuses = []
 		efds = []
@@ -322,12 +320,12 @@ class solar_system_setjy:
     #       me.done()
 	for ii in range(len(MJDs)):
 	    shifted_frequencies = MJD_shifted_frequencies[ii]
-	    if (capitalized_source_name == 'Mars'):
-		[tstatuses,brightnesses,dbrightnesses] = self.brightness_Mars_int ([MJDs[ii]], shifted_frequencies)
+	    if (capitalized_source_name in TIME_VARIABLE_BODIES):
+		[tstatuses,brightnesses,dbrightnesses] = self.brightness_time_int (capitalized_source_name,[MJDs[ii]], shifted_frequencies)
 		# modified by TT: take out an extra dimension (for times), to match the rest of the operation 
-		tstatuses=tstatuses[0] 
-		brightnesses=brightnesses[0]
-		dbrightnesses=dbrightnesses[0]
+		tstatuses = tstatuses[0] 
+		brightnesses = brightnesses[0]
+		dbrightnesses = dbrightnesses[0]
 	    else:
 		tstatuses = []
 		brightnesses = []
@@ -340,8 +338,16 @@ class solar_system_setjy:
 	    tfds = []
 	    tdfds = []
 	    for jj in range (len(tstatuses)):
-		 if not tstatuses[jj]:
-		    flux_density = brightnesses[jj] * 1.0e26 * pi * Rmeans[ii]*Rmeans[ii]/ (DDs[ii]*DDs[ii])
+#
+# if a status of 6 was returned, then it's a body with a current
+# flux density model, but a model from the past which was not
+# flux density was used, so don't multiply by apparent size.
+#
+                 if (tstatuses[jj] == 0 or tstatuses[jj] == 6):
+                    flux_density = brightnesses[jj]  # brigtnesses contains flux density already
+                    if (capitalized_source_name not in MODEL_IS_FD_BODIES or tstatuses[jj] == 6):
+		        flux_density *= 1.0e26 * pi * Rmeans[ii]*Rmeans[ii]/ (DDs[ii]*DDs[ii])
+                    tstatuses[jj] = 0
     #
     # mean apparent planet radius, in arcseconds (used if we ever
     # calculate the primary beam reduction)
@@ -361,41 +367,40 @@ class solar_system_setjy:
 	    statuses.append(tstatuses)
 	    fds.append(tfds)
 	    dfds.append(tdfds)
-
 	return [ statuses, fds, dfds, Rhats, directions ]
 
 
-    def brightness_Mars_int (self,MJDs, frequencies):
+    def brightness_time_int (self, source_name, MJDs, frequencies):
 	'''
-	Planck brightness for Mars.  this one is different because
-	the model is tabulated vs. frequency *and* time.
+	Planck brightness for those bodies for which the data file
+        is a function of both frequency *and* time.
 	inputs:
+            source_name = source name (first character capitalized)
 	    MJDs = list of MJD times
 	    frequencies = list of [start, stop] frequencies for
 			which to calculate the integrated model.
 			example: [ [ 224.234567e9, 224.236567e9 ] ]
 	'''
 
-    #
-    # constants.  these might be in CASA internally somewhere, but
-    # i don't know where to pull them out, so oh well, define my own
-    #
-	#HH = 6.6260755e-34
-	#KK = 1.380658e-23
-	#CC = 2.99792458e8
+    # those bodies which are tabulations of flux density
+        MODEL_IS_FD_BODIES = [ 'Ceres', 'Pallas', 'Vesta', 'Lutetia' ]
+        HAS_OLD_MODEL_BODIES = [ 'Ceres', 'Pallas', 'Vesta' ]
 
 	statuses = []
 	Tbs = []
 	dTbs = []
+        model_data_path = os.environ['CASAPATH'].split()[0]+'/data/alma/SolarSystemModels/'
+        if (source_name in MODEL_IS_FD_BODIES):
+            model_data_filename = model_data_path + source_name + '_fd_time.dat'
+        else:
+            model_data_filename = model_data_path + source_name + '_Tb_time.dat'
 	try:
-	    model_data_path = os.environ['CASAPATH'].split()[0]+'/data/alma/SolarSystemModels/'
-	    model_data_filename = model_data_path + 'Mars_Tb.dat'
 	    ff = open(model_data_filename)
 	except:
 	    for MJD in MJDs:
-		estatuses = []
+                estatuses = []
 		eTbs = []
-		eTbds = []
+		edTbs = []
 		for frequency in frequencies:
 		    estatuses.append(3)
 		    eTbs.append(0)
@@ -413,39 +418,92 @@ class solar_system_setjy:
 	for field in fields:
 	    freqs.append(1.0e9*float(field))
     # model output lines look like:
-    #2010 01 01 00  55197.00000 189.2 195.8 198.9 201.2 203.7 204.9 205.9 207.1 207.8 208.5 209.8 213.0 214.6 214.8 214.5 
+    #2010 01 01 00 00  55197.00000 189.2 195.8 198.9 201.2 203.7 204.9 205.9 207.1 207.8 208.5 209.8 213.0 214.6 214.8 214.5 
 	modelMJDs = []
 	modelTbs = []
 	for line in ff:
 	    fields = line[:-1].split()
-	    modelMJDs.append(float(fields[4]))
+	    modelMJDs.append(float(fields[5]))
 	    lTbs = []
 	    for ii in range(len(freqs)):
-		lTbs.append(float(fields[5+ii]))
+		lTbs.append(float(fields[6+ii]))
 	    modelTbs.append(lTbs)
 	ff.close()
+        old_model_already_called = False
 	for MJD in MJDs:
-	    nind = self.nearest_index (modelMJDs, MJD)
-	    mTbs = []
-	    mfds = []
-	    for ii in range(len(freqs)):
-		lMJD = []
-		lTb = []
-		for jj in range(nind-10, nind+10):
-		    lMJD.append(modelMJDs[jj])
-		    lTb.append(modelTbs[jj][ii])
-		mTbs.append(self.interpolate_list(lMJD, lTb, MJD)[1])
     #
-    # note: here, when we have the planck results, get a proper estimate of
-    # the background temperature.
+    # first, check if it's even a supported MJD (in the file)
     #
-    # note also that we want to do this here because the integral needs to
-    # be done on the brightness, not on the brightness *temperature*.
+            if (MJD > modelMJDs[-1]):
+                estatuses = []
+                eTbs = []
+                edTbs = []
+                for frequency in frequencies:
+                    estatuses.append(2)
+                    eTbs.append(0.0)
+                    edTbs.append(0.0)
+            elif (MJD < modelMJDs[0] and source_name in HAS_OLD_MODEL_BODIES):
+#
+# if the time is before the first time in the model data file,
+# then use the model that is not time variable (if this body
+# has one).  set the status to 6 in that case, so that we know
+# in the calling function to multiply by the apparent size
+# to get true flux density.
+#
+                if (not old_model_already_called):
+#
+# only call this once - not for every time (since the old
+# models are not a function of time)
+#
+                    tstatuses = []
+                    tTbs = []
+                    tdTbs = []
+                    for frequency in frequencies:
+                        [tstatus,tTb,tdTb] = self.brightness_planet_int (source_name, frequency)
+                        tstatuses.append(tstatus)
+                        tTbs.append(tTb)
+                        tdTbs.append(tdTb)
+                    old_model_already_called = True
+                estatuses = []
+                eTbs = []
+                edTbs = []
+                ii = 0
+                for frequency in frequencies:
+                    if (tstatuses[ii]):
+                        estatuses.append(tstatuses[ii])
+                    else:
+                        estatuses.append(6)
+                    eTbs.append(tTbs[ii])
+                    edTbs.append(tdTbs[ii])
+                    ii += 1
+            else:
+                nind = self.nearest_index (modelMJDs, MJD)
+                mTbs = []
+                mfds = []
+	        for ii in range(len(freqs)):
+		    lMJD = []
+		    lTb = []
+		    for jj in range(nind-10, nind+10):
+		        lMJD.append(modelMJDs[jj])
+		        lTb.append(modelTbs[jj][ii])
+                    if (source_name in MODEL_IS_FD_BODIES):
+    # don't know what Tb is, so just set to 0.0
+                        mTbs.append(0.0)
+                        mfds.append(self.interpolate_list(lMJD, lTb, MJD)[1])
+                    else:
+		        mTbs.append(self.interpolate_list(lMJD, lTb, MJD)[1])
     #
-		Tbg = 2.725
-		mfds.append((2.0 * HH * freqs[ii]**3.0 / CC**2.0) * \
-			    ((1.0 / (exp(HH * freqs[ii] / (KK * mTbs[-1])) - 1.0)) - \
-			     (1.0 / (exp(HH * freqs[ii] / (KK * Tbg)) - 1.0))))
+    # note: here, when we have the planck results, get a proper
+    # estimate of the background temperature.
+    #
+    # note also that we want to do this here because the integral
+    # needs to be done on the brightness, not on the brightness
+    # *temperature*.
+    #
+		        Tbg = 2.725
+		        mfds.append((2.0 * HH * freqs[ii]**3.0 / CC**2.0) * \
+			            ((1.0 / (exp(HH * freqs[ii] / (KK * mTbs[-1])) - 1.0)) - \
+			             (1.0 / (exp(HH * freqs[ii] / (KK * Tbg)) - 1.0))))
 	    estatuses = []
 	    eTbs = []
 	    edTbs = []
@@ -472,7 +530,7 @@ class solar_system_setjy:
 	return [statuses, Tbs, dTbs ]
 
 
-    def brightness_planet_int (self,source_name, frequency):
+    def brightness_planet_int (self, source_name, frequency):
 	'''
 	brightness temperature for supported planets.  integrates over
 	a tabulated model.  inputs:
@@ -482,52 +540,57 @@ class solar_system_setjy:
 			example: [ 224.234567e9, 224.236567e9 ]
 	'''
 
-    #
-    # constants.  these might be in CASA internally somewhere, but
-    # i don't know where to pull them out, so oh well, define my own
-    #
-	#HH = 6.6260755e-34
-	#KK = 1.380658e-23
-	#CC = 2.99792458e8
-        
+    # those bodies which are tabulations of flux density.  currently, for
+    # the non-time-variable ones, none of them are flux density. but
+    # leave this in just in case somewhere down the road we have bodies
+    # that we have a flux density model for that isn't time variable
+    # (evolved stars, for instance).
+        MODEL_IS_FD_BODIES = [ ]
         
         if not self.models.has_key(source_name):
-	    try:
-		model_data_path = os.environ['CASAPATH'].split()[0]+'/data/alma/SolarSystemModels/'
-		model_data_filename = model_data_path + source_name + '_Tb.dat'
-		ff = open(model_data_filename)
-	    except:
-		return [ 3, 0.0, 0.0 ]
-	    fds = []
-	    Tbs = []
-	    freqs = []
-	    for line in ff:
-		[freq,Tb] = line[:-1].split()
-		Tbs.append(float(Tb))
-		freqs.append(1.0e9*float(freq))
-	#
-	# note: here, when we have the planck results, get a proper
-	# estimate of the background temperature.
-	#
-	# note also that we want to do this here because the integral
-	# needs to be done on the brightness, not on the brightness
-	# *temperature*.
-	#
-		Tbg = 2.725
-		fds.append((2.0 * HH * freqs[-1]**3.0 / CC**2.0) * \
-			    ((1.0 / (exp(HH * freqs[-1] / (KK * Tbs[-1])) - 1.0)) - \
-			     (1.0 / (exp(HH * freqs[-1] / (KK * Tbg)) - 1.0))))
-	    ff.close()
-            # store 
+            model_data_path = os.environ['CASAPATH'].split()[0]+'/data/alma/SolarSystemModels/'
+            if (source_name in MODEL_IS_FD_BODIES):
+                model_data_filename = model_data_path + source_name + '_fd.dat'
+            else:
+                model_data_filename = model_data_path + source_name + '_Tb.dat'
+            try:
+                ff = open(model_data_filename)
+            except:
+                return [ 3, 0.0, 0.0 ]
+            fds = []
+            Tbs = []
+            freqs = []
+            for line in ff:
+                [freq,Tb] = line[:-1].split()
+                freqs.append(1.0e9*float(freq))
+                if (source_name in MODEL_IS_FD_BODIES):
+# don't know what Tb is, so just set to 0.0
+                    Tbs.append(0.0)
+                    fds.append(float(Tb))
+                else:
+                    Tbs.append(float(Tb))
+#
+# note: here, when we have the planck results, get a proper
+# estimate of the background temperature.
+#
+# note also that we want to do this here because the integral
+# needs to be done on the brightness, not on the brightness
+# *temperature*.
+#
+                    Tbg = 2.725
+                    fds.append((2.0 * HH * freqs[-1]**3.0 / CC**2.0) * \
+                                ((1.0 / (exp(HH * freqs[-1] / (KK * Tbs[-1])) - 1.0)) - \
+                                 (1.0 / (exp(HH * freqs[-1] / (KK * Tbg)) - 1.0))))
+            ff.close()
+# TT added.  store them for future calls
             srcn=source_name
             self.models[srcn]={}
             self.models[srcn]['fds']=fds
             self.models[srcn]['freqs']=freqs
         else:
-            #recover fds, freqs
+            #recover fds, freqs, instead of reading them in from the file
             fds=self.models[source_name]['fds']
             freqs=self.models[source_name]['freqs']
-      
 	if (frequency[0] < freqs[0] or frequency[1] > freqs[-1]):
 	    return [ 2, 0.0, 0.0 ]
 	else:
@@ -541,7 +604,8 @@ class solar_system_setjy:
     #
 	    return self.integrate_Tb (freqs, fds, frequency)
 
-    def nearest_index (self,input_list, value):
+
+    def nearest_index (self, input_list, value):
 	"""
 	find the index of the list input_list that is closest to value
 	"""
@@ -553,13 +617,14 @@ class solar_system_setjy:
 	    ind = ind - 1
 	return ind
 
-    def interpolate_list (self,freqs, Tbs, frequency):
+
+    def interpolate_list (self, freqs, Tbs, frequency):
 	ind = self.nearest_index (freqs, frequency)
 	low = max(0,ind-5)
 	if (low == 0):
 	    high = 11
 	else:
-	    high = min(len(freqs),ind+6)
+	    high = min(len(freqs),ind+5)
 	    if (high == len(freqs)):
 		low = high - 11
     #
@@ -596,7 +661,8 @@ class solar_system_setjy:
 	range = max(aTbs) - min(aTbs)
 	try:
 	    func = interp1d (afreqs, aTbs, kind='cubic')
-	    if isnan(func(frequency)) or func(frequency) < min(aTbs)-range/2 or func(frequency) > max(aTbs)+range/2:            func = interp1d (afreqs, aTbs, kind='linear')
+	    if isnan(func(frequency)) or func(frequency) < min(aTbs)-range/2 or func(frequency) > max(aTbs)+range/2:
+                func = interp1d (afreqs, aTbs, kind='linear')
 	except:
 	    func = interp1d (afreqs, aTbs, kind='linear')
     #
@@ -610,7 +676,7 @@ class solar_system_setjy:
 	return [ 0, brightness, 0.0 ]
 
 
-    def integrate_Tb (self,freqs, Tbs, frequency):
+    def integrate_Tb (self, freqs, Tbs, frequency):
 	[status,low_Tb,low_dTb] = self.interpolate_list (freqs, Tbs, frequency[0])
 	low_index = self.nearest_index (freqs, frequency[0])
 	if (frequency[0] > freqs[low_index]):
@@ -632,5 +698,3 @@ class solar_system_setjy:
 	       ii += 1
 	Tb /= (frequency[1] - frequency[0])
 	return [ 0, Tb, 0.0 ]
-
-

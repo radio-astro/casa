@@ -228,8 +228,8 @@ class ss_setjy_helper:
 	# size: [majoraxis, minoraxis, pa]
 	# direction: direction for each time stamp
         # 
-	#import solar_system_setjy as ss_setjy
 	import solar_system_setjy as SSsetjy 
+	#import solar_system_setjy2 as SSsetjy 
 	retdict={} # for returning flux densities?
         ss_setjy=SSsetjy.solar_system_setjy()
 	#for src in srcnames:
@@ -262,6 +262,7 @@ class ss_setjy_helper:
 	      #infreqs=[inparams[src]['freqlist'][i]]
 	      infreqs=[inparams[vfid]['freqlist'][i]]
             self._casalog.post("Calling solar_system_fd: %s(%s) for spw%s freqs=%s" % (src, vfid,i,freqlist[i]),'DEBUG1')
+            #print "calling solar system fd..."
 	    (errcodes, subfluxes, fluxerrs, sizes, dirs)=\
                ss_setjy.solar_system_fd(source_name=src, MJDs=mjds, frequencies=infreqs, observatory=observatory, casalog=self._casalog)
             # for old code
@@ -276,6 +277,7 @@ class ss_setjy_helper:
 
           # packed fluxes for all spws 
 	    fluxes.append(subfluxes)    
+            #print "fluxes=",fluxes
           # fluxes has fluxesi[nspw][nf][nt]
 
 	  # ------------------------------------------------------------------------
@@ -300,6 +302,7 @@ class ss_setjy_helper:
 	  spwids=inparams[vfid]['spwids']
 
 	  clrecs=odict.odict()
+          #print "LOOP over multiple dir..."
 	  labels = []
 	  # loop for over for multiple directions (=multiple  MJDs) for a given src
 	  for i in range(len(dirs)):  # this is currently only length of 1 since no multiple timestamps were used
@@ -323,6 +326,7 @@ class ss_setjy_helper:
             
             self._casalog.post(dirmsg+str(dirstring))
 
+            #print "componentlist construction"
 	    # setup componentlists
 	    # need to set per dir
 	    # if scalebychan=F, len(freqs) corresponds to nspw selected
@@ -350,6 +354,7 @@ class ss_setjy_helper:
 	    if (os.path.exists(clname)):
               shutil.rmtree(clname)
 
+            #print "Logging/output dict"
             iiflux=[]
             iinfreq=[]
             # for logging/output dict - pack each freq list for each spw
@@ -401,6 +406,7 @@ class ss_setjy_helper:
               #  freqsforlog.append(iinfreq)
               # -----------------------------------------------------------------------------------
               
+              #print "Logging/output dict addcomp"
               self._casalog.post("addcomponent with flux=%s at frequency=%s" %\
               #                    (fluxes[j][i][0],str(reffreqs[int(spwids[j])]/1.e9)+'GHz'), 'INFO1')
                                   (iflux,str(reffreqs[int(spwids[j])]/1.e9)+'GHz'), 'INFO1')
@@ -456,6 +462,8 @@ class ss_setjy_helper:
             clrecs[clabel0]['allfreqinfo']=freqsforlog
             clrecs[clabel0]['spwids']=spwids
 	    mycl.rename(clname) #  - A CL per field
+            #print "clrecs=",clrecs
+            #print "clname=",clname
             mycl.close(False) # False for not to send a warning message
 	    mycl.done()
 
@@ -533,6 +541,7 @@ class ss_setjy_helper:
        
           if clrecs=={}:
             raise Exception, "No componentlist is generated."
+          #self._casalog.post(clrecs)
 	  self._casalog.post(msg+" flux densities")
 	  #self._reportoLog(clrecs,self._casalog)
 	  self._reportoLog2(clrecs,self._casalog)
@@ -542,8 +551,10 @@ class ss_setjy_helper:
           retdict[vfid]=clrecs 
         # ==== end of for loop over fields		 
         #output=self._makeRetFluxDict(retdict)
+        #print "makeRetFluxDict2"
         output=self._makeRetFluxDict2(retdict)
 	#return retval
+        #print "done setSolarSetJY"
 	return output
 
     def getclnamelist(self):

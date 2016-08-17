@@ -139,13 +139,27 @@ def setjy_core(vis=None, field=None, spw=None,
               casalog.post("%s is NOT being modified." % vis)
 
             if standard=='Butler-JPL-Horizons 2012':
+                tpm_supported_objects = ['Ceres','Lutetia','Pallas','Vesta']
+                #ssmoddirs = findCalModels(target='SolarSystemModels',
+                #              roots=[casa['dirs']['data']],
+                #              exts=['.im','.ms','tab', 'dat'])
+                #ssmoddirs = findCalModels(target='SolarSystemModels',
+                #                   roots=[casa['dirs']['data']],
+                #                   exts=['.im','.ms','tab', 'dat'])
+                #for d in ssmoddirs:
+                #        lsmodims(d,modpat='*ALMA_TPMprediction*.txt', header='TPM models of asteroid available for %s' % standard) 
                 ssmoddirs = findCalModels(target='SolarSystemModels',
-                          roots=[casa['dirs']['data']],
-                          exts=['.im','.ms','tab'])
+                           roots=[casa['dirs']['data']],
+                           exts=['.im','.ms','tab'])
+                sstpmdirs = findCalModels(target='SolarSystemModels',
+                           roots=[casa['dirs']['data']],
+                           exts=['.im','.ms','tab'])
                 if ssmoddirs==set([]):
-                    casalog.post("No models were found. Missing SolarSystemModels in the CASA data directory","WARN")           
+                     casalog.post("No models were found. Missing SolarSystemModels in the CASA data directory","WARN")           
                 for d in ssmoddirs:
-                    lsmodims(d,modpat='*Tb.dat', header='Tb models of solar system objects available for %s' % standard) 
+                    lsmodims(d,modpat='*Tb*.dat', header='Tb models of solar system objects available for %s' % standard) 
+                for d in sstpmdirs:
+                    lsmodims(d,modpat='*fd_time.dat', header='Time variable models of asteroids available for %s [only applicable for the observation date 2015.01.01 0UT and beyond]' % standard) 
             elif standard=='Butler-JPL-Horizons 2010':
                 availmodellist=['Venus', 'Mars', 'Jupiter', 'Uranus', 'Neptune', 'Pluto',
                                 'Io', 'Europa', 'Ganymede', 'Callisto', 'Titan','Triton',
@@ -268,13 +282,14 @@ def setjy_core(vis=None, field=None, spw=None,
                           roots=[casa['dirs']['data']],
                           exts=['.im','.ms','tab'])
                 if ssmoddirs==set([]):
-                    raise Exception, "Missing Tb models in the data directory"
+                     raise Exception, "Missing Tb or fd  models in the data directory"
 
                 setjyutil=ss_setjy_helper(myim,vis,casalog)
                 retval=setjyutil.setSolarObjectJy(field=field,spw=spw,scalebychan=scalebychan,
                              timerange=timerange,observation=str(observation), scan=scan, 
                              intent=intent, useephemdir=useephemdir,usescratch=usescratch)
                 clnamelist=setjyutil.getclnamelist()
+            
             else:
                 # Need to branch out the process for fluxscale since the input dictionary may 
                 # contains multiple fields. Since fluxdensity parameter is just a vector contains 

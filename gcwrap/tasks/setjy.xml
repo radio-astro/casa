@@ -463,9 +463,22 @@
 	       Moons: Jupiter: Io, Europa, Ganymede, Callisto
                    Saturn:  Titan 
 
-               Asteroids: Ceres, Pallas**, Vesta**, Juno**<!-- only in the 2010 , Victoria***,
+               Asteroids: Ceres, Lutetia, Pallas**, Vesta**, Juno**<!-- only in the 2010 , Victoria***,
 	               Davida*** -->
 
+            *****************************************************************************************
+            * New asteroid models for Ceres, Pallas, and Vesta were put into CASA 4.7.              * 
+            * A model is also available for Lutetia but we do not advise using this source for ALMA *
+            * absolute flux calibration. These new models are used (automatically chosen)           * 
+            * for data taken after 2015 January 1 0h UT. These new improved models are from thermo- *
+            * physical models by Th. Mueller (private comminication).                               *
+            * The available model files can be listed with the command,                             * 
+            *    setjy(standard='Butler-JPL-Horizons 2012', listmodels=T).                          *
+            * These model files contain tabulated flux densities at frequency grids (30-1000GHz) in *
+            * time steps (1hr or 15min). Setjy interpolates in time and frequency to get a proper   *
+            * flux density for the data.                                                            * 
+            *****************************************************************************************
+              
             * Venus: model for ~300MHz to 350GHz, no atmospheric lines (CO,H2O,HDO, etc)
             * Mars: tabulated as a function of time and frequency (30 - 1000GHz) based on 
                Rudy et al (1988), no atmospheric lines (CO, H20, H2O2, HDO, etc)
@@ -475,7 +488,8 @@
                is included, but contains no rings or synchrotron. 
             * Titan: model for 53.3-1024.1GHz, include many spectral lines
 
-            **  not recommended (The temperature is not yet adjusted for
+            **  not recommended when the old model is used (i.e. for the data prior to 2015.01.01) 
+                (The temperature is not yet adjusted for
                 varying distance from the Sun.  The model data can be scaled
                 after running setjy, but it is an involved process.)
 

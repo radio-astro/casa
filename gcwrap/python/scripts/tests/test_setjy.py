@@ -1602,5 +1602,64 @@ class test_ephemtbl(SetjyUnitTestBase):
         self.check_eq(stats['phase']['spw2']['mean'],4.509242733959611e-08,1.0e-4)
         self.check_eq(stats['phase']['spw3']['mean'],2.8893037876731247e-08,1.0e-4)
 
+class test_tpmAsteroid(SetjyUnitTestBase):
+
+    def setUp(self):
+        prefix = 'A002Xaec9ef.flxcal'
+        self.ismms = False
+        msname=prefix+'.ms'
+        self.setUpMS(msname)         # Ceres, Vista
+        self.result = {}
+        #if not os.path.exists(self.inpuvf):
+        #    raise EnvironmentError, "Missing input UVFITS file: " + datapath + self.inpuvf
+
+        #try:
+            #if not os.path.exists('unittest/setjy'):
+            #    print "\nCreate working area..."
+            #    os.system('mkdir -p unittest/setjy')
+        #    print "Importing", self.inpuvf, "to an MS."
+        #    importuvfits(fitsfile=self.inpuvf, vis=self.inpms,antnamescheme="new")
+        #except Exception, e:
+        #    print "importuvfits error:"
+        #    raise e
+
+    def tearDown(self):
+        self.resetMS()
+
+
+    def test1_tpm(self):
+        """ Test Thermo physical models for asteroid flux densities"""
+
+        sjran = setjy(vis=self.inpms, field='Ceres,Vesta', spw='0,1,2,3', standard='Butler-JPL-Horizons 2012', intent="*CALIB*PHASE*",usescratch=True)
+        #print sjran
+
+        # expected flux densities 
+        # time field 2 (Ceres) : 2016/01/10/22:49:50
+        #      field 3 (Vesta) : 2016/01/10/22:52:14
+        # 
+        # from the table: Ceres_ALMA_TPMprediction_2016_1hour.txt => 1/10/23:00 (mjd:57397.95833) @230GHz = 0.5849 Jy
+        # from the table: Vesta_ALMA_TPMprediction_2016_1hour.txt => 1/10/22:45 (mjd:57397.94792) @230GHz = 0.3040 Jy
+        expflxs={}
+        #freqs=[224.984375, 226.984375, 239.015625, 241.015625] 
+        #expflxs['Ceres']=map(lambda f: pow((f/230.0),2.0)*0.5849, freqs)
+        #expflxs['Vesta']=map(lambda f: pow((f/230.0),2.0)*0.3040, freqs)
+        # follow values are for old code that uses nearest time and freq and scale by freq^2
+        #expflxs['Ceres']=[0.5596682431885227, 0.569662818684742, 0.6316529586894678, 0.6422680920779367]
+        #expflxs['Vesta']=[0.29088587096821833, 0.2960805212517722, 0.32829970839732986, 0.33381689176216917]
+        # follow values for the new Bryan Butler's code
+        expflxs['Ceres']=[0.56003255, 0.5699178, 0.63104469, 0.64148498]
+        expflxs['Vesta']=[0.29007342, 0.29506144, 0.32619381, 0.33155343]
+        self.check_eq(sjran['2']['0']['fluxd'][0],expflxs['Ceres'][0],0.0001)
+        self.check_eq(sjran['2']['1']['fluxd'][0],expflxs['Ceres'][1],0.0001)
+        self.check_eq(sjran['2']['2']['fluxd'][0],expflxs['Ceres'][2],0.0001)
+        self.check_eq(sjran['2']['3']['fluxd'][0],expflxs['Ceres'][3],0.0001)
+        self.check_eq(sjran['3']['0']['fluxd'][0],expflxs['Vesta'][0],0.0001)
+        self.check_eq(sjran['3']['1']['fluxd'][0],expflxs['Vesta'][1],0.0001)
+        self.check_eq(sjran['3']['2']['fluxd'][0],expflxs['Vesta'][2],0.0001)
+        self.check_eq(sjran['3']['3']['fluxd'][0],expflxs['Vesta'][3],0.0001)
+
+
+
+ 
 def suite():
-    return [test_SingleObservation,test_MultipleObservations,test_ModImage, test_inputs, test_conesearch, test_fluxscaleStandard, test_setpol, test_ephemtbl]
+    return [test_SingleObservation,test_MultipleObservations,test_ModImage, test_inputs, test_conesearch, test_fluxscaleStandard, test_setpol, test_ephemtbl, test_tpmAsteroid]
