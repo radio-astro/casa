@@ -931,8 +931,38 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
 
     List of tests:
     test000 --- addwn as integer
-    test001 --- addwn as list of integer
-    test002 --- addwn as string
+    test001 --- addwn as list of an integer
+    test002 --- addwn as list of integers
+    test003 --- addwn as tuple of an integer
+    test004 --- addwn as tuple of integers
+    test005 --- addwn as string (single wave number)
+    test006 --- addwn as string (comma-separated wave numbers)
+    test007 --- addwn as string (wave number range specified)
+    test008 --- addwn as string (less or equal pattern 1)
+    test009 --- addwn as string (less or equal pattern 2)
+    test010 --- addwn as string (less or equal pattern 3)
+    test011 --- addwn as string (less or equal pattern 4)
+    test012 --- addwn as string (less pattern 1)
+    test013 --- addwn as string (less pattern 2)
+    test014 --- addwn as string (greater or equal pattern 1)
+    test015 --- addwn as string (greater or equal pattern 2)
+    test016 --- addwn as string (greater or equal pattern 3)
+    test017 --- addwn as string (greater or equal pattern 4)
+    test018 --- addwn as string (greater pattern 1)
+    test019 --- addwn as string (greater pattern 2)
+    test020 --- specify fftthresh by 'sigma' + checking residual rms
+    test021 --- specify fftthresh by 'top' + checking residual rms
+    
+    test100 --- no effective wave number set (addwn empty list, applyfft=False)
+    test101 --- no effective wave number set (addwn empty list, applyfft=True)
+    test102 --- no effective wave number set (addwn empty tuple, applyfft=False)
+    test103 --- no effective wave number set (addwn empty tuple, applyfft=True)
+    test104 --- no effective wave number set (addwn empty string, applyfft=False)
+    test105 --- no effective wave number set (addwn empty string, applyfft=True)
+    test106 --- no effective wave number set (addwn and rejwn identical, applyfft=False)
+    test107 --- no effective wave number set (addwn and rejwn identical, applyfft=True)
+    test108 --- no effective wave number set (rejwn covers wider range than that of addwn, applyfft=False)
+    test109 --- no effective wave number set (rejwn covers wider range than that of addwn, applyfft=True)
 
     Note: The input data 'sinusoidal.ms' has just two spectral data,
           which are actually identical and described as 
@@ -974,33 +1004,404 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         datacolumn = 'float_data'
         addwn = 0
         result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
-                             blfunc='sinusoid',addwn=addwn,applyfft=True,fftthresh='top4')
+                             blfunc='sinusoid',addwn=addwn,applyfft=False)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
 
     def test001(self):
-        """Sinusoid Test 001: addwn as list of integer"""
+        """Sinusoid Test 001: addwn as list of an integer"""
         tid = '001'
         infile = self.infile
         outfile = self.outroot + tid + '.ms'
         datacolumn = 'float_data'
         addwn = [0]
         result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
-                             blfunc='sinusoid',addwn=addwn,applyfft=True,fftthresh='top4')
+                             blfunc='sinusoid',addwn=addwn,applyfft=False)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
 
     def test002(self):
-        """Sinusoid Test 002: addwn as string"""
+        """Sinusoid Test 002: addwn as list of integers"""
         tid = '002'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        addwn = [0,1]
+        result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                             blfunc='sinusoid',addwn=addwn,applyfft=False)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+
+    def test003(self):
+        """Sinusoid Test 003: addwn as tuple of an integer"""
+        tid = '003'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        addwn = (0)
+        result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                             blfunc='sinusoid',addwn=addwn,applyfft=False)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+
+    def test004(self):
+        """Sinusoid Test 004: addwn as tuple of integers"""
+        tid = '004'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        addwn = (0,1)
+        result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                             blfunc='sinusoid',addwn=addwn,applyfft=False)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+
+    def test005(self):
+        """Sinusoid Test 005: addwn as string (single wave number)"""
+        tid = '005'
         infile = self.infile
         outfile = self.outroot + tid + '.ms'
         datacolumn = 'float_data'
         addwn = '0'
         result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
-                             blfunc='sinusoid',addwn=addwn,applyfft=True,fftthresh='top4')
+                             blfunc='sinusoid',addwn=addwn,applyfft=False)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
+
+    def test006(self):
+        """Sinusoid Test 006: addwn as string (comma-separated wave numbers)"""
+        tid = '006'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        addwn = '0,1'
+        result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                             blfunc='sinusoid',addwn=addwn,applyfft=False)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+
+    def test007(self):
+        """Sinusoid Test 007: addwn as string (wave number range specified)"""
+        tid = '007'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        addwn = '0-2'
+        result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                             blfunc='sinusoid',addwn=addwn,applyfft=False)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+
+    def test008(self):
+        """Sinusoid Test 008: addwn as string (less or equal pattern 1)"""
+        tid = '008'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        addwn = '<=2'
+        result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                             blfunc='sinusoid',addwn=addwn,applyfft=False)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+
+    def test009(self):
+        """Sinusoid Test 009: addwn as string (less or equal pattern 2)"""
+        tid = '009'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        addwn = '=<2'
+        result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                             blfunc='sinusoid',addwn=addwn,applyfft=False)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+
+    def test010(self):
+        """Sinusoid Test 010: addwn as string (less or equal pattern 3)"""
+        tid = '010'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        addwn = '2>='
+        result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                             blfunc='sinusoid',addwn=addwn,applyfft=False)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+
+    def test011(self):
+        """Sinusoid Test 011: addwn as string (less or equal pattern 4)"""
+        tid = '011'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        addwn = '2=>'
+        result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                             blfunc='sinusoid',addwn=addwn,applyfft=False)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+
+    def test012(self):
+        """Sinusoid Test 012: addwn as string (less pattern 1)"""
+        tid = '012'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        addwn = '<2'
+        result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                             blfunc='sinusoid',addwn=addwn,applyfft=False)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+
+    def test013(self):
+        """Sinusoid Test 013: addwn as string (less pattern 2)"""
+        tid = '013'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        addwn = '2>'
+        result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                             blfunc='sinusoid',addwn=addwn,applyfft=False)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+
+    def test014(self):
+        """Sinusoid Test 014: addwn as string (greater or equal pattern 1)"""
+        tid = '014'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        addwn = '4090<='
+        result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                             blfunc='sinusoid',addwn=addwn,applyfft=False)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+
+    def test015(self):
+        """Sinusoid Test 015: addwn as string (greater or equal pattern 2)"""
+        tid = '015'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        addwn = '4090=<'
+        result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                             blfunc='sinusoid',addwn=addwn,applyfft=False)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+
+    def test016(self):
+        """Sinusoid Test 016: addwn as string (greater or equal pattern 3)"""
+        tid = '016'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        addwn = '>=4090'
+        result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                             blfunc='sinusoid',addwn=addwn,applyfft=False)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+
+    def test017(self):
+        """Sinusoid Test 017: addwn as string (greater or equal pattern 4)"""
+        tid = '017'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        addwn = '=>4090'
+        result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                             blfunc='sinusoid',addwn=addwn,applyfft=False)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+
+    def test018(self):
+        """Sinusoid Test 018: addwn as string (greater pattern 1)"""
+        tid = '018'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        addwn = '4090<'
+        result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                             blfunc='sinusoid',addwn=addwn,applyfft=False)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+
+    def test019(self):
+        """Sinusoid Test 019: addwn as string (greater pattern 2)"""
+        tid = '019'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        addwn = '>4090'
+        result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                             blfunc='sinusoid',addwn=addwn,applyfft=False)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+
+    def test020(self):
+        """Sinusoid Test 020: specify fftthresh by 'sigma' + checking residual rms"""
+        tid = '020'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        addwn = '0'
+        fftthresh = '3.0sigma'
+        torr = 1.0e-6
+        result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                             blfunc='sinusoid',addwn=addwn,applyfft=True,fftthresh=fftthresh)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        stat = self._getStats(filename=outfile, pol='0')
+        self.assertTrue(stat[0]['rms'] < torr)
+
+    def test021(self):
+        """Sinusoid Test 021: specify fftthresh by 'top' + checking residual rms"""
+        tid = '021'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        addwn = '0'
+        fftthresh = 'top4'
+        torr = 1.0e-6
+        result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                             blfunc='sinusoid',addwn=addwn,applyfft=True,fftthresh=fftthresh)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        stat = self._getStats(filename=outfile, pol='0')
+        self.assertTrue(stat[0]['rms'] < torr)
+
+    def test100(self):
+        """Sinusoid Test 100: no effective wave number set (addwn empty list, applyfft=False)"""
+        tid = '100'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        addwn = []
+        try:
+            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                                 blfunc='sinusoid',addwn=addwn,applyfft=False)
+        except Exception as e:
+            self.assertEqual(str(e), 'addwn must contain at least one element.')
+        
+    def test101(self):
+        """Sinusoid Test 101: no effective wave number set (addwn empty list, applyfft=True)"""
+        tid = '101'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        addwn = []
+        try:
+            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                                 blfunc='sinusoid',addwn=addwn,applyfft=True)
+        except Exception as e:
+            self.assertEqual(str(e), 'addwn must contain at least one element.')
+        
+    def test102(self):
+        """Sinusoid Test 102: no effective wave number set (addwn empty tuple, applyfft=False)"""
+        tid = '102'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        addwn = ()
+        try:
+            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                                 blfunc='sinusoid',addwn=addwn,applyfft=False)
+        except Exception as e:
+            self.assertEqual(str(e), 'addwn must contain at least one element.')
+        
+    def test103(self):
+        """Sinusoid Test 103: no effective wave number set (addwn empty tuple, applyfft=True)"""
+        tid = '103'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        addwn = ()
+        try:
+            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                                 blfunc='sinusoid',addwn=addwn,applyfft=True)
+        except Exception as e:
+            self.assertEqual(str(e), 'addwn must contain at least one element.')
+        
+    def test104(self):
+        """Sinusoid Test 104: no effective wave number set (addwn empty string, applyfft=False)"""
+        tid = '104'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        addwn = ''
+        try:
+            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                                 blfunc='sinusoid',addwn=addwn,applyfft=False)
+        except Exception as e:
+            self.assertEqual(str(e), 'string index out of range')
+        
+    def test105(self):
+        """Sinusoid Test 105: no effective wave number set (addwn empty string, applyfft=True)"""
+        tid = '105'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        addwn = ''
+        try:
+            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                                 blfunc='sinusoid',addwn=addwn,applyfft=True)
+        except Exception as e:
+            self.assertEqual(str(e), 'string index out of range')
+        
+    def test106(self):
+        """Sinusoid Test 106: no effective wave number set (addwn and rejwn identical, applyfft=False)"""
+        tid = '106'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        addwn = [0,1,2]
+        rejwn = [0,1,2]
+        try:
+            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                                 blfunc='sinusoid',addwn=addwn,rejwn=rejwn,applyfft=False)
+        except Exception as e:
+            self.assertEqual(str(e), 'No effective wave number given for sinusoidal fitting.')
+        
+    def test107(self):
+        """Sinusoid Test 107: no effective wave number set (addwn and rejwn identical, applyfft=True)"""
+        tid = '107'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        addwn = [0,1,2]
+        rejwn = [0,1,2]
+        try:
+            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                                 blfunc='sinusoid',addwn=addwn,rejwn=rejwn,applyfft=True)
+        except Exception as e:
+            self.assertEqual(str(e), 'No effective wave number given for sinusoidal fitting.')
+        
+    def test108(self):
+        """Sinusoid Test 108: no effective wave number set (rejwn covers wider range than that of addwn, applyfft=False)"""
+        tid = '108'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        addwn = '<5'
+        rejwn = '<10'
+        try:
+            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                                 blfunc='sinusoid',addwn=addwn,rejwn=rejwn,applyfft=False)
+        except Exception as e:
+            self.assertEqual(str(e), 'No effective wave number given for sinusoidal fitting.')
+        
+    def test109(self):
+        """Sinusoid Test 109: no effective wave number set (rejwn covers wider range than that of addwn, applyfft=True)"""
+        tid = '109'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        addwn = '<5'
+        rejwn = '<10'
+        try:
+            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                                 blfunc='sinusoid',addwn=addwn,rejwn=rejwn,applyfft=True)
+        except Exception as e:
+            self.assertEqual(str(e), 'No effective wave number given for sinusoidal fitting.')
+
 
 
 class tsdbaseline_multi_IF_test(tsdbaseline_unittest_base):
