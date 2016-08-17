@@ -471,7 +471,7 @@
             * A model is also available for Lutetia but we do not advise using this source for ALMA *
             * absolute flux calibration. These new models are used (automatically chosen)           * 
             * for data taken after 2015 January 1 0h UT. These new improved models are from thermo- *
-            * physical models by Th. Mueller (private comminication).                               *
+            * physical models by Th. Mueller (private communication).                               *
             * The available model files can be listed with the command,                             * 
             *    setjy(standard='Butler-JPL-Horizons 2012', listmodels=T).                          *
             * These model files contain tabulated flux densities at frequency grids (30-1000GHz) in *
