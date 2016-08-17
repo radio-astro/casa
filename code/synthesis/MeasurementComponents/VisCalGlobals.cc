@@ -578,7 +578,6 @@ Slice calParSlice(String caltabname, String what, String pol)
 
 Slice calParSliceByType(String caltype, String what, String pol)
 {
-
   // Upcase all inputs
   //  TBD: do this with local copies
   caltype.upcase();
@@ -659,7 +658,15 @@ Slice calParSliceByType(String caltype, String what, String pol)
     else
       throw(AipsError("Unsupported value type: "+what));
   }
-  
+  else if (caltype.contains("SDSKY") || caltype.contains("SDGAIN")) {
+    if (what=="AMP") {
+      s=0;  // nominal start is first pol
+      i=1;  // increment is nominally 1 (only good for 1-par-per-pol caltypes
+    } else { 
+      throw(AipsError("Unsupported value type: "+what));
+    }
+  }
+
   else
     throw(AipsError("Unsupported cal type: "+caltype));
 
