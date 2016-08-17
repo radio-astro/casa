@@ -27,9 +27,7 @@ class QAScore(object):
 
 class QAScorePool(object):
     all_unity_longmsg = 'All QA completed successfully'
-    # Use empty string as shortmsg if all scores = 1.0 to draw attention to
-    # tasks with scores other than 1.0. 
-    all_unity_shortmsg = ''
+    all_unity_shortmsg = 'QA pass'
     
     def __init__(self):
         self.pool = []
@@ -41,10 +39,10 @@ class QAScorePool(object):
             return self._representative
         
         if not self.pool:
-            return QAScore(None, 'No QA scores registered for this task', '')
+            return QAScore(None, 'No QA scores registered for this task', 'No QA')
         
-        if all([s.score >= 0.9 for s in self.pool]):
-            return QAScore(min([s.score for s in self.pool]), self.all_unity_longmsg, self.all_unity_shortmsg)
+        # if all([s.score >= 0.9 for s in self.pool]):
+        #     return QAScore(min([s.score for s in self.pool]), self.all_unity_longmsg, self.all_unity_shortmsg)
 
         # maybe have different algorithms here. for now just return the
         # QAScore with minimum score

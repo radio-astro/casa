@@ -9,7 +9,7 @@ def num_lines(report_dir, relpath):
 		return 'N/A'
 %>
 
-<%inherit file="t2-4m_details-base.html"/>
+<%inherit file="t2-4m_details-base.mako"/>
 <%block name="header" />
 
 <%block name="title">Flag bandpass cal channels</%block>

@@ -1,7 +1,7 @@
 <%!
 import pipeline.infrastructure.renderer.htmlrenderer as hr
 %>
-<%inherit file="t2-4m_details-base.html"/>
+<%inherit file="t2-4m_details-base.mako"/>
 <%block name="header" />
 
 <%block name="title">${hr.get_task_description(result)}</%block>

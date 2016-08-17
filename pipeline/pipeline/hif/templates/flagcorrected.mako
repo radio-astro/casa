@@ -102,7 +102,7 @@ def num_lines(relpath):
 %>
 
 
-<%inherit file="t2-4m_details-base.html"/>
+<%inherit file="t2-4m_details-base.mako"/>
 <%block name="header" />
 
 <%block name="title">Flag corrected data</%block>

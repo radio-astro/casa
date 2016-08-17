@@ -59,7 +59,7 @@ def rx_for_plot(plot):
 	return '<h6 style="margin-top: -11px;">%s%s</h6>' % (prefix, rx_string)
 
 %>
-<%inherit file="t2-4m_details-base.html"/>
+<%inherit file="t2-4m_details-base.mako"/>
 
 <script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
 <script>

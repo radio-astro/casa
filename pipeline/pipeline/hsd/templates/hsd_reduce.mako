@@ -1,4 +1,4 @@
-<%inherit file="task_details_base.html"/>
+<%inherit file="task_details_base.mako"/>
 
 <h1>Stage ${result.stage_number}: End-to-end single dish data reduction</h1>
 

@@ -22,7 +22,7 @@ def get_plot(plots, field, spw, i, colname):
 	except KeyError:
 		return None
 %>
-<%inherit file="t2-4m_details-base.html"/>
+<%inherit file="t2-4m_details-base.mako"/>
 
 <script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
 <script>

@@ -2,7 +2,7 @@
 rsc_path = "../"
 import pipeline.infrastructure.renderer.htmlrenderer as hr
 %>
-<%inherit file="base.html"/>
+<%inherit file="base.mako"/>
 <%block name="header" />
 
 <%block name="title">Stage ${hr.get_stage_number(result)} QA Details</%block>

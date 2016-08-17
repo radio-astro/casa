@@ -46,7 +46,7 @@ def sanitise(url):
 
 
 %>
-<%inherit file="t2-4m_details-base.html"/>
+<%inherit file="t2-4m_details-base.mako"/>
 
 <script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
 

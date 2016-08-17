@@ -3,7 +3,7 @@ rsc_path = ""
 import os
 import pipeline.infrastructure.filenamer as filenamer
 %>
-<%inherit file="t2-4m_details-base.html"/>
+<%inherit file="t2-4m_details-base.mako"/>
 <%block name="header" />
 
 <script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>

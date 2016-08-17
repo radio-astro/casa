@@ -3,7 +3,7 @@ rsc_path = "../"
 import os
 import collections
 %>
-<%inherit file="t2-4m_details-base.html"/>
+<%inherit file="t2-4m_details-base.mako"/>
 
 <%block name="header" />
 

@@ -3,7 +3,7 @@ navbar_active='Observation Summary'
 import re
 import pipeline.infrastructure.renderer.htmlrenderer as hr
 %>
-<%inherit file="base.html"/>
+<%inherit file="base.mako"/>
 
 <!-- include pipeline JS for access to UTILS module -->
 <script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>

@@ -46,7 +46,7 @@ def spws_for_baseband(plot):
 	return '<h6 style="margin-top: -11px;">(Spw%s)</h6>' % utils.commafy(spws, quotes=False, multi_prefix='s')
 
 %>
-<%inherit file="t2-4m_details-base.html"/>
+<%inherit file="t2-4m_details-base.mako"/>
 
 <script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
 <script>

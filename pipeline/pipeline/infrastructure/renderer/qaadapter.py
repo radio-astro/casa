@@ -84,7 +84,7 @@ class DataSetTopic(Topic):
     handling tasks.
     """    
     def __init__(self):
-        super(DataSetTopic, self).__init__('t2-3-1m.html', 'Data Sets')
+        super(DataSetTopic, self).__init__('t2-3-1m.mako', 'Data Sets')
 
 
 class CalibrationTopic(Topic):

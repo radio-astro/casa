@@ -188,7 +188,7 @@ class T1_1Renderer(RendererBase):
     T1-1 OUS Splash Page renderer
     """
     output_file = 't1-1.html'
-    template = 't1-1.html'
+    template = 't1-1.mako'
     
     
     # named tuple holding values for each row in the main summary table
@@ -314,7 +314,7 @@ class T1_2Renderer(RendererBase):
     T1-2 Observation Summary renderer
     """
     output_file = 't1-2.html'
-    template = 't1-2.html'
+    template = 't1-2.mako'
 
     # named tuple holding values for each row in the main summary table
     TableRow = collections.namedtuple(
@@ -383,7 +383,7 @@ class T1_3MRenderer(RendererBase):
     T1-3M renderer
     """
     output_file = 't1-3.html'
-    template = 't1-3m.html'
+    template = 't1-3m.mako'
     
     MsgTableRow = collections.namedtuple('MsgTableRow', 'stage task type message target')
     
@@ -501,7 +501,7 @@ class T1_4MRenderer(RendererBase):
     """
     output_file = 't1-4.html'
     # TODO get template at run-time
-    template = 't1-4m.html'
+    template = 't1-4m.mako'
 
     @staticmethod
     def get_display_context(context):
@@ -525,7 +525,7 @@ class T2_1Renderer(RendererBase):
     T2-4M renderer
     """
     output_file = 't2-1.html'
-    template = 't2-1.html'
+    template = 't2-1.mako'
 
     @staticmethod
     def get_display_context(context):
@@ -536,7 +536,7 @@ class T2_1Renderer(RendererBase):
 
 class T2_1DetailsRenderer(object):
     output_file = 't2-1_details.html'
-    template = 't2-1_details.html'
+    template = 't2-1_details.mako'
 
     @classmethod
     def get_file(cls, context, session, ms):
@@ -756,7 +756,7 @@ class T2_2_1Renderer(T2_2_XRendererBase):
     T2-2-1 renderer - spatial setup
     """
     output_file = 't2-2-1.html'
-    template = 't2-2-1.html'
+    template = 't2-2-1.mako'
 
     @staticmethod
     def get_display_context(context, ms):
@@ -778,7 +778,7 @@ class T2_2_2Renderer(T2_2_XRendererBase):
     T2-2-2 renderer
     """
     output_file = 't2-2-2.html'
-    template = 't2-2-2.html'
+    template = 't2-2-2.mako'
 
     @staticmethod
     def get_display_context(context, ms):
@@ -791,7 +791,7 @@ class T2_2_3Renderer(T2_2_XRendererBase):
     T2-2-3 renderer
     """
     output_file = 't2-2-3.html'
-    template = 't2-2-3.html'
+    template = 't2-2-3.mako'
 
     @staticmethod
     def get_display_context(context, ms):
@@ -818,7 +818,7 @@ class T2_2_4Renderer(T2_2_XRendererBase):
     T2-2-4 renderer
     """
     output_file = 't2-2-4.html'
-    template = 't2-2-4.html'
+    template = 't2-2-4.mako'
 
     @staticmethod
     def get_display_context(context, ms):
@@ -843,7 +843,7 @@ class T2_2_5Renderer(T2_2_XRendererBase):
     T2-2-5 renderer - weather page
     """
     output_file = 't2-2-5.html'
-    template = 't2-2-5.html'
+    template = 't2-2-5.mako'
 
     @staticmethod
     def get_display_context(context, ms):
@@ -863,7 +863,7 @@ class T2_2_6Renderer(T2_2_XRendererBase):
     T2-2-6 renderer - scans page
     """
     output_file = 't2-2-6.html'
-    template = 't2-2-6.html'
+    template = 't2-2-6.mako'
 
     TableRow = collections.namedtuple(
         'TableRow', 
@@ -908,7 +908,7 @@ class T2_2_7Renderer(T2_2_XRendererBase):
     T2-2-7 renderer (single dish specific)
     """
     output_file = 't2-2-7.html'
-    template = 't2-2-7.html'
+    template = 't2-2-7.mako'
 
     @classmethod
     def render(cls, context):
@@ -1038,7 +1038,7 @@ class T2_3_1MRenderer(T2_3_XMBaseRenderer):
     # the filename to which output will be directed
     output_file = 't2-3-1m.html'
     # the template file for this renderer
-    template = 't2-3-1m.html'
+    template = 't2-3-1m.mako'
 
     @classmethod
     def get_topic(cls):
@@ -1052,7 +1052,7 @@ class T2_3_2MRenderer(T2_3_XMBaseRenderer):
     # the filename to which output will be directed
     output_file = 't2-3-2m.html'
     # the template file for this renderer
-    template = 't2-3-2m.html'
+    template = 't2-3-2m.mako'
 
     @classmethod
     def get_topic(cls):
@@ -1066,7 +1066,7 @@ class T2_3_3MRenderer(T2_3_XMBaseRenderer):
     # the filename to which output will be directed
     output_file = 't2-3-3m.html'
     # the template file for this renderer
-    template = 't2-3-3m.html'
+    template = 't2-3-3m.mako'
 
     @classmethod
     def get_topic(cls):
@@ -1080,7 +1080,7 @@ class T2_3_4MRenderer(T2_3_XMBaseRenderer):
     # the filename to which output will be directed
     output_file = 't2-3-4m.html'
     # the template file for this renderer
-    template = 't2-3-4m.html'
+    template = 't2-3-4m.mako'
 
     @classmethod
     def get_topic(cls):
@@ -1094,7 +1094,7 @@ class T2_3_5MRenderer(T2_3_XMBaseRenderer):
     # the filename to which output will be directed
     output_file = 't2-3-5m.html'
     # the template file for this renderer
-    template = 't2-3-5m.html'
+    template = 't2-3-5m.mako'
 
     @classmethod
     def get_topic(cls):
@@ -1108,7 +1108,7 @@ class T2_3_6MRenderer(T2_3_XMBaseRenderer):
     # the filename to which output will be directed
     output_file = 't2-3-6m.html'
     # the template file for this renderer
-    template = 't2-3-6m.html'
+    template = 't2-3-6m.mako'
 
     @classmethod
     def get_topic(cls):
@@ -1120,7 +1120,7 @@ class T2_4MRenderer(RendererBase):
     T2-4M renderer
     """
     output_file = 't2-4m.html'
-    template = 't2-4m.html'
+    template = 't2-4m.mako'
 
     @staticmethod
     def get_display_context(context):
@@ -1180,7 +1180,7 @@ class T2_4MRenderer(RendererBase):
 
 
 class T2_4MDetailsDefaultRenderer(object):
-    def __init__(self, template='t2-4m_details-generic.html', 
+    def __init__(self, template='t2-4m_details-generic.mako',
                  always_rerender=False):
         self.template = template
         self.always_rerender = always_rerender
@@ -1630,7 +1630,7 @@ class WebLogGenerator(object):
                 except Exception as e:
                     LOG.exception('Error generating weblog: %s', e)
 
-            # create symlink to t1-1.html 
+            # create symlink to t1-1.html
             link_relsrc = T1_1Renderer.output_file
             link_abssrc = os.path.join(context.report_dir, link_relsrc)
             link_dst = os.path.join(context.report_dir, 'index.html')

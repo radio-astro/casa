@@ -13,7 +13,7 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 import pipeline.infrastructure.renderer.sharedrenderer as sharedrenderer
 
 %>
-<%inherit file="t2-4m_details-base.html"/>
+<%inherit file="t2-4m_details-base.mako"/>
 
 <%block name="title">Stage ${hr.get_stage_number(result)} Task Details</%block>
 

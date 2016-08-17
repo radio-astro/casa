@@ -52,17 +52,19 @@ __all__ = ['score_polintents',                                # ALMA specific
 
 LOG = logging.get_logger(__name__)
 
+
 #- utility functions ---------------------------------------------------------
 
 def log_qa(method):
     """
     Decorator that logs QA evaluations as they return with a log level of
-    INFO for scores of 1.0 and WARNING for any other level.
+    INFO for scores between perfect and 'slightly suboptimal' scores and
+    WARNING for any other level.
     """
     def f(self, *args, **kw):
         # get the size of the CASA log before task execution
         qascore = method(self, *args, **kw)
-        if qascore.score == 1.0:
+        if qascore.score >= rutils.SCORE_THRESHOLD_SUBOPTIMAL:
             LOG.info(qascore.longmsg)
         else:
             LOG.warning(qascore.longmsg)
@@ -1343,7 +1345,7 @@ def score_sd_line_detection_for_ms(group_id_list, field_id_list, spw_id_list, li
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
 
 
-#@log_qa
+@log_qa
 def score_checksources(mses, fieldname, spwid, imagename):
     """
     Score a single field image of a point source by comparing the source

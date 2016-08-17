@@ -5,7 +5,7 @@ import sys
 
 import pipeline.infrastructure.renderer.htmlrenderer as hr
 %>
-<%inherit file="task_details_base.html"/>
+<%inherit file="task_details_base.mako"/>
 <%block name="header" />
 
 <%block name="title">Stage ${hr.get_stage_number(result)} Task Details</%block>

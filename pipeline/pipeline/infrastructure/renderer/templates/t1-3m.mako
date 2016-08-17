@@ -60,7 +60,7 @@ def flagcolortable(flagpct):
     
 %>
 
-<%inherit file="base.html"/>
+<%inherit file="base.mako"/>
 
 <%block name="title">Topic Summary</%block>
 
@@ -155,7 +155,7 @@ def flagcolortable(flagpct):
 			% if not task_description == 'No tasks in this topic':
 			<tr>
 				<td><a href="${topic.url}">${topic.description}</a></td>
-				<td>${task_description}</a><span class="pull-right">${pqascore.shortmsg}</span></td>
+				<td>${task_description}</a><span class="pull-right">${rendererutils.format_shortmsg(pqascore)}</span></td>
 				<td><div class="progress" style="margin-bottom:0px;"><div class="progress-bar${rendererutils.get_bar_class(pqascore)}" role="progressbar" style="width:${rendererutils.get_bar_width(pqascore)}%;"><span class="text-center"></span></div></div></td>
 				<td><span class="badge${rendererutils.get_badge_class(pqascore)}">${rendererutils.format_score(pqascore)}</span></td>
 			</tr>

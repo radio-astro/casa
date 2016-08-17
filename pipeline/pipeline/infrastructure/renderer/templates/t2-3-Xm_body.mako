@@ -12,7 +12,7 @@ def get_tablerow_class(row):
 	return tablerow_css_classes.get(row.type, '')
 
 %>
-<%inherit file="base.html"/>
+<%inherit file="base.mako"/>
 
 <div class="page-header">
 	<h1>${next.title()}<%block name="backbutton"><button class="btn btn-default pull-right" onClick="javascript:window.history.back();">Back</button></%block></h1>

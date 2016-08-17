@@ -2,7 +2,7 @@
 import os
 import pipeline.infrastructure.renderer.htmlrenderer as hr
 %>
-<%inherit file="t2-4m_details-base.html"/>
+<%inherit file="t2-4m_details-base.mako"/>
 
 <%block name="title">Select Reference Antenna</%block>
 

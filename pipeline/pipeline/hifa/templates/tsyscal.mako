@@ -4,7 +4,7 @@ import os
 import pipeline.infrastructure.utils as utils
 
 %>
-<%inherit file="t2-4m_details-base.html"/>
+<%inherit file="t2-4m_details-base.mako"/>
 
 <%block name="title">T<sub>sys</sub> Calibration</%block>
 

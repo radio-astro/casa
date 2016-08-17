@@ -107,7 +107,7 @@ def num_lines(relpath):
     });
 </script>
 
-<%inherit file="t2-4m_details-base.html"/>
+<%inherit file="t2-4m_details-base.mako"/>
 <%block name="header" />
 
 <%block name="title">Flag raw channels</%block>

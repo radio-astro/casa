@@ -62,6 +62,7 @@ def printTsysFlags(tsystable, htmlreport):
                 # format break between antennas
                 stream.write('<br>\n')
 
+
 def renderflagcmds(flagcmds, htmlflagcmds):
     """Method to render a list of flagcmds into html format.
     """
@@ -82,7 +83,6 @@ def renderflagcmds(flagcmds, htmlflagcmds):
         stream.write('</html>')
 
 
-
 def get_bar_class(pqascore):
     score = pqascore.score
     if score in (None, '', 'N/A'):
@@ -95,6 +95,7 @@ def get_bar_class(pqascore):
         return ' progress-bar-info'
     else:
         return ' progress-bar-success'
+
 
 def get_badge_class(pqascore):
     score = pqascore.score
@@ -109,16 +110,19 @@ def get_badge_class(pqascore):
     else:
         return ' alert-success'
 
+
 def get_bar_width(pqascore):
     if pqascore.score in (None, '', 'N/A'):
         return 0
     else:
         return 5.0 + 95.0 * pqascore.score
 
+
 def format_score(pqascore):
     if pqascore.score in (None, '', 'N/A'):
         return 'N/A'
     return '%0.2f' % pqascore.score
+
 
 def get_symbol_badge(result):
     if get_errors_badge(result):
@@ -132,6 +136,7 @@ def get_symbol_badge(result):
         
     return symbol
 
+
 def get_warnings_badge(result):
     warning_logrecords = utils.get_logrecords(result, logging.WARNING) 
     warning_qascores = utils.get_qascores(result, SCORE_THRESHOLD_ERROR, SCORE_THRESHOLD_WARNING)
@@ -140,7 +145,8 @@ def get_warnings_badge(result):
         return '<span class="badge alert-warning pull-right">%s</span>' % l
     else:
         return ''
-    
+
+
 def get_errors_badge(result):
     error_logrecords = utils.get_logrecords(result, logging.ERROR) 
     error_qascores = utils.get_qascores(result, -0.1, SCORE_THRESHOLD_ERROR)
@@ -150,6 +156,7 @@ def get_errors_badge(result):
     else:
         return ''
 
+
 def get_suboptimal_badge(result):
     suboptimal_qascores = utils.get_qascores(result, SCORE_THRESHOLD_WARNING, SCORE_THRESHOLD_SUBOPTIMAL)
     l = len(suboptimal_qascores)
@@ -157,6 +164,7 @@ def get_suboptimal_badge(result):
         return '<span class="badge alert-info pull-right">%s</span>' % l
     else:
         return ''
+
 
 def get_plot_command_markup(ctx, command):
     if not command:
@@ -185,3 +193,10 @@ def get_plot_command_markup(ctx, command):
 </div><!-- /.modal -->''' % escaped
 
     return btn
+
+
+def format_shortmsg(pqascore):
+    if pqascore.score >= SCORE_THRESHOLD_SUBOPTIMAL:
+        return ''
+    else:
+        return pqascore.shortmsg

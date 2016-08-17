@@ -14,7 +14,7 @@ comp_descriptions = {'mediandeviant' : 'Flag antennas with deviant median gains.
 
 %>
 
-<%inherit file="t2-4m_details-base.html"/>
+<%inherit file="t2-4m_details-base.mako"/>
 
 <%block name="title">Flag antennas with deviant gain</%block>
 

@@ -21,7 +21,7 @@ def get_plot(plots, field, spw, i, colname):
 		return None
 %>
 
-<%inherit file="t2-4m_details-base.html"/>
+<%inherit file="t2-4m_details-base.mako"/>
 <%block name="header" />
 
 <%block name="title">Clean/CleanList</%block>

@@ -24,7 +24,7 @@ $(document).ready(function() {
 });
 </script>
 
-<%inherit file="t2-4m_details-base.html"/>
+<%inherit file="t2-4m_details-base.mako"/>
 <%block name="header" />
 
 <%block name="title">Find Continuum</%block>

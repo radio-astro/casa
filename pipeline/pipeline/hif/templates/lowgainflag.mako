@@ -8,7 +8,7 @@ def num_lines(report_dir, relpath):
 	else:
 		return 'N/A'
 %>
-<%inherit file="t2-4m_details-base.html"/>
+<%inherit file="t2-4m_details-base.mako"/>
 
 <%block name="title">Flag antennas with low gain</%block>
  

@@ -16,7 +16,7 @@ import pipeline.infrastructure.renderer.sharedrenderer as sharedrenderer
 
 LOG = infrastructure.get_logger(__name__)
 %>
-<%inherit file="t2-4m_details-base.html"/>
+<%inherit file="t2-4m_details-base.mako"/>
 
 <%block name="title">Flag on atmospheric transmission</%block>
 

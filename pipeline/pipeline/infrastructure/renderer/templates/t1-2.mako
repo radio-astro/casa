@@ -5,7 +5,7 @@ import datetime
 import pipeline.domain.measures as measures
 import pipeline.infrastructure.utils as utils
 %>
-<%inherit file="base.html"/>
+<%inherit file="base.mako"/>
 
 <%block name="title">Observation Summary</%block>
 

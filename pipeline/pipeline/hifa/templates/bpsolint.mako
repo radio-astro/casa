@@ -1,7 +1,7 @@
 <%!
 rsc_path = ""
 %>
-<%inherit file="t2-4m_details-base.html"/>
+<%inherit file="t2-4m_details-base.mako"/>
 
 <%block name="title">Compute Bandpass Smoothing Parameters</%block>
 

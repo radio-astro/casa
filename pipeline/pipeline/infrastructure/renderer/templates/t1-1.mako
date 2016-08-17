@@ -10,7 +10,7 @@ import os
 import pipeline.domain.measures as measures
 import pipeline.infrastructure.utils as utils
 %>
-<%inherit file="base.html"/>
+<%inherit file="base.mako"/>
 
 <script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
 

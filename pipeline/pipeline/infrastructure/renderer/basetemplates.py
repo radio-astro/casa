@@ -16,7 +16,7 @@ LOG = logging.get_logger(__name__)
 
 
 class T2_4MDetailsDefaultRenderer(object):
-    def __init__(self, uri='t2-4m_details-generic.html',
+    def __init__(self, uri='t2-4m_details-generic.mako',
                  description='No description set for this task',
                  always_rerender=False):
         self.uri = uri

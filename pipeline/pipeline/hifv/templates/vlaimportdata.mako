@@ -5,7 +5,7 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.utils as utils
 %>
-<%inherit file="t2-4m_details-base.html"/>
+<%inherit file="t2-4m_details-base.mako"/>
 
 <%block name="title">VLA Import Data</%block>
 
