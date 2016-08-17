@@ -140,6 +140,8 @@ public:
   
   static String getAipsRcBase() {return "GroupProcessor";}
 
+  void setTVIDebug(Bool debug) {tvi_debug = debug;}
+
 private:
   void setGroupOrigin();        // Record the beginning of a new group.
   Bool groupHasMore();          // Returns whether or not more VisBuffers
@@ -153,6 +155,7 @@ private:
   // Uninitialized by c'tor.
   Vector<Double> timev_p;
   Double groupStart_p;
+  Bool tvi_debug;
 };
 
 } //# NAMESPACE CASA - END

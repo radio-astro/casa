@@ -7391,6 +7391,7 @@ Bool SubMS::subtractContinuum(const Vector<MS::PredefinedColumns>& colNames,
   vbgcs.setTVIDebug(tvi_debug);
   vbgcs.setWantCont(want_cont_p);
   GroupProcessor gp(viIn, &vbgcs);
+  gp.setTVIDebug(tvi_debug);
 
   retval = gp.go();
 

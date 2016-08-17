@@ -35,7 +35,8 @@ GroupProcessor::GroupProcessor(ROVisibilityIterator& vi, GroupWorkerBase *gw,
                                Double groupInterval) :
   vi_p(vi),
   gw_p(gw),
-  groupInterval_p(groupInterval)
+  groupInterval_p(groupInterval),
+  tvi_debug(False)
 {
 }
 
@@ -82,7 +83,13 @@ Bool GroupProcessor::go()
         vb.fetch(gw_p->prefetchColumns());
         // cerr << "     " << vb.rowIds()[0] << "          " << (vb.time()[0] - 4.65136e9)
         //     << "         " << vb.spectralWindow() << endl;
-        vb.rowIds();
+
+        // jagonzal: Without this call the baselines corresponding to the
+        // first time stamp of each chunk are skipped.
+        // This does not happen with VI/VB2 which is used by the TVI framework
+        // Also VisibilityIteratorReadImpl::update_rowIds seems to be extremely slow (see CAS-8882)
+        if (tvi_debug) vb.rowIds();
+
         vbg.store(vb);
       }
       vbg.endChunk();                   // Record the end of a chunk.
