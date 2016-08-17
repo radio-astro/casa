@@ -195,7 +195,6 @@ String MSCache::getDataColumn(vector<PMS::Axis>& loadAxes,
                 case PMS::AMP:
                 case PMS::REAL:
                 case PMS::WTxAMP:
-                case PMS::WT:
                 case PMS::SIGMA:
                 case PMS::SIGMASP: {
                     dataColumn = PMS::dataColumn(loadData[i]);
@@ -221,12 +220,24 @@ String MSCache::getDataColumn(vector<PMS::Axis>& loadAxes,
                             MS::columnName(MS::WEIGHT_SPECTRUM));
                         if (!weightSpectrum.hasContent()) {
                             logWarn("load_cache", "Plotting WEIGHT column, WEIGHT_SPECTRUM (WTSP) has not been initialized (this can be changed with initweights task)");
-                            // Also send to console
-                            cout << "WARNING: Plotting WEIGHT column, WEIGHT_SPECTRUM (WTSP) has not been initialized (this can be changed with initweights task)" << endl;
                         }
                     }
                     dataColumn = PMS::dataColumn(loadData[i]);
                     break;
+                }
+                case PMS::WT: {
+                    // CAS-8895 warn user requested mean WEIGHT not channelized WEIGHT_SPECTRUM
+	                Table thisTable(filename_);
+	                const ColumnDescSet cds = thisTable.tableDesc().columnDescSet();
+	                if (cds.isDefined("WEIGHT_SPECTRUM")) {
+                        ArrayColumn<Float> weightSpectrum;
+                        weightSpectrum.attach(thisTable,
+                            MS::columnName(MS::WEIGHT_SPECTRUM));
+                        if (weightSpectrum.hasContent()) {
+                            logLoad("Plotting mean WEIGHT column but WEIGHT_SPECTRUM is available. Request 'WtSp' axis to see channelized weights.");
+                        }
+                    }
+                    dataColumn = PMS::dataColumn(loadData[i]);
                 }
                 default:
                     break;
