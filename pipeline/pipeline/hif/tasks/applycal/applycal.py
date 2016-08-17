@@ -275,7 +275,7 @@ class Applycal(basetask.StandardTaskTemplate):
         # run a final flagdata job to get the flagging statistics after
         # application of the potentially flagged caltables
         if inputs.flagsum:
-            flagdata_summary_job = casa_tasks.flagdata(vis=inputs.vis, mode='summary', intent='*TARGET*')
+            #flagdata_summary_job = casa_tasks.flagdata(vis=inputs.vis, mode='summary', intent='*TARGET*')
             stats_after = self._executor.execute(flagdata_summary_job)
             stats_after['name'] = 'applycal'
 
