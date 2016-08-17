@@ -81,6 +81,7 @@ def create_plotter(num_ra, num_dec, num_plane, refpix, refval, increment):
     plotter.setup_labels(refpix, refval, increment)
     return plotter
     
+#@utils.profiler
 def get_data(infile, datatable, num_ra, num_dec, num_chan, rowlist, rowmap=None):
     # default rowmap is EchoDictionary
     if rowmap is None:
@@ -115,7 +116,6 @@ def get_data(infile, datatable, num_ra, num_dec, num_chan, rowlist, rowmap=None)
                 mapped_row = rowmap[median_row]
                 LOG.debug('median row for (%s,%s) is %s (mapped to %s)'%(ix, iy, median_row, mapped_row))
                 nrow += len(idxs)
-                #map_data[ix,iy,:] = tb.getcell('SPECTRA', median_row)
                 this_data = tb.getcellslice(colname, mapped_row, [polid, 0], [polid, -1], [1,1]).real.squeeze()
                 this_mask = tb.getcellslice('FLAG', mapped_row, [polid, 0], [polid, -1], [1,1]).squeeze()
                 map_data[ix,iy,:] = this_data
@@ -127,13 +127,11 @@ def get_data(infile, datatable, num_ra, num_dec, num_chan, rowlist, rowmap=None)
                     this_mask = tb.getcellslice('FLAG', mapped_row, [polid, 0], [polid, -1], [1,1]).squeeze()
                     LOG.trace('this_mask.shape=%s'%(list(this_mask.shape)))
                     LOG.trace('all(this_mask==True) = %s'%(numpy.all(this_mask==True)))
-                    mask_as_binary = numpy.fromiter((0 if x == True else 1 for x in this_mask), dtype=int)
-                    integrated_data += this_data * mask_as_binary
-                    #integrated_data += tb.getcellslice(colname, mapped_row, [polid, 0], [polid, -1], [1,1]).real.squeeze()
-                    num_accumulated += mask_as_binary
+                    binary_mask = numpy.asarray(numpy.logical_not(this_mask), dtype=int)
+                    integrated_data += this_data * binary_mask 
+                    num_accumulated += binary_mask 
             else:
                 LOG.debug('no data is available for (%s,%s)'%(ix,iy))
-    #integrated_data /= nrow
     integrated_data_masked = numpy.ma.masked_array(integrated_data, num_accumulated == 0)
     integrated_data_masked /= num_accumulated
     map_data_masked = numpy.ma.masked_array(map_data, map_mask)
@@ -180,6 +178,7 @@ def get_lines(datatable, num_ra, rowlist):
 #     plotter.done()
 #     return integrated_data, map_data
 
+#@utils.profiler
 def plot_profile_map_with_fit(context, ms, antid, spwid, polid, plot_table, prefit_data, postfit_data, prefit_figfile, postfit_figfile, deviation_mask, line_range,
                               rowmap=None):
     """
