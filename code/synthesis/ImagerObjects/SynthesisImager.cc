@@ -2011,7 +2011,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     theFT = new MosaicFTNew(vps, mLocation_p, stokes, 1000000000, 16, useAutoCorr, 
 		      useDoublePrec);
-    PBMathInterface::PBClass pbtype=PBMathInterface::AIRY;
+    PBMathInterface::PBClass pbtype=(kpb==PBMath::EVLA)? PBMathInterface::COMMONPB: PBMathInterface::AIRY;
     if(rec.asString("name")=="IMAGE")
        pbtype=PBMathInterface::IMAGE;
     ///Use Heterogenous array mode for the following

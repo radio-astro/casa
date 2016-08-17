@@ -69,6 +69,7 @@
 #include <synthesis/TransformMachines/PBMath1DAiry.h>
 #include <synthesis/TransformMachines/PBMath1DNumeric.h>
 #include <synthesis/TransformMachines/PBMath2DImage.h>
+#include <synthesis/TransformMachines/PBMath.h>
 #include <synthesis/TransformMachines/HetArrayConvFunc.h>
 #include <synthesis/MeasurementEquations/VPManager.h>
 
@@ -122,6 +123,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       Int diamIndex=antDiam2IndexMap_p.ndefined();
       Vector<Double> dishDiam=ac.dishDiameter().getColumn();
       Vector<String>dishName=ac.name().getColumn();
+      PBMath::CommonPB whichPB;
+      if(pbClass_p==PBMathInterface::COMMONPB){
+	String band;
+	String commonPBName;
+	// This frequency is ONLY required to determine which PB model to use:
+	// The VLA, the ATNF, and WSRT have frequency - dependent PB models
+	Quantity freq( vb.msColumns().spectralWindow().refFrequency()(0), "Hz");
+	
+	String telescop=vb.msColumns().observation().telescopeName()(0);
+	PBMath::whichCommonPBtoUse( telescop, freq, band, whichPB, commonPBName );
+	//Revert to using AIRY for unknown common telescope
+	if(whichPB==PBMath::UNKNOWN)
+	  pbClass_p=PBMathInterface::AIRY;
+
+      }
       if(pbClass_p== PBMathInterface::AIRY){
       ////////We'll be using dish diameter as key
       for (uInt k=0; k < dishDiam.nelements(); ++k){
@@ -256,6 +272,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	
 	//Get rid of the static class
 	vpman->reset();
+      }
+
+      else if(pbClass_p==PBMathInterface::COMMONPB){
+	//cerr << "Doing the commonPB thing" << endl;
+	antDiam2IndexMap_p.define(String::toString(dishDiam(0)), diamIndex);
+	antIndexToDiamIndex_p.set(diamIndex);
+	antMath_p.resize(diamIndex+1);
+	antMath_p[diamIndex]=PBMath::pbMathInterfaceForCommonPB(whichPB, True);
+
+
       }
       else{
 

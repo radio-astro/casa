@@ -374,6 +374,10 @@ public:
   // converts the PB String into an enumrated type
   static void enumerateCommonPB(const String & str, PBMath::CommonPB &ipb);
 
+
+  // return a PBMathInteface for a commonPB ; caller needs to delete pointer
+  static PBMathInterface* pbMathInterfaceForCommonPB(const PBMath::CommonPB ipb, Bool useSymmetricBeam);
+
   // gives the name of the PB Class that has been used
   void namePBClass(String & name) {  pb_pointer_p->namePBClass(name); }  
 

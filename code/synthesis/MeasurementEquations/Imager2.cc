@@ -3190,13 +3190,17 @@ Bool Imager::createSkyEquation(const Vector<String>& image,
 
 
   // Add the componentlist
+  // cerr << "COMPLIST " << complist << endl;
   if(complist!="") {
     if(!Table::isReadable(complist)) {
       os << LogIO::SEVERE << "ComponentList " << complist
 	 << " not readable" << LogIO::POST;
       return False;
     }
-    delete componentList_p;
+    if(componentList_p){
+      delete componentList_p;
+      componentList_p=0;
+    }
     componentList_p=new ComponentList(complist, True);
     if(componentList_p==0) {
       os << LogIO::SEVERE << "Cannot create ComponentList from " << complist
@@ -3294,7 +3298,7 @@ Bool Imager::createSkyEquation(const Vector<String>& image,
   // If primary-beams are needed, force the fluxScale images held by
   // the SkyModel classes to be allocated/initialized.
   if(doVP_p){
-      if(ft_p->name() != "MosaicFT") 
+    if( (sm_p->numberOfModels() > 0) && (ft_p->name() != "MosaicFT")) 
 	sm_p->mandateFluxScale(0);
     }
  
@@ -4050,7 +4054,7 @@ Bool Imager::makePBImage(const CoordinateSystem& imageCoord,
   String telName=telescopeName;
   if(telName=="ALMA" &&  diam < 12.0)
     telName="ACA";
-  cerr << "Telescope Name is " << telName<< " qFreq " << qFreq << endl;
+  //cerr << "Telescope Name is " << telName<< " qFreq " << qFreq << endl;
   PBMath::CommonPB whichPB;
   PBMath::enumerateCommonPB(telName, whichPB);  
   PBMath myPB;
@@ -4363,7 +4367,7 @@ void Imager::setMosaicFTMachine(Bool useDoublePrec){
   PBMath::CommonPB kpb;
   PBMath::enumerateCommonPB(telescop, kpb);
   if(!((kpb == PBMath::UNKNOWN) || 
-       (kpb==PBMath::OVRO) || (kpb==PBMath::ALMA) || (kpb==PBMath::ACA) || !doDefaultVP_p)){
+       (kpb==PBMath::OVRO) || (kpb==PBMath::ALMA) || (kpb==PBMath::ACA) || (kpb==PBMath::EVLA) || !doDefaultVP_p)){
     
     if(!gvp_p) {
       ROMSColumns msc(*ms_p);
@@ -4388,12 +4392,12 @@ void Imager::setMosaicFTMachine(Bool useDoublePrec){
 		      useDoublePrec);
 
   if((kpb == PBMath::UNKNOWN) || (kpb==PBMath::OVRO) || (kpb==PBMath::ACA)
-     || (kpb==PBMath::ALMA) || (!doDefaultVP_p)){
+     || (kpb==PBMath::ALMA) || (kpb==PBMath::EVLA) || (!doDefaultVP_p)){
     os << LogIO::NORMAL // Loglevel INFO
        << "Using antenna primary beams for determining beams for gridding"
        << LogIO::POST;
     //Use 1D-Airy
-    PBMathInterface::PBClass pbtype=PBMathInterface::AIRY;
+    PBMathInterface::PBClass pbtype= (kpb==PBMath::EVLA) ? PBMathInterface::COMMONPB : PBMathInterface::AIRY;
     //Temporary special case for ALMA to use 2D images
     //Temporary till it is made fully that with automatic image selections
     if((kpb==PBMath::ACA) ||  (kpb==PBMath::ALMA)){
