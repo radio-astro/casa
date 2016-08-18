@@ -211,9 +211,9 @@ class Tclean(cleanbase.CleanBase):
                 result.error = '%s/%s/spw%s clean error: %s' % (inputs.field, inputs.intent, inputs.spw)
                 return result
 
-            inputs.start = '%sGHz' % ((if0+channel_width) / 1e9)
+            inputs.start = '%sGHz' % ((if0 + channel_width) / 1e9)
             inputs.width = '%sMHz' % ((channel_width) / 1e6)
-            inputs.nchan = int((if1 - if0 - 2 * channel_width) / channel_width)
+            inputs.nchan = int(round((if1 - if0) / channel_width - 2))
 
         # Get a noise estimate from the CASA sensitivity calculator
         sensitivity, \
