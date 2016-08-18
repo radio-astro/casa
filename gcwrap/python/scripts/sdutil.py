@@ -1565,9 +1565,14 @@ def parse_wavenumber_param(wn):
             for v in val0: val.append(int(v))
             val.sort()
             res = list(set(val)) # uniq
-            #res.sort()
         elif '-' in wn:                          # case 'a-b' : return [a,a+1,...,b-1,b]
             val = wn.split('-')
+            _check_positive_or_zero(val)
+            val = [int(val[0]), int(val[1])]
+            val.sort()
+            res = [i for i in xrange(val[0], val[1]+1)]
+        elif '~' in wn:                          # case 'a~b' : return [a,a+1,...,b-1,b]
+            val = wn.split('~')
             _check_positive_or_zero(val)
             val = [int(val[0]), int(val[1])]
             val.sort()

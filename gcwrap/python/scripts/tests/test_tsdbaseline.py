@@ -937,23 +937,24 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
     test004 --- addwn as tuple of integers
     test005 --- addwn as string (single wave number)
     test006 --- addwn as string (comma-separated wave numbers)
-    test007 --- addwn as string (wave number range specified)
-    test008 --- addwn as string (less or equal pattern 1)
-    test009 --- addwn as string (less or equal pattern 2)
-    test010 --- addwn as string (less or equal pattern 3)
-    test011 --- addwn as string (less or equal pattern 4)
-    test012 --- addwn as string (less pattern 1)
-    test013 --- addwn as string (less pattern 2)
-    test014 --- addwn as string (greater or equal pattern 1)
-    test015 --- addwn as string (greater or equal pattern 2)
-    test016 --- addwn as string (greater or equal pattern 3)
-    test017 --- addwn as string (greater or equal pattern 4)
-    test018 --- addwn as string (greater pattern 1)
-    test019 --- addwn as string (greater pattern 2)
-    test020 --- specify fftthresh by 'sigma' + checking residual rms
-    test021 --- specify fftthresh by 'top' + checking residual rms
-    test022 --- sinusoid-related parameters with default values
-    test023 --- addwn has too large value but rejwn removes it
+    test007 --- addwn as string (wave number range specified with '-')
+    test008 --- addwn as string (wave number range specified with '~')
+    test009 --- addwn as string (less or equal pattern 1)
+    test010 --- addwn as string (less or equal pattern 2)
+    test011 --- addwn as string (less or equal pattern 3)
+    test012 --- addwn as string (less or equal pattern 4)
+    test013 --- addwn as string (less pattern 1)
+    test014 --- addwn as string (less pattern 2)
+    test015 --- addwn as string (greater or equal pattern 1)
+    test016 --- addwn as string (greater or equal pattern 2)
+    test017 --- addwn as string (greater or equal pattern 3)
+    test018 --- addwn as string (greater or equal pattern 4)
+    test019 --- addwn as string (greater pattern 1)
+    test020 --- addwn as string (greater pattern 2)
+    test021 --- specify fftthresh by 'sigma' + checking residual rms
+    test022 --- specify fftthresh by 'top' + checking residual rms
+    test023 --- sinusoid-related parameters with default values
+    test024 --- addwn has too large value but rejwn removes it
     
     test100 --- no effective wave number set (addwn empty list, applyfft=False)
     test101 --- no effective wave number set (addwn empty list, applyfft=True)
@@ -1109,7 +1110,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
                          msg="The task returned '"+str(result)+"' instead of None")
 
     def test007(self):
-        """Sinusoid Test 007: addwn as string (wave number range specified)"""
+        """Sinusoid Test 007: addwn as string (wave number range specified with '-')"""
         tid = '007'
         infile = self.infile
         outfile = self.outroot + tid + '.ms'
@@ -1121,8 +1122,20 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
                          msg="The task returned '"+str(result)+"' instead of None")
 
     def test008(self):
-        """Sinusoid Test 008: addwn as string (less or equal pattern 1)"""
+        """Sinusoid Test 008: addwn as string (wave number range specified with '~')"""
         tid = '008'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        addwn = '0~2'
+        result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                             blfunc='sinusoid',addwn=addwn,applyfft=False)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+
+    def test009(self):
+        """Sinusoid Test 009: addwn as string (less or equal pattern 1)"""
+        tid = '009'
         infile = self.infile
         outfile = self.outroot + tid + '.ms'
         datacolumn = 'float_data'
@@ -1132,9 +1145,9 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
 
-    def test009(self):
-        """Sinusoid Test 009: addwn as string (less or equal pattern 2)"""
-        tid = '009'
+    def test010(self):
+        """Sinusoid Test 010: addwn as string (less or equal pattern 2)"""
+        tid = '010'
         infile = self.infile
         outfile = self.outroot + tid + '.ms'
         datacolumn = 'float_data'
@@ -1144,9 +1157,9 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
 
-    def test010(self):
-        """Sinusoid Test 010: addwn as string (less or equal pattern 3)"""
-        tid = '010'
+    def test011(self):
+        """Sinusoid Test 011: addwn as string (less or equal pattern 3)"""
+        tid = '011'
         infile = self.infile
         outfile = self.outroot + tid + '.ms'
         datacolumn = 'float_data'
@@ -1156,9 +1169,9 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
 
-    def test011(self):
-        """Sinusoid Test 011: addwn as string (less or equal pattern 4)"""
-        tid = '011'
+    def test012(self):
+        """Sinusoid Test 012: addwn as string (less or equal pattern 4)"""
+        tid = '012'
         infile = self.infile
         outfile = self.outroot + tid + '.ms'
         datacolumn = 'float_data'
@@ -1168,9 +1181,9 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
 
-    def test012(self):
-        """Sinusoid Test 012: addwn as string (less pattern 1)"""
-        tid = '012'
+    def test013(self):
+        """Sinusoid Test 013: addwn as string (less pattern 1)"""
+        tid = '013'
         infile = self.infile
         outfile = self.outroot + tid + '.ms'
         datacolumn = 'float_data'
@@ -1180,9 +1193,9 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
 
-    def test013(self):
-        """Sinusoid Test 013: addwn as string (less pattern 2)"""
-        tid = '013'
+    def test014(self):
+        """Sinusoid Test 014: addwn as string (less pattern 2)"""
+        tid = '014'
         infile = self.infile
         outfile = self.outroot + tid + '.ms'
         datacolumn = 'float_data'
@@ -1192,9 +1205,9 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
 
-    def test014(self):
-        """Sinusoid Test 014: addwn as string (greater or equal pattern 1)"""
-        tid = '014'
+    def test015(self):
+        """Sinusoid Test 015: addwn as string (greater or equal pattern 1)"""
+        tid = '015'
         infile = self.infile
         outfile = self.outroot + tid + '.ms'
         datacolumn = 'float_data'
@@ -1204,9 +1217,9 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
 
-    def test015(self):
-        """Sinusoid Test 015: addwn as string (greater or equal pattern 2)"""
-        tid = '015'
+    def test016(self):
+        """Sinusoid Test 016: addwn as string (greater or equal pattern 2)"""
+        tid = '016'
         infile = self.infile
         outfile = self.outroot + tid + '.ms'
         datacolumn = 'float_data'
@@ -1216,9 +1229,9 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
 
-    def test016(self):
-        """Sinusoid Test 016: addwn as string (greater or equal pattern 3)"""
-        tid = '016'
+    def test017(self):
+        """Sinusoid Test 017: addwn as string (greater or equal pattern 3)"""
+        tid = '017'
         infile = self.infile
         outfile = self.outroot + tid + '.ms'
         datacolumn = 'float_data'
@@ -1228,9 +1241,9 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
 
-    def test017(self):
-        """Sinusoid Test 017: addwn as string (greater or equal pattern 4)"""
-        tid = '017'
+    def test018(self):
+        """Sinusoid Test 018: addwn as string (greater or equal pattern 4)"""
+        tid = '018'
         infile = self.infile
         outfile = self.outroot + tid + '.ms'
         datacolumn = 'float_data'
@@ -1240,9 +1253,9 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
 
-    def test018(self):
-        """Sinusoid Test 018: addwn as string (greater pattern 1)"""
-        tid = '018'
+    def test019(self):
+        """Sinusoid Test 019: addwn as string (greater pattern 1)"""
+        tid = '019'
         infile = self.infile
         outfile = self.outroot + tid + '.ms'
         datacolumn = 'float_data'
@@ -1252,9 +1265,9 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
 
-    def test019(self):
-        """Sinusoid Test 019: addwn as string (greater pattern 2)"""
-        tid = '019'
+    def test020(self):
+        """Sinusoid Test 020: addwn as string (greater pattern 2)"""
+        tid = '020'
         infile = self.infile
         outfile = self.outroot + tid + '.ms'
         datacolumn = 'float_data'
@@ -1264,9 +1277,9 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
 
-    def test020(self):
-        """Sinusoid Test 020: specify fftthresh by 'sigma' + checking residual rms"""
-        tid = '020'
+    def test021(self):
+        """Sinusoid Test 021: specify fftthresh by 'sigma' + checking residual rms"""
+        tid = '021'
         infile = self.infile
         outfile = self.outroot + tid + '.ms'
         datacolumn = 'float_data'
@@ -1280,9 +1293,9 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         stat = self._getStats(filename=outfile, pol='0')
         self.assertTrue(stat[0]['rms'] < torr)
 
-    def test021(self):
-        """Sinusoid Test 021: specify fftthresh by 'top' + checking residual rms"""
-        tid = '021'
+    def test022(self):
+        """Sinusoid Test 022: specify fftthresh by 'top' + checking residual rms"""
+        tid = '022'
         infile = self.infile
         outfile = self.outroot + tid + '.ms'
         datacolumn = 'float_data'
@@ -1296,9 +1309,9 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         stat = self._getStats(filename=outfile, pol='0')
         self.assertTrue(stat[0]['rms'] < torr)
 
-    def test022(self):
-        """Sinusoid Test 022: sinusoid-related parameters with default values"""
-        tid = '022'
+    def test023(self):
+        """Sinusoid Test 023: sinusoid-related parameters with default values"""
+        tid = '023'
         infile = self.infile
         outfile = self.outroot + tid + '.ms'
         datacolumn = 'float_data'
@@ -1307,9 +1320,9 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         
-    def test023(self):
-        """Sinusoid Test 023: addwn has too large value but rejwn removes it"""
-        tid = '023'
+    def test024(self):
+        """Sinusoid Test 024: addwn has too large value but rejwn removes it"""
+        tid = '024'
         infile = self.infile
         outfile = self.outroot + tid + '.ms'
         datacolumn = 'float_data'
