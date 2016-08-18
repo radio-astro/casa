@@ -278,7 +278,7 @@ pipeline processing for huge dataset.
                         <default param="clipniter"><value>0</value></default>
                 </equals>
                 <equals value="sinusoid">
-                        <default param="applyfft"><value>False</value></default>
+                        <default param="applyfft"><value>True</value></default>
                         <default param="fftmethod"><value type="string">fft</value></default>
                         <default param="fftthresh"><value type="double">3.0</value></default>
                         <default param="addwn"><value type="vector"><value>0</value></value></default>
