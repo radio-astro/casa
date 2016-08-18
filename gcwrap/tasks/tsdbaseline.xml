@@ -515,11 +515,12 @@ blfunc -- baseline model function. In cases blmode='apply' or blparam is
                  example: 0
                           [0,1,2]
                           '0,1,2'
-                          'a-b' (= a, a+1, a+2, ..., b-1, b),
-                          '&lt;a'  (= 0,1,...,a-2,a-1),
+                          'a-b' (= a, a+1, ..., b)
+                          'a~b' (= a, a+1, ..., b)
+                          '&lt;a'  (= 0,1,...,a-2,a-1)
                           '&gt;=a' (= a, a+1, ... up to the maximum wave
                                    number corresponding to the Nyquist
-                                   frequency for the case of FFT).
+                                   frequency for the case of FFT)
         rejwn -- wave number(s) of sinusoid NOT to be used for fitting.
                  can be set just as addwn but has higher priority:
                  wave numbers which are specified both in addwn
