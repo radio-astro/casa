@@ -217,7 +217,7 @@ except:
                             <tr>
                                 <th>pbcor image max / min </th>
                                 %if info_dict.get((field,str(spw),pol,'non-masked max')) is not None and info_dict.get((field,str(spw),pol,'non-masked min')) is not None:
-                                            <td>${'%.2g / %.2g %s' % (info_dict[(field,str(spw),pol,'non-masked max')], info_dict[(field,str(spw),pol,'non-masked min')],
+                                            <td>${'%#.3g / %#.3g %s' % (info_dict[(field,str(spw),pol,'non-masked max')], info_dict[(field,str(spw),pol,'non-masked min')],
                                                 info_dict[(field,str(spw),pol,'brightness unit')])}</td>
                                 %else:
                                             <td>-</td>
