@@ -492,20 +492,21 @@ blfunc -- baseline model function. In cases blmode='apply' or blparam is
         npiece -- number of the element polynomials of cubic spline curve
                 options: (int) (&lt;0 turns off baseline fitting)
                 default: 2
-        applyfft - - automatically set wave numbers of sinusoidal functions 
-                    for fitting by applying some method like FFT.
+        applyfft -- automatically choose an appropriate set of sinusoidal 
+                    wave numbers via FFT for each spectrum data.
                 options: (bool) True, False
                 default: True
-        fftmethod - - method to be used when applyfft=True. Now only 
+        fftmethod -- method to be used when applyfft=True. Now only 
                      'fft' is available and it is the default.
-        fftthresh - - threshold to select wave numbers to be used for 
-                     sinusoidal fitting. both (float) and (str) accepted.
+        fftthresh -- threshold on Fourier-domain spectrum data to pick up 
+                     appropriate wave numbers to be used for sinusoidal 
+                     fitting. both (float) and (str) accepted.
                      given a float value, the unit is set to sigma.
                      for string values, allowed formats include:
-                     'xsigma' or 'x' (= x-sigma level. e.g., '3sigma'), or
-                     'topx' (= the x strongest ones, e.g. 'top5').
-                default is 3.0 (unit: sigma).
-        addwn - - additional wave number(s) of sinusoids to be used 
+                     'xsigma' or 'x' (= above x-sigma level. e.g., '3sigma')
+                     or 'topx' (= the x strongest ones, e.g. 'top5'). 
+                default is 3.0 (i.e., above 3sigma level).
+        addwn -- additional wave number(s) of sinusoids to be used 
                  for fitting. 
                  (list) and (int) are accepted to specify every
                  wave numbers. also (str) can be used in case
@@ -513,15 +514,18 @@ blfunc -- baseline model function. In cases blmode='apply' or blparam is
                  default: [0] (i.e., constant is subtracted at least)
                  example: 0
                           [0,1,2]
+                          '0,1,2'
                           'a-b' (= a, a+1, a+2, ..., b-1, b),
                           '&lt;a'  (= 0,1,...,a-2,a-1),
                           '&gt;=a' (= a, a+1, ... up to the maximum wave
                                    number corresponding to the Nyquist
                                    frequency for the case of FFT).
-        rejwn - - wave number(s) of sinusoid NOT to be used for fitting.
+        rejwn -- wave number(s) of sinusoid NOT to be used for fitting.
                  can be set just as addwn but has higher priority:
                  wave numbers which are specified both in addwn
                  and rejwn will NOT be used. 
+                 note also that rejwn value takes precedence over those 
+                 automatically selected by setting applyfft=True as well.
                  default: []
         clipthresh -- clipping threshold for iterative fitting
                  default: 3
