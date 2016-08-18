@@ -1563,8 +1563,9 @@ def parse_wavenumber_param(wn):
             _check_positive_or_zero(val0)
             val = []
             for v in val0: val.append(int(v))
+            val.sort()
             res = list(set(val)) # uniq
-            res.sort()
+            #res.sort()
         elif '-' in wn:                          # case 'a-b' : return [a,a+1,...,b-1,b]
             val = wn.split('-')
             _check_positive_or_zero(val)
@@ -1572,56 +1573,50 @@ def parse_wavenumber_param(wn):
             val.sort()
             res = [i for i in xrange(val[0], val[1]+1)]
         elif wn[:2] == '<=' or wn[:2] == '=<':   # cases '<=a','=<a' : return [0,1,...,a-1,a]
-            val0 = wn[2:]
-            _check_positive_or_zero(val0)
-            val = int(val0)+1
-            res = [i for i in xrange(val)]
+            val = wn[2:]
+            _check_positive_or_zero(val)
+            res = [i for i in xrange(int(val)+1)]
         elif wn[-2:] == '>=' or wn[-2:] == '=>': # cases 'a>=','a=>' : return [0,1,...,a-1,a]
-            val0 = wn[:-2]
-            _check_positive_or_zero(val0)
-            val = int(val0)+1
-            res = [i for i in xrange(val)]
+            val = wn[:-2]
+            _check_positive_or_zero(val)
+            res = [i for i in xrange(int(val)+1)]
         elif wn[0] == '<':                       # case '<a' :         return [0,1,...,a-2,a-1]
-            val0 = wn[1:]
-            _check_positive_or_zero(val0, False)
-            val = int(val0)
-            res = [i for i in xrange(val)]
+            val = wn[1:]
+            _check_positive_or_zero(val, False)
+            res = [i for i in xrange(int(val))]
         elif wn[-1] == '>':                      # case 'a>' :         return [0,1,...,a-2,a-1]
-            val0 = wn[:-1]
-            _check_positive_or_zero(val0, False)
-            val = int(val0)
-            res = [i for i in xrange(val)]
+            val = wn[:-1]
+            _check_positive_or_zero(val, False)
+            res = [i for i in xrange(int(val))]
         elif wn[:2] == '>=' or wn[:2] == '=>':   # cases '>=a','=>a' : return [a,-999], which is
                                                  #                     then interpreted in C++
                                                  #                     side as [a,a+1,...,a_nyq]
                                                  #                     (CAS-3759)
-            val0 = wn[2:]
-            _check_positive_or_zero(val0)
-            val = int(val0)
-            res = [val, -999]
+            val = wn[2:]
+            _check_positive_or_zero(val)
+            res = [int(val), -999]
         elif wn[-2:] == '<=' or wn[-2:] == '=<': # cases 'a<=','a=<' : return [a,-999], which is
                                                  #                     then interpreted in C++
                                                  #                     side as [a,a+1,...,a_nyq]
                                                  #                     (CAS-3759)
-            val0 = wn[:-2]
-            _check_positive_or_zero(val0)
-            val = int(val0)
-            res = [val, -999]
+            val = wn[:-2]
+            _check_positive_or_zero(val)
+            res = [int(val), -999]
         elif wn[0] == '>':                       # case '>a' :         return [a+1,-999], which is
                                                  #                     then interpreted in C++
                                                  #                     side as [a+1,a+2,...,a_nyq]
                                                  #                     (CAS-3759)
             val0 = wn[1:]
-            _check_positive_or_zero(val0)
             val = int(val0)+1
+            _check_positive_or_zero(val)
             res = [val, -999]
         elif wn[-1] == '<':                      # case 'a<' :         return [a+1,-999], which is
                                                  #                     then interpreted in C++
                                                  #                     side as [a+1,a+2,...,a_nyq]
                                                  #                     (CAS-3759)
             val0 = wn[:-1]
-            _check_positive_or_zero(val0)
             val = int(val0)+1
+            _check_positive_or_zero(val)
             res = [val, -999]
         else:
             _check_positive_or_zero(wn)

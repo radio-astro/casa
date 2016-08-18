@@ -952,6 +952,8 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
     test019 --- addwn as string (greater pattern 2)
     test020 --- specify fftthresh by 'sigma' + checking residual rms
     test021 --- specify fftthresh by 'top' + checking residual rms
+    test022 --- sinusoid-related parameters with default values
+    test023 --- addwn has too large value but rejwn removes it
     
     test100 --- no effective wave number set (addwn empty list, applyfft=False)
     test101 --- no effective wave number set (addwn empty list, applyfft=True)
@@ -963,6 +965,32 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
     test107 --- no effective wave number set (addwn and rejwn identical, applyfft=True)
     test108 --- no effective wave number set (rejwn covers wider range than that of addwn, applyfft=False)
     test109 --- no effective wave number set (rejwn covers wider range than that of addwn, applyfft=True)
+    test110 --- wn range greater than upper limit
+    test111 --- explicitly specify wn value (greater than upper limit)
+    test112 --- explicitly specify wn value (negative)
+    test113 --- explicitly specify wn value (addwn has negative and greater than upper limit)
+    test114 --- explicitly specify wn value (both addwn/rejwn have negative and greater than upper limit)
+    test115 --- wrong fftthresh (as list)
+    test116 --- wrong fftthresh (as string 'asigma')
+    test117 --- wrong fftthresh (as string 'topa')
+    test118 --- wrong fftthresh (as string 'top3sigma')
+    test119 --- wrong fftthresh (as string 'a123')
+    test120 --- wrong fftthresh (as string '')
+    test121 --- wrong fftthresh (as string '-3.0')
+    test122 --- wrong fftthresh (as string '0.0')
+    test123 --- wrong fftthresh (as string '-3')
+    test124 --- wrong fftthresh (as string '0')
+    test125 --- wrong fftthresh (as string '-3.0sigma')
+    test126 --- wrong fftthresh (as string '0.0sigma')
+    test127 --- wrong fftthresh (as string '-3sigma')
+    test128 --- wrong fftthresh (as string '0sigma')
+    test129 --- wrong fftthresh (as string 'top-3')
+    test130 --- wrong fftthresh (as string 'top0')
+    test131 --- wrong fftthresh (as string 'top1.5')
+    test132 --- wrong fftthresh (as float -3.0)
+    test133 --- wrong fftthresh (as float 0.0)
+    test134 --- wrong fftthresh (as int -3)
+    test135 --- wrong fftthresh (as int 0)
 
     Note: The input data 'sinusoidal.ms' has just two spectral data,
           which are actually identical and described as 
@@ -1268,6 +1296,32 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         stat = self._getStats(filename=outfile, pol='0')
         self.assertTrue(stat[0]['rms'] < torr)
 
+    def test022(self):
+        """Sinusoid Test 022: sinusoid-related parameters with default values"""
+        tid = '022'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                             blfunc='sinusoid')
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        
+    def test023(self):
+        """Sinusoid Test 023: addwn has too large value but rejwn removes it"""
+        tid = '023'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        applyfft = False
+        addwn = [0,10000]
+        rejwn = '4000<'
+        result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                             blfunc='sinusoid',applyfft=applyfft,addwn=addwn,rejwn=rejwn)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        
+        
     def test100(self):
         """Sinusoid Test 100: no effective wave number set (addwn empty list, applyfft=False)"""
         tid = '100'
@@ -1279,7 +1333,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
             result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                                  blfunc='sinusoid',addwn=addwn,applyfft=False)
         except Exception as e:
-            self.assertEqual(str(e), 'addwn must contain at least one element.')
+            self.assertEqual(e.message, 'addwn must contain at least one element.')
         
     def test101(self):
         """Sinusoid Test 101: no effective wave number set (addwn empty list, applyfft=True)"""
@@ -1292,7 +1346,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
             result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                                  blfunc='sinusoid',addwn=addwn,applyfft=True)
         except Exception as e:
-            self.assertEqual(str(e), 'addwn must contain at least one element.')
+            self.assertEqual(e.message, 'addwn must contain at least one element.')
         
     def test102(self):
         """Sinusoid Test 102: no effective wave number set (addwn empty tuple, applyfft=False)"""
@@ -1305,7 +1359,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
             result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                                  blfunc='sinusoid',addwn=addwn,applyfft=False)
         except Exception as e:
-            self.assertEqual(str(e), 'addwn must contain at least one element.')
+            self.assertEqual(e.message, 'addwn must contain at least one element.')
         
     def test103(self):
         """Sinusoid Test 103: no effective wave number set (addwn empty tuple, applyfft=True)"""
@@ -1318,7 +1372,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
             result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                                  blfunc='sinusoid',addwn=addwn,applyfft=True)
         except Exception as e:
-            self.assertEqual(str(e), 'addwn must contain at least one element.')
+            self.assertEqual(e.message, 'addwn must contain at least one element.')
         
     def test104(self):
         """Sinusoid Test 104: no effective wave number set (addwn empty string, applyfft=False)"""
@@ -1331,7 +1385,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
             result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                                  blfunc='sinusoid',addwn=addwn,applyfft=False)
         except Exception as e:
-            self.assertEqual(str(e), 'string index out of range')
+            self.assertEqual(e.message, 'string index out of range')
         
     def test105(self):
         """Sinusoid Test 105: no effective wave number set (addwn empty string, applyfft=True)"""
@@ -1344,7 +1398,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
             result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                                  blfunc='sinusoid',addwn=addwn,applyfft=True)
         except Exception as e:
-            self.assertEqual(str(e), 'string index out of range')
+            self.assertEqual(e.message, 'string index out of range')
         
     def test106(self):
         """Sinusoid Test 106: no effective wave number set (addwn and rejwn identical, applyfft=False)"""
@@ -1358,7 +1412,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
             result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                                  blfunc='sinusoid',addwn=addwn,rejwn=rejwn,applyfft=False)
         except Exception as e:
-            self.assertEqual(str(e), 'No effective wave number given for sinusoidal fitting.')
+            self.assertEqual(e.message, 'No effective wave number given for sinusoidal fitting.')
         
     def test107(self):
         """Sinusoid Test 107: no effective wave number set (addwn and rejwn identical, applyfft=True)"""
@@ -1372,7 +1426,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
             result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                                  blfunc='sinusoid',addwn=addwn,rejwn=rejwn,applyfft=True)
         except Exception as e:
-            self.assertEqual(str(e), 'No effective wave number given for sinusoidal fitting.')
+            self.assertEqual(e.message, 'No effective wave number given for sinusoidal fitting.')
         
     def test108(self):
         """Sinusoid Test 108: no effective wave number set (rejwn covers wider range than that of addwn, applyfft=False)"""
@@ -1386,7 +1440,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
             result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                                  blfunc='sinusoid',addwn=addwn,rejwn=rejwn,applyfft=False)
         except Exception as e:
-            self.assertEqual(str(e), 'No effective wave number given for sinusoidal fitting.')
+            self.assertEqual(e.message, 'No effective wave number given for sinusoidal fitting.')
         
     def test109(self):
         """Sinusoid Test 109: no effective wave number set (rejwn covers wider range than that of addwn, applyfft=True)"""
@@ -1400,8 +1454,350 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
             result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                                  blfunc='sinusoid',addwn=addwn,rejwn=rejwn,applyfft=True)
         except Exception as e:
-            self.assertEqual(str(e), 'No effective wave number given for sinusoidal fitting.')
+            self.assertEqual(e.message, 'No effective wave number given for sinusoidal fitting.')
 
+    def test110(self):
+        """Sinusoid Test 110: wn range greater than upper limit"""
+        tid = '110'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        addwn = '5000<'
+        rejwn = '<5100'
+        try:
+            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                                 blfunc='sinusoid',addwn=addwn,rejwn=rejwn,applyfft=True)
+        except Exception as e:
+            self.assertEqual(e.message, 'No effective wave number given for sinusoidal fitting.')
+
+    def test111(self):
+        """Sinusoid Test 111: explicitly specify wn value (greater than upper limit)"""
+        tid = '111'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        addwn = [5000,5500]
+        rejwn = []
+        try:
+            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                                 blfunc='sinusoid',addwn=addwn,rejwn=rejwn,applyfft=True)
+        except Exception as e:
+            self.assertEqual(e.message, 'No effective wave number given for sinusoidal fitting.')
+
+    def test112(self):
+        """Sinusoid Test 112: explicitly specify wn value (negative)"""
+        tid = '112'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        addwn = [-10,5]
+        rejwn = []
+        try:
+            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                                 blfunc='sinusoid',addwn=addwn,rejwn=rejwn,applyfft=True)
+        except Exception as e:
+            self.assertEqual(e.message, 'wrong value given for addwn/rejwn')
+
+    def test113(self):
+        """Sinusoid Test 113: explicitly specify wn value (addwn has negative and greater than upper limit)"""
+        tid = '113'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        addwn = [-10,5000]
+        rejwn = []
+        try:
+            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                                 blfunc='sinusoid',addwn=addwn,rejwn=rejwn,applyfft=True)
+        except Exception as e:
+            self.assertEqual(e.message, 'wrong value given for addwn/rejwn')
+
+    def test114(self):
+        """Sinusoid Test 114: explicitly specify wn value (both addwn/rejwn have negative and greater than upper limit)"""
+        tid = '114'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        addwn = [-10,5000]
+        rejwn = [-10,5500]
+        try:
+            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                                 blfunc='sinusoid',addwn=addwn,rejwn=rejwn,applyfft=True)
+        except Exception as e:
+            self.assertEqual(e.message, 'wrong value given for addwn/rejwn')
+
+    def test115(self):
+        """Sinusoid Test 115: wrong fftthresh (as list)"""
+        tid = '115'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        fftthresh = [3.0]
+        try:
+            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                                 blfunc='sinusoid',applyfft=True,fftthresh=fftthresh)
+        except Exception as e:
+            self.assertEqual(e.message, 'fftthresh must be float or integer or string.')
+
+    def test116(self):
+        """Sinusoid Test 116: wrong fftthresh (as string 'asigma')"""
+        tid = '116'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        fftthresh = 'asigma'
+        try:
+            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                                 blfunc='sinusoid',applyfft=True,fftthresh=fftthresh)
+        except Exception as e:
+            self.assertEqual(e.message, 'fftthresh has a wrong format.')
+
+    def test117(self):
+        """Sinusoid Test 117: wrong fftthresh (as string 'topa')"""
+        tid = '117'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        fftthresh = 'topa'
+        try:
+            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                                 blfunc='sinusoid',applyfft=True,fftthresh=fftthresh)
+        except Exception as e:
+            self.assertEqual(e.message, 'fftthresh has a wrong format.')
+
+    def test118(self):
+        """Sinusoid Test 118: wrong fftthresh (as string 'top3sigma')"""
+        tid = '118'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        fftthresh = 'top3sigma'
+        try:
+            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                                 blfunc='sinusoid',applyfft=True,fftthresh=fftthresh)
+        except Exception as e:
+            self.assertEqual(e.message, 'fftthresh has a wrong format.')
+
+    def test119(self):
+        """Sinusoid Test 119: wrong fftthresh (as string 'a123')"""
+        tid = '119'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        fftthresh = 'a123'
+        try:
+            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                                 blfunc='sinusoid',applyfft=True,fftthresh=fftthresh)
+        except Exception as e:
+            self.assertEqual(e.message, 'fftthresh has a wrong format.')
+
+    def test120(self):
+        """Sinusoid Test 120: wrong fftthresh (as string '')"""
+        tid = '120'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        fftthresh = ''
+        try:
+            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                                 blfunc='sinusoid',applyfft=True,fftthresh=fftthresh)
+        except Exception as e:
+            self.assertEqual(e.message, 'fftthresh has a wrong format.')
+
+    def test121(self):
+        """Sinusoid Test 121: wrong fftthresh (as string '-3.0')"""
+        tid = '121'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        fftthresh = '-3.0'
+        try:
+            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                                 blfunc='sinusoid',applyfft=True,fftthresh=fftthresh)
+        except Exception as e:
+            self.assertEqual(e.message, 'threshold given to fftthresh must be positive.')
+
+    def test122(self):
+        """Sinusoid Test 122: wrong fftthresh (as string '0.0')"""
+        tid = '122'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        fftthresh = '0.0'
+        try:
+            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                                 blfunc='sinusoid',applyfft=True,fftthresh=fftthresh)
+        except Exception as e:
+            self.assertEqual(e.message, 'threshold given to fftthresh must be positive.')
+
+    def test123(self):
+        """Sinusoid Test 123: wrong fftthresh (as string '-3')"""
+        tid = '123'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        fftthresh = '-3'
+        try:
+            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                                 blfunc='sinusoid',applyfft=True,fftthresh=fftthresh)
+        except Exception as e:
+            self.assertEqual(e.message, 'threshold given to fftthresh must be positive.')
+
+    def test124(self):
+        """Sinusoid Test 124: wrong fftthresh (as string '0')"""
+        tid = '124'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        fftthresh = '0'
+        try:
+            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                                 blfunc='sinusoid',applyfft=True,fftthresh=fftthresh)
+        except Exception as e:
+            self.assertEqual(e.message, 'threshold given to fftthresh must be positive.')
+
+    def test125(self):
+        """Sinusoid Test 125: wrong fftthresh (as string '-3.0sigma')"""
+        tid = '125'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        fftthresh = '-3.0sigma'
+        try:
+            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                                 blfunc='sinusoid',applyfft=True,fftthresh=fftthresh)
+        except Exception as e:
+            self.assertEqual(e.message, 'threshold given to fftthresh must be positive.')
+
+    def test126(self):
+        """Sinusoid Test 126: wrong fftthresh (as string '0.0sigma')"""
+        tid = '126'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        fftthresh = '0.0sigma'
+        try:
+            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                                 blfunc='sinusoid',applyfft=True,fftthresh=fftthresh)
+        except Exception as e:
+            self.assertEqual(e.message, 'threshold given to fftthresh must be positive.')
+
+    def test127(self):
+        """Sinusoid Test 127: wrong fftthresh (as string '-3sigma')"""
+        tid = '127'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        fftthresh = '-3sigma'
+        try:
+            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                                 blfunc='sinusoid',applyfft=True,fftthresh=fftthresh)
+        except Exception as e:
+            self.assertEqual(e.message, 'threshold given to fftthresh must be positive.')
+
+    def test128(self):
+        """Sinusoid Test 128: wrong fftthresh (as string '0sigma')"""
+        tid = '128'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        fftthresh = '0sigma'
+        try:
+            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                                 blfunc='sinusoid',applyfft=True,fftthresh=fftthresh)
+        except Exception as e:
+            self.assertEqual(e.message, 'threshold given to fftthresh must be positive.')
+
+    def test129(self):
+        """Sinusoid Test 129: wrong fftthresh (as string 'top-3')"""
+        tid = '129'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        fftthresh = 'top-3'
+        try:
+            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                                 blfunc='sinusoid',applyfft=True,fftthresh=fftthresh)
+        except Exception as e:
+            self.assertEqual(e.message, 'threshold given to fftthresh must be positive.')
+
+    def test130(self):
+        """Sinusoid Test 130: wrong fftthresh (as string 'top0')"""
+        tid = '130'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        fftthresh = 'top0'
+        try:
+            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                                 blfunc='sinusoid',applyfft=True,fftthresh=fftthresh)
+        except Exception as e:
+            self.assertEqual(e.message, 'threshold given to fftthresh must be positive.')
+
+    def test131(self):
+        """Sinusoid Test 131: wrong fftthresh (as string 'top1.5')"""
+        tid = '131'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        fftthresh = 'top1.5'
+        try:
+            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                                 blfunc='sinusoid',applyfft=True,fftthresh=fftthresh)
+        except Exception as e:
+            self.assertEqual(e.message, 'fftthresh has a wrong format.')
+
+    def test132(self):
+        """Sinusoid Test 132: wrong fftthresh (as float -3.0)"""
+        tid = '132'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        fftthresh = -3.0
+        try:
+            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                                 blfunc='sinusoid',applyfft=True,fftthresh=fftthresh)
+        except Exception as e:
+            self.assertEqual(e.message, 'threshold given to fftthresh must be positive.')
+
+    def test133(self):
+        """Sinusoid Test 133: wrong fftthresh (as float 0.0)"""
+        tid = '133'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        fftthresh = 0.0
+        try:
+            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                                 blfunc='sinusoid',applyfft=True,fftthresh=fftthresh)
+        except Exception as e:
+            self.assertEqual(e.message, 'threshold given to fftthresh must be positive.')
+
+    def test134(self):
+        """Sinusoid Test 134: wrong fftthresh (as int -3)"""
+        tid = '134'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        fftthresh = -3
+        try:
+            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                                 blfunc='sinusoid',applyfft=True,fftthresh=fftthresh)
+        except Exception as e:
+            self.assertEqual(e.message, 'threshold given to fftthresh must be positive.')
+
+    def test135(self):
+        """Sinusoid Test 135: wrong fftthresh (as int 0)"""
+        tid = '135'
+        infile = self.infile
+        outfile = self.outroot + tid + '.ms'
+        datacolumn = 'float_data'
+        fftthresh = 0
+        try:
+            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+                                 blfunc='sinusoid',applyfft=True,fftthresh=fftthresh)
+        except Exception as e:
+            self.assertEqual(e.message, 'threshold given to fftthresh must be positive.')
 
 
 class tsdbaseline_multi_IF_test(tsdbaseline_unittest_base):

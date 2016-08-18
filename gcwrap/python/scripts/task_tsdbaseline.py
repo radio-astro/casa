@@ -50,6 +50,7 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
             if(blfunc == 'sinusoid'):
                 addwn = sdutil.parse_wavenumber_param(addwn)
                 rejwn = sdutil.parse_wavenumber_param(rejwn)
+                check_fftthresh(fftthresh)
 
             """
             sep=['-','<=','<','>=','>']
@@ -145,6 +146,42 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
 
 blformat_item = ['csv', 'text', 'table']
 blformat_ext  = ['csv', 'txt',  'bltable']
+
+
+def check_fftthresh(fftthresh):
+    has_valid_type = isinstance(fftthresh, float) or isinstance(fftthresh, int) or isinstance(fftthresh, str)
+    if not has_valid_type:
+        raise ValueError, 'fftthresh must be float or integer or string.'
+
+    not_positive_mesg = 'threshold given to fftthresh must be positive.'
+    
+    if isinstance(fftthresh, str):
+        try:
+            val_not_positive = False
+            if (3 < len(fftthresh)) and (fftthresh[:3] == 'top'):
+                val_top = int(fftthresh[3:])
+                if (val_top <= 0):
+                    val_not_positive = True
+            elif (5 < len(fftthresh)) and (fftthresh[-5:] == 'sigma'):
+                val_sigma = float(fftthresh[:-5])
+                if (val_sigma <= 0.0):
+                    val_not_positive = True
+            else:
+                val_sigma = float(fftthresh)
+                if (val_sigma <= 0.0):
+                    val_not_positive = True
+            
+            if val_not_positive:
+                raise ValueError, not_positive_mesg
+        except Exception, e:
+            if (e.message == not_positive_mesg):
+                raise
+            else:
+                raise ValueError, 'fftthresh has a wrong format.'
+
+    else:
+        if (fftthresh <= 0.0):
+            raise ValueError, not_positive_mesg
 
 
 """
