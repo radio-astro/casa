@@ -1,3 +1,4 @@
+import os
 import numpy
 import collections
 
@@ -9,7 +10,7 @@ from ..common import utils
 
 LOG = infrastructure.get_logger(__name__)
 
-def analyze_plot_table(context, datatable, ms, antid, spwid, polid, plot_table):
+def analyze_plot_table(context, datatable, ms, antid, spwid, plot_table):
     #datatable = context.observing_run.datatable_instance
     num_rows = len(plot_table) # num_plane * num_ra * num_dec
     num_dec = plot_table[-1][1] + 1
@@ -43,7 +44,7 @@ def analyze_plot_table(context, datatable, ms, antid, spwid, polid, plot_table):
         dec = plot_table[each_plane[0]][3]
         rowlist[row_index].update(
                 {"RAID": raid, "DECID": decid, "RA": ra, "DEC": dec,
-                 "POLID": polid, "IDS": dataids, "MEDIAN_INDEX": midx})
+                 "IDS": dataids, "MEDIAN_INDEX": midx})
         LOG.trace('RA %s DEC %s: dataids=%s'%(raid, decid, dataids))
         
     refpix_list = [0,0]
@@ -82,16 +83,16 @@ def create_plotter(num_ra, num_dec, num_plane, refpix, refval, increment):
     return plotter
     
 #@utils.profiler
-def get_data(infile, datatable, num_ra, num_dec, num_chan, rowlist, rowmap=None):
+def get_data(infile, datatable, num_ra, num_dec, num_chan, num_pol, rowlist, rowmap=None):
     # default rowmap is EchoDictionary
     if rowmap is None:
         rowmap = utils.EchoDictionary()
 
-    integrated_data = numpy.zeros(num_chan, dtype=float)
-    integrated_mask = numpy.zeros(num_chan, dtype=bool)
-    num_accumulated = numpy.zeros(num_chan, dtype=int)
-    map_data = numpy.zeros((num_ra, num_dec, num_chan), dtype=float) + sparsemap.NoDataThreshold
-    map_mask = numpy.zeros((num_ra, num_dec, num_chan), dtype=bool)
+    integrated_data = numpy.zeros((num_pol, num_chan), dtype=float)
+    integrated_mask = numpy.zeros((num_pol, num_chan), dtype=bool)
+    num_accumulated = numpy.zeros((num_pol, num_chan), dtype=int)
+    map_data = numpy.zeros((num_ra, num_dec, num_pol, num_chan), dtype=float) + sparsemap.NoDataThreshold
+    map_mask = numpy.zeros((num_ra, num_dec, num_pol, num_chan), dtype=bool)
     nrow = 0
     
     # column name for spectral data
@@ -109,26 +110,25 @@ def get_data(infile, datatable, num_ra, num_dec, num_chan, rowlist, rowmap=None)
             ix = num_ra - 1 - d['RAID']
             iy = d['DECID']
             idxs = d['IDS']
-            polid = d['POLID']
             if len(idxs) > 0:
                 midx = d['MEDIAN_INDEX']
                 median_row = datatable.tb1.getcell('ROW', idxs[midx])
                 mapped_row = rowmap[median_row]
                 LOG.debug('median row for (%s,%s) is %s (mapped to %s)'%(ix, iy, median_row, mapped_row))
                 nrow += len(idxs)
-                this_data = tb.getcellslice(colname, mapped_row, [polid, 0], [polid, -1], [1,1]).real.squeeze()
-                this_mask = tb.getcellslice('FLAG', mapped_row, [polid, 0], [polid, -1], [1,1]).squeeze()
-                map_data[ix,iy,:] = this_data
-                map_mask[ix,iy,:] = this_mask
+                this_data = tb.getcell(colname, mapped_row)
+                this_mask = tb.getcell('FLAG', mapped_row)
+                map_data[ix,iy] = this_data.real
+                map_mask[ix,iy] = this_mask
                 for row in (datatable.tb1.getcell('ROW', i) for i in idxs):
                     mapped_row = rowmap[row]
                     LOG.debug('row %s: mapped_row %s'%(row, mapped_row))
-                    this_data = tb.getcellslice(colname, mapped_row, [polid, 0], [polid, -1], [1,1]).real.squeeze()
-                    this_mask = tb.getcellslice('FLAG', mapped_row, [polid, 0], [polid, -1], [1,1]).squeeze()
+                    this_data = tb.getcell(colname, mapped_row)
+                    this_mask = tb.getcell('FLAG', mapped_row)
                     LOG.trace('this_mask.shape=%s'%(list(this_mask.shape)))
                     LOG.trace('all(this_mask==True) = %s'%(numpy.all(this_mask==True)))
                     binary_mask = numpy.asarray(numpy.logical_not(this_mask), dtype=int)
-                    integrated_data += this_data * binary_mask 
+                    integrated_data += this_data.real * binary_mask 
                     num_accumulated += binary_mask 
             else:
                 LOG.debug('no data is available for (%s,%s)'%(ix,iy))
@@ -138,7 +138,6 @@ def get_data(infile, datatable, num_ra, num_dec, num_chan, rowlist, rowmap=None)
     LOG.trace('integrated_data=%s'%(integrated_data))
     LOG.trace('num_accumulated=%s'%(num_accumulated))
     LOG.trace('map_data.shape=%s'%(list(map_data.shape)))
-    LOG.trace('map_data[0][0].shape=%s'%(map_data[0][0].shape))
 
     return integrated_data_masked, map_data_masked
 
@@ -179,7 +178,7 @@ def get_lines(datatable, num_ra, rowlist):
 #     return integrated_data, map_data
 
 #@utils.profiler
-def plot_profile_map_with_fit(context, ms, antid, spwid, polid, plot_table, prefit_data, postfit_data, prefit_figfile, postfit_figfile, deviation_mask, line_range,
+def plot_profile_map_with_fit(context, ms, antid, spwid, plot_table, prefit_data, postfit_data, prefit_figfile_prefix, postfit_figfile_prefix, deviation_mask, line_range,
                               rowmap=None):
     """
     plot_table format:
@@ -187,63 +186,79 @@ def plot_profile_map_with_fit(context, ms, antid, spwid, polid, plot_table, pref
      [0, 1, RA0, DEC1, [IDX10, IDX11, ...]],
      ...]
     """
-    #datatable = context.observing_run.datatable_instance
     datatable = DataTable(context.observing_run.ms_datatable_name)
 
-    num_ra, num_dec, num_plane, refpix, refval, increment, rowlist = analyze_plot_table(context, datatable, ms, antid, spwid, polid, plot_table)
+    num_ra, num_dec, num_plane, refpix, refval, increment, rowlist = analyze_plot_table(context, datatable, ms, antid, spwid, plot_table)
         
     plotter = create_plotter(num_ra, num_dec, num_plane, refpix, refval, increment)
     
     spw = ms.spectral_windows[spwid]
     nchan = spw.num_channels
-    #nchan = context.observing_run[antid].spectral_window[spwid].num_channels
+    data_desc = ms.get_data_description(spw=spw)
+    npol = data_desc.num_polarizations
     LOG.debug('nchan=%s'%(nchan))
     
-    #spw = context.observing_run[antid].spectral_window[spwid]
-    #frequency = numpy.array([spw.refval + (i - spw.refpix) * spw.increment for i in xrange(nchan)]) * 1.0e-9    
     frequency = numpy.fromiter((spw.channels.chan_freqs[i] * 1.0e-9 for i in xrange(nchan)), dtype=numpy.float64) # unit in GHz
     LOG.debug('frequency=%s~%s (nchan=%s)'%(frequency[0], frequency[-1], len(frequency)))
 
     if rowmap is None:
         rowmap = utils.make_row_map(ms, postfit_data)
     postfit_integrated_data, postfit_map_data = get_data(postfit_data, datatable, 
-                                                         num_ra, num_dec, nchan, rowlist,
-                                                         rowmap=rowmap)
+                                                         num_ra, num_dec, nchan, npol,
+                                                         rowlist, rowmap=rowmap)
     lines_map = get_lines(datatable, num_ra, rowlist)
 
+    plot_list = {}
+
     # plot post-fit spectra
+    plot_list['post_fit'] = {}
     plotter.setup_lines(line_range, lines_map)
     plotter.setup_reference_level(0.0)
     plotter.set_deviation_mask(deviation_mask)
     plotter.set_global_scaling()
-    plotter.plot(postfit_map_data, postfit_integrated_data, frequency, figfile=postfit_figfile)
+    for ipol in xrange(npol):
+        postfit_figfile = postfit_figfile_prefix + '_pol%s.png'%(ipol)
+        plotter.plot(postfit_map_data[:,:,ipol,:], 
+                     postfit_integrated_data[ipol], 
+                     frequency, figfile=postfit_figfile)
+        if os.path.exists(postfit_figfile):
+            plot_list['post_fit'][ipol] = postfit_figfile
 
     del postfit_integrated_data
     
-    prefit_integrated_data, prefit_map_data = get_data(prefit_data, datatable, num_ra, num_dec, nchan, rowlist)
+    prefit_integrated_data, prefit_map_data = get_data(prefit_data, datatable, 
+                                                       num_ra, num_dec, 
+                                                       nchan, npol, rowlist)
     
     # fit_result shares its storage with postfit_map_data to reduce memory usage
     fit_result = postfit_map_data
     for x in xrange(num_ra):
         for y in xrange(num_dec):
             prefit = prefit_map_data[x][y]
-            if not all(prefit == sparsemap.NoDataThreshold):
+            if not numpy.all(prefit == sparsemap.NoDataThreshold):
                 postfit = postfit_map_data[x][y]
-                fit_result[x][y] = prefit - postfit
+                fit_result[x,y] = prefit - postfit
             else:
-                fit_result[x][y][:] = sparsemap.NoDataThreshold
+                fit_result[x,y,::] = sparsemap.NoDataThreshold
     
     
     # plot pre-fit spectra
+    plot_list['pre_fit'] = {}
     plotter.setup_reference_level(None) 
     plotter.unset_global_scaling()
-    plotter.plot(prefit_map_data, prefit_integrated_data, frequency, fit_result=fit_result, figfile=prefit_figfile)
+    for ipol in xrange(npol):
+        prefit_figfile = prefit_figfile_prefix + '_pol%s.png'%(ipol)
+        plotter.plot(prefit_map_data[:,:,ipol,:], 
+                     prefit_integrated_data[ipol], 
+                     frequency, fit_result=fit_result[:,:,ipol,:], figfile=prefit_figfile)
+        if os.path.exists(prefit_figfile):
+            plot_list['pre_fit'][ipol] = prefit_figfile
             
     plotter.done()
     
     del prefit_integrated_data, prefit_map_data, postfit_map_data, fit_result
     
-    return True
+    return plot_list
 
 def median_index(arr):
     if not numpy.iterable(arr) or len(arr) == 0:

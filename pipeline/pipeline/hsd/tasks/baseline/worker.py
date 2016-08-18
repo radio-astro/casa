@@ -9,8 +9,6 @@ import itertools
 import types
 import shutil
 
-import asap as sd
-
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
@@ -47,12 +45,14 @@ class BaselineParamKeys(object):
 BLP = BaselineParamKeys
     
 
+#@sdutils.profiler
 def write_blparam(blparam_file, param):
     param_values = collections.defaultdict(str)
     for key in BLP.ORDERED_KEY:
         if param.has_key(key):
             param_values[key] = param[key]
     line = ','.join(map(str, [param_values[k] for k in BLP.ORDERED_KEY]))
+    #line = ','.join((str(param[k]) if k in param.keys() else '' for k in BLP.ORDERED_KEY))
     with open(blparam_file, 'a') as f:
         f.write(line+'\n')
 
@@ -299,6 +299,7 @@ class BaselineFitParamConfig(basetask.StandardTaskTemplate):
     def analyse(self, results):
         return results
     
+    #@sdutils.profiler
     def _calc_baseline_param(self, row_idx, pol, polyorder, nchan, modification, edge, masklist, win_polyorder, fragment, nwindow, mask):
         # Create mask for line protection
         nchan_without_edge = nchan - sum(edge)
@@ -433,6 +434,7 @@ class BaselineSubtractionWorker(basetask.StandardTaskTemplate):
         results = BaselineSubtractionResults(success=True, outcome=outcome)
         return results
         
+    #@sdutils.profiler
     def analyse(self, results):
         # plotting
         #plot_table = self.inputs.plot_table
@@ -502,57 +504,51 @@ class BaselineSubtractionWorker(basetask.StandardTaskTemplate):
 #                                 outcome=outcome)
    
         results.outcome.update({'plot_list': plot_list})
-        
+                
         return results
     
+    #@sdutils.profiler
     def get_rowmap_for_baseline(self, ms, postfit_data):
         rowmap = sdutils.make_row_map(ms, postfit_data)
         return rowmap
 
-    
+    #@sdutils.profiler
     def plot_spectra_with_fit(self, source, ant, spwid, pols, grid_table, prefit_data, postfit_data, outdir, deviation_mask, channelmap_range, rowmap=None):
-        #st = self.inputs.context.observing_run[ant]
         ms= self.inputs.ms
         line_range = [[r[0] - 0.5 * r[1], r[0] + 0.5 * r[1]] for r in channelmap_range if r[2] is True]
         if len(line_range) == 0:
             line_range = None
-        for pol in pols:
-            LOG.debug('Generating plots for source %s ant %s spw %s pol %s'%(source, ant, spwid, pol))
-            outfile_template = lambda x: 'spectral_plot_%s_subtraction_%s_%s_ant%s_spw%s_pol%s.png'%(x,'.'.join(ms.basename.split('.')[:-1]),source,ant,spwid,pol)
-            prefit_outfile = os.path.join(outdir, outfile_template('before'))
-            postfit_outfile = os.path.join(outdir, outfile_template('after'))
-            LOG.debug('prefit_outfile=\'%s\''%(os.path.basename(prefit_outfile)))
-            LOG.debug('postfit_outfile=\'%s\''%(os.path.basename(postfit_outfile)))
-            status = plotter.plot_profile_map_with_fit(self.inputs.context, ms, ant, spwid, pol, grid_table, prefit_data, postfit_data, 
-                                                       prefit_outfile, postfit_outfile, deviation_mask, line_range, rowmap=rowmap)
-            if os.path.exists(prefit_outfile):
-                parameters = {'intent': 'TARGET',
-                              'spw': spwid,
-                              'pol': sd_polmap[pol],
-                              'ant': ms.antennas[ant].name,
-                              'vis': ms.basename,
-                              'type': 'sd_sparse_map_before_subtraction',
-                              'file': prefit_data}
-                plot = logger.Plot(prefit_outfile,
+        LOG.debug('Generating plots for source %s ant %s spw %s'%(source, ant, spwid))
+        outprefix_template = lambda x: 'spectral_plot_%s_subtraction_%s_%s_ant%s_spw%s'%(x,'.'.join(ms.basename.split('.')[:-1]),source,ant,spwid)
+        prefit_prefix = os.path.join(outdir, outprefix_template('before'))
+        postfit_prefix = os.path.join(outdir, outprefix_template('after'))
+        LOG.debug('prefit_prefix=\'%s\''%(os.path.basename(prefit_prefix)))
+        LOG.debug('postfit_prefix=\'%s\''%(os.path.basename(postfit_prefix)))
+        plot_list = plotter.plot_profile_map_with_fit(self.inputs.context, ms, ant, spwid, grid_table, prefit_data, postfit_data, 
+                                                      prefit_prefix, postfit_prefix, deviation_mask, line_range, rowmap=rowmap)
+        for (plot_type, plots) in plot_list.items():
+            if plot_type == 'pre_fit':
+                ptype = 'sd_sparse_map_before_subtraction'
+                data = prefit_data
+            else:
+                ptype = 'sd_sparse_map_after_subtraction'
+                data = postfit_data
+            for (pol, figfile) in plots.items():
+                if os.path.exists(figfile):
+                    parameters = {'intent': 'TARGET',
+                                  'spw': spwid,
+                                  'pol': sd_polmap[pol],
+                                  'ant': ms.antennas[ant].name,
+                                  'vis': ms.basename,
+                                  'type': ptype,
+                                  'file': data}
+                plot = logger.Plot(figfile,
                                    x_axis='Frequency',
                                    y_axis='Intensity',
                                    field=source,
                                    parameters=parameters)
                 yield plot
-            if os.path.exists(postfit_outfile):
-                parameters = {'intent': 'TARGET',
-                              'spw': spwid,
-                              'pol': sd_polmap[pol],
-                              'ant': ms.antennas[ant].name,
-                              'vis': ms.basename,
-                              'type': 'sd_sparse_map_after_subtraction',
-                              'file': postfit_data}
-                plot = logger.Plot(postfit_outfile,
-                                   x_axis='Frequency',
-                                   y_axis='Intensity',
-                                   field=source,
-                                   parameters=parameters)
-                yield plot
+                    
                 
 class CubicSplineBaselineSubtractionWorker(BaselineSubtractionWorker):
     SubTask = CubicSplineFitParamConfig
