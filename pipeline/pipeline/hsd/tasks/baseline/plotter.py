@@ -82,6 +82,23 @@ def create_plotter(num_ra, num_dec, num_plane, refpix, refval, increment):
     plotter.setup_labels(refpix, refval, increment)
     return plotter
     
+# @utils.profiler
+# def echo_mapped_row(i, rowmap):
+#     return i
+# 
+# @utils.profiler
+# def get_mapped_row(i, rowmap):
+#     return rowmap[i]
+# 
+# @utils.profiler
+# def get_data_from_table(table, colname, i):
+#     LOG.info('colname=%s'%(colname))
+#     return table.getcell(colname, i)
+# 
+# @utils.profiler
+# def get_flag_from_table(table, i):
+#     return table.getcell('FLAG', i)
+
 #@utils.profiler
 def get_data(infile, datatable, num_ra, num_dec, num_chan, num_pol, rowlist, rowmap=None):
     # default rowmap is EchoDictionary
@@ -120,7 +137,10 @@ def get_data(infile, datatable, num_ra, num_dec, num_chan, num_pol, rowlist, row
                 this_mask = tb.getcell('FLAG', mapped_row)
                 map_data[ix,iy] = this_data.real
                 map_mask[ix,iy] = this_mask
-                for row in (datatable.tb1.getcell('ROW', i) for i in idxs):
+                # to access MS rows in sorted order (avoid jumping distant row, accessing back and forth)
+                rows = datatable.tb1.getcol('ROW')[idxs]
+                rows.sort()
+                for row in rows:
                     mapped_row = rowmap[row]
                     LOG.debug('row %s: mapped_row %s'%(row, mapped_row))
                     this_data = tb.getcell(colname, mapped_row)
