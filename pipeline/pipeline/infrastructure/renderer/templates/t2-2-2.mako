@@ -19,9 +19,9 @@ import pipeline.domain.measures as measures
 			    <thead>
 			        <tr>
 			            <th scope="col" rowspan="2">ID</th>
-			            <th scope="col" colspan="3">Frequency</th>
-			            <th scope="col" rowspan="2">Bandwidth</th>
-			            <th scope="col" colspan="3">Channels</th>
+			            <th scope="col" colspan="3">Frequency ${'(%s)' % (ms.get_spectral_windows()[0].frame)}</th>
+			            <th scope="col" rowspan="2">Bandwidth ${'(%s)' % (ms.get_spectral_windows()[0].frame)}</th>
+			            <th scope="col" colspan="3">Channels ${'(%s)' % (ms.get_spectral_windows()[0].frame)}</th>
 			            <th scope="col" rowspan="2">Correlator Axis</th>
 			            <th scope="col" rowspan="2">Band</th>
 						<%
@@ -75,9 +75,9 @@ import pipeline.domain.measures as measures
 			    <thead>
 			        <tr>
 			            <th scope="col" rowspan="2">ID</th>
-			            <th scope="col" colspan="3">Frequency</th>
-			            <th scope="col" rowspan="2">Bandwidth</th>
-			            <th scope="col" colspan="3">Channels</th>
+			            <th scope="col" colspan="3">Frequency ${'(%s)' % (ms.get_spectral_windows()[0].frame)}</th>
+			            <th scope="col" rowspan="2">Bandwidth ${'(%s)' % (ms.get_spectral_windows()[0].frame)}</th>
+			            <th scope="col" colspan="3">Channels ${'(%s)' % (ms.get_spectral_windows()[0].frame)}</th>
 			            <th scope="col" rowspan="2">Correlator Axis</th>
 			            <th scope="col" rowspan="2">Band</th>
 						<%
