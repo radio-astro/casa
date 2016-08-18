@@ -113,7 +113,7 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                     info_dict[(field, spw, pol, 'width')] = width
 
                     aggregate_bw_GHz = qaTool.convert(r.aggregate_bw, 'GHz')['value']
-                    aggregate_bw_text = '%.9g GHz (LSRK)' % (aggregate_bw_GHz)
+                    aggregate_bw_text = '%.3g GHz (LSRK)' % (aggregate_bw_GHz)
                     info_dict[(field, spw, pol, 'aggregate bandwidth')] = aggregate_bw_text
 
                     eff_ch_bw_MHz = qaTool.convert(r.eff_ch_bw, 'MHz')['value']
