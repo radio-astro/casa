@@ -189,7 +189,7 @@ except:
                                     %if info_dict.get((field,str(spw),pol,'dirty DR')) is not None:
                                             <br>${'Dirty DR: %.2g' % (info_dict[(field,str(spw),pol,'dirty DR')])}
                                         %if info_dict[(field,str(spw),pol,'maxEDR used')]:
-                                            <br>${'DR correction: %.2g (max EDR heuristic)' % (info_dict[(field,str(spw),pol,'DR correction factor')])}
+                                            <br>${'DR correction: %.2g' % (info_dict[(field,str(spw),pol,'DR correction factor')])}
                                         %else:
                                             <br>${'DR correction: %.2g' % (info_dict[(field,str(spw),pol,'DR correction factor')])}
                                         %endif
