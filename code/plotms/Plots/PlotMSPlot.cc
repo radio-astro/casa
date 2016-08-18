@@ -1926,9 +1926,10 @@ PMS::Axis PlotMSPlot::getCalAxis(String calType, PMS::Axis axis) {
     if (axis==PMS::AMP) {
         if (calType.contains("TSYS")) return PMS::TSYS;
         if (calType.contains("SWPOW")) return PMS::SWP;
+        if (calType.contains("Opac")) return PMS::OPAC;
+        if (calType.contains("SD")) return PMS::GREAL;
         if (calType[0]=='F') return PMS::TEC;
         if (calType[0]=='K' && calType!="KAntPos") return PMS::DELAY;
-        if (calType.contains("Opac")) return PMS::OPAC;
         return PMS::GAMP;
     }
     if (axis==PMS::PHASE) return PMS::GPHASE;
