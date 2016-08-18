@@ -7,6 +7,7 @@ import contextlib
 import re
 import time
 import collections
+import functools
 
 from logging import CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET
 
@@ -33,6 +34,18 @@ from pipeline.domain.datatable import OnlineFlagIndex
 import pipeline.infrastructure.tablereader as tablereader
 
 LOG = infrastructure.get_logger(__name__)
+
+def profiler(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kw):
+        start = time.time()
+        result = func(*args, **kw)
+        end = time.time()
+        
+        LOG.info('#PROFILE# %s: elapsed %s sec'%(func.__name__, end - start))
+    
+        return result
+    return wrapper
 
 def asdm_name(scantable_object):
     """
@@ -497,7 +510,8 @@ def make_row_map_for_baselined_ms(ms):
     
     return make_row_map(ms, work_data)
 
-def make_row_map(src_ms, derived_vis):
+#@profiler
+def make_row_map_by_taql(src_ms, derived_vis):
     """
     Make row mapping between source MS and associating MS
     
@@ -647,6 +661,165 @@ def make_row_map(src_ms, derived_vis):
 
     end_time = time.time()
     LOG.debug('Elapsed %s sec'%(end_time - start_time))
+    return rowmap
+
+#@profiler
+def make_row_map(src_ms, derived_vis):
+    """
+    Make row mapping between source MS and associating MS
+     
+    src_ms: measurement set domain object for source MS 
+    derived_vis: name of the MS that derives from source MS
+     
+    returns: row mapping dictionary
+    """
+    ms = src_ms
+    vis0 = ms.name
+    vis1 = derived_vis
+ 
+    rowmap = {}
+ 
+    if vis0 == vis1:
+        return EchoDictionary()
+          
+    # make polarization map between src MS and derived MS
+    to_derived_polid = make_polid_map(vis0, vis1)
+    LOG.trace('to_derived_polid=%s'%(to_derived_polid))
+     
+    # make spw map between src MS and derived MS
+    to_derived_spwid = make_spwid_map(vis0, vis1)
+    LOG.trace('to_derived_spwid=%s'%(to_derived_spwid))
+     
+    # make a map between (polid, spwid) pair and ddid for derived MS
+    derived_ddid_map = make_ddid_map(vis1)
+    LOG.trace('derived_ddid_map=%s'%(derived_ddid_map))
+     
+    with casatools.TableReader(vis0) as tb:
+        observation_id_list0 = tb.getcol('OBSERVATION_ID')
+        processor_id_list0 = tb.getcol('PROCESSOR_ID')
+        scan_number_list0 = tb.getcol('SCAN_NUMBER')
+        field_id_list0 = tb.getcol('FIELD_ID')
+        antenna1_list0 = tb.getcol('ANTENNA1')
+        antenna2_list0 = tb.getcol('ANTENNA2')
+        state_id_list0 = tb.getcol('STATE_ID')
+        data_desc_id_list0 = tb.getcol('DATA_DESC_ID')
+        time_list0 = tb.getcol('TIME')
+        rownumber_list0 = tb.rownumbers()
+        observation_id_set = set(observation_id_list0)
+        processor_id_set = set(processor_id_list0)
+    scans = ms.get_scans(scan_intent='TARGET')
+    is_unique_processor_id = len(processor_id_set) == 1
+    is_unique_observation_id = len(observation_id_set) == 1
+     
+    with casatools.TableReader(vis1) as tb:
+        observation_id_list1 = tb.getcol('OBSERVATION_ID')
+        processor_id_list1 = tb.getcol('PROCESSOR_ID')
+        scan_number_list1 = tb.getcol('SCAN_NUMBER')
+        field_id_list1 = tb.getcol('FIELD_ID')
+        antenna1_list1 = tb.getcol('ANTENNA1')
+        antenna2_list1 = tb.getcol('ANTENNA2')
+        state_id_list1 = tb.getcol('STATE_ID')
+        data_desc_id_list1 = tb.getcol('DATA_DESC_ID')
+        time_list1 = tb.getcol('TIME')
+        rownumber_list1 = tb.rownumbers()
+ 
+    for processor_id in processor_id_set:
+         
+        LOG.trace('PROCESSOR_ID %s'%(processor_id))
+                      
+        for observation_id in observation_id_set:
+            LOG.trace('OBSERVATION_ID %s'%(observation_id))
+             
+            for scan in scans:
+                scan_number = scan.id
+                LOG.trace('SCAN_NUMBER %s'%(scan_number))
+                states = [s for s in scan.states if 'TARGET' in s.intents]
+ 
+                if len(states) == 0:
+                    LOG.trace('No target states in SCAN %s'%(scan_number))
+                    continue
+                 
+                for field in scan.fields:
+                    field_id = field.id
+                    LOG.trace('FIELD_ID %s'%(field_id))
+                                         
+                    for antenna in ms.antennas:
+                        antenna_id = antenna.id
+                        LOG.trace('ANTENNA_ID %s'%(antenna_id))
+                         
+                        for spw in ms.get_spectral_windows(science_windows_only=True):
+                            data_desc = ms.get_data_description(spw=spw)
+                            data_desc_id = data_desc.id
+                            pol_id = data_desc.pol_id
+                            spw_id = spw.id
+                            derived_pol_id = to_derived_polid[pol_id]
+                            derived_spw_id = to_derived_spwid[spw_id]
+                            derived_dd_id = derived_ddid_map[(derived_pol_id, derived_spw_id)]
+                            LOG.trace('SRC DATA_DESC_ID %s (SPW %s)'%(data_desc_id, spw.id))
+                            LOG.trace('DERIVED DATA_DESC_ID %s (SPW %s)'%(derived_dd_id, derived_spw_id))
+                             
+                            for state in states:
+                                state_id = state.id
+                                LOG.trace('STATE_ID %s'%(state_id))
+                                 
+                                mask0 = numpy.logical_and(state_id_list0 == state_id, 
+                                            numpy.logical_and(data_desc_id_list0 == data_desc_id,
+                                                    numpy.logical_and(antenna2_list0 == antenna_id, 
+                                                            numpy.logical_and(antenna1_list0 == antenna_id,
+                                                                    numpy.logical_and(field_id_list0 == field_id,                                         
+                                                                            scan_number_list0 == scan_number)))))
+#                                 mask0 = numpy.logical_and.reduce((state_id_list0 == state_id,
+#                                                                   data_desc_id_list0 == data_desc_id,
+#                                                                   antenna2_list0 == antenna_id,
+#                                                                   antenna1_list0 == antenna_id,
+#                                                                   field_id_list0 == field_id,
+#                                                                   scan_number_list0 == scan_number),
+#                                                                  axis=0)
+                                if not is_unique_processor_id:
+                                    numpy.logical_and(mask0, processor_id_list0 == processor_id, out=mask0)
+                                if not is_unique_observation_id:
+                                    numpy.logical_and(mask0, observation_id_list0 == observation_id, out=mask0)
+
+                               
+                                LOG.trace('obtained time and row numbers for state %s'%(state.id))
+ 
+                                if numpy.any(mask0 == True):
+                                    # get time stamp and row numbers for selected rows of vis0
+                                    time_in0 = time_list0[mask0]
+                                    row_in0 = rownumber_list0[mask0]
+                                    argsort0 = numpy.argsort(time_in0)
+                                    time_in = time_in0[argsort0]
+                                    row_in = row_in0[argsort0]
+                                     
+                                    # get time stamp and row numbers for selected rows of vis1                                             
+                                    mask1 = numpy.logical_and(state_id_list1 == state_id, 
+                                                    numpy.logical_and(data_desc_id_list1 == derived_dd_id,
+                                                            numpy.logical_and(antenna2_list1 == antenna_id, 
+                                                                    numpy.logical_and(antenna1_list1 == antenna_id,
+                                                                            numpy.logical_and(field_id_list1 == field_id,                                         
+                                                                                    scan_number_list1 == scan_number)))))
+
+                                    if not is_unique_processor_id:
+                                        numpy.logical_and(mask1, processor_id_list1 == processor_id, out=mask1)
+                                    if not is_unique_observation_id:
+                                        numpy.logical_and(mask1, observation_id_list1 == observation_id, out=mask1)
+                                      
+                                    time_out1 = time_list1[mask1]
+                                    row_out1 = rownumber_list1[mask1]
+                                    argsort1 = numpy.argsort(time_out1)
+                                    time_out = time_out1[argsort1]
+                                    row_out = row_out1[argsort1]
+
+                                    assert numpy.all(time_in == time_out)
+ 
+                                    for (rin, rout) in zip(row_in, row_out):
+                                        rowmap[rin] = rout
+                                else:
+                                    assert numpy.all(mask0 == False)
+                                    LOG.trace('NOTE: no rows')
+                                     
+                                LOG.trace('DONE State %s'%(state.id))
+ 
     return rowmap
 
 def __read_table(reader, method, vis):
