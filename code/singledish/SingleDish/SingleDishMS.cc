@@ -853,7 +853,7 @@ void SingleDishMS::get_effective_nwave(std::vector<int> const &addwn,
 
   auto up_to_nyquist_limit = [&](std::vector<int> const &v){ return ((v.size() == 2) && (v[1] == SinusoidWaveNumber_kUpperLimit)); };
   auto check_rejwn_add = [&](int const v){
-    bool add = true;
+    bool add = (0 <= v) && (v <= wn_ulimit); // check v in range
     for (size_t i = 0; i < rejwn.size(); ++i) {
       if (rejwn[i] == v) {
         add = false;
@@ -869,7 +869,9 @@ void SingleDishMS::get_effective_nwave(std::vector<int> const &addwn,
     if (up_to_nyquist_limit(rejwn)) {
       if (addwn[0] < rejwn[0]) {
         for (int wn = addwn[0]; wn < rejwn[0]; ++wn) {
-          effwn.push_back(wn);
+          if ((0 <= wn) && (wn <= wn_ulimit)) {
+            effwn.push_back(wn);
+          }
         }
       } else {
         throw(AipsError("No effective wave number given for sinusoidal fitting."));
@@ -886,7 +888,7 @@ void SingleDishMS::get_effective_nwave(std::vector<int> const &addwn,
         throw(AipsError("No effective wave number given for sinusoidal fitting."));
       }
       for (size_t i = 0; i < addwn.size(); ++i) {
-        if (addwn[i] <= maxwn) {
+        if ((0 <= addwn[i]) && (addwn[i] <= maxwn)) {
           effwn.push_back(addwn[i]);
         }
       }
