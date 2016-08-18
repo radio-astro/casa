@@ -466,18 +466,18 @@
                Asteroids: Ceres, Lutetia, Pallas**, Vesta**, Juno**<!-- only in the 2010 , Victoria***,
 	               Davida*** -->
 
-            *****************************************************************************************
-            * New asteroid models for Ceres, Pallas, and Vesta were put into CASA 4.7.              * 
-            * A model is also available for Lutetia but we do not advise using this source for ALMA *
-            * absolute flux calibration. These new models are used (automatically chosen)           * 
-            * for data taken after 2015 January 1 0h UT. These new improved models are from thermo- *
-            * physical models by Th. Mueller (private communication).                               *
-            * The available model files can be listed with the command,                             * 
-            *    setjy(standard='Butler-JPL-Horizons 2012', listmodels=T).                          *
-            * These model files contain tabulated flux densities at frequency grids (30-1000GHz) in *
-            * time steps (1hr or 15min). Setjy interpolates in time and frequency to get a proper   *
-            * flux density for the data.                                                            * 
-            *****************************************************************************************
+            ******************************************************************************************
+            * New asteroid models for Ceres, Pallas, and Vesta were put into CASA 4.7.               * 
+            * A model is also available for Lutetia but we do not advise using this source for ALMA  *
+            * absolute flux calibration. These new models are used (automatically chosen)            * 
+            * for data taken after 2015 January 1 0h UT. The models are time variable and based on   *
+            * thermophysical modeling by Th. Mueller (private communication).                        *
+            * These are tabulated for 30, 80, 115, 150, 200, 230, 260, 300, 330, 360, 425, 650,      *
+            * 800, 950, and 1000 GHz; cubic frequency interpolation is employed to derive the flux   *
+            * density at other frequencies. There is no line emission included in these models.      *
+            * The available model files can be listed with the command,                              * 
+            *    setjy(standard='Butler-JPL-Horizons 2012', listmodels=T).                           *
+            ******************************************************************************************
               
             * Venus: model for ~300MHz to 350GHz, no atmospheric lines (CO,H2O,HDO, etc)
             * Mars: tabulated as a function of time and frequency (30 - 1000GHz) based on 
