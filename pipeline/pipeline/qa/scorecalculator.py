@@ -257,7 +257,7 @@ def score_bwswitching(mses):
         longmsg = '%s.' % utils.commafy(complaints, False)
         shortmsg = 'No phase calibrations found for target spws %s' % list(nophasecals)
         
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
+    return pqa.QAScore(max(0.0, score), longmsg=longmsg, shortmsg=shortmsg)
 
 @log_qa
 def score_bands(mses):
@@ -308,7 +308,7 @@ def score_bands(mses):
         shortmsg = 'High frequency band data found' 
         
     # Make score linear
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
+    return pqa.QAScore(max(0.0, score), longmsg=longmsg, shortmsg=shortmsg)
 
 @log_qa
 def score_polintents(mses):
@@ -353,7 +353,7 @@ def score_polintents(mses):
         longmsg = '%s.' % utils.commafy(complaints, False)
         shortmsg = 'Polarization calibrators found'
         
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
+    return pqa.QAScore(max(0.0, score), longmsg=longmsg, shortmsg=shortmsg)
 
 @log_qa
 def score_missing_intents(mses, array_type='ALMA_12m'):
@@ -398,7 +398,7 @@ def score_missing_intents(mses, array_type='ALMA_12m'):
         longmsg = '%s.' % utils.commafy(complaints, False)
         shortmsg = 'Calibrators missing'
         
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
+    return pqa.QAScore(max(0.0, score), longmsg=longmsg, shortmsg=shortmsg)
 
 @log_qa
 def score_ephemeris_coordinates(mses):
@@ -436,7 +436,7 @@ def score_ephemeris_coordinates(mses):
         longmsg = '%s.' % utils.commafy(complaints, False)
         shortmsg = 'Suspicious source coordinates'
 
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
+    return pqa.QAScore(max(0.0, score), longmsg=longmsg, shortmsg=shortmsg)
 
 @log_qa
 def score_online_shadow_agents(ms, summaries):
