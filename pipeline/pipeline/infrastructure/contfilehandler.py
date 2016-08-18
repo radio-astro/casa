@@ -156,11 +156,13 @@ class ContFileHandler(object):
         imTool = casatools.imager
 
         freq_ranges = []
+        aggregate_lsrk_bw = 0.0
         cont_regions = self.p.findall(freq_selection.replace(';',''))
         for cont_region in cont_regions:
             fLow = casatools.quanta.convert('%s%s' % (cont_region[0], cont_region[3]), 'Hz')['value']
             fHigh = casatools.quanta.convert('%s%s' % (cont_region[2], cont_region[3]), 'Hz')['value']
             freq_ranges.append((fLow, fHigh))
+            aggregate_lsrk_bw += fHigh - fLow
 
         chan_selections = []
         freq_selections = []
@@ -194,4 +196,4 @@ class ContFileHandler(object):
             chan_selections.append(';'.join('%d~%d' % (item[0], item[1]) for item in chan_selection))
             freq_selections.append('%s TOPO' % (';'.join('%s~%sGHz' % (item[0], item[1]) for item in freq_selection)))
 
-        return freq_selections, chan_selections
+        return freq_selections, chan_selections, aggregate_lsrk_bw

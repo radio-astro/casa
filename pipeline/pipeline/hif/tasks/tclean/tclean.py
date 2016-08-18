@@ -225,7 +225,10 @@ class Tclean(cleanbase.CleanBase):
         spw_topo_chan_param, \
         spw_topo_freq_param_dict, \
         spw_topo_chan_param_dict, \
-        total_topo_bw, aggregate_topo_bw, eff_ch_bw = \
+        total_topo_bw, \
+        aggregate_topo_bw, \
+        aggregate_lsrk_bw, \
+        eff_ch_bw = \
             self._do_sensitivity()
         LOG.info('Sensitivity estimate: %s Jy', sensitivity)
 
@@ -276,10 +279,10 @@ class Tclean(cleanbase.CleanBase):
         result = self._do_iterative_imaging(
             sequence_manager=sequence_manager, result=result)
 
-        # Record aggregate bandwidth and mosaic field sensitivities for weblog
+        # Record aggregate LSRK bandwidth and mosaic field sensitivities for weblog
         # TODO: Record total bandwidth as opposed to range
         #       Save channel selection in result for weblog.
-        result.set_aggregate_bw(aggregate_topo_bw)
+        result.set_aggregate_bw(aggregate_lsrk_bw)
         result.set_eff_ch_bw(eff_ch_bw)
         result.set_min_sensitivity(min_sensitivity)
         result.set_max_sensitivity(max_sensitivity)
@@ -581,7 +584,7 @@ class Tclean(cleanbase.CleanBase):
             targetmslist = [context.observing_run.get_ms(name=ms) for ms in inputs.vis]
 
         # Convert LSRK ranges to TOPO
-        spw_topo_freq_param, spw_topo_chan_param, spw_topo_freq_param_dict, spw_topo_chan_param_dict, total_topo_bw, aggregate_topo_bw = self.inputs.heuristics.calc_topo_ranges(inputs)
+        spw_topo_freq_param, spw_topo_chan_param, spw_topo_freq_param_dict, spw_topo_chan_param_dict, total_topo_bw, aggregate_topo_bw, aggregate_lsrk_bw = self.inputs.heuristics.calc_topo_ranges(inputs)
 
         detailed_field_sensitivities = {}
         min_sensitivities = []
@@ -681,7 +684,7 @@ class Tclean(cleanbase.CleanBase):
             min_field_id = None
             max_field_id = None
 
-        return sensitivity, min_sensitivity, max_sensitivity, min_field_id, max_field_id, spw_topo_freq_param, spw_topo_chan_param, spw_topo_freq_param_dict, spw_topo_chan_param_dict, total_topo_bw, aggregate_topo_bw, eff_ch_bw
+        return sensitivity, min_sensitivity, max_sensitivity, min_field_id, max_field_id, spw_topo_freq_param, spw_topo_chan_param, spw_topo_freq_param_dict, spw_topo_chan_param_dict, total_topo_bw, aggregate_topo_bw, aggregate_lsrk_bw, eff_ch_bw
 
     def _get_sensitivity(self, ms_do, field, spw, chansel):
         """
