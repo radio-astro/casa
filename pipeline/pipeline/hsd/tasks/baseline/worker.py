@@ -46,15 +46,14 @@ BLP = BaselineParamKeys
     
 
 #@sdutils.profiler
-def write_blparam(blparam_file, param):
+def write_blparam(fileobj, param):
     param_values = collections.defaultdict(str)
     for key in BLP.ORDERED_KEY:
         if param.has_key(key):
             param_values[key] = param[key]
     line = ','.join(map(str, [param_values[k] for k in BLP.ORDERED_KEY]))
     #line = ','.join((str(param[k]) if k in param.keys() else '' for k in BLP.ORDERED_KEY))
-    with open(blparam_file, 'a') as f:
-        f.write(line+'\n')
+    fileobj.write(line+'\n')
 
 def as_maskstring(masklist):
     return ';'.join(map(lambda x: '%s~%s'%(x[0],x[1]), masklist))
@@ -203,92 +202,95 @@ class BaselineFitParamConfig(basetask.StandardTaskTemplate):
         colname = self.inputs.colname
         LOG.debug('data column name is "%s"'%(colname))
         
-        for y in xrange(len(member_list)):
-            rows = member_list[y][0]
-            idxs = member_list[y][1]
+        # open blparam file (append mode)
+        with open(args['blparam'], 'a') as blparamfileobj:
         
-            with casatools.TableReader(vis) as tb:
-                #spectra = numpy.fromiter((tb.getcell(colname,row)
-                #                          for row in rows), 
-                #                         dtype=numpy.float64)
-                #tsel = tb.query('ROWNUMBER() IN [%s]'%((','.join(map(str, rows)))), style='python')
-                #spectra = tsel.getcol()
-                #tsel.close()
-                spectra = numpy.asarray([tb.getcell(colname, row) for row in rows])
-                #get_mask_from_flagtra: 1 valid 0 invalid
-                #arg for mask_to_masklist: 0 valid 1 invalid
-                #flaglist = [self._mask_to_masklist(-sdutils.get_mask_from_flagtra(tb.getcell('FLAGTRA', row))+1 )
-                flaglist = [self._mask_to_masklist(tb.getcell('FLAG', row).astype(int))
-                            for row in rows]
-
-                LOG.debug("Flag Mask = %s" % str(flaglist))
-
-            spectra[:,:edge[0],:] = 0.0
-            spectra[:,nchan-edge[1]:,:] = 0.0 
-                
-            # here we assume that masklist is polarization-independent
-            # (this is because that line detection/validation process accumulates 
-            # polarization components together
-            masklist = [datatable.tb2.getcell('MASKLIST',idx)
-                        for idx in idxs]
-#                 masklist = [datatable.tb2.getcell('MASKLIST',idxs[i]) + flaglist[i]
-#                             for i in range(len(idxs))]
-            LOG.debug('DONE %s'%(y))
+            for y in xrange(len(member_list)):
+                rows = member_list[y][0]
+                idxs = member_list[y][1]
             
-            npol = spectra.shape[1]
-            for pol in xrange(npol):
-                # fit order determination
-                polyorder = self.fitorder_heuristic(spectra[:,pol,:], [ list(masklist[i]) + flaglist[i][pol] for i in range(len(idxs))], edge)
-                #del spectra
-                if fit_order == 'automatic' and self.MaxPolynomialOrder != 'none':
-                    polyorder = min(polyorder, self.MaxPolynomialOrder)
-                LOG.debug('time group %d pol %d: fitting order=%s'%(y,pol,polyorder))
-                
-                # calculate fragmentation
-                (fragment, nwindow, win_polyorder) = fragmentation_heuristic(polyorder, nchan, edge)
+                with casatools.TableReader(vis) as tb:
+                    #spectra = numpy.fromiter((tb.getcell(colname,row)
+                    #                          for row in rows), 
+                    #                         dtype=numpy.float64)
+                    #tsel = tb.query('ROWNUMBER() IN [%s]'%((','.join(map(str, rows)))), style='python')
+                    #spectra = tsel.getcol()
+                    #tsel.close()
+                    spectra = numpy.asarray([tb.getcell(colname, row) for row in rows])
+                    #get_mask_from_flagtra: 1 valid 0 invalid
+                    #arg for mask_to_masklist: 0 valid 1 invalid
+                    #flaglist = [self._mask_to_masklist(-sdutils.get_mask_from_flagtra(tb.getcell('FLAGTRA', row))+1 )
+                    flaglist = [self._mask_to_masklist(tb.getcell('FLAG', row).astype(int))
+                                for row in rows]
     
-                nrow = len(rows)
-                LOG.debug('nrow = %s'%(nrow))
-                LOG.debug('len(idxs) = %s'%(len(idxs)))
-            
-                for i in xrange(nrow):
-                    row = rows[i]
-                    idx = idxs[i]
-                    LOG.trace('===== Processing at row = %s ====='%(row))
-                    nochange = datatable.tb2.getcell('NOCHANGE',idx)
-                    LOG.trace('row = %s, Flag = %s'%(row, nochange))
-
-                    # mask lines
-                    maxwidth = 1
-#                     _masklist = masklist[i] 
-                    _masklist = list(masklist[i]) + flaglist[i][pol]
-                    for [chan0, chan1] in _masklist:
-                        if chan1 - chan0 >= maxwidth:
-                            maxwidth = int((chan1 - chan0 + 1) / 1.4)
-                            # allowance in Process3 is 1/5:
-                            #    (1 + 1/5 + 1/5)^(-1) = (5/7)^(-1)
-                            #                         = 7/5 = 1.4
-                    max_polyorder = int((nchan - sum(edge)) / maxwidth + 1)
-                    LOG.trace('Masked Region from previous processes = %s'%(_masklist))
-                    LOG.trace('edge parameters= (%s,%s)'%(edge))
-                    LOG.trace('Polynomial order = %d  Max Polynomial order = %d'%(polyorder, max_polyorder))
-
-                    # fitting
-                    polyorder = min(polyorder, max_polyorder)
-                    mask_array[:] = base_mask_array
-                    #irow = len(row_list_total)+len(row_list)
-                    #irow = len(index_list_total) + i
-                    irow = row
-                    param = self._calc_baseline_param(irow, pol, polyorder, nchan, 0, edge, _masklist, win_polyorder, fragment, nwindow, mask_array)
-                    # defintion of masklist differs in pipeline and ASAP (masklist = [a, b+1] in pipeline masks a channel range a ~ b-1)
-                    param[BLP.MASK] = [ [start, end-1] for [start, end] in param[BLP.MASK] ]
-                    param[BLP.MASK] = as_maskstring(param[BLP.MASK])
-                    LOG.trace('Row %s: param=%s'%(row,param))
-                    write_blparam(args['blparam'], param)
+                    LOG.debug("Flag Mask = %s" % str(flaglist))
+    
+                spectra[:,:edge[0],:] = 0.0
+                spectra[:,nchan-edge[1]:,:] = 0.0 
                     
-                # MS rows contain npol spectra
-                if pol == 0:
-                    index_list_total.extend(idxs)
+                # here we assume that masklist is polarization-independent
+                # (this is because that line detection/validation process accumulates 
+                # polarization components together
+                masklist = [datatable.tb2.getcell('MASKLIST',idx)
+                            for idx in idxs]
+    #                 masklist = [datatable.tb2.getcell('MASKLIST',idxs[i]) + flaglist[i]
+    #                             for i in range(len(idxs))]
+                LOG.debug('DONE %s'%(y))
+                
+                npol = spectra.shape[1]
+                for pol in xrange(npol):
+                    # fit order determination
+                    polyorder = self.fitorder_heuristic(spectra[:,pol,:], [ list(masklist[i]) + flaglist[i][pol] for i in range(len(idxs))], edge)
+                    #del spectra
+                    if fit_order == 'automatic' and self.MaxPolynomialOrder != 'none':
+                        polyorder = min(polyorder, self.MaxPolynomialOrder)
+                    LOG.debug('time group %d pol %d: fitting order=%s'%(y,pol,polyorder))
+                    
+                    # calculate fragmentation
+                    (fragment, nwindow, win_polyorder) = fragmentation_heuristic(polyorder, nchan, edge)
+        
+                    nrow = len(rows)
+                    LOG.debug('nrow = %s'%(nrow))
+                    LOG.debug('len(idxs) = %s'%(len(idxs)))
+                
+                    for i in xrange(nrow):
+                        row = rows[i]
+                        idx = idxs[i]
+                        LOG.trace('===== Processing at row = %s ====='%(row))
+                        nochange = datatable.tb2.getcell('NOCHANGE',idx)
+                        LOG.trace('row = %s, Flag = %s'%(row, nochange))
+    
+                        # mask lines
+                        maxwidth = 1
+    #                     _masklist = masklist[i] 
+                        _masklist = list(masklist[i]) + flaglist[i][pol]
+                        for [chan0, chan1] in _masklist:
+                            if chan1 - chan0 >= maxwidth:
+                                maxwidth = int((chan1 - chan0 + 1) / 1.4)
+                                # allowance in Process3 is 1/5:
+                                #    (1 + 1/5 + 1/5)^(-1) = (5/7)^(-1)
+                                #                         = 7/5 = 1.4
+                        max_polyorder = int((nchan - sum(edge)) / maxwidth + 1)
+                        LOG.trace('Masked Region from previous processes = %s'%(_masklist))
+                        LOG.trace('edge parameters= (%s,%s)'%(edge))
+                        LOG.trace('Polynomial order = %d  Max Polynomial order = %d'%(polyorder, max_polyorder))
+    
+                        # fitting
+                        polyorder = min(polyorder, max_polyorder)
+                        mask_array[:] = base_mask_array
+                        #irow = len(row_list_total)+len(row_list)
+                        #irow = len(index_list_total) + i
+                        irow = row
+                        param = self._calc_baseline_param(irow, pol, polyorder, nchan, 0, edge, _masklist, win_polyorder, fragment, nwindow, mask_array)
+                        # defintion of masklist differs in pipeline and ASAP (masklist = [a, b+1] in pipeline masks a channel range a ~ b-1)
+                        param[BLP.MASK] = [ [start, end-1] for [start, end] in param[BLP.MASK] ]
+                        param[BLP.MASK] = as_maskstring(param[BLP.MASK])
+                        LOG.trace('Row %s: param=%s'%(row,param))
+                        write_blparam(blparamfileobj, param)
+                        
+                    # MS rows contain npol spectra
+                    if pol == 0:
+                        index_list_total.extend(idxs)
 
         outcome = {'blparam': args['blparam'],
                    'bloutput': args['bloutput']}
