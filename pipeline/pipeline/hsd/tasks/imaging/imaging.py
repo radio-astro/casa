@@ -417,15 +417,17 @@ class SDImaging(basetask.StandardTaskTemplate):
                                                   
                     results.append(result)
                       
-            # derive Jy/K factor and store it in a file
             if imagemode == 'AMPCAL':
                 LOG.info("Skipping combined image for the amplitude calibrator.")
                 continue
   
             # Make combined image
+            if len(tocombine_images) == 0:
+                LOG.warn("No valid image to combine for Source %s, Spw %d" % (source_name, spwids[0]))
+                continue
             # reference MS
             ref_ms = context.observing_run.get_ms(name=sdutils.get_parent_ms_name(context, combined_infiles[0]))
-              
+            
             # image name
             namer = filenamer.Image()
             namer.casa_image()
