@@ -96,7 +96,15 @@ except:
                                 <td rowspan="11">${field}</td>
                                 <td rowspan="11">${spw}</td>
                                 <td rowspan="11">${pol}</td>
+                                %if info_dict.get((field,str(spw),pol,'nchan')) is not None:
+                                    %if info_dict[(field,str(spw),pol,'nchan')] == 1:
+								<th>center frequency of image</th>
+                                    %else:
 								<th>center frequency of cube</th>
+                                    %endif
+                                %else:
+								<th>center frequency</th>
+                                %endif
 								<td>${casatools.quanta.tos(info_dict[(field,str(spw),pol,'frequency')], 4)} (LSRK)</td>
                                 <% 
                                 try:
@@ -164,19 +172,15 @@ except:
                                 %endif
                             </tr>
                             <tr>
-                                <th>pbcor image max / min </th>
-                                %if info_dict.get((field,str(spw),pol,'non-masked max')) is not None and info_dict.get((field,str(spw),pol,'non-masked min')) is not None:
-                                            <td>${'%.2g / %.2g %s' % (info_dict[(field,str(spw),pol,'non-masked max')], info_dict[(field,str(spw),pol,'non-masked min')],
-                                                info_dict[(field,str(spw),pol,'brightness unit')])}</td>
-                                %else:
-                                            <td>-</td>
-                                %endif
-                            </tr>
-                            <tr>
-                                <th>non-pbcor image rms</th>
-                                %if info_dict.get((field,str(spw),pol,'masked rms')) is not None:
-                                            <td>${'%.2g %s' % (info_dict[(field,str(spw),pol,'masked rms')],
-                                                info_dict[(field,str(spw),pol,'brightness unit')])}</td>
+                                <th>final theoretical sensitivity</th>
+                                %if info_dict.get((field,str(spw),pol,'sensitivity')) is not None:
+                                            <td>${'%.2g %s' % (info_dict[(field,str(spw),pol,'sensitivity')],
+                                                info_dict[(field,str(spw),pol,'brightness unit')])}
+                                    %if info_dict.get((field,str(spw),pol,'min sensitivity')) is not None and info_dict.get((field,str(spw),pol,'max sensitivity')) is not None:
+                                            <br>${'min: %.2g %s (field: %s)' % (info_dict[(field,str(spw),pol,'min sensitivity')], info_dict[(field,str(spw),pol,'brightness unit')], info_dict[(field,str(spw),pol,'min field id')])}
+                                            <br>${'max: %.2g %s (field: %s)' % (info_dict[(field,str(spw),pol,'max sensitivity')], info_dict[(field,str(spw),pol,'brightness unit')], info_dict[(field,str(spw),pol,'max field id')])}
+                                    %endif
+                                            </td>
                                 %else:
                                             <td>-</td>
                                 %endif
@@ -202,15 +206,19 @@ except:
                                 %endif
                             </tr>
                             <tr>
-                                <th>final theoretical sensitivity</th>
-                                %if info_dict.get((field,str(spw),pol,'sensitivity')) is not None:
-                                            <td>${'%.2g %s' % (info_dict[(field,str(spw),pol,'sensitivity')],
-                                                info_dict[(field,str(spw),pol,'brightness unit')])}
-                                    %if info_dict.get((field,str(spw),pol,'min sensitivity')) is not None and info_dict.get((field,str(spw),pol,'max sensitivity')) is not None:
-                                            <br>${'min: %.2g %s (field: %s)' % (info_dict[(field,str(spw),pol,'min sensitivity')], info_dict[(field,str(spw),pol,'brightness unit')], info_dict[(field,str(spw),pol,'min field id')])}
-                                            <br>${'max: %.2g %s (field: %s)' % (info_dict[(field,str(spw),pol,'max sensitivity')], info_dict[(field,str(spw),pol,'brightness unit')], info_dict[(field,str(spw),pol,'max field id')])}
-                                    %endif
-                                            </td>
+                                <th>non-pbcor image rms</th>
+                                %if info_dict.get((field,str(spw),pol,'masked rms')) is not None:
+                                            <td>${'%.2g %s' % (info_dict[(field,str(spw),pol,'masked rms')],
+                                                info_dict[(field,str(spw),pol,'brightness unit')])}</td>
+                                %else:
+                                            <td>-</td>
+                                %endif
+                            </tr>
+                            <tr>
+                                <th>pbcor image max / min </th>
+                                %if info_dict.get((field,str(spw),pol,'non-masked max')) is not None and info_dict.get((field,str(spw),pol,'non-masked min')) is not None:
+                                            <td>${'%.2g / %.2g %s' % (info_dict[(field,str(spw),pol,'non-masked max')], info_dict[(field,str(spw),pol,'non-masked min')],
+                                                info_dict[(field,str(spw),pol,'brightness unit')])}</td>
                                 %else:
                                             <td>-</td>
                                 %endif
