@@ -914,18 +914,6 @@ void SingleDishMS::finalise_effective_nwave(std::vector<int> const &blparam_eff_
   blparam_eff.resize(blparam_eff_base.size());
   copy(blparam_eff_base.begin(), blparam_eff_base.end(), blparam_eff.begin());
 
-  //-------
-  /*
-  std::cout << "---------------------------" << std::endl;
-  std::cout << "blparam_eff{BEFORE} : ";
-  for (size_t i = 0; i < blparam_eff.size(); ++i) {
-    std::cout << blparam_eff[i] << " ";
-  }
-  std::cout << std::endl;
-  std::cout << "---------------------------" << std::endl;
-  */
-  //-------
-
   if (applyfft) {
     string fftthresh_attr;
     float fftthresh_sigma;
@@ -935,29 +923,7 @@ void SingleDishMS::finalise_effective_nwave(std::vector<int> const &blparam_eff_
     select_wavenumbers_via_fft(num_chan, spec, mask, fftmethod, fftthresh_attr,
                                fftthresh_sigma, fftthresh_top, blparam_upperlimit,
                                blparam_fft);
-  //-------
-  /*
-  std::cout << "---------------------------" << std::endl;
-  std::cout << "blparam_fft : ";
-  for (size_t i = 0; i < blparam_fft.size(); ++i) {
-    std::cout << blparam_fft[i] << " ";
-  }
-  std::cout << std::endl;
-  std::cout << "---------------------------" << std::endl;
-  */
-  //-------
     merge_wavenumbers(blparam_eff_base, blparam_fft, blparam_exclude, blparam_eff);
-  //-------
-  /*
-  std::cout << "---------------------------" << std::endl;
-  std::cout << "blparam_eff{AFTER} : ";
-  for (size_t i = 0; i < blparam_eff.size(); ++i) {
-    std::cout << blparam_eff[i] << " ";
-  }
-  std::cout << std::endl;
-  std::cout << "---------------------------" << std::endl;
-  */
-  //-------
   }
 }
 
@@ -1001,26 +967,12 @@ void SingleDishMS::select_wavenumbers_via_fft(size_t const num_chan, float const
   std::vector<float> fourier_spec;
   if (fftmethod == "fft") {
     exec_fft(num_chan, spec, mask, false, true, fourier_spec);
-    //----------------
-    /*
-    std::cout << "**************" << std::endl;
-    std::cout << "fourier_spec : ";
-    for (size_t i = 0; i < 20; ++i) {
-      std::cout << fourier_spec[i] << " ";
-    }
-    std::cout << std::endl;
-    std::cout << "**************" << std::endl;
-    */
-    //----------------
   } else {
     throw AipsError("fftmethod must be 'fft' for now.");
   }
 
   int fourier_spec_size = static_cast<int>(fourier_spec.size());
   if (fftthresh_attr == "sigma") {
-    //----------------
-    //std::cout << "fftthresh_attr = sigma ENTER " << std::endl;;
-    //----------------
     float mean  = 0.0;
     float mean2 = 0.0;
     for (int i = 0; i < fourier_spec_size; ++i) {
@@ -1037,9 +989,6 @@ void SingleDishMS::select_wavenumbers_via_fft(size_t const num_chan, float const
       }
     }
   } else if (fftthresh_attr == "top") {
-    //----------------
-    //std::cout << "fftthresh_attr = top ENTER " << std::endl;;
-    //----------------
     int i = 0;
     while (i < fftthresh_top) {
       float max = 0.0;
@@ -1050,9 +999,6 @@ void SingleDishMS::select_wavenumbers_via_fft(size_t const num_chan, float const
           max_idx = j;
         }
       }
-      //---------------
-      //std::cout << "fft_max_idx[" << i << "] = " << max_idx << ",  max_value = " << fourier_spec[max_idx] << std::endl;
-      //---------------
       fourier_spec[max_idx] = 0.0;
       if (max_idx <= blparam_upperlimit) {
         blparam_fft.push_back(max_idx);
@@ -1091,14 +1037,6 @@ void SingleDishMS::exec_fft(size_t const num_chan,
       if (!get_ampl_only) fourier_spec.push_back(arg(fftres[i]));
     }
   }
-  //-----------------
-  /*
-  std::cout << "###########" << std::endl;
-  std::cout << "fftres.size = " << fftres.size() << std::endl;
-  std::cout << "fourier_spec.size = " << fourier_spec.size() << std::endl;
-  std::cout << "###########" << std::endl;
-  */
-  //-----------------
 }
 
 void SingleDishMS::interpolate_constant(int const num_chan,
@@ -1735,7 +1673,7 @@ void SingleDishMS::doSubtractBaseline(string const& in_column_name,
 
   //double tend = gettimeofday_sec();
   //std::cout << "Elapsed time = " << (tend - tstart) << " sec." << std::endl;
-}//order blparam_exclude applyfft fftmethod fftthresh
+}
 
 ////////////////////////////////////////////////////////////////////////
 ///// Atcual processing functions
