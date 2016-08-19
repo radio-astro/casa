@@ -4,6 +4,7 @@ from .common import SingleDishInputs
 from .common import SingleDishResults
 from .common import SingleDishTaskTemplate
 from .common import datatable_setter
+from .common import ParameterContainerJob
 
 # utilities
 from .utils import ProgressTimer

@@ -244,3 +244,11 @@ def datatable_setter(func):
         return func(*args, **kwargs)
     return wrapper
             
+class ParameterContainerJob(object):
+    def __init__(self, task, **parameters):
+        self.task = task
+        self.parameters = parameters
+    
+    def execute(self, dry_run=True):
+        result = self.task.execute(dry_run, **self.parameters)
+        return result
