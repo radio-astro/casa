@@ -5,8 +5,8 @@ import types
 
 agent_description = {
 	'before'   : 'Before Task',
-	'online'   : 'Online Flags',
 	'qa0'      : 'QA0',
+	'online'   : 'Online Flags',
 	'template' : 'Flagging Template',
 	'autocorr' : 'Autocorrelations',
 	'shadow'   : 'Shadowed Antennas',
@@ -203,6 +203,7 @@ mses = [m for m in flags.keys() if 'online' in flags[m] or 'template' in flags[m
 	<caption>Summary of flagged data. Each cell states the amount of data 
 	flagged as a fraction of the specified data selection, with the 
 	<em>Flagging Agent</em> columns giving this information per flagging agent.
+	<br>The percentages represent the additional data flagged by applying the next column's agent.
 	</caption>
 	<thead>
 		<tr>
