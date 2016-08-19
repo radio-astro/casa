@@ -157,6 +157,14 @@ class DataTableImpl( object ):
                            0,        1,        2
     Note for Flags: 1 is valid, 0 is invalid
     """ 
+    @classmethod
+    def get_rotable_name(cls, datatable_name):
+        return os.path.join(datatable_name, 'RO')
+    
+    @classmethod
+    def get_rwtable_name(cls, datatable_name):
+        return os.path.join(datatable_name, 'RW')
+    
     def __init__(self, name=None, readonly=None):
         """
         name (optional) -- name of DataTable
