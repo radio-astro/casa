@@ -260,7 +260,7 @@ mses = [m for m in flags.keys() if 'online' in flags[m] or 'template' in flags[m
 	</%def>
 
 	<%def name="preamble()">
-		Plots of flagging reason vs time. The reasons for flagging the data are defined in the plot legend.
+		Plots of flagging reason vs time (from the online flags file).
 	</%def>
 
 	<%def name="mouseover(plot)">Click to show flagging reason vs time for ${plot.parameters['vis']}</%def>
