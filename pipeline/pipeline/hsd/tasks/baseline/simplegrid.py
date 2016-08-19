@@ -20,7 +20,7 @@ DO_TEST = False
 
 class SDMSSimpleGriddingInputs(common.SingleDishInputs):
     def __init__(self, context, vis_list, field_list, antenna_list, spwid_list, 
-                 index_list, nplane=None):
+                 nplane=None):
         self._init_properties(vars())
         
     @property
@@ -44,11 +44,17 @@ class SDMSSimpleGriddingResults(common.SingleDishResults):
 class SDMSSimpleGridding(common.SingleDishTaskTemplate):
     Inputs = SDMSSimpleGriddingInputs
 
-    #@common.datatable_setter
-    def prepare(self):
-        datatable = DataTable(self.context.observing_run.ms_datatable_name)
+    def prepare(self, datatable=None, index_list=None):
+        if datatable is None:
+            LOG.debug('#PNP# instantiate local datatable')
+            datatable = DataTable(self.context.observing_run.ms_datatable_name)
+        else:
+            LOG.debug('datatable is propagated from parent task')
+            
+        assert index_list is not None
+
         #colname = self.inputs.colname
-        grid_table = self.make_grid_table(datatable)
+        grid_table = self.make_grid_table(datatable, index_list)
         # LOG.debug('work_dir=%s'%(work_dir))
         import time
         start = time.time()
@@ -77,7 +83,7 @@ class SDMSSimpleGridding(common.SingleDishTaskTemplate):
     def analyse(self, result):
         return result
 
-    def make_grid_table(self, datatable):
+    def make_grid_table(self, datatable, index_list):
         """
         Calculate Parameters for grid by RA/DEC positions
         """
@@ -85,7 +91,6 @@ class SDMSSimpleGridding(common.SingleDishTaskTemplate):
         spwid_list = self.inputs.spwid_list
         antenna_list = self.inputs.antenna_list
         assert len(antenna_list) == len(spwid_list)
-        index_list = self.inputs.index_list
         reference_data = self.context.observing_run.get_ms(vis_list[0])
         reference_antenna = antenna_list[0]
         reference_spw = spwid_list[0]

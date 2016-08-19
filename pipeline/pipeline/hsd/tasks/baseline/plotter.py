@@ -10,7 +10,7 @@ from ..common import utils
 
 LOG = infrastructure.get_logger(__name__)
 
-def analyze_plot_table(context, datatable, ms, antid, spwid, plot_table):
+def analyze_plot_table(context, dtrows, ms, antid, spwid, plot_table):
     #datatable = context.observing_run.datatable_instance
     num_rows = len(plot_table) # num_plane * num_ra * num_dec
     num_dec = plot_table[-1][1] + 1
@@ -100,7 +100,7 @@ def create_plotter(num_ra, num_dec, num_plane, refpix, refval, increment):
 #     return table.getcell('FLAG', i)
 
 #@utils.profiler
-def get_data(infile, datatable, num_ra, num_dec, num_chan, num_pol, rowlist, rowmap=None):
+def get_data(infile, dtrows, num_ra, num_dec, num_chan, num_pol, rowlist, rowmap=None):
     # default rowmap is EchoDictionary
     if rowmap is None:
         rowmap = utils.EchoDictionary()
@@ -129,7 +129,7 @@ def get_data(infile, datatable, num_ra, num_dec, num_chan, num_pol, rowlist, row
             idxs = d['IDS']
             if len(idxs) > 0:
                 midx = d['MEDIAN_INDEX']
-                median_row = datatable.tb1.getcell('ROW', idxs[midx])
+                median_row = dtrows[idxs[midx]]
                 mapped_row = rowmap[median_row]
                 LOG.debug('median row for (%s,%s) is %s (mapped to %s)'%(ix, iy, median_row, mapped_row))
                 nrow += len(idxs)
@@ -138,7 +138,7 @@ def get_data(infile, datatable, num_ra, num_dec, num_chan, num_pol, rowlist, row
                 map_data[ix,iy] = this_data.real
                 map_mask[ix,iy] = this_mask
                 # to access MS rows in sorted order (avoid jumping distant row, accessing back and forth)
-                rows = datatable.tb1.getcol('ROW')[idxs]
+                rows = dtrows[idxs].copy()
                 rows.sort()
                 for row in rows:
                     mapped_row = rowmap[row]
@@ -161,18 +161,19 @@ def get_data(infile, datatable, num_ra, num_dec, num_chan, num_pol, rowlist, row
 
     return integrated_data_masked, map_data_masked
 
-def get_lines(datatable, num_ra, rowlist):
+def get_lines(rwtablename, num_ra, rowlist):
     lines_map = collections.defaultdict(dict)
-    for d in rowlist:
-        ix = num_ra - 1 - d['RAID']
-        iy = d['DECID']
-        ids = d['IDS']
-        midx = d['MEDIAN_INDEX']
-        if midx is not None:
-            masklist = datatable.getcell('MASKLIST', ids[midx])
-            lines_map[ix][iy] = None if len(masklist) == 0 else masklist
-        else:
-            lines_map[ix][iy] = None
+    with casatools.TableReader(rwtablename) as tb:
+        for d in rowlist:
+            ix = num_ra - 1 - d['RAID']
+            iy = d['DECID']
+            ids = d['IDS']
+            midx = d['MEDIAN_INDEX']
+            if midx is not None:
+                masklist = tb.getcell('MASKLIST', ids[midx])
+                lines_map[ix][iy] = None if numpy.all(masklist == -1) else masklist
+            else:
+                lines_map[ix][iy] = None
     return lines_map
 
 # def plot_profile_map(context, antid, spwid, polid, plot_table, infile, outfile, line_range):
@@ -206,9 +207,13 @@ def plot_profile_map_with_fit(context, ms, antid, spwid, plot_table, prefit_data
      [0, 1, RA0, DEC1, [IDX10, IDX11, ...]],
      ...]
     """
-    datatable = DataTable(context.observing_run.ms_datatable_name)
+    #datatable = DataTable(context.observing_run.ms_datatable_name)
+    rotablename = DataTable.get_rotable_name(context.observing_run.ms_datatable_name)
+    rwtablename = DataTable.get_rwtable_name(context.observing_run.ms_datatable_name)
+    with casatools.TableReader(rotablename) as tb:
+        dtrows = tb.getcol('ROW')
 
-    num_ra, num_dec, num_plane, refpix, refval, increment, rowlist = analyze_plot_table(context, datatable, ms, antid, spwid, plot_table)
+    num_ra, num_dec, num_plane, refpix, refval, increment, rowlist = analyze_plot_table(context, dtrows, ms, antid, spwid, plot_table)
         
     plotter = create_plotter(num_ra, num_dec, num_plane, refpix, refval, increment)
     
@@ -223,10 +228,10 @@ def plot_profile_map_with_fit(context, ms, antid, spwid, plot_table, prefit_data
 
     if rowmap is None:
         rowmap = utils.make_row_map(ms, postfit_data)
-    postfit_integrated_data, postfit_map_data = get_data(postfit_data, datatable, 
+    postfit_integrated_data, postfit_map_data = get_data(postfit_data, dtrows, 
                                                          num_ra, num_dec, nchan, npol,
                                                          rowlist, rowmap=rowmap)
-    lines_map = get_lines(datatable, num_ra, rowlist)
+    lines_map = get_lines(rwtablename, num_ra, rowlist)
 
     plot_list = {}
 
@@ -246,7 +251,7 @@ def plot_profile_map_with_fit(context, ms, antid, spwid, plot_table, prefit_data
 
     del postfit_integrated_data
     
-    prefit_integrated_data, prefit_map_data = get_data(prefit_data, datatable, 
+    prefit_integrated_data, prefit_map_data = get_data(prefit_data, dtrows, 
                                                        num_ra, num_dec, 
                                                        nchan, npol, rowlist)
     

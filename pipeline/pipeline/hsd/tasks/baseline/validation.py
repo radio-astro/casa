@@ -24,9 +24,9 @@ def ValidationFactory(pattern):
         raise ValueError, 'Invalid observing pattern'
 
 class ValidateLineInputs(common.SingleDishInputs):
-    def __init__(self, context, grid_table, detect_signal, spwid, index_list, iteration, 
-                 grid_ra, grid_dec,
-                 window=None, edge=None, nsigma=None, xorder=None, yorder=None, broad_component=None, clusteringalgorithm=None):
+    def __init__(self, context, vislist, spwidlist, iteration, grid_ra, grid_dec,
+                 window=None, edge=None, nsigma=None, xorder=None, yorder=None, 
+                 broad_component=None, clusteringalgorithm=None):
         self._init_properties(vars())
         
     @property
@@ -104,8 +104,7 @@ class ValidateLineResults(common.SingleDishResults):
 class ValidateLineSinglePointing(common.SingleDishTaskTemplate):
     Inputs = ValidateLineInputs
 
-    #@common.datatable_setter
-    def prepare(self):
+    def prepare(self, datatable=None, index_list=None, grid_table=None, detect_signal=None):
         """
         ValidateLine class for single-pointing or multi-pointing (collection of 
         fields with single-pointing). Accept all detected lines without 
@@ -123,7 +122,11 @@ class ValidateLineSinglePointing(common.SingleDishTaskTemplate):
         window = self.inputs.window
         LOG.debug('window=%s'%(window))
         
-        datatable = DataTable(self.context.observing_run.ms_datatable_name)
+        if datatable is None:
+            LOG.debug('#PNP# instantiate local datatable')
+            datatable = DataTable(self.context.observing_run.ms_datatable_name)
+        else:
+            LOG.debug('datatable is propagated from parent task')
 
         # for Pre-Defined Spectrum Window
         if len(window) != 0:
@@ -156,8 +159,9 @@ class ValidateLineSinglePointing(common.SingleDishTaskTemplate):
         LOG.info('Accept all detected lines without clustering analysis.')
 
         iteration = self.inputs.iteration
-        index_list = self.inputs.index_list
-        detect_signal = self.inputs.detect_signal
+        
+        assert index_list is not None
+        assert detect_signal is not None
 
         # First cycle
         #if len(grid_table) == 0:
@@ -222,14 +226,14 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
     def MaxFWHM(self):
         context = self.inputs.context
         num_edge = sum(self.inputs.edge)
-        datatable_row = self.inputs.index_list[0]
-        #nchan = context.observing_run.datatable_instance.getcell('NCHAN', datatable_row)
-        datatable = DataTable(context.observing_run.ms_datatable_name)
-        nchan = datatable.getcell('NCHAN', datatable_row)
+        vis = self.inputs.vislist[0]
+        spwid = self.inputs.spwidlist[0]
+        ms = context.observing_run.get_ms(name=vis)
+        spw = ms.get_spectral_window(spwid)
+        nchan = spw.num_channels
         return int(max(0, nchan - num_edge) / 3)
 
-    #@common.datatable_setter
-    def prepare(self):
+    def prepare(self, datatable=None, index_list=None, grid_table=None, detect_signal=None):
         """
         2D fit line characteristics calculated in Process3
         Sigma clipping iterations will be applied if nsigma is positive
@@ -246,7 +250,11 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
         """
         window = self.inputs.window
 
-        datatable = DataTable(self.context.observing_run.ms_datatable_name)
+        if datatable is None:
+            LOG.debug('#PNP# instantiate local datatable')
+            datatable = DataTable(self.context.observing_run.ms_datatable_name)
+        else:
+            LOG.debug('datatable is propagated from parent task')
 
         # for Pre-Defined Spectrum Window
         if len(window) != 0:
@@ -272,9 +280,11 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
             return result
 
         iteration = self.inputs.iteration
-        grid_table = self.inputs.grid_table
-        detect_signal = self.inputs.detect_signal
-        index_list = self.inputs.index_list
+        
+        assert grid_table is not None
+        assert index_list is not None
+        assert detect_signal is not None
+
         grid_ra = self.inputs.grid_ra
         grid_dec = self.inputs.grid_dec
         broad_component = self.inputs.broad_component

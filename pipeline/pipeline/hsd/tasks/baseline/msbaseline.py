@@ -12,6 +12,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
 from pipeline.hsd.heuristics import MaskDeviationHeuristicForMS
+from pipeline.domain import DataTable
 
 from .. import common
 from . import maskline
@@ -186,8 +187,9 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
         print inputs
         context = inputs.context
         print context
-        datatable = context.observing_run.ms_datatable_name
-        print datatable
+        datatable_name = context.observing_run.ms_datatable_name
+        print datatable_name
+        datatable = DataTable(datatable_name)
         reduction_group = context.observing_run.ms_reduction_group
         print reduction_group
         vis_list = inputs.vis
@@ -326,7 +328,8 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
                                                        group_fieldid_list, group_antennaid_list, group_spwid_list, 
                                                        window, edge, broadline, clusteringalgorithm)
             maskline_task = maskline.MaskLine(maskline_inputs)
-            maskline_result = self._executor.execute(maskline_task, merge=True)
+            job = common.ParameterContainerJob(maskline_task, datatable=datatable)
+            maskline_result = self._executor.execute(job, merge=True)
             grid_table = maskline_result.outcome['grid_table']
             if grid_table is None:
                 LOG.info('Skip reduction group %s'%(group_id))
@@ -373,17 +376,14 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
             fitter_inputs = worker.BaselineSubtractionTask.Inputs(context,
                                                                   fitfunc=fitfunc,
                                                                   vis=ms.name,
-                                                                  field_id_list=field_id_list,
-                                                                  antenna_id_list=antenna_id_list,
-                                                                  spw_id_list=spw_id_list,
                                                                   fit_order=fitorder,
                                                                   edge=edge,
-                                                                  deviationmask_list=devmask_list,
-                                                                  blparam=blparam_file(ms),
-                                                                  grid_table_list=grid_table_list,
-                                                                  channelmap_range_list=channelmap_range_list)
+                                                                  blparam=blparam_file(ms))
             fitter_task = worker.BaselineSubtractionTask(fitter_inputs)
-            fitter_results = self._executor.execute(fitter_task, merge=True)
+            job = common.ParameterContainerJob(fitter_task, datatable=datatable, 
+                                               process_list=accum, 
+                                               deviationmask_list=devmask_list)
+            fitter_results = self._executor.execute(job, merge=True)
             LOG.debug('fitter_results: %s'%(fitter_results))
             if isinstance(fitter_results, basetask.ResultsList):
                 for r in fitter_results:

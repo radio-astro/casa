@@ -60,8 +60,7 @@ class MaskLineResults(common.SingleDishResults):
 class MaskLine(common.SingleDishTaskTemplate):
     Inputs = MaskLineInputs
 
-    # @common.datatable_setter
-    def prepare(self):
+    def prepare(self, datatable=None):
         context = self.context
 
         start_time = time.time()
@@ -72,8 +71,12 @@ class MaskLine(common.SingleDishTaskTemplate):
         spwid_list = self.inputs.spwid_list
         antenna_list = self.inputs.antenna_list
         reference_data = context.observing_run.get_ms(vis_list[0])
-        # datatable = context.observing_run.datatable_instance
-        dt = datatable.DataTableImpl(context.observing_run.ms_datatable_name, readonly=False)
+        if datatable is None:
+            LOG.info('instantiate local datatable')
+            dt = datatable.DataTableImpl(context.observing_run.ms_datatable_name, readonly=False)
+        else:
+            LOG.info('datatable is propagated from parent task')
+            dt = datatable
         srctype = 0  # reference_data.calibration_strategy['srctype']
         index_list = numpy.array(utils.get_index_list_for_ms(dt, vis_list,
                                                              antenna_list, field_list,
@@ -122,11 +125,12 @@ class MaskLine(common.SingleDishTaskTemplate):
  
         # simple gridding
         t0 = time.time()
-        gridding_inputs = simplegrid.SDMSSimpleGridding.Inputs(context, vis_list, field_list, antenna_list, spwid_list, index_list)
+        gridding_inputs = simplegrid.SDMSSimpleGridding.Inputs(context, vis_list, field_list, 
+                                                               antenna_list, spwid_list)
         gridding_task = simplegrid.SDMSSimpleGridding(gridding_inputs)
-        gridding_result = self._executor.execute(gridding_task, merge=True)
+        job = common.ParameterContainerJob(gridding_task, datatable=dt, index_list=index_list)
+        gridding_result = self._executor.execute(job, merge=True)
         spectra = gridding_result.outcome['spectral_data']
-        masks = (spectra != NoData)
         grid_table = gridding_result.outcome['grid_table']
         t1 = time.time()
  
@@ -153,9 +157,11 @@ class MaskLine(common.SingleDishTaskTemplate):
  
         # line finding
         t0 = time.time()
-        detection_inputs = detection.DetectLine.Inputs(context, grid_table, spectra, masks, window, edge, broadline)
+        detection_inputs = detection.DetectLine.Inputs(context, window, edge, broadline)
         line_finder = detection.DetectLine(detection_inputs)
-        detection_result = self._executor.execute(line_finder, merge=True)
+        job = common.ParameterContainerJob(line_finder, datatable=dt, grid_table=grid_table, 
+                                           spectral_data=spectra)
+        detection_result = self._executor.execute(job, merge=True)
         detect_signal = detection_result.signals
         t1 = time.time()
  
@@ -165,10 +171,14 @@ class MaskLine(common.SingleDishTaskTemplate):
         # line validation
         t0 = time.time()
         validator_cls = validation.ValidationFactory(observing_pattern)
-        validation_inputs = validator_cls.Inputs(context, grid_table, detect_signal, spwid_list, index_list, iteration, grid_size, grid_size, window, edge, clusteringalgorithm=clusteringalgorithm)
+        validation_inputs = validator_cls.Inputs(context, vis_list, spwid_list, iteration, grid_size, 
+                                                 grid_size, window, edge, 
+                                                 clusteringalgorithm=clusteringalgorithm)
         line_validator = validator_cls(validation_inputs)
         LOG.trace('len(index_list)=%s'%(len(index_list)))
-        validation_result = self._executor.execute(line_validator, merge=True)
+        job = common.ParameterContainerJob(line_validator, datatable=datatable, index_list=index_list, 
+                                           grid_table=grid_table, detect_signal=detect_signal)
+        validation_result = self._executor.execute(job, merge=True)
         lines = validation_result.outcome['lines']
         if validation_result.outcome.has_key('channelmap_range'):
             channelmap_range = validation_result.outcome['channelmap_range']

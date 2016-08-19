@@ -14,11 +14,12 @@ from pipeline.domain.datatable import DataTableImpl as DataTable
 from .. import common
 from . import rules
 
+NoData = common.NoData
 
 LOG = infrastructure.get_logger(__name__)
 
 class DetectLineInputs(common.SingleDishInputs):
-    def __init__(self, context, grid_table, spectra, masks, window=None, edge=None, broadline=None):
+    def __init__(self, context, window=None, edge=None, broadline=None):
         self._init_properties(vars())
         
     @property
@@ -84,22 +85,22 @@ class DetectLine(common.SingleDishTaskTemplate):
         super(DetectLine, self).__init__(inputs)
         self.line_finder = self.LineFinder()
 
-    #@common.datatable_setter
-    def prepare(self):
+    def prepare(self, datatable=None, grid_table=None, spectral_data=None):
         """
         The process finds emission lines and determines protection regions for baselinefit
         """
-        spectra = self.inputs.spectra
-        masks = self.inputs.masks
-        grid_table = self.inputs.grid_table
+        assert spectral_data is not None
+        assert grid_table is not None
+        spectra = spectral_data
+        masks = (spectra != NoData)
         window = self.inputs.window
         edge = self.inputs.edge
         broadline = self.inputs.broadline
-        start_time = time.time()
-        LOG.debug('Start importing datatable: %s'%(start_time))
-        datatable = DataTable(self.context.observing_run.ms_datatable_name)
-        end_time = time.time()
-        LOG.debug('End importing datatable: %s (%s sec)'%(end_time, end_time - start_time)) 
+        if datatable is None:
+            LOG.debug('#PNP# instantiate local datatable')
+            datatable = DataTable(self.context.observing_run.ms_datatable_name)
+        else:
+            LOG.debug('datatable is propagated from parent task')
         
         detect_signal = {}
 

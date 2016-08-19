@@ -137,7 +137,7 @@ class BaselineFitParamConfig(basetask.StandardTaskTemplate):
     def is_multi_vis_task(self):
         return False
     
-    def prepare(self):
+    def prepare(self, datatable=None):
         LOG.debug('Starting BaselineFitParamConfig.prepare')
         fragmentation_heuristic = fragmentation.FragmentationHeuristics()
 
@@ -153,7 +153,11 @@ class BaselineFitParamConfig(basetask.StandardTaskTemplate):
 
         context = self.inputs.context
         vis = self.inputs.vis
-        datatable = DataTable(context.observing_run.ms_datatable_name)
+        if datatable is None:
+            LOG.info('#PNP# instantiate local datatable')
+            datatable = DataTable(self.context.observing_run.ms_datatable_name)
+        else:
+            LOG.info('datatable is propagated from parent task')
         ms = context.observing_run.get_ms(vis)
         
         args = self.inputs.to_casa_args()
@@ -165,6 +169,8 @@ class BaselineFitParamConfig(basetask.StandardTaskTemplate):
         LOG.debug('MS "%s" ant %s field %s spw %s'%(os.path.basename(vis),antenna_id,field_id,spw_id))
         
         nchan = ms.spectral_windows[spw_id].num_channels
+        data_desc = ms.get_data_description(spw=spw_id)
+        npol = data_desc.num_polarizations
         edge = common.parseEdge(self.inputs.edge)
         
         LOG.debug('nchan={nchan} edge={edge}'.format(nchan=nchan,edge=edge))
@@ -216,7 +222,10 @@ class BaselineFitParamConfig(basetask.StandardTaskTemplate):
                     #tsel = tb.query('ROWNUMBER() IN [%s]'%((','.join(map(str, rows)))), style='python')
                     #spectra = tsel.getcol()
                     #tsel.close()
-                    spectra = numpy.asarray([tb.getcell(colname, row) for row in rows])
+                    #spectra = numpy.asarray([tb.getcell(colname, row).real for row in rows])
+                    spectra = numpy.zeros((len(rows), npol, nchan,), dtype=numpy.float32)
+                    for (i,row) in enumerate(rows):
+                        spectra[i] = tb.getcell(colname, row).real
                     #get_mask_from_flagtra: 1 valid 0 invalid
                     #arg for mask_to_masklist: 0 valid 1 invalid
                     #flaglist = [self._mask_to_masklist(-sdutils.get_mask_from_flagtra(tb.getcell('FLAGTRA', row))+1 )
@@ -373,7 +382,7 @@ class CubicSplineFitParamConfig(BaselineFitParamConfig):
     
 
 class BaselineSubtractionWorkerInputs(BaselineSubtractionInputsBase):
-    def __init__(self, context, vis=None, field_id_list=None, antenna_id_list=None, spw_id_list=None, 
+    def __init__(self, context, vis=None,  
                  fit_order=None, edge=None, deviationmask_list=None, blparam=None, bloutput=None, 
                  grid_table_list=None, channelmap_range_list=None):
         self._init_properties(vars())
@@ -382,21 +391,23 @@ class BaselineSubtractionWorker(basetask.StandardTaskTemplate):
     Inputs = BaselineSubtractionWorkerInputs
     SubTask = None
     
-    def prepare(self):
+    def prepare(self, datatable=None, process_list=None, deviationmask_list=None):
         context = self.inputs.context
         vis = self.inputs.vis
         ms = self.inputs.ms
-        field_id_list = self.inputs.field_id_list
-        antenna_id_list = self.inputs.antenna_id_list
-        spw_id_list = self.inputs.spw_id_list
         fit_order = self.inputs.fit_order
         edge = self.inputs.edge
-        deviationmask_list = self.inputs.deviationmask_list
         args = self.inputs.to_casa_args()
         blparam = args['blparam']
         bloutput = args['bloutput']
         outfile = args['outfile']
         datacolumn = args['datacolumn']
+        
+        assert process_list is not None
+        assert deviationmask_list is not None
+        field_id_list = process_list.get_field_id_list()
+        antenna_id_list = process_list.get_antenna_id_list()
+        spw_id_list = process_list.get_spw_id_list()
         
         assert len(field_id_list) == len(antenna_id_list)
         assert len(antenna_id_list) == len(spw_id_list)
@@ -417,7 +428,8 @@ class BaselineSubtractionWorker(basetask.StandardTaskTemplate):
                                          deviationmask=deviationmask, blparam=blparam, 
                                          bloutput=bloutput)
             task = self.SubTask(inputs)
-            subtask_results = self._executor.execute(task, merge=True)
+            job = common.ParameterContainerJob(task, datatable=datatable)
+            subtask_results = self._executor.execute(job, merge=True)
             
         # execute tsdbaseline
         job = casa_tasks.tsdbaseline(infile=vis, datacolumn=datacolumn, blmode='fit', dosubtract=True,
@@ -432,7 +444,9 @@ class BaselineSubtractionWorker(basetask.StandardTaskTemplate):
             
         outcome = {'blparam': blparam,
                    'bloutput': bloutput,
-                   'outfile': outfile}
+                   'outfile': outfile,
+                   'process_list': process_list,
+                   'deviationmask_list': deviationmask_list}
         results = BaselineSubtractionResults(success=True, outcome=outcome)
         return results
         
@@ -445,12 +459,13 @@ class BaselineSubtractionWorker(basetask.StandardTaskTemplate):
         ms = self.inputs.ms
         ms_id = self.inputs.context.observing_run.measurement_sets.index(ms)
         vis = self.inputs.vis
-        field_id_list = self.inputs.field_id_list
-        antenna_id_list = self.inputs.antenna_id_list
-        spw_id_list = self.inputs.spw_id_list
-        grid_table_list = self.inputs.grid_table_list
-        channelmap_range_list = self.inputs.channelmap_range_list
-        deviationmask_list = self.inputs.deviationmask_list
+        process_list = results.outcome.pop('process_list')
+        field_id_list = process_list.get_field_id_list()
+        antenna_id_list = process_list.get_antenna_id_list()
+        spw_id_list = process_list.get_spw_id_list()
+        grid_table_list = process_list.get_grid_table_list()
+        channelmap_range_list = process_list.get_channelmap_range_list()
+        deviationmask_list = results.outcome.pop('deviationmask_list')
         args = self.inputs.to_casa_args()
         outfile = args['outfile']
         ###if grid_table is not None:
