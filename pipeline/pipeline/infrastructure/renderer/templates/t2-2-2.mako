@@ -37,8 +37,8 @@ import pipeline.domain.measures as measures
 			        	<th>Centre</th>
 			        	<th>End</th>
 			        	<th>Number</th>
-			        	<th>Width</th>
-			        	<th>Resolution</th>
+			        	<th>Frequency Width</th>
+			        	<th>Velocity Width</th>
 			        </tr>
 			    </thead>
 				<tbody>
@@ -94,8 +94,8 @@ import pipeline.domain.measures as measures
 			        	<th>Centre</th>
 			        	<th>End</th>
 			        	<th>Number</th>
-			        	<th>Width</th>
-			        	<th>Resolution</th>
+			        	<th>Frequency Width</th>
+			        	<th>Velocity Width</th>
 			        </tr>
 			    </thead>
 				<tbody>
