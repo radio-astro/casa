@@ -220,6 +220,7 @@ String MSCache::getDataColumn(vector<PMS::Axis>& loadAxes,
                             MS::columnName(MS::WEIGHT_SPECTRUM));
                         if (!weightSpectrum.hasContent()) {
                             logWarn("load_cache", "Plotting WEIGHT column, WEIGHT_SPECTRUM (WTSP) has not been initialized (this can be changed with initweights task)");
+                            cout << "WARNING: Plotting WEIGHT column, WEIGHT_SPECTRUM (WTSP) has not been initialized (this can be changed with initweights task)" << endl;
                         }
                     }
                     dataColumn = PMS::dataColumn(loadData[i]);
@@ -235,6 +236,7 @@ String MSCache::getDataColumn(vector<PMS::Axis>& loadAxes,
                             MS::columnName(MS::WEIGHT_SPECTRUM));
                         if (weightSpectrum.hasContent()) {
                             logLoad("Plotting mean WEIGHT column but WEIGHT_SPECTRUM is available. Request 'WtSp' axis to see channelized weights.");
+                            cout << "INFO: Plotting mean WEIGHT column but WEIGHT_SPECTRUM is available. Request 'WtSp' axis to see channelized weights." << endl;
                         }
                     }
                     dataColumn = PMS::dataColumn(loadData[i]);
