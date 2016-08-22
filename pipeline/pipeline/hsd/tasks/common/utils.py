@@ -911,12 +911,16 @@ def _read_table(reader, table, vis):
 
 #@profiler
 def make_spwid_map(srcvis, dstvis):
-    src_spws = __read_table(casatools.MSMDReader, 
-                            tablereader.SpectralWindowTable.get_spectral_windows,
-                            srcvis)
-    dst_spws = __read_table(casatools.MSMDReader, 
-                            tablereader.SpectralWindowTable.get_spectral_windows,
-                            dstvis)
+#     src_spws = __read_table(casatools.MSMDReader, 
+#                             tablereader.SpectralWindowTable.get_spectral_windows,
+#                             srcvis)
+#     dst_spws = __read_table(casatools.MSMDReader, 
+#                             tablereader.SpectralWindowTable.get_spectral_windows,
+#                             dstvis)
+
+    src_spws = __read_table(None, get_spw_properties, srcvis)
+    dst_spws = __read_table(None, get_spw_properties, dstvis)
+    
     for spw in src_spws:
         LOG.trace('SRC SPWID %s NAME %s'%(spw.id,spw.name))
     for spw in dst_spws:
