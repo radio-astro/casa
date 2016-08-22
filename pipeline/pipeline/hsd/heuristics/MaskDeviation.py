@@ -101,6 +101,8 @@ class MaskDeviation(object):
         """
         Reads data from input MS. 
         """
+        import time
+        start_time = time.time()
         if vis != '': 
             self.infile=vis
         if vis == '': 
@@ -111,44 +113,23 @@ class MaskDeviation(object):
                  'scanintent': 'OBSERVE_TARGET#ON_SOURCE*'}
         LOG.debug('vis="%s"'%(vis))
         LOG.debug('mssel=%s'%(mssel))
+            
         with casatools.MSReader(vis) as myms:
+            mssel['baseline'] = '%s&&&'%(antenna)
             myms.msselect(mssel)
-            sel = myms.msselectedindices()
-        taql = 'ANTENNA1 == ANTENNA2'
-        if antenna != '':
-            taql += ' && ANTENNA1 == {ant}'.format(ant=str(antenna))
-        nparray2str = lambda a: ','.join(map(str, a))
-        if len(sel['field']) > 0:
-            taql += ' && FIELD_ID IN [{field}]'.format(field=nparray2str(sel['field']))
-        if len(sel['spwdd']) > 0:
-            taql += ' && DATA_DESC_ID IN [{dd}]'.format(dd=nparray2str(sel['spwdd']))
-        if len(sel['stateid']) > 0:
-            taql += ' && STATE_ID IN [{state}]'.format(state=nparray2str(sel['stateid']))
-        LOG.debug('sel=%s'%(sel))
-        LOG.debug('taql="%s"'%(taql))
-        with casatools.TableReader(vis) as mytb:
-            tbsel = mytb.query(taql)
-            try:
-                nrow = tbsel.nrows()
-                LOG.debug('number of rows for selected table: %s'%(nrow))
-                cellshape = NP.fromstring(tbsel.getcolshapestring(colname, 0, 1)[0].lstrip('[').rstrip(']'), 
-                                          dtype=NP.int, sep=',')
-                LOG.debug('cellshape={shape}'.format(shape=cellshape))
-                npol, nchan = cellshape
-                array_shape = (nrow * npol, nchan)
-                self.data = NP.zeros(array_shape, NP.float)
-                # flag: True => invalid, False => valid
-                self.flag = NP.zeros(array_shape, NP.bool)
-                self.nrow, self.nchan = array_shape
-                for i in xrange(nrow):
-                    cell = tbsel.getcell(colname, i)
-                    self.data[i * npol:(i + 1) * npol] = NP.real(cell)
-                    self.flag[i * npol:(i + 1) * npol] = tbsel.getcell('FLAG', i)
-            finally:
-                tbsel.close()
+            r = myms.getdata([colname, 'FLAG'])
+            npol, nchan, nrow = r['flag'].shape
+            self.nrow = npol * nrow
+            self.nchan = nchan
+            self.data= NP.real(r[colname.lower()]).transpose((2,0,1)).reshape((nrow * npol, nchan))
+            self.flag = r['flag'].transpose((2,0,1)).reshape((nrow * npol, nchan))
                         
         LOG.debug('MaskDeviation.ReadDataFromMS: %s %s'%(self.nrow, self.nchan))
-
+        end_time = time.time()
+        print 'Elapsed %s sec'%(end_time - start_time)
+        
+        return r
+        
 
     def SubtractMedian(self, threshold=3.0, consider_flag=False):
         """
