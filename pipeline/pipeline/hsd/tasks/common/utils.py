@@ -714,8 +714,8 @@ def make_row_map(src_ms, derived_vis):
     if is_unique_field_set and is_unique_state_set:
         taql = 'ANTENNA1 == ANTENNA2 && SCAN_NUMBER IN %s && FIELD_ID IN %s && STATE_ID IN %s'%(scan_numbers, field_values[0], state_values[0])
     else:
-        taql = 'ANTENNA1 == ANTENNA2 && (%s)'%(' || '.join(['(SCAN_NUMBER == %s && FIELD_ID IN %s && STATE_ID IN %s)'%(scan.id, map(lambda x: x.id, scan.fields), map(lambda x: x.id, scan.states)) for scan in scans]))
-    print taql
+        taql = 'ANTENNA1 == ANTENNA2 && (%s)'%(' || '.join(['(SCAN_NUMBER == %s && FIELD_ID IN %s && STATE_ID IN %s)'%(scan, fields[scan], states[scan]) for scan in scan_numbers]))
+    LOG.trace('taql=\'%s\''%(taql))
      
      
     with casatools.TableReader(os.path.join(vis0, 'OBSERVATION')) as tb:
@@ -789,7 +789,7 @@ def make_row_map(src_ms, derived_vis):
             for scan_number in scan_numbers:
                 LOG.trace('SCAN_NUMBER %s'%(scan_number))
  
-                if len(states[scan_number]) == 0:
+                if not states.has_key(scan_number): 
                     LOG.trace('No target states in SCAN %s'%(scan_number))
                     continue
                  
@@ -805,73 +805,98 @@ def make_row_map(src_ms, derived_vis):
                             data_desc_id = data_desc.id
                             pol_id = data_desc.pol_id
                             spw_id = spw.id
+                            LOG.trace('START PROCESSOR %s SCAN %s DATA_DESC_ID %s ANTENNA %s FIELD %s'%(processor_id, scan_number,data_desc_id,antenna_id,field_id))
                             derived_pol_id = to_derived_polid[pol_id]
                             derived_spw_id = to_derived_spwid[spw_id]
                             derived_dd_id = derived_ddid_map[(derived_pol_id, derived_spw_id)]
-                            LOG.trace('SRC DATA_DESC_ID %s (SPW %s)'%(data_desc_id, spw.id))
+                            LOG.trace('SRC DATA_DESC_ID %s (SPW %s)'%(data_desc_id, spw_id))
                             LOG.trace('DERIVED DATA_DESC_ID %s (SPW %s)'%(derived_dd_id, derived_spw_id))
                              
-                            for state_id in states[scan_number]:
-                                LOG.trace('STATE_ID %s'%(state_id))
-                                 
-                                mask0 = numpy.logical_and(state_id_list0 == state_id, 
-                                            numpy.logical_and(data_desc_id_list0 == data_desc_id,
-                                                            numpy.logical_and(antenna1_list0 == antenna_id,
-                                                                    numpy.logical_and(field_id_list0 == field_id,                                         
-                                                                            scan_number_list0 == scan_number))))
-#                                 mask0 = numpy.logical_and.reduce((state_id_list0 == state_id,
-#                                                                   data_desc_id_list0 == data_desc_id,
-#                                                                   antenna2_list0 == antenna_id,
-#                                                                   antenna1_list0 == antenna_id,
-#                                                                   field_id_list0 == field_id,
-#                                                                   scan_number_list0 == scan_number),
-#                                                                  axis=0)
-                                if not is_unique_processor_id:
-                                    numpy.logical_and(mask0, processor_id_list0 == processor_id, out=mask0)
-                                if not is_unique_observation_id:
-                                    numpy.logical_and(mask0, observation_id_list0 == observation_id, out=mask0)
+                             
+                            tmask0 = numpy.logical_and(data_desc_id_list0 == data_desc_id,
+                                                numpy.logical_and(antenna1_list0 == antenna_id,
+                                                    numpy.logical_and(field_id_list0 == field_id,                                         
+                                                                      scan_number_list0 == scan_number)))
+                            if not is_unique_processor_id:
+                                numpy.logical_and(tmask0, processor_id_list0 == processor_id, out=tmask0)
+                            if not is_unique_observation_id:
+                                numpy.logical_and(tmask0, observation_id_list0 == observation_id, out=tmask0)
 
-                               
-                                LOG.trace('obtained time and row numbers for state %s'%(state_id))
- 
-                                if numpy.any(mask0 == True):
-                                    # get time stamp and row numbers for selected rows of vis0
-                                    time_in0 = time_list0[mask0]
-                                    row_in0 = rownumber_list0[mask0]
-                                    argsort0 = numpy.argsort(time_in0)
-                                    time_in = time_in0[argsort0]
-                                    row_in = row_in0[argsort0]
-                                     
-                                    # get time stamp and row numbers for selected rows of vis1                                             
-                                    mask1 = numpy.logical_and(state_id_list1 == state_id, 
-                                                    numpy.logical_and(data_desc_id_list1 == derived_dd_id,
-                                                                    numpy.logical_and(antenna1_list1 == antenna_id,
-                                                                            numpy.logical_and(field_id_list1 == field_id,                                         
-                                                                                    scan_number_list1 == scan_number))))
+                            tmask1 = numpy.logical_and(data_desc_id_list1 == derived_dd_id,
+                                                numpy.logical_and(antenna1_list1 == antenna_id,
+                                                    numpy.logical_and(field_id_list1 == field_id,                                         
+                                                                      scan_number_list1 == scan_number)))
+                            if not is_unique_processor_id:
+                                numpy.logical_and(tmask1, processor_id_list1 == processor_id, out=tmask1)
+                            if not is_unique_observation_id:
+                                numpy.logical_and(tmask1, observation_id_list1 == observation_id, out=tmask1)
+                            
+                            if numpy.all(tmask0 == False) and numpy.all(tmask1 == False):
+                                # no corresponding data (probably due to PROCESSOR_ID for non-science windows)
+                                LOG.trace('SKIP PROCESSOR %s SCAN %s DATA_DESC_ID %s ANTENNA %s FIELD %s'%(processor_id, scan_number,data_desc_id,antenna_id,field_id))
+                                continue
+                            
+                            tstate0 = state_id_list0[tmask0]
+                            tstate1 = state_id_list1[tmask1]
+                            ttime0 = time_list0[tmask0]
+                            ttime1 = time_list1[tmask1]
+                            trow0 = rownumber_list0[tmask0]
+                            trow1 = rownumber_list1[tmask1]
+                            sort_index0 = numpy.lexsort((tstate0, ttime0))
+                            sort_index1 = numpy.lexsort((tstate1, ttime1))
+                            assert numpy.all(ttime0[sort_index0] == ttime1[sort_index1])
+                            assert numpy.all(tstate0[sort_index0] == tstate1[sort_index1])
+                            assert set(tstate0) == set(states[scan_number])
+                            #print tstate0, set(tstate0)
+                            #print tstate1, set(tstate1)
+                            LOG.trace('scan %s'%(scan_number)
+                                     + ' actual %s'%(list(set(tstate0))) 
+                                     + ' expected %s'%(states[scan_number]))
+                            
+                            for (i0, i1) in zip(sort_index0, sort_index1):
+                                r0 = trow0[i0]
+                                r1 = trow1[i1]
+                                rowmap[r0] = r1
 
-                                    if not is_unique_processor_id:
-                                        numpy.logical_and(mask1, processor_id_list1 == processor_id, out=mask1)
-                                    if not is_unique_observation_id:
-                                        numpy.logical_and(mask1, observation_id_list1 == observation_id, out=mask1)
-                                      
-                                    time_out1 = time_list1[mask1]
-                                    row_out1 = rownumber_list1[mask1]
-                                    argsort1 = numpy.argsort(time_out1)
-                                    time_out = time_out1[argsort1]
-                                    row_out = row_out1[argsort1]
+                            LOG.trace('END PROCESSOR %s SCAN %s DATA_DESC_ID %s ANTENNA %s FIELD %s'%(processor_id, scan_number,data_desc_id,antenna_id,field_id))
 
-                                    assert numpy.all(time_in == time_out)
- 
-                                    for (rin, rout) in zip(row_in, row_out):
-                                        rowmap[rin] = rout
-                                else:
-                                    assert numpy.all(mask0 == False)
-                                    LOG.trace('NOTE: no rows')
-                                     
-                                LOG.trace('DONE State %s'%(state_id))
- 
     return rowmap
 
+class SpwSimpleView(object):
+    def __init__(self, spwid, name):
+        self.id = spwid
+        self.name = name
+        
+class SpwDetailedView(object):
+    def __init__(self, spwid, name, num_channels, ref_frequency, min_frequency, max_frequency):
+        self.id = spwid
+        self.name = name
+        self.num_channels = num_channels
+        self.ref_frequency = ref_frequency
+        self.min_frequency = min_frequency
+        self.max_frequency = max_frequency
+
+def get_spw_names(vis):
+    with casatools.TableReader(os.path.join(vis, 'SPECTRAL_WINDOW')) as tb:
+        gen = (SpwSimpleView(i, tb.getcell('NAME', i)) for i in xrange(tb.nrows()))
+        spws = list(gen)
+    return spws
+
+def get_spw_properties(vis):
+    with casatools.TableReader(os.path.join(vis, 'SPECTRAL_WINDOW')) as tb:
+        spws = []
+        for irow in xrange(tb.nrows()):
+            name = tb.getcell('NAME', irow)
+            nchan = tb.getcell('NUM_CHAN', irow)
+            ref_freq = tb.getcell('REF_FREQUENCY', irow)
+            chan_freq = tb.getcell('CHAN_FREQ', irow)
+            chan_width = tb.getcell('CHAN_WIDTH', irow)
+            min_freq = chan_freq.min() - abs(chan_width[0]) / 2
+            max_freq = chan_freq.max() + abs(chan_width[0]) / 2
+            spws.append(SpwDetailedView(irow, name, nchan, ref_freq, min_freq, max_freq))
+    return spws
+
+#@profiler
 def __read_table(reader, method, vis):
     if reader is None:
         result = method(vis)
@@ -884,6 +909,7 @@ def _read_table(reader, table, vis):
     rows = __read_table(reader, table._read_table, vis)
     return rows
 
+#@profiler
 def make_spwid_map(srcvis, dstvis):
     src_spws = __read_table(casatools.MSMDReader, 
                             tablereader.SpectralWindowTable.get_spectral_windows,
@@ -918,11 +944,12 @@ def make_spwid_map(srcvis, dstvis):
                     and src.min_frequency == spw.min_frequency \
                     and src.max_frequency == spw.max_frequency:
                     if spwid_map.has_key(src.id):
-                        raise RuntimeError('Failed to create spw map for MSs \'%s\' and \'%s\''%(vis0,vis1))
+                        raise RuntimeError('Failed to create spw map for MSs \'%s\' and \'%s\''%(srcvis,dstvis))
                     spwid_map[src.id] = spw.id
     return spwid_map
     
 
+#@profiler
 def make_polid_map(srcvis, dstvis):
     src_rows = _read_table(None, tablereader.PolarizationTable, srcvis)
     dst_rows = _read_table(None, tablereader.PolarizationTable, dstvis)
@@ -938,6 +965,7 @@ def make_polid_map(srcvis, dstvis):
     LOG.trace('polid_map = %s'%(polid_map))
     return polid_map
 
+#@profiler
 def make_ddid_map(vis):
     table_rows = _read_table(casatools.MSMDReader, tablereader.DataDescriptionTable, vis)
     return dict((((polid,spwid),ddid) for ddid,spwid,polid in table_rows))
