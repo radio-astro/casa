@@ -60,6 +60,11 @@ Imports data into the interferometry pipeline
 	<value>False</value>
     </param>
 
+    <param type="string" name="ocorr_mode" subparam="true">
+	<description>ALMA default set to ca</description>
+	<value>ca</value>
+    </param>
+
     <param type="string" name="createmms">
         <description>Create a MMS</description>
     <value>automatic</value>
@@ -87,6 +92,7 @@ Imports data into the interferometry pipeline
 	    </equals>
 	    <equals type="string" value="interactive">
 		<default param="asis"><value type="string">Antenna Station Receiver Source CalAtmosphere CalWVR</value></default>
+        <default param="ocorr_mode"><value type="string">ca</value></default>
 		<default param="process_caldevice"><value type="bool">False</value></default>
 		<default param="overwrite"><value type="bool">False</value></default>
 		<default param="bdfflags"><value type="bool">True</value></default>
@@ -98,6 +104,7 @@ Imports data into the interferometry pipeline
 		<default param="process_caldevice"><value type="bool">False</value></default>
 		<default param="overwrite"><value type="bool">False</value></default>
 		<default param="bdfflags"><value type="bool">True</value></default>
+        <default param="ocorr_mode"><value type="string">ca</value></default>
 	    </equals>
 	</when>
     </constraints>
@@ -161,6 +168,8 @@ bdfflags -- Apply BDF flags on line
 
 dbservice -- Use online flux catalog on import
    default: False
+
+ocorr_mode -- Default set to ca
 
 lazy -- Use the lazy filter import
    default: False
