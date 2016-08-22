@@ -1,0 +1,1359 @@
+\documentclass[11pt]{article}
+\usepackage{a4}
+\usepackage{calc}
+\usepackage{ifthen}
+\usepackage{smartref}
+\usepackage{longtable}
+
+\def\complete{no}
+
+% Adjust the page size
+\addtolength{\oddsidemargin}{-0.4in}
+\addtolength{\evensidemargin}{+0.4in}
+\addtolength{\textwidth}{+0.8in}
+
+\setlength{\parindent}{0mm}
+\setlength{\parskip}{1ex}
+
+
+\title{ASAP - ATNF Spectral Analysis Package\\
+  Software Requirements - Development Cycle 2 }
+ \author{Chris Phillips \& Malte Marquarding}
+
+\newcounter{requirement}
+\newcounter{subrequirement}
+
+\addtoreflist{requirement}
+\newcommand{\reqref}[1]{R\ref{#1}-\requirementref{#1}}
+
+\newcommand{\makenote}[1]{{\bf \tt \em#1}}
+
+\newcommand{\anitem}[2]{\smallskip \parbox[t]{2cm}{#1}%
+  \parbox[t]{\textwidth-2cm}{#2}}
+
+\newcommand{\showreqcounter}{
+  R\arabic{section}.\arabic{subsection}-\arabic{requirement}
+}
+
+\newcommand{\showsubreqcounter}{
+  R\arabic{section}.\arabic{subsection}-\arabic{requirement}.\arabic{subrequirement}
+}
+
+\newcommand{\status}[2]{
+  \ifthenelse{\equal{#1}{Started}}{Started \hspace*{1cm} {\em Priority #2}}
+ {\ifthenelse{\equal{#1}{Not started}}{Not Started\hspace*{1cm} {\em Priority #2}}
+ {\ifthenelse{\equal{#1}{Done1}}{Completed}
+ { \ifthenelse{\equal{#1}{Duplicate}}{Duplicate?}
+ {#1}
+ }}}
+}
+
+% Also Deferred, Obsolete
+
+% Requirement command
+%  Summary
+%  Status
+%  Priority
+%  Time estimate
+%  Percent complete
+%  Completion date
+%  Text
+
+%\newarray\Requirements
+
+%\newcounter{numreq}
+
+\newcommand{\requirement}[7]{
+  \setcounter{subrequirement}{0}
+  \stepcounter{requirement}
+
+  \ifthenelse{\equal{\complete}{yes}}
+	     {\dorequirement{#1}{#2}{#3}{#4}{#5}{#6}{#7}}
+	     {\ifthenelse{\equal{#2}{Done1} 
+		 \or \equal{#2}{Deferred}
+		 \or \equal{#2}{Removed}
+		 \or \equal{#2}{Obsolete}}{}
+	       {\dorequirement{#1}{#2}{#3}{#4}{#5}{#6}{#7}}}
+}
+
+\newcommand{\dorequirement}[7]{
+  \hspace*{2mm}\begin{minipage}{\textwidth-2mm}
+    \setlength{\parindent}{-2mm}
+      {\bf \showreqcounter\ \bf #1} \\ 
+    #7 \\
+    \hspace*{1cm} \status{#2}{#3}
+  \end{minipage}
+
+  \typeout{REQUIREMENT: \showreqcounter & #1 & #2 & #3 & #4 & #5 & #6 :ENDREQ}
+}
+
+\newcommand{\subrequirement}[7]{
+  \stepcounter{subrequirement}
+
+  \ifthenelse{\equal{\complete}{yes}}
+	     {\dosubrequirement{#1}{#2}{#3}{#4}{#5}{#6}{#7}}
+	     {\ifthenelse{\equal{#2}{Done1} 
+		 \or \equal{#2}{Deferred}
+		 \or \equal{#2}{Obsolete} 
+		 \or \equal{#2}{Removed}}{}
+	       {\dosubrequirement{#1}{#2}{#3}{#4}{#5}{#6}{#7}}}
+}
+
+\newcommand{\dosubrequirement}[7]{
+  \hspace*{2mm}\begin{minipage}{\textwidth-2mm}
+    \setlength{\parindent}{-2mm}
+    {\bf \showsubreqcounter\ \bf #1} \\ 
+    #7 \\
+    \hspace*{1cm} \status{#2}{#3}
+  \end{minipage}
+
+  \typeout{REQUIREMENT: \showsubreqcounter & #1 & #2 & #3  & #4 & #5 & #6 :ENDREQ}
+}
+
+
+\newcommand{\extendedrequirement}[7]{
+  \setcounter{subrequirement}{0}
+
+  \hspace*{2mm}\begin{minipage}{\textwidth-2mm}
+    \setlength{\parindent}{-2mm}
+    \stepcounter{requirement}
+    {\bf \showreqcounter\  #1}
+    #7 
+    \hspace*{1cm} \status{#2}{#3}
+  \end{minipage}
+
+  \typeout{REQUIREMENT: \showreqcounter & #1 & #2 & #3 & #4 & #5 & #6 :ENDREQ}
+}
+
+
+\newcommand{\reqeqn}[1]{\\\hspace*{1cm} $#1$}
+
+\let\oldsection\section
+\renewcommand{\section}[1]{\setcounter{requirement}{0}\oldsection{#1}}
+
+\let\oldsubsection\subsection
+\renewcommand{\subsection}[1]{\setcounter{requirement}{0}\oldsubsection{#1}}
+
+\begin{document}
+
+\maketitle
+
+
+%\tableofcontents
+%\newpage
+
+\section{Introduction}
+
+ASAP has been written to replace the venerable single-dish software
+{\tt spc} for processing of single dish spectral line data from all
+ATNF observatories. Version 1.0 of ASAP was released in March
+2005. This document reflects an update of the initial requirements
+document. Some new requirements have been added and the requirement
+priorities have been reassessed for the next development cycle.
+
+\section{Scope}
+
+ASAP should be able to process all spectral line single-dish
+observations from ATNF telescopes (Parkes, Mopra \& Tidbinbilla). This
+includes reading the data produced by the telescope, calibration and
+reduction of the data and basic analysis of the data such as fitting
+line profiles etc.
+
+It has been assumed that the following processing is out of the scope
+of ASAP.
+\begin{itemize}
+\item Raster or ``on-the-fly'' mapping (This is handled by
+``livedata'' and gridzilla).
+\item Very complex or specific data processing. (A route into
+  Class\footnote{Part of the GLIDAS software package, produced by
+  Institut de Radio Astronomie Millime\'trique http://www.iram.fr}
+  should be available for advanced processing).
+%%TODO%% give example
+\item Continuum data.
+\item Pulsar timing observations.
+\end{itemize}
+
+\section{Priorities}
+
+Requirements have been given a value of 1 to 3. The other requirements
+will be implemented mainly depending on priority, with ``1'' the
+highest. Priority 3 and some priority 2 requirements will probably not
+get implemented in the duration of the second development cycle.
+
+\section{User Interface}
+
+The user interface (UI) is the most important part of a single dish
+processing package, but probably the most difficult to get right. Long
+term the UI for this software will consist of three parts.
+\begin{itemize}
+  \item A graphical user interface (GUI).
+  \item An interactive command line interface (CLI).
+  \item A scriptable interface for batch processing.
+\end{itemize}
+
+The CLI and scriptable interface are essentially be the same.
+
+The software does not {\em need} to be able to run solely from a
+``vt100'' style terminal. It can be assumed that the user is running
+the software from within a windowed (i.e. X11) environment. This will
+mean it will not necessarily be possible to run the software remotely
+over a slow network connection (e.g. internationally or from home).
+Where possible, operations on the data should be possible from all
+three aspects of the user interface. 
+
+The user interface needs to be implemented so that the user can easily
+and transparently work on spectra either one at a time or by
+processing multiple spectra in parallel. This means there must be an
+easy way to select specific or multiple spectra to display or process.
+
+At this stage the development of a GUI has been deferred until the
+basic package has stabilised and most features have been
+implemented. At that stage a decision will be made on how to best
+implement a GUI. On a shorter timescale specific purpose GUIs (such as
+a simple Wizard for processing standard Mopra data) may be produced on
+an as-needed basic.
+
+\subsection{Graphical User Interface}
+
+At this stage a general ASAP GUI has been deferred to a later date.
+
+\smallskip
+
+\requirement{Simple interface}{Deferred}{}{}{}{}{It should be simple,
+intuitive and uncluttered. Specifically, use of many windows
+simultaneously should be discouraged, as should hiding functionality
+behind layers of dialog boxes.}
+
+\requirement{Integrated plotter}{Deferred}{}{}{}{}{The plotting window
+should be a major component of the GUI control, not a separate
+isolated window.}
+
+\requirement{Minimal controls}{Deferred}{}{}{}{}{The interface should use
+  minimal ``always visible'' controls, with use of pull down menus and
+  maybe a toolbar for frequency used functions. }
+
+\requirement{Keyboard shortcuts}{Deferred}{}{}{}{}{Keyboard shortcuts should
+be available.}
+
+\requirement{GUI user preferences}{Deferred}{}{}{}{}{Most user preferences
+(i.e. keywords in the CLI) should be presented in a popup, tabbed,
+dialog box.}
+
+\requirement{GUI line fitting}{Deferred}{}{}{}{}{When performing line
+profile fitting, a spreadsheet type window should be viewable which
+shows the current parameter values (amplitude, velocity etc) for each
+line fitted and allow the user to change these parameters or set the
+current value as fixed. This GUI should stay synchronised with any CLI
+changes to these values.}
+
+\requirement{Mopra online GUI}{Not started}{1}{}{}{} 
+{A simple GUI to do very basic online reduction of Mopra data should
+be available. This should include averaging data, quotient }
+
+\subsection{Command Line Interface}
+
+The command line interface is the main user interface to ASAP. It is
+implemented in ipython using a objected oriented command approach.
+
+\requirement{Virtual CLI}{Obsolete}{}{}{}{}{While the GUI should be the main
+interface for new users and for basic manipulation, some tasks can be
+more efficiently performed using a CLI. A virtual CLI could be
+integrated as part of the GUI.}
+
+\requirement{CLI keyword/argument}{Obsolete}{}{}{}{}{The CLI should have a
+keyword/argument form and never prompt the user for specific values
+(the user should be able to change values which are retained until
+they wants to change them again).}
+
+\requirement{CLI case insensitive}{Obsolete}{}{}{}{}{The CLI should be case
+insensitive and accept minimum matching and short forms of
+keywords.}
+
+\requirement{CLI available routines}{Done1}{}{}{}{}{The user must be able to
+quickly and easily see from the command line the available routines
+and keywords which affect it, so they can see which parameters may
+need changing.}
+
+\subsection{Scripting}
+
+\requirement{Scripting}{Done1}{1}{}{}{}{It must be possible to run the
+software in a scripting mode. This would be to process large amounts
+of data in a routine manner and also to automatically reproduce
+specific plots etc (So the scripting must have full control of the
+plotter). Preferably the scripting ``language'' and the CLI would be
+the same.}
+
+\requirement{Standard scripts}{Not started}{1}{}{}{} {ASAP should come
+with sample scripts which users can use for standard observing modes
+(e.g. standard Mopra observing, Parkes polarimetry etc)}
+
+%\requirement{Scripts from History}{Duplicate}{}{}{}{}{It would be worthwhile
+%having a method to auto-generate scripts (for reduction or plotting)
+%from current spectra history, or some similar method.}
+
+\section{Plotter}
+
+The plotter should be fully interactive and be an integral part of the
+GUI and software interface.
+
+\requirement{High quality plots}{Done1}{}{}{}{}{It must be able to
+produce plots of publishable quality.}
+
+\subrequirement{Histogram plots}{Not started}{1}{0.5d}{}{} {As well as line
+plots, there needs to be an option to plot spectra in ``Histogram''
+mode}
+
+
+The user must be able to specify:
+
+\subrequirement{Line Thickness}{Started}{1}{0.1d}{}{}{}
+
+\subrequirement{Character size}{Not started}{1}{0.1d}{}{}{}
+
+\subrequirement{Colours}{Started}{1}{0.75d}{}{}{}
+
+\subrequirement{Line styles}{Not started}{1}{0.5d}{}{}{}
+
+\subrequirement{Position of axis ticks}{Done1}{2}{}{}{}{}
+
+\subrequirement{Hard Copies}{Done1}{1}{}{}{}{Producing hard copies
+in postscript and .png format. Other formats may be added on an as
+need basic.}
+
+\subrequirement{Non-interactive hard copies}{Not started}{1}{2d}{}{} 
+{It must be possible to produce hard copiers without an interactive
+(i.e X11) plotter starting}.
+
+\subrequirement{Scriptable plotting}{Done1}{1}{}{}{} {All aspects of
+the plotter (zooming etc) must be setable from the command line for
+scripting}
+
+\requirement{Arbitrary plots}{Not started}{3}{}{}{}
+{It must be possible to flexibly select the data to plot (e.g. Tsys vs
+time etc as well as plots such as amplitude vs channel number or
+velocity). Preferably any of the header values for a selection of
+scans could be plotted on a scatter plot (e.g. Tsys vs elevation)}
+
+\requirement{Overlay spectra}{Done1}{}{}{}{}{It must be possible to overlay
+  multiple spectra on a single plot using different colours and/or
+  different line styles. (Including multiple stokes data and multiple
+  IFs).[[CHECK]]}
+
+\requirement{Plot individual spectra}{Done1}{}{}{}{}{It must be possible to
+  plot either the individual integrations (in either a stacked
+  fashion, or using a new subplot per integration)}
+
+\subrequirement{Auto-average integrations for plotting}{Not started}{2}{}{}{}
+{It should be possible to optionally auto-average integrations of a
+scan for plotting (for data thats has not already been scan averaged)}
+
+\requirement{Plotter multi-panelling}{Done1}{1}{}{}{}
+{It must be possible to multi-panel spectra in an n$\times$m size
+grid. It must be possible to easily change the number of plots per
+page, ie define the ``n'' and ``m'' values.}
+
+\subrequirement{Step between plots}{Not started}{2}{}{}{}
+{If more spectra than can fit on the plot matrix are to be plotted,
+then it must be possible to step back and forth between the viewable
+spectra (i.e. ``multi-page'' plots). This includes stepping through a
+single plot on the pages at a time.}
+
+\requirement{Multi-panel: change \# panels}{Not started}{2}{}{}{} 
+{When using multi-panelling, the plotter should automatically update
+the plot when the plot matrix dimensions (``n'' and ``m'' are changed)}
+
+\requirement{Plotter interactive zooming}{Done1}{}{}{}{}{It must be possible
+  to interactively zoom the plot (channel range selection and
+  amplitude of the spectra etc.)  This includes both GUI control of
+  the zooming as well as command line control of either the zoom
+  factor or directly specifying the zoom bounds. }
+
+\requirement{Zoomed subplot}{Not started}{2}{}{}{}
+{On a single plot, it should be possible to plot the full spectrum and
+a zoomed copy of the data (using a different lie style) to see weak
+features. The user must be able to specify the zoom factor.}
+
+\requirement{Offset plots}{Not started}{2}{}{}{}{Optionally when stacking
+  multiple spectral plots in one subwindow, a (user definable) offset
+  in the ``y'' direction should be added to each subsequent
+  spectra.}
+
+\requirement{Plotter auto-update}{Not started}{3}{}{}{} 
+{The plotter should automatically update to reflect user processing,
+either from the CLI or GUI. The user should have to option to turn
+this feature off if they so wish.}
+
+\requirement{Waterfall plot}{Not started}{3}{}{}{}
+{It should be possible to plot individual integrations (possibly from
+multiple scans) in a ``waterfall'' plot. This is an image based
+display, where spectral channel is along the x-axis of the plot, time
+(or integration number) along the y-axis and greyscale or colour
+represent the amplitude of spectra. Interactive zooming and panning of
+this image should be supported. }
+
+\requirement{Waterfall editing}{Not started}{3}{}{}{} 
+{When plotting ``waterfall'' plots, it should be possible to
+interactively select regions or points and mark them as invalid
+(i.e. to remove RFI affected data). The plotter should also show the
+time/velocity of the pixel beneath the cursor.}
+
+\requirement{Export waterfall to FITS}{Not started}{3}{}{}{} 
+{It should be possible to export the ``waterfall'' plot images as a
+FITs file, for user specific analysis.}
+
+\requirement{Plot line catalog overlays}{Not started}{1}{3d}{}{} {Line markers overlays,
+read from a catalogue should be optionally available. This would
+include the full Lovas catalogue, the JPL line catalogue and radio
+recombination lines. The lines would be Doppler corrected to a
+specified velocity. The user must be able to plot just a sub-section
+of the lines in any specific catalogue (to avoid clutter).}
+
+\subrequirement{Plot user catalog overlays}{Not started}{2}{}{}{}
+{Simple user definable catalogue should be definable for plot overlays}
+
+\requirement{Plot fitted functions}{Done1}{}{}{}{}
+{Optionally plot fitted functions (e.g line profiles or baseline
+fit). If multiple components (e.g. Gaussian) have been fit, it should
+be possible to show the individual functions or the sum of the
+components}
+
+\requirement{Plot residual data}{Started}{1}{0.5d}{}{}
+{It should be possible to plot the residual data with or without
+subtraction of fit functions. This includes plotting the spectra with
+or without baseline removal and the residual after subtracting
+Gaussian fits. The default should be to plot the data with baseline
+subtracted but profile fits not subtracted.}
+
+\requirement{Plot header data}{Not started}{2}{}{}{} {Basic header data
+(source name, molecule, observation time, Tsys, elevation, parallactic
+angle etc) should be optionally shown, either on the plot or next to
+it. This may either consist of a set of values, or only one or two
+values the user specifically wants to see (source name and molecule,
+for example).}
+
+\subrequirement{User define header plot positions}{Not started}{3}{}{}{}
+{The user should be able to define where on the plot the header info
+would appear.}
+
+\requirement{Realtime cursor position}{Done1}{}{}{}{} 
+{Optionally, relevant data such as the current mouse position should
+be displayed (maybe with a mode to display an extended cross,
+horizontal or vertical line at the current cursor position).}
+
+\requirement{Plot annotations}{Not started}{2}{}{}{}{The user should be able
+  to define simple annotations. This would include text overlay and
+  probably simple graphics (lines, arrows etc).}
+
+The user must be able to use the plotter window to interactively set
+initial values and ranges used for fitting functions etc. The use of
+keyboard ``shortcuts'' or other similar ``power user'' features should
+be available to save the time of experienced users. 
+
+{\em The following requirements are deferred as they require a version
+of Matplotlib not yet available.}
+
+The plotter should be used to set the following values:
+
+\requirement{Interactive channel selection}{Deferred}{1}{}{}{}{Range of
+ spectral channels needed for specific tasks (ie the channel mask)
+ (See requirement \reqref{ref:chansel})}
+
+\requirement{Interactive line fitting}{Deferred}{1}{}{}{}{Initial
+Gaussian parameters (velocity, width, amplitude) for profile
+fitting.}
+
+\requirement{Plotter change fit values}{Deferred}{1}{}{}{}
+{Change the parameter values of existing line profile
+fits, or channel ranges used for baseline fits.}
+
+\section{Functionality}
+
+\subsection{Import/export}
+
+The software needs a set of import/export functions to deal with a
+variety of data formats and to be able to exchange data with other
+popular packages. These functions should be flexible enough to allow
+the user to perform analysis functions in an different package and
+re-import the data (or vice versa). The import function must be
+modular enough to easily add new file formats when the need arises.
+To properly import data, extra information may have to be read from
+secondary calibration files (such as GTP, Gated Total Power, for 3~mm
+wavelength data taken with Mopra). The import functions should be
+flexible enough to gracefully handle data files with missing headers
+etc. They should also be able to make telescope and date specific
+corrections to the data (for ATNF observatories).
+
+The software must be able to read (import) the following file formats.
+
+\requirement{Read rpfits}{Done1}{}{}{}{}{The rpfits file format produced by
+  all current ATNF correlators.}
+
+\requirement{Read sdfits}{Done1}{}{}{}{}{SDFITS (currently written by {\tt SPC}).}
+
+\requirement{Read simple FITS}{Not started}{2}{}{}{}{Simple ``image'' FITS
+(used by CLASS}
+
+\requirement{Read historic formats}{Not started}{3}{}{}{}
+{Historic ATNF single dish formats (Spectra, SPC, SLAP). Possibly a
+set of routines to translate these formats to SDFITs would suffice.}
+
+\requirement{Read PSRFITS}{Deferred}{}{}{}{}{PSRFIT for pulsar spectroscopy.}
+
+\requirement{Read online data}{Not started}{1}{0.1d}{}{}
+{For online analysis, the software should be able to read an rpfits
+file which is is still currently open for writing by the telescope
+backend processor.}
+
+\requirement{Handle Doppler data}{Done1}{1}{}{}{}{Data which has been
+observed in either a fixed frequency or Doppler tracked fashion needs
+to be handled.}
+
+The software should be able to export the data in the following formats.
+
+\requirement{Write SDFITS}{Done1}{}{}{}{}{Single Dish FITS.}
+
+\requirement{Write simple FITS}{Done1}{}{}{}{}
+{Simple ``image'' FITS (as used by CLASS). It must be possible to to
+export multiple spectra simultaneously, using default file name and
+postfix.}
+
+\requirement{}{Removed}{}{}{}{}{}{In a format which can be imported by other popular
+    packages such as Class.
+
+\requirement{Write ASCIIs}{Done1}{}{}{}{}
+{Simple ASCIIs format, suitable for use with programs such as Perl,
+Python, SuperMongo etc.}
+
+\requirement{Header writing}{Started}{1}{0d}{}{}
+{The exported data should retain as much header data as possible. It
+should also be possible to request specific data be written in the
+desired form (B1950 coordinates, optical velocity definition etc).}
+
+\requirement{Import corrections}{Done1}{}{}{}{}
+{The import function should apply relevant corrections (especially
+those which are time dependent) to specific telescopes. See
+$\S$\ref{sec:issues} for a list of currently known issues.}
+
+\requirement{Append output files}{Not started}{1}{3d}{}{} {It must be possible
+to append spectra to existing output files, specifically sdfits and
+asap output files.}
+
+\subsection{Sky subtraction}
+\label{sec:skysubtraction}
+To remove the effects of the passband filter shape and atmospheric
+fluctuations across the band, sky subtraction must be performed on the
+data. The software must be able to do sky subtraction using both
+position switching (quotient spectra) and frequency switching
+techniques.
+
+\requirement{Quotient Spectra}{Done1}{}{}{}{}
+{\label{ref:skysub} Position switched sky subtraction should be
+implemented using the algorithm \medskip\reqeqn{T_{ref} \times
+\frac{S}{R} - T_{sig}} -- removes continuum\bigskip \reqeqn{T_{ref}
+\times \frac{S}{R} - T_{ref}} -- preserves continuum\medskip}
+
+\requirement{Arbitrary reference}{Not started}{2}{}{}{}
+{The user should be able to specify an arbitrarily complex
+reference/source order (which repeats), which can then be used to make
+perform multiple sky subtractions in parallel.}
+
+\requirement{Frequency switching}{Not started}{2}{}{}{}
+{Frequency switched sky subtraction should be supported. (Ref. Liszt,
+1997, A\&AS, 124, 183) }
+
+%\requirement{For wideband multibit sampled data it may be desirable or
+%even required to assume Tsys has a frequency dependency. Appropriate
+%sky subtraction algorithms will need to be investigated.}{3}
+
+\requirement{Pulsar off pulse quotient}{}{}{}{Deferred}{3}
+{For pulsar binned data, the (user specified) off pulse bins can be
+used as the reference spectra. Due to potentially rapid amplitude
+fluctuations, sky subtractions may need to be done on a 
+integration basis.}
+
+Multibeam systems can observe in a nodding fashion (called MX mode at
+Parkes), where the telescope position is nodded between scans so that
+the source is observed in turn by two beams and a reference spectra
+for one beam is obtained while the other is observing the target source.
+
+\requirement{Multibeam MX mode}{Not started}{2}{}{}{}
+{For multibeam systems, it must be possible to perform sky subtraction
+with the source and reference in an alternate pair of beams}
+
+\subsection{Baseline removal}
+
+Baseline removal is needed to correct for imperfections in sky
+subtraction. Depending on the stability of the system, the residual
+spectral baseline errors can be small or quite large. Baseline removal
+is usually done by fitting a function to the (user specified) line
+free channels.
+
+\requirement{Baseline removal}{Done1}{}{}{}{}
+{The software must be able to do baseline removal by fitting a n'th
+order polynomials to the line free channels using a least squares
+method.}
+
+\requirement{Standing wave ripples}{Not started}{3}{}{}{}
+{Removal of standing wave ripples should be done by fitting a Sine
+function to the line free channels.}
+
+\requirement{Robust fitting}{Not started}{3}{}{}{} 
+{``Robust'' fitting functions should be available, which are more
+tolerant to RFI.}
+
+\requirement{Auto-baseline}{Done1}{}{}{}{}
+{Automatic techniques for baselining should be investigated.}
+
+\subsection{Line Profile Fitting}
+
+The user will want to fit multicomponent line profiles to the data in
+a simple manner and be able to manipulate the exact fitting
+parameters.
+
+\requirement{Gaussian fitting}{Done1}{}{}{}{}
+{The software must be able to do multi-component Gaussian fitting of
+the spectra. The initial amplitude, width and velocity of each
+component should be able to be set by the user and specific values to
+be fit should be easily set.}
+
+\requirement{Chi squared}{Done1}{}{}{}{}
+{The reduce Chi squared (or similar statistic) of the fit should given
+to the user, so that they can easily see if adding extra components
+give a statistically significant improvement to the fit.}
+
+%\requirement{The fit parameters should be stored with the data so that
+%the user can work on multiple data sets simultaneously and experiment
+%with different fitting values. These values should be saved to disk
+%along with the data.}{1}
+
+\requirement{Fit multipol data}{}{}{}{Done1}{}
+{For multiple polarisation data, the individual stokes parameters or
+polarisation products should be fit independently.}
+
+\requirement{Export fit parameters}{Not started}{1}{1d}{}{}
+{There should be an easy way of exporting the fit parameter from
+multiple spectra, e.g. as an ASCII table.}
+
+\requirement{Constrained fitting}{Not started}{2}{}{}{}
+{It should be also possible to do constrained fitting of multiple
+hyperfine components, e.g. the NH$_3$ hyperfine components. (The
+constraints may be either the frequency separation of the individual
+components or the amplitude ratio etc.)}
+
+\subrequirement{Specific constrained fitting}{Not started}{1}{4d}{}{}
+{Before arbitrary constrained fitting is available, support for
+specific cases, such as the NH$_3$ hyperfine transition, should e
+added on a case-by-case basis.}
+
+\requirement{Edit fits parameters}{Done1}{}{}{}{}
+{It must be possible to alter the line profile fit parameter values by
+hand at any stage.}
+
+\requirement{Fix fit parameters}{Done1}{}{}{}{}
+{It must be possible to ``fix'' particular values of the line profile
+parameters, so that only subset of lines or (say) the width of a line
+is fit.}
+
+\requirement{Arbitrary line fitting}{Done1}{}{}{}{}
+{The software should allow hooks for line profile shapes other than
+Gaussian to be added in the future, possible user specified.}
+
+\requirement{Save fit parameters}{Done1}{}{}{}{}
+{The fitting parameters for functions which have been fit to the data
+(e.g. for baseline removal or Gaussian fits) should be retained as an
+integral part of the data and stored permanently on disk.}
+
+\requirement{Undo subtracted fits}{Not started}{3}{}{}{}
+{It should be possible to ``undo'' functions which have been
+subtracted from the data (e.g. baseline polynomials).}
+
+\requirement{Gaussian line area}{Not started}{1}{0.2d}{}{} 
+{Optionally the area under a fitted Gaussian should be calculated for
+the user.}
+
+%\makenote{Should it be possible to attach multiple sets of fits to the
+%data (similar to CL tables in classic AIPS), so the user can
+%experiment with different ways of fitting the data?}
+
+%\makenote{Should calculations of rotational temperatures etc be
+%handled when fitting hyperfine components, or should the user be doing
+%this themselves?}
+
+\subsection{Calibration}
+
+The software should handle all basic system temperature (Tsys) and
+gain calibration as well as opacity corrections where relevant. The
+Tsys value should be contained in the rpfits files. The actual
+application of the T$_{\mbox{sys}}$ factor will be applied as part of
+the sky subtraction ($\S$\ref{sec:skysubtraction}). The units of Tsys
+recorded in the data may be either in Jy or Kelvin, which will affect
+how the data is calibrated. The rpfits file does {\em not} distinguish
+if the flux units are Kelvin or Janskys. 
+
+\requirement{Gain-elevation}{Done1}{}{}{}{}
+{Gain elevation corrections should be implemented using a elevation
+dependent polynomial. The polynomial coefficients will be telescope
+and frequency dependent. They will also have a (long term) time
+dependence.}
+
+\requirement{User gain polynomial}{Done1}{}{}{}{}
+{The user may wish to supply their own gain polynomial.}
+
+\requirement{K-Jy conversion}{Done1}{}{}{}{}
+{When required by the user, the spectral units must be converted from
+Kelvin to Jansky. At higher (3mm) frequencies this conversion is often
+not applied. The conversion factor is\medskip \reqeqn{\mbox{Flux (Jy)}
+= \frac{T \times 2 k_b \times 10^{26}}{\eta A}},\medskip\\where $k_b$
+is Boltzmann's constant, A is the illuminated area of the telescope
+and $\eta$ is the efficiency of the telescope (frequency, telescope
+and time dependent)}
+
+\requirement{Scale Tsys}{Done1}{}{}{}{}
+{In some cases the recorded Tsys values will be wrong. There needs to
+be a mechanism to scale the Tsys value and the spectrum if the Tsys
+value has already been applied (i.e. a simple and consistent rescaling
+factor).}
+
+\requirement{Opacity}{Done1}{}{}{}{}
+{The data may need to be corrected for opacity effects, particularly
+at frequencies of 20~GHz and higher. The opacity factor to apply is
+given by\medskip\reqeqn{C_o = e^{\tau/cos(z)}}\medskip\\ where $\tau$
+is the opacity and z is the zenith angle (90-El). These corrections
+will generally be derived from periodic ``skydip'' measurements. These
+values will not be contained in the rpfits files, so there should be a
+simple way of the software obtaining them and interpolating in time
+(the user should not {\em have} to type them in, but may want
+to). Reading in an ASCIIs file which contains the skydip data along
+with a time-stamp would be one possibility.}
+
+\requirement{Tsys variation with freq}{Not started}{3}{}{}{}
+{For wideband, multibit observations, the software should have the
+option to handle Tsys which varies across the band. The exact
+implementation will have to be decided once experience is gained with
+the new Mopra digital filterbank. This will affect the sky subtraction
+algorithms (requirement \reqref{ref:skysub}).}
+
+%\makenote{Is the dependence of gain on frequency weak enough for one
+%set of coefficients for each receiver, or is a full frequency dependent
+%set of values needed?}
+
+%\makenote{Should it be possible to read ``correct'' Tsys values from
+%an external ascii file?} 
+
+\subsection{Editing \& RFI robustness}
+
+In a data set with many observations, individual spectra may be
+corrupted or the data may be affected by RFI and ``birdies''. The user
+needs to be able to easily flag individual spectra or channels. This
+may affect other routines such as sky-subtraction, as this will
+disrupt the reference/source sequence.
+
+\requirement{Spectra flagging}{Started}{1}{1d}{}{}
+{The user must be able to set an entire spectra or part thereof
+(individual polarisation, IF etc) as being invalid.}
+
+\requirement{Channel flagging}{Started}{1}{0.5d}{}{}
+{The user must be able to indicate an individual spectral point or
+range of spectral points are invalid. This should be applied to an
+individual spectra, or set of spectra.}
+
+\subrequirement{Flagged channel plotting}{Done1}{1}{}{}{} {When plotting data
+with flagged spectral channels, the plotting should left a gap (blank)
+in the plotted data|}.
+
+\subrequirement{Flagged channel interpolation}{Not started}{2}{}{}{} 
+{When plotting or processing data (e.g. quotient spectra), the users
+should be able to request that the values for flagged data are
+obtained by interpolation from good data either side of the flagged
+points.}
+
+\requirement{Plot average flux vs time}{Not started}{3}{}{}{}
+{The user should be able to plot the average spectral flux across the
+band, or part of the band, as a function of time and interactively
+select sections of data which should be marked as invalid (similar to
+IBLED in classic aips).}
+
+\requirement{Robust Fitting}{Duplicate}{2}{}{}{}
+{Where relevant, fitting routines etc should have the option of
+selecting RFI tolerant (``robust'') algorithms. This will require
+investigating alternate fitting routines other than the least-squares
+approach.}
+
+\requirement{Birdie finder}{Not started}{2}{}{}{}
+{A routine to automatically find birdies or RFI corrupted data and
+indicate the data as invalid would be useful.}
+
+\requirement{Handle flagged data}{Done1}{}{}{}{}
+{Other routines must be able to cope with portions of data which are
+marked as invalid.}
+
+\subsection{Spectra mathematics and manipulation}
+
+A flexible suite of mathematical operations on the spectra should be
+possible. This should include options such as adding, subtracting,
+averaging and scaling the data. For common operations such as
+averaging and smoothing, it must be simple for the user to invoke the
+function (i.e. not to have to start up a complex spectral
+calculator). Where it makes sense, it should be possible to manipulate
+multiple spectra simultaneously.
+
+The spectral manipulations which should be available are:
+
+\requirement{Add spectra}{Done1}{}{}{}{}{Add or subtract multiple spectra.}
+
+\requirement{Average spectra}{Done1}{1}{}{}{}
+{Averaging multiple spectra, with optional weighting based on Tsys,
+integration or rms.}
+
+\subrequirement{Average spectra with velocity shift}{Not started}{1}{0.2d}{}{}
+{If the velocity of the spectra to be averaged is different, the data
+should be aligned in velocity. The user should be able to turn this
+feature on or off.}
+
+\requirement{Robust averaging}{Not started}{2}{}{}{}
+{Various robust averaging possibilities (e.g. median averaging,
+clipped means etc) should be possible.}
+
+\requirement{Data re-binning}{Done1}{}{}{}{}
+{Re-sampling or re-binning of the data to a lower (or higher) spectral
+resolution (i.e. change the number of spectral points). The
+re-sampling factor may not necessarily be an integer.}
+
+\requirement{Velocity shift}{Done1}{}{}{}{} 
+{It must be possible to shift the data in ``frequency/velocity''. This
+should include channel, frequency and velocity shifts of an arbitrary
+amount.}
+
+\requirement{Spectra smoothing}{Done1}{}{}{}{}
+{Spectral smoothing of the data. Hanning, Tukey, boxcar and Gaussian
+smoothing of variable widths should be possible.}
+
+\requirement{Spectra scaling}{Done1}{}{}{}{}{Scaling of the spectra.}
+
+\requirement{Spectra statistics}{Done1}{}{}{}{}
+{Calculate basic statistical values (maximum, minimum, rms, mean) on a
+range of spectral points. The range may not be contiguous. The
+calculated rms value should be retained with the spectra so it can be
+optionally used for weighted averaging of spectra.}
+
+\requirement{Line flux}{Not started}{2}{}{}{}
+{It must be possible to calculate the flux integral over a range of
+channels. The units should be Jy.km/s (or Kelvin.km/s). The channel
+range for the calculation should be specific via the GUI or CLI.}
+
+\requirement{Line width}{Not started}{2}{}{}{}
+{It must be possible to calculate the numerical ``width'' of a line
+(full width at half maximum type measurement). This should be
+calculated by specifying a channel range and finding the maximum value
+in this range and then finding the interpolated crossing point of the
+data as a user defined fraction of the maximum (default 50\%). The
+profile width and velocity mid-point should then be computed. If the
+profile shape is complex (e.g. double arch) with multiple crossing
+points of the fraction value, the minimum and maximum width values
+should be calculated. There should be the option of using a user
+specified ``maximum value''.}
+
+\requirement{Change rest frequency}{Done1}{}{}{}{}
+{The user must be able to easily change the rest-frequency to which
+the velocity is referenced.}
+
+\requirement{FFT filtering}{Not started}{3}{}{}{}
+{FFT filtering for high- and lowpass filtering and tapering.}
+
+\requirement{FFT to/from autocorrelation function}{Not started}{3}{}{}{}
+{It should be possible to FFT the data to and from power spectra to
+the autocorrelation function.}
+
+\requirement{Cross correlation}{Not started}{3}{}{}{}
+{The user may wish to compute the cross correlation function of two
+spectra. The result should be a standard ``spectra'', which can be
+displayed and analysed using other functions (max, rms etc).}
+
+\requirement{Spectral calculator}{Started}{1}{?}{}{}
+{Complex experiment specific processing can often be done using a
+series of the simple of basic functions. A spectral calculator options
+should be added to the CLI to perform a series of manipulations on a
+set of spectra.}
+
+The user may want to perform specific analysis on the data using the
+functionality above, but wish to do the manipulation between two
+polarisations or IFs. Allowing the functions to also, optionally,
+specify specific polarisations or IF would be an implementation and
+interface nightmare. The simplest solution is to allow the data to be
+``split'' into separate spectra.
+
+\requirement{Slice data}{Not started}{1}{10d}{}{} {It must be possible to
+take multi IF, multibeam or polarisation data and split out the a
+splice of individual spectral portions to form self contained
+spectra.}
+
+\requirement{Slice spectral channels}{Not started}{1}{0d}{}{} {It must be
+possible to select a range of spectral channels to form self contained
+spectra. The channel selection may be different for different IFs.}
+
+\requirement{Merge scantables}{Not started}{1}{5d}{}{}
+{It must be possible to append rows from one scantable onto another}
+
+\subsection{Polarimetry}
+
+The software must fully support polarmetric analysis. This includes
+calibration and basic conversions. Observations may be made with
+linear or circular feed and the backend may or may not compute the
+cross polarisation products. As such the software must cope with a
+variety of conversions. The software should be able to calculate
+stokes parameters with or without solving for leakage terms.
+
+%\makenote{It is debatable whether stokes I is the sum or average or
+%two dual polarisation measurements.}
+
+\requirement{Support polarimetry}{Started}{1}{?}{}{}
+{All functions on the data (calibration, sky subtraction spectral
+mathematics) must support arbitrary, multiple polarisation (linear,
+circular \& stokes and single, dual \& cross polarisations.}
+
+\requirement{Calculate stokes I}{Done1}{}{}{}{}
+{It must be possible to calculate stokes I from single or dual
+polarisation observations.}
+
+\requirement{Average mixed pol data}{Not started}{2}{}{}{}
+{Average a mixture of dual polarisation and single polarisation data
+and form average stokes I (e.g. for a long observation of a source, in
+which one polarisation is missing for some time.}
+
+\requirement{Calculate stokes}{Done1}{}{}{}{}
+{Full stokes parameters should be obtained from dual pol (linear or
+circular) observations where the cross polarisation products have been
+calculated.}
+
+%\requirement{If the observations used linear polarisations and the
+%cross polarisations were not computed, the source needs to be
+%observed with the feeds set at least 3 different parallactic angles
+%(note that if dual linear feeds are available, 2 orthogonal
+%parallactic angles are obtained at once). The Stokes parameters can be
+%solved using a least squares fit to the equation:
+%\reqeqn{Iu/2 + Ip * cos^2 (PA + p)},\\ 
+%where PA is the linear feed position angle, p is the polarisation
+%angle, Iu and Ip and the unpolarised and linearly polarised
+%intensity. {\em Stolen from SPC. I need to write this in more useful
+%language. Is this technique likely to be used anymore?.}}{}{}{}{3}
+
+\requirement{Compute stokes V without crosspol}{Not started}{2}{}{}{}
+{If dual circular polarisation measurements are taken, without
+computing the cross products, the software should still be able to
+compute stokes I and V.}
+
+\requirement{Polarisation leakages}{Not started}{3}{}{}{}
+{The software should be able to calculate leakage terms from a
+calibrator source and correct the data either before or after
+conversion to Stokes. (ref. Johnston, 2002, PASA, 19, 277)}
+
+\requirement{Calibrate position angle}{Not started}{3}{}{}{}
+{The software should be able to determine absolute position angle from
+a calibrator source and correct the data either before or after
+conversion to Stokes.}
+
+\requirement{Zeeman splitting}{Not started}{3}{}{}{}
+{Zeeman splitting factors should be derived from (previous) profile
+fitting and the left and right circular polarisations. The velocity
+shift varies linearly with the magnetic field, but the scaling factor
+depends on the molecule and transition. Scaling factor for common
+transitions should be known by the software and the user able to enter
+factors for less common transitions. Correctly identifying Zeeman
+pairs is crucial in getting the correct result. The software should
+attempt to make an initial guess of pairs (based on component velocity
+and width) but make the user confirm and override the pairing if
+required.}
+
+\subsection{Data Selection}
+While the software is running the user will usually have loaded
+multiple (possibly many) spectra each of which may have multiple IFs,
+data from multiple beams and multiple polarisations. The user will
+want to be able to quickly flip from considering one spectra to
+another and, where relevant, want to perform parallel processing on
+multiple spectra at once (e.g. baselining a sequence of on/off
+observations of the same source which will later be averaged
+together).
+
+\requirement{Spectra selection}{Started}{1}{0d}{}{}
+{The software needs an easy-to-use mechanism to select either
+individual or multiple spectra for viewing, parallel processing
+etc.}
+
+\requirement{Beam/IF selection}{Started}{1}{0d}{}{}
+{An easy-to-use mechanism to select individual IFs, beams or
+polarisations is needed.}
+
+\requirement{Interactive channel selection}{Started}{1}{}{}{}
+{\label{ref:chansel} The range of spectral points to use for baseline
+removal, statistical calculations, RFI editing, analysis etc must be
+easily set by the user from both the CLI and GUI. From the CLI there
+must be the option of setting the range using a variety of units
+(channel number, velocity, frequency). The selection range will
+probably not be a contiguous set of channels, but many sets of
+disjoint channel ranges. For some tasks (such as baseline subtraction
+and statistical values), the channel range should be retained and be
+available as a plot overlay.}
+
+\requirement{Auto-identify reference spectra}{Not started}{1}{5d+}{}{}
+{When performing sky subtraction on many spectra simultaneously, the
+software should have a mechanism for identifying ``on'' and ``off''
+spectra and automatically selecting the signal and quotient
+spectra. The algorithm needs to cope with on/off/on/off sequences as
+well as off/on/on/off. If an individual quotient spectra has been
+marked as invalid, an alternative should be found. User specified
+preference such as ``closest in time'' to ``first reference before
+source'' should be accommodated.}
+
+\requirement{Select source via header values}{Started}{1}{}{}{}
+{The software should be able to select sets of sources based on simple
+regular expression type filtering (wild cards) on a range of header
+values. }
+
+\subrequirement{Select on source name}{Done1}{1}{}{}{}
+{The use should be able to select dana on source name, e.g G309$*$ or
+G309$*$w}
+
+\subrequirement{Select on molecule}{Done1}{2}{}{}{}
+{The use should be able to select data on molecule name, e.g. NH3$*$.}
+
+\subsection{Plugins}
+
+\requirement{Plugins}{Started}{1}{?}{}{}
+{The package should support ``plugins'', user definable
+functions for specific processing. The plugin code must have full
+access (read/write) to the spectra data and headers.}
+
+\requirement{Plugins can reduce dimensions}{Not started}{2}{}{}{}
+{Plugins need to be able to create ``derived'' spectra with reduced
+  dimensions (i.e. less beams, IFs, polarisations or spectral
+  channels)}
+
+\requirement{Simulated data}{Not stated}{3}{}{}{} 
+{The user should be able to create new spectra which the software
+treats the same as the original data. This includes full specification
+of the header items.}
+
+\subsection{Pipelining}
+
+\requirement{Pipelining}{Done1}{}{}{}{}
+{Some sort of pipelining mode is required. This would involve doing a
+quotient spectra, applying appropriate calibration and possibly
+fitting a Gaussian to any lines present.}
+
+\subsection{Methanol Multibeam Survey}
+
+The software may need to support reduction of data from the methanol
+multibeam project. If so the pipelining will need to be flexible and
+powerful enough to support this.
+
+\subsection{Miscellaneous functionality}
+
+\requirement{Position fitting}{Not started}{2}{}{}{}
+{The software should be able to take a simple ``grid'' of observations
+(normally a set of observations in a cross pattern on the sky) and,
+for a subset of channels, fit the position of the emission. The fit
+positions should be either plotted on the screen or exported in a
+simple ASCIIs form.}
+
+\requirement{Kinematic distance}{Not started}{3}{}{}{}
+{The kinematic distance of a source should be calculated using basic
+Galactic rotation models. Multiple Galactic rotation models must be
+supported and a mechanism for easily adding more.}
+
+\requirement{Plot sigma errors on spectra}{Not started}{3}{}{}{}
+{For 1420 MHz observations of HI, the rms (Tsys) values vary
+significantly across the band. The software should be able to compute
+the rms as a function of frequency across the spectra from the
+off-pulse data and then be able to plot n-sigma error bars on the
+spectra.}
+
+\requirement{Simple Mapping}{Not started}{3}{}{}{}
+{It should be possible to take a selection of calibrated spectra which
+are then passed to the ``Gridzilla'' program to produce an image
+cube. Analysis of this cube would be done using external programs
+(e.g. Miriad, aips++)}
+
+\section{Help}
+
+\requirement{Built in help}{Done1}{}{}{}{} 
+{There should be built-in and web-based documentation, which can be
+easily kept up-to-date}
+
+\requirement{Cookbook}{Done1}{}{}{}{}
+{A short and simple end-to-end cookbook for basic data analysis should
+be available.}
+
+\requirement{Programmers Documentation}{Not started}{2}{}{}{}
+{There should be documentation aimed at astronomers wishing to write
+there own scripts, detailing the methods needed and how to get low
+level access to the data.}
+
+\section{Data and meta-data}
+
+\requirement{Handle multi dimensional data}{Done1}{}{}{}{}
+{The software must be capable of handling multi-IF (potentially dozens
+of IFs) and multi-beam data with arbitrary polarisation (e.g. single
+pol, dual pol, full stokes etc).}
+
+\requirement{Handle pulsar data}{Deferred}{}{}{}{}
+{The software should handle pulsar binned data for pulsar absorption
+experiments.}
+
+\subsection{History}
+
+\requirement{History}{Done1}{}{}{}{}
+{A user viewable history of data processing steps should be kept as
+part of the data. Where possible this should be retained when data is
+imported from other packages.}{
+
+\requirement{Convert history to script}{Not started}{2}{}{}{}
+{It should be possible to use the history information to create
+template pipeline scripts for batch processing.}
+
+\subsection{Multiple IFs}
+
+\requirement{Transparently handle multi-IF data}{Done1}{}{}{}{}
+{If multiple IFs are present (currently Tidbinbilla can produce two
+IFs and the new wideband spectrometer for Mopra may have dozens of
+IFs) the software should handle the data transparently. Potentially
+each IF may have a significantly different sky frequency and be
+observing a different molecule or transition with a different rest
+frequency. From the users point of view, simultaneously obtained IFs
+should be kept within the same ``container'' (not split into a myriad
+of separate ``container'').}
+
+\requirement{IFs with different number of spectral channels}{Not started}{1}{}{}{}
+{Separate IFs may have a different number of spectral channels.}
+
+\subsection{Multibeam}
+
+\requirement{Handle multibeam data}{Done1}{}{}{}{}
+{Basic handling of multibeam data should be possible (ie in general
+each beam will be treated as a separate observation, but all within
+the same container). The user should be able to view or process either
+individual beams or all beams in parallel.}
+
+\requirement{Multibeam simultaneous reference/signal}{Not started}{3}{}{}{}
+{The use of a single beam observing a source and the rest of the beams
+as reference beams for sky-subtraction should be investigated.}
+
+\subsection{Robust fitting}
+
+\requirement{Retain raw correlator integrations}{Done1}{}{}{}{}
+{If robust fitting using median filtering is used, then the individual
+integrations from the observations should {\em not} be averaged when
+the data is imported, but retained within a single
+container. Inspection of this data should be optionally of the
+averaged or individual data.}
+
+\subsection{Coordinate frames and units}
+
+\requirement{Flexible coordinate frames}{Done1}{}{}{}{}
+{Coordinate frames and unit selection and handling needs to be
+flexible and relatively transparent to the user (i.e. if the users
+preference is for LSRK velocities, they do not need to worry about the
+reference frame in which the data was observed).}
+
+\requirement{Specific reference frames}{Done1}{}{}{}{}
+{At a minimum the following reference frames and conventions should be
+handled: \setlength{\parindent}{0pt}
+
+\smallskip
+\anitem{Position}{(RA,Dec) in J2000 \& B1950 (as well as other
+  arbitrary epochs), Galactic, (Az,El).}
+
+\anitem{Frequency}{Velocity (Topocentric, Geocentric, Barycentric,
+    Heliocentric, kinematical LSR, dynamical LSR, Rest), Frequency
+    (MHz, GHz), channel number.}
+
+\anitem{Velocity}{ Optical, Radio, Relativistic.}
+
+\anitem{Flux}{ Jansky, Kelvin (mJy etc).}}
+
+\requirement{Data units and frames properly labelled}{Done1}{}{}{}{}
+{All data should be internally labelled with the appropriate
+ coordinate frame and units. If this information is ambiguous for some
+ reason, it should be set when the data is imported and the user
+ should not have to worry about it again.}
+
+\requirement{Current reference frames clear to user}{Done1}{}{}{}{}
+{It should be clear to the user what coordinate frame (velocity,
+position etc) the data is being presented as.}
+
+\requirement{Positional Reference Frame}{Not started}{1}{0.2d}{}{} {The user
+should be able to specify the reference frame (Epoch,Equinox etc) for
+which is used for exporting data, simple mapping output etc. J2000,
+B1950 and Galactic should be supported. The default should be the frame
+in what the data was recorded.}
+
+\requirement{Non-conformist Positional Reference Frame}{Not started}{2}{}{}{} 
+{Non-confirmist positional frames such as Az-El should be supported.}
+
+\subsection{Meta-data}
+
+A comprehensive set of header data should be read from the input data
+files. In general all meta-data available in the rpfits file should be
+retained. The user may wish to enter some specific values by hand.
+
+\requirement{View and edit header data}{Started}{1}{?}{}{}
+{All header data should be viewable and editable by the user. This
+includes changes such as scaling the given Tsys values.}
+
+\requirement{Missing header data}{Done1}{}{}{}{}
+{Missing header data should be handled gracefully, i.e. the software
+should fill the values with ``blanks'' and be able to continue to
+process the data if possible.}
+
+\requirement{User add missing header data}{Not started}{2}{}{}{}
+{The user must be able to add missing header data, which is not
+present in the RPFITs file. It must be possible to add the same header
+data to multiple scans simultaneously.}
+
+\extendedrequirement{Itemised header items}{Started}{1}{}{}{}
+{The following header data would be required per scan:
+\begin{itemize}
+  \item Source name
+  \item Scan type (signal or reference)
+  \item Integration time
+  \item Scan length (actual time of observation, $\ge$ integration time)
+  \item Telescope
+  \item UT time and date of observation
+  \item Telescope elevation of observation
+  \item Parallactic angle
+  \item Beam size
+  \item Scan ID
+  \item Observer
+  \item Project
+  \item Polarisation
+  \item Receiver
+  \item Telescope coordinates
+  \item Weather info (temperature, pressure, humidity)
+  \item User axis display preference (LSR velocity, frequency etc).
+\end{itemize}
+}
+
+\extendedrequirement{IF header items}{Started}{1}{}{}{}
+{\label{req:if}
+The following header data is required for each IF, beam etc:
+\begin{itemize}
+\item Source coordinates and coordinate frame
+\item Frequency/velocity axis definition and type
+\item System Temperature
+\item Beam number
+\item Molecule rest frequency$^\dagger$
+\item Molecular name$^\dagger$
+\item Molecular transition$^\dagger$
+\item Molecular formula$^\dagger$
+\end{itemize}
+}
+
+\requirement{Pretty print formula}{Not started}{3}{}{}{}
+{The molecular formula could be stored with embedded superscripted and
+subscripted symbols for ``pretty'' printing on the plotted, but
+printed in plain text on the CLI or in ASCIIs output}
+
+Some molecular line rest-frequencies are close enough that two or more
+molecules or transitions may be observed in a single IF. Typical
+examples include the 1665/1667~MHz OH maser pair, NH$_3$ transitions,
+and many observations in the 3~mm band.
+\vspace{\parskip}
+
+\requirement{Multiple rest frequencies per IF}{Not started}{2}{}{}{}
+{The software should optionally support multiple lines per IF, by
+storing a set of rest frequencies per IF, rather than a single
+value. The header values in requirement \reqref{req:if} marked with a
+$\dagger$ would all have to be stored as an array of values rather
+than a scalar. A simple mechanism must be possible to change the
+currently ``active'' rest-frequency.}
+
+\section{Installation}
+
+\requirement{Easy installation}{Started}{1}{?}{}{}
+{It must be possible for astronomers to install the software at their
+own institute with either a moderate amount of OS experience or some
+help from the local system administrators. This includes installation
+on a central ``NFS'' server as well as local desktops.}
+
+\requirement{Linux Support}{Started}{1}{3d}{}{}
+{The software must run on major flavours of Linux
+(Fedora/Redhat, Debian, etc).}
+
+\subrequirement{Solaris Support}{Started}{1}{?}{}{}
+{The software must run on Solaris}
+
+\requirement{Run on laptop}{Done1}{}{}{}{}
+{It must be possible for users to install the software on their
+laptops and run with no network connection.}
+
+\requirement{Easy upgrade}{Done1}{}{}{}{}
+{It should be relatively easy to upgrade to the latest version of the
+software.}
+
+\requirement{MacOS/X support}{Not started}{1}{3+d}{}{}
+{The software should run on MacOS/X}
+
+\requirement{Windows support}{Not started}{3}{}{}{}
+{It would be desirable for the software to run on Windows.}
+
+\section{Known Issues}
+\label{sec:issues}
+The following issue are known problems with the data from ATNF
+telescopes, which probably should be automatically corrected for if at
+all possible. The best place to do this is while loading the data.
+
+\subsection{General}
+
+\begin{itemize}
+  \item All polarisations in the RPFITS files are labelled as
+  XX/YY. These need to be relabelled as LL/RR when appropriate.
+\end{itemize}
+
+\subsection{Mopra}
+
+\begin{itemize}
+\item Data obtained in 2002 \& 2003 (and probably before) have an
+  error in the frequency headers (this may be corrected by an external
+  program). \makenote{Nedd Ladd}
+
+\item The (RA,Dec) positions in the data file are in date coordinates
+  not J2000. This causes problems for packages like Class when
+  averaging the data. \makenote{Maria Hunt}
+
+\item It is possible Tsys calibration is inconsistent currently.
+  \makenote{Cormac Purcell??}
+
+\end{itemize}
+
+\subsection{Parkes}
+
+\begin{itemize}
+\item For pulsar data the automatic gain control is disabled. This
+means the nominal Tsys measurement does not change and Tsys per
+integration is encoded in a non-standard way. \makenote{Simon
+Johnston}
+\end{itemize}
+
+\subsection{Tidbinbilla}
+
+\begin{itemize}
+\item All 20-GHz data is calibrated in flux units of Kelvin.
+\item Elevation is not written into the rpfits file.
+\end{itemize}
+
+
+\section{Requirements Matrix}
+
+\begin{longtable}{|l|l|l|c|l|}
+
+\hline
+\bf Requirement & & \bf Status & \bf Priority & \bf Effort \\
+\hline
+\endhead
+\hline
+\endfoot
+\input{reqsum.tex}
+
+\end{longtable}
+
+
+\end{document}
