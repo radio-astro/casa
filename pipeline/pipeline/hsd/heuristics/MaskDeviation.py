@@ -101,8 +101,6 @@ class MaskDeviation(object):
         """
         Reads data from input MS. 
         """
-        import time
-        start_time = time.time()
         if vis != '': 
             self.infile=vis
         if vis == '': 
@@ -125,8 +123,6 @@ class MaskDeviation(object):
             self.flag = r['flag'].transpose((2,0,1)).reshape((nrow * npol, nchan))
                         
         LOG.debug('MaskDeviation.ReadDataFromMS: %s %s'%(self.nrow, self.nchan))
-        end_time = time.time()
-        print 'Elapsed %s sec'%(end_time - start_time)
         
         return r
         
