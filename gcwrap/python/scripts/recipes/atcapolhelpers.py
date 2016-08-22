@@ -15,6 +15,7 @@
 #
 #
 import os
+from math import pi,floor,atan2,sin,cos,sqrt
 import taskinit
 import pylab as pl
 
