@@ -2334,8 +2334,10 @@ class VectorFlagger(basetask.StandardTaskTemplate):
     @staticmethod
     def _find_small_diff(data, flag, limit=2.0, description='unknown'):
         """Return the index in the first quarter of the data array where the
-        point to point difference first falls below twice the median value.
-
+        point to point difference first falls below a threshold, where 
+        the threshold is defined as the "limit" * the median point-to-point
+        difference.
+        
         Keyword arguments:
         data -- The data array to be examined.
         flag -- Array whose elements are True where list_data is bad.
@@ -2350,12 +2352,12 @@ class VectorFlagger(basetask.StandardTaskTemplate):
         nchan = len(data)
         good_data = data[:nchan/4][np.logical_not(flag[:nchan/4])]
         good_data_index = np.arange(nchan/4)[np.logical_not(flag[:nchan/4])]
-        diff = abs(good_data[1:] - good_data[:-1])
-        median_diff = np.median(diff)
+        good_data_diff = abs(good_data[1:] - good_data[:-1])
+        median_diff = np.median(good_data_diff)
 
-        for i in good_data_index[:-2]:
-            if diff[i] < limit * median_diff:
-                result = i
+        for i, diff in enumerate(good_data_diff):
+            if diff < limit * median_diff:
+                result = good_data_index[i]
                 break
 
         if result is None:
@@ -2732,13 +2734,13 @@ class NewVectorFlagger(basetask.StandardTaskTemplate):
                     if len(valid_data):
 
                         # find left edge
-                        left_edge = VectorFlagger._find_small_diff(rdata,
+                        left_edge = NewVectorFlagger._find_small_diff(rdata,
                           rflag, limit, vector.description)
 
                         # and right edge
                         reverse_data = rdata[-1::-1]
                         reverse_flag = rflag[-1::-1]
-                        right_edge = VectorFlagger._find_small_diff(
+                        right_edge = NewVectorFlagger._find_small_diff(
                           reverse_data, reverse_flag, limit, vector.description)
 
                         # flag the 'view'
@@ -3040,7 +3042,9 @@ class NewVectorFlagger(basetask.StandardTaskTemplate):
     @staticmethod
     def _find_small_diff(data, flag, limit=2.0, description='unknown'):
         """Return the index in the first quarter of the data array where the
-        point to point difference first falls below twice the median value.
+        point to point difference first falls below a threshold, where 
+        the threshold is defined as the "limit" * the median point-to-point
+        difference.
 
         Keyword arguments:
         data -- The data array to be examined.
@@ -3056,12 +3060,12 @@ class NewVectorFlagger(basetask.StandardTaskTemplate):
         nchan = len(data)
         good_data = data[:nchan/4][np.logical_not(flag[:nchan/4])]
         good_data_index = np.arange(nchan/4)[np.logical_not(flag[:nchan/4])]
-        diff = abs(good_data[1:] - good_data[:-1])
-        median_diff = np.median(diff)
+        good_data_diff = abs(good_data[1:] - good_data[:-1])
+        median_diff = np.median(good_data_diff)
 
-        for i in good_data_index[:-2]:
-            if diff[i] < limit * median_diff:
-                result = i
+        for i, diff in enumerate(good_data_diff):
+            if diff < limit * median_diff:
+                result = good_data_index[i]
                 break
 
         if result is None:
