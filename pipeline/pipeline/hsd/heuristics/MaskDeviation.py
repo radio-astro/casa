@@ -128,22 +128,25 @@ class MaskDeviation(object):
         LOG.debug('taql="%s"'%(taql))
         with casatools.TableReader(vis) as mytb:
             tbsel = mytb.query(taql)
-            nrow = tbsel.nrows()
-            LOG.debug('number of rows for selected table: %s'%(nrow))
-            cellshape = NP.fromstring(tbsel.getcolshapestring(colname, 0, 1)[0].lstrip('[').rstrip(']'), 
-                                      dtype=NP.int, sep=',')
-            LOG.debug('cellshape={shape}'.format(shape=cellshape))
-            npol, nchan = cellshape
-            array_shape = (nrow * npol, nchan)
-            self.data = NP.zeros(array_shape, NP.float)
-            # flag: True => invalid, False => valid
-            self.flag = NP.zeros(array_shape, NP.bool)
-            self.nrow, self.nchan = array_shape
-            for i in xrange(nrow):
-                cell = tbsel.getcell(colname, i)
-                self.data[i * npol:(i + 1) * npol] = NP.real(cell)
-                self.flag[i * npol:(i + 1) * npol] = tbsel.getcell('FLAG', i)
-        
+            try:
+                nrow = tbsel.nrows()
+                LOG.debug('number of rows for selected table: %s'%(nrow))
+                cellshape = NP.fromstring(tbsel.getcolshapestring(colname, 0, 1)[0].lstrip('[').rstrip(']'), 
+                                          dtype=NP.int, sep=',')
+                LOG.debug('cellshape={shape}'.format(shape=cellshape))
+                npol, nchan = cellshape
+                array_shape = (nrow * npol, nchan)
+                self.data = NP.zeros(array_shape, NP.float)
+                # flag: True => invalid, False => valid
+                self.flag = NP.zeros(array_shape, NP.bool)
+                self.nrow, self.nchan = array_shape
+                for i in xrange(nrow):
+                    cell = tbsel.getcell(colname, i)
+                    self.data[i * npol:(i + 1) * npol] = NP.real(cell)
+                    self.flag[i * npol:(i + 1) * npol] = tbsel.getcell('FLAG', i)
+            finally:
+                tbsel.close()
+                        
         LOG.debug('MaskDeviation.ReadDataFromMS: %s %s'%(self.nrow, self.nchan))
 
 
