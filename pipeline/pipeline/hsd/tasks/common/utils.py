@@ -694,34 +694,90 @@ def make_row_map(src_ms, derived_vis):
     derived_ddid_map = make_ddid_map(vis1)
     LOG.trace('derived_ddid_map=%s'%(derived_ddid_map))
      
-    with casatools.TableReader(vis0) as tb:
-        observation_id_list0 = tb.getcol('OBSERVATION_ID')
-        processor_id_list0 = tb.getcol('PROCESSOR_ID')
-        scan_number_list0 = tb.getcol('SCAN_NUMBER')
-        field_id_list0 = tb.getcol('FIELD_ID')
-        antenna1_list0 = tb.getcol('ANTENNA1')
-        antenna2_list0 = tb.getcol('ANTENNA2')
-        state_id_list0 = tb.getcol('STATE_ID')
-        data_desc_id_list0 = tb.getcol('DATA_DESC_ID')
-        time_list0 = tb.getcol('TIME')
-        rownumber_list0 = tb.rownumbers()
-        observation_id_set = set(observation_id_list0)
-        processor_id_set = set(processor_id_list0)
     scans = ms.get_scans(scan_intent='TARGET')
-    is_unique_processor_id = len(processor_id_set) == 1
-    is_unique_observation_id = len(observation_id_set) == 1
+    scan_numbers = [s.id for s in scans]
+    fields = {}
+    states = {}
+    for scan in scans:
+        fields[scan.id] = [f.id for f in scan.fields if 'TARGET' in f.intents]
+        states[scan.id] = [s.id for s in scan.states if 'TARGET' in s.intents]
+    field_values = fields.values()
+    is_unique_field_set = True
+    for v in field_values:
+        if v != field_values[0]:
+            is_unique_field_set = False
+    state_values = states.values()
+    is_unique_state_set = True
+    for v in state_values:
+        if v != state_values[0]:
+            is_unique_state_set = False
+    if is_unique_field_set and is_unique_state_set:
+        taql = 'ANTENNA1 == ANTENNA2 && SCAN_NUMBER IN %s && FIELD_ID IN %s && STATE_ID IN %s'%(scan_numbers, field_values[0], state_values[0])
+    else:
+        taql = 'ANTENNA1 == ANTENNA2 && (%s)'%(' || '.join(['(SCAN_NUMBER == %s && FIELD_ID IN %s && STATE_ID IN %s)'%(scan.id, map(lambda x: x.id, scan.fields), map(lambda x: x.id, scan.states)) for scan in scans]))
+    print taql
+     
+     
+    with casatools.TableReader(os.path.join(vis0, 'OBSERVATION')) as tb:
+        nrow_obs0 = tb.nrows()
+    with casatools.TableReader(os.path.join(vis0, 'PROCESSOR')) as tb:
+        nrow_proc0 = tb.nrows()
+    with casatools.TableReader(os.path.join(vis1, 'OBSERVATION')) as tb:
+        nrow_obs1 = tb.nrows()
+    with casatools.TableReader(os.path.join(vis1, 'PROCESSOR')) as tb:
+        nrow_proc1 = tb.nrows()
+        
+    assert nrow_obs0 == nrow_obs1
+    assert nrow_proc0 == nrow_proc1
+    
+    is_unique_observation_id = nrow_obs0 == 1
+    is_unique_processor_id = nrow_proc0 == 1
+        
+    with casatools.TableReader(vis0) as tb:
+        tsel = tb.query(taql)
+        try:
+            if is_unique_observation_id:
+                observation_id_list0 = None
+                observation_id_set = set([0])
+            else:
+                observation_id_list0 = tsel.getcol('OBSERVATION_ID')
+                observation_id_set = set(observation_id_list0)
+            if is_unique_processor_id:
+                processor_id_list0 = None
+                processor_id_set = set([0])
+            else:
+                processor_id_list0 = tsel.getcol('PROCESSOR_ID')
+                processor_id_set = set(processor_id_list0)
+            scan_number_list0 = tsel.getcol('SCAN_NUMBER')
+            field_id_list0 = tsel.getcol('FIELD_ID')
+            antenna1_list0 = tsel.getcol('ANTENNA1')
+            state_id_list0 = tsel.getcol('STATE_ID')
+            data_desc_id_list0 = tsel.getcol('DATA_DESC_ID')
+            time_list0 = tsel.getcol('TIME')
+            rownumber_list0 = tsel.rownumbers()
+        finally:
+            tsel.close()
      
     with casatools.TableReader(vis1) as tb:
-        observation_id_list1 = tb.getcol('OBSERVATION_ID')
-        processor_id_list1 = tb.getcol('PROCESSOR_ID')
-        scan_number_list1 = tb.getcol('SCAN_NUMBER')
-        field_id_list1 = tb.getcol('FIELD_ID')
-        antenna1_list1 = tb.getcol('ANTENNA1')
-        antenna2_list1 = tb.getcol('ANTENNA2')
-        state_id_list1 = tb.getcol('STATE_ID')
-        data_desc_id_list1 = tb.getcol('DATA_DESC_ID')
-        time_list1 = tb.getcol('TIME')
-        rownumber_list1 = tb.rownumbers()
+        tsel = tb.query(taql)
+        try:
+            if is_unique_observation_id:
+                observation_id_list1 = None
+            else:
+                observation_id_list1 = tsel.getcol('OBSERVATION_ID')
+            if is_unique_processor_id:
+                processor_id_list1 = None
+            else:
+                processor_id_list1 = tsel.getcol('PROCESSOR_ID')
+            scan_number_list1 = tsel.getcol('SCAN_NUMBER')
+            field_id_list1 = tsel.getcol('FIELD_ID')
+            antenna1_list1 = tsel.getcol('ANTENNA1')
+            state_id_list1 = tsel.getcol('STATE_ID')
+            data_desc_id_list1 = tsel.getcol('DATA_DESC_ID')
+            time_list1 = tsel.getcol('TIME')
+            rownumber_list1 = tsel.rownumbers()
+        finally:
+            tsel.close()
  
     for processor_id in processor_id_set:
          
@@ -730,17 +786,14 @@ def make_row_map(src_ms, derived_vis):
         for observation_id in observation_id_set:
             LOG.trace('OBSERVATION_ID %s'%(observation_id))
              
-            for scan in scans:
-                scan_number = scan.id
+            for scan_number in scan_numbers:
                 LOG.trace('SCAN_NUMBER %s'%(scan_number))
-                states = [s for s in scan.states if 'TARGET' in s.intents]
  
-                if len(states) == 0:
+                if len(states[scan_number]) == 0:
                     LOG.trace('No target states in SCAN %s'%(scan_number))
                     continue
                  
-                for field in scan.fields:
-                    field_id = field.id
+                for field_id in fields[scan_number]:
                     LOG.trace('FIELD_ID %s'%(field_id))
                                          
                     for antenna in ms.antennas:
@@ -758,16 +811,14 @@ def make_row_map(src_ms, derived_vis):
                             LOG.trace('SRC DATA_DESC_ID %s (SPW %s)'%(data_desc_id, spw.id))
                             LOG.trace('DERIVED DATA_DESC_ID %s (SPW %s)'%(derived_dd_id, derived_spw_id))
                              
-                            for state in states:
-                                state_id = state.id
+                            for state_id in states[scan_number]:
                                 LOG.trace('STATE_ID %s'%(state_id))
                                  
                                 mask0 = numpy.logical_and(state_id_list0 == state_id, 
                                             numpy.logical_and(data_desc_id_list0 == data_desc_id,
-                                                    numpy.logical_and(antenna2_list0 == antenna_id, 
                                                             numpy.logical_and(antenna1_list0 == antenna_id,
                                                                     numpy.logical_and(field_id_list0 == field_id,                                         
-                                                                            scan_number_list0 == scan_number)))))
+                                                                            scan_number_list0 == scan_number))))
 #                                 mask0 = numpy.logical_and.reduce((state_id_list0 == state_id,
 #                                                                   data_desc_id_list0 == data_desc_id,
 #                                                                   antenna2_list0 == antenna_id,
@@ -781,7 +832,7 @@ def make_row_map(src_ms, derived_vis):
                                     numpy.logical_and(mask0, observation_id_list0 == observation_id, out=mask0)
 
                                
-                                LOG.trace('obtained time and row numbers for state %s'%(state.id))
+                                LOG.trace('obtained time and row numbers for state %s'%(state_id))
  
                                 if numpy.any(mask0 == True):
                                     # get time stamp and row numbers for selected rows of vis0
@@ -794,10 +845,9 @@ def make_row_map(src_ms, derived_vis):
                                     # get time stamp and row numbers for selected rows of vis1                                             
                                     mask1 = numpy.logical_and(state_id_list1 == state_id, 
                                                     numpy.logical_and(data_desc_id_list1 == derived_dd_id,
-                                                            numpy.logical_and(antenna2_list1 == antenna_id, 
                                                                     numpy.logical_and(antenna1_list1 == antenna_id,
                                                                             numpy.logical_and(field_id_list1 == field_id,                                         
-                                                                                    scan_number_list1 == scan_number)))))
+                                                                                    scan_number_list1 == scan_number))))
 
                                     if not is_unique_processor_id:
                                         numpy.logical_and(mask1, processor_id_list1 == processor_id, out=mask1)
@@ -818,7 +868,7 @@ def make_row_map(src_ms, derived_vis):
                                     assert numpy.all(mask0 == False)
                                     LOG.trace('NOTE: no rows')
                                      
-                                LOG.trace('DONE State %s'%(state.id))
+                                LOG.trace('DONE State %s'%(state_id))
  
     return rowmap
 
