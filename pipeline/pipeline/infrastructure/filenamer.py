@@ -3,24 +3,29 @@ import os
 import shutil
 import string
 
-_valid_chars = "_.-+%s%s" % (string.ascii_letters, string.digits)    
+_valid_chars = "_.-+~%s%s" % (string.ascii_letters, string.digits)
+
+_known_intents = {
+    'BANDPASS': 'bp',
+    'AMPLITUDE': 'flux',
+    'PHASE': 'ph',
+    'TARGET': 'sci',
+    'CHECK': 'chk'
+}
+
+
 def _char_replacer(s):
-    '''A small utility function that echoes the argument or returns '_' if the 
+    """A small utility function that echoes the argument or returns '_' if the
     argument is in a list of forbidden characters.
-    '''
+    """
     if s not in _valid_chars:
         return '_'
     return s
 
+
 def sanitize(text):
     filename = ''.join(_char_replacer(c) for c in text)
-    return filename 
-
-_known_intents = {'BANDPASS'  : 'bp',
-                  'AMPLITUDE' : 'flux',
-                  'PHASE'     : 'ph',
-                  'TARGET'    : 'sci',
-		  'CHECK'     : 'chk' }
+    return filename
 
 
 class FileNameComponentBuilder(object):

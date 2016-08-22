@@ -111,10 +111,10 @@ class PlotmsLeaf(object):
             'x'        : self._xaxis,
             'y'        : self._yaxis,
             'ant'      : '' if self._ant == '' else 'ant%s-' % self._ant.replace(',','_'),
-            'field'    : '' if self._field_label == '' else '-%s' % filenamer.sanitize(self._field_label.replace(',','_')),
+            'field'    : '' if self._field_label == '' else '-%s' % self._field_label.replace(',','_'),
             'intent'   : '' if self._intent == '' else '%s-' % self._intent.replace(',','_'),
             'uvrange'  : '' if self._uvrange == '' else 'uvrange%s-' % self._uvrange.replace(',','_'),
-            'receiver' : '' if self._receiver == '' else '%s-' % filenamer.sanitize(self._receiver.replace(',','_'))
+            'receiver' : '' if self._receiver == '' else '%s-' % self._receiver.replace(',','_')
         }
 
         if self._spw == '':
@@ -128,7 +128,8 @@ class PlotmsLeaf(object):
             fileparts['spw'] = 'bb%s-' % self._baseband
 
         png = '{vis}{field}-{receiver}{spw}{ant}{intent}{uvrange}{y}_vs_{x}.png'.format(**fileparts)
-        
+        png = filenamer.sanitize(png)
+
         # Maximum filename size for Lustre filesystems is 255 bytes. Mosaics
         # can exceed this limit due to including the names of all the field.
         # Truncate over-long field components while keeping them unique by
