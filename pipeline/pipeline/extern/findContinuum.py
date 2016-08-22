@@ -35,7 +35,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: findContinuum.py,v 1.92 2016/08/04 11:52:40 we Exp $" 
+    myversion = "$Id: findContinuum.py,v 1.98 2016/08/21 20:55:42 we Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -78,7 +78,8 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
                   channelFractionForSlopeRemoval=0.75, mask='', 
                   invert=False, meanSpectrumMethod='auto',peakFilterFWHM=10,
                   skyTempThreshold=1.5,
-                  skyTransmissionThreshold=0.08, maxGroupsForSkyThreshold=5):
+                  skyTransmissionThreshold=0.08, maxGroupsForSkyThreshold=5,
+                  minBandwidthFractionForSkyThreshold=0.3):
     """
     This function calls functions to:
     1) compute the mean spectrum of a dirty cube
@@ -246,6 +247,8 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
                                             bytes/1e9))
     meanSpectrumMethodRequested = meanSpectrumMethod
     meanSpectrumMethodMessage = ''
+    npixels = float(nchan)*naxis1*naxis2
+    maxpixels = bytes/67 # float(1024)*1024*960
     if (meanSpectrumMethod.find('auto') >= 0):
         meanSpectrumMethod = 'meanAboveThreshold'
         if (img != ''):
@@ -262,10 +265,9 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
                     meanSpectrumMethod = 'peakOverMad'
                     meanSpectrumMethodMessage = "Set meanSpectrumMethod='%s' since triangular wave pattern was seen." % (meanSpectrumMethod)
             casalogPost(meanSpectrumMethodMessage)
-                    
+
+    centralArcsecField = centralArcsec                    
     if (centralArcsec == 'auto' and img != ''):
-        npixels = float(nchan)*naxis1*naxis2
-        maxpixels = bytes/67 # float(1024)*1024*960
         if (npixels > maxpixels): # and meanSpectrumMethod.find('meanAboveThreshold')>=0):
             casalogPost("Excessive number of pixels (%.0f > %.0f) %d x %d" % (npixels,maxpixels,naxis1,naxis2))
             totalWidthArcsec = abs(cdelt2*naxis2)
@@ -318,7 +320,7 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
                               fullLegend, iteration, meanSpectrumMethodMessage)
     if result == None:
         return
-    selection, png, slope, channelWidth, nchan = result
+    selection, png, slope, channelWidth, nchan, useLowBaseline = result
     if (centralArcsec == 'auto' and img != '' and len(selection.split(separator)) < 2):
         myselection = selection.split(separator)[0]
         if (myselection.find('~') > 0):
@@ -331,13 +333,13 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
             # reduce the field size to one tenth of the previous
             bmaj, bmin, bpa, cdelt1, cdelt2, naxis1, naxis2, freq = imageInfo # getImageInfo(img)
             imageWidthArcsec = 0.5*(np.abs(naxis2*cdelt2) + np.abs(naxis1*cdelt1))
-            centralArcsec = 0.1*imageWidthArcsec
+            centralArcsecField = 0.1*imageWidthArcsec
             # could change the 128 to tdmSpectrum(channelWidth,nchan), but this heuristic may also help
             # for excerpts of larger cubes with narrower channel widths.
             if (nBaselineChannels < 1 and nchan <= 128):  
                 nBaselineChannels = float(np.min([0.5, nBaselineChannels*1.5]))
             overwrite = True
-            casalogPost("Re-running findContinuum over central %.1f arcsec with nBaselineChannels=%g" % (centralArcsec,nBaselineChannels))
+            casalogPost("Re-running findContinuum over central %.1f arcsec with nBaselineChannels=%g" % (centralArcsecField,nBaselineChannels))
             iteration += 1
             result = runFindContinuum(img, spw, transition, baselineModeA, baselineModeB,
                                       sigmaCube, nBaselineChannels, sigmaFindContinuum,
@@ -346,7 +348,7 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
                                       percentile, continuumThreshold, narrow, 
                                       separator, overwrite, titleText, 
                                       showAverageSpectrum, maxTrim, maxTrimFraction,
-                                      meanSpectrumFile, centralArcsec, channelWidth,
+                                      meanSpectrumFile, centralArcsecField, channelWidth,
                                       alternateDirectory, imageInfo, chanInfo, header,
                                       plotAtmosphere, airmass, pwv, 
                                       channelFractionForSlopeRemoval, mask, 
@@ -354,21 +356,34 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
                                       fullLegend,iteration,meanSpectrumMethodMessage)
         if result == None:
             return
-        selection, png, slope, channelWidth, nchan = result
+        selection, png, slope, channelWidth, nchan, useLowBaseline = result
     aggregateBandwidth = computeBandwidth(selection, channelWidth, 0)
     if (meanSpectrumMethodRequested == 'auto'):
+      # Here we check to see if we need to switch the method of computing the mean spectrum
+      # based on any undesirable characteristics of the results, and if so, re-run it.
       groups = len(selection.split(separator))
       if (aggregateBandwidth <= 0.00001 or 
+          (not useLowBaseline and meanSpectrumMethod=='peakOverMad' and not tdmSpectrum(channelWidth,nchan)) or
           (meanSpectrumMethod=='peakOverMad' and meanSpectrumMethodMessage != ''
-           and groups > maxGroupsForSkyThreshold 
+           and groups > maxGroupsForSkyThreshold and 
+           aggregateBandwidth < minBandwidthFractionForSkyThreshold*nchan*channelWidth*1e-9
            and not tdmSpectrum(channelWidth,nchan))):
         # If less than 10 kHz is found, then try the other approach.
         if (meanSpectrumMethod == 'peakOverMad'):
             meanSpectrumMethod = 'meanAboveThreshold'
-            meanSpectrumMethodMessage = "Reverted to meanSpectrumMethod='%s' because groups>%d." % (meanSpectrumMethod,maxGroupsForSkyThreshold)
+            if (aggregateBandwidth <= 0.00001):
+                meanSpectrumMethodMessage = "Reverted to meanSpectrumMethod='%s' because no continuum found." % (meanSpectrumMethod)
+                casalogPost("Re-running findContinuum with the other meanSpectrumMethod: %s (because aggregateBW=%eGHz is less than 10kHz)" % (meanSpectrumMethod,aggregateBandwidth))
+            elif (not useLowBaseline and meanSpectrumMethod=='peakOverMad' and not tdmSpectrum(channelWidth,nchan)):
+                meanSpectrumMethodMessage = "Reverted to meanSpectrumMethod='%s' because useLowBaseline=F." % (meanSpectrumMethod)
+                casalogPost("Re-running findContinuum with the other meanSpectrumMethod: %s (because useLowBaseline=False)" % (meanSpectrumMethod))
+            else:
+                meanSpectrumMethodMessage = "Reverted to meanSpectrumMethod='%s' because groups=%d>%d and not TDM." % (meanSpectrumMethod,groups,maxGroupsForSkyThreshold)
+                casalogPost("Re-running findContinuum with the other meanSpectrumMethod: %s because it is an FDM spectrum with many groups (%d>%d) and aggregate bandwidth < %.2f of total." % (meanSpectrumMethod,groups,maxGroupsForSkyThreshold,minBandwidthFractionForSkyThreshold))
         else:
             meanSpectrumMethod = 'peakOverMad'
-        casalogPost("Re-running findContinuum with the other meanSpectrumMethod: %s (because aggregateBW=%eGHz is less than 10kHz, or FDM with many groups)" % (meanSpectrumMethod,aggregateBandwidth))
+            casalogPost("Re-running findContinuum with the other meanSpectrumMethod: %s (because aggregateBW=%eGHz is less than 10kHz)" % (meanSpectrumMethod,aggregateBandwidth))
+            
         iteration += 1
         os.remove(png)
         png = ''
@@ -379,14 +394,14 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
                                   percentile, continuumThreshold, narrow, 
                                   separator, overwrite, titleText, 
                                   showAverageSpectrum, maxTrim, maxTrimFraction,
-                                  meanSpectrumFile, centralArcsec, channelWidth,
+                                  meanSpectrumFile, centralArcsecField, channelWidth,
                                   alternateDirectory, imageInfo, chanInfo, header,
                                   plotAtmosphere, airmass, pwv, 
                                   channelFractionForSlopeRemoval, mask, 
                                   invert, meanSpectrumMethod, peakFilterFWHM, 
                                   fullLegend, iteration, 
                                   meanSpectrumMethodMessage)
-        selection, png, slope, channelWidth, nchan = result
+        selection, png, slope, channelWidth, nchan, useLowBaseline = result
 
     # Write summary of results to text file
     if (meanSpectrumFile == ''): 
@@ -432,8 +447,25 @@ def centralArcsecArgumentMismatch(centralArcsec, meanSpectrumFile, iteration):
                 return False
     elif (grep(meanSpectrumFile,'centralArcsec=auto %s'%(str(centralArcsec)))[0] == '' and
           grep(meanSpectrumFile,'centralArcsec=%s'%(str(centralArcsec)))[0] == ''):
-        casalogPost("request for specific value but 'centralArcsec=auto %s' not found" % (str(centralArcsec)))
-        return True
+        token = grep(meanSpectrumFile,'centralArcsec=')[0].split('centralArcsec=')
+        if (len(token) < 2):
+            # This should never happen, but if it does, prevent a crash by returning now.
+            casalogPost("Did not find string 'centralArcsec=' with a value in the meanSpectrum file.")
+            return True
+        value = token[1].replace('auto ','').split()[0]
+        try:
+            previousRequest = float(value)
+            centralArcsecThresholdPercent = 2
+            if (100*abs(previousRequest-centralArcsec)/centralArcsec < centralArcsecThresholdPercent):
+                casalogPost("request for specific value (%s) and previous value (%s) is within %d percent" % (str(centralArcsec),str(previousRequest),centralArcsecThresholdPercent))
+                return False
+            else:
+                casalogPost("request for specific value but 'centralArcsec=auto %s' not within %d percent" % (str(centralArcsec),centralArcsecThresholdPercent))
+                return True
+        except:
+            # If there is any trouble reading the previous value, then return now.
+            casalogPost("Failed to parse floating point value.")
+            return True
     else:
         return False
 
@@ -746,7 +778,7 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
             sigmaFindContinuum = 6.0
     else:
         sigmaFindContinuumAutomatic = False
-    continuumChannels,selection,threshold,median,groups,correctionFactor,medianTrue,mad,medianCorrectionFactor,negativeThreshold,lineStrengthFactor,singleChannelPeaksAboveSFC,allGroupsAboveSFC,spectralDiff, trimChannels = \
+    continuumChannels,selection,threshold,median,groups,correctionFactor,medianTrue,mad,medianCorrectionFactor,negativeThreshold,lineStrengthFactor,singleChannelPeaksAboveSFC,allGroupsAboveSFC,spectralDiff, trimChannels, useLowBaseline = \
         findContinuumChannels(avgSpectrumNansReplaced, nBaselineChannels, sigmaFindContinuum, nanmin, 
                               baselineModeB, trimChannels, narrow, verbose, maxTrim, maxTrimFraction, separator)
     sumAboveMedian, sumBelowMedian, sumRatio, channelsAboveMedian, channelsBelowMedian, channelRatio = \
@@ -771,7 +803,7 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
             factor = 1.5
             sigmaFindContinuum *= factor
             casalogPost("Scaling the threshold upward by a factor of %.2f to avoid apparent noise spikes (%d==%d)." % (factor, singleChannelPeaksAboveSFC,allGroupsAboveSFC))
-            continuumChannels,selection,threshold,median,groups,correctionFactor,medianTrue,mad,medianCorrectionFactor,negativeThreshold,lineStrengthFactor,singleChannelPeaksAboveSFC,allGroupsAboveSFC,spectralDiff,trimChannels = \
+            continuumChannels,selection,threshold,median,groups,correctionFactor,medianTrue,mad,medianCorrectionFactor,negativeThreshold,lineStrengthFactor,singleChannelPeaksAboveSFC,allGroupsAboveSFC,spectralDiff,trimChannels,useLowBaseline = \
                 findContinuumChannels(avgSpectrumNansReplaced, nBaselineChannels, sigmaFindContinuum, nanmin, 
                                       baselineModeB, trimChannels, narrow, verbose, maxTrim, maxTrimFraction, separator)
             sumAboveMedian, sumBelowMedian, sumRatio, channelsAboveMedian, channelsBelowMedian, channelRatio = \
@@ -805,7 +837,7 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
         casalogPost("Scaling the threshold by a factor of %.2f (groups=%d, channelRatio=%f)" % (factor, groups,channelRatio))
         print "---------------------"
         sigmaFindContinuum *= factor
-        continuumChannels,selection,threshold,median,groups,correctionFactor,medianTrue,mad,medianCorrectionFactor,negativeThreshold,lineStrengthFactor,singleChannelPeaksAboveSFC,allGroupsAboveSFC,spectralDiff,trimChannels = \
+        continuumChannels,selection,threshold,median,groups,correctionFactor,medianTrue,mad,medianCorrectionFactor,negativeThreshold,lineStrengthFactor,singleChannelPeaksAboveSFC,allGroupsAboveSFC,spectralDiff,trimChannels,useLowBaseline = \
             findContinuumChannels(avgSpectrumNansReplaced, nBaselineChannels, sigmaFindContinuum, nanmin, 
                                   baselineModeB, trimChannels, narrow, verbose, maxTrim, maxTrimFraction, separator)
         sumAboveMedian, sumBelowMedian, sumRatio, channelsAboveMedian, channelsBelowMedian, channelRatio = \
@@ -815,9 +847,10 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
             casalogPost("Not adjusting sigmaFindContinuum, because groups=%d, channelRatio=%g, firstFreq=%g, nchan=%d" % (groups,channelRatio,firstFreq,nchan))
         else:
             casalogPost("Not adjusting sigmaFindContinuum because meanSpectrumMethod = %s" % (meanSpectrumMethod))
+                
         if (newMaxTrim > 0):
             casalogPost("But re-running findContinuumChannels with new maxTrim")
-            continuumChannels,selection,threshold,median,groups,correctionFactor,medianTrue,mad,medianCorrectionFactor,negativeThreshold,lineStrengthFactor,singleChannelPeaksAboveSFC,allGroupsAboveSFC,spectralDiff,trimChannels = \
+            continuumChannels,selection,threshold,median,groups,correctionFactor,medianTrue,mad,medianCorrectionFactor,negativeThreshold,lineStrengthFactor,singleChannelPeaksAboveSFC,allGroupsAboveSFC,spectralDiff,trimChannels, useLowBaseline = \
                 findContinuumChannels(avgSpectrumNansReplaced, nBaselineChannels, sigmaFindContinuum, nanmin, 
                                       baselineModeB, trimChannels, narrow, verbose, maxTrim, maxTrimFraction, separator)
             sumAboveMedian, sumBelowMedian, sumRatio, channelsAboveMedian, channelsBelowMedian, channelRatio = \
@@ -853,7 +886,7 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
 #                maxTrim = maxTrimDefault # prevent overzealous trimming  July 20, 2016
         discardSlopeResult = False
         if rerun:
-            continuumChannels,selection,threshold,median,groups,correctionFactor,medianTrue,mad,medianCorrectionFactor,negativeThreshold,lineStrengthFactor,singleChannelPeaksAboveSFC,allGroupsAboveSFC,spectralDiff,trimChannels = \
+            continuumChannels,selection,threshold,median,groups,correctionFactor,medianTrue,mad,medianCorrectionFactor,negativeThreshold,lineStrengthFactor,singleChannelPeaksAboveSFC,allGroupsAboveSFC,spectralDiff,trimChannels,useLowBaseline = \
             findContinuumChannels(avgSpectrumNansReplaced, nBaselineChannels, sigmaFindContinuum, nanmin, 
                                   baselineModeB, trimChannels, narrow, verbose, maxTrim, maxTrimFraction, 
                                   separator, slope)
@@ -1141,7 +1174,7 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
     casalogPost("%.1f sec elapsed in runFindContinuum" % (donetime-startTime))
 #    sd = open('spectralDiff.dat','a')
 #    sd.write('%f %f %s\n' % (spectralDiff[0],spectralDiff[1],os.path.basename(img)))
-    return(selection, png, slope, channelWidth, nchan)
+    return(selection, png, slope, channelWidth, nchan, useLowBaseline)
 # end of runFindContinuum
 
 def aboveBelow(avgSpectrumNansReplaced, threshold):
@@ -1491,6 +1524,7 @@ def findContinuumChannels(spectrum, nBaselineChannels=16, sigmaFindContinuum=3,
         # or 2 channels of continuum.  signalRatio>0 is to avoid conflict
         # with the earlier heuristic above where it is set to zero.
         trimChannels = 13
+        # could also set narrow=2 here, trimChannels=13 
         casalogPost('Setting trimChannels to %d since many lines appear to be present.' % (trimChannels))
 
     peakMultiChannelsLists = splitListIntoContiguousListsAndRejectNarrow(peakChannels, narrow=2)
@@ -1558,7 +1592,7 @@ def findContinuumChannels(spectrum, nBaselineChannels=16, sigmaFindContinuum=3,
     return(channels, selection, threshold, median, groups, correctionFactor, 
            medianTrue, mad, computeMedianCorrectionFactor(baselineMode, percentile)*signalRatio,
            negativeThreshold, lineStrengthFactor, singleChannelPeaksAboveSFC, 
-           allGroupsAboveSFC, [spectralDiff, spectralDiff2], trimChannels)
+           allGroupsAboveSFC, [spectralDiff, spectralDiff2], trimChannels, useLowBaseline)
 
 def rejectNarrowInnerWindowsChannels(channels):
     """
@@ -2152,6 +2186,7 @@ def meanSpectrum(img='g35.03_KDnh3_11.hline.self.image', nBaselineChannels=16,
         if (mask != '' or meanSpectrumMethod != 'peakOverMad'):
             pixels = myia.getregion()
             maskdata = myia.getregion(getmask=True)
+            nchan = np.shape(maskdata)[axis]
         else:
             bmaj, bmin, bpa, cdelt1, cdelt2, naxis1, naxis2, freq = imageInfo
             blc = [0,0,0,0]
@@ -2411,6 +2446,7 @@ def meanSpectrum(img='g35.03_KDnh3_11.hline.self.image', nBaselineChannels=16,
         threshold = median + sigmaCube*std
         casalogPost("Using threshold above which to compute mean spectrum = %f" % (threshold), verbose)
         pixels[np.where(pixels < threshold)] = 0.0
+        casalogPost("Running avgOverCube")
         avgspectrumAboveThreshold = avgOverCube(pixels, useAbsoluteValue, threshold, mask=maskdata)
         if meanSpectrumMethod.find('OverRms') > 0:
             avgspectrumAboveThreshold /= myrms
@@ -2627,7 +2663,8 @@ def getFreqsForImage(img, header='', spectralaxis=-1, unit='GHz'):
     myqa.done()
     return freqs
 
-def CalcAtmTransmissionForImage(img, header='', chanInfo='', airmass=1.5,pwv=-1,                                spectralaxis=-1, maxAtmCalcChannels=960, 
+def CalcAtmTransmissionForImage(img, header='', chanInfo='', airmass=1.5,pwv=-1,                                
+                                spectralaxis=-1, 
                                 value='transmission', P=-1, H=-1, 
                                 T=-1, altitude=-1):
     """
@@ -2650,12 +2687,20 @@ def CalcAtmTransmissionForImage(img, header='', chanInfo='', airmass=1.5,pwv=-1,
             telescopeName = 'ALMA'
         else:
             telescopeName = 'VLA'
-        freqs = np.linspace(chanInfo[1]*1e-9,chanInfo[2]*1e-9,chanInfo[0])
     else:
         telescopeName = header['telescope']
         # this will not match up with the plot, which uses numberOfChannelsInCube
 #        freqs = getFreqsForImage(img, header, spectralaxis)
-        freqs = np.linspace(chanInfo[1]*1e-9,chanInfo[2]*1e-9,chanInfo[0])
+    freqs = np.linspace(chanInfo[1]*1e-9,chanInfo[2]*1e-9,chanInfo[0])
+    numchan = len(freqs)
+    lsrkwidth = (chanInfo[2] - chanInfo[1])/(numchan-1)
+    result = cubeLSRKToTopo(img, nchan=numchan, f0=chanInfo[1], f1=chanInfo[2], chanwidth=lsrkwidth)
+    if (result == None):
+        topofreqs = freqs
+    else:
+        topoWidth = (result[1]-result[0])/(numchan-1)
+        topofreqs = np.linspace(result[0], result[1], chanInfo[0]) * 1e-9
+        casalogPost("Converted LSRK range (%f-%f) to TOPO (%f-%f) over %d channels" % (chanInfo[1]*1e-9, chanInfo[2]*1e-9,topofreqs[0],topofreqs[-1],numchan))
     P0 = 1000.0 # mbar
     H0 = 20.0   # percent
     T0 = 273.0  # Kelvin
@@ -2686,18 +2731,15 @@ def CalcAtmTransmissionForImage(img, header='', chanInfo='', airmass=1.5,pwv=-1,
     midLatitudeSummer = 2
     midLatitudeWinter = 3
 #    print "image bandwidth = %f GHz" % (np.max(freqs)-np.min(freqs))
-    numchan = len(freqs)
-    reffreq = 0.5*(freqs[numchan/2-1]+freqs[numchan/2])
-    while (numchan > maxAtmCalcChannels):
-        numchan /= 2
-    freqs = np.linspace(freqs[0], freqs[-1], numchan)
-    chansep = (freqs[-1]-freqs[0])/(numchan-1)
-#    print "regridded bandwidth = %f GHz" % (np.max(freqs)-np.min(freqs))
+    reffreq = np.mean(topofreqs)
+    numchanModel = numchan*1
+    chansepModel = (topofreqs[-1]-topofreqs[0])/(numchanModel-1)
+#    print "regridded bandwidth=%f GHz, chansep=%f, reffreq=%f" % (np.max(topofreqs)-np.min(topofreqs), chansepModel, reffreq)
     nbands = 1
     myqa = createCasaTool(qatool)
     fCenter = create_casa_quantity(myqa, reffreq, 'GHz')
-    fResolution = create_casa_quantity(myqa, chansep, 'GHz')
-    fWidth = create_casa_quantity(myqa, numchan*chansep, 'GHz')
+    fResolution = create_casa_quantity(myqa, chansepModel, 'GHz')
+    fWidth = create_casa_quantity(myqa, numchanModel*chansepModel, 'GHz')
     myat = casac.atmosphere()
     myat.initAtmProfile(humidity=H, temperature=create_casa_quantity(myqa,T,"K"),
                         altitude=create_casa_quantity(myqa,altitude,"m"),
@@ -2706,8 +2748,7 @@ def CalcAtmTransmissionForImage(img, header='', chanInfo='', airmass=1.5,pwv=-1,
     myat.setUserWH2O(create_casa_quantity(myqa, pwv, 'mm'))
 #    myat.setAirMass()  # This does not affect the opacity, but it does effect TebbSky, so do it manually.
     myqa.done()
-    rc = myat.getRefChan()
-    n = myat.getNumChan()
+
     dry = np.array(myat.getDryOpacitySpec(0)[1])
     wet = np.array(myat.getWetOpacitySpec(0)[1]['value'])
     TebbSky = myat.getTebbSkySpec(spwid=0)[1]['value']
@@ -2719,11 +2760,11 @@ def CalcAtmTransmissionForImage(img, header='', chanInfo='', airmass=1.5,pwv=-1,
         casalogPost("There is a unit mismatch for refFreq in the atm code.")
     if (myat.getChanSep()['unit'] != 'MHz'):
         casalogPost("There is a unit mismatch for chanSep in the atm code.")
-    numchan = myat.getNumChan()
+    numchanModel = myat.getNumChan()
     freq0 = myat.getChanFreq(0)['value']
-    freq1 = myat.getChanFreq(numchan-1)['value']
-#    print "atm return bandwidth = %f GHz" % (freq1-freq0)
-    freqs = np.linspace(freq0, freq1, numchan)
+    freq1 = myat.getChanFreq(numchanModel-1)['value']
+#    print "atm returned bandwidth = %f GHz = %f to %f " % (freq1-freq0, freq0, freq1)
+#    freqs = np.linspace(freq0, freq1, numchan)
     transmission = np.exp(-airmass*(wet+dry))
     TebbSky *= (1-np.exp(-airmass*(wet+dry)))/(1-np.exp(-wet-dry))
     if value=='transmission':
@@ -2731,6 +2772,309 @@ def CalcAtmTransmissionForImage(img, header='', chanInfo='', airmass=1.5,pwv=-1,
     else:
         values = TebbSky
     return(freqs, values)
+
+def cubeLSRKToTopo(img, freqrange='', prec=4, verbose=False, 
+                   nchan=None, f0=None, f1=None, chanwidth=None):
+    """
+    Reads the date of observation, central RA and Dec,
+    and observatory from an image cube header and then calls lsrkToTopo to
+    return the specified frequency range in TOPO.
+    freqrange: desired range of frequencies (empty string or list = whole cube)
+          floating point list of two frequencies, or a delimited string
+          (delimiter = ',', '~' or space)
+    prec: in fractions of Hz (only used to display the value when verbose=True)
+    -Todd Hunter
+    """
+    header = imheadlist(img, omitBeam=True)
+    if ('reffreqtype' in header.keys()):
+        if (header['reffreqtype'].upper() == 'TOPO'):
+            print "This cube is purportedly already in TOPO."
+            return
+    if (nchan==None or f0==None or f1==None or chanwidth==None):
+        nchan,f0,f1,chanwidth = numberOfChannelsInCube(img, returnFreqs=True, header=header, 
+                                                       faster=True, returnChannelWidth=True)
+    if len(freqrange) == 0:
+        startFreq = f0 
+        stopFreq = f1
+    elif (type(freqrange) == str):
+        if (freqrange.find(',') > 0):
+            freqrange = [float(i) for i in freqrange.split(',')]
+        elif (freqrange.find('~') > 0):
+            freqrange = [float(i) for i in freqrange.split('~')]
+        else:
+            freqrange = [float(i) for i in freqrange.split()]
+        startFreq, stopFreq = freqrange
+    else:
+        startFreq, stopFreq = freqrange
+    ra,dec = rad2radec(header['crval1'], header['crval2'],
+                       delimiter=' ', verbose=False).split()
+    equinox = header['equinox']
+    observatory = header['telescope']
+    datestring = header['date-obs']
+    f0 = lsrkToTopo(startFreq, datestring, ra, dec, equinox, observatory, prec, verbose)
+    f1 = lsrkToTopo(stopFreq, datestring, ra, dec, equinox, observatory, prec, verbose) 
+    return(np.array([f0,f1]))
+
+def rad2radec(ra=0,dec=0, prec=5, verbose=True, component=0,
+              replaceDecDotsWithColons=True, hmsdms=False, delimiter=', ',
+              prependEquinox=False, hmdm=False):
+    """
+    Convert a position in RA/Dec from radians to sexagesimal string which
+    is comma-delimited, e.g. '20:10:49.01, +057:17:44.806'.
+    The position can either be entered as scalars via the 'ra' and 'dec' 
+    parameters, as a tuple via the 'ra' parameter, or as an array of shape (2,1)
+    via the 'ra' parameter.
+    replaceDecDotsWithColons: replace dots with colons as the Declination d/m/s delimiter
+    hmsdms: produce output of format: '20h10m49.01s, +057d17m44.806s'
+    hmdm: produce output of format: '20h10m49.01, +057d17m44.806' (for simobserve)
+    delimiter: the character to use to delimit the RA and Dec strings output
+    prependEquinox: if True, insert "J2000" before coordinates (i.e. for clean or simobserve)
+    Todd Hunter
+    """
+    if (type(ra) == tuple or type(ra) == list or type(ra) == np.ndarray):
+        if (len(ra) == 2):
+            dec = ra[1] # must come first before ra is redefined
+            ra = ra[0]
+        else:
+            ra = ra[0]
+            dec = dec[0]
+    if (np.shape(ra) == (2,1)):
+        dec = ra[1][0]
+        ra = ra[0][0]
+    myqa = createCasaTool(qatool)
+    myra = myqa.formxxx('%.12frad'%ra,format='hms',prec=prec+1)
+    mydec = myqa.formxxx('%.12frad'%dec,format='dms',prec=prec-1)
+    if replaceDecDotsWithColons:
+        mydec = mydec.replace('.',':',2)
+    if (len(mydec.split(':')[0]) > 3):
+        mydec = mydec[0] + mydec[2:]
+    mystring = '%s, %s' % (myra, mydec)
+    myqa.done()
+    if (hmsdms):
+        mystring = convertColonDelimitersToHMSDMS(mystring)
+        if (prependEquinox):
+            mystring = "J2000 " + mystring
+    elif (hmdm):
+        mystring = convertColonDelimitersToHMSDMS(mystring, s=False)
+        if (prependEquinox):
+            mystring = "J2000 " + mystring
+    if (delimiter != ', '):
+        mystring = mystring.replace(', ', delimiter)
+    if (verbose):
+        print mystring
+    return(mystring)
+
+def convertColonDelimitersToHMSDMS(mystring, s=True, usePeriodsForDeclination=False):
+    """
+    Converts HH:MM:SS.SSS, +DD:MM:SS.SSS  to  HHhMMmSS.SSSs, +DDdMMmSS.SSSs
+          or HH:MM:SS.SSS +DD:MM:SS.SSS   to  HHhMMmSS.SSSs +DDdMMmSS.SSSs
+          or HH:MM:SS.SSS, +DD:MM:SS.SSS  to  HHhMMmSS.SSSs, +DD.MM.SS.SSS
+          or HH:MM:SS.SSS +DD:MM:SS.SSS   to  HHhMMmSS.SSSs +DD.MM.SS.SSS
+    s: whether or not to include the trailing 's' in both axes
+    -Todd Hunter
+    """
+    colons = len(mystring.split(':'))
+    if (colons < 5 and (mystring.strip().find(' ')>0 or mystring.find(',')>0)):
+        print "Insufficient number of colons (%d) to proceed (need 4)" % (colons-1)
+        return
+    if (usePeriodsForDeclination):
+        decdeg = '.'
+        decmin = '.'
+        decsec = ''
+    else:
+        decdeg = 'd'
+        decmin = 'm'
+        decsec = 's'
+    if (s):
+        outstring = mystring.strip(' ').replace(':','h',1).replace(':','m',1).replace(',','s,',1).replace(':',decdeg,1).replace(':',decmin,1) + decsec
+        if (',' not in mystring):
+            outstring = outstring.replace(' ', 's ',1)
+    else:
+        outstring = mystring.strip(' ').replace(':','h',1).replace(':','m',1).replace(':',decdeg,1).replace(':',decmin,1)
+    return(outstring)
+    
+def lsrkToTopo(lsrkFrequency, datestring, ra, dec, equinox='J2000', observatory='ALMA', 
+               prec=4, verbose=False):
+    """
+    Converts an LSRKfrequency and observing date/direction
+    to the corresponding frequency in the TOPO frame.
+    Inputs:
+    lsrkFrequency: floating point value in Hz or GHz, or a string with units
+    datestring:  "YYYY/MM/DD/HH:MM:SS" (format = image header keyword 'date-obs')
+    ra: string "HH:MM:SS.SSSS"
+    dec: string "DD.MM.SS.SSSS" or "DD:MM:SS.SSSS" (colons will be replaced with .)
+    prec: only used to display the value when verbose=True
+    Returns: the TOPO frequency in Hz
+    -Todd Hunter
+    """
+    velocityLSRK = 0  # does not matter what it is, just needs to be same in both calls
+    restFreqHz = lsrkToRest(lsrkFrequency, velocityLSRK, datestring, ra, dec, equinox,
+                            observatory, prec, verbose)
+    topoFrequencyHz = restToTopo(restFreqHz, velocityLSRK, datestring, ra, dec, equinox, 
+                                observatory, verbose=verbose)
+    return topoFrequencyHz
+
+def lsrkToRest(lsrkFrequency, velocityLSRK, datestring, ra, dec, 
+               equinox='J2000', observatory='ALMA', prec=4, verbose=True):
+    """
+    Converts an LSRK frequency, LSRK velocity, and observing date/direction
+    to the corresponding frequency in the rest frame.
+    Inputs:
+    lsrkFrequency: floating point value in Hz or GHz, or a string with units
+    velocityLSRK: floating point value in km/s
+    datestring:  "YYYY/MM/DD/HH:MM:SS" (format = image header keyword 'date-obs')
+    ra: string "HH:MM:SS.SSSS"
+    dec: string "DD.MM.SS.SSSS" or "DD:MM:SS.SSSS" (colons will be replaced with .)
+    prec: only used to display the value when verbose=True
+    Returns: the Rest frequency in Hz
+    -Todd Hunter
+    """
+    if (dec.find(':') >= 0):
+        dec = dec.replace(':','.')
+        if verbose:
+            print "Warning: replacing colons with decimals in the dec field."
+    freqGHz = parseFrequencyArgumentToGHz(lsrkFrequency)
+    myqa = createCasaTool(qatool)
+    myme = createCasaTool(metool)
+    velocityRadio = create_casa_quantity(myqa,velocityLSRK,"km/s")
+    position = myme.direction(equinox, ra, dec)
+    obstime = myme.epoch('TAI', datestring)
+    dopp = myme.doppler("RADIO",velocityRadio)
+    radialVelocityLSRK = myme.toradialvelocity("LSRK",dopp)
+    myme.doframe(position)
+    myme.doframe(myme.observatory(observatory))
+    myme.doframe(obstime)
+    rvelRad = myme.measure(radialVelocityLSRK,'LSRK')
+    doppRad = myme.todoppler('RADIO', rvelRad)
+    freqRad = myme.torestfrequency(me.frequency('LSRK',str(freqGHz)+'GHz'), dopp)
+    myqa.done()
+    myme.done()
+    return freqRad['m0']['value']
+
+def restToTopo(restFrequency, velocityLSRK, datestring, ra, dec, equinox='J2000', 
+               observatory='ALMA', veltype='radio', verbose=False):
+    """
+    Converts a rest frequency, LSRK velocity, and observing date/direction
+    to the corresponding frequency in the TOPO frame.
+    Inputs:
+    restFrequency: floating point value in Hz or GHz, or a string with units
+    velocityLSRK: floating point value in km/s
+    datestring:  "YYYY/MM/DD/HH:MM:SS"
+    ra: string "HH:MM:SS.SSSS"
+    dec: string "DD.MM.SS.SSSS" or "DD:MM:SS.SSSS" (colons will be replaced with .)
+    prec: only used to display the value when verbose=True
+    Returns: the TOPO frequency in Hz
+    -Todd Hunter
+    """
+    topoFreqHz, diff1, diff2 = frames(velocityLSRK, datestring, ra, dec, equinox, 
+                                      observatory, verbose=verbose,
+                                      restFreq=restFrequency, veltype=veltype)
+    return topoFreqHz
+
+def frames(velocity=286.7, datestring="2005/11/01/00:00:00",
+           ra="05:35:28.105", dec="-069.16.10.99", equinox="J2000", 
+           observatory="ALMA", prec=4, verbose=True, myme='', myqa='',
+           restFreq=345.79599, veltype='optical'):
+    """
+    Converts an optical velocity into barycentric, LSRK and TOPO frames.
+    Converts a radio LSRK velocity into TOPO frame.
+    Inputs:
+    velocity: in km/s
+    datestring:  "YYYY/MM/DD/HH:MM:SS"
+    ra: "05:35:28.105"
+    dec: "-069.16.10.99"
+    equinox: "J2000" 
+    observatory: "ALMA"
+    prec: precision to display (digits to the right of the decimal point)
+    veltype: 'radio' or 'optical'
+    restFreq: in Hz, GHz or a string with units
+    Returns: 
+    * TOPO frequency in Hz
+    * difference between LSRK-TOPO in km/sec
+    * difference between LSRK-TOPO in Hz
+    - Todd Hunter
+    """
+    localme = False
+    localqa = False
+    if (myme == ''):
+        myme = createCasaTool(metool)
+        localme = True
+    if (myqa == ''):
+        myqa = createCasaTool(qatool)
+        localqa = True
+    if (dec.find(':') >= 0):
+        dec = dec.replace(':','.')
+    position = myme.direction(equinox, ra, dec)
+    obstime = myme.epoch('TAI', datestring)
+
+    if (veltype.lower().find('opt') == 0):
+        velOpt = create_casa_quantity(myqa,velocity,"km/s")
+        dopp = myme.doppler("OPTICAL",velOpt)
+        # CASA doesn't do Helio, but difference to Bary is hopefully small
+        rvelOpt = myme.toradialvelocity("BARY",dopp)
+    elif (veltype.lower().find('rad') == 0):
+        rvelOpt = myme.radialvelocity('LSRK',str(velocity)+'km/s')
+    else:
+        print "veltype must be 'rad'io or 'opt'ical"
+        return
+
+    myme.doframe(position)
+    myme.doframe(myme.observatory(observatory))
+    myme.doframe(obstime)
+    myme.showframe()
+
+    rvelRad = myme.measure(rvelOpt,'LSRK')
+    doppRad = myme.todoppler("RADIO",rvelRad)       
+    restFreq = parseFrequencyArgumentToGHz(restFreq)
+    freqRad = myme.tofrequency('LSRK',doppRad,me.frequency('rest',str(restFreq)+'GHz'))
+
+    lsrk = qa.tos(rvelRad['m0'],prec=prec)
+    rvelTop = myme.measure(rvelOpt,'TOPO')
+    doppTop = myme.todoppler("RADIO",rvelTop)       
+    freqTop = myme.tofrequency('TOPO',doppTop,me.frequency('rest',str(restFreq)+'GHz'))
+    if (localme):
+        myme.done()
+    if (localqa):
+        myqa.done()
+    topo = qa.tos(rvelTop['m0'],prec=prec)
+    velocityDifference = 0.001*(rvelRad['m0']['value']-rvelTop['m0']['value'])
+    frequencyDifference = freqRad['m0']['value'] - freqTop['m0']['value']
+    return(freqTop['m0']['value'], velocityDifference, frequencyDifference)
+
+def parseFrequencyArgumentToGHz(bandwidth):
+    """
+    Converts a frequency string into floating point in GHz, based on the units.
+    If the units are not present, then the value is assumed to be GHz if less
+    than 1000.
+    -Todd Hunter
+    """
+    value = parseFrequencyArgument(bandwidth)
+    if (value > 1000):
+        value *= 1e-9
+    return(value)
+
+def parseFrequencyArgument(bandwidth):
+    """
+    Converts a string frequency into floating point in Hz, based on the units.
+    If the units are not present, then the value is simply converted to float.
+    -Todd Hunter
+    """
+    bandwidth = str(bandwidth)
+    ghz = bandwidth.lower().find('ghz')
+    mhz = bandwidth.lower().find('mhz')
+    khz = bandwidth.lower().find('khz')
+    hz = bandwidth.lower().find('hz')
+    if (ghz>0):
+        bandwidth = 1e9*float(bandwidth[:ghz])
+    elif (mhz>0):
+        bandwidth = 1e6*float(bandwidth[:mhz])
+    elif (khz>0):
+        bandwidth = 1e3*float(bandwidth[:khz])
+    elif (hz>0):
+        bandwidth = float(bandwidth[:hz])
+    else:
+        bandwidth = float(bandwidth)
+    return(bandwidth)
 
 def channelSelectionRangesToIndexArray(selection, separator=';'):
     """
