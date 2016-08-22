@@ -44,7 +44,7 @@
 	<value>True</value>
     </param>
 
-    <param type="string" name="ocorr_mode" subparam="true">
+    <param type="string" name="ocorr_mode">
 	<description>ALMA default set to ca</description>
 	<value>ca</value>
     </param>
