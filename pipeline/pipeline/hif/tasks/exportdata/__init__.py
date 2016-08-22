@@ -17,4 +17,4 @@ qaadapter.registry.register_to_dataset_topic(exportdata.ExportDataResults)
 weblog.add_renderer(ExportData, 
                     basetemplates.T2_4MDetailsDefaultRenderer(uri='exportdata.mako',
                                                               description='Prepare pipeline data products for export'),
-                    group_by='ungrouped')                    
+                    group_by=weblog.UNGROUPED)

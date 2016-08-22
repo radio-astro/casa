@@ -18,4 +18,4 @@ from . import qa
 weblog.add_renderer(Hanning,
                     basetemplates.T2_4MDetailsDefaultRenderer(uri='hanning.mako',
                                                               description='VLA Hanning Smoothing'),
-                    group_by='ungrouped')
+                    group_by=weblog.UNGROUPED)

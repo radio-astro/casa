@@ -21,8 +21,8 @@ from . import hanning
 
 
 weblog.add_renderer(PlotSummary,  basetemplates.T2_4MDetailsDefaultRenderer(uri='plotsummary.mako',
-                                      description='VLA Plot Summary'), group_by='ungrouped')
+                                      description='VLA Plot Summary'), group_by=weblog.UNGROUPED)
 '''
 
-weblog.add_renderer(PlotSummary, renderer.T2_4MDetailsplotsummaryRenderer(always_rerender=False, uri='plotsummary.mako'), group_by='ungrouped')
+weblog.add_renderer(PlotSummary, renderer.T2_4MDetailsplotsummaryRenderer(always_rerender=False, uri='plotsummary.mako'), group_by=weblog.UNGROUPED)
 

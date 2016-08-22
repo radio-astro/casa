@@ -16,4 +16,4 @@ from . import sdcombine
 # 
 # qaadapter.registry.register_to_imaging_topic(imaging.SDImagingResults)
 
-weblog.add_renderer(SDMSImaging, renderer.T2_4MDetailsSingleDishImagingRenderer(always_rerender=False), group_by='ungrouped')
+weblog.add_renderer(SDMSImaging, renderer.T2_4MDetailsSingleDishImagingRenderer(always_rerender=False), group_by=weblog.UNGROUPED)

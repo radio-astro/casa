@@ -22,5 +22,5 @@ from . import qa
 #qaadapter.registry.register_to_dataset_topic(fluxboot.FluxbootResults)
 
 
-weblog.add_renderer(Solint, renderer.T2_4MDetailsSolintRenderer(), group_by='ungrouped')
-weblog.add_renderer(Fluxboot, renderer.T2_4MDetailsfluxbootRenderer(), group_by='ungrouped')
+weblog.add_renderer(Solint, renderer.T2_4MDetailsSolintRenderer(), group_by=weblog.UNGROUPED)
+weblog.add_renderer(Fluxboot, renderer.T2_4MDetailsfluxbootRenderer(), group_by=weblog.UNGROUPED)

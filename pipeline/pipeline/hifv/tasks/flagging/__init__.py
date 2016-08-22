@@ -38,19 +38,19 @@ from .targetflag import Targetflag
 #qaadapter.registry.register_to_dataset_topic(targetflag.TargetflagResults)
 
 
-weblog.add_renderer(FlagDeterVLA, renderer.T2_4MDetailsVLAAgentFlaggerRenderer(), group_by='ungrouped')
+weblog.add_renderer(FlagDeterVLA, renderer.T2_4MDetailsVLAAgentFlaggerRenderer(), group_by=weblog.UNGROUPED)
 
 weblog.add_renderer(FlagBadDeformatters, 
                     basetemplates.T2_4MDetailsDefaultRenderer(uri='flagbaddef.mako',
                                                               description='Flag bad deformatters'),
-                    group_by='ungrouped')
+                    group_by=weblog.UNGROUPED)
                                                                       
 weblog.add_renderer(Checkflag, 
                     basetemplates.T2_4MDetailsDefaultRenderer(uri='checkflag.mako',
                                                               description='Flag possible RFI on BP calibrator using rflag'),                                                                      
-                    group_by='ungrouped')
+                    group_by=weblog.UNGROUPED)
 
-#weblog.add_renderer(Targetflag, renderer.T2_4MDetailstargetflagRenderer(), group_by='ungrouped')
+#weblog.add_renderer(Targetflag, renderer.T2_4MDetailstargetflagRenderer(), group_by=weblog.UNGROUPED)
 
 weblog.add_renderer(Targetflag,  basetemplates.T2_4MDetailsDefaultRenderer(uri='targetflag.mako',
-                                      description='Targetflag'), group_by='ungrouped')
+                                      description='Targetflag'), group_by=weblog.UNGROUPED)

@@ -15,5 +15,5 @@ qaadapter.registry.register_to_imaging_topic(resultobjects.CleanResult)
 
 weblog.add_renderer(Clean,
                     renderer.T2_4MDetailsCleanRenderer(),
-                    group_by='ungrouped')
+                    group_by=weblog.UNGROUPED)
 

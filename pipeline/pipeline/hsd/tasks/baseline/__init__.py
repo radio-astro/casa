@@ -14,4 +14,4 @@ pipelineqa.registry.add_handler(qa.SDBaselineListQAHandler())
 #qaadapter.registry.register_to_calibration_topic(msbaseline.SDMSBaselineResults)
 qaadapter.registry.register_to_miscellaneous_topic(msbaseline.SDMSBaselineResults)
 
-weblog.add_renderer(SDMSBaseline, renderer.T2_4MDetailsSingleDishBaselineRenderer(), group_by='ungrouped')
+weblog.add_renderer(SDMSBaseline, renderer.T2_4MDetailsSingleDishBaselineRenderer(), group_by=weblog.UNGROUPED)

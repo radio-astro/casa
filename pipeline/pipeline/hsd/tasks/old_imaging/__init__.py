@@ -15,4 +15,4 @@ pipelineqa.registry.add_handler(qa.SDImagingVariableListQAHandler())
 qaadapter.registry.register_to_imaging_topic(imaging.SDImagingResults)
 qaadapter.registry.register_to_imaging_topic(scaling.IntensityScalingResults)
 
-weblog.add_renderer(SDImaging, renderer.T2_4MDetailsSingleDishImagingRenderer(always_rerender=False), group_by='ungrouped')
+weblog.add_renderer(SDImaging, renderer.T2_4MDetailsSingleDishImagingRenderer(always_rerender=False), group_by=weblog.UNGROUPED)

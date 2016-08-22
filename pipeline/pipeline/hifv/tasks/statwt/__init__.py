@@ -17,4 +17,4 @@ from . import qa
 weblog.add_renderer(Statwt, 
                     basetemplates.T2_4MDetailsDefaultRenderer(uri='statwt.mako',
                                                               description='Reweight visibilities'),
-                    group_by='ungrouped')
+                    group_by=weblog.UNGROUPED)

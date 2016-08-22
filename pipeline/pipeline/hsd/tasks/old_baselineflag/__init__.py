@@ -15,4 +15,4 @@ qaadapter.registry.register_to_flagging_topic(baselineflag.SDBLFlagResults)
 weblog.add_renderer(SDBLFlag, 
                     super_renderer.T2_4MDetailsDefaultRenderer(uri='hsd_blflag.mako', 
                                                                description='Flag data by Tsys, weather, and statistics of spectra'),
-                    group_by='ungrouped')
+                    group_by=weblog.UNGROUPED)

@@ -15,4 +15,4 @@ qaadapter.registry.register_to_imaging_topic(resultobjects.MakeImagesResult)
 
 weblog.add_renderer(MakeImages, 
                     clean_renderer.T2_4MDetailsTcleanRenderer(description='Calculate clean products'),
-                    group_by='ungrouped')
+                    group_by=weblog.UNGROUPED)

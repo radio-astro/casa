@@ -12,4 +12,4 @@ pipelineqa.registry.add_handler(qa.FindContQAHandler())
 pipelineqa.registry.add_handler(qa.FindContListQAHandler())
 qaadapter.registry.register_to_imaging_topic(resultobjects.FindContResult)
 
-weblog.add_renderer(FindCont, renderer.T2_4MDetailsFindContRenderer(), group_by='ungrouped')
+weblog.add_renderer(FindCont, renderer.T2_4MDetailsFindContRenderer(), group_by=weblog.UNGROUPED)

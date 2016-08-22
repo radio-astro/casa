@@ -12,4 +12,4 @@ from .msexportdata import SDMSExportData
 weblog.add_renderer(SDMSExportData, 
                     super_renderer.T2_4MDetailsDefaultRenderer(uri='exportdata.mako',
                                                                description='Prepare pipeline data products for export'),
-                    group_by='ungrouped')                 
+                    group_by=weblog.UNGROUPED)

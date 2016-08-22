@@ -14,4 +14,4 @@ from . import qa
 #pipelineqa.registry.add_handler(qa.semiFinalBPdcalsListQAHandler())
 #qaadapter.registry.register_to_dataset_topic(semiFinalBPdcalsResults)
 
-weblog.add_renderer(semiFinalBPdcals, renderer.T2_4MDetailssemifinalBPdcalsRenderer(), group_by='ungrouped')
+weblog.add_renderer(semiFinalBPdcals, renderer.T2_4MDetailssemifinalBPdcalsRenderer(), group_by=weblog.UNGROUPED)
