@@ -90,8 +90,7 @@ NullLogger nulllogger;
 
 // Local Functions
 namespace {
-inline casa::Vector<casa::uInt> getOffStateIdList(casa::String const &msName) {
-  casa::MeasurementSet ms(msName);
+inline casa::Vector<casa::uInt> getOffStateIdList(casa::MeasurementSet const &ms) {
   casa::String taql("SELECT FLAG_ROW FROM $1 WHERE UPPER(OBS_MODE) ~ m/^OBSERVE_TARGET#OFF_SOURCE/");
   casa::Table stateSel = casa::tableCommand(taql, ms.state());
   casa::Vector<casa::uInt> stateIdList = stateSel.rowNumbers();
@@ -177,10 +176,9 @@ private:
   casa::ROArrayColumn<casa::Float> dataCol_;
 };
 
-inline  casa::Int nominalDataDesc(casa::String const &msName, casa::Int const ant)
+inline  casa::Int nominalDataDesc(casa::MeasurementSet const &ms, casa::Int const ant)
 {
   casa::Int goodDataDesc = -1;
-  casa::MeasurementSet ms(msName);
   casa::ROScalarColumn<casa::Int> col(ms.spectralWindow(), "NUM_CHAN");
   casa::Vector<casa::Int> nchanList = col.getColumn();
   size_t numSpw = col.nrow();
@@ -311,12 +309,12 @@ inline casa::Vector<casa::Double> detectEdge(casa::Vector<casa::Double> timeList
   return edgeList;
 }
   
-inline casa::Vector<casa::String> detectRaster(casa::String const &msName,
+inline casa::Vector<casa::String> detectRaster(casa::MeasurementSet const &ms,
 					       casa::Int const ant,
 					       casa::Float const fraction,
 					       casa::Int const num)
 {
-  casa::Int dataDesc = nominalDataDesc(msName, ant);
+  casa::Int dataDesc = nominalDataDesc(ms, ant);
   debuglog << "nominal DATA_DESC_ID=" << dataDesc << debugpost;
   assert(dataDesc >= 0);
   if (dataDesc < 0) {
@@ -324,12 +322,12 @@ inline casa::Vector<casa::String> detectRaster(casa::String const &msName,
   }
 
   std::ostringstream oss;
-  oss << "SELECT FROM " << msName << " WHERE ANTENNA1 == " << ant
+  oss << "SELECT FROM $1 WHERE ANTENNA1 == " << ant
       << " && ANTENNA2 == " << ant << " && FEED1 == 0 && FEED2 == 0"
       << " && DATA_DESC_ID == " << dataDesc
       << " ORDER BY TIME";
   debuglog << "detectRaster: taql=" << oss.str() << debugpost;
-  casa::MeasurementSet msSel(casa::tableCommand(oss.str()));
+  casa::MeasurementSet msSel(casa::tableCommand(oss.str(), ms));
   casa::ROScalarColumn<casa::Double> timeCol(msSel, "TIME");
   casa::ROScalarColumn<casa::Double> intervalCol(msSel, "INTERVAL");
   casa::Vector<casa::Double> timeList = timeCol.getColumn();
@@ -901,6 +899,7 @@ void SingleDishSkyCal::applyCal2(vi::VisBuffer2 &vb, Cube<Complex> &Vout, Cube<F
   debuglog << "antenna1: " << vb.antenna1() << debugpost;
   debuglog << "antenna2: " << vb.antenna2() << debugpost;
   debuglog << "spw: " << vb.spectralWindows() << debugpost;
+  debuglog << "field: " << vb.fieldId() << debugpost;
 
   // References to VB2's contents' _data_
   Vector<Bool> flagRv(vb.flagRow());
@@ -989,10 +988,11 @@ void SingleDishSkyCal::selfGatherAndSolve(VisSet& vs, VisEquation& /*ve*/)
   initSolvePar();
 
   // Pick up OFF spectra using STATE_ID
+  MeasurementSet const &msIn = vs.iter().ms();
   debuglog << "configure data selection for specific calibration mode" << debugpost;
-  String taql = configureSelection(); 
+  String taql = configureSelection(msIn);
   debuglog << "taql = \"" << taql << "\"" << debugpost;
-  MeasurementSet msSel(tableCommand(taql, vs.iter().ms()));
+  MeasurementSet msSel(tableCommand(taql, msIn));
   debuglog << "msSel.nrow()=" << msSel.nrow() << debugpost;
   if (msSel.nrow() == 0) {
     throw AipsError("No reference integration in the data.");
@@ -1087,9 +1087,9 @@ SingleDishPositionSwitchCal::~SingleDishPositionSwitchCal()
   debuglog << "SingleDishPositionSwitchCal::~SingleDishPositionSwitchCal()" << debugpost;
 }
 
-String SingleDishPositionSwitchCal::configureSelection()
+String SingleDishPositionSwitchCal::configureSelection(MeasurementSet const &ms)
 {
-  Vector<uInt> stateIdList = getOffStateIdList(msName());
+  Vector<uInt> stateIdList = getOffStateIdList(ms);
   std::ostringstream oss;
   oss << "SELECT FROM $1 WHERE ANTENNA1 == ANTENNA2 && STATE_ID IN "
       << ::toString(stateIdList)
@@ -1150,7 +1150,7 @@ void SingleDishRasterCal::setSolve(const Record& solve)
   SolvableVisCal::setSolve(solve);
 }
   
-String SingleDishRasterCal::configureSelection()
+String SingleDishRasterCal::configureSelection(MeasurementSet const &ms)
 {
   debuglog << "SingleDishRasterCal::configureSelection" << debugpost;
   const Record specify;
@@ -1174,7 +1174,7 @@ String SingleDishRasterCal::configureSelection()
   //   delimiter = " || ";
   // }
   // use ANTENNA 0 for reference antenna
-  Vector<String> timeRangeList = detectRaster(msName(), 0, fraction_, numEdge_);
+  Vector<String> timeRangeList = detectRaster(ms, 0, fraction_, numEdge_);
   debuglog << "timeRangeList=" << ::toString(timeRangeList) << debugpost;
   oss << delimiter;
   oss << "(ANTENNA1 == ANTENNA2 && (";
@@ -1247,13 +1247,13 @@ SingleDishOtfCal::~SingleDishOtfCal()
   debuglog << "SingleDishOtfCal::~SingleDishOtfCal()" << debugpost;
 }
 
-String SingleDishOtfCal::configureSelection()
+String SingleDishOtfCal::configureSelection(MeasurementSet const &ms)
 {
-  PointingDirectionCalculator calc(msSel_);
+  PointingDirectionCalculator calc(ms);
   calc.setDirectionListMatrixShape(PointingDirectionCalculator::ROW_MAJOR);
 
   // Check the coordinates system type used to store the pointing measurements
-  const MSPointing& tbl_pointing = msSel_.pointing();
+  const MSPointing& tbl_pointing = ms.pointing();
   ROMSPointingColumns pointing_cols(tbl_pointing);
   const ROArrayMeasColumn< MDirection >& direction_cols =  pointing_cols.directionMeasCol();
   const MeasRef<MDirection>& direction_ref_frame = direction_cols.getMeasRef();
@@ -1276,16 +1276,16 @@ String SingleDishOtfCal::configureSelection()
   // MeasurementSet 2 specification / FIELD table:
   //   . FIELD_ID column is removed
   //   . FIELD table is directly indexed using the FIELD_ID value in MAIN
-  const MSField& tbl_field = msSel_.field();
+  const MSField& tbl_field = ms.field();
   const String &field_col_name_str = tbl_field.columnName(MSField::MSFieldEnums::SOURCE_ID);
   ROScalarColumn<Int> source_id_col(tbl_field, field_col_name_str);
-  const MSAntenna& tbl_antenna = msSel_.antenna();
+  const MSAntenna& tbl_antenna = ms.antenna();
   const String &col_name_str = tbl_antenna.columnName(MSAntenna::MSAntennaEnums::NAME);
   ScalarColumn<String> antenna_name(tbl_antenna,col_name_str);
-  const MSSpectralWindow& tbl_spectral_window = msSel_.spectralWindow();
+  const MSSpectralWindow& tbl_spectral_window = ms.spectralWindow();
 
   // make a map between SOURCE_ID and source NAME
-  const MSSource &tbl_source = msSel_.source();
+  const MSSource &tbl_source = ms.source();
   ROScalarColumn<Int> id_col(tbl_source, tbl_source.columnName(MSSource::MSSourceEnums::SOURCE_ID));
   ROScalarColumn<String> name_col(tbl_source, tbl_source.columnName(MSSource::MSSourceEnums::NAME));
   std::map<Int, String> source_map;

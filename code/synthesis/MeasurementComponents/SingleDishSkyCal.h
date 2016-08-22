@@ -315,7 +315,7 @@ protected:
   inline SkyCal<Float, Float> &engineF() { return (*engineF_[currSpw()]); }
 
   // arrange data selection according to calibration mode
-  virtual String configureSelection() = 0;
+  virtual String configureSelection(MeasurementSet const &ms) = 0;
 
   // current antenna
   Int currAnt_;
@@ -352,7 +352,7 @@ public:
   virtual String longTypeName() { return "SDSKY_PS (position switch sky subtraction)"; }
 
   // data selection for position switch calibration
-  virtual String configureSelection();
+  virtual String configureSelection(MeasurementSet const &ms);
 
 };
   
@@ -376,7 +376,7 @@ public:
   virtual void setSolve(const Record& solve);
   
   // data selection specific to otfraster mode
-  virtual String configureSelection();
+  virtual String configureSelection(MeasurementSet const &ms);
 
 private:
   // edge detection parameter for otfraster mode
@@ -401,7 +401,7 @@ public:
   virtual String longTypeName() { return "SDSKY_OTF (position switch sky subtraction specific to OTF fast scan)"; }
 
   // Data selection specific to otf mode
-  virtual String configureSelection();
+  virtual String configureSelection(MeasurementSet const &ms);
   virtual void setSolve(const Record& solve);
 
 private:
