@@ -232,7 +232,7 @@ class BaselineFitParamConfig(basetask.StandardTaskTemplate):
                     flaglist = [self._mask_to_masklist(tb.getcell('FLAG', row).astype(int))
                                 for row in rows]
     
-                    LOG.debug("Flag Mask = %s" % str(flaglist))
+                    #LOG.trace("Flag Mask = %s" % str(flaglist))
     
                 spectra[:,:edge[0],:] = 0.0
                 spectra[:,nchan-edge[1]:,:] = 0.0 
@@ -266,12 +266,12 @@ class BaselineFitParamConfig(basetask.StandardTaskTemplate):
                         row = rows[i]
                         idx = idxs[i]
                         LOG.trace('===== Processing at row = %s ====='%(row))
-                        nochange = datatable.tb2.getcell('NOCHANGE',idx)
-                        LOG.trace('row = %s, Flag = %s'%(row, nochange))
+                        #nochange = datatable.tb2.getcell('NOCHANGE',idx)
+                        #LOG.trace('row = %s, Flag = %s'%(row, nochange))
     
                         # mask lines
                         maxwidth = 1
-    #                     _masklist = masklist[i] 
+#                       _masklist = masklist[i] 
                         _masklist = list(masklist[i]) + flaglist[i][pol]
                         for [chan0, chan1] in _masklist:
                             if chan1 - chan0 >= maxwidth:
