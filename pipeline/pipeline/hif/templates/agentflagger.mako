@@ -203,7 +203,7 @@ mses = [m for m in flags.keys() if 'online' in flags[m] or 'template' in flags[m
 	<caption>Summary of flagged data. Each cell states the amount of data 
 	flagged as a fraction of the specified data selection, with the 
 	<em>Flagging Agent</em> columns giving this information per flagging agent.
-	<br>The percentages represent the additional data flagged by applying the next column's agent.
+	<br>The percentages in each successive column represent the additional data flagged by applying that column's agent (after the previous agents have been applied).
 	</caption>
 	<thead>
 		<tr>
