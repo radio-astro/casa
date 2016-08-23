@@ -1198,6 +1198,25 @@ class msmd_test(unittest.TestCase):
         self.assertRaises(Exception, md.namesforspws, 85)
         self.assertRaises(Exception, md.namesforspws, [0,85])
 
+    def test_spwsfornames(self):
+        """Test spwsfornames()"""
+        md = self.md
+        got = md.spwsfornames()
+        for k,v in got.iteritems():
+            if (k == ""):
+                self.assertEqual(len(v), 39)
+            elif k == 'BB_1#SQLD':
+                self.assertEqual(len(v), 1)
+                self.assertEqual(v[0], 3)
+            
+        got = md.spwsfornames("BB_1#SQLD")
+        self.assertEqual(len(got), 1)
+        v = got["BB_1#SQLD"]
+        self.assertEqual(len(v), 1)
+        self.assertEqual(v[0], 3)
+        got = md.spwsfornames("blah")
+        self.assertEqual(len(got), 0)
+
     def test_fieldsforsource(self):
         """Test fieldsforsource() and fieldsforsources()"""
         md = self.md

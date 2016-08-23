@@ -1089,7 +1089,7 @@ windows in the dataset and close the tool.
     # get the name for spws 8 and 2.
     spw_names = msmd.namesforspws([8, 2])
     # get all spw names
-    all_spw_names = namesforspws()
+    all_spw_names = msmd.namesforspws()
     msmd.done()
             </example>
         </method>
@@ -1978,6 +1978,35 @@ windows in the dataset and close the tool.
     # got all the spw IDs associated with all intents which contain 'WVR'
     scan_numbers = msmd.spwsforintent("*WVR*")
     msmd.done()
+    msmd.done()
+            </example>
+        </method>
+        
+        <method type="function" name="spwsfornames" direction="in">
+            <shortdescription>Get the IDs of the specified spw names.</shortdescription>
+             <input>
+                <param type="any" direction="in" name="spwids">
+                    <description>Names of the spws for which IDs are needed (string or string array). Unspecified will return all spw names.</description>
+                    <value type="string"/>
+                    <any type="variant" limittypes="string stringArray"/>
+                </param>
+            </input>
+            <returns type="record"/>
+            <description>
+                Get the IDs of the specified spw(s). Returns a dictionary where the keys
+                are the requested spectral window names that are present in the data set
+                and the values are arrays of the spectral window IDs corresponding to the
+                name. If a specified name is not present, a warning message is logged and
+                that name is not included in the returned dictionary. Specifying no names
+                results in a dictionary containing the name to spw ID mapping for the
+                entire data set.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the IDs for spws named "CO" and "HCN"
+    spw_ids = msmd.spwsfornames(["CO", "HCN"])
+    # get the complete spw name to ID map
+    spw_names_to_ids = msmd.spwsfornames()
     msmd.done()
             </example>
         </method>

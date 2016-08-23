@@ -1692,6 +1692,56 @@ record* msmetadata::spwsforfields() {
 	return nullptr;
 }
 
+record* msmetadata::spwsfornames(const variant& names) {
+    _FUNC(
+        variant::TYPE myType = names.type();
+        auto allNames = _msmd->getSpwNames();
+        set<string> spwNames;
+        if (
+            (myType == variant::STRING && names.toString().empty())
+            || myType == variant::BOOLVEC
+        ) {
+            spwNames.insert(allNames.begin(), allNames.end());
+        }
+        else if (myType == variant::STRING) {
+            spwNames.insert(names.toString());
+        }
+        else if (myType == variant::STRINGVEC) {
+            auto x = names.toStringVec();
+            spwNames.insert(x.begin(), x.end());
+        }
+        else if (names.size() != 0) {
+            ThrowCc(
+                "Unsupported type for spwids. It must be a "
+                "nonnegative integer or nonnegative integer array"
+            );
+        }
+        unique_ptr<record> rec(new record());
+        uInt id = 0;
+        for (const auto& name : allNames) {
+            if (
+                spwNames.find(name) != spwNames.end()
+            ) {
+                rec->insert(name, vector<int>(1, id));
+                spwNames.erase(name);
+            }
+            else if (rec->find(name) != rec->end()) {
+                auto v = rec->at(name).asIntVec();
+                v.push_back(id);
+                (*rec)[name] = v;
+            }
+            ++id;
+        }
+        for (const auto& name : spwNames) {
+            *_log << LogIO::WARN << "Specified spw named "
+                << name << " is not present in MS"
+                << LogIO::POST;
+        }
+        return rec.release();
+    )
+    return nullptr;
+}
+
 vector<int> msmetadata::spwsforscan(int scan, int obsid, int arrayid) {
 	_FUNC(
 		if (scan < 0) {
