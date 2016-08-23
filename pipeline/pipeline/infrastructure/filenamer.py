@@ -3,7 +3,7 @@ import os
 import shutil
 import string
 
-_valid_chars = "_.-+~%s%s" % (string.ascii_letters, string.digits)
+_valid_chars = "_.-+%s%s" % (string.ascii_letters, string.digits)
 
 _known_intents = {
     'BANDPASS': 'bp',
