@@ -12,11 +12,13 @@ import pipeline.infrastructure as infrastructure
 import pipeline.h.heuristics as heuristics
 from pipeline.domain.datatable import DataTableImpl as DataTable
 from .. import common
+from ..common import utils
 from . import rules
 
 NoData = common.NoData
 
-LOG = infrastructure.get_logger(__name__)
+_LOG = infrastructure.get_logger(__name__)
+LOG = utils.OnDemandStringParseLogger(_LOG)
 
 class DetectLineInputs(common.SingleDishInputs):
     def __init__(self, context, window=None, edge=None, broadline=None):
@@ -60,10 +62,10 @@ class DetectLineResults(common.SingleDishResults):
         if type(self.outcome) is types.DictType and self.outcome.has_key('datatable'):
             datatable = self.outcome.pop('datatable')
             start_time = time.time()
-            LOG.debug('Start exporting datatable (minimal): %s'%(start_time))
+            LOG.debug('Start exporting datatable (minimal): {}', start_time)
             datatable.exportdata(minimal=True)
             end_time = time.time()
-            LOG.debug('End exporting datatable (minimal): %s (%s sec)'%(end_time, end_time - start_time))
+            LOG.debug('End exporting datatable (minimal): {} ({} sec)', end_time, end_time - start_time)
         
     @property
     def signals(self):
@@ -133,14 +135,14 @@ class DetectLine(common.SingleDishTaskTemplate):
             return result
 
         LOG.info('Search regions for protection against the background subtraction...')
-        LOG.info('DetectLine: Processing %d spectra...' % nrow)
+        LOG.info('DetectLine: Processing {} spectra...', nrow)
 
         # Set edge mask region
         (EdgeL, EdgeR) = common.parseEdge(edge)
         Nedge = EdgeR + EdgeL
-        LOG.info('edge=%s'%(list(edge)))
-        LOG.info('EdgeL, EdgeR=%s, %s'%(EdgeL, EdgeR))
-        LOG.info('Nedge=%s'%(Nedge))
+        LOG.info('edge={}', edge)
+        LOG.info('EdgeL, EdgeR={}, {}', EdgeL, EdgeR)
+        LOG.info('Nedge={}', Nedge)
         if Nedge >= nchan:
             message = 'Error: Edge masked region too large...'
             LOG.error(message)
@@ -160,7 +162,7 @@ class DetectLine(common.SingleDishTaskTemplate):
         Thre = Threshold * self.ThresholdFactor
 
         # Create progress timer
-        Timer = common.ProgressTimer(80, nrow, LOG.level)
+        Timer = common.ProgressTimer(80, nrow, LOG.logger.level)
         # 100.0: minimum number of channels for binned spectrum to detect lines
         MinChanBinSp = 50.0
         TmpRange = [4**i for i in xrange(int(math.ceil(math.log(len(spectra[0])/MinChanBinSp)/math.log(4))))]
@@ -175,11 +177,11 @@ class DetectLine(common.SingleDishTaskTemplate):
             ProcStartTime = time.time()
             Protected = []
             if len(grid_table[row][6]) == 0:
-                LOG.debug('Row %d: No spectrum' % row)
+                LOG.debug('Row {}: No spectrum', row)
                 # No spectrum
                 Protected = [[-1, -1, 1]]
             else:
-                LOG.debug('Start Row %d' % (row))
+                LOG.debug('Start Row {}', row)
                 for [BINN, offset]  in BinningRange:
                     MinNchan = (MinFWHM-2) / BINN + 2
                     SP = self.SpBinning(spectra[row], BINN, offset)
@@ -211,9 +213,9 @@ class DetectLine(common.SingleDishTaskTemplate):
                                   grid_table[row][5], # DEC
                                   Protected]          # Protected Region
             ProcEndTime = time.time()
-            LOG.info('Channel ranges of detected lines for Row %s: %s' % (row, detect_signal[row][2]))
+            LOG.info('Channel ranges of detected lines for Row {}: {}', row, detect_signal[row][2])
             
-            LOG.debug('End Row %d: Elapsed Time=%.1f sec' % (row, (ProcEndTime - ProcStartTime)) )
+            LOG.debug('End Row {}: Elapsed Time={:.1} sec', row, (ProcEndTime - ProcStartTime))
         del Timer
 
         #LOG.debug('DetectSignal = %s'%(detect_signal))
@@ -266,8 +268,8 @@ class DetectLine(common.SingleDishTaskTemplate):
         MinFWHM = int(rules.LineFinderRule['MinFWHM'])
 
         LOG.trace('line detection parameters: ')
-        LOG.trace('threshold (S/N per channel)=%.1f,' % threshold \
-                       + 'channels, edges to be dropped=[%s, %s]' % (EdgeL, EdgeR) )
+        LOG.trace('threshold (S/N per channel)={}, channels, edges to be dropped=[{}, {}]', 
+                  threshold, EdgeL, EdgeR)
         line_ranges = self.line_finder(spectrum=spectrum,
                                        threshold=threshold, 
                                        tweak=True,
@@ -285,7 +287,7 @@ class DetectLine(common.SingleDishTaskTemplate):
             Width = line_ranges[y*2+1] - line_ranges[y*2] + 1
             ### 2011/05/16 allowance was moved to clustering analysis
             #allowance = int(Width/5)
-            LOG.debug('Ranges=%s, Width=%s' % (line_ranges[y*2:y*2+2], Width))
+            LOG.debug('Ranges={}, Width={}', line_ranges[y*2:y*2+2], Width)
             if Width >= MinFWHM and Width <= MaxFWHM and \
                line_ranges[y*2] > EdgeL and \
                line_ranges[y*2+1] < (nchan - 1 - EdgeR):

@@ -8,7 +8,8 @@ import pipeline.infrastructure.displays.singledish.sparsemap as sparsemap
 from pipeline.domain import DataTable
 from ..common import utils 
 
-LOG = infrastructure.get_logger(__name__)
+_LOG = infrastructure.get_logger(__name__)
+LOG = utils.OnDemandStringParseLogger(_LOG)
 
 def analyze_plot_table(context, dtrows, ms, antid, spwid, plot_table):
     #datatable = context.observing_run.datatable_instance
@@ -16,14 +17,17 @@ def analyze_plot_table(context, dtrows, ms, antid, spwid, plot_table):
     num_dec = plot_table[-1][1] + 1
     num_ra = plot_table[-1][0] + 1
     num_plane = num_rows / (num_dec * num_ra)
-    LOG.debug('num_ra=%s, num_dec=%s, num_plane=%s, num_rows=%s'%(num_ra,num_dec,num_plane,num_rows))
+    LOG.debug('num_ra={}, num_dec={}, num_plane={}, num_rows={}',
+              num_ra,num_dec,num_plane,num_rows)
     each_grid = (range(i*num_plane, (i+1)*num_plane) for i in xrange(num_dec * num_ra))
     rowlist = [{} for i in xrange(num_dec * num_ra)]
     for row_index, each_plane in enumerate(each_grid):
         def g():
             for plot_table_rowid in each_plane:
                 plot_table_row = plot_table[plot_table_rowid]
-                LOG.debug('Process row %s: ra=%s, dec=%s'%(plot_table_rowid, plot_table_row[2], plot_table_row[3]))
+                LOG.debug('Process row {}: ra={}, dec={}',
+                          plot_table_rowid, plot_table_row[2],
+                          plot_table_row[3])
                 for i in plot_table_row[-1]:
                     #mypol = datatable.tb1.getcell('POL', i)
                     #LOG.trace('ID %s POL %s'%(i, mypol))
@@ -31,7 +35,7 @@ def analyze_plot_table(context, dtrows, ms, antid, spwid, plot_table):
                     
                     # MS stores multiple polarization components in one cell 
                     # so it is not necessary to check polarization id
-                    LOG.trace('Adding %s to dataids'%(i))
+                    LOG.trace('Adding {} to dataids', i)
                     yield i
         dataids = numpy.fromiter(g(), dtype=int)
         if len(dataids) > 0:
@@ -45,7 +49,8 @@ def analyze_plot_table(context, dtrows, ms, antid, spwid, plot_table):
         rowlist[row_index].update(
                 {"RAID": raid, "DECID": decid, "RA": ra, "DEC": dec,
                  "IDS": dataids, "MEDIAN_INDEX": midx})
-        LOG.trace('RA %s DEC %s: dataids=%s'%(raid, decid, dataids))
+        LOG.trace('RA {} DEC {}: dataids={}',
+                  raid, decid, dataids)
         
     refpix_list = [0,0]
     refval_list = plot_table[num_ra * num_plane -1][2:4]
@@ -62,18 +67,18 @@ def analyze_plot_table(context, dtrows, ms, antid, spwid, plot_table):
             beam_size = casatools.quanta.convert(reference_data.beam_sizes[antid][spwid], outunit='deg')['value']
             increment_ra = beam_size / dec_corr
     if num_dec > 1:
-        LOG.trace('num_dec > 1 (%s)'%(num_dec))
+        LOG.trace('num_dec > 1 ({})', num_dec)
         increment_dec = plot_table[num_plane * num_ra][3] - plot_table[0][3]
     else:
         LOG.trace('num_dec is 1')
         dec = plot_table[0][3]
         dec_corr = numpy.cos(dec * casatools.quanta.constants('pi')['value'] / 180.0)
-        LOG.trace('declination correction factor is %s'%(dec_corr))
+        LOG.trace('declination correction factor is {}', dec_corr)
         increment_dec = increment_ra * dec_corr
     increment_list = [-increment_ra, increment_dec]
-    LOG.debug('refpix_list=%s'%(refpix_list))
-    LOG.debug('refval_list=%s'%(refval_list))
-    LOG.debug('increment_list=%s'%(increment_list))
+    LOG.debug('refpix_list={}', refpix_list)
+    LOG.debug('refval_list={}', refval_list)
+    LOG.debug('increment_list={}', increment_list)
     
     return num_ra, num_dec, num_plane, refpix_list, refval_list, increment_list, rowlist 
 
@@ -131,7 +136,8 @@ def get_data(infile, dtrows, num_ra, num_dec, num_chan, num_pol, rowlist, rowmap
                 midx = d['MEDIAN_INDEX']
                 median_row = dtrows[idxs[midx]]
                 mapped_row = rowmap[median_row]
-                LOG.debug('median row for (%s,%s) is %s (mapped to %s)'%(ix, iy, median_row, mapped_row))
+                LOG.debug('median row for ({},{}) is {} (mapped to {})',
+                          ix, iy, median_row, mapped_row)
                 nrow += len(idxs)
                 this_data = tb.getcell(colname, mapped_row)
                 this_mask = tb.getcell('FLAG', mapped_row)
@@ -142,22 +148,23 @@ def get_data(infile, dtrows, num_ra, num_dec, num_chan, num_pol, rowlist, rowmap
                 rows.sort()
                 for row in rows:
                     mapped_row = rowmap[row]
-                    LOG.debug('row %s: mapped_row %s'%(row, mapped_row))
+                    LOG.debug('row {}: mapped_row {}', row, mapped_row)
                     this_data = tb.getcell(colname, mapped_row)
                     this_mask = tb.getcell('FLAG', mapped_row)
-                    LOG.trace('this_mask.shape=%s'%(list(this_mask.shape)))
-                    LOG.trace('all(this_mask==True) = %s'%(numpy.all(this_mask==True)))
+                    LOG.trace('this_mask.shape={}', this_mask.shape)
+                    LOG.trace('all(this_mask==True) = {}',
+                              numpy.all(this_mask==True))
                     binary_mask = numpy.asarray(numpy.logical_not(this_mask), dtype=int)
                     integrated_data += this_data.real * binary_mask 
                     num_accumulated += binary_mask 
             else:
-                LOG.debug('no data is available for (%s,%s)'%(ix,iy))
+                LOG.debug('no data is available for ({},{})', ix,iy)
     integrated_data_masked = numpy.ma.masked_array(integrated_data, num_accumulated == 0)
     integrated_data_masked /= num_accumulated
     map_data_masked = numpy.ma.masked_array(map_data, map_mask)
-    LOG.trace('integrated_data=%s'%(integrated_data))
-    LOG.trace('num_accumulated=%s'%(num_accumulated))
-    LOG.trace('map_data.shape=%s'%(list(map_data.shape)))
+    LOG.trace('integrated_data={}', integrated_data)
+    LOG.trace('num_accumulated={}', num_accumulated)
+    LOG.trace('map_data.shape={}', map_data.shape)
 
     return integrated_data_masked, map_data_masked
 
@@ -221,10 +228,11 @@ def plot_profile_map_with_fit(context, ms, antid, spwid, plot_table, prefit_data
     nchan = spw.num_channels
     data_desc = ms.get_data_description(spw=spw)
     npol = data_desc.num_polarizations
-    LOG.debug('nchan=%s'%(nchan))
+    LOG.debug('nchan={}', nchan)
     
     frequency = numpy.fromiter((spw.channels.chan_freqs[i] * 1.0e-9 for i in xrange(nchan)), dtype=numpy.float64) # unit in GHz
-    LOG.debug('frequency=%s~%s (nchan=%s)'%(frequency[0], frequency[-1], len(frequency)))
+    LOG.debug('frequency={}~{} (nchan={})',
+              frequency[0], frequency[-1], len(frequency))
 
     if rowmap is None:
         rowmap = utils.make_row_map(ms, postfit_data)

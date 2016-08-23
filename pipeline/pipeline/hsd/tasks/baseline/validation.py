@@ -12,8 +12,11 @@ import pipeline.infrastructure as infrastructure
 from pipeline.domain.datatable import DataTableImpl as DataTable
 from . import rules
 from .. import common
+from ..common import utils
 
-LOG = infrastructure.get_logger(__name__)
+#LOG = infrastructure.get_logger(__name__)
+_LOG = infrastructure.get_logger(__name__)
+LOG = utils.OnDemandStringParseLogger(_LOG)
 
 def ValidationFactory(pattern):
     if pattern == 'RASTER':
@@ -120,7 +123,7 @@ class ValidateLineSinglePointing(common.SingleDishTaskTemplate):
            [LineCenter, LineWidth, Validity]  OK: Validity = True; NG: Validity = False
         """
         window = self.inputs.window
-        LOG.debug('window=%s'%(window))
+        LOG.debug('window={}', window)
         
         if datatable is None:
             LOG.debug('#PNP# instantiate local datatable')
@@ -331,7 +334,7 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
         #    fp.writelines('%d %f %f %f %f %d %d\n' % (Region[i][0],Region[i][1],Region[i][2],Region[i][3],Region[i][4],Region[i][5],Region[i][6]))
         #fp.close()
         del dummy
-        LOG.debug('Npos = %s' % Npos)
+        LOG.debug('Npos = {}', Npos)
         # 2010/6/9 for non-detection
         if Npos == 0 or len(Region2) == 0: 
             outcome = {'lines': [],
@@ -366,7 +369,7 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
         ndec = 2 * (int((wdec/2.0 - grid_dec/2.0)/grid_dec) + 1) + 1
         x0 = cra - grid_ra/2.0 - grid_ra*(nra-1)/2.0
         y0 = cdec - grid_dec/2.0 - grid_dec*(ndec-1)/2.0
-        LOG.debug('Grid = %d x %d\n' % (nra, ndec))
+        LOG.debug('Grid = {} x {}\n', nra, ndec)
         self.cluster_info['grid'] = {}
         self.cluster_info['grid']['ra_min'] = x0
         self.cluster_info['grid']['dec_min'] = y0
@@ -382,7 +385,7 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
             Grid2SpectrumID[int((PosList[0][i] - x0)/grid_ra)][int((PosList[1][i] - y0)/grid_dec)].append(i)
 
         ProcEndTime = time.time()
-        LOG.info('Clustering: Initialization End: Elapsed time = %s sec' % (ProcEndTime - ProcStartTime))
+        LOG.info('Clustering: Initialization End: Elapsed time = {} sec', ProcEndTime - ProcStartTime)
 
 
         ######## Clustering: K-mean Stage ########
@@ -393,14 +396,14 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
 
         # Bestlines: [[center, width, T/F],[],,,[]]
         clustering_algorithm = self.inputs.clusteringalgorithm
-        LOG.debug('clustering algorithm is \'%s\''%(clustering_algorithm))
+        LOG.debug('clustering algorithm is \'{}\'', clustering_algorithm)
         if clustering_algorithm == 'kmean':
             (Ncluster, Bestlines, BestCategory, Region) = self.clustering_kmean(Region, Region2)
         else:
             (Ncluster, Bestlines, BestCategory, Region) = self.clustering_hierarchy(Region, Region2, rules.ClusterRule['ThresholdHierarchy'])
 
         ProcEndTime = time.time()
-        LOG.info('K-mean Cluster Analaysis End: Elapsed time = %s sec' % (ProcEndTime - ProcStartTime))
+        LOG.info('K-mean Cluster Analaysis End: Elapsed time = {} sec', (ProcEndTime - ProcStartTime))
 
         # Sort lines and Category by LineCenter: lines[][0]
         LineIndex = numpy.argsort([line[0] for line in Bestlines[:Ncluster]])
@@ -427,7 +430,7 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
         (GridCluster, GridMember) = self.detection_stage(Ncluster, nra, ndec, x0, y0, grid_ra, grid_dec, category, Region, detect_signal)
 
         ProcEndTime = time.time()
-        LOG.info('Clustering: Detection Stage End: Elapsed time = %s sec' % (ProcEndTime - ProcStartTime))
+        LOG.info('Clustering: Detection Stage End: Elapsed time = {} sec', (ProcEndTime - ProcStartTime))
 
         ######## Clustering: Validation Stage ########
         ProcStartTime = time.time()
@@ -436,7 +439,7 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
         (GridCluster, GridMember, lines) = self.validation_stage(GridCluster, GridMember, lines)
         
         ProcEndTime = time.time()
-        LOG.info('Clustering: Validation Stage End: Elapsed time = %s sec' % (ProcEndTime - ProcStartTime))
+        LOG.info('Clustering: Validation Stage End: Elapsed time = {} sec', (ProcEndTime - ProcStartTime))
         ######## Clustering: Smoothing Stage ########
         # Rating:  [0.0, 0.4, 0.5, 0.4, 0.0]
         #          [0.4, 0.7, 1.0, 0.7, 0.4]
@@ -451,7 +454,7 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
         (GridCluster, lines) = self.smoothing_stage(GridCluster, lines)
 
         ProcEndTime = time.time()
-        LOG.info('Clustering: Smoothing Stage End: Elapsed time = %s sec' % (ProcEndTime - ProcStartTime))
+        LOG.info('Clustering: Smoothing Stage End: Elapsed time = {} sec', (ProcEndTime - ProcStartTime))
         
         ######## Clustering: Final Stage ########
         ProcStartTime = time.time()
@@ -460,7 +463,7 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
         (RealSignal, lines, channelmap_range) = self.final_stage(GridCluster, GridMember, Region, Region2, lines, category, grid_ra, grid_dec, broad_component, xorder, yorder, x0, y0, Grid2SpectrumID, index_list, PosList)
 
         ProcEndTime = time.time()
-        LOG.info('Clustering: Final Stage End: Elapsed time = %s sec' % (ProcEndTime - ProcStartTime))
+        LOG.info('Clustering: Final Stage End: Elapsed time = {} sec', (ProcEndTime - ProcStartTime))
 
         # Merge masks if possible
         ProcStartTime = time.time()
@@ -511,7 +514,7 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                 datatable.putcell('NOCHANGE',row,-1)
         del GridCluster, RealSignal
         ProcEndTime = time.time()
-        LOG.info('Clustering: Merging End: Elapsed time = %s sec' % (ProcEndTime - ProcStartTime))
+        LOG.info('Clustering: Merging End: Elapsed time = {} sec', (ProcEndTime - ProcStartTime))
         
         outcome = {'lines': lines,
                    'channelmap_range': channelmap_range,
@@ -538,10 +541,10 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
         # Region = [[row, chan0, chan1, RA, DEC, flag, Binning],[],[],,,[]]
         # Region2 = [[Width, Center],[],[],,,[]]
         MedianWidth = numpy.median(Region2[:,0])
-        LOG.trace('MedianWidth = %s' % MedianWidth)
+        LOG.trace('MedianWidth = {}', MedianWidth)
 
         MaxCluster = int(rules.ClusterRule['MaxCluster'])
-        LOG.info('Maximum number of clusters (MaxCluster) = %s' % MaxCluster)
+        LOG.info('Maximum number of clusters (MaxCluster) = {}', MaxCluster)
 
         # Determin the optimum number of clusters
         BestScore = -1.0
@@ -562,14 +565,14 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                 # codebook = [[clstCentX, clstCentY],[clstCentX,clstCentY],,[]] len=Ncluster
                 # diff <= distortion
                 NclusterNew = 0
-                LOG.trace('codebook=%s'%(codebook))
+                LOG.trace('codebook={}', codebook)
                 # Do iteration until no merging of clusters to be found
                 while(NclusterNew != len(codebook)):
                     category, distance = VQ.vq(Region2, codebook)
                     # category = [c0, c0, c1, c2, c0,,,] c0,c1,c2,,, are clusters which each element belongs to
                     # category starts with 0
                     # distance = [d1, d2, d3,,,,,] distance from belonging cluster center
-                    LOG.trace('Cluster Category&Distance %s, distance = %s' % (category, distance))
+                    LOG.trace('Cluster Category&Distance {}, distance = {}', category, distance)
 
                     # remove empty line in codebook
                     codebook = codebook.take([x for x in xrange(0,len(codebook)) 
@@ -587,7 +590,7 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                         Stddev = ValueList.std()
                         Threshold = ValueList.mean() + Stddev * self.nsigma
                         del ValueList
-                        LOG.trace('Cluster Clipping Threshold = %s, Stddev = %s' % (Threshold, Stddev))
+                        LOG.trace('Cluster Clipping Threshold = {}, Stddev = {}', Threshold, Stddev)
                         for i in ((distance * (category == Nc)) > Threshold).nonzero()[0]:
                             Region[i][5] = 0 # set flag to 0
                             Outlier += 1.0
@@ -599,13 +602,13 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                         median_props = numpy.median(properties, axis=0)
                         lines.append([median_props[1], median_props[0], True, MaxDistance])
                     MemberRate = (len(Region) - Outlier)/float(len(Region))
-                    LOG.trace('lines = %s, MemberRate = %f' % (lines, MemberRate))
+                    LOG.trace('lines = {}, MemberRate = {}', lines, MemberRate)
 
                     # 2010/6/15 Plot the score along the number of the clusters
                     ListNcluster.append(Ncluster)
                     Score = self.clustering_kmean_score(Region, MedianWidth, NclusterNew, MemberRate, distance)
                     ListScore.append(Score)
-                    LOG.debug('NclusterNew = %d, Score = %f' % (NclusterNew, Score))
+                    LOG.debug('NclusterNew = {}, Score = {}', NclusterNew, Score)
                     if BestScore < 0 or Score < BestScore:
                         BestNcluster = NclusterNew
                         BestScore = Score
@@ -615,18 +618,18 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                         Bestlines = lines[:]
 
             ListBestScore.append(min(ListScore[index0:]))
-            LOG.debug('Ncluster = %d, BestScore = %f' % (NclusterNew, ListBestScore[-1]))
+            LOG.debug('Ncluster = {}, BestScore = {}', NclusterNew, ListBestScore[-1])
             # iteration end if Score(N) < Score(N+1),Score(N+2),Score(N+3)
             if len(ListBestScore) > 3 and \
                ListBestScore[-4] <= ListBestScore[-3] and \
                ListBestScore[-4] <= ListBestScore[-2] and \
                ListBestScore[-4] <= ListBestScore[-1]:
-                LOG.info('Determined the Number of Clusters to be %d' % (BestNcluster))
+                LOG.info('Determined the Number of Clusters to be {}', BestNcluster)
                 converged = True
                 break
 
         if converged is False:
-            LOG.warn('Clustering analysis not converged. Number of clusters may be greater than upper limit (MaxCluster=%s)'%(MaxCluster))
+            LOG.warn('Clustering analysis not converged. Number of clusters may be greater than upper limit (MaxCluster={})', MaxCluster)
 
         self.cluster_info['cluster_score'] = [ListNcluster, ListScore]
         self.cluster_info['detected_lines'] = Region2
@@ -634,8 +637,8 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
         self.cluster_info['cluster_scale'] = self.CLUSTER_WHITEN
         #SDP.ShowClusterScore(ListNcluster, ListScore, ShowPlot, FigFileDir, FigFileRoot)
         #SDP.ShowClusterInchannelSpace(Region2, Bestlines, self.CLUSTER_WHITEN, ShowPlot, FigFileDir, FigFileRoot)
-        LOG.info('Final: Ncluster = %s, Score = %s, lines = %s' % (BestNcluster, BestScore, Bestlines))
-        LOG.debug('Category = %s, CodeBook = %s' % (category, BestCodebook))
+        LOG.info('Final: Ncluster = {}, Score = {}, lines = {}', BestNcluster, BestScore, Bestlines)
+        LOG.debug('Category = {}, CodeBook = {}', category, BestCodebook)
 
         return (BestNcluster, Bestlines, BestCategory, BestRegion)
 
@@ -722,7 +725,7 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
         Bestlines = []
         for j in range(Ncluster):
             Bestlines.append([Range[j][1], Range[j][0], True, Range[j][4]])
-        LOG.info('Final: Ncluster = %s, lines = %s' % (Ncluster, Bestlines))
+        LOG.info('Final: Ncluster = {}, lines = {}', Ncluster, Bestlines)
 
         self.cluster_info['cluster_score'] = [[1,2,3,4,5], [1,2,3,4,5]]
         self.cluster_info['detected_lines'] = Region2
@@ -898,9 +901,9 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
         #                if GridClusterWithBinning[i][l][j][k] > m: m = GridClusterWithBinning[i][l][j][k]
         #            GridCluster[i][j][k] = m
 
-        LOG.trace('GridClusterWithBinning = %s' % GridClusterWithBinning)
-        LOG.trace('GridCluster = %s' % GridCluster)
-        LOG.trace('GridMember = %s' % GridMember)
+        LOG.trace('GridClusterWithBinning = {}', GridClusterWithBinning)
+        LOG.trace('GridCluster = {}', GridCluster)
+        LOG.trace('GridMember = {}', GridMember)
         del GridClusterWithBinning
         # 2013/05/29 TN
         # cluster_flag is data for plotting clustering analysis results.
@@ -944,8 +947,8 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
         BinningVariation = 1 + int(math.ceil(math.log(self.nchan/MinChanBinSp)/math.log(4)))
 
         for Nc in range(Ncluster):
-            LOG.trace('GridCluster[Nc]: %s' % GridCluster[Nc])
-            LOG.trace('Gridmember: %s' % GridMember)
+            LOG.trace('GridCluster[Nc]: {}', GridCluster[Nc])
+            LOG.trace('Gridmember: {}', GridMember)
             for x in range(nra):
                 for y in range(ndec):
                     if GridMember[x][y] == 0: GridCluster[Nc][x][y] = 0.0
@@ -960,8 +963,8 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
 
         threshold = [self.Valid, self.Marginal, self.Questionable]
         self.__update_cluster_flag('validation', GridCluster, threshold, 10)
-        LOG.trace('GridCluster %s' % GridCluster)
-        LOG.trace('GridMember %s' % GridMember)
+        LOG.trace('GridCluster {}', GridCluster)
+        LOG.trace('GridMember {}', GridMember)
         self.GridClusterValidation = GridCluster.copy()
         
         return (GridCluster, GridMember, lines)
@@ -976,8 +979,8 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
         # Rating = 1.0 / (Dx**2 + Dy**2)**(0.5) : if (Dx, Dy) == (0, 0) rating = 6.0
         (Ncluster,nra,ndec) = GridCluster.shape
         GridScore = numpy.zeros((2, nra, ndec), dtype=numpy.float32)
-        LOG.trace('GridCluster = %s' % GridCluster)
-        LOG.trace('lines = %s' % lines)
+        LOG.trace('GridCluster = {}', GridCluster)
+        LOG.trace('lines = {}', lines)
         for Nc in xrange(Ncluster):
             if lines[Nc][2] != False:
                 GridScore[:] = 0.0
@@ -1019,15 +1022,15 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                         #               else: Rating = 1.0 / sqrt(dx*dx + dy*dy)
                         #               GridScore[0][x][y] += Rating * GridCluster[Nc][nx][ny]
                         #               GridScore[1][x][y] += Rating
-                LOG.trace('Score :  GridScore[%s][0] = %s' % (Nc, GridScore[0]))
-                LOG.trace('Rating:  GridScore[%s][1] = %s' % (Nc, GridScore[1]))
+                LOG.trace('Score :  GridScore[{}][0] = {}', Nc, GridScore[0])
+                LOG.trace('Rating:  GridScore[{}][1] = {}', Nc, GridScore[1])
                 GridCluster[Nc] = GridScore[0] / GridScore[1]
             if ((GridCluster[Nc] > self.Questionable)*1).sum() < 0.1: lines[Nc][2] = False
 
         threshold = [self.Valid, self.Marginal, self.Questionable]
         self.__update_cluster_flag('smoothing', GridCluster, threshold, 100)
-        LOG.trace('threshold = %s' % threshold)
-        LOG.trace('GridCluster = %s' % GridCluster)
+        LOG.trace('threshold = {}', threshold)
+        LOG.trace('GridCluster = {}', GridCluster)
         
         return (GridCluster, lines)
 
@@ -1038,9 +1041,9 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
         xorder0 = xorder
         yorder0 = yorder
 
-        LOG.trace('GridCluster = %s' % GridCluster)
-        LOG.trace('GridMember = %s' % GridMember)
-        LOG.trace('lines = %s' % lines)
+        LOG.trace('GridCluster = {}', GridCluster)
+        LOG.trace('GridMember = {}', GridMember)
+        LOG.trace('lines = {}', lines)
 
         # Dictionary for final output
         RealSignal = {}
@@ -1048,7 +1051,7 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
         #HalfGrid = (grid_ra ** 2 + grid_dec ** 2) ** 0.5 / 2.0
         HalfGrid = 0.5 * sqrt(grid_ra*grid_ra + grid_dec*grid_dec)
 
-        LOG.info('Ncluster=%s'%(Ncluster))
+        LOG.info('Ncluster={}', Ncluster)
         
         MinFWHM = self.MinFWHM
         MaxFWHM = self.MaxFWHM
@@ -1060,8 +1063,8 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
 
         # Clean isolated grids
         for Nc in xrange(Ncluster):
-            LOG.trace('------00------ Exec for Nth Cluster: Nc=%d' % Nc)
-            LOG.trace('lines[Nc] = %s' % lines[Nc])
+            LOG.trace('------00------ Exec for Nth Cluster: Nc={}', Nc)
+            LOG.trace('lines[Nc] = {}', lines[Nc])
             #print '\nNc=', Nc
             if lines[Nc][2] != False:
                 Plane = (GridCluster[Nc] > self.Marginal) * 1
@@ -1132,7 +1135,7 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                 ratio = rules.ClusterRule['BlurRatio']
                 # Set-up SubCluster
                 for n in xrange(len(Nmember)):
-                    LOG.trace('------01------ n=%d' % n)
+                    LOG.trace('------01------ n={}', n)
                     SubPlane = numpy.zeros((nra, ndec), dtype=numpy.float32)
                     #xlist = []
                     #ylist = []
@@ -1158,23 +1161,23 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                                 kernel[x][y] = 1
                     BlurPlane = (convolve2d(SubPlane, kernel) > self.Marginal) * 1
                     ValidPlane = (SubPlane > self.Valid) * 1
-                    LOG.trace('GridCluster.shape = %s' % list(GridCluster.shape))
-                    LOG.trace('Plane.shape = %s' % list(Plane.shape))
-                    LOG.trace('SubPlane.shape = %s' % list(SubPlane.shape))
-                    LOG.trace('BlurPlane.shape = %s' % list(BlurPlane.shape))
+                    LOG.trace('GridCluster.shape = {}', list(GridCluster.shape))
+                    LOG.trace('Plane.shape = {}', list(Plane.shape))
+                    LOG.trace('SubPlane.shape = {}', list(SubPlane.shape))
+                    LOG.trace('BlurPlane.shape = {}', list(BlurPlane.shape))
                     for x in xrange(len(Plane)):
-                        LOG.trace(' %d : %s' % (x, list(Plane[x])))
+                        LOG.trace(' {} : {}', x, list(Plane[x]))
                     for x in xrange(len(BlurPlane)):
-                        LOG.trace(' %d : %s' % (x, list(BlurPlane[x])))
+                        LOG.trace(' {} : {}', x, list(BlurPlane[x]))
                     for x in xrange(len(ValidPlane)):
-                        LOG.trace(' %d : %s' % (x, list(ValidPlane[x])))
+                        LOG.trace(' {} : {}', x, list(ValidPlane[x]))
 
-                    LOG.trace('ValidPlane %s' % ValidPlane)
-                    LOG.trace('Plane %s' % Plane)
-                    LOG.trace('SubPlane %s' % SubPlane)
-                    LOG.trace('BlurPlane %s' % BlurPlane)
-                    LOG.trace('Original %s' % Original)
-                    LOG.trace('GridClusterV %s' % self.GridClusterValidation[Nc])
+                    LOG.trace('ValidPlane {}', ValidPlane)
+                    LOG.trace('Plane {}', Plane)
+                    LOG.trace('SubPlane {}', SubPlane)
+                    LOG.trace('BlurPlane {}', BlurPlane)
+                    LOG.trace('Original {}', Original)
+                    LOG.trace('GridClusterV {}', self.GridClusterValidation[Nc])
                     # 2D fit for each Plane
                     # Use the data for fit if GridCluster[Nc][x][y] > self.Valid
                     # Not use for fit but apply the value at the border if GridCluster[Nc][x][y] > self.Marginal
@@ -1197,7 +1200,7 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                     if xorder < 0: xorder0 = min(xlen-1-numpy.sum((self.GridClusterValidation[Nc]<0.5)*1, axis=1).min(), 5)
                     if yorder < 0: yorder0 = min(ylen-1-numpy.sum((self.GridClusterValidation[Nc]<0.5)*1, axis=0).min(), 5)
 
-                    LOG.trace('(X,Y)order, order0 = (%d, %d) (%d, %d)' % (xorder, yorder, xorder0, yorder0))
+                    LOG.trace('(X,Y)order, order0 = ({}, {}) ({}, {})', xorder, yorder, xorder0, yorder0)
 
                     # clear Flag
                     for i in xrange(len(category)): Region[i][5] = 1
@@ -1217,16 +1220,16 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                         FitData = []
                         ### 2011/05/15 One parameter (Width, Center) for each spectra
                         #Region format:([row, line[0], line[1], detect_signal[row][0], detect_signal[row][1], flag])
-                        LOG.trace('------02-1---- category=%s, len(category)=%s, Nc=%s' % (category, len(category), Nc))
+                        LOG.trace('------02-1---- category={}, len(category)={}, Nc={}', category, len(category), Nc)
                         #LOG.trace('------02-2---- Region=%s' % Region)
                         for i in xrange(len(category)):
-                            LOG.trace('category[i], i, Nc = %s, %s, %s' % (category[i], i, Nc))
+                            LOG.trace('category[i], i, Nc = {}, {}, {}', category[i], i, Nc)
                             if category[i] == Nc:
-                                LOG.trace('Subplane=%s' % SubPlane[int((Region[i][3] - x0)/grid_ra)][int((Region[i][4] - y0)/grid_dec)])
+                                LOG.trace('Subplane={}', SubPlane[int((Region[i][3] - x0)/grid_ra)][int((Region[i][4] - y0)/grid_dec)])
                         dummy = [tuple(Region[i][:5]) for i in xrange(len(category))
                                  if category[i] == Nc and Region[i][5] == 1 and SubPlane[int((Region[i][3] - x0)/grid_ra)][int((Region[i][4] - y0)/grid_dec)] > self.Valid]
-                        LOG.trace('------02-3---- dummy=%s' % dummy)
-                        LOG.trace('------02-4----- len(dummy)=%d' % len(dummy))
+                        LOG.trace('------02-3---- dummy={}', dummy)
+                        LOG.trace('------02-4----- len(dummy)={}', len(dummy))
                         ###2014/11/12 in case of len(dummy)==0
                         if len(dummy) == 0:
                             SingularMatrix = False
@@ -1245,8 +1248,8 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                         # Instantiate SVD solver
                         solver = SVDSolver2D(xorder0, yorder0)
                         for iteration in xrange(3):
-                            LOG.trace('------03------ iteration=%d' % iteration)
-                            LOG.trace('2D Fit Iteration = %d' % iteration)
+                            LOG.trace('------03------ iteration={}', iteration)
+                            LOG.trace('2D Fit Iteration = {}', iteration)
 
                             ### Commented out three lines 2011/05/15
                             ### 2015/8/11
@@ -1263,7 +1266,7 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                             #    loop. Exit the loop whenever SingularMatrix 
                             #    is set to False. See code below.
                             #if len(FitData) == 0 or SingularMatrix: break
-                            LOG.trace('FitData = %s' % FitData)
+                            LOG.trace('FitData = {}', FitData)
 
                             # effective components of FitData
                             effective = [i for i in xrange(len(FitData)) 
@@ -1279,16 +1282,16 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                                 solver.set_data_points(xdata, ydata)
                                 A0 = solver.find_good_solution(lmaxdata)
                                 A1 = solver.find_good_solution(lmindata)
-                                LOG.trace('SVD: A0=%s'%(A0.tolist()))
-                                LOG.trace('SVD: A1=%s'%(A1.tolist()))
+                                LOG.trace('SVD: A0={}', A0.tolist())
+                                LOG.trace('SVD: A1={}', A1.tolist())
                             except Exception, e:
-                                LOG.trace('------04------ in exception loop ExceptionLinAlg=%s SingularMatrix=%s' % (ExceptionLinAlg, SingularMatrix))
+                                LOG.trace('------04------ in exception loop ExceptionLinAlg={} SingularMatrix={}', ExceptionLinAlg, SingularMatrix)
                                 if xorder0 != 0 or yorder0 != 0:
                                     ExceptionLinAlg = True
-                                    LOG.trace('xorder0,yorder0 = %s,%s' % (xorder0, yorder0))
+                                    LOG.trace('xorder0,yorder0 = {},{}', xorder0, yorder0)
                                     xorder0 = max(xorder0 - 1, 0)
                                     yorder0 = max(yorder0 - 1, 0)
-                                    LOG.info('Fit failed. Trying lower order (%s, %s)'%(xorder0, yorder0))
+                                    LOG.info('Fit failed. Trying lower order ({}, {})', xorder0, yorder0)
                                 else:
                                     SingularMatrix = True
                                 import traceback
@@ -1310,7 +1313,7 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
 #                             LOG.trace('SVD: Lmin difference: max %s, min %s, mean %s, std %s'%(diff_lmin.max(), diff_lmin.min(), diff_lmin.mean(), diff_lmin.std()))
 #                             LOG.trace('SVD: Lmax difference: max %s, min %s, mean %s, std %s'%(diff_lmax.max(), diff_lmax.min(), diff_lmax.mean(), diff_lmax.std()))
                             
-                            LOG.trace('------05------ after try ExceptionLinAlg=%s SingularMatrix=%s' % (ExceptionLinAlg, SingularMatrix))
+                            LOG.trace('------05------ after try ExceptionLinAlg={} SingularMatrix={}', ExceptionLinAlg, SingularMatrix)
 
                             # Calculate Sigma
                             # Sigma should be calculated in the upper stage
@@ -1321,7 +1324,7 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                             # following clipping stage. So, evalueate Diff 
                             # only once here and reuse it in clipping.
                             for (Width, Center, x, y, flag) in FitData:
-                                LOG.trace('%d %d %f %f %s %s' % (xorder0,yorder0,x,y,A0,A1))
+                                LOG.trace('{} {} {} {} {} {}', xorder0,yorder0,x,y,A0,A1)
                                 (Fit0, Fit1) = _eval_poly(xorder0+1, yorder0+1, x, y, A0, A1)
                                 Fit0 -= Center
                                 Fit1 -= Width
@@ -1335,8 +1338,8 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                                 Threshold += sqrt(numpy.square(npdiff - Threshold).mean()) * self.nsigma
                             #if len(Diff) > 1: Threshold = numpy.array(Diff).std() * self.nsigma
                             else: Threshold *= 2.0
-                            LOG.trace('Diff = %s' % [Diff[i] for i in effective])
-                            LOG.trace('2D Fit Threshold = %s' % Threshold)
+                            LOG.trace('Diff = {}', [Diff[i] for i in effective])
+                            LOG.trace('2D Fit Threshold = {}', Threshold)
 
                             # Sigma Clip
                             NFlagged = 0
@@ -1350,14 +1353,14 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                                     FitData[i][4] = 0
                                     NFlagged += 1
 
-                            LOG.trace('2D Fit Flagged/All = (%s, %s)' % (NFlagged, Number))
+                            LOG.trace('2D Fit Flagged/All = ({}, {})', NFlagged, Number)
                             #2009/10/15 compare the number of the remainder and fitting order
                             if (Number - NFlagged) <= max(xorder0, yorder0) or Number == NFlagged:
                                 SingularMatrix = True
                                 break
                     # Iteration End
                     ### 2011/05/15 Fitting is no longer (Width, Center) but (minchan, maxChan)
-                    LOG.trace('------06------ End of Iteration ExceptionLinAlg=%s SingularMatrix=%s' % (ExceptionLinAlg, SingularMatrix))
+                    LOG.trace('------06------ End of Iteration ExceptionLinAlg={} SingularMatrix={}', ExceptionLinAlg, SingularMatrix)
 
                     # FitData: [(Chan0, Cha1, RA, DEC, Flag)]
                     if not SingularMatrix:
@@ -1377,14 +1380,14 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                         for x in xrange(nra):
                             for y in xrange(ndec):
                                 if ValidPlane[x][y] == 1:
-                                    LOG.trace('------09------ in ValidPlane x=%d y=%d' % (x, y))
+                                    LOG.trace('------09------ in ValidPlane x={} y={}', x, y)
                                     for PID in Grid2SpectrumID[x][y]:
                                         ID = index_list[PID]
                                         ### 2011/05/15 (Width, Center) -> (minchan, maxChan)
                                         (Chan1, Chan0) = _eval_poly(xorder0+1, yorder0+1, PosList[0][PID], PosList[1][PID], A0, A1) 
                                         Fit0 = 0.5 * (Chan0 + Chan1)
                                         Fit1 = (Chan1 - Chan0) + 1.0
-                                        LOG.trace('Fit0, Fit1 = %s, %s' % (Fit0, Fit1))
+                                        LOG.trace('Fit0, Fit1 = {}, {}', Fit0, Fit1)
                                         # 2015/04/23 remove MaxFWHM check
                                         if (Fit1 >= MinFWHM): # and (Fit1 <= MaxFWHM):
                                             Allowance, Protect = self.calc_allowance(Fit0, Fit1, self.nchan, MinFWHM, MaxFWHM)
@@ -1399,9 +1402,9 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                                                 RealSignal[ID][2].append(Protect)
                                             else:
                                                 RealSignal[ID] = [PosList[0][PID], PosList[1][PID] ,[Protect]]
-                                        else: LOG.trace('------10------ out of range Fit0=%f Fit1=%f' % (Fit0,Fit1))
+                                        else: LOG.trace('------10------ out of range Fit0={} Fit1={}', Fit0,Fit1)
                                 elif BlurPlane[x][y] == 1:
-                                    LOG.trace('------11------ in BlurPlane x=%d y=%d' % (x, y))
+                                    LOG.trace('------11------ in BlurPlane x={} y={}', x, y)
                                     # in Blur Plane, Fit is not extrapolated, 
                                     # but use the nearest value in Valid Plane
                                     # Search the nearest Valid Grid
@@ -1422,8 +1425,8 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                                     # Setup the position near the border
                                     RA2 = RA1 - (RA1 - RA0) * HalfGrid / sqrt(Dist2)
                                     DEC2 = DEC1 - (DEC1 - DEC0) * HalfGrid / sqrt(Dist2)
-                                    LOG.trace('[X,Y],[XX,YY] = [%d,%d],%s' % (x,y,Nearest))
-                                    LOG.trace('(RA0,DEC0),(RA1,DEC1),(RA2,DEC2) = (%.5f,%.5f),(%.5f,%.5f),(%.5f,%.5f)' % (RA0,DEC0,RA1,DEC1,RA2,DEC2))
+                                    LOG.trace('[X,Y],[XX,YY] = [{},{}],{}', x,y,Nearest)
+                                    LOG.trace('(RA0,DEC0),(RA1,DEC1),(RA2,DEC2) = ({:.5},{:.5}),({:.5},{:.5}),({:.5},{:.5})',RA0,DEC0,RA1,DEC1,RA2,DEC2)
                                     # Calculate Fit and apply same value to all the spectra in the Blur Grid
                                     ### 2011/05/15 (Width, Center) -> (minchan, maxChan)
                                     # Border case
@@ -1432,7 +1435,7 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                                     (Chan1, Chan0) = _eval_poly(xorder0+1, yorder0+1, RA1, DEC1, A0, A1)
                                     Fit0 = 0.5 * (Chan0 + Chan1)
                                     Fit1 = (Chan1 - Chan0)
-                                    LOG.trace('Fit0, Fit1 = %s, %s' % (Fit0, Fit1))
+                                    LOG.trace('Fit0, Fit1 = {}, {}', Fit0, Fit1)
                                     # 2015/04/23 remove MaxFWHM check
                                     if (Fit1 >= MinFWHM): # and (Fit1 <= MaxFWHM):
                                         Allowance, Protect = self.calc_allowance(Fit0, Fit1, self.nchan, MinFWHM, MaxFWHM)
@@ -1448,7 +1451,7 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                                             else:
                                                 RealSignal[ID] = [PosList[0][PID], PosList[1][PID] ,[Protect]]
                                     else:
-                                        LOG.trace('------12------ out of range Fit0=%f Fit1=%f' % (Fit0,Fit1))
+                                        LOG.trace('------12------ out of range Fit0={} Fit1={}', Fit0,Fit1)
                                         continue
                                     #else: continue
                     # for Plot
@@ -1461,9 +1464,9 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                 #channelmap_range[Nc][1] = MaskMax - MaskMin + lines[Nc][1] / 2.0
                 # MaskMax-MaskMin is an maximum offset of line center
                 channelmap_range[Nc][1] = MaskMax - MaskMin + lines[Nc][1]
-                LOG.info('Nc, MaskMax, Min: %d, %f, %f' % (Nc, MaskMax, MaskMin))
-                LOG.info('channelmap_range[Nc]: %s' % channelmap_range[Nc])
-                LOG.info('lines[Nc]: %s' % lines[Nc])
+                LOG.info('Nc, MaskMax, Min: {}, {}, {}', Nc, MaskMax, MaskMin)
+                LOG.info('channelmap_range[Nc]: {}', channelmap_range[Nc])
+                LOG.info('lines[Nc]: {}', lines[Nc])
 
                 for x in range(nra):
                     for y in range(ndec):
@@ -1540,7 +1543,7 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
             cluster_flag = cluster_flag + factor * (GridCluster > t)
         self.cluster_info['cluster_flag'] = cluster_flag
         self.cluster_info['%s_threshold'%(stage)] = threshold
-        LOG.trace('cluster_flag = %s' % cluster_flag)
+        LOG.trace('cluster_flag = {}', cluster_flag)
         
 def convolve2d( data, kernel, mode='nearest', cval=0.0 ):
     """
@@ -1632,7 +1635,7 @@ class SVDSolver2D(object):
     def set_data_points(self, x, y):
         nx = len(x)
         ny = len(y)
-        LOG.trace('nx, ny = %s, %s'%(nx, ny))
+        LOG.trace('nx, ny = {}, {}', nx, ny)
         assert nx == ny
         if self.N < nx:
             self.storage.resize(nx * self.L)
@@ -1664,11 +1667,11 @@ class SVDSolver2D(object):
                 yp *= y[k]
                 
     def _svd(self, eps):
-        LOG.trace('G.shape=%s'%(list(self.G.shape)))
+        LOG.trace('G.shape={}', self.G.shape)
         self.U, s, Vh = LA.svd(self.G, full_matrices=False)
-        LOG.trace('U.shape=%s (N,L)=(%s,%s)'%(list(self.U.shape), self.N, self.L))
-        LOG.trace('s.shape=%s'%(list(s.shape)))
-        LOG.trace('Vh.shape=%s'%(list(Vh.shape)))
+        LOG.trace('U.shape={} (N,L)=({},{})', self.U.shape, self.N, self.L)
+        LOG.trace('s.shape={}', s.shape)
+        LOG.trace('Vh.shape={}', Vh.shape)
         #LOG.trace('U=%s'%(self.U))
         #LOG.trace('s=%s'%(s))
         #LOG.trace('Vh=%s'%(Vh))
@@ -1680,7 +1683,7 @@ class SVDSolver2D(object):
         absolute_s = abs(s)
         condition_number = absolute_s.min() / absolute_s.max()
         if condition_number < self.CONDITION_NUMBER_LIMIT:
-            LOG.trace('smax %s, smin %s, condition_number is %s'%(absolute_s.max(), absolute_s.min(), condition_number))
+            LOG.trace('smax {}, smin {}, condition_number is {}', absolute_s.max(), absolute_s.min(), condition_number)
             raise RuntimeError('singular matrix')
         
         threshold = s.max() * eps
@@ -1753,7 +1756,7 @@ class SVDSolver2D(object):
                     diff[i] = fit
             #score = diff.max()
             score = diff.mean()
-            LOG.trace('eps=%s, score=%s'%(intlog(eps),score))
+            LOG.trace('eps={}, score={}', intlog(eps),score)
             if best_ans is None or score < best_score:
                 best_ans[:] = ans
                 best_score = score
@@ -1761,8 +1764,8 @@ class SVDSolver2D(object):
         if 1.0 <= best_score:
             raise RuntimeError('No good solution is found.')
         elif threshold < best_score:
-            LOG.trace('Score is higher than given threshold (threshold %s, score %s)'%(threshold, best_score))
+            LOG.trace('Score is higher than given threshold (threshold {}, score {})', threshold, best_score)
         
-        LOG.trace('best eps: %s (score %s)'%(intlog(best_eps), best_score))
+        LOG.trace('best eps: {} (score {})', intlog(best_eps), best_score)
         return best_ans
     

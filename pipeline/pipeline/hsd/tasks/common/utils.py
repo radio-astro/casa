@@ -29,6 +29,7 @@ LogLevelMap2 = {'critical': CRITICAL, # 50
 
 import pipeline.infrastructure.mpihelpers as mpihelpers
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.casatools as casatools
 from pipeline.domain.datatable import OnlineFlagIndex
 import pipeline.infrastructure.tablereader as tablereader
@@ -1011,3 +1012,51 @@ def create_parallel_job(task_cls, task_args, context):
     job = mpihelpers.AsyncTask(task)
     LOG.debug('Parallel Job: %s'%(task))
     return job
+
+def test():
+    LOG.debug('LOG::This is debug')
+    
+    logger = OnDemandStringParseLogger(LOG)
+    for priority in logging.LOGGING_LEVELS.keys():
+        if priority == 'warning':
+            priority = 'warn'
+        getattr(logger, priority)('This is {level}', level=priority)
+
+
+class OnDemandStringParseLogger(object):
+    PRIORITY_MAP = {'warn': 'warning'}
+    
+    def __init__(self, logger):
+        self.logger = logger
+        self._func_list = []
+
+    @staticmethod
+    def parse(msg_template, *args, **kwargs):
+        print 'parsing ...'
+        return msg_template.format(*args, **kwargs)
+
+    def _post(self, priority, msg_template, *args, **kwargs):
+        key_for_level = self.PRIORITY_MAP.get(priority, priority)
+        if self.logger.isEnabledFor(logging.LOGGING_LEVELS[key_for_level]):
+            getattr(self.logger, priority)(OnDemandStringParseLogger.parse(msg_template, *args, **kwargs))
+
+    def critical(self, msg_template, *args, **kwargs):
+        self._post('critical', msg_template, *args, **kwargs)
+
+    def error(self, msg_template, *args, **kwargs):
+        self._post('error', msg_template, *args, **kwargs)
+
+    def warn(self, msg_template, *args, **kwargs):
+        self._post('warning', msg_template, *args, **kwargs)
+
+    def info(self, msg_template, *args, **kwargs):
+        self._post('info', msg_template, *args, **kwargs)
+
+    def debug(self, msg_template, *args, **kwargs):
+        self._post('debug', msg_template, *args, **kwargs)
+
+    def todo(self, msg_template, *args, **kwargs):
+        self._post('todo', msg_template, *args, **kwargs)
+
+    def trace(self, msg_template, *args, **kwargs):
+        self._post('trace', msg_template, *args, **kwargs)

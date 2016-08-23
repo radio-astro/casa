@@ -13,7 +13,8 @@ from pipeline.domain.datatable import DataTableImpl as DataTable
 from .. import common
 from ..common import utils
 
-LOG = infrastructure.get_logger(__name__)
+_LOG = infrastructure.get_logger(__name__)
+LOG = utils.OnDemandStringParseLogger(_LOG)
 
 NoData = common.NoData
 DO_TEST = False
@@ -53,18 +54,14 @@ class SDMSSimpleGridding(common.SingleDishTaskTemplate):
             
         assert index_list is not None
 
-        #colname = self.inputs.colname
         grid_table = self.make_grid_table(datatable, index_list)
         # LOG.debug('work_dir=%s'%(work_dir))
         import time
         start = time.time()
         retval = self.grid(grid_table=grid_table, datatable=datatable)
         end = time.time()
-        LOG.debug('Elapsed time: %s sec' % (end - start))
+        LOG.debug('Elapsed time: {} sec', (end - start))
         
-        #outcome = {'spectral_data': retval[0],
-        #           'flag_data': retval[1],
-        #           'grid_table': retval[2]}
         outcome = {'spectral_data': retval[0],
                    'meta_data': retval[1],
                    'grid_table': grid_table}
@@ -114,8 +111,8 @@ class SDMSSimpleGridding(common.SingleDishTaskTemplate):
             ras = ras + numpy.less_equal(ras, 180) * 360.0
             min_ra = ras.min()
             max_ra = ras.max()
-        LOG.info(' RA range: [%s, %s]' % (min_ra, max_ra))
-        LOG.info('DEC range: [%s, %s]' % (min_dec, max_dec))
+        LOG.info(' RA range: [{}, {}]', min_ra, max_ra)
+        LOG.info('DEC range: [{}, {}]', min_dec, max_dec)
         ngrid_ra = int(int((max_ra - min_ra + grid_ra_corr) / (2.0 * grid_ra_corr)) * 2 + 1)
         ngrid_dec = int(int((max_dec - min_dec + grid_dec) / (2.0 * grid_dec)) * 2 + 1)
         min_ra = (min_ra + max_ra - ngrid_ra * grid_ra_corr) / 2.0
@@ -181,10 +178,9 @@ class SDMSSimpleGridding(common.SingleDishTaskTemplate):
                         line[6].append([row, None, None, datatable_index, ant, msid])
                     line[6] = numpy.array(line[6])
                     grid_table.append(line)
-                    # LOG.info("grid_table: %s" % line)
         del ras, decs, combine_list
 
-        LOG.info('ngrid_ra = %s  ngrid_dec = %s' % (ngrid_ra, ngrid_dec))
+        LOG.info('ngrid_ra = {}  ngrid_dec = {}', ngrid_ra, ngrid_dec)
         return grid_table
 
 
@@ -207,7 +203,7 @@ class SDMSSimpleGridding(common.SingleDishTaskTemplate):
 
         """
         nrow = len(grid_table)
-        LOG.info('SimpleGrid: Processing %d spectra...' % (nrow))
+        LOG.info('SimpleGrid: Processing {} spectra...', nrow)
 
         spwid_list = self.inputs.spwid_list
         #antenna_list = self.inputs.antenna_list
@@ -222,7 +218,7 @@ class SDMSSimpleGridding(common.SingleDishTaskTemplate):
         reference_spw = spwid_list[0]
         nchan = reference_data.spectral_windows[reference_spw].num_channels
         npol = reference_data.get_data_description(spw=reference_spw).num_polarizations
-        LOG.debug('nrow=%s nchan=%s npol=%s'%(nrow,nchan,npol))
+        LOG.debug('nrow={} nchan={} npol={}', nrow,nchan,npol)
         
         #tTSYS = datatable.getcol('TSYS')
         tEXPT = datatable.getcol('EXPOSURE')
@@ -266,7 +262,7 @@ class SDMSSimpleGridding(common.SingleDishTaskTemplate):
 #                     bind_to_grid[vis].append([data_row, grid_table_row, Weight, tSFLAG[index]])
 #         del tTSYS, tEXPT, tSFLAG
         LOG.debug('bind_to_grid.keys() = %s'%(map(lambda x: x.name, bind_to_grid.keys())))
-        LOG.debug('bind_to_grid=%s'%(bind_to_grid))
+        LOG.debug('bind_to_grid={}', bind_to_grid)
         
         def cmp(x, y):
             if x[0] < y[0]:
@@ -280,7 +276,7 @@ class SDMSSimpleGridding(common.SingleDishTaskTemplate):
             return 0
         for (k,v) in bind_to_grid.items():
             v.sort(cmp=cmp)
-        LOG.debug('sorted bind_to_grid=%s'%(bind_to_grid))
+        LOG.debug('sorted bind_to_grid={}', bind_to_grid)
         
 
         # create storage for output
@@ -299,45 +295,46 @@ class SDMSSimpleGridding(common.SingleDishTaskTemplate):
             return ([], [])
         
         # Create progress timer
-        Timer = common.ProgressTimer(80, sum(map(len, bind_to_grid.values())), LOG.level)
+        Timer = common.ProgressTimer(80, sum(map(len, bind_to_grid.values())), LOG.logger.level)
 
         # loop for antennas
         # for AntID in index_list:
         #for vis in infiles:
         #for i in xrange(len(antenna_list)):
-        query = lambda condition: 1 if condition else 0
-        vquery = numpy.vectorize(query)
+        #query = lambda condition: 1 if condition else 0
+        #vquery = numpy.vectorize(query)
         for (ms, entries) in bind_to_grid.items():
             #AntID = antenna_list[i]
             #with casatools.TableReader(infiles[i]) as tb:
             vis = ms.work_data
             ms_colname = utils.get_datacolumn_name(vis)
             rowmap = utils.make_row_map_for_baselined_ms(ms)
-            LOG.debug('Start reading data from "%s"'%(os.path.basename(vis)))
-            LOG.debug('There are %s entries'%(len(bind_to_grid[vis])))
+            LOG.debug('Start reading data from "{}"', os.path.basename(vis))
+            LOG.debug('There are {} entries', len(bind_to_grid[vis]))
             with casatools.TableReader(vis) as tb:
-                get = lambda col, row: tb.getcell(col, row)
+                #get = lambda col, row: tb.getcell(col, row)
                 #for entry in bind_to_grid[AntID]:
                 for entry in entries:
                     [tROW, ROW, weights, pols, flags] = entry
                     Sp = None
                     Mask = None
                     mapped_row = rowmap[tROW]
-                    LOG.debug('tROW %s: mapped_row %s'%(tROW, mapped_row))
+                    LOG.debug('tROW {}: mapped_row {}', tROW, mapped_row)
                     for (Weight, Pol, SFLAG) in zip(weights, pols, flags):
                         if SFLAG == 1:
                             if Sp is None:
-                                Sp = get(ms_colname, mapped_row)
+                                Sp = tb.getcell(ms_colname, mapped_row)
                             if numpy.any(numpy.isnan(Sp[Pol])):
-                                LOG.debug('vis "%s" row %s pol %s contains NaN'%(os.path.basename(vis),tROW,Pol))
+                                LOG.debug('vis "{}" row {} pol {} contains NaN', os.path.basename(vis),tROW,Pol)
                             if Mask is None:
-                                Mask = vquery(get('FLAG', mapped_row) == False)
+                                Mask = numpy.asarray(numpy.logical_not(tb.getcell('FLAG', mapped_row)),
+                                                     dtype=int)#vquery(tb.getcell('FLAG', mapped_row) == False)
                             #LOG.debug('Mask.shape = {shape}'.format(shape=Mask.shape))
                             #collapsed_mask = numpy.any(Mask == 1, axis=1)
                             #LOG.debug('collapsed_mask = %s'%(collapsed_mask))
                             StorageOut[ROW] += (Sp[Pol] * Mask[Pol] * Weight)
                             StorageWeight[ROW] += (Mask[Pol] * Weight)
-                            StorageNumSp[ROW] += query(any(Mask[Pol] == 1))
+                            StorageNumSp[ROW] += 1 if numpy.any(Mask[Pol] == 1) else 0#query(any(Mask[Pol] == 1))
                             #StorageOut[ROW] += (Sp * Mask * Weight).sum(axis=0)
                             #StorageWeight[ROW] += (Mask * Weight).sum(axis=0)
                             #StorageNumSp[ROW] += numpy.sum(vquery(numpy.any(Mask == 1, axis=1)))#query(any(Mask == 1))
@@ -350,7 +347,7 @@ class SDMSSimpleGridding(common.SingleDishTaskTemplate):
         # RMS = n * Tsys/sqrt(Exptime)
         # Weight = 1/(RMS**2) = (Exptime/(Tsys**2))
         for ROW in range(nrow):
-            LOG.debug('Calculate weighed average for row %s'%(ROW))
+            LOG.debug('Calculate weighed average for row {}', ROW)
             [IF, POL, X, Y, RAcent, DECcent, RowDelta] = grid_table[ROW]
             if StorageNumSp[ROW] == 0 or all(StorageWeight[ROW] == 0.0):
                 StorageOut[ROW,:] = NoData

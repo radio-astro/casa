@@ -15,11 +15,13 @@ from pipeline.hsd.heuristics import MaskDeviationHeuristicForMS
 from pipeline.domain import DataTable
 
 from .. import common
+from ..common import utils
 from . import maskline
 from . import worker
 # from . import fitting
 
-LOG = infrastructure.get_logger(__name__)
+_LOG = infrastructure.get_logger(__name__)
+LOG = utils.OnDemandStringParseLogger(_LOG)
 
 class SDMSBaselineInputs(basetask.StandardInputs):
     """
@@ -252,39 +254,39 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
         # outcome for baseline subtraction
         baselined = []
 
-        LOG.debug('Starting per reduction group processing: number of groups is {ngroup}'.format(ngroup=len(reduction_group)))
+        LOG.debug('Starting per reduction group processing: number of groups is {ngroup}', ngroup=len(reduction_group))
         for (group_id, group_desc) in reduction_group.items():
-            LOG.debug('Processing Reduction Group %s' % (group_id))
+            LOG.debug('Processing Reduction Group {}', group_id)
             LOG.debug('Group Summary:')
             for m in group_desc:
                 # LOG.debug('\tAntenna %s Spw %s Pol %s'%(m.antenna, m.spw, m.pols))
-                LOG.debug('\tMS "{ms}" Antenna "{antenna}" (ID {antenna_id}) Spw {spw} Field "{field}" (ID {field_id})'\
-                          .format(ms=m.ms.basename,
-                                  antenna=m.antenna_name,
-                                  antenna_id=m.antenna_id, spw=m.spw_id,
-                                  field=m.field_name,
-                                  field_id=m.field_id))
+                LOG.debug('\tMS "{ms}" Antenna "{antenna}" (ID {antenna_id}) Spw {spw} Field "{field}" (ID {field_id})',
+                          ms=m.ms.basename,
+                          antenna=m.antenna_name,
+                          antenna_id=m.antenna_id, spw=m.spw_id,
+                          field=m.field_name,
+                          field_id=m.field_id)
 #             # assume all members have same spw and pollist
             first_member = group_desc[0]
 #             pols_list = list(common.pol_filter(group_desc, inputs.get_pollist))
 #             LOG.debug('pols_list=%s'%(pols_list))
             iteration = first_member.iteration
-            LOG.debug('iteration for group {group_id} is {iter}'.format(group_id=group_id, iter=iteration))
+            LOG.debug('iteration for group {group_id} is {iter}', group_id=group_id, iter=iteration)
 # 
             # skip channel averaged spw
             nchan = group_desc.nchan
-            LOG.debug('nchan for group {group_id} is {nchan}'.format(group_id=group_id, nchan=nchan))
+            LOG.debug('nchan for group {group_id} is {nchan}', group_id=group_id, nchan=nchan)
             if nchan == 1:
-                LOG.info('Skip channel averaged spw %s.' % (first_member.spw))
+                LOG.info('Skip channel averaged spw {}.', first_member.spw)
                 continue
  
-            LOG.debug('spw=\'%s\'' % (args['spw']))
-            LOG.debug('vis_list=%s' % (vis_list))
+            LOG.debug('spw=\'{}\'', args['spw'])
+            LOG.debug('vis_list={}', vis_list)
             member_list = list(common.get_valid_ms_members(group_desc, ms_name_list, args['antenna'], args['field'], args['spw']))
             # skip this group if valid member list is empty
-            LOG.debug('member_list=%s' % (member_list))
+            LOG.debug('member_list={}', member_list)
             if len(member_list) == 0:
-                LOG.info('Skip reduction group %d' % (group_id))
+                LOG.info('Skip reduction group {}', group_id)
                 continue
  
             member_list.sort()
@@ -299,7 +301,8 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
             
             LOG.debug('Members to be processed:')
             for (gms, gfield, gant, gspw) in zip(group_ms_list, group_fieldid_list, group_antennaid_list, group_spwid_list):
-                LOG.debug('\tMS "%s" Field ID %s Antenna ID %s Spw ID %s' % (gms.basename, gfield, gant, gspw))
+                LOG.debug('\tMS "{}" Field ID {} Antenna ID {} Spw ID {}', 
+                          gms.basename, gfield, gant, gspw)
                  
             # Deviation Mask 
             # NOTE: deviation mask is evaluated per ms per field per spw
@@ -311,16 +314,18 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
                     if (not hasattr(ms, 'deviation_mask')) or ms.deviation_mask is None:
                         ms.deviation_mask = {}
                     if not ms.deviation_mask.has_key((fieldid,antennaid,spwid)):
-                        LOG.debug('Evaluating deviation mask for %s field %s antenna %s spw %s' % (ms.basename, fieldid, antennaid, spwid))
+                        LOG.debug('Evaluating deviation mask for {} field {} antenna {} spw {}',
+                                  ms.basename, fieldid, antennaid, spwid)
                         mask_list = self.evaluate_deviation_mask(ms.name, fieldid, antennaid, spwid, 
                                                                  consider_flag=True)
-                        LOG.debug('deviation mask = %s' % (mask_list))
+                        LOG.debug('deviation mask = {}', mask_list)
                         ms.deviation_mask[(fieldid, antennaid, spwid)] = mask_list
                     deviation_mask[ms.basename][(fieldid, antennaid, spwid)] = ms.deviation_mask[(fieldid, antennaid, spwid)]
-                    LOG.debug('evaluated deviation mask is {v}'.format(v=ms.deviation_mask[(fieldid, antennaid, spwid)]))
+                    LOG.debug('evaluated deviation mask is {v}',
+                              v=ms.deviation_mask[(fieldid, antennaid, spwid)])
             else:
                 LOG.info('Deviation mask is disabled by the user')
-            LOG.debug('deviation_mask=%s' % (deviation_mask))
+            LOG.debug('deviation_mask={}', deviation_mask)
 
             # Spectral Line Detection and Validation
             # MaskLine will update DataTable.MASKLIST column
@@ -332,7 +337,7 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
             maskline_result = self._executor.execute(job, merge=True)
             grid_table = maskline_result.outcome['grid_table']
             if grid_table is None:
-                LOG.info('Skip reduction group %s'%(group_id))
+                LOG.info('Skip reduction group {}', group_id)
                 continue
             detected_lines = maskline_result.outcome['detected_lines']
             channelmap_range = maskline_result.outcome['channelmap_range']
@@ -362,13 +367,13 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
             field_id_list = accum.get_field_id_list()
             antenna_id_list = accum.get_antenna_id_list()
             spw_id_list = accum.get_spw_id_list()
-            grid_table_list = accum.get_grid_table_list()
-            channelmap_range_list = accum.get_channelmap_range_list()
-            LOG.debug('subgroup member for {vis}:\n\tfield: {field}\n\tantenna: {antenna}\n\tspw: {spw}'\
-                      .format(vis=ms.basename,
-                              field=field_id_list,
-                              antenna=antenna_id_list,
-                              spw=spw_id_list))
+            #grid_table_list = accum.get_grid_table_list()
+            #channelmap_range_list = accum.get_channelmap_range_list()
+            LOG.debug('subgroup member for {vis}:\n\tfield: {field}\n\tantenna: {antenna}\n\tspw: {spw}',
+                      vis=ms.basename,
+                      field=field_id_list,
+                      antenna=antenna_id_list,
+                      spw=spw_id_list)
             
             devmask_list = [deviation_mask[vis][key] for key in zip(field_id_list, antenna_id_list, spw_id_list)]
 
@@ -384,7 +389,7 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
                                                process_list=accum, 
                                                deviationmask_list=devmask_list)
             fitter_results = self._executor.execute(job, merge=True)
-            LOG.debug('fitter_results: %s'%(fitter_results))
+            LOG.debug('fitter_results: {}', fitter_results)
             if isinstance(fitter_results, basetask.ResultsList):
                 for r in fitter_results:
                     plot_list.extend(r.outcome.pop('plot_list'))
@@ -533,13 +538,13 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
                 for member in desc:
                     if member.antenna == antenna:
                         iter_counter_list.extend(member.iteration)
-            LOG.debug('iter_counter_list=%s' % (iter_counter_list))
+            LOG.debug('iter_counter_list={}', iter_counter_list)
             if all(numpy.array(iter_counter_list) == 0):
                 # generate
                 self._generate_storage_from_reference(storage, reference)
 
     def _generate_storage_from_reference(self, storage, reference):
-        LOG.debug('generating %s from %s' % (os.path.basename(storage), os.path.basename(reference)))
+        LOG.debug('generating {} from {}', os.path.basename(storage), os.path.basename(reference))
         with casatools.TableReader(reference) as tb:
             copied = tb.copy(storage, deep=True, returnobject=True)
             copied.close()
@@ -555,7 +560,7 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
     def _clearup_dummy(self):
         remove_list = glob.glob("*" + self._dummy_suffix)
         for dummy in remove_list:
-            LOG.debug("Removing old temprary file '%s'" % dummy)
+            LOG.debug("Removing old temprary file '{}'", dummy)
             shutil.rmtree(dummy)
         del remove_list
 

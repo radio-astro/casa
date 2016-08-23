@@ -13,7 +13,8 @@ from . import validation
 from .. import common
 from ..common import utils
 
-LOG = infrastructure.get_logger(__name__)
+_LOG = infrastructure.get_logger(__name__)
+LOG = utils.OnDemandStringParseLogger(_LOG)
 
 NoData = common.NoData
 
@@ -82,9 +83,9 @@ class MaskLine(common.SingleDishTaskTemplate):
                                                              antenna_list, field_list,
                                                              spwid_list, srctype))
 
-        LOG.debug('index_list=%s' % (index_list))
-        LOG.debug('all(spwid == %s) ? %s' % (spwid_list[0], numpy.all(dt.tb1.getcol('IF').take(index_list) == spwid_list[0])))
-        LOG.debug('all(fieldid == %s) ? %s' % (field_list[0], numpy.all(dt.tb1.getcol('FIELD_ID').take(index_list) == field_list[0])))
+        LOG.debug('index_list={}', index_list)
+        #LOG.trace('all(spwid == {}) ? {}', spwid_list[0], numpy.all(dt.tb1.getcol('IF').take(index_list) == spwid_list[0]))
+        #LOG.trace('all(fieldid == {}) ? {}', field_list[0], numpy.all(dt.tb1.getcol('FIELD_ID').take(index_list) == field_list[0]))
         if len(index_list) == 0:
             # No valid data 
             outcome = {'detected_lines': [],
@@ -111,7 +112,7 @@ class MaskLine(common.SingleDishTaskTemplate):
          
         LOG.debug('Members to be processed:')
         for (v, f, a, s) in zip(vis_list, field_list, antenna_list, spwid_list):
-            LOG.debug('MS "%s" Field %s Antenna %s Spw %s' % (os.path.basename(v), f, a, s))
+            LOG.debug('MS "{}" Field {} Antenna {} Spw {}', os.path.basename(v), f, a, s)
              
         # filename for input/output
         # ms_list = [context.observing_run.get_ms(vis) for vis in vis_list]
@@ -151,9 +152,9 @@ class MaskLine(common.SingleDishTaskTemplate):
                 result.stage_number = self.inputs.context.task_counter 
             return result
          
-        LOG.trace('len(grid_table)=%s, spectra.shape=%s' % (len(grid_table), list(numpy.array(spectra).shape)))
-        LOG.trace('grid_table=%s' % (grid_table))
-        LOG.debug('PROFILE simplegrid: elapsed time is %s sec' % (t1 - t0))
+        LOG.trace('len(grid_table)={}, spectra.shape={}', len(grid_table), numpy.asarray(spectra).shape)
+        LOG.trace('grid_table={}', grid_table)
+        LOG.debug('PROFILE simplegrid: elapsed time is {} sec', t1 - t0)
  
         # line finding
         t0 = time.time()
@@ -165,8 +166,8 @@ class MaskLine(common.SingleDishTaskTemplate):
         detect_signal = detection_result.signals
         t1 = time.time()
  
-        LOG.trace('detect_signal=%s'%(detect_signal))
-        LOG.debug('PROFILE detection: elapsed time is %s sec'%(t1-t0))
+        LOG.trace('detect_signal={}', detect_signal)
+        LOG.debug('PROFILE detection: elapsed time is {} sec', t1-t0)
  
         # line validation
         t0 = time.time()
@@ -175,7 +176,7 @@ class MaskLine(common.SingleDishTaskTemplate):
                                                  grid_size, window, edge, 
                                                  clusteringalgorithm=clusteringalgorithm)
         line_validator = validator_cls(validation_inputs)
-        LOG.trace('len(index_list)=%s'%(len(index_list)))
+        LOG.trace('len(index_list)={}', len(index_list))
         job = common.ParameterContainerJob(line_validator, datatable=datatable, index_list=index_list, 
                                            grid_table=grid_table, detect_signal=detect_signal)
         validation_result = self._executor.execute(job, merge=True)
@@ -188,12 +189,12 @@ class MaskLine(common.SingleDishTaskTemplate):
         t1 = time.time()
  
         #LOG.debug('lines=%s'%(lines))
-        LOG.debug('PROFILE validation: elapsed time is %s sec'%(t1-t0))
+        LOG.debug('PROFILE validation: elapsed time is {} sec', t1-t0)
          
         #LOG.debug('cluster_info=%s'%(cluster_info))
  
         end_time = time.time()
-        LOG.debug('PROFILE execute: elapsed time is %s sec'%(end_time-start_time))
+        LOG.debug('PROFILE execute: elapsed time is {} sec', end_time-start_time)
  
         outcome = {'detected_lines': lines,
                    'channelmap_range': channelmap_range,
