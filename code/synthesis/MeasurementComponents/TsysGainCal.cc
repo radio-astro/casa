@@ -275,7 +275,9 @@ void StandardTsys::specify(const Record&) {
   }
 
   // Assign scan and fieldid info
-  //  assignCTScanField(*ct_,msName());
+  // 2016Aug23 (gmoellen): restore ad hoc method, since 
+  //  Tsys timestamps are quirky
+  assignCTScanField(*ct_,msName());
 
   logSink() << "Tsys spectra counts per spw for antenna Ids 0-"<<nElem()-1<<" (per pol):" << LogIO::POST;
   for (Int ispw=0;ispw<nSpw();++ispw) {
