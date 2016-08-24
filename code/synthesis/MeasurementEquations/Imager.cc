@@ -5363,7 +5363,8 @@ Bool Imager::sjy_make_visibilities(TempImage<Float> *tmodimage, LogIO& os,
       //sm_p->add(*(tmodimages[imod]), 1);
       //} //if-tmodimages..
       //} //for loop
-      ft_p->setFreqInterpolation("nearest");
+      // this has no effect (SetJyGridFT hardcoded to use linear now, Aug. 2016)
+      //ft_p->setFreqInterpolation("nearest");
       setSkyEquation();
       se_p->predict(False);
       destroySkyEquation();
@@ -5810,8 +5811,10 @@ TempImage<Float>* Imager::sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
 
   // Find min channel width to increment to construct freqsofScale 
   Double freqWidth = 0;
+  //
   for (uInt ispw = 0; ispw<rawspwids.nelements(); ispw++) {
     Vector<Double> freqWidths = spwcols.chanWidth()(rawspwids(ispw));
+
     Double minChanWidth = min(fabs(freqWidths));
     // freqWidth init....
     if (freqWidth == 0) 
@@ -5819,17 +5822,19 @@ TempImage<Float>* Imager::sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
     else 
       freqWidth = min(freqWidth,minChanWidth); 
   }
+  
   // ADDED for debug
   //Int rawspwid = rawspwids[0];
   //Vector<Double> freqArray = spwcols.chanFreq()(rawspwid);
   //Int nchan=freqArray.shape()[0]   ;
-  Int nchan = Int(fabs(freqMax - freqMin)/freqWidth) + 1;
-  // UNCOMMENTED for debug
-  //Double freqWidth=fabs(freqMax-freqMin)/Double((nchan > 1) ? (nchan-1) : 1);
+  Int nchan = Int(ceil(fabs(freqMax - freqMin)/freqWidth))+1;
+  //cerr<<"nchan="<<nchan<<" freqMax="<<freqMax<<" freqMin="<<freqMin<<" freqWidth="<<freqWidth<<endl; 
   //Filling it with the LSRK values
   Vector<Double> freqArray(nchan);
-  if (nchan==1) {
-    freqArray[0] = freqMin + 0.5*freqWidth;
+  if (nchan==3) {
+    freqArray[0] = freqMin - freqWidth;
+    freqArray[1] = freqMin;
+    freqArray[2] = freqMin + freqWidth;
   }
   else {
     for (Int k =0;k < nchan; ++k){
@@ -6045,6 +6050,9 @@ TempImage<Float>* Imager::sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
           //SubImage<Float> subim(*tmodimage, sl, True);
           //subim.copyData((LatticeExpr<Float>)(modimage*scale));
         }
+        // for debug
+        //cerr<<"freqscale="<<freqscale<<endl;
+        //cerr<<"freqsOfScale="<<freqsOfScale<<endl;
       }
     }
     else{
