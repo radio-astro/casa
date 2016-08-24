@@ -261,10 +261,13 @@ void SetJyGridFT::get(VisBuffer& vb, Int row){
 
 	  Vector<Double> lsrfreq;
 	  Bool convert;
+	  InterpolateArray1D<Double, Double>::InterpolationMethod  meth= InterpolateArray1D<Double, Double>::nearestNeighbour;
+	  if(freqscale_p.nelements() > 2)
+	    meth= InterpolateArray1D<Double, Double>::linear;
 	  vb.lsrFrequency(vb.spectralWindow(), lsrfreq, convert);
 	  interpscale_p.resize(lsrfreq.nelements());
 	  InterpolateArray1D<Double,Double>::
-	        interpolate(interpscale_p,lsrfreq, freqscale_p, scale_p,InterpolateArray1D<Double, Double>::nearestNeighbour);
+	        interpolate(interpscale_p,lsrfreq, freqscale_p, scale_p,meth);
 
 
 
