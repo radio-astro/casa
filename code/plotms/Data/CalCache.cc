@@ -458,8 +458,16 @@ void CalCache::loadCalChunks(ROCTIter& ci,
         } else {        
             *real_[chunk] = real(cArray(parSlice1, Slice(), Slice()));
         }
-    } else
-        throw(AipsError("real has no meaning for this table"));
+    } else {  // allow float for single dish cal tables
+        Cube<Float> fArray = cti.fparam();
+        if (polnRatio_) {
+            Array<Float> ampRatio = fArray(parSlice1, Slice(), Slice()) / fArray(parSlice2, Slice(), Slice());
+            checkRatioArray(ampRatio, chunk);
+            *real_[chunk] = ampRatio;
+        } else {        
+            *real_[chunk] = fArray(parSlice1, Slice(), Slice());
+        }
+    }
     break;
   }
 

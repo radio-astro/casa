@@ -659,7 +659,7 @@ Slice calParSliceByType(String caltype, String what, String pol)
       throw(AipsError("Unsupported value type: "+what));
   }
   else if (caltype.contains("SDSKY") || caltype.contains("SDGAIN")) {
-    if (what=="AMP") {
+    if ((what=="AMP") || (what=="REAL")) {
       s=0;  // nominal start is first pol
       i=1;  // increment is nominally 1 (only good for 1-par-per-pol caltypes
     } else { 
