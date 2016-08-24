@@ -9,12 +9,12 @@ import scipy.cluster.hierarchy as HIERARCHY
 import numpy.linalg as LA
 
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.basetask as basetask
 from pipeline.domain.datatable import DataTableImpl as DataTable
 from . import rules
 from .. import common
 from ..common import utils
 
-#LOG = infrastructure.get_logger(__name__)
 _LOG = infrastructure.get_logger(__name__)
 LOG = utils.OnDemandStringParseLogger(_LOG)
 
@@ -104,7 +104,7 @@ class ValidateLineResults(common.SingleDishResults):
     def _outcome_name(self):
         return ''
 
-class ValidateLineSinglePointing(common.SingleDishTaskTemplate):
+class ValidateLineSinglePointing(basetask.StandardTaskTemplate):
     Inputs = ValidateLineInputs
 
     def prepare(self, datatable=None, index_list=None, grid_table=None, detect_signal=None):
@@ -127,7 +127,7 @@ class ValidateLineSinglePointing(common.SingleDishTaskTemplate):
         
         if datatable is None:
             LOG.debug('#PNP# instantiate local datatable')
-            datatable = DataTable(self.context.observing_run.ms_datatable_name)
+            datatable = DataTable(self.inputs.context.observing_run.ms_datatable_name)
         else:
             LOG.debug('datatable is propagated from parent task')
 
@@ -148,11 +148,6 @@ class ValidateLineSinglePointing(common.SingleDishTaskTemplate):
                                          outcome=outcome)
                 
             result.task = self.__class__
-                
-            if self.context.subtask_counter is 0: 
-                result.stage_number = self.context.task_counter - 1
-            else:
-                result.stage_number = self.context.task_counter 
                 
             return result
 
@@ -203,17 +198,12 @@ class ValidateLineSinglePointing(common.SingleDishTaskTemplate):
                 
         result.task = self.__class__
                 
-        if self.context.subtask_counter is 0: 
-            result.stage_number = self.context.task_counter - 1
-        else:
-            result.stage_number = self.context.task_counter 
-                
         return result
     
     def analyse(self, result):
         return result
 
-class ValidateLineRaster(common.SingleDishTaskTemplate):
+class ValidateLineRaster(basetask.StandardTaskTemplate):
     Inputs = ValidateLineInputs
 
     CLUSTER_WHITEN = 1.0
@@ -255,7 +245,7 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
 
         if datatable is None:
             LOG.debug('#PNP# instantiate local datatable')
-            datatable = DataTable(self.context.observing_run.ms_datatable_name)
+            datatable = DataTable(self.inputs.context.observing_run.ms_datatable_name)
         else:
             LOG.debug('datatable is propagated from parent task')
 
@@ -274,11 +264,6 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
             result = ValidateLineResults(task=self.__class__,
                                          success=True,
                                          outcome=outcome)
-                
-            if self.context.subtask_counter is 0: 
-                result.stage_number = self.context.task_counter - 1
-            else:
-                result.stage_number = self.context.task_counter 
                 
             return result
 
@@ -346,11 +331,6 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                                          outcome=outcome)
                 
             result.task = self.__class__
-                
-            if self.context.subtask_counter is 0: 
-                result.stage_number = self.context.task_counter - 1
-            else:
-                result.stage_number = self.context.task_counter 
                 
             return result
 
@@ -525,11 +505,6 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                                      outcome=outcome)
                 
         result.task = self.__class__
-                
-        if self.context.subtask_counter is 0: 
-            result.stage_number = self.context.task_counter - 1
-        else:
-            result.stage_number = self.context.task_counter 
                 
         return result
     

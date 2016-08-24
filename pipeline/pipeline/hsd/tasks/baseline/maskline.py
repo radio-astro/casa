@@ -5,8 +5,9 @@ import time
 import numpy
 
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
-import pipeline.domain.datatable as datatable
+from pipeline.domain.datatable import DataTableImpl as DataTable
 from . import simplegrid
 from . import detection
 from . import validation
@@ -58,11 +59,11 @@ class MaskLineResults(common.SingleDishResults):
         return ''
 
 
-class MaskLine(common.SingleDishTaskTemplate):
+class MaskLine(basetask.StandardTaskTemplate):
     Inputs = MaskLineInputs
 
     def prepare(self, datatable=None):
-        context = self.context
+        context = self.inputs.context
 
         start_time = time.time()
 
@@ -74,7 +75,7 @@ class MaskLine(common.SingleDishTaskTemplate):
         reference_data = context.observing_run.get_ms(vis_list[0])
         if datatable is None:
             LOG.info('instantiate local datatable')
-            dt = datatable.DataTableImpl(context.observing_run.ms_datatable_name, readonly=False)
+            dt = DataTable(context.observing_run.ms_datatable_name, readonly=False)
         else:
             LOG.info('datatable is propagated from parent task')
             dt = datatable
@@ -204,12 +205,7 @@ class MaskLine(common.SingleDishTaskTemplate):
                                   success=True,
                                   outcome=outcome)
         result.task = self.__class__
-                 
-        if self.inputs.context.subtask_counter is 0: 
-            result.stage_number = self.inputs.context.task_counter - 1
-        else:
-            result.stage_number = self.inputs.context.task_counter 
-                 
+
         return result
         
     def analyse(self, result):

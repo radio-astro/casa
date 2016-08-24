@@ -42,13 +42,13 @@ class SDMSSimpleGriddingResults(common.SingleDishResults):
     def _outcome_name(self):
         return ''
 
-class SDMSSimpleGridding(common.SingleDishTaskTemplate):
+class SDMSSimpleGridding(basetask.StandardTaskTemplate):
     Inputs = SDMSSimpleGriddingInputs
 
     def prepare(self, datatable=None, index_list=None):
         if datatable is None:
             LOG.debug('#PNP# instantiate local datatable')
-            datatable = DataTable(self.context.observing_run.ms_datatable_name)
+            datatable = DataTable(self.inputs.context.observing_run.ms_datatable_name)
         else:
             LOG.debug('datatable is propagated from parent task')
             
@@ -70,11 +70,6 @@ class SDMSSimpleGridding(common.SingleDishTaskTemplate):
                                        outcome=outcome)
         result.task = self.__class__
                        
-        if self.context.subtask_counter is 0: 
-            result.stage_number = self.context.task_counter - 1
-        else:
-            result.stage_number = self.context.task_counter 
-                
         return result
     
     def analyse(self, result):
@@ -88,7 +83,7 @@ class SDMSSimpleGridding(common.SingleDishTaskTemplate):
         spwid_list = self.inputs.spwid_list
         antenna_list = self.inputs.antenna_list
         assert len(antenna_list) == len(spwid_list)
-        reference_data = self.context.observing_run.get_ms(vis_list[0])
+        reference_data = self.inputs.context.observing_run.get_ms(vis_list[0])
         reference_antenna = antenna_list[0]
         reference_spw = spwid_list[0]
         beam_size = reference_data.beam_sizes[reference_antenna][reference_spw]
@@ -206,15 +201,8 @@ class SDMSSimpleGridding(common.SingleDishTaskTemplate):
         LOG.info('SimpleGrid: Processing {} spectra...', nrow)
 
         spwid_list = self.inputs.spwid_list
-        #antenna_list = self.inputs.antenna_list
-        #infiles = [self.context.observing_run[i].work_data for i in antenna_list]
         vis_list = self.inputs.vis_list
-        #ms_list = [self.context.observing_run.get_ms(vis) for vis in vis_list]
-        #msid_list = [self.context.observing_run.measurement_sets.index(ms) for ms in ms_list]
-        #infiles = [ms.work_data for ms in ms_list]
-        #reference_data = self.context.observing_run[antenna_list[0]]
-        #reference_data = ms_list[0]
-        reference_data = self.context.observing_run.get_ms(vis_list[0])
+        reference_data = self.inputs.context.observing_run.get_ms(vis_list[0])
         reference_spw = spwid_list[0]
         nchan = reference_data.spectral_windows[reference_spw].num_channels
         npol = reference_data.get_data_description(spw=reference_spw).num_polarizations
@@ -227,16 +215,13 @@ class SDMSSimpleGridding(common.SingleDishTaskTemplate):
         # loop for all ROWs in grid_table to make dictionary that 
         # associates spectra in data_in and weights with grids.
         # bind_to_grid = dict([(k,[]) for k in self.data_in.keys()])
-        #bind_to_grid = dict([(self.context.observing_run.measurement_sets[k].name, []) for k in msid_list])
         bind_to_grid = collections.defaultdict(list)
         for grid_table_row in xrange(nrow):
             [IF, POL, X, Y, RAcent, DECcent, RowDelta] = grid_table[grid_table_row]
             for [_data_row, _, _, _index, _ant, _msid] in RowDelta:
                 index = int(_index)
-                #ant = int(_ant)
                 msid = int(_msid)
-                #vis = self.context.observing_run.measurement_sets[msid].work_data
-                ms = self.context.observing_run.measurement_sets[msid]
+                ms = self.inputs.context.observing_run.measurement_sets[msid]
                 data_row = int(_data_row)
                 tSFLAG = datatable.getcell('FLAG_SUMMARY', index)
                 tTSYS = datatable.getcell('TSYS', index)

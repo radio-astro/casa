@@ -9,6 +9,7 @@ import types
 import pylab as PL
 
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.basetask as basetask
 import pipeline.h.heuristics as heuristics
 from pipeline.domain.datatable import DataTableImpl as DataTable
 from .. import common
@@ -77,7 +78,7 @@ class DetectLineResults(common.SingleDishResults):
     def _outcome_name(self):
         return ''
 
-class DetectLine(common.SingleDishTaskTemplate):
+class DetectLine(basetask.StandardTaskTemplate):
     Inputs = DetectLineInputs
     #LineFinder = heuristics.AsapLineFinder
     LineFinder = heuristics.HeuristicsLineFinder
@@ -100,7 +101,7 @@ class DetectLine(common.SingleDishTaskTemplate):
         broadline = self.inputs.broadline
         if datatable is None:
             LOG.debug('#PNP# instantiate local datatable')
-            datatable = DataTable(self.context.observing_run.ms_datatable_name)
+            datatable = DataTable(self.inputs.context.observing_run.ms_datatable_name)
         else:
             LOG.debug('datatable is propagated from parent task')
         
@@ -126,11 +127,6 @@ class DetectLine(common.SingleDishTaskTemplate):
                                                 'datatable': datatable})
 
             result.task = self.__class__
-
-            if self.context.subtask_counter is 0: 
-                result.stage_number = self.context.task_counter - 1
-            else:
-                result.stage_number = self.context.task_counter 
 
             return result
 
@@ -225,11 +221,6 @@ class DetectLine(common.SingleDishTaskTemplate):
                                             'datatable': datatable})
                 
         result.task = self.__class__
-                
-        if self.context.subtask_counter is 0: 
-            result.stage_number = self.context.task_counter - 1
-        else:
-            result.stage_number = self.context.task_counter 
                 
         return result
     
