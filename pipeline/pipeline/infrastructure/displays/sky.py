@@ -106,6 +106,7 @@ class SkyDisplay(object):
                 else:
                     if (collapseFunction == 'max') and ('image' in result) and ('pbcor' not in result):
                         collapsed = image.collapse(function=collapseFunction, axes=[2, 3], outfile=result+'.mom8')
+                        LOG.info('generated peak line intensity (moment 8) image of %s' % (os.path.basename(result)))
                     else:
                         collapsed = image.collapse(function=collapseFunction, axes=[2, 3])
             except:
