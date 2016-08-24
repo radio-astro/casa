@@ -5830,8 +5830,16 @@ TempImage<Float>* Imager::sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
   Int nchan = Int(ceil(fabs(freqMax - freqMin)/freqWidth))+1;
   //cerr<<"nchan="<<nchan<<" freqMax="<<freqMax<<" freqMin="<<freqMin<<" freqWidth="<<freqWidth<<endl; 
   //Filling it with the LSRK values
+  // SetJyGridFT will trigger nearestNeighbour interpolation for nchan>=2
   Vector<Double> freqArray(nchan);
-  if (nchan==3) {
+  if (nchan==1) {
+    freqArray[0] = freqMin;
+  }
+  else if (nchan==2) {
+    freqArray[0] = freqMin;
+    freqArray[1] = freqMax;
+  }
+  else if (nchan==3) {
     freqArray[0] = freqMin - freqWidth;
     freqArray[1] = freqMin;
     freqArray[2] = freqMin + freqWidth;
