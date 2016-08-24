@@ -8,6 +8,7 @@ import collections
 import datetime
 import operator
 import math
+import numpy as np
 
 import pipeline.domain.measures as measures
 import pipeline.infrastructure.utils as utils
@@ -1386,7 +1387,10 @@ def score_checksources(mses, fieldname, spwid, imagename):
         if not ms.derived_fluxes:
             continue
         for field_arg, measurements in ms.derived_fluxes.items():
-            mfieldid = str(ms.get_fields(field_arg)[0].id)
+            mfield = ms.get_fields(field_arg)[0]
+            if 'CHECK' not in mfield.intents:
+                continue
+            mfieldid = str(mfield.id)
             if mfieldid != fieldid:
                 continue
             for measurement in sorted(measurements, key=lambda m: int(m.spw_id)):
@@ -1404,7 +1408,9 @@ def score_checksources(mses, fieldname, spwid, imagename):
     if not reffluxes:
         refflux = None
     else:
-        refflux = qa.quantity (max(reffluxes), 'Jy')
+        median_flux = np.median(np.array(reffluxes))
+        #refflux = qa.quantity (max(reffluxes), 'Jy')
+        refflux = qa.quantity (median_flux, 'Jy')
 
     # Do the fit and compute positions offsets and flux ratios
     fitdict = checksource.checkimage (imagename, refdirection, refflux)
@@ -1421,16 +1427,17 @@ def score_checksources(mses, fieldname, spwid, imagename):
         fitflux = fitdict['fitflux']['value']
         if not refflux:
             coherence = None
-            score = max (0.0, 1.0 - min(1.0, fitdict['beamoffset']['value'])) 
+            score = max (0.0, 1.0 - min(1.0, beams)) 
+            longmsg = 'Source fit for %s spwd %d:  offet %0.3fmarcsec %0.3fbeams  fit flux %0.3fJy  decoherence None' % (fieldname, spwid, offset, beams, fitflux)
         else:
             coherence = fitdict['fluxloss']['value'] * 100.0
-            offsetscore = max (0.0, 1.0 - min(1.0, fitdict['beamoffset']['value'])) 
+            offsetscore = max (0.0, 1.0 - min(1.0, beams)) 
             fluxscore = max (0.0, 1.0 - fitdict['fluxloss']['value'])
             score = math.sqrt (fluxscore * offsetscore)
+            longmsg = 'Source fit for %s spwd %d:  offet %0.3fmarcsec %0.3fbeams  fit flux %0.3fJy  decoherence %0.3f percent' % (fieldname, spwid, offset, beams, fitflux, coherence)
         shortmsg = 'Source fit successful' 
-        longmsg = 'Source fit for %s spwd %d:  offet %0.3fmarcsec %0.3fbeams  fit flux %0.3fJy  decoherence %0.3f percent' % (fieldname, spwid, offset, beams, fitflux, coherence)
 
-    # Dummy score placehold for now
+    # Return score
     return pqa.QAScore (score, longmsg=longmsg, shortmsg=shortmsg)
 
 
