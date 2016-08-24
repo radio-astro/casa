@@ -211,7 +211,10 @@ class Tclean(cleanbase.CleanBase):
                 result.error = '%s/%s/spw%s clean error: %s' % (inputs.field, inputs.intent, inputs.spw)
                 return result
 
-            inputs.start = '%sGHz' % ((if0 + channel_width) / 1e9)
+            # tclean interprets the start frequency as the center of the
+            # first channel. We have, however, an edge to edge range.
+            # Thus shift by 0.5 channels.
+            inputs.start = '%sGHz' % ((if0 + 1.5 * channel_width) / 1e9)
             inputs.width = '%sMHz' % ((channel_width) / 1e6)
             inputs.nchan = int(round((if1 - if0) / channel_width - 2))
 
