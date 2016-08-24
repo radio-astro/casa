@@ -140,7 +140,10 @@ class FindCont(basetask.StandardTaskTemplate):
                         LOG.warning('No LSRK frequency overlap for Field %s SPW %s' % (target['field'], spwid))
                         continue
 
-                    start = '%sGHz' % ((if0 + channel_width) / 1e9)
+                    # tclean interprets the start frequency as the center of the
+                    # first channel. We have, however, an edge to edge range.
+                    # Thus shift by 0.5 channels.
+                    start = '%sGHz' % ((if0 + 1.5 * channel_width) / 1e9)
                     width = '%sMHz' % ((channel_width) / 1e6)
                     nchan = int(round((if1 - if0 ) / channel_width - 2))
 
