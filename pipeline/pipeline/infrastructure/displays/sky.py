@@ -104,7 +104,10 @@ class SkyDisplay(object):
                 if collapseFunction == 'center':
                     collapsed = image.collapse(function='mean', chans=str(image.summary()['shape'][3]/2), axes=[2, 3])
                 else:
-                    collapsed = image.collapse(function=collapseFunction, axes=[2, 3])
+                    if (collapseFunction == 'max') and ('image' in result) and ('pbcor' not in result):
+                        collapsed = image.collapse(function=collapseFunction, axes=[2, 3], outfile=result+'.mom8')
+                    else:
+                        collapsed = image.collapse(function=collapseFunction, axes=[2, 3])
             except:
                 # All channels flagged or some other error. Make collapsed zero image.
                 collapsed = image.newimagefromimage(infile=result)
