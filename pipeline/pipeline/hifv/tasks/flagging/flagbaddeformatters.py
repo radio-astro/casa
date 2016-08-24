@@ -260,7 +260,20 @@ class FlagBadDeformatters(basetask.StandardTaskTemplate):
                 flagstr = "mode='manual' antenna='"+antName+"' spw='"+spwstr+"'"
                 extflaglist.append(flagstr)
                 weblogflagdict[antName].append(spwstr)
-        
+
+        # Get basebands matched with spws.  spws is a single element list with a single csv string
+        tempDict = {}
+        for antNamekey, spws in weblogflagdict.iteritems():
+            basebands = []
+            for spwstr in spws[0].split(','):
+                spw = m.get_spectral_window(spwstr)
+                basebands.append(spw.name.split('#')[1])
+            basebands = list(set(basebands))  #Unique basebands
+            tempDict[antNamekey] = {'spws':spws,'basebands':basebands}
+
+        weblogflagdict = tempDict
+
+
         nflagcmds = len(flaglist)+len(extflaglist)
         if nflagcmds<1:
             LOG.info("No bad basebands/spws found")

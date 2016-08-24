@@ -9,7 +9,7 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 
 <p>Identify and flag basebands with bad deformatters or RFI based on bandpass (BP) table amps and phases.</p>
 
-       
+
         % for single_result in result:
             <h3>BP Table Amps</h3>
             <table class="table table-bordered table-striped table-condensed"
@@ -19,28 +19,31 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 		<tr>
 			<th>Antenna</th>
 			<th>SPWs</th>
+			<th>Basebands</th>
 		</tr>
 	    </thead>
 	    <tbody>
-	    
+
 	    % if single_result.result_amp == []:
 	        <tr>
 	        <td>None</td>
 	        <td>None</td>
+	        <td>None</td>
 	        </tr>
 	    % else:
-	        % for key, listvalues in single_result.amp_collection.iteritems():
+	        % for key, valueDict in single_result.amp_collection.iteritems():
 	            <tr>
 	            <td>${key}</td>
-	            <td>${','.join(listvalues)}</td>
+	            <td>${','.join(valueDict['spws'])}</td>
+	            <td>${','.join(valueDict['basebands'])}</td>
 	            </tr>
 	        % endfor
 	    % endif
-	        
+
 	    </tbody>
             </table>
             <br>
-            
+
             <h3>BP Table Phases</h3>
             <table class="table table-bordered table-striped table-condensed"
 	       summary="Deformatter Flagging Phase">
@@ -49,27 +52,29 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 		<tr>
 			<th>Antenna</th>
 			<th>SPWs</th>
+			<th>Basebands</th>
 		</tr>
 	    </thead>
 	    <tbody>
-	    
+
 	    % if single_result.result_phase == []:
 	        <tr>
 	        <td>None</td>
 	        <td>None</td>
+	        <td>None</td>
 	        </tr>
 	    % else:
-	        % for key, listvalues in single_result.phase_collection.iteritems():
+	        % for key, valueDict in single_result.phase_collection.iteritems():
 	            <tr>
 	            <td>${key}</td>
-	            <td>${','.join(listvalues)}</td>
+	            <td>${','.join(valueDict['spws'])}</td>
+	            <td>${','.join(valueDict['basebands'])}</td>
 	            </tr>
 	        % endfor
 	    % endif
-	        
+
 	    </tbody>
             </table>
-            
+
         % endfor
-	
-	
+
