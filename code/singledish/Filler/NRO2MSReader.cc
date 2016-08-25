@@ -638,10 +638,12 @@ Bool NRO2MSReader::getSourceRowImpl(SourceRecord &record) {
       Quantity(obs_header_.DEC00, "rad"),
       getDirectionFrame());
   record.proper_motion = Vector<Double>(0.0, 0.0);
-  record.rest_frequency = getRestFrequency(source_spw_id_counter_);
+  record.rest_frequency.resize(1);
+  record.rest_frequency[0] = getRestFrequency(source_spw_id_counter_);
   //record.transition
   record.num_lines = 1;
-  record.sysvel = obs_header_.VEL0;
+  record.sysvel.resize(1);
+  record.sysvel[0] = obs_header_.VEL0;
   double time_sec = getMiddleOfTimeRangeSec();
   record.time = time_sec;
   record.interval = time_sec - time_range_sec_[0];
