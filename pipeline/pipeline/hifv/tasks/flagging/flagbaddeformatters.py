@@ -267,7 +267,7 @@ class FlagBadDeformatters(basetask.StandardTaskTemplate):
             basebands = []
             for spwstr in spws[0].split(','):
                 spw = m.get_spectral_window(spwstr)
-                basebands.append(spw.name.split('#')[1])
+                basebands.append(spw.name.split('#')[0] + '  ' + spw.name.split('#')[1])
             basebands = list(set(basebands))  #Unique basebands
             tempDict[antNamekey] = {'spws':spws,'basebands':basebands}
 

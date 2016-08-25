@@ -19,7 +19,7 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 		<tr>
 			<th>Antenna</th>
 			<th>SPWs</th>
-			<th>Basebands</th>
+			<th>Band / Basebands</th>
 		</tr>
 	    </thead>
 	    <tbody>
@@ -52,7 +52,7 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 		<tr>
 			<th>Antenna</th>
 			<th>SPWs</th>
-			<th>Basebands</th>
+			<th>Band / Basebands</th>
 		</tr>
 	    </thead>
 	    <tbody>
