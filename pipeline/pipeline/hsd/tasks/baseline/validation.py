@@ -97,9 +97,13 @@ class ValidateLineResults(common.SingleDishResults):
 
     def merge_with_context(self, context):
         super(ValidateLineResults, self).merge_with_context(context)
-        # replace and export datatable to merge updated data with context
-        datatable = self.outcome.pop('datatable')
-        datatable.exportdata(minimal=True)
+        # exporting datatable should be done within the parent task
+#         datatable = self.outcome.pop('datatable')
+#         datatable.exportdata(minimal=True)
+        
+    @property
+    def datatable(self):
+        return self._get_outcome('datatable')
 
     def _outcome_name(self):
         return ''
@@ -128,8 +132,10 @@ class ValidateLineSinglePointing(basetask.StandardTaskTemplate):
         if datatable is None:
             LOG.debug('#PNP# instantiate local datatable')
             datatable = DataTable(self.inputs.context.observing_run.ms_datatable_name)
+            datatable_out = datatable
         else:
             LOG.debug('datatable is propagated from parent task')
+            datatable_out = None
 
         # for Pre-Defined Spectrum Window
         if len(window) != 0:
@@ -142,7 +148,7 @@ class ValidateLineSinglePointing(basetask.StandardTaskTemplate):
             outcome = {'lines': lines,
                        'channelmap_range': lines,
                        'cluster_info': {},
-                       'datatable': datatable}
+                       'datatable': datatable_out}
             result = ValidateLineResults(task=self.__class__,
                                          success=True,
                                          outcome=outcome)
@@ -191,7 +197,7 @@ class ValidateLineSinglePointing(basetask.StandardTaskTemplate):
         outcome = {'lines': lines,
                    'channelmap_range': lines,
                    'cluster_info': {},
-                   'datatable': datatable}
+                   'datatable': datatable_out}
         result = ValidateLineResults(task=self.__class__,
                                      success=True,
                                      outcome=outcome)
@@ -246,8 +252,10 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
         if datatable is None:
             LOG.debug('#PNP# instantiate local datatable')
             datatable = DataTable(self.inputs.context.observing_run.ms_datatable_name)
+            datatable_out = datatable
         else:
             LOG.debug('datatable is propagated from parent task')
+            datatable_out = None
 
         # for Pre-Defined Spectrum Window
         if len(window) != 0:
@@ -260,7 +268,7 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
             outcome = {'lines': lines,
                        'channelmap_range': lines,
                        'cluster_info': {},
-                       'datatable': datatable}
+                       'datatable': datatable_out}
             result = ValidateLineResults(task=self.__class__,
                                          success=True,
                                          outcome=outcome)
@@ -325,7 +333,7 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
             outcome = {'lines': [],
                        'channelmap_range': [],
                        'cluster_info': {},
-                       'datatable': datatable}
+                       'datatable': datatable_out}
             result = ValidateLineResults(task=self.__class__,
                                          success=True,
                                          outcome=outcome)
@@ -499,7 +507,7 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
         outcome = {'lines': lines,
                    'channelmap_range': channelmap_range,
                    'cluster_info': self.cluster_info,
-                   'datatable': datatable}
+                   'datatable': datatable_out}
         result = ValidateLineResults(task=self.__class__,
                                      success=True,
                                      outcome=outcome)

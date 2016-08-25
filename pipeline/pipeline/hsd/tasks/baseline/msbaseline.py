@@ -345,7 +345,7 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
                                                        window, edge, broadline, clusteringalgorithm)
             maskline_task = maskline.MaskLine(maskline_inputs)
             job = common.ParameterContainerJob(maskline_task, datatable=datatable)
-            maskline_result = self._executor.execute(job, merge=True)
+            maskline_result = self._executor.execute(job, merge=False)
             grid_table = maskline_result.outcome['grid_table']
             if grid_table is None:
                 LOG.info('Skip reduction group {}', group_id)

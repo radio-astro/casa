@@ -60,20 +60,22 @@ class DetectLineResults(common.SingleDishResults):
     def merge_with_context(self, context):
         LOG.debug('DetectLineResults.merge_with_context')
         super(DetectLineResults, self).merge_with_context(context)
-        if type(self.outcome) is types.DictType and self.outcome.has_key('datatable'):
-            datatable = self.outcome.pop('datatable')
-            start_time = time.time()
-            LOG.debug('Start exporting datatable (minimal): {}', start_time)
-            datatable.exportdata(minimal=True)
-            end_time = time.time()
-            LOG.debug('End exporting datatable (minimal): {} ({} sec)', end_time, end_time - start_time)
-        
+        # exporting datatable should be done within the parent task
+#         if type(self.outcome) is types.DictType and self.outcome.has_key('datatable'):
+#             datatable = self.outcome.pop('datatable')
+#             start_time = time.time()
+#             LOG.debug('Start exporting datatable (minimal): {}', start_time)
+#             datatable.exportdata(minimal=True)
+#             end_time = time.time()
+#             LOG.debug('End exporting datatable (minimal): {} ({} sec)', end_time, end_time - start_time)
+         
     @property
     def signals(self):
-        if type(self.outcome) is types.DictType and self.outcome.has_key('signals'):
-            return self.outcome['signals']
-        else:
-            return None
+        return self._get_outcome('signals')
+        
+    @property
+    def datatable(self):
+        return self._get_outcome('datatable')
         
     def _outcome_name(self):
         return ''
@@ -102,8 +104,10 @@ class DetectLine(basetask.StandardTaskTemplate):
         if datatable is None:
             LOG.debug('#PNP# instantiate local datatable')
             datatable = DataTable(self.inputs.context.observing_run.ms_datatable_name)
+            datatable_out = datatable
         else:
             LOG.debug('datatable is propagated from parent task')
+            datatable_out = None
         
         detect_signal = {}
 
@@ -124,7 +128,7 @@ class DetectLine(basetask.StandardTaskTemplate):
             result = DetectLineResults(task=self.__class__,
                                        success=True,
                                        outcome={'signals': detect_signal,
-                                                'datatable': datatable})
+                                                'datatable': datatable_out})
 
             result.task = self.__class__
 
@@ -218,7 +222,7 @@ class DetectLine(basetask.StandardTaskTemplate):
         result = DetectLineResults(task=self.__class__,
                                    success=True,
                                    outcome={'signals': detect_signal, 
-                                            'datatable': datatable})
+                                            'datatable': datatable_out})
                 
         result.task = self.__class__
                 

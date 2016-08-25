@@ -131,7 +131,7 @@ class MaskLine(basetask.StandardTaskTemplate):
                                                                antenna_list, spwid_list)
         gridding_task = simplegrid.SDMSSimpleGridding(gridding_inputs)
         job = common.ParameterContainerJob(gridding_task, datatable=dt, index_list=index_list)
-        gridding_result = self._executor.execute(job, merge=True)
+        gridding_result = self._executor.execute(job, merge=False)
         spectra = gridding_result.outcome['spectral_data']
         grid_table = gridding_result.outcome['grid_table']
         t1 = time.time()
@@ -147,10 +147,6 @@ class MaskLine(basetask.StandardTaskTemplate):
                                      outcome=outcome)
             result.task = self.__class__
                  
-            if self.inputs.context.subtask_counter is 0: 
-                result.stage_number = self.inputs.context.task_counter - 1
-            else:
-                result.stage_number = self.inputs.context.task_counter 
             return result
          
         LOG.trace('len(grid_table)={}, spectra.shape={}', len(grid_table), numpy.asarray(spectra).shape)
@@ -163,8 +159,18 @@ class MaskLine(basetask.StandardTaskTemplate):
         line_finder = detection.DetectLine(detection_inputs)
         job = common.ParameterContainerJob(line_finder, datatable=dt, grid_table=grid_table, 
                                            spectral_data=spectra)
-        detection_result = self._executor.execute(job, merge=True)
+        detection_result = self._executor.execute(job, merge=False)
         detect_signal = detection_result.signals
+        datatable_out = detection_result.datatable
+        if datatable_out is not None:
+            # the task returns updated datatable which is different instance from the one 
+            # passed to the task, so datatable_out needs to be exported and datatable 
+            # must be replaced
+            LOG.debug('Replacing datatable with the one in the result object')
+            datatable_out.exportdata(minimal=True)
+            datatable = datatable_out
+        else:
+            datatable.exportdata(minimal=True)
         t1 = time.time()
  
         LOG.trace('detect_signal={}', detect_signal)
@@ -180,13 +186,23 @@ class MaskLine(basetask.StandardTaskTemplate):
         LOG.trace('len(index_list)={}', len(index_list))
         job = common.ParameterContainerJob(line_validator, datatable=datatable, index_list=index_list, 
                                            grid_table=grid_table, detect_signal=detect_signal)
-        validation_result = self._executor.execute(job, merge=True)
+        validation_result = self._executor.execute(job, merge=False)
         lines = validation_result.outcome['lines']
         if validation_result.outcome.has_key('channelmap_range'):
             channelmap_range = validation_result.outcome['channelmap_range']
         else:
             channelmap_range = validation_result.outcome['lines']
         cluster_info = validation_result.outcome['cluster_info']
+        datatable_out = validation_result.datatable
+        if datatable_out is not None:
+            # the task returns updated datatable which is different instance from the one 
+            # passed to the task, so datatable_out needs to be exported and datatable 
+            # must be replaced
+            LOG.debug('Replacing datatable with the one in the result object')
+            datatable_out.exportdata(minimal=True)
+            datatable = datatable_out
+        else:
+            datatable.exportdata(minimal=True)
         t1 = time.time()
  
         #LOG.debug('lines=%s'%(lines))
