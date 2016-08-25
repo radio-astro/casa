@@ -96,6 +96,7 @@ class SDMSBaselineResults(common.SingleDishResults):
     def __init__(self, task=None, success=None, outcome=None):
         super(SDMSBaselineResults, self).__init__(task, success, outcome)
 
+    #@utils.profiler
     def merge_with_context(self, context):
         super(SDMSBaselineResults, self).merge_with_context(context)
 
@@ -179,6 +180,16 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
         
         def get_channelmap_range_list(self):
             return self.channelmap_range
+        
+        def get_process_list(self):
+            field_id_list = self.get_field_id_list()
+            antenna_id_list = self.get_antenna_id_list()
+            spw_id_list = self.get_spw_id_list()
+            
+            assert len(field_id_list) == len(antenna_id_list)
+            assert len(field_id_list) == len(spw_id_list)
+            
+            return field_id_list, antenna_id_list, spw_id_list
     
     def is_multi_vis_task(self):
         return True
@@ -388,7 +399,7 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
             job = common.ParameterContainerJob(fitter_task, datatable=datatable, 
                                                process_list=accum, 
                                                deviationmask_list=devmask_list)
-            fitter_results = self._executor.execute(job, merge=True)
+            fitter_results = self._executor.execute(job, merge=False)
             LOG.debug('fitter_results: {}', fitter_results)
             if isinstance(fitter_results, basetask.ResultsList):
                 for r in fitter_results:

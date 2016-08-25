@@ -133,8 +133,16 @@ class BaselineFitParamConfig(basetask.StandardTaskTemplate):
     ApplicableDuration = 'raster' # 'raster' | 'subscan'
     MaxPolynomialOrder = 'none' # 'none', 0, 1, 2,...
     PolynomialOrder = 'automatic' # 'automatic', 0, 1, 2, ...
-    ClipCycle = 1
 
+    def __init__(self, inputs):
+        super(BaselineFitParamConfig, self).__init__(inputs)
+        self.paramdict = {}
+    
+    # readonly attributes    
+    @property
+    def ClipCycle(self):
+        return 1
+    
     def is_multi_vis_task(self):
         return False
     
@@ -379,12 +387,24 @@ class CubicSplineFitParamConfigInputs(BaselineSubtractionInputsBase):
     
 class CubicSplineFitParamConfig(BaselineFitParamConfig):
     Inputs = CubicSplineFitParamConfigInputs
+    
+    def __init__(self, inputs):
+        super(CubicSplineFitParamConfig, self).__init__(inputs)
+        
+        # constant stuff
+        self.paramdict[BLP.FUNC] = 'cspline'
+        self.paramdict[BLP.CLIPNITER] = self.ClipCycle
+        self.paramdict[BLP.CLIPTHRESH] = 5.0
+    
     def _get_param(self, idx, pol, polyorder, nchan, mask, edge, nchan_without_edge, nchan_masked, fragment, nwindow, win_polyorder, masklist):
         num_nomask = nchan_without_edge - nchan_masked
         num_pieces = max(int(min(polyorder * num_nomask / float(nchan_without_edge) + 0.5, 0.1 * num_nomask)), 1)
         LOG.trace('Cubic Spline Fit: Number of Sections = {}', num_pieces)
-        return {BLP.ROW: idx, BLP.POL: pol, BLP.MASK: masklist, BLP.NPIECE: num_pieces, BLP.FUNC: 'cspline', BLP.CLIPTHRESH: 5.0, BLP.CLIPNITER: self.ClipCycle}
-    
+        self.paramdict[BLP.ROW] = idx
+        self.paramdict[BLP.POL] = pol
+        self.paramdict[BLP.MASK] = masklist
+        self.paramdict[BLP.NPIECE] = num_pieces
+        return self.paramdict
 
 class BaselineSubtractionWorkerInputs(BaselineSubtractionInputsBase):
     def __init__(self, context, vis=None,  
@@ -410,12 +430,7 @@ class BaselineSubtractionWorker(basetask.StandardTaskTemplate):
         
         assert process_list is not None
         assert deviationmask_list is not None
-        field_id_list = process_list.get_field_id_list()
-        antenna_id_list = process_list.get_antenna_id_list()
-        spw_id_list = process_list.get_spw_id_list()
-        
-        assert len(field_id_list) == len(antenna_id_list)
-        assert len(antenna_id_list) == len(spw_id_list)
+        field_id_list, antenna_id_list, spw_id_list = process_list.get_process_list()
         assert len(field_id_list) == len(deviationmask_list)
         
         # initialization of blparam file
@@ -434,7 +449,7 @@ class BaselineSubtractionWorker(basetask.StandardTaskTemplate):
                                          bloutput=bloutput)
             task = self.SubTask(inputs)
             job = common.ParameterContainerJob(task, datatable=datatable)
-            subtask_results = self._executor.execute(job, merge=True)
+            subtask_results = self._executor.execute(job, merge=False)
             
         # execute tsdbaseline
         job = casa_tasks.tsdbaseline(infile=vis, datacolumn=datacolumn, blmode='fit', dosubtract=True,
@@ -465,9 +480,7 @@ class BaselineSubtractionWorker(basetask.StandardTaskTemplate):
         ms_id = self.inputs.context.observing_run.measurement_sets.index(ms)
         vis = self.inputs.vis
         process_list = results.outcome.pop('process_list')
-        field_id_list = process_list.get_field_id_list()
-        antenna_id_list = process_list.get_antenna_id_list()
-        spw_id_list = process_list.get_spw_id_list()
+        field_id_list, antenna_id_list, spw_id_list = process_list.get_process_list()
         grid_table_list = process_list.get_grid_table_list()
         channelmap_range_list = process_list.get_channelmap_range_list()
         deviationmask_list = results.outcome.pop('deviationmask_list')
