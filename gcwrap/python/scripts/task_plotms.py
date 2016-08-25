@@ -260,7 +260,7 @@ def plotms(vis=None,
         synonyms['greal']=synonyms['gainreal']=synonyms['GainReal']='Gain Real'
         synonyms['gimag']=synonyms['gainimag']=synonyms['GainImag']='Gain Imag'
         synonyms['del']=synonyms['delay']=synonyms['Delay']='delay'
-        synonyms['swp']=synonyms['swpower']=synonyms['switchedpower']=synonyms['SwPower']='swpower'
+        synonyms['swp']=synonyms['swpower']=synonyms['switchedpower']=synonyms['SwPower']=synonyms['spgain']='swpower'
         synonyms['tsys']=synonyms['Tsys']=synonyms['TSYS']='tsys'
         synonyms['opac']=synonyms['opacity']=synonyms['Opac']='opac'
         synonyms['snr']=synonyms['SNR']='SNR'
