@@ -34,14 +34,58 @@ import pipeline.infrastructure.casatools as casatools
 from pipeline.domain.datatable import OnlineFlagIndex
 import pipeline.infrastructure.tablereader as tablereader
 
-LOG = infrastructure.get_logger(__name__)
+_LOG = infrastructure.get_logger(__name__)
+
+class OnDemandStringParseLogger(object):
+    PRIORITY_MAP = {'warn': 'warning'}
+    
+    def __init__(self, logger):
+        self.logger = logger
+        self._func_list = []
+
+    @staticmethod
+    def parse(msg_template, *args, **kwargs):
+        if len(args) == 0 and len(kwargs) == 0:
+            return msg_template
+        else:
+            return msg_template.format(*args, **kwargs)
+
+    def _post(self, priority, msg_template, *args, **kwargs):
+        key_for_level = self.PRIORITY_MAP.get(priority, priority)
+        if self.logger.isEnabledFor(logging.LOGGING_LEVELS[key_for_level]):
+            getattr(self.logger, priority)(OnDemandStringParseLogger.parse(msg_template, *args, **kwargs))
+
+    def critical(self, msg_template, *args, **kwargs):
+        self._post('critical', msg_template, *args, **kwargs)
+
+    def error(self, msg_template, *args, **kwargs):
+        self._post('error', msg_template, *args, **kwargs)
+
+    def warn(self, msg_template, *args, **kwargs):
+        self._post('warning', msg_template, *args, **kwargs)
+
+    def info(self, msg_template, *args, **kwargs):
+        self._post('info', msg_template, *args, **kwargs)
+
+    def debug(self, msg_template, *args, **kwargs):
+        self._post('debug', msg_template, *args, **kwargs)
+
+    def todo(self, msg_template, *args, **kwargs):
+        self._post('todo', msg_template, *args, **kwargs)
+
+    def trace(self, msg_template, *args, **kwargs):
+        self._post('trace', msg_template, *args, **kwargs)
+        
+LOG = OnDemandStringParseLogger(_LOG)
 
 def profiler(func):
     @functools.wraps(func)
     def wrapper(*args, **kw):
         start = time.time()
+#        LOG.info('#TIMING# Begin {} at {}', func.__name__, start)
         result = func(*args, **kw)
         end = time.time()
+#        LOG.info('#TIMING# End {} at {}', func.__name__, end)
         
         LOG.info('#PROFILE# %s: elapsed %s sec'%(func.__name__, end - start))
     
@@ -1013,50 +1057,3 @@ def create_parallel_job(task_cls, task_args, context):
     LOG.debug('Parallel Job: %s'%(task))
     return job
 
-def test():
-    LOG.debug('LOG::This is debug')
-    
-    logger = OnDemandStringParseLogger(LOG)
-    for priority in logging.LOGGING_LEVELS.keys():
-        if priority == 'warning':
-            priority = 'warn'
-        getattr(logger, priority)('This is {level}', level=priority)
-
-
-class OnDemandStringParseLogger(object):
-    PRIORITY_MAP = {'warn': 'warning'}
-    
-    def __init__(self, logger):
-        self.logger = logger
-        self._func_list = []
-
-    @staticmethod
-    def parse(msg_template, *args, **kwargs):
-        print 'parsing ...'
-        return msg_template.format(*args, **kwargs)
-
-    def _post(self, priority, msg_template, *args, **kwargs):
-        key_for_level = self.PRIORITY_MAP.get(priority, priority)
-        if self.logger.isEnabledFor(logging.LOGGING_LEVELS[key_for_level]):
-            getattr(self.logger, priority)(OnDemandStringParseLogger.parse(msg_template, *args, **kwargs))
-
-    def critical(self, msg_template, *args, **kwargs):
-        self._post('critical', msg_template, *args, **kwargs)
-
-    def error(self, msg_template, *args, **kwargs):
-        self._post('error', msg_template, *args, **kwargs)
-
-    def warn(self, msg_template, *args, **kwargs):
-        self._post('warning', msg_template, *args, **kwargs)
-
-    def info(self, msg_template, *args, **kwargs):
-        self._post('info', msg_template, *args, **kwargs)
-
-    def debug(self, msg_template, *args, **kwargs):
-        self._post('debug', msg_template, *args, **kwargs)
-
-    def todo(self, msg_template, *args, **kwargs):
-        self._post('todo', msg_template, *args, **kwargs)
-
-    def trace(self, msg_template, *args, **kwargs):
-        self._post('trace', msg_template, *args, **kwargs)
