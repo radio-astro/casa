@@ -140,8 +140,11 @@ class ALMAPhcorBandpass(bandpassworker.BandpassWorker):
         # Look for missing and bad solutions.
         #    Adjust the estimates for poor solutions to the
         #    best acceptable value
+        #    Cap the result to the nearest even multiple of the integration time
+        #    below 60s
         nmissing = 0
         tmpsolints = []
+        max_solint = quanta.quantity('60s')
         for i in range(len(snr_result.spwids)):
             if not snr_result.phsolints[i]:
                 nmissing = nmissing + 1
@@ -153,6 +156,7 @@ class ALMAPhcorBandpass(bandpassworker.BandpassWorker):
                             snr_result.spwids[i], snr_result.nphsolutions[i], inputs.ms.basename)
                 factor = float(max(1, snr_result.nphsolutions[i])) / inputs.phaseupnsols
                 old_solint = snr_result.phsolints[i]
+                old_intsolint = snr_result.phintsolints[i]
                 if old_solint == 'int':
                     # We expect an MS to have the same integration interval
                     # for each spw in the phase-up scan(s). We can't rely on 
@@ -173,7 +177,13 @@ class ALMAPhcorBandpass(bandpassworker.BandpassWorker):
                         LOG.warning('Expected 1 solution interval for %s scans'
                                     ' for spw %s. Got %s', inputs.intent,
                                     snr_result.spwids[i], solints)
-                        tmpsolints.append(old_solint)
+                        if quanta.gt (old_solint,  max_solint):
+                            best_solint = _constrain_phaseupsolint (old_solint, old_intsolint, max_solint)
+                            LOG.warning('Solution interval for spw %s greater than %0.3fs adjusting to %0.3fs',
+                                snr_result.spwids[i], max_solint['value'], best_solint['value'])
+                        else:
+                            best_solint = old_solint
+                        tmpsolints.append(best_solint)
                         continue
 
                     # OK. We got one solution interval for all scans of the 
@@ -188,9 +198,21 @@ class ALMAPhcorBandpass(bandpassworker.BandpassWorker):
                 newsolint = quanta.tos(quanta.mul(old_solint, factor))
                 LOG.warning('Resetting estimated phaseup solint for spw %s from %s to %s in MS %s',
                             snr_result.spwids[i], snr_result.phsolints[i], newsolint, inputs.ms.basename)
-                tmpsolints.append(newsolint)
+                if quanta.gt (newsolint,  max_solint):
+                    best_solint = _constrain_phaseupsolint (newsolint, old_intsolint, max_solint)
+                    LOG.warning('Solution interval for spw %s greater than %0.3fs adjusting to %0.3fs',
+                        snr_result.spwids[i], max_solint['value'], best_solint['value'])
+                else:
+                    best_solint = newsolint
+                tmpsolints.append(best_solint)
             else:
-                tmpsolints.append(snr_result.phsolints[i])
+                if quanta.gt (snr_result.phsolints[i],  max_solint):
+                    best_solint = _constrain_phaseupsolint (snr_result.phsolints[i], snr_result.phintsolints[i], max_solint)
+                    LOG.warning('Solution interval for spw %s greater than %0.3fs adjusting to %0.3fs',
+                        snr_result.spwids[i], max_solint['value'], best_solint['value'])
+                else:
+                    best_solint = snr_result.phsolints[i]
+                tmpsolints.append(best_solint)
 
         # If all values are missing return default value.
         if nmissing >= nexpected:
@@ -444,3 +466,16 @@ class ALMAPhcorBandpass(bandpassworker.BandpassWorker):
             outspw.append(cmd)
     
         return ','.join(outspw)
+
+
+# Constrain the solint to be the largest even number of integrations which
+# are greater than a specified maximum. All input quantities are quanta in seconds.
+
+def _constrain_phaseupsolint (input_solint, integration_time, max_solint):
+
+    quanta = casatools.quanta
+    newsolint = input_solint
+    while quanta.gt(newsolint, max_solint):
+         newsolint = quanta.sub(newsolint, integration_time)
+
+    return newsolint
