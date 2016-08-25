@@ -89,6 +89,11 @@ Compute clean results from a list of specified targets.
     <value>1</value>
   </param>
 
+  <param type="bool" name="cleancontranges">
+    <description>Clean continuum frequency ranges in cubes</description>
+    <value>False</value>
+  </param>
+
   <param type="bool" name="subcontms">
     <description>Subtract continuum in MS</description>
     <value>False</value>
@@ -241,6 +246,10 @@ weighting_robust -- For weighting='briggs' and 'briggsabs'
 weighting_noise -- For weighting='briggsabs'
                        noise parameter to use for Briggs "abs" weighting
                        example noise='1.0mJy'
+
+cleancontranges -- Clean continuum frequency ranges in cubes
+                   default=False
+                   Options: False, True
 
 subcontms -- Subtract continuum in MS
              Caveat: if enabled, repeated continuum subtraction will

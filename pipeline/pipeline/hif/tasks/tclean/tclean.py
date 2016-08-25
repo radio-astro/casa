@@ -36,7 +36,7 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
                  weighting=None, robust=None, noise=None, npixels=None,
                  restoringbeam=None, iter=None, mask=None, niter=None, threshold=None,
                  noiseimage=None, hm_masking=None, hm_cleaning=None, tlimit=None,
-                 masklimit=None, maxncleans=None, subcontms=None, parallel=None):
+                 masklimit=None, maxncleans=None, cleancontranges=None, subcontms=None, parallel=None):
         self._init_properties(vars())
         self.heuristics = tclean.TcleanHeuristics(self.context, self.vis, self.spw)
 
@@ -47,6 +47,7 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
     hm_masking = basetask.property_with_default('hm_masking', 'centralregion')
     masklimit = basetask.property_with_default('masklimit', 4.0)
     tlimit = basetask.property_with_default('tlimit', 4.0)
+    cleancontranges = basetask.property_with_default('cleancontranges', False)
     subcontms = basetask.property_with_default('subcontms', False)
 
     @property
@@ -475,7 +476,7 @@ class Tclean(cleanbase.CleanBase):
                 new_cleanmask = '%s.iter%s.cleanmask' % (rootname, iter)
 
             # perform an iteration.
-            if (inputs.specmode == 'cube'):
+            if (inputs.specmode == 'cube') and (not inputs.cleancontranges):
                 seq_result = sequence_manager.iteration(new_cleanmask, self.pblimit_image, self.pblimit_cleanmask, inputs.spw, inputs.spwsel_lsrk)
             else:
                 seq_result = sequence_manager.iteration(new_cleanmask, self.pblimit_image, self.pblimit_cleanmask)

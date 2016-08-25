@@ -216,6 +216,11 @@ Compute a clean map.
     <value>1</value>
   </param>
 
+  <param type="bool" name="cleancontranges">
+    <description>Clean continuum frequency ranges in cubes</description>
+    <value>False</value>
+  </param>
+
   <param type="bool" name="subcontms">
     <description>Subtract continuum in MS</description>
     <value>False</value>
@@ -538,6 +543,10 @@ threshold -- Threshold for cleaning
 maxncleans -- Maximum number of clean calls
     default: 1
     example: 10
+
+cleancontranges -- Clean continuum frequency ranges in cubes
+                   default=False
+                   Options: False, True
 
 subcontms -- Subtract continuum in MS
              Caveat: if enabled, repeated continuum subtraction will
