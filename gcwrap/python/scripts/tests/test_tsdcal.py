@@ -1184,7 +1184,9 @@ class tsdcal_test_otf(unittest.TestCase):
             'applytable':os.path.join(self.ref_datapath,'lissajous.edges_new_fraction_0.1.ms_caltable')
         }
         self.current_test_params = {
-            'ref_calibrated_ms':'lissajous.edges_new_fraction_0.1.sky.ms'
+            # new reference data after George's CTTimeInterp1 fix
+            #'ref_calibrated_ms':'lissajous.edges_new_fraction_0.1.sky.ms'
+            'ref_calibrated_ms':'lissajous.edges_after4.7_fraction_0.1.sky.ms'
         }
         expected_result = MsCorrectedDataChecker(self.ref_calibrated_ms())
         self.run_tsdcal()
@@ -1200,7 +1202,9 @@ class tsdcal_test_otf(unittest.TestCase):
             'calmode':'otf,tsys,apply',
         }
         self.current_test_params = {
-            'ref_calibrated_ms':'lissajous.edges_new_fraction_0.1.sky.ms'
+            # new reference data after George's CTTimeInterp1 fix
+            #'ref_calibrated_ms':'lissajous.edges_new_fraction_0.1.sky.ms'
+            'ref_calibrated_ms':'lissajous.edges_after4.7_fraction_0.1.sky.ms'
         }
         expected_result = MsCorrectedDataChecker(self.ref_calibrated_ms(),convert_to_kelvin=True)
         self.run_tsdcal()
