@@ -527,7 +527,8 @@ def read_fluxes(ms, dbservice=True):
                     iquv_db = (measures.FluxDensity(float(f),measures.FluxDensityUnits.JANSKY),
                                iquv[1], iquv[2], iquv[3])
                     if int(spw_id) in science_spw_ids:
-                        LOG.info("Source: "+source_name +" spw: "+spw_id+"    ASDM Flux: "+str(iquv[0])+"    Online catalog Flux: "+str(f) +" Jy")
+                        #LOG.info("Source: "+source_name +" spw: "+spw_id+"    ASDM Flux: "+str(iquv[0])+"    Online catalog Flux: "+str(f) +" Jy")
+                        LOG.info("Source: "+source_name +" spw: "+str(spw_id)+"    ASDM Flux: "+str(iquv[0])+"    Online catalog Flux: "+str(f) +" Jy")
                 except:
                     #No flux values from Source.xml
                     iquv_db = (measures.FluxDensity(float(f),measures.FluxDensityUnits.JANSKY),
@@ -535,7 +536,8 @@ def read_fluxes(ms, dbservice=True):
                                measures.FluxDensity(0.0,measures.FluxDensityUnits.JANSKY),
                                measures.FluxDensity(0.0,measures.FluxDensityUnits.JANSKY))
                     if (int(spw_id) in science_spw_ids):
-                        LOG.info("Source: "+source_name +" spw: "+spw_id+"    No ASDM Flux, Online Catalog Flux: "+str(f))
+                        #LOG.info("Source: "+source_name +" spw: "+spw_id+"    No ASDM Flux, Online Catalog Flux: "+str(f))
+                        LOG.info("Source: "+source_name +" spw: "+str(spw_id)+"    No ASDM Flux, Online Catalog Flux: "+str(f))
                 m = domain.FluxMeasurement(spw_id, *iquv_db)
 
             except:
@@ -547,7 +549,7 @@ def read_fluxes(ms, dbservice=True):
                     #Use Source.xml values since nothing was returned from the online database
                     m = domain.FluxMeasurement(spw_id, *iquv)
                     if (int(spw_id) in science_spw_ids):
-                        LOG.info("Source: "+source_name +" spw: "+spw_id+"    ASDM Flux: "+str(iquv[0]) +"     No online catalog information.")
+                        LOG.info("Source: "+source_name +" spw: "+str(spw_id)+"    ASDM Flux: "+str(iquv[0]) +"     No online catalog information.")
 
         result[source].append(m)
 
