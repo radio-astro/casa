@@ -258,14 +258,17 @@ Bool SetJyGridFT::fromRecord(String& error,
 
   Vector<Double> lsrfreq;
   //Bool convert;
+
+  InterpolateArray1D<Double, Double>::InterpolationMethod  meth= InterpolateArray1D<Double, Double>::nearestNeighbour;
+  if(freqscale_p.nelements() > 2)
+    meth= InterpolateArray1D<Double, Double>::linear;
+  
   lsrfreq=vb.getFrequencies(0,MFrequency::LSRK);
   //vb.lsrFrequency(vb.spectralWindow(), lsrfreq, convert);
   interpscale_p.resize(lsrfreq.nelements());
   InterpolateArray1D<Double,Double>::
-	        interpolate(interpscale_p,lsrfreq, freqscale_p, scale_p,InterpolateArray1D<Double, Double>::nearestNeighbour);
-
-
-
+	        interpolate(interpscale_p,lsrfreq, freqscale_p, scale_p,meth);
+ 
   //    IPosition s(data.shape());
   Int nvp=data.shape()(0);
   Int nvc=data.shape()(1);
