@@ -380,6 +380,14 @@ def bpcal( in_table, out_dir, logobj='PYTHON', create_plots=False ):
 
 def bpcal_calc( in_table, logger='' ):
 
+        # Get the list of spw ids actually in the caltable
+        #    Should be handled by calanalysis tool meta data
+        #    fetchers but is not.
+        tbLoc = casac.table()
+        tbLoc.open(in_table)
+        spwidList = numpy.unique(tbLoc.getcol('SPECTRAL_WINDOW_ID')).tolist()
+        tbLoc.close()
+
 	# Create the local instance of the calibration analysis tool and open
 	# the bandpass caltable
 
@@ -390,13 +398,17 @@ def bpcal_calc( in_table, logger='' ):
 
 	caLoc.open( in_table )
 
-
-	# Get the spectral window and channel lists
-
-	spwList = caLoc.spw( name=False )
-
-	numchanList = caLoc.numchannel()
-
+        # Get the spw ids and corresponding number of channels in the
+        #    caltable meta data and remove values that are not represented
+        #    in the caltable.
+        full_spwList = caLoc.spw( name=False )
+        full_numchanList = caLoc.numchannel()
+        spwList = []; numchanList = []
+        for spwid, numchan in zip(full_spwList, full_numchanList):
+            if int(spwid) not in spwidList:
+                continue
+            spwList.append(spwid)
+            numchanList.append(numchan)
 
 	# Initialize the bandpass calibration statistics dictionary
 
@@ -420,7 +432,7 @@ def bpcal_calc( in_table, logger='' ):
 			    weight=False )
 			f['spw'] = int( spwList[s] )
 			f['chanRange'] = chanRange
-			bpcal_stats['AMPLITUDE_FIT'][str(s)] = f
+			bpcal_stats['AMPLITUDE_FIT'][spwList[s]] = f
 
 	except Exception, err:
 		origin = 'bpcal.bpcal_calc'
@@ -445,7 +457,7 @@ def bpcal_calc( in_table, logger='' ):
 			    type='LSQ', weight=False )
 			f['spw'] = int( spwList[s] )
 			f['chanRange'] = chanRange
-			bpcal_stats['PHASE_FIT'][str(s)] = f
+			bpcal_stats['PHASE_FIT'][spwList[s]] = f
 
 	except Exception, err:
 		origin = 'bpcal.bpcal_calc'
@@ -460,36 +472,34 @@ def bpcal_calc( in_table, logger='' ):
 
 	try:
             for s in range( len(spwList) ):
-                #chanRange = bpcal_chanRangeList( numchanList[s] )
-                #if chanRange == []: continue
-                #spw = bpcal_spwChanString( spwList[s], chanRange )
+                chanRange = [0, numchanList[s]-1]
 
                 # Consider full channel range. Any roll-off should be flagged
                 # already.
                 spw = spwList[s]
 
-                bpcal_stats['AMPLITUDE'][str(s)] = dict()
-                bpcal_stats['AMPLITUDE'][str(s)]['spw'] = int( spwList[s] )
-                bpcal_stats['AMPLITUDE'][str(s)]['chanRange'] = chanRange
-                bpcal_stats['PHASE'][str(s)] = dict()
-                bpcal_stats['PHASE'][str(s)]['spw'] = int( spwList[s] )
-                bpcal_stats['PHASE'][str(s)]['chanRange'] = chanRange
-                bpcal_stats['AMPLITUDE_SNR'][str(s)] = dict()
-                bpcal_stats['AMPLITUDE_SNR'][str(s)]['spw'] = int( spwList[s] )
-                bpcal_stats['AMPLITUDE_SNR'][str(s)]['chanRange'] = chanRange
+                bpcal_stats['AMPLITUDE'][spwList[s]] = dict()
+                bpcal_stats['AMPLITUDE'][spwList[s]]['spw'] = int( spwList[s] )
+                bpcal_stats['AMPLITUDE'][spwList[s]]['chanRange'] = chanRange
+                bpcal_stats['PHASE'][spwList[s]] = dict()
+                bpcal_stats['PHASE'][spwList[s]]['spw'] = int( spwList[s] )
+                bpcal_stats['PHASE'][spwList[s]]['chanRange'] = chanRange
+                bpcal_stats['AMPLITUDE_SNR'][spwList[s]] = dict()
+                bpcal_stats['AMPLITUDE_SNR'][spwList[s]]['spw'] = int( spwList[s] )
+                bpcal_stats['AMPLITUDE_SNR'][spwList[s]]['chanRange'] = chanRange
                 # Amplitude
                 bp_data = caLoc.get(spw = spw)
                 for pol in bp_data.iterkeys():
                     amp_values = numpy.ma.array(bp_data[pol]['value'], mask=bp_data[pol]['flag'])
-                    bpcal_stats['AMPLITUDE'][str(s)][pol] = amp_values
-                    amp_mean = numpy.ma.average(bpcal_stats['AMPLITUDE'][str(s)][pol])
+                    bpcal_stats['AMPLITUDE'][spwList[s]][pol] = amp_values
+                    amp_mean = numpy.ma.average(bpcal_stats['AMPLITUDE'][spwList[s]][pol])
                     amp_rms = rms(amp_values-amp_mean)
-                    bpcal_stats['AMPLITUDE_SNR'][str(s)][pol] = amp_mean / amp_rms
+                    bpcal_stats['AMPLITUDE_SNR'][spwList[s]][pol] = amp_mean / amp_rms
                 # Phase
                 bp_data = caLoc.get(spw = spw, ap='PHASE')
                 for pol in bp_data.iterkeys():
                     phase_values = numpy.ma.array(bp_data[pol]['value'], mask=bp_data[pol]['flag'])
-                    bpcal_stats['PHASE'][str(s)][pol] = phase_values
+                    bpcal_stats['PHASE'][spwList[s]][pol] = phase_values
 	except Exception, err:
 		origin = 'bpcal.bpcal_calc'
 		if logger != '': logger.error( err.args[0], origin=origin )
