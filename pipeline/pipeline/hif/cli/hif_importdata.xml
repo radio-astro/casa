@@ -56,7 +56,7 @@
     
     <param type="bool" name="dbservice">
 	<description>Use the online flux catalog</description>
-	<value>True</value>
+	<value>False</value>
     </param>
 
     <param type="string" name="createmms">
@@ -161,7 +161,7 @@ lazy -- Use the lazy import option
    default: False
 
 dbservice -- Use online flux catalog on import
-   default: True
+   default: False
 
 createmms -- create a multi-measurement set ('true') ready for parallel
     processing, or a standard measurement set ('false'). The default setting
