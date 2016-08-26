@@ -170,8 +170,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		    if( fabs( itsPrevPeakResidual - itsPeakResidual )<1e-10) 
 		      {stopCode = 4;}
 
-                    // another non-convergent condition: diverging
-                    else if ( itsIterDone > 0 && fabs( itsPrevPeakResidual) < fabs(itsPeakResidual) ) 
+                    // another non-convergent condition: diverging (if it increases more than by 200%)
+                    else if ( itsIterDone > 0 && fabs( (itsPeakResidual - itsPrevPeakResidual)/itsPrevPeakResidual ) >2.0) 
                       {stopCode = 5;}
 		  }
 	        
