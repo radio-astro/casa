@@ -483,7 +483,7 @@ class DataTableImpl( object ):
         LOG.info('set get_timetable end: Elapsed time %s sec'%(end_time - start_time))
 
     def get_timetable(self, ant, spw, pol, ms=None, field_id=None):
-        LOG.info('new get_timetable start')
+        LOG.trace('new get_timetable start')
         start_time = time.time()
         key_small = timetable_key('SMALL', ant, spw, pol, ms, field_id)
         key_large = timetable_key('LARGE', ant, spw, pol, ms, field_id)
@@ -498,7 +498,7 @@ class DataTableImpl( object ):
         else:
             raise RuntimeError('time table for Antenna %s spw %s pol %s is not configured properly'%(ant,spw,pol))
         end_time = time.time()
-        LOG.info('new get_timetable end: Elapsed time %s sec'%(end_time - start_time))
+        LOG.trace('new get_timetable end: Elapsed time %s sec'%(end_time - start_time))
             
         return timetable
         
