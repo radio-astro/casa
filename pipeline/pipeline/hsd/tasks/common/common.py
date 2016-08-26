@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 import os
 import re
+import types
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -143,6 +144,12 @@ class SingleDishResults(basetask.Results):
         # usually, outcome is a name of the file
         return absolute_path(self.outcome)
 
+    def _get_outcome(self, key):
+        if type(self.outcome) is types.DictType:
+            return self.outcome.get(key, None)
+        else:
+            return None
+        
     def __repr__(self):
         #taskname = self.task if hasattr(self,'task') else 'none'
         s = '%s:\n\toutcome is %s'%(self.__class__.__name__,self._outcome_name())
