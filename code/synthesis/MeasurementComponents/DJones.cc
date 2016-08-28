@@ -1722,50 +1722,22 @@ void GlinXphJones::solveOneVB(const VisBuffer& vb) {
       phfitter.setFunction(line);
       Vector<Bool> m(mask.column(ich));
 
-   /*
-     // Fit nominally, detect if steep and resolve
+      // Fit shallow and steep, and always prefer shallow
+      
+      // Assumed shallow solve:
+      Vector<Double> solnA;
+      solnA.assign(phfitter.fit(x.column(ich),y.column(ich),sig.column(ich),&m));
 
-      // Solve y=mx+b for m
-      Vector<Double> soln=phfitter.fit(x.column(ich),y.column(ich),sig.column(ich),&m);
-
-      // The X-Y phase is the arctan of the fitted slope
-      Double Xph=atan(soln(1));   
-
-      cout << currSpw() << ":" << ich << "  " << soln(1) << " " << Xph*180/C::pi;
-
-      // Handle steep solutions by solving x=(1/m)y -b/m for (1/m)
-      if (abs(soln(1))>1.0) {
-	// Resolve as x vs. y:
-	soln=phfitter.fit(y.column(ich),x.column(ich),sig.column(ich),&m);
-	Double s1(soln(1));
-	if (s1>0.0)
-	  Xph=(C::pi/2.) - atan(s1); 
-	else
-	  Xph=(-C::pi/2.) - atan(s1); 
-	cout << "-->" << soln(1) << " " << Xph*180/C::pi;
-      }
-   */
-
-
-      // Fit steep and shallow, and always prefer shallow
-      Vector<Double> solnA=phfitter.fit(x.column(ich),y.column(ich),sig.column(ich),&m);
-      Double XphA=atan(solnA(1));   
-      //      cout << currSpw() << ":" << ich << "  " << solnA(1) << " " << XphA*180/C::pi;
-      Vector<Double> solnB=phfitter.fit(y.column(ich),x.column(ich),sig.column(ich),&m);
-      Double XphB=atan(solnB(1));   
+      // Assumed steep solve:
+      Vector<Double> solnB;
+      solnB.assign(phfitter.fit(y.column(ich),x.column(ich),sig.column(ich),&m));
 
       Double Xph(0.0);
       if (abs(solnA(1))<abs(solnB(1))) {
-	Xph=XphA;
-	//	cout << " <-- " << solnB(1) << " " << XphB*180/C::pi;
+	Xph=atan(solnA(1));
       }
       else {
-	Double s1(solnB(1));
-	if (s1>0.0)
-	  Xph=(C::pi/2.) - XphB;
-	else
-	  Xph=(-C::pi/2.) - XphB;
-	//	cout << " --> " << solnB(1) << " " << Xph*180/C::pi;
+	Xph=atan(1.0/solnB(1));
       }
 
       Cph(ich)=currAmb*Complex(DComplex(cos(Xph),sin(Xph)));
