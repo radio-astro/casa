@@ -144,32 +144,38 @@ class ALMAPhcorBandpass(bandpassworker.BandpassWorker):
         #    below 60s
         nmissing = 0
         tmpsolints = []
-        max_solint = quanta.quantity('60s')
+        max_solint = '60s'
         for i in range(len(snr_result.spwids)):
+
+            # No solution available
             if not snr_result.phsolints[i]:
                 nmissing = nmissing + 1
                 LOG.warning('No phaseup solint estimate for spw %s in MS %s',
                             snr_result.spwids[i], inputs.ms.basename)
                 continue
+
+            # An MS might have multiple scans for the phase-up intent.
+            # Collect the integration intervals for each scan with
+            # this intent. We expect this to return one integration
+            # interval
+            scans = inputs.ms.get_scans(scan_intent=inputs.intent)
+            solints = set([scan.mean_interval(snr_result.spwids[i])
+                                   for scan in scans])
+            timedelta = solints.pop()
+            timedelta_solint = '%ss' % timedelta.total_seconds() 
+
+            old_solint = snr_result.phsolints[i]
+
             if snr_result.nphsolutions[i] < inputs.phaseupnsols:
                 LOG.warning('Phaseup solution for spw %s has only %d points in MS %s',
                             snr_result.spwids[i], snr_result.nphsolutions[i], inputs.ms.basename)
                 factor = float(max(1, snr_result.nphsolutions[i])) / inputs.phaseupnsols
-                old_solint = snr_result.phsolints[i]
-                old_intsolint = snr_result.phintsolints[i]
+
                 if old_solint == 'int':
                     # We expect an MS to have the same integration interval
                     # for each spw in the phase-up scan(s). We can't rely on 
                     # this though, so we need to check this assumption on each
                     # access 
-
-                    # An MS might have multiple scans for the phase-up intent.
-                    # Collect the integration intervals for each scan with
-                    # this intent. We expect this to return one integration
-                    # interval
-                    scans = inputs.ms.get_scans(scan_intent=inputs.intent)
-                    solints = set([scan.mean_interval(snr_result.spwids[i])
-                                   for scan in scans])
                     
                     # But if multiple solint were were used for scans with the
                     # same intent, bail out again
@@ -177,39 +183,36 @@ class ALMAPhcorBandpass(bandpassworker.BandpassWorker):
                         LOG.warning('Expected 1 solution interval for %s scans'
                                     ' for spw %s. Got %s', inputs.intent,
                                     snr_result.spwids[i], solints)
-                        if quanta.gt (old_solint,  max_solint):
-                            best_solint = _constrain_phaseupsolint (old_solint, old_intsolint, max_solint)
-                            LOG.warning('Solution interval for spw %s greater than %0.3fs adjusting to %0.3fs',
-                                snr_result.spwids[i], max_solint['value'], best_solint['value'])
-                        else:
-                            best_solint = old_solint
-                        tmpsolints.append(best_solint)
+                        tmpsolints.append(old_solint)
                         continue
 
                     # OK. We got one solution interval for all scans of the 
                     # desired intent. Overwrite old_solint with the equivalent
                     # time for 'int' in seconds. This wil be carried forward
                     # to the quanta tool calls.
-                    timedelta = solints.pop()
                     # note the extra s to denote units, otherwise the quanta
                     # tool can't make a comparison 
-                    old_solint = '%ss' % timedelta.total_seconds() 
+                    old_solint = timedelta_solint
                     
-                newsolint = quanta.tos(quanta.mul(old_solint, factor))
-                LOG.warning('Resetting estimated phaseup solint for spw %s from %s to %s in MS %s',
+                newsolint = quanta.tos(quanta.mul(quanta.quantity(old_solint), quanta.quantity(factor)), 3)
+                LOG.warning('Rounding estimated phaseup solint for spw %s from %s to %s in MS %s',
                             snr_result.spwids[i], snr_result.phsolints[i], newsolint, inputs.ms.basename)
-                if quanta.gt (newsolint,  max_solint):
-                    best_solint = _constrain_phaseupsolint (newsolint, old_intsolint, max_solint)
-                    LOG.warning('Solution interval for spw %s greater than %0.3fs adjusting to %0.3fs',
-                        snr_result.spwids[i], max_solint['value'], best_solint['value'])
+                if quanta.gt (quanta.quantity(newsolint),  quanta.quantity(max_solint)):
+                    best_solint = _constrain_phaseupsolint (newsolint, timedelta_solint, max_solint)
+                    LOG.warning('Solution interval for spw %s greater than %s adjusting to %s',
+                        snr_result.spwids[i], max_solint, best_solint)
                 else:
                     best_solint = newsolint
                 tmpsolints.append(best_solint)
             else:
-                if quanta.gt (snr_result.phsolints[i],  max_solint):
-                    best_solint = _constrain_phaseupsolint (snr_result.phsolints[i], snr_result.phintsolints[i], max_solint)
-                    LOG.warning('Solution interval for spw %s greater than %0.3fs adjusting to %0.3fs',
-                        snr_result.spwids[i], max_solint['value'], best_solint['value'])
+                if old_solint == 'int':
+                    newsolint = timedelta_solint
+                else:
+                    newsolint = old_solint
+                if quanta.gt (quanta.quantity(newsolint),  quanta.quantity(max_solint)):
+                    best_solint = _constrain_phaseupsolint (newsolint, timedelta_solint, max_solint)
+                    LOG.warning('Solution interval for spw %s greater than %s adjusting to %s',
+                        snr_result.spwids[i], max_solint, best_solint)
                 else:
                     best_solint = snr_result.phsolints[i]
                 tmpsolints.append(best_solint)
@@ -469,13 +472,19 @@ class ALMAPhcorBandpass(bandpassworker.BandpassWorker):
 
 
 # Constrain the solint to be the largest even number of integrations which
-# are greater than a specified maximum. All input quantities are quanta in seconds.
+# are greater than a specified maximum. The inputs and outputs are times in
+# seconds in string quanta format '60.0s'
 
 def _constrain_phaseupsolint (input_solint, integration_time, max_solint):
 
     quanta = casatools.quanta
-    newsolint = input_solint
-    while quanta.gt(newsolint, max_solint):
-         newsolint = quanta.sub(newsolint, integration_time)
 
-    return newsolint
+    input_solint_q = quanta.quantity(input_solint)
+    integration_time_q = quanta.quantity (integration_time)
+    max_solint_q = quanta.quantity(max_solint)
+
+    newsolint_q = input_solint_q
+    while quanta.gt(newsolint_q, max_solint_q):
+         newsolint_q = quanta.sub(newsolint_q, integration_time_q)
+
+    return quanta.tos(newsolint_q, 3)
