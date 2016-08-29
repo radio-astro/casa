@@ -659,7 +659,8 @@ record* msmetadata::exposuretime(
 				return nullptr;
 			}
 		}
-		std::map<std::pair<uInt COMMA uInt> COMMA uInt> ddidMap = _msmd->getSpwIDPolIDToDataDescIDMap();
+		std::map<std::pair<uInt COMMA uInt> COMMA uInt> ddidMap
+		    = _msmd->getSpwIDPolIDToDataDescIDMap();
 		std::pair<uInt COMMA uInt> mykey;
 		mykey.first = spwid;
 		mykey.second = polid;
@@ -670,15 +671,22 @@ record* msmetadata::exposuretime(
 			+ String::toString(polid)
 		);
 		uInt dataDescID = ddidMap[mykey];
-		std::map<Int COMMA casa::Quantity> map2 = _msmd->getFirstExposureTimeMap()[dataDescID];
+		map<ScanKey COMMA MSMetaData::FirstExposureTimeMap> map2
+		    = _msmd->getScanToFirstExposureTimeMap(False);
+		ScanKey scanKey;
+		scanKey.arrayID = arrayid;
+		scanKey.obsID = obsid;
+		scanKey.scan = scan;
 		ThrowIf(
-			map2.find(scan) == map2.end(),
+			map2.find(scanKey) == map2.end()
+			|| map2[scanKey].find(dataDescID) == map2[scanKey].end(),
 			"MS has no records for scan number " + String::toString(scan)
-			+ ", spectral window ID " + String::toString(spwid) + ", and polarization ID "
-			+ String::toString(polid)
+			+ ", spectral window ID " + String::toString(spwid)
+		    + ", and polarization ID " + String::toString(polid)
 		);
-
-		return fromRecord(QuantumHolder(map2[scan]).toRecord());
+		return fromRecord(
+		    QuantumHolder(map2[scanKey][dataDescID].second).toRecord()
+		);
 	)
 	return nullptr;
 }
