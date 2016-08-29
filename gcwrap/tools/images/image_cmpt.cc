@@ -5612,7 +5612,7 @@ variant* image::makearray(
 ) {
 	auto ndim = shape.size();
 	int nelem = 1;
-	for (int i = 0; i < ndim; ++i) {
+	for (uInt i = 0; i < ndim; ++i) {
 		nelem *= shape[i];
 	}
 	std::vector<double> element(nelem);
