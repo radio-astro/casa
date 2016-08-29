@@ -646,7 +646,10 @@ class test_savepars(test_base):
         myinput = "scan='4' mode='clip' correlation='ABS_RR' clipminmax=[0, 4]\n"
         filename = create_input(myinput)
 
-        newfile = 'myflags.txt'                
+        newfile = 'myflags.txt'  
+        if os.path.exists("myflags.txt"):
+            os.system('rm -rf myflags.txt')
+                      
         # Apply flags from filename and try to save in newfile
         # Overwrite=False shouldn't do anything as newfile doesn't exist
         flagcmd(vis=self.vis, action='apply', inpmode='list',inpfile=filename, savepars=True, outfile=newfile,
