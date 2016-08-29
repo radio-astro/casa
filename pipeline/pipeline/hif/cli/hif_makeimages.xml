@@ -58,9 +58,15 @@ Compute clean results from a list of specified targets.
          <value>psf</value>
          <value>psfiter</value>
          <value>auto</value>
+         <value>auto-thresh</value>
          <value>none</value>
          <value></value>
        </allowed>
+  </param>
+
+  <param type="string" name="hm_maskthreshold" subparam="true">
+     <description>Auto-boxing mask threshold</description>
+       <value></value>
   </param>
 
   <param type="string" name="hm_cleaning">
@@ -155,6 +161,10 @@ Compute clean results from a list of specified targets.
         <default param="maxncleans"><value type="int">10</value></default>
       </equals>
       <equals value="auto">
+        <default param="hm_maskthreshold"><value type="string"></value></default>
+      </equals>
+      <equals value="auto-thresh">
+        <default param="hm_maskthreshold"><value type="string"></value></default>
       </equals>
       <equals value="none">
       </equals>
@@ -246,6 +256,13 @@ weighting_robust -- For weighting='briggs' and 'briggsabs'
 weighting_noise -- For weighting='briggsabs'
                        noise parameter to use for Briggs "abs" weighting
                        example noise='1.0mJy'
+
+hm_masking -- Clean masking mode. Options are 'centralregion'
+    'psf', 'psfiter', 'auto', 'auto-thresh', 'manual' and 'none'
+    default: 'centralregion'
+    example: 'manual'
+
+hm_maskthreshold -- Auto-boxing mask threshold. See tclean for options.
 
 cleancontranges -- Clean continuum frequency ranges in cubes
                    default=False

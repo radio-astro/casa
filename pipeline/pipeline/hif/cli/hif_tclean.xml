@@ -168,10 +168,16 @@ Compute a clean map.
          <value>psf</value>
          <value>psfiter</value>
          <value>auto</value>
+         <value>auto-thresh</value>
          <value>manual</value>
          <value>none</value>
          <value></value>
        </allowed>
+  </param>
+
+  <param type="string" name="hm_maskthreshold" subparam="true">
+     <description>Auto-boxing mask threshold</description>
+       <value></value>
   </param>
 
   <param type="string" name="hm_cleaning">
@@ -310,6 +316,10 @@ Compute a clean map.
         <default param="maxncleans"><value type="int">10</value></default>
       </equals>
       <equals value="auto">
+        <default param="hm_maskthreshold"><value type="string"></value></default>
+      </equals>
+      <equals value="auto-thresh">
+        <default param="hm_maskthreshold"><value type="string"></value></default>
       </equals>
       <equals value="manual">
         <default param="mask"><value type="string"></value></default>
@@ -523,9 +533,11 @@ restoringbeam -- Gaussina sestoring beam for clean, \'\' for default
     example:
 
 hm_masking -- Clean masking mode. Options are 'centralregion'
-    'psf', 'psfiter', 'auto', 'manual' and 'none'
+    'psf', 'psfiter', 'auto', 'auto-thresh', 'manual' and 'none'
     default: 'centralregion'
     example: 'manual'
+
+hm_maskthreshold -- Auto-boxing mask threshold. See tclean for options.
 
 mask -- Image mask for hm_masking manual mode. User responsible for
     matching image sizes, coordinates, etc.

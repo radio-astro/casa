@@ -32,7 +32,7 @@ class CleanBaseInputs(basetask.StandardInputs):
                  gridder=None, deconvolver=None, outframe=None, imsize=None, cell=None,
                  phasecenter=None, nchan=None, start=None, width=None, stokes=None,
                  weighting=None, robust=None, noise=None, npixels=None,
-                 restoringbeam=None, iter=None, mask=None, hm_masking=None, pblimit=None, niter=None,
+                 restoringbeam=None, iter=None, mask=None, hm_masking=None, hm_maskthreshold=None, pblimit=None, niter=None,
                  threshold=None, sensitivity=None, result=None, parallel=None):
         self._init_properties(vars())
 
@@ -44,6 +44,7 @@ class CleanBaseInputs(basetask.StandardInputs):
     iter = basetask.property_with_default('iter', 0)
     mask = basetask.property_with_default('mask', '')
     hm_masking = basetask.property_with_default('hm_masking', 'centralregion')
+    hm_maskthreshold = basetask.property_with_default('hm_maskthreshold', '')
     niter = basetask.property_with_default('niter', 5000)
     noise = basetask.property_with_default('noise', '1.0Jy')
     nchan = basetask.property_with_default('nchan', -1)
@@ -298,8 +299,9 @@ class CleanBase(basetask.StandardTaskTemplate):
             }
 
         # Set up masking parameters
-        if (inputs.hm_masking == 'auto'):
+        if inputs.hm_masking in ('auto', 'auto-thresh'):
             tclean_job_parameters['usemask'] = 'auto-thresh'
+            tclean_job_parameters['maskthreshold'] = inputs.hm_maskthreshold
             # The following parameters are currently just for PL developer
             # testing
             #tclean_job_parameters['pbmask'] = 0.3
@@ -308,7 +310,7 @@ class CleanBase(basetask.StandardTaskTemplate):
             #tclean_job_parameters['maskthreshold'] = '%s%s' % (maskthreshold['value'], maskthreshold['unit'])
         else:
             tclean_job_parameters['usemask'] = 'user'
-            tclean_job_parameters['mask']    = inputs.mask
+            tclean_job_parameters['mask'] = inputs.mask
 
         # Show nterms parameter only if it is used.
         if (result.multiterm):

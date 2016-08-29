@@ -35,7 +35,7 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
                  phasecenter=None, nchan=None, start=None, width=None,
                  weighting=None, robust=None, noise=None, npixels=None,
                  restoringbeam=None, iter=None, mask=None, niter=None, threshold=None,
-                 noiseimage=None, hm_masking=None, hm_cleaning=None, tlimit=None,
+                 noiseimage=None, hm_masking=None, hm_maskthreshold=None, hm_cleaning=None, tlimit=None,
                  masklimit=None, maxncleans=None, cleancontranges=None, subcontms=None, parallel=None):
         self._init_properties(vars())
         self.heuristics = tclean.TcleanHeuristics(self.context, self.vis, self.spw)
@@ -45,6 +45,7 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
     spwsel_topo = basetask.property_with_default('spwsel_topo', [])
     hm_cleaning = basetask.property_with_default('hm_cleaning', 'rms')
     hm_masking = basetask.property_with_default('hm_masking', 'centralregion')
+    hm_maskthreshold = basetask.property_with_default('hm_maskthreshold', '')
     masklimit = basetask.property_with_default('masklimit', 4.0)
     tlimit = basetask.property_with_default('tlimit', 4.0)
     cleancontranges = basetask.property_with_default('cleancontranges', False)
@@ -259,7 +260,7 @@ class Tclean(cleanbase.CleanBase):
                     gridder = inputs.gridder, threshold=threshold,
                     sensitivity = sensitivity, niter=inputs.niter)
             # Auto-boxing
-            elif inputs.hm_masking == 'auto':
+            elif inputs.hm_masking in ('auto', 'auto-thresh'):
                 sequence_manager = AutoMaskThresholdSequence(
                     gridder = inputs.gridder, threshold=threshold,
                     sensitivity = sensitivity, niter=inputs.niter)
@@ -880,6 +881,7 @@ class Tclean(cleanbase.CleanBase):
                                                   iter=iter,
                                                   mask=cleanmask,
                                                   hm_masking=inputs.hm_masking,
+                                                  hm_maskthreshold=inputs.hm_maskthreshold,
                                                   niter=niter,
                                                   threshold=threshold,
                                                   sensitivity=sensitivity,
