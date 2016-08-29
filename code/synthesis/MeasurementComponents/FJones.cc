@@ -569,8 +569,6 @@ void FJones::calcAllJones() {
   Double f,rotpers2,tec,del,rot;
   Complex cdel;
 
-  // For now, ignore dispersive delay part (we don't know the diffs)
-  del=0.0;
 
   for (Int iant=0; iant<nAnt(); ++iant,++lostec,++lostecok) {
     if ((*lostecok)) { 
@@ -579,7 +577,7 @@ void FJones::calcAllJones() {
 
       for (Int ich=0;ich<nChanMat();++ich) {
 	f=currFreq()(ich)*1.0e9;   // Hz
-	//del = 8.4483e-7*tec/f;
+	del = -8.4483e-7*tec/f;   // opposite sign cf rot!
 	rot = rotpers2/f/f;
 
 	switch (jonesType()) {
