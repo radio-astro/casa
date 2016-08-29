@@ -1816,7 +1816,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     String telescopeName=msoc.telescopeName()(0);
     CountedPtr<ConvolutionFunction> awConvFunc = AWProjectFT::makeCFObject(telescopeName, 
 									   aTermOn,
-									   psTermOn, True, mTermOn, wbAWP);
+									   psTermOn, (wprojPlane > 1),
+									   mTermOn, wbAWP);
     //
     // Construct the appropriate re-sampler.
     //

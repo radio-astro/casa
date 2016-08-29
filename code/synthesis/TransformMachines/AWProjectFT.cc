@@ -137,7 +137,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 							    const Bool mTermOn,
 							    const Bool wbAWP)
   {
-    (void)wTermOn;//Unused
     CountedPtr<ATerm> apertureFunction = AWProjectFT::createTelescopeATerm(telescopeName, aTermOn);
     CountedPtr<PSTerm> psTerm = new PSTerm();
     CountedPtr<WTerm> wTerm = new WTerm();
@@ -147,7 +146,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     if (aTermOn == False) {apertureFunction->setOpCode(CFTerms::NOOP);}
     if (psTermOn == False) psTerm->setOpCode(CFTerms::NOOP);
-
+    if (wTermOn == False) wTerm->setOpCode(CFTerms::NOOP);
     //
     // Construct the CF object with appropriate CFTerms.
     //
@@ -266,7 +265,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     pop_p->init();
     useDoubleGrid_p=doublePrecGrid;
-    //    rotatedConvFunc_p.data=new Array<Complex>();
+    useDoubleGrid_p=doublePrecGrid;
     CFBuffer::initCFBStruct(cfbst_pub);
     muellerType_p = muellerType;
   }
@@ -1753,14 +1752,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if (useDoubleGrid_p)
       {
 	resampleDataToGrid(griddedData2, vbs, vb, dopsf);//, *imagingweight, *data, uvw,flags,dphase,dopsf);
-	//storeArrayAsImage(String("cgrid_awp_d.im"), image->coordinates(), griddedData2);
+	//if (!dopsf) storeArrayAsImage(String("cgrid_awp_d.im"), image->coordinates(), griddedData2);
       }
     else
       {
 	resampleDataToGrid(griddedData, vbs, vb, dopsf);//, *imagingweight, *data, uvw,flags,dphase,dopsf);
 	// String msg("WTH");
 	// isVBNaN(vb,msg);
-	//storeArrayAsImage(String("cgrid_awp_s.im"), image->coordinates(), griddedData);
+	//if (!dopsf) storeArrayAsImage(String("cgrid_awp_s.im"), image->coordinates(), griddedData);
       }
   }
   //
@@ -1950,7 +1949,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  {
 	    arrayLattice = new ArrayLattice<Complex>(griddedData);
 	    //cerr << "##### " << griddedData2.shape() << endl;
-	    //storeArrayAsImage(String("cgrid_awp.im"), image->coordinates(), griddedData);
+	    //if (!makingPSF) storeArrayAsImage(String("cgrid_awp.im"), image->coordinates(), griddedData);
 	    lattice=arrayLattice;
 	    LatticeFFT::cfft2d(*lattice,False);
 	  }
@@ -1964,6 +1963,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	//
 	// //normalizeImage(*lattice,sumWeight,*avgPB_p,fftNormalization);
         //	normalizeImage(*lattice,sumWeight,*avgPB_p, *avgPBSq_p, fftNormalization);
+	//if (!makingPSF) storeImg(String("uvgrid0.im"), *image);
 
 	// nx ny normalization from GridFT...
 	{
@@ -1999,6 +1999,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      }
 	    }
 	}
+	//if (!makingPSF) storeImg(String("uvgrid.im"), *image);
 	if(!isTiled) 
 	  {
 	    //
@@ -2023,7 +2024,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // {
     //   // TempImage<Complex> tt(lattice->shape(), image->coordinates());
     //   // tt.put(lattice->get());
-    //   storeImg(String("uvgrid.im"), *image);
+      //      if (!makingPSF) throw(AipsError("Exiting from AWP.cc: 1765"));
+
     // }
 
     return *image;
