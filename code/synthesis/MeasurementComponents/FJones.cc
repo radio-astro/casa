@@ -142,6 +142,8 @@ FJones::~FJones() {
 // Enforce calwt=F and spwmap=[0]
 void FJones::setApply(const Record& apply) {
 
+  cout << "FJones (iononsphere) apply now provisionally includes disp. delay." << endl;
+
   // Force spwmap to all 0 (FJones pars are not spw-dep
   // NB: this is required before calling parent, which sets
   //  up spwmap-dep interpolation
