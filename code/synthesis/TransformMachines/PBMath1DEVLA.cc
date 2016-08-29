@@ -59,6 +59,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   void PBMath1DEVLA::nearestVPArray(Double freq){
+    LogIO os(LogOrigin("PBMATH1DEVLA", "nearestVPArray"));
     String band=feed(freq);
     auto confiter=feedConf_p.find(band);
     Float mag = 1.21;
@@ -77,25 +78,33 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     Vector<Double> coeff;
     Double freqMHz=freq*1e-6;
+    Double freqUsed=freq*1e-6;
     std::map<Double, std::vector<Double> >::iterator low, prev;
     low = coeffmap_p.lower_bound(freqMHz);
     if (low == coeffmap_p.end()) {
       --low;
       coeff=Vector<Double>(low->second);
+      freqUsed=low->first;
     } 
     else if (low == coeffmap_p.begin()) {
       coeff=Vector<Double>(low->second);
+      freqUsed=low->first;
     }
     else{
       prev = low;
       --prev;
       //cerr << "freqMHz " << freqMHz <<  " prev " << prev->first << " low " <<low->first  << endl; 
-      if (fabs(freqMHz - prev->first) < fabs(low->first - freqMHz))
+      if (fabs(freqMHz - prev->first) < fabs(low->first - freqMHz)){
         coeff=Vector<Double>(prev->second);
-      else
+	freqUsed=prev->first;
+      }
+      else{
 	coeff=Vector<Double>(low->second);
+	freqUsed=low->first;
+      }
       
     }
+    os << LogIO::NORMAL1 << "Using EVLA beam model of frequency  " << freqUsed << " MHz " << LogIO::POST;
     pbMathPoly_p= new PBMath1DPoly(coeff, maxRad_p, Quantity(1.0, "GHz"), False,  squint_p, useSymmetric_p);
     (this->vp_p).resize();
     (this->vp_p)=pbMathPoly_p->vp_p;
