@@ -36,73 +36,73 @@ namespace casa {
 const String ImagePadder::_class = "ImagePadder";
 
 ImagePadder::ImagePadder(
-		const SPCIIF image,
-	const Record *const regionRec,
-	const String& box,
-	const String& chanInp, const String& stokes,
-	const String& maskInp, const String& outname,
-	const Bool overwrite
+        const SPCIIF image,
+    const Record *const regionRec,
+    const String& box,
+    const String& chanInp, const String& stokes,
+    const String& maskInp, const String& outname,
+    const Bool overwrite
 ) : ImageTask<Float>(
-		image, "", regionRec, box, chanInp, stokes,
-		maskInp, outname, overwrite
-	), _nPixels(0), _value(0), _good(False) {
-	_construct();
+        image, "", regionRec, box, chanInp, stokes,
+        maskInp, outname, overwrite
+    ), _nPixels(0), _value(0), _good(False) {
+    _construct();
 }
 
 ImagePadder::~ImagePadder() {}
 
 void ImagePadder::setPaddingPixels(
-	const uInt nPixels, const Double value,
-	const Bool good
+    const uInt nPixels, const Double value,
+    const Bool good
 ) {
-	_nPixels = nPixels;
-	_value = value;
-	_good = good;
+    _nPixels = nPixels;
+    _value = value;
+    _good = good;
 }
 
 SPIIF ImagePadder::pad(const Bool wantReturn) const {
-	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
-	SHARED_PTR<const SubImage<Float> > subImage = SubImageFactory<Float>::createSubImageRO(
-		*this->_getImage(), *_getRegion(), _getMask(),
+    *_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
+    SHARED_PTR<const SubImage<Float> > subImage = SubImageFactory<Float>::createSubImageRO(
+        *this->_getImage(), *_getRegion(), _getMask(),
         _getLog().get(), AxesSpecifier(), _getStretch()
-	);
-	Vector<Int> dirAxes = subImage->coordinates().directionAxesNumbers();
-	IPosition outShape = subImage->shape();
-	outShape[dirAxes[0]] += 2*_nPixels;
-	outShape[dirAxes[1]] += 2*_nPixels;
-	CoordinateSystem newCoords = subImage->coordinates();
-	Vector<Double> refpix = newCoords.referencePixel();
-	refpix[dirAxes[0]] += _nPixels;
-	refpix[dirAxes[1]] += _nPixels;
-	newCoords.setReferencePixel(refpix);
-	ArrayLattice<Bool> mask(outShape);
-	mask.set(_good);
-	IPosition blc(subImage->ndim(), 0);
-	blc[dirAxes[0]] = _nPixels;
-	blc[dirAxes[1]] = _nPixels;
+    );
+    Vector<Int> dirAxes = subImage->coordinates().directionAxesNumbers();
+    IPosition outShape = subImage->shape();
+    outShape[dirAxes[0]] += 2*_nPixels;
+    outShape[dirAxes[1]] += 2*_nPixels;
+    CoordinateSystem newCoords = subImage->coordinates();
+    Vector<Double> refpix = newCoords.referencePixel();
+    refpix[dirAxes[0]] += _nPixels;
+    refpix[dirAxes[1]] += _nPixels;
+    newCoords.setReferencePixel(refpix);
+    ArrayLattice<Bool> mask(outShape);
+    mask.set(_good);
+    IPosition blc(subImage->ndim(), 0);
+    blc[dirAxes[0]] = _nPixels;
+    blc[dirAxes[1]] = _nPixels;
     if (subImage->isMasked() || ! _good) {
         IPosition end = subImage->shape();
         Slicer slice(blc, end, Slicer::endIsLength);
         SubLattice<Bool> subLatt(mask, slice, True);
         ImageTask<Float>::_copyMask(subLatt, *subImage);
-	}
-	Array<Float> valArray(outShape, _value);
-	ArrayLattice<Float> values(valArray);
-	values.putSlice(subImage->get(), blc);
-	const Array<Float>& vals = values.get();
-	SPIIF outImage(
+    }
+    Array<Float> valArray(outShape, _value);
+    ArrayLattice<Float> values(valArray);
+    values.putSlice(subImage->get(), blc);
+    const Array<Float>& vals = values.get();
+    SPIIF outImage(
         _prepareOutputImage(
-		    *subImage, &vals, &mask, &outShape, &newCoords
-	    )
+            *subImage, &vals, &mask, &outShape, &newCoords
+        )
     );
-	if (! wantReturn) {
-		outImage.reset();
-	}
-	return outImage;
+    if (! wantReturn) {
+        outImage.reset();
+    }
+    return outImage;
 }
 
 String ImagePadder::getClass() const {
-	return _class;
+    return _class;
 }
 
 }
