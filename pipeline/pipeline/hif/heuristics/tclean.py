@@ -381,6 +381,7 @@ class TcleanHeuristics(object):
 
         # Get ID of field closest to the phase center
         meTool = casatools.measures
+        qaTool = casatools.quanta
         ref_field_ids = []
 
         # Phase center coordinates
@@ -434,11 +435,12 @@ class TcleanHeuristics(object):
                             # TODO: Need to derive real channel ranges
                             spw_topo_chan_param_dict[os.path.basename(inputs.vis[i])][spwid] = '0~%d' % (spw_info.num_channels - 1)
                         # Count only one selection !
-                        aggregate_lsrk_bw = 0.0
+                        aggregate_lsrk_bw = '0.0GHz'
                         for freq_range in freq_selection.split(';'):
                             f1, sep, f2, unit = p.findall(freq_range)[0]
                             topo_freq_ranges.append((float(f1), float(f2)))
-                            aggregate_lsrk_bw += f2 - f1
+                            delta_f = qaTool.sub('%s%s' % (f2, unit), '%s%s' % (f1, unit))
+                            aggregate_lsrk_bw = qaTool.add(aggregate_lsrk_bw, delta_f)
                 else:
                     spw_topo_freq_param_lists.append([spwid] * len(inputs.vis))
                     spw_topo_chan_param_lists.append([spwid] * len(inputs.vis))
@@ -446,7 +448,7 @@ class TcleanHeuristics(object):
                         spw_topo_freq_param_dict[os.path.basename(msname)][spwid] = ''
                         spw_topo_chan_param_dict[os.path.basename(msname)][spwid] = ''
                     topo_freq_ranges.append((min_frequency, max_frequency))
-                    aggregate_lsrk_bw = max_frequency - min_frequency
+                    aggregate_lsrk_bw = '%sGHz' % (max_frequency - min_frequency)
                     if (inputs.intent == 'TARGET') and (inputs.specmode in ('mfs', 'cont')):
                         LOG.warning('No continuum frequency selection for Target Field %s SPW %s' % (inputs.field, spwid))
             else:
@@ -456,14 +458,12 @@ class TcleanHeuristics(object):
                     spw_topo_freq_param_dict[os.path.basename(msname)][spwid] = ''
                     spw_topo_chan_param_dict[os.path.basename(msname)][spwid] = ''
                 topo_freq_ranges.append((min_frequency, max_frequency))
-                aggregate_lsrk_bw = max_frequency - min_frequency
+                aggregate_lsrk_bw = '%sGHz' % (max_frequency - min_frequency)
                 if (inputs.intent == 'TARGET') and (inputs.specmode in ('mfs', 'cont')):
                     LOG.warning('No continuum frequency selection for Target Field %s SPW %s' % (inputs.field, spwid))
 
         spw_topo_freq_param = [','.join(spwsel_per_ms) for spwsel_per_ms in [[spw_topo_freq_param_list_per_ms[i] for spw_topo_freq_param_list_per_ms in spw_topo_freq_param_lists] for i in xrange(len(inputs.vis))]]
         spw_topo_chan_param = [','.join(spwsel_per_ms) for spwsel_per_ms in [[spw_topo_chan_param_list_per_ms[i] for spw_topo_chan_param_list_per_ms in spw_topo_chan_param_lists] for i in xrange(len(inputs.vis))]]
-
-        qaTool = casatools.quanta
 
         # Calculate total bandwidth
         total_topo_bw = '0.0GHz'

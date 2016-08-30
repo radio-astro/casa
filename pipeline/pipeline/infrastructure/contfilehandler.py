@@ -9,6 +9,7 @@ frequency range.
 '''
 
 import re
+import copy
 import numpy as np
 
 from . import casatools
@@ -142,7 +143,7 @@ class ContFileHandler(object):
 
     def lsrk_to_topo(self, selection, msnames, fields, spw_id, ctrim=0, ctrim_nchan=-1):
 
-        freq_selection, refer = selection.split()
+        lsrk_freq_selection, refer = selection.split()
         if (refer != 'LSRK'):
             LOG.error('Original reference frame must be LSRK.')
             raise Exception, 'Original reference frame must be LSRK.'
@@ -154,23 +155,25 @@ class ContFileHandler(object):
         spw_id = int(spw_id)
 
         imTool = casatools.imager
+        qaTool = casatools.quanta
 
         freq_ranges = []
-        aggregate_lsrk_bw = 0.0
-        cont_regions = self.p.findall(freq_selection.replace(';',''))
+        aggregate_lsrk_bw = '0.0GHz'
+        cont_regions = self.p.findall(lsrk_freq_selection.replace(';',''))
         for cont_region in cont_regions:
-            fLow = casatools.quanta.convert('%s%s' % (cont_region[0], cont_region[3]), 'Hz')['value']
-            fHigh = casatools.quanta.convert('%s%s' % (cont_region[2], cont_region[3]), 'Hz')['value']
+            fLow = qaTool.convert('%s%s' % (cont_region[0], cont_region[3]), 'Hz')['value']
+            fHigh = qaTool.convert('%s%s' % (cont_region[2], cont_region[3]), 'Hz')['value']
             freq_ranges.append((fLow, fHigh))
-            aggregate_lsrk_bw += fHigh - fLow
+            delta_f = qaTool.sub('%s%s' % (fHigh, unit), '%s%s' % (fLow, unit))
+            aggregate_lsrk_bw = qaTool.add(aggregate_lsrk_bw, delta_f)
 
-        chan_selections = []
-        freq_selections = []
+        topo_chan_selections = []
+        topo_freq_selections = []
         for i in xrange(len(msnames)):
             msname = msnames[i]
             field = int(fields[i])
-            chan_selection = []
-            freq_selection = []
+            topo_chan_selection = []
+            topo_freq_selection = []
             try:
                 if (field != -1):
                     for freq_range in freq_ranges:
@@ -185,15 +188,15 @@ class ContFileHandler(object):
                             start = start if (start >= ctrim) else ctrim
                             stop = stop if (stop < (ctrim_nchan-ctrim)) else ctrim_nchan-ctrim-1
                         if (stop >= start):
-                            chan_selection.append((start, stop))
+                            topo_chan_selection.append((start, stop))
                             result = imTool.advisechansel(msname = msname, fieldid = field, spwselection = '%d:%d~%d' % (spw_id, start, stop), freqframe = 'TOPO', getfreqrange = True)
-                            fLow = casatools.quanta.convert('%sHz' % (result['freqstart']), 'GHz')['value']
-                            fHigh = casatools.quanta.convert('%sHz' % (result['freqend']), 'GHz')['value']
-                            freq_selection.append((fLow, fHigh))
+                            fLow = qaTool.convert('%sHz' % (result['freqstart']), 'GHz')['value']
+                            fHigh = qaTool.convert('%sHz' % (result['freqend']), 'GHz')['value']
+                            topo_freq_selection.append((fLow, fHigh))
             except Exception as e:
                 LOG.info('Cannot calculate TOPO range for MS %s Field %s SPW %s' % (msname, field, spw_id))
 
-            chan_selections.append(';'.join('%d~%d' % (item[0], item[1]) for item in chan_selection))
-            freq_selections.append('%s TOPO' % (';'.join('%s~%sGHz' % (item[0], item[1]) for item in freq_selection)))
+            topo_chan_selections.append(';'.join('%d~%d' % (item[0], item[1]) for item in topo_chan_selection))
+            topo_freq_selections.append('%s TOPO' % (';'.join('%s~%sGHz' % (item[0], item[1]) for item in topo_freq_selection)))
 
-        return freq_selections, chan_selections, aggregate_lsrk_bw
+        return topo_freq_selections, topo_chan_selections, aggregate_lsrk_bw
