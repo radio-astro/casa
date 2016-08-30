@@ -20,7 +20,7 @@ NoData = -32767.0
 NoDataThreshold = NoData + 10000.0
 
 class SparseMapAxesManager(object):
-    def __init__(self, nh, nv, brightnessunit, ticksize, clearpanel=True):
+    def __init__(self, nh, nv, brightnessunit, ticksize, clearpanel=True, figure_id=None):
         self.nh = nh
         self.nv = nv
         self.ticksize = ticksize
@@ -30,17 +30,22 @@ class SparseMapAxesManager(object):
         self._axes_integsp = None
         self._axes_spmap = None
         
-        pl.figure(self.MATPLOTLIB_FIGURE_ID)
+        if figure_id is None:
+            self.figure_id = self.MATPLOTLIB_FIGURE_ID()
+        else:
+            self.figure_id = figure_id
+        self.figure = pl.figure(self.figure_id)
         if clearpanel:
             pl.clf()
             
-    @property
-    def MATPLOTLIB_FIGURE_ID(self):
+    @staticmethod
+    def MATPLOTLIB_FIGURE_ID():
         return 8910
         
     @property
     def axes_integsp(self):
         if self._axes_integsp is None:
+            pl.figure(self.figure_id)
             axes = pl.subplot((self.nv+3)/2+3, 1, 1)
             axes.cla()
             axes.xaxis.set_major_formatter(self.numeric_formatter)
@@ -57,6 +62,7 @@ class SparseMapAxesManager(object):
     @property
     def axes_spmap(self):
         if self._axes_spmap is None:
+            pl.figure(self.figure_id)
             self._axes_spmap = list(self.__axes_spmap())
 
         return self._axes_spmap
@@ -94,13 +100,13 @@ class SparseMapAxesManager(object):
 
 
 class SDSparseMapPlotter(object):
-    def __init__(self, nh, nv, step, brightnessunit, clearpanel=True):
+    def __init__(self, nh, nv, step, brightnessunit, clearpanel=True, figure_id=None):
         self.step = step
         if step > 1:
             ticksize = 10 - int(max(nh, nv) * step / (step - 1)) / 2
         elif step == 1:
             ticksize = 10 - int(max(nh, nv)) / 2
-        self.axes = SparseMapAxesManager(nh, nv, brightnessunit, ticksize, clearpanel)
+        self.axes = SparseMapAxesManager(nh, nv, brightnessunit, ticksize, clearpanel, figure_id)
         self.lines_averaged = None
         self.lines_map = None
         self.reference_level = None

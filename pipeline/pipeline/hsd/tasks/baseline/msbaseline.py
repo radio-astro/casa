@@ -18,6 +18,7 @@ from .. import common
 from ..common import utils
 from . import maskline
 from . import worker
+from . import plotter
 # from . import fitting
 
 _LOG = infrastructure.get_logger(__name__)
@@ -267,11 +268,11 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
 
         LOG.debug('Starting per reduction group processing: number of groups is {ngroup}', ngroup=len(reduction_group))
         for (group_id, group_desc) in reduction_group.items():
-            LOG.debug('Processing Reduction Group {}', group_id)
-            LOG.debug('Group Summary:')
+            LOG.info('Processing Reduction Group {}', group_id)
+            LOG.info('Group Summary:')
             for m in group_desc:
                 # LOG.debug('\tAntenna %s Spw %s Pol %s'%(m.antenna, m.spw, m.pols))
-                LOG.debug('\tMS "{ms}" Antenna "{antenna}" (ID {antenna_id}) Spw {spw} Field "{field}" (ID {field_id})',
+                LOG.info('\tMS "{ms}" Antenna "{antenna}" (ID {antenna_id}) Spw {spw} Field "{field}" (ID {field_id})',
                           ms=m.ms.basename,
                           antenna=m.antenna_name,
                           antenna_id=m.antenna_id, spw=m.spw_id,
@@ -373,20 +374,26 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
         blparam_file = lambda ms: ms.basename.rstrip('/') \
             + '_blparam_stage{stage}.txt'.format(stage=stage_number)
         work_data = {}
+        plot_list = []
+        plot_manager = plotter.BaselineSubtractionPlotManager(self.inputs.context)
         for (ms, accum) in registry.items():
             vis = ms.basename
             field_id_list = accum.get_field_id_list()
             antenna_id_list = accum.get_antenna_id_list()
             spw_id_list = accum.get_spw_id_list()
-            #grid_table_list = accum.get_grid_table_list()
-            #channelmap_range_list = accum.get_channelmap_range_list()
             LOG.debug('subgroup member for {vis}:\n\tfield: {field}\n\tantenna: {antenna}\n\tspw: {spw}',
                       vis=ms.basename,
                       field=field_id_list,
                       antenna=antenna_id_list,
                       spw=spw_id_list)
             
-            devmask_list = [deviation_mask[vis][key] for key in zip(field_id_list, antenna_id_list, spw_id_list)]
+            devmask_list = []
+            for key in zip(field_id_list, antenna_id_list, spw_id_list):
+                devmask = None
+                if deviation_mask[vis].has_key(key):
+                    devmask = deviation_mask[vis][key]
+                devmask_list.append(devmask)
+                
 
             # fit order determination
             fitter_inputs = worker.BaselineSubtractionTask.Inputs(context,
@@ -401,111 +408,27 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
                                                deviationmask_list=devmask_list)
             fitter_results = self._executor.execute(job, merge=False)
             LOG.debug('fitter_results: {}', fitter_results)
-            if isinstance(fitter_results, basetask.ResultsList):
-                for r in fitter_results:
-                    plot_list.extend(r.outcome.pop('plot_list'))
-            else:
-                plot_list.extend(fitter_results.outcome.pop('plot_list'))
-            work_data[ms.name] = fitter_results.outcome['outfile']
-#           # fit order determination and fitting
-#             fitter_cls = fitting.FittingFactory.get_fitting_class(fitfunc)
-# 
-#             # loop over file
-#             job_list = []
-#             if mpihelpers.is_mpi_ready():
-#                 context_path = os.path.join(context.output_dir, context.name + '.context')
-#                 context.save(context_path)
-#                 datatable.exportdata(minimal=False)
-#                 job_generator = common.create_parallel_job
-#             else:
-#                 job_generator = common.create_serial_job
-#             # create job 
-#             def _gen():
-#                 for (ant,spwid,pols) in zip(antenna_list, spwid_list, pols_list):
-#                     if len(pols) == 0:
-#                         LOG.info('Skip Antenna %s Spw %s (polarization selection is null)'%(ant, spwid))
-#                         continue
-#                     
-#                     LOG.debug('Performing spectral baseline subtraction for Antenna %s Spw %s Pols %s'%(ant, spwid, pols))
-#                     
-#                     _iteration = group_desc.get_iteration(ant, spwid)
-#                     outfile = self._get_dummy_name(context, ant)
-#                     LOG.debug('pols=%s'%(pols))
-#                     #LOG.info('asizeof(grid_table)=%s'%(asizeof.asizeof(grid_table)))
-#                     #LOG.info('asizeof(channelmap_range)=%s'%(asizeof.asizeof(channelmap_range)))
-#                     #per_antenna_table = per_antenna_grid_table(ant, grid_table)
-#                     plot_table = generate_plot_table(ant, spwid, pols, grid_table)
-#                     #LOG.info('asizeof(per antenna grid_table)=%s'%(asizeof.asizeof(per_antenna_table)))
-#                     fitter_args = {"antennaid": ant,
-#                                  "spwid": spwid,
-#                                  "pollist": pols,
-#                                  "iteration": _iteration,
-#                                  "fit_order": fitorder,
-#                                  "edge": edge,
-#                                  "outfile": outfile,
-#                                  "grid_table": plot_table,
-#                                  "channelmap_range": channelmap_range,
-#                                  "stage_dir": stage_dir}
-#                     yield {'job': job_generator(fitter_cls, fitter_args, context),
-#                            'meta': (ant, spwid, pols, outfile)}                      
-# #                 job_list.append({'job': job_generator(fitter_cls, fitter_args, context),
-# #                                  'meta': (ant, spwid, pols, outfile)})
-#             if mpihelpers.is_mpi_ready():
-#                 job_list = list(_gen())
-#             else:
-#                 job_list = _gen()
-#             # execute job, get result, and generate plots before/after baseline subtraction
-#             for job_entry in job_list:
-#                 job = job_entry['job']
-#                 ant, spwid, pols, outfile = job_entry['meta']
-#                 fitter_result = job.get_result()
-#                 #LOG.info('asizeof(fitter_result type %s)=%s'%(type(fitter_result), asizeof.asizeof(fitter_result)))
-#                 #LOG.info('asizeof(fitter_result.inputs=%s'%(asizeof.asizeof(fitter_result.inputs)))
-#                 #LOG.info('asizeof(fitter_result.casalog=%s'%(asizeof.asizeof(fitter_result.casalog)))
-#                 if isinstance(fitter_result, basetask.ResultsList):
-#                     temp_name = fitter_result[0].outcome.pop('outtable')
-#                     for r in fitter_result:
-#                         r.accept(context)
-#                         #if hasattr(r, 'index_list'):
-#                         #    LOG.info('asizeof(index_list)=%s'%(asizeof.asizeof(r.outcome['index_list'])))
-#                         #if hasattr(r, 'inputs'):
-#                         #    LOG.info('asizeof(inputs)=%s'%(asizeof.asizeof(r.inputs)))
-#                         #    for (k,v) in r.inputs.items():
-#                         #        LOG.info('asizeof(r.inputs[\'%s\'])=%s'%(k,asizeof.asizeof(v)))
-#                         plot_list.extend(r.outcome.pop('plot_list'))
-#                 else:
-#                     temp_name = fitter_result.outcome.pop('outtable')
-#                     #if hasattr(fitter_result, 'index_list'):
-#                     #    LOG.debug('asizeof(index_list)=%s'%(asizeof.asizeof(fitter_result.outcome['index_list'])))
-#                     #    for (k,v) in fitter_result.inputs.items():
-#                     #        LOG.info('asizeof(fitter_result.inputs[\'%s\'])=%s'%(k,asizeof.asizeof(v)))
-#                     fitter_result.accept(context)
-#                     plot_list.extend(fitter_result.outcome.pop('plot_list'))
-#                 if not files_temp.has_key(ant):
-#                     files_temp[ant] = temp_name
-#                     
-#                 
-#             name_list = [context.observing_run[f].baselined_name
-#                          for f in antenna_list]
-#             baselined.append({'group_id': group_id, 'iteration': iteration,
-#                               'name': name_list, 'index': antenna_list,
-#                               'spw': spwid_list, 'pols': pols_list,
-#                               'lines': detected_lines,
-#                               'channelmap_range': channelmap_range,
-#                               'clusters': cluster_info})
-#             LOG.debug('cluster_info=%s'%(cluster_info))
-# 
-#         # replace working scantable with temporal baselined scantable
-#         for file_idx, temp_name in files_temp.items():
-#             blname = context.observing_run[file_idx].baselined_name
-#             if os.path.exists(blname) and os.path.exists(temp_name):
-#                 shutil.rmtree(blname)
-#             shutil.move(temp_name, blname)
-# 
-#         outcome = {'baselined': baselined,
-#                    'edge': edge,
-#                    'deviation_mask': deviation_mask,
-#                    'plots': plot_list}
+
+            outfile = fitter_results.outcome['outfile']
+            work_data[ms.name] = outfile
+            
+            # plot
+            field_id_list, antenna_id_list, spw_id_list = accum.get_process_list()
+            grid_table_list = accum.get_grid_table_list()
+            channelmap_range_list = accum.get_channelmap_range_list()
+            deviationmask_list = devmask_list
+            
+            # initialize plot manager
+            status = plot_manager.initialize(ms, outfile)
+            for (field_id, antenna_id, spw_id, grid_table, deviationmask, channelmap_range) in \
+                    zip(field_id_list, antenna_id_list, spw_id_list, grid_table_list, deviationmask_list, channelmap_range_list):
+                
+                if status:
+                    plot_list.extend(plot_manager.plot_spectra_with_fit(field_id, antenna_id, spw_id, 
+                                                                        grid_table, 
+                                                                        deviationmask, channelmap_range))
+        plot_manager.finalize()
+        
         outcome = {'baselined': baselined,
                    'work_data': work_data,
                    'edge': edge,
@@ -514,13 +437,7 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
         results = SDMSBaselineResults(task=self.__class__,
                                     success=True,
                                     outcome=outcome)
-                
-#         #stage_number is taken care of by basetask.result_finaliser
-#         if self.inputs.context.subtask_counter is 0: 
-#             results.stage_number = self.inputs.context.task_counter - 1
-#         else:
-#             results.stage_number = self.inputs.context.task_counter 
-                
+                        
         return results
 
     def analyse(self, result):

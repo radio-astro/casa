@@ -1,13 +1,9 @@
 from __future__ import absolute_import
 
 import os
-import time
-import re
 import numpy
 import collections
-import itertools
 import types
-import shutil
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -18,10 +14,6 @@ from pipeline.domain import DataTable
 from .. import common
 from pipeline.hsd.tasks.common import utils as sdutils
 from pipeline.infrastructure import casa_tasks
-from . import plotter
-import pipeline.infrastructure.renderer.logger as logger
-
-from pipeline.infrastructure.displays.singledish.utils import sd_polmap
 
 _LOG = infrastructure.get_logger(__name__)
 LOG = sdutils.OnDemandStringParseLogger(_LOG)
@@ -60,12 +52,12 @@ def as_maskstring(masklist):
     return ';'.join(map(lambda x: '%s~%s'%(x[0],x[1]), masklist))
 
 def generate_plot_table(ms_id, antenna_id, spw_id, polarization_ids, grid_table):
-    def filter(msid, ant, spw, pols, table):
+    def _filter(msid, ant, spw, pols, table):
         for row in table:
             if row[0] == spw and row[1] in pols:
                 new_row_entry = row[2:6] + [numpy.array([r[3] for r in row[6] if r[-1] == msid and r[-2] == ant], dtype=int)]
                 yield new_row_entry
-    new_table = list(filter(ms_id, antenna_id, spw_id, polarization_ids, grid_table))
+    new_table = list(_filter(ms_id, antenna_id, spw_id, polarization_ids, grid_table))
     return new_table
 
 class BaselineSubtractionInputsBase(basetask.StandardInputs):
@@ -457,134 +449,15 @@ class BaselineSubtractionWorker(basetask.StandardTaskTemplate):
                                      blfunc='variable', blparam=blparam,
                                      outfile=outfile, overwrite=True)
         self._executor.execute(job)
-#         # copy infile to outfile for testing
-#         if os.path.exists(outfile):
-#             shutil.rmtree(outfile)
-#         shutil.copytree(vis, outfile)
             
         outcome = {'blparam': blparam,
                    'bloutput': bloutput,
-                   'outfile': outfile,
-                   'process_list': process_list,
-                   'deviationmask_list': deviationmask_list}
+                   'outfile': outfile}
         results = BaselineSubtractionResults(success=True, outcome=outcome)
         return results
         
-    #@sdutils.profiler
     def analyse(self, results):
-        # plotting
-        #plot_table = self.inputs.plot_table
-        #channelmap_range = self.inputs.channelmap_range
-        plot_list = []
-        ms = self.inputs.ms
-        ms_id = self.inputs.context.observing_run.measurement_sets.index(ms)
-        vis = self.inputs.vis
-        process_list = results.outcome.pop('process_list')
-        field_id_list, antenna_id_list, spw_id_list = process_list.get_process_list()
-        grid_table_list = process_list.get_grid_table_list()
-        channelmap_range_list = process_list.get_channelmap_range_list()
-        deviationmask_list = results.outcome.pop('deviationmask_list')
-        args = self.inputs.to_casa_args()
-        outfile = args['outfile']
-        ###if grid_table is not None:
-        
-        # mkdir stage_dir if it doesn't exist
-        #stage_dir = self.inputs.stage_dir
-        #if stage_dir is None:
-        stage_number = self.inputs.context.task_counter
-        stage_dir = os.path.join(self.inputs.context.report_dir,"stage%d" % stage_number)
-        if not os.path.exists(stage_dir):
-            os.makedirs(stage_dir)
-            
-        # get row map between original and baseline-subtracted MS
-        rowmap = self.get_rowmap_for_baseline(ms, outfile)
-            
-        #st = self.inputs.context.observing_run[antennaid]
-        
-        for (field_id, antenna_id, spw_id, grid_table, deviation_mask, channelmap_range) in \
-                zip(field_id_list, antenna_id_list, spw_id_list, grid_table_list, deviationmask_list, channelmap_range_list):
-            if grid_table is not None:
-                data_desc = ms.get_data_description(spw=spw_id)
-                num_pol = data_desc.num_polarizations
-                pol_list = numpy.arange(num_pol, dtype=int)
-                source_name = ms.fields[field_id].source.name.replace(' ', '_').replace('/','_')
-                plot_table = generate_plot_table(ms_id, antenna_id, spw_id, pol_list, grid_table)
-                plot_list.extend(list(self.plot_spectra_with_fit(source_name, antenna_id, spw_id, 
-                                                                 pol_list, plot_table, 
-                                                                 vis, outfile,
-                                                                 stage_dir, deviation_mask,
-                                                                 channelmap_range,
-                                                                 rowmap=rowmap)))
-            
-            
-#             # TODO: use proper source name when we can handle multiple source 
-#             source_name = ''
-#             for (source_id,source) in st.source.items():
-#                 if 'TARGET' in source.intents:
-#                     source_name = source.name.replace(' ', '_').replace('/','_')
-# #             prefix = 'spectral_plot_before_subtraction_%s_%s_ant%s_spw%s'%('.'.join(st.basename.split('.')[:-1]),source_name,antennaid,spwid)
-# #             plot_list.extend(self.plot_spectra(source_name, antennaid, spwid, pollist, self.inputs.grid_table, 
-# #                                                filename_in, stage_dir, prefix, channelmap_range))
-# #             prefix = prefix.replace('before', 'after')
-# #             plot_list.extend(self.plot_spectra(source_name, antennaid, spwid, pollist, grid_table, filename_out, stage_dir, prefix, channelmap_range))
-#         
-#             plot_list.extend(list(self.plot_spectra_with_fit(source_name, antennaid, spwid, pollist, grid_table, filename_in, filename_out, stage_dir, channelmap_range)))
-        
-#         outcome = {'bltable': bltable_name,
-#                    'index_list': index_list_total,
-#                    'outtable': filename_out,
-#                    'plot_list': plot_list}
-#         result = FittingResults(task=self.__class__,
-#                                 success=True,
-#                                 outcome=outcome)
-   
-        results.outcome.update({'plot_list': plot_list})
-                
         return results
-    
-    #@sdutils.profiler
-    def get_rowmap_for_baseline(self, ms, postfit_data):
-        rowmap = sdutils.make_row_map(ms, postfit_data)
-        return rowmap
-
-    #@sdutils.profiler
-    def plot_spectra_with_fit(self, source, ant, spwid, pols, grid_table, prefit_data, postfit_data, outdir, deviation_mask, channelmap_range, rowmap=None):
-        ms= self.inputs.ms
-        line_range = [[r[0] - 0.5 * r[1], r[0] + 0.5 * r[1]] for r in channelmap_range if r[2] is True]
-        if len(line_range) == 0:
-            line_range = None
-        LOG.debug('Generating plots for source {} ant {} spw {}',
-                  source, ant, spwid)
-        outprefix_template = lambda x: 'spectral_plot_%s_subtraction_%s_%s_ant%s_spw%s'%(x,'.'.join(ms.basename.split('.')[:-1]),source,ant,spwid)
-        prefit_prefix = os.path.join(outdir, outprefix_template('before'))
-        postfit_prefix = os.path.join(outdir, outprefix_template('after'))
-        LOG.debug('prefit_prefix=\'{}\'', os.path.basename(prefit_prefix))
-        LOG.debug('postfit_prefix=\'{}\'', os.path.basename(postfit_prefix))
-        plot_list = plotter.plot_profile_map_with_fit(self.inputs.context, ms, ant, spwid, grid_table, prefit_data, postfit_data, 
-                                                      prefit_prefix, postfit_prefix, deviation_mask, line_range, rowmap=rowmap)
-        for (plot_type, plots) in plot_list.items():
-            if plot_type == 'pre_fit':
-                ptype = 'sd_sparse_map_before_subtraction'
-                data = prefit_data
-            else:
-                ptype = 'sd_sparse_map_after_subtraction'
-                data = postfit_data
-            for (pol, figfile) in plots.items():
-                if os.path.exists(figfile):
-                    parameters = {'intent': 'TARGET',
-                                  'spw': spwid,
-                                  'pol': sd_polmap[pol],
-                                  'ant': ms.antennas[ant].name,
-                                  'vis': ms.basename,
-                                  'type': ptype,
-                                  'file': data}
-                plot = logger.Plot(figfile,
-                                   x_axis='Frequency',
-                                   y_axis='Intensity',
-                                   field=source,
-                                   parameters=parameters)
-                yield plot
-                    
                 
 class CubicSplineBaselineSubtractionWorker(BaselineSubtractionWorker):
     SubTask = CubicSplineFitParamConfig
