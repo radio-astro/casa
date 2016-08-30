@@ -6,12 +6,15 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="hifa_tsysflag" category="pipeline">
+
 <shortdescription>Flag deviant system temperature measurements</shortdescription>
+
 <description>
 Flag deviant system temperature measurements. This is done by running a
 sequence of flagging subtasks, each looking for a different type of 
 possible error.
 </description>
+
 <input>
     <param type="stringArray" name="vis" subparam="true">
         <description>List of input measurement sets (Not used) </description>
@@ -29,7 +32,7 @@ possible error.
     </param>
 
     <param type="double" name="fnm_limit" subparam="true">
-        <description>Flag spectra with median &gt; fnm_limit * median over all spectra</description>
+        <description>Flag spectra with median greater than fnm_limit * median over all spectra</description>
         <value>2.0</value>
     </param>
  
@@ -54,7 +57,7 @@ possible error.
     </param>
 
     <param type="double" name="fe_edge_limit" subparam="true">
-        <description>Flag channels whose channel to channel difference &gt; fe_edge_limit * median across spectrum</description>
+        <description>Flag channels whose channel to channel difference greater than fe_edge_limit * median across spectrum</description>
         <value>3.0</value>
     </param>
 
@@ -69,7 +72,7 @@ possible error.
     </param>
 
     <param type="double" name="ff_max_limit" subparam="true">
-        <description>Flag Tsys spectra with \'fieldshape\' metric &gt; ff_max_limit</description>
+        <description>Flag Tsys spectra with \'fieldshape\' metric greater than ff_max_limit</description>
         <value>5.0</value>
     </param>
 
@@ -79,7 +82,7 @@ possible error.
     </param>
 
     <param type="double" name="fb_sharps_limit" subparam="true">
-        <description>Flag channels bracketing a channel to channel difference &gt; fb_sharps_limit</description>
+        <description>Flag channels bracketing a channel to channel difference greater than fb_sharps_limit</description>
         <value>0.05</value>
     </param>
 
@@ -89,20 +92,25 @@ possible error.
     </param>
 
     <param type="double" name="tmf1_limit" subparam="true">
-        <description>Flag all Tsys spectra within a timestamp for an antenna if proportion flagged already &gt; tmf1_limit</description>
+        <description>Flag all Tsys spectra within a timestamp for an antenna if proportion flagged already exceeds tmf1_limit</description>
         <value>0.666</value>
     </param>
 
     <param type="double" name="tmef1_limit" subparam="true">
-        <description>Flag all Tsys spectra for all antennas in a spw, if proportion of antennas that are already entirely flagged in all timestamps &gt; tmef1_limit</description>
+        <description>Flag all Tsys spectra for all antennas in a spw, if proportion of antennas that are already entirely flagged in all timestamps exceeds tmef1_limit</description>
         <value>0.666</value>
+    </param>
+
+    <param type="string" name="metric_order">
+        <description>Order in which to evaluate the flagging metric(s); inactive metrics are skipped.</description>
+        <value>nmedian,derivative,edgechans,fieldshape,birdies,toomany</value>
     </param>
 
     <param type="bool" name="normalize_tsys">
         <description>Normalize Tsys prior to computing the flagging metric(s)</description>
         <value>False</value>
     </param>
-
+    
     <param type="string" name="pipelinemode">
         <description>The pipeline operations mode</description>
         <value>automatic</value>
@@ -197,9 +205,9 @@ possible error.
         <value></value>
     </param>
 </output>
-<returns type="void"/>
 
 <example>
+
 hif_tsysflag tries to flag all deviant system temperature measurements in 
 the system temperature calibration table. It does this by running a sequence
 of flagging tests, each designed to look for a different type of error.
@@ -223,21 +231,18 @@ a threshold, and flag Tsys spectra for all antennas and all timestamps
 in a spw, if proportion of antennas that are already entirely flagged 
 in all timestamps exceeds a threshold.
 
+
+
 Keyword arguments:
 
+--- Pipeline parameter arguments which can be set in any pipeline mode
+
 pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
-   determines the values of all context defined pipeline inputs automatically.
-   In interactive mode the user can set the pipeline context defined parameters
-   manually.  In 'getinputs' mode the user can check the settings of all
-   pipeline parameters without running the task.
-   default: 'automatic'.
-
----- pipeline context defined parameter arguments which can be set only in
-'interactive mode'
-
-caltable -- List of input Tsys calibration tables
-    default: [] - Use the table currently stored in the pipeline context. 
-    example: caltable=['X132.ms.tsys.s2.tbl']
+    determines the values of all context defined pipeline inputs automatically.
+    In interactive mode the user can set the pipeline context defined 
+    parameters manually.  In 'getinputs' mode the user can check the settings 
+    of all pipeline parameters without running the task.
+    default: 'automatic'.
 
 flag_nmedian -- True to flag Tsys spectra with high median value.
     default: True
@@ -279,43 +284,59 @@ flag_birdies -- True to flag channels covering sharp spectral features.
     default: True
 
 fb_sharps_limit -- Flag channels bracketing a channel to channel
-     difference &gt; fb_sharps_limit.
-     default: 0.05
+    difference &gt; fb_sharps_limit.
+    default: 0.05
 
 flag_toomany -- True to flag Tsys spectra for which a proportion of 
-antennas for given timestamp and/or proportion of antennas that are 
-entirely flagged in all timestamps exceeds their respective thresholds.
+    antennas for given timestamp and/or proportion of antennas that are 
+    entirely flagged in all timestamps exceeds their respective thresholds.
+    default: True
 
 tmf1_limit -- Flag Tsys spectra for all antennas in a timestamp and spw if 
-proportion of antennas already flagged in this timestamp and spw exceeds 
-tmf1_limit.
+    proportion of antennas already flagged in this timestamp and spw exceeds 
+    tmf1_limit.
     default: 0.666
 
 tmef1_limit -- Flag Tsys spectra for all antennas and all timestamps
-in a spw, if proportion of antennas that are already entirely flagged 
-in all timestamps exceeds tmef1_limit.
+    in a spw, if proportion of antennas that are already entirely flagged 
+    in all timestamps exceeds tmef1_limit.
     default: 0.666
 
+metric_order -- Order in which to evaluate the flagging metrics that are 
+    enables. Disabled metrics are skipped.
+    default: 'nmedian,derivative,edgechans,fieldshape,birdies,toomany'
+
 normalize_tsys -- True to create a normalized Tsys table that is used to 
-evaluate the Tsys flagging metrics. All newly found flags are also applied
-to the original Tsys caltable that continues to be used for subsequent 
-calibration.
+    evaluate the Tsys flagging metrics. All newly found flags are also applied
+    to the original Tsys caltable that continues to be used for subsequent 
+    calibration.
     default: False
 
--- Pipeline task execution modes
+--- Pipeline context defined parameter arguments which can be set only in
+'interactive mode'
+
+caltable -- List of input Tsys calibration tables
+    default: [] - Use the table currently stored in the pipeline context. 
+    example: caltable=['X132.ms.tsys.s2.tbl']
+
+--- Pipeline task execution modes
 
 dryrun -- Run the commands (True) or generate the commands to be run but
-   do not execute (False).
-   default: True
+    do not execute (False).
+    default: True
 
 acceptresults -- Add the results of the task to the pipeline context (True) or
-   reject them (False).
-   default: True
+    reject them (False).
+    default: True
+
+
 
 Output:
 
 results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
     the results object for the pipeline task is returned.
+
+
 
 Examples:
 
