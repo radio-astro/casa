@@ -1374,6 +1374,8 @@ def score_checksources(mses, fieldname, spwid, imagename):
         field = ms.get_fields (name = fieldname)
         if not field:
             continue
+        if 'CHECK' not in field.intents:
+            continue
         fieldid = str(field[0].id)
         refdirection = me.measure(field[0].mdirection, 'ICRS')
         break
@@ -1419,8 +1421,8 @@ def score_checksources(mses, fieldname, spwid, imagename):
     # the position and flux scores if both are available.
     if not fitdict:
         score = 0.0
-        longmsg = 'Source fit failed for %s spwd %d' % (fieldname, spwid)
-        shortmsg = 'Source fit failed' 
+        longmsg = 'Check source fit failed for %s spwd %d' % (fieldname, spwid)
+        shortmsg = 'Check source fit failed' 
     else:
         offset = fitdict['positionoffset']['value'] * 1000.0
         beams = fitdict['beamoffset']['value']
@@ -1428,14 +1430,14 @@ def score_checksources(mses, fieldname, spwid, imagename):
         if not refflux:
             coherence = None
             score = max (0.0, 1.0 - min(1.0, beams)) 
-            longmsg = 'Source fit for %s spwd %d:  offet %0.3fmarcsec %0.3fbeams  fit flux %0.3fJy  decoherence None' % (fieldname, spwid, offset, beams, fitflux)
+            longmsg = 'Check source fit for %s spwd %d:  offet %0.3fmarcsec %0.3fbeams  fit flux %0.3fJy  decoherence None' % (fieldname, spwid, offset, beams, fitflux)
         else:
             coherence = fitdict['fluxloss']['value'] * 100.0
             offsetscore = max (0.0, 1.0 - min(1.0, beams)) 
             fluxscore = max (0.0, 1.0 - fitdict['fluxloss']['value'])
             score = math.sqrt (fluxscore * offsetscore)
-            longmsg = 'Source fit for %s spwd %d:  offet %0.3fmarcsec %0.3fbeams  fit flux %0.3fJy  decoherence %0.3f percent' % (fieldname, spwid, offset, beams, fitflux, coherence)
-        shortmsg = 'Source fit successful' 
+            longmsg = 'Check source fit for %s spwd %d:  offet %0.3fmarcsec %0.3fbeams  fit flux %0.3fJy  decoherence %0.3f percent' % (fieldname, spwid, offset, beams, fitflux, coherence)
+        shortmsg = 'Check source fit successful' 
 
     # Return score
     return pqa.QAScore (score, longmsg=longmsg, shortmsg=shortmsg)
