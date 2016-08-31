@@ -5,13 +5,14 @@ import types
 
 agent_description = {
 	'before'   : 'Before Task',
+	'intents'  : 'Unwanted Intents',
 	'qa0'      : 'QA0',
 	'online'   : 'Online Flags',
 	'template' : 'Flagging Template',
 	'autocorr' : 'Autocorrelations',
 	'shadow'   : 'Shadowed Antennas',
-	'edgespw'  : 'Edge Channels',
-	'intents'  : 'Unwanted Intents'
+	'edgespw'  : 'Edge Channels'
+
 }
 
 total_keys = {
@@ -201,7 +202,7 @@ mses = [m for m in flags.keys() if 'online' in flags[m] or 'template' in flags[m
 <table class="table table-bordered table-striped"
 	   summary="Flagged Data">
 	<caption>Summary of flagged data. Each cell states the amount of data 
-	flagged as a fraction of the specified data selection, with the 
+	flagged as a fraction of the spec ified data selection, with the
 	<em>Flagging Agent</em> columns giving this information per flagging agent.
 	<br>The percentages in each successive column represent the additional data flagged by applying that column's agent (after the previous agents have been applied).
 	</caption>

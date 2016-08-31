@@ -345,8 +345,8 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
 
         agent_summaries = dict((v['name'], v) for v in summary_dict.values())
         
-        ordered_agents = ['before', 'anos', 'qa0', 'online',  'template', 'autocorr',
-                          'shadow', 'intents', 'edgespw', 'clip', 'quack', 
+        ordered_agents = ['before', 'anos', 'intents', 'qa0', 'online',  'template', 'autocorr',
+                          'shadow', 'edgespw', 'clip', 'quack',
                           'baseband']
 
         summary_reps = [agent_summaries[agent] 
@@ -398,6 +398,24 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
                 flag_cmds.extend(self._read_flagfile(inputs.fileonline))
                 flag_cmds.append("mode='summary' name='online'")
         '''
+
+        # These must be separated due to the way agent flagging works
+        if inputs.intents != '':
+            # for intent in inputs.intents.split(','):
+            #    if '*' not in intent:
+            #        intent = '*%s*' % intent
+            #    flag_cmds.append("mode='manual' intent='%s' reason='intents'" % intent)
+            # flag_cmds.append("mode='summary' name='intents'")
+            for intent in inputs.intents.split(','):
+                # if '*' not in intent:
+                # intent = '*%s*' % intent
+                intentlist = list(inputs.ms.get_original_intent(intent))
+                for intent_item in intentlist:
+                    flag_cmds.append("mode='manual' intent='%s' reason='intents'" % intent_item)
+            flag_cmds.append("mode='summary' name='intents'")
+
+
+
         if inputs.online:
             if not os.path.exists(inputs.fileonline):
                 LOG.warning('Online flag file \'%s\' was not found. Online '
@@ -423,7 +441,7 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
         if inputs.template:
             if not os.path.exists(inputs.filetemplate):
                 LOG.warning('Template flag file \'%s\' was not found. Template '
-                            'flagging for %s disabled.' % (inputs.filetemplate, 
+                            'flagging for %s disabled.' % (inputs.filetemplate,
                                                            inputs.ms.basename))
             else:
                 flag_cmds.extend(self._read_flagfile(inputs.filetemplate))
@@ -444,20 +462,7 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
             flag_cmds.append("mode='manual' scan='%s' reason='scans'" % inputs.scannumber)
             flag_cmds.append("mode='summary' name='scans'")
 
-        # These must be separated due to the way agent flagging works
-        if inputs.intents != '':
-            #for intent in inputs.intents.split(','):
-            #    if '*' not in intent:
-            #        intent = '*%s*' % intent
-            #    flag_cmds.append("mode='manual' intent='%s' reason='intents'" % intent)
-            #flag_cmds.append("mode='summary' name='intents'")
-            for intent in inputs.intents.split(','):
-                #if '*' not in intent:
-                    #intent = '*%s*' % intent
-                intentlist = list(inputs.ms.get_original_intent(intent))
-                for intent_item in intentlist:
-                    flag_cmds.append("mode='manual' intent='%s' reason='intents'" % intent_item)
-            flag_cmds.append("mode='summary' name='intents'") 
+
         
         # Flag spectral window edge channels?
         if inputs.edgespw: 
