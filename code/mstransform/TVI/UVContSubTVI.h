@@ -29,6 +29,7 @@
 // Fitting classes
 #include <scimath/Fitting/LinearFitSVD.h>
 #include <scimath/Functionals/Polynomial.h>
+#include <mstransform/TVI/DenoisingLib.h>
 
 // OpenMP
 #ifdef _OPENMP
@@ -52,6 +53,8 @@ public:
 	UVContSubTVI(	ViImplementation2 * inputVii,
 						const Record &configuration);
 
+	~UVContSubTVI();
+
 	// Report the the ViImplementation type
 	virtual String ViiType() const { return String("UVContSub( ")+getVii()->ViiType()+" )"; };
 
@@ -66,16 +69,23 @@ protected:
     void initialize();
 
     template<class T> void transformDataCube(	const Cube<T> &inputVis,
-    											const Cube<Float> &inputSigma,
-    											Bool sigmaAsWeight,
+    											const Cube<Float> &inputWeight,
     											Cube<T> &outputVis) const;
+
+    template<class T> void transformDataCore(	denoising::GslPolynomialModel<Double>* model,
+												Vector<Bool> *lineFreeChannelMask,
+												const Cube<T> &inputVis,
+												const Cube<Bool> &inputFlags,
+												const Cube<Float> &inputWeight,
+												Cube<T> &outputVis,
+												Int parallelCorrAxis=-1) const;
 
     mutable uInt fitOrder_p;
     mutable Bool want_cont_p;
+    mutable Bool gsl_p;
     mutable String fitspw_p;
-    mutable LinearFitSVD<Float> fitter_p;
     mutable map<Int,Vector<Bool> > lineFreeChannelMaskMap_p;
-	mutable map<Int, Matrix<Float> > inputFrequencyMap_p;
+	mutable map<Int, denoising::GslPolynomialModel<Double>* > inputFrequencyMap_p;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -95,7 +105,7 @@ protected:
 	vi::ViImplementation2 * createVi () const;
 
 	Record configuration_p;
-	ViImplementation2 *inputVii_p;;
+	ViImplementation2 *inputVii_p;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -157,22 +167,30 @@ template<class T> class UVContSubKernel
 
 public:
 
-	UVContSubKernel(	uInt fitOrder,
-						LinearFitSVD<Float> *fitter,
-						Matrix<Float> *freqPows,
+	UVContSubKernel(	denoising::GslPolynomialModel<Double>* model,
 						Vector<Bool> *lineFreeChannelMask);
 
 	virtual void kernel(DataCubeMap *inputData,
-						DataCubeMap *outputData) = 0;
+						DataCubeMap *outputData);
+
+	virtual void changeFitOrder(size_t order) = 0;
+
+	virtual void defaultKernel(	Vector<T> &inputVector,
+								Vector<T> &outputVector) = 0;
+
+	virtual void kernelCore(Vector<T> &inputVector,
+							Vector<Bool> &inputFlags,
+							Vector<Float> &inputWeights,
+							Vector<T> &outputVector) = 0;
 
 	void setDebug(Bool debug) { debug_p = debug;}
 
 protected:
 
 	Bool debug_p;
-	uInt fitOrder_p;
-	LinearFitSVD<Float> *fitter_p;
-	Matrix<Float> *freqPows_p;
+	size_t fitOrder_p;
+	denoising::GslPolynomialModel<Double> *model_p;
+	Matrix<Double> freqPows_p;
 	Vector<Float> frequencies_p;
 	Vector<Bool> *lineFreeChannelMask_p;
 };
@@ -184,7 +202,7 @@ protected:
 template<class T> class UVContSubtractionKernel : public UVContSubKernel<T>
 {
 	using UVContSubKernel<T>::fitOrder_p;
-	using UVContSubKernel<T>::fitter_p;
+	using UVContSubKernel<T>::model_p;
 	using UVContSubKernel<T>::freqPows_p;
 	using UVContSubKernel<T>::frequencies_p;
 	using UVContSubKernel<T>::lineFreeChannelMask_p;
@@ -193,23 +211,30 @@ template<class T> class UVContSubtractionKernel : public UVContSubKernel<T>
 
 public:
 
-	UVContSubtractionKernel(	uInt fitOrder,
-								LinearFitSVD<Float> *fitter,
-								Matrix<Float> *freqPows,
+	UVContSubtractionKernel(	denoising::GslPolynomialModel<Double>* model,
 								Vector<Bool> *lineFreeChannelMask=NULL);
 
-	void kernel(DataCubeMap *inputData,
-				DataCubeMap *outputData);
+	void changeFitOrder(size_t order);
+
+	void defaultKernel(	Vector<Complex> &inputVector,
+						Vector<Complex> &outputVector);
+
+	void defaultKernel(	Vector<Float> &inputVector,
+						Vector<Float> &outputVector);
 
 	void kernelCore(	Vector<Complex> &inputVector,
 						Vector<Bool> &inputFlags,
-						Vector<Float> &inputSigma,
+						Vector<Float> &inputWeights,
 						Vector<Complex> &outputVector);
 
 	void kernelCore(	Vector<Float> &inputVector,
 						Vector<Bool> &inputFlags,
-						Vector<Float> &inputSigma,
+						Vector<Float> &inputWeights,
 						Vector<Float> &outputVector);
+
+private:
+
+	LinearFitSVD<Float> fitter_p;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -220,7 +245,7 @@ template<class T> class UVContEstimationKernel : public UVContSubKernel<T>
 {
 
 	using UVContSubKernel<T>::fitOrder_p;
-	using UVContSubKernel<T>::fitter_p;
+	using UVContSubKernel<T>::model_p;
 	using UVContSubKernel<T>::freqPows_p;
 	using UVContSubKernel<T>::frequencies_p;
 	using UVContSubKernel<T>::lineFreeChannelMask_p;
@@ -228,23 +253,97 @@ template<class T> class UVContEstimationKernel : public UVContSubKernel<T>
 
 public:
 
-	UVContEstimationKernel(	uInt fitOrder,
-							LinearFitSVD<Float> *fitter,
-							Matrix<Float> *freqPows,
+	UVContEstimationKernel(	denoising::GslPolynomialModel<Double>* model,
 							Vector<Bool> *lineFreeChannelMask=NULL);
 
-	void kernel(DataCubeMap *inputData,
-				DataCubeMap *outputData);
+	void changeFitOrder(size_t order);
+
+	void defaultKernel(	Vector<Complex> &inputVector,
+						Vector<Complex> &outputVector);
+
+	void defaultKernel(	Vector<Float> &inputVector,
+						Vector<Float> &outputVector);
 
 	void kernelCore(	Vector<Complex> &inputVector,
 						Vector<Bool> &inputFlags,
-						Vector<Float> &inputSigma,
+						Vector<Float> &inputWeights,
 						Vector<Complex> &outputVector);
 
 	void kernelCore(	Vector<Float> &inputVector,
 						Vector<Bool> &inputFlags,
-						Vector<Float> &inputSigma,
+						Vector<Float> &inputWeights,
 						Vector<Float> &outputVector);
+private:
+
+	LinearFitSVD<Float> fitter_p;
+};
+
+//////////////////////////////////////////////////////////////////////////
+// UVContSubtractionGSLKernel class
+//////////////////////////////////////////////////////////////////////////
+
+template<class T> class UVContSubtractionGSLKernel : public UVContSubKernel<T>
+{
+	using UVContSubKernel<T>::fitOrder_p;
+	using UVContSubKernel<T>::model_p;
+	using UVContSubKernel<T>::freqPows_p;
+	using UVContSubKernel<T>::frequencies_p;
+	using UVContSubKernel<T>::lineFreeChannelMask_p;
+	using UVContSubKernel<T>::debug_p;
+
+
+public:
+
+	UVContSubtractionGSLKernel(	denoising::GslPolynomialModel<Double>* model,
+								Vector<Bool> *lineFreeChannelMask=NULL);
+
+	void changeFitOrder(size_t order);
+
+	void defaultKernel(	Vector<T> &inputVector,
+						Vector<T> &outputVector);
+
+	void kernelCore(	Vector<T> &inputVector,
+						Vector<Bool> &inputFlags,
+						Vector<Float> &inputWeights,
+						Vector<T> &outputVector);
+
+private:
+
+	denoising::GslMultifitWeightedLinear fitter_p;
+};
+
+//////////////////////////////////////////////////////////////////////////
+// UVContEstimationGSLKernel class
+//////////////////////////////////////////////////////////////////////////
+
+template<class T> class UVContEstimationGSLKernel : public UVContSubKernel<T>
+{
+
+	using UVContSubKernel<T>::fitOrder_p;
+	using UVContSubKernel<T>::model_p;
+	using UVContSubKernel<T>::freqPows_p;
+	using UVContSubKernel<T>::frequencies_p;
+	using UVContSubKernel<T>::lineFreeChannelMask_p;
+	using UVContSubKernel<T>::debug_p;
+
+public:
+
+	UVContEstimationGSLKernel(	denoising::GslPolynomialModel<Double>* model,
+							Vector<Bool> *lineFreeChannelMask=NULL);
+
+	void changeFitOrder(size_t order);
+
+	void defaultKernel(	Vector<T> &inputVector,
+						Vector<T> &outputVector);
+
+	void kernelCore(	Vector<T> &inputVector,
+						Vector<Bool> &inputFlags,
+						Vector<Float> &inputWeights,
+						Vector<T> &outputVector);
+
+private:
+
+	denoising::GslMultifitWeightedLinear fitter_p;
 };
 
 

@@ -28,6 +28,7 @@ casa_add_library( mstransform
  MSTransform/MSTransformIteratorFactory.cc
  MSTransform/MSUVBin.cc
  TVI/UtilsTVI.cc 
+ TVI/DenoisingLib.cc 
  TVI/FreqAxisTVI.cc 
  TVI/ChannelAverageTVI.cc
  TVI/ConvolutionTVI.cc
@@ -56,6 +57,7 @@ install (FILES
 	
 install (FILES
  	TVI/UtilsTVI.h	
+ 	TVI/DenoisingLib.h	
  	TVI/FreqAxisTVI.h	
 	TVI/ChannelAverageTVI.h	
 	TVI/ConvolutionTVI.h	

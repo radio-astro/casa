@@ -39,6 +39,7 @@ UVContSubTVI::UVContSubTVI(	ViImplementation2 * inputVii,
 {
 	fitOrder_p = 0;
 	want_cont_p = False;
+	gsl_p = True;
 	fitspw_p = String("");
 	inputFrequencyMap_p.clear();
 
@@ -53,6 +54,15 @@ UVContSubTVI::UVContSubTVI(	ViImplementation2 * inputVii,
 	initialize();
 
 	return;
+}
+
+UVContSubTVI::~UVContSubTVI()
+{
+	for (auto iter = inputFrequencyMap_p.begin();iter != inputFrequencyMap_p.end(); iter++)
+	{
+		delete iter->second;
+	}
+	inputFrequencyMap_p.clear();
 }
 
 // -----------------------------------------------------------------------
@@ -123,10 +133,6 @@ void UVContSubTVI::initialize()
 		spw_idx++;
 	}
 
-	// Initialize fitting model (we assume there is always enough data for the requested order)
-	Polynomial<AutoDiff<Float> > poly(fitOrder_p);
-	fitter_p.setFunction(poly);
-
 	// Process line-free channel selection
 	if (fitspw_p.size() > 0)
 	{
@@ -189,7 +195,7 @@ void UVContSubTVI::floatData (Cube<Float> & vis) const
 	VisBuffer2 *vb = getVii()->getVisBuffer();
 
 	// Transform data
-	transformDataCube(vb->visCubeFloat(),vb->weightSpectrum(),True,vis);
+	transformDataCube(vb->visCubeFloat(),vb->weightSpectrum(),vis);
 
 	return;
 }
@@ -202,8 +208,14 @@ void UVContSubTVI::visibilityObserved (Cube<Complex> & vis) const
 	// Get input VisBuffer
 	VisBuffer2 *vb = getVii()->getVisBuffer();
 
+	// Get weightSpectrum from sigmaSpectrum
+	Cube<Float> weightSpFromSigmaSp;
+	weightSpFromSigmaSp.resize(vb->sigmaSpectrum().shape(),False);
+	weightSpFromSigmaSp = vb->sigmaSpectrum(); // = Operator makes a copy
+	arrayTransformInPlace (weightSpFromSigmaSp,sigmaToWeight);
+
 	// Transform data
-	transformDataCube(vb->visCube(),vb->sigmaSpectrum(),False,vis);
+	transformDataCube(vb->visCube(),weightSpFromSigmaSp,vis);
 
 	return;
 }
@@ -218,7 +230,7 @@ void UVContSubTVI::visibilityCorrected (Cube<Complex> & vis) const
 
 
 	// Transform data
-	transformDataCube(vb->visCubeCorrected(),vb->weightSpectrum(),True,vis);
+	transformDataCube(vb->visCubeCorrected(),vb->weightSpectrum(),vis);
 
 	return;
 }
@@ -232,7 +244,7 @@ void UVContSubTVI::visibilityModel (Cube<Complex> & vis) const
 	VisBuffer2 *vb = getVii()->getVisBuffer();
 
 	// Transform data
-	transformDataCube(vb->visCubeModel(),vb->weightSpectrum(),True,vis);
+	transformDataCube(vb->visCubeModel(),vb->weightSpectrum(),vis);
 
 	return;
 }
@@ -241,115 +253,113 @@ void UVContSubTVI::visibilityModel (Cube<Complex> & vis) const
 //
 // -----------------------------------------------------------------------
 template<class T> void UVContSubTVI::transformDataCube(	const Cube<T> &inputVis,
-														const Cube<Float> &inputSigma,
-														Bool sigmaAsWeight,
+														const Cube<Float> &inputWeight,
 														Cube<T> &outputVis) const
 {
 	// Get input VisBuffer
 	VisBuffer2 *vb = getVii()->getVisBuffer();
 
-	// Convert input frequencies to Float (required for the templated fitter class LinearFitSVD<Float>)
+	// Get polynomial model for this SPW (depends on number of channels and gridding)
 	Int spwId = vb->spectralWindows()(0);
 	if (inputFrequencyMap_p.find(spwId) == inputFrequencyMap_p.end())
 	{
 		const Vector<Double> &inputFrequencies = vb->getFrequencies(0);
-		inputFrequencyMap_p[spwId] = Matrix<Float>(fitOrder_p==0? 1:fitOrder_p,inputFrequencies.size(),0);
-
-		Double midfreq,lofreq,hifreq,freqscale;
-		lofreq = inputFrequencies(0);
-		hifreq = inputFrequencies(inputFrequencies.size()-1);
-		midfreq = 0.5 * (lofreq + hifreq);
-		freqscale = 1.0 / (hifreq - midfreq);
-		// First row is always input frequencies
-		for (uInt chan_idx = 0; chan_idx < inputFrequencies.size(); chan_idx++)
-		{
-			//inputFrequencyMap_p[spwId](0,chan_idx) = inputFrequencies(chan_idx);
-			//inputFrequencyMap_p[spwId](0,chan_idx) = -1.0 + chan_idx*(2.0/(inputFrequencies.size()-1));
-			inputFrequencyMap_p[spwId](0,chan_idx) = freqscale*(inputFrequencies(chan_idx)-midfreq);
-		}
-
-		// For fit order 2 and above we calculate pows
-		for (uInt order_idx=2;order_idx<=fitOrder_p;order_idx++)
-		{
-			for (uInt chan_idx = 0; chan_idx < inputFrequencies.size(); chan_idx++)
-			{
-				inputFrequencyMap_p[spwId](order_idx-1,chan_idx) = pow(inputFrequencyMap_p[spwId](0,chan_idx),order_idx);
-			}
-		}
+		// STL should trigger move semantics
+		inputFrequencyMap_p[spwId] = new denoising::GslPolynomialModel<Double>(inputFrequencies,fitOrder_p);
 	}
 
 	// Get input line-free channel mask
-	Vector<Bool> *lineFreeChannelMask;
+	Vector<Bool> *lineFreeChannelMask = NULL;
 	if (lineFreeChannelMaskMap_p.find(spwId) != lineFreeChannelMaskMap_p.end())
 	{
 		lineFreeChannelMask = &(lineFreeChannelMaskMap_p[spwId]);
-	}
-	else
-	{
-		lineFreeChannelMask = NULL;
 	}
 
 	// Reshape output data before passing it to the DataCubeHolder
 	outputVis.resize(getVisBufferConst()->getShape(),False);
 
+	// Get input flag Cube
+	const Cube<Bool> &flagCube = vb->flagCube();
+
+	// Determine number of OpenMP threads
+	int nThreads = 1;
+#ifdef _OPENMP
+	if (gsl_p) nThreads = omp_get_max_threads();
+#endif
+
+	// Transform data
+	if (nThreads > 1)
+	{
+		uInt nCorrs = vb->getShape()(0);
+		#pragma omp parallel for
+		for (uInt corrIdx=0; corrIdx < nCorrs; corrIdx++)
+		{
+			transformDataCore(inputFrequencyMap_p[spwId],lineFreeChannelMask,
+					inputVis,flagCube,inputWeight,outputVis,corrIdx);
+		}
+	}
+	else
+	{
+		transformDataCore(inputFrequencyMap_p[spwId],lineFreeChannelMask,
+				inputVis,flagCube,inputWeight,outputVis);
+	}
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template<class T> void UVContSubTVI::transformDataCore(	denoising::GslPolynomialModel<Double>* model,
+														Vector<Bool> *lineFreeChannelMask,
+														const Cube<T> &inputVis,
+														const Cube<Bool> &inputFlags,
+														const Cube<Float> &inputWeight,
+														Cube<T> &outputVis,
+														Int parallelCorrAxis) const
+{
 	// Gather input data
 	DataCubeMap inputData;
 	DataCubeHolder<T> inputVisCubeHolder(inputVis);
-	DataCubeHolder<Float> inputSigmaCubeHolder(inputSigma);
-	DataCubeHolder<Bool> inputFlagCubeHolder(vb->flagCube());
+	DataCubeHolder<Bool> inputFlagCubeHolder(inputFlags);
+	DataCubeHolder<Float> inputWeightsCubeHolder(inputWeight);
 	inputData.add(MS::DATA,inputVisCubeHolder);
-	inputData.add(MS::SIGMA,inputSigmaCubeHolder);
 	inputData.add(MS::FLAG,inputFlagCubeHolder);
+	inputData.add(MS::WEIGHT_SPECTRUM,inputWeightsCubeHolder);
 
 	// Gather output data
 	DataCubeMap outputData;
 	DataCubeHolder<T> outputVisCubeHolder(outputVis);
 	outputData.add(MS::DATA,outputVisCubeHolder);
 
-	// Configure transformation engine and transform data
-	fitter_p.asWeight(sigmaAsWeight); // We are using sigma spectrum
 	if (want_cont_p)
 	{
-		UVContEstimationKernel<T> kernel(fitOrder_p,&fitter_p,&(inputFrequencyMap_p[spwId]),lineFreeChannelMask);
-		UVContSubTransformEngine<T> transformer(&kernel,&inputData,&outputData);
-		transformFreqAxis2(vb->getShape(),transformer);
-	}
-	else
-	{
-		int nThreads = 1;
-#ifdef _OPENMP
-		nThreads = omp_get_max_threads();
-#endif
-		nThreads = 1; // jagonzal: There is a lock in AutoDiff preventing parallelization
-
-		if (nThreads == 1)
+		if (gsl_p)
 		{
-			UVContSubtractionKernel<T> kernel(fitOrder_p,&fitter_p,&(inputFrequencyMap_p[spwId]),lineFreeChannelMask);
-			UVContSubTransformEngine<T> transformer(&kernel,&inputData,&outputData);
-			transformFreqAxis2(vb->getShape(),transformer);
+			 UVContEstimationGSLKernel<T> kernel(model,lineFreeChannelMask);
+			 UVContSubTransformEngine<T> transformer(&kernel,&inputData,&outputData);
+			 transformFreqAxis2(inputVis.shape(),transformer,parallelCorrAxis);
 		}
 		else
 		{
-#ifdef _OPENMP
-			uInt nCorrs = vb->getShape()(0);
-			#pragma omp parallel for
-			for (uInt corrIdx=0; corrIdx < nCorrs; corrIdx++)
-			{
-				// Create a new fitter for the Transform Engine
-				LinearFitSVD<Float> fitterIdx;
-				Polynomial<AutoDiff<Float> > polyIdx(fitOrder_p);
-				fitterIdx.setFunction(polyIdx);
-
-				// Make reference copy of the input-output DataCube Maps
-				DataCubeMap inputDataIdx(inputData);
-				DataCubeMap outputDataIdx(outputData);
-
-				// Transform data for this correlation
-				UVContSubtractionKernel<T> kernel(fitOrder_p,&fitterIdx,&(inputFrequencyMap_p[spwId]),lineFreeChannelMask);
-				UVContSubTransformEngine<T> transformer(&kernel,&inputDataIdx,&outputDataIdx);
-				transformFreqAxis2(vb->getShape(),transformer,corrIdx);
-			}
-#endif
+			UVContEstimationKernel<T> kernel(model,lineFreeChannelMask);
+			UVContSubTransformEngine<T> transformer(&kernel,&inputData,&outputData);
+			transformFreqAxis2(inputVis.shape(),transformer,parallelCorrAxis);
+		}
+	}
+	else
+	{
+		if (gsl_p)
+		{
+			 UVContSubtractionGSLKernel<T> kernel(model,lineFreeChannelMask);
+			 UVContSubTransformEngine<T> transformer(&kernel,&inputData,&outputData);
+			 transformFreqAxis2(inputVis.shape(),transformer,parallelCorrAxis);
+		}
+		else
+		{
+			UVContSubtractionKernel<T> kernel(model,lineFreeChannelMask);
+			UVContSubTransformEngine<T> transformer(&kernel,&inputData,&outputData);
+			transformFreqAxis2(inputVis.shape(),transformer,parallelCorrAxis);
 		}
 	}
 
@@ -435,42 +445,23 @@ template<class T> void UVContSubTransformEngine<T>::transform(	)
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-template<class T> UVContSubKernel<T>::UVContSubKernel(	uInt fitOrder,
-														LinearFitSVD<Float> *fitter,
-														Matrix<Float> *freqPows,
+template<class T> UVContSubKernel<T>::UVContSubKernel(	denoising::GslPolynomialModel<Double> *model,
 														Vector<Bool> *lineFreeChannelMask)
 {
-	fitter_p = fitter;
-	fitOrder_p = fitOrder;
-	freqPows_p = freqPows;
-	frequencies_p.reference(freqPows->row(0));
+	model_p = model;
+	fitOrder_p = model_p->ncomponents()-1;
+	freqPows_p.reference(model_p->getModelMatrix());
+	frequencies_p.reference(model_p->getLinearComponentFloat());
+
 	lineFreeChannelMask_p = lineFreeChannelMask != NULL? lineFreeChannelMask : NULL;
 	debug_p = False;
 }
 
-
-//////////////////////////////////////////////////////////////////////////
-// UVContSubtractionKernel class
-//////////////////////////////////////////////////////////////////////////
-
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-template<class T> UVContSubtractionKernel<T>::UVContSubtractionKernel(	uInt fitOrder,
-																		LinearFitSVD<Float> *fitter,
-																		Matrix<Float> *freqPows,
-																		Vector<Bool> *lineFreeChannelMask):
-																		UVContSubKernel<T>(fitOrder,fitter,
-																				freqPows,lineFreeChannelMask)
-{
-
-}
-
-// -----------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------
-template<class T> void UVContSubtractionKernel<T>::kernel(	DataCubeMap *inputData,
-															DataCubeMap *outputData)
+template<class T> void UVContSubKernel<T>::kernel(	DataCubeMap *inputData,
+													DataCubeMap *outputData)
 {
 	// Get input/output data
 	Vector<T> &outputVector = outputData->getVector<T>(MS::DATA);
@@ -490,35 +481,79 @@ template<class T> void UVContSubtractionKernel<T>::kernel(	DataCubeMap *inputDat
 		// Reduce fit order to match number of valid points
 		if (validPoints <= fitOrder_p)
 		{
-			fitOrder_p = validPoints-1;
-			Polynomial<AutoDiff<Float> > poly(fitOrder_p);
-			fitter_p->setFunction(poly);
+			changeFitOrder(validPoints-1);
 			restoreDefaultPoly = True;
 		}
 
 		// Get weights
-		Vector<Float> &inputSigma = inputData->getVector<Float>(MS::SIGMA);
+		Vector<Float> &inputWeight = inputData->getVector<Float>(MS::WEIGHT_SPECTRUM);
 
 		// Convert flags to mask
 		Vector<Bool> mask = !inputFlags;
 
 		// Calculate and subtract continuum
-		kernelCore(inputVector,mask,inputSigma,outputVector);
+		kernelCore(inputVector,mask,inputWeight,outputVector);
 
 		// Go back to default fit order to match number of valid points
 		if (restoreDefaultPoly)
 		{
-			fitOrder_p = tmpFitOrder;
-			Polynomial<AutoDiff<Float> > poly(fitOrder_p);
-			fitter_p->setFunction(poly);
+			changeFitOrder(tmpFitOrder);
 		}
 	}
 	else
 	{
-		// Continuum is 0, therefore output data equals input data
-		outputVector = inputVector;
+		defaultKernel(inputVector,outputVector);
 	}
 
+	return;
+}
+
+
+//////////////////////////////////////////////////////////////////////////
+// UVContSubtractionKernel class
+//////////////////////////////////////////////////////////////////////////
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template<class T> UVContSubtractionKernel<T>::UVContSubtractionKernel(	denoising::GslPolynomialModel<Double>* model,
+																		Vector<Bool> *lineFreeChannelMask):
+																		UVContSubKernel<T>(model,lineFreeChannelMask)
+{
+	changeFitOrder(fitOrder_p);
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template<class T> void UVContSubtractionKernel<T>::changeFitOrder(size_t order)
+{
+	fitOrder_p = order;
+	Polynomial<AutoDiff<Float> > poly(order);
+	fitter_p.setFunction(poly); // poly It is cloned
+	fitter_p.asWeight(True);
+
+	return;
+}
+
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template<class T> void UVContSubtractionKernel<T>::defaultKernel(	Vector<Complex> &inputVector,
+																	Vector<Complex> &outputVector)
+{
+	outputVector = inputVector;
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template<class T> void UVContSubtractionKernel<T>::defaultKernel(	Vector<Float> &inputVector,
+																	Vector<Float> &outputVector)
+{
+	outputVector = inputVector;
 	return;
 }
 
@@ -527,14 +562,14 @@ template<class T> void UVContSubtractionKernel<T>::kernel(	DataCubeMap *inputDat
 // -----------------------------------------------------------------------
 template<class T> void UVContSubtractionKernel<T>::kernelCore(	Vector<Complex> &inputVector,
 																Vector<Bool> &inputFlags,
-																Vector<Float> &inputSigma,
+																Vector<Float> &inputWeights,
 																Vector<Complex> &outputVector)
 {
 	// Fit for imaginary and real components separately
 	Vector<Float> realCoeff;
 	Vector<Float> imagCoeff;
-	realCoeff = fitter_p->fit(frequencies_p, real(inputVector), inputSigma, &inputFlags);
-	imagCoeff = fitter_p->fit(frequencies_p, imag(inputVector), inputSigma, &inputFlags);
+	realCoeff = fitter_p.fit(frequencies_p, real(inputVector), inputWeights, &inputFlags);
+	imagCoeff = fitter_p.fit(frequencies_p, imag(inputVector), inputWeights, &inputFlags);
 
 	// Fill output data
 	outputVector = inputVector;
@@ -544,29 +579,23 @@ template<class T> void UVContSubtractionKernel<T>::kernelCore(	Vector<Complex> &
 		Complex coeff(realCoeff(order_idx),imagCoeff(order_idx));
 		for (uInt chan_idx=0; chan_idx < outputVector.size(); chan_idx++)
 		{
-			outputVector(chan_idx) -= ((*freqPows_p)(order_idx-1,chan_idx))*coeff;
+			outputVector(chan_idx) -= (freqPows_p(order_idx,chan_idx))*coeff;
 		}
-
-		// jagonzal: This way requires more copies and it is not faster
-		// outputVector -= Complex(realCoeff(order_idx),imagCoeff(order_idx))*(freqPows_p->row(order_idx-1));
 	}
 
-	// jagonzal: Debug code
 	/*
 	if (debug_p)
 	{
 		LogIO logger;
-		logger << "frequencies_p=" << frequencies_p << LogIO::POST;
-		logger << "inputSigma=" << inputSigma << LogIO::POST;
-		logger << "inputFlags=" << inputFlags << LogIO::POST;
-		logger << "real(inputVector)=" << real(inputVector) << LogIO::POST;
-		logger << "realCoeff=" << realCoeff << LogIO::POST;
-		logger << "imag(inputVector)=" << imag(inputVector) << LogIO::POST;
-		logger << "imagCoeff=" << imagCoeff << LogIO::POST;
-		logger << "outputVector=" << outputVector << LogIO::POST;
+		logger << "fit order = " << fitOrder_p << LogIO::POST;
+		logger << "realCoeff =" << realCoeff << LogIO::POST;
+		logger << "imagCoeff =" << imagCoeff << LogIO::POST;
+		logger << "inputFlags =" << inputFlags << LogIO::POST;
+		logger << "inputWeights =" << inputWeights << LogIO::POST;
+		logger << "inputVector =" << inputVector << LogIO::POST;
+		logger << "outputVector =" << outputVector << LogIO::POST;
 	}
 	*/
-
 
 	return;
 }
@@ -576,12 +605,12 @@ template<class T> void UVContSubtractionKernel<T>::kernelCore(	Vector<Complex> &
 // -----------------------------------------------------------------------
 template<class T> void UVContSubtractionKernel<T>::kernelCore(	Vector<Float> &inputVector,
 																Vector<Bool> &inputFlags,
-																Vector<Float> &inputSigma,
+																Vector<Float> &inputWeights,
 																Vector<Float> &outputVector)
 {
 	// Fit model
 	Vector<Float> coeff;
-	coeff = fitter_p->fit(frequencies_p, inputVector, inputSigma, &inputFlags);
+	coeff = fitter_p.fit(frequencies_p, inputVector, inputWeights, &inputFlags);
 
 	// Fill output data
 	outputVector = inputVector;
@@ -590,7 +619,7 @@ template<class T> void UVContSubtractionKernel<T>::kernelCore(	Vector<Float> &in
 	{
 		for (uInt chan_idx=0; chan_idx < outputVector.size(); chan_idx++)
 		{
-			outputVector(chan_idx) -= ((*freqPows_p)(order_idx-1,chan_idx))*coeff(order_idx);
+			outputVector(chan_idx) -= (freqPows_p(order_idx,chan_idx))*coeff(order_idx);
 		}
 	}
 
@@ -605,69 +634,43 @@ template<class T> void UVContSubtractionKernel<T>::kernelCore(	Vector<Float> &in
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-template<class T> UVContEstimationKernel<T>::UVContEstimationKernel(	uInt fitOrder,
-																		LinearFitSVD<Float> *fitter,
-																		Matrix<Float> *freqPows,
+template<class T> UVContEstimationKernel<T>::UVContEstimationKernel(	denoising::GslPolynomialModel<Double>* model,
 																		Vector<Bool> *lineFreeChannelMask):
-																		UVContSubKernel<T>(fitOrder,fitter,
-																				freqPows,lineFreeChannelMask)
+																		UVContSubKernel<T>(model,lineFreeChannelMask)
 {
-
+	changeFitOrder(fitOrder_p);
 }
 
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-template<class T> void UVContEstimationKernel<T>::kernel(	DataCubeMap *inputData,
-															DataCubeMap *outputData)
+template<class T> void UVContEstimationKernel<T>::changeFitOrder(size_t order)
 {
-	// Get input/output data
-	Vector<T> &outputVector = outputData->getVector<T>(MS::DATA);
-	Vector<T> &inputVector = inputData->getVector<T>(MS::DATA);
+	fitOrder_p = order;
+	Polynomial<AutoDiff<Float> > poly(order);
+	fitter_p.setFunction(poly); // poly It is cloned
+	fitter_p.asWeight(True);
 
-	// Apply line-free channel mask
-	Vector<Bool> &inputFlags = inputData->getVector<Bool>(MS::FLAG);
-	if (lineFreeChannelMask_p != NULL) inputFlags |= *lineFreeChannelMask_p;
+	return;
+}
 
-	// Calculate number of valid data points and adapt fit
-	size_t validPoints = nfalse(inputFlags);
-	if (validPoints > 0)
-	{
-		Bool restoreDefaultPoly = False;
-		uInt tmpFitOrder = fitOrder_p;
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template<class T> void UVContEstimationKernel<T>::defaultKernel(Vector<Complex> &,
+																Vector<Complex> &outputVector)
+{
+	outputVector = 0;
+	return;
+}
 
-		// Reduce fit order to match number of valid points
-		if (validPoints <= fitOrder_p)
-		{
-			fitOrder_p = validPoints-1;
-			Polynomial<AutoDiff<Float> > poly(fitOrder_p);
-			fitter_p->setFunction(poly);
-			restoreDefaultPoly = True;
-		}
-
-		// Get weights
-		Vector<Float> &inputSigma = inputData->getVector<Float>(MS::SIGMA);
-
-		// Convert flags to mask
-		Vector<Bool> mask = !inputFlags;
-
-		// Calculate and subtract continuum
-		kernelCore(inputVector,mask,inputSigma,outputVector);
-
-		// Go back to default fit order to match number of valid points
-		if (restoreDefaultPoly)
-		{
-			fitOrder_p = tmpFitOrder;
-			Polynomial<AutoDiff<Float> > poly(fitOrder_p);
-			fitter_p->setFunction(poly);
-		}
-	}
-	else
-	{
-		// Continuum is 0, therefore output data equals input data
-		outputVector = 0;
-	}
-
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template<class T> void UVContEstimationKernel<T>::defaultKernel(Vector<Float> &,
+																Vector<Float> &outputVector)
+{
+	outputVector = 0;
 	return;
 }
 
@@ -676,14 +679,14 @@ template<class T> void UVContEstimationKernel<T>::kernel(	DataCubeMap *inputData
 // -----------------------------------------------------------------------
 template<class T> void UVContEstimationKernel<T>::kernelCore(	Vector<Complex> &inputVector,
 																Vector<Bool> &inputFlags,
-																Vector<Float> &inputSigma,
+																Vector<Float> &inputWeights,
 																Vector<Complex> &outputVector)
 {
 	// Fit for imaginary and real components separately
 	Vector<Float> realCoeff;
 	Vector<Float> imagCoeff;
-	realCoeff = fitter_p->fit(frequencies_p, real(inputVector), inputSigma, &inputFlags);
-	imagCoeff = fitter_p->fit(frequencies_p, imag(inputVector), inputSigma, &inputFlags);
+	realCoeff = fitter_p.fit(frequencies_p, real(inputVector), inputWeights, &inputFlags);
+	imagCoeff = fitter_p.fit(frequencies_p, imag(inputVector), inputWeights, &inputFlags);
 
 	// Fill output data
 	outputVector = Complex(realCoeff(0),imagCoeff(0));
@@ -692,26 +695,9 @@ template<class T> void UVContEstimationKernel<T>::kernelCore(	Vector<Complex> &i
 		Complex coeff(realCoeff(order_idx),imagCoeff(order_idx));
 		for (uInt chan_idx=0; chan_idx < outputVector.size(); chan_idx++)
 		{
-			outputVector(chan_idx) += ((*freqPows_p)(order_idx-1,chan_idx))*coeff;
+			outputVector(chan_idx) += (freqPows_p(order_idx,chan_idx))*coeff;
 		}
 	}
-
-	// jagonzal: Debug code
-	/*
-	if (debug_p)
-	{
-		LogIO logger;
-		logger << "frequencies_p=" << frequencies_p << LogIO::POST;
-		logger << "inputSigma=" << inputSigma << LogIO::POST;
-		logger << "inputFlags=" << inputFlags << LogIO::POST;
-		logger << "real(inputVector)=" << real(inputVector) << LogIO::POST;
-		logger << "realCoeff=" << realCoeff << LogIO::POST;
-		logger << "imag(inputVector)=" << imag(inputVector) << LogIO::POST;
-		logger << "imagCoeff=" << imagCoeff << LogIO::POST;
-		logger << "outputVector=" << outputVector << LogIO::POST;
-	}
-	*/
-
 
 	return;
 }
@@ -721,12 +707,12 @@ template<class T> void UVContEstimationKernel<T>::kernelCore(	Vector<Complex> &i
 // -----------------------------------------------------------------------
 template<class T> void UVContEstimationKernel<T>::kernelCore(	Vector<Float> &inputVector,
 																Vector<Bool> &inputFlags,
-																Vector<Float> &inputSigma,
+																Vector<Float> &inputWeights,
 																Vector<Float> &outputVector)
 {
 	// Fit model
 	Vector<Float> coeff;
-	coeff = fitter_p->fit(frequencies_p, inputVector, inputSigma, &inputFlags);
+	coeff = fitter_p.fit(frequencies_p, inputVector, inputWeights, &inputFlags);
 
 	// Fill output data
 	outputVector = coeff(0);
@@ -734,7 +720,139 @@ template<class T> void UVContEstimationKernel<T>::kernelCore(	Vector<Float> &inp
 	{
 		for (uInt chan_idx=0; chan_idx < outputVector.size(); chan_idx++)
 		{
-			outputVector(chan_idx) += ((*freqPows_p)(order_idx-1,chan_idx))*coeff(order_idx);
+			outputVector(chan_idx) += (freqPows_p(order_idx,chan_idx))*coeff(order_idx);
+		}
+	}
+
+	return;
+}
+
+//////////////////////////////////////////////////////////////////////////
+// UVContSubtractionGSLKernel class
+//////////////////////////////////////////////////////////////////////////
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template<class T> UVContSubtractionGSLKernel<T>::UVContSubtractionGSLKernel(denoising::GslPolynomialModel<Double>* model,
+																			Vector<Bool> *lineFreeChannelMask):
+																			UVContSubKernel<T>(model,lineFreeChannelMask)
+{
+	fitter_p.resetModel(*model);
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template<class T> void UVContSubtractionGSLKernel<T>::changeFitOrder(size_t order)
+{
+	fitOrder_p = order;
+	fitter_p.resetNComponents(order+1);
+	return;
+}
+
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template<class T> void UVContSubtractionGSLKernel<T>::defaultKernel(	Vector<T> &inputVector,
+																		Vector<T> &outputVector)
+{
+	outputVector = inputVector;
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template<class T> void UVContSubtractionGSLKernel<T>::kernelCore(	Vector<T> &inputVector,
+																	Vector<Bool> &inputFlags,
+																	Vector<Float> &inputWeights,
+																	Vector<T> &outputVector)
+{
+	fitter_p.setWeightsAndFlags(inputWeights,inputFlags);
+	Vector<T> coeff = fitter_p.calcFitCoeff(inputVector);
+
+	// Fill output data
+	outputVector = inputVector;
+	outputVector -= coeff(0);
+	for (uInt order_idx = 1; order_idx <= fitOrder_p; order_idx++)
+	{
+		for (uInt chan_idx=0; chan_idx < outputVector.size(); chan_idx++)
+		{
+			outputVector(chan_idx) -= (freqPows_p(order_idx,chan_idx))*coeff(order_idx);
+		}
+	}
+
+	/*
+	if (debug_p)
+	{
+		LogIO logger;
+		logger << "fit order = " << fitOrder_p << LogIO::POST;
+		logger << "coeff =" << coeff << LogIO::POST;
+		logger << "inputFlags =" << inputFlags << LogIO::POST;
+		logger << "inputWeights =" << inputWeights << LogIO::POST;
+		logger << "inputVector =" << inputVector << LogIO::POST;
+		logger << "outputVector =" << outputVector << LogIO::POST;
+	}
+	*/
+
+	return;
+}
+
+//////////////////////////////////////////////////////////////////////////
+// UVContEstimationGSLKernel class
+//////////////////////////////////////////////////////////////////////////
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template<class T> UVContEstimationGSLKernel<T>::UVContEstimationGSLKernel(	denoising::GslPolynomialModel<Double>* model,
+																			Vector<Bool> *lineFreeChannelMask):
+																			UVContSubKernel<T>(model,lineFreeChannelMask)
+{
+	fitter_p.resetModel(*model);
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template<class T> void UVContEstimationGSLKernel<T>::changeFitOrder(size_t order)
+{
+	fitOrder_p = order;
+	fitter_p.resetNComponents(order+1);
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template<class T> void UVContEstimationGSLKernel<T>::defaultKernel(	Vector<T> &,
+																	Vector<T> &outputVector)
+{
+	outputVector = 0;
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template<class T> void UVContEstimationGSLKernel<T>::kernelCore(	Vector<T> &inputVector,
+																	Vector<Bool> &inputFlags,
+																	Vector<Float> &inputWeights,
+																	Vector<T> &outputVector)
+{
+	fitter_p.setWeightsAndFlags(inputWeights,inputFlags);
+	Vector<T> coeff = fitter_p.calcFitCoeff(inputVector);
+
+	// Fill output data
+	outputVector = inputVector;
+	outputVector = coeff(0);
+	for (uInt order_idx = 1; order_idx <= fitOrder_p; order_idx++)
+	{
+		for (uInt chan_idx=0; chan_idx < outputVector.size(); chan_idx++)
+		{
+			outputVector(chan_idx) += (freqPows_p(order_idx,chan_idx))*coeff(order_idx);
 		}
 	}
 
