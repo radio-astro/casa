@@ -20,7 +20,8 @@ def TsysAfterPowerChange(Vorig, Vnew, TsysOrig=200.0, Tatm=270.0):
     x = (Vnew / Vorig) * (TsysOrig / (TsysOrig + Tatm))
     return Tatm * x / (1.0 - x)
 
-def getPower(vis, scan, spw, duration, fromEnd=False, skipStartSecs=1.0, skipEndSecs=1.0, verbose=True):
+def getPower(vis, scan, spw, duration, fromEnd=False, skipStartSecs=1.0, 
+             skipEndSecs=1.0, datacolname='data', verbose=True):
     """
     Return a per-antenna list of total power values for the two polarizations of the specified scan and spw.
     duration: number of samples to use starting from the start of the scan
@@ -29,12 +30,13 @@ def getPower(vis, scan, spw, duration, fromEnd=False, skipStartSecs=1.0, skipEnd
     small changes from the original tsys table (i.e. it will not get normalized).   - Todd
     """
 
+    # Read in data from MS
     with casatools.MSReader(vis) as ms:
         ms.selectinit(datadescid=spw)
         ms.selecttaql('SCAN_NUMBER==%d AND DATA_DESC_ID==%d AND ANTENNA1==ANTENNA2'%(scan, spw))
-        d = ms.getdata(['real','axis_info'], ifraxis=True)
+        d = ms.getdata([datacolname,'axis_info'], ifraxis=True)
 
-    powers = d['real']
+    powers = d[datacolname]
     ants = d['axis_info']['ifr_axis']['ifr_name']
     pols = list(d['axis_info']['corr_axis'])
     idxPol0 = pols.index("XX")
@@ -130,6 +132,21 @@ def tsysNormalize(vis, tsysTable, newTsysTable, scaleSpws=[], verbose=False):
     # scans that we are applying Tsys to.
     badIntents = ['CALIBRATE_POINTING', 'CALIBRATE_FOCUS', 'CALIBRATE_SIDEBAND_RATIO', 'CALIBRATE_ATMOSPHERE']
 
+    # Determine column name for data. This presently differs between
+    # interferometry and single-dish, as they use different values 
+    # for the parameter ocorr_mode at the importasdm stage.
+    # Note: using lower-case for column name, as ms.getdata will return
+    # a dictionary that has lower-case keys, regardless of whether 
+    # the column was upper-case.
+    # TODO: need a common solution for identifying data column.
+    with casatools.TableReader(vis) as tb:
+        # SD will contain "FLOAT_DATA"
+        if 'FLOAT_DATA' in tb.colnames():
+            datacolname = 'float_data'
+        # IF will contain "DATA"
+        else:
+            datacolname = 'data'
+
     with casatools.MSMDReader(vis) as msmd:
 
         with casatools.TableReader(tsysTable, nomodify=False) as table:
@@ -210,7 +227,9 @@ def tsysNormalize(vis, tsysTable, newTsysTable, scaleSpws=[], verbose=False):
                         if verbose:
                             LOG.info("calling getPower(vis, {0}, {1}, 10.0, {2})".format(
                               powerRefScans[i], spw, str(powerRefScans[i] < fieldTsysScans[i])))
-                        p = getPower(vis, powerRefScans[i], spw, 10.0, powerRefScans[i] < fieldTsysScans[i], verbose=verbose)
+                        p = getPower(vis, powerRefScans[i], spw, 10.0, 
+                          powerRefScans[i] < fieldTsysScans[i], 
+                          datacolname=datacolname, verbose=verbose)
                         refPowers[fieldTsysScans[i]].append(p)
                     if verbose:
                         LOG.info("powers to use for Tsys scan {0}: {1}".format(fieldTsysScans[i], refPowers[fieldTsysScans[i]]))
