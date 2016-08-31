@@ -164,7 +164,7 @@ class ContFileHandler(object):
             fLow = qaTool.convert('%s%s' % (cont_region[0], cont_region[3]), 'Hz')['value']
             fHigh = qaTool.convert('%s%s' % (cont_region[2], cont_region[3]), 'Hz')['value']
             freq_ranges.append((fLow, fHigh))
-            delta_f = qaTool.sub('%s%s' % (fHigh, unit), '%s%s' % (fLow, unit))
+            delta_f = qaTool.sub('%s%s' % (fHigh, cont_region[3]), '%s%s' % (fLow, cont_region[3]))
             aggregate_lsrk_bw = qaTool.add(aggregate_lsrk_bw, delta_f)
 
         topo_chan_selections = []
