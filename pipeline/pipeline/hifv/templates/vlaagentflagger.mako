@@ -218,7 +218,7 @@ mses = [m for m in flags.keys() if 'online' in flags[m] or 'template' in flags[m
 	</caption>
 	<thead>
 		<tr>
-			<th rowspan="2">Data Selection</th>
+			<th rowspan="2">Data Selection (by intent)</th>
 			<!-- flags before task is always first agent -->
 			<th rowspan="2">${agent_description[agents[0]]}</th>
 			<th colspan="3">Flagging Agent (Total Vis)</th>
