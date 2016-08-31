@@ -233,6 +233,7 @@ void MosaicFTNew::getWeightImage(ImageInterface<Float>& weightImage,
 
   weightImage.copyData( (LatticeExpr<Float>) ( (*skyCoverage_p)*inx*iny ) );
  
+   skyCoverage_p->tempClose();
 
 }
 

@@ -2248,12 +2248,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     	if(!dopsf) 
 	  {
 	    itsMappers.finalizeDegrid(*vb,gmap);
-	    //itsMappers.getMapper(gmap)->finalizeDegrid();
+	    //	   	    auto back = itsMappers.getMapper(gmap)->imageStore()->forwardGrid();        
+	    //		    back->tempClose();
 	  }
 	itsMappers.finalizeGrid(*vb, dopsf,gmap);
-    	//itsMappers.getMapper(gmap)->finalizeGrid(*vb, dopsf);
 
-	//	itsMappers.getMapper(gmap)->releaseImageLocks();
+	//itsMappers.getMapper(gmap)->imageStore()->releaseLocks();        
+	itsMappers.getMapper(gmap)->imageStore()->releaseComplexGrids();        
+
+
+	//        auto back = itsMappers.getMapper(gmap)->imageStore()->backwardGrid();        
+	//	back->tempClose();
 
 	SynthesisUtilMethods::getResource("End Major Cycle for mapper"+String::toString(gmap));
        }// end of mapper loop
