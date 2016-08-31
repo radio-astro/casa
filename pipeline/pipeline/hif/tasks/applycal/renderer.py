@@ -298,6 +298,10 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             ms = context.observing_run.get_ms(vis)
             correlation = ms.get_alma_corrstring()
 
+            amp_vs_freq_summary_plots[vis]['TARGET'] = []
+            phase_vs_freq_summary_plots[vis]['TARGET'] = []
+            amp_vs_uv_summary_plots[vis]['TARGET'] = []
+
             # Plot for 1 science field (either 1 science target or for a mosaic 1
             # pointing). The science field that should be chosen is the one with
             # the brightest average amplitude over all spws
@@ -324,20 +328,20 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                                                       applycal.AmpVsFrequencySummaryChart,
                                                       [brightest_field.id],
                                                       uv_range, correlation=correlation)
-                amp_vs_freq_summary_plots[vis]['TARGET'] = plots
+                amp_vs_freq_summary_plots[vis]['TARGET'].extend(plots)
     
                 plots = self.science_plots_for_result(context, 
                                                       result, 
                                                       applycal.PhaseVsFrequencyPerBasebandSummaryChart,
                                                       [brightest_field.id],
                                                       uv_range, correlation=correlation)
-                phase_vs_freq_summary_plots[vis]['TARGET'] = plots
+                phase_vs_freq_summary_plots[vis]['TARGET'].extend(plots)
     
                 plots = self.science_plots_for_result(context, 
                                                       result, 
                                                       applycal.AmpVsUVSummaryChart,
                                                       [brightest_field.id], correlation=correlation)
-                amp_vs_uv_summary_plots[vis]['TARGET'] = plots
+                amp_vs_uv_summary_plots[vis]['TARGET'].extend(plots)
 
             if pipeline.infrastructure.generate_detail_plots(result):
                 scans = ms.get_scans(scan_intent='TARGET')
