@@ -75,6 +75,7 @@ import flaghelper
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
+from pipeline.infrastructure import casa_tasks
 import pipeline.domain.measures as measures
 
 from pipeline.hif.tasks.flagging import flagdeterbase 
@@ -387,6 +388,51 @@ class FlagDeterVLA( flagdeterbase.FlagDeterBase ):
 
     Inputs = FlagDeterVLAInputs
 
+
+    def prepare(self):
+        """
+        Prepare and execute a flagdata flagging job appropriate to the
+        task inputs.
+
+        This method generates, overwriting if necessary, an ASCII file
+        containing flagdata flagging commands. A flagdata task is then
+        executed, using this ASCII file as inputs.
+        """
+        # create a local alias for inputs, so we're not saying 'self.inputs'
+        # everywhere
+        inputs = self.inputs
+
+        # get the flagdata command string, ready for the flagdata input file
+        flag_cmds = self._get_flag_commands()
+        flag_str = '\n'.join(flag_cmds)
+
+        # write the flag commands to the file
+        with open(inputs.inpfile, 'w') as stream:
+            stream.writelines(flag_str)
+
+        # to save inspecting the file, also log the flag commands
+        LOG.debug('Flag commands for %s:\n%s', inputs.vis, flag_str)
+
+        # Map the pipeline inputs to a dictionary of CASA task arguments
+        task_args = inputs.to_casa_args()
+
+        # create and execute a flagdata job using these task arguments
+        job = casa_tasks.flagdata(**task_args)
+        summary_dict = self._executor.execute(job)
+
+        agent_summaries = dict((v['name'], v) for v in summary_dict.values())
+
+        ordered_agents = ['before', 'anos', 'qa0', 'online', 'template', 'autocorr',
+                          'shadow', 'intents', 'edgespw', 'clip', 'quack',
+                          'baseband']
+
+        summary_reps = [agent_summaries[agent]
+                        for agent in ordered_agents
+                        if agent in agent_summaries]
+
+        # return the results object, which will be used for the weblog
+        return FlagDeterVLAResults(summary_reps, flag_cmds)
+
     def _get_flag_commands(self):
         """ Adding quack and clip
         """
@@ -395,6 +441,14 @@ class FlagDeterVLA( flagdeterbase.FlagDeterBase ):
         flag_cmds = []
 
         inputs = self.inputs
+
+        # These must be separated due to the way agent flagging works
+        if inputs.intents != '':
+            for intent in inputs.intents.split(','):
+                if '*' not in intent:
+                    intent = '*%s*' % intent
+                flag_cmds.append('mode=\'manual\' intent=\'%s\' reason=\'intents\'' % intent)
+            flag_cmds.append('mode=\'summary\' name=\'intents\'')
 
 
         # flag online?
@@ -443,13 +497,7 @@ class FlagDeterVLA( flagdeterbase.FlagDeterBase ):
             flag_cmds.append('mode=\'manual\' scan=\'%s\' reason=\'scans\'' % inputs.scannumber)
             flag_cmds.append('mode=\'summary\' name=\'scans\'')
 
-        # These must be separated due to the way agent flagging works
-        if inputs.intents != '':
-            for intent in inputs.intents.split(','):
-                if '*' not in intent:
-                    intent = '*%s*' % intent
-                flag_cmds.append('mode=\'manual\' intent=\'%s\' reason=\'intents\'' % intent)
-            flag_cmds.append('mode=\'summary\' name=\'intents\'')
+
             
         # Flag end 5 percent of each spw or minimum of 3 channels
         if inputs.edgespw:
