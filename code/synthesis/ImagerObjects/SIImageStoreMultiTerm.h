@@ -186,6 +186,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void calcSensitivity();
   virtual Bool isModelEmpty();
 
+  Double calcFractionalBandwidth();
+
 protected:
 
   virtual void printImageStats();

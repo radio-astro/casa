@@ -1293,6 +1293,15 @@ HPX HEALPix grid.  -->
                                  ( where vp.tab is the name of the vpmanager file. 
                                     See the inline help for the 'vptable' parameter )
 
+                       Note : Multi-term PB correction that includes a correction for the
+                                 spectral index of the PB has not been enabled for the 4.7 release.  
+                                 Please use the widebandpbcor task instead. 
+                                 ( Wideband PB corrections are required when the amplitude of the
+                                    brightest source is known accurately enough to be sensitive 
+                                    to the difference in the PB gain between the upper and lower 
+                                    end of the band at its location. As a guideline, the artificial spectral
+                                    index due to the PB is -1.4 at the 0.5 gain level and less than -0.2
+                                    at the 0.9 gain level at the middle frequency )
 </description>
       <value type="bool">False</value>
     </param>
