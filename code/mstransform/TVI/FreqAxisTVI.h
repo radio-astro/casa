@@ -158,6 +158,7 @@ protected:
 					transformer.setCorrIndex(corr);
 
 					// jagonzal: Debug code
+					/*
 					VisBuffer2 *vb = getVii()->getVisBuffer();
 					if (vb->rowIds()(row)==0 and corr==0)
 					{
@@ -167,7 +168,7 @@ protected:
 					{
 						transformer.setDebug(False);
 					}
-
+					*/
 					transformer.transform();
 				}
 			}
