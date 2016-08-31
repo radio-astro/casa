@@ -5,7 +5,7 @@ import os
 	<h1>Weather Details<button class="btn btn-default pull-right" onclick="javascript:window.history.back();">Back</button></h1>
 </div>
 
-% if os.path.exists(weather_plot.abspath):
+% if weather_plot is not None and os.path.exists(weather_plot.abspath):
 <ul class="thumbnails">
 	<li class="span3">
 	  	<div class="thumbnail">
