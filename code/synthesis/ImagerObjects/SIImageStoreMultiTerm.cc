@@ -495,6 +495,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return True; // do something more intelligent here.
   }
 
+  Bool SIImageStoreMultiTerm::releaseComplexGrids() 
+  {
+    LogIO os( LogOrigin("SIImageStoreMultiTerm","releaseComplexGrids",WHERE) );
+
+    for(uInt tix=0; tix<2*itsNTerms-1; tix++)
+      {
+	if( itsBackwardGrids[tix] ) releaseImage( itsBackwardGrids[tix] );
+	if( tix < itsNTerms )
+	  {
+	    if( itsForwardGrids[tix] ) releaseImage( itsForwardGrids[tix] );
+	  }
+      }
+    return True; // do something more intelligent here.
+  }
+
+
   Double SIImageStoreMultiTerm::getReferenceFrequency()
   {
     Double theRefFreq;

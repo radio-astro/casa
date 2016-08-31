@@ -694,11 +694,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return True; // do something more intelligent here.
   }
 
+  Bool SIImageStore::releaseComplexGrids() 
+  {
+    LogIO os( LogOrigin("SIImageStore","releaseComplexGrids",WHERE) );
+
+    if( itsForwardGrid ) releaseImage( itsForwardGrid );
+    if( itsBackwardGrid ) releaseImage( itsBackwardGrid );
+
+    return True; // do something more intelligent here.
+  }
+
   void SIImageStore::releaseImage( SHARED_PTR<ImageInterface<Float> > im )
   {
     //im->flush();
     im->clearCache();
     im->unlock();
+    im->tempClose();
+  }
+
+  void SIImageStore::releaseImage( SHARED_PTR<ImageInterface<Complex> > im )
+  {
     im->tempClose();
   }
 

@@ -1804,6 +1804,8 @@ void MosaicFT::getWeightImage(ImageInterface<Float>& weightImage,
   */
   weightImage.copyData(*skyCoverage_p);
 
+  skyCoverage_p->tempClose();
+
 }
 
 void MosaicFT::getFluxImage(ImageInterface<Float>& fluxImage) {

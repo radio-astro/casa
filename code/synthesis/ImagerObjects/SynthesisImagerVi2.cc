@@ -881,6 +881,7 @@ void SynthesisImagerVi2::appendToMapperList(String imagename,
     	//itsMappers.getMapper(gmap)->finalizeGrid(*vb, dopsf);
 	
 	//	itsMappers.getMapper(gmap)->releaseImageLocks();
+	itsMappers.getMapper(gmap)->imageStore()->releaseComplexGrids();        
 	
 	SynthesisUtilMethods::getResource("End Major Cycle for mapper"+String::toString(gmap));
        }// end of mapper loop

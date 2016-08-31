@@ -141,6 +141,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   */
 
   Bool releaseLocks();
+  Bool releaseComplexGrids();
 
   virtual Double getReferenceFrequency();
 
