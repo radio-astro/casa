@@ -1087,13 +1087,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	String telescope = itsCoordSys.obsInfo().telescope();
 	if ( telescope != "ALMA" )
 	  {
-	    os << LogIO::WARN << "Wideband (multi-term) PB correction is not yet available via tclean in the 4.7 release. Please use the widebandpbcor task instead." << LogIO::POST;
+	    os << LogIO::WARN << "Wideband (multi-term) PB correction is not yet available via tclean in the 4.7 release. Please use the widebandpbcor task instead. "<< LogIO::POST;
 	    return;
 	  }
 	else
 	  {
-	    os << LogIO::WARN << "Wideband (multi-term) PB Correction is currently only an approximation. It assumes no PB frequency dependence. This code has been added for the 4.7 release to support the current ALMA pipeline, which does not need corrections for the frequency dependence of the primary beam across the small fractional bandwidths used. For wide bands where it matters (and for other telescopes), please use the 'widebandpbcor' task instead of the pbcor option in tclean." <<LogIO::POST;
+	    os << LogIO::WARN << "Wideband (multi-term) PB Correction is currently only an approximation. It assumes no PB frequency dependence. This code has been added for the 4.7 release to support the current ALMA pipeline, which does not apply corrections for the frequency dependence of the primary beam across small fractional bandwidths. Please look at the help for the 'pbcor' parameter and use the widebandpbcor task if needed. " <<LogIO::POST;
 	  }
+
+	
       }
 
 
@@ -1191,8 +1193,38 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    os << LogIO::POST;
 	  }
       }
+
+    Double fbw = calcFractionalBandwidth();
+    os << "Fractional Bandwidth : " << fbw << " %." << LogIO::POST;
+
   }
-  
+ 
+  Double SIImageStoreMultiTerm::calcFractionalBandwidth()
+  {
+
+    LogIO os( LogOrigin("SIImageStoreMultiTerm","calcFractionalBandwidth",WHERE) );
+
+    Double fbw;
+
+    for(uInt i=0; i<itsCoordSys.nCoordinates(); i++)
+    {
+      if( itsCoordSys.type(i) == Coordinate::SPECTRAL )
+	{
+	  SpectralCoordinate speccoord(itsCoordSys.spectralCoordinate(i));
+	  Double startfreq=0.0,startpixel=-0.5;
+	  Double endfreq=0.0,endpixel=+0.5;
+	  speccoord.toWorld(startfreq,startpixel);
+	  speccoord.toWorld(endfreq,endpixel);
+	  Double midfreq = (endfreq+startfreq)/2.0;
+	  fbw = ((endfreq - startfreq)/midfreq) * 100.0;
+	  //os << "MFS frequency range : " << startfreq << " -> " << endfreq; 
+	  //os << ". Fractional Bandwidth : " << itsFractionalBandwidth << " %." << LogIO::POST;
+	}
+    }
+    return fbw;
+  }
+
+ 
   // Check for non-zero model (this is different from getting model flux, for derived SIIMMT)
   Bool SIImageStoreMultiTerm::isModelEmpty()
   {
