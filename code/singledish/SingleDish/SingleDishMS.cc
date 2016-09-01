@@ -1251,6 +1251,20 @@ void SingleDishMS::doSubtractBaseline(string const& in_column_name,
                                num_chan, nchan, nchan_set,
                                ctx_indices, bl_contexts);
         }
+      } else {
+        int last_nchan_set_idx = nchan_set.size() - 1;
+        for (int i = nchan_set.size()-1; i >= 0; --i) {
+          if (nchan_set[i]) break;
+          --last_nchan_set_idx;
+        }
+        if (0 < last_nchan_set_idx) {
+          for (int i = 0; i < last_nchan_set_idx; ++i) {
+            if (nchan[i] == nchan[last_nchan_set_idx]) {
+              ctx_indices[last_nchan_set_idx] = ctx_indices[i];
+              break;
+            }
+          }
+        }
       }
 
       // get data/flag cubes (npol*nchan*nrow) from VisBuffer
