@@ -194,16 +194,13 @@ class SkyDisplay(object):
             cqa = casatools.quanta
             if 'major' in beam:
                 bpa = beam['positionangle']
-                bpa = cqa.quantity('%s%s' % (bpa['value'], bpa['unit']))
                 bpa = cqa.convert(bpa, 'rad')
                 bpa = bpa['value']
                 bpa += np.pi/2.0
                 bmaj = beam['major']
-                bmaj = cqa.quantity('%s%s' % (bmaj['value'], bmaj['unit']))
                 bmaj = cqa.convert(bmaj, 'arcsec')
                 bmaj = bmaj['value']
                 bmin = beam['minor']
-                bmin = cqa.quantity('%s%s' % (bmin['value'], bmin['unit']))
                 bmin = cqa.convert(bmin, 'arcsec')
                 bmin = bmin['value']
 
