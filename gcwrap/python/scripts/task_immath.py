@@ -180,30 +180,13 @@ def immath(
     # Remove any old tmp files that may be left from
     # a previous run of immath
     tb.clearlocks()    
-    tmpFilePrefix='_immath_tmp'
+    tmpFilePrefix='_immath_tmp' + str(os.getpid())
     try:
         _immath_cleanup( tmpFilePrefix )
     except Exception, e:
         casalog.post( 'Unable to cleanup working directory '+os.getcwd()+'\n'+str(e), 'SEVERE' )
         raise Exception, str(e)
 
-
-    # Keep track of which LEL functions are upper-case and
-    # which are lower-case.  For some reason LEL was written
-    # to be case sensitive!
-    #
-    # The values stored are in the opposite case of what we want, 
-    # because we want to search for the invalid case.
-    #
-    # Note these were found in the various LEL*Enums.h files.
-    lower_case=[ 'SIN(', 'SINH(', 'ASIN(', 'COS(', 'COSH(', 'ACOS(', 'TAN(', \
-                 'TANH(', 'ATAN(', 'ATAN2(', 'EXP(', 'LOG(', 'LOG10(', 'POW(',\
-                 'SQRT(', 'ROUND(', 'SIGN(', 'CEIL(', 'FLOOR(', 'ABS(', \
-                 'ARG(', 'REAL(', 'IMAG(', 'CONJ(', 'COMPLEX(', 'FMOD(' \
-                 'MIN(', 'MAX(', 'MIN1D(', 'MAX1D(', 'MEAN1D(', 'MEDIAN1D('\
-                 'FRACTILE1D(', 'FRACTILERANGE1D(', 'SUM(', 'NELEM(', 'ALL('\
-                 'ANY(', 'IIF(', 'REPLACE(', 'LENGTH(', 'INDEXIN(', 'NDIM' ]
-    upper_case=[ ]
     # First check to see if the output file exists.  If it
     # does then we abort.  CASA doesn't allow files to be
     # over-written, just a policy.
