@@ -229,6 +229,22 @@ class PySynthesisImager:
             self.stopMinor = self.IBtool.pauseforinteraction()
             #print "Actioncodes in python : " , self.stopMinor
 
+            #Check if force-stop has happened while savemodel != "none".
+            # If so, warn the user that unless the Last major cycle has happened,
+            # the model won't have been written into the MS, and to do a 'predict' run.
+            if self.iterpars['savemodel'] != "none":
+                all2=True;
+                for akey in self.stopMinor:
+                    all2 = all2 and self.stopMinor[akey]==2
+
+                if all2==True:
+                    if self.iterpars['savemodel'] == "modelcolumn":
+                        wstr = "Saving model column"
+                    else:
+                        wstr = "Saving virtual model"
+                    casalog.post("Model visibilities may not have been saved in the MS even though you have asked for it. Please check the logger for the phrases 'Run (Last) Major Cycle'  and  '" + wstr +"'. If these do not appear, then please save the model via a separate tclean run with niter=0,calcres=F,calcpsf=F. It will pick up the existing model from disk and save/predict it.   Reason for this : For performance reasons model visibilities are saved only in the last major cycle. If the X button on the interactive GUI is used to terminate a run before this automatically detected 'last' major cycle, the model isn't written. However, a subsequent tclean run as described above will predict and save the model. ","WARN")
+                
+
 #############################################
     def runInteractiveGUI(self):
         if self.iterpars['interactive'] == True:
@@ -1541,7 +1557,8 @@ class ImagerParameters():
         ######### Iteration control. 
         self.iterpars = { 'niter':niter, 'cycleniter':cycleniter, 'threshold':threshold, 
                           'loopgain':loopgain, 'interactive':interactive,
-                          'cyclefactor':cyclefactor, 'minpsffraction':minpsffraction, 'maxpsffraction':maxpsffraction}
+                          'cyclefactor':cyclefactor, 'minpsffraction':minpsffraction, 
+                          'maxpsffraction':maxpsffraction, 'savemodel':savemodel}
 
         ######### CFCache params. 
         self.cfcachepars = {'cflist': cflist};
