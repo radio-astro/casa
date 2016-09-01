@@ -545,6 +545,7 @@ class VLAImportData(basetask.StandardTaskTemplate):
                                      #process_caldevice=False,
                                      asis="",
                                      overwrite=self.inputs.overwrite,
+                                     with_pointing_correction=True,
                                      createmms=createmms)
         
         
