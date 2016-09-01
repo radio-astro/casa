@@ -38,6 +38,9 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 	    %if 'width' in target.keys():
 	            <th>width</th>
 	    %endif
+	    %if 'nbin' in target.keys():
+	            <th>nbin</th>
+	    %endif
 	    %if 'nchan' in target.keys():
 	            <th>nchan</th>
 	    %endif
@@ -88,6 +91,9 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 	        %endif
 	        %if 'width' in target.keys():
 	                <td>${target['width']}</td>
+	        %endif
+	        %if 'nbin' in target.keys():
+	                <td>${target['nbin']}</td>
 	        %endif
 	        %if 'nchan' in target.keys():
 	                <td>${target['nchan']}</td>

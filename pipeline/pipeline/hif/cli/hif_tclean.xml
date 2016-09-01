@@ -127,6 +127,11 @@ Compute a clean map.
     <value type="string"></value>
   </param>
 
+  <param type="int" name="nbin">
+    <description>Channel binning factor, -1 for default.</description>
+    <value>-1</value>
+  </param>
+
   <param type="string" name="weighting">
      <description>Type of weighting</description>
      <value>briggs</value>
@@ -182,12 +187,12 @@ Compute a clean map.
 
   <param type="string" name="hm_cleaning">
      <description>Pipeline clean control heuristics</description>
-       <value>manual</value>
+       <value>rms</value>
        <allowed kind="enum">
-         <value>manual</value>
+         <value>rms</value>
          <value>sensitivity</value>
          <value>timesmask</value>
-         <value>rms</value>
+         <value>manual</value>
        </allowed>
   </param>
 
@@ -509,6 +514,10 @@ nchan -- Number of channels or planes in the output image, -1 for all
 width -- Width of spectral dimension in frequency, \'\' for default.
     default: \'\'
     example: '7.8125MHz'
+
+nbin -- Channel binning factor
+    default: -1
+    example: 2
 
 weighting -- Weighting to apply to visibilities. Options are: 'natural',
     'uniform','briggs', 'superuniform','briggsabs','radial'

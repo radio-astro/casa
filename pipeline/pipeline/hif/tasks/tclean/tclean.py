@@ -32,7 +32,7 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
     def __init__(self, context, output_dir=None, vis=None, imagename=None,
                  intent=None, field=None, spw=None, spwsel_lsrk=None, spwsel_topo=None, uvrange=None, specmode=None,
                  gridder=None, deconvolver=None, outframe=None, imsize=None, cell=None,
-                 phasecenter=None, nchan=None, start=None, width=None,
+                 phasecenter=None, nchan=None, start=None, width=None, nbin=None,
                  weighting=None, robust=None, noise=None, npixels=None,
                  restoringbeam=None, iter=None, mask=None, niter=None, threshold=None,
                  noiseimage=None, hm_masking=None, hm_maskthreshold=None, hm_cleaning=None, tlimit=None,
@@ -144,6 +144,8 @@ class Tclean(cleanbase.CleanBase):
 
         result = None
 
+        qaTool = casatools.quanta
+
         # delete any old files with this naming root. One of more
         # of these (don't know which) will interfere with this run.
         LOG.info('deleting %s*.iter*', inputs.imagename)
@@ -208,17 +210,36 @@ class Tclean(cleanbase.CleanBase):
             # To avoid noisy edge channels, use only the LSRK frequency
             # intersection and skip one channel on either end.
             if0, if1, channel_width = inputs.heuristics.lsrk_freq_intersection(inputs.vis, inputs.field, inputs.spw)
+
             if (if0 == -1) or (if1 == -1):
-                LOG.error('No LSRK frequency overlap for Field %s SPW %s' % (inputs.field, inputs.spw))
+                LOG.error('No LSRK frequency intersect among selected MSs for Field %s SPW %s' % (inputs.field, inputs.spw))
                 result.error = '%s/%s/spw%s clean error: %s' % (inputs.field, inputs.intent, inputs.spw)
                 return result
+
+            if inputs.start != '':
+                LOG.info('Using supplied start frequency %s' % (inputs.start))
+                if0 = qaTool.convert(inputs.start, 'Hz')['value']
+
+            if inputs.width != '':
+                LOG.info('Using supplied width %s' % (inputs.width))
+                channel_width = qaTool.convert(inputs.width, 'Hz')['value']
+
+            if inputs.nchan != -1:
+                LOG.info('Using supplied nchan %d' % (inputs.nchan))
+                if1 = if0 + channel_width * inputs.nchan
+
+            if inputs.nbin != -1:
+                LOG.info('Applying binning factor %d' % (inputs.nbin))
+                channel_width *= inputs.nbin
 
             # tclean interprets the start frequency as the center of the
             # first channel. We have, however, an edge to edge range.
             # Thus shift by 0.5 channels.
             inputs.start = '%sGHz' % ((if0 + 1.5 * channel_width) / 1e9)
             inputs.width = '%sMHz' % ((channel_width) / 1e6)
-            inputs.nchan = int(round((if1 - if0) / channel_width - 2))
+            # Skip edge channels if no nchan is supplied
+            if inputs.nchan == -1:
+               inputs.nchan = int(round((if1 - if0) / channel_width - 2))
 
         # Get a noise estimate from the CASA sensitivity calculator
         sensitivity, \
@@ -604,8 +625,11 @@ class Tclean(cleanbase.CleanBase):
                 detailed_field_sensitivities[os.path.basename(ms.name)][intSpw] = {}
                 try:
                     if (inputs.specmode == 'cube'):
-                        # Use the center channel
-                        chansel = '%d~%d' % (int(spw_do.num_channels / 2.0), int(spw_do.num_channels / 2.0))
+                        # Use the center channel selection
+                        if inputs.nbin != -1:
+                            chansel = '%d~%d' % (int(spw_do.num_channels / 2.0), int(spw_do.num_channels / 2.0) + inputs.nbin - 1)
+                        else:
+                            chansel = '%d~%d' % (int(spw_do.num_channels / 2.0), int(spw_do.num_channels / 2.0))
                     else:
                         if (spw_topo_chan_param_dict[os.path.basename(ms.name)][str(intSpw)] != ''):
                             # Use continuum frequency selection

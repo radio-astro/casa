@@ -110,6 +110,12 @@ Create a a list of images to be cleaned.
     <value type="string"></value>
   </param>
 
+  <param type="any" name="nbins">
+    <description>Channel binning factors per spw, \'\' for default.</description>
+    <any type="variant"/>
+    <value type="string"></value>
+  </param>
+
   <param type="string" name="pipelinemode">
     <description>The pipeline operating mode</description>
     <value>automatic</value>
@@ -240,6 +246,10 @@ width -- Output channel width.
         for frequency mode images.
     example: '24.2kHz'
              'pilotimage' for 15 MHz / 8 channel heuristic
+
+nbins -- Channel binning factors per spw
+    default: '' Binning factors for each spw. Format: 'spw1:nb1,spw2:nb2,...'
+    example: '9:2,11:4,13:2,15:8'
 
 ---- pipeline context defined parameter arguments which can be set only in
      'interactive mode'

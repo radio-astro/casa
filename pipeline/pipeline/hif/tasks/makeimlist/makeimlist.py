@@ -18,7 +18,7 @@ class MakeImListInputs(basetask.StandardInputs):
       imagename=None, intent=None, field=None, spw=None, contfile=None,
       linesfile=None, uvrange=None, specmode=None, outframe=None,
       imsize=None, cell=None, calmaxpix=None, phasecenter=None,
-      nchan=None, start=None, width=None):
+      nchan=None, start=None, width=None, nbins=None):
 
         self._init_properties(vars())
 
@@ -195,6 +195,16 @@ class MakeImListInputs(basetask.StandardInputs):
         if value is None:
             value = ''
         self._width = value
+
+    @property
+    def nbins(self):
+        return self._nbins
+
+    @nbins.setter
+    def nbins(self, value):
+        if value is None:
+            value = ''
+        self._nbins = value
 
 
 # tell the infrastructure to give us mstransformed data when possible by
@@ -429,6 +439,16 @@ class MakeImList(basetask.StandardTaskTemplate):
                     LOG.warn('No continuum selection for target %s, spw %s. Will not image this selection.' % (field_intent[1], spwspec))
                     spwspec_ok = False
 
+                if (inputs.specmode == 'cube') and (inputs.nbins != ''):
+                    nbins_dict = dict([map(int, item.split(':')) for item in inputs.nbins.split(',')])
+                    try:
+                        nbin = nbins_dict[int(new_spwspec)]
+                    except:
+                        LOG.warn('Could not determine binning factor for spw %s. Using default channel width.' % (new_spwspec))
+                        nbin = -1
+                else:
+                    nbin = -1
+
                 if spwspec_ok and valid_data[spwspec][field_intent] and imsizes.has_key((field_intent[0],spwspec)):
                     LOG.debug (
                       'field:%s intent:%s spw:%s cell:%s imsize:%s phasecenter:%s'
@@ -448,6 +468,7 @@ class MakeImList(basetask.StandardTaskTemplate):
                               'imagename': imagenames[(field_intent, spwspec)],
                               'start': inputs.start,
                               'width': widths[(field_intent[0], spwspec)],
+                              'nbin': nbin,
                               'nchan': nchans[(field_intent[0], spwspec)],
                               'uvrange': inputs.uvrange}
 

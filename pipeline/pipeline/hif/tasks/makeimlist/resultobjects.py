@@ -48,6 +48,7 @@ class MakeImListResult(basetask.Results):
         specmode_width = len('specmode')
         start_width = len('start')
         width_width = len('width')
+        nbin_width = len('nbin')
         nchan_width = len('nchan')
         uvrange_width = len('uvrange')
 
@@ -67,6 +68,8 @@ class MakeImListResult(basetask.Results):
                 start_width = max(start_width, len(str(target['start'])))
             if 'width' in target.keys():
                 width_width = max(width_width, len(str(target['width'])))
+            if 'nbin' in target.keys():
+                nbin_width = max(nbin_width, len(str(target['nbin'])))
             if 'nchan' in target.keys():
                 nchan_width = max(nchan_width, len(str(target['nchan'])))
             if 'uvrange' in target.keys():
@@ -82,6 +85,7 @@ class MakeImListResult(basetask.Results):
         specmode_width += 1
         start_width += 1
         width_width += 1
+        nbin_width += 1
         nchan_width += 1
         uvrange_width += 1
 
@@ -99,6 +103,8 @@ class MakeImListResult(basetask.Results):
             repr += '{0:{1}}'.format('start', start_width)
         if 'width' in target.keys():
             repr += '{0:{1}}'.format('width', width_width)
+        if 'nbin' in target.keys():
+            repr += '{0:{1}}'.format('nbin', nbin_width)
         if 'nchan' in target.keys():
             repr += '{0:{1}}'.format('nchan', nchan_width)
         if 'uvrange' in target.keys():
@@ -121,6 +127,8 @@ class MakeImListResult(basetask.Results):
                 repr += '{0:{1}}'.format(str(target['start']), start_width)
             if 'width' in target.keys():
                 repr += '{0:{1}}'.format(str(target['width']), width_width)
+            if 'nbin' in target.keys():
+                repr += '{0:{1}}'.format(str(target['nbin']), nbin_width)
             if 'nchan' in target.keys():
                 repr += '{0:{1}}'.format(str(target['nchan']), nchan_width)
             if 'uvrange' in target.keys():
