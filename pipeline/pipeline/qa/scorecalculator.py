@@ -1374,7 +1374,7 @@ def score_checksources(mses, fieldname, spwid, imagename):
         field = ms.get_fields (name = fieldname)
         if not field:
             continue
-        if 'CHECK' not in field.intents:
+        if 'CHECK' not in field[0].intents:
             continue
         fieldid = str(field[0].id)
         refdirection = me.measure(field[0].mdirection, 'ICRS')
