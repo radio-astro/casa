@@ -180,7 +180,7 @@ def immath(
     # Remove any old tmp files that may be left from
     # a previous run of immath
     tb.clearlocks()    
-    tmpFilePrefix='_immath_tmp' + str(os.getpid())
+    tmpFilePrefix='_immath_tmp' + str(os.getpid()) + '_'
     try:
         _immath_cleanup( tmpFilePrefix )
     except Exception, e:
