@@ -889,14 +889,13 @@ def make_row_map(src_ms, derived_vis):
                             trow1 = rownumber_list1[tmask1]
                             sort_index0 = numpy.lexsort((tstate0, ttime0))
                             sort_index1 = numpy.lexsort((tstate1, ttime1))
-                            assert numpy.all(ttime0[sort_index0] == ttime1[sort_index1])
-                            assert numpy.all(tstate0[sort_index0] == tstate1[sort_index1])
-                            assert set(tstate0) == set(states[scan_number])
-                            #print tstate0, set(tstate0)
-                            #print tstate1, set(tstate1)
                             LOG.trace('scan %s'%(scan_number)
                                      + ' actual %s'%(list(set(tstate0))) 
                                      + ' expected %s'%(states[scan_number]))
+                            assert numpy.all(ttime0[sort_index0] == ttime1[sort_index1])
+                            assert numpy.all(tstate0[sort_index0] == tstate1[sort_index1])
+                            #assert set(tstate0) == set(states[scan_number])
+                            assert set(tstate0).issubset(set(states[scan_number]))
                             
                             for (i0, i1) in zip(sort_index0, sort_index1):
                                 r0 = trow0[i0]
