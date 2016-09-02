@@ -547,7 +547,8 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                          corrstring, renderer_cls=None, **kwargs):
         vis = os.path.basename(result.inputs['vis'])
 
-        plotter = plotter_cls(context, result, intents, **kwargs)
+        #plotter = plotter_cls(context, result, intents, **kwargs)
+        plotter = plotter_cls(context, result, intents, correlation=corrstring)
         plots = plotter.plot()
         for plot in plots:
             plot.parameters['intent'] = intents
