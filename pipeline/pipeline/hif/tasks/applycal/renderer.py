@@ -331,8 +331,8 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 amp_vs_freq_summary_plots[vis]['TARGET'].extend(plots)
     
                 plots = self.science_plots_for_result(context, 
-                                                      result, 
-                                                      applycal.PhaseVsFrequencyPerBasebandSummaryChart,
+                                                      result,
+                                                      applycal.PhaseVsFrequencyPerSpwSummaryChart,
                                                       [brightest_field.id],
                                                       uv_range, correlation=correlation)
                 phase_vs_freq_summary_plots[vis]['TARGET'].extend(plots)

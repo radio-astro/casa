@@ -646,22 +646,21 @@ def format_spwmap(spwmap, scispws):
 		half of the data (UV max < ${str(uv_max[ms])}).</p>
 	</%def>
 
-	<%def name="mouseover(plot)">Click to show phase vs frequency for baseband ${plot.parameters['baseband']}</%def>
+	<%def name="mouseover(plot)">Click to show phase vs frequency for spw ${plot.parameters['spw']}</%def>
 
 	<%def name="fancybox_caption(plot)">
 		Receiver: ${utils.commafy(plot.parameters['receiver'], quotes=False)}<br>
-		Baseband: ${plot.parameters['baseband']} (spw ${plot.parameters['spw']})<br>
+		Spw ${plot.parameters['spw']}<br>
 		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br>
 		Fields: ${cgi.escape(plot.parameters['field'], True)}
 	</%def>
 
 	<%def name="caption_title(plot)">
-		Baseband ${plot.parameters['baseband']}
+		Spw ${plot.parameters['spw']}
 	</%def>
 
 	<%def name="caption_subtitle(plot)">
 		${rx_for_plot(plot)}
-		${spws_for_baseband(plot)}
 	</%def>
 
 	<%def name="caption_text(plot, source_id)">
