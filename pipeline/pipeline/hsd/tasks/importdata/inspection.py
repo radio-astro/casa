@@ -394,10 +394,14 @@ class SDMSInspection(object):
         calibration_type = calibration_type_heuristic(ms.name)
         science_windows = ms.get_spectral_windows(science_windows_only=True)
         tsys_windows = [spw for spw in ms.spectral_windows \
-                        if 'ATMOSPHERE' in spw.intents and re.search('(CH_AVG|SQLD)', spw.name) is None]
+                        if 'ATMOSPHERE' in spw.intents and \
+                           re.search('(CH_AVG|SQLD|WVR)', spw.name) is None]
         LOG.debug('tsys_windows={spws}'.format(spws=[spw.id for spw in tsys_windows]))
         TOL = singledish.ScantableRep.tolerance
         for spwa in tsys_windows:
+            if spwa in science_windows:
+                # identical spw, skip (not necessary to transfer Tsys)
+                continue
             fmina = float(spwa._min_frequency.value)
             fmaxa = float(spwa._max_frequency.value)
             for spwt in science_windows:
