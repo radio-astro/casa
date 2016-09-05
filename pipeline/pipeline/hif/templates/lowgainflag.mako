@@ -41,7 +41,11 @@ def num_lines(report_dir, relpath):
 			<td>${msname}</td>
 			<td><a class="replace-pre" href="${relpath}">${os.path.basename(relpath)}</a></td>
 			<td>${num_lines(pcontext.report_dir, relpath)}</td>
-            <td><a class="replace" data-vis="${msname}" href="${plots_path}">Display</a></td>
+            % if plots_path:
+                <td><a class="replace" data-vis="${msname}" href="${plots_path}">Display</a></td>
+            % else:
+                <td>N/A</td>
+            % endif
 		</tr>
 		% endfor
 	</tbody>
