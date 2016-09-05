@@ -961,7 +961,10 @@ class Tclean(cleanbase.CleanBase):
         mom0_name = '%s.mom0_fc' % (imagename)
         
         # Get continuum frequency ranges.
-        cont_freq_ranges = self.inputs.spwsel_lsrk['spw%s' % (self.inputs.spw)].split()[0]
+        if self.inputs.spwsel_lsrk['spw%s' % (self.inputs.spw)] not in (None, 'NONE', ''):
+            cont_freq_ranges = self.inputs.spwsel_lsrk['spw%s' % (self.inputs.spw)].split()[0]
+        else:
+            cont_freq_ranges = ''
 
         # Convert frequency ranges to channel ranges.
         cont_chan_ranges = utils.freq_selection_to_channels(imagename, cont_freq_ranges)

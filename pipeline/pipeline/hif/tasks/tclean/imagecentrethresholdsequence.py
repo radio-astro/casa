@@ -70,15 +70,17 @@ class ImageCentreThresholdSequence(BaseCleanSequence):
                 for spwid in spw.split(','):
                     spwkey = 'spw%s' % (spwid)
                     if frequency_selection.has_key(spwkey):
-                        channel_ranges.extend(utils.freq_selection_to_channels(new_cleanmask, frequency_selection[spwkey].split()[0]))
-                with casatools.ImageReader(new_cleanmask) as iaTool:
-                    shape = iaTool.shape()
-                    rgTool = casatools.regionmanager
-                    for channel_range in channel_ranges:
-                        LOG.info('Unmasking channels %d to %d' % (channel_range[0], channel_range[1]))
-                        region = rgTool.box([0,0,0,channel_range[0]], [shape[0]-1, shape[1]-1, 0, channel_range[1]])
-                        iaTool.set(region=region, pixels=0.0, pixelmask=False)
-                    rgTool.done()
+                        if (frequency_selection[spwkey] not in (None, 'NONE', '')):
+                            channel_ranges.extend(utils.freq_selection_to_channels(new_cleanmask, frequency_selection[spwkey].split()[0]))
+                if channel_ranges != []:
+                    with casatools.ImageReader(new_cleanmask) as iaTool:
+                        shape = iaTool.shape()
+                        rgTool = casatools.regionmanager
+                        for channel_range in channel_ranges:
+                            LOG.info('Unmasking channels %d to %d' % (channel_range[0], channel_range[1]))
+                            region = rgTool.box([0,0,0,channel_range[0]], [shape[0]-1, shape[1]-1, 0, channel_range[1]])
+                            iaTool.set(region=region, pixels=0.0, pixelmask=False)
+                        rgTool.done()
 
             self.result.cleanmask = new_cleanmask
             self.result.threshold = self.threshold
