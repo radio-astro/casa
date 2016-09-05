@@ -459,19 +459,40 @@ def score_applycal_agents(ms, summaries):
     return score_data_flagged_by_agents(ms, summaries, 0.05, 0.6, ['applycal'])
 
 @log_qa
-def score_flagging_view_exists(filename, view):
+def score_flagging_view_exists(filename, result):
     """
     Assign a score of zero if the flagging view cannot be computed
     """
 
-    if not view:
-        score = 0.0
-        longmsg = 'No flagging views for %s' % (filename)
-        shortmsg = 'No flagging views'
-    else:
-        score = 1.0
-        longmsg = 'Flagging views exist for %s' % (filename)
-        shortmsg = 'Flagging views exist'
+    # By default, assume no flagging views were found.
+    score = 0.0
+    longmsg = 'No flagging views for %s' % (filename)
+    shortmsg = 'No flagging views'
+
+    # Check if this is a flagging result for a single metric, where
+    # the flagging view is stored directly in the result.
+    try:
+        view = result.view
+        if view:
+            score = 1.0
+            longmsg = 'Flagging views exist for %s' % (filename)
+            shortmsg = 'Flagging views exist'
+    except AttributeError:
+        pass
+    
+    # Check if this flagging results contains multiple metrics,
+    # and look for flagging views among components.
+    try:
+        # Set score to 1 as soon as a single metric contains a
+        # valid flagging view.
+        for metricresult in result.components.values():
+            view = metricresult.view
+            if view:
+                score = 1.0
+                longmsg = 'Flagging views exist for %s' % (filename)
+                shortmsg = 'Flagging views exist'
+    except AttributeError:
+        pass
 
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg,
                        vis=filename)

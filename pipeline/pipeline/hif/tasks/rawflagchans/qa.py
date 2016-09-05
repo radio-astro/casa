@@ -21,10 +21,13 @@ class RawflagchansQAHandler(pqa.QAResultHandler):
         vis = result.inputs['vis']
         ms = context.observing_run.get_ms(vis)
     
+        # Calculate QA score from presence of flagging views and from the
+        # flagging summary in the result, adopting the minimum score as the
+        # representative score for this task.
         score1 = qacalc.linear_score_fraction_newly_flagged(ms.basename,
                                                              result.summaries,
                                                              ms.basename)
-        score2 = qacalc.score_flagging_view_exists(ms.basename, result.view)
+        score2 = qacalc.score_flagging_view_exists(ms.basename, result)
         scores = [score1, score2]
         result.qa.pool[:] = scores
 

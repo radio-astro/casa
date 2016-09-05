@@ -21,9 +21,14 @@ class GainflagQAHandler(pqa.QAResultHandler):
         vis = result.inputs['vis']
         ms = context.observing_run.get_ms(vis)
     
-        scores = [qacalc.linear_score_fraction_newly_flagged(ms.basename,
+        # Calculate QA score from presence of flagging views and from the
+        # flagging summary in the result, adopting the minimum score as the
+        # representative score for this task.
+        score1 = qacalc.linear_score_fraction_newly_flagged(ms.basename,
                                                              result.summaries,
-                                                             ms.basename)]
+                                                             ms.basename)
+        score2 = qacalc.score_flagging_view_exists(ms.basename, result)
+        scores = [score1, score2]
         result.qa.pool[:] = scores
 
         result.qa.all_unity_longmsg = 'No extra data was flagged in %s' % vis
