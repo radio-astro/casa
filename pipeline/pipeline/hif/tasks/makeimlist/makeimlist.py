@@ -439,7 +439,7 @@ class MakeImList(basetask.StandardTaskTemplate):
                     LOG.warn('No continuum selection for target %s, spw %s. Will not image this selection.' % (field_intent[1], spwspec))
                     spwspec_ok = False
 
-                if (inputs.specmode == 'cube') and (inputs.nbins != ''):
+                if inputs.nbins != '':
                     nbins_dict = dict([map(int, item.split(':')) for item in inputs.nbins.split(',')])
                     try:
                         nbin = nbins_dict[int(new_spwspec)]
