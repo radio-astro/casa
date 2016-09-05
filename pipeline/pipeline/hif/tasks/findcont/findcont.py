@@ -137,15 +137,33 @@ class FindCont(basetask.StandardTaskTemplate):
                     # Use only the current spw ID here !
                     if0, if1, channel_width = tclean_heuristics.lsrk_freq_intersection(inputs.vis, target['field'], spwid)
                     if (if0 == -1) or (if1 == -1):
-                        LOG.warning('No LSRK frequency overlap for Field %s SPW %s' % (target['field'], spwid))
+                        LOG.warning('No LSRK frequency intersect among selected for Field %s SPW %s' % (target['field'], spwid))
                         continue
+
+                    if target['start'] != '':
+                        LOG.info('Using supplied start frequency %s' % (target['start']))
+                        if0 = qaTool.convert(target['start'], 'Hz')['value']
+
+                    if target['width'] != '':
+                        LOG.info('Using supplied width %s' % (target['width']))
+                        channel_width = qaTool.convert(target['width'], 'Hz')['value']
+
+                    if target['nchan'] != -1:
+                        LOG.info('Using supplied nchan %d' % (target['nchan']))
+                        if1 = if0 + channel_width * target['nchan']
+
+                    if target['nbin'] != -1:
+                        LOG.info('Applying binning factor %d' % (target['nbin']))
+                        channel_width *= target['nbin']
 
                     # tclean interprets the start frequency as the center of the
                     # first channel. We have, however, an edge to edge range.
                     # Thus shift by 0.5 channels.
                     start = '%sGHz' % ((if0 + 1.5 * channel_width) / 1e9)
                     width = '%sMHz' % ((channel_width) / 1e6)
-                    nchan = int(round((if1 - if0 ) / channel_width - 2))
+                    # Skip edge channels if no nchan is supplied
+                    if target['nchan'] == -1:
+                        nchan = int(round((if1 - if0 ) / channel_width - 2))
 
                     # Estimate memory usage and adjust chanchunks parameter to avoid
                     # exceeding the available memory.
