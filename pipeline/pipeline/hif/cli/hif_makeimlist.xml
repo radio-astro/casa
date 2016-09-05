@@ -249,7 +249,9 @@ width -- Output channel width.
 
 nbins -- Channel binning factors per spw
     default: '' Binning factors for each spw. Format: 'spw1:nb1,spw2:nb2,...'
+             Optional wildcard: '*:nb'
     example: '9:2,11:4,13:2,15:8'
+             '*:2'
 
 ---- pipeline context defined parameter arguments which can be set only in
      'interactive mode'

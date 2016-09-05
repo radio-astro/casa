@@ -440,9 +440,16 @@ class MakeImList(basetask.StandardTaskTemplate):
                     spwspec_ok = False
 
                 if inputs.nbins != '':
-                    nbins_dict = dict([map(int, item.split(':')) for item in inputs.nbins.split(',')])
+                    nbin_items = inputs.nbins.split(',')
+                    nbins_dict = {}
+                    for nbin_item in nbin_items:
+                        key, value = nbin_item.split(':')
+                        nbins_dict[key] = int(value)
                     try:
-                        nbin = nbins_dict[int(new_spwspec)]
+                        if '*' in nbins_dict.keys():
+                            nbin = nbins_dict['*']
+                        else:
+                            nbin = nbins_dict[new_spwspec]
                     except:
                         LOG.warn('Could not determine binning factor for spw %s. Using default channel width.' % (new_spwspec))
                         nbin = -1
