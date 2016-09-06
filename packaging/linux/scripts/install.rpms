@@ -1,0 +1,292 @@
+#!/usr/bin/perl
+
+##
+## usage:  install-rpms BASENAMES VERSION REVISION
+##
+use File::Find;
+use File::Copy;
+use File::Path;
+use File::Spec::Functions abs2rel;
+
+
+$rpmdir = "";
+$rhver = "";
+$destdir = "";
+$old_cache = "";
+$trim_old_cache = 0;
+$trim_old_count = 5;
+$debug = 0;
+$ssh_invocation = 0;
+
+if ( scalar(@ARGV) == 0 ) {
+
+    if ( defined $ENV{'SSH_ORIGINAL_COMMAND'} ) {
+	##
+	## we're run from an ssh script, so we must break apart our arguments
+	## from the SSH_ORIGINAL_COMMAND environment variable...
+	##
+	@ARGV = split( /\s+/, $ENV{'SSH_ORIGINAL_COMMAND'} );
+	$HOME = $ENV{'HOME'};
+
+	$ssh_invocation = 1;
+
+	##
+	## all of the rpms come via a tar archive on stdin...
+	##
+	mkpath( "$HOME/casa/tmp/$$/" );
+	chdir("$HOME/casa/tmp/$$/");
+	system( "tar -xf -" );
+
+	$rpmdir = ".";
+
+	system( "printenv > $HOME/casa/tmp/$$.env 2>&1" );
+
+    } else {
+	die "must eiter have flag or be run via ssh";
+    }
+}
+
+##
+## process flags
+##
+while ($_ = @ARGV[0], (/^--/)) {
+    shift(@ARGV);
+    last if /^--$/;
+
+    /^--destroot$/i && ($destdir = shift(@ARGV), next);
+    /^--old-cache$/i && ($old_cache = shift(@ARGV), next);
+    /^--trim-cache=(\d+)$/i && ($trim_old_cache = 1, $trim_old_count = $1, next);
+    /^--trim-cache$/i && ($trim_old_cache = 1, next);
+    /^--rpmdir$/i && ($rpmdir = shift(@ARGV), next);
+    /^--dryrun$/i && ($debug = 1, next);
+    die "unknown option: $_\n";
+}
+
+##
+## set required parameters
+##
+@base = split( ':', $ARGV[0] );
+$version = $ARGV[1];
+$revision = $ARGV[2];
+
+##
+## check parameters
+##
+die "no directory specified where rpms can be found" unless $rpmdir;
+die "no destination specified, use --destroot <PATH>" unless $destdir;
+die "destination ($destdir) does not exist" unless -d $destdir;
+die "too few parameters" unless scalar(@base) > 0 && $version && $revision;
+die "old store ($old_cache) does not exist" if $old_cache ne "" && ! -d $old_cache;
+
+##
+## find redhat version
+##
+if ( ! $rhver ) {
+    if ( -f "/etc/SuSE-release" ) {
+
+	$rhver = "suse";
+
+    } elsif ( -f "/etc/redhat-release" ) {
+
+	open( IN, "</etc/redhat-release" );
+	$rhver = <IN>;
+	close( IN );
+
+	if ( $rhver =~ m/^Fedora/ ) {
+	    $rhver = "fedora";
+	} elsif ( $rhver =~ m/^Red Hat Enterprise.*release 4/ ) {
+	    $rhver = "rhe4";
+	} elsif ( $rhver =~ m/^Red Hat Enterprise/ ) {
+	    $rhver = "rhe";
+	} elsif ( $rhver =~ m/^Red Hat Linux release ([0-9.]+)/ ) {
+	    $rhver = "rh$1";
+	} elsif ( $rhver =~ m/^Mandrake Linux/  ) {
+	    $rhver = "mandrake";
+	} else {
+	    die "cannot understand version string";
+	}
+
+    } else {
+
+	die "we're not in linux land";
+
+    }
+}
+
+@rpms = ();
+@rpms_full = ();
+sub find_source {
+    foreach $base ( @base ) {
+	if ( -f $_ && $_ =~ m/^\Q$base\E-\Q$version-$revision\E/ ) {
+	    if ( $File::Find::dir !~ m@/old[^/]*$@ ) {
+		push( @rpms_full, "$File::Find::fullname" );
+		push( @rpms, $_ );
+	    }
+	}
+    }
+}
+
+sub find_old {
+    foreach $base ( @base ) {
+	if ( -f $_ && $_ =~ m/^\Q$base\E-\d+/ ) {
+	    if ( $File::Find::dir !~ m@/old[^/]*$@ ) {
+		push( @rpms_full, "$File::Find::fullname" );
+		push( @rpms, $_ );
+	    }
+	}
+    }
+}
+
+%rpms = ();
+%rpms_full = ();
+sub find_trim {
+    foreach $base ( @base ) {
+	if ( -f $_ && $_ =~ m/^\Q$base\E-\d+/ ) {
+	    if ( ! defined $rpms{$base} ) {
+		$rpms{$base} = [ ];
+		$rpms_full{$base} = [ ];
+	    }
+	    my $ref = $rpms_full{$base};
+	    push( @$ref, "$File::Find::fullname" );
+	    $ref = $rpms{$base};
+	    push( @$ref, $_ );
+	}
+    }
+}
+
+find({ wanted => \&find_source, follow => 1 }, $rpmdir);
+#find({ wanted => \&find_source, follow => 1 }, $srpmdir);
+
+##
+## find new rpms to be installed
+##
+@source_rpms = @rpms_full;
+@rpms_full = ();
+@rpms = ();
+
+##
+## find the old rpms to be deleted or moth-balled
+##
+find({ wanted => \&find_old, follow => 1 }, $destdir);
+@old_rpms = @rpms_full;
+
+sub rpm_compare {
+    my $lhs_string = shift(@_);
+    my $rhs_string = shift(@_);
+    $lhs_string =~ s@.*?([^/]+)$@$1@;
+    $lhs_string =~ s/^\D+//;
+    $rhs_string =~ s@.*?([^/]+)$@$1@;
+    $rhs_string =~ s/^\D+//;
+
+    ##
+    ## major version
+    ##
+    my $lhs_cur = $lhs_string;
+    $lhs_cur =~ s/^(\d+).*/$1/;
+    $lhs_string =~ s/^\d+[-.a-zA-Z]+//;
+
+    my $rhs_cur = $rhs_string;
+    $rhs_cur =~ s/^(\d+).*/$1/;
+    $rhs_string =~ s/^\d+[-.a-zA-Z]+//;
+
+    my $result = $lhs_cur <=> $rhs_cur;
+    if ( $result != 0 ) { return $result; }
+
+    ##
+    ## minor version
+    ##
+    $lhs_cur = $lhs_string;
+    $lhs_cur =~ s/^(\d+).*/$1/;
+    $lhs_string =~ s/^\d+[-.a-zA-Z]+//;
+
+    $rhs_cur = $rhs_string;
+    $rhs_cur =~ s/^(\d+).*/$1/;
+    $rhs_string =~ s/^\d+[-.a-zA-Z]+//;
+
+    $result = $lhs_cur <=> $rhs_cur;
+    if ( $result != 0 ) { return $result; }
+
+    ##
+    ## revision
+    ##
+    $lhs_cur = $lhs_string;
+    $lhs_cur =~ s/^(\d+).*/$1/;
+    $lhs_string =~ s/^\d+[-.a-zA-Z]+//;
+
+    $rhs_cur = $rhs_string;
+    $rhs_cur =~ s/^(\d+).*/$1/;
+    $rhs_string =~ s/^\d+[-.a-zA-Z]+//;
+
+    $result = $lhs_cur <=> $rhs_cur;
+    if ( $result != 0 ) { return $result; }
+
+    ##
+    ## release
+    ##
+    $lhs_cur = $lhs_string;
+    $lhs_cur =~ s/^(\d+).*/$1/;
+
+    $rhs_cur = $rhs_string;
+    $rhs_cur =~ s/^(\d+).*/$1/;
+
+    return $lhs_cur <=> $rhs_cur;
+}
+
+##
+## clean (trim) up backup area
+##
+if ( $trim_old_cache && $old_cache ne "" ) {
+    find({ wanted => \&find_trim, follow => 1 }, $old_cache );
+    foreach $key ( keys %rpms_full ) {
+	my $ref = $rpms_full{$key};
+	@sorted = sort { rpm_compare($a,$b) } @$ref;
+	if ( scalar(@sorted) > ($trim_old_count - 1) ) {
+	    my @nuke = splice(@sorted, 0, scalar(@sorted) - $trim_old_count + 1);
+	    #my @keep = splice(@sorted, scalar(@sorted) - $trim_old_count + 1, $trim_old_count-1);
+	    foreach $file ( @nuke ) {
+		if ( -f $file ) {
+		    if ( $debug ) {
+			print "unlink($file)\n";
+		    } else {
+			unlink $file;
+		    }
+		}
+	    }
+	}
+    }
+}
+
+##
+## backup if asked
+##
+if ( $old_cache ne "" ) {
+    foreach $path ( @old_rpms ) {
+	if ( $debug ) {
+	    print "move($path, $old_cache)\n";
+	} else {
+	    move($path, $old_cache);
+	}
+    }
+} else {
+    foreach $path ( @old_rpms ) {
+	if ( $debug ) {
+	    print "unlink($path)\n";
+	} else {
+	    unlink $path;
+	}
+    }
+}
+
+
+##
+## install new rpms
+##
+foreach $path ( @source_rpms ) {
+    if ( $debug ) {
+	print "copy($path,$destdir)\n";
+    } else {
+	copy($path,$destdir);
+    }
+}
+
+#system( "rm -rf $HOME/casa/tmp/$$" );

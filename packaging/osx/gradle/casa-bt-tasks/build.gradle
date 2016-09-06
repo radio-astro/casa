@@ -1,0 +1,32 @@
+apply plugin: 'groovy'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile gradleApi( )
+    compile localGroovy( )
+	compile group: 'net.sourceforge.htmlcleaner', name: 'htmlcleaner', version: '2.6.1'
+}
+
+apply plugin: 'maven'
+
+group = 'edu.nrao.gradle'
+version = '1.0-SNAPSHOT'
+
+test {
+	include 'edu/nrao/gradle/casa/unittests/**'
+	exclude 'edu/nrao/gradle/casa/functionaltests/**'
+}
+
+uploadArchives.dependsOn ':test'
+
+uploadArchives (){
+    repositories {
+        mavenDeployer {
+            repository(url: uri('../repo'))
+        }
+    }
+}
+

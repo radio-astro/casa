@@ -1,0 +1,35 @@
+--- source/makemake.orig	2016-02-22 12:58:20.208000000 -0500
++++ source/makemake	2016-02-22 12:59:11.596000000 -0500
+@@ -852,7 +852,9 @@
+ 	$(PG_NON_STANDARD) $(GR_ROUTINES) $(DISPATCH_ROUTINE) \
+ 	$(DRIVERS) $(SYSTEM_ROUTINES) | sort | uniq` $(SHARED_LIB_LIBS) -lpng
+ 	for link in $(SHARED_LINKS); do		\
+-	    ln -s $(SHARED_LIB) $$link;		\
++	    if test ! -e $$link; then		\
++	        ln -s $(SHARED_LIB) $$link;	\
++	    fi;					\
+ 	done
+ 
+ EOD
+@@ -863,7 +865,9 @@
+ $(SHARED_CLIB): libcpgplot.a
+ 	$(SHARED_CLD) `ls cpg*.o | sort | uniq` $(SHARED_CLIB_LIBS)
+ 	for link in $(SHARED_CLINKS); do	\
+-	    ln -s $(SHARED_CLIB) $$link;	\
++	    if test ! -e $$link; then		\
++	        ln -s $(SHARED_CLIB) $$link;	\
++	    fi;					\
+ 	done
+ EOD
+ fi
+--- ./source/drivers/pndriv.c.orig	2016-02-22 12:34:26.500000000 -0500
++++ ./source/drivers/pndriv.c	2016-02-22 12:38:22.788000000 -0500
+@@ -222,7 +222,7 @@
+ 	return;
+   }
+ 
+-  if (setjmp(png_ptr->jmpbuf)) { /* not really sure what I'm doing here... */
++  if (setjmp(png_jmpbuf(png_ptr))) { /* not really sure what I'm doing here... */
+ 	fprintf(stderr,"%s: error in libpng while writing file %s, plotting disabled\n", png_ident, filename);
+ 	png_destroy_write_struct(&png_ptr,&info_ptr);
+ 	dev->error = true;

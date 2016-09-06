@@ -1,0 +1,375 @@
+#!/usr/bin/perl
+
+$RPM_TOP = "/opt/users/rpmbuild/casa/prerelease";
+$PKG_TOP = "/opt/users/rpmbuild/casa/prerelease";
+
+use File::Basename;
+use File::Find;
+use File::Path;
+use File::Copy;
+use Cwd;
+
+$get_revision = "$PKG_TOP/scripts/svn-revision";
+$get_version = "$PKG_TOP/scripts/casa-version";
+$install_rpms = "$RPM_TOP/scripts/install.rpms";
+$email_list = "drs\@nrao.edu vsuorant\@nrao.edu";
+$distro_email_list = $email_list;
+
+
+BEGIN {
+    ###
+    ### check to see if there is already a build running... if so, abort...
+    ###
+    my $HOME = $ENV{'HOME'};
+    my $reference_pid = $$;
+    $state_root = "$HOME/casa";
+    $TAG        = "prerelease";
+
+    if ( -d "$state_root/state" ) {
+	if ( -e "$state_root/state/rebuild-$TAG.pid" ) {
+	    open( PID, "< $state_root/state/rebuild-$TAG.pid" );
+	    my $pid = <PID>;
+	    close(PID);
+	    $pid =~ s|\s||g;
+	    ###
+	    ### rebuild.casa forks a child which generates the output while the
+	    ### parent just waits and send an email if there are errors...
+	    ### ... getppid( ) does not work here because there are shell
+	    ### invocations between the root and the children, but getpgrp( )
+	    ### does work because the shell sets up forked children as the
+	    ### process group leader...
+	    ###
+	    ### ... getpgrp( ) seems to fail with, e.g.
+	    ### svn update -q /opt/users/rpmbuild/casa/prerelease && /opt/users/rpmbuild/casa/prerelease/scripts/rebuild.prerelease rel=4.5.0
+	    ###
+	    if ( $pid eq $$ || $pid eq $ENV{"_REBUILD_RECURSIVE_$TAG"} ) {
+		$reference_pid = $pid;
+	    } else {
+		open( PS, "ps -A |" );
+		while ( <PS> ) {
+		    if ( m|^\s*$pid| ) {
+			die "build already running: $_";
+		    }
+		}
+		close(PS);
+		unlink("$state_root/state/rebuild-$TAG.pid");
+	    }
+	}
+	open(PID, "> $state_root/state/rebuild-$TAG.pid");
+	print PID "$reference_pid\n";
+	close(PID);
+    }
+}
+
+END {
+    ###
+    ### if we make it this far, clean up our pid file...
+    ###
+    my $HOME = $ENV{'HOME'};
+    if ( -e "$state_root/state/rebuild-$TAG.pid" ) {
+	unlink("$state_root/state/rebuild-$TAG.pid");
+    }
+}
+
+$HOME = $ENV{'HOME'};
+$rhver = "";
+$svnroot = "";
+$casa_svn_root = "";
+
+$repo_dir = "/usr/src/rpmbuild/apache/content/casa/repo";
+$staging_area = "/usr/src/rpmbuild/apache/spool/prerelease-binaries";
+$state_dir = "$state_root/state";
+
+$testfile = "";
+##$rsync_command = "/usr/bin/rsync";
+
+$self = "$RPM_TOP/scripts/rebuild.$TAG";
+$selfflags = "";
+$spec_file = '';
+$backup_root = "/var/backup";
+
+foreach ( @ARGV ) {
+    if ( m|^rel=([0-9.]+)$| ) {
+	push(@selfflags,$_);
+	$version=$1;
+	($version_string = $version) =~ s|\.|_|g;
+	($url_version_string = $version) =~ s|(\d+)\.(\d+).*|$1_$2|;
+    }
+}
+
+die "must specify release version, e.g. rel=4.3" unless $version_string && $url_version_string;
+sub url { return "https://svn.cv.nrao.edu/svn/casa/branches/release-$url_version_string" }
+
+$casa_svn_root = url( );
+
+open( $check_url, "svn info $casa_svn_root 2>&1 |" );
+$ok = 1;
+foreach ( <$check_url> ) {
+    m|Not a valid URL| && ( $ok = 0 );
+    m|problem occurred| && ( $ok = 0 );
+}
+close( $check_url );
+
+unless( $ok ) { die "invalid subversion url: $casa_svn_root"; }
+
+##
+## set $arch
+##
+$arch_line = `uname -m`;
+if ( $arch_line =~ m/x86_64/ ) {
+    $arch = "x86_64";
+} else {
+    $arch = "i386";
+}
+
+if ( ! $rhver ) {
+
+    if ( -f "/etc/SuSE-release" ) {
+
+        $rhver = "suse";
+
+    } elsif ( -f "/etc/redhat-release" ) {
+
+        open( IN, "</etc/redhat-release" );
+        $rhver = <IN>;
+        close( IN );
+        if ( $rhver =~ m/^Fedora Core release 6/ ) {
+            $rhver = "fc6";
+        } elsif ( $rhver =~ m/^Fedora release 7/ ) {
+            $rhver = "fc7";
+        } elsif ( $rhver =~ m/^Red Hat Enterprise.*release 4/ ) {
+            $rhver = "el4";
+        } elsif ( $rhver =~ m/^Scientific Linux SL release 4.*/ ) {
+            $rhver = "el4";
+        } elsif ( $rhver =~ m/^Red Hat Enterprise.*release 5/ ) {
+	    $spec_file = "$RPM_TOP/SPECS/casa_el5.spec";
+            $rhver = "el5";
+        } elsif ( $rhver =~ m/^Scientific Linux SL release 5.*/ ) {
+	    $spec_file = "$RPM_TOP/SPECS/casa_el5.spec";
+            $rhver = "el5";
+        } elsif ( $rhver =~ m/^Red Hat Enterprise.*release 6/ ) {
+	    $spec_file = "$RPM_TOP/SPECS/casa.spec";
+            $rhver = "el6";
+        } elsif ( $rhver =~ m/^Scientific Linux SL release 6.*/ ) {
+	    $spec_file = "$RPM_TOP/SPECS/casa.spec";
+            $rhver = "el6";
+        } elsif ( $rhver =~ m/^Red Hat Enterprise.*release 7/ ) {
+            $spec_file = "$RPM_TOP/SPECS/casa.spec";
+            $rhver = "el7";
+        } elsif ( $rhver =~ m/^Scientific Linux SL release 7.*/ ) {
+            $spec_file = "$RPM_TOP/SPECS/casa.spec";
+            $rhver = "el7";
+        } elsif ( $rhver =~ m/^Red Hat Enterprise/ ) {
+            die "unknown enterprise version: $rhver";
+        } elsif ( $rhver =~ m/^Red Hat Linux release ([0-9.]+)/ ) {
+            die "we no longer support: $rhver";
+        } elsif ( $rhver =~ m/^Mandrake Linux/  ) {
+            die "we don't yet support mandrake";
+        } else {
+            die "cannot understand version string: $rhver";
+        }
+
+    } else {
+
+        die "we're not in linux land";
+
+    }
+}
+
+die "no spec file" unless $spec_file;
+
+##
+## set up mail program, RHEL5 has a very limited /bin/mail
+##
+if ( $rhver eq "el5" ) {
+    $mail = "/bin/mail";
+} else {
+    $mail = "/bin/mailx -S from=noreply\@nrao.edu";
+}
+
+##
+## change to the directory where the script is
+$path = dirname($0);
+chdir $path if $path;
+
+die "prerelease staging directory does not exist: $staging_area/$rhver/repo" unless -d "$staging_area/$rhver/repo";
+
+open( $rev, "$get_revision branch=release-$url_version_string 2> /dev/null |" );
+$revision_string = <$rev>;
+close( $rev );
+die "bad version string: $revision_string" unless $revision_string =~ m|^(\d+)$|;
+$revision = $1;
+
+$testrpm = "-$TAG";
+$testdistro = "--tag $TAG";
+
+$etc_dir = "/usr/src/rpmbuild/build/etc/$rhver";
+die "etc directory does not exist" unless -d $etc_dir;
+$logfile = "$state_root/log/casa-$TAG.$version.$revision";
+$versionfile = "$state_dir/casa.$TAG.$version";
+
+##
+## if we have email addresses to send the output to, collect it and send
+## if necessary...
+##
+unless ( defined $ENV{"_REBUILD_RECURSIVE_$TAG"} ) {
+    $ENV{"_REBUILD_RECURSIVE_$TAG"} = $$;
+    $lines = 0;
+    my $selfflags = join(' ',@selfflags);
+    open( CHILD, "$self $selfflags 2>&1 | tee $logfile.errors |" );
+    while ( <CHILD> ) { ++$lines; }
+    close( CHILD );
+    if ( $lines > 0 ) {
+        $uname=`/bin/uname -n`;
+	$uname =~ s/\n$//;
+	if ( -e $logfile ) {
+	    my $lines_to_show = 75;
+	    if ( -e "$logfile.errors" ) {
+		exec "(echo 'build failed...  showing last $lines_to_show lines of log...' && echo '----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- -----' && cat $logfile.errors && echo '----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- -----' && tail -$lines_to_show $logfile) | $mail -s '[$uname] casa rpm app build' $email_list";
+	    } else {
+		exec "(echo 'build failed...  showing last $lines_to_show lines of log...' && echo '----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- -----' && tail -$lines_to_show $logfile) | $mail -s '[$uname] casa rpm app build' $email_list";
+	    }
+	} elsif ( -e "$logfile.errors" ) {
+	    exec "$mail -s '[$uname] casa rpm app build' $email_list < $logfile.errors";
+	} else {
+	    exec "echo 'died from unknown errors...' | $mail -s '[$uname] casa rpm app build' $email_list";
+	}
+	exit(0);
+    } else {
+	exit(0);
+    }
+}
+
+
+if ( ! -d "$state_root" ) {
+    mkdir("$state_root", 0755);
+}
+if ( ! -d "$state_dir" ) {
+    mkdir("$state_dir", 0755);
+}
+if ( ! -d "$state_root/log" ) {
+    mkdir("$state_root/log", 0755);
+}
+
+$release = 0;
+if ( -f $versionfile ) {
+    open( IN, "<$versionfile" );
+    chomp( $last_revision=<IN> );
+    close(IN);
+
+    if ( $last_revision =~ m|(\d+)\s+(\d+)| ) {
+	exit(0) unless ( $revision > $1 );
+	$release = $2;
+    } else { die "format error for revision state: $last_revision" }
+}
+$release = $release + 1;
+
+die "no spec file found" unless -f $spec_file;
+
+($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
+
+open ( LOG, "> $logfile" );
+printf LOG "%4d-%02d-%02d %02d:%02d:%02d\n",$year+1900,$mon+1,$mday,$hour,$min,$sec;
+print LOG "rpmbuild -ba $spec_file\n";
+print LOG "---------------------------------------------------------------------------\n";
+print LOG     "rpmbuild -D 'rel $release' --define '_topdir $RPM_TOP' -ba $spec_file 2>&1 | tee -a $logfile |" . "\n";
+print LOG "open( UPDATE, \"rpmbuild -D 'rel $release' -ba $spec_file 2>&1 | tee -a $logfile |\" );" . "\n";
+open( UPDATE, "rpmbuild -D 'rel $release' --define '_topdir $RPM_TOP' -ba $spec_file 2>&1 | tee -a $logfile |" );
+
+@wrote = ();
+@export = ();
+$rpmver = "";
+$rpmrev = "";
+while( <UPDATE> ) {
+    ($rpmrev = $3, $rpmver = $2, push(@wrote,$1), push(@export,$1)) if m@^Wrote: (\S+?/casa-$TAG-($version)-(\d+)(?:\.\w+)?\.$arch\.rpm)@;
+    (push(@wrote,$1), push(@export,$1)) if m@^Wrote: (\S+?/casa-$TAG-shared-$version-\d+(?:\.\w+)?\.$arch\.rpm)@;
+    (push(@wrote,$1), push(@export,$1)) if m@^Wrote: (\S+?/casa-$TAG-bin-$version-\d+(?:\.\w+)?\.$arch\.rpm)@;
+    (push(@wrote,$1), push(@export,$1)) if m@^Wrote: (\S+?/casa-$TAG-opt-$version-\d+(?:\.\w+)?\.$arch\.rpm)@;
+    push(@wrote,$1) if m@^Wrote: (\S+?/casa-$TAG-devel-$version-\d+(?:\.\w+)?\.$arch\.rpm)@;
+}
+close(UPDATE);
+
+open ( LOG, ">> $logfile" );
+print LOG "---------------------------------------------------------------------------\n";
+print LOG "rpms created: " . join(' ', @wrote) . "\n";
+print LOG "---------------------------------------------------------------------------\n";
+
+if ( scalar(@wrote) >= 4 && $rpmver && $rpmrev ) {
+    print LOG "...build succeeded...\n";
+
+} else {
+    print LOG "...build failed...\n";
+    die "build failed";
+}
+
+##
+## sign each of the rpms
+##
+%rpms = ( );
+foreach $rpm ( @wrote ) {
+    print LOG "> $RPM_TOP/scripts/rpmsign $rpm\n";
+    system(     "$RPM_TOP/scripts/rpmsign $rpm" );
+    open( my $v, "/bin/rpm -qp --qf \"%{NAME}\" $rpm 2> /dev/null |" );
+    my $name = <$v>;
+    close($v);
+    $rpms{$name} = $rpm;
+}
+print LOG "---------------------------------------------------------------------------\n";
+print LOG "staging area: $staging_area/$rhver/repo\n";
+$cwd = getcwd( );
+$rm_old_rpms = sub {  if ( -f && m|\.rpm| ) {
+                          open( my $v, "/bin/rpm -qp --qf \"%{NAME}\" $_ 2> /dev/null |" );
+			  my $name = <$v>;
+			  close($v);
+			  if ( exists $rpms{$name} ) { unlink($_) }
+			  print LOG "\t$_\n";
+		      } };
+
+print LOG "removing old RPMs........................................\n";
+find( { wanted => $rm_old_rpms }, "$staging_area/$rhver/repo" );
+print LOG "installing new RPMs......................................\n";
+foreach $rpm ( keys %rpms ) {
+    print LOG "\t$rpms{$rpm}\n";
+    copy( $rpms{$rpm}, "$staging_area/$rhver/repo" );
+}
+
+#######################################################################################################
+#######    create binary tar distribution                                                       #######
+#######################################################################################################
+$makeapp = "$RPM_TOP/scripts/appdistro";
+if ( -x $makeapp ) {
+    my $execline = "$makeapp version=$version-$release ws=/var/rpmbuild/BUILD/casa-$TAG/casa-$TAG-$version dir=$staging_area/$rhver tag=$TAG";
+    open ( LOG, ">> $logfile" );
+    print LOG "---------------------------------------------------------------------------\n";
+    print LOG "generating make-app distro\n\n";
+    print LOG "$execline\n";
+    print LOG "--- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---\n";
+    open( $distro, "$execline 2>&1 |" );
+
+    foreach ( <$distro> ) {
+	m|ran to completion\.$| && ( chomp($do_email = $last_line) );
+	$last_line = $_;
+	print LOG $_;
+    }
+
+    close( $distro );
+    close( LOG );
+} else {
+    print LOG "$makeapp either does not exist or cannot be executed\n";
+}
+
+
+open ( LOG, ">> $logfile" );
+print LOG "---------------------------------------------------------------------------\n";
+print LOG "storing version ($version-$revision) from $revision in $versionfile\n";
+open( OUT, ">$versionfile" );
+print OUT "$revision $release\n";
+close( OUT );
+
+($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
+print LOG "---------------------------------------------------------------------------\n";
+printf LOG "%4d-%02d-%02d %02d:%02d:%02d\n",$year+1900,$mon+1,$mday,$hour,$min,$sec;
+close(LOG);
+
+exit 0;
+

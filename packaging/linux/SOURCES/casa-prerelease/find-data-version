@@ -1,0 +1,83 @@
+#!/usr/bin/perl
+
+use File::Basename;
+use File::Find;
+use File::Path;
+
+$repo = "/usr/src/rpmbuild/apache/content/casa/repo";
+
+##
+## set $arch
+##
+$arch_line = `uname -m`;
+if ( $arch_line =~ m/x86_64/ ) {
+    $arch = "x86_64";
+    $bit = '-64b';
+    $lib = '64';
+} else {
+    $arch = "i386";
+}
+
+$casa_prefix="casapy";
+if ( -f "/etc/SuSE-release" ) {
+
+    $rhver = "suse";
+
+} elsif ( -f "/etc/redhat-release" ) {
+
+    open( IN, "</etc/redhat-release" );
+    $rhver = <IN>;
+    close( IN );
+    if ( $rhver =~ m/^Fedora Core release 6/ ) {
+	$rhver = "fc6";
+	die "CASA does not yet support 64 bit Fedora Core systems" if $arch ne "i386";
+    } elsif ( $rhver =~ m/^Fedora release 7/ ) {
+	$rhver = "fc7";
+	die "CASA does not yet support 64 bit Fedora Core systems" if $arch ne "i386";
+    } elsif ( $rhver =~ m/^Red Hat Enterprise.*release 4/ ) {
+	$rhver = "el4";
+    } elsif ( $rhver =~ m/^Scientific Linux SL release 4.*/ ) {
+	$rhver = "el4";
+    } elsif ( $rhver =~ m/^Red Hat Enterprise.*release 5/ ) {
+	$rhver = "el5";
+    } elsif ( $rhver =~ m/^Scientific Linux SL release 5.*/ ) {
+	$rhver = "el5";
+    } elsif ( $rhver =~ m/^CentOS release 5.*/ ) {
+	$rhver = "el5";
+    } elsif ( $rhver =~ m/^Red Hat Enterprise.*release 6/ ) {
+	$rhver = "el6";
+	$casa_prefix = "casa";
+    } elsif ( $rhver =~ m/^CentOS release 6.*/ ) {
+	$rhver = "el6";
+	$casa_prefix = "casa";
+    } elsif ( $rhver =~ m/^Red Hat Enterprise.*release 7/ ) {
+	$rhver = "el7";
+	$casa_prefix = "casa";
+    } elsif ( $rhver =~ m/^CentOS release 7.*/ ) {
+	$rhver = "el7";
+	$casa_prefix = "casa";
+    } elsif ( $rhver =~ m/^Red Hat Enterprise/ ) {
+	die "unknown enterprise version: $rhver";
+    } elsif ( $rhver =~ m/^Red Hat Linux release ([0-9.]+)/ ) {
+	die "we no longer support: $rhver";
+    } elsif ( $rhver =~ m/^Mandrake Linux/  ) {
+	die "we don't yet support mandrake";
+    } else {
+	die "cannot understand version string: $rhver";
+    }
+
+} else {
+
+    die "we're not in linux land";
+
+}
+
+
+sub find_rpms {
+    if ( -f "$File::Find::dir/$_" && $_ =~ m/^$casa_prefix-data-(\d+)-\d+\.noarch\.rpm$/ && $_ !~ m/\.src\.rpm$/ ) {
+	print "$1\n";
+	exit(0);
+    }
+}
+
+find( { wanted => \&find_rpms, follow => 1 }, "$repo/$rhver/$arch" );

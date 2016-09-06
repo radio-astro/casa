@@ -1,0 +1,11 @@
+#!/usr/bin/expect
+set timeout 90
+log_user 0
+log_file -a ~/casa/log/sign_rpm.log
+send_log -- "----- [exec date]\n"
+set p ""
+set f [lindex $argv 0]
+spawn rpm --resign $f
+expect "Enter pass phrase:"
+send -- "$p\r"
+expect eof

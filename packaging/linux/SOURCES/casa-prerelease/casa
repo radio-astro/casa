@@ -1,0 +1,703 @@
+#!/usr/bin/perl -T
+use File::Find;
+use File::Path;
+use List::Util qw(max reduce);
+use File::Basename;
+use AnyDBM_File;
+use Fcntl;
+use Cwd;
+
+###
+### these variables would be perl 'state' variables except for the fact
+### that all OSes do not have perl 5.10 (e.g. rhel5 has 5.8.8)
+###
+$state_osver = '';
+$state_hash_file = '';
+$state_version_file = '';
+
+BEGIN {
+    ### move any directories specified with environment variables, e.g. PERL5LIB to the end
+    #@INC = @lib::ORIG_INC;
+    $ENV{PATH} = "/usr/bin:/bin";
+    delete $ENV{IFS};
+    delete $ENV{ifs};
+    @INC = reverse(@INC);
+    $HOME = $ENV{HOME};
+};
+
+sub untaint {
+    my $var = shift(@_);
+    $var =~ /^(.*)$/;
+    return $1;
+}
+
+$binary=basename($0);
+### @install_types provides the installation types in the preferred order (if unspecified)
+@install_types = ( 'release', 'monthly', 'stable', 'prerelease', 'test', 'pipe' );
+### %install_types allows for checking for valid installation types
+%install_types = map { $_ => undef } @install_types;
+@install_points = ( "/opt/casa/versions", "/usr/lib64/casa", "/usr/lib64/casapy/release" );
+
+$revision='';
+$get_revision=0;
+$only='';
+$list=0;           ####   list the installed versions of CASA
+$do_hash=0;        ####   create a hash file describing all of the versions of CASA which
+                   ####         will be reused until --unhash (or --hash) is used
+$doit=0;
+
+$verbose = 0;
+
+@args=( );
+
+foreach ( @ARGV ) {
+    if ( $get_revision ) {
+        $get_revision=0;
+	if ( m|^(\d+\.\d+\.\d+)$| ) {
+	    $revision = $1;
+	} else {
+	    $only = 'release';
+	}
+        next;
+    }
+    m@^(?:r(?:el)?|release)=(\d+\.\d+\.\d+(?:/\w+)?)$@ && ( $revision = $1, next );
+    m@^--?(?:r|release)(\d+\.\d+\.\d+(?:/\w+)?)$@ && ( $revision = $1, next );
+    m/^--?(?:r|release)$/ && ( $get_revision=1, next );
+    m|^-{0,2}test$| && ( $only = 'test', next );
+    m|^-{0,2}stable$| && ( $only = 'stable', next );
+    m|^-{0,2}prerelease$| && ( $only = 'prerelease', next );
+    m|^-{0,2}monthly$| && ( $only = 'monthly', next );
+    m|^-{0,2}release$| && ( $only = 'release', next );
+    m|^-{0,2}pipe(?:line)?$| && ( $only = 'pipe', next );
+    m|^-v$| && ( $verbose = 1, next );
+    m|^--?ls$| && ( $list = 1, next );
+    if ( m|^--?hash$| ) {
+	if ( -f hash_file( ) ) { unlink(hash_file( )) or die "could not clear hash (".hash_file( ).": $!" }
+	if ( -f hash_file( ).".dir" ) { unlink(hash_file( ).".dir") or die "could not clear hash (".hash_file( ).".dir): $!" }
+	if ( -f hash_file( ).".pag" ) { unlink(hash_file( ).".pag") or die "could not clear hash (".hash_file( ).".pag): $!" }
+	$do_hash = 1;
+	$doit = 1;
+	$list = 1;
+	next;
+    }
+    if ( m|^--?unhash$| ) {
+	if ( -f hash_file( ) ) { unlink(hash_file( )) }
+	if ( -f hash_file( ).".dir" ) { unlink(hash_file( ).".dir") }
+	if ( -f hash_file( ).".pag" ) { unlink(hash_file( ).".pag") }
+	exit(0);
+    }
+    if ( m|^--doit$| ) { $list = 1; $doit = 1 }
+
+    push( @args, $_ );
+}
+
+###
+### If a user uses --release to specify that they only want to run a release
+### the loop state above will be left waiting to see if a release number is
+### included. This catches that and interpretes it a --release indicating that
+### only release versions should be run...
+###
+$only = 'release' if $get_revision;
+
+$system_versions = find_system_versions( \@install_points );
+$personal_versions = find_personal_versions( );
+
+if ( $do_hash ) {
+    ### use $hash instead of $personal_versions strictly for visual
+    ### consistency with traversal functions below...
+    my $hash = $personal_versions;
+    my $hash_dir = dirname(hash_file( ));
+    if ( ! -d $hash_dir ) { mkpath($hash_dir) or die "could not create path for hash ($hash_dir): $!" };
+    tie( my %db, 'AnyDBM_File', hash_file( ), O_CREAT | O_RDWR, 0644 ) or die "failed to open hash (".hash_file( )."): $!";
+    foreach my $t ( keys %$hash ) {
+	my $t_hash = $$hash{$t};
+	foreach my $ver ( keys %$t_hash ) {
+	    my $v_hash = $$t_hash{$ver};
+	    foreach my $id ( keys %$v_hash ) {
+		my $paths = $$v_hash{$id};
+		$db{"p<#>$t<#>$ver<#>$id"} = join('<#>', @$paths);
+	    }
+	}
+    }
+    untie %db;
+}
+
+###
+## should return ( <TYPE>, <PATH>, <CONTEXT> ), where:
+## <TYPE>:    'system' or 'personal'
+## <PATH>:    path to root of the installation
+## <CONTEXT>: array containing path to version
+###
+my $selection = select_version( $revision, $only, $personal_versions, $system_versions );
+unless( scalar(@$selection) == 3 ) { die "failed to find a version of CASA to run" }
+my $paths = $$selection[1];
+unless( scalar(@$paths) > 0 ) { die "failed to find a verson of CASA to run" }
+$path = $$paths[0];
+$inst = $$selection[0];
+
+if ( $list ) {
+    print "available versions:\n";
+
+    foreach my $type ( @install_types ) {
+        my $sys = $$system_versions{$type};
+        my $per = $$personal_versions{$type};
+	my %versions = map { $_ => undef } keys %$sys, keys %$per;
+        if ( scalar(keys %versions) > 0 ) {
+            printf( "%10s: %s\n", $type, join(' ', map { ascii($_) } reverse sort(keys %versions)) );
+        }
+    }
+
+    printf( "%10s: %s\n", "would run", $path );
+    printf( "            <%s>\n", ($inst eq 'personal' ? "local installation" : "system installation") );
+    exit 0;
+}
+
+die "internal error" unless -d $path;
+if ( $inst eq 'personal' ) {
+    die "installation error" unless -e "$path/$binary";
+
+    @args = map { untaint($_) } @args;
+
+    print "starting: $path/bin/$binary\n" if $verbose;
+    exec { untaint("$path/$binary") } (untaint("$path/$binary"),@args);
+
+} else {
+    die "installation error" unless -e "$path/bin/$binary";
+
+    @args = map { untaint($_) } @args;
+
+    setup_environment($path);
+    print "starting: $path/bin/$binary\n" if $verbose;
+    exec { untaint("$path/bin/$binary") } (untaint("$path/bin/$binary"),@args);
+}
+
+sub setup_environment {
+    my $path = shift(@_);
+    my $third = '01';
+
+    my $old = $ENV{'LD_LIBRARY_PATH'};
+    $ENV{'LD_LIBRARY_PATH'} = "$path/lib:/usr/lib64/casa/$third/lib:/usr/lib64/casa/$third/lib/libsakura/default/lib:/usr/lib64:/lib64:/usr/lib:/lib" . ($old ? ":$old" : '');
+    $ENV{'CASAPATH'} = "$path linux";
+    $old = $ENV{'PATH'};
+    $ENV{'PATH'}="$path/bin:/usr/lib64/casa/$third/bin:/usr/bin:/bin:/usr/X11R6/bin:/usr/lib64/pgplot" . ($old ? ":$old" : '');
+    $ENV{'PGPLOT_FONT'} = "$path/pgplot/grfont.dat";
+    $ENV{'PGPLOT_RGB'} = "$path/pgplot/rgb.txt";
+
+    ###
+    ### With rhel6, dbus auto-launches when a process tries to connect.
+    ### If the casaviewer tries to connect to dbus from an ssh session,
+    ### then a dbus session is started and the user cannot exit until
+    ### the dbus-daemon exits... which happens when the user hits ^C.
+    ###
+    ### This solution might have to be rethought if we someday have long
+    ### running, decoupled clean runs etc. (in that case well probably
+    ### need a state file or perhaps just use the auto-launched version).
+    ###
+    $ENV{'DBUS_SESSION_BUS_ADDRESS'} = 'unset';
+
+    my $mplconfig = "$HOME/.casa/matplotlib";
+    $ENV{'MPLCONFIGDIR'} = $mplconfig;
+    unless ( -d $mplconfig ) {
+	mkpath(untaint($mplconfig)) or die "could not create matplotlib config directory: $mplconfig";
+    }
+
+    $ENV{'CASA_INSTALLATION_TYPE'} = "rpm-installation";
+}
+
+sub rpm_type {
+    my $file = shift(@_);
+    my $default = shift(@_);
+    my $result = { };
+    open( my $rpm_info, "/bin/rpm -q --queryformat '%{NAME}\n' --whatprovides $file 2>&1 |" );
+    foreach ( <$rpm_info> ) {
+	if ( m|^casa| ) {
+	    if ( m|test| ) {
+		$$result{'test'} = 1;
+	    } elsif ( m|stable| ) {
+		$$result{'stable'} = 1;
+	    } elsif ( m|prerelease| ) {
+		$$result{'prerelease'} = 1;
+	    } elsif ( m|monthly| ) {
+		$$result{'monthly'} = 1;
+	    } else {
+		$$result{'release'} = 1;
+	    }
+	}
+    }
+    close( $rpm_info );
+    if ( $default && scalar(keys %$result) == 0 ) { return { $default => 1 } }
+    return $result;
+}
+
+sub select_version {
+    my $ver = shift(@_);         ### user wants a specific version
+    my $only = shift(@_);        ### user wants a specific type (e.g. prerelease or test)
+    my $personal = shift(@_ );   ### personal (e.g. from ~/.casa/versions) versions to consider
+    my $system = shift(@_);      ### system (i.e. installed with RPM) versions to consider
+
+    my $type = '';               ### should be set to either 'system' or 'personal'
+
+    if ( $ver ) {
+	unless( $ver =~ m|^(\d+\.\d+\.\d+)| ) { die "version ($ver) should look something like 4.2.2 or 4.2.2/pl" }
+	my $basic_ver = $1;
+	if ( $ver =~ m|/\w+| ) {
+	    my $modifier = sub {  my $hash = shift( @_ );
+                                  foreach my $t ( @install_types ) {
+                                      my $t_hash = $$hash{$t};
+                                      if ( exists $$t_hash{numeric($basic_ver)} ) {
+                                          my $id_hash = $$t_hash{numeric($basic_ver)};
+                                          if ( exists $$id_hash{$ver} ) {
+                                            return [$$id_hash{$ver}, [$t,numeric($basic_ver),$ver]];
+					  }
+				      }
+				  }
+				  return [ ] };
+
+	    my $result = $modifier->($personal);
+	    if ( scalar(@$result) > 0 ) {
+		return ['personal',@$result];
+	    }
+	    $result = $modifier->($system);
+	    if ( scalar(@$result) > 0 ) {
+		return ['system',@$result];
+	    }
+
+	} else {
+	    unless( $ver =~ m|^\d+\.\d+\.\d+$| ) { die "version ($ver) should look something like 4.2.2 or 4.2.2/pl" }
+	    my $vnumber = sub { my $hash = shift( @_ );
+                                foreach my $t ( @install_types ) {
+				    if ( exists $$hash{$t} ) {
+                                        my $t_hash = $$hash{$t};
+                                        if ( exists $$t_hash{numeric($ver)} ) {
+                                            my $id_hash = $$t_hash{numeric($ver)};
+                                            my $cmp = '';
+                                            my $rid = '';
+                                            my $p = '';
+                                            foreach $id ( keys %$id_hash ) {
+                                                my @id = split('/',$id);
+                                                if ( scalar(@id) > 1 ) {
+                                                    if ( $id[1] gt $cmp ) {
+                                                        $rid = $id;
+                                                        $cmp = $id[1];
+                                                        $p = $$id_hash{$id};
+                                                    }
+                                                } elsif ( $id eq $ver ) {
+                                                    ### if there is an unqualified match, return it, but
+                                                    ### there should not be a case where <VER>/<QUALIFIER>
+                                                    ### IDs are mixed with <VER> IDs
+                                                    return [$$id_hash{$id}, [$t,numeric($ver),$id]];
+                                                }
+                                            }
+                                            if ( $rid ) { return [$$id_hash{$rid}, [$t,numeric($ver),$rid]]; }
+                                        }
+				    }
+                                }
+				return [] };
+
+	    my $result = $vnumber->($personal);
+	    if ( scalar(@$result) > 0 ) {
+		return ['personal',@$result];
+	    }
+	    $result = $vnumber->($system);
+	    if ( scalar(@$result) > 0 ) {
+		return ['system',@$result];
+	    }
+	}
+    
+	die "could not find a CASA version matching $ver";
+    } elsif ( $only ) {
+	unless ( exists $install_types{$only} ) { die "install type must be one of: " . join(' ',@install_types) }
+        my $onlytype = sub {  my $hash = shift( @_ );
+                              if ( exists $$hash{$only} ) {
+                                  my $t_hash = $$hash{$only};
+				  my $v = max(keys %$t_hash);
+                                  if ( exists $$t_hash{$v} ) {
+                                      my $id_hash = $$t_hash{$v};
+                                      my $cmp = '';
+                                      my $rid = '';
+                                      my $p = '';
+                                      foreach $id ( keys %$id_hash ) {
+                                          my @id = split('/',$id);
+                                          if ( scalar(@id) > 1 ) {
+                                              if ( $id[1] gt $cmp ) {
+                                                  $rid = $id;
+                                                  $cmp = $id[1];
+                                                  $p = $$id_hash{$id};
+                                              }
+                                          } elsif ( $id eq ascii($v) ) {
+                                              ### if there is an unqualified match, return it, but
+                                              ### there should not be a case where <VER>/<QUALIFIER>
+                                              ### IDs are mixed with <VER> IDs
+                                              return [$$id_hash{$id}, [$t,$v,$id]];
+                                          }
+                                      }
+                                      if ( $rid ) { return [$$id_hash{$rid}, [$t,numeric($v),$rid]]; }
+                                  }
+                                  
+                              }
+			      return [] };
+
+        my $result = $onlytype->($personal);
+	if ( scalar(@$result) > 0 ) {
+	    return ['personal',@$result];
+	}
+	$result = $onlytype->($system);
+	if ( scalar(@$result) > 0 ) {
+	    return ['system',@$result];
+	}
+
+    } else {
+	###
+	### no version/type specified
+	###
+	my $default = sub { my $hash = shift( @_ );
+                            foreach my $t ( @install_types ) {
+                                if ( exists $$hash{$t} ) {
+				    my $t_hash = $$hash{$t};
+				    my $v = max(keys %$t_hash);
+				    my $ver = ascii($v);
+				    my $id_hash = $$t_hash{$v};
+				    my $cmp = '';
+				    my $rid = '';
+				    my $p = '';
+				    foreach $id ( keys %$id_hash ) {
+					my @id = split('/',$id);
+					if ( scalar(@id) > 1 ) {
+					    if ( $id[1] gt $cmp ) {
+						$rid = $id;
+						$cmp = $id[1];
+						$p = $$id_hash{$id};
+					    }
+					} elsif ( $id eq $ver ) {
+					    ### if there is an unqualified match, return it, but
+					    ### there should not be a case where <VER>/<QUALIFIER>
+					    ### IDs are mixed with <VER> IDs
+					    return [$$id_hash{$id}, [$t,$v,$id]];
+					}
+				    }
+				    if ( $rid ) { return [$$id_hash{$rid}, [$t,$v,$rid]]; }
+				}
+			    }
+			    return [] };
+
+        my $result = $default->($personal);
+	if ( scalar(@$result) > 0 ) {
+	    return ['personal',@$result];
+	}
+	$result = $default->($system);
+	if ( scalar(@$result) > 0 ) {
+	    return ['system',@$result];
+	}
+    }
+    die "could not find a version of CASA to run...";
+}
+
+sub discover_install_path {
+    my $vers = shift( @_ );
+    my $only = shift( @_ );
+    my $test = { };
+    my $stable = { };
+    my $release = { };
+    my $prerelease = { };
+    my $monthly = { };
+
+    foreach $key ( keys %$vers ) {
+	my $type = { };
+	my $info_file = "$$vers{$key}/.revstate";
+	if ( ! -f $info_file ) {
+	    ### fall back to the file available in the casapy-*-bin RPMs (RHEL5 only)
+	    $info_file = "$$vers{$key}/.aipsrc";
+	    if ( -f $info_file ) {
+		$type = rpm_type($info_file)
+	    }
+	} else {
+	    open( my $fh, "< $info_file" );
+	    foreach ( <$fh> ) {
+		if ( m|^install="([^"]+)"| && $1 eq "rpm" ) {
+		    $type = rpm_type($info_file,'test');
+		}
+	    }
+	    close( $fh );
+	}
+	if ( defined $$type{'test'} ) { $$test{$key} = $$vers{$key} }
+	if ( defined $$type{'stable'} ) { $$stable{$key} = $$vers{$key} }
+	if ( defined $$type{'release'} ) { $$release{$key} = $$vers{$key} }
+	if ( defined $$type{'prerelease'} ) { $$prerelease{$key} = $$vers{$key} }
+	if ( defined $$type{'monthly'} ) { $$monthly{$key} = $$vers{$key} }
+    }
+
+    my $path = '';
+    if ( $only ) {
+	if ( $only eq 'test' ) {
+	    ### solitary test/-test/--test supplied so we restrict ourselves to only test versions...
+	    die "a test version was requested, but none is available" if scalar( keys %$test ) == 0;
+	    $path = $$vers{numeric(max(keys %$test))};
+	} elsif ( $only eq 'stable' ) {
+	    ### solitary stable/-stable/--stable supplied so we restrict ourselves to only stable versions...
+	    die "a stable version was requested, but none is available" if scalar( keys %$stable ) == 0;
+	    $path = $$vers{numeric(max(keys %$stable))};
+	} elsif ( $only eq 'release' ) {
+	    ### solitary release/-release/--release supplied so we restrict ourselves to only release versions...
+	    die "a release version was requested, but none is available" if scalar( keys %$release ) == 0;
+	    $path = $$vers{numeric(max(keys %$release))};
+	} elsif ( $only eq 'prerelease' ) {
+	    ### solitary prerelease/-prerelease/--prerelease supplied so we restrict ourselves to only prerelease versions...
+	    die "a release version was requested, but none is available" if scalar( keys %$prerelease ) == 0;
+	    $path = $$vers{numeric(max(keys %$prerelease))};
+	} elsif ( $only eq 'monthly' ) {
+	    ### solitary monthly/-monthly/--monthly supplied so we restrict ourselves to only monthly versions...
+	    die "a release version was requested, but none is available" if scalar( keys %$monthly ) == 0;
+	    $path = $$vers{numeric(max(keys %$monthly))};
+	} else {
+	    die "internal error, unknown 'only' option";
+	}
+    } else {
+	###
+	### if no specific version number was supplied and no type restrictions
+	### (e.g. -stable) were supplied, then we prefer release, followed by
+	### stable, and the default is test.
+	###
+	if ( scalar( keys %$release ) > 0 ) {
+	    $path = $$vers{numeric(max(keys %$release))};
+	} elsif ( scalar( keys %$monthly ) > 0 ) {
+	    $path = $$vers{numeric(max(keys %$monthly))};
+	} elsif ( scalar( keys %$stable ) > 0 || scalar( keys %$prerelease ) > 0 ) {
+	    $path = $$vers{numeric(max(keys %$stable, keys %$prerelease ))};
+	} elsif ( scalar( keys %$test ) > 0 ) {
+	    $path = $$vers{numeric(max(keys %$test))};
+	} else {
+	    die "could find no suitable casa install trees";
+	}
+    }
+    return ( $path , { 'release' => $release, 'stable' => $stable, 'test' => $test, 'prerelease' => $prerelease, 'monthly' => $monthly } );
+}
+
+%ascii_version = { };
+
+sub ascii {
+    my $arg = shift(@_);
+    my $stable = $arg % 1000;
+    $arg /= 1000;
+    my $minor = $arg % 1000;
+    $arg /= 1000;
+    my $major = $arg % 1000;
+    return "$major.$minor.$stable";
+}
+
+sub numeric {
+    my $arg = shift(@_);
+    ### releases have an 'R' at the end of the version number to distingush
+    ### them from the development version, i.e. there could be:
+    ###        o  /usr/lib64/casa/4.3.0     (test/stable develoment series)
+    ### and    o  /usr/lib64/casa/4.3.0R    (prerelease/release release series)
+    $arg =~ s|R$||;
+    my $val = $arg;
+    my @val = reverse split(/\./,$val);
+    my $accum = 0;
+    for ( my $count=0; scalar(@val) > 0; ++$count ) {
+	my $element = shift(@val);
+	$accum += $element * 1000 ** $count;
+    }
+    $ascii_version{$accum} = $arg;
+    return $accum;
+}
+
+sub find_system_versions {
+    my $points = shift(@_);
+    my $result = { };
+    my $current_dir=getcwd( );
+    foreach $install_point ( @$points ) {
+	if ( -d $install_point ) {
+	    chdir(untaint($install_point));
+	    opendir( my $dh, $install_point ) or die "could not open casa installation directory $install_point";
+	    foreach ( readdir $dh ) {
+#		if ( m|^(\d+\.\d+\.\d+)$| && -d $1 && -e "$1/.revstate" ) {
+		if ( m|^(\d+\.\d+\.\d+R?)$| && -d $1 ) {
+		    my $ver = $1;
+		    my $type = { test => 1};
+		    if ( -f "$ver/.revstate" ) {
+			open( my $fh, "< $ver/.revstate" );
+			foreach ( <$fh> ) {
+			    if ( m|^install="([^"]+)"| && $1 eq "rpm" ) {
+				$type = rpm_type("$install_point/$ver/.revstate",'test');
+			    }
+			}
+			close( $fh );
+		    } else {
+			if ( -f "$ver/.aipsrc" ) {
+			    $type = rpm_type("$install_point/$ver/.aipsrc");
+			} else { next }
+		    }
+
+		    ### system installs can belong to more than one type, e.g. test and stable
+		    foreach my $t ( keys %$type ) {
+			unless( exists $$result{$t} ) { $$result{$t} = { } }
+			my $typeref = $$result{$t};
+			my $num = numeric($ver);
+			unless( exists $$typeref{$num} ) { $$typeref{$num} = { } }
+			my $numref = $$typeref{$num};
+			my $index = $ver;
+			$index =~ s|R$||;
+			unless( exists $$numref{$index} ) { $$numref{$index} = [] };
+			my $pathref = $$numref{$index};
+			push( @$pathref, "$install_point/$ver" );
+		    }
+		}
+	    }
+	    closedir($dh);
+	}
+    }
+    chdir(untaint($current_dir));
+    return $result;
+}
+    
+
+sub find_personal_versions {
+    unless( $state_version_file ) {
+	$state_version_file = untaint("$HOME/.casa/versions." . osver( ));
+    }
+    my $search_path = $state_version_file;
+    my $result = { };
+
+
+    if ( -f hash_file( ) || ( -f hash_file( ).".pag" && -f hash_file( ).".dir" ) ) {
+	tie( my %db, 'AnyDBM_File', hash_file( ), O_RDONLY, 0644 ) or die "failed to open hash (".hash_file( )."): $!";
+	foreach my $key ( keys %db ) {
+	    ### drop the first value because it is a future option (i.e. 'p<#>...') to
+	    ### distinguish private version from other versions
+	    (undef, my @access) = split('<#>',$key);
+	    ### remove the last index, because it gets assigned the actual value (i.e. the paths)...
+	    my $last = pop(@access);
+	    ### reference the innermost hash reference...
+	    my $ref = reduce { unless ( exists $$a{$b} ) { $$a{$b} = { } }; $$a{$b} } $result, @access;
+	    $$ref{$last} = [ split('<#>',$db{$key}) ];
+	}
+	untie %db;
+    } else {
+        $find_versions = sub {  if ( -d $_ ) {
+                                    if ( m|^casa(?:py)?-(?:(\w+)-)?.*?(\d+\.\d+)(?:\.(\d+))?(?:\.(\d+))?| ) {
+                                        my $version = '';
+                                        my @switches = ( );
+                                        my $type = 'unknown';
+                                        if ( -f "$_/.revstate" ) {
+                                            $version = "$2.$3";
+                                            $type = $1;
+                                        } else {
+                                            my $newver = "$2.$3";
+                                            if ( -f "$_/lib/casa/$newver/.revstate" ) {
+                                                $type = $1;
+                                                $version = $newver;
+                                            } else {
+                                                my $oldver = (map { s|(\d)(\d)|$1.$2|g; $_ } "$2")[0];
+                                                if ( -f "$_/lib64/casapy/stable/.aipsrc" ||
+                                                     -f "$_/lib64/casapy/release/$oldver/.aipsrc" || 
+                                                     -f "$_/lib64/casapy/test/.aipsrc" ) {
+                                                    $version = $oldver;
+                                                    if ( $1 eq 'release' ) {
+                                                        $type = 'release';
+                                                        if ( defined $3 ) { push(@switches,"r$3") }
+                                                    } elsif ( $1 eq 'prerelease' ) {
+                                                        $type = 'prerelease';
+                                                        if ( defined $3 ) { push(@switches,"pr$3") }
+                                                    } elsif ( $1 eq 'stable' ) {
+                                                        $type = 'stable';
+                                                        if ( defined $3 ) { push(@switches,"s$3") }
+						    } elsif ( $1 eq 'monthly' ) {
+                                                        $type = 'monthly';
+                                                        if ( defined $3 ) { push(@switches,"m$3") }
+                                                    } elsif ( $1 eq 'test' ) {
+                                                        $type = 'test';
+                                                        if ( defined $3 ) { push(@switches,"t$3") }
+                                                    }
+                                                    if ( m|-pipe-| ) {
+                                                        $type = 'pipe';
+                                                        push(@switches,'pl');
+                                                    }
+                                                    if ( m|prerelease-(\d+)-| ) {
+                                                        $type = 'prerelease';
+                                                        push( @switches,"pr$1" );
+                                                    }
+                                                }
+                                                if ( ! defined $1 && $type eq 'unknown' ) { $type = 'release' }
+                                            }
+                                        }
+                                        if ( $version ) {
+                                            my $path = untaint(getcwd( ) . "/" . $_);
+                                            my $id = $version . (scalar(@switches) > 0 ? "/".join('/',@switches) : '');
+                                            unless( exists $$result{$type} ) { $$result{$type} = { } }
+                                            my $typeref = $$result{$type};
+                                            my $num = numeric($version);
+                                            unless( exists $$typeref{$num} ) { $$typeref{$num} = { } }
+                                            my $numref = $$typeref{$num};
+                                            unless( exists $$numref{$id} ) { $$numref{$id} = [] };
+                                            my $pathref = $$numref{$id};
+                                            push( @$pathref, $path );
+                                            $File::Find::prune = 1;
+                                        }
+                                    }
+                                } };
+	my %home_links = ( );
+	my $find_home_links = sub { if ( -l $_ ) { $home_links{readlink $_} = 1 }
+				    elsif ( -d $_ && m|^casa(?:py)?-(?:(\w+)-)?.*?(\d+\.\d+)(?:\.(\d+))?(?:\.(\d+))?| ) {
+					$File::Find::prune = 1;
+				  } };
+
+	find( { wanted => $find_home_links, untaint => 1, untaint_pattern => qr|^(.+)$| }, $search_path );
+	find( { wanted => $find_versions, untaint => 1, untaint_pattern => qr|^(.+)$| }, $search_path, keys %home_links );
+
+    }
+    return $result;
+}
+
+sub hash_file {
+    unless ($state_hash_file) {
+	$state_hash_file = untaint("$HOME/.casa/.versions_hash." . osver( ));
+    }
+    return $state_hash_file;
+}
+
+sub osver {
+    unless ( $state_osver ) {
+	if ( -f "/etc/SuSE-release" ) {
+	    $state_osver = "suse";
+	} elsif ( -f "/etc/redhat-release" ) {
+	    open( IN, "</etc/redhat-release" );
+	    $_ = <IN>;
+	    close( IN );
+	    if ( m/^Fedora Core release 6/ ) {
+		$state_osver = "fc6";
+	    } elsif ( m/^Fedora release 7/ ) {
+		$state_osver = "fc7";
+	    } elsif ( m/^Red Hat Enterprise.*release 4/ ) {
+		$state_osver = "el4";
+	    } elsif ( m/^Scientific Linux SL release 4.*/ ) {
+		$state_osver =  "el4";
+	    } elsif ( m/^CentOS release 4.*/ ) {
+		$state_osver = "el4";
+	    } elsif ( m/^Red Hat Enterprise.*release 5/ ) {
+		$state_osver = "el5";
+	    } elsif ( m/^Scientific Linux SL release 5.*/ ) {
+		$state_osver = "el5";
+	    } elsif ( m/^CentOS release 5.*/ ) {
+		$state_osver = "el5";
+	    } elsif ( m/^Red Hat Enterprise.*release 6/ ) {
+		$state_osver = "el6";
+	    } elsif ( m/^Scientific Linux SL release 6.*/ ) {
+		$state_osver = "el6";
+	    } elsif ( m/^CentOS release 6.*/ ) {
+		$state_osver = "el6";
+	    } elsif ( m/^Red Hat Enterprise/ ) {
+		die "unknown enterprise version: $_";
+	    } elsif ( m/^Red Hat Linux release ([0-9.]+)/ ) {
+		die "we no longer support: $_";
+	    } elsif ( m/^Mandrake Linux/  ) {
+		die "we don't yet support mandrake";
+	    } else {
+		die "cannot understand version string: $_";
+	    }
+	} else {
+	    die "we're not in linux land";
+	}
+    }
+    return $state_osver;
+}
