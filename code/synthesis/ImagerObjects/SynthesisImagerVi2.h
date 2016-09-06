@@ -66,7 +66,8 @@ public:
 		   const String& ftmName,
 		   const String& cfcPath,
 		   const Bool& psTermOn,
-		   const Bool& aTermOn);
+		   const Bool& aTermOn,
+		   const Bool& conjBeams);
   void reloadCFCache();
 
  protected:

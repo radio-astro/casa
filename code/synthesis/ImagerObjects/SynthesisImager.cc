@@ -101,7 +101,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  SynthesisImager::SynthesisImager() : itsMappers(SIMapperCollection()), writeAccess_p(True)
+  SynthesisImager::SynthesisImager() : itsMappers(SIMapperCollection()), writeAccess_p(True),
+				       gridpars_p(), impars_p()
   {
 
      imwgt_p=VisImagingWeight("natural");
@@ -701,7 +702,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     CoordinateSystem csys;
     CountedPtr<FTMachine> ftm, iftm;
 
-
+    impars_p = impars;
+    gridpars_p = gridpars;
     try
       {
 
@@ -1817,7 +1819,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     CountedPtr<ConvolutionFunction> awConvFunc = AWProjectFT::makeCFObject(telescopeName, 
 									   aTermOn,
 									   psTermOn, (wprojPlane > 1),
-									   mTermOn, wbAWP);
+									   mTermOn, wbAWP, conjBeams);
     //
     // Construct the appropriate re-sampler.
     //
@@ -2453,7 +2455,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				    const String& ftmName,
 				    const String& cfcPath,
 				    const Bool& psTermOn,
-				    const Bool& aTermOn)
+				    const Bool& aTermOn,
+				    const Bool& conjBeams)
     {
       LogIO os( LogOrigin("SynthesisImager","fillCFCache",WHERE) );
       // If not an AWProject-class FTM, make this call a NoOp.  Might be
@@ -2513,7 +2516,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  // FTM to be constructed (which can be expensive in terms of
 	  // memory footprint).
 	  AWConvFunc::makeConvFunction2(String(cfcPath), uvScale, uvOffset, vbFreqSelection,
-					*cfs2, *cfwts2, psTermOn, aTermOn);
+					*cfs2, *cfwts2, psTermOn, aTermOn, conjBeams);
       	}
       //cerr << "Mem used = " << itsMappers.getFTM(whichFTM)->getCFCache()->memCache2_p[0].memUsage() << endl;
       //(static_cast<AWProjectWBFTNew &> (*(itsMappers.getFTM(whichFTM)))).getCFCache()->initCache2();

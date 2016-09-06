@@ -168,7 +168,7 @@ protected:
 							new SynthesisImager());
 					si->fillCFCache(
 						cf_list, grid_pars0.ftmachine, grid_pars0.cfCache,
-						grid_pars0.psTermOn, grid_pars0.aTermOn);
+						grid_pars0.psTermOn, grid_pars0.aTermOn,grid_pars0.conjBeams);
 				}
 			}
 			// create new imager instance, scrapping any that already exists

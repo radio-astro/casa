@@ -1491,10 +1491,11 @@ void SynthesisImagerVi2::unlockMSs()
   // Finally, unset the dry-run mode of the FTM.
   //
   void SynthesisImagerVi2::fillCFCache(const Vector<String>& cfList,
-				    const String& ftmName,
-				    const String& cfcPath,
-				    const Bool& psTermOn,
-				    const Bool& aTermOn)
+				       const String& ftmName,
+				       const String& cfcPath,
+				       const Bool& psTermOn,
+				       const Bool& aTermOn,
+				       const Bool& conjBeams)
     {
       LogIO os( LogOrigin("SynthesisImagerVi2","fillCFCache",WHERE) );
       // If not an AWProject-class FTM, make this call a NoOp.  Might be
@@ -1555,7 +1556,7 @@ void SynthesisImagerVi2::unlockMSs()
 	  // FTM to be constructed (which can be expensive in terms of
 	  // memory footprint).
 	  refim::AWConvFunc::makeConvFunction2(String(cfcPath), uvScale, uvOffset, vbFreqSelection,
-					       *cfs2, *cfwts2, psTermOn, aTermOn);
+					       *cfs2, *cfwts2, psTermOn, aTermOn, conjBeams);
       	}
       //cerr << "Mem used = " << itsMappers.getFTM(whichFTM)->getCFCache()->memCache2_p[0].memUsage() << endl;
       //(static_cast<AWProjectWBFTNew &> (*(itsMappers.getFTM(whichFTM)))).getCFCache()->initCache2();

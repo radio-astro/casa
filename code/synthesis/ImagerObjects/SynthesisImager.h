@@ -184,11 +184,14 @@ class SynthesisImager
 
   virtual void dryGridding(const Vector<String>& cfList);
   virtual void fillCFCache(const Vector<String>& cfList, const String& ftmName, const String& cfcPath,
-			   const Bool& psTermOn, const Bool& aTermOn); 
+			   const Bool& psTermOn, const Bool& aTermOn, const Bool& conjBeams); 
   virtual void reloadCFCache();
 
   static String doubleToString(const Double& df); 
  
+  const SynthesisParamsGrid& getSynthesisParamsGrid() {return gridpars_p;};
+  const SynthesisParamsImage& getSynthesisParamsImage() {return impars_p;};
+
 protected:
  
   /////////////// Internal Functions
@@ -320,6 +323,8 @@ protected:
   Bool makePBImage(const String telescop);
   virtual Bool makePrimaryBeam(PBMath& pbMath);
 
+  
+
   /////////////// Member Objects
 
   SIMapperCollection itsMappers;
@@ -377,6 +382,10 @@ protected:
   FTMachine::Type datacol_p;
 
   Int nMajorCycles;
+
+  SynthesisParamsGrid gridpars_p;
+  SynthesisParamsImage impars_p;
+
 
 };
 
