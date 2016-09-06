@@ -441,7 +441,8 @@ bool synthesisimager::setweighting(const std::string& type,
 				    const std::string& ftmName,
 				    const std::string& cfcPath,
 				    const bool psTermOn,
-				    const bool aTermOn)
+				    const bool aTermOn,
+				    const bool conjBeams)
   {
     Bool rstat(False);
     
@@ -449,7 +450,8 @@ bool synthesisimager::setweighting(const std::string& type,
       
       //if( ! itsImager ) itsImager = new SynthesisImager();
       itsImager = makeSI();
-      itsImager->fillCFCache(cfList,ftmName, cfcPath, psTermOn, aTermOn);
+      //Bool conjBeams=itsImager->getSynthesisParamsGrid().conjBeams;
+      itsImager->fillCFCache(cfList,ftmName, cfcPath, psTermOn, aTermOn, conjBeams);
       
     } catch  (AipsError x) {
       RETHROW(x);

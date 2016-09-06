@@ -563,6 +563,16 @@ Define the image coordinate systems and shapes.
       </value>
     </param>
 
+    <param type="bool" name="conjbeams">
+      <description>
+	Use WB A-Projection algorithm (use frequency-conjugate beams)?
+      </description>
+      <value>
+	true
+      </value>
+    </param>
+
+
   </input>
   <returns type="bool"/>
 </method>

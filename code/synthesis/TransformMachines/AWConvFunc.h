@@ -57,9 +57,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     AWConvFunc(const CountedPtr<ATerm> ATerm,
 	       const CountedPtr<PSTerm> psTerm,
 	       const CountedPtr<WTerm> wTerm,
-	       const Bool wbAWP=False):
+	       const Bool wbAWP=False,
+	       const Bool conjPB=True):
       ConvolutionFunction(),aTerm_p(ATerm),psTerm_p(psTerm), wTerm_p(wTerm), pixFieldGrad_p(), 
-      wbAWP_p(wbAWP), baseCFB_p()
+      wbAWP_p(wbAWP), conjPB_p(conjPB), baseCFB_p()
     {pixFieldGrad_p.resize(2);pixFieldGrad_p=0.0;}
 
     ~AWConvFunc() {};
@@ -92,13 +93,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				  CFStore2& cfs,
 				  CFStore2& cfwts,
 				  const Bool psTermOn,
-				  const Bool aTermOn);
+				  const Bool aTermOn,
+				  const Bool conjBeams);
     static void fillConvFuncBuffer2(CFBuffer& cfb, CFBuffer& cfWtb,
 				    const Int& nx, const Int& ny,
 				    const ImageInterface<Complex>& skyImage,
 				    //const CoordinateSystem& skyCoords,
 				    const CFCStruct& miscInfo,
-				    PSTerm& psTerm, WTerm& wTerm, ATerm& aTerm);
+				    PSTerm& psTerm, WTerm& wTerm, ATerm& aTerm,
+				    Bool conjPB);
 
     virtual Bool makeAverageResponse(const VisBuffer& vb, 
 				     const ImageInterface<Complex>& image,
@@ -159,7 +162,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     Vector<Double> thePix_p, pixFieldGrad_p;
     Double imRefFreq_p;
-    Bool wbAWP_p;
+    Bool wbAWP_p, conjPB_p;
     CountedPtr<CFBuffer> baseCFB_p;
   };
   //

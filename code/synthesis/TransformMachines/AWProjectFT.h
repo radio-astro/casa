@@ -153,7 +153,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 							const Bool psTermOn,
 							const Bool wTermOn,
 							const Bool mTermOn,
-							const Bool wBAWP);
+							const Bool wBAWP,
+							const Bool conjBeams);
     AWProjectFT();
     
     // Constructor: cachesize is the size of the cache in words

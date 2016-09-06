@@ -135,7 +135,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 							    const Bool psTermOn,
 							    const Bool wTermOn,
 							    const Bool mTermOn,
-							    const Bool wbAWP)
+							    const Bool wbAWP,
+							    const Bool conjBeams)
   {
     CountedPtr<ATerm> apertureFunction = AWProjectFT::createTelescopeATerm(telescopeName, aTermOn);
     CountedPtr<PSTerm> psTerm = new PSTerm();
@@ -154,9 +155,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //    awConvFunc = new AWConvFunc(apertureFunction,psTerm,wTerm, !wbAWP);
     //if ((ftmName=="mawprojectft") || (mTermOn))
     if (mTermOn)
-      awConvFunc = new AWConvFuncEPJones(apertureFunction,psTerm,wTerm,wbAWP);
+      awConvFunc = new AWConvFuncEPJones(apertureFunction,psTerm,wTerm,wbAWP,conjBeams);
     else
-      awConvFunc = new AWConvFunc(apertureFunction,psTerm,wTerm,wbAWP);
+      awConvFunc = new AWConvFunc(apertureFunction,psTerm,wTerm,wbAWP, conjBeams);
     return awConvFunc;
   }
   //

@@ -81,7 +81,8 @@ namespace casa{
     pixFieldGrad_p(0) = pixFieldGrad_p(0) - Double(nx_p / 2);
     pixFieldGrad_p(1) = pixFieldGrad_p(1) - Double(ny_p / 2);
 
-    Int convSampling=aTerm_p->getOversampling();
+    //    Int convSampling=aTerm_p->getOversampling();
+    Int convSampling=getOversampling(*psTerm_p,*wTerm_p,*aTerm_p);
 
     //phase gradient per pixel to apply
     pixFieldGrad_p(0) = -pixFieldGrad_p(0)*2.0*C::pi/Double(nx_p)/Double(convSampling);

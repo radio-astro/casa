@@ -350,7 +350,11 @@ namespace casa{
 		    TempImage<Complex> twoDPBSq_l(pbShape,cs_l);
 		    //-------------------------------------------------------------		    
 		    // WBAWP CODE BEGIN -- ftATermSq_l has conj. PolCS
-		    cfWtBuf *= ftATerm_l.get()*conj(ftATermSq_l.get());
+		    if (conjPB_p)
+		      cfWtBuf *= ftATerm_l.get()*conj(ftATermSq_l.get());
+		    else
+		      cfWtBuf *= ftATerm_l.get()*conj(ftATerm_l.get());
+		      
 		    //tim.mark();
 		    //UUU cfWtBuf *= ftATerm_l.get();
 		    cfBuf *= ftATerm_l.get();
@@ -420,6 +424,7 @@ namespace casa{
 		    // exit(0);
 
 		    //tim.mark();
+
 		    IPosition shp(twoDPB_l.shape());
 		    IPosition start(4, 0, 0, 0, 0), pbSlice(4, shp[0]-1, shp[1]-1,1/*polInUse*/, 1),
 		      sliceLength(4,cfBuf.shape()[0]-1,cfBuf.shape()[1]-1,1,1);
@@ -1533,7 +1538,8 @@ namespace casa{
 				       const ImageInterface<Complex>& skyImage,
 				       //const CoordinateSystem& skyCoords,
 				       const CFCStruct& miscInfo,
-				       PSTerm& psTerm, WTerm& wTerm, ATerm& aTerm)
+				       PSTerm& psTerm, WTerm& wTerm, ATerm& aTerm,
+				       Bool conjPB)
 
   {
     LogIO log_l(LogOrigin("AWConvFunc", "fillConvFuncBuffer2[R&D]"));
@@ -1664,7 +1670,11 @@ namespace casa{
 	TempImage<Complex> twoDPBSq_l(pbShape,cs_l);
 	//-------------------------------------------------------------		    
 	// WBAWP CODE BEGIN -- ftATermSq_l has conj. PolCS
-	cfWtBuf *= ftATerm_l.get()*conj(ftATermSq_l.get());
+	if (conjPB)
+	  cfWtBuf *= ftATerm_l.get()*conj(ftATermSq_l.get());
+	else
+	  cfWtBuf *= ftATerm_l.get()*conj(ftATerm_l.get());
+	  
 	//tim.mark();
 	cfBuf *= ftATerm_l.get();
 	//tim.show("W*A*2: ");
@@ -1806,7 +1816,8 @@ namespace casa{
 				     CFStore2& cfs2,
 				     CFStore2& cfwts2,
 				     const Bool psTermOn,
-				     const Bool aTermOn)
+				     const Bool aTermOn,
+				     const Bool conjBeams)
   {
     LogIO log_l(LogOrigin("AWConvFunc", "makeConvFunction2[R&D]"));
     Int convSize, convSampling;//, polInUse;
@@ -1825,6 +1836,7 @@ namespace casa{
     IPosition wCFStShape = cfwts2.getShape();
 
     //Matrix<Int> uniqueBaselineTypeList=makeBaselineList(aTerm_p->getAntTypeList());
+    Bool wbAWP, wTermOn;
 
     for (int iPA=0; iPA<cfsShape[0]; iPA++)
       for (int iB=0; iB<cfsShape[1]; iB++)
@@ -1834,6 +1846,7 @@ namespace casa{
 	    cfwtb_p=cfwts2.getCFBuffer(iPA,iB);
 
 	    IPosition cfbShape = cfb_p->shape();
+
 	    for (int iNu=0; iNu<cfbShape(0); iNu++)       // Frequency axis
 	      for (int iPol=0; iPol<cfbShape(2); iPol++)     // Polarization axis
 		for (int iW=0; iW<cfbShape(1); iW++)   // W axis
@@ -1850,8 +1863,11 @@ namespace casa{
 		       {
 			 (*cfb_p)(iNu,iW,iPol).getAsStruct(miscInfo); // Get misc. info. for this CFCell
 
+			 wbAWP=True; // Always true since the Freq. value is got from the coord. sys.
+			 wTermOn=(miscInfo.wValue > 0.0);
+
 			 CountedPtr<ConvolutionFunction> awCF = AWProjectFT::makeCFObject(miscInfo.telescopeName,
-											  aTermOn, psTermOn, True, True, True);
+											  aTermOn, psTermOn, wTermOn, True, wbAWP, conjBeams);
 			 (static_cast<AWConvFunc &>(*awCF)).aTerm_p->cacheVBInfo(miscInfo.telescopeName, miscInfo.diameter);
 			 //aTerm_p->cacheVBInfo(miscInfo.telescopeName, miscInfo.diameter);
 
@@ -1891,7 +1907,8 @@ namespace casa{
 							 miscInfo,
 							 *((static_cast<AWConvFunc &>(*awCF)).psTerm_p),
 							 *((static_cast<AWConvFunc &>(*awCF)).wTerm_p),
-							 *((static_cast<AWConvFunc &>(*awCF)).aTerm_p));
+							 *((static_cast<AWConvFunc &>(*awCF)).aTerm_p),
+							 conjBeams);
 					     
 			 //				     *psTerm_p, *wTerm_p, *aTerm_p);
 			 //cfb_p->show(NULL,cerr);

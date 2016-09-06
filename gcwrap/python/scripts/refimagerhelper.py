@@ -327,7 +327,8 @@ class PySynthesisImager:
         self.SItool.fillcfcache(cflist, self.allgridpars['0']['gridder'],
                                 cfcName,
                                 self.allgridpars['0']['psterm'],
-                                self.allgridpars['0']['aterm']);
+                                self.allgridpars['0']['aterm'],
+                                self.allgridpars['0']['conjbeams']);
                   
 #############################################
     def reloadCFCache(self):
@@ -569,11 +570,16 @@ class PyParallelContSynthesisImager(PySynthesisImager):
         #  Check if cfcache exists.
         #
         cfCacheName=self.allgridpars['0']['cfcache'];
-        
+        cfcExists=False;
         if (not (cfCacheName == '')):
             cfcExists = (os.path.exists(cfCacheName) and os.path.isdir(cfCacheName));
-        else:
-            cfcExists = False;
+
+            if (cfcExists):
+                nCFs = len(os.listdir(cfCacheName));
+                if (nCFs == 0):
+                    casalog.post(cfCacheName + " exists, but is empty.  Attempt is being made to fill it now.","WARN")
+                    cfcExists = False;
+
         # print "##########################################"
         # print "CFCACHE = ",cfCacheName,cfcExists;
         # print "##########################################"
@@ -764,6 +770,7 @@ class PyParallelContSynthesisImager(PySynthesisImager):
         ftmname = "\""+str(self.allgridpars['0']['gridder'])+"\"";
         psTermOn = str(self.allgridpars['0']['psterm']);
         aTermOn = str(self.allgridpars['0']['aterm']);
+        conjBeams = str(self.allgridpars['0']['conjbeams']);
         #aTermOn = str(True);
         # print "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@";
         # print "AllCFList = ",allcflist;
@@ -774,7 +781,7 @@ class PyParallelContSynthesisImager(PySynthesisImager):
         joblist=[];
         for node in self.listOfNodes[:m]:
             #print "#!$#!%#!$#@$#@$ ",allcflist;
-            cmd = "toolsi.fillcfcache("+str(allcflist[node])+","+str(ftmname)+","+str(cfcPath)+","+psTermOn+","+aTermOn+")";
+            cmd = "toolsi.fillcfcache("+str(allcflist[node])+","+str(ftmname)+","+str(cfcPath)+","+psTermOn+","+aTermOn+","+conjBeams+")";
             # print "CMD = ",node," ",cmd;
             joblist.append(self.PH.runcmd(cmd,node));
         self.PH.checkJobs(joblist);
