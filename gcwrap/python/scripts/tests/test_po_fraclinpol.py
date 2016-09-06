@@ -89,7 +89,7 @@ class po_fraclinpol_test(unittest.TestCase):
         mypo = self.mypo
         print eq_beams
         mypo.open(eq_beams)
-        self.assertTrue(mypo.fraclinpol("g"))
+        self.assertTrue(mypo.fraclinpol(True))
         mypo.open(neq_beams)
         self.assertRaises(Exception, mypo.fraclinpol, "hh")
         

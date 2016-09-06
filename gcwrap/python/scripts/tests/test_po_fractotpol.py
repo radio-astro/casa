@@ -89,7 +89,7 @@ class po_fractotpol_test(unittest.TestCase):
         mypo = self.mypo
         print eq_beams
         mypo.open(eq_beams)
-        self.assertTrue(mypo.fractotpol("g"))
+        self.assertTrue(mypo.fractotpol(True))
         mypo.open(neq_beams)
         self.assertRaises(Exception, mypo.fractotpol, "hh")
         

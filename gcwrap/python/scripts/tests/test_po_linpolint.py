@@ -89,7 +89,7 @@ class po_linpolint_test(unittest.TestCase):
         mypo = self.mypo
         print eq_beams
         mypo.open(eq_beams)
-        self.assertTrue(mypo.linpolint("g"))
+        self.assertTrue(mypo.linpolint(True))
         mypo.open(neq_beams)
         self.assertRaises(Exception, mypo.linpolint, "hh")
         

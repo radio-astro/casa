@@ -88,7 +88,7 @@ class po_totpolint_test(unittest.TestCase):
         """Test multibeam images for correct behavior"""
         mypo = self.mypo
         mypo.open(eq_beams)
-        self.assertTrue(mypo.totpolint("g"))
+        self.assertTrue(mypo.totpolint(True))
         mypo.open(neq_beams)
         self.assertRaises(Exception, mypo.totpolint, "hh")
         
