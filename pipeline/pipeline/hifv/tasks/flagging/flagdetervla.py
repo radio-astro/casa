@@ -422,8 +422,8 @@ class FlagDeterVLA( flagdeterbase.FlagDeterBase ):
 
         agent_summaries = dict((v['name'], v) for v in summary_dict.values())
 
-        ordered_agents = ['before', 'anos', 'qa0', 'online', 'template', 'autocorr',
-                          'shadow', 'intents', 'edgespw', 'clip', 'quack',
+        ordered_agents = ['before', 'anos', 'shadow', 'intents', 'qa0', 'online', 'template', 'autocorr',
+                           'edgespw', 'clip', 'quack',
                           'baseband']
 
         summary_reps = [agent_summaries[agent]
