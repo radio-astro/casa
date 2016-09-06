@@ -1524,7 +1524,8 @@ using namespace casa::vi;
 				       const Int& nx, const Int& ny, 
 				       const ImageInterface<Complex>& skyImage,
 				       const CFCStruct& miscInfo,
-				       PSTerm& psTerm, WTerm& wTerm, ATerm& aTerm)
+				       PSTerm& psTerm, WTerm& wTerm, ATerm& aTerm,
+				       Bool conjBeams)
 
   {
     LogIO log_l(LogOrigin("AWConvFunc2", "fillConvFuncBuffer2[R&D]"));
@@ -1657,7 +1658,11 @@ using namespace casa::vi;
 	TempImage<Complex> twoDPBSq_l(pbShape,cs_l);
 	//-------------------------------------------------------------		    
 	// WBAWP CODE BEGIN -- ftATermSq_l has conj. PolCS
-	cfWtBuf *= ftATerm_l.get()*conj(ftATermSq_l.get());
+	if (conjBeams)
+	  cfWtBuf *= ftATerm_l.get()*conj(ftATermSq_l.get());
+	else
+	  cfWtBuf *= ftATerm_l.get()*conj(ftATerm_l.get());
+	
 	//tim.mark();
 	cfBuf *= ftATerm_l.get();
 	//tim.show("W*A*2: ");
@@ -1798,7 +1803,8 @@ using namespace casa::vi;
 				     CFStore2& cfs2,
 				     CFStore2& cfwts2,
 				     const Bool psTermOn,
-				     const Bool aTermOn)
+				     const Bool aTermOn,
+				     const Bool conjBeams)
   {
     LogIO log_l(LogOrigin("AWConvFunc2", "makeConvFunction2[R&D]"));
     Int convSize, convSampling;//, polInUse;
@@ -1817,6 +1823,7 @@ using namespace casa::vi;
     IPosition wCFStShape = cfwts2.getShape();
 
     //Matrix<Int> uniqueBaselineTypeList=makeBaselineList(aTerm_p->getAntTypeList());
+    Bool wbAWP, wTermOn;
 
     for (int iPA=0; iPA<cfsShape[0]; iPA++)
       for (int iB=0; iB<cfsShape[1]; iB++)
@@ -1842,8 +1849,11 @@ using namespace casa::vi;
 		       {
 			 (*cfb_p)(iNu,iW,iPol).getAsStruct(miscInfo); // Get misc. info. for this CFCell
 
+			 wbAWP=True; // Always true since the Freq. value is got from the coord. sys.
+			 wTermOn=(miscInfo.wValue > 0.0);
+
 			 CountedPtr<ConvolutionFunction> awCF = AWProjectFT::makeCFObject(miscInfo.telescopeName,
-											  aTermOn, psTermOn, True, True, True);
+											  aTermOn, psTermOn, wTermOn, True, wbAWP, conjBeams);
 			 (static_cast<AWConvFunc &>(*awCF)).aTerm_p->cacheVBInfo(miscInfo.telescopeName, miscInfo.diameter);
 			 //aTerm_p->cacheVBInfo(miscInfo.telescopeName, miscInfo.diameter);
 
@@ -1879,10 +1889,12 @@ using namespace casa::vi;
 			 //
 			 
 			 AWConvFunc::fillConvFuncBuffer2(*cfb_p, *cfwtb_p, convSize, convSize, 
-					     skyImage_l, miscInfo,
-					     *((static_cast<AWConvFunc &>(*awCF)).psTerm_p),
-					     *((static_cast<AWConvFunc &>(*awCF)).wTerm_p),
-					     *((static_cast<AWConvFunc &>(*awCF)).aTerm_p));
+							 skyImage_l,
+							 miscInfo,
+							 *((static_cast<AWConvFunc &>(*awCF)).psTerm_p),
+							 *((static_cast<AWConvFunc &>(*awCF)).wTerm_p),
+							 *((static_cast<AWConvFunc &>(*awCF)).aTerm_p),
+							 conjBeams);
 					     
 			 //				     *psTerm_p, *wTerm_p, *aTerm_p);
 			 //cfb_p->show(NULL,cerr);
