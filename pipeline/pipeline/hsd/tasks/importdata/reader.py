@@ -143,6 +143,8 @@ class MetaDataReader(object):
             Tbeam = tb.getcol('FEED1')
             Tsrctype = numpy.fromiter((0 if i in target_states else 1 for i in tb.getcol('STATE_ID')), dtype=numpy.int32)
             Tflagrow = tb.getcol('FLAG_ROW')
+            Tflag = numpy.fromiter((numpy.all(tb.getcell('FLAG', i) == True) for i in xrange(nrow)), dtype=bool)
+            Tflagrow = numpy.logical_or(Tflagrow, Tflag)
             field_ids = tb.getcol('FIELD_ID')
             getsourcename = numpy.vectorize(lambda x: ms.get_fields(x)[0].source.name, otypes=['string'])
             Tsrc = getsourcename(field_ids)
@@ -196,7 +198,7 @@ class MetaDataReader(object):
                 assert len(antennas) == 1
                 antenna_domain = antennas[0]
                 mposition = antenna_domain.position
-                pointing_directions = msmd.pointingdirection(row)
+                pointing_directions = msmd.pointingdirection(row, interpolate=True)
                 pointing_direction = pointing_directions['antenna1']['pointingdirection'] # antenna2 should be the same
                 lon = pointing_direction['m0']
                 lat = pointing_direction['m1']
