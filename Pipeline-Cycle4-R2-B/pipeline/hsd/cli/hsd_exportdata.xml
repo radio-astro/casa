@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="hsd_exportdata" category="pipeline">
+<shortdescription>Prepare singledish data for export</shortdescription>
+<description>
+</description>
+<input>
+    <param type="string" name="pprfile" subparam="true">
+    <description>The pipeline processing request(PPR) file to be exported</description>
+    <value></value>
+    </param>
+    
+    <param type="stringArray" name="targetimages" subparam="true">
+	<description>List of target CASA images to be exported</description>
+	<value></value>
+    </param>
+    
+    <param type="string" name="products_dir" subparam="true">
+    <description>The data products directory</description>
+    <value></value>
+    </param>
+
+    <param type="string" name="pipelinemode">
+	<description>The pipeline operating mode</description>
+	<value>automatic</value>
+	<allowed kind="enum">
+	    <value>automatic</value>
+	    <value>interactive</value>
+	    <value>getinputs</value>
+	</allowed>
+    </param>
+
+    <param type="bool" name="dryrun" subparam="true">
+	<description>Run the task (False) or display task command (True)</description>
+	<value>False</value>
+    </param>
+
+    <param type="bool" name="acceptresults" subparam="true">
+	<description>Add the results into the pipeline context</description>
+	<value>True</value>
+    </param>
+
+    <constraints>
+	<when param="pipelinemode">
+	    <equals type="string" value="automatic">
+	    </equals>
+	    <equals type="string" value="interactive">
+		<default param="pprfile"><value type="string"></value></default>
+		<default param="targetimages"><value type="stringArray"></value></default>
+        <default param="products_dir"><value type="string"></value></default>
+		<default param="dryrun"><value type="bool">False</value></default>
+		<default param="acceptresults"><value type="bool">True</value></default>
+	    </equals>
+	    <equals type="string" value="getinputs">
+		<default param="pprfile"><value type="string"></value></default>
+		<default param="targetimages"><value type="stringArray"></value></default>
+        <default param="products_dir"><value type="string"></value></default>
+	    </equals>
+	</when>
+    </constraints>
+
+</input>
+
+<output>
+    <param type="any" name="results">
+        <description>The output results object</description>
+        <any type="variant"/>
+        <value></value>
+    </param>
+</output>
+<returns type="void"/>
+
+
+<example>
+The hsd_exportdata task exports the data defined in the pipeline context
+and exports it to the data products directory, converting and or
+packing it as necessary.
+
+Keyword arguments:
+
+---- pipeline parameter arguments which can be set in any pipeline mode
+
+pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
+   determines the values of all context defined pipeline inputs automatically.
+   In 'interactive' mode the user can set the pipeline context defined
+   parameters manually.  In 'getinputs' mode the user can check the settings
+   of all pipeline parameters without running the task.
+   default: 'automatic'.
+
+---- pipeline context defined parameter argument which can be set only in
+'interactive mode'
+
+pprfile -- Name of the pipeline processing request to be exported. Defaults
+   to a file matching the template 'PPR_*.xml'.
+   default: []
+   example: pprfile=['PPR_GRB021004.xml']
+
+targetimages -- List of science target images to be exported. Defaults to all
+   science target images recorded in the pipeline context.
+   default: []
+   example: targetimages=['r_aqr.CM02.spw5.line0.XXYY.sd.im', 'r_aqr.CM02.spw5.XXYY.sd.cont.im']
+
+products_dir -- Name of the data products subdirectory. Defaults to './'
+   default: ''
+   example: products_dir='../products'
+
+
+--- pipeline task execution modes
+
+dryrun -- Run the commands (True) or generate the commands to be run but
+   do not execute (False).
+   default: True
+
+acceptresults -- Add the results of the task to the pipeline context (True) or
+   reject them (False).
+   default: True
+
+Output:
+
+results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
+   the results object for the pipeline task is returned.
+
+Description
+
+The hsd_exportdata task exports the data defined in the pipeline context
+and exports it to the data products directory, converting and or packing
+it as necessary.
+
+The current version of the task exports the following products
+
+o a FITS imgae for each selected science target source image
+o a tar file per ASDM containing the final flags version and blparam
+o a tar file containing the file web log
+
+TBD
+o a file containing the line feature table(frequency,width,spatial distribution)
+o a file containing the list of identified transitions from line catalogs
+
+Examples
+
+1. Export the pipeline results for a single sessions to the data products
+directory
+
+    !mkdir ../products
+    hsd_exportdata (products_dir='../products')
+
+</example>
+</task>
+</casaxml>

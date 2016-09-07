@@ -1,0 +1,87 @@
+from __future__ import absolute_import
+import os
+
+import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.basetask as basetask
+from pipeline.domain import DataTable
+
+from pipeline.hif.tasks.applycal.applycal import ApplycalInputs, Applycal, ApplycalResults
+
+LOG = infrastructure.get_logger(__name__)
+
+
+class SDMSApplycalInputs(ApplycalInputs,basetask.StandardInputs,
+                         basetask.OnTheFlyCalibrationMixin):
+    """
+    ApplycalInputs defines the inputs for the Applycal pipeline task.
+    """
+    @basetask.log_equivalent_CASA_call
+    def __init__(self, context, output_dir=None,
+                 # 
+                 vis=None, 
+                 # data selection arguments
+                 field=None, spw=None, antenna=None, intent=None,
+                 # preapply calibrations
+                 opacity=None, parang=None, applymode=None, calwt=None,
+                 flagbackup=None, scan=None, flagsum=None):
+        self._init_properties(vars())
+
+    @property
+    def intent(self):
+        return self._intent
+
+    @intent.setter
+    def intent(self, value):
+        if value is None:
+            value = 'TARGET'
+        self._intent = value.replace('*', '')
+
+    @property
+    def applymode(self):
+        return self._applymode
+
+    @applymode.setter
+    def applymode(self, value):
+        if value is None:
+            value = 'calflagstrict'
+        elif value == '':
+            value = 'calflagstrict'
+        self._applymode = value
+
+class SDMSApplycal(Applycal, basetask.StandardTaskTemplate):
+    """
+    Applycal executes CASA applycal tasks for the current context state,
+    applying calibrations registered with the pipeline context to the target
+    measurement set.
+    
+    Applying the results from this task to the context marks the referred
+    tables as applied. As a result, they will not be included in future
+    on-the-fly calibration arguments.
+    """
+    Inputs = SDMSApplycalInputs
+    ### Note this is a temporary workaround ###
+    antenna_to_apply = '*&&&'
+    
+    def prepare(self):
+        # execute Applycal
+        results = super(SDMSApplycal, self).prepare()
+        # Update Tsys in datatable
+        context = self.inputs.context
+        datatable = DataTable(name=context.observing_run.ms_datatable_name, readonly=False)
+        # this task uses _handle_multiple_vis framework 
+        msobj = self.inputs.ms
+        datatable._update_flag(context, msobj.name)
+        for calapp in results.applied:
+            filename = os.path.join(context.output_dir, calapp.vis)
+            fieldids = [fieldobj.id for fieldobj in msobj.get_fields(name=calapp.field)]
+            for _calfrom in calapp.calfrom:
+                if _calfrom.caltype == 'tsys':
+                    tsystable = _calfrom.gaintable
+                    spwmap = _calfrom.spwmap
+                    gainfield= _calfrom.gainfield
+                    datatable._update_tsys(context, filename, tsystable, spwmap, fieldids, gainfield)
+        # here, full export is necessary
+        datatable.exportdata(minimal=False)
+
+        return results
+    
