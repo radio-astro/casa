@@ -79,7 +79,7 @@ class ALMAPhcorBandpass(bandpassworker.BandpassWorker):
             # are the same
             if inputs.hm_phaseup == 'snr':
                 if len(snr_result.spwids) <= 0:
-                    LOG.warn('SNR based phaseup solint estimates are unavailable for MS %s' % (inputs.ms.basename))
+                    LOG.warning('SNR based phaseup solint estimates are unavailable for MS %s' % (inputs.ms.basename))
                     phaseupsolint = inputs.phaseupsolint
                 else:
                     phaseupsolint = self._get_best_phaseup_solint(snr_result)
@@ -90,7 +90,7 @@ class ALMAPhcorBandpass(bandpassworker.BandpassWorker):
         # Now perform the bandpass
         if inputs.hm_bandpass == 'snr':
             if len(snr_result.spwids) <= 0:
-                LOG.warn('SNR based bandpass solint estimates are unavailable for MS %s' % (inputs.ms.basename))
+                LOG.warning('SNR based bandpass solint estimates are unavailable for MS %s' % (inputs.ms.basename))
             else:
                 LOG.info('Using SNR based solint estimates')
             result = self._do_snr_bandpass(snr_result)
@@ -150,8 +150,7 @@ class ALMAPhcorBandpass(bandpassworker.BandpassWorker):
             # No solution available
             if not snr_result.phsolints[i]:
                 nmissing = nmissing + 1
-                LOG.warning('No phaseup solint estimate for spw %s in MS %s',
-                            snr_result.spwids[i], inputs.ms.basename)
+                LOG.warning('No phaseup solint estimate for spw %s in MS %s' % (snr_result.spwids[i], inputs.ms.basename))
                 continue
 
             # An MS might have multiple scans for the phase-up intent.
@@ -167,8 +166,7 @@ class ALMAPhcorBandpass(bandpassworker.BandpassWorker):
             old_solint = snr_result.phsolints[i]
 
             if snr_result.nphsolutions[i] < inputs.phaseupnsols:
-                LOG.warning('Phaseup solution for spw %s has only %d points in MS %s',
-                            snr_result.spwids[i], snr_result.nphsolutions[i], inputs.ms.basename)
+                LOG.warning('Phaseup solution for spw %s has only %d points in MS %s' % (snr_result.spwids[i], snr_result.nphsolutions[i], inputs.ms.basename))
                 factor = float(max(1, snr_result.nphsolutions[i])) / inputs.phaseupnsols
 
                 if old_solint == 'int':
@@ -180,9 +178,7 @@ class ALMAPhcorBandpass(bandpassworker.BandpassWorker):
                     # But if multiple solint were were used for scans with the
                     # same intent, bail out again
                     if len(solints) != 1:
-                        LOG.warning('Expected 1 solution interval for %s scans'
-                                    ' for spw %s. Got %s', inputs.intent,
-                                    snr_result.spwids[i], solints)
+                        LOG.warning('Expected 1 solution interval for %s scans for spw %s. Got %s' % (inputs.intent, snr_result.spwids[i], solints))
                         tmpsolints.append(old_solint)
                         continue
 
@@ -195,12 +191,10 @@ class ALMAPhcorBandpass(bandpassworker.BandpassWorker):
                     old_solint = timedelta_solint
                     
                 newsolint = quanta.tos(quanta.mul(quanta.quantity(old_solint), quanta.quantity(factor)), 3)
-                LOG.warning('Rounding estimated phaseup solint for spw %s from %s to %s in MS %s',
-                            snr_result.spwids[i], snr_result.phsolints[i], newsolint, inputs.ms.basename)
+                LOG.warning('Rounding estimated phaseup solint for spw %s from %s to %s in MS %s' % (snr_result.spwids[i], snr_result.phsolints[i], newsolint, inputs.ms.basename))
                 if quanta.gt (quanta.quantity(newsolint),  quanta.quantity(max_solint)):
                     best_solint = _constrain_phaseupsolint (newsolint, timedelta_solint, max_solint)
-                    LOG.warning('Solution interval for spw %s greater than %s adjusting to %s',
-                        snr_result.spwids[i], max_solint, best_solint)
+                    LOG.warning('Solution interval for spw %s greater than %s adjusting to %s' % (snr_result.spwids[i], max_solint, best_solint))
                 else:
                     best_solint = newsolint
                 tmpsolints.append(best_solint)
@@ -211,21 +205,19 @@ class ALMAPhcorBandpass(bandpassworker.BandpassWorker):
                     newsolint = old_solint
                 if quanta.gt (quanta.quantity(newsolint),  quanta.quantity(max_solint)):
                     best_solint = _constrain_phaseupsolint (newsolint, timedelta_solint, max_solint)
-                    LOG.warning('Solution interval for spw %s greater than %s adjusting to %s',
-                        snr_result.spwids[i], max_solint, best_solint)
+                    LOG.warning('Solution interval for spw %s greater than %s adjusting to %s' % (snr_result.spwids[i], max_solint, best_solint))
                 else:
                     best_solint = snr_result.phsolints[i]
                 tmpsolints.append(best_solint)
 
         # If all values are missing return default value.
         if nmissing >= nexpected:
-            LOG.warning('Reverting to phaseup solint default %s for MS %s',
-                        inputs.phaseupsolint, inputs.ms.basename)
+            LOG.warning('Reverting to phaseup solint default %s for MS %s' % (inputs.phaseupsolint, inputs.ms.basename))
             return inputs.phaseupsolint
 
         # If phaseup solints are all the same return the first one
         if len(set(tmpsolints)) is 1:
-            LOG.info("Best phaseup solint estimate is '%s'", tmpsolints[0])
+            LOG.info("Best phaseup solint estimate is '%s'" % tmpsolints[0])
             return tmpsolints[0]
 
         # Find spws with the minimum number of phaseup solutions and
@@ -264,7 +256,7 @@ class ALMAPhcorBandpass(bandpassworker.BandpassWorker):
         #result = self._executor.execute(phaseup_task, merge=True)
         result = self._executor.execute(phaseup_task, merge=False)
 	if not result.final:
-            LOG.warning('No bandpass phaseup solution for %s' % inputs.ms.basename)
+            LOG.warning('No bandpass phaseup solution for %s' % (inputs.ms.basename))
 	else:
 	    result.accept(inputs.context)
 	return result
@@ -393,7 +385,7 @@ class ALMAPhcorBandpass(bandpassworker.BandpassWorker):
                         # number of solution channels
                         factor = float(max (1, snr_result.nbpsolutions[solindex])) / inputs.bpnsols
                         newsolint =  quanta.tos(quanta.mul (snr_result.bpsolints[solindex], factor))
-                        LOG.warn('Too few channels: Changing recommended bandpass solint from %s to %s for spw %s' % \
+                        LOG.warning('Too few channels: Changing recommended bandpass solint from %s to %s for spw %s' % \
                              (snr_result.bpsolints[solindex], newsolint, spw.id))
                         inputs.solint = orig_solint + ',' +  newsolint
                     else:
@@ -412,7 +404,7 @@ class ALMAPhcorBandpass(bandpassworker.BandpassWorker):
                             str(bandwidth / inputs.maxchannels) + 'MHz'
                 else:
                     inputs.solint = orig_solint
-                    LOG.warn("Reverting to default bandpass solint %s for spw %s in MS %s" % (inputs.solint, spw.id, inputs.ms.basename))
+                    LOG.warning("Reverting to default bandpass solint %s for spw %s in MS %s" % (inputs.solint, spw.id, inputs.ms.basename))
 
                 # Compute and append bandpass solution
                 inputs.spw = spw.id
