@@ -218,8 +218,6 @@ class MaskDeviation(object):
             else: Nmask0 = Nmask
         # TODO
         mask = stdSP<(median+detection*std)
-        if with_flag:
-            mask = NP.logical_and(mask, self.stdSP.mask == False)
         LOG.trace('MaskDeviation.CalcRange: before ExtendMask %s'%(mask))
         mask = self.ExtendMask(mask, median+extension*std)
         LOG.trace('MaskDeviation.CalcRange: after ExtendMask %s'%(mask))
