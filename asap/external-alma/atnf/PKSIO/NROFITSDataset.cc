@@ -848,7 +848,9 @@ int NROFITSDataset::fillRecord( int i )
   string str8( 8, ' ' ) ;
   string str24( 24, ' ' ) ;
 
-  strcpy( record_->LSFIL, str4.c_str() ) ;
+  for (auto i = 0u; i < 4u; ++i) {
+    record_->LSFIL[i] = ' ';
+  }
   status = readTable( record_->LSFIL, "LSFIL", 4, i ) ;
   if ( status ) {
     os << LogIO::WARN << "Error while reading LSFIL." << LogIO::POST ;
@@ -877,7 +879,9 @@ int NROFITSDataset::fillRecord( int i )
   // DEBUG
   //cout << "LAVST(" << i << ") = " << record_->LAVST << endl ;
   //
-  strcpy( record_->SCANTP, str8.c_str() ) ; 
+  for (auto i = 0u; i < 8u; ++i) {
+    record_->SCANTP[i] = ' ';
+  }
     status = readTable( record_->SCANTP, "SCNTP", strlen(record_->SCANTP), i ) ;
   if ( status ) {
     os << LogIO::WARN << "Error while reading SCANTP." << LogIO::POST ;
@@ -992,9 +996,11 @@ int NROFITSDataset::fillRecord( int i )
   // DEBUG
   //cout << "YY(" << i << ") = " << record_->YY << endl ;
   //
-  strcpy( record_->ARRYT, str4.c_str() ) ;
-  status = readTable( record_->ARRYT, "ARRYT", strlen(record_->ARRYT), i ) ;
-  for (int j = strlen(record_->ARRYT)-1 ; j >= 0 ; j--) {
+  for (auto i = 0u; i < 4u; ++i) {
+    record_->ARRYT[i] = ' ';
+  }
+  status = readTable( record_->ARRYT, "ARRYT", 4, i ) ;
+  for (int j = 3 ; j >= 0 ; j--) {
     if (record_->ARRYT[j] == ' ') record_->ARRYT[j] = '\0';
     else break;
   }
