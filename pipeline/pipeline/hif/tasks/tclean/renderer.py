@@ -117,7 +117,7 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                     info_dict[(field, spw, pol, 'aggregate bandwidth')] = aggregate_bw_text
 
                     eff_ch_bw_MHz = qaTool.convert(r.eff_ch_bw, 'MHz')['value']
-                    eff_ch_bw_text = '%.5g MHz (LSRK)' % (eff_ch_bw_MHz)
+                    eff_ch_bw_text = '%.5g MHz (TOPO)' % (eff_ch_bw_MHz)
                     info_dict[(field, spw, pol, 'effective channel bandwidth')] = eff_ch_bw_text
 
                     try:
