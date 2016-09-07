@@ -300,7 +300,7 @@ class SDMSSimpleGridding(basetask.StandardTaskTemplate):
                 #get = lambda col, row: tb.getcell(col, row)
                 #for entry in bind_to_grid[AntID]:
                 for entry in entries:
-                    [tROW, ROW, weights, pols, flags] = entry
+                    [tROW, ROW, pols, weights, flags] = entry
                     Sp = None
                     Mask = None
                     mapped_row = rowmap[tROW]
