@@ -36,6 +36,7 @@ class PlotterPool(object):
         plotter = sparsemap.SDSparseMapPlotter(nh=num_ra, nv=num_dec, 
                                                step=1, brightnessunit='Jy/beam',
                                                figure_id=self.figure_id)
+        plotter.setup_labels(refpix, refval, increment)
         return plotter
     
     def done(self):
