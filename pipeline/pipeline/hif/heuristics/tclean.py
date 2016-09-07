@@ -399,6 +399,8 @@ class TcleanHeuristics(object):
         # Get a cont file handler for the conversion to TOPO
         contfile_handler = contfilehandler.ContFileHandler(self.context.contfile)
 
+        aggregate_lsrk_bw = '0.0GHz'
+
         for spwid in inputs.spw.split(','):
             spw_info = ms.get_spectral_window(spwid)
 
@@ -415,7 +417,7 @@ class TcleanHeuristics(object):
                     freq_selection, refer = inputs.spwsel_lsrk['spw%s' % (spwid)].split()
                     if (refer == 'LSRK'):
                         # Convert to TOPO
-                        topo_freq_selections, topo_chan_selections, aggregate_lsrk_bw = contfile_handler.lsrk_to_topo(inputs.spwsel_lsrk['spw%s' % (spwid)], inputs.vis, ref_field_ids, spwid)
+                        topo_freq_selections, topo_chan_selections, aggregate_spw_lsrk_bw = contfile_handler.lsrk_to_topo(inputs.spwsel_lsrk['spw%s' % (spwid)], inputs.vis, ref_field_ids, spwid)
                         spw_topo_freq_param_lists.append(['%s:%s' % (spwid, topo_freq_selection.split()[0]) for topo_freq_selection in topo_freq_selections])
                         spw_topo_chan_param_lists.append(['%s:%s' % (spwid, topo_chan_selection.split()[0]) for topo_chan_selection in topo_chan_selections])
                         for i in xrange(len(inputs.vis)):
@@ -435,12 +437,12 @@ class TcleanHeuristics(object):
                             # TODO: Need to derive real channel ranges
                             spw_topo_chan_param_dict[os.path.basename(inputs.vis[i])][spwid] = '0~%d' % (spw_info.num_channels - 1)
                         # Count only one selection !
-                        aggregate_lsrk_bw = '0.0GHz'
+                        aggregate_spw_lsrk_bw = '0.0GHz'
                         for freq_range in freq_selection.split(';'):
                             f1, sep, f2, unit = p.findall(freq_range)[0]
                             topo_freq_ranges.append((float(f1), float(f2)))
                             delta_f = qaTool.sub('%s%s' % (f2, unit), '%s%s' % (f1, unit))
-                            aggregate_lsrk_bw = qaTool.add(aggregate_lsrk_bw, delta_f)
+                            aggregate_spw_lsrk_bw = qaTool.add(aggregate_spw_lsrk_bw, delta_f)
                 else:
                     spw_topo_freq_param_lists.append([spwid] * len(inputs.vis))
                     spw_topo_chan_param_lists.append([spwid] * len(inputs.vis))
@@ -448,7 +450,7 @@ class TcleanHeuristics(object):
                         spw_topo_freq_param_dict[os.path.basename(msname)][spwid] = ''
                         spw_topo_chan_param_dict[os.path.basename(msname)][spwid] = ''
                     topo_freq_ranges.append((min_frequency, max_frequency))
-                    aggregate_lsrk_bw = '%sGHz' % (max_frequency - min_frequency)
+                    aggregate_spw_lsrk_bw = '%sGHz' % (max_frequency - min_frequency)
                     if (inputs.intent == 'TARGET') and (inputs.specmode in ('mfs', 'cont')):
                         LOG.warning('No continuum frequency selection for Target Field %s SPW %s' % (inputs.field, spwid))
             else:
@@ -458,9 +460,11 @@ class TcleanHeuristics(object):
                     spw_topo_freq_param_dict[os.path.basename(msname)][spwid] = ''
                     spw_topo_chan_param_dict[os.path.basename(msname)][spwid] = ''
                 topo_freq_ranges.append((min_frequency, max_frequency))
-                aggregate_lsrk_bw = '%sGHz' % (max_frequency - min_frequency)
+                aggregate_spw_lsrk_bw = '%sGHz' % (max_frequency - min_frequency)
                 if (inputs.intent == 'TARGET') and (inputs.specmode in ('mfs', 'cont')):
                     LOG.warning('No continuum frequency selection for Target Field %s SPW %s' % (inputs.field, spwid))
+
+            aggregate_lsrk_bw = qaTool.add(aggregate_lsrk_bw, aggregate_spw_lsrk_bw)
 
         spw_topo_freq_param = [','.join(spwsel_per_ms) for spwsel_per_ms in [[spw_topo_freq_param_list_per_ms[i] for spw_topo_freq_param_list_per_ms in spw_topo_freq_param_lists] for i in xrange(len(inputs.vis))]]
         spw_topo_chan_param = [','.join(spwsel_per_ms) for spwsel_per_ms in [[spw_topo_chan_param_list_per_ms[i] for spw_topo_chan_param_list_per_ms in spw_topo_chan_param_lists] for i in xrange(len(inputs.vis))]]
