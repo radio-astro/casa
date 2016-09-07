@@ -9,7 +9,7 @@ class carta:
        scriptdir = os.path.dirname(__file__)
        relativepath = "/../../etc/carta/bin/carta.sh"
        if sys.platform == "darwin" :
-           relativepath = "/../Carta.app/Contents/MacOS/applet"
+           relativepath = "/../Carta.app/Contents/MacOS/carta.sh"
        cartapath = scriptdir + relativepath
        print cartapath
        subprocess.Popen([cartapath])
