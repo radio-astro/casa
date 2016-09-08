@@ -897,6 +897,9 @@ class cleanhelper:
                 maskframe='LSRK'
                 
         ia.open(outputmask)
+        # make output mask template unit less to avoid imagenalysis warning...
+        if (ia.brightnessunit()!=""):
+             ia.setbrightnessunit("")
         shp=ia.shape()
         self.csys=ia.coordsys().torecord()
         # keep this info for reading worldbox
@@ -913,7 +916,7 @@ class cleanhelper:
             self.csys['spectral2']['conversion']['system']=maskframe
         ia.setcoordsys(self.csys)
         #ia.setcoordsys(mycsys.torecord())
-#        ia.close()
+        ia.close() # close outputmask
 
         if(len(maskimage) > 0):
             for ima in maskimage :
@@ -1016,7 +1019,7 @@ class cleanhelper:
 
         ## CAS-5227
         ia.open( outputmask )
-        ia.calc('iif("'+outputmask+'"!=0.0,1.0,0.0)')
+        ia.calc('iif("'+outputmask+'"!=0.0,1.0,0.0)', False)
         ia.close()
         
         ## CAS-5221 
