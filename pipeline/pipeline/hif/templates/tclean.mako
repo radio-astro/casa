@@ -241,20 +241,16 @@ except:
                             </tr>
                             <tr>
                                 %if info_dict.get((field,str(spw),pol,'nchan')) is not None:
-                                    %if info_dict[(field,str(spw),pol,'nchan')] > 1:
-                                        <th>effective channel bandwidth</th>
-                                        %if info_dict.get((field,str(spw),pol,'effective channel bandwidth')) is not None:
-                                            <td>${info_dict[(field,str(spw),pol,'effective channel bandwidth')]}</td>
-                                        %else:
-                                            <td>-</td>
-                                        %endif
-                                    %else:
+                                    %if info_dict[(field,str(spw),pol,'nchan')] == 1:
                                         <th>aggregate bandwidth</th>
                                         %if info_dict.get((field,str(spw),pol,'aggregate bandwidth')) is not None:
                                             <td>${info_dict[(field,str(spw),pol,'aggregate bandwidth')]}</td>
                                         %else:
                                             <td>-</td>
                                         %endif
+                                    %else:
+                                        <th></th>
+                                            <td></td>
                                     %endif
                                 %else:
                                         <th>No bandwidth information</th>
