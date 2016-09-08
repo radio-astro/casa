@@ -78,10 +78,14 @@ def specflux(
         if box or chans or stokes:
             wreg = "box=" + box + ", chans=" + chans + ", stokes=" + stokes
         header = "# " + imagename + ", " + wreg + "\n"
-        if myia.restoringbeam():
-            beamsize = myia.beamarea()
-            header += "# beam size: " + str(beamsize['arcsec2'])
-            header += " arcsec2, " + str(beamsize["pixels"]) + " pixels\n"
+        beamrec = myia.restoringbeam()
+        if beamrec:
+            if beamrec.has_key("major"):
+                beamsize = myia.beamarea()
+                header += "# beam size: " + str(beamsize['arcsec2'])
+                header += " arcsec2, " + str(beamsize["pixels"]) + " pixels\n"
+            else:
+                header += "# multiple beams\n"
         else:
             header += "# no beam\n"
         coords = rec['coords']
