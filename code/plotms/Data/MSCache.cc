@@ -101,21 +101,6 @@ void MSCache::loadIt(vector<PMS::Axis>& loadAxes,
         delete selMS;
         loadError(log.getMesg());
     }
-    if (averaging_.channel()) {
-        Int avgChans;
-        double chanVal = averaging_.channelValue();
-        if (chanVal > INT_MAX) {
-            logWarn(PMS::LOG_ORIGIN_LOAD_CACHE, "avgchannel value exceeds maximum integer allowed (" + String::toString(INT_MAX) + ")");
-            avgChans = INT_MAX;
-        } else {
-            if (chanVal == 0.0) {
-                chanVal = 1.0;
-                logLoad("Cannot average 0 channels, using 1 instead (no averaging).");
-            }
-            avgChans = static_cast<Int>(chanVal);
-        }
-        logChansForSpws(*selMS, avgChans);
-    }
 
     // Make volume meter for countChunks to estimate memory requirements
     vm_ = new MSCacheVolMeter(*inputMS, averaging_, chansel, corrsel);
@@ -361,24 +346,6 @@ void MSCache::getNamesFromMS(MeasurementSet& ms)
     mapIntentNamesToIds();  // eliminate duplicate intent names
 }
 
-void MSCache::logChansForSpws(MeasurementSet& ms, Int chanVal) {
-    logLoad("Actual avgchannel value used:");
-    ROMSColumns msCol(ms);
-    Vector<Int> spwIds = msCol.dataDescription().spectralWindowId().getColumn();
-    Vector<Int> spwChans = msCol.spectralWindow().numChan().getColumn();
-    Int spw, numChans;
-    for (uInt i=0; i < spwIds.size(); ++i) {
-        spw = spwIds[i];
-        if (chanVal > spwChans[spw]) {
-            numChans = spwChans[spw];
-        } else {
-            numChans = chanVal;
-        }
-        logLoad("SPW " + String::toString(spw) + " number of channels averaged: " 
-            + String::toString(numChans));
-    }
-}
-
 void MSCache::setUpVisIter(PlotMSSelection& selection,
 		PlotMSCalibration& calibration,
 		String dataColumn, 
@@ -425,9 +392,17 @@ void MSCache::setUpVisIter(PlotMSSelection& selection,
 		configuration.define("timespan", timespanStr);
 	}
 	if (averaging_.channel()) {
+        int chanBin;
         double chanVal = averaging_.channelValue();
-        int chanBin = (chanVal > INT_MAX) ? INT_MAX : static_cast<int>(chanVal);
-        if (chanBin == 0) chanBin = 1;
+        if (chanVal > INT_MAX) {
+            chanBin = INT_MAX;
+            logWarn(PMS::LOG_ORIGIN_LOAD_CACHE, "avgchannel value exceeds maximum integer allowed (" + String::toString(INT_MAX) + ")");
+        } else if (chanVal == 0.0) {
+            chanBin = 1;
+            logLoad("Cannot average 0 channels, using 1 instead (no averaging).");
+        } else {
+            chanBin = static_cast<int>(chanVal);
+        }
 		configuration.define("chanaverage", True);
 		configuration.define("chanbin", chanBin);
 	}
@@ -764,6 +739,12 @@ void MSCache::loadChunks(vi::VisibilityIterator2& vi,
             }
 		}
 	}
+    // Report averaged channels per spw in log
+    // (should match MSTransformManager output in console)
+    map<Int,Int>::iterator it;
+    for (it=chansPerSpw_.begin(); it!=chansPerSpw_.end(); ++it) {
+        logLoad("SPW " + String::toString(it->first) + ": number of channels averaged = " + String::toString(it->second));
+    }
 }
 
 void MSCache::loadChunks(vi::VisibilityIterator2& vi,
@@ -1090,27 +1071,24 @@ void MSCache::loadAxis(vi::VisBuffer2* vb, Int vbnum, PMS::Axis axis,
 
 	case PMS::CHANNEL: {
         Vector<Int> chans = vb->getChannelNumbers(0);
+        *chan_[vbnum] = chans;
 	    if (averaging_.channel()) {
-            int numBins = chans.size();
-            int numChans = vb->getChannelNumbersSelected(0).size();
-            if (numChans > 0) { // cannot get mean of 0-element array
-                // Rather than bin/index, save averaged channel number
-                Vector<Int> avgChanNum(numBins);
-                // Save which channels are being averaged, for Locate
-                Array<Int> chansPerBin(IPosition(2, numChans, numBins));
+            // Save which channels are being averaged, for Locate
+            Int numBins = chans.size();
+            Int numChans = vb->getChannelNumbersSelected(0).size();
+            Array<Int> chansPerBin(IPosition(2, numChans, numBins));
+            // when there is only one channel in the spw selected chans is empty array
+            if (numChans==0 && numBins==1) {
+                numChans = 1;
+                chansPerBin.resize(IPosition(2, 1, 1));
+                chansPerBin[0] = chans;
+            } else {
                 for (Int bin=0; bin < numBins; ++bin) {
-                    Vector<Int> selChanNums = vb->getChannelNumbersSelected(bin);
-                    avgChanNum[bin] = mean(selChanNums);
-                    chansPerBin[bin] = selChanNums;
+                    chansPerBin[bin] = vb->getChannelNumbersSelected(bin);
                 }
-                *chan_[vbnum] = avgChanNum;
-                *chansPerBin_[vbnum] = chansPerBin;
-            } else {  // this should not happen! just use bin number
-                *chan_[vbnum] = chans;
-                *chansPerBin_[vbnum] = chans;
             }
-        } else {
-            *chan_[vbnum] = chans;
+            *chansPerBin_[vbnum] = chansPerBin;
+            chansPerSpw_[vb->spectralWindows()(0)] = numChans;
         }
 		break;
     }

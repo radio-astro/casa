@@ -1299,9 +1299,8 @@ void PlotMSIndexer::reportMeta(Double x, Double y, Bool masked,stringstream& ss)
 
 	ss << "Chan=";
 	Int ichan=getIndex0100(currChunk_,irel_);
+    PlotMSAveraging& pmsave(plotmscache_->averaging());
 	if (plotmscache_->netAxesMask_[dataIndex](1)) {
-
-		PlotMSAveraging& pmsave(plotmscache_->averaging());
 		if (pmsave.channel() && pmsave.channelValue()>1) {
             Vector<Int> chansPerBin = plotmscache_->getChansPerBin(currChunk_, ichan);
 			ss << "<" << chansPerBin[0] << "~" << chansPerBin[chansPerBin.size()-1] << ">";
@@ -1313,11 +1312,16 @@ void PlotMSIndexer::reportMeta(Double x, Double y, Bool masked,stringstream& ss)
 		ss << "*";
 	ss << " ";
 
-	ss << "Freq=";
-	if (plotmscache_->netAxesMask_[dataIndex](1))
+	if (plotmscache_->netAxesMask_[dataIndex](1)) {
+		if (pmsave.channel() && pmsave.channelValue()>1) {
+	        ss << "Avg Freq=";
+        } else {
+	        ss << "Freq=";
+        }
 		ss << plotmscache_->getFreq(currChunk_,ichan) << " ";
-	else
-		ss << "*        ";
+    } else {
+		ss << "Freq=*        ";
+    }
 
     if (plotmscache_->cacheType()==PlotMSCacheBase::CAL)
 	    ss << "Poln=";
@@ -1656,48 +1660,6 @@ void PlotMSIndexer::computeRanges() {
 			}
 		}
 	}
-
-	// Pad the ranges slightly
-	xmin_-=1e-5;
-	xmax_+=1e-5;
-	ymin_-=1e-5;
-	ymax_+=1e-5;
-	xflmin_-=1e-5;
-	xflmax_+=1e-5;
-	yflmin_-=1e-5;
-	yflmax_+=1e-5;
-
-
-	// Adopt alternate values when no masked/unmasked data found
-	/*
-  if (sizeUnMasked_==0 && sizeMasked_>0) {
-    xflmin_=xmin_;
-    xflmax_=xmax_;
-    yflmin_=ymin_;
-    yflmax_=ymax_;
-  }
-
-  if (sizeMasked_==0 && sizeUnMasked_>0) {
-    xmin_=xflmin_;
-    xmax_=xflmax_;
-    ymin_=yflmin_;
-    ymax_=yflmax_;
-  }
-	 */
-
-	/*
-  cout << "sizedUnMasked (unflagged) = " << sizeUnMasked_ << " Ranges:" << xmin_ << "-" << xmax_ << " / " << ymin_ << "-" << ymax_ << endl;
-  cout << "sizedMasked (flagged)     = " << sizeMasked_ << " Ranges:" << xflmin_ << "-" << xflmax_ << " / " << yflmin_ << "-" << yflmax_ << endl;
-  cout << "size() = " << size() << endl;
-	 */
-
-	// TBD:
-	//  Handle reversed axes?  (e.g., U)
-	//  Handle equal-scale axes (e.g., V vs. U, real vs. imag)
-	//  (Reconcile unadjusted limits (e.g., if no flagged data found)  OK not to bother?)
-	//  (Handle margin padding?  OK?)
-
-
 }
 
 void PlotMSIndexer::log(const String& method, const String& message,
