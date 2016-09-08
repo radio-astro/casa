@@ -630,7 +630,7 @@ Display Parameters
     <param type="any" name="flaggedsymbolshape" subparam="true">
         <description>shape of plotted flagged symbols</description>
         <any type="variant" limittype="string stringArray"/>
-        <value type="string">nosymbol</value>
+        <value type="string">circle</value>
         <allowed kind="enum" type="string">
             <value>nosymbol</value>
             <value>autoscaling</value>
