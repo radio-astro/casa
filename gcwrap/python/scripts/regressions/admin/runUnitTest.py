@@ -271,7 +271,25 @@ def main(testnames=[]):
             else:
                 ff = getname(f)
                 tests = gettests(f)
-                testcases = UnitTest(ff).getUnitTest(tests)
+                # allow splitting of large test groups into smaller chunks
+                # large long running test groups make parallel test scheduling
+                # a bit more complicated so splitting them to smaller groups
+                # helps
+                # syntax: [testsplit:chunk_index-number_of_chunks]
+                if len(tests) == 1 and tests[0].startswith('testsplit:'):
+                    import math
+                    testcases = UnitTest(ff).getUnitTest()
+                    chk, nchk = map(int, tests[0].split(':')[1].split('-'))
+                    if chk > nchk or chk < 1:
+                        raise ValueError('testsplit chunk must be 1 <= nchunks')
+                    nchk = min(len(testcases), nchk)
+                    chksz = int(math.ceil(len(testcases) / float(nchk)))
+                    offset = (chk - 1) * chksz
+                    print 'running tests %d to %d' % \
+                        (offset, min(offset + chksz, len(testcases)))
+                    testcases = testcases[offset:offset + chksz]
+                else:
+                    testcases = UnitTest(ff).getUnitTest(tests)
                 list = list+testcases                
                 
         if (len(list) == 0):
