@@ -69,8 +69,9 @@ class AzElChart(object):
             'spw': self.spwlist,
             'plotfile': self.figfile,
             'clearplots': True,
-            'showgui': False
-        }
+            'showgui': False,
+            'customflaggedsymbol': True,
+            'flaggedsymbolshape': 'autoscaling' }
 
         task = casa_tasks.plotms(**task_args)
 
@@ -166,7 +167,9 @@ class ElVsTimeChart(object):
                      'spw'             : self.spwlist,
                      'plotfile'        : self.figfile,
                      'clearplots'      : True,
-                     'showgui'         : False}
+                     'showgui'         : False,
+                     'customflaggedsymbol': True,
+                     'flaggedsymbolshape': 'autoscaling' }
 
         task = casa_tasks.plotms(**task_args)
         if not os.path.exists(self.figfile):
