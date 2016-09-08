@@ -32,6 +32,7 @@
 import numpy
 import taskinit
 import os
+import csv # used by editIntentscsv
 
 class SpwMap:
     """
