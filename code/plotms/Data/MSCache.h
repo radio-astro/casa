@@ -97,7 +97,6 @@ private:
   String checkLoadedAxesDatacol();
   String normalizeColumnName(String plotmscol);
   void getNamesFromMS(MeasurementSet& ms);
-  void logChansForSpws(MeasurementSet& ms, Int chanVal);
   void setUpVisIter(PlotMSSelection& selection,
 		    PlotMSCalibration& calibration,
 		    String dataColumn,
@@ -158,6 +157,12 @@ private:
 			  Bool setFlag,
 			  PlotMSIndexer* indexer, int dataIndex);
 
+  Vector<Double> calcVelocity(vi::VisBuffer2* vb); 
+
+  // For averaging done by PlotMSVBAverager;
+  // Some axes need to come from VB2 attached to VI2
+  bool useAveragedVisBuffer(PMS::Axis axis);
+
   // Datacolumn to use (requested or "adjusted")
   String dataColumn_;
 
@@ -179,11 +184,7 @@ private:
   // Volume meter for volume calculation
   MSCacheVolMeter* vm_;
 
-  Vector<Double> calcVelocity(vi::VisBuffer2* vb); 
-
-  // For averaging done by PlotMSVBAverager;
-  // Some axes need to come from VB2 attached to VI2
-  bool useAveragedVisBuffer(PMS::Axis axis);
+  map<Int, Int> chansPerSpw_; 
 
   bool ephemerisAvailable;
 };
