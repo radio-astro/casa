@@ -23,6 +23,7 @@ casa_add_python( python  casa_python python/${PYTHONV}
 scripts/asap_init.py
 scripts/assignmentFilter.py
 scripts/callibrary.py
+scripts/carta.py
 scripts/casa_in_py.py
 scripts/casa.py
 scripts/casapy.py
