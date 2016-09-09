@@ -439,17 +439,6 @@ def editIntentscsv(intentcsv, dryrun=False, verbose=False):
             else:
                 print "Could not find requested measurement set: ", vis
 
-def createCasaTool(mytool):
-    """
-    A wrapper to handle the changing ways in which casa tools are invoked.
-    Todd Hunter
-    """
-    if (type(casac.Quantity) != type):  # casa 4.x
-        myt = mytool()
-    else:  # casa 3.x
-        myt = mytool.create()
-    return(myt)
-
 def editIntents(msName='', field='', scan='', newintents='', 
                 append=False, verbose=True):
     """
@@ -484,7 +473,7 @@ def editIntents(msName='', field='', scan='', newintents='',
     if (field == ''):
         print "You must specify a field ID or name."
         return
-    mytb = createCasaTool(tbtool)
+    mytb = taskinit.tbtool()
     mytb.open(msName + '/FIELD')
     fieldnames = mytb.getcol('NAME')
     if verbose:
@@ -542,8 +531,6 @@ def editIntents(msName='', field='', scan='', newintents='',
             print "Found zero rows for this field (and/or scan). Stopping."
             return
         state_ids = s.getcol('STATE_ID')
-        # original code from J. Lightfoot, can probably be replaced
-        # by the np.unique() above
         states = []
         for state_id in state_ids:
             if state_id not in states:
@@ -593,7 +580,7 @@ def editIntents(msName='', field='', scan='', newintents='',
                     print 'adding intent to state table'
                 intentcol = list(intentcol)
                 intentcol.append(state)
-                intentcol = np.array(intentcol)
+                intentcol = numpy.array(intentcol)
                 state_id = len(intentcol) - 1
                 naddedrows += 1
                 if verbose:
@@ -602,10 +589,10 @@ def editIntents(msName='', field='', scan='', newintents='',
             else:
                 if verbose:
                     print 'intent already in state table'
-                state_id = np.arange(len(intentcol))[intentcol==state]
+                state_id = numpy.arange(len(intentcol))[intentcol==state]
                 if verbose:
                     print 'state_id is', state_id
-                if (type(state_id) == list or type(state_id)==np.ndarray):
+                if (type(state_id) == list or type(state_id)==numpy.ndarray):
                     # ms can have identical combinations of INTENT, so just
                     # pick the row for the first appearance - T. Hunter
                     state_ids[:] = state_id[0]
