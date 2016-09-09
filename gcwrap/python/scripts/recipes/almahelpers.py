@@ -450,7 +450,7 @@ def createCasaTool(mytool):
         myt = mytool.create()
     return(myt)
 
-def editIntents(msName='', field='', scan='', newintents='', help=False,
+def editIntents(msName='', field='', scan='', newintents='', 
                 append=False, verbose=True):
     """
     Change the observation intents for a specified field.  
@@ -478,9 +478,6 @@ def editIntents(msName='', field='', scan='', newintents='', help=False,
                     'CALIBRATE_SIDEBAND_RATIO','OBSERVE_TARGET',
                     'CALIBRATE_WVR', 'OBSERVE_CHECK_SOURCE'
                     ]
-    if (help == True):
-        print "Usage: editIntents(msName='', field='', scan='', newintents='', help=False, append=False)"
-        return
     if (msName == ''):
         print "You must specify a measurement set."
         return
