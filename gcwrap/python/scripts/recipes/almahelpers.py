@@ -435,7 +435,7 @@ def editIntentscsv(intentcsv, dryrun=False, verbose=False):
                     print "Would call %s\n" % (cmd)
                 else:
                     print "Calling %s" % (cmd)
-                    editIntents(vis,field,scan,intents)
+                    editIntents(vis,field,scan,intents,verbose=verbose)
             else:
                 print "Could not find requested measurement set: ", vis
 
