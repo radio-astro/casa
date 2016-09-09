@@ -735,10 +735,11 @@ endif()
 # Since we are using the C++ linker, the Fortran runtime libraries must be explicitly
 # linked in.
 
-if( CMAKE_SYSTEM_NAME STREQUAL Linux )
-  SET(CMAKE_Fortran_IMPLICIT_LINK_LIBRARIES ${_gfortran_lib_path})
-  SET(CMAKE_Fortran_IMPLICIT_LINK_DIRECTORIES "")
-endif()
+if( CMAKE_SYSTEM_NAME STREQUAL Linux AND EXISTS ${_gfortran_lib_path} )
+# SET(CMAKE_Fortran_IMPLICIT_LINK_LIBRARIES ${_gfortran_lib_path})
+# SET(CMAKE_Fortran_IMPLICIT_LINK_DIRECTORIES "")
+  message( STATUS "not setting CMAKE_Fortran_IMPLICIT_LINK_LIBRARIES to a fully qualified path because cmake (on RHEL7 anyway) just changes it back to something like -lgfortran anyway..." )
+endif( )
 
 if( NOT FORTRAN_LIBRARIES )
 
@@ -960,6 +961,17 @@ casa_find( GSL
    	      DEPENDS GSLCBLAS
             )
 
+#
+# gsl drags in dependencencies on atlas libraries, if they are not explicitly
+# referenced, loading is left until runtime based upon transitive dependencies.
+# This thwarts creation of a cleanly relocatable distribution.
+#
+if(CMAKE_SYSTEM_NAME STREQUAL Linux AND GSL_LIBRARIES)
+    if(EXISTS "/usr/lib64/atlas/libsatlas.so")
+        set( Boost_LIBRARIES "${GSL_LIBRARIES};/usr/lib64/atlas/libsatlas.so" )
+    endif( )
+endif( )
+
 # Java
 casa_find( Java
   VERSION 1.5
@@ -1077,9 +1089,6 @@ IF (NOT WIN32)
    SET(LIBXML2_DEFINITIONS ${LIBXML2_DEFINITIONS} ${PC_LIBXML_CFLAGS_OTHER})
 ENDIF (NOT WIN32)
 
-#find_package( OpenGL REQUIRED )
-#set( OPENGL_INCLUDE_DIRS ${OPENGL_INCLUDE_DIR} CACHE PATH "OpenGL include directories" FORCE )
-
 
 # QT4  4.3.4 or 4.5.1
 
@@ -1092,10 +1101,16 @@ else()
   set( qt4-version 4.3.4 )
 endif()
 
-find_package(
-  Qt4 ${qt4-version}
-  COMPONENTS QtCore QtGui QtDBus QtXml QtUiTools QtSvg ) #QtOpenGL )
-
+if(CMAKE_SYSTEM_NAME STREQUAL Linux AND EXISTS /usr/lib64/libqwt.so.6 )
+  find_package(
+    Qt4 ${qt4-version}
+    COMPONENTS QtCore QtGui QtDBus QtXml QtUiTools QtSvg QtOpenGL)
+    set( QT_OPENGL ${QT_QTOPENGL_LIBRARY} )
+else( )
+  find_package(
+    Qt4 ${qt4-version}
+    COMPONENTS QtCore QtGui QtDBus QtXml QtUiTools QtSvg )
+endif( )
 if( NOT QT4_FOUND )
   message( FATAL_ERROR "Qt4 could not be found. Please check!" )
 endif()
@@ -1106,8 +1121,7 @@ set( QT4_LIBRARIES
   ${QT_QTCORE_LIBRARY} 
   ${QT_QTGUI_LIBRARY} 
   ${QT_QTDBUS_LIBRARY} 
-  ${QT_QTXML_LIBRARY} ${QT_QTUITOOLS_LIBRARY} ${QT_QTSVG_LIBRARY}
-  # ${QT_QTOPENGL_LIBRARY}
+  ${QT_QTXML_LIBRARY} ${QT_QTUITOOLS_LIBRARY} ${QT_QTSVG_LIBRARY} ${QT_OPENGL}
   CACHE FILEPATH "QT4 libraries" FORCE )
 list( REMOVE_ITEM QT4_LIBRARIES "optimized" )
 list( REMOVE_ITEM QT4_LIBRARIES "debug" )
@@ -1246,7 +1260,6 @@ casa_add_module( casaqt CASACORE QT4 QWT XERCES graphics stdcasa Boost)
 ###casa_add_module ( CasaDataObjects CASACORE)
 casa_add_module( components stdcasa CASACORE Boost GSL)
 casa_add_module( imageanalysis CASACORE components)
-#casa_add_module( display3d CASACORE QT4 OPENGL display )
 casa_add_module( asdmstman CASACORE Boost )
 casa_add_module( msvis CASACORE Boost asdmstman ) # WarningsAsErrors)
 casa_add_module( mstransform CASACORE stdcasa imageanalysis msvis)
