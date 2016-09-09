@@ -34,6 +34,9 @@ def concatephem(ephems=[], outputephem=''):
     shouldconcat_with_previous = []
     canconcat_with_previous = []
 
+    stepsize_rel_tolerance = 1E-6 # relative difference in time step size must be smaller than this
+    stepsize_abs_tolerance_d = 0.1/86400. # absolute difference in time step size (days) must be smaller than this
+
     for myephem in ephems:
         mytb.open(myephem)
         mynrows = mytb.nrows()
@@ -70,7 +73,8 @@ def concatephem(ephems=[], outputephem=''):
         hasoverlap_with_previous.append(False)
         gap_to_previous.append(0)
         if i>0: 
-            if stepsizes[i]==stepsizes[i-1-backstep]:
+            if (abs(stepsizes[i] - stepsizes[i-1-backstep])/stepsizes[i] < stepsize_rel_tolerance) \
+                    and abs(stepsizes[i] - stepsizes[i-1-backstep]) < stepsize_abs_tolerance_d:
                 casalog.post( 'Ephemerides '+str(i-1-backstep)+' and '+str(i)+' have same step size.', 'INFO')
                 if starts[i-1-backstep] <= starts[i]:
                     casalog.post( 'Ephemeris '+str(i-1-backstep)+' begins before '+str(i), 'INFO')
