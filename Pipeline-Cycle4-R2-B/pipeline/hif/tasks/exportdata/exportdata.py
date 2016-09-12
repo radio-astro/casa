@@ -402,6 +402,13 @@ class ExportData(basetask.StandardTaskTemplate):
             inputs.products_dir)
         pipemanifest.add_antennapos_file (ouss, os.path.basename(antenna_file))
 
+        # Export the cont.dat file.
+        #    May need to be exported to the archive. This is TBD
+        #    Relies on file name convention
+        cont_file = self._export_cont_file (inputs.context, oussid, 'cont.dat',
+            inputs.products_dir)
+        pipemanifest.add_cont_file (ouss, os.path.basename(cont_file))
+
         # Export the target source template flagging files
         #    Whether or not these should be exported to the archive depends on
         #    the final plage of the target flagging step in the work flow
@@ -850,6 +857,31 @@ class ExportData(basetask.StandardTaskTemplate):
                      (antpos_file, out_antpos_file))
             shutil.copy (antpos_file, out_antpos_file)
             return os.path.basename(out_antpos_file)
+        else:
+            return 'Undefined'
+
+    def _export_cont_file (self, context, oussid, contfile_name, products_dir):
+
+        """
+        Save the continuum regions file
+        """
+
+        ps = context.project_structure
+        if ps is None:
+            cont_file = os.path.join (context.output_dir, contfile_name)
+            out_cont_file = os.path.join (products_dir, contfile_name)
+        elif ps.ousstatus_entity_id == 'unknown':
+            cont_file = os.path.join (context.output_dir, contfile_name)
+            out_cont_file = os.path.join (products_dir, contfile_name)
+        else:
+            cont_file = os.path.join (context.output_dir, contfile_name)
+            out_cont_file = os.path.join (products_dir, oussid + '.' + contfile_name)
+
+        if os.path.exists(cont_file):
+            LOG.info('Copying continuum frequency ranges file %s to %s' % \
+                     (cont_file, out_cont_file))
+            shutil.copy (cont_file, out_cont_file)
+            return os.path.basename(out_cont_file)
         else:
             return 'Undefined'
 
