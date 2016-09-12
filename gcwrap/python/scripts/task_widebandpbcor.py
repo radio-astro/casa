@@ -29,7 +29,7 @@ def widebandpbcor(vis='',
    make one PB per spw (middle channel). 
    """   
    casalog.origin('widebandpbcor')
-
+   casalog.post('widebandpbcor is a temporary task, meant for use until a widebandpbcor option is enabled from within the tclean task.','WARN')
    # Check nterms
    if nterms < 1:
        casalog.post('Please specify a valid number of Taylor-terms (>0)', 'SEVERE')
@@ -219,7 +219,7 @@ def _makePBList(msname='',pbprefix='',field='',spwlist=[],chanlist=[], imsize=[]
          im.defineimage(nx=imsize[0],ny=imsize[1], cellx=cellx,celly=celly, 
                              nchan=1,start=chanlist[aspw], stokes='I',
                              mode='channel',spw=[spwlist[aspw]],phasecenter=phasecenter);
-         im.setvp(dovp=True,usedefaultvp=True,telescope='EVLA');
+         im.setvp(dovp=True)
 #         im.setvp(dovp=True,usedefaultvp=False,vptable='evlavp.tab',telescope='EVLA');
          pbname = pbprefix + str(spwlist[aspw])+'.'+str(chanlist[aspw])
          im.makeimage(type='pb', image=pbname, compleximage="", verbose=False);
