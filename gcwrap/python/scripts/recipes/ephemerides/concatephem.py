@@ -254,4 +254,42 @@ def findephems(vis=[], field=''):
 
     return rval
 
-             
+
+def concatreplaceephem(vis=[], field=''):
+
+    """
+       Search the MSs given in the list "vis" for ephemerides for
+       a given field, concatenate the ephemerides, and replace
+       all of the original ephemerides with the concatenated one.
+
+       vis - list of the MSs to search for ephemerides
+             default: []
+
+       field - field for which to seach ephemerides
+             default:
+    """
+      
+    ephemfield = field
+    thetabs = findephems(vis, ephemfield)
+    if thetabs != [] and not ('' in thetabs):
+        tmptab = os.path.basename(thetabs[0])+'.concattmp'
+        concatephem(thetabs, tmptab)
+        if os.path.exists(tmptab):
+            for targettab in thetabs:
+                if not os.path.exists(targettab):
+                    raise Exception, 'Internal ERROR: ephemeris '+targettab+' does not exist'	
+                os.system('rm -rf '+targettab)
+                os.system('cp -R '+tmptab+' '+targettab)
+        else:
+            casalog.post('ERROR while concatenating ephemerides for field '+str(ephemfield), 'SEVERE')
+            raise Exception, 'Concatenation of ephemerides for field '+str(ephemfield)+' failed.'
+        
+        os.system('rm -rf '+tmptab)
+
+    else:
+        casalog.post('ERROR while searching for ephemerides for field '+str(ephemfield), 'SEVERE')
+        raise Exception, 'Cannot find ephemerides for field '+str(ephemfield)+' in all input MSs.'
+
+    casalog.post('All ephemerides for field '+str(ephemfield)+' replaced by concatenated ephemeris.', 'INFO')
+
+    return True
