@@ -81,6 +81,12 @@ class PipelineManifest(object):
 	"""
         eltree.SubElement (ous, "antennapos_file", name=antennapos_file)
 
+    def add_cont_file (self, ous, cont_file):
+	"""
+        Add the continuum frequency ranges file to the OUS element
+	"""
+        eltree.SubElement (ous, "cont_file", name=cont_file)
+
     def add_aqua_report (self, ous, aqua_report):
 	"""
         Add the AQUA report to the OUS element
