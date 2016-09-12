@@ -149,20 +149,15 @@ except:
                                 %else:
                                 <td>No image available</td>
                                 %endif
-							</tr>
+			    </tr>
                             <tr>
 				<th>beam</th>
                                 %if info_dict.get((field,str(spw),pol,'beam major')) is not None:
-                                    <%
-                                    beam_major = casatools.quanta.tos(info_dict[(field,str(spw),pol,'beam major')],2)
-                                    beam_major = beam_major.replace('arcsec', '')
-                                    %>
-                                <td>${beam_major}x${
-                                            casatools.quanta.tos(info_dict[(field,str(spw),pol,'beam minor')],2)}</td>
+                                    <td>${'%.2g x %.2g %s' % (info_dict[(field,str(spw),pol,'beam major')]['value'], info_dict[(field,str(spw),pol,'beam minor')]['value'], info_dict[(field,str(spw),pol,'beam major')]['unit'])}</td>
                                 %else:
-                                <td>-</td>
+                                    <td>-</td>
                                 %endif
-							</tr>
+			    </tr>
                             <tr>
                                             <th>beam p.a.</th> 
                                 %if info_dict.get((field,str(spw),pol,'beam pa')) is not None:
