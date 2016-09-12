@@ -30,6 +30,8 @@ def widebandpbcor(vis='',
    """   
    casalog.origin('widebandpbcor')
 
+   casalog.post('widebandpbcor is a temporary task, meant for use until a widebandpbcor option is enabled from within the tclean task.','WARN')
+
    # Check nterms
    if nterms < 1:
        casalog.post('Please specify a valid number of Taylor-terms (>0)', 'SEVERE')
@@ -201,11 +203,6 @@ def _calcPBAlpha(pbtay=[], pbthreshold=0.1,pbalphaname='pbalpha.im'):
 #################################################
 def _makePBList(msname='',pbprefix='',field='',spwlist=[],chanlist=[], imsize=[], cellx='10.0arcsec', celly='10.0arcsec',phasecenter=''):
    #print 'Making PB List from the following spw,chan pairs';
-#   vp.setpbpoly(telescope='EVLA', coeff=[1.0, -1.529e-3, 8.69e-7, -1.88e-10])  #1GHz
-#   vp.setpbpoly(telescope='EVLA', coeff=[1.0, -1.486e-3, 8.26e-7, -1.75e-10])  #1.8GHz
-
-#   vp.saveastable('evlavp.tab')
-
    pblist = []
    try:
      for aspw in range(0,len(spwlist)):
@@ -219,8 +216,7 @@ def _makePBList(msname='',pbprefix='',field='',spwlist=[],chanlist=[], imsize=[]
          im.defineimage(nx=imsize[0],ny=imsize[1], cellx=cellx,celly=celly, 
                              nchan=1,start=chanlist[aspw], stokes='I',
                              mode='channel',spw=[spwlist[aspw]],phasecenter=phasecenter);
-         im.setvp(dovp=True,usedefaultvp=True,telescope='EVLA');
-#         im.setvp(dovp=True,usedefaultvp=False,vptable='evlavp.tab',telescope='EVLA');
+         im.setvp(dovp=True)
          pbname = pbprefix + str(spwlist[aspw])+'.'+str(chanlist[aspw])
          im.makeimage(type='pb', image=pbname, compleximage="", verbose=False);
          pblist.append(pbname)
