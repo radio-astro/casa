@@ -1547,7 +1547,7 @@ class WebLogGenerator(object):
                  T2_2_2Renderer,       # spectral setup
                  T2_2_3Renderer,       # antenna setup
                  T2_2_4Renderer,       # sky setup
-                 T2_2_5Renderer,       # weather
+#                 T2_2_5Renderer,       # weather
                  T2_2_6Renderer,       # scans
                  T2_2_7Renderer,       # telescope pointing (single dish specific)
                  T2_3_1MRenderer,      # data set topic
