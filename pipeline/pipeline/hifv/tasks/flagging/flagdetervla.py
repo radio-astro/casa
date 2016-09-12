@@ -422,7 +422,7 @@ class FlagDeterVLA( flagdeterbase.FlagDeterBase ):
 
         agent_summaries = dict((v['name'], v) for v in summary_dict.values())
 
-        ordered_agents = ['before', 'anos', 'shadow', 'intents', 'qa0', 'online', 'template', 'autocorr',
+        ordered_agents = ['before', 'anos', 'online', 'shadow', 'intents', 'qa0',  'template', 'autocorr',
                            'edgespw', 'clip', 'quack',
                           'baseband']
 
@@ -454,13 +454,25 @@ class FlagDeterVLA( flagdeterbase.FlagDeterBase ):
                 cmdlist = self._read_flagfile(inputs.fileonline)
                 flag_cmds.extend([cmd for cmd in cmdlist if ('ANTENNA_NOT_ON_SOURCE' in cmd)])
                 flag_cmds.append('mode=\'summary\' name=\'anos\'')
-                
+
+        # Flag online?
+        if inputs.online:
+            if not os.path.exists(inputs.fileonline):
+                LOG.warning('Online flag file \'%s\' was not found. Online '
+                            'flagging for %s disabled.' % (inputs.fileonline,
+                                                           inputs.ms.basename))
+            else:
+                cmdlist = self._read_flagfile(inputs.fileonline)
+                # All other online flags
+                flag_cmds.extend([cmd for cmd in cmdlist if not ('ANTENNA_NOT_ON_SOURCE' in cmd)])
+                flag_cmds.append('mode=\'summary\' name=\'online\'')
+
 
 
         # Flag shadowed antennas?
-            if inputs.shadow:
-                flag_cmds.append('mode=\'shadow\' reason=\'shadow\'')
-                flag_cmds.append('mode=\'summary\' name=\'shadow\'')
+        if inputs.shadow:
+            flag_cmds.append('mode=\'shadow\' reason=\'shadow\'')
+            flag_cmds.append('mode=\'summary\' name=\'shadow\'')
 
         # These must be separated due to the way agent flagging works
         if inputs.intents != '':
@@ -470,17 +482,7 @@ class FlagDeterVLA( flagdeterbase.FlagDeterBase ):
                 flag_cmds.append('mode=\'manual\' intent=\'%s\' reason=\'intents\'' % intent)
             flag_cmds.append('mode=\'summary\' name=\'intents\'')
 
-        # Flag online?
-        if inputs.online:
-            if not os.path.exists(inputs.fileonline):
-                LOG.warning('Online flag file \'%s\' was not found. Online ANOS'
-                            'flagging for %s disabled.' % (inputs.fileonline,
-                                                                   inputs.ms.basename))
-            else:
-                cmdlist = self._read_flagfile(inputs.fileonline)
-                # All other online flags
-                flag_cmds.extend([cmd for cmd in cmdlist if not ('ANTENNA_NOT_ON_SOURCE' in cmd)])
-                flag_cmds.append('mode=\'summary\' name=\'online\'')
+
 
 
 
