@@ -43,13 +43,8 @@ class ImageCentreThresholdSequence(BaseCleanSequence):
                 cm = casatools.image.newimagefromimage(infile=self.flux+extension,
                   outfile=new_cleanmask, overwrite=True)
                 # verbose = False to suppress warning message
+                cm.calcmask('T')
                 cm.calc('1', verbose=False)
-                try:
-                    cm.replacemaskedpixels('0')
-                except Exception as e:
-                    # We get here for the case of calmaxpixel limits and
-                    # no masked pixel for the default pblimit values in iter0.
-                    pass
                 cm.calc('replace("%s"["%s" > %f], 0)' % (os.path.basename(new_cleanmask), self.flux+extension, pblimit_cleanmask), verbose=False)
                 cm.calcmask('"%s" > %s' % (self.flux+extension, str(pblimit_image)))
                 cm.done()
