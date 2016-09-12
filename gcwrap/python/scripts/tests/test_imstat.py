@@ -679,5 +679,15 @@ class imstat_test(unittest.TestCase):
         myia.done()
         self.assertTrue(res['npts'] == 70, 'Wrong number of points')
 
+    def test_f2h_quantiles(self):
+        """verify ran out of bins bug fixed, CAS-8783"""
+        myia = iatool()
+        myia.open(datapath + "f2h_quantile.im")
+        # if it completes successfully, it verifies the defect has been fixed
+        stats = ia.statistics(
+            robust=True, algorithm='fit-half', includepix=[0,0.01],
+        )
+        myia.done()
+
 def suite():
     return [imstat_test]
