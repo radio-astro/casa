@@ -682,12 +682,31 @@ class imstat_test(unittest.TestCase):
     def test_f2h_quantiles(self):
         """verify ran out of bins bug fixed, CAS-8783"""
         myia = iatool()
-        myia.open(datapath + "f2h_quantile.im")
-        # if it completes successfully, it verifies the defect has been fixed
-        stats = ia.statistics(
+        myia.open(self.datapath + "f2h_quantile.im")
+        stats = myia.statistics(
             robust=True, algorithm='fit-half', includepix=[0,0.01],
         )
         myia.done()
+        self.assertTrue((stats['blc'] == [0, 0, 0, 0]).all())
+        self.assertEqual(stats['blcf'], '09:49:35.993, +30.23.38.356, I, 2.520709e+11Hz')
+        self.assertAlmostEqual(stats['flux'][0], 269.1136358, 6)
+        self.assertAlmostEqual(stats['max'][0], 0.00400829, 6)
+        self.assertAlmostEqual(stats['mean'][0], 0.00200415, 6)
+        self.assertAlmostEqual(stats['medabsdevmed'][0], 0.00107797, 6)
+        self.assertAlmostEqual(stats['median'][0], 0.00200415, 6)
+        self.assertAlmostEqual(stats['min'][0], 2.42198261e-10, 6)
+        self.assertTrue((stats['minpos'] == [138, 130,   0, 207]).all())
+        self.assertEqual(stats['minposf'], '09:49:35.225, +30.23.47.717, I, 2.520204e+11Hz') 
+        self.assertEqual(stats['npts'], 25891736)
+        self.assertAlmostEqual(stats['q1'][0], 0.00092617, 6)
+        self.assertAlmostEqual(stats['q3'][0], 0.00308212, 6)
+        self.assertAlmostEqual(stats['quartile'][0], 0.00215594, 6)
+        self.assertAlmostEqual(stats['rms'][0], 0.0023352, 6)
+        self.assertAlmostEqual(stats['sigma'][0], 0.00119857, 6)
+        self.assertAlmostEqual(stats['sum'][0], 51890.79546682, 6)
+        self.assertAlmostEqual(stats['sumsq'][0], 141.19227439, 6)
+        self.assertTrue((stats['trc'] == [500, 500,   0, 250]).all())
+        self.assertEqual(stats['trcf'], '09:49:33.210, +30.24.14.357, I, 2.520099e+11Hz')
 
 def suite():
     return [imstat_test]
