@@ -69,6 +69,11 @@
 	</allowed>
     </param>
 
+    <param type="bool" name="clearcals">
+	<description>Reinitialize pipeline calibrations as needed</description>
+	<value>True</value>
+    </param>
+
     <param type="bool" name="dryrun" subparam="true">
 	<description>Run the task (False) or display task command (True)</description>
 	<value>False</value>
@@ -163,10 +168,17 @@ lazy -- Use the lazy import option
 dbservice -- Use online flux catalog on import
    default: False
 
-createmms -- create a multi-measurement set ('true') ready for parallel
+createmms -- Create a multi-measurement set ('true') ready for parallel
     processing, or a standard measurement set ('false'). The default setting
     ('automatic') creates an MMS if running in a cluster environment.
     default: automatic
+
+clearcals -- Clear pipeline calibrations as needed by resetting the corrected
+    data column to the data column and setting the model column to unity. For
+    normal pipeline operations clearclas should be left on, and the pipeline
+    will choose when it needs to reset the calibrations. In some reprocessing
+    applications clearcals should be turned off.
+    default: True
 
 --- pipeline task execution modes
 

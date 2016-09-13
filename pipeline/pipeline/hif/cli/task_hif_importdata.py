@@ -7,8 +7,8 @@ import pipeline.h.cli.utils as utils
 
 def hif_importdata(vis=None, session=None, pipelinemode=None, asis=None,
                    process_caldevice=None, overwrite=None, bdfflags=None,
-                   lazy=None, dbservice=None, createmms=None, dryrun=None,
-                   acceptresults=None):
+                   lazy=None, dbservice=None, createmms=None, clearcals=None,
+                   dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the
     # constructor
