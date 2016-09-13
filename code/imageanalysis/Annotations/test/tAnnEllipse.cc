@@ -46,7 +46,7 @@ int main () {
 			log << LogIO::NORMAL
 				<<"Test mixed world and pixel coordinates throws exception"
 				<< LogIO::POST;
-			Bool thrown = True;
+			Bool thrown = true;
 			Quantity centerx(0.01, "deg");
 			Quantity centery(0.01, "pix");
 			Quantity mi(30, "arcsec");
@@ -54,7 +54,7 @@ int main () {
 			Quantity pa(0, "deg");
 			Quantity beginFreq, endFreq;
 			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(False)
+				csys.directionCoordinate().directionType(false)
 			);
 			String freqRefFrameString = MFrequency::showType(
 				csys.spectralCoordinate().frequencySystem()
@@ -70,9 +70,9 @@ int main () {
 				AnnEllipse ellipse(
 					centerx, centery, ma, mi, pa, dirTypeString,
 					csys, shape, beginFreq, endFreq, freqRefFrameString,
-					dopplerString, restfreq, stokes, False
+					dopplerString, restfreq, stokes, false
 				);
-				thrown = False;
+				thrown = false;
 			} catch (const AipsError& x) {
 				log << LogIO::NORMAL
 					<< "Exception thrown as expected: " << x.getMesg()
@@ -84,7 +84,7 @@ int main () {
 			log << LogIO::NORMAL
 				<< "Test that bad quantity for world direction coordinate throws exception"
 				<< LogIO::POST;
-			Bool thrown = True;
+			Bool thrown = true;
 			Quantity centerx(0.01, "deg");
 			Quantity centery(0.01, "cm");
 			Quantity mi(30, "arcsec");
@@ -93,7 +93,7 @@ int main () {
 
 			Quantity beginFreq, endFreq;
 			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(False)
+				csys.directionCoordinate().directionType(false)
 			);
 			String freqRefFrameString = MFrequency::showType(
 				csys.spectralCoordinate().frequencySystem()
@@ -109,9 +109,9 @@ int main () {
 				AnnEllipse ellipse(
 					centerx, centery, ma, mi, pa, dirTypeString,
 					csys, shape, beginFreq, endFreq, freqRefFrameString,
-					dopplerString, restfreq, stokes, False
+					dopplerString, restfreq, stokes, false
 				);
-				thrown = False;
+				thrown = false;
 			} catch (const AipsError& x) {
 				log << LogIO::NORMAL
 					<< "Exception thrown as expected: " << x.getMesg()
@@ -124,7 +124,7 @@ int main () {
 			log << LogIO::NORMAL
 				<< "Test that minor axis larger than major axis throws exception"
 				<< LogIO::POST;
-			Bool thrown = True;
+			Bool thrown = true;
 			Quantity centerx(0.01, "deg");
 			Quantity centery(0.01, "deg");
 			Quantity mi(30, "arcsec");
@@ -133,7 +133,7 @@ int main () {
 
 			Quantity beginFreq, endFreq;
 			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(False)
+				csys.directionCoordinate().directionType(false)
 			);
 			String freqRefFrameString = MFrequency::showType(
 				csys.spectralCoordinate().frequencySystem()
@@ -149,9 +149,9 @@ int main () {
 				AnnEllipse ellipse(
 					centerx, centery, ma, mi, pa, dirTypeString,
 					csys, shape, beginFreq, endFreq, freqRefFrameString,
-					dopplerString, restfreq, stokes, False
+					dopplerString, restfreq, stokes, false
 				);
-				thrown = False;
+				thrown = false;
 			} catch (const AipsError& x) {
 				log << LogIO::NORMAL
 					<< "Exception thrown as expected: " << x.getMesg()
@@ -163,7 +163,7 @@ int main () {
 			log << LogIO::NORMAL
 				<< "Test that position angle not in angular units throws exception"
 				<< LogIO::POST;
-			Bool thrown = True;
+			Bool thrown = true;
 			Quantity centerx(0.01, "deg");
 			Quantity centery(0.01, "deg");
 			Quantity mi(30, "arcsec");
@@ -172,7 +172,7 @@ int main () {
 
 			Quantity beginFreq, endFreq;
 			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(False)
+				csys.directionCoordinate().directionType(false)
 			);
 			String freqRefFrameString = MFrequency::showType(
 				csys.spectralCoordinate().frequencySystem()
@@ -188,9 +188,9 @@ int main () {
 				AnnEllipse ellipse(
 					centerx, centery, ma, mi, pa, dirTypeString,
 					csys, shape, beginFreq, endFreq, freqRefFrameString,
-					dopplerString, restfreq, stokes, False
+					dopplerString, restfreq, stokes, false
 				);
-				thrown = False;
+				thrown = false;
 			} catch (const AipsError& x) {
 				log << LogIO::NORMAL
 					<< "Exception thrown as expected: " << x.getMesg()
@@ -207,7 +207,7 @@ int main () {
 
 			Quantity beginFreq, endFreq;
 			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(False)
+				csys.directionCoordinate().directionType(false)
 			);
 			String freqRefFrameString = MFrequency::showType(
 				csys.spectralCoordinate().frequencySystem()
@@ -222,7 +222,7 @@ int main () {
 			AnnEllipse ellipse(
 				centerx, centery, ma, mi, pa, dirTypeString,
 				csys, shape, beginFreq, endFreq, freqRefFrameString,
-				dopplerString, restfreq, stokes, False
+				dopplerString, restfreq, stokes, false
 			);
 			cout << ellipse << endl;
 
@@ -259,7 +259,7 @@ int main () {
 
 			Quantity beginFreq, endFreq;
 			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(False)
+				csys.directionCoordinate().directionType(false)
 			);
 			String freqRefFrameString = MFrequency::showType(
 				csys.spectralCoordinate().frequencySystem()
@@ -275,7 +275,7 @@ int main () {
 			AnnEllipse ellipse(
 				centerx, centery, ma, mi, pa, dirTypeString,
 				csys, shape, beginFreq, endFreq, freqRefFrameString,
-				dopplerString, restfreq, stokes, False
+				dopplerString, restfreq, stokes, false
 			);
 
 			MDirection center = ellipse.getCenter();
@@ -343,7 +343,7 @@ int main () {
 			AnnEllipse ellipse(
 				centerx, centery, ma, mi, pa, dirTypeString,
 				csys, shape, beginFreq, endFreq, freqRefFrameString,
-				dopplerString, restfreq, stokes, False
+				dopplerString, restfreq, stokes, false
 			);
 			MDirection center = ellipse.getCenter();
 			Double xnew = 0.012055422536187882;
@@ -398,7 +398,7 @@ int main () {
 
 			Quantity beginFreq, endFreq;
 			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(False)
+				csys.directionCoordinate().directionType(false)
 			);
 			String freqRefFrameString = MFrequency::showType(
 				csys.spectralCoordinate().frequencySystem()
@@ -414,7 +414,7 @@ int main () {
 			AnnEllipse ellipse(
 				centerx, centery, ma, mi, pa, dirTypeString,
 				csys, shape, beginFreq, endFreq, freqRefFrameString,
-				dopplerString, restfreq, stokes, False
+				dopplerString, restfreq, stokes, false
 			);
 
 			Quantity qma = ellipse.getSemiMajorAxis();
@@ -445,7 +445,7 @@ int main () {
 			Quantity endFreq(1450e6, "Hz");
 
 			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(False)
+				csys.directionCoordinate().directionType(false)
 			);
 			String freqRefFrameString = MFrequency::showType(
 				csys.spectralCoordinate().frequencySystem()
@@ -461,7 +461,7 @@ int main () {
 				centerx, centery, ma, mi, pa,
 				dirTypeString,
 				csys, shape, beginFreq, endFreq, freqRefFrameString,
-				dopplerString, restfreq, stokes, False
+				dopplerString, restfreq, stokes, false
 			);
 
 			Vector<MFrequency> freqs = ellipse.getFrequencyLimits();
@@ -489,7 +489,7 @@ int main () {
 			Quantity endFreq(1450e6, "Hz");
 
 			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(False)
+				csys.directionCoordinate().directionType(false)
 			);
 			String freqRefFrameString = "GALACTO";
 			String dopplerString = MDoppler::showType(
@@ -503,7 +503,7 @@ int main () {
 				centerx, centery, ma, mi, pa,
 				dirTypeString,
 				csys, shape, beginFreq, endFreq, freqRefFrameString,
-				dopplerString, restfreq, stokes, False
+				dopplerString, restfreq, stokes, false
 			);
 
 			Vector<MFrequency> freqs = ellipse.getFrequencyLimits();
@@ -531,7 +531,7 @@ int main () {
 			Quantity endFreq(-250000, "km/s");
 
 			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(False)
+				csys.directionCoordinate().directionType(false)
 			);
 			String freqRefFrameString = MFrequency::showType(
 				csys.spectralCoordinate().frequencySystem()
@@ -547,7 +547,7 @@ int main () {
 				centerx, centery, ma, mi, pa,
 				dirTypeString,
 				csys, shape, beginFreq, endFreq, freqRefFrameString,
-				dopplerString, restfreq, stokes, False
+				dopplerString, restfreq, stokes, false
 			);
 
 			Vector<MFrequency> freqs = ellipse.getFrequencyLimits();
@@ -575,7 +575,7 @@ int main () {
 			Quantity endFreq(-20, "km/s");
 
 			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(False)
+				csys.directionCoordinate().directionType(false)
 			);
 			String freqRefFrameString = MFrequency::showType(
 				csys.spectralCoordinate().frequencySystem()
@@ -591,7 +591,7 @@ int main () {
 				centerx, centery, ma, mi, pa,
 				dirTypeString,
 				csys, shape, beginFreq, endFreq, freqRefFrameString,
-				dopplerString, restfreq, stokes, False
+				dopplerString, restfreq, stokes, false
 			);
 
 			Vector<MFrequency> freqs = ellipse.getFrequencyLimits();
@@ -618,7 +618,7 @@ int main () {
 			Quantity endFreq(-1986.7458583077, "km/s");
 
 			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(False)
+				csys.directionCoordinate().directionType(false)
 			);
 			String freqRefFrameString = MFrequency::showType(
 				csys.spectralCoordinate().frequencySystem()
@@ -631,7 +631,7 @@ int main () {
 			AnnEllipse ellipse(
 				centerx, centery, ma, mi, pa, dirTypeString,
 				csys, shape, beginFreq, endFreq, freqRefFrameString,
-				dopplerString, restfreq, stokes, False
+				dopplerString, restfreq, stokes, false
 			);
 			cout << ellipse << endl;
 			Vector<MFrequency> freqs = ellipse.getFrequencyLimits();
@@ -657,7 +657,7 @@ int main () {
 
 			Quantity beginFreq, endFreq;
 			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(False)
+				csys.directionCoordinate().directionType(false)
 			);
 			String freqRefFrameString = MFrequency::showType(
 				csys.spectralCoordinate().frequencySystem()
@@ -673,7 +673,7 @@ int main () {
 			AnnEllipse ellipse(
 				centerx, centery, ma, mi, pa, dirTypeString,
 				csys, shape, beginFreq, endFreq, freqRefFrameString,
-				dopplerString, restfreq, stokes, False
+				dopplerString, restfreq, stokes, false
 			);
 
 			MDirection center = ellipse.getCenter();
@@ -728,7 +728,7 @@ int main () {
 			Quantity pa(0, "deg");
 			Quantity beginFreq, endFreq;
 			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(False)
+				csys.directionCoordinate().directionType(false)
 			);
 			String freqRefFrameString = MFrequency::showType(
 				csys.spectralCoordinate().frequencySystem()
@@ -746,7 +746,7 @@ int main () {
 			AnnEllipse ellipse(
 				centerx, centery, ma, mi, pa, dirTypeString,
 				csys, shape, beginFreq, endFreq, freqRefFrameString,
-				dopplerString, restfreq, stokes, False
+				dopplerString, restfreq, stokes, false
 			);
 			AlwaysAssert(ellipse.getSemiMajorAxis().getValue() == 28, AipsError);
 			AlwaysAssert(ellipse.getSemiMinorAxis().getValue() == 20, AipsError);
@@ -757,7 +757,7 @@ int main () {
 			ellipse = 	AnnEllipse(
 				centerx, centery, ma, mi, pa, dirTypeString,
 				csys, shape, beginFreq, endFreq, freqRefFrameString,
-				dopplerString, restfreq, stokes, False
+				dopplerString, restfreq, stokes, false
 			);
 			AlwaysAssert(ellipse.getSemiMajorAxis().getValue() == 28, AipsError);
 			AlwaysAssert(ellipse.getSemiMinorAxis().getValue() == 20, AipsError);

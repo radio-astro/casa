@@ -38,7 +38,7 @@ class PlotMSSelectionWidget;
 class QtFileWidget;
 
 
-// Subclass of PlotMSTab that handles picking MS filename, selection, and
+// Subclass of PlotMSTab that handles picking casacore::MS filename, selection, and
 // averaging parameters.
 class PlotMSDataTab : public PlotMSPlotSubtab {
     Q_OBJECT
@@ -59,26 +59,26 @@ public:
     // Implements PlotMSPlotSubtab::update().
     void update(const PlotMSPlot& plot);
     
-    QString tabName() const { return "Data"; }
+    QString tabName() const { return "casacore::Data"; }
 
     //Returns the name of the file that will be plotted.
-    String getFileName() const;
+    casacore::String getFileName() const;
 
     //Returns any selection criteria for the data.
-    String getSelection() const;
+    casacore::String getSelection() const;
 
     //Returns the type of averaging for the data.
-    String getAveraging() const;
+    casacore::String getAveraging() const;
 
 signals:
 	void changed();
 
 private:
     
-    // Widget for MS selection.
+    // Widget for casacore::MS selection.
     PlotMSSelectionWidget* itsSelectionWidget_;
     
-    // Widget for MS averaging.
+    // Widget for casacore::MS averaging.
     PlotMSAveragingWidget* itsAveragingWidget_;
 
     QtFileWidget* itsFileWidget_;

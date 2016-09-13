@@ -30,6 +30,7 @@
 #include <casa/Arrays/ArrayMath.h>
 #include <tables/Tables/RefRows.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //----------------------------------------------------------------------------
@@ -192,7 +193,7 @@ Vector<Bool>& SolvableVisJonesMBuf::totalSolnOk()
   if (connectedToIter()) {
     if (!totalSolnOkOK_p) {
       calMainCol()->totalSolnOk().getColumn (totalSolnOk_p);
-      totalSolnOkOK_p = True;
+      totalSolnOkOK_p = true;
     };
   };
   return totalSolnOk_p;
@@ -210,7 +211,7 @@ Vector<Float>& SolvableVisJonesMBuf::totalFit()
   if (connectedToIter()) {
     if (!totalFitOK_p) {
       calMainCol()->totalFit().getColumn (totalFit_p);
-      totalFitOK_p = True;
+      totalFitOK_p = true;
     };
   };
   return totalFit_p;
@@ -228,7 +229,7 @@ Vector<Float>& SolvableVisJonesMBuf::totalFitWgt()
   if (connectedToIter()) {
     if (!totalFitWgtOK_p) {
       calMainCol()->totalFitWgt().getColumn (totalFitWgt_p);
-      totalFitWgtOK_p = True;
+      totalFitWgtOK_p = true;
     };
   };
   return totalFitWgt_p;
@@ -246,7 +247,7 @@ Array<Bool>& SolvableVisJonesMBuf::solnOk()
   if (connectedToIter()) {
     if (!solnOkOK_p) {
       calMainCol()->solnOk().getColumn (solnOk_p);
-      solnOkOK_p = True;
+      solnOkOK_p = true;
     };
   };
   return solnOk_p;
@@ -264,7 +265,7 @@ Array<Float>& SolvableVisJonesMBuf::fit()
   if (connectedToIter()) {
     if (!fitOK_p) {
       calMainCol()->fit().getColumn (fit_p);
-      fitOK_p = True;
+      fitOK_p = true;
     };
   };
   return fit_p;
@@ -282,7 +283,7 @@ Array<Float>& SolvableVisJonesMBuf::fitWgt()
   if (connectedToIter()) {
     if (!fitWgtOK_p) {
       calMainCol()->fitWgt().getColumn (fitWgt_p);
-      fitWgtOK_p = True;
+      fitWgtOK_p = true;
     };
   };
   return fitWgt_p;
@@ -300,7 +301,7 @@ Array<Bool>& SolvableVisJonesMBuf::flag()
   if (connectedToIter()) {
     if (!flagOK_p) {
       calMainCol()->flag().getColumn (flag_p);
-      flagOK_p = True;
+      flagOK_p = true;
     };
   };
   return flag_p;
@@ -318,7 +319,7 @@ Array<Float>& SolvableVisJonesMBuf::snr()
   if (connectedToIter()) {
     if (!snrOK_p) {
       calMainCol()->snr().getColumn (snr_p);
-      snrOK_p = True;
+      snrOK_p = true;
     };
   };
   return snr_p;
@@ -343,14 +344,14 @@ void SolvableVisJonesMBuf::invalidate()
   CalMainBuffer::invalidate();
 
   // Set all cache flags to false
-  totalSolnOkOK_p = False;
-  totalFitOK_p = False;   
-  totalFitWgtOK_p = False;
-  solnOkOK_p = False;     
-  fitOK_p = False;      
-  fitWgtOK_p = False;     
-  flagOK_p = False;
-  snrOK_p = False;
+  totalSolnOkOK_p = false;
+  totalFitOK_p = false;   
+  totalFitWgtOK_p = false;
+  solnOkOK_p = false;     
+  fitOK_p = false;      
+  fitWgtOK_p = false;     
+  flagOK_p = false;
+  snrOK_p = false;
 };
 
 //----------------------------------------------------------------------------
@@ -377,7 +378,7 @@ void SolvableVisJonesMBuf::fillAttributes (const Vector<Int>& /*calIndices*/)
   //
   // TOTAL_SOLUTION_OK
   totalSolnOk().resize(nrow);
-  totalSolnOk() = False;
+  totalSolnOk() = false;
 
   // TOTAL_FIT
   totalFit().resize(nrow);
@@ -395,7 +396,7 @@ void SolvableVisJonesMBuf::fillAttributes (const Vector<Int>& /*calIndices*/)
 
   // SOLUTION_OK
   solnOk().resize(sizeA);
-  solnOk() = False;
+  solnOk() = false;
 
   // FIT
   fit().resize(sizeA);
@@ -407,7 +408,7 @@ void SolvableVisJonesMBuf::fillAttributes (const Vector<Int>& /*calIndices*/)
 
   // FLAG
   flag().resize(sizeA);
-  flag() = True;
+  flag() = true;
 
   // SNR
   snr().resize(sizeA);
@@ -463,11 +464,11 @@ Bool GJonesMBuf::fillMatchingRows (const Vector<Int>& matchingRows,
 //    sRefAnt             const Int &            Reference antenna id.
 //
   // Initialization
-  Bool retval = False;
+  Bool retval = false;
   Int nMatch = matchingRows.nelements();
 
   if (nMatch > 0) {
-    retval = True;
+    retval = true;
     // Update each matched row
     for (Int i=0; i < nMatch; i++) {
       uInt row = matchingRows(i);

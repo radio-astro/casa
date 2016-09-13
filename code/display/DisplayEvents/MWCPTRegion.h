@@ -60,7 +60,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <synopsis>
 // This class finalises the functionality in WCRectTool to
 // implement event-based drawing of polygonal regions on a
-// WorldCanvas.  Double clicking inside the constructed polygon
+// WorldCanvas.  casacore::Double clicking inside the constructed polygon
 // emits the region, whilst pressing Escape cancels the region.
 // </synopsis>
 
@@ -97,10 +97,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void regionReady() { };
 
 		// get the world coords of the current polygon region
-		void getWorldCoords(Vector<Double> &x, Vector<Double> &y);
+		void getWorldCoords(casacore::Vector<casacore::Double> &x, casacore::Vector<casacore::Double> &y);
 
 		// get the linear coords of the current ploygon region
-		void getLinearCoords(Vector<Double> &x, Vector<Double> &y);
+		void getLinearCoords(casacore::Vector<casacore::Double> &x, casacore::Vector<casacore::Double> &y);
 
 	};
 

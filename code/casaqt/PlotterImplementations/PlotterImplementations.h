@@ -23,14 +23,14 @@ SimplePlotterPtr simplePlotter(Plotter::Implementation which= Plotter::DEFAULT,
                                
 class PlotterImplementations {                               
 public:
-    static String implementationName(Plotter::Implementation i);
+    static casacore::String implementationName(Plotter::Implementation i);
     
-    static String implementationAbout(Plotter::Implementation i,
+    static casacore::String implementationAbout(Plotter::Implementation i,
                                       bool useHTML = true);
     
-    static String implementationVersion(Plotter::Implementation i);
+    static casacore::String implementationVersion(Plotter::Implementation i);
     
-    static String implementationLink(Plotter::Implementation i,
+    static casacore::String implementationLink(Plotter::Implementation i,
                                      bool useHTML = true);
 };
 

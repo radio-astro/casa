@@ -27,6 +27,7 @@
 #include <QDebug>
 #include <assert.h>
 
+using namespace casacore;
 namespace casa {
 
 	ConverterVelocityFrequency::ConverterVelocityFrequency(const QString& oldUnits,const QString& newUnits) :
@@ -70,4 +71,5 @@ namespace casa {
 		// TODO Auto-generated destructor stub
 	}
 
+using namespace casacore;
 } /* namespace casa */

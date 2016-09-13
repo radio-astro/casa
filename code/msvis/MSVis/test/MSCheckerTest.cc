@@ -31,6 +31,7 @@
 #include <memory>
 
 using namespace casacore;
+using namespace casacore;
 
 using namespace std;
 

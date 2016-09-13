@@ -67,8 +67,8 @@
 namespace casa {
 
 template <class T> ImageSourceFinder<T>::ImageSourceFinder(
-	SPCIIT image, const Record *const region, const String& mask
-) : ImageTask<T>(image, region, mask, "", False) {
+	SPCIIT image, const casacore::Record *const region, const casacore::String& mask
+) : ImageTask<T>(image, region, mask, "", false) {
 	this->_construct();
 }
 
@@ -76,52 +76,52 @@ template <class T>
 ImageSourceFinder<T>::~ImageSourceFinder () {}
 
 template <class T>
-ComponentList ImageSourceFinder<T>::findSources (Int nMax) {
+ComponentList ImageSourceFinder<T>::findSources (casacore::Int nMax) {
    return _findSources(nMax);
 }
 
 template <class T>
 SkyComponent ImageSourceFinder<T>::findSourceInSky (
-	Vector<Double>& absPixel
+	casacore::Vector<casacore::Double>& absPixel
 ) {
 
 	// Find sky
-	Int dC;
-	String errorMessage;
-	Vector<Int> pixelAxes, worldAxes;
+	casacore::Int dC;
+	casacore::String errorMessage;
+	casacore::Vector<casacore::Int> pixelAxes, worldAxes;
 	auto subImage = SubImageFactory<T>::createSubImageRO(
 		*this->_getImage(), *this->_getRegion(), this->_getMask(),
-		this->_getLog().get(), AxesSpecifier()
+		this->_getLog().get(), casacore::AxesSpecifier()
 	);
 
-	CoordinateSystem cSys = subImage->coordinates();
+	casacore::CoordinateSystem cSys = subImage->coordinates();
 	ThrowIf(
-		!CoordinateUtil::findSky(
+		!casacore::CoordinateUtil::findSky(
 			errorMessage, dC, pixelAxes,
 			worldAxes, cSys
 		), errorMessage
 	);
 	// Find maximum/minimum
    
-	LatticeStatistics<T> stats(*subImage, *this->_getLog(), True);
-	IPosition minPos, maxPos;
+	casacore::LatticeStatistics<T> stats(*subImage, *this->_getLog(), true);
+	casacore::IPosition minPos, maxPos;
 	ThrowIf(
 		!stats.getMinMaxPos(minPos, maxPos), stats.errorMessage()
 	);
-	// Make SubImage of plane of sky holding maximum or minimum
+	// Make casacore::SubImage of plane of sky holding maximum or minimum
          
-	IPosition shape = subImage->shape();
-	const uInt nDim = subImage->ndim();
+	casacore::IPosition shape = subImage->shape();
+	const casacore::uInt nDim = subImage->ndim();
 
 	absPixel.resize(nDim);
-	IPosition blc;
-	IPosition trc;
+	casacore::IPosition blc;
+	casacore::IPosition trc;
 	if (_absFind) {
 		// Find positive only
 
 		blc = maxPos;
 		trc = maxPos;
-		for (uInt i=0; i<nDim; ++i) {
+		for (casacore::uInt i=0; i<nDim; ++i) {
 			absPixel(i) = maxPos(i);
 		}
 	}
@@ -132,14 +132,14 @@ SkyComponent ImageSourceFinder<T>::findSourceInSky (
 		if (abs(valueMax) > abs(valueMin)) {
 			blc = maxPos;
 			trc = maxPos;
-			for (uInt i=0; i<nDim; ++i) {
+			for (casacore::uInt i=0; i<nDim; ++i) {
 				absPixel(i) = maxPos(i);
 			}
 		}
 		else {
 			blc = minPos;
 			trc = minPos;
-			for (uInt i=0; i<nDim; ++i) {
+			for (casacore::uInt i=0; i<nDim; ++i) {
 				absPixel(i) = maxPos(i);
 			}
 		}
@@ -148,11 +148,11 @@ SkyComponent ImageSourceFinder<T>::findSourceInSky (
 	blc(pixelAxes(1)) = 0;
 	trc(pixelAxes(0)) = shape(pixelAxes(0))-1;
 	trc(pixelAxes(1)) = shape(pixelAxes(1))-1;
-	IPosition inc(nDim,1);
-	LCBox::verify (blc, trc, inc, shape);
-	Slicer slicer(blc, trc, inc, Slicer::endIsLast);
-	AxesSpecifier axesSpec(False);   // drop degenerate
-	const SubImage<T> subImage2(*subImage, slicer, axesSpec);
+	casacore::IPosition inc(nDim,1);
+	casacore::LCBox::verify (blc, trc, inc, shape);
+	casacore::Slicer slicer(blc, trc, inc, casacore::Slicer::endIsLast);
+	casacore::AxesSpecifier axesSpec(false);   // drop degenerate
+	const casacore::SubImage<T> subImage2(*subImage, slicer, axesSpec);
 	SPCIIT myclone(subImage2.cloneII());
 	// Find one source
 
@@ -164,9 +164,9 @@ SkyComponent ImageSourceFinder<T>::findSourceInSky (
    
 	ComponentList list = isf.findSources(1);
 	SkyComponent sky = list.component(0);
-	DirectionCoordinate dCoord = cSys.directionCoordinate(dC);
-	MDirection mDir = sky.shape().refDirection();
-	Vector<Double> dirPixel(2);
+	casacore::DirectionCoordinate dCoord = cSys.directionCoordinate(dC);
+	casacore::MDirection mDir = sky.shape().refDirection();
+	casacore::Vector<casacore::Double> dirPixel(2);
 	ThrowIf(
 		!dCoord.toPixel(dirPixel, mDir), dCoord.errorMessage()
 	);
@@ -176,7 +176,7 @@ SkyComponent ImageSourceFinder<T>::findSourceInSky (
 }
 
 template <class T> ComponentList ImageSourceFinder<T>::_findSources (
-	Int nMax
+	casacore::Int nMax
 ) {
 	ComponentList listOut;
 
@@ -184,63 +184,63 @@ template <class T> ComponentList ImageSourceFinder<T>::_findSources (
 
 	auto subImage = SubImageFactory<T>::createSubImageRO(
 		*this->_getImage(), *this->_getRegion(), this->_getMask(),
-   		this->_getLog().get(), AxesSpecifier(False)
+   		this->_getLog().get(), casacore::AxesSpecifier(false)
 	);
 
 	const auto& cSys = subImage->coordinates();
-	Bool xIsLong = cSys.isDirectionAbscissaLongitude();
+	casacore::Bool xIsLong = cSys.isDirectionAbscissaLongitude();
 
 	// Width support for fast source finder.
 	// Can go to w/off/off2 = 5/2/1 but craps out if bigger.
 
-	Int w = 3;
-	Int off = 1;
-	Int off2 = 0;
+	casacore::Int w = 3;
+	casacore::Int off = 1;
+	casacore::Int off2 = 0;
 
 	// Results matrix
-	Matrix<typename NumericTraits<T>::PrecisionType> mat(w,w);
-	Matrix<typename NumericTraits<T>::PrecisionType> rs(nMax, 3);  // flux, x, y
+	casacore::Matrix<typename casacore::NumericTraits<T>::PrecisionType> mat(w,w);
+	casacore::Matrix<typename casacore::NumericTraits<T>::PrecisionType> rs(nMax, 3);  // flux, x, y
 	rs = 0.0;
     
 	// Assume only positive
     
-	Double asign(1.0);
+	casacore::Double asign(1.0);
 
 	// Fitting data
  
-	LSQaips fit(6);
-	Vector<T> gel(6);
-	uInt rank;
-	Vector<T> sol(6);
+	casacore::LSQaips fit(6);
+	casacore::Vector<T> gel(6);
+	casacore::uInt rank;
+	casacore::Vector<T> sol(6);
    
-	// Input data arrays
+	// casacore::Input data arrays
 
-	IPosition inShape = subImage->shape();
-	Int nx = inShape(0);
-	Int ny = inShape(1);
+	casacore::IPosition inShape = subImage->shape();
+	casacore::Int nx = inShape(0);
+	casacore::Int ny = inShape(1);
 	ThrowIf(
 		ny <= w,
-		"Need at least " + String::toString(w+1)
-   	   	+ " rows in image. Found only " + String::toString(ny)
+		"Need at least " + casacore::String::toString(w+1)
+   	   	+ " rows in image. Found only " + casacore::String::toString(ny)
 	);
-	IPosition inSliceShape(2, nx, 1);
-	Block<COWPtr<Array<T> > > inPtr(w);
-	Block<COWPtr<Array<Bool> > > inMaskPtr(w);
-	Matrix<Bool> inDone(w,nx);
-	inDone = False;
-	for (Int j=0; j<w; ++j) {
-		inPtr[j] = COWPtr<Array<T> >(new Array<T>(inSliceShape));
-		inMaskPtr[j] = COWPtr<Array<Bool> >(new Array<Bool>(inSliceShape));
+	casacore::IPosition inSliceShape(2, nx, 1);
+	casacore::Block<casacore::COWPtr<casacore::Array<T> > > inPtr(w);
+	casacore::Block<casacore::COWPtr<casacore::Array<casacore::Bool> > > inMaskPtr(w);
+	casacore::Matrix<casacore::Bool> inDone(w,nx);
+	inDone = false;
+	for (casacore::Int j=0; j<w; ++j) {
+		inPtr[j] = casacore::COWPtr<casacore::Array<T> >(new casacore::Array<T>(inSliceShape));
+		inMaskPtr[j] = casacore::COWPtr<casacore::Array<casacore::Bool> >(new casacore::Array<casacore::Bool>(inSliceShape));
 	}
 	// Read first w-1 lines
-	Int inp = 0;
-	IPosition start(inShape);
+	casacore::Int inp = 0;
+	casacore::IPosition start(inShape);
 	start = 0;
-	IPosition pos(1,0);
-	for (Int j=0; j<(w-1); ++j) {
-		subImage->getSlice(inPtr[inp+j], Slicer(start, inSliceShape), True);
-		subImage->getMaskSlice(inMaskPtr[inp+j], Slicer(start, inSliceShape), True);
-		for (Int i=0; i<nx; ++i) {
+	casacore::IPosition pos(1,0);
+	for (casacore::Int j=0; j<(w-1); ++j) {
+		subImage->getSlice(inPtr[inp+j], casacore::Slicer(start, inSliceShape), true);
+		subImage->getMaskSlice(inMaskPtr[inp+j], casacore::Slicer(start, inSliceShape), true);
+		for (casacore::Int i=0; i<nx; ++i) {
 			pos(0) = i;
 			inDone(inp+j, i) = inMaskPtr[inp+j].ref()(pos);
 		}
@@ -248,12 +248,12 @@ template <class T> ComponentList ImageSourceFinder<T>::_findSources (
 	}
 	// Loop through remaining lines
                
-	for (Int j=(w-1); j<ny; ++j) {
+	for (casacore::Int j=(w-1); j<ny; ++j) {
 		inp++;
 		inp %= w;
-		subImage->getSlice(inPtr[(inp+1)%w], Slicer(start, inSliceShape), True);
-		subImage->getMaskSlice(inMaskPtr[(inp+1)%w], Slicer(start, inSliceShape), True);
-		for (Int i=0; i<nx; ++i) {
+		subImage->getSlice(inPtr[(inp+1)%w], casacore::Slicer(start, inSliceShape), true);
+		subImage->getMaskSlice(inMaskPtr[(inp+1)%w], casacore::Slicer(start, inSliceShape), true);
+		for (casacore::Int i=0; i<nx; ++i) {
 			pos(0) = i;
 			inDone((inp+1)%w, i) = !(inMaskPtr[(inp+1)%w].ref()(pos));
 		}
@@ -261,12 +261,12 @@ template <class T> ComponentList ImageSourceFinder<T>::_findSources (
          
 		// All points
 
-		for (Int i=off; i<(nx-off); ++i) {
+		for (casacore::Int i=off; i<(nx-off); ++i) {
 			if (inDone(inp, i)) {
 				continue;             // point already used or masked
 			}
 			pos(0) = i;
-			typename NumericTraits<T>::PrecisionType v(inPtr[inp].ref()(pos));
+			typename casacore::NumericTraits<T>::PrecisionType v(inPtr[inp].ref()(pos));
 			if (_absFind) {                            // find pos/neg
 				asign = (v<0) ? -1.0 : 1.0;
 				v = abs(v);
@@ -280,11 +280,11 @@ template <class T> ComponentList ImageSourceFinder<T>::_findSources (
          
 			// Make local data field
             
-			Bool xt = False;
-			for (Int jj=-off; jj<(off+1); ++jj) {
-				for (Int ii=-off; ii<(off+1); ++ii) {
+			casacore::Bool xt = false;
+			for (casacore::Int jj=-off; jj<(off+1); ++jj) {
+				for (casacore::Int ii=-off; ii<(off+1); ++ii) {
 					if (inDone((inp+jj+w)%w, i+ii)) {    // already used
-						xt = True;
+						xt = true;
 						break;
 					}
 
@@ -311,10 +311,10 @@ template <class T> ComponentList ImageSourceFinder<T>::_findSources (
 
 			// Solve general ellipsoid
     
-			Int k = 0;
+			casacore::Int k = 0;
 			fit.set(6);
-			for (Int jj=-off; jj<(off+1); ++jj) {
-				for (Int ii=-off; ii<(off+1); ++ii) {
+			for (casacore::Int jj=-off; jj<(off+1); ++jj) {
+				for (casacore::Int ii=-off; ii<(off+1); ++ii) {
 					gel(0)= 1;
 					gel(1) = jj;
 					gel(2) = ii;
@@ -337,11 +337,11 @@ template <class T> ComponentList ImageSourceFinder<T>::_findSources (
    
 			// Find max
 
-			typename NumericTraits<T>::PrecisionType r1(sol(5)*sol(5) - 4*sol(3)*sol(4));       // dx
-			if (r1 == typename NumericTraits<T>::PrecisionType(0)) {
+			typename casacore::NumericTraits<T>::PrecisionType r1(sol(5)*sol(5) - 4*sol(3)*sol(4));       // dx
+			if (r1 == typename casacore::NumericTraits<T>::PrecisionType(0)) {
 				continue;                            // forget
 			}
-			typename NumericTraits<T>::PrecisionType r0((2*sol(2)*sol(3) - sol(1)*sol(5))/r1);  // dy
+			typename casacore::NumericTraits<T>::PrecisionType r0((2*sol(2)*sol(3) - sol(1)*sol(5))/r1);  // dy
 			r1 = (2*sol(1)*sol(4) - sol(2)*sol(5))/r1;
 			if (abs(r0)>1 || abs(r1)>1) {
 				continue;             // too far away from peak
@@ -357,10 +357,10 @@ template <class T> ComponentList ImageSourceFinder<T>::_findSources (
 			}
 			if (v<_cutoff*abs(rs(0,0))) continue;             // too small
 
-			for (Int k=0; k<nMax; ++k) {
+			for (casacore::Int k=0; k<nMax; ++k) {
 				if (v>=rs(k,0)) {
-					for (Int l=nMax-1; l>k; --l) {
-						for (uInt i0=0; i0<3; ++i0) {
+					for (casacore::Int l=nMax-1; l>k; --l) {
+						for (casacore::uInt i0=0; i0<3; ++i0) {
 							rs(l,i0) = rs(l-1,i0);
 						}
 					}
@@ -369,9 +369,9 @@ template <class T> ComponentList ImageSourceFinder<T>::_findSources (
 					rs(k,1) = i+r0;                        // X
 					rs(k,2) = j+r1-1;                      // Y
 
-					for (Int jj=-off; jj<(off+1); ++jj) {
-						for (Int ii=-off; ii<(off+1); ++ii) {
-							inDone((inp+jj+w)%w, i+ii) = True;
+					for (casacore::Int jj=-off; jj<(off+1); ++jj) {
+						for (casacore::Int ii=-off; ii<(off+1); ++ii) {
+							inDone((inp+jj+w)%w, i+ii) = true;
 						}
 					}
             	  break;
@@ -381,9 +381,9 @@ template <class T> ComponentList ImageSourceFinder<T>::_findSources (
 	}
                        
 	// Find the number filled
-	Int nFound = 0;
+	casacore::Int nFound = 0;
 	auto x = _cutoff*abs(rs(0,0));
-	for (Int k=0; k<nMax; ++k) {
+	for (casacore::Int k=0; k<nMax; ++k) {
 		if (abs(rs(k,0)) < x || rs(k,0) == 0) {
 			break;
 		}
@@ -391,20 +391,20 @@ template <class T> ComponentList ImageSourceFinder<T>::_findSources (
 	}
 
 	if (nFound==0) {
-		*this->_getLog() << LogIO::WARN << "No sources were found" << LogIO::POST;
+		*this->_getLog() << casacore::LogIO::WARN << "No sources were found" << casacore::LogIO::POST;
 		return listOut;
 	}
 
 	// Generate more accurate fit if required giveing shape information
 
-	Matrix<typename NumericTraits<T>::PrecisionType> ss(nFound, 3);    // major, minor, pa
-	Matrix<typename NumericTraits<T>::PrecisionType> rs2(rs.copy());   // copy
+	casacore::Matrix<typename casacore::NumericTraits<T>::PrecisionType> ss(nFound, 3);    // major, minor, pa
+	casacore::Matrix<typename casacore::NumericTraits<T>::PrecisionType> rs2(rs.copy());   // copy
 
 	if (! _doPoint) {
 
 		// Loop over found sources
 
-		for (Int k=0; k<nFound; ++k) {
+		for (casacore::Int k=0; k<nFound; ++k) {
 			if (_width <= 0) {
 
 				// This means we want just the default shape estimates only
@@ -416,10 +416,10 @@ template <class T> ComponentList ImageSourceFinder<T>::_findSources (
 			else {
 
 				// See if we can do this source
-				Int iCen = Int(rs(k,1));
-				Int jCen = Int(rs(k,2));
-				IPosition blc0(subImage->ndim(),0);
-				IPosition trc0(subImage->ndim(),0);
+				casacore::Int iCen = casacore::Int(rs(k,1));
+				casacore::Int jCen = casacore::Int(rs(k,2));
+				casacore::IPosition blc0(subImage->ndim(),0);
+				casacore::IPosition trc0(subImage->ndim(),0);
 				blc0(0) = iCen - _width;
 				blc0(1) = jCen - _width;
 				trc0(0) = iCen + _width;
@@ -429,8 +429,8 @@ template <class T> ComponentList ImageSourceFinder<T>::_findSources (
 					blc0(0)<0 || trc0(0)>=inShape(0)
 					|| blc0(1)<0 || trc0(1)>=inShape(1)
 				) {
-					*this->_getLog() << LogIO::WARN << "Component " << k << " is too close to the image edge for" << endl;
-					*this->_getLog() << "  shape-fitting - resorting to default shape estimates" << LogIO::POST;
+					*this->_getLog() << casacore::LogIO::WARN << "Component " << k << " is too close to the image edge for" << endl;
+					*this->_getLog() << "  shape-fitting - resorting to default shape estimates" << casacore::LogIO::POST;
 					ss(k,0) = _width;
 					ss(k,1) = _width;
 					ss(k,2) = 0.0;
@@ -439,20 +439,20 @@ template <class T> ComponentList ImageSourceFinder<T>::_findSources (
 
 					// Fish out data to fit
 
-					IPosition shp = trc0 - blc0 + 1;
-					Array<T> dataIn = subImage->getSlice(blc0, shp, False);
-					Array<Bool> maskIn = subImage->getMaskSlice(blc0, shp, False);
-					Array<T> sigmaIn(dataIn.shape(),1.0);
+					casacore::IPosition shp = trc0 - blc0 + 1;
+					casacore::Array<T> dataIn = subImage->getSlice(blc0, shp, false);
+					casacore::Array<casacore::Bool> maskIn = subImage->getMaskSlice(blc0, shp, false);
+					casacore::Array<T> sigmaIn(dataIn.shape(),1.0);
 
 					// Make fitter, add model and fit
 
-					Fit2D fit2d(*this->_getLog());
-					auto model =  fit2d.estimate(Fit2D::GAUSSIAN, dataIn, maskIn);
+					casacore::Fit2D fit2d(*this->_getLog());
+					auto model =  fit2d.estimate(casacore::Fit2D::GAUSSIAN, dataIn, maskIn);
 					model(0) = rs(k,0);
-					fit2d.addModel(Fit2D::GAUSSIAN, model);
+					fit2d.addModel(casacore::Fit2D::GAUSSIAN, model);
 					auto ret = fit2d.fit(dataIn, maskIn, sigmaIn);
 
-					if (ret==Fit2D::OK) {
+					if (ret==casacore::Fit2D::OK) {
 						auto solution = fit2d.availableSolution();
 
 						rs(k,0) = solution(0);
@@ -464,7 +464,7 @@ template <class T> ComponentList ImageSourceFinder<T>::_findSources (
 						ss(k,2) = solution(5);
 					}
 					else {
-						*this->_getLog() << LogIO::WARN << "Fit did not converge, resorting to default shape estimates" << LogIO::POST;
+						*this->_getLog() << casacore::LogIO::WARN << "Fit did not converge, resorting to default shape estimates" << casacore::LogIO::POST;
 						ss(k,0) = _width;
 						ss(k,1) = _width;
 						ss(k,2) = 0.0;
@@ -475,24 +475,24 @@ template <class T> ComponentList ImageSourceFinder<T>::_findSources (
 	}
 
 	// Fill SkyComponents
-	*this->_getLog() << LogIO::NORMAL << "Found " << nFound << " sources" << LogIO::POST;
-	const Unit& bU = subImage->units();
-	Double rat;
+	*this->_getLog() << casacore::LogIO::NORMAL << "Found " << nFound << " sources" << casacore::LogIO::POST;
+	const casacore::Unit& bU = subImage->units();
+	casacore::Double rat;
 
-	// What Stokes is the plane we are finding in ?
+	// What casacore::Stokes is the plane we are finding in ?
       
-	Stokes::StokesTypes stokes(Stokes::Undefined);
-	stokes = CoordinateUtil::findSingleStokes (*this->_getLog(), cSys, 0);
+	casacore::Stokes::StokesTypes stokes(casacore::Stokes::Undefined);
+	stokes = casacore::CoordinateUtil::findSingleStokes (*this->_getLog(), cSys, 0);
 
-	Vector<Double> pars;
+	casacore::Vector<casacore::Double> pars;
 	ComponentType::Shape cType(ComponentType::POINT);
 	pars.resize(3);
 	if (! _doPoint) {
 		cType = ComponentType::GAUSSIAN;
-		pars.resize(6, True);
+		pars.resize(6, true);
 	}
 
-	for (Int k=0; k<nFound; ++k) {
+	for (casacore::Int k=0; k<nFound; ++k) {
 		pars(0) = rs(k,0);
 		pars(1) = rs(k,1);
 		pars(2) = rs(k,2);
@@ -512,12 +512,12 @@ template <class T> ComponentList ImageSourceFinder<T>::_findSources (
 			);
 			listOut.add(sky);
 		}
-		catch (const AipsError& x) {
-			*this->_getLog() << LogIO::WARN << "Could not convert fitted pixel parameters to world for source " << k+1 << endl;
+		catch (const casacore::AipsError& x) {
+			*this->_getLog() << casacore::LogIO::WARN << "Could not convert fitted pixel parameters to world for source " << k+1 << endl;
 			*this->_getLog() << "Probably this means the fitted parameters were wildly wrong" << endl;
-			*this->_getLog() << "Reverting to original POINT source parameters for this source " << LogIO::POST;
+			*this->_getLog() << "Reverting to original POINT source parameters for this source " << casacore::LogIO::POST;
 
-			Vector<Double> pars2(3);
+			casacore::Vector<casacore::Double> pars2(3);
 			pars2(0) = rs2(k,0);
 			pars2(1) = rs2(k,1);
 			pars2(2) = rs2(k,2);

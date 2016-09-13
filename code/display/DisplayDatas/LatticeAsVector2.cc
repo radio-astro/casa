@@ -34,6 +34,7 @@
 
 #include <display/DisplayDatas/LatticeAsVector.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	template <>

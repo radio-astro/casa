@@ -40,12 +40,16 @@
 //#include<casa/random.h>
 #include<synthesis/ImagerObjects/InteractiveMasking.h>
 
+namespace casacore{
+
+class MeasurementSet;
+template<class T> class ImageInterface;
+}
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Forward declarations
-class MeasurementSet;
 class ViewerProxy;
-template<class T> class ImageInterface;
 
 // <summary> Class that contains functions needed for imager </summary>
 
@@ -63,25 +67,25 @@ class SynthesisIterBot
   void openDBus( );
 
   // make all pure-inputs const
-  void setupIteration(Record iterpars);
+  void setupIteration(casacore::Record iterpars);
 
-  void setInteractiveMode(Bool interactiveMode);
-  virtual void   setIterationDetails(Record iterpars);
-  Record getIterationDetails();
-  Record getIterationSummary();
+  void setInteractiveMode(casacore::Bool interactiveMode);
+  virtual void   setIterationDetails(casacore::Record iterpars);
+  casacore::Record getIterationDetails();
+  casacore::Record getIterationSummary();
 
   int cleanComplete();
 
-  Record getSubIterBot();
+  casacore::Record getSubIterBot();
 
-  void startMinorCycle(Record& initializationRecord);
-  void endMinorCycle(Record& executionRecord);
+  void startMinorCycle(casacore::Record& initializationRecord);
+  void endMinorCycle(casacore::Record& executionRecord);
 
   void endMajorCycle();
 
-  void changeStopFlag( Bool stopflag );
+  void changeStopFlag( casacore::Bool stopflag );
 
-  virtual Record pauseForUserInteractionOld(){return Record();};
+  virtual casacore::Record pauseForUserInteractionOld(){return casacore::Record();};
 
 protected:
 
@@ -98,10 +102,10 @@ protected:
   void dbus_thread_launch_pad( );
 
   /// Parameters to control the old interactive GUI. Can be moved somewhere more appropriate...
-  /*  Vector<String> itsImageList;
-  Vector<Int> itsNTermList;
-  Vector<Int> itsActionCodes;
-  CountedPtr<InteractiveMasking> itsInteractiveMasker;
+  /*  casacore::Vector<casacore::String> itsImageList;
+  casacore::Vector<casacore::Int> itsNTermList;
+  casacore::Vector<casacore::Int> itsActionCodes;
+  casacore::CountedPtr<InteractiveMasking> itsInteractiveMasker;
   */
 };
 
@@ -114,18 +118,18 @@ protected:
   SynthesisIterBotWithOldGUI();
   ~SynthesisIterBotWithOldGUI(){};
 
-  void   setIterationDetails(Record iterpars);
-  Record pauseForUserInteractionOld();
+  void   setIterationDetails(casacore::Record iterpars);
+  casacore::Record pauseForUserInteractionOld();
 
 protected:
 
   void pauseForUserInteraction(){};
 
  private:
-  Vector<String> itsImageList;
-  Vector<Bool> itsMultiTermList;
-  Vector<Int> itsActionCodes;
-  CountedPtr<InteractiveMasking> itsInteractiveMasker;
+  casacore::Vector<casacore::String> itsImageList;
+  casacore::Vector<casacore::Bool> itsMultiTermList;
+  casacore::Vector<casacore::Int> itsActionCodes;
+  casacore::CountedPtr<InteractiveMasking> itsInteractiveMasker;
 
   };
 

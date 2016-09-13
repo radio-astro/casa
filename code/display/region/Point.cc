@@ -39,6 +39,7 @@
 #include <coordinates/Coordinates/CoordinateUtil.h>
 #include <display/ds9/ds9writer.h>
 
+using namespace casacore;
 namespace casa {
 	namespace viewer {
 
@@ -226,7 +227,7 @@ namespace casa {
 						// draw outline rectangle for resizing the point...
 						// While a circle would be a better choice, drawing a dotted circle
 						// leaves terrible gaps in the circumference...  currently... <drs>
-						// pc->drawEllipse(x, y, radius, radius, 0.0, True, 1.0, 1.0);
+						// pc->drawEllipse(x, y, radius, radius, 0.0, true, 1.0, 1.0);
 						pc->drawRectangle( x-radius+4, y-radius+4, x+radius-4, y+radius-4 );
 					}
 				}

@@ -110,12 +110,12 @@ Bool VLAFrequencyFilter::passThru(const VLALogicalRecord& record) const {
 // 	   << " - " << itsTopEdge;
       if (itsTopEdge > bottomEdge && itsBottomEdge < topEdge) {
 // 	cerr << " match" << endl;
-	return True;
+	return true;
       }
 //       cerr << " NO match" << endl;
     }
   }
-  return False;
+  return false;
 }
 
 VLAFilter* VLAFrequencyFilter::clone() const {
@@ -129,29 +129,29 @@ Bool VLAFrequencyFilter::ok() const {
   // The LogIO class is only constructed if an error is detected for
   // performance reasons. Both function static and file static variables
   // where considered and rejected for this purpose.
-  if (!VLAFilter::ok()) return False; 
+  if (!VLAFilter::ok()) return false; 
   if (itsBottomEdge < 0.0) { 
     LogIO logErr(LogOrigin("VLAFrequencyFilter", "ok()"));
     logErr << LogIO::SEVERE 
  	   << "The bottom of the selected frequency range cannot be negative"
  	   << LogIO::POST;
-    return False;
+    return false;
   }
   if (near(itsBottomEdge, itsTopEdge)) { 
     LogIO logErr(LogOrigin("VLAFrequencyFilter", "ok()"));
     logErr << LogIO::SEVERE 
  	   << "The bandwidth cannot be zero"
  	   << LogIO::POST;
-    return False;
+    return false;
   }
   if (itsBottomEdge > itsTopEdge) { 
     LogIO logErr(LogOrigin("VLAFrequencyFilter", "ok()"));
     logErr << LogIO::SEVERE 
  	   << "The bandwidth cannot be negative"
  	   << LogIO::POST;
-    return False;
+    return false;
   }
-  return True;
+  return true;
 }
 
 // Local Variables: 

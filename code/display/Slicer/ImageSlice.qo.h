@@ -63,12 +63,12 @@ namespace casa {
 		int getColorCount() const;
 		void setShowCorners( bool show );
 		void setSampleCount( int count );
-		void setAxes( const Vector<Int>& axes );
-		void setCoords( const Vector<Int>& coords );
+		void setAxes( const casacore::Vector<casacore::Int>& axes );
+		void setCoords( const casacore::Vector<casacore::Int>& coords );
 		void setCurveColor( QList<QColor> colors );
 		bool isSelected() const;
 		void setSelected( bool selected );
-		void setInterpolationMethod( const String& method );
+		void setInterpolationMethod( const casacore::String& method );
 		void setImageAnalysis( ImageAnalysis* analysis );
 		void setUseViewerColors( bool useViewerColors );
 		void setPolylineColorUnit( bool polyline );
@@ -76,7 +76,7 @@ namespace casa {
 		void setViewerCurveColor( const QString& colorName );
 		void updatePolyLine(  const QList<int> &pixelX, const QList<int> & pixelY,
 		                      const QList<double>& worldX, const QList<double>& worldY );
-		void updatePositionInformation(const QVector<String>& info );
+		void updatePositionInformation(const QVector<casacore::String>& info );
 		void toAscii( QTextStream& );
 		void clearCurve();
 		void addPlotCurve( QwtPlot* plot);

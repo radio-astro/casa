@@ -30,6 +30,7 @@
 #include <display/DisplayShapes/DSClosed.h>
 #include <display/Display/PixelCanvas.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	DSClosed::DSClosed() :
@@ -88,7 +89,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	Bool DSClosed::setOptions(const Record& settings) {
-		Bool localChange = False;
+		Bool localChange = false;
 		if (settings.isDefined("fillstyle")) {
 			Int temp(settings.asInt("fillstyle"));
 			itsFillStyle = static_cast<DSClosed::FillStyle>(temp);
@@ -96,7 +97,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if (settings.isDefined("fillcolor"))
 			itsFillColor = settings.asString("fillcolor");
 
-		if (DSBasic::setOptions(settings)) localChange = True;
+		if (DSBasic::setOptions(settings)) localChange = true;
 
 		return localChange;
 	}

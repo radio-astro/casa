@@ -41,6 +41,7 @@
 #include <display/DisplayDatas/SkyCatOverlayDD.h>
 #include <cpgplot.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	SkyCatOverlayDM::SkyCatOverlayDM(WorldCanvas *worldCanvas,
@@ -74,12 +75,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if (dtype == TpFloat) {
 			ROScalarColumn<Float> longCol(*(parent->table()),
 			                              parent->itsLongitudeColumn);
-			longCol.getColumn(longVec, True);
+			longCol.getColumn(longVec, true);
 		} else if (dtype == TpDouble) {
 			ROScalarColumn<Double> longCol(*(parent->table()),
 			                               parent->itsLongitudeColumn);
 			Vector<Double> dlongVec;
-			longCol.getColumn(dlongVec, True);
+			longCol.getColumn(dlongVec, true);
 			longVec.resize(dlongVec.shape());
 			convertArray(longVec, dlongVec);
 		}
@@ -89,12 +90,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if (dtype == TpFloat) {
 			ROScalarColumn<Float> latCol(*(parent->table()),
 			                             parent->itsLatitudeColumn);
-			latCol.getColumn(latVec, True);
+			latCol.getColumn(latVec, true);
 		} else if (dtype == TpDouble) {
 			ROScalarColumn<Double> latCol(*(parent->table()),
 			                              parent->itsLatitudeColumn);
 			Vector<Double> dlatVec;
-			latCol.getColumn(dlatVec, True);
+			latCol.getColumn(dlatVec, true);
 			latVec.resize(dlatVec.shape());
 			convertArray(latVec, dlatVec);
 		}
@@ -109,7 +110,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		cdesc = tdesc.columnDesc(parent->itsDirectionTypeColumn);
 		ROScalarColumn<String> dirtypeCol(*(parent->table()),
 		                                  parent->itsDirectionTypeColumn);
-		dirtypeCol.getColumn(dirtypeVec, True);
+		dirtypeCol.getColumn(dirtypeVec, true);
 
 
 		String xaxiscode, yaxiscode;
@@ -192,7 +193,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			ROScalarColumn<String> nameCol(*(parent->table()),
 			                               parent->nameColumn());
 			Vector<String> nameVec;
-			nameCol.getColumn(nameVec, True);
+			nameCol.getColumn(nameVec, true);
 			wc->setColor(parent->charColor());
 			cpgsch(parent->charSize());
 			if (parent->charFont() == "roman") {
@@ -207,7 +208,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			wc->drawTextStrings(long_rad, lat_rad, nameVec, parent->charAngle(),
 			                    parent->labelXOffset(), parent->labelYOffset());
 		}
-		return True;
+		return true;
 	}
 
 	void SkyCatOverlayDM::cleanup() {

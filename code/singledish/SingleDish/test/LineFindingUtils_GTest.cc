@@ -40,6 +40,13 @@
 
 #define NUM_IN 20
 
+using namespace casacore;
+using namespace casacore;
+using namespace casacore;
+using namespace casacore;
+using namespace casacore;
+using namespace casacore;
+using namespace casacore;
 using namespace casa;
 using namespace std;
 using namespace test_utility;

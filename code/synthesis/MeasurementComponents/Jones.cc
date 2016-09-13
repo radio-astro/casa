@@ -33,6 +33,7 @@
 #include <casa/Exceptions/Error.h>
 #include <casa/namespace.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
   
 
@@ -46,8 +47,8 @@ Jones::Jones() :
   oki_(NULL),
   cOne_(1.0),
   cZero_(0.0),
-  scalardata_(False),
-  vtmp_(VisVector::Four,True)
+  scalardata_(false),
+  vtmp_(VisVector::Four,true)
 {}
 
 // In place invert
@@ -66,11 +67,11 @@ void Jones::invert() {
       j_[3]=tmp/det;
     } else {
       zero();
-      ok_[0]=ok_[1]=ok_[2]=ok_[3]=False;
+      ok_[0]=ok_[1]=ok_[2]=ok_[3]=false;
     }
   }
   else {
-    ok_[0]=ok_[1]=ok_[2]=ok_[3]=False;
+    ok_[0]=ok_[1]=ok_[2]=ok_[3]=false;
     zero();
   }
 
@@ -279,7 +280,7 @@ void JonesGenLin::invert() {
     j_[1]*=-1.0;
   } else {
     zero();
-    ok_[0]=ok_[1]=False;
+    ok_[0]=ok_[1]=false;
   }
   */
 
@@ -447,7 +448,7 @@ void JonesDiag::invert() {
       (*ji_)=cOne_/(*ji_);
     else {
       (*ji_)=cZero_;
-      (*oki_)=False;
+      (*oki_)=false;
     }
 
 }
@@ -636,7 +637,7 @@ void JonesScal::invert() {
     (*j_)=cOne_/(*j_);
   else {
     (*j_)=cZero_;
-    (*ok_)=False;
+    (*ok_)=false;
   }
 
 }

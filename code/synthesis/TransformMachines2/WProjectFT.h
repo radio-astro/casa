@@ -48,12 +48,16 @@
 #include <measures/Measures/MPosition.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
-
+namespace casacore{
 
 template <class K, class V> class SimpleOrderedMap;
 template <class T> class PtrBlock;
 template <class T> class CountedPtr;
+}
+
+namespace casa { //# NAMESPACE CASA - BEGIN
+
+
 namespace refim { //# namespace for imaging refactor
 class   WPConvFunc; 
 
@@ -86,7 +90,7 @@ class   WPConvFunc;
 // Gridding and degridding in WProjectFT are performed using a
 // novel sort-less algorithm. In this approach, the gridded plane is
 // divided into small patches, a cache of which is maintained in memory
-// using a general-purpose <linkto class=LatticeCache>LatticeCache</linkto> class. As the (time-sorted)
+// using a general-purpose <linkto class=casacore::LatticeCache>LatticeCache</linkto> class. As the (time-sorted)
 // visibility data move around slowly in the Fourier plane, patches are
 // swapped in and out as necessary. Thus, optimally, one would keep at
 // least one patch per baseline.  
@@ -138,21 +142,21 @@ public:
   // 12, 16 works in most cases). 
   // <group>
   WProjectFT(
-	   Int nFacets, Long cachesize, Int tilesize=16, 
-	   Bool usezero=True, Bool useDoublePrec=False, const Double minW=-1.0, const Double maxW=-1.0, const Double rmsW=-1.0);
+	   casacore::Int nFacets, casacore::Long cachesize, casacore::Int tilesize=16, 
+	   casacore::Bool usezero=true, casacore::Bool useDoublePrec=false, const casacore::Double minW=-1.0, const casacore::Double maxW=-1.0, const casacore::Double rmsW=-1.0);
   //Constructor without tangent direction
-  WProjectFT(Int nFacets, MPosition mLocation,
-	     Long cachesize, Int tilesize=16, 
-	     Bool usezero=True, Float padding=1.0, Bool useDoublePrec=False, const Double minW=-1.0, const Double maxW=-1.0, const Double rmsW=-1.0);
+  WProjectFT(casacore::Int nFacets, casacore::MPosition mLocation,
+	     casacore::Long cachesize, casacore::Int tilesize=16, 
+	     casacore::Bool usezero=true, casacore::Float padding=1.0, casacore::Bool useDoublePrec=false, const casacore::Double minW=-1.0, const casacore::Double maxW=-1.0, const casacore::Double rmsW=-1.0);
   //Deprecated no longer need ms in constructor
   WProjectFT(
-	     Int nFacets, MDirection mTangent, MPosition mLocation,
-	     Long cachesize, Int tilesize=16, 
-	     Bool usezero=True, Float padding=1.0, Bool useDoublePrec=False, const Double minW=-1.0, const Double maxW=-1.0, const Double rmsW=-1.0);
+	     casacore::Int nFacets, casacore::MDirection mTangent, casacore::MPosition mLocation,
+	     casacore::Long cachesize, casacore::Int tilesize=16, 
+	     casacore::Bool usezero=true, casacore::Float padding=1.0, casacore::Bool useDoublePrec=false, const casacore::Double minW=-1.0, const casacore::Double maxW=-1.0, const casacore::Double rmsW=-1.0);
   // </group>
 
-  // Construct from a Record containing the WProjectFT state
-  WProjectFT(const RecordInterface& stateRec);
+  // Construct from a casacore::Record containing the WProjectFT state
+  WProjectFT(const casacore::RecordInterface& stateRec);
 
   // Copy constructor
   WProjectFT(const WProjectFT &other);
@@ -166,7 +170,7 @@ public:
   virtual FTMachine* cloneFTM();
   // Initialize transform to Visibility plane using the image
   // as a template. The image is loaded and Fourier transformed.
-  void initializeToVis(ImageInterface<Complex>& image,
+  void initializeToVis(casacore::ImageInterface<casacore::Complex>& image,
   		       const vi::VisBuffer2& vb);
   
   // Finalize transform to Visibility plane: flushes the image
@@ -174,7 +178,7 @@ public:
   void finalizeToVis();
 
   // Initialize transform to Sky plane: initializes the image
-  void initializeToSky(ImageInterface<Complex>& image,  Matrix<Float>& weight,
+  void initializeToSky(casacore::ImageInterface<casacore::Complex>& image,  casacore::Matrix<casacore::Float>& weight,
   		       const vi::VisBuffer2& vb);
   // Finalize transform to Sky plane: flushes the image
   // cache and shows statistics if it is being used. DOES NOT
@@ -182,68 +186,68 @@ public:
   void finalizeToSky();
 
   // Get actual coherence from grid by degridding
-  void get(vi::VisBuffer2& vb, Int row=-1);
+  void get(vi::VisBuffer2& vb, casacore::Int row=-1);
 
   // Put coherence to grid by gridding.
-  void put(const vi::VisBuffer2& vb, Int row=-1, Bool dopsf=False,
+  void put(const vi::VisBuffer2& vb, casacore::Int row=-1, casacore::Bool dopsf=false,
 	   FTMachine::Type type=FTMachine::OBSERVED);
 
   // Make the entire image
   void makeImage(FTMachine::Type type,
 		 vi::VisibilityIterator2& vi,
-		 ImageInterface<Complex>& image,
-		 Matrix<Float>& weight);
+		 casacore::ImageInterface<casacore::Complex>& image,
+		 casacore::Matrix<casacore::Float>& weight);
   
   // Get the final image: do the Fourier transform and
   // grid-correct, then optionally normalize by the summed weights
-  ImageInterface<Complex>& getImage(Matrix<Float>&, Bool normalize=True);
-  virtual void normalizeImage(Lattice<Complex>& /*skyImage*/,
-			      const Matrix<Double>& /*sumOfWts*/,
-			      Lattice<Float>& /*sensitivityImage*/,
-			      Bool /*fftNorm*/)
-    {throw(AipsError("WProjectFT::normalizeImage() called"));}
+  casacore::ImageInterface<casacore::Complex>& getImage(casacore::Matrix<casacore::Float>&, casacore::Bool normalize=true);
+  virtual void normalizeImage(casacore::Lattice<casacore::Complex>& /*skyImage*/,
+			      const casacore::Matrix<casacore::Double>& /*sumOfWts*/,
+			      casacore::Lattice<casacore::Float>& /*sensitivityImage*/,
+			      casacore::Bool /*fftNorm*/)
+    {throw(casacore::AipsError("WProjectFT::normalizeImage() called"));}
  
   // Get the final weights image
-  void getWeightImage(ImageInterface<Float>&, Matrix<Float>&);
+  void getWeightImage(casacore::ImageInterface<casacore::Float>&, casacore::Matrix<casacore::Float>&);
 
   // Save and restore the WProjectFT to and from a record
-  Bool toRecord(String& error, RecordInterface& outRec, 
-		Bool withImage=False, const String diskimage="");
-  Bool fromRecord(String& error, const RecordInterface& inRec);
+  casacore::Bool toRecord(casacore::String& error, casacore::RecordInterface& outRec, 
+		casacore::Bool withImage=false, const casacore::String diskimage="");
+  casacore::Bool fromRecord(casacore::String& error, const casacore::RecordInterface& inRec);
   
   // Can this FTMachine be represented by Fourier convolutions?
-  Bool isFourier() {return True;}
+  casacore::Bool isFourier() {return true;}
 
 
   // Return name of this machine
 
-  String name() const;
+  casacore::String name() const;
 
   // Copy convolution function etc to another FT machine
   // necessary if ft and ift are distinct but can share convfunctions
 
-  void setConvFunc(CountedPtr<WPConvFunc>& pbconvFunc);
-  CountedPtr<WPConvFunc>& getConvFunc();
-  virtual void setMiscInfo(const Int qualifier){(void)qualifier;};
-  virtual void ComputeResiduals(vi::VisBuffer2& /*vb*/, Bool /*useCorrected*/) {};
+  void setConvFunc(casacore::CountedPtr<WPConvFunc>& pbconvFunc);
+  casacore::CountedPtr<WPConvFunc>& getConvFunc();
+  virtual void setMiscInfo(const casacore::Int qualifier){(void)qualifier;};
+  virtual void ComputeResiduals(vi::VisBuffer2& /*vb*/, casacore::Bool /*useCorrected*/) {};
   //Helper function to calculate min, max, rms of W in the data set
-  static void wStat(vi::VisibilityIterator2& vi, Double& minW, Double& maxW, Double& rmsW); 
+  static void wStat(vi::VisibilityIterator2& vi, casacore::Double& minW, casacore::Double& maxW, casacore::Double& rmsW); 
 
 protected:
 
   // Padding in FFT
-  Float padding_p;
+  casacore::Float padding_p;
 
-  Int nint(Double val) {return Int(floor(val+0.5));};
+  casacore::Int nint(casacore::Double val) {return casacore::Int(floor(val+0.5));};
 
   // Find the convolution function
-  void findConvFunction(const ImageInterface<Complex>& image,
+  void findConvFunction(const casacore::ImageInterface<casacore::Complex>& image,
 			const vi::VisBuffer2& vb);
 
-  Int nWPlanes_p;
+  casacore::Int nWPlanes_p;
 
   // Get the appropriate data pointer
-  Array<Complex>* getDataPointer(const IPosition&, Bool);
+  casacore::Array<casacore::Complex>* getDataPointer(const casacore::IPosition&, casacore::Bool);
 
   void ok();
 
@@ -252,65 +256,65 @@ protected:
   void prepGridForDegrid();
   // Is this record on Grid? check both ends. This assumes that the
   // ends bracket the middle
-  //Bool recordOnGrid(const vi::VisBuffer2& vb, Int rownr) const;
+  //casacore::Bool recordOnGrid(const vi::VisBuffer2& vb, casacore::Int rownr) const;
 
   /////for openmp sectioning
-  void   findGridSector(const Int& nxp, const Int& nyp, const Int& ixsub, const Int& iysub, const Int& minx, const Int& miny, const Int& icounter, Int& x0, Int& y0, Int& nxsub, Int& nysub, const Bool linear); 
+  void   findGridSector(const casacore::Int& nxp, const casacore::Int& nyp, const casacore::Int& ixsub, const casacore::Int& iysub, const casacore::Int& minx, const casacore::Int& miny, const casacore::Int& icounter, casacore::Int& x0, casacore::Int& y0, casacore::Int& nxsub, casacore::Int& nysub, const casacore::Bool linear); 
 
 
   // Image cache
-  LatticeCache<Complex> * imageCache;
+  casacore::LatticeCache<casacore::Complex> * imageCache;
 
   // Sizes
-  Long cachesize;
-  Int tilesize;
+  casacore::Long cachesize;
+  casacore::Int tilesize;
 
   // Gridder
-  ConvolveGridder<Double, Complex>* gridder;
+  casacore::ConvolveGridder<casacore::Double, casacore::Complex>* gridder;
 
   // Is this tiled?
-  Bool isTiled;
+  casacore::Bool isTiled;
 
-  // Array lattice
-  CountedPtr<Lattice<Complex> > arrayLattice;
+  // casacore::Array lattice
+  casacore::CountedPtr<casacore::Lattice<casacore::Complex> > arrayLattice;
 
   // Lattice. For non-tiled gridding, this will point to arrayLattice,
   //  whereas for tiled gridding, this points to the image
-  CountedPtr<Lattice<Complex> > lattice;
+  casacore::CountedPtr<casacore::Lattice<casacore::Complex> > lattice;
 
-  Float maxAbsData;
+  casacore::Float maxAbsData;
 
   // Useful IPositions
-  IPosition centerLoc, offsetLoc;
+  casacore::IPosition centerLoc, offsetLoc;
 
   // Image Scaling and offset
-  Vector<Double> uvScale, uvOffset;
-  Double savedWScale_p;
+  casacore::Vector<casacore::Double> uvScale, uvOffset;
+  casacore::Double savedWScale_p;
 
 
   // Grid/degrid zero spacing points?
-  Bool usezero_p;
+  casacore::Bool usezero_p;
 
-  Cube<Complex> convFunc;
-  Int convSampling;
-  Int convSize;
-  Vector<Int> convSupport;
+  casacore::Cube<casacore::Complex> convFunc;
+  casacore::Int convSampling;
+  casacore::Int convSize;
+  casacore::Vector<casacore::Int> convSupport;
 
-  Vector<Int> convSizes_p;
+  casacore::Vector<casacore::Int> convSizes_p;
 
 
-  Int wConvSize;
+  casacore::Int wConvSize;
 
-  Int lastIndex_p;
+  casacore::Int lastIndex_p;
 
-  Int getIndex(const ROMSPointingColumns& mspc, const Double& time,
-	       const Double& interval);
+  casacore::Int getIndex(const casacore::ROMSPointingColumns& mspc, const casacore::Double& time,
+	       const casacore::Double& interval);
 
-  String machineName_p;
+  casacore::String machineName_p;
 
-  CountedPtr<WPConvFunc> wpConvFunc_p;
-  Double timemass_p, timegrid_p, timedegrid_p;
-  Double minW_p, maxW_p, rmsW_p;
+  casacore::CountedPtr<WPConvFunc> wpConvFunc_p;
+  casacore::Double timemass_p, timegrid_p, timedegrid_p;
+  casacore::Double minW_p, maxW_p, rmsW_p;
 };
 } // end namespace refim
 } //# NAMESPACE CASA - END

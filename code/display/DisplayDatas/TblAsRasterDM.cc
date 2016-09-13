@@ -39,6 +39,7 @@
 #include <display/DisplayDatas/TblAsRasterDD.h>
 #include <display/DisplayDatas/TblAsRasterDM.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // constructor
@@ -85,7 +86,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			// read the column into an array
 			ROArrayColumn<double>
 			dataCol(*theTable,parent->itsXColumnName->value());
-			dataCol.getColumn(typedata,True);
+			dataCol.getColumn(typedata,true);
 			// now convert array to type float
 			data.resize(typedata.shape());
 			convertArray(data,typedata);
@@ -93,13 +94,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if (type == TpArrayFloat) {
 			ROArrayColumn<float>
 			dataCol(*theTable,parent->itsXColumnName->value());
-			dataCol.getColumn(data,True);
+			dataCol.getColumn(data,true);
 		}
 		if (type == TpArrayUShort) {
 			Array<ushort> typedata;
 			ROArrayColumn<ushort>
 			dataCol(*theTable,parent->itsXColumnName->value());
-			dataCol.getColumn(typedata,True);
+			dataCol.getColumn(typedata,true);
 			data.resize(typedata.shape());
 			convertArray(data,typedata);
 		}
@@ -107,7 +108,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			Array<int> typedata;
 			ROArrayColumn<int>
 			dataCol(*theTable,parent->itsXColumnName->value());
-			dataCol.getColumn(typedata,True);
+			dataCol.getColumn(typedata,true);
 			data.resize(typedata.shape());
 			convertArray(data,typedata);
 		}
@@ -115,7 +116,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			Array<uInt> typedata;
 			ROArrayColumn<uInt>
 			dataCol(*theTable,parent->itsXColumnName->value());
-			dataCol.getColumn(typedata,True);
+			dataCol.getColumn(typedata,true);
 			data.resize(typedata.shape());
 			convertArray(data,typedata);
 		}
@@ -123,12 +124,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		const Matrix<float> theData = data;
 
 		// define several things for drawing
-		Bool usePixelEdges = True;
+		Bool usePixelEdges = true;
 
 		// now plot the data
 		wc->drawImage(parent->itsLinblc, parent->itsLintrc, theData,
 		              usePixelEdges);
-		return True;
+		return true;
 	}
 
 // (required) default constructor

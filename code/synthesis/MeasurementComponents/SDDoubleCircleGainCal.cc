@@ -67,9 +67,9 @@ inline void fillNChanParList(casacore::String const &msName,
 casacore::Vector<casacore::Int> &nChanParList) {
   casacore::MeasurementSet const ms(msName);
   casacore::MSSpectralWindow const &msspw = ms.spectralWindow();
-  casacore::ROScalarColumn<casa::Int> nchanCol(msspw, "NUM_CHAN");
+  casacore::ROScalarColumn<casacore::Int> nchanCol(msspw, "NUM_CHAN");
   debuglog<< "nchanCol=" << nchanCol.getColumn() << debugpost;
-  nChanParList = nchanCol.getColumn()(casa::Slice(0, nChanParList.nelements()));
+  nChanParList = nchanCol.getColumn()(casacore::Slice(0, nChanParList.nelements()));
 }
 
 template<class T>
@@ -87,10 +87,10 @@ inline casacore::String toString(casacore::Vector<T> const &v) {
 
 inline casacore::String selectOnSourceAutoCorr(casacore::MeasurementSet const &ms) {
   debuglog<< "selectOnSource" << debugpost;
-  casa::String taqlForState(
+  casacore::String taqlForState(
       "SELECT FLAG_ROW FROM $1 WHERE UPPER(OBS_MODE) ~ m/^OBSERVE_TARGET#ON_SOURCE/");
-  casa::Table stateSel = casacore::tableCommand(taqlForState, ms.state());
-  casa::Vector<casa::uInt> stateIdList = stateSel.rowNumbers();
+  casacore::Table stateSel = casacore::tableCommand(taqlForState, ms.state());
+  casacore::Vector<casacore::uInt> stateIdList = stateSel.rowNumbers();
   debuglog<< "stateIdList = " << stateIdList << debugpost;
   std::ostringstream oss;
   oss << "SELECT FROM $1 WHERE ANTENNA1 == ANTENNA2 && STATE_ID IN "
@@ -131,14 +131,14 @@ public:
 private:
   FloatDataColumnAccessor() {
   }
-  casa::ROArrayColumn<casa::Float> dataCol_;
+  casacore::ROArrayColumn<casacore::Float> dataCol_;
 };
 
-inline bool isEphemeris(casa::String const &name) {
+inline bool isEphemeris(casacore::String const &name) {
   // Check if given name is included in MDirection types
-  casa::Int nall, nextra;
-  const casa::uInt *typ;
-  auto *types = casa::MDirection::allMyTypes(nall, nextra, typ);
+  casacore::Int nall, nextra;
+  const casacore::uInt *typ;
+  auto *types = casacore::MDirection::allMyTypes(nall, nextra, typ);
   auto start_extra = nall - nextra;
   auto capital_name = name;
   capital_name.upcase();
@@ -166,6 +166,7 @@ casacore::Double rad2arcsec(casacore::Double value_in_rad) {
 }
 }
 
+using namespace casacore;
 namespace casa {
 SDDoubleCircleGainCal::SDDoubleCircleGainCal(VisSet &vs) :
     VisCal(vs),             // virtual base
@@ -330,8 +331,8 @@ void SDDoubleCircleGainCal::executeDoubleCircleGainCal(
   // traverse MS
   Int cols[] = {MS::FIELD_ID, MS::ANTENNA1, MS::FEED1, MS::DATA_DESC_ID};
   Int *colsp = cols;
-  Block<Int> sortCols(4, colsp, False);
-  MSIter msIter(ms, sortCols, 0.0, False, False);
+  Block<Int> sortCols(4, colsp, false);
+  MSIter msIter(ms, sortCols, 0.0, false, false);
   for (msIter.origin(); msIter.more(); msIter++) {
     MeasurementSet const currentMS = msIter.table();
 

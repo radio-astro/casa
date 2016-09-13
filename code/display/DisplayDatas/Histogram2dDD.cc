@@ -34,6 +34,7 @@
 #include <display/DisplayDatas/Histogram2dDD.h>
 #include <display/DisplayDatas/Histogram2dDM.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	Histogram2dDD::Histogram2dDD(const ImageInterface<Float> *image) :
@@ -47,7 +48,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// construct our statistics calculator
 		itsLatticeStatistics =
-		    new LatticeStatistics<Float>(*itsMaskedLattice, False);
+		    new LatticeStatistics<Float>(*itsMaskedLattice, false);
 		if (!itsLatticeStatistics) {
 			throw(AipsError("Histogram2dDD::ctor - failed to create statistics"));
 		}
@@ -112,7 +113,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// construct our histogram calculator
 		itsLatticeHistograms =
-		    new LatticeHistograms<Float>(maskedLattice(), False, False);
+		    new LatticeHistograms<Float>(maskedLattice(), false, false);
 		if (!itsLatticeHistograms) {
 			throw(AipsError("Histogram2dDD::ctor - failed to create histograms"));
 		}

@@ -29,6 +29,7 @@
 
 #include <scimath/Mathematics/GaussianBeam.h>
 
+using namespace casacore;
 namespace casa {
 
 Bool GaussianDeconvolver::deconvolve(
@@ -37,17 +38,17 @@ Bool GaussianDeconvolver::deconvolve(
 	const GaussianBeam& beam
 ) {
 	Unit radians(String("rad"));
-	Unit positionAngleModelUnit = deconvolvedSize.getPA(False).getFullUnit();
+	Unit positionAngleModelUnit = deconvolvedSize.getPA(false).getFullUnit();
 	Unit majorAxisModelUnit = deconvolvedSize.getMajor().getFullUnit();
 	Unit minorAxisModelUnit = deconvolvedSize.getMinor().getFullUnit();
 
 	// Get values in radians
 	Double majorSource = convolvedSize.getMajor().getValue(radians);
 	Double minorSource = convolvedSize.getMinor().getValue(radians);
-	Double thetaSource = convolvedSize.getPA(True).getValue(radians);
+	Double thetaSource = convolvedSize.getPA(true).getValue(radians);
 	Double majorBeam = beam.getMajor().getValue(radians);
 	Double minorBeam = beam.getMinor().getValue(radians);
-	Double thetaBeam = beam.getPA(True).getValue(radians);
+	Double thetaBeam = beam.getPA(true).getValue(radians);
 	// Do the sums
 
 	Double alpha  = square(majorSource*cos(thetaSource)) +
@@ -75,11 +76,11 @@ Bool GaussianDeconvolver::deconvolve(
 			deconvolvedSize = GaussianBeam(
 				Quantity(beam.getMajor().get(majorAxisModelUnit)),
 				Quantity(beam.getMinor().get(minorAxisModelUnit)),
-				Quantity(beam.getPA(True).get(positionAngleModelUnit))
+				Quantity(beam.getPA(true).get(positionAngleModelUnit))
 			);
 			// unwrap
-			deconvolvedSize.setPA(deconvolvedSize.getPA(True));
-			return True;
+			deconvolvedSize.setPA(deconvolvedSize.getPA(true));
+			return true;
 		}
 		else {
 			throw AipsError("Source may be only (slightly) resolved in one direction");
@@ -97,8 +98,8 @@ Bool GaussianDeconvolver::deconvolve(
 	pa.convert(positionAngleModelUnit);
 	deconvolvedSize = GaussianBeam(majax, minax, pa);
 	// unwrap
-	deconvolvedSize.setPA(deconvolvedSize.getPA(True));
-	return False;
+	deconvolvedSize.setPA(deconvolvedSize.getPA(true));
+	return false;
 }
 
 

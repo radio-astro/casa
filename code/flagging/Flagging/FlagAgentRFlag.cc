@@ -22,6 +22,7 @@
 
 #include <flagging/Flagging/FlagAgentRFlag.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
@@ -211,7 +212,7 @@ void FlagAgentRFlag::setAgentParameters(Record config)
 		*logger_p << LogIO::NORMAL << " display is: " << display << LogIO::POST;
 	}
 
-	Bool writeflags(True);
+	Bool writeflags(true);
 	exists = config.fieldNumber ("writeflags");
 	if (exists >= 0)
 	{
@@ -225,10 +226,10 @@ void FlagAgentRFlag::setAgentParameters(Record config)
 	}
 	else if (display == String("report"))
 	{
-		writeflags = False;
+		writeflags = false;
 	}
 
-	if( (writeflags == True) or (display == String("data")) or (display == String("both")) )
+	if( (writeflags == true) or (display == String("data")) or (display == String("both")) )
 	{
 		doflag_p = true;
 		*logger_p << LogIO::NORMAL << " (writeflags,display)=(" <<  writeflags << "," << display << "), will apply flags on modified flag cube " << LogIO::POST;
@@ -253,12 +254,12 @@ void FlagAgentRFlag::setAgentParameters(Record config)
 	exists = config.fieldNumber ("timedev");
 	if (exists >= 0)
 	{
-	  if ( config.type( exists ) == casa::TpFloat ||  config.type( exists ) == casa::TpDouble || config.type(exists) == casa::TpInt )
+	  if ( config.type( exists ) == casacore::TpFloat ||  config.type( exists ) == casacore::TpDouble || config.type(exists) == casacore::TpInt )
 		{
 			noise_p = config.asDouble("timedev");
 			*logger_p << logLevel_p << " timedev (same for all fields and spws) is " << noise_p << LogIO::POST;
 		}
-		else if( config.type(exists) == casa::TpArrayDouble || config.type(exists) == casa::TpArrayFloat || config.type(exists) == casa::TpArrayInt)
+		else if( config.type(exists) == casacore::TpArrayDouble || config.type(exists) == casacore::TpArrayFloat || config.type(exists) == casacore::TpArrayInt)
 		{
 			Matrix<Double> timedev = config.asArrayDouble( RecordFieldId("timedev") );
 			if(timedev.ncolumn()==3)
@@ -272,7 +273,7 @@ void FlagAgentRFlag::setAgentParameters(Record config)
 			    	pair<Int,Int> field_spw = std::make_pair((Int)timedev(dev_i,0),
 			    	                                         (Int)timedev(dev_i,1));
 			    	field_spw_noise_map_p[field_spw] = timedev(dev_i,2);
-			    	user_field_spw_noise_map_p[field_spw] = True;
+			    	user_field_spw_noise_map_p[field_spw] = true;
 			    	*logger_p << LogIO::DEBUG1 << "timedev matrix - field=" << timedev(dev_i,0) << " spw=" << timedev(dev_i,1) << " dev=" << timedev(dev_i,2) << LogIO::POST;
 			    }
 			}
@@ -298,12 +299,12 @@ void FlagAgentRFlag::setAgentParameters(Record config)
 	exists = config.fieldNumber ("freqdev");
 	if (exists >= 0)
 	{
-		if ( config.type( exists ) == casa::TpFloat ||  config.type( exists ) == casa::TpDouble  || config.type(exists) == casa::TpInt )
+		if ( config.type( exists ) == casacore::TpFloat ||  config.type( exists ) == casacore::TpDouble  || config.type(exists) == casacore::TpInt )
 		{
 			scutof_p = config.asDouble("freqdev");
 			*logger_p << logLevel_p << " freqdev (same for all fields and spws) is " << scutof_p << LogIO::POST;
 		}
-		else if( config.type(exists) == casa::TpArrayDouble || config.type(exists) == casa::TpArrayFloat || config.type(exists) == casa::TpArrayInt)
+		else if( config.type(exists) == casacore::TpArrayDouble || config.type(exists) == casacore::TpArrayFloat || config.type(exists) == casacore::TpArrayInt)
 		{
 			Matrix<Double> freqdev = config.asArrayDouble( RecordFieldId("freqdev") );
 			if(freqdev.ncolumn()==3)
@@ -317,7 +318,7 @@ void FlagAgentRFlag::setAgentParameters(Record config)
 			    	pair<Int,Int> field_spw = std::make_pair(static_cast<Int>(freqdev(dev_i,0)),
 			    			static_cast<Int>(freqdev(dev_i,1)));
 			    	field_spw_scutof_map_p[field_spw] = freqdev(dev_i,2);
-			    	user_field_spw_scutof_map_p[field_spw] = True;
+			    	user_field_spw_scutof_map_p[field_spw] = true;
 				*logger_p << LogIO::DEBUG1 << "freqdev matrix - field=" << freqdev(dev_i,0) << " spw=" << freqdev(dev_i,1) << " dev=" << freqdev(dev_i,2) << LogIO::POST;
 			    }
 			}
@@ -1068,7 +1069,7 @@ FlagAgentRFlag::computeAntennaPairFlags(const vi::VisBuffer2 &visBuffer, VisMapp
 	pair<Int,Int> field_spw = std::make_pair(field,spw);
 
 	// Check if frequency array has to be initialized
-	Bool initFreq = False;
+	Bool initFreq = false;
 
 	// Get noise and scutoff levels
 	Double noise = -1;
@@ -1088,7 +1089,7 @@ FlagAgentRFlag::computeAntennaPairFlags(const vi::VisBuffer2 &visBuffer, VisMapp
 		field_spw_noise_histogram_sum_squares_p[field_spw] = vector<Double>(nChannels,0);
 		field_spw_frequency_p[field_spw] = vector<Double>(nChannels,0);
 		if (doflag_p) prepass_p = true;
-		initFreq = True;
+		initFreq = true;
 	}
 
 	// Get cutoff level
@@ -1111,7 +1112,7 @@ FlagAgentRFlag::computeAntennaPairFlags(const vi::VisBuffer2 &visBuffer, VisMapp
 		if (field_spw_frequency_p.find(field_spw) == field_spw_frequency_p.end())
 		{
 			field_spw_frequency_p[field_spw] = vector<Double>(nChannels,0);
-			initFreq = True;
+			initFreq = true;
 		}
 
 		if (doflag_p) prepass_p = true;

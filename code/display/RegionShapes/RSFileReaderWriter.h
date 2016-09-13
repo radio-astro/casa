@@ -44,14 +44,15 @@ namespace casa {
 	class RSFileReader;
 	class RSFileWriter;
 
-// Convenience class for a String/bool pair.
-	class RFError {
+class RFError {
+
+// Convenience class for a casacore::String/bool pair.
 	public:
 		// Constructor, blank error.
 		RFError();
 
 		// Constructor, error with the given text and isFatal flag.
-		RFError(const String& error, bool isFatal = false);
+		RFError(const casacore::String& error, bool isFatal = false);
 
 		// Destructor.
 		~RFError();
@@ -61,13 +62,13 @@ namespace casa {
 		bool isFatal() const;
 
 		// Returns this error's text.
-		const String& error() const;
+		const casacore::String& error() const;
 
 		// Sets the error.
-		void set(const String& error, bool isFatal = false);
+		void set(const casacore::String& error, bool isFatal = false);
 
 	private:
-		String m_error;
+		casacore::String m_error;
 		bool m_fatal;
 	};
 
@@ -83,19 +84,19 @@ namespace casa {
 		    DS9, CASA_XML
 		};
 
-		// Converts between enum and String for SupportedType.
+		// Converts between enum and casacore::String for SupportedType.
 		// <group>
-		static SupportedType supportedType(String type);
-		static String supportedType(SupportedType type);
+		static SupportedType supportedType(casacore::String type);
+		static casacore::String supportedType(SupportedType type);
 		// </group>
 
 		// Returns the file extension for the given SupportedType.
-		static String extensionForType(SupportedType type);
+		static casacore::String extensionForType(SupportedType type);
 
 		// Returns all known SupportedTypes.
 		// <group>
 		static vector<SupportedType> supportedTypes();
-		static vector<String> supportedTypesStrings();
+		static vector<casacore::String> supportedTypesStrings();
 		// </group>
 
 		// Returns an appropriate child RegionFileReader class for the given
@@ -120,20 +121,20 @@ namespace casa {
 		virtual ~RSFileReaderWriter() { }
 
 		// Sets the file to be read/written to the given.
-		virtual void setFile(const String& filename);
+		virtual void setFile(const casacore::String& filename);
 
 		// Returns the last error set during read/write.
 		virtual const RFError& lastError() const;
 
 	protected:
 		// Filename to be read/written.
-		String m_filename;
+		casacore::String m_filename;
 
 		// Last error seen during read/write.
 		RFError m_lastError;
 
 		// Convenience method for setting last error during read/write.
-		virtual void setError(const String& error, bool isFatal = false) const;
+		virtual void setError(const casacore::String& error, bool isFatal = false) const;
 	};
 
 
@@ -154,7 +155,7 @@ namespace casa {
 		virtual bool read(vector<RegionShape*>& readShapes) = 0;
 
 		// Calls setFile() then read().
-		virtual bool readFile(const String& file, vector<RegionShape*>& shapes) {
+		virtual bool readFile(const casacore::String& file, vector<RegionShape*>& shapes) {
 			setFile(file);
 			return read(shapes);
 		}
@@ -186,7 +187,7 @@ namespace casa {
 		virtual bool write(const vector<RegionShape*>& shapes) const = 0;
 
 		// Calls setFile then write.
-		virtual bool writeFile(const String& filename,
+		virtual bool writeFile(const casacore::String& filename,
 		                       const vector<RegionShape*>& shapes) {
 			setFile(filename);
 			return write(shapes);

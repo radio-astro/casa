@@ -95,7 +95,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// "stick around" after a double click action.
 		WCCrosshairTool(WorldCanvas *wcanvas,
 		                Display::KeySym keysym = Display::K_Pointer_Button1,
-		                const Bool persistent = True);
+		                const casacore::Bool persistent = true);
 
 		// Destructor.
 		virtual ~WCCrosshairTool();
@@ -131,27 +131,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// </group>
 
 		// Retrieve the crosshair position.
-		virtual void get(Int &x1, Int &y1) const ;
+		virtual void get(casacore::Int &x1, casacore::Int &y1) const ;
 
 	private:
 
 		// does the crosshair persist after double clicks?
-		Bool itsCrosshairPersistent;
+		casacore::Bool itsCrosshairPersistent;
 
 		// what radius is the crosshair? in pixels
-		Int itsCrosshairRadius;
+		casacore::Int itsCrosshairRadius;
 
 		// is the crosshair on screen?
-		Bool itsOnScreen;
+		casacore::Bool itsOnScreen;
 
 		// is some activity taking place with the crosshair?
-		Bool itsActive;
+		casacore::Bool itsActive;
 
 		// has the crosshair been moved?
-		Bool itsMoved;
+		casacore::Bool itsMoved;
 
 		// do we have a crosshair drawn yet?
-		Bool itsCrosshairExists;
+		casacore::Bool itsCrosshairExists;
 
 		// adjustment mode
 		enum AdjustMode {
@@ -162,19 +162,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// coordinates of the crosshair: pixel and world
 		// <group>
-		Int itsX1, itsY1;
-		Vector<Double> itsStoredWorldPosition;
+		casacore::Int itsX1, itsY1;
+		casacore::Vector<casacore::Double> itsStoredWorldPosition;
 		// </group>
 
 		// set the coordinates of the crosshair
 		// <group>
-		virtual void set(const Int &x1, const Int &y1);
+		virtual void set(const casacore::Int &x1, const casacore::Int &y1);
 		// </group>
 
 		// set/get only the anchor point
 		// <group>
-		//virtual void set(const Int &x1, const Int &y1);
-		//virtual void get(Int &x1, Int &y1) const ;
+		//virtual void set(const casacore::Int &x1, const casacore::Int &y1);
+		//virtual void get(casacore::Int &x1, casacore::Int &y1) const ;
 		// </group>
 
 		// preserve/restore the world coordinates
@@ -184,23 +184,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// </group>
 
 		// draw the crosshair on the WorldCanvas' PixelCanvas.
-		virtual void draw(const Bool drawHandles = False);
+		virtual void draw(const casacore::Bool drawHandles = false);
 
 		// reset this drawer
 		virtual void reset();
 
 		// position that move started from
-		Int itsBaseMoveX, itsBaseMoveY;
+		casacore::Int itsBaseMoveX, itsBaseMoveY;
 
 		// position of last press event
-		Int itsLastPressX, itsLastPressY;
-		Int its2ndLastPressX, its2ndLastPressY;
+		casacore::Int itsLastPressX, itsLastPressY;
+		casacore::Int its2ndLastPressX, its2ndLastPressY;
 
 		// position of last release event
-		Int itsLastReleaseX, itsLastReleaseY;
+		casacore::Int itsLastReleaseX, itsLastReleaseY;
 
 		// store the times of the last two presses here:
-		Double itsLastPressTime, its2ndLastPressTime;
+		casacore::Double itsLastPressTime, its2ndLastPressTime;
 
 	};
 

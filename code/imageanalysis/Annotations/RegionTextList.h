@@ -25,9 +25,13 @@
 #include <images/Regions/WCRegion.h>
 #include <images/Regions/WCUnion.h>
 
-namespace casa {
+namespace casacore{
 
 class WCDifference;
+}
+
+namespace casa {
+
 
 // <summary>
 // An ordered list of annotations and comments representing an ascii region file.
@@ -74,7 +78,7 @@ public:
 	// <src>globalOverrideStokes</src> override all correlation selections in the file
 	// or text by using this polarization selection<src>
 	RegionTextList(
-		const CoordinateSystem& csys, const IPosition shape
+		const casacore::CoordinateSystem& csys, const casacore::IPosition shape
 	);
 
 	// create a list by reading it from a file.
@@ -85,10 +89,10 @@ public:
 	// the first region is a difference; in that case, the all pixels in entire
 	// shape are set to good initially.
 	RegionTextList(
-		const String& filename, const CoordinateSystem& csys,
-		const IPosition shape, const String& prependRegion="",
-		const String& globalOverrideChans="", const String& globalOverrrideStokes="",
-		const Int requireAtLeastThisVersion=RegionTextParser::CURRENT_VERSION
+		const casacore::String& filename, const casacore::CoordinateSystem& csys,
+		const casacore::IPosition shape, const casacore::String& prependRegion="",
+		const casacore::String& globalOverrideChans="", const casacore::String& globalOverrrideStokes="",
+		const casacore::Int requireAtLeastThisVersion=RegionTextParser::CURRENT_VERSION
 	);
 
 	// create a list by reading it from a text string.
@@ -99,11 +103,11 @@ public:
 	// the first region is a difference; in that case, the all pixels in entire
 	// shape are set to good initially.
 	RegionTextList(
-		const CoordinateSystem& csys, const String& text,
-		const IPosition shape,
-		const String& prependRegion="",
-		const String& globalOverrideChans="",
-		const String& globalOverrrideStokes=""
+		const casacore::CoordinateSystem& csys, const casacore::String& text,
+		const casacore::IPosition shape,
+		const casacore::String& prependRegion="",
+		const casacore::String& globalOverrideChans="",
+		const casacore::String& globalOverrrideStokes=""
 	);
 	//</group>
 
@@ -113,38 +117,38 @@ public:
 	void addLine(const AsciiAnnotationFileLine& line);
 
 	// number of lines in the list
-	uInt nLines() const;
+	casacore::uInt nLines() const;
 
 	// get the line at the specified index
-	AsciiAnnotationFileLine lineAt(const uInt i) const;
+	AsciiAnnotationFileLine lineAt(const casacore::uInt i) const;
 
 	// get all lines in the list
-	inline const Vector<AsciiAnnotationFileLine>& getLines() const {
+	inline const casacore::Vector<AsciiAnnotationFileLine>& getLines() const {
 		return _lines;
 	}
 
-	ostream& print(ostream& os) const;
+	std::ostream& print(std::ostream& os) const;
 
 	// get the composite region.
-	CountedPtr<const WCRegion> getRegion() const;
+	casacore::CountedPtr<const casacore::WCRegion> getRegion() const;
 
 	// get the composite region as a region record.
-	Record regionAsRecord() const;
+	casacore::Record regionAsRecord() const;
 
 private:
-	Vector<AsciiAnnotationFileLine> _lines;
-	vector<SHARED_PTR<const WCRegion> > _regions;
-	CoordinateSystem _csys;
-	IPosition _shape;
-	Bool _canGetRegion;
+	casacore::Vector<AsciiAnnotationFileLine> _lines;
+	vector<SHARED_PTR<const casacore::WCRegion> > _regions;
+	casacore::CoordinateSystem _csys;
+	casacore::IPosition _shape;
+	casacore::Bool _canGetRegion;
 	// if false, then the corresponding region is complementary to
 	// the result of the previous region operations in the sequence
-	vector<Bool> _union;
-	mutable vector<SHARED_PTR<const WCDifference> > _myDiff;
-	mutable SHARED_PTR<const WCRegion> _composite;
+	vector<casacore::Bool> _union;
+	mutable vector<SHARED_PTR<const casacore::WCDifference> > _myDiff;
+	mutable SHARED_PTR<const casacore::WCRegion> _composite;
 };
 
-inline ostream &operator<<(ostream& os, const RegionTextList& list) {
+inline std::ostream &operator<<(std::ostream& os, const RegionTextList& list) {
 	return list.print(os);
 };
 

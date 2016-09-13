@@ -51,29 +51,29 @@ class AnnLine: public AnnotationBase {
 public:
 
 	AnnLine(
-		const Quantity& xPoint1,
-		const Quantity& yPoint1,
-		const Quantity& xPoint2,
-		const Quantity& yPoint2,
-		const String& dirRefFrameString,
-		const CoordinateSystem& csys,
-		const Quantity& beginFreq,
-		const Quantity& endFreq,
-		const String& freqRefFrame,
-		const String& dopplerString,
-		const Quantity& restfreq,
-		const Vector<Stokes::StokesTypes>& stokes
+		const casacore::Quantity& xPoint1,
+		const casacore::Quantity& yPoint1,
+		const casacore::Quantity& xPoint2,
+		const casacore::Quantity& yPoint2,
+		const casacore::String& dirRefFrameString,
+		const casacore::CoordinateSystem& csys,
+		const casacore::Quantity& beginFreq,
+		const casacore::Quantity& endFreq,
+		const casacore::String& freqRefFrame,
+		const casacore::String& dopplerString,
+		const casacore::Quantity& restfreq,
+		const casacore::Vector<casacore::Stokes::StokesTypes>& stokes
 	);
 
 	// simplified constructor. Direction quantities must be in the same reference frame as
 	// <src>csys</src> and all frequencies are valid.
 	AnnLine(
-		const Quantity& xPoint1,
-		const Quantity& yPoint1,
-		const Quantity& xPoint2,
-		const Quantity& yPoint2,
-		const CoordinateSystem& csys,
-		const Vector<Stokes::StokesTypes>& stokes
+		const casacore::Quantity& xPoint1,
+		const casacore::Quantity& yPoint1,
+		const casacore::Quantity& xPoint2,
+		const casacore::Quantity& yPoint2,
+		const casacore::CoordinateSystem& csys,
+		const casacore::Vector<casacore::Stokes::StokesTypes>& stokes
 	);
 
 	// implicit copy constructor and destructor are fine
@@ -82,9 +82,9 @@ public:
 
 	// get the end point directions, transformed to
 	// the input coordinate system if necessary
-	Vector<MDirection> getEndPoints() const;
+	casacore::Vector<casacore::MDirection> getEndPoints() const;
 
-	virtual ostream& print(ostream &os) const;
+	virtual std::ostream& print(std::ostream &os) const;
 
 protected:
 	AnnotationBase::Direction _inputPoints;

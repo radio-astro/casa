@@ -41,9 +41,13 @@
 #include <display/DisplayDatas/DDDObject.h>
 #include <display/DisplayDatas/DDDHandle.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore{
 
 	class LogIO;
+}
+
+namespace casa { //# NAMESPACE CASA - BEGIN
+
 	class DisplayEvent;
 
 // <summary>
@@ -66,7 +70,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	public:
 
-		// Constructor taking a Record description.  Fields in the record,
+		// Constructor taking a casacore::Record description.  Fields in the record,
 		// on top of what is consumed by the DDDObject constructor, are:
 		// Required : <src>center</src> (vector of quanta length 2),
 		// <src>major, minor, positionangle</src> (all quanta).
@@ -76,22 +80,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// major and minor only.
 		//
 		// Other, not required fields are <src>outline & editable</src>
-		// which default to <src>True</src>.  When <src>editable=False</src>
-		// the object can be moved but not reshaped, when <src>True</src>
-		// it can be moved and reshaped.   When   <src>outline=False</src>
-		// the ellipse is filled.   If the field <src>rectangle=True</src>
-		// a rectangle is drawn. If it does not exist or is False, an ellipse
+		// which default to <src>true</src>.  When <src>editable=false</src>
+		// the object can be moved but not reshaped, when <src>true</src>
+		// it can be moved and reshaped.   When   <src>outline=false</src>
+		// the ellipse is filled.   If the field <src>rectangle=true</src>
+		// a rectangle is drawn. If it does not exist or is false, an ellipse
 		// is drawn.
 		//
-		// Finally, field <src>doreference</src> which defaults to <src>False</src>
+		// Finally, field <src>doreference</src> which defaults to <src>false</src>
 		// is used to control the location at which conversions to and from
-		// pixel coordinates are done.  If <src>True</src> then all conversions
+		// pixel coordinates are done.  If <src>true</src> then all conversions
 		// are done at the reference value. Otherwise, the conversions are
 		// done at the actual location of the shape.  For example, with
-		// a DirectionCoordinate plane, setting <src>doreference=True</src>
+		// a casacore::DirectionCoordinate plane, setting <src>doreference=true</src>
 		// will cause the shape to rotate as you move it about the display
 		// as the position angle tracks the local North.
-		DDDEllipse(const Record &description, DrawingDisplayData *owner);
+		DDDEllipse(const casacore::Record &description, DrawingDisplayData *owner);
 
 		// Destructor.
 		virtual ~DDDEllipse();
@@ -103,11 +107,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Return a record describing this object.  Presently returns
 		// only construction description.
-		virtual Record description();
+		virtual casacore::Record description();
 
 		// Update this object based on the information in the provided
 		// Record.
-		virtual void setDescription(const Record &rec);
+		virtual void setDescription(const casacore::Record &rec);
 
 		// Event handlers.  The parent DrawingDisplayData will distribute
 		// events as necessary to the various DDDObjects which comprise it.
@@ -131,21 +135,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	private:
 
 // Fill style
-		Bool itsOutline;
+		casacore::Bool itsOutline;
 
 // Define center x, center y, major, minor, pa in world
-		Vector<Quantum<Double> > itsWorldParameters;
+		casacore::Vector<casacore::Quantum<casacore::Double> > itsWorldParameters;
 
 // Define center x, center y, major, minor, pa (radians) in screen pixel
-		Vector<Double> itsPixelCenter, itsPixelShape;
+		casacore::Vector<casacore::Double> itsPixelCenter, itsPixelShape;
 
 // Rotated Rectangle Corners to draw in screen pixel
-		Matrix<Double> itsCorners;
-		Matrix<Double> itsPixelOffsets;
+		casacore::Matrix<casacore::Double> itsCorners;
+		casacore::Matrix<casacore::Double> itsPixelOffsets;
 
-// List of handles
+// casacore::List of handles
 
-		Block<DDDHandle> itsHandles;
+		casacore::Block<DDDHandle> itsHandles;
 
 // Mode.
 
@@ -153,11 +157,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Store for movement bases.
 
-		Double itsBaseMoveX, itsBaseMoveY;
+		casacore::Double itsBaseMoveX, itsBaseMoveY;
 
 // Logger
 
-		LogIO itsLogger;
+		casacore::LogIO itsLogger;
 
 // DisplayCoordinateSystem in screen pixel coordinates
 		DisplayCoordinateSystem itsCoordinateSystem;
@@ -166,13 +170,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		WorldCanvas* itsWorldCanvasPtr;
 
 // are we drawing a rectangle or an ellipse ?
-		Bool itsRectangle;
+		casacore::Bool itsRectangle;
 
 // Fractional indicators
-		Bool itsFracX, itsFracY;
+		casacore::Bool itsFracX, itsFracY;
 
 // Do world/pixel conversions at reference location ?
-		Bool itsDoRef;
+		casacore::Bool itsDoRef;
 
 // COnvert parameters from world to pixel
 		void convertToPixel ();
@@ -182,15 +186,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Decode record into private data
 
-		void decode(const RecordInterface& description, Bool required);
+		void decode(const casacore::RecordInterface& description, casacore::Bool required);
 
 // Encode private data into record
-		void encode(RecordInterface& description) const;
+		void encode(casacore::RecordInterface& description) const;
 
 // compute corners of rectangle
 		void createCorners();
 
-		Matrix<Int> toIntPixel(const Matrix<Double>& points);
+		casacore::Matrix<casacore::Int> toIntPixel(const casacore::Matrix<casacore::Double>& points);
 
 // Debugging routines
 

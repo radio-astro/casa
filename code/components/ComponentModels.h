@@ -65,7 +65,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <etymology>
 //#! Except when it is obvious (e.g., "Arrays") explain how the module name
-//#! expresses the role of this module.  Example: IPosition is short for
+//#! expresses the role of this module.  Example: casacore::IPosition is short for
 //#! "Integral Position" - a specialized integer vector for specifying
 //#! array dimensions and indices.
 // </etymology>
@@ -94,7 +94,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </motivation>
 
 // <todo asof="yyyy/mm/dd">
-//#! A List of bugs, limitations, extensions or planned refinements.
+//#! A casacore::List of bugs, limitations, extensions or planned refinements.
 //#! The programmer should fill in a date in the "asof" field, which
 //#! will usually be the date at which the class is submitted for review.
 //#! If, during the review, new "todo" items come up, then the "asof"

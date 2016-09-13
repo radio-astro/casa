@@ -54,8 +54,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <synopsis>
 // SolvableMJonesDesc defines the format of SolvableMJones calibration 
-// tables in terms of table descriptors <linkto class="TableDesc">TableDesc
-// </linkto>, as used in the Table system. The solvable MJones calibration
+// tables in terms of table descriptors <linkto class="casacore::TableDesc">TableDesc
+// </linkto>, as used in the casacore::Table system. The solvable MJones calibration
 // table formats include fit statistics and weights. Specializations for 
 // specific solvable forms are provided through inheritance. At present, 
 // this set of classes returns only the default table formats.
@@ -82,11 +82,11 @@ class SolvableMJonesDesc : public TimeVarMJonesDesc
    virtual ~SolvableMJonesDesc() {};
 
    // Return the cal_main table descriptor
-   virtual TableDesc calMainDesc();
+   virtual casacore::TableDesc calMainDesc();
 
  private:
-   // Table descriptor for fit statistics and weights
-   TableDesc itsFitDesc;
+   // casacore::Table descriptor for fit statistics and weights
+   casacore::TableDesc itsFitDesc;
 
 };
 
@@ -110,8 +110,8 @@ class SolvableMJonesDesc : public TimeVarMJonesDesc
 //
 // <synopsis>
 // MIfrDesc defines the format of MIfr calibration tables in terms 
-// of table descriptors <linkto class="TableDesc">TableDesc</linkto>, 
-// as used in the Table system. MIfr matrices define diagonal,
+// of table descriptors <linkto class="casacore::TableDesc">casacore::TableDesc</linkto>, 
+// as used in the casacore::Table system. MIfr matrices define diagonal,
 // multiplicative interferometer gain corrections in the Measurement 
 // Equation formalism. At present, this class returns only the default 
 // table format.

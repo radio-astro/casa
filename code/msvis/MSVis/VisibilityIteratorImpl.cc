@@ -58,6 +58,7 @@
 
 using std::make_pair;
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 SubChunkPair
@@ -86,16 +87,16 @@ VisibilityIteratorReadImpl::VisibilityIteratorReadImpl (ROVisibilityIterator * r
                                                         Double timeInterval)
 : addDefaultSort_p (addDefaultSort),
   curChanGroup_p (0),
-  floatDataFound_p (False),
-  initialized_p (False),
-  msIterAtOrigin_p (False),
-  msIter_p (mss, sortColumns, timeInterval, addDefaultSort, False),
+  floatDataFound_p (false),
+  initialized_p (false),
+  msIterAtOrigin_p (false),
+  msIter_p (mss, sortColumns, timeInterval, addDefaultSort, false),
   nChan_p (0),
   nRowBlocking_p (0),
   rovi_p (NULL),
   selRows_p (0, 0),
   sortColumns_p (sortColumns),
-  stateOk_p (False),
+  stateOk_p (false),
   tileCacheIsSet_p (0),
   timeInterval_p (timeInterval)
 {
@@ -113,9 +114,9 @@ void
 VisibilityIteratorReadImpl::initialize (const Block<MeasurementSet> &mss)
 {
 
-    AipsrcValue<Bool>::find (autoTileCacheSizing_p, VisibilityIterator::getAipsRcBase () + ".AutoTileCacheSizing", False);
+    AipsrcValue<Bool>::find (autoTileCacheSizing_p, VisibilityIterator::getAipsRcBase () + ".AutoTileCacheSizing", false);
 
-    asyncEnabled_p = False;
+    asyncEnabled_p = false;
     cache_p.lastazelUT_p = -1;
     cache_p.lastazel0UT_p = -1;
     cache_p.lasthourangUT_p = -1;
@@ -241,9 +242,9 @@ VisibilityIteratorReadImpl::Velocity::operator= (const VisibilityIteratorReadImp
 }
 
 VisibilityIteratorReadImpl::Cache::Cache()
-: flagOK_p (False),
-  floatDataCubeOK_p (False),
-  freqCacheOK_p (False),
+: flagOK_p (false),
+  floatDataCubeOK_p (false),
+  freqCacheOK_p (false),
   hourang_p (0),
   lastParang0UT_p (-1), // set last cache update as invalid
   lastParangUT_p (-1), // set last cache update as invalid
@@ -251,10 +252,10 @@ VisibilityIteratorReadImpl::Cache::Cache()
   lastazel0UT_p (-1), // set last cache update as invalid
   lasthourangUT_p (-1), // set last cache update as invalid
   lastfeedpaUT_p (-1), // set last cache update as invalid
-  msHasFC_p(False),
-  msHasWtSp_p (False),
+  msHasFC_p(false),
+  msHasWtSp_p (false),
   parang0_p (0),
-  weightSpOK_p (False)
+  weightSpOK_p (false)
 {}
 
 VisibilityIteratorReadImpl::Cache &
@@ -322,8 +323,8 @@ VisibilityIteratorReadImpl::Columns::operator= (const VisibilityIteratorReadImpl
 
 VisibilityIteratorReadImpl::Velocity::Velocity ()
 : nVelChan_p (0),
-  velSelection_p (False),
-  vPrecise_p (False)
+  velSelection_p (false),
+  vPrecise_p (false)
 {}
 
 
@@ -380,7 +381,7 @@ VisibilityIteratorReadImpl::existsColumn (VisBufferComponents::EnumType id) cons
     //     It's not true that all the other columns are required.
     //     existsFlagCategory uses caching anyway.
     // case VisBufferComponents::FlagCategory:
-    //   result = False;
+    //   result = false;
     //   if(!columns_p.flagCategory().isNull() &&
     //      columns_p.flagCategory().isDefined(0)){
     //     IPosition fcshape(columns_p.flagCategory().shape(0));
@@ -390,7 +391,7 @@ VisibilityIteratorReadImpl::existsColumn (VisBufferComponents::EnumType id) cons
     //   }
 
     default:
-        result = True; // required columns
+        result = true; // required columns
     }
 
     return result;
@@ -410,14 +411,14 @@ VisibilityIteratorReadImpl::origin ()
         originChunks ();
     } else {
         curChanGroup_p = 0;
-        newChanGroup_p = True;
+        newChanGroup_p = true;
         curStartRow_p = 0;
-        cache_p.freqCacheOK_p = False;
-        cache_p.flagOK_p = False;
-        cache_p.weightSpOK_p = False;
+        cache_p.freqCacheOK_p = false;
+        cache_p.flagOK_p = false;
+        cache_p.weightSpOK_p = false;
         cache_p.visOK_p.resize (3);
-        cache_p.visOK_p = False;
-        cache_p.floatDataCubeOK_p = False;
+        cache_p.visOK_p = false;
+        cache_p.floatDataCubeOK_p = false;
         setSelTable ();
         attachColumnsSafe (attachTable ());
         getTopoFreqs ();
@@ -435,24 +436,24 @@ VisibilityIteratorReadImpl::origin ()
 void
 VisibilityIteratorReadImpl::originChunks ()
 {
-    originChunks (False);
+    originChunks (false);
 }
 
 
 void
 VisibilityIteratorReadImpl::originChunks (Bool forceRewind)
 {
-    initialized_p = True;
+    initialized_p = true;
     subchunk_p.resetToOrigin();
 
     if (forceRewind) {
-        msIterAtOrigin_p = False;
+        msIterAtOrigin_p = false;
     }
 
     if (!msIterAtOrigin_p) {
 
         msIter_p.origin ();
-        msIterAtOrigin_p = True;
+        msIterAtOrigin_p = true;
 
         while ((! isInSelectedSPW (msIter_p.spectralWindowId ())) &&
                 msIter_p.more ()) {
@@ -460,7 +461,7 @@ VisibilityIteratorReadImpl::originChunks (Bool forceRewind)
             msIter_p++;
         }
 
-        stateOk_p = False;
+        stateOk_p = false;
         msCounter_p = msId ();
 
     }
@@ -476,29 +477,29 @@ VisibilityIteratorReadImpl::isInSelectedSPW (const Int & spw)
 
     for (uInt k = 0; k < msChannels_p.spw_p[msId ()].nelements () ; ++k) {
         if (spw == msChannels_p.spw_p[msId ()][k]) {
-            return True;
+            return true;
         }
     }
-    return False;
+    return false;
 }
 
 void
 VisibilityIteratorReadImpl::advance ()
 {
-    newChanGroup_p = False;
-    cache_p.flagOK_p = False;
-    cache_p.visOK_p = False;
-    cache_p.floatDataCubeOK_p = False;
-    cache_p.weightSpOK_p = False;
+    newChanGroup_p = false;
+    cache_p.flagOK_p = false;
+    cache_p.visOK_p = false;
+    cache_p.floatDataCubeOK_p = false;
+    cache_p.weightSpOK_p = false;
     curStartRow_p = curEndRow_p + 1;
     if (curStartRow_p >= curTableNumRow_p) {
         if (++ curChanGroup_p >= curNGroups_p) {
             curChanGroup_p--;
-            more_p = False;
+            more_p = false;
         } else {
             curStartRow_p = 0;
-            newChanGroup_p = True;
-            cache_p.freqCacheOK_p = False;
+            newChanGroup_p = true;
+            cache_p.freqCacheOK_p = false;
             updateSlicer ();
         }
     }
@@ -535,15 +536,15 @@ VisibilityIteratorReadImpl::nextChunk ()
                     && (msIter_p.more ())) {
                 msIter_p++;
             }
-            stateOk_p = False;
+            stateOk_p = false;
         }
 
         if (msIter_p.newMS ()) {
             msCounter_p = msId ();
             doChannelSelection ();
         }
-        msIterAtOrigin_p = False;
-        stateOk_p = False;
+        msIterAtOrigin_p = false;
+        stateOk_p = false;
     }
     if (msIter_p.more ()) {
         subchunk_p.incrementChunk();
@@ -692,10 +693,10 @@ VisibilityIteratorReadImpl::setState ()
         }
         channelGroupSize_p = channels_p.width_p[spw];
         curNGroups_p = channels_p.nGroups_p[spw];
-        cache_p.freqCacheOK_p = False;
+        cache_p.freqCacheOK_p = false;
     }
 
-    stateOk_p = True;
+    stateOk_p = true;
 }
 
 const MSDerivedValues &
@@ -710,7 +711,7 @@ VisibilityIteratorReadImpl::updateSlicer ()
 {
 
     if (msIter_p.newMS ()) {
-        channels_p.nGroups_p.resize (0, True, False);
+        channels_p.nGroups_p.resize (0, true, false);
         doChannelSelection ();
     }
 
@@ -763,7 +764,7 @@ VisibilityIteratorReadImpl::setTileCache ()
 
     if (tileCacheIsSet_p.nelements () != 8) {
         tileCacheIsSet_p.resize (8);
-        tileCacheIsSet_p.set (False);
+        tileCacheIsSet_p.set (false);
     }
 
     Vector<String> columns (8);
@@ -792,7 +793,7 @@ VisibilityIteratorReadImpl::setTileCache ()
                 msIterAtOrigin_p &&
                 ! tileCacheIsSet_p[k]) {
 
-                Block<String> refTables = theMs.getPartNames (True);
+                Block<String> refTables = theMs.getPartNames (true);
 
                 for (uInt kk = 0; kk < refTables.nelements (); ++kk) {
 
@@ -801,7 +802,7 @@ VisibilityIteratorReadImpl::setTileCache ()
                     MrsEligibility mrSubtables = MrsEligibility::defaultEligible();
                     elms.setMemoryResidentSubtables (mrSubtables);
 
-                    ROTiledStManAccessor tacc (elms, columns[k], True);
+                    ROTiledStManAccessor tacc (elms, columns[k], true);
 
 		    // Cleverly sense full-row cache size (in tiles)
 		    uInt cacheSizeInTiles(1);
@@ -825,13 +826,13 @@ VisibilityIteratorReadImpl::setTileCache ()
 
 		    // Now set it
                     tacc.setCacheSize (rRow, cacheSizeInTiles);  
-                    tileCacheIsSet_p[k] = True;
+                    tileCacheIsSet_p[k] = true;
                     //cerr << "set cache on kk " << kk << " vol " << columns[k] << "  " << refTables[kk] << endl;
                 }
             }
             else {
 
-                ROTiledStManAccessor tacc (theMs, columns[k], True);
+                ROTiledStManAccessor tacc (theMs, columns[k], true);
 
 
 		// Cleverly sense full-row cache size (in tiles)
@@ -850,11 +851,11 @@ VisibilityIteratorReadImpl::setTileCache ()
 		//   (this satisfies cases where required rows require >1 non-contiguous tiles)
 		cacheSizeInTiles*=2;
 
-	        Bool setCache = True;
+	        Bool setCache = true;
                 if (! useSlicer_p){        // always set cache if slicer in use
                     for (uInt jj = 0 ; jj <  tacc.nhypercubes (); ++jj) {
                         if (tacc.getBucketSize (jj) == 0) {
-                            setCache = False;
+                            setCache = false;
                         }
                     }
                 }
@@ -895,7 +896,7 @@ Bool
 VisibilityIteratorReadImpl::usesTiledDataManager (const String & columnName,
                                                   const MeasurementSet & theMs) const
 {
-    Bool noData = False;
+    Bool noData = false;
 
     // Have to do something special about weight_spectrum as it tend to exist but
     // has no valid data.
@@ -933,10 +934,10 @@ VisibilityIteratorReadImpl::usesTiledDataManager (const String & columnName,
              (columnName == MS::columnName (MS::UVW) &&
               (columns_p.uvw_p.isNull () || ! columns_p.uvw_p.isDefined (0)));
 
-    Bool usesTiles = False;
+    Bool usesTiles = false;
 
     if (! noData){
-        String dataManType = RODataManAccessor (theMs, columnName, True).dataManagerType ();
+        String dataManType = RODataManAccessor (theMs, columnName, true).dataManagerType ();
 
         usesTiles = dataManType.contains ("Tiled");
     }
@@ -977,13 +978,13 @@ void VisibilityIteratorReadImpl::setTileCache (){
 	  // Find smallest tile shape
 	  Int lowestProduct = 0;
 	  Int lowestId = 0;
-	  Bool firstFound = False;
+	  Bool firstFound = false;
 	  for (uInt id=0; id < nHyper; id++) {
 	    Int product = tacc.getTileShape (id).product ();
 	    if (product > 0 && (!firstFound || product < lowestProduct)) {
 	      lowestProduct = product;
 	      lowestId = id;
-	      if (!firstFound) firstFound = True;
+	      if (!firstFound) firstFound = true;
 	    }
 	  }
 	  Int nchantile;
@@ -1058,9 +1059,9 @@ VisibilityIteratorReadImpl::attachColumns (const Table & t)
 
     if (cds.isDefined (MS::columnName (MS::FLOAT_DATA))) {
         columns_p.floatVis_p.attach (t, MS::columnName (MS::FLOAT_DATA));
-        floatDataFound_p = True;
+        floatDataFound_p = true;
     } else {
-        floatDataFound_p = False;
+        floatDataFound_p = false;
     }
 
     if (cds.isDefined ("MODEL_DATA")) {
@@ -1223,7 +1224,7 @@ Vector<Int> &
 VisibilityIteratorReadImpl::corrType (Vector<Int> & corrTypes) const
 {
     Int polId = msIter_p.polarizationId ();
-    msIter_p.msColumns ().polarization ().corrType ().get (polId, corrTypes, True);
+    msIter_p.msColumns ().polarization ().corrType ().get (polId, corrTypes, true);
     return corrTypes;
 }
 
@@ -1231,9 +1232,9 @@ Cube<Bool> &
 VisibilityIteratorReadImpl::flag (Cube<Bool> & flags) const
 {
     if (useSlicer_p) {
-        getCol (columns_p.flag_p, slicer_p, flags, True);
+        getCol (columns_p.flag_p, slicer_p, flags, true);
     } else {
-        getCol (columns_p.flag_p, flags, True);
+        getCol (columns_p.flag_p, flags, true);
     }
     return flags;
 }
@@ -1242,9 +1243,9 @@ Matrix<Bool> &
 VisibilityIteratorReadImpl::flag (Matrix<Bool> & flags) const
 {
     if (useSlicer_p) {
-        getCol (columns_p.flag_p, slicer_p, cache_p.flagCube_p, True);
+        getCol (columns_p.flag_p, slicer_p, cache_p.flagCube_p, true);
     } else {
-        getCol (columns_p.flag_p, cache_p.flagCube_p, True);
+        getCol (columns_p.flag_p, cache_p.flagCube_p, true);
     }
 
     flags.resize (channelGroupSize_p, curNumRow_p);
@@ -1282,7 +1283,7 @@ Bool VisibilityIteratorReadImpl::existsFlagCategory() const
       cache_p.msHasFC_p = columns_p.flagCategory_p.hasContent();
     }
     catch (AipsError x){
-      cache_p.msHasFC_p = False;
+      cache_p.msHasFC_p = false;
     }
   }
   return cache_p.msHasFC_p;
@@ -1298,9 +1299,9 @@ VisibilityIteratorReadImpl::flagCategory (Array<Bool> & flagCategories) const
             throw (AipsError ("velocity selection not allowed in flagCategory ()."));
         } else {
             if (useSlicer_p) {
-                getCol (columns_p.flagCategory_p, slicer_p, flagCategories, True);
+                getCol (columns_p.flagCategory_p, slicer_p, flagCategories, true);
             } else {
-                getCol (columns_p.flagCategory_p, flagCategories, True);
+                getCol (columns_p.flagCategory_p, flagCategories, true);
             }
         }
     }
@@ -1355,7 +1356,7 @@ VisibilityIteratorReadImpl::frequency (Vector<Double> & freq) const
         freq = velocity_p.selFreq_p;
     } else {
         if (! cache_p.freqCacheOK_p) {
-            cache_p.freqCacheOK_p = True;
+            cache_p.freqCacheOK_p = true;
             Int spw = msIter_p.spectralWindowId ();
             cache_p.frequency_p.resize (channelGroupSize_p);
             const Vector<Double> & chanFreq = msIter_p.frequency ();
@@ -1509,24 +1510,24 @@ VisibilityIteratorReadImpl::getDataColumn (DataColumn whichOne,
     case ROVisibilityIterator::Observed:
         if (floatDataFound_p) {
             Cube<Float> dataFloat;
-            getCol (columns_p.floatVis_p, slicer, dataFloat, True);
+            getCol (columns_p.floatVis_p, slicer, dataFloat, true);
             data.resize (dataFloat.shape ());
             convertArray (data, dataFloat);
         } else {
-            getCol (columns_p.vis_p, slicer, data, True);
+            getCol (columns_p.vis_p, slicer, data, true);
         }
         break;
 
     case ROVisibilityIterator::Corrected:
-        getCol (columns_p.corrVis_p, slicer, data, True);
+        getCol (columns_p.corrVis_p, slicer, data, true);
         break;
 
     case ROVisibilityIterator::Model:
-        getCol (columns_p.modelVis_p, slicer, data, True);
+        getCol (columns_p.modelVis_p, slicer, data, true);
         break;
 
     default:
-        Assert (False);
+        Assert (false);
     }
 
 }
@@ -1543,24 +1544,24 @@ VisibilityIteratorReadImpl::getDataColumn (DataColumn whichOne,
     case ROVisibilityIterator::Observed:
         if (floatDataFound_p) {
             Cube<Float> dataFloat;
-            getCol (columns_p.floatVis_p, dataFloat, True);
+            getCol (columns_p.floatVis_p, dataFloat, true);
             data.resize (dataFloat.shape ());
             convertArray (data, dataFloat);
         } else {
-            getCol (columns_p.vis_p, data, True);
+            getCol (columns_p.vis_p, data, true);
         }
         break;
 
     case ROVisibilityIterator::Corrected:
-        getCol (columns_p.corrVis_p, data, True);
+        getCol (columns_p.corrVis_p, data, true);
         break;
 
     case ROVisibilityIterator::Model:
-        getCol (columns_p.modelVis_p, data, True);
+        getCol (columns_p.modelVis_p, data, true);
         break;
 
     default:
-        Assert (False);
+        Assert (false);
     }
 }
 
@@ -1570,7 +1571,7 @@ VisibilityIteratorReadImpl::getFloatDataColumn (const Slicer & slicer,
 {
     // Return FLOAT_DATA as real Floats.
     if (floatDataFound_p) {
-        getCol (columns_p.floatVis_p, slicer, data, True);
+        getCol (columns_p.floatVis_p, slicer, data, true);
     }
 }
 
@@ -1579,7 +1580,7 @@ VisibilityIteratorReadImpl::getFloatDataColumn (Cube<Float> & data) const
 {
     // Return FLOAT_DATA as real Floats.
     if (floatDataFound_p) {
-        getCol (columns_p.floatVis_p, data, True);
+        getCol (columns_p.floatVis_p, data, true);
     }
 }
 
@@ -1597,7 +1598,7 @@ VisibilityIteratorReadImpl::visibility (Matrix<CStokesVector> & vis,
     Bool deleteIt;
     Complex * pcube = cache_p.visCube_p.getStorage (deleteIt);
     if (deleteIt) {
-        cerr << "Problem in ROVisIter::visibility - deleteIt True" << endl;
+        cerr << "Problem in ROVisIter::visibility - deleteIt true" << endl;
     }
     // Here we cope in a limited way with cases where not all 4
     // polarizations are present: if only 2, assume XX,YY or RR,LL
@@ -1613,7 +1614,7 @@ VisibilityIteratorReadImpl::visibility (Matrix<CStokesVector> & vis,
         break;
     }
     case 2: {
-        vis.set (Complex (0., 0.));
+        vis.set (CStokesVector (Complex (0., 0.)));
         for (uInt row = 0; row < curNumRow_p; row++) {
             for (Int chn = 0; chn < channelGroupSize_p; chn++, pcube += 2) {
                 CStokesVector & v = vis (chn, row);
@@ -1624,7 +1625,7 @@ VisibilityIteratorReadImpl::visibility (Matrix<CStokesVector> & vis,
         break;
     }
     case 1: {
-        vis.set (Complex (0., 0.));
+        vis.set (CStokesVector (Complex (0., 0.)));
         for (uInt row = 0; row < curNumRow_p; row++) {
             for (Int chn = 0; chn < channelGroupSize_p; chn++, pcube++) {
                 CStokesVector & v = vis (chn, row);
@@ -1640,7 +1641,7 @@ Vector<RigidVector<Double, 3> > &
 VisibilityIteratorReadImpl::uvw (Vector<RigidVector<Double, 3> > & uvwvec) const
 {
     uvwvec.resize (curNumRow_p);
-    getColArray<Double>(columns_p.uvw_p, cache_p.uvwMat_p, True);
+    getColArray<Double>(columns_p.uvw_p, cache_p.uvwMat_p, true);
     // get a pointer to the raw storage for quick access
     Bool deleteIt;
     Double * pmat = cache_p.uvwMat_p.getStorage (deleteIt);
@@ -1653,7 +1654,7 @@ VisibilityIteratorReadImpl::uvw (Vector<RigidVector<Double, 3> > & uvwvec) const
 Matrix<Double> &
 VisibilityIteratorReadImpl::uvwMat (Matrix<Double> & uvwmat) const
 {
-    getCol (columns_p.uvw_p, uvwmat, True);
+    getCol (columns_p.uvw_p, uvwmat, true);
     return uvwmat;
 }
 
@@ -2014,7 +2015,7 @@ VisibilityIteratorReadImpl::existsWeightSpectrum () const
             //        << ", " << channelGroupSize () << endl;
             // }
         } catch (AipsError x) {
-            cache_p.msHasWtSp_p = False;
+            cache_p.msHasWtSp_p = false;
         }
     }
     return cache_p.msHasWtSp_p;
@@ -2025,9 +2026,9 @@ VisibilityIteratorReadImpl::weightSpectrum (Cube<Float> & wtsp) const
 {
     if (existsWeightSpectrum ()) {
         if (useSlicer_p) {
-            getCol (columns_p.weightSpectrum_p, slicer_p, wtsp, True);
+            getCol (columns_p.weightSpectrum_p, slicer_p, wtsp, true);
         } else {
-            getCol (columns_p.weightSpectrum_p, wtsp, True);
+            getCol (columns_p.weightSpectrum_p, wtsp, true);
         }
     } else {
         wtsp.resize (0, 0, 0);
@@ -2122,17 +2123,17 @@ VisibilityIteratorReadImpl::selectVelocity (Int /*nChan*/,
         MDoppler::Types /*dType*/,
         Bool /*precise*/)
 {
-    ThrowIf (True, "Method not implemented");
+    ThrowIf (true, "Method not implemented");
 
 //    if (!initialized_p) {
 //        // initialize the base iterator only (avoid recursive call to originChunks)
 //        if (!msIterAtOrigin_p) {
 //            msIter_p.origin ();
-//            msIterAtOrigin_p = True;
-//            stateOk_p = False;
+//            msIterAtOrigin_p = true;
+//            stateOk_p = false;
 //        }
 //    }
-//    velSelection_p = True;
+//    velSelection_p = true;
 //    nVelChan_p = nChan;
 //    vstart_p = vStart;
 //    vinc_p = vInc;
@@ -2159,8 +2160,8 @@ VisibilityIteratorReadImpl::selectChannel (Int nGroup, Int start, Int width,
         // initialize the base iterator only (avoid recursive call to originChunks)
         if (!msIterAtOrigin_p) {
             msIter_p.origin ();
-            msIterAtOrigin_p = True;
-            stateOk_p = False;
+            msIterAtOrigin_p = true;
+            stateOk_p = false;
         }
     }
     Int spw = spectralWindow;
@@ -2169,44 +2170,44 @@ VisibilityIteratorReadImpl::selectChannel (Int nGroup, Int start, Int width,
     }
     Int n = channels_p.nGroups_p.nelements ();
     if (n == 0) {
-        msChannels_p.spw_p.resize (1, True, False);
+        msChannels_p.spw_p.resize (1, true, false);
         msChannels_p.spw_p[0].resize (1);
         msChannels_p.spw_p[0][0] = spw;
-        msChannels_p.nGroups_p.resize (1, True, False);
+        msChannels_p.nGroups_p.resize (1, true, false);
         msChannels_p.nGroups_p[0].resize (1);
         msChannels_p.nGroups_p[0][0] = nGroup;
-        msChannels_p.start_p.resize (1, True, False);
+        msChannels_p.start_p.resize (1, true, false);
         msChannels_p.start_p[0].resize (1);
         msChannels_p.start_p[0][0] = start;
-        msChannels_p.width_p.resize (1, True, False);
+        msChannels_p.width_p.resize (1, true, false);
         msChannels_p.width_p[0].resize (1);
         msChannels_p.width_p[0][0] = width;
-        msChannels_p.inc_p.resize (1, True, False);
+        msChannels_p.inc_p.resize (1, true, false);
         msChannels_p.inc_p[0].resize (1);
         msChannels_p.inc_p[0][0] = increment;
         msCounter_p = 0;
 
     } else {
-        Bool hasSpw = False;
+        Bool hasSpw = false;
         Int spwIndex = -1;
         for (uInt k = 0; k < msChannels_p.spw_p[0].nelements (); ++k) {
             if (spw == msChannels_p.spw_p[0][k]) {
-                hasSpw = True;
+                hasSpw = true;
                 spwIndex = k;
                 break;
             }
         }
         if (!hasSpw) {
             Int nspw = msChannels_p.spw_p[0].nelements () + 1;
-            msChannels_p.spw_p[0].resize (nspw, True);
+            msChannels_p.spw_p[0].resize (nspw, true);
             msChannels_p.spw_p[0][nspw - 1] = spw;
-            msChannels_p.nGroups_p[0].resize (nspw, True);
+            msChannels_p.nGroups_p[0].resize (nspw, true);
             msChannels_p.nGroups_p[0][nspw - 1] = nGroup;
-            msChannels_p.start_p[0].resize (nspw, True);
+            msChannels_p.start_p[0].resize (nspw, true);
             msChannels_p.start_p[0][nspw - 1] = start;
-            msChannels_p.width_p[0].resize (nspw, True);
+            msChannels_p.width_p[0].resize (nspw, true);
             msChannels_p.width_p[0][nspw - 1] = width;
-            msChannels_p.inc_p[0].resize (nspw, True);
+            msChannels_p.inc_p[0].resize (nspw, true);
             msChannels_p.inc_p[0][nspw - 1] = increment;
         } else {
             msChannels_p.spw_p[0][spwIndex] = spw;
@@ -2243,7 +2244,7 @@ VisibilityIteratorReadImpl::selectChannel (Int nGroup, Int start, Int width,
     //            while ((!isInSelectedSPW (msIter_p.spectralWindowId ()))
     //                    && (msIter_p.more ()))
     //                msIter_p++;
-    //            stateOk_p=False;
+    //            stateOk_p=false;
     //            setState ();
     //        }
     //    }
@@ -2271,23 +2272,23 @@ VisibilityIteratorReadImpl::selectChannel (const Block<Vector<Int> > & blockNGro
     }
      */
 
-    msChannels_p.nGroups_p.resize (0, True, False);
+    msChannels_p.nGroups_p.resize (0, true, false);
     msChannels_p.nGroups_p = blockNGroup;
-    msChannels_p.start_p.resize (0, True, False);
+    msChannels_p.start_p.resize (0, true, false);
     msChannels_p.start_p = blockStart;
-    msChannels_p.width_p.resize (0, True, False);
+    msChannels_p.width_p.resize (0, true, false);
     msChannels_p.width_p = blockWidth;
-    msChannels_p.inc_p.resize (0, True, False);
+    msChannels_p.inc_p.resize (0, true, false);
     msChannels_p.inc_p = blockIncr;
-    msChannels_p.spw_p.resize (0, True, False);
+    msChannels_p.spw_p.resize (0, true, false);
     msChannels_p.spw_p = blockSpw;
 
     if (!initialized_p) {
         // initialize the base iterator only (avoid recursive call to originChunks)
         if (!msIterAtOrigin_p) {
             msIter_p.origin ();
-            msIterAtOrigin_p = True;
-            stateOk_p = False;
+            msIterAtOrigin_p = true;
+            stateOk_p = false;
         }
     }
 
@@ -2304,7 +2305,7 @@ VisibilityIteratorReadImpl::selectChannel (const Block<Vector<Int> > & blockNGro
                     && (msIter_p.more ())) {
                 msIter_p++;
             }
-            stateOk_p = False;
+            stateOk_p = false;
         }
 
     }
@@ -2322,15 +2323,15 @@ VisibilityIteratorReadImpl::getChannelSelection (Block< Vector<Int> > & blockNGr
         Block< Vector<Int> > & blockSpw)
 {
 
-    blockNGroup.resize (0, True, False);
+    blockNGroup.resize (0, true, false);
     blockNGroup = msChannels_p.nGroups_p;
-    blockStart.resize (0, True, False);
+    blockStart.resize (0, true, false);
     blockStart = msChannels_p.start_p;
-    blockWidth.resize (0, True, False);
+    blockWidth.resize (0, true, false);
     blockWidth = msChannels_p.width_p;
-    blockIncr.resize (0, True, False);
+    blockIncr.resize (0, true, false);
     blockIncr = msChannels_p.inc_p;
-    blockSpw.resize (0, True, False);
+    blockSpw.resize (0, true, false);
     blockSpw = msChannels_p.spw_p;
 }
 void
@@ -2345,10 +2346,10 @@ VisibilityIteratorReadImpl::doChannelSelection ()
         if (spw >= n) {
             // we need to resize the blocks
             Int newn = max (2, max (2 * n, spw + 1));
-            channels_p.nGroups_p.resize (newn, True, True);
-            channels_p.start_p.resize (newn, True, True);
-            channels_p.width_p.resize (newn, True, True);
-            channels_p.inc_p.resize (newn, True, True);
+            channels_p.nGroups_p.resize (newn, true, true);
+            channels_p.start_p.resize (newn, true, true);
+            channels_p.width_p.resize (newn, true, true);
+            channels_p.inc_p.resize (newn, true, true);
             for (Int i = n; i < newn; i++) {
                 channels_p.nGroups_p[i] = 0;
             }
@@ -2500,9 +2501,9 @@ VisibilityIteratorReadImpl::getSpwInFreqRange (Block<Vector<Int> > & spw,
 
     Int nMS = msIter_p.numMS ();
 
-    spw.resize (nMS, True, False);
-    start.resize (nMS, True, False);
-    nchan.resize (nMS, True, False);
+    spw.resize (nMS, true, false);
+    start.resize (nMS, true, false);
+    nchan.resize (nMS, true, false);
 
     for (Int k = 0; k < nMS; ++k) {
         Vector<Double> t;
@@ -2669,12 +2670,12 @@ VisibilityIteratorReadImpl::lsrFrequency (const Int & spw,
                                MFrequency::Ref (MFrequency::LSRK, frame));
 
     //    if (obsMFreqType != MFrequency::LSRK){
-    //        convert=True;
+    //        convert=true;
     //    }
 
     convert = obsMFreqType != MFrequency::LSRK; // make this parameter write-only
     // user requested no conversion
-    if(ignoreconv) convert=False;
+    if(ignoreconv) convert=false;
 
     for (Int i = 0; i < chanWidth[spw]; i++) {
         Int inc = chanInc[spw] <= 0 ? 1 : chanInc[spw] ;
@@ -2913,7 +2914,7 @@ VisibilityIteratorReadImpl::slurp () const
                     dmInfo.subRecord (i).get ("TYPE", dm_type);
                     // cout << "dm_type = " << dm_type << endl;
 
-                    Bool can_exceed_nr_buckets = False;
+                    Bool can_exceed_nr_buckets = false;
                     uInt num_buckets = msIter_p.ms ().nrow ();
                     // One bucket is at least one row, so this is enough
 
@@ -2983,10 +2984,10 @@ VisibilityIteratorWriteImpl::attachColumns (const Table & t)
     }
 
     if (cds.isDefined (MS::columnName (MS::FLOAT_DATA))) {
-        readImpl->floatDataFound_p = True;
+        readImpl->floatDataFound_p = true;
         columns_p.floatVis_p.attach (t, MS::columnName (MS::FLOAT_DATA));
     } else {
-        readImpl->floatDataFound_p = False;
+        readImpl->floatDataFound_p = false;
     }
 
     if (cds.isDefined ("MODEL_DATA")) {
@@ -3250,7 +3251,7 @@ VisibilityIteratorWriteImpl::putDataColumn (DataColumn whichOne,
         break;
 
     default:
-        Assert (False);
+        Assert (false);
     }
 }
 
@@ -3287,7 +3288,7 @@ VisibilityIteratorWriteImpl::putDataColumn (DataColumn whichOne,
         break;
 
     default:
-        Assert (False);
+        Assert (false);
     }
 }
 
@@ -3376,11 +3377,11 @@ template <class T> void VisibilityIteratorWriteImpl::setTileShape(	RefRows &rowR
 
 Bool VisibilityIteratorWriteImpl::useCustomTileShape()
 {
-	Bool ret = False;
+	Bool ret = false;
 	String rank = EnvironmentVariable::get("OMPI_COMM_WORLD_RANK");
 	if (!rank.empty())
 	{
-		ret = True;
+		ret = true;
 	}
 
 	return ret;
@@ -3398,7 +3399,7 @@ VisibilityIteratorWriteImpl::putModel(const RecordInterface& rec, Bool iscompone
 
   // Make sure  we have the right size
 
-  fields.resize(nfields, True);
+  fields.resize(nfields, true);
   Int msid = getReadImpl()->msId();
 
   Vector<Int> spws =  getReadImpl()->msChannels_p.spw_p[msid];

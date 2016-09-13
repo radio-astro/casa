@@ -21,7 +21,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
  * MA 02111-1307  USA
  *
- * File Interval.h
+ * casacore::File Interval.h
  */
 
 #ifndef Interval_CLASS
@@ -285,7 +285,7 @@ namespace asdm {
     return tmp;
   }
 
-  // Conversion functions
+  // casacore::Conversion functions
   inline Interval::operator string () const {
     return toString();
   }

@@ -52,8 +52,8 @@ namespace casa {
 //
 // <synopsis>
 // GJonesDesc defines the format of GJones calibration tables in terms 
-// of table descriptors <linkto class="TableDesc">TableDesc</linkto>, 
-// as used in the Table system. GJones matrices define the electronic
+// of table descriptors <linkto class="casacore::TableDesc">casacore::TableDesc</linkto>, 
+// as used in the casacore::Table system. GJones matrices define the electronic
 // gain corrections in the Measurement Equation formalism. At present, 
 // this class returns only the default table formats.
 // </etymology>
@@ -77,17 +77,17 @@ public:
   // Default null constructor, and destructor
   EPointDesc();
   // Construct from the Jones table type
-  EPointDesc (const String& type);
+  EPointDesc (const casacore::String& type);
 
   virtual ~EPointDesc() {};
 
   // Return the table descriptors for the main calibration table:
-  virtual TableDesc calMainDesc();
+  virtual casacore::TableDesc calMainDesc();
   
-  TableDesc addCols(TableDesc& td);
+  casacore::TableDesc addCols(casacore::TableDesc& td);
 
 protected:
-  TableDesc itsTableDesc;
+  casacore::TableDesc itsTableDesc;
 };
 }
 #endif

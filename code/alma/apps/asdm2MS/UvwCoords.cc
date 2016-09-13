@@ -91,8 +91,8 @@ void UvwCoords::uvw_an( double                        timeCentroid,
   MEpoch    epoch( Quantity(timeCentroid,"s"),
   		   MEpoch::UTC);
 
-  casa::Double dirx=phaseDir[0][0].get();
-  casa::Double diry=phaseDir[0][1].get();
+  casacore::Double dirx=phaseDir[0][0].get();
+  casacore::Double diry=phaseDir[0][1].get();
   MVDirection mvd( Quantity(dirx,"rad"),
 		   Quantity(diry,"rad") );
   MDirection phasedir( mvd,
@@ -149,10 +149,10 @@ void UvwCoords::uvw_an( double                        timeCentroid,
 void UvwCoords::uvw_bl( const vector<Tag>& v_antennaId,
 			unsigned int nrep,
 			bool reverse,
-			vector<Vector<casa::Double> >& v_uvw){
+			vector<Vector<casacore::Double> >& v_uvw){
 
-  Vector<casa::Double> uvw; uvw.resize(3);
-  Vector<casa::Double> uvw_i, uvw_j;
+  Vector<casacore::Double> uvw; uvw.resize(3);
+  Vector<casacore::Double> uvw_i, uvw_j;
 
   if (getenv ("ASDM_DEBUG")) { 
     cout << "Entering UvwCoords::uvw_bl" << endl;
@@ -214,8 +214,8 @@ void UvwCoords::uvw_bl( Tag configDescriptionId,
 			double timeCentroid,
 			Enum<CorrelationMode> correlationMode,
 			bool reverse, bool autoTrailing, 
-			vector<Vector<casa::Double> >& v_uvw,
-			casa::MSFieldColumns* msfc_p){
+			vector<Vector<casacore::Double> >& v_uvw,
+			casacore::MSFieldColumns* msfc_p){
 
   map<Tag,ArrayParam>::const_iterator itf=m_array_.find(configDescriptionId);
 
@@ -242,7 +242,7 @@ void UvwCoords::uvw_bl( Tag configDescriptionId,
     uvw_bl( itf->second.v_ant, itf->second.nrepeat, reverse, v_uvw );
     if(correlationMode[CorrelationModeMod::CROSS_AND_AUTO]){
       // the auto baselines
-      vector<Vector<casa::Double> > vV_sd;     
+      vector<Vector<casacore::Double> > vV_sd;
       vV_sd.assign( itf->second.v_ant.size() * itf->second.nrepeat, 
 		    sduvw_ );
       // append the auto to the cross baselines
@@ -255,7 +255,7 @@ void UvwCoords::uvw_bl( Tag configDescriptionId,
 		    sduvw_ );
     }
     // the cross baselines
-    vector<Vector<casa::Double> > vV_bl;     
+    vector<Vector<casacore::Double> > vV_bl;
     uvw_bl( itf->second.v_ant, itf->second.nrepeat, reverse, vV_bl );
     // append the cross to the auto baselines
     v_uvw.insert( v_uvw.end(), vV_bl.begin(),  vV_bl.end() );
@@ -268,8 +268,8 @@ void UvwCoords::uvw_bl( Tag configDescriptionId,
 			const vector<double>& v_timeCentroid,
 			Enum<CorrelationMode> correlationMode,
 			bool reverse, bool autoTrailing, 
-			vector<Vector<casa::Double> >& v_uvw,
-			casa::MSFieldColumns* msfc_p){
+			vector<Vector<casacore::Double> >& v_uvw,
+			casacore::MSFieldColumns* msfc_p){
 
   map<Tag,ArrayParam>::const_iterator itf=m_array_.find(configDescriptionId);
 
@@ -286,7 +286,7 @@ void UvwCoords::uvw_bl( Tag configDescriptionId,
 		  sduvw_ );
   }
 
-  casa::Vector<casa::Double> V_bl; V_bl.resize(3);
+  casacore::Vector<casacore::Double> V_bl; V_bl.resize(3);
   vector<Tag> v_a; v_a.reserve(2); v_a.resize(2);
 
   unsigned int k=0;
@@ -329,7 +329,7 @@ void UvwCoords::uvw_bl( Tag configDescriptionId,
   }
   if(correlationMode[CorrelationModeMod::CROSS_AND_AUTO] && autoTrailing){
     // the auto baselines
-    vector<Vector<casa::Double> > vV_sd;     
+    vector<Vector<casacore::Double> > vV_sd;
     vV_sd.assign( itf->second.v_ant.size() * itf->second.nrepeat, 
 		  sduvw_ );
     // append these auto to the cross baselines
@@ -340,11 +340,11 @@ void UvwCoords::uvw_bl( Tag configDescriptionId,
 
 void UvwCoords::uvw_bl( asdm::MainRow* mainRow, vector<pair<unsigned int,double> > v_tci, 
 			Enum<CorrelationMode> correlationMode,
- 			pair<bool,bool> dataOrder, vector<Vector<casa::Double> >& v_uvw){
+ 			pair<bool,bool> dataOrder, vector<Vector<casacore::Double> >& v_uvw){
 
   vector<double> v_timeCentroid;
   for(unsigned int n=0;n<v_tci.size();n++)v_timeCentroid.push_back(v_tci[n].second);
-  vector<Vector<casa::Double> > vV;
+  vector<Vector<casacore::Double> > vV;
   uvw_bl( mainRow, v_timeCentroid, correlationMode, dataOrder, vV);
   v_uvw.clear(); v_uvw.resize(vV.size());
   //for(unsigned int n=0;n<v_tci.size();n++)v_uvw[v_tci[n].first]=vV[n++];
@@ -354,7 +354,7 @@ void UvwCoords::uvw_bl( asdm::MainRow* mainRow, vector<pair<unsigned int,double>
 
 
 void UvwCoords::uvw_bl( asdm::MainRow* mainRow, vector<double> v_timeCentroid, Enum<CorrelationMode> correlationMode,
- 			pair<bool,bool> dataOrder, vector<Vector<casa::Double> >& v_uvw, casa::MSFieldColumns* msfc_p){
+ 			pair<bool,bool> dataOrder, vector<Vector<casacore::Double> >& v_uvw, casacore::MSFieldColumns* msfc_p){
 
   bool coutest=false;
 
@@ -409,7 +409,7 @@ void UvwCoords::uvw_bl( asdm::MainRow* mainRow, vector<double> v_timeCentroid, E
   if(autoTrailing){
 
     if(!correlationMode[CorrelationModeMod::AUTO_ONLY]){                   // The cross data
-      vector<Vector<casa::Double> > v_bluvw;
+      vector<Vector<casacore::Double> > v_bluvw;
       for(unsigned int nt=0; nt<ndump; nt++){
 	unsigned int cnt=0;
 	for(unsigned int n=0; n<nbl*nrepeat; n++){
@@ -439,7 +439,7 @@ void UvwCoords::uvw_bl( asdm::MainRow* mainRow, vector<double> v_timeCentroid, E
       }
     }
     if(!correlationMode[CorrelationModeMod::CROSS_ONLY]){                  // The single dish:
-      vector<Vector<casa::Double> > v_sduvw;
+      vector<Vector<casacore::Double> > v_sduvw;
       v_sduvw.assign( ndump*nant*nrepeat, sduvw_ ); 
       v_uvw.insert( v_uvw.end(),v_sduvw.begin(), v_sduvw.end() ); 
     }
@@ -450,7 +450,7 @@ void UvwCoords::uvw_bl( asdm::MainRow* mainRow, vector<double> v_timeCentroid, E
       v_uvw.assign( ndump*nant*nrepeat, sduvw_ ); 
 
     if(!correlationMode[CorrelationModeMod::AUTO_ONLY]){                   // The cross data
-      vector<Vector<casa::Double> > v_bluvw;
+      vector<Vector<casacore::Double> > v_bluvw;
       for(unsigned int nt=0; nt<ndump; nt++){
 	unsigned int cnt=0;                            //  cout<<"nt="<<nt<<" nbl="<<nbl<<" nrepeat="<<nrepeat<<endl;
 	for(unsigned int n=0; n<nbl*nrepeat; n++){

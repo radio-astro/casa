@@ -67,7 +67,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <synopsis>
 // AgentFlagger performs automated flagging operations on a measurement set or calibration
-// table. The class is constructed from an MS or cal table. After that, the run method may be used
+// table. The class is constructed from an casacore::MS or cal table. After that, the run method may be used
 // to run any number of flagging agents.
 // </synopsis>
 //
@@ -75,23 +75,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <srcblock>
 // // The following is a typical way of using this class and its methods to perform flagging.
 //
-// // Open the MS or a calibration file and attach it to the tool. This will create an object of the
+// // Open the casacore::MS or a calibration file and attach it to the tool. This will create an object of the
 // // FlagDataHandler (fdh) type. The constructor of the fdh takes three arguments,
-// // the MS or CAL table, the iteration approach to use and the time interval. Only the MS
+// // the casacore::MS or CAL table, the iteration approach to use and the time interval. Only the MS
 // // is mandatory to use. By default it will use the FlagDataHandler::SUB_INTEGRATION iteration
 // // approach and 0.0 seconds as the time interval.
 //
 //    AgentFlagger *tf = new AgentFlagger();
 //    af->open('my.ms')
 //
-// // Select the data where to flag. If left blank, the whole MS will be selected. This step
-// // will use the MS Selection class. There are two methods to perform the selection. One takes
-// // a Record of the parameters, the other takes the individual parameters as arguments.
+// // Select the data where to flag. If left blank, the whole casacore::MS will be selected. This step
+// // will use the casacore::MS Selection class. There are two methods to perform the selection. One takes
+// // a casacore::Record of the parameters, the other takes the individual parameters as arguments.
 //
 // // 1) First method:
-//    String spw = "0:1~10";
-//    String scan = "1";
-//    Record selection = Record();
+//    casacore::String spw = "0:1~10";
+//    casacore::String scan = "1";
+//    casacore::Record selection = casacore::Record();
 //    selection.define("spw", spw);
 //    selection.define("scan", scan);
 //    af->selectData(selection);
@@ -114,33 +114,33 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // // the list.
 //
 // // A similar situation will happen with the combinescans parameter. If any of the combinescans is
-// // True, it will be taken as True to all agents.
+// // true, it will be taken as true to all agents.
 //
 // // Async I/O will be activated if any of the modes clip, tfcrop or rflag is requested. Also for
 // // these three modes, there will be a call to a function that will validate the requested
-// // datacolumn parameter. It will detect if the input is an MS or a cal table and validate the
+// // datacolumn parameter. It will detect if the input is an casacore::MS or a cal table and validate the
 // // column. The default is the DATA column. If the input is a cal table, the function will
 // // first check if FPARAM is available, then CPARAM. If none of them is available it will return
-// // False and the agent will not be created.
+// // false and the agent will not be created.
 //
 // // Only for the tfcrop agent, if a correlation ALL is requested, this method will create one
-// // agent for each available polarization in the MS. For example, if the MS contains polarizations
+// // agent for each available polarization in the MS. For example, if the casacore::MS contains polarizations
 // // XX and YY and the parameter is correlation="ABS_ALL", then there will be two tfcrop agents,
 // // one with correlation="ABS_XX" and the other with correlation="ABS_YY". The apply parameter
-// // is set by default to True to apply the flags.
+// // is set by default to true to apply the flags.
 //
-//     Record agent_pars = Record();
+//     casacore::Record agent_pars = casacore::Record();
 //     agent_pars.define("mode", "clip");
 //     agent_pars.define("clipzeros", true);
 //     agent_pars.define("apply", true);
 //     af->parseAgentParameters(agent_pars);
 //
-//     Record agent_pars = Record();
+//     casacore::Record agent_pars = casacore::Record();
 //     agent_pars.define("mode", "manual");
 //     agent_pars.define("autocorr", true);
 //     af->parseAgentParameters(agent_pars);
 //
-//     Record agent_pars = Record();
+//     casacore::Record agent_pars = casacore::Record();
 //     agent_pars.define("mode", "summary");
 //     agent_pars.define("basecnt", true);
 //     af->parseAgentParameters(agent_pars);
@@ -162,7 +162,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // // calls. Some basic checks will be performed at this stage for types and values of the parameters.
 //
 // // If any tfcrop, rflag, extend or display agent is in the list, the iteration approach will be
-// // set to a different value depending on whether combinescans is true or not. When True, the
+// // set to a different value depending on whether combinescans is true or not. When true, the
 // // iteration approach will be set to FlagDataHandler::COMBINE_SCANS_MAP_ANTENNA_PAIRS_ONLY, otherwise
 // // to FlagDataHandler::COMPLETE_SCAN_MAP_ANTENNA_PAIRS_ONLY.
 //
@@ -182,18 +182,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // // The next step in the chain is to actually process the flags and write them or
 // // not to the MS. The run method takes two parameters, writeflags and sequential.
 // // The parameter writeflags controls whether to write the flags or not to the MS.
-// // By default it is set to True. Setting writeflags to False is useful when one
+// // By default it is set to true. Setting writeflags to false is useful when one
 // // wants to run the tool together with the display agent to see what is going to be
 // // flagged before deciding to write or not to the MS. The sequential parameter
-// // controls if the order of the agent's list needs to be preserved or not. If set to False,
+// // controls if the order of the agent's list needs to be preserved or not. If set to false,
 // // the order will not be preserved and the framework may execute the agent's list in parallel.
-// // By default sequential is set to True.
+// // By default sequential is set to true.
 //
 // // The run method gathers several reports, depending on which agents are run. The display and summary agents
 // // produce reports that can be retrieved from calling the run method. The reports are returned via a Record
 // // that may contain multiple reports at the same time.
 
-//     Record myReports;
+//     casacore::Record myReports;
 //     myReports = af->run();
 //
 // // To destroy the tool, call a method to execute the destructor.
@@ -213,46 +213,46 @@ class AgentFlagger
 {
 protected:
 
-	static LogIO os;
+	static casacore::LogIO os;
 
 	// variables used to initialize the FlagDataHandler
-	String msname_p;
-	uShort iterationApproach_p;
-	Double timeInterval_p;
-	Bool isMS_p;
+	casacore::String msname_p;
+	casacore::uShort iterationApproach_p;
+	casacore::Double timeInterval_p;
+	casacore::Bool isMS_p;
 
 
 	// members to parse to selectData
-	String spw_p;
-	String scan_p;
-	String field_p;
-	String antenna_p;
-	String timerange_p;
-	String correlation_p;
-	String intent_p;
-	String feed_p;
-	String array_p;
-	String uvrange_p;
-	String observation_p;
-	Record dataselection_p;
+	casacore::String spw_p;
+	casacore::String scan_p;
+	casacore::String field_p;
+	casacore::String antenna_p;
+	casacore::String timerange_p;
+	casacore::String correlation_p;
+	casacore::String intent_p;
+	casacore::String feed_p;
+	casacore::String array_p;
+	casacore::String uvrange_p;
+	casacore::String observation_p;
+	casacore::Record dataselection_p;
 
 	// agent's members
-	String mode_p;
-	Record agentParams_p;
+	casacore::String mode_p;
+	casacore::Record agentParams_p;
 	FlagAgentSummary *summaryAgent_p;
-	Bool combinescans_p;
-	Bool extendflags_p;
+	casacore::Bool combinescans_p;
+	casacore::Bool extendflags_p;
 
-	// True if there are apply and unapply parameters in the list
-	Bool mixed_p;
+	// true if there are apply and unapply parameters in the list
+	casacore::Bool mixed_p;
 
 	// Display agent parameters
 	FlagAgentDisplay *displayAgent_p;
 
 	// variables for initAgents
 	FlagDataHandler *fdh_p;
-	std::vector<Record> agents_config_list_p;
-	std::vector<Record> agents_config_list_copy_p;
+	std::vector<casacore::Record> agents_config_list_p;
+	std::vector<casacore::Record> agents_config_list_copy_p;
 	FlagAgentList agents_list_p;
 
 public:  
@@ -266,78 +266,78 @@ public:
 	void done();
 
 	// configure the tool, open the MS
-	bool open(String msname, Double ntime);
+	bool open(casacore::String msname, casacore::Double ntime);
 
 	// parse the data selection
-	bool selectData(Record selrec);
-	bool selectData(String field, String spw, String array, String feed, String scan,
-		       	    String antenna, String uvrange, String timerange,
-		       	    String correlation, String intent, String observation="");
+	bool selectData(casacore::Record selrec);
+	bool selectData(casacore::String field, casacore::String spw, casacore::String array, casacore::String feed, casacore::String scan,
+		       	    casacore::String antenna, casacore::String uvrange, casacore::String timerange,
+		       	    casacore::String correlation, casacore::String intent, casacore::String observation="");
 
 	// parse the parameters of the agent
-	bool parseAgentParameters(Record agent_params);
-	String getExpressionFunction(String expression);
-	bool isExpressionPolarizationAll(String expression);
+	bool parseAgentParameters(casacore::Record agent_params);
+	casacore::String getExpressionFunction(casacore::String expression);
+	bool isExpressionPolarizationAll(casacore::String expression);
 
 	// initialize the agents list
 	bool initAgents();
 
 	// Run the tool and write the flags to the MS
-	Record run(Bool writeflags, Bool sequential=true);
+	casacore::Record run(casacore::Bool writeflags, casacore::Bool sequential=true);
 
 	// Flag backup methods
 	bool printFlagSelections();
-	bool saveFlagVersion(String versionname, String comment, String merge);
-	bool restoreFlagVersion(Vector<String> versionname, String merge);
-	bool deleteFlagVersion(Vector<String> versionname);
-	bool getFlagVersionList(Vector<String> &verlist);
+	bool saveFlagVersion(casacore::String versionname, casacore::String comment, casacore::String merge);
+	bool restoreFlagVersion(casacore::Vector<casacore::String> versionname, casacore::String merge);
+	bool deleteFlagVersion(casacore::Vector<casacore::String> versionname);
+	bool getFlagVersionList(casacore::Vector<casacore::String> &verlist);
 
 	// Agent's specific parsing methods (for convenience only)
 	// Parse parameters for manual
-	bool parseManualParameters(String field, String spw, String array, String feed, String scan,
-       	    String antenna, String uvrange, String timerange,String correlation,
-       	    String intent, String observation, Bool autocorr, Bool apply);
+	bool parseManualParameters(casacore::String field, casacore::String spw, casacore::String array, casacore::String feed, casacore::String scan,
+       	    casacore::String antenna, casacore::String uvrange, casacore::String timerange,casacore::String correlation,
+       	    casacore::String intent, casacore::String observation, casacore::Bool autocorr, casacore::Bool apply);
 
 	// Parse parameters for clip
-	bool parseClipParameters(String field, String spw, String array, String feed, String scan,
-       	    String antenna, String uvrange, String timerange,String correlation,
-       	    String intent, String observation, String datacolumn,
-       	    Vector<Double> clipminmax, Bool clipoutside, Bool channelavg, casac::variant chanbin, Bool timeavg,
-       	    String timebin, Bool clipzeros, Bool apply);
+	bool parseClipParameters(casacore::String field, casacore::String spw, casacore::String array, casacore::String feed, casacore::String scan,
+       	    casacore::String antenna, casacore::String uvrange, casacore::String timerange,casacore::String correlation,
+       	    casacore::String intent, casacore::String observation, casacore::String datacolumn,
+       	    casacore::Vector<casacore::Double> clipminmax, casacore::Bool clipoutside, casacore::Bool channelavg, casac::variant chanbin, casacore::Bool timeavg,
+       	    casacore::String timebin, casacore::Bool clipzeros, casacore::Bool apply);
 
 	// Parse parameters for quack
-	bool parseQuackParameters(String field, String spw, String array, String feed, String scan,
-       	    String antenna, String uvrange, String timerange,String correlation,
-       	    String intent, String observation, String quackmode, Double quackinterval,
-       	    Bool quackincrement, Bool apply);
+	bool parseQuackParameters(casacore::String field, casacore::String spw, casacore::String array, casacore::String feed, casacore::String scan,
+       	    casacore::String antenna, casacore::String uvrange, casacore::String timerange,casacore::String correlation,
+       	    casacore::String intent, casacore::String observation, casacore::String quackmode, casacore::Double quackinterval,
+       	    casacore::Bool quackincrement, casacore::Bool apply);
 
 	// Parse parameters for elevation
-	bool parseElevationParameters(String field, String spw, String array, String feed,
-			String scan, String antenna, String uvrange, String timerange, String correlation,
-       	    String intent, String observation, Double lowerlimit, Double upperlimit,
-       	    Bool apply);
+	bool parseElevationParameters(casacore::String field, casacore::String spw, casacore::String array, casacore::String feed,
+			casacore::String scan, casacore::String antenna, casacore::String uvrange, casacore::String timerange, casacore::String correlation,
+       	    casacore::String intent, casacore::String observation, casacore::Double lowerlimit, casacore::Double upperlimit,
+       	    casacore::Bool apply);
 
 	// Parse parameters for tfcrop
-	bool parseTfcropParameters(String field, String spw, String array, String feed,
-			String scan, String antenna, String uvrange, String timerange, String correlation,
-       	    String intent, String observation, Double ntime, Bool combinescans,
-       	    String datacolumn, Double timecutoff, Double freqcutoff, String timefit,
-       	    String freqfit, Int maxnpieces, String flagdimension, String usewindowstats,
-       	    Int halfwin, Bool extendflags, Bool apply, Bool channelavg, casac::variant chanbin, Bool timeavg,
-       	    String timebin);
+	bool parseTfcropParameters(casacore::String field, casacore::String spw, casacore::String array, casacore::String feed,
+			casacore::String scan, casacore::String antenna, casacore::String uvrange, casacore::String timerange, casacore::String correlation,
+       	    casacore::String intent, casacore::String observation, casacore::Double ntime, casacore::Bool combinescans,
+       	    casacore::String datacolumn, casacore::Double timecutoff, casacore::Double freqcutoff, casacore::String timefit,
+       	    casacore::String freqfit, casacore::Int maxnpieces, casacore::String flagdimension, casacore::String usewindowstats,
+       	    casacore::Int halfwin, casacore::Bool extendflags, casacore::Bool apply, casacore::Bool channelavg, casac::variant chanbin, casacore::Bool timeavg,
+       	    casacore::String timebin);
 
 	// Parse parameters for extend
-	bool parseExtendParameters(String field="", String spw="", String array="", String feed="",
-			String scan="", String antenna="", String uvrange="", String timerange="", String correlation="",
-       	    String intent="", String observation="", Double ntime=0.0, Bool combinescans=false,
-       	    Bool extendpols=true, Double growtime=50.0, Double growfreq=50.0, Bool growaround=false,
-       	    Bool flagneartime=false, Bool flagnearfreq=false, Bool apply=true);
+	bool parseExtendParameters(casacore::String field="", casacore::String spw="", casacore::String array="", casacore::String feed="",
+			casacore::String scan="", casacore::String antenna="", casacore::String uvrange="", casacore::String timerange="", casacore::String correlation="",
+       	    casacore::String intent="", casacore::String observation="", casacore::Double ntime=0.0, casacore::Bool combinescans=false,
+       	    casacore::Bool extendpols=true, casacore::Double growtime=50.0, casacore::Double growfreq=50.0, casacore::Bool growaround=false,
+       	    casacore::Bool flagneartime=false, casacore::Bool flagnearfreq=false, casacore::Bool apply=true);
 
 	// Parse parameters for summary
-	bool parseSummaryParameters(String field, String spw, String array, String feed,
-			String scan, String antenna, String uvrange, String timerange, String correlation,
-       	    String intent, String observation, Bool spwchan, Bool spwcorr, Bool basecnt, Bool fieldcnt,
-       	    String name);
+	bool parseSummaryParameters(casacore::String field, casacore::String spw, casacore::String array, casacore::String feed,
+			casacore::String scan, casacore::String antenna, casacore::String uvrange, casacore::String timerange, casacore::String correlation,
+       	    casacore::String intent, casacore::String observation, casacore::Bool spwchan, casacore::Bool spwcorr, casacore::Bool basecnt, casacore::Bool fieldcnt,
+       	    casacore::String name);
 
 private:
 
@@ -346,28 +346,28 @@ private:
 	AgentFlagger& operator=(const AgentFlagger &)  {return *this;};
 
 	// Maximum between two numbers
-	void getMax(Double value);
+	void getMax(casacore::Double value);
 
 	// Check if mode is valid against a list of known modes
-	bool isModeValid(String mode);
+	bool isModeValid(casacore::String mode);
 
-	Bool validateDataColumn(String datacol);
+	casacore::Bool validateDataColumn(casacore::String datacol);
 
 	// Sink used to store history
-	LogSink logSink_p;
+	casacore::LogSink logSink_p;
 
 	// Debug message flag
 	static const bool dbg;
 
 	// Store the temporary maximum value
-	Double max_p;
+	casacore::Double max_p;
 
 	// Helper members
-	Bool timeset_p;
-	Bool iterset_p;
+	casacore::Bool timeset_p;
+	casacore::Bool iterset_p;
 
-	// Time average parameter in clip mode
-	Bool timeAvg_p;
+	// casacore::Time average parameter in clip mode
+	casacore::Bool timeAvg_p;
 
 };
 

@@ -34,7 +34,7 @@ class ActionSummary  : public PlotMSAction {
 public:
 	ActionSummary( Client* client );
 	void setSummaryType( PMS::SummaryType type );
-	void setFile( String file );
+	void setFile( casacore::String file );
 	void setVerbose( bool verbose );
 
 	virtual ~ActionSummary();
@@ -45,7 +45,7 @@ protected:
 private:
 	//vector<PlotMSPlot*> plots;
 	PMS::SummaryType summaryType;
-	String filename;
+	casacore::String filename;
 	bool verbose;
 };
 

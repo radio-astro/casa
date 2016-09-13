@@ -34,9 +34,13 @@
 #include <synthesis/TransformMachines/BeamSkyJones.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore{
 
 class Table;
+}
+
+namespace casa { //# NAMESPACE CASA - BEGIN
+
 
 //# Someday, we'll need these forward declarations for Solve in the Jones Matrices
 class SkyEquation;
@@ -70,8 +74,8 @@ class SkyModel;
 // </example>
 //
 // <motivation>
-// To deal with the non-leakage voltage pattern as applied to all Stokes,
-// and beam squint (ie, errors in Stokes V caused by differing RR and
+// To deal with the non-leakage voltage pattern as applied to all casacore::Stokes,
+// and beam squint (ie, errors in casacore::Stokes V caused by differing RR and
 // LL beams).  Polarization leakage beams are in DBeamSkyJones.
 // The motivation for this split is differing storage requirements
 // for the unerlying PBMath types, and different methods available
@@ -89,32 +93,32 @@ class VPSkyJones : public BeamSkyJones {
 public:
 
   // constructor from a VP Table
-  VPSkyJones(const ROMSColumns& msc, Table& table,
-	     const Quantity &parAngleInc,
+  VPSkyJones(const casacore::ROMSColumns& msc, casacore::Table& table,
+	     const casacore::Quantity &parAngleInc,
 	     BeamSquint::SquintType doSquint,
-	     const Quantity &skyPositionThreshold = Quantity(180.,"deg"));
+	     const casacore::Quantity &skyPositionThreshold = casacore::Quantity(180.,"deg"));
 
   // constructor for default PB type associated with MS
-  VPSkyJones(const ROMSColumns& msc, 
-	     Bool makeDefaultPBsFromMS = True,
-	     const Quantity &parallacticAngleIncrement = Quantity(720.0, "deg"),
+  VPSkyJones(const casacore::ROMSColumns& msc, 
+	     casacore::Bool makeDefaultPBsFromMS = true,
+	     const casacore::Quantity &parallacticAngleIncrement = casacore::Quantity(720.0, "deg"),
 	     BeamSquint::SquintType doSquint = BeamSquint::NONE,
-	     const Quantity &skyPositionThreshold = Quantity(180.,"deg"));
+	     const casacore::Quantity &skyPositionThreshold = casacore::Quantity(180.,"deg"));
 
   
   // constructor for common PB type
-  VPSkyJones(const String& tel,
+  VPSkyJones(const casacore::String& tel,
 	     PBMath::CommonPB commonPBType,
-	     const Quantity &parallacticAngleIncrement = Quantity(720.0, "deg"),
+	     const casacore::Quantity &parallacticAngleIncrement = casacore::Quantity(720.0, "deg"),
 	     BeamSquint::SquintType doSquint = BeamSquint::NONE,
-	     const Quantity &skyPositionThreshold = Quantity(180.,"deg"));
+	     const casacore::Quantity &skyPositionThreshold = casacore::Quantity(180.,"deg"));
 
   // constructor for given PBMath type
-  VPSkyJones(const String& tel,
+  VPSkyJones(const casacore::String& tel,
 	     PBMath& myPBMath,
-	     const Quantity &parallacticAngleIncrement = Quantity(720.0, "deg"),
+	     const casacore::Quantity &parallacticAngleIncrement = casacore::Quantity(720.0, "deg"),
 	     BeamSquint::SquintType doSquint = BeamSquint::NONE,
-	     const Quantity &skyPositionThreshold = Quantity(180.,"deg"));
+	     const casacore::Quantity &skyPositionThreshold = casacore::Quantity(180.,"deg"));
 
   
   // destructor needed so it's not an abstract baseclass
@@ -124,7 +128,7 @@ public:
   Type type() {return SkyJones::E;};
 
   // Is this solveable?
-  virtual Bool isSolveable() {return False;};
+  virtual casacore::Bool isSolveable() {return false;};
  
 
 

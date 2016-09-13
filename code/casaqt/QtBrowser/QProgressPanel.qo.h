@@ -54,7 +54,7 @@ public:
     // Builds a QProgressPanel with the given label and a progress meter at 0%
 	// completion.  If hideable is true, the optional "Hide" button is shown;
 	// similarly, if cancelable is true, the optional "Cancel" button is shown.
-    QProgressPanel(String label, bool hideable = true, bool cancelable = true);
+    QProgressPanel(casacore::String label, bool hideable = true, bool cancelable = true);
 
     ~QProgressPanel();
 
@@ -66,7 +66,7 @@ public:
     QLabel* getLabel();
 
     // Sets the text of the label to the given String.
-    void setLabel(String newLabel);
+    void setLabel(casacore::String newLabel);
 
 public slots:
     // Sets the value of the progress meter to the given value.  Note that the
@@ -143,7 +143,7 @@ public:
     QProgressBar* getBar();
     
     // Set the text of the QLabel to the given String.
-    void setLabel(String label);
+    void setLabel(casacore::String label);
     
     // Set the total number of steps in the task.
     void setSteps(int steps);
@@ -158,7 +158,7 @@ public:
     void done();
 
     // Rest the progress meter and set the label with the given text.
-    void reset(String newLabel);
+    void reset(casacore::String newLabel);
 
 private:
     // Indicates whether this object is valid or not.  (See constructors.)

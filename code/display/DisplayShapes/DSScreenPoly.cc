@@ -40,6 +40,7 @@
 
 #include <scimath/Mathematics.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	DSScreenPoly::DSScreenPoly() :
@@ -112,7 +113,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	Bool DSScreenPoly::setOptions(const Record& settings) {
-		Bool localChange = False;
+		Bool localChange = false;
 		Record toSet = settings;
 
 		if (settings.isDefined("coords")) {
@@ -137,7 +138,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		if (DSPoly::setOptions(toSet)) {
-			localChange = True;
+			localChange = true;
 		}
 
 		return localChange;

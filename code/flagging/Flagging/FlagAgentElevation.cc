@@ -22,6 +22,7 @@
 
 #include <flagging/Flagging/FlagAgentElevation.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Definition of static members for common pre-processing

@@ -112,7 +112,7 @@
  *
  * - <a href="APEX__SkyDipTest_8cpp.html">APEX_SkyDipTest</a> (APEX telescope at Chajnantor. Details on next release)
  * - <a href="MITORetrievalTest_8cpp.html">MITORetrievalTest</a> (MITO telescope at Testa Grigia, the Alps. Details on next release)
- * - <a href="SMATest_8cpp.html">SMATest</a> (SMA Array on Mauna Kea. Details on next release)
+ * - <a href="SMATest_8cpp.html">SMATest</a> (SMA casacore::Array on Mauna Kea. Details on next release)
  *
  * \section PUBLICATIONS ATM publications
  *

@@ -30,12 +30,16 @@
 #include <display/QtViewer/CursorTrackingHolder.ui.h>
 #include <vector>
 
+namespace casacore{
+
+    class Record;
+}
+
 namespace casa {
 
     class QtDisplayPanelGui;
     class QtDisplayData;
     class PrincipalAxesDD;
-    class Record;
     class TrackBox;
 
 	/**
@@ -51,7 +55,7 @@ namespace casa {
         void arrangeTrackBoxes( );
         TrackBox *addTrackBox( QtDisplayData *, int position = -1 );
         void removeTrackBox( QtDisplayData * );
-        void display( const Record &trackingRec );
+        void display( const casacore::Record &trackingRec );
         void cursorUpdate( const std::vector<double> &, QtDisplayData * );
 
         QSize sizeHint( ) const { return find_size( ); }

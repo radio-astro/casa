@@ -25,7 +25,7 @@ class ImageDecimatorData {
 public:
 
 	// Put new functions before NFUNCS.
-	enum Function {
+	enum casacore::Function {
 		// just copy the nth plane as is, no function applied
 		COPY,
 		MEAN,

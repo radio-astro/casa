@@ -39,11 +39,12 @@
 #include <synthesis/Parallel/PabloIO.h>
 #endif
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 Applicator::Applicator() : comm(0), algorithmIds(0),
-  knownAlgorithms((Algorithm*)0), LastID(101), usedAllThreads(False),
-  serial(True), nProcs(0), procStatus(0)
+  knownAlgorithms((Algorithm*)0), LastID(101), usedAllThreads(false),
+  serial(true), nProcs(0), procStatus(0)
 {
 // Default constructor; requires later init().
 }
@@ -153,7 +154,7 @@ void Applicator::loop()
 {
 // Loop, if a worker process, waiting for an assigned task
 //
-  Bool die(False);
+  Bool die(false);
   Int what;
   // Wait for a message from the controller with any Algorithm tag
   while(!die){
@@ -162,7 +163,7 @@ void Applicator::loop()
     comm->get(what);
     switch(what){
     case STOP :
-      die = True;
+      die = true;
       break;
     default :
       // In this case, an Algorithm tag is expected.
@@ -195,7 +196,7 @@ Bool Applicator::nextAvailProcess(Algorithm &a, Int &rank)
       Bool lastOne;
       rank = findFreeProc(lastOne);
       AlwaysAssert(rank >= 0, AipsError);
-      if (lastOne) usedAllThreads = True;
+      if (lastOne) usedAllThreads = true;
       Int tag = algorithmIds(a.name());
       
       // Send wake-up message (containing the Algorithm tag) to
@@ -203,10 +204,10 @@ Bool Applicator::nextAvailProcess(Algorithm &a, Int &rank)
       comm->connect(rank);
       comm->setTag(tag);
       put(tag);
-      assigned = True;
+      assigned = true;
       procStatus(rank) = ASSIGNED;
     } else {
-      assigned = False;
+      assigned = false;
     }
   }
   return assigned;
@@ -217,16 +218,16 @@ Int Applicator::nextProcessDone(Algorithm &a, Bool &allDone)
 // Return the rank of the next process to complete the specified algorithm
 //
   Int rank = -1;
-  allDone = True;
+  allDone = true;
   for (uInt i=0; i<procStatus.nelements(); i++) {
     if (procStatus(i) == ASSIGNED) {
       if (isSerial()) {
 	// In the serial case, the controller can be assigned
-	allDone = False;
+	allDone = false;
       } else {
 	// In the parallel case, the controller is not assigned
 	if (i != static_cast<uInt>(comm->controllerRank())) {
-	  allDone = False;
+	  allDone = false;
 	}
       }
     }
@@ -247,7 +248,7 @@ Int Applicator::nextProcessDone(Algorithm &a, Bool &allDone)
       comm->connect(rank);
       // Mark process as free
       procStatus(rank) = FREE;
-      usedAllThreads = False;
+      usedAllThreads = false;
     }
   }
   return rank;
@@ -317,12 +318,12 @@ void Applicator::setupProcStatus()
 //
   nProcs = comm->numThreads();
   if (nProcs <= 1) {
-    serial = True;
+    serial = true;
   } else {
-    serial = False;
+    serial = false;
   }
   // Resize the process list, and mark as unassigned (except for controller)
-  usedAllThreads = False;
+  usedAllThreads = false;
   procStatus.resize(max(nProcs,1));
   procStatus = FREE;
   // In the parallel case, the controller is never assigned

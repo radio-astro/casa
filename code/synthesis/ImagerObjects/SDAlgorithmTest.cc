@@ -54,6 +54,7 @@
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogSink.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
@@ -75,9 +76,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SDAlgorithmTest::initializeDeconvolver( Float &peakresidual, Float &modelflux )
   {
 
-    itsResidual.get( itsMatResidual, True );
-    itsModel.get( itsMatModel, True );
-    itsPsf.get( itsMatPsf, True );
+    itsResidual.get( itsMatResidual, true );
+    itsModel.get( itsMatModel, true );
+    itsPsf.get( itsMatPsf, true );
 
     //    cout << "Residual image : " << itsMatResidual << endl;
     //  cout << "PSF image : " << itsMatPsf << endl;
@@ -174,8 +175,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // the image for separate calls to 'deconvolve'.
   void SDAlgorithmTest::queryDesiredShape(Bool &onechan, Bool &onepol) // , nImageFacets.
   {  
-    onechan = True;
-    onepol = True;
+    onechan = true;
+    onepol = true;
   }
 
 
@@ -196,7 +197,7 @@ Bool SDAlgorithmTest::findMaxAbs(const Matrix<Float>& lattice,
     maxAbs=minVal;
     posMaxAbs=posmin;
   }
-  return True;
+  return true;
 }
   */
 
@@ -219,7 +220,7 @@ Bool SDAlgorithmTest::findMaxAbsMask(const Matrix<Float>& lattice,
     posMaxAbs=posmin;
   }
  
-  return True;
+  return true;
 }
   */
 

@@ -41,6 +41,7 @@
 #include <casa/iostream.h> 
 #include <casa/System/Choice.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# These are the definitions of the fortran functions
@@ -144,12 +145,12 @@ ClarkCleanModel::ClarkCleanModel()
    thePsfPatchSize(2,51,51),
    theSpeedup(0.0),
    theCycleSpeedup(-1.0),
-   theChoose(False),
+   theChoose(false),
    theMask(),
    theLog(LogOrigin("ClarkCleanModel", "ClarkCleanModel()")),
    theIterCounter(0),
    itsProgressPtr(0),
-   itsJustStarting(True)
+   itsJustStarting(true)
 {
 };
 //----------------------------------------------------------------------
@@ -164,13 +165,13 @@ ClarkCleanModel::ClarkCleanModel(Array<Float> & model)
    thePsfPatchSize(2, 51, 51),
    theSpeedup(0.0), 
    theCycleSpeedup(-1.0), 
-   theChoose(False),
+   theChoose(false),
    theMask(),
    theLog(LogOrigin("ClarkCleanModel", 
 		    "ClarkCleanModel(const Array<Float> & model)")),
    theIterCounter(0),
    itsProgressPtr(0),
-   itsJustStarting(True)
+   itsJustStarting(true)
 {
   AlwaysAssert(theModel.ndim() >= 2, AipsError);
   if (theModel.ndim() >= 3)
@@ -195,14 +196,14 @@ ClarkCleanModel::ClarkCleanModel(Array<Float> & model,
    thePsfPatchSize(2, 51, 51),
    theSpeedup(0.0), 
    theCycleSpeedup(-1.0), 
-   theChoose(False),
+   theChoose(false),
    theMask(mask),
    theLog(LogOrigin("ClarkCleanModel", 
 		    "ClarkCleanModel(Array<Float> & model"
 		    ", Array<Float> & mask)")),
    theIterCounter(0),
    itsProgressPtr(0),
-   itsJustStarting(True)
+   itsJustStarting(true)
 {
      AlwaysAssert(theModel.ndim() >= 2, AipsError);
      if (theModel.ndim() >= 3)
@@ -318,11 +319,11 @@ Bool ClarkCleanModel::solve(ConvolutionEquation & eqn){
 
   theLog << "Initial maximum residual: " << maxRes << LogIO::POST;
   // if flux limit or iteration limit reached then bail out. 
-  Bool userHalt = False;
+  Bool userHalt = false;
   while ((Int(numIterations) < numberIterations()) && 
 	 (maxRes > threshold()) &&
 	 ((theMaxNumberMajorCycles<0)||(numMajorCycles<(uInt)theMaxNumberMajorCycles)) &&
-	 userHalt == False){
+	 userHalt == false){
 
     // determine the fluxlimit for this major cycle
     // choose fluxlimit for residuals to be considered in minor iterations
@@ -382,7 +383,7 @@ Bool ClarkCleanModel::solve(ConvolutionEquation & eqn){
       theLog << LogIO::WARN 
       	     << "Zero Pixels selected with a Fluxlimit of " << fluxLimit
       	     << " and a maximum Residual of " << maxRes << LogIO::POST;
-      userHalt=True;
+      userHalt=true;
     }
     userHalt = userHalt || stopnow();
   }
@@ -390,7 +391,7 @@ Bool ClarkCleanModel::solve(ConvolutionEquation & eqn){
   setNumberIterations(numIterations);
   theMaxNumPix = maxNumPix;
   theMaxNumberMinorIterations = maxNumberMinorIterations;
-  return True;
+  return true;
 };
 
 //----------------------------------------------------------------------
@@ -494,7 +495,7 @@ Bool ClarkCleanModel::singleSolve(ConvolutionEquation & eqn,
   theMaxNumPix = maxNumPix;
   theMaxNumberMinorIterations = maxNumberMinorIterations;
 
-  return True;
+  return true;
 };
 //----------------------------------------------------------------------
 void ClarkCleanModel::setPsfPatchSize(const IPosition & psfPatchSize){
@@ -667,10 +668,10 @@ void ClarkCleanModel::doMinorIterations(Array<Float> & model,
         itsProgressPtr->hasPGPlotter();  
         signedAbsRes = absRes * maxRes(0)/abs( maxRes(0) );
         itsProgressPtr->
-          info(False, (Int)(totalIterations+curIter),  (Int)numberIterations,
+          info(false, (Int)(totalIterations+curIter),  (Int)numberIterations,
                signedAbsRes, IPosition(2,maxPos(0),maxPos(1)),
-               totalFlux, False, itsJustStarting );
-	itsJustStarting = False;
+               totalFlux, false, itsJustStarting );
+	itsJustStarting = false;
       } catch (AipsError x) {
         // if it throw an exception, do nothing
       } 
@@ -1127,20 +1128,20 @@ Bool ClarkCleanModel::stopnow() {
     String choice = Choice::choice("Do you want to continue or stop?",
 				   choices);
     if (choice==choices(0)) {
-      return False;
+      return false;
     }
     else if (choice==choices(2)) {
-      setChoose(False);
+      setChoose(false);
       theLog << "Continuing: won't ask again" << LogIO::POST;
-      return False;
+      return false;
     }
     else {
       theLog << "Clark clean stopped at user request" << LogIO::POST;
-      return True;
+      return true;
     }
   }
   else {
-    return False;
+    return false;
   }
 }
 

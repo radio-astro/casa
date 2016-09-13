@@ -28,6 +28,7 @@
 
 #include <synthesis/CalTables/CalHistoryColumns.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //----------------------------------------------------------------------------
@@ -63,7 +64,7 @@ void ROCalHistoryColumns::attach (const CalTable& calTable,
 //    calTable         const CalTable&      Calibration table
 //    tabCol           ROTableColumn&       Table column accessor
 //    colEnum          MSCalEnums::colDef   Column enum
-//    optional         const Bool&          True if optional column
+//    optional         const Bool&          true if optional column
 // Output to private data:
 //
   // Convert to column name
@@ -112,7 +113,7 @@ void CalHistoryColumns::attach (CalTable& calTable,
 //    calTable         CalTable&            Calibration table
 //    tabCol           ROTableColumn&       Table column accessor
 //    colEnum          MSCalEnums::colDef   Column enum
-//    optional         const Bool&          True if optional column
+//    optional         const Bool&          true if optional column
 // Output to private data:
 //
   // Convert to column name

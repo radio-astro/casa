@@ -60,10 +60,10 @@ public:
   //  enum Type{UVMOD,Mf,M,K,B,G,D,C,E,P,T,EP,F};
   enum Type{Test=0,ANoise,M,KAntPos,K,B,G,J,D,X,C,P,E,T,F,A,ALL};
 
-  // Enumeration of parameter types (Complex, Real, or Both)
+  // Enumeration of parameter types (casacore::Complex, Real, or Both)
   enum ParType{Co,Re,CoRe};
 
-  static String nameOfType(Type type) {
+  static casacore::String nameOfType(Type type) {
     switch (type) {
     case ANoise: return "ANoise";
     case M: return "M";
@@ -84,11 +84,11 @@ public:
 
   VisCal(VisSet& vs);
   
-  VisCal(String msname,Int MSnAnt,Int MSnSpw);
+  VisCal(casacore::String msname,casacore::Int MSnAnt,casacore::Int MSnSpw);
 
   VisCal(const MSMetaInfoForCal& msmc);
   
-  VisCal(const Int& nAnt);
+  VisCal(const casacore::Int& nAnt);
   
   virtual ~VisCal();
 
@@ -97,10 +97,10 @@ public:
   virtual Type type()=0;
 
   // Return type name as string
-  virtual String typeName()     { return "Unknown VisCal"; };
-  virtual String longTypeName() { return "Unknown VisCal"; };
+  virtual casacore::String typeName()     { return "Unknown VisCal"; };
+  virtual casacore::String longTypeName() { return "Unknown VisCal"; };
 
-  // Return Matrix type
+  // Return casacore::Matrix type
   virtual VisCalEnum::MatrixType matrixType() { return VisCalEnum::GLOBAL; };
 
   // Return the parameter type (nominally complex)
@@ -108,68 +108,68 @@ public:
 
   // Number of pars per ant/bln
   //    (Must be implemented in specializations!)
-  virtual Int nPar()=0;
+  virtual casacore::Int nPar()=0;
 
   // Report calibration availability per spw
-  //  (always True for non-tabular?)
-  virtual Vector<Bool> spwOK() { return Vector<Bool>(nSpw(),True); };
-  virtual Bool spwOK(Int) { return True; };
+  //  (always true for non-tabular?)
+  virtual casacore::Vector<casacore::Bool> spwOK() { return casacore::Vector<casacore::Bool>(nSpw(),true); };
+  virtual casacore::Bool spwOK(casacore::Int) { return true; };
 
   // Frequency-dependent Parameters?  Nominally not.
-  virtual Bool freqDepPar() { return False; };
+  virtual casacore::Bool freqDepPar() { return false; };
 
   // Number of par channels in current spw
-  inline const Int& nChanPar() const { return nChanPar_[currSpw_]; };
+  inline const casacore::Int& nChanPar() const { return nChanPar_[currSpw_]; };
   
   // Frequency-dependent Matrices?  Nominally same as freqDepPar.
-  virtual Bool freqDepMat() { return freqDepPar(); };
+  virtual casacore::Bool freqDepMat() { return freqDepPar(); };
 
   // Freq-dep Weight scaling?  // almost always false
-  virtual Bool freqDepCalWt() { return False; };
+  virtual casacore::Bool freqDepCalWt() { return false; };
 
   // Matrices time-dependent per parameter set (nominally no)
-  virtual Bool timeDepMat() { return False; };
+  virtual casacore::Bool timeDepMat() { return false; };
 
   // Is this calibration matrix to be applied?
-  inline Bool isApplied() {return applied_;};
+  inline casacore::Bool isApplied() {return applied_;};
 
   // Is this solveable? (never via this interface)
-  virtual Bool isSolvable() {return False;};
+  virtual casacore::Bool isSolvable() {return false;};
 
   // Return the time interval over which this calibration is constant
-  inline virtual Double& interval() {return interval_;}
+  inline virtual casacore::Double& interval() {return interval_;}
 
   // Set the application parameters
   virtual void setApply();
-  virtual void setApply(const Record& apply);
-  virtual void setCallib(const Record& callib,const MeasurementSet& selms);
+  virtual void setApply(const casacore::Record& apply);
+  virtual void setCallib(const casacore::Record& callib,const casacore::MeasurementSet& selms);
 
   // Apply info/params, suitable for logging
-  virtual String applyinfo();
+  virtual casacore::String applyinfo();
 
   // simulation params - for a VC, sim is apply; for a SVC this will get 
   // overriden
-  inline virtual String siminfo() { return applyinfo(); };
+  inline virtual casacore::String siminfo() { return applyinfo(); };
 
   // Trigger calibration of weights
-  inline Bool& calWt() { return calWt_; };
+  inline casacore::Bool& calWt() { return calWt_; };
 
-  // Apply calibration to data in VisBuffer (correct Data or corrupt Model)
+  // Apply calibration to data in VisBuffer (correct casacore::Data or corrupt Model)
   //  (in-place versions)
-  virtual void correct(VisBuffer& vb, Bool trial=False);
-  virtual void correct2(vi::VisBuffer2& vb, Bool trial=False, Bool doWtSp=False);
+  virtual void correct(VisBuffer& vb, casacore::Bool trial=false);
+  virtual void correct2(vi::VisBuffer2& vb, casacore::Bool trial=false, casacore::Bool doWtSp=false);
   virtual void corrupt(VisBuffer& vb);
   virtual void corrupt2(vi::VisBuffer2& vb);
 
   // Apply calibration to data in VisBuffer; 
   //  (alternate output versions)
-  virtual void correct(VisBuffer& vb, Cube<Complex>& Vout,Bool trial=False);
-  virtual void corrupt(VisBuffer& vb, Cube<Complex>& Mout);
-  virtual void corrupt2(vi::VisBuffer2& vb, Cube<Complex>& Mout);
+  virtual void correct(VisBuffer& vb, casacore::Cube<casacore::Complex>& Vout,casacore::Bool trial=false);
+  virtual void corrupt(VisBuffer& vb, casacore::Cube<casacore::Complex>& Mout);
+  virtual void corrupt2(vi::VisBuffer2& vb, casacore::Cube<casacore::Complex>& Mout);
 
   // Flag counting
   virtual void initCalFlagCount();
-  virtual Record actionRec();
+  virtual casacore::Record actionRec();
 
   // Report the state
   virtual void state();
@@ -177,89 +177,89 @@ public:
   virtual void currMetaNote();
 
   // Set the print level
-  inline void setPrtlev(const Int& prtlev) { prtlev_=prtlev; };
+  inline void setPrtlev(const casacore::Int& prtlev) { prtlev_=prtlev; };
 
   // Baseline index from antenna indices: (assumes a1<=a2 !!)
-  inline Int blnidx(const Int& a1, 
-		    const Int& a2) { return  a1*nAnt() - a1*(a1+1)/2 + a2; };
+  inline casacore::Int blnidx(const casacore::Int& a1, 
+		    const casacore::Int& a2) { return  a1*nAnt() - a1*(a1+1)/2 + a2; };
 
-  inline String& extraTag() { return extratag_; };
+  inline casacore::String& extraTag() { return extratag_; };
 
  
   // VI2-related refactor--------------------------------------
 
   // Set "current" meta info, so internals can be registered
-  virtual void setMeta(Int obs, Int scan, Double time,
-		       Int spw, const Vector<Double>& freq,
-		       Int fld);
+  virtual void setMeta(int obs, int scan, double time,
+		       int spw, const casacore::Vector<double>& freq,
+		       int fld);
 
   // Reshape solvePar* arrays for the currSpw()  
   //  (sensitive to freqDepPar())
-  virtual void sizeApplyParCurrSpw(Int nVisChan);
+  virtual void sizeApplyParCurrSpw(int nVisChan);
 
   // Set parameters to def values in the currSpw(), 
   //   and optionally sync everything
-  virtual void setDefApplyParCurrSpw(Bool sync=False, Bool doInv=False);
+  virtual void setDefApplyParCurrSpw(bool sync=false, bool doInv=false);
 
 
 protected:
 
   // Set applied state flag
-  inline void setApplied(const Bool& flag) {applied_=flag;};
+  inline void setApplied(const casacore::Bool& flag) {applied_=flag;};
 
-  inline String& msName() { return msName_; };
+  inline casacore::String& msName() { return msName_; };
 
   // General Shape Info 
-  inline Int& nSpw() { return nSpw_; };
-  inline Int& nAnt() { return nAnt_; };
-  inline Int& nBln() { return nBln_; };
+  inline casacore::Int& nSpw() { return nSpw_; };
+  inline casacore::Int& nAnt() { return nAnt_; };
+  inline casacore::Int& nBln() { return nBln_; };
 
   // The number of sets of parameters under consideration
-  virtual Int& nElem()=0;
+  virtual casacore::Int& nElem()=0;
 
   // Number of Calibration matrices on ant/bln axis
-  virtual Int nCalMat()=0;
+  virtual casacore::Int nCalMat()=0;
 
   // Current in-focus spw
-  inline Int& currSpw() { return currSpw_; };
+  inline casacore::Int& currSpw() { return currSpw_; };
 
   // Current coords
-  inline Double& lastTime()                { return lastTime_(currSpw()); };
-  inline Double& currTime()                { return currTime_(currSpw()); };
-  inline Int&    currScan()                { return currScan_(currSpw()); };
-  inline Int&    currObs()                 { return currObs_(currSpw()); };
-  inline Int&    currField()               { return currField_(currSpw()); };
-  inline Vector<Double>& currFreq()        { return currFreq_; };
+  inline casacore::Double& lastTime()                { return lastTime_(currSpw()); };
+  inline casacore::Double& currTime()                { return currTime_(currSpw()); };
+  inline casacore::Int&    currScan()                { return currScan_(currSpw()); };
+  inline casacore::Int&    currObs()                 { return currObs_(currSpw()); };
+  inline casacore::Int&    currField()               { return currField_(currSpw()); };
+  inline casacore::Vector<casacore::Double>& currFreq()        { return currFreq_; };
 
-  inline Double& refTime()                 { return refTime_; };
-  inline Double& refFreq()                 { return refFreq_; };
+  inline casacore::Double& refTime()                 { return refTime_; };
+  inline casacore::Double& refFreq()                 { return refFreq_; };
 
   // Current spectral shapes
-  inline Int& nChanPar()              { return nChanPar_[currSpw_]; };
-  inline Int& nChanMat()              { return nChanMat_[currSpw_]; };
-  inline Int& startChan()             { return startChan_[currSpw_];};
-  inline Vector<Int>& nChanParList()  { return nChanPar_; };
-  inline Vector<Int>& nChanMatList()  { return nChanMat_; };
-  inline Vector<Int>& startChanList() { return startChan_;};
+  inline casacore::Int& nChanPar()              { return nChanPar_[currSpw_]; };
+  inline casacore::Int& nChanMat()              { return nChanMat_[currSpw_]; };
+  inline casacore::Int& startChan()             { return startChan_[currSpw_];};
+  inline casacore::Vector<casacore::Int>& nChanParList()  { return nChanPar_; };
+  inline casacore::Vector<casacore::Int>& nChanMatList()  { return nChanMat_; };
+  inline casacore::Vector<casacore::Int>& startChanList() { return startChan_;};
 
   // Access to matrix renderings of Visibilities
   inline VisVector& V() { return (*V_[currSpw()]); };
 
   // Access to current solution parameters and matrices
-  inline virtual Cube<Complex>& currCPar()  {return (*currCPar_[currSpw()]);};
-  inline virtual Cube<Float>&   currRPar()  {return (*currRPar_[currSpw()]);};
-  inline virtual Cube<Bool>&    currParOK() {return (*currParOK_[currSpw()]);};
+  inline virtual casacore::Cube<casacore::Complex>& currCPar()  {return (*currCPar_[currSpw()]);};
+  inline virtual casacore::Cube<casacore::Float>&   currRPar()  {return (*currRPar_[currSpw()]);};
+  inline virtual casacore::Cube<casacore::Bool>&    currParOK() {return (*currParOK_[currSpw()]);};
 
   // Validation of calibration parameters
-  inline void invalidateP() {PValid_(currSpw())=False;};
-  inline void validateP()   {PValid_(currSpw())=True;};
-  inline Bool PValid()      {return PValid_(currSpw());};
+  inline void invalidateP() {PValid_(currSpw())=false;};
+  inline void validateP()   {PValid_(currSpw())=true;};
+  inline casacore::Bool PValid()      {return PValid_(currSpw());};
 
   // Invalidate cal matrices generically 
   virtual void invalidateCalMat()=0;
 
   // Access to weight-scaling factors
-  inline Cube<Float>& currWtScale() { return (*currWtScale_[currSpw()]); };
+  inline casacore::Cube<casacore::Float>& currWtScale() { return (*currWtScale_[currSpw()]); };
 
   // Flag counting
   virtual void countInFlag(const VisBuffer& vb);
@@ -267,17 +267,17 @@ protected:
   virtual void countOutFlag(const VisBuffer& vb);
   virtual void countOutFlag2(const vi::VisBuffer2& vb);
 
-  // Row-by-row apply to a Cube<Complex> (generic)
-  virtual void applyCal(VisBuffer& vb, Cube<Complex>& Vout,Bool trial=False)=0;
+  // Row-by-row apply to a casacore::Cube<casacore::Complex> (generic)
+  virtual void applyCal(VisBuffer& vb, casacore::Cube<casacore::Complex>& Vout,casacore::Bool trial=false)=0;
   virtual void applyCal2(vi::VisBuffer2& vb, 
-			 Cube<Complex>& Vout,Cube<Float>& Wout,
-			 Bool trial=False)=0;
+			 casacore::Cube<casacore::Complex>& Vout,casacore::Cube<casacore::Float>& Wout,
+			 casacore::Bool trial=false)=0;
 
   // Synchronize "gains" with a VisBuffer or another VisCal
   virtual void syncCal(const VisBuffer& vb,
-		       const Bool& doInv=False);
+		       const casacore::Bool& doInv=false);
   virtual void syncCal2(const vi::VisBuffer2& vb,
-		       const Bool& doInv=False);
+		       const casacore::Bool& doInv=false);
   virtual void syncCal(VisCal& vc);
 
   // Set internal meta data from a VisBuffer or another VisCal
@@ -285,20 +285,20 @@ protected:
   virtual void syncMeta2(const vi::VisBuffer2& vb);
   void syncMeta(VisCal& vc);
 
-  void syncMeta(const Int& spw,
-		const Double& time,
-		const Int& field,
-		const Vector<Double>& freq,
-		const Int& nchan);
+  void syncMeta(const casacore::Int& spw,
+		const casacore::Double& time,
+		const casacore::Int& field,
+		const casacore::Vector<casacore::Double>& freq,
+		const casacore::Int& nchan);
 
   // Set the calibration matrix channelization
-  void setCalChannelization(const Int& nChanDat);
+  void setCalChannelization(const casacore::Int& nChanDat);
 
   // Test for need of new calibration
   void checkCurrCal();
 
   // Synchronize "gains" with current meta-data
-  virtual void syncCal(const Bool& doInv=False);
+  virtual void syncCal(const casacore::Bool& doInv=false);
 
   // Sync parameters for current meta data
   virtual void syncPar();
@@ -307,16 +307,20 @@ protected:
   virtual void calcPar();
 
   // Sync matrices generically for current meta data 
-  virtual void syncCalMat(const Bool& doInv=False)=0;
+  virtual void syncCalMat(const casacore::Bool& doInv=false)=0;
 
   // Return print (cout) level
-  inline Int& prtlev() { return prtlev_; };
+  inline casacore::Int& prtlev() { return prtlev_; };
 
   // set current field index vector to given field id
-  void setCurrField(const Int& ifld);
+  void setCurrField(const casacore::Int& ifld);
 
   // Access to the MSMetaInfoForCal (throws if none)
-  const MSMetaInfoForCal& msmc() const { if (msmc_) return *msmc_; else throw(AipsError("VisCal::msmc(): No MSMetaInfoForCal object!")); };
+  const MSMetaInfoForCal& msmc() const
+  {
+      if (msmc_) return *msmc_;
+      else throw(casacore::AipsError("VisCal::msmc(): No MSMetaInfoForCal object!"));
+  };
 
 private:
 
@@ -329,72 +333,72 @@ private:
   // Delete pointers
   void deleteVisCal();
 
-  // Associated MS name
-  String msName_;
+  // Associated casacore::MS name
+  casacore::String msName_;
 
   // The MSMetaInfoForCal pointer
   const MSMetaInfoForCal* msmc_;
-  const Bool delmsmc_;  // must delete _only_ if locally formed
+  const bool delmsmc_;  // must delete _only_ if locally formed
 
   // Number of Spectral windows
-  Int nSpw_;
+  casacore::Int nSpw_;
 
   // Number of antennas
-  Int nAnt_;
+  casacore::Int nAnt_;
 
   // Number of baselines
-  Int nBln_;
+  casacore::Int nBln_;
 
   // Current synchronized spw
-  Int currSpw_;
+  casacore::Int currSpw_;
 
   // Current indices
-  Vector<Double> currTime_;
-  Vector<Int> currScan_;
-  Vector<Int> currObs_;
-  Vector<Int> currField_;
-  Vector<Double> currFreq_;
-  Vector<Double> lastTime_;
-  Double refTime_;
-  Double refFreq_;
+  casacore::Vector<casacore::Double> currTime_;
+  casacore::Vector<casacore::Int> currScan_;
+  casacore::Vector<casacore::Int> currObs_;
+  casacore::Vector<casacore::Int> currField_;
+  casacore::Vector<casacore::Double> currFreq_;
+  casacore::Vector<casacore::Double> lastTime_;
+  casacore::Double refTime_;
+  casacore::Double refFreq_;
 
   // Channel counts
-  Vector<Int> nChanPar_, nChanMat_;
-  Vector<Int> startChan_;
+  casacore::Vector<casacore::Int> nChanPar_, nChanMat_;
+  casacore::Vector<casacore::Int> startChan_;
 
   // Solution timescale (context-dependent)
-  Double interval_;
+  casacore::Double interval_;
 
   // Application flag
-  Bool applied_;
+  casacore::Bool applied_;
 
   // In-focus channel for single-chan solves on multi-chan data
-  Int focusChan_;
+  casacore::Int focusChan_;
 
   // VisVector wrapper (per Spw)
-  PtrBlock<VisVector*> V_;
+  casacore::PtrBlock<VisVector*> V_;
 
   // Current parameters
-  PtrBlock<Cube<Complex>*>  currCPar_;   // [nSpw](nPar,nChanPar,nElm)
-  PtrBlock<Cube<Float>*>    currRPar_;   // [nSpw](nPar,nChanPar,nElm)
-  PtrBlock<Cube<Bool>*>     currParOK_;  // [nSpw](nPar,nChanPar,nElm)
+  casacore::PtrBlock<casacore::Cube<casacore::Complex>*>  currCPar_;   // [nSpw](nPar,nChanPar,nElm)
+  casacore::PtrBlock<casacore::Cube<casacore::Float>*>    currRPar_;   // [nSpw](nPar,nChanPar,nElm)
+  casacore::PtrBlock<casacore::Cube<casacore::Bool>*>     currParOK_;  // [nSpw](nPar,nChanPar,nElm)
 
   // Paremeter validity
-  Vector<Bool> PValid_;
+  casacore::Vector<casacore::Bool> PValid_;
 
   // Trigger calibration of weights
-  Bool calWt_;
+  casacore::Bool calWt_;
 
   // Weight scale factors
-  PtrBlock<Cube<Float>*> currWtScale_;  // [nSpw](nPar,nChan,nElm)
+  casacore::PtrBlock<casacore::Cube<casacore::Float>*> currWtScale_;  // [nSpw](nPar,nChan,nElm)
 
   // Flag counting
-  Int64 ndataIn_, nflagIn_, nflagOut_;
+  casacore::Int64 ndataIn_, nflagIn_, nflagOut_;
 
   // Print level
-  Int prtlev_;
+  casacore::Int prtlev_;
 
-  String extratag_;  // e.g. to tag as noise scale
+  casacore::String extratag_;  // e.g. to tag as noise scale
 
 
 };
@@ -411,15 +415,15 @@ public:
   // Constructor
   VisMueller(VisSet& vs);
 
-  VisMueller(String msname,Int MSnAnt,Int MSnSpw);
+  VisMueller(casacore::String msname,casacore::Int MSnAnt,casacore::Int MSnSpw);
 
   VisMueller(const MSMetaInfoForCal& msmc);
 
-  VisMueller(const Int& nAnt);
+  VisMueller(const casacore::Int& nAnt);
 
   virtual ~VisMueller();
 
-  // Return Matrix type
+  // Return casacore::Matrix type
   virtual VisCalEnum::MatrixType matrixType() { return VisCalEnum::MUELLER; };
 
   // Mueller matrix type (must be implemented in Mueller specializations!)
@@ -431,55 +435,55 @@ public:
 protected:
 
   // Total number of parameter sets required
-  virtual Int& nElem() { return nBln(); };
+  virtual casacore::Int& nElem() { return nBln(); };
 
   // Number of Cal Matrices to form on baseline axis
   //  (Mueller, apply context: nBln())
-  virtual Int nCalMat() { return nBln(); };
+  virtual casacore::Int nCalMat() { return nBln(); };
 
   // Are the parameters the matrix elements? 
   //   (or is a non-trivial calculation required?)
   //    (Must be implemented in specializations!)
-  virtual Bool trivialMuellerElem()=0;
+  virtual casacore::Bool trivialMuellerElem()=0;
 
   // Are we applying via Mueller multiplication?
-  //   (necessarily True for native Muellers)
-  virtual Bool applyByMueller() { return True; };
+  //   (necessarily true for native Muellers)
+  virtual casacore::Bool applyByMueller() { return true; };
 
   // Access to matrix renderings of Muellers
   inline Mueller& M()   { return (*M_[currSpw()]); };
 
   // Access to current matrices
-  inline Cube<Complex>& currMElem()   {return (*currMElem_[currSpw()]);};
-  inline Cube<Bool>&    currMElemOK() {return (*currMElemOK_[currSpw()]);};
+  inline casacore::Cube<casacore::Complex>& currMElem()   {return (*currMElem_[currSpw()]);};
+  inline casacore::Cube<casacore::Bool>&    currMElemOK() {return (*currMElemOK_[currSpw()]);};
 
   // Invalidate cal matrices generically (at this level, just Mueller)
   inline virtual void invalidateCalMat() { invalidateM(); };
 
   // Validation of Mueller matrices (for currSpw)
-  inline void invalidateM() {MValid_(currSpw())=False;};
-  inline void validateM()   {MValid_(currSpw())=True;};
-  inline Bool MValid()      {return MValid_(currSpw());};
+  inline void invalidateM() {MValid_(currSpw())=false;};
+  inline void validateM()   {MValid_(currSpw())=true;};
+  inline casacore::Bool MValid()      {return MValid_(currSpw());};
 
-  // Row-by-row apply to a Cube<Complex> (applyByMueller override)
-  virtual void applyCal(VisBuffer& vb, Cube<Complex>& Vout,Bool trial=False);
+  // Row-by-row apply to a casacore::Cube<casacore::Complex> (applyByMueller override)
+  virtual void applyCal(VisBuffer& vb, casacore::Cube<casacore::Complex>& Vout,casacore::Bool trial=false);
   virtual void applyCal2(vi::VisBuffer2& vb, 
-			 Cube<Complex>& Vout,Cube<Float>& Wout,
-			 Bool trial=False);
-  //  { throw(AipsError("VisMueller::applyCal2 NYI!!!!!!!!!!!!!")); };
+			 casacore::Cube<casacore::Complex>& Vout,casacore::Cube<casacore::Float>& Wout,
+			 casacore::Bool trial=false);
+  //  { throw(casacore::AipsError("VisMueller::applyCal2 NYI!!!!!!!!!!!!!")); };
 
   // Sync matrices for current meta data (Mueller override)
-  virtual void syncCalMat(const Bool& doInv=False);
+  virtual void syncCalMat(const casacore::Bool& doInv=false);
 
   // Sync Mueller matrix elements for current parameters
-  virtual void syncMueller(const Bool& doInv=False);
+  virtual void syncMueller(const casacore::Bool& doInv=false);
 
   // Calculate an ensemble of Mueller matrices (all baselines, channels)
   virtual void calcAllMueller();
 
   // Calculate a single Mueller matrix by some means
-  virtual void calcOneMueller(Vector<Complex>& mat, Vector<Bool>& mOk,
-			      const Vector<Complex>& par, const Vector<Bool>& pOk);
+  virtual void calcOneMueller(casacore::Vector<casacore::Complex>& mat, casacore::Vector<casacore::Bool>& mOk,
+			      const casacore::Vector<casacore::Complex>& par, const casacore::Vector<casacore::Bool>& pOk);
 
   // Invert Mueller matrices
   virtual void invMueller();
@@ -499,7 +503,7 @@ protected:
   virtual void calcWtScale();
 
   // Update the wt vector for a baseline
-  virtual void updateWt(Vector<Float>& wt,const Int& a1,const Int& a2);
+  virtual void updateWt(casacore::Vector<casacore::Float>& wt,const casacore::Int& a1,const casacore::Int& a2);
 
 
 private:
@@ -514,14 +518,14 @@ private:
   void deleteVisMueller();
 
   // Mueller algebra wrapper (per Spw)
-  PtrBlock<Mueller*> M_;                
+  casacore::PtrBlock<Mueller*> M_;                
 
   // Current Mueller matrix elements
-  PtrBlock<Cube<Complex>*> currMElem_;    // [nSpw]([1,2,4,16],nChanMat,nBln)
-  PtrBlock<Cube<Bool>*>    currMElemOK_;  // [nSpw]([1,2,4,16],nChanMat,nBln)
+  casacore::PtrBlock<casacore::Cube<casacore::Complex>*> currMElem_;    // [nSpw]([1,2,4,16],nChanMat,nBln)
+  casacore::PtrBlock<casacore::Cube<casacore::Bool>*>    currMElemOK_;  // [nSpw]([1,2,4,16],nChanMat,nBln)
 
   // Mueller validity
-  Vector<Bool> MValid_;
+  casacore::Vector<casacore::Bool> MValid_;
 
 };
 
@@ -539,15 +543,15 @@ public:
   // Constructor
   VisJones(VisSet& vs);
 
-  VisJones(String msname,Int MSnAnt,Int MSnSpw);
+  VisJones(casacore::String msname,casacore::Int MSnAnt,casacore::Int MSnSpw);
 
   VisJones(const MSMetaInfoForCal& msmc);
 
-  VisJones(const Int& nAnt);
+  VisJones(const casacore::Int& nAnt);
 
   virtual ~VisJones();
 
-  // Return Matrix type
+  // Return casacore::Matrix type
   virtual VisCalEnum::MatrixType matrixType() { return VisCalEnum::JONES; };
 
   // What kind of Mueller matrices should we use?  
@@ -564,63 +568,63 @@ public:
 protected:
 
   // Number of parameter sets is number of antennas
-  inline virtual Int& nElem() { return nAnt(); };
+  inline virtual casacore::Int& nElem() { return nAnt(); };
 
   // Number of Cal Matrices to form on antenna axis
   //  (Jones, apply context: nAnt())
-  virtual Int nCalMat() { return nAnt(); };
+  virtual casacore::Int nCalMat() { return nAnt(); };
 
   // Jones matrices can never be trivial Muellers!
-  virtual Bool trivialMuellerElem() { return False; };
+  virtual casacore::Bool trivialMuellerElem() { return false; };
 
   // Are the parameters the Jones matrix elements?
   //   (or is a non-trivial calculation required?)
   //    (Must be implemented in specializations!)
-  virtual Bool trivialJonesElem()=0;
+  virtual casacore::Bool trivialJonesElem()=0;
 
   // Are we applying via Mueller or Jones multiplication?
   //   (probably by Jones for native Jones?)
-  virtual Bool applyByMueller() { return False; };
-  virtual Bool applyByJones()   { return True; };
+  virtual casacore::Bool applyByMueller() { return false; };
+  virtual casacore::Bool applyByJones()   { return true; };
 
   // Access to matrix renderings of Jones matrices
   inline Jones& J1() { return *J1_[currSpw()]; };
   inline Jones& J2() { return *J2_[currSpw()]; };
 
   // Access to Jones matrix element array
-  inline Cube<Complex>& currJElem() {return (*currJElem_[currSpw()]);};
-  inline Cube<Bool>& currJElemOK()  {return (*currJElemOK_[currSpw()]);};
+  inline casacore::Cube<casacore::Complex>& currJElem() {return (*currJElem_[currSpw()]);};
+  inline casacore::Cube<casacore::Bool>& currJElemOK()  {return (*currJElemOK_[currSpw()]);};
 
   // Invalidate cal matrices generically (at this level, both Mueller and Jones)
   inline virtual void invalidateCalMat() { invalidateM(); invalidateJ(); };
 
   // Validation of Jones matrices
-  inline void invalidateJ() {JValid_(currSpw())=False;};
-  inline void validateJ()   {JValid_(currSpw())=True;};
-  inline Bool JValid()      {return JValid_(currSpw());};
+  inline void invalidateJ() {JValid_(currSpw())=false;};
+  inline void validateJ()   {JValid_(currSpw())=true;};
+  inline casacore::Bool JValid()      {return JValid_(currSpw());};
 
-  // Row-by-row apply to a Cube<Complex> (applyByJones override)
-  virtual void applyCal(VisBuffer& vb, Cube<Complex>& Vout,Bool trial=False);
+  // Row-by-row apply to a casacore::Cube<casacore::Complex> (applyByJones override)
+  virtual void applyCal(VisBuffer& vb, casacore::Cube<casacore::Complex>& Vout,casacore::Bool trial=false);
   virtual void applyCal2(vi::VisBuffer2& vb, 
-			 Cube<Complex>& Vout,Cube<Float>& Wout,
-			 Bool trial=False);
+			 casacore::Cube<casacore::Complex>& Vout,casacore::Cube<casacore::Float>& Wout,
+			 casacore::Bool trial=false);
 
   // Sync matrices for current meta data (VisJones override)
-  virtual void syncCalMat(const Bool& doInv=False);
+  virtual void syncCalMat(const casacore::Bool& doInv=false);
 
   // Calculate an ensemble of Mueller matrices (all baselines, channels)
   //  (only meaningful if applyByMueller()=T)
   virtual void calcAllMueller();
 
   // Synchronize current Jones matrices
-  virtual void syncJones(const Bool& doInv=False);
+  virtual void syncJones(const casacore::Bool& doInv=false);
 
   // Calculate an ensemble of Jones matrices (all antennas, channels)
   virtual void calcAllJones();
 
   // Calculate a single Jones matrix by some means from parameters
-  virtual void calcOneJones(Vector<Complex>& mat, Vector<Bool>& mOk, 
-			    const Vector<Complex>& par, const Vector<Bool>& pOk );
+  virtual void calcOneJones(casacore::Vector<casacore::Complex>& mat, casacore::Vector<casacore::Bool>& mOk, 
+			    const casacore::Vector<casacore::Complex>& par, const casacore::Vector<casacore::Bool>& pOk );
 
   // Invert Jones matrices
   virtual void invJones();
@@ -640,8 +644,8 @@ protected:
   virtual void calcWtScale();
 
   // Update the wt vector for a baseline
-  virtual void updateWt(Vector<Float>& wt,const Int& a1,const Int& a2);
-  virtual void updateWt2(Matrix<Float>& wt,const Int& a1,const Int& a2);
+  virtual void updateWt(casacore::Vector<casacore::Float>& wt,const casacore::Int& a1,const casacore::Int& a2);
+  virtual void updateWt2(casacore::Matrix<casacore::Float>& wt,const casacore::Int& a1,const casacore::Int& a2);
 
 private:
 
@@ -655,15 +659,15 @@ private:
   void deleteVisJones();
 
   // Jones algebra wrapper (per Spw)
-  PtrBlock<Jones*> J1_;
-  PtrBlock<Jones*> J2_;
+  casacore::PtrBlock<Jones*> J1_;
+  casacore::PtrBlock<Jones*> J2_;
 
   // Current Jones matrix-element arrays
-  PtrBlock<Cube<Complex>*> currJElem_;    // [nSpw](nJElem,nChanMat,nAnt)
-  PtrBlock<Cube<Bool>*>    currJElemOK_;  // [nSpw](nJElem,nChanMat,nAnt)
+  casacore::PtrBlock<casacore::Cube<casacore::Complex>*> currJElem_;    // [nSpw](nJElem,nChanMat,nAnt)
+  casacore::PtrBlock<casacore::Cube<casacore::Bool>*>    currJElemOK_;  // [nSpw](nJElem,nChanMat,nAnt)
 
   // Jones validity, per spw
-  Vector<Bool> JValid_;
+  casacore::Vector<casacore::Bool> JValid_;
 
 
 };

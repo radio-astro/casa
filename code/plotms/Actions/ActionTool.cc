@@ -27,6 +27,7 @@
 #include <plotms/Client/Client.h>
 #include <plotms/PlotMS/PlotMS.h>
 #include <plotms/Plots/PlotMSPlot.h>
+using namespace casacore;
 namespace casa {
 
 ActionTool::ActionTool( Client* client )
@@ -98,4 +99,5 @@ bool ActionTool::doTool(PlotMSApp* /*plotms*/) {
 ActionTool::~ActionTool() {
 }
 
+using namespace casacore;
 } /* namespace casa */

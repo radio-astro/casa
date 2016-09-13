@@ -45,6 +45,7 @@
 #include <casa/Arrays/ArrayUtil.h>
 #include <casa/Arrays/IPosition.h>
 #include <casa/Arrays/Slice.h>
+#include <casa/BasicSL/Complex.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/OS/File.h>
 #include <casa/OS/Directory.h>
@@ -101,6 +102,10 @@
 #include <scimath/Mathematics/Smooth.h>
 #include <casa/Quanta/MVTime.h>
 
+
+using namespace casacore;
+
+
 namespace casa {
 
 typedef ROVisibilityIterator ROVisIter;
@@ -123,16 +128,21 @@ Double sigToWeight(Double sig)
   // wt = 1/square(sig)
   return sig > 0.0 ? 1.0 / square(sig) : FLT_EPSILON;
 }
-}
-  
+
+} // end namespace subms
+
+//#warning "Debugging kluge here"
+//inline Complex operator*(const Complex& val, Double f) { return val*Float(f); }
+//
+
   SubMS::SubMS(String& theMS, Table::TableOption option) :
     ms_p(MeasurementSet(theMS, option)),
     mssel_p(ms_p),
     msc_p(NULL),
     mscIn_p(NULL),
     keepShape_p(true),
-    //    sameShape_p(True),
-    antennaSel_p(False),
+    //    sameShape_p(true),
+    antennaSel_p(false),
     timeBin_p(-1.0),
     scanString_p(""),
     intentString_p(""),
@@ -157,8 +167,8 @@ Double sigToWeight(Double sig)
     msc_p(NULL),
     mscIn_p(NULL),
     keepShape_p(true),
-    //sameShape_p(True),
-    antennaSel_p(False),
+    //sameShape_p(true),
+    antennaSel_p(false),
     timeBin_p(-1.0),
     scanString_p(""),
     intentString_p(""),
@@ -171,7 +181,7 @@ Double sigToWeight(Double sig)
     fitorder_p(-1),
     fitspw_p("*"),
     fitoutspw_p("*"),
-    fillMainTable_p(True),
+    fillMainTable_p(true),
     tvi_debug(False),
     want_cont_p(False)
   {
@@ -265,7 +275,7 @@ std::set<Int> SubMS::findBadSpws(MeasurementSet& ms, Vector<Int> spwv)
 
       // Copy the default width to all spws.
       if(widths_p.nelements() < nspw){
-        widths_p.resize(nspw, True);
+        widths_p.resize(nspw, true);
         for(uInt k = 1; k < nspw; ++k)
           widths_p[k] = widths_p[0];
       }
@@ -309,7 +319,7 @@ std::set<Int> SubMS::findBadSpws(MeasurementSet& ms, Vector<Int> spwv)
 
       if(widths_p.nelements() != spw_p.nelements()){
         if(widths_p.nelements() == 1){
-          widths_p.resize(spw_p.nelements(), True);
+          widths_p.resize(spw_p.nelements(), true);
           for(uInt k = 1; k < spw_p.nelements(); ++k)
             widths_p[k] = widths_p[0];
 	}
@@ -399,19 +409,19 @@ std::set<Int> SubMS::findBadSpws(MeasurementSet& ms, Vector<Int> spwv)
       //no may be we have to redo the chan selection
       
       if (nchan.nelements() != spw_p.nelements()){
-	nchan.resize(spw_p.nelements(), True);
+	nchan.resize(spw_p.nelements(), true);
 	for(uInt k = 1; k < spw_p.nelements(); ++k){
 	  nchan[k] = nchan[0];
 	}
       }
       if (start.nelements() != spw_p.nelements()){
-	start.resize(spw_p.nelements(), True);
+	start.resize(spw_p.nelements(), true);
 	for(uInt k = 1; k < spw_p.nelements(); ++k){
 	  start[k] = start[0];
 	}
       }
       if (step.nelements() != spw_p.nelements()){
-	step.resize(spw_p.nelements(), True);
+	step.resize(spw_p.nelements(), true);
 	for(uInt k = 1; k < spw_p.nelements(); ++k){
 	  step[k] = step[0];
 	}
@@ -581,7 +591,7 @@ Bool SubMS::getCorrMaps(MSSelection& mssel, const MeasurementSet& ms,
 	istep[0]=step[0];
       }
       if(step.nelements() != nchan.nelements()){
-	istep.resize(nchan.nelements(), True);
+	istep.resize(nchan.nelements(), true);
 	istep.set(istep[0]);
       }
       else{
@@ -591,7 +601,7 @@ Bool SubMS::getCorrMaps(MSSelection& mssel, const MeasurementSet& ms,
 	istart[0]=start[0];
       }
       if(start.nelements() != nchan.nelements()){
-	istart.resize(nchan.nelements(), True);
+	istart.resize(nchan.nelements(), true);
 	istart.set(istart[0]);
       }
       else{
@@ -605,9 +615,9 @@ Bool SubMS::getCorrMaps(MSSelection& mssel, const MeasurementSet& ms,
         istep.resize(chansel.nrow());
         istart.resize(chansel.nrow());
         // if the vector step is used ..for averaging ..let's use it
-        Bool stepused=False;
+        Bool stepused=false;
         if( (step.nelements() >= 1) && (max(step) > 1))
-          stepused=True;
+          stepused=true;
         for (uInt k =0 ; k < chansel.nrow(); ++k){
           if(stepused){
             if(step.nelements() == 1)
@@ -719,7 +729,7 @@ Bool SubMS::pickAntennas(Vector<Int>& selected_antennaids,
            << "this MS"
            << LogIO::POST;
         ms_p=MeasurementSet();
-        return False;   
+        return false;   
       }
       
       // Watch out!  This throws an AipsError if ms_p doesn't have the
@@ -732,7 +742,7 @@ Bool SubMS::pickAntennas(Vector<Int>& selected_antennaids,
         //   << "and timerange may be invalid." 
         //   << LogIO::POST;
         ms_p=MeasurementSet();
-        return False;
+        return false;
       }
       mscIn_p=new ROMSColumns(mssel_p);
       // Note again the parseColumnNames() a few lines back that stops setupMS()
@@ -838,10 +848,10 @@ Bool SubMS::pickAntennas(Vector<Int>& selected_antennaids,
         delete outpointer;
         os << LogIO::WARN << msname << " left unfinished." << LogIO::POST;
         ms_p=MeasurementSet();
-        return False;
+        return false;
       }
       
-      //  msOut_p.relinquishAutoLocks (True);
+      //  msOut_p.relinquishAutoLocks (true);
       //  msOut_p.unlock();
       //Detaching the selected part
       ms_p=MeasurementSet();
@@ -865,7 +875,7 @@ Bool SubMS::pickAntennas(Vector<Int>& selected_antennaids,
         }
 
       delete outpointer;
-      return True;
+      return true;
 
     /*
     }
@@ -927,7 +937,7 @@ Bool SubMS::pickAntennas(Vector<Int>& selected_antennaids,
     
     outpointer->markForDelete();
     //Hmmmmmm....memory...... 
-    if(sizeInMB <  (Double)(HostInfo::memoryTotal(True))/(2048.0) 
+    if(sizeInMB <  (Double)(HostInfo::memoryTotal(true))/(2048.0) 
        || forceInMemory){
       MeasurementSet* a = outpointer;
       outpointer= new MeasurementSet(a->copyToMemoryTable("TmpMemoryMS"));
@@ -978,7 +988,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
   // here.
   msc_p = new MSColumns(msOut_p);
   msc_p->setEpochRef(MEpoch::castType(mscIn_p->timeMeas().getMeasRef().getType()),
-                     False);
+                     false);
 
   // UVW is the only other Measures column in the main table.
   msc_p->uvwMeas().setDescRefCode(Muvw::castType(mscIn_p->uvwMeas().getMeasRef().getType()));
@@ -988,7 +998,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
   timer.mark();
   if(!fillDDTables())
-    return False;
+    return false;
   os << LogIO::DEBUG1
      << "fillDDTables took " << timer.real() << "s."
      << LogIO::POST;
@@ -1191,7 +1201,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     }
     //mssel_p.rename(ms_p.tableName()+"/SELECTED_TABLE", Table::Scratch);
     if(mssel_p.nrow() == 0)
-      return False;
+      return false;
 
     // Setup antNewIndex_p now that mssel_p is ready.
     if(antennaSel_p){
@@ -1204,10 +1214,10 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       Vector<Int> selAnts(ant1c.getColumn());
       uInt nAnts = selAnts.nelements();
 
-      selAnts.resize(2 * nAnts, True);
+      selAnts.resize(2 * nAnts, true);
       selAnts(Slice(nAnts, nAnts)) = ant2c.getColumn();
       nAnts = GenSort<Int>::sort(selAnts, Sort::Ascending, Sort::NoDuplicates);
-      selAnts.resize(nAnts, True);
+      selAnts.resize(nAnts, true);
       Int maxAnt = max(selAnts);
 
       if(maxAnt < 0){
@@ -1215,7 +1225,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
            << "The maximum selected antenna number, " << maxAnt
            << ", seems to be < 0."
            << LogIO::POST;
-        return False;
+        return false;
       }
       antNewIndex_p.resize(maxAnt + 1);
       antNewIndex_p.set(-1); //So if you see -1 in the main, feed, or pointing
@@ -1238,7 +1248,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
          << " considered due to the selection criteria." 
          << LogIO::POST;
     }
-    return True;
+    return true;
   }
 
   MeasurementSet* SubMS::setupMS(const String& MSFileName, const Int nchan,
@@ -1371,7 +1381,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     uInt cache_val=32768;
     // Set the default Storage Manager to be the Incr one
     IncrementalStMan incrStMan ("ISMData",cache_val);
-    newtab.bindAll(incrStMan, True);
+    newtab.bindAll(incrStMan, true);
     //Override the binding for specific columns
     
     IncrementalStMan incrStMan0("Array_ID",cache_val);
@@ -1677,7 +1687,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
         os << LogIO::SEVERE
            << " Channel settings wrong; exceeding number of channels in spw "
            << spw_uniq_p[k] << LogIO::POST;
-        return False;
+        return false;
       }
     }
 
@@ -1811,7 +1821,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       if(haveSpwDI)
         msSpW.dopplerId().put(min_k, inSpWCols.dopplerId()(spw_p[k]));
 
-      msDD.flagRow().put(min_k, False);
+      msDD.flagRow().put(min_k, false);
       msDD.polarizationId().put(min_k, newPolId[min_k]);
       msDD.spectralWindowId().put(min_k, min_k);
     }
@@ -1995,7 +2005,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       throw(AipsError("Unknown exception caught and released in fillFieldTable()"));
     }
     
-    return True;    
+    return true;    
   }
 
   // Sets up sourceRelabel_p for mapping input SourceIDs (if any) to output
@@ -2111,7 +2121,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     vector< Int > method; // interpolation method cast to Int
     
 
-    Bool msModified = False;
+    Bool msModified = false;
 
     String oframe = outframe;
     oframe.upcase();
@@ -2143,7 +2153,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 			    regridChanWidth,
 			    phaseCenterFieldId,
 			    phaseCenter,
-			    False, // <-----
+			    false, // <-----
 			    os,
 			    regridMessage,
 			    centerIsStart,
@@ -2204,7 +2214,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 			    regridChanWidth,
 			    phaseCenterFieldId,
 			    phaseCenter,
-			    True, // <-----
+			    true, // <-----
 			    os,
 			    regridMessage,
 			    centerIsStart,
@@ -2230,10 +2240,10 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     
     // now we need to modify the main table ...
 
-    Bool needRegridding = False;
+    Bool needRegridding = false;
     for(uInt i=0; i<regrid.size(); i++){
       if(regrid[i]){
-	needRegridding = True;
+	needRegridding = true;
       }
     }
 
@@ -2420,12 +2430,12 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       // channel-number-dependent arrays need to be regridded.
       if(regrid[iDone]){
 
-	Bool doExtrapolate = False;
+	Bool doExtrapolate = false;
 
 	// regrid the complex columns
 	Array<Complex> yout;
 	Array<Bool> youtFlags;
-	Bool youtFlagsWritten(False);
+	Bool youtFlagsWritten(false);
 	Array<Complex> yin;
 	Array<Bool> yinFlags((*oldFLAGColP)(mainTabRow));
 	Array<Bool> yinFlagsUnsmoothed;
@@ -2449,7 +2459,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  MFrequency::Convert freqTrans2(unit, fromFrame, outFrameV[iDone]);
 
 	  MDoppler radVelCorr; // no correction
-	  Bool radVelSignificant = False;
+	  Bool radVelSignificant = false;
 
 	  // prepare correction for radial velocity if requested and possible
 	  if(doRadVelCorr && fldCols.needInterTime(theFieldId)){
@@ -2460,7 +2470,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	      Quantity offsetMrv = outRadVelV[iDone].get("m/s"); // the radvel by which the out SPW def was shifted 
 	      radVelCorr = MDoppler(mrv-(2.*offsetMrv)); 
 	      if(fabs(mrv.getValue())>1E-6){
-		radVelSignificant = True;
+		radVelSignificant = true;
 	      }
 	    }
 	    else{
@@ -2546,7 +2556,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 				     yinFlags, // the output flags
 				     yinUnsmoothed, // the input
 				     yinFlagsUnsmoothed, // the input flags
-				     False);  // for flagging: good is not true
+				     false);  // for flagging: good is not true
 	  }
 	  
 	  if(method[iDone]==(Int)useLinIntThenFFTShift){
@@ -2558,15 +2568,15 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 							    yin, // the old visibilities 
 							    yinFlags,// the old flags
 							    InterpolateArray1D<Double,Complex>::linear, // the interpol method
-							    False, // for flagging: good is not true
+							    false, // for flagging: good is not true
 							    doExtrapolate // do not extrapolate
 							    );	    
 	    // shift from this timestamp to the output SPW timestamp
 	    fFFTServer.fftshift(yout, youtFlags, yinIntermediate, yinFlagsIntermediate, 
 				1, // axis 1 of the array is the polarisation axis 
 				relShift, 
-				False, // for flagging: good is not true 
-				False);
+				false, // for flagging: good is not true 
+				false);
 
 	  }
 	  else if(method[iDone]==(Int)useFFTShift){
@@ -2574,8 +2584,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    fFFTServer.fftshift(yout, youtFlags, yin, yinFlags, 
 				1, // axis 1 of the array is the polarisation axis 
 				relShift, 
-				False, // for flagging: good is not true 
-				False);
+				false, // for flagging: good is not true 
+				false);
 	  }
 	  else{
 	    InterpolateArray1D<Double,Complex>::interpolate(yout, // the new visibilities
@@ -2585,7 +2595,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 							    yin, // the old visibilities 
 							    yinFlags,// the old flags
 							    methodC, // the interpol method
-							    False, // for flagging: good is not true
+							    false, // for flagging: good is not true
 							    doExtrapolate // do not extrapolate
 							    );
 	  }
@@ -2593,7 +2603,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  CORRECTED_DATACol.put(mainTabRow, yout);
 	  if(!youtFlagsWritten){ 
 	    FLAGCol.put(mainTabRow, youtFlags);
-	    youtFlagsWritten = True;
+	    youtFlagsWritten = true;
 	  }
 	}
 	if(!DATACol.isNull()){
@@ -2602,32 +2612,32 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    Array<Complex> yinUnsmoothed;
 	    yinUnsmoothed.assign(yin);
 
-	    Smooth<Complex>::hanning(yin, yinFlags, yinUnsmoothed, yinFlagsUnsmoothed, False);  
+	    Smooth<Complex>::hanning(yin, yinFlags, yinUnsmoothed, yinFlagsUnsmoothed, false);  
 	  }
 
 	  if(method[iDone]==(Int)useLinIntThenFFTShift){
 	    InterpolateArray1D<Double,Complex>::interpolate(yinIntermediate, yinFlagsIntermediate, xout[iDone], 
 							    xindd, yin, yinFlags,
 							    InterpolateArray1D<Double,Complex>::linear, 
-							    False, doExtrapolate);	    
+							    false, doExtrapolate);	    
 	    fFFTServer.fftshift(yout, youtFlags, yinIntermediate, yinFlagsIntermediate, 
-				1, relShift, False, False);
+				1, relShift, false, false);
 
 	  }
 	  else if(method[iDone]==(Int)useFFTShift){
 	    fFFTServer.fftshift(yout, youtFlags, yin, yinFlags, 
-				1, relShift, False, False);
+				1, relShift, false, false);
 	  }
 	  else{
 	    InterpolateArray1D<Double,Complex>::interpolate(yout, youtFlags, xout[iDone], 
 							    xindd, yin, yinFlags,
-							    methodC, False, doExtrapolate);
+							    methodC, false, doExtrapolate);
 	  }
 
 	  DATACol.put(mainTabRow, yout);
 	  if(!youtFlagsWritten){ 
 	    FLAGCol.put(mainTabRow, youtFlags);
-	    youtFlagsWritten = True;
+	    youtFlagsWritten = true;
 	  }	  
 	}
 	if(!LAG_DATACol.isNull()){
@@ -2636,25 +2646,25 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    Array<Complex> yinUnsmoothed;
 	    yinUnsmoothed.assign(yin);
 
-	    Smooth<Complex>::hanning(yin, yinFlags, yinUnsmoothed, yinFlagsUnsmoothed, False);  
+	    Smooth<Complex>::hanning(yin, yinFlags, yinUnsmoothed, yinFlagsUnsmoothed, false);  
 	  }
 	  if(method[iDone]==(Int)useLinIntThenFFTShift){
 	    InterpolateArray1D<Double,Complex>::interpolate(yinIntermediate, yinFlagsIntermediate, xout[iDone], 
 							    xindd, yin, yinFlags,
 							    InterpolateArray1D<Double,Complex>::linear, 
-							    False, doExtrapolate);	    
+							    false, doExtrapolate);	    
 	    fFFTServer.fftshift(yout, youtFlags, yinIntermediate, yinFlagsIntermediate, 
-				1, relShift, False, False);
+				1, relShift, false, false);
 
 	  }
 	  else if(method[iDone]==(Int)useFFTShift){
 	    fFFTServer.fftshift(yout, youtFlags, yin, yinFlags, 
-				1, relShift, False, False);
+				1, relShift, false, false);
 	  }
 	  else{
 	    InterpolateArray1D<Double,Complex>::interpolate(yout, youtFlags, xout[iDone], 
 							    xindd, yin, yinFlags,
-							    methodC, False, doExtrapolate);
+							    methodC, false, doExtrapolate);
 	  }
 
 	  LAG_DATACol.put(mainTabRow, yout);
@@ -2666,25 +2676,25 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    InterpolateArray1D<Double,Complex>::interpolate(yinIntermediate, yinFlagsIntermediate, xout[iDone], 
 							    xindd, yin, yinFlags,
 							    InterpolateArray1D<Double,Complex>::linear, 
-							    False, doExtrapolate);	    
+							    false, doExtrapolate);	    
 	    fFFTServer.fftshift(yout, youtFlags, yinIntermediate, yinFlagsIntermediate, 
-				1, relShift, False, False);
+				1, relShift, false, false);
 
 	  }
 	  else if(method[iDone]==(Int)useFFTShift){
 	    fFFTServer.fftshift(yout, youtFlags, yin, yinFlags, 
-				1, relShift, False, False);
+				1, relShift, false, false);
 	  }
 	  else{
 	    InterpolateArray1D<Double,Complex>::interpolate(yout, youtFlags, xout[iDone], 
 							    xindd, yin, yinFlags,
-							    methodC, False, doExtrapolate);
+							    methodC, false, doExtrapolate);
 	  }
 
 	  MODEL_DATACol.put(mainTabRow, yout);
 	  if(!youtFlagsWritten){ 
 	    FLAGCol.put(mainTabRow, youtFlags);
-	    youtFlagsWritten = True;
+	    youtFlagsWritten = true;
 	  }
 	}
 	
@@ -2698,45 +2708,45 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    Array<Float> yinfUnsmoothed;
 	    yinfUnsmoothed.assign(yinf);
 
-	    Smooth<Float>::hanning(yinf, yinFlags, yinfUnsmoothed, yinFlagsUnsmoothed, False);  
+	    Smooth<Float>::hanning(yinf, yinFlags, yinfUnsmoothed, yinFlagsUnsmoothed, false);  
 	  }
 
 	  if(method[iDone]==(Int)useLinIntThenFFTShift){
 	    InterpolateArray1D<Double,Float>::interpolate(fYinIntermediate, yinFlagsIntermediate, xout[iDone], 
 							  xindd, yinf, yinFlags,
 							  InterpolateArray1D<Double,Float>::linear, 
-							  False, doExtrapolate);	    
+							  false, doExtrapolate);	    
 	    fFFTServer.fftshift(youtf, youtFlags, fYinIntermediate, yinFlagsIntermediate, 
-				1, relShift, False);
+				1, relShift, false);
 
 	  }
 	  else if(method[iDone]==(Int)useFFTShift){
 	    fFFTServer.fftshift(youtf, youtFlags, yinf, yinFlags, 
-				1, relShift, False);
+				1, relShift, false);
 	  }
 	  else{
 	    InterpolateArray1D<Double, Float>::interpolate(youtf, youtFlags, xout[iDone], xindd, 
-							   yinf, yinFlags, methodF, False, doExtrapolate);
+							   yinf, yinFlags, methodF, false, doExtrapolate);
 	  }
 
 	  FLOAT_DATACol.put(mainTabRow, youtf);
 	  if(!youtFlagsWritten){ 
 	    FLAGCol.put(mainTabRow, youtFlags);
-	    youtFlagsWritten = True;
+	    youtFlagsWritten = true;
 	  }
 	}
 
 	if(!SIGMA_SPECTRUMCol.isNull()){
 	  yinf.assign((*oldSIGMA_SPECTRUMColP)(mainTabRow));
 	  InterpolateArray1D<Double, Float>::interpolate(youtf, youtFlags, xout[iDone], xindd, 
-							 yinf, yinFlags, methodF, False, doExtrapolate);
+							 yinf, yinFlags, methodF, false, doExtrapolate);
 	  SIGMA_SPECTRUMCol.put(mainTabRow, youtf * sigmaScaleV[iDone]); //  an approximation
 	}
 	if(!WEIGHT_SPECTRUMCol.isNull() && oldWEIGHT_SPECTRUMColP->isDefined(mainTabRow)){ // required column, but can be empty
 	  yinf.assign((*oldWEIGHT_SPECTRUMColP)(mainTabRow));
 	  InterpolateArray1D<Double, Float>::interpolate(youtf, youtFlags, xout[iDone],
                                                          xindd, yinf, yinFlags,
-                                                         methodF, False, doExtrapolate);
+                                                         methodF, false, doExtrapolate);
 	  WEIGHT_SPECTRUMCol.put(mainTabRow, youtf * weightScaleV[iDone]); // an approximation
 	}
 	
@@ -2768,7 +2778,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    InterpolateArray1D<Double, Float>::interpolate(dummyYout, youtFlags,
                                                            xout[iDone], xindd, 
 							   dummyYin, yinFlags,
-                                                           methodF, False, False);
+                                                           methodF, false, false);
 	    // write the slice to the array flagCatOut
 	    for(Int j=0; j<nCorrelations; j++){
 	      for(Int k=0; k<nOutChannels; k++){
@@ -2781,7 +2791,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  
 	}
 	
-	msModified = True;
+	msModified = true;
 	
       } // end if regridding necessary
 
@@ -2857,7 +2867,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 				  const Int& hypercolumnDim,
 				  const IPosition& tileShape
 				  ){
-    Bool rval = False;
+    Bool rval = false;
     if(modMSTD.isColumn(oldName)){
       // get the old column desc
       ColumnDesc myColDesc(modMSTD.columnDesc(oldName));
@@ -2878,7 +2888,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       ms_p.addColumn(myColDesc, *tiledStMan);
       modMSTD.defineHypercolumn(oldHcName, hypercolumnDim, stringToVector(oldName));
 
-      rval = True;
+      rval = true;
     }
     return rval;
   }
@@ -2921,15 +2931,15 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
 
     // detect spectral windows defined with descending frequency
-    Bool isDescending=False;
+    Bool isDescending=false;
     for(uInt i=1; i<transNewXin.size(); i++){
       if(transNewXin(i)<transNewXin(i-1)){
-	isDescending = True;
+	isDescending = true;
       }
       else if(isDescending){ // i.e. descending was detected but now we encounter ascending
 	oss << "Channel frequencies are neither in ascending nor in descending order. Cannot process.";
 	message = oss.str();
-	return False;  
+	return false;  
       }	
     }
 
@@ -2972,7 +2982,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    break;
 	  }
 	}
-	centerIsStart = False;
+	centerIsStart = false;
       }
       else if(0. <= regridCenter && regridCenter < Double(oldNUM_CHAN)){ // valid input
 	regridCenterChan = (Int) floor(regridCenter);  
@@ -2987,7 +2997,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	oss << regridCenter << " outside valid range which is "
 	    << 0 << " - " << oldNUM_CHAN-1 <<".";
 	message = oss.str();
-	return False;  
+	return false;  
       }  
       
       if(regridBandwidth<=0.|| nchan>0){ // not set or nchan set
@@ -3009,7 +3019,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	else{
 	  regridCenterChan = regridCenterChan + regridBandwidthChan/2;
 	}
-	centerIsStart = False;
+	centerIsStart = false;
       }
 
       if(regridCenterChan-regridBandwidthChan/2 < 0) { // center too close to lower edge
@@ -3161,7 +3171,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
       message = oss.str();
 
-      return True;
+      return true;
     }
     else { // we operate on real numbers /////////////////
       // first transform them to frequencies
@@ -3175,12 +3185,12 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	if(regridVeloRestfrq<-1E30){ // means "not set"
 	  oss << "Parameter \"restfreq\" needs to be set if regrid_quantity==vrad. Cannot proceed with regridSpw ..."; 
 	  message = oss.str();
-	  return False;
+	  return false;
 	}
 	else if(regridVeloRestfrq < 0. || regridVeloRestfrq > 1E30){
 	  oss << "Parameter \"restfreq\" value " << regridVeloRestfrq << " is invalid.";
 	  message = oss.str();
-	  return False;
+	  return false;
 	}	  
 	lDouble regridCenterVel; 
 	if(regridCenter>-C::c){
@@ -3209,7 +3219,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	else{ // center was not specified
 	  regridCenterF = (transNewXin[0]+transNewXin[oldNUM_CHAN-1])/2.;
 	  regridCenterVel = vrad(regridCenterF,regridVeloRestfrq);
-	  centerIsStart = False;
+	  centerIsStart = false;
 	}
 	if(nchan>0){
 	  if(regridChanWidth > 0.){
@@ -3229,7 +3239,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    else{
 	      regridCenterF = regridCenterF + regridBandwidthF/2.;
 	    }
-	    centerIsStart = False;
+	    centerIsStart = false;
 	  }
 	}
 	else if(regridBandwidth > 0.){
@@ -3242,7 +3252,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	      regridCenterVel = regridCenter - regridBandwidth/2.;
 	    }
 	    regridCenterF = freq_from_vrad(regridCenterVel,regridVeloRestfrq);
-	    centerIsStart = False;
+	    centerIsStart = false;
 	  }
 	  lDouble bwUpperEndF = freq_from_vrad(regridCenterVel - regridBandwidth/2.,
                                               regridVeloRestfrq);
@@ -3260,13 +3270,13 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	if(regridVeloRestfrq < -1E30){ // means "not set"
 	  oss << "Parameter \"restfreq\" needs to be set if regrid_quantity==vopt. Cannot proceed with regridSpw ...";
 	  message = oss.str();
-	  return False;
+	  return false;
 	}
 	else if(regridVeloRestfrq <= 0. || regridVeloRestfrq > 1E30){
 	  oss << "Parameter \"restfreq\" value " << regridVeloRestfrq
               << " is invalid."; 
 	  message = oss.str();
-	  return False;
+	  return false;
 	}
 	lDouble regridCenterVel; 
 	if(regridCenter > -C::c){
@@ -3293,7 +3303,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	else{ // center was not specified
 	  regridCenterF = (transNewXin[0]-transCHAN_WIDTH[0]+transNewXin[oldNUM_CHAN-1]+transCHAN_WIDTH[oldNUM_CHAN-1])/2.;
 	  regridCenterVel = vopt(regridCenterF,regridVeloRestfrq);
-	  centerIsStart = False;
+	  centerIsStart = false;
 	}
 	if(nchan>0){
 	  lDouble cw;
@@ -3328,7 +3338,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	      regridCenterVel = regridCenterVel - (lDouble)nchan*cw/2.;
 	    }
 	    regridCenterF = freq_from_vopt(regridCenterVel,regridVeloRestfrq);
-	    centerIsStart = False;
+	    centerIsStart = false;
 	  }
 	  nchan=0; // indicate that nchan should not be used in the following
 	}
@@ -3342,7 +3352,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	      regridCenterVel = regridCenter - regridBandwidth/2.;
 	    }
 	    regridCenterF = freq_from_vopt(regridCenterVel,regridVeloRestfrq);
-	    centerIsStart = False;
+	    centerIsStart = false;
 	  }
 	  lDouble bwUpperEndF =  freq_from_vopt(regridCenterVel - regridBandwidth/2.,
                                                regridVeloRestfrq);
@@ -3364,7 +3374,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    oss << " *** Parameter start exceeds total number of channels which is "
 		<< transNewXin.size() << ". Set to 0." << endl;
 	    firstChan = 0;
-	    startIsEnd = False;
+	    startIsEnd = false;
 	  }
 	  if(startIsEnd){
 	    regridCenter = transNewXin[firstChan]+transCHAN_WIDTH[firstChan]/2.;
@@ -3372,7 +3382,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  else{
 	    regridCenter = transNewXin[firstChan]-transCHAN_WIDTH[firstChan]/2.;
 	  }
-	  centerIsStart = True;
+	  centerIsStart = true;
 	}
 	else{
 	  if(centerIsStart){ // start is the center of the first channel
@@ -3421,7 +3431,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	else{ // center was not specified
 	  regridCenterF = (transNewXin[0] + transNewXin[oldNUM_CHAN-1])/2.;
 	  regridCenterWav = lambda(regridCenterF);
-	  centerIsStart = False;
+	  centerIsStart = false;
 	}
 	if(nchan>0){
 	  lDouble cw;
@@ -3454,7 +3464,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	      regridCenterWav = regridCenterWav - (lDouble)nchan*cw/2.;
 	    }
 	    regridCenterF = freq_from_lambda(regridCenterWav);
-	    centerIsStart = False;
+	    centerIsStart = false;
 	  }
 	  nchan=0; // indicate that nchan should not be used in the following
 	}
@@ -3468,7 +3478,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	      regridCenterWav = regridCenter - regridBandwidth/2.;
 	    }
 	    regridCenterF = freq_from_lambda(regridCenterWav);
-	    centerIsStart = False;
+	    centerIsStart = false;
 	  }
 	  lDouble bwUpperEndF =  lambda(regridCenterWav - regridBandwidth/2.);
 	  regridBandwidthF = 2.* (bwUpperEndF - regridCenterF); 
@@ -3481,7 +3491,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       else{
 	oss << "Invalid value " << regridQuant << " for parameter \"mode\".";
 	message = oss.str();
-	return False;
+	return false;
       }
       // (transformation of regrid parameters to frequencies completed)
       
@@ -3497,7 +3507,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	// keep regrid center as it is in the data
 	theRegridCenterF = (transNewXin[0] - transCHAN_WIDTH[0]/2. 
 			    + transNewXin[oldNUM_CHAN-1]+transCHAN_WIDTH[oldNUM_CHAN-1]/2.)/2.;
-	centerIsStart = False;
+	centerIsStart = false;
       }
       else { // regridCenterF was set
 	// keep center in limits
@@ -3547,7 +3557,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  if(regridCenterF <= 0.|| regridCenter <-C::c ){ // center was not set by user but calculated
 	    // need to update
 	    theRegridCenterF = transNewXin[0] - transCHAN_WIDTH[0]/2. + theRegridBWF/2.;
-	    centerIsStart = False;
+	    centerIsStart = false;
 	  }
 	  else if(nchan<0){ // center but not nchan was set by user
 	    // verify that the bandwidth is correct
@@ -3583,7 +3593,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  else{
 	    theRegridCenterF = theRegridCenterF + theRegridBWF/2.;
 	  }
-	  centerIsStart = False;
+	  centerIsStart = false;
 	}
       }
       else { // regridBandwidthF was set
@@ -3599,7 +3609,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  else{
 	    theRegridCenterF = theRegridCenterF + theRegridBWF/2.;
 	  }
-	  centerIsStart = False;
+	  centerIsStart = false;
 	}
 	{
 	  Double rangeTol = 1.; // Hz
@@ -3668,7 +3678,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 				    - vopt(transNewXin[ii]+transCHAN_WIDTH[ii]/2.,regridVeloRestfrq)) * 2. << " m/s";
 	    }
 	    message = oss.str();
-	    return False;  
+	    return false;  
 	  }
 	  else { // input channel width was OK, memorize
 	    theChanWidthX = regridChanWidth;
@@ -4046,7 +4056,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       else{ // should not get here
 	oss << "Invalid value " << regridQuant << " for parameter \"mode\".";
 	message = oss.str();
-	return False;
+	return false;
       }
 
       Int numNewChanDown = loFBdown.size();
@@ -4085,7 +4095,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
       message = oss.str();
 
-      return True;
+      return true;
       
     } // end if (regridQuant== ...
 
@@ -4114,13 +4124,13 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 			      Int& t_width,
 			      Int& t_start
 			      ){
-    Bool rstat(False);
+    Bool rstat(false);
     
     try {
       
       os << LogOrigin("SubMS", "convertGridPars");
       
-      casa::QuantumHolder qh;
+      casacore::QuantumHolder qh;
       String error;
 
       t_mode = mode;
@@ -4131,7 +4141,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	}
 	else{
 	  os << LogIO::SEVERE  << "restfreq: " << error << LogIO::POST; 	  
-	  return False;
+	  return false;
 	}
       }
       
@@ -4142,8 +4152,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       t_nchan = -1; 
       t_width = 0;
       t_start = -1;
-      t_startIsEnd = False; // False means that start specifies the lower end in frequency (default)
-      // True means that start specifies the upper end in frequency
+      t_startIsEnd = false; // false means that start specifies the lower end in frequency (default)
+      // true means that start specifies the upper end in frequency
 
       if(!start.empty() && !(start=="[]")){ // start was set
 	if(t_mode == "channel"){
@@ -4158,7 +4168,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  }
 	  else{
 	    os << LogIO::SEVERE  << "start: " << error << LogIO::POST; 	  
-	    return False;
+	    return false;
 	  }	
 	}
 	else if(t_mode == "velocity"){
@@ -4167,7 +4177,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  }
 	  else{
 	    os << LogIO::SEVERE << "start: " << error << LogIO::POST; 	  
-	    return False;
+	    return false;
 	  }	
 	}
       }
@@ -4176,14 +4186,14 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  Int w = atoi(width.c_str());
 	  t_width = abs(w);
 	  if(w<0){
-	    t_startIsEnd = True;
+	    t_startIsEnd = true;
 	  }
 	}
 	else if(t_mode == "channel_b"){
 	  Double w = atoi(width.c_str());
 	  t_cwidth = abs(w);
 	  if(w<0){
-	    t_startIsEnd = True;
+	    t_startIsEnd = true;
 	  }	
 	}
 	else if(t_mode == "frequency"){
@@ -4191,12 +4201,12 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    Double w = qh.asQuantity().getValue("Hz");
 	    t_cwidth = abs(w);
 	    if(w<0){
-	      t_startIsEnd = True;
+	      t_startIsEnd = true;
 	    }	
 	  }
 	  else{
 	    os << LogIO::SEVERE << "width: " << error << LogIO::POST; 	  
-	    return False;
+	    return false;
 	  }	
 	}
 	else if(t_mode == "velocity"){
@@ -4204,19 +4214,19 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    Double w = qh.asQuantity().getValue("m/s");
 	    t_cwidth = abs(w);
 	    if(w>=0){
-	      t_startIsEnd = True; 
+	      t_startIsEnd = true; 
 	    }		
 	  }
 	  else{
 	    os << LogIO::SEVERE << "width: " << error << LogIO::POST; 	  
-	    return False;	    
+	    return false;	    
 	  }
 	}
       }
       else{ // width was not set
-	// for the velocity mode the default t_startIsEnd is True if the sign of width is not known
+	// for the velocity mode the default t_startIsEnd is true if the sign of width is not known
 	if(t_mode == "velocity"){
-	  t_startIsEnd = True;
+	  t_startIsEnd = true;
 	}
       }
 
@@ -4246,7 +4256,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       else if(t_mode == "velocity"){
 	if(t_restfreq == 0.){
 	  os << LogIO::SEVERE << "Need to set restfreq in velocity mode." << LogIO::POST; 
-	  return False;
+	  return false;
 	}	
 	t_regridQuantity = "vrad";
 	if(veltype == "optical"){
@@ -4259,20 +4269,20 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       }   
       else{
 	os << LogIO::WARN << "Invalid mode " << t_mode << LogIO::POST;
-	return False;
+	return false;
       }
       
       t_outframe=outframe;
       t_regridInterpMeth=interp;
-      t_centerIsStart = True;
+      t_centerIsStart = true;
             
       // end prepare regridding parameters
       
-      rstat = True;
+      rstat = true;
 
     } catch (AipsError x) {
       os << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-      rstat = False;
+      rstat = false;
     }
     return rstat;
   }
@@ -4387,55 +4397,55 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 			)
        ){
       // an error occured
-      return False;
+      return false;
     }
 
     // reference frame transformation
-    Bool needTransform = True;
-    Bool doRadVelCorr = False;
+    Bool needTransform = true;
+    Bool doRadVelCorr = false;
     MFrequency::Types theFrame;
     String oframe = outframe;
     oframe.upcase();
     if(outframe==""){ // no ref frame given 
       // keep the reference frame as is
       theFrame = theOldRefFrame;
-      needTransform = False;
+      needTransform = false;
     }
     else if(oframe=="SOURCE"){ // GEO trafo + radial velocity correction
       theFrame = MFrequency::GEO;
-      doRadVelCorr = True;
+      doRadVelCorr = true;
     }
     else if(!MFrequency::getType(theFrame, outframe)){
       os << LogIO::SEVERE
 	 << "Parameter \"outframe\" value " << outframe << " is invalid." 
 	 << LogIO::POST;
-      return False;
+      return false;
     }
     else if (theFrame == theOldRefFrame){
-      needTransform = False;
+      needTransform = false;
     }
 
     uInt oldNUM_CHAN = oldCHAN_FREQ.size();
     if(oldNUM_CHAN == 0){
       newCHAN_FREQ.resize(0);
       newCHAN_WIDTH.resize(0);
-      return True;
+      return true;
     }
 
     if(oldNUM_CHAN != oldCHAN_WIDTH.size()){
       os << LogIO::SEVERE
 	 << "Internal error: inconsistent dimensions of input channel freq and width arrays." 
 	 << LogIO::POST;
-      return False;
+      return false;
     }      
 
     Vector<Double> absOldCHAN_WIDTH;
     absOldCHAN_WIDTH.assign(oldCHAN_WIDTH);
     {
-      Bool negativeWidths = False;
+      Bool negativeWidths = false;
       for(uInt i=0; i<oldCHAN_WIDTH.size(); i++){
 	if(oldCHAN_WIDTH(i) < 0.){
-	  negativeWidths = True;
+	  negativeWidths = true;
 	  absOldCHAN_WIDTH(i) = -oldCHAN_WIDTH(i);
 	}
       }
@@ -4458,14 +4468,14 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       MFrequency::Convert freqTrans(unit, fromFrame, toFrame);
       
       MDoppler radVelCorr; // no correction
-      Bool radVelSignificant = False; // is the radial velocity large enough to warrant a shift?
+      Bool radVelSignificant = false; // is the radial velocity large enough to warrant a shift?
       // prepare correction for radial velocity if requested and possible
       if(doRadVelCorr){
 	Quantity mrv = mRV.get("m/s"); // (const)
 	radVelCorr = MDoppler(-mrv); // NOTE: opposite sign to achieve correction!
 	Double mRVVal = mrv.getValue();
 	if(fabs(mRVVal)>1E-6){
-	  radVelSignificant = True;
+	  radVelSignificant = true;
 	  if(verbose){
 	    os << LogIO::NORMAL
 	       << "Note: The given additional radial velocity of " << mRVVal << " m/s will be taken into account."
@@ -4521,7 +4531,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 			 )
        ){ // there was an error
       os << LogIO::WARN << message << LogIO::POST;
-      return False;
+      return false;
     }
     
     if(verbose){
@@ -4543,7 +4553,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
     weightScale = newCHAN_WIDTH[0]/transCHAN_WIDTH[0];
     
-    return True;
+    return true;
 
   }
   
@@ -4583,7 +4593,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 				  const Int start
 				  )
   {
-    Bool rval = True;
+    Bool rval = true;
 
     // reset the "done" table.
     newDataDescId.resize(0);
@@ -4746,13 +4756,13 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	   << " reference to non-existing DATA_DESCRIPTION table entry "
            << theDataDescId
 	   << LogIO::POST;
-	rval = False;
+	rval = false;
 	return rval;
       }
 
       // variables saying what has to be done for this row
-      Bool needTransform = False;
-      Bool doRegrid = False;
+      Bool needTransform = false;
+      Bool doRegrid = false;
       Int equivalentSpwFieldPair = -1;
 
       String message;
@@ -4791,28 +4801,28 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
 	// Determine if a reference frame transformation is necessary
 	// Bool 	getType (MFrequency::Types &tp, const String &in)
-	needTransform = True;
-	Bool doRadVelCorr = False;
+	needTransform = true;
+	Bool doRadVelCorr = false;
 	MFrequency::Types theFrame;
 	String oframe = outframe;
 	oframe.upcase();
 	if(outframe==""){ // no ref frame given 
 	  // keep the reference frame as is
 	  theFrame = theOldRefFrame;
-	  needTransform = False;
+	  needTransform = false;
 	}
 	else if(oframe=="SOURCE"){ // GEO trafo + radial velocity correction
 	  theFrame = MFrequency::GEO;
-	  doRadVelCorr = True;
+	  doRadVelCorr = true;
 	}
 	else if(!MFrequency::getType(theFrame, outframe)){
 	  os << LogIO::SEVERE
              << "Parameter \"outframe\" value " << outframe << " is invalid." 
 	     << LogIO::POST;
-	  return False;
+	  return false;
 	}
 	else if (theFrame == theOldRefFrame){
-	  needTransform = False;
+	  needTransform = false;
 	}
 
 	Double weightScale = 1.;
@@ -4838,7 +4848,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	}
 	else if(regridPhaseCenterFieldId==-1){ // use the given direction
 	  theFieldDir = regridPhaseCenter;
-	  doRadVelCorr = False;
+	  doRadVelCorr = false;
 	}
 	else if((uInt)regridPhaseCenterFieldId < fieldtable.nrow()){ // use this valid field ID
 	  theFieldDir = FIELDCols.phaseDirMeas(regridPhaseCenterFieldId, mainCols.time()(mainTabRow));
@@ -4859,7 +4869,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  os << LogIO::SEVERE << "Field to be used as phase center, id " 
 	     << regridPhaseCenterFieldId 
 	     << ", does not exist." << LogIO::POST;
-	  return False;
+	  return false;
 	}
 
 	//	cout << "theFieldId = " << theFieldId << ", theObsTime = " << theObsTime
@@ -4877,10 +4887,10 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	Int oldNUM_CHAN = numChanCol(theSPWId); 
 	Vector<Double> oldCHAN_WIDTH = chanWidthCol(theSPWId);
 	{
-	  Bool negativeWidths = False;
+	  Bool negativeWidths = false;
 	  for(uInt i=0; i<oldCHAN_WIDTH.nelements(); i++){
 	    if(oldCHAN_WIDTH(i) < 0.){
-	      negativeWidths = True;
+	      negativeWidths = true;
 	      oldCHAN_WIDTH(i) = -oldCHAN_WIDTH(i);
 	    }
 	  }
@@ -4911,14 +4921,14 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  MFrequency::Convert freqTrans(unit, fromFrame, toFrame);
 	  
 	  MDoppler radVelCorr; // no correction
-	  Bool radVelSignificant = False; // is the radial velocity large enough to warrant a shift?
+	  Bool radVelSignificant = false; // is the radial velocity large enough to warrant a shift?
 	  // prepare correction for radial velocity if requested and possible
 	  if(doRadVelCorr && FIELDCols.needInterTime(theFieldIdToUse)){
 	    MRadialVelocity mRV = FIELDCols.radVelMeas(theFieldIdToUse, mainCols.time()(mainTabRow));
 	    Quantity mrv = mRV.get("m/s");
 	    radVelCorr = MDoppler(-mrv); // NOTE: opposite sign to achieve correction
 	    if(fabs(mrv.getValue())>1E-6){
-	      radVelSignificant = True;
+	      radVelSignificant = true;
 	      outRadVel = mRV;
 	      os << LogIO::NORMAL
 		 << "Note: The geocentric radial velocity information (ca. " << mrv.getValue()
@@ -5056,12 +5066,12 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    }
 	    else if(meth.contains("fft")){
 	      // check if input grid is equidistant in frequency
-	      Bool isEquidistant = True;
+	      Bool isEquidistant = true;
 	      Double sep = fabs(transCHAN_WIDTH(0));
 	      for(uInt i=1; i<transCHAN_WIDTH.size(); i++){
 		if((fabs(transCHAN_WIDTH(i)-transCHAN_WIDTH(i-1))>0.1)
 		   || fabs(fabs(transNewXin(i)-transNewXin(i-1))-sep)>0.1 ){
-		  isEquidistant = False;
+		  isEquidistant = false;
 		  break;
 		}
 		sep = fabs(transNewXin(i)-transNewXin(i-1));
@@ -5083,7 +5093,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 		   << "Parameter \"interpolation\" value \"" << meth << "\" requires an output grid equidistant in frequency."
 		   << endl << "Cannot proceed." 
 		   << LogIO::POST;
-		return False;
+		return false;
 	      }
 	    }
 	    else {
@@ -5091,7 +5101,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 		os << LogIO::WARN
                    << "Parameter \"interpolation\" value \"" << meth << "\" is invalid." 
 		   << LogIO::POST;
-		return False;
+		return false;
 	      }
 	      theMethod = (Int) InterpolateArray1D<Double,Complex>::linear;
 	      methodName = "linear";
@@ -5119,7 +5129,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	       ){ // there was an error
 	      os << LogIO::SEVERE << message << LogIO::POST;
 	      throw(AipsError("Regridding failed."));
-	      //return False;
+	      //return false;
 	    }
 	    
 	    // we have a useful set of channel boundaries
@@ -5170,7 +5180,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 // 	    }
 
 	    if(!allEQ(newXout, transNewXin)){ // grids are different
-	      doRegrid = True;
+	      doRegrid = true;
 	    }
 	    
 	  } // end if (regridQuant=="" ... 
@@ -5184,7 +5194,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	      os << LogIO::WARN
                  << "Unable to add new row to SPECTRAL_WINDOW table. Cannot proceed with regridSpw ..." 
 		 << LogIO::POST;
-	      return False; 
+	      return false; 
 	    }
 	    
 	    numNewSPWIds++;
@@ -5224,7 +5234,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    effectiveBWCol.put(nextSPWId, newEFFECTIVE_BW);
 	    resolutionCol.put(nextSPWId, newRESOLUTION);
 	    
-	    msModified = True;
+	    msModified = true;
 	    //   Create a new row in the DATA_DESCRIPTION table and enter
 	    //   nextSPWId in the SPW_ID column, copy the polarization id and
 	    //   the flag_row content from the old DATA_DESCRIPTION row.
@@ -5232,7 +5242,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	      os << LogIO::WARN
                  << "Unable to add new row to DATA_DESCRIPTION table.  Cannot proceed with regridSpw ..." 
 		 << LogIO::POST;
-	      return False; 
+	      return false; 
 	    }
 	    numNewDataDesc++;
 	    nextDataDescId++;
@@ -5265,7 +5275,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	      os << LogIO::WARN
                  << "Unable to add new row to SOURCE table. Cannot proceed with regridSpw ..." 
 		 << LogIO::POST;
-	      return False; 
+	      return false; 
 	    }
 	    numNewSourceRows++;
 	    nextSourceRow++;
@@ -5287,7 +5297,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 		 <<" even though the FIELD and the DATA_DESCRIPTION table entries for main table row " 
 		 << mainTabRow << " refer to it." 
 		 << LogIO::POST;
-	      return False;
+	      return false;
 	    }
 	    else { // found matching row
 	      p_sourcetable->addRow();
@@ -5349,7 +5359,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	ScalarColumn<Int> sourceIdCol = p_sourceCol->sourceId();
 	ScalarColumn<Int> spwIdCol = p_sourceCol->spectralWindowId();
 	// delete duplicate rows among the original Source rows
-	vector<Bool> tBRemRows(origNumSourceRows, False);
+	vector<Bool> tBRemRows(origNumSourceRows, false);
 	for(Int i=0; i<origNumSourceRows-1; i++){
 	  if(tBRemRows[i]){
 	    continue;
@@ -5358,7 +5368,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  Int tSpwId = spwIdCol(i);
 	  for(Int j=i+1; j<origNumSourceRows; j++){
 	    if(sourceIdCol(j)==tSId && spwIdCol(j)==tSpwId){
-	      tBRemRows[j]=True;
+	      tBRemRows[j]=true;
 	    }
 	  }
 	}
@@ -5372,10 +5382,10 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	// delete those original Source rows with Source/SPW ID pairs also present among the new ones
 	uInt sIndex=0;
 	for(Int i=0; i<origNumSourceRows; i++){
-	  Bool sFound=False;
+	  Bool sFound=false;
 	  for(uInt j=0; j<newSourceIds.size(); j++){
 	    if(sourceIdCol(sIndex)==newSourceIds[j] && spwIdCol(sIndex)==newSourceSPWIds[j]){
-	      sFound=True;
+	      sFound=true;
 	      break;
 	    }
 	  }
@@ -5409,11 +5419,15 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     return rval;
   }
 
+
   Bool SubMS::combineSpws(const Vector<Int>& spwids,
 			  const Bool noModify,
 			  Vector<Double>& newCHAN_FREQ,
 			  Vector<Double>& newCHAN_WIDTH,
 			  Bool verbose){
+
+
+    using casacore::operator*;
     
     LogIO os(LogOrigin("SubMS", "combineSpws()"));
       
@@ -5421,12 +5435,12 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
     if(spwids.nelements()==0){
       os << LogIO::WARN << "No SPWs selected for combination ..." <<  LogIO::POST;
-      return True;
+      return true;
     }
 
     String tempNewName = ms_p.tableName()+".spwCombined"; // temporary name for the MS to store the result
 
-    Bool allScratchColsPresent = False;
+    Bool allScratchColsPresent = false;
 
     { // begin scope for MS related objects
 
@@ -5436,7 +5450,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       Int newSPWId = origNumSPWs;
 
       vector<Int> spwsToCombine;
-      Vector<Bool> includeIt(origNumSPWs, False);
+      Vector<Bool> includeIt(origNumSPWs, false);
 
       // jagonzal: This covers for the case when we want to combine all the input SPWs
       if(spwids(0) == -1)
@@ -5444,7 +5458,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     	  for(Int i=0; i<origNumSPWs; i++)
     	  {
     		  spwsToCombine.push_back(i);
-    		  includeIt(i) = True;
+    		  includeIt(i) = true;
     	  }
       }
       // jagonzal: Nominal case when we want to combine a sub-set of the input SPWs
@@ -5455,13 +5469,13 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     		  if(spwids(i)<origNumSPWs && spwids(i)>=0)
     		  {
     			  spwsToCombine.push_back(spwids(i));
-    			  includeIt(spwids(i)) = True;
+    			  includeIt(spwids(i)) = true;
     		  }
     		  else
     		  {
     			  os << LogIO::SEVERE << "Invalid SPW ID selected for combination " << spwids(i)
     					  << "valid range is 0 - " << origNumSPWs-1 << ")" << LogIO::POST;
-    			  return False;
+    			  return false;
     		  }
     	  }
       }
@@ -5472,7 +5486,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     	  {
     		  os << LogIO::NORMAL << "Less than two SPWs selected. No combination necessary." << LogIO::POST;
     	  }
-    	  return True;
+    	  return true;
       }
       
       // sort the spwids
@@ -5495,8 +5509,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
       // create a list of the spw ids sorted by first (lowest) channel frequency
       vector<Int> spwsSorted(nSpwsToCombine);
-      Vector<Bool> isDescending(origNumSPWs, False);
-      Bool negChanWidthWarned = False;
+      Vector<Bool> isDescending(origNumSPWs, false);
+      Bool negChanWidthWarned = false;
       {
 	Double* firstFreq = new Double[nSpwsToCombine];
 	uInt count = 0;
@@ -5510,7 +5524,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    }
 	    else{
 	      firstFreq[count] = CHAN_FREQ(nCh-1);
-	      isDescending(i) = True;
+	      isDescending(i) = true;
 	    }	   
 	    count++;
 	  }
@@ -5532,10 +5546,10 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       newCHAN_WIDTH.assign(chanWidthColr(id0));
       Bool newIsDescending = isDescending(id0);
       {
-	Bool negativeWidths = False;
+	Bool negativeWidths = false;
 	for(uInt i=0; i<newNUM_CHAN; i++){
 	  if(newCHAN_WIDTH(i) < 0.){
-	    negativeWidths = True;
+	    negativeWidths = true;
 	    newCHAN_WIDTH(i) = -newCHAN_WIDTH(i);
 	  }
 	}
@@ -5543,7 +5557,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  os << LogIO::NORMAL
 	     << " *** Encountered negative channel widths in SPECTRAL_WINDOW table."
 	     << LogIO::POST;
-	  negChanWidthWarned = True;
+	  negChanWidthWarned = true;
 	}
       }
 
@@ -5611,10 +5625,10 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	Vector<Double> newCHAN_WIDTHi(chanWidthColr(idi));
 	Bool newIsDescendingI = isDescending(idi);
 	{
-	  Bool negativeWidths = False;
+	  Bool negativeWidths = false;
 	  for(uInt ii=0; ii<newNUM_CHANi; ii++){
 	    if(newCHAN_WIDTHi(ii) < 0.){
-	      negativeWidths = True;
+	      negativeWidths = true;
 	      newCHAN_WIDTHi(ii) = -newCHAN_WIDTHi(ii);
 	    }
 	  }
@@ -5622,7 +5636,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    os << LogIO::NORMAL
 	       << " *** Encountered negative channel widths in SPECTRAL_WINDOW table."
 	       << LogIO::POST;
-	    negChanWidthWarned = True;
+	    negChanWidthWarned = true;
 	  }
 	}
 	if(newIsDescendingI){ // need to reverse the order for processing 
@@ -5666,7 +5680,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  os << LogIO::WARN
 	     << "SPW " << idi << " cannot be combined with SPW " << id0 << ". Non-matching ref. frame."
 	     << LogIO::POST;
-	  return False; 
+	  return false; 
 	}
 
 	// append or prepend spw to new spw
@@ -5968,14 +5982,14 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 // 	  cout << " i, j " << i << ", " << j << " averageWhichChan[i][j] " << averageWhichChan[i][j]
 // 	       << " averageWhichSPW[i][j] " << averageWhichSPW[i][j] << endl;
 // 	  cout << " averageChanFrac[i][j] " << averageChanFrac[i][j] << endl;
-// 	  tboolv.push_back(False);
+// 	  tboolv.push_back(false);
 // 	}
 // 	wasprinted.push_back(tboolv);
 //       }
       
       
       if(noModify){ // newCHAN_FREQ and newCHAN_WIDTH have been determined now
-	return True;
+	return true;
       }
 
       // now need write access
@@ -6002,7 +6016,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	os << LogIO::WARN
 	   << "Unable to add new row to SPECTRAL_WINDOW table. Cannot proceed with spwCombine ..." 
 	   << LogIO::POST;
-	return False; 
+	return false; 
       }
 
       TableRow SPWRow(spwtable);
@@ -6059,7 +6073,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       ScalarColumn<Int> SPWIdCol = DDCols.spectralWindowId();
       ScalarColumn<Int> PolIdCol = DDCols.polarizationId();
       vector<uInt> affDDIds;  
-      vector<Bool> DDRowsToDelete(numDataDescs, False);
+      vector<Bool> DDRowsToDelete(numDataDescs, false);
       SimpleOrderedMap <Int, Int> tempDDIndex(-1); // store relation between old and new DD Ids
       SimpleOrderedMap <Int, Int> DDtoSPWIndex(-1); // store relation between old DD Ids and old SPW Ids 
       //  (only for affected SPW IDs)
@@ -6081,10 +6095,10 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       // Find redundant DD IDs
       // loop over DD table rows
       for(uInt i=0; i<numDataDescs; i++){
-	Bool affected = False;
+	Bool affected = false;
 	for(uInt j=0; j<affDDIds.size(); j++){
 	  if(i == affDDIds[j] && !DDRowsToDelete[i]){
-	    affected = True;
+	    affected = true;
 	    break;
 	  }
 	}
@@ -6099,7 +6113,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    // if row i and row j redundant?
 	    if(PolIDi == PolIdCol(j) && SpwIDi == SPWIdCol(j)){
 	      // mark for deletion
-	      DDRowsToDelete[j] = True;
+	      DDRowsToDelete[j] = true;
 	      // fill map for DDrenumbering
 	      tempDDIndex.define(j, i);
 	    }
@@ -6183,19 +6197,19 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
       // 6) MAIN
 
-      ms_p.flush(True); // with fsync
+      ms_p.flush(true); // with fsync
 
       Table newMain(TableCopy::makeEmptyTable( tempNewName,
 					       Record(),
 					       (Table) ms_p,
 					       Table::New,
 					       Table::AipsrcEndian,
-					       True, // replaceTSM 
-					       True // noRows
+					       true, // replaceTSM 
+					       true // noRows
 					       )
 		    );
       
-      TableCopy::copySubTables(newMain, ms_p, False);
+      TableCopy::copySubTables(newMain, ms_p, false);
       
       MSMainColumns mainCols((MeasurementSet&)newMain);
       MSMainColumns oldMainCols(ms_p);
@@ -6284,7 +6298,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       Bool SIGMA_SPECTRUMColIsOK = !SIGMA_SPECTRUMCol.isNull();
       Bool WEIGHT_SPECTRUMColIsOK = !WEIGHT_SPECTRUMCol.isNull(); // rechecked further below
       Bool FLAGColIsOK = !FLAGCol.isNull();
-      Bool FLAG_CATEGORYColIsOK = False; // to be set to the correct value further below
+      Bool FLAG_CATEGORYColIsOK = false; // to be set to the correct value further below
       
       allScratchColsPresent = CORRECTED_DATAColIsOK && MODEL_DATAColIsOK;
 
@@ -6312,7 +6326,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  newWeightSpectrum.resize(newShape);
 	}
 	else{
-	  WEIGHT_SPECTRUMColIsOK = False;
+	  WEIGHT_SPECTRUMColIsOK = false;
 	}
       }
       if(FLAGColIsOK){ // required but one never knows (there may be bugs elsewhere)
@@ -6322,7 +6336,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       uInt nCat  = 0;
       if(!FLAG_CATEGORYCol.isNull()){ 
 	if(oldFLAG_CATEGORYCol.isDefined(firstAffRow)){ // required column but may be empty
-	  FLAG_CATEGORYColIsOK = True;
+	  FLAG_CATEGORYColIsOK = true;
 	  flagCatShape = oldFLAG_CATEGORYCol.shape(firstAffRow);
 	  nCat = flagCatShape(2); // the dimension of the third axis ==
 	  // number of categories
@@ -6422,7 +6436,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 		 << LogIO::POST;
 	      if(!flagRowCol(nextRow)){
 		os << LogIO::SEVERE << "You need to flag row " << nextRow << " to proceed." << LogIO::POST;
-		return False;
+		return false;
 	      }
 	      else{
 		os << LogIO::WARN << "Fortunately, row " << nextRow << " is flagged so this problem will be ignored." << LogIO::POST;
@@ -6438,7 +6452,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 		 << LogIO::POST;
 	      if(!flagRowCol(nextRow)){
 		os << LogIO::SEVERE << "You need to flag row " << nextRow << " to proceed." << LogIO::POST;
-		return False;
+		return false;
 	      }
 	      else{
 		os << LogIO::WARN << "Fortunately row " << nextRow << " is flagged so this problem will be ignored." << LogIO::POST;
@@ -6452,7 +6466,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 		 << theSPWId << LogIO::POST;
 	      if(!flagRowCol(nextRow)){
 		os << LogIO::SEVERE << "You need to flag row " << nextRow << " to proceed." << LogIO::POST;
-		return False;
+		return false;
 	      }
 	      else{
 		os << LogIO::WARN << "Fortunately, row " << nextRow << " is flagged so this problem will be ignored." << LogIO::POST;
@@ -6559,7 +6573,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  // merge data columns from all rows found using the averaging info from above
 	  // averageN[], averageWhichSPW[], averageWhichChan[], averageChanFrac[]
 
-	  Bool failedAv = False;	  
+	  Bool failedAv = false;	  
 	  vector<Int> failedAvChans;
 	  vector<Int> failedAvCorrs;
 
@@ -6568,18 +6582,18 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    // initialise special treatment for Bool columns
 	    if(FLAGColIsOK){
 	      for(uInt k=0; k<nCorrelations; k++){ 
-		newFlag(k,i) =  True; // overwritten with False below if there is a SPW where this channel is not flagged for this correlator
+		newFlag(k,i) =  true; // overwritten with false below if there is a SPW where this channel is not flagged for this correlator
 	      }
 	    }
 	    if(FLAG_CATEGORYColIsOK){
 	      for(uInt k=0; k<nCorrelations; k++){ 
 		for(uInt m=0; m<nCat; m++){ 
-		  newFlagCategory(IPosition(3,k,i,m)) = False;
+		  newFlagCategory(IPosition(3,k,i,m)) = false;
 		}
 	      }
 	    }
 
-	    Bool haveCoverage = False;
+	    Bool haveCoverage = false;
 	    Vector<Double> modNorm(nCorrelations, 0.); // normalization for the averaging of the contributions from the SPWs
 	    vector<vector<Double> > modAverageChanFrac(averageN[i], vector<Double>(nCorrelations, 0.));
 	    for(uInt k=0; k<nCorrelations; k++){
@@ -6587,9 +6601,9 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	      for(Int j=0; j<averageN[i]; j++){
 		if(SPWtoRowIndex.isDefined(averageWhichSPW[i][j])){
 		  if(!newFlagI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] )){
-		    haveCoverage = True;
+		    haveCoverage = true;
 		    if(FLAGColIsOK){
-		      newFlag(k,i) = False; // there is valid data for this channel and correlation => don't flag in output
+		      newFlag(k,i) = false; // there is valid data for this channel and correlation => don't flag in output
 		    }
 		    modAverageChanFrac[j][k] = averageChanFrac[i][j];
 		    modNorm(k) += averageChanFrac[i][j];
@@ -6614,8 +6628,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 		    modAverageChanFrac[j][k] = 0.;
 		    if(modNorm(k)<=0.){ // should only occur in rare cases
 		      if(FLAGColIsOK && !newFlag(k,i)){
-			failedAv = True;
-			newFlag(k,i) = True;
+			failedAv = true;
+			newFlag(k,i) = true;
 			if(prevNewMainTabRow<0){
 			  prevNewMainTabRow = newMainTabRow;
 			}
@@ -6661,7 +6675,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 // 			       << newDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) 
 // 			       << " newData(k,i) " << newData(k,i) 
 // 			       << " weight " << weight << endl;
-// 			  wasprinted[i][j] = True;
+// 			  wasprinted[i][j] = true;
 // 			} 
 		      }
 		      if(FLOAT_DATAColIsOK){
@@ -6727,7 +6741,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  }
 
 	  // write data into the new main table
-	  newMain.addRow(1,False);
+	  newMain.addRow(1,false);
 
 	  //	  cout << "writing new row " << newMainTabRow << endl;
 	  
@@ -6821,14 +6835,14 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	}
       }
 
-      newMain.flush(True); 
+      newMain.flush(true); 
 
     } // end scope for MS related objects
  
     String oldName(ms_p.tableName());
 
     // detach old MS
-    ms_p.flush(True);
+    ms_p.flush(true);
     ms_p = MeasurementSet();
     mssel_p = MeasurementSet();
 
@@ -6863,7 +6877,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       os << LogIO::NORMAL << "Spectral window combination complete." << LogIO::POST;
     }
 
-    return True;
+    return true;
 
   }
 
@@ -7000,7 +7014,7 @@ uInt SubMS::dataColStrToEnums(const String& col, Vector<MS::PredefinedColumns>& 
   Int i = 0;
   pch = strtok((char*)tmpNames.c_str(), " ,");
   while (pch != NULL){
-    tokens.resize(i + 1, True);
+    tokens.resize(i + 1, true);
     tokens[i] = String(pch);
     ++i;
     pch = strtok(NULL, " ,");
@@ -7010,7 +7024,7 @@ uInt SubMS::dataColStrToEnums(const String& col, Vector<MS::PredefinedColumns>& 
 
   uInt nFound = 0;
   for(uInt i = 0; i < nNames; ++i){
-    colvec.resize(nFound + 1, True);
+    colvec.resize(nFound + 1, true);
     colvec[nFound] = MS::UNDEFINED_COLUMN;
 	    
     if (tokens[i] == "OBSERVED" || 
@@ -7057,7 +7071,7 @@ Bool SubMS::fillAccessoryMainCols(){
   LogIO os(LogOrigin("SubMS", "fillAccessoryMainCols()"));
   uInt nrows = mssel_p.nrow();
 
-  msOut_p.addRow(nrows, True);
+  msOut_p.addRow(nrows, true);
   
   //#ifdef COPYTIMER
   Timer timer;
@@ -7151,7 +7165,7 @@ Bool SubMS::fillAccessoryMainCols(){
      << "relabelIDs took " << timer.real() << "s."
      << LogIO::POST;
 
-  return True;
+  return true;
 }
 
   Bool SubMS::writeAllMainRows(const Vector<MS::PredefinedColumns>& colNames)
@@ -7209,7 +7223,7 @@ Bool SubMS::existsFlagCategory() const
       data.reference(mscIn_p->lagData());
     else                                // The honored-by-time-if-nothing-else
       data.reference(mscIn_p->correctedData()); // default.
-    return True;
+    return true;
   }
 
   Bool SubMS::getDataColumn(ROArrayColumn<Float>& data,
@@ -7224,7 +7238,7 @@ Bool SubMS::existsFlagCategory() const
 	 << LogIO::POST;
     
     data.reference(mscIn_p->floatData());
-    return True;
+    return true;
   }
 
   Bool SubMS::putDataColumn(MSColumns& msc, ROArrayColumn<Complex>& data, 
@@ -7359,13 +7373,13 @@ Bool SubMS::subtractContinuum(const Vector<MS::PredefinedColumns>& colNames,
                               const VBRemapper& vbmaps)
 {
   LogIO os(LogOrigin("SubMS", "subtractContinuum()"));
-  Bool retval = True;
+  Bool retval = true;
 
   if(colNames.nelements() != 1){
     os << LogIO::SEVERE
        << "The continuum cannot be subtracted from > 1 *DATA column at a time."
        << LogIO::POST;
-    return False;
+    return false;
   }
 
   Block<Int> sort;
@@ -7381,7 +7395,7 @@ Bool SubMS::subtractContinuum(const Vector<MS::PredefinedColumns>& colNames,
   // DBL_MAX, meaning that TIME can be in sort but effectively be ignored for
   // major chunking.  Why couldn't they just have said DBL_MAX in the first
   // place?
-  ROVisibilityIterator viIn(mssel_p, sort, False, DBL_MIN);
+  ROVisibilityIterator viIn(mssel_p, sort, false, DBL_MIN);
 
   // Make sure it is initialized before any copies are made.
   viIn.originChunks();
@@ -7484,7 +7498,7 @@ Bool SubMS::copyDataFlagsWtSp(const Vector<MS::PredefinedColumns>& colNames,
 
     uInt ninrows = mssel_p.nrow();
     ProgressMeter meter(0.0, ninrows * 1.0, "split", "rows copied", "", "",
-                        True, 1);
+                        true, 1);
     uInt inrowsdone = 0;  // only for the meter.
 
     uInt nDataCols = colNames.nelements();
@@ -7717,7 +7731,7 @@ void SubMS::relabelIDs()
 Bool SubMS::writeSomeMainRows(const Vector<MS::PredefinedColumns>& colNames)
 {    
   LogIO os(LogOrigin("SubMS", "writeSomeMainRows()"));
-  Bool retval = True;
+  Bool retval = true;
     
   os << LogIO::DEBUG1 // helpdesk ticket in from Oleg Smirnov (ODU-232630)
      << "Before fillAntIndexer(): "
@@ -7787,7 +7801,7 @@ Bool SubMS::copyCols(Table& out, const Table& in, const Bool flush)
   const TableDesc& inTD = in.actualTableDesc();
   Vector<String> inColNames = inTD.columnNames();
   uInt nInCol = inTD.ncolumn();
-  Bool retval = True;
+  Bool retval = true;
 
   if(in.nrow() > out.nrow())
     out.addRow(in.nrow() - out.nrow());
@@ -7803,7 +7817,7 @@ Bool SubMS::copyCols(Table& out, const Table& in, const Bool flush)
            << "Could not add column " << inColNames[k] << " to "
            << out.tableName()
            << LogIO::POST;
-        retval = False;
+        retval = false;
       }
     }
 
@@ -7825,14 +7839,14 @@ Bool SubMS::copyCols(Table& out, const Table& in, const Bool flush)
     MSAntenna& newAnt = msOut_p.antenna();
     const ROMSAntennaColumns incols(oldAnt);
     MSAntennaColumns         outcols(newAnt);
-    Bool 		     retval = False;
+    Bool 		     retval = false;
     
     outcols.setOffsetRef(MPosition::castType(incols.offsetMeas().getMeasRef().getType()));
     outcols.setPositionRef(MPosition::castType(incols.positionMeas().getMeasRef().getType()));
 
     if(!antennaSel_p){
       TableCopy::copyRows(newAnt, oldAnt);
-      retval = True;
+      retval = true;
     }
     else{
       uInt nAnt = antNewIndex_p.nelements();
@@ -7844,7 +7858,7 @@ Bool SubMS::copyCols(Table& out, const Table& in, const Bool flush)
           TableCopy::copyRows(newAnt, oldAnt, antNewIndex_p[k], k, 1, false);
       }
       newAnt.flush();
-      retval = True;
+      retval = true;
     }
     return retval;    
   }
@@ -7902,7 +7916,7 @@ Bool SubMS::copyCols(Table& out, const Table& in, const Bool flush)
       os << LogIO::SEVERE << "No feeds were selected." << LogIO::POST;
       return false;
     }
-    return True;
+    return true;
   }
   
   Bool SubMS::copyFlag_Cmd(){
@@ -7972,7 +7986,7 @@ Bool SubMS::copyCols(Table& out, const Table& in, const Bool flush)
 	//   newFlag_Cmd.flush();
       }
     }
-    return True;
+    return true;
   }
   
   Bool SubMS::copyHistory(){
@@ -7993,7 +8007,7 @@ Bool SubMS::copyCols(Table& out, const Table& in, const Bool flush)
     newHCs.setEpochRef(MEpoch::castType(oldHCs.timeMeas().getMeasRef().getType()));
 	
     TableCopy::copyRows(newHistory, oldHistory);
-    return True;
+    return true;
   }
   
   Bool SubMS::copySource(){
@@ -8057,10 +8071,10 @@ Bool SubMS::copyCols(Table& out, const Table& in, const Bool flush)
 	}
       }
 
-      return True;
+      return true;
     }
   
-    return False;
+    return false;
   }
   
 Bool SubMS::copyGenericSubtables(){
@@ -8139,7 +8153,7 @@ Bool SubMS::copyGenericSubtables(){
       
     //W TableCopy::deepCopy(newObs, oldObs, false);
     
-    return True;
+    return true;
   }
   
   Bool SubMS::copyProcessor()
@@ -8150,7 +8164,7 @@ Bool SubMS::copyGenericSubtables(){
     TableCopy::copyRows(newProc, oldProc);
     //W TableCopy::deepCopy(newProc, oldProc, false);
     
-    return True;
+    return true;
   }
 
 Bool SubMS::copyState()
@@ -8185,7 +8199,7 @@ Bool SubMS::copyState()
 			    outStateToInState[outrn], 1);
     }
   }
-  return True;
+  return true;
 }
 
 void SubMS::createSubtables(MeasurementSet& ms, Table::TableOption option)
@@ -8331,7 +8345,7 @@ void SubMS::createSubtables(MeasurementSet& ms, Table::TableOption option)
     else
       setupNewPointing();       // Make an empty stub for MSColumns.
 
-    return True;
+    return true;
   }
 
 void SubMS::setupNewPointing()
@@ -8341,7 +8355,7 @@ void SubMS::setupNewPointing()
   // POINTING can be large, set some sensible defaults for storageMgrs
   IncrementalStMan ismPointing ("ISMPointing");
   StandardStMan ssmPointing("SSMPointing", 32768);
-  pointingSetup.bindAll(ismPointing, True);
+  pointingSetup.bindAll(ismPointing, true);
   pointingSetup.bindColumn(MSPointing::columnName(MSPointing::DIRECTION),
                            ssmPointing);
   pointingSetup.bindColumn(MSPointing::columnName(MSPointing::TARGET),
@@ -8413,7 +8427,7 @@ void SubMS::setupNewPointing()
 	}
       }
     }
-    return True;
+    return true;
   }
 
 Bool SubMS::copySyscal()
@@ -8480,7 +8494,7 @@ Bool SubMS::copySyscal()
       }
     }
   }
-  return True;
+  return true;
 }
 
 void SubMS::copySubtable(const String& tabName, const Table& inTab,
@@ -8490,7 +8504,7 @@ void SubMS::copySubtable(const String& tabName, const Table& inTab,
 
   if(PlainTable::tableCache()(outName))
     PlainTable::tableCache().remove(outName);
-  inTab.deepCopy(outName, Table::New, False, Table::AipsrcEndian,
+  inTab.deepCopy(outName, Table::New, false, Table::AipsrcEndian,
                  doFilter);
   Table outTab(outName, Table::Update);
   msOut_p.rwKeywordSet().defineTable(tabName, outTab);
@@ -8528,7 +8542,7 @@ Bool SubMS::filterOptSubtable(const String& subtabname)
         uInt totalSelOuttabs = 0;
         Int maxSelAntp1 = antNewIndex_p.nelements(); // Int for comparison with
                                                      // antIds.
-        Bool haveRemappingProblem = False;
+        Bool haveRemappingProblem = false;
         for(uInt inrow = 0; inrow < totNOuttabs; ++inrow){
           // antenna must be selected, and spwId must be -1 (any) or selected.
           // Extra care must be taken because for a while MSes had CALDEVICE
@@ -8549,7 +8563,7 @@ Bool SubMS::filterOptSubtable(const String& subtabname)
             // all the spw errors, so we settle for catching the ones we can
             // and reliably avoiding segfaults.
             else if(spwIds[inrow] >= static_cast<Int>(spwRelabel_p.nelements()))
-              haveRemappingProblem = True;
+              haveRemappingProblem = true;
           }
         }
         outtab.flush();
@@ -8576,7 +8590,7 @@ Bool SubMS::filterOptSubtable(const String& subtabname)
       }
     }
   }
-  return True;
+  return true;
 }
 
 // writeDiffSpwShape() was the VisIter-using channel averager, which sounds
@@ -8678,7 +8692,7 @@ Bool SubMS::doChannelMods(const Vector<MS::PredefinedColumns>& datacols)
   Bool doFC = existsFlagCategory();
   uInt rowsdone = 0;
   ProgressMeter meter(0.0, mssel_p.nrow() * 1.0, "split", "rows averaged", "", "",
-		      True, 1);
+		      true, 1);
   Cube<Complex> vis;
   Cube<Float> floatvis;
   VisBuffer vb(viIn);
@@ -8707,7 +8721,7 @@ Bool SubMS::doChannelMods(const Vector<MS::PredefinedColumns>& datacols)
           vb.floatDataCube();
 
         // The flags and weights are already loaded by this point, UNLESS the
-        // row flag was True for all the rows.  Make sure they're loaded, or
+        // row flag was true for all the rows.  Make sure they're loaded, or
         // they could end up with the wrong shape.
         vb.flagCube();
         // if(viIn.existsWeightSpectrum())
@@ -8716,7 +8730,7 @@ Bool SubMS::doChannelMods(const Vector<MS::PredefinedColumns>& datacols)
         if(doFC)
           vb.flagCategory();
       
-        vb.channelAve(chanAveBounds[viIn.spectralWindow()],False);
+        vb.channelAve(chanAveBounds[viIn.spectralWindow()],false);
 
         if(nCmplx > 0){
           if(vb.flagCube().shape() !=
@@ -8782,7 +8796,7 @@ Bool SubMS::doChannelMods(const Vector<MS::PredefinedColumns>& datacols)
      << "Post binning memory: " << Memory::allocatedMemoryInBytes() / (1024.0 * 1024.0) << " MB"
      << LogIO::POST;
 
-  return True;
+  return true;
 }
 
 // // Sets mapper to the distinct values of mscol, in increasing order.
@@ -9001,7 +9015,7 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames,
   //maybe that should be revisited with VisibilityIterator.
   if(chanStep_p[0] > 1){
     throw(AipsError("Simultaneous time and channel averaging is not handled."));
-    return False;
+    return false;
   }
 
   os << LogIO::DEBUG1 // helpdesk ticket from Oleg Smirnov (ODU-232630)
@@ -9087,7 +9101,7 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames,
 
   uInt ninrows = mssel_p.nrow();
   ProgressMeter meter(0.0, ninrows * 1.0, "split", "rows averaged", "", "",
-		      True, 1);
+		      true, 1);
   uInt inrowsdone = 0;  // only for the meter.
 
   VisChunkAverager vca(dataColNames, doSpWeight, chanAveBounds);
@@ -9108,7 +9122,7 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames,
     if(rowsnow > 0){
       RefRows rowstoadd(rowsdone, rowsdone + rowsnow - 1);
 
-      // msOut_p.addRow(rowsnow, True);
+      // msOut_p.addRow(rowsnow, true);
       msOut_p.addRow(rowsnow);            // Try it without initialization.
 
       // avb.freqAveCubes();  // Watch out, weight must currently be handled separately.
@@ -9202,7 +9216,7 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames,
        << LogIO::POST;
     return false;
   }
-  return True;
+  return true;
 }
 
 // This should become the default soon (with a name change).
@@ -9215,7 +9229,7 @@ Bool SubMS::doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNa
   //maybe that should be revisited with VisibilityIterator.
   if(chanStep_p[0] > 1){
     throw(AipsError("Simultaneous time and channel averaging is not handled."));
-    return False;
+    return false;
   }
 
   os << LogIO::DEBUG1 // helpdesk ticket from Oleg Smirnov (ODU-232630)
@@ -9296,7 +9310,7 @@ Bool SubMS::doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNa
 
   uInt ninrows = mssel_p.nrow();
   ProgressMeter meter(0.0, ninrows * 1.0, "split", "rows averaged", "", "",
-		      True, 1);
+		      true, 1);
   uInt inrowsdone = 0;  // only for the meter.
 
   VisChunkAverager vca(dataColNames, doSpWeight, chanAveBounds);
@@ -9317,7 +9331,7 @@ Bool SubMS::doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNa
     if(rowsnow > 0){
       RefRows rowstoadd(rowsdone, rowsdone + rowsnow - 1);
 
-      // msOut_p.addRow(rowsnow, True);
+      // msOut_p.addRow(rowsnow, true);
       msOut_p.addRow(rowsnow);            // Try it without initialization.
         
       // avb.freqAveCubes();  // Watch out, weight must currently be handled
@@ -9406,7 +9420,7 @@ Bool SubMS::doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNa
        << LogIO::POST;
     return false;
   }
-  return True;
+  return true;
 }
 
 void SubMS::getDataColMap(MSColumns* msc, ArrayColumn<Complex>* mapper,
@@ -9442,12 +9456,12 @@ inline Bool SubMS::areDataShapesConstant()
 
   Bool isAllColumns(const Vector<MS::PredefinedColumns>& colNames)
   {
-    Bool dCol=False, mCol=False, cCol=False;
+    Bool dCol=false, mCol=false, cCol=false;
     for(uInt i=0;i<colNames.nelements();i++)
       {
-	if (colNames[i] == MS::DATA)                dCol=True;
-	else if (colNames[i] == MS::MODEL_DATA)     mCol=True;
-	else if (colNames[i] == MS::CORRECTED_DATA) cCol=True;
+	if (colNames[i] == MS::DATA)                dCol=true;
+	else if (colNames[i] == MS::MODEL_DATA)     mCol=true;
+	else if (colNames[i] == MS::CORRECTED_DATA) cCol=true;
         // else turn off all?
       }
     return (dCol && mCol && cCol);

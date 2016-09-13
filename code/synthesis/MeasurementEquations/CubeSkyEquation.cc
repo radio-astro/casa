@@ -75,16 +75,17 @@
 #include <omp.h>
 #endif
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 CubeSkyEquation::CubeSkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft,
                                  ComponentFTMachine& cft, Bool noModelCol)
 : SkyEquation(sm, vs, ft, cft, noModelCol),
-  destroyVisibilityIterator_p (False),
-  internalChangesPut_p(False),
-  internalChangesGet_p(False),
-  firstOneChangesPut_p(False),
-  firstOneChangesGet_p(False)
+  destroyVisibilityIterator_p (false),
+  internalChangesPut_p(false),
+  internalChangesGet_p(false),
+  firstOneChangesPut_p(false),
+  firstOneChangesGet_p(false)
 {
 
     init(ft);
@@ -94,11 +95,11 @@ CubeSkyEquation::CubeSkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft,
 CubeSkyEquation::CubeSkyEquation(SkyModel& sm, ROVisibilityIterator& vi, FTMachine& ft,
                                  ComponentFTMachine& cft, Bool noModelCol)
 : SkyEquation(sm, vi, ft, cft, noModelCol),
-  destroyVisibilityIterator_p (False),
-  internalChangesPut_p(False),
-  internalChangesGet_p(False),
-  firstOneChangesPut_p(False),
-  firstOneChangesGet_p(False)
+  destroyVisibilityIterator_p (false),
+  internalChangesPut_p(false),
+  internalChangesGet_p(false),
+  firstOneChangesPut_p(false),
+  firstOneChangesGet_p(false)
 {
     init(ft);
 }
@@ -106,7 +107,7 @@ CubeSkyEquation::CubeSkyEquation(SkyModel& sm, ROVisibilityIterator& vi, FTMachi
 void CubeSkyEquation::init(FTMachine& ft){
   Int nmod=sm_->numberOfModels()/sm_->numberOfTaylorTerms();
 
-  doflat_p=False;
+  doflat_p=false;
   
   ///   if(sm_->numberOfTaylorTerms()>1) 
   if( ft.name()=="MultiTermFT" ) 
@@ -118,8 +119,8 @@ void CubeSkyEquation::init(FTMachine& ft){
   if(nmod==0)
     nmod=1;
   
-  ftm_p.resize(nmod, True);
-  iftm_p.resize(nmod, True);
+  ftm_p.resize(nmod, true);
+  iftm_p.resize(nmod, true);
   
   //make a distinct ift_ as gridding and degridding can occur simultaneously
   if(ft.name() == "MosaicFT"){
@@ -131,8 +132,8 @@ void CubeSkyEquation::init(FTMachine& ft){
     
     MPosition loc=ift_->getLocation();
     for (Int k=1; k < (nmod); ++k){ 
-      ftm_p[k]=new GridFT(1000000, 16, "SF", loc, 1.0, False);
-      iftm_p[k]=new GridFT(1000000, 16, "SF", loc, 1.0, False);
+      ftm_p[k]=new GridFT(1000000, 16, "SF", loc, 1.0, false);
+      iftm_p[k]=new GridFT(1000000, 16, "SF", loc, 1.0, false);
     }
   }
   else if(ft.name()== "WProjectFT"){
@@ -230,7 +231,7 @@ void CubeSkyEquation::init(FTMachine& ft){
   else if (ft.name() == "SetJyGridFT") {
     ft_=new SetJyGridFT(static_cast<SetJyGridFT &>(ft));
     ift_=new SetJyGridFT(static_cast<SetJyGridFT &>(ft));
-    // ftm_p[0]=CountedPtr<FTMachine>(ft_, False);
+    // ftm_p[0]=CountedPtr<FTMachine>(ft_, false);
     ftm_p[0]=ft_;
     iftm_p[0]=ift_;
     for (Int k=1; k < (nmod); ++k){ 
@@ -277,7 +278,7 @@ void CubeSkyEquation::init(FTMachine& ft){
   else {
     ft_=new GridFT(static_cast<GridFT &>(ft));
     ift_=new GridFT(static_cast<GridFT &>(ft));
-    // ftm_p[0]=CountedPtr<FTMachine>(ft_, False);
+    // ftm_p[0]=CountedPtr<FTMachine>(ft_, false);
     ftm_p[0]=ft_;
     iftm_p[0]=ift_;
     for (Int k=1; k < (nmod); ++k){ 
@@ -296,9 +297,9 @@ void CubeSkyEquation::init(FTMachine& ft){
      nmod2=nmod;
    }
 
-  imGetSlice_p.resize(nmod2, True, False);
-  imPutSlice_p.resize(nmod2, True, False);
-  weightSlice_p.resize(nmod2, True, False);
+  imGetSlice_p.resize(nmod2, true, false);
+  imPutSlice_p.resize(nmod2, true, false);
+  weightSlice_p.resize(nmod2, true, false);
 
 }
 
@@ -340,15 +341,15 @@ void  CubeSkyEquation::predict(Bool incremental, MS::PredefinedColumns col) {
                           blockChanWidth_p, blockChanInc_p, blockSpw_p);
   checkVisIterNumRows(vi);
   VisBufferAutoPtr vb (vi); // uses write VI so no ROVIA conversion
-  Bool changedVI=False;
+  Bool changedVI=false;
   // Reset the visibilities only if this is not an incremental
   // change to the model
-  Bool initialized=False;
+  Bool initialized=false;
   predictComponents(incremental, initialized);
   //set to zero then loop over model...check for size...subimage then loop over  subimages
   
   
-  Bool isEmpty=True;
+  Bool isEmpty=true;
   for (Int model=0; model < (sm_->numberOfModels());++model){
     isEmpty=isEmpty &&  (sm_->isEmpty(model));                
     
@@ -418,9 +419,9 @@ void  CubeSkyEquation::predict(Bool incremental, MS::PredefinedColumns col) {
 		modImage=(vi.ms()).source().tableName();
 	      modImage=File::newUniqueName(modImage, "FT_MODEL").absoluteName();
 	      //cerr << "in ftrec saving" << endl;
-	      if(!(ftm_p[model]->toRecord(error, ftrec, True, modImage)))
+	      if(!(ftm_p[model]->toRecord(error, ftrec, true, modImage)))
 		throw(AipsError("Error in record saving:  "+error));
-	      vi.putModel(ftrec, False, ((model>0) || incremental || (cubeSlice > 0)));
+	      vi.putModel(ftrec, false, ((model>0) || incremental || (cubeSlice > 0)));
 	    }
 	  }
 	}
@@ -435,7 +436,7 @@ void  CubeSkyEquation::predict(Bool incremental, MS::PredefinedColumns col) {
       }
     }
     finalizeGetSlice();
-    if(!incremental&&!initialized) initialized=True;
+    if(!incremental&&!initialized) initialized=true;
   }
   
   for(Int model=0; model < sm_->numberOfModels(); ++model){
@@ -464,12 +465,12 @@ void CubeSkyEquation::makeApproxPSF(PtrBlock<ImageInterface<Float> * >& psfs)
 void CubeSkyEquation::makeMosaicPSF(PtrBlock<ImageInterface<Float> * >& psfs){
   //lets try to make the psf directly
   LogIO os(LogOrigin("SkyEquation", "makeMosaicPSF"));
-  Bool centered=True;
+  Bool centered=true;
   try{
     makeSimplePSF(psfs);
   }
   catch(...){
-    centered=False;
+    centered=false;
   }
   Int xpos;
   Int ypos;
@@ -495,7 +496,7 @@ void CubeSkyEquation::makeMosaicPSF(PtrBlock<ImageInterface<Float> * >& psfs){
       for (Int k=0; k < nchana ; ++k){
 	blc(3)=k; trc(3)=k;
 	Slicer sl(blc, trc, Slicer::endIsLast);
-	SubImage<Float> psfSub(*(psfs[0]), sl, True);
+	SubImage<Float> psfSub(*(psfs[0]), sl, true);
 	Float planeMax;
 	LatticeExprNode LEN = max( psfSub );
 	planeMax =  LEN.getFloat();
@@ -514,8 +515,8 @@ void CubeSkyEquation::makeMosaicPSF(PtrBlock<ImageInterface<Float> * >& psfs){
      << "Will retry to make an approximate one without primary beam "
      << LogIO::POST;
   MPosition loc=iftm_p[0]->getLocation();
-  ftm_p[0]=new GridFT(1000000, 16, "SF", loc, 1.0, False);
-  iftm_p[0]=new GridFT(1000000, 16, "SF", loc, 1.0, False);
+  ftm_p[0]=new GridFT(1000000, 16, "SF", loc, 1.0, false);
+  iftm_p[0]=new GridFT(1000000, 16, "SF", loc, 1.0, false);
   ft_=&(*ftm_p[0]);
   ift_=&(*iftm_p[0]);
   
@@ -537,9 +538,9 @@ void CubeSkyEquation::makeSimplePSF(PtrBlock<ImageInterface<Float> * >& psfs) {
     LogIO os(LogOrigin("CubeSkyEquation", "makeSimplePSF"));
     SigHandler myStopSig;
     ft_->setNoPadding(noModelCol_p);
-    isPSFWork_p= True; // avoid PB correction etc for PSF estimation
-    Bool doPSF=True;
-    Bool changedVI=False;
+    isPSFWork_p= true; // avoid PB correction etc for PSF estimation
+    Bool doPSF=true;
+    Bool changedVI=false;
     // Initialize the gradients
     sm_->initializeGradients();
     ROVisIter& vi(*rvi_p);
@@ -577,7 +578,7 @@ void CubeSkyEquation::makeSimplePSF(PtrBlock<ImageInterface<Float> * >& psfs) {
         Int cohDone=0;
         ProgressMeter pm(1.0, Double(vb->numberCoh()),
                          "Gridding weights for PSF",
-                         "", "", "", True);
+                         "", "", "", true);
 
         initializePutSlice(* vb, doPSF, cubeSlice, nCubeSlice);
 
@@ -630,9 +631,9 @@ void CubeSkyEquation::makeSimplePSF(PtrBlock<ImageInterface<Float> * >& psfs) {
 	    blc(2)=j; trc(2)=j;
 	    blc(3)=k; trc(3)=k;
 	    Slicer sl(blc, trc, Slicer::endIsLast);
-	    SubImage<Float> gSSub(sm_->gS(model), sl, False);
-	    SubImage<Float> ggSSub(sm_->ggS(model), sl, False);
-	    SubImage<Float> psfSub(*(psfs[model]), sl, True);
+	    SubImage<Float> gSSub(sm_->gS(model), sl, false);
+	    SubImage<Float> ggSSub(sm_->ggS(model), sl, false);
+	    SubImage<Float> psfSub(*(psfs[model]), sl, true);
 	    Float planeMax;
 	    LatticeExprNode LEN = max( ggSSub );
 	    planeMax =  LEN.getFloat();
@@ -680,7 +681,7 @@ void CubeSkyEquation::makeSimplePSF(PtrBlock<ImageInterface<Float> * >& psfs) {
 	sm_->ggS(model).clearCache();
     }
 
-    isPSFWork_p=False; // resetting this flag so that subsequent calculation uses
+    isPSFWork_p=false; // resetting this flag so that subsequent calculation uses
     // the right SkyJones correction;
 }
 
@@ -688,11 +689,11 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
     AlwaysAssert(cft_, AipsError);
     AlwaysAssert(sm_, AipsError);
     //AlwaysAssert(vs_, AipsError);
-    Bool initialized=False;
-    Bool changedVI=False;
+    Bool initialized=false;
+    Bool changedVI=false;
 
     //For now we don't deal with incremental especially when having multi fields
-    Bool incremental=False;
+    Bool incremental=false;
 
     predictComponents(incremental, initialized);
     Bool predictedComp=initialized;
@@ -735,7 +736,7 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
     }
   }
      */
-    Bool isEmpty=True;
+    Bool isEmpty=true;
     for (Int model=0; model < (sm_->numberOfModels());++model){
         isEmpty=isEmpty &&  sm_->isEmpty(model);
     }
@@ -761,8 +762,8 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
 
     ft_=&(*ftm_p[0]);
     resetSkyJones();
-    firstOneChangesPut_p=False;
-    firstOneChangesGet_p=False;
+    firstOneChangesPut_p=false;
+    firstOneChangesGet_p=false;
 
     Int nCubeSlice=1;
 
@@ -796,15 +797,15 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
 	//		if(!isEmpty) 
 	if( ! isNewFTM() ||  ! isEmpty )
 	{
-            initializeGetSlice(* vb, 0, False, cubeSlice, nCubeSlice);
+            initializeGetSlice(* vb, 0, false, cubeSlice, nCubeSlice);
         }
         //	Timers tInitPutSlice=Timers::getTime();
-        initializePutSlice(* vb, False, cubeSlice, nCubeSlice);
+        initializePutSlice(* vb, false, cubeSlice, nCubeSlice);
         //	Timers tDonePutSlice=Timers::getTime();
         Int cohDone=0;
         ProgressMeter pm(1.0, Double(vb->numberCoh()),
                          "Gridding residual",
-                         "", "", "", True);
+                         "", "", "", true);
         // aGetFreq += tOrigChunks - tGetFreqRange;
         // aOrigChunks += tVBInValid - tOrigChunks;
         // aVBInValid += tInitGetSlice - tVBInValid;
@@ -815,7 +816,7 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
         for (rvi_p->originChunks();rvi_p->moreChunks();rvi_p->nextChunk()) {
             for (rvi_p->origin(); rvi_p->more(); (*rvi_p)++) {
 	      //cerr << "nrow " << vb->nRow() << " ";
-	      //  Bool anychanIn=False;
+	      //  Bool anychanIn=false;
 	      //for(Int model=0; model < (sm_->numberOfModels()) ; ++model)
 	      //anychanIn=anychanIn || iftm_p[model]->matchChannel(vb->spectralWindow(), *vb);
 	      //if(anychanIn)
@@ -870,9 +871,9 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
 			modImage=File::newUniqueName(modImage, "FT_MODEL").absoluteName();
 		       
 			//cerr << "in ftrec saving" << endl;
-			if(!(ftm_p[model]->toRecord(error, ftrec, True, modImage)))
+			if(!(ftm_p[model]->toRecord(error, ftrec, true, modImage)))
 			  throw(AipsError("Error in saving model;  "+error));
-			wvi_p->putModel(ftrec, False, ((model>0) || predictedComp || incremental || (cubeSlice >0)));
+			wvi_p->putModel(ftrec, false, ((model>0) || predictedComp || incremental || (cubeSlice >0)));
 		      }
 		    }
 		  }
@@ -888,7 +889,7 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
 
 
                 //		Timers tPutSlice = Timers::getTime();
-                putSlice(* vb, False, FTMachine::MODEL, cubeSlice, nCubeSlice);
+                putSlice(* vb, false, FTMachine::MODEL, cubeSlice, nCubeSlice);
                 cohDone+=vb->nRow();
                 pm.update(Double(cohDone));
                 // Timers tDoneGridding=Timers::getTime();
@@ -904,9 +905,9 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
 
         //	Timers tFinalizeGetSlice=Timers::getTime();
         finalizeGetSlice();
-        if(!incremental&&!initialized) initialized=True;
+        if(!incremental&&!initialized) initialized=true;
         //	Timers tFinalizePutSlice=Timers::getTime();
-        finalizePutSlice(* vb, False, cubeSlice, nCubeSlice);
+        finalizePutSlice(* vb, false, cubeSlice, nCubeSlice);
         //	Timers tDoneFinalizePutSlice=Timers::getTime();
 
         // aFinalizeGetSlice += tFinalizePutSlice - tFinalizeGetSlice;
@@ -956,7 +957,7 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
     // for (Int model=0;model< (sm_->numberOfModels()); ++model) 
     //   if (!isNewFTM(&(*ftm_p[model])))
     // 	{
-    // 	  Bool dopsf=False;
+    // 	  Bool dopsf=false;
     // 	  tmpWBNormalizeImage(dopsf);
     // 	}
 
@@ -990,14 +991,15 @@ void
 CubeSkyEquation::configureAsyncIo (ROVisibilityIterator * & oldRvi, VisibilityIterator * & oldWvi)
 {
 
+using namespace casacore;
     using namespace casa::asyncio;
 
     oldRvi = NULL;
     oldWvi = NULL;
 
     Bool isEnabled;
-    AipsrcValue<Bool>::find (isEnabled, "Imager.asyncio", False);
-    //    Bool foundSetting = AipsrcValue<Bool>::find (isEnabled, "Imager.asyncio", False);
+    AipsrcValue<Bool>::find (isEnabled, "Imager.asyncio", false);
+    //    Bool foundSetting = AipsrcValue<Bool>::find (isEnabled, "Imager.asyncio", false);
 
     //isEnabled = ! foundSetting || isEnabled; // let global flag call shots if setting not present
     // For now (release 3.4) make imaging be explicitly turned on
@@ -1115,7 +1117,7 @@ void CubeSkyEquation::initializePutSlice(const VisBuffer& vb, Bool dopsf,
 
   LogIO os(LogOrigin("CubeSkyEquation", "initializePutSlice"));
 
-  Bool newFTM=False;
+  Bool newFTM=false;
   newFTM = isNewFTM(&(*ftm_p[0]));
   if (newFTM) newInitializePutSlice(vb, dopsf, cubeSlice, nCubeSlice);
   else        oldInitializePutSlice(vb, dopsf, cubeSlice, nCubeSlice);
@@ -1140,7 +1142,7 @@ void CubeSkyEquation::oldInitializePutSlice(const VisBuffer& vb, Bool /*dopsf*/,
   }
   assertSkyJones(vb, -1);
   //vb_p is used to finalize things if vb has changed propoerties
-  vb_p->assign(vb, False);
+  vb_p->assign(vb, false);
   vb_p->updateCoordInfo(& vb, dirDep);
 }
 
@@ -1177,7 +1179,7 @@ void CubeSkyEquation::newInitializePutSlice(const VisBuffer& vb, Bool dopsf,
   }// end of field
   assertSkyJones(vb, -1);
   //vb_p is used to finalize things if vb has changed propoerties
-  vb_p->assign(vb, False);
+  vb_p->assign(vb, false);
   vb_p->updateCoordInfo(& vb, dirDep);
 }
 
@@ -1203,8 +1205,8 @@ CubeSkyEquation::putSlice(VisBuffer & vb, Bool dopsf, FTMachine::Type col, Int c
 
     AlwaysAssert(ok(),AipsError);
     Int nRow=vb.nRow();
-    internalChangesPut_p=False;  // Does this VB change inside itself?
-    firstOneChangesPut_p=False;  // Has this VB changed from the previous one?
+    internalChangesPut_p=false;  // Does this VB change inside itself?
+    firstOneChangesPut_p=false;  // Has this VB changed from the previous one?
     if((ftm_p[0]->name() != "MosaicFT")    && (ftm_p[0]->name() != "PBWProjectFT") &&
        (ftm_p[0]->name() != "AWProjectFT") && (ftm_p[0]->name() != "AWProjectWBFT")) {
         changedSkyJonesLogic(vb, firstOneChangesPut_p, internalChangesPut_p);
@@ -1221,7 +1223,7 @@ CubeSkyEquation::putSlice(VisBuffer & vb, Bool dopsf, FTMachine::Type col, Int c
     if(internalChangesPut_p || internalChangesGet_p) {
 
         if(internalChangesGet_p)
-            internalChangesGet_p=False;
+            internalChangesGet_p=false;
 
         // Yes there are changes: go row by row.
 
@@ -1242,13 +1244,13 @@ CubeSkyEquation::putSlice(VisBuffer & vb, Bool dopsf, FTMachine::Type col, Int c
     else if (IFTChanged || firstOneChangesPut_p || firstOneChangesGet_p) {
 
         if(firstOneChangesGet_p)
-            firstOneChangesGet_p=False;
+            firstOneChangesGet_p=false;
 
         if(!isBeginingOfSkyJonesCache_p){
 	  finalizePutSlice(*vb_p, dopsf, cubeSlice, nCubeSlice);
         }
         initializePutSlice(vb, dopsf, cubeSlice, nCubeSlice);
-        isBeginingOfSkyJonesCache_p=False;
+        isBeginingOfSkyJonesCache_p=false;
         for (Int model=0; model<sm_->numberOfModels()/( isNewFTM()? sm_->numberOfTaylorTerms() : 1 ); ++model){
                  iftm_p[model]->put(vb, -1, dopsf, col);
         }
@@ -1259,7 +1261,7 @@ CubeSkyEquation::putSlice(VisBuffer & vb, Bool dopsf, FTMachine::Type col, Int c
         }
     }
 
-    isBeginingOfSkyJonesCache_p=False;
+    isBeginingOfSkyJonesCache_p=false;
 
 }
 
@@ -1288,7 +1290,7 @@ void CubeSkyEquation::finalizePutSlice(const VisBuffer& vb,  Bool dopsf,
   // Iterate across fields
   LogIO os(LogOrigin("CubeSkyEquation", "finalizePutSlice"));
 
-  Bool newFTM=False;
+  Bool newFTM=false;
   /*
   for (Int field=0; field < sm_->numberOfModels(); ++field)
     {
@@ -1320,7 +1322,7 @@ void CubeSkyEquation::newFinalizePutSlice(const VisBuffer& vb,  Bool dopsf,
       // 	 << ftm_p[field]->name()
       // 	 << LogIO::WARN << LogIO::POST;
       
-      sm_->setImageNormalization(True);
+      sm_->setImageNormalization(true);
       for (Int field=0; field < sm_->numberOfModels()/sm_->numberOfTaylorTerms(); ++field)
 	{
 	  ft_=&(*ftm_p[field]);
@@ -1388,8 +1390,8 @@ void CubeSkyEquation::oldFinalizePutSlice(const VisBuffer& vb,  Bool /*dopsf*/,
 	// 1. Now get the (unnormalized) image and add the 
 	// weight to the summed weight
 	Matrix<Float> delta;
-	//imPutSlice_p[model]->copyData(iftm_p[model]->getImage(delta, False));
-	iftm_p[model]->getImage(delta, False);
+	//imPutSlice_p[model]->copyData(iftm_p[model]->getImage(delta, false));
+	iftm_p[model]->getImage(delta, false);
 	//iftm_p[field]->finalizeToSky( imPutSliceVec , gSSliceVec , ggSSliceVec , fluxScaleVec, dopsf , weightSliceVec );
 	weightSlice_p[model]+=delta;
 	
@@ -1419,7 +1421,7 @@ void CubeSkyEquation::oldFinalizePutSlice(const VisBuffer& vb,  Bool /*dopsf*/,
       // 4. Finally, we add the statistics
       sm_->addStatistics(sumwt, chisq);
     }
-    sm_->setImageNormalization(False);
+    sm_->setImageNormalization(false);
 }
 
 void CubeSkyEquation::initializeGetSlice(const VisBuffer& vb, 
@@ -1431,7 +1433,7 @@ void CubeSkyEquation::initializeGetSlice(const VisBuffer& vb,
   
   //  oldInitializeGetSlice(vb, row, incremental, cubeSlice, nCubeSlice);
 
-   Bool newFTM=False;
+   Bool newFTM=false;
    /*
    for (Int field=0; field < sm_->numberOfModels(); ++field)
      {
@@ -1456,10 +1458,10 @@ void CubeSkyEquation::newInitializeGetSlice(const VisBuffer& vb,
 					    Bool incremental, Int cubeSlice, 
 					    Int nCubeSlice)
 {
-  //  imGetSlice_p.resize(sm_->numberOfModels(), True, False);
+  //  imGetSlice_p.resize(sm_->numberOfModels(), true, false);
   //  for(Int field=0; field < sm_->numberOfFields(); ++field){
-  sm_->setImageNormalization(True);
-  imGetSlice_p.resize(sm_->numberOfModels(), True, False);
+  sm_->setImageNormalization(true);
+  imGetSlice_p.resize(sm_->numberOfModels(), true, false);
   for(Int model=0; model < sm_->numberOfModels()/sm_->numberOfTaylorTerms(); ++model)
     {
       if(nCubeSlice>1)
@@ -1522,9 +1524,9 @@ void CubeSkyEquation::oldInitializeGetSlice(const VisBuffer& vb,
 					    Int row, 
 					    Bool incremental, Int cubeSlice, 
 					    Int nCubeSlice){
-  sm_->setImageNormalization(False);
+  sm_->setImageNormalization(false);
   
-  imGetSlice_p.resize(sm_->numberOfModels(), True, False);
+  imGetSlice_p.resize(sm_->numberOfModels(), true, false);
   for(Int model=0; model < sm_->numberOfModels(); ++model){
     if(nCubeSlice>1){
       ftm_p[model]->reset();
@@ -1563,7 +1565,7 @@ void CubeSkyEquation::sliceCube(CountedPtr<ImageInterface<Complex> >& slice,Int 
   blc(3)=beginChannel;
   trc(3)=endChannel;
   sl_p=Slicer (blc, trc, Slicer::endIsLast);
-  SubImage<Complex>* sliceIm= new SubImage<Complex>(sm_->cImage(model), sl_p, True); /// UUU changes to True
+  SubImage<Complex>* sliceIm= new SubImage<Complex>(sm_->cImage(model), sl_p, true); /// UUU changes to true
   //  cerr << "SliceCube: " << beginChannel << " " << endChannel << endl;
   if(typeOfSlice==0){    
     
@@ -1601,7 +1603,7 @@ void CubeSkyEquation::sliceCube(SubImage<Float>*& slice,
   trc(3)=endChannel;
   sl_p=Slicer(blc, trc, Slicer::endIsLast);
   //writeable if possible
-  slice=  new SubImage<Float> (image, sl_p, True);
+  slice=  new SubImage<Float> (image, sl_p, true);
 }
 
 VisBuffer& CubeSkyEquation::getSlice(VisBuffer& result,  
@@ -1618,8 +1620,8 @@ VisBuffer& CubeSkyEquation::getSlice(VisBuffer& result,
   
   // we might need to recompute the "sky" for every single row, but we
   // avoid this if possible.
-  internalChangesGet_p=False;  // Does this VB change inside itself?
-  firstOneChangesGet_p=False;  // Has this VB changed from the previous one?
+  internalChangesGet_p=false;  // Does this VB change inside itself?
+  firstOneChangesGet_p=false;  // Has this VB changed from the previous one?
   if((ftm_p[0]->name() != "MosaicFT")    && (ftm_p[0]->name() != "PBWProjectFT") &&
      (ftm_p[0]->name() != "AWProjectFT") && (ftm_p[0]->name() != "AWProjectWBFT")) {
     changedSkyJonesLogic(result, firstOneChangesGet_p, internalChangesGet_p);
@@ -1627,7 +1629,7 @@ VisBuffer& CubeSkyEquation::getSlice(VisBuffer& result,
   
   if(internalChangesGet_p || internalChangesPut_p) {
     if(internalChangesPut_p)
-      internalChangesPut_p=False;
+      internalChangesPut_p=false;
     // Yes there are changes within this buffer: go row by row.
     // This will automatically catch a change in the FTMachine so
     // we don't have to check for that.
@@ -1636,7 +1638,7 @@ VisBuffer& CubeSkyEquation::getSlice(VisBuffer& result,
     Matrix<Complex> refvb;
     for (Int row=0; row<nRow; row++) {
       finalizeGetSlice();
-      initializeGetSlice(result, row, False, cubeSlice, 
+      initializeGetSlice(result, row, false, cubeSlice, 
 			 nCubeSlice);
       if(incremental || (nmodels > 1)){
 	for (Int model=0; model < nmodels; ++model){
@@ -1652,13 +1654,13 @@ VisBuffer& CubeSkyEquation::getSlice(VisBuffer& result,
   }
   else if (FTChanged || firstOneChangesGet_p || firstOneChangesPut_p) {
     if(firstOneChangesPut_p)
-      firstOneChangesPut_p=False;
+      firstOneChangesPut_p=false;
     // This buffer has changed wrt the previous buffer, but
     // this buffer has no changes within it. Again we don't need to
     // check for the FTMachine changing.
     
     finalizeGetSlice();
-    initializeGetSlice(result, 0, False, cubeSlice, nCubeSlice);
+    initializeGetSlice(result, 0, false, cubeSlice, nCubeSlice);
     if(incremental || (nmodels > 1)){
       for (Int model=0; model < nmodels; ++model){
 	ftm_p[model]->get(vb);
@@ -1698,7 +1700,7 @@ CubeSkyEquation::getFreqRange(ROVisibilityIterator& vi,
                               const CoordinateSystem& coords,
                               Int slice, Int nslice){
   //bypass this for now
-  return False;
+  return false;
     // Enforce that all SPWs are in the same frequency frame.
     //
     // If all the SPWs in the MS are in LSRK frame, we can do data
@@ -1712,17 +1714,17 @@ CubeSkyEquation::getFreqRange(ROVisibilityIterator& vi,
     ROScalarMeasColumn<MFrequency> freqFrame=vb->msColumns().spectralWindow().refFrequencyMeas();
     uInt nrows=vb->msColumns().spectralWindow().nrow();
     String firstString = freqFrame(0).getRefString();
-    Bool allFramesSame=True;
+    Bool allFramesSame=true;
     for (uInt i=0;i<nrows;i++)
         if (freqFrame(i).getRefString() != firstString)
-        {allFramesSame = False;break;}
+        {allFramesSame = false;break;}
 
     if (!allFramesSame || (firstString!="LSRK"))
-        return False;
+        return false;
 
     // Only one slice lets keep what the user selected
     if(nslice==1)
-        return False;
+        return false;
 
     Double start=0.0; 
     Double end=0.0;
@@ -1747,14 +1749,14 @@ CubeSkyEquation::getFreqRange(ROVisibilityIterator& vi,
     Block<Vector<Int> > incrb=blockChanInc_p;
     vi.getSpwInFreqRange(spwb, startb, nchanb, start, end, chanwidth);
     if(spwb.nelements()==0)
-        return False;
+        return false;
 
     //cerr << "Original is " << blockChanStart_p[0] <<  "   " << blockChanWidth_p[0] << "  " <<  blockChanInc_p[0] << "   " 
     //	 <<  blockSpw_p[0] << endl;
     //vi.selectChannel(1, startb[0][0], nchanb[0][0], 1, spwb[0][0]); 
     vi.selectChannel(blockNumChanGroup_p, startb, nchanb, incrb, spwb); 
 
-    return True;
+    return true;
 
 }
 
@@ -1796,7 +1798,7 @@ void CubeSkyEquation::fixImageScale()
 	os << "Using No image plane weighting" << LogIO::POST;
 	}
       */
-      sm_->fluxScale(model).removeRegion ("mask0", RegionHandler::Any, False);
+      sm_->fluxScale(model).removeRegion ("mask0", RegionHandler::Any, false);
       if ((ftm_p[model]->name()!="MosaicFT")) {
 	if(scaleType_p=="SAULT"){
 	  
@@ -1851,8 +1853,8 @@ void CubeSkyEquation::fixImageScale()
 	    blc(2)=j; trc(2)=j;
 	    blc(3)=k; trc(3)=k;
 	    Slicer sl(blc, trc, Slicer::endIsLast);
-	    SubImage<Float> fscalesub(sm_->fluxScale(model), sl, True);
-	    SubImage<Float> ggSSub(sm_->ggS(model), sl, True);
+	    SubImage<Float> fscalesub(sm_->fluxScale(model), sl, true);
+	    SubImage<Float> ggSSub(sm_->ggS(model), sl, true);
 	    Float planeMax;
 	    LatticeExprNode LEN = max( ggSSub );
 	    planeMax =  LEN.getFloat();

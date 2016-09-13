@@ -38,14 +38,14 @@
 // Test program for class MSCalEnums.
 // </summary>
 
-Bool foundError = False;
+Bool foundError = false;
 
 
 void checkField (const Int& calEnum, const String& name, const DataType& type)
 {
   if (MSC::fieldName(calEnum) != name || MSC::basicType(calEnum) != type) {
     cout << "Mismatch for field name: " << name << endl;
-    foundError = True;
+    foundError = true;
   };
   return;
 };

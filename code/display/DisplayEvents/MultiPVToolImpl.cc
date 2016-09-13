@@ -38,9 +38,10 @@
 // this include:
 #include <display/DisplayEvents/MultiPVToolImpl.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-	MultiPVToolImpl::MultiPVToolImpl(viewer::RegionSourceFactory *rf, PanelDisplay* pd, Display::KeySym keysym) : MultiPVTool(rf, pd, keysym, True) {  }
+	MultiPVToolImpl::MultiPVToolImpl(viewer::RegionSourceFactory *rf, PanelDisplay* pd, Display::KeySym keysym) : MultiPVTool(rf, pd, keysym, true) {  }
 
 	MultiPVToolImpl::~MultiPVToolImpl() {  }
 

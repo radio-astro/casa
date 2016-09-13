@@ -35,6 +35,7 @@
 #include <components/ComponentModels/ConstantSpectrum.h>
 #include <scimath/Mathematics/GaussianBeam.h>
 
+using namespace casacore;
 using namespace casa;
 
 int main() {

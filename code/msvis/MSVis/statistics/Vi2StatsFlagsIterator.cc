@@ -29,6 +29,7 @@
 #include <casacore/casa/Arrays/Vector.h>
 #include <msvis/MSVis/statistics/Vi2StatsFlagsIterator.h>
 
+using namespace casacore;
 namespace casa {
 
 Vi2StatsFlagsCubeIterator::Vi2StatsFlagsCubeIterator(vi::VisBuffer2 *vb2)
@@ -167,4 +168,5 @@ Vi2StatsFlagsRowIterator::prepareNextRow() {
 	++flags_iter;
 }
 
+using namespace casacore;
 } // namespace casa

@@ -36,6 +36,7 @@
 #include <functional>
 #include <algorithm>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 ExecRecord::ExecRecord(int iterDone, int maxCycleIterDone, float peakResidual,

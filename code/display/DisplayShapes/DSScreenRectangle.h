@@ -49,24 +49,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	public:
 
 		DSScreenRectangle();
-		DSScreenRectangle(const Record& setting, PixelCanvas* pc);
+		DSScreenRectangle(const casacore::Record& setting, PixelCanvas* pc);
 		DSScreenRectangle(DSPixelRectangle& other, PixelCanvas* pc);
 		DSScreenRectangle(DSWorldRectangle& other);
 
 		virtual ~DSScreenRectangle();
 
 		virtual void recalculateScreenPosition();
-		virtual Bool setOptions(const Record& settings);
-		virtual Record getOptions();
+		virtual casacore::Bool setOptions(const casacore::Record& settings);
+		virtual casacore::Record getOptions();
 
-		virtual void move(const Float& dX, const Float& dy);
-		virtual void setCenter(const Float& xPos, const Float& yPos);
-		virtual void rotate(const Float& angle);
-		virtual void changePoint(const Vector<Float>&pos, const Int n);
-		virtual void changePoint(const Vector<Float>& pos);
+		virtual void move(const casacore::Float& dX, const casacore::Float& dy);
+		virtual void setCenter(const casacore::Float& xPos, const casacore::Float& yPos);
+		virtual void rotate(const casacore::Float& angle);
+		virtual void changePoint(const casacore::Vector<casacore::Float>&pos, const casacore::Int n);
+		virtual void changePoint(const casacore::Vector<casacore::Float>& pos);
 		// PLUS OTHERS! :)  change point etc
 
-		virtual Record getRawOptions() {
+		virtual casacore::Record getRawOptions() {
 			return DSRectangle::getOptions();
 		}
 
@@ -74,10 +74,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	private:
 		PixelCanvas* itsPC;
-		Vector<Float> itsRelativeCenter;
+		casacore::Vector<casacore::Float> itsRelativeCenter;
 
-		Float itsRelWidth;
-		Float itsRelHeight;
+		casacore::Float itsRelWidth;
+		casacore::Float itsRelHeight;
 
 	};
 

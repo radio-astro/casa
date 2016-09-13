@@ -41,6 +41,7 @@
 #include <casa/BasicMath/Math.h>
 #include <math.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	uInt GLPixelCanvasColorTable::nColors() const {
@@ -50,7 +51,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return depth_;
 	}
 	uInt GLPixelCanvasColorTable::nSpareColors() const {
-		return QueryColorsAvailable(False);
+		return QueryColorsAvailable(false);
 	}
 	::XDisplay * GLPixelCanvasColorTable::display() const {
 		return display_;
@@ -106,29 +107,29 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		switch( visual->c_class) {
 		case StaticGray:
-			readOnly_ = True;
-			decomposedIndex_ = False;
+			readOnly_ = true;
+			decomposedIndex_ = false;
 			break;
 		case GrayScale:
-			readOnly_ = False;
-			decomposedIndex_ = False;
+			readOnly_ = false;
+			decomposedIndex_ = false;
 			break;
 		case StaticColor:
-			readOnly_ = True;
-			decomposedIndex_ = False;
+			readOnly_ = true;
+			decomposedIndex_ = false;
 			break;
-		case TrueColor:
-			readOnly_ = True;
-			decomposedIndex_ = True;
+		case trueColor:
+			readOnly_ = true;
+			decomposedIndex_ = true;
 			break;
 		case DirectColor:
-			readOnly_ = False;
-			decomposedIndex_ = True;
+			readOnly_ = false;
+			decomposedIndex_ = true;
 			break;
 		case PseudoColor:
 		default:
-			readOnly_ = False;
-			decomposedIndex_ = False;
+			readOnly_ = false;
+			decomposedIndex_ = false;
 			break;
 		}
 		// Initialize the virtual colormap. Possibly not the best place to
@@ -191,7 +192,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		for (uInt i = 0; i < r.nelements(); i++) {
 			storeColor(i+offset, r(i), g(i), b(i));
 		}
-		return True;
+		return true;
 	}
 
 	Bool GLPixelCanvasColorTable::resize(uInt newSize) {
@@ -201,14 +202,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// is bigger, we may not have the space we require
 		if (newSize > oldSize) {
 
-			uInt availColors = QueryColorsAvailable(True);
+			uInt availColors = QueryColorsAvailable(true);
 			if (availColors < newSize - oldSize) {
 				LogIO os;
 				os << LogIO::WARN << LogOrigin("GLPixelCanvasColorTable",
 				                               "resize", WHERE)
 				   << "There were not enough colors to satisfy the resize request"
 				   << LogIO::POST;
-				return False;
+				return false;
 			}
 		}
 
@@ -222,7 +223,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Bool ok = allocCells(newSize);
 		if (ok) {
 			colormapManager().redistributeColormaps();
-			return True;
+			return true;
 		}
 
 		// Uh oh.  Someone alloc'ed cells during that short time.  Try to
@@ -236,14 +237,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			   << "number of colors returned to " << oldSize
 			   << LogIO::POST;
 			colormapManager().redistributeColormaps();
-			return False;
+			return false;
 		}
 
 		// If we get here, we were unable to restore the old size, so
 		// throw an exception.
 		throw(AipsError("Color cells have been lost - unsupported situation"));
 
-		return False;  // to stop compiler warning
+		return false;  // to stop compiler warning
 	}
 
 	Bool GLPixelCanvasColorTable::resize(uInt n1, uInt n2, uInt n3) {
@@ -252,8 +253,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if (n2 == 0) n2 = 1;
 		if (n3 == 0) n3 = 1;
 
-		// Return True immediately if no change needed
-		if (n1_ == n1 && n2_ == n2 & n3_ == n3) return True;
+		// Return true immediately if no change needed
+		if (n1_ == n1 && n2_ == n2 & n3_ == n3) return true;
 
 		// Test to see if there is a change in the number of colors needed.  Resize
 		// if that is so.
@@ -261,7 +262,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			// Fail if rigid
 			if (rigid_) {
 				// This GLPixelCanvasColorTable cannot be resized
-				return False;
+				return false;
 			}
 
 			uInt n1o = n1_;
@@ -311,7 +312,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		doResizeCallbacks();
-		return True;
+		return true;
 	}
 
 // 5
@@ -328,8 +329,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  depth_(0),
 		  nColors_(0),
 		  colors_(0),
-		  rigid_(False),
-		  pow2Mapping_(False),
+		  rigid_(false),
+		  pow2Mapping_(false),
 		  colorModel_(colorModel),
 		  n1_(0),
 		  n2_(0),
@@ -340,7 +341,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			          "GLPixelCanvasColorTable:Could not get requested GL visual."));
 		checkVisual();
 
-		uInt totalCells = QueryColorsAvailable(True);
+		uInt totalCells = QueryColorsAvailable(true);
 		uInt nCells = 0;
 
 		// Compute # of color cells to use.
@@ -357,10 +358,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				percent = 100.0;
 			nCells = (uInt)(totalCells * percent / 100.0);
 		}
-		Bool ok = False;
+		Bool ok = false;
 		uInt nr,ng,nb;
 
-		if (!getRGBDistribution(nCells, False, nr, ng, nb))
+		if (!getRGBDistribution(nCells, false, nr, ng, nb))
 			throw(AipsError("GLPixelCanvasColorTable::GLPixelCanvasColorTable -\n"
 			                "Can't allocate color cube in shared colortable."));
 		uInt nAlloc = nr*ng*nb;
@@ -388,7 +389,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if(vi != NULL)
 			visualInfo_ = vi;
 		else if((visualInfo_ = getVisualInfo(display_, colorModel_)) == NULL)
-			return False;
+			return false;
 
 		visual_ = visualInfo_->visual;
 		screen_ = ScreenOfDisplay(display_, visualInfo_->screen);
@@ -397,7 +398,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		xcmap_ = XCreateColormap(display_, RootWindowOfScreen(screen_),
 		                         visual_, AllocNone);
 		X11ResourceManager::refColormap(screen_, xcmap_);
-		return True;
+		return true;
 	}
 
 	GLPixelCanvasColorTable::~GLPixelCanvasColorTable() {
@@ -418,7 +419,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			XFreeColors(display_, xcmap_, colors_, nColors_, (uLong) 0);
 
 		nColors_ = 0;
-		return True;
+		return true;
 	}
 
 // Allocate RW color cells from colormap. For read only maps, we're faking
@@ -436,9 +437,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		if(readOnly_) {
 			if(nCells <= vcmapLength_) {
-				ok = True;
+				ok = true;
 			} else
-				ok = False;
+				ok = false;
 		} else {
 			uLong *colors = new uLong[nCells];
 			uLong planeMask[1];
@@ -475,23 +476,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Bool GLPixelCanvasColorTable::isPow2(uInt n, uInt & log2n) {
 		if (n == 0) {
 			log2n = 0;
-			return True;
+			return true;
 		}
 		for (uInt r = 0; r < 31; r++)
 			if (n - (1 << r) == 0) {
 				log2n = r;
-				return True;
+				return true;
 			}
-		return False;
+		return false;
 	}
 
 	Bool GLPixelCanvasColorTable::allocColorCube() {
 		// Try to make a colour cube with remaining colors in xcmap_
-		Bool ok = False;
+		Bool ok = false;
 		uInt nr,ng,nb;
 		while (!ok) {
-			uInt nCells = QueryColorsAvailable(True);
-			if (!getRGBDistribution(nCells, False, nr, ng, nb))
+			uInt nCells = QueryColorsAvailable(true);
+			if (!getRGBDistribution(nCells, false, nr, ng, nb))
 				throw(AipsError("GLPixelCanvasColorTable::allocColorCube(xpcct) -\n"
 				                "Can't allocate color cube in shared colortable."));
 			uInt nAlloc = nr*ng*nb;
@@ -503,23 +504,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	Bool GLPixelCanvasColorTable::allocColorCube(uInt n1, uInt n2, uInt n3) {
-		uInt nCells = QueryColorsAvailable(True);
+		uInt nCells = QueryColorsAvailable(true);
 		uInt nAlloc = n1*n2*n3;
 		if (nCells < (n1*n2*n3))
-			return False;
+			return false;
 
 		if (!allocCells(nAlloc))
-			return False;
+			return false;
 
 		setupColorCube(n1,n2,n3,1,n1,n1*n2);
 
-		return True;
+		return true;
 	}
 
 	Bool GLPixelCanvasColorTable::allocColorCubeMinMax(
 	    uInt n1min, uInt n2min, uInt n3min,
 	    uInt n1max, uInt n2max, uInt n3max) {
-		Bool ok = False;
+		Bool ok = false;
 
 		uInt n1 = n1max;
 		uInt n2 = n2max;
@@ -530,7 +531,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		ok = allocColorCube(n1,n2,n3);
 		while (!ok) {
 			if (n1 == n1min && n2 == n2min && n3 == n3min)
-				return False;
+				return false;
 
 			// pick component to decrement
 			c1 = (n1 > n1min);
@@ -538,14 +539,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			c3 = (n3 > n3min);
 
 			if (c3 && c2)
-				if (n3 >= n2) c2 = False;
-				else c3 = False;
+				if (n3 >= n2) c2 = false;
+				else c3 = false;
 			if (c3 && c1)
-				if (n3 >= n1) c1 = False;
-				else c3 = False;
+				if (n3 >= n1) c1 = false;
+				else c3 = false;
 			if (c2 && c1)
-				if (n2 >= n1) c1 = False;
-				else c2 = False;
+				if (n2 >= n1) c1 = false;
+				else c2 = false;
 
 			if (c1) n1--;
 			if (c2) n2--;
@@ -691,7 +692,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	        const float r, const float g, const float b) {
 		// pindex is the index into the virtual colormap. For PseudoColor
 		// colormaps, this is also the pixel value. For decomposedIndexes
-		// ( TrueColor & DirectColor), it is necessary to generate the
+		// ( trueColor & DirectColor), it is necessary to generate the
 		// pixel value.
 		uLong pixel = pindex;
 		if(decomposedIndex()) {
@@ -802,7 +803,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	        Array<Float> & chan1out,
 	        Array<Float> & chan2out,
 	        Array<Float> & chan3out) {
-		Bool ok = False;
+		Bool ok = false;
 
 		// [ ] CONFORM TEST
 
@@ -813,12 +814,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				chan1out = chan1in;
 				chan2out = chan2in;
 				chan3out = chan3in;
-				ok = True;
+				ok = true;
 				break;
 			case Display::HSV:
 				rgbToHsv(chan1in, chan2in, chan3in,
 				         chan1out, chan2out, chan3out);
-				ok = True;
+				ok = true;
 				break;
 			case Display::Index:
 				// won't get here
@@ -830,13 +831,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			case Display::RGB:
 				hsvToRgb(chan1in, chan2in, chan3in,
 				         chan1out, chan2out, chan3out);
-				ok = True;
+				ok = true;
 				break;
 			case Display::HSV:
 				chan1out = chan1in;
 				chan2out = chan2in;
 				chan3out = chan3in;
-				ok = True;
+				ok = true;
 				break;
 			case Display::Index:
 				// won't get here
@@ -1237,7 +1238,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				while (outq < endp) {
 					*outq++ = colors_[((*ch1q++) << n1Shift_) | ((*ch2q++) << n2Shift_) | ((*ch3q++) << n3Shift_)];
 				}
-			} else {	// TrueColor, DirectColor.
+			} else {	// trueColor, DirectColor.
 				if(colorModel_ == Display::RGB)
 					while (outq < endp) {
 						uLong red = (*ch1q++ << red_shift_)&red_mask_;
@@ -1569,15 +1570,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 // Convert a virtual index to a physical pixel. Valid range is 0 to nColors_ -1.
-// Returns False if vindex is out of range. Otherwise, True.
+// Returns false if vindex is out of range. Otherwise, true.
 	Bool GLPixelCanvasColorTable::virtualToPhysical(const uLong vindex,
 	        uLong &pindex)const {
 		if(vindex >= nColors_)
-			return False;
+			return false;
 		else {
 			int index = colors_[vindex];
 			pindex = vcmap_[index].getPixel();
-			return True;
+			return true;
 		}
 	}
 

@@ -28,6 +28,7 @@
 
 #include <casaqt/QwtPlotter/QPData.h>
 
+using namespace casacore;
 namespace casa {
 
 /////////////////////////////

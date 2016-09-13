@@ -48,23 +48,23 @@ class AnnText: public AnnotationBase {
 public:
 
 	AnnText(
-		const Quantity& xPos, const Quantity& yPos,
-		const String& dirRefFrameString,
-		const CoordinateSystem& csys,
-		const String& text,
-		const Quantity& beginFreq,
-		const Quantity& endFreq,
-		const String& freqRefFrame,
-		const String& dopplerString,
-		const Quantity& restfreq,
-		const Vector<Stokes::StokesTypes>& stokes
+		const casacore::Quantity& xPos, const casacore::Quantity& yPos,
+		const casacore::String& dirRefFrameString,
+		const casacore::CoordinateSystem& csys,
+		const casacore::String& text,
+		const casacore::Quantity& beginFreq,
+		const casacore::Quantity& endFreq,
+		const casacore::String& freqRefFrame,
+		const casacore::String& dopplerString,
+		const casacore::Quantity& restfreq,
+		const casacore::Vector<casacore::Stokes::StokesTypes>& stokes
 	);
 
 	AnnText(
-		const Quantity& xPos, const Quantity& yPos,
-		const CoordinateSystem& csys,
-		const String& text,
-		const Vector<Stokes::StokesTypes>& stokes
+		const casacore::Quantity& xPos, const casacore::Quantity& yPos,
+		const casacore::CoordinateSystem& csys,
+		const casacore::String& text,
+		const casacore::Vector<casacore::Stokes::StokesTypes>& stokes
 	);
 
 	// implicit copy constructor and destructor are fine
@@ -72,17 +72,17 @@ public:
 	AnnText& operator=(const AnnText& other);
 
 	// left most point of text string
-	MDirection getDirection() const;
+	casacore::MDirection getDirection() const;
 
-	String getText() const;
+	casacore::String getText() const;
 
-	virtual ostream& print(ostream &os) const;
+	virtual std::ostream& print(std::ostream &os) const;
 
 private:
 	AnnotationBase::Direction _inputDirection;
-	String _text;
+	casacore::String _text;
 
-	void _init(const Quantity& x, const Quantity& y);
+	void _init(const casacore::Quantity& x, const casacore::Quantity& y);
 
 };
 

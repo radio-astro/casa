@@ -32,6 +32,7 @@
 #include <qwt_text_label.h>
 #include <casaqt/QwtPlotter/QPCanvasHelpers.qo.h>
 
+using namespace casacore;
 namespace casa {
 
 ExternalAxisWidgetRight::ExternalAxisWidgetRight(QWidget* parent, QwtPlot* plot,
@@ -119,4 +120,5 @@ ExternalAxisWidgetRight::~ExternalAxisWidgetRight() {
     delete scaleDraw;
 }
 
+using namespace casacore;
 } /* namespace casa */

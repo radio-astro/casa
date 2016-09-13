@@ -55,11 +55,14 @@
 
 #include <casa/Utilities/Assert.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 namespace refim {// REFIM namespace
 
+using namespace casacore;
  using namespace casa;
+using namespace casacore;
  using namespace casa::refim;
 VPSkyJones::VPSkyJones(const ROMSColumns& msc, Table& tab,
 		       const Quantity &parAngleInc,
@@ -112,7 +115,7 @@ VPSkyJones::VPSkyJones(const ROMSColumns& msc, Table& tab,
 	    PBMath::whichCommonPBtoUse( tele, freq, band, whichPB, commonPBName );
 	  }
 	  
-	  PBMath  myPBMath(tele, False, freq );
+	  PBMath  myPBMath(tele, false, freq );
 	  setPBMath (telCol(i), myPBMath);	
 	  
 	} else {        
@@ -162,14 +165,14 @@ VPSkyJones::VPSkyJones(const ROMSColumns& msc,
 	
 	if(whichPB != PBMath::UNKNOWN){
 	  os << "PB used " << commonPBName << LogIO::POST;
-	    PBMath  myPBMath(telescope_p, False, freq );
+	    PBMath  myPBMath(telescope_p, false, freq );
 	    setPBMath (telescope_p, myPBMath);
 	}
 	else{
 	  //lets do it by diameter
 	  os << "PB used determined from dish-diameter" << LogIO::POST;
 	  Double diam=msc.antenna().dishDiameter()(0);
-	  PBMath myPBMath(diam, False, freq);
+	  PBMath myPBMath(diam, false, freq);
 	  setPBMath(telescope_p, myPBMath);
 
 	}

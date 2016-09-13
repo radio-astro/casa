@@ -33,6 +33,8 @@
  */
 #include <stdint.h>
 
+using namespace casacore;
+
 	 
 ASDM_MAIN::ASDM_MAIN() {
   name_ = "ASDM_MAIN";

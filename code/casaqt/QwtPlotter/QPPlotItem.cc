@@ -39,6 +39,7 @@
 
 #include <qwt_painter.h>
 
+using namespace casacore;
 namespace casa {
 
 /////////////////////////////

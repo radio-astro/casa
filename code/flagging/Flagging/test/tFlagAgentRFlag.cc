@@ -26,6 +26,7 @@
 #include <iostream>
 #include <sstream>
 
+using namespace casacore;
 using namespace casa;
 
 // --- utility type for splitting strings
@@ -257,7 +258,7 @@ void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParame
 	{
 		Record diplayAgentConfig;
 		diplayAgentConfig.define("name","FlagAgentDisplay");
-		diplayAgentConfig.define("datadisplay",True);
+		diplayAgentConfig.define("datadisplay",true);
 
 		int exists = agentParameters[0].fieldNumber ("correlation");
 		if (exists >= 0) diplayAgentConfig.define("correlation",agentParameters[0].asString("correlation"));
@@ -378,7 +379,7 @@ void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParame
 	{
     	Record diplayAgentConfig;
     	diplayAgentConfig.define("name","FlagAgentDisplay");
-    	diplayAgentConfig.define("reportdisplay",True);
+    	diplayAgentConfig.define("reportdisplay",true);
     	FlagAgentDisplay reportDisplayAgent(dh,diplayAgentConfig);
     	reportDisplayAgent.displayReports(combinedReport);
 	}
@@ -589,7 +590,7 @@ int main(int argc, char **argv)
 		}
 		else if (parameter == string("-unflag"))
 		{
-			if (value.compare("True") == 0)
+			if (value.compare("true") == 0)
 			{
 				deleteFlagsActivated = true;
 				cout << "Clean flags step activated" << endl;
@@ -762,14 +763,14 @@ int main(int argc, char **argv)
 		}
 		else if (parameter == string("-writeflags"))
 		{
-			agentParameters.define ("writeflags", True);
-			if (value == "True")
+			agentParameters.define ("writeflags", true);
+			if (value == "true")
 			{
-				agentParameters.define ("writeflags", True);
+				agentParameters.define ("writeflags", true);
 			}
 			else
 			{
-				agentParameters.define ("writeflags", False);
+				agentParameters.define ("writeflags", false);
 			}
 		}
 	}

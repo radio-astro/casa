@@ -26,6 +26,7 @@
 
 #include <imageanalysis/Annotations/AnnLine.h>
 
+using namespace casacore;
 namespace casa {
 
 AnnLine::AnnLine(

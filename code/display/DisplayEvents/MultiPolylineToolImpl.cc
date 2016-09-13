@@ -35,10 +35,11 @@
 // this include:
 #include <display/DisplayEvents/MultiPolylineToolImpl.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	MultiPolylineToolImpl::MultiPolylineToolImpl(viewer::RegionSourceFactory *rf, PanelDisplay* pd, Display::KeySym keysym) :
-		MultiPolylineTool( rf, pd, keysym, True) {
+		MultiPolylineTool( rf, pd, keysym, true) {
 	}
 
 	MultiPolylineToolImpl::~MultiPolylineToolImpl() {

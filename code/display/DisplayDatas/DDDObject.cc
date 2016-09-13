@@ -33,14 +33,15 @@
 #include <display/DisplayDatas/DDDObject.h>
 #include <casa/Quanta/UnitMap.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	DDDObject::DDDObject(const Record &description, DrawingDisplayData *owner) :
 
 		itsOwner(owner),
-		itsShowHandles(False),
-		itsEditable(False),
-		itsMovable(True),
+		itsShowHandles(false),
+		itsEditable(false),
+		itsMovable(true),
 		itsLineWidth(1) {
 		if (description.isDefined("color")) {
 			description.get("color", itsColor);
@@ -128,9 +129,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		         itsOwner->doubleClickInterval())) {
 			itsOwner->doubleClick(itsObjectID);
 			clearClickBuffer();
-			return True;
+			return true;
 		}
-		return False;
+		return false;
 	}
 
 	void DDDObject::clearClickBuffer() {
@@ -192,7 +193,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Bool DDDObject::inPolygon(const Vector<Double>& xP, const Vector<Double>& yP,
 	                          Double x, Double y) {
 		AlwaysAssert(xP.nelements()==yP.nelements(), AipsError);
-		Bool isInside = False;
+		Bool isInside = false;
 		uInt n = xP.nelements();
 		for (uInt i=0,j=n-1; i < n; j=i++) {
 			if ((((yP(i)<=y) && (y<yP(j))) ||
@@ -209,10 +210,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	                         Double x, Double y) {
 		for (uInt i=0; i< handles.nelements(); i++) {
 			if (handles[i].underCursor(x,y)) {
-				return True;
+				return true;
 			}
 		}
-		return False;
+		return false;
 	}
 
 

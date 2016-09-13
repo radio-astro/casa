@@ -28,6 +28,7 @@
 #include <display/Display/WorldCanvas.h>
 #include <display/DisplayEvents/WorldCanvasEvent.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Constructor.

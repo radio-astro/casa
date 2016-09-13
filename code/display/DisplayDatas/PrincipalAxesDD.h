@@ -38,13 +38,18 @@
 #include <display/DisplayDatas/DisplayData.h>
 #include <display/Utilities/StatusSink.h>
 
+namespace casacore{
+
+	template <class T> class Vector;
+	class String;
+	template <class T> class ImageInterface;
+}
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // forwards:
 	class WorldCanvas;
 	class WorldCanvasHolder;
-	template <class T> class Vector;
-	class String;
 	class AttributeBuffer;
 	class WCPositionEvent;
 	class WCMotionEvent;
@@ -54,7 +59,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	class PrincipalAxesDM;
 
 	class ImageAnalysis;
-	template <class T> class ImageInterface;
 
 // <summary>
 // Interface for DisplayDatas which have data arranged in axes.
@@ -71,65 +75,65 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	public:
 
 		// constructor
-		PrincipalAxesDD( uInt xAxis, uInt yAxis, Int mAxis = -1, Bool axisLabels = True, viewer::StatusSink *sink=0 );
+		PrincipalAxesDD( casacore::uInt xAxis, casacore::uInt yAxis, casacore::Int mAxis = -1, casacore::Bool axisLabels = true, viewer::StatusSink *sink=0 );
 
 		// destructor
 		virtual ~PrincipalAxesDD();
 
-		// Coordinate transformation handlers, called by WorldCanvasHolder
+		// casacore::Coordinate transformation handlers, called by WorldCanvasHolder
 		// <group>
-		virtual Bool linToWorld(Vector<Double> &world,
-		                        const Vector<Double> &lin);
-		virtual Bool worldToLin(Vector<Double> &lin,
-		                        const Vector<Double> &world);
-		virtual Bool linToFullWorld(Vector<Double> &fullWorld,
-		                            const Vector<Double> &lin);
+		virtual casacore::Bool linToWorld(casacore::Vector<casacore::Double> &world,
+		                        const casacore::Vector<casacore::Double> &lin);
+		virtual casacore::Bool worldToLin(casacore::Vector<casacore::Double> &lin,
+		                        const casacore::Vector<casacore::Double> &world);
+		virtual casacore::Bool linToFullWorld(casacore::Vector<casacore::Double> &fullWorld,
+		                            const casacore::Vector<casacore::Double> &lin);
 		// </group>
 
-		// Format a string containing coordinate and data information at the
+		// casacore::Format a string containing coordinate and data information at the
 		// given world coordinate
-		virtual String showPosition(const Vector<Double> &world,
-		                            const Bool &displayAxesOnly = False);
+		virtual casacore::String showPosition(const casacore::Vector<casacore::Double> &world,
+		                            const casacore::Bool &displayAxesOnly = false);
 
-		// Format a string containing coordinate and data information at the
+		// casacore::Format a string containing coordinate and data information at the
 		// given world coordinate. This function let's you specify output
 		// conditions (world/pixel and abs/rel)
-		virtual String showPosition(const Vector<Double> &world,
-		                            const Bool &showAbs, const Bool &displayAxesOnly);
+		virtual casacore::String showPosition(const casacore::Vector<casacore::Double> &world,
+		                            const casacore::Bool &showAbs, const casacore::Bool &displayAxesOnly);
 
-		virtual void setSubstituteTitleText( const String text );
+		virtual void setSubstituteTitleText( const casacore::String text );
 		// Is the DD is capable (in its current state) of drawing
 		// in the current DisplayCoordinateSystem of the WCH's WorldCanvas?
-		virtual Bool conformsToCS(const WorldCanvas &wc);
+		virtual casacore::Bool conformsToCS(const WorldCanvas &wc);
 
 		// Miscellaneous information supply routines
 		// <group>
-		virtual Vector<String> worldAxisNames() const;
-		virtual Vector<String> worldAxisUnits() const;
-		virtual Vector<Double> worldAxisIncrements();
-		virtual void worldAxisType(Coordinate::Type &type, Int &coordinate,
-		                           Int &axisincoord, const uInt &worldaxisnum);
-		virtual String worldAxisCode(const uInt &worldaxisnum);
+		virtual casacore::Vector<casacore::String> worldAxisNames() const;
+		virtual casacore::Vector<casacore::String> worldAxisUnits() const;
+		virtual casacore::Vector<casacore::Double> worldAxisIncrements();
+		virtual void worldAxisType(casacore::Coordinate::Type &type, casacore::Int &coordinate,
+		                           casacore::Int &axisincoord, const casacore::uInt &worldaxisnum);
+		virtual casacore::String worldAxisCode(const casacore::uInt &worldaxisnum);
 		// </group>
 
 		// Return the number of display elements (eg. drawable images) in this
 		// DisplayData
 		// <group>
-		virtual uInt nelements(const WorldCanvasHolder &wcHolder) const;
-		virtual uInt nelements() const;
+		virtual casacore::uInt nelements(const WorldCanvasHolder &wcHolder) const;
+		virtual casacore::uInt nelements() const;
 		// </group>
 
 		// Set and retrieve the minimum and maximum data values
 		// <group>
-		virtual void setDataMin(Double datmin);
-		virtual void setDataMax(Double datmax);
-		virtual Double getDataMin() const;
-		virtual Double getDataMax() const;
+		virtual void setDataMin(casacore::Double datmin);
+		virtual void setDataMax(casacore::Double datmax);
+		virtual casacore::Double getDataMin() const;
+		virtual casacore::Double getDataMax() const;
 		// </group>
 
 		// sizeControlFunction, called by the WorldCanvasHolder to setup the
 		// WorldCanvas linear coordinate system
-		virtual Bool sizeControl(WorldCanvasHolder& wcHolder,
+		virtual casacore::Bool sizeControl(WorldCanvasHolder& wcHolder,
 		                         AttributeBuffer& holderBuf);
 
 		// Position event handler, called by the WorldCanvasHolder
@@ -143,8 +147,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void refreshEH(const WCRefreshEvent& ev);
 
 		// label/draw the axes
-		virtual Bool labelAxes(const WCRefreshEvent &ev);
-		virtual Bool canLabelAxes() const;
+		virtual casacore::Bool labelAxes(const WCRefreshEvent &ev);
+		virtual casacore::Bool canLabelAxes() const;
 
 		// required function to tidy up our elements, primarily
 		virtual void cleanup();
@@ -153,27 +157,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void setDefaultOptions();
 
 		// apply options stored in val to the DisplayData; return value
-		// True means a refresh is needed...
-		virtual Bool setOptions(Record &rec, Record &recOut);
+		// true means a refresh is needed...
+		virtual casacore::Bool setOptions(casacore::Record &rec, casacore::Record &recOut);
 
 
 		// retrieve the current and default options and parameter types.
-		virtual Record getOptions( bool scrub ) const;
+		virtual casacore::Record getOptions( bool scrub ) const;
 
 		// distribute options to all the axis labellers
-		virtual Bool setLabellerOptions(Record &rec, Record &recout);
+		virtual casacore::Bool setLabellerOptions(casacore::Record &rec, casacore::Record &recout);
 
 		// retrieve options from the axis labellers
-		virtual Record getLabellerOptions( bool scrub=false ) const;
+		virtual casacore::Record getLabellerOptions( bool scrub=false ) const;
 
 		// Sets which axes are on display and animator, and positions for
-		// animator and sliders.  Pass 'reset' as False if you don't need
+		// animator and sliders.  Pass 'reset' as false if you don't need
 		// an unzoom (e.g. when display axes are unchanged).
-		virtual void setAxes(const uInt xAxis, const uInt yAxis, const uInt mAxis,
-		                     const IPosition fixedPos, Bool reset=True);
+		virtual void setAxes(const casacore::uInt xAxis, const casacore::uInt yAxis, const casacore::uInt mAxis,
+		                     const casacore::IPosition fixedPos, casacore::Bool reset=true);
 
 		// query the number of dimensions in the data
-		virtual uInt nDim() {
+		virtual casacore::uInt nDim() {
 			return dataDim();
 		}
 
@@ -194,7 +198,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// DisplayCoordinateSystem
 		void restoreCoordinateSystem();
 
-		// set a Linear Coordinate in case of pixToWorld undefined for the
+		// set a Linear casacore::Coordinate in case of pixToWorld undefined for the
 		// blc/trc
 		void installFakeCoordinateSystem();
 		void removeFakeCoordinateSystem();
@@ -202,12 +206,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Return the class name of this DisplayData; useful mostly for
 		// debugging purposes, and perhaps future use in the glish widget
 		// interface.
-		virtual String className() {
-			return String("PrincipalAxesDD");
+		virtual casacore::String className() {
+			return casacore::String("PrincipalAxesDD");
 		}
 
 		// Get the current fixed position
-		virtual IPosition fixedPosition() const {
+		virtual casacore::IPosition fixedPosition() const {
 			return itsFixedPosition;
 		}
 
@@ -217,7 +221,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		// Get the current setting of pixel treatment mode
-		virtual String pixelTreatment() const {
+		virtual casacore::String pixelTreatment() const {
 			return itsOptionsPixelTreatment;
 		}
 
@@ -230,43 +234,43 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		//# just cause crashes.  Please see me for what's needed to properly
 		//# support this method if you need to restore it).
 		//#
-		//# void usesAxisLabels(Bool state) {
+		//# void usesAxisLabels(casacore::Bool state) {
 		//#   itsUsesAxisLabels = state;
 		//# }
 
 
 		// Convert a 2D worldCoordinate of the WorldCanvas to a full worldcoordinate
 		// and full pixel position
-		virtual Bool getFullCoord(Vector<Double> &fullWorld,
-		                          Vector<Double> &fullPixel,
-		                          const Vector<Double> &world);
+		virtual casacore::Bool getFullCoord(casacore::Vector<casacore::Double> &fullWorld,
+		                          casacore::Vector<casacore::Double> &fullPixel,
+		                          const casacore::Vector<casacore::Double> &world);
 
 		virtual void notifyUnregister(WorldCanvasHolder& wcHolder,
-		                              Bool ignoreRefresh = False);
+		                              casacore::Bool ignoreRefresh = false);
 
 		// allow external functions to translate axes...
-		Int xlatePixelAxes( Int idx ) const {
+		casacore::Int xlatePixelAxes( casacore::Int idx ) const {
 			return itsTransPixelAxes[idx];
 		}
-		Int xlateFixedPixelAxes( Int idx ) const {
+		casacore::Int xlateFixedPixelAxes( casacore::Int idx ) const {
 			return itsFixedPosition[idx];
 		}
-		const String &xaxisStr( ) const {
+		const casacore::String &xaxisStr( ) const {
 			return itsOptionsXAxis;
 		}
-		const String &yaxisStr( ) const {
+		const casacore::String &yaxisStr( ) const {
 			return itsOptionsYAxis;
 		}
-		const String &zaxisStr( ) const {
+		const casacore::String &zaxisStr( ) const {
 			return itsOptionsZAxis;
 		}
-		const String &spectStr( ) const;
+		const casacore::String &spectStr( ) const;
 
 		// Convert list of world axis names to pixel axis names
-		Vector<String> worldToPixelAxisNames (const DisplayCoordinateSystem& cSys) const;
+		casacore::Vector<casacore::String> worldToPixelAxisNames (const DisplayCoordinateSystem& cSys) const;
 
-		const String &spectralunitStr( ) const;
-		const static String HISTOGRAM_RANGE;
+		const casacore::String &spectralunitStr( ) const;
+		const static casacore::String HISTOGRAM_RANGE;
 
 		bool hasMovieDimension( ) const {
 			return has_nonsingleton_nondegenerate_nondisplayed_axis( *this );
@@ -280,14 +284,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// individual drawings), according to passed animator index.  This is
 		// called by conformsTo() (via conformsToZIndex()), and serves to
 		// 'focus' the DD on the current WCH's zIndex.
-		// Returns True if there is only one frame, in which case activeZIndex_
+		// Returns true if there is only one frame, in which case activeZIndex_
 		// is set to 0.  Thus a single frame is considered to apply to any
 		// canvas zIndex setting (this allows a continuum image to be blinked
 		// with a chosen channel of a spectral image, e.g.).
 		// If there is more than one frame, the passed zindex is stored, and
 		// the return value will indicate whether it lies within the DD's
 		// current number of frames.
-		virtual Bool setActiveZIndex_(Int zindex);
+		virtual casacore::Bool setActiveZIndex_(casacore::Int zindex);
 
 		// Derived classes will implement if applicable (at present,
 		// LatticePADDs may draw if they have an image with beam data).
@@ -297,30 +301,30 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// parent PrincipalAxesDD object
 		friend class PrincipalAxesDM;
 
-		virtual void setNumImages(const uInt nimages) {
+		virtual void setNumImages(const casacore::uInt nimages) {
 			itsNumImages = nimages;
 		}
 
 		static bool has_nonsingleton_nondegenerate_nondisplayed_axis( const DisplayData &other );
 
 		// Internal state
-		Bool iAmRubbish;
+		casacore::Bool iAmRubbish;
 
 		// min and max to use for drawing
-		Double datamin;
-		Double datamax;
+		casacore::Double datamin;
+		casacore::Double datamax;
 
 		// internal bookkeeping
 		// number of axes
-		uInt nArrayAxes;
-		uInt nPixelAxes;
-		uInt nWorldAxes;
+		casacore::uInt nArrayAxes;
+		casacore::uInt nPixelAxes;
+		casacore::uInt nWorldAxes;
 
 		// format for diplaying numbers in the tracker
-		Coordinate::formatType itsNotation;
+		casacore::Coordinate::formatType itsNotation;
 
 		// do some setup work, part of construction and changing dataset
-		void setup(IPosition fixedPos);
+		void setup(casacore::IPosition fixedPos);
 
 		// functions need by above
 		virtual void setupElements();
@@ -328,28 +332,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Helper routine for setting up the transpose vectors for the coordinate
 		// system.
-		Bool indexInserted(Int index, Int length, Vector<Int>& testVec);
+		casacore::Bool indexInserted(casacore::Int index, casacore::Int length, casacore::Vector<casacore::Int>& testVec);
 
 		// helper to transpose coordinates
 		// <group>
-		void normalToTransposed(Vector<Double>& coord, const Vector<Int>& transPos);
-		void transposedToNormal(Vector<Double>& coord, const Vector<Int>& transPos);
+		void normalToTransposed(casacore::Vector<casacore::Double>& coord, const casacore::Vector<casacore::Int>& transPos);
+		void transposedToNormal(casacore::Vector<casacore::Double>& coord, const casacore::Vector<casacore::Int>& transPos);
 		// </group>
 
 		// Set velocity state
 		void setVelocityState (DisplayCoordinateSystem& cSys,
-		                       const String& velTypeString,
-		                       const String& unitString);
+		                       const casacore::String& velTypeString,
+		                       const casacore::String& unitString);
 
 		// Set Spectral formatting
 		void setSpectralFormatting (DisplayCoordinateSystem& cSys,
-		                            const String& velTypeString,
-		                            const String& unitString,
-		                            const String& frequency_system = "");
+		                            const casacore::String& velTypeString,
+		                            const casacore::String& unitString,
+		                            const casacore::String& frequency_system = "");
 
 		// Determine the active image (if any).
 		// (Deprecated (7/04).  Use  confromsToZIndex(wch)  instead).
-		Bool findActiveImage(WorldCanvasHolder &wcHolder);
+		casacore::Bool findActiveImage(WorldCanvasHolder &wcHolder);
 
 		// (Required) default constructor.
 		PrincipalAxesDD();
@@ -364,8 +368,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// so these functions are used to allow only the
 		// LatticePADisplayData<T> template to only return an
 		// image analysis object for the non-complex version...
-		ImageAnalysis *create_image_analysis( SHARED_PTR<ImageInterface<float> > ) const;
-		ImageAnalysis *create_image_analysis( SHARED_PTR<ImageInterface<Complex> > ) const {
+		ImageAnalysis *create_image_analysis( SHARED_PTR<casacore::ImageInterface<float> > ) const;
+		ImageAnalysis *create_image_analysis( SHARED_PTR<casacore::ImageInterface<casacore::Complex> > ) const {
 			return 0;
 		}
 
@@ -375,23 +379,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// axis numbers IN ORIGINAL COORDINATE SYSTEM; zAxisNum = -1 means
 		// no third axis in data set
-		Int itsXAxisNum;
-		Int itsYAxisNum;
-		Int itsZAxisNum;
+		casacore::Int itsXAxisNum;
+		casacore::Int itsYAxisNum;
+		casacore::Int itsZAxisNum;
 
 		// the x (0), y (1) and z/movie (2) axis numbers
 		vector<int> itsDisplayAxes;
 
 		// Store options:
 		// Axis selection ---
-		String itsOptionsXAxis, itsOptionsYAxis, itsOptionsZAxis;
-		IPosition itsFixedPosition;
+		casacore::String itsOptionsXAxis, itsOptionsYAxis, itsOptionsZAxis;
+		casacore::IPosition itsFixedPosition;
 
 		// treatment of edge pixels
-		String itsOptionsPixelTreatment;
+		casacore::String itsOptionsPixelTreatment;
 
 		// number of elements (images) in this DisplayData
-		uInt itsNumImages;
+		casacore::uInt itsNumImages;
 
 		// This CS is the one we were constructed with
 		DisplayCoordinateSystem itsOrigCoordSys;
@@ -410,11 +414,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		DisplayCoordinateSystem itsCoordSys;
 
-		// List of AxisLabellers.
-		PtrBlock<void *> itsAxisLabellers;
+		// casacore::List of AxisLabellers.
+		casacore::PtrBlock<void *> itsAxisLabellers;
 
 		// Aspect selection ---
-		String itsOptionsAspect;
+		casacore::String itsOptionsAspect;
 
 		// Position tracking variables
 		// This CS is the one we use to set the appropriate state for
@@ -422,50 +426,50 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// but the formtting and velocity state (if there is a SC) may differ
 
 		DisplayCoordinateSystem itsPosTrackCoordSys;
-		String itsSpectralUnit;
-		String itsSpectralQuantity;
-		Bool itsAbsolute;
-		Bool itsFractionalPixels;
+		casacore::String itsSpectralUnit;
+		casacore::String itsSpectralQuantity;
+		casacore::Bool itsAbsolute;
+		casacore::Bool itsFractionalPixels;
 
 		// buffer for string sizecontrol done by this ImageDisplayData
 		AttributeBuffer sizeControlBuf;
 
 		// the coordinates of the axes that do not vary
-		Vector<Double>    itsAddPixPos;
+		casacore::Vector<casacore::Double>    itsAddPixPos;
 
 		// how the axes are permuted
-		Vector<Int>       itsTransPixelAxes;
-		Vector<Int>       itsTransWorldAxes;
+		casacore::Vector<casacore::Int>       itsTransPixelAxes;
+		casacore::Vector<casacore::Int>       itsTransWorldAxes;
 
 		// world ranges for toMix conversions
-		Vector<Double> itsWorldMin, itsWorldMax;
+		casacore::Vector<casacore::Double> itsWorldMin, itsWorldMax;
 
 		// Temporaries  for coordinate conversions.
 		// You should only use one temporary per function.
-		Vector<Double> itsWorldInTmp1, itsPixelInTmp1;
-		Vector<Bool> itsWorldAxesTmp1, itsPixelAxesTmp1;
-		Vector<Double> itsFullWorldTmp1;
+		casacore::Vector<casacore::Double> itsWorldInTmp1, itsPixelInTmp1;
+		casacore::Vector<casacore::Bool> itsWorldAxesTmp1, itsPixelAxesTmp1;
+		casacore::Vector<casacore::Double> itsFullWorldTmp1;
 		//
-		Vector<Double> itsPixelInTmp2;
+		casacore::Vector<casacore::Double> itsPixelInTmp2;
 		//
-		Vector<Double> itsWorldInTmp3, itsWorldOutTmp3;
-		Vector<Double> itsPixelInTmp3, itsPixelOutTmp3;
-		Vector<Bool> itsWorldAxesTmp3, itsPixelAxesTmp3;
+		casacore::Vector<casacore::Double> itsWorldInTmp3, itsWorldOutTmp3;
+		casacore::Vector<casacore::Double> itsPixelInTmp3, itsPixelOutTmp3;
+		casacore::Vector<casacore::Bool> itsWorldAxesTmp3, itsPixelAxesTmp3;
 		//
-		Vector<Double> itsFullWorldTmp4, itsFullPixelTmp4;
+		casacore::Vector<casacore::Double> itsFullWorldTmp4, itsFullPixelTmp4;
 
-		Bool itsUsesAxisLabels;
+		casacore::Bool itsUsesAxisLabels;
 
-		// Find out if SpectralCoordinate can have velocity units
-		Bool canHaveVelocityUnit (const DisplayCoordinateSystem& cSys) const;
+		// Find out if casacore::SpectralCoordinate can have velocity units
+		casacore::Bool canHaveVelocityUnit (const DisplayCoordinateSystem& cSys) const;
 
 		// Remove list of pixel axes from CS
 		void removePixelAxes (DisplayCoordinateSystem& cSys,
-		                      uInt startAxis,
-		                      const IPosition& fixedPosition);
+		                      casacore::uInt startAxis,
+		                      const casacore::IPosition& fixedPosition);
 
 		viewer::StatusSink *ssink;
-		String titleText;
+		casacore::String titleText;
 
 	};
 

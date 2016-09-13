@@ -38,6 +38,7 @@
 
 #include <iomanip>
 
+using namespace casacore;
 namespace casa {
 
 const String PVGenerator::_class = "PVGenerator";
@@ -232,7 +233,7 @@ SPIIF PVGenerator::generate() const {
 	SPIIF subImage(
 		SubImageFactory<Float>::createImage(
 			*_getImage(), "", *_getRegion(),
-			_getMask(), False, False, False, _getStretch()
+			_getMask(), false, false, false, _getStretch()
 		 )
 	);
 	*_getLog() << LogOrigin(_class, __func__, WHERE);
@@ -344,7 +345,7 @@ SPIIF PVGenerator::generate() const {
 			<< LogIO::POST;
 		ImagePadder padder(subImage);
 		padder.setPaddingPixels(nPixels);
-		auto padded = padder.pad(True);
+		auto padded = padder.pad(true);
 		imageToRotate = padded;
 	}
 	IPosition blc(subImage->ndim(), 0);
@@ -368,14 +369,14 @@ SPIIF PVGenerator::generate() const {
 		*_getLog() << LogIO::NORMAL << "Slice is along x-axis, no rotation necessary.";
 		rotated = SubImageFactory<Float>::createSubImageRW(
 	        *imageToRotate, lcbox, "", 0,
-			AxesSpecifier(), True
+			AxesSpecifier(), true
 		);
 	}
 	else {
 		auto outShape = subShape;
 		outShape[xAxis] = (Int)(endPixRot[0] + nPixels + 6);
 		outShape[yAxis] = (Int)(startPixRot[1] + halfwidth) + nPixels + 6;
-		ImageRotator rotator(imageToRotate, &lcbox, "", "", False);
+		ImageRotator rotator(imageToRotate, &lcbox, "", "", false);
 		rotator.setAngle(Quantity(paInRad, "rad"));
 		rotator.setShape(outShape);
 		rotated = rotator.rotate();
@@ -444,7 +445,7 @@ SPIIF PVGenerator::generate() const {
 	IPosition axes(1, yAxis);
 	ImageCollapser<Float> collapser(
 		"mean", rotated, &lcbox,
-		"", axes, False, "", False
+		"", axes, false, "", false
 	);
 
 	SPIIF collapsed = collapser.collapse();
@@ -503,7 +504,7 @@ SPIIF PVGenerator::generate() const {
 	}
 	// now remove the degenerate linear axis
 	SHARED_PTR<const SubImage<Float> > cDropped = SubImageFactory<Float>::createSubImageRO(
-		*collapsed, Record(), "", 0, AxesSpecifier(keep, axisPath),	False, True
+		*collapsed, Record(), "", 0, AxesSpecifier(keep, axisPath),	false, true
 	);
 	std::unique_ptr<ArrayLattice<Bool> > newMask;
 	if (dynamic_cast<TempImage<Float> *>(collapsed.get())->hasPixelMask()) {

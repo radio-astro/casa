@@ -30,6 +30,7 @@
 #include <display/Utilities/DisplayOptions.h>
 #include <display/Display/DParameterString.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Constructor.
@@ -38,7 +39,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	                                   const String defaultvalue,
 	                                   const String value, const String context,
 	                                   const Bool editable) :
-		DisplayParameter(name, description, help, context, False, editable),
+		DisplayParameter(name, description, help, context, false, editable),
 		itsDefault(defaultvalue),
 		itsValue(value) {
 	}

@@ -36,11 +36,15 @@
 
 #include <memory>
 
-namespace casa {
+namespace casacore{
 
 template <class T> class CountedPtr;
+}
 
-class ImageStatsCalculator: public ImageTask<Float> {
+namespace casa {
+
+
+class ImageStatsCalculator: public ImageTask<casacore::Float> {
     // <summary>
     // Top level class used for statistics calculations
     // </summary>
@@ -73,59 +77,59 @@ public:
 
    	ImageStatsCalculator(
    		const SPCIIF image,
-    	const Record *const &regionPtr,
-    	const String& maskInp, Bool beVerboseDuringConstruction=False
+    	const casacore::Record *const &regionPtr,
+    	const casacore::String& maskInp, casacore::Bool beVerboseDuringConstruction=false
     );
 
     ~ImageStatsCalculator();
 
-    Record calculate();
+    casacore::Record calculate();
 
-    void configureChauvenet(Double zscore, Int maxIterations);
+    void configureChauvenet(casacore::Double zscore, casacore::Int maxIterations);
 
     void configureClassical(PreferredClassicalAlgorithm p);
 
     // configure fit to half algorithm
     void configureFitToHalf(
-    	FitToHalfStatisticsData::CENTER centerType,
-    	FitToHalfStatisticsData::USE_DATA useData,
-    	Double centerValue
+    	casacore::FitToHalfStatisticsData::CENTER centerType,
+    	casacore::FitToHalfStatisticsData::USE_DATA useData,
+    	casacore::Double centerValue
     );
 
     // configure hinges-fences algorithm
-    void configureHingesFences(Double f);
+    void configureHingesFences(casacore::Double f);
 
     void forceNewStorage() { _statistics.reset(); }
 
-    inline String getClass() const {return _class;}
+    inline casacore::String getClass() const {return _class;}
 
-    inline void setAxes(const Vector<Int>& axes) {
-    	_axes.assign(axes); GenSort<Int>::sort(_axes);
+    inline void setAxes(const casacore::Vector<casacore::Int>& axes) {
+    	_axes.assign(axes); casacore::GenSort<casacore::Int>::sort(_axes);
     }
 
-    void setDisk(Bool d);
+    void setDisk(casacore::Bool d);
 
     // Set range of pixel values to include in the calculation. Should be a two element
     // Vector
-    inline void setIncludePix(const Vector<Float>& inc) {_includepix.assign(inc);}
+    inline void setIncludePix(const casacore::Vector<casacore::Float>& inc) {_includepix.assign(inc);}
 
     // Set range of pixel values to exclude from the calculation. Should be a two element
     // Vector
-    inline void setExcludePix(const Vector<Float>& exc) {_excludepix.assign(exc);}
+    inline void setExcludePix(const casacore::Vector<casacore::Float>& exc) {_excludepix.assign(exc);}
 
-    // List stats to logger? If you want no logging you should set this to False in addition to
+    // casacore::List stats to logger? If you want no logging you should set this to false in addition to
     // calling setVerbosity()
-    inline void setList(Bool l) {_list = l;}
+    inline void setList(casacore::Bool l) {_list = l;}
 
-    void setRobust(Bool r);
+    void setRobust(casacore::Bool r);
 
-    void setVerbose(Bool v);
+    void setVerbose(casacore::Bool v);
 
     // moved from ImageAnalysis
     // if messageStore != 0, log messages, stripped of time stampe and priority, will also
     // be placed in this parameter and returned to caller for eg logging to file.
-    Record statistics(
-    	 vector<String> *const &messageStore=0
+    casacore::Record statistics(
+    	 vector<casacore::String> *const &messageStore=0
     );
 
 protected:
@@ -138,40 +142,40 @@ protected:
     	return vector<OutputDestinationChecker::OutputStruct>(0);
     }
 
-    vector<Coordinate::Type> _getNecessaryCoordinates() const {
-    	return vector<Coordinate::Type>(0);
+    vector<casacore::Coordinate::Type> _getNecessaryCoordinates() const {
+    	return vector<casacore::Coordinate::Type>(0);
     }
 
-    Bool _hasLogfileSupport() const { return True; }
+    casacore::Bool _hasLogfileSupport() const { return true; }
 
-    inline Bool _supportsMultipleRegions() const {return True;}
+    inline casacore::Bool _supportsMultipleRegions() const {return true;}
 
 private:
-    std::unique_ptr<ImageStatistics<Float> > _statistics;
-    CountedPtr<ImageRegion> _oldStatsRegion, _oldStatsMask;
-    Vector<Int> _axes;
-    Vector<Float> _includepix, _excludepix;
-    Bool _list, _disk, _robust, _verbose;
-    LatticeStatistics<Float>::AlgConf _algConf;
-    SHARED_PTR<const SubImage<Float> > _subImage;
+    std::unique_ptr<casacore::ImageStatistics<casacore::Float> > _statistics;
+    casacore::CountedPtr<casacore::ImageRegion> _oldStatsRegion, _oldStatsMask;
+    casacore::Vector<casacore::Int> _axes;
+    casacore::Vector<casacore::Float> _includepix, _excludepix;
+    casacore::Bool _list, _disk, _robust, _verbose;
+    casacore::LatticeStatistics<casacore::Float>::AlgConf _algConf;
+    SHARED_PTR<const casacore::SubImage<casacore::Float> > _subImage;
     PreferredClassicalAlgorithm _prefClassStatsAlg;
 
-    static const String _class;
+    static const casacore::String _class;
 
-    String _configureAlgorithm();
+    casacore::String _configureAlgorithm();
 
     // moved from ImageAnalysis
     // See if the combination of the 'region' and 'mask' ImageRegions have changed
-    static Bool _haveRegionsChanged (
-    	ImageRegion* pNewRegionRegion,
-    	ImageRegion* pNewMaskRegion,
-    	ImageRegion* pOldRegionRegion,
-    	ImageRegion* pOldMaskRegion
+    static casacore::Bool _haveRegionsChanged (
+    	casacore::ImageRegion* pNewRegionRegion,
+    	casacore::ImageRegion* pNewMaskRegion,
+    	casacore::ImageRegion* pOldRegionRegion,
+    	casacore::ImageRegion* pOldMaskRegion
     );
 
     void _reportDetailedStats(
-    	const SHARED_PTR<const ImageInterface<Float> > tempIm,
-    	const Record& retval
+    	const SHARED_PTR<const casacore::ImageInterface<casacore::Float> > tempIm,
+    	const casacore::Record& retval
     );
 
 };

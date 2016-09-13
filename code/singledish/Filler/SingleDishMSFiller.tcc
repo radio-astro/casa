@@ -43,7 +43,6 @@
 #include <casacore/tables/Tables/SetupNewTab.h>
 
 using namespace casacore;
-using namespace sdfiller;
 
 #define ARRAY_BLOCK_SIZE 1024
 
@@ -57,7 +56,7 @@ inline void fillTable(_Table &table, _Record &record, _Reader const &reader) {
 
   size_t irow = 0;
   record.clear();
-  for (Bool more_rows = reader(record); more_rows == True;
+  for (casacore::Bool more_rows = reader(record); more_rows == true;
       more_rows = reader(record)) {
     record.add(table, columns);
     record.fill(irow, columns);
@@ -69,22 +68,22 @@ inline void fillTable(_Table &table, _Record &record, _Reader const &reader) {
 }
 
 template<class _Table, class _Columns, class _Comparer, class _Updater>
-inline Int updateTable(_Table &mytable, _Columns &mycolumns,
+inline casacore::Int updateTable(_Table &mytable, _Columns &mycolumns,
     _Comparer const &comparer, _Updater const &updater) {
   POST_START;
 
-  Int id = -1;
-  if (mycolumns.nrow() >= (uInt) INT_MAX) {
-    throw AipsError("Too much row in table");
+  casacore::Int id = -1;
+  if (mycolumns.nrow() >= (casacore::uInt) INT_MAX) {
+    throw casacore::AipsError("Too much row in table");
   }
-  for (uInt i = 0; i < mycolumns.nrow(); ++i) {
+  for (casacore::uInt i = 0; i < mycolumns.nrow(); ++i) {
     if (comparer(mycolumns, i)) {
-      id = (Int) i;
+      id = (casacore::Int) i;
     }
   }
   if (id < 0) {
     id = mycolumns.nrow();
-    mytable.addRow(1, True);
+    mytable.addRow(1, true);
     updater(mycolumns, id);
   }
 
@@ -93,45 +92,45 @@ inline Int updateTable(_Table &mytable, _Columns &mycolumns,
 }
 
 template<class _Columns, class _Record>
-inline void updateSubtable(_Columns &columns, uInt irow,
+inline void updateSubtable(_Columns &columns, casacore::uInt irow,
     _Record const &record) {
   // only update timestamp and interval
-  Double time_org = columns.time()(irow);
-  Double interval_org = columns.interval()(irow);
+  casacore::Double time_org = columns.time()(irow);
+  casacore::Double interval_org = columns.interval()(irow);
 
-  Double time_min_org = time_org - interval_org / 2.0;
-  Double time_max_org = time_org + interval_org / 2.0;
+  casacore::Double time_min_org = time_org - interval_org / 2.0;
+  casacore::Double time_max_org = time_org + interval_org / 2.0;
 
-  Double time_min_in = record.time - record.interval / 2.0;
-  Double time_max_in = record.time + record.interval / 2.0;
+  casacore::Double time_min_in = record.time - record.interval / 2.0;
+  casacore::Double time_max_in = record.time + record.interval / 2.0;
 
-  Double time_min_new = min(time_min_org, time_min_in);
-  Double time_max_new = max(time_max_org, time_max_in);
+  casacore::Double time_min_new = min(time_min_org, time_min_in);
+  casacore::Double time_max_new = max(time_max_org, time_max_in);
 
   if (time_min_new != time_min_org || time_max_new != time_max_org) {
-    Double time_new = (time_min_new + time_max_new) / 2.0;
-    Double interval_new = time_max_new - time_min_new;
+    casacore::Double time_new = (time_min_new + time_max_new) / 2.0;
+    casacore::Double interval_new = time_max_new - time_min_new;
     columns.time().put(irow, time_new);
     columns.interval().put(irow, interval_new);
   }
 }
 
-void makeSourceMap(MSSource const &table, Record &source_map) {
+void makeSourceMap(casacore::MSSource const &table, casacore::Record &source_map) {
   POST_START;
 
-  ROScalarColumn<String> name_column(table, "NAME");
-  ROScalarColumn<Int> id_column(table, "SOURCE_ID");
-  Vector<Int> id = id_column.getColumn();
+  casacore::ROScalarColumn<casacore::String> name_column(table, "NAME");
+  casacore::ROScalarColumn<casacore::Int> id_column(table, "SOURCE_ID");
+  casacore::Vector<casacore::Int> id = id_column.getColumn();
 
-  Sort sorter;
+  casacore::Sort sorter;
   sorter.sortKey(id.data(), TpInt);
-  Vector<uInt> unique_vector;
-  uInt num_id = sorter.sort(unique_vector, id.nelements(),
-      Sort::HeapSort | Sort::NoDuplicates);
-  for (uInt i = 0; i < num_id; ++i) {
-    uInt irow = unique_vector[i];
-    String const source_name = name_column(irow);
-    Int const source_id = id[irow];
+  casacore::Vector<casacore::uInt> unique_vector;
+  casacore::uInt num_id = sorter.sort(unique_vector, id.nelements(),
+      casacore::Sort::HeapSort | casacore::Sort::NoDuplicates);
+  for (casacore::uInt i = 0; i < num_id; ++i) {
+    casacore::uInt irow = unique_vector[i];
+    casacore::String const source_name = name_column(irow);
+    casacore::Int const source_id = id[irow];
     source_map.define(source_name, source_id);
   }
 
@@ -140,14 +139,18 @@ void makeSourceMap(MSSource const &table, Record &source_map) {
 
 } // anonymous namespace
 
+using namespace casacore;
+
 namespace casa { //# NAMESPACE CASA - BEGIN
+
+using namespace sdfiller;
 
 static constexpr ssize_t CONTEXT_BUFFER_SIZE = 10;
 static constexpr ssize_t FILLER_STORAGE_SIZE = CONTEXT_BUFFER_SIZE + 2;
 typedef sdfiller::ProducerConsumerModelContext<ssize_t, CONTEXT_BUFFER_SIZE> PCMContext;
 
 extern PCMContext *g_context_p;
-extern DataRecord *g_storage_p;
+extern casa::sdfiller::DataRecord *g_storage_p;
 
 template<class T>
 void SingleDishMSFiller<T>::create_context() {
@@ -215,11 +218,11 @@ void *SingleDishMSFiller<T>::consume(void *arg) {
 //              << record->interval;
 //          PCMContext::locked_print(oss.str(), g_context_p);
 
-        Bool is_ready = accumulator.queryForGet(record->time);
+        casacore::Bool is_ready = accumulator.queryForGet(record->time);
         if (is_ready) {
           filler->flush(accumulator);
         }
-        Bool astatus = accumulator.accumulate(*record);
+        casacore::Bool astatus = accumulator.accumulate(*record);
         (void) astatus;
 
 //          oss.str("");
@@ -264,7 +267,7 @@ void *SingleDishMSFiller<T>::produce(void *arg) {
     for (size_t irow = 0; irow < nrow; ++irow) {
 
       DataRecord *record = &g_storage_p[storage_index];
-      Bool status = reader->getData(irow, *record);
+      casacore::Bool status = reader->getData(irow, *record);
 
 //        oss.str("");
 //        oss << "irow " << irow << " status " << status << std::endl;
@@ -362,12 +365,12 @@ void SingleDishMSFiller<T>::fill() {
   fillPreProcessTables();
 
   // main loop
-  LogIO os(LogOrigin("SingleDishMSFiller", "fill", WHERE));
+  casacore::LogIO os(casacore::LogOrigin("SingleDishMSFiller", "fill", WHERE));
   if (parallel_) {
-    os << "Parallel execution of fillMain" << LogIO::POST;
+    os << "Parallel execution of fillMain" << casacore::LogIO::POST;
     SingleDishMSFiller<T>::fillMainMT(this);
   } else {
-    os << "Serial execution of fillMain" << LogIO::POST;
+    os << "Serial execution of fillMain" << casacore::LogIO::POST;
     fillMain();
   }
 
@@ -401,12 +404,12 @@ void SingleDishMSFiller<T>::initialize() {
   setupMS();
 
   // frame information
-  MDirection::Types direction_frame = reader_->getDirectionFrame();
+  casacore::MDirection::Types direction_frame = reader_->getDirectionFrame();
   auto mytable = ms_->pointing();
-  ArrayColumn<Double> direction_column(mytable, "DIRECTION");
-  TableRecord &record = direction_column.rwKeywordSet();
-  Record meas_info = record.asRecord("MEASINFO");
-  String ref_string = MDirection::showType(direction_frame);
+  casacore::ArrayColumn<casacore::Double> direction_column(mytable, "DIRECTION");
+  casacore::TableRecord &record = direction_column.rwKeywordSet();
+  casacore::Record meas_info = record.asRecord("MEASINFO");
+  casacore::String ref_string = casacore::MDirection::showType(direction_frame);
   meas_info.define("Ref", ref_string);
   record.defineRecord("MEASINFO", meas_info);
 
@@ -428,16 +431,16 @@ void SingleDishMSFiller<T>::save(std::string const &name) {
   POST_START;
 
 #ifdef SINGLEDISHMSFILLER_DEBUG
-  std::cout << "Saving MS as \"" << name << "\"" << std::endl;
-  std::cout << "current working directory is \"" << Path().absoluteName()
+  std::cout << "Saving casacore::MS as \"" << name << "\"" << std::endl;
+  std::cout << "current working directory is \"" << casacore::Path().absoluteName()
   << "\"" << std::endl;
 #endif
 
-  ms_->deepCopy(name, Table::New);
+  ms_->deepCopy(name, casacore::Table::New);
 
 #ifdef SINGLEDISHMSFILLER_DEBUG
-  File file(name);
-  Bool name_exists = file.exists();
+  casacore::File file(name);
+  casacore::Bool name_exists = file.exists();
   if (name_exists) {
     std::cout << "file successfully created" << std::endl;
   } else {
@@ -452,188 +455,188 @@ template<class T>
 void SingleDishMSFiller<T>::setupMS() {
 //  std::cout << "Start " << __PRETTY_FUNCTION__ << std::endl;
 
-//  String dunit = table_->getHeader().fluxunit ;
+//  casacore::String dunit = table_->getHeader().fluxunit ;
 
-  TableDesc ms_main_description = MeasurementSet::requiredTableDesc();
+  casacore::TableDesc ms_main_description = casacore::MeasurementSet::requiredTableDesc();
   if (is_float_) {
-    MeasurementSet::addColumnToDesc(ms_main_description,
-        MSMainEnums::FLOAT_DATA, 2);
+    casacore::MeasurementSet::addColumnToDesc(ms_main_description,
+        casacore::MSMainEnums::FLOAT_DATA, 2);
   } else {
-    MeasurementSet::addColumnToDesc(ms_main_description, MSMainEnums::DATA, 2);
+    casacore::MeasurementSet::addColumnToDesc(ms_main_description, casacore::MSMainEnums::DATA, 2);
   }
 
-  String const scratch_table_name = File::newUniqueName(".",
+  casacore::String const scratch_table_name = casacore::File::newUniqueName(".",
       "SingleDishMSFillerTemp").originalName();
-  SetupNewTable newtab(scratch_table_name, ms_main_description, Table::Scratch);
+  casacore::SetupNewTable newtab(scratch_table_name, ms_main_description, casacore::Table::Scratch);
 
-  ms_.reset(new MeasurementSet(newtab));
+  ms_.reset(new casacore::MeasurementSet(newtab));
 
   // create subtables
-  TableDesc ms_antenna_description = MSAntenna::requiredTableDesc();
-  SetupNewTable ms_antenna_table(ms_->antennaTableName(),
-      ms_antenna_description, Table::Scratch);
+  casacore::TableDesc ms_antenna_description = casacore::MSAntenna::requiredTableDesc();
+  casacore::SetupNewTable ms_antenna_table(ms_->antennaTableName(),
+      ms_antenna_description, casacore::Table::Scratch);
   ms_->rwKeywordSet().defineTable(
-      MeasurementSet::keywordName(MeasurementSet::ANTENNA),
-      Table(ms_antenna_table));
+      casacore::MeasurementSet::keywordName(casacore::MeasurementSet::ANTENNA),
+      casacore::Table(ms_antenna_table));
 
-  TableDesc ms_data_desc_description = MSDataDescription::requiredTableDesc();
-  SetupNewTable ms_data_desc_table(ms_->dataDescriptionTableName(),
-      ms_data_desc_description, Table::Scratch);
+  casacore::TableDesc ms_data_desc_description = casacore::MSDataDescription::requiredTableDesc();
+  casacore::SetupNewTable ms_data_desc_table(ms_->dataDescriptionTableName(),
+      ms_data_desc_description, casacore::Table::Scratch);
   ms_->rwKeywordSet().defineTable(
-      MeasurementSet::keywordName(MeasurementSet::DATA_DESCRIPTION),
-      Table(ms_data_desc_table));
+      casacore::MeasurementSet::keywordName(casacore::MeasurementSet::DATA_DESCRIPTION),
+      casacore::Table(ms_data_desc_table));
 
-  TableDesc ms_doppler_description = MSDoppler::requiredTableDesc();
-  SetupNewTable ms_doppler_table(ms_->dopplerTableName(),
-      ms_doppler_description, Table::Scratch);
+  casacore::TableDesc ms_doppler_description = casacore::MSDoppler::requiredTableDesc();
+  casacore::SetupNewTable ms_doppler_table(ms_->dopplerTableName(),
+      ms_doppler_description, casacore::Table::Scratch);
   ms_->rwKeywordSet().defineTable(
-      MeasurementSet::keywordName(MeasurementSet::DOPPLER),
-      Table(ms_doppler_table));
+      casacore::MeasurementSet::keywordName(casacore::MeasurementSet::DOPPLER),
+      casacore::Table(ms_doppler_table));
 
-  TableDesc ms_feed_description = MSFeed::requiredTableDesc();
-  SetupNewTable ms_feed_table(ms_->feedTableName(), ms_feed_description,
-      Table::Scratch);
+  casacore::TableDesc ms_feed_description = casacore::MSFeed::requiredTableDesc();
+  casacore::SetupNewTable ms_feed_table(ms_->feedTableName(), ms_feed_description,
+      casacore::Table::Scratch);
   ms_->rwKeywordSet().defineTable(
-      MeasurementSet::keywordName(MeasurementSet::FEED), Table(ms_feed_table));
+      casacore::MeasurementSet::keywordName(casacore::MeasurementSet::FEED), casacore::Table(ms_feed_table));
 
-  TableDesc ms_field_description = MSField::requiredTableDesc();
-  SetupNewTable ms_field_table(ms_->fieldTableName(), ms_field_description,
-      Table::Scratch);
+  casacore::TableDesc ms_field_description = casacore::MSField::requiredTableDesc();
+  casacore::SetupNewTable ms_field_table(ms_->fieldTableName(), ms_field_description,
+      casacore::Table::Scratch);
   ms_->rwKeywordSet().defineTable(
-      MeasurementSet::keywordName(MeasurementSet::FIELD),
-      Table(ms_field_table));
+      casacore::MeasurementSet::keywordName(casacore::MeasurementSet::FIELD),
+      casacore::Table(ms_field_table));
 
-  TableDesc ms_flag_cmd_description = MSFlagCmd::requiredTableDesc();
-  SetupNewTable ms_flag_cmd_table(ms_->flagCmdTableName(),
-      ms_flag_cmd_description, Table::Scratch);
+  casacore::TableDesc ms_flag_cmd_description = casacore::MSFlagCmd::requiredTableDesc();
+  casacore::SetupNewTable ms_flag_cmd_table(ms_->flagCmdTableName(),
+      ms_flag_cmd_description, casacore::Table::Scratch);
   ms_->rwKeywordSet().defineTable(
-      MeasurementSet::keywordName(MeasurementSet::FLAG_CMD),
-      Table(ms_flag_cmd_table));
+      casacore::MeasurementSet::keywordName(casacore::MeasurementSet::FLAG_CMD),
+      casacore::Table(ms_flag_cmd_table));
 
-  TableDesc ms_freq_offset_description = MSFreqOffset::requiredTableDesc();
-  SetupNewTable ms_freq_offset_table(ms_->freqOffsetTableName(),
-      ms_freq_offset_description, Table::Scratch);
+  casacore::TableDesc ms_freq_offset_description = casacore::MSFreqOffset::requiredTableDesc();
+  casacore::SetupNewTable ms_freq_offset_table(ms_->freqOffsetTableName(),
+      ms_freq_offset_description, casacore::Table::Scratch);
   ms_->rwKeywordSet().defineTable(
-      MeasurementSet::keywordName(MeasurementSet::FREQ_OFFSET),
-      Table(ms_freq_offset_table));
+      casacore::MeasurementSet::keywordName(casacore::MeasurementSet::FREQ_OFFSET),
+      casacore::Table(ms_freq_offset_table));
 
-  TableDesc ms_history_description = MSHistory::requiredTableDesc();
-  SetupNewTable ms_history_table(ms_->historyTableName(),
-      ms_history_description, Table::Scratch);
+  casacore::TableDesc ms_history_description = casacore::MSHistory::requiredTableDesc();
+  casacore::SetupNewTable ms_history_table(ms_->historyTableName(),
+      ms_history_description, casacore::Table::Scratch);
   ms_->rwKeywordSet().defineTable(
-      MeasurementSet::keywordName(MeasurementSet::HISTORY),
-      Table(ms_history_table));
+      casacore::MeasurementSet::keywordName(casacore::MeasurementSet::HISTORY),
+      casacore::Table(ms_history_table));
 
-  TableDesc ms_observation_description = MSObservation::requiredTableDesc();
-  SetupNewTable ms_observation_table(ms_->observationTableName(),
-      ms_observation_description, Table::Scratch);
+  casacore::TableDesc ms_observation_description = casacore::MSObservation::requiredTableDesc();
+  casacore::SetupNewTable ms_observation_table(ms_->observationTableName(),
+      ms_observation_description, casacore::Table::Scratch);
   ms_->rwKeywordSet().defineTable(
-      MeasurementSet::keywordName(MeasurementSet::OBSERVATION),
-      Table(ms_observation_table));
+      casacore::MeasurementSet::keywordName(casacore::MeasurementSet::OBSERVATION),
+      casacore::Table(ms_observation_table));
 
-  TableDesc ms_pointing_description = MSPointing::requiredTableDesc();
-  SetupNewTable ms_pointing_table(ms_->pointingTableName(),
-      ms_pointing_description, Table::Scratch);
+  casacore::TableDesc ms_pointing_description = casacore::MSPointing::requiredTableDesc();
+  casacore::SetupNewTable ms_pointing_table(ms_->pointingTableName(),
+      ms_pointing_description, casacore::Table::Scratch);
   ms_->rwKeywordSet().defineTable(
-      MeasurementSet::keywordName(MeasurementSet::POINTING),
-      Table(ms_pointing_table));
+      casacore::MeasurementSet::keywordName(casacore::MeasurementSet::POINTING),
+      casacore::Table(ms_pointing_table));
 
-  TableDesc ms_polarization_description = MSPolarization::requiredTableDesc();
-  SetupNewTable ms_polarization_table(ms_->polarizationTableName(),
-      ms_polarization_description, Table::Scratch);
+  casacore::TableDesc ms_polarization_description = casacore::MSPolarization::requiredTableDesc();
+  casacore::SetupNewTable ms_polarization_table(ms_->polarizationTableName(),
+      ms_polarization_description, casacore::Table::Scratch);
   ms_->rwKeywordSet().defineTable(
-      MeasurementSet::keywordName(MeasurementSet::POLARIZATION),
-      Table(ms_polarization_table));
+      casacore::MeasurementSet::keywordName(casacore::MeasurementSet::POLARIZATION),
+      casacore::Table(ms_polarization_table));
 
-  TableDesc ms_processor_description = MSProcessor::requiredTableDesc();
-  SetupNewTable ms_processor_table(ms_->processorTableName(),
-      ms_processor_description, Table::Scratch);
+  casacore::TableDesc ms_processor_description = casacore::MSProcessor::requiredTableDesc();
+  casacore::SetupNewTable ms_processor_table(ms_->processorTableName(),
+      ms_processor_description, casacore::Table::Scratch);
   ms_->rwKeywordSet().defineTable(
-      MeasurementSet::keywordName(MeasurementSet::PROCESSOR),
-      Table(ms_processor_table));
+      casacore::MeasurementSet::keywordName(casacore::MeasurementSet::PROCESSOR),
+      casacore::Table(ms_processor_table));
 
-  TableDesc ms_source_description = MSSource::requiredTableDesc();
-  MSSource::addColumnToDesc(ms_source_description, MSSourceEnums::TRANSITION,
+  casacore::TableDesc ms_source_description = casacore::MSSource::requiredTableDesc();
+  casacore::MSSource::addColumnToDesc(ms_source_description, casacore::MSSourceEnums::TRANSITION,
       1);
-  MSSource::addColumnToDesc(ms_source_description,
-      MSSourceEnums::REST_FREQUENCY, 1);
-  MSSource::addColumnToDesc(ms_source_description, MSSourceEnums::SYSVEL, 1);
-  SetupNewTable ms_source_table(ms_->sourceTableName(), ms_source_description,
-      Table::Scratch);
+  casacore::MSSource::addColumnToDesc(ms_source_description,
+      casacore::MSSourceEnums::REST_FREQUENCY, 1);
+  casacore::MSSource::addColumnToDesc(ms_source_description, casacore::MSSourceEnums::SYSVEL, 1);
+  casacore::SetupNewTable ms_source_table(ms_->sourceTableName(), ms_source_description,
+      casacore::Table::Scratch);
   ms_->rwKeywordSet().defineTable(
-      MeasurementSet::keywordName(MeasurementSet::SOURCE),
-      Table(ms_source_table));
+      casacore::MeasurementSet::keywordName(casacore::MeasurementSet::SOURCE),
+      casacore::Table(ms_source_table));
 
-  TableDesc ms_spectral_window_description =
-      MSSpectralWindow::requiredTableDesc();
-  SetupNewTable ms_spectral_window_table(ms_->spectralWindowTableName(),
-      ms_spectral_window_description, Table::Scratch);
+  casacore::TableDesc ms_spectral_window_description =
+      casacore::MSSpectralWindow::requiredTableDesc();
+  casacore::SetupNewTable ms_spectral_window_table(ms_->spectralWindowTableName(),
+      ms_spectral_window_description, casacore::Table::Scratch);
   ms_->rwKeywordSet().defineTable(
-      MeasurementSet::keywordName(MeasurementSet::SPECTRAL_WINDOW),
-      Table(ms_spectral_window_table));
+      casacore::MeasurementSet::keywordName(casacore::MeasurementSet::SPECTRAL_WINDOW),
+      casacore::Table(ms_spectral_window_table));
 
-  TableDesc ms_state_description = MSState::requiredTableDesc();
-  SetupNewTable ms_state_table(ms_->stateTableName(), ms_state_description,
-      Table::Scratch);
+  casacore::TableDesc ms_state_description = casacore::MSState::requiredTableDesc();
+  casacore::SetupNewTable ms_state_table(ms_->stateTableName(), ms_state_description,
+      casacore::Table::Scratch);
   ms_->rwKeywordSet().defineTable(
-      MeasurementSet::keywordName(MeasurementSet::STATE),
-      Table(ms_state_table));
+      casacore::MeasurementSet::keywordName(casacore::MeasurementSet::STATE),
+      casacore::Table(ms_state_table));
 
-  TableDesc ms_syscal_description = MSSysCal::requiredTableDesc();
-  MSSysCal::addColumnToDesc(ms_syscal_description, MSSysCalEnums::TCAL_SPECTRUM,
+  casacore::TableDesc ms_syscal_description = casacore::MSSysCal::requiredTableDesc();
+  casacore::MSSysCal::addColumnToDesc(ms_syscal_description, casacore::MSSysCalEnums::TCAL_SPECTRUM,
       2);
-  MSSysCal::addColumnToDesc(ms_syscal_description, MSSysCalEnums::TCAL, 1);
-  MSSysCal::addColumnToDesc(ms_syscal_description, MSSysCalEnums::TSYS_SPECTRUM,
+  casacore::MSSysCal::addColumnToDesc(ms_syscal_description, casacore::MSSysCalEnums::TCAL, 1);
+  casacore::MSSysCal::addColumnToDesc(ms_syscal_description, casacore::MSSysCalEnums::TSYS_SPECTRUM,
       2);
-  MSSysCal::addColumnToDesc(ms_syscal_description, MSSysCalEnums::TSYS, 1);
-  SetupNewTable ms_syscal_table(ms_->sysCalTableName(), ms_syscal_description,
-      Table::Scratch);
+  casacore::MSSysCal::addColumnToDesc(ms_syscal_description, casacore::MSSysCalEnums::TSYS, 1);
+  casacore::SetupNewTable ms_syscal_table(ms_->sysCalTableName(), ms_syscal_description,
+      casacore::Table::Scratch);
   ms_->rwKeywordSet().defineTable(
-      MeasurementSet::keywordName(MeasurementSet::SYSCAL),
-      Table(ms_syscal_table));
+      casacore::MeasurementSet::keywordName(casacore::MeasurementSet::SYSCAL),
+      casacore::Table(ms_syscal_table));
 
-  TableDesc ms_weather_description = MSWeather::requiredTableDesc();
-  MSWeather::addColumnToDesc(ms_weather_description,
-      MSWeatherEnums::TEMPERATURE);
-  MSWeather::addColumnToDesc(ms_weather_description, MSWeatherEnums::PRESSURE);
-  MSWeather::addColumnToDesc(ms_weather_description,
-      MSWeatherEnums::REL_HUMIDITY);
-  MSWeather::addColumnToDesc(ms_weather_description,
-      MSWeatherEnums::WIND_SPEED);
-  MSWeather::addColumnToDesc(ms_weather_description,
-      MSWeatherEnums::WIND_DIRECTION);
-  SetupNewTable ms_weather_table(ms_->weatherTableName(),
-      ms_weather_description, Table::Scratch);
+  casacore::TableDesc ms_weather_description = casacore::MSWeather::requiredTableDesc();
+  casacore::MSWeather::addColumnToDesc(ms_weather_description,
+      casacore::MSWeatherEnums::TEMPERATURE);
+  casacore::MSWeather::addColumnToDesc(ms_weather_description, casacore::MSWeatherEnums::PRESSURE);
+  casacore::MSWeather::addColumnToDesc(ms_weather_description,
+      casacore::MSWeatherEnums::REL_HUMIDITY);
+  casacore::MSWeather::addColumnToDesc(ms_weather_description,
+      casacore::MSWeatherEnums::WIND_SPEED);
+  casacore::MSWeather::addColumnToDesc(ms_weather_description,
+      casacore::MSWeatherEnums::WIND_DIRECTION);
+  casacore::SetupNewTable ms_weather_table(ms_->weatherTableName(),
+      ms_weather_description, casacore::Table::Scratch);
   ms_->rwKeywordSet().defineTable(
-      MeasurementSet::keywordName(MeasurementSet::WEATHER),
-      Table(ms_weather_table));
+      casacore::MeasurementSet::keywordName(casacore::MeasurementSet::WEATHER),
+      casacore::Table(ms_weather_table));
 
   ms_->initRefs();
 
   // Set up MSMainColumns
-  ms_columns_.reset(new MSMainColumns(*ms_));
+  ms_columns_.reset(new casacore::MSMainColumns(*ms_));
 
   // Set up MSDataDescColumns
   data_description_columns_.reset(
-      new MSDataDescColumns(ms_->dataDescription()));
+      new casacore::MSDataDescColumns(ms_->dataDescription()));
 
   // Set up MSFeedColumns
-  feed_columns_.reset(new MSFeedColumns(ms_->feed()));
+  feed_columns_.reset(new casacore::MSFeedColumns(ms_->feed()));
 
   // Set up MSPointingColumns
-  pointing_columns_.reset(new MSPointingColumns(ms_->pointing()));
+  pointing_columns_.reset(new casacore::MSPointingColumns(ms_->pointing()));
 
   // Set up MSPolarizationColumns
-  polarization_columns_.reset(new MSPolarizationColumns(ms_->polarization()));
+  polarization_columns_.reset(new casacore::MSPolarizationColumns(ms_->polarization()));
 
   // Set up MSSysCalColumns
-  syscal_columns_.reset(new MSSysCalColumns(ms_->sysCal()));
+  syscal_columns_.reset(new casacore::MSSysCalColumns(ms_->sysCal()));
 
   // Set up MSStateColumns
-  state_columns_.reset(new MSStateColumns(ms_->state()));
+  state_columns_.reset(new casacore::MSStateColumns(ms_->state()));
 
   // Set up MSWeatherColumns
-  weather_columns_.reset(new MSWeatherColumns(ms_->weather()));
+  weather_columns_.reset(new casacore::MSWeatherColumns(ms_->weather()));
 
 //  std::cout << "End " << __PRETTY_FUNCTION__ << std::endl;
 }
@@ -690,17 +693,17 @@ void SingleDishMSFiller<T>::fillMain() {
   DataRecord record;
 //    std::cout << "nrow = " << nrow << std::endl;
   for (size_t irow = 0; irow < nrow; ++irow) {
-    Bool status = reader_->getData(irow, record);
+    casacore::Bool status = reader_->getData(irow, record);
 //      std::cout << "irow " << irow << " status " << status << std::endl;
 //      std::cout << "   TIME=" << record.time << " INTERVAL=" << record.interval
 //          << std::endl;
 //      std::cout << "status = " << status << std::endl;
     if (status) {
-      Bool is_ready = accumulator.queryForGet(record.time);
+      casacore::Bool is_ready = accumulator.queryForGet(record.time);
       if (is_ready) {
         flush(accumulator);
       }
-      Bool astatus = accumulator.accumulate(record);
+      casacore::Bool astatus = accumulator.accumulate(record);
       (void) astatus;
 //        std::cout << "astatus = " << astatus << std::endl;
     }
@@ -721,10 +724,10 @@ void SingleDishMSFiller<T>::fillAntenna() {
       [&](AntennaRecord &record) {return reader_->getAntennaRow(record);});
 
   // initialize POINTING table related stuff
-  uInt nrow = mytable.nrow();
+  casacore::uInt nrow = mytable.nrow();
   num_pointing_time_.resize(nrow);
-  for (uInt i = 0; i < nrow; ++i) {
-    pointing_time_[i] = Vector<Double>(ARRAY_BLOCK_SIZE, -1.0);
+  for (casacore::uInt i = 0; i < nrow; ++i) {
+    pointing_time_[i] = casacore::Vector<casacore::Double>(ARRAY_BLOCK_SIZE, -1.0);
     pointing_time_min_[i] = -1.0;
     pointing_time_max_[i] = 1.0e30;
     num_pointing_time_[i] = 0;
@@ -789,13 +792,13 @@ void SingleDishMSFiller<T>::fillHistory() {
 
   // HISTORY table should be filled by upper-level
   // application command (e.g. importscantable)
-//    ms_->history().addRow(1, True);
-//    Vector<String> cols(2);
+//    ms_->history().addRow(1, true);
+//    casacore::Vector<casacore::String> cols(2);
 //    cols[0] = "APP_PARAMS";
 //    cols[1] = "CLI_COMMAND";
-//    TableRow row(ms_->history(), cols, True);
+//    casacore::TableRow row(ms_->history(), cols, true);
 //    // TODO: fill HISTORY row here
-//    TableRecord record = row.record();
+//    casacore::TableRecord record = row.record();
 //    record.print(std::cout);
 //    row.put(0, record);
 
@@ -821,20 +824,20 @@ void SingleDishMSFiller<T>::fillNROArray() {
 
   String const nro_tablename = "NRO_ARRAY";
 
-  TableDesc td(nro_tablename, TableDesc::Scratch);
+  casacore::TableDesc td(nro_tablename, TableDesc::Scratch);
   td.addColumn(ScalarColumnDesc<Int>("ARRAY"));
   td.addColumn(ScalarColumnDesc<Int>("BEAM"));
   td.addColumn(ScalarColumnDesc<Int>("POLARIZATION"));
   td.addColumn(ScalarColumnDesc<Int>("SPECTRAL_WINDOW"));
-  String tabname = ms_->tableName() + "/" + nro_tablename;
-  SetupNewTable newtab(tabname, td, Table::Scratch);
+  casacore::String tabname = ms_->tableName() + "/" + nro_tablename;
+  casacore::SetupNewTable newtab(tabname, td, Table::Scratch);
   ms_->rwKeywordSet().defineTable(nro_tablename, Table(newtab, reader_->getNROArraySize()));
 
-  Table nro_table = ms_->rwKeywordSet().asTable(nro_tablename);
-  ScalarColumn<int> arr(nro_table, "ARRAY");
-  ScalarColumn<int> bea(nro_table, "BEAM");
-  ScalarColumn<int> pol(nro_table, "POLARIZATION");
-  ScalarColumn<int> spw(nro_table, "SPECTRAL_WINDOW");
+  casacore::Table nro_table = ms_->rwKeywordSet().asTable(nro_tablename);
+  casacore::ScalarColumn<int> arr(nro_table, "ARRAY");
+  casacore::ScalarColumn<int> bea(nro_table, "BEAM");
+  casacore::ScalarColumn<int> pol(nro_table, "POLARIZATION");
+ casacore:: ScalarColumn<int> spw(nro_table, "SPECTRAL_WINDOW");
   int iarr = 0;
   for (int ibeam = 0; ibeam < reader_->getNRONumBeam(); ++ibeam) {
     for (int ipol = 0; ipol < reader_->getNRONumPol(); ++ipol) {
@@ -852,111 +855,111 @@ void SingleDishMSFiller<T>::fillNROArray() {
 }
 
 template<class T>
-Int SingleDishMSFiller<T>::updatePolarization(Vector<Int> const &corr_type,
-    Int const &num_pol) {
-  uInt num_corr = corr_type.size();
+casacore::Int SingleDishMSFiller<T>::updatePolarization(casacore::Vector<casacore::Int> const &corr_type,
+    casacore::Int const &num_pol) {
+  casacore::uInt num_corr = corr_type.size();
   if (num_pol < 1 || num_corr != (uInt) num_pol) {
-    throw AipsError("Internal inconsistency in number of correlations");
+    throw casacore::AipsError("Internal inconsistency in number of correlations");
   }
-  MSPolarization &mytable = ms_->polarization();
-  //MSPolarizationColumns mycolumns(mytable);
-  Matrix<Int> const corr_product(2, num_pol, 0);
-  auto comparer = [&](MSPolarizationColumns const &columns, uInt i) {
-    Bool match = allEQ(columns.corrType()(i), corr_type);
+  casacore::MSPolarization &mytable = ms_->polarization();
+  //casacore::MSPolarizationColumns mycolumns(mytable);
+  casacore::Matrix<casacore::Int> const corr_product(2, num_pol, 0);
+  auto comparer = [&](casacore::MSPolarizationColumns const &columns, casacore::uInt i) {
+    casacore::Bool match = allEQ(columns.corrType()(i), corr_type);
     return match;
   };
-  auto updater = [&](MSPolarizationColumns &columns, uInt i) {
+  auto updater = [&](casacore::MSPolarizationColumns &columns, casacore::uInt i) {
     columns.numCorr().put(i, num_pol);
     columns.corrType().put(i, corr_type);
     columns.corrProduct().put(i, corr_product);
   };
-  Int polarization_id = ::updateTable(mytable, *(polarization_columns_.get()),
+  casacore::Int polarization_id = ::updateTable(mytable, *(polarization_columns_.get()),
       comparer, updater);
   return polarization_id;
 }
 
 template<class T>
-Int SingleDishMSFiller<T>::updateDataDescription(Int const &polarization_id,
-    Int const &spw_id) {
+Int SingleDishMSFiller<T>::updateDataDescription(casacore::Int const &polarization_id,
+    casacore::Int const &spw_id) {
   if (polarization_id < 0 || spw_id < 0) {
-    throw AipsError("Invalid ids for DATA_DESCRIPTION");
+    throw casacore::AipsError("Invalid ids for DATA_DESCRIPTION");
   }
-  MSDataDescription &mytable = ms_->dataDescription();
-  //MSDataDescColumns mycolumns(mytable);
-  auto comparer = [&](MSDataDescColumns const &columns, uInt i) {
-    Bool match = (columns.polarizationId()(i) == polarization_id)
+  casacore::MSDataDescription &mytable = ms_->dataDescription();
+  //casacore::MSDataDescColumns mycolumns(mytable);
+  auto comparer = [&](casacore::MSDataDescColumns const &columns, casacore::uInt i) {
+    casacore::Bool match = (columns.polarizationId()(i) == polarization_id)
     && (columns.spectralWindowId()(i) == spw_id);
     return match;
   };
-  auto updater = [&](MSDataDescColumns &columns, uInt i) {
+  auto updater = [&](casacore::MSDataDescColumns &columns, casacore::uInt i) {
     columns.polarizationId().put(i, polarization_id);
     columns.spectralWindowId().put(i, spw_id);
   };
-  Int data_desc_id = ::updateTable(mytable, *(data_description_columns_.get()),
+  casacore::Int data_desc_id = ::updateTable(mytable, *(data_description_columns_.get()),
       comparer, updater);
 
   return data_desc_id;
 }
 
 template<class T>
-Int SingleDishMSFiller<T>::updateState(Int const &subscan,
-    String const &obs_mode) {
-  MSState &mytable = ms_->state();
-  static Regex const regex("^OBSERVE_TARGET#ON_SOURCE");
-  //static std::vector<Int> subscan_list;
+Int SingleDishMSFiller<T>::updateState(casacore::Int const &subscan,
+    casacore::String const &obs_mode) {
+  casacore::MSState &mytable = ms_->state();
+  static casacore::Regex const regex("^OBSERVE_TARGET#ON_SOURCE");
+  //static std::vector<casacore::Int> subscan_list;
   auto comparer =
-      [&](MSStateColumns &columns, uInt i) {
-        Bool match = (subscan == subscan_list_[i]) && (obs_mode == columns.obsMode()(i));
+      [&](casacore::MSStateColumns &columns, casacore::uInt i) {
+        casacore::Bool match = (subscan == subscan_list_[i]) && (obs_mode == columns.obsMode()(i));
         return match;
       };
-  auto updater = [&](MSStateColumns &columns, uInt i) {
+  auto updater = [&](casacore::MSStateColumns &columns, casacore::uInt i) {
     columns.subScan().put(i, subscan);
     columns.obsMode().put(i, obs_mode);
-    Bool is_signal = obs_mode.matches(regex);
+    casacore::Bool is_signal = obs_mode.matches(regex);
     columns.sig().put(i, is_signal);
     columns.ref().put(i, !is_signal);
 
     subscan_list_.push_back(subscan);
   };
-  Int state_id = ::updateTable(mytable, *(state_columns_.get()), comparer,
+  casacore::Int state_id = ::updateTable(mytable, *(state_columns_.get()), comparer,
       updater);
   return state_id;
 }
 
 template<class T>
-Int SingleDishMSFiller<T>::updateFeed(Int const &feed_id, Int const &spw_id,
-    String const &pol_type) {
-  constexpr Int num_receptors = 2;
-  static String const linear_type_arr[2] = { "X", "Y" };
-  static Vector<String> linear_type(linear_type_arr, 2, SHARE);
-  static String const circular_type_arr[2] = { "R", "L" };
-  static Vector<String> circular_type(circular_type_arr, 2, SHARE);
-  static Matrix<Complex> const pol_response(num_receptors, num_receptors,
-      Complex(0));
-  Vector<String> *polarization_type = nullptr;
+Int SingleDishMSFiller<T>::updateFeed(casacore::Int const &feed_id, casacore::Int const &spw_id,
+    casacore::String const &pol_type) {
+  constexpr casacore::Int num_receptors = 2;
+  static casacore::String const linear_type_arr[2] = { "X", "Y" };
+  static casacore::Vector<casacore::String> linear_type(linear_type_arr, 2, SHARE);
+  static casacore::String const circular_type_arr[2] = { "R", "L" };
+  static casacore::Vector<casacore::String> circular_type(circular_type_arr, 2, SHARE);
+  static casacore::Matrix<casacore::Complex> const pol_response(num_receptors, num_receptors,
+      casacore::Complex(0));
+  casacore::Vector<casacore::String> *polarization_type = nullptr;
   if (pol_type == "linear") {
     polarization_type = &linear_type;
   } else if (pol_type == "circular") {
     polarization_type = &circular_type;
   }
-  //static std::vector< Vector<String> *> polarization_type_pool;
+  //static std::vector< casacore::Vector<casacore::String> *> polarization_type_pool;
 
-  String polarization_type_arr[2] = { "X", "Y" };
-  Vector<String> polarization_type_storage(polarization_type_arr, 2, SHARE);
-  Matrix<Double> const beam_offset(2, num_receptors, 0.0);
-  Vector<Double> const receptor_angle(num_receptors, 0.0);
-  Vector<Double> const position(3, 0.0);
-  auto comparer = [&](MSFeedColumns &columns, uInt i) {
-    Vector<String> *current_polarization_type = polarization_type_pool_[i];
-    Bool match = allEQ(*polarization_type, *current_polarization_type) &&
+  casacore::String polarization_type_arr[2] = { "X", "Y" };
+  casacore::Vector<casacore::String> polarization_type_storage(polarization_type_arr, 2, SHARE);
+  casacore::Matrix<casacore::Double> const beam_offset(2, num_receptors, 0.0);
+  casacore::Vector<casacore::Double> const receptor_angle(num_receptors, 0.0);
+  casacore::Vector<casacore::Double> const position(3, 0.0);
+  auto comparer = [&](casacore::MSFeedColumns &columns, casacore::uInt i) {
+    casacore::Vector<casacore::String> *current_polarization_type = polarization_type_pool_[i];
+    casacore::Bool match = allEQ(*polarization_type, *current_polarization_type) &&
     (feed_id == columns.feedId()(i)) &&
     (spw_id == columns.spectralWindowId()(i));
     return match;
   };
-  auto updater = [&](MSFeedColumns &columns, uInt i) {
+  auto updater = [&](casacore::MSFeedColumns &columns, casacore::uInt i) {
     // TODO: 2016/01/26 TN
     // Here I regard "multi-beam receiver" as multi-feed, single-beam receivers
-    // in MS v2 notation. So, BEAM_ID is always 0 and FEED_ID is beam identifier
+    // in casacore::MS v2 notation. So, BEAM_ID is always 0 and FEED_ID is beam identifier
     // for "multi-beam" receivers so far. However, if we decide to import beams
     // as separated virtual antennas, FEED_ID must always be 0.
       columns.feedId().put(i, feed_id);
@@ -970,7 +973,7 @@ Int SingleDishMSFiller<T>::updateFeed(Int const &feed_id, Int const &spw_id,
 
       polarization_type_pool_.push_back(polarization_type);
     };
-  Int feed_row = ::updateTable(ms_->feed(), *(feed_columns_.get()), comparer,
+  casacore::Int feed_row = ::updateTable(ms_->feed(), *(feed_columns_.get()), comparer,
       updater);
 
   // reference feed
@@ -982,9 +985,9 @@ Int SingleDishMSFiller<T>::updateFeed(Int const &feed_id, Int const &spw_id,
 }
 
 template<class T>
-Int SingleDishMSFiller<T>::updatePointing(Int const &antenna_id,
-    Int const &feed_id, Double const &time, Double const &interval,
-    Matrix<Double> const &direction) {
+Int SingleDishMSFiller<T>::updatePointing(casacore::Int const &antenna_id,
+    casacore::Int const &feed_id, casacore::Double const &time, casacore::Double const &interval,
+    casacore::Matrix<casacore::Double> const &direction) {
   POST_START;
 
   if (reference_feed_ != feed_id) {
@@ -992,31 +995,31 @@ Int SingleDishMSFiller<T>::updatePointing(Int const &antenna_id,
   }
 
   auto &mytable = ms_->pointing();
-  uInt nrow = mytable.nrow();
+  casacore::uInt nrow = mytable.nrow();
 
-  uInt *n = &num_pointing_time_[antenna_id];
-  Double *time_max = &pointing_time_max_[antenna_id];
-  Double *time_min = &pointing_time_min_[antenna_id];
-  Vector<Double> *time_list = &pointing_time_[antenna_id];
+  casacore::uInt *n = &num_pointing_time_[antenna_id];
+  casacore::Double *time_max = &pointing_time_max_[antenna_id];
+  casacore::Double *time_min = &pointing_time_min_[antenna_id];
+  casacore::Vector<casacore::Double> *time_list = &pointing_time_[antenna_id];
 
   auto addPointingRow =
       [&]() {
-        mytable.addRow(1, True);
+        mytable.addRow(1, true);
         pointing_columns_->time().put(nrow, time);
         pointing_columns_->interval().put(nrow, interval);
         pointing_columns_->antennaId().put(nrow, antenna_id);
         if (direction.ncolumn() == 1 || allEQ(direction.column(1), 0.0)) {
           pointing_columns_->numPoly().put(nrow, 0);
-          pointing_columns_->direction().put(nrow, direction(IPosition(2,0,0), IPosition(2,1,0)));
+          pointing_columns_->direction().put(nrow, direction(casacore::IPosition(2,0,0), casacore::IPosition(2,1,0)));
         } else {
           pointing_columns_->direction().put(nrow, direction);
-          Int num_poly = direction.shape()[1] - 1;
+          casacore::Int num_poly = direction.shape()[1] - 1;
           pointing_columns_->numPoly().put(nrow, num_poly);
         }
         // add timestamp to the list
-        uInt nelem = time_list->nelements();
+        casacore::uInt nelem = time_list->nelements();
         if (nelem <= *n) {
-          time_list->resize(nelem + ARRAY_BLOCK_SIZE, True);
+          time_list->resize(nelem + ARRAY_BLOCK_SIZE, true);
         }
         (*time_list)[*n] = time;
         // increment number of pointing entry
@@ -1043,8 +1046,8 @@ Int SingleDishMSFiller<T>::updatePointing(Int const &antenna_id,
 }
 
 template<class T>
-void SingleDishMSFiller<T>::updateWeather(Int const &antenna_id,
-    Double const &time, Double const &interval,
+void SingleDishMSFiller<T>::updateWeather(casacore::Int const &antenna_id,
+    casacore::Double const &time, casacore::Double const &interval,
     MSDataRecord const &data_record) {
   WeatherRecord record;
   record.clear();
@@ -1060,8 +1063,8 @@ void SingleDishMSFiller<T>::updateWeather(Int const &antenna_id,
   auto pos = std::find(weather_list_.begin(), weather_list_.end(), record);
   if (pos == weather_list_.end()) {
     weather_list_.push_back(record);
-    uInt irow = mytable.nrow();
-    mytable.addRow(1, True);
+    casacore::uInt irow = mytable.nrow();
+    mytable.addRow(1, true);
     record.fill(irow, *(weather_columns_.get()));
   } else {
     auto irow = std::distance(weather_list_.begin(), pos);
@@ -1070,15 +1073,15 @@ void SingleDishMSFiller<T>::updateWeather(Int const &antenna_id,
 }
 
 template<class T>
-void SingleDishMSFiller<T>::updateWeather(MSWeatherColumns &columns, uInt irow,
+void SingleDishMSFiller<T>::updateWeather(casacore::MSWeatherColumns &columns, casacore::uInt irow,
     WeatherRecord const &record) {
   ::updateSubtable(columns, irow, record);
 }
 
 template<class T>
-void SingleDishMSFiller<T>::updateSysCal(Int const &antenna_id,
-    Int const &feed_id, Int const &spw_id, Double const &time,
-    Double const &interval, MSDataRecord const &data_record) {
+void SingleDishMSFiller<T>::updateSysCal(casacore::Int const &antenna_id,
+    casacore::Int const &feed_id, casacore::Int const &spw_id, casacore::Double const &time,
+    casacore::Double const &interval, MSDataRecord const &data_record) {
   POST_START;
 
   SysCalRecord record;
@@ -1089,18 +1092,18 @@ void SingleDishMSFiller<T>::updateSysCal(Int const &antenna_id,
   record.time = time;
   record.interval = interval;
 
-  //Bool tcal_empty = False;
-  Bool tsys_empty = False;
+  //casacore::Bool tcal_empty = false;
+  casacore::Bool tsys_empty = false;
 
   if (data_record.tcal.empty() || allEQ(data_record.tcal, 1.0f)
       || allEQ(data_record.tcal, 0.0f)) {
-    //tcal_empty = True;
+    //tcal_empty = true;
   } else {
 //      std::cout << "tcal seems to be valid " << data_record.tcal << std::endl;
     if (data_record.float_data.shape() == data_record.tcal.shape()) {
       record.tcal_spectrum.assign(data_record.tcal);
     } else {
-      Matrix<Float> tcal = data_record.tcal;
+      casacore::Matrix<casacore::Float> tcal = data_record.tcal;
       if (!tcal.empty()) {
         record.tcal.assign(tcal.column(0));
       }
@@ -1108,12 +1111,12 @@ void SingleDishMSFiller<T>::updateSysCal(Int const &antenna_id,
   }
   if (data_record.tsys.empty() || allEQ(data_record.tsys, 1.0f)
       || allEQ(data_record.tsys, 0.0f)) {
-    tsys_empty = True;
+    tsys_empty = true;
   } else {
     if (data_record.float_data.shape() == data_record.tsys.shape()) {
       record.tsys_spectrum.assign(data_record.tsys);
     } else {
-      Matrix<Float> tsys = data_record.tsys;
+      casacore::Matrix<casacore::Float> tsys = data_record.tsys;
       if (!tsys.empty()) {
         record.tsys.assign(tsys.column(0));
       }
@@ -1129,8 +1132,8 @@ void SingleDishMSFiller<T>::updateSysCal(Int const &antenna_id,
   auto &mytable = ms_->sysCal();
   auto pos = std::find(syscal_list_.begin(), syscal_list_.end(), record);
   if (pos == syscal_list_.end()) {
-    uInt irow = mytable.nrow();
-    mytable.addRow(1, True);
+    casacore::uInt irow = mytable.nrow();
+    mytable.addRow(1, true);
     record.fill(irow, *(syscal_columns_.get()));
     syscal_list_.push_back(SysCalTableRecord(ms_.get(), irow, record));
   } else {
@@ -1142,27 +1145,27 @@ void SingleDishMSFiller<T>::updateSysCal(Int const &antenna_id,
 }
 
 template<class T>
-void SingleDishMSFiller<T>::updateSysCal(MSSysCalColumns &columns, uInt irow,
+void SingleDishMSFiller<T>::updateSysCal(casacore::MSSysCalColumns &columns, casacore::uInt irow,
     SysCalRecord const &record) {
   ::updateSubtable(columns, irow, record);
 }
 
 template<class T>
-void SingleDishMSFiller<T>::updateMain(Int const &antenna_id, Int field_id,
-    Int feedId, Int dataDescriptionId, Int stateId, Int const &scan_number,
-    Double const &time, MSDataRecord const &dataRecord) {
+void SingleDishMSFiller<T>::updateMain(casacore::Int const &antenna_id, casacore::Int field_id,
+    casacore::Int feedId, casacore::Int dataDescriptionId, casacore::Int stateId, casacore::Int const &scan_number,
+    casacore::Double const &time, MSDataRecord const &dataRecord) {
   POST_START;
 
   // constant stuff
-  static Vector<Double> const uvw(3, 0.0);
-  static Array<Bool> const flagCategory(IPosition(3, 0, 0, 0));
+  static casacore::Vector<casacore::Double> const uvw(3, 0.0);
+  static casacore::Array<casacore::Bool> const flagCategory(casacore::IPosition(3, 0, 0, 0));
 
   // target row id
-  uInt irow = ms_->nrow();
+  casacore::uInt irow = ms_->nrow();
 
   // add new row
-  //ms_->addRow(1, True);
-  ms_->addRow(1, False);
+  //ms_->addRow(1, true);
+  ms_->addRow(1, false);
 
   ms_columns_->uvw().put(irow, uvw);
   ms_columns_->flagCategory().put(irow, flagCategory);
@@ -1176,12 +1179,12 @@ void SingleDishMSFiller<T>::updateMain(Int const &antenna_id, Int field_id,
   ms_columns_->scanNumber().put(irow, scan_number);
   ms_columns_->time().put(irow, time);
   ms_columns_->timeCentroid().put(irow, time);
-  Double const &interval = dataRecord.interval;
+  casacore::Double const &interval = dataRecord.interval;
   ms_columns_->interval().put(irow, interval);
   ms_columns_->exposure().put(irow, interval);
 
   if (is_float_) {
-    Matrix<Float> floatData;
+    casacore::Matrix<casacore::Float> floatData;
     if (dataRecord.isFloat()) {
       floatData.reference(dataRecord.float_data);
     } else {
@@ -1189,11 +1192,11 @@ void SingleDishMSFiller<T>::updateMain(Int const &antenna_id, Int field_id,
     }
     ms_columns_->floatData().put(irow, floatData);
   } else {
-    Matrix<Complex> data;
+    casacore::Matrix<casacore::Complex> data;
     if (dataRecord.isFloat()) {
       data.assign(
           makeComplex(dataRecord.float_data,
-              Matrix<Float>(dataRecord.float_data.shape(), 0.0f)));
+              casacore::Matrix<casacore::Float>(dataRecord.float_data.shape(), 0.0f)));
     } else {
       data.reference(dataRecord.complex_data);
     }
@@ -1220,26 +1223,26 @@ void SingleDishMSFiller<T>::flush(DataAccumulator &accumulator) {
   }
 
   for (size_t ichunk = 0; ichunk < nchunk; ++ichunk) {
-    Bool status = accumulator.get(ichunk, record_);
+    casacore::Bool status = accumulator.get(ichunk, record_);
 //      std::cout << "accumulator status = " << std::endl;
     if (status) {
-      Double time = record_.time;
-      Int antenna_id = record_.antenna_id;
-      Int spw_id = record_.spw_id;
-      Int feed_id = record_.feed_id;
-      Int field_id = record_.field_id;
-      Int scan = record_.scan;
-      Int subscan = record_.subscan;
-      String pol_type = record_.pol_type;
-      String obs_mode = record_.intent;
-      Int num_pol = record_.num_pol;
-      Vector<Int> &corr_type = record_.corr_type;
-      Int polarization_id = updatePolarization(corr_type, num_pol);
+      casacore::Double time = record_.time;
+      casacore::Int antenna_id = record_.antenna_id;
+      casacore::Int spw_id = record_.spw_id;
+      casacore::Int feed_id = record_.feed_id;
+      casacore::Int field_id = record_.field_id;
+      casacore::Int scan = record_.scan;
+      casacore::Int subscan = record_.subscan;
+      casacore::String pol_type = record_.pol_type;
+      casacore::String obs_mode = record_.intent;
+      casacore::Int num_pol = record_.num_pol;
+      casacore::Vector<casacore::Int> &corr_type = record_.corr_type;
+      casacore::Int polarization_id = updatePolarization(corr_type, num_pol);
       updateFeed(feed_id, spw_id, pol_type);
-      Int data_desc_id = updateDataDescription(polarization_id, spw_id);
-      Int state_id = updateState(subscan, obs_mode);
-      Matrix<Double> &direction = record_.direction;
-      Double interval = record_.interval;
+      casacore::Int data_desc_id = updateDataDescription(polarization_id, spw_id);
+      casacore::Int state_id = updateState(subscan, obs_mode);
+      casacore::Matrix<casacore::Double> &direction = record_.direction;
+      casacore::Double interval = record_.interval;
 
       // updatePointing must be called after updateFeed
       updatePointing(antenna_id, feed_id, time, interval, direction);
@@ -1269,33 +1272,33 @@ void SingleDishMSFiller<T>::sortPointing() {
   num_pointing_time_.resize();
 
   auto mytable = ms_->pointing();
-  MSPointingColumns mycolumns(mytable);
-  uInt nrow = mytable.nrow();
-  Vector<Int> antenna_id_list = mycolumns.antennaId().getColumn();
-  Vector<Double> time_list = mycolumns.time().getColumn();
-  Sort sorter;
+  casacore::MSPointingColumns mycolumns(mytable);
+  casacore::uInt nrow = mytable.nrow();
+  casacore::Vector<casacore::Int> antenna_id_list = mycolumns.antennaId().getColumn();
+  casacore::Vector<casacore::Double> time_list = mycolumns.time().getColumn();
+  casacore::Sort sorter;
   sorter.sortKey(antenna_id_list.data(), TpInt);
   sorter.sortKey(time_list.data(), TpDouble);
-  Vector<uInt> index_vector;
+  casacore::Vector<casacore::uInt> index_vector;
   sorter.sort(index_vector, nrow);
 
-  size_t storage_size = nrow * 2 * sizeof(Double);
+  size_t storage_size = nrow * 2 * sizeof(casacore::Double);
   std::unique_ptr<void, sdfiller::Deleter> storage(malloc(storage_size));
 
   // sort TIME
   {
-    Vector<Double> sorted(IPosition(1, nrow),
-        reinterpret_cast<Double *>(storage.get()), SHARE);
-    for (uInt i = 0; i < nrow; ++i) {
+    casacore::Vector<casacore::Double> sorted(casacore::IPosition(1, nrow),
+        reinterpret_cast<casacore::Double *>(storage.get()), SHARE);
+    for (casacore::uInt i = 0; i < nrow; ++i) {
       sorted[i] = time_list[index_vector[i]];
     }
     mycolumns.time().putColumn(sorted);
   }
   // sort ANTENNA_ID
   {
-    Vector<Int> sorted(IPosition(1, nrow),
-        reinterpret_cast<Int *>(storage.get()), SHARE);
-    for (uInt i = 0; i < nrow; ++i) {
+    casacore::Vector<casacore::Int> sorted(casacore::IPosition(1, nrow),
+        reinterpret_cast<casacore::Int *>(storage.get()), SHARE);
+    for (casacore::uInt i = 0; i < nrow; ++i) {
       sorted[i] = antenna_id_list[index_vector[i]];
     }
     mycolumns.antennaId().putColumn(sorted);
@@ -1303,11 +1306,11 @@ void SingleDishMSFiller<T>::sortPointing() {
 
   // sort NUM_POLY
   {
-    Vector<Int> num_poly_list(antenna_id_list);
+    casacore::Vector<casacore::Int> num_poly_list(antenna_id_list);
     mycolumns.numPoly().getColumn(num_poly_list);
-    Vector<Int> sorted(IPosition(1, nrow),
-        reinterpret_cast<Int *>(storage.get()), SHARE);
-    for (uInt i = 0; i < nrow; ++i) {
+    casacore::Vector<casacore::Int> sorted(casacore::IPosition(1, nrow),
+        reinterpret_cast<casacore::Int *>(storage.get()), SHARE);
+    for (casacore::uInt i = 0; i < nrow; ++i) {
       sorted[i] = antenna_id_list[index_vector[i]];
     }
     mycolumns.numPoly().putColumn(sorted);
@@ -1315,11 +1318,11 @@ void SingleDishMSFiller<T>::sortPointing() {
 
   // sort DIRECTION
   {
-    std::map<uInt, Matrix<Double> > direction;
-    for (uInt i = 0; i < nrow; ++i) {
+    std::map<casacore::uInt, casacore::Matrix<casacore::Double> > direction;
+    for (casacore::uInt i = 0; i < nrow; ++i) {
       direction[i] = mycolumns.direction()(i);
     }
-    for (uInt i = 0; i < nrow; ++i) {
+    for (casacore::uInt i = 0; i < nrow; ++i) {
       mycolumns.direction().put(i, direction[index_vector[i]]);
     }
   }

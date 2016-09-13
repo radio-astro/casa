@@ -28,6 +28,7 @@
 #include <components/ComponentModels/ComponentType.h>
 #include <casa/BasicSL/String.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 String ComponentType::name(ComponentType::Shape shapeEnum) {

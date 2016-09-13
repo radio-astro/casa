@@ -47,6 +47,7 @@
 #include <casa/BasicSL/String.h>
 #include <casa/Quanta/QuantumHolder.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 ComponentShape::ComponentShape() 
@@ -181,33 +182,33 @@ Bool ComponentShape::fromRecord(String& errorMessage,
   const String dirString("direction");
   if (!record.isDefined(dirString)) {
     // The there is no direction field then the direction is NOT changed!
-    return True;
+    return true;
   }
   const RecordFieldId direction(dirString);
   if (record.dataType(direction) != TpRecord) {
     errorMessage += "The 'direction' field must be a record\n";
-    return False;
+    return false;
   }
   const Record& dirRecord = record.asRecord(direction);
   MeasureHolder mh;
   if (!mh.fromRecord(errorMessage, dirRecord)) {
     errorMessage += "Could not parse the reference direction\n";
-    return False;
+    return false;
   }
   if (!mh.isMDirection()) {
     errorMessage += "The reference direction is not a direction measure\n";
-    return False;
+    return false;
   }
   setRefDirection(mh.asMDirection());
   const String errorString("error");
   if (!dirRecord.isDefined(errorString)) {
     // The there is no error field then the error is NOT changed!
-    return True;
+    return true;
   }
   const RecordFieldId error(errorString);
   if (dirRecord.dataType(error) != TpRecord) {
     errorMessage += "The 'error' field must be a record\n";
-    return False;
+    return false;
   }
   const Record& errRecord = dirRecord.asRecord(error);
 
@@ -215,11 +216,11 @@ Bool ComponentShape::fromRecord(String& errorMessage,
   if (!fromAngQRecord(longErr, errorMessage, "longitude", errRecord) ||
       !fromAngQRecord(latErr, errorMessage, "latitude", errRecord)) {
     errorMessage += "Direction error not changed\n";
-    return False;
+    return false;
   }
   setRefDirectionError(latErr, longErr);
   DebugAssert(ComponentShape::ok(), AipsError);
-  return True;
+  return true;
 }
 
 Bool ComponentShape::toRecord(String& errorMessage,
@@ -230,7 +231,7 @@ Bool ComponentShape::toRecord(String& errorMessage,
   const MeasureHolder mh(refDirection());
   if (!mh.toRecord(errorMessage, dirRecord)) {
     errorMessage += "Could not convert the reference direction to a record\n";
-    return False;
+    return false;
   }
 
   Record errRec;
@@ -241,28 +242,28 @@ Bool ComponentShape::toRecord(String& errorMessage,
     if (!qhLong.toRecord(errorMessage, longRec) || 
 	!qhLat.toRecord(errorMessage, latRec)) {
       errorMessage += "Could not convert the direction errors to a record\n";
-      return False;
+      return false;
     }
     errRec.defineRecord(RecordFieldId("longitude"), longRec);
     errRec.defineRecord(RecordFieldId("latitude"), latRec);
   }
   dirRecord.defineRecord(RecordFieldId("error"), errRec);
   record.defineRecord(RecordFieldId("direction"), dirRecord);
-  return True;
+  return true;
 }
 
 Bool ComponentShape::ok() const {
   if (ComponentShape::badError(itsDirErrLat)) {
     LogIO logErr(LogOrigin("ComponentShape", "ok()"));
     logErr << LogIO::SEVERE << "The latitude error is bad." << LogIO::POST;
-    return False;
+    return false;
   }
   if (ComponentShape::badError(itsDirErrLong)) {
     LogIO logErr(LogOrigin("ComponentShape", "ok()"));
     logErr << LogIO::SEVERE << "The longitude error is bad." << LogIO::POST;
-    return False;
+    return false;
   }
-  return True;
+  return true;
 }
 
 ComponentType::Shape ComponentShape::getType(String& errorMessage,
@@ -312,17 +313,17 @@ Bool ComponentShape::fromPixel (const Vector<Double>& parameters,
       os << "DirectionCoordinate conversion to pixel failed because "
          << dirCoord.errorMessage() << LogIO::EXCEPTION;
    }                                
-   return True;
+   return true;
 }
 
 
 Bool ComponentShape::differentRefs(const MeasRef<MDirection>& ref1,
 				   const MeasRef<MDirection>& ref2) {
-  if (ref1.getType() != ref2.getType()) return True;
+  if (ref1.getType() != ref2.getType()) return true;
   //# The MeasRef<T>::getFrame function should really be const.
   const MeasFrame& frame1 = const_cast<MeasRef<MDirection>&>(ref1).getFrame();
   const MeasFrame& frame2 = const_cast<MeasRef<MDirection>&>(ref2).getFrame();
-  if (frame1.empty() && frame2.empty()) return False;
+  if (frame1.empty() && frame2.empty()) return false;
   return frame1 == frame2;
   //# I should also check the offsets but I cannot see how to fish
   //# them out of the MeasRef<T> class
@@ -339,7 +340,7 @@ Bool ComponentShape::fromAngQRecord(Quantum<Double>& retVal,
   
   if (!record.isDefined(fieldString)) {
     errorMessage += "The '" + fieldString + "' field does not exist\n";
-    return False;
+    return false;
   }
   const RecordFieldId field(fieldString);
   if (!(record.dataType(field) == TpRecord || 
@@ -347,29 +348,29 @@ Bool ComponentShape::fromAngQRecord(Quantum<Double>& retVal,
 	 (record.shape(field) == IPosition(1,1))))) {
     errorMessage += "The '" + fieldString + "' field must be a record\n";
     errorMessage += "or a string (but not a vector of strings)\n";
-    return False;
+    return false;
   }
   QuantumHolder qHolder;
   if (record.dataType(field) == TpString) {
     if (!qHolder.fromString(errorMessage, record.asString(field))) {
       errorMessage += "Problem parsing the '" + fieldString + "' string\n";
-      return False;
+      return false;
     }
   } else if (!qHolder.fromRecord(errorMessage, record.asRecord(field))) {
     errorMessage += "Problem parsing the '" + fieldString +"' record\n";
-    return False;
+    return false;
   }
   if (!(qHolder.isScalar() && qHolder.isReal())) {
     errorMessage += "The '" + fieldString + "' field is not a quantity\n";
-    return False;
+    return false;
   }
   retVal = qHolder.asQuantumDouble();
   if (retVal.getFullUnit() != Unit("rad")) {
     errorMessage += "The '" + fieldString + 
       "' field must have angular units\n";
-    return False;
+    return false;
   }
-  return True;
+  return true;
 }
 
 // Local Variables: 

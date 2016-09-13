@@ -8,6 +8,7 @@
 #include <display3d/3DViewer/3DPoint.h>
 #include <display3d/3DViewer/Colorbar.qo.h>
 
+using namespace casacore;
 namespace casa {
 
 Colorbar::Colorbar(QWidget *parent)

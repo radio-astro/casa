@@ -55,7 +55,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // This class is derived from <linkto
 // class=DisplayParameter>DisplayParameter</linkto> and provides a
-// boolean switch parameter. Parameters can be True or False.
+// boolean switch parameter. Parameters can be true or false.
 // They cannot be unset.
 
 // </synopsis>
@@ -65,7 +65,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // DParameterSwitch pswitch("myswitch", "Axis labels",
 //                          "Do you want to draw axis labels?",
-//                          True,True);
+//                          true,true);
 //
 // // ...
 //
@@ -98,10 +98,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Constructor taking the name of the parameter, a short
 		// description, some help text, a default value, an initial value,
 		// the context of the parameter.
-		DParameterSwitch(const String name, const String description,
-		                 const String help,
-		                 const Bool defaultvalue, const Bool value,
-		                 const String context="");
+		DParameterSwitch(const casacore::String name, const casacore::String description,
+		                 const casacore::String help,
+		                 const casacore::Bool defaultvalue, const casacore::Bool value,
+		                 const casacore::String context="");
 
 		// (Required) copy constructor.
 		DParameterSwitch(const DParameterSwitch& other);
@@ -113,37 +113,37 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		DParameterSwitch& operator=(const DParameterSwitch& other);
 
 		// Parse <src>record</src>, and update this parameter.  Return
-		// <src>True</src> if the parameter is changed, otherwise return
-		// <src>False</src>.
-		virtual Bool fromRecord(const RecordInterface& record);
+		// <src>true</src> if the parameter is changed, otherwise return
+		// <src>false</src>.
+		virtual casacore::Bool fromRecord(const casacore::RecordInterface& record);
 
 		// Place a record describing this parameter in a sub-field of
 		// <src>record</src> with name matching that of this parameter.  If
-		// <src>overwrite</src> is <src>True</src>, then any existing field
+		// <src>overwrite</src> is <src>true</src>, then any existing field
 		// with matching name will be overwritten.  If <src>fullrecord</src>
-		// is <src>True</src>, then a complete description of the parameter
+		// is <src>true</src>, then a complete description of the parameter
 		// is given, otherwise just its current value is stored in
 		// <src>record</src>.  Presently <src>fullrecord</src> is ignored.
-		virtual void toRecord(RecordInterface& record, const Bool fullrecord = True,
-		                      const Bool overwrite = False);
+		virtual void toRecord(casacore::RecordInterface& record, const casacore::Bool fullrecord = true,
+		                      const casacore::Bool overwrite = false);
 
 		// Return the default for this parameter.
-		Bool defaultValue() const {
+		casacore::Bool defaultValue() const {
 			return itsDefaultValue;
 		}
 
 		// Return the current value of this parameter.
-		Bool value() const {
+		casacore::Bool value() const {
 			return itsValue;
 		}
 
 		// Set or change the default value for this parameter.
-		void setDefaultValue(const Bool defaultvalue) {
+		void setDefaultValue(const casacore::Bool defaultvalue) {
 			itsDefaultValue = defaultvalue;
 		}
 
 		// Set or change the current value.
-		void setValue(const Bool value) {
+		void setValue(const casacore::Bool value) {
 			itsValue = value;
 		}
 
@@ -155,10 +155,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	private:
 
 		// Store for the default of this parameter.
-		Bool itsDefaultValue;
+		casacore::Bool itsDefaultValue;
 
 		// Store for the value of this parameter.
-		Bool itsValue;
+		casacore::Bool itsValue;
 
 	};
 

@@ -33,21 +33,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   class VBStore
   {
   public:
-    VBStore():dopsf_p(False) {};
+    VBStore():dopsf_p(false) {};
     ~VBStore() {};
-    inline Int nRow()              {return nRow_p;};
-    inline Int beginRow()          {return beginRow_p;}
-    inline Int endRow()            {return endRow_p;}
-    inline Bool dopsf()            {return dopsf_p;}
-    inline Bool useCorrected()     {return useCorrected_p;};
-    Matrix<Double>& uvw()          {return uvw_p;};
-    Vector<Bool>& rowFlag()        {return rowFlag_p;};
-    Cube<Bool>& flagCube()         {return flagCube_p;};
-    Matrix<Float>& imagingWeight() {return imagingWeight_p;};
-    Cube<Complex>& visCube()       {return visCube_p;};
-    Vector<Double>& freq()         {return freq_p;};
-    Cube<Complex>& modelCube()     {return modelCube_p;};
-    Cube<Complex>& correctedCube() {return correctedCube_p;};
+    inline casacore::Int nRow()              {return nRow_p;};
+    inline casacore::Int beginRow()          {return beginRow_p;}
+    inline casacore::Int endRow()            {return endRow_p;}
+    inline casacore::Bool dopsf()            {return dopsf_p;}
+    inline casacore::Bool useCorrected()     {return useCorrected_p;};
+    casacore::Matrix<casacore::Double>& uvw()          {return uvw_p;};
+    casacore::Vector<casacore::Bool>& rowFlag()        {return rowFlag_p;};
+    casacore::Cube<casacore::Bool>& flagCube()         {return flagCube_p;};
+    casacore::Matrix<casacore::Float>& imagingWeight() {return imagingWeight_p;};
+    casacore::Cube<casacore::Complex>& visCube()       {return visCube_p;};
+    casacore::Vector<casacore::Double>& freq()         {return freq_p;};
+    casacore::Cube<casacore::Complex>& modelCube()     {return modelCube_p;};
+    casacore::Cube<casacore::Complex>& correctedCube() {return correctedCube_p;};
 
     void reference(const VBStore& other)
     {
@@ -82,14 +82,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       // correctedCube_p.assign(other.correctedCube_p);
     }
 
-    Int nRow_p, beginRow_p, endRow_p;
-    Matrix<Double> uvw_p;
-    Vector<Bool> rowFlag_p;
-    Cube<Bool> flagCube_p;
-    Matrix<Float> imagingWeight_p;
-    Cube<Complex> visCube_p, modelCube_p, correctedCube_p;
-    Vector<Double> freq_p;
-    Bool dopsf_p,useCorrected_p;
+    casacore::Int nRow_p, beginRow_p, endRow_p;
+    casacore::Matrix<casacore::Double> uvw_p;
+    casacore::Vector<casacore::Bool> rowFlag_p;
+    casacore::Cube<casacore::Bool> flagCube_p;
+    casacore::Matrix<casacore::Float> imagingWeight_p;
+    casacore::Cube<casacore::Complex> visCube_p, modelCube_p, correctedCube_p;
+    casacore::Vector<casacore::Double> freq_p;
+    casacore::Bool dopsf_p,useCorrected_p;
   };
 
 } //# NAMESPACE CASA - END

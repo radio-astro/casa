@@ -3,7 +3,7 @@
 #define CSyscalMethod_H
 
 /*
- * ALMA - Atacama Large Millimeter Array
+ * ALMA - Atacama Large Millimeter casacore::Array
  * (c) European Southern Observatory, 2002
  * (c) Associated Universities Inc., 2002
  * Copyright by ESO (in the framework of the ALMA collaboration),
@@ -33,7 +33,7 @@
  * //  ---------------------------------------------------------  //
  * /////////////////////////////////////////////////////////////////
  *
- * File CSyscalMethod.h
+ * casacore::File CSyscalMethod.h
  */
 
 #ifndef __cplusplus
@@ -65,7 +65,7 @@ namespace SyscalMethodMod
      ,
     SKYDIP /*!< Use a skydip (observing the sky at various elevations) to get atmospheric opacity */
      ,
-    SIDEBAND_RATIO /*!< Measure the sideband gain ratio. */
+    SIDEBAND_RATIO /*!< casacore::Measure the sideband gain ratio. */
      
   };
   typedef SyscalMethod &SyscalMethod_out;

@@ -55,6 +55,7 @@
 #include <unistd.h>
 using namespace std;
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
   
   SynthesisNormalizer::SynthesisNormalizer() : 
@@ -378,28 +379,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SynthesisNormalizer","setupImagesOnDisk",WHERE) );
 
-    Bool needToGatherImages=False;
+    Bool needToGatherImages=false;
 
     String err("");
 
     // Check if full images exist, and open them if possible.
-    Bool foundFullImage=False;
+    Bool foundFullImage=false;
     try
       {
 	itsImages = makeImageStore( itsImageName );
-	foundFullImage = True;
+	foundFullImage = true;
       }
     catch(AipsError &x)
       {
 	//throw( AipsError("Error in constructing a Deconvolver : "+x.getMesg()) );
 	//cout << "Did not find full images : " << x.getMesg() << endl;  // This should be a debug message.
 	err = err += String(x.getMesg()) + "\n";
-	foundFullImage = False;
+	foundFullImage = false;
       }
 
 
     // Check if part images exist
-    Bool foundPartImages = itsPartImageNames.nelements()>0 ? True : False ;
+    Bool foundPartImages = itsPartImageNames.nelements()>0 ? true : false ;
     itsPartImages.resize( itsPartImageNames.nelements() );
 
     for ( uInt part=0; part < itsPartImageNames.nelements() ; part++ )
@@ -407,19 +408,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	try
 	  {
 	    itsPartImages[part] = makeImageStore ( itsPartImageNames[part] );
-	    foundPartImages |= True;
+	    foundPartImages |= true;
 	  }
 	catch(AipsError &x)
 	  {
 	    //throw( AipsError("Error in constructing a Deconvolver : "+x.getMesg()) );
 	    err = err += String(x.getMesg()) + "\n";
-	    foundPartImages = False;
+	    foundPartImages = false;
 	  }
       }
 
-    if( foundPartImages == False) 
+    if( foundPartImages == false) 
       { 
-	if( foundFullImage == True && itsPartImageNames.nelements()>0 )
+	if( foundFullImage == true && itsPartImageNames.nelements()>0 )
 	  {
 	    // Pick the coordsys, etc from fullImage, and construct new/fresh partial images. 
 	    cout << "Found full image, but no partial images. Make partImStores for : " << itsPartImageNames << endl;
@@ -464,9 +465,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
     // Make sure all images exist and are consistent with each other. At the end, itsImages should be valid
-    if( foundPartImages == True ) // Partial Images exist. Check that 'full' exists, and do the gather. 
+    if( foundPartImages == true ) // Partial Images exist. Check that 'full' exists, and do the gather. 
       {
-	if ( foundFullImage == True ) // Full image exists. Just check that shapes match with parts.
+	if ( foundFullImage == true ) // Full image exists. Just check that shapes match with parts.
 	  {
 	    os << LogIO::DEBUG2 << "Partial and Full images exist. Checking if part images have the same shape as the full image : ";
 	    IPosition fullshape = itsImages->getShape();
@@ -513,16 +514,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    Bool useweightimage = itsPartImages[0]->getUseWeightImage( *(itsPartImages[0]->sumwt()) );
 
 	    itsImages = makeImageStore ( itsImageName, tempcsys, tempshape, useweightimage );
-	    foundFullImage = True;
+	    foundFullImage = true;
 	  }
 
 	// By now, all partial images and the full images exist on disk, and have the same shape.
-	needToGatherImages=True;
+	needToGatherImages=true;
 
       }
     else // No partial images supplied. Operating only with full images.
       {
-	if ( foundFullImage == True ) 
+	if ( foundFullImage == true ) 
 	  {
 	    os << LogIO::DEBUG2 << "Full images exist : " << itsImageName << LogIO::POST;
 	  }
@@ -541,7 +542,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
         
         // First, make sure that full images have been allocated before trying to make references.....
-	//        if( ! itsImages->checkValidity(True/*psf*/, True/*res*/,True/*wgt*/,True/*model*/,False/*image*/,False/*mask*/,True/*sumwt*/ ) ) 
+	//        if( ! itsImages->checkValidity(true/*psf*/, true/*res*/,true/*wgt*/,true/*model*/,false/*image*/,false/*mask*/,true/*sumwt*/ ) ) 
 	//	    { throw(AipsError("Internal Error : Invalid ImageStore for " + itsImages->getName())); }
 
         //        Array<Float> ttt;
@@ -567,9 +568,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   SHARED_PTR<SIImageStore> SynthesisNormalizer::makeImageStore( String imagename )
   {
     if( itsMapperType == "multiterm" )
-      { return SHARED_PTR<SIImageStore>(new SIImageStoreMultiTerm( imagename, itsNTaylorTerms, True ));   }
+      { return SHARED_PTR<SIImageStore>(new SIImageStoreMultiTerm( imagename, itsNTaylorTerms, true ));   }
     else
-      { return SHARED_PTR<SIImageStore>(new SIImageStore( imagename, True ));   }
+      { return SHARED_PTR<SIImageStore>(new SIImageStore( imagename, true ));   }
   }
 
 
@@ -578,10 +579,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 								IPosition shp, Bool useweightimage )
   {
     if( itsMapperType == "multiterm" )
-      { return SHARED_PTR<SIImageStore>(new SIImageStoreMultiTerm( imagename, csys, shp, itsNFacets, False, itsNTaylorTerms, useweightimage ));   }
+      { return SHARED_PTR<SIImageStore>(new SIImageStoreMultiTerm( imagename, csys, shp, itsNFacets, false, itsNTaylorTerms, useweightimage ));   }
     else
-      { return SHARED_PTR<SIImageStore>(new SIImageStore( imagename, csys, shp, False, useweightimage ));   }
-    //      { return new SIImageStore( imagename, csys, shp, itsNFacets, False, useweightimage );   }
+      { return SHARED_PTR<SIImageStore>(new SIImageStore( imagename, csys, shp, false, useweightimage ));   }
+    //      { return new SIImageStore( imagename, csys, shp, itsNFacets, false, useweightimage );   }
   }
 
   //
@@ -614,7 +615,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    blc[1]=(shape[1]-(onepsf.shape()[1]))/2;
 	    trc[1]=onepsf.shape()[1]+blc[1]-1;
 	    Slicer sl(blc, trc, Slicer::endIsLast);
-	    SubImage<Float> sub(*(itsImages->psf(tix)), sl, True);
+	    SubImage<Float> sub(*(itsImages->psf(tix)), sl, true);
 	    sub.copyData(onepsf);
 	  }
       }

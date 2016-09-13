@@ -27,6 +27,7 @@
 #include <asdmstman/AsdmStMan.h>
 
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 /////////////////////////////////////////////
@@ -43,8 +44,8 @@ MSTransformDataHandler::MSTransformDataHandler(	String& theMS, Table::TableOptio
 		  mssel_p(ms_p),
 		  msc_p(NULL),
 		  mscIn_p(NULL),
-		  keepShape_p(True),
-		  antennaSel_p(False),
+		  keepShape_p(true),
+		  antennaSel_p(false),
 		  timeBin_p(-1.0),
 		  scanString_p(""),
 		  intentString_p(""),
@@ -74,8 +75,8 @@ MSTransformDataHandler::MSTransformDataHandler(	MeasurementSet& ms,
 		   mssel_p(ms_p),
 		   msc_p(NULL),
 		   mscIn_p(NULL),
-		   keepShape_p(True),
-		   antennaSel_p(False),
+		   keepShape_p(true),
+		   antennaSel_p(false),
 		   timeBin_p(-1.0),
 		   scanString_p(""),
 		   intentString_p(""),
@@ -285,7 +286,7 @@ uInt MSTransformDataHandler::dataColStrToEnums(const String& col, Vector<MS::Pre
 	pch = strtok((char*) tmpNames.c_str(), " ,");
 	while (pch != NULL)
 	{
-		tokens.resize(i + 1, True);
+		tokens.resize(i + 1, true);
 		tokens[i] = String(pch);
 		++i;
 		pch = strtok(NULL, " ,");
@@ -296,7 +297,7 @@ uInt MSTransformDataHandler::dataColStrToEnums(const String& col, Vector<MS::Pre
 	uInt nFound = 0;
 	for (uInt i = 0; i < nNames; ++i)
 	{
-		colvec.resize(nFound + 1, True);
+		colvec.resize(nFound + 1, true);
 		colvec[nFound] = MS::UNDEFINED_COLUMN;
 
 		if (	tokens[i] == "OBSERVED"
@@ -501,7 +502,7 @@ Bool MSTransformDataHandler::selectSpw(const String& spwstr,const Vector<Int>& s
 		// Copy the default width to all spws.
 		if (widths_p.nelements() < nspw)
 		{
-			widths_p.resize(nspw, True);
+			widths_p.resize(nspw, true);
 			for (uInt k = 1; k < nspw; ++k)
 			{
 				widths_p[k] = widths_p[0];
@@ -541,7 +542,7 @@ Bool MSTransformDataHandler::selectSpw(const String& spwstr,const Vector<Int>& s
 		{
 			if (widths_p.nelements() == 1)
 			{
-				widths_p.resize(spw_p.nelements(), True);
+				widths_p.resize(spw_p.nelements(), true);
 				for (uInt k = 1; k < spw_p.nelements(); ++k)
 				{
 					widths_p[k] = widths_p[0];
@@ -787,7 +788,7 @@ Bool MSTransformDataHandler::makeMSBasicStructure(	String& msname,
 	{
 		os << LogIO::SEVERE << "SpectralWindow selection contains elements that do not exist in this MS" << LogIO::POST;
 		ms_p = MeasurementSet();
-		return False;
+		return false;
 	}
 
 	// Watch out!  This throws an AipsError if ms_p doesn't have the requested columns.
@@ -797,7 +798,7 @@ Bool MSTransformDataHandler::makeMSBasicStructure(	String& msname,
 	{
 		ms_p = MeasurementSet();
 		throw(MSSelectionNullSelection("MSSelectionNullSelection : The selected table has zero rows."));
-		return False;
+		return false;
 	}
 
 	mscIn_p = new ROMSColumns(mssel_p);
@@ -837,7 +838,7 @@ Bool MSTransformDataHandler::makeMSBasicStructure(	String& msname,
 
 	msOut_p = *outpointer;
 
-	Bool ret = True;
+	Bool ret = true;
 	try
 	{
 		if (option == Table::Scratch)
@@ -863,7 +864,7 @@ Bool MSTransformDataHandler::makeMSBasicStructure(	String& msname,
 	}
 	catch (AipsError ex)
 	{
-		ret = False;
+		ret = false;
 		os 	<< LogIO::SEVERE
 			<< "Exception filling the sub-tables: " << ex.getMesg() << endl
 			<< "Stack Trace: " << ex.getStackTrace()
@@ -876,7 +877,7 @@ Bool MSTransformDataHandler::makeMSBasicStructure(	String& msname,
 		ms_p = MeasurementSet();
 		msOut_p = MeasurementSet();
 		os << LogIO::SEVERE << msname << " left unfinished." << LogIO::POST;
-		return False;
+		return false;
 	}
 
 	//Detaching the selected part
@@ -900,7 +901,7 @@ Bool MSTransformDataHandler::makeMSBasicStructure(	String& msname,
 	}
 
 	delete outpointer;
-	return True;
+	return true;
 }
 
 // -----------------------------------------------------------------------
@@ -908,12 +909,12 @@ Bool MSTransformDataHandler::makeMSBasicStructure(	String& msname,
 // -----------------------------------------------------------------------
 Bool MSTransformDataHandler::isAllColumns(const Vector<MS::PredefinedColumns>& colNames)
 {
-	Bool dCol = False, mCol = False, cCol = False;
+	Bool dCol = false, mCol = false, cCol = false;
 	for (uInt i = 0; i < colNames.nelements(); i++)
 	{
-		if (colNames[i] == MS::DATA) dCol = True;
-		else if (colNames[i] == MS::MODEL_DATA) mCol = True;
-		else if (colNames[i] == MS::CORRECTED_DATA) cCol = True;
+		if (colNames[i] == MS::DATA) dCol = true;
+		else if (colNames[i] == MS::MODEL_DATA) mCol = true;
+		else if (colNames[i] == MS::CORRECTED_DATA) cCol = true;
 		// else turn off all?
 	}
 
@@ -1071,7 +1072,7 @@ Bool MSTransformDataHandler::makeSelection()
 		mssel_p = MeasurementSet((*elms));
 	}
 
-	if (mssel_p.nrow() == 0) return False;
+	if (mssel_p.nrow() == 0) return false;
 
 	// Setup antNewIndex_p now that mssel_p is ready.
 	if (antennaSel_p and reindex_p)
@@ -1083,10 +1084,10 @@ Bool MSTransformDataHandler::makeSelection()
 		Vector<Int> selAnts(ant1c.getColumn());
 		uInt nAnts = selAnts.nelements();
 
-		selAnts.resize(2 * nAnts, True);
+		selAnts.resize(2 * nAnts, true);
 		selAnts(Slice(nAnts, nAnts)) = ant2c.getColumn();
 		nAnts = GenSort<Int>::sort(selAnts, Sort::Ascending,Sort::NoDuplicates);
-		selAnts.resize(nAnts, True);
+		selAnts.resize(nAnts, true);
 		Int maxAnt = max(selAnts);
 		*/
 
@@ -1122,7 +1123,7 @@ Bool MSTransformDataHandler::makeSelection()
 				<< "The maximum selected antenna number, " << maxAnt
 				<< ", seems to be < 0."
 				<< LogIO::POST;
-			return False;
+			return false;
 		}
 
 		antNewIndex_p.resize(maxAnt + 1);
@@ -1154,7 +1155,7 @@ Bool MSTransformDataHandler::makeSelection()
 				<< LogIO::POST;
 	}
 
-	return True;
+	return true;
 }
 
 
@@ -1302,7 +1303,7 @@ MeasurementSet* MSTransformDataHandler::setupMS(	const String& MSFileName, const
 
 	// Set the default Storage Manager to be the Incr one
 	IncrementalStMan incrStMan("ISMData", cache_val);
-	newtab.bindAll(incrStMan, True);
+	newtab.bindAll(incrStMan, true);
 
 	//Override the binding for specific columns
 	IncrementalStMan incrStMan0("Array_ID", cache_val);
@@ -1483,7 +1484,7 @@ Bool MSTransformDataHandler::fillSubTables(const Vector<MS::PredefinedColumns>&)
 	// sub-tables (like POINTING) might already have been written.
 	// However, empty tables are still empty after setting up the reference codes here.
 	msc_p = new MSColumns(msOut_p);
-	msc_p->setEpochRef(MEpoch::castType(mscIn_p->timeMeas().getMeasRef().getType()), False);
+	msc_p->setEpochRef(MEpoch::castType(mscIn_p->timeMeas().getMeasRef().getType()), false);
 
 	// UVW is the only other Measures column in the main table.
 	msc_p->uvwMeas().setDescRefCode(Muvw::castType(mscIn_p->uvwMeas().getMeasRef().getType()));
@@ -1495,7 +1496,7 @@ Bool MSTransformDataHandler::fillSubTables(const Vector<MS::PredefinedColumns>&)
 
 
 	timer.mark();
-	if (!fillDDTables()) return False;
+	if (!fillDDTables()) return false;
 	os << LogIO::DEBUG1 << "fillDDTables took " << timer.real() << "s." << LogIO::POST;
 
 	// SourceIDs need to be re-mapped around here
@@ -1665,7 +1666,7 @@ Bool MSTransformDataHandler::fillFieldTable()
 		MSField &outputField = msOut_p.field();
 		TableCopy::copyRows(outputField, inputField);
 		copyEphemerisTable(msField);
-		return True;
+		return true;
 	}
 
 	// fieldRelabel_p size: nrow of a input MS, -1 for unselected field ids
@@ -1752,7 +1753,7 @@ Bool MSTransformDataHandler::fillFieldTable()
 		throw(AipsError("Unknown exception caught and released in fillFieldTable()"));
 	}
 
-	return True;
+	return true;
 }
 
 Bool MSTransformDataHandler::copyEphemerisTable(MSFieldColumns & msField)
@@ -1912,7 +1913,7 @@ Bool MSTransformDataHandler::fillPolTable()
 		msPol.corrProduct().put(polId, outCP);
 	}
 
-	return True;
+	return true;
 }
 
 // -----------------------------------------------------------------------
@@ -1939,7 +1940,7 @@ Bool MSTransformDataHandler::fillDDITable()
 	}
 
 	// Get list of unique selected SPWs
-	Bool option(False);
+	Bool option(false);
 	Sort sortSpws(spw_p.getStorage(option), sizeof(Int));
 	sortSpws.sortKey((uInt) 0, TpInt);
 	Vector<uInt> spwsortindex, spwuniqinds;
@@ -1960,7 +1961,7 @@ Bool MSTransformDataHandler::fillDDITable()
 	{
 		MSDataDescription &outputDDI = msOut_p.dataDescription();
 		TableCopy::copyRows(outputDDI, inputDDI);
-		return True;
+		return true;
 	}
 
 	// Output SPECTRAL_WINDOW_ID column
@@ -1982,13 +1983,13 @@ Bool MSTransformDataHandler::fillDDITable()
 	for (uInt ddi=0; ddi<nddid; ddi++)
 	{
 		msOut_p.dataDescription().addRow();
-		outputDDI.flagRow().put(ddi, False);
+		outputDDI.flagRow().put(ddi, false);
 		outputDDI.polarizationId().put(ddi, newPolId[ddi]);
 		outputDDI.spectralWindowId().put(ddi, newSPWId[ddi]);
 	}
 
 
-	return True;
+	return true;
 }
 
 // -----------------------------------------------------------------------
@@ -2070,7 +2071,7 @@ Bool MSTransformDataHandler::fillSPWTable()
 			os 	<< LogIO::SEVERE
 				<< " Channel settings wrong; exceeding number of channels in spw "
 				<< spw_uniq_p[k] << LogIO::POST;
-			return False;
+			return false;
 		}
 	}
 
@@ -2363,7 +2364,7 @@ void MSTransformDataHandler::copySubtable(const String& tabName, const Table& in
 	String outName(msOut_p.tableName() + '/' + tabName);
 
 	if (PlainTable::tableCache()(outName)) PlainTable::tableCache().remove(outName);
-	inTab.deepCopy(outName, Table::New, False, Table::AipsrcEndian, doFilter);
+	inTab.deepCopy(outName, Table::New, false, Table::AipsrcEndian, doFilter);
 	Table outTab(outName, Table::Update);
 	msOut_p.rwKeywordSet().defineTable(tabName, outTab);
 	msOut_p.initRefs();
@@ -2490,7 +2491,7 @@ Bool MSTransformDataHandler::copyPointing()
 	}
 
 
-	return True;
+	return true;
 }
 
 // -----------------------------------------------------------------------
@@ -2504,7 +2505,7 @@ void MSTransformDataHandler::setupNewPointing()
 	// POINTING can be large, set some sensible defaults for storageMgrs
 	IncrementalStMan ismPointing("ISMPointing");
 	StandardStMan ssmPointing("SSMPointing", 32768);
-	pointingSetup.bindAll(ismPointing, True);
+	pointingSetup.bindAll(ismPointing, true);
 	pointingSetup.bindColumn(MSPointing::columnName(MSPointing::DIRECTION),ssmPointing);
 	pointingSetup.bindColumn(MSPointing::columnName(MSPointing::TARGET),ssmPointing);
 	pointingSetup.bindColumn(MSPointing::columnName(MSPointing::TIME),ssmPointing);
@@ -2544,7 +2545,7 @@ Bool MSTransformDataHandler::copySource()
 		if (!reindex_p)
 		{
 			TableCopy::copyRows(newSource, oldSource);
-			return True;
+			return true;
 		}
 
 		const ROScalarColumn<Int>& inSId = incols.sourceId();
@@ -2587,7 +2588,7 @@ Bool MSTransformDataHandler::copySource()
 
 	}
 
-	return True;
+	return true;
 }
 
 // -----------------------------------------------------------------------
@@ -2599,18 +2600,18 @@ Bool MSTransformDataHandler::copyAntenna()
 	MSAntenna& newAnt = msOut_p.antenna();
 	const ROMSAntennaColumns incols(oldAnt);
 	MSAntennaColumns outcols(newAnt);
-	Bool retval = False;
+	Bool retval = false;
 
 	outcols.setOffsetRef(MPosition::castType(incols.offsetMeas().getMeasRef().getType()));
 	outcols.setPositionRef(MPosition::castType(incols.positionMeas().getMeasRef().getType()));
 
     //TableCopy::copyRows(newAnt, oldAnt);
-    //retval = True;
+    //retval = true;
 
 	if (!antennaSel_p or !reindex_p)
 	{
 		TableCopy::copyRows(newAnt, oldAnt);
-		retval = True;
+		retval = true;
 	}
 	else
 	{
@@ -2623,7 +2624,7 @@ Bool MSTransformDataHandler::copyAntenna()
 			if (antNewIndex_p[k] > -1) TableCopy::copyRows(newAnt, oldAnt, antNewIndex_p[k], k, 1, false);
 		}
 		newAnt.flush();
-		retval = True;
+		retval = true;
 	}
 
 	return retval;
@@ -2705,7 +2706,7 @@ Bool MSTransformDataHandler::copyFeed()
 		return false;
 	}
 
-	return True;
+	return true;
 }
 
 // -----------------------------------------------------------------------
@@ -2718,9 +2719,9 @@ Int MSTransformDataHandler::getProcessorId(Int dataDescriptionId, String msname)
     taql << " WHERE DATA_DESC_ID ==" << dataDescriptionId;
     taql << " LIMIT 1";
 
-    casa::TableProxy *firstSelectedRow = new TableProxy(tableCommand(taql.str()));
+    casacore::TableProxy *firstSelectedRow = new TableProxy(tableCommand(taql.str()));
     Record colWrapper = firstSelectedRow->getVarColumn(String("PROCESSOR_ID"),0,1,1);
-    casa::Vector<Int> processorId = colWrapper.asArrayInt("r1");
+    casacore::Vector<Int> processorId = colWrapper.asArrayInt("r1");
 
     delete firstSelectedRow;
     return processorId[0];
@@ -2759,7 +2760,7 @@ Bool MSTransformDataHandler::copyFlag_Cmd()
 		}
 	}
 
-	return True;
+	return true;
 }
 
 // -----------------------------------------------------------------------
@@ -2784,7 +2785,7 @@ Bool MSTransformDataHandler::copyHistory()
 
 	TableCopy::copyRows(newHistory, oldHistory);
 
-	return True;
+	return true;
 }
 
 // -----------------------------------------------------------------------
@@ -2812,7 +2813,7 @@ Bool MSTransformDataHandler::copyObservation()
 		TableCopy::copyRows(newObs, oldObs);
 	}
 
-	return True;
+	return true;
 }
 
 // -----------------------------------------------------------------------
@@ -2824,7 +2825,7 @@ Bool MSTransformDataHandler::copyProcessor()
 	MSProcessor& newProc = msOut_p.processor();
 	TableCopy::copyRows(newProc, oldProc);
 
-	return True;
+	return true;
 }
 
 // -----------------------------------------------------------------------
@@ -2894,7 +2895,7 @@ Bool MSTransformDataHandler::copyState()
 
 		}
 	}
-	return True;
+	return true;
 }
 
 // -----------------------------------------------------------------------
@@ -2970,7 +2971,7 @@ Bool MSTransformDataHandler::copySyscal()
 		}
 	}
 
-	return True;
+	return true;
 }
 
 Bool MSTransformDataHandler::copyWeather()
@@ -3045,7 +3046,7 @@ Bool MSTransformDataHandler::copyWeather()
 		}
 	}
 
-	return True;
+	return true;
 }
 
 // -----------------------------------------------------------------------
@@ -3086,7 +3087,7 @@ Bool MSTransformDataHandler::filterOptSubtable(const String& subtabname)
 				// Int for comparison with antIds.
 				Int maxSelAntp1 = antNewIndex_p.nelements();
 
-				Bool haveRemappingProblem = False;
+				Bool haveRemappingProblem = false;
 				for (uInt inrow = 0; inrow < totNOuttabs; ++inrow)
 				{
 					// antenna must be selected, and spwId must be -1 (any) or selected.
@@ -3112,7 +3113,7 @@ Bool MSTransformDataHandler::filterOptSubtable(const String& subtabname)
 						// and reliably avoiding segfaults.
 						else if (spwIds[inrow] >= static_cast<Int> (spwRelabel_p.nelements()))
 						{
-							haveRemappingProblem = True;
+							haveRemappingProblem = true;
 						}
 
 					}
@@ -3146,7 +3147,7 @@ Bool MSTransformDataHandler::filterOptSubtable(const String& subtabname)
 		}
 	}
 
-	return True;
+	return true;
 }
 
 // -----------------------------------------------------------------------
@@ -3320,7 +3321,7 @@ Bool MSTransformDataHandler::mergeSpwSubTables(Vector<String> filenames)
 				}
 			}
 
-			spwTable_0.flush(True,True);
+			spwTable_0.flush(true,true);
 
 			// Merge the other sub-tables using SPW map generated here
 			mergeDDISubTables(filenames);
@@ -3335,17 +3336,17 @@ Bool MSTransformDataHandler::mergeSpwSubTables(Vector<String> filenames)
 		{
 	    	os << LogIO::SEVERE << LogOrigin("MSTransformDataHandler", __FUNCTION__)
 	    			<< "SPECTRAL_WINDOW sub-table found but has no valid content" << LogIO::POST;
-	    	return False;
+	    	return false;
 		}
 	}
 	else
 	{
     	os << LogIO::SEVERE << LogOrigin("MSTransformDataHandler", __FUNCTION__)
     			<< "SPECTRAL_WINDOW sub-table not found " << LogIO::POST;
-    	return False;
+    	return false;
 	}
 
-	return True;
+	return true;
 }
 
 // -----------------------------------------------------------------------
@@ -3403,23 +3404,23 @@ Bool MSTransformDataHandler::mergeDDISubTables(Vector<String> filenames)
         		}
         	}
 
-        	ddiTable_0.flush(True,True);
+        	ddiTable_0.flush(true,true);
     	}
 		else
 		{
 	    	os << LogIO::SEVERE << LogOrigin("MSTransformDataHandler", __FUNCTION__)
 	    			<< "DDI sub-table found but has no valid content" << LogIO::POST;
-	    	return False;
+	    	return false;
 		}
     }
     else
     {
     	os << LogIO::SEVERE << LogOrigin("MSTransformDataHandler", __FUNCTION__)
     			<< "DDI sub-table not found " << LogIO::POST;
-    	return False;
+    	return false;
     }
 
-	return True;
+	return true;
 }
 
 
@@ -3433,7 +3434,7 @@ Bool MSTransformDataHandler::mergeFeedSubTables(Vector<String> filenames, Vector
 	if (filenames.size() != mapSubmsSpwid.size())
 	{
 		os 	<< LogIO::SEVERE << "List of Sub-MSs does not match size of SPW re-indexing map" << LogIO::POST;
-		return False;
+		return false;
 	}
 
 	String filename_0 = filenames(0);
@@ -3502,14 +3503,14 @@ Bool MSTransformDataHandler::mergeFeedSubTables(Vector<String> filenames, Vector
         }
 
         // Flush changes
-        feedTable_0.flush(True,True);
+        feedTable_0.flush(true,true);
 //    	}
 /*
 		else
 		{
 	    	os << LogIO::SEVERE << LogOrigin("MSTransformDataHandler", __FUNCTION__)
 	    			<< "FEED sub-table found but has no valid content" << LogIO::POST;
-	    	return False;
+	    	return false;
 		}
 */
     }
@@ -3517,10 +3518,10 @@ Bool MSTransformDataHandler::mergeFeedSubTables(Vector<String> filenames, Vector
     {
     	os << LogIO::SEVERE << LogOrigin("MSTransformDataHandler", __FUNCTION__) <<
     			 "FEED sub-table not found " << LogIO::POST;
-    	return False;
+    	return false;
     }
 
-	return True;
+	return true;
 }
 
 // -----------------------------------------------------------------------
@@ -3533,7 +3534,7 @@ Bool MSTransformDataHandler::mergeSourceSubTables(Vector<String> filenames, Vect
 	if (filenames.size() != mapSubmsSpwid.size())
 	{
 		os 	<< LogIO::SEVERE << "List of Sub-MSs does not match size of SPW re-indexing map" << LogIO::POST;
-		return False;
+		return false;
 	}
 
 	String filename_0 = filenames(0);
@@ -3619,23 +3620,23 @@ Bool MSTransformDataHandler::mergeSourceSubTables(Vector<String> filenames, Vect
 			}
 
 			// Flush changes
-			sourceTable_0.flush(True,True);
+			sourceTable_0.flush(true,true);
 		}
 		else
 		{
 	    	os << LogIO::SEVERE << LogOrigin("MSTransformDataHandler", __FUNCTION__)
 	    			<< "SOURCE sub-table found but has no valid content" << LogIO::POST;
-	    	return False;
+	    	return false;
 		}
 	}
 	else
 	{
 		os << LogIO::SEVERE << LogOrigin("MSTransformDataHandler", __FUNCTION__)
     			<< "SOURCE sub-table not found " << LogIO::POST;
-    	return False;
+    	return false;
 	}
 
-	return True;
+	return true;
 }
 
 
@@ -3649,7 +3650,7 @@ Bool MSTransformDataHandler::mergeSyscalSubTables(Vector<String> filenames, Vect
 	if (filenames.size() != mapSubmsSpwid.size())
 	{
 		os 	<< LogIO::SEVERE << "List of Sub-MSs does not match size of SPW re-indexing map" << LogIO::POST;
-		return False;
+		return false;
 	}
 
 	String filename_0 = filenames(0);
@@ -3801,14 +3802,14 @@ Bool MSTransformDataHandler::mergeSyscalSubTables(Vector<String> filenames, Vect
         }
 
         // Flush changes
-        syscalTable_0.flush(True,True);
+        syscalTable_0.flush(true,true);
 /*
 		}
 		else
 		{
 	    	os << LogIO::DEBUG1 << LogOrigin("MSTransformDataHandler", __FUNCTION__)
 	    			<< "SYSCAL sub-table found but has no valid content" << LogIO::POST;
-	    	return False;
+	    	return false;
 		}
 */
 	}
@@ -3816,10 +3817,10 @@ Bool MSTransformDataHandler::mergeSyscalSubTables(Vector<String> filenames, Vect
 	{
 		os << LogIO::DEBUG1 << LogOrigin("MSTransformDataHandler", __FUNCTION__)
     			<< "SYSCAL sub-table not found " << LogIO::POST;
-    	return False;
+    	return false;
 	}
 
-	return True;
+	return true;
 }
 
 
@@ -3833,7 +3834,7 @@ Bool MSTransformDataHandler::mergeFreqOffsetTables(Vector<String> filenames, Vec
 	if (filenames.size() != mapSubmsSpwid.size())
 	{
 		os 	<< LogIO::SEVERE << "List of Sub-MSs does not match size of SPW re-indexing map" << LogIO::POST;
-		return False;
+		return false;
 	}
 
 	String filename_0 = filenames(0);
@@ -3887,13 +3888,13 @@ Bool MSTransformDataHandler::mergeFreqOffsetTables(Vector<String> filenames, Vec
 			}
 
 			// Flush changes
-			freqoffsetTable_0.flush(True,True);
+			freqoffsetTable_0.flush(true,true);
 		}
 		else
 		{
 	    	os << LogIO::DEBUG1 << LogOrigin("MSTransformDataHandler", __FUNCTION__)
 	    			<< "FREQ_OFFSET sub-table found but has no valid content" << LogIO::POST;
-	    	return False;
+	    	return false;
 		}
 
 	}
@@ -3901,10 +3902,10 @@ Bool MSTransformDataHandler::mergeFreqOffsetTables(Vector<String> filenames, Vec
 	{
 		os << LogIO::DEBUG1 << LogOrigin("MSTransformDataHandler", __FUNCTION__)
     			<< "FREQ_OFFSET sub-table not found " << LogIO::POST;
-    	return False;
+    	return false;
 	}
 
-	return True;
+	return true;
 }
 
 // -----------------------------------------------------------------------
@@ -3917,7 +3918,7 @@ Bool MSTransformDataHandler::mergeCalDeviceSubtables(Vector<String> filenames, V
 	if (filenames.size() != mapSubmsSpwid.size())
 	{
 		os 	<< LogIO::SEVERE << "List of Sub-MSs does not match size of SPW re-indexing map" << LogIO::POST;
-		return False;
+		return false;
 	}
 
 	String filename_0 = filenames(0);
@@ -4088,23 +4089,23 @@ Bool MSTransformDataHandler::mergeCalDeviceSubtables(Vector<String> filenames, V
 			}
 
 			// Flush changes
-			subtable_0.flush(True,True);
+			subtable_0.flush(true,true);
 		}
 		else
 		{
 	    	os << LogIO::DEBUG1 << LogOrigin("MSTransformDataHandler", __FUNCTION__)
 	    			<< "CALDEVICE sub-table found but has no valid content" << LogIO::POST;
-	    	return False;
+	    	return false;
 		}
 	}
 	else
 	{
 		os << LogIO::DEBUG1 << LogOrigin("MSTransformDataHandler", __FUNCTION__)
     			<< "CALDEVICE sub-table not found " << LogIO::POST;
-    	return False;
+    	return false;
 	}
 
-	return True;
+	return true;
 }
 
 
@@ -4118,7 +4119,7 @@ Bool MSTransformDataHandler::mergeSysPowerSubtables(Vector<String> filenames, Ve
 	if (filenames.size() != mapSubmsSpwid.size())
 	{
 		os 	<< LogIO::SEVERE << "List of Sub-MSs does not match size of SPW re-indexing map" << LogIO::POST;
-		return False;
+		return false;
 	}
 
 	String filename_0 = filenames(0);
@@ -4256,23 +4257,23 @@ Bool MSTransformDataHandler::mergeSysPowerSubtables(Vector<String> filenames, Ve
 			}
 
 			// Flush changes
-			subtable_0.flush(True,True);
+			subtable_0.flush(true,true);
 		}
 		else
 		{
 	    	os << LogIO::DEBUG1 << LogOrigin("MSTransformDataHandler", __FUNCTION__)
 	    			<< "SYSPOWER sub-table found but has no valid content" << LogIO::POST;
-	    	return False;
+	    	return false;
 		}
 	}
 	else
 	{
 		os << LogIO::DEBUG1 << LogOrigin("MSTransformDataHandler", __FUNCTION__)
     			<< "SYSPOWER sub-table not found " << LogIO::POST;
-    	return False;
+    	return false;
 	}
 
-	return True;
+	return true;
 }
 
 // -----------------------------------------------------------------------
@@ -4283,11 +4284,11 @@ Bool MSTransformDataHandler::mergeSysPowerSubtables(Vector<String> filenames, Ve
 // 	Bool ret;
 // 	if (column.isNull()==false and column.hasContent()==true and column.ndimColumn() > 0)
 // 	{
-// 		ret = True;
+// 		ret = true;
 // 	}
 // 	else
 // 	{
-// 		ret = False;
+// 		ret = false;
 // 	}
 
 // 	return ret;
@@ -4301,11 +4302,11 @@ Bool MSTransformDataHandler::mergeSysPowerSubtables(Vector<String> filenames, Ve
 // 	Bool ret;
 // 	if (column.isNull()==false and column.hasContent()==true)
 // 	{
-// 		ret = True;
+// 		ret = true;
 // 	}
 // 	else
 // 	{
-// 		ret = False;
+// 		ret = false;
 // 	}
 
 // 	return ret;

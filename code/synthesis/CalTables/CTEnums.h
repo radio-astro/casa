@@ -65,7 +65,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <example>
 // <srcblock>
 //      // Determine the column name for the SPECTRAL_WINDOW_ID column
-//      String name = MSC::fieldName (MSC::SPECTRAL_WINDOW_ID));
+//      casacore::String name = MSC::fieldName (MSC::SPECTRAL_WINDOW_ID));
 //
 // </srcblock>
 // </example>
@@ -103,7 +103,7 @@ class CTEnums
   SCAN_NUMBER = 7,
   // Observation identifier
   OBSERVATION_ID = 8,
-  // Array identifier
+  // casacore::Array identifier
   ARRAY_ID = 9,
   
   // Solution parameters and weights
@@ -122,9 +122,9 @@ class CTEnums
   };
 
   // Access functions for column/keyword description data
-  static String fieldName (Int enumField);
-  static Block<String> fieldNames (const Vector<Int>& enumFields);
-  static DataType basicType (Int enumField);
+  static casacore::String fieldName (casacore::Int enumField);
+  static casacore::Block<casacore::String> fieldNames (const casacore::Vector<casacore::Int>& enumFields);
+  static casacore::DataType basicType (casacore::Int enumField);
  
  private:
   // Initialize the static maps
@@ -132,9 +132,9 @@ class CTEnums
   
   // Static ordered maps containing field descriptions
   // Enum => Field Name
-  static SimpleOrderedMap <Int, String> theirFieldMap;
+  static casacore::SimpleOrderedMap <casacore::Int, casacore::String> theirFieldMap;
   // Enum => Basic data type
-  static SimpleOrderedMap <Int, DataType> theirTypeMap;
+  static casacore::SimpleOrderedMap <casacore::Int, casacore::DataType> theirTypeMap;
 };
 
 

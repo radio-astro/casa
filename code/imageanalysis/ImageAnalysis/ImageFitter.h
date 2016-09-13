@@ -35,7 +35,7 @@
 
 namespace casa {
 
-class ImageFitter : public ImageTask<Float> {
+class ImageFitter : public ImageTask<casacore::Float> {
     // <summary>
     // Top level interface to ImageAnalysis::fitsky to handle inputs, bookkeeping etc and
     // ultimately call fitsky to do fitting
@@ -77,11 +77,11 @@ public:
     // In cases where both box and region are specified, box, not region, is used.</li>
     // <li>region - Named region to use for fitting</li>
     // <li>regionPtr - A pointer to a region. Note there are unfortunately several different types of
-    // region records throughout CASA. In this case, it must be a Record produced by creating a
-    // region via a RegionManager method.
+    // region records throughout CASA. In this case, it must be a casacore::Record produced by creating a
+    // region via a casacore::RegionManager method.
     // <li>chanInp - Zero-based channel number on which to do the fit. Only a single channel can be
     // specified.</li>
-    // <li>stokes - Stokes plane on which to do the fit. Only a single Stokes parameter can be
+    // <li>stokes - casacore::Stokes plane on which to do the fit. Only a single casacore::Stokes parameter can be
     // specified.</li>
     // <li> maskInp - Mask (as LEL) to use as a way to specify which pixels to use </li>
     // <li> includepix - Pixel value range to include in the fit. includepix and excludepix
@@ -90,17 +90,17 @@ public:
     // <li> residualInp - Name of residual image to save. Blank means do not save residual image</li>
     // <li> modelInp - Name of the model image to save. Blank means do not save model image</li>
 
-    // use these constructors when you already have a pointer to a valid ImageInterface object
+    // use these constructors when you already have a pointer to a valid casacore::ImageInterface object
 
 
     ImageFitter(
-        const SPCIIF image, const String& region,
-        const Record *const &regionRec,
-        const String& box="",
-        const String& chanInp="", const String& stokes="",
-        const String& maskInp="",
-        const String& estiamtesFilename="",
-        const String& newEstimatesInp="", const String& compListName=""
+        const SPCIIF image, const casacore::String& region,
+        const casacore::Record *const &regionRec,
+        const casacore::String& box="",
+        const casacore::String& chanInp="", const casacore::String& stokes="",
+        const casacore::String& maskInp="",
+        const casacore::String& estiamtesFilename="",
+        const casacore::String& newEstimatesInp="", const casacore::String& compListName=""
     );
 
     ImageFitter(const ImageFitter& other) = delete;
@@ -116,21 +116,21 @@ public:
 
     void setWriteControl(ImageFitterResults::CompListWriteControl x) { _writeControl = x; }
 
-    inline String getClass() const {return _class;}
+    inline casacore::String getClass() const {return _class;}
 
     // Did the fit converge for the specified channel?
-    // Throw AipsError if the fit has not yet been done.
+    // Throw casacore::AipsError if the fit has not yet been done.
     // <src>plane</src> is relative to the first plane in the image chosen to be fit.
-    Bool converged(uInt plane) const;
+    casacore::Bool converged(casacore::uInt plane) const;
 
     // Did the fit converge?
-    // Throw AipsError if the fit has not yet been done.
+    // Throw casacore::AipsError if the fit has not yet been done.
     // <src>plane</src> is relative to the first plane in the image chosen to be fit.
-    Vector<Bool> converged() const;
+    casacore::Vector<casacore::Bool> converged() const;
 
     // set the zero level estimate. Implies fitting of zero level should be done. Must be
     // called before fit() to have an effect.
-    void setZeroLevelEstimate(Double estimate, Bool isFixed);
+    void setZeroLevelEstimate(casacore::Double estimate, casacore::Bool isFixed);
 
     // Unset zero level (resets to zero). Implies fitting of zero level should not be done.
     // Call prior to fit().
@@ -138,187 +138,187 @@ public:
 
     // get the fitted result and error. Throws
     // an exception if the zero level was not fit for.
-    void getZeroLevelSolution(vector<Double>& solution, vector<Double>& error);
+    void getZeroLevelSolution(vector<casacore::Double>& solution, vector<casacore::Double>& error);
 
     // set rms level for calculating uncertainties. If not positive, an exception is thrown.
-    void setRMS(const Quantity& rms);
+    void setRMS(const casacore::Quantity& rms);
 
-    void setIncludePixelRange(const std::pair<Float, Float>& r) {
-        _includePixelRange.reset(new std::pair<Float, Float>(r));
+    void setIncludePixelRange(const std::pair<casacore::Float, casacore::Float>& r) {
+        _includePixelRange.reset(new std::pair<casacore::Float, casacore::Float>(r));
     }
 
-    void setExcludePixelRange(const std::pair<Float, Float>& r) {
-        _excludePixelRange.reset(new std::pair<Float, Float>(r));
+    void setExcludePixelRange(const std::pair<casacore::Float, casacore::Float>& r) {
+        _excludePixelRange.reset(new std::pair<casacore::Float, casacore::Float>(r));
     }
 
     // set the output model image name
-    void setModel(const String& m) { _model = m; }
+    void setModel(const casacore::String& m) { _model = m; }
 
     // set the output residual image name
-    void setResidual(const String& r) { _residual = r; }
+    void setResidual(const casacore::String& r) { _residual = r; }
 
     // set noise correlation beam FWHM
-    void setNoiseFWHM(const Quantity& q);
+    void setNoiseFWHM(const casacore::Quantity& q);
 
     // in pixel widths
-    void setNoiseFWHM(Double d);
+    void setNoiseFWHM(casacore::Double d);
 
     // clear noise FWHM, if the image has no beam, use the uncorrelated noise equations.
     // If the image has a beam(s) use the correlated noise equations with theta_N =
     // the geometric mean of the beam major and minor axes.
     void clearNoiseFWHM();
 
-    // The Record holding all the output info
-    Record getOutputRecord() const {return _output; }
+    // The casacore::Record holding all the output info
+    casacore::Record getOutputRecord() const {return _output; }
 
     // Set The summary text file name.
-    void setSummaryFile(const String& f) { _summary = f; }
+    void setSummaryFile(const casacore::String& f) { _summary = f; }
 
 protected:
 
-    virtual Bool _hasLogfileSupport() const { return True; }
+    virtual casacore::Bool _hasLogfileSupport() const { return true; }
 
-    virtual inline Bool _supportsMultipleRegions() const {return True;}
+    virtual inline casacore::Bool _supportsMultipleRegions() const {return true;}
 
 private:
 
-    using Angular2DGaussian = GaussianBeam;
+    using Angular2DGaussian = casacore::GaussianBeam;
 
-    String _regionString;
-    String _residual{}, _model{}, _estimatesString{}, _summary{};
-    String _newEstimatesFileName, _compListName, _bUnit;
-    SHARED_PTR<std::pair<Float, Float> > _includePixelRange{}, _excludePixelRange{};
+    casacore::String _regionString;
+    casacore::String _residual{}, _model{}, _estimatesString{}, _summary{};
+    casacore::String _newEstimatesFileName, _compListName, _bUnit;
+    SHARED_PTR<std::pair<casacore::Float, casacore::Float> > _includePixelRange{}, _excludePixelRange{};
     ComponentList _estimates{}, _curConvolvedList, _curDeconvolvedList;
-    Vector<String> _fixed{}, _deconvolvedMessages;
-    Bool _fitDone{False}, _noBeam{False}, _doZeroLevel{}, _zeroLevelIsFixed{},
+    casacore::Vector<casacore::String> _fixed{}, _deconvolvedMessages;
+    casacore::Bool _fitDone{false}, _noBeam{false}, _doZeroLevel{}, _zeroLevelIsFixed{},
         _correlatedNoise, _useBeamForNoise;
-    Vector<Bool> _fitConverged{};
-    Vector<Quantity> _peakIntensities{}, _peakIntensityErrors, _fluxDensityErrors,
+    casacore::Vector<casacore::Bool> _fitConverged{};
+    casacore::Vector<casacore::Quantity> _peakIntensities{}, _peakIntensityErrors, _fluxDensityErrors,
         _fluxDensities, _majorAxes, _majorAxisErrors, _minorAxes, _minorAxisErrors,
         _positionAngles, _positionAngleErrors;
-    vector<Quantity> _allConvolvedPeakIntensities{}, _allConvolvedPeakIntensityErrors{}, _allSums{},
+    vector<casacore::Quantity> _allConvolvedPeakIntensities{}, _allConvolvedPeakIntensityErrors{}, _allSums{},
         _allFluxDensities{}, _allFluxDensityErrors{};
-    vector<GaussianBeam> _allBeams;
-    vector<Double> _allBeamsPix, _allBeamsSter;
-    vector<uInt> _allChanNums;
-    vector<Bool> _isPoint;
-    Record _residStats, inputStats, _output;
-    Double _rms = -1;
-    String _kludgedStokes;
+    vector<casacore::GaussianBeam> _allBeams;
+    vector<casacore::Double> _allBeamsPix, _allBeamsSter;
+    vector<casacore::uInt> _allChanNums;
+    vector<casacore::Bool> _isPoint;
+    casacore::Record _residStats, inputStats, _output;
+    casacore::Double _rms = -1;
+    casacore::String _kludgedStokes;
     ImageFitterResults::CompListWriteControl _writeControl = ImageFitterResults::NO_WRITE;
-    Vector<uInt> _chanVec;
-    uInt _curChan;
-    Double _zeroLevelOffsetEstimate = 0;
-    vector<Double> _zeroLevelOffsetSolution, _zeroLevelOffsetError;
-    Int _stokesPixNumber = -1, _chanPixNumber = -1;
+    casacore::Vector<casacore::uInt> _chanVec;
+    casacore::uInt _curChan;
+    casacore::Double _zeroLevelOffsetEstimate = 0;
+    vector<casacore::Double> _zeroLevelOffsetSolution, _zeroLevelOffsetError;
+    casacore::Int _stokesPixNumber = -1, _chanPixNumber = -1;
     ImageFitterResults _results;
-    std::unique_ptr<Quantity> _noiseFWHM{};
-    Quantity _pixWidth{0, "arcsec"};
+    std::unique_ptr<casacore::Quantity> _noiseFWHM{};
+    casacore::Quantity _pixWidth{0, "arcsec"};
 
-    const static String _class;
+    const static casacore::String _class;
 
     void _fitLoop(
-        Bool& anyConverged, ComponentList& convolvedList,
+        casacore::Bool& anyConverged, ComponentList& convolvedList,
         ComponentList& deconvolvedList, SPIIF templateImage,
         SPIIF residualImage, SPIIF modelImage,
-        /*LCMask& completePixelMask, */ String& resultsString
+        /*casacore::LCMask& completePixelMask, */ casacore::String& resultsString
     );
 
     vector<OutputDestinationChecker::OutputStruct> _getOutputStruct();
 
-    vector<Coordinate::Type> _getNecessaryCoordinates() const;
+    vector<casacore::Coordinate::Type> _getNecessaryCoordinates() const;
 
     CasacRegionManager::StokesControl _getStokesControl() const;
 
-    void _finishConstruction(const String& estimatesFilename);
+    void _finishConstruction(const casacore::String& estimatesFilename);
 
-    //String _resultsHeader() const;
+    //casacore::String _resultsHeader() const;
 
     // summarize the results in a nicely formatted string
-    String _resultsToString(uInt nPixels) const;
+    casacore::String _resultsToString(casacore::uInt nPixels) const;
 
     //summarize the size details in a nicely formatted string
-    String _sizeToString(const uInt compNumber) const;
+    casacore::String _sizeToString(const casacore::uInt compNumber) const;
 
-    String _spectrumToString(uInt compNumber) const;
+    casacore::String _spectrumToString(casacore::uInt compNumber) const;
 
     void _setDeconvolvedSizes();
 
-    void _getStandardDeviations(Double& inputStdDev, Double& residStdDev) const;
+    void _getStandardDeviations(casacore::Double& inputStdDev, casacore::Double& residStdDev) const;
 
-    void _getRMSs(Double& inputRMS, Double& residRMS) const;
+    void _getRMSs(casacore::Double& inputRMS, casacore::Double& residRMS) const;
 
-    Double _getStatistic(const String& type, const uInt index, const Record& stats) const;
+    casacore::Double _getStatistic(const casacore::String& type, const casacore::uInt index, const casacore::Record& stats) const;
 
-    String _statisticsToString() const;
+    casacore::String _statisticsToString() const;
 
     SPIIF _createImageTemplate() const;
 
     void _writeCompList(ComponentList& list) const;
 
     void _setIncludeExclude(
-        Fit2D& fitter
+        casacore::Fit2D& fitter
     ) const;
 
     void _fitsky(
-        Fit2D& fitter, Array<Float>& pixels,
-        Array<Bool>& pixelMask, Bool& converged,
-        Double& zeroLevelOffsetSolution,
-        Double& zeroLevelOffsetError,
-        std::pair<Int, Int>& pixelOffsets,
-        const Vector<String>& models, Bool fitIt,
-        Bool deconvolveIt,
-        Double zeroLevelEstimate
+        casacore::Fit2D& fitter, casacore::Array<casacore::Float>& pixels,
+        casacore::Array<casacore::Bool>& pixelMask, casacore::Bool& converged,
+        casacore::Double& zeroLevelOffsetSolution,
+        casacore::Double& zeroLevelOffsetError,
+        std::pair<casacore::Int, casacore::Int>& pixelOffsets,
+        const casacore::Vector<casacore::String>& models, casacore::Bool fitIt,
+        casacore::Bool deconvolveIt,
+        casacore::Double zeroLevelEstimate
     );
 
-    Vector<Double> _singleParameterEstimate(
-        Fit2D& fitter, Fit2D::Types model,
-        const MaskedArray<Float>& pixels, Float minVal,
-        Float maxVal, const IPosition& minPos, const IPosition& maxPos
+    casacore::Vector<casacore::Double> _singleParameterEstimate(
+        casacore::Fit2D& fitter, casacore::Fit2D::Types model,
+        const casacore::MaskedArray<casacore::Float>& pixels, casacore::Float minVal,
+        casacore::Float maxVal, const casacore::IPosition& minPos, const casacore::IPosition& maxPos
     ) const;
 
-    ComponentType::Shape _convertModelType(Fit2D::Types typeIn) const;
+    ComponentType::Shape _convertModelType(casacore::Fit2D::Types typeIn) const;
 
     void _fitskyExtractBeam(
-        Vector<Double>& parameters, const ImageInfo& imageInfo,
-        const Bool xIsLong, const CoordinateSystem& cSys
+        casacore::Vector<casacore::Double>& parameters, const casacore::ImageInfo& imageInfo,
+        const casacore::Bool xIsLong, const casacore::CoordinateSystem& cSys
     ) const;
 
     void _encodeSkyComponentError(
-        SkyComponent& sky, Double facToJy, const CoordinateSystem& csys,
-        const Vector<Double>& parameters, const Vector<Double>& errors,
-        Stokes::StokesTypes stokes, Bool xIsLong
+        SkyComponent& sky, casacore::Double facToJy, const casacore::CoordinateSystem& csys,
+        const casacore::Vector<casacore::Double>& parameters, const casacore::Vector<casacore::Double>& errors,
+        casacore::Stokes::StokesTypes stokes, casacore::Bool xIsLong
     ) const;
 
     void _doConverged(
         ComponentList& convolvedList, ComponentList& deconvolvedList,
-        Double& zeroLevelOffsetEstimate, std::pair<Int, Int>& pixelOffsets,
+        casacore::Double& zeroLevelOffsetEstimate, std::pair<casacore::Int, casacore::Int>& pixelOffsets,
         SPIIF& residualImage, SPIIF& modelImage,
-        SHARED_PTR<TempImage<Float> >& tImage,
-        SHARED_PTR<ArrayLattice<Bool> >& initMask,
-        Double zeroLevelOffsetSolution, Double zeroLevelOffsetError,
-        Bool hasSpectralAxis, Int spectralAxisNumber, Bool outputImages, const IPosition& planeShape,
-        const Array<Float>& pixels, const Array<Bool>& pixelMask, const Fit2D& fitter,
+        SHARED_PTR<casacore::TempImage<casacore::Float> >& tImage,
+        SHARED_PTR<casacore::ArrayLattice<casacore::Bool> >& initMask,
+        casacore::Double zeroLevelOffsetSolution, casacore::Double zeroLevelOffsetError,
+        casacore::Bool hasSpectralAxis, casacore::Int spectralAxisNumber, casacore::Bool outputImages, const casacore::IPosition& planeShape,
+        const casacore::Array<casacore::Float>& pixels, const casacore::Array<casacore::Bool>& pixelMask, const casacore::Fit2D& fitter,
         SPIIF templateImage
     );
 
-    Quantity _pixelWidth();
+    casacore::Quantity _pixelWidth();
 
     void _calculateErrors();
 
-    Double _getRMS() const;
+    casacore::Double _getRMS() const;
 
-    Double _correlatedOverallSNR(
-        uInt comp, Double a, Double b, Double signalToNoise
+    casacore::Double _correlatedOverallSNR(
+        casacore::uInt comp, casacore::Double a, casacore::Double b, casacore::Double signalToNoise
     ) const;
 
-    GaussianBeam _getCurrentBeam() const;
+    casacore::GaussianBeam _getCurrentBeam() const;
 
     void _createOutputRecord(const ComponentList& convolved, const ComponentList& decon);
 
-    void _setSum(const SkyComponent& comp, const SubImage<Float>& im, uInt compNum);
+    void _setSum(const SkyComponent& comp, const casacore::SubImage<casacore::Float>& im, casacore::uInt compNum);
 
-    void _setBeam(GaussianBeam& beam, uInt ngauss);
+    void _setBeam(casacore::GaussianBeam& beam, casacore::uInt ngauss);
 };
 }
 

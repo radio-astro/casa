@@ -26,6 +26,7 @@
 #include "SplatResult.h"
 #include <sstream>
 #include <stdio.h>
+
 namespace casa {
 
 SplatResult::SplatResult(int speciesId, const string& species,

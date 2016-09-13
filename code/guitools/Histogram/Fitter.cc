@@ -27,6 +27,8 @@
 #include <QDebug>
 #include <limits>
 
+using namespace casacore;
+
 namespace casa {
 
 Fitter::Fitter() {

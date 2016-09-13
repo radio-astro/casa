@@ -61,7 +61,7 @@ public:
             int histLimit = historyLimit()) {
         return qgetHelper(AcceptOpen, DirectoryOnly, parent, caption,
                           directory, QString(), histLimit); }
-    static String getExistingDir(QWidget* parent = NULL,
+    static casacore::String getExistingDir(QWidget* parent = NULL,
             const QString& caption = QString(),
             const QString& directory = lastDirectory(),
             int histLimit = historyLimit()) {
@@ -79,7 +79,7 @@ public:
         (void)filter;
         return qgetHelper(AcceptOpen, ExistingFile, parent, caption, directory,
                           QString(), histLimit); }
-    static String getExistingFile(QWidget* parent = NULL,
+    static casacore::String getExistingFile(QWidget* parent = NULL,
             const QString& caption = QString(),
             const QString& directory = lastDirectory(),
             const QString& filter = QString(), int histLimit = historyLimit()){
@@ -96,7 +96,7 @@ public:
         const QString& /*filter*/ = QString(), int histLimit = historyLimit()){
         return qgetHelper(AcceptSave, AnyFile, parent, caption, directory,
                           QString(), histLimit); }
-    static String getAnyFile(QWidget* parent = NULL,
+    static casacore::String getAnyFile(QWidget* parent = NULL,
             const QString& caption = QString(),
             const QString& directory = lastDirectory(),
             const QString& filter = QString(), int histLimit = historyLimit()){

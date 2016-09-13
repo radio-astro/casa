@@ -48,24 +48,24 @@ namespace casa {
 
 		// Defaults.
 		// <group>
-		static const String DEFAULT_FONT;
+		static const casacore::String DEFAULT_FONT;
 		static const int DEFAULT_POINTSIZE;
 		// </group>
 
 
 		// Constructor.
-		RegionShapeLabel(String text = "");
+		RegionShapeLabel(casacore::String text = "");
 
 		// Destructor.
 		~RegionShapeLabel();
 
 
 		// Sets this label's text to the given.
-		void setText(const String& text);
+		void setText(const casacore::String& text);
 
 		// Sets this label's font family to the given.  How it is handled when
 		// being drawn depends on the underlying PixelCanvas implementation.
-		void setFont(const String& font);
+		void setFont(const casacore::String& font);
 
 		// Sets the label's font point size to the given.
 		void setSize(int size);
@@ -73,7 +73,7 @@ namespace casa {
 		// Sets the label's font color to the given.  Note: while there is no
 		// formal specification for color format, Strings should be accepted in
 		// common name format ("black") or hexadecimal format ("#000000").
-		void setColor(const String& color);
+		void setColor(const casacore::String& color);
 
 		// Sets whether the label's font is italic or not.  Note: only
 		// QtPixelCanvas currently supports bold.
@@ -92,16 +92,16 @@ namespace casa {
 		bool isEmpty() const;
 
 		// Returns the text for this label.
-		const String& text() const;
+		const casacore::String& text() const;
 
 		// Returns the font family for this label.
-		const String& font() const;
+		const casacore::String& font() const;
 
 		// Returns the point size for this label.
 		int size() const;
 
 		// Returns the color for this label.
-		const String& color() const;
+		const casacore::String& color() const;
 
 		// Returns true if this label's font is italic, false otherwise.
 		bool isItalic() const;
@@ -128,13 +128,13 @@ namespace casa {
 		// label.  If bottom is false, the label is centered on (x, y); otherwise
 		// the label is drawn with (x, y) at its bottom center point.
 		bool draw(PixelCanvas* pc, int x, int y, bool bottom = false,
-		          String* error = NULL);
+		          casacore::String* error = NULL);
 
 	private:
-		String m_text;      // text
-		String m_font;      // font family name
+		casacore::String m_text;      // text
+		casacore::String m_font;      // font family name
 		int m_pointSize; // font point size
-		String m_color;     // font color
+		casacore::String m_color;     // font color
 		bool m_italic;      // is italic?
 		bool m_bold;        // is bold?
 		double m_angle;     // screen rotation angle
@@ -163,22 +163,22 @@ namespace casa {
 //         a world system (true) or a pixel system (false).  Note: if true, the
 //         world system MUST be defined using the following property.
 //         <b>MUST ALWAYS BE DEFINED.</b></li>
-//     <li><b>RegionShape::PROPWORLDSYSTEM</b> (<i>String</i>): if the shape
+//     <li><b>RegionShape::PROPWORLDSYSTEM</b> (<i>casacore::String</i>): if the shape
 //         is in world coordinates, the world system.  MUST be able to be
-//         converted to an MDirection::Types via MDirection::getType().
+//         converted to an casacore::MDirection::Types via casacore::MDirection::getType().
 //         <b>MUST BE DEFINED FOR SHAPES WITH WORLD COORDINATES.</b></li>
-//     <li><b>RegionShape::PROPLINE_COLOR</b> (<i>String</i>): line color.
+//     <li><b>RegionShape::PROPLINE_COLOR</b> (<i>casacore::String</i>): line color.
 //         <b>OPTIONAL.</b></li>
 //     <li><b>RegionShape::PROPLINE_WIDTH</b> (<i>double</i>): line width.
 //         <b>OPTIONAL.</b></li>
-//     <li><b>RegionShape::PROPLINE_STYLE</b> (<i>String</i>): String
+//     <li><b>RegionShape::PROPLINE_STYLE</b> (<i>casacore::String</i>): String
 //         representation of line style.  NOTE: styles other than solid and
 //         dashed are only supported by QtPixelCanvas.  <b>OPTIONAL.</b></li>
-//     <li><b>RegionShape::PROPTEXT</b> (<i>String</i>): label text.
+//     <li><b>RegionShape::PROPTEXT</b> (<i>casacore::String</i>): label text.
 //         <b>OPTIONAL.</b></li>
-//     <li><b>RegionShape::PROPTEXT_COLOR</b> (<i>String</i>): label color.
+//     <li><b>RegionShape::PROPTEXT_COLOR</b> (<i>casacore::String</i>): label color.
 //         <b>OPTIONAL.</b></li>
-//     <li><b>RegionShape::PROPTEXT_FONT</b> (<i>String</i>): label font.
+//     <li><b>RegionShape::PROPTEXT_FONT</b> (<i>casacore::String</i>): label font.
 //         <b>OPTIONAL.</b></li>
 //     <li><b>RegionShape::PROPTEXT_SIZE</b> (<i>int</i>): label point size.
 //         <b>OPTIONAL.</b></li>
@@ -188,19 +188,19 @@ namespace casa {
 //         is bold.  <b>OPTIONAL.</b></li>
 //     <li><b>RegionShape::PROPLINETHROUGH</b> (<i>bool</li>): whether the
 //         shape has a linethrough or not.  <b>OPTIONAL.</b></li>
-//     <li><b>RegionShape::PROPLINETHROUGH_COLOR</b> (<i>String</i>):
+//     <li><b>RegionShape::PROPLINETHROUGH_COLOR</b> (<i>casacore::String</i>):
 //         linethrough color.  <b>OPTIONAL.</b></li>
 //     <li><b>RegionShape::PROPLINETHROUGH_WIDTH</b> (<i>double</i>):
 //         linethrough width.  <b>OPTIONAL.</b></li>
-//     <li><b>RegionShape::PROPLINETHROUGH_STYLE</b> (<i>String</i>): String
+//     <li><b>RegionShape::PROPLINETHROUGH_STYLE</b> (<i>casacore::String</i>): String
 //         representation of linethrough style.  NOTE: styles other than solid
 //         and dashed are only supported by QtPixelCanvas.
 //         <b>OPTIONAL.</b></li>
-//     <li><b>RegionShape::PROPCOORDINATES</b> (<i>Array&lt;double&gt;</i>):
+//     <li><b>RegionShape::PROPCOORDINATES</b> (<i>casacore::Array&lt;double&gt;</i>):
 //         This property will be used to call setCoordParameters, and so is
 //         specific to the shape type.  <b>MUST BE DEFINED FOR SHAPE TYPES
 //         OTHER THAN RSPolygon AND RSComposite.</b></li>
-//     <li><b>RegionShape::PROPOPTIONS</b> (<i>Record</i>): the fields are set
+//     <li><b>RegionShape::PROPOPTIONS</b> (<i>casacore::Record</i>): the fields are set
 //         in the order defined by each shape type's option methods.  Each
 //         field's name should be unique (the specifics are irrelevant since it
 //         is the order that matters), and the value should be one of the types
@@ -208,7 +208,7 @@ namespace casa {
 // RegionShape also defines a shapeFromRecord() method that will create and
 // return a new shape based on the given record.  This record has the
 // following additional properties:
-// <ul><li><b>RegionShape::PROPTYPE</b> (<i>String</i>): for defining which
+// <ul><li><b>RegionShape::PROPTYPE</b> (<i>casacore::String</i>): for defining which
 //         type of shape is defined by the record.  Acceptable choices:
 //         <ul><li>RegionShape::PROPTYPE_ELLIPSE</li>
 //             <li>RegionShape::PROPTYPE_CIRCLE</li>
@@ -227,7 +227,7 @@ namespace casa {
 		// The unit that all native coordinates are in.  Currently set to "deg".
 		// If this is changed, DS9RegionFileWriter::convertValue() must also be
 		// updated.
-		static const String UNIT;
+		static const casacore::String UNIT;
 
 		// Value used for wrapping negative/positive unit values.  Currently set
 		// to 360 for degrees.
@@ -235,40 +235,40 @@ namespace casa {
 
 		// Properties.  See RegionShape description.
 		// <group>
-		static const String PROPISWORLD;
-		static const String PROPWORLDSYSTEM;
-		static const String PROPLINE_COLOR;
-		static const String PROPLINE_WIDTH;
-		static const String PROPLINE_STYLE;
-		static const String PROPTEXT;
-		static const String PROPTEXT_COLOR;
-		static const String PROPTEXT_FONT;
-		static const String PROPTEXT_SIZE;
-		static const String PROPTEXT_ITALIC;
-		static const String PROPTEXT_BOLD;
-		static const String PROPLINETHROUGH;
-		static const String PROPLINETHROUGH_COLOR;
-		static const String PROPLINETHROUGH_WIDTH;
-		static const String PROPLINETHROUGH_STYLE;
-		static const String PROPCOORDINATES;
-		static const String PROPOPTIONS;
+		static const casacore::String PROPISWORLD;
+		static const casacore::String PROPWORLDSYSTEM;
+		static const casacore::String PROPLINE_COLOR;
+		static const casacore::String PROPLINE_WIDTH;
+		static const casacore::String PROPLINE_STYLE;
+		static const casacore::String PROPTEXT;
+		static const casacore::String PROPTEXT_COLOR;
+		static const casacore::String PROPTEXT_FONT;
+		static const casacore::String PROPTEXT_SIZE;
+		static const casacore::String PROPTEXT_ITALIC;
+		static const casacore::String PROPTEXT_BOLD;
+		static const casacore::String PROPLINETHROUGH;
+		static const casacore::String PROPLINETHROUGH_COLOR;
+		static const casacore::String PROPLINETHROUGH_WIDTH;
+		static const casacore::String PROPLINETHROUGH_STYLE;
+		static const casacore::String PROPCOORDINATES;
+		static const casacore::String PROPOPTIONS;
 
-		static const String PROPTYPE;
-		static const String PROPTYPE_ELLIPSE;
-		static const String PROPTYPE_CIRCLE;
-		static const String PROPTYPE_RECTANGLE;
-		static const String PROPTYPE_POLYGON;
-		static const String PROPTYPE_LINE;
-		static const String PROPTYPE_VECTOR;
-		static const String PROPTYPE_MARKER;
-		static const String PROPTYPE_TEXT;
-		static const String PROPTYPE_COMPOSITE;
+		static const casacore::String PROPTYPE;
+		static const casacore::String PROPTYPE_ELLIPSE;
+		static const casacore::String PROPTYPE_CIRCLE;
+		static const casacore::String PROPTYPE_RECTANGLE;
+		static const casacore::String PROPTYPE_POLYGON;
+		static const casacore::String PROPTYPE_LINE;
+		static const casacore::String PROPTYPE_VECTOR;
+		static const casacore::String PROPTYPE_MARKER;
+		static const casacore::String PROPTYPE_TEXT;
+		static const casacore::String PROPTYPE_COMPOSITE;
 		// </group>
 
 		// Creates a record of the correct type from the given record (see
 		// RegionShape class description), or NULL if a fatal error occurred.
-		static RegionShape* shapeFromRecord(const RecordInterface& properties,
-		                                    String& error);
+		static RegionShape* shapeFromRecord(const casacore::RecordInterface& properties,
+		                                    casacore::String& error);
 
 		// Different types for coordinate parameters.
 		enum CoordinateParameterType {
@@ -300,13 +300,13 @@ namespace casa {
 
 		// Convert between line style enum and String.
 		// <group>
-		static String convLineStyle(LineStyle style);
-		static LineStyle convLineStyle(String style);
+		static casacore::String convLineStyle(LineStyle style);
+		static LineStyle convLineStyle(casacore::String style);
 		// </group>
 
 		// Defaults.
 		// <group>
-		static const String DEFAULT_COLOR;
+		static const casacore::String DEFAULT_COLOR;
 		static const double DEFAULT_WIDTH;
 		static const LineStyle DEFAULT_STYLE;
 		// <group>
@@ -317,15 +317,15 @@ namespace casa {
 		// World Constructor.  Note: implementing subclasses MUST supply values
 		// for m_xMin, m_xMax, m_yMin, and m_yMax, or override xMin(), xMax(),
 		// yMin(), and yMax().
-		RegionShape(MDirection::Types worldSys);
+		RegionShape(casacore::MDirection::Types worldSys);
 
 		// Pixel Constructor.  Note: implementing subclasses MUST supply values
 		// for m_xMin, m_xMax, m_yMin, and m_yMax, or override xMin(), xMax(),
 		// yMin(), and yMax().
 		RegionShape();
 
-		// Record Constructor.
-		RegionShape(const RecordInterface& properties);
+		// casacore::Record Constructor.
+		RegionShape(const casacore::RecordInterface& properties);
 
 		// Destructor
 		virtual ~RegionShape();
@@ -334,11 +334,11 @@ namespace casa {
 		// PassiveCachingDD methods //
 
 		// Implements PassiveCachingDD::dataUnit.
-		const Unit dataUnit() const;
-		const IPosition dataShape() const {
-			return IPosition( );
+		const casacore::Unit dataUnit() const;
+		const casacore::IPosition dataShape() const {
+			return casacore::IPosition( );
 		}
-		uInt dataDim() const {
+		casacore::uInt dataDim() const {
 			return 0;
 		}
 		std::vector<int> displayAxes( ) const {
@@ -358,8 +358,8 @@ namespace casa {
 
 		// Gets/sets this shape's line color.
 		// <group>
-		virtual String lineColor() const;
-		virtual void setLineColor(const String& newColor, bool alsoSetLabel= true);
+		virtual casacore::String lineColor() const;
+		virtual void setLineColor(const casacore::String& newColor, bool alsoSetLabel= true);
 		// </group>
 
 		// Gets/sets this shape's line width.
@@ -376,8 +376,8 @@ namespace casa {
 
 		// Gets/sets this shape's label's text.
 		// <group>
-		virtual String text() const;
-		virtual void setText(const String& text);
+		virtual casacore::String text() const;
+		virtual void setText(const casacore::String& text);
 		// </group>
 
 		// Gets/sets this shape's label.
@@ -389,10 +389,10 @@ namespace casa {
 		// Gets/sets this shape's linethrough properties.
 		// <group>
 		virtual bool linethrough() const;
-		virtual String linethroughColor() const;
+		virtual casacore::String linethroughColor() const;
 		virtual double linethroughWidth() const;
 		virtual LineStyle linethroughStyle() const;
-		virtual void setLinethrough(bool linethrough, String color = "red",
+		virtual void setLinethrough(bool linethrough, casacore::String color = "red",
 		                            double width = 1, LineStyle style = SOLID);
 		// </group>
 
@@ -423,7 +423,7 @@ namespace casa {
 
 		// If this shape is in world coordinates, returns the system used.
 		// Undefined for pixel coordinates.
-		virtual MDirection::Types worldSystem() const {
+		virtual casacore::MDirection::Types worldSystem() const {
 			return m_worldSystem;
 		}
 
@@ -433,12 +433,12 @@ namespace casa {
 		}
 
 		// Set world system.
-		virtual void setWorldSystem(MDirection::Types sys) {
+		virtual void setWorldSystem(casacore::MDirection::Types sys) {
 			m_worldSystem = sys;
 		}
 
 		// Returns this shape's type (color + type).
-		virtual String title() const {
+		virtual casacore::String title() const {
 			return lineColor() + " " + type();
 		}
 
@@ -455,20 +455,20 @@ namespace casa {
 		}
 
 		// Returns the error that occurred during the last call to draw().
-		const String& lastDrawingError() const {
+		const casacore::String& lastDrawingError() const {
 			return m_drawingError;
 		}
 
 		// Returns this shape's properties as a Record.
-		Record getProperties() const;
+		casacore::Record getProperties() const;
 
 		// Synonym.
-		Record toRecord() const {
+		casacore::Record toRecord() const {
 			return getProperties();
 		}
 
 		// Sets this shape's properties from the given Record.
-		void setProperties(const RecordInterface& properties);
+		void setProperties(const casacore::RecordInterface& properties);
 
 
 		// Pure Virtual Methods //
@@ -479,18 +479,18 @@ namespace casa {
 		// line style of the pixel canvas back to Display::LSSolid when finished.
 		// The protected method resetLineStyle can be used for this purpose.
 		virtual bool drawAndUpdateBoundingBox(WorldCanvasHolder& wch,
-		                                      String* error = NULL) = 0;
+		                                      casacore::String* error = NULL) = 0;
 
 		// Returns the name/type of this shape, for displaying to the user.
-		virtual String type() const = 0;
+		virtual casacore::String type() const = 0;
 		// Pure virtual function from DisplayData...
-		String dataType() const {
+		casacore::String dataType() const {
 			return type( );
 		}
 
 
 		// Can be overridden by children.  Returns a one-word type.
-		virtual String oneWordType() const {
+		virtual casacore::String oneWordType() const {
 			return type();
 		}
 
@@ -505,14 +505,14 @@ namespace casa {
 		// needed.  The number and order depend on the shape type.  toSystem
 		// indivates which system the given values are in and should either be:
 		// 1) RSUtils::PIXEL for pixel coordinates, or
-		// 2) a value that can be converted to a MDirection::Types via
-		//    MDirection::getType().
+		// 2) a value that can be converted to a casacore::MDirection::Types via
+		//    casacore::MDirection::getType().
 		// Returned coordinates have unit RegionShape::UNIT for world systems.
-		virtual vector<double> coordParameterValues(String toSystem) const = 0;
+		virtual vector<double> coordParameterValues(casacore::String toSystem) const = 0;
 
 		// Returns the name for the coordinate parameters, in the same order
 		// as coordParameterValues().
-		virtual vector<String> coordParameterNames() const = 0;
+		virtual vector<casacore::String> coordParameterNames() const = 0;
 
 		// Returns a vector indicating the types of the coordinate parameters,
 		// in the same order as coordParameterValues().
@@ -528,15 +528,15 @@ namespace casa {
 		// as coordParameterValues().  valSystem indicates which system the given
 		// values are in and should either be:
 		// 1) RSUtils::PIXEL for pixel coordinates, or
-		// 2) a value that can be converted to a MDirection::Types via
-		//    MDirection::getType().
+		// 2) a value that can be converted to a casacore::MDirection::Types via
+		//    casacore::MDirection::getType().
 		// Values must be in unit RegionShape::UNIT for world systems.
 		virtual void setCoordParameters(const vector<double>& vals,
-		                                String valSystem) = 0;
+		                                casacore::String valSystem) = 0;
 
 		// Moves this shape the given delta x and delta y in the given system
 		// (empty for shape's native system).
-		virtual void move(double dx, double dy, String system = "") = 0;
+		virtual void move(double dx, double dy, casacore::String system = "") = 0;
 
 		// Returns a RSHandle (four points in screen coords that are like a
 		// bounding box for the shape) for this shape.  If the shape has not
@@ -545,15 +545,15 @@ namespace casa {
 		virtual RSHandle getHandle() const = 0;
 
 		// Returns the names for options.
-		virtual vector<String> optionNames() const = 0;
+		virtual vector<casacore::String> optionNames() const = 0;
 
 		// Returns the types for options.
 		virtual vector<OptionType> optionTypes() const = 0;
 
 		// For options that are string choices, return the available choices.
 		// May return an empty vector if there are no string choices.
-		virtual vector<vector<String> > optionChoices() const {
-			return vector<vector<String> >();
+		virtual vector<vector<casacore::String> > optionChoices() const {
+			return vector<vector<casacore::String> >();
 		}
 
 		// Returns the current values for options.
@@ -569,10 +569,10 @@ namespace casa {
 		bool m_isWorld;
 
 		// World system (undefined if m_isWorld is false).
-		MDirection::Types m_worldSystem;
+		casacore::MDirection::Types m_worldSystem;
 
 		// Line color.
-		String m_color;
+		casacore::String m_color;
 
 		// Line width.
 		double m_width;
@@ -586,7 +586,7 @@ namespace casa {
 		// Linethrough properties.
 		// <group>
 		bool m_lt;
-		String m_ltColor;
+		casacore::String m_ltColor;
 		double m_ltWidth;
 		LineStyle m_ltStyle;
 		// </group>
@@ -604,7 +604,7 @@ namespace casa {
 		// For keeping track of drawing/conversion errors.
 		// <group>
 		bool m_hadDrawingError;
-		String m_drawingError;
+		casacore::String m_drawingError;
 		// </group>
 
 
@@ -612,10 +612,10 @@ namespace casa {
 
 		// Puts shape-specific properties in the given record.  MUST at least set
 		// PROP_TYPE.
-		virtual void getShapeSpecificProperties(Record& properties) const = 0;
+		virtual void getShapeSpecificProperties(casacore::Record& properties) const = 0;
 
 		// Sets shape-specific properties from the given record.
-		virtual void setShapeSpecificProperties(const RecordInterface& props) = 0;
+		virtual void setShapeSpecificProperties(const casacore::RecordInterface& props) = 0;
 
 
 		// Common RegionShape Methods //
@@ -634,84 +634,84 @@ namespace casa {
 
 		// Convenience access to RSUtils conversion methods.
 		// <group>
-		bool worldToPixel(const Quantum<Vector<double> >& worldX,
-		                  const Quantum<Vector<double> >& worldY,
-		                  Vector<double>& pixelX, Vector<double>& pixelY,
+		bool worldToPixel(const casacore::Quantum<casacore::Vector<double> >& worldX,
+		                  const casacore::Quantum<casacore::Vector<double> >& worldY,
+		                  casacore::Vector<double>& pixelX, casacore::Vector<double>& pixelY,
 		                  WorldCanvasHolder& wch, bool wrap = true,
-		                  String* error = NULL) const {
+		                  casacore::String* error = NULL) const {
 			return RSUtils::worldToPixel(worldX, worldY, pixelX, pixelY, wch,
 			                             m_worldSystem, wrap, error);
 		}
 
-		bool pixelToWorld(const Vector<double>& pixelX,
-		                  const Vector<double>& pixelY,
-		                  Quantum<Vector<double> >& worldX,
-		                  Quantum<Vector<double> >& worldY, WorldCanvasHolder& wch,
-		                  bool wrap = true, String* error = NULL) const {
+		bool pixelToWorld(const casacore::Vector<double>& pixelX,
+		                  const casacore::Vector<double>& pixelY,
+		                  casacore::Quantum<casacore::Vector<double> >& worldX,
+		                  casacore::Quantum<casacore::Vector<double> >& worldY, WorldCanvasHolder& wch,
+		                  bool wrap = true, casacore::String* error = NULL) const {
 			return RSUtils::pixelToWorld(pixelX, pixelY, worldX, worldY, wch,
 			                             m_worldSystem, wrap, error);
 		}
 
-		bool worldToLinear(const Quantum<Vector<double> >& worldX,
-		                   const Quantum<Vector<double> >& worldY,
-		                   Vector<double>& linearX, Vector<double>& linearY,
+		bool worldToLinear(const casacore::Quantum<casacore::Vector<double> >& worldX,
+		                   const casacore::Quantum<casacore::Vector<double> >& worldY,
+		                   casacore::Vector<double>& linearX, casacore::Vector<double>& linearY,
 		                   WorldCanvasHolder& wch, bool wrap = true,
-		                   String* error = NULL) const {
+		                   casacore::String* error = NULL) const {
 			return RSUtils::worldToLinear(worldX, worldY, linearX, linearY, wch,
 			                              m_worldSystem, wrap, error);
 		}
 
-		bool worldToScreen(const Quantum<Vector<double> >& worldX,
-		                   const Quantum<Vector<double> >& worldY,
-		                   Vector<double>& screenX, Vector<double>& screenY,
+		bool worldToScreen(const casacore::Quantum<casacore::Vector<double> >& worldX,
+		                   const casacore::Quantum<casacore::Vector<double> >& worldY,
+		                   casacore::Vector<double>& screenX, casacore::Vector<double>& screenY,
 		                   WorldCanvasHolder& wch, bool wrap = true,
-		                   String* error = NULL) const {
-			Vector<double> linX(worldX.getValue().size()),
+		                   casacore::String* error = NULL) const {
+			casacore::Vector<double> linX(worldX.getValue().size()),
 			       linY(worldY.getValue().size());
 			return RSUtils::worldToLinear(worldX, worldY, linX, linY, wch,
 			                              m_worldSystem, wrap, error) &&
 			       RSUtils::linearToScreen(linX, linY, screenX, screenY,wch,error);
 		}
 
-		bool linearToWorld(const Vector<double>& linearX,
-		                   const Vector<double>& linearY,
-		                   Quantum<Vector<double> >& worldX,
-		                   Quantum<Vector<double> >& worldY,
-		                   WorldCanvasHolder& wch, String* error = NULL) const {
+		bool linearToWorld(const casacore::Vector<double>& linearX,
+		                   const casacore::Vector<double>& linearY,
+		                   casacore::Quantum<casacore::Vector<double> >& worldX,
+		                   casacore::Quantum<casacore::Vector<double> >& worldY,
+		                   WorldCanvasHolder& wch, casacore::String* error = NULL) const {
 			return RSUtils::linearToWorld(linearX, linearY, worldX, worldY, wch,
 			                              m_worldSystem, vector<int>(),
 			                              vector<int>(), false, error);
 		}
 
-		bool linearToWorld(const Vector<double>& linearX,
-		                   const Vector<double>& linearY,
-		                   Quantum<Vector<double> >& worldX,
-		                   Quantum<Vector<double> >& worldY,
+		bool linearToWorld(const casacore::Vector<double>& linearX,
+		                   const casacore::Vector<double>& linearY,
+		                   casacore::Quantum<casacore::Vector<double> >& worldX,
+		                   casacore::Quantum<casacore::Vector<double> >& worldY,
 		                   WorldCanvasHolder& wch, const vector<int>& xSign,
-		                   const vector<int>& ySign, String* error = NULL) const {
+		                   const vector<int>& ySign, casacore::String* error = NULL) const {
 			return RSUtils::linearToWorld(linearX, linearY, worldX, worldY, wch,
 			                              m_worldSystem, xSign, ySign, true, error);
 		}
 
-		bool screenToWorld(const Vector<double>& screenX,
-		                   const Vector<double>& screenY,
-		                   Quantum<Vector<double> >& worldX,
-		                   Quantum<Vector<double> >& worldY,
-		                   WorldCanvasHolder& wch, String* error = NULL) const {
-			Vector<double> linX(screenX.size()), linY(screenY.size());
+		bool screenToWorld(const casacore::Vector<double>& screenX,
+		                   const casacore::Vector<double>& screenY,
+		                   casacore::Quantum<casacore::Vector<double> >& worldX,
+		                   casacore::Quantum<casacore::Vector<double> >& worldY,
+		                   WorldCanvasHolder& wch, casacore::String* error = NULL) const {
+			casacore::Vector<double> linX(screenX.size()), linY(screenY.size());
 			return RSUtils::screenToLinear(screenX, screenY, linX,linY,wch,error)&&
 			       RSUtils::linearToWorld(linX, linY, worldX, worldY, wch,
 			                              m_worldSystem, vector<int>(),
 			                              vector<int>(), false, error);
 		}
 
-		bool screenToWorld(const Vector<double>& screenX,
-		                   const Vector<double>& screenY,
-		                   Quantum<Vector<double> >& worldX,
-		                   Quantum<Vector<double> >& worldY,
+		bool screenToWorld(const casacore::Vector<double>& screenX,
+		                   const casacore::Vector<double>& screenY,
+		                   casacore::Quantum<casacore::Vector<double> >& worldX,
+		                   casacore::Quantum<casacore::Vector<double> >& worldY,
 		                   WorldCanvasHolder& wch, const vector<int>& xSign,
-		                   const vector<int>& ySign, String* error = NULL) const {
-			Vector<double> linX(screenX.size()), linY(screenY.size());
+		                   const vector<int>& ySign, casacore::String* error = NULL) const {
+			casacore::Vector<double> linX(screenX.size()), linY(screenY.size());
 			return RSUtils::screenToLinear(screenX, screenY, linX,linY,wch,error)&&
 			       RSUtils::linearToWorld(linX, linY, worldX, worldY, wch,
 			                              m_worldSystem, xSign, ySign, true,error);
@@ -738,7 +738,7 @@ namespace casa {
 		~RegionShapeDM();
 
 		// Implementation of CachingDisplayMethod::drawIntoList.
-		Bool drawIntoList(Display::RefreshReason reason, WorldCanvasHolder& wch);
+		casacore::Bool drawIntoList(Display::RefreshReason reason, WorldCanvasHolder& wch);
 
 	private:
 		RegionShape& m_shape; // Parent shape.

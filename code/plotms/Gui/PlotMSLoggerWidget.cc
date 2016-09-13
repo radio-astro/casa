@@ -31,6 +31,7 @@
 
 #include <QLabel>
 
+using namespace casacore;
 namespace casa {
 
 ////////////////////////////////////

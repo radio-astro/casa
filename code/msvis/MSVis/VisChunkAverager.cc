@@ -29,6 +29,7 @@
 
 #include <casa/Arrays/ArrayPartMath.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //----------------------------------------------------------------------------
@@ -136,6 +137,8 @@ Bool VisChunkAverager::setupHashFunction(ROVisibilityIterator& vi)
 
 VisBuffer& VisChunkAverager::average(ROVisibilityIterator& vi)
 {
+    using casacore::operator*;
+
   // Just in case findCollision() returned before doing it.
   // makeHashMap will return right away if it can.
   haveHashMap_p = makeHashMap(vi);
@@ -170,7 +173,7 @@ VisBuffer& VisChunkAverager::average(ROVisibilityIterator& vi)
     }
 
     // The flags and weights are already loaded by this point, UNLESS the
-    // row flag was True for all the rows.  Make sure they're loaded, or
+    // row flag was true for all the rows.  Make sure they're loaded, or
     // they could end up with the wrong shape.
     vb.flagCube();
     if(vi.existsWeightSpectrum())
@@ -389,7 +392,7 @@ void VisChunkAverager::initialize(VisBuffer& vb)
 // Initialize the averaging buffer.
 // Output to private data:
 //    avBuf_p          VisBuffer       Averaging buffer
-//    readyToHash_p    Bool            sets to True
+//    readyToHash_p    Bool            sets to true
 //    nChan_p          Int             # of channels
 //    nCorr_p          Int             # of polarizations
 
@@ -397,8 +400,8 @@ void VisChunkAverager::initialize(VisBuffer& vb)
 
   // Assign to vb to establish a two-way connection to the underlying VisIter.
   // Assign main meta info only
-  //    avBuf_p.assign(vb,True);  
-  avBuf_p.assign(vb, False);  
+  //    avBuf_p.assign(vb,true);  
+  avBuf_p.assign(vb, false);  
   avBuf_p.updateCoordInfo();  // This is the (simplified) CalVisBuffer version!
   
   // Immutables:
@@ -439,7 +442,7 @@ void VisChunkAverager::initialize(VisBuffer& vb)
 
   if(nCat_p > 0){
     avBuf_p.flagCategory().resize(IPosition(4, nCorr_p, nChan_p, nCat_p, nRow));
-    avBuf_p.flagCategory() = True;
+    avBuf_p.flagCategory() = true;
   }
 
   avBuf_p.observationId().resize(nRow);
@@ -480,8 +483,8 @@ void VisChunkAverager::initialize(VisBuffer& vb)
       avBuf_p.visCube() = czero;
   }
   avBuf_p.exposure() = 0.0;
-  avBuf_p.flagCube() = True;
-  avBuf_p.flagRow() = False;
+  avBuf_p.flagCube() = true;
+  avBuf_p.flagRow() = false;
   avBuf_p.scan() = 0;                   // This should be unnecessary.
   avBuf_p.time() = 0.0;                 // This should be unnecessary.
   avBuf_p.timeInterval() = 0.0;         // This should be unnecessary.
@@ -514,7 +517,7 @@ void VisChunkAverager::normalize(const Double minTime, const Double maxTime,
   avBuf_p.timeInterval() = maxTime - minTime +
                            0.5 * (firstinterval + lastinterval);
 
-  // Already done by initialize()'s avBuf_p.assign(vb, False);
+  // Already done by initialize()'s avBuf_p.assign(vb, false);
   // avBuf_p.dataDescriptionId() = vb.dataDescriptionId();
 
   uInt outrow = 0;
@@ -537,7 +540,7 @@ void VisChunkAverager::normalize(const Double minTime, const Double maxTime,
     }
 
     if(wt == 0.0){
-      avBuf_p.flagRow()[outrow] = True;
+      avBuf_p.flagRow()[outrow] = true;
 
       // Looks better than 0 (-> 1858).
       avBuf_p.timeCentroid()[outrow] = avBuf_p.time()[outrow];

@@ -44,6 +44,7 @@
 #include <QDebug>
 #include <QtCore/qmath.h>
 
+using namespace casacore;
 namespace casa {
 
 	const QString Util::ORGANIZATION = "NRAO/CASA";
@@ -464,7 +465,7 @@ namespace casa {
 		return regionRecord;
 	}
 
-	std::pair<Vector<Float>,Vector<Float> > Util::getProfile(SHARED_PTR<const casa::ImageInterface<Float> >& imagePtr,
+	std::pair<Vector<Float>,Vector<Float> > Util::getProfile(SHARED_PTR<const casacore::ImageInterface<Float> >& imagePtr,
 					const Vector<Double>& x, const Vector<Double>& y, const String& shape,
 					int tabularAxis, ImageCollapserData::AggregateType function, String unit,
 					const String& coordinateType, const Quantity *const restFreq, const String& frame){

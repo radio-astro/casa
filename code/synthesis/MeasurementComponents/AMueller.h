@@ -42,18 +42,18 @@ public:
 
   // Constructor
   AMueller(VisSet& vs);
-  AMueller(String msname,Int MSnAnt,Int MSnSpw);
+  AMueller(casacore::String msname,casacore::Int MSnAnt,casacore::Int MSnSpw);
   AMueller(const MSMetaInfoForCal& msmc);
-  AMueller(const Int& nAnt);
-
+  AMueller(const casacore::Int& nAnt);
+  
   virtual ~AMueller();
 
   // Return the type enum
   virtual Type type() { return VisCal::A; };
 
   // Return type name as string
-  virtual String typeName()     { return "A Mueller"; };
-  virtual String longTypeName() { return "A Mueller (baseline-based)"; };
+  virtual casacore::String typeName()     { return "A Mueller"; };
+  virtual casacore::String longTypeName() { return "A Mueller (baseline-based)"; };
 
   // Algebraic type of Mueller matrix 
   //  (this is the key distinguishing characteristic)
@@ -63,7 +63,7 @@ public:
   using SolvableVisCal::setSolve;
   // Parameters particular to this class:
   //    fitorder: Order of the polynomial fit.  If 0, it is just an average.
-  virtual void setSolve(const Record& solvepar);
+  virtual void setSolve(const casacore::Record& solvepar);
 
   // AMueller's caltables have polynomial orders where channels would normally
   // go.  setSolve() above sets the number of "channels", but
@@ -72,16 +72,16 @@ public:
   virtual void setSolveChannelization(VisSet& vs);
 
   // Size up the solving arrays, etc.  (supports combine)
-  virtual Int sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol);
+  virtual casacore::Int sizeUpSolve(VisSet& vs, casacore::Vector<casacore::Int>& nChunkPerSol);
 
-  // The fitorder = 0 version (in M) skips LinearFitSVD by just averaging.
-  virtual Bool useGenericGatherForSolve() {return fitorder_p != 0;}
+  // The fitorder = 0 version (in M) skips casacore::LinearFitSVD by just averaging.
+  virtual casacore::Bool useGenericGatherForSolve() {return fitorder_p != 0;}
 
-  // Only called if useGenericGatherForSolve() == True.  If
-  // useGenericGatherForSolve() == True, then genericGatherAndSolve() will call
+  // Only called if useGenericGatherForSolve() == true.  If
+  // useGenericGatherForSolve() == true, then genericGatherAndSolve() will call
   // AMueller's selfSolveOne().  Otherwise MMueller's selfGatherAndSolve() will
   // do everything.
-  virtual Bool useGenericSolveOne() {return False;}
+  virtual casacore::Bool useGenericSolveOne() {return false;}
 
   // Per-solution self-solving inside generic gather.  Flexible enough for
   // fitorder != 0, but overkill otherwise.
@@ -90,32 +90,32 @@ public:
   virtual void storeNCT();
 
   virtual void setApply() {SolvableVisCal::setApply();}
-  virtual void setApply(const Record& applypar);
+  virtual void setApply(const casacore::Record& applypar);
 
   // Apply this calibration to vb.  AMueller does NOT support trial
   //                                and ignores it!
-  virtual void applyCal(VisBuffer& vb, Cube<Complex>& Vout, Bool trial=False);
+  virtual void applyCal(VisBuffer& vb, casacore::Cube<casacore::Complex>& Vout, casacore::Bool trial=false);
 
   // Freq dependence
-  virtual Bool freqDepPar() { return False; };
-  virtual Bool freqDepMat() {
+  virtual casacore::Bool freqDepPar() { return false; };
+  virtual casacore::Bool freqDepMat() {
     return fitorder_p != 0 || nChanPar() > 1; // The latter is for applying.
   }
 
   // We do not normalize by the model, since we are estimating
   //  directly from the data  (we should optimize here by avoiding 
   //  the model I/O)
-  virtual Bool normalizable() {return False;};
+  virtual casacore::Bool normalizable() {return false;};
 
   // Specialize corrupt to pre-zero model for corruption
   //using VisMueller::corrupt;
   virtual void corrupt(VisBuffer& vb);
-  //virtual void corrupt(VisBuffer& vb, Cube<Complex>& Mout);
+  //virtual void corrupt(VisBuffer& vb, casacore::Cube<casacore::Complex>& Mout);
 
   // Set (repeatedly, unfortunately) whether or not subtraction is being done,
   // and IF fitorder == 0, sync matrices for current meta data (VisMueller
   // override).  (Mueller matrices aren't used for fitorder != 0.)
-  void syncCalMat(const Bool& doInv)
+  void syncCalMat(const casacore::Bool& doInv)
   {
     doSub_p = doInv;
     if(fitorder_p == 0)
@@ -123,7 +123,7 @@ public:
   }
 
 protected:
-  virtual Int nPar() {
+  virtual casacore::Int nPar() {
     if(nCorr_p < 0)
       hurl("nPar()", "nPar() called before being set.");
     return nCorr_p;
@@ -133,21 +133,21 @@ private:
   void init();  // Common code for the c'tors.
 
   // Logs and throws msg as an exception from origin.
-  void hurl(const String& origin, const String& msg);
+  void hurl(const casacore::String& origin, const casacore::String& msg);
 
   // Initialized to 0 in the initialization lists of the c'tors.
-  Int fitorder_p;  // Stores the order of the fitted polynomials.
+  casacore::Int fitorder_p;  // Stores the order of the fitted polynomials.
 
-  Bool doSub_p; // For apply, whether or not to subtract or give the continuum
+  casacore::Bool doSub_p; // For apply, whether or not to subtract or give the continuum
                 // estimate.
-  Int  nCorr_p; // # of correlations.  -1 if not yet known.
+  casacore::Int  nCorr_p; // # of correlations.  -1 if not yet known.
 
   // Resized and set to impossible values in init().
-  Vector<Double> lofreq_p; // Lowest and highest frequencies (Hz) used
-  Vector<Double> hifreq_p; // to make the fit.
-  Vector<uInt> totnumchan_p; // The total number of input channels that will be
+  casacore::Vector<casacore::Double> lofreq_p; // Lowest and highest frequencies (Hz) used
+  casacore::Vector<casacore::Double> hifreq_p; // to make the fit.
+  casacore::Vector<casacore::uInt> totnumchan_p; // The total number of input channels that will be
                              // looked at (including masked ones!)
-  Vector<Bool> spwApplied_p;  // Just keeps track of which spws have been
+  casacore::Vector<casacore::Bool> spwApplied_p;  // Just keeps track of which spws have been
                               // applied to.
 };
 
@@ -159,9 +159,10 @@ public:
 
   // Constructor
   ANoise(VisSet& vs);
-  ANoise(String msname,Int MSnAnt,Int MSnSpw);
+  ANoise(casacore::String msname,casacore::Int MSnAnt,casacore::Int MSnSpw);
   ANoise(const MSMetaInfoForCal& msmc);
-  ANoise(const Int& nAnt);
+  ANoise(const casacore::Int& nAnt);
+
 
   virtual ~ANoise();
 
@@ -169,30 +170,30 @@ public:
   virtual Type type() { return VisCal::ANoise; };
 
   // Return type name as string
-  virtual String typeName()     { return "A Noise"; };
-  virtual String longTypeName() { return "A Noise (baseline-based)"; };
+  virtual casacore::String typeName()     { return "A Noise"; };
+  virtual casacore::String longTypeName() { return "A Noise (baseline-based)"; };
 
   // Algebraic type of Mueller matrix 
   //  (this is the key distinguishing characteristic)
   virtual Mueller::MuellerType muellerType() { return Mueller::AddDiag2; };
 
   // Overide solvability
-  virtual Bool isSolvable() { return False; };
+  virtual casacore::Bool isSolvable() { return false; };
 
   // this is inherently freqdep:
-  virtual Bool freqDepPar() { return True; };
+  virtual casacore::Bool freqDepPar() { return true; };
 
-  virtual void createCorruptor(const VisIter& vi, const Record& simpar, const Int nSim);
+  virtual void createCorruptor(const VisIter& vi, const casacore::Record& simpar, const casacore::Int nSim);
 
 protected:
   // umm... 2 for each of parallel hands?
-  virtual Int nPar() { return 2; };
+  virtual casacore::Int nPar() { return 2; };
 
   // Jones matrix elements are trivial
-  virtual Bool trivialMuellerElem() { return (!simOnTheFly()); };
+  virtual casacore::Bool trivialMuellerElem() { return (!simOnTheFly()); };
 
   // override VC default of timeDepMat=F for OTF simulatio:
-  virtual Bool timeDepMat() { return simOnTheFly(); };
+  virtual casacore::Bool timeDepMat() { return simOnTheFly(); };
 
   // Calculate an ensemble of Mueller matrices (all baselines, channels)
   // overrriding VisCal::calcAllMueller
@@ -200,8 +201,8 @@ protected:
 
   // Calculate a single Mueller matrix by some means
   // override SolvableVisMueller::calcOneMueller
-  virtual void calcOneMueller(Vector<Complex>& mat, Vector<Bool>& mOk,
-			      const Vector<Complex>& par, const Vector<Bool>& pOk);
+  virtual void calcOneMueller(casacore::Vector<casacore::Complex>& mat, casacore::Vector<casacore::Bool>& mOk,
+			      const casacore::Vector<casacore::Complex>& par, const casacore::Vector<casacore::Bool>& pOk);
 
 private:
   ANoiseCorruptor *acorruptor_p;

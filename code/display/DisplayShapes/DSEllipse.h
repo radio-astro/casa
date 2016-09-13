@@ -74,43 +74,43 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Constructors and destructors. the 'onlyShowOneHandle' flag is primarily
 		// for use if the ellipse is intended to remain symmetrical i.e. a circle.
 		// <group>
-		DSEllipse(const Bool& onlyShowOneHandle = False);
+		DSEllipse(const casacore::Bool& onlyShowOneHandle = false);
 		DSEllipse(const DSEllipse& other);
-		DSEllipse(const Float& xPos, const Float& yPos, const Float& major,
-		          const Float& minor,
-		          const Bool& hasHandles = False, const Bool& drawHandles = False,
-		          const Bool& onlyShowOneHandle = False);
+		DSEllipse(const casacore::Float& xPos, const casacore::Float& yPos, const casacore::Float& major,
+		          const casacore::Float& minor,
+		          const casacore::Bool& hasHandles = false, const casacore::Bool& drawHandles = false,
+		          const casacore::Bool& onlyShowOneHandle = false);
 		virtual ~DSEllipse();
 		// </group>
 
 		// General DisplayShape functions.
 		// <group>
 		virtual void draw(PixelCanvas *pix);
-		virtual void move(const Float& dX, const Float& dY);
-		virtual Bool inObject(const Float& xPos, const Float& yPos);
-		virtual void rotate(const Float& angle);
-		virtual void rotateAbout(const Float& angle, const Float& aboutX,
-		                         const Float& aboutY);
-		virtual void setCenter(const Float& xPos, const Float& yPos);
-		virtual Vector<Float> getCenter();
-		virtual void changePoint(const Vector<Float>& newPoint);
-		virtual void changePoint(const Vector<Float>& newPoint, const Int nPoint);
-		virtual void scale(const Float& scaleFactor);
+		virtual void move(const casacore::Float& dX, const casacore::Float& dY);
+		virtual casacore::Bool inObject(const casacore::Float& xPos, const casacore::Float& yPos);
+		virtual void rotate(const casacore::Float& angle);
+		virtual void rotateAbout(const casacore::Float& angle, const casacore::Float& aboutX,
+		                         const casacore::Float& aboutY);
+		virtual void setCenter(const casacore::Float& xPos, const casacore::Float& yPos);
+		virtual casacore::Vector<casacore::Float> getCenter();
+		virtual void changePoint(const casacore::Vector<casacore::Float>& newPoint);
+		virtual void changePoint(const casacore::Vector<casacore::Float>& newPoint, const casacore::Int nPoint);
+		virtual void scale(const casacore::Float& scaleFactor);
 		// </group>
 
 		// Functions to set / get the minor and major axis of the ellipse
 		// (in pixels).
 		// <group>
-		virtual Float getMinorAxis();
-		virtual Float getMajorAxis();
-		virtual void setMajorAxis(const Float& newMajor);
-		virtual void setMinorAxis(const Float& newMinor);
+		virtual casacore::Float getMinorAxis();
+		virtual casacore::Float getMajorAxis();
+		virtual void setMajorAxis(const casacore::Float& newMajor);
+		virtual void setMinorAxis(const casacore::Float& newMinor);
 		// </group>
 
 		// Get and set options
 		// <group>
-		virtual Record getOptions();
-		virtual Bool setOptions(const Record& settings);
+		virtual casacore::Record getOptions();
+		virtual casacore::Bool setOptions(const casacore::Record& settings);
 		// </group>
 
 	protected:
@@ -118,12 +118,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void calculateHandlePositions();
 	private:
 
-		Vector<Float> itsCenter;
-		Float itsAngle;
-		Float itsMajorAxis, itsMinorAxis;
-		Bool itsValid, itsOneHandle;
+		casacore::Vector<casacore::Float> itsCenter;
+		casacore::Float itsAngle;
+		casacore::Float itsMajorAxis, itsMinorAxis;
+		casacore::Bool itsValid, itsOneHandle;
 
-		Matrix<Float> itsHandleLocation;
+		casacore::Matrix<casacore::Float> itsHandleLocation;
 
 		// Called when def. constructor used
 		virtual void setDefaultOptions();

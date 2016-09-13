@@ -31,6 +31,7 @@
 #include <casa/iostream.h>
 #include <casa/iomanip.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 void VersionInfo::report(ostream &os)

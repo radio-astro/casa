@@ -28,7 +28,7 @@
  * | If you do, all changes will be lost when the file is re-generated. |
  *  --------------------------------------------------------------------
  *
- * File CalFocusModelTable.h
+ * casacore::File CalFocusModelTable.h
  */
  
 #ifndef CalFocusModelTable_CLASS
@@ -366,7 +366,7 @@ public:
 	std::string toXML()  ;
 
 #ifndef WITHOUT_ACS
-	// Conversion Methods
+	// casacore::Conversion Methods
 	/**
 	 * Convert this table into a CalFocusModelTableIDL CORBA structure.
 	 *

@@ -77,8 +77,8 @@ int main()
     trc(1) = dirty0.shape()(1) * 3 / 4 - 1;    
     cout << "BLC: " << blc << "   TRC: " << trc << endl;
     LCSlicer quarter(blc, trc);
-    SubImage<Float> prior(prior0, ImageRegion(quarter), True);
-    SubImage<Float> dirty(dirty0, ImageRegion(quarter), True);
+    SubImage<Float> prior(prior0, ImageRegion(quarter), true);
+    SubImage<Float> dirty(dirty0, ImageRegion(quarter), true);
     //  */
 
 

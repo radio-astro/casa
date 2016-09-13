@@ -101,9 +101,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void operator=(const CachingDisplayMethod &other);
 
 		// Draw into a cached drawing list, called by draw function.
-		// The return value is set False if the DM could not draw or
+		// The return value is set false if the DM could not draw or
 		// does not wish a drawlist to be saved.
-		virtual Bool drawIntoList(Display::RefreshReason reason,
+		virtual casacore::Bool drawIntoList(Display::RefreshReason reason,
 		                          WorldCanvasHolder &wcHolder) = 0;
 
 	private:
@@ -116,10 +116,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		AttributeBuffer *itsWCHAttributes, *itsDDAttributes;
 
 		// Do we have a cached drawing list?
-		Bool itsHasList;
+		casacore::Bool itsHasList;
 
 		// Store for cached drawing list number.
-		uInt itsCachedDrawingList;
+		casacore::uInt itsCachedDrawingList;
 
 	};
 

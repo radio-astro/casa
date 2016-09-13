@@ -31,12 +31,12 @@
 namespace casa {
 
 template <class T> MomentClip<T>::MomentClip(
-    shared_ptr<Lattice<T>> pAncilliaryLattice, MomentsBase<T>& iMom,
-    LogIO& os, const uInt nLatticeOut
+    shared_ptr<casacore::Lattice<T>> pAncilliaryLattice, MomentsBase<T>& iMom,
+    casacore::LogIO& os, const casacore::uInt nLatticeOut
 ) : _ancilliaryLattice(pAncilliaryLattice), iMom_p(iMom), os_p(os) {
     selectMoments_p = this->selectMoments(iMom_p);
     constructorCheck(calcMoments_p, calcMomentsMask_p, selectMoments_p, nLatticeOut);
-    Int momAxis = this->momentAxis(iMom_p);
+    casacore::Int momAxis = this->momentAxis(iMom_p);
     if (_ancilliaryLattice) {
         sliceShape_p.resize(_ancilliaryLattice->ndim());
         sliceShape_p = 1;
@@ -70,16 +70,16 @@ template <class T> MomentClip<T>::MomentClip(
 template <class T> MomentClip<T>::~MomentClip() {}
 
 template <class T> void MomentClip<T>::process(
-    T&, Bool&, const Vector<T>&, const Vector<Bool>&,
-    const IPosition&
+    T&, casacore::Bool&, const casacore::Vector<T>&, const casacore::Vector<casacore::Bool>&,
+    const casacore::IPosition&
 ) {
-    ThrowCc("MomentClip<T>::process(Vector<T>&, IPosition&): not implemented");
+    ThrowCc("MomentClip<T>::process(casacore::Vector<T>&, casacore::IPosition&): not implemented");
 }
 
 template <class T> void MomentClip<T>::multiProcess(
-    Vector<T>& moments, Vector<Bool>& momentsMask,
-    const Vector<T>& profileIn, const Vector<Bool>& profileInMask,
-    const IPosition& inPos
+    casacore::Vector<T>& moments, casacore::Vector<casacore::Bool>& momentsMask,
+    const casacore::Vector<T>& profileIn, const casacore::Vector<casacore::Bool>& profileInMask,
+    const casacore::IPosition& inPos
 ) {
     // The profile comes with its own mask (or a null mask
     // which means all good).  In addition, we create
@@ -93,12 +93,12 @@ template <class T> void MomentClip<T>::multiProcess(
     // ancilliary vector object  that we can use for fast access
 
     const T* pProfileSelect = nullptr;
-    auto deleteIt = False;
+    auto deleteIt = false;
     if (_ancilliaryLattice && (doInclude_p || doExclude_p)) {
-        Array<T> ancilliarySlice;
-        IPosition stride(_ancilliaryLattice->ndim(),1);
+        casacore::Array<T> ancilliarySlice;
+        casacore::IPosition stride(_ancilliaryLattice->ndim(),1);
         _ancilliaryLattice->getSlice(
-            ancilliarySlice, inPos, sliceShape_p, stride, True
+            ancilliarySlice, inPos, sliceShape_p, stride, true
         );
         ancilliarySliceRef_p.reference(ancilliarySlice);
         pProfileSelect_p = &ancilliarySliceRef_p;
@@ -120,8 +120,8 @@ template <class T> void MomentClip<T>::multiProcess(
     // We must fill in the input pixel coordinate if we need
     // coordinates, but did not pre compute them
     if (! preComp && (doCoordRandom_p || doCoordProfile_p)) {
-        for (uInt i=0; i<inPos.size(); ++i) {
-            pixelIn_p[i] = Double(inPos[i]);
+        for (casacore::uInt i=0; i<inPos.size(); ++i) {
+            pixelIn_p[i] = casacore::Double(inPos[i]);
         }
     }
 
@@ -129,16 +129,16 @@ template <class T> void MomentClip<T>::multiProcess(
     // the original data, regardless of whether the pixel selection is
     // done with the primary or ancilliary data.
 
-    typename NumericTraits<T>::PrecisionType s0  = 0.0;
-    typename NumericTraits<T>::PrecisionType s0Sq = 0.0;
-    typename NumericTraits<T>::PrecisionType s1  = 0.0;
-    typename NumericTraits<T>::PrecisionType s2  = 0.0;
-    Int iMin = -1;
-    Int iMax = -1;
+    typename casacore::NumericTraits<T>::PrecisionType s0  = 0.0;
+    typename casacore::NumericTraits<T>::PrecisionType s0Sq = 0.0;
+    typename casacore::NumericTraits<T>::PrecisionType s1  = 0.0;
+    typename casacore::NumericTraits<T>::PrecisionType s2  = 0.0;
+    casacore::Int iMin = -1;
+    casacore::Int iMax = -1;
     T dMin =  1.0e30;
     T dMax = -1.0e30;
-    Double coord = 0.0;
-    uInt i, j;
+    casacore::Double coord = 0.0;
+    casacore::uInt i, j;
     if (profileInMask.empty()) {
         // No mask included.
         if (doInclude_p) {
@@ -153,7 +153,7 @@ template <class T> void MomentClip<T>::multiProcess(
                     else if (doCoordProfile_p) {
                         coord = this->getMomentCoord(
                             iMom_p, pixelIn_p,
-                            worldOut_p, Double(i)
+                            worldOut_p, casacore::Double(i)
                         );
                     }
                     this->accumSums(
@@ -179,7 +179,7 @@ template <class T> void MomentClip<T>::multiProcess(
                     else if (doCoordProfile_p) {
                         coord = this->getMomentCoord(
                             iMom_p, pixelIn_p,
-                            worldOut_p, Double(i)
+                            worldOut_p, casacore::Double(i)
                         );
                     }
                     this->accumSums(
@@ -201,7 +201,7 @@ template <class T> void MomentClip<T>::multiProcess(
                 else if (doCoordProfile_p) {
                     coord = this->getMomentCoord(
                         iMom_p, pixelIn_p,
-                        worldOut_p, Double(i)
+                        worldOut_p, casacore::Double(i)
                     );
                 }
                 this->accumSums(
@@ -215,7 +215,7 @@ template <class T> void MomentClip<T>::multiProcess(
     }
     else {
         // Set up a pointer for faster access to the profile mask
-        auto deleteIt2 = False;
+        auto deleteIt2 = false;
         const auto* pProfileInMask = profileInMask.getStorage(deleteIt2);
 
         if (doInclude_p) {
@@ -230,7 +230,7 @@ template <class T> void MomentClip<T>::multiProcess(
                     }
                     else if (doCoordProfile_p) {
                         coord = this->getMomentCoord(
-                            iMom_p, pixelIn_p, worldOut_p, Double(i)
+                            iMom_p, pixelIn_p, worldOut_p, casacore::Double(i)
                         );
                     }
                     this->accumSums(
@@ -258,7 +258,7 @@ template <class T> void MomentClip<T>::multiProcess(
                     else if (doCoordProfile_p) {
                         coord = this->getMomentCoord(
                             iMom_p, pixelIn_p,
-                            worldOut_p, Double(i)
+                            worldOut_p, casacore::Double(i)
                         );
                     }
                     this->accumSums(
@@ -279,7 +279,7 @@ template <class T> void MomentClip<T>::multiProcess(
                     else if (doCoordProfile_p) {
                         coord = this->getMomentCoord(
                             iMom_p, pixelIn_p,
-                            worldOut_p, Double(i)
+                            worldOut_p, casacore::Double(i)
                         );
                     }
                     this->accumSums(
@@ -305,11 +305,11 @@ template <class T> void MomentClip<T>::multiProcess(
     // If no points make moments zero and mask
     if (nPts == 0) {
         moments = 0.0;
-        momentsMask = False;
+        momentsMask = false;
         return;
     }
     // Absolute deviations of I from mean needs an extra pass.
-    typename NumericTraits<T>::PrecisionType sumAbsDev = 0;
+    typename casacore::NumericTraits<T>::PrecisionType sumAbsDev = 0;
     if (doAbsDev_p) {
         T iMean = s0 / nPts;
         for (i=0; i<nPts; ++i) {
@@ -319,7 +319,7 @@ template <class T> void MomentClip<T>::multiProcess(
     // Median of I
     T dMedian = 0.0;
     if (doMedianI_p) {
-        selectedData_p.resize(nPts,True);
+        selectedData_p.resize(nPts,true);
         dMedian = median(selectedData_p);
     }
     // Median coordinate.  ImageMoments will only be allowing this if
@@ -331,7 +331,7 @@ template <class T> void MomentClip<T>::multiProcess(
             // Treat spectrum as a probability distribution for velocity
             // and generate cumulative probability (it's already sorted
             // of course).
-            selectedData_p.resize(nPts,True);
+            selectedData_p.resize(nPts,true);
             selectedData_p(0) = abs(selectedData_p[0]);
             auto dataMax = selectedData_p[0];
             for (i=1; i<nPts; ++i) {
@@ -341,7 +341,7 @@ template <class T> void MomentClip<T>::multiProcess(
             // Find 1/2 way value (well, the first one that occurs)
 
             auto halfMax = dataMax/2.0;
-            Int iVal = 0;
+            casacore::Int iVal = 0;
             for (i=0; i<nPts; ++i) {
                 if (selectedData_p[i] >= halfMax) {
                     iVal = i;
@@ -349,11 +349,11 @@ template <class T> void MomentClip<T>::multiProcess(
                 }
             }
             // Linearly interpolate to velocity index
-            Double interpPixel;
+            casacore::Double interpPixel;
             if (iVal > 0) {
-                Double m = (selectedData_p[iVal] - selectedData_p[iVal-1])
+                casacore::Double m = (selectedData_p[iVal] - selectedData_p[iVal-1])
                     / (selectedDataIndex_p[iVal] - selectedDataIndex_p[iVal-1]);
-                Double b = selectedData_p[iVal] - m*selectedDataIndex_p[iVal];
+                casacore::Double b = selectedData_p[iVal] - m*selectedDataIndex_p[iVal];
                 interpPixel = (selectedData_p[iVal] - b)/m;
             }
             else {

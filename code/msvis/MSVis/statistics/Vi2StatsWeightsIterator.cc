@@ -24,6 +24,7 @@
 //#
 #include <msvis/MSVis/statistics/Vi2StatsWeightsIterator.h>
 
+using namespace casacore;
 namespace casa {
 
 Vi2StatsWeightsCubeIterator::Vi2StatsWeightsCubeIterator(vi::VisBuffer2 *vb2)
@@ -135,4 +136,5 @@ Vi2StatsWeightsRowIterator::atEnd()
 	return row == nRows;
 }
 
+using namespace casacore;
 } // namespace casa

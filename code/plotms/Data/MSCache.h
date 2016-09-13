@@ -1,4 +1,4 @@
-//# MSCache.h: MS-specific Data cache for plotms.
+//# MSCache.h: casacore::MS-specific casacore::Data cache for plotms.
 //# Copyright (C) 2009
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -67,17 +67,17 @@ public:
   // Identify myself
   PlotMSCacheBase::Type cacheType() const { return PlotMSCacheBase::MS; };
 
-  // ...not yet MS-specific... (or ever?)
+  // ...not yet casacore::MS-specific... (or ever?)
   // Set up indexing for the plot
   //  void setUpIndexer(PMS::Axis iteraxis=PMS::SCAN,
-  //		    Bool globalXRange=False, Bool globalYRange=False);
+  //		    casacore::Bool globalXRange=false, casacore::Bool globalYRange=false);
 
-  void setFilename(String filename) { filename_ = filename; };
-  virtual String polname(Int ipol);
+  void setFilename(casacore::String filename) { filename_ = filename; };
+  virtual casacore::String polname(casacore::Int ipol);
 
 protected:
 
-  // MS-specific loadIt method
+  // casacore::MS-specific loadIt method
   virtual void loadIt(vector<PMS::Axis>& loadAxes,
 		      vector<PMS::DataColumn>& loadData,
 		      /*PlotMSCacheThread**/ThreadCommunication* thread = NULL);
@@ -91,36 +91,36 @@ private:
   MSCache(const MSCache&);
 
   // Set up
-  String getDataColumn(vector<PMS::Axis>& loadAxes, 
+  casacore::String getDataColumn(vector<PMS::Axis>& loadAxes, 
                        vector<PMS::DataColumn>& loadData);
   PMS::DataColumn checkReqDataColumn(PMS::DataColumn reqDataCol);
-  String checkLoadedAxesDatacol();
-  String normalizeColumnName(String plotmscol);
-  void getNamesFromMS(MeasurementSet& ms);
+  casacore::String checkLoadedAxesDatacol();
+  casacore::String normalizeColumnName(casacore::String plotmscol);
+  void getNamesFromMS(casacore::MeasurementSet& ms);
   void setUpVisIter(PlotMSSelection& selection,
 		    PlotMSCalibration& calibration,
-		    String dataColumn,
-            Bool interactive=False,
-		    Bool estimateMemory=False,
+		    casacore::String dataColumn,
+            casacore::Bool interactive=false,
+		    casacore::Bool estimateMemory=false,
             ThreadCommunication* thread=NULL);
-  vi::VisibilityIterator2* setUpVisIter(MeasurementSet& selectedMS,
-	Vector<Vector<Slice> > chansel, Vector<Vector<Slice> > corrsel);
+  vi::VisibilityIterator2* setUpVisIter(casacore::MeasurementSet& selectedMS,
+	casacore::Vector<casacore::Vector<casacore::Slice> > chansel, casacore::Vector<casacore::Vector<casacore::Slice> > corrsel);
   void setUpFrequencySelectionChannels(vi::FrequencySelectionUsingChannels fs,
-	Vector<Vector<Slice> > chansel);
+	casacore::Vector<casacore::Vector<casacore::Slice> > chansel);
 
   // clean up
   void deleteVi();
   void deleteVm();
-  void loadError(String mesg);
+  void loadError(casacore::String mesg);
 
   // Estimate cache size for averaging
-  bool countChunks(vi::VisibilityIterator2& vi, Vector<Int>& nIterPerAve, 
+  bool countChunks(vi::VisibilityIterator2& vi, casacore::Vector<casacore::Int>& nIterPerAve, 
                    /*PlotMSCacheThread**/ThreadCommunication* thread);
   void updateEstimateProgress(ThreadCommunication* thread);
 
   // Trap attempt to use to much memory (too many points)
-  void trapExcessVolume(map<PMS::Axis,Bool> pendingLoadAxes);
-  std::vector<IPosition> visBufferShapes_;
+  void trapExcessVolume(map<PMS::Axis,casacore::Bool> pendingLoadAxes);
+  std::vector<casacore::IPosition> visBufferShapes_;
 
   // Loop over VisIter, filling the cache
   void loadChunks(vi::VisibilityIterator2& vi,
@@ -129,11 +129,11 @@ private:
 		  /*PlotMSCacheThread**/ThreadCommunication* thread);
   void loadChunks(vi::VisibilityIterator2& vi,
 		  const PlotMSAveraging& averaging,
-		  const Vector<Int>& nIterPerAve,
+		  const casacore::Vector<casacore::Int>& nIterPerAve,
 		  const vector<PMS::Axis> loadAxes,
 		  const vector<PMS::DataColumn> loadData,
 		  /*PlotMSCacheThread**/ThreadCommunication* thread);
-  void updateProgress(ThreadCommunication* thread, Int chunk);
+  void updateProgress(ThreadCommunication* thread, casacore::Int chunk);
 
   // Force read on vb for requested axes 
   //   (so pre-cache averaging treats all data it should)
@@ -147,14 +147,14 @@ private:
 		   PlotMSVBAverager& vba);
 
   // Loads the specific axis/metadata into the cache using the given VisBuffer.
-  void loadAxis(vi::VisBuffer2* vb, Int vbnum, PMS::Axis axis,
+  void loadAxis(vi::VisBuffer2* vb, casacore::Int vbnum, PMS::Axis axis,
 		PMS::DataColumn data = PMS::DEFAULT_DATACOLUMN);
 
   // Set flags in the MS
   virtual void flagToDisk(const PlotMSFlagging& flagging,
-			  Vector<Int>& chunks, 
-			  Vector<Int>& relids,
-			  Bool setFlag,
+			  casacore::Vector<casacore::Int>& chunks, 
+			  casacore::Vector<casacore::Int>& relids,
+			  casacore::Bool setFlag,
 			  PlotMSIndexer* indexer, int dataIndex);
 
   Vector<Double> calcVelocity(vi::VisBuffer2* vb); 
@@ -164,19 +164,19 @@ private:
   bool useAveragedVisBuffer(PMS::Axis axis);
 
   // Datacolumn to use (requested or "adjusted")
-  String dataColumn_;
+  casacore::String dataColumn_;
 
   // Create map of intent names to "intent ids" 
   // since state ids can duplicate intents.
   // Then use map to assign intent ids to replace state ids
   // (stateId -> intent string -> intentId)
-  map<String, Int> intentIds_; 
+  map<casacore::String, casacore::Int> intentIds_; 
   void mapIntentNamesToIds();   // create map
   // Use map to assign intent ids
-  Vector<Int> assignIntentIds(Vector<Int>& stateIds);
+  casacore::Vector<casacore::Int> assignIntentIds(casacore::Vector<casacore::Int>& stateIds);
 
   // Provisional flagging helpers
-  Vector<Int> nVBPerAve_;
+  casacore::Vector<casacore::Int> nVBPerAve_;
 
   // VisIterator pointer
   vi::VisibilityIterator2* vi_p;
@@ -184,11 +184,11 @@ private:
   // Volume meter for volume calculation
   MSCacheVolMeter* vm_;
 
-  map<Int, Int> chansPerSpw_; 
+  map<casacore::Int, casacore::Int> chansPerSpw_; 
 
   bool ephemerisAvailable;
 };
-typedef CountedPtr<MSCache> MSCachePtr;
+typedef casacore::CountedPtr<MSCache> MSCachePtr;
 
 
 }

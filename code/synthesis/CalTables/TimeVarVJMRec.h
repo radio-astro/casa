@@ -79,7 +79,7 @@ class TimeVarVisJonesMRec : public VisJonesMRec
    ~TimeVarVisJonesMRec() {};
 
    // Construct from an existing record
-   TimeVarVisJonesMRec (const Record& inpRec);
+   TimeVarVisJonesMRec (const casacore::Record& inpRec);
 
  };
 
@@ -130,7 +130,7 @@ class PJonesMRec : public TimeVarVisJonesMRec
    ~PJonesMRec() {};
 
    // Construct from an existing record
-   PJonesMRec (const Record& inpRec);
+   PJonesMRec (const casacore::Record& inpRec);
 
  };
 
@@ -181,7 +181,7 @@ class CJonesMRec : public TimeVarVisJonesMRec
    ~CJonesMRec() {};
 
    // Construct from an existing record
-   CJonesMRec (const Record& inpRec);
+   CJonesMRec (const casacore::Record& inpRec);
 
  };
 

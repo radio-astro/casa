@@ -40,7 +40,7 @@ public:
 	virtual ~SearcherFactory();
 
 private:
-	static String getLocation( bool local );
+	static casacore::String getLocation( bool local );
 	SearcherFactory();
 };
 

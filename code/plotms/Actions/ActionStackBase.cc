@@ -25,6 +25,7 @@
 
 #include "ActionStackBase.h"
 
+using namespace casacore;
 namespace casa {
 
 ActionStackBase::ActionStackBase( Client* client )
@@ -39,4 +40,5 @@ int ActionStackBase::getDelta() const {
 ActionStackBase::~ActionStackBase() {
 }
 
+using namespace casacore;
 } /* namespace casa */

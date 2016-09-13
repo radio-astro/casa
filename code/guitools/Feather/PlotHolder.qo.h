@@ -45,10 +45,10 @@ class PlotHolder : public QWidget {
 public:
     PlotHolder(QWidget *parent = 0);
 
-    //Data related
+    //casacore::Data related
     typedef FeatherPlotWidget::DataType DataType;
-    void setData( const Vector<Float>& x, const Vector<Float>& xAmp,
-    		const Vector<Float>& y, const Vector<Float>& yAmp, DataType dType );
+    void setData( const casacore::Vector<casacore::Float>& x, const casacore::Vector<casacore::Float>& xAmp,
+    		const casacore::Vector<casacore::Float>& y, const casacore::Vector<casacore::Float>& yAmp, DataType dType );
     void updateScatterData( );
     void addSumData();
     void clearPlots();

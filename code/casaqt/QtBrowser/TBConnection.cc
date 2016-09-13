@@ -30,6 +30,7 @@
 #include <casaqt/QtBrowser/TBTable.h>
 #include <casaqt/QtUtilities/QtFileDialog.qo.h>
 
+using namespace casacore;
 namespace casa {
 
 //////////////////////////////

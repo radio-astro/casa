@@ -29,6 +29,7 @@
 
 #include <imageanalysis/ImageAnalysis/ImageHistograms.h>
 
+using namespace casacore;
 namespace casa {
 
 const String ImageHistogramsCalculator::CLASS_NAME = "ImageHistogramsCalculator";
@@ -37,9 +38,9 @@ ImageHistogramsCalculator::ImageHistogramsCalculator(
 	const SPCIIF image, const Record *const &region,
 	const String& mask
 ) : ImageTask<Float>(
-        image, "", region, "", "", "", mask, "", False
+        image, "", region, "", "", "", mask, "", false
     ) {
-	this->_construct(True);
+	this->_construct(true);
 }
 
 ImageHistogramsCalculator::~ImageHistogramsCalculator() {}
@@ -56,7 +57,7 @@ Record ImageHistogramsCalculator::compute() const {
     );
 
     ImageHistograms<Float> histograms(
-        *subImage, *log, True, _disk
+        *subImage, *log, true, _disk
     );
 
     ThrowIf(

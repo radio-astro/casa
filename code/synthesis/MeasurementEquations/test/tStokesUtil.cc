@@ -41,9 +41,9 @@
 
 #include <casa/namespace.h>
 int main() {
-  Bool anyFailures = False;
+  Bool anyFailures = false;
   /*  {
-    Bool failed = False;
+    Bool failed = false;
     const uInt nvec= 3;
     Vector<StokesVector> stokes(nvec);
     StokesVector iquv(0, 1, 2, 3), cs(4,4,4,4);
@@ -59,7 +59,7 @@ int main() {
     expectedResult(0,2) = 2; expectedResult(1,2) = 6; expectedResult(2,2) = 10;
     expectedResult(0,3) = 3; expectedResult(1,3) = 7; expectedResult(2,3) = 11;
     if (!allNearAbs(expectedResult, result, 1.E-5)){
-      failed = True;
+      failed = true;
       cout << "Failed";
     }
     else
@@ -78,7 +78,7 @@ int main() {
       unpackStokes(result, newStokes);
       expectedResult = 0;
       if (!allNearAbs(result, expectedResult, 1.E-5)){
-	failed = True;
+	failed = true;
 	cout << "Failed";
       }
       else
@@ -87,12 +87,12 @@ int main() {
 	   << endl;
     }
     if (failed)
-      anyFailures = True;
+      anyFailures = true;
   }
   // because of explicit typecasts the g++ compiler cannot do the 
   // following StokesVector->Double test
   {
-    Bool failed = False;
+    Bool failed = false;
     const uInt nvec = 3;
     Array<StokesVector> stokes(IPosition(2,nvec,1));
     StokesVector iquv(0, 1, 2, 3), cs(4,4,4,4);
@@ -117,7 +117,7 @@ int main() {
     expectedResult(2,0,3) = 11;
 
     if (!allNearAbs(expectedResult, result, 1.E-5)){
-      failed = True;
+      failed = true;
       cout << "Failed";
     }
     else
@@ -133,7 +133,7 @@ int main() {
       unpackStokes(result, newStokes);
       expectedResult = 0;
       if (!allNearAbs(result, expectedResult, 1.E-5)){
-	failed = True;
+	failed = true;
 	cout << "Failed";
       }
       else
@@ -142,10 +142,10 @@ int main() {
 	   << endl;
     }
     if (failed)
-      anyFailures = True;
+      anyFailures = true;
   }
   {
-    Bool failed = False;
+    Bool failed = false;
     const uInt nvec = 3;
     Array<CStokesVector> stokes(IPosition(2,nvec,1));
     CStokesVector iquv(Complex(0,0.1), Complex(1,1.1), 
@@ -172,7 +172,7 @@ int main() {
     expectedResult(1,0,3) = Complex(7,3.15); 
     expectedResult(2,0,3) = Complex(11,3.2);
     if (!allNearAbs(expectedResult, result, 1.E-5)){
-      failed = True;
+      failed = true;
       cout << "Failed";
     }
     else
@@ -188,7 +188,7 @@ int main() {
       unpackStokes(result, newStokes);
       expectedResult = 0;
       if (!allNearAbs(result, expectedResult, 1.E-5)){
-	failed = True;
+	failed = true;
 	cout << "Failed";
       }
       else
@@ -197,12 +197,12 @@ int main() {
 	   << endl;
     }
     if (failed)
-      anyFailures = True;
+      anyFailures = true;
   }
   // because of explicit typecasts the g++ compiler cannot do the 
   // following CStokesVector->DComplex test
   {
-    Bool failed = False;
+    Bool failed = false;
     const uInt nvec = 3;
     Vector<CStokesVector> stokes(nvec);
     CStokesVector iquv(Complex(0,0.1), Complex(1,1.1), 
@@ -229,7 +229,7 @@ int main() {
     expectedResult(1,3) = DComplex(7,3.15); 
     expectedResult(2,3) = DComplex(11,3.2);
     if (!allNearAbs(expectedResult, result, 1.E-5)){
-      failed = True;
+      failed = true;
       cout << "Failed";
     }
     else
@@ -245,7 +245,7 @@ int main() {
       unpackStokes(result, newStokes);
       expectedResult = 0;
       if (!allNearAbs(result, expectedResult, 1.E-5)){
-	failed = True;
+	failed = true;
 	cout << "Failed";
       }
       else
@@ -254,10 +254,10 @@ int main() {
 	   << endl;
     }
     if (failed)
-      anyFailures = True;
+      anyFailures = true;
   } 
   {
-    Bool failed = False;
+    Bool failed = false;
     StokesVector scalar(1.0f, 3.0f, 7.0f, 4.0f);
     Vector<Float> myArray(5);
     indgen(myArray);
@@ -273,7 +273,7 @@ int main() {
     Array<Float> feresult;
     unpackStokes(feresult, expectedResult);
     if (!allNearAbs(fresult, feresult, 1.E-5)){
-      failed = True;
+      failed = true;
       cout << "Failed";
     }
     else
@@ -282,14 +282,14 @@ int main() {
     result = scalar*myArray;
     unpackStokes(fresult, result);
     if (!allNearAbs(fresult, feresult, 1.E-5)){
-      failed = True;
+      failed = true;
       cout << "Failed";
     }
     else
       cout << "Passed";
     cout << " the StokesVector*Array<Float> test" << endl;
     if (failed) 
-      anyFailures = True;
+      anyFailures = true;
   }
   */
   if (anyFailures) 

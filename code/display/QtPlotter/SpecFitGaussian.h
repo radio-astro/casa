@@ -46,7 +46,7 @@ namespace casa {
 		bool isPeakFixed() const;
 		bool isCenterFixed() const;
 		bool isFwhmFixed() const;
-		void evaluate( Vector<Float>& xValues );
+		void evaluate( casacore::Vector<casacore::Float>& xValues );
 		SpecFitGaussian& operator=(const SpecFitGaussian& other );
 		virtual ~SpecFitGaussian();
 

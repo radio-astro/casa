@@ -22,6 +22,7 @@
 
 #include <mstransform/TVI/UtilsTVI.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 namespace vi { //# NAMESPACE VI - BEGIN
@@ -128,11 +129,11 @@ Bool DataCubeMap::present(MS::PredefinedColumns key)
 {
 	if (dataCubeMap_p.find(key) != dataCubeMap_p.end())
 	{
-		return True;
+		return true;
 	}
 	else
 	{
-		return False;
+		return false;
 	}
 }
 
@@ -208,7 +209,7 @@ void accumulateWeightCube (const Cube<Float> &weightCube, const Cube<Bool> &flag
 	uInt nRows = shape(2);
 	uInt nCorrelations = shape (0);
 
-	result.resize(nCorrelations,nRows,False);
+	result.resize(nCorrelations,nRows,false);
 
 	Vector<Float> currentVector;
 	for (uInt row=0; row < nRows; row++)
@@ -226,7 +227,7 @@ void accumulateWeightCube (const Cube<Float> &weightCube, const Cube<Bool> &flag
 void accumulateWeightMatrix (const Matrix<Float> &weightMatrix, const Matrix<Bool> &flags, Vector<Float> &result)
 {
     IPosition shape = weightMatrix.shape();
-    result.resize(shape(0),False);
+    result.resize(shape(0),false);
     Vector<uInt> samples(shape(0),0);
     uInt nCorrelations = shape (0);
     uInt nChannels = shape (1);
@@ -235,21 +236,21 @@ void accumulateWeightMatrix (const Matrix<Float> &weightMatrix, const Matrix<Boo
     {
         int nSamples = 0;
         float sum = 0;
-        bool accumulatorFlag = True;
+        bool accumulatorFlag = true;
 
         for (uInt channel=0; channel< nChannels; channel++)
         {
             Bool inputFlag = flags(correlation,channel);
-            // True/True or False/False
+            // true/true or false/false
             if (accumulatorFlag == inputFlag)
             {
                 nSamples ++;
                 sum += weightMatrix (correlation, channel);
             }
-            // True/False: Reset accumulation when accumulator switches from flagged to unflagged
+            // true/false: Reset accumulation when accumulator switches from flagged to unflagged
             else if ( accumulatorFlag and ! inputFlag )
             {
-                accumulatorFlag = False;
+                accumulatorFlag = false;
                 nSamples = 1;
                 sum = weightMatrix (correlation, channel);
             }
@@ -275,13 +276,13 @@ void accumulateFlagCube (const Cube<Bool> &flagCube, Vector<Bool> &flagRow)
 	size_t nRows = shape(2);
 
 	// Reshape flag cube to match the input shape
-	flagRow.resize(nRows,False);
-	flagRow = False;
+	flagRow.resize(nRows,false);
+	flagRow = false;
 
-	Bool rowFlagValue = False;
+	Bool rowFlagValue = false;
 	for (size_t row_i =0;row_i<nRows;row_i++)
 	{
-		rowFlagValue = True;
+		rowFlagValue = true;
 		for (size_t chan_i =0;chan_i<nChan;chan_i++)
 		{
 			if (rowFlagValue)
@@ -290,7 +291,7 @@ void accumulateFlagCube (const Cube<Bool> &flagCube, Vector<Bool> &flagRow)
 				{
 					if (not flagCube(corr_i,chan_i,row_i))
 					{
-						rowFlagValue = False;
+						rowFlagValue = false;
 						break;
 					}
 				}

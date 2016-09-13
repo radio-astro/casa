@@ -51,9 +51,9 @@ template <class T> class MomentsBase;
 //   <li> <linkto class="MomentsBase">MomentsBase</linkto>
 //   <li> <linkto class="ImageMoments">ImageMoments</linkto>
 //   <li> <linkto class="MSMoments">MSMoments</linkto>
-//   <li> <linkto class="LatticeApply">LatticeApply</linkto>
+//   <li> <linkto class="casacore::LatticeApply">casacore::LatticeApply</linkto>
 //   <li> <linkto class="MomentCalcBase">MomentCalcBase</linkto>
-//   <li> <linkto class="LineCollapser">LineCollapser</linkto>
+//   <li> <linkto class="casacore::LineCollapser">casacore::LineCollapser</linkto>
 // </prerequisite>
 //
 // <synopsis>
@@ -64,7 +64,7 @@ template <class T> class MomentsBase;
 //  and invokes the <src>multiProcess</src> member function of MomentFit on each vector
 //  of pixels that it extracts from the input lattice.  The <src>multiProcess</src>
 //  function returns a vector of moments which are inserted into the output
-//  lattices also supplied to the LatticeApply function.
+//  lattices also supplied to the casacore::LatticeApply function.
 // 
 //  MomentFit computes moments by fitting a Gaussian to each profile.  The
 //  moments are then computed from that fit.   The fitting can be done either
@@ -85,7 +85,7 @@ template <class T> class MomentsBase;
 //
 // <example>
 // This example comes from ImageMoments.   outPt is a pointer block holding
-// pointers to the output lattices.   os_P is a LogIO object.
+// pointers to the output lattices.   os_P is a casacore::LogIO object.
 //                                     
 // <srcBlock>
 // 
@@ -103,7 +103,7 @@ template <class T> class MomentsBase;
 //
 //// Iterate optimally through the image, compute the moments, fill the output lattices
 //
-//   LatticeApply<T>::lineMultiApply(outPt, *pInImage_p, *pMomentCalculator,   
+//   casacore::LatticeApply<T>::lineMultiApply(outPt, *pInImage_p, *pMomentCalculator,   
 //                                   momentAxis_p, pProgressMeter);
 //   delete pMomentCalculator;
 // </srcBlock>
@@ -127,34 +127,34 @@ public:
 // Constructor.  We need the ImageMoments or MSMoments object which is calling us, 
 // its logger, and the number of output lattices it has created.
    MomentFit(MomentsBase<T>& iMom,
-             LogIO& os,
-             const uInt nLatticeOut);
+             casacore::LogIO& os,
+             const casacore::uInt nLatticeOut);
 
 // Destructor (does nothing).
   virtual ~MomentFit();
 
 // This function is not implemented and throws an exception.
    virtual void process(T& out,
-                        Bool& outMask,
-                        const Vector<T>& in,
-                        const Vector<Bool>& inMask,
-                        const IPosition& pos);
+                        casacore::Bool& outMask,
+                        const casacore::Vector<T>& in,
+                        const casacore::Vector<casacore::Bool>& inMask,
+                        const casacore::IPosition& pos);
 
 // This function returns a vector of numbers from each input vector.
 // the output vector contains the moments known to the ImageMoments
 // or MSMoments object passed into the constructor.
-   virtual void multiProcess(Vector<T>& out,
-                             Vector<Bool>& outMask,
-                             const Vector<T>& in,
-                             const Vector<Bool>& inMask,
-                             const IPosition& pos);
+   virtual void multiProcess(casacore::Vector<T>& out,
+                             casacore::Vector<casacore::Bool>& outMask,
+                             const casacore::Vector<T>& in,
+                             const casacore::Vector<casacore::Bool>& inMask,
+                             const casacore::IPosition& pos);
 
 private:
    MomentsBase<T>& iMom_p;
-   LogIO os_p;
+   casacore::LogIO os_p;
    T stdDeviation_p, peakSNR_p;
-   Bool doFit_p;
-   Gaussian1D<T> gauss_p;
+   casacore::Bool doFit_p;
+   casacore::Gaussian1D<T> gauss_p;
 
   //# Make members of parent class known.
 protected:

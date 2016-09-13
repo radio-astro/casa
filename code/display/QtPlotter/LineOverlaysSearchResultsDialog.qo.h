@@ -41,7 +41,7 @@ namespace casa {
 	public:
 		LineOverlaysSearchResultsDialog(QWidget *parent = 0);
 		QList<int> getLineIndices() const;
-		bool getLine(int lineIndex, Float& peak, Float& center,
+		bool getLine(int lineIndex, casacore::Float& peak, casacore::Float& center,
 		             QString& molecularName, QString& chemicalName,
 		             QString& resolvedQNs, QString& frequencyUnit ) const;
 		void getLines( QList<float>& peaks, QList<float>& centers,

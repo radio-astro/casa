@@ -65,16 +65,16 @@ namespace casa {
 //   <li> 
 // </todo>
 
-class ImageHistogramsCalculator : public ImageTask<Float> {
+class ImageHistogramsCalculator : public ImageTask<casacore::Float> {
 public:
 
-	const static String CLASS_NAME;
+	const static casacore::String CLASS_NAME;
 
 	ImageHistogramsCalculator() = delete;
 
 	ImageHistogramsCalculator(
-		const SPCIIF image, const Record *const &regionPtr,
-	    const String& mask
+		const SPCIIF image, const casacore::Record *const &regionPtr,
+	    const casacore::String& mask
 	);
 	
 	ImageHistogramsCalculator(const ImageHistogramsCalculator &other) = delete;
@@ -83,30 +83,30 @@ public:
 
 	ImageHistogramsCalculator &operator=(const ImageHistogramsCalculator &other) = delete;
 
-	Record compute() const;
+	casacore::Record compute() const;
 
-	String getClass() const { return CLASS_NAME; }
+	casacore::String getClass() const { return CLASS_NAME; }
 
 	// set cursor axes
-	void setAxes(const vector<uInt>& axes) { _axes = axes; };
+	void setAxes(const vector<casacore::uInt>& axes) { _axes = axes; };
 
 	// should the histogram be cumulative
-	void setCumulative(Bool b) { _cumulative = b; }
+	void setCumulative(casacore::Bool b) { _cumulative = b; }
 
 	// If true, force the storage lattice to be written to disk.
-	void setDisk(Bool b) { _disk = b; }
+	void setDisk(casacore::Bool b) { _disk = b; }
 
 	// If true, the counts should be returned as log10 of the actual counts
-	void setDoLog10(Bool b) { _doLog10 = b; }
+	void setDoLog10(casacore::Bool b) { _doLog10 = b; }
 
 	// set include range
 	void setIncludeRange(const vector<double>& r) { _includeRange = r; }
 
 	// If true list stats to logger
-	void setListStats(Bool b) { _listStats = b; }
+	void setListStats(casacore::Bool b) { _listStats = b; }
 
 	// set number of bins
-	void setNBins(uInt n) { _nbins = n; }
+	void setNBins(casacore::uInt n) { _nbins = n; }
 
 
 protected:
@@ -115,19 +115,19 @@ protected:
    		return CasacRegionManager::USE_ALL_STOKES;
    	}
 
-    vector<Coordinate::Type> _getNecessaryCoordinates() const {
-    	return vector<Coordinate::Type>();
+    vector<casacore::Coordinate::Type> _getNecessaryCoordinates() const {
+    	return vector<casacore::Coordinate::Type>();
     }
 
-    inline Bool _supportsMultipleRegions() const {return True;}
+    inline casacore::Bool _supportsMultipleRegions() const {return true;}
 
 private:
-    Bool _disk = False;
-    Bool _cumulative = False;
-    Bool _listStats = False;
-    Bool _doLog10 = False;
-    vector<uInt> _axes;
-    uInt _nbins = 25;
+    casacore::Bool _disk = false;
+    casacore::Bool _cumulative = false;
+    casacore::Bool _listStats = false;
+    casacore::Bool _doLog10 = false;
+    vector<casacore::uInt> _axes;
+    casacore::uInt _nbins = 25;
     vector<double> _includeRange;
 
 };

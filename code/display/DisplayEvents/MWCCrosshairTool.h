@@ -90,32 +90,32 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Base class methods must also be called to register event handling
 		// for the desired WorldCanvas[es].
 		MWCCrosshairTool(Display::KeySym keysym = Display::K_Pointer_Button1,
-		                 const Bool persistent = True);
+		                 const casacore::Bool persistent = true);
 
 		// Destructor.
 		virtual ~MWCCrosshairTool();
 
 		// Retrieve the crosshair position in pixels.  A derived crosshairReady()
 		// routine would use this.
-		virtual void get(Int &x, Int &y) const ;
+		virtual void get(casacore::Int &x, casacore::Int &y) const ;
 
 		//Rectrive the crosshair position in Lin
-		virtual void getLin(Double &x, Double &y) const;
+		virtual void getLin(casacore::Double &x, casacore::Double &y) const;
 
 		//Rectrive the crosshair position in World
-		virtual void getWorld(Double &x, Double &y) const;
+		virtual void getWorld(casacore::Double &x, casacore::Double &y) const;
 
 		// Switch the tool off: this calls the base class disable to turn off
 		// event handling, and then erases the crosshair if necessary.
 		virtual void disable();
 
 		// set crosshair cursor type
-		virtual void setCross(Bool cross=False);
+		virtual void setCross(casacore::Bool cross=false);
 
 		// Reset to non-showing, non-active crosshair.
-		// Refreshes if necessary to erase (unless skipRefresh==True).
+		// Refreshes if necessary to erase (unless skipRefresh==true).
 		// (Does not unregister from WCs or disable future event handling).
-		virtual void reset(Bool skipRefresh=False);
+		virtual void reset(casacore::Bool skipRefresh=false);
 
 		// handle events, via new-style interface.  Currently just for reset event.
 		virtual void handleEvent(DisplayEvent& ev);
@@ -144,7 +144,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// handle the crosshair-position-ready 'event'.
 		// evtype is "down" "move" or "up" depending on the state of the
 		// mouse leading to this event.
-		virtual void crosshairReady(const String& ) { };
+		virtual void crosshairReady(const casacore::String& ) { };
 
 	private:
 
@@ -152,33 +152,33 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// To do: reset the tool when the WC CS (linToWorld) transformation
 		// changes.  (There is a WorldCoordinateChange RefreshReason, but it is
 		// not currently used when WC CS/Coordinatehandlers are set/changed).
-		virtual void set(Int x, Int y);
+		virtual void set(casacore::Int x, casacore::Int y);
 
 		// the last crosshair position.
 		// (zooms will change pixel but not linear coordinates; therefore this
 		// position is stored in the latter).
-		Vector<Double> itsPos;
-		Vector<Double> itsWorld;
+		casacore::Vector<casacore::Double> itsPos;
+		casacore::Vector<casacore::Double> itsWorld;
 
 		// should the crosshair remain visible after its button is released?
-		Bool itsPersist;
+		casacore::Bool itsPersist;
 
 		// what is the crosshair radius? (screen pixels)
-		Int itsRadius;
+		casacore::Int itsRadius;
 
 		// was the crosshair drawing visible after last refresh cycle?
-		Bool itsShowing;
+		casacore::Bool itsShowing;
 
 		// should the crosshair be drawn when X,Y are in the zoom window?
-		Bool itsShow;
+		casacore::Bool itsShow;
 
 		// draw crosshair
-		Bool itsCross;
+		casacore::Bool itsCross;
 
-		// is the crosshair's button down?  (True when the
+		// is the crosshair's button down?  (true when the
 		// tool's button was pressed in a WC where it is handling events,
 		// and has not yet been released, or the tool reset).
-		Bool itsBtnDn;
+		casacore::Bool itsBtnDn;
 
 	};
 

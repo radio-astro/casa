@@ -52,7 +52,7 @@ int main() {
 				"x", csys, IPosition(4, 2000, 2000, 4, 2000),
 				RegionTextParser::CURRENT_VERSION
 			);
-			AlwaysAssert(False, AipsError);
+			AlwaysAssert(false, AipsError);
 		}
 		catch(AipsError x) {
 			cout << "Caught expected exception: " << x.getMesg() << endl;
@@ -115,7 +115,7 @@ int main() {
 			Quantity y(0, "deg");
 
 			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(False)
+				csys.directionCoordinate().directionType(false)
 			);
 			AnnSymbol symbol(
 				x, y, csys,

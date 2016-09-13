@@ -28,7 +28,7 @@
  * | If you do, all changes will be lost when the file is re-generated. |
  *  --------------------------------------------------------------------
  *
- * File SpectralWindowRow.h
+ * casacore::File SpectralWindowRow.h
  */
  
 #ifndef SpectralWindowRow_CLASS
@@ -187,7 +187,7 @@ public:
 	bool isAdded() const;
 		
 	////////////////////////////////
-	// Intrinsic Table Attributes //
+	// Intrinsic casacore::Table Attributes //
 	////////////////////////////////
 	
 	
@@ -1241,7 +1241,7 @@ public:
 
 
 	////////////////////////////////
-	// Extrinsic Table Attributes //
+	// Extrinsic casacore::Table Attributes //
 	////////////////////////////////
 	
 	
@@ -1444,7 +1444,7 @@ public:
 
 	
 		
-	// ===> Slice link from a row of SpectralWindow table to a collection of row of Doppler table.
+	// ===> casacore::Slice link from a row of SpectralWindow table to a collection of row of Doppler table.
 	
 	/**
 	 * Get the collection of row in the Doppler table having dopplerId == this.dopplerId
@@ -1624,7 +1624,7 @@ private:
 	 */
 	bool hasBeenAdded;
 
-	// This method is used by the Table class when this row is added to the table.
+	// This method is used by the casacore::Table class when this row is added to the table.
 	void isAdded(bool added);
 
 
@@ -1658,7 +1658,7 @@ private:
 	 SpectralWindowRow (SpectralWindowTable &table, SpectralWindowRow &row);
 	 	
 	////////////////////////////////
-	// Intrinsic Table Attributes //
+	// Intrinsic casacore::Table Attributes //
 	////////////////////////////////
 	
 	
@@ -2022,7 +2022,7 @@ private:
  	
 
 	////////////////////////////////
-	// Extrinsic Table Attributes //
+	// Extrinsic casacore::Table Attributes //
 	////////////////////////////////
 	
 	

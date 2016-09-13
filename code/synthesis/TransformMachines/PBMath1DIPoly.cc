@@ -35,6 +35,7 @@
 
 
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 PBMath1DIPoly::PBMath1DIPoly(const Vector<Double>& coeff, Quantity maxRad,
@@ -62,7 +63,7 @@ PBMath1DIPoly::PBMath1DIPoly(const Matrix<Double>& coeff,
   wbcoeff_p(coeff)
 {
   wFreqs_p=freqs;
-  wideFit_p = True;
+  wideFit_p = true;
   if (coeff.ncolumn()!=freqs.nelements()) {
     throw(AipsError("PBMath1DIPoly:: - coeff and freqs arguments do not match"));
   }

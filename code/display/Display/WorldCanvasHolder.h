@@ -38,11 +38,15 @@
 #include <display/Display/AttributeBuffer.h>
 #include <display/Display/WorldCanvas.h>
 
+namespace casacore{
+
+	class String;
+}
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	class Attribute;
 	class DisplayData;
-	class String;
 
 // <summary>
 // A holder to interface between DisplayDatas and a WorldCanvas
@@ -105,17 +109,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// WorldCanvas. <src>ignoreRefresh</src> tells the DD not to refresh
 		// just to clean up DMs
 		virtual void removeDisplayData(DisplayData& dData,
-		                               Bool ignoreRefresh = False);
+		                               casacore::Bool ignoreRefresh = false);
 
 		// How many DisplayDatas are registered?
-		virtual uInt nDisplayDatas() const;
+		virtual casacore::uInt nDisplayDatas() const;
 
 		// Install a single restriction, or a buffer of restrictions, on the
 		// WorldCanvasHolder which DisplayData must match in order that they
 		// be allowed to draw themselves.
 		// <group>
 		void setRestriction(const Attribute& restriction) {
-			cout<<"World canvas holder restriction="<<restriction.getName().c_str()<<" value="<<restriction.getType()<<endl;
+			std::cout<<"World canvas holder restriction="
+			         <<restriction.getName().c_str()
+			         << " value=" << restriction.getType() << std::endl;
 
 			itsWorldCanvas->setRestriction(restriction);
 		}
@@ -125,7 +131,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// </group>
 
 		// Check if a named restriction exists.
-		Bool existRestriction(const String& name) const {
+		casacore::Bool existRestriction(const casacore::String& name) const {
 			return itsWorldCanvas->existRestriction(name);
 		}
 
@@ -137,7 +143,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Remove the named restriction, or all restrictions, from the
 		// WorldCanvasHolder.
 		// <group>
-		void removeRestriction(const String& restrictionName) {
+		void removeRestriction(const casacore::String& restrictionName) {
 			itsWorldCanvas->removeRestriction(restrictionName);
 		}
 		void removeRestrictions() {
@@ -149,10 +155,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// WorldCanvasHolder match the given restriction or buffer of
 		// restrictions.
 		// <group>
-		Bool matchesRestriction(const Attribute& restriction) const {
+		casacore::Bool matchesRestriction(const Attribute& restriction) const {
 			return itsWorldCanvas->matchesRestriction(restriction);
 		}
-		Bool matchesRestrictions(const AttributeBuffer& buffer) const {
+		casacore::Bool matchesRestrictions(const AttributeBuffer& buffer) const {
 			return itsWorldCanvas->matchesRestrictions(buffer);
 		}
 		// </group>
@@ -167,10 +173,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// WorldCanvasHolder->worldCanvas()->refresh(reason);.
 		virtual void refresh(const Display::RefreshReason &reason =
 		                         Display::UserCommand,
-		                     const Bool &explicitrequest = True);
+		                     const casacore::Bool &explicitrequest = true);
 
 		// Handle size control requests originating from the WorldCanvas.
-		virtual Bool executeSizeControl(WorldCanvas *wCanvas);
+		virtual casacore::Bool executeSizeControl(WorldCanvas *wCanvas);
 
 		// Distribute a WCPositionEvent originating from the held
 		// WorldCanvas over the DisplayDatas.
@@ -190,34 +196,34 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// new-style event handling interface from DisplayEH, via WCRefreshEH.
 		virtual void handleEvent(DisplayEvent& ev);
 
-		// Coordinate conversion routines, handled for the WorldCanvas.
+		// casacore::Coordinate conversion routines, handled for the WorldCanvas.
 		// In future, they should be handled on the WC itself, via its own CS.
 		// At present, these requests are forwarded to the CSmaster DD, which
 		// should be equivalent in most cases.
 		// <group>
-		virtual Bool linToWorld(Vector<Double>& world, const Vector<Double>& lin);
-		virtual Bool worldToLin(Vector<Double>& lin, const Vector<Double>& world);
+		virtual casacore::Bool linToWorld(casacore::Vector<casacore::Double>& world, const casacore::Vector<casacore::Double>& lin);
+		virtual casacore::Bool worldToLin(casacore::Vector<casacore::Double>& lin, const casacore::Vector<casacore::Double>& world);
 
 		//# (these latter two are merely to stop a compiler whine...)
-		virtual Bool linToWorld(Matrix<Double> & world, Vector<Bool> & failures,
-		                        const Matrix<Double> & lin) {
+		virtual casacore::Bool linToWorld(casacore::Matrix<casacore::Double> & world, casacore::Vector<casacore::Bool> & failures,
+		                        const casacore::Matrix<casacore::Double> & lin) {
 			return WCCoordinateHandler::linToWorld(world, failures, lin);
 		}
 
-		virtual Bool worldToLin(Matrix<Double> & lin, Vector<Bool> & failures,
-		                        const Matrix<Double> & world) {
+		virtual casacore::Bool worldToLin(casacore::Matrix<casacore::Double> & lin, casacore::Vector<casacore::Bool> & failures,
+		                        const casacore::Matrix<casacore::Double> & world) {
 			return WCCoordinateHandler::worldToLin(lin, failures, world);
 		}
 		// </group>
 
 		// Return the number of world axes, which is hard-wired to 2.
-		virtual uInt nWorldAxes() const {
+		virtual casacore::uInt nWorldAxes() const {
 			return 2;
 		}
 
 		// Maximum number of animation frames of all registered
 		// DDs which are valid for the WC's current CS state.
-		virtual uInt nelements();
+		virtual casacore::uInt nelements();
 
 		// Force a cleanup of all the DisplayDatas which are registered with
 		// this WorldCanvasHolder.
@@ -231,7 +237,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Is the specified DisplayData the one in charge of WC state?
 		// (During DD::sizeControl() execution, it means instead that the
 		// DD has permission to become CSmaster, if it can).
-		Bool isCSmaster(const DisplayData *dd) const {
+		casacore::Bool isCSmaster(const DisplayData *dd) const {
 			return itsWorldCanvas->isCSmaster(dd);
 		}
 		void clearCSMasterSettings( WorldCanvas* wCanvas, bool clearZoom = true );
@@ -241,7 +247,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// sizeControl execution, in determining whether a CS master change is
 		// occurring, and whether anyone was master before.  This affects
 		// whether any old zoom window is retained or completely reset.
-		Bool wasCSmaster(DisplayData* dd=0) const {
+		casacore::Bool wasCSmaster(DisplayData* dd=0) const {
 			return (dd==0)? itsLastCSmaster!=0 : itsLastCSmaster==dd;
 		}
 
@@ -249,7 +255,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// all its main display WC[H]s.  Sets [default] CS master dd to that of
 		// passed wch (if that dd is registered here), and gets it to reset WC
 		// coordinate state.
-		virtual Bool syncCSmaster(const WorldCanvasHolder* wch);
+		virtual casacore::Bool syncCSmaster(const WorldCanvasHolder* wch);
 		bool setCSMaster( DisplayData* dd );
 
 		const std::list<DisplayData*> &displaylist( ) const {
@@ -260,14 +266,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		 * Returns the current pgp draw unit, which depends on the x-range
 		 * of the data currently being displayed.
 		 */
-		Float getDrawUnit() const;
+		casacore::Float getDrawUnit() const;
 
-		const static String BLINK_MODE;
+		const static casacore::String BLINK_MODE;
 
 		std::string errorMessage( ) const { return error_string; }
 
 	private:
-		//True if the viewer is in blink mode.
+		//true if the viewer is in blink mode.
 		bool blinkMode;
 
 		// The WorldCanvas that is held by this WorldCanvasHolder.
@@ -286,18 +292,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// just compared for equality.  The original DD may not even exist by the
 		// time it is used).
 		void* itsLastCSmaster;
-		Float drawUnit;
+		casacore::Float drawUnit;
 
-		String getTitleDDName(const Vector<Bool>& conforms) const;
-		DisplayData* getTitleDDBlink( const Vector<Bool> & conforms ) const;
-		DisplayData* getTitleDDNormal( const Vector<Bool> & conforms ) const;
-		String getTitle( DisplayData* dd ) const;
-		void labelAxes( const Vector<Bool>& conforms, const WCRefreshEvent &ev);
-		void labelAxesBlink( const Vector<Bool>& conforms, const WCRefreshEvent & ev );
-		void labelAxesNormal( const Vector<Bool>& conforms, const WCRefreshEvent & ev );
-		void setControllingTitle( const Vector<Bool>& conforms );
+		casacore::String getTitleDDName(const casacore::Vector<casacore::Bool>& conforms) const;
+		DisplayData* getTitleDDBlink( const casacore::Vector<casacore::Bool> & conforms ) const;
+		DisplayData* getTitleDDNormal( const casacore::Vector<casacore::Bool> & conforms ) const;
+		casacore::String getTitle( DisplayData* dd ) const;
+		void labelAxes( const casacore::Vector<casacore::Bool>& conforms, const WCRefreshEvent &ev);
+		void labelAxesBlink( const casacore::Vector<casacore::Bool>& conforms, const WCRefreshEvent & ev );
+		void labelAxesNormal( const casacore::Vector<casacore::Bool>& conforms, const WCRefreshEvent & ev );
+		void setControllingTitle( const casacore::Vector<casacore::Bool>& conforms );
 		void clearSubstituteTitles( );
-		Vector<Bool> getConformance() const;
+		casacore::Vector<casacore::Bool> getConformance() const;
 		std::string error_string;
 	};
 

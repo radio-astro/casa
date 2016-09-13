@@ -28,7 +28,7 @@
  * | If you do, all changes will be lost when the file is re-generated. |
  *  --------------------------------------------------------------------
  *
- * File DataDescriptionTable.h
+ * casacore::File DataDescriptionTable.h
  */
  
 #ifndef DataDescriptionTable_CLASS
@@ -209,7 +209,7 @@ public:
 	std::string toXML()  ;
 
 #ifndef WITHOUT_ACS
-	// Conversion Methods
+	// casacore::Conversion Methods
 	/**
 	 * Convert this table into a DataDescriptionTableIDL CORBA structure.
 	 *

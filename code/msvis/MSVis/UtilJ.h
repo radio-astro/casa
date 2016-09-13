@@ -50,25 +50,28 @@
 
 #define UnusedVariable(x) ((void) x);
 
-namespace casa {
+namespace casacore{
 
 class String;
+}
+
+namespace casa {
 
 namespace utilj {
 
-class AipsErrorTrace : public AipsError {
+class AipsErrorTrace : public casacore::AipsError {
 
 public:
 
-    AipsErrorTrace ( const String &msg, const String &filename, uInt lineNumber,
+    AipsErrorTrace ( const casacore::String &msg, const casacore::String &filename, casacore::uInt lineNumber,
                      Category c = GENERAL);
 
 };
 
-class Strings : public std::vector<String> {};
+class Strings : public std::vector<casacore::String> {};
 
 //template <typename Element, typename Container>
-//Bool
+//bool
 //contains (const Element & e, const Container & c)
 //{
 //	return c.find(e) != c.end();
@@ -76,7 +79,7 @@ class Strings : public std::vector<String> {};
 
 
 template <typename Container>
-Bool
+bool
 containsKey (const typename Container::key_type & key,
              const Container & container)
 {
@@ -84,7 +87,7 @@ containsKey (const typename Container::key_type & key,
 }
 
 template <typename Container>
-Bool
+bool
 contains (const typename Container::value_type & e,
           const Container & c)
 {
@@ -138,12 +141,12 @@ template <typename F, typename S>
 FirstFunctor<F,S> firstFunctor () { return FirstFunctor<F,S> ();}
 
 
-//DEPRECATED (String format (const char * formatString, ...) /* "Use String::format"*/);
-String formatV (const String & formatString, va_list vaList);
+//DEPRECATED (casacore::String format (const char * formatString, ...) /* "Use casacore::String::format"*/);
+casacore::String formatV (const casacore::String & formatString, va_list vaList);
 
 template<typename T>
 T
-getEnv (const String & name, const T & defaultValue)
+getEnv (const casacore::String & name, const T & defaultValue)
 {
 	char * value = getenv (name.c_str());
 
@@ -155,25 +158,25 @@ getEnv (const String & name, const T & defaultValue)
 	}
 }
 
-Bool
-getEnv (const String & name, const Bool & defaultValue);
+bool
+getEnv (const casacore::String & name, const bool & defaultValue);
 
-Int
-getEnv (const String & name, const Int & defaultValue);
+int
+getEnv (const casacore::String & name, const int & defaultValue);
 
 
-String getTimestamp ();
+casacore::String getTimestamp ();
 
-Bool isEnvDefined (const String & name);
+bool isEnvDefined (const casacore::String & name);
 
-std::vector<String> split (const String & string, const String & splitter,
-                           Bool ignoreConsecutiveSplitters = False);
+std::vector<casacore::String> split (const casacore::String & string, const casacore::String & splitter,
+                           bool ignoreConsecutiveSplitters = false);
 
 template <typename Itr>
-String
-join (Itr begin, Itr end, const String & delimiter)
+casacore::String
+join (Itr begin, Itr end, const casacore::String & delimiter)
 {
-    String result;
+    casacore::String result;
     Itr i = begin;
 
     if (i != end){
@@ -189,17 +192,17 @@ join (Itr begin, Itr end, const String & delimiter)
 }
 
 template <typename T>
-String
-join (const T & strings, const String & delimiter)
+casacore::String
+join (const T & strings, const casacore::String & delimiter)
 {
     return join (strings.begin(), strings.end(), delimiter);
 }
 
 template <typename Itr, typename F>
-String
-join (Itr begin, Itr end, F f, const String & delimiter)
+casacore::String
+join (Itr begin, Itr end, F f, const casacore::String & delimiter)
 {
-    String result;
+    casacore::String result;
     Itr i = begin;
 
     if (i != end){
@@ -226,8 +229,10 @@ mapKeys (const std::map<K,V> & aMap)
     return result;
 }
 
-AipsError repackageAipsError (AipsError & error, const String & message, const String & file,
-                              Int line, const String & func);
+casacore::AipsError repackageAipsError (casacore::AipsError & error,
+                                        const casacore::String & message,
+                                        const casacore::String & file,
+                                        int line, const casacore::String & func);
 
 template <typename F, typename S>
 F & second (std::pair<F,S> & pair) { return pair.second;}
@@ -255,24 +260,24 @@ mapValues (const std::map<K,V> & aMap)
     return result;
 }
 
-void printBacktrace (ostream & os, const String & prefix = "");
+void printBacktrace (std::ostream & os, const casacore::String & prefix = "");
 
-long round (Double d);
+long round (double d);
 
-void sleepMs (Int milliseconds);
-void toStdError (const String & m, const String & prefix = "*E* ");
-void throwIf (Bool condition, const String & message, const String & file,
-              Int line, const String & func = String());
-void throwIfError (Int errorCode, const String & prefix, const String & file,
-                   Int line, const String & func = String());
+void sleepMs (int milliseconds);
+void toStdError (const casacore::String & m, const casacore::String & prefix = "*E* ");
+void throwIf (bool condition, const casacore::String & message, const casacore::String & file,
+              int line, const casacore::String & func = casacore::String());
+void throwIfError (int errorCode, const casacore::String & prefix, const casacore::String & file,
+                   int line, const casacore::String & func = casacore::String());
 
 template <typename It, typename Obj>
-string
-containerToString (It begin, It end, String (Obj::* func) () const, const String & delimiter = ",",
-                   const String & wrapper = "")
+casacore::String
+containerToString (It begin, It end, casacore::String (Obj::* func) () const, const casacore::String & delimiter = ",",
+                   const casacore::String & wrapper = "")
 {
-    String result;
-    String d = "";
+    casacore::String result;
+    casacore::String d = "";
 
     for (It i = begin; i != end; i++){
         result += d + wrapper + ((* i) .* func) () + wrapper;
@@ -313,24 +318,24 @@ public:
     IoStatistics operator- (const IoStatistics &) const;
     IoStatistics operator+ (const IoStatistics &) const;
     IoStatistics operator/ (const IoStatistics &) const;
-    IoStatistics operator* (Double factor) const;
+    IoStatistics operator* (double factor) const;
 
     void capture ();
 
-    Double getBytesRead () const;
-    Double getBytesWritten () const;
-    Double getNReads () const;
-    Double getNWrites () const;
+    double getBytesRead () const;
+    double getBytesWritten () const;
+    double getNReads () const;
+    double getNWrites () const;
 
-    String report (float scale = .001, const String & scaleTag = String ("K")) const;
+    casacore::String report (float scale = .001, const casacore::String & scaleTag = casacore::String ("K")) const;
 
 private:
 
-    Double nBytesRead_p;
-    Double nBytesWritten_p;
-    Double nReads_p;
-    Double nWrites_p;
-    String statFile_p;
+    double nBytesRead_p;
+    double nBytesWritten_p;
+    double nReads_p;
+    double nWrites_p;
+    casacore::String statFile_p;
 };
 
 
@@ -389,10 +394,10 @@ public:
 
     ThreadTimes () { * this = getTime();}
 
-    Double cpu () const { return cpu_p;}
-    void clear () { empty_p = True;}
-    Bool empty () const { return empty_p;}
-    Double elapsed () const { return elapsed_p;}
+    double cpu () const { return cpu_p;}
+    void clear () { empty_p = true;}
+    bool empty () const { return empty_p;}
+    double elapsed () const { return elapsed_p;}
 
     static ThreadTimes
     getTime (){
@@ -400,9 +405,9 @@ public:
         struct timeval tVal;
         gettimeofday (& tVal, NULL);
 
-        Double elapsed = tVal.tv_sec + tVal.tv_usec * 1e-6;
+        double elapsed = tVal.tv_sec + tVal.tv_usec * 1e-6;
 
-        //Double cpu = ((Double) clock ()) / CLOCKS_PER_SEC; // should be in seconds
+        //double cpu = ((double) clock ()) / CLOCKS_PER_SEC; // should be in seconds
 
 
 
@@ -412,9 +417,9 @@ public:
         int failed = getrusage (RUSAGE_THREAD, & usage);
         assert (! failed);
 
-        Double cpu = ! failed ? toSeconds (usage.ru_utime) + toSeconds (usage.ru_stime) : 0;
+        double cpu = ! failed ? toSeconds (usage.ru_utime) + toSeconds (usage.ru_stime) : 0;
 #else
-        Double cpu = 0;
+        double cpu = 0;
 #endif
 
         return ThreadTimes (elapsed, cpu);
@@ -422,7 +427,7 @@ public:
 
     DeltaThreadTimes operator- (const ThreadTimes & tEarlier) const;
 
-    static Double
+    static double
     toSeconds (const struct timeval & t)
     {
         return t.tv_sec + t.tv_usec * 1e-6;
@@ -430,11 +435,11 @@ public:
 
 protected:
 
-    Bool empty_p;
-    Double cpu_p;
-    Double elapsed_p;
+    bool empty_p;
+    double cpu_p;
+    double elapsed_p;
 
-    ThreadTimes (Double elapsed, Double cpu) : cpu_p (cpu), elapsed_p (elapsed) {}
+    ThreadTimes (double elapsed, double cpu) : cpu_p (cpu), elapsed_p (elapsed) {}
 };
 
 // <summary>
@@ -484,7 +489,7 @@ class DeltaThreadTimes : private ThreadTimes {
 
 public:
 
-    DeltaThreadTimes () : ThreadTimes (0, 0), doStats_p (False), n_p (0) {}
+    DeltaThreadTimes () : ThreadTimes (0, 0), doStats_p (false), n_p (0) {}
     explicit DeltaThreadTimes (bool doStats) : ThreadTimes (0,0), doStats_p (doStats), n_p (0)
     {
         cpuSsq_p = 0;
@@ -497,32 +502,32 @@ public:
 
     DeltaThreadTimes & operator += (const DeltaThreadTimes & other);
 
-    Double cpu () const { return ThreadTimes::cpu();}
-    Double cpuAvg () const { return n_p == 0 ? 0 : cpu() / n_p;}
-    Double elapsed () const { return ThreadTimes::elapsed();}
-    Double elapsedAvg () const { return n_p == 0 ? 0 : elapsed() / n_p;}
-    String formatAverage (const String & floatFormat = "%6.1f",
-                          Double scale=1000.0,
-                          const String & units = "ms")  const; // to convert to ms
-    String formatStats (const String & floatFormat = "%6.1f",
-                        Double scale=1000.0,
-                        const String & units = "ms")  const; // to convert to ms
-    Int n() const { return n_p;}
+    double cpu () const { return ThreadTimes::cpu();}
+    double cpuAvg () const { return n_p == 0 ? 0 : cpu() / n_p;}
+    double elapsed () const { return ThreadTimes::elapsed();}
+    double elapsedAvg () const { return n_p == 0 ? 0 : elapsed() / n_p;}
+    casacore::String formatAverage (const casacore::String & floatFormat = "%6.1f",
+                          double scale=1000.0,
+                          const casacore::String & units = "ms")  const; // to convert to ms
+    casacore::String formatStats (const casacore::String & floatFormat = "%6.1f",
+                        double scale=1000.0,
+                        const casacore::String & units = "ms")  const; // to convert to ms
+    int n() const { return n_p;}
 
 protected:
 
-    DeltaThreadTimes (Double elapsed, Double cpu) : ThreadTimes (elapsed, cpu), n_p (0) {}
+    DeltaThreadTimes (double elapsed, double cpu) : ThreadTimes (elapsed, cpu), n_p (0) {}
 
 private:
 
-    Double cpuMin_p;
-    Double cpuMax_p;
-    Double cpuSsq_p;
-    Bool doStats_p;
-    Double elapsedMin_p;
-    Double elapsedMax_p;
-    Double elapsedSsq_p;
-    Int n_p;
+    double cpuMin_p;
+    double cpuMax_p;
+    double cpuSsq_p;
+    bool doStats_p;
+    double elapsedMin_p;
+    double elapsedMax_p;
+    double elapsedSsq_p;
+    int n_p;
 };
 
 class RUsage {
@@ -556,7 +561,7 @@ public:
     long   nvcsw () const { return rusage_p.ru_nvcsw;}         /* voluntary context switches */
     long   nivcsw () const { return rusage_p.ru_nivcsw;}        /* involuntary context switches */
 
-    String toString () const;
+    casacore::String toString () const;
 
 private:
 
@@ -663,6 +668,7 @@ public:
 } // end namespace utilj
 
 } // end namespace casa
+
 
 
 #endif /* UTILJ_H_ */

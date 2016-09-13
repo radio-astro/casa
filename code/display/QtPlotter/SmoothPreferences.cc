@@ -3,6 +3,7 @@
 #include <QSettings>
 #include <QDebug>
 
+using namespace casacore;
 namespace casa {
 
 const QString SmoothPreferences::APPLICATION = "Profiler";

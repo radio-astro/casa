@@ -44,6 +44,7 @@
 #include <synthesis/CalTables/NewCalTable.h>
 #include <ms/MSSel/MSSpWindowIndex.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Define external CLIC solvers
@@ -85,7 +86,7 @@ BJonesPoly::BJonesPoly (VisSet& vs) :
   vs_p(&vs),
   degamp_p(3),
   degphase_p(3),
-  visnorm_p(False),
+  visnorm_p(false),
   maskcenter_p(1),
   maskedge_p(5.0),
   maskcenterHalf_p(0),
@@ -101,7 +102,7 @@ BJonesPoly::BJonesPoly (VisSet& vs) :
 //    vs_p              VisSet&            Visibility set pointer (needed locally)
 //    degamp_p          Int                Polynomial degree in amplitude
 //    degphase_p        Int                Polynomial degree in phase
-//    visnorm           const Bool&        True if pre-normalization of the 
+//    visnorm           const Bool&        true if pre-normalization of the 
 //                                         visibility data over frequency is
 //                                         required before solving.
 //    maskcenter        const Int&         No. of central channels to mask
@@ -112,8 +113,8 @@ BJonesPoly::BJonesPoly (VisSet& vs) :
 //    maskedgeFrac_p    Float              Fractional edge mask
 
   // Neither solved nor applied at this point
-  setSolved(False);
-  setApplied(False);
+  setSolved(false);
+  setApplied(false);
 };
 
 //----------------------------------------------------------------------------
@@ -126,7 +127,7 @@ void BJonesPoly::setSolve(const Record& solvepar)
 // Output to private data:
 //    degamp_p          Int                Polynomial degree in amplitude
 //    degphase_p        Int                Polynomial degree in phase
-//    visnorm           const Bool&        True if pre-normalization of the 
+//    visnorm           const Bool&        true if pre-normalization of the 
 //                                         visibility data over frequency is
 //                                         required before solving.
 //    maskcenter        const Int&         No. of central channels to mask
@@ -182,9 +183,9 @@ void BJonesPoly::setApply(const Record& applypar)
 
   BJones::setApply(applypar);
 
-  // The old BPOLY never used calWt=True; preserve
+  // The old BPOLY never used calWt=true; preserve
   //  this behavior for now
-  calWt()=False;
+  calWt()=false;
 
   /*
 
@@ -237,8 +238,8 @@ void BJonesPoly::setApply(const Record& applypar)
   load(calTableName());
 
   // Signal apply context
-  setApplied(True);
-  setSolved(False);
+  setApplied(true);
+  setSolved(false);
 
   */
 
@@ -274,7 +275,7 @@ void BJonesPoly::selfSolveOne(VisBuffGroupAcc& vbga)
      << LogIO::POST;
 
   // Bool to short-circuit operation
-  Bool ok(True);
+  Bool ok(true);
 
   // Initialize the baseline index
   Vector<Int> ant1(nBln(), -1);
@@ -341,7 +342,7 @@ void BJonesPoly::selfSolveOne(VisBuffGroupAcc& vbga)
 
   // Populate the frequency grid with the input frequency channels,
   //  and demand that enough (?) will get filled.
-  Vector<Bool> freqGridOk(nFreqGrid,False);
+  Vector<Bool> freqGridOk(nFreqGrid,false);
   for (Int ispw=0;ispw<nSpw();ispw++) {
     if (freq[ispw]) {
       for (Int ichan=0;ichan<numFreqChan(ispw);ichan++) {
@@ -349,7 +350,7 @@ void BJonesPoly::selfSolveOne(VisBuffGroupAcc& vbga)
 	if(chanidx >= nFreqGrid){
 	  cout << "spw " << ispw <<" " <<  chanidx << endl;
 	}
-	freqGridOk(chanidx)=True;
+	freqGridOk(chanidx)=true;
       }
     }
   }
@@ -363,7 +364,7 @@ void BJonesPoly::selfSolveOne(VisBuffGroupAcc& vbga)
     os << LogIO::SEVERE 
        << "Reduce degamp by at least " << degamp_p+1-nok << " and try again." 
        << LogIO::POST;
-    ok=False;
+    ok=false;
   }
   if (nok < (degphase_p+1) ) {
     os << LogIO::SEVERE 
@@ -372,7 +373,7 @@ void BJonesPoly::selfSolveOne(VisBuffGroupAcc& vbga)
     os << LogIO::SEVERE 
        << "Reduce degphase by at least " << degphase_p+1-nok << " and try again." 
        << LogIO::POST;
-    ok=False;
+    ok=false;
   }
   // If either degree vs nGrid test failed, quit here
   if (!ok) throw(AipsError("Invalid polynomial degree specification"));
@@ -395,8 +396,8 @@ void BJonesPoly::selfSolveOne(VisBuffGroupAcc& vbga)
 
 
   // We must keep track of good ants and baselines
-  Vector<Bool> antok(nAnt(),False);
-  Matrix<Bool> bslok(nAnt(),nAnt(),False);
+  Vector<Bool> antok(nAnt(),false);
+  Matrix<Bool> bslok(nAnt(),nAnt(),false);
   Int nGoodBasl=0;
   Matrix<Int> bslidx(nAnt(),nAnt(),-1);
   Matrix<Int> antOkChan(nFreqGrid, nAnt(),0);
@@ -464,10 +465,10 @@ void BJonesPoly::selfSolveOne(VisBuffGroupAcc& vbga)
 	   nfalse(cvb.flag().column(row)) > 0 ) {
 
 	// These ants, this baseline is ok (there is at least some good data here)
-	antok(a1)=True;
-	antok(a2)=True;
+	antok(a1)=true;
+	antok(a2)=true;
 	if (!bslok(a1,a2)) {   // first visit to this baseline
-	  bslok(a1,a2)=True;
+	  bslok(a1,a2)=true;
 	  bslidx(a1,a2)=nGoodBasl++;
 	  ant1idx(bslidx(a1,a2))=a1;
 	  ant2idx(bslidx(a1,a2))=a2;
@@ -545,10 +546,10 @@ void BJonesPoly::selfSolveOne(VisBuffGroupAcc& vbga)
     ant1num(ibl)=antnum(ant1idx(ibl));
     ant2num(ibl)=antnum(ant2idx(ibl));
   }
-  ant1num.resize(nGoodBasl,True);
-  ant2num.resize(nGoodBasl,True);
-  ant1idx.resize(nGoodBasl,True);
-  ant2idx.resize(nGoodBasl,True);  
+  ant1num.resize(nGoodBasl,true);
+  ant2num.resize(nGoodBasl,true);
+  ant1idx.resize(nGoodBasl,true);
+  ant2idx.resize(nGoodBasl,true);  
 
 
   Int nGoodAnt=Int(ntrue(antok));
@@ -815,7 +816,7 @@ void BJonesPoly::selfSolveOne(VisBuffGroupAcc& vbga)
 
   // After first call, append must be true in case we have more to 
   //  write.
-  append()=True;
+  append()=true;
   
 };
 
@@ -989,18 +990,18 @@ Bool BJonesPoly::maskedChannel (const Int& chan, const Int& nChan)
 //                                             in edge or center mask
 //
   // Initialization
-  Bool masked = False;
+  Bool masked = false;
   Int loChan = nChan / 2 - maskcenterHalf_p;
   Int hiChan = loChan + maskcenter_p;
 
   // Check mask at center of spectrum
   if ((chan >= loChan) && (chan < hiChan)) {
-    masked = True;
+    masked = true;
   };
 
   // Check mask at edge of spectrum
   if ((chan < (nChan*maskedgeFrac_p)) || (chan > nChan*(1-maskedgeFrac_p))) {
-    masked = True;
+    masked = true;
   };
 
   return masked;
@@ -1024,7 +1025,7 @@ void BJonesPoly::loadMemCalTable (String applyTable,String /*field*/)
 //   fact that currently it CANNOT be time-dependent).
 
   // Generate a NCT in memory to hold the BPOLY as a B
-  ct_=new NewCalTable("BpolyAsB.temp",VisCalEnum::COMPLEX,"B Jones",msName(),False);
+  ct_=new NewCalTable("BpolyAsB.temp",VisCalEnum::COMPLEX,"B Jones",msName(),false);
 
   // Open the BJonesPoly calibration table
   BJonesPolyTable calTable(applyTable, Table::Update);
@@ -1072,7 +1073,7 @@ void BJonesPoly::loadMemCalTable (String applyTable,String /*field*/)
     //    currCPar().resize(nPar(),nChanPar(),nAnt());
     //    currCPar()=Complex(1.0);
     //    currParOK().resize(nPar(),nChanPar(),nAnt());
-    //    currParOK()=False;
+    //    currParOK()=false;
     invalidateP();
     invalidateCalMat();      
   }
@@ -1163,12 +1164,12 @@ void BJonesPoly::loadMemCalTable (String applyTable,String /*field*/)
 	    phaseval = getChebVal(pc, x1, x2, thisfreq);
 	    solveAllCPar()(ipol,chan,antennaId)= factor *
 	      Complex(exp(ampval)) * Complex(cos(phaseval),sin(phaseval));
-	    solveAllParOK()(ipol,chan,antennaId)= True;
+	    solveAllParOK()(ipol,chan,antennaId)= true;
 	  }
 	  else {
 	    // Unflagged unit calibration for now
 	    solveAllCPar()(ipol,chan,antennaId)= Complex(1.0);
-	    solveAllParOK()(ipol,chan,antennaId)= True;
+	    solveAllParOK()(ipol,chan,antennaId)= true;
 	  }	      
 	}	   
       }
@@ -1184,7 +1185,7 @@ void BJonesPoly::loadMemCalTable (String applyTable,String /*field*/)
 
       // reset arrays
       solveAllCPar().set(Complex(1.0));
-      solveAllParOK().set(False);
+      solveAllParOK().set(false);
       solveAllParErr().set(0.0);
       solveAllParSNR().set(1.0);
 
@@ -1398,11 +1399,11 @@ void BJonesPoly::plotsolve2(const Vector<Double>& x,
     if (num_valid_points > 0){
 
       // resize data arrays according to num_valid_points
-      x1.resize(num_valid_points, True);
-      amp1.resize(num_valid_points, True);
-      amperr1.resize(num_valid_points, True);
-      pha1.resize(num_valid_points, True);
-      phaerr1.resize(num_valid_points, True);
+      x1.resize(num_valid_points, true);
+      amp1.resize(num_valid_points, true);
+      amperr1.resize(num_valid_points, true);
+      pha1.resize(num_valid_points, true);
+      phaerr1.resize(num_valid_points, true);
 
       ant1ampcoeff=ampcoeff.row(ant1idx(ibl));
       ant2ampcoeff=ampcoeff.row(ant2idx(ibl));

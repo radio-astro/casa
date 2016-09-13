@@ -45,6 +45,7 @@
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	WorldAxesDD::WorldAxesDD() :
@@ -88,7 +89,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Bool WorldAxesDD::setOptions(Record& rec, Record& recOut) {
 		Bool ret = AxesDisplayData::setOptions(rec, recOut);
 
-		Bool localchange = False;
+		Bool localchange = false;
 
 		// spectral preferences
 

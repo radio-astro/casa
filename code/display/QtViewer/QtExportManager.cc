@@ -54,6 +54,7 @@
 #include <graphics/X11/X_exit.h>
 
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
@@ -519,21 +520,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// thats the default values for the call "ImageFITSConverter::ImageToFITS"
 		String error;
 		uInt memoryInMB(64);
-		Bool preferVelocity(True);
-		Bool opticalVelocity(True);
+		Bool preferVelocity(true);
+		Bool opticalVelocity(true);
 		Int BITPIX(-32);
 		Float minPix(1.0);
 		Float maxPix(-1.0);
-		Bool allowOverwrite(False);
-		Bool degenerateLast(False);
-		Bool verbose(True);
-		Bool stokesLast(False);
-		Bool preferWavelength(False);
-		Bool preferAirWavelength(False);
+		Bool allowOverwrite(false);
+		Bool degenerateLast(false);
+		Bool verbose(true);
+		Bool stokesLast(false);
+		Bool preferWavelength(false);
+		Bool preferAirWavelength(false);
 		String origin("CASA Viewer / FITS export");
 
 		// overwrite was confirmed
-		allowOverwrite = True;
+		allowOverwrite = true;
 		getSectralCoordFlags(img, preferVelocity, opticalVelocity, preferWavelength, preferAirWavelength);
 
 		// overwrite the default "origin" if already
@@ -580,46 +581,46 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		switch (spcType) {
 		case SpectralCoordinate::FREQ:
-			preferVelocity      = False;
-			opticalVelocity     = False;
-			preferWavelength    = False;
-			preferAirWavelength = False;
+			preferVelocity      = false;
+			opticalVelocity     = false;
+			preferWavelength    = false;
+			preferAirWavelength = false;
 			break;
 		case SpectralCoordinate::VRAD:
-			preferVelocity      = True;
-			opticalVelocity     = False;
-			preferWavelength    = False;
-			preferAirWavelength = False;
+			preferVelocity      = true;
+			opticalVelocity     = false;
+			preferWavelength    = false;
+			preferAirWavelength = false;
 			break;
 		case SpectralCoordinate::VOPT:
-			preferVelocity      = True;
-			opticalVelocity     = True;
-			preferWavelength    = False;
-			preferAirWavelength = False;
+			preferVelocity      = true;
+			opticalVelocity     = true;
+			preferWavelength    = false;
+			preferAirWavelength = false;
 			break;
 		case SpectralCoordinate::BETA:
-			preferVelocity      = False;
-			opticalVelocity     = False;
-			preferWavelength    = False;
-			preferAirWavelength = False;
+			preferVelocity      = false;
+			opticalVelocity     = false;
+			preferWavelength    = false;
+			preferAirWavelength = false;
 			break;
 		case SpectralCoordinate::WAVE:
-			preferVelocity      = False;
-			opticalVelocity     = False;
-			preferWavelength    = True;
-			preferAirWavelength = False;
+			preferVelocity      = false;
+			opticalVelocity     = false;
+			preferWavelength    = true;
+			preferAirWavelength = false;
 			break;
 		case SpectralCoordinate::AWAV:
-			preferVelocity      = False;
-			opticalVelocity     = False;
-			preferWavelength    = True;
-			preferAirWavelength = True;
+			preferVelocity      = false;
+			opticalVelocity     = false;
+			preferWavelength    = true;
+			preferAirWavelength = true;
 			break;
 		default:
-			preferVelocity      = False;
-			opticalVelocity     = False;
-			preferWavelength    = False;
-			preferAirWavelength = False;
+			preferVelocity      = false;
+			opticalVelocity     = false;
+			preferWavelength    = false;
+			preferAirWavelength = false;
 		}
 
 	}
@@ -640,9 +641,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 				// create a mask in the output image
 				if (maskName.size()>0)
-					newPagedImage.makeMask(maskName, True, True);
+					newPagedImage.makeMask(maskName, true, true);
 				else
-					newPagedImage.makeMask("default", True, True);
+					newPagedImage.makeMask("default", true, true);
 
 				// copy the mask over
 				(newPagedImage.pixelMask()).copyData(img->pixelMask());

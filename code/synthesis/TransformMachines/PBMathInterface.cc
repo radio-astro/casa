@@ -50,6 +50,7 @@
 #include <casa/Utilities/Assert.h>
 #include <casa/BasicSL/String.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 PBMathInterface::PBMathInterface()
@@ -176,7 +177,7 @@ PBMathInterface::applyPB(const ImageInterface<Complex>& in,
 			 Float cutoff,
 			 Bool forward)
 {
-  return apply(in, out, sp, parAngle, doSquint, inverse, False, 2, cutoff, forward);
+  return apply(in, out, sp, parAngle, doSquint, inverse, false, 2, cutoff, forward);
 };
 
 ImageInterface<Float>&  
@@ -228,7 +229,7 @@ PBMathInterface::applyPB(SkyComponent& in,
 			 Float cutoff,
 			 Bool forward)
 {
-  return apply(in, out, sp, frequency, parAngle, doSquint, inverse, False, 2, cutoff,
+  return apply(in, out, sp, frequency, parAngle, doSquint, inverse, false, 2, cutoff,
 	       forward);
 };
 
@@ -240,7 +241,7 @@ PBMathInterface::applyPB2(SkyComponent& in,
 			  const Quantity parAngle,
 			  const BeamSquint::SquintType doSquint)
 {
-  return apply(in, out, sp, frequency, parAngle, doSquint, False, False, 4, 0.0, True);
+  return apply(in, out, sp, frequency, parAngle, doSquint, false, false, 4, 0.0, true);
 };
 
 

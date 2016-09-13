@@ -89,18 +89,18 @@ public:
 
     // Returns the name of the last performed action, or blank if there is
     // none.  See TBActionList::lastActionName().
-    String lastActionName();
+    casacore::String lastActionName();
 
     // Returns the name of the last undone action, or blank if there is none.
     // See TBActionList::lastUndoneActionName().
-    String lastUndoneActionName();
+    casacore::String lastUndoneActionName();
     
     
-    /* Table Access Methods */
+    /* casacore::Table Access Methods */
 
     // Returns the name of the currently selected table, or blank if there is
     // none.
-    String currentlySelectedTableName();
+    casacore::String currentlySelectedTableName();
     
     // Returns the currently selected table.
     TBTable* currentlySelectedTable();
@@ -109,10 +109,10 @@ public:
     TBTableTabs* currentlySelectedTableTabs();
 
     // Returns the names of all opened tables.
-    std::vector<String> openedTableNames();
+    std::vector<casacore::String> openedTableNames();
     
     // Returns the TBTableTabs for the table with the given name.
-    TBTableTabs* table(String name);
+    TBTableTabs* table(casacore::String name);
     
     // Returns the index of the indicated table tabs, or -1 if the pointer is
     // invalid.
@@ -122,29 +122,29 @@ public:
     TBTableTabs* tableAt(int i);
     
     
-    /* Table Operation Methods */
+    /* casacore::Table Operation Methods */
     
     // Opens a table tab from the given file, with the given parameters.  Loads
     // rows from start to (start + num).  If the DriverParameters are NULL,
     // the default is used.
-    int openTable(String filename, DriverParams* dp = NULL, int start = 0,
+    int openTable(casacore::String filename, DriverParams* dp = NULL, int start = 0,
                   int num = TBConstants::DEFAULT_SELECT_NUM);
     
     // Opens a table tab from the given file, with the given parameters.  Loads
     // rows from start to (start + num).  If the DriverParameters are NULL,
     // the default is used.
-    int openTable(String filename, bool taql, DriverParams* dp = NULL,
+    int openTable(casacore::String filename, bool taql, DriverParams* dp = NULL,
                   int start = 0, int num = TBConstants::DEFAULT_SELECT_NUM);
     
     // Closes the currently selected table and returns its name.
-    String closeTable();
+    casacore::String closeTable();
 
     // Closes the table at the given tab index and returns its name.
-    String closeTable(int index);
+    casacore::String closeTable(int index);
     
     // Closes the table with the given name and returns whether the close
     // succeeded or not.
-    bool closeTable(String name);
+    bool closeTable(casacore::String name);
 
     // Returns the column (field) names for the table at the given index.
     QStringList getColumnsAt(unsigned int index);
@@ -162,7 +162,7 @@ public:
     
     // Exports the currently selected table to VOTable XML format to the given
     // filename.  See TBTable::exportVOTable().
-    void exportVOTable(String file);
+    void exportVOTable(casacore::String file);
     
     // Returns true if the table at the given index has a find rule entered,
     // false otherwise.
@@ -208,13 +208,13 @@ public:
     // selected table.
     void viewTableInfo();
     
-    // Sort the currently selected table by the indicated fields.
-    void sort(std::vector<std::pair<String, bool> >& s);
+    // casacore::Sort the currently selected table by the indicated fields.
+    void sort(std::vector<std::pair<casacore::String, bool> >& s);
 
-    // Sort the table at index i with the fields in s.  Each entry in s should
+    // casacore::Sort the table at index i with the fields in s.  Each entry in s should
     // be a field name paired with a bool indicating whether the sort order is
     // ascending.  See TBTableTabs::sort().
-    void sort(int i, std::vector<std::pair<String, bool> >& s);
+    void sort(int i, std::vector<std::pair<casacore::String, bool> >& s);
 
     
     /* Action Methods */
@@ -236,7 +236,7 @@ public:
 
     // Adds a QProgressPanel to the front of the browser and dims the GUI
     // behind the progress panel, then returns the QProgressPanel.
-    QProgressPanel* addProgressPanel(String label, bool hideable,
+    QProgressPanel* addProgressPanel(casacore::String label, bool hideable,
                                      bool cancelable);
 
     // Removes the given QProgressPanel from the browser and restores it to
@@ -245,7 +245,7 @@ public:
 
     // Shows the progress frame on the bottom of the browser and returns a
     // ProgressHelper encapsulating it.
-    ProgressHelper* enableProgressFrame(String label);
+    ProgressHelper* enableProgressFrame(casacore::String label);
 
     // Hides the progress frame on the bottom of the browser.
     void disableProgressFrame();
@@ -264,14 +264,14 @@ public:
 
 public slots:
     // Displays the given error in a dialog to the user.
-    void displayError(String message);
+    void displayError(casacore::String message);
     
     // Opens a TaQL table with the given command.  See openTable().
-    void openTaQL(String command);
+    void openTaQL(casacore::String command);
 
     // Opens the subtable located at the given filename, and load the rows such
     // that row r can be selected.
-    void followReference(String subtable, int r);
+    void followReference(casacore::String subtable, int r);
 
     // Removes all actions associated with the given widget.
     void removeActionsAssociatedWithWidget(QWidget* widget);
@@ -281,12 +281,12 @@ public slots:
 
 signals:
     // This signal is emitted when a new table is opened and its tab added.
-    // The String parameter holds the name of the newly opened table.
-    void tableOpened(String name, String fullpath);
+    // The casacore::String parameter holds the name of the newly opened table.
+    void tableOpened(casacore::String name, casacore::String fullpath);
 
     // This signal is emitted when a table is closed and its tab removed.
-    // The String parameter holds the name of the table that was closed.
-    void tableClosed(String name);
+    // The casacore::String parameter holds the name of the table that was closed.
+    void tableClosed(casacore::String name);
 
     // This signal is emitted whenever an action is performed.  The
     // TBAction parameter points to the action that was performed.
@@ -355,7 +355,7 @@ private:
     // Adds a table tab from the given file, with the given parameters.  Loads
     // rows from start to (start + num).  If the DriverParameters are NULL,
     // the default is used.
-    int addTable(String filename, bool taql, DriverParams* dp, int start,
+    int addTable(casacore::String filename, bool taql, DriverParams* dp, int start,
                   int num);
     
 private slots:

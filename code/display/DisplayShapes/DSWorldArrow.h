@@ -52,7 +52,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	public:
 
 		DSWorldArrow();
-		DSWorldArrow(const Record& settings, PanelDisplay* pd);
+		DSWorldArrow(const casacore::Record& settings, PanelDisplay* pd);
 		DSWorldArrow(DSScreenArrow& other, PanelDisplay* pd);
 		DSWorldArrow(DSPixelArrow& other, PanelDisplay* pd);
 
@@ -62,23 +62,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// So we can update our WCs
 		// <group>
-		virtual void move(const Float& dX, const Float& dY);
-		virtual void setCenter(const Float& xPos, const Float& yPos);
-		virtual void rotate(const Float& angle);
-		virtual void scale(const Float& scaleFactor);
-		virtual void setStartPoint(const Vector<Float>& startPoint);
-		virtual void setEndPoint(const Vector<Float>& endPoint);
-		virtual void changePoint(const Vector<Float>&pos, const Int n);
-		virtual void changePoint(const Vector<Float>& pos);
+		virtual void move(const casacore::Float& dX, const casacore::Float& dY);
+		virtual void setCenter(const casacore::Float& xPos, const casacore::Float& yPos);
+		virtual void rotate(const casacore::Float& angle);
+		virtual void scale(const casacore::Float& scaleFactor);
+		virtual void setStartPoint(const casacore::Vector<casacore::Float>& startPoint);
+		virtual void setEndPoint(const casacore::Vector<casacore::Float>& endPoint);
+		virtual void changePoint(const casacore::Vector<casacore::Float>&pos, const casacore::Int n);
+		virtual void changePoint(const casacore::Vector<casacore::Float>& pos);
 		virtual void draw(PixelCanvas* pc);
 		// </group>
 
-		virtual Bool setOptions(const Record& settings);
-		virtual Record getOptions();
+		virtual casacore::Bool setOptions(const casacore::Record& settings);
+		virtual casacore::Record getOptions();
 
 
 
-		virtual Record getRawOptions() {
+		virtual casacore::Record getRawOptions() {
 			return DSArrow::getOptions();
 		}
 
@@ -88,12 +88,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	private:
 
 		// Based on a WC option record
-		//  virtual WorldCanvas* chooseWC(const Record& settings, PanelDisplay* pd);
+		//  virtual WorldCanvas* chooseWC(const casacore::Record& settings, PanelDisplay* pd);
 
 		// Based on a pixel center
-		virtual WorldCanvas* chooseWC(const Float& startXPos,
-		                              const Float& startYPos,
-		                              const Float& endXPos, const Float& endYPos,
+		virtual WorldCanvas* chooseWC(const casacore::Float& startXPos,
+		                              const casacore::Float& startYPos,
+		                              const casacore::Float& endXPos, const casacore::Float& endYPos,
 		                              PanelDisplay* pd);
 
 		// The paneldisplay from which I may choose an appropriate WC
@@ -103,8 +103,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		WorldCanvas* itsWC;
 
 		// The center of the marker in world co-ords.
-		Vector<Quantum<Double> > itsWorldStart;
-		Vector<Quantum<Double> > itsWorldEnd;
+		casacore::Vector<casacore::Quantum<casacore::Double> > itsWorldStart;
+		casacore::Vector<casacore::Quantum<casacore::Double> > itsWorldEnd;
 
 		void updateWCoords();
 	};

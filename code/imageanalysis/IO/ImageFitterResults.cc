@@ -39,6 +39,7 @@
 
 #include <iomanip>
 
+using namespace casacore;
 namespace casa {
 
 const String ImageFitterResults::_class = "ImageFitterResults";
@@ -86,7 +87,7 @@ void ImageFitterResults::writeNewEstimatesFile(const String& filename) const {
 	File estimates(filename);
 	String action = (estimates.getWriteStatus() == File::OVERWRITABLE) ? "Overwrote" : "Created";
 	LogFile newEstimates(filename);
-	newEstimates.write(output, True, True);
+	newEstimates.write(output, true, true);
 	*_log << LogIO::NORMAL << action << " file "
 		<< filename << " with new estimates file"
 		<< LogIO::POST;
@@ -179,7 +180,7 @@ String ImageFitterResults::resultsHeader(
 String ImageFitterResults::fluxToString(
 	uInt compNumber, Bool hasBeam
 ) const {
-	vector<String> unitPrefix = ImageFitterResults::unitPrefixes(False);
+	vector<String> unitPrefix = ImageFitterResults::unitPrefixes(false);
 	ostringstream fluxes;
 	Quantity fluxDensity = _fluxDensities[compNumber];
 	Quantity fluxDensityError = _fluxDensityErrors[compNumber];
@@ -455,7 +456,7 @@ void ImageFitterResults::writeSummaryFile(
         oss << endl;
     }
     LogFile summary(filename);
-    summary.write(oss.str(), True, True);
+    summary.write(oss.str(), true, true);
 }
 
 

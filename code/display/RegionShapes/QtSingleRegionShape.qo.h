@@ -126,15 +126,15 @@ namespace casa {
 	};
 
 
-// Widget that can be used to input a String, String choice, double, bool,
-// String array, or String choice array.
+// Widget that can be used to input a casacore::String, casacore::String choice, double, bool,
+// casacore::String array, or casacore::String choice array.
 	class QtRSOption : public QHBoxLayout {
 		Q_OBJECT
 
 	public:
 		// Constructor.
-		QtRSOption(RegionShape::OptionType type, const String& name,
-		           const RSOption& value, const vector<String>& choices);
+		QtRSOption(RegionShape::OptionType type, const casacore::String& name,
+		           const RSOption& value, const vector<casacore::String>& choices);
 
 		// Destructor.
 		~QtRSOption();
@@ -154,7 +154,7 @@ namespace casa {
 		QCheckBox* m_bool;
 		vector<QLineEdit*> m_stringArray;
 		vector<QComboBox*> m_choiceArray;
-		vector<String> m_choices;
+		vector<casacore::String> m_choices;
 		QToolButton* m_lessButton, *m_moreButton;
 		// </group>
 
@@ -169,7 +169,7 @@ namespace casa {
 
 // Dialog for editing a single region shape.  Can either be used in editing
 // or creation mode.  Currently there are three sections:
-// <ol><li>Coordinate editing.  Using the RegionShape's coordinate parameter
+// <ol><li>casacore::Coordinate editing.  Using the RegionShape's coordinate parameter
 //         methods, the shape's current coordinates are displayed and can be
 //         changed (both value and system/unit).</li>
 //     <li>General options.  Line width/color, label text/font, linethrough,
@@ -182,26 +182,26 @@ namespace casa {
 	public:
 		// Static Members //
 
-		// System/Unit constants.
+		// System/casacore::Unit constants.
 		// <group>
-		static const String SEXAGESIMAL;
-		static const String UNKNOWN;
+		static const casacore::String SEXAGESIMAL;
+		static const casacore::String UNKNOWN;
 		// </group>
 
 		// Returns available systems for the system chooser.
-		static vector<String> systems() {
-			static vector<String> v(6);
-			v[0] = MDirection::showType(MDirection::B1950);
-			v[1] = MDirection::showType(MDirection::J2000);
-			v[2] = MDirection::showType(MDirection::GALACTIC);
-			v[3] = MDirection::showType(MDirection::SUPERGAL);
-			v[4] = MDirection::showType(MDirection::ECLIPTIC);
+		static vector<casacore::String> systems() {
+			static vector<casacore::String> v(6);
+			v[0] = casacore::MDirection::showType(casacore::MDirection::B1950);
+			v[1] = casacore::MDirection::showType(casacore::MDirection::J2000);
+			v[2] = casacore::MDirection::showType(casacore::MDirection::GALACTIC);
+			v[3] = casacore::MDirection::showType(casacore::MDirection::SUPERGAL);
+			v[4] = casacore::MDirection::showType(casacore::MDirection::ECLIPTIC);
 			v[5] = RSUtils::PIXEL;
 			return v;
 		}
 
 		static QComboBox* systemsChooser() {
-			vector<String> v = systems();
+			vector<casacore::String> v = systems();
 			QComboBox* b = new QComboBox();
 			for(unsigned int i = 0; i < v.size(); i++) b->addItem(v[i].c_str());
 			return b;
@@ -217,7 +217,7 @@ namespace casa {
 		// are only used if coordWidget is not NULL.
 		QtEditRegionShape(RegionShape* shape, QtRegionShapeManager* manager,
 		                  QWidget* coordWidget = NULL, bool showPosition = true,
-		                  bool showSize = true, String applyButtonText = "");
+		                  bool showSize = true, casacore::String applyButtonText = "");
 
 		// Destructor.
 		~QtEditRegionShape();
@@ -226,9 +226,9 @@ namespace casa {
 		// Methods used for accessing what coordinate system/unit the user has
 		// chosen.
 		// <group>
-		String chosenCoordinateSystem() const;
-		String chosenPositionUnit() const;
-		String chosenSizeUnit() const;
+		casacore::String chosenCoordinateSystem() const;
+		casacore::String chosenPositionUnit() const;
+		casacore::String chosenSizeUnit() const;
 		// </group>
 
 		// Returns true if the entered coordinates are valid, false otherwise.
@@ -238,7 +238,7 @@ namespace casa {
 		// 2) For non-sexagesimal, contains a number
 		// 3) For sexagesimal, contains three numbers separated by :'s.
 		// If invalid, a reason is given.
-		bool enteredCoordinatesAreValid(String& reason) const;
+		bool enteredCoordinatesAreValid(casacore::String& reason) const;
 
 	public slots:
 		// Apply changes to the underlying region shape.
@@ -262,14 +262,14 @@ namespace casa {
 		// Shape manager.
 		QtRegionShapeManager* m_manager;
 
-		// Coordinate editing fields.
+		// casacore::Coordinate editing fields.
 		vector<QLineEdit*> m_coordEdits;
 
 		// Coord types.
 		vector<RegionShape::CoordinateParameterType> m_coordTypes;
 
 		// Last chosen system, position unit, and size unit.
-		String m_lastSystem, m_lastPosUnit, m_lastSizeUnit;
+		casacore::String m_lastSystem, m_lastPosUnit, m_lastSizeUnit;
 
 		// Line color widget.
 		QtColorWidget* m_lineColor;
@@ -289,7 +289,7 @@ namespace casa {
 
 		// Initial GUI setup, depending on creation/edit mode.
 		void init(QWidget* coordWidget = NULL, bool showPosition = true,
-		          bool showSize = true, String applyButtonText = "");
+		          bool showSize = true, casacore::String applyButtonText = "");
 
 		// Sets up the GUI to reflect values/properties of the underlying region
 		// shape.
@@ -308,8 +308,8 @@ namespace casa {
 		// Private Static Methods //
 
 		// Returns available units for the position unit chooser.
-		static vector<String> positionUnits() {
-			static vector<String> v(5);
+		static vector<casacore::String> positionUnits() {
+			static vector<casacore::String> v(5);
 			v[0] = RSValue::DEG;
 			v[1] = RSValue::RAD;
 			v[2] = SEXAGESIMAL;
@@ -319,8 +319,8 @@ namespace casa {
 		}
 
 		// Returns available units for the size unit chooser.
-		static vector<String> sizeUnits() {
-			static vector<String> v(4);
+		static vector<casacore::String> sizeUnits() {
+			static vector<casacore::String> v(4);
 			v[0] = RSValue::DEG;
 			v[1] = RSValue::RAD;
 			v[2] = RSValue::ARCSEC;

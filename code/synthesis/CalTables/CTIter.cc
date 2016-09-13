@@ -31,13 +31,14 @@
 #include <casa/Arrays.h>
 #include <casa/OS/Timer.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //----------------------------------------------------------------------------
 
 ROCTIter::ROCTIter(NewCalTable tab, const Block<String>& sortcol) :
   sortCols_(sortcol,sortcol.nelements()),
-  singleSpw_(False),
+  singleSpw_(false),
   parentNCT_(tab),
   calCol_(tab),
   ti_(NULL),

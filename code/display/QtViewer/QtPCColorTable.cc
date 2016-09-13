@@ -2,6 +2,7 @@
 #include <casa/namespace.h>
 #include <QDebug>
 
+namespace casa {
 
 QtPCColorTable::QtPCColorTable(): maps_(MAX_QTPCCT_SIZE, qRgba(0,0,0,1)),
 	size_(INITIAL_QTPCCT_SIZE) {
@@ -11,11 +12,11 @@ QtPCColorTable::QtPCColorTable(): maps_(MAX_QTPCCT_SIZE, qRgba(0,0,0,1)),
 
 Bool QtPCColorTable::resize(uInt newSize) {
 //cerr<<"QtPCColorTable::resize" << endl;	//#diag
-	if (newSize>MAX_QTPCCT_SIZE) return False;
+	if (newSize>MAX_QTPCCT_SIZE) return false;
 
 	size_ = newSize;
 	colormapManager().redistributeColormaps();
-	return True;
+	return true;
 }
 
 
@@ -34,7 +35,7 @@ Bool QtPCColorTable::installRGBColors(const Vector<Float> & r,
 //std::dec(cerr);	//#diag
 	if ( r.nelements() + offset > nColors() ||
 	        r.nelements() > g.nelements() ||
-	        r.nelements() > b.nelements() ) return False;
+	        r.nelements() > b.nelements() ) return false;
 	for (uInt i = 0; i < r.nelements(); i++) {
 		maps_[i+offset] = qRgba( clrByte(r(i)), clrByte(g(i)), clrByte(b(i)), clrByte(alpha(i)) );
 	}
@@ -42,7 +43,7 @@ Bool QtPCColorTable::installRGBColors(const Vector<Float> & r,
 //cout<<i+offset<<" "<<qc.red()<<" "<<qc.green()<<" "<<qc.blue()<<
 //" rgb:"<<r[i]<<" "<<g[i]<<" "<<b[i]<<endl;	//#diag
 
-	return True;
+	return true;
 }
 
 
@@ -95,3 +96,4 @@ void QtPCColorTable::mapToColor(const Colormap* map, Array<uInt>& outArray,
 //template class Vector<QRgb>;
 
 
+} // end namespace casa

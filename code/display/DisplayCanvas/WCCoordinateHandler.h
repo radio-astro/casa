@@ -31,20 +31,24 @@
 #include <casa/aips.h>
 #include <casa/Arrays/Vector.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore{
 
 	template <class T> class Matrix;
+}
+
+namespace casa { //# NAMESPACE CASA - BEGIN
+
 
 // <summary>
 // Base class defining a set of transformations for WorldCanvas coordinates.
 // </summary>
 //
 // <prerequisite>
-// <li> Understanding of non-linear World Coordinate Systems
+// <li> Understanding of non-linear World casacore::Coordinate Systems
 // </prerequisite>
 //
 // <etymology>
-// WCCoordinateHandler : WorldCanvas Coordinate Handler
+// WCCoordinateHandler : WorldCanvas casacore::Coordinate Handler
 // </etymology>
 //
 // <synopsis>
@@ -57,9 +61,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // coordinate transformations for various reasons, and the derived class
 // that implements these coordinate transformations.
 //
-// The designer of the derived class must write the Vector&ltDouble&gt versions
+// The designer of the derived class must write the casacore::Vector&ltDouble&gt versions
 // of linToWorld and worldToLin as described in detail below.  It is also
-// recommended that the Matrix&ltDouble&gt versions of linToWorld and worldToLin
+// recommended that the casacore::Matrix&ltDouble&gt versions of linToWorld and worldToLin
 // be written to maximize efficiency.
 // </synopsis>
 //
@@ -84,50 +88,50 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		WCCoordinateHandler();
 
 		// transform the lin point (2-dimensional) into a world coordinate
-		// (N-dimensional), returning False if the coordinate could not be
+		// (N-dimensional), returning false if the coordinate could not be
 		// transformed.  Derived classes should override.
-		virtual Bool linToWorld(Vector<Double> & world,
-		                        const Vector<Double> & lin) = 0;
+		virtual casacore::Bool linToWorld(casacore::Vector<casacore::Double> & world,
+		                        const casacore::Vector<casacore::Double> & lin) = 0;
 
 		// Batch transformation where each row of lin is a coordinate that
 		// is transformed into each row of world.  On input, if the i'th
 		// position in the failures vector is true, the i'th transformation
 		// is not attempted.  If the j'th transformation fails, the j'th
 		// position in the failures vector will be set.  The return value is
-		// True only when the failures vector has no position set to True;
+		// true only when the failures vector has no position set to true;
 		// This function is implemented in this base class by making
-		// repeated calls to the Vector<Double> version of linToWorld.
-		virtual Bool linToWorld(Matrix<Double> & world,
-		                        Vector<Bool> & failures,
-		                        const Matrix<Double> & lin);
+		// repeated calls to the casacore::Vector<casacore::Double> version of linToWorld.
+		virtual casacore::Bool linToWorld(casacore::Matrix<casacore::Double> & world,
+		                        casacore::Vector<casacore::Bool> & failures,
+		                        const casacore::Matrix<casacore::Double> & lin);
 
 		// transform the world point (N-dimensional) into a lin coordinate
-		// (2-dimensional), returning False if the coordinate could not be
+		// (2-dimensional), returning false if the coordinate could not be
 		// transformed.  Derived classes should override.
-		virtual Bool worldToLin(Vector<Double> & lin,
-		                        const Vector<Double> & world) = 0;
+		virtual casacore::Bool worldToLin(casacore::Vector<casacore::Double> & lin,
+		                        const casacore::Vector<casacore::Double> & world) = 0;
 
 		// Batch transformation where each row of world is a coordinate that
 		// is transformed into each row of lin.  On input, if the i'th
 		// position in the failures vector is true, the i'th transformation
 		// is not attempted.  If the j'th transformation fails, the j'th
 		// position in the failures vector will be set.  The return value is
-		// True only when the failures vector has no position set to True;
+		// true only when the failures vector has no position set to true;
 		// This function is implemented in this base class by making
-		// repeated calls to the Vector<Double> version of worldToLin.
-		virtual Bool worldToLin(Matrix<Double> & lin,
-		                        Vector<Bool> & failures,
-		                        const Matrix<Double> & world);
+		// repeated calls to the casacore::Vector<casacore::Double> version of worldToLin.
+		virtual casacore::Bool worldToLin(casacore::Matrix<casacore::Double> & lin,
+		                        casacore::Vector<casacore::Bool> & failures,
+		                        const casacore::Matrix<casacore::Double> & world);
 
 		virtual std::string errorMessage( ) const = 0;
 
 		// Return the number of axes in the world coordinates
-		virtual uInt nWorldAxes() const = 0;
+		virtual casacore::uInt nWorldAxes() const = 0;
 
 		// Routines that give the axes names and the unit.
 		// <group>
-		/* virtual Vector<String> worldAxisNames() = 0; */
-		/* virtual Vector<String> worldAxisUnits() = 0; */
+		/* virtual casacore::Vector<casacore::String> worldAxisNames() = 0; */
+		/* virtual casacore::Vector<casacore::String> worldAxisUnits() = 0; */
 		// </group>
 
 		// Destructor

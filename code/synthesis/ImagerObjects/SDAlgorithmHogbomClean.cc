@@ -58,6 +58,7 @@
 #include <msvis/MSVis/StokesVector.h>
 
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 #define NEED_UNDERSCORES
@@ -181,10 +182,10 @@ void REFHogbomCleanImageSkyModelmsgput(Int *npol, Int* /*pol*/, Int* iter, Int* 
   {
     LogIO os( LogOrigin("SDAlgorithmHogbomClean","initializeDeconvolver",WHERE) );
 
-    itsImages->residual()->get( itsMatResidual, True );
-    itsImages->model()->get( itsMatModel, True );
-    itsImages->psf()->get( itsMatPsf, True );
-    itsImages->mask()->get( itsMatMask, True );
+    itsImages->residual()->get( itsMatResidual, true );
+    itsImages->model()->get( itsMatModel, true );
+    itsImages->psf()->get( itsMatPsf, true );
+    itsImages->mask()->get( itsMatMask, true );
 
     //    cout << "initDecon : " << itsImages->residual()->shape() << " : " << itsMatResidual.shape() 
     //	 << itsImages->model()->shape() << " : " << itsMatModel.shape() 
@@ -250,7 +251,7 @@ void REFHogbomCleanImageSkyModelmsgput(Int *npol, Int* /*pol*/, Int* iter, Int* 
     Int starting_iteration = 0;  
     Int ending_iteration=0;         
     Float cycleSpeedup = -1; // ie, ignore it
-    Bool stop=False;
+    Bool stop=false;
     Float maxRes=C::flt_max;
     Int niterloop= niter < 5000 ? 500: 1000 ;
     Int numloop = niter%niterloop ? niter/niterloop+1  : niter/niterloop;
@@ -265,7 +266,7 @@ void REFHogbomCleanImageSkyModelmsgput(Int *npol, Int* /*pol*/, Int* iter, Int* 
 	   (void*) &REFHogbomCleanImageSkyModelmsgput,
 	   (void*) &REFHogbomCleanImageSkyModelstopnow);
       if(ending_iteration < (starting_iteration+niterloop))
-	stop=True;
+	stop=true;
       starting_iteration=starting_iteration+niterloop;
       --numloop;
       Float fmax, fmin;
@@ -275,7 +276,7 @@ void REFHogbomCleanImageSkyModelmsgput(Int *npol, Int* /*pol*/, Int* iter, Int* 
       if(maxRes > fmax)
 	maxRes=fmax;
       else
-	stop=True;
+	stop=true;
     }
   
     iterdone=ending_iteration;

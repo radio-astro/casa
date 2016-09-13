@@ -7,6 +7,7 @@
 
 #include <casa/namespace.h>
 
+using namespace casacore;
 namespace casa {
 
 PlotFactoryPtr plotterImplementation(Plotter::Implementation which,

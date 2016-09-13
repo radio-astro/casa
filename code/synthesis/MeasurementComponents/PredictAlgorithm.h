@@ -88,30 +88,30 @@ class PredictAlgorithm : public Algorithm {
   void put();
 
   // Return the name of the algorithm
-  String &name();
+  casacore::String &name();
 
 private:
   // Private data
-  Int model_p;
+  casacore::Int model_p;
 
-  TempImage<Complex> *cImage_p;
-  String myName_p;
-  String msName_p;
-  Bool incremental_p;
-  TempImage<Float> psf_p;
+  casacore::TempImage<casacore::Complex> *cImage_p;
+  casacore::String myName_p;
+  casacore::String msName_p;
+  casacore::Bool incremental_p;
+  casacore::TempImage<casacore::Float> psf_p;
   FTMachine* ft_p;
-  MeasurementSet *ms_p ; 
+  casacore::MeasurementSet *ms_p ; 
 
   // The work that a child processor is to do 
   void task();
 
   // Initialize the visibility grid 
-  void initializeGet(const VisBuffer& vb, Int row, Int model, 
-		     Bool incremental);
+  void initializeGet(const VisBuffer& vb, casacore::Int row, casacore::Int model, 
+		     casacore::Bool incremental);
 
   // FT and put the result into the model visibility column of the visbuffer 
-  VisBuffer& getModelVis(VisBuffer& vb, Int model,
-			 Bool incremental);
+  VisBuffer& getModelVis(VisBuffer& vb, casacore::Int model,
+			 casacore::Bool incremental);
 
 };
 

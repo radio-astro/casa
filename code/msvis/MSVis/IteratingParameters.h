@@ -35,19 +35,19 @@ public:
 
   IteratingParameters();
 
-  IteratingParameters(Double chunkInterval, 
+  IteratingParameters(casacore::Double chunkInterval, 
 		      const SortColumns& sortColumns=SortColumns(), 
 		      WeightScaling * weightScaling = 0);
   
   IteratingParameters(const IteratingParameters& other);
   IteratingParameters& operator=(const IteratingParameters& other);
 
-  Double getChunkInterval() const;
+  casacore::Double getChunkInterval() const;
   const SortColumns& getSortColumns() const;
   WeightScaling* getWeightScaling() const;
   
 
-  void setChunkInterval(Double);
+  void setChunkInterval(casacore::Double);
   void setSortColumns(const SortColumns&);
   void setWeightScaling(WeightScaling*);
   
@@ -55,7 +55,7 @@ private:
 
   void validate();
 
-  Double chunkInterval_p;
+  casacore::Double chunkInterval_p;
   SortColumns sortColumns_p;
   WeightScaling* weightScaling_p;
   

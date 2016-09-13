@@ -49,7 +49,7 @@ class SynthesisDeconvolverMixin
 private:
 	std::vector< std::shared_ptr<SynthesisDeconvolver> > deconvolvers;
 
-	Record controls;
+	casacore::Record controls;
 
 protected:
 	void
@@ -79,7 +79,7 @@ protected:
 public:
 	void
 	initialize_minor_cycle() {
-		std::vector<Record> init_records;
+		std::vector<casacore::Record> init_records;
 		for (auto sd : deconvolvers)
 			init_records.push_back(sd->initMinorCycle());
 		T::merge_initialization_records(init_records);
@@ -88,7 +88,7 @@ public:
 
 	void
 	execute_minor_cycle() {
-		std::vector<Record> exec_records;
+		std::vector<casacore::Record> exec_records;
 		for (auto sd : deconvolvers)
 			exec_records.push_back(sd->executeMinorCycle(controls));
 		T::merge_execution_records(exec_records);

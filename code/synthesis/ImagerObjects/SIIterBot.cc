@@ -31,6 +31,7 @@
 #include <casa/Containers/Record.h>
 #include <math.h>						// For FLT_MAX
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	////////////////////////////////////
@@ -74,7 +75,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 						itsThreshold(0),
 						itsCycleThreshold(0.0),
 						itsInteractiveThreshold(0.0),
-						itsIsCycleThresholdAuto(True),
+						itsIsCycleThresholdAuto(true),
 						itsCycleFactor(1.0),
 						itsLoopGain(0.1),
 						itsStopFlag(false),
@@ -140,7 +141,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		LogIO os( LogOrigin("SIIterBot_state",__FUNCTION__,WHERE) );
 
-		//		printOut("FromcleanComplete ", False);
+		//		printOut("FromcleanComplete ", false);
 
 		int stopCode=0;
                 
@@ -189,14 +190,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		/* If autocalc, compute cyclethresh from peak res, cyclefactor and psf sidelobe 
 		   Otherwise, the user has explicitly set it (interactively) for this minor cycle */
-		if( itsIsCycleThresholdAuto == True ) { 
+		if( itsIsCycleThresholdAuto == true ) { 
 		  updateCycleThreshold(); 
 		  //cout << "Updating cyc thresh" << endl; 
 		}
 		//		else { 
 		//		  cout << "NOT updating cyc thresh" << endl; 
 		//		}
-		itsIsCycleThresholdAuto = True; /* Reset this, for the next round */
+		itsIsCycleThresholdAuto = true; /* Reset this, for the next round */
 
 		/* Now that we have set the threshold, zero the peak residual 
 		   so it can be found again after the minor cycles */
@@ -264,7 +265,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			nShp.nelements() != 2 || nShp[0] != itsNSummaryFields ) 
 			throw(AipsError("Internal error in shape of global minor-cycle summary record"));
 
-		itsSummaryMinor.resize( IPosition( 2, itsNSummaryFields, cShp[1]+nShp[1] ) ,True );
+		itsSummaryMinor.resize( IPosition( 2, itsNSummaryFields, cShp[1]+nShp[1] ) ,true );
 
 		for (unsigned int row = 0; row < nShp[1]; row++) {
 			// iterations done
@@ -393,7 +394,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if( shp.nelements() != 1 ) 
 			throw(AipsError("Internal error in shape of major-cycle summary record"));
 
-		itsSummaryMajor.resize( IPosition( 1, shp[0]+1 ) , True );
+		itsSummaryMajor.resize( IPosition( 1, shp[0]+1 ) , true );
 		itsSummaryMajor( IPosition(1, shp[0] ) ) = itsIterDone;
 	}
   
@@ -456,8 +457,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		returnRecord.define(RecordFieldId("interactiveniter"),itsInteractiveNiter);
 
 		returnRecord.define( RecordFieldId("threshold"),  itsThreshold);    
-		if( itsIsCycleThresholdAuto == True )  updateCycleThreshold();
-		itsIsCycleThresholdAuto = True; /* Reset this, for the next round */
+		if( itsIsCycleThresholdAuto == true )  updateCycleThreshold();
+		itsIsCycleThresholdAuto = true; /* Reset this, for the next round */
 
 		returnRecord.define( RecordFieldId("cyclethreshold"),itsCycleThreshold);
 		returnRecord.define( RecordFieldId("interactivethreshold"), itsInteractiveThreshold);  
@@ -512,7 +513,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	void SIIterBot_state::changeCycleThreshold( Float cyclethreshold ) {
 		std::lock_guard<std::recursive_mutex> guard(recordMutex);
 		itsCycleThreshold = cyclethreshold;
-		itsIsCycleThresholdAuto = False;
+		itsIsCycleThresholdAuto = false;
 	}
 
 	void SIIterBot_state::changeInteractiveThreshold( Float interactivethreshold ) {
@@ -595,7 +596,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if (recordIn.isDefined("maxpsffraction"))
 			changeMaxPsfFraction(recordIn.asFloat( RecordFieldId("maxpsffraction")));
 
-		//		printOut("After Setting : ", False);
+		//		printOut("After Setting : ", false);
 
 	}
 
@@ -614,7 +615,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  {
 		    Quantity thresh; 
 		    // If it cannot be converted to a Quantity.... complain, and use zero.
-		    if( ! casa::Quantity::read( thresh, recordIn.asString( RecordFieldId(id) ) ) )
+		    if( ! casacore::Quantity::read( thresh, recordIn.asString( RecordFieldId(id) ) ) )
 		      {os << LogIO::WARN << "Cannot parse threshold value. Setting to zero." << LogIO::POST;  
 			fthresh=0.0;}
 		    // If converted to Quantity, get value in Jy. 
@@ -630,7 +631,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
 	/* Print out contents of the IterBot. For debugging. */
 	void SIIterBot_state::printOut( String prefix, Bool verbose ) {
-		if( verbose == True ) {
+		if( verbose == true ) {
 			cout << prefix << " : " 
 				 << " ItsNiter=" << itsNiter
 				 << " itsCycleNiter=" << itsCycleNiter

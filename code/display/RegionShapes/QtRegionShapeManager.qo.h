@@ -58,7 +58,7 @@ namespace casa {
 
 	public:
 		// Constant message used when a error was reported during a shape drawing.
-		static const String DRAWERRORMSG;
+		static const casacore::String DRAWERRORMSG;
 
 
 		// Constructor which takes the parent panel.
@@ -91,11 +91,11 @@ namespace casa {
 		QtSingleRegionShape* shapeWidget(RegionShape* shape) const;
 
 		// Shows the given error message (should be short).
-		void showSimpleError(const String& message, bool warn = true) const;
+		void showSimpleError(const casacore::String& message, bool warn = true) const;
 
 		// Shows the given detailed error message.  "message" should contain a
 		// short overview while "details" should contain longer information.
-		void showDetailedError(const String& message, const String& details,
+		void showDetailedError(const casacore::String& message, const casacore::String& details,
 		                       bool warn = true) const;
 
 	public slots:
@@ -125,7 +125,7 @@ namespace casa {
 	private:
 		QtDisplayPanel* m_panel;               // Parent panel.
 		vector<QtSingleRegionShape*> m_shapes; // Loaded region shapes.
-		String m_lastDirectory,                // Last loaded directory, file,
+		casacore::String m_lastDirectory,                // Last loaded directory, file,
 		       m_lastFile,                     // and format.  Initially empty.
 		       m_lastFormat;
 
@@ -177,7 +177,7 @@ namespace casa {
 		// Constructor.  The initial file and format will be set to the given, and
 		// if a filechooser is opened the starting directory will be set to the
 		// given.
-		QtRSFileLoader(String file = "", String format = "", String dir = "");
+		QtRSFileLoader(casacore::String file = "", casacore::String format = "", casacore::String dir = "");
 
 		// Destructor.
 		~QtRSFileLoader();
@@ -186,26 +186,26 @@ namespace casa {
 		// Opens a new QtRSFileLoader so that the user can input a filename and
 		// file format, and then returns a RSFileReader appropriate for reading
 		// that file.  Returns NULL if the user cancels or if an error occurs
-		// (shouldn't happen).  If the String* arguments are given, they will be
+		// (shouldn't happen).  If the casacore::String* arguments are given, they will be
 		// used for the initial settings and then updated to show the opened
 		// file, format, and directory, respectively.
-		static RSFileReader* getFileReader(String* file = NULL,
-		                                   String* format = NULL,
-		                                   String* directory = NULL);
+		static RSFileReader* getFileReader(casacore::String* file = NULL,
+		                                   casacore::String* format = NULL,
+		                                   casacore::String* directory = NULL);
 
 	private:
 		QString m_lastDir;   // directory to start filechooser
 
 		// Gets the current filename chosen by the user.
-		String getFilename();
+		casacore::String getFilename();
 
 		// Gets the directory of the filename chosen by the user.
-		String getDirectory();
+		casacore::String getDirectory();
 
 		// Gets the current region file format chosen by the user.
 		// Guaranteed to be one of the values in
 		// RegionFileReader::supportedTypesStrings().
-		String getFormat();
+		casacore::String getFormat();
 
 	private slots:
 		// Show a file chooser dialog.
@@ -227,7 +227,7 @@ namespace casa {
 		// Constructor.  The initial file and format will be set to the given, and
 		// if a filechooser is opened the starting directory will be set to the
 		// given.
-		QtRSFileSaver(String file = "", String format = "", String dir = "");
+		QtRSFileSaver(casacore::String file = "", casacore::String format = "", casacore::String dir = "");
 
 		// Destructor.
 		~QtRSFileSaver();
@@ -236,12 +236,12 @@ namespace casa {
 		// Opens a new QtRegionFileSaver so that the user can input a filename,
 		// file format, and format options, and then returns a RegionFileWriter
 		// appropriate for writing that file.  Returns NULL if the user cancels or
-		// an error occurs (shouldn't happen).  If the String* arguments are given,
+		// an error occurs (shouldn't happen).  If the casacore::String* arguments are given,
 		// they will be used for the initial settings and then updated to show the
 		// saved file, format, and directory, respectively.
-		static RSFileWriter* getFileWriter(String* file = NULL,
-		                                   String* format = NULL,
-		                                   String* directory = NULL);
+		static RSFileWriter* getFileWriter(casacore::String* file = NULL,
+		                                   casacore::String* format = NULL,
+		                                   casacore::String* directory = NULL);
 
 	private:
 		QString m_lastDir;  // directory to start filechooser
@@ -250,15 +250,15 @@ namespace casa {
 		QStackedLayout* m_formatOptions;
 
 		// Gets the current filename chosen by the user.
-		String getFilename();
+		casacore::String getFilename();
 
 		// Gets the directory of the filename chosen by the user.
-		String getDirectory();
+		casacore::String getDirectory();
 
 		// Gets the current region file format chosen by the user.
 		// Guaranteed to be one of the values in
 		// RegionFileReader::supportedTypesStrings().
-		String getFormat();
+		casacore::String getFormat();
 
 		// Gets the current options widget.
 		QWidget* getOptions();

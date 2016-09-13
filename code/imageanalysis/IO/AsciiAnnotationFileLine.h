@@ -67,33 +67,33 @@ public:
 
 	AsciiAnnotationFileLine();
 
-	AsciiAnnotationFileLine(const String& comment);
+	AsciiAnnotationFileLine(const casacore::String& comment);
 
-	AsciiAnnotationFileLine(CountedPtr<const AnnotationBase> annotationBase);
+	AsciiAnnotationFileLine(casacore::CountedPtr<const AnnotationBase> annotationBase);
 
-	AsciiAnnotationFileLine(const map<AnnotationBase::Keyword, String>& globals);
+	AsciiAnnotationFileLine(const map<AnnotationBase::Keyword, casacore::String>& globals);
 
 	AsciiAnnotationFileLine& operator= (const AsciiAnnotationFileLine& other);
 
-	String getComment() const;
+	casacore::String getComment() const;
 
-	map<AnnotationBase::Keyword, String> getGloabalParams() const;
+	map<AnnotationBase::Keyword, casacore::String> getGloabalParams() const;
 
-	CountedPtr<const AnnotationBase> getAnnotationBase() const;
+	casacore::CountedPtr<const AnnotationBase> getAnnotationBase() const;
 
 	Type getType() const;
 
-	ostream& print(ostream& os) const;
+	std::ostream& print(std::ostream& os) const;
 
 private:
 	Type _type;
-	String _comment;
-	CountedPtr<const AnnotationBase> _annotationBase;
-	map<AnnotationBase::Keyword, String> _globals;
+	casacore::String _comment;
+	casacore::CountedPtr<const AnnotationBase> _annotationBase;
+	map<AnnotationBase::Keyword, casacore::String> _globals;
 
 };
 
-inline ostream &operator<<(ostream& os, const AsciiAnnotationFileLine& line) {
+inline std::ostream &operator<<(std::ostream& os, const AsciiAnnotationFileLine& line) {
 	return line.print(os);
 };
 

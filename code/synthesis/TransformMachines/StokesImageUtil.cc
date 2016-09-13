@@ -70,6 +70,7 @@
 
 #include <casa/iostream.h>
 
+using namespace casacore;
 namespace casa {
 
 // <summary> 
@@ -144,8 +145,8 @@ void StokesImageUtil::Convolve(ImageInterface<Float>& image,
       fft.fft0(cft,li.matrixCursor());
       cft *= xfr;
       // fft.fft(li.rwMatrixCursor(), cft);
-      fft.fft0(li.rwMatrixCursor(),cft,False);
-      fft.flip(li.rwMatrixCursor(), False, False);
+      fft.fft0(li.rwMatrixCursor(),cft,false);
+      fft.flip(li.rwMatrixCursor(), false, false);
     }
   } 
 };
@@ -169,7 +170,7 @@ void StokesImageUtil::Convolve(ImageInterface<Float>& image,
       blc[freqAx]=k;
       trc[freqAx]=k;
       Slicer slc(blc, trc, Slicer::endIsLast);
-      SubImage<Float> subim(image, slc, True);
+      SubImage<Float> subim(image, slc, true);
       GaussianBeam elbeam=beams(k,0);
       Convolve(subim, elbeam, normalizeVolume);
 
@@ -408,19 +409,19 @@ void StokesImageUtil::Constrain(ImageInterface<Float>& image) {
     
     for (Int ix=0;ix<nx;ix++) {
       // I >=0
-      Bool zero=False;
+      Bool zero=false;
       if(limage(ix,0)<0.0) {
-	zero=True;
+	zero=true;
       }
       // I >= abs(V)
       else if (npol==2) {
-	if(limage(ix,0)<abs(limage(ix,1))) zero=True;
+	if(limage(ix,0)<abs(limage(ix,1))) zero=true;
       }
       // fractional pol < 1.0
       else if (npol==4) {
 	StokesVector sv(limage(ix,0),limage(ix,1),
 			limage(ix,2),limage(ix,3));
-	if(sv.minEigenValue()<0.0) zero=True;
+	if(sv.minEigenValue()<0.0) zero=true;
       }
       if(zero) for (Int pol=0;pol<npol;pol++) limage(ix,pol)=0.0;
     }
@@ -430,7 +431,7 @@ void StokesImageUtil::Constrain(ImageInterface<Float>& image) {
 
 Bool StokesImageUtil::FitGaussianPSF(ImageInterface<Float>& psf, ImageBeamSet& elbeam){
 
-  Bool retval=True;
+  Bool retval=true;
   Int freqAx=CoordinateUtil::findSpectralAxis(psf.coordinates());
   Vector<Stokes::StokesTypes> whichPols;
   Int polAx=CoordinateUtil::findStokesAxis(whichPols, psf.coordinates());
@@ -442,22 +443,22 @@ Bool StokesImageUtil::FitGaussianPSF(ImageInterface<Float>& psf, ImageBeamSet& e
   elbeam=ImageBeamSet(nchan, 1);
   IPosition ipos(2,0,0);
   Matrix<GaussianBeam> tempBeam(nchan,1);
-  Vector<Bool> fitted(nchan, False);
+  Vector<Bool> fitted(nchan, false);
 
   for (Int k=0; k < nchan;++k){ 
     blc[freqAx]=k;
     trc[freqAx]=k;
     Slicer slc(blc, trc, Slicer::endIsLast);
-    SubImage<Float> subpsf(psf, slc, False);
+    SubImage<Float> subpsf(psf, slc, false);
     try{
       fitted(k)=FitGaussianPSF(subpsf, tempBeam(k,0));
     }
     catch (AipsError x_error){
       Int ik=k;
-      fitted(k)=False;
+      fitted(k)=false;
       while ((ik > 0) && !fitted(k)){
 	if(fitted(ik-1)){
-	  fitted(k)=True;
+	  fitted(k)=true;
 	  tempBeam(k,0)=tempBeam(ik-1, 0);
 	}
 	--ik;
@@ -487,10 +488,10 @@ Bool StokesImageUtil::FitGaussianPSF(ImageInterface<Float>& psf, ImageBeamSet& e
 	  tempBeam.resize(1,1);
 	  tempBeam(0,0)=theBeam;
 	  fitted.resize(1);
-	  fitted=True;
+	  fitted=true;
   }
   if(!anyTrue(fitted)){
-      retval=False;
+      retval=false;
       throw(AipsError("No valid fits were found to PSF"));
   }
   if(!allTrue(fitted)){
@@ -498,7 +499,7 @@ Bool StokesImageUtil::FitGaussianPSF(ImageInterface<Float>& psf, ImageBeamSet& e
        int ik=k;
        while((ik < (nchan-1)) && !fitted(k)){
 	 if(fitted(ik+1)){
-	   fitted(k)=True;
+	   fitted(k)=true;
 	   tempBeam(k,0)=tempBeam(ik+1, 0);
 	 }
 	 ++ik;
@@ -515,8 +516,8 @@ Bool StokesImageUtil::FitGaussianPSF(ImageInterface<Float>& psf,
 				     GaussianBeam& beam)
 {
 	Vector<Float> vbeam(3, 0.0);
-  Bool status=True;
-  if(!FitGaussianPSF(psf, vbeam)) status=False;
+  Bool status=true;
+  if(!FitGaussianPSF(psf, vbeam)) status=false;
   beam = GaussianBeam(
 		  Quantity(abs(vbeam[0]),"arcsec"),
 		  Quantity(abs(vbeam[1]),"arcsec"),
@@ -568,7 +569,7 @@ try{
 	  beam[1] = fdiam;
 	  beam[2] = 0.0;
     os << LogIO::WARN << "Could not find peak " << LogIO::POST;
-    return False;
+    return false;
   }
   
   lpsf/=bamp;
@@ -591,7 +592,7 @@ try{
   Matrix<Double> ix(maxnpoints,2);
   Vector<Double> iy(maxnpoints), isigma(maxnpoints);
   ix=0.0; iy=0.0; isigma=0.0;
-  Bool converg=False;
+  Bool converg=false;
   Vector<Double> solution;
   Int kounter=0;
  while(amin >0.1 && !converg && (kounter < 50)){
@@ -621,7 +622,7 @@ try{
 	    // did we step out of the lobe?
 	    if (inlobe&&(lpsf(irow,jrow)<amin)) break;
 	    if (lpsf(irow,jrow)>amin) {
-	      inlobe = True;
+	      inlobe = true;
 	      // the sign on the ra can cause problems.  we just fit 
 	      // for what the beam "looks" like here, and worry about 
 	      // it later.
@@ -631,7 +632,7 @@ try{
 	      isigma(npoints) = 1.0;
 	      ++npoints;
 	      if(npoints > (maxnpoints-1)) {
-		inlobe=False;
+		inlobe=false;
 		break;
 	      }
 	    }
@@ -662,9 +663,9 @@ try{
   gauss2d[5] = 1.0;
   
   // Fix height and center
-  gauss2d.mask(0) = False;
-  gauss2d.mask(1) = False;
-  gauss2d.mask(2) = False;
+  gauss2d.mask(0) = false;
+  gauss2d.mask(1) = false;
+  gauss2d.mask(2) = false;
   
   NonLinearFitLM<Double> fitter;
   // Set maximum number of iterations to 1000
@@ -705,11 +706,11 @@ try{
      if (beam(2) > 180.0) beam(2)-=360.0;
      else beam(2)+=360.0;
    }
-   return True;
+   return true;
  }
  else os << LogIO::WARN << "The fit did not coverge; check your PSF" <<
 	LogIO::POST; 
- return False;
+ return false;
 
  } catch (AipsError x_error) {
 	 beam[0] = fdiam;
@@ -717,7 +718,7 @@ try{
 	 beam[2] = 0.0;
     os << LogIO::SEVERE << "Caught Exception: "<< x_error.getMesg() <<
       LogIO::POST;
-    return False;
+    return false;
    } 
 
 }
@@ -816,7 +817,7 @@ void StokesImageUtil::directCFromR(ImageInterface<Complex>& out, const ImageInte
     outtrc(outmap(2))=outindex;
     Slicer slin(inblc, intrc, Slicer::endIsLast);
     Slicer slout(outblc, outtrc, Slicer::endIsLast);
-    SubImage<Complex> sliceout(out, slout, True);
+    SubImage<Complex> sliceout(out, slout, true);
     SubImage<Float> slicein(in, slin);
     sliceout.copyData(LatticeExpr<Complex>(toComplex(slicein)));
   }
@@ -881,7 +882,7 @@ void StokesImageUtil::directCToR(ImageInterface<Float>& out, ImageInterface<Comp
     outtrc(outmap(2))=outindex;
     Slicer slin(inblc, intrc, Slicer::endIsLast);
     Slicer slout(outblc, outtrc, Slicer::endIsLast);
-    SubImage<Float> sliceout(out, slout, True);
+    SubImage<Float> sliceout(out, slout, true);
     SubImage<Complex> slicein(in, slin);
     sliceout.copyData(LatticeExpr<Float>(real(slicein)));
   }
@@ -1842,40 +1843,40 @@ Bool StokesImageUtil::StokesMap(Vector<Int>& map, const CoordinateSystem& coord)
   if(dirIndex>-1) {
     Vector<Int> dirAxes=coord.pixelAxes(dirIndex);
     if(dirAxes.nelements()>2) {
-      return False;
+      return false;
     }
     map(0)=dirAxes(0);
     map(1)=dirAxes(1);
   }
   else {
-    return False;
+    return false;
   }
 
   Int stokesIndex=coord.findCoordinate(Coordinate::STOKES);
   if(stokesIndex>-1) {
     Vector<Int> stokesAxes=coord.pixelAxes(stokesIndex);
     if(stokesAxes.nelements()>1) {
-      return False;
+      return false;
     }
     map(2)=stokesAxes(0);
   }
   else {
-    return False;
+    return false;
   }
 
   Int spectralIndex=coord.findCoordinate(Coordinate::SPECTRAL);
   if(spectralIndex>-1) {
     Vector<Int> spectralAxes=coord.pixelAxes(spectralIndex);
     if(spectralAxes.nelements()>1) {
-      return False;
+      return false;
     }
     map(3)=spectralAxes(0);
   }
   else {
-    return False;
+    return false;
   }
 
-  return True;
+  return true;
 }
 
 void StokesImageUtil::BoxMask(ImageInterface<Float>& mask,
@@ -1931,14 +1932,14 @@ standardImageCoordinates(const ImageInterface<Float>& image) {
 
 Bool StokesImageUtil::
 standardImageCoordinates(const CoordinateSystem& coords) {
-  Bool isStandard = True;
+  Bool isStandard = true;
   {
     Int ind=coords.findCoordinate(Coordinate::DIRECTION);
-    if (ind != 0) isStandard = False;
+    if (ind != 0) isStandard = false;
     ind=coords.findCoordinate(Coordinate::STOKES);
-    if (ind != 1) isStandard = False;
+    if (ind != 1) isStandard = false;
     ind=coords.findCoordinate(Coordinate::SPECTRAL);
-    if (ind != 2) isStandard = False;
+    if (ind != 2) isStandard = false;
   }
   return isStandard;
 };

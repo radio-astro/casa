@@ -1,9 +1,11 @@
 #include <msvis/MSVis/VisBufferAsyncWrapper2.h>
 
 #include "AsynchronousTools.h"
+using namespace casacore;
 using namespace casa::async;
 
 #include "UtilJ.h"
+using namespace casacore;
 using namespace casa::utilj;
 
 #define CheckWrap() \
@@ -15,6 +17,7 @@ using namespace casa::utilj;
         {if (casa::asyncio::AsynchronousInterface::logThis (level)) \
     Logger::get()->log (__VA_ARGS__);};
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 namespace vi {
@@ -729,5 +732,6 @@ VisBufferWrapperAsync2::wrap (VisBuffer2 * vb)
  // end namespace vi
 
 }
+using namespace casacore;
  // end namespace casa
 

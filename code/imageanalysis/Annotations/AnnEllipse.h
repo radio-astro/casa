@@ -57,19 +57,19 @@ public:
 	// <group>
 
 	AnnEllipse(
-		const Quantity& xcenter, const Quantity& ycenter,
-		const Quantity& semiMajorAxis,
-		const Quantity& semiMinorAxis, const Quantity& positionAngle,
-		const String& dirRefFrameString,
-		const CoordinateSystem& csys,
-		const IPosition& imShape,
-		const Quantity& beginFreq,
-		const Quantity& endFreq,
-		const String& freqRefFrameString,
-		const String& dopplerString,
-		const Quantity& restfreq,
-		const Vector<Stokes::StokesTypes> stokes,
-		const Bool annotationOnly
+		const casacore::Quantity& xcenter, const casacore::Quantity& ycenter,
+		const casacore::Quantity& semiMajorAxis,
+		const casacore::Quantity& semiMinorAxis, const casacore::Quantity& positionAngle,
+		const casacore::String& dirRefFrameString,
+		const casacore::CoordinateSystem& csys,
+		const casacore::IPosition& imShape,
+		const casacore::Quantity& beginFreq,
+		const casacore::Quantity& endFreq,
+		const casacore::String& freqRefFrameString,
+		const casacore::String& dopplerString,
+		const casacore::Quantity& restfreq,
+		const casacore::Vector<casacore::Stokes::StokesTypes> stokes,
+		const casacore::Bool annotationOnly
 	);
 
 	// Simplified constructor.
@@ -79,12 +79,12 @@ public:
 	// is a region (not just an annotation), although this value can be changed after
 	// construction.
 	AnnEllipse(
-		const Quantity& xcenter, const Quantity& ycenter,
-		const Quantity& semiMajorAxis,
-		const Quantity& semiMinorAxis, const Quantity& positionAngle,
-		const CoordinateSystem& csys,
-		const IPosition& imShape,
-		const Vector<Stokes::StokesTypes>& stokes
+		const casacore::Quantity& xcenter, const casacore::Quantity& ycenter,
+		const casacore::Quantity& semiMajorAxis,
+		const casacore::Quantity& semiMinorAxis, const casacore::Quantity& positionAngle,
+		const casacore::CoordinateSystem& csys,
+		const casacore::IPosition& imShape,
+		const casacore::Vector<casacore::Stokes::StokesTypes>& stokes
 	);
 
 	// implicit copy constructor and destructor are fine
@@ -93,35 +93,35 @@ public:
 
 	AnnEllipse& operator=(const AnnEllipse& other);
 
-	Bool operator==(const AnnEllipse& other) const;
+	casacore::Bool operator==(const AnnEllipse& other) const;
 
 	// Get the center position, tranformed to the reference
 	// from of the coordinate system if necessary
-	MDirection getCenter() const;
+	casacore::MDirection getCenter() const;
 
 	// get semi-major axis. The quantity will have units
 	// of angular measure
-	Quantity getSemiMajorAxis() const;
+	casacore::Quantity getSemiMajorAxis() const;
 
 	// get semi-minor axis. The quantity will have units
 	// of angular measure
-	Quantity getSemiMinorAxis() const;
+	casacore::Quantity getSemiMinorAxis() const;
 
 	// get position angle. The quantity will have units
 	// of angular measure and will be measured from north through east,
 	// using the normal astronomical convention.
-	Quantity getPositionAngle() const;
+	casacore::Quantity getPositionAngle() const;
 
-	virtual ostream& print(ostream &os) const;
+	virtual std::ostream& print(std::ostream &os) const;
 
 
 private:
 	AnnotationBase::Direction _inputCenter;
-	Quantity _inputSemiMajorAxis, _inputSemiMinorAxis, _inputPositionAngle,
+	casacore::Quantity _inputSemiMajorAxis, _inputSemiMinorAxis, _inputPositionAngle,
 		_convertedSemiMajorAxis, _convertedSemiMinorAxis,
 		_convertedPositionAngle;
 
-	void _init(	const Quantity& xcenter, const Quantity& ycenter);
+	void _init(	const casacore::Quantity& xcenter, const casacore::Quantity& ycenter);
 };
 
 }

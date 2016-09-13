@@ -224,7 +224,7 @@ int main() {
 		new FITSImage(datadir + "reorder_in.fits")
 	);
 
-	Bool ok = True;
+	Bool ok = true;
 	try {
 		testException(
 			"test non-writable output image will throw an exception",
@@ -270,7 +270,7 @@ int main() {
 			goodInputImage, bogusOrder, "out.im"
 		);
 
-		bogusOrder.resize(4, True);
+		bogusOrder.resize(4, true);
 		bogusOrder[2] = "f";
 		bogusOrder[3] = "k";
 		testException(
@@ -412,7 +412,7 @@ int main() {
 		cout << "ok" << endl;
 	}
     catch (AipsError x) {
-    	ok = False;
+    	ok = false;
         cerr << "Exception caught: " << x.getMesg() << endl;
     }
 	if(workdir.exists()) {

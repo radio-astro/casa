@@ -41,8 +41,8 @@
 #ifdef X_NameSpace
 #undef String
 #undef Bool
-#undef True
-#undef False
+#undef true
+#undef false
 #undef Complex
 #undef X_NameSpace
 #undef Time

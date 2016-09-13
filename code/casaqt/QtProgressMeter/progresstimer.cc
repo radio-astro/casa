@@ -38,6 +38,7 @@
 #include <QTextStream>
 #include <graphics/X11/X_enter.h>
 
+using namespace casacore;
 namespace casa {
 
 ProgressTimer::ProgressTimer(QWidget *parent)

@@ -28,15 +28,15 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-// Flag Data Handler class definition
+// Flag casacore::Data Handler class definition
 class FlagMSHandler: public FlagDataHandler
 {
 
 public:
 
 	// Default constructor
-	// NOTE: Time interval 0 groups all time steps together in one chunk.
-	FlagMSHandler(string msname, uShort iterationApproach = SUB_INTEGRATION, Double timeInterval = 0);
+	// NOTE: casacore::Time interval 0 groups all time steps together in one chunk.
+	FlagMSHandler(string msname, casacore::uShort iterationApproach = SUB_INTEGRATION, casacore::Double timeInterval = 0);
 
 	// Default destructor
 	~FlagMSHandler();
@@ -50,8 +50,8 @@ public:
 	// Generate selected Measurement Set
 	bool selectData();
 
-	// Parse MSSelection expression
-	bool parseExpression(MSSelection &parser);
+	// Parse casacore::MSSelection expression
+	bool parseExpression(casacore::MSSelection &parser);
 
 	// Generate Visibility Iterator
 	bool generateIterator();
@@ -66,29 +66,29 @@ public:
 	bool flushFlags();
 
 	// Provide table name (for flag version)
-	String getTableName();
+	casacore::String getTableName();
 
 	// Check if a given column is available in the MS
 	// (typically for checking existence of CORRECTED_DATA
-	bool checkIfColumnExists(String column);
+	bool checkIfColumnExists(casacore::String column);
 
 	// Signal true when a progress summary has to be printed
 	bool summarySignal();
 
-	// Get the MS PROCESSOR sub-table
+	// Get the casacore::MS PROCESSOR sub-table
 	bool processorTable();
 
-	// Get a Float visCube and return a Complex one
-	Cube<Complex>& weightVisCube();
+	// Get a casacore::Float visCube and return a casacore::Complex one
+	casacore::Cube<casacore::Complex>& weightVisCube();
 
-	Cube<Complex> weight_spectrum_p;
+	casacore::Cube<casacore::Complex> weight_spectrum_p;
 
 private:
 
 	// Mapping functions
 	virtual void generateScanStartStopMap();
 
-	// Swap MS to check what is the maximum RAM memory needed
+	// Swap casacore::MS to check what is the maximum RAM memory needed
 	void preSweep();
 
 	// Apply channel selection for asyn or normal iterator
@@ -97,8 +97,8 @@ private:
 
 
 	// Measurement set section
-	MeasurementSet *selectedMeasurementSet_p;
-	MeasurementSet *originalMeasurementSet_p;
+	casacore::MeasurementSet *selectedMeasurementSet_p;
+	casacore::MeasurementSet *originalMeasurementSet_p;
 
 	// RO Visibility Iterator
 	vi::VisibilityIterator2 *preAveragingVI_p;

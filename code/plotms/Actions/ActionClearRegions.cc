@@ -28,6 +28,7 @@
 #include <plotms/Plots/PlotMSPlot.h>
 #include <plotms/Client/Client.h>
 
+using namespace casacore;
 namespace casa {
 
 ActionClearRegions::ActionClearRegions( Client* client )
@@ -64,4 +65,5 @@ bool ActionClearRegions::doActionSpecific(PlotMSApp* plotms){
 ActionClearRegions::~ActionClearRegions() {
 }
 
+using namespace casacore;
 } /* namespace casa */

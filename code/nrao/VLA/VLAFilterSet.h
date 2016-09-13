@@ -82,7 +82,7 @@ class VLAFilterSet
 public:
   // The default constructor creates a filter set that does not contan any
   // filters. Using the passThru function without any filters always returns
-  // True;
+  // true;
   VLAFilterSet();
   
   // The copy constructor uses copy semantics.
@@ -99,23 +99,23 @@ public:
   
   // Adds the specified filter from the set. Throws an exception if which is
   // not less than the value returned by nelements().
-  void removeFilter(const uInt which);
+  void removeFilter(const casacore::uInt which);
 
   // Returns the number of filters in the set.
-  uInt nelements() const;
+  casacore::uInt nelements() const;
 
   // Returns a reference to the specified filter
-  const VLAFilter& filter(const uInt which) const;
+  const VLAFilter& filter(const casacore::uInt which) const;
 
-  // returns True if the supplied record meets the filter criteria for all the
-  // filters that are contained within in this filter set. Also returns True if
+  // returns true if the supplied record meets the filter criteria for all the
+  // filters that are contained within in this filter set. Also returns true if
   // there are no filters in the set.
-  virtual Bool passThru(const VLALogicalRecord& record) const;
+  virtual casacore::Bool passThru(const VLALogicalRecord& record) const;
   
-  // Function which checks the internal data of this class for correct
-  // dimensionality and consistant values. Returns True if everything is fine
-  // otherwise returns False.
-  virtual Bool ok() const;
+  // casacore::Function which checks the internal data of this class for correct
+  // dimensionality and consistant values. Returns true if everything is fine
+  // otherwise returns false.
+  virtual casacore::Bool ok() const;
   
 private:
   //# deletes all the filters in the current filter set.
@@ -123,10 +123,10 @@ private:
   //# copies all the filters from the specified set to the current one.
   void copyFilters(const VLAFilterSet& other);
 
-  PtrBlock<VLAFilter*> itsFilters;
+  casacore::PtrBlock<VLAFilter*> itsFilters;
 };
 
-inline uInt VLAFilterSet::nelements() const {
+inline casacore::uInt VLAFilterSet::nelements() const {
   return itsFilters.nelements();
 }
 

@@ -49,7 +49,7 @@ public:
 
   virtual ~ViiLayerFactory () {}
   
-  virtual ViImplementation2 * createViImpl2 (Vector<ViiLayerFactory*> viifactories) const;
+  virtual ViImplementation2 * createViImpl2 (casacore::Vector<ViiLayerFactory*> viifactories) const;
 
 protected:
 

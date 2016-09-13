@@ -68,8 +68,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // I'll pass this class into a subroutine as an actual instance of an
 // abstract class cannot be constructed. 
 // <srcblock>
-// void foo(LinearModel< Image<Float> > mod, 
-//          LinearEquation<Image<Float>, VisibilitySet>)
+// void foo(LinearModel< Image<casacore::Float> > mod, 
+//          LinearEquation<Image<casacore::Float>, VisibilitySet>)
 // VisibilitySet predictedVisibility;
 // eqn.evaluate(predictedVisibility, mod); 
 // </srcblock>
@@ -111,21 +111,21 @@ public:
   virtual ~LinearEquation();
 
   // This function evaluates the Equation for the specified model.
-  // It returns False if the result could not be computed.
-  virtual Bool evaluate(Range & result, 
+  // It returns false if the result could not be computed.
+  virtual casacore::Bool evaluate(Range & result, 
 			const LinearModel<Domain>& model) = 0;
 
   // evaluate residual
-  virtual Bool residual(Domain & answer,
+  virtual casacore::Bool residual(Domain & answer,
 			const LinearModel<Domain> & model) = 0;
   
   // Same as above, but also calculates Chi^2
-  virtual Bool residual(Domain & answer, Float & chisq,
+  virtual casacore::Bool residual(Domain & answer, casacore::Float & chisq,
 			const LinearModel<Domain> & model) = 0;
 
   // Same as above, but also calculates Chi^2
   // considering a mask
-  virtual Bool residual(Domain & answer, Float & chisq,
+  virtual casacore::Bool residual(Domain & answer, casacore::Float & chisq,
 			Domain & mask,
 			const LinearModel<Domain> & model) = 0;
 

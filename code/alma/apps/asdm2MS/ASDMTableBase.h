@@ -19,7 +19,6 @@
 #include <tables/Tables/ArrayColumn.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/Utilities/Assert.h>
-using namespace casa;
 
 #include "ASDM.h"
 #include "ArrayTime.h"
@@ -51,17 +50,17 @@ class ASDM_TABLE_BASE {
   ASDM_TABLE_BASE();
   virtual~ASDM_TABLE_BASE();
   string name_;
-  Table* table_p_;
+  casacore::Table* table_p_;
 
  public:
-  Table* table_p();
+  casacore::Table* table_p();
   const string& name() const;
-  virtual const TableDesc& tableDesc() const = 0;
-  void buildAndAttachTable(MS* attachMS);
+  virtual const casacore::TableDesc& tableDesc() const = 0;
+  void buildAndAttachTable(casacore::MS* attachMS);
   virtual void fill(const ASDM& asdm) = 0;
 
-  template<typename T, typename U>  Vector<U> basic2CASA1D(const vector<T>& v) {
-    Vector<U> result;
+  template<typename T, typename U>  casacore::Vector<U> basic2CASA1D(const vector<T>& v) {
+    casacore::Vector<U> result;
     if (v.size() == 0)
       return result;
 
@@ -71,8 +70,8 @@ class ASDM_TABLE_BASE {
     return result;
   }
 
-  template<typename T, typename U>  Matrix<U> basic2CASA2D(const vector<vector <T> >& v) {
-    Matrix<U> result;
+  template<typename T, typename U>  casacore::Matrix<U> basic2CASA2D(const vector<vector <T> >& v) {
+    casacore::Matrix<U> result;
     if (v.size() == 0 || v.at(0).size() == 0)
       return result;
 
@@ -84,8 +83,8 @@ class ASDM_TABLE_BASE {
   }
 
 
-  template<typename T, typename U>  Cube<U> basic2CASA3D(const vector<vector <vector <T> > >& v) {
-    Cube<U> result;
+  template<typename T, typename U>  casacore::Cube<U> basic2CASA3D(const vector<vector <vector <T> > >& v) {
+    casacore::Cube<U> result;
     if (v.size() == 0 || v.at(0).size() == 0 || v.at(0).at(0).size() == 0)
       return result;
 
@@ -98,8 +97,8 @@ class ASDM_TABLE_BASE {
     return result;
   }
 
-  template<typename T, typename U>  Vector<U> ext2CASA1D(const vector<T>& v) {
-    Vector<U> result;
+  template<typename T, typename U>  casacore::Vector<U> ext2CASA1D(const vector<T>& v) {
+    casacore::Vector<U> result;
     if (v.size() == 0)
       return result;
 
@@ -109,8 +108,8 @@ class ASDM_TABLE_BASE {
     return result;
   }
 
-  template<typename T, typename U>  Matrix<U> ext2CASA2D(const vector<vector <T> >& v) {
-    Matrix<U> result;
+  template<typename T, typename U>  casacore::Matrix<U> ext2CASA2D(const vector<vector <T> >& v) {
+    casacore::Matrix<U> result;
     if (v.size() == 0 || v.at(0).size() == 0)
       return result;
 
@@ -122,8 +121,8 @@ class ASDM_TABLE_BASE {
   }
 
 
-  template<typename T, typename U>  Cube<U> ext2CASA3D(const vector<vector <vector <T> > >& v) {
-    Cube<U> result;
+  template<typename T, typename U>  casacore::Cube<U> ext2CASA3D(const vector<vector <vector <T> > >& v) {
+    casacore::Cube<U> result;
     if (v.size() == 0 || v.at(0).size() == 0 || v.at(0).at(0).size() == 0)
       return result;
 
@@ -136,8 +135,8 @@ class ASDM_TABLE_BASE {
     return result;
   }
 
-  template<typename T, typename U>  Vector<U> _2CASAString1D(const vector<T>& v) {
-    Vector<U> result;
+  template<typename T, typename U>  casacore::Vector<U> _2CASAString1D(const vector<T>& v) {
+    casacore::Vector<U> result;
     if (v.size() == 0)
       return result;
 
@@ -147,8 +146,8 @@ class ASDM_TABLE_BASE {
     return result;
   }
 
-  template<typename T, typename U>  Matrix<U> _2CASAString2D(const vector<vector <T> >& v) {
-    Matrix<U> result;
+  template<typename T, typename U>  casacore::Matrix<U> _2CASAString2D(const vector<vector <T> >& v) {
+    casacore::Matrix<U> result;
     if (v.size() == 0 || v.at(0).size() == 0)
       return result;
 
@@ -160,8 +159,8 @@ class ASDM_TABLE_BASE {
   }
 
 
-  template<typename T, typename U>  Cube<U> _2CASAString3D(const vector<vector <vector <T> > >& v) {
-    Cube<U> result;
+  template<typename T, typename U>  casacore::Cube<U> _2CASAString3D(const vector<vector <vector <T> > >& v) {
+    casacore::Cube<U> result;
     if (v.size() == 0 || v.at(0).size() == 0 || v.at(0).at(0).size() == 0)
       return result;
 
@@ -175,8 +174,8 @@ class ASDM_TABLE_BASE {
   }
 
 
-  template<typename enumT, typename CenumT>  Vector<String> enum2CASA1D (const vector<enumT>& v) {
-    Vector<String> result;
+  template<typename enumT, typename CenumT>  casacore::Vector<casacore::String> enum2CASA1D (const vector<enumT>& v) {
+    casacore::Vector<casacore::String> result;
     if (v.size() == 0) return result;
 
     result.resize(v.size());
@@ -185,8 +184,8 @@ class ASDM_TABLE_BASE {
     return result;
   }
 
-  template<typename enumT, typename CenumT>  Matrix<String> enum2CASA2D (const vector<vector<enumT> >& v) {
-    Matrix<String> result;
+  template<typename enumT, typename CenumT>  casacore::Matrix<casacore::String> enum2CASA2D (const vector<vector<enumT> >& v) {
+    casacore::Matrix<casacore::String> result;
     if (v.size() == 0 || v.at(0).size() == 0) return result;
 
     result.resize(v.size(), v.at(0).size());
@@ -196,8 +195,8 @@ class ASDM_TABLE_BASE {
     return result;
   }
 
-  template<typename enumT, typename CenumT>  Cube<String> enum2CASA3D (const vector<vector<vector<enumT> > >& v) {
-    Cube<String> result;
+  template<typename enumT, typename CenumT>  casacore::Cube<casacore::String> enum2CASA3D (const vector<vector<vector<enumT> > >& v) {
+    casacore::Cube<casacore::String> result;
     if (v.size() == 0 || v.at(0).size() == 0 || v.at(0).at(0) == 0) return result;
 
     result.resize(v.size(), v.at(0).size(), v.at(0).at(0).size());
@@ -208,8 +207,8 @@ class ASDM_TABLE_BASE {
     return result;
   }
 
-  template<typename T, typename U> Vector<U> interval2CASA1D(const vector<T>& v) {
-    Vector<U> result;
+  template<typename T, typename U> casacore::Vector<U> interval2CASA1D(const vector<T>& v) {
+    casacore::Vector<U> result;
     if (v.size()==0) return result;
 
     result.resize(v.size());
@@ -218,8 +217,8 @@ class ASDM_TABLE_BASE {
     return result;
   }
 
-  template<typename T, typename U> Matrix<U> interval2CASA2D(const vector<vector<T> >& v) {
-    Matrix<U> result;
+  template<typename T, typename U> casacore::Matrix<U> interval2CASA2D(const vector<vector<T> >& v) {
+    casacore::Matrix<U> result;
     if (v.size()==0 || v.at(0).size()) return result;
 
     result.resize(v.size(), v.at(0).size());
@@ -229,8 +228,8 @@ class ASDM_TABLE_BASE {
     return result;
   }
 
-  template<typename T, typename U> Cube<U> interval2CASA3D(const vector<vector< vector<T> > >& v) {
-    Cube<U> result;
+  template<typename T, typename U> casacore::Cube<U> interval2CASA3D(const vector<vector< vector<T> > >& v) {
+    casacore::Cube<U> result;
     if (v.size() == 0 || v.at(0).size() == 0 || v.at(0).at(0).size() == 0) return result;
 
     result.resize(v.size(), v.at(0).size(), v.at(0).at(0).size());
@@ -241,8 +240,8 @@ class ASDM_TABLE_BASE {
     return result;
   }
 
-  template<typename U>  Vector<U> at2CASA1D(const vector<ArrayTime>& v) {
-    Vector<U> result;
+  template<typename U>  casacore::Vector<U> at2CASA1D(const vector<ArrayTime>& v) {
+    casacore::Vector<U> result;
     if (v.size()==0) return result;
 
     result.resize(v.size());
@@ -251,8 +250,8 @@ class ASDM_TABLE_BASE {
     return result;
   }
 
-  template<typename U> Matrix<U> at2CASA2D(const vector<vector<ArrayTime> >& v) {
-    Matrix<U> result;
+  template<typename U> casacore::Matrix<U> at2CASA2D(const vector<vector<ArrayTime> >& v) {
+    casacore::Matrix<U> result;
     if (v.size()==0 || v.at(0).size()) return result;
 
     result.resize(v.size(), v.at(0).size());
@@ -262,8 +261,8 @@ class ASDM_TABLE_BASE {
     return result;
   }
 
-  template<typename U>  Cube<U> at2CASA3D(const vector<vector< vector<ArrayTime> > >& v) {
-    Cube<U> result;
+  template<typename U>  casacore::Cube<U> at2CASA3D(const vector<vector< vector<ArrayTime> > >& v) {
+    casacore::Cube<U> result;
     if (v.size() == 0 || v.at(0).size() == 0 || v.at(0).at(0).size() == 0) return result;
 
     result.resize(v.size(), v.at(0).size(), v.at(0).at(0).size());
@@ -274,15 +273,15 @@ class ASDM_TABLE_BASE {
     return result;
   }
 
-  template<typename U> Vector<U> ati2CASA1D(const ArrayTimeInterval& ati) {
-    Vector<U> result(2);
+  template<typename U> casacore::Vector<U> ati2CASA1D(const ArrayTimeInterval& ati) {
+    casacore::Vector<U> result(2);
     result(0) = ((double) ati.getStart().get()) / ArrayTime::unitsInASecond;
     result(1) = ((double) ati.getDuration().get()) / ArrayTime::unitsInASecond;
     return result;
   }
 
-  template<typename U> Matrix<U> ati2CASA2D(const vector<ArrayTimeInterval>& v) {
-    Matrix<U> result;
+  template<typename U> casacore::Matrix<U> ati2CASA2D(const vector<ArrayTimeInterval>& v) {
+    casacore::Matrix<U> result;
     if (v.size() == 0) return result;
 
     result.resize(v.size(), 2);
@@ -293,8 +292,8 @@ class ASDM_TABLE_BASE {
     return result;
   }
 
-  template<typename U> Cube<U> ati2CASA3D(const vector<vector<ArrayTimeInterval> >& v) {
-    Cube<U> result;
+  template<typename U> casacore::Cube<U> ati2CASA3D(const vector<vector<ArrayTimeInterval> >& v) {
+    casacore::Cube<U> result;
     if (v.size() == 0 || v.at(0).size() == 0) return result;
 
     result.resize(v.size(), v.at(0).size(), 2);

@@ -32,9 +32,13 @@
 #include <casa/Containers/Record.h>
 #include <display/Utilities/DisplayOptions.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore{
 
 	template <class T> class Array;
+}
+
+namespace casa { //# NAMESPACE CASA - BEGIN
+
 
 // <summary>
 // Class implementing simple data scaling for the WorldCanvas.
@@ -46,7 +50,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </prerequisite>
 //
 // <etymology>
-// WCDataScaleHandler : WorldCanvas Data Scale Handler
+// WCDataScaleHandler : WorldCanvas casacore::Data Scale Handler
 //
 // This class is responsible for scaling data into a range suitable
 // for display.
@@ -72,11 +76,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // The function suite includes all the normal scalar types.  Default
 // implementations exist for
 // <ul>
-// <li>Bool version which maps False to 0 and True to N-1
-// <li>Complex version which extracts magnitude and forwards the
-//   call to the Float version.
-// <li>DComplex version which extracts magnitude and forwards the
-//   call to the Double version.
+// <li>casacore::Bool version which maps false to 0 and true to N-1
+// <li>casacore::Complex version which extracts magnitude and forwards the
+//   call to the casacore::Float version.
+// <li>casacore::DComplex version which extracts magnitude and forwards the
+//   call to the casacore::Double version.
 // </ul>
 //
 // Each scalar implementation must scale the data according to the
@@ -99,9 +103,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <todo>
 // <li> add ComplexToRealMethod field to base class to allow
-// for extracting values other than magnitude for Complex and DComplex
+// for extracting values other than magnitude for casacore::Complex and DComplex
 // variables.
-// <li> consider changing Matrices to Arrays to support a Vector of
+// <li> consider changing Matrices to Arrays to support a casacore::Vector of
 // transformations.
 // </todo>
 //
@@ -117,52 +121,52 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual ~WCDataScaleHandler();
 
 		// Set min/max at construction time
-		WCDataScaleHandler(Double min, Double max);
+		WCDataScaleHandler(casacore::Double min, casacore::Double max);
 
-		// op() returns True if the Array in was converted to the
-		// Array out successfully.  Default implentation for Bool
-		// maps False to 0 and True to rangeMax
+		// op() returns true if the casacore::Array in was converted to the
+		// casacore::Array out successfully.  Default implentation for Bool
+		// maps false to 0 and true to rangeMax
 		//
-		// Types uChar to Double not implemented (They return False).
+		// Types casacore::uChar to casacore::Double not implemented (They return false).
 		// User should override the types needed (or perhaps all
 		// depending on your compiler.
 		//
-		// Default Complex and DComplex extract amplitude and call
-		// the Float or Double version.
+		// Default casacore::Complex and casacore::DComplex extract amplitude and call
+		// the casacore::Float or casacore::Double version.
 		// <group>
-		virtual Bool operator()(Array<uInt> & out, const Array<Bool> & in);
-		virtual Bool operator()(Array<uInt> & out, const Array<uChar> & in);
-		virtual Bool operator()(Array<uInt> & out, const Array<Char> & in);
-		virtual Bool operator()(Array<uInt> & out, const Array<uShort> & in);
-		virtual Bool operator()(Array<uInt> & out, const Array<Short> & in);
-		virtual Bool operator()(Array<uInt> & out, const Array<uInt> & in);
-		virtual Bool operator()(Array<uInt> & out, const Array<Int> & in);
-		virtual Bool operator()(Array<uInt> & out, const Array<uLong> & in);
-		virtual Bool operator()(Array<uInt> & out, const Array<Long> & in);
-		virtual Bool operator()(Array<uInt> & out, const Array<Float> & in);
-		virtual Bool operator()(Array<uInt> & out, const Array<Double> & in);
-		virtual Bool operator()(Array<uInt> & out, const Array<Complex> & in);
-		virtual Bool operator()(Array<uInt> & out, const Array<DComplex> & in);
+		virtual casacore::Bool operator()(casacore::Array<casacore::uInt> & out, const casacore::Array<casacore::Bool> & in);
+		virtual casacore::Bool operator()(casacore::Array<casacore::uInt> & out, const casacore::Array<casacore::uChar> & in);
+		virtual casacore::Bool operator()(casacore::Array<casacore::uInt> & out, const casacore::Array<casacore::Char> & in);
+		virtual casacore::Bool operator()(casacore::Array<casacore::uInt> & out, const casacore::Array<casacore::uShort> & in);
+		virtual casacore::Bool operator()(casacore::Array<casacore::uInt> & out, const casacore::Array<casacore::Short> & in);
+		virtual casacore::Bool operator()(casacore::Array<casacore::uInt> & out, const casacore::Array<casacore::uInt> & in);
+		virtual casacore::Bool operator()(casacore::Array<casacore::uInt> & out, const casacore::Array<casacore::Int> & in);
+		virtual casacore::Bool operator()(casacore::Array<casacore::uInt> & out, const casacore::Array<casacore::uLong> & in);
+		virtual casacore::Bool operator()(casacore::Array<casacore::uInt> & out, const casacore::Array<casacore::Long> & in);
+		virtual casacore::Bool operator()(casacore::Array<casacore::uInt> & out, const casacore::Array<casacore::Float> & in);
+		virtual casacore::Bool operator()(casacore::Array<casacore::uInt> & out, const casacore::Array<casacore::Double> & in);
+		virtual casacore::Bool operator()(casacore::Array<casacore::uInt> & out, const casacore::Array<casacore::Complex> & in);
+		virtual casacore::Bool operator()(casacore::Array<casacore::uInt> & out, const casacore::Array<casacore::DComplex> & in);
 		// </group>
 
 		// set/get the min/max to use for the input Array
 		// <group>
-		Double domainMin() const {
+		casacore::Double domainMin() const {
 			return domainMin_;
 		}
-		Double domainMax() const {
+		casacore::Double domainMax() const {
 			return domainMax_;
 		}
-		void setDomainMinMax(Double min, Double max);
+		void setDomainMinMax(casacore::Double min, casacore::Double max);
 		// </group>
 
 		// set/get the maximum value to use for the output array
 		// Note: the minimum value is always zero
 		// <group>
-		uInt rangeMax() const {
+		casacore::uInt rangeMax() const {
 			return rangeMax_;
 		}
-		void setRangeMax(uInt max) {
+		void setRangeMax(casacore::uInt max) {
 			rangeMax_ = max;
 		}
 		// </group>
@@ -171,21 +175,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void setDefaultOptions();
 
 		// apply options stored in val to the DisplayData; return value
-		// True means a refresh is needed...
-		virtual Bool setOptions(Record &rec, Record &recOut);
+		// true means a refresh is needed...
+		virtual casacore::Bool setOptions(casacore::Record &rec, casacore::Record &recOut);
 
 		// retrieve the current and default options and parameter types.
-		virtual Record getOptions( bool scrub=false ) const;
+		virtual casacore::Record getOptions( bool scrub=false ) const;
 
 	private:
 
 		// domain limits to use
-		Double domainMin_;
-		Double domainMax_;
+		casacore::Double domainMin_;
+		casacore::Double domainMax_;
 
 		// range limits
 		// rangeMin is always zero
-		uInt rangeMax_;
+		casacore::uInt rangeMax_;
 
 	};
 

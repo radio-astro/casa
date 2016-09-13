@@ -28,6 +28,7 @@
 #include <plotms/Plots/PlotMSPlot.h>
 #include <plotms/Client/Client.h>
 
+using namespace casacore;
 namespace casa {
 
 ActionIterFirst::ActionIterFirst( Client* client )
@@ -59,4 +60,5 @@ bool ActionIterFirst::doActionSpecific(PlotMSApp* plotms) {
 ActionIterFirst::~ActionIterFirst() {
 }
 
+using namespace casacore;
 } /* namespace casa */

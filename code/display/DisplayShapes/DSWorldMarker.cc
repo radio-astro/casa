@@ -35,6 +35,7 @@
 #include <casa/Arrays/ArrayMath.h>
 
 #include <display/Display/DisplayCoordinateSystem.h>
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	DSWorldMarker::DSWorldMarker() :
@@ -105,7 +106,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	Bool DSWorldMarker::setOptions(const Record& settings) {
-		Bool localChange = False;
+		Bool localChange = false;
 		Record toSet = settings;
 
 		if (settings.isDefined("coords")) {
@@ -130,7 +131,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			}
 
 			if (settings.dataType("center") == TpRecord) {
-				localChange = True;
+				localChange = true;
 				Record centerField = settings.subRecord("center");
 
 				if (centerField.nfields() != 2) {
@@ -179,7 +180,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		if (DSMarker::setOptions(toSet)) {
-			localChange = True;
+			localChange = true;
 		}
 
 		return localChange;

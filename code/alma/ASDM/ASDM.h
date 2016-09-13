@@ -28,7 +28,7 @@
  * | If you do, all changes will be lost when the file is re-generated. |
  *  --------------------------------------------------------------------
  *
- * File ASDM.h
+ * casacore::File ASDM.h
  */
  
 #ifndef ASDM_CLASS

@@ -31,6 +31,7 @@
 #include <display/Display/WorldCanvas.h>
 #include <display/DisplayEvents/MWCRTZoomer.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	MWCRTZoomer::MWCRTZoomer(Display::KeySym keysym) :
@@ -68,7 +69,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// (so that zoomed() callback always has a valid 'current WC'...)
 
 		String attString = "resetCoordinates";
-		Attribute resetAtt(attString, True);
+		Attribute resetAtt(attString, true);
 		while (!itsWCListIter->atEnd()) {
 			WorldCanvas *wc = itsWCListIter->getRight();
 			wc->setAttribute(resetAtt);

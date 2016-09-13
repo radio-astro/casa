@@ -90,10 +90,10 @@ NullLogger nulllogger;
 
 // Local Functions
 namespace {
-inline casa::Vector<casa::uInt> getOffStateIdList(casa::MeasurementSet const &ms) {
-  casa::String taql("SELECT FLAG_ROW FROM $1 WHERE UPPER(OBS_MODE) ~ m/^OBSERVE_TARGET#OFF_SOURCE/");
-  casa::Table stateSel = casa::tableCommand(taql, ms.state());
-  casa::Vector<casa::uInt> stateIdList = stateSel.rowNumbers();
+inline casacore::Vector<casacore::uInt> getOffStateIdList(casacore::MeasurementSet const &ms) {
+  casacore::String taql("SELECT FLAG_ROW FROM $1 WHERE UPPER(OBS_MODE) ~ m/^OBSERVE_TARGET#OFF_SOURCE/");
+  casacore::Table stateSel = casacore::tableCommand(taql, ms.state());
+  casacore::Vector<casacore::uInt> stateIdList = stateSel.rowNumbers();
   debuglog << "stateIdList[" << stateIdList.nelements() << "]=";
   for (size_t i = 0; i < stateIdList.nelements(); ++i) {
     debuglog << stateIdList[i] << " ";
@@ -103,7 +103,7 @@ inline casa::Vector<casa::uInt> getOffStateIdList(casa::MeasurementSet const &ms
 }
 
 template<class T>
-inline std::string toString(casa::Vector<T> const &v) {
+inline std::string toString(casacore::Vector<T> const &v) {
   std::ostringstream oss;
   oss << "[";
   std::string delimiter = "";
@@ -115,80 +115,80 @@ inline std::string toString(casa::Vector<T> const &v) {
   return oss.str();
 }
   
-inline casa::String configureTaqlString(casa::String const &msName, casa::Vector<casa::uInt> stateIdList) {
+inline casacore::String configureTaqlString(casacore::String const &msName, casacore::Vector<casacore::uInt> stateIdList) {
   std::ostringstream oss;
   oss << "SELECT FROM " << msName << " WHERE ANTENNA1 == ANTENNA2 && STATE_ID IN "
       << toString(stateIdList)
       << " ORDER BY FIELD_ID, ANTENNA1, FEED1, DATA_DESC_ID, TIME";
-  return casa::String(oss);
+  return casacore::String(oss);
 }
 
-inline void fillNChanParList(casa::MeasurementSet const &ms, casa::Vector<casa::Int> &nChanParList) {
-  casa::MSSpectralWindow const &msspw = ms.spectralWindow();
-  casa::ROScalarColumn<casa::Int> nchanCol(msspw, "NUM_CHAN");
+inline void fillNChanParList(casacore::MeasurementSet const &ms, casacore::Vector<casacore::Int> &nChanParList) {
+  casacore::MSSpectralWindow const &msspw = ms.spectralWindow();
+  casacore::ROScalarColumn<casacore::Int> nchanCol(msspw, "NUM_CHAN");
   debuglog << "nchanCol=" << toString(nchanCol.getColumn()) << debugpost;
-  nChanParList = nchanCol.getColumn()(casa::Slice(0,nChanParList.nelements()));
+  nChanParList = nchanCol.getColumn()(casacore::Slice(0,nChanParList.nelements()));
   debuglog << "nChanParList=" << nChanParList << debugpost;
 }
 
 inline void updateWeight(casa::NewCalTable &ct) {
   casa::CTMainColumns ctmc(ct);
-  casa::ROArrayColumn<casa::Double> chanWidthCol(ct.spectralWindow(), "CHAN_WIDTH");
-  casa::Vector<casa::Int> chanWidth(chanWidthCol.nrow());
+  casacore::ROArrayColumn<casacore::Double> chanWidthCol(ct.spectralWindow(), "CHAN_WIDTH");
+  casacore::Vector<casacore::Int> chanWidth(chanWidthCol.nrow());
   for (size_t irow = 0; irow < chanWidthCol.nrow(); ++irow) {
-    casa::Double chanWidthVal = chanWidthCol(irow)(casa::IPosition(1,0));
+    casacore::Double chanWidthVal = chanWidthCol(irow)(casacore::IPosition(1,0));
     chanWidth[irow] = abs(chanWidthVal);
   }
   for (size_t irow = 0; irow < ct.nrow(); ++irow) {
-    casa::Int spwid = ctmc.spwId()(irow);
-    casa::Double width = chanWidth[spwid];
-    casa::Double interval = ctmc.interval()(irow);
-    casa::Float weight = width * interval;
-    casa::Matrix<casa::Float> weightMat(ctmc.fparam().shape(irow), weight);
+    casacore::Int spwid = ctmc.spwId()(irow);
+    casacore::Double width = chanWidth[spwid];
+    casacore::Double interval = ctmc.interval()(irow);
+    casacore::Float weight = width * interval;
+    casacore::Matrix<casacore::Float> weightMat(ctmc.fparam().shape(irow), weight);
     ctmc.weight().put(irow, weightMat);
   }
 }
 
 class DataColumnAccessor {
 public:
-  DataColumnAccessor(casa::Table const &ms,
-		     casa::String const colName="DATA")
+  DataColumnAccessor(casacore::Table const &ms,
+		     casacore::String const colName="DATA")
     : dataCol_(ms, colName) {
   }
-  casa::Matrix<casa::Float> operator()(size_t irow) {
-    return casa::real(dataCol_(irow));
+  casacore::Matrix<casacore::Float> operator()(size_t irow) {
+    return casacore::real(dataCol_(irow));
   }
 private:
   DataColumnAccessor() {}
-  casa::ROArrayColumn<casa::Complex> dataCol_;
+  casacore::ROArrayColumn<casacore::Complex> dataCol_;
 };    
 
 class FloatDataColumnAccessor {
 public:
-  FloatDataColumnAccessor(casa::Table const &ms)
+  FloatDataColumnAccessor(casacore::Table const &ms)
     : dataCol_(ms, "FLOAT_DATA") {
   }
-  casa::Matrix<casa::Float> operator()(size_t irow) {
+  casacore::Matrix<casacore::Float> operator()(size_t irow) {
     return dataCol_(irow);
   }
 private:
   FloatDataColumnAccessor() {}
-  casa::ROArrayColumn<casa::Float> dataCol_;
+  casacore::ROArrayColumn<casacore::Float> dataCol_;
 };
 
-inline  casa::Int nominalDataDesc(casa::MeasurementSet const &ms, casa::Int const ant)
+inline  casacore::Int nominalDataDesc(casacore::MeasurementSet const &ms, casacore::Int const ant)
 {
-  casa::Int goodDataDesc = -1;
-  casa::ROScalarColumn<casa::Int> col(ms.spectralWindow(), "NUM_CHAN");
-  casa::Vector<casa::Int> nchanList = col.getColumn();
+  casacore::Int goodDataDesc = -1;
+  casacore::ROScalarColumn<casacore::Int> col(ms.spectralWindow(), "NUM_CHAN");
+  casacore::Vector<casacore::Int> nchanList = col.getColumn();
   size_t numSpw = col.nrow();
-  casa::Vector<casa::Int> spwMap(numSpw);
+  casacore::Vector<casacore::Int> spwMap(numSpw);
   col.attach(ms.dataDescription(), "SPECTRAL_WINDOW_ID");
   for (size_t i = 0; i < col.nrow(); ++i) {
     spwMap[col(i)] = i;
   }
-  casa::ROScalarColumn<casa::String> obsModeCol(ms.state(), "OBS_MODE");
-  casa::Regex regex("^OBSERVE_TARGET#ON_SOURCE");
+  casacore::ROScalarColumn<casacore::String> obsModeCol(ms.state(), "OBS_MODE");
+  casacore::Regex regex("^OBSERVE_TARGET#ON_SOURCE");
   for (size_t ispw = 0; ispw < numSpw; ++ispw) {
     if (nchanList[ispw] == 4) {
       // this should be WVR
@@ -199,15 +199,15 @@ inline  casa::Int nominalDataDesc(casa::MeasurementSet const &ms, casa::Int cons
       oss << "SELECT FROM $1 WHERE ANTENNA1 == " << ant
 	  << " && ANTENNA2 == " << ant << " && DATA_DESC_ID == " << spwMap[ispw]
 	  << " ORDER BY STATE_ID";
-      casa::MeasurementSet msSel(casa::tableCommand(oss.str(), ms));
+      casacore::MeasurementSet msSel(casacore::tableCommand(oss.str(), ms));
       col.attach(msSel, "STATE_ID");
-      casa::Vector<casa::Int> stateIdList = col.getColumn();
-      casa::Int previousStateId = -1;
+      casacore::Vector<casacore::Int> stateIdList = col.getColumn();
+      casacore::Int previousStateId = -1;
       for (size_t i = 0; i < msSel.nrow(); ++i) {
-	casa::Int stateId = stateIdList[i];
+	casacore::Int stateId = stateIdList[i];
 	if (stateId != previousStateId) {
-	  casa::String obsmode = obsModeCol(stateId);
-	  if (regex.match(obsmode.c_str(), obsmode.size()) != casa::String::npos) {
+	  casacore::String obsmode = obsModeCol(stateId);
+	  if (regex.match(obsmode.c_str(), obsmode.size()) != casacore::String::npos) {
 	    goodDataDesc = spwMap[ispw];
 	    break;
 	  }
@@ -222,13 +222,13 @@ inline  casa::Int nominalDataDesc(casa::MeasurementSet const &ms, casa::Int cons
   return goodDataDesc;
 }
 
-inline casa::Vector<size_t> detectGap(casa::Vector<casa::Double> timeList)
+inline casacore::Vector<size_t> detectGap(casacore::Vector<casacore::Double> timeList)
 {
   size_t n = timeList.size();
-  casa::Vector<casa::Double> timeInterval = timeList(casa::Slice(1, n-1)) - timeList(casa::Slice(0, n-1));
-  casa::Double medianTime = casa::median(timeInterval);
-  casa::Double const threshold = medianTime * 5.0;
-  casa::Vector<size_t> gapIndexList(casa::IPosition(1, n/2 + 2), new size_t[n/2+2], casa::TAKE_OVER);
+  casacore::Vector<casacore::Double> timeInterval = timeList(casacore::Slice(1, n-1)) - timeList(casacore::Slice(0, n-1));
+  casacore::Double medianTime = casacore::median(timeInterval);
+  casacore::Double const threshold = medianTime * 5.0;
+  casacore::Vector<size_t> gapIndexList(casacore::IPosition(1, n/2 + 2), new size_t[n/2+2], casacore::TAKE_OVER);
   gapIndexList[0] = 0;
   size_t gapIndexCount = 1;
   for (size_t i = 0; i < timeInterval.size(); ++i) {
@@ -242,14 +242,14 @@ inline casa::Vector<size_t> detectGap(casa::Vector<casa::Double> timeList)
     gapIndexCount++;
   }
   debuglog << "Detected " << gapIndexCount << " gaps." << debugpost;
-  casa::Vector<size_t> ret(casa::IPosition(1, gapIndexCount), gapIndexList.data(), casa::COPY);
+  casacore::Vector<size_t> ret(casacore::IPosition(1, gapIndexCount), gapIndexList.data(), casacore::COPY);
   debuglog << "gapList=" << toString(ret) << debugpost;
   return ret;
 }
 
 struct DefaultRasterEdgeDetector
 {
-  static size_t N(size_t numData, casa::Float const /*fraction*/, casa::Int const /*num*/)
+  static size_t N(size_t numData, casacore::Float const /*fraction*/, casacore::Int const /*num*/)
   {
     debuglog << "DefaultRasterEdgeDetector" << debugpost;
     return max((size_t)1, static_cast<size_t>(sqrt(numData + 1) - 1));
@@ -258,11 +258,11 @@ struct DefaultRasterEdgeDetector
 
 struct FixedNumberRasterEdgeDetector
 {
-  static size_t N(size_t /*numData*/, casa::Float const /*fraction*/, casa::Int const num)
+  static size_t N(size_t /*numData*/, casacore::Float const /*fraction*/, casacore::Int const num)
   {
     debuglog << "FixedNumberRasterEdgeDetector" << debugpost;
     if (num < 0) {
-      throw casa::AipsError("Negative number of edge points.");
+      throw casacore::AipsError("Negative number of edge points.");
     }
     return (size_t)num;
   }
@@ -270,7 +270,7 @@ struct FixedNumberRasterEdgeDetector
 
 struct FixedFractionRasterEdgeDetector
 {
-  static casa::Int N(size_t numData, casa::Float const fraction, casa::Int const /*num*/)
+  static casacore::Int N(size_t numData, casacore::Float const fraction, casacore::Int const /*num*/)
   {
     debuglog << "FixedFractionRasterEdgeDetector" << debugpost;
     return max((size_t)1, static_cast<size_t>(numData * fraction));
@@ -278,17 +278,17 @@ struct FixedFractionRasterEdgeDetector
 };
 
 template<class Detector>
-inline casa::Vector<casa::Double> detectEdge(casa::Vector<casa::Double> timeList, casa::Double const interval, casa::Float const fraction, casa::Int const num)
+inline casacore::Vector<casacore::Double> detectEdge(casacore::Vector<casacore::Double> timeList, casacore::Double const interval, casacore::Float const fraction, casacore::Int const num)
 {
   // storage for time range for edges (at head and tail)
   // [(start of head edge), (end of head edge),
   //  (start of tail edge), (end of tail edge)]
-  casa::Vector<casa::Double> edgeList(4);
+  casacore::Vector<casacore::Double> edgeList(4);
   size_t numList = timeList.size();
   size_t numEdge = Detector::N(numList, fraction, num);
   debuglog << "numEdge = " << numEdge << debugpost;
   if (numEdge == 0) {
-    throw casa::AipsError("Zero edge points.");
+    throw casacore::AipsError("Zero edge points.");
   }
   else if (timeList.size() > numEdge * 2) {
     edgeList[0] = timeList[0] - 0.5 * interval;
@@ -300,7 +300,7 @@ inline casa::Vector<casa::Double> detectEdge(casa::Vector<casa::Double> timeList
     std::ostringstream oss;
     oss << "Too many edge points (" << 2.0 * numEdge << " out of "
         << timeList.size() << " points)";
-    throw casa::AipsError(oss.str());
+    throw casacore::AipsError(oss.str());
     // edgeList[0] = timeList[0] - 0.5 * interval;
     // edgeList[1] = timeList[numList-1] + 0.5 * interval;
     // edgeList[2] = edgeList[0];
@@ -309,16 +309,16 @@ inline casa::Vector<casa::Double> detectEdge(casa::Vector<casa::Double> timeList
   return edgeList;
 }
   
-inline casa::Vector<casa::String> detectRaster(casa::MeasurementSet const &ms,
-					       casa::Int const ant,
-					       casa::Float const fraction,
-					       casa::Int const num)
+inline casacore::Vector<casacore::String> detectRaster(casacore::MeasurementSet const &ms,
+					       casacore::Int const ant,
+					       casacore::Float const fraction,
+					       casacore::Int const num)
 {
-  casa::Int dataDesc = nominalDataDesc(ms, ant);
+  casacore::Int dataDesc = nominalDataDesc(ms, ant);
   debuglog << "nominal DATA_DESC_ID=" << dataDesc << debugpost;
   assert(dataDesc >= 0);
   if (dataDesc < 0) {
-    return casa::Vector<casa::String>();
+    return casacore::Vector<casacore::String>();
   }
 
   std::ostringstream oss;
@@ -327,14 +327,14 @@ inline casa::Vector<casa::String> detectRaster(casa::MeasurementSet const &ms,
       << " && DATA_DESC_ID == " << dataDesc
       << " ORDER BY TIME";
   debuglog << "detectRaster: taql=" << oss.str() << debugpost;
-  casa::MeasurementSet msSel(casa::tableCommand(oss.str(), ms));
-  casa::ROScalarColumn<casa::Double> timeCol(msSel, "TIME");
-  casa::ROScalarColumn<casa::Double> intervalCol(msSel, "INTERVAL");
-  casa::Vector<casa::Double> timeList = timeCol.getColumn();
-  casa::Double interval = casa::min(intervalCol.getColumn());
-  casa::Vector<size_t> gapList = detectGap(timeList);
-  casa::Vector<casa::String> edgeAsTimeRange(gapList.size() * 2);
-  typedef casa::Vector<casa::Double> (*DetectorFunc)(casa::Vector<casa::Double>, casa::Double const,  casa::Float const, casa::Int const);
+  casacore::MeasurementSet msSel(casacore::tableCommand(oss.str(), ms));
+  casacore::ROScalarColumn<casacore::Double> timeCol(msSel, "TIME");
+  casacore::ROScalarColumn<casacore::Double> intervalCol(msSel, "INTERVAL");
+  casacore::Vector<casacore::Double> timeList = timeCol.getColumn();
+  casacore::Double interval = casacore::min(intervalCol.getColumn());
+  casacore::Vector<size_t> gapList = detectGap(timeList);
+  casacore::Vector<casacore::String> edgeAsTimeRange(gapList.size() * 2);
+  typedef casacore::Vector<casacore::Double> (*DetectorFunc)(casacore::Vector<casacore::Double>, casacore::Double const,  casacore::Float const, casacore::Int const);
   DetectorFunc detect = NULL;
   if (num > 0) {
     detect = detectEdge<FixedNumberRasterEdgeDetector>;
@@ -350,8 +350,8 @@ inline casa::Vector<casa::String> detectRaster(casa::MeasurementSet const &ms,
     size_t endRow = gapList[i+1];
     size_t len = endRow - startRow;
     debuglog << "startRow=" << startRow << ", endRow=" << endRow << debugpost;
-    casa::Vector<casa::Double> oneRow = timeList(casa::Slice(startRow, len));
-    casa::Vector<casa::Double> edgeList = detect(oneRow, interval, fraction, num);
+    casacore::Vector<casacore::Double> oneRow = timeList(casacore::Slice(startRow, len));
+    casacore::Vector<casacore::Double> edgeList = detect(oneRow, interval, fraction, num);
     std::ostringstream s;
     s << std::setprecision(16) << "TIME BETWEEN " << edgeList[0] << " AND " << edgeList[1];
     edgeAsTimeRange[2*i] = s.str();
@@ -378,7 +378,7 @@ inline casa::Vector<casa::String> detectRaster(casa::MeasurementSet const &ms,
 //
 struct SimpleWeightScalingScheme
 {
-  static casa::Float SimpleScale(casa::Double exposureOn, casa::Double exposureOff)
+  static casacore::Float SimpleScale(casacore::Double exposureOn, casacore::Double exposureOff)
   {
     return exposureOff / (exposureOn + exposureOff);
   }
@@ -404,13 +404,13 @@ struct SimpleWeightScalingScheme
 //
 struct LinearWeightScalingScheme : public SimpleWeightScalingScheme
 {
-  static casa::Float InterpolateScale(casa::Double timeOn, casa::Double exposureOn,
-                                     casa::Double timeOff1, casa::Double exposureOff1,
-                                     casa::Double timeOff2, casa::Double exposureOff2)
+  static casacore::Float InterpolateScale(casacore::Double timeOn, casacore::Double exposureOn,
+                                     casacore::Double timeOff1, casacore::Double exposureOff1,
+                                     casacore::Double timeOff2, casacore::Double exposureOff2)
   {
-    casa::Double dt = timeOff2 - timeOff1;
-    casa::Double dt1 = timeOn - timeOff1;
-    casa::Double dt2 = timeOff2 - timeOn;
+    casacore::Double dt = timeOff2 - timeOff1;
+    casacore::Double dt1 = timeOn - timeOff1;
+    casacore::Double dt2 = timeOff2 - timeOn;
     return 1.0f / (1.0f + exposureOn / (dt * dt)
                    * (dt2 * dt2 / exposureOff1 + dt1 * dt1 / exposureOff2));
   }
@@ -422,23 +422,23 @@ struct LinearWeightScalingScheme : public SimpleWeightScalingScheme
 //
 struct NearestWeightScalingScheme : public SimpleWeightScalingScheme
 {
-  static casa::Float InterpolateScale(casa::Double timeOn, casa::Double exposureOn,
-                                     casa::Double timeOff1, casa::Double exposureOff1,
-                                     casa::Double timeOff2, casa::Double exposureOff2)
+  static casacore::Float InterpolateScale(casacore::Double timeOn, casacore::Double exposureOn,
+                                     casacore::Double timeOff1, casacore::Double exposureOff1,
+                                     casacore::Double timeOff2, casacore::Double exposureOff2)
   {
-    casa::Double dt1 = abs(timeOn - timeOff1);
-    casa::Double dt2 = abs(timeOff2 - timeOn);
+    casacore::Double dt1 = abs(timeOn - timeOff1);
+    casacore::Double dt2 = abs(timeOff2 - timeOn);
     return (dt1 <= dt2) ?
       SimpleScale(exposureOn, exposureOff1)
       : SimpleScale(exposureOn, exposureOff2);
   }
 };
 
-inline bool isEphemeris(casa::String const &name) {
+inline bool isEphemeris(casacore::String const &name) {
   // Check if given name is included in MDirection types
-  casa::Int nall, nextra;
-  const casa::uInt *typ;
-  auto *types = casa::MDirection::allMyTypes(nall, nextra, typ);
+  casacore::Int nall, nextra;
+  const casacore::uInt *typ;
+  auto *types = casacore::MDirection::allMyTypes(nall, nextra, typ);
   auto start_extra = nall - nextra;
   auto capital_name = name;
   capital_name.upcase();
@@ -454,6 +454,7 @@ inline bool isEphemeris(casa::String const &name) {
 
 }
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // SingleDishSkyCal
@@ -470,7 +471,7 @@ SingleDishSkyCal::SingleDishSkyCal(VisSet& vs)
     currentSkyOK_(vs.numberSpw(), NULL)
 {
   debuglog << "SingleDishSkyCal::SingleDishSkyCal(VisSet& vs)" << debugpost;
-  append() = False;
+  append() = false;
 
   initializeSky();
 }
@@ -500,7 +501,7 @@ SingleDishSkyCal::SingleDishSkyCal(const Int& nAnt)
     currentSkyOK_(1, NULL)
 {
   debuglog << "SingleDishSkyCal::SingleDishSkyCal(const Int& nAnt)" << debugpost;
-  append() = False;
+  append() = false;
 
   initializeSky();
 }
@@ -585,8 +586,8 @@ void SingleDishSkyCal::traverseMS(MeasurementSet const &ms) {
   Int cols[] = {MS::FIELD_ID, MS::ANTENNA1, MS::FEED1,
 		MS::DATA_DESC_ID};
   Int *colsp = cols;
-  Block<Int> sortCols(4, colsp, False);
-  MSIter msIter(ms, sortCols, 0.0, False, False);
+  Block<Int> sortCols(4, colsp, false);
+  MSIter msIter(ms, sortCols, 0.0, false, false);
   for (msIter.origin(); msIter.more(); msIter++) {
     Table const current = msIter.table();
     uInt nrow = current.nrow();
@@ -637,7 +638,7 @@ void SingleDishSkyCal::traverseMS(MeasurementSet const &ms) {
     dataSum = 0.0f;
     weightSum = 0.0f;
     Matrix<Bool> resultMask(cellShape, new Bool[nelem], TAKE_OVER);
-    resultMask = True;
+    resultMask = true;
     Vector<Bool> flagRow = flagRowCol.getColumn();
     Double threshold = 1.1;
     Double timeCentroid = 0.0;
@@ -670,7 +671,7 @@ void SingleDishSkyCal::traverseMS(MeasurementSet const &ms) {
 	for (size_t j = 0; j < dataSum.nelements(); ++j) {
 	  if (weight_[j] == 0.0f) {
 	    data_[j] = 0.0;
-	    flag_[j] = False;
+	    flag_[j] = false;
 	  }
 	  else {
 	    data_[j] /= weight_[j];
@@ -694,7 +695,7 @@ void SingleDishSkyCal::traverseMS(MeasurementSet const &ms) {
 
 	dataSum = 0.0f;
 	weightSum = 0.0f;
-	resultMask = True;
+	resultMask = true;
 	timeCentroid = 0.0;
 	numSpectra = 0;
 	effectiveExposure = 0.0;
@@ -745,7 +746,7 @@ void SingleDishSkyCal::initSolvePar()
     solveAllParOK().resize(solveAllRPar().shape());
     solveAllParErr().resize(solveAllRPar().shape());
     solveAllParSNR().resize(solveAllRPar().shape());
-    solveAllParOK()=True;
+    solveAllParOK()=true;
     solveAllParErr()=0.0;
     solveAllParSNR()=0.0;
     solveParOK().reference(solveAllParOK());

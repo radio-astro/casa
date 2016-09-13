@@ -24,6 +24,7 @@
 
 
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 /////////////////////////////////////////////
@@ -41,8 +42,6 @@ namespace MSTransformations
 		return sigma > FLT_MIN ? 1.0 / std::pow (sigma,2) : 0.0;
 	}
 
-	Bool False = False;
-	Bool True = False;
 	Unit Hz(String("Hz"));
 }
 
@@ -88,7 +87,7 @@ MSTransformManager::~MSTransformManager()
 	// This has to be done after deleting the outputMS data handler
 	if (userBufferMode_p)
 	{
-		Table::deleteTable(outMsName_p,True);
+		Table::deleteTable(outMsName_p,true);
 	}
 
 	return;
@@ -103,9 +102,9 @@ void MSTransformManager::initialize()
 	inpMsName_p = String("");
 	outMsName_p = String("");
 	datacolumn_p = String("CORRECTED");
-	makeVirtualModelColReal_p = False; // MODEL_DATA should always be made real via the datacol param.
-	makeVirtualCorrectedColReal_p = True; // TODO: CORRECTED_DATA should be made real on request
-	tileShape_p.resize(1,False);
+	makeVirtualModelColReal_p = false; // MODEL_DATA should always be made real via the datacol param.
+	makeVirtualCorrectedColReal_p = true; // TODO: CORRECTED_DATA should be made real on request
+	tileShape_p.resize(1,false);
 	//TileShape of size 1 can have 2 values [0], and [1] ...these are used in to
 	//determine the tileshape by using MSTileLayout. Otherwise it has to be a
 	//vector size 3 e.g [4, 15, 351] => a tile shape of 4 stokes, 15 channels 351
@@ -141,11 +140,11 @@ void MSTransformManager::initialize()
 	// Frequency transformation parameters
 	nspws_p = 1;
 	ddiStart_p = 0;
-	combinespws_p = False;
-	channelAverage_p = False;
-	hanningSmooth_p = False;
-	regridding_p = False;
-	refFrameTransformation_p = False;
+	combinespws_p = false;
+	channelAverage_p = false;
+	hanningSmooth_p = false;
+	regridding_p = false;
+	refFrameTransformation_p = false;
 	freqbin_p = Vector<Int>(1,-1);
 	useweights_p = "flags";
 	weightmode_p = MSTransformations::flags;
@@ -153,9 +152,9 @@ void MSTransformManager::initialize()
 	phaseCenterPar_p = new casac::variant("");
 	restFrequency_p = String("");
 	outputReferenceFramePar_p = String("");			// Options are: LSRK, LSRD, BARY, GALACTO, LGROUP, CMB, GEO, or TOPO
-	radialVelocityCorrection_p = False;
+	radialVelocityCorrection_p = false;
 	smoothBin_p = 3;
-	smoothCoeff_p.resize(3,False);
+	smoothCoeff_p.resize(3,false);
 	smoothCoeff_p(0) = 0.25;
 	smoothCoeff_p(1) = 0.5;
 	smoothCoeff_p(2) = 0.25;
@@ -169,12 +168,12 @@ void MSTransformManager::initialize()
 	velocityType_p = String("radio");				// When mode is velocity options are: optical, radio
 
 	// Phase shifting paramters
-	phaseShifting_p = False;
+	phaseShifting_p = false;
 	dx_p = 0;
 	dy_p = 0;
 
 	// Time transformation parameters
-	timeAverage_p = False;
+	timeAverage_p = false;
 	timeBin_p = 0.0;
 	timespan_p = String("");
 	timeAvgOptions_p = vi::AveragingOptions(vi::AveragingOptions::Nothing);
@@ -182,7 +181,7 @@ void MSTransformManager::initialize()
 	// minbaselines_p = 0;
 
 	// Cal parameters
-	calibrate_p = False;
+	calibrate_p = false;
 	callib_p = "";
 	callibRec_p = Record();
 
@@ -191,13 +190,13 @@ void MSTransformManager::initialize()
 	uvcontsubRec_p = Record();
 
 	// Spw averaging
-	spwAverage_p = False;
+	spwAverage_p = false;
 
 	// Weight Spectrum parameters
-	usewtspectrum_p = False;
-	spectrumTransformation_p = False;
-	propagateWeights_p = False;
-	flushWeightSpectrum_p = False;
+	usewtspectrum_p = false;
+	spectrumTransformation_p = false;
+	propagateWeights_p = false;
+	flushWeightSpectrum_p = false;
 
 	// MS-related members
 	dataHandler_p = NULL;
@@ -220,13 +219,13 @@ void MSTransformManager::initialize()
 	channelSelector_p = NULL;
 
 	// Output MS structure related members
-	inputFlagCategoryAvailable_p = False;
-	inputWeightSpectrumAvailable_p = False;
-	weightSpectrumFromSigmaFilled_p = False;
-	correctedToData_p = False;
-	doingData_p = False;
-	doingCorrected_p = False;
-	doingModel_p = False;
+	inputFlagCategoryAvailable_p = false;
+	inputWeightSpectrumAvailable_p = false;
+	weightSpectrumFromSigmaFilled_p = false;
+	correctedToData_p = false;
+	doingData_p = false;
+	doingCorrected_p = false;
+	doingModel_p = false;
 	dataColMap_p.clear();
 	mainColumn_p = MS::CORRECTED_DATA;
 	nRowsToAdd_p = 0;
@@ -252,12 +251,12 @@ void MSTransformManager::initialize()
 	newSigmaFactorMap_p.clear();
 
 	// Reference frame transformation members
-	fftShiftEnabled_p = False;
+	fftShiftEnabled_p = false;
 	fftShift_p = 0;
 
 	// Weight Spectrum members
-	inputWeightSpectrumAvailable_p = False;
-	combinationOfSPWsWithDifferentExposure_p = False;
+	inputWeightSpectrumAvailable_p = false;
+	combinationOfSPWsWithDifferentExposure_p = false;
 
 	// Transformations - related function pointers
 	transformCubeOfDataComplex_p = NULL;
@@ -280,17 +279,17 @@ void MSTransformManager::initialize()
 	writeOutputFlagsPlaneReshapedSlices_p = NULL;
 
 	// Buffer handling members
-	bufferMode_p = False;
-	userBufferMode_p = False;
-	reindex_p = True;
+	bufferMode_p = false;
+	userBufferMode_p = false;
+	reindex_p = true;
 	factory_p = False;
-	interactive_p = False;
-	spectrumReshape_p = False;
-	cubeTransformation_p = False;
-	dataColumnAvailable_p = False;
-	correctedDataColumnAvailable_p = False;
-	modelDataColumnAvailable_p = False;
-	floatDataColumnAvailable_p = False;
+	interactive_p = false;
+	spectrumReshape_p = false;
+	cubeTransformation_p = false;
+	dataColumnAvailable_p = false;
+	correctedDataColumnAvailable_p = false;
+	modelDataColumnAvailable_p = false;
+	floatDataColumnAvailable_p = false;
 	flagCube_p = NULL;
 	visCube_p = NULL;
 	visCubeCorrected_p = NULL;
@@ -303,7 +302,7 @@ void MSTransformManager::initialize()
 	relativeRow_p = 0;
 
 	// single dish specific
-	smoothFourier_p = False;
+	smoothFourier_p = false;
 
 	return;
 }
@@ -413,7 +412,7 @@ void MSTransformManager::parseMsSpecParams(Record &configuration)
 
 	if (userBufferMode_p)
 	{
-		interactive_p = True;
+		interactive_p = true;
 
 		exists = -1;
 		exists = configuration.fieldNumber ("interactive");
@@ -435,7 +434,7 @@ void MSTransformManager::parseMsSpecParams(Record &configuration)
 	}
 	else
 	{
-		interactive_p = False;
+		interactive_p = false;
 
 		exists = -1;
 		exists = configuration.fieldNumber ("realmodelcol");
@@ -457,7 +456,7 @@ void MSTransformManager::parseMsSpecParams(Record &configuration)
 							 << "MODEL_DATA column not selected in datacolumn parameter "
 							 << "Options that include MODEL_DATA are 'MODEL' and 'ALL'"
 							 << LogIO::POST;
-					makeVirtualModelColReal_p = False;
+					makeVirtualModelColReal_p = false;
 				}
 			}
 		}
@@ -478,13 +477,13 @@ void MSTransformManager::parseMsSpecParams(Record &configuration)
 		exists = configuration.fieldNumber ("tileshape");
 		if (exists >= 0)
 		{
-			if ( configuration.type(exists) == casa::TpInt )
+			if ( configuration.type(exists) == casacore::TpInt )
 			{
 				Int mode;
 				configuration.get (exists, mode);
 				tileShape_p = Vector<Int>(1,mode);
 			}
-			else if ( configuration.type(exists) == casa::TpArrayInt)
+			else if ( configuration.type(exists) == casacore::TpArrayInt)
 			{
 				configuration.get (exists, tileShape_p);
 			}
@@ -646,7 +645,7 @@ void MSTransformManager::parseChanAvgParams(Record &configuration)
 	exists = configuration.fieldNumber ("chanbin");
 	if (exists >= 0)
 	{
-		if ( configuration.type(exists) == casa::TpInt )
+		if ( configuration.type(exists) == casacore::TpInt )
 		{
 			Int freqbin;
 			configuration.get (exists, freqbin);
@@ -663,7 +662,7 @@ void MSTransformManager::parseChanAvgParams(Record &configuration)
 
 			}
 		}
-		else if ( configuration.type(exists) == casa::TpArrayInt)
+		else if ( configuration.type(exists) == casacore::TpArrayInt)
 		{
 			configuration.get (exists, freqbin_p);
 		}
@@ -680,7 +679,7 @@ void MSTransformManager::parseChanAvgParams(Record &configuration)
 	{
 		logger_p << LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
 				<< "Channel average is activated but no chanbin parameter provided " << LogIO::POST;
-		channelAverage_p = False;
+		channelAverage_p = false;
 		return;
 	}
 
@@ -762,7 +761,7 @@ void MSTransformManager::parseFreqTransParams(Record &configuration)
 		if (hanningSmooth_p)
 		{
 			smoothBin_p = 3;
-			smoothCoeff_p.resize(3,False);
+			smoothCoeff_p.resize(3,false);
 			smoothCoeff_p(0) = 0.25;
 			smoothCoeff_p(1) = 0.5;
 			smoothCoeff_p(2) = 0.25;
@@ -881,7 +880,7 @@ void MSTransformManager::parseRefFrameTransParams(Record &configuration)
 		}
 		else if (interpolationMethodPar_p.contains("fftshift"))
 		{
-			fftShiftEnabled_p = True;
+			fftShiftEnabled_p = true;
 			interpolationMethod_p = MSTransformations::linear;
 		}
 		else
@@ -908,7 +907,7 @@ void MSTransformManager::parseRefFrameTransParams(Record &configuration)
 		{
 			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
 					<< "Number of output SPWs is " << nspws_p << LogIO::POST;
-			combinespws_p = True;
+			combinespws_p = true;
 		}
 		else
 		{
@@ -1014,7 +1013,7 @@ void MSTransformManager::parsePhaseShiftParams(Record &configuration)
 
 	if (abs(dx_p) > 0 or abs(dy_p) > 0)
 	{
-		phaseShifting_p = True;
+		phaseShifting_p = true;
 		logger_p 	<< LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
 					<< "Phase shifting is activated: dx="<< dx_p << " dy=" << dy_p << LogIO::POST;
 	}
@@ -1063,7 +1062,7 @@ void MSTransformManager::parseTimeAvgParams(Record &configuration)
 		{
 			logger_p << LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
 					<< "Time average is activated but no timebin parameter provided " << LogIO::POST;
-			timeAverage_p = False;
+			timeAverage_p = false;
 			return;
 		}
 
@@ -1155,10 +1154,7 @@ void MSTransformManager::parseTimeAvgParams(Record &configuration)
 // -----------------------------------------------------------------------
 void MSTransformManager::parseCalParams(Record &configuration)
 {
-	int exists = -1;
-
-	exists = -1;
-	exists = configuration.fieldNumber("callib");
+	int exists = configuration.fieldNumber("callib");
 	if (exists >= 0)
 	{
 
@@ -1327,7 +1323,7 @@ void MSTransformManager::open()
 
 
 	//jagonzal (CAS-5174)
-	Bool outputMSStructureCreated = False;
+	Bool outputMSStructureCreated = false;
 	try
 	{
 		if (not bufferMode_p)
@@ -1342,7 +1338,7 @@ void MSTransformManager::open()
 	}
 	catch (AipsError ex)
 	{
-		outputMSStructureCreated = False;
+		outputMSStructureCreated = false;
 		logger_p 	<< LogIO::SEVERE
 					<< "Exception creating output MS structure: " << ex.getMesg() << endl
 					<< "Stack Trace: " << ex.getStackTrace()
@@ -1403,7 +1399,7 @@ void MSTransformManager::close()
 		// Flush and unlock MS
 		outputMs_p->flush();
 		outputMs_p->unlock();
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 
 		// Unset the output MS
 		outputMs_p = NULL;
@@ -1431,7 +1427,7 @@ void MSTransformManager::setup()
 		{
 			logger_p << LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
 					<< "There is only one selected SPW, no need to combine " << LogIO::POST;
-			combinespws_p = False;
+			combinespws_p = false;
 		}
 	}
 
@@ -1464,42 +1460,42 @@ void MSTransformManager::setup()
 	{
 		transformCubeOfDataComplex_p = &MSTransformManager::combineCubeOfData;
 		transformCubeOfDataFloat_p = &MSTransformManager::combineCubeOfData;
-		spectrumTransformation_p = True;
-		propagateWeights_p = True;
-		spectrumReshape_p = True;
-		cubeTransformation_p = True;
+		spectrumTransformation_p = true;
+		propagateWeights_p = true;
+		spectrumReshape_p = true;
+		cubeTransformation_p = true;
 	}
 	else if (regridding_p)
 	{
 		transformCubeOfDataComplex_p = &MSTransformManager::regridCubeOfData;
 		transformCubeOfDataFloat_p = &MSTransformManager::regridCubeOfData;
-		spectrumTransformation_p = True;
-		propagateWeights_p = True;
-		spectrumReshape_p = True;
-		cubeTransformation_p = True;
+		spectrumTransformation_p = true;
+		propagateWeights_p = true;
+		spectrumReshape_p = true;
+		cubeTransformation_p = true;
 	}
 	else if (channelAverage_p)
 	{
 		transformCubeOfDataComplex_p = &MSTransformManager::averageCubeOfData;
 		transformCubeOfDataFloat_p = &MSTransformManager::averageCubeOfData;
-		spectrumTransformation_p = True;
-		propagateWeights_p = True;
-		spectrumReshape_p = True;
-		cubeTransformation_p = True;
+		spectrumTransformation_p = true;
+		propagateWeights_p = true;
+		spectrumReshape_p = true;
+		cubeTransformation_p = true;
 	}
 	else if (hanningSmooth_p || smoothFourier_p)
 	{
 		transformCubeOfDataComplex_p = &MSTransformManager::smoothCubeOfData;
 		transformCubeOfDataFloat_p = &MSTransformManager::smoothCubeOfData;
-		spectrumTransformation_p = True;
-		cubeTransformation_p = True;
+		spectrumTransformation_p = true;
+		cubeTransformation_p = true;
 	}
 	else if (nspws_p > 1)
 	{
 		transformCubeOfDataComplex_p = &MSTransformManager::separateCubeOfData;
 		transformCubeOfDataFloat_p = &MSTransformManager::separateCubeOfData;
-		spectrumReshape_p = True;
-		cubeTransformation_p = True;
+		spectrumReshape_p = true;
+		cubeTransformation_p = true;
 	}
 	else
 	{
@@ -1554,7 +1550,7 @@ void MSTransformManager::setup()
 	// weightSpectrum is constant and has no effect in frequency avg./regridding
 	if ((not inputWeightSpectrumAvailable_p) and (not timeAverage_p))
 	{
-		propagateWeights_p = False;
+		propagateWeights_p = false;
 		weightmode_p = MSTransformations::flagsNonZero;
 	}
 	else
@@ -1566,11 +1562,11 @@ void MSTransformManager::setup()
 	// SPECTRUM columns have to be set when they exists in the input or the user specifies it via usewtspectrum_p
 	if (inputWeightSpectrumAvailable_p or usewtspectrum_p)
 	{
-		flushWeightSpectrum_p = True;
+		flushWeightSpectrum_p = true;
 	}
 	else
 	{
-		flushWeightSpectrum_p = False;
+		flushWeightSpectrum_p = false;
 	}
 
 	propagateWeights(propagateWeights_p);
@@ -2325,8 +2321,8 @@ void MSTransformManager::initRefFrameTransParams()
 	}
 
     // Parse output reference frame
-    refFrameTransformation_p = True;
-    radialVelocityCorrection_p = False;
+    refFrameTransformation_p = true;
+    radialVelocityCorrection_p = false;
     if(outputReferenceFramePar_p.empty())
     {
     	outputReferenceFrame_p = inputReferenceFrame_p;
@@ -2335,7 +2331,7 @@ void MSTransformManager::initRefFrameTransParams()
     else if (outputReferenceFramePar_p == "SOURCE")
     {
     	outputReferenceFrame_p = MFrequency::GEO;
-    	radialVelocityCorrection_p = True;
+    	radialVelocityCorrection_p = true;
     }
     else if(!MFrequency::getType(outputReferenceFrame_p, outputReferenceFramePar_p))
     {
@@ -2344,7 +2340,7 @@ void MSTransformManager::initRefFrameTransParams()
     }
 
     if (outputReferenceFrame_p == inputReferenceFrame_p) {
-    	refFrameTransformation_p = False;
+    	refFrameTransformation_p = false;
     }
 
 
@@ -2398,7 +2394,7 @@ void MSTransformManager::initRefFrameTransParams()
     }
     else
     {
-    	String phaseCenter = phaseCenterPar_p->toString(True);
+    	String phaseCenter = phaseCenterPar_p->toString(true);
 
     	// Determine phase center from the first row in the FIELD sub-table of the output (selected) MS
     	if (phaseCenter.empty())
@@ -2551,7 +2547,7 @@ void MSTransformManager::regridSpwSubTable()
     }
 
     // Flush changes
-    outputMs_p->flush(True);
+    outputMs_p->flush(true);
 
 	return;
 }
@@ -2633,7 +2629,7 @@ void MSTransformManager::regridAndCombineSpwSubtable()
     std::vector<std::vector<Double> > averageChanFrac;
     MSTransformRegridder::combineSpws(logger_p,outMsName_p,Vector<Int>(1,-1),
     								  combinedCHAN_FREQ,combinedCHAN_WIDTH,
-									  averageWhichChan, averageWhichSPW, averageChanFrac, True);
+									  averageWhichChan, averageWhichSPW, averageChanFrac, true);
 
 	// Create list of combined channels
 	vector<channelInfo> combinedChannels;
@@ -2709,7 +2705,7 @@ void MSTransformManager::regridAndCombineSpwSubtable()
     measFreqRefCol.put(0,outputReferenceFrame_p);
 
     // Flush changes
-    outputMs_p->flush(True);
+    outputMs_p->flush(true);
 
 
     /// Add input-output SPW pair to map ///////////////////
@@ -2810,7 +2806,7 @@ void MSTransformManager::regridSpwAux(	Int spwId,
 											restFrequency_p,
 											outputReferenceFramePar_p,
 											velocityType_p,
-											True, // verbose
+											true, // verbose
 											radialVelocity_p
 											);
 
@@ -2869,7 +2865,7 @@ void MSTransformManager::regridSpwAux(	Int spwId,
 												restFrequency_p,
 												outputReferenceFramePar_p,
 												velocityType_p,
-												False // verbose
+												false // verbose
 												);
 
 		Double avgCombinedWidth = 0;
@@ -2893,7 +2889,7 @@ void MSTransformManager::regridSpwAux(	Int spwId,
 			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
 	        					<< "Ratio between input and output width is " << avgRegriddedWidth/avgCombinedWidth
 	        					<< ", setting pre-channel average width to " << width << LogIO::POST;
-			channelAverage_p = True;
+			channelAverage_p = true;
 			freqbinMap_p[spwId] = width;
 			newWeightFactorMap_p[spwId] /= width; // jagonzal: Remove channel width contribution to the scale factor
 
@@ -2970,10 +2966,10 @@ void MSTransformManager::separateSpwSubtable()
 				Double lastEffectiveBW = effectiveBW(chanFreq.size()-1);
 				Double lastResolution = resolution(chanFreq.size()-1);
 
-				chanFreq.resize(nOutChannels,True);
-				chanWidth.resize(nOutChannels,True);
-				effectiveBW.resize(nOutChannels,True);
-				resolution.resize(nOutChannels,True);
+				chanFreq.resize(nOutChannels,true);
+				chanWidth.resize(nOutChannels,true);
+				effectiveBW.resize(nOutChannels,true);
+				resolution.resize(nOutChannels,true);
 
 				uInt outIndex;
 				for (uInt newChanIdx = 0; newChanIdx<newChannels; newChanIdx++)
@@ -2997,7 +2993,7 @@ void MSTransformManager::separateSpwSubtable()
 				if (rowIndex > 0)
 				{
 					// Add row
-					spwTable.addRow(1,True);
+					spwTable.addRow(1,true);
 
 					spwCols.measFreqRef().put(rowIndex,spwCols.measFreqRef()(0));
 					spwCols.flagRow().put(rowIndex,spwCols.flagRow()(0));
@@ -3079,7 +3075,7 @@ void MSTransformManager::separateSpwSubtable()
 			// spwTable.removeRow(0);
 
 			// Flush changes
-			spwTable.flush(True,True);
+			spwTable.flush(true,true);
 		}
     	else
     	{
@@ -3183,7 +3179,7 @@ void MSTransformManager::separateFeedSubtable()
 		    }
 
 		    // Flush changes
-		    feedtable.flush(True,True);
+		    feedtable.flush(true,true);
 		}
     	else
     	{
@@ -3328,7 +3324,7 @@ void MSTransformManager::separateSourceSubtable()
 		    }
 
 		    // Flush changes
-		    sourcetable.flush(True,True);
+		    sourcetable.flush(true,true);
 		}
     	else
     	{
@@ -3618,7 +3614,7 @@ void MSTransformManager::separateSyscalSubtable()
 			}
 
 			// Flush changes
-			syscalTable.flush(True,True);
+			syscalTable.flush(true,true);
     	}
     	else
     	{
@@ -3691,7 +3687,7 @@ void MSTransformManager::separateFreqOffsetSubtable()
     		}
 
     		// Flush changes
-    		freqoffsetTable.flush(True,True);
+    		freqoffsetTable.flush(true,true);
     	}
     	else
     	{
@@ -3814,7 +3810,7 @@ void MSTransformManager::separateCalDeviceSubtable()
 	        }
 
 	    	// Flush changes
-			subtable.flush(True,True);
+			subtable.flush(true,true);
 		}
 		else
 		{
@@ -3918,7 +3914,7 @@ void MSTransformManager::separateSysPowerSubtable()
 	        }
 
 	    	// Flush changes
-			subtable.flush(True,True);
+			subtable.flush(true,true);
 		}
 		else
 		{
@@ -3952,8 +3948,8 @@ void MSTransformManager::calculateIntermediateFrequencies(	Int spwId,
 	}
 	numOfCombInputChanMap_p[spwId] = inputChanFreq.size();
 	numOfCombInterChanMap_p[spwId] = mumOfInterChan;
-	intermediateChanFreq.resize(mumOfInterChan,False);
-	intermediateChanWidth.resize(mumOfInterChan,False);
+	intermediateChanFreq.resize(mumOfInterChan,false);
+	intermediateChanWidth.resize(mumOfInterChan,false);
 	simpleAverage(freqbinMap_p[spwId], inputChanFreq, intermediateChanFreq);
 	simpleAverage(freqbinMap_p[spwId], inputChanWidth, intermediateChanWidth);
 
@@ -4023,7 +4019,7 @@ void MSTransformManager::reindexSourceSubTable()
     	sourceSubtable.removeRow(duplicateIdx);
 
     	// Flush changes
-        outputMs_p->flush(True);
+        outputMs_p->flush(true);
     }
     else
     {
@@ -4055,7 +4051,7 @@ void MSTransformManager::reindexDDISubTable()
     		if (rowIndex > 0)
     		{
         		// Add row
-        		ddiTable.addRow(1,True);
+        		ddiTable.addRow(1,true);
 
         	    // Copy polID and flagRow from the first original SPW
         		ddiCols.polarizationId().put(rowIndex,ddiCols.polarizationId()(0));
@@ -4091,7 +4087,7 @@ void MSTransformManager::reindexDDISubTable()
 
 
         // Flush changes
-        outputMs_p->flush(True);
+        outputMs_p->flush(true);
 
     }
     else
@@ -4152,7 +4148,7 @@ void MSTransformManager::reindexFeedSubTable()
     	feedSubtable.removeRow(duplicateIdx);
 
         // Flush changes
-        outputMs_p->flush(True);
+        outputMs_p->flush(true);
     }
     else
     {
@@ -4213,7 +4209,7 @@ void MSTransformManager::reindexSysCalSubTable()
     	syscalSubtable.removeRow(duplicateIdx);
 
         // Flush changes
-        outputMs_p->flush(True);
+        outputMs_p->flush(true);
     }
     else
     {
@@ -4275,7 +4271,7 @@ void MSTransformManager::reindexFreqOffsetSubTable()
     	freqoffsetSubtable.removeRow(duplicateIdx);
 
         // Flush changes
-        outputMs_p->flush(True);
+        outputMs_p->flush(true);
     }
     else
     {
@@ -4339,11 +4335,11 @@ void MSTransformManager::reindexGenericTimeDependentSubTable(const String& subta
 	    	subtable.removeRow(duplicateIdx);
 
 	    	// Flush changes
-			subtable.flush(True,True);
+			subtable.flush(true,true);
 		}
 		else
 		{
-			if (subtabname == casa::String("FEED"))
+			if (subtabname == casacore::String("FEED"))
 			{
 		    	logger_p << LogIO::SEVERE << LogOrigin("MSTransformManager", __FUNCTION__)
 		    			<< subtabname << " sub-table found but has no valid content" << LogIO::POST;
@@ -4357,7 +4353,7 @@ void MSTransformManager::reindexGenericTimeDependentSubTable(const String& subta
 	}
 	else
 	{
-		if (subtabname == casa::String("FEED"))
+		if (subtabname == casacore::String("FEED"))
 		{
 	    	logger_p << LogIO::SEVERE << LogOrigin("MSTransformManager", __FUNCTION__)
 	    			<< subtabname << " sub-table not found" << LogIO::POST;
@@ -4503,7 +4499,7 @@ void MSTransformManager::dropNonUniformWidthChannels()
 	}
 
 	// Flush changes
-	outputMs_p->flush(True);
+	outputMs_p->flush(true);
 
 	return;
 }
@@ -4626,12 +4622,12 @@ void MSTransformManager::calculateNewWeightAndSigmaFactors()
 // -----------------------------------------------------------------------
 void MSTransformManager::checkFillFlagCategory()
 {
-	inputFlagCategoryAvailable_p = False;
+	inputFlagCategoryAvailable_p = false;
 	if (	!selectedInputMsCols_p->flagCategory().isNull()
 			&& selectedInputMsCols_p->flagCategory().isDefined(0)
 			&& selectedInputMsCols_p->flagCategory()(0).shape() == 3)
 	{
-		inputFlagCategoryAvailable_p = True;
+		inputFlagCategoryAvailable_p = true;
 		logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
 				<< "Optional column FLAG_CATEGORY found in input MS will be written to output MS" << LogIO::POST;
 	}
@@ -4644,10 +4640,10 @@ void MSTransformManager::checkFillFlagCategory()
 // -----------------------------------------------------------------------
 void MSTransformManager::checkFillWeightSpectrum()
 {
-	inputWeightSpectrumAvailable_p = False;
+	inputWeightSpectrumAvailable_p = false;
 	if (!selectedInputMsCols_p->weightSpectrum().isNull() && selectedInputMsCols_p->weightSpectrum().isDefined(0))
 	{
-		inputWeightSpectrumAvailable_p = True;
+		inputWeightSpectrumAvailable_p = true;
 		logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
 				<< "Optional column WEIGHT_SPECTRUM found in input MS will be written to output MS" << LogIO::POST;
 	}
@@ -4660,31 +4656,31 @@ void MSTransformManager::checkFillWeightSpectrum()
 // -----------------------------------------------------------------------
 void MSTransformManager::checkDataColumnsAvailable()
 {
-	dataColumnAvailable_p = False;
-	correctedDataColumnAvailable_p = False;
-	modelDataColumnAvailable_p = False;
+	dataColumnAvailable_p = false;
+	correctedDataColumnAvailable_p = false;
+	modelDataColumnAvailable_p = false;
 
 
-	floatDataColumnAvailable_p = False;
-	lagDataColumnAvailable_p = False;
+	floatDataColumnAvailable_p = false;
+	lagDataColumnAvailable_p = false;
 
 
 	// DATA
 	if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::DATA)))
 	{
-		dataColumnAvailable_p = True;
+		dataColumnAvailable_p = true;
 	}
 
 
 	// CORRECTED_DATA already exists in the input MS
 	if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::CORRECTED_DATA)))
 	{
-		correctedDataColumnAvailable_p = True;
+		correctedDataColumnAvailable_p = true;
 	}
 	// CORRECTED_DATA does not exist but there is a calibration parameter set available
 	else if (calibrate_p and (makeVirtualCorrectedColReal_p or bufferMode_p))
 	{
-		correctedDataColumnAvailable_p = True;
+		correctedDataColumnAvailable_p = true;
 	}
 	// There is no calibration parameter set available
 	else
@@ -4692,37 +4688,37 @@ void MSTransformManager::checkDataColumnsAvailable()
 		// TODO: Inform that virtual CORRECTED_DATA is not available
 
 		// Unset makeVirtualModelColReal_p as virtual CORRECTED col. is not available
-		makeVirtualCorrectedColReal_p = False;
+		makeVirtualCorrectedColReal_p = false;
 	}
 
 	// FLOAT_DATA
 	if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::FLOAT_DATA)))
 	{
-		floatDataColumnAvailable_p = True;
+		floatDataColumnAvailable_p = true;
 	}
 
 
 	// MODEL_DATA already exists in the input MS
 	if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::MODEL_DATA)))
 	{
-		modelDataColumnAvailable_p = True;
+		modelDataColumnAvailable_p = true;
 	}
 	// MODEL_DATA does not exist but there is a model available in the SOURCE sub-table
 	// MODEL_DATA should not be made real if the user does not specify it implicitly
 	else if (inputMs_p->source().isColumn(MSSource::SOURCE_MODEL) and makeVirtualModelColReal_p)
 	{
-		modelDataColumnAvailable_p = True;
+		modelDataColumnAvailable_p = true;
 	}
 	// CAS-7390: Provide default MODEL_DATA in buffer mode
 	else if (bufferMode_p and not floatDataColumnAvailable_p) // MODEL is not defined for SD data
 	{
-		makeVirtualModelColReal_p = True;
-		modelDataColumnAvailable_p = True;
+		makeVirtualModelColReal_p = true;
+		modelDataColumnAvailable_p = true;
 	}
 	// There is no model available in the SOURCE sub-table
 	else
 	{
-		modelDataColumnAvailable_p = False;
+		modelDataColumnAvailable_p = false;
 
 		// Inform that virtual MODEL_DATA is not available
 		if (makeVirtualModelColReal_p)
@@ -4744,14 +4740,14 @@ void MSTransformManager::checkDataColumnsAvailable()
 		}
 
 		// Unset makeVirtualModelColReal_p as virtual MODEL col. is not available
-		makeVirtualModelColReal_p = False;
+		makeVirtualModelColReal_p = false;
 	}
 
 
 	// LAG_DATA
 	if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::LAG_DATA)))
 	{
-		lagDataColumnAvailable_p = True;
+		lagDataColumnAvailable_p = true;
 	}
 
 	return;
@@ -4763,7 +4759,7 @@ void MSTransformManager::checkDataColumnsAvailable()
 void MSTransformManager::checkDataColumnsToFill()
 {
 	dataColMap_p.clear();
-	Bool mainColSet=False;
+	Bool mainColSet=false;
 	timeAvgOptions_p = vi::AveragingOptions(vi::AveragingOptions::Nothing);
 
 	if (datacolumn_p.contains("ALL"))
@@ -4773,7 +4769,7 @@ void MSTransformManager::checkDataColumnsToFill()
 			if (!mainColSet)
 			{
 				mainColumn_p = MS::DATA;
-				mainColSet = True;
+				mainColSet = true;
 			}
 			dataColMap_p[MS::DATA] = MS::DATA;
 			colCheckInfo(MS::columnName(MS::DATA),MS::columnName(dataColMap_p[MS::DATA]));
@@ -4787,7 +4783,7 @@ void MSTransformManager::checkDataColumnsToFill()
 			if (!mainColSet)
 			{
 				mainColumn_p = MS::CORRECTED_DATA;
-				mainColSet = True;
+				mainColSet = true;
 			}
 			dataColMap_p[MS::CORRECTED_DATA] = MS::CORRECTED_DATA;
 			colCheckInfo(MS::columnName(MS::CORRECTED_DATA),MS::columnName(dataColMap_p[MS::CORRECTED_DATA]));
@@ -4801,7 +4797,7 @@ void MSTransformManager::checkDataColumnsToFill()
 			if (!mainColSet)
 			{
 				mainColumn_p = MS::MODEL_DATA;
-				mainColSet = True;
+				mainColSet = true;
 			}
 			dataColMap_p[MS::MODEL_DATA] = MS::MODEL_DATA;
 			colCheckInfo(MS::columnName(MS::MODEL_DATA),MS::columnName(dataColMap_p[MS::MODEL_DATA]));
@@ -4827,7 +4823,7 @@ void MSTransformManager::checkDataColumnsToFill()
 			if (!mainColSet)
 			{
 				mainColumn_p = MS::FLOAT_DATA;
-				mainColSet = True;
+				mainColSet = true;
 			}
 			dataColMap_p[MS::FLOAT_DATA] = MS::FLOAT_DATA;
 			colCheckInfo(MS::columnName(MS::FLOAT_DATA),MS::columnName(dataColMap_p[MS::FLOAT_DATA]));
@@ -4840,7 +4836,7 @@ void MSTransformManager::checkDataColumnsToFill()
 			if (!mainColSet)
 			{
 				mainColumn_p = MS::LAG_DATA;
-				mainColSet = True;
+				mainColSet = true;
 			}
 			dataColMap_p[MS::LAG_DATA] = MS::LAG_DATA;
 			colCheckInfo(MS::columnName(MS::LAG_DATA),MS::columnName(dataColMap_p[MS::LAG_DATA]));
@@ -4856,7 +4852,7 @@ void MSTransformManager::checkDataColumnsToFill()
 			if (!mainColSet)
 			{
 				mainColumn_p = MS::DATA;
-				mainColSet = True;
+				mainColSet = true;
 			}
 			dataColMap_p[MS::DATA] = MS::DATA;
 			colCheckInfo(MS::columnName(MS::DATA),MS::columnName(dataColMap_p[MS::DATA]));
@@ -4870,7 +4866,7 @@ void MSTransformManager::checkDataColumnsToFill()
 			if (!mainColSet)
 			{
 				mainColumn_p = MS::CORRECTED_DATA;
-				mainColSet = True;
+				mainColSet = true;
 			}
 			dataColMap_p[MS::CORRECTED_DATA] = MS::CORRECTED_DATA;
 			colCheckInfo(MS::columnName(MS::CORRECTED_DATA),MS::columnName(dataColMap_p[MS::CORRECTED_DATA]));
@@ -4884,7 +4880,7 @@ void MSTransformManager::checkDataColumnsToFill()
 			if (!mainColSet)
 			{
 				mainColumn_p = MS::MODEL_DATA;
-				mainColSet = True;
+				mainColSet = true;
 			}
 			dataColMap_p[MS::MODEL_DATA] = MS::MODEL_DATA;
 			colCheckInfo(MS::columnName(MS::MODEL_DATA),MS::columnName(dataColMap_p[MS::MODEL_DATA]));
@@ -4907,14 +4903,14 @@ void MSTransformManager::checkDataColumnsToFill()
 	}
 	else if (datacolumn_p.contains("FLOAT_DATA,DATA"))
 	{
-		Bool mainColSet=False;
+		Bool mainColSet=false;
 
 		if (dataColumnAvailable_p)
 		{
 			if (!mainColSet)
 			{
 				mainColumn_p = MS::DATA;
-				mainColSet = True;
+				mainColSet = true;
 			}
 			dataColMap_p[MS::DATA] = MS::DATA;
 			colCheckInfo(MS::columnName(MS::DATA),MS::columnName(dataColMap_p[MS::DATA]));
@@ -4933,7 +4929,7 @@ void MSTransformManager::checkDataColumnsToFill()
 			if (!mainColSet)
 			{
 				mainColumn_p = MS::FLOAT_DATA;
-				mainColSet = True;
+				mainColSet = true;
 			}
 			dataColMap_p[MS::FLOAT_DATA] = MS::FLOAT_DATA;
 			colCheckInfo(MS::columnName(MS::FLOAT_DATA),MS::columnName(dataColMap_p[MS::FLOAT_DATA]));
@@ -4953,7 +4949,7 @@ void MSTransformManager::checkDataColumnsToFill()
 			if (!mainColSet)
 			{
 				mainColumn_p = MS::FLOAT_DATA;
-				mainColSet = True;
+				mainColSet = true;
 			}
 			dataColMap_p[MS::FLOAT_DATA] = MS::FLOAT_DATA;
 			colCheckInfo(MS::columnName(MS::FLOAT_DATA),MS::columnName(dataColMap_p[MS::FLOAT_DATA]));
@@ -4973,7 +4969,7 @@ void MSTransformManager::checkDataColumnsToFill()
 			if (!mainColSet)
 			{
 				mainColumn_p = MS::DATA;
-				mainColSet = True;
+				mainColSet = true;
 			}
 			dataColMap_p[MS::DATA] = MS::DATA;
 			colCheckInfo(MS::columnName(MS::DATA),MS::columnName(dataColMap_p[MS::DATA]));
@@ -4992,7 +4988,7 @@ void MSTransformManager::checkDataColumnsToFill()
 			if (!mainColSet)
 			{
 				mainColumn_p = MS::LAG_DATA;
-				mainColSet = True;
+				mainColSet = true;
 			}
 			dataColMap_p[MS::LAG_DATA] = MS::LAG_DATA;
 			colCheckInfo(MS::columnName(MS::LAG_DATA),MS::columnName(dataColMap_p[MS::LAG_DATA]));
@@ -5013,7 +5009,7 @@ void MSTransformManager::checkDataColumnsToFill()
 			if (!mainColSet)
 			{
 				mainColumn_p = MS::LAG_DATA;
-				mainColSet = True;
+				mainColSet = true;
 			}
 			dataColMap_p[MS::LAG_DATA] = MS::LAG_DATA;
 			colCheckInfo(MS::columnName(MS::LAG_DATA),MS::columnName(dataColMap_p[MS::LAG_DATA]));
@@ -5034,7 +5030,7 @@ void MSTransformManager::checkDataColumnsToFill()
 			if (!mainColSet)
 			{
 				mainColumn_p = MS::DATA;
-				mainColSet = True;
+				mainColSet = true;
 			}
 			dataColMap_p[MS::DATA] = MS::DATA;
 			colCheckInfo(MS::columnName(MS::DATA),MS::columnName(dataColMap_p[MS::DATA]));
@@ -5055,10 +5051,10 @@ void MSTransformManager::checkDataColumnsToFill()
 			if (!mainColSet)
 			{
 				mainColumn_p = MS::CORRECTED_DATA;
-				mainColSet = True;
+				mainColSet = true;
 			}
 			dataColMap_p[MS::CORRECTED_DATA] = MS::DATA;
-			correctedToData_p = True;
+			correctedToData_p = true;
 			colCheckInfo(MS::columnName(MS::CORRECTED_DATA),MS::columnName(dataColMap_p[MS::CORRECTED_DATA]));
 
 			timeAvgOptions_p |= vi::AveragingOptions::AverageCorrected;
@@ -5078,7 +5074,7 @@ void MSTransformManager::checkDataColumnsToFill()
 			if (!mainColSet)
 			{
 				mainColumn_p = MS::MODEL_DATA;
-				mainColSet = True;
+				mainColSet = true;
 			}
 
 			dataColMap_p[MS::MODEL_DATA] = MS::DATA;
@@ -5111,15 +5107,15 @@ void MSTransformManager::checkDataColumnsToFill()
 
 	// Check if we are doing DATA
 	iter = dataColMap_p.find(MS::DATA);
-	if (iter != dataColMap_p.end()) doingData_p = True;
+	if (iter != dataColMap_p.end()) doingData_p = true;
 
 	// Check if we are doing CORRECTED_DATA
 	iter = dataColMap_p.find(MS::CORRECTED_DATA);
-	if (iter != dataColMap_p.end()) doingCorrected_p = True;
+	if (iter != dataColMap_p.end()) doingCorrected_p = true;
 
 	// Check if we are doing MODEL_DATA
 	iter = dataColMap_p.find(MS::MODEL_DATA);
-	if (iter != dataColMap_p.end()) doingModel_p = True;
+	if (iter != dataColMap_p.end()) doingModel_p = true;
 
 	return;
 }
@@ -5241,8 +5237,8 @@ void MSTransformManager::setIterationApproach()
 // -----------------------------------------------------------------------
 void MSTransformManager::generateIterator()
 {
-	Bool isWritable = False;
-	if (interactive_p) isWritable = True;
+	Bool isWritable = false;
+	if (interactive_p) isWritable = true;
 
 	// Prepare time average parameters (common for all cases)
 	vi::AveragingParameters *timeavgParams = NULL;
@@ -5336,7 +5332,7 @@ void MSTransformManager::generateIterator()
 		{
 			delete visibilityIterator_p;
 
-			correctedDataColumnAvailable_p = False;
+			correctedDataColumnAvailable_p = false;
 			checkDataColumnsToFill();
 
 			// Averaging VI
@@ -5461,11 +5457,11 @@ void MSTransformManager::fillOutputMs(vi::VisBuffer2 *vb)
 		RefRows rowRef( currentRows, currentRows + nRowsToAdd_p/nspws_p - 1);
 
 		// Add new rows to output MS
-		outputMs_p->addRow(nRowsToAdd_p,False);
+		outputMs_p->addRow(nRowsToAdd_p,false);
 
 		// Fill new rows
-		weightSpectrumFlatFilled_p = False;
-		weightSpectrumFromSigmaFilled_p = False;
+		weightSpectrumFlatFilled_p = false;
+		weightSpectrumFromSigmaFilled_p = false;
 	    fillWeightCols(vb,rowRef);
 	    fillDataCols(vb,rowRef);
 		fillIdCols(vb,rowRef);
@@ -5487,14 +5483,14 @@ void MSTransformManager::initFrequencyTransGrid(vi::VisBuffer2 *vb)
 	// CAS-6778: Support for new ref. frame SOURCE that requires radial velocity correction
 	MDoppler radVelCorr;
 	MDirection inputFieldDirection;
-	Bool radVelSignificant = False;
+	Bool radVelSignificant = false;
 	if (radialVelocityCorrection_p && inputMSFieldCols_p->needInterTime(vb->fieldId()(0)))
 	{
 		MRadialVelocity mRV = inputMSFieldCols_p->radVelMeas(vb->fieldId()(0),vb->time()(0));
 		Quantity mrv = mRV.get("m/s");
 		Quantity offsetMrv = radialVelocity_p.get("m/s"); // the radvel by which the out SPW def was shifted
 		radVelCorr =  MDoppler(mrv-(Quantity(2.)*offsetMrv));
-		if (fabs(mrv.getValue()) > 1E-6) radVelSignificant = True;
+		if (fabs(mrv.getValue()) > 1E-6) radVelSignificant = true;
 
 		inputFieldDirection = inputMSFieldCols_p->phaseDirMeas(vb->fieldId()(0), vb->time()(0));
 	}
@@ -5592,7 +5588,7 @@ void MSTransformManager::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 	RefRows absoluteRefRows(rowRef.firstRow(),rowRef.firstRow()+nRowsToAdd_p-1);
 	Vector<Int> tmpVectorInt(nRowsToAdd_p,0);
 	Vector<Double> tmpVectorDouble(nRowsToAdd_p,0.0);
-	Vector<Bool> tmpVectorBool(nRowsToAdd_p,False);
+	Vector<Bool> tmpVectorBool(nRowsToAdd_p,false);
 
 	// Special case for Data description Id
 	if (transformDDIVector(vb->dataDescriptionIds(),tmpVectorInt))
@@ -5605,10 +5601,10 @@ void MSTransformManager::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 	}
 
 	// Re-indexable Columns
-	transformAndWriteReindexableVector(	vb->observationId(),tmpVectorInt,True,
+	transformAndWriteReindexableVector(	vb->observationId(),tmpVectorInt,true,
 										inputOutputObservationIndexMap_p,
 										outputMsCols_p->observationId(),absoluteRefRows);
-	transformAndWriteReindexableVector(	vb->arrayId(),tmpVectorInt,True,
+	transformAndWriteReindexableVector(	vb->arrayId(),tmpVectorInt,true,
 										inputOutputArrayIndexMap_p,
 										outputMsCols_p->arrayId(),absoluteRefRows);
 	transformAndWriteReindexableVector(	vb->fieldId(),tmpVectorInt,!timespan_p.contains("field"),
@@ -5617,21 +5613,21 @@ void MSTransformManager::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 	transformAndWriteReindexableVector(	vb->stateId(),tmpVectorInt,!timespan_p.contains("state"),
 										inputOutputScanIntentIndexMap_p,
 										outputMsCols_p->stateId(),absoluteRefRows);
-	transformAndWriteReindexableVector(	vb->antenna1(),tmpVectorInt,False,
+	transformAndWriteReindexableVector(	vb->antenna1(),tmpVectorInt,false,
 										inputOutputAntennaIndexMap_p,
 										outputMsCols_p->antenna1(),absoluteRefRows);
-	transformAndWriteReindexableVector(	vb->antenna2(),tmpVectorInt,False,
+	transformAndWriteReindexableVector(	vb->antenna2(),tmpVectorInt,false,
 										inputOutputAntennaIndexMap_p,
 										outputMsCols_p->antenna2(),absoluteRefRows);
 
 	// Not Re-indexable Columns
 	transformAndWriteNotReindexableVector(vb->scan(),tmpVectorInt,!timespan_p.contains("scan"),outputMsCols_p->scanNumber(),absoluteRefRows);
-	transformAndWriteNotReindexableVector(vb->processorId(),tmpVectorInt,False,outputMsCols_p->processorId(),absoluteRefRows);
-	transformAndWriteNotReindexableVector(vb->feed1(),tmpVectorInt,False,outputMsCols_p->feed1(),absoluteRefRows);
-	transformAndWriteNotReindexableVector(vb->feed2(),tmpVectorInt,False,outputMsCols_p->feed2(),absoluteRefRows);
-	transformAndWriteNotReindexableVector(vb->time(),tmpVectorDouble,False,outputMsCols_p->time(),absoluteRefRows);
-	transformAndWriteNotReindexableVector(vb->timeCentroid(),tmpVectorDouble,False,outputMsCols_p->timeCentroid(),absoluteRefRows);
-	transformAndWriteNotReindexableVector(vb->timeInterval(),tmpVectorDouble,False,outputMsCols_p->interval(),absoluteRefRows);
+	transformAndWriteNotReindexableVector(vb->processorId(),tmpVectorInt,false,outputMsCols_p->processorId(),absoluteRefRows);
+	transformAndWriteNotReindexableVector(vb->feed1(),tmpVectorInt,false,outputMsCols_p->feed1(),absoluteRefRows);
+	transformAndWriteNotReindexableVector(vb->feed2(),tmpVectorInt,false,outputMsCols_p->feed2(),absoluteRefRows);
+	transformAndWriteNotReindexableVector(vb->time(),tmpVectorDouble,false,outputMsCols_p->time(),absoluteRefRows);
+	transformAndWriteNotReindexableVector(vb->timeCentroid(),tmpVectorDouble,false,outputMsCols_p->timeCentroid(),absoluteRefRows);
+	transformAndWriteNotReindexableVector(vb->timeInterval(),tmpVectorDouble,false,outputMsCols_p->interval(),absoluteRefRows);
 
 	// Special case for vectors that have to be averaged
 	if (combinespws_p)
@@ -5645,8 +5641,8 @@ void MSTransformManager::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 	}
 	else
 	{
-		transformAndWriteNotReindexableVector(vb->flagRow(),tmpVectorBool,False,outputMsCols_p->flagRow(),absoluteRefRows);
-		transformAndWriteNotReindexableVector(vb->exposure(),tmpVectorDouble,False,outputMsCols_p->exposure(),absoluteRefRows);
+		transformAndWriteNotReindexableVector(vb->flagRow(),tmpVectorBool,false,outputMsCols_p->flagRow(),absoluteRefRows);
+		transformAndWriteNotReindexableVector(vb->exposure(),tmpVectorDouble,false,outputMsCols_p->exposure(),absoluteRefRows);
 	}
 
 	if (combinespws_p)
@@ -5802,7 +5798,7 @@ template <class T> void MSTransformManager::transformAndWriteReindexableVector(	
 // ------------------------------------------------------------------------------------
 Bool MSTransformManager::transformDDIVector(const Vector<Int> &inputVector,Vector<Int> &outputVector)
 {
-	Bool transformed = True;
+	Bool transformed = true;
 
 	if ((combinespws_p) or (nspws_p > 1))
 	{
@@ -5825,7 +5821,7 @@ Bool MSTransformManager::transformDDIVector(const Vector<Int> &inputVector,Vecto
 	}
 	else
 	{
-		transformed = transformReindexableVector(inputVector,outputVector,True,inputOutputDDIndexMap_p);
+		transformed = transformReindexableVector(inputVector,outputVector,true,inputOutputDDIndexMap_p);
 	}
 
 	return transformed;
@@ -5883,7 +5879,7 @@ void MSTransformManager::mapAndAverageVector(	const Vector<Double> &inputVector,
 void MSTransformManager::mapAndAverageVector(	const Vector<Bool> &inputVector,
 												Vector<Bool> &outputVector)
 {
-	Bool average = False;
+	Bool average = false;
 	vector<uInt> baselineRows;
 	uInt row, counts, absoluteIndex = 0;
 	for (baselineMap::iterator iter = baselineMap_p.begin(); iter != baselineMap_p.end(); iter++)
@@ -6188,7 +6184,7 @@ void MSTransformManager::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
     										transformedCubeShape(2),
     										inputFlagCategoryShape(2),
     										transformedCubeShape(2));
-    		Array<Bool> flagCategory(flagCategoryShape,False);
+    		Array<Bool> flagCategory(flagCategoryShape,false);
 
         	outputMsCols_p->flagCategory().putColumnCells(rowRef, flagCategory);
     	}
@@ -6211,7 +6207,7 @@ void MSTransformManager::fillWeightCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 	if (flushWeightSpectrum_p or spectrumTransformation_p or userBufferMode_p)
 	{
 		// Switch aux Weight propagation off
-		propagateWeights(False);
+		propagateWeights(false);
 
 		// Switch average and smooth kernels
 		setChannelAverageKernel(MSTransformations::flagCumSumNonZero);
@@ -6233,11 +6229,11 @@ void MSTransformManager::fillWeightCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 			Cube<Bool> transformedFlag;
 			if (not userBufferMode_p)
 			{
-				setBufferMode(True);
+				setBufferMode(true);
 				dataBuffer_p = MSTransformations::weightSpectrum;
-				transformedSpectrum.resize(getShape(),False);
+				transformedSpectrum.resize(getShape(),false);
 				weightSpectrum_p = &transformedSpectrum;
-				transformedFlag.resize(getShape(),False);
+				transformedFlag.resize(getShape(),false);
 				flagCube_p = &transformedFlag; // Not used for the output but to extract the average/median
 			}
 
@@ -6323,7 +6319,7 @@ void MSTransformManager::fillWeightCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 			// Switch off buffer mode
 			if (not userBufferMode_p)
 			{
-				setBufferMode(False);
+				setBufferMode(false);
 				weightSpectrum_p = NULL;
 			}
 		}
@@ -6542,7 +6538,7 @@ void MSTransformManager::transformAndWriteSpectrum(	vi::VisBuffer2 *vb,
 
 	// Extract median matrix (nCorr x nRow)
 	// When separating SPWs this procedure computes the mean of each separated SPW
-	// Matrix<Float> medians = partialMedians(*weightSpectrum_p,IPosition(1,1),True);
+	// Matrix<Float> medians = partialMedians(*weightSpectrum_p,IPosition(1,1),true);
 	if (userBufferMode_p)
 	{
 		switch (weightTransformation)
@@ -6684,10 +6680,10 @@ const Cube<Float>& MSTransformManager::getWeightSpectrumFromSigmaSpectrum(vi::Vi
 	}
 	else
 	{
-		weightSpectrumCube_p.resize(vb->getShape(),False);
+		weightSpectrumCube_p.resize(vb->getShape(),false);
 		weightSpectrumCube_p = vb->sigmaSpectrum(); // = Operator makes a copy
 		arrayTransformInPlace (weightSpectrumCube_p,vi::AveragingTvi2::sigmaToWeight);
-		weightSpectrumFromSigmaFilled_p = True;
+		weightSpectrumFromSigmaFilled_p = true;
 		return weightSpectrumCube_p;
 	}
 }
@@ -6703,14 +6699,14 @@ const Cube<Float>& MSTransformManager::getWeightSpectrumFlat(vi::VisBuffer2 *vb)
 	}
 	else if (weightSpectrumCubeFlat_p.shape().isEqual(vb->getShape()))
 	{
-		weightSpectrumFlatFilled_p = True;
+		weightSpectrumFlatFilled_p = true;
 		return weightSpectrumCubeFlat_p;
 	}
 	else
 	{
-		weightSpectrumCubeFlat_p.resize(vb->getShape(),False);
+		weightSpectrumCubeFlat_p.resize(vb->getShape(),false);
 		weightSpectrumCubeFlat_p = 1.0f;
-		weightSpectrumFlatFilled_p = True;
+		weightSpectrumFlatFilled_p = true;
 		return weightSpectrumCubeFlat_p;
 	}
 }
@@ -6769,7 +6765,8 @@ template <class T> void MSTransformManager::writeCube(	const Cube<T> &inputCube,
 {
 	IPosition shape = inputCube.shape();
 	shape(2) = rowRef.nrows();
-    Array<T> outputArray(shape,const_cast<T*>(inputCube.getStorage(MSTransformations::False)),SHARE);
+	Bool deleteIt;
+    Array<T> outputArray(shape,const_cast<T*>(inputCube.getStorage(deleteIt)),SHARE);
     outputCol.putColumnCells(rowRef, outputArray);
 
 	return;
@@ -6864,7 +6861,7 @@ template <class T> void MSTransformManager::combineCubeOfData(	vi::VisBuffer2 *v
 	IPosition inputPlaneShape(2,nInputCorrelations, numOfCombInputChanMap_p[0]);
 	Matrix<Double> normalizingFactorPlane(inputPlaneShape);
 	Matrix<T> inputPlaneData(inputPlaneShape);
-	Matrix<Bool> inputPlaneFlags(inputPlaneShape,False);
+	Matrix<Bool> inputPlaneFlags(inputPlaneShape,false);
 	Matrix<Float> inputPlaneWeights(inputPlaneShape);
 
 	// Initialize output planes
@@ -6882,12 +6879,12 @@ template <class T> void MSTransformManager::combineCubeOfData(	vi::VisBuffer2 *v
 	map<Int, uInt> spwRowMap;
 	map<Int, uInt>::iterator spwRowMapIter;
 	map<Int, uInt> spwFractionCountsMap;
-	Bool unityContributors = False;
+	Bool unityContributors = false;
 	vector< channelContribution > contributions;
 	vector< channelContribution >::iterator contributionsIter;
 	map < Int , map < uInt, Bool > > removeContributionsMap;
 
-	Bool combinationOfSPWsWithDifferentExposure = False;
+	Bool combinationOfSPWsWithDifferentExposure = false;
 	Double exposure = 0;
 
 	relativeRow_p = 0; // Initialize relative row for buffer mode
@@ -6909,7 +6906,7 @@ template <class T> void MSTransformManager::combineCubeOfData(	vi::VisBuffer2 *v
 		spwRowMap.clear();
 		if (combinationOfSPWsWithDifferentExposure_p and (inputWeightCube.shape().isEqual(inputCubeShape)))
 		{
-			combinationOfSPWsWithDifferentExposure = True;
+			combinationOfSPWsWithDifferentExposure = true;
 			addWeightSpectrumContribution_p = &MSTransformManager::addWeightSpectrumContribution;
 			for (vector<uInt>::iterator iter = baselineRows.begin();iter != baselineRows.end(); iter++)
 			{
@@ -6921,7 +6918,7 @@ template <class T> void MSTransformManager::combineCubeOfData(	vi::VisBuffer2 *v
 		else
 		{
 			exposure = exposures(*baselineRows.begin());
-			combinationOfSPWsWithDifferentExposure = False;
+			combinationOfSPWsWithDifferentExposure = false;
 			for (vector<uInt>::iterator iter = baselineRows.begin();iter != baselineRows.end(); iter++)
 			{
 				row = *iter;
@@ -6931,13 +6928,13 @@ template <class T> void MSTransformManager::combineCubeOfData(	vi::VisBuffer2 *v
 				// In the case of *_SPECTRUM inputWeightCube is dummy
 				if ((abs(exposure - exposures(row)) > FLT_EPSILON) and (inputWeightCube.shape().isEqual(inputCubeShape)))
 				{
-					combinationOfSPWsWithDifferentExposure = True;
+					combinationOfSPWsWithDifferentExposure = true;
 				}
 			}
 
 			if (combinationOfSPWsWithDifferentExposure)
 			{
-				combinationOfSPWsWithDifferentExposure_p = True;
+				combinationOfSPWsWithDifferentExposure_p = true;
 				addWeightSpectrumContribution_p = &MSTransformManager::addWeightSpectrumContribution;
 				if (inputWeightSpectrumAvailable_p)
 				{
@@ -6968,7 +6965,7 @@ template <class T> void MSTransformManager::combineCubeOfData(	vi::VisBuffer2 *v
 			for (uInt pol = 0; pol < inputDataCube.shape()(0); pol++)
 			{
 				spwFractionCountsMap.clear();
-				unityContributors = False;
+				unityContributors = false;
 
 				// Go through list of contributors for this output channel and polarization and gather flags info
 				for (contributionsIter = contributions.begin(); contributionsIter != contributions.end(); contributionsIter++)
@@ -6998,13 +6995,13 @@ template <class T> void MSTransformManager::combineCubeOfData(	vi::VisBuffer2 *v
 						// Count if we have valid unity contributors, otherwise we don't discard non-unity contributors
 						else
 						{
-							unityContributors = True;
+							unityContributors = true;
 						}
 					}
 					else
 					{
 						// Fill flags info
-						contributionsIter->flag = True;
+						contributionsIter->flag = true;
 					}
 				}
 
@@ -7034,7 +7031,7 @@ template <class T> void MSTransformManager::combineCubeOfData(	vi::VisBuffer2 *v
 		}
 
 		// Normalize combined data and determine input plane flags
-		inputPlaneFlags = False;
+		inputPlaneFlags = false;
 		for (uInt outputChannel = 0; outputChannel < numOfCombInputChanMap_p[0]; outputChannel++)
 		{
 			for (uInt pol = 0; pol < nInputCorrelations; pol++)
@@ -7050,17 +7047,17 @@ template <class T> void MSTransformManager::combineCubeOfData(	vi::VisBuffer2 *v
 				else if (normalizingFactor > 0)
 				{
 					inputPlaneData(pol,outputChannel) /= normalizingFactorPlane(pol,outputChannel);
-					inputPlaneFlags(pol,outputChannel) = True;
+					inputPlaneFlags(pol,outputChannel) = true;
 				}
 				else
 				{
-					inputPlaneFlags(pol,outputChannel) = True;
+					inputPlaneFlags(pol,outputChannel) = true;
 				}
 			}
 		}
 
 		// Initialize output flags plane
-		outputPlaneFlags = False;
+		outputPlaneFlags = false;
 
 		// Transform input planes and write them
 		transformAndWritePlaneOfData(	0,rowRef.firstRow()+baseline_index*nspws_p,
@@ -7247,7 +7244,7 @@ template <class T> void MSTransformManager::transformAndWriteCubeOfData(	Int inp
 	for (uInt rowIndex=0; rowIndex < nInputRows; rowIndex++)
 	{
 		// Initialize output flags plane
-		outputPlaneFlags = False;
+		outputPlaneFlags = false;
 
 		// Fill input planes by reference
 		inputPlaneData = inputDataCube.xyPlane(rowIndex);
@@ -7591,7 +7588,7 @@ template <class T> void MSTransformManager::bufferOutputPlanesInSlices(	uInt,
 	uInt outRow = relativeRow_p+spw_i;
 	Slice sliceY(chansPerOutputSpw_p*spw_i,tailOfChansforLastSpw_p);
 	Matrix<T> outputPlane_i = outputDataPlane(sliceX,sliceY);
-	outputPlane_i.resize(outputPlaneShape_i,True); // Resize uses a new storage and copies the old values to it
+	outputPlane_i.resize(outputPlaneShape_i,true); // Resize uses a new storage and copies the old values to it
 	// jagonzal (CAS-7435): We have to set the new values to 0
 	Slice sliceTail(tailOfChansforLastSpw_p,chansPerOutputSpw_p-tailOfChansforLastSpw_p);
 	outputPlane_i(sliceX,sliceTail) = 0; // Slices use reference semantics.
@@ -7600,9 +7597,9 @@ template <class T> void MSTransformManager::bufferOutputPlanesInSlices(	uInt,
 	if (flagBufferPointer != NULL)
 	{
 		Matrix<Bool> outputFlagPlane_i = outputFlagsPlane(sliceX,sliceY);
-		outputFlagPlane_i.resize(outputPlaneShape_i,True); // Resize uses a new storage and copies the old values to it
+		outputFlagPlane_i.resize(outputPlaneShape_i,true); // Resize uses a new storage and copies the old values to it
 		// jagonzal (CAS-7435): We have to set the new values to 0
-		outputFlagPlane_i(sliceX,sliceTail) = True; // Slices use reference semantics.
+		outputFlagPlane_i(sliceX,sliceTail) = true; // Slices use reference semantics.
 		flagBufferPointer->xyPlane(outRow) = outputFlagPlane_i;
 	}
 
@@ -7730,7 +7727,7 @@ template <class T> void MSTransformManager::writeOutputPlaneReshapedSlices(	Matr
 																				uInt &outputRow)
 {
 	Matrix<T> outputPlane_i = outputPlane(sliceX,sliceY);
-	outputPlane_i.resize(outputPlaneShape,True);
+	outputPlane_i.resize(outputPlaneShape,true);
 	outputCol.setShape(outputRow,outputPlaneShape);
 	outputCol.put(outputRow, outputPlane_i);
 	return;
@@ -7938,7 +7935,7 @@ template <class T> void MSTransformManager::flagAverageKernel(	Vector<T> &inputD
 	}
 	else
 	{
-		outputFlags(outputPos) = True;
+		outputFlags(outputPos) = true;
 	}
 
 	outputData(outputPos) = avg;
@@ -7976,7 +7973,7 @@ template <class T> void MSTransformManager::weightAverageKernel(	Vector<T> &inpu
 	}
 	else
 	{
-		outputFlags(outputPos) = True;
+		outputFlags(outputPos) = true;
 	}
 
 	outputData(outputPos) = avg;
@@ -8043,7 +8040,7 @@ template <class T> void MSTransformManager::flagWeightAverageKernel(	Vector<T> &
 	}
 	else
 	{
-		outputFlags(outputPos) = True;
+		outputFlags(outputPos) = true;
 	}
 
 	outputData(outputPos) = avg;
@@ -8100,16 +8097,16 @@ template <class T> void MSTransformManager::flagNonZeroAverageKernel(	Vector<T> 
 		// Get input index
 		inputPos = startInputPos + sample_i;
 
-		// True/True or False/False
+		// true/true or false/false
 		if (accumulatorFlag == inputFlags(inputPos))
 		{
 			samples += 1;
 			avg += inputData(inputPos);
 		}
-		// True/False: Reset accumulation when accumulator switches from flagged to unflag
-		else if ( (accumulatorFlag == True) and (inputFlags(inputPos) == False) )
+		// true/false: Reset accumulation when accumulator switches from flagged to unflag
+		else if ( (accumulatorFlag == true) and (inputFlags(inputPos) == false) )
 		{
-			accumulatorFlag = False;
+			accumulatorFlag = false;
 			samples = 1;
 			avg = inputData(inputPos);
 		}
@@ -8125,15 +8122,15 @@ template <class T> void MSTransformManager::flagNonZeroAverageKernel(	Vector<T> 
 	// This should never happen
 	else
 	{
-		accumulatorFlag = True;
+		accumulatorFlag = true;
 		outputData(outputPos) = 0; // this should be a code error
 	}
 
 
-	// Set output flag (it is initialized to False)
+	// Set output flag (it is initialized to false)
 	if (accumulatorFlag)
 	{
-		outputFlags(outputPos) = True;
+		outputFlags(outputPos) = true;
 	}
 
 	return;
@@ -8162,16 +8159,16 @@ template <class T> void MSTransformManager::flagWeightNonZeroAverageKernel(	Vect
 		// Get input index
 		inputPos = startInputPos + sample_i;
 
-		// True/True or False/False
+		// true/true or false/false
 		if (accumulatorFlag == inputFlags(inputPos))
 		{
 			normalization += inputWeights(inputPos);
 			avg += inputData(inputPos)*inputWeights(inputPos);
 		}
-		// True/False: Reset accumulation when accumulator switches from flagged to unflag
-		else if ( (accumulatorFlag == True) and (inputFlags(inputPos) == False) )
+		// true/false: Reset accumulation when accumulator switches from flagged to unflag
+		else if ( (accumulatorFlag == true) and (inputFlags(inputPos) == false) )
 		{
-			accumulatorFlag = False;
+			accumulatorFlag = false;
 			normalization = inputWeights(inputPos);
 			avg = inputData(inputPos)*inputWeights(inputPos);
 		}
@@ -8184,18 +8181,18 @@ template <class T> void MSTransformManager::flagWeightNonZeroAverageKernel(	Vect
 		avg /= normalization;
 		outputData(outputPos) = avg;
 	}
-	// If all weights are zero set accumulatorFlag to True
+	// If all weights are zero set accumulatorFlag to true
 	else
 	{
-		accumulatorFlag = True;
+		accumulatorFlag = true;
 		outputData(outputPos) = 0; // If all weights are zero then the avg is 0 too
 	}
 
 
-	// Set output flag (it is initialized to False)
+	// Set output flag (it is initialized to false)
 	if (accumulatorFlag)
 	{
-		outputFlags(outputPos) = True;
+		outputFlags(outputPos) = true;
 	}
 
 	return;
@@ -8222,25 +8219,25 @@ template <class T> void MSTransformManager::flagCumSumNonZeroKernel(	Vector<T> &
 		// Get input index
 		inputPos = startInputPos + sample_i;
 
-		// True/True or False/False
+		// true/true or false/false
 		if (accumulatorFlag == inputFlags(inputPos))
 		{
 			avg += inputData(inputPos);
 		}
-		// True/False: Reset accumulation when accumulator switches from flagged to unflag
-		else if ( (accumulatorFlag == True) and (inputFlags(inputPos) == False) )
+		// true/false: Reset accumulation when accumulator switches from flagged to unflag
+		else if ( (accumulatorFlag == true) and (inputFlags(inputPos) == false) )
 		{
-			accumulatorFlag = False;
+			accumulatorFlag = false;
 			avg = inputData(inputPos);
 		}
 	}
 
 	outputData(outputPos) = avg;
 
-	// Set output flag (it is initialized to False)
+	// Set output flag (it is initialized to false)
 	if (accumulatorFlag)
 	{
-		outputFlags(outputPos) = True;
+		outputFlags(outputPos) = true;
 	}
 
 	return;
@@ -8273,14 +8270,14 @@ template <class T> void MSTransformManager::smooth(	Int ,
 	// Flag lower edge
 	for (uInt outChan = 0; outChan<outChanStart; outChan++)
 	{
-		outputFlagsStripe(outChan) = True;
+		outputFlagsStripe(outChan) = true;
 		outputDataStripe(outChan) = inputDataStripe(outChan);
 	}
 
 	// Flag higher edge
 	for (uInt outChan = outChanStop; outChan<inputDataStripe.size(); outChan++)
 	{
-		outputFlagsStripe(outChan) = True;
+		outputFlagsStripe(outChan) = true;
 		outputDataStripe(outChan) = inputDataStripe(outChan);
 	}
 
@@ -8339,7 +8336,7 @@ template <class T> void  MSTransformManager::plainSmooth(	Vector<T> &inputData,
 		outputData(outputPos) += smoothCoeff_p(i)*inputData(outputPos-halfWidth+i);
 
 		// Output sample is flagged if any of the contributors are flagged
-		if (inputFlags(outputPos-halfWidth+i)) outputFlags(outputPos)=True;
+		if (inputFlags(outputPos-halfWidth+i)) outputFlags(outputPos)=true;
 	}
 
 	return;
@@ -8361,7 +8358,7 @@ template <class T> void  MSTransformManager::plainSmoothSpectrum(	Vector<T> &inp
 	if (inputData(outputPos-halfWidth) <= FLT_MIN)
 	{
 		outputData(outputPos) = 0;
-		outputFlags(outputPos) = True;
+		outputFlags(outputPos) = true;
 	}
 	else
 	{
@@ -8375,14 +8372,14 @@ template <class T> void  MSTransformManager::plainSmoothSpectrum(	Vector<T> &inp
 		// Mind for zeros as there is a division operation
 		if (inputData(outputPos-halfWidth+i) <= FLT_MIN)
 		{
-			outputFlags(outputPos) = True;
+			outputFlags(outputPos) = true;
 		}
 		else
 		{
 			outputData(outputPos) += smoothCoeff_p(i)*smoothCoeff_p(i)/inputData(outputPos-halfWidth+i);
 
 			// Output sample is flagged if any of the contributors are flagged
-			if (inputFlags(outputPos-halfWidth+i)) outputFlags(outputPos)=True;
+			if (inputFlags(outputPos-halfWidth+i)) outputFlags(outputPos)=true;
 		}
 	}
 
@@ -8471,8 +8468,8 @@ void MSTransformManager::fftshift(	Int ,
     					(const Vector<Bool>)inputFlagsStripe,
     					(const uInt)0, // In vectors axis 0 is the only dimension
     					(const Double)fftShift_p,
-    					MSTransformations::False, // A good data point has its flag set to False
-    					MSTransformations::False);
+    					false, // A good data point has its flag set to false
+    					false);
 	return;
 }
 
@@ -8492,7 +8489,7 @@ void MSTransformManager::fftshift(	Int ,
     					(const Vector<Bool>)inputFlagsStripe,
     					(const uInt)0, // In vectors axis 0 is the only dimension
     					(const Double)fftShift_p,
-    					MSTransformations::False); // A good data point has its flag set to False
+    					false); // A good data point has its flag set to false
 	return;
 }
 
@@ -8515,14 +8512,14 @@ template <class T> void MSTransformManager::interpol1D(	Int inputSpw,
 		    										inputDataStripe, // Input data
 		    										inputFlagsStripe, // Input Flags
 		    										interpolationMethod_p, // Interpolation method
-		    										False, // A good data point has its flag set to False
-		    										False // If False extrapolated data points are set flagged
+		    										false, // A good data point has its flag set to false
+		    										false // If false extrapolated data points are set flagged
 								    				);
 	}
 	else
 	{
 		outputDataStripe = inputDataStripe(0);
-		outputFlagsStripe = True;
+		outputFlagsStripe = true;
 	}
 
 	return;
@@ -8539,7 +8536,7 @@ template <class T> void MSTransformManager::interpol1Dfftshift(	Int inputSpw,
 																	Vector<Bool> &outputFlagsStripe)
 {
 	Vector<T> regriddedDataStripe(inputDataStripe.shape(),T());
-	Vector<Bool> regriddedFlagsStripe(inputFlagsStripe.shape(),MSTransformations::False);
+	Vector<Bool> regriddedFlagsStripe(inputFlagsStripe.shape(),false);
 
 	// This linear interpolation provides an uniform grid (pre-condition to apply fftshift)
 	interpol1D(inputSpw,inputDataStripe,inputFlagsStripe,inputWeightsStripe,regriddedDataStripe,regriddedFlagsStripe);
@@ -8561,7 +8558,7 @@ template <class T> void MSTransformManager::averageSmooth(	Int inputSpw,
 																Vector<Bool> &outputFlagsStripe)
 {
 	Vector<T> averagedDataStripe(outputDataStripe.shape(),T());
-	Vector<Bool> averagedFlagsStripe(outputFlagsStripe.shape(),MSTransformations::False);
+	Vector<Bool> averagedFlagsStripe(outputFlagsStripe.shape(),false);
 
 	average(inputSpw,inputDataStripe,inputFlagsStripe,inputWeightsStripe, averagedDataStripe,averagedFlagsStripe);
 
@@ -8581,7 +8578,7 @@ template <class T> void MSTransformManager::averageRegrid(	Int inputSpw,
 																Vector<Bool> &outputFlagsStripe)
 {
 	Vector<T> averagedDataStripe(numOfCombInterChanMap_p[inputSpw],T());
-	Vector<Bool> averagedFlagsStripe(numOfCombInterChanMap_p[inputSpw],MSTransformations::False);
+	Vector<Bool> averagedFlagsStripe(numOfCombInterChanMap_p[inputSpw],false);
 
 	average(inputSpw,inputDataStripe,inputFlagsStripe,inputWeightsStripe, averagedDataStripe,averagedFlagsStripe);
 
@@ -8601,7 +8598,7 @@ template <class T> void MSTransformManager::smoothRegrid(	Int inputSpw,
 																Vector<Bool> &outputFlagsStripe)
 {
 	Vector<T> smoothedDataStripe(inputDataStripe.shape(),T());
-	Vector<Bool> smoothedFlagsStripe(inputFlagsStripe.shape(),MSTransformations::False);
+	Vector<Bool> smoothedFlagsStripe(inputFlagsStripe.shape(),false);
 
 	smooth(inputSpw,inputDataStripe,inputFlagsStripe,inputWeightsStripe,smoothedDataStripe,smoothedFlagsStripe);
 
@@ -8621,7 +8618,7 @@ template <class T> void MSTransformManager::averageSmoothRegrid(Int inputSpw,
 																	Vector<Bool> &outputFlagsStripe)
 {
 	Vector<T> averageSmoothedDataStripe(numOfCombInterChanMap_p[inputSpw],T());
-	Vector<Bool> averageSmoothedFlagsStripe(numOfCombInterChanMap_p[inputSpw],MSTransformations::False);
+	Vector<Bool> averageSmoothedFlagsStripe(numOfCombInterChanMap_p[inputSpw],false);
 
 	averageSmooth(	inputSpw,inputDataStripe,inputFlagsStripe,
 					inputWeightsStripe,averageSmoothedDataStripe,averageSmoothedFlagsStripe);

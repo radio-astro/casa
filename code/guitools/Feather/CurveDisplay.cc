@@ -59,6 +59,4 @@ CurveDisplay::~CurveDisplay(){
 
 }
 
-
-
 } /* namespace casa */

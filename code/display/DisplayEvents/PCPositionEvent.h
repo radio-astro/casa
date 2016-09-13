@@ -88,8 +88,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// the position of the pointer, and the input "modifiers".
 		// User Constructor
 		PCPositionEvent(PixelCanvas *pc, const Display::KeySym &key,
-		                const Bool &keystate, const Int &x, const Int &y,
-		                const uInt &modifiers);
+		                const casacore::Bool &keystate, const casacore::Int &x, const casacore::Int &y,
+		                const casacore::uInt &modifiers);
 
 		// Destructor.
 		virtual ~PCPositionEvent();
@@ -99,9 +99,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			return itsKey;
 		}
 
-		// What state is the key in: <src>True</src> for pressed,
-		// <src>False</src> for released.
-		virtual Bool keystate() const {
+		// What state is the key in: <src>true</src> for pressed,
+		// <src>false</src> for released.
+		virtual casacore::Bool keystate() const {
 			return itsKeyState;
 		}
 
@@ -122,7 +122,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Display::KeySym itsKey;
 
 		// Store the state of that key here.
-		Bool itsKeyState;
+		casacore::Bool itsKeyState;
 
 	};
 

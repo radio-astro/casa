@@ -26,6 +26,7 @@
 //#
 //# $Id$
 #include <synthesis/TransformMachines/CFStore.h>
+using namespace casacore;
 namespace casa{
 
   CFStore& CFStore::operator=(const CFStore& other)

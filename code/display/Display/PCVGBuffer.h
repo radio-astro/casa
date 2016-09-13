@@ -80,22 +80,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		               };
 
 		// Default Constructor Required
-		PCVGBuffer(PixelCanvas * pc, uInt nVerts = 1024);
+		PCVGBuffer(PixelCanvas * pc, casacore::uInt nVerts = 1024);
 
 		// User Constructor
 		PCVGBuffer();
 
 		// add point
-		void accumPoint(Float x, Float y);
+		void accumPoint(casacore::Float x, casacore::Float y);
 
 		// add line
-		void accumLine(Float x1, Float y1, Float x2, Float y2);
+		void accumLine(casacore::Float x1, casacore::Float y1, casacore::Float x2, casacore::Float y2);
 
 		// add point to polyline
-		void accumPolylinePoint(Float x, Float y);
+		void accumPolylinePoint(casacore::Float x, casacore::Float y);
 
 		// add point to polygon
-		void accumPolygonPoint(Float x, Float y);
+		void accumPolygonPoint(casacore::Float x, casacore::Float y);
 
 		// flush the buffer
 		void flush();
@@ -119,9 +119,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		PixelCanvas * pc_;
 
 		AccumMode mode_;
-		uInt c_;
-		Matrix<Float> verts_;
-		uInt blockSize_;
+		casacore::uInt c_;
+		casacore::Matrix<casacore::Float> verts_;
+		casacore::uInt blockSize_;
 
 	};
 

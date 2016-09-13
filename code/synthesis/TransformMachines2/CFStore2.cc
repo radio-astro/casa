@@ -31,6 +31,7 @@
 #include <synthesis/TransformMachines/SynthesisError.h>
 #include <synthesis/TransformMachines2/PolOuterProduct.h>
 
+using namespace casacore;
 namespace casa{
   using namespace refim;
   //
@@ -84,7 +85,7 @@ namespace casa{
     if (paNdx < 0) 
       {paNdx=pa_p.nelements();pa_p.resize(paNdx+1,retainValues);};
     if (antNdx < 0) 
-      {antNdx=ant1_p.nelements();ant1_p.resize(antNdx+1,True);ant2_p.resize(antNdx+1,retainValues);}; 
+      {antNdx=ant1_p.nelements();ant1_p.resize(antNdx+1,true);ant2_p.resize(antNdx+1,retainValues);}; 
     // if (wNdx < 0) 
     //   {wNdx=wValue_p.nelements();wValue_p.resize(wNdx+1,retainValues);}
     // Resize the storage_p Cube to the current size of required along

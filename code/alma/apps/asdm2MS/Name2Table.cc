@@ -40,6 +40,7 @@
 
 using namespace boost; 
 using namespace std;
+using namespace casacore;
 
 typedef tokenizer<boost::char_separator<char> > my_tok;
 

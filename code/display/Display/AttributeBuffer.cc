@@ -35,6 +35,7 @@
 #include <display/Display/AttValTol.h>
 
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	AttributeBuffer::AttributeBuffer()
@@ -371,7 +372,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if ( exists(newAttribute.getName(), index) ) {
 			attributes[index]->setValue(newAttribute);
 		} else {
-			add(newAttribute, False);
+			add(newAttribute, false);
 		}
 
 	}
@@ -448,7 +449,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				// will trow an exception
 			}
 		} else {
-			add(name, newValue, tolerance, strict, False);
+			add(name, newValue, tolerance, strict, false);
 		}
 	}
 
@@ -466,7 +467,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				// will trow an exception
 			}
 		} else {
-			add(name, newValue, tolerance, strict, False);
+			add(name, newValue, tolerance, strict, false);
 		}
 	}
 
@@ -483,7 +484,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				value_p->setStrictness(strict);
 			}
 		} else {
-			add(name, newValue, tolerance, strict, False);
+			add(name, newValue, tolerance, strict, false);
 		}
 	}
 
@@ -500,7 +501,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				value_p->setStrictness(strict);
 			}
 		} else {
-			add(name, newValue, tolerance, strict, False);
+			add(name, newValue, tolerance, strict, false);
 		}
 	}
 
@@ -516,7 +517,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				value_p->setStrictness(strict);
 			}
 		} else {
-			add(name, newValue, strict, False);
+			add(name, newValue, strict, false);
 		}
 	}
 
@@ -532,7 +533,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				value_p->setStrictness(strict);
 			}
 		} else {
-			add(name, newValue, strict, False);
+			add(name, newValue, strict, false);
 		}
 	}
 
@@ -547,7 +548,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				value_p->setStrictness(strict);
 			}
 		} else {
-			add(name, newValue, strict, False);
+			add(name, newValue, strict, false);
 		}
 	}
 
@@ -636,10 +637,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Bool AttributeBuffer::exists(const String& name) const {
 		for (uInt i = 0; i < attributes.nelements(); i++) {
 			if ( name == (attributes[i])->getName() ) {
-				return True;
+				return true;
 			}
 		}
-		return False;
+		return false;
 	}
 
 
@@ -647,11 +648,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		for (uInt i = 0; i < attributes.nelements(); i++) {
 			if ( name == (attributes[i])->getName() ) {
 				found = i;
-				return True;
+				return true;
 			}
 		}
 		found = -1;
-		return False;
+		return false;
 	}
 
 
@@ -680,10 +681,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		for (uInt i = 0; i < attributes.nelements(); i++) {
 			if  ( ( *(attributes[i]) ) != res )  {
-				return False;
+				return false;
 			}
 		}
-		return True;
+		return true;
 	}
 
 
@@ -691,10 +692,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Bool AttributeBuffer::matches(const AttributeBuffer& resBuf) const {
 		for (uInt i = 0; i < attributes.nelements(); i++) {
 			if  ( !resBuf.matches(*(attributes[i])) ) {
-				return False;
+				return false;
 			}
 		}
-		return True;
+		return true;
 	}
 
 // AttributeBuffer addition arithmetic.

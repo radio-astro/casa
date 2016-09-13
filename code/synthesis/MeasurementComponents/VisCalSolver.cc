@@ -47,6 +47,7 @@
 
 #define VCS_PRTLEV 0
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
@@ -71,7 +72,7 @@ VisCalSolver::VisCalSolver() :
   dpar_(), dcalpar_(), dsrcpar_(),
   grad_(),hess_(),
   lambda_(2.0),
-  optstep_(True),
+  optstep_(true),
   prtlev_(VCS_PRTLEV)
 {
   if (prtlev()>0) cout << "VCS::VCS()" << endl;
@@ -127,7 +128,7 @@ Bool VisCalSolver::solve(VisEquation& ve, SolvableVisCal& svc, VisBuffer& svb) {
 
     // Iterate solution
     Int iter(0);
-    Bool done(False);
+    Bool done(false);
     while (!done) {
       
       if (prtlev()>2) cout << " Beginning iteration " << iter 
@@ -142,7 +143,7 @@ Bool VisCalSolver::solve(VisEquation& ve, SolvableVisCal& svc, VisBuffer& svb) {
 	//	cout << "wtmat = " << svb.weightMat() << endl;
 	//	cout << "flag = " << svb.flag() << endl;
 	//	cout << "sum(wtmat) = " << sum(wtmat) << endl;
-	return False;
+	return false;
       }
 
       dChiSq() = chiSq()-lastChiSq();
@@ -197,7 +198,7 @@ Bool VisCalSolver::solve(VisEquation& ve, SolvableVisCal& svc, VisBuffer& svb) {
       }
       else {
 	// Convergence means we're done!
-	done=True;
+	done=true;
 
 	if (prtlev()>0) {
 	  cout << "Iterations =" << iter << endl;
@@ -230,7 +231,7 @@ Bool VisCalSolver::solve(VisEquation& ve, SolvableVisCal& svc, VisBuffer& svb) {
 	//	cout << " good pars = " << ntrue(parOK())
 	//	     << "  steps = " << steplist
 	//	     << endl;
-	done=True;
+	done=true;
       }
       
       // Advance iteration counter
@@ -242,7 +243,7 @@ Bool VisCalSolver::solve(VisEquation& ve, SolvableVisCal& svc, VisBuffer& svb) {
     cout << " Insufficient unflagged antennas to proceed with this solve." << endl;
   }
 
-  return False;
+  return false;
     
 }
 
@@ -289,7 +290,7 @@ Bool VisCalSolver::solve(VisEquation& ve, SolvableVisCal& svc, VisBuffGroupAcc& 
 
     // Iterate solution
     Int iter(0);
-    Bool done(False);
+    Bool done(false);
     while (!done) {
       
       if (prtlev()>2) cout << " Beginning iteration " << iter 
@@ -304,7 +305,7 @@ Bool VisCalSolver::solve(VisEquation& ve, SolvableVisCal& svc, VisBuffGroupAcc& 
 	//	cout << "wtmat = " << svb.weightMat() << endl;
 	//	cout << "flag = " << svb.flag() << endl;
 	//	cout << "sum(wtmat) = " << sum(wtmat) << endl;
-	return False;
+	return false;
       }
 
       dChiSq() = chiSq()-lastChiSq();
@@ -359,7 +360,7 @@ Bool VisCalSolver::solve(VisEquation& ve, SolvableVisCal& svc, VisBuffGroupAcc& 
       }
       else {
 	// Convergence means we're done!
-	done=True;
+	done=true;
 
 	if (prtlev()>0) {
 	  cout << "Iterations =" << iter << endl;
@@ -392,7 +393,7 @@ Bool VisCalSolver::solve(VisEquation& ve, SolvableVisCal& svc, VisBuffGroupAcc& 
 	//	cout << " good pars = " << ntrue(parOK())
 	//	     << "  steps = " << steplist
 	//	     << endl;
-	done=True;
+	done=true;
       }
       
       // Advance iteration counter
@@ -404,7 +405,7 @@ Bool VisCalSolver::solve(VisEquation& ve, SolvableVisCal& svc, VisBuffGroupAcc& 
     cout << " Insufficient unflagged antennas to proceed with this solve." << endl;
   }
 
-  return False;
+  return false;
     
 }
   
@@ -745,7 +746,7 @@ Bool VisCalSolver::converged() {
       //      if (cvrgcount_>3)
       //if (cvrgcount_>10)
       if (cvrgcount_>5)
-	return True;
+	return true;
     }
 
     if (prtlev()>0)
@@ -782,7 +783,7 @@ Bool VisCalSolver::converged() {
   }
 
   // Not yet converged
-  return False;
+  return false;
 
 }
 
@@ -1144,12 +1145,12 @@ void VisCalSolver::solveGradHess() {
     }
     else {
       dpar()(ipar)=0.0; 
-      parOK()(ipar)=False;
+      parOK()(ipar)=false;
     }
   }
   
   // Turn off source pol update for the moment
-  if (svc().solvePol() && False) 
+  if (svc().solvePol() && false) 
     for (Int ipar=nCalPar(); ipar<nTotalPar(); ipar++) {
       if ( hess()(ipar)!=0.0) {
 	// good hess for this par:
@@ -1393,7 +1394,7 @@ void VisCalSolver::getErrors() {
     }
 
 
-  if (False) {
+  if (false) {
 
     cout << "ChiSq  = " << chiSq() << endl;
     cout << "ChiSqV = " << chiSqV() << endl;

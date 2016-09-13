@@ -30,6 +30,7 @@
 
 #include <casacore/tables/Tables/ConcatScalarColumn.h>
 
+using namespace casacore;
 namespace casa {
 MSChecker::MSChecker(const MeasurementSet& ms) : _ms(ms) {}
 

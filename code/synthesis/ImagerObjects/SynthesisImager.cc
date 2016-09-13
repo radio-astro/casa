@@ -96,6 +96,7 @@
 
 using namespace std;
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
   
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -106,9 +107,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
 
      imwgt_p=VisImagingWeight("natural");
-     imageDefined_p=False;
-     useScratch_p=False;
-     readOnly_p=True;
+     imageDefined_p=false;
+     useScratch_p=false;
+     readOnly_p=true;
 
      mss4vi_p.resize(0);
      wvi_p=0;
@@ -122,7 +123,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
      nMajorCycles=0;
 
-     itsDataLoopPerMapper=False;
+     itsDataLoopPerMapper=false;
 
   }
   
@@ -185,7 +186,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     selectData( pars );
 
-    return True;
+    return true;
   }
   
   Bool SynthesisImager::selectData(const SynthesisParamsSelect& selpars)
@@ -205,7 +206,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //    cout << "**************** usescr : " << useScratch_p << "     readonly : " << readOnly_p << endl;
     //if you want to use scratch col...make sure they are there
     if(selpars.usescratch && !selpars.readonly){
-      VisSetUtil::addScrCols(thisms, True, False, True, False);
+      VisSetUtil::addScrCols(thisms, true, false, true, false);
       VisModelData::clearModel(thisms);
     }
     if(!selpars.incrmodel && !selpars.usescratch && !selpars.readonly)
@@ -263,7 +264,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     TableExprNode exprNode=thisSelection.toTableExprNode(&thisms);
     if(!(exprNode.isNull()))
       {
-	mss4vi_p.resize(mss4vi_p.nelements()+1, False, True);
+	mss4vi_p.resize(mss4vi_p.nelements()+1, false, true);
 	MeasurementSet thisMSSelected0 = MeasurementSet(thisms(exprNode));
 
 	if(selpars.taql != "")
@@ -299,10 +300,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
       ///////////////Temporary revert to using Vi/vb
       Int msin=mss4vi_p.nelements();
-      blockNChan_p.resize(msin, False, True);
-      blockStart_p.resize(msin, False, True);
-      blockStep_p.resize(msin, False, True);
-      blockSpw_p.resize(msin, False, True);
+      blockNChan_p.resize(msin, false, true);
+      blockStart_p.resize(msin, false, true);
+      blockStep_p.resize(msin, false, true);
+      blockSpw_p.resize(msin, false, true);
       msin-=1;
       blockNChan_p[msin].resize(nSelections);
       blockStart_p[msin].resize(nSelections);
@@ -328,7 +329,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
       //maxnspw=max(nspw,maxnspw);
       // update the channel selections and initialize to 1's (all selected)
-      chanSel_p.resize(msin+1,nspw,maxnchan,True);
+      chanSel_p.resize(msin+1,nspw,maxnchan,true);
       chanSel_p.yzPlane(msin)=1;
 
       if(selpars.freqbeg==""){
@@ -357,7 +358,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                   if(loChans(spw) == -1) { 
                     loChans(spw) = chanStart;
                     nUsedSpw++;
-                    usedSpw.resize(nUsedSpw,True);
+                    usedSpw.resize(nUsedSpw,true);
                     usedSpw(nUsedSpw-1) = spw;
                   }
                   else {
@@ -459,7 +460,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     	  //frequencies at the channel range edges. So set freqStep = 0.0 .
     	  //MSUtil::getSpwInFreqRange(elspw, elstart,elnchan,mss4vi_p[msin],lowfreq, topfreq,1.0, selpars.freqframe, fieldid);
     	  MSUtil::getSpwInFreqRange(elspw, elstart,elnchan,mss4vi_p[msin],lowfreq, topfreq,0.0, selpars.freqframe, fieldid);
-    	  //im.adviseChanSelex(lowfreq, topfreq, 1.0, selpars.freqframe, elspw, elstart, elnchan, selpars.msname, fieldid, False);
+    	  //im.adviseChanSelex(lowfreq, topfreq, 1.0, selpars.freqframe, elspw, elstart, elnchan, selpars.msname, fieldid, false);
     	  // Refine elspw if there is spw selection
     	  if ( elspw.nelements()==0 || elstart.nelements()==0 || elnchan.nelements()==0 )
             throw(AipsError("Failed to select vis. data by frequency range"));
@@ -469,9 +470,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
             Vector<Int> spwids = thisSelection.getSpwList( & mss4vi_p[msin]);
             for (uInt k=0; k < elspw.nelements(); k++ ) {
               if (std::find(spwids.begin(), spwids.end(), elspw[k]) != spwids.end()) {
-                tempspwlist.resize(tempspwlist.nelements()+1,True);
-                tempnchanlist.resize(tempnchanlist.nelements()+1,True);
-                tempstartlist.resize(tempstartlist.nelements()+1,True);
+                tempspwlist.resize(tempspwlist.nelements()+1,true);
+                tempnchanlist.resize(tempnchanlist.nelements()+1,true);
+                tempstartlist.resize(tempstartlist.nelements()+1,true);
                 tempspwlist[nselspw] = elspw[k];
                 tempnchanlist[nselspw] = elnchan[k];
                 tempstartlist[nselspw] = elstart[k];
@@ -503,7 +504,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     /////// Remove this when the new vi/vb is able to get the full freq range.
     mssFreqSel_p.resize();
-    mssFreqSel_p  = thisSelection.getChanFreqList(NULL,True);
+    mssFreqSel_p  = thisSelection.getChanFreqList(NULL,true);
 
     //// Set the data column on which to operate
     // TT: added checks for the requested data column existace 
@@ -539,7 +540,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     */
     else { os << LogIO::WARN << "Invalid data column : " << datacol_p << ". Using corrected (or observed if corrected doesn't exist)" << LogIO::POST;  datacol_p = thisms.tableDesc().isColumn("CORRECTED_DATA") ? FTMachine::CORRECTED : FTMachine::OBSERVED; }
 
-    dataSel_p.resize(dataSel_p.nelements()+1, True);
+    dataSel_p.resize(dataSel_p.nelements()+1, true);
 
     dataSel_p[dataSel_p.nelements()-1]=selpars;
 
@@ -552,7 +553,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	throw( AipsError("Error in selectData() : "+x.getMesg()) );
       }
 
-    return True;
+    return true;
 
   }
 
@@ -618,14 +619,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				    //				    const String vpTable,
 				    const String startmodel,
 				    // The extra params for WB-AWP
-				    const Bool aTermOn,//    = True,
-				    const Bool psTermOn,//   = True,
-				    const Bool mTermOn,//    = False,
-				    const Bool wbAWP,//      = True,
+				    const Bool aTermOn,//    = true,
+				    const Bool psTermOn,//   = true,
+				    const Bool mTermOn,//    = false,
+				    const Bool wbAWP,//      = true,
 				    const String cfCache,//  = "",
-				    const Bool doPointing,// = False,
-				    const Bool doPBCorr,//   = True,
-				    const Bool conjBeams,//  = True,
+				    const Bool doPointing,// = false,
+				    const Bool doPBCorr,//   = true,
+				    const Bool conjBeams,//  = true,
 				    const Float computePAStep,         //=360.0
 				    const Float rotatePAStep          //=5.0
 				    )
@@ -688,7 +689,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   defineImage( impars, gridpars );
 
-  return True;
+  return true;
 }
 
   Bool SynthesisImager::defineImage(SynthesisParamsImage& impars, 
@@ -770,14 +771,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			   ftm, iftm,
 			   gridpars.distance, gridpars.facets, gridpars.chanchunks,impars.overwrite,
 			   gridpars.mType, gridpars.padding, impars.nTaylorTerms, impars.startModel);
-	imageDefined_p=True;
+	imageDefined_p=true;
       }
     catch(AipsError &x)
       {
 	os << "Error in adding Mapper : "+x.getMesg() << LogIO::EXCEPTION;
       }
 
-    return True;
+    return true;
   }
 
   Bool SynthesisImager::defineImage(CountedPtr<SIImageStore> imstor, 
@@ -788,8 +789,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // The following call to createFTMachine() uses the
     // following defaults
     //
-    // facets=1, wprojplane=1, padding=1.0, useAutocorr=False, 
-    // useDoublePrec=True, gridFunction=String("SF")
+    // facets=1, wprojplane=1, padding=1.0, useAutocorr=false, 
+    // useDoublePrec=true, gridFunction=String("SF")
     //
     createFTMachine(ftm, iftm, ftmachine);
     
@@ -805,7 +806,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     itsMappers.addMapper(  createSIMapper( "default", imstor, ftm, iftm, id ) );
     
-    return True;
+    return true;
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -855,7 +856,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	   //Record partRec=outRec.asRecord("0");
 
 	   ///resetting the block ms
-	   mss4vi_p.resize(0,True, False);
+	   mss4vi_p.resize(0,true, false);
 	   //resetting data selection stored
 	   dataSel_p.resize();
 	   // reset rvi_p
@@ -940,7 +941,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     nMajorCycles++;
 
-    Bool lastcycle=False;
+    Bool lastcycle=false;
     if( controlRecord.isDefined("lastcycle") )
       {
 	controlRecord.get( "lastcycle" , lastcycle );
@@ -954,10 +955,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     try
       {    
-	if( itsDataLoopPerMapper == False )
-	  {	runMajorCycle(False, lastcycle);}
+	if( itsDataLoopPerMapper == false )
+	  {	runMajorCycle(false, lastcycle);}
 	else
-	  {	runMajorCycle2(False, lastcycle);}
+	  {	runMajorCycle2(false, lastcycle);}
 	
 	
 	itsMappers.releaseImageLocks();
@@ -980,10 +981,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
       try
       {
-	if( itsDataLoopPerMapper == False )
-	  {runMajorCycle(True, False);}
+	if( itsDataLoopPerMapper == false )
+	  {runMajorCycle(true, false);}
 	else
-	  {runMajorCycle2(True, False);}
+	  {runMajorCycle2(true, false);}
 
 	//	makeImage();
 
@@ -1122,7 +1123,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     		  //this->unlock();
     		  os << LogIO::SEVERE << "Unknown weighting " << type
     				  << LogIO::EXCEPTION;
-    		  return False;
+    		  return false;
     	  }
       }
 	 
@@ -1136,7 +1137,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       ///////////////////////////////
 	 
 	 
-	 ///	 return True;
+	 ///	 return true;
 	 
        }
        catch(AipsError &x)
@@ -1144,7 +1145,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	   throw( AipsError("Error in Weighting : "+x.getMesg()) );
 	 }
        
-       return True;
+       return true;
   }
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
@@ -1173,7 +1174,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	throw(AipsError("In getWeightDensity : "+x.getMesg()));
       }
-    return True;
+    return true;
   }
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /// todo : do for full mapper list, and taylor terms.
@@ -1187,7 +1188,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	for (uInt fid=0;fid<densitymatrices.nelements();fid++)
 	  {
 	    Array<Float> arr;
-	    itsMappers.imageStore(fid)->gridwt(0)->get(arr,True);
+	    itsMappers.imageStore(fid)->gridwt(0)->get(arr,true);
 	    densitymatrices[fid].reference( arr );
 	    //cout << "Density shape (set) for f " << fid << " : " << arr.shape() << " : " << densitymatrices[fid].shape() << endl;
 	  }
@@ -1202,7 +1203,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	throw(AipsError("In setWeightDensity : "+x.getMesg()));
       }
-    return True;
+    return true;
   }
   
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1392,7 +1393,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    blc[1]=(shape[1]-(onepsf.shape()[1]))/2;
 	    trc[1]=onepsf.shape()[1]+blc[1]-1;
 	    Slicer sl(blc, trc, Slicer::endIsLast);
-	    SubImage<Float> sub(*(unFacettedImStore_p->psf(tix)), sl, True);
+	    SubImage<Float> sub(*(unFacettedImStore_p->psf(tix)), sl, true);
 	    sub.copyData(onepsf);
 	  }
       }
@@ -1544,7 +1545,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       if(chanchunks > 1 && itsMappers.nMappers() > 0)
 	log_l << "Channel chunking is currently not supported with multi(outlier)-fields. Please submit a feature request if needed." << LogIO::EXCEPTION;
 
-      if(chanchunks > 1) itsDataLoopPerMapper=True;
+      if(chanchunks > 1) itsDataLoopPerMapper=true;
       
       AlwaysAssert( ( ( ! (ftm->name()=="MosaicFTNew" && mappertype=="imagemosaic") )  && 
       		      ( ! (ftm->name()=="AWProjectWBFTNew" && mappertype=="imagemosaic") )) ,
@@ -1602,9 +1603,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   Bool SynthesisImager::toUseWeightImage(CountedPtr<FTMachine>& ftm, String mappertype)
   {
     if( (ftm->name() == "GridFT" || ftm->name() == "WProjectFT")&&(mappertype!="imagemosaic") )  
-      { return False; }
+      { return false; }
     else
-      { return True; }
+      { return true; }
   }
   */
 
@@ -1618,22 +1619,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					//------------------------------
 					const Int wprojplane,        //=1,
 					const Float padding,         //=1.0,
-					const Bool useAutocorr,      //=False,
-					const Bool useDoublePrec,    //=True,
+					const Bool useAutocorr,      //=false,
+					const Bool useDoublePrec,    //=true,
 					const String gridFunction,   //=String("SF"),
 					//------------------------------
-					const Bool aTermOn,          //= True,
-					const Bool psTermOn,         //= True,
-					const Bool mTermOn,          //= False,
-					const Bool wbAWP,            //= True,
+					const Bool aTermOn,          //= true,
+					const Bool psTermOn,         //= true,
+					const Bool mTermOn,          //= false,
+					const Bool wbAWP,            //= true,
 					const String cfCache,        //= "",
-					const Bool doPointing,       //= False,
-					const Bool doPBCorr,         //= True,
-					const Bool conjBeams,        //= True,
+					const Bool doPointing,       //= false,
+					const Bool doPBCorr,         //= true,
+					const Bool conjBeams,        //= true,
 					const Float computePAStep,         //=360.0
 					const Float rotatePAStep,          //=5.0
 					const String interpolation,  //="linear"
-					const Bool freqFrameValid, //=True
+					const Bool freqFrameValid, //=true
 					const Int cache,             //=1000000000,
 					const Int tile,               //=16
 					const String stokes, //=I
@@ -1702,8 +1703,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	AlwaysAssert( nTaylorTerms>=1 , AipsError );
 
-	CountedPtr<FTMachine> theMTFT = new MultiTermFTNew( theFT , nTaylorTerms, True/*forward*/ );
-	CountedPtr<FTMachine> theMTIFT = new MultiTermFTNew( theIFT , nTaylorTerms, False/*forward*/ );
+	CountedPtr<FTMachine> theMTFT = new MultiTermFTNew( theFT , nTaylorTerms, true/*forward*/ );
+	CountedPtr<FTMachine> theMTIFT = new MultiTermFTNew( theIFT , nTaylorTerms, false/*forward*/ );
 
 	theFT = theMTFT;
 	theIFT = theMTIFT;
@@ -1720,7 +1721,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	ROMSColumns msc(mss4vi_p[0]);
 	Quantity parang(0.0,"deg");
 	Quantity skyposthreshold(0.0,"deg");
-	vp = new VPSkyJones(msc, True,  parang, BeamSquint::NONE,skyposthreshold);
+	vp = new VPSkyJones(msc, true,  parang, BeamSquint::NONE,skyposthreshold);
 
 	Vector<CountedPtr<SkyJones> > skyJonesList(1);
 	skyJonesList(0) = vp;
@@ -1732,8 +1733,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //// For mode=cubedata, set the freq frame to invalid..
     // get this info from buildCoordSystem
     Vector<Int> tspws(0);
-    //theFT->setSpw( tspws, False );
-    //theIFT->setSpw( tspws, False );
+    //theFT->setSpw( tspws, false );
+    //theIFT->setSpw( tspws, false );
     theFT->setSpw( tspws, freqFrameValid );
     theIFT->setSpw( tspws, freqFrameValid );
 
@@ -1755,18 +1756,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					   //------------------------------
 					   const Int wprojPlane,        //=1,
 					   const Float,// padding,         //=1.0,
-					   const Bool,// useAutocorr,      //=False,
-					   const Bool useDoublePrec,    //=True,
+					   const Bool,// useAutocorr,      //=false,
+					   const Bool useDoublePrec,    //=true,
 					   const String,// gridFunction,   //=String("SF"),
 					   //------------------------------
-					   const Bool aTermOn,          //= True,
-					   const Bool psTermOn,         //= True,
-					   const Bool mTermOn,          //= False,
-					   const Bool wbAWP,            //= True,
+					   const Bool aTermOn,          //= true,
+					   const Bool psTermOn,         //= true,
+					   const Bool mTermOn,          //= false,
+					   const Bool wbAWP,            //= true,
 					   const String cfCache,        //= "",
-					   const Bool doPointing,       //= False,
-					   const Bool doPBCorr,         //= True,
-					   const Bool conjBeams,        //= True,
+					   const Bool doPointing,       //= false,
+					   const Bool doPBCorr,         //= true,
+					   const Bool conjBeams,        //= true,
 					   const Float computePAStep,   //=360.0
 					   const Float rotatePAStep,    //=5.0
 					   const Int cache,             //=1000000000,
@@ -1799,14 +1800,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // //
     // // Selectively switch off CFTerms.
     // //
-    // if (aTermOn == False) {apertureFunction->setOpCode(CFTerms::NOOP);}
-    // if (psTermOn == False) psTerm->setOpCode(CFTerms::NOOP);
+    // if (aTermOn == false) {apertureFunction->setOpCode(CFTerms::NOOP);}
+    // if (psTermOn == false) psTerm->setOpCode(CFTerms::NOOP);
 
     // //
     // // Construct the CF object with appropriate CFTerms.
     // //
     // CountedPtr<ConvolutionFunction> tt;
-    // tt = AWProjectFT::makeCFObject(aTermOn, psTermOn, True, mTermOn, wbAWP);
+    // tt = AWProjectFT::makeCFObject(aTermOn, psTermOn, true, mTermOn, wbAWP);
     // CountedPtr<ConvolutionFunction> awConvFunc;
     // //    awConvFunc = new AWConvFunc(apertureFunction,psTerm,wTerm, !wbAWP);
     // if ((ftmName=="mawprojectft") || (mTermOn))
@@ -1851,8 +1852,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     theFT = new AWProjectWBFTNew(wprojPlane, cache/2, 
 			      cfCacheObj, awConvFunc, 
 			      visResampler,
-			      /*True */doPointing, doPBCorr, 
-			      tile, computePAStep, pbLimit_l, True,conjBeams,
+			      /*true */doPointing, doPBCorr, 
+			      tile, computePAStep, pbLimit_l, true,conjBeams,
 			      useDoublePrec);
 
     cfCacheObj = new CFCache();
@@ -1871,8 +1872,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // theIFT = new AWProjectWBFT(wprojPlane, cache/2, 
     // 			       cfCacheObj, awConvFunc, 
     // 			       visResampler,
-    // 			       /*True */doPointing, doPBCorr, 
-    // 			       tile, computePAStep, pbLimit_l, True,conjBeams,
+    // 			       /*true */doPointing, doPBCorr, 
+    // 			       tile, computePAStep, pbLimit_l, true,conjBeams,
     // 			       useDoublePrec);
 
     // static_cast<AWProjectWBFT &>(*theIFT).setObservatoryLocation(mLocation_p);
@@ -1997,7 +1998,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     VPSkyJones* vps=NULL;
     if(rec.asString("name")=="COMMONPB" && kpb !=PBMath::UNKNOWN ){
-      vps= new VPSkyJones(msc, True, Quantity(rotatePAStep, "deg"), BeamSquint::GOFIGURE, Quantity(360.0, "deg"));
+      vps= new VPSkyJones(msc, true, Quantity(rotatePAStep, "deg"), BeamSquint::GOFIGURE, Quantity(360.0, "deg"));
       /////Don't know which parameter has pb threshold cutoff that the user want 
       ////leaving at default
       ////vps.setThreshold(minPB);
@@ -2099,7 +2100,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     	rvi_p->origin();
 
 	ProgressMeter pm(1.0, Double(vb->numberCoh()), 
-			 dopsf?"Gridding Weights and PSF":"Major Cycle", "","","",True);
+			 dopsf?"Gridding Weights and PSF":"Major Cycle", "","","",true);
 	Int cohDone=0;
 
 
@@ -2207,7 +2208,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     	rvi_p->origin();
 
 	ProgressMeter pm(1.0, Double(vb->numberCoh()), 
-			 dopsf?"Gridding Weights and PSF":"Major Cycle", "","","",True);
+			 dopsf?"Gridding Weights and PSF":"Major Cycle", "","","",true);
 	Int cohDone=0;
 
 
@@ -2296,7 +2297,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       rvi_p->origin();
 
       ProgressMeter pm(1.0, Double(vb->numberCoh()), 
-		       "Predict Model", "","","",True);
+		       "Predict Model", "","","",true);
       Int cohDone=0;
 
       itsMappers.initializeDegrid(*vb);
@@ -2331,8 +2332,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SynthesisImager","makeImage",WHERE) );
 
-    Bool dopsf=False;
-    if(datacol_p==FTMachine::PSF) dopsf=True;
+    Bool dopsf=false;
+    if(datacol_p==FTMachine::PSF) dopsf=true;
 
     {
     	VisBufferAutoPtr vb(rvi_p);
@@ -2340,7 +2341,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     	rvi_p->origin();
 
 	ProgressMeter pm(1.0, Double(vb->numberCoh()), 
-			 String(datacol_p), "","","",True);
+			 String(datacol_p), "","","",true);
 	Int cohDone=0;
 
     	itsMappers.initializeGrid(*vb,dopsf);
@@ -2385,7 +2386,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // useful to extend it to other projection FTMs -- but later.
     String ftmName = ((*(itsMappers.getFTM(whichFTM)))).name();
 
-    if (!((itsMappers.getFTM(whichFTM,True))->isUsingCFCache())) return;
+    if (!((itsMappers.getFTM(whichFTM,true))->isUsingCFCache())) return;
 
     os << "---------------------------------------------------- Dry Gridding ---------------------------------------------" << LogIO::POST;
 
@@ -2399,12 +2400,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       rvi_p->originChunks();
       rvi_p->origin();
 
-      ProgressMeter pm(1.0, Double(vb->numberCoh()), "dryGridding", "","","",True);
+      ProgressMeter pm(1.0, Double(vb->numberCoh()), "dryGridding", "","","",true);
 
       itsMappers.initializeGrid(*vb);
     
       // Set the gridder (iFTM) to run in dry-gridding mode
-      (itsMappers.getFTM(whichFTM,True))->setDryRun(True);
+      (itsMappers.getFTM(whichFTM,true))->setDryRun(true);
 
       Bool aTermIsOff=False;
       {
@@ -2428,7 +2429,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    {
 	      if (SynthesisUtilMethods::validate(*vb)!=SynthesisUtilMethods::NOVALIDROWS) 
 		{
-		  itsMappers.grid(*vb, True, FTMachine::OBSERVED, whichFTM);
+		  itsMappers.grid(*vb, true, FTMachine::OBSERVED, whichFTM);
 		  cohDone += vb->nRow();
 		  pm.update(Double(cohDone));
 		  // If there is no term that depends on time, don't iterate over the entire data base
@@ -2439,7 +2440,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     if (cohDone == 0) os << "No valid rows found in dryGridding." << LogIO::EXCEPTION << LogIO::POST;
     // Unset the dry-gridding mode.
-    (itsMappers.getFTM(whichFTM,True))->setDryRun(False);
+    (itsMappers.getFTM(whichFTM,true))->setDryRun(false);
 
     //itsMappers.checkOverlappingModels("restore");
     unlockMSs();
@@ -2498,8 +2499,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  // tmpFT->setCFCache(cfCacheObj);
 	  Vector<Double> uvScale, uvOffset;
 	  Matrix<Double> vbFreqSelection;
-	  CountedPtr<CFStore2> cfs2 = CountedPtr<CFStore2>(&cfCacheObj->memCache2_p[0],False);//new CFStore2;
-	  CountedPtr<CFStore2> cfwts2 =  CountedPtr<CFStore2>(&cfCacheObj->memCacheWt2_p[0],False);//new CFStore2;
+	  CountedPtr<CFStore2> cfs2 = CountedPtr<CFStore2>(&cfCacheObj->memCache2_p[0],false);//new CFStore2;
+	  CountedPtr<CFStore2> cfwts2 =  CountedPtr<CFStore2>(&cfCacheObj->memCacheWt2_p[0],false);//new CFStore2;
 
 	  //
 	  // Get whichFTM from itsMappers (SIMapperCollection) and
@@ -2542,8 +2543,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       // This assumes the itsMappers is always SIMapperCollection.
       for (whichFTM = 0; whichFTM < itsMappers.nMappers(); whichFTM++)
 	{
-	  (static_cast<AWProjectWBFTNew &> (*(itsMappers.getFTM(whichFTM)))).setCFCache(cfCacheObj,True); // Setup iFTM
-	  (static_cast<AWProjectWBFTNew &> (*(itsMappers.getFTM(whichFTM,False)))).setCFCache(cfCacheObj,True); // Set FTM
+	  (static_cast<AWProjectWBFTNew &> (*(itsMappers.getFTM(whichFTM)))).setCFCache(cfCacheObj,true); // Setup iFTM
+	  (static_cast<AWProjectWBFTNew &> (*(itsMappers.getFTM(whichFTM,false)))).setCFCache(cfCacheObj,true); // Set FTM
 	}
   }
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2595,7 +2596,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       return False;
   }
   
-  Bool SynthesisImager::makePBImage(const String& telescopeName, 
+  bool SynthesisImager::makePBImage(const String& telescopeName,
 				    Bool useSymmetricBeam, Double diam){
     
     LogIO os(LogOrigin("SynthesisImager", "makePBImage()", WHERE));
@@ -2634,7 +2635,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     os << LogIO::WARN << "Telescope " << telName << " is not known\n "
        << "Not making the PB  image" 
        << LogIO::POST;
-    return False; 
+    return false; 
   }
   return makePrimaryBeam(myPB );
 }
@@ -2676,12 +2677,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Vector<Int> fieldsDone;
   
     for(rvi_p->originChunks(); rvi_p->moreChunks(); rvi_p->nextChunk()){
-      Bool fieldDone=False;
+      Bool fieldDone=false;
       for (uInt k=0;  k < fieldsDone.nelements(); ++k)
 	fieldDone=fieldDone || (vb.fieldId()==fieldsDone(k));
       if(!fieldDone){
 	++fieldCounter;
-	fieldsDone.resize(fieldCounter, True);
+	fieldsDone.resize(fieldCounter, true);
 	fieldsDone(fieldCounter-1)=vb.fieldId();
 
 	itsMappers.addPB(vb,pbMath);

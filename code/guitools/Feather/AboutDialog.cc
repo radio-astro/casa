@@ -27,6 +27,7 @@
 #include <stdcasa/version.h>
 #include <sstream>
 
+using namespace casacore;
 namespace casa {
 
 AboutDialog::AboutDialog(QWidget *parent)

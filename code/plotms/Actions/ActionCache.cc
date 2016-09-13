@@ -35,6 +35,7 @@
 #include <QDebug>
 #include <fstream>
 
+using namespace casacore;
 namespace casa {
 
 ActionCache::ActionCache( Client* client )
@@ -137,4 +138,5 @@ bool ActionCache::loadParameters(){
 ActionCache::~ActionCache() {
 }
 
+using namespace casacore;
 } /* namespace casa */

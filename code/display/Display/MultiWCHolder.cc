@@ -35,20 +35,21 @@
 #include <display/Display/MultiWCHolder.h>
 #include <casa/BasicMath/Math.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Default constructor.
 	MultiWCHolder::MultiWCHolder() :
 		itsBLength(0), itsBIndex(0),
 		itsHoldCount(0),
-		itsRefreshHeld(False) {
+		itsRefreshHeld(false) {
 		setBIndexName();
 	}
 
 // Constructor for a single WorldCanvasHolder.
 	MultiWCHolder::MultiWCHolder(WorldCanvasHolder &holder) :
 		itsHoldCount(0),
-		itsRefreshHeld(False) {
+		itsRefreshHeld(false) {
 		setBIndexName();
 		addWCHolder(holder);
 	}
@@ -75,7 +76,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if (!isAlreadyRegistered(holder)) {
 			return;
 		}
-		removeAllDisplayDatas(holder,True);
+		removeAllDisplayDatas(holder,true);
 		ListIter<WorldCanvasHolder *> localWCHLI(itsWCHList);
 		localWCHLI.toStart();
 		while (!localWCHLI.atEnd()) {
@@ -127,7 +128,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if ( isBlinkDD(&displaydata) ){
 
 			itsBLength++;
-			itsBlinkDDs.resize( itsBLength, True );
+			itsBlinkDDs.resize( itsBLength, true );
 		}
 
 		ListIter<DisplayData *> iter(itsDDList);
@@ -214,7 +215,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					// if it was selecting a DD past the one deleted, in order
 					// to continue selecting the same DD.
 
-					if(found) {		// (should be True).
+					if(found) {		// (should be true).
 						itsBLength--;
 						if ( itsBLength >= 0 ){
 							itsBlinkDDs[itsBLength] = NULL;
@@ -344,7 +345,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			if (itsRefreshHeld) {
 				refresh(itsHeldReason);
 			}
-			itsRefreshHeld = False;
+			itsRefreshHeld = false;
 		}
 		ListIter<WorldCanvasHolder *> localWCHLI(itsWCHList);
 		localWCHLI.toStart();
@@ -357,7 +358,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	void MultiWCHolder::refresh(const Display::RefreshReason &reason) {
 		if (itsHoldCount) {
 			if (!itsRefreshHeld) { // store only first reason
-				itsRefreshHeld = True;
+				itsRefreshHeld = true;
 				itsHeldReason = reason;
 			}
 		} else {
@@ -378,22 +379,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		localWCHLI.toStart();
 		while (!localWCHLI.atEnd()) {
 			if (&holder == localWCHLI.getRight()) {
-				return True;
+				return true;
 			}
 			localWCHLI++;
 		}
-		return False;
+		return false;
 	}
 	Bool MultiWCHolder::isAlreadyRegistered(const DisplayData &displaydata) {
 		ListIter<DisplayData *> localDDLI(itsDDList);
 		localDDLI.toStart();
 		while (!localDDLI.atEnd()) {
 			if (&displaydata == localDDLI.getRight()) {
-				return True;
+				return true;
 			}
 			localDDLI++;
 		}
-		return False;
+		return false;
 	}
 
 // Add/remove all the DisplayDatas to/from a WorldCanvasHolder.
@@ -410,7 +411,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		ListIter<DisplayData *> localDDLI(itsDDList);
 		localDDLI.toStart();
 		while (!localDDLI.atEnd()) {
-			holder.removeDisplayData(*(localDDLI.getRight()), True);
+			holder.removeDisplayData(*(localDDLI.getRight()), true);
 			localDDLI++;
 		}
 	}
@@ -477,7 +478,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Determines which DDs will be restricted, which are always active.
 // May need refinement later; for now, blink Raster PADDs only; do not
 // restrict other DDs.  (Contour DDs will always show, e.g.).
-// (Note that GTkPanelDisplay assumes that isBlinkDD() is False for
+// (Note that GTkPanelDisplay assumes that isBlinkDD() is false for
 // GTkDrawingDDs, at present).
 // (12/04: This should probably be a DD method instead, so MWCH doesn't
 // need to know about various DD classes...).
@@ -525,12 +526,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		ListIter<WorldCanvasHolder*> wchs(itsWCHList);
 
 		for(Int i=0;  ;   i++, wchs++)  {
-			if(wchs.atEnd()) return False;
+			if(wchs.atEnd()) return false;
 			if(i==wchIndex) break;
 		}
 
 		wch=wchs.getRight();
-		if(wch==0 || dd==0) return False;
+		if(wch==0 || dd==0) return false;
 
 		return (!testZ     || dd->conformsToZIndex(*wch->worldCanvas()))  &&
 		       (!testCS    || dd->conformsToCS(*wch->worldCanvas()))      &&

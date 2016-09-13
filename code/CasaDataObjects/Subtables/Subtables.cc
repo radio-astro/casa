@@ -14,6 +14,7 @@
 
 using namespace std;
 
+using namespace casacore;
 namespace casa {
 
 namespace cdo {

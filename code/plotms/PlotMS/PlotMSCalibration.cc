@@ -27,6 +27,7 @@
 #include <plotms/PlotMS/PlotMSCalibration.h>
 #include <synthesis/CalLibrary/CalLibraryTools.h>
 
+using namespace casacore;
 namespace casa {
 
 ///////////////////////////////////////
@@ -74,7 +75,7 @@ bool PlotMSCalibration::operator==(const PlotMSCalibration& other) const {
 }
 
 void PlotMSCalibration::setDefaults() {
-  setUseCallib(False);
+  setUseCallib(false);
   setCalLibrary("");
 }
 

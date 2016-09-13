@@ -1,4 +1,4 @@
-//# MSCalEnums.h: Field name dictionary for MS and CAL tables
+//# MSCalEnums.h: Field name dictionary for casacore::MS and CAL tables
 //# Copyright (C) 1996,1997,1998,2000,2001,2002
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -39,7 +39,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <summary> 
-// MSCalEnums: Field name dictionary for MeasurementSet and calibration tables
+// MSCalEnums: Field name dictionary for casacore::MeasurementSet and calibration tables
 // </summary>
 
 // <use visibility=export>
@@ -47,16 +47,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <reviewed reviewer="" date="" tests="" demos="">
 
 // <prerequisite>
-//   <li> <linkto class="MeasurementSet">MeasurementSet</linkto> module
+//   <li> <linkto class="casacore::MeasurementSet">casacore::MeasurementSet</linkto> module
 // </prerequisite>
 //
 // <etymology>
-// From MeasurementSet and calibration enumerations.
+// From casacore::MeasurementSet and calibration enumerations.
 // </etymology>
 //
 // <synopsis>
 // MSCalEnums defines a global dictionary of field names and properties
-// used by both the MeasurementSet and calibration tables. Field names
+// used by both the casacore::MeasurementSet and calibration tables. Field names
 // and properties are accessed through enumerated constants, thus
 // ensuring a consistent and uniform interface. Both column names and
 // keywords are included here. All data are stored in static maps.
@@ -65,7 +65,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <example>
 // <srcblock>
 //      // Determine the column name for the SPECTRAL_WINDOW_ID column
-//      String name = MSC::fieldName (MSC::SPECTRAL_WINDOW_ID));
+//      casacore::String name = MSC::fieldName (MSC::SPECTRAL_WINDOW_ID));
 //
 // </srcblock>
 // </example>
@@ -90,7 +90,7 @@ class MSCalEnums
  public:
   // Enumerate all relevant data fields (columns and keywords)
   enum colDef {
-  // First include all MeasurementSet MAIN columns which may be used
+  // First include all casacore::MeasurementSet MAIN columns which may be used
   // in calibration selection, interpolation or labelling.
   //
   // Antenna number
@@ -109,7 +109,7 @@ class MSCalEnums
   TIME_EXTRA_PREC = 7,
   // Interval
   INTERVAL = 8,
-  // Array identifier
+  // casacore::Array identifier
   ARRAY_ID = 9,
   // Processor identifier
   PROCESSOR_ID = 10,
@@ -126,7 +126,7 @@ class MSCalEnums
   // State identifier
   STATE_ID = 16,
   
-  // Other secondary MeasurementSet columns
+  // Other secondary casacore::MeasurementSet columns
   //
   // Frequency group
   FREQ_GROUP = 100,
@@ -210,7 +210,7 @@ class MSCalEnums
   JONES_TYPE = 507, 
   // Polarization enumerations
   POLARIZATION_TYPE = 508,
-  // MeasurementSet name
+  // casacore::MeasurementSet name
   MS_NAME = 509,
   
   // Calibration history columns
@@ -265,9 +265,9 @@ class MSCalEnums
   };
 
   // Access functions for column/keyword description data
-  static String fieldName (Int enumField);
-  static Block<String> fieldNames (const Vector<Int>& enumFields);
-  static DataType basicType (Int enumField);
+  static casacore::String fieldName (casacore::Int enumField);
+  static casacore::Block<casacore::String> fieldNames (const casacore::Vector<casacore::Int>& enumFields);
+  static casacore::DataType basicType (casacore::Int enumField);
  
  private:
   // Initialize the static maps
@@ -275,9 +275,9 @@ class MSCalEnums
   
   // Static ordered maps containing field descriptions
   // Enum => Field Name
-  static SimpleOrderedMap <Int, String> theirFieldMap;
+  static casacore::SimpleOrderedMap <casacore::Int, casacore::String> theirFieldMap;
   // Enum => Basic data type
-  static SimpleOrderedMap <Int, DataType> theirTypeMap;
+  static casacore::SimpleOrderedMap <casacore::Int, casacore::DataType> theirTypeMap;
 };
 
 

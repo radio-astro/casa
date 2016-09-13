@@ -46,7 +46,7 @@ class SkyEquation;
 // <prerequisite>
 //   <li> <linkto class=ImageSkyModel>ImageSkyModel</linkto> class
 //   <li> <linkto class=MFCleanImageSkyModel>MFCleanImageSkyModel</linkto> class
-//   <li> <linkto class=LatticeCleaner>LatticeCleaner</linkto> class
+//   <li> <linkto class=casacore::LatticeCleaner>LatticeCleaner</linkto> class
 // </prerequisite>
 //
 // <etymology>
@@ -90,50 +90,50 @@ public:
   // component goes negative;
   // stoppointmode controls how many of the smallest component must be
   // hit consecutively before we stop that cycle (-1 ==> don't stop)
-  MFMSCleanImageSkyModel(const Int nscales,
-			 const Int stoplargenegatives=2,
-			 const Int stoppointmode=-1,
-                         const Float smallScaleBias=0.6);
+  MFMSCleanImageSkyModel(const casacore::Int nscales,
+			 const casacore::Int stoplargenegatives=2,
+			 const casacore::Int stoppointmode=-1,
+                         const casacore::Float smallScaleBias=0.6);
 
   // Create a MFMSCleanImageSkyModel, you provide the scale sizes, IN PIXELS
-  // for example:  Vector<Float> scales(4); scales(0) = 0.0;  scales(1) = 3.0;  
+  // for example:  casacore::Vector<casacore::Float> scales(4); scales(0) = 0.0;  scales(1) = 3.0;  
   // scales(2) = 10.0;  scales(3) = 30.0; 
-  MFMSCleanImageSkyModel(const Vector<Float>& useScaleSize,
-			 const Int stoplargenegatives=2,
-			 const Int stoppointmode=-1,
-                         const Float smallScaleBias=0.6);
+  MFMSCleanImageSkyModel(const casacore::Vector<casacore::Float>& useScaleSize,
+			 const casacore::Int stoplargenegatives=2,
+			 const casacore::Int stoppointmode=-1,
+                         const casacore::Float smallScaleBias=0.6);
 
   // destructor
   ~MFMSCleanImageSkyModel();
 
   // Solve for this SkyModel
-  virtual Bool solve (SkyEquation& me);
+  virtual casacore::Bool solve (SkyEquation& me);
 
 private:
   // Chattily get the scales into userScaleSizes_p, doing some calculation if necessary.
   void getScales();
 
   // set the scales
-  //  void setScales(LatticeCleaner<Float>& cleaner);
+  //  void setScales(casacore::LatticeCleaner<casacore::Float>& cleaner);
 
   enum Scale_Method{NSCALES, USERVECTOR};
   Scale_Method method_p;
 
-  uInt nscales_p;
-  Vector<Float> userScaleSizes_p;
+  casacore::uInt nscales_p;
+  casacore::Vector<casacore::Float> userScaleSizes_p;
 
-  LatticeCleanProgress *progress_p;
+  casacore::LatticeCleanProgress *progress_p;
 
   // parameter to stop the cycle (for the first N cycles) if you get a 
   // negative on the largest scale;
   // To disable, use < 0
-  Int stopLargeNegatives_p;
+  casacore::Int stopLargeNegatives_p;
 
   // parameter which stops the cycle if you hit the smallest scale this many
   // consecutive times; if < 0, don't stop for this
-  Int stopPointMode_p;
+  casacore::Int stopPointMode_p;
 
-  Float smallScaleBias_p;
+  casacore::Float smallScaleBias_p;
 
 };
 

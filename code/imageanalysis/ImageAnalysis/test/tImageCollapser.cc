@@ -101,7 +101,7 @@ void testException(
 	try {
 		ImageCollapser<Float> collapser(
 			aggString, image, nullptr,
-			mask, axes, False, outname(), False
+			mask, axes, false, outname(), false
 		);
 
 		// should not get here, fail if we do.
@@ -140,7 +140,7 @@ int main() {
     		writeTestString("average full image collapse along axis 0");
     		ImageCollapser<Float> collapser(
     			"mean", goodImage, nullptr, "", IPosition(1, 0),
-				False, outname(), False
+				false, outname(), false
     		);
     		collapser.collapse();
     		checkImage(outname(), datadir + "collapse_avg_0.fits");
@@ -149,7 +149,7 @@ int main() {
     		writeTestString("average full image collapse along axis 2");
     		ImageCollapser<Float> collapser(
     			"mean", goodImage, nullptr, "", IPosition(1, 2),
-				False, outname(), False
+				false, outname(), false
     		);
     		collapser.collapse();
     		checkImage(outname(), datadir + "collapse_avg_2.fits");
@@ -168,17 +168,17 @@ int main() {
 				nullptr, mask, chans,
 				CasacRegionManager::USE_ALL_STOKES, box,
 				goodImage->shape(), goodImage->name(),
-				False
+				false
     		);
     		ImageCollapser<Float> collapser(
     			"sum", goodImage, &region, "",
-				IPosition(1, 2), False, outname(), False
+				IPosition(1, 2), false, outname(), false
     		);
     		collapser.collapse();
     		// and check that we can overwrite the previous output
     		ImageCollapser<Float> collapser2(
         		"sum", goodImage, &region, "", IPosition(1, 1),
-				False, outname(), True
+				false, outname(), true
         	);
     		collapser2.collapse();
     		checkImage(outname(), datadir + "collapse_sum_1.fits");
@@ -187,7 +187,7 @@ int main() {
     		writeTestString("Check not specifying out file is ok");
     		ImageCollapser<Float> collapser(
     			"mean", goodImage, nullptr, "",
-				IPosition(1, 2), False, "", False
+				IPosition(1, 2), false, "", false
     		);
     		auto collapsed = collapser.collapse();
     		checkImage(collapsed, datadir + "collapse_avg_2.fits");
@@ -198,7 +198,7 @@ int main() {
 
     		ImageCollapser<Float> collapser(
     			"max", goodImage, nullptr, "", axes,
-				False, outname(), False
+				false, outname(), false
     		);
     		collapser.collapse();
     		checkImage(outname(), datadir + "collapse_max_0_a.fits");
@@ -211,7 +211,7 @@ int main() {
 
         	ImageCollapser<Float> collapser(
         		"mean", tIm, nullptr, "", IPosition(1, 0),
-				False, outname(), False
+				false, outname(), false
         	);
         	collapser.collapse();
         	checkImage(outname(), datadir + "collapse_avg_0.fits");
@@ -221,7 +221,7 @@ int main() {
         	IPosition axes(2, 0, 1);
         	ImageCollapser<Float> collapser(
         		"mean", goodImage, nullptr, "", axes,
-				False, outname(), False
+				false, outname(), false
         	);
         	collapser.collapse();
         	checkImage(outname(), datadir + "collapse_avg_0_1.fits");

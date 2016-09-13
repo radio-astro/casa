@@ -53,12 +53,12 @@ int main() {
             writeTestString(
                 "test constructor throws error in case where file does not exist"
             );
-            Bool thrown = False;
+            Bool thrown = false;
             try {
             	FitterEstimatesFileParser parser(datadir + "bogusfile.txt", fitsImage);
             }
             catch (AipsError x) {
-            	thrown = True;
+            	thrown = true;
             }
             if (! thrown) {
             	// if we get here an exception wasn't thrown so the test failed
@@ -69,12 +69,12 @@ int main() {
         	writeTestString(
         		"test constructor throws error in case where file is formatted incorrectly"
         	);
-        	Bool thrown = False;
+        	Bool thrown = false;
             try {
             	FitterEstimatesFileParser parser(datadir + "badEstimatesFormat.txt", fitsImage);
             }
             catch (AipsError x) {
-            	thrown = True;
+            	thrown = true;
             }
             if (! thrown) {
             	// if we get here an exception wasn't thrown so the test failed
@@ -85,14 +85,14 @@ int main() {
         	writeTestString(
         		"test constructor throws error in case where fixed parameters contain unrecognized flag"
         	);
-        	Bool thrown = False;
+        	Bool thrown = false;
             try {
             	FitterEstimatesFileParser parser(
             		datadir + "badFixedFormat.txt", fitsImage
             	);
             }
             catch (AipsError x) {
-            	thrown = True;
+            	thrown = true;
             }
             if (! thrown) {
             	// if we get here an exception wasn't thrown so the test failed

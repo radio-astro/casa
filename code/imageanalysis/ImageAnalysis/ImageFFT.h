@@ -32,11 +32,15 @@
 #include <images/Images/ImageInterface.h>
 #include <imageanalysis/ImageTypedefs.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore{
 
 class CoordinateSystem;
 class IPosition;
 template<class T> class Vector;
+}
+
+namespace casa { //# NAMESPACE CASA - BEGIN
+
 
 // <summary>
 // FFT an image
@@ -48,9 +52,9 @@ template<class T> class Vector;
 // </reviewed>
 
 // <prerequisite>
-//   <li> <linkto class=LatticeFFT>LatticeFFT</linkto> 
-//   <li> <linkto class=ImageInterface>ImageInterface</linkto> 
-//   <li> <linkto class=TempImage>TempImage</linkto> 
+//   <li> <linkto class=casacore::LatticeFFT>LatticeFFT</linkto> 
+//   <li> <linkto class=casacore::ImageInterface>ImageInterface</linkto> 
+//   <li> <linkto class=casacore::TempImage>TempImage</linkto> 
 // </prerequisite>
 
 // <etymology>
@@ -62,7 +66,7 @@ template<class T> class Vector;
 // take the FFT of just the sky plane(s) of an image or
 // the specified axes.
 //
-// When you specify axes, if any of them are a sky axis (DirectionCoordinate)
+// When you specify axes, if any of them are a sky axis (casacore::DirectionCoordinate)
 // you must give both sky axes.
 //
 // Masked pixels are given the value 0.0 before the FFT is taken and the
@@ -71,10 +75,10 @@ template<class T> class Vector;
 // will not be copied to the output
 //
 // This class holds the FourierTransform internally in a 
-// <linkto class=TempImage>TempImage</linkto> object.  This is
+// <linkto class=casacore::TempImage>TempImage</linkto> object.  This is
 // in memory or on disk depending upon its size and the amount
 // of memory in your computer.    The algorithm used
-// is that in <linkto class=TempLattice>TempLattice</linkto>.
+// is that in <linkto class=casacore::TempLattice>TempLattice</linkto>.
 //
 // In generating the Fourier Coordinates, it is currently
 // assumed that there is no coordinate rotation.  This 
@@ -86,22 +90,22 @@ template<class T> class Vector;
 //
 // // Make a constant image
 //
-//      IPosition shape(2, 10, 20);
-//      PagedImage<Float> im1(shape, CoordinateUtil::defaultCoords2D(), "im1");
+//      casacore::IPosition shape(2, 10, 20);
+//      casacore::PagedImage<casacore::Float> im1(shape, casacore::CoordinateUtil::defaultCoords2D(), "im1");
 //      im1.set(1.0);
 //
 // // Create output images with masks if needed
 //
-//      PagedImage<Float> r1(shape, CoordinateUtil::defaultCoords2D(), "real1");
-//      PagedImage<Float> i1(shape, CoordinateUtil::defaultCoords2D(), "imag1");
+//      casacore::PagedImage<casacore::Float> r1(shape, casacore::CoordinateUtil::defaultCoords2D(), "real1");
+//      casacore::PagedImage<casacore::Float> i1(shape, casacore::CoordinateUtil::defaultCoords2D(), "imag1");
 //      if (im1.isMasked()) {
-//         LCPagedMask mask1 = LCPagedMask(RegionHandler::makeMask (r1, "mask0"));
-//         mask1.set(True);
-//         r1.defineRegion ("mask0", ImageRegion(mask1), RegionHandler::Masks);
+//         casacore::LCPagedMask mask1 = casacore::LCPagedMask(casacore::RegionHandler::makeMask (r1, "mask0"));
+//         mask1.set(true);
+//         r1.defineRegion ("mask0", casacore::ImageRegion(mask1), casacore::RegionHandler::Masks);
 //         r1.setDefaultMask("mask0");
-//         LCPagedMask mask2 = LCPagedMask(RegionHandler::makeMask (i1, "mask0"));
-//         mask2.set(True);
-//         i1.defineRegion ("mask0", ImageRegion(mask1), RegionHandler::Masks);
+//         casacore::LCPagedMask mask2 = casacore::LCPagedMask(casacore::RegionHandler::makeMask (i1, "mask0"));
+//         mask2.set(true);
+//         i1.defineRegion ("mask0", casacore::ImageRegion(mask1), casacore::RegionHandler::Masks);
 //         i1.setDefaultMask("mask0");
 //      }
 // //
@@ -141,36 +145,36 @@ public:
 
 	// Do the FFT of the sky plane to the uv plane
 	// Masked pixels are set to zero before the FT
-	void fftsky (const ImageInterface<Float>& in);
+	void fftsky (const casacore::ImageInterface<casacore::Float>& in);
 
-	void fftsky (const ImageInterface<Complex>& in);
+	void fftsky (const casacore::ImageInterface<casacore::Complex>& in);
 
 
-// Do the FFT of the specified pixel axes (True to FT).  
+// Do the FFT of the specified pixel axes (true to FT).  
 // The rest are iterated over.
 // Masked pixels are set to zero before the FT
-   void fft (const ImageInterface<Float>& in, 
-             const Vector<Bool>& axes);
+   void fft (const casacore::ImageInterface<casacore::Float>& in, 
+             const casacore::Vector<casacore::Bool>& axes);
 
-// Do the FFT of the specified pixel axes (True to FT).  
+// Do the FFT of the specified pixel axes (true to FT).  
 // The rest are iterated over
 // Masked pixels are set to zero before the FT
-   void fft (const ImageInterface<Complex>& in, 
-             const Vector<Bool>& axes);
+   void fft (const casacore::ImageInterface<casacore::Complex>& in, 
+             const casacore::Vector<casacore::Bool>& axes);
 
 // Return the FFT (from the last call to fftsky or fft) in the 
-// desired form.    The CoordinateSystem, MiscInfo, ImageInfo,
+// desired form.    The casacore::CoordinateSystem, MiscInfo, casacore::ImageInfo,
 // history and units are copied/updated in the output image
 // from the image that was FFTd.   If the input image is masked,
 // and the output image has a writable mask, the mask will
 // be transferred. Any output mask should be initialized to
-// True before calling these functions.
+// true before calling these functions.
 // <group>
-   void getComplex (ImageInterface<Complex>& out) const;
-   void getReal (ImageInterface<Float>& out) const;
-   void getImaginary (ImageInterface<Float>& out) const;
-   void getAmplitude (ImageInterface<Float>& out) const;
-   void getPhase (ImageInterface<Float>& out) const;
+   void getComplex (casacore::ImageInterface<casacore::Complex>& out) const;
+   void getReal (casacore::ImageInterface<casacore::Float>& out) const;
+   void getImaginary (casacore::ImageInterface<casacore::Float>& out) const;
+   void getAmplitude (casacore::ImageInterface<casacore::Float>& out) const;
+   void getPhase (casacore::ImageInterface<casacore::Float>& out) const;
 // </group>
 
 private:
@@ -178,71 +182,71 @@ private:
    SPIIC _tempImagePtr;
    SPIIF _floatImage;
    SPIIC _complexImage;
-   Bool _done;
+   casacore::Bool _done;
 
 // Check axes for multi-dim FFT
-   void checkAxes(const CoordinateSystem& cSys, uInt ndim, 
-                  const Vector<Bool>& axes);
+   void checkAxes(const casacore::CoordinateSystem& cSys, casacore::uInt ndim, 
+                  const casacore::Vector<casacore::Bool>& axes);
 
 // Copy the  mask to the output
-   void copyMask (ImageInterface<Float>& out) const;
-   void copyMask (ImageInterface<Complex>& out) const;
-   void copyMask (ImageInterface<Float>& out,
-                  const ImageInterface<Float>& in) const;
-   void copyMask (ImageInterface<Float>& out,
-                  const ImageInterface<Complex>& in) const;
-   void copyMask (ImageInterface<Complex>& out,
-                  const ImageInterface<Float>& in) const;
-   void copyMask (ImageInterface<Complex>& out,
-                  const ImageInterface<Complex>& in) const;
+   void copyMask (casacore::ImageInterface<casacore::Float>& out) const;
+   void copyMask (casacore::ImageInterface<casacore::Complex>& out) const;
+   void copyMask (casacore::ImageInterface<casacore::Float>& out,
+                  const casacore::ImageInterface<casacore::Float>& in) const;
+   void copyMask (casacore::ImageInterface<casacore::Float>& out,
+                  const casacore::ImageInterface<casacore::Complex>& in) const;
+   void copyMask (casacore::ImageInterface<casacore::Complex>& out,
+                  const casacore::ImageInterface<casacore::Float>& in) const;
+   void copyMask (casacore::ImageInterface<casacore::Complex>& out,
+                  const casacore::ImageInterface<casacore::Complex>& in) const;
 
-// Copy MiscInfo, ImageInfo, Unit, logSInk to output
+// Copy MiscInfo, casacore::ImageInfo, casacore::Unit, logSInk to output
 // <group>
-   void copyMiscellaneous (ImageInterface<Float>& out) const;
-   void copyMiscellaneous (ImageInterface<Complex>& out) const;
+   void copyMiscellaneous (casacore::ImageInterface<casacore::Float>& out) const;
+   void copyMiscellaneous (casacore::ImageInterface<casacore::Complex>& out) const;
 // </group>
 
    void _fftsky2 (
-		   ImageInterface<Complex>& out,
-		   const ImageInterface<Float>& in,
-		   const Vector<Int>& pixelAxes
+		   casacore::ImageInterface<casacore::Complex>& out,
+		   const casacore::ImageInterface<casacore::Float>& in,
+		   const casacore::Vector<casacore::Int>& pixelAxes
    );
 
    void _fftsky2 (
-		   ImageInterface<Complex>& out,
-   		   const ImageInterface<Complex>& in,
-   		   const Vector<Int>& pixelAxes
+		   casacore::ImageInterface<casacore::Complex>& out,
+   		   const casacore::ImageInterface<casacore::Complex>& in,
+   		   const casacore::Vector<casacore::Int>& pixelAxes
    );
-// FFT (Float) given axes
-   void fft2(ImageInterface<Complex>& out,
-             const ImageInterface<Float>& in,
-             const Vector<Bool>& axes);
+// FFT (casacore::Float) given axes
+   void fft2(casacore::ImageInterface<casacore::Complex>& out,
+             const casacore::ImageInterface<casacore::Float>& in,
+             const casacore::Vector<casacore::Bool>& axes);
 
-// FFT (Complex) given axes
-   void fft3(ImageInterface<Complex>& out,
-             const ImageInterface<Complex>& in,
-             const Vector<Bool>& axes);
+// FFT (casacore::Complex) given axes
+   void fft3(casacore::ImageInterface<casacore::Complex>& out,
+             const casacore::ImageInterface<casacore::Complex>& in,
+             const casacore::Vector<casacore::Bool>& axes);
 
 // Find the sky axes in this CoordinateSystem
-   Bool _findSky(
-		   Int& dC, Vector<Int>& pixelAxes,
-		   Vector<Int>& worldAxes, const CoordinateSystem& cSys,
-		   Bool throwIt
+   casacore::Bool _findSky(
+		   casacore::Int& dC, casacore::Vector<casacore::Int>& pixelAxes,
+		   casacore::Vector<casacore::Int>& worldAxes, const casacore::CoordinateSystem& cSys,
+		   casacore::Bool throwIt
    );
 
 // Overwrite the coordinate system with Fourier coordinates for sky axes only
    void _setSkyCoordinates (
-		   ImageInterface<Complex>& out,
-		   const CoordinateSystem& csys, const IPosition& shape,
-		   uInt dC
+		   casacore::ImageInterface<casacore::Complex>& out,
+		   const casacore::CoordinateSystem& csys, const casacore::IPosition& shape,
+		   casacore::uInt dC
    );
 
 // Overwrite the coordinate system with Fourier coordinates for all desginated axes
    void _setCoordinates (
-		  ImageInterface<Complex>& out,
-		  const CoordinateSystem& cSys,
-		  const Vector<Bool>& axes,
-		  const IPosition& shape
+		  casacore::ImageInterface<casacore::Complex>& out,
+		  const casacore::CoordinateSystem& cSys,
+		  const casacore::Vector<casacore::Bool>& axes,
+		  const casacore::IPosition& shape
 );
 };
 

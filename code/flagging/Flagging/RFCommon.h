@@ -38,9 +38,9 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // RFAs use bitwise flags
-typedef uInt RFlagWord;
-typedef Vector<RFlagWord> FlagVector;
-typedef Matrix<RFlagWord> FlagMatrix;
+typedef casacore::uInt RFlagWord;
+typedef casacore::Vector<RFlagWord> FlagVector;
+typedef casacore::Matrix<RFlagWord> FlagMatrix;
 
 // character constants for common agent parameters
 const char 
@@ -149,53 +149,56 @@ public:
    
 
 // short inline function for checking the type of a record field
-inline Bool fieldType ( const RecordInterface &parm,const String &id,DataType type,DataType type2 = TpNumberOfTypes )
+inline casacore::Bool fieldType ( const casacore::RecordInterface &parm,
+                                  const casacore::String &id,casacore::DataType type,
+                                  casacore::DataType type2 = casacore::TpNumberOfTypes )
 {
   if( !parm.isDefined(id) || !parm.shape(id).product() )
-    return False;
-  DataType t = parm.dataType(id);
+    return false;
+  casacore::DataType t = parm.dataType(id);
   return t==type || t==type2;
 }
     
 // short inline function for checking a field's data type against some function
-inline Bool isField ( const RecordInterface &parm,const String &id,Bool (*func)(DataType) )
+inline casacore::Bool isField ( const casacore::RecordInterface &parm,const casacore::String &id,casacore::Bool (*func)(casacore::DataType) )
 {
   if( !parm.isDefined(id) )
-    return False;
-  DataType type = parm.dataType(id);
+    return false;
+  casacore::DataType type = parm.dataType(id);
   return (*func)(type);
 }
 
 // short inline function for checking that a field is a non-empty record
-inline Bool isValidRecord ( const RecordInterface &parm,const String &id)
+inline casacore::Bool isValidRecord ( const casacore::RecordInterface &parm,const casacore::String &id)
 {
-  if( !parm.isDefined(id) || parm.dataType(id) != TpRecord )
-    return False;
+  if( !parm.isDefined(id) || parm.dataType(id) != casacore::TpRecord )
+    return false;
   return parm.asRecord(id).nfields() > 0;
 }
     
-// Short inline function for checking if a record field is "set",
-// i.e. exists, and is not an empty array or a boolean False.
-inline Bool isFieldSet ( const RecordInterface &parm,const String &id )
+// casacore::Short inline function for checking if a record field is "set",
+// i.e. exists, and is not an empty array or a boolean false.
+inline casacore::Bool isFieldSet ( const casacore::RecordInterface &parm,const casacore::String &id )
 {
-  return parm.isDefined(id) && parm.shape(id).product() && ( parm.dataType(id) != TpBool || parm.asBool(id) );
+  return parm.isDefined(id) && parm.shape(id).product() &&
+          ( parm.dataType(id) != casacore::TpBool || parm.asBool(id) );
 }
     
-// Short inline function for returning the number of elements in a field
+// casacore::Short inline function for returning the number of elements in a field
 // (0 for no field, 1 for scalar, >1 for arrays)
-inline uInt fieldSize ( const RecordInterface &parm,const String &id )
+inline casacore::uInt fieldSize ( const casacore::RecordInterface &parm,const casacore::String &id )
 {
   return parm.isDefined(id) ? parm.shape(id).product() : 0;
 }
 
-// Basically just upcase(), but in a form suitable for Array::apply
-inline String stringUpper ( const String &in )
+// Basically just upcase(), but in a form suitable for casacore::Array::apply
+inline casacore::String stringUpper ( const casacore::String &in )
 {
   return upcase(in);
 }
 
 // a debug-printf function, for printf-ing debug messages
-int dprintf( LogIO &os, const char *format, ... );
+int dprintf( casacore::LogIO &os, const char *format, ... );
 
 inline std::vector<bool> bitvec_from_ulong( unsigned long val, size_t len = std::numeric_limits<unsigned long>::digits ) {
     std::vector<bool> result(len,false);

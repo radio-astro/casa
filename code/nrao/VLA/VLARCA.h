@@ -84,7 +84,7 @@ public:
 
   // Initialise this RCA from the given BytesSource (which must contain a VLA
   // logical record), and must be readable & seekable.
-  VLARCA(ByteSource& record);
+  VLARCA(casacore::ByteSource& record);
 
   // The copy constructor uses copy semantics
   VLARCA(const VLARCA& other);
@@ -95,46 +95,46 @@ public:
   // The assignment constructor uses copy semantics
   VLARCA& operator=(const VLARCA& other);
     
-  // attach to the specified ByteSource 
-  void attach(ByteSource& record);
+  // attach to the specified casacore::ByteSource 
+  void attach(casacore::ByteSource& record);
   
   // return the length of this logical record
-  uInt length() const;
+  casacore::uInt length() const;
   
   // return the revision of this logical record
-  uInt revision() const;
+  casacore::uInt revision() const;
   
   // return the position (in bytes) of the start of the SDA, from the
   // beginning of the logical record.
-  uInt SDAOffset() const;
+  casacore::uInt SDAOffset() const;
   
   // return the position (in bytes) of the start of the specified ADA, from the
   // beginning of the logical record.
-  uInt ADAOffset(uInt which) const;
+  casacore::uInt ADAOffset(casacore::uInt which) const;
   
   // return the number of antennas in the sub-array that this logical record
   // contains data for.
-  uInt nAntennas() const;
+  casacore::uInt nAntennas() const;
   
   // return the position (in bytes) of the start of the specified CDA, from the
   // beginning of the logical record.
-  uInt CDAOffset(uInt which) const;
+  casacore::uInt CDAOffset(casacore::uInt which) const;
   
   // return the number of bytes in the header of a baseline record in the
   // specified CDA
-  uInt CDAHeaderBytes(uInt which) const;
+  casacore::uInt CDAHeaderBytes(casacore::uInt which) const;
 
   // return the number of bytes in the baseline record, including the header in
   // the specified CDA
-  uInt CDABaselineBytes(uInt which) const;
+  casacore::uInt CDABaselineBytes(casacore::uInt which) const;
 
   // return the time in Modified Julian Days that is the reference point for
   // the times given in this record. 
-  uInt obsDay() const;
+  casacore::uInt obsDay() const;
 
 private:
   //# Contains a logical record
-  mutable ByteSource itsRecord;
+  mutable casacore::ByteSource itsRecord;
 };
 #endif
 

@@ -45,7 +45,7 @@ ATM_NAMESPACE_BEGIN
 /** \brief Defines the side of a sideband.
  *
  *  Heterodyne receivers have two sidebands, a lower and an upper sideband. On the
- *  other hand the detectors do not have sidebands. The Science Data Model assign
+ *  other hand the detectors do not have sidebands. The Science casacore::Data Model assign
  *  one spectral window per sideband. Hence, with detectors, there is a single
  *  spectral window. SidebandSide differentiates between these various cases.<br>
  *
@@ -78,14 +78,14 @@ enum SidebandSide{ NOSB=0,         //!< No sideband (eg for HEMT)
  *  The codes have the following meaning:
  *   <ul>
  *     <li> -1 No type (NOTYPE): type is not relevant with a SidebandSide equal to NOSB
- *     <li> 0  Double sidebands (DSB): Case with no sideband rejection
+ *     <li> 0  casacore::Double sidebands (DSB): Case with no sideband rejection
  *     <li> 1  Single sideband (SSB): Case with sideband rejection
  *     <li> 2  Two sideband (TWOSB): Case with sideband separation (only for interferometric modes)
  *    </ul>
  *  </ul>
  */
 enum SidebandType{ NOTYPE=-1,      //!< Not relevant (no sideband)
-                   DSB=0,          //!< Double sideband (no rejection)
+                   DSB=0,          //!< casacore::Double sideband (no rejection)
                    SSB=1,          //!< Single sideband (rejection)
                    TWOSB=2         //!< two sidebands (sideband separation)
 };

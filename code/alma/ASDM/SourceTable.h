@@ -28,7 +28,7 @@
  * | If you do, all changes will be lost when the file is re-generated. |
  *  --------------------------------------------------------------------
  *
- * File SourceTable.h
+ * casacore::File SourceTable.h
  */
  
 #ifndef SourceTable_CLASS
@@ -356,7 +356,7 @@ class SourceRow;
  * <TD> numStokes </TD> 
  * <TD> int </TD>
  * <TD>  &nbsp; </TD>
- * <TD>&nbsp; the number of Stokes parameters. </TD>
+ * <TD>&nbsp; the number of casacore::Stokes parameters. </TD>
  * </TR>
 	
  * <TR>
@@ -377,7 +377,7 @@ class SourceRow;
  * <TD> stokesParameter </TD> 
  * <TD> vector<StokesParameterMod::StokesParameter > </TD>
  * <TD>  numStokes  </TD>
- * <TD>&nbsp; the array of Stokes parameters (one value per parameter). </TD>
+ * <TD>&nbsp; the array of casacore::Stokes parameters (one value per parameter). </TD>
  * </TR>
 	
  * <TR>
@@ -521,7 +521,7 @@ public:
 	std::string toXML()  ;
 
 #ifndef WITHOUT_ACS
-	// Conversion Methods
+	// casacore::Conversion Methods
 	/**
 	 * Convert this table into a SourceTableIDL CORBA structure.
 	 *

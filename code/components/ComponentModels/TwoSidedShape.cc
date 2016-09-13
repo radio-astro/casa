@@ -45,6 +45,7 @@
 #include <casa/Utilities/Precision.h>
 #include <casa/BasicSL/String.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 TwoSidedShape::~TwoSidedShape() {
@@ -167,7 +168,7 @@ void TwoSidedShape::visibility(Matrix<DComplex>& scale,
 
 Bool TwoSidedShape::isSymmetric() const {
   DebugAssert(ok(), AipsError);
-  return True;
+  return true;
 }
 
 uInt TwoSidedShape::nParameters() const {
@@ -226,13 +227,13 @@ void TwoSidedShape::setOptParameters(const Vector<Double>& newOptParms){
 
 Bool TwoSidedShape::fromRecord(String& errorMessage,
 			       const RecordInterface& record) {
-  if (!ComponentShape::fromRecord(errorMessage, record)) return False;
+  if (!ComponentShape::fromRecord(errorMessage, record)) return false;
   Quantum<Double> majorAxis, minorAxis, pa;
   if (!fromAngQRecord(majorAxis, errorMessage, "majoraxis", record) ||
       !fromAngQRecord(minorAxis, errorMessage, "minoraxis", record) ||
       !fromAngQRecord(pa, errorMessage, "positionangle", record)) {
     errorMessage += "Shape not changed\n";
-    return False;
+    return false;
   }
   const Unit rad("rad");
   const Double majorAxisInRad = majorAxis.getValue(rad);
@@ -246,30 +247,30 @@ Bool TwoSidedShape::fromRecord(String& errorMessage,
   if (majorAxisInRad < minorAxisInRad && 
       !near(minorAxisInRad, minorAxisInRad, 2*C::dbl_epsilon)) {
     errorMessage += "The major axis cannot be smaller than the minor axis\n";
-    return False;
+    return false;
   }
   setWidth(majorAxis, minorAxis, pa);
   if (!fromAngQRecord(majorAxis, errorMessage, "majoraxiserror", record) ||
       !fromAngQRecord(minorAxis, errorMessage, "minoraxiserror", record) ||
       !fromAngQRecord(pa, errorMessage, "positionangleerror", record)) {
     errorMessage += "Shape errors not changed\n";
-    return False;
+    return false;
   }
   setErrors(majorAxis, minorAxis, pa);
   DebugAssert(ok(), AipsError);
-  return True;
+  return true;
 }
 
 Bool TwoSidedShape::toRecord(String& errorMessage,
 			     RecordInterface& record) const {
   DebugAssert(ok(), AipsError);
-  if (!ComponentShape::toRecord(errorMessage, record)) return False;
+  if (!ComponentShape::toRecord(errorMessage, record)) return false;
   {
     const QuantumHolder qHolder(majorAxis());
     Record qRecord;
     if (!qHolder.toRecord(errorMessage, qRecord)) {
       errorMessage += "Cannot convert the major axis to a record\n";
-      return False;
+      return false;
     }
     record.defineRecord(RecordFieldId("majoraxis"), qRecord);
   }
@@ -278,7 +279,7 @@ Bool TwoSidedShape::toRecord(String& errorMessage,
     Record qRecord;
     if (!qHolder.toRecord(errorMessage, qRecord)) {
       errorMessage += "Cannot convert the minor axis to a record\n";
-      return False;
+      return false;
     }
     record.defineRecord(RecordFieldId("minoraxis"), qRecord);
   }
@@ -287,7 +288,7 @@ Bool TwoSidedShape::toRecord(String& errorMessage,
     Record qRecord;
     if (!qHolder.toRecord(errorMessage, qRecord)) {
       errorMessage += "Cannot convert the position angle to a record\n";
-      return False;
+      return false;
     }
     record.defineRecord(RecordFieldId("positionangle"), qRecord);
   }
@@ -296,7 +297,7 @@ Bool TwoSidedShape::toRecord(String& errorMessage,
     Record qRecord;
     if (!qHolder.toRecord(errorMessage, qRecord)) {
       errorMessage += "Cannot convert the major axis error to a record\n";
-      return False;
+      return false;
     }
     record.defineRecord(RecordFieldId("majoraxiserror"), qRecord);
   }
@@ -305,7 +306,7 @@ Bool TwoSidedShape::toRecord(String& errorMessage,
     Record qRecord;
     if (!qHolder.toRecord(errorMessage, qRecord)) {
       errorMessage += "Cannot convert the minor axis error to a record\n";
-      return False;
+      return false;
     }
     record.defineRecord(RecordFieldId("minoraxiserror"), qRecord);
   }
@@ -314,11 +315,11 @@ Bool TwoSidedShape::toRecord(String& errorMessage,
     Record qRecord;
     if (!qHolder.toRecord(errorMessage, qRecord)) {
       errorMessage += "Cannot convert the position angle error to a record\n";
-      return False;
+      return false;
     }
     record.defineRecord(RecordFieldId("positionangleerror"), qRecord);
   }
-  return True;
+  return true;
 }
 
 Bool TwoSidedShape::convertUnit(String& errorMessage,
@@ -328,20 +329,20 @@ Bool TwoSidedShape::convertUnit(String& errorMessage,
     const String fieldString("majoraxis");
     if (!record.isDefined(fieldString)) {
       errorMessage += "The 'majoraxis' field does not exist\n";
-      return False;
+      return false;
     }
     const RecordFieldId field(fieldString);
     if (!((record.dataType(field) == TpString) && 
 	  (record.shape(field) == IPosition(1,1)))) {
       errorMessage += "The 'majoraxis' field must be a string\n";
       errorMessage += "(but not a vector of strings)\n";
-      return False;
+      return false;
     }
     const Unit unit = Unit(record.asString(field));
     if (unit != deg) {
       errorMessage += 
 	"Cannot convert the major axis width to a non angular unit";
-      return False;
+      return false;
     }
     itsMajUnit = unit;
   }
@@ -349,20 +350,20 @@ Bool TwoSidedShape::convertUnit(String& errorMessage,
     const String fieldString("minoraxis");
     if (!record.isDefined(fieldString)) {
       errorMessage += "The 'minoraxis' field does not exist\n";
-      return False;
+      return false;
     }
     const RecordFieldId field(fieldString);
     if (!((record.dataType(field) == TpString) && 
 	  (record.shape(field) == IPosition(1,1)))) {
       errorMessage += "The 'minoraxis' field must be a string\n";
       errorMessage += "(but not a vector of strings)\n";
-      return False;
+      return false;
     }
     const Unit unit = Unit(record.asString(field));
     if (unit != deg) {
       errorMessage += 
 	"Cannot convert the minor axis width to a non angular unit";
-      return False;
+      return false;
     }
     itsMinUnit = unit;
   }
@@ -370,52 +371,52 @@ Bool TwoSidedShape::convertUnit(String& errorMessage,
     const String fieldString("positionangle");
     if (!record.isDefined(fieldString)) {
       errorMessage += "The 'positionangle' field does not exist\n";
-      return False;
+      return false;
     }
     const RecordFieldId field(fieldString);
     if (!((record.dataType(field) == TpString) && 
 	  (record.shape(field) == IPosition(1,1)))) {
       errorMessage += "The 'positionangle' field must be a string\n";
       errorMessage += "(but not a vector of strings)\n";
-      return False;
+      return false;
     }
     const Unit unit = Unit(record.asString(field));
     if (unit != deg) {
       errorMessage += 
 	"Cannot convert the position angle to a non angular unit";
-      return False;
+      return false;
     }
     itsPaUnit = unit;
   }
   DebugAssert(ok(), AipsError);
-  return True;
+  return true;
 }
 
 Bool TwoSidedShape::ok() const {
   // The LogIO class is only constructed if an error is detected for
   // performance reasons. Both function static and file static variables
   // where considered and rejected for this purpose.
-  if (!ComponentShape::ok()) return False;
+  if (!ComponentShape::ok()) return false;
   const Unit deg("deg");
   if (itsMajUnit != deg) {
     LogIO logErr(LogOrigin("TwoSidedCompRep", "ok()"));
     logErr << LogIO::SEVERE << "The major axis does not have angular units."
            << LogIO::POST;
-    return False;
+    return false;
   }
   if (itsMinUnit != deg) {
     LogIO logErr(LogOrigin("TwoSidedCompRep", "ok()"));
     logErr << LogIO::SEVERE << "The minor axis does not have angular units."
            << LogIO::POST;
-    return False;
+    return false;
   }
   if (itsPaUnit != deg) {
     LogIO logErr(LogOrigin("TwoSidedCompRep", "ok()"));
     logErr << LogIO::SEVERE <<"The position angle does not have angular units."
            << LogIO::POST;
-    return False;
+    return false;
   }
-  return True;
+  return true;
 }
 
 TwoSidedShape::TwoSidedShape()
@@ -510,7 +511,7 @@ Vector<Double> TwoSidedShape::toPixel (const DirectionCoordinate& dirCoord)  con
    Double minorWorldRad = minorWorld.getValue(Unit("rad"));
    Double sep = 0.0;
    Double prevSep = 0.0;
-   Bool more = True;
+   Bool more = true;
    while (more) {
       dirCoord.toWorld(posWorld, posPix);
       MVDirection mvd = posWorld.getValue();

@@ -36,6 +36,7 @@
 
 
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 PBMath1DCosPoly::PBMath1DCosPoly(const Vector<Double>& coeff, 

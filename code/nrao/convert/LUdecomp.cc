@@ -44,7 +44,7 @@ template<class T> LUdecomp<T>::LUdecomp(Matrix<T> &A){
  Int numcols = A.ncolumn();  // N
  LU.resize(numrows,numcols);
  LU = A;
- thePivot.resize(numrows+1, True, False);
+ thePivot.resize(numrows+1, true, false);
  for(int i =0;i<numrows+1;i++) thePivot[i]=i+1;
  Bool LUstoreflag;
  T *matrixhold = LU.getStorage(LUstoreflag);

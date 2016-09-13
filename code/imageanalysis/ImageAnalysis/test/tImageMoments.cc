@@ -58,10 +58,10 @@ int main () {
 		temp.setUnits("Jy/pixel");
 		Image2DConvolver<Float>::convolve(
 			log, expImage, temp, VectorKernel::GAUSSIAN,
-			IPosition(2, 0, 1), p, True, -1.0, True, True
+			IPosition(2, 0, 1), p, true, -1.0, true, true
 		);
 
-		ImageMoments<Float> momentMaker(expImage, log, True, False);
+		ImageMoments<Float> momentMaker(expImage, log, true, false);
 		Vector<Int> whichMoments(5);
 		whichMoments(0) = 0;
 		whichMoments(1) = 1;
@@ -74,7 +74,7 @@ int main () {
 		Int axis = 2;
 		momentMaker.setMomentAxis(axis);
 		PtrBlock<MaskedLattice<Float>*> images;
-		momentMaker.createMoments(images, False, "exp", False);
+		momentMaker.createMoments(images, false, "exp", false);
 		shape[2] = 1;
 		TempImage<Float> i6(TiledShape(shape), csys);
 		TempImage<Float> io6(TiledShape(shape), csys);
@@ -96,7 +96,7 @@ int main () {
 				i6.putAt(1.0, IPosition(3, 50, 50, 0));
 				Image2DConvolver<Float>::convolve(
 					log, io6, i6, VectorKernel::GAUSSIAN,
-					IPosition(2, 0, 1), p, True, -1.0, True, True
+					IPosition(2, 0, 1), p, true, -1.0, true, true
 				);
 			}
 			if (i == 1) {
@@ -105,7 +105,7 @@ int main () {
 				i8.putAt(1.0, IPosition(3, 50, 50, 0));
 				Image2DConvolver<Float>::convolve(
 					log, io8, i8, VectorKernel::GAUSSIAN,
-					IPosition(2, 0, 1), p, True, -1.0
+					IPosition(2, 0, 1), p, true, -1.0
 				);
 			}
 			if (i == 2) {
@@ -114,7 +114,7 @@ int main () {
 				i10.putAt(1.0, IPosition(3, 50, 50, 0));
 				Image2DConvolver<Float>::convolve(
 					log, io10, i10, VectorKernel::GAUSSIAN,
-					IPosition(2, 0, 1), p, True, -1.0
+					IPosition(2, 0, 1), p, true, -1.0
 				);
 			}
 			beamSet.setBeam(i, -1, GaussianBeam(p));
@@ -127,17 +127,17 @@ int main () {
 		info.setBeams(beamSet);
 		multi.setUnits("Jy/beam");
 		multi.setImageInfo(info);
-		ImageMoments<Float> gotMom(multi, log, True, False);
+		ImageMoments<Float> gotMom(multi, log, true, false);
 		if (!gotMom.setMoments(whichMoments)) {
 			throw AipsError("Cannot set moments");
 		}
 		gotMom.setMomentAxis(axis);
 		PtrBlock<MaskedLattice<Float>*> gotImages;
-		gotMom.createMoments(gotImages, False, "got", False);
+		gotMom.createMoments(gotImages, false, "got", false);
 		for (uInt i=0; i<gotImages.size(); i++) {
 			IPosition mshape = gotImages[i]->shape();
 			IPosition axisPath = IPosition::makeAxisPath(mshape.size());
-            ArrayPositionIterator iter(mshape, axisPath, False);
+            ArrayPositionIterator iter(mshape, axisPath, false);
 			while (! iter.pastEnd()) {
                 const IPosition pos = iter.pos();
                 if (expImage.getAt(pos) < 0.01) {

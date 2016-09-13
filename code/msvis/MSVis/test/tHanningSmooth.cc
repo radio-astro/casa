@@ -72,7 +72,7 @@ int main(int argc, char **argv) {
 	for (row=0; row<nRow; row++) {
 	  for (pol=0; pol<nPol; pol++) {
 	    smoothedData(pol,0,row) = vc(pol,0,row); // not really necessary
-	    newFlag(pol,0,row) = True;    // since we must flag first channel
+	    newFlag(pol,0,row) = true;    // since we must flag first channel
 	    for (chn=1; chn<nChan-1; chn++) {
 	      smoothedData(pol,chn,row) =
 		vc(pol,chn-1,row)*0.25 + vc(pol,chn,row)*0.50 +
@@ -81,7 +81,7 @@ int main(int argc, char **argv) {
 		fc(pol,chn-1,row)||fc(pol,chn,row)||fc(pol,chn+1,row);
 	    }
 	    smoothedData(pol,nChan-1,row) = vc(pol,nChan-1,row);
-	    newFlag(pol,nChan-1,row) = True;  // flag last channel
+	    newFlag(pol,nChan-1,row) = true;  // flag last channel
 	  }
 	}
 	vi.setVisAndFlag(smoothedData,newFlag,VisibilityIterator::Corrected);

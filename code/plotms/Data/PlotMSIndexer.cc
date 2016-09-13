@@ -35,6 +35,7 @@
 //#include <QtCore/qmath.h>
 #include <QDebug>
 
+using namespace casacore;
 namespace casa {
 
 PlotMSIndexer::PlotMSIndexer():
@@ -48,7 +49,7 @@ PlotMSIndexer::PlotMSIndexer():
 		  nSegPoints_(),nCumulPoints_(),cacheChunk_(),cacheOffset_(),
 		  currentX_(PMS::SCAN),
 		  currentY_(PMS::SCAN),
-		  indexerReady_(False),
+		  indexerReady_(false),
 		  icorrmax_(),
 		  ichanmax_(),
 		  ibslnmax_(),
@@ -68,9 +69,9 @@ PlotMSIndexer::PlotMSIndexer():
 		  yflmax_(-DBL_MAX),
 		  sizeMasked_(0),
 		  sizeUnMasked_(0),
-		  globalXMinMax_(False),
-		  globalYMinMax_(False),
-		  iterate_(False),
+		  globalXMinMax_(false),
+		  globalYMinMax_(false),
+		  iterate_(false),
 		  iterAxis_(PMS::NONE),
 		  iterValue_(-999),
 		  itsColorize_(false),
@@ -92,7 +93,7 @@ PlotMSIndexer::PlotMSIndexer(PlotMSCacheBase* parent, PMS::Axis xAxis,
 		  nSegPoints_(),nCumulPoints_(),cacheChunk_(),cacheOffset_(),
 		  currentX_(xAxis),
 		  currentY_(yAxis),
-		  indexerReady_(False),
+		  indexerReady_(false),
 		  icorrmax_(),
 		  ichanmax_(),
 		  ibslnmax_(),
@@ -112,9 +113,9 @@ PlotMSIndexer::PlotMSIndexer(PlotMSCacheBase* parent, PMS::Axis xAxis,
 		  yflmax_(-DBL_MAX),
 		  sizeMasked_(0),
 		  sizeUnMasked_(0),
-		  globalXMinMax_(False),
-		  globalYMinMax_(False),
-		  iterate_(False),
+		  globalXMinMax_(false),
+		  globalYMinMax_(false),
+		  iterate_(false),
 		  iterAxis_(PMS::SCAN),
 		  iterValue_(-999),
 		  itsColorize_(false),
@@ -137,7 +138,7 @@ PlotMSIndexer::PlotMSIndexer(PlotMSCacheBase* parent, PMS::Axis xAxis,
 		nSegPoints_(),nCumulPoints_(),cacheChunk_(),cacheOffset_(),
 		currentX_(xAxis),
 		currentY_(yAxis),
-		indexerReady_(False),
+		indexerReady_(false),
 		icorrmax_(),
 		ichanmax_(),
 		ibslnmax_(),
@@ -157,8 +158,8 @@ PlotMSIndexer::PlotMSIndexer(PlotMSCacheBase* parent, PMS::Axis xAxis,
 		yflmax_(-DBL_MAX),
 		sizeMasked_(0),
 		sizeUnMasked_(0),
-		globalXMinMax_(False),
-		globalYMinMax_(False),
+		globalXMinMax_(false),
+		globalYMinMax_(false),
 		iterate_(iterAxis!=PMS::NONE),
 		iterAxis_(iterAxis),
 		iterValue_(iterValue),
@@ -225,7 +226,7 @@ bool PlotMSIndexer::minsMaxes(double& xMin, double& xMax,
 		yMin=min(ymin_,yflmin_);
 		yMax=max(ymax_,yflmax_);
 	}
-	return True;
+	return true;
 }
 
 bool PlotMSIndexer::maskedAt( unsigned int index) const {
@@ -271,7 +272,7 @@ bool PlotMSIndexer::maskedMinsMaxes(double& xMin, double& xMax,
 		yMin=yflmin_;
 		yMax=yflmax_;
 	}
-	return True;
+	return true;
 }
 
 
@@ -285,7 +286,7 @@ bool PlotMSIndexer::maskedMinsMaxesRaw(double& xMin, double& xMax,
 	xMax=xflmax_;
 	yMin=yflmin_;
 	yMax=yflmax_;
-	return True;
+	return true;
 }
 
 bool PlotMSIndexer::unmaskedMinsMaxes(double& xMin, double& xMax, 
@@ -317,7 +318,7 @@ bool PlotMSIndexer::unmaskedMinsMaxes(double& xMin, double& xMax,
 		yMin=ymin_;
 		yMax=ymax_;
 	}
-	return True;
+	return true;
 }
 
 
@@ -330,7 +331,7 @@ bool PlotMSIndexer::unmaskedMinsMaxesRaw(double& xMin, double& xMax,
 	xMax=xmax_;
 	yMin=ymin_;
 	yMax=ymax_;
-	return True;
+	return true;
 }
 
 
@@ -647,10 +648,10 @@ void PlotMSIndexer::setUpIndexing() {
 		if (nSegment_==0) nSegment_=1;
 
 		// (w/ copy)
-		nSegPoints_.resize(nSegment_,True);
-		nCumulPoints_.resize(nSegment_,True);
-		cacheChunk_.resize(nSegment_,True);
-		cacheOffset_.resize(nSegment_,True);
+		nSegPoints_.resize(nSegment_,true);
+		nCumulPoints_.resize(nSegment_,true);
+		cacheChunk_.resize(nSegment_,true);
+		cacheOffset_.resize(nSegment_,true);
 	}
 
 	// Fill cumulative counter
@@ -1138,7 +1139,7 @@ Record PlotMSIndexer::locateInfo(const Vector<PlotRegion>& regions,
 		Bool selectAll) {
 	int nFound = 0, n = size();
 	Int nFoundMasked = 0, nFoundUnmasked = 0;
-	Bool m = False;
+	Bool m = false;
 	Record result;
 	result.define("xaxis", PMS::axis(currentX_));
 	result.define("yaxis", PMS::axis(currentY_));
@@ -1191,7 +1192,7 @@ PlotLogMessage* PlotMSIndexer::locateRange(const Vector<PlotRegion>& regions,
 	Int nFound = 0, n = size();
 	Int nFoundMasked(0),nFoundUnmasked(0);
 
-	Bool m(False);
+	Bool m(false);
 	for(Int i = 0; i < n; i++) {
 
 		m=maskedAt(i);
@@ -1234,7 +1235,7 @@ void PlotMSIndexer::reportMeta(Double x, Double y, Bool masked,stringstream& ss)
 
 	// This method assumes currChunk_ and irel_ already set correctly!
     // Note some values not set (-1) in some cal tables
-	Bool showindices(True);
+	Bool showindices(true);
 
 	ss << "Scan=";
     Int scan= Int(plotmscache_->getScan(currChunk_,0));
@@ -1371,8 +1372,8 @@ PlotLogMessage* PlotMSIndexer::flagRange(const PlotMSFlagging& flagging,
 					flsz = flagchunk.nelements();
 					if(flsz < nFound) {
 						// Add 50% more space (w/ copy!)
-						flagchunk.resize(Int(flsz * 1.5), True);
-						flagindex.resize(Int(flsz * 1.5), True);
+						flagchunk.resize(Int(flsz * 1.5), true);
+						flagindex.resize(Int(flsz * 1.5), true);
 					}
 					flagchunk(nFound - 1) = currChunk_;
 					flagindex(nFound - 1) = irel_;
@@ -1396,8 +1397,8 @@ PlotLogMessage* PlotMSIndexer::flagRange(const PlotMSFlagging& flagging,
 
 		// shrink flag list to correct size
 		if(flagchunk.nelements() > uInt(nFound)) {
-			flagchunk.resize(nFound, True);
-			flagindex.resize(nFound, True);
+			flagchunk.resize(nFound, true);
+			flagindex.resize(nFound, true);
 		}
 
 		//    cout << "flagchunk = " << flagchunk << endl;
@@ -1566,7 +1567,7 @@ void PlotMSIndexer::flagInCache(const PlotMSFlagging& flagging,Bool flag) {
 	if (!flag) {
 		Vector<Bool> flagrow(plotmscache_->flagrow(currChunk_));
 		if (flagrow.nelements()>0)
-			flagrow(bsln)=False;
+			flagrow(bsln)=false;
 	}
 }
 
@@ -1616,7 +1617,7 @@ void PlotMSIndexer::collapseMask0001(Int ch,Array<Bool>& collmask) {
   //  TBD: generate antenna-based mask from baseline-based flags
   IPosition nsh(3,1,1,iantmax_(ch));
   collmask.resize(nsh);
-  collmask.set(True);   
+  collmask.set(true);   
 }
  */
 

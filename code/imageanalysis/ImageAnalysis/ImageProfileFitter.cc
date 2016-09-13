@@ -44,6 +44,7 @@
 // debug
 #include <casa/OS/PrecTimer.h>
 
+using namespace casacore;
 namespace casa {
 
 const String ImageProfileFitter::_class = "ImageProfileFitter";
@@ -56,16 +57,16 @@ ImageProfileFitter::ImageProfileFitter(
 	const uInt ngauss, Bool overwrite
 ) : ImageTask<Float>(
 		image, region, regionPtr, box, chans, stokes,
-		mask, "", False
+		mask, "", false
 	),
 	_residual(), _model(), _xUnit(), _centerName(),
 	_centerErrName(), _fwhmName(), _fwhmErrName(),
 	_ampName(), _ampErrName(), _integralName(),
 	_integralErrName(), _plpName(), _plpErrName(), _sigmaName(),
-	_abscissaDivisorForDisplay("1"), _multiFit(False),
-	/*_deleteImageOnDestruct(False),*/ _logResults(True),
-	_isSpectralIndex(False), _createResid(False), _overwrite(overwrite),
-	_storeFits(True),
+	_abscissaDivisorForDisplay("1"), _multiFit(false),
+	/*_deleteImageOnDestruct(false),*/ _logResults(true),
+	_isSpectralIndex(false), _createResid(false), _overwrite(overwrite),
+	_storeFits(true),
 	_polyOrder(-1), _fitAxis(axis), _nGaussSinglets(ngauss),
 	_nGaussMultiplets(0), _nLorentzSinglets(0), _nPLPCoeffs(0),
 	_nLTPCoeffs(0), _minGoodPoints(1), _nProfiles(0), _nAttempted(0), _nSucceeded(0),
@@ -85,16 +86,16 @@ ImageProfileFitter::ImageProfileFitter(
 	const String& estimatesFilename, Bool overwrite
 ) : ImageTask<Float>(
 		image, region, regionPtr, box, chans, stokes,
-		mask, "", False
+		mask, "", false
 	),
 	_residual(), _model(), _xUnit(), _centerName(),
 	_centerErrName(), _fwhmName(), _fwhmErrName(),
 	_ampName(), _ampErrName(), _integralName(),
 	_integralErrName(), _plpName(), _plpErrName(), _sigmaName(),
-	_abscissaDivisorForDisplay("1"), _multiFit(False),
-	/*_deleteImageOnDestruct(False),*/ _logResults(True),
-	_isSpectralIndex(False), _createResid(False), _overwrite(overwrite),
-	_storeFits(True),
+	_abscissaDivisorForDisplay("1"), _multiFit(false),
+	/*_deleteImageOnDestruct(false),*/ _logResults(true),
+	_isSpectralIndex(false), _createResid(false), _overwrite(overwrite),
+	_storeFits(true),
 	_polyOrder(-1), _fitAxis(axis), _nGaussSinglets(0),
 	_nGaussMultiplets(0), _nLorentzSinglets(0), _nPLPCoeffs(0),
 	_nLTPCoeffs(0), _minGoodPoints(1), _nProfiles(0), _nAttempted(0), _nSucceeded(0),
@@ -121,16 +122,16 @@ ImageProfileFitter::ImageProfileFitter(
 	const SpectralList& spectralList, Bool overwrite
 ) : ImageTask<Float>(
 		image, region, regionPtr, box, chans, stokes,
-		mask, "", False
+		mask, "", false
 	),
 	_residual(), _model(), _xUnit(), _centerName(),
 	_centerErrName(), _fwhmName(), _fwhmErrName(),
 	_ampName(), _ampErrName(), _integralName(),
 	_integralErrName(), _plpName(), _plpErrName(), _sigmaName(),
-	_abscissaDivisorForDisplay("1"), _multiFit(False),
-	/* _deleteImageOnDestruct(False),*/ _logResults(True),
-	_isSpectralIndex(False), _createResid(False), _overwrite(overwrite),
-	_storeFits(True),
+	_abscissaDivisorForDisplay("1"), _multiFit(false),
+	/* _deleteImageOnDestruct(false),*/ _logResults(true),
+	_isSpectralIndex(false), _createResid(false), _overwrite(overwrite),
+	_storeFits(true),
 	_polyOrder(-1), _fitAxis(axis), _nGaussSinglets(0),
 	_nGaussMultiplets(0), _nLorentzSinglets(0), _nPLPCoeffs(0),
 	_nLTPCoeffs(0), _minGoodPoints(1), _nProfiles(0), _nAttempted(0), _nSucceeded(0),
@@ -260,14 +261,14 @@ Record ImageProfileFitter::fit(Bool doDetailedResults) {
 	try {
 		if (! _multiFit) {
 			ImageCollapser<Float> collapser(
-				_subImage, IPosition(1, _fitAxis), True,
-				ImageCollapserData::MEAN, "", True
+				_subImage, IPosition(1, _fitAxis), true,
+				ImageCollapserData::MEAN, "", true
 			);
 			SPIIF x = collapser.collapse();
 			// _subImage needs to be a SubImage<Float> object
 			_subImage = SubImageFactory<Float>::createSubImageRO(
 			    *x, Record(), "", _getLog().get(),
-				AxesSpecifier(), False
+				AxesSpecifier(), false
 			);
 			if (_sigma.get()) {
 				Array<Bool> sigmaMask = _sigma->get() != Array<Float>(_sigma->shape(), 0.0);
@@ -276,13 +277,13 @@ Record ImageProfileFitter::fit(Bool doDetailedResults) {
 						sigmaMask = sigmaMask && _sigma->pixelMask().get();
 					}
 					else {
-						_sigma->makeMask("sigmamask", True, True, False);
+						_sigma->makeMask("sigmamask", true, true, false);
 					}
 					_sigma->pixelMask().put(sigmaMask);
 				}
 				ImageCollapser<Float> collapsedSigma(
-					_sigma, IPosition(1, _fitAxis), True,
-					ImageCollapserData::MEAN, "", True
+					_sigma, IPosition(1, _fitAxis), true,
+					ImageCollapserData::MEAN, "", true
 				);
 				SPIIF collapsed = collapsedSigma.collapse();
 				SHARED_PTR<TempImage<Float> >ctmp = DYNAMIC_POINTER_CAST<TempImage<Float> >(collapsed);
@@ -332,13 +333,13 @@ Record ImageProfileFitter::fit(Bool doDetailedResults) {
 	}
 	resultHandler.writeImages(_nConverged > 0);
 	if (_modelImage) {
-	    _modelImage = _prepareOutputImage(*_modelImage, _model, _overwrite, True);
+	    _modelImage = _prepareOutputImage(*_modelImage, _model, _overwrite, true);
 	}
 	if (_residImage) {
-		_residImage = _prepareOutputImage(*_residImage, _residual, _overwrite, True);
+		_residImage = _prepareOutputImage(*_residImage, _residual, _overwrite, true);
 	}
 	if (originalSigma && ! _sigmaName.empty()) {
-	    _prepareOutputImage(*originalSigma, _sigmaName, True, True);
+	    _prepareOutputImage(*originalSigma, _sigmaName, true, true);
     }
 	return _results;
 }
@@ -437,7 +438,7 @@ void ImageProfileFitter::setSigma(const ImageInterface<Float>* const &sigma) {
 		_sigma = DYNAMIC_POINTER_CAST<TempImage<Float> >(clone);
 		if (! _sigma) {
 			SPIIF x = SubImageFactory<Float>::createImage(
-				*sigma, "", Record(), "", False, False ,True, False
+				*sigma, "", Record(), "", false, false ,true, false
 			);
 			if (x) {
 				_sigma = DYNAMIC_POINTER_CAST<TempImage<Float> >(x);
@@ -482,7 +483,7 @@ void ImageProfileFitter::setSigma(const ImageInterface<Float>* const &sigma) {
 			dataToInsert /= mymax;
 		}
 		Array<Float> sigmaData = _sigma->get();
-		ArrayIterator<Float> iter(sigmaData, IPosition(1, _fitAxis), True);
+		ArrayIterator<Float> iter(sigmaData, IPosition(1, _fitAxis), true);
 		while(! iter.pastEnd()) {
 			iter.array() = dataToInsert;
 			iter.next();
@@ -536,7 +537,7 @@ std::vector<OutputDestinationChecker::OutputStruct> ImageProfileFitter::_getOutp
     	OutputDestinationChecker::OutputStruct modelImage;
     	modelImage.label = "model image";
     	modelImage.outputFile = &_model;
-    	modelImage.required = True;
+    	modelImage.required = true;
     	modelImage.replaceable = _overwrite;
     	outputs.push_back(modelImage);
     }
@@ -544,7 +545,7 @@ std::vector<OutputDestinationChecker::OutputStruct> ImageProfileFitter::_getOutp
     	OutputDestinationChecker::OutputStruct residImage;
     	residImage.label = "residual image";
     	residImage.outputFile = &_residual;
-    	residImage.required = True;
+    	residImage.required = true;
     	residImage.replaceable = _overwrite;
     	outputs.push_back(residImage);
     }
@@ -584,7 +585,7 @@ void ImageProfileFitter::_finishConstruction() {
 				<< ") as fit axis" << LogIO::POST;
 		}
 	}
-    //this->_setSupportsLogfile(True);
+    //this->_setSupportsLogfile(true);
 }
 /*
 Bool ImageProfileFitter::_inVelocitySpace() const {
@@ -646,7 +647,7 @@ void ImageProfileFitter::_fitallprofiles() {
 		&& ! (
 			_modelImage = SubImageFactory<Float>::createImage(
 				*_subImage, "", Record(), "",
-				False, _overwrite ,False, False, True
+				false, _overwrite ,false, false, true
 			)
 		)
 	) {
@@ -657,13 +658,13 @@ void ImageProfileFitter::_fitallprofiles() {
 		&& ! (
 			_residImage = SubImageFactory<Float>::createImage(
 				*_subImage, "", Record(), "",
-				False, _overwrite ,False, False, True
+				false, _overwrite ,false, false, true
 			)
 		)
 	) {
 		*_getLog() << LogIO::WARN << "Failed to create residual image" << LogIO::POST;
 	}
-	Bool showProgress = True;
+	Bool showProgress = true;
 	_fitProfiles(showProgress);
 }
 
@@ -743,7 +744,7 @@ void ImageProfileFitter::_fitProfiles(Bool showProgress) {
 	Array<Bool> fitMask;
 	if (checkMinPts) {
 		fitMask = (
-			partialNTrue(fitData->getMask(False), IPosition(1, _fitAxis))
+			partialNTrue(fitData->getMask(false), IPosition(1, _fitAxis))
 			>= _minGoodPoints
 		);
 		IPosition oldShape = fitMask.shape();
@@ -794,9 +795,9 @@ void ImageProfileFitter::_loopOverFits(
 	// with position
 	Double *divisorPtr = 0;
 	Vector<Double> abscissaValues(0);
-	Bool fitSuccess = False;
+	Bool fitSuccess = false;
 	if (isSpectral) {
-		abscissaValues = fitter.makeAbscissa(abcissaType, True, 0);
+		abscissaValues = fitter.makeAbscissa(abcissaType, true, 0);
 		if (_isSpectralIndex) {
 			_setAbscissaDivisorIfNecessary(abscissaValues);
 			if (_abscissaDivisor != 1) {
@@ -821,13 +822,13 @@ void ImageProfileFitter::_loopOverFits(
 	Bool abscissaSet = ! abscissaValues.empty();
 	if (_nLTPCoeffs > 0) {
 		if (! abscissaSet) {
-			xfunc = casa::log;
+			xfunc = casacore::log;
 		}
-		yfunc = casa::log;
+		yfunc = casacore::log;
 	}
 	if (abscissaSet) {
 		fitter.setAbscissa(abscissaValues);
-		//abscissaSet = False;
+		//abscissaSet = false;
 	}
 	IPosition inTileShape = fitData->niceCursorShape();
 	TiledLineStepper stepper (fitData->shape(), inTileShape, _fitAxis);
@@ -852,7 +853,7 @@ void ImageProfileFitter::_loopOverFits(
 		}
 		else {
 			fitter.setData(
-				curPos, abcissaType, True, divisorPtr, xfunc, yfunc
+				curPos, abcissaType, true, divisorPtr, xfunc, yfunc
 			);
 		}
 		Bool canFit = _setFitterElements(
@@ -861,7 +862,7 @@ void ImageProfileFitter::_loopOverFits(
 		);
 		if (canFit) {
 			if (hasXMask) {
-				fitter.setXMask(goodPlanes, True);
+				fitter.setXMask(goodPlanes, true);
 			}
 			try {
 				fitSuccess = fitter.fit();
@@ -880,11 +881,11 @@ void ImageProfileFitter::_loopOverFits(
 				}
 			}
 			catch (const AipsError& x) {
-				fitSuccess = False;
+				fitSuccess = false;
 			}
 		}
 		else {
-			fitSuccess = False;
+			fitSuccess = false;
 		}
 		if (fitter.succeeded()) {
 			++_nSucceeded;
@@ -908,7 +909,7 @@ void ImageProfileFitter::_updateModelAndResidual(
     Lattice<Bool>* const &pResidMask
 ) const {
 	static const Array<Float> failData(sliceShape, NAN);
-	static const Array<Bool> failMask(sliceShape, False);
+	static const Array<Bool> failMask(sliceShape, false);
 	Array<Bool> resultMask = fitOK
 		? fitter.getDataMask().reform(sliceShape)
 		: failMask;
@@ -942,7 +943,7 @@ Bool ImageProfileFitter::_setFitterElements(
 	if (_nonPolyEstimates.nelements() == 0) {
 		if (_nGaussSinglets > 0) {
 			fitter.setGaussianElements (_nGaussSinglets);
-			uInt ng = fitter.getList(False).nelements();
+			uInt ng = fitter.getList(false).nelements();
 			if (ng != _nGaussSinglets && ! _haveWarnedAboutGuessingGaussians) {
 				*this->_getLog() << LogOrigin(getClass(), __func__) << LogIO::WARN;
 				if (ng == 0) {
@@ -961,15 +962,15 @@ Bool ImageProfileFitter::_setFitterElements(
 				        "this run will not be logged)";
 				}
 				*this->_getLog() << "."	<< LogIO::POST;
-				_haveWarnedAboutGuessingGaussians = True;
+				_haveWarnedAboutGuessingGaussians = true;
 			}
 		}
 		if (polyEl.ptr()) {
 			fitter.addElement(*polyEl);
 		}
 		else {
-			if (fitter.getList(False).nelements() == 0) {
-				return False;
+			if (fitter.getList(false).nelements() == 0) {
+				return false;
 			}
 		}
 	}
@@ -990,14 +991,14 @@ Bool ImageProfileFitter::_setFitterElements(
 			) {
 				IPosition diff = curPos - *iter;
 				Int dist2 = 0;
-				Bool larger = False;
+				Bool larger = false;
 				for (
 					IPosition::const_iterator ipositer=diff.begin();
 					ipositer!=diff.end(); ipositer++
 				) {
 					dist2 += *ipositer * *ipositer;
 					if(dist2 >= minDist2) {
-						larger = True;
+						larger = true;
 						break;
 					}
 				}
@@ -1017,7 +1018,7 @@ Bool ImageProfileFitter::_setFitterElements(
 		}
 		fitter.setElements(newEstimates);
 	}
-	return True;
+	return true;
 }
 
 void ImageProfileFitter::_setAbscissaDivisorIfNecessary(
@@ -1044,7 +1045,7 @@ void ImageProfileFitter::_flagFitterIfNecessary(
 ) const {
 	Bool checkComps = _goodAmpRange || _goodCenterRange
 		|| _goodFWHMRange;
-	SpectralList solutions = fitter.getList(True);
+	SpectralList solutions = fitter.getList(true);
 	for (uInt i=0; i<solutions.nelements(); ++i) {
 		if (
 			anyTrue(isNaN(solutions[i]->get()))
@@ -1100,7 +1101,7 @@ Bool ImageProfileFitter::_isPCFSolutionOK(
 			|| amp > _goodAmpRange->second
 			|| fabs(pcf->getAmplErr()/amp) > 100
 		) {
-			return False;
+			return false;
 		}
 	}
 	if (_goodCenterRange) {
@@ -1109,7 +1110,7 @@ Bool ImageProfileFitter::_isPCFSolutionOK(
 			center < _goodCenterRange->first
 			|| center > _goodCenterRange->second
 		) {
-			return False;
+			return false;
 		}
 	}
 	if (_goodFWHMRange) {
@@ -1119,10 +1120,10 @@ Bool ImageProfileFitter::_isPCFSolutionOK(
 			|| fwhm > _goodFWHMRange->second
 			|| fabs(pcf->getFWHMErr()/fwhm) > 100
 		) {
-			return False;
+			return false;
 		}
 	}
-	return True;
+	return true;
 }
 
 const Array<SHARED_PTR<ProfileFitResults> >& ImageProfileFitter::getFitters() const{

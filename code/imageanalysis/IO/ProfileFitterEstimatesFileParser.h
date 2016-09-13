@@ -46,7 +46,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </reviewed>
 
 // <prerequisite> 
-//    <li> <linkto class=RegularFilebufIO>FilebufIO</linkto> class
+//    <li> <linkto class=RegularFilebufIO>casacore::FilebufIO</linkto> class
 // </prerequisite>
 
 // <synopsis> 
@@ -73,7 +73,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <srcblock>
 //   ProfileFitterEstimatesFilebFileReader reader("myEstimates.txt", myImage);
 //   SpectralList sl = reader.getEstimates();
-//   vector<String> fixed = reader.getFixed();
+//   vector<casacore::String> fixed = reader.getFixed();
 // </srcblock>
 // </example>
 
@@ -84,7 +84,7 @@ class ProfileFitterEstimatesFileParser {
 		// <src>filename</src> Name of file containing estimates
 		// <src>image</src> Image for which the estimates apply
 		explicit ProfileFitterEstimatesFileParser(
-			const String& filename
+			const casacore::String& filename
 		);
 
 		~ProfileFitterEstimatesFileParser();
@@ -93,21 +93,21 @@ class ProfileFitterEstimatesFileParser {
 		SpectralList getEstimates() const;
 
 		// Get the fixed parameter masks specified in the file.
-		vector<String> getFixed() const;
+		vector<casacore::String> getFixed() const;
 
 		// Get the contents of the file
-		String getContents() const;
+		casacore::String getContents() const;
 
 	private:
-		const static String _class;
+		const static casacore::String _class;
 		SpectralList _spectralList;
-		vector<String> _fixedValues;
-		LogIO _log;
-		vector<Double> _peakValues, _centerValues, _fwhmValues;
-		String _contents;
+		vector<casacore::String> _fixedValues;
+		casacore::LogIO _log;
+		vector<casacore::Double> _peakValues, _centerValues, _fwhmValues;
+		casacore::String _contents;
 
 		// parse the file
-		void _parseFile(const RegularFile& myFile);
+		void _parseFile(const casacore::RegularFile& myFile);
 		void _createSpectralList();
 };
 

@@ -50,7 +50,9 @@
 #include <casa/OS/Directory.h>
 #include <casa/Utilities/Regex.h>
 #include <synthesis/TransformMachines2/test/MakeMS.h>
+using namespace casacore;
 using namespace casa;
+using namespace casacore;
 using namespace casa::test;
 Int main(/*int argc, char **argv*/){
 
@@ -85,7 +87,7 @@ Int main(/*int argc, char **argv*/){
    im.set(Complex(0.0));
    MPosition loc;
    MeasTable::Observatory(loc, MSColumns(thems).observation().telescopeName()(0));
-   GridFT ftm(1000000, 16, "SF", loc, 1.0, False, False);
+   GridFT ftm(1000000, 16, "SF", loc, 1.0, false, false);
    Matrix<Float> weight;
    vi.originChunks();
    vi.origin();
@@ -101,7 +103,7 @@ Int main(/*int argc, char **argv*/){
    }
    
    
-   ftm.getImage(weight, True);
+   ftm.getImage(weight, true);
    ftm.finalizeToSky();
    //cerr << "val at center " << real(im.getAt(IPosition(4, 50, 50, 0, 0))) - 6.66e-2 << endl;
    AlwaysAssertExit(near(6.66e-2, real( im.getAt(IPosition(4, 50, 50, 0, 0))), 1.0e-5));

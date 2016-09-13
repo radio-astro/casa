@@ -92,6 +92,7 @@
 #include <scimath/Mathematics/Smooth.h>
 #include <casa/Quanta/MVTime.h>
 
+using namespace casacore;
 namespace casa {
 
 typedef ROVisibilityIterator ROVisIter;
@@ -103,7 +104,7 @@ Reweighter::Reweighter(const String& theMS, const Bool dorms, const uInt minsamp
   dorms_p(dorms),
   minsamp_p(minsamp),
   msc_p(NULL),
-  antennaSel_p(False),
+  antennaSel_p(false),
   timeBin_p(-1.0),
   scanString_p(""),
   intentString_p(""),
@@ -333,7 +334,7 @@ void Reweighter::selectTime(Double timeBin, String timerng)
   
 Bool Reweighter::reweight(String& colname, const String& combine)
 {
-    //Bool retval = True;
+    //Bool retval = true;
   LogIO os(LogOrigin("Reweighter", "reweight()"));
 
   try{
@@ -343,7 +344,7 @@ Bool Reweighter::reweight(String& colname, const String& combine)
          << "and timerange may be invalid." 
          << LogIO::POST;
       ms_p=MeasurementSet();
-      return False;
+      return false;
     }
     msc_p = new MSColumns(mssel_p);
     // Note again the parseColumnNames() a few lines back that stops setupMS()
@@ -365,7 +366,7 @@ Bool Reweighter::reweight(String& colname, const String& combine)
     // DBL_MAX, meaning that TIME can be in sort but effectively be ignored for
     // major chunking.  Why couldn't they just have said DBL_MAX in the first
     // place?
-    ROVisibilityIterator viIn(mssel_p, sort, False, DBL_MIN);
+    ROVisibilityIterator viIn(mssel_p, sort, false, DBL_MIN);
 
     // Make sure it is initialized before any copies are made.
     viIn.originChunks();
@@ -430,7 +431,7 @@ Bool Reweighter::reweight(String& colname, const String& combine)
     //    memory.  It does mean some extra I/O for another pass, but it's only
     //    over WEIGHT, SIGMA, FLAG_ROW, and unfortunately FLAG.
     
-    return True;
+    return true;
   }
   catch(AipsError x){
     ms_p = MeasurementSet();
@@ -515,7 +516,7 @@ Bool Reweighter::makeSelection()
   }
   //mssel_p.rename(ms_p.tableName()+"/SELECTED_TABLE", Table::Scratch);
   if(mssel_p.nrow() == 0)
-    return False;
+    return false;
 
   // Setup antNewIndex_p now that mssel_p is ready.
   if(antennaSel_p){
@@ -528,10 +529,10 @@ Bool Reweighter::makeSelection()
     Vector<Int> selAnts(ant1c.getColumn());
     uInt nAnts = selAnts.nelements();
 
-    selAnts.resize(2 * nAnts, True);
+    selAnts.resize(2 * nAnts, true);
     selAnts(Slice(nAnts, nAnts)) = ant2c.getColumn();
     nAnts = GenSort<Int>::sort(selAnts, Sort::Ascending, Sort::NoDuplicates);
-    selAnts.resize(nAnts, True);
+    selAnts.resize(nAnts, true);
     Int maxAnt = max(selAnts);
 
     if(maxAnt < 0){
@@ -539,7 +540,7 @@ Bool Reweighter::makeSelection()
          << "The maximum selected antenna number, " << maxAnt
          << ", seems to be < 0."
          << LogIO::POST;
-      return False;
+      return false;
     }
 
     Bool trivial = true;
@@ -555,7 +556,7 @@ Bool Reweighter::makeSelection()
        << " considered due to the selection criteria." 
        << LogIO::POST;
   }
-  return True;
+  return true;
 }
 
 Bool Reweighter::shouldWatch(Bool& conflict, const String& col,

@@ -28,6 +28,7 @@
 
 #include <synthesis/CalTables/CalMainColumns.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //----------------------------------------------------------------------------
@@ -79,8 +80,8 @@ ROCalMainColumns::ROCalMainColumns (const CalTable& calTable)
   // optional columns)
   attach (calTable, time_p, MSC::TIME);
   attach (calTable, timeMeas_p, MSC::TIME);
-  attach (calTable, timeEP_p, MSC::TIME_EXTRA_PREC, True);
-  attach (calTable, timeEPQuant_p, MSC::TIME_EXTRA_PREC, True);
+  attach (calTable, timeEP_p, MSC::TIME_EXTRA_PREC, true);
+  attach (calTable, timeEPQuant_p, MSC::TIME_EXTRA_PREC, true);
   attach (calTable, interval_p, MSC::INTERVAL);
   attach (calTable, intervalQuant_p, MSC::INTERVAL);
   attach (calTable, antenna1_p, MSC::ANTENNA1);
@@ -91,9 +92,9 @@ ROCalMainColumns::ROCalMainColumns (const CalTable& calTable)
   attach (calTable, scanNo_p, MSC::SCAN_NUMBER);
   attach (calTable, processorId_p, MSC::PROCESSOR_ID);
   attach (calTable, stateId_p, MSC::STATE_ID);
-  attach (calTable, phaseId_p, MSC::PHASE_ID, True);
-  attach (calTable, pulsarBin_p, MSC::PULSAR_BIN, True);
-  attach (calTable, pulsarGateId_p, MSC::PULSAR_GATE_ID, True);
+  attach (calTable, phaseId_p, MSC::PHASE_ID, true);
+  attach (calTable, pulsarBin_p, MSC::PULSAR_BIN, true);
+  attach (calTable, pulsarGateId_p, MSC::PULSAR_GATE_ID, true);
   attach (calTable, freqGrp_p, MSC::FREQ_GROUP);
   attach (calTable, freqGrpName_p, MSC::FREQ_GROUP_NAME);
   attach (calTable, fieldName_p, MSC::FIELD_NAME);
@@ -140,7 +141,7 @@ void ROCalMainColumns::attach (const CalTable& calTable,
 //    calTable         const CalTable&      Calibration table
 //    tabCol           ROTableColumn&       Table column accessor
 //    colEnum          MSCalEnums::colDef   Column enum
-//    optional         const Bool&          True if optional column
+//    optional         const Bool&          true if optional column
 // Output to private data:
 //
   // Convert to column name
@@ -169,7 +170,7 @@ void ROCalMainColumns::attach (const CalTable& calTable,
 //    tabCol           ROArrayMeasColumn<MFrequency>&   Table measures 
 //                                                      column accessor
 //    colEnum          MSCalEnums::colDef               Column enum
-//    optional         const Bool&                      True if optional column
+//    optional         const Bool&                      true if optional column
 // Output to private data:
 //
   // Convert to column name
@@ -198,7 +199,7 @@ void ROCalMainColumns::attach (const CalTable& calTable,
 //    tabCol           ROArrayMeasColumn<MEpoch>&       Table measures 
 //                                                      column accessor
 //    colEnum          MSCalEnums::colDef               Column enum
-//    optional         const Bool&                      True if optional column
+//    optional         const Bool&                      true if optional column
 // Output to private data:
 //
   // Convert to column name
@@ -227,7 +228,7 @@ void ROCalMainColumns::attach (const CalTable& calTable,
 //    tabCol           ROArrayMeasColumn<MDirection>&   Table measures 
 //                                                      column accessor
 //    colEnum          MSCalEnums::colDef               Column enum
-//    optional         const Bool&                      True if optional column
+//    optional         const Bool&                      true if optional column
 // Output to private data:
 //
   // Convert to column name
@@ -256,7 +257,7 @@ void ROCalMainColumns::attach (const CalTable& calTable,
 //    tabCol           ROScalarMeasColumn<MEpoch>&  Table measures column 
 //                                                  accessor
 //    colEnum          MSCalEnums::colDef           Column enum
-//    optional         const Bool&                  True if optional column
+//    optional         const Bool&                  true if optional column
 // Output to private data:
 //
   // Convert to column name
@@ -284,7 +285,7 @@ void ROCalMainColumns::attach (const CalTable& calTable,
 //    calTable    const CalTable&                Calibration table
 //    tabCol      ROScalarQuantColumn<Double>&   Scalar quantum column accessor
 //    colEnum     MSCalEnums::colDef             Column enum
-//    optional    const Bool&                    True if optional column
+//    optional    const Bool&                    true if optional column
 // Output to private data:
 //
   // Convert to column name
@@ -350,8 +351,8 @@ CalMainColumns::CalMainColumns (CalTable& calTable)
   // optional columns)
   attach (calTable, time_p, MSC::TIME);
   attach (calTable, timeMeas_p, MSC::TIME);
-  attach (calTable, timeEP_p, MSC::TIME_EXTRA_PREC, True);
-  attach (calTable, timeEPQuant_p, MSC::TIME_EXTRA_PREC, True);
+  attach (calTable, timeEP_p, MSC::TIME_EXTRA_PREC, true);
+  attach (calTable, timeEPQuant_p, MSC::TIME_EXTRA_PREC, true);
   attach (calTable, interval_p, MSC::INTERVAL);
   attach (calTable, intervalQuant_p, MSC::INTERVAL);
   attach (calTable, antenna1_p, MSC::ANTENNA1);
@@ -362,9 +363,9 @@ CalMainColumns::CalMainColumns (CalTable& calTable)
   attach (calTable, scanNo_p, MSC::SCAN_NUMBER);
   attach (calTable, processorId_p, MSC::PROCESSOR_ID);
   attach (calTable, stateId_p, MSC::STATE_ID);
-  attach (calTable, phaseId_p, MSC::PHASE_ID, True);
-  attach (calTable, pulsarBin_p, MSC::PULSAR_BIN, True);
-  attach (calTable, pulsarGateId_p, MSC::PULSAR_GATE_ID, True);
+  attach (calTable, phaseId_p, MSC::PHASE_ID, true);
+  attach (calTable, pulsarBin_p, MSC::PULSAR_BIN, true);
+  attach (calTable, pulsarGateId_p, MSC::PULSAR_GATE_ID, true);
   attach (calTable, freqGrp_p, MSC::FREQ_GROUP);
   attach (calTable, freqGrpName_p, MSC::FREQ_GROUP_NAME);
   attach (calTable, fieldName_p, MSC::FIELD_NAME);
@@ -411,7 +412,7 @@ void CalMainColumns::attach (CalTable& calTable,
 //    calTable         CalTable&            Calibration table
 //    tabCol           TableColumn&         Table column accessor
 //    colEnum          MSCalEnums::colDef   Column enum
-//    optional         const Bool&          True if optional column
+//    optional         const Bool&          true if optional column
 // Output to private data:
 //
   // Convert to column name
@@ -440,7 +441,7 @@ void CalMainColumns::attach (CalTable& calTable,
 //    tabCol           ArrayMeasColumn<MEpoch>&      Table measures column 
 //                                                   accessor
 //    colEnum          MSCalEnums::colDef            Column enum
-//    optional         const Bool&                   True if optional column
+//    optional         const Bool&                   true if optional column
 // Output to private data:
 //
   // Convert to column name
@@ -469,7 +470,7 @@ void CalMainColumns::attach (CalTable& calTable,
 //    tabCol           ArrayMeasColumn<MFrequency>&  Table measures column 
 //                                                   accessor
 //    colEnum          MSCalEnums::colDef            Column enum
-//    optional         const Bool&                   True if optional column
+//    optional         const Bool&                   true if optional column
 // Output to private data:
 //
   // Convert to column name
@@ -498,7 +499,7 @@ void CalMainColumns::attach (CalTable& calTable,
 //    tabCol           ArrayMeasColumn<MDirection>&  Table measures column 
 //                                                   accessor
 //    colEnum          MSCalEnums::colDef            Column enum
-//    optional         const Bool&                   True if optional column
+//    optional         const Bool&                   true if optional column
 // Output to private data:
 //
   // Convert to column name
@@ -527,7 +528,7 @@ void CalMainColumns::attach (CalTable& calTable,
 //    tabCol           ScalarMeasColumn<MEpoch>&   Table measures column 
 //                                                 accessor
 //    colEnum          MSCalEnums::colDef          Column enum
-//    optional         const Bool&                 True if optional column
+//    optional         const Bool&                 true if optional column
 // Output to private data:
 //
   // Convert to column name
@@ -555,7 +556,7 @@ void CalMainColumns::attach (CalTable& calTable,
 //    calTable    CalTable&                    Calibration table
 //    tabCol      ScalarQuantColumn<Double>&   Table measures column accessor
 //    colEnum     MSCalEnums::colDef           Column enum
-//    optional    const Bool&                  True if optional column
+//    optional    const Bool&                  true if optional column
 // Output to private data:
 //
   // Convert to column name

@@ -33,11 +33,15 @@
 
 using namespace std;
 
-namespace casa {
+namespace casacore{
 
 	template <class T> class ImageInterface;
-	class BinPlotWidget;
 	class ImageRegion;
+}
+
+namespace casa {
+
+	class BinPlotWidget;
 
 //Displays a histogram that allows the user
 //to set a include/exclude pixel range for the fit.
@@ -47,12 +51,12 @@ namespace casa {
 
 	public:
 		PixelRangeDialog(QWidget *parent = 0);
-		void setImage( const SHARED_PTR<const ImageInterface<Float> > img );
+		void setImage( const SHARED_PTR<const casacore::ImageInterface<casacore::Float> > img );
 		void setInterval( double minValue, double maxValue );
 		void setImageMode( bool imageMode );
 		void setLineMode( bool lineMode );
 		void setChannelValue( int channel );
-		bool setImageRegion( ImageRegion* imageRegion, int id );
+		bool setImageRegion( casacore::ImageRegion* imageRegion, int id );
 		void setTitle( const QString& title );
 		void deleteImageRegion( int id );
 		void imageRegionSelected( int id );

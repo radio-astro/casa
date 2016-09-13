@@ -28,7 +28,7 @@
  * | If you do, all changes will be lost when the file is re-generated. |
  *  --------------------------------------------------------------------
  *
- * File Representable.h
+ * casacore::File Representable.h
  */
  
 #ifndef _Representable_H

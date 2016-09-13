@@ -47,43 +47,43 @@ namespace casa {
 		// unit RegionShape::UNIT.  Angle is counterclockwise, and angle 0 is the
 		// east vector.
 		RSEllipse(double x, double y, double xRadius, double yRadius,
-		          MDirection::Types worldSystem, double angle = 0);
+		          casacore::MDirection::Types worldSystem, double angle = 0);
 
 		// Pixel Constructor.  Angle in counterclockwise degrees.
 		RSEllipse(double x, double y, double xRadius, double yRadius,
 		          double angle = 0);
 
-		// Record Constructor.
-		RSEllipse(const RecordInterface& properties);
+		// casacore::Record Constructor.
+		RSEllipse(const casacore::RecordInterface& properties);
 
 		// Destructor.
 		virtual ~RSEllipse();
 
 		// Implements RegionShape::drawAndUpdateBoundingBox.
 		virtual bool drawAndUpdateBoundingBox(WorldCanvasHolder& wch,
-		                                      String* error = NULL);
+		                                      casacore::String* error = NULL);
 
 		// Implements RegionShape::type.
-		virtual String type() const {
+		virtual casacore::String type() const {
 			return "ellipse";
 		}
 
 		// Gets ellipse-specific coordinates, to avoid dependence on
 		// coordParameterValues() when the shape type is known.
 		// If toSystem is empty, no conversion is done; otherwise see the
-		// constraints listed in RegionShape::coordParameterValues(String).
+		// constraints listed in RegionShape::coordParameterValues(casacore::String).
 		void getEllipseCoordinates(double& x, double& y, double& xRadius,
 		                           double& yRadius, double& angle,
-		                           String toSystem = "") const;
+		                           casacore::String toSystem = "") const;
 
 		// Implements RegionShape::coordParameterValues.
 		virtual vector<double> coordParameterValues() const;
 
 		// Implements RegionShape::coordParameterValues.
-		virtual vector<double> coordParameterValues(String toSystem) const;
+		virtual vector<double> coordParameterValues(casacore::String toSystem) const;
 
 		// Implements RegionShape::coordParameterNames.
-		virtual vector<String> coordParameterNames() const;
+		virtual vector<casacore::String> coordParameterNames() const;
 
 		// Implements RegionShape::coordParameterPositions.
 		virtual vector<CoordinateParameterType> coordParameterTypes() const;
@@ -92,10 +92,10 @@ namespace casa {
 		virtual void setCoordParameters(const vector<double>& vals);
 
 		// Implements RegionShape::setCoordParameters.
-		virtual void setCoordParameters(const vector<double>& vals, String system);
+		virtual void setCoordParameters(const vector<double>& vals, casacore::String system);
 
 		// Implements RegionShape::move.
-		virtual void move(double dx, double dy, String system = "");
+		virtual void move(double dx, double dy, casacore::String system = "");
 
 		// Implements RegionShape::getHandle.
 		virtual RSHandle getHandle() const;
@@ -103,8 +103,8 @@ namespace casa {
 		// Implements RegionShape option methods.  Note: ellipses do not have
 		// additonal options.
 		// <group>
-		virtual vector<String> optionNames() const {
-			return vector<String>();
+		virtual vector<casacore::String> optionNames() const {
+			return vector<casacore::String>();
 		}
 		virtual vector<OptionType> optionTypes() const {
 			return vector<OptionType>();
@@ -122,15 +122,15 @@ namespace casa {
 
 
 		// Implements RegionShape::getShapeSpecificProperties.
-		virtual void getShapeSpecificProperties(Record& properties) const {
+		virtual void getShapeSpecificProperties(casacore::Record& properties) const {
 			properties.define(PROPTYPE, PROPTYPE_ELLIPSE);
 		}
 
 		// Implements RegionShape::setShapeSpecificProperties.
-		virtual void setShapeSpecificProperties(const RecordInterface& /*props*/) { }
+		virtual void setShapeSpecificProperties(const casacore::RecordInterface& /*props*/) { }
 
 		// Updates screen coords using world/pixel coords and the given WorldCanvas
-		virtual bool updateScreenCoordinates(WorldCanvasHolder& wch, String* err);
+		virtual bool updateScreenCoordinates(WorldCanvasHolder& wch, casacore::String* err);
 
 		// Update m_xMin, m_xMax, m_yMin, and m_yMax.
 		virtual void updateMinMax();
@@ -143,37 +143,37 @@ namespace casa {
 	public:
 		// World constructor.  x, y, and xRadius must be of the type defined by
 		// worldSys and in units of RegionShape::UNIT.
-		RSCircle(double x, double y, double xRadius, MDirection::Types worldSys);
+		RSCircle(double x, double y, double xRadius, casacore::MDirection::Types worldSys);
 
 		// Pixel constructor.
 		RSCircle(double x, double y, double xRadius);
 
-		// Record Constructor.
-		RSCircle(const RecordInterface& properties);
+		// casacore::Record Constructor.
+		RSCircle(const casacore::RecordInterface& properties);
 
 		// Destructor.
 		~RSCircle();
 
 		// Overrides RSEllipse::type.
-		String type() const {
+		casacore::String type() const {
 			return "circle";
 		}
 
 		// Gets circle-specific coordinates, to avoid dependence on
 		// coordParameterValues() when the shape type is known.
 		// If toSystem is empty, no conversion is done; otherwise see the
-		// constraints listed in RegionShape::coordParameterValues(String).
+		// constraints listed in RegionShape::coordParameterValues(casacore::String).
 		void getCircleCoordinates(double& x, double& y, double& xRadius,
-		                          String toSystem = "") const;
+		                          casacore::String toSystem = "") const;
 
 		// Overrides RSEllipse::coordParameterValues.
 		vector<double> coordParameterValues() const;
 
 		// Overrides RSEllipse::coordParameterValues.
-		vector<double> coordParameterValues(String toSystem) const;
+		vector<double> coordParameterValues(casacore::String toSystem) const;
 
 		// Overrides RSEllipse::coordParameterNames.
-		vector<String> coordParameterNames() const;
+		vector<casacore::String> coordParameterNames() const;
 
 		// Overrides RSEllipse::coordParameterPositions.
 		vector<CoordinateParameterType> coordParameterTypes() const;
@@ -182,16 +182,16 @@ namespace casa {
 		void setCoordParameters(const vector<double>& vals);
 
 		// Overrides RSEllipse::setCoordParameters.
-		void setCoordParameters(const vector<double>& vals, String valSystem);
+		void setCoordParameters(const vector<double>& vals, casacore::String valSystem);
 
 	protected:
 		// Overrides RSEllipse::getShapeSpecificProperties.
-		void getShapeSpecificProperties(Record& properties) const {
+		void getShapeSpecificProperties(casacore::Record& properties) const {
 			properties.define(PROPTYPE, PROPTYPE_CIRCLE);
 		}
 
 		// Overrides RSEllipse::updateScreenCoordinates.
-		bool updateScreenCoordinates(WorldCanvasHolder& wch, String* err);
+		bool updateScreenCoordinates(WorldCanvasHolder& wch, casacore::String* err);
 	};
 
 
@@ -210,8 +210,8 @@ namespace casa {
 		// coordinate system of the given points.
 		static bool getRectanglePoints(double centerX, double centerY,
 		                               double radiusX, double radiusY,
-		                               double angle, Vector<double>& xPoints,
-		                               Vector<double>& yPoints);
+		                               double angle, casacore::Vector<double>& xPoints,
+		                               casacore::Vector<double>& yPoints);
 
 
 		// Non-Static Members //
@@ -221,42 +221,42 @@ namespace casa {
 		// RegionShape::UNIT.  (x, y) specifies the center of the rectangle.
 		// Angle is in counterclockwise degrees starting at the east vector.
 		RSRectangle(double x, double y, double width, double height,
-		            MDirection::Types worldSystem, double angle = 0);
+		            casacore::MDirection::Types worldSystem, double angle = 0);
 
 		// Pixel Constructor.  (x, y) specifies the center of the rectangle.
 		RSRectangle(double x, double y, double width, double height,
 		            double angle = 0);
 
-		// Record Constructor.
-		RSRectangle(const RecordInterface& properties);
+		// casacore::Record Constructor.
+		RSRectangle(const casacore::RecordInterface& properties);
 
 		// Destructor.
 		~RSRectangle();
 
 		// Implements RegionShape::drawAndUpdateBoundingBox.
-		bool drawAndUpdateBoundingBox(WorldCanvasHolder& wch, String* err = NULL);
+		bool drawAndUpdateBoundingBox(WorldCanvasHolder& wch, casacore::String* err = NULL);
 
 		// Implements RegionShape::type.
-		String type() const {
+		casacore::String type() const {
 			return "rectangle";
 		}
 
 		// Gets rectangle-specific coordinates, to avoid dependence on
 		// coordParameterValues() when the shape type is known.
 		// If toSystem is empty, no conversion is done; otherwise see the
-		// constraints listed in RegionShape::coordParameterValues(String).
+		// constraints listed in RegionShape::coordParameterValues(casacore::String).
 		void getRectangleCoordinates(double& x, double& y, double& width,
 		                             double& height, double& angle,
-		                             String toSystem = "") const;
+		                             casacore::String toSystem = "") const;
 
 		// Implements RegionShape::coordParameterValues.
 		vector<double> coordParameterValues() const;
 
 		// Implements RegionShape::coordParameterValues.
-		vector<double> coordParameterValues(String toSystem) const;
+		vector<double> coordParameterValues(casacore::String toSystem) const;
 
 		// Implements RegionShape::coordParameterNames.
-		vector<String> coordParameterNames() const;
+		vector<casacore::String> coordParameterNames() const;
 
 		// Implements RegionShape::coordParameterPositions.
 		vector<CoordinateParameterType> coordParameterTypes() const;
@@ -265,10 +265,10 @@ namespace casa {
 		void setCoordParameters(const vector<double>& vals);
 
 		// Implements RegionShape::setCoordParameters.
-		void setCoordParameters(const vector<double>& vals, String valSystem);
+		void setCoordParameters(const vector<double>& vals, casacore::String valSystem);
 
 		// Implements RegionShape::move.
-		void move(double dx, double dy, String system = "");
+		void move(double dx, double dy, casacore::String system = "");
 
 		// Implements RegionShape::getHandle.
 		RSHandle getHandle() const;
@@ -276,8 +276,8 @@ namespace casa {
 		// Implements RegionShape option methods.  Note: rectangles do not have
 		// additonal options.
 		// <group>
-		vector<String> optionNames() const {
-			return vector<String>();
+		vector<casacore::String> optionNames() const {
+			return vector<casacore::String>();
 		}
 		vector<OptionType> optionTypes() const {
 			return vector<OptionType>();
@@ -291,21 +291,21 @@ namespace casa {
 	protected:
 		vector<double> m_spec;               // order: [x, y, width, height, angle]
 		// either world or pixel coords
-		Vector<double> m_x, m_y;             // pixel/world coords for four points
+		casacore::Vector<double> m_x, m_y;             // pixel/world coords for four points
 		// in order: [upL, boL, boR, upR]
-		Vector<double> m_screenX, m_screenY; // screen coords for four points
+		casacore::Vector<double> m_screenX, m_screenY; // screen coords for four points
 		// same order
 
 		// Implements RegionShape::getShapeSpecificProperties.
-		void getShapeSpecificProperties(Record& properties) const {
+		void getShapeSpecificProperties(casacore::Record& properties) const {
 			properties.define(PROPTYPE, PROPTYPE_RECTANGLE);
 		}
 
 		// Implements RegionShape::setShapeSpecificProperties.
-		void setShapeSpecificProperties(const RecordInterface& /*properties*/) { }
+		void setShapeSpecificProperties(const casacore::RecordInterface& /*properties*/) { }
 
 		// Updates screen coords using world/pixel coords and the given WorldCanvas
-		bool updateScreenCoordinates(WorldCanvasHolder& wch, String* err);
+		bool updateScreenCoordinates(WorldCanvasHolder& wch, casacore::String* err);
 
 		// Translates m_spec into m_x and m_y.
 		void updatePoints();
@@ -320,10 +320,10 @@ namespace casa {
 // <ul><li>list of x and y coordinates</li>
 //     <li>optional custom name</li></ul>
 // The following properties are also available:
-// <ul><li><b>RSPolygon::PROPXCOORDINATES</b> (<i>Array&lt;double&gt;</i>):
+// <ul><li><b>RSPolygon::PROPXCOORDINATES</b> (<i>casacore::Array&lt;double&gt;</i>):
 //         vertices x values.  <b>NOT STRICTLY REQUIRED, BUT A VALID POLYGON
 //         HAS AT LEAST TWO VERTICES.</b></li>
-//     <li><b>RSPolygon::PROPYCOORDINATES</b> (<i>Array&lt;double&gt;</li>):
+//     <li><b>RSPolygon::PROPYCOORDINATES</b> (<i>casacore::Array&lt;double&gt;</li>):
 //         vertices y values.  <b>NOT STRICTLY REQUIRED, BUT A VALID POLYGON
 //         HAS AT LEAST TWO VERTICES.</b></li></ul>
 	class RSPolygon : public RegionShape {
@@ -332,8 +332,8 @@ namespace casa {
 
 		// Properties.  (See class descriptions of RegionShape and RSPolygon.)
 		// <group>
-		static const String PROPXCOORDINATES;
-		static const String PROPYCOORDINATES;
+		static const casacore::String PROPXCOORDINATES;
+		static const casacore::String PROPYCOORDINATES;
 		// </group>
 
 
@@ -342,58 +342,58 @@ namespace casa {
 		// World Constructor.  x and y must both be 1) using the same world system
 		// as defined by worldSystem, and 2) in unit RegionShape::UNIT.  A custom
 		// name can be provided to be returned with RSPolygon::type().
-		RSPolygon(const Vector<double>& x, const Vector<double>& y,
-		          MDirection::Types worldSystem, String custName = "");
+		RSPolygon(const casacore::Vector<double>& x, const casacore::Vector<double>& y,
+		          casacore::MDirection::Types worldSystem, casacore::String custName = "");
 
 		// Pixel Constructor.
-		RSPolygon(const Vector<double>& x, const Vector<double>& y,
-		          String custName = "");
+		RSPolygon(const casacore::Vector<double>& x, const casacore::Vector<double>& y,
+		          casacore::String custName = "");
 
-		// Record Constructor.
-		RSPolygon(const RecordInterface& properties);
+		// casacore::Record Constructor.
+		RSPolygon(const casacore::RecordInterface& properties);
 
 		// Destructor.
 		~RSPolygon();
 
 		// Sets the polygon coordinates to the given.
-		void setPolygonCoordinates(const Vector<double>& x,
-		                           const Vector<double>& y);
+		void setPolygonCoordinates(const casacore::Vector<double>& x,
+		                           const casacore::Vector<double>& y);
 
 		// Implements RegionShape::drawAndUpdateBoundingBox.
-		bool drawAndUpdateBoundingBox(WorldCanvasHolder& wch, String* err = NULL);
+		bool drawAndUpdateBoundingBox(WorldCanvasHolder& wch, casacore::String* err = NULL);
 
 		// Implements RegionShape::type.
-		String type() const {
+		casacore::String type() const {
 			if(!m_custName.empty()) return m_custName;
 			else                    return "polygon";
 		}
 
 		// Overrides RegionShape::oneWordType.
-		String oneWordType() const {
+		casacore::String oneWordType() const {
 			return "polygon";
 		}
 
 		// Gets polygon-specific coordinates, to avoid dependence on
 		// coordParameterValues() when the shape type is known.
 		// If toSystem is empty, no conversion is done; otherwise see the
-		// constraints listed in RegionShape::coordParameterValues(String).
+		// constraints listed in RegionShape::coordParameterValues(casacore::String).
 		void getPolygonCoordinates(double& centerX, double& centerY,
-		                           String toSystem = "") const;
+		                           casacore::String toSystem = "") const;
 
 		// Gets actual polygon coordinates.
 		// If toSystem is empty, no conversion is done; otherwise see the
-		// constraints listed in RegionShape::coordParameterValues(String).
+		// constraints listed in RegionShape::coordParameterValues(casacore::String).
 		void getPolygonCoordinates(vector<double>& x, vector<double>& y,
-		                           String toSystem = "") const;
+		                           casacore::String toSystem = "") const;
 
 		// Implements RegionShape::coordParameterValues.
 		vector<double> coordParameterValues() const;
 
 		// Implements RegionShape::coordParameterValues.
-		vector<double> coordParameterValues(String toSystem) const;
+		vector<double> coordParameterValues(casacore::String toSystem) const;
 
 		// Implements RegionShape::coordParameterNames.
-		vector<String> coordParameterNames() const;
+		vector<casacore::String> coordParameterNames() const;
 
 		// Implements RegionShape::coordParameterPositions.
 		vector<CoordinateParameterType> coordParameterTypes() const;
@@ -402,16 +402,16 @@ namespace casa {
 		void setCoordParameters(const vector<double>& vals);
 
 		// Implements RegionShape::setCoordParameters.
-		void setCoordParameters(const vector<double>& vals, String valSystem);
+		void setCoordParameters(const vector<double>& vals, casacore::String valSystem);
 
 		// Implements RegionShape::move.
-		void move(double dx, double dy, String system = "");
+		void move(double dx, double dy, casacore::String system = "");
 
 		// Implements RegionShape::getHandle.
 		RSHandle getHandle() const;
 
 		// Implements RegionShape::optionNames.
-		vector<String> optionNames() const;
+		vector<casacore::String> optionNames() const;
 
 		// Implements RegionShape::optionTypes.
 		vector<OptionType> optionTypes() const;
@@ -423,20 +423,20 @@ namespace casa {
 		void setOptionValues(const vector<RSOption>& options);
 
 	protected:
-		Vector<Double> m_x, m_y;             // coordinates, world or pixel
+		casacore::Vector<casacore::Double> m_x, m_y;             // coordinates, world or pixel
 		double m_centerX, m_centerY;         // center of polygon, world or pixel
-		Vector<Double> m_screenX, m_screenY; // coordinates, screen
+		casacore::Vector<casacore::Double> m_screenX, m_screenY; // coordinates, screen
 		unsigned int m_n;                    // number of points
-		String m_custName;                   // optional custom name
+		casacore::String m_custName;                   // optional custom name
 
 		// Implements RegionShape::getShapeSpecificProperties.
-		void getShapeSpecificProperties(Record& properties) const;
+		void getShapeSpecificProperties(casacore::Record& properties) const;
 
 		// Implements RegionShape::setShapeSpecificProperties.
-		void setShapeSpecificProperties(const RecordInterface& properties);
+		void setShapeSpecificProperties(const casacore::RecordInterface& properties);
 
 		// Updates screen coords using world/pixel coords and the given WorldCanvas
-		bool updateScreenCoordinates(WorldCanvasHolder& wch, String* err);
+		bool updateScreenCoordinates(WorldCanvasHolder& wch, casacore::String* err);
 
 		// Update m_xMin, m_xMax, m_yMin, and m_yMax.
 		void updateMinMax();
@@ -468,17 +468,17 @@ namespace casa {
 			return v;
 		}
 
-		static vector<String> allArrowTypesStrings() {
+		static vector<casacore::String> allArrowTypesStrings() {
 			vector<ArrowType> types = allArrowTypes();
-			vector<String> v(types.size());
+			vector<casacore::String> v(types.size());
 			for(unsigned int i = 0; i < v.size(); i++) v[i] = arrowType(types[i]);
 			return v;
 		}
 		// </group>
 
-		// Converts to/from the String representation of arrow types.
+		// Converts to/from the casacore::String representation of arrow types.
 		// <group>
-		static String arrowType(ArrowType type) {
+		static casacore::String arrowType(ArrowType type) {
 			switch(type) {
 			case FilledTriangle:
 				return "filled triangle";
@@ -494,8 +494,8 @@ namespace casa {
 			}
 		}
 
-		static ArrowType arrowType(const String& type) {
-			String t = type;
+		static ArrowType arrowType(const casacore::String& type) {
+			casacore::String t = type;
 			for(unsigned int i = 0; i < t.size(); i++) t[i] = tolower(t[i]);
 			if(t == "filled triangle")      return FilledTriangle;
 			else if(t == "triangle")        return Triangle;
@@ -514,7 +514,7 @@ namespace casa {
 		// RegionShape::UNIT.  arrowLength is in screen pixels.  arrow1 defines
 		// whether (x1, y1) has an arrow; arrow2 for (x2, y2).
 		RSLine(double x1, double y1, double x2, double y2,
-		       MDirection::Types worldSystem, int arrowLength, bool arrow1 = false,
+		       casacore::MDirection::Types worldSystem, int arrowLength, bool arrow1 = false,
 		       bool arrow2 = false, ArrowType type1 = FilledDoubleV,
 		       ArrowType type2 = FilledDoubleV);
 
@@ -524,8 +524,8 @@ namespace casa {
 		       bool arrow1 = false, bool arrow2 = false,
 		       ArrowType type1 = FilledDoubleV, ArrowType type2 = FilledDoubleV);
 
-		// Record Constructor.
-		RSLine(const RecordInterface& properties);
+		// casacore::Record Constructor.
+		RSLine(const casacore::RecordInterface& properties);
 
 		// Destructor.
 		virtual ~RSLine();
@@ -542,28 +542,28 @@ namespace casa {
 
 		// Implements RegionShape::drawAndUpdateBoundingBox.
 		virtual bool drawAndUpdateBoundingBox(WorldCanvasHolder& wch,
-		                                      String* error = NULL);
+		                                      casacore::String* error = NULL);
 
 		// Implements RegionShape::type.
-		virtual String type() const {
+		virtual casacore::String type() const {
 			return "line";
 		}
 
 		// Gets line-specific coordinates, to avoid dependence on
 		// coordParameterValues() when the shape type is known.
 		// If toSystem is empty, no conversion is done; otherwise see the
-		// constraints listed in RegionShape::coordParameterValues(String).
+		// constraints listed in RegionShape::coordParameterValues(casacore::String).
 		void getLineCoordinates(double& x1, double& y1, double& x2, double& y2,
-		                        int& arrowLength, String toSystem = "") const;
+		                        int& arrowLength, casacore::String toSystem = "") const;
 
 		// Implements RegionShape::coordParameterVales.
 		virtual vector<double> coordParameterValues() const;
 
 		// Implements RegionShape::coordParameterValues.
-		vector<double> coordParameterValues(String toSystem) const;
+		vector<double> coordParameterValues(casacore::String toSystem) const;
 
 		// Implements RegionShape::coordParameterNames.
-		virtual vector<String> coordParameterNames() const;
+		virtual vector<casacore::String> coordParameterNames() const;
 
 		// Implements RegionShape::coordParameterPositions.
 		virtual vector<CoordinateParameterType> coordParameterTypes() const;
@@ -572,22 +572,22 @@ namespace casa {
 		virtual void setCoordParameters(const vector<double>& vals);
 
 		// Implements RegionShape::setCoordParameters.
-		virtual void setCoordParameters(const vector<double>& vals, String System);
+		virtual void setCoordParameters(const vector<double>& vals, casacore::String System);
 
 		// Implements RegionShape::move.
-		virtual void move(double dx, double dy, String system = "");
+		virtual void move(double dx, double dy, casacore::String system = "");
 
 		// Implements RegionShape::getHandle.
 		virtual RSHandle getHandle() const;
 
 		// Implements RegionShape::optionNames.
-		virtual vector<String> optionNames() const;
+		virtual vector<casacore::String> optionNames() const;
 
 		// Implements RegionShape::optionTypes.
 		virtual vector<OptionType> optionTypes() const;
 
 		// Implements RegionShape::optionChoices.
-		virtual vector<vector<String> > optionChoices() const;
+		virtual vector<vector<casacore::String> > optionChoices() const;
 
 		// Implements RegionShape::optionValues.
 		virtual vector<RSOption> optionValues() const;
@@ -603,15 +603,15 @@ namespace casa {
 		ArrowType m_aType1, m_aType2; // arrow types
 
 		// Implements RegionShape::getShapeSpecificProperties.
-		virtual void getShapeSpecificProperties(Record& properties) const {
+		virtual void getShapeSpecificProperties(casacore::Record& properties) const {
 			properties.define(PROPTYPE, PROPTYPE_LINE);
 		}
 
 		// Implements RegionShape::setShapeSpecificProperties.
-		virtual void setShapeSpecificProperties(const RecordInterface& /*props*/) { }
+		virtual void setShapeSpecificProperties(const casacore::RecordInterface& /*props*/) { }
 
 		// Updates screen coords using world/pixel coords and the given WorldCanvas
-		virtual bool updateScreenCoordinates(WorldCanvasHolder& wch, String* err);
+		virtual bool updateScreenCoordinates(WorldCanvasHolder& wch, casacore::String* err);
 
 		// Update m_xMin, m_xMax, m_yMin, and m_yMax.
 		void updateMinMax();
@@ -638,7 +638,7 @@ namespace casa {
 		// vector.   arrowLength is in screen pixels. arrow defines whether the
 		// second point has an arrow.
 		RSVector(double x, double y, double length, double angle,
-		         MDirection::Types worldSystem, int arrowLength,
+		         casacore::MDirection::Types worldSystem, int arrowLength,
 		         bool arrow = true, ArrowType arrowType = FilledDoubleV);
 
 		// Pixel Constructor.  Angle is counterclockwise.  arrowLength is in screen
@@ -646,8 +646,8 @@ namespace casa {
 		RSVector(double x, double y, double length, double angle, int arrowLength,
 		         bool arrow = true, ArrowType arrowType = FilledDoubleV);
 
-		// Record Constructor.
-		RSVector(const RecordInterface& properties);
+		// casacore::Record Constructor.
+		RSVector(const casacore::RecordInterface& properties);
 
 		// Destructor.
 		~RSVector();
@@ -658,26 +658,26 @@ namespace casa {
 		}
 
 		// Overrides RSLine::type.
-		String type() const {
+		casacore::String type() const {
 			return "vector";
 		}
 
 		// Gets vector-specific coordinates, to avoid dependence on
 		// coordParameterValues() when the shape type is known.
 		// If toSystem is empty, no conversion is done; otherwise see the
-		// constraints listed in RegionShape::coordParameterValues(String).
+		// constraints listed in RegionShape::coordParameterValues(casacore::String).
 		void getVectorCoordinates(double& x, double& y, double& angle,
 		                          double& length, int& arrowLength,
-		                          String toSystem = "") const;
+		                          casacore::String toSystem = "") const;
 
 		// Overrides RSLine::coordParameterValues.
 		vector<double> coordParameterValues() const;
 
 		// Implements RegionShape::coordParameterValues.
-		vector<double> coordParameterValues(String toSystem) const;
+		vector<double> coordParameterValues(casacore::String toSystem) const;
 
 		// Overrides RSLine::coordParameterNames.
-		vector<String> coordParameterNames() const;
+		vector<casacore::String> coordParameterNames() const;
 
 		// Overrides RSLine::coordParameterPositions.
 		vector<CoordinateParameterType> coordParameterTypes() const;
@@ -686,16 +686,16 @@ namespace casa {
 		void setCoordParameters(const vector<double>& vals);
 
 		// Overrides RSLine::setCoordParameters.
-		void setCoordParameters(const vector<double>& vals, String valSystem);
+		void setCoordParameters(const vector<double>& vals, casacore::String valSystem);
 
 		// Overrides RSLine::optionNames.
-		vector<String> optionNames() const;
+		vector<casacore::String> optionNames() const;
 
 		// Overrides RSLine::optionTypes.
 		vector<OptionType> optionTypes() const;
 
 		// Overrides RSLine::optionChoices.
-		vector<vector<String> > optionChoices() const;
+		vector<vector<casacore::String> > optionChoices() const;
 
 		// Overrides RSLine::optionValues.
 		vector<RSOption> optionValues() const;
@@ -708,7 +708,7 @@ namespace casa {
 		double m_angle;  // angle, world or pixel
 
 		// Overrides RSLine::getShapeSpecificProperties.
-		void getShapeSpecificProperties(Record& properties) const {
+		void getShapeSpecificProperties(casacore::Record& properties) const {
 			properties.define(PROPTYPE, PROPTYPE_VECTOR);
 		}
 	};
@@ -725,13 +725,13 @@ namespace casa {
 		// 1) using the same world system as defined by worldSystem, and
 		// 2) in the unit RegionShape::UNIT.  pixelHeight is in screen pixels.
 		RSMarker(double x, double y, Display::Marker marker, int pixelHeight,
-		         MDirection::Types worldSystem);
+		         casacore::MDirection::Types worldSystem);
 
 		// World Constructor for a compound marker type.  x and y must all be
 		// 1) using the same world system as defined by worldSystem, and
 		// 2) in the unit RegionShape::UNIT.  pixelHeight is in screen pixels.
 		RSMarker(double x, double y, const vector<Display::Marker>& markers,
-		         int pixelHeight, MDirection::Types worldSystem);
+		         int pixelHeight, casacore::MDirection::Types worldSystem);
 
 		// Pixel Constructor for a single marker type.  pixelHeight is in screen
 		// pixels.
@@ -742,8 +742,8 @@ namespace casa {
 		RSMarker(double x, double y, const vector<Display::Marker>& markers,
 		         int pixelHeight);
 
-		// Record Constructor.
-		RSMarker(const RecordInterface& properties);
+		// casacore::Record Constructor.
+		RSMarker(const casacore::RecordInterface& properties);
 
 		// Destructor.
 		~RSMarker();
@@ -757,31 +757,31 @@ namespace casa {
 
 
 		// Implements RegionShape::drawAndUpdateBoundingBox.
-		bool drawAndUpdateBoundingBox(WorldCanvasHolder& wch, String* err = NULL);
+		bool drawAndUpdateBoundingBox(WorldCanvasHolder& wch, casacore::String* err = NULL);
 
 		// Implements RegionShape::type.
-		String type() const;
+		casacore::String type() const;
 
 		// Overrides RegionShape::oneWordType.
-		String oneWordType() const {
+		casacore::String oneWordType() const {
 			return "marker";
 		}
 
 		// Gets marker-specific coordinates, to avoid dependence on
 		// coordParameterValues() when the shape type is known.
 		// If toSystem is empty, no conversion is done; otherwise see the
-		// constraints listed in RegionShape::coordParameterValues(String).
+		// constraints listed in RegionShape::coordParameterValues(casacore::String).
 		void getMarkerCoordinates(double& x, double& y, int& pixelHeight,
-		                          String toSystem = "") const;
+		                          casacore::String toSystem = "") const;
 
 		// Implements RegionShape::coordParameterValues.
 		vector<double> coordParameterValues() const;
 
 		// Implements RegionShape::coordParameterValues.
-		vector<double> coordParameterValues(String toSystem) const;
+		vector<double> coordParameterValues(casacore::String toSystem) const;
 
 		// Implements RegionShape::coordParameterNames.
-		vector<String> coordParameterNames() const;
+		vector<casacore::String> coordParameterNames() const;
 
 		// Implements RegionShape::coordParameterPositions.
 		vector<CoordinateParameterType> coordParameterTypes() const;
@@ -790,22 +790,22 @@ namespace casa {
 		void setCoordParameters(const vector<double>& vals);
 
 		// Implements RegionShape::setCoordParameters.
-		void setCoordParameters(const vector<double>& vals, String valSystem);
+		void setCoordParameters(const vector<double>& vals, casacore::String valSystem);
 
 		// Implements RegionShape::move.
-		void move(double dx, double dy, String system = "");
+		void move(double dx, double dy, casacore::String system = "");
 
 		// Implements RegionShape::getHandle.
 		RSHandle getHandle() const;
 
 		// Implements RegionShape::optionNames.
-		vector<String> optionNames() const;
+		vector<casacore::String> optionNames() const;
 
 		// Implements RegionShape::optionTypes.
 		vector<OptionType> optionTypes() const;
 
 		// Overrides RegionShape::optionChoices.
-		vector<vector<String> > optionChoices() const;
+		vector<vector<casacore::String> > optionChoices() const;
 
 		// Implements RegionShape::optionValues.
 		vector<RSOption> optionValues() const;
@@ -820,21 +820,21 @@ namespace casa {
 		int m_pixelHeight;                 // pixel height for marker(s)
 
 		// Implements RegionShape::getShapeSpecificProperties.
-		void getShapeSpecificProperties(Record& properties) const {
+		void getShapeSpecificProperties(casacore::Record& properties) const {
 			properties.define(PROPTYPE, PROPTYPE_MARKER);
 		}
 
 		// Implements RegionShape::setShapeSpecificProperties.
-		void setShapeSpecificProperties(const RecordInterface& /*properties*/) { }
+		void setShapeSpecificProperties(const casacore::RecordInterface& /*properties*/) { }
 
 		// Updates screen coords using world/pixel coords and the given WorldCanvas
-		bool updateScreenCoordinates(WorldCanvasHolder& wch, String* err);
+		bool updateScreenCoordinates(WorldCanvasHolder& wch, casacore::String* err);
 
 		// Update m_xMin, m_xMax, m_yMin, and m_yMax.
 		void updateMinMax();
 
 
-		static String markerToString(Display::Marker marker) {
+		static casacore::String markerToString(Display::Marker marker) {
 			switch(marker) {
 			case Display::Cross:
 				return "cross";
@@ -872,8 +872,8 @@ namespace casa {
 			}
 		}
 
-		static bool stringToMarker(const String& str, Display::Marker& marker) {
-			String m = str;
+		static bool stringToMarker(const casacore::String& str, Display::Marker& marker) {
+			casacore::String m = str;
 			for(unsigned int i = 0; i < m.size(); i++) m[i] = tolower(str[i]);
 
 			if(m == "cross")                  marker = Display::Cross;
@@ -925,41 +925,41 @@ namespace casa {
 		// World Constructor.  x, y, and angle must both be 1) using the same world
 		// system as defined by worldSystem, and 2) in unit RegionShape::UNIT.
 		// Angle is counterclockwise, and the base is the east vector.
-		RSText(double x, double y, const String& text, MDirection::Types worldSys,
+		RSText(double x, double y, const casacore::String& text, casacore::MDirection::Types worldSys,
 		       double angle = 0);
 
 		// Pixel Constructor.  Angle is counterclockwise.
-		RSText(double x, double y, const String& text, double angle = 0);
+		RSText(double x, double y, const casacore::String& text, double angle = 0);
 
-		// Record Constructor.
-		RSText(const RecordInterface& properties);
+		// casacore::Record Constructor.
+		RSText(const casacore::RecordInterface& properties);
 
 		// Destructor.
 		~RSText();
 
 		// Implements RegionShape::drawAndUpdateBoundingBox.
-		bool drawAndUpdateBoundingBox(WorldCanvasHolder& wch, String* err = NULL);
+		bool drawAndUpdateBoundingBox(WorldCanvasHolder& wch, casacore::String* err = NULL);
 
 		// Implements RegionShape::type.
-		String type() const {
+		casacore::String type() const {
 			return "text";
 		}
 
 		// Gets text-specific coordinates, to avoid dependence on
 		// coordParameterValues() when the shape type is known.
 		// If toSystem is empty, no conversion is done; otherwise see the
-		// constraints listed in RegionShape::coordParameterValues(String).
+		// constraints listed in RegionShape::coordParameterValues(casacore::String).
 		void getTextCoordinates(double& x, double& y, double& angle,
-		                        String toSystem = "") const;
+		                        casacore::String toSystem = "") const;
 
 		// Implements RegionShape::coordParameterValues.
 		vector<double> coordParameterValues() const;
 
 		// Implements RegionShape::coordParameterValues.
-		vector<double> coordParameterValues(String toSystem) const;
+		vector<double> coordParameterValues(casacore::String toSystem) const;
 
 		// Implements RegionShape::coordParameterNames.
-		vector<String> coordParameterNames() const;
+		vector<casacore::String> coordParameterNames() const;
 
 		// Implements RegionShape::coordParameterPositions.
 		vector<CoordinateParameterType> coordParameterTypes() const;
@@ -968,10 +968,10 @@ namespace casa {
 		void setCoordParameters(const vector<double>& vals);
 
 		// Implements RegionShape::setCoordParameters.
-		void setCoordParameters(const vector<double>& vals, String valSystem);
+		void setCoordParameters(const vector<double>& vals, casacore::String valSystem);
 
 		// Implements RegionShape::move.
-		void move(double dx, double dy, String system = "");
+		void move(double dx, double dy, casacore::String system = "");
 
 		// Implements RegionShape::getHandle.
 		RSHandle getHandle() const;
@@ -979,8 +979,8 @@ namespace casa {
 		// Implements RegionShape option methods.  Note: text do not have
 		// additonal options.
 		// <group>
-		vector<String> optionNames() const {
-			return vector<String>();
+		vector<casacore::String> optionNames() const {
+			return vector<casacore::String>();
 		}
 		vector<OptionType> optionTypes() const {
 			return vector<OptionType>();
@@ -999,15 +999,15 @@ namespace casa {
 		double m_screenX, m_screenY; // location, screen
 
 		// Implements RegionShape::getShapeSpecificProperties.
-		void getShapeSpecificProperties(Record& properties) const {
+		void getShapeSpecificProperties(casacore::Record& properties) const {
 			properties.define(PROPTYPE, PROPTYPE_TEXT);
 		}
 
 		// Implements RegionShape::setShapeSpecificProperties.
-		void setShapeSpecificProperties(const RecordInterface& /*properties*/) { }
+		void setShapeSpecificProperties(const casacore::RecordInterface& /*properties*/) { }
 
 		// Updates screen coords using world/pixel coords and the given WorldCanvas
-		bool updateScreenCoordinates(WorldCanvasHolder& wch, String* err);
+		bool updateScreenCoordinates(WorldCanvasHolder& wch, casacore::String* err);
 
 		// Update m_xMin, m_xMax, m_yMin, and m_yMax.  Note that this is only valid
 		// the screen coordinates have been updated.
@@ -1026,7 +1026,7 @@ namespace casa {
 // <ul><li><b>RSComposite::PROPDEPENDENTCHILDREN</b> (<i>bool</i>):
 //         whether the composite's children are dependent (true) or independent
 //         (false).  <b>OPTIONAL</b>.</li>
-//     <li><b>RSComposite::PROPCHILDREN</b> (<i>Record of Records</li>):
+//     <li><b>RSComposite::PROPCHILDREN</b> (<i>casacore::Record of Records</li>):
 //         ordered list of children records.  Each field must have a unique
 //         name (the specifics are irrelevant because it's the order that
 //         matters) and the value must be a record that can be used to create a
@@ -1038,8 +1038,8 @@ namespace casa {
 
 		// Properties.  (See class descriptions of RegionShape and RSComposite.)
 		// <group>
-		static const String PROPDEPENDENTCHILDREN;
-		static const String PROPCHILDREN;
+		static const casacore::String PROPDEPENDENTCHILDREN;
+		static const casacore::String PROPCHILDREN;
 		// </group>
 
 
@@ -1050,16 +1050,16 @@ namespace casa {
 		// customName is set, it will be returned on type().  The given world
 		// system is only used for displaying/setting the center of the composite
 		// and does not affect the coordinate systems of the children.
-		RSComposite(MDirection::Types worldSys, bool dependent = true,
-		            String customName = "");
+		RSComposite(casacore::MDirection::Types worldSys, bool dependent = true,
+		            casacore::String customName = "");
 
 		// Pixel constructor.  Initially empty composite.  The dependent flag
 		// controls whether the children are dependent or independent.  If
 		// custonName is set, it will be returned on type().
-		RSComposite(bool dependent = true, String customName = "");
+		RSComposite(bool dependent = true, casacore::String customName = "");
 
-		// Record Constructor.
-		RSComposite(const RecordInterface& properties);
+		// casacore::Record Constructor.
+		RSComposite(const casacore::RecordInterface& properties);
 
 		// Destructor.
 		~RSComposite();
@@ -1091,43 +1091,43 @@ namespace casa {
 
 		// Overrides RegionShape methods in the case of dependent children.
 		// <group>
-		void setLineColor(const String& newColor, bool alsoSetLabel = true);
+		void setLineColor(const casacore::String& newColor, bool alsoSetLabel = true);
 		void setLineWidth(double width);
 		void setLineStyle(LineStyle style);
 		void setLabel(const RegionShapeLabel& label);
 		// </group>
 
 		// Implements RegionShape::drawAndUpdateBoundingBox.
-		bool drawAndUpdateBoundingBox(WorldCanvasHolder& wch, String* err = NULL);
+		bool drawAndUpdateBoundingBox(WorldCanvasHolder& wch, casacore::String* err = NULL);
 
 		// Implements RegionShape::type.
-		String type() const;
+		casacore::String type() const;
 
 		// Overrides RegionShape::oneWordType.
-		String oneWordType() const {
+		casacore::String oneWordType() const {
 			return "composite";
 		}
 
 		// Returns 0 degrees pixel/screen in the given coordinate system (own
 		// system if toSystem is empty, otherwise see the constraints listed in
-		// RegionShape::coordParameterValues(String).
-		double getAngle(String toSystem = "") const;
+		// RegionShape::coordParameterValues(casacore::String).
+		double getAngle(casacore::String toSystem = "") const;
 
 		// Gets composite-specific coordinates, to avoid dependence on
 		// coordParameterValues() when the shape type is known.
 		// If toSystem is empty, no conversion is done; otherwise see the
-		// constraints listed in RegionShape::coordParameterValues(String).
+		// constraints listed in RegionShape::coordParameterValues(casacore::String).
 		void getCompositeCoordinates(double& centerX, double& centerY,
-		                             String toSystem = "") const;
+		                             casacore::String toSystem = "") const;
 
 		// Implements RegionShape::coordParameterValues.
 		vector<double> coordParameterValues() const;
 
 		// Implements RegionShape::coordParameterValues.
-		vector<double> coordParameterValues(String toSystem) const;
+		vector<double> coordParameterValues(casacore::String toSystem) const;
 
 		// Implements RegionShape::coordParameterNames.
-		vector<String> coordParameterNames() const;
+		vector<casacore::String> coordParameterNames() const;
 
 		// Implements RegionShape::coordParameterPositions.
 		vector<CoordinateParameterType> coordParameterTypes() const;
@@ -1136,16 +1136,16 @@ namespace casa {
 		void setCoordParameters(const vector<double>& vals);
 
 		// Implements RegionShape::setCoordParameters.
-		void setCoordParameters(const vector<double>& vals, String valSystem);
+		void setCoordParameters(const vector<double>& vals, casacore::String valSystem);
 
 		// Implements RegionShape::move.
-		void move(double dx, double dy, String system = "");
+		void move(double dx, double dy, casacore::String system = "");
 
 		// Implements RegionShape::getHandle.
 		RSHandle getHandle() const;
 
 		// Implements RegionShape::optionNames.
-		vector<String> optionNames() const;
+		vector<casacore::String> optionNames() const;
 
 		// Implements RegionShape::optionTypes.
 		vector<OptionType> optionTypes() const;
@@ -1157,7 +1157,7 @@ namespace casa {
 		void setOptionValues(const vector<RSOption>& options);
 
 	protected:
-		String m_custName;             // optional custom name
+		casacore::String m_custName;             // optional custom name
 		bool m_dependentChildren;      // whether children are dependent
 		vector<RegionShape*> m_shapes; // children
 		double m_centerX, m_centerY;   // center
@@ -1171,10 +1171,10 @@ namespace casa {
 		// to children or not.
 
 		// Implements RegionShape::getShapeSpecificProperties.
-		void getShapeSpecificProperties(Record& properties) const;
+		void getShapeSpecificProperties(casacore::Record& properties) const;
 
 		// Implements RegionShape::setShapeSpecificProperties.
-		void setShapeSpecificProperties(const RecordInterface& properties);
+		void setShapeSpecificProperties(const casacore::RecordInterface& properties);
 
 		// Update m_xMin, m_xMax, m_yMin, and m_yMax.
 		void updateMinMax();

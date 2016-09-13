@@ -61,6 +61,7 @@
 #include <casa/Logging/LogSink.h>
 // math.h ?
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
@@ -146,7 +147,7 @@ void PJones::calcPar() {
   // Initialize parameter arrays
   currCPar().resize(1,1,nAnt());
   currParOK().resize(1,1,nAnt());
-  currParOK()=True;
+  currParOK()=true;
 
   // Fill currCPar() with exp(i*pa)
   Float* a=pa().data();
@@ -178,7 +179,7 @@ void PJones::calcOneJones(Vector<Complex>& mat, Vector<Bool>& mOk,
     case Jones::Diagonal: {
       mat(0)=conj(par(0));  // exp(-ia)
       mat(1)=par(0);        // exp(ia)
-      mOk=True;
+      mOk=true;
       break;
     }
       // Linear version:
@@ -187,7 +188,7 @@ void PJones::calcOneJones(Vector<Complex>& mat, Vector<Bool>& mOk,
       mat(0)=mat(3)=cos(a);
       mat(1)=sin(a);
       mat(2)=-mat(1);
-      mOk=True;
+      mOk=true;
       break;
     }
     default:
@@ -278,16 +279,16 @@ void TJones::guessPar(VisBuffer& vb) {
 
   // Find out which ants are available
   // TBD: count nominal guessant rows, insist not much less than nAnt
-  Vector<Bool> antok(nAnt(),False);
-  Vector<Bool> rowok(vb.nRow(),False);
+  Vector<Bool> antok(nAnt(),false);
+  Vector<Bool> rowok(vb.nRow(),false);
   for (Int irow=0;irow<vb.nRow();++irow) {
     // Is this row ok?
     rowok(irow)= (!vb.flagRow()(irow) &&
 		  (vb.antenna1()(irow)!=vb.antenna2()(irow)) &&
 		  nfalse(vb.flag().column(irow))> 0 );
     if (rowok(irow)) {
-      antok(vb.antenna1()(irow))=True;
-      antok(vb.antenna2()(irow))=True;
+      antok(vb.antenna1()(irow))=true;
+      antok(vb.antenna2()(irow))=true;
     }
   }
 
@@ -354,7 +355,7 @@ void TJones::guessPar(VisBuffer& vb) {
   else
     solveCPar()=Complex(0.3);
 
-  solveParOK()=True;
+  solveParOK()=true;
 
   /*
   cout << "Guess:" << endl
@@ -735,7 +736,7 @@ void GJones::guessPar(VisBuffer& vb) {
 
   // Find out which ants are available
   Vector<Int> antok(nAnt(),0);
-  Vector<Bool> rowok(vb.nRow(),False);
+  Vector<Bool> rowok(vb.nRow(),false);
   for (Int irow=0;irow<vb.nRow();++irow) {
     // Is this row ok
     rowok(irow)= (!vb.flagRow()(irow) &&
@@ -812,7 +813,7 @@ void GJones::guessPar(VisBuffer& vb) {
   else
     solveCPar()=Complex(0.3);
 
-  solveParOK()=True;
+  solveParOK()=true;
 
   //For scalar data, Set "other" pol soln to zero
   if (nDataCorr == 1)
@@ -1145,10 +1146,10 @@ void BJones::normalize() {
       
       if (nfalse(fl)>0) {
 	Cube<Complex> p(ctiter.cparam());
-	ArrayIterator<Complex> soliter(p,itax,False);
-	ArrayIterator<Bool> fliter(fl,itax,False);
+	ArrayIterator<Complex> soliter(p,itax,false);
+	ArrayIterator<Bool> fliter(fl,itax,false);
 	while (!soliter.pastEnd()) {
-	  normSolnArray(soliter.array(),!fliter.array(),True); // Do phase
+	  normSolnArray(soliter.array(),!fliter.array(),true); // Do phase
 	  soliter.next();
 	  fliter.next();
 	}
@@ -1207,8 +1208,8 @@ void BJones::fillChanGaps() {
       
       if (nfalse(fl)>0) {
 	Cube<Complex> p(ctiter.cparam());
-	ArrayIterator<Complex> soliter(p,itax,False);
-	ArrayIterator<Bool> fliter(fl,itax,False);
+	ArrayIterator<Complex> soliter(p,itax,false);
+	ArrayIterator<Bool> fliter(fl,itax,false);
 	Array<Bool> sok;
 	while (!soliter.pastEnd()) {
 	  Array<Bool> thfl(fliter.array());
@@ -1238,7 +1239,7 @@ void BJones::fillChanGapArray(Array<Complex>& sol,
   Vector<Bool> solOKv(solOK.reform(IPosition(1,solOK.nelements())));
 
   Int nChan(solv.nelements());
-  Bool done(False);
+  Bool done(false);
   Int ich(0), ch1(-1), ch2(-1);
   Int dch(1);
   Float a0, da, a, p0, dp, p, fch;
@@ -1247,9 +1248,9 @@ void BJones::fillChanGapArray(Array<Complex>& sol,
   while(!solOKv(ich) && ich<nChan) ++ich;
 
   // Found no unflagged channels, so signal escape
-  if (ich==nChan) done=True;
+  if (ich==nChan) done=true;
 
-  // done turns True if we reach nChan, and nothing more to do
+  // done turns true if we reach nChan, and nothing more to do
   while (!done) {
 
     // Advance to next flagged channel
@@ -1294,7 +1295,7 @@ void BJones::fillChanGapArray(Array<Complex>& sol,
 	    // cout << " " << ich << " " << a << " " << p << endl;
 
 	    solv(ich)=a*Complex(cos(p),sin(p));
-	    solOKv(ich)=True;
+	    solOKv(ich)=true;
 	    ++ich;
 	  }
 
@@ -1308,11 +1309,11 @@ void BJones::fillChanGapArray(Array<Complex>& sol,
       }
       else
 	// Reached nChan looking for ch2
-	done=True;
+	done=true;
     }
     else
       // Reach nChan looking for gaps 
-      done=True;
+      done=true;
   } // done
 
 }
@@ -1350,9 +1351,9 @@ void BJones::calcWtScale() {
   Cube<Float> cWS(currWtScale());
 
   IPosition it3(2,0,2);
-  ArrayIterator<Float> A(amps,it3,False);
-  ArrayIterator<Bool> Aok(ampfl,it3,False);
-  ArrayIterator<Float> cWSi(cWS,it3,False);
+  ArrayIterator<Float> A(amps,it3,false);
+  ArrayIterator<Bool> Aok(ampfl,it3,false);
+  ArrayIterator<Float> cWSi(cWS,it3,false);
     
   while (!A.pastEnd()) {
 
@@ -1473,7 +1474,7 @@ void JJones::guessPar(VisBuffer& vb) {
   ampave/=Float(namp);
   ampave=sqrt(ampave);
   solveCPar()*=Complex(ampave);
-  solveParOK()=True;
+  solveParOK()=true;
 
   //  cout << "post-guess:" << endl;
   //  cout << "solveCPar()   = " << solveCPar() << endl;
@@ -1550,8 +1551,8 @@ void MMueller::setApply(const Record& apply) {
 
   SolvableVisCal::setApply(apply);
 
-  // Force calwt to False for now
-  calWt()=False;
+  // Force calwt to false for now
+  calWt()=false;
 
 }
 
@@ -1585,7 +1586,7 @@ void MMueller::newselfSolve(VisSet& vs, VisEquation& ve) {
   for (Int isol=0;isol<nSol && vi.moreChunks();++isol) {
 
     // Arrange to accumulate
-    VisBuffAccumulator vba(nAnt(),preavg(),False);
+    VisBuffAccumulator vba(nAnt(),preavg(),false);
     
     for (Int ichunk=0;ichunk<nChunkPerSol(isol);++ichunk) {
 
@@ -1652,7 +1653,7 @@ void MMueller::newselfSolve(VisSet& vs, VisEquation& ve) {
 
     // Fill solveCPar() with 1, nominally, and flagged
     solveCPar()=Complex(1.0);
-    solveParOK()=False;
+    solveParOK()=false;
     
     if (vbOk && svb.nRow()>0) {
 
@@ -1845,10 +1846,10 @@ void MfMueller::normalize() {
       
       if (nfalse(fl)>0) {
 	Cube<Complex> p(ctiter.cparam());
-	ArrayIterator<Complex> soliter(p,itax,False);
-	ArrayIterator<Bool> fliter(fl,itax,False);
+	ArrayIterator<Complex> soliter(p,itax,false);
+	ArrayIterator<Bool> fliter(fl,itax,false);
 	while (!soliter.pastEnd()) {
-	  normSolnArray(soliter.array(),!fliter.array(),True); // Do phase
+	  normSolnArray(soliter.array(),!fliter.array(),true); // Do phase
 	  soliter.next();
 	  fliter.next();
 	}
@@ -1917,8 +1918,8 @@ void TOpac::setApply(const Record& applypar) {
   else {
 
     // We are applying
-    setSolved(False);
-    setApplied(True);
+    setSolved(false);
+    setApplied(true);
 
     LogMessage message;
     { ostringstream o;
@@ -1945,7 +1946,7 @@ void TOpac::setApply(const Record& applypar) {
       if (nopac<nSpw()) {
 	// Resize (with copy) to match nSpw, 
 	//  duplicating last specified entry
-	opacity_.resize(nSpw(),True);
+	opacity_.resize(nSpw(),true);
 	opacity_(IPosition(1,nopac),IPosition(1,nSpw()-1))=opacity_(nopac-1);
       }
     
@@ -1955,7 +1956,7 @@ void TOpac::setApply(const Record& applypar) {
 	currRPar().resize(1,1,nAnt());
 	currRPar()=Float(opacity_(ispw));
 	currParOK().resize(1,1,nAnt());
-	currParOK()=True;
+	currParOK()=true;
       }
       currSpw()=oldspw;
       

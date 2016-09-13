@@ -25,7 +25,10 @@
 #include <tuple>
 
 using namespace std;
+using namespace casacore;
 using namespace casa;
+using namespace casacore;
+using namespace casacore;
 using namespace casacore;
 using namespace casa::vi;
 
@@ -40,6 +43,7 @@ main (int nArgs, char * args [])
 gtestLog << "--- RUN_ALL_TESTS" << endl;
     return RUN_ALL_TESTS();
 
+using namespace casacore;
 //    using namespace casa::vi::test;
 //
 //    Tester tester;
@@ -61,6 +65,7 @@ gtestLog << "--- RUN_ALL_TESTS" << endl;
 //    return allPassed ? 0 : 1;
 }
 
+using namespace casacore;
 namespace casa {
 namespace vi {
 
@@ -81,8 +86,8 @@ VisibilityIterator2::copyingViFactory (const MeasurementSet & srcMs,
     Block <Int> sortColumns;
 
     VisibilityIteratorImpl2 * viReader = new VisibilityIteratorImpl2 (mss, SortColumns(),
-                                                                      0, VbPlain, False);
-    FinalTvi2 * fVi = new FinalTvi2 (viReader, dstMs, False);
+                                                                      0, VbPlain, false);
+    FinalTvi2 * fVi = new FinalTvi2 (viReader, dstMs, false);
 
     VisibilityIterator2 * vi = new VisibilityIterator2 ();
     vi->impl_p = fVi;
@@ -202,7 +207,7 @@ TestWidget::sweepMs()
 gtestLog << "--- Starting sweepMs" << endl;
     Block<const MeasurementSet *> mss;
     pair<Bool,Bool> result;
-    Bool moreSweeps = False;
+    Bool moreSweeps = false;
     Subchunk subchunk;
     try {
 
@@ -253,26 +258,26 @@ gtestLog << "--- Starting sweepMs" << endl;
         } while (moreSweeps);
 
 
-        result = make_pair (True, False);
+        result = make_pair (true, false);
     }
     catch (TestError & e){
 gtestLog << "Failed by TestError" << endl;
         FAIL() << String::format ("*** TestError at subchunk %s while executing test %s:\n-->%s\n",
                                   subchunk.toString().c_str(), name ().c_str(), e.what());
-        //result = make_pair (False, False);
+        //result = make_pair (false, false);
     }
     catch (AipsError & e){
 gtestLog << "Failed by AipsError" << endl;
         FAIL() << String::format ("*** AipsError while executing test %s:\n-->%s\n",
                                   name ().c_str(), e.what());
 
-        //result = make_pair (False, False);
+        //result = make_pair (false, false);
     }
     catch (...){
 gtestLog << "Failed by ..." << endl;
         FAIL() << String::format ("*** Unknown exception while executing test %s\n***\n*** Exiting ***\n",
                                   name ().c_str());
-        //result = make_pair (False, True);
+        //result = make_pair (false, true);
     }
 gtestLog << "Success" << endl;
 
@@ -439,7 +444,7 @@ BasicChannelSelection::checkRowScalars (VisBuffer2 * vb)
     Int expectedAntenna1 = 0;
     Int expectedAntenna2 = 0;
     Double previousTime = -1;
-    Bool newTimeExpected = True;
+    Bool newTimeExpected = true;
 
     for (Int row = 0; row < nRows; row ++){
 
@@ -450,7 +455,7 @@ BasicChannelSelection::checkRowScalars (VisBuffer2 * vb)
                           String::format ("Backwards time=%f (< %f) at msRow=%d",
                                           vb->time()(row), previousTime, rowId));
             previousTime = vb->time()(row);
-            newTimeExpected = False;
+            newTimeExpected = false;
         }
 
         TestErrorIf (vb->time()(row) != previousTime,
@@ -471,7 +476,7 @@ BasicChannelSelection::checkRowScalars (VisBuffer2 * vb)
 
             expectedAntenna1 ++;
             expectedAntenna2 = expectedAntenna1;
-            newTimeExpected = True;
+            newTimeExpected = true;
         }
 
         checkUvw (vb, nRows, rowId, row);
@@ -557,11 +562,11 @@ BasicChannelSelection::createMs ()
     system ("rm -r BasicChannelSelection.ms");
 
     msf_p = new MsFactory ("BasicChannelSelection.ms");
-    msf_p->setIncludeAutocorrelations(True);
+    msf_p->setIncludeAutocorrelations(true);
 
     pair<MeasurementSet *, Int> p = msf_p->createMs ();
     nRowsToProcess_p = p.second;
-    return std::make_tuple (p.first, p.second, False);
+    return std::make_tuple (p.first, p.second, false);
 }
 
 
@@ -798,7 +803,7 @@ BasicChannelSelection::checkFlagCategory (Int rowId, Int spectralWindow, Int row
 
         default:
 
-            Assert (False);
+            Assert (false);
             expected = false;
             break;
 
@@ -1039,7 +1044,7 @@ BasicCorrelationSelection::~BasicCorrelationSelection ()
 
 BasicMutation::BasicMutation ()
 : BasicChannelSelection (),
-  firstPass_p (True)
+  firstPass_p (true)
 {
 }
 
@@ -1056,7 +1061,7 @@ BasicMutation::createMs ()
 
     std::tie (ms, nRows, toss) = BasicChannelSelection::createMs ();
 
-    return std::make_tuple (ms, nRows, True);
+    return std::make_tuple (ms, nRows, true);
 }
 
 class LogicalNot {
@@ -1130,7 +1135,7 @@ Bool
 BasicMutation::noMoreData (VisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/, int /*nRows*/)
 {
     Bool moreSweeps = firstPass_p;
-    firstPass_p = False;
+    firstPass_p = false;
     setFactor (-1);
 
     return moreSweeps;
@@ -1158,7 +1163,7 @@ FrequencyChannelSelection::noMoreData (VisibilityIterator2 & /*vi*/, VisBuffer2 
 //                 String::format ("Expected to process %d rows, but did %d instead.",
 //                                 nRowsToProcess_p, nRowsProcessed));
 
-    return False;
+    return false;
 }
 
 
@@ -1213,7 +1218,7 @@ PerformanceComparator::compare (int tests, int nSweeps, int nChannelTests)
 
     Block<int> sortColumns;
 
-    ROVisibilityIterator oldVi (ms, sortColumns, True);
+    ROVisibilityIterator oldVi (ms, sortColumns, true);
 
     VisibilityIterator2 newVi (ms, SortColumns ());
 
@@ -1383,33 +1388,33 @@ PerformanceComparator::sweepViOld (ROVisibilityIterator & vi)
 void
 CopyMs::copySubtables (MeasurementSet * newMs, const MeasurementSet * oldMs)
 {
-    SubMS::copyCols (newMs->antenna(), oldMs->antenna (), True);
-    SubMS::copyCols (newMs->dataDescription(), oldMs->dataDescription (), True);
+    SubMS::copyCols (newMs->antenna(), oldMs->antenna (), true);
+    SubMS::copyCols (newMs->dataDescription(), oldMs->dataDescription (), true);
     if (! newMs->doppler().isNull()){
-        SubMS::copyCols (newMs->doppler(), oldMs->doppler (), True);
+        SubMS::copyCols (newMs->doppler(), oldMs->doppler (), true);
     }
-    SubMS::copyCols (newMs->feed(), oldMs->feed (), True);
-    SubMS::copyCols (newMs->field(), oldMs->field (), True);
-    SubMS::copyCols (newMs->flagCmd(), oldMs->flagCmd (), True);
+    SubMS::copyCols (newMs->feed(), oldMs->feed (), true);
+    SubMS::copyCols (newMs->field(), oldMs->field (), true);
+    SubMS::copyCols (newMs->flagCmd(), oldMs->flagCmd (), true);
     if (! newMs->freqOffset().isNull()){
-        SubMS::copyCols (newMs->freqOffset(), oldMs->freqOffset (), True);
+        SubMS::copyCols (newMs->freqOffset(), oldMs->freqOffset (), true);
     }
-    SubMS::copyCols (newMs->history(), oldMs->history (), True);
-    TableCopy::copyRows (newMs->observation(), oldMs->observation (), True);
+    SubMS::copyCols (newMs->history(), oldMs->history (), true);
+    TableCopy::copyRows (newMs->observation(), oldMs->observation (), true);
     setupNewPointing (newMs);
-    SubMS::copyCols (newMs->pointing(), oldMs->pointing (), True);
-    SubMS::copyCols (newMs->polarization(), oldMs->polarization (), True);
-    SubMS::copyCols (newMs->processor(), oldMs->processor (), True);
+    SubMS::copyCols (newMs->pointing(), oldMs->pointing (), true);
+    SubMS::copyCols (newMs->polarization(), oldMs->polarization (), true);
+    SubMS::copyCols (newMs->processor(), oldMs->processor (), true);
     if (! newMs->source().isNull()){
-        TableCopy::copyRows (newMs->source(), oldMs->source (), True);
+        TableCopy::copyRows (newMs->source(), oldMs->source (), true);
     }
-    SubMS::copyCols (newMs->spectralWindow(), oldMs->spectralWindow (), True);
-    SubMS::copyCols (newMs->state(), oldMs->state (), True);
+    SubMS::copyCols (newMs->spectralWindow(), oldMs->spectralWindow (), true);
+    SubMS::copyCols (newMs->state(), oldMs->state (), true);
     if (! newMs->sysCal().isNull()){
-        SubMS::copyCols (newMs->sysCal(), oldMs->sysCal (), True);
+        SubMS::copyCols (newMs->sysCal(), oldMs->sysCal (), true);
     }
     if (! newMs->weather().isNull()){
-        SubMS::copyCols (newMs->weather(), oldMs->weather (), True);
+        SubMS::copyCols (newMs->weather(), oldMs->weather (), true);
     }
 }
 
@@ -1423,7 +1428,7 @@ CopyMs::setupNewPointing(MeasurementSet * newMs)
   // POINTING can be large, set some sensible defaults for storageMgrs
   IncrementalStMan ismPointing ("ISMPointing");
   StandardStMan ssmPointing("SSMPointing", 32768);
-  pointingSetup.bindAll(ismPointing, True);
+  pointingSetup.bindAll(ismPointing, true);
   pointingSetup.bindColumn(MSPointing::columnName(MSPointing::DIRECTION),
                            ssmPointing);
   pointingSetup.bindColumn(MSPointing::columnName(MSPointing::TARGET),
@@ -1471,7 +1476,7 @@ CopyMs::doit (const String & oldMsName)
 
     //SetupNewTable newSetup (newMsName, oldMs.tableDesc(), Table::NewNoReplace);
 
-    //casa::MeasurementSet newMs (newSetup, 0, False);
+    //casa::MeasurementSet newMs (newSetup, 0, false);
     //newMs.createDefaultSubtables(Table::NewNoReplace);
 
     VisibilityIterator2 * vi = VisibilityIterator2::copyingViFactory (oldMs, newMs);
@@ -1500,7 +1505,7 @@ MultipleMss::createMss (){
         String msName = String::format ("MultipleMss%d.ms", i);
         system (String::format ("rm -r %s", msName.c_str()).c_str());
         MsFactory * msf = new MsFactory (msName);
-        msf->setIncludeAutocorrelations(True);
+        msf->setIncludeAutocorrelations(true);
         msf->addSpectralWindow("spw", i+5, 0, 100, "LL RR RL LR");
 
         pair<MeasurementSet *, Int> p = msf->createMs ();
@@ -1511,7 +1516,7 @@ MultipleMss::createMss (){
         delete msf;
     }
 
-    return std::make_tuple (mss, nRows, False);
+    return std::make_tuple (mss, nRows, false);
 }
 
 void
@@ -1575,7 +1580,7 @@ MultipleMss::startOfData (VisibilityIterator2 & vi, VisBuffer2 * /*vb*/)
 
 bool
 MultipleMss::usesMultipleMss () const {
-    return True;
+    return true;
 }
 
 std::tuple <MeasurementSet *, Int, Bool>
@@ -1584,14 +1589,14 @@ Weighting::createMs ()
     system ("rm -r Weighting.ms");
 
     msf_p = new MsFactory ("Weighting.ms");
-    msf_p->setIncludeAutocorrelations(True);
+    msf_p->setIncludeAutocorrelations(true);
     msf_p->addSpectralWindow("spw", 5, 0, 100, "LL RR RL LR");
 
-    msf_p->addWeightSpectrum(False);
+    msf_p->addWeightSpectrum(false);
 
     pair<MeasurementSet *, Int> p = msf_p->createMs ();
     nRowsToProcess_p = p.second;
-    return std::make_tuple (p.first, p.second, False);
+    return std::make_tuple (p.first, p.second, false);
 }
 
 void
@@ -1692,5 +1697,6 @@ TEST_F (Weighting, DoWeighting)
 
 } // end namespace test
 } // end namespace vi
+using namespace casacore;
 } // end namespace casa
 

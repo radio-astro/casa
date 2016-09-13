@@ -80,6 +80,7 @@
 #include <imageanalysis/ImageAnalysis/ImageRegridder.h>
 
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	/*static std::string record_to_string( const Record &rec ) {
@@ -391,7 +392,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 							panel_->logIO( ) << "generating temporary image \'" << outpath << "'" << LogIO::POST;
 							ImageRegridder regridder(im_, String(outpath), regrid_to->imageInterface( ) );
 							regridder.setMethod(method);
-							regridder.setSpecAsVelocity(True);
+							regridder.setSpecAsVelocity(true);
 							im_ = regridder.regrid();
 							// std::auto_ptr<ImageInterface<Float> > imptr(im_);
 						}
@@ -993,7 +994,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				}
 				emit spectrumChanged(spcTypeUnit, spcRval, spcSys);
 			}
-		} catch(const casa::AipsError& err) {
+		} catch(const casacore::AipsError& err) {
 			errMsg_ = err.getMesg();
 		} catch(...) {
 			errMsg_ = "Unknown error checking axis";
@@ -1006,7 +1007,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Apply option values to the DisplayData.  Method will
 		// emit optionsChanged() if other option values, limits, etc.
 		// should also change as a result.
-		// Set emitAll = True if the call was not initiated by the options gui
+		// Set emitAll = true if the call was not initiated by the options gui
 		// itself (e.g. via scripting or save-restore); that will ensure that
 		// the options gui does receive all option updates (via the optionsChanged
 		// signal) and updates its user interface accordingly.
@@ -1016,7 +1017,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		//cout << "\t>>== " << (emitAll ? "true" : "false") << "==>> " << opts << endl;
 
 		Record chgdOpts;
-		Bool held=False;
+		Bool held=false;
 		try {
 
 			//Decide if the refresh is local to this dd or if we are going to have
@@ -1056,13 +1057,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			if (colorBarLabelSpaceOpt_ != NULL ) {
 				cbSzChg  = colorBarLabelSpaceOpt_->fromRecord(opts) || cbSzChg;
 			}
-			held=True;
+			held=true;
 			panel_->viewer()->hold();
 			// (avoids redrawing more often than necessary)
 
 			// Trigger color bar and main panel rearrangement, if necessary.
 			if(reorient) {
-				colorBarOrientationOpt_->toRecord(chgdOpts, True, True);
+				colorBarOrientationOpt_->toRecord(chgdOpts, true, true);
 				// Make sure user interface sees this change via chgdOpts.
 				Bool orientation = (colorBarOrientationOpt_->value()=="vertical");
 				panel_->setColorBarOrientation(orientation);
@@ -1070,22 +1071,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				emit colorBarChange();
 			}
 			if(!held) {
-				held=True;
+				held=true;
 				panel_->viewer()->hold();
 			}
 
 			// Refresh all main canvases where dd_ is registered, if required
 			// because of option changes (it usually is).
-			// Note: the 'True' parameter to refresh() is a  sneaky/kludgy
+			// Note: the 'true' parameter to refresh() is a  sneaky/kludgy
 			// part of the refresh cycle interface which is easily missed.
 			// In practice what it means now is that DDs on the PrincipalAxesDD
 			// branch get their drawlist cache cleared.  It has no effect
 			// (on caching or otherwise) for DDs on the CachingDD branch.
 			if(needsRefresh) {
-				dd_->refresh(True);
+				dd_->refresh(true);
 			}
 
-			held=False;
+			held=false;
 			panel_->viewer()->release();
 			if(cbNeedsRefresh) {
 				emit colorBarChange();
@@ -1097,11 +1098,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				checkGlobalChange( opts );
 			}
 
-		} catch (const casa::AipsError& err) {
+		} catch (const casacore::AipsError& err) {
 			errMsg_ = err.getMesg();
 			cerr<<"qdd setOpts Err:"<<errMsg_<<endl;	//#dg
 			if(held) {
-				held=False;
+				held=false;
 				panel_->viewer()->release();
 			}
 			emit qddError(errMsg_);
@@ -1109,7 +1110,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			errMsg_ = "Unknown error setting data options";
 			cerr<<"qdd setOpts Err:"<<errMsg_<<endl;	//#dg
 			if(held) {
-				held=False;
+				held=false;
 				panel_->viewer()->release();
 			}
 			emit qddError(errMsg_);
@@ -1130,7 +1131,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if(emitAll) {
 			chgdOpts.merge(opts, Record::SkipDuplicates);
 		}
-		// When emitAll==True this ensures that the options gui
+		// When emitAll==true this ensures that the options gui
 		// receives all option updates via the optionsChanged
 		// signal, not just internally-generated ones.  For use
 		// when the gui itself didn't initiate the setOptions call.
@@ -1235,9 +1236,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	bool QtDisplayData::setColorBarOptions( Record& opts, Record& chgdOpts ) {
 		//fprintf( stderr, "<0x%x>\tQtDisplayData::setColorBarOptions( ", this );
 		//cerr << record_to_string(opts) << ", Record& )\n";
-		Bool cbNeedsRefresh = False;
+		Bool cbNeedsRefresh = false;
 		if(usesClrMap_() && clrMapOpt_->fromRecord(opts)) {
-			cbNeedsRefresh = True;
+			cbNeedsRefresh = true;
 			setColormap_(clrMapOpt_->value());
 		}
 
@@ -1284,14 +1285,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 			Float datamin=0., datamax=1.;
 			Vector<Float> minMax;
-			Bool notFound=True, minNotFound=True, maxNotFound=True;
+			Bool notFound=true, minNotFound=true, maxNotFound=true;
 
 			dd_->readOptionRecord(minMax, notFound, chgdOpts, PrincipalAxesDD::HISTOGRAM_RANGE);
 			if(minMax.nelements()==2) {
 				datamin = minMax[0];
-				minNotFound=False;
+				minNotFound=false;
 				datamax = minMax[1];
-				maxNotFound=False;
+				maxNotFound=false;
 			} else {
 				dd_->readOptionRecord(datamin, minNotFound, chgdOpts, DisplayData::DATA_MIN);
 				dd_->readOptionRecord(datamax, maxNotFound, chgdOpts, DisplayData::DATA_MAX);
@@ -1301,11 +1302,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				if(minMax.nelements()==2) {
 					if(minNotFound) {
 						datamin = minMax[0];
-						minNotFound=False;
+						minNotFound=false;
 					}
 					if(maxNotFound) {
 						datamax = minMax[1];
-						maxNotFound=False;
+						maxNotFound=false;
 					}
 				} else {
 					if(minNotFound) {
@@ -1332,7 +1333,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			}
 
 			if(colorBar_->setOptions(cbopts, chgdcbopts)) {
-				cbNeedsRefresh = True;
+				cbNeedsRefresh = true;
 			}
 		}
 		return cbNeedsRefresh;
@@ -1541,36 +1542,36 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Get/set colormap shift/slope ('fiddle') and brightness/contrast
 // settings.  (At present this is usually set for the PC's current
 // colormap via mouse tools.  These may want to to into get/setOptions
-// (thus into guis) eventually...).  Return value will be False if
+// (thus into guis) eventually...).  Return value will be false if
 // DD has no colormap [at present].
 
 	Bool QtDisplayData::getCMShiftSlope(Vector<Float>& params) const {
-		if(!hasColormap()) return False;
+		if(!hasColormap()) return false;
 		Vector<Float> p = clrMap_->getShapingCoefficients();
 		params.resize(p.size());	// (Should be 2.  Usual rigamarole
 		params = p;			// around poor Vector operator= design...).
-		return True;
+		return true;
 	}
 
 	Bool QtDisplayData::getCMBrtCont(Vector<Float>& params) const {
-		if(!hasColormap()) return False;
+		if(!hasColormap()) return false;
 		params.resize(2);
 		params[0] = clrMap_->getBrightness();
 		params[1] = clrMap_->getContrast();
-		return True;
+		return true;
 	}
 
 	Bool QtDisplayData::setCMShiftSlope(const Vector<Float>& params) {
-		if(!hasColormap()) return False;
+		if(!hasColormap()) return false;
 		clrMap_->setShapingCoefficients(params);
-		return True;
+		return true;
 	}
 
 	Bool QtDisplayData::setCMBrtCont(const Vector<Float>& params) {
-		if(!hasColormap()) return False;
+		if(!hasColormap()) return false;
 		clrMap_->setBrightness(params[0]);
 		clrMap_->setContrast(params[1]);
-		return True;
+		return true;
 	}
 
 	Bool QtDisplayData::setColormapAlpha( uInt alpha ){
@@ -1701,15 +1702,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Return value is 0 if the conversion can't be made or does not apply
 		// to this DD for any reason (ignored by non-Lattice DDs, e.g.).
 		//
-		// If allChannels==True, the region is extended along spectral axis, if
+		// If allChannels==true, the region is extended along spectral axis, if
 		// it exists (but ONLY if the spectral axis is not also on display; the
 		// visible mouse region always defines region shape on the display axes).
 		//
-		// If allAxes is True, the region is extended over all (non-display)
-		// axes (including any spectral axis; allAxes=True makes the allChannels
+		// If allAxes is true, the region is extended over all (non-display)
+		// axes (including any spectral axis; allAxes=true makes the allChannels
 		// setting irrelevant).
 		//
-		// If both allchannels and allAxes are False (the default), the region
+		// If both allchannels and allAxes are false (the default), the region
 		// will be confined to the currently-displayed plane.
 		//
 		// -->If the returned ImageRegion* is non-zero, the caller
@@ -1792,7 +1793,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			// The WCBox restricts to the plane of interest (displayed plane),
 			// except if an extension is required.
 			// Extensions across an axis are done only _if_ it exists _and_ is not a display axis.
-			// - If allAxes is True, the region extends along all non-display axes.
+			// - If allAxes is true, the region extends along all non-display axes.
 			// Extensions can be done on 'allChannels', 'allPols', 'allRAs',' allDECs' if any of
 			// them are non-display axes.
 			//
@@ -1905,7 +1906,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}	// (try)
 
 
-		catch (const casa::AipsError& err) {
+		catch (const casacore::AipsError& err) {
 			errMsg_ = err.getMesg();
 			// cerr<<"mse2ImgReg: "<<errMsg_<<endl;	//#dg
 			// emit qddRegnError(errMsg_);
@@ -1935,9 +1936,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		//(4) pass layer index to LatticeStatistcis
 		//(5) do single plane statistic right here
 
-		if (!isRaster()) return False;
+		if (!isRaster()) return false;
 
-		if(im_==0) return False;
+		if(im_==0) return false;
 
 		//cout << "imgReg=" << imgReg.toRecord("") << endl;
 		try {
@@ -1950,7 +1951,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 			PrincipalAxesDD* padd = dynamic_cast<PrincipalAxesDD*>(dd_);
 			if (padd == 0)
-				return False;
+				return false;
 
 			std::vector<int> dispAxes = padd->displayAxes();
 			//cout << "dispAxes=" << dispAxes << endl;
@@ -2063,9 +2064,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 			IPosition pos = padd->fixedPosition();
 
-			ImageStatistics<Float> stats(subImg, False);
-			if (!stats.setAxes(cursorAxes)) return False;
-			stats.setList(True);
+			ImageStatistics<Float> stats(subImg, false);
+			if (!stats.setAxes(cursorAxes)) return false;
+			stats.setList(true);
 			String layerStats;
 			Vector<String> nm = cs.worldAxisNames();
 			//cout << "unit=" << zUnit << endl;
@@ -2210,23 +2211,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			//cout << layerStats << endl;
 			if (!statsOk) {
 				cout << "stats not ok" << endl;
-				return False;
+				return false;
 			}
 
 			layerStats = String(head) + layerStats;
 
 			//cout << "done getLayerStats" << endl ;
 			emit statsReady(layerStats);
-			return True;
+			return true;
 
-		} catch (const casa::AipsError& err) {
+		} catch (const casacore::AipsError& err) {
 			errMsg_ = err.getMesg();
 			//cout << "Error: " << errMsg_ << endl;
-			return False;
+			return false;
 		} catch (...) {
 			errMsg_ = "Unknown error computing region statistics.";
 			//cout << "Error: " << errMsg_ << endl;
-			return False;
+			return false;
 		}
 
 	}
@@ -2235,10 +2236,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Bool QtDisplayData::printRegionStats(ImageRegion& imgReg) {
 
 		// Compute and print statistics on DD's image for given region.
-		// Current plane only.  Returns False if it can't compute for
+		// Current plane only.  Returns false if it can't compute for
 		// various reasons.
 
-		if(im_==0) return False;
+		if(im_==0) return false;
 		// This code only supports QDDs containing an im_
 		// (ImageInterface<Float>) at present (Complex is not supported).
 		// imgReg should be conpatible with im_.  In most cases, imgReg
@@ -2253,12 +2254,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			// LogOrigin org("QtDisplayData", "imageStats()", WHERE);
 			// LogIO logio(org);	//#dk this LogIO works, goes to std out.
 			// ImageStatistics<Float> stats(subImg, logio);	// (verbose version)
-			ImageStatistics<Float> stats(subImg, False);
+			ImageStatistics<Float> stats(subImg, false);
 
 
 			Vector<Int> cursorAxes(subImg.ndim());
 			indgen(cursorAxes);		// cursorAxes = {0,1,2,...n-1}
-			if(!stats.setAxes(cursorAxes)) return False;
+			if(!stats.setAxes(cursorAxes)) return false;
 			// This tells stats to compute just one set of statistics
 			// for the entire (sub-)image.
 
@@ -2279,13 +2280,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			// Retrieve statistics into Vector sts.
 
 			Vector<Double> sts;
-			if(!stats.getStats(sts, IPosition(im_->ndim(), 0), True)) {
+			if(!stats.getStats(sts, IPosition(im_->ndim(), 0), true)) {
 				// cerr<<"gS "<<stats.errorMessage()<<endl;		//#dg
-				return False;
+				return false;
 			}
 
 
-			if(sts.nelements()<stats.NSTATS) return False;
+			if(sts.nelements()<stats.NSTATS) return false;
 
 			ostringstream os;
 			// ostream& os=cout;
@@ -2358,24 +2359,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			cout<<String(os);
 
 
-			return True;
+			return true;
 
 		}	// (try)
 
 
-		catch (const casa::AipsError& err) {
+		catch (const casacore::AipsError& err) {
 			errMsg_ = err.getMesg();
 			// cerr<<"mse2ImgReg: "<<errMsg_<<endl;	//#dg
 			// emit qddRegnError(errMsg_);
 			// To do: use this routine-specific signal (do this in sOpts too)
-			return False;
+			return false;
 		}
 
 		catch (...) {
 			errMsg_ = "Unknown error computing region statistics.";
 			// cerr<<"mse2ImgReg: "<<errMsg_<<endl;	//#dg
 			// emit qddRegnError(errMsg_);
-			return False;
+			return false;
 		}
 
 	}
@@ -2646,7 +2647,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			WCPolygon poly(qx, qy, IPosition(dispAxes), cs);
 			return new ImageRegion(poly);
 
-		} catch (const casa::AipsError& err) {
+		} catch (const casacore::AipsError& err) {
 			errMsg_ = err.getMesg();
 			return 0;
 		} catch (...) {

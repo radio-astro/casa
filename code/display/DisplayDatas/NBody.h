@@ -39,6 +39,12 @@
 #include <display/DisplayDatas/DisplayData.h>
 #include <casa/Containers/List.h>
 
+namespace casacore{
+
+	class Unit;
+	class IPosition;
+}
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	class WorldCanvas;
@@ -46,8 +52,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	class WorldCanvasHolder;
 	class AttributeBuffer;
 	class Attribute;
-	class Unit;
-	class IPosition;
 
 // <summary>
 // Simple class which provides brute force n-body simulation and display.
@@ -73,75 +77,75 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Destructor.
 		virtual ~NBody();
 
-		// Coordinate transformations, called by the WorldCanvasHolder.
+		// casacore::Coordinate transformations, called by the WorldCanvasHolder.
 		// <group>
-		virtual Bool linToWorld(Vector<Double>& world, const Vector<Double>& lin);
-		virtual Bool worldToLin(Vector<Double>& lin, const Vector<Double>& world);
+		virtual casacore::Bool linToWorld(casacore::Vector<casacore::Double>& world, const casacore::Vector<casacore::Double>& lin);
+		virtual casacore::Bool worldToLin(casacore::Vector<casacore::Double>& lin, const casacore::Vector<casacore::Double>& world);
 		// </group>
 
 		// irrelevant in this part of the tree
-		virtual void setActiveImage(uInt /*zindex*/) {
+		virtual void setActiveImage(casacore::uInt /*zindex*/) {
 			return;
 		};
 
 		// Routines which yield information on the axis names and units, and
 		// some miscellaneous information.
 		// <group>
-		virtual Vector<String> worldAxisNames() const;
-		virtual Vector<String> worldAxisUnits() const;
-		virtual const Unit dataUnit() ;
-		virtual const RecordInterface& miscInfo() ;
+		virtual casacore::Vector<casacore::String> worldAxisNames() const;
+		virtual casacore::Vector<casacore::String> worldAxisUnits() const;
+		virtual const casacore::Unit dataUnit() ;
+		virtual const casacore::RecordInterface& miscInfo() ;
 		// </group>
 
 		// Return the number of elements in this DisplayData.
-		virtual uInt nelements(const WorldCanvasHolder& wcHolder) const;
-		virtual uInt nelements() const;
+		virtual casacore::uInt nelements(const WorldCanvasHolder& wcHolder) const;
+		virtual casacore::uInt nelements() const;
 
 		// Add a restriction for item <src>itemNum</src> of this
 		// DisplayData.
 		// <group>
-		virtual void addElementRestrictions(const uInt itemNum,
+		virtual void addElementRestrictions(const casacore::uInt itemNum,
 		                                    AttributeBuffer& other);
-		virtual void addElementRestriction(const uInt itemNum,
+		virtual void addElementRestriction(const casacore::uInt itemNum,
 		                                   Attribute& newRestriction,
-		                                   Bool permanent);
+		                                   casacore::Bool permanent);
 		// </group>
 
 		// Set a restriction for item <src>itemNum</src> of this
 		// DisplayData.
 		// <group>
-		virtual void setElementRestrictions(const uInt itemNum,
+		virtual void setElementRestrictions(const casacore::uInt itemNum,
 		                                    AttributeBuffer& other);
-		virtual void setElementRestriction(const uInt itemNum,
+		virtual void setElementRestriction(const casacore::uInt itemNum,
 		                                   Attribute& newRestriction);
 		// </group>
 
 		// Remove a restriction from item <src>itemNum</src>.
-		virtual void removeElementRestriction(const uInt itemNum,
-		                                      const String& name);
+		virtual void removeElementRestriction(const casacore::uInt itemNum,
+		                                      const casacore::String& name);
 
 		// Clear all restrictions of item <src>itemNum</src> (except the
 		// ones that are permanent of course).
-		virtual void clearElementRestrictions(const uInt itemNum);
+		virtual void clearElementRestrictions(const casacore::uInt itemNum);
 
 		// Check if a restriction for item <src>itemNum</src> with name
 		// <src>name</src> exists.
-		virtual Bool existElementRestriction(const uInt itemNum,
-		                                     const String& name);
+		virtual casacore::Bool existElementRestriction(const casacore::uInt itemNum,
+		                                     const casacore::String& name);
 
 		// Get a handle to the buffer of restrictions for item
-		// <src>itemNum</src>.  Throws an exception of type AipsError if
+		// <src>itemNum</src>.  Throws an exception of type casacore::AipsError if
 		// <src>itemNum</src> is out of range.
-		virtual AttributeBuffer *elementRestrictionBuffer(const uInt itemNum);
+		virtual AttributeBuffer *elementRestrictionBuffer(const casacore::uInt itemNum);
 
 		// Report the minimum and maximum data values for this DisplayData.
 		// <group>
-		virtual Double getDataMin();
-		virtual Double getDataMax();
+		virtual casacore::Double getDataMin();
+		virtual casacore::Double getDataMax();
 		// </group>
 
 		// sizeControlFunction, called by the WorldCanvasHolder.
-		virtual Bool sizeControl(WorldCanvasHolder& wcHolder,
+		virtual casacore::Bool sizeControl(WorldCanvasHolder& wcHolder,
 		                         AttributeBuffer& holderBuf);
 
 		// Position event handler, called by the WorldCanvasHolder.
@@ -157,11 +161,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void cleanup();
 
 		// required functions with null implementations
-		virtual String showPosition(const Vector<Double> &, const Bool &) {
-			return String("");
+		virtual casacore::String showPosition(const casacore::Vector<casacore::Double> &, const casacore::Bool &) {
+			return casacore::String("");
 		}
-		virtual String showValue(const Vector<Double> &) {
-			return String("");
+		virtual casacore::String showValue(const casacore::Vector<casacore::Double> &) {
+			return casacore::String("");
 		}
 		virtual Display::DisplayDataType classType() {
 			return Display::Vector;
@@ -176,18 +180,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// General restrictions  (already declared in DisplayData.h)
 		//  AttributeBuffer restrictions;
-		//True if nothing should be drawn by the NBody
-		Bool turnedOff;
+		//true if nothing should be drawn by the NBody
+		casacore::Bool turnedOff;
 
 		// The min and max to use for drawing
-		Double dataMin;
-		Double dataMax;
+		casacore::Double dataMin;
+		casacore::Double dataMax;
 
-		Double itsTimeStep;
-		Double itsDampingFactor;
-		Int itsNumSteps;
-		Int itsXSize;
-		Int itsYSize;
+		casacore::Double itsTimeStep;
+		casacore::Double itsDampingFactor;
+		casacore::Int itsNumSteps;
+		casacore::Int itsXSize;
+		casacore::Int itsYSize;
 
 		// internal bookkeeping:
 		// buffer for stroing sizecontrol done by this NBody
@@ -195,15 +199,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 		// Check if this NBody did the sizeControl
-		Bool iDidSizeControl(WorldCanvas& wCanvas);
+		casacore::Bool iDidSizeControl(WorldCanvas& wCanvas);
 
-		void drawMovie(WorldCanvas& wCanvas, Int numSteps, Double timeStep,
-		               Double dampingFactor);
+		void drawMovie(WorldCanvas& wCanvas, casacore::Int numSteps, casacore::Double timeStep,
+		               casacore::Double dampingFactor);
 
-		Record miscInfoDummy;
+		casacore::Record miscInfoDummy;
 
-		List<void *> itsGalaxyList;
-		ListIter<void *> *itsGalaxyListIter;
+		casacore::List<void *> itsGalaxyList;
+		casacore::ListIter<void *> *itsGalaxyListIter;
 
 	};
 

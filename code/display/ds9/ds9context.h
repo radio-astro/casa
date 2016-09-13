@@ -33,18 +33,18 @@ namespace casa {
 		enum SkyFrame {FK4, FK5, ICRS, GALACTIC, ECLIPTIC, NATIVEWCS};
 		enum SkyFormat {DEGREES, SEXAGESIMAL, ARCMIN, ARCSEC};
 
-		inline MDirection::Types todirection( SkyFrame frame ) {
+		inline casacore::MDirection::Types todirection( SkyFrame frame ) {
 			switch ( frame ) {
 			case FK4:
-				return MDirection::B1950;
+				return casacore::MDirection::B1950;
 			case FK5:
-				return MDirection::J2000;
+				return casacore::MDirection::J2000;
 			case GALACTIC:
-				return MDirection::GALACTIC;
+				return casacore::MDirection::GALACTIC;
 			case ECLIPTIC:
-				return MDirection::ECLIPTIC;
+				return casacore::MDirection::ECLIPTIC;
 			default:
-				return MDirection::GALACTIC;
+				return casacore::MDirection::GALACTIC;
 			}
 		}
 

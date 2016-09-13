@@ -1,4 +1,4 @@
-//# PanelDisplay.h: A 3d Slice Application
+//# PanelDisplay.h: A 3d casacore::Slice Application
 //# Copyright (C) 2000,2001
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -67,7 +67,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	class SliceEH : public WCMotionEH,public WCPositionEH, public DTVisible {
 	public:
-		SliceEH(PanelDisplay* mwch, uInt axis=0, uInt daxis=0);
+		SliceEH(PanelDisplay* mwch, casacore::uInt axis=0, casacore::uInt daxis=0);
 		virtual ~SliceEH();
 		virtual void draw(const WCMotionEvent &ev);
 		virtual void operator()(const WCMotionEvent &ev);
@@ -76,8 +76,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	private:
 		PanelDisplay* itsPD;
 		MWCAnimator itsAni;
-		uInt itsAxis;
-		uInt itsDrawAxis;
+		casacore::uInt itsAxis;
+		casacore::uInt itsDrawAxis;
 		Display::KeySym itsPositionKey;
 		Display::KeyModifier itsMotionKey;
 	};
@@ -117,17 +117,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		SlicePanelDisplay(PixelCanvas* pcanvas);
 		virtual ~SlicePanelDisplay();
 
-		virtual Record getOptions() const;
-		virtual Bool setOptions(const Record& rec, Record& updatedOptions);
+		virtual casacore::Record getOptions() const;
+		virtual casacore::Bool setOptions(const casacore::Record& rec, casacore::Record& updatedOptions);
 
 		virtual void hold();
 		virtual void release();
 
 		virtual void refresh(const Display::RefreshReason &reason = Display::UserCommand);
 
-		virtual PanelDisplay* getPanelDisplay(const String& pdname);
+		virtual PanelDisplay* getPanelDisplay(const casacore::String& pdname);
 
-		virtual void setToolKey(const String& toolname,
+		virtual void setToolKey(const casacore::String& toolname,
 		                        const Display::KeySym& keysym);
 		virtual void disableTools();
 		virtual void enableTools();
@@ -140,8 +140,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void precompute();
 
 	private:
-		SimpleOrderedMap<String, PanelDisplay* > itsPanelDisplays;
-		SimpleOrderedMap<String, SliceEH* > itsSliceEHs;
+		casacore::SimpleOrderedMap<casacore::String, PanelDisplay* > itsPanelDisplays;
+		casacore::SimpleOrderedMap<casacore::String, SliceEH* > itsSliceEHs;
 		PanelDisplay* itsActivePD;
 		void installEHs();
 		void removeEHs();

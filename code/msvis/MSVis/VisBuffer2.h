@@ -1,4 +1,4 @@
-//# VisBuffer.h: buffer for iterating through MS in large blocks
+//# VisBuffer.h: buffer for iterating through casacore::MS in large blocks
 //# Copyright (C) 1996,1997,1998,1999,2000,2002,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -41,12 +41,9 @@
 using casa::vi::VisBufferComponent2;
 using casa::vi::VisBufferComponents2;
 
-namespace casa { //# NAMESPACE CASA - BEGIN
-
-//#forward
+namespace casacore{
 
 template <typename T> class Array;
-class CStokesVector;
 template <typename T> class CountedPtr;
 template <typename T> class Cube;
 class IPosition;
@@ -54,6 +51,13 @@ template <typename T> class Matrix;
 class MDirection;
 template <typename T, Int N> class SquareMatrix;
 template <typename T> class Vector;
+}
+
+namespace casa { //# NAMESPACE CASA - BEGIN
+
+//#forward
+
+class CStokesVector;
 
 namespace ms {
 
@@ -102,7 +106,7 @@ enum VisBufferOptions : int {VbNoOptions, VbWritable = 1, VbRekeyable = 2};
 // currently "pointed to" by the VI.  Because of this tight coupling between
 // an attached VI and its VB the operations that can be applied to a VisBuffer
 // are somewhat restricted in order to maintain the relationship between the
-// MeasurementSet's data and the data i the VisBuffer (failure to do so allows
+// casacore::MeasurementSet's data and the data i the VisBuffer (failure to do so allows
 // obscure bugs to be created).  As such the functions for averaging in either
 // the time or frequency axes is not permitted on an attached VB.
 //
@@ -160,8 +164,8 @@ public:
 
     virtual ~VisBuffer2() {}
 
-    virtual ms::MsRow * getRow (Int row) const;
-    virtual ms::MsRow * getRowMutable (Int row);
+    virtual ms::MsRow * getRow (casacore::Int row) const;
+    virtual ms::MsRow * getRowMutable (casacore::Int row);
 
     //---------------------------------------------------------------------
     //
@@ -176,46 +180,46 @@ public:
     // Copies all of the components from the specified VisBuffer into this one.
     // Uncached values will be cleared in this VB.
 
-    virtual void copy (const VisBuffer2 & other, Bool fetchIfNeeded) = 0;
+    virtual void copy (const VisBuffer2 & other, casacore::Bool fetchIfNeeded) = 0;
 
     // Copies the specified components (or just the ones in the cache if
-    // fetchIfNeeded is False) from the specified VisBuffer into this one.
+    // fetchIfNeeded is false) from the specified VisBuffer into this one.
     // If this VB is not empty it will must have the same shape as the other
-    // VB unless allowShapeChange is True; in that case this VB will change
+    // VB unless allowShapeChange is true; in that case this VB will change
     // changes to match the other VB flushing the cached data.
 
     virtual void copyComponents (const VisBuffer2 & other,
 				 const VisBufferComponents2 & components,
-				 Bool allowShapeChange = False,
-				 Bool fetchIfNeeded = True) = 0;
+				 casacore::Bool allowShapeChange = false,
+				 casacore::Bool fetchIfNeeded = true) = 0;
 
     // Copies the coordinate components (or just the ones in the cache if
-    // fetchIfNeeded is False) from the specified VisBuffer into this one.
+    // fetchIfNeeded is false) from the specified VisBuffer into this one.
     // If this VB is not empty it will must have the same shape as the other
-    // VB unless allowShapeChange is True; in that case this VB will change
+    // VB unless allowShapeChange is true; in that case this VB will change
     // changes to match the other VB flushing the cached data.
     // The basic coordinate components are:
     //  Antenna1, Antenna2, ArrayId, DataDescriptionIds, FieldId, SpectralWindows,
-    //  Time, NRows, Feed1, Feed2
+    //  casacore::Time, NRows, Feed1, Feed2
     // The directional coordinates (copied if includeDirections is true):
     //   Direction1, Direction2, FeedPa1, FeedPa2
 
     virtual void copyCoordinateInfo(const VisBuffer2 * other,
-                                    Bool includeDirections,
-                                    Bool allowShapeChange = False,
-                                    Bool fetchIfNeeded = True) = 0;
+                                    casacore::Bool includeDirections,
+                                    casacore::Bool allowShapeChange = false,
+                                    casacore::Bool fetchIfNeeded = true) = 0;
 
-    virtual void setShape (Int nCorrelations, Int nChannels, Int nRows, Bool clearCache = False) = 0;
+    virtual void setShape (casacore::Int nCorrelations, casacore::Int nChannels, casacore::Int nRows, casacore::Bool clearCache = false) = 0;
     virtual void validateShapes () const = 0;
 
     // For attached VBs this returns the VI the VB is attached to.  For free
-    // VBs this method returns False. N.B.: It should not be used within the framework
+    // VBs this method returns false. N.B.: It should not be used within the framework
     // itself; instead access the associated ViImplementation2 object.
 
     virtual const VisibilityIterator2 * getVi () const;
 
-    virtual Bool isAttached () const = 0;
-    virtual Bool isFillable () const = 0;
+    virtual casacore::Bool isAttached () const = 0;
+    virtual casacore::Bool isFillable () const = 0;
 
     //---------------------------------------------------------------------
     //
@@ -237,8 +241,8 @@ public:
     //    in the future.
 
     virtual void writeChangesBack () = 0;
-    virtual void initWeightSpectrum (const Cube<Float>& wtspec) = 0;
-    virtual void initSigmaSpectrum (const Cube<Float>& sigspec) = 0;
+    virtual void initWeightSpectrum (const casacore::Cube<casacore::Float>& wtspec) = 0;
+    virtual void initSigmaSpectrum (const casacore::Cube<casacore::Float>& sigspec) = 0;
 
     virtual void dirtyComponentsAdd (const VisBufferComponents2 & additionalDirtyComponents) = 0;
     virtual void dirtyComponentsAdd (VisBufferComponent2 component) = 0;
@@ -251,8 +255,8 @@ public:
     // If an imaging weight generator has not been supplied to the associated
     // VisibilityIterator then this method will throw an exception.
 
-    virtual const Matrix<Float> & imagingWeight() const = 0;
-    virtual void setImagingWeight (const Matrix<Float> & newImagingWeights) = 0;
+    virtual const casacore::Matrix<casacore::Float> & imagingWeight() const = 0;
+    virtual void setImagingWeight (const casacore::Matrix<casacore::Float> & newImagingWeights) = 0;
 
     //---------------------------------------------------------------------------
     //
@@ -260,7 +264,7 @@ public:
     //
     // These methods provide information about the frequencies returned in the
     // visibility cubes.  The information can returned as the channel numbers
-    // (numbered as in the underlying MS data) or in a frame-based frequency.
+    // (numbered as in the underlying casacore::MS data) or in a frame-based frequency.
     // This information reported need not be in the same frame of reference
     // used to select the data.  If the frame of reference is specified in the
     // call, then that is the frame that is used to calculate the frequencies.
@@ -276,18 +280,18 @@ public:
     // The frequency index is the zero-based index along the frequency axis of
     // a visibility cube.
 
-    virtual Vector<Stokes::StokesTypes> getCorrelationTypesDefined () const = 0;
-    virtual Vector<Stokes::StokesTypes> getCorrelationTypesSelected () const = 0;
-    virtual Vector<Int> getCorrelationTypes () const = 0;
-    virtual Double getFrequency (Int rowInBuffer, Int frequencyIndex,
-                                 Int frame = FrameNotSpecified) const = 0;
-    virtual const Vector<Double> & getFrequencies (Int rowInBuffer,
-                                                   Int frame = FrameNotSpecified) const = 0;
-    virtual Int getChannelNumber (Int rowInBuffer, Int frequencyIndex) const = 0;
-    virtual const Vector<Int> & getChannelNumbers (Int rowInBuffer) const = 0;
-    virtual Vector<Int> getChannelNumbersSelected (Int outputChannelIndex) const = 0;
+    virtual casacore::Vector<casacore::Stokes::StokesTypes> getCorrelationTypesDefined () const = 0;
+    virtual casacore::Vector<casacore::Stokes::StokesTypes> getCorrelationTypesSelected () const = 0;
+    virtual casacore::Vector<casacore::Int> getCorrelationTypes () const = 0;
+    virtual casacore::Double getFrequency (casacore::Int rowInBuffer, casacore::Int frequencyIndex,
+                                 casacore::Int frame = FrameNotSpecified) const = 0;
+    virtual const casacore::Vector<casacore::Double> & getFrequencies (casacore::Int rowInBuffer,
+                                                   casacore::Int frame = FrameNotSpecified) const = 0;
+    virtual casacore::Int getChannelNumber (casacore::Int rowInBuffer, casacore::Int frequencyIndex) const = 0;
+    virtual const casacore::Vector<casacore::Int> & getChannelNumbers (casacore::Int rowInBuffer) const = 0;
+    virtual casacore::Vector<casacore::Int> getChannelNumbersSelected (casacore::Int outputChannelIndex) const = 0;
 
-    // Sort/unsort the correlations, if necessary
+    // casacore::Sort/unsort the correlations, if necessary
     //  (Rudimentary handling of non-canonically sorted correlations--use with care!)
     //
     // The sorting functionality is a horrible kluge that puts the VisBuffer into a
@@ -305,9 +309,9 @@ public:
     virtual void normalize() = 0;
 
     // Rotate visibility phase for given vector (dim = nrow of vb) of phases (metres)
-    virtual void phaseCenterShift(const Vector<Double>& phase) = 0;
+    virtual void phaseCenterShift(const casacore::Vector<casacore::Double>& phase) = 0;
     // Rotate visibility phase for phase center offsets (arcsecs)
-    virtual void phaseCenterShift(Double dx, Double dy) = 0;
+    virtual void phaseCenterShift(casacore::Double dx, casacore::Double dy) = 0;
 
     // Set the weight cube using the sigma cube.  Each weight will be
     // the reciprocal of the square of the corresponding element in the model
@@ -322,33 +326,33 @@ public:
     //  Subhchunk information methods
     //
     //  These methods provide information related to the current subchunk.
-    //  The isNewXXX methods return True if the XXX property of the subchunk
+    //  The isNewXXX methods return true if the XXX property of the subchunk
     //  differs from the previous subchunk.
     //
     //  The methods msId and msName provide information about the MS
     //  related to the current subchunk.  The msID is the zero-based index
-    //  of the MS in the sequence of MSs being iterated over.
+    //  of the casacore::MS in the sequence of MSs being iterated over.
     //
-    //  The isWritable method is True when the attached iterator is writable
-    //  and False otherwise.
+    //  The isWritable method is true when the attached iterator is writable
+    //  and false otherwise.
     //
-    //  The isRekeyable method is True when the VisBuffer is writable and also
+    //  The isRekeyable method is true when the VisBuffer is writable and also
     //  allows the modification of non-data fields (e.g., antenna1, fieldId, etc.)
     //  A rekeyable VB is one that could be used to create data for a brand new
     //  MS.
 
-    virtual Bool isNewArrayId () const = 0;
-    virtual Bool isNewFieldId () const = 0;
-    virtual Bool isNewMs() const = 0;
-    virtual Bool isNewSpectralWindow () const = 0;
-    virtual Bool isWritable () const = 0;
-    virtual Int msId() const /*__attribute__((deprecated))*/ = 0;
-    virtual String msName (Bool stripPath = False) const /*__attribute__((deprecated))*/ = 0;
+    virtual casacore::Bool isNewArrayId () const = 0;
+    virtual casacore::Bool isNewFieldId () const = 0;
+    virtual casacore::Bool isNewMs() const = 0;
+    virtual casacore::Bool isNewSpectralWindow () const = 0;
+    virtual casacore::Bool isWritable () const = 0;
+    virtual casacore::Int msId() const /*__attribute__((deprecated))*/ = 0;
+    virtual casacore::String msName (casacore::Bool stripPath = false) const /*__attribute__((deprecated))*/ = 0;
     virtual Subchunk getSubchunk () const = 0;
 
     //////////////////////////////////////////////////////////////////////
     //
-    //  Data accessors and setters (where appropriate)
+    //  casacore::Data accessors and setters (where appropriate)
     //
     //  There are the methods that allows access to the items cached in the
     //  VisBuffer.  The straight accessors provide read-only access to the
@@ -365,7 +369,7 @@ public:
 
     //--------------------------------------------------------
     //
-    // Accessors for data contained in the main MeasurementSet main table
+    // Accessors for data contained in the main casacore::MeasurementSet main table
     // The actual visibility data are at the end.
     //
     //  *** N.B.: the VB usually caches the information
@@ -374,215 +378,215 @@ public:
     //  cached value in a different representation (e.g., weightMat or
     //  visCube).  This should not be a problem in normal usage.
 
-    virtual const Vector<Int> & antenna1 () const = 0; // [nR]
-    virtual void setAntenna1 (const Vector<Int> & value) = 0; // [nR]
-    virtual const Vector<Int> & antenna2 () const = 0; // [nR]
-    virtual void setAntenna2 (const Vector<Int> & value) = 0; // [nR]
-    virtual const Vector<Int> & arrayId () const = 0;
-    virtual void setArrayId (const Vector<Int> & ) = 0;
-    //virtual Int dataDescriptionId () const = 0;
-    //virtual void setDataDescriptionId (Int value) = 0;
-    virtual const Vector<Int> & dataDescriptionIds () const = 0; // [nR]
-    virtual void setDataDescriptionIds (const Vector<Int> & ) = 0; // [nR]
-    virtual const Vector<MDirection> & direction1 () const = 0; // [nR]
-    virtual const Vector<MDirection> & direction2 () const = 0; // [nR]
-    virtual const Vector<Double> & exposure () const = 0; // [nR]
-    virtual void setExposure (const Vector<Double> & value) = 0; // [nR]
-    virtual const Vector<Int> & feed1 () const = 0; // [nR]
-    virtual void setFeed1 (const Vector<Int> & value) = 0; // [nR]
-    virtual const Vector<Int> & feed2 () const = 0; // [nR]
-    virtual void setFeed2 (const Vector<Int> & value) = 0; // [nR]
-    virtual const Vector<Int> & fieldId () const = 0;
-    virtual void setFieldId (const Vector<Int> &) = 0;
-    //virtual const Matrix<Bool> & flag () const = 0; // [nF,nR]
-    //virtual void setFlag (const Matrix<Bool>& value) = 0; // [nF,nR]
-    virtual const Array<Bool> & flagCategory () const = 0; // [nC,nF,nCategories,nR]
-    virtual void setFlagCategory (const Array<Bool>& value) = 0; // [nC,nF,nCategories,nR]
-    virtual const Cube<Bool> & flagCube () const = 0; // [nC,nF,nR]
-    virtual void setFlagCube (const Cube<Bool>& value) = 0; // [nC,nF,nR]
-    virtual const Vector<Bool> & flagRow () const = 0; // [nR]
-    virtual void setFlagRow (const Vector<Bool>& value) = 0; // [nR]
-    virtual const Vector<Int> & observationId () const = 0; // [nR]
-    virtual void setObservationId (const Vector<Int> & value) = 0; // [nR]
-    virtual const Vector<Int> & processorId () const = 0; // [nR]
-    virtual void setProcessorId (const Vector<Int> & value) = 0; // [nR]
-    virtual const Vector<Int> & scan () const = 0; // [nR]
-    virtual void setScan (const Vector<Int> & value) = 0; // [nR]
-    virtual const Matrix<Float> & sigma () const = 0; // [nC, nR]
-    virtual void setSigma (const Matrix <Float> & value) = 0; // [nC, nR]
-    //virtual const Matrix<Float> & sigmaMat () const = 0; // [nC,nR]
-    virtual const Vector<Int> & stateId () const = 0; // [nR]
-    virtual void setStateId (const Vector<Int> & value) = 0; // [nR]
-    virtual const Vector<Double> & time () const = 0; // [nR]
-    virtual void setTime (const Vector<Double> & value) = 0; // [nR]
-    virtual const Vector<Double> & timeCentroid () const = 0; // [nR]
-    virtual void setTimeCentroid (const Vector<Double> & value) = 0; // [nR]
-    virtual const Vector<Double> & timeInterval () const = 0; // [nR]
-    virtual void setTimeInterval (const Vector<Double> & value) = 0; // [nR]
-    virtual const Matrix<Double> & uvw () const = 0; // [3,nR]
-    virtual void setUvw (const Matrix<Double> & value) = 0; // [3,nR]
-    virtual const Matrix<Float> & weight () const = 0; // [nC, nR]
-    virtual void setWeight (const Matrix <Float>& value) = 0; // [nC, nR]
-    //virtual const Matrix<Float> & weightMat () const = 0; // [nC,nR]
-    //virtual void setWeightMat (const Matrix<Float>& value) = 0; // [nC,nR]
+    virtual const casacore::Vector<casacore::Int> & antenna1 () const = 0; // [nR]
+    virtual void setAntenna1 (const casacore::Vector<casacore::Int> & value) = 0; // [nR]
+    virtual const casacore::Vector<casacore::Int> & antenna2 () const = 0; // [nR]
+    virtual void setAntenna2 (const casacore::Vector<casacore::Int> & value) = 0; // [nR]
+    virtual const casacore::Vector<casacore::Int> & arrayId () const = 0;
+    virtual void setArrayId (const casacore::Vector<casacore::Int> & ) = 0;
+    //virtual casacore::Int dataDescriptionId () const = 0;
+    //virtual void setDataDescriptionId (casacore::Int value) = 0;
+    virtual const casacore::Vector<casacore::Int> & dataDescriptionIds () const = 0; // [nR]
+    virtual void setDataDescriptionIds (const casacore::Vector<casacore::Int> & ) = 0; // [nR]
+    virtual const casacore::Vector<casacore::MDirection> & direction1 () const = 0; // [nR]
+    virtual const casacore::Vector<casacore::MDirection> & direction2 () const = 0; // [nR]
+    virtual const casacore::Vector<casacore::Double> & exposure () const = 0; // [nR]
+    virtual void setExposure (const casacore::Vector<casacore::Double> & value) = 0; // [nR]
+    virtual const casacore::Vector<casacore::Int> & feed1 () const = 0; // [nR]
+    virtual void setFeed1 (const casacore::Vector<casacore::Int> & value) = 0; // [nR]
+    virtual const casacore::Vector<casacore::Int> & feed2 () const = 0; // [nR]
+    virtual void setFeed2 (const casacore::Vector<casacore::Int> & value) = 0; // [nR]
+    virtual const casacore::Vector<casacore::Int> & fieldId () const = 0;
+    virtual void setFieldId (const casacore::Vector<casacore::Int> &) = 0;
+    //virtual const casacore::Matrix<casacore::Bool> & flag () const = 0; // [nF,nR]
+    //virtual void setFlag (const casacore::Matrix<casacore::Bool>& value) = 0; // [nF,nR]
+    virtual const casacore::Array<casacore::Bool> & flagCategory () const = 0; // [nC,nF,nCategories,nR]
+    virtual void setFlagCategory (const casacore::Array<casacore::Bool>& value) = 0; // [nC,nF,nCategories,nR]
+    virtual const casacore::Cube<casacore::Bool> & flagCube () const = 0; // [nC,nF,nR]
+    virtual void setFlagCube (const casacore::Cube<casacore::Bool>& value) = 0; // [nC,nF,nR]
+    virtual const casacore::Vector<casacore::Bool> & flagRow () const = 0; // [nR]
+    virtual void setFlagRow (const casacore::Vector<casacore::Bool>& value) = 0; // [nR]
+    virtual const casacore::Vector<casacore::Int> & observationId () const = 0; // [nR]
+    virtual void setObservationId (const casacore::Vector<casacore::Int> & value) = 0; // [nR]
+    virtual const casacore::Vector<casacore::Int> & processorId () const = 0; // [nR]
+    virtual void setProcessorId (const casacore::Vector<casacore::Int> & value) = 0; // [nR]
+    virtual const casacore::Vector<casacore::Int> & scan () const = 0; // [nR]
+    virtual void setScan (const casacore::Vector<casacore::Int> & value) = 0; // [nR]
+    virtual const casacore::Matrix<casacore::Float> & sigma () const = 0; // [nC, nR]
+    virtual void setSigma (const casacore::Matrix <casacore::Float> & value) = 0; // [nC, nR]
+    //virtual const casacore::Matrix<casacore::Float> & sigmaMat () const = 0; // [nC,nR]
+    virtual const casacore::Vector<casacore::Int> & stateId () const = 0; // [nR]
+    virtual void setStateId (const casacore::Vector<casacore::Int> & value) = 0; // [nR]
+    virtual const casacore::Vector<casacore::Double> & time () const = 0; // [nR]
+    virtual void setTime (const casacore::Vector<casacore::Double> & value) = 0; // [nR]
+    virtual const casacore::Vector<casacore::Double> & timeCentroid () const = 0; // [nR]
+    virtual void setTimeCentroid (const casacore::Vector<casacore::Double> & value) = 0; // [nR]
+    virtual const casacore::Vector<casacore::Double> & timeInterval () const = 0; // [nR]
+    virtual void setTimeInterval (const casacore::Vector<casacore::Double> & value) = 0; // [nR]
+    virtual const casacore::Matrix<casacore::Double> & uvw () const = 0; // [3,nR]
+    virtual void setUvw (const casacore::Matrix<casacore::Double> & value) = 0; // [3,nR]
+    virtual const casacore::Matrix<casacore::Float> & weight () const = 0; // [nC, nR]
+    virtual void setWeight (const casacore::Matrix <casacore::Float>& value) = 0; // [nC, nR]
+    //virtual const casacore::Matrix<casacore::Float> & weightMat () const = 0; // [nC,nR]
+    //virtual void setWeightMat (const casacore::Matrix<casacore::Float>& value) = 0; // [nC,nR]
 
-    virtual const Cube<Float> & weightSpectrum () const = 0; // [nC,nF,nR]
-    virtual void setWeightSpectrum (const Cube<Float>& value) = 0; // [nC,nF,nR]
+    virtual const casacore::Cube<casacore::Float> & weightSpectrum () const = 0; // [nC,nF,nR]
+    virtual void setWeightSpectrum (const casacore::Cube<casacore::Float>& value) = 0; // [nC,nF,nR]
 
-    virtual const Cube<Float> & sigmaSpectrum () const = 0; // [nC,nF,nR]
-    virtual void setSigmaSpectrum (const Cube<Float>& value) = 0; // [nC,nF,nR]
+    virtual const casacore::Cube<casacore::Float> & sigmaSpectrum () const = 0; // [nC,nF,nR]
+    virtual void setSigmaSpectrum (const casacore::Cube<casacore::Float>& value) = 0; // [nC,nF,nR]
 
     // --------------------------------------------------------------
     // Visibility data accessors in order of observed, corrected,
     // float, & model
 
-    virtual const Cube<Complex> & visCube () const = 0; // [nC,nF,nR]
-    virtual void setVisCube(const Complex & c) = 0;
-    virtual void setVisCube (const Cube<Complex> &) = 0; // [nC,nF,nR]
-//    virtual const Matrix<CStokesVector> & vis () const = 0; // [nF,nR]
-//    virtual void setVis (Matrix<CStokesVector> &) = 0; // [nF,nR]
+    virtual const casacore::Cube<casacore::Complex> & visCube () const = 0; // [nC,nF,nR]
+    virtual void setVisCube(const casacore::Complex & c) = 0;
+    virtual void setVisCube (const casacore::Cube<casacore::Complex> &) = 0; // [nC,nF,nR]
+//    virtual const casacore::Matrix<CStokesVector> & vis () const = 0; // [nF,nR]
+//    virtual void setVis (casacore::Matrix<CStokesVector> &) = 0; // [nF,nR]
 
-    virtual const Cube<Complex> & visCubeCorrected () const = 0; // [nC,nF,nR]
-    virtual void setVisCubeCorrected (const Cube<Complex> &) = 0; // [nC,nF,nR]
-//    virtual const Matrix<CStokesVector> & visCorrected () const = 0; // [nF,nR]
-//    virtual void setVisCorrected (const Matrix<CStokesVector> &) = 0; // [nF,nR]
+    virtual const casacore::Cube<casacore::Complex> & visCubeCorrected () const = 0; // [nC,nF,nR]
+    virtual void setVisCubeCorrected (const casacore::Cube<casacore::Complex> &) = 0; // [nC,nF,nR]
+//    virtual const casacore::Matrix<CStokesVector> & visCorrected () const = 0; // [nF,nR]
+//    virtual void setVisCorrected (const casacore::Matrix<CStokesVector> &) = 0; // [nF,nR]
 
-    virtual const Cube<Float> & visCubeFloat () const = 0; // [nC,nF,nR]
-    virtual void setVisCubeFloat (const Cube<Float> &) = 0; // [nC,nF,nR]
+    virtual const casacore::Cube<casacore::Float> & visCubeFloat () const = 0; // [nC,nF,nR]
+    virtual void setVisCubeFloat (const casacore::Cube<casacore::Float> &) = 0; // [nC,nF,nR]
 
-    virtual const Cube<Complex> & visCubeModel () const = 0; // [nC,nF,nR]
-    virtual void setVisCubeModel(const Complex & c) = 0;
-    virtual void setVisCubeModel(const Cube<Complex>& vis) = 0; // [nC,nF,nR]
-    virtual void setVisCubeModel(const Vector<Float>& stokes) = 0; // [1..4]
-//    virtual const Matrix<CStokesVector> & visModel () const = 0; // [nF,nR]
-//    virtual void setVisModel (Matrix<CStokesVector> &) = 0; // [nF,nR]
+    virtual const casacore::Cube<casacore::Complex> & visCubeModel () const = 0; // [nC,nF,nR]
+    virtual void setVisCubeModel(const casacore::Complex & c) = 0;
+    virtual void setVisCubeModel(const casacore::Cube<casacore::Complex>& vis) = 0; // [nC,nF,nR]
+    virtual void setVisCubeModel(const casacore::Vector<casacore::Float>& stokes) = 0; // [1..4]
+//    virtual const casacore::Matrix<CStokesVector> & visModel () const = 0; // [nF,nR]
+//    virtual void setVisModel (casacore::Matrix<CStokesVector> &) = 0; // [nF,nR]
 
-    virtual Float getWeightScaled (Int row) const = 0;
-    virtual Float getWeightScaled (Int correlation, Int row) const = 0;
-    virtual Float getWeightScaled (Int correlation, Int channel, Int row) const = 0;
-    virtual Float getSigmaScaled (Int row) const = 0;
-    virtual Float getSigmaScaled (Int correlation, Int row) const = 0;
-    virtual Float getSigmaScaled (Int correlation, Int channel, Int row) const = 0;
+    virtual casacore::Float getWeightScaled (casacore::Int row) const = 0;
+    virtual casacore::Float getWeightScaled (casacore::Int correlation, casacore::Int row) const = 0;
+    virtual casacore::Float getWeightScaled (casacore::Int correlation, casacore::Int channel, casacore::Int row) const = 0;
+    virtual casacore::Float getSigmaScaled (casacore::Int row) const = 0;
+    virtual casacore::Float getSigmaScaled (casacore::Int correlation, casacore::Int row) const = 0;
+    virtual casacore::Float getSigmaScaled (casacore::Int correlation, casacore::Int channel, casacore::Int row) const = 0;
 
     //--------------------------------------------------------
     //
-    // Accessors for data derived from the MS main table data
+    // Accessors for data derived from the casacore::MS main table data
 
     // Returns the pointing angle for the array as a whole at the
     // specified time.
 
-    virtual MDirection azel0 (Double time) const = 0;
+    virtual casacore::MDirection azel0 (casacore::Double time) const = 0;
 
     // Returns the pointing angle for each antenna in the array
     // at the specified time.
 
-    virtual const Vector<MDirection> & azel(Double time) const = 0; // [nA]
+    virtual const casacore::Vector<casacore::MDirection> & azel(casacore::Double time) const = 0; // [nA]
 
     // Returns the Jones C matrix for each antenna.
 
-    virtual const Vector<SquareMatrix<Complex, 2> > & cjones () const = 0; // [nA]
+    virtual const casacore::Vector<casacore::SquareMatrix<casacore::Complex, 2> > & cjones () const = 0; // [nA]
 
     // Returns the correlation type of each correlation in the
     // VisCube.
 
-    virtual const Vector<Int> & correlationTypes () const = 0; // [nC]
+    virtual const casacore::Vector<casacore::Int> & correlationTypes () const = 0; // [nC]
 
     // Calculates the parallactic angle for the first receptor of
     // each antenna at the specified time.
 
-    virtual const Vector<Float> & feedPa(Double time) const = 0; // [nR]
+    virtual const casacore::Vector<casacore::Float> & feedPa(casacore::Double time) const = 0; // [nR]
 
     // Calculates the parallactic angle for feed 0 of the
     // row's Antenna1.
 
-    virtual const Vector<Float> & feedPa1 () const = 0; // [nR]
+    virtual const casacore::Vector<casacore::Float> & feedPa1 () const = 0; // [nR]
 
     // Calculates the parallactic angle for feed 0 of the
     // row's Antenna2.
 
-    virtual const Vector<Float> & feedPa2 () const = 0; // [nR]
+    virtual const casacore::Vector<casacore::Float> & feedPa2 () const = 0; // [nR]
 
-    virtual IPosition getShape () const = 0;
+    virtual casacore::IPosition getShape () const = 0;
 
     // Returns the hour angle of the array at the specified time.
 
-    virtual Double hourang(Double time) const = 0;
+    virtual casacore::Double hourang(casacore::Double time) const = 0;
 
-    virtual Int nAntennas () const = 0;
+    virtual casacore::Int nAntennas () const = 0;
 
-    virtual Int nChannels () const = 0;
+    virtual casacore::Int nChannels () const = 0;
 
     // Returns the number of correlations along the visCube
     // correlation axis.  This comes from the "channel" selection and thus can
     // be anything positive integer (e.g., user could select the same
     // correlation more than once).
 
-    virtual Int nCorrelations () const = 0;
+    virtual casacore::Int nCorrelations () const = 0;
 
     // Returns the number of rows in this VisBuffer
 
-    virtual Int nRows () const = 0;
+    virtual casacore::Int nRows () const = 0;
 
     // Calculates the parallactic angle of the array as a whole
     // at the specified time.
 
-    virtual Float parang0(Double time) const = 0;
+    virtual casacore::Float parang0(casacore::Double time) const = 0;
 
     // Calculates the parallactic angle of each antenna in the
     // array at the specified time.
 
-    virtual const Vector<Float> & parang(Double time) const = 0; // [nA]
+    virtual const casacore::Vector<casacore::Float> & parang(casacore::Double time) const = 0; // [nA]
 
     // Returns the phase center of the array for the specified
     // row.
 
-    virtual const MDirection& phaseCenter () const = 0;
+    virtual const casacore::MDirection& phaseCenter () const = 0;
 
     // Returns the polarization frame for the specified row.
 
-    virtual Int polarizationFrame () const = 0;
+    virtual casacore::Int polarizationFrame () const = 0;
 
-    virtual Int polarizationId () const = 0;
+    virtual casacore::Int polarizationId () const = 0;
 
-    // The returned Vector serves as a map between the rows in
-    // the VisBuffer and the row IDs in the underlying MS main
+    // The returned casacore::Vector serves as a map between the rows in
+    // the VisBuffer and the row IDs in the underlying casacore::MS main
     // virtual table:  mainTableID [i] = rowIds () [ i] = 0;
 
-    virtual const Vector<uInt> & rowIds () const = 0; // [nR]
+    virtual const casacore::Vector<casacore::uInt> & rowIds () const = 0; // [nR]
 
     // Returns the spectral window ID for the specified row.
 
-    //virtual Int spectralWindow () const = 0;
+    //virtual casacore::Int spectralWindow () const = 0;
 
-    virtual const Vector<Int> & spectralWindows () const = 0; // [nR]
-    virtual void setSpectralWindows (const Vector<Int> & spectralWindows) = 0;
+    virtual const casacore::Vector<casacore::Int> & spectralWindows () const = 0; // [nR]
+    virtual void setSpectralWindows (const casacore::Vector<casacore::Int> & spectralWindows) = 0;
 
-    virtual CountedPtr<WeightScaling> getWeightScaling () const = 0;
+    virtual casacore::CountedPtr<WeightScaling> getWeightScaling () const = 0;
 
 protected:
 
     virtual void associateWithVi2 (const VisibilityIterator2 *);
-    virtual void configureNewSubchunk (Int msId, const String & msName, Bool isNewMs,
-                                       Bool isNewArrayId, Bool isNewFieldId,
-                                       Bool isNewSpectralWindow, const Subchunk & subchunk,
-                                       Int nRows, Int nChannels, Int nCorrelations,
-                                       const Vector<Int> & correlations,
-                                       const Vector<Stokes::StokesTypes> & correlationsDefined,
-                                       const Vector<Stokes::StokesTypes> & correlationsSelected,
-                                       CountedPtr<WeightScaling> weightScaling) = 0;
+    virtual void configureNewSubchunk (casacore::Int msId, const casacore::String & msName, casacore::Bool isNewMs,
+                                       casacore::Bool isNewArrayId, casacore::Bool isNewFieldId,
+                                       casacore::Bool isNewSpectralWindow, const Subchunk & subchunk,
+                                       casacore::Int nRows, casacore::Int nChannels, casacore::Int nCorrelations,
+                                       const casacore::Vector<casacore::Int> & correlations,
+                                       const casacore::Vector<casacore::Stokes::StokesTypes> & correlationsDefined,
+                                       const casacore::Vector<casacore::Stokes::StokesTypes> & correlationsSelected,
+                                       casacore::CountedPtr<WeightScaling> weightScaling) = 0;
     static VisBuffer2 * factory (ViImplementation2 * vi, VisBufferType t, VisBufferOptions options);
     virtual void invalidate() = 0;
-    virtual Bool isRekeyable () const = 0;
-    virtual void setFillable (Bool isFillable) = 0;
-    virtual void setRekeyable (Bool isRekeable) = 0;
-    virtual Bool setWritability (bool /*newWritability*/) { ThrowCc ("Should be overridden"); } // Kluge
+    virtual casacore::Bool isRekeyable () const = 0;
+    virtual void setFillable (casacore::Bool isFillable) = 0;
+    virtual void setRekeyable (casacore::Bool isRekeable) = 0;
+    virtual bool setWritability (bool /*newWritability*/) { ThrowCc ("Should be overridden"); } // Kluge
 
-    virtual Vector<Bool> & flagRowRef () = 0;  // [nR]
-    virtual Cube<Bool> & flagCubeRef () = 0;  // [nC,nF,nR]
-    virtual Cube<Complex> & visCubeRef () = 0; // [nC,nF,nR]
-    virtual Cube<Complex> & visCubeCorrectedRef () = 0; // [nC,nF,nR]
-    virtual Cube<Complex> & visCubeModelRef () = 0; // [nC,nF,nR]
-    virtual Cube<Float> & weightSpectrumRef () = 0; // [nC,nF,nR]
+    virtual casacore::Vector<casacore::Bool> & flagRowRef () = 0;  // [nR]
+    virtual casacore::Cube<casacore::Bool> & flagCubeRef () = 0;  // [nC,nF,nR]
+    virtual casacore::Cube<casacore::Complex> & visCubeRef () = 0; // [nC,nF,nR]
+    virtual casacore::Cube<casacore::Complex> & visCubeCorrectedRef () = 0; // [nC,nF,nR]
+    virtual casacore::Cube<casacore::Complex> & visCubeModelRef () = 0; // [nC,nF,nR]
+    virtual casacore::Cube<casacore::Float> & weightSpectrumRef () = 0; // [nC,nF,nR]
 
 private:
 
@@ -594,8 +598,8 @@ class VisBufferUtil2 {
 
 public:
 
-  static void phaseCenterShift(VisBuffer2 & vb, const Vector<Double>& phase);
-  static void phaseCenterShift(VisBuffer2 & vb, Double dx, Double dy);
+  static void phaseCenterShift(VisBuffer2 & vb, const casacore::Vector<casacore::Double>& phase);
+  static void phaseCenterShift(VisBuffer2 & vb, casacore::Double dx, casacore::Double dy);
 };
 
 

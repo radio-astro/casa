@@ -32,6 +32,7 @@
 #include <casaqt/QtBrowser/TBArray.h>
 #include <casaqt/QtBrowser/TBData.h>
 
+using namespace casacore;
 namespace casa {
 
 ///////////////////////////

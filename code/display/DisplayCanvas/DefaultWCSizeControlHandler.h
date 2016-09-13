@@ -77,7 +77,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		DefaultWCSizeControlHandler();
 
 		// apply modifies the world canvas parameters through the passed pointer.
-		virtual Bool executeSizeControl(WorldCanvas * wc);
+		virtual casacore::Bool executeSizeControl(WorldCanvas * wc);
 
 		// Destructor
 		virtual ~DefaultWCSizeControlHandler();

@@ -35,6 +35,7 @@
 #include <ms/MSSel/MSSelection.h>
 #include <casa/Arrays/ArrayMath.h>
 
+using namespace casacore;
 namespace casa {
 
 StatWT::StatWT(const ROVisibilityIterator& vi,
@@ -341,4 +342,5 @@ Bool StatWT::apply_variances(VisBuffer& vb,
   return retval;
 }
 
+using namespace casacore;
 } // end namespace casa

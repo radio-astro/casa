@@ -29,6 +29,7 @@
 #include <casaqt/QtUtilities/QtId.h>
 #include <display/QtViewer/QtApp.h>
 
+using namespace casacore;
 namespace casa {
 
     QtDBusPlotSvrAdaptor::QtDBusPlotSvrAdaptor( QtPlotServer *s ) : QDBusAbstractAdaptor(new QObject()), server(s) { }

@@ -24,7 +24,9 @@
 #include <mstransform/TVI/test/tChannelAverageTVI.h>
 
 using namespace std;
+using namespace casacore;
 using namespace casa;
+using namespace casacore;
 using namespace casa::vi;
 
 
@@ -74,8 +76,8 @@ void ChannelAverageTVITest::initReferenceConfiguration(Record &configuration)
 {
 	refConfiguration_p = configuration;
 	refConfiguration_p.define ("inputms", referenceFile_p);
-	refConfiguration_p.define ("reindex", False);
-	refConfiguration_p.define ("chanaverage", True);
+	refConfiguration_p.define ("reindex", false);
+	refConfiguration_p.define ("chanaverage", true);
 	refConfiguration_p.define ("datacolumn", String("ALL"));
 
 	return;
@@ -257,7 +259,7 @@ int main(int argc, char **argv)
 	int ret;
 	string parameter,value;
 	Record configuration;
-	Bool autoMode = True;
+	Bool autoMode = true;
 
 	for (unsigned short i=0;i<argc-1;i++)
 	{
@@ -267,7 +269,7 @@ int main(int argc, char **argv)
 		if (parameter == string("-vis"))
 		{
 			configuration.define ("inputms", value);
-			autoMode = False;
+			autoMode = false;
 		}
 		else if (parameter == string("-spw"))
 		{

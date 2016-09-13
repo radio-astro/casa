@@ -43,13 +43,17 @@
 #include <measures/Measures.h>
 #include <casa/Utilities/CountedPtr.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore{
 
-//#forward
 class Table;
 class ImageRegion;
 class RecordInterface;
 class CoordinateSystem;
+}
+
+namespace casa { //# NAMESPACE CASA - BEGIN
+
+//#forward
 // <summary> Primary beam envelope class, derived from PBMathInterface </summary>
 
 // <use visibility=export>
@@ -93,15 +97,15 @@ class CoordinateSystem;
 // <example>
 // <srcblock>
 //
-//    PagedImage<Float> in;
-//    PagedImage<Complex> out;
-//    MDirection pointingDir(Quantity(135.0, "deg"), Quantity(60.0, "deg"), 
-//                           MDirection::Ref(MDirection::J2000));
-//    Quantity parallacticAngle(26.5, "deg");
+//    casacore::PagedImage<casacore::Float> in;
+//    casacore::PagedImage<casacore::Complex> out;
+//    casacore::MDirection pointingDir(casacore::Quantity(135.0, "deg"), casacore::Quantity(60.0, "deg"), 
+//                           casacore::MDirection::Ref(casacore::MDirection::J2000));
+//    casacore::Quantity parallacticAngle(26.5, "deg");
 //    PBMath wsrtPB(PBMath::WSRT_LOW);
 //    wsrtPB.applyPB(in, out, pointingDir);   // multiply by primary beam
 //    wsrtPB.applyPB(in, out, pointingDir, parallacticAngle, BeamSquint::GOFIGURE, 
-//                   True, 0.02); // divide by primary beam
+//                   true, 0.02); // divide by primary beam
 //    wsrtPB.applyVP(in, out, pointingDir);   // multiply by voltage pattern
 // </srcblock>
 // </example>
@@ -144,88 +148,88 @@ public:
   enum {
     NumberOfCommonPB=43  };
 
-  // Default constructor, required for Block<PBMath>
+  // Default constructor, required for casacore::Block<PBMath>
   PBMath();
   
   // Make a PB of common type
-  explicit PBMath(PBMath::CommonPB myPBType, Bool useSymmetricBeam=False);
+  explicit PBMath(PBMath::CommonPB myPBType, casacore::Bool useSymmetricBeam=false);
 
   //Make a PB from a telescopename and frequency
 
-  PBMath(String& telescopeName, Bool useSymmetricBeam=False, 
-	 Quantity freq=Quantity(0.0, "Hz"));
+  PBMath(casacore::String& telescopeName, casacore::Bool useSymmetricBeam=false, 
+	 casacore::Quantity freq=casacore::Quantity(0.0, "Hz"));
 
   //Make a PB by dish diameter
-  PBMath(Double dishDiam, Bool useSymmetricBeam, Quantity freq);
+  PBMath(casacore::Double dishDiam, casacore::Bool useSymmetricBeam, casacore::Quantity freq);
 
   // Make a PB from a RecordInterface
-  explicit PBMath(const RecordInterface& myrec);
+  explicit PBMath(const casacore::RecordInterface& myrec);
 
   // Make a Gaussian Primary beam
-  PBMath(PBMathInterface::PBClass theclass, Quantity halfWidth, 
-	 Quantity maxRad, Quantity refFreq, 
-	 Bool isThisVP=False,
-	 BeamSquint squint=BeamSquint(MDirection(Quantity(0.0, "deg"),
-						 Quantity(0.0, "deg"),
-						 MDirection::Ref(MDirection::AZEL)), 
-				      Quantity(1.0, "GHz")),
-	 Bool useSymmetricBeam=False);
+  PBMath(PBMathInterface::PBClass theclass, casacore::Quantity halfWidth, 
+	 casacore::Quantity maxRad, casacore::Quantity refFreq, 
+	 casacore::Bool isThisVP=false,
+	 BeamSquint squint=BeamSquint(casacore::MDirection(casacore::Quantity(0.0, "deg"),
+						 casacore::Quantity(0.0, "deg"),
+						 casacore::MDirection::Ref(casacore::MDirection::AZEL)), 
+				      casacore::Quantity(1.0, "GHz")),
+	 casacore::Bool useSymmetricBeam=false);
   
 
-  // Make a Polynomial, Inverse Polynomial, or Numeric Primary beam
+  // Make a casacore::Polynomial, Inverse casacore::Polynomial, or Numeric Primary beam
   // (These three have identical calling signatures, they can only be distinguished
   // by the PBClass enumeration)
-  PBMath(PBMathInterface::PBClass theclass, const Vector<Double>& coeff, 
-	 Quantity maxRad, Quantity refFreq, 
-	 Bool isThisVP=False,
-	 BeamSquint squint=BeamSquint(MDirection(Quantity(0.0, "deg"),
-						 Quantity(0.0, "deg"),
-						 MDirection::Ref(MDirection::AZEL)),
-				      Quantity(1.0, "GHz")),
-	 Bool useSymmetricBeam=False);
+  PBMath(PBMathInterface::PBClass theclass, const casacore::Vector<casacore::Double>& coeff, 
+	 casacore::Quantity maxRad, casacore::Quantity refFreq, 
+	 casacore::Bool isThisVP=false,
+	 BeamSquint squint=BeamSquint(casacore::MDirection(casacore::Quantity(0.0, "deg"),
+						 casacore::Quantity(0.0, "deg"),
+						 casacore::MDirection::Ref(casacore::MDirection::AZEL)),
+				      casacore::Quantity(1.0, "GHz")),
+	 casacore::Bool useSymmetricBeam=false);
 
   
 
   // Make a Numeric Primary beam (FLOAT!)
-  PBMath(PBMathInterface::PBClass theclass, const Vector<Float>& coeff, 
-	 Quantity maxRad, Quantity refFreq, 
-	 Bool isThisVP=False,
-	 BeamSquint squint=BeamSquint(MDirection(Quantity(0.0, "deg"),
-						 Quantity(0.0, "deg"),
-						 MDirection::Ref(MDirection::AZEL)),
-				      Quantity(1.0, "GHz")),
-	 Bool useSymmetricBeam=False);
+  PBMath(PBMathInterface::PBClass theclass, const casacore::Vector<casacore::Float>& coeff, 
+	 casacore::Quantity maxRad, casacore::Quantity refFreq, 
+	 casacore::Bool isThisVP=false,
+	 BeamSquint squint=BeamSquint(casacore::MDirection(casacore::Quantity(0.0, "deg"),
+						 casacore::Quantity(0.0, "deg"),
+						 casacore::MDirection::Ref(casacore::MDirection::AZEL)),
+				      casacore::Quantity(1.0, "GHz")),
+	 casacore::Bool useSymmetricBeam=false);
 
   
   // Make a CosPolynomial beam type
-  PBMath(PBMathInterface::PBClass theclass, const Vector<Double>& coeff, 
-	 const Vector<Double>& scale, 
-	 Quantity maxRad, Quantity refFreq,
-	 Bool isThisVP=False,
-	 BeamSquint squint=BeamSquint(MDirection(Quantity(0.0, "deg"),
-						 Quantity(0.0, "deg"),
-						 MDirection::Ref(MDirection::AZEL)),
-				      Quantity(1.0, "GHz")),
-	 Bool useSymmetricBeam=False);
+  PBMath(PBMathInterface::PBClass theclass, const casacore::Vector<casacore::Double>& coeff, 
+	 const casacore::Vector<casacore::Double>& scale, 
+	 casacore::Quantity maxRad, casacore::Quantity refFreq,
+	 casacore::Bool isThisVP=false,
+	 BeamSquint squint=BeamSquint(casacore::MDirection(casacore::Quantity(0.0, "deg"),
+						 casacore::Quantity(0.0, "deg"),
+						 casacore::MDirection::Ref(casacore::MDirection::AZEL)),
+				      casacore::Quantity(1.0, "GHz")),
+	 casacore::Bool useSymmetricBeam=false);
   
   // Make an Airy beam type
-  PBMath(PBMathInterface::PBClass theclass, Quantity dishDiam, Quantity blockageDiam,
-	 Quantity maxRad, Quantity refFreq,
-	 BeamSquint squint=BeamSquint(MDirection(Quantity(0.0, "deg"),
-						 Quantity(0.0, "deg"),
-						 MDirection::Ref(MDirection::AZEL)),
-				      Quantity(1.0, "GHz")),
-	 Bool useSymmetricBeam=False);
+  PBMath(PBMathInterface::PBClass theclass, casacore::Quantity dishDiam, casacore::Quantity blockageDiam,
+	 casacore::Quantity maxRad, casacore::Quantity refFreq,
+	 BeamSquint squint=BeamSquint(casacore::MDirection(casacore::Quantity(0.0, "deg"),
+						 casacore::Quantity(0.0, "deg"),
+						 casacore::MDirection::Ref(casacore::MDirection::AZEL)),
+				      casacore::Quantity(1.0, "GHz")),
+	 casacore::Bool useSymmetricBeam=false);
   
   // Make an Image-based beam
   PBMath(PBMathInterface::PBClass theclass,
-	 ImageInterface<Float>& reJones);
+	 casacore::ImageInterface<casacore::Float>& reJones);
   PBMath(PBMathInterface::PBClass theclass,
-	 ImageInterface<Float>& reJones,
-	 ImageInterface<Float>& imJones);
+	 casacore::ImageInterface<casacore::Float>& reJones,
+	 casacore::ImageInterface<casacore::Float>& imJones);
   
   // Instantiate from a Table
-  //  PBMath(const Table& theTable, Int row);
+  //  PBMath(const casacore::Table& theTable, casacore::Int row);
   
   
   // copy ctor: copies the reference counted pointer
@@ -240,12 +244,12 @@ public:
   // comparison operator: just checks that the objects are same
   // (could have two different objects with identical data, these are treated
   // as !=)
-  Bool operator==(const PBMath& other) const;
+  casacore::Bool operator==(const PBMath& other) const;
   
   // comparison operator: just checks that the objects are different
   // (could have two different objects with identical data, these are treated
   // as !=)
-  Bool operator!=(const PBMath& other) const;
+  casacore::Bool operator!=(const PBMath& other) const;
   
   // copy()      returns a copy of the PBMath
   // PBMath copy() const;
@@ -254,69 +258,69 @@ public:
   //  Apply Jones matrix to an image (and adjoint)
   // <group>
 
-  ImageInterface<Complex>& applyVP(const ImageInterface<Complex>& in,
-				   ImageInterface<Complex>& out,
-				   const MDirection& sp,
-				   const Quantity parAngle = Quantity(0.0,"deg"),
+  casacore::ImageInterface<casacore::Complex>& applyVP(const casacore::ImageInterface<casacore::Complex>& in,
+				   casacore::ImageInterface<casacore::Complex>& out,
+				   const casacore::MDirection& sp,
+				   const casacore::Quantity parAngle = casacore::Quantity(0.0,"deg"),
 				   const BeamSquint::SquintType doSquint = BeamSquint::NONE,
-				   Bool inverse = False,
-				   Bool conjugate = False,
-				   Float cutoff = 0.01,
-				   Bool forward=True);
+				   casacore::Bool inverse = false,
+				   casacore::Bool conjugate = false,
+				   casacore::Float cutoff = 0.01,
+				   casacore::Bool forward=true);
 
-  ImageInterface<Complex>& applyPB(const ImageInterface<Complex>& in,
-				   ImageInterface<Complex>& out,
-				   const MDirection& sp,
-				   const Quantity parAngle = Quantity(0.0,"deg"),
+  casacore::ImageInterface<casacore::Complex>& applyPB(const casacore::ImageInterface<casacore::Complex>& in,
+				   casacore::ImageInterface<casacore::Complex>& out,
+				   const casacore::MDirection& sp,
+				   const casacore::Quantity parAngle = casacore::Quantity(0.0,"deg"),
 				   const BeamSquint::SquintType doSquint = BeamSquint::NONE,
-				   Bool inverse = False,
-				   Float cutoff = 0.01,
-				   Bool forward = True);
+				   casacore::Bool inverse = false,
+				   casacore::Float cutoff = 0.01,
+				   casacore::Bool forward = true);
 
-  ImageInterface<Float>& applyPB(const ImageInterface<Float>& in,
-				   ImageInterface<Float>& out,
-				   const MDirection& sp,
-				   const Quantity parAngle = Quantity(0.0,"deg"),
+  casacore::ImageInterface<casacore::Float>& applyPB(const casacore::ImageInterface<casacore::Float>& in,
+				   casacore::ImageInterface<casacore::Float>& out,
+				   const casacore::MDirection& sp,
+				   const casacore::Quantity parAngle = casacore::Quantity(0.0,"deg"),
 				   const BeamSquint::SquintType doSquint = BeamSquint::NONE,
-				   Float cutoff = 0.01);
+				   casacore::Float cutoff = 0.01);
 
 
-  ImageInterface<Float>& applyPB2(const ImageInterface<Float>& in,
-				  ImageInterface<Float>& out,
-				  const MDirection& sp,
-				  const Quantity parAngle = Quantity(0.0,"deg"),
+  casacore::ImageInterface<casacore::Float>& applyPB2(const casacore::ImageInterface<casacore::Float>& in,
+				  casacore::ImageInterface<casacore::Float>& out,
+				  const casacore::MDirection& sp,
+				  const casacore::Quantity parAngle = casacore::Quantity(0.0,"deg"),
 				  const BeamSquint::SquintType doSquint = BeamSquint::NONE,
-				  Float cutoff=0.01);
+				  casacore::Float cutoff=0.01);
   // </group>
   
   // Apply Jones matrix to a sky component (and adjoint)
   // <group>
   SkyComponent& applyVP(SkyComponent& in,
 			SkyComponent& out,
-			const MDirection& sp,
-			const Quantity frequency,
-			const Quantity parAngle = Quantity(0.0,"deg"),
+			const casacore::MDirection& sp,
+			const casacore::Quantity frequency,
+			const casacore::Quantity parAngle = casacore::Quantity(0.0,"deg"),
 			const BeamSquint::SquintType doSquint = BeamSquint::NONE,
-			Bool inverse = False,
-			Bool conjugate = False,
-			Float cutoff = 0.01,
-			Bool forward = True);
+			casacore::Bool inverse = false,
+			casacore::Bool conjugate = false,
+			casacore::Float cutoff = 0.01,
+			casacore::Bool forward = true);
 
   SkyComponent& applyPB(SkyComponent& in,
 			SkyComponent& out,
-			const MDirection& sp,
-			const Quantity frequency,
-			const Quantity parAngle = Quantity(0.0,"deg"),
+			const casacore::MDirection& sp,
+			const casacore::Quantity frequency,
+			const casacore::Quantity parAngle = casacore::Quantity(0.0,"deg"),
 			const BeamSquint::SquintType doSquint = BeamSquint::NONE,
-			Bool inverse = False,
-			Float cutoff = 0.01,
-			Bool forward = True);
+			casacore::Bool inverse = false,
+			casacore::Float cutoff = 0.01,
+			casacore::Bool forward = true);
 
   SkyComponent& applyPB2(SkyComponent& in,
 			 SkyComponent& out,
-			 const MDirection& sp,
-			 const Quantity frequency,
-			 const Quantity parAngle = Quantity(0.0,"deg"),
+			 const casacore::MDirection& sp,
+			 const casacore::Quantity frequency,
+			 const casacore::Quantity parAngle = casacore::Quantity(0.0,"deg"),
 			 const BeamSquint::SquintType doSquint = BeamSquint::NONE);
   // </group>
 
@@ -326,20 +330,20 @@ public:
 
   
   // Fit an azimuthally symmetric beam to the squinted or otherwise 2-D beam
-  // for Stokes I?
-  void setUseSymmetric(Bool useSym=True) { pb_pointer_p->setUseSymmetric(useSym); }
+  // for casacore::Stokes I?
+  void setUseSymmetric(casacore::Bool useSym=true) { pb_pointer_p->setUseSymmetric(useSym); }
 
   // Get value of useSymmetric
-  Bool getUseSymmetric() { return pb_pointer_p->getUseSymmetric(); }
+  casacore::Bool getUseSymmetric() { return pb_pointer_p->getUseSymmetric(); }
   
   // Get the type of PB this is
   PBMathInterface::PBClass whichPBClass() { return pb_pointer_p->whichPBClass(); }  
 
   // Summarize the Voltage Pattern;
-  void summary(Int nValues=0);
+  void summary(casacore::Int nValues=0);
 
   // Is the state of the PBMath OK?
-  Bool ok() const;
+  casacore::Bool ok() const;
 
   // Get the BLC, TRC of the primary beam on an Image for a given pointing
   // Note: BLC and TRC are not necesarily constrained to lie within the
@@ -347,39 +351,39 @@ public:
   // image).  fPad: extra fractional padding above PB support
   // (note: we do not properly treat squint yet, this will cover it for now)
   // iChan: frequency channel to take: lowest frequency channel is safe for all
-  ImageRegion* extent (const ImageInterface<Complex>& im, 
-		       const MDirection& pointing,
-		       const Int row,
-		       const Float fPad,  
-		       const Int iChan,  
+  casacore::ImageRegion* extent (const casacore::ImageInterface<casacore::Complex>& im, 
+		       const casacore::MDirection& pointing,
+		       const casacore::Int row,
+		       const casacore::Float fPad,  
+		       const casacore::Int iChan,  
 		       const SkyJones::SizeType);
-  ImageRegion* extent (const ImageInterface<Float>& im, 
-		       const MDirection& pointing,
-		       const Int row,
-		       const Float fPad,  
-		       const Int iChan,  
+  casacore::ImageRegion* extent (const casacore::ImageInterface<casacore::Float>& im, 
+		       const casacore::MDirection& pointing,
+		       const casacore::Int row,
+		       const casacore::Float fPad,  
+		       const casacore::Int iChan,  
 		       const SkyJones::SizeType);
 
-  Int support (const CoordinateSystem& cs);
+  casacore::Int support (const casacore::CoordinateSystem& cs);
 
   // given the Telescope name and the frequency, guess the most approrpiate
   // CommonPB primary beam type and the band
-  static void whichCommonPBtoUse (String &telescope, Quantity &freq, 
-				  String &band, PBMath::CommonPB &whichPB, 
-				  String &pbName);
+  static void whichCommonPBtoUse (casacore::String &telescope, casacore::Quantity &freq, 
+				  casacore::String &band, PBMath::CommonPB &whichPB, 
+				  casacore::String &pbName);
 
   // converts the enumrated type into a string
-  static void nameCommonPB(const PBMath::CommonPB iPB, String & str);
+  static void nameCommonPB(const PBMath::CommonPB iPB, casacore::String & str);
   
-  // converts the PB String into an enumrated type
-  static void enumerateCommonPB(const String & str, PBMath::CommonPB &ipb);
+  // converts the PB casacore::String into an enumrated type
+  static void enumerateCommonPB(const casacore::String & str, PBMath::CommonPB &ipb);
 
 
   // return a PBMathInteface for a commonPB ; caller needs to delete pointer
-  static PBMathInterface* pbMathInterfaceForCommonPB(const PBMath::CommonPB ipb, Bool useSymmetricBeam);
+  static PBMathInterface* pbMathInterfaceForCommonPB(const PBMath::CommonPB ipb, bool useSymmetricBeam);
 
   // gives the name of the PB Class that has been used
-  void namePBClass(String & name) {  pb_pointer_p->namePBClass(name); }  
+  void namePBClass(casacore::String & name) {  pb_pointer_p->namePBClass(name); }  
 
 
   // Gradient stuff: this needs more thought, as it is not
@@ -387,62 +391,62 @@ public:
   // This will return the partial derivatives of chi^2 w.r.t
   // the beam model parameters, represented here as a vector.
   // Not implemented yet.  
-  // void parameterGradient(Vector<Float> grad);
+  // void parameterGradient(casacore::Vector<casacore::Float> grad);
   
   // Flush the construction parameters to disk
   // This is a public method because this class doesn't know what Table
   // it is to be stored in
 
-  //virtual Bool flushToTable(Table& beamSubTable, Int iRow);
+  //virtual casacore::Bool flushToTable(casacore::Table& beamSubTable, casacore::Int iRow);
 
   
 protected:
 
   // polymorphic lower level helping apply methods
   // <group>
-  ImageInterface<Complex>& apply(const ImageInterface<Complex>& in,
-				 ImageInterface<Complex>& out,
-				 const MDirection& sp,
-				 const Quantity parAngle,	      
+  casacore::ImageInterface<casacore::Complex>& apply(const casacore::ImageInterface<casacore::Complex>& in,
+				 casacore::ImageInterface<casacore::Complex>& out,
+				 const casacore::MDirection& sp,
+				 const casacore::Quantity parAngle,	      
 				 const BeamSquint::SquintType doSquint,
-				 Bool inverse,
-				 Bool conjugate,
-				 Int ipower,  // ie, 1=VP, 2=PB
-				 Float cutoff=0.01,
-				 Bool forward=True); 
+				 casacore::Bool inverse,
+				 casacore::Bool conjugate,
+				 casacore::Int ipower,  // ie, 1=VP, 2=PB
+				 casacore::Float cutoff=0.01,
+				 casacore::Bool forward=true); 
 
   SkyComponent& apply(SkyComponent& in,
 		      SkyComponent& out,
-		      const MDirection& sp,
-		      const Quantity frequency,	      
-		      const Quantity parAngle,	      
+		      const casacore::MDirection& sp,
+		      const casacore::Quantity frequency,	      
+		      const casacore::Quantity parAngle,	      
 		      const BeamSquint::SquintType doSquint,
-		      Bool inverse,
-		      Bool conjugate,
-		      Int ipower,  // ie, 1=VP, 2=PB, 4=PB^2
-		      Float cutoff=0.01,
-		      Bool forward=True); 
+		      casacore::Bool inverse,
+		      casacore::Bool conjugate,
+		      casacore::Int ipower,  // ie, 1=VP, 2=PB, 4=PB^2
+		      casacore::Float cutoff=0.01,
+		      casacore::Bool forward=true); 
   // </group>  
 
 
 private:    
   
-  CountedPtr<PBMathInterface> pb_pointer_p;
+  casacore::CountedPtr<PBMathInterface> pb_pointer_p;
   
 
-  // These should probably move to RecordInterface when we are happy with their performance
+  // These should probably move to casacore::RecordInterface when we are happy with their performance
   // <group>
 
-  Bool getQuantity(const RecordInterface& rec, const String& item, 
-		   Quantity& returnedQuantity) const;
-  Bool getMDirection(const RecordInterface& rec, const String& item, 
-		     MDirection& returnedMDirection) const;
-  //Function to initialize the state of the tool
-  void initByTelescope(PBMath::CommonPB myPBType, Bool useSymmetricBeam=False, 
-		       Double frequency=0.0);
+  casacore::Bool getQuantity(const casacore::RecordInterface& rec, const casacore::String& item, 
+		   casacore::Quantity& returnedQuantity) const;
+  casacore::Bool getMDirection(const casacore::RecordInterface& rec, const casacore::String& item, 
+		     casacore::MDirection& returnedMDirection) const;
+  //casacore::Function to initialize the state of the tool
+  void initByTelescope(PBMath::CommonPB myPBType, casacore::Bool useSymmetricBeam=false, 
+		       casacore::Double frequency=0.0);
 
-  //Function to initialize the by dish diameter 
-  void initByDiameter(Double diam, Bool useSymmetricBeam, Double freq); 
+  //casacore::Function to initialize the by dish diameter 
+  void initByDiameter(casacore::Double diam, casacore::Bool useSymmetricBeam, casacore::Double freq); 
 
   // </group>
 

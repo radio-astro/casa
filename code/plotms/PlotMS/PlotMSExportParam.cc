@@ -27,6 +27,7 @@
 #include <plotms/PlotMS/PlotMSExportParam.h>
 #include <QDebug>
 
+using namespace casacore;
 namespace casa {
 
 ///////////////////////////////////////

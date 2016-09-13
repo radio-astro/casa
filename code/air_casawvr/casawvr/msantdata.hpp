@@ -23,13 +23,13 @@ namespace LibAIR2 {
 
   /** \brief Load positions of all antennas
    */
-  void getAntPos(const casa::MeasurementSet &ms,
+  void getAntPos(const casacore::MeasurementSet &ms,
 		 antpos_t &res);
 
   /// Association between antenna numbers and names
   typedef std::map<size_t, std::string > aname_t;
 
-  aname_t getAName(const casa::MeasurementSet &ms);
+  aname_t getAName(const casacore::MeasurementSet &ms);
   
 
 }

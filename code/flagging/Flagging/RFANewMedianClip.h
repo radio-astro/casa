@@ -65,43 +65,43 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 class RFANewMedianClip : public RFAFlagCubeBase, public RFDataMapper
 {
 public:
-  RFANewMedianClip  ( RFChunkStats &ch, const RecordInterface &parm );
+  RFANewMedianClip  ( RFChunkStats &ch, const casacore::RecordInterface &parm );
   virtual ~RFANewMedianClip ();
 
-  virtual uInt estimateMemoryUse ();
-  virtual Bool newChunk (Int &maxmem);
+  virtual casacore::uInt estimateMemoryUse ();
+  virtual casacore::Bool newChunk (casacore::Int &maxmem);
   virtual void endChunk ();
   virtual void startData (bool verbose);
   virtual void startDry (bool verbose); // add
-  virtual IterMode iterTime (uInt itime);
-  virtual IterMode iterRow  (uInt irow);
-  virtual IterMode iterDry  (uInt it);
+  virtual IterMode iterTime (casacore::uInt itime);
+  virtual IterMode iterRow  (casacore::uInt irow);
+  virtual IterMode iterDry  (casacore::uInt it);
   virtual IterMode endData  ();
   virtual IterMode endDry  ();
  
-  virtual String getDesc ();
-  static const RecordInterface & getDefaults ();
+  virtual casacore::String getDesc ();
+  static const casacore::RecordInterface & getDefaults ();
 
 protected:
-  MedianSlider & slider (uInt ich,uInt ifr);
-  MedianSlider globalmed;
+  casacore::MedianSlider & slider (casacore::uInt ich,casacore::uInt ifr);
+  casacore::MedianSlider globalmed;
 
   FlagCubeIterator * pflagiter; 
   FlagCubeIterator flag_iter;
-  Double  threshold;  
+  casacore::Double  threshold;  
 
-  MedianSlider * msl;
+  casacore::MedianSlider * msl;
 
   // lattice of evaluated values [NCH,NIFR,NTIME]
   RFFloatLattice evalue;
   // matrix of standard deviation [NCH,NIFR]
-  Matrix<Float> stdev;
-  Bool stdeved;
-  Double globalsigma;
+  casacore::Matrix<casacore::Float> stdev;
+  casacore::Bool stdeved;
+  casacore::Double globalsigma;
 };
 
 
-inline MedianSlider & RFANewMedianClip::slider (uInt ich,uInt ifr)
+inline casacore::MedianSlider & RFANewMedianClip::slider (casacore::uInt ich,casacore::uInt ifr)
 {
   return msl[ ifr*num(CHAN) + ich ];
 }

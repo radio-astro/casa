@@ -48,27 +48,27 @@ public:
   // Converts this object to/from a record.  Each field will have a key that
   // is its enum name
   // <group>
-  void fromRecord(const RecordInterface& record);
-  Record toRecord() const;
+  void fromRecord(const casacore::RecordInterface& record);
+  casacore::Record toRecord() const;
   // </group>
 
 
   // Convenience methods for returning the standard field values.
   // <group>
-  Bool useCallib() const { return itsCallibUse_; };
-  String calLibrary() const  { return itsCalLibrary_; }
+  casacore::Bool useCallib() const { return itsCallibUse_; };
+  casacore::String calLibrary() const  { return itsCalLibrary_; }
 
   /*
   // Returns parsed cal library as a Record
-  Record callibRec() const;
+  casacore::Record callibRec() const;
   */
   // </group>
   
   
   // Convenience methods for setting the standard field values.
   // <group>
-  void setUseCallib(const Bool use) { itsCallibUse_ = use; }
-  void setCalLibrary(const String& callib) { itsCalLibrary_ = callib;}
+  void setUseCallib(const casacore::Bool use) { itsCallibUse_ = use; }
+  void setCalLibrary(const casacore::String& callib) { itsCalLibrary_ = callib;}
   // </group>
   
   
@@ -82,12 +82,12 @@ public:
   // Copy operator.
   PlotMSCalibration& operator=(const PlotMSCalibration& copy);
   // Print out a summary
-  String summary() const;
+  casacore::String summary() const;
   
 private:
-  Bool itsCallibUse_;
-  String itsCalLibrary_;
-  //Record itsCallibRec_;
+  casacore::Bool itsCallibUse_;
+  casacore::String itsCalLibrary_;
+  //casacore::Record itsCallibRec_;
 
   // Sets the default values.
   void setDefaults();

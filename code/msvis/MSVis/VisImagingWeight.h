@@ -33,11 +33,15 @@
 #include <casa/Quanta/Quantum.h>
 #include <msvis/MSVis/VisibilityIterator2.h>
 
+namespace casacore{
+
+template<class T> class Matrix;
+template<class T> class Vector;
+}
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 //#forward
 class ROVisibilityIterator;
-template<class T> class Matrix;
-template<class T> class Vector;
 
 // <summary>
 // Object to hold type of imaging weight scheme to be used on the fly and to provide
@@ -71,26 +75,26 @@ template<class T> class Vector;
      //empty constructor
      VisImagingWeight();
      //Constructor to calculate natural and radial weights
-     VisImagingWeight(const String& type);
+     VisImagingWeight(const casacore::String& type);
      //Constructor to calculate uniform weight schemes; include Brigg's and super/uniform
-     //If multiField=True, the weight density calcution is done on a per field basis, 
+     //If multiField=true, the weight density calcution is done on a per field basis, 
      //else it is all fields combined
-     VisImagingWeight(ROVisibilityIterator& vi, const String& rmode, const Quantity& noise,
-                               const Double robust, const Int nx, const Int ny,
-                               const Quantity& cellx, const Quantity& celly,
-		      const Int uBox, const Int vBox, const Bool multiField=False);
+     VisImagingWeight(ROVisibilityIterator& vi, const casacore::String& rmode, const casacore::Quantity& noise,
+                               const casacore::Double robust, const casacore::Int nx, const casacore::Int ny,
+                               const casacore::Quantity& cellx, const casacore::Quantity& celly,
+		      const casacore::Int uBox, const casacore::Int vBox, const casacore::Bool multiField=false);
      //Constructor for uniform style weighting when the weight density is calculated 
      //elsewhere
-     VisImagingWeight(ROVisibilityIterator& vi, Block<Matrix<Float> >& grids, const String& rmode, const Quantity& noise,
-                                     const Double robust, const Quantity& cellx, const Quantity& celly,
-		      const Bool multiField=False) ;
+     VisImagingWeight(ROVisibilityIterator& vi, casacore::Block<casacore::Matrix<casacore::Float> >& grids, const casacore::String& rmode, const casacore::Quantity& noise,
+                                     const casacore::Double robust, const casacore::Quantity& cellx, const casacore::Quantity& celly,
+		      const casacore::Bool multiField=false) ;
      //VisibilityIterator2 version of the above....
      // Note the VisibilityIterator can be readonly...thus recommended if you can
      // as that will prevent unnecessary locks
-     VisImagingWeight(vi::VisibilityIterator2& vi, const String& rmode, const Quantity& noise,
-                               const Double robust, const Int nx, const Int ny,
-                               const Quantity& cellx, const Quantity& celly,
-		      const Int uBox, const Int vBox, const Bool multiField=False);
+     VisImagingWeight(vi::VisibilityIterator2& vi, const casacore::String& rmode, const casacore::Quantity& noise,
+                               const casacore::Double robust, const casacore::Int nx, const casacore::Int ny,
+                               const casacore::Quantity& cellx, const casacore::Quantity& celly,
+		      const casacore::Int uBox, const casacore::Int vBox, const casacore::Bool multiField=false);
 
      virtual ~VisImagingWeight();
 
@@ -100,70 +104,70 @@ template<class T> class Vector;
 
 
 
-     // Function to calculate the  uniform style weights, include Brigg's for example
+     // casacore::Function to calculate the  uniform style weights, include Brigg's for example
      // imagingWeight should be sized by (nchan, row) already
      // The fieldid and msid parameters must correspond to what VisBuffer  or VisIter fieldId() and msId() returns
-     virtual void weightUniform(Matrix<Float>& imagingWeight, const Matrix<Bool>& flag, const Matrix<Double>& uvw,
-                                const Vector<Double>& frequency, const Matrix<Float>& weight, const Int msid, const Int fieldid ) const;
+     virtual void weightUniform(casacore::Matrix<casacore::Float>& imagingWeight, const casacore::Matrix<casacore::Bool>& flag, const casacore::Matrix<casacore::Double>& uvw,
+                                const casacore::Vector<casacore::Double>& frequency, const casacore::Matrix<casacore::Float>& weight, const casacore::Int msid, const casacore::Int fieldid ) const;
 
      //Natural weighting scheme
      //imagingWeight should be sized by (nchan, row) already
-     virtual void weightNatural(Matrix<Float>& imagingWeight, const Matrix<Bool>& flag,
-                                const Matrix<Float>& weight) const;
+     virtual void weightNatural(casacore::Matrix<casacore::Float>& imagingWeight, const casacore::Matrix<casacore::Bool>& flag,
+                                const casacore::Matrix<casacore::Float>& weight) const;
 
    /*  unused version?
-     //weight as Matrix version
-     virtual void weightNatural(Matrix<Float>& imagingWeight, const Matrix<Bool>& flag,
-                                const Matrix<Float>& weight) const;
+     //weight as casacore::Matrix version
+     virtual void weightNatural(casacore::Matrix<casacore::Float>& imagingWeight, const casacore::Matrix<casacore::Bool>& flag,
+                                const casacore::Matrix<casacore::Float>& weight) const;
 
    */
      //Radial weighting
      //imagingWeight should be sized by (nchan, row) already
-     virtual void weightRadial(Matrix<Float>& imagingWeight, const Matrix<Bool>& flag,
-                               const Matrix<Double>& uvw, const Vector<Double>& frequency,
-                               const Matrix<Float>& weight) const;
+     virtual void weightRadial(casacore::Matrix<casacore::Float>& imagingWeight, const casacore::Matrix<casacore::Bool>& flag,
+                               const casacore::Matrix<casacore::Double>& uvw, const casacore::Vector<casacore::Double>& frequency,
+                               const casacore::Matrix<casacore::Float>& weight) const;
 
      //Get the type of weighting this object is on..will return one of "natural", "uniform", "radial"
-     virtual String getType() const;
+     virtual casacore::String getType() const;
      
      //setting uv filtering
-     virtual void setFilter(const String& type, const Quantity& bmaj,
-			    const Quantity& bmin, const Quantity& bpa);
+     virtual void setFilter(const casacore::String& type, const casacore::Quantity& bmaj,
+			    const casacore::Quantity& bmin, const casacore::Quantity& bpa);
 
      //returns if uv filtering is set
-     virtual Bool doFilter() const;
+     virtual casacore::Bool doFilter() const;
 
      //do uvfiltering...to be called after imaging weight is calculated
-     virtual void filter(Matrix<Float>& imWeight, const Matrix<Bool>& flag, 
-			 const Matrix<Double>& uvw,
-			 const Vector<Double>& frequency, const Matrix<Float>& weight) const;
+     virtual void filter(casacore::Matrix<casacore::Float>& imWeight, const casacore::Matrix<casacore::Bool>& flag, 
+			 const casacore::Matrix<casacore::Double>& uvw,
+			 const casacore::Vector<casacore::Double>& frequency, const casacore::Matrix<casacore::Float>& weight) const;
 
      // This is to  get/set uniform style weight density...e.g if the caller wants to
      // add densities from different pieces of data distributed via different 
      // VisibilityIterators
-     virtual Bool getWeightDensity (Block<Matrix<Float> >& density);
-     virtual void setWeightDensity(const Block<Matrix<Float> >& density);
+     virtual casacore::Bool getWeightDensity (casacore::Block<casacore::Matrix<casacore::Float> >& density);
+     virtual void setWeightDensity(const casacore::Block<casacore::Matrix<casacore::Float> >& density);
 
      // Form corr-indep weight by averaging parallel-hand weights
-     void unPolChanWeight(Matrix<Float>& chanRowWt, const Cube<Float>& corrChanRowWt) const;
+     void unPolChanWeight(casacore::Matrix<casacore::Float>& chanRowWt, const casacore::Cube<casacore::Float>& corrChanRowWt) const;
 
     private:
-     void cube2Matrix(const Cube<Bool>& fcube, Matrix<Bool>& fMat);
-     SimpleOrderedMap <String, Int> multiFieldMap_p;
-     Block<Matrix<Float> > gwt_p;
-     String wgtType_p;
-     Float uscale_p, vscale_p;
-     Vector<Float> f2_p, d2_p;
-     Int uorigin_p, vorigin_p;
-     Int nx_p, ny_p;
-     Bool doFilter_p;
-     Double cospa_p;
-     Double sinpa_p;
-     Double rbmaj_p;
-     Double rbmin_p;
-     Double robust_p;
-     String rmode_p;
-     Quantity noise_p;
+     void cube2Matrix(const casacore::Cube<casacore::Bool>& fcube, casacore::Matrix<casacore::Bool>& fMat);
+     casacore::SimpleOrderedMap <casacore::String, casacore::Int> multiFieldMap_p;
+     casacore::Block<casacore::Matrix<casacore::Float> > gwt_p;
+     casacore::String wgtType_p;
+     casacore::Float uscale_p, vscale_p;
+     casacore::Vector<casacore::Float> f2_p, d2_p;
+     casacore::Int uorigin_p, vorigin_p;
+     casacore::Int nx_p, ny_p;
+     casacore::Bool doFilter_p;
+     casacore::Double cospa_p;
+     casacore::Double sinpa_p;
+     casacore::Double rbmaj_p;
+     casacore::Double rbmin_p;
+     casacore::Double robust_p;
+     casacore::String rmode_p;
+     casacore::Quantity noise_p;
 
 
  };

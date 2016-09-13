@@ -42,42 +42,42 @@ namespace casa
   typedef struct 	/* all dimensions in meters, GHz */
   {
     char name[16];	/* name of antenna, e.g., VLA */
-    Double sub_h;	/* subreflector vertex height above primary vertex */
-    Double feedpos[3];	/* position of feed */
-    Double subangle;	/* angle subtended by the subreflector */
-    Double legwidth;	/* strut width */
-    Double legfoot;		/* distance from optic axis of leg foot */
-    Double legapex;		/* hight of leg intersection */
-    Double Rhole;		/* radius of central hole */
-    Double Rant;		/* antenna radius */
-    Double reffreq;		/* a reference frequency */
-    Double taperpoly[5];	/* polynomial expanded about reffreq */
-    Int ntaperpoly;		/* number of terms in polynomial */
+    casacore::Double sub_h;	/* subreflector vertex height above primary vertex */
+    casacore::Double feedpos[3];	/* position of feed */
+    casacore::Double subangle;	/* angle subtended by the subreflector */
+    casacore::Double legwidth;	/* strut width */
+    casacore::Double legfoot;		/* distance from optic axis of leg foot */
+    casacore::Double legapex;		/* hight of leg intersection */
+    casacore::Double Rhole;		/* radius of central hole */
+    casacore::Double Rant;		/* antenna radius */
+    casacore::Double reffreq;		/* a reference frequency */
+    casacore::Double taperpoly[5];	/* polynomial expanded about reffreq */
+    casacore::Int ntaperpoly;		/* number of terms in polynomial */
     
-    Double astigm_0;     /* astigmatism: coefficient of Zernike Polyn. Z6 a.k.a. 0-90 */
-    Double astigm_45;    /* astigmatism: coefficient of Zernike Polyn. Z5 a.k.a. 45-135 */
+    casacore::Double astigm_0;     /* astigmatism: coefficient of Zernike Polyn. Z6 a.k.a. 0-90 */
+    casacore::Double astigm_45;    /* astigmatism: coefficient of Zernike Polyn. Z5 a.k.a. 45-135 */
 
     /* to be added later
-       Double focus;
-       Double dfeedpos[3];
-       Double dsub_z;
+       casacore::Double focus;
+       casacore::Double dfeedpos[3];
+       casacore::Double dsub_z;
     */
   } BeamCalcGeometry;
   
   typedef struct 
   {
-    Int oversamp;			/* average this many points per cell */
-    TempImage<Complex> *aperture;	/* Jones planes [Nx,Ny,NStokes,NFreq]*/
-    Double x0, y0;			/* center of cell 0, 0, meters */
-    Double dx, dy;			/* increment in meters */
-    Int nx, ny;			/* calculation plane size in cells */
+    casacore::Int oversamp;			/* average this many points per cell */
+    casacore::TempImage<casacore::Complex> *aperture;	/* Jones planes [Nx,Ny,NStokes,NFreq]*/
+    casacore::Double x0, y0;			/* center of cell 0, 0, meters */
+    casacore::Double dx, dy;			/* increment in meters */
+    casacore::Int nx, ny;			/* calculation plane size in cells */
     /* last cell is at coordinates:
        X = x0 + (nx-1)*dx
        Y = y0 + (ny-1)*dy
     */
-    Double pa;			/* Parallactic angle, radians */
-    Double freq;			/* GHz */
-    Int band;
+    casacore::Double pa;			/* Parallactic angle, radians */
+    casacore::Double freq;			/* GHz */
+    casacore::Int band;
   } ApertureCalcParams;
 
   /*
@@ -85,55 +85,55 @@ namespace casa
    */
   typedef struct
   {
-    Double sub_h;               /* height of subreflector (on axis) */
-    Double feed[3];             /* position of the feed */
-    Double feeddir[3];          /* unit vector pointing along feed */
-    Double pfeeddir[3];         /* same as above after pathology applied */
-    Double radius;              /* antenna radius (m) */
-    Double K;
-    Double deltar;
-    Double zedge;               /* height at the edge of the dish */
-    Double bestparabola;        /* best fit parabola quadratic coef */
-    Double ftaper;              /* taper of feed */
-    Double thmax;               /* maximum angle of feed */
-    Double fa2pi;
-    Double legwidth;
-    Double legfoot, legfootz;
-    Double legapex;
-    Double legthick;
-    Double hole_radius;
-    Double freq, lambda;
-    Double astigm_0;     /* astigmatism: coefficient of Zernike Polyn. Z6 a.k.a. 0-90 */
-    Double astigm_45;    /* astigmatism: coefficient of Zernike Polyn. Z5 a.k.a. 45-135 */
-    Double dir[3];
-    Double hhat[3], vhat[3];   /* unit vectors orthogonal to dir */
-    Double z[MAXGEOM];
-    Double m[MAXGEOM];
-    Double k[3];
-    Int ngeom;
+    casacore::Double sub_h;               /* height of subreflector (on axis) */
+    casacore::Double feed[3];             /* position of the feed */
+    casacore::Double feeddir[3];          /* unit vector pointing along feed */
+    casacore::Double pfeeddir[3];         /* same as above after pathology applied */
+    casacore::Double radius;              /* antenna radius (m) */
+    casacore::Double K;
+    casacore::Double deltar;
+    casacore::Double zedge;               /* height at the edge of the dish */
+    casacore::Double bestparabola;        /* best fit parabola quadratic coef */
+    casacore::Double ftaper;              /* taper of feed */
+    casacore::Double thmax;               /* maximum angle of feed */
+    casacore::Double fa2pi;
+    casacore::Double legwidth;
+    casacore::Double legfoot, legfootz;
+    casacore::Double legapex;
+    casacore::Double legthick;
+    casacore::Double hole_radius;
+    casacore::Double freq, lambda;
+    casacore::Double astigm_0;     /* astigmatism: coefficient of Zernike Polyn. Z6 a.k.a. 0-90 */
+    casacore::Double astigm_45;    /* astigmatism: coefficient of Zernike Polyn. Z5 a.k.a. 45-135 */
+    casacore::Double dir[3];
+    casacore::Double hhat[3], vhat[3];   /* unit vectors orthogonal to dir */
+    casacore::Double z[MAXGEOM];
+    casacore::Double m[MAXGEOM];
+    casacore::Double k[3];
+    casacore::Int ngeom;
     char name[16];
-    Int gridsize;
+    casacore::Int gridsize;
   } calcAntenna;
   
   typedef struct
   {
-    Double subrot[3][3];        /* 3x3 matrix rotating x,y,z or nx,ny,nz */
-    Double feedrot[3][3];       /* 3x3 matrix rotating x,y,z or nx,ny,nz */
-    Double subshift[3];         /* 3 length vector */
-    Double feedshift[3];        /* 3 length vector */
-    Double subrotpoint[3];      /* 3 vector describing point to rotate sub. */
-    Double az_offset;           /* azimuth pointing offset (radians) */
-    Double el_offset;           /* elevation pointing offset (radians) */
-    Double phase_offset;        /* DC offset in phase (radians) */
-    Double focus;               /* meters out of focus toward subreflector */
+    casacore::Double subrot[3][3];        /* 3x3 matrix rotating x,y,z or nx,ny,nz */
+    casacore::Double feedrot[3][3];       /* 3x3 matrix rotating x,y,z or nx,ny,nz */
+    casacore::Double subshift[3];         /* 3 length vector */
+    casacore::Double feedshift[3];        /* 3 length vector */
+    casacore::Double subrotpoint[3];      /* 3 vector describing point to rotate sub. */
+    casacore::Double az_offset;           /* azimuth pointing offset (radians) */
+    casacore::Double el_offset;           /* elevation pointing offset (radians) */
+    casacore::Double phase_offset;        /* DC offset in phase (radians) */
+    casacore::Double focus;               /* meters out of focus toward subreflector */
   } Pathology;
   
   typedef struct
   {
-    Double aper[6];             /* aperture x, y, z, nx, ny, nz */
-    Double dish[6];             /* dish x, y, z, nx, ny, nz */
-    Double sub[6];              /* subreflector x, y, z, nx, ny, nz */
-    Double feed[3];             /* feed x, y, z */
+    casacore::Double aper[6];             /* aperture x, y, z, nx, ny, nz */
+    casacore::Double dish[6];             /* dish x, y, z, nx, ny, nz */
+    casacore::Double sub[6];              /* subreflector x, y, z, nx, ny, nz */
+    casacore::Double feed[3];             /* feed x, y, z */
   } Ray;
 
 
@@ -178,14 +178,14 @@ namespace casa
     ALMABeamCalc_NumBandCodes	/* this line last */
   };
 
-  extern Double VLABandMinFreqDefaults[VLABeamCalc_NumBandCodes];
-  extern Double VLABandMaxFreqDefaults[VLABeamCalc_NumBandCodes];
+  extern casacore::Double VLABandMinFreqDefaults[VLABeamCalc_NumBandCodes];
+  extern casacore::Double VLABandMaxFreqDefaults[VLABeamCalc_NumBandCodes];
   extern BeamCalcGeometry VLABeamCalcGeometryDefaults[VLABeamCalc_NumBandCodes];
-  extern Double EVLABandMinFreqDefaults[EVLABeamCalc_NumBandCodes];
-  extern Double EVLABandMaxFreqDefaults[EVLABeamCalc_NumBandCodes];
+  extern casacore::Double EVLABandMinFreqDefaults[EVLABeamCalc_NumBandCodes];
+  extern casacore::Double EVLABandMaxFreqDefaults[EVLABeamCalc_NumBandCodes];
   extern BeamCalcGeometry EVLABeamCalcGeometryDefaults[EVLABeamCalc_NumBandCodes];
-  extern Double ALMABandMinFreqDefaults[ALMABeamCalc_NumBandCodes];
-  extern Double ALMABandMaxFreqDefaults[ALMABeamCalc_NumBandCodes];
+  extern casacore::Double ALMABandMinFreqDefaults[ALMABeamCalc_NumBandCodes];
+  extern casacore::Double ALMABandMaxFreqDefaults[ALMABeamCalc_NumBandCodes];
   extern BeamCalcGeometry ALMABeamCalcGeometryDefaults[ALMABeamCalc_NumBandCodes];
 
   class BeamCalc
@@ -195,20 +195,20 @@ namespace casa
     // This is a SINGLETON class
     static BeamCalc* Instance();
 
-    void setBeamCalcGeometries(const String& obsName, // (the observatory name, e.g. "ALMA" or "ACA")
-			       const String& antennaType = "STANDARD",
-			       const MEpoch& obsTime = MEpoch(Quantity(50000., "d")),
-			       const String& otherAntRayPath=""); // override the AntennaResponses Table in Observatories
+    void setBeamCalcGeometries(const casacore::String& obsName, // (the observatory name, e.g. "ALMA" or "ACA")
+			       const casacore::String& antennaType = "STANDARD",
+			       const casacore::MEpoch& obsTime = casacore::MEpoch(casacore::Quantity(50000., "d")),
+			       const casacore::String& otherAntRayPath=""); // override the AntennaResponses casacore::Table in Observatories
 
-    Int getBandID(const Double freq, // in Hz 
-		  const String& obsname,
-		  const String& antennaType="STANDARD",
-		  const MEpoch& obsTime = MEpoch(Quantity(50000., "d")),
-		  const String& otherAntRayPath=""); // override the AntennaResponses Table in Observatories 
+    casacore::Int getBandID(const casacore::Double freq, // in Hz 
+		  const casacore::String& obsname,
+		  const casacore::String& antennaType="STANDARD",
+		  const casacore::MEpoch& obsTime = casacore::MEpoch(casacore::Quantity(50000., "d")),
+		  const casacore::String& otherAntRayPath=""); // override the AntennaResponses casacore::Table in Observatories 
 
-    Int calculateAperture(ApertureCalcParams *ap);
-    Int calculateAperture(ApertureCalcParams *ap, const Int& whichStokes);
-    Int calculateApertureLinPol(ApertureCalcParams *ap, const Int& whichStokes);
+    casacore::Int calculateAperture(ApertureCalcParams *ap);
+    casacore::Int calculateAperture(ApertureCalcParams *ap, const casacore::Int& whichStokes);
+    casacore::Int calculateApertureLinPol(ApertureCalcParams *ap, const casacore::Int& whichStokes);
 
   protected:
     BeamCalc();
@@ -216,63 +216,63 @@ namespace casa
   private:
 
   void computePixelValues(const ApertureCalcParams *ap, const calcAntenna *a, const Pathology *p,
-			  const Double &L0, Complex *Er, Complex *El, 
-			  const Int &i, const Int &j);
+			  const casacore::Double &L0, casacore::Complex *Er, casacore::Complex *El, 
+			  const casacore::Int &i, const casacore::Int &j);
   void computePixelValues(const ApertureCalcParams *ap, 
 			  const calcAntenna *a, const Pathology *p,
-			  const Double &L0,
-			  Complex *Er, Complex *El,
-			  const Int &i, const Int &j,
-			  const Int& whichStokes);
+			  const casacore::Double &L0,
+			  casacore::Complex *Er, casacore::Complex *El,
+			  const casacore::Int &i, const casacore::Int &j,
+			  const casacore::Int& whichStokes);
   void computePixelValuesLinPol(const ApertureCalcParams *ap, 
 				const calcAntenna *a, const Pathology *p,
-				const Double &L0,
-				Complex *Ex, Complex *Ey,
-				const Int &i, const Int &j,
-				const Int& whichStokes);
+				const casacore::Double &L0,
+				casacore::Complex *Ex, casacore::Complex *Ey,
+				const casacore::Int &i, const casacore::Int &j,
+				const casacore::Int& whichStokes);
     //normalizes a "vector" of 3 Doubles in the vector sense
-    inline void norm3(Double *v)
+    inline void norm3(casacore::Double *v)
     {
-      Double s;
+      casacore::Double s;
       s = sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
       v[0] /= s;
       v[1] /= s;
       v[2] /= s;
     }
 
-    calcAntenna *newAntenna(Double sub_h, Double feed_x, Double feed_y, Double feed_z,
-			    Double ftaper, Double thmax, const char *geomfile);
+    calcAntenna *newAntenna(casacore::Double sub_h, casacore::Double feed_x, casacore::Double feed_y, casacore::Double feed_z,
+			    casacore::Double ftaper, casacore::Double thmax, const char *geomfile);
 
     void deleteAntenna(calcAntenna *a);
 
-    void Antennasetfreq(calcAntenna *a, Double freq);
+    void Antennasetfreq(calcAntenna *a, casacore::Double freq);
 
-    void Antennasetdir(calcAntenna *a, const Double *dir);
+    void Antennasetdir(calcAntenna *a, const casacore::Double *dir);
 
     // sets feeddir after pathology is considered 
     void alignfeed(calcAntenna *a, const Pathology *p);
 
-    void getfeedbasis(const calcAntenna *a, Double B[3][3]);
+    void getfeedbasis(const calcAntenna *a, casacore::Double B[3][3]);
 
-    void Efield(const calcAntenna *a, const Complex *pol, Complex *E);
+    void Efield(const calcAntenna *a, const casacore::Complex *pol, casacore::Complex *E);
 
-    Int Antennasetfeedpattern(calcAntenna *a, const char *filename, Double scale);
+    casacore::Int Antennasetfeedpattern(calcAntenna *a, const char *filename, casacore::Double scale);
 
     calcAntenna *newAntennafromApertureCalcParams(ApertureCalcParams *ap);
 
-    Int dishvalue(const calcAntenna *a, Double r, Double *z, Double *m);
+    casacore::Int dishvalue(const calcAntenna *a, casacore::Double r, casacore::Double *z, casacore::Double *m);
 
-    Int astigdishvalue(const calcAntenna *a, Double x, Double y, Double *z, Double *m); 
+    casacore::Int astigdishvalue(const calcAntenna *a, casacore::Double x, casacore::Double y, casacore::Double *z, casacore::Double *m); 
 
     // Returns position of subreflector piece (x, y, z) and
     // its normal (u, v, w)
-    Int subfromdish(const calcAntenna *a, Double x, Double y, Double *subpoint);
+    casacore::Int subfromdish(const calcAntenna *a, casacore::Double x, casacore::Double y, casacore::Double *subpoint);
 
-    Int dishfromsub(const calcAntenna *a, Double x, Double y, Double *dishpoint);
+    casacore::Int dishfromsub(const calcAntenna *a, casacore::Double x, casacore::Double y, casacore::Double *dishpoint);
 
     void printAntenna(const calcAntenna *a);
 
-    Ray* newRay(const Double *sub);
+    Ray* newRay(const casacore::Double *sub);
 
     void deleteRay(Ray *ray);
 
@@ -282,59 +282,59 @@ namespace casa
 
     void deletePathology(Pathology *P);
 
-    void normvec(const Double *a, const Double *b, Double *c);
+    void normvec(const casacore::Double *a, const casacore::Double *b, casacore::Double *c);
 
-    Double dAdOmega(const calcAntenna *a, const Ray *ray1, const Ray *ray2,
+    casacore::Double dAdOmega(const calcAntenna *a, const Ray *ray1, const Ray *ray2,
 		    const Ray *ray3, const Pathology *p);
 
-    Double dOmega(const calcAntenna *a, const Ray *ray1, const Ray *ray2,
+    casacore::Double dOmega(const calcAntenna *a, const Ray *ray1, const Ray *ray2,
 		  const Ray *ray3, const Pathology *p);
 
-    Double Raylen(const Ray *ray);
+    casacore::Double Raylen(const Ray *ray);
 
-    void Pathologize(Double *sub, const Pathology *p);
+    void Pathologize(casacore::Double *sub, const Pathology *p);
 
     void applyPathology(Pathology *P, calcAntenna *a);
 
-    void intersectdish(const calcAntenna *a, const Double *sub, const Double *unitdir,
-		       Double *dish, Int niter);
+    void intersectdish(const calcAntenna *a, const casacore::Double *sub, const casacore::Double *unitdir,
+		       casacore::Double *dish, casacore::Int niter);
 
-    void intersectaperture(const calcAntenna *a, const Double *dish, 
-			   const Double *unitdir, Double *aper);
+    void intersectaperture(const calcAntenna *a, const casacore::Double *dish, 
+			   const casacore::Double *unitdir, casacore::Double *aper);
 
-    Double feedfunc(const calcAntenna *a, Double theta);
+    casacore::Double feedfunc(const calcAntenna *a, casacore::Double theta);
 
-    Double feedgain(const calcAntenna *a, const Ray *ray, const Pathology *p);
+    casacore::Double feedgain(const calcAntenna *a, const Ray *ray, const Pathology *p);
 
-    Ray* trace(const calcAntenna *a, Double x, Double y, const Pathology *p);
+    Ray* trace(const calcAntenna *a, casacore::Double x, casacore::Double y, const Pathology *p);
 
-    void tracepol(Complex *E0, const Ray *ray, Complex *E1);
+    void tracepol(casacore::Complex *E0, const Ray *ray, casacore::Complex *E1);
 
-    Int legplanewaveblock(const calcAntenna *a, Double x, Double y);
+    casacore::Int legplanewaveblock(const calcAntenna *a, casacore::Double x, casacore::Double y);
 
-    Int legplanewaveblock2(const calcAntenna *a, const Ray *ray);
+    casacore::Int legplanewaveblock2(const calcAntenna *a, const Ray *ray);
 
-    Int legsphericalwaveblock(const calcAntenna *a, const Ray *ray);
+    casacore::Int legsphericalwaveblock(const calcAntenna *a, const Ray *ray);
 
     void copyBeamCalcGeometry(BeamCalcGeometry* to, BeamCalcGeometry* from);
 
     static BeamCalc* instance_p;
 
-    String obsName_p;
-    String antType_p;
-    MEpoch obsTime_p;
-    uInt BeamCalc_NumBandCodes_p;
-    Vector<BeamCalcGeometry> BeamCalcGeometries_p;
-    Vector<Double> bandMinFreq_p; // in Hz
-    Vector<Double> bandMaxFreq_p; // in Hz
-    String antRespPath_p;
+    casacore::String obsName_p;
+    casacore::String antType_p;
+    casacore::MEpoch obsTime_p;
+    casacore::uInt BeamCalc_NumBandCodes_p;
+    casacore::Vector<BeamCalcGeometry> BeamCalcGeometries_p;
+    casacore::Vector<casacore::Double> bandMinFreq_p; // in Hz
+    casacore::Vector<casacore::Double> bandMaxFreq_p; // in Hz
+    casacore::String antRespPath_p;
 
-    static const Double METER_INCH;
-    static const Double INCH_METER;
-    static const Double NS_METER;
-    static const Double METER_NS;
-    static const Double DEG_RAD;
-    static const Double RAD_DEG;
+    static const casacore::Double METER_INCH;
+    static const casacore::Double INCH_METER;
+    static const casacore::Double NS_METER;
+    static const casacore::Double METER_NS;
+    static const casacore::Double DEG_RAD;
+    static const casacore::Double RAD_DEG;
 
   };
   

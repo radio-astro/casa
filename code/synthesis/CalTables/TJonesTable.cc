@@ -28,6 +28,7 @@
 
 #include <synthesis/CalTables/TJonesTable.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //----------------------------------------------------------------------------

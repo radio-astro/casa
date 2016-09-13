@@ -10,6 +10,7 @@
 #include <limits>
 #include <QDebug>
 
+using namespace casacore;
 namespace casa {
 
 FeatherPlotWidgetScatter::FeatherPlotWidgetScatter(const QString& title, FeatherPlot::PlotType plotType, QWidget *parent):
@@ -403,4 +404,5 @@ FeatherPlotWidgetScatter::~FeatherPlotWidgetScatter() {
 	// TODO Auto-generated destructor stub
 }
 
+using namespace casacore;
 } /* namespace casa */

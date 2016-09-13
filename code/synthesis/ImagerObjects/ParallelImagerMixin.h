@@ -135,7 +135,7 @@ public:
 		// Convert parameters to other formats used by synthesis imaging
 		// components, putting them into vectors by field index (not field key
 		// as used by the Records).
-		auto to_synthesis_params_select = [] (const Record &r) {
+		auto to_synthesis_params_select = [] (const casacore::Record &r) {
 			SynthesisParamsSelect pars;
 			pars.fromRecord(r);
 			return pars;
@@ -144,7 +144,7 @@ public:
 			transformed_by_field<SynthesisParamsSelect>(
 				my_params.selection, to_synthesis_params_select, "ms");
 
-		auto to_synthesis_params_image = [] (const Record &r) {
+		auto to_synthesis_params_image = [] (const casacore::Record &r) {
 			SynthesisParamsImage pars;
 			pars.fromRecord(r);
 			return pars;
@@ -153,7 +153,7 @@ public:
 			transformed_by_field<SynthesisParamsImage>(
 				my_params.image, to_synthesis_params_image);
 
-		auto to_synthesis_params_grid = [] (const Record &r) {
+		auto to_synthesis_params_grid = [] (const casacore::Record &r) {
 			SynthesisParamsGrid pars;
 			pars.fromRecord(r);
 			return pars;
@@ -162,7 +162,7 @@ public:
 			transformed_by_field<SynthesisParamsGrid>(
 				my_params.grid, to_synthesis_params_grid);
 
-		auto to_synthesis_params_deconv = [] (const Record &r) {
+		auto to_synthesis_params_deconv = [] (const casacore::Record &r) {
 			SynthesisParamsDeconv pars;
 			pars.fromRecord(r);
 			return pars;
@@ -171,12 +171,12 @@ public:
 			transformed_by_field<SynthesisParamsDeconv>(
 				my_params.deconvolution, to_synthesis_params_deconv);
 
-		auto to_vector_params = [] (const Record &r) {
-			Record result = r;
+		auto to_vector_params = [] (const casacore::Record &r) {
+			casacore::Record result = r;
 			return result;
 		};
-		vector<Record> normalization_params =
-			transformed_by_field<Record>(my_params.normalization, to_vector_params);
+		vector<casacore::Record> normalization_params =
+			transformed_by_field<casacore::Record>(my_params.normalization, to_vector_params);
 
 		// Configure components
 		T::setup_imager(imaging_comm, selection_params, image_params,
@@ -211,7 +211,7 @@ public:
 
 	// Top level imaging method. Note that differences in parallel continuum,
 	// parallel cube, and serial imaging are not apparent at this level.
-	Record clean() {
+	casacore::Record clean() {
 		if (calculate_psf) {
 			T::make_psf();
 			T::normalize_psf();
@@ -230,7 +230,7 @@ public:
 		}
 		T::restore_images();
 		T::concat_images("virtualnomove");
-		Record result = T::get_summary(); // includes plot_report
+		casacore::Record result = T::get_summary(); // includes plot_report
 		MPI_Barrier(worker_comm);
 		return result;
 	}
@@ -269,13 +269,13 @@ protected:
 
 	MPI_Comm iteration_comm;
 
-	// Convenience function for transforming input parameter Record fields.
+	// Convenience function for transforming input parameter casacore::Record fields.
 	template<class T1>
-	static vector<T1> transformed_by_field(Record &rec,
-	                                       T1 (*fn)(const Record &),
+	static vector<T1> transformed_by_field(casacore::Record &rec,
+	                                       T1 (*fn)(const casacore::Record &),
 	                                       const string &prefix = "") {
 		vector<T1> result;
-		auto add_to_result = [&](const Record &rec) {
+		auto add_to_result = [&](const casacore::Record &rec) {
 			result.push_back(fn(rec));
 		};
 		std::for_each(ParamFieldIterator::begin(&rec, prefix),

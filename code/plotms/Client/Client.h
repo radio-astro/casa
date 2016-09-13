@@ -71,7 +71,7 @@ public:
 	virtual PlotAxis getAxisLocationY() const;
 
 	//Return a list of files loaded in the client
-	virtual vector<String> getFiles() const = 0;
+	virtual vector<casacore::String> getFiles() const = 0;
 
 
 	//Flagging
@@ -90,13 +90,13 @@ public:
 	//Display an error in a client dependent way.  For a GUI, this may
 	//mean popping up a dialog; for a script, this may mean writing the
 	//error to a log file or web log.
-	virtual void showError(const String& message,
-			const String& title, bool isWarning) = 0;
+	virtual void showError(const casacore::String& message,
+			const casacore::String& title, bool isWarning) = 0;
 
 	//Display a message.  For a GUI client, this may mean popping up a dialog;
 	//for a script client, this may mean writing the message to a log file or
 	//a web log.
-	virtual void showMessage(const String& message, const String& title, bool warning = false) = 0;
+	virtual void showMessage(const casacore::String& message, const casacore::String& title, bool warning = false) = 0;
 
 	virtual void clearMessage() = 0;
 
@@ -116,8 +116,8 @@ public:
 	virtual PlotSymbolPtr createSymbol( const PlotSymbolPtr& copy );
 	//Ask the client to make a symbol with the given specifications for insertion
 	//into the plot.
-	virtual PlotSymbolPtr createSymbol(const String& descriptor, Int size,
-			const String& color, const String& fillPattern, bool outline);
+	virtual PlotSymbolPtr createSymbol(const casacore::String& descriptor, casacore::Int size,
+			const casacore::String& color, const casacore::String& fillPattern, bool outline);
 
 	//Logging is client (implementation) specific so that client needs to
 	//be asked for the logger.

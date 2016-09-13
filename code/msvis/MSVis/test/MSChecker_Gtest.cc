@@ -10,7 +10,9 @@
 using namespace std;
 
 using namespace casacore;
+using namespace casacore;
 
+using namespace casacore;
 using namespace casa;
 
 MeasurementSet _testMS;

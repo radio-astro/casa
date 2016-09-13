@@ -1,5 +1,6 @@
 #include <synthesis/TransformMachines/BeamCalc.h>
 
+using namespace casacore;
 namespace casa{
 
   Double ALMABandMinFreqDefaults[ALMABeamCalc_NumBandCodes] =

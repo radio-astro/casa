@@ -40,9 +40,9 @@ namespace casa {
 class ProgressMonitor {
 public:
 	//Initialize the monitor with the identifying operation.
-	virtual void initialize(const String&) = 0;
+	virtual void initialize(const casacore::String&) = 0;
 	//Set the progress to a specific amount and status.
-	virtual void setProgress(unsigned int, const String&) = 0;
+	virtual void setProgress(unsigned int, const casacore::String&) = 0;
 	//Stop the progress
 	virtual void finalize() = 0;
 	//Set whether the user is allowed to cancel, put the operation in the background,

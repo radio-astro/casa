@@ -37,6 +37,7 @@
 #include <synthesis/MeasurementComponents/SDPosInterpolator.h>
 #include <tables/Tables/Table.h>
 
+using namespace casacore;
 using namespace casa;
 using namespace std;
 

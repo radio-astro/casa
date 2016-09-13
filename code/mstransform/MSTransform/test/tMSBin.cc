@@ -56,7 +56,7 @@ Vector<Int> polMap_p;
 Int makeUVW(const DirectionCoordinate& thedir, Matrix<Double>& uvw, const Int nx, const Int ny, const Double reffreq){
 	Vector<Int> shp(2);
 	shp(0)=nx; shp(1)=ny;
-	Coordinate *ftcoord=thedir.makeFourierCoordinate(Vector<Bool>(2, True), shp);
+	Coordinate *ftcoord=thedir.makeFourierCoordinate(Vector<Bool>(2, true), shp);
 	increment_p=ftcoord->increment();
 	increment_p *= C::c/reffreq;
 	center_p(0)=nx/2;
@@ -106,7 +106,7 @@ void gridData(const vi::VisBuffer2& vb, Cube<Complex>& grid,
 	for (Int k=0; k < vb.nRows(); ++k){
 		Int newrow=locuv(1,k)*npix_p(0)+locuv(0,k);
 		if(rowFlag(newrow) && !(vb.flagRow()(k))){
-			rowFlag(newrow)=False;
+			rowFlag(newrow)=false;
 			uvw(2,newrow)=vb.uvw()(2,k);
 
 		}
@@ -116,7 +116,7 @@ void gridData(const vi::VisBuffer2& vb, Cube<Complex>& grid,
 					grid(polMap_p(pol),chanMap_p(chan), newrow)
 								+= hasCorrected ? vb.visCubeCorrected()(pol,chan,k):
 										vb.visCube()(pol,chan,k);
-					flag(polMap_p(pol),chanMap_p(chan), newrow)=False;
+					flag(polMap_p(pol),chanMap_p(chan), newrow)=false;
 					wghtSpec(polMap_p(pol),chanMap_p(chan), newrow)+=vb.weightSpectrum()(pol, chan, k);
 				}
 			}
@@ -172,7 +172,7 @@ int main(int argc, char **argv) {
 	///////////////
 
 /*
-	vi::VisibilityIterator2 vi_p(myms, vi::SortColumns(), False);
+	vi::VisibilityIterator2 vi_p(myms, vi::SortColumns(), false);
 	vi_p.originChunks();
 	vi_p.origin();
 	vi::VisBuffer2* vb=vi_p.getVisBuffer();
@@ -216,7 +216,7 @@ int main(int argc, char **argv) {
 	Cube<Float> wghtSpec(npol, nchan, nrrows);
 	Cube<Bool> flag(npol, nchan, nrrows);
 	Vector<Bool> rowFlag(nrrows);
-	msPtr->addRow(nrrows, True);
+	msPtr->addRow(nrrows, true);
 	for (vi_p.originChunks(); vi_p.moreChunks(); vi_p.nextChunk()){
 		for(vi_p.origin(); vi_p.more(); vi_p.next()){
 			gridData(*vb, grid, wght, wghtSpec,flag, rowFlag,uvw);
@@ -232,7 +232,7 @@ int main(int argc, char **argv) {
 	  // POINTING can be large, set some sensible defaults for storageMgrs
 	  IncrementalStMan ismPointing ("ISMPointing");
 	  StandardStMan ssmPointing("SSMPointing", 32768);
-	  pointingSetup.bindAll(ismPointing, True);
+	  pointingSetup.bindAll(ismPointing, true);
 	  pointingSetup.bindColumn(MSPointing::columnName(MSPointing::DIRECTION),
 	                           ssmPointing);
 	  pointingSetup.bindColumn(MSPointing::columnName(MSPointing::TARGET),

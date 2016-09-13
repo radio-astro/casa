@@ -61,7 +61,7 @@ ATM_NAMESPACE_BEGIN
  *  When there are two sidebands, every of these corresponds to a single spectral window.
  *  Note that these two sidebands can be constructed using a single method if the intermediate
  *  frequency is an input parameter.
- *  \note The Alma Science Data Model (ASDM) spectral windows derive from spectral grids,
+ *  \note The Alma Science casacore::Data Model (ASDM) spectral windows derive from spectral grids,
  *  with extra informations such as the channel width, the resolution the noise bandwidth
  *  etc...
  *

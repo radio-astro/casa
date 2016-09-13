@@ -31,6 +31,7 @@
 #include <casa/BasicSL/Constants.h>
 #include <display/DisplayCanvas/WCLinearScaleHandler.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Default Constructor Required
@@ -56,7 +57,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     *p++ = (uInt) (f*((*q++) - domainMin()));              \
   in.freeStorage(inp, inDel);                              \
   out.putStorage(outp, outDel);                            \
-  return True;
+  return true;
 
 // I think this version will not go outside the limits!
 
@@ -84,7 +85,7 @@ while (p < endp) { \
 } \
 in.freeStorage(inp, inDel); \
 out.putStorage(outp, outDel); \
-return True;
+return true;
 
 	Bool WCLinearScaleHandler::operator()(Array<uInt> & out, const Array<Bool> & in) {
 		out.resize(in.shape());
@@ -99,7 +100,7 @@ return True;
 			*p++ = (*q++) ? rangeMax() : 0;
 		in.freeStorage(inp, inDel);
 		out.putStorage(outp, outDel);
-		return True;
+		return true;
 	}
 
 	Bool WCLinearScaleHandler::operator()(Array<uInt> & out, const Array<uChar> & in) {

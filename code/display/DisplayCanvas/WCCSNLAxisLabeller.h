@@ -60,7 +60,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// object is invalidated (or destroyed) _before_ the WorldCanvas
 		// corresponding to ev gets destroyed, so that any cached axis drawing
 		// which the WC is holding for us can be deleted properly.
-		virtual Bool draw(const WCRefreshEvent &ev);
+		virtual casacore::Bool draw(const WCRefreshEvent &ev);
 
 		// Invalidate/return any cached drawing list
 		virtual void invalidate();
@@ -75,30 +75,30 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// don't matter).  Specifying this correctly can make the
 		// toMix computations much faster (it uses an iterative
 		// solution) and avoid solution ambiguities.
-		void setWorldRanges (const Vector<Double>& worldMin,
-		                     const Vector<Double>& worldMax,
-		                     const Vector<String>& units);
+		void setWorldRanges (const casacore::Vector<casacore::Double>& worldMin,
+		                     const casacore::Vector<casacore::Double>& worldMax,
+		                     const casacore::Vector<casacore::String>& units);
 
 		// install the default options for this DisplayData
 		virtual void setDefaultOptions();
 
 		// apply options stored in rec to the DisplayData; return value
-		// True means a refresh is needed.  Any fields added to the
+		// true means a refresh is needed.  Any fields added to the
 		// updatedOptions argument are options which have changed in
 		// some way due to the setting of other options - ie. they
 		// are context sensitive.
-		virtual Bool setOptions(const Record &rec, Record &updatedOptions);
+		virtual casacore::Bool setOptions(const casacore::Record &rec, casacore::Record &updatedOptions);
 
 		// retrieve the current and default options and parameter types.
-		virtual Record getOptions() const;
+		virtual casacore::Record getOptions() const;
 
 	private:
 
 		// Is the drawlist state below valid?
-		Bool itsValid;
+		casacore::Bool itsValid;
 
 		// our drawlist number
-		uInt itsDrawListNumber;
+		casacore::uInt itsDrawListNumber;
 
 		// attribute buffer that suits the drawlist we have made
 		AttributeBuffer itsDrawStateBuffer;

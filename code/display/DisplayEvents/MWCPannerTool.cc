@@ -30,12 +30,13 @@
 #include <display/DisplayEvents/MWCPannerTool.h>
 #include <casa/OS/Time.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	MWCPannerTool::MWCPannerTool(Display::KeySym keysym,
 	                             Bool  scrollingAllowed) :
 		MultiWCTool(keysym),
-		itsActive(False),
+		itsActive(false),
 		itsScrollingAllowed(scrollingAllowed),
 		itsLastScrollTime(0.),
 		itsLastKey(-1) {
@@ -49,7 +50,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsX1=itsX2=ev.pixX();
 		itsY1=itsY2=ev.pixY();
 		itsCurrentWC = ev.worldCanvas();
-		itsActive = True;
+		itsActive = true;
 	}
 
 	void MWCPannerTool::moved(const WCMotionEvent &ev, const viewer::region::region_list_type & /*selected_regions*/) {
@@ -105,9 +106,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		uInt k = ev.key();
 		Int iKey;
-		Bool found = False;
+		Bool found = false;
 		for(iKey=0; iKey<10; iKey++) if(panKeys[iKey]==k) {
-				found = True;
+				found = true;
 				break;
 			}
 		if(!found) return;
@@ -169,7 +170,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			return;
 		}
 
-		itsActive=False;	// erases pan line; resets tool w/o
+		itsActive=false;	// erases pan line; resets tool w/o
 		// unnecessary extra refresh
 
 		// apply shift:
@@ -204,7 +205,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	void MWCPannerTool::reset(Bool skipRefresh) {
 		Bool wasActive=itsActive;
-		itsActive=False;	// erases pan line (if any) on refresh
+		itsActive=false;	// erases pan line (if any) on refresh
 		if(wasActive && !skipRefresh) refresh();
 	}
 

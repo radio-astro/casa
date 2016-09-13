@@ -32,13 +32,14 @@
 #include <casa/Exceptions/Error.h>
 #include <casa/iostream.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	DSLine::DSLine() :
 		DSPolyLine() {
 
-		itsValidStart = False;
-		itsValidEnd = False;
+		itsValidStart = false;
+		itsValidEnd = false;
 	}
 
 	DSLine::DSLine(const DSLine& other) :
@@ -58,8 +59,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		DSPolyLine() {
 
 		// Valid:
-		itsValidStart = True;
-		itsValidEnd = True;
+		itsValidStart = true;
+		itsValidEnd = true;
 		itsStart = startPos;
 		itsEnd = endPos;
 
@@ -93,8 +94,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			itsStart(1) = yPos;
 			itsEnd(0) = xPos;
 			itsEnd(1) = yPos;
-			itsValidStart = True;
-			itsValidEnd = True;
+			itsValidStart = true;
+			itsValidEnd = true;
 			make();
 		}
 	}
@@ -104,9 +105,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		else {
 			itsStart = start;
 			if (!itsValidStart && itsValidEnd) {
-				itsValidStart = True;
+				itsValidStart = true;
 				make();
-			} else itsValidStart = True;
+			} else itsValidStart = true;
 		}
 	}
 
@@ -139,19 +140,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	Bool DSLine::setOptions(const Record& newSettings) {
-		Bool localChange = False;
+		Bool localChange = false;
 
 		if (newSettings.isDefined("startpoint")) {
 			setStartPoint(newSettings.asArrayFloat("startpoint"));
-			localChange = True;
+			localChange = true;
 		}
 
 		if (newSettings.isDefined("endpoint")) {
 			setEndPoint(newSettings.asArrayFloat("endpoint"));
-			localChange = True;
+			localChange = true;
 		}
 
-		if (DSPolyLine::setOptions(newSettings)) localChange = True;
+		if (DSPolyLine::setOptions(newSettings)) localChange = true;
 		return localChange;
 	}
 
@@ -159,9 +160,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsEnd = end;
 		if (isValid()) DSPolyLine::changePoint(end, 1);
 		else if (itsValidStart && !itsValidEnd) {
-			itsValidEnd = True;
+			itsValidEnd = true;
 			make();
-		} else itsValidEnd = True;
+		} else itsValidEnd = true;
 	}
 
 	Matrix<Float> DSLine::asPolyLine(const Vector<Float>& start,

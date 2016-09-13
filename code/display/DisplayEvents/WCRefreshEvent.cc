@@ -28,6 +28,7 @@
 #include <casa/aips.h>
 #include <display/DisplayEvents/WCRefreshEvent.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Constructor.

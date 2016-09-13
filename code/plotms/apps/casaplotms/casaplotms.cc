@@ -38,6 +38,8 @@
 #include <QDebug>
 #include <casa/namespace.h>
 
+using namespace casa;
+
 int main(int argc, char* argv[]) {    
 
 #if (0)

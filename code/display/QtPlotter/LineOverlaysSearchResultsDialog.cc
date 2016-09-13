@@ -27,6 +27,7 @@
 #include <display/QtPlotter/Util.h>
 #include <display/QtPlotter/SearchMoleculesResultsWidget.qo.h>
 
+using namespace casacore;
 namespace casa {
 
 	const QString LineOverlaysSearchResultsDialog::NO_LINES_SELECTED = "Please select one or more lines from the search results to graph";

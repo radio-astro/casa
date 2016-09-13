@@ -8,6 +8,7 @@ double rgauss( void );
 
 #include <calanalysis/CalAnalysis/CalStats.h>
 
+using namespace casacore;
 using namespace casa;
 
 // -----------------------------------------------------------------------------
@@ -60,7 +61,7 @@ int main( void ) {
 
   // Initialize the input flag cube
 
-  Cube<Bool> oFlag( oShape, False );
+  Cube<Bool> oFlag( oShape, false );
 
 
   // Initialize the polarization (feed) abscissa

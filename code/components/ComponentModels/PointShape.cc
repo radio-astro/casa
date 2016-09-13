@@ -41,6 +41,7 @@
 #include <casa/Utilities/Assert.h>
 #include <casa/BasicSL/String.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 PointShape::PointShape() 
@@ -83,12 +84,12 @@ Double PointShape::sample(const MDirection& direction,
   const MDirection& compDir(refDirection());
   const MDirection::Ref& compDirFrame(compDir.getRef());
   const MDirection::MVType* compDirValue = &(compDir.getValue());
-  Bool deleteValue = False;
+  Bool deleteValue = false;
   // Convert direction to the same frame as the reference direction
   if (ComponentShape::differentRefs(direction.getRef(), compDirFrame)) {
     compDirValue = new MDirection::MVType
       (MDirection::Convert(compDir, direction.getRef())().getValue());
-    deleteValue = True;
+    deleteValue = true;
   }
 //
   const Double latSize = abs(pixelLatSize.radian());
@@ -117,12 +118,12 @@ void PointShape::sample(Vector<Double>& scale,
   const MDirection& compDir(refDirection());
   const MDirection::Ref& compDirFrame(compDir.getRef());
   const MDirection::MVType* compDirValue = &(compDir.getValue());
-  Bool deleteValue = False;
+  Bool deleteValue = false;
   // Convert direction to the same frame as the reference direction
   if (refFrame != compDirFrame) {
     compDirValue = new MDirection::MVType
       (MDirection::Convert(compDir, refFrame)().getValue());
-    deleteValue = True;
+    deleteValue = true;
   }
 //
   const Double longSize = abs(pixelLongSize.radian());
@@ -159,7 +160,7 @@ void PointShape::visibility(Matrix<DComplex>& scale, const Matrix<Double>& uvw,
 
 Bool PointShape::isSymmetric() const {
   DebugAssert(ok(), AipsError);
-  return True;
+  return true;
 }
 
 ComponentShape* PointShape::clone() const {
@@ -222,7 +223,7 @@ Bool PointShape::toRecord(String& errorMessage,
 
 Bool PointShape::convertUnit(String&, const RecordInterface&) {
   DebugAssert(ok(), AipsError);
-  return True;
+  return true;
 }
 
 Bool PointShape::ok() const {

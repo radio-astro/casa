@@ -31,6 +31,11 @@
 #include <casacore/casa/BasicSL/String.h>
 #include <casacore/casa/Containers/Record.h>
 
+namespace casacore{
+
+// The class MSFieldParse only contains information about a table
+}
+
 namespace casa {
 
 // <motivation>
@@ -53,9 +58,8 @@ namespace casa {
 // CalLibraryParse is used by the parser of cal library files.
 // The parser is written in Bison and Flex in files CalLibraryGram.yy and .ll.
 // The statements in there use the routines in this file to complete
-// a Record with default and specified calibration parameters.
+// a casacore::Record with default and specified calibration parameters.
 //
-// The class MSFieldParse only contains information about a table
 // used in the table command. Global variables (like a list and a vector)
 // are used in MSFieldParse.cc to hold further information.
 //
@@ -73,28 +77,28 @@ class CalLibraryParse
         ~CalLibraryParse();
 
         static CalLibraryParse* thisCalLibParser;
-        const Record* record();
+        const casacore::Record* record();
 
         void reset();
-        void addStringParam(String key, String val);
-        void addBoolParam(String key, Bool val);
-        void addMapParam(String mapname, Int val);
-        void addMapParam(Int val);
+        void addStringParam(casacore::String key, casacore::String val);
+        void addBoolParam(casacore::String key, casacore::Bool val);
+        void addMapParam(casacore::String mapname, casacore::Int val);
+        void addMapParam(casacore::Int val);
         void addMap();
         void addCaltable();
 
     private:
         void resetCaltable();
         void resetParamRecord();
-        void addDefaultMap(String key);
-        void issueKeywordWarning(String key);
+        void addDefaultMap(casacore::String key);
+        void issueKeywordWarning(casacore::String key);
 
-        Record* callibRec_;     // holds (entire) cal library parsing results
-        Record paramRec_;
-        String caltableName_;
-        String mapName_;
-        Vector<Int> mapList_;
-        Bool calwt_;
+        casacore::Record* callibRec_;     // holds (entire) cal library parsing results
+        casacore::Record paramRec_;
+        casacore::String caltableName_;
+        casacore::String mapName_;
+        casacore::Vector<casacore::Int> mapList_;
+        casacore::Bool calwt_;
 };
 
 }

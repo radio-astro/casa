@@ -35,6 +35,7 @@
 #include <casa/iostream.h>
 #include <cstring>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	PSPixelCanvasColorTable::PSPixelCanvasColorTable(PSDriver *ps,
@@ -103,7 +104,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		ps->storeColors(offset, len,
 		                red_+offset, green_+offset, blue_+offset);
 
-		return True;
+		return true;
 	}
 
 // Resize color table.
@@ -120,11 +121,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if(newSize <= NUMRWCOLORS) {
 			nColors_ = newSize;
 			colormapManager().redistributeColormaps();
-			return True;
+			return true;
 		}
 
 		cerr << "Had to fall back on oldSize of " << oldSize << ".\n";
-		return False;
+		return false;
 	}
 
 // Resize color table using components.
@@ -136,7 +137,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	                                        const Display::ColorModel cm) {
 		int i;
 
-		annotate(True);
+		annotate(true);
 		ps = psd;
 		if(ps == NULL)
 			ps = new PSDriver();
@@ -150,7 +151,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// No Read Only colors have been allocated yet.
 		for(i=0; i < NUMROCOLORS; i++)
-			allocated_[i] = False;
+			allocated_[i] = false;
 
 		setColorModel(cm);
 	}
@@ -201,7 +202,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    Array<Float> & chan1out,
 	    Array<Float> & chan2out,
 	    Array<Float> & chan3out) {
-		Bool ok = False;
+		Bool ok = false;
 
 		// [ ] CONFORM TEST
 
@@ -212,12 +213,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				chan1out = chan1in;
 				chan2out = chan2in;
 				chan3out = chan3in;
-				ok = True;
+				ok = true;
 				break;
 			case Display::HSV:
 				rgbToHsv(chan1in, chan2in, chan3in,
 				         chan1out, chan2out, chan3out);
-				ok = True;
+				ok = true;
 				break;
 			case Display::Index:
 				// won't get here
@@ -229,13 +230,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			case Display::RGB:
 				hsvToRgb(chan1in, chan2in, chan3in,
 				         chan1out, chan2out, chan3out);
-				ok = True;
+				ok = true;
 				break;
 			case Display::HSV:
 				chan1out = chan1in;
 				chan2out = chan2in;
 				chan3out = chan3in;
-				ok = True;
+				ok = true;
 				break;
 			case Display::Index:
 				// won't get here
@@ -1560,8 +1561,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return eptr;
 	}
 
-// Convert a colorname to a color triple. Returns True for success,
-// False if name can't be found. The color spec can also be in the form:
+// Convert a colorname to a color triple. Returns true for success,
+// false if name can't be found. The color spec can also be in the form:
 //  "#xxxxxx", A '#' character followed by exactly 6 hex digits.
 //  (This form is considered obsolete and is not completely implemented here).
 // RGB and RGBI forms are also handled, although no error checking is done.
@@ -1569,12 +1570,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	        float &red, float &green,
 	        float &blue) {
 		Bool ok;
-		Bool needScale=False;
+		Bool needScale=false;
 		float r, g, b;
 		r = g = b = 0.0;
 
 		if((name == NULL) || (strlen(name) == 0))
-			return False;
+			return false;
 
 		if(*name == '#') {	// Exactly 6 hex chars. (Old RGB device spec).
 			long color;		// This form is considered obsolete.
@@ -1584,32 +1585,32 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				r = (color >> 16) & 0xff;
 				g = (color >> 8)  & 0xff;
 				b = color & 0xff;
-				ok = True;
-				needScale=True;
+				ok = true;
+				needScale=true;
 			} else
-				ok = False;
+				ok = false;
 		} else	// RGB Device specification.
 			if(strncasecmp("rgb:", name, 4) == 0) {
 				const char *ptr = fromRGB(name+4, red);	// No error checking!
 				ptr = fromRGB(ptr+1, green);
 				fromRGB(ptr+1, blue);
-				ok = True;
+				ok = true;
 			} else	// RGB intensity specification.
 				if(strncasecmp("rgbi:", name, 5) == 0) {
 					const char *ptr = fromRGBI(name+5, red);	// No error checking!
 					ptr = fromRGBI(ptr+1, green);
 					fromRGBI(ptr+1, blue);
-					ok = True;
+					ok = true;
 				} else {	// Lookup color name
 					XColors *c = lookupColor(name);
 					if(c != NULL) {
 						r = c->red;
 						g = c->green;
 						b = c->blue;
-						ok = True;
-						needScale=True;
+						ok = true;
+						needScale=true;
 					} else
-						ok = False;
+						ok = false;
 				}
 
 		if(needScale) {
@@ -1626,16 +1627,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return parseColor(name.chars(), red, green, blue);
 	}
 
-// Return contents of colormap at the given index. Returns False if
+// Return contents of colormap at the given index. Returns false if
 // the index is out of range. The valid range is all 4096 colors.
 	Bool PSPixelCanvasColorTable::queryColor(const int index,
 	        float &r, float &g, float &b) {
 		if((index < 0) || (index >= INDEXCOLORS))
-			return False;
+			return false;
 		r = red_[index];
 		g = green_[index];
 		b = blue_[index];
-		return True;
+		return true;
 	}
 
 	static inline float Clamp(const float a) {
@@ -1647,19 +1648,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			return a;
 	}
 
-// Sets the contents of colormap at the given index. Returns False if
+// Sets the contents of colormap at the given index. Returns false if
 // the index is out of range.
 	Bool PSPixelCanvasColorTable::storeColor(const int index,
 	        const float r, const float g,
 	        const float b) {
 		if((index < 0) || (index >= NUMRWCOLORS))
-			return False;
+			return false;
 
 		red_[index] = Clamp(r);
 		green_[index] = Clamp(g);
 		blue_[index] = Clamp(b);
 		ps->storeColor(index, r, g, b);
-		return True;
+		return true;
 	}
 
 // Allocate the color value in the color table. index is set to the
@@ -1679,7 +1680,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			red_[i] = r;
 			green_[i] = g;
 			blue_[i] = b;
-			allocated_[a0] = True;
+			allocated_[a0] = true;
 			index = i;
 			ps->storeColor(i, r, g, b);
 			return 2;
@@ -1692,7 +1693,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	        const float b, int &index) {
 		int err;
 		if((err =allocColor_(r, g, b, index)) == 0)
-			return False;
+			return false;
 
 		if(annotate() && (err == 2)) {
 			char buf[128];
@@ -1700,7 +1701,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			        r, g, b, index);
 			ps->comment(buf);
 		}
-		return True;
+		return true;
 	}
 
 	Bool PSPixelCanvasColorTable::allocColor(const String &name, int &index) {
@@ -1712,7 +1713,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		int err;
 
 		if(! parseColor(name, r, g, b))
-			return False;
+			return false;
 		err = allocColor_(r, g, b, index);
 		if(annotate() && (err == 2)) {
 			char buf[128];
@@ -1720,7 +1721,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			        name, r, g, b, index);
 			ps->comment(buf);
 		}
-		return True;
+		return true;
 	}
 
 // About 13 bits. Since PostScript only supports 12, more isn't more.
@@ -1728,11 +1729,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	static inline Bool isClose(const float a, const float b) {
 		float c = a-b;
 		if(c < 0.0) c = -c;
-		return (c <= ERR)? True : False;
+		return (c <= ERR)? true : false;
 	}
 
 // Finds the index of a color triple coming 'close' to the RGB args.
-// Returns: True if a match is found, else False.
+// Returns: true if a match is found, else false.
 	Bool PSPixelCanvasColorTable::lookupROColor(const float r,  const float g,
 	        const float b, int &index) {
 		// Start at end of table (in case we change to floating table size).
@@ -1742,10 +1743,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			if(isClose(red_[i], r) && isClose(green_[i], g)
 			        && isClose(blue_[i],b)) {
 				index = i;
-				return True;
+				return true;
 			}
 		}
-		return False;
+		return false;
 	}
 
 	Bool PSPixelCanvasColorTable::lookupRWColor(const float r, const float g,
@@ -1754,17 +1755,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			if(isClose(red_[i], r) && isClose(green_[i], g)
 			        && isClose(blue_[i],b)) {
 				index = i;
-				return True;
+				return true;
 			}
 		}
-		return False;
+		return false;
 	}
 
 	void PSPixelCanvasColorTable::deallocate(uLong index) {
 		int i = index-NUMRWCOLORS;
 
 		if((i >= 0) && (i < NUMROCOLORS))
-			allocated_[i] = False;
+			allocated_[i] = false;
 	}
 
 } //# NAMESPACE CASA - END

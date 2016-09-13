@@ -17,20 +17,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 namespace sdfiller { //# NAMESPACE SDFILLER - BEGIN
 
 struct WeatherRecord {
-  typedef MSWeather AssociatingTable;
-  typedef MSWeatherColumns AssociatingColumns;
+  typedef casacore::MSWeather AssociatingTable;
+  typedef casacore::MSWeatherColumns AssociatingColumns;
 
   // mandatory
-  Int antenna_id;
-  Double time;
-  Double interval;
+  casacore::Int antenna_id;
+  casacore::Double time;
+  casacore::Double interval;
 
   // optional
-  Float temperature;
-  Float pressure;
-  Float rel_humidity;
-  Float wind_speed;
-  Float wind_direction;
+  casacore::Float temperature;
+  casacore::Float pressure;
+  casacore::Float rel_humidity;
+  casacore::Float wind_speed;
+  casacore::Float wind_direction;
 
   // method
   void clear() {
@@ -65,12 +65,12 @@ struct WeatherRecord {
   }
 
   void add(AssociatingTable &table, AssociatingColumns &/*columns*/) {
-    table.addRow(1, True);
+    table.addRow(1, true);
   }
 
-  Bool fill(uInt irow, AssociatingColumns &columns) {
+  casacore::Bool fill(casacore::uInt irow, AssociatingColumns &columns) {
     if (columns.nrow() <= irow) {
-      return False;
+      return false;
     }
 
     columns.antennaId().put(irow, antenna_id);
@@ -82,7 +82,7 @@ struct WeatherRecord {
     columns.windSpeed().put(irow, wind_speed);
     columns.windDirection().put(irow, wind_direction);
 
-    return True;
+    return true;
   }
 };
 

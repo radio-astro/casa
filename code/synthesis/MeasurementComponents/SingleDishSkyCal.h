@@ -90,8 +90,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </prerequisite>
 //
 // <etymology>
-//#! Except when it is obvious (e.g., "Array") explain how the class name
-//#! expresses the role of this class.  Example: IPosition is short for
+//#! Except when it is obvious (e.g., "casacore::Array") explain how the class name
+//#! expresses the role of this class.  Example: casacore::IPosition is short for
 //#! "Integral Position" - a specialized integer vector for specifying
 //#! array dimensions and indices.
 // </etymology>
@@ -120,8 +120,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //#! appear as actual template arguments.  For example:  imagine that you
 //#! are writing a templated sort class, which does a quicksort on a
 //#! list of arbitrary objects.  Anybody who uses your templated class
-//#! must make sure that the actual argument class (say, Int or
-//#! String or Matrix) has comparison operators defined.
+//#! must make sure that the actual argument class (say, casacore::Int or
+//#! casacore::String or casacore::Matrix) has comparison operators defined.
 //#! This tag must be repeated for each template formal argument in the
 //#! template class definition -- that's why this tag has the "arg" attribute.
 //#! (Most templated classes, however, are templated on only a single
@@ -139,7 +139,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </thrown>
 //
 // <todo asof="yyyy/mm/dd">
-//#! A List of bugs, limitations, extensions or planned refinements.
+//#! A casacore::List of bugs, limitations, extensions or planned refinements.
 //#! The programmer should fill in a date in the "asof" field, which
 //#! will usually be the date at which the class is submitted for review.
 //#! If, during the review, new "todo" items come up, then the "asof"
@@ -156,7 +156,7 @@ public:
   // Constructor
   SingleDishSkyCal(VisSet& vs);
   SingleDishSkyCal(const MSMetaInfoForCal& msmc);  // preferred ctor
-  SingleDishSkyCal(const Int& nAnt);
+  SingleDishSkyCal(const casacore::Int& nAnt);
 
   // Destructor
   virtual ~SingleDishSkyCal();
@@ -169,10 +169,10 @@ public:
   virtual Type type() { return VisCal::M; }
   
   // Return type name as string (ditto)
-  virtual String typeName()     { return "SD SKY"; }
-  virtual String longTypeName() { return "SD SKY (sky spectra)"; }
+  virtual casacore::String typeName()     { return "SD SKY"; }
+  virtual casacore::String longTypeName() { return "SD SKY (sky spectra)"; }
 
-  // Return Matrix type
+  // Return casacore::Matrix type
   // single dish calibration is antenna-based
   virtual VisCalEnum::MatrixType matrixType() { return VisCalEnum::JONES; }
 
@@ -185,15 +185,15 @@ public:
 
   // Number of pars per ant/bln
   // TODO: nPar should refer numCorr in input MS
-  virtual Int nPar() { return 2; }
+  virtual casacore::Int nPar() { return 2; }
 
   // Total number of (complex) parameters per solve
   //  (specialize to jive with ant- or bln-basedness, etc.)
-  virtual Int nTotalPar() { return nPar(); }
+  virtual casacore::Int nTotalPar() { return nPar(); }
 
   // Does normalization by MODEL_DATA commute with this VisCal?
   //   (if so, permits pre-solve time-averaging)
-  virtual Bool normalizable() { return False; }
+  virtual casacore::Bool normalizable() { return false; }
 
   // Hazard a guess at the parameters (solveCPar) given the data
   virtual void guessPar(VisBuffer& vb);
@@ -201,51 +201,51 @@ public:
   // Differentiate VB model w.r.t. Cal  parameters (no 2nd derivative yet)
   virtual void differentiate(CalVisBuffer& cvb);
   virtual void differentiate(VisBuffer& vb,        
-        		     Cube<Complex>& V,     
-        		     Array<Complex>& dV,
-        		     Matrix<Bool>& Vflg);
+        		     casacore::Cube<casacore::Complex>& V,     
+        		     casacore::Array<casacore::Complex>& dV,
+        		     casacore::Matrix<casacore::Bool>& Vflg);
 
   // Differentiate VB model w.r.t. Source parameters
   virtual void diffSrc(VisBuffer& vb,        
-  		       Array<Complex>& dV);
+  		       casacore::Array<casacore::Complex>& dV);
 
   // Apply refant (implemented in SVJ)
   virtual void reReference() {}
 
   // Accumulate another VisCal onto this one
   virtual void accumulate(SolvableVisCal* incr,
-			  const Vector<Int>& fields);
+			  const casacore::Vector<casacore::Int>& fields);
 
   // Determine and apply flux density scaling
-  virtual void fluxscale(const String& outfile,
-                         const Vector<Int>& refFieldIn,
-			 const Vector<Int>& tranFieldIn,
-			 const Vector<Int>& inRefSpwMap,
-			 const Vector<String>& fldNames,
-                         const Float& inGainThres,
-                         const String& antSel,
-                         const String& timerangeSel,
-                         const String& scanSel,
+  virtual void fluxscale(const casacore::String& outfile,
+                         const casacore::Vector<casacore::Int>& refFieldIn,
+			 const casacore::Vector<casacore::Int>& tranFieldIn,
+			 const casacore::Vector<casacore::Int>& inRefSpwMap,
+			 const casacore::Vector<casacore::String>& fldNames,
+                         const casacore::Float& inGainThres,
+                         const casacore::String& antSel,
+                         const casacore::String& timerangeSel,
+                         const casacore::String& scanSel,
 			 fluxScaleStruct& oFluxScaleStruct,
-			 const String& oListFile,
-                         const Bool& incremental,
-                         const Int& fitorder,
-                         const Bool& display);
+			 const casacore::String& oListFile,
+                         const casacore::Bool& incremental,
+                         const casacore::Int& fitorder,
+                         const casacore::Bool& display);
 
   // Use generic data gathering mechanism for solve
-  virtual Bool useGenericGatherForSolve() { return False; }
+  virtual casacore::Bool useGenericGatherForSolve() { return false; }
 
   // Report state:
-  virtual void listCal(const Vector<Int> ufldids, const Vector<Int> uantids,
-		       const Matrix<Int> uchanids,  //const Int& spw, const Int& chan,
-		       const String& listfile="",const Int& pagerows=50);
+  virtual void listCal(const casacore::Vector<casacore::Int> ufldids, const casacore::Vector<casacore::Int> uantids,
+		       const casacore::Matrix<casacore::Int> uchanids,  //const casacore::Int& spw, const casacore::Int& chan,
+		       const casacore::String& listfile="",const casacore::Int& pagerows=50);
 
 
   // Local setApply
-  virtual void setApply(const Record& apply);
+  virtual void setApply(const casacore::Record& apply);
 
   // In general, we are freq-dep
-  virtual Bool freqDepPar() { return True; }
+  virtual casacore::Bool freqDepPar() { return true; }
   
   // New CalTable handling
   virtual void keepNCT();
@@ -258,15 +258,15 @@ protected:
 
   // The number of sets of parameters under consideration
   // This states size of third axis of SolveAllRPar
-  virtual Int& nElem() { return nAnt(); }
+  virtual casacore::Int& nElem() { return nAnt(); }
 
   // Number of Calibration matrices on ant/bln axis
-  virtual Int nCalMat() { return nAnt(); }
+  virtual casacore::Int nCalMat() { return nAnt(); }
 
   // Are the parameters the matrix elements? 
   //   (or is a non-trivial calculation required?)
   //    (Must be implemented in specializations!)
-  virtual Bool trivialMuellerElem() { return False; }
+  virtual casacore::Bool trivialMuellerElem() { return false; }
 
   // Initialize solve parameters (shape)
   virtual void initSolvePar();
@@ -278,7 +278,7 @@ protected:
   virtual void syncMeta2(const vi::VisBuffer2& vb);
 
   // Sync matrices generically for current meta data 
-  virtual void syncCalMat(const Bool& doInv=False);
+  virtual void syncCalMat(const casacore::Bool& doInv=false);
 
   // Synchronize the differentiated calibration 
   virtual void syncDiffMat();
@@ -291,48 +291,48 @@ protected:
   void calcWtScale();
 
   // Normalize a (complex) solution array (generic)
-  virtual Float calcPowerNorm(Array<Float>& amp, const Array<Bool>& ok);
+  virtual casacore::Float calcPowerNorm(casacore::Array<casacore::Float>& amp, const casacore::Array<casacore::Bool>& ok);
 
   // Invalidate cal matrices generically 
   virtual void invalidateCalMat() {}
 
-  // Row-by-row apply to a Cube<Complex> (generic)
-  virtual void applyCal(VisBuffer& vb, Cube<Complex>& Vout,Bool trial=False);
+  // Row-by-row apply to a casacore::Cube<casacore::Complex> (generic)
+  virtual void applyCal(VisBuffer& vb, casacore::Cube<casacore::Complex>& Vout,casacore::Bool trial=false);
   virtual void applyCal2(vi::VisBuffer2& vb, 
-        		 Cube<Complex>& Vout,Cube<Float>& Wout,
-        		 Bool trial=False);
+        		 casacore::Cube<casacore::Complex>& Vout,casacore::Cube<casacore::Float>& Wout,
+        		 casacore::Bool trial=false);
 
   // Fill caltable by traversing MS
   // Accessor is responsible for accessing data stored either
   // in DATA or FLOAT_DATA
   template<class Accessor>
-  inline void traverseMS(MeasurementSet const &ms);
+  inline void traverseMS(casacore::MeasurementSet const &ms);
 
   // access to current calibration data
-  inline Cube<Complex> &currentSky() { return (*currentSky_[currSpw()]); }
-  inline Cube<Bool> &currentSkyOK() { return (*currentSkyOK_[currSpw()]); }
-  inline SkyCal<Complex, Complex> &engineC() { return (*engineC_[currSpw()]); }
-  inline SkyCal<Float, Float> &engineF() { return (*engineF_[currSpw()]); }
+  inline casacore::Cube<casacore::Complex> &currentSky() { return (*currentSky_[currSpw()]); }
+  inline casacore::Cube<casacore::Bool> &currentSkyOK() { return (*currentSkyOK_[currSpw()]); }
+  inline SkyCal<casacore::Complex, casacore::Complex> &engineC() { return (*engineC_[currSpw()]); }
+  inline SkyCal<casacore::Float, casacore::Float> &engineF() { return (*engineF_[currSpw()]); }
 
   // arrange data selection according to calibration mode
-  virtual String configureSelection(MeasurementSet const &ms) = 0;
+  virtual casacore::String configureSelection(casacore::MeasurementSet const &ms) = 0;
 
   // current antenna
-  Int currAnt_;
-  Vector<Double> interval_;
+  casacore::Int currAnt_;
+  casacore::Vector<casacore::Double> interval_;
 
   // Single Dish Calibration algebra wrapper (per Spw)
-  PtrBlock<SkyCal<Complex, Complex> *> engineC_;
-  PtrBlock<SkyCal<Float, Float> *> engineF_;
+  casacore::PtrBlock<SkyCal<casacore::Complex, casacore::Complex> *> engineC_;
+  casacore::PtrBlock<SkyCal<casacore::Float, casacore::Float> *> engineF_;
 
   // Current Sky spectra
-  PtrBlock<Cube<Complex> *> currentSky_; // [nSpw]([1,2],nChanMat,nAnt)
-  PtrBlock<Cube<Bool> *> currentSkyOK_;  // [nSpw]([1,2],nChanMat,nAnt)
+  casacore::PtrBlock<casacore::Cube<casacore::Complex> *> currentSky_; // [nSpw]([1,2],nChanMat,nAnt)
+  casacore::PtrBlock<casacore::Cube<casacore::Bool> *> currentSkyOK_;  // [nSpw]([1,2],nChanMat,nAnt)
 
 private:
   void initializeSky();
   void finalizeSky();
-  void updateWt2(Matrix<Float> &weight, const Int& antenna1);
+  void updateWt2(casacore::Matrix<casacore::Float> &weight, const casacore::Int& antenna1);
 };
 
 class SingleDishPositionSwitchCal : public SingleDishSkyCal 
@@ -342,17 +342,17 @@ public:
   // Constructor
   SingleDishPositionSwitchCal(VisSet& vs);
   SingleDishPositionSwitchCal(const MSMetaInfoForCal& msmc);  // preferred ctor
-  SingleDishPositionSwitchCal(const Int& nAnt);
+  SingleDishPositionSwitchCal(const casacore::Int& nAnt);
 
   // Destructor
   virtual ~SingleDishPositionSwitchCal();
 
   // Return type name as string (ditto)
-  virtual String typeName()     { return "SDSKY_PS"; }
-  virtual String longTypeName() { return "SDSKY_PS (position switch sky subtraction)"; }
+  virtual casacore::String typeName()     { return "SDSKY_PS"; }
+  virtual casacore::String longTypeName() { return "SDSKY_PS (position switch sky subtraction)"; }
 
   // data selection for position switch calibration
-  virtual String configureSelection(MeasurementSet const &ms);
+  virtual casacore::String configureSelection(casacore::MeasurementSet const &ms);
 
 };
   
@@ -363,25 +363,25 @@ public:
   // Constructor
   SingleDishRasterCal(VisSet& vs);
   SingleDishRasterCal(const MSMetaInfoForCal& msmc);  // preferred ctor
-  SingleDishRasterCal(const Int& nAnt);
+  SingleDishRasterCal(const casacore::Int& nAnt);
 
   // Destructor
   virtual ~SingleDishRasterCal();
 
   // Return type name as string (ditto)
-  virtual String typeName()     { return "SDSKY_RASTER"; }
-  virtual String longTypeName() { return "SDSKY_RASTER (position switch sky subtraction specific to OTF raster observation)"; }
+  virtual casacore::String typeName()     { return "SDSKY_RASTER"; }
+  virtual casacore::String longTypeName() { return "SDSKY_RASTER (position switch sky subtraction specific to OTF raster observation)"; }
 
   // local setSolve
-  virtual void setSolve(const Record& solve);
+  virtual void setSolve(const casacore::Record& solve);
   
   // data selection specific to otfraster mode
-  virtual String configureSelection(MeasurementSet const &ms);
+  virtual casacore::String configureSelection(casacore::MeasurementSet const &ms);
 
 private:
   // edge detection parameter for otfraster mode
-  Float fraction_;
-  Int numEdge_;
+  casacore::Float fraction_;
+  casacore::Int numEdge_;
 };
 
 class SingleDishOtfCal : public SingleDishSkyCal 
@@ -391,26 +391,26 @@ public:
   // Constructor
   SingleDishOtfCal(VisSet& vs);
   //  SingleDishOtfCal(const MSMetaInfoForCal& msmc);  // preferred ctor   ****ctor needs an MS!
-  // Renaud: disabledSingleDishOtfCal(const Int& nAnt);
+  // Renaud: disabledSingleDishOtfCal(const casacore::Int& nAnt);
 
   // Destructor
   virtual ~SingleDishOtfCal();
 
   // Return type name as string (ditto)
-  virtual String typeName()     { return "SDSKY_OTF"; }
-  virtual String longTypeName() { return "SDSKY_OTF (position switch sky subtraction specific to OTF fast scan)"; }
+  virtual casacore::String typeName()     { return "SDSKY_OTF"; }
+  virtual casacore::String longTypeName() { return "SDSKY_OTF (position switch sky subtraction specific to OTF fast scan)"; }
 
-  // Data selection specific to otf mode
-  virtual String configureSelection(MeasurementSet const &ms);
-  virtual void setSolve(const Record& solve);
+  // casacore::Data selection specific to otf mode
+  virtual casacore::String configureSelection(casacore::MeasurementSet const &ms);
+  virtual void setSolve(const casacore::Record& solve);
 
 private:
   // Edge detection parameters for otf mode
-  Float fraction_;
-  Float pixel_scale_;
+  casacore::Float fraction_;
+  casacore::Float pixel_scale_;
 
-  // MeasurementSet filtered with user-specified selection
-  const MeasurementSet & msSel_ ;
+  // casacore::MeasurementSet filtered with user-specified selection
+  const casacore::MeasurementSet & msSel_ ;
 
 };
 

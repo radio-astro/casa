@@ -42,7 +42,7 @@ namespace casa {
 class SpectralElement;
 
 // <summary>
-// Fit spectral components to a Vector of data
+// Fit spectral components to a casacore::Vector of data
 // </summary>
 
 // <use visibility=export>
@@ -58,7 +58,7 @@ class SpectralElement;
 
 // <synopsis> 
 // Fit lists (held in class SpectralList) of SpectralElements to a 
-// Vector of data.  Each SpectralElement can  be one from a variety
+// casacore::Vector of data.  Each SpectralElement can  be one from a variety
 // of types.  The values of the parameters for each SpectralElement 
 // provide the initial starting guesses for the fitting process.  
 // Also, a SpectralElement object holds a mask indicating whether 
@@ -66,25 +66,25 @@ class SpectralElement;
 // fitting is done, a new SpectralList holding SpectralElements with 
 // the fitted parameters is created.  
 //
-// For all the functions that return a status Bool, True is good. If
-// False is returned, an error message can be recovered with function
-// <src>errorMessage</src>,  You should not proceed if False is returned.
+// For all the functions that return a status casacore::Bool, true is good. If
+// false is returned, an error message can be recovered with function
+// <src>errorMessage</src>,  You should not proceed if false is returned.
 // </synopsis> 
 
 // <example>
 // <srcblock>
-// const uInt n = 512;
-// Vector<Double> x(n);
-// Vector<Double> y(n);
-// Vector<Bool> m(n);
+// const casacore::uInt n = 512;
+// casacore::Vector<casacore::Double> x(n);
+// casacore::Vector<casacore::Double> y(n);
+// casacore::Vector<casacore::Bool> m(n);
 // 
 // // Code to fill data vectors x,y,m
 //
-// ProfileFit1D<Float> fitter; 
-// Bool ok = fitter.setData (x, y, m);
+// ProfileFit1D<casacore::Float> fitter; 
+// casacore::Bool ok = fitter.setData (x, y, m);
 // ok = fitter.setGaussianElements (2);              
 // ok = fitter.fit();       
-// const SpectralList& fitList = fitter.getList(True);
+// const SpectralList& fitList = fitter.getList(true);
 // </srcblock>
 // </example>
 
@@ -115,16 +115,16 @@ public:
     // Assignment operator. Uses copy semantics.
     ProfileFit1D& operator=(const ProfileFit1D& other);
 
-    // Set abcissa, ordinate, mask and weights. A True mask value means the 
+    // Set abcissa, ordinate, mask and weights. A true mask value means the 
     // data are good. If you don't specify the weights vector, all weights 
     // are assumed to be unity.  If you don't specify a mask it will be
     // created as all good.
-    // Status is returned, if False, error message can be recovered with <src>errorMessage</src>
+    // Status is returned, if false, error message can be recovered with <src>errorMessage</src>
     // <group>
-    Bool setData (const Vector<Double>& x, const Vector<T>& y, const Vector<Bool>& mask,
-                  const Vector<Double>& weight);
-    Bool setData (const Vector<Double>& x, const Vector<T>& y, const Vector<Bool>& mask);
-    Bool setData (const Vector<Double>& x, const Vector<T>& y);
+    casacore::Bool setData (const casacore::Vector<casacore::Double>& x, const casacore::Vector<T>& y, const casacore::Vector<casacore::Bool>& mask,
+                  const casacore::Vector<casacore::Double>& weight);
+    casacore::Bool setData (const casacore::Vector<casacore::Double>& x, const casacore::Vector<T>& y, const casacore::Vector<casacore::Bool>& mask);
+    casacore::Bool setData (const casacore::Vector<casacore::Double>& x, const casacore::Vector<T>& y);
     // </group>
 
     // Set a SpectralList of SpectralElements to fit for.
@@ -140,9 +140,9 @@ public:
     // The initial estimates for the Gaussians will be automatically determined.
     // All of the parameters created by this function will be solved for
     // by default. You can recover the list of elements with function getList.
-    // Status is returned, if False, error message can be 
+    // Status is returned, if false, error message can be 
     // recovered with <src>errorMessage</src>
-    Bool setGaussianElements (uInt nGauss);
+    casacore::Bool setGaussianElements (casacore::uInt nGauss);
 
     // Add new SpectralElement(s) to the SpectralList (can be empty)
     // of SpectralElements to be fit for.  
@@ -156,54 +156,54 @@ public:
 
     // Set abscissa range mask.  You can specify a number of ranges
     // via a vector of start indices (or X values) and a vector of end
-    // indices (or X values).   When argument insideIsGood is True,
+    // indices (or X values).   When argument insideIsGood is true,
     // a mask will be created which
-    // will be True (good) inside the ranges and bad (False)
-    // outside of those ranges.  When argument insideIsGood is False,
-    // the mask will be False (bad) inside the ranges and 
-    // True (good) outside of those ranges. When the data are fit, a total
+    // will be true (good) inside the ranges and bad (false)
+    // outside of those ranges.  When argument insideIsGood is false,
+    // the mask will be false (bad) inside the ranges and 
+    // true (good) outside of those ranges. When the data are fit, a total
     // mask is formed combining (via a logical AND) the 
     // data mask (setData) and this range mask.
-    // Status is returned, if False, error message can be recovered with <src>errorMessage</src>
+    // Status is returned, if false, error message can be recovered with <src>errorMessage</src>
     // In the single set version, the values in the set indicate the pixels to set the mask for,
     // ie no ranges, just specific pixels are to be provided. In this case, specified values
     // which are greater than or equal to the number of pixels are tacitly ignored.
     // <group>
-    Bool setXRangeMask (const Vector<uInt>& startIndex,
-                       const Vector<uInt>& endIndex,
-                       Bool insideIsGood=True);
-    Bool setXRangeMask (const Vector<T>& startIndex,
-                       const Vector<T>& endIndex,
-                       Bool insideIsGood=True);
+    casacore::Bool setXRangeMask (const casacore::Vector<casacore::uInt>& startIndex,
+                       const casacore::Vector<casacore::uInt>& endIndex,
+                       casacore::Bool insideIsGood=true);
+    casacore::Bool setXRangeMask (const casacore::Vector<T>& startIndex,
+                       const casacore::Vector<T>& endIndex,
+                       casacore::Bool insideIsGood=true);
 
-    Bool setXMask(const std::set<uInt>& indices, Bool specifiedPixelsAreGood);
+    casacore::Bool setXMask(const std::set<casacore::uInt>& indices, casacore::Bool specifiedPixelsAreGood);
     // </group>
 
     // Recover masks.  These are the data mask (setData) the range
     // mask (setRangeMask may be length zero) and the total 
     // mask combining the two.
     // <group>
-    Vector<Bool> getDataMask() const {return itsDataMask;};
-    Vector<Bool> getRangeMask() const {return itsRangeMask;}
-    Vector<Bool> getTotalMask() const {return makeTotalMask();};
+    casacore::Vector<casacore::Bool> getDataMask() const {return itsDataMask;};
+    casacore::Vector<casacore::Bool> getRangeMask() const {return itsRangeMask;}
+    casacore::Vector<casacore::Bool> getTotalMask() const {return makeTotalMask();};
     // </group>
 
     // Do the fit and return status.  Returns convergence status.
     // Error conditions in the solution process will generate
-    // an AipsError exception and you should catch these yourself.
-    Bool fit ();
+    // an casacore::AipsError exception and you should catch these yourself.
+    casacore::Bool fit ();
 
     // Get Chi Squared of fit
-    Double getChiSquared () const {return itsFitter.chiSq();}
+    casacore::Double getChiSquared () const {return itsFitter.chiSq();}
 
     // Get number of iterations for last fit
-    Double getNumberIterations () const {return itsFitter.nIterations();}
+    casacore::Double getNumberIterations () const {return itsFitter.nIterations();}
 
     // Recover the list of elements.  You can get the elements
-    // as initially estimated (fit=False), or after fitting 
-    // (fit=True).  In the latter case, the SpectralElements
+    // as initially estimated (fit=false), or after fitting 
+    // (fit=true).  In the latter case, the SpectralElements
     // hold the parameters and errors of the fit.
-    const SpectralList& getList (Bool fit=True) const;
+    const SpectralList& getList (casacore::Bool fit=true) const;
 
     // Recover vectors for the estimate, fit and residual.
     // If you don't specify which element, all elements are included
@@ -211,29 +211,29 @@ public:
     // condition exists (e.g. asking for fit before you do one). In this
     // case an error message can be recovered with function <src>errorMessage</src>.
     //<group>
-    Vector<T> getEstimate (Int which=-1) const;
-    Vector<T> getFit (Int which=-1) const;
-    Vector<T> getResidual (Int which=-1, Bool fit=True)  const;
+    casacore::Vector<T> getEstimate (casacore::Int which=-1) const;
+    casacore::Vector<T> getFit (casacore::Int which=-1) const;
+    casacore::Vector<T> getResidual (casacore::Int which=-1, casacore::Bool fit=true)  const;
     //</group>
 
     // Recover the error message
-    String errorMessage () const {return itsError;};
+    casacore::String errorMessage () const {return itsError;};
 
 private:
-   Vector<Double> itsX;                    // Abcissa (really should not be type T)
-   Vector<T> itsY;                         // Ordinate 
-   Vector<Double> itsWeight;               // Weights 
-   Vector<Bool> itsDataMask;               // Data mask
-   Vector<Bool> itsRangeMask;              // Mask associated with ranges
+   casacore::Vector<casacore::Double> itsX;                    // Abcissa (really should not be type T)
+   casacore::Vector<T> itsY;                         // Ordinate 
+   casacore::Vector<casacore::Double> itsWeight;               // Weights 
+   casacore::Vector<casacore::Bool> itsDataMask;               // casacore::Data mask
+   casacore::Vector<casacore::Bool> itsRangeMask;              // Mask associated with ranges
 //
-   SpectralList itsList;                   // List of elements to fit for
+   SpectralList itsList;                   // casacore::List of elements to fit for
 //
    SpectralFit itsFitter;                  // Fitter
-   mutable String itsError;                // Error message
+   mutable casacore::String itsError;                // Error message
 
 // Functions
-   Vector<Bool> makeTotalMask() const;
-   SpectralList getSubsetList (const SpectralList& list, Int which)  const;
+   casacore::Vector<casacore::Bool> makeTotalMask() const;
+   SpectralList getSubsetList (const SpectralList& list, casacore::Int which)  const;
    void checkType() const;
    void copy(const ProfileFit1D<T>& other);
 };

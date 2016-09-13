@@ -41,6 +41,7 @@
 #include <display/DisplayDatas/TblAsXYDD.h>
 #include <display/DisplayDatas/TblAsXYDM.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // constructor
@@ -90,7 +91,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			// read the column into an array
 			ROScalarColumn<double>
 			dataCol(*theTable,parent->itsXColumnName->value());
-			dataCol.getColumn(typedata,True);
+			dataCol.getColumn(typedata,true);
 			// now convert array to type double
 			xData.resize(typedata.shape());
 			convertArray(xData,typedata);
@@ -99,7 +100,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			Vector<float> typedata;
 			ROScalarColumn<float>
 			dataCol(*theTable,parent->itsXColumnName->value());
-			dataCol.getColumn(typedata,True);
+			dataCol.getColumn(typedata,true);
 			xData.resize(typedata.shape());
 			xData=typedata;
 		}
@@ -107,7 +108,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			Vector<ushort> typedata;
 			ROScalarColumn<ushort>
 			dataCol(*theTable,parent->itsXColumnName->value());
-			dataCol.getColumn(typedata,True);
+			dataCol.getColumn(typedata,true);
 			xData.resize(typedata.shape());
 			convertArray(xData,typedata);
 		}
@@ -115,7 +116,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			Vector<int> typedata;
 			ROScalarColumn<int>
 			dataCol(*theTable,parent->itsXColumnName->value());
-			dataCol.getColumn(typedata,True);
+			dataCol.getColumn(typedata,true);
 			xData.resize(typedata.shape());
 			convertArray(xData,typedata);
 		}
@@ -123,7 +124,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			Vector<uInt> typedata;
 			ROScalarColumn<uInt>
 			dataCol(*theTable,parent->itsXColumnName->value());
-			dataCol.getColumn(typedata,True);
+			dataCol.getColumn(typedata,true);
 			xData.resize(typedata.shape());
 			convertArray(xData,typedata);
 		}
@@ -141,7 +142,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				// read the column into an array
 				ROScalarColumn<double>
 				dataCol(*theTable,parent->itsYColumnName->value());
-				dataCol.getColumn(typedata,True);
+				dataCol.getColumn(typedata,true);
 				// now convert array to type double
 				yData.resize(typedata.shape());
 				convertArray(yData,typedata);
@@ -150,7 +151,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				Vector<float> typedata;
 				ROScalarColumn<float>
 				dataCol(*theTable,parent->itsYColumnName->value());
-				dataCol.getColumn(typedata,True);
+				dataCol.getColumn(typedata,true);
 				yData.resize(typedata.shape());
 				yData=typedata;
 			}
@@ -158,7 +159,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				Vector<ushort> typedata;
 				ROScalarColumn<ushort>
 				dataCol(*theTable,parent->itsYColumnName->value());
-				dataCol.getColumn(typedata,True);
+				dataCol.getColumn(typedata,true);
 				yData.resize(typedata.shape());
 				convertArray(yData,typedata);
 			}
@@ -166,7 +167,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				Vector<int> typedata;
 				ROScalarColumn<int>
 				dataCol(*theTable,parent->itsYColumnName->value());
-				dataCol.getColumn(typedata,True);
+				dataCol.getColumn(typedata,true);
 				yData.resize(typedata.shape());
 				convertArray(yData,typedata);
 			}
@@ -174,7 +175,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				Vector<uInt> typedata;
 				ROScalarColumn<uInt>
 				dataCol(*theTable,parent->itsYColumnName->value());
-				dataCol.getColumn(typedata,True);
+				dataCol.getColumn(typedata,true);
 				yData.resize(typedata.shape());
 				convertArray(yData,typedata);
 			}
@@ -187,11 +188,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		cout << endl;
 
 		// define several things for drawing
-		// Bool usePixelEdges = False;  // don't use this yet
+		// Bool usePixelEdges = false;  // don't use this yet
 
 		// now plot the data
 		wc->drawMarkers(xData, yData);
-		return True;
+		return true;
 	}
 
 // (required) default constructor

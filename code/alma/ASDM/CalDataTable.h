@@ -28,7 +28,7 @@
  * | If you do, all changes will be lost when the file is re-generated. |
  *  --------------------------------------------------------------------
  *
- * File CalDataTable.h
+ * casacore::File CalDataTable.h
  */
  
 #ifndef CalDataTable_CLASS
@@ -183,7 +183,7 @@ class CalDataRow;
  * <TD> numScan </TD> 
  * <TD> int </TD>
  * <TD>  &nbsp;  </TD> 
- * <TD> &nbsp;the number of scans (in this Execution Block). </TD>
+ * <TD> &nbsp;the number of scans (in this Execution casacore::Block). </TD>
  * </TR>
 	
  * <TR>
@@ -331,7 +331,7 @@ public:
 	std::string toXML()  ;
 
 #ifndef WITHOUT_ACS
-	// Conversion Methods
+	// casacore::Conversion Methods
 	/**
 	 * Convert this table into a CalDataTableIDL CORBA structure.
 	 *

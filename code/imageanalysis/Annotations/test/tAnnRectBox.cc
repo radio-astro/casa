@@ -81,7 +81,7 @@ int main () {
 			log << LogIO::NORMAL
 				<< "mixed world and pixel coordinates throws exception"
 				<< LogIO::POST;
-			Bool thrown = True;
+			Bool thrown = true;
 			Quantity blcx(0.01, "deg");
 			Quantity blcy(0, "deg");
 			Quantity trcx(0, "deg");
@@ -89,7 +89,7 @@ int main () {
 
 			Quantity beginFreq, endFreq;
 			String dirTypeString = MDirection::showType(
-					csys.directionCoordinate().directionType(False)
+					csys.directionCoordinate().directionType(false)
 			);
 			String freqRefFrameString = MFrequency::showType(
 					csys.spectralCoordinate().frequencySystem()
@@ -106,9 +106,9 @@ int main () {
 						blcx, blcy, trcx, trcy,
 						dirTypeString,
 						csys, shape, beginFreq, endFreq, freqRefFrameString,
-						dopplerString, restfreq, stokes, False
+						dopplerString, restfreq, stokes, false
 				);
-				thrown = False;
+				thrown = false;
 			} catch (AipsError x) {
 				log << LogIO::NORMAL
 					<< "Exception thrown as expected: "
@@ -121,14 +121,14 @@ int main () {
 			log << LogIO::NORMAL
 				<< "Test bad quantity for world direction coordinate throws exception"
 				<< LogIO::POST;
-			Bool thrown = True;
+			Bool thrown = true;
 			Quantity blcx(0.01, "km/s");
 			Quantity blcy(0, "deg");
 			Quantity trcx(0, "deg");
 			Quantity trcy(0.01, "deg");
 			Quantity beginFreq, endFreq;
 			String dirTypeString = MDirection::showType(
-					csys.directionCoordinate().directionType(False)
+					csys.directionCoordinate().directionType(false)
 			);
 			String freqRefFrameString = MFrequency::showType(
 					csys.spectralCoordinate().frequencySystem()
@@ -145,9 +145,9 @@ int main () {
 						blcx, blcy, trcx, trcy,
 						dirTypeString,
 						csys, shape, beginFreq, endFreq, freqRefFrameString,
-						dopplerString, restfreq, stokes, False
+						dopplerString, restfreq, stokes, false
 				);
-				thrown = False;
+				thrown = false;
 			} catch (AipsError x) {
 				log << LogIO::NORMAL
 					<< "Exception thrown as expected: "
@@ -163,7 +163,7 @@ int main () {
 
 			Quantity beginFreq, endFreq;
 			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(False)
+				csys.directionCoordinate().directionType(false)
 			);
 			String freqRefFrameString = MFrequency::showType(
 				csys.spectralCoordinate().frequencySystem()
@@ -180,7 +180,7 @@ int main () {
 				blcx, blcy, trcx, trcy,
 				dirTypeString,
 				csys, shape, beginFreq, endFreq, freqRefFrameString,
-				dopplerString, restfreq, stokes, False
+				dopplerString, restfreq, stokes, false
 			);
 			/*
 			vector<Quantity> wblc, wtrc;
@@ -225,7 +225,7 @@ int main () {
 			Quantity trcy(0.01, "deg");
 			Quantity beginFreq, endFreq;
 			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(False)
+				csys.directionCoordinate().directionType(false)
 			);
 			String freqRefFrameString = MFrequency::showType(
 				csys.spectralCoordinate().frequencySystem()
@@ -241,7 +241,7 @@ int main () {
 				blcx, blcy, trcx, trcy,
 				dirTypeString,
 				csys, shape, beginFreq, endFreq, freqRefFrameString,
-				dopplerString, restfreq, stokes, False
+				dopplerString, restfreq, stokes, false
 			);
 
 			Vector<MDirection> corners = box.getCorners();
@@ -317,7 +317,7 @@ int main () {
 			AnnRectBox box(
 				blcx, blcy, trcx, trcy, dirTypeString,
 				csys, shape, beginFreq, endFreq, freqRefFrameString,
-				dopplerString, restfreq, stokes, False
+				dopplerString, restfreq, stokes, false
 			);
 			Vector<MDirection> corners = box.getCorners();
 			AlwaysAssert(
@@ -358,7 +358,7 @@ int main () {
 			Quantity endFreq(1450e6, "Hz");
 
 			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(False)
+				csys.directionCoordinate().directionType(false)
 			);
 			String freqRefFrameString = MFrequency::showType(
 				csys.spectralCoordinate().frequencySystem()
@@ -374,7 +374,7 @@ int main () {
 				blcx, blcy, trcx, trcy,
 				dirTypeString,
 				csys, shape, beginFreq, endFreq, freqRefFrameString,
-				dopplerString, restfreq, stokes, False
+				dopplerString, restfreq, stokes, false
 			);
 
 			Vector<MFrequency> freqs = box.getFrequencyLimits();
@@ -399,7 +399,7 @@ int main () {
 			Quantity endFreq(1450e6, "Hz");
 
 			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(False)
+				csys.directionCoordinate().directionType(false)
 			);
 			String freqRefFrameString = "GALACTO";
 			String dopplerString = MDoppler::showType(
@@ -413,7 +413,7 @@ int main () {
 				blcx, blcy, trcx, trcy,
 				dirTypeString,
 				csys, shape, beginFreq, endFreq, freqRefFrameString,
-				dopplerString, restfreq, stokes, False
+				dopplerString, restfreq, stokes, false
 			);
 
 			Vector<MFrequency> freqs = box.getFrequencyLimits();
@@ -438,7 +438,7 @@ int main () {
 			Quantity beginFreq(250000000, "m/s");
 
 			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(False)
+				csys.directionCoordinate().directionType(false)
 			);
 			String freqRefFrameString = MFrequency::showType(
 				csys.spectralCoordinate().frequencySystem()
@@ -454,7 +454,7 @@ int main () {
 				blcx, blcy, trcx, trcy,
 				dirTypeString,
 				csys, shape, beginFreq, endFreq, freqRefFrameString,
-				dopplerString, restfreq, stokes, False
+				dopplerString, restfreq, stokes, false
 			);
 
 			Vector<MFrequency> freqs = box.getFrequencyLimits();
@@ -479,7 +479,7 @@ int main () {
 			Quantity beginFreq(20000, "m/s");
 
 			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(False)
+				csys.directionCoordinate().directionType(false)
 			);
 			String freqRefFrameString = MFrequency::showType(
 				csys.spectralCoordinate().frequencySystem()
@@ -495,7 +495,7 @@ int main () {
 				blcx, blcy, trcx, trcy,
 				dirTypeString,
 				csys, shape, beginFreq, endFreq, freqRefFrameString,
-				dopplerString, restfreq, stokes, False
+				dopplerString, restfreq, stokes, false
 			);
 
 			Vector<MFrequency> freqs = box.getFrequencyLimits();
@@ -521,7 +521,7 @@ int main () {
 			Quantity endFreq(-1986.7458583077, "km/s");
 
 			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(False)
+				csys.directionCoordinate().directionType(false)
 			);
 			String freqRefFrameString = MFrequency::showType(
 				csys.spectralCoordinate().frequencySystem()
@@ -535,7 +535,7 @@ int main () {
 				blcx, blcy, trcx, trcy,
 				dirTypeString,
 				csys, shape, beginFreq, endFreq, freqRefFrameString,
-				dopplerString, restfreq, stokes, False
+				dopplerString, restfreq, stokes, false
 			);
 			cout << box << endl;
 			Vector<MFrequency> freqs = box.getFrequencyLimits();

@@ -121,17 +121,17 @@ public:
     // ABSTRACT METHODS //
     
     // Returns this color's value in a hexadecimal form, i.e. "000000".
-    virtual String asHexadecimal() const = 0;
+    virtual casacore::String asHexadecimal() const = 0;
     
     // Returns this color's value as a human-readable name if applicable, or an
-    // empty String if inapplicable.
-    virtual String asName() const = 0;
+    // empty casacore::String if inapplicable.
+    virtual casacore::String asName() const = 0;
     
-    // If the given String is a hexadecimal value, sets the color to it.
+    // If the given casacore::String is a hexadecimal value, sets the color to it.
     // Otherwise tries to set the color as a name.  If the given name is
     // invalid, the behavior is undefined but should probably default to a
     // sensible value.
-    virtual void setAsHexadecimalOrName(const String& str) = 0;
+    virtual void setAsHexadecimalOrName(const casacore::String& str) = 0;
     
     // Returns this color's alpha as a value between 0 (transparent) and 1
     // (opaque).
@@ -145,18 +145,18 @@ public:
     // CONVENIENCE METHODS //
     
     // Sets this color's value as a hexadecimal value.
-    virtual void setAsHexadecimal(const String& hex);
+    virtual void setAsHexadecimal(const casacore::String& hex);
     
     // Set's this color's value to the given named color.
-    virtual void setAsName(const String& name);
+    virtual void setAsName(const casacore::String& name);
     
     
     // RECORD METHODS //
     
     // Gets/Sets the color as a Record.
     // <group>
-    virtual Record toRecord() const;
-    virtual void fromRecord(const Record& record);
+    virtual casacore::Record toRecord() const;
+    virtual void fromRecord(const casacore::Record& record);
     // </group>
     
     
@@ -173,13 +173,13 @@ public:
     virtual bool operator!=(const PlotColor& rh) const;
     
 protected:
-    // Record key names.
+    // casacore::Record key names.
     // <group>
-    static const String REC_HEXADECIMAL; // String
-    static const String REC_ALPHA;       // double
+    static const casacore::String REC_HEXADECIMAL; // String
+    static const casacore::String REC_ALPHA;       // double
     // </group>
 };
-typedef CountedPtr<PlotColor> PlotColorPtr;
+typedef casacore::CountedPtr<PlotColor> PlotColorPtr;
 
 
 // Abstract class for fonts.  A font has a family, size, color, bold, italics,
@@ -210,10 +210,10 @@ public:
     virtual void setPixelSize(int size) = 0;
     
     // Returns the font family.
-    virtual String fontFamily() const = 0;
+    virtual casacore::String fontFamily() const = 0;
     
     // Sets the font family to the given.
-    virtual void setFontFamily(const String& font) = 0;
+    virtual void setFontFamily(const casacore::String& font) = 0;
     
     // Returns a copy of the color for this font.
     virtual PlotColorPtr color() const = 0;
@@ -238,7 +238,7 @@ public:
     // Convenience methods for setting color.
     // <group>
     virtual void setColor(const PlotColorPtr c);
-    virtual void setColor(const String& col);
+    virtual void setColor(const casacore::String& col);
     // </group>
     
     
@@ -246,8 +246,8 @@ public:
     
     // Gets/Sets the color as a Record.
     // <group>
-    virtual Record toRecord() const;
-    virtual void fromRecord(const Record& record);
+    virtual casacore::Record toRecord() const;
+    virtual void fromRecord(const casacore::Record& record);
     // </group>
     
     
@@ -264,18 +264,18 @@ public:
     virtual bool operator!=(const PlotFont& rh) const;
     
 protected:
-    // Record key names.
+    // casacore::Record key names.
     // <group>
-    static const String REC_POINTSIZE; // double
-    static const String REC_PIXELSIZE; // int
-    static const String REC_FAMILY;    // String
-    static const String REC_COLOR;     // Record
-    static const String REC_ITALICS;   // bool
-    static const String REC_BOLD;      // bool
-    static const String REC_UNDERLINE; // bool
+    static const casacore::String REC_POINTSIZE; // double
+    static const casacore::String REC_PIXELSIZE; // int
+    static const casacore::String REC_FAMILY;    // String
+    static const casacore::String REC_COLOR;     // Record
+    static const casacore::String REC_ITALICS;   // bool
+    static const casacore::String REC_BOLD;      // bool
+    static const casacore::String REC_UNDERLINE; // bool
     // </group>
 };
-typedef CountedPtr<PlotFont> PlotFontPtr;
+typedef casacore::CountedPtr<PlotFont> PlotFontPtr;
 
 
 // Abstract class for area fill.  An area fill consists of a color and a
@@ -308,14 +308,14 @@ public:
     
     // Sets the pattern for this area fill to the given.
     virtual void setPattern(Pattern pattern) = 0;
-    virtual void setPattern( const String& descriptor );
+    virtual void setPattern( const casacore::String& descriptor );
     
     // CONVENIENCE METHODS //
     
     // Convenience methods for setting color.
     // <group>
     virtual void setColor(const PlotColorPtr c);
-    virtual void setColor(const String& co);
+    virtual void setColor(const casacore::String& co);
     // </group>
     
     
@@ -323,8 +323,8 @@ public:
     
     // Gets/Sets the color as a Record.
     // <group>
-    virtual Record toRecord() const;
-    virtual void fromRecord(const Record& record);
+    virtual casacore::Record toRecord() const;
+    virtual void fromRecord(const casacore::Record& record);
     // </group>
     
     
@@ -342,13 +342,13 @@ public:
     virtual bool operator!=(const PlotAreaFill& rh) const;
     
 protected:
-    // Record key names.
+    // casacore::Record key names.
     // <group>
-    static const String REC_COLOR;   // Record
-    static const String REC_PATTERN; // int
+    static const casacore::String REC_COLOR;   // Record
+    static const casacore::String REC_PATTERN; // int
     // </group>
 };
-typedef CountedPtr<PlotAreaFill> PlotAreaFillPtr;
+typedef casacore::CountedPtr<PlotAreaFill> PlotAreaFillPtr;
 
 
 // Abstract class for a line.  A line has a color, style, and width.
@@ -397,7 +397,7 @@ public:
     // Convenience methods for setting color.
     // <group>
     virtual void setColor(const PlotColorPtr c);
-    virtual void setColor(const String& col);
+    virtual void setColor(const casacore::String& col);
     // </group>
     
     
@@ -405,8 +405,8 @@ public:
     
     // Gets/Sets the color as a Record.
     // <group>
-    virtual Record toRecord() const;
-    virtual void fromRecord(const Record& record);
+    virtual casacore::Record toRecord() const;
+    virtual void fromRecord(const casacore::Record& record);
     // </group>
     
     
@@ -423,14 +423,14 @@ public:
     virtual bool operator!=(const PlotLine& rh) const;
     
 protected:
-    // Record key names.
+    // casacore::Record key names.
     // <group>
-    static const String REC_WIDTH; // double
-    static const String REC_STYLE; // int
-    static const String REC_COLOR; // Record
+    static const casacore::String REC_WIDTH; // double
+    static const casacore::String REC_STYLE; // int
+    static const casacore::String REC_COLOR; // Record
     // </group>
 };
-typedef CountedPtr<PlotLine> PlotLinePtr;
+typedef casacore::CountedPtr<PlotLine> PlotLinePtr;
 
 
 // Abstract class for a symbol.  A symbol has a style, size, line, and area
@@ -493,7 +493,7 @@ public:
     
     // Sets the symbol style to the given.
     virtual void setSymbol(Symbol symbol) = 0;
-    virtual void setSymbol( const String& descriptor );
+    virtual void setSymbol( const casacore::String& descriptor );
     
     // Sets the symbol character to the given.  Implies setSymbol(CHARACTER).
     virtual void setSymbol(char c) = 0;
@@ -530,7 +530,7 @@ public:
     // Convenience methods for setting the line.
     // <group>
     virtual void setLine(const PlotLinePtr l);
-    virtual void setLine(const String& color,
+    virtual void setLine(const casacore::String& color,
                          PlotLine::Style style = PlotLine::SOLID,
                          double width = 1.0);
     // </group>
@@ -538,7 +538,7 @@ public:
     // Convenience methods for setting area fill.
     // <group>
     virtual void setAreaFill(const PlotAreaFillPtr a);
-    virtual void setAreaFill(const String& color,
+    virtual void setAreaFill(const casacore::String& color,
                  PlotAreaFill::Pattern pattern = PlotAreaFill::FILL);
     // </group>
     
@@ -546,8 +546,8 @@ public:
     // <group>
     virtual void setColor(const PlotColor& color);
     virtual void setColor(const PlotColorPtr color);
-    virtual void setColor(const String& color);
-    String getColor() const;
+    virtual void setColor(const casacore::String& color);
+    casacore::String getColor() const;
     // </group>
     
     
@@ -555,8 +555,8 @@ public:
     
     // Gets/Sets the color as a Record.
     // <group>
-    virtual Record toRecord() const;
-    virtual void fromRecord(const Record& record);
+    virtual casacore::Record toRecord() const;
+    virtual void fromRecord(const casacore::Record& record);
     // </group>
     
     // OPERATORS //
@@ -572,37 +572,37 @@ public:
     virtual bool operator!=(const PlotSymbol& rh) const;
     
 protected:
-    // Record key names.
+    // casacore::Record key names.
     // <group>
-    static const String REC_WIDTH;         // double
-    static const String REC_HEIGHT;        // double
-    static const String REC_HEIGHTISPIXEL; // bool
-    static const String REC_SYMBOL;        // int
-    static const String REC_UCHAR;         // int (no ushort in Records)
-    static const String REC_LINE;          // Record
-    static const String REC_AREAFILL;      // Record
-    static const String REC_COLOR;			//String
+    static const casacore::String REC_WIDTH;         // double
+    static const casacore::String REC_HEIGHT;        // double
+    static const casacore::String REC_HEIGHTISPIXEL; // bool
+    static const casacore::String REC_SYMBOL;        // int
+    static const casacore::String REC_UCHAR;         // int (no ushort in Records)
+    static const casacore::String REC_LINE;          // Record
+    static const casacore::String REC_AREAFILL;      // Record
+    static const casacore::String REC_COLOR;			//String
     // </group>
 
 private:
-    const String DEFAULT_COLOR;
-    String currentColor;
+    const casacore::String DEFAULT_COLOR;
+    casacore::String currentColor;
 };
-typedef CountedPtr<PlotSymbol> PlotSymbolPtr;
+typedef casacore::CountedPtr<PlotSymbol> PlotSymbolPtr;
 
 
 //////////////////////////////
 // CONCRETE UTILITY CLASSES //
 //////////////////////////////
 
-// Coordinate on the canvas surface (i.e., the part where the actual plots
+// casacore::Coordinate on the canvas surface (i.e., the part where the actual plots
 // are, which doesn't include things like axes, titles, etc.).  A coordinate
 // has two values and a system.
 class PlotCoordinate {
 public:
     // Static //
     
-    // Coordinate system.
+    // casacore::Coordinate system.
     enum System {
         WORLD,            // in the units of the axes
         NORMALIZED_WORLD, // [0 ... 1] value that maps to a "percentage" of
@@ -653,7 +653,7 @@ public:
     bool operator!=(const PlotCoordinate& rh) const;
     
 private:
-    // Coordinate system.
+    // casacore::Coordinate system.
     System m_system;
     
     // X value.
@@ -789,7 +789,7 @@ private:
     // Axes stack.
     std::vector<std::pair<PlotAxis, PlotAxis> > m_axes;
     
-    // Stack index.
+    // casacore::Stack index.
     unsigned int m_stackIndex;
     
     
@@ -817,28 +817,28 @@ public:
         HIGH    // "high" resolution
     };
     
-    // Converts to/from a Type and its String representation.
+    // Converts to/from a Type and its casacore::String representation.
     // <group>
-    static String exportFormat(Type t);
-    static Type exportFormat(String t, bool* ok = NULL);
+    static casacore::String exportFormat(Type t);
+    static Type exportFormat(casacore::String t, bool* ok = NULL);
     // </group>
     
     // Gives/converts the standard extension for export types.
     // <group>
-    static String extensionFor(Type t);   
-    static Type typeForExtension(String file, bool* ok = NULL);
+    static casacore::String extensionFor(Type t);   
+    static Type typeForExtension(casacore::String file, bool* ok = NULL);
     // </group>
     
     // Returns all supported export formats.
     // <group>
     static std::vector<Type> supportedFormats();  
-    static std::vector<String> supportedFormatStrings();
+    static std::vector<casacore::String> supportedFormatStrings();
     // </group>
     
     // Returns all supported image formats.
     // <group>
     static std::vector<Type> supportedImageFormats();
-    static std::vector<String> supportedImageFormatStrings();
+    static std::vector<casacore::String> supportedImageFormatStrings();
     // </group>
     
     
@@ -848,7 +848,7 @@ public:
     // is SCREEN; default dpi is -1 (unspecified); default width and height
     // are -1 (unspecified).  Unspecified values are left up to the plotting
     // implementation.
-    PlotExportFormat(Type t, const String& file);
+    PlotExportFormat(Type t, const casacore::String& file);
     
     // Destructor.
     ~PlotExportFormat();
@@ -856,7 +856,7 @@ public:
     // Public Members
     // <group>
     Type type;             // export type
-    String location;       // export location
+    casacore::String location;       // export location
     Resolution resolution; // export resolution
     int dpi;               // export dpi (if applicable)
     int width;             // export width (if applicable)

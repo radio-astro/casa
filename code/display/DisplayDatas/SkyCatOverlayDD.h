@@ -37,9 +37,13 @@
 #include <display/Display/DParameterMapKeyChoice.h>
 #include <display/DisplayDatas/PassiveTableDD.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore{
 
 	class Table;
+}
+
+namespace casa { //# NAMESPACE CASA - BEGIN
+
 	class SkyCatOverlayDM;
 
 // <summary>
@@ -51,11 +55,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	public:
 
 		// Constructor taking a pointer to an already constructed Table.
-		SkyCatOverlayDD(Table* table);
+		SkyCatOverlayDD(casacore::Table* table);
 
-		// Constructor taking a String which describes the full pathname
-		// of a Table on disk.
-		SkyCatOverlayDD(const String tablename);
+		// Constructor taking a casacore::String which describes the full pathname
+		// of a casacore::Table on disk.
+		SkyCatOverlayDD(const casacore::String tablename);
 
 		// Destructor.
 		virtual ~SkyCatOverlayDD();
@@ -64,20 +68,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void setDefaultOptions();
 
 		// Apply options stored in <src>rec</src> to the DisplayData.  A
-		// return value of <src>True</src> means a refresh is needed.
+		// return value of <src>true</src> means a refresh is needed.
 		// <src>recOut</src> contains any fields which were implicitly
 		// changed as a result of the call to this function.
-		virtual Bool setOptions(Record &rec, Record &recOut);
+		virtual casacore::Bool setOptions(casacore::Record &rec, casacore::Record &recOut);
 
 		// Retrieve the current and default options and parameter types.
-		virtual Record getOptions( bool scrub=false ) const;
+		virtual casacore::Record getOptions( bool scrub=false ) const;
 
 		// Return the type of this DisplayData.
 		virtual Display::DisplayDataType classType() {
 			return Display::CanvasAnnotation;
 		}
 		// Pure virtual function from DisplayData...
-		String dataType() const {
+		casacore::String dataType() const {
 			return "sky cat";
 		}
 
@@ -98,12 +102,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 		// Get the column name for text labelling.
-		virtual String nameColumn() const {
+		virtual casacore::String nameColumn() const {
 			return itsParamNameColumn->value();
 		}
 
 		// Get the line width for labelling.
-		virtual Float lineWidth() const {
+		virtual casacore::Float lineWidth() const {
 			return itsParamLineWidth->value();
 		}
 
@@ -112,48 +116,48 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual Display::Marker markerType() const {
 			return static_cast<Display::Marker>(itsParamMarkerType->keyValue());
 		}
-		virtual Int markerSize() const {
+		virtual casacore::Int markerSize() const {
 			return itsParamMarkerSize->value();
 		}
-		virtual String markerColor() const {
+		virtual casacore::String markerColor() const {
 			return itsParamMarkerColor->value();
 		}
 		// </group>
 		// Get the column name for value-size mapping.
-		virtual String mapColumn() const {
+		virtual casacore::String mapColumn() const {
 			return itsParamMapColumn->value();
 		}
 
 
 		// Get the character font, size, color and angle for labelling.
 		// <group>
-		virtual String charFont() const {
+		virtual casacore::String charFont() const {
 			return itsParamCharacterFont->value();
 		}
-		virtual Float charSize() const {
+		virtual casacore::Float charSize() const {
 			return itsParamCharacterSize->value();
 		}
-		virtual String charColor() const {
+		virtual casacore::String charColor() const {
 			return itsParamCharacterColor->value();
 		}
-		virtual Int charAngle() const {
+		virtual casacore::Int charAngle() const {
 			return itsParamCharacterAngle->value();
 		}
 		// </group>
 
 		// Get the label x and y offsets (in character height).
 		// <group>
-		virtual Float labelXOffset() const {
+		virtual casacore::Float labelXOffset() const {
 			return itsParamLabelXOffset->value();
 		}
-		virtual Float labelYOffset() const {
+		virtual casacore::Float labelYOffset() const {
 			return itsParamLabelYOffset->value();
 		}
 		// </group>
 
 		// Determine ability to draw, given current canvas coordinate state.
 		// This DD requires direction coordinates in both X and Y axis codes.
-		virtual Bool conformsToCS(const WorldCanvas& wch);
+		virtual casacore::Bool conformsToCS(const WorldCanvas& wch);
 
 		std::string errorMessage( ) const { return ""; }
 
@@ -170,57 +174,57 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Attempt to determine which columns map to longitude, latitude,
 		// and type.
-		virtual Bool determineDirectionColumnMapping();
+		virtual casacore::Bool determineDirectionColumnMapping();
 
 		// Return the unit of a given column in the table.  This is
 		// extracted from the first column keyword matching the pattern
 		// <src>^[uU][nN][iI][tT]$</src>.  If no unit keyword is available,
 		// the returned unit is a null unit.
-		Unit columnUnit(const String columnName) const;
+		casacore::Unit columnUnit(const casacore::String columnName) const;
 
 	private:
 
 		// Store the column names here.
-		Vector<String> itsColumnNames;
+		casacore::Vector<casacore::String> itsColumnNames;
 
 		// Option: what type of coordinates are provided?
-		//String itsCoordinateType;
+		//casacore::String itsCoordinateType;
 
 		// Which column is mapped to the longitude coordinate, and what is
 		// its unit?
-		String itsLongitudeColumn;
-		Unit itsLongitudeUnit;
+		casacore::String itsLongitudeColumn;
+		casacore::Unit itsLongitudeUnit;
 
 		// Which column is mapped to the latitude coordinate, and what is
 		// its unit?
-		String itsLatitudeColumn;
-		Unit itsLatitudeUnit;
+		casacore::String itsLatitudeColumn;
+		casacore::Unit itsLatitudeUnit;
 
 		// Which column is mapped to epoch
-		String itsDirectionTypeColumn;
+		casacore::String itsDirectionTypeColumn;
 
 		// Option: which column is mapped to the name?
 		DParameterChoice* itsParamNameColumn;
 
 		// plot line width
-		DParameterRange<Int>* itsParamLineWidth;
+		DParameterRange<casacore::Int>* itsParamLineWidth;
 
 		// Marker type, size and color.
 		DParameterMapKeyChoice* itsParamMarkerType;
-		DParameterRange<Int>* itsParamMarkerSize;
+		DParameterRange<casacore::Int>* itsParamMarkerSize;
 		DParameterColorChoice* itsParamMarkerColor;
 		DParameterChoice* itsParamMapColumn;
 
 
 		// Labelling character font, size, color and angle.
 		DParameterChoice* itsParamCharacterFont;
-		DParameterRange<Float>* itsParamCharacterSize;
+		DParameterRange<casacore::Float>* itsParamCharacterSize;
 		DParameterColorChoice* itsParamCharacterColor;
-		DParameterRange<Int>* itsParamCharacterAngle;
+		DParameterRange<casacore::Int>* itsParamCharacterAngle;
 
 		// Labelling character offsets in character height units.
-		DParameterRange<Float>* itsParamLabelXOffset;
-		DParameterRange<Float>* itsParamLabelYOffset;
+		DParameterRange<casacore::Float>* itsParamLabelXOffset;
+		DParameterRange<casacore::Float>* itsParamLabelYOffset;
 
 		// Allow the DisplayMethod to access the private data.
 		friend class SkyCatOverlayDM;

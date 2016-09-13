@@ -81,8 +81,8 @@ class EPointMBuf : public TimeVarVisJonesMBuf
   // their specified values. Non-index columns will be set 
   // to default values, and there is no connection to an 
   // underlying calibration table iterator in this case.
-  EPointMBuf (const Vector<Int>& calIndices, 
-			const Block<Vector<Int> >& indexValues);
+  EPointMBuf (const casacore::Vector<casacore::Int>& calIndices, 
+			const casacore::Block<casacore::Vector<casacore::Int> >& indexValues);
 
   // Construct from a calibration table iterator. The calibration
   // buffer will remain synchronized with the iterator.
@@ -90,13 +90,13 @@ class EPointMBuf : public TimeVarVisJonesMBuf
 
   // Write the current buffer at the end of a specified cal table;
   // returns the number of rows appended
-  virtual Int append (CalTable& calTable);
+  virtual casacore::Int append (CalTable& calTable);
 
   // Maximum number of rows in the calibration buffer
-  virtual Int nRow();
+  virtual casacore::Int nRow();
 
-  // Data field accessors
-  virtual Array<Float>& pointingOffset();
+  // casacore::Data field accessors
+  virtual casacore::Array<casacore::Float>& pointingOffset();
 
  protected:
   // Factory method to create a columns accessor object of the appropriate type
@@ -118,19 +118,19 @@ class EPointMBuf : public TimeVarVisJonesMBuf
   // as non-attribute columns
   //
   // Use a visibility buffer to define the attribute values (NYI)
-  virtual void fillAttributes(const Vector<Int>& /*calIndices*/,
+  virtual void fillAttributes(const casacore::Vector<casacore::Int>& /*calIndices*/,
 			      const VisBuffer& /*vb*/) {};
   //
   // Set default attribute values
-  virtual void fillAttributes(const Vector<Int>& calIndices);
+  virtual void fillAttributes(const casacore::Vector<casacore::Int>& calIndices);
   // </group>
 
  private:
   // Buffer fields
-  Array<Float> pointingOffset_p;
+  casacore::Array<casacore::Float> pointingOffset_p;
 
   // Buffer field status flags
-  Bool pointingOffsetOK_p;
+  casacore::Bool pointingOffsetOK_p;
 };
 }
 #endif

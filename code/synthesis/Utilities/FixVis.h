@@ -33,21 +33,25 @@
 #include <ms/MeasurementSets/MSColumns.h>
 #include <msvis/MSVis/MSUVWGenerator.h>
 
-// UVWMachine Does rotation, including B1950 <-> J2000, refocusing, and maybe
+// casacore::UVWMachine Does rotation, including B1950 <-> J2000, refocusing, and maybe
 // even SIN <-> (-)NCP reprojection of existing UVWs, but it does not generate
 // UVWs from an antenna table.
-// FTMachine::rotateUVW(Matrix<Double>& uvw, Vector<Double>& dphase,
+// FTMachine::rotateUVW(casacore::Matrix<casacore::Double>& uvw, casacore::Vector<casacore::Double>& dphase,
 //                      const VisBuffer& vb)
 #include <synthesis/TransformMachines/FTMachine.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore{
 
 class MeasurementSet;
 class LogIO;
+}
+
+namespace casa { //# NAMESPACE CASA - BEGIN
+
 
 // <summary>Performs for MeasurementSets various fixes which do not involve calibrating.
 // This includes (in order of implementation):
-//   1. Generating and inserting (u, v, w)s into a MS that may or may not
+//   1. Generating and inserting (u, v, w)s into a casacore::MS that may or may not
 //      already have them.  Includes antenna offsets when known.
 //   2. Correcting for differential aberration.
 //   3. Changing the phase tracking center.
@@ -60,7 +64,7 @@ class LogIO;
 // </reviewed>
 // 
 // <prerequisite>
-//   <li> <linkto class=MeasurementSet>MeasurementSet</linkto>
+//   <li> <linkto class=casacore::MeasurementSet>MeasurementSet</linkto>
 // </prerequisite>
 //
 // <etymology>
@@ -77,7 +81,7 @@ class LogIO;
 //
 // <example>
 // <srcBlock>
-//     MS inMS(fileName);
+//     casacore::MS inMS(fileName);
 //     FixVis uvwfixer(inMS);
 //     uvwfixer.setDataDescriptionIds(ddIds);
 //     uvwfixer.setFields(fieldIds);
@@ -102,153 +106,153 @@ class FixVis : public FTMachine
 {
 public:
 // Constructor
-  FixVis (MeasurementSet& ms, const String& dataColName=String("all"));
+  FixVis (casacore::MeasurementSet& ms, const casacore::String& dataColName=casacore::String("all"));
 
-// Assignment (only copies reference to MS, need to reset selection etc)
+// Assignment (only copies reference to casacore::MS, need to reset selection etc)
   FixVis& operator=(FixVis& other);
 
 // Destructor
   ~FixVis();
 
 // Set the required field Ids and return the # of selected fields.
-  uInt setFields(const Vector<Int>& fieldIds);
+  casacore::uInt setFields(const casacore::Vector<casacore::Int>& fieldIds);
 
   //// Select by observationIDs (problematic at best)
-  //void setObsIDs(const String& obs) {obsString_p = obs;}
+  //void setObsIDs(const casacore::String& obs) {obsString_p = obs;}
 
   // Specifies new phase tracking centers for the selected fields
-  void setPhaseDirs(const Vector<MDirection>& phaseDirs);
+  void setPhaseDirs(const casacore::Vector<casacore::MDirection>& phaseDirs);
 
   // Specifies distances for each selected field according to distances, which
-  // must be in m and the same order as the Vector given to setFields.  Throws
+  // must be in m and the same order as the casacore::Vector given to setFields.  Throws
   // an exception if distances.nelements() != nsel_p.
   // Because of the way refocus() works, zeroes are ignored (no refocusing
   // done), but negative distances are accepted!
-  void setDistances(const Vector<Double>& distances);
+  void setDistances(const casacore::Vector<casacore::Double>& distances);
 
   // Calculate the (u, v, w)s and store them in ms_p.
-  Bool calc_uvw(const String& refcode, const Bool reuse=true);
+  casacore::Bool calc_uvw(const casacore::String& refcode, const casacore::Bool reuse=true);
 
   // Convert the UVW column to a new reference frame by rotating the old
   // baselines instead of calculating fresh ones.
-  void rotateUVW(const MDirection &indir, const MDirection::Ref& newref);
+  void rotateUVW(const casacore::MDirection &indir, const casacore::MDirection::Ref& newref);
 
   // For things like rotation, differential aberration correction, etc., when
   // there already is a UVW column, using FTMachine.  Returns true if _any_
   // fields are modified.
-  Bool fixvis(const String& refcode);
-  virtual void setMiscInfo(const Int qualifier){(void)qualifier;};
-  virtual void ComputeResiduals(VisBuffer&, Bool //useCorrected
+  casacore::Bool fixvis(const casacore::String& refcode);
+  virtual void setMiscInfo(const casacore::Int qualifier){(void)qualifier;};
+  virtual void ComputeResiduals(VisBuffer&, casacore::Bool //useCorrected
                                 ) {}
-  virtual String name() const { return "FixVis";};
+  virtual casacore::String name() const { return "FixVis";};
 
 private:
-  // Interpret field indices (MSSelection)
-  Vector<Int> getFieldIdx(const String& fields);
+  // Interpret field indices (casacore::MSSelection)
+  casacore::Vector<casacore::Int> getFieldIdx(const casacore::String& fields);
   
   // Makes sure msc_p is ready, and returns false if it fails.
-  Bool ready_msc_p();
+  casacore::Bool ready_msc_p();
   
   // Convert the directions (phase tracking centers, + DELAY_DIR and
   // REFERENCE_DIR if they start in the same frame) in the FIELD table to
   // newFrame.  Note that each direction column in the table only allows one
   // reference frame for the entire column, so all fields must share the same
   // frame.  Calls ready_msc_p() as a side effect.
-  void convertFieldDirs(const MDirection::Types outType);
+  void convertFieldDirs(const casacore::MDirection::Types outType);
 
   // Private worker function for convertFieldDirs().
-  void convertFieldCols(MSFieldColumns& msfcs,
-                        const MDirection::Ref& newFrame,
-                        const Bool doAll3);
+  void convertFieldCols(casacore::MSFieldColumns& msfcs,
+                        const casacore::MDirection::Ref& newFrame,
+                        const casacore::Bool doAll3);
 
   // Calls ready_msc_p() as a side effect.
-  Bool makeSelection(const Int selectedField);
+  casacore::Bool makeSelection(const casacore::Int selectedField);
   
   // Does phase tracking center and distance adjustment for mssel_p.
-  void processSelected(uInt numInSel);
+  void processSelected(casacore::uInt numInSel);
 
   // FTMachine declares a LOT of pure virtual functions which FixVis does not
   // need.  They are declared as no-ops here for now.
-  ImageInterface<Complex>& getImage(Matrix<float>&, Bool) {return *image;}
-  virtual void normalizeImage(Lattice<Complex>&,// skyImage,
-			      const Matrix<Double>&,// sumOfWts,
-			      Lattice<Float>&,// sensitivityImage,
-			      Bool //fftNorm
+  casacore::ImageInterface<casacore::Complex>& getImage(casacore::Matrix<float>&, casacore::Bool) {return *image;}
+  virtual void normalizeImage(casacore::Lattice<casacore::Complex>&,// skyImage,
+			      const casacore::Matrix<casacore::Double>&,// sumOfWts,
+			      casacore::Lattice<casacore::Float>&,// sensitivityImage,
+			      casacore::Bool //fftNorm
                               )
-  {throw(AipsError("normalizeImage::normalizeImage() called"));}
+  {throw(casacore::AipsError("normalizeImage::normalizeImage() called"));}
 
-  void getWeightImage(ImageInterface<float>&, Matrix<float>&) {}
-  void get(VisBuffer&, Int) {}
-  void put(const VisBuffer& , Int , Bool , FTMachine::Type) {};
+  void getWeightImage(casacore::ImageInterface<float>&, casacore::Matrix<float>&) {}
+  void get(VisBuffer&, casacore::Int) {}
+  void put(const VisBuffer& , casacore::Int , casacore::Bool , FTMachine::Type) {};
 
-  // Bool getRestFreq(Vector<Double>& restFreq, const Int spw, const Int fldID);
-  //  void setObsInfo(ObsInfo& obsinfo);
+  // casacore::Bool getRestFreq(casacore::Vector<casacore::Double>& restFreq, const casacore::Int spw, const casacore::Int fldID);
+  //  void setObsInfo(casacore::ObsInfo& obsinfo);
 
   void ok();
   void init();
 
   // Initialize transform to Visibility plane using the image
   // as a template.
-  void initializeToVis(ImageInterface<Complex>& image,
+  void initializeToVis(casacore::ImageInterface<casacore::Complex>& image,
 		       const VisBuffer& vb);
   
   // Finalize transform to Visibility plane.
   void finalizeToVis();
 
   // Initialize transform to Sky plane: initializes the image
-  void initializeToSky(ImageInterface<Complex>& image,  Matrix<Float>& weight,
+  void initializeToSky(casacore::ImageInterface<casacore::Complex>& image,  casacore::Matrix<casacore::Float>& weight,
 		       const VisBuffer& vb);
   
   // Defined here only because FTMachine declares it purely virtual.
   void finalizeToSky() {}
 
   // TODO?: trackDir.
-  Bool setImageField(const Int fieldid,
-                     const Bool dotrackDir=false //, const MDirection& trackDir
+  casacore::Bool setImageField(const casacore::Int fieldid,
+                     const casacore::Bool dotrackDir=false //, const casacore::MDirection& trackDir
                      );
 
-  Bool lock();
+  casacore::Bool lock();
   void unlock();
 
   // Log functions and variables
-  LogIO sink_p;
-  LogIO& logSink() {return sink_p;}
+  casacore::LogIO sink_p;
+  casacore::LogIO& logSink() {return sink_p;}
 
   // Initialized in ctor.  Make sure the order there matches with the order here.
-  MeasurementSet ms_p;			// Input/Output MS
-  MSColumns      *msc_p;		// Ptr. to columns of mssel_p.
-  uInt           nsel_p;		// Number of selected fields.
-  uInt           nAllFields_p;	        // The total # of fields in the MS.
-  const uInt       npix_p;              // Not that there are any real pixels.
-  const IPosition  cimageShape_p;       // No image will be made, but
-  const IPosition  tileShape_p;         // the coords are stored in a fake one.
-  const TiledShape tiledShape_p;
-  Bool             antennaSel_p;        // Is selection being done by antenna?
-  Bool             freqFrameValid_p;    // Freq frame is good and valid
+  casacore::MeasurementSet ms_p;			// casacore::Input/Output MS
+  casacore::MSColumns      *msc_p;		// Ptr. to columns of mssel_p.
+  casacore::uInt           nsel_p;		// Number of selected fields.
+  casacore::uInt           nAllFields_p;	        // The total # of fields in the MS.
+  const casacore::uInt       npix_p;              // Not that there are any real pixels.
+  const casacore::IPosition  cimageShape_p;       // No image will be made, but
+  const casacore::IPosition  tileShape_p;         // the coords are stored in a fake one.
+  const casacore::TiledShape tiledShape_p;
+  casacore::Bool             antennaSel_p;        // Is selection being done by antenna?
+  casacore::Bool             freqFrameValid_p;    // Freq frame is good and valid
                                         // conversions can be done (or not)
-  //String           obsString_p;       // obsID selection
-  Vector<Int>      antennaId_p;         // MSSelection::indexExprStr() doesn't
-                                        // work with Vector<uInt>.
-  Vector<String>   antennaSelStr_p;
-  Vector<Double>   distances_p;	        // new distances (m) for each selected
+  //casacore::String           obsString_p;       // obsID selection
+  casacore::Vector<casacore::Int>      antennaId_p;         // casacore::MSSelection::indexExprStr() doesn't
+                                        // work with casacore::Vector<casacore::uInt>.
+  casacore::Vector<casacore::String>   antennaSelStr_p;
+  casacore::Vector<casacore::Double>   distances_p;	        // new distances (m) for each selected
                                         // field
-  Vector<MS::PredefinedColumns> dataCols_p;
-  uInt             nDataCols_p;
-  uInt             nchan_p;
-  Vector<Int>      spectralwindowids_p;
-  uInt             lockCounter_p;
+  casacore::Vector<casacore::MS::PredefinedColumns> dataCols_p;
+  casacore::uInt             nDataCols_p;
+  casacore::uInt             nchan_p;
+  casacore::Vector<casacore::Int>      spectralwindowids_p;
+  casacore::uInt             lockCounter_p;
   
   // Not initialized in ctor.
-  MeasurementSet     mssel_p;           // The selected part of ms_p.
-  ObsInfo            latestObsInfo_p;  
-  Vector<Int>        DDIds_p;	        // DataDescription Ids to process
-  Vector<Int>        FieldIds_p;        // Field Ids to process
-  Vector<MDirection> phaseDirs_p;       // new phase centers for each selected
+  casacore::MeasurementSet     mssel_p;           // The selected part of ms_p.
+  casacore::ObsInfo            latestObsInfo_p;  
+  casacore::Vector<casacore::Int>        DDIds_p;	        // DataDescription Ids to process
+  casacore::Vector<casacore::Int>        FieldIds_p;        // Field Ids to process
+  casacore::Vector<casacore::MDirection> phaseDirs_p;       // new phase centers for each selected
                                         // field
-  Int                nSpw_p;	        // Number of spws
-  MPosition          mLocation_p;
-  Bool               doTrackSource_p;
-  Int                fieldid_p;
+  casacore::Int                nSpw_p;	        // Number of spws
+  casacore::MPosition          mLocation_p;
+  casacore::Bool               doTrackSource_p;
+  casacore::Int                fieldid_p;
 };
   
 } //# NAMESPACE CASA - END

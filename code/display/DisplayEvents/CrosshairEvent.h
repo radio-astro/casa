@@ -85,8 +85,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Constructor taking a pointer to the WorldCanvas where the
 		// event occured, and the pixel coordinates of the event.
 		// evtype should be "down", "move", or "up", according to mouse state.
-		CrosshairEvent(WorldCanvas *wc, const Int pixX, const Int pixY,
-		               const String& evtype) :
+		CrosshairEvent(WorldCanvas *wc, const casacore::Int pixX, const casacore::Int pixY,
+		               const casacore::String& evtype) :
 			WorldCanvasEvent(wc),
 			itsPixX(pixX), itsPixY(pixY),
 			itsEvType(evtype)
@@ -94,13 +94,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// The x and y pixel position of the crosshair when the event occurred.
 		// <group>
-		virtual Int pixX() const {
+		virtual casacore::Int pixX() const {
 			return itsPixX;
 		}
-		virtual Int pixY() const {
+		virtual casacore::Int pixY() const {
 			return itsPixY;
 		}
-		virtual String evtype() const {
+		virtual casacore::String evtype() const {
 			return itsEvType;
 		}
 		// </group>
@@ -108,9 +108,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	private:
 
 		// pixel position of the event
-		Int itsPixX, itsPixY;
+		casacore::Int itsPixX, itsPixY;
 		// "down", "move", or "up", according to mouse state.
-		String itsEvType;
+		casacore::String itsEvType;
 
 	};
 

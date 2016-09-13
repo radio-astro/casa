@@ -78,6 +78,7 @@
 #include <casa/BasicSL/String.h>
 #include <casa/Containers/Record.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 const String fluxName = "Flux";
@@ -105,10 +106,10 @@ ComponentList::ComponentList()
   :itsList(),
    itsNelements(0),
    itsTable(),
-   itsROFlag(False),
+   itsROFlag(false),
    itsSelectedFlags(),
    itsOrder(),
-   itsAddOptCol(False)
+   itsAddOptCol(false)
 {
   AlwaysAssert(ok(), AipsError);
 }
@@ -117,10 +118,10 @@ ComponentList::ComponentList(const Path& fileName, const Bool readOnly)
   :itsList(),
    itsNelements(0),
    itsTable(),
-   itsROFlag(False),
+   itsROFlag(false),
    itsSelectedFlags(),
    itsOrder(),
-   itsAddOptCol(False)
+   itsAddOptCol(false)
 {
   readTable(fileName, readOnly);
   AlwaysAssert(ok(), AipsError);
@@ -139,7 +140,7 @@ ComponentList::ComponentList(const ComponentList& other)
 }
 
 ComponentList::~ComponentList() {
-  if ((itsROFlag == False) && (itsTable.isNull() == False)) {
+  if ((itsROFlag == false) && (itsTable.isNull() == false)) {
     writeTable();
   }
   AlwaysAssert(ok(), AipsError);
@@ -147,7 +148,7 @@ ComponentList::~ComponentList() {
 
 ComponentList& ComponentList::operator=(const ComponentList& other){
   if (this != &other) {
-    if ((itsROFlag == False) && (itsTable.isNull() == False)) {
+    if ((itsROFlag == false) && (itsTable.isNull() == false)) {
       writeTable();
     }
     itsList = other.itsList;
@@ -168,7 +169,7 @@ Bool ComponentList::isPhysical(const Vector<Int>& indices) const {
   DebugAssert(allGE(static_cast<const Vector<Int> &>(indices), 0), AipsError);
   DebugAssert(allLT(static_cast<const Vector<Int> &>(indices), 
 		    static_cast<Int>(nelements())), AipsError);
-  Bool retVal = True;
+  Bool retVal = true;
   uInt c = indices.nelements();
   while (retVal && c > 0) {
     c--;
@@ -212,7 +213,7 @@ void ComponentList::sample(Cube<Double>& samples,
 }
 
 void ComponentList::add(SkyComponent component) {
-//  AlwaysAssert(itsROFlag == False, AipsError);
+//  AlwaysAssert(itsROFlag == false, AipsError);
   DebugAssert(ok(), AipsError);
   uInt blockSize = itsList.nelements();
   if (itsNelements == blockSize) {
@@ -224,10 +225,10 @@ void ComponentList::add(SkyComponent component) {
   }
   // for limb-darkened disk shape, add an optional col 
   if (component.shape().type()==ComponentType::LDISK) {
-    itsAddOptCol=True;
+    itsAddOptCol=true;
   }
   itsList[itsNelements] = component;
-  itsSelectedFlags[itsNelements] = False;
+  itsSelectedFlags[itsNelements] = false;
   itsOrder[itsNelements] = itsNelements;
   itsNelements++;
 }
@@ -240,13 +241,13 @@ void ComponentList::addList(const ComponentList& list) {
 
 
 void ComponentList::remove(const uInt& index) {
-//  AlwaysAssert(itsROFlag == False, AipsError);
+//  AlwaysAssert(itsROFlag == false, AipsError);
   AlwaysAssert(index < nelements(), AipsError);
   DebugAssert(ok(), AipsError);
   uInt realIndex = itsOrder[index];
-  itsSelectedFlags.remove(realIndex, False);
-  itsList.remove(realIndex, False);
-  itsOrder.remove(index, False);
+  itsSelectedFlags.remove(realIndex, false);
+  itsList.remove(realIndex, false);
+  itsOrder.remove(index, false);
   itsNelements--;
   for (uInt i = 0; i < nelements(); i++) {
     if (itsOrder[i] > realIndex) {
@@ -276,7 +277,7 @@ void ComponentList::deselect(const Vector<Int>& indexes) {
   for (uInt i = 0; i < indexes.nelements(); i++) {
     AlwaysAssert(indexes(i) < Int(nelements()), AipsError);
     AlwaysAssert(indexes(i) >= 0, AipsError);
-    itsSelectedFlags[itsOrder[indexes(i)]] = False;
+    itsSelectedFlags[itsOrder[indexes(i)]] = false;
   }
   DebugAssert(ok(), AipsError);
 }
@@ -285,7 +286,7 @@ void ComponentList::select(const Vector<Int>& indexes) {
   for (uInt i = 0; i < indexes.nelements(); i++) {
     AlwaysAssert(indexes(i) < Int(nelements()), AipsError);
     AlwaysAssert(indexes(i) >= 0, AipsError);
-    itsSelectedFlags[itsOrder[indexes(i)]] = True;
+    itsSelectedFlags[itsOrder[indexes(i)]] = true;
   }
   DebugAssert(ok(), AipsError);
 }
@@ -294,14 +295,14 @@ Vector<Int> ComponentList::selected() const {
   DebugAssert(ok(), AipsError);
   uInt nSelected = 0;
   for (uInt i = 0; i < nelements(); i++) {
-    if (itsSelectedFlags[i] == True) {
+    if (itsSelectedFlags[i] == true) {
       nSelected++;
     }
   }
   Vector<Int> retVal(nSelected);
   uInt s = 0;
   for (uInt j = 0; j < nelements(); j++) {
-    if (itsSelectedFlags[j] == True) {
+    if (itsSelectedFlags[j] == true) {
       retVal(s) = j;
       s++;
     }
@@ -472,7 +473,7 @@ void ComponentList::setShape(const Vector<Int>& which,
     component(c).setShape(newShape);
     //for limb-darkened disk shape
     if (newShape.type()==ComponentType::LDISK) {
-      itsAddOptCol=True;
+      itsAddOptCol=true;
     }
   }
   DebugAssert(ok(), AipsError);
@@ -511,7 +512,7 @@ void ComponentList::setOptParms(const Vector<Int>& which,
       optparms = comp.shape().optParameters(); 
       //comp.shape().setOptParameters(optparms);
       component(c).optionalParameters()=optparms;
-      itsAddOptCol=True;
+      itsAddOptCol=true;
     }
   }
   DebugAssert(ok(), AipsError);
@@ -587,7 +588,7 @@ void ComponentList::setRefFrequencyUnit(const Vector<Int>& which,
 }
 
 SkyComponent& ComponentList::component(const uInt& index) {
-//  AlwaysAssert(itsROFlag == False, AipsError);
+//  AlwaysAssert(itsROFlag == false, AipsError);
   AlwaysAssert(index < nelements(), AipsError);
   DebugAssert(ok(), AipsError);
   return itsList[itsOrder[index]];
@@ -602,7 +603,7 @@ const SkyComponent& ComponentList::component(const uInt& index) const {
 void ComponentList::rename(const Path& fileName, 
 			   const Table::TableOption option) {
   AlwaysAssert(option != Table::Old, AipsError);
-  AlwaysAssert(itsROFlag == False, AipsError);
+  AlwaysAssert(itsROFlag == false, AipsError);
   DebugAssert(ok(), AipsError);
   if (fileName.length() != 0) {
     // See if this list is associated with a Table. 
@@ -614,7 +615,7 @@ void ComponentList::rename(const Path& fileName,
       itsTable.rename(fileName.absoluteName(), option);
     }
 
-    // Ensure that the Table::isReadable(fileName) returns True, otherwise the
+    // Ensure that the Table::isReadable(fileName) returns true, otherwise the
     // ok() function will fail.
     itsTable.flush();
     DebugAssert(ok(), AipsError);
@@ -622,7 +623,7 @@ void ComponentList::rename(const Path& fileName,
     if (!itsTable.isNull()) {
       itsTable.markForDelete();
       itsTable = Table();
-      itsROFlag = False;
+      itsROFlag = false;
     }
   }
 }
@@ -641,7 +642,7 @@ ComponentList ComponentList::copy() const {
 void ComponentList::sort(ComponentList::SortCriteria criteria) {
   Block<Double> val(nelements());
   Sort::Order order = Sort::Ascending;
-  Bool doSort = True;
+  Bool doSort = true;
   switch (criteria) {
   case ComponentList::FLUX: {
     for (uInt i = 0; i < nelements(); i++) {
@@ -677,7 +678,7 @@ void ComponentList::sort(ComponentList::SortCriteria criteria) {
   }
   case ComponentList::UNSORTED: 
   case ComponentList::NUMBER_CRITERIA:
-    doSort = False;
+    doSort = false;
     break;
   };
   // The genSort function requires a Vector<uInt> and not a Block<uInt> so
@@ -720,30 +721,30 @@ Bool ComponentList::ok() const {
     logErr << LogIO::SEVERE 
 	   << "The list size is inconsistant with its cached size"
            << LogIO::POST;
-     return False;
+     return false;
   }
-  if (itsROFlag == True && itsTable.isNull() == True) {
+  if (itsROFlag == true && itsTable.isNull() == true) {
     LogIO logErr(LogOrigin("ComponentList", "ok()"));
     logErr << LogIO::SEVERE 
 	   << "Only ComponentList's associated with a Table can be readonly"
            << LogIO::POST;
-     return False;
+     return false;
   }
-  if (itsTable.isNull() == False) {
+  if (itsTable.isNull() == false) {
     String tablename = itsTable.tableName();
-    if (Table::isReadable(tablename) == False) {
+    if (Table::isReadable(tablename) == false) {
 	LogIO logErr(LogOrigin("ComponentList", "ok()"));
 	logErr << LogIO::SEVERE 
 	       << "Table associated with ComponentList is not readable"
 	       << LogIO::POST;
-	return False;
+	return false;
     }
-    if (itsROFlag == False && Table::isWritable(tablename) == False) {
+    if (itsROFlag == false && Table::isWritable(tablename) == false) {
 	LogIO logErr(LogOrigin("ComponentList", "ok()"));
 	logErr << LogIO::SEVERE 
 	       << "Table associated with ComponentList is not writeable"
 	       << LogIO::POST;
-	return False;
+	return false;
     }
   }
   for (uInt i = 0; i < itsNelements; i++) {
@@ -752,10 +753,10 @@ Bool ComponentList::ok() const {
       logErr << LogIO::SEVERE 
 	     << "Cannot index to an element that is outside the list!"
 	     << LogIO::POST;
-      return False;
+      return false;
     }
   }
-  return True;
+  return true;
 }
 
 void ComponentList::createTable(const Path& fileName,
@@ -885,7 +886,7 @@ void ComponentList::createTable(const Path& fileName,
     TiledCellStMan optcolsm("TiledOptParms",IPosition(1,1));
     newTable.bindColumn(optParColName,optcolsm);
   }
-  itsTable = Table(newTable, TableLock::AutoLocking, nelements(), False);
+  itsTable = Table(newTable, TableLock::AutoLocking, nelements(), false);
   {
     TableInfo& info(itsTable.tableInfo());
     info.setType(TableInfo::type(TableInfo::COMPONENTLIST));
@@ -896,7 +897,7 @@ void ComponentList::createTable(const Path& fileName,
 }
 
 void ComponentList::writeTable() {
-  if (itsTable.isWritable() == False) {
+  if (itsTable.isWritable() == false) {
     itsTable.reopenRW();
   }
   DebugAssert(itsTable.isWritable(), AipsError);
@@ -1136,7 +1137,7 @@ void ComponentList::readTable(const Path& fileName, const Bool readOnly) {
 	dirErrCol.get(i, newDirErr);
 	compShape.setRefDirectionError(newDirErr(0), newDirErr(1));
       }
-      shapeParmCol.get(i, shapeParms, True);
+      shapeParmCol.get(i, shapeParms, true);
       compShape.setParameters(shapeParms);
       if (!shapeErrCol.isNull()) {
 	shapeErrCol.get(i, shapeParms);
@@ -1160,7 +1161,7 @@ void ComponentList::readTable(const Path& fileName, const Bool readOnly) {
 	freqErrCol.get(i, newFreqErr);
 	compSpectrum.setRefFrequencyError(newFreqErr);
       }
-      spectralParmCol.get(i, spectralParms, True);
+      spectralParmCol.get(i, spectralParms, true);
       compSpectrum.setParameters(spectralParms);
       if (!spectralErrCol.isNull()) {
 	spectralErrCol.get(i, spectralParms);
@@ -1174,7 +1175,7 @@ void ComponentList::readTable(const Path& fileName, const Bool readOnly) {
       if (!optParmCol.isNull()) {
         if (optParmCol.isDefined(i)) {
           ComponentShape& compShape2 = currentComp.shape();
-          optParmCol.get(i,optParms,True);
+          optParmCol.get(i,optParms,true);
           compShape2.setOptParameters(optParms); 
           currentComp.optionalParameters()=optParms;
         }
@@ -1188,7 +1189,7 @@ void ComponentList::readTable(const Path& fileName, const Bool readOnly) {
 
 Bool ComponentList::toRecord(String& error, RecordInterface& outRec) const {
 
-  Bool retval=True;
+  Bool retval=true;
 
   outRec.define("nelements", itsNelements);
   for (uInt k=0; k < itsNelements; ++k){ 
@@ -1204,13 +1205,13 @@ Bool ComponentList::toRecord(String& error, RecordInterface& outRec) const {
 
 Bool ComponentList::fromRecord(String& error, const RecordInterface& inRec){
 
-	Bool retval= True;
+	Bool retval= true;
 	if(itsNelements > 0){
 		LogIO logErr(LogOrigin("ComponentList", "fromRecord()"));
 		logErr << LogIO::SEVERE
 		<< "Trying to overwrite a non-empty componentList  from Record"
 		<< LogIO::POST;
-		return False;
+		return false;
 
 	}
 

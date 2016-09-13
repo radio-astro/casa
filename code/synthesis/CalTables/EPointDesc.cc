@@ -31,6 +31,7 @@
 #include <msvis/MSVis/MSCalEnums.h>
 #include <tables/Tables/ArrColDesc.h>
 
+using namespace casacore;
 namespace casa{
 
 EPointDesc::EPointDesc() :  SolvableVisJonesDesc("EPoint Jones")

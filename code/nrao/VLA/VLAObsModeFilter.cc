@@ -88,10 +88,10 @@ Bool VLAObsModeFilter::passThru(const VLALogicalRecord& record) const {
   if (itsObsModes.nelements()==0 ||
       anyEQ(itsObsModes,record.SDA().obsMode()) ) {
     //    cerr << " match" << endl;
-    return True;
+    return true;
   } else {
     //    cerr << " NO match" << endl;
-    return False;
+    return false;
   }
 }
 
@@ -106,8 +106,8 @@ Bool VLAObsModeFilter::ok() const {
   // The LogIO class is only constructed if an error is detected for
   // performance reasons. Both function static and file static variables
   // where considered and rejected for this purpose.
-  if (!VLAFilter::ok()) return False; 
-  return True;
+  if (!VLAFilter::ok()) return false; 
+  return true;
 }
 // Local Variables: 
 // compile-command: "gmake VLAObsModeFilter"

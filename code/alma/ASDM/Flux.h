@@ -22,7 +22,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
  * MA 02111-1307  USA
  *
- * File Flux.h
+ * casacore::File Flux.h
  */
 #ifndef Flux_CLASS
 #define Flux_CLASS
@@ -115,7 +115,7 @@ public:
 	 */
 	static double fromString(const string& s);
 	/**
-	 * Conversion into string.
+	 * casacore::Conversion into string.
 	 * The resulting string contains the representation of the value of this Flux.
 	 *
 	 * @return string
@@ -277,11 +277,11 @@ public:
 	 */
 	bool isZero() const;
 	/**
-	 * Unary operator. Opposite.
+	 * casacore::Unary operator. Opposite.
 	 */
 	Flux operator - () const;
 	/**
-	 * Unary operator. Unary plus.
+	 * casacore::Unary operator. casacore::Unary plus.
 	 */
 	Flux operator + () const;
 	/**
@@ -294,7 +294,7 @@ public:
 	 */
 	string toStringI() const;
 	/**
-	 * Conversion operator.
+	 * casacore::Conversion operator.
 	 * Converts into a string.
 	 */
 	operator string () const;
@@ -414,7 +414,7 @@ inline Flux Flux::operator + () const {
     tmp.value = value;
 	return tmp;
 }
-// Conversion functions
+// casacore::Conversion functions
 inline Flux::operator string () const {
 	return toString();
 }

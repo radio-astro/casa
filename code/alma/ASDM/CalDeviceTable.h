@@ -28,7 +28,7 @@
  * | If you do, all changes will be lost when the file is re-generated. |
  *  --------------------------------------------------------------------
  *
- * File CalDeviceTable.h
+ * casacore::File CalDeviceTable.h
  */
  
 #ifndef CalDeviceTable_CLASS
@@ -102,7 +102,7 @@ class CalDeviceRow;
  * <BR>
  * 
  * \par Role
- * Calibration device characteristics. This table is not part of the   Calibration Data Model but describes the actual observations; it refers to   the amplitude calibration device which includes the hot loads.     Calibration device properties are assumed independent of frequency   throughout a spectral window.
+ * Calibration device characteristics. This table is not part of the   Calibration casacore::Data Model but describes the actual observations; it refers to   the amplitude calibration device which includes the hot loads.     Calibration device properties are assumed independent of frequency   throughout a spectral window.
  * <BR>
  
  * Generated from model's revision "1.64", branch "HEAD"
@@ -298,7 +298,7 @@ public:
 	std::string toXML()  ;
 
 #ifndef WITHOUT_ACS
-	// Conversion Methods
+	// casacore::Conversion Methods
 	/**
 	 * Convert this table into a CalDeviceTableIDL CORBA structure.
 	 *

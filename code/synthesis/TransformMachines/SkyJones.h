@@ -37,11 +37,15 @@
 #include <components/ComponentModels/SkyComponent.h>
 #include <casa/Utilities/CompositeNumber.h>
 
+namespace casacore{
+
+class ImageRegion;
+class CoordinateSystem;
+}
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //#forward
-class ImageRegion;
-class CoordinateSystem;
 class SkyEquation;
 
 //# Need forward declaration for Solve in the Jones Matrices
@@ -94,18 +98,18 @@ class SkyEquation;
 //
 //  // Low level code example:
 //
-//    MeasurementSet ms("imagertest/3C273XC1.ms", Table::Update);
+//    casacore::MeasurementSet ms("imagertest/3C273XC1.ms", casacore::Table::Update);
 //    VPSkyJones  unsquintedVPSJ(ms);
-//    VPSkyJones  squintedVPSJ(ms, True, Quantity(5.0, "deg"), BeamSquint::GOFIGURE);
+//    VPSkyJones  squintedVPSJ(ms, true, casacore::Quantity(5.0, "deg"), BeamSquint::GOFIGURE);
 //    unsquintedVPSJ.reset();
 //    squintedVPSJ.reset();
 //
-//    PagedImage<Complex> imageIn;
-//    PagedImage<Complex> imageOut;  // in reality, this ouwld need more construction with coords and shapes
+//    casacore::PagedImage<casacore::Complex> imageIn;
+//    casacore::PagedImage<casacore::Complex> imageOut;  // in reality, this ouwld need more construction with coords and shapes
 //
 //    VisSet vs(ms,bi,chanSelection,interval);
 //
-//    Int row = 0;
+//    casacore::Int row = 0;
 //    VisIter &vi = vs.iter();
 //    VisBuffer vb(vi);
 //    for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
@@ -124,7 +128,7 @@ class SkyEquation;
 //
 //
 //      // Create an ImageSkyJones from an image on disk
-//      ImageSkyModel ism(PagedImage<Float>("3C273XC1.modelImage"));
+//      ImageSkyModel ism(casacore::PagedImage<casacore::Float>("3C273XC1.modelImage"));
 //
 //      // Make an FTMachine: here we use a simple Grid and FT.
 //      GridFT ft;
@@ -146,7 +150,7 @@ class SkyEquation;
 //      // Make a Clean Image and write it out
 //      HogbomCleanImageSkyJones csm(ism);
 //      if (csm.solve(othervs)) {
-//        PagedImage<Float> cleanImage=csm.image(0);
+//        casacore::PagedImage<casacore::Float> cleanImage=csm.image(0);
 //        cleanImage.setName("3c84.cleanImage");
 //      }
 //
@@ -179,64 +183,64 @@ public:
 
   // Apply Jones matrix to an image (and adjoint)
   // <group>
-  virtual ImageInterface<Complex>& apply(const ImageInterface<Complex>& in,
-					 ImageInterface<Complex>& out,
-					 const VisBuffer& vb, Int row,
-					 Bool forward=True) = 0;
+  virtual casacore::ImageInterface<casacore::Complex>& apply(const casacore::ImageInterface<casacore::Complex>& in,
+					 casacore::ImageInterface<casacore::Complex>& out,
+					 const VisBuffer& vb, casacore::Int row,
+					 casacore::Bool forward=true) = 0;
 
-  virtual ImageInterface<Float>& apply(const ImageInterface<Float>& in,
-					 ImageInterface<Float>& out,
-					 const VisBuffer& vb, Int row) = 0;
+  virtual casacore::ImageInterface<casacore::Float>& apply(const casacore::ImageInterface<casacore::Float>& in,
+					 casacore::ImageInterface<casacore::Float>& out,
+					 const VisBuffer& vb, casacore::Int row) = 0;
 
-  virtual ImageInterface<Float>& applySquare(const ImageInterface<Float>& in,
-					     ImageInterface<Float>& out,
-					     const VisBuffer& vb, Int row) = 0;
+  virtual casacore::ImageInterface<casacore::Float>& applySquare(const casacore::ImageInterface<casacore::Float>& in,
+					     casacore::ImageInterface<casacore::Float>& out,
+					     const VisBuffer& vb, casacore::Int row) = 0;
   // </group>
 
   // Apply Jones matrix to a sky component (and adjoint)
   // <group>
   virtual SkyComponent& apply(SkyComponent& in,
 			      SkyComponent& out,
-			      const VisBuffer& vb, Int row, Bool forward=True) = 0;
+			      const VisBuffer& vb, casacore::Int row, casacore::Bool forward=true) = 0;
   virtual SkyComponent& applySquare(SkyComponent& in,
 				    SkyComponent& out,
-				    const VisBuffer& vb, Int row) = 0;
+				    const VisBuffer& vb, casacore::Int row) = 0;
   // </group>
 
   // Has this operator changed since the last application?
-  virtual Bool changed(const VisBuffer& vb, Int row) = 0;
+  virtual casacore::Bool changed(const VisBuffer& vb, casacore::Int row) = 0;
 
   // Does this operator changed in this VisBuffer,
   // starting with row1?
   // If yes, we return in row2, the last row that has the
   // same SkyJones as row1.
-  virtual Bool changedBuffer(const VisBuffer& vb, Int row1, Int& row2) = 0;
+  virtual casacore::Bool changedBuffer(const VisBuffer& vb, casacore::Int row1, casacore::Int& row2) = 0;
 
   // Reset
   virtual void reset() = 0;
 
   // Assure
-  virtual void assure(const VisBuffer& vb, Int row) = 0;
+  virtual void assure(const VisBuffer& vb, casacore::Int row) = 0;
 
   // Does the operator change in this visbuffer or since the last
   // call?       
   // I'm not sure this is useful -- come back to it
   // m.a.h.  Dec 30 1999
-  virtual Bool change(const VisBuffer& vb) = 0;
+  virtual casacore::Bool change(const VisBuffer& vb) = 0;
 
   // Return the type of this Jones matrix (actual type of derived class).
   virtual Type type() = 0;
 
   // Apply gradient
-  virtual ImageInterface<Complex>& 
-  applyGradient(ImageInterface<Complex>& result, const VisBuffer& vb, Int row)
+  virtual casacore::ImageInterface<casacore::Complex>& 
+  applyGradient(casacore::ImageInterface<casacore::Complex>& result, const VisBuffer& vb, casacore::Int row)
   = 0;
   virtual SkyComponent&
-  applyGradient(SkyComponent& result, const VisBuffer& vb, Int row)
+  applyGradient(SkyComponent& result, const VisBuffer& vb, casacore::Int row)
   = 0;
 
   // Is this solveable?
-  virtual Bool isSolveable()=0;
+  virtual casacore::Bool isSolveable()=0;
 
   // Initialize for gradient search
   virtual void initializeGradients()=0;
@@ -245,15 +249,15 @@ public:
   virtual void finalizeGradients()=0;
  
   // Add to Gradient Chisq
-  virtual void addGradients(const VisBuffer& vb, Int row, const Float sumwt, 
-			    const Float chisq, const Matrix<Complex>& c, 
-			    const Matrix<Float>& f)=0;
+  virtual void addGradients(const VisBuffer& vb, casacore::Int row, const casacore::Float sumwt, 
+			    const casacore::Float chisq, const casacore::Matrix<casacore::Complex>& c, 
+			    const casacore::Matrix<casacore::Float>& f)=0;
  
   // Solve
-  virtual Bool solve (SkyEquation& se) = 0;
+  virtual casacore::Bool solve (SkyEquation& se) = 0;
 
-  // Get the ImageRegion of the primary beam on an Image for a given pointing
-  // Note: ImageRegion is not necesarily constrained to lie within the
+  // Get the casacore::ImageRegion of the primary beam on an Image for a given pointing
+  // Note: casacore::ImageRegion is not necesarily constrained to lie within the
   // image region (for example, if the pointing center is near the edge of the
   // image).  fPad: extra fractional padding beyond the primary beam support
   // (note: we do not properly treat squint yet, this will cover it for now)
@@ -262,34 +266,34 @@ public:
   //           POWEROF2  = next larger power of 2,
   //           ANY       = just take what we get!
   //
-  // Potential problem: this ImageRegion includes all Stokes and Frequency Channels
+  // Potential problem: this casacore::ImageRegion includes all casacore::Stokes and Frequency Channels
   // present in the input image.
 
-  virtual ImageRegion*  extent (const ImageInterface<Complex>& im, 
+  virtual casacore::ImageRegion*  extent (const casacore::ImageInterface<casacore::Complex>& im, 
 				const VisBuffer& vb, 
-				const Int irow=-1,                        
-				const Float fPad=1.2,  
-				const Int iChan=0, 
+				const casacore::Int irow=-1,                        
+				const casacore::Float fPad=1.2,  
+				const casacore::Int iChan=0, 
 				const SkyJones::SizeType sizeType=COMPOSITE)=0;
-  virtual ImageRegion*  extent (const ImageInterface<Float>& im, 
+  virtual casacore::ImageRegion*  extent (const casacore::ImageInterface<casacore::Float>& im, 
 				const VisBuffer& vb,  
-				const Int irow=-1,
-				const Float fPad=1.2,  
-				const Int iChan=0, 
+				const casacore::Int irow=-1,
+				const casacore::Float fPad=1.2,  
+				const casacore::Int iChan=0, 
 				const SkyJones::SizeType sizeType=COMPOSITE)=0;
 
-  virtual String telescope()=0;
+  virtual casacore::String telescope()=0;
   
-  virtual Int support(const VisBuffer& vb, const CoordinateSystem& cs)=0;
+  virtual casacore::Int support(const VisBuffer& vb, const casacore::CoordinateSystem& cs)=0;
 
-  virtual void setThreshold(const Float t){threshold_p=t;};
-  virtual Float threshold(){return  threshold_p;};
+  virtual void setThreshold(const casacore::Float t){threshold_p=t;};
+  virtual casacore::Float threshold(){return  threshold_p;};
 
 
 protected:
 
   // Could be over-ridden if necessary
-  virtual String typeName() {
+  virtual casacore::String typeName() {
     switch(type()) {
     case SkyJones::E:    // voltage pattern (ie, on-axis terms)
       return "E Jones";
@@ -303,7 +307,7 @@ protected:
     return "Not known";
   };
 
-  Float threshold_p;
+  casacore::Float threshold_p;
  
 
 private:    

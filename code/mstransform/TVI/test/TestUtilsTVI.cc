@@ -22,6 +22,7 @@
 
 #include <mstransform/TVI/test/TestUtilsTVI.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 namespace vi { //# NAMESPACE VI - BEGIN
@@ -34,7 +35,7 @@ namespace vi { //# NAMESPACE VI - BEGIN
 //
 // -----------------------------------------------------------------------
 FreqAxisTVITest::FreqAxisTVITest():
-		autoMode_p(True), testResult_p(True)
+		autoMode_p(true), testResult_p(true)
 {
 
 }
@@ -43,7 +44,7 @@ FreqAxisTVITest::FreqAxisTVITest():
 //
 // -----------------------------------------------------------------------
 FreqAxisTVITest::FreqAxisTVITest(Record configuration):
-		autoMode_p(False), testResult_p(True)
+		autoMode_p(false), testResult_p(true)
 {
 	configuration.get (configuration.fieldNumber ("inputms"), inpFile_p);
 	testFile_p = inpFile_p + String(".test");
@@ -127,16 +128,16 @@ template <class T> Bool compareVector(	const Char* column,
 				<< " test size=" << inp.size()
 				<< " reference size=" << ref.size()
 				<< endl;
-		return False;
+		return false;
 	}
 
 	// Compare values
-	Bool ret = True;
+	Bool ret = true;
 	for (uInt index=0;index < inp.size(); index++)
 	{
 		if (abs(inp(index) - ref(index)) > tolerance )
 		{
-			ret = False;
+			ret = false;
 			cout << RED;
 			cout << column << " does not match in position="
 					<< index
@@ -175,11 +176,11 @@ template <class T> Bool compareMatrix(	const Char* column,
 				<< " reference (row,col)="
 				<< "("<< ref.shape()(1) << "," << ref.shape()(0) << ")"
 				<< endl;
-		return False;
+		return false;
 	}
 
 	// Compare values
-	Bool ret = True;
+	Bool ret = true;
 	const IPosition &shape = inp.shape();
 	for (uInt row=0;row < shape(1) and ret; row++)
 	{
@@ -187,7 +188,7 @@ template <class T> Bool compareMatrix(	const Char* column,
 		{
 			if (abs(inp(col,row) - ref(col,row)) > tolerance )
 			{
-				ret = False;
+				ret = false;
 				cout << RED;
 				cout << column << " does not match in position (row,col)="
 						<< "("<< row << "," << col << ")"
@@ -227,11 +228,11 @@ template <class T> Bool compareCube(const Char* column,
 				<< " reference (row,chan,corr)="
 				<< "("<< ref.shape()(2) << "," << ref.shape()(1) << "," << ref.shape()(0) << ")"
 				<< endl;
-		return False;
+		return false;
 	}
 
 	// Compare values
-	Bool ret = True;
+	Bool ret = true;
 	const IPosition &shape = inp.shape();
 	for (uInt row=0;row < shape(2) and ret; row++)
 	{
@@ -241,7 +242,7 @@ template <class T> Bool compareCube(const Char* column,
 			{
 				if (abs(inp(corr,chan,row) - ref(corr,chan,row)) > tolerance )
 				{
-					ret = False;
+					ret = false;
 					cout << RED;
 					cout << column << " does not match in position (row,chan,corr)="
 							<< "("<< row << "," << chan << "," << corr << ")"
@@ -275,7 +276,7 @@ Bool compareVisibilityIterators(VisibilityIterator2 &testTVI,
 	// Declare working variables
 	String columnName;
 	Int chunk = 0,buffer = 0;
-	Bool res, keepIterating = True;
+	Bool res, keepIterating = true;
 
 	// Get VisBuffers
 	VisBuffer2 *refVb = refTVI.getVisBuffer();
@@ -308,7 +309,7 @@ Bool compareVisibilityIterators(VisibilityIterator2 &testTVI,
 					res = testVb->nRows() == refVb->nRows();
 					if (not res)
 					{
-						keepIterating = False;
+						keepIterating = false;
 						cout << RED;
 						cout << "Number of rows does not match "
 								<< " test=" << testVb->nRows()
@@ -322,7 +323,7 @@ Bool compareVisibilityIterators(VisibilityIterator2 &testTVI,
 					res = testVb->nChannels() == refVb->nChannels();
 					if (not res)
 					{
-						keepIterating = False;
+						keepIterating = false;
 						cout << RED;
 						cout << "Number of channels does not match "
 								<< " test=" << testVb->nChannels()
@@ -336,7 +337,7 @@ Bool compareVisibilityIterators(VisibilityIterator2 &testTVI,
 					res = testVb->nCorrelations() == refVb->nCorrelations();
 					if (not res)
 					{
-						keepIterating = False;
+						keepIterating = false;
 						cout << RED;
 						cout << "Number of correlations does not match "
 								<< " test=" << testVb->nCorrelations()
@@ -350,7 +351,7 @@ Bool compareVisibilityIterators(VisibilityIterator2 &testTVI,
 					columnName = VisBufferComponents2::name(VisBufferComponent2::FlagRow);
 					res = compareVector(columnName.c_str(),testVb->flagRow(),refVb->flagRow(),
 							refVb->rowIds(),tolerance);
-					if (not res) keepIterating = False;
+					if (not res) keepIterating = false;
 				}
 
 				if (columns.contains(VisBufferComponent2::FlagCube))
@@ -358,7 +359,7 @@ Bool compareVisibilityIterators(VisibilityIterator2 &testTVI,
 					columnName = VisBufferComponents2::name(VisBufferComponent2::FlagCube);
 					res = compareCube(columnName.c_str(),testVb->flagCube(),refVb->flagCube(),
 							refVb->rowIds(),tolerance);
-					if (not res) keepIterating = False;
+					if (not res) keepIterating = false;
 				}
 
 				if (columns.contains(VisBufferComponent2::VisibilityCubeObserved))
@@ -366,7 +367,7 @@ Bool compareVisibilityIterators(VisibilityIterator2 &testTVI,
 					columnName = VisBufferComponents2::name(VisBufferComponent2::VisibilityCubeObserved);
 					res = compareCube(columnName.c_str(),testVb->visCube(),getViscube(refVb,MS::DATA,datacolmap),
 							refVb->rowIds(),tolerance);
-					if (not res) keepIterating = False;
+					if (not res) keepIterating = false;
 				}
 
 				if (columns.contains(VisBufferComponent2::VisibilityCubeCorrected))
@@ -374,7 +375,7 @@ Bool compareVisibilityIterators(VisibilityIterator2 &testTVI,
 					columnName = VisBufferComponents2::name(VisBufferComponent2::VisibilityCubeCorrected);
 					res = compareCube(columnName.c_str(),testVb->visCubeCorrected(),getViscube(refVb,MS::CORRECTED_DATA,datacolmap),
 							refVb->rowIds(),tolerance);
-					if (not res) keepIterating = False;
+					if (not res) keepIterating = false;
 				}
 
 				if (columns.contains(VisBufferComponent2::VisibilityCubeModel))
@@ -382,7 +383,7 @@ Bool compareVisibilityIterators(VisibilityIterator2 &testTVI,
 					columnName = VisBufferComponents2::name(VisBufferComponent2::VisibilityCubeModel);
 					res = compareCube(columnName.c_str(),testVb->visCubeModel(),getViscube(refVb,MS::MODEL_DATA,datacolmap),
 							refVb->rowIds(),tolerance);
-					if (not res) keepIterating = False;
+					if (not res) keepIterating = false;
 				}
 
 				if (columns.contains(VisBufferComponent2::VisibilityCubeFloat))
@@ -390,7 +391,7 @@ Bool compareVisibilityIterators(VisibilityIterator2 &testTVI,
 					columnName = VisBufferComponents2::name(VisBufferComponent2::VisibilityCubeFloat);
 					res = compareCube(columnName.c_str(),testVb->visCubeFloat(),refVb->visCubeFloat(),
 							refVb->rowIds(),tolerance);
-					if (not res) keepIterating = False;
+					if (not res) keepIterating = false;
 				}
 
 				if (columns.contains(VisBufferComponent2::WeightSpectrum))
@@ -398,7 +399,7 @@ Bool compareVisibilityIterators(VisibilityIterator2 &testTVI,
 					columnName = VisBufferComponents2::name(VisBufferComponent2::WeightSpectrum);
 					res = compareCube(columnName.c_str(),testVb->weightSpectrum(),refVb->weightSpectrum(),
 							refVb->rowIds(),tolerance);
-					if (not res) keepIterating = False;
+					if (not res) keepIterating = false;
 				}
 
 				if (columns.contains(VisBufferComponent2::SigmaSpectrum))
@@ -406,7 +407,7 @@ Bool compareVisibilityIterators(VisibilityIterator2 &testTVI,
 					columnName = VisBufferComponents2::name(VisBufferComponent2::SigmaSpectrum);
 					res = compareCube(columnName.c_str(),testVb->sigmaSpectrum(),refVb->sigmaSpectrum(),
 							refVb->rowIds(),tolerance);
-					if (not res) keepIterating = False;
+					if (not res) keepIterating = false;
 				}
 
 				if (columns.contains(VisBufferComponent2::Weight))
@@ -414,7 +415,7 @@ Bool compareVisibilityIterators(VisibilityIterator2 &testTVI,
 					columnName = VisBufferComponents2::name(VisBufferComponent2::Weight);
 					res = compareMatrix(columnName.c_str(),testVb->weight(),refVb->weight(),
 							refVb->rowIds(),tolerance);
-					if (not res) keepIterating = False;
+					if (not res) keepIterating = false;
 				}
 
 				if (columns.contains(VisBufferComponent2::Sigma))
@@ -422,7 +423,7 @@ Bool compareVisibilityIterators(VisibilityIterator2 &testTVI,
 					columnName = VisBufferComponents2::name(VisBufferComponent2::Sigma);
 					res = compareMatrix(columnName.c_str(),testVb->sigma(),refVb->sigma(),
 							refVb->rowIds(),tolerance);
-					if (not res) keepIterating = False;
+					if (not res) keepIterating = false;
 				}
 
 				if (columns.contains(VisBufferComponent2::Frequencies))
@@ -430,7 +431,7 @@ Bool compareVisibilityIterators(VisibilityIterator2 &testTVI,
 					columnName = VisBufferComponents2::name(VisBufferComponent2::Frequencies);
 					res = compareVector(columnName.c_str(),testVb->getFrequencies(0),refVb->getFrequencies(0),
 							refVb->rowIds(),tolerance);
-					if (not res) keepIterating = False;
+					if (not res) keepIterating = false;
 				}
 
 				refTVI.next();
@@ -448,7 +449,7 @@ Bool compareVisibilityIterators(VisibilityIterator2 &testTVI,
 					<< "Exception comparing visibility iterators: " << ex.getMesg() << endl
 					<< "Stack Trace: " << ex.getStackTrace()
 					<< LogIO::POST;
-		keepIterating = False;
+		keepIterating = false;
 	}
 
 
@@ -462,7 +463,7 @@ Bool compareVisibilityIterators(VisibilityIterator2 &testTVI,
 // -----------------------------------------------------------------------
 Bool copyTestFile(String &path,String &filename,String &outfilename)
 {
-	Bool ret = True;
+	Bool ret = true;
 
 	if (path.size() > 0)
 	{
@@ -493,7 +494,7 @@ Bool copyTestFile(String &path,String &filename,String &outfilename)
 				cout << "TEST FILE NOT FOUND: " << fullfilename << endl;
 				cout << RESET;
 
-				ret = False;
+				ret = false;
 			}
 		}
 		else
@@ -502,7 +503,7 @@ Bool copyTestFile(String &path,String &filename,String &outfilename)
 			cout << "CASAPATH ENVIRONMENTAL VARIABLE NOT DEFINED" << endl;
 			cout << RESET;
 
-			ret = False;
+			ret = false;
 		}
 	}
 	else
@@ -522,7 +523,7 @@ Bool copyTestFile(String &path,String &filename,String &outfilename)
 			cout << "TEST FILE NOT FOUND: " << filename << endl;
 			cout << RESET;
 
-			ret = False;
+			ret = false;
 		}
 	}
 
@@ -606,10 +607,10 @@ void flagEachOtherChannel(VisibilityIterator2 &vi)
 
 			// Initialize flag cube
 			IPosition shape = vb->getShape();
-			Cube<Bool> flagCube(shape,False);
+			Cube<Bool> flagCube(shape,false);
 
 			// Switch each other buffer the sign of the flag of the first block of channels
-			Bool firstChanBlockFlag = buffer % 2? True:False;
+			Bool firstChanBlockFlag = buffer % 2? true:False;
 
 			// Fill flag cube alternating flags per blocks channels
 			size_t nCorr = shape(0);
@@ -620,7 +621,7 @@ void flagEachOtherChannel(VisibilityIterator2 &vi)
 				// Row completely flagged
 				if (row_i % 2)
 				{
-					flagCube.xyPlane(row_i) = True;
+					flagCube.xyPlane(row_i) = true;
 				}
 				else
 				{

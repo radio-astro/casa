@@ -38,6 +38,7 @@
 using namespace xercesc;
 using namespace std;
 
+using namespace casacore;
 namespace casa {
 
 //////////////////////////

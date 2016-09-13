@@ -40,6 +40,7 @@
 #include <display/QtViewer/QtDisplayData.qo.h>
 #include <display/ds9/ds9writer.h>
 
+using namespace casacore;
 namespace casa {
 	namespace viewer {
 
@@ -942,7 +943,7 @@ namespace casa {
 					IPosition pos = padd->fixedPosition( );
 					Vector<Int> dispAxes = padd->displayAxes( );
 
-					if ( nAxes == 2 ) dispAxes.resize(2,True);
+					if ( nAxes == 2 ) dispAxes.resize(2,true);
 
 					if ( nAxes < 2 || Int(shp.nelements()) != nAxes ||
 					        Int(pos.nelements()) != nAxes ||
@@ -952,7 +953,7 @@ namespace casa {
 					if ( dispAxes.nelements() > 2u )
 						pos[dispAxes[2]] = zIndex;
 
-					dispAxes.resize(2,True);
+					dispAxes.resize(2,true);
 
 					// select the visible layer in the third and all
 					// hidden axes with a WCBox and a SubImage
@@ -985,7 +986,7 @@ namespace casa {
 
 					delete imgbox;
 					delete imageregion;
-				} catch (const casa::AipsError& err) {
+				} catch (const casacore::AipsError& err) {
 					errMsg_ = err.getMesg();
 					fprintf( stderr, "Polygon::generate_dds_centers( ): %s\n", errMsg_.c_str() );
 					continue;
@@ -1024,7 +1025,7 @@ namespace casa {
 			if ( ! image ) return 0;
 
 			Vector<Int> dispAxes = padd->displayAxes( );
-			dispAxes.resize(2,True);
+			dispAxes.resize(2,true);
 
 			const Vector<String> &units = wc_->worldAxisUnits( );
 			const DisplayCoordinateSystem &cs = image->coordinates( );

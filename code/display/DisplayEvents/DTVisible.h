@@ -103,17 +103,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual ~DTVisible();
 
 		// Return the color to use.
-		virtual String drawColor() const {
+		virtual casacore::String drawColor() const {
 			return itsDrawColor;
 		}
 
 		// Return the line width to use.
-		virtual Int lineWidth() const {
+		virtual casacore::Int lineWidth() const {
 			return itsLineWidth;
 		}
 
 		// Return the double click interval (in seconds).
-		virtual Double doubleClickInterval() const {
+		virtual casacore::Double doubleClickInterval() const {
 			return itsDoubleClickInterval;
 		}
 
@@ -128,13 +128,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	private:
 
 		// Store the color to use here.
-		String itsDrawColor;
+		casacore::String itsDrawColor;
 
 		// Store the line width here.
-		Int itsLineWidth;
+		casacore::Int itsLineWidth;
 
 		// Store the double click interval (in seconds) here.
-		Double itsDoubleClickInterval;
+		casacore::Double itsDoubleClickInterval;
 
 	};
 

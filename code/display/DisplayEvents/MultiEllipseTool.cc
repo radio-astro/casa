@@ -27,6 +27,7 @@
 
 #include <display/DisplayEvents/MultiEllipseTool.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	SHARED_PTR<viewer::Rectangle> MultiEllipseTool::allocate_region( WorldCanvas *wc, double x1, double y1, double x2, double y2, VOID * ) const {

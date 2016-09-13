@@ -52,10 +52,10 @@ public:
     // Returns a human-readable title for identification.  Doesn't have to
     // be unique. Used for (for example) legends and other user-interactions.
     // Note: PlotItems that have no titles should not be shown on the legend.
-    virtual String title() const = 0;
+    virtual casacore::String title() const = 0;
     
     // Sets this items's title to the given.
-    virtual void setTitle(const String& newTitle) = 0;
+    virtual void setTitle(const casacore::String& newTitle) = 0;
     
     // Returns true if this item is valid, false otherwise.  Although validity
     // varies between items, canvases should NOT draw items which are invalid.
@@ -95,7 +95,7 @@ public:
     // DEFAULT IMPLEMENTATION.
     virtual unsigned int drawSegments(unsigned int segmentThreshold) const;
 };
-typedef CountedPtr<PlotItem> PlotItemPtr;
+typedef casacore::CountedPtr<PlotItem> PlotItemPtr;
 
 }
 

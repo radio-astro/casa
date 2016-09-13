@@ -40,16 +40,16 @@ class FlagAgentRFlag : public FlagAgentBase {
 
 public:
 
-	FlagAgentRFlag(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube = false, Bool flag = true);
+	FlagAgentRFlag(FlagDataHandler *dh, casacore::Record config, casacore::Bool writePrivateFlagCube = false, casacore::Bool flag = true);
 	~FlagAgentRFlag();
 
 protected:
 
 	// Parse configuration parameters
-	void setAgentParameters(Record config);
+	void setAgentParameters(casacore::Record config);
 
 	// Compute flags for a given (time,freq) map
-	bool computeAntennaPairFlags(const vi::VisBuffer2 &visBuffer, VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows);
+	bool computeAntennaPairFlags(const vi::VisBuffer2 &visBuffer, VisMapper &visibilities,FlagMapper &flags,casacore::Int antenna1,casacore::Int antenna2,vector<casacore::uInt> &rows);
 
 	// Extract automatically computed thresholds to use them in the next pass
 	void passIntermediate(const vi::VisBuffer2 &visBuffer);
@@ -58,107 +58,107 @@ protected:
 	void passFinal(const vi::VisBuffer2 &visBuffer);
 
 	// Convenience function to get simple averages
-	Double mean(vector<Double> &data,vector<Double> &counts);
+	casacore::Double mean(vector<casacore::Double> &data,vector<casacore::Double> &counts);
 
 	// Convenience function to compute median
-	Double median(vector<Double> &data);
+	casacore::Double median(vector<casacore::Double> &data);
 
 	//
-	void noiseVsRef(vector<Double> &data, Double ref);
+	void noiseVsRef(vector<casacore::Double> &data, casacore::Double ref);
 
 	// Convenience function to get simple averages
-	Double computeThreshold(vector<Double> &data, vector<Double> &dataSquared, vector<Double> &counts);
+	casacore::Double computeThreshold(vector<casacore::Double> &data, vector<casacore::Double> &dataSquared, vector<casacore::Double> &counts);
 
-	// Function to be called for each timestep/channel
-	void computeAntennaPairFlagsCore(	pair<Int,Int> spw_field,
-										Double noise,
-										Double scutof,
-										uInt timeStart,
-										uInt timeStop,
-										uInt centralTime,
+	// casacore::Function to be called for each timestep/channel
+	void computeAntennaPairFlagsCore(	pair<casacore::Int,casacore::Int> spw_field,
+										casacore::Double noise,
+										casacore::Double scutof,
+										casacore::uInt timeStart,
+										casacore::uInt timeStop,
+										casacore::uInt centralTime,
 										VisMapper &visibilities,
 										FlagMapper &flags);
 
-	void robustMean(	uInt timestep_i,
-						uInt pol_k,
-						uInt nChannels,
-						Double &AverageReal,
-						Double &AverageImag,
-						Double &StdReal,
-						Double &StdImag,
-						Double &SumWeightReal,
-						Double &SumWeightImag,
+	void robustMean(	casacore::uInt timestep_i,
+						casacore::uInt pol_k,
+						casacore::uInt nChannels,
+						casacore::Double &AverageReal,
+						casacore::Double &AverageImag,
+						casacore::Double &StdReal,
+						casacore::Double &StdImag,
+						casacore::Double &SumWeightReal,
+						casacore::Double &SumWeightImag,
 						VisMapper &visibilities,
 						FlagMapper &flags);
 
-	void simpleMedian(	uInt timestep_i,
-						uInt pol_k,
-						uInt nChannels,
-						Double &AverageReal,
-						Double &AverageImag,
-						Double &StdReal,
-						Double &StdImag,
-						Double &SumWeightReal,
-						Double &SumWeightImag,
+	void simpleMedian(	casacore::uInt timestep_i,
+						casacore::uInt pol_k,
+						casacore::uInt nChannels,
+						casacore::Double &AverageReal,
+						casacore::Double &AverageImag,
+						casacore::Double &StdReal,
+						casacore::Double &StdImag,
+						casacore::Double &SumWeightReal,
+						casacore::Double &SumWeightImag,
 						VisMapper &visibilities,
 						FlagMapper &flags);
 
-	// Function to return histograms
+	// casacore::Function to return histograms
 	FlagReport getReport();
 
-	// Function to return histograms
-	FlagReport getReportCore(	map< pair<Int,Int>,vector<Double> > &data,
-								map< pair<Int,Int>,vector<Double> > &dataSquared,
-								map< pair<Int,Int>,vector<Double> > &counts,
-								map< pair<Int,Int>,Double > &threshold,
+	// casacore::Function to return histograms
+	FlagReport getReportCore(	map< pair<casacore::Int,casacore::Int>,vector<casacore::Double> > &data,
+								map< pair<casacore::Int,casacore::Int>,vector<casacore::Double> > &dataSquared,
+								map< pair<casacore::Int,casacore::Int>,vector<casacore::Double> > &counts,
+								map< pair<casacore::Int,casacore::Int>,casacore::Double > &threshold,
 								FlagReport &totalReport,
 								string label,
-								Double scale);
+								casacore::Double scale);
 
 	// Dedicated method to generate threshold values
-	void generateThresholds(	map< pair<Int,Int>,vector<Double> > &data,
-								map< pair<Int,Int>,vector<Double> > &dataSquared,
-								map< pair<Int,Int>,vector<Double> > &counts,
-								map< pair<Int,Int>,Double > &threshold,
+	void generateThresholds(	map< pair<casacore::Int,casacore::Int>,vector<casacore::Double> > &data,
+								map< pair<casacore::Int,casacore::Int>,vector<casacore::Double> > &dataSquared,
+								map< pair<casacore::Int,casacore::Int>,vector<casacore::Double> > &counts,
+								map< pair<casacore::Int,casacore::Int>,casacore::Double > &threshold,
 								string label,
-								Double scale);
+								casacore::Double scale);
 
 private:
 
 	// General parameters
-	Bool doflag_p;
-	Bool doplot_p;
-	uInt nTimeSteps_p;
-	Double noiseScale_p;
-	Double scutofScale_p;
+	casacore::Bool doflag_p;
+	casacore::Bool doplot_p;
+	casacore::uInt nTimeSteps_p;
+	casacore::Double noiseScale_p;
+	casacore::Double scutofScale_p;
 
 	// Spectral Robust fit
-	uInt nIterationsRobust_p;
-	vector<Double> thresholdRobust_p;
-	Double spectralmin_p;
-	Double spectralmax_p;
-	uInt optype_p;
-	void (casa::FlagAgentRFlag::*spectralAnalysis_p)(uInt,uInt,uInt,Double&,Double&,Double&,Double&,Double&,Double&,VisMapper&,FlagMapper&);
+	casacore::uInt nIterationsRobust_p;
+	vector<casacore::Double> thresholdRobust_p;
+	casacore::Double spectralmin_p;
+	casacore::Double spectralmax_p;
+	casacore::uInt optype_p;
+	void (casa::FlagAgentRFlag::*spectralAnalysis_p)(casacore::uInt,casacore::uInt,casacore::uInt,casacore::Double&,casacore::Double&,casacore::Double&,casacore::Double&,casacore::Double&,casacore::Double&,VisMapper&,FlagMapper&);
 
 	// Store frequency to be used in Reports
-	map< pair<Int,Int>,vector<Double> > field_spw_frequency_p;
-	map< pair<Int,Int>,Double > field_spw_frequencies_p;
+	map< pair<casacore::Int,casacore::Int>,vector<casacore::Double> > field_spw_frequency_p;
+	map< pair<casacore::Int,casacore::Int>,casacore::Double > field_spw_frequencies_p;
 
-	// Time-direction analysis
-	Double noise_p;
-	map< pair<Int,Int>,Double > field_spw_noise_map_p;
-	map< pair<Int,Int>,Bool > user_field_spw_noise_map_p;
-	map< pair<Int,Int>,vector<Double> > field_spw_noise_histogram_sum_p;
-	map< pair<Int,Int>,vector<Double> > field_spw_noise_histogram_sum_squares_p;
-	map< pair<Int,Int>,vector<Double> > field_spw_noise_histogram_counts_p;
+	// casacore::Time-direction analysis
+	casacore::Double noise_p;
+	map< pair<casacore::Int,casacore::Int>,casacore::Double > field_spw_noise_map_p;
+	map< pair<casacore::Int,casacore::Int>,casacore::Bool > user_field_spw_noise_map_p;
+	map< pair<casacore::Int,casacore::Int>,vector<casacore::Double> > field_spw_noise_histogram_sum_p;
+	map< pair<casacore::Int,casacore::Int>,vector<casacore::Double> > field_spw_noise_histogram_sum_squares_p;
+	map< pair<casacore::Int,casacore::Int>,vector<casacore::Double> > field_spw_noise_histogram_counts_p;
 
 	// Spectral analysis
-	Double scutof_p;
-	map< pair<Int,Int>,Double > field_spw_scutof_map_p;
-	map< pair<Int,Int>,Bool > user_field_spw_scutof_map_p;
-	map< pair<Int,Int>,vector<Double> > field_spw_scutof_histogram_sum_p;
-	map< pair<Int,Int>,vector<Double> > field_spw_scutof_histogram_sum_squares_p;
-	map< pair<Int,Int>,vector<Double> > field_spw_scutof_histogram_counts_p;
+	casacore::Double scutof_p;
+	map< pair<casacore::Int,casacore::Int>,casacore::Double > field_spw_scutof_map_p;
+	map< pair<casacore::Int,casacore::Int>,casacore::Bool > user_field_spw_scutof_map_p;
+	map< pair<casacore::Int,casacore::Int>,vector<casacore::Double> > field_spw_scutof_histogram_sum_p;
+	map< pair<casacore::Int,casacore::Int>,vector<casacore::Double> > field_spw_scutof_histogram_sum_squares_p;
+	map< pair<casacore::Int,casacore::Int>,vector<casacore::Double> > field_spw_scutof_histogram_counts_p;
 };
 
 

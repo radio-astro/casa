@@ -61,18 +61,18 @@ public:
     };
     
     // The default date format to use for the plotter.  See dateFormat().
-    static const String DEFAULT_DATE_FORMAT;
+    static const casacore::String DEFAULT_DATE_FORMAT;
     
     // The default relative date format to use for the plotter.  See
     // relativeDateFormat().
-    static const String DEFAULT_RELATIVE_DATE_FORMAT;
+    static const casacore::String DEFAULT_RELATIVE_DATE_FORMAT;
     
-    // Returns a String for the given date value using the given format (see
+    // Returns a casacore::String for the given date value using the given format (see
     // dateFormat()) and scale.  If isRelative is true, the value is treated as
     // a relative value (i.e., +X seconds past a reference date); otherwise it
     // is treated as an absolute value.  For relative values years, months, and
     // days are ignored.
-    static String formattedDateString(const String& format, double value,
+    static casacore::String formattedDateString(const casacore::String& format, double value,
             PlotAxisScale scale, bool isRelative = false);
     
     
@@ -102,10 +102,10 @@ public:
     virtual void setCanvasCachedAxesStackImageSize( int width, int height );
 
     // Returns the plotter window's title.
-    virtual String windowTitle() const = 0;
+    virtual casacore::String windowTitle() const = 0;
     
     // Sets the plotter window's title to the given.
-    virtual void setWindowTitle(const String& newTitle) = 0;
+    virtual void setWindowTitle(const casacore::String& newTitle) = 0;
     
     // Returns the size of the canvas area (i.e., minus bordering panels) in
     // pixels (width x height).
@@ -169,8 +169,8 @@ public:
     //         is less than zero, the default is used.  Applies to any seconds
     //         tags that are AFTER the precision tag.
     // <group>
-    virtual const String& dateFormat() const = 0;
-    virtual void setDateFormat(const String& dateFormat) = 0;
+    virtual const casacore::String& dateFormat() const = 0;
+    virtual void setDateFormat(const casacore::String& dateFormat) = 0;
     // </group>
     
     // Gets/Sets the date format for relative values (i.e., for reference
@@ -179,8 +179,8 @@ public:
     // to the user, such as for axis ticks when a reference value is set.  See
     // dateFormat() for information on the format.
     // <group>
-    virtual const String& relativeDateFormat() const = 0;
-    virtual void setRelativeDateFormat(const String& dateFormat) = 0;
+    virtual const casacore::String& relativeDateFormat() const = 0;
+    virtual void setRelativeDateFormat(const casacore::String& dateFormat) = 0;
     // </group>
     
     
@@ -224,8 +224,8 @@ public:
     
     
     //Use a common x-/y- axis when plotting multiple graphs.
-    void setCommonAxisX(Bool commonAxis );
-    void setCommonAxisY(Bool commonAxis );
+    void setCommonAxisX(casacore::Bool commonAxis );
+    void setCommonAxisY(casacore::Bool commonAxis );
     bool isCommonAxisX() const;
     bool isCommonAxisY() const;
     void setAxisLocation( PlotAxis xLocation, PlotAxis yLocation );
@@ -247,9 +247,9 @@ public:
     
     // Shows a file chooser dialog and returns the absolute filename that the
     // user chooses.  If a directory is given, start the dialog there.  If the
-    // user cancels, an empty String is returned.
-    virtual String fileChooserDialog(const String& title = "File Chooser",
-                                     const String& directory = "") = 0;
+    // user cancels, an empty casacore::String is returned.
+    virtual casacore::String fileChooserDialog(const casacore::String& title = "casacore::File Chooser",
+                                     const casacore::String& directory = "") = 0;
 
     
     // Event Handling methods //
@@ -276,7 +276,7 @@ public:
     virtual void setCanvas(PlotCanvasPtr canvas);
     
     // See PlotLogger::filterMinPriority().
-    LogMessage::Priority logFilterMinPriority() const;
+    casacore::LogMessage::Priority logFilterMinPriority() const;
     
     // See PlotLogger::setFilterMinPriority().
     void setLogFilterMinPriority(PlotLogMessage::Priority minPriority);
@@ -303,12 +303,12 @@ public:
 protected:
     // Logger.
     PlotLoggerPtr m_logger;
-    Bool commonAxisX;
-    Bool commonAxisY;
+    casacore::Bool commonAxisX;
+    casacore::Bool commonAxisY;
     PlotAxis axisLocationX;
     PlotAxis axisLocationY;
 };
-typedef CountedPtr<Plotter> PlotterPtr;
+typedef casacore::CountedPtr<Plotter> PlotterPtr;
 
 }
 

@@ -49,6 +49,7 @@
 #include <casa/Logging/LogMessage.h>
 #include <casa/Logging/LogSink.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
   
 #define NEED_UNDERSCORES
@@ -161,7 +162,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Long cachesize=200000000;
     Float paInc=1.0; // 1 deg.
     String cfCacheDirName("tmpCFCache.dir");
-    //Bool doPBCorr=False;// applyPointingOffsets=True;
+    //Bool doPBCorr=false;// applyPointingOffsets=true;
     if (solve.isDefined("cfcache"))
       cfCacheDirName=solve.asString("cfcache");
     if (solve.isDefined("painc"))
@@ -181,7 +182,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // 			       16,         //Int tilesize=16 
     // 			       paInc       //Float paSteps=1.0
     // 			       );
-    casa::Quantity patol(paInc,"deg");
+    casacore::Quantity patol(paInc,"deg");
     logSink() << LogOrigin("LJJones","setSolve") 
 	      << "Parallactic Angle tolerance set to " << patol.getValue("deg") << " deg" 
 	      << LogIO::POST;
@@ -258,8 +259,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	preavg()=DBL_MAX;
     }
     // This is the solve context
-    setSolved(True);
-    setApplied(False);
+    setSolved(true);
+    setApplied(false);
     //  SolvableVisCal::setSolve(solve);
     cs_ = new CalSet<Complex>(nSpw());
   };
@@ -295,7 +296,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Sets the value returned by currSpw().
     // Resizes currCPar or currRPar to nPar() x nChanPar() x nElem()
     // Resizes currParOK() to nChanPar() x nElem()
-    // Set currParOK() = True
+    // Set currParOK() = true
     //
     VisCal::setApply(apply);
     
@@ -327,8 +328,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       interval()=apply.asFloat("t");
     
     // This is apply context  
-    setApplied(True);
-    setSolved(False);
+    setApplied(true);
+    setSolved(false);
     
     //  TBD:  "Arranging to apply...."
     
@@ -356,7 +357,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Inflate model data in VB, Mout references it
     //  (In this type, model data is always re-calc'd from scratch)
     //
-    vb.modelVisCube(True);
+    vb.modelVisCube(true);
     Mout.reference(vb.modelVisCube());
   }
   //
@@ -388,7 +389,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //
       // Model vis shape must match visibility
       //
-      vb.modelVisCube(False);
+      vb.modelVisCube(false);
       Mout.reference(vb.modelVisCube());
       
       //
@@ -464,7 +465,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     // Model vis shape must match visibility
     //
-    vb.modelVisCube(False);
+    vb.modelVisCube(false);
     //
     // Compute the corrupted model and the derivatives.
     //  
@@ -538,7 +539,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	cs().parOK(currSpw())(blc4,trc4).nonDegenerate(3)= solveParOK();
 	cs().parErr(currSpw())(blc4,trc4).nonDegenerate(3)= solveParErr();
 	cs().parSNR(currSpw())(blc4,trc4).nonDegenerate(3)= solveParSNR();
-	cs().solutionOK(currSpw())(slot) = anyEQ(solveParOK(),True);
+	cs().solutionOK(currSpw())(slot) = anyEQ(solveParOK(),true);
 	
       }
     else
@@ -557,8 +558,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     calTableName()="<none>";
     
     // This is the solve context
-    setSolved(True);
-    setApplied(False);
+    setSolved(true);
+    setApplied(false);
     
     // Create a pristine CalSet
     //  TBD: move this to inflate()?
@@ -617,7 +618,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	solveParErr().resize(nPar(),1,nAnt());
 	
 	solvePar()=(0.0);
-	solveParOK()=True;
+	solveParOK()=true;
 	
 	solveParSNR().resize(nPar(),1,nAnt());
 	solveParSNR()=0.0;
@@ -669,7 +670,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //   and set solveParOK accordingly
     Vector<Int> blperant(nAnt(),0);
     Vector<Double> wtperant(nAnt(),0.0);
-    Vector<Bool> antOK(nAnt(),False);
+    Vector<Bool> antOK(nAnt(),false);
     
     
     while (nAntForSolve!=nAntForSolveFinal) 
@@ -696,7 +697,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      }
 	  }
 	
-	antOK=False;
+	antOK=false;
 	for (Int iant=0;iant<nAnt();++iant) 
 	  {
 	    if (blperant(iant)>3 &&
@@ -704,13 +705,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      {
 		// This antenna is good, keep it
 		nAntForSolve+=1;
-		antOK(iant)=True;
+		antOK(iant)=true;
 	      }
 	    else 
 	      {
 		// This antenna under-represented; flag it
-		vb.flagRow()(vb.antenna1()==iant)=True;
-		vb.flagRow()(vb.antenna2()==iant)=True;
+		vb.flagRow()(vb.antenna1()==iant)=true;
+		vb.flagRow()(vb.antenna2()==iant)=true;
 	      }
 	  }
 	//    cout << "blperant     = " << blperant << endl;
@@ -721,11 +722,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     nAntForSolveFinal=nAntForSolve;
     
     // Set a priori solution flags  
-    solveParOK() = False;
+    solveParOK() = false;
     for (Int iant=0;iant<nAnt();++iant)
       if (antOK(iant))
 	// This ant ok
-	solveParOK().xyPlane(iant) = True;
+	solveParOK().xyPlane(iant) = true;
       else
 	// This ant not ok, set soln to zero
 	solveRPar().xyPlane(iant)=0.0;
@@ -783,10 +784,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     nMesg = (nMesg<1?1:nMesg);
     
     Int tmp=abs(nSlots-slotNo); Bool print;
-    print = False;
-    if ((slotNo == 0) || (slotNo == nSlots-1))  print=True;
-    else if ((tmp > 0 ) && ((slotNo+1)%nMesg ==0)) print=True;
-    else print=False;
+    print = false;
+    if ((slotNo == 0) || (slotNo == nSlots-1))  print=true;
+    else if ((tmp > 0 ) && ((slotNo+1)%nMesg ==0)) print=true;
+    else print=false;
     
     if (print)
       {
@@ -846,12 +847,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int refantNdx=refant()+1, ByPass=0,stat,nant,mode=2; // mode=0 ==> Phase-only, 1 ==> Amp-only, 2 ==> AP
     Int iPol, outPol, spw, nGood(0);
     Float oresid, nresid,scanwt;
-    Bool ppPolFound=False, keepSolutions=False;
+    Bool ppPolFound=false, keepSolutions=false;
     antgain.set(1.0);
     leakage.set(0.0);
     for (vi.originChunks(); vi.moreChunks(); vi.nextChunk()) 
       {
-	VisBuffAccumulator avgXij(nAnt(),preavg(),False);
+	VisBuffAccumulator avgXij(nAnt(),preavg(),false);
 	spw=vi.spectralWindow();
 	currSpw()=spw;
 	Int n=0;
@@ -874,21 +875,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Int nPol=avgVB.corrType().shape()[0];
 	//	cerr << spwMap() << " " << avgVB.spectralWindow() << endl;
 	Bool vbOk;
-	if (n==0) vbOk=False;
+	if (n==0) vbOk=false;
 	else vbOk = syncSolveMeta(avgVB,vi.fieldId());
 
 	if (vbOk) 
 	  {
-	    //Bool totalGoodSol(False);
+	    //Bool totalGoodSol(false);
 	    antgain.set(1.0);		    leakage.set(0.0);
 	    for (Int ich=nChanPar()-1;ich>-1;--ich) 
 	      {
-		keepSolutions=False;
+		keepSolutions=false;
 		for(iPol=0;iPol<nPol;iPol++)
 		  {
-		    ppPolFound=False;
-		    if (avgVB.corrType()[iPol] == Stokes::RR) {outPol=0; ppPolFound=True;}
-		    else if (avgVB.corrType()[iPol] == Stokes::LL) {outPol=2; ppPolFound=True;}
+		    ppPolFound=false;
+		    if (avgVB.corrType()[iPol] == Stokes::RR) {outPol=0; ppPolFound=true;}
+		    else if (avgVB.corrType()[iPol] == Stokes::LL) {outPol=2; ppPolFound=true;}
 		    if (ppPolFound)
 		      {
 			focusChan()=ich;
@@ -897,8 +898,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 			Bool del;
 			nant = nAnt();
-			antgain.resize(IPosition(1,nant),True);
-			leakage.resize(IPosition(1,nant),True);
+			antgain.resize(IPosition(1,nant),true);
+			leakage.resize(IPosition(1,nant),true);
 			Complex *visArrayPtr=visArray.getStorage(del),
 			  *antgainPtr = antgain.getStorage(del),
 			  *leakagePtr = leakage.getStorage(del);
@@ -940,9 +941,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			      Matrix<Bool>& /*Mflg*/)
   {
     /*
-      VisBuffAccumulator resAvgr(nAnt(),preavg(),False),
-      dRes1Avgr(nAnt(), preavg(), False),
-      dRes2Avgr(nAnt(), preavg(), False);
+      VisBuffAccumulator resAvgr(nAnt(),preavg(),false),
+      dRes1Avgr(nAnt(), preavg(), false),
+      dRes2Avgr(nAnt(), preavg(), false);
       VisBuffer vb(vi);
       IPosition shp;
       //
@@ -961,7 +962,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //
       // Model vis shape must match visibility
       //
-      residuals.modelVisCube(False);
+      residuals.modelVisCube(false);
       
       residuals.modelVisCube() = Complex(0,0);
       dAZVB.modelVisCube() = dELVB.modelVisCube() = Complex(0,0);  
@@ -1174,7 +1175,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   void LJJones::getAvgVB(VisIter& vi, VisEquation& ve, VisBuffer& vb)
   {
-    VisBuffAccumulator avgXij(nAnt(),preavg(),False);
+    VisBuffAccumulator avgXij(nAnt(),preavg(),false);
     VisBuffer accumVB(vi);
     Int n=0;
     

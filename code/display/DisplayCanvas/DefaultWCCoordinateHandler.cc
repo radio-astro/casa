@@ -27,6 +27,7 @@
 
 #include <display/DisplayCanvas/DefaultWCCoordinateHandler.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Default Constructor Required
@@ -38,7 +39,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if (world.nelements()!=2) world.resize(2);
 		world(0) = lin(0);
 		world(1) = lin(1);
-		return True;
+		return true;
 	}
 
 	Bool DefaultWCCoordinateHandler::worldToLin(Vector<Double> &lin,
@@ -46,7 +47,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if (lin.nelements()!=2) lin.resize(2);
 		lin(0) = world(0);
 		lin(1) = world(1);
-		return True;
+		return true;
 	}
 
 	Bool DefaultWCCoordinateHandler::linToWorld(Matrix<Double> & world,

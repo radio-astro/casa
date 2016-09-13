@@ -29,6 +29,7 @@
 #define MSVIS_SimplSimVi2_H
 
 #include <casa/aips.h>
+#include <casa/Exceptions/Error.h>
 #include <casa/BasicSL.h>
 #include <msvis/MSVis/VisBufferComponents2.h>
 #include <msvis/MSVis/ViImplementation2.h>
@@ -46,13 +47,18 @@
 #define SSVi2NotPossible() ThrowCc("Not Possible in SimpleSimVi2"); 
 #define SSVi2NotYetImplemented() ThrowCc("Not yet implemented in SimpleSimVi2");
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore{
 
+class AipsError;
 class RecordInterface;
 class Slice;
 class String;
 template <typename T, Int n> class SquareMatrix;
 template <typename T> class Vector;
+}
+
+namespace casa { //# NAMESPACE CASA - BEGIN
+
 class VisImagingWeight;
 
 namespace vi {
@@ -72,21 +78,21 @@ public:
   SimpleSimVi2Parameters();
 
   // Simple, shape-oriented ctor
-  SimpleSimVi2Parameters(Int nField,Int nScan,Int nSpw,Int nAnt,Int nCorr,
-			 const Vector<Int>& nTimePerField, const Vector<Int>& nChan,
-			 Complex c0=Complex(0.0f));
+  SimpleSimVi2Parameters(casacore::Int nField,casacore::Int nScan, casacore::Int nSpw, casacore::Int nAnt, casacore::Int nCorr,
+			 const casacore::Vector<casacore::Int>& nTimePerField, const casacore::Vector<casacore::Int>& nChan,
+			 casacore::Complex c0=casacore::Complex(0.0f));
 
   // Full control
-  SimpleSimVi2Parameters(Int nField,Int nScan,Int nSpw,Int nAnt,Int nCorr,
-			 const Vector<Int>& nTimePerField, const Vector<Int>& nChan,
-			 String date0, Double dt, 
-			 const Vector<Double>& refFreq, const Vector<Double>& df,
-			 const Matrix<Float>& stokes, 
-			 Bool doNoise,
-			 const Matrix<Float>& gain, const Matrix<Float>& tsys, 
-			 Bool doNorm=True,
-			 String polBasis="circ", Bool doAC=False,
-			 Complex c0=Complex(0.0f));
+  SimpleSimVi2Parameters(casacore::Int nField,casacore::Int nScan,casacore::Int nSpw,casacore::Int nAnt,casacore::Int nCorr,
+			 const casacore::Vector<casacore::Int>& nTimePerField, const casacore::Vector<casacore::Int>& nChan,
+			 casacore::String date0, casacore::Double dt, 
+			 const casacore::Vector<casacore::Double>& refFreq, const casacore::Vector<casacore::Double>& df,
+			 const casacore::Matrix<casacore::Float>& stokes, 
+			 casacore::Bool doNoise,
+			 const casacore::Matrix<casacore::Float>& gain, const casacore::Matrix<casacore::Float>& tsys, 
+			 casacore::Bool doNorm=true,
+			 casacore::String polBasis="circ", casacore::Bool doAC=false,
+			 casacore::Complex c0 = casacore::Complex(0.0f));
   
   SimpleSimVi2Parameters(const SimpleSimVi2Parameters& other);
   SimpleSimVi2Parameters& operator=(const SimpleSimVi2Parameters& other);
@@ -96,26 +102,26 @@ public:
 
   void summary() const;
 
-  Int nField_, nScan_, nSpw_, nAnt_, nCorr_;
-  Vector<Int> nTimePerField_, nChan_;
-  String date0_; 
-  Double dt_;
-  Vector<Double> refFreq_, df_;
-  Bool doNoise_;
-  Matrix<Float> stokes_, gain_, tsys_;
-  Bool doNorm_;
-  String polBasis_;
-  Bool doAC_;
-  Complex c0_;
+  casacore::Int nField_, nScan_, nSpw_, nAnt_, nCorr_;
+  casacore::Vector<casacore::Int> nTimePerField_, nChan_;
+  casacore::String date0_; 
+  casacore::Double dt_;
+  casacore::Vector<casacore::Double> refFreq_, df_;
+  casacore::Bool doNoise_;
+  casacore::Matrix<casacore::Float> stokes_, gain_, tsys_;
+  casacore::Bool doNorm_;
+  casacore::String polBasis_;
+  casacore::Bool doAC_;
+  casacore::Complex c0_;
 
   // Return frequencies for specified spw
-  Vector<Double> freqs(Int spw) const;
+  casacore::Vector<casacore::Double> freqs(casacore::Int spw) const;
 
 private:
-  void initialize(const Vector<Int>& nTimePerField, const Vector<Int>& nChan,
-		  const Vector<Double>& refFreq, const Vector<Double>& df,
-		  const Matrix<Float>& stokes, 
-		  const Matrix<Float>& gain, const Matrix<Float>& tsys);
+  void initialize(const casacore::Vector<casacore::Int>& nTimePerField, const casacore::Vector<casacore::Int>& nChan,
+		  const casacore::Vector<casacore::Double>& refFreq, const casacore::Vector<casacore::Double>& df,
+		  const casacore::Matrix<casacore::Float>& stokes, 
+		  const casacore::Matrix<casacore::Float>& gain, const casacore::Matrix<casacore::Float>& tsys);
 
 };
 
@@ -133,7 +139,7 @@ public:
   virtual ~SimpleSimVi2 ();
 
   // Report the the ViImplementation type
-  virtual String ViiType() const { return String("Simulated(*)"); };
+  virtual casacore::String ViiType() const { return casacore::String("Simulated(*)"); };
 
   //   +==================================+
   //   |                                  |
@@ -145,25 +151,25 @@ public:
   // Methods to control and monitor subchunk iteration
 
   virtual void origin ();
-  virtual Bool more () const;
+  virtual casacore::Bool more () const;
   virtual void next ();
   virtual Subchunk getSubchunkId () const;
   
   // Methods to control chunk iterator
 
-  virtual void originChunks (Bool forceRewind = False);
-  virtual Bool moreChunks () const;
+  virtual void originChunks (casacore::Bool forceRewind = false);
+  virtual casacore::Bool moreChunks () const;
   virtual void nextChunk ();
   
-  virtual Bool isWritable () const { return False; };
+  virtual casacore::Bool isWritable () const { return false; };
 
   // Return the time interval (in seconds) used for iteration.
   // This is not the same as the INTERVAL column.  Setting the
   // the interval requires calling origin chunks before performing
   // further iterator.
   
-  virtual Double getInterval() const {return 1.0e9; };
-  virtual void setInterval (Double) { SSVi2NotPossible() };
+  virtual casacore::Double getInterval() const {return 1.0e9; };
+  virtual void setInterval (casacore::Double) { SSVi2NotPossible() };
 
   // Select the channels to be returned.  Requires calling originChunks before
   // performing additional iteration.
@@ -171,26 +177,26 @@ public:
   virtual void setFrequencySelections (const FrequencySelections & selection);
 
   // Set the 'blocking' size for returning data.
-  virtual void setRowBlocking (Int) { SSVi2NotPossible() };
+  virtual void setRowBlocking (casacore::Int) { SSVi2NotPossible() };
   
-  virtual Bool existsColumn (VisBufferComponent2 id) const;
+  virtual casacore::Bool existsColumn (VisBufferComponent2 id) const;
   
   virtual const SortColumns & getSortColumns() const { SSVi2NotPossible() };
 
-  virtual Bool isNewArrayId () const { return False; };
-  virtual Bool isNewFieldId () const { return thisField_!=lastField_; };
-  virtual Bool isNewMs () const  { return False; };
-  virtual Bool isNewSpectralWindow () const { return thisSpw_!=lastSpw_; };
+  virtual casacore::Bool isNewArrayId () const { return false; };
+  virtual casacore::Bool isNewFieldId () const { return thisField_!=lastField_; };
+  virtual casacore::Bool isNewMs () const  { return false; };
+  virtual casacore::Bool isNewSpectralWindow () const { return thisSpw_!=lastSpw_; };
 
   // Return the number of rows in the current iteration
 
-  virtual Int nRows () const { return nBsln_; };
+  virtual casacore::Int nRows () const { return nBsln_; };
   
   // Return the row ids as from the original root table. This is useful
   // to find correspondance between a given row in this iteration to the
   // original ms row
 
-  virtual void getRowIds (Vector<uInt> & rowids) const;
+  virtual void getRowIds (casacore::Vector<casacore::uInt> & rowids) const;
 
   virtual VisBuffer2 * getVisBuffer (const VisibilityIterator2 *) { SSVi2NotPossible() };
   virtual VisBuffer2 * getVisBuffer ();
@@ -198,154 +204,154 @@ public:
 
   //   +=========================+
   //   |                         |
-  //   | Subchunk Data Accessors |
+  //   | Subchunk casacore::Data Accessors |
   //   |                         |
   //   +=========================+
   
   // Return info
-  virtual void antenna1 (Vector<Int> & ant1) const;
-  virtual void antenna2 (Vector<Int> & ant2) const;
-  virtual void corrType (Vector<Int> & corrTypes) const;
-  virtual Int  dataDescriptionId () const;
-  virtual void dataDescriptionIds (Vector<Int> & ddis) const;
-  virtual void exposure (Vector<Double> & expo) const;
-  virtual void feed1 (Vector<Int> & fd1) const;
-  virtual void feed2 (Vector<Int> & fd2) const;
-  virtual void fieldIds (Vector<Int>&) const;
-  virtual void arrayIds (Vector<Int>&) const;
-  virtual String fieldName () const;
+  virtual void antenna1 (casacore::Vector<casacore::Int> & ant1) const;
+  virtual void antenna2 (casacore::Vector<casacore::Int> & ant2) const;
+  virtual void corrType (casacore::Vector<casacore::Int> & corrTypes) const;
+  virtual casacore::Int  dataDescriptionId () const;
+  virtual void dataDescriptionIds (casacore::Vector<casacore::Int> & ddis) const;
+  virtual void exposure (casacore::Vector<casacore::Double> & expo) const;
+  virtual void feed1 (casacore::Vector<casacore::Int> & fd1) const;
+  virtual void feed2 (casacore::Vector<casacore::Int> & fd2) const;
+  virtual void fieldIds (casacore::Vector<casacore::Int>&) const;
+  virtual void arrayIds (casacore::Vector<casacore::Int>&) const;
+  virtual casacore::String fieldName () const;
 
-  virtual void flag (Cube<Bool> & flags) const;
-  virtual void flag (Matrix<Bool> &) const { SSVi2NotPossible() };
-  virtual Bool flagCategoryExists () const { return False; };
-  virtual void flagCategory (Array<Bool> &) const { SSVi2NotPossible() };
-  virtual void flagRow (Vector<Bool> & rowflags) const;
-  virtual void observationId (Vector<Int> & obsids) const;
-  virtual Int polarizationId () const;
-  virtual void processorId (Vector<Int> & procids) const;
-  virtual void scan (Vector<Int> & scans) const;
-  virtual String sourceName () const;
-  virtual void stateId (Vector<Int> & stateids) const;
-  virtual void jonesC (Vector<SquareMatrix<Complex, 2> > &) const { SSVi2NotPossible() };
-  virtual Int polFrame () const;
-  virtual void sigma (Matrix<Float> & sigmat) const;
-  virtual Int spectralWindow () const;
-  virtual void spectralWindows (Vector<Int> & spws) const;
-  virtual void time (Vector<Double> & t) const;
-  virtual void timeCentroid (Vector<Double> & t) const;
-  virtual void timeInterval (Vector<Double> & ti) const;
-  virtual void uvw (Matrix<Double> & uvwmat) const;
+  virtual void flag (casacore::Cube<casacore::Bool> & flags) const;
+  virtual void flag (casacore::Matrix<casacore::Bool> &) const { SSVi2NotPossible() };
+  virtual casacore::Bool flagCategoryExists () const { return false; };
+  virtual void flagCategory (casacore::Array<casacore::Bool> &) const { SSVi2NotPossible() };
+  virtual void flagRow (casacore::Vector<casacore::Bool> & rowflags) const;
+  virtual void observationId (casacore::Vector<casacore::Int> & obsids) const;
+  virtual casacore::Int polarizationId () const;
+  virtual void processorId (casacore::Vector<casacore::Int> & procids) const;
+  virtual void scan (casacore::Vector<casacore::Int> & scans) const;
+  virtual casacore::String sourceName () const;
+  virtual void stateId (casacore::Vector<casacore::Int> & stateids) const;
+  virtual void jonesC (casacore::Vector<casacore::SquareMatrix<casacore::Complex, 2> > &) const { SSVi2NotPossible() };
+  virtual casacore::Int polFrame () const;
+  virtual void sigma (casacore::Matrix<casacore::Float> & sigmat) const;
+  virtual casacore::Int spectralWindow () const;
+  virtual void spectralWindows (casacore::Vector<casacore::Int> & spws) const;
+  virtual void time (casacore::Vector<casacore::Double> & t) const;
+  virtual void timeCentroid (casacore::Vector<casacore::Double> & t) const;
+  virtual void timeInterval (casacore::Vector<casacore::Double> & ti) const;
+  virtual void uvw (casacore::Matrix<casacore::Double> & uvwmat) const;
 
-  virtual void visibilityCorrected (Cube<Complex> & vis) const;
-  virtual void visibilityModel (Cube<Complex> & vis) const;
-  virtual void visibilityObserved (Cube<Complex> & vis) const;
-  virtual void floatData (Cube<Float> & fcube) const;
+  virtual void visibilityCorrected (casacore::Cube<casacore::Complex> & vis) const;
+  virtual void visibilityModel (casacore::Cube<casacore::Complex> & vis) const;
+  virtual void visibilityObserved (casacore::Cube<casacore::Complex> & vis) const;
+  virtual void floatData (casacore::Cube<casacore::Float> & fcube) const;
 
-  virtual IPosition visibilityShape () const;
+  virtual casacore::IPosition visibilityShape () const;
 
-  virtual void weight (Matrix<Float> & wtmat) const;
-  virtual Bool weightSpectrumExists () const;
-  virtual Bool sigmaSpectrumExists () const;
-  virtual void weightSpectrum (Cube<Float> & wtsp) const;
-  virtual void sigmaSpectrum (Cube<Float> & wtsp) const;
+  virtual void weight (casacore::Matrix<casacore::Float> & wtmat) const;
+  virtual casacore::Bool weightSpectrumExists () const;
+  virtual casacore::Bool sigmaSpectrumExists () const;
+  virtual void weightSpectrum (casacore::Cube<casacore::Float> & wtsp) const;
+  virtual void sigmaSpectrum (casacore::Cube<casacore::Float> & wtsp) const;
 
-  virtual void setWeightScaling (CountedPtr<WeightScaling>) { SSVi2NotPossible() };
-  virtual Bool hasWeightScaling () const { return False; };
-  virtual CountedPtr<WeightScaling> getWeightScaling () const; //  { SSVi2NotPossible() };
+  virtual void setWeightScaling (casacore::CountedPtr<WeightScaling>) { SSVi2NotPossible() };
+  virtual casacore::Bool hasWeightScaling () const { return false; };
+  virtual casacore::CountedPtr<WeightScaling> getWeightScaling () const; //  { SSVi2NotPossible() };
 
   //   +------------------------+
   //   |                        |
-  //   | Angular Data Providers |
+  //   | Angular casacore::Data Providers |
   //   |                        |
   //   +------------------------+
 
   // No underlying geometry is available for these!
-  virtual Bool allBeamOffsetsZero () const { SSVi2NotPossible() };
-  virtual MDirection azel0 (Double) const { SSVi2NotPossible() };
-  virtual const Vector<MDirection> & azel (Double) const { SSVi2NotPossible() };
-  virtual const Vector<Float> & feed_pa (Double) const { SSVi2NotPossible() };
-  virtual const Cube<RigidVector<Double, 2> > & getBeamOffsets () const { SSVi2NotPossible() };
-  virtual Double hourang (Double) const { SSVi2NotPossible() };
-  virtual const Float & parang0 (Double) const { SSVi2NotPossible() };
-  virtual const Vector<Float> & parang (Double) const { SSVi2NotPossible() };
-  virtual const MDirection & phaseCenter () const { return phaseCenter_; }; // trivial value (for now)
-  virtual const Cube<Double> & receptorAngles () const { SSVi2NotPossible() };
+  virtual casacore::Bool allBeamOffsetsZero () const { SSVi2NotPossible() };
+  virtual casacore::MDirection azel0 (casacore::Double) const { SSVi2NotPossible() };
+  virtual const casacore::Vector<casacore::MDirection> & azel (casacore::Double) const { SSVi2NotPossible() };
+  virtual const casacore::Vector<casacore::Float> & feed_pa (casacore::Double) const { SSVi2NotPossible() };
+  virtual const casacore::Cube<casacore::RigidVector<casacore::Double, 2> > & getBeamOffsets () const { SSVi2NotPossible() };
+  virtual casacore::Double hourang (casacore::Double) const { SSVi2NotPossible() };
+  virtual const casacore::Float & parang0 (casacore::Double) const { SSVi2NotPossible() };
+  virtual const casacore::Vector<casacore::Float> & parang (casacore::Double) const { SSVi2NotPossible() };
+  virtual const casacore::MDirection & phaseCenter () const { return phaseCenter_; }; // trivial value (for now)
+  virtual const casacore::Cube<casacore::Double> & receptorAngles () const { SSVi2NotPossible() };
 
   //   +=========================+
   //   |                         |
-  //   | Chunk and MS Level Data |
+  //   | Chunk and casacore::MS Level casacore::Data |
   //   |                         |
   //   +=========================+
 
-  virtual const Vector<String> & antennaMounts () const { SSVi2NotPossible() };
+  virtual const casacore::Vector<casacore::String> & antennaMounts () const { SSVi2NotPossible() };
   virtual const VisImagingWeight & getImagingWeightGenerator () const { SSVi2NotPossible() };
   
-  virtual MFrequency::Types getObservatoryFrequencyType () const { SSVi2NotPossible() };
-  virtual MPosition getObservatoryPosition () const { SSVi2NotPossible() };
-  virtual Vector<Float> getReceptor0Angle () { SSVi2NotPossible() };
+  virtual casacore::MFrequency::Types getObservatoryFrequencyType () const { SSVi2NotPossible() };
+  virtual casacore::MPosition getObservatoryPosition () const { SSVi2NotPossible() };
+  virtual casacore::Vector<casacore::Float> getReceptor0Angle () { SSVi2NotPossible() };
  
-  virtual Int getReportingFrameOfReference () const { return -2;  /*SSVi2NotPossible()*/ };
-  virtual void setReportingFrameOfReference (Int) { SSVi2NotPossible() };
+  virtual casacore::Int getReportingFrameOfReference () const { return -2;  /*SSVi2NotPossible()*/ };
+  virtual void setReportingFrameOfReference (casacore::Int) { SSVi2NotPossible() };
  
-  virtual MEpoch getEpoch () const;
+  virtual casacore::MEpoch getEpoch () const;
 
-  virtual Vector<Int> getCorrelations () const;
+  virtual casacore::Vector<casacore::Int> getCorrelations () const;
 
-  virtual Vector<Stokes::StokesTypes> getCorrelationTypesDefined () const { return corrdef_; /*SSVi2NotPossible()*/ };
-  virtual Vector<Stokes::StokesTypes> getCorrelationTypesSelected () const { return corrdef_; /*SSVi2NotPossible()*/ };
+  virtual casacore::Vector<casacore::Stokes::StokesTypes> getCorrelationTypesDefined () const { return corrdef_; /*SSVi2NotPossible()*/ };
+  virtual casacore::Vector<casacore::Stokes::StokesTypes> getCorrelationTypesSelected () const { return corrdef_; /*SSVi2NotPossible()*/ };
 
-  virtual Vector<Int> getChannels (Double time, Int frameOfReference, Int spectralWndow = -1,
-				   Int msId = -1) const;
-  virtual Vector<Double> getFrequencies (Double time, Int frameOfReference, Int spectralWndow = -1,
-					 Int msId = -1) const;
+  virtual casacore::Vector<casacore::Int> getChannels (casacore::Double time, casacore::Int frameOfReference, casacore::Int spectralWndow = -1,
+				   casacore::Int msId = -1) const;
+  virtual casacore::Vector<casacore::Double> getFrequencies (casacore::Double time, casacore::Int frameOfReference, casacore::Int spectralWndow = -1,
+					 casacore::Int msId = -1) const;
 
   //reference to actual ms in interator  (TRIVIAL returns
-  virtual Int msId () const { return -1; }; // zero-based index of current MS in set of MSs
-  virtual const MeasurementSet & ms () const { SSVi2NotPossible() };
-  virtual Int getNMs () const { return 0; };
+  virtual casacore::Int msId () const { return -1; }; // zero-based index of current casacore::MS in set of MSs
+  virtual const casacore::MeasurementSet & ms () const { SSVi2NotPossible() };
+  virtual casacore::Int getNMs () const { return 0; };
 
   // Name of the MS in the interator
-  virtual String msName() const { return String("<noms>"); };
+  virtual casacore::String msName() const { return casacore::String("<noms>"); };
 
   // Call to use the slurp i/o method for all scalar columns. 
   //  Not meaningful for non-I/O
   virtual void slurp () const { SSVi2NotPossible() };
 
-  // Access the current ROMSColumns object in MSIter -- NOT POSSIBLE
+  // Access the current casacore::ROMSColumns object in MSIter -- NOT POSSIBLE
   virtual const vi::SubtableColumns & subtableColumns () const { SSVi2NotPossible() };
 
 
   // get back the selected spectral windows and spectral channels for
   // current ms
 
-  virtual const SpectralWindowChannels & getSpectralWindowChannels (Int msId, Int spectralWindowId) const;
+  virtual const SpectralWindowChannels & getSpectralWindowChannels (casacore::Int msId, casacore::Int spectralWindowId) const;
 
   //assign a VisImagingWeight object to this iterator
   virtual void useImagingWeight (const VisImagingWeight & ) { SSVi2NotPossible() };
   
   // Return number of antennasm spws, polids, ddids
   
-  virtual Int nAntennas () const;
-  virtual Int nDataDescriptionIds () const;
-  virtual Int nPolarizationIds () const;
-  virtual Int nRowsInChunk () const; // number rows in current chunk
-  virtual Int nRowsViWillSweep () const; // number of rows in all selected ms's
-  virtual Int nSpectralWindows () const;
+  virtual casacore::Int nAntennas () const;
+  virtual casacore::Int nDataDescriptionIds () const;
+  virtual casacore::Int nPolarizationIds () const;
+  virtual casacore::Int nRowsInChunk () const; // number rows in current chunk
+  virtual casacore::Int nRowsViWillSweep () const; // number of rows in all selected ms's
+  virtual casacore::Int nSpectralWindows () const;
 
   // Writeback methods are Irrelevant for non-disk-reading VI2
   virtual void writeBackChanges (VisBuffer2* ) { SSVi2NotPossible() };
-  virtual void writeFlag (const Cube<Bool> &) { SSVi2NotPossible() };
-  virtual void writeFlagRow (const Vector<Bool> &) { SSVi2NotPossible() };
-  virtual void writeFlagCategory(const Array<Bool>&) { SSVi2NotPossible() };
-  virtual void writeVisCorrected (const Cube<Complex> &) { SSVi2NotPossible() };
-  virtual void writeVisModel (const Cube<Complex> &) { SSVi2NotPossible() };
-  virtual void writeVisObserved (const Cube<Complex> &) { SSVi2NotPossible() };
-  virtual void writeWeight (const Matrix<Float> &) { SSVi2NotPossible() };
-  virtual void writeWeightSpectrum (const Cube<Float> &) { SSVi2NotPossible() };
-  virtual void initWeightSpectrum (const Cube<Float> &) { SSVi2NotPossible() };
-  virtual void writeSigmaSpectrum (const Cube<Float> &) { SSVi2NotPossible() };
-  virtual void writeSigma (const Matrix<Float> &) { SSVi2NotPossible() };
-  virtual void writeModel(const RecordInterface&,Bool,Bool) { SSVi2NotPossible() };
+  virtual void writeFlag (const casacore::Cube<casacore::Bool> &) { SSVi2NotPossible() };
+  virtual void writeFlagRow (const casacore::Vector<casacore::Bool> &) { SSVi2NotPossible() };
+  virtual void writeFlagCategory(const casacore::Array<casacore::Bool>&) { SSVi2NotPossible() };
+  virtual void writeVisCorrected (const casacore::Cube<casacore::Complex> &) { SSVi2NotPossible() };
+  virtual void writeVisModel (const casacore::Cube<casacore::Complex> &) { SSVi2NotPossible() };
+  virtual void writeVisObserved (const casacore::Cube<casacore::Complex> &) { SSVi2NotPossible() };
+  virtual void writeWeight (const casacore::Matrix<casacore::Float> &) { SSVi2NotPossible() };
+  virtual void writeWeightSpectrum (const casacore::Cube<casacore::Float> &) { SSVi2NotPossible() };
+  virtual void initWeightSpectrum (const casacore::Cube<casacore::Float> &) { SSVi2NotPossible() };
+  virtual void writeSigmaSpectrum (const casacore::Cube<casacore::Float> &) { SSVi2NotPossible() };
+  virtual void writeSigma (const casacore::Matrix<casacore::Float> &) { SSVi2NotPossible() };
+  virtual void writeModel(const casacore::RecordInterface&,casacore::Bool,casacore::Bool) { SSVi2NotPossible() };
 
 private:
 
@@ -356,45 +362,46 @@ private:
   void configureNewSubchunk();
 
   // Generate noise on data
-  void addNoise(Cube<Complex>& vis) const;
+  void addNoise(casacore::Cube<casacore::Complex>& vis) const;
 
-  // Input parameters
+  // casacore::Input parameters
   const SimpleSimVi2Parameters pars_;
   /*
-  Int nField_,nScan_,nSpw_,nAnt_,nCorr_;
-  Vector<Int> nTimePerField_, nChan_;
-  String date0_;
-  Double dt_;
-  Vector<Double> refFreq_, df_;
-  Matrix<Float> stokes_, sefd_;
-  String polBasis_;
-  Bool doAC_;
+  casacore::Int nField_,nScan_,nSpw_,nAnt_,nCorr_;
+  casacore::Vector<casacore::Int> nTimePerField_, nChan_;
+  casacore::String date0_;
+  casacore::Double dt_;
+  casacore::Vector<casacore::Double> refFreq_, df_;
+  casacore::Matrix<casacore::Float> stokes_, sefd_;
+  casacore::String polBasis_;
+  casacore::Bool doAC_;
   */
 
   // Derived parameters
-  Int  nChunk_, nBsln_;
-  Double t0_;
-  Vector<Float> wt0_;
-  Matrix<Complex> vis0_;
+  casacore::Int  nChunk_, nBsln_;
+  casacore::Complex c0_;
+  casacore::Double t0_;
+  casacore::Vector<casacore::Float> wt0_;
+  casacore::Matrix<casacore::Complex> vis0_;
 
   // Counters
-  Int iChunk_,iSubChunk_,iRow0_;
-  Int iScan_;
-  Double iChunkTime0_;
+  casacore::Int iChunk_,iSubChunk_,iRow0_;
+  casacore::Int iScan_;
+  casacore::Double iChunkTime0_;
 
   // Meta-info
-  Int thisScan_, thisField_, thisSpw_;
-  Int lastScan_, lastField_, lastSpw_;
-  Double thisTime_;
+  casacore::Int thisScan_, thisField_, thisSpw_;
+  casacore::Int lastScan_, lastField_, lastSpw_;
+  casacore::Double thisTime_;
 
   // Correlation stuff
-  Vector<Stokes::StokesTypes> corrdef_;
+  casacore::Vector<casacore::Stokes::StokesTypes> corrdef_;
 
   // The associated VB
   VisBuffer2* vb_;
 
   // Trivial (for now) MDirection, so phaseCenter() has something to return
-  MDirection phaseCenter_;
+  casacore::MDirection phaseCenter_;
 
 };
 

@@ -40,10 +40,11 @@
 
 #include <lattices/LRegions/LCSlicer.h>
 
+using namespace casacore;
 namespace casa {
 
 ImageInputProcessor::ImageInputProcessor()
-: _log(new LogIO()), _processHasRun(False),
+: _log(new LogIO()), _processHasRun(false),
   _nSelectedChannels(0)
 {}
 
@@ -70,13 +71,13 @@ String ImageInputProcessor::_stokesFromRecord(
  		uInt stokesBegin, stokesEnd;
  		ImageRegion *imreg = ImageRegion::fromRecord(region, "");
  		Array<Float> blc, trc;
- 		Bool oneRelAccountedFor = False;
+ 		Bool oneRelAccountedFor = false;
  		if (imreg->isLCSlicer()) {
  			blc = imreg->asLCSlicer().blc();
  			trc = imreg->asLCSlicer().trc();
 	 		stokesBegin = (uInt)((Vector<Float>)blc)[polAxis];
 	 		stokesEnd = (uInt)((Vector<Float>)trc)[polAxis];
-	 		oneRelAccountedFor = True;
+	 		oneRelAccountedFor = true;
  		}
  		else if (RegionManager::isPixelRegion(*(ImageRegion::fromRecord(region, "")))) {
 			region.toArray("blc", blc);

@@ -28,7 +28,7 @@
  * | If you do, all changes will be lost when the file is re-generated. |
  *  --------------------------------------------------------------------
  *
- * File CalHolographyTable.h
+ * casacore::File CalHolographyTable.h
  */
  
 #ifndef CalHolographyTable_CLASS
@@ -462,7 +462,7 @@ public:
 	std::string toXML()  ;
 
 #ifndef WITHOUT_ACS
-	// Conversion Methods
+	// casacore::Conversion Methods
 	/**
 	 * Convert this table into a CalHolographyTableIDL CORBA structure.
 	 *

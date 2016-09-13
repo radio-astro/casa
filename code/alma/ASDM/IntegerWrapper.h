@@ -21,7 +21,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
  * MA 02111-1307  USA
  *
- * File Integer.h
+ * casacore::File Integer.h
  */
 # ifndef Integer_CLASS
 # define Integer_CLASS

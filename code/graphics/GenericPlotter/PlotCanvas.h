@@ -74,7 +74,7 @@ public:
     virtual bool canvasDrawBeginning(PlotOperationPtr drawOperation,
             bool drawingIsThreaded, int drawnLayersFlag) = 0;
 };
-typedef CountedPtr<PlotDrawWatcher> PlotDrawWatcherPtr;
+typedef casacore::CountedPtr<PlotDrawWatcher> PlotDrawWatcherPtr;
 
 
 // PlotCanvas is an area for different PlotItems to be attached and drawn.  It
@@ -99,13 +99,13 @@ public:
     // Returns all legend positions.
     // <group>
     static std::vector<LegendPosition> allLegendPositions(); 
-    static std::vector<String> allLegendPositionStrings();
+    static std::vector<casacore::String> allLegendPositionStrings();
     // </group>
     
-    // Converts between legend positions and their String representations.
+    // Converts between legend positions and their casacore::String representations.
     // <group>
-    static String legendPosition(LegendPosition p); 
-    static LegendPosition legendPosition(String p, bool* ok = NULL);
+    static casacore::String legendPosition(LegendPosition p); 
+    static LegendPosition legendPosition(casacore::String p, bool* ok = NULL);
     // </group>
     
     // Indicates whether the given legend position is internal to the canvas or
@@ -128,8 +128,8 @@ public:
     
     // Convenient access to operation names.
     // <group>
-    static const String OPERATION_DRAW;
-    static const String OPERATION_EXPORT;
+    static const casacore::String OPERATION_DRAW;
+    static const casacore::String OPERATION_EXPORT;
     // </group>
     
     
@@ -166,13 +166,13 @@ public:
     virtual void show() = 0;
     virtual void hide() = 0;
     virtual bool isDrawing( )= 0;
-    // Returns the text of the canvas title, or an empty String if none is
+    // Returns the text of the canvas title, or an empty casacore::String if none is
     // shown.  The title is shown above the plotting area.
-    virtual String title() const = 0;
+    virtual casacore::String title() const = 0;
     
     // Sets the text of the canvas title to the given.  Setting the title to an
     // empty string should remove the title from the canvas.
-    virtual void setTitle(const String& title) = 0;
+    virtual void setTitle(const casacore::String& title) = 0;
     
     // Returns a copy of the font used for the canvas title.  If no title is
     // shown this behavior is undefined.
@@ -195,7 +195,7 @@ public:
     // DEFAULT IMPLEMENTATION.
     // <group>
     virtual void setBackground(const PlotAreaFillPtr areaFill);
-    virtual void setBackground(const String& color,
+    virtual void setBackground(const casacore::String& color,
             PlotAreaFill::Pattern pattern = PlotAreaFill::FILL);
     // </group>
     
@@ -294,13 +294,13 @@ public:
     virtual void showCartesianAxes(bool show = true, bool hideNormal = true);
     // </group>
     
-    // Returns the label for the given axis, or an empty String if none is
+    // Returns the label for the given axis, or an empty casacore::String if none is
     // shown.
-    virtual String axisLabel(PlotAxis axis) const = 0;
+    virtual casacore::String axisLabel(PlotAxis axis) const = 0;
     
     // Sets the label of an axis title to the given.  Setting the title to an
     // empty string should remove the title from the axis.
-    virtual void setAxisLabel(PlotAxis axis, const String& title) = 0;
+    virtual void setAxisLabel(PlotAxis axis, const casacore::String& title) = 0;
     
     // Convenience method for clearing labels from all axes.
     // DEFAULT IMPLEMENTATION.
@@ -396,7 +396,7 @@ public:
     virtual void setAxesRatioLocked(bool locked = true) = 0;
     
     
-    // Stack Methods //
+    // casacore::Stack Methods //
     
     // Returns a single PlotAxesStack associated with this canvas.  Note that
     // the canvas itself doesn't modify/use this stack AT ALL; it is expressly
@@ -616,7 +616,7 @@ public:
     // DEFAULT IMPLEMENTATION.
     // <group>
     virtual void setSelectLine(const PlotLinePtr line);
-    virtual void setSelectLine(const String& color,
+    virtual void setSelectLine(const casacore::String& color,
                                PlotLine::Style style = PlotLine::SOLID,
                                double width = 1.0);
     // </group>
@@ -685,10 +685,10 @@ public:
     // DEFAULT IMPLEMENTATION.
     // <group>
     virtual void setGridMajorLine(const PlotLinePtr line);
-    virtual void setGridMajorLine(const String& color,
+    virtual void setGridMajorLine(const casacore::String& color,
             PlotLine::Style style = PlotLine::SOLID, double width = 1.0);
     virtual void setGridMinorLine(const PlotLinePtr line);
-    virtual void setGridMinorLine(const String& color,
+    virtual void setGridMinorLine(const casacore::String& color,
             PlotLine::Style style = PlotLine::SOLID, double width = 1.0);
     // </group>
     
@@ -720,7 +720,7 @@ public:
     // DEFAULT IMPLEMENTATION.
     // <group>
     virtual void setLegendLine(const PlotLinePtr line);
-    virtual void setLegendLine(const String& color,
+    virtual void setLegendLine(const casacore::String& color,
             PlotLine::Style style = PlotLine::SOLID, double width = 1.0);
     // </group>
     
@@ -734,7 +734,7 @@ public:
     // DEFAULT IMPLEMENTATION.
     // <group>
     virtual void setLegendFill(const PlotAreaFillPtr area);
-    virtual void setLegendFill(const String& color,
+    virtual void setLegendFill(const casacore::String& color,
             PlotAreaFill::Pattern pattern = PlotAreaFill::FILL);
     // </group>
     
@@ -775,21 +775,21 @@ public:
     
     // Shows a file chooser dialog and return the absolute filename that the
     // user chooses.  If a directory is given, start the dialog there.  If the
-    // user cancels the dialog, an empty String should be returned.
-    virtual String fileChooserDialog(const String& title = "File Chooser",
-                                     const String& directory = "") = 0;
+    // user cancels the dialog, an empty casacore::String should be returned.
+    virtual casacore::String fileChooserDialog(const casacore::String& title = "casacore::File Chooser",
+                                     const casacore::String& directory = "") = 0;
     
     // Gets/Sets the date format for this canvas.  See Plotter::dateFormat().
     // <group>
-    virtual const String& dateFormat() const = 0;
-    virtual void setDateFormat(const String& dateFormat) = 0;
+    virtual const casacore::String& dateFormat() const = 0;
+    virtual void setDateFormat(const casacore::String& dateFormat) = 0;
     // </group>
     
     // Gets/Sets the date format for values relative to a reference value for
     // this canvas.  See Plotter::relativeDateFormat().
     // <group>
-    virtual const String& relativeDateFormat() const = 0;
-    virtual void setRelativeDateFormat(const String& dateFormat) = 0;
+    virtual const casacore::String& relativeDateFormat() const = 0;
+    virtual void setRelativeDateFormat(const casacore::String& dateFormat) = 0;
     // </group>
 
     // Converts the given coordinate into a coordinate with the given system.
@@ -808,7 +808,7 @@ public:
     // Returns the width, height, and descent for the given text in the given
     // font.  Note: this was put into place for use in a matplotlib backend,
     // but probably doesn't have much use outside that.
-    virtual std::vector<double> textWidthHeightDescent(const String& text,
+    virtual std::vector<double> textWidthHeightDescent(const casacore::String& text,
             PlotFontPtr font) const = 0;
     
     // Returns the width, height, and descent for the given annotation.  Note:
@@ -1033,7 +1033,7 @@ protected:
             int newWidth, int newHeight);
     // </group>
 };
-typedef CountedPtr<PlotCanvas> PlotCanvasPtr;
+typedef casacore::CountedPtr<PlotCanvas> PlotCanvasPtr;
 
 }
 

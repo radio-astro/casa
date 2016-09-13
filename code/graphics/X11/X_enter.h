@@ -36,14 +36,14 @@
 // <synopsis>
 // Xlib.h issues the following statements:
 // <ul>
-// <li> #define Bool int
-// <li> #define True 1
-// <li> #define False 0
+// <li> #define casacore::Bool int
+// <li> #define true 1
+// <li> #define false 0
 // </ul>
 // X.h issues the following statements:
 // <ul>
-// <li> #define Complex          0        /* paths may intersect */
-// <li> typedef unsigned long Time;
+// <li> #define casacore::Complex          0        /* paths may intersect */
+// <li> typedef unsigned long casacore::Time;
 // </ul>
 // </synopsis>
 //
@@ -57,12 +57,12 @@
 #ifdef String
 #undef String
 #endif
-#define String XString
+#define casacore::String XString
 
 #ifdef Time
 #undef Time
 #endif
-#define Time XTime
+#define casacore::Time XTime
 
 #ifdef Display
 #undef Display
@@ -75,8 +75,8 @@
 #define Colormap XColormap
 
 #undef Bool
-#undef True
-#undef False
+#undef true
+#undef false
 
 #undef Complex
 

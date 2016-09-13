@@ -129,7 +129,7 @@ protected:
     
     virtual void SetUp();
     virtual void TearDown();
-    //Double expFlxVal;
+    //casacore::Double expFlxVal;
 };
 
 }// end namespace test

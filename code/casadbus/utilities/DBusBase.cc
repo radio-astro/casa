@@ -9,6 +9,7 @@
 #include <thread>
 #include <functional>
 
+using namespace casacore;
 namespace casa {
 
   DBusThreadedBase::DBusThreadedBase():

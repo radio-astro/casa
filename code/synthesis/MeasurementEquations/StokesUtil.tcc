@@ -34,43 +34,43 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 template<class T, class U> void
-unpackStokes(Array<U>& output, const Array<T>& input){
+unpackStokes(casacore::Array<U>& output, const casacore::Array<T>& input){
   // Create space for the output array
   {
-    IPosition outSize(input.shape());
-    outSize.append(IPosition(1,4));
+    casacore::IPosition outSize(input.shape());
+    outSize.append(casacore::IPosition(1,4));
     output.resize(outSize);
   }
   // Create a reference to the arrays that allows the data to be accessed
   // linearly
-  uInt nelements = input.nelements();
-  Vector<T> linput(input.reform(IPosition(1,nelements), IPosition(1,0)));
-  Vector<U> loutput(output.reform(IPosition(1,output.nelements()), 
-				  IPosition(1,0)));
+  casacore::uInt nelements = input.nelements();
+  casacore::Vector<T> linput(input.reform(casacore::IPosition(1,nelements), casacore::IPosition(1,0)));
+  casacore::Vector<U> loutput(output.reform(casacore::IPosition(1,output.nelements()), 
+				  casacore::IPosition(1,0)));
   // Now copy the data
-  uInt j = 0;
-  for (uInt pol = 0; pol < 4; pol++){
-    for (uInt i = 0; i < nelements; i++){
+  casacore::uInt j = 0;
+  for (casacore::uInt pol = 0; pol < 4; pol++){
+    for (casacore::uInt i = 0; i < nelements; i++){
       loutput(j++) = linput(i)(pol);
     }
   }
 };
 
 template<class T, class U> void
-repackStokes(Array<U>& output, const Array<T>& input){
+repackStokes(casacore::Array<U>& output, const casacore::Array<T>& input){
   // Find which axis is the stokes axis
-  uInt stokesAxis;
-  IPosition inputSize = input.shape();
+  casacore::uInt stokesAxis;
+  casacore::IPosition inputSize = input.shape();
   // First remove any trailing degenerate axes
   stokesAxis = inputSize.nelements();
   while ((stokesAxis > 0) && (inputSize(stokesAxis-1) == 1))
     stokesAxis--; 
   // Then check that the input array has a slowest dimension of 4
-  if (inputSize(stokesAxis-1) != 4) throw(AipsError(
+  if (inputSize(stokesAxis-1) != 4) throw(casacore::AipsError(
      "StokesVector::repackStokes() last dimension does not have 4 elements"));
   // resize the output array to suit (include trailing axes)
   {
-    IPosition outSize = inputSize.getFirst(stokesAxis-1);
+    casacore::IPosition outSize = inputSize.getFirst(stokesAxis-1);
     if (stokesAxis < input.ndim()){
       outSize.append(inputSize.getLast(input.ndim() - stokesAxis));
     }
@@ -79,15 +79,15 @@ repackStokes(Array<U>& output, const Array<T>& input){
   
   // Create a reference to the arrays that allows the data to be accessed 
   // linearly
-  Vector<T> linput(input.reform(IPosition(1,input.nelements()), 
-				IPosition(1,0)));
-  Vector<U> loutput(output.reform(IPosition(1,output.nelements()), 
-				  IPosition(1,0)));
+  casacore::Vector<T> linput(input.reform(casacore::IPosition(1,input.nelements()), 
+				casacore::IPosition(1,0)));
+  casacore::Vector<U> loutput(output.reform(casacore::IPosition(1,output.nelements()), 
+				  casacore::IPosition(1,0)));
   // Now copy the data
-  uInt nelements = output.nelements();
-  uInt j = 0;
-  for (uInt pol = 0; pol < 4; pol++){
-    for (uInt i = 0; i < nelements; i++){
+  casacore::uInt nelements = output.nelements();
+  casacore::uInt j = 0;
+  for (casacore::uInt pol = 0; pol < 4; pol++){
+    for (casacore::uInt i = 0; i < nelements; i++){
       loutput(i)(pol) = linput(j++);
     }
   }

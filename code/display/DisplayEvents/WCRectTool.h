@@ -92,7 +92,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Constructor
 		WCRectTool(WorldCanvas *wcanvas,
 		           Display::KeySym keysym = Display::K_Pointer_Button1,
-		           const Bool persistent = False);
+		           const casacore::Bool persistent = false);
 
 		// Destructor
 		virtual ~WCRectTool();
@@ -129,24 +129,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// </group>
 
 		// Retrieve the rectangle corners
-		virtual void get(Int &x1, Int &y1, Int &x2, Int &y2) const ;
+		virtual void get(casacore::Int &x1, casacore::Int &y1, casacore::Int &x2, casacore::Int &y2) const ;
 
 	private:
 
 		// do the rectangles persist after double clicks?
-		Bool itsRectanglePersistent;
+		casacore::Bool itsRectanglePersistent;
 
 		// is the rectangle on screen?
-		Bool itsOnScreen;
+		casacore::Bool itsOnScreen;
 
 		// are we actively zooming?
-		Bool itsActive;
+		casacore::Bool itsActive;
 
 		// have we moved?
-		Bool itsMoved;
+		casacore::Bool itsMoved;
 
 		// do we have a rectangle drawn yet?
-		Bool itsRectangleExists;
+		casacore::Bool itsRectangleExists;
 
 		// adjustment mode
 		enum AdjustMode {
@@ -157,19 +157,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// coordinates of the rectangle: pixel and world
 		// <group>
-		Int itsX1, itsY1, itsX2, itsY2;
-		Vector<Double> itsStoredWorldBlc, itsStoredWorldTrc;
+		casacore::Int itsX1, itsY1, itsX2, itsY2;
+		casacore::Vector<casacore::Double> itsStoredWorldBlc, itsStoredWorldTrc;
 		// </group>
 
 		// set the coordinates of the rectangle
 		// <group>
-		virtual void set(const Int &x1, const Int &y1, const Int &x2, const Int &y2);
+		virtual void set(const casacore::Int &x1, const casacore::Int &y1, const casacore::Int &x2, const casacore::Int &y2);
 		// </group>
 
 		// set/get only the anchor point
 		// <group>
-		virtual void set(const Int &x1, const Int &y1);
-		virtual void get(Int &x1, Int &y1) const ;
+		virtual void set(const casacore::Int &x1, const casacore::Int &y1);
+		virtual void get(casacore::Int &x1, casacore::Int &y1) const ;
 		// </group>
 
 		// preserve/restore the world coordinates
@@ -179,26 +179,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// </group>
 
 		// draw the rubberband box on a PixelCanvas
-		virtual void draw(const Bool drawHandles = False);
+		virtual void draw(const casacore::Bool drawHandles = false);
 
 		// reset this drawer
 		virtual void reset();
 
 		// storage of the handle coordinates
-		Vector<Int> itsHX, itsHY;
+		casacore::Vector<casacore::Int> itsHX, itsHY;
 
 		// position that move started from
-		Int itsBaseMoveX, itsBaseMoveY;
+		casacore::Int itsBaseMoveX, itsBaseMoveY;
 
 		// position of last press event
-		Int itsLastPressX, itsLastPressY;
-		Int its2ndLastPressX, its2ndLastPressY;
+		casacore::Int itsLastPressX, itsLastPressY;
+		casacore::Int its2ndLastPressX, its2ndLastPressY;
 
 		// position of last release event
-		Int itsLastReleaseX, itsLastReleaseY;
+		casacore::Int itsLastReleaseX, itsLastReleaseY;
 
 		// store the times of the last two presses here:
-		Double itsLastPressTime, its2ndLastPressTime;
+		casacore::Double itsLastPressTime, its2ndLastPressTime;
 
 	};
 

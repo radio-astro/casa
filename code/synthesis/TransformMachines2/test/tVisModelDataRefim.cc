@@ -66,7 +66,7 @@ main(int argc, char **argv){
 
     Block<Int> sort(0); // create empty block with sortColumns
     //VisibilityIterator vi(mssel,sort);
-    vi::VisibilityIterator2 vi(mssel,vi::SortColumns(),False);
+    vi::VisibilityIterator2 vi(mssel,vi::SortColumns(),false);
     vi::VisBuffer2 *vb=vi.getVisBuffer();
 
     

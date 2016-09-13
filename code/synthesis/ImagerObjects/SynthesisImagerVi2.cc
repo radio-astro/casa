@@ -95,6 +95,7 @@
 
 using namespace std;
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
   SynthesisImagerVi2::SynthesisImagerVi2() : SynthesisImager(), mss_p(0), vi_p(0) {
@@ -125,7 +126,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //    cout << "**************** usescr : " << useScratch_p << "     readonly : " << readOnly_p << endl;
     //if you want to use scratch col...make sure they are there
     if(selpars.usescratch && !selpars.readonly){
-      VisSetUtil::addScrCols(thisms, True, False, True, False);
+      VisSetUtil::addScrCols(thisms, true, false, true, false);
       refim::VisModelData::clearModel(thisms);
     }
 
@@ -187,7 +188,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     TableExprNode exprNode=thisSelection.toTableExprNode(&thisms);
     if(!(exprNode.isNull()))
       {
-	mss_p.resize(mss_p.nelements()+1, False, True);
+	mss_p.resize(mss_p.nelements()+1, false, true);
     
 	MeasurementSet thisMSSelected0 = MeasurementSet(thisms(exprNode));
 
@@ -244,7 +245,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     /////// Remove this when the new vi/vb is able to get the full freq range.
     mssFreqSel_p.resize();
-    mssFreqSel_p  = thisSelection.getChanFreqList(NULL,True);
+    mssFreqSel_p  = thisSelection.getChanFreqList(NULL,true);
    
     //// Set the data column on which to operate
     // TT: added checks for the requested data column existace 
@@ -270,7 +271,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
    
     else { os << LogIO::WARN << "Invalid data column : " << datacol_p << ". Using corrected (or observed if corrected doesn't exist)" << LogIO::POST;  datacol_p = thisms.tableDesc().isColumn("CORRECTED_DATA") ? FTMachine::CORRECTED : FTMachine::OBSERVED; }
 
-    dataSel_p.resize(dataSel_p.nelements()+1, True);
+    dataSel_p.resize(dataSel_p.nelements()+1, true);
 
     dataSel_p[dataSel_p.nelements()-1]=selpars;
 
@@ -283,7 +284,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	throw( AipsError("Error in selectData() : "+x.getMesg()) );
       }
 
-    return True;
+    return true;
 
 
 
@@ -369,14 +370,14 @@ Bool SynthesisImagerVi2::defineImage(SynthesisParamsImage& impars,
 			   gridpars.distance, gridpars.facets, gridpars.chanchunks,impars.overwrite,
 			   gridpars.mType, gridpars.padding, impars.nTaylorTerms, impars.startModel);
 	
-	imageDefined_p=True;
+	imageDefined_p=true;
       }
     catch(AipsError &x)
       {
 	os << "Error in adding Mapper : "+x.getMesg() << LogIO::EXCEPTION;
       }
 
-    return True;
+    return true;
   }
 
 
@@ -502,7 +503,7 @@ Bool SynthesisImagerVi2::defineImage(SynthesisParamsImage& impars,
     		  //this->unlock();
     		  os << LogIO::SEVERE << "Unknown weighting " << type
     				  << LogIO::EXCEPTION;
-    		  return False;
+    		  return false;
     	  }
       }
 	 
@@ -516,7 +517,7 @@ Bool SynthesisImagerVi2::defineImage(SynthesisParamsImage& impars,
       ///////////////////////////////
 	 
 	 
-	 ///	 return True;
+	 ///	 return true;
 	 
        }
        catch(AipsError &x)
@@ -524,7 +525,7 @@ Bool SynthesisImagerVi2::defineImage(SynthesisParamsImage& impars,
 	   throw( AipsError("Error in Weighting : "+x.getMesg()) );
 	 }
        
-       return True;
+       return true;
   }
 
 void SynthesisImagerVi2::appendToMapperList(String imagename,  
@@ -621,7 +622,7 @@ void SynthesisImagerVi2::appendToMapperList(String imagename,
       if(chanchunks > 1 && itsMappers.nMappers() > 0)
 	log_l << "Channel chunking is currently not supported with multi(outlier)-fields. Please submit a feature request if needed." << LogIO::EXCEPTION;
 
-      if(chanchunks > 1) itsDataLoopPerMapper=True;
+      if(chanchunks > 1) itsDataLoopPerMapper=true;
       
       AlwaysAssert( ( ( ! (ftm->name()=="MosaicFTNew" && mappertype=="imagemosaic") )  && 
       		      ( ! (ftm->name()=="AWProjectWBFTNew" && mappertype=="imagemosaic") )) ,
@@ -700,7 +701,7 @@ void SynthesisImagerVi2::appendToMapperList(String imagename,
       for (uInt k=0; k< mss_p.nelements(); ++k)
 	numcoh+=Double(mss_p[k]->nrow());
       ProgressMeter pm(1.0, numcoh, 
-			 dopsf?"Gridding Weights and PSF":"Major Cycle", "","","",True);
+			 dopsf?"Gridding Weights and PSF":"Major Cycle", "","","",true);
 	Int cohDone=0;
 
 
@@ -823,7 +824,7 @@ void SynthesisImagerVi2::appendToMapperList(String imagename,
 
 
 	 ProgressMeter pm(1.0, numcoh, 
-			  dopsf?"Gridding Weights and PSF":"Major Cycle", "","","",True);
+			  dopsf?"Gridding Weights and PSF":"Major Cycle", "","","",true);
 	Int cohDone=0;
 
 
@@ -918,7 +919,7 @@ void SynthesisImagerVi2::appendToMapperList(String imagename,
       for (uInt k=0; k< mss_p.nelements(); ++k)
 	numberCoh+=Double(mss_p[k]->nrow());
 
-      ProgressMeter pm(1.0, numberCoh, "Predict Model", "","","",True);
+      ProgressMeter pm(1.0, numberCoh, "Predict Model", "","","",true);
       Int cohDone=0;
 
       itsMappers.initializeDegrid(*vb);
@@ -1023,22 +1024,22 @@ void SynthesisImagerVi2::unlockMSs()
 					   //------------------------------
 					   const Int wprojplane,        //=1,
 					   const Float padding,         //=1.0,
-					   const Bool useAutocorr,      //=False,
-					   const Bool useDoublePrec,    //=True,
+					   const Bool useAutocorr,      //=false,
+					   const Bool useDoublePrec,    //=true,
 					   const String gridFunction,   //=String("SF"),
 					//------------------------------
-					   const Bool aTermOn,          //= True,
-					   const Bool psTermOn,         //= True,
-					   const Bool mTermOn,          //= False,
-					const Bool wbAWP,            //= True,
+					   const Bool aTermOn,          //= true,
+					   const Bool psTermOn,         //= true,
+					   const Bool mTermOn,          //= false,
+					const Bool wbAWP,            //= true,
 					   const String cfCache,        //= "",
-					   const Bool doPointing,       //= False,
-					   const Bool doPBCorr,         //= True,
-					   const Bool conjBeams,        //= True,
+					   const Bool doPointing,       //= false,
+					   const Bool doPBCorr,         //= true,
+					   const Bool conjBeams,        //= true,
 					const Float computePAStep,         //=360.0
 					   const Float rotatePAStep,          //=5.0
 					   const String interpolation,  //="linear"
-					   const Bool freqFrameValid, //=True
+					   const Bool freqFrameValid, //=true
 					   const Int cache,             //=1000000000,
 					   const Int tile,               //=16
 					   const String stokes, //=I
@@ -1107,8 +1108,8 @@ void SynthesisImagerVi2::unlockMSs()
       {
 	AlwaysAssert( nTaylorTerms>=1 , AipsError );
 
-	CountedPtr<refim::FTMachine> theMTFT = new refim::MultiTermFTNew( theFT , nTaylorTerms, True/*forward*/ );
-	CountedPtr<refim::FTMachine> theMTIFT = new refim::MultiTermFTNew( theIFT , nTaylorTerms, False/*forward*/ );
+	CountedPtr<refim::FTMachine> theMTFT = new refim::MultiTermFTNew( theFT , nTaylorTerms, true/*forward*/ );
+	CountedPtr<refim::FTMachine> theMTIFT = new refim::MultiTermFTNew( theIFT , nTaylorTerms, false/*forward*/ );
 
 	theFT = theMTFT;
 	theIFT = theMTIFT;
@@ -1125,7 +1126,7 @@ void SynthesisImagerVi2::unlockMSs()
 	ROMSColumns msc(*(mss_p[0]));
 	Quantity parang(0.0,"deg");
 	Quantity skyposthreshold(0.0,"deg");
-	vp = new refim::VPSkyJones(msc, True,  parang, BeamSquint::NONE,skyposthreshold);
+	vp = new refim::VPSkyJones(msc, true,  parang, BeamSquint::NONE,skyposthreshold);
 
 	Vector<CountedPtr<refim::SkyJones> > skyJonesList(1);
 	skyJonesList(0) = vp;
@@ -1136,8 +1137,8 @@ void SynthesisImagerVi2::unlockMSs()
 
     //// For mode=cubedata, set the freq frame to invalid..
     // get this info from buildCoordSystem
-    //theFT->setSpw( tspws, False );
-    //theIFT->setSpw( tspws, False );
+    //theFT->setSpw( tspws, false );
+    //theIFT->setSpw( tspws, false );
     theFT->setFrameValidity( freqFrameValid );
     theIFT->setFrameValidity( freqFrameValid );
 
@@ -1159,18 +1160,18 @@ void SynthesisImagerVi2::unlockMSs()
 					   //------------------------------
 					   const Int wprojPlane,        //=1,
 					   const Float,// padding,         //=1.0,
-					   const Bool,// useAutocorr,      //=False,
-					   const Bool useDoublePrec,    //=True,
+					   const Bool,// useAutocorr,      //=false,
+					   const Bool useDoublePrec,    //=true,
 					   const String,// gridFunction,   //=String("SF"),
 					   //------------------------------
-					   const Bool aTermOn,          //= True,
-					   const Bool psTermOn,         //= True,
-					   const Bool mTermOn,          //= False,
-					   const Bool wbAWP,            //= True,
+					   const Bool aTermOn,          //= true,
+					   const Bool psTermOn,         //= true,
+					   const Bool mTermOn,          //= false,
+					   const Bool wbAWP,            //= true,
 					   const String cfCache,        //= "",
-					   const Bool doPointing,       //= False,
-					   const Bool doPBCorr,         //= True,
-					   const Bool conjBeams,        //= True,
+					   const Bool doPointing,       //= false,
+					   const Bool doPBCorr,         //= true,
+					   const Bool conjBeams,        //= true,
 					   const Float computePAStep,   //=360.0
 					   const Float rotatePAStep,    //=5.0
 					   const Int cache,             //=1000000000,
@@ -1203,14 +1204,14 @@ void SynthesisImagerVi2::unlockMSs()
     // //
     // // Selectively switch off CFTerms.
     // //
-    // if (aTermOn == False) {apertureFunction->setOpCode(CFTerms::NOOP);}
-    // if (psTermOn == False) psTerm->setOpCode(CFTerms::NOOP);
+    // if (aTermOn == false) {apertureFunction->setOpCode(CFTerms::NOOP);}
+    // if (psTermOn == false) psTerm->setOpCode(CFTerms::NOOP);
 
     // //
     // // Construct the CF object with appropriate CFTerms.
     // //
     // CountedPtr<ConvolutionFunction> tt;
-    // tt = AWProjectFT::makeCFObject(aTermOn, psTermOn, True, mTermOn, wbAWP);
+    // tt = AWProjectFT::makeCFObject(aTermOn, psTermOn, true, mTermOn, wbAWP);
     // CountedPtr<ConvolutionFunction> awConvFunc;
     // //    awConvFunc = new AWConvFunc(apertureFunction,psTerm,wTerm, !wbAWP);
     // if ((ftmName=="mawprojectft") || (mTermOn))
@@ -1222,7 +1223,7 @@ void SynthesisImagerVi2::unlockMSs()
     String telescopeName=msoc.telescopeName()(0);
     CountedPtr<refim::ConvolutionFunction> awConvFunc = refim::AWProjectFT::makeCFObject(telescopeName, 
 									   aTermOn,
-									   psTermOn, True, mTermOn, wbAWP);
+									   psTermOn, true, mTermOn, wbAWP);
     //
     // Construct the appropriate re-sampler.
     //
@@ -1254,8 +1255,8 @@ void SynthesisImagerVi2::unlockMSs()
     theFT = new refim::AWProjectWBFTNew(wprojPlane, cache/2, 
 			      cfCacheObj, awConvFunc, 
 			      visResampler,
-			      /*True */doPointing, doPBCorr, 
-			      tile, computePAStep, pbLimit_l, True,conjBeams,
+			      /*true */doPointing, doPBCorr, 
+			      tile, computePAStep, pbLimit_l, true,conjBeams,
 			      useDoublePrec);
 
     cfCacheObj = new refim::CFCache();
@@ -1274,8 +1275,8 @@ void SynthesisImagerVi2::unlockMSs()
     // theIFT = new AWProjectWBFT(wprojPlane, cache/2, 
     // 			       cfCacheObj, awConvFunc, 
     // 			       visResampler,
-    // 			       /*True */doPointing, doPBCorr, 
-    // 			       tile, computePAStep, pbLimit_l, True,conjBeams,
+    // 			       /*true */doPointing, doPBCorr, 
+    // 			       tile, computePAStep, pbLimit_l, true,conjBeams,
     // 			       useDoublePrec);
 
     // static_cast<AWProjectWBFT &>(*theIFT).setObservatoryLocation(mLocation_p);
@@ -1324,7 +1325,7 @@ void SynthesisImagerVi2::unlockMSs()
 
    refim::VPSkyJones* vps=NULL;
     if(rec.asString("name")=="COMMONPB" && kpb !=PBMath::UNKNOWN ){
-      vps= new refim::VPSkyJones(msc, True, Quantity(rotatePAStep, "deg"), BeamSquint::GOFIGURE, Quantity(360.0, "deg"));
+      vps= new refim::VPSkyJones(msc, true, Quantity(rotatePAStep, "deg"), BeamSquint::GOFIGURE, Quantity(360.0, "deg"));
       /////Don't know which parameter has pb threshold cutoff that the user want 
       ////leaving at default
       ////vps.setThreshold(minPB);
@@ -1364,7 +1365,7 @@ void SynthesisImagerVi2::unlockMSs()
 	for (uInt fid=0;fid<densitymatrices.nelements();fid++)
 	  {
 	    Array<Float> arr;
-	    itsMappers.imageStore(fid)->gridwt(0)->get(arr,True);
+	    itsMappers.imageStore(fid)->gridwt(0)->get(arr,true);
 	    densitymatrices[fid].reference( arr );
 	    //cout << "Density shape (set) for f " << fid << " : " << arr.shape() << " : " << densitymatrices[fid].shape() << endl;
 	  }
@@ -1379,7 +1380,7 @@ void SynthesisImagerVi2::unlockMSs()
       {
 	throw(AipsError("In setWeightDensity : "+x.getMesg()));
       }
-    return True;
+    return true;
   }
   
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1394,7 +1395,7 @@ void SynthesisImagerVi2::unlockMSs()
     if(mss_p.nelements() != uInt(fselections_p.size()) && (fselections_p.size() !=0)){
       throw(AipsError("Discrepancy between Number of MSs and Frequency selections"));
     }
-    vi_p=new vi::VisibilityIterator2(mss_p, vi::SortColumns(), True); //writeAccess);
+    vi_p=new vi::VisibilityIterator2(mss_p, vi::SortColumns(), true); //writeAccess);
     if(fselections_p.size() !=0)
       vi_p->setFrequencySelection (fselections_p);
     //
@@ -1422,7 +1423,7 @@ void SynthesisImagerVi2::unlockMSs()
     // useful to extend it to other projection FTMs -- but later.
     String ftmName = ((*(itsMappers.getFTM2(whichFTM)))).name();
 
-    if (!((itsMappers.getFTM2(whichFTM,True))->isUsingCFCache())) return;
+    if (!((itsMappers.getFTM2(whichFTM,true))->isUsingCFCache())) return;
 
     os << "---------------------------------------------------- Dry Gridding ---------------------------------------------" << LogIO::POST;
 
@@ -1439,12 +1440,12 @@ void SynthesisImagerVi2::unlockMSs()
       for (uInt k=0; k< mss_p.nelements(); ++k)
 	numberCoh+=Double(mss_p[k]->nrow());
 
-      ProgressMeter pm(1.0, numberCoh, "dryGridding", "","","",True);
+      ProgressMeter pm(1.0, numberCoh, "dryGridding", "","","",true);
 
       itsMappers.initializeGrid(*vb);
     
       // Set the gridder (iFTM) to run in dry-gridding mode
-      (itsMappers.getFTM2(whichFTM,True))->setDryRun(True);
+      (itsMappers.getFTM2(whichFTM,true))->setDryRun(true);
 
       Bool aTermIsOff=False;
       {
@@ -1467,7 +1468,7 @@ void SynthesisImagerVi2::unlockMSs()
 	    {
 	      if (SynthesisUtilMethods::validate(*vb)!=SynthesisUtilMethods::NOVALIDROWS) 
 		{
-		  itsMappers.grid(*vb, True, refim::FTMachine::OBSERVED, whichFTM);
+		  itsMappers.grid(*vb, true, refim::FTMachine::OBSERVED, whichFTM);
 		  cohDone += vb->nRows();
 		  pm.update(Double(cohDone));
 		  // If there is no term that depends on time, don't iterate over the entire data base
@@ -1478,7 +1479,7 @@ void SynthesisImagerVi2::unlockMSs()
     }
     if (cohDone == 0) os << "No valid rows found in dryGridding." << LogIO::EXCEPTION << LogIO::POST;
     // Unset the dry-gridding mode.
-    (itsMappers.getFTM2(whichFTM,True))->setDryRun(False);
+    (itsMappers.getFTM2(whichFTM,true))->setDryRun(false);
 
     //itsMappers.checkOverlappingModels("restore");
     unlockMSs();
@@ -1538,8 +1539,8 @@ void SynthesisImagerVi2::unlockMSs()
 	  // tmpFT->setCFCache(cfCacheObj);
 	  Vector<Double> uvScale, uvOffset;
 	  Matrix<Double> vbFreqSelection;
-	  CountedPtr<refim::CFStore2> cfs2 = CountedPtr<refim::CFStore2>(&cfCacheObj->memCache2_p[0],False);//new CFStore2;
-	  CountedPtr<refim::CFStore2> cfwts2 =  CountedPtr<refim::CFStore2>(&cfCacheObj->memCacheWt2_p[0],False);//new CFStore2;
+	  CountedPtr<refim::CFStore2> cfs2 = CountedPtr<refim::CFStore2>(&cfCacheObj->memCache2_p[0],false);//new CFStore2;
+	  CountedPtr<refim::CFStore2> cfwts2 =  CountedPtr<refim::CFStore2>(&cfCacheObj->memCacheWt2_p[0],false);//new CFStore2;
 
 	  //
 	  // Get whichFTM from itsMappers (SIMapperCollection) and
@@ -1582,8 +1583,8 @@ void SynthesisImagerVi2::unlockMSs()
       // This assumes the itsMappers is always SIMapperCollection.
       for (whichFTM = 0; whichFTM < itsMappers.nMappers(); whichFTM++)
 	{
-	  (static_cast<refim::AWProjectWBFTNew &> (*(itsMappers.getFTM2(whichFTM)))).setCFCache(cfCacheObj,True); // Setup iFTM
-	  (static_cast<refim::AWProjectWBFTNew &> (*(itsMappers.getFTM2(whichFTM,False)))).setCFCache(cfCacheObj,True); // Set FTM
+	  (static_cast<refim::AWProjectWBFTNew &> (*(itsMappers.getFTM2(whichFTM)))).setCFCache(cfCacheObj,true); // Setup iFTM
+	  (static_cast<refim::AWProjectWBFTNew &> (*(itsMappers.getFTM2(whichFTM,false)))).setCFCache(cfCacheObj,true); // Set FTM
 	}
   }
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////

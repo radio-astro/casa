@@ -52,6 +52,7 @@
 #include <casa/Logging/LogMessage.h>
 #include <casa/Logging/LogSink.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
@@ -172,7 +173,7 @@ void FJones::setApply(const Record& apply) {
 
 
   // Enforce no weight calibration (this is a phase-like correction)
-  calWt()=False;
+  calWt()=false;
 
 }
 
@@ -256,7 +257,7 @@ void FJones::setSpecify(const Record& specify) {
 
   // Initialize parameter space
   solveAllRPar()=0.0;
-  solveAllParOK()=True;
+  solveAllParOK()=true;
   solveAllParErr()=0.0;   // what to use here?
   solveAllParSNR()=100.0; // what to use here?
 
@@ -281,7 +282,7 @@ void FJones::specify(const Record&) {
   
   MeasurementSet ms(msName());
   vi::SortColumns sc(cols);
-  vi::VisibilityIterator2 vi2(ms,sc,True);
+  vi::VisibilityIterator2 vi2(ms,sc,true);
   vi::VisBuffer2 *vb = vi2.getVisBuffer();
   vi2.originChunks();
   vi2.origin();
@@ -322,7 +323,7 @@ void FJones::specify(const Record&) {
   Double& dlng0(inc(0)), dlat0(inc(1)), dtime0(inc(2));
 
   Cube<Float> tecube(2,2,2,0.0);  // lng, lat, time
-  tecube=tecim.getSlice(lastcorner,lastcorner+2,False);
+  tecube=tecim.getSlice(lastcorner,lastcorner+2,false);
   Float &a0(tecube(0,0,0)), &a1(tecube(1,0,0)), &a2(tecube(1,1,0)), &a3(tecube(0,1,0));
   Float &b0(tecube(0,0,1)), &b1(tecube(1,0,1)), &b2(tecube(1,1,1)), &b3(tecube(0,1,1));
 
@@ -383,7 +384,7 @@ void FJones::specify(const Record&) {
 	  corner=IPosition(c);   // as IPosition
 	  if (corner!=lastcorner) { // If new
 	    wc0=teccs.toWorld(corner);
-	    tecube=tecim.getSlice(corner,twos,False);
+	    tecube=tecim.getSlice(corner,twos,false);
 	    lastcorner=corner;
 
 	    /*
@@ -409,7 +410,7 @@ void FJones::specify(const Record&) {
 	  u0=dlat/dlat0;
 	  v0=dtime/dtime0;
 
-	  if (False && iant==0) {
+	  if (false && iant==0) {
 	    cout << dlng << " " << dlng0 << " " << t0 << endl;
 	    cout << dlat << " " << dlat0 << " " << u0 << endl;
 	    cout << dtime << " " << dtime0 << " " << v0 << endl;
@@ -555,11 +556,13 @@ void FJones::calcPar() {
 
 void FJones::calcAllJones() {
 
+    using casacore::operator*;
+
   if (prtlev()>6) cout << "       FJones::calcAllJones()" << endl;
 
   // Nominally no ionosphere
   currJElem()=Complex(1.0);
-  currJElemOK().set(True);
+  currJElemOK().set(true);
 
   //  cout << currSpw() << " " 
   //       << currTime() << " " 

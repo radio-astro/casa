@@ -31,6 +31,7 @@
 #include <QCheckBox>
 #include <QDebug>
 
+using namespace casacore;
 namespace casa {
 
 PlotMSDataCollapsible::PlotMSDataCollapsible(PlotMSPlotter* plotter,

@@ -32,8 +32,8 @@ public:
 	TwoPointCorrelator() = delete;
 
 	TwoPointCorrelator(
-		SPCIIT image, const Record *const region, const String& mask,
-		const String& outname, Bool overwrite
+		SPCIIT image, const casacore::Record *const region, const casacore::String& mask,
+		const casacore::String& outname, casacore::Bool overwrite
 	);
 
 	// destructor
@@ -41,13 +41,13 @@ public:
 
 	SPIIT correlate();
 
-	String getClass() const { const static String s = "TwoPointCorrelator"; return s; }
+	casacore::String getClass() const { const static casacore::String s = "TwoPointCorrelator"; return s; }
 
 	// Set the pixel axes over which to do correlation
-	void setAxes(const IPosition& axes);
+	void setAxes(const casacore::IPosition& axes);
 
-	void setMethod(const String& method) {
-		_method = LatticeTwoPtCorr<T>::fromString(method);
+	void setMethod(const casacore::String& method) {
+		_method = casacore::LatticeTwoPtCorr<T>::fromString(method);
 	}
 
 protected:
@@ -56,15 +56,15 @@ protected:
 		return CasacRegionManager::USE_ALL_STOKES;
 	}
 
-	inline std::vector<Coordinate::Type> _getNecessaryCoordinates() const {
-		return std::vector<Coordinate::Type>();
+	inline std::vector<casacore::Coordinate::Type> _getNecessaryCoordinates() const {
+		return std::vector<casacore::Coordinate::Type>();
 	}
 
-    inline Bool _supportsMultipleBeams() const {return True;}
+    inline casacore::Bool _supportsMultipleBeams() const {return true;}
 
 private:
-	IPosition _axes = IPosition();
-	typename LatticeTwoPtCorr<T>::Method _method = LatticeTwoPtCorr<T>::STRUCTUREFUNCTION;
+	casacore::IPosition _axes = casacore::IPosition();
+	typename casacore::LatticeTwoPtCorr<T>::Method _method = casacore::LatticeTwoPtCorr<T>::STRUCTUREFUNCTION;
 
 };
 }

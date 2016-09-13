@@ -1,6 +1,7 @@
 #include <synthesis/MeasurementComponents/GlobalFTMachineCallbacks.h>
 #include <synthesis/TransformMachines/IlluminationConvFunc.h>
 
+using namespace casacore;
 using namespace casa;
 
 extern "C" 

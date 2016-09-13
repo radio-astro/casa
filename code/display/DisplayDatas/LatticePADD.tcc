@@ -67,42 +67,42 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // >2d array-based ctor
 	template <class T>
-	LatticePADisplayData<T>::LatticePADisplayData(Array<T> *array,
-	        const uInt xAxis,
-	        const uInt yAxis,
-	        const uInt mAxis,
-	        const IPosition fixedPos) :
+	LatticePADisplayData<T>::LatticePADisplayData(casacore::Array<T> *array,
+	        const casacore::uInt xAxis,
+	        const casacore::uInt yAxis,
+	        const casacore::uInt mAxis,
+	        const casacore::IPosition fixedPos) :
 		PrincipalAxesDD(xAxis, yAxis, mAxis),
 		itsBaseImagePtr(0),
 		itsBaseArrayPtr(0),
 		itsMaskedLatticePtr(0),
-		itsDeleteMLPointer(False),
+		itsDeleteMLPointer(false),
 		itsLatticeStatisticsPtr(0),
 		itsRegionPtr(0),
 		itsMaskPtr(0),
 		itsDataUnit("_"),
 		itsComplexToRealMethod(Display::Magnitude) {
 
-		itsBaseArrayPtr = new Array<T>;
+		itsBaseArrayPtr = new casacore::Array<T>;
 		*itsBaseArrayPtr = array->copy();
-		itsMaskedLatticePtr = new SubLattice<T>(ArrayLattice<T>(*itsBaseArrayPtr));
-		itsDeleteMLPointer = True;
+		itsMaskedLatticePtr = new casacore::SubLattice<T>(casacore::ArrayLattice<T>(*itsBaseArrayPtr));
+		itsDeleteMLPointer = true;
 		updateLatticeStatistics();
 
-		iAmRubbish = False;
+		iAmRubbish = false;
 		/*
-		Vector<Int> axes(3);
+		casacore::Vector<casacore::Int> axes(3);
 		axes(0) = xAxis;
 		axes(1) = yAxis;
 		axes(2) = mAxis;
 		*/
 
 		// setup a coordinate system
-		CoordinateSystem newcsys;
-		LinearCoordinate lc(itsMaskedLatticePtr->ndim());
+		casacore::CoordinateSystem newcsys;
+		casacore::LinearCoordinate lc(itsMaskedLatticePtr->ndim());
 		newcsys.addCoordinate(lc);
-		Vector<Double> tmp = newcsys.referencePixel();
-		tmp = tmp - (Double)1.0;
+		casacore::Vector<casacore::Double> tmp = newcsys.referencePixel();
+		tmp = tmp - (casacore::Double)1.0;
 		newcsys.setReferencePixel(tmp);
 		setCoordinateSystem(newcsys);
 
@@ -115,43 +115,43 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // 2d array-based ctor
 	template <class T>
-	LatticePADisplayData<T>::LatticePADisplayData(Array<T> *array,
-	        const uInt xAxis,
-	        const uInt yAxis) :
+	LatticePADisplayData<T>::LatticePADisplayData(casacore::Array<T> *array,
+	        const casacore::uInt xAxis,
+	        const casacore::uInt yAxis) :
 		PrincipalAxesDD(xAxis, yAxis),
 		itsBaseImagePtr(0),
 		itsBaseArrayPtr(0),
 		itsMaskedLatticePtr(0),
-		itsDeleteMLPointer(False),
+		itsDeleteMLPointer(false),
 		itsLatticeStatisticsPtr(0),
 		itsRegionPtr(0),
 		itsMaskPtr(0),
 		itsDataUnit("_"),
 		itsComplexToRealMethod(Display::Magnitude) {
 
-		itsBaseArrayPtr = new Array<T>;
+		itsBaseArrayPtr = new casacore::Array<T>;
 		*itsBaseArrayPtr = array->copy();
-		itsMaskedLatticePtr = new SubLattice<T>(ArrayLattice<T>(*itsBaseArrayPtr));
-		itsDeleteMLPointer = True;
+		itsMaskedLatticePtr = new casacore::SubLattice<T>(casacore::ArrayLattice<T>(*itsBaseArrayPtr));
+		itsDeleteMLPointer = true;
 		updateLatticeStatistics();
 
-		iAmRubbish = False;
+		iAmRubbish = false;
 		/*
-		Vector<Int> axes(2);
+		casacore::Vector<casacore::Int> axes(2);
 		axes(0) = xAxis;
 		axes(1) = yAxis;
 		*/
 
 		// setup a coordinate system
-		CoordinateSystem newcsys;
-		LinearCoordinate lc(2);
+		casacore::CoordinateSystem newcsys;
+		casacore::LinearCoordinate lc(2);
 		newcsys.addCoordinate(lc);
-		Vector<Double> tmp = newcsys.referencePixel().copy();
-		tmp = tmp - (Double)1.0;
+		casacore::Vector<casacore::Double> tmp = newcsys.referencePixel().copy();
+		tmp = tmp - (casacore::Double)1.0;
 		newcsys.setReferencePixel(tmp);
 		setCoordinateSystem(newcsys);
 
-		IPosition fixedPos(2);
+		casacore::IPosition fixedPos(2);
 		fixedPos = 0;
 
 		// call base class setup
@@ -162,16 +162,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // >2d image-based ctor
 	template <class T>
-	LatticePADisplayData<T>::LatticePADisplayData(SHARED_PTR<ImageInterface<T> > image,
-	        const uInt xAxis,
-	        const uInt yAxis,
-	        const uInt mAxis,
-	        const IPosition fixedPos, viewer::StatusSink *sink ) :
-		PrincipalAxesDD(xAxis, yAxis, mAxis, True, sink),
+	LatticePADisplayData<T>::LatticePADisplayData(SHARED_PTR<casacore::ImageInterface<T> > image,
+	        const casacore::uInt xAxis,
+	        const casacore::uInt yAxis,
+	        const casacore::uInt mAxis,
+	        const casacore::IPosition fixedPos, viewer::StatusSink *sink ) :
+		PrincipalAxesDD(xAxis, yAxis, mAxis, true, sink),
 		itsBaseImagePtr(),
 		itsBaseArrayPtr(0),
 		itsMaskedLatticePtr(),
-		itsDeleteMLPointer(False),
+		itsDeleteMLPointer(false),
 		itsLatticeStatisticsPtr(0),
 		itsRegionPtr(0),
 		itsMaskPtr(0),
@@ -182,7 +182,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsMaskedLatticePtr = itsBaseImagePtr;
 		updateLatticeStatistics();
 
-		iAmRubbish = False;
+		iAmRubbish = false;
 
 		setCoordinateSystem(itsBaseImagePtr->coordinates());
 
@@ -196,14 +196,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // 2d image-based ctor
 	template <class T>
-	LatticePADisplayData<T>::LatticePADisplayData(SHARED_PTR<ImageInterface<T> > image,
-	        const uInt xAxis,
-	        const uInt yAxis) :
+	LatticePADisplayData<T>::LatticePADisplayData(SHARED_PTR<casacore::ImageInterface<T> > image,
+	        const casacore::uInt xAxis,
+	        const casacore::uInt yAxis) :
 		PrincipalAxesDD(xAxis, yAxis),
 		itsBaseImagePtr(),
 		itsBaseArrayPtr(0),
 		itsMaskedLatticePtr(),
-		itsDeleteMLPointer(False),
+		itsDeleteMLPointer(false),
 		itsLatticeStatisticsPtr(0),
 		itsRegionPtr(0),
 		itsMaskPtr(0),
@@ -213,9 +213,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsMaskedLatticePtr = itsBaseImagePtr;
 		updateLatticeStatistics();
 
-		iAmRubbish = False;
+		iAmRubbish = false;
 		setCoordinateSystem(image->coordinates());
-		IPosition fixedPos(2);
+		casacore::IPosition fixedPos(2);
 		fixedPos = 0;
 
 		// call base class setup
@@ -259,9 +259,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Query the shape of the lattice
 	template <class T>
-	const IPosition LatticePADisplayData<T>::dataShape() const {
+	const casacore::IPosition LatticePADisplayData<T>::dataShape() const {
 		if (!itsMaskedLatticePtr) {
-			throw(AipsError("LatticePADisplayData<T>::dataShape - "
+			throw(casacore::AipsError("LatticePADisplayData<T>::dataShape - "
 			                "no lattice is available"));
 		}
 		return itsMaskedLatticePtr->shape();
@@ -269,9 +269,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Query the dimension of the lattice
 	template <class T>
-	uInt LatticePADisplayData<T>::dataDim() const {
+	casacore::uInt LatticePADisplayData<T>::dataDim() const {
 		if (!itsMaskedLatticePtr) {
-			throw(AipsError("LatticePADisplayData<T>::dataDim - "
+			throw(casacore::AipsError("LatticePADisplayData<T>::dataDim - "
 			                "no lattice is available"));
 		}
 		return itsMaskedLatticePtr->ndim();
@@ -279,13 +279,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Query the value of the lattice at a particular position:
 	template <class T>
-	/*const*/ T LatticePADisplayData<T>::dataValue(IPosition pos) {
+	/*const*/ T LatticePADisplayData<T>::dataValue(casacore::IPosition pos) {
 		if (!itsMaskedLatticePtr) {
-			throw(AipsError("LatticePADisplayData<T>::dataValue - "
+			throw(casacore::AipsError("LatticePADisplayData<T>::dataValue - "
 			                "no lattice is available"));
 		}
 		if (pos.nelements() != itsMaskedLatticePtr->ndim()) {
-			throw(AipsError("LatticePADisplayData<T>::dataValue - "
+			throw(casacore::AipsError("LatticePADisplayData<T>::dataValue - "
 			                "no such position in lattice"));
 		}
 		return itsMaskedLatticePtr->operator()(pos);
@@ -293,13 +293,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	template <class T>
-	Bool LatticePADisplayData<T>::maskValue(const IPosition &pos) {
+	casacore::Bool LatticePADisplayData<T>::maskValue(const casacore::IPosition &pos) {
 		if (!itsMaskedLatticePtr) {
-			throw(AipsError("LatticePADisplayData<T>::maskValue - "
+			throw(casacore::AipsError("LatticePADisplayData<T>::maskValue - "
 			                "no lattice available"));
 		}
 		if (pos.nelements() != itsMaskedLatticePtr->ndim()) {
-			throw(AipsError("LatticePADisplayData<T>::maskValue - "
+			throw(casacore::AipsError("LatticePADisplayData<T>::maskValue - "
 			                "no such position in lattice"));
 		}
 
@@ -307,22 +307,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // application of the OTF mask is not reflected by the
 // pixelMask() Lattice
 
-		static Array<Bool> tmp;
-		static Bool deleteIt;
+		static casacore::Array<casacore::Bool> tmp;
+		static casacore::Bool deleteIt;
 		{
-			itsMaskedLatticePtr->getMaskSlice(tmp,Slicer(pos));
+			itsMaskedLatticePtr->getMaskSlice(tmp,casacore::Slicer(pos));
 			return *(tmp.getStorage(deleteIt));
 		}
 	}
 
 // Query the units of the lattice values
 	template <class T>
-	const Unit LatticePADisplayData<T>::dataUnit() const {
-		if (!itsMaskedLatticePtr) return Unit("");
-		//    throw(AipsError("LatticePADisplayData<T>::dataUnit - "
+	const casacore::Unit LatticePADisplayData<T>::dataUnit() const {
+		if (!itsMaskedLatticePtr) return casacore::Unit("");
+		//    throw(casacore::AipsError("LatticePADisplayData<T>::dataUnit - "
 		//	(dumb)	    "no lattice is available"));
 
-		if(itsDataUnit==Unit("_")) return Unit("");
+		if(itsDataUnit==casacore::Unit("_")) return casacore::Unit("");
 
 		return itsDataUnit;
 	}
@@ -333,11 +333,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	template <class T>
-	String LatticePADisplayData<T>::getBrightnessUnits() const {
+	casacore::String LatticePADisplayData<T>::getBrightnessUnits() const {
 		try {
 			return itsDataUnit.getName();
 		} catch(...) {
-			throw(AipsError("LatticePADisplayData<T>::getBrightnessUnit - "
+			throw(casacore::AipsError("LatticePADisplayData<T>::getBrightnessUnit - "
 			                "couldn't get brightness unit"));
 		}
 
@@ -346,27 +346,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	template <class T>
 	void LatticePADisplayData<T>::setDefaultOptions() {
 
-		calcHist = False;
+		calcHist = false;
 		PrincipalAxesDD::setDefaultOptions();
 		itsResample = "nearest";
-		itsResampleHandler = new WCSimpleResampleHandler(Interpolate2D::NEAREST);
+		itsResampleHandler = new WCSimpleResampleHandler(casacore::Interpolate2D::NEAREST);
 		itsComplexMode = "magnitude";
 		setComplexMode(Display::Magnitude);
 	}
 
 	template <class T>
-	Bool LatticePADisplayData<T>::setOptions(Record &rec, Record &recOut) {
-		Bool ret = PrincipalAxesDD::setOptions(rec, recOut);
-		Bool newHistNeeded = False;    // lei050
+	casacore::Bool LatticePADisplayData<T>::setOptions(casacore::Record &rec, casacore::Record &recOut) {
+		casacore::Bool ret = PrincipalAxesDD::setOptions(rec, recOut);
+		casacore::Bool newHistNeeded = false;    // lei050
 
-		ImageInterface<T>* pImage = 0;
-		DataType dtype;
+		casacore::ImageInterface<T>* pImage = 0;
+		casacore::DataType dtype;
 
-		Bool error;
+		casacore::Bool error;
 		if(readOptionRecord(itsResample, error, rec, "resample")) {
-			ret = True;
+			ret = true;
 
-			//newHistNeeded = True;
+			//newHistNeeded = true;
 			//#dk -- commented out 12/05
 			// This is unnecessary, I believe: display resampling
 			// mode should have no effect on the data histogram,
@@ -376,24 +376,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				delete itsResampleHandler;
 			}
 			if (itsResample == "bilinear") {
-				itsResampleHandler = new WCSimpleResampleHandler(Interpolate2D::LINEAR);
+				itsResampleHandler = new WCSimpleResampleHandler(casacore::Interpolate2D::LINEAR);
 			} else if (itsResample=="bicubic") {
-				itsResampleHandler = new WCSimpleResampleHandler(Interpolate2D::CUBIC);
+				itsResampleHandler = new WCSimpleResampleHandler(casacore::Interpolate2D::CUBIC);
 				itsResample = "bicubic";
 			} else {
-				itsResampleHandler = new WCSimpleResampleHandler(Interpolate2D::NEAREST);
+				itsResampleHandler = new WCSimpleResampleHandler(casacore::Interpolate2D::NEAREST);
 				itsResample = "nearest";
 			}
 		}
 		//
-		Bool fillRecOut = False;
+		casacore::Bool fillRecOut = false;
 		T typetester;
-		dtype = whatType(&typetester);
+		dtype = casacore::whatType(&typetester);
 
-		if ((dtype == TpComplex) || (dtype == TpDComplex)) {
+		if ((dtype == casacore::TpComplex) || (dtype == casacore::TpDComplex)) {
 			if (readOptionRecord(itsComplexMode, error, rec, "complexmode")) {
-				ret = True;
-				newHistNeeded = True;
+				ret = true;
+				newHistNeeded = true;
 
 				if (itsComplexMode == "phase") {
 					setComplexMode(Display::Phase);
@@ -408,62 +408,62 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				cleanup();
 				updateLatticeStatistics();
 				getMinAndMax();
-				fillRecOut = True;
+				fillRecOut = true;
 			}
 		}
 
-		Bool reread = False;
-		Bool forceRegionParse = False;
+		casacore::Bool reread = false;
+		casacore::Bool forceRegionParse = false;
 		if (readOptionRecord(reread, error, rec, "reread")) {
-			ret = True;
+			ret = true;
 			cleanup();
 			getMinAndMax();
-			fillRecOut = True;
-			forceRegionParse = True;
+			fillRecOut = true;
+			forceRegionParse = true;
 			if (itsBaseImagePtr) {   //reset to default mask
-				LatticeLocker lock(*itsBaseImagePtr, FileLocker::Write);
-				if (lock.hasLock(FileLocker::Write)) {
+				casacore::LatticeLocker lock(*itsBaseImagePtr, casacore::FileLocker::Write);
+				if (lock.hasLock(casacore::FileLocker::Write)) {
 					itsBaseImagePtr->setDefaultMask(itsBaseImagePtr->getDefaultMask());
-					newHistNeeded = True;
+					newHistNeeded = true;
 				} else {
-					LogIO os(LogOrigin("LatticePADisplayData", "setOptions", WHERE));
-					os << LogIO::SEVERE << "Couldn't lock image." << LogIO::POST;
+					casacore::LogIO os(casacore::LogOrigin("LatticePADisplayData", "setOptions", WHERE));
+					os << casacore::LogIO::SEVERE << "Couldn't lock image." << casacore::LogIO::POST;
 				}
 			}
 		}
 
 		if (rec.isDefined("newdata")) {
-			newHistNeeded = True;
-			DataType indtype = rec.dataType("newdata");
-			if ((indtype == TpString) && itsBaseImagePtr) {
+			newHistNeeded = true;
+			casacore::DataType indtype = rec.dataType("newdata");
+			if ((indtype == casacore::TpString) && itsBaseImagePtr) {
 				// we were built from an image, and we've been given a string -
 				// assume it's an image name...
 
 			} else if (!itsBaseImagePtr &&
-			           (((indtype == TpArrayFloat) && (dtype == TpFloat)) ||
-			            ((indtype == TpArrayComplex) && (dtype == TpComplex)))) {
-				// we were built from an array of Float/Complex, and we've been given
+			           (((indtype == casacore::TpArrayFloat) && (dtype == casacore::TpFloat)) ||
+			            ((indtype == casacore::TpArrayComplex) && (dtype == casacore::TpComplex)))) {
+				// we were built from an array of casacore::Float/casacore::Complex, and we've been given
 				// the same...
-				Array<T> array;
+				casacore::Array<T> array;
 				rec.get("newdata", array);
 				if (array.shape().nelements() != itsBaseArrayPtr->shape().nelements()) {
-					throw(AipsError("dimensionality of new data is invalid"));
+					throw(casacore::AipsError("dimensionality of new data is invalid"));
 				}
 				cleanup();
 
-// When the data source is an Array, itsDeleteMLPointer must always
+// When the data source is an casacore::Array, itsDeleteMLPointer must always
 // be true
 
-				AlwaysAssert(itsDeleteMLPointer, AipsError);
-				itsMaskedLatticePtr.reset(new SubLattice<T>(ArrayLattice<T>(array)));
+				AlwaysAssert(itsDeleteMLPointer, casacore::AipsError);
+				itsMaskedLatticePtr.reset(new casacore::SubLattice<T>(casacore::ArrayLattice<T>(array)));
 				updateLatticeStatistics();
 				setAxes(displayAxes()[0], displayAxes()[1],
 				        displayAxes()[2], fixedPosition());
 				getMinAndMax();
-				fillRecOut = True;
-				ret = True;
+				fillRecOut = true;
+				ret = true;
 			} else {
-				throw(AipsError("Invalid use of 'newdata' option"));
+				throw(casacore::AipsError("Invalid use of 'newdata' option"));
 			}
 		}
 
@@ -472,13 +472,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // be applied first, followed by application of the region
 
 		if (itsBaseImagePtr && (rec.isDefined("region") || rec.isDefined("mask"))) {
-			String resetString("resetCoordinates");
-			Attribute resetAtt(resetString, True);
+			casacore::String resetString("resetCoordinates");
+			Attribute resetAtt(resetString, true);
 
 // If the region is unset, the returned pointer is null
 
-			ImageRegion* pRegion = 0;
-			Bool regionChanged = False;
+			casacore::ImageRegion* pRegion = 0;
+			casacore::Bool regionChanged = false;
 			if (rec.isDefined("region")) {
 				pRegion = makeRegion (rec);
 
@@ -486,15 +486,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 				regionChanged = isRegionDifferent (pRegion);
 				if (regionChanged) {
-					newHistNeeded = True;
+					newHistNeeded = true;
 				}
 
 			}
 
 // If the mask is unset, the returned pointer is null
 
-			WCLELMask* pMask = 0;
-			Bool maskChanged = False;
+			casacore::WCLELMask* pMask = 0;
+			casacore::Bool maskChanged = false;
 			if (rec.isDefined("mask")) {
 				pMask = makeMask (rec);
 
@@ -502,7 +502,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 				maskChanged = isMaskDifferent (pMask);
 				if (maskChanged) {
-					newHistNeeded = True;
+					newHistNeeded = true;
 				}
 			}
 //
@@ -510,16 +510,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				cleanup();
 //
 				if (itsMaskPtr) {
-					ImageRegion maskRegion(*itsMaskPtr);
+					casacore::ImageRegion maskRegion(*itsMaskPtr);
 					if (itsRegionPtr) {
-						SubImage<T> subIm(*itsBaseImagePtr, maskRegion, False);
-						pImage = new SubImage<T>(subIm, *itsRegionPtr, False);
+						casacore::SubImage<T> subIm(*itsBaseImagePtr, maskRegion, false);
+						pImage = new casacore::SubImage<T>(subIm, *itsRegionPtr, false);
 					} else {
-						pImage = new SubImage<T>(*itsBaseImagePtr, maskRegion, False);
+						pImage = new casacore::SubImage<T>(*itsBaseImagePtr, maskRegion, false);
 					}
 				} else {
 					if (itsRegionPtr) {
-						pImage = new SubImage<T>(*itsBaseImagePtr, *itsRegionPtr, False);
+						pImage = new casacore::SubImage<T>(*itsBaseImagePtr, *itsRegionPtr, false);
 					}
 				}
 //
@@ -534,8 +534,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				DisplayCoordinateSystem cSysOld = originalCoordinateSystem();
 				if (pImage) {
 					itsMaskedLatticePtr.reset(pImage);
-					itsDeleteMLPointer = True;
-					newHistNeeded = True;
+					itsDeleteMLPointer = true;
+					newHistNeeded = true;
 
 // Transfer over the axis unit and velocity choices that
 // might have been set by PADD
@@ -546,7 +546,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					setCoordinateSystem(cSys);
 				} else {
 					itsMaskedLatticePtr = itsBaseImagePtr;
-					itsDeleteMLPointer = False;
+					itsDeleteMLPointer = false;
 
 // Transfer over the axis unit and velocity choices that
 // might have been set by PADD
@@ -563,7 +563,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				setAxes(displayAxes()[0], displayAxes()[1],
 				        displayAxes()[2], fixedPosition());
 				getMinAndMax();
-				fillRecOut = True;
+				fillRecOut = true;
 
 				// Request an update to the number of frames on the animator(s) where
 				// this DD is registered.  (Note: this is _not_ a change to an 'Adjust'
@@ -572,21 +572,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				// otherwise it will be set to the first frame.
 
 				if(!recOut.isDefined("setanimator")) {
-					Record setanimrec;
+					casacore::Record setanimrec;
 					recOut.defineRecord("setanimator",setanimrec);
 				}
 
 // Set this so that coordinates are reset...
 
 				setAttributeOnPrimaryWCHs(resetAtt);
-				ret = True;
+				ret = true;
 			}
 		}
 //
 
 		if (fillRecOut) {
 
-			Record trec = getOptions();
+			casacore::Record trec = getOptions();
 
 			// We change datamin/datamax (contained in "minmaxhist")  in "rec"
 			// only if they do not pre-exist (if they do the user has specified
@@ -595,7 +595,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			if (!rec.isDefined(PrincipalAxesDD::HISTOGRAM_RANGE) &&
 			        trec.isDefined(PrincipalAxesDD::HISTOGRAM_RANGE)) {
 
-				Vector<Float> tempinsert(2);
+				casacore::Vector<casacore::Float> tempinsert(2);
 				tempinsert(0) = datamin;
 				tempinsert(1) = datamax;
 
@@ -610,7 +610,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 		if(rec.isDefined("alwaysupdate")) {
-			Bool optCalc;
+			casacore::Bool optCalc;
 
 			rec.get("alwaysupdate", optCalc);
 
@@ -621,20 +621,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					if((itsRegionPtr) || (itsMaskPtr)) {
 						if ((itsRegionPtr) && (itsMaskPtr)) {
 							//Region and Mask set
-							ImageRegion maskRegion(*itsMaskPtr);
-							SubImage<T> subIm(*itsBaseImagePtr, maskRegion, False);
-							pImage = new SubImage<T>(subIm, *itsRegionPtr, False);
+							casacore::ImageRegion maskRegion(*itsMaskPtr);
+							casacore::SubImage<T> subIm(*itsBaseImagePtr, maskRegion, false);
+							pImage = new casacore::SubImage<T>(subIm, *itsRegionPtr, false);
 						} else if (itsRegionPtr) {
 							//Region only
-							pImage = new SubImage<T>(*itsBaseImagePtr, *itsRegionPtr, False);
+							pImage = new casacore::SubImage<T>(*itsBaseImagePtr, *itsRegionPtr, false);
 						} else {
 							//Mask only
-							ImageRegion maskRegion(*itsMaskPtr);
-							pImage = new SubImage<T>(*itsBaseImagePtr, maskRegion, False);
+							casacore::ImageRegion maskRegion(*itsMaskPtr);
+							pImage = new casacore::SubImage<T>(*itsBaseImagePtr, maskRegion, false);
 						}
 					}
 				}
-				newHistNeeded = True;
+				newHistNeeded = true;
 
 			} else {
 				calcHist = optCalc;
@@ -645,37 +645,37 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if(getOptions().isDefined(PrincipalAxesDD::HISTOGRAM_RANGE) && newHistNeeded && calcHist) {
 			if (pImage) {
 				if (updateHistogram(recOut, *pImage)) {
-					newHistNeeded = False;
+					newHistNeeded = false;
 				} else {
-					throw(AipsError("LatticePADD.cc - Error making new histogram data"
+					throw(casacore::AipsError("LatticePADD.cc - Error making new histogram data"
 					                " - (from pImage)"));
 				}
 			} else if (itsBaseImagePtr) {
 				if (updateHistogram(recOut, *itsBaseImagePtr)) {
-					newHistNeeded = False;
+					newHistNeeded = false;
 				} else {
-					throw(AipsError("LatticePADD.cc - Error making new histogram data"
+					throw(casacore::AipsError("LatticePADD.cc - Error making new histogram data"
 					                " - (from baseImage)"));
 				}
 
 			} else if (itsBaseArrayPtr) {
 				if (updateHistogram(recOut, itsBaseArrayPtr)) {
-					newHistNeeded = False;
+					newHistNeeded = false;
 				} else {
-					throw(AipsError("LatticePADD.cc - Error making new histogram data"
+					throw(casacore::AipsError("LatticePADD.cc - Error making new histogram data"
 					                " - (from baseArray)"));
 				}
 
 			} else {
-				throw(AipsError("LatticePADD.cc - Error making new histogram data"
+				throw(casacore::AipsError("LatticePADD.cc - Error making new histogram data"
 				                " - (couldn't find anything to use!)"));
 			}
 
 		} else {
 			if (recOut.isDefined(PrincipalAxesDD::HISTOGRAM_RANGE) &&
 			        recOut.subRecord(PrincipalAxesDD::HISTOGRAM_RANGE).isDefined("newdata")) {
-				Record tmphist = recOut.subRecord(PrincipalAxesDD::HISTOGRAM_RANGE);
-				tmphist.define("newdata", False);
+				casacore::Record tmphist = recOut.subRecord(PrincipalAxesDD::HISTOGRAM_RANGE);
+				tmphist.define("newdata", false);
 				tmphist.define("histarray", "unset");
 				recOut.defineRecord(PrincipalAxesDD::HISTOGRAM_RANGE, tmphist);
 			}
@@ -684,39 +684,39 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		//After all that, check whether histogramgui window needs new statistices
 		if (rec.isDefined("imagestats") && getOptions().isDefined(PrincipalAxesDD::HISTOGRAM_RANGE)) {
-			Vector<String> whatToGet;
+			casacore::Vector<casacore::String> whatToGet;
 			rec.get("imagestats", whatToGet);
 
-			Record addStats;
+			casacore::Record addStats;
 			if (recOut.isDefined(PrincipalAxesDD::HISTOGRAM_RANGE)) {
 				addStats = recOut.subRecord(PrincipalAxesDD::HISTOGRAM_RANGE);
 			} else {
 				addStats = getOptions().subRecord(PrincipalAxesDD::HISTOGRAM_RANGE);
 			}
 //
-			Record theStats;
-			Array<Double> tempStats;
-			for (uInt i=0; i<whatToGet.nelements(); i++) {
+			casacore::Record theStats;
+			casacore::Array<casacore::Double> tempStats;
+			for (casacore::uInt i=0; i<whatToGet.nelements(); i++) {
 				if (whatToGet(i) == "mean") {
-					itsLatticeStatisticsPtr->getStatistic(tempStats,LatticeStatsBase::MEAN);
+					itsLatticeStatisticsPtr->getStatistic(tempStats,casacore::LatticeStatsBase::MEAN);
 					theStats.define("mean", tempStats);
 				} else if (whatToGet(i) == "median") {
-					itsLatticeStatisticsPtr->getStatistic(tempStats,LatticeStatsBase::MEDIAN);
+					itsLatticeStatisticsPtr->getStatistic(tempStats,casacore::LatticeStatsBase::MEDIAN);
 					theStats.define("median", tempStats);
 				} else if (whatToGet(i) == "stddev") {
-					itsLatticeStatisticsPtr->getStatistic(tempStats,LatticeStatsBase::SIGMA);
+					itsLatticeStatisticsPtr->getStatistic(tempStats,casacore::LatticeStatsBase::SIGMA);
 					theStats.define("stddev", tempStats);
 				}
 			}
-			theStats.define("new", True);
+			theStats.define("new", true);
 			addStats.defineRecord("stats", theStats);
 			recOut.defineRecord(PrincipalAxesDD::HISTOGRAM_RANGE, addStats);
 		} else {
 			if (recOut.isDefined(PrincipalAxesDD::HISTOGRAM_RANGE)) {
-				Record temp = recOut.subRecord(PrincipalAxesDD::HISTOGRAM_RANGE);
+				casacore::Record temp = recOut.subRecord(PrincipalAxesDD::HISTOGRAM_RANGE);
 				if (temp.isDefined("stats")) {
-					Record clear = temp.subRecord("stats");
-					clear.define("new", False);
+					casacore::Record clear = temp.subRecord("stats");
+					clear.define("new", false);
 					temp.defineRecord("stats", clear);
 					recOut.defineRecord(PrincipalAxesDD::HISTOGRAM_RANGE, temp);
 				}
@@ -727,7 +727,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Set Beam ellipse user interface parameters, if applicable.
 
 		if( beams_.size( ) > 0 ) {
-			Bool  needsRefresh = beamOnOff_->fromRecord(rec);
+			casacore::Bool  needsRefresh = beamOnOff_->fromRecord(rec);
 			needsRefresh = beamStyle_->fromRecord(rec)     || needsRefresh;
 			needsRefresh = beamColor_->fromRecord(rec)     || needsRefresh;
 			needsRefresh = beamLineWidth_->fromRecord(rec) || needsRefresh;
@@ -743,47 +743,47 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	template <class T>
-	Record LatticePADisplayData<T>::getHist() const {
+	casacore::Record LatticePADisplayData<T>::getHist() const {
 		if(imageHistogram.isDefined("values")) {
 			return imageHistogram;
 		} else {
-			Record unset;
+			casacore::Record unset;
 			unset.define("unset", "unset");
 			return unset;
 		}
 	}
 
 	template <class T>
-	Record LatticePADisplayData<T>::getOptions( bool scrub ) const {
+	casacore::Record LatticePADisplayData<T>::getOptions( bool scrub ) const {
 
-		Record rec = PrincipalAxesDD::getOptions(scrub);
+		casacore::Record rec = PrincipalAxesDD::getOptions(scrub);
 
 // Some of these widgets are not appropriate to the
-// LatticeAsVector DD (which has a Complex data source)
+// LatticeAsVector DD (which has a casacore::Complex data source)
 
-		if (className() != String("LatticeAsVector")) {
-			Record resample;
+		if (className() != casacore::String("LatticeAsVector")) {
+			casacore::Record resample;
 			resample.define("dlformat", "resample");
 			resample.define("listname", "resampling mode");
 			resample.define("ptype", "choice");
-			Vector<String> vresample(3);
+			casacore::Vector<casacore::String> vresample(3);
 			vresample(0) = "nearest";
 			vresample(1) = "bilinear";
 			vresample(2) = "bicubic";
 			resample.define("popt", vresample);
 			resample.define("default", "nearest");
 			resample.define("value", itsResample);
-			resample.define("allowunset", False);
+			resample.define("allowunset", false);
 			rec.defineRecord("resample", resample);
 //
 			T typetester;
-			DataType dtype = whatType(&typetester);
-			if ((dtype == TpComplex) || (dtype == TpDComplex)) {
-				Record complexmode;
+			casacore::DataType dtype = casacore::whatType(&typetester);
+			if ((dtype == casacore::TpComplex) || (dtype == casacore::TpDComplex)) {
+				casacore::Record complexmode;
 				complexmode.define("dlformat", "complexmode");
-				complexmode.define("listname", "Complex mode");
+				complexmode.define("listname", "casacore::Complex mode");
 				complexmode.define("ptype", "choice");
-				Vector<String> vcomplexmode(4);
+				casacore::Vector<casacore::String> vcomplexmode(4);
 				vcomplexmode(0) = "magnitude";
 				vcomplexmode(1) = "phase";
 				vcomplexmode(2) = "real";
@@ -791,30 +791,30 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				complexmode.define("popt", vcomplexmode);
 				complexmode.define("default", "magnitude");
 				complexmode.define("value", itsComplexMode);
-				complexmode.define("allowunset", False);
+				complexmode.define("allowunset", false);
 				rec.defineRecord("complexmode", complexmode);
 			}
 		}
 //
 		if (itsBaseImagePtr && ! scrub) {
-			Record region;
+			casacore::Record region;
 			region.define("dlformat", "region");
 			region.define("listname", "Image region");
 			region.define("ptype", "region");
-			Record unset;
+			casacore::Record unset;
 			unset.define("i_am_unset", "i_am_unset");
 			region.defineRecord("default", unset);
 			region.defineRecord("value", unset);
-			region.define("allowunset", True);
+			region.define("allowunset", true);
 			rec.defineRecord("region", region);
 //
-			Record mask;
+			casacore::Record mask;
 			mask.define("dlformat", "mask");
 			mask.define("listname", "Mask expression");
 			mask.define("ptype", "string");
 			mask.defineRecord("default", unset);
 			mask.defineRecord("value", unset);
-			mask.define("allowunset", True);
+			mask.define("allowunset", true);
 			rec.defineRecord("mask", mask);
 		}
 
@@ -834,17 +834,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return rec;
 	}
 
-// update the stored minimum and maximum data values (Float version)
+// update the stored minimum and maximum data values (casacore::Float version)
 	template<class T>
 	void LatticePADisplayData<T>::getMinAndMax() {
 		// sanity check
 		if (!itsMaskedLatticePtr || !itsLatticeStatisticsPtr) {
-			throw(AipsError("LatticePADisplayData<T>::getMinAndMax - "
+			throw(casacore::AipsError("LatticePADisplayData<T>::getMinAndMax - "
 			                "no lattice is available"));
 			return;
 		}
 //
-		Float dMin, dMax;
+		casacore::Float dMin, dMax;
 		if (!itsLatticeStatisticsPtr->getFullMinMax(dMin, dMax)) {
 			datamin = -1.0;
 			datamax = 1.0;
@@ -856,22 +856,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	template<class T>
-	WCLELMask* LatticePADisplayData<T>::makeMask (const RecordInterface& mask) {
-		LogIO os(LogOrigin("LatticePADisplayData", "makeRegion", WHERE));
-		WCLELMask* maskPtr = 0;
-		if (mask.dataType("mask") == TpRecord) {
-			Record rec = mask.asRecord("mask");
+	casacore::WCLELMask* LatticePADisplayData<T>::makeMask (const casacore::RecordInterface& mask) {
+		casacore::LogIO os(casacore::LogOrigin("LatticePADisplayData", "makeRegion", WHERE));
+		casacore::WCLELMask* maskPtr = 0;
+		if (mask.dataType("mask") == casacore::TpRecord) {
+			casacore::Record rec = mask.asRecord("mask");
 			if (rec.isDefined("i_am_unset")) {
 			} else {
-				os << LogIO::SEVERE << "Mask is illegal record" << LogIO::POST;
+				os << casacore::LogIO::SEVERE << "Mask is illegal record" << casacore::LogIO::POST;
 			}
-		} else if (mask.dataType("mask") == TpString) {
-			maskPtr = new WCLELMask(mask.asString("mask"));
+		} else if (mask.dataType("mask") == casacore::TpString) {
+			maskPtr = new casacore::WCLELMask(mask.asString("mask"));
 			if (!maskPtr) {
-				os << "Failed to create WCLELMask from mask String" << LogIO::POST;
+				os << "Failed to create casacore::WCLELMask from mask casacore::String" << casacore::LogIO::POST;
 			}
 		} else {
-			os << LogIO::SEVERE << "Mask is illegal record type" << LogIO::POST;
+			os << casacore::LogIO::SEVERE << "Mask is illegal record type" << casacore::LogIO::POST;
 		}
 //
 		return maskPtr;
@@ -879,21 +879,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	template<class T>
-	ImageRegion* LatticePADisplayData<T>::makeRegion (const RecordInterface& region) {
-		LogIO os(LogOrigin("LatticePADisplayData", "makeRegion", WHERE));
-		ImageRegion* regionPtr = 0;
-		if (region.dataType("region") == TpRecord) {
-			Record rec = region.asRecord("region");
+	casacore::ImageRegion* LatticePADisplayData<T>::makeRegion (const casacore::RecordInterface& region) {
+		casacore::LogIO os(casacore::LogOrigin("LatticePADisplayData", "makeRegion", WHERE));
+		casacore::ImageRegion* regionPtr = 0;
+		if (region.dataType("region") == casacore::TpRecord) {
+			casacore::Record rec = region.asRecord("region");
 			if (rec.isDefined("i_am_unset")) {
 //
 			} else {
-				regionPtr = ImageRegion::fromRecord(rec, String(""));
+				regionPtr = casacore::ImageRegion::fromRecord(rec, casacore::String(""));
 				if (!regionPtr) {
-					os << LogIO::NORMAL << "Failed to create ImageRegion from region record" << LogIO::POST;
+					os << casacore::LogIO::NORMAL << "Failed to create casacore::ImageRegion from region record" << casacore::LogIO::POST;
 				}
 			}
 		} else {
-			os << LogIO::SEVERE << "Region is illegal record type" << LogIO::POST;
+			os << casacore::LogIO::SEVERE << "Region is illegal record type" << casacore::LogIO::POST;
 		}
 //
 		return regionPtr;
@@ -902,13 +902,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	template<class T>
-	Bool LatticePADisplayData<T>::isRegionDifferent (ImageRegion*& pRegion) {
-		Bool same = False;
+	casacore::Bool LatticePADisplayData<T>::isRegionDifferent (casacore::ImageRegion*& pRegion) {
+		casacore::Bool same = false;
 		if (!pRegion) {
-			if (!itsRegionPtr) same = True;
+			if (!itsRegionPtr) same = true;
 		} else {
 			if (itsRegionPtr) {
-				if (*itsRegionPtr==*pRegion) same = True;
+				if (*itsRegionPtr==*pRegion) same = true;
 			}
 		}
 //
@@ -924,13 +924,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	template<class T>
-	Bool LatticePADisplayData<T>::isMaskDifferent (WCLELMask*& pMask) {
-		Bool same = False;
+	casacore::Bool LatticePADisplayData<T>::isMaskDifferent (casacore::WCLELMask*& pMask) {
+		casacore::Bool same = false;
 		if (!pMask) {
-			if (!itsMaskPtr) same = True;
+			if (!itsMaskPtr) same = true;
 		} else {
 			if (itsMaskPtr) {
-				if (*itsMaskPtr==*pMask) same = True;
+				if (*itsMaskPtr==*pMask) same = true;
 			}
 		}
 //
@@ -948,14 +948,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	template<class T>
-	Bool LatticePADisplayData<T>::insertFloat(Record& into, Float from, const String field) {
-		Record tempSub;
+	casacore::Bool LatticePADisplayData<T>::insertFloat(casacore::Record& into, casacore::Float from, const casacore::String field) {
+		casacore::Record tempSub;
 		if (!into.isDefined(field)) {
 			tempSub = getOptions().subRecord(field);
 			tempSub.define("value", from);
 			into.defineRecord(field, tempSub);
 		} else {
-			if (into.dataType(field) == TpRecord) {
+			if (into.dataType(field) == casacore::TpRecord) {
 				tempSub = into.subRecord(field);
 				tempSub.define("value", from);
 				into.defineRecord(field, tempSub);
@@ -967,18 +967,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			}
 		}
 
-		return True;
+		return true;
 	}
 
 	template<class T>
-	Bool LatticePADisplayData<T>::insertArray(Record& into, Vector<Float> from, const String field) {
-		Record tempSub;
+	casacore::Bool LatticePADisplayData<T>::insertArray(casacore::Record& into, casacore::Vector<casacore::Float> from, const casacore::String field) {
+		casacore::Record tempSub;
 		if (!into.isDefined(field)) {
 			tempSub = getOptions().subRecord(field);
 			tempSub.define("value", from);
 			into.defineRecord(field, tempSub);
 		} else {
-			if (into.dataType(field) == TpRecord) {
+			if (into.dataType(field) == casacore::TpRecord) {
 				tempSub = into.subRecord(field);
 				tempSub.define("value", from);
 				into.defineRecord(field, tempSub);
@@ -989,54 +989,54 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				into.defineRecord(field, tempSub);
 			}
 		}
-		return True;
+		return true;
 
 	}
 
 	template<class T>
-	Bool LatticePADisplayData<T>::transferPreferences (DisplayCoordinateSystem& cSysInOut,
+	casacore::Bool LatticePADisplayData<T>::transferPreferences (DisplayCoordinateSystem& cSysInOut,
 	        const DisplayCoordinateSystem& cSysIn) const {
-		if (cSysIn.nCoordinates()!=cSysInOut.nCoordinates()) return False;
-		if (cSysIn.nWorldAxes()!=cSysInOut.nWorldAxes()) return False;
-		if (cSysIn.nPixelAxes()!=cSysInOut.nPixelAxes()) return False;
+		if (cSysIn.nCoordinates()!=cSysInOut.nCoordinates()) return false;
+		if (cSysIn.nWorldAxes()!=cSysInOut.nWorldAxes()) return false;
+		if (cSysIn.nPixelAxes()!=cSysInOut.nPixelAxes()) return false;
 //
-		Int after = -1;
-		Int cIn = cSysIn.findCoordinate (Coordinate::SPECTRAL, after);
+		casacore::Int after = -1;
+		casacore::Int cIn = cSysIn.findCoordinate (casacore::Coordinate::SPECTRAL, after);
 		after = -1;
-		Int cInOut = cSysInOut.findCoordinate (Coordinate::SPECTRAL, after);
+		casacore::Int cInOut = cSysInOut.findCoordinate (casacore::Coordinate::SPECTRAL, after);
 //
 		if (cIn!=-1 && cInOut!=-1 && cIn==cInOut) {
-			const SpectralCoordinate scIn = cSysIn.spectralCoordinate(cIn);
-			const SpectralCoordinate scInOut = cSysInOut.spectralCoordinate(cInOut);
-			SpectralCoordinate scInOut2(scInOut);
+			const casacore::SpectralCoordinate scIn = cSysIn.spectralCoordinate(cIn);
+			const casacore::SpectralCoordinate scInOut = cSysInOut.spectralCoordinate(cInOut);
+			casacore::SpectralCoordinate scInOut2(scInOut);
 //
-			MDoppler::Types velDoppler = scIn.velocityDoppler ();
-			String velUnit = scIn.velocityUnit();
+			casacore::MDoppler::Types velDoppler = scIn.velocityDoppler ();
+			casacore::String velUnit = scIn.velocityUnit();
 			scInOut2.setVelocity (velUnit, velDoppler);
 //
-			String formatUnit = scIn.formatUnit();
+			casacore::String formatUnit = scIn.formatUnit();
 			scInOut2.setFormatUnit(formatUnit);
 //
 			cSysInOut.replaceCoordinate(scInOut2, cInOut);
 		}
-		return True;
+		return true;
 	}
 
 	template<class T>
 	void LatticePADisplayData<T>::delTmpImage() {
 		if (itsBaseImagePtr) {
-			String tmpImage(itsBaseImagePtr->name(False));
+			casacore::String tmpImage(itsBaseImagePtr->name(false));
 			delTmpData(tmpImage);
 		}
 	}
 
 	template<class T>
-	Bool LatticePADisplayData<T>::useStriding(
-	    const IPosition& shape, IPosition& stride,
-	    uInt maxPixels, uInt minPerAxis) {
+	casacore::Bool LatticePADisplayData<T>::useStriding(
+	    const casacore::IPosition& shape, casacore::IPosition& stride,
+	    casacore::uInt maxPixels, casacore::uInt minPerAxis) {
 		// Aids updateHistogram() by computing a stride to use for efficiency
 		// when computing histograms (could be used elsewhere too).
-		// Input parameter 'shape' is the shape of the original lattice or array.
+		// casacore::Input parameter 'shape' is the shape of the original lattice or array.
 		// Return value indicates whether striding should be used; if so, the
 		// recommended stride is returned in the 'stride' parameter.
 		// maxPixels is the desired maximum number of elements in the sub-lattice
@@ -1047,7 +1047,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// less than minPerAxis.
 		//
 		// The idea is to sample using no more than maxPixels elements from the
-		// original Lattice or Array.  Histograms needn't be more accurate for
+		// original casacore::Lattice or Array.  Histograms needn't be more accurate for
 		// their purpose (which is to set color scaling).
 
 
@@ -1055,23 +1055,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		minPerAxis = max(1u, minPerAxis);
 		// (safety: insure against improper input parameter use).
 
-		uInt nAxes = shape.nelements();
+		casacore::uInt nAxes = shape.nelements();
 
 		stride.resize(nAxes);
 		stride=1;	// Initial stride on all axes.
 
-		uInt latticeSize = 1;
-		for(uInt axis=0; axis<nAxes; axis++) latticeSize *= shape[axis];
+		casacore::uInt latticeSize = 1;
+		for(casacore::uInt axis=0; axis<nAxes; axis++) latticeSize *= shape[axis];
 
-		if(latticeSize <= maxPixels) return False;
+		if(latticeSize <= maxPixels) return false;
 		// No striding needed.
 
 
-		Double reduceFctr = Double(latticeSize)/maxPixels;
+		casacore::Double reduceFctr = casacore::Double(latticeSize)/maxPixels;
 		// We want striding to reduce the data examined by at least
 		// this factor.  (reduceFctr > 1).
 
-		// Strided sampling would be poor on the Stokes axis, or even
+		// Strided sampling would be poor on the casacore::Stokes axis, or even
 		// on a frequency axis.  This code makes a lame attempt at
 		// avoiding this, by assuming that sky coordinates are on the
 		// first two axes, doing strided sampling there only, if possible.
@@ -1085,25 +1085,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// The longer of the first two axes will be the next one strided,
 		// after the shortest; then the rest, as necessary.
 
-		Int shortAxis=0, longAxis=1;
-		IPosition axisOrder(nAxes);
-		for (uInt i=1; i<nAxes; i++) axisOrder[i]=i;
+		casacore::Int shortAxis=0, longAxis=1;
+		casacore::IPosition axisOrder(nAxes);
+		for (casacore::uInt i=1; i<nAxes; i++) axisOrder[i]=i;
 
 		if(nAxes>1 && shape[1]<shape[0])  {
 			shortAxis = 1;
 			axisOrder[1] = longAxis = 0;
 		}
 
-		Int shortMaxStride = max(1u, shape[shortAxis]/minPerAxis);
-		Int longMaxStride  = max(1u, shape[longAxis]/minPerAxis);
+		casacore::Int shortMaxStride = max(1u, shape[shortAxis]/minPerAxis);
+		casacore::Int longMaxStride  = max(1u, shape[longAxis]/minPerAxis);
 		// maximum usable stride on short, long axes.
 
-		Int sqrtStride = Int(ceil(sqrt(reduceFctr)));
+		casacore::Int sqrtStride = casacore::Int(ceil(sqrt(reduceFctr)));
 		// This stride on first two axes, if usable, would achieve
 		// the needed reduceFctr...
 
 		// ...We may even get away with one less on the short axis...
-		Int shortStride = sqrtStride-1;
+		casacore::Int shortStride = sqrtStride-1;
 		if(shortStride*min(sqrtStride,longMaxStride) < reduceFctr) shortStride++;
 		// (No, not enough: use full sqrtStride, if possible...).
 
@@ -1118,22 +1118,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Compute stride on remaining axes (starting with the
 		// longest of the first two).
 
-		for (uInt i=1; i<nAxes; i++) {
+		for (casacore::uInt i=1; i<nAxes; i++) {
 
 			if(reduceFctr<=1.) break;	// reduceFctr achieved -- done.
 
-			Int strideAxis = axisOrder[i];
+			casacore::Int strideAxis = axisOrder[i];
 			// Next axis -- the one to stride now.
-			Int maxStride = max(1u, shape[strideAxis]/minPerAxis);
+			casacore::Int maxStride = max(1u, shape[strideAxis]/minPerAxis);
 			// Its maximum stride.
-			stride[strideAxis] = min(maxStride, Int(ceil(reduceFctr)));
+			stride[strideAxis] = min(maxStride, casacore::Int(ceil(reduceFctr)));
 			// stride to use on this axis.
 			reduceFctr /= stride[strideAxis];
 		}
 		// reduction factor still to be achieved on remaining
 		// axes, in possible.
 
-		return True;
+		return true;
 	}
 
 
@@ -1161,14 +1161,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 			// Set up parameters for user interface.
 
-			Vector<String> yesNo(2);
+			casacore::Vector<casacore::String> yesNo(2);
 			yesNo[0]="Yes";
 			yesNo[1]="No";
 
-			Vector<String> outlnFill(2);
+			casacore::Vector<casacore::String> outlnFill(2);
 			outlnFill[0]="Outline";
 			outlnFill[1]="Filled";
-			Vector<String> bmClr(11);
+			casacore::Vector<casacore::String> bmClr(11);
 			bmClr(0) = "foreground";
 			bmClr(1) = "background";
 			bmClr(2) = "black";
@@ -1194,16 +1194,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			                                  "beam ellipse's color",
 			                                  bmClr, bmClr[0], bmClr[0], "beam_ellipse");
 
-			beamLineWidth_ = new DParameterRange<Int>("beamlinewidth", "line width",
+			beamLineWidth_ = new DParameterRange<casacore::Int>("beamlinewidth", "line width",
 			        "width of the line used to draw the ellipse",
 			        1, 7,  1,  1, 1, "beam_ellipse");
 
-			beamXCenter_ = new DParameterRange<Float>("beamxcenter", "x center",
+			beamXCenter_ = new DParameterRange<casacore::Float>("beamxcenter", "x center",
 			        "relative horizontal position of the beam's center within\n"
 			        "the image drawing area:  0 = left edge, 1 = right edge",
 			        0., 1.,  .02,  .1, .1, "beam_ellipse");
 
-			beamYCenter_ = new DParameterRange<Float>("beamycenter", "y center",
+			beamYCenter_ = new DParameterRange<casacore::Float>("beamycenter", "y center",
 			        "relative vertical position of the beam's center within\n"
 			        "the image drawing area:  0 = bottom edge, 1 = top edge",
 			        0., 1.,  .02,  .1, .1, "beam_ellipse");
@@ -1217,11 +1217,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	void LatticePADisplayData<T>::drawBeamEllipse_(WorldCanvas* wc) {
 		// Will draw the beam ellipse if applicable (i.e., the LatticePADD
 		// has an image with beam data, beam drawing is turned on, and the
-		// WC's CoordinateSystem is set to sky coordinates).
+		// WC's casacore::CoordinateSystem is set to sky coordinates).
 
 		if( beams_.size( ) == 0 || beamOnOff_->value()=="No" ) return;
 
-		vector<double> beam = (Int) beams_.size( ) > activeZIndex_ ? beams_[activeZIndex_] : beams_[0];
+		vector<double> beam = (casacore::Int) beams_.size( ) > activeZIndex_ ? beams_[activeZIndex_] : beams_[0];
 		// The major and minor axes must both be positive
 		if ( beam[0] <= 0.0 || beam[1] <= 0.0 ) return;
 

@@ -61,11 +61,12 @@
 #include <unistd.h>
 using namespace std;
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
   
   SIMapper::SIMapper( CountedPtr<SIImageStore>& imagestore, 
 		      CountedPtr<FTMachine>& ftm, 
-		      CountedPtr<FTMachine>& iftm) : useViVb2_p(False)
+		      CountedPtr<FTMachine>& iftm) : useViVb2_p(false)
   {
     LogIO os( LogOrigin("SIMapper","Construct a mapper",WHERE) );
     ft_p=ftm;
@@ -77,7 +78,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   SIMapper::SIMapper( CountedPtr<SIImageStore>& imagestore, 
 		      CountedPtr<refim::FTMachine>& ftm, 
-		      CountedPtr<refim::FTMachine>& iftm) : useViVb2_p(True)
+		      CountedPtr<refim::FTMachine>& iftm) : useViVb2_p(true)
   {
     LogIO os( LogOrigin("SIMapper","Construct a mapper",WHERE) );
     ft2_p=ftm;
@@ -323,20 +324,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SIMapper","getFTMRecord",WHERE) );
     if(ft_p.null() && !useViVb2_p)
-    	return False;
+    	return false;
      if(ft2_p.null() && useViVb2_p)
-    	return False;
+    	return false;
     String err;
     if(!useViVb2_p)
-      return ft_p->toRecord(err, rec, True, diskimage);
-    return ft2_p->toRecord(err, rec, True, diskimage);
+      return ft_p->toRecord(err, rec, true, diskimage);
+    return ft2_p->toRecord(err, rec, true, diskimage);
     // rec = itsFTM->toRecord();
 
   }
   Bool SIMapper::getCLRecord(Record& rec)
   {
     if(cft_p.null() && cft2_p.null())
-      return False;
+      return false;
     String err;
     return cl_p.toRecord(err, rec);
   }

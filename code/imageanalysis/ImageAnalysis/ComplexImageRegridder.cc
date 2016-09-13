@@ -29,6 +29,7 @@
 #include <imageanalysis/ImageAnalysis/ImageFactory.h>
 #include <imageanalysis/ImageAnalysis/ImageRegridder.h>
 
+using namespace casacore;
 namespace casa {
 
 const String  ComplexImageRegridder::_class = "ComplexImageRegridder";
@@ -63,7 +64,7 @@ SPIIC ComplexImageRegridder::regrid() const {
 		myimage, ImageFactory::REAL
 	);
 	ImageRegridder rgReal(realPart, _getRegion(), _getMask(), "",
-		False, _getTemplateCoords(), _getAxes(), _getShape()
+		false, _getTemplateCoords(), _getAxes(), _getShape()
 	);
 	rgReal.setConfiguration(*this);
 	SPIIF outReal = rgReal.regrid();
@@ -71,7 +72,7 @@ SPIIC ComplexImageRegridder::regrid() const {
 		myimage, ImageFactory::IMAG
 	);
 	ImageRegridder rgImag(imagPart, _getRegion(), _getMask(), "",
-		False, _getTemplateCoords(), _getAxes(), _getShape()
+		false, _getTemplateCoords(), _getAxes(), _getShape()
 	);
 	rgImag.setConfiguration(*this);
 	SPIIF outImag = rgImag.regrid();

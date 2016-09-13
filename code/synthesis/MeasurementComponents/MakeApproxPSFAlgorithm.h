@@ -89,18 +89,18 @@ public:
   void put();
 
   // Return the name of the algorithm
-  String &name();
+  casacore::String &name();
 
  private:
   // Local copies of the data and input parameters
-  TempImage<Complex> *cImage_p;
-  String myName_p;
-  String msFileName_p;
+  casacore::TempImage<casacore::Complex> *cImage_p;
+  casacore::String myName_p;
+  casacore::String msFileName_p;
 
-  TempImage<Float> *psf_p;
-  Matrix<Float> weight_p;
-  Vector<Float> beam_p; 
-  Array<Float> *beamArray_p;
+  casacore::TempImage<casacore::Float> *psf_p;
+  casacore::Matrix<casacore::Float> weight_p;
+  casacore::Vector<casacore::Float> beam_p; 
+  casacore::Array<casacore::Float> *beamArray_p;
   FTMachine* ft_p;
 
   // Form and fit the PSF/beam

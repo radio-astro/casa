@@ -63,7 +63,7 @@
 
 // Unit test for the bnmin1 module
 
-using namespace casa;
+using namespace casacore;
 
 QuadObs * mkStdObs(void)
 {

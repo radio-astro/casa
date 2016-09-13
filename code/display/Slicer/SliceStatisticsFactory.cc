@@ -30,6 +30,7 @@
 #include <display/Slicer/SliceStatisticsPosition.h>
 #include <QDebug>
 
+using namespace casacore;
 namespace casa {
 
 
@@ -102,4 +103,5 @@ namespace casa {
 		delete statisticsPosition;
 	}
 
+using namespace casacore;
 } /* namespace casa */

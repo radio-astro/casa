@@ -26,6 +26,7 @@
 #include <display/QtViewer/QtDisplayPanelGui.qo.h>
 #include <QDebug>
 
+using namespace casacore;
 namespace casa {
 
 	const bool AnimatorHolder::BLINK_MODE = false;

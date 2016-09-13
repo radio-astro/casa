@@ -191,7 +191,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	protected:
 
 		// Indicate whether key is presently pressed.
-		virtual Bool keyPresentlyDown(const PCMotionEvent &ev);
+		virtual casacore::Bool keyPresentlyDown(const PCMotionEvent &ev);
 
 	private:
 
@@ -205,7 +205,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Display::KeyModifier itsKeyModifier;
 
 		// Whether the event handlers are currently registered.
-		Bool itsEventHandlersRegistered;
+		casacore::Bool itsEventHandlersRegistered;
 
 		// The event handlers.
 		PCToolPosEH *itsPositionEH;

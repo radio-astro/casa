@@ -54,7 +54,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	public:
 
 		DSScreenArrow();
-		DSScreenArrow(const Record& settings, PixelCanvas* pc);
+		DSScreenArrow(const casacore::Record& settings, PixelCanvas* pc);
 		DSScreenArrow(DSPixelArrow& other, PixelCanvas* pc);
 		DSScreenArrow(DSWorldArrow& other);
 
@@ -64,20 +64,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// So we can update our Screen pos (relative)
 		// <group>
-		virtual void move(const Float& dX, const Float& dY);
-		virtual void setCenter(const Float& xPos, const Float& yPos);
-		virtual void rotate(const Float& angle);
-		virtual void scale(const Float& scaleFactor);
-		virtual void setStartPoint(const Vector<Float>& startPoint);
-		virtual void setEndPoint(const Vector<Float>& endPoint);
-		virtual void changePoint(const Vector<Float>&pos, const Int n);
-		virtual void changePoint(const Vector<Float>& pos);
+		virtual void move(const casacore::Float& dX, const casacore::Float& dY);
+		virtual void setCenter(const casacore::Float& xPos, const casacore::Float& yPos);
+		virtual void rotate(const casacore::Float& angle);
+		virtual void scale(const casacore::Float& scaleFactor);
+		virtual void setStartPoint(const casacore::Vector<casacore::Float>& startPoint);
+		virtual void setEndPoint(const casacore::Vector<casacore::Float>& endPoint);
+		virtual void changePoint(const casacore::Vector<casacore::Float>&pos, const casacore::Int n);
+		virtual void changePoint(const casacore::Vector<casacore::Float>& pos);
 		// </group>
 
-		virtual Bool setOptions(const Record& settings);
-		virtual Record getOptions();
+		virtual casacore::Bool setOptions(const casacore::Record& settings);
+		virtual casacore::Record getOptions();
 
-		virtual Record getRawOptions() {
+		virtual casacore::Record getRawOptions() {
 			return DSArrow::getOptions();
 		}
 
@@ -87,8 +87,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		PixelCanvas* itsPC;
 
 		// The center of the marker in world co-ords.
-		Vector<Float> itsRelativeStart;
-		Vector<Float> itsRelativeEnd;
+		casacore::Vector<casacore::Float> itsRelativeStart;
+		casacore::Vector<casacore::Float> itsRelativeEnd;
 
 		void updateRelative();
 	};

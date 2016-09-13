@@ -53,20 +53,20 @@ class AnnCenterBox: public AnnPolygon {
 public:
 
 	AnnCenterBox(
-		const Quantity& centerx,
-		const Quantity& centery,
-		const Quantity& xwidth,
-		const Quantity& ywidth,
-		const String& dirRefFrameString,
-		const CoordinateSystem& csys,
-		const IPosition& imShape,
-		const Quantity& beginFreq,
-		const Quantity& endFreq,
-		const String& freqRefFrameString,
-		const String& dopplerString,
-		const Quantity& restfreq,
-		const Vector<Stokes::StokesTypes> stokes,
-		const Bool annotationOnly
+		const casacore::Quantity& centerx,
+		const casacore::Quantity& centery,
+		const casacore::Quantity& xwidth,
+		const casacore::Quantity& ywidth,
+		const casacore::String& dirRefFrameString,
+		const casacore::CoordinateSystem& csys,
+		const casacore::IPosition& imShape,
+		const casacore::Quantity& beginFreq,
+		const casacore::Quantity& endFreq,
+		const casacore::String& freqRefFrameString,
+		const casacore::String& dopplerString,
+		const casacore::Quantity& restfreq,
+		const casacore::Vector<casacore::Stokes::StokesTypes> stokes,
+		const casacore::Bool annotationOnly
 	);
 
 	// Simplified constructor.
@@ -76,23 +76,23 @@ public:
 	// is a region (not just an annotation), although this value can be changed after
 	// construction.
 	AnnCenterBox(
-		const Quantity& centerx,
-		const Quantity& centery,
-		const Quantity& xwidth,
-		const Quantity& ywidth,
-		const CoordinateSystem& csys,
-		const IPosition& imShape,
-		const Vector<Stokes::StokesTypes>& stokes
+		const casacore::Quantity& centerx,
+		const casacore::Quantity& centery,
+		const casacore::Quantity& xwidth,
+		const casacore::Quantity& ywidth,
+		const casacore::CoordinateSystem& csys,
+		const casacore::IPosition& imShape,
+		const casacore::Vector<casacore::Stokes::StokesTypes>& stokes
 	);
 
 	// implicit copy constructor and destructor are fine
 
 	AnnCenterBox& operator=(const AnnCenterBox& other);
 
-	ostream& print(ostream &os) const;
+	std::ostream& print(std::ostream &os) const;
 
 private:
-	Quantity _inpXCenter, _inpYCenter, _inpXWidth, _inpYWidth;
+	casacore::Quantity _inpXCenter, _inpYCenter, _inpXWidth, _inpYWidth;
 
 };
 

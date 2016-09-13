@@ -27,10 +27,11 @@
 
 #include <imageanalysis/ImageAnalysis/ProfileFitResults.h>
 
+using namespace casacore;
 namespace casa {
 
 ProfileFitResults::ProfileFitResults(const ImageFit1D<Float>& fitter) :
-	_spectralList(fitter.getList(True)), _converged(fitter.converged()),
+	_spectralList(fitter.getList(true)), _converged(fitter.converged()),
 	_isValid(fitter.isValid()), _succeeded(fitter.succeeded()),
     _iterations((uInt)fitter.getNumberIterations())
 {}

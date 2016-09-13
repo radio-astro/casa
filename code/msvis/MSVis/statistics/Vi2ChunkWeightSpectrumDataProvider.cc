@@ -28,6 +28,7 @@
 #include <msvis/MSVis/statistics/Vi2ChunkWeightSpectrumDataProvider.h>
 #include <msvis/MSVis/VisBufferComponents2.h>
 
+using namespace casacore;
 namespace casa {
 
 Vi2ChunkWeightSpectrumDataProvider::Vi2ChunkWeightSpectrumDataProvider(
@@ -44,4 +45,5 @@ Vi2ChunkWeightSpectrumDataProvider::dataArray() {
 	return vi2->getVisBuffer()->weightSpectrum();
 }
 
+using namespace casacore;
 } // namespace casa

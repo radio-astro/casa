@@ -27,6 +27,7 @@
 
 #include <display/Display/DisplayParameter.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Constructor.
@@ -75,8 +76,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsDescription(""),
 		itsHelp(""),
 		itsContext(""),
-		itsAllowUnset(False),
-		itsEditable(False) {
+		itsAllowUnset(false),
+		itsEditable(false) {
 	}
 
 // Return a basic description of this parameter.

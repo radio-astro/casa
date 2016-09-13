@@ -1,4 +1,4 @@
-//# Register.h: Register the DataManager create functiuons.
+//# Register.h: Register the casacore::DataManager create functiuons.
 //# Copyright (C) 2012
 //# Associated Universities, Inc. Washington DC, USA.
 //# (c) European Southern Observatory, 2012

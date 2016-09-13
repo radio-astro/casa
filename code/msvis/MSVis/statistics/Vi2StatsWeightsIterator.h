@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //
-// Data provider weights iterators, based on weights column
+// casacore::Data provider weights iterators, based on weights column
 //
 #ifndef MSVIS_STATISTICS_VI2_STATS_WEIGHTS_ITERATOR_H_
 #define MSVIS_STATISTICS_VI2_STATS_WEIGHTS_ITERATOR_H_
@@ -41,7 +41,7 @@ namespace casa {
 //
 template<class T>
 class Vi2StatsWeightsIterator
-	: public std::iterator<std::input_iterator_tag,Float> {
+	: public std::iterator<std::input_iterator_tag,casacore::Float> {
 
 public:
 	Vi2StatsWeightsIterator& operator++();
@@ -52,7 +52,7 @@ public:
 
 	bool operator!=(const Vi2StatsWeightsIterator& rhs);
 
-	Float operator*();
+	casacore::Float operator*();
 
 	bool atEnd();
 
@@ -82,17 +82,17 @@ public:
 
 	bool operator!=(const Vi2StatsWeightsCubeIterator& rhs);
 
-	Float operator*();
+	casacore::Float operator*();
 
 	bool atEnd();
 
 protected:
-	uInt correlation;
-	uInt nCorrelations;
-	uInt channel;
-	uInt nChannels;
-	uInt row;
-	uInt nRows;
+	casacore::uInt correlation;
+	casacore::uInt nCorrelations;
+	casacore::uInt channel;
+	casacore::uInt nChannels;
+	casacore::uInt row;
+	casacore::uInt nRows;
 };
 
 // Weights iterator over row weights.
@@ -112,13 +112,13 @@ public:
 
 	bool operator!=(const Vi2StatsWeightsRowIterator& rhs);
 
-	Float operator*();
+	casacore::Float operator*();
 
 	bool atEnd();
 
 protected:
-	uInt row;
-	uInt nRows;
+	casacore::uInt row;
+	casacore::uInt nRows;
 };
 
 } // namespace casa

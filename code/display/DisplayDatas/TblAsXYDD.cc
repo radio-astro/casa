@@ -43,6 +43,7 @@
 #include <display/DisplayDatas/TblAsXYDD.h>
 #include <display/DisplayDatas/TblAsXYDM.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // constructors
@@ -131,13 +132,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // set a record
 	Bool TblAsXYDD::setOptions(Record &rec, Record &recOut) {
 		Bool ret = ActiveCaching2dDD::setOptions(rec,recOut);
-		Bool localchange = False, coordchange = False, error;
+		Bool localchange = false, coordchange = false, error;
 
 		if (readOptionRecord(itsOptQueryString, itsOptQueryStringUnset,
 		                     error, rec, "querystring")) {
 
 			arrangeQueryTable();
-			localchange = True;
+			localchange = true;
 		}
 
 		// set the DParmeter values which have information on
@@ -170,7 +171,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		} else {
 			querystring.define("value", itsOptQueryString);
 		}
-		querystring.define("allowunset", True);
+		querystring.define("allowunset", true);
 		rec.defineRecord("querystring", querystring);
 
 		// get DParameter values which have information on the axis (columns) used
@@ -237,7 +238,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// setup values for query options
 		itsOptQueryString = "";
-		itsOptQueryStringUnset = True;
+		itsOptQueryStringUnset = true;
 		arrangeQueryTable();
 
 	}
@@ -257,11 +258,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			String whereStr = "WHERE " + itsOptQueryString;
 			itsQueryTable = new Table(tableCommand(selectStr + fromStr + whereStr));
 			if (itsQueryTable) {
-				return True;
+				return true;
 			}
 		}
 		// query table was not set
-		return False;
+		return false;
 	}
 
 	void TblAsXYDD::getCoordinateSystem() {
@@ -377,7 +378,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		// now resize the selected column names vector
-		retval.resize(n, True);
+		retval.resize(n, true);
 
 		return retval;
 	}
@@ -400,11 +401,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Vector<String> ystring = xstring;
 
 		// increase the size of the x column string and add the "none" option
-		xstring.resize(xstring.nelements() + 1, True);
+		xstring.resize(xstring.nelements() + 1, true);
 		xstring(xstring.nelements() - 1) = "<none>";
 
 		// increase the size of the y column string and add the "rows" option
-		ystring.resize(ystring.nelements() + 1, True);
+		ystring.resize(ystring.nelements() + 1, true);
 		ystring(ystring.nelements() - 1) = "<row>";
 
 		// now set up the X column choice parameters
@@ -509,14 +510,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			Vector<double> typedata;
 			// read the scalar column into an array
 			ROScalarColumn<double> dataCol(*table(),columnName);
-			dataCol.getColumn(typedata,True);
+			dataCol.getColumn(typedata,true);
 			// minima and maxima of data are world coordinate min and max
 			minMax(extrema(0),extrema(1),typedata);
 		}
 		if (type == TpFloat) {
 			Vector<float> typedata;
 			ROScalarColumn<float> dataCol(*table(),columnName);
-			dataCol.getColumn(typedata,True);
+			dataCol.getColumn(typedata,true);
 			Array<double> data;
 			data.resize(typedata.shape());
 			convertArray(data,typedata);
@@ -526,7 +527,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if (type == TpShort) {
 			Vector<short> typedata;
 			ROScalarColumn<short> dataCol(*table(),columnName);
-			dataCol.getColumn(typedata,True);
+			dataCol.getColumn(typedata,true);
 			Array<double> data;
 			data.resize(typedata.shape());
 			convertArray(data,typedata);
@@ -536,7 +537,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if (type == TpUShort) {
 			Vector<uShort> typedata;
 			ROScalarColumn<uShort> dataCol(*table(),columnName);
-			dataCol.getColumn(typedata,True);
+			dataCol.getColumn(typedata,true);
 			Array<double> data;
 			data.resize(typedata.shape());
 			convertArray(data,typedata);
@@ -546,7 +547,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if (type == TpInt) {
 			Vector<int> typedata;
 			ROScalarColumn<int> dataCol(*table(),columnName);
-			dataCol.getColumn(typedata,True);
+			dataCol.getColumn(typedata,true);
 			Array<double> data;
 			data.resize(typedata.shape());
 			convertArray(data,typedata);
@@ -556,7 +557,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if (type == TpUInt) {
 			Vector<uInt> typedata;
 			ROScalarColumn<uInt> dataCol(*table(),columnName);
-			dataCol.getColumn(typedata,True);
+			dataCol.getColumn(typedata,true);
 			Array<double> data;
 			data.resize(typedata.shape());
 			// have to change template file

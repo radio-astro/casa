@@ -49,6 +49,7 @@
 #include <set>
 
 
+using namespace casacore;
 namespace casa {
 	namespace viewer {
 
@@ -89,7 +90,7 @@ namespace casa {
 			if (! beam.isNull()) {
 				result.push_back( beam.getMajor("arcsec") );
 				result.push_back( beam.getMinor("arcsec") );
-				result.push_back( beam.getPA("deg", True) );
+				result.push_back( beam.getPA("deg", true) );
 			}
 			return result;
 		}
@@ -102,7 +103,7 @@ namespace casa {
 				result.push_back(buf);
 				sprintf( buf,"%.2f\"", beam.getMinor("arcsec") );
 				result.push_back(buf);
-				sprintf( buf,"%.2f%c", beam.getPA("deg", True), 0x00B0 );
+				sprintf( buf,"%.2f%c", beam.getPA("deg", true), 0x00B0 );
 				result.push_back(buf);
 			}
 			return result;
@@ -180,18 +181,18 @@ namespace casa {
 
 					ra_range.resize(2);
 					dec_range.resize(2);
-					casa::String units;
+					casacore::String units;
 					ra_range[0] = world[0];
-					ra_range_str.push_back(direction.format( units, casa::Coordinate::DEFAULT, world[0], 0, true, true ));
+					ra_range_str.push_back(direction.format( units, casacore::Coordinate::DEFAULT, world[0], 0, true, true ));
 					dec_range[0] = world[1];
-					dec_range_str.push_back(direction.format( units, casa::Coordinate::DEFAULT, world[1], 1, true, true ));
+					dec_range_str.push_back(direction.format( units, casacore::Coordinate::DEFAULT, world[1], 1, true, true ));
 
 					for ( unsigned int x=0; x < pix.size( ); ++x ) pix[x] = shape_[direction_axes[x]];
 					direction.toWorld(world,pix);
 					ra_range[1] = world[0];
-					ra_range_str.push_back(direction.format( units, casa::Coordinate::DEFAULT, world[0], 0, true, true ));
+					ra_range_str.push_back(direction.format( units, casacore::Coordinate::DEFAULT, world[0], 0, true, true ));
 					dec_range[1] = world[1];
-					dec_range_str.push_back(direction.format( units, casa::Coordinate::DEFAULT, world[1], 1, true, true ));
+					dec_range_str.push_back(direction.format( units, casacore::Coordinate::DEFAULT, world[1], 1, true, true ));
 				}
 			}
 
@@ -314,51 +315,51 @@ namespace casa {
 
 
 std::ostream &operator<<( std::ostream &os, const casa::DisplayCoordinateSystem &cs ) {
-    casa::Vector<casa::String> names = cs.worldAxisNames( );
-    casa::Vector<casa::String> units = cs.worldAxisUnits( );
+    casacore::Vector<casacore::String> names = cs.worldAxisNames( );
+    casacore::Vector<casacore::String> units = cs.worldAxisUnits( );
     os << "[[" << cs.nWorldAxes( ) << "w," << cs.nPixelAxes( ) << "p]" << std::endl;
     for ( unsigned int i=0; i < cs.nWorldAxes(); ++i ) {
         int coordNum, axisInCoord;
         cs.findWorldAxis( coordNum, axisInCoord, i );
         os << " ";
         switch ( cs.type(coordNum) ) {
-          case casa::Coordinate::LINEAR:
+          case casacore::Coordinate::LINEAR:
             {
-            //const casa::LinearCoordinate &coordinate = cs.linearCoordinate(coordNum);
+            //const casacore::LinearCoordinate &coordinate = cs.linearCoordinate(coordNum);
             os << "(" << i << ":" << coordNum << ":" << axisInCoord << ":" << cs.worldAxisToPixelAxis(i) << "P),linear) " << names[i] << "/" << units[i];
             }
             break;
-          case casa::Coordinate::DIRECTION:
+          case casacore::Coordinate::DIRECTION:
             {
-            const casa::DirectionCoordinate &coordinate = cs.directionCoordinate(coordNum);
-            os << "(" << i << ":" << coordNum << ":" << axisInCoord << ":" << cs.worldAxisToPixelAxis(i) << "P),direction:" << casa::MDirection::showType(coordinate.directionType()) << ") " << names[i] << "/" << units[i];
+            const casacore::DirectionCoordinate &coordinate = cs.directionCoordinate(coordNum);
+            os << "(" << i << ":" << coordNum << ":" << axisInCoord << ":" << cs.worldAxisToPixelAxis(i) << "P),direction:" << casacore::MDirection::showType(coordinate.directionType()) << ") " << names[i] << "/" << units[i];
             }
             break;
-          case casa::Coordinate::SPECTRAL: 
+          case casacore::Coordinate::SPECTRAL:
             {
-            //const casa::SpectralCoordinate &coordinate = cs.spectralCoordinate(coordNum);
+            //const casacore::SpectralCoordinate &coordinate = cs.spectralCoordinate(coordNum);
             os << "(" << i << ":" << coordNum << ":" << axisInCoord << ":" << cs.worldAxisToPixelAxis(i) << "P),spectral) " << names[i] << "/" << units[i];
             }
             break;
-          case casa::Coordinate::STOKES: 
+          case casacore::Coordinate::STOKES:
             {
-            //const casa::StokesCoordinate  &coordinate = cs.stokesCoordinate(coordNum);
+            //const casacore::StokesCoordinate  &coordinate = cs.stokesCoordinate(coordNum);
             os << "(" << i << ":" << coordNum << ":" << axisInCoord << ":" << cs.worldAxisToPixelAxis(i) << "P),stokes) " << names[i] << "/" << units[i];
             }
             break;
-          case casa::Coordinate::TABULAR:
+          case casacore::Coordinate::TABULAR:
             {
-            //const casa::TabularCoordinate &coordinate = cs.tabularCoordinate(coordNum);
+            //const casacore::TabularCoordinate &coordinate = cs.tabularCoordinate(coordNum);
             os << "(" << i << ":" << coordNum << ":" << axisInCoord << ":" << cs.worldAxisToPixelAxis(i) << "P),tabular) " << names[i] << "/" << units[i];
             }
             break;
-          case casa::Coordinate::QUALITY:
+          case casacore::Coordinate::QUALITY:
             {
-            //const casa::QualityCoordinate &coordinate = cs.qualityCoordinate(coordNum);
+            //const casacore::QualityCoordinate &coordinate = cs.qualityCoordinate(coordNum);
             os << "(" << i << ":" << coordNum << ":" << axisInCoord << ":" << cs.worldAxisToPixelAxis(i) << "P),quality) " << names[i] << "/" << units[i];
             }
             break;
-          case casa::Coordinate::COORDSYS:
+          case casacore::Coordinate::COORDSYS:
             os << "<<<coordinate system>>>";
         };
         os << std::endl;

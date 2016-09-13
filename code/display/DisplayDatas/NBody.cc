@@ -47,12 +47,13 @@
 #include <display/DisplayDatas/NBody.h>
 #include <display/DisplayDatas/Galaxy.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	NBody::NBody() {
 		dataMin = 0.0;
 		dataMax = 1.0;
-		turnedOff = False;
+		turnedOff = false;
 		itsTimeStep = 2.0;
 		itsDampingFactor = 0.99;
 		itsNumSteps = 10;
@@ -100,14 +101,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	                       const Vector<Double>& lin) {
 		world.resize(lin.shape()(0));
 		world = lin;
-		return True;
+		return true;
 	}
 
 	Bool NBody::worldToLin(Vector<Double>& lin,
 	                       const Vector<Double>& world) {
 		lin.resize(world.shape()(0));
 		lin = world;
-		return True;
+		return true;
 	}
 
 	void  NBody::positionEH(const WCPositionEvent& ev) {
@@ -139,7 +140,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			break;
 		}
 		case Display::K_d : {
-			while (True) {
+			while (true) {
 				drawMovie(*wCanvas, 10*itsNumSteps, itsTimeStep, itsDampingFactor);
 				drawMovie(*wCanvas, 10*itsNumSteps, itsTimeStep, itsDampingFactor);
 				drawMovie(*wCanvas, 10*itsNumSteps, itsTimeStep, itsDampingFactor);
@@ -278,8 +279,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		        holderBuf.exists("dataMin") ||
 		        holderBuf.exists("dataMax") ) {
 			// should not respond to requests
-			turnedOff = True;
-			return True;
+			turnedOff = true;
+			return true;
 		}
 
 		WorldCanvas *wCanvas = wcHolder.worldCanvas();
@@ -292,7 +293,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Int linYMin = -1;
 		Int linXMax = 1;
 		Int linYMax = 1;
-		Attribute resetAtt("resetCoordinates", False);
+		Attribute resetAtt("resetCoordinates", false);
 		wCanvas->setAttribute(resetAtt);
 
 
@@ -314,7 +315,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// ImageDisplayData.
 		sizeControlBuf = holderBuf;
 
-		return True;
+		return true;
 	}
 
 	void NBody::cleanup() {
@@ -323,7 +324,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Bool NBody::iDidSizeControl(WorldCanvas& wCanvas) {
 		//turned off is set during sizeControl
 		if (turnedOff) {
-			return False;
+			return false;
 		}
 
 		AttributeBuffer wCanvasState;
@@ -386,7 +387,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	Bool NBody::existElementRestriction(const uInt, const String &) {
-		return False;
+		return false;
 	}
 
 	void  NBody::clearElementRestrictions(const uInt) {

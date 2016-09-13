@@ -37,28 +37,28 @@
 
 namespace casa {
 
-// Data provider for antenna1 column
+// casacore::Data provider for antenna1 column
 //
 class Vi2ChunkAntenna1DataProvider final
 	: public Vi2ChunkWeightsRowDataProvider<Vi2StatsIntIterator> {
 
 public:
 	Vi2ChunkAntenna1DataProvider(
-		vi::VisibilityIterator2 *vi2, Bool omit_flagged_data);
+		vi::VisibilityIterator2 *vi2, casacore::Bool omit_flagged_data);
 
-	const Vector<Int>& dataArray();
+	const casacore::Vector<casacore::Int>& dataArray();
 };
 
-// Data provider for antenna2 column
+// casacore::Data provider for antenna2 column
 //
 class Vi2ChunkAntenna2DataProvider final
 	: public Vi2ChunkWeightsRowDataProvider<Vi2StatsIntIterator> {
 
 public:
 	Vi2ChunkAntenna2DataProvider(
-		vi::VisibilityIterator2 *vi2, Bool omit_flagged_data);
+		vi::VisibilityIterator2 *vi2, casacore::Bool omit_flagged_data);
 
-	const Vector<Int>& dataArray();
+	const casacore::Vector<casacore::Int>& dataArray();
 };
 
 } // namespace casa

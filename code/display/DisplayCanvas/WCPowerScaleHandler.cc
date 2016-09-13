@@ -31,6 +31,7 @@
 #include <casa/Arrays/Vector.h>
 #include <display/DisplayCanvas/WCPowerScaleHandler.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	const String WCPowerScaleHandler::POWER_CYCLES="powercycles";
@@ -49,13 +50,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	void WCPowerScaleHandler::setDefaultOptions() {
 		WCDataScaleHandler::setDefaultOptions();
 		itsOptionsPowerCycles = 0.0;
-		itsOptionsHistoEqualisation = False;
+		itsOptionsHistoEqualisation = false;
 	}
 
 // Apply new options to this object.
 	Bool WCPowerScaleHandler::setOptions(Record &rec, Record &recOut) {
 		Bool ret = WCDataScaleHandler::setOptions(rec, recOut);
-		Bool localchange = False;
+		Bool localchange = false;
 		Bool error;
 
 		localchange = (readOptionRecord(itsOptionsPowerCycles, error, rec ,POWER_CYCLES) || localchange);
@@ -75,9 +76,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		histoequalisation.define("dlformat", "histoequalisation");
 		histoequalisation.define("listname", "Histogram equalisation?");
 		histoequalisation.define("ptype", "boolean");
-		histoequalisation.define("default", Bool(False));
+		histoequalisation.define("default", Bool(false));
 		histoequalisation.define("value", itsOptionsHistoEqualisation);
-		histoequalisation.define("allowunset", False);
+		histoequalisation.define("allowunset", false);
 		rec.defineRecord("histoequalisation", histoequalisation);
 
 		Record powercycles;
@@ -89,8 +90,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		powercycles.define("presolution", Float(0.1));
 		powercycles.define("default", Float(0));
 		powercycles.define("value", itsOptionsPowerCycles);
-		powercycles.define("provideentry", True);
-		powercycles.define("allowunset", False);
+		powercycles.define("provideentry", true);
+		powercycles.define("allowunset", false);
 		rec.defineRecord(POWER_CYCLES, powercycles);
 
 		return rec;
@@ -172,39 +173,39 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			*p++ = (*q++) ? rangeMax() : 0;
 		in.freeStorage(inp, inDel);
 		out.putStorage(outp, outDel);
-		return True;
+		return true;
 	}
 	Bool WCPowerScaleHandler::operator()(Array<uInt> &out, const Array<uChar> &in) {
 		WCPowerScaleHandlerSCALE(uChar, 1);
-		return True;
+		return true;
 	}
 	Bool WCPowerScaleHandler::operator()(Array<uInt> &out, const Array<Char> &in) {
 		WCPowerScaleHandlerSCALE(Char, 1);
-		return True;
+		return true;
 	}
 	Bool WCPowerScaleHandler::operator()(Array<uInt> &out, const Array<uShort> &in) {
 		WCPowerScaleHandlerSCALE(uShort, 1);
-		return True;
+		return true;
 	}
 	Bool WCPowerScaleHandler::operator()(Array<uInt> &out, const Array<Short> &in) {
 		WCPowerScaleHandlerSCALE(Short, 1);
-		return True;
+		return true;
 	}
 	Bool WCPowerScaleHandler::operator()(Array<uInt> &out, const Array<uInt> &in) {
 		WCPowerScaleHandlerSCALE(uInt, 1);
-		return True;
+		return true;
 	}
 	Bool WCPowerScaleHandler::operator()(Array<uInt> &out, const Array<Int> &in) {
 		WCPowerScaleHandlerSCALE(Int, 1);
-		return True;
+		return true;
 	}
 	Bool WCPowerScaleHandler::operator()(Array<uInt> &out, const Array<uLong> &in) {
 		WCPowerScaleHandlerSCALE(uLong, 1);
-		return True;
+		return true;
 	}
 	Bool WCPowerScaleHandler::operator()(Array<uInt> &out, const Array<Long> &in) {
 		WCPowerScaleHandlerSCALE(Long, 1);
-		return True;
+		return true;
 	}
 	Bool WCPowerScaleHandler::operator()(Array<uInt> &out, const Array<Float> &inn) {
 		Array<Float> in(inn.shape());
@@ -214,12 +215,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			in = inn;
 		}
 		WCPowerScaleHandlerSCALE(Float, FLT_EPSILON);
-		return True;
+		return true;
 	}
 
 	Bool WCPowerScaleHandler::operator()(Array<uInt> &out, const Array<Double> &in) {
 		WCPowerScaleHandlerSCALE(Double, DBL_EPSILON);
-		return True;
+		return true;
 	}
 
 	Bool WCPowerScaleHandler::operator()(Array<uInt> & out, const Array<Complex> & in) {
@@ -270,7 +271,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		\
 		out.putStorage(outp, outDel);
 		\
-		return True;
+		return true;
 	}
 
 

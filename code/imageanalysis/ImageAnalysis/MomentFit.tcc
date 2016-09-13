@@ -49,8 +49,8 @@ namespace casa {
 template <class T>
 MomentFit<T>::MomentFit(
     MomentsBase<T>& iMom,
-    LogIO& os,
-    const uInt nLatticeOut)
+    casacore::LogIO& os,
+    const casacore::uInt nLatticeOut)
 : iMom_p(iMom),
   os_p(os)
 {
@@ -104,25 +104,25 @@ MomentFit<T>::~MomentFit()
 
 template <class T> 
 void MomentFit<T>::process(T&,
-                            Bool&,
-                            const Vector<T>&,
-                            const Vector<Bool>&,
-                            const IPosition&)
+                            casacore::Bool&,
+                            const casacore::Vector<T>&,
+                            const casacore::Vector<casacore::Bool>&,
+                            const casacore::IPosition&)
 {
-   throw(AipsError("MomentFit<T>::process not implemented"));
+   throw(casacore::AipsError("MomentFit<T>::process not implemented"));
 }
 
 template <class T> void MomentFit<T>::multiProcess(
-    Vector<T>& moments,
-    Vector<Bool>& momentsMask,
-    const Vector<T>& profileIn,
-    const Vector<Bool>& profileInMask,
-    const IPosition& inPos
+    casacore::Vector<T>& moments,
+    casacore::Vector<casacore::Bool>& momentsMask,
+    const casacore::Vector<T>& profileIn,
+    const casacore::Vector<casacore::Bool>& profileInMask,
+    const casacore::IPosition& inPos
 ) {
     // Generate moments from a Gaussian fit of this profile
 
     auto nPts = profileIn.size();
-    Vector<T> gaussPars(4);
+    casacore::Vector<T> gaussPars(4);
     abcissa_p.resize(nPts);
     indgen(abcissa_p);
     if (
@@ -132,7 +132,7 @@ template <class T> void MomentFit<T>::multiProcess(
         )
     ) {
         moments = 0;
-        momentsMask = False;
+        momentsMask = false;
         return;
     }
     // Were the profile coordinates precomputed ?
@@ -142,8 +142,8 @@ template <class T> void MomentFit<T>::multiProcess(
     // coordinates, but did not pre compute them
     //
     if (! preComp && (doCoordRandom_p || doCoordProfile_p)) {
-        for (uInt i=0; i<inPos.size(); ++i) {
-            pixelIn_p[i] = Double(inPos[i]);
+        for (casacore::uInt i=0; i<inPos.size(); ++i) {
+            pixelIn_p[i] = casacore::Double(inPos[i]);
         }
     }
     // Set Gaussian functional values.  We reuse the same functional that
@@ -154,19 +154,19 @@ template <class T> void MomentFit<T>::multiProcess(
 
     // Compute moments from the fitted Gaussian
 
-    typename NumericTraits<T>::PrecisionType s0  = 0.0;
-    typename NumericTraits<T>::PrecisionType s0Sq = 0.0;
-    typename NumericTraits<T>::PrecisionType s1  = 0.0;
-    typename NumericTraits<T>::PrecisionType s2  = 0.0;
-    Int iMin = -1;
-    Int iMax = -1;
+    typename casacore::NumericTraits<T>::PrecisionType s0  = 0.0;
+    typename casacore::NumericTraits<T>::PrecisionType s0Sq = 0.0;
+    typename casacore::NumericTraits<T>::PrecisionType s1  = 0.0;
+    typename casacore::NumericTraits<T>::PrecisionType s2  = 0.0;
+    casacore::Int iMin = -1;
+    casacore::Int iMax = -1;
     T dMin =  1.0e30;
     T dMax = -1.0e30;
-    Double coord = 0.0;
+    casacore::Double coord = 0.0;
     T xx;
-    Vector<T> gData(nPts);
+    casacore::Vector<T> gData(nPts);
 
-    uInt i,j;
+    casacore::uInt i,j;
     for (i=0, j=0; i<nPts; ++i) {
         if (profileInMask(i)) {
             xx = i;
@@ -178,7 +178,7 @@ template <class T> void MomentFit<T>::multiProcess(
             else if (doCoordProfile_p) {
                 coord = this->getMomentCoord(
                     iMom_p, pixelIn_p,
-                    worldOut_p,Double(i)
+                    worldOut_p,casacore::Double(i)
                 );
             }
             this->accumSums(
@@ -193,11 +193,11 @@ template <class T> void MomentFit<T>::multiProcess(
     nPts = j;
     if (nPts == 0) {
         moments = 0;
-        momentsMask = False;
+        momentsMask = false;
         return;
     }
     // Absolute deviations of I from mean needs an extra pass.
-    typename NumericTraits<T>::PrecisionType sumAbsDev = 0.0;
+    typename casacore::NumericTraits<T>::PrecisionType sumAbsDev = 0.0;
     if (doAbsDev_p) {
         T iMean = s0 / nPts;
         for (i=0; i<nPts; ++i) {
@@ -207,7 +207,7 @@ template <class T> void MomentFit<T>::multiProcess(
     // Median of I
     T dMedian = 0.0;
     if (doMedianI_p) {
-        gData.resize(nPts, True);
+        gData.resize(nPts, true);
         dMedian = median(gData);
     }
     T vMedian = 0.0;
@@ -225,7 +225,7 @@ template <class T> void MomentFit<T>::multiProcess(
 
     for (i=0; i<selectMoments_p.size(); ++i) {
         moments[i] = calcMoments_p(selectMoments_p[i]);
-        momentsMask[i] = True;
+        momentsMask[i] = true;
         momentsMask[i] = calcMomentsMask_p(selectMoments_p[i]);
     }
 }

@@ -1,4 +1,4 @@
-//# DParameterString.h: class to store and retrieve String parameters
+//# DParameterString.h: class to store and retrieve casacore::String parameters
 //# Copyright (C) 2000
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -34,7 +34,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <summary>
-// Implementation of DisplayParameter to store String parameters.
+// Implementation of DisplayParameter to store casacore::String parameters.
 // </summary>
 
 // <use visibility=export>
@@ -48,14 +48,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <etymology>
 // DParameterString is an implementation of a DisplayParameter
-// providing a String parameter type.
+// providing a casacore::String parameter type.
 // </etymology>
 
 // <synopsis>
 // This class is derived from <linkto
 // class=DisplayParameter>DisplayParameter</linkto> and provides a
-// String-type parameter.  String parameters simply have a String
-// value, and a default String value.  They cannot be unset.
+// casacore::String-type parameter.  casacore::String parameters simply have a String
+// value, and a default casacore::String value.  They cannot be unset.
 // </synopsis>
 
 // <example>
@@ -101,10 +101,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// description, some help text, a default value, an initial value,
 		// and flags indicating whether the parameter can be unset and is
 		// editable.
-		DParameterString(const String name, const String description,
-		                 const String help, const String defaultvalue,
-		                 const String value, const String context = "",
-		                 const Bool editable = True);
+		DParameterString(const casacore::String name, const casacore::String description,
+		                 const casacore::String help, const casacore::String defaultvalue,
+		                 const casacore::String value, const casacore::String context = "",
+		                 const casacore::Bool editable = true);
 
 		// (Required) copy constructor.
 		DParameterString(const DParameterString &other);
@@ -117,27 +117,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Parse <src>record</src>, and update this parameter if a field
 		// exists whose name matches that of this parameter.  Return
-		// <src>True</src> if the parameter is changed, otherwise return
-		// <src>False</src>.
-		virtual Bool fromRecord(const RecordInterface &record);
+		// <src>true</src> if the parameter is changed, otherwise return
+		// <src>false</src>.
+		virtual casacore::Bool fromRecord(const casacore::RecordInterface &record);
 
 		// Place a record describing this parameter in a sub-field of
 		// <src>record</src> with name matching that of this parameter.  If
-		// <src>overwrite</src> is <src>True</src>, then any existing field
+		// <src>overwrite</src> is <src>true</src>, then any existing field
 		// with matching name will be overwritten.  If <src>fullrecord</src>
-		// is <src>True</src>, then a complete description of the parameter
+		// is <src>true</src>, then a complete description of the parameter
 		// is given, otherwise just its current value is stored in
 		// <src>record</src>.  Presently <src>fullrecord</src> is ignored.
-		virtual void toRecord(RecordInterface &record, const Bool fullrecord = True,
-		                      const Bool overwrite = False);
+		virtual void toRecord(casacore::RecordInterface &record, const casacore::Bool fullrecord = true,
+		                      const casacore::Bool overwrite = false);
 
 		// Return the default for this parameter.
-		String defaultValue() {
+		casacore::String defaultValue() {
 			return itsDefault;
 		}
 
 		// Return the current value of this parameter.
-		String value() {
+		casacore::String value() {
 			return itsValue;
 		}
 
@@ -149,10 +149,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	private:
 
 		// Store for the default of this parameter.
-		String itsDefault;
+		casacore::String itsDefault;
 
 		// Store for the value of this parameter.
-		String itsValue;
+		casacore::String itsValue;
 
 	};
 

@@ -65,15 +65,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </summary>
 	class GLPCDisplayListElement {
 	public:
-		// Draw element unless disabled or force is True.
-		virtual void call(Bool force=False, const uInt nspaces=0);
+		// Draw element unless disabled or force is true.
+		virtual void call(casacore::Bool force=false, const casacore::uInt nspaces=0);
 
 		// enable/disable
 		// <group>
-		Bool enabled()const {
+		casacore::Bool enabled()const {
 			return enabled_;
 		}
-		Bool disabled()const {
+		casacore::Bool disabled()const {
 			return !enabled_;
 		}
 		virtual void disable();
@@ -89,10 +89,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// </group>
 		// Enable/disable tracing.
 		// <group>
-		Bool trace()const {
+		casacore::Bool trace()const {
 			return trace_;
 		}
-		void trace(const Bool t) {
+		void trace(const casacore::Bool t) {
 			trace_ = t;
 		}
 		// </group>
@@ -103,7 +103,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Stop display list recording. Ignored if not already recording.
 		virtual void stop();
 		// Each element is reference counted.
-		uLong useCount()const {
+		casacore::uLong useCount()const {
 			return usage_;
 		}
 		void ref();
@@ -112,20 +112,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		GLPCDisplayListElement(const char *name=NULL);
 		// Elements self delete when the reference count goes to 0.
 		virtual ~GLPCDisplayListElement();
-		void traceCheck(uInt spaces=0, const char *str=NULL,
+		void traceCheck(casacore::uInt spaces=0, const char *str=NULL,
 		                const char *name=NULL);
 	private:
-		uLong	usage_;
-		Bool	enabled_;
-		Bool	trace_;
-		String	name_;
+		casacore::uLong	usage_;
+		casacore::Bool	enabled_;
+		casacore::Bool	trace_;
+		casacore::String	name_;
 	};
 
 // <summary>
-// Returns a Display List Element for recording GL commands.
+// Returns a Display casacore::List Element for recording GL commands.
 // </summary>
 // <synopsis>
-// Returns a Display List Element for recording GL commands.
+// Returns a Display casacore::List Element for recording GL commands.
 // Commands are recorded until stop is called by creating an OpenGL
 // display list and letting OpenGL do the actual recording. Calling
 // stop ends the list. Typically, these OpenGL lists are very short,
@@ -140,7 +140,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		    GLenum mode=GL_COMPILE_AND_EXECUTE);
 		virtual ~GLPCDisplayListEntry();
 		//# Draw list.
-		virtual void call(Bool force, const uInt spaces);
+		virtual void call(casacore::Bool force, const casacore::uInt spaces);
 		//# Recording is a one shot deal. After stop is called, recording
 		//# can not be reenabled.
 		virtual void start();	//# Start recording.
@@ -170,7 +170,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		enum {DefaultSizeIncrement=16};
 
 		GLPCDisplayList(const char *name=NULL,
-		                uInt sizeincr=GLPCDisplayList::DefaultSizeIncrement);
+		                casacore::uInt sizeincr=GLPCDisplayList::DefaultSizeIncrement);
 
 		// Copy a display list's list.
 		GLPCDisplayList(const GLPCDisplayList &list);
@@ -180,22 +180,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void add(GLPCDisplayListElement *);
 
 		// Run the current list.
-		virtual void call(Bool force=False, uInt spaces=0);
+		virtual void call(casacore::Bool force=false, casacore::uInt spaces=0);
 
 		// Translate the list.
 		// Set translation values. New values are added to current.
-		void translate(Float xt, Float yt, Float zt=0.0);
+		void translate(casacore::Float xt, casacore::Float yt, casacore::Float zt=0.0);
 
 		//# Miscellaneous
 
 		// Return current translation
-		void  translation(Float &xo, Float &yo)const;
-		void  translation(Float &xo, Float &yo, Float &zo)const;
+		void  translation(casacore::Float &xo, casacore::Float &yo)const;
+		void  translation(casacore::Float &xo, casacore::Float &yo, casacore::Float &zo)const;
 		// Return/Set amount to increase id list by.
-		uInt sizeincrement()const {
+		casacore::uInt sizeincrement()const {
 			return sizeincr_;
 		}
-		void sizeincrement(const uInt sizeincr) {
+		void sizeincrement(const casacore::uInt sizeincr) {
 			sizeincr_ = sizeincr;
 		}
 	protected:
@@ -204,9 +204,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void unrefall();
 
 		GLfloat	xt_, yt_, zt_;	//# Amount to translate display list.
-		uInt	sizeincr_;	//# Amount to increase listids_ when it's full.
-		uInt	numentries_;	//# # of entries & index to next free.
-		uInt	listSize_;	//# # of slots in list.
+		casacore::uInt	sizeincr_;	//# Amount to increase listids_ when it's full.
+		casacore::uInt	numentries_;	//# # of entries & index to next free.
+		casacore::uInt	listSize_;	//# # of slots in list.
 		GLPCDisplayListElement **list_;
 	};
 

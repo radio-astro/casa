@@ -36,13 +36,14 @@
 
 
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 PBMath1DAiry::PBMath1DAiry(Quantity dishDiam, Quantity blockedDiam,
 			   Quantity maxRad, Quantity refFreq, 
 			   BeamSquint squint,
 			   Bool useSymmetricBeam) :
-  PBMath1D(maxRad, refFreq, True, squint, useSymmetricBeam),
+  PBMath1D(maxRad, refFreq, true, squint, useSymmetricBeam),
   dishDiam_p(dishDiam),  
   blockedDiam_p(blockedDiam)
 {

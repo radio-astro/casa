@@ -38,12 +38,16 @@
 #include <iostream>
 using namespace std;
 
+namespace casacore{
+
+	template <class T> class Vector;
+	class String;
+}
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	class WorldCanvas;
 	class WorldCanvasHolder;
-	template <class T> class Vector;
-	class String;
 	class AttributeBuffer;
 
 // <summary>
@@ -71,13 +75,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void setDefaultOptions();
 
 		// Apply options stored in <src>rec</src> to the DisplayData.  A
-		// return value of <src>True</src> means a refresh is needed.
+		// return value of <src>true</src> means a refresh is needed.
 		// <src>recOut</src> contains any fields which were implicitly
 		// changed as a result of the call to this function.
-		virtual Bool setOptions(Record &rec, Record &recOut);
+		virtual casacore::Bool setOptions(casacore::Record &rec, casacore::Record &recOut);
 
 		// Retrieve the current and default options and parameter types.
-		virtual Record getOptions( bool scrub=false ) const;
+		virtual casacore::Record getOptions( bool scrub=false ) const;
 
 		// Return the type of this DisplayData.
 		virtual Display::DisplayDataType classType() {
@@ -99,7 +103,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual AttributeBuffer optionsAsAttributes();
 
 		// Get the title text for labelling.
-		virtual String titleText() const {
+		virtual casacore::String titleText() const {
 			return itsParamTitleText->value();
 		}
 
@@ -107,16 +111,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// a WC can be supplied in order to retrieve default titles
 		// from the WC CS.
 		// <group>
-		virtual String xAxisText(const WorldCanvas* wc=0) const;
-		virtual String yAxisText(const WorldCanvas* wc=0) const;
+		virtual casacore::String xAxisText(const WorldCanvas* wc=0) const;
+		virtual casacore::String yAxisText(const WorldCanvas* wc=0) const;
 		// </group>
 
 		// Get what type of grid should be marked in each direction.
 		// <group>
-		virtual String xGridType() const {
+		virtual casacore::String xGridType() const {
 			return itsParamXGridType->value();
 		}
-		virtual String yGridType() const {
+		virtual casacore::String yGridType() const {
 			return itsParamYGridType->value();
 		}
 		// </group>
@@ -124,34 +128,34 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Get the color to use for the title text, the X axis text, and the
 		// Y axis text labels.
 		// <group>
-		virtual String titleTextColor() const {
+		virtual casacore::String titleTextColor() const {
 			return itsParamTitleColor->value();
 		}
-		virtual String xAxisColor() const {
+		virtual casacore::String xAxisColor() const {
 			return itsParamXAxisColor->value();
 		}
-		virtual String yAxisColor() const {
+		virtual casacore::String yAxisColor() const {
 			return itsParamYAxisColor->value();
 		}
 		// </group>
 
 		// Get the line width for labelling.
-		virtual Float lineWidth() const {
+		virtual casacore::Float lineWidth() const {
 			return itsParamLineWidth->value();
 		}
 
 		// Get the character font for labelling.
-		virtual String charFont() const {
+		virtual casacore::String charFont() const {
 			return itsParamCharacterFont->value();
 		}
 
 		// Get the character size for labelling.
-		virtual Float charSize() const {
+		virtual casacore::Float charSize() const {
 			return itsParamCharacterSize->value();
 		}
 
 		// Get the color of the plot outline.
-		virtual String outlineColor() const {
+		virtual casacore::String outlineColor() const {
 			return itsParamOutlineColor->value();
 		}
 		static const float AXIS_LABEL_DEFAULT_CHAR_SIZE;
@@ -179,20 +183,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// title color
 		DParameterColorChoice *itsParamTitleColor;
-		//String itsOptionsTitleTextColor;
+		//casacore::String itsOptionsTitleTextColor;
 
 		// label text color
 		DParameterColorChoice *itsParamXAxisColor, *itsParamYAxisColor;
-		//String itsOptionsXAxisColor, itsOptionsYAxisColor;
+		//casacore::String itsOptionsXAxisColor, itsOptionsYAxisColor;
 
 		// plot line width
-		DParameterRange<Float> *itsParamLineWidth;
+		DParameterRange<casacore::Float> *itsParamLineWidth;
 
 		// plot character font
 		DParameterChoice *itsParamCharacterFont;
 
 		// plot character size
-		DParameterRange<Float> *itsParamCharacterSize;
+		DParameterRange<casacore::Float> *itsParamCharacterSize;
 
 		// plot outline color
 		DParameterColorChoice *itsParamOutlineColor;

@@ -28,6 +28,7 @@
 #include <display/Display/PixelCanvas.h>
 #include <display/Display/PCVGBuffer.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Default Constructor Required

@@ -44,6 +44,7 @@
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogSink.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 #define NEED_UNDERSCORES
 #if defined(NEED_UNDERSCORES)
@@ -53,7 +54,7 @@ extern "C" {
   void maximg(Float*, int*, Float*, int*, int*, int*, Float*, Float*);
 };
 
-  CleanImageSkyModel::CleanImageSkyModel() : ImageSkyModel(), doPolJoint_p(True)
+  CleanImageSkyModel::CleanImageSkyModel() : ImageSkyModel(), doPolJoint_p(true)
 {
 
 
@@ -64,12 +65,12 @@ Bool CleanImageSkyModel::addMask(Int thismodel, ImageInterface<Float>& mask)
   LogIO os(LogOrigin("CleanImageSkyModel", "addMask"));
   if(thismodel>=nmodels_p||thismodel<0) {
     os << LogIO::SEVERE << "Illegal model slot" << thismodel << LogIO::POST;
-    return False;
+    return false;
   }
   if(Int(mask_p.nelements())<=thismodel) mask_p.resize(thismodel+1);
   mask_p[thismodel] = &mask;
   AlwaysAssert(mask_p[thismodel], AipsError);
-  return True;
+  return true;
 }
   
   CleanImageSkyModel::CleanImageSkyModel(const CleanImageSkyModel& other) : ImageSkyModel() {
@@ -109,7 +110,7 @@ Int CleanImageSkyModel::add(ImageInterface<Float>& image, const Int maxNumXfr)
 
 Bool CleanImageSkyModel::hasMask(Int model) 
 {
-  if(mask_p.nelements()==0) return False;
+  if(mask_p.nelements()==0) return false;
   return (mask_p[model]);
 }
 
@@ -123,7 +124,7 @@ ImageInterface<Float>& CleanImageSkyModel::mask(Int model)
 
 Bool CleanImageSkyModel::hasFluxMask(Int model) 
 {
-  if(fluxmask_p.nelements()==0) return False;
+  if(fluxmask_p.nelements()==0) return false;
   return (fluxmask_p[model]);
 }
 
@@ -140,12 +141,12 @@ Bool CleanImageSkyModel::addFluxMask(Int thismodel, ImageInterface<Float>& fluxM
   LogIO os(LogOrigin("CleanImageSkyModel", "add"));
   if(thismodel>=nmodels_p||thismodel<0) {
     os << LogIO::SEVERE << "Illegal model slot" << thismodel << LogIO::POST;
-    return False;
+    return false;
   }
   if(Int(fluxmask_p.nelements())<=thismodel) fluxmask_p.resize(thismodel+1);
   fluxmask_p[thismodel] = &fluxMask;
   AlwaysAssert(fluxmask_p[thismodel], AipsError);
-  return True;
+  return true;
 }
 
 void  CleanImageSkyModel::setJointStokesClean(Bool joint) {
@@ -206,7 +207,7 @@ Float CleanImageSkyModel::maxField(Vector<Float>& imagemax,
     // cleaned
     Array<Float> maskArray;
     RO_LatticeIterator<Float> maskIter;
-    Bool cubeMask=False;
+    Bool cubeMask=false;
     
     Int domask=0;
     if(hasMask(model)) {
@@ -218,7 +219,7 @@ Float CleanImageSkyModel::maxField(Vector<Float>& imagemax,
 	nMaskChan=mask(model).shape()(3);
       }
       if( (nchan >1) && nMaskChan==nchan)
-	cubeMask=True;
+	cubeMask=true;
       if((mx != nx) || (my != ny) || (mpol != npol)){
 	throw(AipsError("Mask image shape is not the same as dirty image"));
       }

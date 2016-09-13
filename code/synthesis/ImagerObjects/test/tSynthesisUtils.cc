@@ -57,6 +57,7 @@
 int main(int argc, char **argv)
 {
   using namespace std;
+using namespace casacore;
   using namespace casa;
   try{
 

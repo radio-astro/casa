@@ -37,6 +37,7 @@
 #include <display/QtPlotter/conversion/ConverterChannel.h>
 #include <QDebug>
 
+using namespace casacore;
 namespace casa {
 
 	const QList<QString> Converter::FREQUENCY_UNITS =
@@ -136,4 +137,5 @@ namespace casa {
 		// TODO Auto-generated destructor stub
 	}
 
+using namespace casacore;
 } /* namespace casa */

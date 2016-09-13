@@ -42,22 +42,22 @@
 #include <msvis/MSVis/VisBuffer.h>
 namespace casa { //# NAMESPACE CASA - BEGIN
   using namespace CFDefs;
-  typedef Cube<CountedPtr<CFCell > > VBRow2CFMapType;
-  typedef Vector<CountedPtr<CFBuffer > > VBRow2CFBMapType;
+  typedef casacore::Cube<casacore::CountedPtr<CFCell > > VBRow2CFMapType;
+  typedef casacore::Vector<casacore::CountedPtr<CFBuffer > > VBRow2CFBMapType;
   class CFStore2
   {
   public:
     CFStore2():storage_p(), pa_p(), mosPointingPos_p(0) {};
 
-    // CFStore2(CFBuffer<Complex> *dataPtr, Quantity PA, Int mosPointing):
+    // CFStore2(CFBuffer<casacore::Complex> *dataPtr, casacore::Quantity PA, casacore::Int mosPointing):
     //   storage_p(), pa_p(PA), mosPointingPos_p(mosPointing)
-    // {storage_p = new CFBuffer<Complex>(*dataPtr);};
+    // {storage_p = new CFBuffer<casacore::Complex>(*dataPtr);};
 
     virtual ~CFStore2() {};
 
     CFStore2& operator=(const CFStore2& other);
     //-------------------------------------------------------------------------
-    void show(const char *Mesg=NULL,ostream &os=cerr, const Bool verbose=False);
+    void show(const char *Mesg=NULL,ostream &os=cerr, const casacore::Bool verbose=false);
     //-------------------------------------------------------------------------
     // This version saves the entire CFStore
     void makePersistent(const char *dir,const char *name="", const char *qualifier="");
@@ -67,19 +67,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     void makePersistent(const char *dir,
 			const char *cfName,
 			const char *qualifier,
-			const Quantity &pa, const Quantity& dPA,
-			const Int& ant1, const Int& ant2);
+			const casacore::Quantity &pa, const casacore::Quantity& dPA,
+			const casacore::Int& ant1, const casacore::Int& ant2);
     //-------------------------------------------------------------------------
     void primeTheCFB();
     //-------------------------------------------------------------------------
-    void initMaps(const VisBuffer& vb, const Matrix<Double>& freqSelection, 
-		  const Double& imRefFreq);
+    void initMaps(const VisBuffer& vb, const casacore::Matrix<casacore::Double>& freqSelection, 
+		  const casacore::Double& imRefFreq);
     //-------------------------------------------------------------------------
     void initPolMaps(PolMapType& polMap, PolMapType& conjPolMap);
     //-------------------------------------------------------------------------
-    Bool null() {return (storage_p.size() == 0);};
+    casacore::Bool null() {return (storage_p.size() == 0);};
     //-------------------------------------------------------------------------
-    Double memUsage();
+    casacore::Double memUsage();
     //-------------------------------------------------------------------------
     void set(const CFStore2& other)
     {
@@ -88,19 +88,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       ant2_p.assign(other.ant2_p);
     }
     //-------------------------------------------------------------------------
-    void setCFBuffer(CFBuffer *dataPtr, Quantity pa, 
-		     const Int& ant1, const Int& ant2);
+    void setCFBuffer(CFBuffer *dataPtr, casacore::Quantity pa, 
+		     const casacore::Int& ant1, const casacore::Int& ant2);
     //-------------------------------------------------------------------------
-    CountedPtr<CFBuffer>& getCFBuffer(const Quantity& pa, 
-				      const Quantity& paTol, 
-				      const Int& ant1, const Int& ant2);
+    casacore::CountedPtr<CFBuffer>& getCFBuffer(const casacore::Quantity& pa, 
+				      const casacore::Quantity& paTol, 
+				      const casacore::Int& ant1, const casacore::Int& ant2);
     //-------------------------------------------------------------------------
     // Get CFBuffer by directly indexing in the list of CFBuffers
-    CountedPtr<CFBuffer>& getCFBuffer(const Int& paNdx, const Int& antNdx);
-    CFBuffer& operator()(const Int& paNdx, const Int& antNdx) {return *storage_p(paNdx, antNdx);}
-    void getParams(Quantity& pa, 
-		   Int& ant1, Int& ant2, 
-		   const Int& paNdx, const Int& antNdx);
+    casacore::CountedPtr<CFBuffer>& getCFBuffer(const casacore::Int& paNdx, const casacore::Int& antNdx);
+    CFBuffer& operator()(const casacore::Int& paNdx, const casacore::Int& antNdx) {return *storage_p(paNdx, antNdx);}
+    void getParams(casacore::Quantity& pa, 
+		   casacore::Int& ant1, casacore::Int& ant2, 
+		   const casacore::Int& paNdx, const casacore::Int& antNdx);
     //-------------------------------------------------------------------------
     //
     // Generate a map for the given frequency and Mueller element list
@@ -110,65 +110,65 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     /*
     void makeVBRow2CFMap(VBRow2CFMapType& vbRow2CFMap,
 			 const VisBuffer& vb, 
-			 const Quantity& paTol,
-			 const Vector<Int>& dataChan2ImChanMap,
-			 const Vector<Int>& dataPol2ImPolMap);
+			 const casacore::Quantity& paTol,
+			 const casacore::Vector<casacore::Int>& dataChan2ImChanMap,
+			 const casacore::Vector<casacore::Int>& dataPol2ImPolMap);
     */
     //-------------------------------------------------------------------------
-    Vector<Int> resize(const Quantity& pa, const Quantity& paTol, 
-		       const Int& ant1,const Int& ant2, Bool retainValues=True);
-    // void rememberATerm(CountedPtr<ATerm>& aTerm) {theATermUsed_p = aTerm;}
+    casacore::Vector<casacore::Int> resize(const casacore::Quantity& pa, const casacore::Quantity& paTol, 
+		       const casacore::Int& ant1,const casacore::Int& ant2, casacore::Bool retainValues=true);
+    // void rememberATerm(casacore::CountedPtr<ATerm>& aTerm) {theATermUsed_p = aTerm;}
 
-    // Int mapAntIDToAntType(const Int& ant) {return theATermUsed_p->mapAntIDToAntType(ant);};
-    Matrix<CountedPtr<CFBuffer> >& getStorage() {return storage_p;}
-    Vector<Int>& getAnt1List() {return ant1_p;};
-    Vector<Int>& getAnt2List() {return ant2_p;};
-    Vector<Quantity> getPAList() {return pa_p;};
-    IPosition getShape() {return storage_p.shape();}
+    // casacore::Int mapAntIDToAntType(const casacore::Int& ant) {return theATermUsed_p->mapAntIDToAntType(ant);};
+    casacore::Matrix<casacore::CountedPtr<CFBuffer> >& getStorage() {return storage_p;}
+    casacore::Vector<casacore::Int>& getAnt1List() {return ant1_p;};
+    casacore::Vector<casacore::Int>& getAnt2List() {return ant2_p;};
+    casacore::Vector<casacore::Quantity> getPAList() {return pa_p;};
+    casacore::IPosition getShape() {return storage_p.shape();}
 
 
   protected:
 
-    Matrix<CountedPtr<CFBuffer > > storage_p;
-    Vector<Int> ant1_p, ant2_p;
-    Vector<Quantity> pa_p;
-    Int mosPointingPos_p;
+    casacore::Matrix<casacore::CountedPtr<CFBuffer > > storage_p;
+    casacore::Vector<casacore::Int> ant1_p, ant2_p;
+    casacore::Vector<casacore::Quantity> pa_p;
+    casacore::Int mosPointingPos_p;
 
-    virtual void getIndex(const Quantity& pa, 
-			  const Quantity& paTol, 
-			  const Int& ant1, const Int& ant2,
-			  Int& paNdx, Int& antNdx)
+    virtual void getIndex(const casacore::Quantity& pa, 
+			  const casacore::Quantity& paTol, 
+			  const casacore::Int& ant1, const casacore::Int& ant2,
+			  casacore::Int& paNdx, casacore::Int& antNdx)
     {
       paNdx  = paHashFunction(pa,paTol);
       antNdx = antHashFunction(ant1,ant2);
     }
 
-    // virtual Int wHashFunction(const Double& wValue)
+    // virtual casacore::Int wHashFunction(const casacore::Double& wValue)
     // {
-    //   Int ndx=-1;
-    //   for(uInt i=0;i<wValue_p.nelements(); i++)
+    //   casacore::Int ndx=-1;
+    //   for(casacore::uInt i=0;i<wValue_p.nelements(); i++)
     // 	if (wValue_p[i] == wValue)
     // 	  {ndx=i;break;}
     //   return ndx;
     // }
-    virtual Int antHashFunction(const Int& ant1, const Int& ant2)
+    virtual casacore::Int antHashFunction(const casacore::Int& ant1, const casacore::Int& ant2)
     {
-      Int ndx=-1;
-      for (uInt i=0;i<ant1_p.nelements(); i++)
+      casacore::Int ndx=-1;
+      for (casacore::uInt i=0;i<ant1_p.nelements(); i++)
 	if ((ant1_p[i]==ant1) && (ant2_p[i]==ant2))
 	  {ndx=i;break;}
       return ndx;
     };
 
-    virtual Int paHashFunction(const Quantity& pa,const Quantity& paTol)
+    virtual casacore::Int paHashFunction(const casacore::Quantity& pa,const casacore::Quantity& paTol)
     {
-      // for (uInt i=0; i<pa_p.nelements(); i++)
+      // for (casacore::uInt i=0; i<pa_p.nelements(); i++)
       // 	if ( pa_p[i] == pa)
       // 	  {ndx=i;break;}
       return nearestPA(pa, paTol);
     }
 
-    virtual Int nearestPA(const Quantity& pa, const Quantity& paTol);
+    virtual casacore::Int nearestPA(const casacore::Quantity& pa, const casacore::Quantity& paTol);
   };
 } //# NAMESPACE CASA - END
 

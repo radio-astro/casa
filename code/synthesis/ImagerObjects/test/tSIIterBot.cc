@@ -918,6 +918,7 @@ protected:
    if arguments are included then we spawn a Controller process for testing
 */
 int main(int argc, char** argv){
+using namespace casacore;
   using namespace casa;
 
 

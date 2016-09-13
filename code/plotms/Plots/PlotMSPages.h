@@ -61,10 +61,10 @@ public:
 
     PlotMSPage getFirstPage() const;
 
-    void setCurrentPageNum(uInt num);
+    void setCurrentPageNum(casacore::uInt num);
 
     // Accessor
-    PlotMSPage& operator[](uInt index) { return itsPages_[index]; }
+    PlotMSPage& operator[](casacore::uInt index) { return itsPages_[index]; }
 
     // Iterators
     typedef vector<PlotMSPage>::iterator iterator;

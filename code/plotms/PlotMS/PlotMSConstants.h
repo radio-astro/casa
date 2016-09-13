@@ -45,7 +45,7 @@ namespace casa {
 // * ALLSTRMETHOD: name of the method that returns a vector of the string
 //                 representation of all defined members of the enum,
 // * CONVMETHOD: name of the method that converts between the enum and its
-//               String representation,
+//               casacore::String representation,
 // * ... (__VA_ARGS__): list of enum methods for PMS_ENUM1 and list of
 //                      their string representations for PMS_ENUM2.  IMPORTANT:
 //                      if both macros are used then the lists must be the same
@@ -71,20 +71,20 @@ namespace casa {
     }
 
 #define PMS_ENUM2(NAME,ALLMETHOD,ALLSTRMETHOD,CONVMETHOD,...)                 \
-    static const vector<String>& ALLSTRMETHOD () {                            \
-        static const String arr[] = {                                         \
+    static const vector<casacore::String>& ALLSTRMETHOD () {                            \
+        static const casacore::String arr[] = {                                         \
             __VA_ARGS__                                                       \
         };                                                                    \
         static const int count = sizeof(arr) / sizeof(arr[0]);                \
-        static const vector<String> v(arr, &arr[count]);                      \
+        static const vector<casacore::String> v(arr, &arr[count]);                      \
         return v;                                                             \
     }                                                                         \
                                                                               \
-    static const String& CONVMETHOD ( NAME v) {                               \
+    static const casacore::String& CONVMETHOD ( NAME v) {                               \
         return ALLSTRMETHOD ()[v]; }                                          \
                                                                               \
-    static const NAME & CONVMETHOD (const String& v, bool* ok = NULL) {       \
-        const vector<String>& strs = ALLSTRMETHOD ();                         \
+    static const NAME & CONVMETHOD (const casacore::String& v, bool* ok = NULL) {       \
+        const vector<casacore::String>& strs = ALLSTRMETHOD ();                         \
         const vector< NAME >& enms = ALLMETHOD ();                            \
         for(unsigned int i = 0; i < strs.size(); i++) {                       \
             if(PMS::strEq(v, strs[i], true)) {                                \
@@ -124,7 +124,7 @@ public:
 	      NONE)
 
     PMS_ENUM2(Axis, axes, axesStrings, axis,
-	      "Scan","Field","Time","Interval",
+	      "Scan","Field","casacore::Time","Interval",
 	      "Spw","Channel","Frequency","Velocity","Corr",
 	      "Antenna1","Antenna2","Baseline","Row",
 	      "Observation", "Intent", "Feed1", "Feed2",
@@ -204,26 +204,26 @@ public:
     // </group>    
               
     // Returns true if the given Strings are equals, false otherwise.  If
-    // ignoreCase is false then it is a direct String comparison using ==;
-    // otherwise the String characters are compared while ignoring case for
+    // ignoreCase is false then it is a direct casacore::String comparison using ==;
+    // otherwise the casacore::String characters are compared while ignoring case for
     // letters.
-    static bool strEq(const String& str1, const String& str2,
+    static bool strEq(const casacore::String& str1, const casacore::String& str2,
                       bool ignoreCase = false);
     
     // Returns true if the given Records are equals, false otherwise.
-    static bool recEq(const Record& rec1, const Record& rec2);
+    static bool recEq(const casacore::Record& rec1, const casacore::Record& rec2);
     
     // Converts the given templated vector to/from an int Vector.
     // <group>
     template <class T>
-    static Vector<int> toIntVector(const vector<T>& v) {
-        Vector<int> v2(v.size());
+    static casacore::Vector<int> toIntVector(const vector<T>& v) {
+        casacore::Vector<int> v2(v.size());
         for(unsigned int i = 0; i < v.size(); i++) v2[i] = (int)v[i];
         return v2;
     }
     
     template <class T>
-    static vector<T> fromIntVector(const Vector<int>& v) {
+    static vector<T> fromIntVector(const casacore::Vector<int>& v) {
         vector<T> v2(v.size());
         for(unsigned int i = 0; i < v.size(); i++) v2[i] = (T)v[i];
         return v2;
@@ -231,7 +231,7 @@ public:
     // </group>
     
     
-    // Enum for the different MS summary types.
+    // Enum for the different casacore::MS summary types.
     // <group>
     PMS_ENUM1(SummaryType, summaryTypes, summaryTypeStrings, summaryType,
               S_ALL, S_WHERE, S_WHAT, S_HOW, S_MAIN, S_TABLES, S_ANTENNA,
@@ -257,16 +257,16 @@ public:
     // Colorizing Values //
               
     // Returns the list of unique colors used to colorize plots.
-    static const vector<String>& COLORS_LIST();
+    static const vector<casacore::String>& COLORS_LIST();
     
     
     // Default Parameter Values //
     
     // Default values for PlotMSParameters.
     // <group>
-    static const String DEFAULT_LOG_FILENAME;
+    static const casacore::String DEFAULT_LOG_FILENAME;
     static const int DEFAULT_LOG_EVENTS;
-    static const LogMessage::Priority DEFAULT_LOG_PRIORITY;
+    static const casacore::LogMessage::Priority DEFAULT_LOG_PRIORITY;
     static const bool DEFAULT_CLEAR_SELECTIONS;
     static const int DEFAULT_CACHED_IMAGE_WIDTH;
     static const int DEFAULT_CACHED_IMAGE_HEIGHT;
@@ -287,7 +287,7 @@ public:
     // <group>
     static const PlotAxis DEFAULT_CANVAS_XAXIS;
     static const PlotAxis DEFAULT_CANVAS_YAXIS;
-    static const String DEFAULT_CANVAS_AXIS_LABEL_FORMAT;
+    static const casacore::String DEFAULT_CANVAS_AXIS_LABEL_FORMAT;
     static const bool DEFAULT_FONTSET;
     static const int DEFAULT_FONT;
     static const bool DEFAULT_SHOWAXIS;
@@ -295,7 +295,7 @@ public:
     static const PlotCanvas::LegendPosition DEFAULT_LEGENDPOSITION;
     static const bool DEFAULT_SHOW_GRID;
     static PlotLinePtr DEFAULT_GRID_LINE(PlotFactoryPtr factory);
-    static const String DEFAULT_TITLE_FORMAT;
+    static const casacore::String DEFAULT_TITLE_FORMAT;
     // </group>
     
     // Default values for export range;
@@ -329,19 +329,19 @@ public:
     // Logging Constants //
     
     // Log class origin.
-    static const String LOG_ORIGIN;
+    static const casacore::String LOG_ORIGIN;
     
     // Log event origin names.
     // <group>
-    static const String LOG_ORIGIN_DBUS;
-    static const String LOG_ORIGIN_FLAG;
-    static const String LOG_ORIGIN_LOAD_CACHE;
-    static const String LOG_ORIGIN_LOCATE;
-    static const String LOG_ORIGIN_PARAMS_CHANGED;
-    static const String LOG_ORIGIN_PLOT;
-    static const String LOG_ORIGIN_RELEASE_CACHE;
-    static const String LOG_ORIGIN_UNFLAG;
-    static const String LOG_ORIGIN_SUMMARY;
+    static const casacore::String LOG_ORIGIN_DBUS;
+    static const casacore::String LOG_ORIGIN_FLAG;
+    static const casacore::String LOG_ORIGIN_LOAD_CACHE;
+    static const casacore::String LOG_ORIGIN_LOCATE;
+    static const casacore::String LOG_ORIGIN_PARAMS_CHANGED;
+    static const casacore::String LOG_ORIGIN_PLOT;
+    static const casacore::String LOG_ORIGIN_RELEASE_CACHE;
+    static const casacore::String LOG_ORIGIN_UNFLAG;
+    static const casacore::String LOG_ORIGIN_SUMMARY;
     // </group>
     
     // Log event flags.

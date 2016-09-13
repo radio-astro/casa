@@ -34,33 +34,33 @@ template<class T> ArrayModel<T>::
 ArrayModel(){};
 
 template<class T> ArrayModel<T>::
-ArrayModel(const Array<T> & model):
+ArrayModel(const casacore::Array<T> & model):
   theModel(model.copy()) {
 };
 
 template<class T> ArrayModel<T>::
-ArrayModel(Array<T> & model):
+ArrayModel(casacore::Array<T> & model):
   theModel(model) {
 }; 
 
 template<class T> void ArrayModel<T>::
-getModel(Array<T> & model) const {
+getModel(casacore::Array<T> & model) const {
   model = theModel;
 };
 
-template<class T> const Array<T> & ArrayModel<T>::
+template<class T> const casacore::Array<T> & ArrayModel<T>::
 getModel() const {
   return theModel;
 }
 
 template<class T> void ArrayModel<T>::
-setModel(const Array<T> & model){
+setModel(const casacore::Array<T> & model){
   theModel.resize(model.shape());
   theModel = model;
 };
 
 template<class T> void ArrayModel<T>::
-setModel(Array<T> & model){
+setModel(casacore::Array<T> & model){
   theModel.reference(model);
 };
 

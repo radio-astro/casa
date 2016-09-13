@@ -88,15 +88,15 @@ int main(int argc, char **argv)
      Array<Complex> arr1;
      //////Lets do FFT via FFTPack
      {
-       FFT2D ft(False);
-       im.get(arr0, True);
+       FFT2D ft(false);
+       im.get(arr0, true);
 #ifdef _OPENMP
        wtime0=omp_get_wtime();
 #endif
        Bool del;
        Complex *scr= arr0.getStorage(del);
-       //ft.fftShift(scr, Long(x), Long(y), True);
-       ft.doFFT(scr, Long(x), Long(y), True);
+       //ft.fftShift(scr, Long(x), Long(y), true);
+       ft.doFFT(scr, Long(x), Long(y), true);
 #ifdef _OPENMP
        cerr << "FFTPack forward " << x << " by " << y << " complex takes " << omp_get_wtime()-wtime0 << endl;
        arr0.putStorage(scr, del);
@@ -105,7 +105,7 @@ int main(int argc, char **argv)
        wtime0=omp_get_wtime();
 #endif
        
-       ft.doFFT(scr, Long(x), Long(y), False);
+       ft.doFFT(scr, Long(x), Long(y), false);
 #ifdef _OPENMP
        cerr << "FFTPack backward " << x << " by " << y << " complex takes " << omp_get_wtime()-wtime0 << endl;
 #endif
@@ -113,22 +113,22 @@ int main(int argc, char **argv)
      }
      //////Lets do FFT via FFTW
      {
-       FFT2D ft(True);
-       im.get(arr1, True);
+       FFT2D ft(true);
+       im.get(arr1, true);
 #ifdef _OPENMP
        wtime0=omp_get_wtime();
 #endif
 
        Bool del;
        Complex *scr= arr1.getStorage(del);
-       ft.doFFT(scr, Long(x), Long(y), True);
+       ft.doFFT(scr, Long(x), Long(y), true);
 
 #ifdef _OPENMP
        cerr << "FFTW forward " << x << " by " << y << " complex takes " << omp_get_wtime()-wtime0 << endl;
        wtime0=omp_get_wtime();
 #endif
 
-       ft.doFFT(scr, Long(x), Long(y), False);
+       ft.doFFT(scr, Long(x), Long(y), false);
 
 #ifdef _OPENMP
        cerr << "FFTW backward " << x << " by " << y << " complex takes " << omp_get_wtime()-wtime0 << endl;
@@ -142,7 +142,7 @@ int main(int argc, char **argv)
      {
        
       
-       im.get(arr1, True);
+       im.get(arr1, true);
 
 #ifdef _OPENMP
        numthreads=omp_get_max_threads();
@@ -150,10 +150,10 @@ int main(int argc, char **argv)
        wtime0=omp_get_wtime();
 #endif
 
-       FFT2D ft(True);
+       FFT2D ft(true);
        Bool del;
        Complex *scr= arr1.getStorage(del);
-       ft.doFFT(scr, Long(x), Long(y), True);
+       ft.doFFT(scr, Long(x), Long(y), true);
 
 #ifdef _OPENMP
        cerr << "FFTW 1-thread forward " << x << " by " << y << " complex takes " << omp_get_wtime()-wtime0 << endl;
@@ -161,7 +161,7 @@ int main(int argc, char **argv)
        wtime0=omp_get_wtime();
 #endif
 
-       ft.doFFT(scr, Long(x), Long(y), False);
+       ft.doFFT(scr, Long(x), Long(y), false);
 
 #ifdef _OPENMP
        cerr << "FFTW 1-thread backward " << x << " by " << y << " complex takes " << omp_get_wtime()-wtime0 << endl;
@@ -177,14 +177,14 @@ int main(int argc, char **argv)
   wtime0=omp_get_wtime();
 #endif
   Array<Complex> arr;
-   Bool isRef=im.get(arr, True);
+   Bool isRef=im.get(arr, true);
 #ifdef _OPENMP
    wtime1=omp_get_wtime();
 #endif
    Bool del;
    Complex *scr= arr.getStorage(del);
    cerr << "isRef " << isRef << " storage is copy " << del << endl;
-   FFT2D smp(True);
+   FFT2D smp(true);
    smp.c2cFFT(scr, Long(x), Long(y));
 #ifdef _OPENMP
    wtime2=omp_get_wtime();
@@ -197,7 +197,7 @@ int main(int argc, char **argv)
     cerr << "getting array " << wtime1-wtime0 << " fft " << wtime2-wtime1 << " put " << omp_get_wtime()-wtime2 << endl;
    wtime0=omp_get_wtime();
 #endif
-   smp.c2cFFT(scr, Long(x), Long(y), False);
+   smp.c2cFFT(scr, Long(x), Long(y), false);
 #ifdef _OPENMP  
    wtime1=omp_get_wtime();
 #endif
@@ -211,14 +211,14 @@ int main(int argc, char **argv)
 #ifdef _OPENMP
      wtime1=omp_get_wtime();
 #endif
-     LatticeFFT::cfft2d(im3, True);
+     LatticeFFT::cfft2d(im3, true);
    }
 #ifdef _OPENMP 
    cerr << "LatticeFFT::cfft2d " << omp_get_wtime()-wtime1 << " as compared to  disk array based FFT2D " << totTimeFFT2D <<  endl;
 #endif
    Array<Complex> arr2;
-   im.get(arr, True);
-   im3.get(arr2, True);
+   im.get(arr, true);
+   im3.get(arr2, true);
    cerr << "max diff lattFFT and FFT2D " << max(arr-arr2) << endl;
    
 

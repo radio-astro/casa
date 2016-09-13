@@ -28,7 +28,7 @@
  * | If you do, all changes will be lost when the file is re-generated. |
  *  --------------------------------------------------------------------
  *
- * File DelayModelVariableParametersTable.h
+ * casacore::File DelayModelVariableParametersTable.h
  */
  
 #ifndef DelayModelVariableParametersTable_CLASS
@@ -329,7 +329,7 @@ public:
 	std::string toXML()  ;
 
 #ifndef WITHOUT_ACS
-	// Conversion Methods
+	// casacore::Conversion Methods
 	/**
 	 * Convert this table into a DelayModelVariableParametersTableIDL CORBA structure.
 	 *

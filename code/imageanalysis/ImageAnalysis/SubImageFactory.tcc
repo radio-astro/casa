@@ -45,55 +45,55 @@
 
 namespace casa {
 
-template<class T> SHARED_PTR<SubImage<T> > SubImageFactory<T>::createSubImageRW(
-    CountedPtr<ImageRegion>& outRegion, CountedPtr<ImageRegion>& outMask,
-    ImageInterface<T>& inImage, const Record& region,
-    const String& mask, LogIO *const &os,
-    const AxesSpecifier& axesSpecifier,
-    Bool extendMask, Bool preserveAxesOrder
+template<class T> SHARED_PTR<casacore::SubImage<T> > SubImageFactory<T>::createSubImageRW(
+    casacore::CountedPtr<casacore::ImageRegion>& outRegion, casacore::CountedPtr<casacore::ImageRegion>& outMask,
+    casacore::ImageInterface<T>& inImage, const casacore::Record& region,
+    const casacore::String& mask, casacore::LogIO *const &os,
+    const casacore::AxesSpecifier& axesSpecifier,
+    casacore::Bool extendMask, casacore::Bool preserveAxesOrder
 ) {
     if (! mask.empty()) {
         _getMask(outMask, mask, extendMask, inImage.shape(), inImage.coordinates());
     }
-    SHARED_PTR<SubImage<T> > subImage;
+    SHARED_PTR<casacore::SubImage<T> > subImage;
     // We can get away with no region processing if the region record
     // is empty and the user is not dropping degenerate axes
     if (region.nfields() == 0 && axesSpecifier.keep()) {
         subImage.reset(
             ! outMask
-            ? new SubImage<T>(inImage, True, axesSpecifier, preserveAxesOrder)
-            : new SubImage<T>(
+            ? new casacore::SubImage<T>(inImage, true, axesSpecifier, preserveAxesOrder)
+            : new casacore::SubImage<T>(
                 inImage, *outMask,
-                True, axesSpecifier, preserveAxesOrder
+                true, axesSpecifier, preserveAxesOrder
             )
         );
     }
     else {
-        outRegion = ImageRegion::fromRecord(
+        outRegion = casacore::ImageRegion::fromRecord(
             os, inImage.coordinates(),
             inImage.shape(), region
         );
         if (! outMask) {
             subImage.reset(
-                new SubImage<T>(
+                new casacore::SubImage<T>(
                     inImage, *outRegion,
-                    True, axesSpecifier,
+                    true, axesSpecifier,
                     preserveAxesOrder
                 )
             );
         }
         else {
             // on the first pass, we need to keep all axes, the second
-            // SubImage construction after this one will properly account
+            // casacore::SubImage construction after this one will properly account
             // for the axes specifier
-            SubImage<T> subImage0(
-                inImage, *outMask, True,
-                AxesSpecifier(), preserveAxesOrder
+            casacore::SubImage<T> subImage0(
+                inImage, *outMask, true,
+                casacore::AxesSpecifier(), preserveAxesOrder
             );
             subImage.reset(
-                new SubImage<T>(
+                new casacore::SubImage<T>(
                     subImage0, *outRegion,
-                    True, axesSpecifier,
+                    true, axesSpecifier,
                     preserveAxesOrder
                 )
             );
@@ -102,14 +102,14 @@ template<class T> SHARED_PTR<SubImage<T> > SubImageFactory<T>::createSubImageRW(
     return subImage;
 }
 
-template<class T> SHARED_PTR<SubImage<T> > SubImageFactory<T>::createSubImageRW(
-    ImageInterface<T>& inImage, const Record& region,
-    const String& mask, LogIO *const &os,
-    const AxesSpecifier& axesSpecifier,
-    Bool extendMask, Bool preserveAxesOrder
+template<class T> SHARED_PTR<casacore::SubImage<T> > SubImageFactory<T>::createSubImageRW(
+    casacore::ImageInterface<T>& inImage, const casacore::Record& region,
+    const casacore::String& mask, casacore::LogIO *const &os,
+    const casacore::AxesSpecifier& axesSpecifier,
+    casacore::Bool extendMask, casacore::Bool preserveAxesOrder
 ) {
-    CountedPtr<ImageRegion> pRegion;
-    CountedPtr<ImageRegion> pMask;
+    casacore::CountedPtr<casacore::ImageRegion> pRegion;
+    casacore::CountedPtr<casacore::ImageRegion> pMask;
     return createSubImageRW(
         pRegion, pMask, inImage, region,
         mask, os, axesSpecifier,
@@ -117,37 +117,37 @@ template<class T> SHARED_PTR<SubImage<T> > SubImageFactory<T>::createSubImageRW(
     );
 }
 
-template<class T> SHARED_PTR<const SubImage<T> > SubImageFactory<T>::createSubImageRO(
-    CountedPtr<ImageRegion>& outRegion, CountedPtr<ImageRegion>& outMask,
-    const ImageInterface<T>& inImage, const Record& region,
-    const String& mask, LogIO *const &os,
-    const AxesSpecifier& axesSpecifier,
-    Bool extendMask, Bool preserveAxesOrder
+template<class T> SHARED_PTR<const casacore::SubImage<T> > SubImageFactory<T>::createSubImageRO(
+    casacore::CountedPtr<casacore::ImageRegion>& outRegion, casacore::CountedPtr<casacore::ImageRegion>& outMask,
+    const casacore::ImageInterface<T>& inImage, const casacore::Record& region,
+    const casacore::String& mask, casacore::LogIO *const &os,
+    const casacore::AxesSpecifier& axesSpecifier,
+    casacore::Bool extendMask, casacore::Bool preserveAxesOrder
 ) {
     if (! mask.empty()) {
         _getMask(outMask, mask, extendMask, inImage.shape(), inImage.coordinates());
     }
-    SHARED_PTR<SubImage<T> > subImage;
+    SHARED_PTR<casacore::SubImage<T> > subImage;
     // We can get away with no region processing if the region record
     // is empty and the user is not dropping degenerate axes
     if (region.nfields() == 0 && axesSpecifier.keep()) {
         subImage.reset(
             ! outMask
-            ? new SubImage<T>(inImage, axesSpecifier, preserveAxesOrder)
-            : new SubImage<T>(
+            ? new casacore::SubImage<T>(inImage, axesSpecifier, preserveAxesOrder)
+            : new casacore::SubImage<T>(
                 inImage, *outMask,
                 axesSpecifier, preserveAxesOrder
             )
         );
     }
     else {
-        outRegion = ImageRegion::fromRecord(
+        outRegion = casacore::ImageRegion::fromRecord(
             os, inImage.coordinates(),
             inImage.shape(), region
         );
         if (! outMask) {
             subImage.reset(
-                new SubImage<T>(
+                new casacore::SubImage<T>(
                     inImage, *outRegion,
                     axesSpecifier,
                     preserveAxesOrder
@@ -156,15 +156,15 @@ template<class T> SHARED_PTR<const SubImage<T> > SubImageFactory<T>::createSubIm
         }
         else {
             // on the first pass, we need to keep all axes, the second
-            // SubImage construction after this one will properly account
+            // casacore::SubImage construction after this one will properly account
             // for the axes specifier
-            SubImage<T> subImage0(
+            casacore::SubImage<T> subImage0(
                 inImage, *outMask,
-                AxesSpecifier(),
+                casacore::AxesSpecifier(),
                 preserveAxesOrder
             );
             subImage.reset(
-                new SubImage<T>(
+                new casacore::SubImage<T>(
                     subImage0, *outRegion,
                     axesSpecifier,
                     preserveAxesOrder
@@ -175,14 +175,14 @@ template<class T> SHARED_PTR<const SubImage<T> > SubImageFactory<T>::createSubIm
     return subImage;
 }
 
-template<class T> SHARED_PTR<const SubImage<T> > SubImageFactory<T>::createSubImageRO(
-    const ImageInterface<T>& inImage, const Record& region,
-    const String& mask, LogIO *const &os,
-    const AxesSpecifier& axesSpecifier,
-    Bool extendMask, Bool preserveAxesOrder
+template<class T> SHARED_PTR<const casacore::SubImage<T> > SubImageFactory<T>::createSubImageRO(
+    const casacore::ImageInterface<T>& inImage, const casacore::Record& region,
+    const casacore::String& mask, casacore::LogIO *const &os,
+    const casacore::AxesSpecifier& axesSpecifier,
+    casacore::Bool extendMask, casacore::Bool preserveAxesOrder
 ) {
-    CountedPtr<ImageRegion> pRegion;
-    CountedPtr<ImageRegion> pMask;
+    casacore::CountedPtr<casacore::ImageRegion> pRegion;
+    casacore::CountedPtr<casacore::ImageRegion> pMask;
     return createSubImageRO(
         pRegion, pMask, inImage, region,
         mask, os, axesSpecifier,
@@ -191,69 +191,69 @@ template<class T> SHARED_PTR<const SubImage<T> > SubImageFactory<T>::createSubIm
 }
 
 template<class T> SPIIT SubImageFactory<T>::createImage(
-    const ImageInterface<T>& image,
-    const String& outfile, const Record& region,
-    const String& mask, Bool dropDegenerateAxes,
-    Bool overwrite, Bool list, Bool extendMask, Bool attachMask,
-    const Lattice<T> *const data
+    const casacore::ImageInterface<T>& image,
+    const casacore::String& outfile, const casacore::Record& region,
+    const casacore::String& mask, casacore::Bool dropDegenerateAxes,
+    casacore::Bool overwrite, casacore::Bool list, casacore::Bool extendMask, casacore::Bool attachMask,
+    const casacore::Lattice<T> *const data
 ) {
     return createImage(
-        image, outfile, region, mask, AxesSpecifier(! dropDegenerateAxes),
+        image, outfile, region, mask, casacore::AxesSpecifier(! dropDegenerateAxes),
         overwrite, list, extendMask, attachMask, data
     );
 }
 
 template<class T> SPIIT SubImageFactory<T>::createImage(
-    const ImageInterface<T>& image,
-    const String& outfile, const Record& region,
-    const String& mask, const AxesSpecifier& axesSpec,
-    Bool overwrite, Bool list, Bool extendMask, Bool attachMask,
-    const Lattice<T> *const data
+    const casacore::ImageInterface<T>& image,
+    const casacore::String& outfile, const casacore::Record& region,
+    const casacore::String& mask, const casacore::AxesSpecifier& axesSpec,
+    casacore::Bool overwrite, casacore::Bool list, casacore::Bool extendMask, casacore::Bool attachMask,
+    const casacore::Lattice<T> *const data
 ) {
-    LogIO log;
-    log << LogOrigin("SubImageFactory", __func__);
+    casacore::LogIO log;
+    log << casacore::LogOrigin("SubImageFactory", __func__);
     // Copy a portion of the image
     // Verify output file
     if (! overwrite && ! outfile.empty()) {
-        NewFile validfile;
-        String errmsg;
+        casacore::NewFile validfile;
+        casacore::String errmsg;
         if(! validfile.valueOK(outfile, errmsg)) {
             // CAS-8715 users want a nicer error message in this case
-            if (File(outfile).exists()) {
+            if (casacore::File(outfile).exists()) {
                 errmsg = outfile + " already exists";
             }
             ThrowCc(errmsg);
         }
     }
-    SHARED_PTR<const SubImage<T> > x = createSubImageRO(
+    SHARED_PTR<const casacore::SubImage<T> > x = createSubImageRO(
         image, region, mask, list ? &log : 0,
-        axesSpec, extendMask, True
+        axesSpec, extendMask, true
     );
     SPIIT outImage;
     if (outfile.empty()) {
         outImage.reset(
-            new TempImage<T>(x->shape(), x->coordinates())
+            new casacore::TempImage<T>(x->shape(), x->coordinates())
         );
     }
     else {
         outImage.reset(
-            new PagedImage<T>(
+            new casacore::PagedImage<T>(
                 x->shape(), x->coordinates(), outfile
             )
         );
         if (list) {
-            log << LogIO::NORMAL << "Creating image '" << outfile
-                << "' of shape " << outImage->shape() << LogIO::POST;
+            log << casacore::LogIO::NORMAL << "Creating image '" << outfile
+                << "' of shape " << outImage->shape() << casacore::LogIO::POST;
         }
     }
-    ImageUtilities::copyMiscellaneous(*outImage, *x);
+    casacore::ImageUtilities::copyMiscellaneous(*outImage, *x);
     if (attachMask || ! ImageMask::isAllMaskTrue(*x)) {
         // if we don't already have a mask, but the user has specified that one needs to
         // be present, attach it. This needs to be done prior to the copyDataAndMask() call
         // because in that implementation, the image to which the mask is to be copied must
         // have already have a mask; that call does not create one if it does not exist.
-        String maskName = "";
-        ImageMaskAttacher::makeMask(*outImage, maskName, False, True, log, list);
+        casacore::String maskName = "";
+        ImageMaskAttacher::makeMask(*outImage, maskName, false, true, log, list);
         if (data) {
             ImageMaskHandler<T> imh(outImage);
             imh.copy(*x);
@@ -263,34 +263,34 @@ template<class T> SPIIT SubImageFactory<T>::createImage(
         outImage->copyData(*data);
     }
     else {
-        LatticeUtilities::copyDataAndMask(log, *outImage, *x);
+        casacore::LatticeUtilities::copyDataAndMask(log, *outImage, *x);
     }
     outImage->flush();
     return outImage;
 }
 
 template<class T> void SubImageFactory<T>::_getMask(
-    CountedPtr<ImageRegion>& outMask, const String& mask,
-    Bool extendMask, const IPosition& imageShape,
-    const CoordinateSystem& csys
+    casacore::CountedPtr<casacore::ImageRegion>& outMask, const casacore::String& mask,
+    casacore::Bool extendMask, const casacore::IPosition& imageShape,
+    const casacore::CoordinateSystem& csys
 ) {
-    String mymask = mask;
-    for (uInt i=0; i<2; i++) {
+    casacore::String mymask = mask;
+    for (casacore::uInt i=0; i<2; i++) {
         try {
-            outMask = ImageRegion::fromLatticeExpression(mymask);
+            outMask = casacore::ImageRegion::fromLatticeExpression(mymask);
             break;
         }
-        catch (const AipsError& x) {
+        catch (const casacore::AipsError& x) {
             if (i == 0) {
                 // not an LEL expression, perhaps it's a clean mask image name
                 mymask += ">=0.5";
                 continue;
             }
-            ThrowCc("Input mask specification is incorrect: " + x.getMesg());
+            ThrowCc("casacore::Input mask specification is incorrect: " + x.getMesg());
         }
     }
-    if (outMask && outMask->asWCRegion().type() == "WCLELMask") {
-        const ImageExpr<Bool> *myExpression = dynamic_cast<const WCLELMask*>(
+    if (outMask && outMask->asWCRegion().type() == "casacore::WCLELMask") {
+        const casacore::ImageExpr<casacore::Bool> *myExpression = dynamic_cast<const casacore::WCLELMask*>(
             outMask->asWCRegionPtr()
         )->getImageExpr();
         if (
@@ -306,10 +306,10 @@ template<class T> void SubImageFactory<T>::_getMask(
                 ThrowCc(os.str());
             }
             try {
-                ExtendImage<Bool> exIm(*myExpression, imageShape, csys);
-                outMask = new ImageRegion(LCMask(exIm));
+                casacore::ExtendImage<casacore::Bool> exIm(*myExpression, imageShape, csys);
+                outMask = new casacore::ImageRegion(casacore::LCMask(exIm));
             }
-            catch (const AipsError& x) {
+            catch (const casacore::AipsError& x) {
                 ThrowCc("Unable to extend mask: " + x.getMesg());
             }
         }

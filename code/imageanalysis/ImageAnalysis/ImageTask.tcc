@@ -48,22 +48,22 @@ namespace casa {
 
 template <class T> ImageTask<T>::ImageTask(
     const SPCIIT image,
-    const String& region, const Record *const &regionPtr,
-    const String& box, const String& chanInp,
-    const String& stokes, const String& maskInp,
-    const String& outname, Bool overwrite
+	const casacore::String& region, const casacore::Record *const &regionPtr,
+	const casacore::String& box, const casacore::String& chanInp,
+	const casacore::String& stokes, const casacore::String& maskInp,
+    const casacore::String& outname, casacore::Bool overwrite
 ) : _image(image), _regionPtr(regionPtr),_region(region), _box(box),
     _chan(chanInp), _stokesString(stokes), _mask(maskInp),
-    _outname(outname), _overwrite(overwrite), _stretch(False),
+	_outname(outname), _overwrite(overwrite), _stretch(false),
     _logfile() {
-   // FITSImage::registerOpenFunction();
-   //  MIRIADImage::registerOpenFunction();
+   // casacore::FITSImage::registerOpenFunction();
+   //  casacore::MIRIADImage::registerOpenFunction();
 }
 
 template <class T> ImageTask<T>::ImageTask(
-    const SPCIIT image, const Record *const &regionPtr,
-    const String& mask,
-    const String& outname, Bool overwrite
+	const SPCIIT image, const casacore::Record *const &regionPtr,
+	const casacore::String& mask,
+    const casacore::String& outname, casacore::Bool overwrite
 ) : _image(image), _regionPtr(regionPtr),
     _region(), _box(), _chan(), _stokesString(), _mask(mask),
     _outname(outname), _overwrite(overwrite) {}
@@ -77,27 +77,27 @@ template <class T> std::vector<OutputDestinationChecker::OutputStruct> ImageTask
         OutputDestinationChecker::OutputStruct outputImage;
         outputImage.label = "output image";
         outputImage.outputFile = &_outname;
-        outputImage.required = True;
+        outputImage.required = true;
         outputImage.replaceable = _overwrite;
         outputs.push_back(outputImage);
     }
     return outputs;
 }
 
-template <class T> void ImageTask<T>::_construct(Bool verbose) {
+template <class T> void ImageTask<T>::_construct(casacore::Bool verbose) {
     ThrowIf(
         ! _supportsMultipleBeams() && _image->imageInfo().hasMultipleBeams(),
         "This application does not support images with multiple "
         "beams. Please convolve your image with a single beam "
         "and run this application using that image"
     );
-    String diagnostics;
+	casacore::String diagnostics;
     std::vector<OutputDestinationChecker::OutputStruct> outputs = _getOutputStruct();
     std::vector<OutputDestinationChecker::OutputStruct> *outputPtr = outputs.size() > 0
         ? &outputs
         : 0;
-    std::vector<Coordinate::Type> necCoords = _getNecessaryCoordinates();
-    std::vector<Coordinate::Type> *coordsPtr = necCoords.size() > 0
+	std::vector<casacore::Coordinate::Type> necCoords = _getNecessaryCoordinates();
+	std::vector<casacore::Coordinate::Type> *coordsPtr = necCoords.size() > 0
         ? &necCoords
         : 0;
     ThrowIf(
@@ -118,7 +118,7 @@ template <class T> void ImageTask<T>::_construct(Bool verbose) {
     );
 }
 
-template <class T> void ImageTask<T>::setRegion(const Record& region) {
+template <class T> void ImageTask<T>::setRegion(const casacore::Record& region) {
     ThrowIf(
         ! _supportsMultipleRegions() && region.isDefined("regions"),
         "This application does not support multiple region selection"
@@ -131,9 +131,9 @@ template <class T> void ImageTask<T>::setRegion(const Record& region) {
 }
 
 template <class T> void ImageTask<T>::_removeExistingFileIfNecessary(
-    const String& filename, Bool overwrite, Bool warnOnly
+	const casacore::String& filename, casacore::Bool overwrite, casacore::Bool warnOnly
 ) const {
-    File out(filename);
+	casacore::File out(filename);
     if (out.exists()) {
         if (overwrite) {
             File f(filename);
@@ -145,23 +145,23 @@ template <class T> void ImageTask<T>::_removeExistingFileIfNecessary(
                 + "overwrite it"
             );
             if (out.isDirectory()) {
-                Directory dir(filename);
+				casacore::Directory dir(filename);
                 dir.removeRecursive();
             }
             else if (out.isRegular()) {
-                RegularFile reg(filename);
+				casacore::RegularFile reg(filename);
                 reg.remove();
             }
             else if (out.isSymLink()) {
-                SymLink link(filename);
+				casacore::SymLink link(filename);
                 link.remove();
             }
         }
         else {
-            String msg = "File " + filename + " exists but overwrite is false "
+		    casacore::String msg = "File " + filename + " exists but overwrite is false "
                 "so it cannot be overwritten";
             if (warnOnly) {
-                *_log << LogIO::WARN << msg << LogIO::POST;
+		        *_log << casacore::LogIO::WARN << msg << casacore::LogIO::POST;
             }
             else {
                 ThrowCc(msg);
@@ -174,10 +174,10 @@ template <class T> void ImageTask<T>::_removeExistingOutfileIfNecessary() const 
     _removeExistingFileIfNecessary(_outname, _overwrite);
 }
 
-template <class T> String ImageTask<T>::_summaryHeader() const {
-    String region = _box.empty() ? _region : "";
+template <class T> casacore::String ImageTask<T>::_summaryHeader() const {
+	casacore::String region = _box.empty() ? _region : "";
     ostringstream os;
-    os << "Input parameters ---" << endl;
+	os << "Input parameters ---" << endl;
     os << "       --- imagename:           " << _image->name() << endl;
     os << "       --- region:              " << region << endl;
     os << "       --- box:                 " << _box << endl;
@@ -187,7 +187,7 @@ template <class T> String ImageTask<T>::_summaryHeader() const {
     return os.str();
 }
 
-template <class T> void ImageTask<T>::setLogfile(const String& lf) {
+template <class T> void ImageTask<T>::setLogfile(const casacore::String& lf) {
     if (lf.empty()) {
         return;
     }
@@ -199,7 +199,7 @@ template <class T> void ImageTask<T>::setLogfile(const String& lf) {
         _logfile.reset(new LogFile(lf));
         _logfile->setAppend(_logfileAppend);
     }
-    catch (const AipsError& x) {}
+	catch (const casacore::AipsError& x) {}
 }
 
 template <class T> const SHARED_PTR<LogFile> ImageTask<T>::_getLogFile() const {
@@ -210,9 +210,9 @@ template <class T> const SHARED_PTR<LogFile> ImageTask<T>::_getLogFile() const {
     return _logfile;
 }
 
-template <class T> Bool ImageTask<T>::_openLogfile() {
+template <class T> casacore::Bool ImageTask<T>::_openLogfile() {
     if (_logfile.get() == 0) {
-        return False;
+		return false;
     }
     ThrowIf(
         ! _hasLogfileSupport(),
@@ -227,20 +227,20 @@ template <class T> void ImageTask<T>::_closeLogfile() const {
     }
 }
 
-template<class T> Bool ImageTask<T>::_writeLogfile(
-    const String& output, const Bool open, const Bool close
+template<class T> casacore::Bool ImageTask<T>::_writeLogfile(
+	const casacore::String& output, const casacore::Bool open, const casacore::Bool close
 ) {
     ThrowIf(
         ! _hasLogfileSupport(),
         "Logic Error: This task does not support writing of a log file"
     );
     if (! _logfile) {
-        return False;
+		return false;
     }
     return _logfile->write(output, open, close);
 }
 
-template <class T> void ImageTask<T>::setLogfileAppend(Bool a) {
+template <class T> void ImageTask<T>::setLogfileAppend(casacore::Bool a) {
     ThrowIf(
         ! _hasLogfileSupport(),
         "Logic Error: This task does not support writing of a log file"
@@ -252,7 +252,7 @@ template <class T> void ImageTask<T>::setLogfileAppend(Bool a) {
 }
 
 template <class T> void ImageTask<T>::addHistory(
-    const vector<std::pair<String, String> >& msgs
+	const vector<std::pair<casacore::String, casacore::String> >& msgs
 ) const {
     _newHistory.insert(
         _newHistory.end(), msgs.begin(), msgs.end()
@@ -260,44 +260,44 @@ template <class T> void ImageTask<T>::addHistory(
 }
 
 template <class T> void ImageTask<T>::addHistory(
-    const LogOrigin& origin, const String& msg
+	const casacore::LogOrigin& origin, const casacore::String& msg
 ) const {
-    std::pair<String, String> x;
+	std::pair<casacore::String, casacore::String> x;
     x.first = origin.fullName();
     x.second = msg;
     _newHistory.push_back(x);
 }
 
 template <class T> void ImageTask<T>::addHistory(
-    const LogOrigin& origin, const vector<String>& msgs
+	const casacore::LogOrigin& origin, const vector<casacore::String>& msgs
 ) const {
-    std::pair<String, String> x;
+	std::pair<casacore::String, casacore::String> x;
     x.first = origin.fullName();
-    for( String m: msgs ) {
+	for( casacore::String m: msgs ) {
         x.second = m;
         _newHistory.push_back(x);
     }
 }
 
 template <class T> void ImageTask<T>::addHistory(
-    const LogOrigin& origin, const String& taskname,
-    const vector<String>& paramNames, const vector<casac::variant>& paramValues
+    const casacore::LogOrigin& origin, const casacore::String& taskname,
+    const vector<casacore::String>& paramNames, const vector<casac::variant>& paramValues
 ) const {
     ThrowIf(
         paramNames.size() != paramValues.size(),
         "paramNames and paramValues must have the same number of elements"
     );
-    std::pair<String, String> x;
+	std::pair<casacore::String, casacore::String> x;
     x.first = origin.fullName();
     x.second = "Ran " + taskname + " on " + _image->name();
     _newHistory.push_back(x);
-    vector<std::pair<String, casac::variant> > inputs;
-    vector<String>::const_iterator begin = paramNames.begin();
-    vector<String>::const_iterator name = begin;
+	vector<std::pair<casacore::String, casac::variant> > inputs;
+	vector<casacore::String>::const_iterator begin = paramNames.begin();
+	vector<casacore::String>::const_iterator name = begin;
     vector<casac::variant>::const_iterator value = paramValues.begin();
-    vector<String>::const_iterator end = paramNames.end();
-    String out = taskname + "(";
-    String quote;
+	vector<casacore::String>::const_iterator end = paramNames.end();
+	casacore::String out = taskname + "(";
+	casacore::String quote;
     while (name != end) {
         if (name != begin) {
             out += ", ";
@@ -314,15 +314,15 @@ template <class T> void ImageTask<T>::addHistory(
 }
 
 template <class T> void ImageTask<T>::_copyMask(
-    Lattice<Bool>& mask, const ImageInterface<T>& image
+	casacore::Lattice<casacore::Bool>& mask, const casacore::ImageInterface<T>& image
 ) {
     auto cursorShape = image.niceCursorShape(4096*4096);
-    LatticeStepper stepper(image.shape(), cursorShape, LatticeStepper::RESIZE);
-    RO_MaskedLatticeIterator<T> iter(image, stepper);
-    LatticeIterator<Bool> miter(mask, stepper);
-    std::unique_ptr<RO_LatticeIterator<Bool>> pmiter;
+	casacore::LatticeStepper stepper(image.shape(), cursorShape, casacore::LatticeStepper::RESIZE);
+	casacore::RO_MaskedLatticeIterator<T> iter(image, stepper);
+	casacore::LatticeIterator<casacore::Bool> miter(mask, stepper);
+	std::unique_ptr<casacore::RO_LatticeIterator<casacore::Bool>> pmiter;
     if (image.hasPixelMask()) {
-        pmiter.reset(new RO_LatticeIterator<Bool>(image.pixelMask(), stepper));
+		pmiter.reset(new casacore::RO_LatticeIterator<casacore::Bool>(image.pixelMask(), stepper));
     }
     for (iter.reset(); ! iter.atEnd(); ++iter, ++miter) {
         auto mymask = iter.getMask();
@@ -335,27 +335,27 @@ template <class T> void ImageTask<T>::_copyMask(
 }
 
 template <class T> void ImageTask<T>::_copyData(
-    Lattice<T>& data, const ImageInterface<T>& image
+	casacore::Lattice<T>& data, const casacore::ImageInterface<T>& image
 ) {
     auto cursorShape = image.niceCursorShape(4096*4096);
-    LatticeStepper stepper(image.shape(), cursorShape, LatticeStepper::RESIZE);
-    RO_LatticeIterator<T> iter(image, stepper);
-    LatticeIterator<T> diter(data, stepper);
+	casacore::LatticeStepper stepper(image.shape(), cursorShape, casacore::LatticeStepper::RESIZE);
+	casacore::RO_LatticeIterator<T> iter(image, stepper);
+	casacore::LatticeIterator<T> diter(data, stepper);
     for (iter.reset(); ! iter.atEnd(); ++iter, ++diter) {
         diter.rwCursor() = iter.cursor();
     }
 }
 
 template <class T> SPIIT ImageTask<T>::_prepareOutputImage(
-    const ImageInterface<T>& image, const Array<T> *const values,
-    const ArrayLattice<Bool> *const mask,
-    const IPosition *const outShape, const CoordinateSystem *const coordsys,
-    const String *const outname, Bool overwrite, Bool dropDegen
+    const casacore::ImageInterface<T>& image, const casacore::Array<T> *const values,
+    const casacore::ArrayLattice<casacore::Bool> *const mask,
+    const casacore::IPosition *const outShape, const casacore::CoordinateSystem *const coordsys,
+	const casacore::String *const outname, casacore::Bool overwrite, casacore::Bool dropDegen
 ) const {
-    IPosition oShape = outShape == 0 ? image.shape() : *outShape;
-    CoordinateSystem csys = coordsys == 0 ? image.coordinates() : *coordsys;
-    SHARED_PTR<TempImage<T> > tmpImage(
-        new TempImage<T>(TiledShape(oShape), csys)
+	casacore::IPosition oShape = outShape == 0 ? image.shape() : *outShape;
+	casacore::CoordinateSystem csys = coordsys == 0 ? image.coordinates() : *coordsys;
+	SHARED_PTR<casacore::TempImage<T> > tmpImage(
+		new casacore::TempImage<T>(casacore::TiledShape(oShape), csys)
     );
     if (mask != 0) {
         if (! ImageMask::isAllMaskTrue(*mask)) {
@@ -368,19 +368,19 @@ template <class T> SPIIT ImageTask<T>::_prepareOutputImage(
     else if (image.hasPixelMask() || image.isMasked()) {
         // A paged array is stored on disk and is preferred over an
         // ArrayLattice which will exhaust memory for large images.
-        std::unique_ptr<Lattice<Bool>> mymask;
+		std::unique_ptr<casacore::Lattice<casacore::Bool>> mymask;
         if (image.size() > 4096*4096) {
-            mymask.reset(new PagedArray<Bool>(image.shape()));
+			mymask.reset(new casacore::PagedArray<casacore::Bool>(image.shape()));
         }
         else {
-            mymask.reset(new ArrayLattice<Bool>(image.shape()));
+			mymask.reset(new casacore::ArrayLattice<casacore::Bool>(image.shape()));
         }
         _copyMask(*mymask, image);
         if (! ImageMask::isAllMaskTrue(image)) {
             tmpImage->attachMask(*mymask);
         }
     }
-    String myOutname = outname ? *outname : _outname;
+	casacore::String myOutname = outname ? *outname : _outname;
     if (! outname) {
         overwrite = _overwrite;
     }
@@ -396,46 +396,46 @@ template <class T> SPIIT ImageTask<T>::_prepareOutputImage(
         if (! myOutname.empty()) {
             _removeExistingFileIfNecessary(myOutname, overwrite);
         }
-        String emptyMask = "";
-        Record empty;
+		casacore::String emptyMask = "";
+		casacore::Record empty;
         outImage = SubImageFactory<T>::createImage(
             *tmpImage, myOutname, empty, emptyMask,
-            dropDegen, False, True, False
+        	dropDegen, false, true, false
         );
     }
-    ImageUtilities::copyMiscellaneous(*outImage, image);
+	casacore::ImageUtilities::copyMiscellaneous(*outImage, image);
     _doHistory(outImage);
     return outImage;
 }
 
 template <class T> SPIIT ImageTask<T>::_prepareOutputImage(
-    const ImageInterface<T>& image, Bool dropDeg
+    const casacore::ImageInterface<T>& image, casacore::Bool dropDeg
 ) const {
     if (! _outname.empty()) {
         _removeExistingFileIfNecessary(_outname, _overwrite);
     }
-    static const Record empty;
-    static const String emptyString;
+    static const casacore::Record empty;
+    static const casacore::String emptyString;
     auto outImage = SubImageFactory<T>::createImage(
         image, _outname, empty, emptyString, dropDeg,
-        _overwrite, True, False, False
+        _overwrite, true, false, false
     );
     _doHistory(outImage);
     return outImage;
 }
 
 template <class T> SPIIT ImageTask<T>::_prepareOutputImage(
-    const ImageInterface<T>& image, const String& outname,
-    Bool overwrite, Bool warnOnly
+    const casacore::ImageInterface<T>& image, const casacore::String& outname,
+    casacore::Bool overwrite, casacore::Bool warnOnly
 ) const {
     if (! outname.empty()) {
         _removeExistingFileIfNecessary(outname, overwrite, warnOnly);
     }
-    static const Record empty;
-    static const String emptyString;
+    static const casacore::Record empty;
+    static const casacore::String emptyString;
     auto outImage = SubImageFactory<T>::createImage(
-        image, outname, empty, emptyString, False,
-        overwrite, True, False, False
+        image, outname, empty, emptyString, false,
+        overwrite, true, false, false
     );
     _doHistory(outImage);
     return outImage;
@@ -443,26 +443,26 @@ template <class T> SPIIT ImageTask<T>::_prepareOutputImage(
 
 
 template <class T> SPIIT ImageTask<T>::_prepareOutputImage(
-    const ImageInterface<T>& image, const Lattice<T>& data
+    const casacore::ImageInterface<T>& image, const casacore::Lattice<T>& data
 ) const {
     if (! _outname.empty()) {
         _removeExistingFileIfNecessary(_outname, _overwrite);
     }
-    static const Record empty;
-    static const String emptyString;
+    static const casacore::Record empty;
+    static const casacore::String emptyString;
     auto outImage = SubImageFactory<T>::createImage(
-        image, _outname, empty, emptyString, False,
-        _overwrite, True, False, False, &data
+        image, _outname, empty, emptyString, false,
+        _overwrite, true, false, false, &data
     );
     _doHistory(outImage);
     return outImage;
 }
 
 template <class T>
-template <class U> void ImageTask<T>::_doHistory(SHARED_PTR<ImageInterface<U>>& image) const {
+template <class U> void ImageTask<T>::_doHistory(SHARED_PTR<casacore::ImageInterface<U>>& image) const {
     if (! _suppressHistory) {
         ImageHistory<U> history(image);
-        if (history.get(False).empty()) {
+        if (history.get(false).empty()) {
             history.append(_image);
         }
         for (const auto& line: _newHistory) {

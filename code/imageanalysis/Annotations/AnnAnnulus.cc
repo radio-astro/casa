@@ -24,6 +24,7 @@
 #include <images/Regions/WCEllipsoid.h>
 #include <casa/Quanta/QLogical.h>
 
+using namespace casacore;
 namespace casa {
 
 AnnAnnulus::AnnAnnulus()

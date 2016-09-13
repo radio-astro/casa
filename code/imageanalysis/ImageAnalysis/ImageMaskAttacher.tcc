@@ -27,37 +27,37 @@
 
 namespace casa {
 
-template<class T> Bool ImageMaskAttacher::makeMask(
-	ImageInterface<T>& out, String& maskName,
-	Bool init, Bool makeDefault, LogIO& os, Bool list
+template<class T> casacore::Bool ImageMaskAttacher::makeMask(
+	casacore::ImageInterface<T>& out, casacore::String& maskName,
+	casacore::Bool init, casacore::Bool makeDefault, casacore::LogIO& os, casacore::Bool list
 ) {
-	os << LogOrigin("ImageMaskAttacher", __FUNCTION__);
+	os << casacore::LogOrigin("ImageMaskAttacher", __FUNCTION__);
 	if (out.canDefineRegion()) {
 
 		// Generate mask name if not given
 		if (maskName.empty()) {
-			maskName = out.makeUniqueRegionName(String("mask"), 0);
+			maskName = out.makeUniqueRegionName(casacore::String("mask"), 0);
 		}
 		// Make the mask if it does not exist
-		if (! out.hasRegion(maskName, RegionHandler::Masks)) {
-			out.makeMask(maskName, True, makeDefault, init, True);
+		if (! out.hasRegion(maskName, casacore::RegionHandler::Masks)) {
+			out.makeMask(maskName, true, makeDefault, init, true);
 			if (list) {
 				if (init) {
-					os << LogIO::NORMAL << "Created and initialized mask `"
-							<< maskName << "'" << LogIO::POST;
+					os << casacore::LogIO::NORMAL << "Created and initialized mask `"
+							<< maskName << "'" << casacore::LogIO::POST;
 				} else {
-					os << LogIO::NORMAL << "Created mask `" << maskName << "'"
-							<< LogIO::POST;
+					os << casacore::LogIO::NORMAL << "Created mask `" << maskName << "'"
+							<< casacore::LogIO::POST;
 				}
 			}
 		}
-		return True;
+		return true;
 	}
 	else {
-		os << LogIO::WARN
+		os << casacore::LogIO::WARN
 			<< "Cannot make requested mask for this type of image"
-				<< LogIO::POST;
-		return False;
+				<< casacore::LogIO::POST;
+		return false;
 	}
 }
 

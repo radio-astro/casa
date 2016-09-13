@@ -39,6 +39,7 @@
 #include <imageanalysis/Utilities/SpectralImageUtil.h>
 
 #include <casa/iostream.h>
+using namespace casacore;
 namespace casa {
   SubImage<Float>* SpectralImageUtil::getChannel(ImageInterface<Float>& theIm, Int beginchannel, Int endchannel, Bool writeAccess){
     CoordinateSystem csys=theIm.coordinates();

@@ -53,36 +53,36 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	class ScrollingRasterDD : public PrincipalAxesDD {
 
 	public:
-		ScrollingRasterDD(const uInt nDim,
-		                  const IPosition, const Vector<String>, const Vector<String>,
-		                  uInt sAxis = 2, uInt scanNo = 100);
+		ScrollingRasterDD(const casacore::uInt nDim,
+		                  const casacore::IPosition, const casacore::Vector<casacore::String>, const casacore::Vector<casacore::String>,
+		                  casacore::uInt sAxis = 2, casacore::uInt scanNo = 100);
 		virtual ~ScrollingRasterDD();
 
-		virtual void updateLattice(const Record &) {};
-		virtual void updateLattice(Array<Float> &, DisplayCoordinateSystem &);
+		virtual void updateLattice(const casacore::Record &) {};
+		virtual void updateLattice(casacore::Array<casacore::Float> &, DisplayCoordinateSystem &);
 
-		virtual String className() const {
-			return String("ScrollingRasterDD");
+		virtual casacore::String className() const {
+			return casacore::String("ScrollingRasterDD");
 		}
 
-		virtual Bool setOptions(Record &rec, Record &recOut);
-		virtual Record getOptions( bool scrub=false ) const;
+		virtual casacore::Bool setOptions(casacore::Record &rec, casacore::Record &recOut);
+		virtual casacore::Record getOptions( bool scrub=false ) const;
 
 		virtual void setDefaultOptions();
 
 		// distribute options to all the axis labellers - empty here, we use WorldAxesDD
-		virtual Bool setLabellerOptions(Record &, Record &) {
-			return False;
+		virtual casacore::Bool setLabellerOptions(casacore::Record &, casacore::Record &) {
+			return false;
 		}
 
 		// retrieve options from the axis labellers - empty here, we use WorldAxesDD
-		virtual Record getLabellerOptions( bool /*scrub*/=false ) const {
-			Record rec;
+		virtual casacore::Record getLabellerOptions( bool /*scrub*/=false ) const {
+			casacore::Record rec;
 			return rec;
 		}
 
 
-		virtual Bool sizeControl(WorldCanvasHolder& wcHolder,
+		virtual casacore::Bool sizeControl(WorldCanvasHolder& wcHolder,
 		                         AttributeBuffer& holderBuf);
 
 		virtual WCResampleHandler *resampleHandler() {
@@ -92,24 +92,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	protected:
 		friend class ScrollingRasterDM;
 
-		virtual void updateLatticeConcat(Array<Float>* = NULL , DisplayCoordinateSystem* = NULL);
-		virtual void initLattice(const Record &);
-		virtual void initLattice(const Float, const Float, const uInt);
+		virtual void updateLatticeConcat(casacore::Array<casacore::Float>* = NULL , DisplayCoordinateSystem* = NULL);
+		virtual void initLattice(const casacore::Record &);
+		virtual void initLattice(const casacore::Float, const casacore::Float, const casacore::uInt);
 
-		virtual void recreateEmptyLattices(uInt changedScanNumber = 0);
+		virtual void recreateEmptyLattices(casacore::uInt changedScanNumber = 0);
 
-		virtual const IPosition dataShape() const;
-		virtual uInt dataDim() const;
-		virtual const Unit dataUnit() const;
+		virtual const casacore::IPosition dataShape() const;
+		virtual casacore::uInt dataDim() const;
+		virtual const casacore::Unit dataUnit() const;
 		virtual void setupElements();
 		virtual void getMinAndMax();
 		virtual void updateLatticeStatistics();
 
-		//virtual void refresh(Bool);
+		//virtual void refresh(casacore::Bool);
 
-		virtual Bool labelAxes(const WCRefreshEvent &ev);
+		virtual casacore::Bool labelAxes(const WCRefreshEvent &ev);
 
-		virtual MaskedLattice<Float>* maskedLattice() {
+		virtual casacore::MaskedLattice<casacore::Float>* maskedLattice() {
 			return itsLatticeConcatPtr;
 		}
 
@@ -117,19 +117,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			return Display::Raster;
 		}
 		// Pure virtual function from DisplayData...
-		String dataType() const {
+		casacore::String dataType() const {
 			return "scrolling";
 		}
 
-		virtual String showValue(const Vector<Double> &world);
-		virtual Float dataValue(IPosition pos);
-		virtual Bool maskValue(const IPosition &pos);
+		virtual casacore::String showValue(const casacore::Vector<casacore::Double> &world);
+		virtual casacore::Float dataValue(casacore::IPosition pos);
+		virtual casacore::Bool maskValue(const casacore::IPosition &pos);
 
-		virtual Vector<String> worldAxisNames() const;
-		virtual Vector<String> worldAxisUnits() const;
+		virtual casacore::Vector<casacore::String> worldAxisNames() const;
+		virtual casacore::Vector<casacore::String> worldAxisUnits() const;
 
 		// (Required) default constructor.
-		ScrollingRasterDD(uInt mAxis=2, uInt scanNo=100);
+		ScrollingRasterDD(casacore::uInt mAxis=2, casacore::uInt scanNo=100);
 
 		// (Required) copy constructor.
 		ScrollingRasterDD(const ScrollingRasterDD &other);
@@ -139,94 +139,94 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Set Spectral preference -> not used here.
 		virtual void setSpectralPreference (
-		    DisplayCoordinateSystem& /*cSys*/, const String&, const String& ) {}
+		    DisplayCoordinateSystem& /*cSys*/, const casacore::String&, const casacore::String& ) {}
 
-		void setHeaderMin(Float x) {
+		void setHeaderMin(casacore::Float x) {
 			itsHeaderMin = x;
 		}
-		void setHeaderMax(Float x) {
+		void setHeaderMax(casacore::Float x) {
 			itsHeaderMax = x;
 		}
-		Float headerMin() {
+		casacore::Float headerMin() {
 			return itsHeaderMin;
 		}
-		Float headerMax() {
+		casacore::Float headerMax() {
 			return itsHeaderMax;
 		}
-		void setScanNumber(uInt x) {
+		void setScanNumber(casacore::uInt x) {
 			itsScanNumber = x;
 		}
-		uInt scanNumber() {
+		casacore::uInt scanNumber() {
 			return itsScanNumber;
 		}
-		Bool headerReceived() {
+		casacore::Bool headerReceived() {
 			return itsHeaderReceived;
 		}
-		void setHeaderReceived(Bool x) {
+		void setHeaderReceived(casacore::Bool x) {
 			itsHeaderReceived = x;
 		}
 
-		IPosition latticesShape() {
+		casacore::IPosition latticesShape() {
 			return itsLattices[0]->shape();
 		}
-		uInt shiftAxis() {
+		casacore::uInt shiftAxis() {
 			return itsShiftAxis;
 		}
 
-		void setNeedResize(const Bool x) {
+		void setNeedResize(const casacore::Bool x) {
 			itsNeedResize = x;
 		}
-		Bool needResize() {
+		casacore::Bool needResize() {
 			return itsNeedResize;
 		}
 
-		IPosition fixedPos() {
+		casacore::IPosition fixedPos() {
 			return itsFixedPos;
 		}
 
-		//void setPlaneNumber(const uInt x) { itsPlaneNumber = x; }
-		//uInt planeNumber() { return itsPlaneNumber; }
+		//void setPlaneNumber(const casacore::uInt x) { itsPlaneNumber = x; }
+		//casacore::uInt planeNumber() { return itsPlaneNumber; }
 
-		void setLatticeShape(const IPosition x) {
+		void setLatticeShape(const casacore::IPosition x) {
 			itsLatticeShape = x;
 		}
-		IPosition latticeShape() {
+		casacore::IPosition latticeShape() {
 			return itsLatticeShape;
 		}
 
 	private:
 		// Worker function for c'tors.
-		void initSRDD(const Vector<String> aAxisNames, const Vector<String> aAxisUnits,
-		              uInt mAxis);
+		void initSRDD(const casacore::Vector<casacore::String> aAxisNames, const casacore::Vector<casacore::String> aAxisUnits,
+		              casacore::uInt mAxis);
 
-		uInt nDim;
+		casacore::uInt nDim;
 
-		//ImageInterface<Float> *itsImagePtr;
-		////Array<Float>          *itsBaseArrayPtr;
-		LatticeConcat<Float>* itsLatticeConcatPtr;
-		//MaskedLattice<Float>  *itsMaskedLatticePtr;
-		LatticeStatistics<Float> *itsLatticeStatisticsPtr;
-		SubLattice<Float> *itsFilledDisplayedLatticePtr;
-		//Int itsM2Axis;
-		IPosition itsFixedPos;
+		//casacore::ImageInterface<casacore::Float> *itsImagePtr;
+		////casacore::Array<casacore::Float>          *itsBaseArrayPtr;
+		casacore::LatticeConcat<casacore::Float>* itsLatticeConcatPtr;
+		//casacore::MaskedLattice<casacore::Float>  *itsMaskedLatticePtr;
+		casacore::LatticeStatistics<casacore::Float> *itsLatticeStatisticsPtr;
+		casacore::SubLattice<casacore::Float> *itsFilledDisplayedLatticePtr;
+		//casacore::Int itsM2Axis;
+		casacore::IPosition itsFixedPos;
 
-		Int itsFilledCount;
+		casacore::Int itsFilledCount;
 
-		MaskedLattice<Float> **itsLattices;
+		casacore::MaskedLattice<casacore::Float> **itsLattices;
 
-		Bool itsNeedResize;
-		uInt itsShiftAxis;
+		casacore::Bool itsNeedResize;
+		casacore::uInt itsShiftAxis;
 
-		Bool itsHeaderReceived;
-		Float itsHeaderMin;
-		Float itsHeaderMax;
-		uInt itsScanNumber;
-		IPosition itsLatticeShape;
-		//IPosition itsScanShape;
-		//uInt itsPlaneNumber;
+		casacore::Bool itsHeaderReceived;
+		casacore::Float itsHeaderMin;
+		casacore::Float itsHeaderMax;
+		casacore::uInt itsScanNumber;
+		casacore::IPosition itsLatticeShape;
+		//casacore::IPosition itsScanShape;
+		//casacore::uInt itsPlaneNumber;
 
 		// storage for the display parameters
-		String itsResample;
+		casacore::String itsResample;
 
 		// pointer to resampler
 		WCResampleHandler *itsResampleHandler;

@@ -21,6 +21,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 namespace sdfiller { //# NAMESPACE SDFILLER - BEGIN
 
 class Mutex {
+
 public:
   Mutex() :
       mutex_(PTHREAD_MUTEX_INITIALIZER) {

@@ -44,9 +44,9 @@ namespace casa {
 
 	public:
 		LineOverlaysTab(QWidget *parent = 0);
-		void setRange( double min, double max, String units );
+		void setRange( double min, double max, casacore::String units );
 		void setInitialReferenceFrame( QString referenceStr );
-		void setSpectralCoordinate( SpectralCoordinate coord );
+		void setSpectralCoordinate( casacore::SpectralCoordinate coord );
 		void setCanvas( QtCanvas* canvas );
 		void unitsChanged(QString graphUnits );
 		~LineOverlaysTab();
@@ -70,7 +70,7 @@ namespace casa {
 		QtCanvas* pixelCanvas;
 		LineOverlaysSearchResultsDialog searchResults;
 		SearchRedshiftDialog searchRedshiftDialog;
-		SpectralCoordinate spectralCoordinate;
+		casacore::SpectralCoordinate spectralCoordinate;
 
 	};
 }

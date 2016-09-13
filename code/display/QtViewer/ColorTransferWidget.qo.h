@@ -44,7 +44,7 @@ namespace casa {
 
 		void setColorMap(QwtLinearColorMap* linearMap );
 		void setIntensities( std::vector<float>& intensities );
-		void setColorLookups( const Vector<uInt>& lookups );
+		void setColorLookups( const casacore::Vector<casacore::uInt>& lookups );
 
 	private:
 		ColorTransferWidget( const ColorTransferWidget& other );
@@ -56,7 +56,7 @@ namespace casa {
 
 		Ui::ColorTransferWidgetClass ui;
 
-		Vector<uInt> colorLookups;
+		casacore::Vector<casacore::uInt> colorLookups;
 		QwtPlot* plot;
 		QwtPlotCurve* colorCurve;
 		QwtLinearColorMap* colorMap;

@@ -38,6 +38,7 @@
 
 #include <scimath/Mathematics.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	DSScreenPolyLine::DSScreenPolyLine() :
@@ -89,7 +90,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	Bool DSScreenPolyLine::setOptions(const Record& settings) {
-		Bool localChange = False;
+		Bool localChange = false;
 		Record toSet = settings;
 
 		if (settings.isDefined("coords")) {
@@ -113,7 +114,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 		if (DSPolyLine::setOptions(toSet)) {
-			localChange = True;
+			localChange = true;
 		}
 
 		return localChange;

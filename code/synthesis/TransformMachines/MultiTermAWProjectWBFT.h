@@ -45,20 +45,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // most cases).  
     // <group>
     //
-    MultiTermAWProjectWBFT(Int nFacets, Long cachesize,
-			   CountedPtr<CFCache>& cfcache,
-			   CountedPtr<ConvolutionFunction>& cf,
-			   Bool applyPointingOffset=True,
-			   Bool doPBCorr=True,
-			   Int tilesize=16, 
-			   Float paSteps=5.0, 
-			   Float pbLimit=5e-2,
-			   Bool usezero=False) 
+    MultiTermAWProjectWBFT(casacore::Int nFacets, casacore::Long cachesize,
+			   casacore::CountedPtr<CFCache>& cfcache,
+			   casacore::CountedPtr<ConvolutionFunction>& cf,
+			   casacore::Bool applyPointingOffset=true,
+			   casacore::Bool doPBCorr=true,
+			   casacore::Int tilesize=16, 
+			   casacore::Float paSteps=5.0, 
+			   casacore::Float pbLimit=5e-2,
+			   casacore::Bool usezero=false) 
     {};
     // </group>
     
-    // Construct from a Record containing the AWProjectWBFT state
-    MultiTermAWProjectWBFT(const RecordInterface& stateRec) 
+    // Construct from a casacore::Record containing the AWProjectWBFT state
+    MultiTermAWProjectWBFT(const casacore::RecordInterface& stateRec) 
     {};
     
     // Assignment operator
@@ -73,10 +73,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // sum of weights and the sensitivity image, this method replaces
     // the skyImage with the normalized image of the sky.
     //
-    virtual void normalizeImage(Lattice<Complex>& skyImage,
-				const Matrix<Double>& sumOfWts,
-				Lattice<Float>& sensitivityImage,
-				Bool fftNorm=True) 
+    virtual void normalizeImage(casacore::Lattice<casacore::Complex>& skyImage,
+				const casacore::Matrix<casacore::Double>& sumOfWts,
+				casacore::Lattice<casacore::Float>& sensitivityImage,
+				casacore::Bool fftNorm=true) 
     {};
     //
     // In AWProjectWBFT and its derivatives, sensitivity image is
@@ -85,13 +85,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // overloaded in AWProjectWBFT and only issues a log message.
     //
     // The following method is used to Fourier transform normalize the
-    // accumulated weight images.  doFFTNorm when True, the FFT
+    // accumulated weight images.  doFFTNorm when true, the FFT
     // normalization (by pixel volume) is also done.
     //
-    virtual void makeSensitivityImage(Lattice<Complex>& wtImage,
-				      ImageInterface<Float>& sensitivityImage,
-				      const Matrix<Float>& sumWt=Matrix<Float>(),
-				      const Bool& doFFTNorm=True)
+    virtual void makeSensitivityImage(casacore::Lattice<casacore::Complex>& wtImage,
+				      casacore::ImageInterface<casacore::Float>& sensitivityImage,
+				      const casacore::Matrix<casacore::Float>& sumWt=casacore::Matrix<casacore::Float>(),
+				      const casacore::Bool& doFFTNorm=true)
     {};
     //
     // Method used to make normalized image from gridded visibilites.
@@ -101,20 +101,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // normalizeImage() which uses the sensitivty image computed by
     // makeSensitivtyImage().
     //
-    virtual ImageInterface<Complex>& getImage(Matrix<Float>&, Bool normalize=True)
+    virtual casacore::ImageInterface<casacore::Complex>& getImage(casacore::Matrix<casacore::Float>&, casacore::Bool normalize=true)
     {};
 
     //
-    // Returns True if accumulation during gridding to compute the
+    // Returns true if accumulation during gridding to compute the
     // average PB must be done.
     //
-    virtual Bool computeAvgPB(const Double& actualPA, const Double& lastPAUsedForWtImg) 
-    {return (avgPBReady_p==False);};
+    virtual casacore::Bool computeAvgPB(const casacore::Double& actualPA, const casacore::Double& lastPAUsedForWtImg) 
+    {return (avgPBReady_p==false);};
 
-    virtual String name() const {return "MultiTermAWProjectWBFT";};
+    virtual casacore::String name() const {return "MultiTermAWProjectWBFT";};
 
-    void normalizeAvgPB(ImageInterface<Complex>& inImage, ImageInterface<Float>& outImage) 
-    {throw(AipsError("MTAWPWBFT::normalizeAvgPB(Complex,Float)"));}
+    void normalizeAvgPB(casacore::ImageInterface<casacore::Complex>& inImage, casacore::ImageInterface<casacore::Float>& outImage) 
+    {throw(casacore::AipsError("MTAWPWBFT::normalizeAvgPB(casacore::Complex,casacore::Float)"));}
   };
 } //# NAMESPACE CASA - END
 

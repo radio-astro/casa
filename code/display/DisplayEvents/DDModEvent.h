@@ -56,14 +56,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // This class adds to the information stored in the <linkto
 // class=DisplayDataEvent>DisplayDataEvent</linkto> class. It adds a
 // pointer to a record that holds the modified data. The structure of
-// the record is specific to each type of Display Data so the event
+// the record is specific to each type of Display casacore::Data so the event
 // handlers will need to know the structure they are listening for
 // </synopsis>
 
 // <example>
 // <srcBlock>
 // // Sending a DDModEvent from a Profile2dDD (inherits from ActiveCaching2dDD)
-// Record rec;
+// casacore::Record rec;
 // fillRecordWithData(rec); // DD specific function
 // DDModEvent ev(this, &rec);
 // ActiveCaching2dDD::handleEvent(ev); // let super classes send events
@@ -104,13 +104,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Constructor, taking a pointer to a DisplayData and
 		// a pointer to a data record.
-		DDModEvent(DisplayData* dd, const Record *rec);
+		DDModEvent(DisplayData* dd, const casacore::Record *rec);
 
 		// Destructor.
 		virtual ~DDModEvent();
 
 		// Return a pointer to the data record.
-		virtual const Record *dataRecord() const {
+		virtual const casacore::Record *dataRecord() const {
 			return itsRec;
 		}
 
@@ -128,7 +128,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	private:
 
 		// the data record
-		const Record *itsRec;
+		const casacore::Record *itsRec;
 
 	};
 

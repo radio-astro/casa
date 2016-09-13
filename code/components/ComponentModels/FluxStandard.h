@@ -33,12 +33,16 @@
 #include <components/ComponentModels/Flux.h>
 #include <measures/Measures/MDirection.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore{
 
-// Forward declarations
 class String;        //#include <casa/BasicSL/String.h>
 class MEpoch;        //#include <measures/Measures/MEpoch.h>
 class MFrequency;    //#include <measures/Measures/MFrequency.h>
+}
+
+namespace casa { //# NAMESPACE CASA - BEGIN
+
+// Forward declarations
 class SpectralModel; //#include <components/ComponentModels/SpectralModel.h>
 
 // <summary> 
@@ -130,29 +134,29 @@ class FluxStandard
   ~FluxStandard();
 
   // Compute the flux density for a specified source at a specified frequency
-  Bool compute (const String& sourceName, const MDirection& sourceDir, const MFrequency& mfreq, const MEpoch& mtime,
-		Flux<Double>& value, Flux<Double>& error);
+  casacore::Bool compute (const casacore::String& sourceName, const casacore::MDirection& sourceDir, const casacore::MFrequency& mfreq, const casacore::MEpoch& mtime,
+		Flux<casacore::Double>& value, Flux<casacore::Double>& error);
 
   // Compute the flux densities and their uncertainties for a specified source
   // at a set of specified frequencies.
-  Bool compute(const String& sourceName, 
-               const MDirection& sourceDir,
-               const Vector<MFrequency>& mfreqs,
-               const MEpoch& mtime,
-	       Vector<Flux<Double> >& values,
-               Vector<Flux<Double> >& errors,
-               const Bool verbose=True);
+  casacore::Bool compute(const casacore::String& sourceName, 
+               const casacore::MDirection& sourceDir,
+               const casacore::Vector<casacore::MFrequency>& mfreqs,
+               const casacore::MEpoch& mtime,
+	       casacore::Vector<Flux<casacore::Double> >& values,
+               casacore::Vector<Flux<casacore::Double> >& errors,
+               const casacore::Bool verbose=true);
 
   // Compute the flux densities and their uncertainties for a specified source
   // for a set of sets of specified frequencies, i.e. mfreqs[spw] is a set of
   // frequencies for channels in spectral window spw, and values and errors are
   // arranged the same way.
-  Bool compute(const String& sourceName,
-               const MDirection& sourceDir,
-               const Vector<Vector<MFrequency> >& mfreqs,
-               const MEpoch& mtime,
-               Vector<Vector<Flux<Double> > >& values,
-               Vector<Vector<Flux<Double> > >& errors);
+  casacore::Bool compute(const casacore::String& sourceName,
+               const casacore::MDirection& sourceDir,
+               const casacore::Vector<casacore::Vector<casacore::MFrequency> >& mfreqs,
+               const casacore::MEpoch& mtime,
+               casacore::Vector<casacore::Vector<Flux<casacore::Double> > >& values,
+               casacore::Vector<casacore::Vector<Flux<casacore::Double> > >& errors);
 
   // Like compute, but it also saves a set of ComponentLists for the source to
   // disk and puts the paths (sourceName_mfreq_mtime.cl) in clnames, making it
@@ -161,14 +165,14 @@ class FluxStandard
   // Solar System objects are typically resolved and variable!
   // The ComponentList names are formed from prefix, sourceName, the
   // frequencies, and times.
-  Bool computeCL(const String& sourceName, const Vector<Vector<MFrequency> >& mfreqs,
-                 const MEpoch& mtime, const MDirection& position,
-                 Vector<Vector<Flux<Double> > >& values,
-                 Vector<Vector<Flux<Double> > >& errors,
-                 Vector<String>& clnames, const String& prefix="");
+  casacore::Bool computeCL(const casacore::String& sourceName, const casacore::Vector<casacore::Vector<casacore::MFrequency> >& mfreqs,
+                 const casacore::MEpoch& mtime, const casacore::MDirection& position,
+                 casacore::Vector<casacore::Vector<Flux<casacore::Double> > >& values,
+                 casacore::Vector<casacore::Vector<Flux<casacore::Double> > >& errors,
+                 casacore::Vector<casacore::String>& clnames, const casacore::String& prefix="");
 
   // set interpolation method for a time-variable source
-  void setInterpMethod(const String& interpmethod);
+  void setInterpMethod(const casacore::String& interpmethod);
   
 
   // Take a component cmp and save it to a ComponentList on disk, returning the
@@ -179,38 +183,38 @@ class FluxStandard
   // up the pathname.  The ComponentList name is formed from prefix, sourceName,
   // mfreq, and mtime.
   //
-  static String makeComponentList(const String& sourceName, const MFrequency& mfreq,
-                                  const MEpoch& mtime, const Flux<Double>& fluxval,
+  static casacore::String makeComponentList(const casacore::String& sourceName, const casacore::MFrequency& mfreq,
+                                  const casacore::MEpoch& mtime, const Flux<casacore::Double>& fluxval,
                                   const ComponentShape& cmp,
                                   const SpectralModel& spectrum,
-				  const String& prefix="");
+				  const casacore::String& prefix="");
 
   // Variation of the above that will fill a TabularSpectrum with mfreqs and
   // values if appropriate.
-  static String makeComponentList(const String& sourceName,
-                                  const Vector<MFrequency>& mfreqs,
-                                  const MEpoch& mtime,
-                                  const Vector<Flux<Double> >& values,
+  static casacore::String makeComponentList(const casacore::String& sourceName,
+                                  const casacore::Vector<casacore::MFrequency>& mfreqs,
+                                  const casacore::MEpoch& mtime,
+                                  const casacore::Vector<Flux<casacore::Double> >& values,
                                   const ComponentShape& cmp,
-                                  const String& prefix="");
+                                  const casacore::String& prefix="");
 
   // Decode a string representation of the standard or catalog name
-  static Bool matchStandard(const String& name, 
+  static casacore::Bool matchStandard(const casacore::String& name, 
 			    FluxStandard::FluxScale& stdEnum,
-			    String& stdName);
+			    casacore::String& stdName);
 
   // Return a standard string description for each scale or catalog
-  static String standardName(const FluxStandard::FluxScale& stdEnum);
+  static casacore::String standardName(const FluxStandard::FluxScale& stdEnum);
 
  private:
   // Flux scale in use
   FluxStandard::FluxScale itsFluxScale;
 
-  Bool has_direction_p;
+  casacore::Bool has_direction_p;
 
-  MDirection direction_p;
+  casacore::MDirection direction_p;
 
-  String interpmethod_p;
+  casacore::String interpmethod_p;
 };
 
 } //# NAMESPACE CASA - END

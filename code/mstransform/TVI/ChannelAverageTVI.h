@@ -40,36 +40,36 @@ class ChannelAverageTVI : public FreqAxisTVI
 
 public:
 
-	ChannelAverageTVI(ViImplementation2 * inputVii,const Record &configuration);
-
+	ChannelAverageTVI(ViImplementation2 * inputVii, const casacore::Record &configuration);
 	// Report the the ViImplementation type
-	virtual String ViiType() const { return String("ChannelAverage( ")+getVii()->ViiType()+" )"; };
+	virtual casacore::String ViiType() const { return casacore::String("ChannelAverage( ")+getVii()->ViiType()+" )"; };
 
 
-    void flag(Cube<Bool>& flagCube) const;
-    void floatData (Cube<Float> & vis) const;
-    void visibilityObserved (Cube<Complex> & vis) const;
-    void visibilityCorrected (Cube<Complex> & vis) const;
-    void visibilityModel (Cube<Complex> & vis) const;
-    void weightSpectrum(Cube<Float> &weightSp) const;
-    void sigmaSpectrum (Cube<Float> &sigmaSp) const;
+    void flag(casacore::Cube<casacore::Bool>& flagCube) const;
+    void floatData (casacore::Cube<casacore::Float> & vis) const;
+    void visibilityObserved (casacore::Cube<casacore::Complex> & vis) const;
+    void visibilityCorrected (casacore::Cube<casacore::Complex> & vis) const;
+    void visibilityModel (casacore::Cube<casacore::Complex> & vis) const;
+    void weightSpectrum(casacore::Cube<casacore::Float> &weightSp) const;
+    void sigmaSpectrum (casacore::Cube<casacore::Float> &sigmaSp) const;
 
-    Bool weightSpectrumExists () const {return True;}
-    Bool sigmaSpectrumExists () const {return True;}
+    casacore::Bool weightSpectrumExists () const {return true;}
+    casacore::Bool sigmaSpectrumExists () const {return true;}
+    
+    casacore::Vector<casacore::Double> getFrequencies (	casacore::Double time, casacore::Int frameOfReference,
+    								casacore::Int spectralWindowId, casacore::Int msId) const;
 
-    Vector<Double> getFrequencies (	Double time, Int frameOfReference,
-    								Int spectralWindowId, Int msId) const;
 
-    void writeFlag (const Cube<Bool> & flag);
+    void writeFlag (const casacore::Cube<casacore::Bool> & flag);
 
 protected:
 
-    void propagateChanAvgFlags (const Cube<Bool> &avgFlagCube, Cube<Bool> &expandedFlagCube);
-    Bool parseConfiguration(const Record &configuration);
+    void propagateChanAvgFlags (const casacore::Cube<casacore::Bool> &avgFlagCube, casacore::Cube<casacore::Bool> &expandedFlagCube);
+    casacore::Bool parseConfiguration(const casacore::Record &configuration);
     void initialize();
 
-	Vector<Int> chanbin_p;
-	mutable map<Int,uInt > spwChanbinMap_p; // Must be accessed from const methods
+	casacore::Vector<casacore::Int> chanbin_p;
+	mutable map<casacore::Int,casacore::uInt > spwChanbinMap_p; // Must be accessed from const methods
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -81,14 +81,14 @@ class ChannelAverageTVIFactory : public ViFactory
 
 public:
 
-	ChannelAverageTVIFactory(Record &configuration,ViImplementation2 *inputVII);
+	ChannelAverageTVIFactory(casacore::Record &configuration,ViImplementation2 *inputVII);
 
 protected:
 
 	vi::ViImplementation2 * createVi (VisibilityIterator2 *) const;
 	vi::ViImplementation2 * createVi () const;
 
-	Record configuration_p;
+	casacore::Record configuration_p;
 	ViImplementation2 *inputVii_p;;
 };
 
@@ -101,7 +101,7 @@ class ChannelAverageTVILayerFactory : public ViiLayerFactory
 
 public:
 
-  ChannelAverageTVILayerFactory(Record &configuration);
+  ChannelAverageTVILayerFactory(casacore::Record &configuration);
 
   virtual ~ChannelAverageTVILayerFactory() {};
 
@@ -110,7 +110,7 @@ protected:
   
   virtual ViImplementation2 * createInstance(ViImplementation2* vii0) const;
 
-  const Record configuration_p;
+  const casacore::Record configuration_p;
 
 };
 
@@ -132,13 +132,13 @@ public:
 	ChannelAverageTransformEngine	(	ChannelAverageKernel<T> *kernel,
 										DataCubeMap *inputData,
 										DataCubeMap *outputData,
-										uInt width);
+										casacore::uInt width);
 
 	void transform();
 
 protected:
 
-	uInt width_p;
+	casacore::uInt width_p;
 	// This member has to be a pointer, otherwise there
 	// are compile time problems due to the fact that
 	// it is a pure virtual class.
@@ -156,9 +156,9 @@ public:
 
 	virtual void kernel(DataCubeMap *inputData,
 						DataCubeMap *outputData,
-						uInt startInputPos,
-						uInt outputPos,
-						uInt width) = 0;
+						casacore::uInt startInputPos,
+						casacore::uInt outputPos,
+						casacore::uInt width) = 0;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -172,9 +172,9 @@ public:
 
 	void kernel(	DataCubeMap *inputData,
 					DataCubeMap *outputData,
-					uInt startInputPos,
-					uInt outputPos,
-					uInt width);
+					casacore::uInt startInputPos,
+					casacore::uInt outputPos,
+					casacore::uInt width);
 
 };
 
@@ -189,9 +189,9 @@ public:
 
 	void kernel(DataCubeMap *inputData,
 				DataCubeMap *outputData,
-				uInt startInputPos,
-				uInt outputPos,
-				uInt width);
+				casacore::uInt startInputPos,
+				casacore::uInt outputPos,
+				casacore::uInt width);
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -205,9 +205,9 @@ public:
 
 	void kernel(DataCubeMap *inputData,
 				DataCubeMap *outputData,
-				uInt startInputPos,
-				uInt outputPos,
-				uInt width);
+				casacore::uInt startInputPos,
+				casacore::uInt outputPos,
+				casacore::uInt width);
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -221,9 +221,9 @@ public:
 
 	void kernel(DataCubeMap *inputData,
 				DataCubeMap *outputData,
-				uInt startInputPos,
-				uInt outputPos,
-				uInt width);
+				casacore::uInt startInputPos,
+				casacore::uInt outputPos,
+				casacore::uInt width);
 };
 
 } //# NAMESPACE VI - END

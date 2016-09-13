@@ -34,7 +34,7 @@ public:
     ~AveragingTvi2 ();
 
     // Report the the ViImplementation type
-    virtual String ViiType() const { return String("TimeAve( ")+getVii()->ViiType()+" )"; };
+    virtual casacore::String ViiType() const { return casacore::String("TimeAve( ")+getVii()->ViiType()+" )"; };
 
     /////////////////////////////////////////////////////////////////////////
     //
@@ -60,54 +60,54 @@ public:
     // The input VI must use the data description ID as a sort column so that
     // a chunk will only contain data from a single DDID setting.
 
-    void originChunks (Bool forceRewind = False);
+    void originChunks (casacore::Bool forceRewind = false);
     void nextChunk ();
-    Bool moreChunks () const;
+    casacore::Bool moreChunks () const;
 
     void origin ();
     void next ();
-    Bool more () const;
+    casacore::Bool more () const;
 
-    void writeFlag (const Cube<Bool> & flag);
-    void writeFlagRow (const Vector<Bool> & rowflags);
+    void writeFlag (const casacore::Cube<casacore::Bool> & flag);
+    void writeFlagRow (const casacore::Vector<casacore::Bool> & rowflags);
 
-    static Float weightToSigma (Float weight);
-    static inline Float sigmaToWeight (Float sigma)
+    static casacore::Float weightToSigma (casacore::Float weight);
+    static inline casacore::Float sigmaToWeight (casacore::Float sigma)
     {
         return sigma > FLT_MIN ? 1.0 / (sigma * sigma) : 0.0; // bad sample
     }
 
 
-    static Vector<Float> average (const Matrix<Float> &data, const Matrix<Bool> &flags);
-    static Matrix<Float> average (const Cube<Float> &data, const Cube<Bool> &flags);
+    static casacore::Vector<casacore::Float> average (const casacore::Matrix<casacore::Float> &data, const casacore::Matrix<casacore::Bool> &flags);
+    static casacore::Matrix<casacore::Float> average (const casacore::Cube<casacore::Float> &data, const casacore::Cube<casacore::Bool> &flags);
 
 protected:
 
     void advanceInputVii ();
-    Int determineDdidToUse () const;
-    Bool inputExceedsTimeDistance (ms::MsRow * rowInput, avg::MsRowAvg * rowAveraged);
-    Bool inputExceedsUvwDistance (ms::MsRow * rowInput, avg::MsRowAvg * rowAveraged);
+    casacore::Int determineDdidToUse () const;
+    casacore::Bool inputExceedsTimeDistance (ms::MsRow * rowInput, avg::MsRowAvg * rowAveraged);
+    casacore::Bool inputExceedsUvwDistance (ms::MsRow * rowInput, avg::MsRowAvg * rowAveraged);
     void produceSubchunk ();
     void processInputSubchunk (const VisBuffer2 *);
-    Bool reachedAveragingBoundary();
+    casacore::Bool reachedAveragingBoundary();
     void captureIterationInfo (const VisBuffer2 * vb2);
     bool subchunksReady () const;
     void validateInputVi (ViImplementation2 *);
 
 private:
 
-    const Double averagingInterval_p; // averaging interval in seconds
+    const casacore::Double averagingInterval_p; // averaging interval in seconds
     AveragingOptions averagingOptions_p;
     AveragingParameters averagingParameters_p;
-    Int ddidLastUsed_p; // ddId last used to produce a subchunk.
-    Bool inputViiAdvanced_p; // true if input VII was advanced but data not used
-    Bool more_p;
+    casacore::Int ddidLastUsed_p; // ddId last used to produce a subchunk.
+    casacore::Bool inputViiAdvanced_p; // true if input VII was advanced but data not used
+    casacore::Bool more_p;
     Subchunk subchunk_p;
-    Bool subchunkExists_p;
+    casacore::Bool subchunkExists_p;
     avg::VbAvg * vbAvg_p;
     WeightScaling * weightScaling_p;
-    Int startBuffer_p;
-    Int endBuffer_p;
+    casacore::Int startBuffer_p;
+    casacore::Int endBuffer_p;
 };
 
 } // end namespace vi

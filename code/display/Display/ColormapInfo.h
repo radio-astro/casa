@@ -56,8 +56,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Constructor taking a pointer to a Colormap, and the initial
 		// weight, offset and size of the Colormap.
-		ColormapInfo(const Colormap *colormap, const Float &weight,
-		             const uInt &offset, const uInt &size);
+		ColormapInfo(const Colormap *colormap, const casacore::Float &weight,
+		             const casacore::uInt &offset, const casacore::uInt &size);
 
 		// Yield a pointer to the Colormap about which this stores
 		// information.
@@ -66,28 +66,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		// Return the current weight for this mapping.
-		Float weight() const {
+		casacore::Float weight() const {
 			return itsWeight;
 		}
 
 		// Return the current offset for this mapping.
-		uInt offset() const {
+		casacore::uInt offset() const {
 			return itsOffset;
 		}
 
 		// Return the current size for this mapping.
-		uInt size() const {
+		casacore::uInt size() const {
 			return itsSize;
 		}
 
 		// Set the weight for this mapping.
-		void setWeight(const Float &weight);
+		void setWeight(const casacore::Float &weight);
 
 		// Set the offset for this mapping.
-		void setOffset(const uInt &offset);
+		void setOffset(const casacore::uInt &offset);
 
 		// Set the size for this mapping.
-		void setSize(const uInt &size);
+		void setSize(const casacore::uInt &size);
 
 		// Increment and decrement the reference count for this mapping.
 		// <group>
@@ -96,7 +96,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// </group>
 
 		// Return the current reference count.
-		uInt refCount() const {
+		casacore::uInt refCount() const {
 			return itsRefCount;
 		}
 
@@ -106,16 +106,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		const Colormap *itsColormap;
 
 		// Store the weight of the mapping here.
-		Float itsWeight;
+		casacore::Float itsWeight;
 
 		// Store the offset of the mapping here.
-		uInt itsOffset;
+		casacore::uInt itsOffset;
 
 		// Store the size of the mapping here.
-		uInt itsSize;
+		casacore::uInt itsSize;
 
 		// Store the reference count of the mapping here.
-		Int itsRefCount;
+		casacore::Int itsRefCount;
 
 	};
 

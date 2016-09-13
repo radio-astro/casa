@@ -21,58 +21,58 @@ class MsIterInfo {
 
 public:
 
-    void fill (const MSIter & msIter);
+    void fill (const casacore::MSIter & msIter);
 
-    Bool allBeamOffsetsZero () const;
-    Vector<String>  & antennaMounts () const;
-    Int arrayId () const;
-    Int dataDescriptionId () const;
-    Int fieldId () const;
-    String fieldName () const;
-    const MFrequency & frequency0 () const;
-    const Vector<Double> & getBeamOffsets () const;
-    Bool more () const;
-    Int msId () const;
-    Bool newArray () const;
-    Int newDataDescriptionId () const;
-    Bool newField () const;
-    Bool newMS () const;
-    Bool newSpectralWindow () const;
-    Int numMS () const;
-    const MDirection & phaseCenter () const;
-    Int polFrame () const;
-    Int polarizationId () const;
-    const Matrix<Double> & receptorAngle () const;
-    const String & sourceName () const;
-    Int spectralWindowId () const;
-    const MPosition & telescopePosition () const;
+    casacore::Bool allBeamOffsetsZero () const;
+    casacore::Vector<casacore::String>  & antennaMounts () const;
+    casacore::Int arrayId () const;
+    casacore::Int dataDescriptionId () const;
+    casacore::Int fieldId () const;
+    casacore::String fieldName () const;
+    const casacore::MFrequency & frequency0 () const;
+    const casacore::Vector<casacore::Double> & getBeamOffsets () const;
+    casacore::Bool more () const;
+    casacore::Int msId () const;
+    casacore::Bool newArray () const;
+    casacore::Int newDataDescriptionId () const;
+    casacore::Bool newField () const;
+    casacore::Bool newMS () const;
+    casacore::Bool newSpectralWindow () const;
+    casacore::Int numMS () const;
+    const casacore::MDirection & phaseCenter () const;
+    casacore::Int polFrame () const;
+    casacore::Int polarizationId () const;
+    const casacore::Matrix<casacore::Double> & receptorAngle () const;
+    const casacore::String & sourceName () const;
+    casacore::Int spectralWindowId () const;
+    const casacore::MPosition & telescopePosition () const;
 
 
 private:
 
-    Bool allBeamOffsetsZero_p;
-    Vector<String>  antennaMounts_p;
-    Int arrayId_p;
-    Int dataDescriptionId_p;
-    Int fieldId_p;
-    String fieldName_p;
-    MFrequency frequency0_p;
-    Vector<Double> getBeamOffsets_p;
-    Bool more_p;
-    Int msId_p;
-    Bool newArray_p;
-    Int newDataDescriptionId_p;
-    Bool newField_p;
-    Bool newMS_p;
-    Bool newSpectralWindow_p;
-    Int numMS_p;
-    MDirection phaseCenter_p;
-    Int polFrame_p;
-    Int polarizationId_p;
-    Matrix<Double> receptorAngle_p;
-    String sourceName_p;
-    Int spectralWindowId_p;
-    MPosition telescopePosition_p;
+    casacore::Bool allBeamOffsetsZero_p;
+    casacore::Vector<casacore::String>  antennaMounts_p;
+    casacore::Int arrayId_p;
+    casacore::Int dataDescriptionId_p;
+    casacore::Int fieldId_p;
+    casacore::String fieldName_p;
+    casacore::MFrequency frequency0_p;
+    casacore::Vector<casacore::Double> getBeamOffsets_p;
+    casacore::Bool more_p;
+    casacore::Int msId_p;
+    casacore::Bool newArray_p;
+    casacore::Int newDataDescriptionId_p;
+    casacore::Bool newField_p;
+    casacore::Bool newMS_p;
+    casacore::Bool newSpectralWindow_p;
+    casacore::Int numMS_p;
+    casacore::MDirection phaseCenter_p;
+    casacore::Int polFrame_p;
+    casacore::Int polarizationId_p;
+    casacore::Matrix<casacore::Double> receptorAngle_p;
+    casacore::String sourceName_p;
+    casacore::Int spectralWindowId_p;
+    casacore::MPosition telescopePosition_p;
 
 };
 
@@ -100,107 +100,107 @@ protected:
     // VisBufferAsync2 is created.
 
     VisBufferImplAsync2 ();
-    VisBufferImplAsync2 (VisibilityIterator2 & iter, Bool isWritable);
+    VisBufferImplAsync2 (VisibilityIterator2 & iter, casacore::Bool isWritable);
 
 //    void attachToVisIter(VisibilityIterator2 & iter);
 //    void checkVisIter (const char * func, const char * file, int line, const char * extra = "") const;
 //    void clear ();
     void construct ();
 //    virtual void copyAsyncValues (const VisBufferAsync2 & other);
-//    virtual void copyCache (const VisBuffer2 & other, Bool force);
-//    template<typename T> void copyVector (const Vector<T> & from, Vector<T> & to);
-//    Vector<MDirection>& fillDirection1();
-//    Vector<MDirection>& fillDirection2();
+//    virtual void copyCache (const VisBuffer2 & other, casacore::Bool force);
+//    template<typename T> void copyVector (const casacore::Vector<T> & from, casacore::Vector<T> & to);
+//    casacore::Vector<casacore::MDirection>& fillDirection1();
+//    casacore::Vector<casacore::MDirection>& fillDirection2();
 //    void fillFrom (const VisBufferAsync2 & other);
-//    MDirection & fillPhaseCenter();
-//    Bool getAllBeamOffsetsZero () const;
-//    const Vector <String> & getAntennaMounts () const;
-//    const Cube <RigidVector <Double, 2> > & getBeamOffsets () const;
-//    const MeasurementSet & getMs () const;
-//    Int getNSpw () const;
-//    MDirection getPhaseCenter () const;
-//    const Cube <Double> & getReceptorAngles () const;
-//    void setAngleInfo (Bool allBeamOffsetsZero,
-//                       const Vector<String> antennaMounts,
-//                       Cube<RigidVector<Double, 2> > beamOffsets,
-//                       const Cube<Double> & receptorAngles);
+//    casacore::MDirection & fillPhaseCenter();
+//    casacore::Bool getAllBeamOffsetsZero () const;
+//    const casacore::Vector <casacore::String> & getAntennaMounts () const;
+//    const casacore::Cube <casacore::RigidVector <casacore::Double, 2> > & getBeamOffsets () const;
+//    const casacore::MeasurementSet & getMs () const;
+//    casacore::Int getNSpw () const;
+//    casacore::MDirection getPhaseCenter () const;
+//    const casacore::Cube <casacore::Double> & getReceptorAngles () const;
+//    void setAngleInfo (casacore::Bool allBeamOffsetsZero,
+//                       const casacore::Vector<casacore::String> antennaMounts,
+//                       casacore::Cube<casacore::RigidVector<casacore::Double, 2> > beamOffsets,
+//                       const casacore::Cube<casacore::Double> & receptorAngles);
 //    void initializeScalars ();
-//    /////void setDataDescriptionId (Int id);
-//    void setFilling (Bool isFilling);
-//    void setLsrInfo (const Block <Int> & channelGroupNumber,
-//                     const Block <Int> & channelIncrement,
-//                     const Block <Int> & channelStart,
-//                     const Block <Int> & channelWidth,
-//                     const MPosition & observatoryPosition,
-//                     const MDirection & phaseCenter,
-//                     Bool velocitySelection);
-//    void setMeasurementSet (const MeasurementSet & ms);
-//    void setMeasurementSetId (Int id, bool isNew);
-//    void setMEpoch (const MEpoch & mEpoch);
-//    void setMSD (const MSDerivedValues & msd);
-//    void setNAntennas (Int);
-//    void setNCoh (Int);
-//    void setNSpw (Int);
+//    /////void setDataDescriptionId (casacore::Int id);
+//    void setFilling (casacore::Bool isFilling);
+//    void setLsrInfo (const casacore::Block <casacore::Int> & channelGroupNumber,
+//                     const casacore::Block <casacore::Int> & channelIncrement,
+//                     const casacore::Block <casacore::Int> & channelStart,
+//                     const casacore::Block <casacore::Int> & channelWidth,
+//                     const casacore::MPosition & observatoryPosition,
+//                     const casacore::MDirection & phaseCenter,
+//                     casacore::Bool velocitySelection);
+//    void setMeasurementSet (const casacore::MeasurementSet & ms);
+//    void setMeasurementSetId (casacore::Int id, bool isNew);
+//    void setMEpoch (const casacore::MEpoch & mEpoch);
+//    void setMSD (const casacore::MSDerivedValues & msd);
+//    void setNAntennas (casacore::Int);
+//    void setNCoh (casacore::Int);
+//    void setNSpw (casacore::Int);
 //    void setNewEntityFlags (bool newArrayId, bool newFieldId, bool newSpectralWindow);
-//    void setPolarizationId (Int);
-//    void setNRowChunk (Int);
-//    void setReceptor0Angle (const Vector<Float> & receptor0Angle);
-//    void setRowIds (const Vector<uInt> & rowIds);
-//    void setSelectedNVisibilityChannels (const Vector<Int> & nVisibilityChannels);
-//    void setSelectedSpectralWindows (const Vector<Int> & spectralWindows);
-//    void setTopoFreqs (const Vector<Double> & lsrFreq, const Vector<Double> & selFreq_p);
-//    void setVisibilityShape (const IPosition & pvisibilityShape);
-//    void updateCoordInfo (const VisBuffer2 *, const Bool dirDependent=True);
+//    void setPolarizationId (casacore::Int);
+//    void setNRowChunk (casacore::Int);
+//    void setReceptor0Angle (const casacore::Vector<casacore::Float> & receptor0Angle);
+//    void setRowIds (const casacore::Vector<casacore::uInt> & rowIds);
+//    void setSelectedNVisibilityChannels (const casacore::Vector<casacore::Int> & nVisibilityChannels);
+//    void setSelectedSpectralWindows (const casacore::Vector<casacore::Int> & spectralWindows);
+//    void setTopoFreqs (const casacore::Vector<casacore::Double> & lsrFreq, const casacore::Vector<casacore::Double> & selFreq_p);
+//    void setVisibilityShape (const casacore::IPosition & pvisibilityShape);
+//    void updateCoordInfo (const VisBuffer2 *, const casacore::Bool dirDependent=true);
 //
-//    static MDirection unsharedCopyDirection (const MDirection & direction);
-//    static void unsharedCopyDirectionVector (Vector<MDirection> & direction);
-//    static MEpoch unsharedCopyEpoch (const MEpoch & mEpoch);
-//    static MPosition unsharedCopyPosition (const MPosition & position);
+//    static casacore::MDirection unsharedCopyDirection (const casacore::MDirection & direction);
+//    static void unsharedCopyDirectionVector (casacore::Vector<casacore::MDirection> & direction);
+//    static casacore::MEpoch unsharedCopyEpoch (const casacore::MEpoch & mEpoch);
+//    static casacore::MPosition unsharedCopyPosition (const casacore::MPosition & position);
 
 private:
 
-//    Bool fillAllBeamOffsetsZero ();
-//    Vector <String> fillAntennaMounts ();
-//    Cube <RigidVector <Double, 2> > fillBeamOffsets ();
-//    Cube <Double> fillReceptorAngles ();
+//    casacore::Bool fillAllBeamOffsetsZero ();
+//    casacore::Vector <casacore::String> fillAntennaMounts ();
+//    casacore::Cube <casacore::RigidVector <casacore::Double, 2> > fillBeamOffsets ();
+//    casacore::Cube <casacore::Double> fillReceptorAngles ();
 
-    Bool                           allBeamOffsetsZero_p;
-    Vector<String>                 antennaMounts_p;
-    mutable Vector<MDirection>     azelCached_p;      // mutable because it is a cached value
-    mutable Double                 azelCachedTime_p;  // mutable because it is a cached value
-    Cube<RigidVector<Double, 2> >  beamOffsets_p;
-    Block<Int>                     channelGroupNumber_p;
-    Block<Int>                     channelIncrement_p;
-    Block<Int>                     channelStart_p;
-    Block<Int>                     channelWidth_p;
-    //Int                            dataDescriptionId_p;
-    mutable Vector<Float>          feedpaCached_p;      // mutable because it is a cached value
-    mutable Double                 feedpaCachedTime_p;  // mutable because it is a cached value
-    Bool                           isFilling_p;
-    Vector<Double>                 lsrFrequency_p; // calculated by getTopoFreqs if velSelection_p
-    MEpoch                         mEpoch_p;
-    const MeasurementSet *         measurementSet_p;  // [use]
-    mutable ROMSColumns *          msColumns_p; // [own]
-    MSDerivedValues *              msd_p; // [own]
-    Int                            nAntennas_p;
-    Int                            nCoh_p;
-    Bool                           newArrayId_p;
-    Bool                           newFieldId_p;
-    Bool                           newSpectralWindow_p;
-    Int                            nRowChunk_p;
-    Int                            nSpw_p;
-    //const ROScalarColumn<Int> *    obsMFreqTypes_p; // [use]
-    MPosition                      observatoryPosition_p;
-    mutable Vector<Float>          parangCached_p;      // mutable because it is a cached value
-    mutable Double                 parangCachedTime_p;  // mutable because it is a cached value
-    Int                            polarizationId_p;
-    Vector<Float>                  receptor0Angle_p;
-    Cube<Double>                   receptorAngles_p;
-    Vector<Double>                 selFreq_p;
-    Vector<Int>                    selectedNVisibilityChannels_p;
-    Vector<Int>                    selectedSpectralWindows_p;
-    Bool                           velSelection_p;
-    IPosition                      visibilityShape_p;
+    casacore::Bool                           allBeamOffsetsZero_p;
+    casacore::Vector<casacore::String>                 antennaMounts_p;
+    mutable casacore::Vector<casacore::MDirection>     azelCached_p;      // mutable because it is a cached value
+    mutable casacore::Double                 azelCachedTime_p;  // mutable because it is a cached value
+    casacore::Cube<casacore::RigidVector<casacore::Double, 2> >  beamOffsets_p;
+    casacore::Block<casacore::Int>                     channelGroupNumber_p;
+    casacore::Block<casacore::Int>                     channelIncrement_p;
+    casacore::Block<casacore::Int>                     channelStart_p;
+    casacore::Block<casacore::Int>                     channelWidth_p;
+    //casacore::Int                            dataDescriptionId_p;
+    mutable casacore::Vector<casacore::Float>          feedpaCached_p;      // mutable because it is a cached value
+    mutable casacore::Double                 feedpaCachedTime_p;  // mutable because it is a cached value
+    casacore::Bool                           isFilling_p;
+    casacore::Vector<casacore::Double>                 lsrFrequency_p; // calculated by getTopoFreqs if velSelection_p
+    casacore::MEpoch                         mEpoch_p;
+    const casacore::MeasurementSet *         measurementSet_p;  // [use]
+    mutable casacore::ROMSColumns *          msColumns_p; // [own]
+    casacore::MSDerivedValues *              msd_p; // [own]
+    casacore::Int                            nAntennas_p;
+    casacore::Int                            nCoh_p;
+    casacore::Bool                           newArrayId_p;
+    casacore::Bool                           newFieldId_p;
+    casacore::Bool                           newSpectralWindow_p;
+    casacore::Int                            nRowChunk_p;
+    casacore::Int                            nSpw_p;
+    //const casacore::ROScalarColumn<casacore::Int> *    obsMFreqTypes_p; // [use]
+    casacore::MPosition                      observatoryPosition_p;
+    mutable casacore::Vector<casacore::Float>          parangCached_p;      // mutable because it is a cached value
+    mutable casacore::Double                 parangCachedTime_p;  // mutable because it is a cached value
+    casacore::Int                            polarizationId_p;
+    casacore::Vector<casacore::Float>                  receptor0Angle_p;
+    casacore::Cube<casacore::Double>                   receptorAngles_p;
+    casacore::Vector<casacore::Double>                 selFreq_p;
+    casacore::Vector<casacore::Int>                    selectedNVisibilityChannels_p;
+    casacore::Vector<casacore::Int>                    selectedSpectralWindows_p;
+    casacore::Bool                           velSelection_p;
+    casacore::IPosition                      visibilityShape_p;
 
 
 
@@ -208,13 +208,13 @@ private:
 
 
 //template<typename T>
-//void VisBufferAsync2::copyVector (const Vector<T> & from, Vector<T> & to)
+//void VisBufferAsync2::copyVector (const casacore::Vector<T> & from, casacore::Vector<T> & to)
 //{
 //    // Make an independent copy of the vector.
-//    // N.B.: the independence is only at the top Vector level
+//    // N.B.: the independence is only at the top casacore::Vector level
 //    //       so any deep dependence is not undone
 //
-//    Vector<T> tmp = from;
+//    casacore::Vector<T> tmp = from;
 //    to = tmp.copy();
 //}
 

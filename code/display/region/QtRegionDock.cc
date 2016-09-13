@@ -39,6 +39,7 @@
 
 extern int qInitResources_QtRegionDock();
 
+using namespace casacore;
 namespace casa {
 	namespace viewer {
 

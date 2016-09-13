@@ -46,7 +46,10 @@
 #include <synthesis/CalTables/GJonesTable.h>
 #include <synthesis/CalTables/CalIter.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
+
+using casacore::operator*;
 
 // Define external CLIC solvers
 #define NEED_UNDERSCORES
@@ -85,12 +88,12 @@ GJonesSpline::GJonesSpline (VisSet& vs) :
   VisMueller(vs),
   GJones(vs),
   vs_p(&vs),
-  solveAmp_p(False),
-  solvePhase_p(True),
+  solveAmp_p(false),
+  solvePhase_p(true),
   splinetime_p(7200.0),
   cacheTimeValid_p(0),
   calBuffer_p(NULL),
-  rawPhaseRemoval_p(False),
+  rawPhaseRemoval_p(false),
   timeValueMap_p(0),
   solTimeStamp_p(0.0)
 {
@@ -98,8 +101,8 @@ GJonesSpline::GJonesSpline (VisSet& vs) :
 // Input:
 //    vs                VisSet&            Visibility set
 // Output to private data:
-//    solveAmp_p        Bool               True if mode_p includes amp. soln.
-//    solvePhase_p      Bool               True if mode_p includes phase soln.
+//    solveAmp_p        Bool               true if mode_p includes amp. soln.
+//    solvePhase_p      Bool               true if mode_p includes phase soln.
 //    cacheTimeValid_p  Double             Time for which the current
 //                                         calibration cache is valid
 //    calBuffer_p       GJonesSplineMBuf*  Ptr to the applied cal. buffer
@@ -109,8 +112,8 @@ GJonesSpline::GJonesSpline (VisSet& vs) :
 
   // Mark the Jones matrix as neither solved for nor applied,
   // pending initialization by setSolver() or setInterpolation()
-  setSolved(False);
-  setApplied(False);
+  setSolved(false);
+  setApplied(false);
 
 };
 
@@ -170,7 +173,7 @@ void GJonesSpline::setSolve(const Record& solvepar)
   //  cout << "calTableName() = " << calTableName() << endl;
 
   // Mark the Jones matrix as being solved for
-  setSolved(True);
+  setSolved(true);
 
   return;
 };
@@ -211,7 +214,7 @@ void GJonesSpline::setApply(const Record& applypar)
   calBuffer_p->fillCache();
 
   // Mark the Jones matrix as being applied
-  setApplied(True);
+  setApplied(true);
   
   return;
 };
@@ -225,8 +228,8 @@ void GJonesSpline::selfGatherAndSolve (VisSet& vs, VisEquation& ve)
 //    me           VisEquation&         Measurement Equation (ME) in
 //                                      which this Jones matrix resides
 // Output:
-//    solve        Bool                 True is solution succeeded
-//                                      else False
+//    solve        Bool                 true is solution succeeded
+//                                      else false
 //
 
   if (prtlev()>2) cout << "GSpline::selfGatherAndSolve(vs,ve)" << endl;
@@ -328,7 +331,7 @@ void GJonesSpline::selfGatherAndSolve (VisSet& vs, VisEquation& ve)
     // matrix.
 
     // Arrange to accumulate
-    VisBuffAccumulator vba(nAnt(),preavg(),False);
+    VisBuffAccumulator vba(nAnt(),preavg(),false);
 
     vi.origin();
     //    t0=86400.0*floor(vb.time()(0)/86400.0);
@@ -400,12 +403,12 @@ void GJonesSpline::selfGatherAndSolve (VisSet& vs, VisEquation& ve)
 	    // Create a new time series entry
 	    timeIndex = nTimeSeries++;
 	    timeValueMap.define(timeKey, timeIndex);
-	    timeValues.resize(nTimeSeries, True);
+	    timeValues.resize(nTimeSeries, true);
 	    timeValues(timeIndex) = svb.time()(row);
 	    Complex czero(0,0);
-	    visTimeSeries.resize(nTimeSeries, True);
+	    visTimeSeries.resize(nTimeSeries, true);
 	    visTimeSeries[timeIndex] = new Matrix<Complex>(nBln(),nPH, czero);
-	    weightTimeSeries.resize(nTimeSeries, True);
+	    weightTimeSeries.resize(nTimeSeries, true);
 	    weightTimeSeries[timeIndex] = new Matrix<Double>(nBln(),nPH, 0);
 	  };
 
@@ -587,8 +590,8 @@ void GJonesSpline::selfGatherAndSolve (VisSet& vs, VisEquation& ve)
       ostringstream o;
       o << calTableName() << ".AMP.pol" << ip << ".log";
       String logfile=o.str();
-      writeAsciiLog(logfile, polyCoeffAmp.xyPlane(ip), rmsfit, False);
-      //    plotsolve(time, amp, weight, rmsfit, polyCoeffAmp, False);
+      writeAsciiLog(logfile, polyCoeffAmp.xyPlane(ip), rmsfit, false);
+      //    plotsolve(time, amp, weight, rmsfit, polyCoeffAmp, false);
 
     }
 
@@ -698,10 +701,10 @@ void GJonesSpline::selfGatherAndSolve (VisSet& vs, VisEquation& ve)
       ostringstream o;
       o << calTableName() << ".PHASE.pol" << ip << ".log";
       String logfile=o.str();
-      writeAsciiLog(logfile, polyCoeffPhase.xyPlane(ip), rmsfit, True);
+      writeAsciiLog(logfile, polyCoeffPhase.xyPlane(ip), rmsfit, true);
 
       // TBD: make multi-pol plotsolve
-      //      plotsolve(time, phase, weight, rmsfit, polyCoeffPhase, True);
+      //      plotsolve(time, phase, weight, rmsfit, polyCoeffPhase, true);
 
     }
 
@@ -782,7 +785,7 @@ void GJonesSpline::calcPar() {
 
   currCPar().resize(nPar(),1,nAnt());
   currParOK().resize(nPar(),1,nAnt());
-  currParOK()=False;
+  currParOK()=false;
 
   // Compute them, per antenna
   for (Int iant=0; iant < nAnt(); iant++) {
@@ -906,7 +909,7 @@ void GJonesSpline::calcPar() {
       for (Int i=0;i<2;++i) {
 	currCPar()(i,0,iant) = gain * ampVal(i) * Complex(cos(phaseVal(i)), 
 							  sin(phaseVal(i)) );
-	currParOK()(i,0,iant) = True;
+	currParOK()(i,0,iant) = true;
       }
       
     };
@@ -1183,7 +1186,7 @@ void GJonesSpline::plotsolve(const Vector<Double>& x,
 	if (weight(k)>0){
 	  x1(num_valid_points)=x(k)-x(0);
 	  y1(num_valid_points)=y(k);
-	  if(phasesoln==True){
+	  if(phasesoln==true){
 	    y1(num_valid_points)=remainder(y1(num_valid_points), 2*C::pi);
 	    y1(num_valid_points)=y1(num_valid_points)/C::pi*180.0;
 	    errarray(num_valid_points)=Float(err)*180.0/C::pi;
@@ -1206,7 +1209,7 @@ void GJonesSpline::plotsolve(const Vector<Double>& x,
 	xval[k]= (k)*((x[numpoints-1]-x[0]))/Double(numplotpoints-1)
 	  +(x[0]);	
 	
-	if(phasesoln==True){
+	if(phasesoln==true){
 	  soly1(k)=0; 
 	  Double xx, yy1, yy2;
 	  xx=xval[k];
@@ -1240,9 +1243,9 @@ void GJonesSpline::plotsolve(const Vector<Double>& x,
 
 
       //cout << " Mean of sol " << mean(soly1) << endl;
-      x1.resize(num_valid_points, True);
-      y1.resize(num_valid_points, True);
-      errarray.resize(num_valid_points, True);
+      x1.resize(num_valid_points, true);
+      y1.resize(num_valid_points, true);
+      errarray.resize(num_valid_points, true);
       pg.sci(1);
 
       Float max_data, min_data, max_err;
@@ -1319,7 +1322,7 @@ void GJonesSpline::setRawPhaseVisSet(VisSet& vs){
   Block<Int> columns(0);
   
   rawvs_p = new VisSet (vs, columns, DBL_MAX);
-  rawPhaseRemoval_p=True;
+  rawPhaseRemoval_p=true;
   fillRawPhaseBuff();
 }
 
@@ -1400,12 +1403,12 @@ void GJonesSpline::fillRawPhaseBuff(){
 	    timeIndex = nTimeSeries++;
 	    //	    cout << "FILL timekey "<< timeKey << " index " << timeIndex << endl;
 	    timeValueMap_p.define(timeKey, timeIndex);
-	    timeValues.resize(nTimeSeries, True);
+	    timeValues.resize(nTimeSeries, true);
 	    timeValues(timeIndex) = vb.time()(row);
-	    rawVisTimeSeries.resize(nTimeSeries, True);
+	    rawVisTimeSeries.resize(nTimeSeries, true);
 	    Complex czero(0,0);
 	    rawVisTimeSeries[timeIndex] = new Vector<Complex>(nBasl, czero);
-	    weightTimeSeries.resize(nTimeSeries, True);
+	    weightTimeSeries.resize(nTimeSeries, true);
 	    weightTimeSeries[timeIndex] = new Vector<Double>(nBasl, 0);
 	  };
 
@@ -1441,12 +1444,12 @@ Double GJonesSpline::getRawPhase(Int ant1, Int ant2, Double time){
 
   if (ant1 == ant2) return 0.0;
   Int nAnt = vs_p->numberAnt();
-  Bool flip=False;
+  Bool flip=false;
   if(ant1 > ant2){
     Int tmp=ant1;
     ant1=ant2;
     ant2=tmp;
-    flip=True;
+    flip=true;
   }
   Int baselineIndex = ant1 * nAnt - ant1 * (ant1 + 1) / 2 +
                       ant2 - 1 - ant1;

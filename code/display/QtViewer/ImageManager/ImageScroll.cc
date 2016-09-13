@@ -32,6 +32,7 @@
 #include <QSpacerItem>
 #include <QFrame>
 
+using namespace casacore;
 namespace casa {
 
 	ImageScroll::ImageScroll(QWidget *parent)

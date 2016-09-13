@@ -9,22 +9,23 @@
 #include <casa_sakura/SakuraUtils.h>
 #include <casa_sakura/SakuraAlignedArray.h>
 
+using namespace casacore;
 namespace casa {
-Bool SakuraUtils::is_initialized_ = False;
+Bool SakuraUtils::is_initialized_ = false;
   
 Bool SakuraUtils::InitializeSakura() {
   // return if already initialized
   if (is_initialized_) {
-    return True;
+    return true;
   }
   
   LogIO logger(LogOrigin("SakuraUtils", "InitializeSakura", WHERE));
   logger << LogIO::DEBUGGING << "Initializing Sakura...";
-  is_initialized_ = False;
+  is_initialized_ = false;
   LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(Initialize)(NULL, NULL);
   if (status == LIBSAKURA_SYMBOL(Status_kOK)) {
     logger << LogIO::DEBUGGING << "SUCCESS!" << LogIO::POST;
-    is_initialized_ = True;
+    is_initialized_ = true;
   }
   else {
     logger << LogIO::DEBUGGING << "FAILED!" << LogIO::POST;
@@ -37,7 +38,7 @@ void SakuraUtils::CleanUpSakura() {
     LogIO logger(LogOrigin("SakuraUtils", "CleanUpSakura", WHERE));
     logger << LogIO::DEBUGGING << "Cleaning up Sakura..." << LogIO::POST;
     LIBSAKURA_SYMBOL(CleanUp)();
-    is_initialized_ = False;
+    is_initialized_ = false;
   }
 }
 

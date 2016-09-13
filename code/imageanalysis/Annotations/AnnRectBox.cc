@@ -19,6 +19,7 @@
 
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 
+using namespace casacore;
 namespace casa {
 
 AnnRectBox::AnnRectBox(

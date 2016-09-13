@@ -35,42 +35,42 @@
 
 
 namespace casa {
-template<class T> Record ImageMetaData::_summary(
+template<class T> casacore::Record ImageMetaData::_summary(
     SPCIIT image,
-    const String& doppler, const Bool list,
-    const Bool pixelorder, const Bool verbose
+    const casacore::String& doppler, const casacore::Bool list,
+    const casacore::Bool pixelorder, const casacore::Bool verbose
 ) {
     auto log = _getLog();
-    log << LogOrigin("ImageMetaData", __func__);
-    Vector<String> messages;
-    Record retval;
-    ImageSummary<T> s(*image);
-    MDoppler::Types velType;
-    if (!MDoppler::getType(velType, doppler)) {
-        log << LogIO::WARN << "Illegal velocity type, using RADIO"
-                << LogIO::POST;
-        velType = MDoppler::RADIO;
+    log << casacore::LogOrigin("ImageMetaData", __func__);
+    casacore::Vector<casacore::String> messages;
+    casacore::Record retval;
+    casacore::ImageSummary<T> s(*image);
+    casacore::MDoppler::Types velType;
+    if (!casacore::MDoppler::getType(velType, doppler)) {
+        log << casacore::LogIO::WARN << "Illegal velocity type, using RADIO"
+                << casacore::LogIO::POST;
+        velType = casacore::MDoppler::RADIO;
     }
 
     if (list) {
-        messages = s.list(log, velType, False, verbose);
+        messages = s.list(log, velType, false, verbose);
     }
     else {
         // Write messages to local sink only so we can fish them out again
-        LogFilter filter;
-        LogSink sink(filter, False);
-        LogIO osl(sink);
-        messages = s.list(osl, velType, True);
+        casacore::LogFilter filter;
+        casacore::LogSink sink(filter, false);
+        casacore::LogIO osl(sink);
+        messages = s.list(osl, velType, true);
     }
     retval.define("messages", messages);
     auto axes = s.axisNames(pixelorder);
-    auto crpix = s.referencePixels(False); // 0-rel
+    auto crpix = s.referencePixels(false); // 0-rel
     auto crval = s.referenceValues(pixelorder);
     auto cdelt = s.axisIncrements(pixelorder);
     auto axisunits = s.axisUnits(pixelorder);
 
     auto shape = _getShape();
-    retval.define("ndim", (Int)shape.size());
+    retval.define("ndim", (casacore::Int)shape.size());
     retval.define("shape", shape.asVector());
     retval.define("tileshape", s.tileShape().asVector());
     retval.define("axisnames", axes);
@@ -85,11 +85,12 @@ template<class T> Record ImageMetaData::_summary(
     retval.define("imagetype", _getImType());
 
     const auto& info = image->imageInfo();
-    Record iRec;
-    String error;
+    casacore::Record iRec;
+    casacore::String error;
+    using casacore::AipsError;
     ThrowIf(
         ! info.toRecord(error, iRec),
-        "Failed to convert ImageInfo to a record because "
+        "Failed to convert casacore::ImageInfo to a record because "
     );
     if (iRec.isDefined("restoringbeam")) {
         retval.defineRecord("restoringbeam", iRec.asRecord("restoringbeam"));

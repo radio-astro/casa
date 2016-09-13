@@ -51,6 +51,7 @@
 #include <synthesis/MeasurementEquations/CEMemProgress.h>
 
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 CEMemImageSkyModel::
@@ -65,7 +66,7 @@ CEMemImageSkyModel(Float sigma,
   itsConstrainFlux(constrainFlux),
   itsPrior(priors),
   itsEntropy(entropy),
-  itsInitializeModel(True),
+  itsInitializeModel(true),
   itsProgress(0)
 {
 };
@@ -153,7 +154,7 @@ Bool CEMemImageSkyModel::solve(SkyEquation& se) {
   if (hasMask(0) & (xend > xbeg) && (yend > ybeg) ) {
     LCBox maskbox (IPosition(4, xbeg, ybeg, 0, 0), 
 		   IPosition(4, xend, yend, 0, 0), mask(0).shape());
-    mask_sl_p = new SubLattice<Float> (mask(0), maskbox, False);
+    mask_sl_p = new SubLattice<Float> (mask(0), maskbox, false);
   }
 
 
@@ -165,9 +166,9 @@ Bool CEMemImageSkyModel::solve(SkyEquation& se) {
 		 IPosition(4, nx-1, ny-1, 0, ichan),
 		 PSF(0).shape());
     
-    SubLattice<Float>  psf_sl (PSF(0), psfbox, False);
-    SubLattice<Float>  residual_sl (residual(0), imagebox, True);
-    SubLattice<Float>  model_sl (image(0), imagebox, True);
+    SubLattice<Float>  psf_sl (PSF(0), psfbox, false);
+    SubLattice<Float>  residual_sl (residual(0), imagebox, true);
+    SubLattice<Float>  model_sl (image(0), imagebox, true);
 
     TempLattice<Float> dirty_sl( residual_sl.shape());
     dirty_sl.copyData(residual_sl);
@@ -200,7 +201,7 @@ Bool CEMemImageSkyModel::solve(SkyEquation& se) {
 	os << " Known MEM entropies: entropy | emptiness " << LogIO::POST;
 	os << LogIO::SEVERE << "Unknown MEM entropy: " << entString
 	   << LogIO::POST;
-	return False;
+	return false;
       }
 
       TempLattice<Float> zero (model_sl.shape());
@@ -209,7 +210,7 @@ Bool CEMemImageSkyModel::solve(SkyEquation& se) {
       IncCEMemModel memer(*myEnt_p,  zero, model_sl, numberIterations(),
 			  sigma(),
 			  targetFlux(), constrainFlux(),
-			  initializeModel(), False );
+			  initializeModel(), false );
 
       if(priorImagePtr!=0) {
 	memer.setPrior(*priorImagePtr);
@@ -224,7 +225,7 @@ Bool CEMemImageSkyModel::solve(SkyEquation& se) {
       }
 
       memer.solve(*eqn_p);
-      // memer.setChoose(False);  // not yet implemented!
+      // memer.setChoose(false);  // not yet implemented!
       //      os << "Mem used " << cleaner.numberIterations() << " iterations" 
       //	 << " to get to a max residual of " << cleaner.threshold() 
       //	 << LogIO::POST;
@@ -237,7 +238,7 @@ Bool CEMemImageSkyModel::solve(SkyEquation& se) {
   }
   if (priorImagePtr) delete priorImagePtr; priorImagePtr=0;
   if (mask_sl_p)  delete mask_sl_p; mask_sl_p=0;
-  return(True);
+  return(true);
 };
 
 

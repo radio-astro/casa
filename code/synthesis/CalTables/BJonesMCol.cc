@@ -28,6 +28,7 @@
 
 #include <synthesis/CalTables/BJonesMCol.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //----------------------------------------------------------------------------
@@ -81,12 +82,12 @@ ROBJonesPolyMCol::ROBJonesPolyMCol (const BJonesPolyTable& bjpTable) :
   attach (bjpTable, polyType_p, MSC::POLY_TYPE);
   attach (bjpTable, polyMode_p, MSC::POLY_MODE);
   attach (bjpTable, scaleFactor_p, MSC::SCALE_FACTOR);
-  attach (bjpTable, validDomain_p, MSC::VALID_DOMAIN, True);
-  attach (bjpTable, nPolyAmp_p, MSC::N_POLY_AMP, True);
-  attach (bjpTable, nPolyPhase_p, MSC::N_POLY_PHASE, True);
-  attach (bjpTable, polyCoeffAmp_p, MSC::POLY_COEFF_AMP, True);
-  attach (bjpTable, polyCoeffPhase_p, MSC::POLY_COEFF_PHASE, True);
-  attach (bjpTable, phaseUnits_p, MSC::PHASE_UNITS, True);
+  attach (bjpTable, validDomain_p, MSC::VALID_DOMAIN, true);
+  attach (bjpTable, nPolyAmp_p, MSC::N_POLY_AMP, true);
+  attach (bjpTable, nPolyPhase_p, MSC::N_POLY_PHASE, true);
+  attach (bjpTable, polyCoeffAmp_p, MSC::POLY_COEFF_AMP, true);
+  attach (bjpTable, polyCoeffPhase_p, MSC::POLY_COEFF_PHASE, true);
+  attach (bjpTable, phaseUnits_p, MSC::PHASE_UNITS, true);
   attach (bjpTable, sideBandRef_p, MSC::SIDEBAND_REF);
 };
 
@@ -117,11 +118,11 @@ BJonesPolyMCol::BJonesPolyMCol (BJonesPolyTable& bjpTable) :
   attach (bjpTable, polyMode_p, MSC::POLY_MODE);
   attach (bjpTable, scaleFactor_p, MSC::SCALE_FACTOR);
   attach (bjpTable, validDomain_p, MSC::VALID_DOMAIN);
-  attach (bjpTable, nPolyAmp_p, MSC::N_POLY_AMP, True);
-  attach (bjpTable, nPolyPhase_p, MSC::N_POLY_PHASE, True);
-  attach (bjpTable, polyCoeffAmp_p, MSC::POLY_COEFF_AMP, True);
-  attach (bjpTable, polyCoeffPhase_p, MSC::POLY_COEFF_PHASE, True);
-  attach (bjpTable, phaseUnits_p, MSC::PHASE_UNITS, True);
+  attach (bjpTable, nPolyAmp_p, MSC::N_POLY_AMP, true);
+  attach (bjpTable, nPolyPhase_p, MSC::N_POLY_PHASE, true);
+  attach (bjpTable, polyCoeffAmp_p, MSC::POLY_COEFF_AMP, true);
+  attach (bjpTable, polyCoeffPhase_p, MSC::POLY_COEFF_PHASE, true);
+  attach (bjpTable, phaseUnits_p, MSC::PHASE_UNITS, true);
   attach (bjpTable, sideBandRef_p, MSC::SIDEBAND_REF);
 };
 

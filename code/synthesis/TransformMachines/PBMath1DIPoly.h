@@ -1,4 +1,4 @@
-//# PBMath1DIPoly.h: Definitions of 1-D Inverse Polynomial PBMath objects
+//# PBMath1DIPoly.h: Definitions of 1-D Inverse casacore::Polynomial PBMath objects
 //# Copyright (C) 1996,1997,1998,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -38,7 +38,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //#forward
 
 // <summary> 
-// PBMath1DIPoly is a 1-D Inverse Polynomial Expansion for a Primary Beam
+// PBMath1DIPoly is a 1-D Inverse casacore::Polynomial Expansion for a Primary Beam
 // </summary>
 
 // <use visibility=export>
@@ -51,7 +51,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </prerequisite>
 //
 // <etymology>
-// PBMath1DIPoly: derived from  PBMath1D, implements an Inverse Polynomial PB and VP
+// PBMath1DIPoly: derived from  PBMath1D, implements an Inverse casacore::Polynomial PB and VP
 // </etymology>
 //
 // <synopsis> 
@@ -82,7 +82,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //    coef(2) = 1.21421e-07;
 //    coef(3) = 9.68612e-11; 
 //    coef(4) = 1.86268e-13;
-//    PBMath1DIPoly ipolyPB( coef, Quantity(43.0,"'"), Quantity(1.0,"GHz"));
+//    PBMath1DIPoly ipolyPB( coef, casacore::Quantity(43.0,"'"), casacore::Quantity(1.0,"GHz"));
 //
 // </srcblock>
 // </example>
@@ -96,8 +96,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </motivation>
 //
 // <todo asof="98/10/21">
-// <li> constructor from a MS beam subtable
-// <li> flush to MS beam subtable
+// <li> constructor from a casacore::MS beam subtable
+// <li> flush to casacore::MS beam subtable
 // </todo>
 
  
@@ -107,34 +107,34 @@ public:
   PBMath1DIPoly() {};
 
   // Instantiation from arguments; default = no squint
-  // squint is the offset from pointing center if the Stokes R beam
+  // squint is the offset from pointing center if the casacore::Stokes R beam
   // useSymmetricBeam forces a fit to the squinted beam
-  PBMath1DIPoly(const Vector<Double>& coeff, Quantity maxRad, 
-		Quantity refFreq, 
-		Bool isThisVP=False,
-		BeamSquint squint=BeamSquint(MDirection(Quantity(0.0, "deg"),
-							Quantity(0.0, "deg"),
-							MDirection::Ref(MDirection::AZEL)),
-					     Quantity(1.0, "GHz")),
-		Bool useSymmetricBeam=False);
+  PBMath1DIPoly(const casacore::Vector<casacore::Double>& coeff, casacore::Quantity maxRad, 
+		casacore::Quantity refFreq, 
+		casacore::Bool isThisVP=false,
+		BeamSquint squint=BeamSquint(casacore::MDirection(casacore::Quantity(0.0, "deg"),
+							casacore::Quantity(0.0, "deg"),
+							casacore::MDirection::Ref(casacore::MDirection::AZEL)),
+					     casacore::Quantity(1.0, "GHz")),
+		casacore::Bool useSymmetricBeam=false);
 
   // Instantiation from arguments; default = no squint
-  // squint is the offset from pointing center if the Stokes R beam
+  // squint is the offset from pointing center if the casacore::Stokes R beam
   // useSymmetricBeam forces a fit to the squinted beam
   // Each column in coeff corresponds to a frequency in freqs
-  PBMath1DIPoly(const Matrix<Double>& coeff, const Vector<Double>& freqs,
-		Quantity maxRad, 
-		Quantity refFreq, 
-		Bool isThisVP=False,
-		BeamSquint squint=BeamSquint(MDirection(Quantity(0.0, "deg"),
-							Quantity(0.0, "deg"),
-							MDirection::Ref(MDirection::AZEL)),
-					     Quantity(1.0, "GHz")),
-		Bool useSymmetricBeam=False);
+  PBMath1DIPoly(const casacore::Matrix<casacore::Double>& coeff, const casacore::Vector<casacore::Double>& freqs,
+		casacore::Quantity maxRad, 
+		casacore::Quantity refFreq, 
+		casacore::Bool isThisVP=false,
+		BeamSquint squint=BeamSquint(casacore::MDirection(casacore::Quantity(0.0, "deg"),
+							casacore::Quantity(0.0, "deg"),
+							casacore::MDirection::Ref(casacore::MDirection::AZEL)),
+					     casacore::Quantity(1.0, "GHz")),
+		casacore::Bool useSymmetricBeam=false);
 
   // Instantiation from a row in the Beam subTable
-  // PBMath1DIPoly(const Table& BeamSubTable, Int row,
-  // 	       Bool useSymmetricBeam=False);
+  // PBMath1DIPoly(const casacore::Table& BeamSubTable, casacore::Int row,
+  // 	       casacore::Bool useSymmetricBeam=false);
 
   // Copy constructor
   // PBMath1DIPoly(const PBMath1DIPoly& other);
@@ -143,7 +143,7 @@ public:
   PBMath1DIPoly& operator=(const PBMath1DIPoly& other);
 
   // Clone the object
-  //  CountedPtr<PBMathInterface> clone();
+  //  casacore::CountedPtr<PBMathInterface> clone();
 
 
   ~PBMath1DIPoly();  
@@ -152,10 +152,10 @@ public:
   PBMathInterface::PBClass whichPBClass() { return PBMathInterface::IPOLY; }  
 
   // Flush the construction parameters to disk
-  // Bool flushToTable(Table& beamSubTable, Int iRow);
+  // casacore::Bool flushToTable(casacore::Table& beamSubTable, casacore::Int iRow);
 
   // Summarize the construction data for this primary beam
-  void summary(Int nValues=0);
+  void summary(casacore::Int nValues=0);
 
 protected:
 
@@ -164,8 +164,8 @@ protected:
 
 private:    
 
-  Vector<Double> coeff_p;
-  Matrix<Double> wbcoeff_p;
+  casacore::Vector<casacore::Double> coeff_p;
+  casacore::Matrix<casacore::Double> wbcoeff_p;
 
 };
 

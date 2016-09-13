@@ -22,6 +22,7 @@
 
 #include <flagging/Flagging/FlagAgentClipping.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 FlagAgentClipping::FlagAgentClipping(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube, Bool flag):
@@ -58,7 +59,7 @@ FlagAgentClipping::setAgentParameters(Record config)
 	}
 	else
 	{
-		clipzeros_p = False;
+		clipzeros_p = false;
 	}
 
 	*logger_p << logLevel_p << " clipzeros is " << clipzeros_p << LogIO::POST;
@@ -76,7 +77,7 @@ FlagAgentClipping::setAgentParameters(Record config)
 	}
 	else
 	{
-		clipoutside_p = True;
+		clipoutside_p = true;
 	}
 
 	*logger_p << logLevel_p << " clipoutside is " << clipoutside_p << LogIO::POST;
@@ -100,7 +101,7 @@ FlagAgentClipping::setAgentParameters(Record config)
 		Array<Double> cliprange = config.asArrayDouble("clipminmax");
 		if (cliprange.size() == 2)
 		{
-			Bool deleteIt = False;
+			Bool deleteIt = false;
 			clipmin_p = cliprange.getStorage(deleteIt)[0];
 			clipmax_p = cliprange.getStorage(deleteIt)[1];
 			*logger_p << logLevel_p << " clipmin is " << clipmin_p << LogIO::POST;

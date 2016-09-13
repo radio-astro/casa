@@ -47,7 +47,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	class WCCSAxisLabeller : public WCAxisLabeller {
 
 	public:
-		enum SpecAxisType { // taken from the FITS spectral coordinate type codes
+		enum SpecAxisType { // taken from the casacore::FITS spectral coordinate type codes
 		    FREQ,
 		    VELO,
 		    WAVE,
@@ -61,7 +61,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual ~WCCSAxisLabeller();
 
 		// Install a DisplayCoordinateSystem.
-		//#dk note: See Bool useWCCS, below; in some cases the WorldCanvas's
+		//#dk note: See casacore::Bool useWCCS, below; in some cases the WorldCanvas's
 		//#   own CS is now used to draw labels, although the CS set here is
 		//#   still needed for certain things (default user interface, e.g.)
 		//#   when the WC is unknown.  (10/07)
@@ -73,57 +73,57 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		// Has a CS been set?
-		Bool hasCoordinateSystem() const {
+		casacore::Bool hasCoordinateSystem() const {
 			return itsHasCoordinateSystem;
 		};
 
-		// Setting this True allows the labeller to use the WorldCanvas's
+		// Setting this true allows the labeller to use the WorldCanvas's
 		// own CS to draw labels (although itsCoordinateSystem is still
-		// needed for certain things at present).  Default: False.
+		// needed for certain things at present).  Default: false.
 		//#dk (See WCCSNLAxisLabeller::draw() and usage in PADD::setupElements()).
 		//#
 		//# (Kludge upon kludge, I know... all stemming from the original design
 		//# flaw: not realizing that WC needs its _own CS_ (related to but _not
 		//# the same_ as the Images'), and then trying to tack one on later...).
-		Bool useWCCS;
+		casacore::Bool useWCCS;
 
 		// install the default options for this labeller.
 		virtual void setDefaultOptions();
 
 		// apply options stored in rec to the labeller; return value
-		// True means a refresh is needed.  Any fields added to the
+		// true means a refresh is needed.  Any fields added to the
 		// updatedOptions argument are options which have changed in
 		// some way due to the setting of other options - ie. they
 		// are context sensitive.
-		virtual Bool setOptions(const Record &rec, Record &updatedOptions);
+		virtual casacore::Bool setOptions(const casacore::Record &rec, casacore::Record &updatedOptions);
 
 		// retrieve the current and default options and parameter types.
-		virtual Record getOptions() const;
+		virtual casacore::Record getOptions() const;
 
 		// return the X and Y label text - over-ridden from base class
 		// <group>
-		//# virtual String xAxisText(WorldCanvas* wc=0) const;
-		//# virtual String yAxisText(WorldCanvas* wc=0) const;
+		//# virtual casacore::String xAxisText(WorldCanvas* wc=0) const;
+		//# virtual casacore::String yAxisText(WorldCanvas* wc=0) const;
 		//# (Compiler whines unless you do it this way instead... grr...).
-		virtual String xAxisText(WorldCanvas* wc) const;
-		virtual String yAxisText(WorldCanvas* wc) const;
-		virtual String xAxisText() const {
+		virtual casacore::String xAxisText(WorldCanvas* wc) const;
+		virtual casacore::String yAxisText(WorldCanvas* wc) const;
+		virtual casacore::String xAxisText() const {
 			return xAxisText(0);
 		}
-		virtual String yAxisText() const {
+		virtual casacore::String yAxisText() const {
 			return yAxisText(0);
 		}
 		// </group>
 
-		virtual String zLabelType() const {
+		virtual casacore::String zLabelType() const {
 			return itsZLabelType;
 		};
 
-		virtual String zLabelPos() const {
+		virtual casacore::String zLabelPos() const {
 			return itsZLabelPos;
 		};
 
-		virtual void setZIndex(Int zindex) {
+		virtual void setZIndex(casacore::Int zindex) {
 			itsZIndex = zindex;
 		};
 
@@ -135,32 +135,32 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// 0-based values instead.  Unless setUIBase(0) is called, the
 		// traditional 1-based labelling behavior is retained by default.
 		//
-		// If you are using 0-basing for 'Absolute Pixel Coordinate' labelling,
+		// If you are using 0-basing for 'Absolute Pixel casacore::Coordinate' labelling,
 		// you should call setUIBase(0), before using draw().
 		// <group>
-		virtual Int uiBase() const {
+		virtual casacore::Int uiBase() const {
 			return uiBase_;
 		}
 
-		virtual void setUIBase(Int uibase) {
+		virtual void setUIBase(casacore::Int uibase) {
 			if(uibase==0 || uibase==1) uiBase_ = uibase;
 		}
 		// </group>
 
 
-		const String &spectralunitStr( ) const {
+		const casacore::String &spectralunitStr( ) const {
 			return itsSpectralUnit;
 		}
 
-        Int spectralprec( ) const {
+        casacore::Int spectralprec( ) const {
             return itsSpectralPrecision;
         }
 
 	protected:
-		Bool itsAbsolute;
-		Bool itsWorldAxisLabels;
+		casacore::Bool itsAbsolute;
+		casacore::Bool itsWorldAxisLabels;
 		mutable WCCSAxisLabeller::SpecAxisType itsSpecAxisType;
-		Int itsZIndex;
+		casacore::Int itsZIndex;
 
 		// Set spectral state onto given CS
 		void setSpectralState(DisplayCoordinateSystem& cs) const;
@@ -171,26 +171,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	private:
 
 		DisplayCoordinateSystem itsCoordinateSystem;
-		Bool itsHasCoordinateSystem;
-		Int    itsSpectralPrecision;
-		String itsSpectralUnit;
-		String itsSpectralQuantity;
-		String itsSpectralTypeUnit;
-		String itsDirectionUnit;
-		String itsDirectionSystem;
-		String itsFrequencySystem;
-		String itsZLabelType;
-		String itsZLabelPos;
-		String itsRestValue;      // rest frequency or wavelength (value and unit)
-		String itsRestUnit;       // unit for rest frequency or wavelength
+		casacore::Bool itsHasCoordinateSystem;
+		casacore::Int    itsSpectralPrecision;
+		casacore::String itsSpectralUnit;
+		casacore::String itsSpectralQuantity;
+		casacore::String itsSpectralTypeUnit;
+		casacore::String itsDirectionUnit;
+		casacore::String itsDirectionSystem;
+		casacore::String itsFrequencySystem;
+		casacore::String itsZLabelType;
+		casacore::String itsZLabelPos;
+		casacore::String itsRestValue;      // rest frequency or wavelength (value and unit)
+		casacore::String itsRestUnit;       // unit for rest frequency or wavelength
 
-		Int uiBase_;		// (initialized to 1; see uiBase(), above).
+		casacore::Int uiBase_;		// (initialized to 1; see uiBase(), above).
 
 		// Generate axis text for specified axis
-		//# String axisText(Int worldAxis, WorldCanvas* wc=0) const;
+		//# casacore::String axisText(casacore::Int worldAxis, WorldCanvas* wc=0) const;
 		//# (Compiler whines unless you do it this way instead... grr...).
-		String axisText(Int worldAxis, WorldCanvas* wc) const;
-		String axisText(Int worldAxis) const {
+		casacore::String axisText(casacore::Int worldAxis, WorldCanvas* wc) const;
+		casacore::String axisText(casacore::Int worldAxis) const {
 			return axisText(worldAxis, 0);
 		}
 
@@ -210,7 +210,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// "optical velocity [m/s]" --> "optical velocity" and "m/s"
 		void distributeTypeUnit() ;
 
-		static const String FRAME_REST;
+		static const casacore::String FRAME_REST;
 	};
 
 

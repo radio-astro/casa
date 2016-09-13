@@ -23,6 +23,7 @@
 #include <mstransform/MSTransform/MSTransformIterator.h>
 #include <casa/Utilities/CountedPtr.h>
 
+using namespace casacore;
 namespace casa
 {
 
@@ -68,7 +69,7 @@ MSTransformIterator::~MSTransformIterator()
 		// ~MSTransformManager => MSTransformManager.close()
 		manager_p.reset();
 
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 	}
 
 	// Now the parent class destructor (~TransformingVi2) is called, which deletes the inner
@@ -224,14 +225,14 @@ void MSTransformIterator::writeFlagRow (const Vector<Bool> & rowflags)
 		// To implement the FLAG_ROW convention we have to produce a flag cube flagged
 		// in the planes corresponding to the he rows that have FLAG_ROW set to true
 		Cube<Bool> flagCube;
-		Bool flagCubeModified = False;
+		Bool flagCubeModified = false;
 		flagCube = buffer_p->flagCube(); // Copy flags from input buffer
 		for (size_t row_i =0;row_i<rowflags.size();row_i++)
 		{
 			if (rowflags(row_i))
 			{
-				flagCubeModified = True;
-				flagCube.xyPlane(row_i) = True;
+				flagCubeModified = true;
+				flagCube.xyPlane(row_i) = true;
 			}
 		}
 
@@ -294,7 +295,7 @@ void MSTransformIterator::propagateChanAvgFlags (const Cube<Bool> &avgFlagCube, 
 			{
 				for (size_t corr_i =0;corr_i<nCorr;corr_i++)
 				{
-					if (avgFlagCube(corr_i,outChan,row_i)) expandedFlagCube(corr_i,chan_i,row_i) = True;
+					if (avgFlagCube(corr_i,outChan,row_i)) expandedFlagCube(corr_i,chan_i,row_i) = true;
 				}
 			}
 		}

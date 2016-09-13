@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //
-// Data provider for uvrange.
+// casacore::Data provider for uvrange.
 //
 #ifndef MSVIS_STATISTICS_VI2_CHUNK_UV_RANGE_DATA_PROVIDER_H_
 #define MSVIS_STATISTICS_VI2_CHUNK_UV_RANGE_DATA_PROVIDER_H_
@@ -47,9 +47,9 @@ class Vi2ChunkUVRangeDataProvider final
 public:
 	Vi2ChunkUVRangeDataProvider(
 		vi::VisibilityIterator2 *vi2,
-		Bool omit_flagged_data);
+		casacore::Bool omit_flagged_data);
 
-	const Matrix<Double>& dataArray();
+	const casacore::Matrix<casacore::Double>& dataArray();
 };
 
 } // namespace casa

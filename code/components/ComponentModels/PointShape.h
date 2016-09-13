@@ -34,13 +34,17 @@
 #include <components/ComponentModels/ComponentType.h>
 #include <casa/BasicSL/Complex.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore{
 
 class MVAngle;
 class MDirection;
 class RecordInterface;
 class String;
 template <class T> class Vector;
+}
+
+namespace casa { //# NAMESPACE CASA - BEGIN
+
 
 // <summary>A shape where emission comes from only one direction</summary>
 
@@ -66,7 +70,7 @@ template <class T> class Vector;
 
 // For a point shape all the emission comes only from the reference direction
 // which is specified in celestial co-ordinates, using a 
-// <linkto class=MDirection>MDirection</linkto> object.  The direction can be
+// <linkto class=casacore::MDirection>MDirection</linkto> object.  The direction can be
 // specified both in the constructor or with the <src>setRefDirection</src>
 // function.
 
@@ -115,20 +119,20 @@ template <class T> class Vector;
 // <src>dPointShape.cc</src> file.  Note that it is more accurate to do
 // subtraction of point components in the (u,v) domain
 // <srcblock>
-//  MDirection J1934_dir;
+//  casacore::MDirection J1934_dir;
 //  { // get the right direction into J1934_dir
-//    Quantity J1934_ra; MVAngle::read(J1934_ra, "19:39:");
-//    Quantity J1934_dec; MVAngle::read(J1934_dec, "-63.43.");
-//    J1934_dir = MDirection(J1934_ra, J1934_dec, MDirection::J2000);
+//    casacore::Quantity J1934_ra; casacore::MVAngle::read(J1934_ra, "19:39:");
+//    casacore::Quantity J1934_dec; casacore::MVAngle::read(J1934_dec, "-63.43.");
+//    J1934_dir = casacore::MDirection(J1934_ra, J1934_dec, casacore::MDirection::J2000);
 //  }
 //  { // One way to construct the SkyComponent
 //    SkyComponent J1934(ComponentType::POINT, ComponentType::CONSTANT_SPECTRUM);
 //    J1934.shape().setRefDirection(J1934_dir);
-//    J1934.flux() = Flux<Double>(6.28, 0.1, 0.15, 0.01);
+//    J1934.flux() = Flux<casacore::Double>(6.28, 0.1, 0.15, 0.01);
 //    printShape(J1934.shape());
 //  }
 //  { // An alternative way to construct the SkyComponent
-//    const Flux<Double> flux(6.28, 0.1, 0.15, 0.01);
+//    const Flux<casacore::Double> flux(6.28, 0.1, 0.15, 0.01);
 //    const PointShape shape(J1934_dir);
 //    const ConstantSpectrum spectrum;
 //    SkyComponent component(flux, shape, spectrum);
@@ -156,7 +160,7 @@ public:
   PointShape();
   
   // Construct a point shape at the specified direction.
-  PointShape(const MDirection& direction);
+  PointShape(const casacore::MDirection& direction);
   
   // The copy constructor uses copy semantics.
   PointShape(const PointShape& other);
@@ -175,18 +179,18 @@ public:
   // size centered on the specified direction. Because this is a point shape
   // the returned value is either zero or one.  It is one if the specified
   // direction is less than half a pixelSize away from the reference direction.
-  virtual Double sample(const MDirection& direction, 
-			const MVAngle& pixelLatSize,
-			const MVAngle& pixelLongSize) const;
+  virtual casacore::Double sample(const casacore::MDirection& direction, 
+			const casacore::MVAngle& pixelLatSize,
+			const casacore::MVAngle& pixelLongSize) const;
 
   // Same as the previous function except that many directions can be sampled
   // at once. The reference frame and pixel size must be the same for all the
   // specified directions. This is a customised version.
-  virtual void sample(Vector<Double>& scale, 
-		      const Vector<MDirection::MVType>& directions, 
-		      const MDirection::Ref& refFrame, 
-		      const MVAngle& pixelLatSize,
-		      const MVAngle& pixelLongSize) const;
+  virtual void sample(casacore::Vector<casacore::Double>& scale, 
+		      const casacore::Vector<casacore::MDirection::MVType>& directions, 
+		      const casacore::MDirection::Ref& refFrame, 
+		      const casacore::MVAngle& pixelLatSize,
+		      const casacore::MVAngle& pixelLongSize) const;
 
   // Return the Fourier transform of the component at the specified point in
   // the spatial frequency domain. The point is specified by a 3 element vector
@@ -198,24 +202,24 @@ public:
   // The reference position for the transform is the direction of the
   // component. Hence the returned value is always a constant real value of
   // one.  The input arguments are ignored except in debug mode where the
-  // length of the uvw Vector and sign of the frequency variable are checked.
-  virtual DComplex visibility(const Vector<Double>& uvw,
-			      const Double& frequency) const;
+  // length of the uvw casacore::Vector and sign of the frequency variable are checked.
+  virtual casacore::DComplex visibility(const casacore::Vector<casacore::Double>& uvw,
+			      const casacore::Double& frequency) const;
 
   // Same as the previous function except that many (u,v,w) points can be
   // sampled at once. As with the previous function the returned value is
   // always a constant real vector of one.  The input arguments are ignored
-  // except in debug mode where the shape of the uvw Matrix and the scale
-  // Vector are checked as is the  sign of the frequency variable.
-  virtual void visibility(Vector<DComplex>& scale, const Matrix<Double>& uvw,
-			  const Double& frequency) const;
+  // except in debug mode where the shape of the uvw casacore::Matrix and the scale
+  // casacore::Vector are checked as is the  sign of the frequency variable.
+  virtual void visibility(casacore::Vector<casacore::DComplex>& scale, const casacore::Matrix<casacore::Double>& uvw,
+			  const casacore::Double& frequency) const;
 
   //Same as above except with many frequencies
-  virtual void visibility(Matrix<DComplex>& scale, const Matrix<Double>& uvw,
-			  const Vector<Double>& frequency) const;
+  virtual void visibility(casacore::Matrix<casacore::DComplex>& scale, const casacore::Matrix<casacore::Double>& uvw,
+			  const casacore::Vector<casacore::Double>& frequency) const;
 
-  // A point shape is symmetric so this function always returns True;
-  virtual Bool isSymmetric() const;
+  // A point shape is symmetric so this function always returns true;
+  virtual casacore::Bool isSymmetric() const;
 
   // Return a pointer to a copy of this object upcast to a ComponentShape
   // object. The class that uses this function is responsible for deleting the
@@ -224,53 +228,53 @@ public:
 
   // return the number of parameters in this shape and set/get them.  As this
   // is a point shape there are none. So calling <src>setParameters</src> or
-  // <src>setErrors</src> with anything other than a zero length Vector will
+  // <src>setErrors</src> with anything other than a zero length casacore::Vector will
   // throw an exception (when compiled in debug mode). The
   // <src>nParameters</src> will always return zero and the
   // <src>parameters</src> and <src>errors</src> functions will always return
   // zero length Vectors.
   // <group>
-  virtual uInt nParameters() const;
-  virtual void setParameters(const Vector<Double>& newParms);
-  virtual Vector<Double> parameters() const;
-  virtual void setErrors(const Vector<Double>& newParms);
-  virtual Vector<Double> errors() const;
-  virtual Vector<Double> optParameters() const;
-  virtual void setOptParameters(const Vector<Double>& newOptParms);
+  virtual casacore::uInt nParameters() const;
+  virtual void setParameters(const casacore::Vector<casacore::Double>& newParms);
+  virtual casacore::Vector<casacore::Double> parameters() const;
+  virtual void setErrors(const casacore::Vector<casacore::Double>& newParms);
+  virtual casacore::Vector<casacore::Double> errors() const;
+  virtual casacore::Vector<casacore::Double> optParameters() const;
+  virtual void setOptParameters(const casacore::Vector<casacore::Double>& newOptParms);
   // </group>
 
-  // This functions convert between a Record and a PointShape. These functions
+  // This functions convert between a casacore::Record and a PointShape. These functions
   // define how a point shape is represented in glish and this is detailed in
-  // the synopsis above.  They return False if the supplied Record is malformed
-  // and append an error message to the supplied String giving the reason.
+  // the synopsis above.  They return false if the supplied casacore::Record is malformed
+  // and append an error message to the supplied casacore::String giving the reason.
   // <group>
-  virtual Bool fromRecord(String& errorMessage,
-			  const RecordInterface& record);
-  virtual Bool toRecord(String& errorMessage, RecordInterface& record) const;
+  virtual casacore::Bool fromRecord(casacore::String& errorMessage,
+			  const casacore::RecordInterface& record);
+  virtual casacore::Bool toRecord(casacore::String& errorMessage, casacore::RecordInterface& record) const;
   // </group>
 
   // Convert the parameters of the component to the specified units. As a point
   // component has no parameters this function does nothing and always returns
-  // True.
-  virtual Bool convertUnit(String&, const RecordInterface&);
+  // true.
+  virtual casacore::Bool convertUnit(casacore::String&, const casacore::RecordInterface&);
 
 
 
-  // Function which checks the internal data of this class for consistent
-  // values. Returns True if everything is fine otherwise returns False.
-  virtual Bool ok() const;
+  // casacore::Function which checks the internal data of this class for consistent
+  // values. Returns true if everything is fine otherwise returns false.
+  virtual casacore::Bool ok() const;
 
   // return a pointer to this object.
   virtual const ComponentShape* getPtr() const; 
 
-  virtual String sizeToString() const;
+  virtual casacore::String sizeToString() const;
 
 private:
 
 // FInd out if a direction is located within a pixel 
-   Double dirIsInPixel (Double longSize, Double latSize, Double nearSize,
-                                    const MDirection::MVType& dirValue,
-                                    const MDirection::MVType* compDirValue) const;
+   casacore::Double dirIsInPixel (casacore::Double longSize, casacore::Double latSize, casacore::Double nearSize,
+                                    const casacore::MDirection::MVType& dirValue,
+                                    const casacore::MDirection::MVType* compDirValue) const;
 };
 
 } //# NAMESPACE CASA - END

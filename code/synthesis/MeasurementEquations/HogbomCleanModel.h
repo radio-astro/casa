@@ -93,7 +93,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // been implemented yet but is relatively simple to do if necessary). 
 //
 // This multi-dimensionalty is exploited when cleaning arrays of
-// StokesVectors. Here the Array of StokesVectors is decomposed into a stack
+// StokesVectors. Here the casacore::Array of StokesVectors is decomposed into a stack
 // of 4 Floating point arrays and the cleaning is done on all the the arrays
 // simultaneosly. The criterion for choosing the brightest pixel has been
 // generalised by using the "length" of the Stokesvector in 4 dimensional
@@ -107,14 +107,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <example>
 // <srcblock>
-// Matrix<Float> psf(12,12), dirty(10,10), initialModel(10,10);
+// casacore::Matrix<casacore::Float> psf(12,12), dirty(10,10), initialModel(10,10);
 // ...put appropriate values into psf, dirty, & initialModel....
-// HogbomCleanModel<Float> deconvolvedModel(initialModel); 
+// HogbomCleanModel<casacore::Float> deconvolvedModel(initialModel); 
 // ConvolutionEquation convEqn(psf, dirty);
 // deconvolvedModel.setGain(0.2); 
 // deconvolvedModel.setNumberIterations(1000);
-// Bool convWorked = deconvolvedModel.solve(convEqn);
-// Array<Float> finalModel, residuals;
+// casacore::Bool convWorked = deconvolvedModel.solve(convEqn);
+// casacore::Array<casacore::Float> finalModel, residuals;
 // if (convWorked){
 //   finalModel = deconvolvedModel.getModel();
 //   ConvEqn.residual(deconvolvedModel, finalResidual);
@@ -149,16 +149,16 @@ public:
   // ArrayModel class.
   HogbomCleanModel():ArrayModel<T>(){};
   // Construct the HogbomCleanModel object and initialise the model.
-  HogbomCleanModel(const Array<T> & model):ArrayModel<T>(model){};
+  HogbomCleanModel(const casacore::Array<T> & model):ArrayModel<T>(model){};
   // Using a Hogbom clean deconvolution proceedure solve for an improved
   // estimate of the deconvolved object. The convolution/residual equation
   // contains the psf and dirty image. When called with a ResidualEquation
   // arguement a quite general interface is used that is slow. The
   // convolution equation contains functions that speed things up. The
-  // functions return False if the deconvolution could not be done.
+  // functions return false if the deconvolution could not be done.
   // <group>
-  Bool solve(ResidualEquation<Array<T> > & eqn);
-  Bool solve(ConvolutionEquation & eqn);
+  casacore::Bool solve(ResidualEquation<casacore::Array<T> > & eqn);
+  casacore::Bool solve(ConvolutionEquation & eqn);
   // </group>
 
   //# Make parent members known.

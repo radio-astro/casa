@@ -29,8 +29,11 @@
 #include <components/ComponentModels/TwoSidedShape.h>
 typedef std::numeric_limits< double > dbl;
 
+using namespace casacore;
 using namespace casa;
+using namespace casacore;
 using namespace casac;
+using namespace casacore;
 using namespace casacore;
 using namespace std; 
 

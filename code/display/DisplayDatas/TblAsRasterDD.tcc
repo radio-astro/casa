@@ -1,4 +1,4 @@
-//# TblAsRasterDD.cc:  Display Data for raster displays of data from a table
+//# TblAsRasterDD.cc:  Display casacore::Data for raster displays of data from a table
 //# Copyright (C) 2000,2001
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -47,7 +47,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // constructors
 // given an already constructed table
-	TblAsRasterDD::TblAsRasterDD(Table *table):
+	TblAsRasterDD::TblAsRasterDD(casacore::Table *table):
 		// NEED TO CLONE/COPY THE TABLE AND PUT THE CLONE IN ITSTABLE
 		// SO THAT NO ONE ELSE CAN REMOVE THE TABLE ON US
 		itsTable(table),
@@ -69,7 +69,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // given a string which gives the full pathname and filename of a table
 // on disk
-	TblAsRasterDD::TblAsRasterDD(const String tablename):
+	TblAsRasterDD::TblAsRasterDD(const casacore::String tablename):
 		itsTable(0),
 		itsQueryTable(0),
 		itsXColumnName(0),
@@ -77,9 +77,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsMColumnName(0),
 		itsMColumnSet(0) {
 		// open the table file - throw and error if there is a problem
-		itsTable = new Table(tablename);
+		itsTable = new casacore::Table(tablename);
 		if (!itsTable) {
-			throw(AipsError("Cannot open named table"));
+			throw(casacore::AipsError("Cannot open named table"));
 		}
 		// get the names of the columns from the table
 		getTableColumnNames();
@@ -104,15 +104,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 	}
 
-	const Unit TblAsRasterDD::dataUnit() {
-		String value = "_";
+	const casacore::Unit TblAsRasterDD::dataUnit() {
+		casacore::String value = "_";
 		return value;
 	}
 
 // get the units of the columns being displayed
-	const Unit TblAsRasterDD::dataUnit(const String column) {
-		static Regex rxUnit("^[uU][nN][iI][tT]$");
-		String value;
+	const casacore::Unit TblAsRasterDD::dataUnit(const casacore::String column) {
+		static casacore::Regex rxUnit("^[uU][nN][iI][tT]$");
+		casacore::String value;
 		if (getColumnKeyword(value, column, rxUnit)) {
 		} else {
 			value = "_";
@@ -129,15 +129,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 // set a record
-	Bool TblAsRasterDD::setOptions(Record &rec, Record &recOut) {
-		Bool ret = ActiveCaching2dDD::setOptions(rec,recOut);
-		Bool localchange = False, coordchange = False, error;
+	casacore::Bool TblAsRasterDD::setOptions(casacore::Record &rec, casacore::Record &recOut) {
+		casacore::Bool ret = ActiveCaching2dDD::setOptions(rec,recOut);
+		casacore::Bool localchange = false, coordchange = false, error;
 
 		if (readOptionRecord(itsOptQueryString, itsOptQueryStringUnset,
 		                     error, rec, "querystring")) {
 
 			arrangeQueryTable();
-			localchange = True;
+			localchange = true;
 		}
 
 		// set the DParmeter values which have information on
@@ -157,10 +157,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return (ret || localchange || coordchange);
 	}
 
-	Record TblAsRasterDD::getOptions( bool scrub ) const {
-		Record rec = ActiveCaching2dDD::getOptions(scrub);
+	casacore::Record TblAsRasterDD::getOptions( bool scrub ) const {
+		casacore::Record rec = ActiveCaching2dDD::getOptions(scrub);
 
-		Record querystring;
+		casacore::Record querystring;
 		querystring.define("dlformat", "querystring");
 		querystring.define("listname", "\"WHERE\" query");
 		querystring.define("ptype", "string");
@@ -170,7 +170,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		} else {
 			querystring.define("value", itsOptQueryString);
 		}
-		querystring.define("allowunset", True);
+		querystring.define("allowunset", true);
 		rec.defineRecord("querystring", querystring);
 
 		// get DParameter values which have information on the axis (columns) used
@@ -209,7 +209,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 // obtain a pointer to the table to be displayed
-	Table *TblAsRasterDD::table() {
+	casacore::Table *TblAsRasterDD::table() {
 		if (itsQueryTable) {
 			return itsQueryTable;
 		} else {
@@ -237,12 +237,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// setup values for query options
 		itsOptQueryString = "";
-		itsOptQueryStringUnset = True;
+		itsOptQueryStringUnset = true;
 		arrangeQueryTable();
 
 	}
 
-	Bool TblAsRasterDD::arrangeQueryTable() {
+	casacore::Bool TblAsRasterDD::arrangeQueryTable() {
 		// remove old version of query table and make ready for new entries
 		if (itsQueryTable) {
 			itsQueryTable->markForDelete();
@@ -252,16 +252,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// now add to new query table if requested
 		if (!itsOptQueryStringUnset) {
-			String selectStr = "SELECT ";
-			String fromStr = "FROM " + String(itsTable->tableName()) + String(" ");
-			String whereStr = "WHERE " + itsOptQueryString;
-			itsQueryTable = new Table(tableCommand(selectStr + fromStr + whereStr));
+			casacore::String selectStr = "SELECT ";
+			casacore::String fromStr = "FROM " + casacore::String(itsTable->tableName()) + casacore::String(" ");
+			casacore::String whereStr = "WHERE " + itsOptQueryString;
+			itsQueryTable = new casacore::Table(tableCommand(selectStr + fromStr + whereStr));
 			if (itsQueryTable) {
-				return True;
+				return true;
 			}
 		}
 		// query table was not set
-		return False;
+		return false;
 	}
 
 	void TblAsRasterDD::getCoordinateSystem() {
@@ -270,7 +270,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 		// linear extent of coordinates
-		Vector<Double> linblc(2), lintrc(2), extrema;
+		casacore::Vector<casacore::Double> linblc(2), lintrc(2), extrema;
 		extrema = columnStatistics(itsXColumnName->value());
 		linblc(0)=extrema(0);
 		lintrc(0)=extrema(1)-1.0;
@@ -279,36 +279,36 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		lintrc(1)=extrema(1)-1.0;
 
 		// coordinate axis names
-		Vector<String> names(2);
+		casacore::Vector<casacore::String> names(2);
 		names(0) = itsXColumnName->value();
 		names(1) = itsYColumnName->value();
 
 		// coordinate axis units
-		Vector<String> units(2);
-		Unit temp = dataUnit(itsXColumnName->value());
+		casacore::Vector<casacore::String> units(2);
+		casacore::Unit temp = dataUnit(itsXColumnName->value());
 		units(0) = temp.getName();
 		if (itsYColumnName->value() == "<row>") {  // row is not a table column
 			units(1) = "_";
 		} else {
-			Unit temp2 = dataUnit(itsYColumnName->value());
+			casacore::Unit temp2 = dataUnit(itsYColumnName->value());
 			units(1)= temp2.getName();
 		}
 
-		Matrix<Double> pc(2,2);
+		casacore::Matrix<casacore::Double> pc(2,2);
 		pc = 0.0;
 		pc(0, 0) = pc(1, 1) = 1.0;
 
 		// reference values for mapping for mapping coordinates
-		Vector<double> refVal = linblc;
+		casacore::Vector<double> refVal = linblc;
 
 		// coordinate increments
-		Vector<double> inc(2);
+		casacore::Vector<double> inc(2);
 		inc = 1.0;
 
 		// reference pixel for mapping coordinates
-		Vector<double> refPix = linblc;
+		casacore::Vector<double> refPix = linblc;
 
-		LinearCoordinate lc(names, units, refVal, inc, pc, refPix);
+		casacore::LinearCoordinate lc(names, units, refVal, inc, pc, refPix);
 		itsCoord.addCoordinate(lc);
 		itsLinblc = linblc;
 		itsLintrc = lintrc;
@@ -319,12 +319,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		ActiveCaching2dDD::setCoordinateSystem( itsCoord, itsLinblc, itsLintrc);
 	}
 
-	String TblAsRasterDD::showValue(const Vector<Double> &world) {
+	casacore::String TblAsRasterDD::showValue(const casacore::Vector<casacore::Double> &world) {
 
 		// NEED TO IMPLEMENT
 		// no examples of this function exist in any other DD but it should be
 		// easy to implement?
-		String temp="";
+		casacore::String temp="";
 		return temp;
 	}
 
@@ -333,7 +333,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// make sure there is a table to be read
 		if (!table()) {
-			throw(AipsError("could not obtain table in TblAsRasterDD"));
+			throw(casacore::AipsError("could not obtain table in TblAsRasterDD"));
 		}
 
 		// determine the column names
@@ -341,58 +341,58 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// check to make sure there are at least two column names
 		if (itsColumnNames.nelements() < 2) {
-			throw(AipsError("too few columns for TblAsRasterDD to plot table"));
+			throw(casacore::AipsError("too few columns for TblAsRasterDD to plot table"));
 		}
 
 	}
 
 // get all of the table columnNames with a certain data type
-	Vector<String> TblAsRasterDD::getColumnNamesOfType( const Bool isarray) {
+	casacore::Vector<casacore::String> TblAsRasterDD::getColumnNamesOfType( const casacore::Bool isarray) {
 
-		uInt n = 0;
+		casacore::uInt n = 0;
 
 		// get all the table column names available
 		// we must do this since a table query may be active
 		getTableColumnNames();
-		Vector<String> cnames = itsColumnNames;
+		casacore::Vector<casacore::String> cnames = itsColumnNames;
 
 		// get a description of the columns
-		TableDesc tdesc(table()->tableDesc());
+		casacore::TableDesc tdesc(table()->tableDesc());
 
 		// now keep only columns of specified data types
-		Vector<String> retval (cnames.shape());
-		for (uInt i = 0; i < cnames.nelements(); i++ ) {
+		casacore::Vector<casacore::String> retval (cnames.shape());
+		for (casacore::uInt i = 0; i < cnames.nelements(); i++ ) {
 			if (isarray ) {
 				// columns with arrays suitable for x axis
-				if (tdesc.columnDesc(cnames(i)).trueDataType() == TpArrayShort ||
-				        tdesc.columnDesc(cnames(i)).trueDataType() == TpArrayShort ||
-				        tdesc.columnDesc(cnames(i)).trueDataType() == TpArrayUShort ||
-				        tdesc.columnDesc(cnames(i)).trueDataType() == TpArrayInt ||
-				        tdesc.columnDesc(cnames(i)).trueDataType() == TpArrayUInt ||
-				        tdesc.columnDesc(cnames(i)).trueDataType() == TpArrayFloat ||
-				        tdesc.columnDesc(cnames(i)).trueDataType() == TpArrayDouble ||
-				        tdesc.columnDesc(cnames(i)).trueDataType() == TpArrayComplex ||
-				        tdesc.columnDesc(cnames(i)).trueDataType() == TpArrayDComplex ) {
+				if (tdesc.columnDesc(cnames(i)).trueDataType() == casacore::TpArrayShort ||
+				        tdesc.columnDesc(cnames(i)).trueDataType() == casacore::TpArrayShort ||
+				        tdesc.columnDesc(cnames(i)).trueDataType() == casacore::TpArrayUShort ||
+				        tdesc.columnDesc(cnames(i)).trueDataType() == casacore::TpArrayInt ||
+				        tdesc.columnDesc(cnames(i)).trueDataType() == casacore::TpArrayUInt ||
+				        tdesc.columnDesc(cnames(i)).trueDataType() == casacore::TpArrayFloat ||
+				        tdesc.columnDesc(cnames(i)).trueDataType() == casacore::TpArrayDouble ||
+				        tdesc.columnDesc(cnames(i)).trueDataType() == casacore::TpArrayComplex ||
+				        tdesc.columnDesc(cnames(i)).trueDataType() == casacore::TpArrayDComplex ) {
 					retval(n++) = cnames(i);
 				}
 			} else {
 				// columns with scalars suitable for y axis
-				if (tdesc.columnDesc(cnames(i)).trueDataType() == TpShort ||
-				        tdesc.columnDesc(cnames(i)).trueDataType() == TpShort ||
-				        tdesc.columnDesc(cnames(i)).trueDataType() == TpUShort ||
-				        tdesc.columnDesc(cnames(i)).trueDataType() == TpInt ||
-				        tdesc.columnDesc(cnames(i)).trueDataType() == TpUInt ||
-				        tdesc.columnDesc(cnames(i)).trueDataType() == TpFloat ||
-				        tdesc.columnDesc(cnames(i)).trueDataType() == TpDouble ||
-				        tdesc.columnDesc(cnames(i)).trueDataType() == TpComplex ||
-				        tdesc.columnDesc(cnames(i)).trueDataType() == TpDComplex ) {
+				if (tdesc.columnDesc(cnames(i)).trueDataType() == casacore::TpShort ||
+				        tdesc.columnDesc(cnames(i)).trueDataType() == casacore::TpShort ||
+				        tdesc.columnDesc(cnames(i)).trueDataType() == casacore::TpUShort ||
+				        tdesc.columnDesc(cnames(i)).trueDataType() == casacore::TpInt ||
+				        tdesc.columnDesc(cnames(i)).trueDataType() == casacore::TpUInt ||
+				        tdesc.columnDesc(cnames(i)).trueDataType() == casacore::TpFloat ||
+				        tdesc.columnDesc(cnames(i)).trueDataType() == casacore::TpDouble ||
+				        tdesc.columnDesc(cnames(i)).trueDataType() == casacore::TpComplex ||
+				        tdesc.columnDesc(cnames(i)).trueDataType() == casacore::TpDComplex ) {
 					retval(n++) = cnames(i);
 				}
 			}
 		}
 
 		// now resize the selected column names vector
-		retval.resize(n, True);
+		retval.resize(n, true);
 
 		return retval;
 	}
@@ -401,26 +401,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // construct the parameters list
 	void TblAsRasterDD::constructParameters() {
 
-		Bool isarray = true, notarray = False;
+		casacore::Bool isarray = true, notarray = false;
 
 		// get a list of column names with numerical data in arrays
-		Vector<String> xstring = getColumnNamesOfType(isarray);
+		casacore::Vector<casacore::String> xstring = getColumnNamesOfType(isarray);
 
 		// if no columns are returned then throw exception
 		if (xstring.nelements() < 1) {
-			throw(AipsError("no valid columns found in table for a raster plot"));
+			throw(casacore::AipsError("no valid columns found in table for a raster plot"));
 		}
 
 		// get a list of column names with numerical data in non-arrays
 		// ystring can have zero elements since we can plot against "row number"
-		Vector<String> ystring = getColumnNamesOfType(notarray);
+		casacore::Vector<casacore::String> ystring = getColumnNamesOfType(notarray);
 
 		// increase the size of the x column string and add the "none" option
-		xstring.resize(xstring.nelements() + 1, True);
+		xstring.resize(xstring.nelements() + 1, true);
 		xstring(xstring.nelements() - 1) = "<none>";
 
 		// increase the size of the y column string and add the "rows" option
-		ystring.resize(ystring.nelements() + 1, True);
+		ystring.resize(ystring.nelements() + 1, true);
 		ystring(ystring.nelements() - 1) = "<row>";
 
 		// now set up the X column choice parameters
@@ -494,9 +494,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // we need to add support for complex values
 //
-	Vector<double> TblAsRasterDD::columnStatistics(const String& columnName) {
+	casacore::Vector<double> TblAsRasterDD::columnStatistics(const casacore::String& columnName) {
 
-		Vector<double> extrema(2);  // first value is minima second is maxima
+		casacore::Vector<double> extrema(2);  // first value is minima second is maxima
 
 		// for now the min is allows zero - until we can determine if a
 		// table measures exists to tell us the world coordinate values
@@ -514,124 +514,124 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		// get the table column data type
-		TableDesc tdesc(table()->tableDesc());
-		DataType type=tdesc.columnDesc(columnName).trueDataType();
+		casacore::TableDesc tdesc(table()->tableDesc());
+		casacore::DataType type=tdesc.columnDesc(columnName).trueDataType();
 
-		if (type == TpArrayDouble) {
+		if (type == casacore::TpArrayDouble) {
 			// array to contain data from column in columns data type
-			Array<double> typedata;
+			casacore::Array<double> typedata;
 			// read the column into an array
-			ROArrayColumn<double> dataCol(*table(),columnName);
-			dataCol.getColumn(typedata,True);
+			casacore::ROArrayColumn<double> dataCol(*table(),columnName);
+			dataCol.getColumn(typedata,true);
 			// let the maximum value be the number of elements in the array
 			// typedata is ndim+row so we need to look at its shape the get
 			// the number of pixels in a column row (nx)
-			IPosition length = typedata.shape();
+			casacore::IPosition length = typedata.shape();
 			extrema(1) = length(0); // get the length of the first axis which is nx
 			// for use in the future or TableAsXY
 			// find the minimum and maximum in the array
 			//minMax(extrema(0),extrema(1),data);
 		}
-		if (type == TpArrayFloat) {
-			Array<float> typedata;
-			ROArrayColumn<float> dataCol(*table(),columnName);
-			dataCol.getColumn(typedata,True);
+		if (type == casacore::TpArrayFloat) {
+			casacore::Array<float> typedata;
+			casacore::ROArrayColumn<float> dataCol(*table(),columnName);
+			dataCol.getColumn(typedata,true);
 			// let the maximum value be the number of elements - assume 1-D array
-			IPosition length = typedata.shape();
+			casacore::IPosition length = typedata.shape();
 			extrema(1) = length(0); // get the length of the first axis which is nx
 			// for use in the future or TableAsXY
 			// now convert array to type double
-			// Array<double> data;
+			// casacore::Array<double> data;
 			//data.resize(typedata.shape());
 			//convertArray(data,typedata);
 			// find the minimum and maximum in the array
 			//minMax(extrema(0),extrema(1),data);
 		}
-		if (type == TpArrayShort) {
-			Array<short> typedata;
-			ROArrayColumn<short> dataCol(*table(),columnName);
-			dataCol.getColumn(typedata,True);
-			IPosition length = typedata.shape();
+		if (type == casacore::TpArrayShort) {
+			casacore::Array<short> typedata;
+			casacore::ROArrayColumn<short> dataCol(*table(),columnName);
+			dataCol.getColumn(typedata,true);
+			casacore::IPosition length = typedata.shape();
 			extrema(1) = length(0); // get the length of the first axis which is nx
 		}
-		if (type == TpArrayUShort) {
-			Array<uShort> typedata;
-			ROArrayColumn<uShort> dataCol(*table(),columnName);
-			dataCol.getColumn(typedata,True);
-			IPosition length = typedata.shape();
+		if (type == casacore::TpArrayUShort) {
+			casacore::Array<casacore::uShort> typedata;
+			casacore::ROArrayColumn<casacore::uShort> dataCol(*table(),columnName);
+			dataCol.getColumn(typedata,true);
+			casacore::IPosition length = typedata.shape();
 			extrema(1) = length(0); // get the length of the first axis which is nx
 		}
-		if (type == TpArrayInt) {
-			Array<int> typedata;
-			ROArrayColumn<int> dataCol(*table(),columnName);
-			dataCol.getColumn(typedata,True);
-			IPosition length = typedata.shape();
+		if (type == casacore::TpArrayInt) {
+			casacore::Array<int> typedata;
+			casacore::ROArrayColumn<int> dataCol(*table(),columnName);
+			dataCol.getColumn(typedata,true);
+			casacore::IPosition length = typedata.shape();
 			extrema(1) = length(0); // get the length of the first axis which is nx
 		}
-		if (type == TpArrayUInt) {
-			Array<uInt> typedata;
-			ROArrayColumn<uInt> dataCol(*table(),columnName);
-			dataCol.getColumn(typedata,True);
-			IPosition length = typedata.shape();
+		if (type == casacore::TpArrayUInt) {
+			casacore::Array<casacore::uInt> typedata;
+			casacore::ROArrayColumn<casacore::uInt> dataCol(*table(),columnName);
+			dataCol.getColumn(typedata,true);
+			casacore::IPosition length = typedata.shape();
 			extrema(1) = length(0); // get the length of the first axis which is nx
 		}
 		//
 		// scalar column cases
 		//
-		if (type == TpDouble) {
+		if (type == casacore::TpDouble) {
 			// array to contain data from column in columns data type
-			Vector<double> typedata;
+			casacore::Vector<double> typedata;
 			// read the scalar column into an array
-			ROScalarColumn<double> dataCol(*table(),columnName);
-			dataCol.getColumn(typedata,True);
+			casacore::ROScalarColumn<double> dataCol(*table(),columnName);
+			dataCol.getColumn(typedata,true);
 			// minima and maxima of data are world coordinate min and max
 			minMax(extrema(0),extrema(1),typedata);
 		}
-		if (type == TpFloat) {
-			Vector<float> typedata;
-			ROScalarColumn<float> dataCol(*table(),columnName);
-			dataCol.getColumn(typedata,True);
-			Array<double> data;
+		if (type == casacore::TpFloat) {
+			casacore::Vector<float> typedata;
+			casacore::ROScalarColumn<float> dataCol(*table(),columnName);
+			dataCol.getColumn(typedata,true);
+			casacore::Array<double> data;
 			data.resize(typedata.shape());
 			convertArray(data,typedata);
 			// minima and maxima of data are world coordinate min and max
 			minMax(extrema(0),extrema(1),data);
 		}
-		if (type == TpShort) {
-			Vector<short> typedata;
-			ROScalarColumn<short> dataCol(*table(),columnName);
-			dataCol.getColumn(typedata,True);
-			Array<double> data;
+		if (type == casacore::TpShort) {
+			casacore::Vector<short> typedata;
+			casacore::ROScalarColumn<short> dataCol(*table(),columnName);
+			dataCol.getColumn(typedata,true);
+			casacore::Array<double> data;
 			data.resize(typedata.shape());
 			convertArray(data,typedata);
 			// minima and maxima of data are world coordinate min and max
 			minMax(extrema(0),extrema(1),data);
 		}
-		if (type == TpUShort) {
-			Vector<uShort> typedata;
-			ROScalarColumn<uShort> dataCol(*table(),columnName);
-			dataCol.getColumn(typedata,True);
-			Array<double> data;
+		if (type == casacore::TpUShort) {
+			casacore::Vector<casacore::uShort> typedata;
+			casacore::ROScalarColumn<casacore::uShort> dataCol(*table(),columnName);
+			dataCol.getColumn(typedata,true);
+			casacore::Array<double> data;
 			data.resize(typedata.shape());
 			convertArray(data,typedata);
 			// minima and maxima of data are world coordinate min and max
 			minMax(extrema(0),extrema(1),data);
 		}
-		if (type == TpInt) {
-			Vector<int> typedata;
-			ROScalarColumn<int> dataCol(*table(),columnName);
-			dataCol.getColumn(typedata,True);
-			Array<double> data;
+		if (type == casacore::TpInt) {
+			casacore::Vector<int> typedata;
+			casacore::ROScalarColumn<int> dataCol(*table(),columnName);
+			dataCol.getColumn(typedata,true);
+			casacore::Array<double> data;
 			data.resize(typedata.shape());
 			convertArray(data,typedata);
 			// minima and maxima of data are world coordinate min and max
 			minMax(extrema(0),extrema(1),data);
 		}
-		if (type == TpUInt) {
-			Vector<uInt> typedata;
-			ROScalarColumn<uInt> dataCol(*table(),columnName);
-			dataCol.getColumn(typedata,True);
-			Array<double> data;
+		if (type == casacore::TpUInt) {
+			casacore::Vector<casacore::uInt> typedata;
+			casacore::ROScalarColumn<casacore::uInt> dataCol(*table(),columnName);
+			dataCol.getColumn(typedata,true);
+			casacore::Array<double> data;
 			data.resize(typedata.shape());
 			// have to change template file
 			convertArray(data,typedata);

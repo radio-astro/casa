@@ -33,6 +33,7 @@
 #include <display/Display/PixelCanvas.h>
 #include <casa/iostream.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	DSPoly::DSPoly() :
@@ -57,7 +58,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		setHasHandles(handles);
 		setDrawHandles(drawHandles);
-		itsValidCenter = False;
+		itsValidCenter = false;
 		itsPoints = points;
 		itsPolyCenter.resize(2);
 		if (handles) {
@@ -75,7 +76,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		                            (yPos - currentCenter[1]));
 
 		// New center.
-		itsValidCenter = True;
+		itsValidCenter = true;
 		itsPolyCenter[0] = xPos;
 		itsPolyCenter[1] = yPos;
 
@@ -113,7 +114,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	Bool DSPoly::setOptions(const Record& settings) {
-		Bool localChange = False;
+		Bool localChange = false;
 		// Maybe this first one, "validPoints" isnt needed?
 		if (settings.isDefined("polygonpoints")) {
 			itsPoints = settings.asArrayFloat("polygonpoints");
@@ -121,7 +122,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 
-		if(DSClosed::setOptions(settings)) localChange = True;
+		if(DSClosed::setOptions(settings)) localChange = true;
 		return localChange;
 	}
 
@@ -140,7 +141,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	                         const Float& aboutY) {
 
 		//Rotate the polygon about some point
-		itsValidCenter = False;
+		itsValidCenter = false;
 		itsPoints = DisplayShape::rotatePolygon(itsPoints, toRadians(angle),
 		                                        aboutX, aboutY);
 		DSClosed::rotateAbout(angle, aboutX, aboutY);
@@ -174,7 +175,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			itsPoints(whichPoint, 0) = newLocation[0];
 			itsPoints(whichPoint, 1) = newLocation[1];
 			setHandlePositions(itsPoints);
-			itsValidCenter = False;
+			itsValidCenter = false;
 		}
 	}
 
@@ -182,14 +183,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsPoints(point, 0) = newLocation[0];
 		itsPoints(point, 1) = newLocation[1];
 		setHandlePositions(itsPoints);
-		itsValidCenter = False;
+		itsValidCenter = false;
 	}
 
 	void DSPoly::addPoint(const Vector<Float> &newPoint) {
 		//Need to think about this one.
 
 		//Find the points it is closest two, and insert it in between them.
-		itsValidCenter = False;
+		itsValidCenter = false;
 		Int firstPoint = -1;
 		Int secondPoint = -1;
 		closestPoints(itsPoints, newPoint[0], newPoint[1], firstPoint, secondPoint);
@@ -199,13 +200,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		//Insert into position.
 		Matrix<Float> newPoints(itsPoints.nrow() + 1, itsPoints.ncolumn());
-		Bool inserted = False;
+		Bool inserted = false;
 
 		for (uInt i=0; i<newPoints.nrow(); i++) {
 			if(i == uInt(position)) {
 				newPoints(i,0) = newPoint[0];
 				newPoints(i,1) = newPoint[1];
-				inserted = True;
+				inserted = true;
 			} else {
 				if (!inserted) {
 					newPoints(i,0) = itsPoints(i,0);
@@ -219,18 +220,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 		itsPoints.resize();
 		itsPoints = newPoints;
-		addHandle(newPoint, False, position);
+		addHandle(newPoint, false, position);
 	}
 
 	void DSPoly::deletePoint(const Vector<Float> & /*removePoint*/) {
 		//NYI
-		//itsValidCenter = False;
+		//itsValidCenter = false;
 		//cerr << "Sorry. I haven't been implemented yet." << endl;
 	}
 
 	void DSPoly::deletePoint(const Int /*nPoint*/) {
 		//NYI
-		//itsValidCenter = False;
+		//itsValidCenter = false;
 		//cerr << "Sorry. I haven't been implemented yet." << endl;
 	}
 
@@ -276,7 +277,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			newCenter[1] = itsPoints(0,1);
 		}
 		//
-		itsValidCenter = True;
+		itsValidCenter = true;
 		itsPolyCenter = newCenter;
 		//
 
@@ -305,7 +306,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	void DSPoly::setPoints(const Matrix<Float> &newPoints) {
 
 		itsPoints = newPoints;
-		itsValidCenter = False;
+		itsValidCenter = false;
 		setHandlePositions(itsPoints);
 
 	}
@@ -317,9 +318,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	void DSPoly::setDefaultOptions() {
 		itsPolyCenter.resize(2);
 		itsPoints.resize();
-		itsValidCenter = False;
-		setHasHandles(True);
-		setDrawHandles(False);
+		itsValidCenter = false;
+		setHasHandles(true);
+		setDrawHandles(false);
 	}
 
 

@@ -42,8 +42,8 @@ namespace casa {
 // </reviewed>
 
 // <prerequisite>
-//   <li> <linkto class="ImageInterface">ImageInterface</linkto>
-//   <li> <linkto class="Convolver">Convolver</linkto>
+//   <li> <linkto class="casacore::ImageInterface">casacore::ImageInterface</linkto>
+//   <li> <linkto class="casacore::Convolver">casacore::Convolver</linkto>
 // </prerequisite>
 
 // <etymology>
@@ -70,13 +70,13 @@ namespace casa {
 template <class T> class SepImageConvolverTask : public ImageTask<T> {
 public:
 
-	const static String CLASS_NAME;
+	const static casacore::String CLASS_NAME;
 
 	SepImageConvolverTask() = delete;
 
 	SepImageConvolverTask(
-		const SPCIIT image, const Record *const &regionPtr,
-	    const String& mask, const String& outname, const Bool overwrite
+		const SPCIIT image, const casacore::Record *const &regionPtr,
+	    const casacore::String& mask, const casacore::String& outname, const casacore::Bool overwrite
 	);
 	
     SepImageConvolverTask(const SepImageConvolverTask<T> &other) = delete;
@@ -87,15 +87,15 @@ public:
 
 	SPIIT convolve();
 
-	void setKernels(const Vector<String>& kernels) { _kernels.assign(kernels); }
+	void setKernels(const casacore::Vector<casacore::String>& kernels) { _kernels.assign(kernels); }
 
-	void setKernelWidths(const Vector<Quantity>& kernelwidths) { _kernelWidths.assign(kernelwidths); }
+	void setKernelWidths(const casacore::Vector<casacore::Quantity>& kernelwidths) { _kernelWidths.assign(kernelwidths); }
 
-	void setScale(Double d) { _scale = d; }
+	void setScale(casacore::Double d) { _scale = d; }
 
-	void setSmoothAxes(const Vector<Int>& axes) { _axes.assign(axes); }
+	void setSmoothAxes(const casacore::Vector<casacore::Int>& axes) { _axes.assign(axes); }
 
-	String getClass() const { return CLASS_NAME; }
+	casacore::String getClass() const { return CLASS_NAME; }
 
 protected:
 
@@ -103,17 +103,17 @@ protected:
    		return CasacRegionManager::USE_ALL_STOKES;
    	}
 
-    vector<Coordinate::Type> _getNecessaryCoordinates() const {
-    	return vector<Coordinate::Type>();
+    vector<casacore::Coordinate::Type> _getNecessaryCoordinates() const {
+    	return vector<casacore::Coordinate::Type>();
     }
 
-    inline Bool _supportsMultipleRegions() const {return True;}
+    inline casacore::Bool _supportsMultipleRegions() const {return true;}
 
 private:
-    Vector<String> _kernels;
-    Vector<Quantity> _kernelWidths;
-    Double _scale = 0;
-    Vector<Int> _axes;
+    casacore::Vector<casacore::String> _kernels;
+    casacore::Vector<casacore::Quantity> _kernelWidths;
+    casacore::Double _scale = 0;
+    casacore::Vector<casacore::Int> _axes;
 
 };
 

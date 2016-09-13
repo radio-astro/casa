@@ -44,31 +44,31 @@ public:
 							SHARED_PTR<MSTransformManager>);
 	~MSTransformIterator();
 
-    const MeasurementSet & ms () const {return *transformedMS_p;};
+    const casacore::MeasurementSet & ms () const {return *transformedMS_p;};
 
 	vi::VisBuffer2 * getVisBuffer (const vi::VisibilityIterator2 *) {return buffer_p;}
 	vi::VisBuffer2 * getVisBuffer () {return buffer_p;}
 
     void originChunks ();
-    Bool moreChunks () const;
+    casacore::Bool moreChunks () const;
     void nextChunk ();
 
     void origin ();
-    Bool more () const;
+    casacore::Bool more () const;
     void next ();
 
-    void writeFlag (const Cube<Bool> & flag);
-    void writeFlagRow (const Vector<Bool> & rowflags);
+    void writeFlag (const casacore::Cube<casacore::Bool> & flag);
+    void writeFlagRow (const casacore::Vector<casacore::Bool> & rowflags);
 
 protected:
 
-    void propagateChanAvgFlags (const Cube<Bool> &avgFlagCube, Cube<Bool> &expandedFlagCube);
+    void propagateChanAvgFlags (const casacore::Cube<casacore::Bool> &avgFlagCube, casacore::Cube<casacore::Bool> &expandedFlagCube);
 
 private:
-    String tmpMSFileName_p;
+    casacore::String tmpMSFileName_p;
     SHARED_PTR<MSTransformManager> manager_p;
 	MSTransformBufferImpl *buffer_p;
-	MeasurementSet *transformedMS_p;
+	casacore::MeasurementSet *transformedMS_p;
 };
 
 } //# NAMESPACE CASA - END

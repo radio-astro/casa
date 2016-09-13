@@ -47,7 +47,7 @@ int main () {
 			log << LogIO::NORMAL
 				<< "Test mixed world and pixel coordinates throws exception"
 				<< LogIO::POST;
-			Bool thrown = True;
+			Bool thrown = true;
 			Vector<Quantity> x(3);
 			Vector<Quantity> y(3);
 
@@ -60,7 +60,7 @@ int main () {
 
 			Quantity beginFreq, endFreq;
 			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(False)
+				csys.directionCoordinate().directionType(false)
 			);
 			String freqRefFrameString = MFrequency::showType(
 				csys.spectralCoordinate().frequencySystem()
@@ -76,9 +76,9 @@ int main () {
 				AnnPolygon poly(
 					x, y, dirTypeString,
 					csys, shape, beginFreq, endFreq, freqRefFrameString,
-					dopplerString, restfreq, stokes, False
+					dopplerString, restfreq, stokes, false
 				);
-				thrown = False;
+				thrown = false;
 			} catch (AipsError x) {
 				log << LogIO::NORMAL
 					<< "Exception thrown as expected: "
@@ -90,7 +90,7 @@ int main () {
 			log << LogIO::NORMAL
 				<< "Test bad quantity for world direction coordinate throws exception"
 				<< LogIO::POST;
-			Bool thrown = True;
+			Bool thrown = true;
 			Vector<Quantity> x(3);
 			Vector<Quantity> y(3);
 			x[0] = Quantity(0.01, "km/s");
@@ -102,7 +102,7 @@ int main () {
 
 			Quantity beginFreq, endFreq;
 			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(False)
+				csys.directionCoordinate().directionType(false)
 			);
 			String freqRefFrameString = MFrequency::showType(
 				csys.spectralCoordinate().frequencySystem()
@@ -118,9 +118,9 @@ int main () {
 				AnnPolygon poly(
 					x, y, dirTypeString,
 					csys, shape, beginFreq, endFreq, freqRefFrameString,
-					dopplerString, restfreq, stokes, False
+					dopplerString, restfreq, stokes, false
 				);
-				thrown = False;
+				thrown = false;
 			} catch (AipsError x) {
 				log << LogIO::NORMAL
 					<< "Exception thrown as expected: "
@@ -144,7 +144,7 @@ int main () {
 
 			Quantity beginFreq, endFreq;
 			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(False)
+				csys.directionCoordinate().directionType(false)
 			);
 			String freqRefFrameString = MFrequency::showType(
 				csys.spectralCoordinate().frequencySystem()
@@ -159,7 +159,7 @@ int main () {
 			AnnPolygon poly(
 				x, y, dirTypeString,
 				csys, shape, beginFreq, endFreq, freqRefFrameString,
-				dopplerString, restfreq, stokes, False
+				dopplerString, restfreq, stokes, false
 			);
 			vector<Quantity> wblc, wtrc;
 			poly.worldBoundingBox(wblc, wtrc);
@@ -211,7 +211,7 @@ int main () {
 
 			Quantity beginFreq, endFreq;
 			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(False)
+				csys.directionCoordinate().directionType(false)
 			);
 			String freqRefFrameString = MFrequency::showType(
 				csys.spectralCoordinate().frequencySystem()
@@ -226,7 +226,7 @@ int main () {
 			AnnPolygon poly(
 				x, y, dirTypeString,
 				csys, shape, beginFreq, endFreq, freqRefFrameString,
-				dopplerString, restfreq, stokes, False
+				dopplerString, restfreq, stokes, false
 			);
 
 			Vector<MDirection> corners = poly.getCorners();
@@ -291,7 +291,7 @@ int main () {
 			AnnPolygon poly(
 				x, y, dirTypeString,
 				csys, shape, beginFreq, endFreq, freqRefFrameString,
-				dopplerString, restfreq, stokes, False
+				dopplerString, restfreq, stokes, false
 			);
 			Vector<MDirection> corners = poly.getCorners();
 			AlwaysAssert(corners.size() == 3, AipsError);
@@ -340,7 +340,7 @@ int main () {
 			Quantity endFreq(1450e6, "Hz");
 
 			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(False)
+				csys.directionCoordinate().directionType(false)
 			);
 			String freqRefFrameString = MFrequency::showType(
 				csys.spectralCoordinate().frequencySystem()
@@ -355,7 +355,7 @@ int main () {
 			AnnPolygon poly(
 				x, y, dirTypeString,
 				csys, shape, beginFreq, endFreq, freqRefFrameString,
-				dopplerString, restfreq, stokes, False
+				dopplerString, restfreq, stokes, false
 			);
 
 			Vector<MFrequency> freqs = poly.getFrequencyLimits();
@@ -388,7 +388,7 @@ int main () {
 			Quantity endFreq(1450e6, "Hz");
 
 			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(False)
+				csys.directionCoordinate().directionType(false)
 			);
 			String freqRefFrameString = "GALACTO";
 			String dopplerString = MDoppler::showType(
@@ -401,7 +401,7 @@ int main () {
 			AnnPolygon poly(
 				x, y, dirTypeString,
 				csys, shape, beginFreq, endFreq, freqRefFrameString,
-				dopplerString, restfreq, stokes, False
+				dopplerString, restfreq, stokes, false
 			);
 
 			Vector<MFrequency> freqs = poly.getFrequencyLimits();
@@ -434,7 +434,7 @@ int main () {
 			Quantity endFreq(-250000, "km/s");
 
 			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(False)
+				csys.directionCoordinate().directionType(false)
 			);
 			String freqRefFrameString = MFrequency::showType(
 				csys.spectralCoordinate().frequencySystem()
@@ -449,7 +449,7 @@ int main () {
 			AnnPolygon poly(
 				x, y, dirTypeString,
 				csys, shape, beginFreq, endFreq, freqRefFrameString,
-				dopplerString, restfreq, stokes, False
+				dopplerString, restfreq, stokes, false
 			);
 
 			Vector<MFrequency> freqs = poly.getFrequencyLimits();
@@ -481,7 +481,7 @@ int main () {
 			Quantity endFreq(-20, "km/s");
 
 			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(False)
+				csys.directionCoordinate().directionType(false)
 			);
 			String freqRefFrameString = MFrequency::showType(
 				csys.spectralCoordinate().frequencySystem()
@@ -496,7 +496,7 @@ int main () {
 			AnnPolygon poly(
 				x, y, dirTypeString,
 				csys, shape, beginFreq, endFreq, freqRefFrameString,
-				dopplerString, restfreq, stokes, False
+				dopplerString, restfreq, stokes, false
 			);
 			Vector<MFrequency> freqs = poly.getFrequencyLimits();
 			AlwaysAssert(
@@ -526,7 +526,7 @@ int main () {
 			Quantity endFreq(-1986.7458583077, "km/s");
 
 			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(False)
+				csys.directionCoordinate().directionType(false)
 			);
 			String freqRefFrameString = MFrequency::showType(
 				csys.spectralCoordinate().frequencySystem()
@@ -539,7 +539,7 @@ int main () {
 			AnnPolygon poly(
 				x, y, dirTypeString,
 				csys, shape, beginFreq, endFreq, freqRefFrameString,
-				dopplerString, restfreq, stokes, False
+				dopplerString, restfreq, stokes, false
 			);
 			cout << poly << endl;
 

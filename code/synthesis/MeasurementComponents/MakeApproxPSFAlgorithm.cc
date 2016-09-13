@@ -57,6 +57,7 @@
 #include <synthesis/TransformMachines/StokesImageUtil.h>
 #include <unistd.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 extern Applicator applicator; 
@@ -128,7 +129,7 @@ void MakeApproxPSFAlgorithm::task(){
 		 IPosition(4, nx-1, ny-1, 0, 0),
 		 psf_p->shape());
   
-    SubLattice<Float>  psf_sl (*psf_p, psfbox, True);
+    SubLattice<Float>  psf_sl (*psf_p, psfbox, true);
     Array<Float> tempbeamArray;
     //Bool rStat = ((Lattice<Float> &)psf_sl).get(tempbeamArray);
     //UNUSED: Bool rStat = psf_sl.get(tempbeamArray);

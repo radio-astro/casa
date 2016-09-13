@@ -60,11 +60,15 @@
 #include <unistd.h>
 using namespace std;
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 namespace refim {//# namespace refactor imaging
   
+using namespace casacore;
 using namespace casa;
+using namespace casacore;
 using namespace casa::refim;
+using namespace casacore;
 using namespace casa::vi;
   
   SIMapperImageMosaic::SIMapperImageMosaic( CountedPtr<SIImageStore>& imagestore, 
@@ -87,7 +91,7 @@ using namespace casa::vi;
     }
     */
 
-    firstaccess_p = True;
+    firstaccess_p = true;
 
   }
   
@@ -110,7 +114,7 @@ using namespace casa::vi;
     */
     clCorrupted_p=cl;
 
-    firstaccess_p = True;
+    firstaccess_p = true;
       
   }
   
@@ -138,10 +142,10 @@ using namespace casa::vi;
     Bool dirDep= ift_p->isSkyJonesSet(); //  (!ejgrid_p.null());
     dirDep= dirDep || ((ift_p->name()) == "MosaicFT");
 
-    //    ovb_p.assign(vb, False);
+    //    ovb_p.assign(vb, false);
     //    ovb_p.updateCoordInfo(&vb, dirDep);
     ovb_p = vi::VisBuffer2::factory(vi::VbPlain, vi::VbRekeyable);
-    ovb_p->copy(vb,True);
+    ovb_p->copy(vb,true);
     
     firstaccess_p = firstaccess;
     
@@ -157,8 +161,8 @@ using namespace casa::vi;
        return;
      
       Int nRow=vb.nRows();
-      Bool internalChanges=False;  // Does this VB change inside itself?
-      Bool firstOneChanges=False;  // Has this VB changed from the previous one?
+      Bool internalChanges=false;  // Does this VB change inside itself?
+      Bool firstOneChanges=false;  // Has this VB changed from the previous one?
       if((ift_p->name() != "MosaicFT")    && (ift_p->name() != "PBWProjectFT") &&
 	 (ift_p->name() != "AWProjectFT") && (ift_p->name() != "AWProjectWBFT")) {
 	ift_p->changedSkyJonesLogic(vb, firstOneChanges, internalChanges);
@@ -191,7 +195,7 @@ using namespace casa::vi;
 	if( !firstaccess_p )
 	  {
 	    finalizeGrid( *ovb_p, dopsf );
-	    firstaccess_p=False;
+	    firstaccess_p=false;
 	  }
 	initializeGrid( vb, dopsf );
 	ift_p->put(vb, -1, dopsf, col);
@@ -242,7 +246,7 @@ using namespace casa::vi;
 	    }
 	  }
 	  ////We might have to deal with the right row here if the visbuffer is has changed internally
-	  ejdegrid_p->apply(comp, comp, vb,row, True);
+	  ejdegrid_p->apply(comp, comp, vb,row, true);
 	  clCorrupted_p.add(comp);
 	}
       }
@@ -264,8 +268,8 @@ using namespace casa::vi;
       origCube.assign(vb.visCubeModel()); 
 
       Int nRow=vb.nRows();
-      Bool internalChanges=False;  // Does this VB change inside itself?
-      Bool firstOneChanges=False;  // Has this VB changed from the previous one?
+      Bool internalChanges=false;  // Does this VB change inside itself?
+      Bool firstOneChanges=false;  // Has this VB changed from the previous one?
       
       if((!ft_p.null() && (ft_p->name() != "MosaicFT")    && (ft_p->name() != "PBWProjectFT") &&
 	  (ft_p->name() != "AWProjectFT") && (ft_p->name() != "AWProjectWBFT")) || (!cft_p.null())) {
@@ -315,31 +319,31 @@ using namespace casa::vi;
 
   /*
   Bool SIMapperImageMosaic::changedSkyJonesLogic(const vi::VisBuffer2& vb, Bool& firstRow, Bool& internalRow, const Bool grid){
-      firstRow=False;
-      internalRow=False;
+      firstRow=false;
+      internalRow=false;
       CountedPtr<VPSkyJones> ej= grid ? ejgrid_p : ejdegrid_p;
       if(ej.null())
-    	  return False;
+    	  return false;
 	  if(ej->changed(vi::VisBuffer2Adapter(&vb),0))
-		  firstRow=True;
+		  firstRow=true;
 	  Int row2temp=0;
 	  if(ej->changedBuffer(vi::VisBuffer2Adapter(&vb),0,row2temp)) {
-	     internalRow=True;
+	     internalRow=true;
 	   }
 	   return (firstRow || internalRow) ;
   }
   ////////////Old VB version
   Bool SIMapperImageMosaic::changedSkyJonesLogic(const VisBuffer& vb, Bool& firstRow, Bool& internalRow, const Bool grid){
-        firstRow=False;
-        internalRow=False;
+        firstRow=false;
+        internalRow=false;
         CountedPtr<VPSkyJones> ej= grid ? ejgrid_p : ejdegrid_p;
         if(ej.null())
-      	  return False;
+      	  return false;
   	  if(ej->changed(vb,0))
-  		  firstRow=True;
+  		  firstRow=true;
   	  Int row2temp=0;
   	  if(ej->changedBuffer(vb,0,row2temp)) {
-  	     internalRow=True;
+  	     internalRow=true;
   	   }
   	   return (firstRow || internalRow) ;
     }

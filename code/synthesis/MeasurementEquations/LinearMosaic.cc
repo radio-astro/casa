@@ -39,6 +39,7 @@
 #include <synthesis/MeasurementEquations/LinearMosaic.h>
 using namespace std;
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
@@ -88,7 +89,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				      Vector<CountedPtr<ImageInterface<Float> > >& ims,
 				      Vector<CountedPtr<ImageInterface<Float> > >& wgtims){
 
-		Bool retval=True;
+		Bool retval=true;
 		if(ims.nelements() != wgtims.nelements())
 			ThrowCc("Unequal number of images and weight images ");
 		for (uInt k=0; k < ims.nelements(); ++k){
@@ -101,7 +102,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				  	  Vector<CountedPtr<ImageInterface<Float> > >& ims,
 				  	  Vector<CountedPtr<ImageInterface<Float> > >& wgtims){
 
-			Bool retval=True;
+			Bool retval=true;
 			if(outImage_p.null() && outImName_p=="")
 				ThrowCc("No output image or weight image defined");
 			if(outImage_p.null())
@@ -117,8 +118,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		}
 	void LinearMosaic::setOutImages(ImageInterface<Float>& outim, ImageInterface<Float>& outwgt, const Int imageWeightType, const Int weightType){
-		outImage_p=CountedPtr<ImageInterface<Float> >(&outim, False);
-		outWgt_p = CountedPtr<ImageInterface<Float> >(&outwgt, False);
+		outImage_p=CountedPtr<ImageInterface<Float> >(&outim, false);
+		outWgt_p = CountedPtr<ImageInterface<Float> >(&outwgt, false);
 		imageWeightType_p=imageWeightType;
 		weightType_p=weightType;
 	}
@@ -184,14 +185,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		SubImage<Float> subOutWgt;
 		try{
 	       	
-		  subOutIm=SubImage<Float>(outim, imagreg, True);
-		  subOutWgt=SubImage<Float>(outwgt, imagreg, True);
+		  subOutIm=SubImage<Float>(outim, imagreg, true);
+		  subOutWgt=SubImage<Float>(outwgt, imagreg, true);
 		}
 		catch(...){
 			//Failed to make a subimage let us use the full image
 		  //cerr << "Failed to make subImage " << x.what()<< endl;
-			subOutIm=SubImage<Float>(outim, True);
-			subOutWgt=SubImage<Float>(outwgt, True);
+			subOutIm=SubImage<Float>(outim, true);
+			subOutWgt=SubImage<Float>(outwgt, true);
 
 		}
 		TempImage<Float> fullImage(subOutWgt.shape(), subOutIm.coordinates(), meminMB/8.0);
@@ -205,7 +206,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				TempImage<Float> trueWeightIm(inWgt.shape(), inWgt.coordinates(), meminMB/8.0);
 				if(inWgt.getDefaultMask() != ""){
 				  Imager::copyMask(trueWeightIm, inWgt,  inWgt.getDefaultMask());
-				  fullWeight.makeMask(inWgt.getDefaultMask(), True, True, True, True);
+				  fullWeight.makeMask(inWgt.getDefaultMask(), true, true, true, true);
 				}
 				trueWeightIm.copyData((LatticeExpr<Float>)(inWgt*inWgt));
 				
@@ -214,7 +215,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				TempImage<Float> inWeightedIm(inIm.shape(), inIm.coordinates(), meminMB/8.0);	
 				if(inIm.getDefaultMask() != ""){
 				  Imager::copyMask(inWeightedIm, inIm,  inIm.getDefaultMask());
-				  fullImage.makeMask(inIm.getDefaultMask(), True, True, True, True);
+				  fullImage.makeMask(inIm.getDefaultMask(), true, true, true, true);
 				}
 				
 				inWeightedIm.copyData((LatticeExpr<Float>)(inIm*inWgt));
@@ -225,10 +226,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			}
 			else if (linmosType_p==1){
 			  if(inIm.getDefaultMask() != ""){
-				  fullImage.makeMask(inIm.getDefaultMask(), True, True, True, True);
+				  fullImage.makeMask(inIm.getDefaultMask(), true, true, true, true);
 			  }
 			  if(inWgt.getDefaultMask() != ""){
-			    fullWeight.makeMask(inWgt.getDefaultMask(), True, True, True, True);
+			    fullWeight.makeMask(inWgt.getDefaultMask(), true, true, true, true);
 			  }
 				regridder.regrid( fullWeight, Interpolate2D::LINEAR,
 										IPosition(2,0,1), inWgt);
@@ -261,7 +262,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			imageWeightType_p=0;
 		}
 
-		return True;
+		return true;
 	}
 
 
@@ -332,4 +333,5 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		outdiskim.set(0.0);
 	}
 
+using namespace casacore;
 } //end namespace casa

@@ -87,7 +87,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Constructor
 		MultiPointTool( viewer::RegionSourceFactory *rsf, PanelDisplay* pd,
-		                Display::KeySym keysym = Display::K_Pointer_Button1, const Bool persistent = False ) :
+		                Display::KeySym keysym = Display::K_Pointer_Button1, const casacore::Bool persistent = false ) :
 			MultiRectTool( rsf, pd, keysym, persistent ) { }
 
 		// Destructor

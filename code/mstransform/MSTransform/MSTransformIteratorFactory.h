@@ -69,19 +69,19 @@ namespace casa {
 // (therefore I point to task_mstransform help for doubts regarding the parameters)
 //
 // <srcblock>
-// 	Record configuration;
+// 	casacore::Record configuration;
 // 	configuration.define ("inputms", filename);
 // 	configuration.define ("spw", "8,9,10,11");
 // 	configuration.define ("antenna", "1&&2");
-// 	configuration.define ("combinespws", True);
-// 	configuration.define ("regridms", True);
+// 	configuration.define ("combinespws", true);
+// 	configuration.define ("regridms", true);
 // 	configuration.define ("mode", "channel");
 // 	configuration.define ("width", "2");
-// 	configuration.define ("timeaverage", True);
+// 	configuration.define ("timeaverage", true);
 // 	configuration.define ("timebin", "30s");
 // </srcblock>
 //
-// Notice that some parameters don't make sense in the context of a VI/VB interface:
+// casacore::Notice that some parameters don't make sense in the context of a VI/VB interface:
 // * outputms
 // * tileshape
 // * datacolumn
@@ -108,9 +108,9 @@ namespace casa {
 //		while (visIter->more())
 //		{
 //
-//			Vector<Int> ddi = visBuffer->dataDescriptionIds();
-//			Vector<Int> antenna1 = visBuffer->antenna1();
-//			Vector<Int> antenna2 = visBuffer->antenna2();
+//			casacore::Vector<casacore::Int> ddi = visBuffer->dataDescriptionIds();
+//			casacore::Vector<casacore::Int> antenna1 = visBuffer->antenna1();
+//			casacore::Vector<casacore::Int> antenna2 = visBuffer->antenna2();
 //			// Etc
 //
 //			visIter->next();
@@ -121,13 +121,13 @@ namespace casa {
 // </srcblock>
 //
 // It is also possible to access the transformed Sub-Tables
-// (loaded in memory thanks to the Memory Resident Sub-Tables mechanism):
+// (loaded in memory thanks to the casacore::Memory Resident Sub-Tables mechanism):
 //
 // <srcblock>
-// 	MSSpectralWindow transformedSpwTable = visIter->ms().spectralWindow();
+// 	casacore::MSSpectralWindow transformedSpwTable = visIter->ms().spectralWindow();
 // </srcblock>
 //
-// Notice that it is the responsibility of the application layer to delete the VisibilityIterator2
+// casacore::Notice that it is the responsibility of the application layer to delete the VisibilityIterator2
 // pointer returned by the factory method. However the life cycle of the VisBuffer2 object is
 // responsibility of the VisibilityIterator2 object.
 //
@@ -142,25 +142,25 @@ class MSTransformIteratorFactory : public vi::ViFactory
 
 public:
 
-	MSTransformIteratorFactory(Record &configuration);
-	MSTransformIteratorFactory(Record &configuration, MrsEligibility &eligibleSubTables);
+	MSTransformIteratorFactory(casacore::Record &configuration);
+	MSTransformIteratorFactory(casacore::Record &configuration, casacore::MrsEligibility &eligibleSubTables);
 	~MSTransformIteratorFactory();
 
-	std::vector<IPosition> getVisBufferStructure();
+	std::vector<casacore::IPosition> getVisBufferStructure();
 	vi::VisibilityIterator2 * getInputVI() {return manager_p->getVisIter();}
 
 protected:
 
-	void setConfiguration(Record &configuration);
+	void setConfiguration(casacore::Record &configuration);
 	void initializeManager();
 	vi::ViImplementation2 * createVi () const;
 
 private:
 
-	Record configuration_p;
-	String tmpMSFileName_p;
+	casacore::Record configuration_p;
+	casacore::String tmpMSFileName_p;
 	mutable SHARED_PTR<MSTransformManager> manager_p;
-	MrsEligibility eligibleSubTables_p;
+	casacore::MrsEligibility eligibleSubTables_p;
 };
 
 } //# NAMESPACE CASA - END

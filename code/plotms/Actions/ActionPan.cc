@@ -25,6 +25,7 @@
 
 #include "ActionPan.h"
 
+using namespace casacore;
 namespace casa {
 
 ActionPan::ActionPan( Client* client )
@@ -39,4 +40,5 @@ ToolCode ActionPan::getToolCode() const {
 ActionPan::~ActionPan() {
 }
 
+using namespace casacore;
 } /* namespace casa */

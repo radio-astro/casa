@@ -37,15 +37,19 @@
 #include <casa/BasicSL/Complex.h>
 #include <synthesis/TransformMachines/SkyJones.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore{
 
-//Forward declaration
 class Table;
 class MDirection;
 class CoordinateSystem;
-class SkyComponent;
 class ImageRegion;
 class String;
+}
+
+namespace casa { //# NAMESPACE CASA - BEGIN
+
+//Forward declaration
+class SkyComponent;
 
 // <summary> Virtual base class defining the Primary Beam interface </summary>
 
@@ -95,9 +99,9 @@ class String;
 // </example>
 //
 // <motivation>
-// The SkyJones classes are all tied up with the MS or VisBuffers.  This class
+// The SkyJones classes are all tied up with the casacore::MS or VisBuffers.  This class
 // encapsulates the raw mathematical functionality of the PB from the
-// BeamSkyJones-derived classes which deal with the MS/VisBuff's.
+// BeamSkyJones-derived classes which deal with the casacore::MS/VisBuff's.
 // Also, several different BeamSkyJones objects and effects can be treated
 // with the same PBMath heirarchy objects.
 // </motivation>
@@ -119,7 +123,7 @@ public:
   // Currently, COMMONPB, Airy, Gauss, Poly, Ipoly, CosPoly, Numerical
   // are all implemented; Image and Zernike (2D PB's) are not.
   // This enumeration order becomes locked in when we get permanent
-  // PB's in the MeasurementSet Tables.
+  // PB's in the casacore::MeasurementSet Tables.
   //
   // COMMPNPB is not really a PB Class, but is here for consistency with
   // glish code in vpmanager
@@ -132,9 +136,9 @@ public:
   };
 
   // Useful constructor
-  PBMathInterface(Bool isThisVP,
+  PBMathInterface(casacore::Bool isThisVP,
 		  BeamSquint squint, 
-		  Bool useSymmetricBeam);
+		  casacore::Bool useSymmetricBeam);
 
   // virtual destructor
   virtual ~PBMathInterface() = 0;
@@ -142,68 +146,68 @@ public:
   // Apply Jones matrix to an image (and adjoint)
   // <group>
 
-  ImageInterface<Complex>& applyVP(const ImageInterface<Complex>& in,
-				   ImageInterface<Complex>& out,
-				   const MDirection& sp,
-				   const Quantity parAngle = Quantity(0.0,"deg"),
+  casacore::ImageInterface<casacore::Complex>& applyVP(const casacore::ImageInterface<casacore::Complex>& in,
+				   casacore::ImageInterface<casacore::Complex>& out,
+				   const casacore::MDirection& sp,
+				   const casacore::Quantity parAngle = casacore::Quantity(0.0,"deg"),
 				   const BeamSquint::SquintType doSquint = BeamSquint::NONE,
-				   Bool inverse = False,
-				   Bool conjugate = False,
-				   Float cutoff = 0.01,
-				   Bool forward=True);
+				   casacore::Bool inverse = false,
+				   casacore::Bool conjugate = false,
+				   casacore::Float cutoff = 0.01,
+				   casacore::Bool forward=true);
 
-  ImageInterface<Complex>& applyPB(const ImageInterface<Complex>& in,
-				   ImageInterface<Complex>& out,
-				   const MDirection& sp,
-				   const Quantity parAngle = Quantity(0.0,"deg"),
+  casacore::ImageInterface<casacore::Complex>& applyPB(const casacore::ImageInterface<casacore::Complex>& in,
+				   casacore::ImageInterface<casacore::Complex>& out,
+				   const casacore::MDirection& sp,
+				   const casacore::Quantity parAngle = casacore::Quantity(0.0,"deg"),
 				   const BeamSquint::SquintType doSquint = BeamSquint::NONE,
-				   Bool inverse = False,
-				   Float cutoff = 0.01,
-				   Bool forward=True);
+				   casacore::Bool inverse = false,
+				   casacore::Float cutoff = 0.01,
+				   casacore::Bool forward=true);
 
-  ImageInterface<Float>& applyPB(const ImageInterface<Float>& in,
-				   ImageInterface<Float>& out,
-				   const MDirection& sp,
-				   const Quantity parAngle = Quantity(0.0,"deg"),
+  casacore::ImageInterface<casacore::Float>& applyPB(const casacore::ImageInterface<casacore::Float>& in,
+				   casacore::ImageInterface<casacore::Float>& out,
+				   const casacore::MDirection& sp,
+				   const casacore::Quantity parAngle = casacore::Quantity(0.0,"deg"),
 				   const BeamSquint::SquintType doSquint = BeamSquint::NONE,
-				   Float cutoff = 0.01);
+				   casacore::Float cutoff = 0.01);
 
   // This has a very specialized role (in SkyEquation) and should
   // not be used elsewhere
-  ImageInterface<Float>& applyPB2(const ImageInterface<Float>& in,
-				  ImageInterface<Float>& out,
-				  const MDirection& sp,
-				  const Quantity parAngle = Quantity(0.0,"deg"),
+  casacore::ImageInterface<casacore::Float>& applyPB2(const casacore::ImageInterface<casacore::Float>& in,
+				  casacore::ImageInterface<casacore::Float>& out,
+				  const casacore::MDirection& sp,
+				  const casacore::Quantity parAngle = casacore::Quantity(0.0,"deg"),
 				  const BeamSquint::SquintType doSquint = BeamSquint::NONE,
-				  Float cutoff=0.01);
+				  casacore::Float cutoff=0.01);
   // </group>
   
   // Apply Jones matrix to a sky component (and adjoint)
   // <group>
   SkyComponent& applyVP(SkyComponent& in,
 			SkyComponent& out,
-			const MDirection& sp,
-			const Quantity frequency,
-			const Quantity parAngle = Quantity(0.0,"deg"),
+			const casacore::MDirection& sp,
+			const casacore::Quantity frequency,
+			const casacore::Quantity parAngle = casacore::Quantity(0.0,"deg"),
 			const BeamSquint::SquintType doSquint = BeamSquint::NONE,
-			Bool inverse = False,
-			Bool conjugate = False,
-			Float cutoff = 0.01,
-			Bool forward = True);
+			casacore::Bool inverse = false,
+			casacore::Bool conjugate = false,
+			casacore::Float cutoff = 0.01,
+			casacore::Bool forward = true);
   SkyComponent& applyPB(SkyComponent& in,
 			SkyComponent& out,
-			const MDirection& sp,
-			const Quantity frequency,
-			const Quantity parAngle = Quantity(0.0,"deg"),
+			const casacore::MDirection& sp,
+			const casacore::Quantity frequency,
+			const casacore::Quantity parAngle = casacore::Quantity(0.0,"deg"),
 			const BeamSquint::SquintType doSquint = BeamSquint::NONE,
-			Bool inverse = False,
-			Float cutoff = 0.01,
-			Bool forward = True);
+			casacore::Bool inverse = false,
+			casacore::Float cutoff = 0.01,
+			casacore::Bool forward = true);
   SkyComponent& applyPB2(SkyComponent& in,
 			 SkyComponent& out,
-			 const MDirection& sp,
-			 const Quantity frequency,
-			 const Quantity parAngle = Quantity(0.0,"deg"),
+			 const casacore::MDirection& sp,
+			 const casacore::Quantity frequency,
+			 const casacore::Quantity parAngle = casacore::Quantity(0.0,"deg"),
 			 const BeamSquint::SquintType doSquint = BeamSquint::NONE);
   // </group>
 
@@ -211,44 +215,44 @@ public:
   virtual PBClass whichPBClass() = 0;
   
   // Convert PBClass enumeration into PBClass String
-  void namePBClass(String & name);
+  void namePBClass(casacore::String & name);
 
   // Convert enumeration into a string
-  static void namePBClass(const PBMathInterface::PBClass iPB,  String & str);
+  static void namePBClass(const PBMathInterface::PBClass iPB,  casacore::String & str);
 
   // Fit an azimuthally symmetric beam to the squinted or otherwise 2-D beam
-  // for Stokes I?
-  virtual void setUseSymmetric(Bool useSym=True) { useSymmetricBeam_p = useSym; }
+  // for casacore::Stokes I?
+  virtual void setUseSymmetric(casacore::Bool useSym=true) { useSymmetricBeam_p = useSym; }
 
   // Get value of useSymmetric
-  virtual Bool getUseSymmetric() { return useSymmetricBeam_p; }
+  virtual casacore::Bool getUseSymmetric() { return useSymmetricBeam_p; }
 
-  // Get the ImageRegion of the primary beam on an Image for a given pointing
-  // Note: ImageRegion is not necesarily constrained to lie within the
+  // Get the casacore::ImageRegion of the primary beam on an Image for a given pointing
+  // Note: casacore::ImageRegion is not necesarily constrained to lie within the
   // image region (for example, if the pointing center is near the edge of the
   // image).  fPad: fractional padding for extra support beyond PB.
   // (note: we do not properly treat squint yet, this will cover it for now)
   // iChan: frequency channel to take: lowest frequency channel is safe for all
   //
-  // Potential problem: this ImageRegion includes all Stokes and Frequency Channels
+  // Potential problem: this casacore::ImageRegion includes all casacore::Stokes and Frequency Channels
   // present in the input image.
-  virtual ImageRegion*  extent (const ImageInterface<Complex>& im, const MDirection& pointing,
-				const Int row, const Float fPad,  const Int iChan,  
+  virtual casacore::ImageRegion*  extent (const casacore::ImageInterface<casacore::Complex>& im, const casacore::MDirection& pointing,
+				const casacore::Int row, const casacore::Float fPad,  const casacore::Int iChan,  
 				const SkyJones::SizeType) = 0;
-  virtual ImageRegion*  extent (const ImageInterface<Float>& im, const MDirection& pointing,
-				const Int row, const Float fPad,  const Int iChan,  
+  virtual casacore::ImageRegion*  extent (const casacore::ImageInterface<casacore::Float>& im, const casacore::MDirection& pointing,
+				const casacore::Int row, const casacore::Float fPad,  const casacore::Int iChan,  
 				const SkyJones::SizeType) = 0;
 
 
 
-  virtual Int support (const CoordinateSystem& cs)=0;
+  virtual casacore::Int support (const casacore::CoordinateSystem& cs)=0;
 
   // Summarize the Voltage Pattern;
   // For PBMath1D, list nValues worth of the PB array
-  virtual void summary(Int nValues=0);
+  virtual void summary(casacore::Int nValues=0);
 
   // Is state of PBMath object OK?
-  virtual Bool ok()=0;
+  virtual casacore::Bool ok()=0;
 
 protected:
  
@@ -259,48 +263,48 @@ protected:
   // <group>
 
   virtual 
-  ImageInterface<Complex>& 
-  apply(const ImageInterface<Complex>& in,
-	ImageInterface<Complex>& out,
-	const MDirection& sp,
-	const Quantity parAngle,       
+  casacore::ImageInterface<casacore::Complex>& 
+  apply(const casacore::ImageInterface<casacore::Complex>& in,
+	casacore::ImageInterface<casacore::Complex>& out,
+	const casacore::MDirection& sp,
+	const casacore::Quantity parAngle,       
 	const BeamSquint::SquintType doSquint,
-	Bool Inverse,
-	Bool Conjugate,
-	Int ipower,  // ie, 1=VP, 2=PB
-	Float cutoff,
-	Bool forward) =0;   
+	casacore::Bool Inverse,
+	casacore::Bool Conjugate,
+	casacore::Int ipower,  // ie, 1=VP, 2=PB
+	casacore::Float cutoff,
+	casacore::Bool forward) =0;   
 
   virtual 
-  ImageInterface<Float>& 
-  apply(const ImageInterface<Float>& in,
-	ImageInterface<Float>& out,
-	const MDirection& sp,
-	const Quantity parAngle,       
+  casacore::ImageInterface<casacore::Float>& 
+  apply(const casacore::ImageInterface<casacore::Float>& in,
+	casacore::ImageInterface<casacore::Float>& out,
+	const casacore::MDirection& sp,
+	const casacore::Quantity parAngle,       
 	const BeamSquint::SquintType doSquint,
-	Float cutoff, const Int ipower=4) =0;   
+	casacore::Float cutoff, const casacore::Int ipower=4) =0;   
 
   virtual SkyComponent& 
   apply(SkyComponent& in,
 	SkyComponent& out,
-	const MDirection& sp,
-	const Quantity frequency,
-	const Quantity parAngle,          
+	const casacore::MDirection& sp,
+	const casacore::Quantity frequency,
+	const casacore::Quantity parAngle,          
 	const BeamSquint::SquintType doSquint,
-	Bool Inverse,
-	Bool Conjugate,
-	Int ipower,  // ie, 1=VP, 2=PB, 4=PB^2
-	Float cutoff,
-	Bool forward)  =0; 
+	casacore::Bool Inverse,
+	casacore::Bool Conjugate,
+	casacore::Int ipower,  // ie, 1=VP, 2=PB, 4=PB^2
+	casacore::Float cutoff,
+	casacore::Bool forward)  =0; 
   //  </group>
   
 
   // Functions to deal with conversions to Float
   // <group>
-  static Float asFloat(const Complex & value) {return value.real(); }
-  static Float asFloat(const DComplex & value){return (Float) value.real(); }
-  static Float asFloat(const Float & value) {return value; }
-  static Float asFloat(const Double & value) {return (Float) value; }
+  static casacore::Float asFloat(const casacore::Complex & value) {return value.real(); }
+  static casacore::Float asFloat(const casacore::DComplex & value){return (casacore::Float) value.real(); }
+  static casacore::Float asFloat(const casacore::Float & value) {return value; }
+  static casacore::Float asFloat(const casacore::Double & value) {return (casacore::Float) value; }
   // </group>
 
   
@@ -308,17 +312,17 @@ protected:
   // Are the parameters being provided in the derived class constructor
   // describing a Voltage Pattern or a Primary Beam?  The default is Voltage
   // Pattern, and we keep it internally as a voltage pattern
-  Bool isThisVP_p;
+  casacore::Bool isThisVP_p;
 
   // Beam squint: convention is AZ-EL offset of the
-  // Stokes RR beam w.r.t. pointing position 
-  // Stokes LL will be at -squint_p
+  // casacore::Stokes RR beam w.r.t. pointing position 
+  // casacore::Stokes LL will be at -squint_p
   // Southern observatories have the same AZ-EL and PA definitions as Northern
   BeamSquint squint_p;
   
   // Should we use the effective az-symmetrical primary beam?
   // Otherwise, use squinted beam; if no squint, no difference
-  Bool useSymmetricBeam_p;
+  casacore::Bool useSymmetricBeam_p;
 
 private:
 

@@ -21,7 +21,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
  * MA 02111-1307  USA
  *
- * File StringTokenizer.h
+ * casacore::File StringTokenizer.h
  */
 # ifndef StringTokenizer_CLASS
 # define StringTokenizer_CLASS

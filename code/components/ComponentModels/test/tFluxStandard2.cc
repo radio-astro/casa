@@ -80,7 +80,7 @@ int main(int argc, char* argv[])
   
   try {
     String fluxScaleName;
-    Bool matchedScale=False;
+    Bool matchedScale=false;
     Vector<Double> fluxUsed(4);
 
     // Test the (sub)mm FD calibration models.
@@ -249,7 +249,7 @@ int main(int argc, char* argv[])
 	      Table::deleteTable(tempCLs[spwInd]);
 	    else
 	      cout << "Table::canDeleteTable(" << tempCLs[spwInd]
-		   << ") returned False" << endl;
+		   << ") returned false" << endl;
 	  }	    
 	}
       }
@@ -302,7 +302,7 @@ int main(int argc, char* argv[])
           Table::deleteTable(tempCLs[0]);
         else
           cout << "Table::canDeleteTable(" << tempCLs[0]
-               << ") returned False" << endl;
+               << ") returned false" << endl;
       }
     }
     else{

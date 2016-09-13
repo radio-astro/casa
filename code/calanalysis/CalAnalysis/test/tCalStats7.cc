@@ -8,6 +8,7 @@ double rgauss( void );
 
 #include <calanalysis/CalAnalysis/CalStats.h>
 
+using namespace casacore;
 using namespace casa;
 
 // -----------------------------------------------------------------------------
@@ -31,7 +32,7 @@ int main( void ) {
 
   // Initialize the input flag cube
 
-  Cube<Bool> oFlag( oShape, False );
+  Cube<Bool> oFlag( oShape, false );
 
 
   // Initialize the input data and data error cubes (constant across frequency
@@ -51,8 +52,8 @@ int main( void ) {
       }
       oData(p,5,t) = 200.0;
       oData(p,27,t) = -120.0;
-      oFlag(p,5,t) = True;
-      oFlag(p,27,t) = True;
+      oFlag(p,5,t) = true;
+      oFlag(p,27,t) = true;
     }
   }
 

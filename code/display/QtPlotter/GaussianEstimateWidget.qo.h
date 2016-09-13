@@ -44,17 +44,17 @@ namespace casa {
 	public:
 		static void setEstimateColor( QColor estimateColor );
 		GaussianEstimateWidget(QWidget *parent = 0);
-		void setCurveData(const Vector<float>& xValues, const Vector<float>& yValues);
+		void setCurveData(const casacore::Vector<float>& xValues, const casacore::Vector<float>& yValues);
 		void setCurveColor( QColor color );
 		void setTitle( const QString& titleStr );
-		void setRangeX( Float xValue, Float yValue );
-		void setRangeY( Float xValue, Float yValue );
+		void setRangeX( casacore::Float xValue, casacore::Float yValue );
+		void setRangeY( casacore::Float xValue, casacore::Float yValue );
 		void setDisplayYUnits( const QString& units );
 		void molecularLineChanged( float peak, float center, const QString& label,
 		                           const QString& chemicalName, const QString& resolvedQNs, const QString& frequencyUnits );
 		SpecFitGaussian getEstimate();
 		void setEstimate( const SpecFitGaussian& estimate );
-		void unitsChanged( const QString& oldUnits, const QString& newUnits, SpectralCoordinate& coord);
+		void unitsChanged( const QString& oldUnits, const QString& newUnits, casacore::SpectralCoordinate& coord);
 		void setSliderValueFWHM( float value );
 		void updateUIBasedOnEstimate();
 		void clearMolecularLines();
@@ -75,10 +75,10 @@ namespace casa {
 		void fwhmFixedChanged( bool fixed );
 
 	private:
-		float scale( int value, Float min, Float max ) const;
+		float scale( int value, casacore::Float min, casacore::Float max ) const;
 		float scaleY( int value ) const;
 		float scaleX( int value ) const;
-		int reverseScale( float value, Float min, Float max ) const;
+		int reverseScale( float value, casacore::Float min, casacore::Float max ) const;
 		int reverseScaleY( float value ) const;
 		int reverseScaleX( float value ) const;
 		float getFwhmRange() const;
@@ -86,8 +86,8 @@ namespace casa {
 		void centerChanged( float value );
 		void fwhmChanged( float value );
 		void updateFit();
-		void copyVectors( const Vector<float>& values, QVector<double>& vals, bool reverseOrder );
-		void copyVectors( const Vector<float>& sourceValues, Vector<float>& destinationValues, bool reverseOrder );
+		void copyVectors( const casacore::Vector<float>& values, QVector<double>& vals, bool reverseOrder );
+		void copyVectors( const casacore::Vector<float>& sourceValues, casacore::Vector<float>& destinationValues, bool reverseOrder );
 		float adjustValue( float val ) const;
 		void setSliderValuePeak( float value );
 		void setSliderValueCenter( float value );
@@ -103,12 +103,12 @@ namespace casa {
 		QwtPlotCurve* fitCurve;
 		Ui::GaussianEstimateWidgetClass ui;
 		SpecFitGaussian gaussianEstimate;
-		Vector<float> xValues;
-		Vector<float> yValues;
-		Float minX;
-		Float maxX;
-		Float minY;
-		Float maxY;
+		casacore::Vector<float> xValues;
+		casacore::Vector<float> yValues;
+		casacore::Float minX;
+		casacore::Float maxX;
+		casacore::Float minY;
+		casacore::Float maxY;
 		QColor curveColor;
 		static QColor fitCurveColor;
 		QMap<QString,MolecularLine*> molecularLineMap;

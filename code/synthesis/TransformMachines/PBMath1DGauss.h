@@ -67,14 +67,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <example>
 // <srcblock>
 //
-//    PBMath1DGauss myPB  (Quantity(1.0, "'"),
-//                         Quantity(3.0, "'"),
-//                         Quantity(1.0, "GHz"),
-//                         BeamSquint(MDirection(Quantity(2.0, "\""),
-//                                                         Quantity(0.0, "\""),
-//                                                         MDirection::Ref(MDirection::AZEL)),
-//                                    Quantity(2.0, "GHz")),
-//                         False);
+//    PBMath1DGauss myPB  (casacore::Quantity(1.0, "'"),
+//                         casacore::Quantity(3.0, "'"),
+//                         casacore::Quantity(1.0, "GHz"),
+//                         BeamSquint(casacore::MDirection(casacore::Quantity(2.0, "\""),
+//                                                         casacore::Quantity(0.0, "\""),
+//                                                         casacore::MDirection::Ref(casacore::MDirection::AZEL)),
+//                                    casacore::Quantity(2.0, "GHz")),
+//                         false);
 // </srcblock>
 // </example>
 //
@@ -87,8 +87,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </motivation>
 //
 // <todo asof="98/10/21">
-// <li> constructor from a MS beam subtable
-// <li> flush to MS beam subtable
+// <li> constructor from a casacore::MS beam subtable
+// <li> flush to casacore::MS beam subtable
 // </todo>
 
  
@@ -98,21 +98,21 @@ public:
   PBMath1DGauss();
 
   // Instantiation from arguments; default = no squint
-  // squint is the offset from pointing center if the Stokes R beam
+  // squint is the offset from pointing center if the casacore::Stokes R beam
   // useSymmetricBeam forces a fit to the squinted beam
   // width = Half-Width-Half-max
   // maxRad = half-width at zero intensity
-  PBMath1DGauss( Quantity halfWidth, Quantity maxRad, Quantity refFreq, 
-		 Bool isThisVP=False,
-		 BeamSquint squint=BeamSquint(MDirection(Quantity(0.0, "deg"),
-							 Quantity(0.0, "deg"),
-							 MDirection::Ref(MDirection::AZEL)),
-					      Quantity(1.0, "GHz")),
-		 Bool useSymmetricBeam=False);
+  PBMath1DGauss( casacore::Quantity halfWidth, casacore::Quantity maxRad, casacore::Quantity refFreq, 
+		 casacore::Bool isThisVP=false,
+		 BeamSquint squint=BeamSquint(casacore::MDirection(casacore::Quantity(0.0, "deg"),
+							 casacore::Quantity(0.0, "deg"),
+							 casacore::MDirection::Ref(casacore::MDirection::AZEL)),
+					      casacore::Quantity(1.0, "GHz")),
+		 casacore::Bool useSymmetricBeam=false);
 
   // Instantiation from a row in the Beam subTable
-  //  PBMath1DGauss(const Table& BeamSubTable, Int row, 
-  //	Bool useSymmetricBeam=False);
+  //  PBMath1DGauss(const casacore::Table& BeamSubTable, casacore::Int row, 
+  //	casacore::Bool useSymmetricBeam=false);
 
   // Copy constructor
   // PBMath1DGauss(const PBMath1DGauss& other);
@@ -121,7 +121,7 @@ public:
   PBMath1DGauss& operator=(const PBMath1DGauss& other);
 
   // Clone the object
-  //  CountedPtr<PBMathInterface> clone();
+  //  casacore::CountedPtr<PBMathInterface> clone();
 
   // destructor
   ~PBMath1DGauss();  
@@ -130,10 +130,10 @@ public:
   PBMathInterface::PBClass whichPBClass() { return PBMathInterface::GAUSS; }  
   
   // Flush the construction parameters to disk
-  // Bool flushToTable(Table& beamSubTable, Int iRow);
+  // casacore::Bool flushToTable(casacore::Table& beamSubTable, casacore::Int iRow);
 
   // Summarize the construction data for this primary beam
-  void summary(Int nValues=0);
+  void summary(casacore::Int nValues=0);
 
 protected:
 
@@ -142,7 +142,7 @@ protected:
 
 private:    
 
-  Quantity halfWidth_p;
+  casacore::Quantity halfWidth_p;
 
 };
 

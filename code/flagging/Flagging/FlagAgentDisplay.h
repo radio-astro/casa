@@ -41,11 +41,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
   public:
     
-    FlagAgentDisplay(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube = false);
+    FlagAgentDisplay(FlagDataHandler *dh, casacore::Record config, casacore::Bool writePrivateFlagCube = false);
     ~FlagAgentDisplay();
 
     // Make plots and either display or write to a file
-    Bool displayReports(FlagReport &combinedReport);
+    casacore::Bool displayReports(FlagReport &combinedReport);
     
     // Get a report/summary
     FlagReport getReport();
@@ -53,7 +53,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   protected:
     
     // Compute flags for a given (time,freq) map
-    bool computeAntennaPairFlags(const vi::VisBuffer2 &visBuffer, VisMapper &visibilities,FlagMapper &flag,Int antenna1,Int antenna2,vector<uInt> &rows);
+    bool computeAntennaPairFlags(const vi::VisBuffer2 &visBuffer, VisMapper &visibilities,FlagMapper &flag,casacore::Int antenna1,casacore::Int antenna2,vector<casacore::uInt> &rows);
 
     void preProcessBuffer(const vi::VisBuffer2 &visBuffer);
     
@@ -61,87 +61,87 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     void iterateAntennaPairsInteractive(antennaPairMap *antennaPairMap_ptr);
     
     // Parse configuration parameters
-    void setAgentParameters(Record config);
+    void setAgentParameters(casacore::Record config);
 
   private:
     
-    Bool setDataLayout();
-    Bool setReportLayout();
-    Bool buildDataPlotWindow();
-    Bool buildReportPlotWindow();
+    casacore::Bool setDataLayout();
+    casacore::Bool setReportLayout();
+    casacore::Bool buildDataPlotWindow();
+    casacore::Bool buildReportPlotWindow();
 
 
     void getChunkInfo(const vi::VisBuffer2 &visBuffer);
-    Bool skipBaseline(std::pair<Int,Int> antennaPair);
+    casacore::Bool skipBaseline(std::pair<casacore::Int,casacore::Int> antennaPair);
  
     void getUserInput();
     void getReportUserInput();
     
-    void DisplayRaster(Int xdim, Int ydim, Vector<Float> &data, uInt frame);
-    void DisplayLine(Int xdim, Vector<Double> &xdata, Vector<Float> &ydata, String label, String color, Bool hold,  uInt frame);
-    void DisplayScatter(Int xdim, Vector<Double> &xdata, Vector<Float> &ydata, String label, String color, Bool hold,  uInt frame);
-    void DisplayLineScatterError(FlagPlotServerProxy *&plotter, String &plottype, Vector<Float> &xdata, Vector<Float> &ydata, String &errortype, Vector<Float> &error, String label, String color, uInt frame);
+    void DisplayRaster(casacore::Int xdim, casacore::Int ydim, casacore::Vector<casacore::Float> &data, casacore::uInt frame);
+    void DisplayLine(casacore::Int xdim, casacore::Vector<casacore::Double> &xdata, casacore::Vector<casacore::Float> &ydata, casacore::String label, casacore::String color, casacore::Bool hold,  casacore::uInt frame);
+    void DisplayScatter(casacore::Int xdim, casacore::Vector<casacore::Double> &xdata, casacore::Vector<casacore::Float> &ydata, casacore::String label, casacore::String color, casacore::Bool hold,  casacore::uInt frame);
+    void DisplayLineScatterError(FlagPlotServerProxy *&plotter, casacore::String &plottype, casacore::Vector<casacore::Float> &xdata, casacore::Vector<casacore::Float> &ydata, casacore::String &errortype, casacore::Vector<casacore::Float> &error, casacore::String label, casacore::String color, casacore::uInt frame);
 
     // Plotter members
     FlagPlotServerProxy *dataplotter_p;  
     FlagPlotServerProxy *reportplotter_p;
 
     // GUI parameters
-    String userChoice_p;
-    String userFixA1_p, userFixA2_p;
+    casacore::String userChoice_p;
+    casacore::String userFixA1_p, userFixA2_p;
 
-    Int skipScan_p, skipSpw_p, skipField_p;
+    casacore::Int skipScan_p, skipSpw_p, skipField_p;
 
     // Control parameters
-    Bool pause_p;
+    casacore::Bool pause_p;
 
     // visBuffer state variables
-    Int fieldId_p;
-    String fieldName_p;
-    Int scanStart_p;
-    Int scanEnd_p;
-    Int spwId_p;
-    uInt nPolarizations_p;
-    Vector<Double> freqList_p;
-    String antenna1_p;
-    String antenna2_p;
+    casacore::Int fieldId_p;
+    casacore::String fieldName_p;
+    casacore::Int scanStart_p;
+    casacore::Int scanEnd_p;
+    casacore::Int spwId_p;
+    casacore::uInt nPolarizations_p;
+    casacore::Vector<casacore::Double> freqList_p;
+    casacore::String antenna1_p;
+    casacore::String antenna2_p;
 
-    Bool dataDisplay_p, reportDisplay_p; // show per chunk plots and/or end-of-MS plots
-    String reportFormat_p;
-    Bool stopAndExit_p;
-    Bool reportReturn_p;
-    Bool showBandpass_p;
+    casacore::Bool dataDisplay_p, reportDisplay_p; // show per chunk plots and/or end-of-casacore::MS plots
+    casacore::String reportFormat_p;
+    casacore::Bool stopAndExit_p;
+    casacore::Bool reportReturn_p;
+    casacore::Bool showBandpass_p;
 
-    Vector<dbus::variant> panels_p, report_panels_p;
+    casacore::Vector<dbus::variant> panels_p, report_panels_p;
     const char *dock_xml_p, *report_dock_xml_p;
-//    Bool showBandpass_p;
+//    casacore::Bool showBandpass_p;
 
     // Control parameters
-//    Bool stopAndExit_p;
-//    Bool pause_p;
-//    Bool dataDisplay_p, reportDisplay_p; // show per chunk plots and/or end-of-MS plots
-//    Bool reportReturn_p;
-//    String reportFormat_p;
+//    casacore::Bool stopAndExit_p;
+//    casacore::Bool pause_p;
+//    casacore::Bool dataDisplay_p, reportDisplay_p; // show per chunk plots and/or end-of-casacore::MS plots
+//    casacore::Bool reportReturn_p;
+//    casacore::String reportFormat_p;
     
     // visBuffer state variables
-//    Int fieldId_p;
-//    String fieldName_p;
-//    Int scanStart_p;
-//    Int scanEnd_p;
-//    Int spwId_p;
-//    String antenna1_p;
-//    String antenna2_p;
+//    casacore::Int fieldId_p;
+//    casacore::String fieldName_p;
+//    casacore::Int scanStart_p;
+//    casacore::Int scanEnd_p;
+//    casacore::Int spwId_p;
+//    casacore::String antenna1_p;
+//    casacore::String antenna2_p;
     
-//    uInt nPolarizations_p;
-//    Vector<Double> freqList_p;
+//    casacore::uInt nPolarizations_p;
+//    casacore::Vector<casacore::Double> freqList_p;
     
     // GUI parameters
-//    String userChoice_p;
-//    String userFixA1_p, userFixA2_p;
+//    casacore::String userChoice_p;
+//    casacore::String userFixA1_p, userFixA2_p;
     
-//    Int skipScan_p, skipSpw_p, skipField_p;
+//    casacore::Int skipScan_p, skipSpw_p, skipField_p;
 
-    Vector<String> plotColours_p;
+    casacore::Vector<casacore::String> plotColours_p;
     
     
   };

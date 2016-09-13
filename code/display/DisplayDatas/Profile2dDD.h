@@ -70,11 +70,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <etymology> </etymology>
 
-// <synopsis> This Display Data attaches to itself, another Display
-// Data whos profile (at a point) is to be extracted and drawn.  The
-// Display Data attached to Profile2dDD must have atleast 3 world Axes
+// <synopsis> This Display casacore::Data attaches to itself, another Display
+// casacore::Data whos profile (at a point) is to be extracted and drawn.  The
+// Display casacore::Data attached to Profile2dDD must have atleast 3 world Axes
 // and atleast 2 pixels on it's profile axis (3rd axis).  An axis from
-// a Linear Coordinate or Stokes Coordinate presently can not be on
+// a Linear casacore::Coordinate or casacore::Stokes casacore::Coordinate presently can not be on
 // the profile axis.  All other AIPS++ coordinate types are supported.
 //
 // Profile2dDD is an implements WCMotionEH and WCPositionEH and
@@ -128,21 +128,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Profile2dDD();
 
 		// Constructor taking a pointer to an already constructed
-		// ImageInterface.The Display Data dd must have atleast 3 World Axes
+		// ImageInterface.The Display casacore::Data dd must have atleast 3 World Axes
 		// and atleast 2 elements in the profile (3rd) world axis.
-		Profile2dDD(LatticePADisplayData<Float>* dd);
+		Profile2dDD(LatticePADisplayData<casacore::Float>* dd);
 
 		// Destructor.
 		virtual ~Profile2dDD();
 		// </group>
 
 		// <group>
-		// Attach a Display Data to this Profile2dDD. The Display Data dd
+		// Attach a Display casacore::Data to this Profile2dDD. The Display casacore::Data dd
 		// must have atleast 3 World Axes and atleast 2 elements in the
 		// profile (3rd) world axis. If any of the above conditions are not
-		// met or a Display Data is already attached, False is
-		// returned. Otherwise True is returned.
-		virtual Bool attachDD(LatticePADisplayData<Float>* dd);
+		// met or a Display casacore::Data is already attached, false is
+		// returned. Otherwise true is returned.
+		virtual casacore::Bool attachDD(LatticePADisplayData<casacore::Float>* dd);
 
 		// Detach the currently attached Display Data.
 		virtual void detachDD();
@@ -150,30 +150,30 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Overloading ActiveCaching2dDD::sizeControl. Zooming is modified
 		// for autoscaling feature.
-		virtual Bool sizeControl(WorldCanvasHolder &wcHolder,
+		virtual casacore::Bool sizeControl(WorldCanvasHolder &wcHolder,
 		                         AttributeBuffer &holderBuf);
 
 		// <group>
 		// Store the data to be drawn in the data Matrix. If world is false,
 		// pixel coordinates are used. If world is true, then world
 		// coordinates are used.
-		virtual void getDrawData(Matrix<Double> &data,
-		                         const Bool world=False);
+		virtual void getDrawData(casacore::Matrix<casacore::Double> &data,
+		                         const casacore::Bool world=false);
 
 		// Store the mask in mask vector
-		virtual void getMaskData(Vector<Bool> &mask);
+		virtual void getMaskData(casacore::Vector<casacore::Bool> &mask);
 
 		// Store the details of the current profile in rec
-		// Record structure similar to position event structure.
-		virtual void getProfileAsRecord(Record &rec);
+		// casacore::Record structure similar to position event structure.
+		virtual void getProfileAsRecord(casacore::Record &rec);
 		// </group>
 
 
 		// Return the data unit.
-		virtual const Unit dataUnit();
+		virtual const casacore::Unit dataUnit();
 
 		// Returns an empty string.
-		virtual String showValue(const Vector<Double> &world);
+		virtual casacore::String showValue(const casacore::Vector<casacore::Double> &world);
 
 		// Motion Event Handler
 		virtual void operator()(const WCMotionEvent &ev);
@@ -188,21 +188,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void sendDDModEvent();
 
 		// Draws and labels the axes based on the refresh event
-		virtual Bool labelAxes(const WCRefreshEvent &ev);
-		virtual Bool canLabelAxes() const;
+		virtual casacore::Bool labelAxes(const WCRefreshEvent &ev);
+		virtual casacore::Bool canLabelAxes() const;
 
 		// <group>
 		// Install the default options for this DisplayData.
 		virtual void setDefaultOptions();
 
 		// Apply options stored in <src>rec</src> to the DisplayData. A
-		// return value of <src>True</src> means a refresh is needed.
+		// return value of <src>true</src> means a refresh is needed.
 		// <src>recOut</src> contains any fields which were implicitly
 		// changed as a result of the call to this function.
-		virtual Bool setOptions(Record &rec, Record &recOut);
+		virtual casacore::Bool setOptions(casacore::Record &rec, casacore::Record &recOut);
 
 		// Retrieve the current and default options and parameter types.
-		virtual Record getOptions( bool scrub=false ) const;
+		virtual casacore::Record getOptions( bool scrub=false ) const;
 		// </group>
 
 		// Return the type of this DisplayData.
@@ -226,15 +226,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Take actions on removal from WC[H] (notably, deletion of drawlists).
 		virtual void notifyUnregister(WorldCanvasHolder& wcHolder,
-		                              Bool ignoreRefresh = False);
+		                              casacore::Bool ignoreRefresh = false);
 
 		// <group>
 		// Return Profile Color
-		virtual String profileColor() const {
+		virtual casacore::String profileColor() const {
 			return itsParamColor->value();
 		}
 		// Return Profile Line Width
-		virtual Float profileLineWidth() const {
+		virtual casacore::Float profileLineWidth() const {
 			return itsParamLineWidth->value();
 		}
 		// Return Profile LineStyle
@@ -242,66 +242,66 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			return static_cast<Display::LineStyle>(itsParamLineStyle->keyValue());
 		}
 
-		// Return True if the last requested profile was for a
-		// region. Return False if the last requested profile was for a
+		// Return true if the last requested profile was for a
+		// region. Return false if the last requested profile was for a
 		// single point
-		virtual Bool isRegionProfile() const {
+		virtual casacore::Bool isRegionProfile() const {
 			return itsIsRegionProfile;
 		}
 
 		// get the region dimensions, in pixels, of the last region
 		// submitted to Profile2dDD.
-		virtual void regionDimensions(Vector<Double> &regionBlc,
-		                              Vector<Double> &regionTrc);
+		virtual void regionDimensions(casacore::Vector<casacore::Double> &regionBlc,
+		                              casacore::Vector<casacore::Double> &regionTrc);
 
 		// Return Minimum Y value
-		virtual Double profileYMin() const {
+		virtual casacore::Double profileYMin() const {
 			return itsCurrentBlc(1);
 		}
 		// Return Maximum Y value
-		virtual Double profileYMax() const {
+		virtual casacore::Double profileYMax() const {
 			return itsCurrentTrc(1);
 		}
 		// Return Minimum X value
-		virtual Double profileXMin() const {
+		virtual casacore::Double profileXMin() const {
 			return itsCurrentBlc(0);
 		}
 		// Return Maximum X value
-		virtual Double profileXMax() const {
+		virtual casacore::Double profileXMax() const {
 			return itsCurrentTrc(0);
 		}
 		// Return the autoscale status (On or Off)
-		virtual Bool profileAutoscale() const {
+		virtual casacore::Bool profileAutoscale() const {
 			return itsParamAutoscale->value();
 		}
 		// Return the rest frequency display status (to draw or not to draw)
-		virtual Bool showRestFrequency()  const {
+		virtual casacore::Bool showRestFrequency()  const {
 			return itsParamShowRestFrequency->value();
 		}
 		// Return rest frequency.
-		virtual Double restFrequency()  const {
+		virtual casacore::Double restFrequency()  const {
 			return itsRestFrequency;
 		}
 
 		// Return the statistics used for region calculations.
-		virtual LatticeStatsBase::StatisticsTypes  regionStatType()  const {
-			return static_cast<LatticeStatsBase::StatisticsTypes>
+		virtual casacore::LatticeStatsBase::StatisticsTypes  regionStatType()  const {
+			return static_cast<casacore::LatticeStatsBase::StatisticsTypes>
 			       (itsParamRegionStatType->keyValue());
 		}
 
 		// Return the x value added to the pixel at a pixel position to
 		// create a region
-		virtual Int regionXRadius()  const {
+		virtual casacore::Int regionXRadius()  const {
 			return itsParamRegionXRadius->value();
 		}
 
 		// Return the y value added to the pixel at a pixel position to
 		// create a region
-		virtual Int regionYRadius()  const {
+		virtual casacore::Int regionYRadius()  const {
 			return itsParamRegionYRadius->value();
 		}
 		// Return the profile axis number (from the original image)
-		virtual  Int profileAxis();
+		virtual  casacore::Int profileAxis();
 
 		// </group>
 
@@ -319,29 +319,29 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Helper function. Initialise Profile2dDD with a DisplayCoordinateSystem
 		// put together from the parent DD
-		Bool createCoordinateSystem();
+		casacore::Bool createCoordinateSystem();
 
-		// Update the coordinate system of this Display Data and the axis
+		// Update the coordinate system of this Display casacore::Data and the axis
 		// labeller. Set new minimum and maximum Y values if necessary
-		Bool updateCoordinateSys(DisplayCoordinateSystem &cs);
+		casacore::Bool updateCoordinateSys(DisplayCoordinateSystem &cs);
 
 		// Extract the profile data from the provided pixel region and place
 		// it into itsData. The statistics used is determined by the
-		// options. Return True if new profile data has been extracted
-		// (i.e. a refresh is needed) otherwise return False
-		Bool getRegionProfile(Vector<Double> &fpixelBlc,
-		                      Vector<Double> &fpixelTrc);
+		// options. Return true if new profile data has been extracted
+		// (i.e. a refresh is needed) otherwise return false
+		casacore::Bool getRegionProfile(casacore::Vector<casacore::Double> &fpixelBlc,
+		                      casacore::Vector<casacore::Double> &fpixelTrc);
 
 		// Extract the profile data from the provided world position and
 		// place it into itsData. Also extract the Mask data (if it exists)
-		// and place it into itsMask. Return True if new profile data has
-		// been extracted (i.e. a refresh is needed) otherwise return False
-		Bool getPointProfile(const Vector<Double> &world);
+		// and place it into itsMask. Return true if new profile data has
+		// been extracted (i.e. a refresh is needed) otherwise return false
+		casacore::Bool getPointProfile(const casacore::Vector<casacore::Double> &world);
 
 		// Crop the region so that it does not define areas outside the
-		// data. Returns False if the entire region is outside image data
-		Bool cropRegion(Vector<Double> &fpixelBlc,
-		                Vector<Double> &fpixelTrc);
+		// data. Returns false if the entire region is outside image data
+		casacore::Bool cropRegion(casacore::Vector<casacore::Double> &fpixelBlc,
+		                casacore::Vector<casacore::Double> &fpixelTrc);
 
 		// Construct the parameters for getOptions and setOptions
 		virtual void constructParameters();
@@ -349,74 +349,74 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void destructParameters();
 
 		// A pointer to the attached DisplayData
-		LatticePADisplayData<Float>* itsDD;
+		LatticePADisplayData<casacore::Float>* itsDD;
 
 		// Flag to indicate whether the last drawn profile was for a region
 		// or for a single point.
-		Bool itsIsRegionProfile;
+		casacore::Bool itsIsRegionProfile;
 
-		// A flag to indicate whether tracking is on. If True, a new profile
+		// A flag to indicate whether tracking is on. If true, a new profile
 		// is extracted each time a new motion event is received.
-		Bool itsTrackingState;
+		casacore::Bool itsTrackingState;
 
 		// The dependent (world) axis of itsDD. For example, if a RA axis is
 		// the profile axis, then the DEC axis will be the dependent axis.
-		Int itsDependentAxis;
+		casacore::Int itsDependentAxis;
 
 		// Increment value for the linear coordinate on the Y axis
-		Double itsYAxisInc;
+		casacore::Double itsYAxisInc;
 
 		// Rest Frequency
-		Double itsRestFrequency;
+		casacore::Double itsRestFrequency;
 
 		// Minimum and maximum X/Y values
-		Vector<Double> itsCurrentBlc;
-		Vector<Double> itsCurrentTrc;
+		casacore::Vector<casacore::Double> itsCurrentBlc;
+		casacore::Vector<casacore::Double> itsCurrentTrc;
 
 		// <group> The pixel position on the world canvas when the last
 		// motion' event was received. This position is in the format of
 		// itsDD, NOT the original image.
-		Vector<Double> itsPixelPosition;
+		casacore::Vector<casacore::Double> itsPixelPosition;
 		// The world position on the world canvas when the last motion'
 		// event was received. This position is in the format of
 		// itsDD, NOT the original image.
-		Vector<Double> itsWorldPosition;
+		casacore::Vector<casacore::Double> itsWorldPosition;
 
 		// The region dimensions, in pixels, of the last region event
 		// received by Profile2dDD
-		Vector<Double> itsRegionBlc;
-		Vector<Double> itsRegionTrc;
+		casacore::Vector<casacore::Double> itsRegionBlc;
+		casacore::Vector<casacore::Double> itsRegionTrc;
 
 		// </group>
 		// The Profile Data
-		Matrix<Double> itsData;
+		casacore::Matrix<casacore::Double> itsData;
 		// The Mask Data
-		Vector<Bool> itsMask;
+		casacore::Vector<casacore::Bool> itsMask;
 
-		// The axis map between input DD's Coordinate system and
+		// The axis map between input DD's casacore::Coordinate system and
 		// itsCompleteCS
-		Vector<Int> itsWorldAxisMap;
-		Vector<Int> itsPixelAxisMap;
+		casacore::Vector<casacore::Int> itsWorldAxisMap;
+		casacore::Vector<casacore::Int> itsPixelAxisMap;
 
 		// The choices for region calculations. eg, mean, median, etc
-		Vector<String> itsRegionCalcChoices;
+		casacore::Vector<casacore::String> itsRegionCalcChoices;
 
 		// The default x and y axis labels. The x and y labels change to
 		// indicate region profiles.
-		Vector<String> itsDefaultAxisLabels;
+		casacore::Vector<casacore::String> itsDefaultAxisLabels;
 
 		// The Axis Labeller used to draw Axes
 		WCCSNLAxisLabeller itsAxisLabeller;
 
 		// Display Parameters for
 		DParameterColorChoice* itsParamColor;
-		DParameterRange<Float>* itsParamLineWidth;
+		DParameterRange<casacore::Float>* itsParamLineWidth;
 		DParameterMapKeyChoice* itsParamLineStyle;
 		DParameterSwitch* itsParamAutoscale;
 		DParameterSwitch* itsParamShowRestFrequency;
 		DParameterMapKeyChoice* itsParamRegionStatType;
-		DParameterRange<Int>* itsParamRegionXRadius;
-		DParameterRange<Int>* itsParamRegionYRadius;
+		DParameterRange<casacore::Int>* itsParamRegionXRadius;
+		DParameterRange<casacore::Int>* itsParamRegionYRadius;
 	};
 
 } //# NAMESPACE CASA - END

@@ -30,6 +30,7 @@
 #include <display/DisplayEvents/WCRectTool.h>
 #include <casa/BasicMath/Math.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	WCRectTool::WCRectTool(WorldCanvas *wcanvas,
@@ -37,9 +38,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	                       const Bool persistent) :
 		WCTool(wcanvas, keysym),
 		itsRectanglePersistent(persistent),
-		itsOnScreen(False),
-		itsActive(False),
-		itsRectangleExists(False),
+		itsOnScreen(false),
+		itsActive(false),
+		itsRectangleExists(false),
 		itsHX(4),
 		itsHY(4) {
 		reset();
@@ -88,11 +89,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					y1 = y2;
 					y2 = tmp;
 				}
-				draw(True);
+				draw(true);
 				set(x1, y1, x2, y2);
 				draw();
 				reset();
-				itsActive = True;
+				itsActive = true;
 				return;
 			}
 			if ((x >= min(itsX1, itsX2)) && (x <= max(itsX1, itsX2)) &&
@@ -101,10 +102,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				itsAdjustMode = WCRectTool::Move;
 				itsBaseMoveX = x;
 				itsBaseMoveY = y;
-				itsActive = True;
-				itsMoved = False;
+				itsActive = true;
+				itsMoved = false;
 				rectangleNotReady();
-				draw(True);
+				draw(true);
 				draw();
 				return;
 			}
@@ -115,7 +116,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				ev.worldCanvas()->pixelCanvas()->copyFrontBufferToBackBuffer();
 				draw();
 				reset();
-				itsActive = True;
+				itsActive = true;
 			}
 		}
 	}
@@ -124,18 +125,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Int x = ev.pixX();
 		Int y = ev.pixY();
 		if (itsActive && (itsAdjustMode == WCRectTool::Off)) {
-			itsActive = False;
+			itsActive = false;
 			draw(); // erase
 			itsLastPressX = itsLastPressY = -99999;
 			itsLastReleaseX = itsLastReleaseY = -99999;
 			itsLastPressTime = its2ndLastPressTime = -1.0;
 			if ((itsX1 == itsX2) && (itsY1 == itsY2)) {
 				// null rectangle
-				itsRectangleExists = False;
+				itsRectangleExists = false;
 				return;
 			}
-			draw(True); // redraw with handles
-			itsRectangleExists = True;
+			draw(true); // redraw with handles
+			itsRectangleExists = true;
 			preserve();
 			rectangleReady();
 			//itsLastPressX = itsLastPressY = -99999;
@@ -143,9 +144,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			//itsLastPressTime = its2ndLastPressTime = -1.0;
 		} else if (itsActive && (itsAdjustMode == WCRectTool::Move)) {
 			itsAdjustMode = WCRectTool::Off;
-			itsActive = False;
+			itsActive = false;
 			draw();
-			draw(True);
+			draw(true);
 			preserve();
 			rectangleReady();
 		}
@@ -154,12 +155,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			itsLastReleaseX = itsLastReleaseY = -99999;
 			// "double click" & rectangle exists
 			if (!itsRectanglePersistent) {
-				draw(True); // - erase the rectangle with handles
+				draw(true); // - erase the rectangle with handles
 				reset();
 			} else {
-				itsActive = False;
+				itsActive = false;
 				rectangleReady();
-				itsMoved = False;
+				itsMoved = false;
 				itsAdjustMode = WCRectTool::Off;
 			}
 			// now only proceed if we are not in a handle
@@ -199,7 +200,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	void WCRectTool::moved(const WCMotionEvent &ev, const viewer::region::region_list_type & /*selected_regions*/) {
-		itsMoved = True;
+		itsMoved = true;
 		if (!itsActive) {
 			return;
 		}
@@ -226,11 +227,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	void WCRectTool::refresh(const WCRefreshEvent &ev) {
 		if (ev.reason() == Display::BackCopiedToFront) {
-			itsOnScreen = False;
+			itsOnScreen = false;
 		}
 		if (!itsActive && itsRectangleExists) {
 			restore();
-			draw(True);
+			draw(true);
 		} else {
 			reset();
 		}
@@ -285,10 +286,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		PixelCanvas *pCanvas = pixelCanvas();
 		if (itsOnScreen) {
 			pCanvas->copyBackBufferToFrontBuffer();
-			itsOnScreen = False;
+			itsOnScreen = false;
 			return;
 		}
-		itsOnScreen = True;
+		itsOnScreen = true;
 		Display::DrawBuffer oldBuffer = pCanvas->drawBuffer();
 		pCanvas->setDrawBuffer(Display::FrontBuffer);
 		pCanvas->setLineWidth(1);
@@ -339,9 +340,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if (!itsActive && itsRectangleExists) {
 			rectangleNotReady();
 		}
-		itsActive = False;
-		itsMoved = False;
-		itsRectangleExists = False;
+		itsActive = false;
+		itsMoved = false;
+		itsRectangleExists = false;
 		itsAdjustMode = WCRectTool::Off;
 		itsLastPressX = itsLastPressY = -99999;
 		its2ndLastPressX = its2ndLastPressY = -99999;

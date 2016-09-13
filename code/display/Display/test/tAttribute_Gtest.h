@@ -17,22 +17,22 @@ namespace test {
  */
 class TestAttribute : public ::testing::Test {
 public:
-    TestAttribute (const String& name);
+    TestAttribute (const casacore::String& name);
     virtual ~TestAttribute ();
 protected:
     virtual void SetUp();
     virtual void TearDown();
 
-    String m_testName;
+    casacore::String m_testName;
     Attribute* m_att1;
     Attribute* m_att2;
-    String m_att1name;
-    String m_att2name;
+    casacore::String m_att1name;
+    casacore::String m_att2name;
 
 };
 
 /**
- * Test String Attributes.
+ * Test casacore::String Attributes.
  */
 class TestAttributeString : public TestAttribute {
 public:
@@ -44,14 +44,14 @@ protected:
 	void checkConstructionVector();
 	void checkCloning ();
 	void checkOperators();
-	String m_val1;
-	String m_val2;
-	Vector<String> m_vecVal;
+	casacore::String m_val1;
+	casacore::String m_val2;
+	casacore::Vector<casacore::String> m_vecVal;
 
 };
 
 /**
- * Test Quantity Attributes.
+ * Test casacore::Quantity Attributes.
  */
 class TestAttributeQuantity : public TestAttribute {
 public:
@@ -68,12 +68,12 @@ protected:
 	void checkOperators();
 	void checkOperatorsPointer();
 	void checkComparisonTolerance();
-	Quantity m_val1;
-	Quantity m_val2;
-	Quantity m_val3;
-	Quantity m_tol1;
-	Quantity m_tol2;
-	Vector<Quantity> m_vecVal;
+	casacore::Quantity m_val1;
+	casacore::Quantity m_val2;
+	casacore::Quantity m_val3;
+	casacore::Quantity m_tol1;
+	casacore::Quantity m_tol2;
+	casacore::Vector<casacore::Quantity> m_vecVal;
 };
 
 /**
@@ -106,8 +106,8 @@ protected:
     void checkAdditionPointer();
     void checkAdditionVectorPointer();
 
-    Vector<T> m_vecVal1;
-    Vector<T> m_vecVal2;
+    casacore::Vector<T> m_vecVal1;
+    casacore::Vector<T> m_vecVal2;
     T m_val1;
     T m_val2;
     T m_tol1;
@@ -115,7 +115,7 @@ protected:
 };
 
 using testing::Types;
-typedef Types<uInt, Int, Float, Double> Implementations;
+typedef Types<casacore::uInt, casacore::Int, casacore::Float, casacore::Double> Implementations;
 TYPED_TEST_CASE( TestAttributeNumeric, Implementations );
 
 } // end namespace test

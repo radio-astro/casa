@@ -30,6 +30,7 @@
 #include <casaqt/QwtPlotter/QPOptions.h>
 #include <qwt_text.h>
 
+using namespace casacore;
 namespace casa {
 
 const String QPExporter::EXPORT_NAME = "export";
@@ -487,7 +488,7 @@ QImage QPExporter::produceScreenImage(const PlotExportFormat& format,
     // Do we have external axes?
     Int totalRows = rowCount;
     Int totalCols = colCount;
-    Bool top=False, bottom=False, left=False, right=False;
+    Bool top=false, bottom=false, left=false, right=false;
     Int externalX=0, externalY=0;
 
     if (canvasSize > (rowCount * colCount)) {
@@ -505,8 +506,8 @@ QImage QPExporter::produceScreenImage(const PlotExportFormat& format,
                 findYAxisLocations(numYaxes, isVertical, left, right);
             }
         } else {  // first canvas is a plot not an axis
-            bottom = (numXaxes > 0) ? True : False;
-            right = (numYaxes > 0) ? True : False;
+            bottom = (numXaxes > 0) ? true : false;
+            right = (numYaxes > 0) ? true : false;
         }
     }
 
@@ -574,34 +575,34 @@ QImage QPExporter::produceScreenImage(const PlotExportFormat& format,
 }
 
 void QPExporter::findXAxisLocations(Int numX, Bool vertical, Bool& top, Bool& bottom) {
-    top = bottom = False;
+    top = bottom = false;
     switch (numX) {
         case 0:
-            break; // top & bottom already False;
+            break; // top & bottom already false;
         case 1: {
             if (vertical)
-                bottom = True;
+                bottom = true;
             else
-                top = True;
+                top = true;
             break;
         }
     }
 }
 
 void QPExporter::findYAxisLocations(Int numY, Bool vertical, Bool& left, Bool& right) {
-    left = right = False;
+    left = right = false;
     switch (numY) {
         case 0:
-            break; // left & right already False;
+            break; // left & right already false;
         case 1: {
             if (vertical)
-                left = True;
+                left = true;
             else
-                right = True;
+                right = true;
             break;
         }
         case 2: {
-            left = right = True;
+            left = right = true;
             break;
         }
     }
@@ -610,21 +611,21 @@ void QPExporter::findYAxisLocations(Int numY, Bool vertical, Bool& left, Bool& r
 void QPExporter::findYAxisSecondRow(Int numY, Int nCols, vector<QPExportCanvas*> &qcanvases,
         Bool& left, Bool& right) {
     /* Assumes xaxis is top! */
-    left = right = False;
+    left = right = false;
     switch (numY) {
         case 0:
-            break; // left & right already False;
+            break; // left & right already false;
         case 1: {
             // qcanvases[totalCols-1] is first canvas in second row if 1 y-axis
             Bool isLeftAxis = qcanvases[nCols-1]->isAxis();
             if (isLeftAxis) 
-                left = True;
+                left = true;
             else
-                right = True;
+                right = true;
             break;
         }
         case 2: {
-            left = right = True;
+            left = right = true;
             break;
         }
     }
@@ -647,4 +648,5 @@ bool QPExporter::exportPlotter(QPPlotter* plotter, const PlotExportFormat& fmt) 
 QPExporter::~QPExporter(){
 }
 
+using namespace casacore;
 } /* namespace casa */

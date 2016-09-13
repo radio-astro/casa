@@ -46,7 +46,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 // <summary>
-// RFATimeFreqCrop : 2-Dimensional Time Frequency Autoflag agent 
+// RFATimeFreqCrop : 2-Dimensional casacore::Time Frequency Autoflag agent 
 // </summary>
 
 // <use visibility=local>
@@ -75,94 +75,94 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 class RFATimeFreqCrop : public RFAFlagCubeBase, public RFDataMapper
 {
 public:
-  RFATimeFreqCrop  ( RFChunkStats &ch,const RecordInterface &parm );
+  RFATimeFreqCrop  ( RFChunkStats &ch,const casacore::RecordInterface &parm );
   virtual ~RFATimeFreqCrop ();
 
-  virtual Bool newChunk (Int &i);
+  virtual casacore::Bool newChunk (casacore::Int &i);
   virtual void endChunk ();
   virtual void startData (bool verbose);
-  virtual IterMode iterTime (uInt itime);
-  virtual IterMode iterRow  (uInt irow);
+  virtual IterMode iterTime (casacore::uInt itime);
+  virtual IterMode iterRow  (casacore::uInt irow);
   virtual IterMode endData  ();
   virtual void startFlag (bool verbose);
-  virtual void iterFlag(uInt itime);
-  static const RecordInterface & getDefaults ();
+  virtual void iterFlag(casacore::uInt itime);
+  static const casacore::RecordInterface & getDefaults ();
   
 private:
   
-  Float UMean(Vector<Float> vect, Vector<Bool> flag);
-  Float UStd(Vector<Float> vect, Vector<Bool> flag, Vector<Float> fit);
-  Float UStd(Vector<Float> vect, Vector<Bool> flag, Float mean);
-  void CleanBand(Vector<Float> data,Vector<Float> fit);
-  void PolyFit(Vector<Float> data,Vector<Bool> flag, Vector<Float> fit, uInt lim1, uInt lim2,uInt deg);
-  void LineFit(Vector<Float> data,Vector<Bool> flag, Vector<Float> fit, uInt lim1, uInt lim2);
-  void Ants(uInt bs, uInt *a1, uInt *a2);
-  uInt BaselineIndex(uInt row, uInt a1, uInt a2);
+  casacore::Float UMean(casacore::Vector<casacore::Float> vect, casacore::Vector<casacore::Bool> flag);
+  casacore::Float UStd(casacore::Vector<casacore::Float> vect, casacore::Vector<casacore::Bool> flag, casacore::Vector<casacore::Float> fit);
+  casacore::Float UStd(casacore::Vector<casacore::Float> vect, casacore::Vector<casacore::Bool> flag, casacore::Float mean);
+  void CleanBand(casacore::Vector<casacore::Float> data,casacore::Vector<casacore::Float> fit);
+  void PolyFit(casacore::Vector<casacore::Float> data,casacore::Vector<casacore::Bool> flag, casacore::Vector<casacore::Float> fit, casacore::uInt lim1, casacore::uInt lim2,casacore::uInt deg);
+  void LineFit(casacore::Vector<casacore::Float> data,casacore::Vector<casacore::Bool> flag, casacore::Vector<casacore::Float> fit, casacore::uInt lim1, casacore::uInt lim2);
+  void Ants(casacore::uInt bs, casacore::uInt *a1, casacore::uInt *a2);
+  casacore::uInt BaselineIndex(casacore::uInt row, casacore::uInt a1, casacore::uInt a2);
 
-  void Display_ds9(Int xdim, Int ydim, Matrix<Float> &data, Int frame);
-  void Plot_ds9(Int dim, Vector<Float> data1, Vector<Float> data2);
+  void Display_ds9(casacore::Int xdim, casacore::Int ydim, casacore::Matrix<casacore::Float> &data, casacore::Int frame);
+  void Plot_ds9(casacore::Int dim, casacore::Vector<casacore::Float> data1, casacore::Vector<casacore::Float> data2);
 
   void AllocateMemory();  
   void FlagZeros();
   void RunTFCrop();
-  void FlagTimeSeries(uInt pl, uInt bs);
-  void FitCleanBandPass(uInt pl, uInt bs);
-  void FlagBandPass(uInt pl, uInt bs);
-  void GrowFlags(uInt pl, uInt bs);
+  void FlagTimeSeries(casacore::uInt pl, casacore::uInt bs);
+  void FitCleanBandPass(casacore::uInt pl, casacore::uInt bs);
+  void FlagBandPass(casacore::uInt pl, casacore::uInt bs);
+  void GrowFlags(casacore::uInt pl, casacore::uInt bs);
   RFA::IterMode ShowFlagPlots();
   void ExtendFlags();
   void FillChunkFlags();
 
-  uInt itime;  
+  casacore::uInt itime;  
   VisibilityIterator &vi; 
   VisBuffer &vb;
-  uInt TimeStamps;
-  String msname;
-  Vector<Int> ant1,ant2;
+  casacore::uInt TimeStamps;
+  casacore::String msname;
+  casacore::Vector<casacore::Int> ant1,ant2;
   
-  Cube <Complex> *vv; 	// visCube ptr - for one timestamp
-  Cube <Complex> vc; 	// visCube ptr - for one timestamp
-  Cube <Bool> ff; 	// flagCube ptr - for one timestamp
-  Vector <Bool> fr;     // rowflag ptr - for one timestamp
-  Cube<Float> visc; 	// visCube
-  Cube<Bool> flagc; 	// flagCube
-  Cube<Float> meanBP; 	// mean bandpass - npol x nbaselines x nchannels
-  Cube<Float> cleanBP; 	// cleaned bandpasses - npol x nbaselines x nchannels
-  Vector<Bool> rowflags; // rowflags from the MS - ntime x nbaselines
-  Vector<Bool> baselineflags; // flags for baselines - NumB (for internal use)
+  casacore::Cube <casacore::Complex> *vv; 	// visCube ptr - for one timestamp
+  casacore::Cube <casacore::Complex> vc; 	// visCube ptr - for one timestamp
+  casacore::Cube <casacore::Bool> ff; 	// flagCube ptr - for one timestamp
+  casacore::Vector <casacore::Bool> fr;     // rowflag ptr - for one timestamp
+  casacore::Cube<casacore::Float> visc; 	// visCube
+  casacore::Cube<casacore::Bool> flagc; 	// flagCube
+  casacore::Cube<casacore::Float> meanBP; 	// mean bandpass - npol x nbaselines x nchannels
+  casacore::Cube<casacore::Float> cleanBP; 	// cleaned bandpasses - npol x nbaselines x nchannels
+  casacore::Vector<casacore::Bool> rowflags; // rowflags from the casacore::MS - ntime x nbaselines
+  casacore::Vector<casacore::Bool> baselineflags; // flags for baselines - NumB (for internal use)
 
-  Cube<Bool> chunkflags; // Flags for the entire chunk.
+  casacore::Cube<casacore::Bool> chunkflags; // Flags for the entire chunk.
   
-  Vector<Float> tempBP; // temporary workspace - nchannels
-  Vector<Float> tempTS; // temporary workspace - ntimes
-  Vector<Bool> flagBP; 	// temporary list of flags - nchannels
-  Vector<Bool> flagTS; 	// temporary list of flags - ntimes
-  Vector<Float> fitBP; 	// temporary fit array - nchannels
-  Vector<Float> fitTS; 	// temporary fit array - ntimes
+  casacore::Vector<casacore::Float> tempBP; // temporary workspace - nchannels
+  casacore::Vector<casacore::Float> tempTS; // temporary workspace - ntimes
+  casacore::Vector<casacore::Bool> flagBP; 	// temporary list of flags - nchannels
+  casacore::Vector<casacore::Bool> flagTS; 	// temporary list of flags - ntimes
+  casacore::Vector<casacore::Float> fitBP; 	// temporary fit array - nchannels
+  casacore::Vector<casacore::Float> fitTS; 	// temporary fit array - ntimes
  
-  Float T_TOL,F_TOL,ANT_TOL,BASELN_TOL; // Input parameters
-  uInt FlagLevel,CorrChoice,NumTime,MaxNPieces;//Input parameters
-  Bool ShowPlots,DryRun,IgnorePreflags;
-  uInt nPol;
-  Bool FreqLineFit;
-  Bool StopAndExit;
-  String Column;
-  Vector<String> Expr;
+  casacore::Float T_TOL,F_TOL,ANT_TOL,BASELN_TOL; // casacore::Input parameters
+  casacore::uInt FlagLevel,CorrChoice,NumTime,MaxNPieces;//casacore::Input parameters
+  casacore::Bool ShowPlots,DryRun,IgnorePreflags;
+  casacore::uInt nPol;
+  casacore::Bool FreqLineFit;
+  casacore::Bool StopAndExit;
+  casacore::String Column;
+  casacore::Vector<casacore::String> Expr;
  
-  Matrix<Bool> RowFlags; // Row Flags
+  casacore::Matrix<casacore::Bool> RowFlags; // Row Flags
   
-  IPosition cubepos,matpos; 
+  casacore::IPosition cubepos,matpos; 
 
-  uInt passcnt;
-  uInt iterRowcnt;
-  uInt iterTimecnt;
-  uInt timecnt;
+  casacore::uInt passcnt;
+  casacore::uInt iterRowcnt;
+  casacore::uInt iterTimecnt;
+  casacore::uInt timecnt;
 
-  uInt NumT; // Number of timestamps in one block
-  uInt NumB; // Number of baselines.
-  uInt NumAnt; // Number of antennas.
-  uInt NumC; // Number of channels
-  uInt NumP; // Number of polarizations
+  casacore::uInt NumT; // Number of timestamps in one block
+  casacore::uInt NumB; // Number of baselines.
+  casacore::uInt NumAnt; // Number of antennas.
+  casacore::uInt NumC; // Number of channels
+  casacore::uInt NumP; // Number of polarizations
  
   FlagCubeIterator flag_iter; // Local Flag Iterator
 };

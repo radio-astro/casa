@@ -34,6 +34,7 @@
 #include <display/region/Polyline.qo.h>
 #include <display/DisplayErrors.h>
 
+using namespace casacore;
 namespace casa {
 	namespace viewer {
 		namespace qt {

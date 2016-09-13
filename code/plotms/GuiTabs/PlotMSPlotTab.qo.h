@@ -60,7 +60,7 @@ public:
     virtual ~PlotMSPlotSubtab();
     
     
-    // Gets/Sets the MS filename, selection, and averaging using a
+    // Gets/Sets the casacore::MS filename, selection, and averaging using a
     // PlotMSPlotParameters.
     // <group>
     virtual void getValue(PlotMSPlotParameters& params) const = 0;
@@ -131,9 +131,9 @@ public:
     
     //Return the data to support overplots.
     PlotMSDataTab* getData();
-    String getFileName() const;
+    casacore::String getFileName() const;
 
-    String getAveragingSummary() const;
+    casacore::String getAveragingSummary() const;
 
     // Returns the currently selected plot.
     PlotMSPlot* currentPlot() const;
@@ -158,7 +158,7 @@ public:
     bool setGridSize( int rowCount, int colCount );
 
     //Return the location on the grid for this plot.
-    void getLocation( Int& rowIndex, Int& colIndex );
+    void getLocation( casacore::Int& rowIndex, casacore::Int& colIndex );
 
     // Remove this plot.
     void removePlot();

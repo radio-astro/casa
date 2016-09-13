@@ -60,7 +60,7 @@ public:
     ~TBTableInfo();
 
 private:
-	// Table pointer.
+	// casacore::Table pointer.
     TBTable* table;
 
     

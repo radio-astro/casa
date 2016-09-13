@@ -28,7 +28,7 @@
 #ifndef GRAPHICS_X11INTRINSIC_H
 #define GRAPHICS_X11INTRINSIC_H
 
-// <X11/Intrinsic.h> #defines True, False, Bool, and String. After inclusion
+// <X11/Intrinsic.h> #defines true, false, casacore::Bool, and String. After inclusion
 // of <X11/Intrinsic.h>, usage of other portions of AIPS++, e.g. the String
 // class, may fail to compile. This file circumvents this name conflict. This
 // file should be used in preference to <X11/Intrinsics.h> where there is the
@@ -39,15 +39,15 @@
 #ifdef String
 #undef String
 #endif
-#define String XWinString
+#define casacore::String XWinString
 #ifdef Bool
 #undef Bool
 #endif
-#ifdef True
-#undef True
+#ifdef true
+#undef true
 #endif
-#ifdef False
-#undef False
+#ifdef false
+#undef false
 #endif
 #include <X11/Intrinsic.h>
 
@@ -58,8 +58,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </reviewed>
 // <group name=definitions>
 
-#undef True
-#undef False
+#undef true
+#undef false
 #undef String
 #undef Bool
 // </group>

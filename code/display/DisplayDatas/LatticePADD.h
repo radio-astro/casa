@@ -36,25 +36,29 @@
 #include <display/Display/DParameterChoice.h>
 #include <display/Display/DParameterRange.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore{
 
 	class IPosition;
-	class WCResampleHandler;
 	class ImageRegion;
 	class WCLELMask;
-	class WorldCanvas;
 	template <class T> class Array;
 	template <class T> class Lattice;
 	template <class T> class MaskedLattice;
 	template <class T> class LatticeStatistics;
+}
+
+namespace casa { //# NAMESPACE CASA - BEGIN
+
+	class WCResampleHandler;
+	class WorldCanvas;
 
 // <summary>
-// Partial implementation of PrincipalAxesDD for Lattice-based data.
+// Partial implementation of PrincipalAxesDD for casacore::Lattice-based data.
 // </summary>
 //
 // <synopsis>
 // This class is a partial (ie. base) implementation of PrincipalAxesDD
-// which adds methods particular to handling Lattice-based data.
+// which adds methods particular to handling casacore::Lattice-based data.
 // </synopsis>
 
 	template <class T> class LatticePADisplayData : public PrincipalAxesDD {
@@ -63,42 +67,42 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Constructors (no default)
 		//LatticePADisplayData();
 
-		// Array-based constructors: >2d and 2d
+		// casacore::Array-based constructors: >2d and 2d
 		// <group>
-		LatticePADisplayData(Array<T> *array, const uInt xAxis,
-		                     const uInt yAxis, const uInt mAxis,
-		                     const IPosition fixedPos);
-		LatticePADisplayData(Array<T> *array, const uInt xAxis,
-		                     const uInt yAxis);
+		LatticePADisplayData(casacore::Array<T> *array, const casacore::uInt xAxis,
+		                     const casacore::uInt yAxis, const casacore::uInt mAxis,
+		                     const casacore::IPosition fixedPos);
+		LatticePADisplayData(casacore::Array<T> *array, const casacore::uInt xAxis,
+		                     const casacore::uInt yAxis);
 		// </group>
 
 		// Image-based constructors: >2d and 2d
 		// <group>
-		LatticePADisplayData( SHARED_PTR<ImageInterface<T> > image, const uInt xAxis, const uInt yAxis, const uInt mAxis, const IPosition fixedPos, viewer::StatusSink *sink=0 );
-		LatticePADisplayData(SHARED_PTR<ImageInterface<T> > image, const uInt xAxis,
-		                     const uInt yAxis);
+		LatticePADisplayData( SHARED_PTR<casacore::ImageInterface<T> > image, const casacore::uInt xAxis, const casacore::uInt yAxis, const casacore::uInt mAxis, const casacore::IPosition fixedPos, viewer::StatusSink *sink=0 );
+		LatticePADisplayData(SHARED_PTR<casacore::ImageInterface<T> > image, const casacore::uInt xAxis,
+		                     const casacore::uInt yAxis);
 		// </group>
 
 		// Destructor
 		virtual ~LatticePADisplayData();
 
-		// Format a string containing value information at the
+		// casacore::Format a string containing value information at the
 		// given world coordinate
-		virtual String showValue(const Vector<Double> &world);
+		virtual casacore::String showValue(const casacore::Vector<casacore::Double> &world);
 
 		// required functions to help inherited "setup" amongst other things
-		virtual const IPosition dataShape() const;
-		virtual uInt dataDim() const;
-		virtual /*const*/ T dataValue(IPosition pos);
-		virtual const Unit dataUnit() const;
+		virtual const casacore::IPosition dataShape() const;
+		virtual casacore::uInt dataDim() const;
+		virtual /*const*/ T dataValue(casacore::IPosition pos);
+		virtual const casacore::Unit dataUnit() const;
 
 		// Pure virtual function from DisplayData...
-		String dataType() const {
+		casacore::String dataType() const {
 			return "image";
 		}
 		// Get image analyis about object...
 		virtual ImageAnalysis *imageanalysis( ) const;
-		SHARED_PTR<ImageInterface<Float> > imageinterface( );
+		SHARED_PTR<casacore::ImageInterface<casacore::Float> > imageinterface( );
 
 
 		// left as pure virtual for implementation in concrete class
@@ -106,27 +110,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void getMinAndMax();
 
 		// return mask value at given position
-		virtual Bool maskValue(const IPosition &pos);
+		virtual casacore::Bool maskValue(const casacore::IPosition &pos);
 
 		// install the default options for this DisplayData
 		virtual void setDefaultOptions();
 
 		// apply options stored in val to the DisplayData; return value
-		// True means a refresh is needed...
-		virtual Bool setOptions(Record &rec, Record &recOut);
+		// true means a refresh is needed...
+		virtual casacore::Bool setOptions(casacore::Record &rec, casacore::Record &recOut);
 
 
 
 		// retrieve the current and default options and parameter types.
-		virtual Record getOptions( bool scrub=false ) const;
+		virtual casacore::Record getOptions( bool scrub=false ) const;
 
 		// Return the class name of this DisplayData; useful mostly for
 		// debugging purposes, and perhaps future use in the glish widget
 		// interface.
-		virtual String className() const {
-			return String("LatticePADisplayData");
+		virtual casacore::String className() const {
+			return casacore::String("LatticePADisplayData");
 		}
-		String description( ) const {
+		casacore::String description( ) const {
 			return itsBaseImagePtr ? itsBaseImagePtr->name( ) : "none available";
 		}
 
@@ -143,25 +147,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			itsComplexToRealMethod = method;
 		}
 
-		virtual SHARED_PTR<MaskedLattice<T> > maskedLattice() {
+		virtual SHARED_PTR<casacore::MaskedLattice<T> > maskedLattice() {
 			return itsMaskedLatticePtr;
 		}
 
 
 		// Insert an array into a Record. The array is insert into a "value" field, eg
 		// somerecord.fieldname.value
-		virtual Bool insertArray(Record& toGoInto, Vector<Float> toInsert, const String fieldname);
-		virtual Bool insertFloat(Record& toGoInto, Float toInsert, const String fieldname);
+		virtual casacore::Bool insertArray(casacore::Record& toGoInto, casacore::Vector<casacore::Float> toInsert, const casacore::String fieldname);
+		virtual casacore::Bool insertFloat(casacore::Record& toGoInto, casacore::Float toInsert, const casacore::String fieldname);
 
 		// Return the last calculated histogram
-		virtual Record getHist() const;
+		virtual casacore::Record getHist() const;
 
 		// Return the brightness unit as a string
-		virtual String getBrightnessUnits() const;
+		virtual casacore::String getBrightnessUnits() const;
 
 		// Aids updateHistogram() by computing a stride to use for efficiency
 		// when computing histograms (could be used elsewhere too).
-		// Input parameter 'shape' is the shape of the original lattice or array.
+		// casacore::Input parameter 'shape' is the shape of the original lattice or array.
 		// Return value indicates whether striding should be used; if so, the
 		// recommended stride is returned in the 'stride' parameter.
 		// maxPixels is the desired maximum number of elements in the sub-lattice
@@ -170,8 +174,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// A stride greater than 1 will not be returned for an axis if it
 		// would make the length of that axis in the strided sub-lattice
 		// less than minPerAxis.
-		static Bool useStriding(const IPosition& shape, IPosition& stride,
-		                        uInt maxPixels=1000000u, uInt minPerAxis=20u);
+		static casacore::Bool useStriding(const casacore::IPosition& shape, casacore::IPosition& stride,
+		                        casacore::uInt maxPixels=1000000u, casacore::uInt minPerAxis=20u);
 
 
 	protected:
@@ -182,7 +186,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Will draw the beam ellipse if applicable (i.e., the LatticePADD
 		// has an image with beam data, beam drawing is turned on, and the
-		// WC's CoordinateSystem is set to sky coordinates).
+		// WC's casacore::CoordinateSystem is set to sky coordinates).
 		virtual void drawBeamEllipse_(WorldCanvas* wc);
 
 
@@ -190,57 +194,57 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	private:
 
 		// The base image cloned at construction.
-		SHARED_PTR<ImageInterface<T> > itsBaseImagePtr;
+		SHARED_PTR<casacore::ImageInterface<T> > itsBaseImagePtr;
 
 		// The base array cloned at construction.
-		Array<T>* itsBaseArrayPtr;
+		casacore::Array<T>* itsBaseArrayPtr;
 
 		// The image histogram
-		Record imageHistogram;
+		casacore::Record imageHistogram;
 
 		// Whether to always calculate the histogram or not
-		Bool calcHist;
+		casacore::Bool calcHist;
 
 		// The masked lattice, effectively referencing one of itsBaseImagePtr
 		// or itsBaseArray, or some sub-region of said.
-		SHARED_PTR<MaskedLattice<T> > itsMaskedLatticePtr;
+		SHARED_PTR<casacore::MaskedLattice<T> > itsMaskedLatticePtr;
 
 		// Says whether the destructor should delete itsMaskedLattice or not
-		Bool itsDeleteMLPointer;
+		casacore::Bool itsDeleteMLPointer;
 
 		// Object to use for calculating statistics.
-		LatticeStatistics<Float>* itsLatticeStatisticsPtr;
+		casacore::LatticeStatistics<casacore::Float>* itsLatticeStatisticsPtr;
 
-		// Is itsLattice a SubImage?
-		ImageRegion* itsRegionPtr;
+		// Is itsLattice a casacore::SubImage?
+		casacore::ImageRegion* itsRegionPtr;
 
 		// OTF mask
-		WCLELMask* itsMaskPtr;
+		casacore::WCLELMask* itsMaskPtr;
 
 		// The data unit
-		Unit itsDataUnit;
+		casacore::Unit itsDataUnit;
 
 		// the complex to real method
 		Display::ComplexToRealMethod itsComplexToRealMethod;
 
 		// storage for the display parameters
-		String itsResample;
-		String itsComplexMode;
+		casacore::String itsResample;
+		casacore::String itsComplexMode;
 
 		// beam-drawing state
 		// </group>
 
 		std::vector<std::vector<double> > beams_;
-		String majorunit_;	//# units of above (should be angular
-		String minorunit_;	//# (relative world sky coordinates).
-		String paunit_;	//# angular units of posangle_.
+		casacore::String majorunit_;	//# units of above (should be angular
+		casacore::String minorunit_;	//# (relative world sky coordinates).
+		casacore::String paunit_;	//# angular units of posangle_.
 
 		DParameterChoice* beamOnOff_;		//# User-selectable parameters.
 		DParameterChoice* beamStyle_;		//# "Outline", "Filled"
 		DParameterChoice* beamColor_;
-		DParameterRange<Int>* beamLineWidth_;
-		DParameterRange<Float>* beamXCenter_;		//# 0=left edge, 1=right edge
-		DParameterRange<Float>* beamYCenter_;		//# 0=bottom edge, 1=top edge
+		DParameterRange<casacore::Int>* beamLineWidth_;
+		DParameterRange<casacore::Float>* beamXCenter_;		//# 0=left edge, 1=right edge
+		DParameterRange<casacore::Float>* beamYCenter_;		//# 0=bottom edge, 1=top edge
 		// </group>
 
 
@@ -252,18 +256,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void updateLatticeStatistics();
 
 		// Update the histogram, and attach it to the supplied record
-		Bool updateHistogram(Record &rec, MaskedLattice<Complex> &pImage);
-		Bool updateHistogram(Record &rec, ImageInterface<Float> &pImage);
-		Bool updateHistogram(Record &rec, const Array<Complex>*);
-		Bool updateHistogram(Record &rec, const Array<Float>*);
+		casacore::Bool updateHistogram(casacore::Record &rec, casacore::MaskedLattice<casacore::Complex> &pImage);
+		casacore::Bool updateHistogram(casacore::Record &rec, casacore::ImageInterface<casacore::Float> &pImage);
+		casacore::Bool updateHistogram(casacore::Record &rec, const casacore::Array<casacore::Complex>*);
+		casacore::Bool updateHistogram(casacore::Record &rec, const casacore::Array<casacore::Float>*);
 
-		WCLELMask* makeMask (const RecordInterface& mask);
-		ImageRegion* makeRegion (const RecordInterface& region);
-		Bool isMaskDifferent (WCLELMask*& pMask);
-		Bool isRegionDifferent (ImageRegion*& pRegion);
+		casacore::WCLELMask* makeMask (const casacore::RecordInterface& mask);
+		casacore::ImageRegion* makeRegion (const casacore::RecordInterface& region);
+		casacore::Bool isMaskDifferent (casacore::WCLELMask*& pMask);
+		casacore::Bool isRegionDifferent (casacore::ImageRegion*& pRegion);
 
 		// Transfer preferences between CoordinateSystems
-		Bool transferPreferences (DisplayCoordinateSystem& cSysInOut,
+		casacore::Bool transferPreferences (DisplayCoordinateSystem& cSysInOut,
 		                          const DisplayCoordinateSystem& cSysIn) const;
 
 		// Delete temporary image data

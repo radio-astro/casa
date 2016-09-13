@@ -4,6 +4,7 @@
 #include <display/Display/DisplayEnums.h>
 
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	Matrix<Float> PixelCanvas::getMarker(const Display::Marker& marker,

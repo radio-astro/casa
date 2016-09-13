@@ -29,11 +29,11 @@
 //	Support functions for GLPixelCanvas.
 // </summary>
 // <synopsis>
-// The GLLogIO class extends the LogIO class to add tracing support.
+// The GLLogIO class extends the casacore::LogIO class to add tracing support.
 // Also, a couple of miscellaneous support routines are defined.
 // </synopsis>
 // <prerequisite>
-// <li> <linkto class="LogIO">LogIO</linkto>
+// <li> <linkto class="casacore::LogIO">casacore::LogIO</linkto>
 // </prerequisite>
 // <use visibility=local>
 //
@@ -51,58 +51,58 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-// GLLogIO adds tracing support to the AIPS++ LogIO object.
-	class GLLogIO : public LogIO {
+// GLLogIO adds tracing support to the AIPS++ casacore::LogIO object.
+	class GLLogIO : public casacore::LogIO {
 	public:
 		GLLogIO();
 		virtual ~GLLogIO();
 		// Print tracing information. Also calls glcheck.
 		// This is the main use for GLLogIO.
 		// nspaces is the number of spaces to indent name and any errors.
-		// If errorsonly is True, don't print anything if there are no
+		// If errorsonly is true, don't print anything if there are no
 		// errors.
-		void trace(const char *name, int nspaces, Bool errorsonly=False);
+		void trace(const char *name, int nspaces, casacore::Bool errorsonly=false);
 
 		// Append a line to buffer then add a newline.
 		// msg is indented by nspaces spaces. msg may contain newline
 		// characters.
-		void append(const char *msg, uInt nspaces=0);
+		void append(const char *msg, casacore::uInt nspaces=0);
 		// Adds nspaces to buffer.
-		void indent(uInt nspaces=0);
+		void indent(casacore::uInt nspaces=0);
 		// Deletes current buffer contents.
 		void clear();
 		// Copies any current OpenGL error messages to internal buffer.
-		int glcheck(uInt nspaces);
+		int glcheck(casacore::uInt nspaces);
 
 		// Logging to standard AIPS++ disrupts trace formatting. These
 		// routines allow redirecting or delaying output.
 		// NOTE: There is only 1 instance of the use iostream flag or String
 		// for all instances of GLLogIO.
 
-		// Post messages to an iostream instead of LogIO object.
-		static void postToStream(Bool useStream=False);
+		// Post messages to an iostream instead of casacore::LogIO object.
+		static void postToStream(casacore::Bool useStream=false);
 
 		// Post messages to str for later use. Disables if NULL.
 		// If str is non NULL, no output is done until postString is called.
 		// Replacing an existing string does not cause the existing string
 		// to be posted.
-		static void postToString(String *str=NULL);
+		static void postToString(casacore::String *str=NULL);
 
 		// If an output string exists, copy it to an output stream if
 		// it exists. If the output stream doesn't exist, copy it to
-		// the LogIO object. The string is then cleared.
+		// the casacore::LogIO object. The string is then cleared.
 		// Ignore if the string doesn't exist.
 		void postString();
-		// Copy string to either output stream or LogIO object. The string
+		// Copy string to either output stream or casacore::LogIO object. The string
 		// is not cleared.
-		void postString(const String &str);
+		void postString(const casacore::String &str);
 		// Copy internal buffer to output. Then clear internal buffer.
 		void post();
 	private:
 	private:
-		String	buffer_;
-		static Bool postToStream_;
-		static String	*ostring_;
+		casacore::String	buffer_;
+		static casacore::Bool postToStream_;
+		static casacore::String	*ostring_;
 	};
 
 	enum GLTraceLevel {GLTraceNone, GLTraceErrors=1, GLTraceInfo=2,
@@ -117,7 +117,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	const char *GLformatToString(GLenum format);
 // Given a glPushAttrib argument, append the string with the arg's
 // string representation.
-	void GLAttribToString(GLbitfield bits, String &str);
+	void GLAttribToString(GLbitfield bits, casacore::String &str);
 
 //const char *GLtypeToString(GLenum type);
 

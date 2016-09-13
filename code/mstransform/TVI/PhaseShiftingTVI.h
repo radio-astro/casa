@@ -41,21 +41,21 @@ class PhaseShiftingTVI : public FreqAxisTVI
 public:
 
 	PhaseShiftingTVI(	ViImplementation2 * inputVii,
-						const Record &configuration);
+						const casacore::Record &configuration);
 
 	// Report the the ViImplementation type
-	virtual String ViiType() const { return String("PhaseShifting( ")+getVii()->ViiType()+" )"; };
+	virtual casacore::String ViiType() const { return casacore::String("PhaseShifting( ")+getVii()->ViiType()+" )"; };
 
-    virtual void visibilityObserved (Cube<Complex> & vis) const;
-    virtual void visibilityCorrected (Cube<Complex> & vis) const;
-    virtual void visibilityModel (Cube<Complex> & vis) const;
+    virtual void visibilityObserved (casacore::Cube<casacore::Complex> & vis) const;
+    virtual void visibilityCorrected (casacore::Cube<casacore::Complex> & vis) const;
+    virtual void visibilityModel (casacore::Cube<casacore::Complex> & vis) const;
 
 protected:
 
-    Bool parseConfiguration(const Record &configuration);
+    casacore::Bool parseConfiguration(const casacore::Record &configuration);
     void initialize();
 
-	Double dx_p, dy_p;
+	casacore::Double dx_p, dy_p;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -67,14 +67,14 @@ class PhaseShiftingTVIFactory : public ViFactory
 
 public:
 
-	PhaseShiftingTVIFactory(Record &configuration,ViImplementation2 *inputVII);
+	PhaseShiftingTVIFactory(casacore::Record &configuration,ViImplementation2 *inputVII);
 
 protected:
 
 	vi::ViImplementation2 * createVi (VisibilityIterator2 *) const;
 	vi::ViImplementation2 * createVi () const;
 
-	Record configuration_p;
+	casacore::Record configuration_p;
 	ViImplementation2 *inputVii_p;;
 };
 
@@ -91,9 +91,9 @@ template<class T> class PhaseShiftingTransformEngine : public FreqAxisTransformE
 
 public:
 
-	PhaseShiftingTransformEngine(Double dx, Double dy,
-								Matrix<Double> *uvw,
-								Vector<Double> *frequencies,
+	PhaseShiftingTransformEngine(casacore::Double dx, casacore::Double dy,
+								casacore::Matrix<casacore::Double> *uvw,
+								casacore::Vector<casacore::Double> *frequencies,
 								DataCubeMap *inputData,
 								DataCubeMap *outputData);
 
@@ -103,9 +103,9 @@ public:
 
 protected:
 
-	Double dx_p, dy_p;
-	Matrix<Double> *uvw_p;
-	Vector<Double> *frequencies_p;
+	casacore::Double dx_p, dy_p;
+	casacore::Matrix<casacore::Double> *uvw_p;
+	casacore::Vector<casacore::Double> *frequencies_p;
 };
 
 

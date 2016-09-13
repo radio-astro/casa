@@ -54,8 +54,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <synopsis>
 // SolvableVisJonesDesc defines the format of SolvableVisJones calibration 
-// tables in terms of table descriptors <linkto class="TableDesc">TableDesc
-// </linkto>, as used in the Table system. The solvable VisJones calibration
+// tables in terms of table descriptors <linkto class="casacore::TableDesc">TableDesc
+// </linkto>, as used in the casacore::Table system. The solvable VisJones calibration
 // table formats include fit statistics and weights. Specializations for 
 // GJones, DJones and BJones calibration tables are provided through 
 // inheritance. At present, this set of classes returns only the default 
@@ -83,14 +83,14 @@ class SolvableVisJonesDesc : public TimeVarVisJonesDesc
    virtual ~SolvableVisJonesDesc() {};
 
    // Construct from the Jones table type
-   SolvableVisJonesDesc (const String& type);
+   SolvableVisJonesDesc (const casacore::String& type);
 
    // Return the cal_main table descriptor
-   virtual TableDesc calMainDesc();
+   virtual casacore::TableDesc calMainDesc();
 
  private:
-   // Table descriptor for fit statistics and weights
-   TableDesc itsFitDesc;
+   // casacore::Table descriptor for fit statistics and weights
+   casacore::TableDesc itsFitDesc;
 
 };
 
@@ -114,8 +114,8 @@ class SolvableVisJonesDesc : public TimeVarVisJonesDesc
 //
 // <synopsis>
 // GJonesDesc defines the format of GJones calibration tables in terms 
-// of table descriptors <linkto class="TableDesc">TableDesc</linkto>, 
-// as used in the Table system. GJones matrices define the electronic
+// of table descriptors <linkto class="casacore::TableDesc">casacore::TableDesc</linkto>, 
+// as used in the casacore::Table system. GJones matrices define the electronic
 // gain corrections in the Measurement Equation formalism. At present, 
 // this class returns only the default table formats.
 // </etymology>
@@ -164,8 +164,8 @@ class GJonesDesc : public SolvableVisJonesDesc
 // <synopsis>
 // GJonesDelayRateSBDesc defines the format of GJonesDelayRateSB 
 // calibration tables in terms of table descriptors
-// <linkto class="TableDesc">TableDesc</linkto>, 
-// as used in the Table system. This class augments the GJones
+// <linkto class="casacore::TableDesc">casacore::TableDesc</linkto>, 
+// as used in the casacore::Table system. This class augments the GJones
 // class, with several additional columns for parametrized 
 // fringe-fitting solutions. 
 // </synopsis>
@@ -191,7 +191,7 @@ class GJonesDelayRateSBDesc : public GJonesDesc
    virtual ~GJonesDelayRateSBDesc() {};
 
    // Return the table descriptors for the main calibration table:
-   virtual TableDesc calMainDesc();
+   virtual casacore::TableDesc calMainDesc();
 };
 
 // <summary> 
@@ -214,8 +214,8 @@ class GJonesDelayRateSBDesc : public GJonesDesc
 //
 // <synopsis>
 // DJonesDesc defines the format of DJones calibration tables in terms 
-// of table descriptors <linkto class="TableDesc">TableDesc</linkto>, 
-// as used in the Table system. DJones matrices define the instrumental
+// of table descriptors <linkto class="casacore::TableDesc">casacore::TableDesc</linkto>, 
+// as used in the casacore::Table system. DJones matrices define the instrumental
 // polarization corrections in the Measurement Equation formalism. At 
 // present, this class returns only the default table formats.
 // </etymology>
@@ -262,8 +262,8 @@ class DJonesDesc : public SolvableVisJonesDesc
 //
 // <synopsis>
 // TJonesDesc defines the format of TJones calibration tables in terms 
-// of table descriptors <linkto class="TableDesc">TableDesc</linkto>, 
-// as used in the Table system. TJones matrices define the atmospheric
+// of table descriptors <linkto class="casacore::TableDesc">casacore::TableDesc</linkto>, 
+// as used in the casacore::Table system. TJones matrices define the atmospheric
 // gain corrections in the Measurement Equation formalism. At present, 
 // this class returns only the default table formats.
 // </etymology>

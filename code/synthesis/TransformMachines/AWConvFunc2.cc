@@ -50,6 +50,7 @@
 #include <omp.h>
 #endif
 
+using namespace casacore;
 namespace casa{
   //
   //----------------------------------------------------------------------
@@ -101,7 +102,7 @@ namespace casa{
 
 	TempImage<Complex> jones_l(jonesShape, modifiedPolCS_l);
 	jones_l.set(Complex(1.0,0.0));
-	aTerm.makeFullJones(jones_l, vb, True, bandID,-1);
+	aTerm.makeFullJones(jones_l, vb, true, bandID,-1);
 
 	for (uInt imx=0;imx<muellerElements.nelements();imx++) // Loop over all MuellerElements
 	  for (uInt imy=0;imy<muellerElements(imx).nelements();imy++)
@@ -135,7 +136,7 @@ namespace casa{
 
 		CoordinateSystem conjPolCS_l=cs_l;  makeConjPolAxis(conjPolCS_l);
 		TempImage<Complex> ftATerm_l(pbshp, cs_l), ftATermSq_l(pbshp,conjPolCS_l);
-		Bool doSquint=True; Complex tt;
+		Bool doSquint=true; Complex tt;
 		ftATerm_l.set(Complex(1.0,0.0));   ftATermSq_l.set(Complex(1.0,0.0));
 		aTerm.applySky(ftATerm_l, vb, doSquint, 0);
 		aTerm.applySky(ftATermSq_l, vb, doSquint, 0,conjFreq);
@@ -175,8 +176,8 @@ namespace casa{
 		      cfBufMat = cfWtBufMat = 1.0;
 		    else
 		      {
-			psTerm.applySky(cfBufMat, False);   // Assign (psScale set in psTerm.init()
-			psTerm.applySky(cfWtBufMat, False); // Assign
+			psTerm.applySky(cfBufMat, false);   // Assign (psScale set in psTerm.init()
+			psTerm.applySky(cfWtBufMat, false); // Assign
 		      }
 
 		    wTerm.applySky(cfBufMat, iw, cellSize, wScale, cfBuf.shape()(0));///4);
@@ -192,7 +193,7 @@ namespace casa{
 
 		    twoDPB_l.putSlice(cfBuf, PolnPlane);
 		    twoDPBSq_l.putSlice(cfWtBuf, PolnPlane);
-		    Bool PBSQ = False;
+		    Bool PBSQ = false;
 		    if(PBSQ) makePBSq(twoDPBSq_l); 
 
     		    CoordinateSystem cs=twoDPB_l.coordinates();
@@ -216,14 +217,14 @@ namespace casa{
 		      sliceLength(4,cfBuf.shape()[0]-1,cfBuf.shape()[1]-1,1,1);
 		    
 		    cfBuf(Slicer(start,sliceLength)).nonDegenerate()
-		      =(twoDPB_l.getSlice(start, pbSlice, True));
+		      =(twoDPB_l.getSlice(start, pbSlice, true));
 		    
 		    shp = twoDPBSq_l.shape();
 		    IPosition pbSqSlice(4, shp[0]-1, shp[1]-1, 1, 1),
 		      sqSliceLength(4,cfWtBuf.shape()(0)-1,cfWtBuf.shape()[1]-1,1,1);
 		    
 		    cfWtBuf(Slicer(start,sqSliceLength)).nonDegenerate()
-		      =(twoDPBSq_l.getSlice(start, pbSqSlice, True));
+		      =(twoDPBSq_l.getSlice(start, pbSqSlice, true));
 
 		    //
 		    // Resize WT-CF

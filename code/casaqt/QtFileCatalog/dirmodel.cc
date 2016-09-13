@@ -44,6 +44,7 @@
 
 
 
+using namespace casacore;
 namespace casa { 
 
 DirModel::DirModel(QDir *data, QObject *parent)

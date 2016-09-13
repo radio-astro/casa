@@ -30,7 +30,7 @@
 
 namespace casa {
 /**
- * Fits Poisson curves to the histogram.
+ * Fits casacore::Poisson curves to the histogram.
  */
 
 class FitterPoisson : public Fitter {

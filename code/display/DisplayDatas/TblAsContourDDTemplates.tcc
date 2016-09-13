@@ -35,69 +35,69 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	template <class T>
-	Bool TblAsContourDD::getTableKeyword(T &value, const String keyword) const {
-		TableRecord trec(itsTable->keywordSet());
+	casacore::Bool TblAsContourDD::getTableKeyword(T &value, const casacore::String keyword) const {
+		casacore::TableRecord trec(itsTable->keywordSet());
 		if (!trec.isDefined(keyword)) {
-			return False;
+			return false;
 		}
-		DataType dtype = whatType(&value);
+		casacore::DataType dtype = casacore::whatType(&value);
 		if (dtype != trec.dataType(keyword)) {
-			return False;
+			return false;
 		}
 		try {
 			trec.get(keyword, value);
-		} catch (const AipsError &x) {
+		} catch (const casacore::AipsError &x) {
 			if (&x) {
-				return False;
+				return false;
 			}
 		}
-		return True;
+		return true;
 	}
 
 	template <class T>
-	Bool TblAsContourDD::getTableKeyword(T &value, const Regex &regex) const {
-		TableRecord trec(itsTable->keywordSet());
-		for (uInt j = 0; j < trec.nfields(); j++) {
+	casacore::Bool TblAsContourDD::getTableKeyword(T &value, const casacore::Regex &regex) const {
+		casacore::TableRecord trec(itsTable->keywordSet());
+		for (casacore::uInt j = 0; j < trec.nfields(); j++) {
 			if (trec.name(j).matches(regex)) {
 				return getTableKeyword(value, trec.name(j));
 			}
 		}
-		return False;
+		return false;
 	}
 
 	template <class T>
-	Bool TblAsContourDD::getColumnKeyword(T &value, const String column,
-	                                      const String keyword) const {
-		TableDesc tdesc(itsTable->tableDesc());
-		TableRecord trec(tdesc.columnDesc(column).keywordSet());
+	casacore::Bool TblAsContourDD::getColumnKeyword(T &value, const casacore::String column,
+	                                      const casacore::String keyword) const {
+		casacore::TableDesc tdesc(itsTable->tableDesc());
+		casacore::TableRecord trec(tdesc.columnDesc(column).keywordSet());
 		if (!trec.isDefined(keyword)) {
-			return False;
+			return false;
 		}
-		DataType dtype = whatType(&value);
+		casacore::DataType dtype = casacore::whatType(&value);
 		if (dtype != trec.dataType(keyword)) {
-			return False;
+			return false;
 		}
 		try {
 			trec.get(keyword, value);
-		} catch (const AipsError &x) {
+		} catch (const casacore::AipsError &x) {
 			if (&x) {
-				return False;
+				return false;
 			}
 		}
-		return True;
+		return true;
 	}
 
 	template <class T>
-	Bool TblAsContourDD::getColumnKeyword(T &value, const String column,
-	                                      const Regex &regex) const {
-		TableDesc tdesc(itsTable->tableDesc());
-		TableRecord trec(tdesc.columnDesc(column).keywordSet());
-		for (uInt j = 0; j < trec.nfields(); j++) {
+	casacore::Bool TblAsContourDD::getColumnKeyword(T &value, const casacore::String column,
+	                                      const casacore::Regex &regex) const {
+		casacore::TableDesc tdesc(itsTable->tableDesc());
+		casacore::TableRecord trec(tdesc.columnDesc(column).keywordSet());
+		for (casacore::uInt j = 0; j < trec.nfields(); j++) {
 			if (trec.name(j).matches(regex)) {
 				return getColumnKeyword(value, column, trec.name(j));
 			}
 		}
-		return False;
+		return false;
 	}
 
 

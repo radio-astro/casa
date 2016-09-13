@@ -69,6 +69,7 @@
 
 #include <flagging/Flagging/FlagVersion.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 #define TMR(a) "[User: " << a.user() << "] [System: " << a.system() << "] [Real: " << a.real() << "]"
@@ -181,9 +182,9 @@ FlagVersion::~FlagVersion()
 Bool FlagVersion::doesVersionExist( String versionname )
 {
    /* check if this versionname exists. */
-   Bool exists = False;
+   Bool exists = false;
    for(Int i=0;i<(Int)versionlist_p.nelements();i++)
-      if(versionlist_p[i].matches(versionname)) exists = True;
+      if(versionlist_p[i].matches(versionname)) exists = true;
 
    return exists;
 }
@@ -225,7 +226,7 @@ Bool FlagVersion::attachFlagColumns(String version,
    if(fcol_p) 
        flag.attach(subflagtable_p,dataflagcolname_p);
    
-   return True;
+   return true;
 }
 
 /*********************************************************************************/
@@ -291,14 +292,14 @@ Bool FlagVersion::saveFlagsInto( Table &fromFTab, Table &toFTab, String merge )
 	    if (!(j < nrows_p)) j = nrows_p - 1;
 	    RefRows arraySection(i, j);
 
-	    fromFlag.getColumnCells(arraySection,arr1,True);
+	    fromFlag.getColumnCells(arraySection,arr1,true);
 
 	    if( merge.matches("and") ) {
-	      toFlag.getColumnCells(arraySection,arr2,True);
+	      toFlag.getColumnCells(arraySection,arr2,true);
 	      arr2 *= arr1;
 	    }
 	    else if (merge.matches("or")) {
-	      toFlag.getColumnCells(arraySection,arr2,True);
+	      toFlag.getColumnCells(arraySection,arr2,true);
 	      arr2 += arr1;
 	    }
 	    else if (merge.matches("replace")) {
@@ -329,13 +330,13 @@ Bool FlagVersion::saveFlagsInto( Table &fromFTab, Table &toFTab, String merge )
                       if (i % 16384 == 0) {
                           pm.update(i);
                       }
-                      fromFlag.get(i,arr1,True);
+                      fromFlag.get(i,arr1,true);
                       if( merge.matches("and") ) {
-                          toFlag.get(i,arr2,True);
+                          toFlag.get(i,arr2,true);
                           arr2 *= arr1;
                       }
                       else if (merge.matches("or")) {
-                          toFlag.get(i,arr2,True);
+                          toFlag.get(i,arr2,true);
                           arr2 += arr1;
                       }
                       else if (merge.matches("replace")) {
@@ -349,7 +350,7 @@ Bool FlagVersion::saveFlagsInto( Table &fromFTab, Table &toFTab, String merge )
    
    toFTab.flush();
 
-   return True;
+   return true;
 }
 /*********************************************************************************/
 
@@ -445,7 +446,7 @@ Bool FlagVersion::saveFlagVersion( String versionname ,
       listfile.close();
    }
    
-   return True;
+   return true;
 }
 
 /*********************************************************************************/
@@ -460,7 +461,7 @@ Bool FlagVersion::restoreFlagVersion( String versionname, String merge )
    {
       log->out(String("Flag version ") +  versionname + 
           " does not exist", fnname, clname, LogMessage::WARN);
-      return False;
+      return false;
    }
    
    /* Save current flags from this version to the main table. */
@@ -470,7 +471,7 @@ Bool FlagVersion::restoreFlagVersion( String versionname, String merge )
       saveFlagsInto( ftab, tab_p, merge );
    }
    
-   return True;
+   return true;
 }
 
 /*********************************************************************************/
@@ -479,22 +480,22 @@ Bool FlagVersion::deleteFlagVersion( String versionname )
    String fnname= "deleteFlagVersion";
    /* Check if this version exists */
    /* check if this versionname exists. */
-   Bool exists = False;
+   Bool exists = false;
    for(Int i=0;i<(Int)versionlist_p.nelements();i++)
-      if(versionlist_p[i].matches(versionname)) exists = True;
+      if(versionlist_p[i].matches(versionname)) exists = true;
 
    if(!exists)
    {
       log->out(String("Flag version ") +  versionname + 
           " does not exist", fnname, clname, LogMessage::WARN);
-      return False;
+      return false;
    }
 
    if(versionname.matches( String("main") ))
    {
       log->out(String("The main flag table cannot be deleted. "), 
           fnname, clname, LogMessage::WARN);
-      return False;
+      return false;
    }
    
    /* remove the entry from the list file */
@@ -523,7 +524,7 @@ Bool FlagVersion::deleteFlagVersion( String versionname )
 
    readVersionList();
 
-   return True;
+   return true;
 }
 /*********************************************************************************
 This function should be changed to not use get(i,...) and put(i, ...) instead
@@ -548,7 +549,7 @@ Bool FlagVersion::clearAllFlags()
       rfscol.attach(tab_p,rowflagcolname_p);
  
       Vector<Bool> frc = rfscol.getColumn();
-      frc = False;
+      frc = false;
       rfscol.putColumn(frc);
    }
    if(fcol_p)
@@ -557,13 +558,13 @@ Bool FlagVersion::clearAllFlags()
       facol.attach(tab_p,dataflagcolname_p);
  
       Array<Bool> fc = facol.getColumn();
-      fc = False;
+      fc = false;
       facol.putColumn(fc);
    }
    
    tab_p.flush();
 
-   return True;
+   return true;
 }
 
 /*********************************************************************************/
@@ -593,8 +594,8 @@ Bool FlagVersion::readVersionList()
       listfile.getline(vers,500,'\n');
       if(!listfile.eof())
       {
-         versionlist_p.resize(vcount+1,True);
-         commentlist_p.resize(vcount+1,True);
+         versionlist_p.resize(vcount+1,true);
+         commentlist_p.resize(vcount+1,true);
          versionlist_p[vcount] = String(vers).before(" : ");
          commentlist_p[vcount] = String(vers);
          vcount++;
@@ -624,9 +625,9 @@ Bool FlagVersion::readVersionList()
            "do not match the number of rows in the main table. " +
            "Please check your selection.\n" + err,
            fnname, clname, LogMessage::SEVERE);
-      return False;
+      return false;
    }
-   return True;
+   return true;
 } /*********************************************************************************/
 void FlagVersion::FlagVersionError(String msg)
 {

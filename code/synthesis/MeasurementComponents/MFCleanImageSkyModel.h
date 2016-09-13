@@ -31,12 +31,16 @@
 
 #include <synthesis/MeasurementComponents/CleanImageSkyModel.h>
 #include <synthesis/MeasurementEquations/ClarkCleanProgress.h>
+namespace casacore{
+
+template<class T> class Lattice;
+template <class T> class RO_LatticeIterator;
+}
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //forward
 class SkyEquation;
-template<class T> class Lattice;
-template <class T> class RO_LatticeIterator;
 
 // <summary> 
 // MF Image Sky Model: Image Sky Model implementing the MF Clean algorithm
@@ -85,29 +89,29 @@ template <class T> class RO_LatticeIterator;
 class MFCleanImageSkyModel : public CleanImageSkyModel {
 public:
 
-  virtual Int add(ImageInterface<Float>& image, const Int maxNumXfr=100);
+  virtual casacore::Int add(casacore::ImageInterface<casacore::Float>& image, const casacore::Int maxNumXfr=100);
 
-  virtual Bool addResidual(Int image, ImageInterface<Float>& residual);
+  virtual casacore::Bool addResidual(casacore::Int image, casacore::ImageInterface<casacore::Float>& residual);
 
-  virtual Bool addMask(Int image, ImageInterface<Float>& mask);
+  virtual casacore::Bool addMask(casacore::Int image, casacore::ImageInterface<casacore::Float>& mask);
 
   // Solve for this SkyModel
-  virtual Bool solve (SkyEquation& me);
+  virtual casacore::Bool solve (SkyEquation& me);
 
 
   // Make mask and locate bounding boxes
 
-Matrix<Float>* makeMaskMatrix(const Int& nx, 
-			      const Int& ny, 
-			      RO_LatticeIterator<Float>& maskIter,
-			      Int& xbeg,
-			      Int& xend,
-			      Int& ybeg,
-			      Int& yend); 
+casacore::Matrix<casacore::Float>* makeMaskMatrix(const casacore::Int& nx,
+			      const casacore::Int& ny, 
+			      casacore::RO_LatticeIterator<casacore::Float>& maskIter,
+			      casacore::Int& xbeg,
+			      casacore::Int& xend,
+			      casacore::Int& ybeg,
+			      casacore::Int& yend); 
 
 protected:
   // Return maximum abs outer sidelobe, more than nCenter pixels from the center
-  Float maxOuter(Lattice<Float> & lat, const uInt nCenter );
+  casacore::Float maxOuter(casacore::Lattice<casacore::Float> & lat, const casacore::uInt nCenter );
   // Pointer to the progress display object
   ClarkCleanProgress *progress_p;
   //Allow only one model to be valid in overlapping regions

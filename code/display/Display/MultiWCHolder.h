@@ -33,12 +33,16 @@
 #include <display/Display/DisplayEnums.h>
 #include <display/Display/AttributeBuffer.h>
 
+namespace casacore{
+
+	class String;
+}
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	class WorldCanvasHolder;
 	class DisplayData;
 	class AttributeBuffer;
-	class String;
 
 // <summary>
 // A holder of WorldCanvasHolders to use for panelling applications.
@@ -131,7 +135,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// <group>
 		virtual void setRestriction(const Attribute& restriction);
 		virtual void setRestrictions(const AttributeBuffer& restrictions);
-		virtual void removeRestriction(const String& name);
+		virtual void removeRestriction(const casacore::String& name);
 		virtual void removeRestrictions();
 		// </group>
 
@@ -171,35 +175,35 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void refresh(const Display::RefreshReason &reason =
 		                         Display::UserCommand);
 
-		virtual uInt zLength();
+		virtual casacore::uInt zLength();
 
 		// These orrespond to 'zIndex, zLength' for animator's 'blink mode'.
-		virtual Int bLength();
-		virtual Int bIndex();
+		virtual casacore::Int bLength();
+		virtual casacore::Int bIndex();
 
 		//Sets whether the viewer is in blink mode.
 		void setBlinkMode( bool blinkMode );
 
 		// Determines which DDs will be restricted, which are always active.
-		virtual Bool isBlinkDD(DisplayData *dd);
+		virtual casacore::Bool isBlinkDD(DisplayData *dd);
 
 		// Test conformance of a DD to a WCH of this MWCH (by default, test
 		// against the first one (WCH 0), which always exists).
 		// The three aspects of conformance can be selectively tested.
-		virtual Bool conforms(DisplayData* dd,
-		                      Bool testRstrs=True, Bool testCS=True, Bool testZ=True,
-		                      Int wchIndex=0);
+		virtual casacore::Bool conforms(DisplayData* dd,
+		                      casacore::Bool testRstrs=true, casacore::Bool testCS=true, casacore::Bool testZ=true,
+		                      casacore::Int wchIndex=0);
 
 		// Return number of WCHs (subpanels).
-		virtual Int nWCHs() {
-			return Int(itsWCHList.len());
+		virtual casacore::Int nWCHs() {
+			return casacore::Int(itsWCHList.len());
 		}
 
 		// Clear PC in MWCH's area (not implemented on this level).
 		virtual void clear() {  }
 
 		// Added to collect region statistics from MultiRectTool::update_stats( )...
-		List<DisplayData*> *displayDatas( ) {
+		casacore::List<DisplayData*> *displayDatas( ) {
 			return &itsDDList;
 		}
 
@@ -224,22 +228,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// The list of WorldCanvasHolders that are managed by this
 		// MultiWCHolder.
-		List<WorldCanvasHolder *> itsWCHList;
+		casacore::List<WorldCanvasHolder *> itsWCHList;
 
 		// The list of DisplayDatas that are managed by this MultiWCHolder.
-		List<DisplayData *> itsDDList;
+		casacore::List<DisplayData *> itsDDList;
 
 		// Subset of above DDs which will have blinking restrictions added
 		// (Countour plots, e.g., do not; they always display).  This should
-		// actually be a Block<DisplayData*>.
-		Block<void*> itsBlinkDDs;
+		// actually be a casacore::Block<DisplayData*>.
+		casacore::Block<void*> itsBlinkDDs;
 
 		// Number of DDs above.
-		Int itsBLength;
+		casacore::Int itsBLength;
 
 		// Index of DD to show in first WCH when blink mode is active (it is
 		// kept up-to-date in any case).
-		Int itsBIndex;
+		casacore::Int itsBIndex;
 
 		// The (unchanging) name of the blink restriction: "bIndex" followed by
 		// an ID unique to this MWCH.  The ID is because DDs can be registered on
@@ -247,7 +251,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Note, however, that when setLinearRestrictions() is used externally to
 		// set the blink restriction onto the WCHs, it simply uses the name
 		// "bIndex".
-		String itsBIndexName;
+		casacore::String itsBIndexName;
 
 		// The buffer of attributes which are presently installed on the
 		// registered WorldCanvasHolders.
@@ -257,25 +261,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// WCHolders are added, their count is increased to this value.
 		// Calls to hold() and release() modify this count as well as
 		// those per canvas.
-		Int itsHoldCount;
+		casacore::Int itsHoldCount;
 
 		// The current state of whether a refresh was held up or not.
-		Bool itsRefreshHeld;
+		casacore::Bool itsRefreshHeld;
 
 		// The reason for the held-up refresh event
 		Display::RefreshReason itsHeldReason;
 
 		// Do we already have this WorldCanvasHolder/DisplayData registered?
 		// <group>
-		Bool isAlreadyRegistered(const WorldCanvasHolder &holder);
-		Bool isAlreadyRegistered(const DisplayData &displaydata);
+		casacore::Bool isAlreadyRegistered(const WorldCanvasHolder &holder);
+		casacore::Bool isAlreadyRegistered(const DisplayData &displaydata);
 		// </group>
 
 		// Add/remove all the DisplayDatas to/from a WorldCanvasHolder.
 		// <group>
 		void addAllDisplayDatas(WorldCanvasHolder &holder);
 		void removeAllDisplayDatas(WorldCanvasHolder &holder,
-		                           const Bool& permanent = False);
+		                           const casacore::Bool& permanent = false);
 		// </group>
 
 		// Add/remove a DisplayData to/from all WorldCanvasHolders.

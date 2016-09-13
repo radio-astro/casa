@@ -93,19 +93,19 @@ class CalDescBuffer
   // table cal_desc subtable(NYI)
   virtual void append (CalTable& /*calTable*/) {};
 
-  // Data field accessors
-  Vector<Int>& numSpw();
-  Vector<Int>& numChan();
-  Vector<Int>& numReceptors();
-  Vector<Int>& nJones();
-  Matrix<Int>& spwId();
-  Array<MFrequency>& chanFreqMeas();
-  Vector<Int>& measFreqRef();
-  Array<Quantity>& chanWidthQuant();
-  Array<Int>& chanRange();
-  Matrix<String>& polznType();
-  Vector<String>& jonesType();
-  Vector<String>& msName();
+  // casacore::Data field accessors
+  casacore::Vector<casacore::Int>& numSpw();
+  casacore::Vector<casacore::Int>& numChan();
+  casacore::Vector<casacore::Int>& numReceptors();
+  casacore::Vector<casacore::Int>& nJones();
+  casacore::Matrix<casacore::Int>& spwId();
+  casacore::Array<casacore::MFrequency>& chanFreqMeas();
+  casacore::Vector<casacore::Int>& measFreqRef();
+  casacore::Array<casacore::Quantity>& chanWidthQuant();
+  casacore::Array<casacore::Int>& chanRange();
+  casacore::Matrix<casacore::String>& polznType();
+  casacore::Vector<casacore::String>& jonesType();
+  casacore::Vector<casacore::String>& msName();
 
  protected:
   // Factory method to create a columns accessor object of the appropriate type
@@ -116,42 +116,42 @@ class CalDescBuffer
   virtual CalDescColumns* calDescCol() {return calDescCol_p;};
 
   // Is the buffer connected to an underlying iterator ?
-  Bool connectedToIter() {return connectedToIter_p;};
+  casacore::Bool connectedToIter() {return connectedToIter_p;};
 
  private:
-  // True if connected to underlying iterator
-  Bool connectedToIter_p;
+  // true if connected to underlying iterator
+  casacore::Bool connectedToIter_p;
 
   // Ptr to cal main columns accessor
   CalDescColumns* calDescCol_p;
 
   // Buffer fields
-  Vector<Int> numSpw_p;
-  Vector<Int> numChan_p;
-  Vector<Int> numReceptors_p;
-  Vector<Int> nJones_p;
-  Matrix<Int> spwId_p;
-  Array<MFrequency> chanFreqMeas_p;
-  Vector<Int> measFreqRef_p;
-  Array<Quantity> chanWidthQuant_p;
-  Array<Int> chanRange_p;
-  Matrix<String> polznType_p;
-  Vector<String> jonesType_p;
-  Vector<String> msName_p;
+  casacore::Vector<casacore::Int> numSpw_p;
+  casacore::Vector<casacore::Int> numChan_p;
+  casacore::Vector<casacore::Int> numReceptors_p;
+  casacore::Vector<casacore::Int> nJones_p;
+  casacore::Matrix<casacore::Int> spwId_p;
+  casacore::Array<casacore::MFrequency> chanFreqMeas_p;
+  casacore::Vector<casacore::Int> measFreqRef_p;
+  casacore::Array<casacore::Quantity> chanWidthQuant_p;
+  casacore::Array<casacore::Int> chanRange_p;
+  casacore::Matrix<casacore::String> polznType_p;
+  casacore::Vector<casacore::String> jonesType_p;
+  casacore::Vector<casacore::String> msName_p;
 
   // Buffer field status flags
-  Bool numSpwOK_p;
-  Bool numChanOK_p;
-  Bool numReceptorsOK_p;
-  Bool nJonesOK_p;
-  Bool spwIdOK_p;
-  Bool chanFreqMeasOK_p;
-  Bool measFreqRefOK_p;
-  Bool chanWidthQuantOK_p;
-  Bool chanRangeOK_p;
-  Bool polznTypeOK_p;
-  Bool jonesTypeOK_p;
-  Bool msNameOK_p;
+  casacore::Bool numSpwOK_p;
+  casacore::Bool numChanOK_p;
+  casacore::Bool numReceptorsOK_p;
+  casacore::Bool nJonesOK_p;
+  casacore::Bool spwIdOK_p;
+  casacore::Bool chanFreqMeasOK_p;
+  casacore::Bool measFreqRefOK_p;
+  casacore::Bool chanWidthQuantOK_p;
+  casacore::Bool chanRangeOK_p;
+  casacore::Bool polznTypeOK_p;
+  casacore::Bool jonesTypeOK_p;
+  casacore::Bool msNameOK_p;
 };
 
 

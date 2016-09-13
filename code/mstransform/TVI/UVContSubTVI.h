@@ -51,41 +51,41 @@ class UVContSubTVI : public FreqAxisTVI
 public:
 
 	UVContSubTVI(	ViImplementation2 * inputVii,
-						const Record &configuration);
+						const casacore::Record &configuration);
 
 	~UVContSubTVI();
 
 	// Report the the ViImplementation type
-	virtual String ViiType() const { return String("UVContSub( ")+getVii()->ViiType()+" )"; };
+	virtual casacore::String ViiType() const { return casacore::String("UVContSub( ")+getVii()->ViiType()+" )"; };
 
-    virtual void floatData (Cube<Float> & vis) const;
-    virtual void visibilityObserved (Cube<Complex> & vis) const;
-    virtual void visibilityCorrected (Cube<Complex> & vis) const;
-    virtual void visibilityModel (Cube<Complex> & vis) const;
+    virtual void floatData (casacore::Cube<casacore::Float> & vis) const;
+    virtual void visibilityObserved (casacore::Cube<casacore::Complex> & vis) const;
+    virtual void visibilityCorrected (casacore::Cube<casacore::Complex> & vis) const;
+    virtual void visibilityModel (casacore::Cube<casacore::Complex> & vis) const;
 
 protected:
 
-    Bool parseConfiguration(const Record &configuration);
+    bool parseConfiguration(const casacore::Record &configuration);
     void initialize();
 
-    template<class T> void transformDataCube(	const Cube<T> &inputVis,
-    											const Cube<Float> &inputWeight,
-    											Cube<T> &outputVis) const;
+    template<class T> void transformDataCube(	const casacore::Cube<T> &inputVis,
+    											const casacore::Cube<casacore::Float> &inputWeight,
+    											casacore::Cube<T> &outputVis) const;
 
-    template<class T> void transformDataCore(	denoising::GslPolynomialModel<Double>* model,
-												Vector<Bool> *lineFreeChannelMask,
-												const Cube<T> &inputVis,
-												const Cube<Bool> &inputFlags,
-												const Cube<Float> &inputWeight,
-												Cube<T> &outputVis,
-												Int parallelCorrAxis=-1) const;
+    template<class T> void transformDataCore(	denoising::GslPolynomialModel<casacore::Double>* model,
+												casacore::Vector<casacore::Bool> *lineFreeChannelMask,
+												const casacore::Cube<T> &inputVis,
+												const casacore::Cube<casacore::Bool> &inputFlags,
+												const casacore::Cube<casacore::Float> &inputWeight,
+												casacore::Cube<T> &outputVis,
+												casacore::Int parallelCorrAxis=-1) const;
+    mutable casacore::uInt fitOrder_p;
+    mutable casacore::Bool want_cont_p;
+    mutable casacore::String fitspw_p;
+    mutable casacore::Bool gsl_p;
+    mutable map<casacore::Int,casacore::Vector<casacore::Bool> > lineFreeChannelMaskMap_p;
 
-    mutable uInt fitOrder_p;
-    mutable Bool want_cont_p;
-    mutable Bool gsl_p;
-    mutable String fitspw_p;
-    mutable map<Int,Vector<Bool> > lineFreeChannelMaskMap_p;
-	mutable map<Int, denoising::GslPolynomialModel<Double>* > inputFrequencyMap_p;
+	mutable map<casacore::Int, denoising::GslPolynomialModel<casacore::Double>* > inputFrequencyMap_p;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -97,14 +97,14 @@ class UVContSubTVIFactory : public ViFactory
 
 public:
 
-	UVContSubTVIFactory(Record &configuration,ViImplementation2 *inputVII);
+	UVContSubTVIFactory(casacore::Record &configuration,ViImplementation2 *inputVII);
 
 protected:
 
 	vi::ViImplementation2 * createVi (VisibilityIterator2 *) const;
 	vi::ViImplementation2 * createVi () const;
 
-	Record configuration_p;
+	casacore::Record configuration_p;
 	ViImplementation2 *inputVii_p;
 };
 
@@ -117,14 +117,14 @@ class UVContSubTVILayerFactory : public ViiLayerFactory
 
 public:
 
-	UVContSubTVILayerFactory(Record &configuration);
+	UVContSubTVILayerFactory(casacore::Record &configuration);
 	virtual ~UVContSubTVILayerFactory() {};
 
 protected:
 
 	ViImplementation2 * createInstance(ViImplementation2* vii0) const;
 
-	Record configuration_p;
+	casacore::Record configuration_p;
 
 };
 
@@ -167,32 +167,32 @@ template<class T> class UVContSubKernel
 
 public:
 
-	UVContSubKernel(	denoising::GslPolynomialModel<Double>* model,
-						Vector<Bool> *lineFreeChannelMask);
+	UVContSubKernel(	denoising::GslPolynomialModel<casacore::Double>* model,
+						casacore::Vector<casacore::Bool> *lineFreeChannelMask);
 
 	virtual void kernel(DataCubeMap *inputData,
 						DataCubeMap *outputData);
 
 	virtual void changeFitOrder(size_t order) = 0;
 
-	virtual void defaultKernel(	Vector<T> &inputVector,
-								Vector<T> &outputVector) = 0;
+	virtual void defaultKernel(	casacore::Vector<T> &inputVector,
+								casacore::Vector<T> &outputVector) = 0;
 
-	virtual void kernelCore(Vector<T> &inputVector,
-							Vector<Bool> &inputFlags,
-							Vector<Float> &inputWeights,
-							Vector<T> &outputVector) = 0;
+	virtual void kernelCore(casacore::Vector<T> &inputVector,
+							casacore::Vector<casacore::Bool> &inputFlags,
+							casacore::Vector<casacore::Float> &inputWeights,
+							casacore::Vector<T> &outputVector) = 0;
 
-	void setDebug(Bool debug) { debug_p = debug;}
+	void setDebug(casacore::Bool debug) { debug_p = debug;}
 
 protected:
 
-	Bool debug_p;
+	casacore::Bool debug_p;
 	size_t fitOrder_p;
-	denoising::GslPolynomialModel<Double> *model_p;
-	Matrix<Double> freqPows_p;
-	Vector<Float> frequencies_p;
-	Vector<Bool> *lineFreeChannelMask_p;
+	denoising::GslPolynomialModel<casacore::Double> *model_p;
+	casacore::Matrix<casacore::Double> freqPows_p;
+	casacore::Vector<casacore::Float> frequencies_p;
+	casacore::Vector<casacore::Bool> *lineFreeChannelMask_p;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -211,30 +211,30 @@ template<class T> class UVContSubtractionKernel : public UVContSubKernel<T>
 
 public:
 
-	UVContSubtractionKernel(	denoising::GslPolynomialModel<Double>* model,
-								Vector<Bool> *lineFreeChannelMask=NULL);
+	UVContSubtractionKernel(	denoising::GslPolynomialModel<casacore::Double>* model,
+								casacore::Vector<casacore::Bool> *lineFreeChannelMask=NULL);
 
 	void changeFitOrder(size_t order);
 
-	void defaultKernel(	Vector<Complex> &inputVector,
-						Vector<Complex> &outputVector);
+	void defaultKernel(	casacore::Vector<casacore::Complex> &inputVector,
+						casacore::Vector<casacore::Complex> &outputVector);
 
-	void defaultKernel(	Vector<Float> &inputVector,
-						Vector<Float> &outputVector);
+	void defaultKernel(	casacore::Vector<casacore::Float> &inputVector,
+						casacore::Vector<casacore::Float> &outputVector);
 
-	void kernelCore(	Vector<Complex> &inputVector,
-						Vector<Bool> &inputFlags,
-						Vector<Float> &inputWeights,
-						Vector<Complex> &outputVector);
+	void kernelCore(	casacore::Vector<casacore::Complex> &inputVector,
+						casacore::Vector<casacore::Bool> &inputFlags,
+						casacore::Vector<casacore::Float> &inputWeights,
+						casacore::Vector<casacore::Complex> &outputVector);
 
-	void kernelCore(	Vector<Float> &inputVector,
-						Vector<Bool> &inputFlags,
-						Vector<Float> &inputWeights,
-						Vector<Float> &outputVector);
+	void kernelCore(	casacore::Vector<casacore::Float> &inputVector,
+						casacore::Vector<casacore::Bool> &inputFlags,
+						casacore::Vector<casacore::Float> &inputWeights,
+						casacore::Vector<casacore::Float> &outputVector);
 
 private:
 
-	LinearFitSVD<Float> fitter_p;
+	casacore::LinearFitSVD<casacore::Float> fitter_p;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -253,29 +253,30 @@ template<class T> class UVContEstimationKernel : public UVContSubKernel<T>
 
 public:
 
-	UVContEstimationKernel(	denoising::GslPolynomialModel<Double>* model,
-							Vector<Bool> *lineFreeChannelMask=NULL);
+	UVContEstimationKernel(	denoising::GslPolynomialModel<casacore::Double>* model,
+							casacore::Vector<casacore::Bool> *lineFreeChannelMask=NULL);
 
 	void changeFitOrder(size_t order);
 
-	void defaultKernel(	Vector<Complex> &inputVector,
-						Vector<Complex> &outputVector);
+	void defaultKernel(	casacore::Vector<casacore::Complex> &inputVector,
+						casacore::Vector<casacore::Complex> &outputVector);
 
-	void defaultKernel(	Vector<Float> &inputVector,
-						Vector<Float> &outputVector);
+	void defaultKernel(	casacore::Vector<casacore::Float> &inputVector,
+						casacore::Vector<casacore::Float> &outputVector);
 
-	void kernelCore(	Vector<Complex> &inputVector,
-						Vector<Bool> &inputFlags,
-						Vector<Float> &inputWeights,
-						Vector<Complex> &outputVector);
+	void kernelCore(	casacore::Vector<casacore::Complex> &inputVector,
+						casacore::Vector<casacore::Bool> &inputFlags,
+						casacore::Vector<casacore::Float> &inputWeights,
+						casacore::Vector<casacore::Complex> &outputVector);
 
-	void kernelCore(	Vector<Float> &inputVector,
-						Vector<Bool> &inputFlags,
-						Vector<Float> &inputWeights,
-						Vector<Float> &outputVector);
+	void kernelCore(	casacore::Vector<casacore::Float> &inputVector,
+						casacore::Vector<casacore::Bool> &inputFlags,
+						casacore::Vector<casacore::Float> &inputWeights,
+						casacore::Vector<casacore::Float> &outputVector);
+
 private:
 
-	LinearFitSVD<Float> fitter_p;
+	casacore::LinearFitSVD<casacore::Float> fitter_p;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -294,18 +295,18 @@ template<class T> class UVContSubtractionGSLKernel : public UVContSubKernel<T>
 
 public:
 
-	UVContSubtractionGSLKernel(	denoising::GslPolynomialModel<Double>* model,
-								Vector<Bool> *lineFreeChannelMask=NULL);
+	UVContSubtractionGSLKernel(	denoising::GslPolynomialModel<casacore::Double>* model,
+								casacore::Vector<casacore::Bool> *lineFreeChannelMask=NULL);
 
 	void changeFitOrder(size_t order);
 
-	void defaultKernel(	Vector<T> &inputVector,
-						Vector<T> &outputVector);
+	void defaultKernel(	casacore::Vector<T> &inputVector,
+						casacore::Vector<T> &outputVector);
 
-	void kernelCore(	Vector<T> &inputVector,
-						Vector<Bool> &inputFlags,
-						Vector<Float> &inputWeights,
-						Vector<T> &outputVector);
+	void kernelCore(	casacore::Vector<T> &inputVector,
+						casacore::Vector<casacore::Bool> &inputFlags,
+						casacore::Vector<casacore::Float> &inputWeights,
+						casacore::Vector<T> &outputVector);
 
 private:
 
@@ -328,18 +329,18 @@ template<class T> class UVContEstimationGSLKernel : public UVContSubKernel<T>
 
 public:
 
-	UVContEstimationGSLKernel(	denoising::GslPolynomialModel<Double>* model,
-							Vector<Bool> *lineFreeChannelMask=NULL);
+	UVContEstimationGSLKernel(	denoising::GslPolynomialModel<casacore::Double>* model,
+							casacore::Vector<casacore::Bool> *lineFreeChannelMask=NULL);
 
 	void changeFitOrder(size_t order);
 
-	void defaultKernel(	Vector<T> &inputVector,
-						Vector<T> &outputVector);
+	void defaultKernel(	casacore::Vector<T> &inputVector,
+						casacore::Vector<T> &outputVector);
 
-	void kernelCore(	Vector<T> &inputVector,
-						Vector<Bool> &inputFlags,
-						Vector<Float> &inputWeights,
-						Vector<T> &outputVector);
+	void kernelCore(	casacore::Vector<T> &inputVector,
+						casacore::Vector<casacore::Bool> &inputFlags,
+						casacore::Vector<casacore::Float> &inputWeights,
+						casacore::Vector<T> &outputVector);
 
 private:
 

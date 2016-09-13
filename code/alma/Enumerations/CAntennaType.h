@@ -3,7 +3,7 @@
 #define CAntennaType_H
 
 /*
- * ALMA - Atacama Large Millimeter Array
+ * ALMA - Atacama Large Millimeter casacore::Array
  * (c) European Southern Observatory, 2002
  * (c) Associated Universities Inc., 2002
  * Copyright by ESO (in the framework of the ALMA collaboration),
@@ -33,7 +33,7 @@
  * //  ---------------------------------------------------------  //
  * /////////////////////////////////////////////////////////////////
  *
- * File CAntennaType.h
+ * casacore::File CAntennaType.h
  */
 
 #ifndef __cplusplus
@@ -54,7 +54,7 @@
 namespace AntennaTypeMod
 {
   //! AntennaType.
-  //!  Functional types of antenna
+  //!  casacore::Functional types of antenna
   
   const char *const revision = "-1";
   const int version = 1;

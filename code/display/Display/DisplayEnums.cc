@@ -29,6 +29,7 @@
 #include <casa/Exceptions/Error.h>
 #include <casa/iostream.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // write to ostream support
@@ -451,61 +452,61 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	ostream & operator << (ostream & os, Display::KeyModifier dkm) {
-		Bool sep = False;
+		Bool sep = false;
 		os << "{";
 		if (dkm & Display::KM_Shift) {
 			if (sep) os << "|";
-			sep = True;
+			sep = true;
 			os << "Shift";
 		}
 		if (dkm & Display::KM_Shift) {
 			if (sep) os << "|";
-			sep = True;
+			sep = true;
 			os << "CapsLock";
 		}
 		if (dkm & Display::KM_Shift) {
 			if (sep) os << "|";
-			sep = True;
+			sep = true;
 			os << "Ctrl";
 		}
 		if (dkm & Display::KM_Shift) {
 			if (sep) os << "|";
-			sep = True;
+			sep = true;
 			os << "Alt";
 		}
 		if (dkm & Display::KM_Shift) {
 			if (sep) os << "|";
-			sep = True;
+			sep = true;
 			os << "NumLock";
 		}
 		if (dkm & Display::KM_Shift) {
 			if (sep) os << "|";
-			sep = True;
+			sep = true;
 			os << "ScrollLock";
 		}
 		if (dkm & Display::KM_Shift) {
 			if (sep) os << "|";
-			sep = True;
+			sep = true;
 			os << "Mod4";
 		}
 		if (dkm & Display::KM_Shift) {
 			if (sep) os << "|";
-			sep = True;
+			sep = true;
 			os << "Mod5";
 		}
 		if (dkm & Display::KM_Shift) {
 			if (sep) os << "|";
-			sep = True;
+			sep = true;
 			os << "PointerButton1";
 		}
 		if (dkm & Display::KM_Shift) {
 			if (sep) os << "|";
-			sep = True;
+			sep = true;
 			os << "PointerButton2";
 		}
 		if (dkm & Display::KM_Shift) {
 			if (sep) os << "|";
-			sep = True;
+			sep = true;
 			os << "PointerButton3";
 		}
 		os << "}";

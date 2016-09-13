@@ -32,6 +32,7 @@
 #include <qwt_symbol.h>
 #include <QDebug>
 
+using namespace casacore;
 namespace casa {
 
 	SegmentTracer::SegmentTracer( int regionId, int index, QwtPlot* plot ):
@@ -117,4 +118,5 @@ namespace casa {
 		// TODO Auto-generated destructor stub
 	}
 
+using namespace casacore;
 } /* namespace casa */

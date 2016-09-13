@@ -44,11 +44,14 @@
 #include <casa/OS/Directory.h>
 #include <casa/Utilities/Regex.h>
 #include <synthesis/MeasurementEquations/Simulator.h>
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 namespace test { //#namespace for imaging refactoring
 
 using namespace std;
+using namespace casacore;
 using namespace casa;
+using namespace casacore;
 using namespace casa::test;
 
 void MakeMS::makems(String msname, MDirection thedir, Double freq,
@@ -95,7 +98,7 @@ void MakeMS::makems(String msname, MDirection thedir, Double freq,
   sm.setlimits(0.01, Quantity(10.0, "deg"));
   sm.setauto(0.0);
   sm.setfield("2C666", thedir, "T", Quantity(0.0, "m"));
-  sm.settimes(Quantity(1.0,"s"), True, refepo);
+  sm.settimes(Quantity(1.0,"s"), true, refepo);
   sm.observe("2C666", "Bandobast", Quantity(-Double(nInteg)/2.0, "s"), Quantity(Double(nInteg)/2.0,"s"));
   
 }
@@ -108,4 +111,5 @@ void MakeMS::makems(String msname, MDirection thedir, Double freq,
 
 }//end namespace test
 
+using namespace casacore;
 } //end namespace casa

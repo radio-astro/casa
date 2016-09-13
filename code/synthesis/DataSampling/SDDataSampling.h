@@ -36,9 +36,13 @@
 #include <casa/Arrays/Matrix.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore{
 
 class ROMSPointingColumns;
+}
+
+namespace casa { //# NAMESPACE CASA - BEGIN
+
 
 // <summary> Provides sampling of single dish data for esimation algorithms
 // </summary>
@@ -51,7 +55,7 @@ class ROMSPointingColumns;
 // </prerequisite>
 //
 // <etymology>
-// Samples single dish Data as needed for various estimation algorithms
+// Samples single dish casacore::Data as needed for various estimation algorithms
 // </etymology>
 //
 // <synopsis> 
@@ -75,10 +79,10 @@ class ROMSPointingColumns;
 class SDDataSampling : public DataSampling {
 public:
 
-  SDDataSampling(MeasurementSet& ms, SkyJones& sj,
-		 const CoordinateSystem& coords,
-		 const IPosition& shape,
-		 const Quantity& sigma);
+  SDDataSampling(casacore::MeasurementSet& ms, SkyJones& sj,
+		 const casacore::CoordinateSystem& coords,
+		 const casacore::IPosition& shape,
+		 const casacore::Quantity& sigma);
 
   // Copy constructor
   SDDataSampling(const SDDataSampling &other);
@@ -90,11 +94,11 @@ public:
 
 private:
 
-  Int lastIndex_p;
+  casacore::Int lastIndex_p;
 
-  Int nRows_p;
+  casacore::Int nRows_p;
 
-  Int getIndex(const ROMSPointingColumns& mspc, const Double& time);
+  casacore::Int getIndex(const casacore::ROMSPointingColumns& mspc, const casacore::Double& time);
 
   void ok();
 

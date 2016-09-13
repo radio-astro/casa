@@ -112,24 +112,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     ~ConvFuncDiskCache() {};
     void setCacheDir(const char *dir) {Dir = dir;}
     void initCache();
-    void cacheConvFunction(Int which, Float pa, Array<Complex>& cf, CoordinateSystem& coords,
-			   CoordinateSystem& ftcoords, Int& convSize, Cube<Int>& convSupport, 
-			   Float convSampling, String nameQualifier="",Bool savePA=True);
-    void cacheWeightsFunction(Int which, Float pa, Array<Complex>& cfWt, CoordinateSystem& coords,
-			      Int& convSize, Cube<Int>& convSupport, Float convSampling);
-    Bool searchConvFunction(const VisBuffer& vb, VPSkyJones& vpSJ, Int& which, Float &pa);
-    Bool searchConvFunction(const VisBuffer& vb, ParAngleChangeDetector& vpSJ, 
-			    Int& which, Float &pa);
-    Bool loadConvFunction(Int where, Int Nx, PtrBlock < Array<Complex> *> & convFuncCache,
-			  Cube<Int> &convSupport, Vector<Float>& convSampling,
-			  Double& cfRefFreq,CoordinateSystem& coordys, String prefix="/CF");
+    void cacheConvFunction(casacore::Int which, casacore::Float pa, casacore::Array<casacore::Complex>& cf, casacore::CoordinateSystem& coords,
+			   casacore::CoordinateSystem& ftcoords, casacore::Int& convSize, casacore::Cube<casacore::Int>& convSupport, 
+			   casacore::Float convSampling, casacore::String nameQualifier="",casacore::Bool savePA=true);
+    void cacheWeightsFunction(casacore::Int which, casacore::Float pa, casacore::Array<casacore::Complex>& cfWt, casacore::CoordinateSystem& coords,
+			      casacore::Int& convSize, casacore::Cube<casacore::Int>& convSupport, casacore::Float convSampling);
+    casacore::Bool searchConvFunction(const VisBuffer& vb, VPSkyJones& vpSJ, casacore::Int& which, casacore::Float &pa);
+    casacore::Bool searchConvFunction(const VisBuffer& vb, ParAngleChangeDetector& vpSJ, 
+			    casacore::Int& which, casacore::Float &pa);
+    casacore::Bool loadConvFunction(casacore::Int where, casacore::Int Nx, casacore::PtrBlock < casacore::Array<casacore::Complex> *> & convFuncCache,
+			  casacore::Cube<casacore::Int> &convSupport, casacore::Vector<casacore::Float>& convSampling,
+			  casacore::Double& cfRefFreq,casacore::CoordinateSystem& coordys, casacore::String prefix="/CF");
     void finalize();
-    void finalize(ImageInterface<Float>& avgPB);
-    void loadAvgPB(ImageInterface<Float>& avgPB);
+    void finalize(casacore::ImageInterface<casacore::Float>& avgPB);
+    void loadAvgPB(casacore::ImageInterface<casacore::Float>& avgPB);
   private:
-    Vector<Float> paList, Sampling;
-    Cube<Int> XSup, YSup;
-    String Dir, cfPrefix, aux;
+    casacore::Vector<casacore::Float> paList, Sampling;
+    casacore::Cube<casacore::Int> XSup, YSup;
+    casacore::String Dir, cfPrefix, aux;
   };
 }
 

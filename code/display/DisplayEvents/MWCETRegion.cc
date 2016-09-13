@@ -38,10 +38,11 @@
 // this include:
 #include <display/DisplayEvents/MWCETRegion.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	MWCETRegion::MWCETRegion(Display::KeySym keysym) :
-		MWCEllipseTool(keysym, True) {
+		MWCEllipseTool(keysym, true) {
 	}
 
 	MWCETRegion::~MWCETRegion() {

@@ -29,6 +29,7 @@
 #include <plotms/Plots/PlotMSPlot.h>
 #include <QDebug>
 
+using namespace casacore;
 namespace casa {
 
 ThreadController::ThreadController(ProgressMonitor* progress,
@@ -160,4 +161,5 @@ ThreadController::~ThreadController() {
 	delete bgThread;
 }
 
+using namespace casacore;
 } /* namespace casa */

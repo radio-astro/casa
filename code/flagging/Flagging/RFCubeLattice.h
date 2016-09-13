@@ -92,17 +92,17 @@ template<class T> class RFCubeLatticeIterator
     void reset();
 
     // advances internal iterator to specified slot along the Z axis
-    void advance( uInt iz );
+    void advance( casacore::uInt iz );
     
     // returns position of internal iterator
-    uInt position ()                 
+    casacore::uInt position ()                 
       { return iter_pos; }
         
     // returns element at i,j of cursor
-    T operator () ( uInt i,uInt j ) const;
+    T operator () ( casacore::uInt i,casacore::uInt j ) const;
 
-    void set( uInt i, uInt j, const T &val );
-    void set( uInt ichan, uInt ifr, uInt icorrs, bool val );
+    void set( casacore::uInt i, casacore::uInt j, const T &val );
+    void set( casacore::uInt ichan, casacore::uInt ifr, casacore::uInt icorrs, bool val );
 
     void flush_curs();
 };
@@ -130,12 +130,12 @@ template<class T> class RFCubeLatticeIterator
 // single giant block.
 // Each element of the matrices is a few bits, therefore (in order to
 // save memory), the full matrix is represented as a bitsequence, which
-// is converted to Matrix<T> on the fly.
+// is converted to casacore::Matrix<T> on the fly.
 //
-// The buffer is no longer implemented using a TempLattice because the
-// template parameter to TempLattice is restricted to certain types, and
-// cannot be dynamic_bitset<>. Besides, TempLattice is currently(?)
-// *not* well implemented: it creates TempLattice disk files although most
+// The buffer is no longer implemented using a casacore::TempLattice because the
+// template parameter to casacore::TempLattice is restricted to certain types, and
+// cannot be dynamic_bitset<>. Besides, casacore::TempLattice is currently(?)
+// *not* well implemented: it creates casacore::TempLattice disk files although most
 // of the RAM is free.
 //
 // If more memory than avilable RAM is requested, swapping will occur.
@@ -162,7 +162,7 @@ template<class T> class RFCubeLatticeIterator
 template<class T> class RFCubeLattice
 {
 protected:
-  IPosition                              lat_shape;
+  casacore::IPosition                              lat_shape;
   std::vector<std::vector<bool> >        lat;
   RFCubeLatticeIterator<T>               iter;
   unsigned n_chan, n_ifr, n_time, n_bit, n_corr;
@@ -171,50 +171,50 @@ public:
 // default constructor creates empty cube
   RFCubeLattice();
 // creates NX x NY x NZ cube
-  RFCubeLattice( uInt nx,uInt ny,uInt nz, uInt ncorr, uInt nAgent );
+  RFCubeLattice( casacore::uInt nx,casacore::uInt ny,casacore::uInt nz, casacore::uInt ncorr, casacore::uInt nAgent );
 // creates NX x NY x NZ cube and fills with initial value
-  RFCubeLattice( uInt nx,uInt ny,uInt nz, uInt ncorr, uInt nAgent, const T &init_val );
+  RFCubeLattice( casacore::uInt nx,casacore::uInt ny,casacore::uInt nz, casacore::uInt ncorr, casacore::uInt nAgent, const T &init_val );
 // destructor
   ~RFCubeLattice();
 
 // creates NX x NY x NZ cube
 // tile_mb is the tile size, in MB (when using paging)
-  void init ( uInt nx,uInt ny,uInt nz, uInt ncorr, uInt nAgent );
+  void init ( casacore::uInt nx,casacore::uInt ny,casacore::uInt nz, casacore::uInt ncorr, casacore::uInt nAgent );
 // creates NX x NY x NZ cube and fills with initial value
 // tile_mb is the tile size, in MB (when using paging)
-  void init ( uInt nx,uInt ny,uInt nz, uInt ncorr, uInt nAgent, const T &init_val );
+  void init ( casacore::uInt nx,casacore::uInt ny,casacore::uInt nz, casacore::uInt ncorr, casacore::uInt nAgent, const T &init_val );
 // destroys cube
   void cleanup ();
 // returns size of cube
-  static uInt estimateMemoryUse ( uInt nx,uInt ny,uInt nz )
+  static casacore::uInt estimateMemoryUse ( casacore::uInt nx,casacore::uInt ny,casacore::uInt nz )
         { return nx*ny*nz*sizeof(T)/(1024*1024) + 1; }
 
 // resets the lattice iterator to beginning. 
-  //Matrix<T> * reset( Bool will_read=True,
-  //                   Bool will_write=True );  
+  //casacore::Matrix<T> * reset( casacore::Bool will_read=true,
+  //                   casacore::Bool will_write=true );  
   void reset();
   
 // advances internal iterator to specified slot along the Z axis
-  void advance( Int iz )   { iter.advance(iz); };
+  void advance( casacore::Int iz )   { iter.advance(iz); };
   
 // returns position of internal iterator
-  Int position ()                 { return iter.position(); }
+  casacore::Int position ()                 { return iter.position(); }
   
 // returns shape
-  IPosition & shape ()      { return lat_shape; }
+  casacore::IPosition & shape ()      { return lat_shape; }
   
 // returns element at i,j of cursor
-  T operator () ( uInt i,uInt j ) const { return iter(i,j); }
+  T operator () ( casacore::uInt i,casacore::uInt j ) const { return iter(i,j); }
   
   // sets element at i, j of cursor
-  void set( uInt i, uInt j, const T &val ) 
+  void set( casacore::uInt i, casacore::uInt j, const T &val ) 
     { iter.set(i, j, val); }
 
-  void set( uInt ichan, uInt ifr, uInt icorr, bool val) 
+  void set( casacore::uInt ichan, casacore::uInt ifr, casacore::uInt icorr, bool val) 
     { iter.set(ichan, ifr, icorr, val); }
 
   // sets element for all (ichan, icorr)
-  void set_column( uInt ifr, const T &val );
+  void set_column( casacore::uInt ifr, const T &val );
 
 // provides access to lattice itself  
 //  std::vector<std::vector<bool> > & lattice()    { return lat; }

@@ -76,8 +76,8 @@ public:
     
     // Gets/Sets the currently set color on the widget as a String.
     // <group>
-    String getColorString() const;
-    void setColor(const String& color);
+    casacore::String getColorString() const;
+    void setColor(const casacore::String& color);
     // </group>
     
 private:
@@ -100,7 +100,7 @@ class PlotFillWidget : public QtPlotWidget, Ui::FillWidget {
 public:
     // Constructor which takes a PlotFactory, a flag for whether or not to show
     // an alpha spinner in the color widget, and an optional parent widget.
-    PlotFillWidget(PlotFactoryPtr factory, bool showAlpha = false, String fillColor="blue",
+    PlotFillWidget(PlotFactoryPtr factory, bool showAlpha = false, casacore::String fillColor="blue",
             QWidget* parent = NULL);
     
     // Destructor.

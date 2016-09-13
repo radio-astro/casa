@@ -43,17 +43,17 @@ public:
 	 * @param axis the axis where the label change is ocurring.
 	 * @param title the new label for the axis.
 	 */
-	virtual void setAxisLabel(PlotAxis axis, const String& title) = 0;
+	virtual void setAxisLabel(PlotAxis axis, const casacore::String& title) = 0;
 	/**
 	 * New format for displaying dates.
 	 * @param dateFormat the new format to use for displaying dates.
 	 */
-	virtual void setDateFormat(const String& dateFormat) = 0;
+	virtual void setDateFormat(const casacore::String& dateFormat) = 0;
 	/**
 	 * New format for displaying dates based off a given start position.
 	 * @param dateFormat the new format for displaying relative dates.
 	 */
-	virtual void setRelativeDateFormat(const String& dateFormat) = 0;
+	virtual void setRelativeDateFormat(const casacore::String& dateFormat) = 0;
 	/**
 	 * Set a new scale for the plot axis (logarithmic, etc).
 	 * @param axis, the PlotAxis to which the scale applies.

@@ -28,6 +28,7 @@
 #include <casa/Exceptions/Error.h>
 #include <display/DisplayEvents/DisplayTool.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Destructor.

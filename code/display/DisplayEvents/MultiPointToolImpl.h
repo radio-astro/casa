@@ -64,7 +64,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // ------------------------------------------------------------------------
 // This class finalises the functionality in MWCPointTool to
 // implement event-based drawing of elliptical regions on a
-// WorldCanvas.  Double clicking inside the constructed point
+// WorldCanvas.  casacore::Double clicking inside the constructed point
 // emits the region, whilst pressing Escape cancels the region.
 // </synopsis>
 
@@ -104,10 +104,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void regionReady() { };
 
 		// get the world coords of the current elliptical region
-		void getWorldCoords(Vector<Double> &blc, Vector<Double> &trc);
+		void getWorldCoords(casacore::Vector<casacore::Double> &blc, casacore::Vector<casacore::Double> &trc);
 
 		// get the linear coords of the current elliptical region
-		void getLinearCoords(Vector<Double> &blc, Vector<Double> &trc);
+		void getLinearCoords(casacore::Vector<casacore::Double> &blc, casacore::Vector<casacore::Double> &trc);
 
 	};
 

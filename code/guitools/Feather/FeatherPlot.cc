@@ -40,6 +40,7 @@
 #include <qwt_scale_draw.h>
 //#include <qwt_legend_item.h>
 
+using namespace casacore;
 namespace casa {
 
 const QString FeatherPlot::Y_EQUALS_X = "y=x";
@@ -501,4 +502,5 @@ void FeatherPlot::addCurve( QVector<double> xValues, QVector<double> yValues,
 	curve->setCurveData( xValues, yValues );
 	setCurveData( curve, yAxis );
 }
+using namespace casacore;
 } /* namespace casa */

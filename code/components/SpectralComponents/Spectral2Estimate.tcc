@@ -39,23 +39,23 @@ namespace casa { //#Begin namespace casa
 
 //# Member templates
 template <class MT>
-const SpectralList &SpectralEstimate::estimate(const Vector<MT> &prof,
-					       Vector<MT> *der) {
+const SpectralList &SpectralEstimate::estimate(const casacore::Vector<MT> &prof,
+					       casacore::Vector<MT> *der) {
 	  if (prof.nelements() != lprof_p) {
     delete [] deriv_p; deriv_p = 0; lprof_p = 0;
     lprof_p = prof.nelements();
-    deriv_p = new Double[lprof_p];
+    deriv_p = new casacore::Double[lprof_p];
   };
   // Check if signal in window
   if (!window(prof)) return slist_p;
   // Limit window
-  windowEnd_p = min(windowEnd_p+q_p , Int(lprof_p)); 
-  windowLow_p = max(windowLow_p-q_p , 0 );
+  windowEnd_p = casacore::min(windowEnd_p+q_p , casacore::Int(lprof_p));
+  windowLow_p = casacore::max(windowLow_p-q_p , 0 );
   // Get the second derivatives
   findc2(prof);
   // Next for debugging
   if (der) {
-    for (uInt i=0; i<lprof_p; i++) (*der)[i] = deriv_p[i];
+    for (casacore::uInt i=0; i<lprof_p; i++) (*der)[i] = deriv_p[i];
   };
   // Find the estimates (sorted)
   findga(prof);
@@ -64,21 +64,21 @@ const SpectralList &SpectralEstimate::estimate(const Vector<MT> &prof,
 }
 
 template <class MT>
-const SpectralList& SpectralEstimate::estimate(const Vector<MT>& x,
-                                               const Vector<MT>& y)
+const SpectralList& SpectralEstimate::estimate(const casacore::Vector<MT>& x,
+                                               const casacore::Vector<MT>& y)
 {
   if (x.nelements() != y.nelements()) {
-     throw(AipsError("Abcissa and ordinate vectors must be the same length"));
+     throw(casacore::AipsError("Abcissa and ordinate vectors must be the same length"));
   }
   if (x.nelements()==1) {
-     throw(AipsError("Not enough elements in vectors")); 
+     throw(casacore::AipsError("Not enough elements in vectors")); 
   }
   // Get pixel-based estimate (into slist_p)
   estimate(y);
   // Convert
-  for (uInt i=0; i<slist_p.nelements(); i++) {
+  for (casacore::uInt i=0; i<slist_p.nelements(); i++) {
 	  if (slist_p[i]->getType() != SpectralElement::GAUSSIAN) {
-		  throw AipsError("Non-gaussian spectral types cannot be estimated");
+		  throw casacore::AipsError("Non-gaussian spectral types cannot be estimated");
 	  }
 	  const GaussianSpectralElement elIn = *dynamic_cast<const GaussianSpectralElement *>(slist_p[i]);
 	  GaussianSpectralElement elOut = convertElement (x, elIn);
@@ -89,21 +89,21 @@ const SpectralList& SpectralEstimate::estimate(const Vector<MT>& x,
 
 
 template <class MT>
-uInt SpectralEstimate::window(const Vector<MT> &prof) {
+casacore::uInt SpectralEstimate::window(const casacore::Vector<MT> &prof) {
   windowLow_p =0;
   windowEnd_p = 0;
   if (!useWindow_p || rms_p <= 0.0 || lprof_p == 0) {
     if (regionEnd_p) {
-      windowLow_p = min(max(0,regionLow_p),Int(lprof_p));
-      windowEnd_p = min(regionEnd_p, Int(lprof_p));
+      windowLow_p = casacore::min(casacore::max(0,regionLow_p),casacore::Int(lprof_p));
+      windowEnd_p = casacore::min(regionEnd_p, casacore::Int(lprof_p));
     } else windowEnd_p = lprof_p;
     return windowEnd_p-windowLow_p;
   };
   // Total flux in profile and max position
-  Double flux(0.0);
-  Double pmax(prof(0));
-  uInt imax(0);
-  for (Int i=windowLow_p; i<windowEnd_p; i++) {
+  casacore::Double flux(0.0);
+  casacore::Double pmax(prof(0));
+  casacore::uInt imax(0);
+  for (casacore::Int i=windowLow_p; i<windowEnd_p; i++) {
     if (prof(i)>pmax) {
       pmax = prof(i);
       imax = i;
@@ -113,20 +113,20 @@ uInt SpectralEstimate::window(const Vector<MT> &prof) {
   // No data
   if (pmax < cutoff_p) return 0;
   // Window boundaries; new/old base and centre; width
-  Int width(-1);
-  Int nw(0);
-  Double bnew(flux), bold;
-  Double cnew(imax), cold;
+  casacore::Int width(-1);
+  casacore::Int nw(0);
+  casacore::Double bnew(flux), bold;
+  casacore::Double cnew(imax), cold;
   do {
     width++;
     cold = cnew;
     bold = bnew;
-    windowLow_p = max(0, Int(cold-width+0.5));
-    windowEnd_p = min(Int(lprof_p), Int(cold+width+1.5));
+    windowLow_p = casacore::max(0, casacore::Int(cold-width+0.5));
+    windowEnd_p = casacore::min(casacore::Int(lprof_p), casacore::Int(cold+width+1.5));
     // flux and first moment in window
-    Double s(0);
-    Double c(0);
-    for (Int i=windowLow_p; i<windowEnd_p; i++) {
+    casacore::Double s(0);
+    casacore::Double c(0);
+    for (casacore::Int i=windowLow_p; i<windowEnd_p; i++) {
       s += prof(i);
       c += i*prof(i);
     };
@@ -141,14 +141,14 @@ uInt SpectralEstimate::window(const Vector<MT> &prof) {
 }
 
 template <class MT>
-void SpectralEstimate::findc2(const Vector<MT> &prof) {
-  for (Int i=windowLow_p; i<windowEnd_p; i++) {
+void SpectralEstimate::findc2(const casacore::Vector<MT> &prof) {
+  for (casacore::Int i=windowLow_p; i<windowEnd_p; i++) {
     // Moments
-    Double m0(0.0); 
-    Double m2(0.0); 
-    for (Int j = -q_p; j <= q_p; j++) {
-      Int k = i+j;
-      if (k >= 0 && k<Int(lprof_p)) {
+    casacore::Double m0(0.0); 
+    casacore::Double m2(0.0); 
+    for (casacore::Int j = -q_p; j <= q_p; j++) {
+      casacore::Int k = i+j;
+      if (k >= 0 && k<casacore::Int(lprof_p)) {
 	// add to moments
 	m0 += prof(k);
 	m2 += prof(k)*j*j;
@@ -160,13 +160,13 @@ void SpectralEstimate::findc2(const Vector<MT> &prof) {
 }
 
 template <class MT>
-void SpectralEstimate::findga(const Vector<MT> &prof) {
-	Int i(windowLow_p-1);
+void SpectralEstimate::findga(const casacore::Vector<MT> &prof) {
+	casacore::Int i(windowLow_p-1);
 	// Window on Gaussian
-	Int iclo(windowLow_p);
-	Int ichi(windowLow_p);
+	casacore::Int iclo(windowLow_p);
+	casacore::Int ichi(windowLow_p);
 	// Peak counter
-	Int nmax = 0;
+	casacore::Int nmax = 0;
 	GaussianSpectralElement tspel;
 	while (++i < windowEnd_p) {
         if (deriv_p[i] > 0.0) {
@@ -186,47 +186,47 @@ void SpectralEstimate::findga(const Vector<MT> &prof) {
 			// Found a Gaussian
 		case 2: {
 			// Some moments
-			Double m0m(0);
-			Double m0(0);
-			Double m1(0);
-			Double m2(0);
+			casacore::Double m0m(0);
+			casacore::Double m0(0);
+			casacore::Double m1(0);
+			casacore::Double m2(0);
 			ichi = i;
 			// Do Schwarz' calculation
-			Double b = deriv_p[iclo];
-			Double a = (deriv_p[ichi] - b) / (ichi-iclo);
-			for (Int ic=iclo; ic<=ichi; ic++) {
-				m0m += min(deriv_p[ic], 0.0);
-				Double wi = deriv_p[ic] - a*(ic-iclo) - b;
+			casacore::Double b = deriv_p[iclo];
+			casacore::Double a = (deriv_p[ichi] - b) / (ichi-iclo);
+			for (casacore::Int ic=iclo; ic<=ichi; ic++) {
+				m0m += casacore::min(deriv_p[ic], 0.0);
+				casacore::Double wi = deriv_p[ic] - a*(ic-iclo) - b;
 				m0 += wi;
 				m1 += wi*ic;
 				m2 += wi*ic*ic;
 			};
 			// determinant
-			Double det = m2*m0 - m1*m1;
+			casacore::Double det = m2*m0 - m1*m1;
 			if (det > 0.0 && fabs(m0m) >  FLT_EPSILON) {
-				Double   xm = m1/m0;
-				Double sg = 1.69*sqrt(det) / fabs(m0);
+				casacore::Double   xm = m1/m0;
+				casacore::Double sg = 1.69*sqrt(det) / fabs(m0);
 				// Width above critical?
 				if (sg > sigmin_p) {
-					Int is = Int(1.73*sg+0.5);
-					Int im = Int(xm+0.5);
-					Double yl(0);
+					casacore::Int is = casacore::Int(1.73*sg+0.5);
+					casacore::Int im = casacore::Int(xm+0.5);
+					casacore::Double yl(0);
 					if ((im-is) >= 0) yl = prof(im-is);
-					Double yh(0);
-					if ((im + is) <= Int(lprof_p-1)) yh = prof(im+is);
-					Double ym = prof(im);
+					casacore::Double yh(0);
+					if ((im + is) <= casacore::Int(lprof_p-1)) yh = prof(im+is);
+					casacore::Double ym = prof(im);
                     // modified by dmehringer 2012apr03 to deal with 0 denominator
                     // 0.0/0.0 produces NaN on Linux but 0 on OSX
-                    Double pg = (ym-0.5*(yh+yl));
+                    casacore::Double pg = (ym-0.5*(yh+yl));
 					if (pg != 0) {
-						Double denom = (1.0-exp(-0.5*(is*is)/sg/sg));
+						casacore::Double denom = (1.0-exp(-0.5*(is*is)/sg/sg));
 						if (denom == 0) {
-							throw AipsError("Bailing because division by zero is undefined");
+							throw casacore::AipsError("Bailing because division by zero is undefined");
 						}
 						pg /= denom;
 					}
                     // end dmehring mods
-					pg = min(pg, ym);
+					pg = casacore::min(pg, ym);
 					// cout << "pg " << pg << " cutoff " << cutoff_p << endl;
 					// Above critical level? Add to list
 					if (pg > cutoff_p) {
@@ -251,28 +251,28 @@ void SpectralEstimate::findga(const Vector<MT> &prof) {
 }
 
 template <class MT>
-GaussianSpectralElement SpectralEstimate::convertElement (const Vector<MT>& x,
+GaussianSpectralElement SpectralEstimate::convertElement (const casacore::Vector<MT>& x,
                                                   const GaussianSpectralElement& el) const
 {
 	GaussianSpectralElement elOut = el;
-   const Int& idxMax = x.nelements()-1;
+   const casacore::Int& idxMax = x.nelements()-1;
 
 // Get current (pars are amp, center, width as the SpectralElement
 // will always be a Gaussian)
 
-   Vector<Double> par, err;
+   casacore::Vector<casacore::Double> par, err;
    el.get(par);
    el.getError(err);
 
 // Center
 
-   Int cenIdx = Int(par[1]);
+   casacore::Int cenIdx = casacore::Int(par[1]);
 
 // Get the x-increment, local to the center, as best we can from 
 // the abcissa vector.  The following algorithm assumes the X
 // vector is monotonic
 
-   Double incX;
+   casacore::Double incX;
    if (cenIdx-1<0) {
       incX = x[1] - x[0];
    } else if (cenIdx+1>idxMax) {
@@ -286,7 +286,7 @@ GaussianSpectralElement SpectralEstimate::convertElement (const Vector<MT>& x,
    } else if (cenIdx>idxMax) {
       par[1] = incX*(par[1]-idxMax) + x[idxMax];   // Extrapolate from x[idxMax]
    } else {
-      Double dIdx = par[1] - cenIdx;
+      casacore::Double dIdx = par[1] - cenIdx;
       par[1] = x[cenIdx] + dIdx*incX;              // Interpolate
    }
    err[1] = abs(err[1] * incX);

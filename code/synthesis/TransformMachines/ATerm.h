@@ -66,39 +66,39 @@ namespace casa{
     ATerm ();
     virtual ~ATerm () {};
 
-    virtual String name() = 0;
+    virtual casacore::String name() = 0;
 
-    virtual void makeFullJones(ImageInterface<Complex>& pbImage,
+    virtual void makeFullJones(casacore::ImageInterface<casacore::Complex>& pbImage,
 			       const VisBuffer& vb,
-			       Bool doSquint, Int& bandID, Double freqVal)=0;
+			       casacore::Bool doSquint, casacore::Int& bandID, casacore::Double freqVal)=0;
 
-    virtual void applySky(ImageInterface<Float>& outputImages,
+    virtual void applySky(casacore::ImageInterface<casacore::Float>& outputImages,
 			  const VisBuffer& vb, 
-			  const Bool doSquint=True,
-			  const Int& cfKey=0,
-			  const Int& muellerTerm=0,
-			  const Double freqVal=-1.0) = 0;
-    virtual void applySky(ImageInterface<Complex>& outputImages,
+			  const casacore::Bool doSquint=true,
+			  const casacore::Int& cfKey=0,
+			  const casacore::Int& muellerTerm=0,
+			  const casacore::Double freqVal=-1.0) = 0;
+    virtual void applySky(casacore::ImageInterface<casacore::Complex>& outputImages,
 			  const VisBuffer& vb, 
-			  const Bool doSquint=True,
-			  const Int& cfKey=0,
-			  const Int& muellerTerm=0,
-			  const Double freqVal=-1.0) = 0;
-    virtual void applySky(ImageInterface<Complex>& outImages,
-			  const Double& pa,
-			  const Bool doSquint,
-			  const Int& cfKey,
-			  const Int& muellerTerm,
-			  const Double freqVal)=0;
+			  const casacore::Bool doSquint=true,
+			  const casacore::Int& cfKey=0,
+			  const casacore::Int& muellerTerm=0,
+			  const casacore::Double freqVal=-1.0) = 0;
+    virtual void applySky(casacore::ImageInterface<casacore::Complex>& outImages,
+			  const casacore::Double& pa,
+			  const casacore::Bool doSquint,
+			  const casacore::Int& cfKey,
+			  const casacore::Int& muellerTerm,
+			  const casacore::Double freqVal)=0;
 
     //
     // Not sure if the following method is requried.  Leaving it in
     // the code for now with an implementation that does nothing.
     //
-    // virtual void applySky(Matrix<Complex>& screen, const Int wPixel, 
-    // 			  const Vector<Double>& sampling,
-    // 			  const Int wConvSize, const Double wScale,
-    // 			  const Int inner) 
+    // virtual void applySky(casacore::Matrix<casacore::Complex>& screen, const casacore::Int wPixel, 
+    // 			  const casacore::Vector<casacore::Double>& sampling,
+    // 			  const casacore::Int wConvSize, const casacore::Double wScale,
+    // 			  const casacore::Int inner) 
     // {(void)screen; (void)wPixel; (void)sampling; (void)wConvSize; (void)wScale; (void)inner;};
 
     //
@@ -113,32 +113,32 @@ namespace casa{
     // and for all arrays where not all antenna aperture illuminations
     // can be treated as identical.
     //
-    virtual Int makePBPolnCoords(const VisBuffer& vb,
-				 const Int& convSize,
-				 const Int& convSampling,
-				 const CoordinateSystem& skyCoord,
-				 const Int& skyNx, const Int& skyNy,
-				 CoordinateSystem& feedCoord)
+    virtual casacore::Int makePBPolnCoords(const VisBuffer& vb,
+				 const casacore::Int& convSize,
+				 const casacore::Int& convSampling,
+				 const casacore::CoordinateSystem& skyCoord,
+				 const casacore::Int& skyNx, const casacore::Int& skyNy,
+				 casacore::CoordinateSystem& feedCoord)
     {
       return makePBPolnCoords(vb.corrType(), convSize, convSampling, skyCoord,
 			      skyNx, skyNy, feedCoord);
     };
-    virtual Int makePBPolnCoords(const Vector<Int>& vbCorrTypes,
-				 const Int& convSize,
-				 const Int& convSampling,
-				 const CoordinateSystem& skyCoord,
-				 const Int& skyNx, const Int& skyNy,
-				 CoordinateSystem& feedCoord);
+    virtual casacore::Int makePBPolnCoords(const casacore::Vector<casacore::Int>& vbCorrTypes,
+				 const casacore::Int& convSize,
+				 const casacore::Int& convSampling,
+				 const casacore::CoordinateSystem& skyCoord,
+				 const casacore::Int& skyNx, const casacore::Int& skyNy,
+				 casacore::CoordinateSystem& feedCoord);
 
 
-    virtual Vector<Int> vbRow2CFKeyMap(const VisBuffer& vb, Int& nUnique)
-    {Vector<Int> tmp; tmp.resize(vb.nRow()); tmp=0; nUnique=1; return tmp;}
+    virtual casacore::Vector<casacore::Int> vbRow2CFKeyMap(const VisBuffer& vb, casacore::Int& nUnique)
+    {casacore::Vector<casacore::Int> tmp; tmp.resize(vb.nRow()); tmp=0; nUnique=1; return tmp;}
 
-    virtual void getPolMap(Vector<Int>& polMap) {polMap.resize(0); polMap = polMap_p_base;};
-    virtual Vector<Int> getAntTypeList() {Vector<Int> tt(1);tt(0)=0;return tt;};
-    virtual Int getConvSize() ;
+    virtual void getPolMap(casacore::Vector<casacore::Int>& polMap) {polMap.resize(0); polMap = polMap_p_base;};
+    virtual casacore::Vector<casacore::Int> getAntTypeList() {casacore::Vector<casacore::Int> tt(1);tt(0)=0;return tt;};
+    virtual casacore::Int getConvSize() ;
     // {
-    //   Int defaultConvSize=CONVSIZE;
+    //   casacore::Int defaultConvSize=CONVSIZE;
     //   defaultConvSize= SynthesisUtils::getenv("CONVSIZE",CONVSIZE);
     //   // if (envStr != "")
     //   // 	{
@@ -148,9 +148,9 @@ namespace casa{
     //   return defaultConvSize;
     // };
 
-    virtual Int getOversampling() ;
+    virtual casacore::Int getOversampling() ;
     // {
-    //   Int defaultOverSampling=OVERSAMPLING;
+    //   casacore::Int defaultOverSampling=OVERSAMPLING;
     //   char *envStr;
     //   if ((envStr = getenv("OVERSAMPLING")) != NULL)
     // 	{
@@ -159,26 +159,26 @@ namespace casa{
     // 	}
     //   return defaultOverSampling;
     // }
-    virtual Float getConvWeightSizeFactor() {return CONVWTSIZEFACTOR;};
-    virtual Float getSupportThreshold() {return THRESHOLD;};
+    virtual casacore::Float getConvWeightSizeFactor() {return CONVWTSIZEFACTOR;};
+    virtual casacore::Float getSupportThreshold() {return THRESHOLD;};
 
-    // virtual Vector<Int> vbRow2CFKeyMap(const VisBuffer& vb, Int& nUnique) = 0;
-    // virtual Int getConvSize() = 0;
-    // virtual Int getOversampling() = 0;
-    // virtual Float getConvWeightSizeFactor() = 0;
-    // virtual Float getSupportThreshold() = 0;
+    // virtual casacore::Vector<casacore::Int> vbRow2CFKeyMap(const VisBuffer& vb, casacore::Int& nUnique) = 0;
+    // virtual casacore::Int getConvSize() = 0;
+    // virtual casacore::Int getOversampling() = 0;
+    // virtual casacore::Float getConvWeightSizeFactor() = 0;
+    // virtual casacore::Float getSupportThreshold() = 0;
 
-    virtual void normalizeImage(Lattice<Complex>& skyImage,
-				const Matrix<Float>& weights) 
+    virtual void normalizeImage(casacore::Lattice<casacore::Complex>& skyImage,
+				const casacore::Matrix<casacore::Float>& weights) 
     {
       (void)skyImage;(void)weights;
-      throw(AipsError("Make ATerm::normalizeImage() pure virtual and implement in specializations"));
+      throw(casacore::AipsError("Make ATerm::normalizeImage() pure virtual and implement in specializations"));
     };
 
     virtual void cacheVBInfo(const VisBuffer& vb) = 0;
-    virtual void cacheVBInfo(const String& telescopeName, const Float& diameter)=0;
-    virtual Int getBandID(const Double& freq, const String& telescopeName) = 0;
-    virtual int getVisParams(const VisBuffer& vb, const CoordinateSystem& skyCoord=CoordinateSystem()) = 0;
+    virtual void cacheVBInfo(const casacore::String& telescopeName, const casacore::Float& diameter)=0;
+    virtual casacore::Int getBandID(const casacore::Double& freq, const casacore::String& telescopeName) = 0;
+    virtual int getVisParams(const VisBuffer& vb, const casacore::CoordinateSystem& skyCoord=casacore::CoordinateSystem()) = 0;
     //
     // The mapping from VisBuffer polarizations map to the Image plane
     // polarization.  The latter is determined by the user input,
@@ -187,22 +187,22 @@ namespace casa{
     // The map is available in the FTMachine which uses this method to
     // set the map for the ATerm object.
     //
-    virtual void setPolMap(const Vector<Int>& polMap) {polMap_p_base.resize(0);polMap_p_base=polMap;}
+    virtual void setPolMap(const casacore::Vector<casacore::Int>& polMap) {polMap_p_base.resize(0);polMap_p_base=polMap;}
     //    virtual void rotate(const VisBuffer& vb, CFStore2& cfs)=0;
-    virtual void rotate(const VisBuffer& vb, CFCell& cfc, const Double& rotAngleIncrement=5.0)=0;
-    virtual void rotate2(const VisBuffer& vb, CFCell& baseCFS, CFCell& cfc, const Double& rotAngleIncrement=5.0)=0;
-    virtual Int mapAntIDToAntType(const Int& /*ant*/) {return 0;};
-    String getTelescopeName() {return telescopeName_p;};
-    virtual Bool rotationallySymmetric() {return True;};
+    virtual void rotate(const VisBuffer& vb, CFCell& cfc, const casacore::Double& rotAngleIncrement=5.0)=0;
+    virtual void rotate2(const VisBuffer& vb, CFCell& baseCFS, CFCell& cfc, const casacore::Double& rotAngleIncrement=5.0)=0;
+    virtual casacore::Int mapAntIDToAntType(const casacore::Int& /*ant*/) {return 0;};
+    casacore::String getTelescopeName() {return telescopeName_p;};
+    virtual casacore::Bool rotationallySymmetric() {return true;};
 
   protected:
-    LogIO& logIO() {return logIO_p;}
-    LogIO logIO_p;
-    Vector<Int> polMap_p_base;
-    Int cachedOverSampling_p, cachedConvSize_p;
+    casacore::LogIO& logIO() {return logIO_p;}
+    casacore::LogIO logIO_p;
+    casacore::Vector<casacore::Int> polMap_p_base;
+    casacore::Int cachedOverSampling_p, cachedConvSize_p;
 
-    Float Diameter_p, Nant_p, HPBW, sigma;
-    String telescopeName_p;
+    casacore::Float Diameter_p, Nant_p, HPBW, sigma;
+    casacore::String telescopeName_p;
   };
 
 };

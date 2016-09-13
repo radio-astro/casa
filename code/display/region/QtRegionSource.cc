@@ -43,6 +43,7 @@
 #include <imageanalysis/Annotations/AnnPolyline.h>
 #include <measures/Measures/MCDirection.h>
 
+using namespace casacore;
 namespace casa {
 	namespace viewer {
 
@@ -353,7 +354,7 @@ namespace casa {
 
 			try {
 				RegionTextList region_list( path.toAscii( ).constData( ), viewer_cs, shape);
-				const casa::Vector<AsciiAnnotationFileLine> &lines = region_list.getLines( );
+				const casacore::Vector<AsciiAnnotationFileLine> &lines = region_list.getLines( );
 				for ( uInt i=0; i < lines.size( ); ++i ) {
 					if ( lines[i].getType() == AsciiAnnotationFileLine::ANNOTATION ) {
 						CountedPtr<const AnnotationBase> annotation = lines[i].getAnnotationBase();
@@ -400,14 +401,14 @@ namespace casa {
 			if ( ann_cstype == MDirection::EXTRA ) return;
 
 			// get BLC, TRC as quantities... <mdirection>
-			casa::Vector<MDirection> corners = rectangle->getCorners();
+			casacore::Vector<MDirection> corners = rectangle->getCorners();
 			if ( corners.size() != 2 ) return;
 
 			// convert to the viewer's world coordinates... <mdirection>
 			MDirection blcmd = MDirection::Convert(MDirection(corners[0].getAngle("rad"),ann_cstype), cstype)();
-			casa::Quantum<casa::Vector<double> > blcq = blcmd.getAngle("rad");
+			casacore::Quantum<casacore::Vector<double> > blcq = blcmd.getAngle("rad");
 			MDirection trcmd = MDirection::Convert(MDirection(corners[1].getAngle("rad"),ann_cstype), cstype)();
-			casa::Quantum<casa::Vector<double> > trcq = trcmd.getAngle("rad");
+			casacore::Quantum<casacore::Vector<double> > trcq = trcmd.getAngle("rad");
 			std::vector<std::pair<double,double> > pts(2);
 			try {
 				world_to_linear( wc,blcq.getValue( )(0),blcq.getValue( )(1),trcq.getValue( )(0),trcq.getValue( )(1),
@@ -439,7 +440,7 @@ namespace casa {
 
 			// convert to the viewer's world coordinates... <mdirection>
 			MDirection dir_center = MDirection::Convert(ellipse->getCenter( ), cstype)();
-			casa::Vector<double> center = dir_center.getAngle("rad").getValue( );
+			casacore::Vector<double> center = dir_center.getAngle("rad").getValue( );
 			// 90 deg around 0 & 180 deg
 			const double major_radius = ellipse->getSemiMajorAxis().getValue("rad");
 			const double minor_radius = ellipse->getSemiMinorAxis().getValue("rad");
@@ -480,7 +481,7 @@ namespace casa {
 
 			// get point
 			MDirection dir_point = MDirection::Convert(symbol->getDirection( ), cstype)();
-			casa::Vector<double> point = dir_point.getAngle("rad").getValue( );
+			casacore::Vector<double> point = dir_point.getAngle("rad").getValue( );
 
 			std::vector<std::pair<double,double> > pts(2);
 			try {
@@ -511,13 +512,13 @@ namespace casa {
 			MDirection::Types ann_cstype = get_coordinate_type( polygon->getCsys( ) );
 			if ( ann_cstype == MDirection::EXTRA ) return;
 
-			casa::Vector<MDirection> corners = polygon->getCorners();
+			casacore::Vector<MDirection> corners = polygon->getCorners();
 			if ( corners.size() < 3 ) return;
 
 			std::vector<std::pair<double,double> > pts(corners.size());
 			for ( unsigned int i=0; i < corners.size( ); ++i ) {
 				MDirection corner = MDirection::Convert(corners[i], cstype)();
-				casa::Vector<double> point = corner.getAngle("rad").getValue( );
+				casacore::Vector<double> point = corner.getAngle("rad").getValue( );
 				try {
 					world_to_linear( wc, point[0], point[1], pts[i].first, pts[i].second );
 				} catch(...) {
@@ -546,13 +547,13 @@ namespace casa {
 			MDirection::Types ann_cstype = get_coordinate_type( polyline->getCsys( ) );
 			if ( ann_cstype == MDirection::EXTRA ) return;
 
-			casa::Vector<MDirection> corners = polyline->getCorners();
+			casacore::Vector<MDirection> corners = polyline->getCorners();
 			if ( corners.size() < 2 ) return;
 
 			std::vector<std::pair<double,double> > pts(corners.size());
 			for ( unsigned int i=0; i < corners.size( ); ++i ) {
 				MDirection corner = MDirection::Convert(corners[i], cstype)();
-				casa::Vector<double> point = corner.getAngle("rad").getValue( );
+				casacore::Vector<double> point = corner.getAngle("rad").getValue( );
 				try {
 					world_to_linear( wc, point[0], point[1], pts[i].first, pts[i].second );
 				} catch(...) {

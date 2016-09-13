@@ -46,7 +46,7 @@ class QPButton : public QObject, public PlotButton {
 public:
     // Constructor which takes the button text and whether or not the button
     // should be toggleable.
-    QPButton(const String& text, bool toggleable = false);
+    QPButton(const casacore::String& text, bool toggleable = false);
     
     // Destructor.
     ~QPButton();
@@ -67,10 +67,10 @@ public:
     void setVisible(bool visible = true);
     
     // Implements PlotWidget::tooltip().
-    String tooltip() const;
+    casacore::String tooltip() const;
     
     // Implements PlotWidget::setTooltip().
-    void setTooltip(const String& text);
+    void setTooltip(const casacore::String& text);
     
     
     // PlotButton Methods //
@@ -82,10 +82,10 @@ public:
     void showText(bool show = true);
     
     // Implements PlotButton::text().
-    String text() const;
+    casacore::String text() const;
     
     // Implements PlotButton::setText().
-    void setText(const String& text);
+    void setText(const casacore::String& text);
     
     // Implements PlotButton::imageShown().
     bool imageShown() const;
@@ -94,7 +94,7 @@ public:
     void showImage(bool show = true);
     
     // Implements PlotButton::setImagePath().
-    void setImagePath(const String& imgPath);
+    void setImagePath(const casacore::String& imgPath);
     
     // Implements PlotButton::isToggleable().
     bool isToggleable() const;
@@ -128,8 +128,8 @@ public:
     
 private:
     QPushButton* m_button; // Button
-    String m_text;         // Text
-    String m_imageLoc;     // Image location
+    casacore::String m_text;         // Text
+    casacore::String m_imageLoc;     // Image location
     
     std::vector<PlotButtonEventHandlerPtr> m_handlers; // Event handlers
     
@@ -148,7 +148,7 @@ class QPCheckbox : public QObject, public PlotCheckbox {
     
 public:
     // Constructor that takes the checkbox text.
-    QPCheckbox(const String& text);
+    QPCheckbox(const casacore::String& text);
     
     // Destructor.
     ~QPCheckbox();
@@ -169,19 +169,19 @@ public:
     void setVisible(bool visible = true);
     
     // Implements PlotWidget::tooltip().
-    String tooltip() const;
+    casacore::String tooltip() const;
     
     // Implements PlotWidget::setTooltip().
-    void setTooltip(const String& text);
+    void setTooltip(const casacore::String& text);
     
     
     // PlotCheckbox Methods //
     
     // Implements PlotCheckbox::text().
-    String text() const;
+    casacore::String text() const;
     
     // Implements PlotCheckbox::setText().
-    void setText(const String& text);
+    void setText(const casacore::String& text);
     
     // Implements PlotCheckbox::isChecked().
     bool isChecked() const;

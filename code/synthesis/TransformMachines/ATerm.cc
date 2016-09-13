@@ -34,6 +34,7 @@
 //
 //---------------------------------------------------------------------
 //
+using namespace casacore;
 namespace casa{
   
   ATerm::ATerm()

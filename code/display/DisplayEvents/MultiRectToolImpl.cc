@@ -38,9 +38,10 @@
 // this include:
 #include <display/DisplayEvents/MultiRectToolImpl.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-	MultiRectToolImpl::MultiRectToolImpl(viewer::RegionSourceFactory *rf, PanelDisplay* pd, Display::KeySym keysym) : MultiRectTool(rf, pd, keysym, True) {  }
+	MultiRectToolImpl::MultiRectToolImpl(viewer::RegionSourceFactory *rf, PanelDisplay* pd, Display::KeySym keysym) : MultiRectTool(rf, pd, keysym, true) {  }
 
 	MultiRectToolImpl::~MultiRectToolImpl() {  }
 

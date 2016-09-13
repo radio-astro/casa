@@ -21,6 +21,7 @@
 
 #include "../SDDoubleCircleGainCalImpl.h"
 
+using namespace casacore;
 using namespace casa;
 using namespace std;
 
@@ -139,7 +140,7 @@ struct ConfigInterface {
    * It receives radius in arcsec and return the calculated radius in rad.
    */
   static Double ConfigureRadius(SDDoubleCircleGainCalImpl &calibrator,
-      Double const radius = 0.21, Bool const auto_radius = False) {
+      Double const radius = 0.21, Bool const auto_radius = false) {
     Double myradius = radius;
     if (auto_radius) {
       Double const diameter = 12.0;
@@ -170,8 +171,8 @@ struct ConfigInterface {
   }
 
   static Int ConfigureSmoothing(SDDoubleCircleGainCalImpl &calibrator,
-      Bool const do_smooth = False, Int const smooth_size = -1,
-      Bool const auto_size = False) {
+      Bool const do_smooth = false, Int const smooth_size = -1,
+      Bool const auto_size = false) {
     Int mysize = smooth_size;
     if (do_smooth) {
       if (auto_size) {
@@ -216,7 +217,7 @@ struct AllFlaggedConfig: public ConfigInterface<AllFlaggedConfig> {
     }
 
     // all data are flagged
-    flag = True;
+    flag = true;
 
     ASSERT_EQ(data.shape(), flag.shape());
   }
@@ -229,7 +230,7 @@ struct PartiallyFlaggedConfig: public ConfigInterface<PartiallyFlaggedConfig> {
       flag.resize(data.shape());
     }
 
-    flag = False;
+    flag = false;
 
     ASSERT_GE(data.shape()[0], 0);
     ASSERT_GE(data.shape()[1], 0);
@@ -238,7 +239,7 @@ struct PartiallyFlaggedConfig: public ConfigInterface<PartiallyFlaggedConfig> {
     for (size_t i = 0; i < num_data; ++i) {
       if (direction(0, i) == 0.0 && direction(1, i) == 0.0) {
         TESTLOG << "flag " << i << endl;
-        flag.xyPlane(i) = True;
+        flag.xyPlane(i) = true;
       }
     }
 
@@ -275,7 +276,7 @@ struct StandardExecutor {
 
     if (flag.empty()) {
       flag_local.resize(data.shape());
-      flag_local = False; // all data are valid
+      flag_local = false; // all data are valid
     } else {
       flag_local.reference(flag);
     }
@@ -310,7 +311,7 @@ struct StandardExecutor {
 //      TESTLOG << "gain (with flag) " << gain_with_flag << endl;
       EXPECT_TRUE(allEQ(gain_time, gain_time_with_flag));
       EXPECT_TRUE(allEQ(gain, gain_with_flag));
-      EXPECT_TRUE(allEQ(gain_flag, False));
+      EXPECT_TRUE(allEQ(gain_flag, false));
     }
   }
 
@@ -329,7 +330,7 @@ private:
         count++;
       }
     }
-    data_index.resize(count, True);
+    data_index.resize(count, true);
   }
 
   static void VerifyGain(Int const smooth_size,
@@ -471,7 +472,7 @@ private:
     for (ssize_t ip = 0; ip < num_pol; ++ip) {
       for (ssize_t ic = 0; ic < num_chan; ++ic) {
         for (size_t i = start; i < end; ++i) {
-          if (flag(ip, ic, i) == False) {
+          if (flag(ip, ic, i) == false) {
             mean(ip, ic) += data(ip, ic, i);
             count(ip, ic) += 1;
           }
@@ -552,7 +553,7 @@ private:
           Double mean_data = 0.0;
           size_t count = 0;
           for (size_t ig = 0; ig < num_data_expected; ++ig) {
-            if (gain_flag(ip, ic, ig) == False) {
+            if (gain_flag(ip, ic, ig) == false) {
               mean_data += smoothed_data(ip, ic, ig);
               count++;
             }
@@ -677,43 +678,43 @@ SDD_TEST(BasicAPITest) {
 //TEST(SDDoubleCircleGainCalImplTest, FailedTest) {
 SDD_TEST(FailedTest) {
   // too small central region, no calibration is done
-  RunTest<StandardConfig, StandardExecutor>(20, 20, 0.01, False, False, -1,
-      False);
+  RunTest<StandardConfig, StandardExecutor>(20, 20, 0.01, false, false, -1,
+      false);
 
   // invalid user-supplied radius
-  RunTest<StandardConfig, ExceptionExecutor>(20, 20, -1.0, False, False, -1,
-      False);
+  RunTest<StandardConfig, ExceptionExecutor>(20, 20, -1.0, false, false, -1,
+      false);
 
   // invalid auto calculated radius
-  RunTest<StandardConfig, ExceptionExecutor>(20, 20, -1.0, True, False, -1,
-      False);
+  RunTest<StandardConfig, ExceptionExecutor>(20, 20, -1.0, true, false, -1,
+      false);
 }
 
 //TEST(SDDoubleCircleGainCalImplTest, CalibrationTest) {
 SDD_TEST(CalibrationNoSmoothingUserSuppliedRadius2) {
   // no smoothing, user-supplied radius
   TESTLOG << "no smoothing, user-supplied radius (2.1)" << endl;
-  RunTest<StandardConfig, StandardExecutor>(20, 20, 2.1, False, False, -1,
-      False);
+  RunTest<StandardConfig, StandardExecutor>(20, 20, 2.1, false, false, -1,
+      false);
 }
 
 SDD_TEST(CalibrationNoSmoothingUserSuppliedRadius3) {
   TESTLOG << "no smoothing, user-supplied radius (3.1)" << endl;
-  RunTest<StandardConfig, StandardExecutor>(20, 20, 3.1, False, False, -1,
-      False);
+  RunTest<StandardConfig, StandardExecutor>(20, 20, 3.1, false, false, -1,
+      false);
 }
 
 SDD_TEST(CalibrationNoSmoothingAutoRadius) {
   // no smoothing, auto radius based on primary beam size
   TESTLOG << "no smoothing, auto radius based on primary beam size" << endl;
-  RunTest<StandardConfig, StandardExecutor>(20, 20, 2.1, True, False, -1,
-      False);
+  RunTest<StandardConfig, StandardExecutor>(20, 20, 2.1, true, false, -1,
+      false);
 }
 
 SDD_TEST(CalibrationDoSmoothing2UserSuppliedRadius2) {
   // do smoothing with size 2, user-supplied radius
   TESTLOG << "do smoothing with size 2, user-supplied radius" << endl;
-  RunTest<StandardConfig, StandardExecutor>(20, 20, 2.1, False, True, 2, False);
+  RunTest<StandardConfig, StandardExecutor>(20, 20, 2.1, false, true, 2, false);
 }
 
 SDD_TEST(CalibrationDoSmoothing1UserSuppliedRadius2) {
@@ -731,6 +732,7 @@ SDD_TEST(CalibrationDoSmoothingLargeUserSuppliedRadius2) {
       << endl;
   RunTest<StandardConfig, StandardExecutor>(20, 20, 2.1, False, True, 100000,
       False);
+
 }
 
 SDD_TEST(CalibrationAutoSmoothingUserSuppliedRadius3) {
@@ -738,7 +740,6 @@ SDD_TEST(CalibrationAutoSmoothingUserSuppliedRadius3) {
   TESTLOG
       << "do smoothing with auto calculated size (which will be 5), user-supplied radius"
       << endl;
-  RunTest<StandardConfig, StandardExecutor>(20, 20, 3.1, False, True, -1, True);
 }
 
 SDD_TEST(CalibrationAutoSmoothingAutoRadius) {

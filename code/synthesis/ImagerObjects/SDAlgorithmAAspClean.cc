@@ -59,6 +59,7 @@
 #include <msvis/MSVis/StokesVector.h>
 
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
   SDAlgorithmAAspClean::SDAlgorithmAAspClean():
@@ -78,10 +79,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SDAlgorithmAAspClean","initializeDeconvolver",WHERE) );
 
-    itsImages->residual()->get( itsMatResidual, True );
-    itsImages->model()->get( itsMatModel, True );
-    itsImages->psf()->get( itsMatPsf, True );
-    itsImages->mask()->get( itsMatMask, True );
+    itsImages->residual()->get( itsMatResidual, true );
+    itsImages->model()->get( itsMatModel, true );
+    itsImages->psf()->get( itsMatPsf, true );
+    itsImages->mask()->get( itsMatMask, true );
 
     /*
     /////////////////
@@ -128,8 +129,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     
     iterdone=cycleNiter;
-    itsImages->residual()->get( itsMatResidual, True );
-    itsImages->model()->get( itsMatModel, True );
+    itsImages->residual()->get( itsMatResidual, true );
+    itsImages->model()->get( itsMatModel, true );
     
     // itsMatModel.putStorage( limage_data, delete_iti );
     // itsMatResidual.putStorage( limageStep_data, delete_its );

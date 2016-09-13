@@ -88,23 +88,27 @@
 #include <unistd.h>
 using namespace std;
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 namespace refim {//# namespace refactor imaging
   
+using namespace casacore;
 using namespace casa;
+using namespace casacore;
 using namespace casa::refim;
+using namespace casacore;
 using namespace casa::vi;
   
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  SynthesisImager::SynthesisImager() : itsMappers(SIMapperCollection()), writeAccess_p(True)
+  SynthesisImager::SynthesisImager() : itsMappers(SIMapperCollection()), writeAccess_p(true)
   {
 
      imwgt_p=VisImagingWeight("natural");
-     imageDefined_p=False;
-     useScratch_p=False;
-     readOnly_p=True;
+     imageDefined_p=false;
+     useScratch_p=false;
+     readOnly_p=true;
 
      mss_p=0;
      vi_p=0;
@@ -173,7 +177,7 @@ using namespace casa::vi;
 
     selectData( pars );
 
-    return True;
+    return true;
   }
   
   Bool SynthesisImager::selectData(const SynthesisParamsSelect& selpars)
@@ -192,7 +196,7 @@ using namespace casa::vi;
     //    cout << "**************** usescr : " << useScratch_p << "     readonly : " << readOnly_p << endl;
     //if you want to use scratch col...make sure they are there
     if(selpars.usescratch && !selpars.readonly){
-      VisSetUtil::addScrCols(thisms, True, False, True, False);
+      VisSetUtil::addScrCols(thisms, true, false, true, false);
       VisModelData::clearModel(thisms);
     }
     if(!selpars.incrmodel && !selpars.usescratch && !selpars.readonly)
@@ -250,7 +254,7 @@ using namespace casa::vi;
     TableExprNode exprNode=thisSelection.toTableExprNode(&thisms);
     if(!(exprNode.isNull()))
       {
-	mss_p.resize(mss_p.nelements()+1, False, True);
+	mss_p.resize(mss_p.nelements()+1, false, true);
 	mss_p[mss_p.nelements()-1]=new const  MeasurementSet(thisms(exprNode));
 	os << "  NRows selected : " << (mss_p[mss_p.nelements()-1])->nrow() << LogIO::POST;
       }
@@ -309,7 +313,7 @@ using namespace casa::vi;
 	throw( AipsError("Error in selectData() : "+x.getMesg()) );
       }
 
-    return True;
+    return true;
 
   }
 
@@ -342,14 +346,14 @@ using namespace casa::vi;
 				    const String convFunc, 
 				    const String startmodel,
 				    // The extra params for WB-AWP
-				    const Bool aTermOn,//    = True,
-				    const Bool psTermOn,//   = True,
-				    const Bool mTermOn,//    = False,
-				    const Bool wbAWP,//      = True,
+				    const Bool aTermOn,//    = true,
+				    const Bool psTermOn,//   = true,
+				    const Bool mTermOn,//    = false,
+				    const Bool wbAWP,//      = true,
 				    const String cfCache,//  = "",
-				    const Bool doPointing,// = False,
-				    const Bool doPBCorr,//   = True,
-				    const Bool conjBeams,//  = True,
+				    const Bool doPointing,// = false,
+				    const Bool doPBCorr,//   = true,
+				    const Bool conjBeams,//  = true,
 				    const Float computePAStep,         //=360.0
 				    const Float rotatePAStep          //=5.0
 				    )
@@ -405,7 +409,7 @@ using namespace casa::vi;
 
   defineImage( impars, gridpars );
 
-  return True;
+  return true;
 }
 
   Bool SynthesisImager::defineImage(SynthesisParamsImage& impars, 
@@ -474,7 +478,7 @@ using namespace casa::vi;
 			   ftm, iftm,
 			   gridpars.distance, gridpars.facets, impars.overwrite,
 			   gridpars.mType, impars.nTaylorTerms);
-	imageDefined_p=True;
+	imageDefined_p=true;
       }
     catch(AipsError &x)
       {
@@ -489,7 +493,7 @@ using namespace casa::vi;
       itsCurrentImages->setModelImage( startmodel );
       }
     */
-    return True;
+    return true;
   }
  
   Bool SynthesisImager::defineImage(CountedPtr<SIImageStore> imstor, 
@@ -500,8 +504,8 @@ using namespace casa::vi;
     // The following call to createFTMachine() uses the
     // following defaults
     //
-    // facets=1, wprojplane=1, padding=1.0, useAutocorr=False, 
-    // useDoublePrec=True, gridFunction=String("SF")
+    // facets=1, wprojplane=1, padding=1.0, useAutocorr=false, 
+    // useDoublePrec=true, gridFunction=String("SF")
     //
     createFTMachine(ftm, iftm, ftmachine);
     
@@ -517,7 +521,7 @@ using namespace casa::vi;
 
     itsMappers.addMapper(  createSIMapper( "default", imstor, ftm, iftm, id ) );
     
-    return True;
+    return true;
   }
 
    ///////////////////////////////////////////////////////////////////////////////////////////
@@ -568,7 +572,7 @@ using namespace casa::vi;
     LogIO os( LogOrigin("SynthesisImager","executeMajorCycle",WHERE) );
 
 
-    Bool lastcycle=False;
+    Bool lastcycle=false;
     if( controlRecord.isDefined("lastcycle") )
       {
 	controlRecord.get( "lastcycle" , lastcycle );
@@ -582,7 +586,7 @@ using namespace casa::vi;
     
     try
       {    
-	runMajorCycle(False, lastcycle);
+	runMajorCycle(false, lastcycle);
 
 	itsMappers.releaseImageLocks();
 
@@ -604,7 +608,7 @@ using namespace casa::vi;
     
       try
       {
-	runMajorCycle(True, False);
+	runMajorCycle(true, false);
 
     	  if(facetsStore_p >1)
 	    {
@@ -772,7 +776,7 @@ using namespace casa::vi;
     		  //this->unlock();
     		  os << LogIO::SEVERE << "Unknown weighting " << type
     				  << LogIO::EXCEPTION;
-    		  return False;
+    		  return false;
     	  }
       }
 	 
@@ -785,7 +789,7 @@ using namespace casa::vi;
 	 
 	 vi_p->useImagingWeight(imwgt_p);
 	 
-	 return True;
+	 return true;
 	 
        }
        catch(AipsError &x)
@@ -794,7 +798,7 @@ using namespace casa::vi;
 	 }
        
        
-       return True;
+       return true;
   }
   
   
@@ -966,7 +970,7 @@ using namespace casa::vi;
 	    blc[1]=(shape[1]-(onepsf.shape()[1]))/2;
 	    trc[1]=onepsf.shape()[1]+blc[1]-1;
 	    Slicer sl(blc, trc, Slicer::endIsLast);
-	    SubImage<Float> sub(*(unFacettedImStore_p->psf(tix)), sl, True);
+	    SubImage<Float> sub(*(unFacettedImStore_p->psf(tix)), sl, true);
 	    sub.copyData(onepsf);
 	  }
       }
@@ -1010,7 +1014,7 @@ using namespace casa::vi;
       else // This field is facetted. Make a list of reference imstores, and add all to the mapper list.
 	{
 	  // First, make sure that full images have been allocated before trying to make references.....
-	  //	  if( ! imstor->checkValidity(True/*psf*/, True/*res*/,True/*wgt*/,True/*model*/,False/*image*/,False/*mask*/,True/*sumwt*/ ) ) 
+	  //	  if( ! imstor->checkValidity(true/*psf*/, true/*res*/,true/*wgt*/,true/*model*/,false/*image*/,false/*mask*/,true/*sumwt*/ ) ) 
 	  //	    { throw(AipsError("Internal Error : Invalid ImageStore for " + imstor->getName())); }
 
 	  // Make and connect the list.
@@ -1031,9 +1035,9 @@ using namespace casa::vi;
   Bool SynthesisImager::toUseWeightImage(CountedPtr<FTMachine>& ftm, String mappertype)
   {
     if( (ftm->name() == "GridFT" || ftm->name() == "WProjectFT")&&(mappertype!="imagemosaic") )  
-      { return False; }
+      { return false; }
     else
-      { return True; }
+      { return true; }
   }
   */
 
@@ -1047,22 +1051,22 @@ using namespace casa::vi;
 					//------------------------------
 					const Int wprojplane,        //=1,
 					const Float padding,         //=1.0,
-					const Bool useAutocorr,      //=False,
-					const Bool useDoublePrec,    //=True,
+					const Bool useAutocorr,      //=false,
+					const Bool useDoublePrec,    //=true,
 					const String gridFunction,   //=String("SF"),
 					//------------------------------
-					const Bool aTermOn,          //= True,
-					const Bool psTermOn,         //= True,
-					const Bool mTermOn,          //= False,
-					const Bool wbAWP,            //= True,
+					const Bool aTermOn,          //= true,
+					const Bool psTermOn,         //= true,
+					const Bool mTermOn,          //= false,
+					const Bool wbAWP,            //= true,
 					const String cfCache,        //= "",
-					const Bool doPointing,       //= False,
-					const Bool doPBCorr,         //= True,
-					const Bool conjBeams,        //= True,
+					const Bool doPointing,       //= false,
+					const Bool doPBCorr,         //= true,
+					const Bool conjBeams,        //= true,
 					const Float computePAStep,         //=360.0
 					const Float rotatePAStep,          //=5.0
 					const String interpolation,  //="linear"
-					const Bool freqFrameValid, //=True
+					const Bool freqFrameValid, //=true
 					const Int cache,             //=1000000000,
 					const Int tile               //=16
 					)
@@ -1110,8 +1114,8 @@ using namespace casa::vi;
       {
 	AlwaysAssert( nTaylorTerms>=1 , AipsError );
 
-	CountedPtr<refim::FTMachine> theMTFT = new refim::MultiTermFTNew( theFT , nTaylorTerms, True/*forward*/ );
-	CountedPtr<refim::FTMachine> theMTIFT = new refim::MultiTermFTNew( theIFT , nTaylorTerms, False/*forward*/ );
+	CountedPtr<refim::FTMachine> theMTFT = new refim::MultiTermFTNew( theFT , nTaylorTerms, true/*forward*/ );
+	CountedPtr<refim::FTMachine> theMTIFT = new refim::MultiTermFTNew( theIFT , nTaylorTerms, false/*forward*/ );
 
 	theFT = theMTFT;
 	theIFT = theMTIFT;
@@ -1126,7 +1130,7 @@ using namespace casa::vi;
 	ROMSColumns msc(*mss_p[0]);
 	Quantity parang(0.0,"deg");
 	Quantity skyposthreshold(0.0,"deg");
-	vp = new VPSkyJones(msc, True,  parang, BeamSquint::NONE,skyposthreshold);
+	vp = new VPSkyJones(msc, true,  parang, BeamSquint::NONE,skyposthreshold);
 
 	Vector<CountedPtr<SkyJones> > skyJonesList(1);
 	skyJonesList(0) = vp;
@@ -1138,8 +1142,8 @@ using namespace casa::vi;
     //// For mode=cubedata, set the freq frame to invalid..
     // get this info from buildCoordSystem
     Vector<Int> tspws(0);
-    //theFT->setSpw( tspws, False );
-    //theIFT->setSpw( tspws, False );
+    //theFT->setSpw( tspws, false );
+    //theIFT->setSpw( tspws, false );
     theFT->setSpw( tspws, freqFrameValid );
     theIFT->setSpw( tspws, freqFrameValid );
 
@@ -1158,18 +1162,18 @@ using namespace casa::vi;
 					   //------------------------------
 					   const Int wprojPlane,        //=1,
 					   const Float,// padding,         //=1.0,
-					   const Bool,// useAutocorr,      //=False,
-					   const Bool useDoublePrec,    //=True,
+					   const Bool,// useAutocorr,      //=false,
+					   const Bool useDoublePrec,    //=true,
 					   const String,// gridFunction,   //=String("SF"),
 					   //------------------------------
-					   const Bool aTermOn,          //= True,
-					   const Bool psTermOn,         //= True,
-					   const Bool mTermOn,          //= False,
-					   const Bool wbAWP,            //= True,
+					   const Bool aTermOn,          //= true,
+					   const Bool psTermOn,         //= true,
+					   const Bool mTermOn,          //= false,
+					   const Bool wbAWP,            //= true,
 					   const String cfCache,        //= "",
-					   const Bool doPointing,       //= False,
-					   const Bool doPBCorr,         //= True,
-					   const Bool conjBeams,        //= True,
+					   const Bool doPointing,       //= false,
+					   const Bool doPBCorr,         //= true,
+					   const Bool conjBeams,        //= true,
 					   const Float computePAStep,   //=360.0
 					   const Float rotatePAStep,    //=5.0
 					   const Int cache,             //=1000000000,
@@ -1201,8 +1205,8 @@ using namespace casa::vi;
     //
     // Selectively switch off CFTerms.
     //
-    if (aTermOn == False) {apertureFunction->setOpCode(refim::CFTerms::NOOP);}
-    if (psTermOn == False) psTerm->setOpCode(refim::CFTerms::NOOP);
+    if (aTermOn == false) {apertureFunction->setOpCode(refim::CFTerms::NOOP);}
+    if (psTermOn == false) psTerm->setOpCode(refim::CFTerms::NOOP);
 
     //
     // Construct the CF object with appropriate CFTerms.
@@ -1238,8 +1242,8 @@ using namespace casa::vi;
     theFT = new refim::AWProjectWBFTNew(wprojPlane, cache/2, 
 			      cfCacheObj, awConvFunc, 
 			      visResampler,
-			      /*True */doPointing, doPBCorr, 
-			      tile, computePAStep, pbLimit_l, True,conjBeams,
+			      /*true */doPointing, doPBCorr, 
+			      tile, computePAStep, pbLimit_l, true,conjBeams,
 			      useDoublePrec);
 
     Quantity rotateOTF(rotatePAStep,"deg");
@@ -1249,8 +1253,8 @@ using namespace casa::vi;
     // theIFT = new AWProjectWBFT(wprojPlane, cache/2, 
     // 			       cfCacheObj, awConvFunc, 
     // 			       visResampler,
-    // 			       /*True */doPointing, doPBCorr, 
-    // 			       tile, computePAStep, pbLimit_l, True,conjBeams,
+    // 			       /*true */doPointing, doPBCorr, 
+    // 			       tile, computePAStep, pbLimit_l, true,conjBeams,
     // 			       useDoublePrec);
 
     // static_cast<AWProjectWBFT &>(*theIFT).setObservatoryLocation(mLocation_p);

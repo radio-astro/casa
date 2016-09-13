@@ -71,13 +71,13 @@ namespace casa {
 class SearchEngine
 {
 public:
-	// <src>table</src> Input spectral line table to search.
-	// <src>list</src> List result set of search to logger (and optional logfile)?
-	// <src>logfile</src> Logfile to list results to. Only used if list=True. If empty, no logfile is created.
-	// <src>append</src> Append results to logfile (True) or overwrite logfile (False) if it exists? Only used if list=True and logfile not empty.
+	// <src>table</src> casacore::Input spectral line table to search.
+	// <src>list</src> casacore::List result set of search to logger (and optional logfile)?
+	// <src>logfile</src> Logfile to list results to. Only used if list=true. If empty, no logfile is created.
+	// <src>append</src> Append results to logfile (true) or overwrite logfile (false) if it exists? Only used if list=true and logfile not empty.
 	SearchEngine(
-		const SplatalogueTable* const table, const Bool list,
-		const String& logfile, const Bool append
+		const SplatalogueTable* const table, const casacore::Bool list,
+		const casacore::String& logfile, const casacore::Bool append
 	);
 
 	//destuctor
@@ -85,40 +85,40 @@ public:
 
 	// Search the table. It is the caller's responsibility to delete the returned pointer.
 	SplatalogueTable* search(
-		const String& resultsTableName, const Double freqLow, const Double freqHigh,
-		const Vector<String>& species, const Bool recommendedOnly,
-		const Vector<String>& chemNames, const Vector<String>& qns,
-		const Double intensityLow, const Double intensityHigh,
-		const Double smu2Low, const Double smu2High,
-		const Double logaLow, const Double logaHigh,
-		const Double elLow, const Double elHigh,
-		const Double euLow, const Double euHigh,
-		const Bool includeRRLs, const Bool onlyRRLs
+		const casacore::String& resultsTableName, const casacore::Double freqLow, const casacore::Double freqHigh,
+		const casacore::Vector<casacore::String>& species, const casacore::Bool recommendedOnly,
+		const casacore::Vector<casacore::String>& chemNames, const casacore::Vector<casacore::String>& qns,
+		const casacore::Double intensityLow, const casacore::Double intensityHigh,
+		const casacore::Double smu2Low, const casacore::Double smu2High,
+		const casacore::Double logaLow, const casacore::Double logaHigh,
+		const casacore::Double elLow, const casacore::Double elHigh,
+		const casacore::Double euLow, const casacore::Double euHigh,
+		const casacore::Bool includeRRLs, const casacore::Bool onlyRRLs
 	) const;
 
 	// Get the unique species in the table.
-	Vector<String> uniqueSpecies() const;
+	casacore::Vector<casacore::String> uniqueSpecies() const;
 
 	// Get the unique chemical names in the table.
-	Vector<String> uniqueChemicalNames() const;
+	casacore::Vector<casacore::String> uniqueChemicalNames() const;
 
 private:
-	LogIO *_log;
+	casacore::LogIO *_log;
 	const SplatalogueTable *_table;
-	String _logfile;
-	const Bool _list, _append;
+	casacore::String _logfile;
+	const casacore::Bool _list, _append;
 	SearchEngine();
 
-	String _getBetweenClause(
-		const String& col, const Double low, const Double high
+	casacore::String _getBetweenClause(
+		const casacore::String& col, const casacore::Double low, const casacore::Double high
 	) const;
 
 	// If the query table is currently not on disk, this method will temporarily
 	// write a copy of it to disk and query it, and then remove the copy from disk.
 	// The method returns the query results table.
-	Table _runQuery(const String& query) const;
+	casacore::Table _runQuery(const casacore::String& query) const;
 
-	void _logIt(const String& logString) const;
+	void _logIt(const casacore::String& logString) const;
 };
 
 

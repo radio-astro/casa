@@ -80,10 +80,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void regionReady() { };
 
 		// get the world coords of the current polygon region
-		void getWorldCoords(Vector<Double> &x, Vector<Double> &y);
+		void getWorldCoords(casacore::Vector<casacore::Double> &x, casacore::Vector<casacore::Double> &y);
 
 		// get the linear coords of the current ploygon region
-		void getLinearCoords(Vector<Double> &x, Vector<Double> &y);
+		void getLinearCoords(casacore::Vector<casacore::Double> &x, casacore::Vector<casacore::Double> &y);
 
 	};
 

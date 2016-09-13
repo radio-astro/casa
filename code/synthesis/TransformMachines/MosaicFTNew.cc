@@ -85,6 +85,7 @@
 #ifdef _OPENMP
 #include <omp.h>
 #endif
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
   FTMachine* MosaicFTNew::cloneFTM(){
@@ -129,7 +130,7 @@ ImageInterface<Complex>& MosaicFTNew::getImage(Matrix<Float>& weights,
 	    << "Starting FFT and scaling of image" << LogIO::POST;
     if(useDoubleGrid_p){
       ArrayLattice<DComplex> darrayLattice(griddedData2);
-      LatticeFFT::cfft2d(darrayLattice,False);
+      LatticeFFT::cfft2d(darrayLattice,false);
       griddedData.resize(griddedData2.shape());
       convertArray(griddedData, griddedData2);
       
@@ -142,7 +143,7 @@ ImageInterface<Complex>& MosaicFTNew::getImage(Matrix<Float>& weights,
     else{
       arrayLattice = new ArrayLattice<Complex>(griddedData);
       lattice=arrayLattice;
-      LatticeFFT::cfft2d(*lattice,False);
+      LatticeFFT::cfft2d(*lattice,false);
     }
     
     {

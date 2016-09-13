@@ -53,6 +53,7 @@
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogSink.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 #define MEMFACTOR 8.0
@@ -66,14 +67,14 @@ ImageSkyModel::ImageSkyModel(const Int maxNumModels) :
   nmodels_p(0), 
   componentList_p(0), 
   pgplotter_p(0),
-  displayProgress_p(False),
+  displayProgress_p(false),
   cycleFactor_p(4.0),
   cycleSpeedup_p(-1.0),
   cycleMaxPsfFraction_p(0.8),
-  donePSF_p(False),
-  modified_p(True),
+  donePSF_p(false),
+  modified_p(true),
   dataPolRep_p(StokesImageUtil::CIRCULAR),
-  workDirOnNFS_p(False), useMem_p(False), tileVol_p(1000000)
+  workDirOnNFS_p(false), useMem_p(false), tileVol_p(1000000)
  {
    
  }
@@ -86,9 +87,9 @@ Bool ImageSkyModel::add(ComponentList& compList)
 {
   if(componentList_p==0) {
     componentList_p=new ComponentList(compList);
-    return True;
+    return true;
   }
-  return False;
+  return false;
 }
 
 Bool ImageSkyModel::updatemodel(ComponentList& compList)
@@ -99,8 +100,8 @@ Bool ImageSkyModel::updatemodel(ComponentList& compList)
   }
   
   componentList_p=new ComponentList(compList);
-  modified_p=True; 
-  return True;
+  modified_p=true; 
+  return true;
 }
   
 
@@ -110,8 +111,8 @@ Bool ImageSkyModel::updatemodel(const Int thismodel, ImageInterface<Float>& imag
   image_p[thismodel]=&image;
   AlwaysAssert(image_p[thismodel], AipsError);
   image_p[thismodel]->setUnits(Unit("Jy/pixel"));
-  modified_p=True;
-  return True;
+  modified_p=true;
+  return true;
 }
 
 Int ImageSkyModel::add(ImageInterface<Float>& image, const Int maxNumXfr)
@@ -125,7 +126,7 @@ Int ImageSkyModel::add(ImageInterface<Float>& image, const Int maxNumXfr)
     //cerr << "Using NFS " << workDirOnNFS_p << endl;
   }
   catch(...){
-    workDirOnNFS_p=False;
+    workDirOnNFS_p=false;
   }
 
   if(nmodels_p>maxnmodels_p) maxnmodels_p=nmodels_p;
@@ -162,8 +163,8 @@ Int ImageSkyModel::add(ImageInterface<Float>& image, const Int maxNumXfr)
   fluxScale_p[thismodel]=0;
   work_p[thismodel]=0;
   deltaimage_p[thismodel]=0;
-  solve_p[thismodel]=True;
-  doFluxScale_p[thismodel]=False;
+  solve_p[thismodel]=true;
+  doFluxScale_p[thismodel]=false;
   weight_p[thismodel]=0;
   beam_p[thismodel]=0;
   
@@ -171,7 +172,7 @@ Int ImageSkyModel::add(ImageInterface<Float>& image, const Int maxNumXfr)
   image_p[thismodel]=&image;
   AlwaysAssert(image_p[thismodel], AipsError);
   image_p[thismodel]->setUnits(Unit("Jy/pixel"));
-  donePSF_p=False;
+  donePSF_p=false;
   return thismodel;
 }
 
@@ -180,13 +181,13 @@ Bool ImageSkyModel::addResidual(Int thismodel, ImageInterface<Float>& residual)
   LogIO os(LogOrigin("ImageSkyModel", "addResidual"));
   if(thismodel>=nmodels_p||thismodel<0) {
     os << LogIO::SEVERE << "Illegal model slot" << thismodel << LogIO::POST;
-    return False;
+    return false;
   }
   residual_p[thismodel] = &residual;
   AlwaysAssert(residual_p[thismodel], AipsError);
   if(residualImage_p[thismodel]) delete residualImage_p[thismodel];
   residualImage_p[thismodel]=0;
-  return True;
+  return true;
 }
   
   ImageSkyModel::ImageSkyModel(const ImageSkyModel& other) : SkyModel() {
@@ -279,7 +280,7 @@ void ImageSkyModel::makeApproxPSFs(SkyEquation& se) {
 	 << " deg" << LogIO::POST;
     }
   }
-  donePSF_p=True;
+  donePSF_p=true;
 }
 
 void ImageSkyModel::initializeGradients() {
@@ -314,8 +315,8 @@ Bool ImageSkyModel::makeNewtonRaphsonStep(SkyEquation& se, Bool incremental, Boo
       }
     }
   }
-  modified_p=False;
-  return True;
+  modified_p=false;
+  return true;
 }
 
 // Simply finds residual image: i.e. Dirty Image if started with
@@ -327,8 +328,8 @@ Bool ImageSkyModel::solve(SkyEquation& se) {
 // Simply finds residual image: i.e. Dirty Image if started with
 // zero'ed image. We work from corrected visibilities only!
 Bool ImageSkyModel::solveResiduals(SkyEquation& se, Bool modelToMS) {
-  makeNewtonRaphsonStep(se, False, modelToMS);
-  return True;
+  makeNewtonRaphsonStep(se, false, modelToMS);
+  return true;
 }
 
 // Return residual image: to be used by callers when it is known that the
@@ -344,9 +345,9 @@ Bool ImageSkyModel::isEmpty(Int model)
   RO_LatticeIterator<Float> li(image(model), ls);
   
   for(li.reset();!li.atEnd();li++) {
-    if(max(abs(li.cursor()))>0.0) return False;
+    if(max(abs(li.cursor()))>0.0) return false;
   }
-  return True;
+  return true;
 }
 
 ImageInterface<Float>& ImageSkyModel::image(Int model) 
@@ -417,14 +418,14 @@ ImageInterface<Complex>& ImageSkyModel::XFR(Int model, Int numXFR)
   AlwaysAssert((model>-1)&&(model<nmodels_p), AipsError);
   if(numXFR==maxNumXFR_p){
     ++maxNumXFR_p;
-    cxfr_p.resize(nmodels_p*maxNumXFR_p, True);
+    cxfr_p.resize(nmodels_p*maxNumXFR_p, true);
     //initialize the extra pointers to 0
     for (Int k = 0; k <nmodels_p; ++k){
       cxfr_p[nmodels_p*(maxNumXFR_p-1)+k]=0;
     }
   }
   AlwaysAssert(numXFR<maxNumXFR_p, AipsError);
-  Double memoryMB=HostInfo::memoryTotal(True)/1024/(MEMFACTOR*maxnmodels_p);
+  Double memoryMB=HostInfo::memoryTotal(true)/1024/(MEMFACTOR*maxnmodels_p);
   if(cxfr_p[model*maxNumXFR_p+numXFR]==0) {
 
     TempImage<Complex>* cxfrPtr = 0;
@@ -475,7 +476,7 @@ ImageInterface<Float>& ImageSkyModel::PSF(Int model)
 
   //if(model>0&&(psf_p[model-1])) psf_p[model-1]->tempClose();
 
-  Double memoryMB=HostInfo::memoryTotal(True)/1024/(MEMFACTOR*maxnmodels_p);
+  Double memoryMB=HostInfo::memoryTotal(true)/1024/(MEMFACTOR*maxnmodels_p);
   if(psf_p[model]==0) {
         TempImage<Float>* psfPtr = 
 	  new TempImage<Float> (TiledShape(image_p[model]->shape(), tileShape(model)), 
@@ -532,7 +533,7 @@ ImageInterface<Float>& ImageSkyModel::gS(Int model)
   //if(model>0&&(gS_p[model-1])) gS_p[model-1]->tempClose();
 
   if(gS_p[model]==0) {
-    Double memoryMB=HostInfo::memoryTotal(True)/1024/(MEMFACTOR*maxnmodels_p);
+    Double memoryMB=HostInfo::memoryTotal(true)/1024/(MEMFACTOR*maxnmodels_p);
     
       TempImage<Float>* gSPtr = 
 	new TempImage<Float> (TiledShape(image_p[model]->shape(), tileShape(model)), 
@@ -555,7 +556,7 @@ ImageInterface<Float>& ImageSkyModel::ggS(Int model)
   //if(model>0&&(ggS_p[model-1])) ggS_p[model-1]->tempClose();
 
   if(ggS_p[model]==0) {
-    Double memoryMB=HostInfo::memoryTotal(True)/1024/(MEMFACTOR*maxnmodels_p);
+    Double memoryMB=HostInfo::memoryTotal(true)/1024/(MEMFACTOR*maxnmodels_p);
     TempImage<Float>* ggSPtr = 
       new TempImage<Float> (TiledShape(image_p[model]->shape(), tileShape(model)),
 			    image_p[model]->coordinates(),
@@ -579,7 +580,7 @@ ImageInterface<Float>& ImageSkyModel::fluxScale(Int model)
   //  if(model>0&&(fluxScale_p[model-1])) fluxScale_p[model-1]->tempClose();
 
   if(fluxScale_p[model]==0) {
-    Double memoryMB=HostInfo::memoryTotal(True)/1024/(MEMFACTOR*maxnmodels_p);
+    Double memoryMB=HostInfo::memoryTotal(true)/1024/(MEMFACTOR*maxnmodels_p);
     
       TempImage<Float>* fluxScalePtr = 
 	new TempImage<Float> (TiledShape(image_p[model]->shape(), tileShape(model)),       
@@ -596,7 +597,7 @@ ImageInterface<Float>& ImageSkyModel::fluxScale(Int model)
     fluxScale_p[model]->set(1.0);
   }
   AlwaysAssert((model>-1)&&(model<nmodels_p), AipsError);
-  if( isImageNormalized() == False ) 
+  if( isImageNormalized() == false ) 
     {
       mandateFluxScale(model);
     }
@@ -611,7 +612,7 @@ ImageInterface<Float>& ImageSkyModel::work(Int model)
   //  if(model>0&&(work_p[model-1])) work_p[model-1]->tempClose();
 
   if(work_p[model]==0) {
-    Double memoryMB=HostInfo::memoryTotal(True)/1024/(MEMFACTOR*maxnmodels_p);
+    Double memoryMB=HostInfo::memoryTotal(true)/1024/(MEMFACTOR*maxnmodels_p);
     
     TempImage<Float>* workPtr = 
       new TempImage<Float> (TiledShape(image_p[model]->shape(),tileShape(model)),
@@ -636,7 +637,7 @@ ImageInterface<Float>& ImageSkyModel::deltaImage(Int model)
   // if(model>0&&(deltaimage_p[model-1])) deltaimage_p[model-1]->tempClose();
 
   if(deltaimage_p[model]==0) {
-    Double memoryMB=HostInfo::memoryTotal(True)/1024/(MEMFACTOR*maxnmodels_p);
+    Double memoryMB=HostInfo::memoryTotal(true)/1024/(MEMFACTOR*maxnmodels_p);
         TempImage<Float>* deltaimagePtr = 
 	  new TempImage<Float> (TiledShape(image_p[model]->shape(),tileShape(model)), 
 			    image_p[model]->coordinates(),
@@ -683,7 +684,7 @@ Bool ImageSkyModel::free(Int model)
   AlwaysAssert(nmodels_p>0, AipsError);
   AlwaysAssert((model>-1)&&(model<nmodels_p), AipsError);
   Bool previous=solve_p[model];
-  solve_p[model]=True;
+  solve_p[model]=true;
   return previous;
 };
 
@@ -692,7 +693,7 @@ Bool ImageSkyModel::fix(Int model)
   AlwaysAssert(nmodels_p>0, AipsError);
   AlwaysAssert((model>-1)&&(model<nmodels_p), AipsError);
   Bool previous=solve_p[model];
-  solve_p[model]=False;
+  solve_p[model]=false;
   return previous;
 };
 
@@ -716,7 +717,7 @@ void ImageSkyModel::mandateFluxScale(Int model)
 {
   AlwaysAssert(nmodels_p>0, AipsError);
   AlwaysAssert((model>-1)&&(model<nmodels_p), AipsError);
-  doFluxScale_p[model]=True;
+  doFluxScale_p[model]=true;
 };
 
 Bool ImageSkyModel::hasComponentList()

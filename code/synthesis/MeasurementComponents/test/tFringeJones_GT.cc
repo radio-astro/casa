@@ -34,7 +34,9 @@
 #include <gtest/gtest.h>
 
 using namespace std;
+using namespace casacore;
 using namespace casa;
+using namespace casacore;
 using namespace casa::vi;
 
 class FringeJonesTest : public ::testing::Test {
@@ -65,12 +67,12 @@ TEST_F(FringeJonesTest, Basic) {
   ASSERT_EQ(VisCal::K,fringe->type());
   ASSERT_EQ(String("Fringe Jones"),fringe->typeName());
   ASSERT_EQ(6,fringe->nPar());
-  ASSERT_EQ(False,fringe->freqDepPar());
-  ASSERT_EQ(True,fringe->freqDepMat());
-  ASSERT_EQ(False,fringe->freqDepCalWt());
+  ASSERT_EQ(false,fringe->freqDepPar());
+  ASSERT_EQ(true,fringe->freqDepMat());
+  ASSERT_EQ(false,fringe->freqDepCalWt());
   ASSERT_EQ(True,fringe->timeDepMat());
-  ASSERT_EQ(True,fringe->isApplied());
-  ASSERT_EQ(True,fringe->isSolvable());
+  ASSERT_EQ(true,fringe->isApplied());
+  ASSERT_EQ(true,fringe->isSolvable());
 
   delete fringe;
 }

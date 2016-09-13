@@ -30,6 +30,7 @@
 #include <msvis/MSVis/MSCalEnums.h>
 #include <tables/Tables/ArrColDesc.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //----------------------------------------------------------------------------

@@ -27,6 +27,7 @@
 #include <QFormLayout>
 #include <QDebug>
 
+using namespace casacore;
 namespace casa {
 	CanvasHolder::CanvasHolder(QWidget *parent)
 		: QWidget(parent), showLegend( true ),

@@ -25,6 +25,7 @@
 
 #include "ActionStackForward.h"
 
+using namespace casacore;
 namespace casa {
 
 ActionStackForward::ActionStackForward( Client* client )
@@ -39,4 +40,5 @@ int ActionStackForward::getDelta() const {
 ActionStackForward::~ActionStackForward() {
 }
 
+using namespace casacore;
 } /* namespace casa */

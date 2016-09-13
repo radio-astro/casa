@@ -52,11 +52,11 @@ public:
     
     
     // Gets the currently set value, using the given PlotMSPlot to get the MS
-    // objects from if not NULL.  If the plot is NULL, then the MS objects must
+    // objects from if not NULL.  If the plot is NULL, then the casacore::MS objects must
     // be set using PlotMSFlagging::setMS() before being used.
     PlotMSFlagging getValue(PlotMSPlot* plot = NULL) const;
     
-    // Sets the currently displayed value to the given.  If MS objects are set
+    // Sets the currently displayed value to the given.  If casacore::MS objects are set
     // in the given value, they are ignored.
     void setValue(const PlotMSFlagging& flagging);
     

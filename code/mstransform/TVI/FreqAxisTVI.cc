@@ -22,6 +22,7 @@
 
 #include <mstransform/TVI/FreqAxisTVI.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 namespace vi { //# NAMESPACE VI - BEGIN
@@ -76,7 +77,7 @@ FreqAxisTVI::~FreqAxisTVI()
 Bool FreqAxisTVI::parseConfiguration(const Record &configuration)
 {
 	int exists = -1;
-	Bool ret = True;
+	Bool ret = true;
 
 	// Parse spw selection (optional)
 	exists = -1;
@@ -212,12 +213,12 @@ Bool FreqAxisTVI::existsColumn (VisBufferComponent2 id) const
 	{
 		case VisBufferComponent2::WeightSpectrum:
 		{
-			ret = True;
+			ret = true;
 			break;
 		}
 		case VisBufferComponent2::SigmaSpectrum:
 		{
-			ret = True;
+			ret = true;
 			break;
 		}
 		default:

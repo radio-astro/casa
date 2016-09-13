@@ -36,40 +36,40 @@ public:
 
     // add a line to the history
     void addHistory(
-        const String& origin, const String& history
+        const casacore::String& origin, const casacore::String& history
     );
 
     void addHistory(
-        const LogOrigin& origin, const String& history
+        const casacore::LogOrigin& origin, const casacore::String& history
     );
     // add multiple history lines, all which have the same origin
     void addHistory(
-        const String& origin, const vector<String>& history
+        const casacore::String& origin, const vector<casacore::String>& history
     );
 
     void addHistory(
-        const LogOrigin& origin, const vector<String>& history
+        const casacore::LogOrigin& origin, const vector<casacore::String>& history
     );
 
     void addHistory(
-        const String& origin, const vector<string>& history
+        const casacore::String& origin, const vector<string>& history
     );
 
     void addHistory(
-        const vector<std::pair<LogOrigin, String> >& history
+        const vector<std::pair<casacore::LogOrigin, casacore::String> >& history
     );
 
-    vector<String> get(Bool list) const;
-    vector<string> getAsStdStrings(Bool list) const;
+    vector<casacore::String> get(casacore::Bool list) const;
+    vector<string> getAsStdStrings(casacore::Bool list) const;
 
     //Append the specified image's history to this image's history
     void append(SPCIIF image);
 
     void append(SPCIIC image);
 
-    String getClass() const { const static String s = "ImageHistory"; return s; }
+    casacore::String getClass() const { const static casacore::String s = "ImageHistory"; return s; }
 
-    LogIO& getLogSink();
+    casacore::LogIO& getLogSink();
 
 private:
 

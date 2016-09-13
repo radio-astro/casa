@@ -44,7 +44,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <reviewed reviewer="" date="" tests="" demos="">
 
 // <prerequisite>
-//   <li> <linkto class="Record">Record</linkto> module
+//   <li> <linkto class="casacore::Record">casacore::Record</linkto> module
 // </prerequisite>
 //
 // <etymology>
@@ -79,47 +79,47 @@ class CTMainRecord
    ~CTMainRecord() {};
 
    // Construct from an existing record
-   CTMainRecord (const Record& inpRec);
+   CTMainRecord (const casacore::Record& inpRec);
 
    // Return as record
-   const Record& record();
+   const casacore::Record& record();
 
    // Field accessors
    // a) define
-   void defineTime (const Double& time);
-   void defineTime (const MEpoch& time);
-   void defineFieldId (const Int& fieldId);
-   void defineSpwId (const Int& spwId);
-   void defineAntenna1 (const Int& antenna1);
-   void defineAntenna2 (const Int& antenna2);
-   void defineInterval (const Double& interval);
-   void defineScanNo (const Int& scanNo);
-   void defineParam (const Array<Complex>& param);
-   void defineParamerr (const Array<Float>& paramerr);
-   void defineFlag (const Array<Bool>& flag);
-   void defineSnr (const Array<Float>& snr);
-   void defineWeight (const Array<Float>& weight);
+   void defineTime (const casacore::Double& time);
+   void defineTime (const casacore::MEpoch& time);
+   void defineFieldId (const casacore::Int& fieldId);
+   void defineSpwId (const casacore::Int& spwId);
+   void defineAntenna1 (const casacore::Int& antenna1);
+   void defineAntenna2 (const casacore::Int& antenna2);
+   void defineInterval (const casacore::Double& interval);
+   void defineScanNo (const casacore::Int& scanNo);
+   void defineParam (const casacore::Array<casacore::Complex>& param);
+   void defineParamerr (const casacore::Array<casacore::Float>& paramerr);
+   void defineFlag (const casacore::Array<casacore::Bool>& flag);
+   void defineSnr (const casacore::Array<casacore::Float>& snr);
+   void defineWeight (const casacore::Array<casacore::Float>& weight);
 
    // b) get
-   void getTime (Double& time);
-   void getFieldId (Int& fieldId);
-   void getSpwId (Int& spwId);
-   void getAntenna1 (Int& antenna1);
-   void getAntenna2 (Int& antenna2);
-   void getInterval (Double& interval);
-   void getScanNo (Int& scanNo);
-   void getParam (Array<Complex>& param);
-   void getParamerr (Array<Float>& paramerr);
-   void getFlag (Array<Bool>& flag);
-   void getSnr (Array<Float>& snr);
-   void getWeight (Array<Float>& weight);
+   void getTime (casacore::Double& time);
+   void getFieldId (casacore::Int& fieldId);
+   void getSpwId (casacore::Int& spwId);
+   void getAntenna1 (casacore::Int& antenna1);
+   void getAntenna2 (casacore::Int& antenna2);
+   void getInterval (casacore::Double& interval);
+   void getScanNo (casacore::Int& scanNo);
+   void getParam (casacore::Array<casacore::Complex>& param);
+   void getParamerr (casacore::Array<casacore::Float>& paramerr);
+   void getFlag (casacore::Array<casacore::Bool>& flag);
+   void getSnr (casacore::Array<casacore::Float>& snr);
+   void getWeight (casacore::Array<casacore::Float>& weight);
 
  protected:
    // Add to itsRecord
-   void addRec (const Record& newRec);
+   void addRec (const casacore::Record& newRec);
 
  private:
-   Record itsRecord;
+   casacore::Record itsRecord;
 
  };
 

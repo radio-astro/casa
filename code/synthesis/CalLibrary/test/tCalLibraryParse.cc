@@ -29,10 +29,11 @@
 
 #include <fstream>
 
+using namespace casacore;
 using namespace casa;
 using namespace std;
 
-int parseString(String callibString, Bool testString=True) {
+int parseString(String callibString, Bool testString=true) {
   /* Return value of 1 = parsing succeeded */
   try {
     cout << "\ntCalLibraryParse STRING " << endl;
@@ -59,7 +60,7 @@ int parseString(String callibString, Bool testString=True) {
         cout << "bcal tinterp='nearest' check: ";
         cout << (ok3 ? "PASS" : "FAIL") << endl;
 
-        // Check 4 - bcal calwt=False 
+        // Check 4 - bcal calwt=false 
         ok4 = (bcalRec.asBool("calwt") == 0); 
         cout << "bcal calwt=0 check: ";
         cout << (ok4 ? "PASS" : "FAIL") << endl;
@@ -99,7 +100,7 @@ int parseFile(String callibName) {
         cout << "gcal nfields=3 check: ";
         cout << (ok2 ? "PASS" : "FAIL") << endl;
 
-        // Check 3 - gcal kept calwt=True setting
+        // Check 3 - gcal kept calwt=true setting
         Record gcalRec = callibRec.asRecord("ngc5921.gcal");
         ok3 = (gcalRec.asBool("calwt") == 1); 
         cout << "gcal calwt=1 check: ";
@@ -135,21 +136,21 @@ int main(int argc, const char* argv[])
     if (argc == 2) {
         callib = argv[1];
         if (callib.contains("="))
-            parseString(callib, False);
+            parseString(callib, false);
         else
             parseFile(callib);
     } else {
-        String cal1 = "caltable='ngc5921.bcal' calwt=False tinterp='nearest'";
+        String cal1 = "caltable='ngc5921.bcal' calwt=false tinterp='nearest'";
         String cal2 = "caltable='ngc5921.fluxscale' calwt=T tinterp='nearest' fldmap='nearest'";
-        String cal3 = "caltable='ngc5921.gcal' calwt=True field='0' tinterp='nearest' fldmap=[0]";
-        String cal4 = "calwt=False field='1,2' tinterp='linear' fldmap=[0,1,1,3] caltable='ngc5921.gcal'";
+        String cal3 = "caltable='ngc5921.gcal' calwt=true field='0' tinterp='nearest' fldmap=[0]";
+        String cal4 = "calwt=false field='1,2' tinterp='linear' fldmap=[0,1,1,3] caltable='ngc5921.gcal'";
         String cal5 = "# this is a comment";
 
         int ok_string = parseString(cal1);
 
         String multistring = cal1 + "," + cal2;
         // Don't check Record, just make sure it parses without error
-        int ok_string2 = parseString(multistring, False);
+        int ok_string2 = parseString(multistring, false);
 
         // make callib file from strings
         const char* filename = "/tmp/test_callib_parse.txt";

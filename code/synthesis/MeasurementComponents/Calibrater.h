@@ -56,8 +56,8 @@ class Calibrater
   Calibrater();
 
 
-  // Simple MS-only ctor
-  Calibrater(String msname);
+  // Simple casacore::MS-only ctor
+  Calibrater(casacore::String msname);
 
   // Copy constructor and assignment operator
   Calibrater(const Calibrater&);
@@ -68,290 +68,290 @@ class Calibrater
   
 
   // Set uv-data selection via MSSelection
-  void selectvis(const String& time="",
-		 const String& spw="",
-		 const String& scan="",
-		 const String& field="",
-		 const String& intent="",
-		 const String& obsIDs="",
-		 const String& baseline="",
-		 const String& uvrange="",
-		 const String& chanmode="none",
-		 const Int& nchan=1,
-		 const Int& start=0, 
-		 const Int& step=1,
-		 const MRadialVelocity& mStart=MRadialVelocity(),
-		 const MRadialVelocity& mStep=MRadialVelocity(),
-		 const String& msSelect="");
+  void selectvis(const casacore::String& time="",
+		 const casacore::String& spw="",
+		 const casacore::String& scan="",
+		 const casacore::String& field="",
+		 const casacore::String& intent="",
+		 const casacore::String& obsIDs="",
+		 const casacore::String& baseline="",
+		 const casacore::String& uvrange="",
+		 const casacore::String& chanmode="none",
+		 const casacore::Int& nchan=1,
+		 const casacore::Int& start=0, 
+		 const casacore::Int& step=1,
+		 const casacore::MRadialVelocity& mStart=casacore::MRadialVelocity(),
+		 const casacore::MRadialVelocity& mStep=casacore::MRadialVelocity(),
+		 const casacore::String& msSelect="");
 
-  // Set up to apply calibration (using MSSelection syntax)
-  Bool setapply (const String& type, 
-		 const Double& t,
-		 const String& table,
-		 const String& spw,
-		 const String& field,
-		 const String& interp,
-		 const Bool& calwt,
-		 const Vector<Int>& spwmap,
-		 const Vector<Double>& opacity);
+  // Set up to apply calibration (using casacore::MSSelection syntax)
+  casacore::Bool setapply (const casacore::String& type, 
+		 const casacore::Double& t,
+		 const casacore::String& table,
+		 const casacore::String& spw,
+		 const casacore::String& field,
+		 const casacore::String& interp,
+		 const casacore::Bool& calwt,
+		 const casacore::Vector<casacore::Int>& spwmap,
+		 const casacore::Vector<casacore::Double>& opacity);
 
-  Bool setapply (const String& type, 
-		 const Record& applypar);
+  casacore::Bool setapply (const casacore::String& type, 
+		 const casacore::Record& applypar);
 
   // Set up apply-able calibration via a Cal Library
-  Bool setcallib(Record callib);
-  Bool setcallib2(Record callib);
-  Bool validatecallib(Record callib);
+  casacore::Bool setcallib(casacore::Record callib);
+  casacore::Bool setcallib2(casacore::Record callib);
+  casacore::Bool validatecallib(casacore::Record callib);
 
-  Bool setmodel(const String& modelImage);
-  Bool setModel(const Vector<Double>& stokes);
+  casacore::Bool setmodel(const casacore::String& modelImage);
+  casacore::Bool setModel(const casacore::Vector<casacore::Double>& stokes);
 
-  // Arrange to solve (using MSSelection syntax)
-  Bool setsolve (const String& type, 
-		 const String& solint,
-		 const String& table,
-		 const Bool append,
-		 const Double preavg, 
-		 const String& apmode="AP",
-		 const Int minblperant=4,
-		 const String& refant="",
-		 const Bool solnorm=False,
-		 const Float minsnr=0.0f,
-		 const String& combine="",
-		 const Int fillgaps=0,
-		 const String& cfcache="",
-		 const Double painc=360.0,
-                 const Int fitorder=0,
-                 const Float fraction=0.1,
-                 const Int numedge=-1,
-                 const String& radius="",
-                 const Bool smooth=True);
+  // Arrange to solve (using casacore::MSSelection syntax)
+  casacore::Bool setsolve (const casacore::String& type, 
+		 const casacore::String& solint,
+		 const casacore::String& table,
+		 const casacore::Bool append,
+		 const casacore::Double preavg, 
+		 const casacore::String& apmode="AP",
+		 const casacore::Int minblperant=4,
+		 const casacore::String& refant="",
+		 const casacore::Bool solnorm=false,
+		 const casacore::Float minsnr=0.0f,
+		 const casacore::String& combine="",
+		 const casacore::Int fillgaps=0,
+		 const casacore::String& cfcache="",
+		 const casacore::Double painc=360.0,
+                 const casacore::Int fitorder=0,
+                 const casacore::Float fraction=0.1,
+                 const casacore::Int numedge=-1,
+                 const casacore::String& radius="",
+                 const casacore::Bool smooth=true);
 
-  // Arrange to solve for BPOLY (using MSSelection syntax)
-  Bool setsolvebandpoly(const String& table,
-			const Bool& append,
-			const String& solint,
-			const String& combine,
-			const Vector<Int>& degree,
-			const Bool& visnorm,
-			const Bool& solnorm,
-			const Int& maskcenter,
-			const Float& maskedge,
-			const String& refant);
+  // Arrange to solve for BPOLY (using casacore::MSSelection syntax)
+  casacore::Bool setsolvebandpoly(const casacore::String& table,
+			const casacore::Bool& append,
+			const casacore::String& solint,
+			const casacore::String& combine,
+			const casacore::Vector<casacore::Int>& degree,
+			const casacore::Bool& visnorm,
+			const casacore::Bool& solnorm,
+			const casacore::Int& maskcenter,
+			const casacore::Float& maskedge,
+			const casacore::String& refant);
 
-  // Arrange to solve for GSPLINE (using MSSelection syntax)
-  Bool setsolvegainspline(const String& table,
-			  const Bool& append,
-			  const String& mode,
-			  const Double& splinetime,
-			  const Double& preavg,
-			  const Int& numpoint,
-			  const Double& phasewrap,
-			  const String& refant);
+  // Arrange to solve for GSPLINE (using casacore::MSSelection syntax)
+  casacore::Bool setsolvegainspline(const casacore::String& table,
+			  const casacore::Bool& append,
+			  const casacore::String& mode,
+			  const casacore::Double& splinetime,
+			  const casacore::Double& preavg,
+			  const casacore::Int& numpoint,
+			  const casacore::Double& phasewrap,
+			  const casacore::String& refant);
 
-  Bool setsolve (const String& type, 
-		 const Record& solvepar);
+  casacore::Bool setsolve (const casacore::String& type, 
+		 const casacore::Record& solvepar);
 
   // Unset all (default) or one apply calibration component
-  Bool unsetapply(const Int& which=-1);
-  // TBD:   Bool unsetapply(const String& type);  // by type?
+  casacore::Bool unsetapply(const casacore::Int& which=-1);
+  // TBD:   casacore::Bool unsetapply(const casacore::String& type);  // by type?
 
   // Unset the solved-for calibration component
-  Bool unsetsolve();
+  casacore::Bool unsetsolve();
 
   // Reset the calibrator object
-  Bool reset(const Bool& apply=True, 
-	     const Bool& solve=True);
+  casacore::Bool reset(const casacore::Bool& apply=true, 
+	     const casacore::Bool& solve=true);
 
   // Apply all setapply'd calibration components to DATA and
   //  deposit in the CORRECTED_DATA column
-  Bool correct(String mode="calflag");
-  Bool correct2(String mode="calflag");
+  casacore::Bool correct(casacore::String mode="calflag");
+  casacore::Bool correct2(casacore::String mode="calflag");
 
   // Apply all setapply'd calibration components to MODEL_DATA and
   //  deposit in the MODEL_DATA column
-  Bool corrupt();
+  casacore::Bool corrupt();
 
   // Initialize sigma/weight, and possibly weight_spectrum
-  Bool initWeights(String wtmode, Bool dowtsp=False);
-  Bool initWeights(Bool doBT=True, Bool dowtsp=False);
-  Bool initWeightsWithTsys(String wtmode, Bool dowtsp=False, String tsystable="",
-			String gainfield="", String interp="linear", Vector<Int> spwmap=Vector<Int>());
+  casacore::Bool initWeights(casacore::String wtmode, casacore::Bool dowtsp=false);
+  casacore::Bool initWeights(casacore::Bool doBT=true, casacore::Bool dowtsp=false);
+  casacore::Bool initWeightsWithTsys(casacore::String wtmode, casacore::Bool dowtsp=false, casacore::String tsystable="",
+			casacore::String gainfield="", casacore::String interp="linear", casacore::Vector<casacore::Int> spwmap=casacore::Vector<casacore::Int>());
 
   // Solve for a given calibration component
-  Bool solve();
+  casacore::Bool solve();
 
   // Modelfit
-  Vector<Double> modelfit(const Int& iter,
-			  const String& stype,
-			  const Vector<Double>& par,
-			  const Vector<Bool>& vary,
-			  const String& file);
+  casacore::Vector<casacore::Double> modelfit(const casacore::Int& iter,
+			  const casacore::String& stype,
+			  const casacore::Vector<casacore::Double>& par,
+			  const casacore::Vector<casacore::Bool>& vary,
+			  const casacore::String& file);
 
-  // Fluxscale (using MSSelection syntax for fields)
-  void fluxscale(const String& infile, 
-		 const String& outfile,
-		 const String& refFields, 
-		 const Vector<Int>& refSpwMap,
-		 const String& tranFields,
-		 const Bool& append,
-                 const Float& inGainThres,
-                 const String& antSel,
-                 const String& timerangeSel,
-                 const String& scanSel,
+  // Fluxscale (using casacore::MSSelection syntax for fields)
+  void fluxscale(const casacore::String& infile, 
+		 const casacore::String& outfile,
+		 const casacore::String& refFields, 
+		 const casacore::Vector<casacore::Int>& refSpwMap,
+		 const casacore::String& tranFields,
+		 const casacore::Bool& append,
+                 const casacore::Float& inGainThres,
+                 const casacore::String& antSel,
+                 const casacore::String& timerangeSel,
+                 const casacore::String& scanSel,
 		 SolvableVisCal::fluxScaleStruct& oFluxScaleFactor,
-		 Vector<Int>& tranidx,
-		 const String& oListFile,
-                 const Bool& incremental,
-                 const Int& fitorder,
-                 const Bool& display);
+		 casacore::Vector<casacore::Int>& tranidx,
+		 const casacore::String& oListFile,
+                 const casacore::Bool& incremental,
+                 const casacore::Int& fitorder,
+                 const casacore::Bool& display);
 
   // Fluxscale (via field indices)
-  void fluxscale(const String& infile, 
-		 const String& outfile,
-		 const Vector<Int>& refField, 
-		 const Vector<Int>& refSpwMap,
-		 const Vector<Int>& tranField,
-		 const Bool& append,
-                 const Float& inGainThres,
-                 const String& antSel,
-                 const String& timerangeSel,
-                 const String& scanSel,
+  void fluxscale(const casacore::String& infile, 
+		 const casacore::String& outfile,
+		 const casacore::Vector<casacore::Int>& refField, 
+		 const casacore::Vector<casacore::Int>& refSpwMap,
+		 const casacore::Vector<casacore::Int>& tranField,
+		 const casacore::Bool& append,
+                 const casacore::Float& inGainThres,
+                 const casacore::String& antSel,
+                 const casacore::String& timerangeSel,
+                 const casacore::String& scanSel,
 		 SolvableVisCal::fluxScaleStruct& oFluxScaleFactor,
-		 const String& oListFile,
-		 const Bool& incremental,
-                 const Int& fitorder,
-                 const Bool& display);
+		 const casacore::String& oListFile,
+		 const casacore::Bool& incremental,
+                 const casacore::Int& fitorder,
+                 const casacore::Bool& display);
 
-  // Accumulate (using MSSelection syntax)
-  void accumulate(const String& intab,
-		  const String& incrtab,
-		  const String& outtab,
-		  const String& fields,
-		  const String& calFields,
-		  const String& interp="linear",
-		  const Double& t=-1.0,
-		  const Vector<Int>& spwmap=Vector<Int>(1,-1));
+  // Accumulate (using casacore::MSSelection syntax)
+  void accumulate(const casacore::String& intab,
+		  const casacore::String& incrtab,
+		  const casacore::String& outtab,
+		  const casacore::String& fields,
+		  const casacore::String& calFields,
+		  const casacore::String& interp="linear",
+		  const casacore::Double& t=-1.0,
+		  const casacore::Vector<casacore::Int>& spwmap=casacore::Vector<casacore::Int>(1,-1));
 
   // Generate cal table from specified values
-  void specifycal(const String& type,
-		  const String& caltable,
-		  const String& time,
-		  const String& spw,
-		  const String& antenna,
-		  const String& pol,
-		  const Vector<Double>& parameter,
-		  const String& infile);
+  void specifycal(const casacore::String& type,
+		  const casacore::String& caltable,
+		  const casacore::String& time,
+		  const casacore::String& spw,
+		  const casacore::String& antenna,
+		  const casacore::String& pol,
+		  const casacore::Vector<casacore::Double>& parameter,
+		  const casacore::String& infile);
 
-  // Smooth  calibration (using MSSelection syntax
-  Bool smooth(const String& infile,
-              String& outfile, 
-	      const String& smoothtype, 
-	      const Double& smoothtime,
-	      const String& fields);
+  // casacore::Smooth  calibration (using casacore::MSSelection syntax
+  casacore::Bool smooth(const casacore::String& infile,
+              casacore::String& outfile, 
+	      const casacore::String& smoothtype, 
+	      const casacore::Double& smoothtime,
+	      const casacore::String& fields);
 
 
-  // List a calibration table
-  Bool listCal(const String& infile,
-	       const String& field,
-	       const String& antenna,
-	       const String& spw,
-	       const String& listfile="",
-	       const Int& pagerows=50);
+  // casacore::List a calibration table
+  casacore::Bool listCal(const casacore::String& infile,
+	       const casacore::String& field,
+	       const casacore::String& antenna,
+	       const casacore::String& spw,
+	       const casacore::String& listfile="",
+	       const casacore::Int& pagerows=50);
 
   // Initialize the calibrator object from an input MeasurementSet.
   // Optional compression of the calibration columns (MODEL_DATA,
   // and CORRECTED_DATA) is supported.
-  //if addScratch=True, optionally one can just add CORRECTED_DATA by
-  //setting addModel to False
-  Bool initialize(MeasurementSet& inputMS, 
-		  Bool compress=True,
-		  Bool addScratch=True, Bool addModel=True);
+  //if addScratch=true, optionally one can just add CORRECTED_DATA by
+  //setting addModel to false
+  casacore::Bool initialize(casacore::MeasurementSet& inputMS, 
+		  casacore::Bool compress=true,
+		  casacore::Bool addScratch=true, casacore::Bool addModel=true);
 
   // Re-initialize the calibration scratch columns
-  Bool initCalSet(const Int& calSet);
+  casacore::Bool initCalSet(const casacore::Int& calSet);
 
   // Report apply/solve state
-  Bool state();
-  Bool applystate();
-  Bool solvestate();
+  casacore::Bool state();
+  casacore::Bool applystate();
+  casacore::Bool solvestate();
 
-  Record& getActRec() {return actRec_;};
+  casacore::Record& getActRec() {return actRec_;};
 
-  Bool cleanup();
+  casacore::Bool cleanup();
 
   // Handle caltable backward compatibility
-  static Bool updateCalTable(const String& caltable);
+  static casacore::Bool updateCalTable(const casacore::String& caltable);
 
   // Return access to the VisEquation
   VisEquation* ve() { return ve_p; };
   
  private:
   // Log functions and variables
-  LogIO sink_p;
-  LogIO& logSink();
+  casacore::LogIO sink_p;
+  casacore::LogIO& logSink();
 
-  // Method to update MS HISTORY Table
-  void writeHistory(LogIO& os, 
-		    Bool cliCommand=False);
+  // Method to update casacore::MS HISTORY Table
+  void writeHistory(casacore::LogIO& os, 
+		    casacore::Bool cliCommand=false);
 
-  // Time functions and variables
-  String timerString();
-  Timer timer_p;
+  // casacore::Time functions and variables
+  casacore::String timerString();
+  casacore::Timer timer_p;
 
   VisibilityIterator::DataColumn configureForCorrection ();
 
   // Select on channel using MSSelection
-  void selectChannel(const String& spw);
+  void selectChannel(const casacore::String& spw);
 
   // Channel mask services
   void initChanMask();
 
   // Select on channel in the VisSet
-  void selectChannel(const String& mode, 
-		     const Int& nchan, const Int& start, const Int& step,
-		     const MRadialVelocity& mStart,
-		     const MRadialVelocity& mStep);
+  void selectChannel(const casacore::String& mode, 
+		     const casacore::Int& nchan, const casacore::Int& start, const casacore::Int& step,
+		     const casacore::MRadialVelocity& mStart,
+		     const casacore::MRadialVelocity& mStep);
   
   // Interpret refant index
-  Vector<Int> getRefantIdxList(const String& refant);
+  casacore::Vector<casacore::Int> getRefantIdxList(const casacore::String& refant);
   
-  Vector<Int> getAntIdx(const String& antenna);
+  casacore::Vector<casacore::Int> getAntIdx(const casacore::String& antenna);
 
-  // Interpret field indices (MSSelection)
-  Vector<Int> getFieldIdx(const String& fields);
+  // Interpret field indices (casacore::MSSelection)
+  casacore::Vector<casacore::Int> getFieldIdx(const casacore::String& fields);
 
-  // Interpret spw indices (MSSelection)
-  Vector<Int> getSpwIdx(const String& spws);
+  // Interpret spw indices (casacore::MSSelection)
+  casacore::Vector<casacore::Int> getSpwIdx(const casacore::String& spws);
 
-  // Interpret spw indices (MSSelection)
-  Matrix<Int> getChanIdx(const String& spws);
+  // Interpret spw indices (casacore::MSSelection)
+  casacore::Matrix<casacore::Int> getChanIdx(const casacore::String& spws);
   
   // Query apply types to see if we need to calibrate the weights
-  Bool calWt();
+  casacore::Bool calWt();
 
-  // Returns True if calibrator object is in a valid state
-  Bool ok();
+  // Returns true if calibrator object is in a valid state
+  casacore::Bool ok();
 
   // Given a (supplied) list of uncalibrated spws, determines and returns if there were
   // any, and if so sends them as a warning message to the logger.
-  Bool summarize_uncalspws(const Vector<Bool>& uncalspw, const String& origin,
-			   Bool strictflag=False);
+  casacore::Bool summarize_uncalspws(const casacore::Vector<casacore::Bool>& uncalspw, const casacore::String& origin,
+			   casacore::Bool strictflag=false);
 
   // Create a VisSet for raw phase transfer if needed
-  void getRawPhaseVisSet(Vector<Int>& spwid); 
+  void getRawPhaseVisSet(casacore::Vector<casacore::Int>& spwid); 
 
   // The standard solving mechanism
-  Bool genericGatherAndSolve();
+  casacore::Bool genericGatherAndSolve();
 
-  // Input MeasurementSet and derived selected MeasurementSet
-  String msname_p;
-  MeasurementSet* ms_p;
-  MeasurementSet* mssel_p;
-  MeasurementSet* msselRaw_p;
+  // casacore::Input casacore::MeasurementSet and derived selected MeasurementSet
+  casacore::String msname_p;
+  casacore::MeasurementSet* ms_p;
+  casacore::MeasurementSet* mssel_p;
+  casacore::MeasurementSet* msselRaw_p;
 
-  // MSSelection object
-  MSSelection* mss_p;
+  // casacore::MSSelection object
+  casacore::MSSelection* mss_p;
   vi::FrequencySelections* frequencySelections_p;
 
   // VisSet and VisEquation derived from the input MeasurementSet
@@ -360,28 +360,28 @@ class Calibrater
   VisEquation* ve_p;
 
   // VisCals for applying and solving:
-  PtrBlock<VisCal*> vc_p;
+  casacore::PtrBlock<VisCal*> vc_p;
   SolvableVisCal* svc_p;
 
-  // MeasurementSet selection parameters
-  String dataMode_p;
-  Int dataNchan_p, dataStart_p, dataStep_p;
-  MRadialVelocity mDataStart_p, mDataStep_p;
+  // casacore::MeasurementSet selection parameters
+  casacore::String dataMode_p;
+  casacore::Int dataNchan_p, dataStart_p, dataStep_p;
+  casacore::MRadialVelocity mDataStart_p, mDataStep_p;
 
   //Spline phase wrapping helper params
-  Double phasewrap_p;
-  Int splinepoint_p;
+  casacore::Double phasewrap_p;
+  casacore::Int splinepoint_p;
 
-  //Used to update the MS HISTORY Table
-  Int histLockCounter_p;
-  MSHistoryHandler *hist_p;
-  Table historytab_p;
+  //Used to update the casacore::MS HISTORY Table
+  casacore::Int histLockCounter_p;
+  casacore::MSHistoryHandler *hist_p;
+  casacore::Table historytab_p;
 
   // channel masking 
-  PtrBlock<Vector<Bool>*> chanmask_;
+  casacore::PtrBlock<casacore::Vector<casacore::Bool>*> chanmask_;
 
   // Activity record
-  Record actRec_;
+  casacore::Record actRec_;
 
 };
 

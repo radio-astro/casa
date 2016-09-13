@@ -45,27 +45,27 @@ class FlagAgentSummary : public FlagAgentBase {
 			accumTotalCount = 0;
 		}
 
-		std::map<std::string, std::map<std::string, uInt64> > accumflags;
-		std::map<std::string, std::map<std::string, uInt64> > accumtotal;
+		std::map<std::string, std::map<std::string, casacore::uInt64> > accumflags;
+		std::map<std::string, std::map<std::string, casacore::uInt64> > accumtotal;
 
-		std::map<Int, std::map<uInt, uInt64> > accumChannelflags;
-		std::map<Int, std::map<uInt, uInt64> > accumChanneltotal;
+		std::map<casacore::Int, std::map<casacore::uInt, casacore::uInt64> > accumChannelflags;
+		std::map<casacore::Int, std::map<casacore::uInt, casacore::uInt64> > accumChanneltotal;
 
-		std::map<Int, std::map<std::string, uInt64> > accumPolarizationflags;
-		std::map<Int, std::map<std::string, uInt64> > accumPolarizationtotal;
+		std::map<casacore::Int, std::map<std::string, casacore::uInt64> > accumPolarizationflags;
+		std::map<casacore::Int, std::map<std::string, casacore::uInt64> > accumPolarizationtotal;
 
-		std::map<Int, std::map<Int, uInt64> > accumAntScanflags;
-		std::map<Int, std::map<Int, uInt64> > accumAntScantotal;
+		std::map<casacore::Int, std::map<casacore::Int, casacore::uInt64> > accumAntScanflags;
+		std::map<casacore::Int, std::map<casacore::Int, casacore::uInt64> > accumAntScantotal;
 
-		uInt64 accumTotalFlags, accumTotalCount;
+		casacore::uInt64 accumTotalFlags, accumTotalCount;
 	};
 
 public:
 
-	FlagAgentSummary(FlagDataHandler *dh, Record config);
+	FlagAgentSummary(FlagDataHandler *dh, casacore::Record config);
 	~FlagAgentSummary();
 
-	Record getResult();
+	casacore::Record getResult();
 
 protected:
 
@@ -73,36 +73,36 @@ protected:
 	void preProcessBuffer(const vi::VisBuffer2 &visBuffer);
 
 	// Compute flags for a given mapped visibility point
-	bool computeRowFlags(const vi::VisBuffer2 &visBuffer, FlagMapper &flags, uInt row);
+	bool computeRowFlags(const vi::VisBuffer2 &visBuffer, FlagMapper &flags, casacore::uInt row);
 
 	// Parse configuration parameters
-	void setAgentParameters(Record config);
+	void setAgentParameters(casacore::Record config);
 
 	// Get the summary dictionary, and 'view' reports.
 	FlagReport getReport();
 
 	// Utility method to facilitate creation of sub-summaries per field
-	void getResultCore(Record &summary);
+	void getResultCore(casacore::Record &summary);
 
 private:
 
 	// Build simple plot-reports from the summary dictionary
 	FlagReport buildFlagCountPlots();
-	std::map<Int , std::vector<Double> > frequencyList;
+	std::map<casacore::Int , std::vector<casacore::Double> > frequencyList;
 
-	Bool spwChannelCounts;
-	Bool spwPolarizationCounts;
-	Bool baselineCounts;
-	Bool fieldCounts;
-	String display_p;
+	casacore::Bool spwChannelCounts;
+	casacore::Bool spwPolarizationCounts;
+	casacore::Bool baselineCounts;
+	casacore::Bool fieldCounts;
+	casacore::String display_p;
 
 	std::map<std::string, summary* > fieldSummaryMap;
 	summary *currentSummary;
-	Int arrayId;
-	Int fieldId;
-	Int spw;
-	Int scan;
-	Int observationId;
+	casacore::Int arrayId;
+	casacore::Int fieldId;
+	casacore::Int spw;
+	casacore::Int scan;
+	casacore::Int observationId;
 
 	string arrayId_str;
 	string fieldId_str;

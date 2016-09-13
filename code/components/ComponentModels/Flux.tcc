@@ -45,34 +45,34 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-template<class T> const std::vector<Unit> FluxRep<T>::_allowedUnits {"Jy", "Jy.km/s", "K.rad2"};
+template<class T> const std::vector<casacore::Unit> FluxRep<T>::_allowedUnits {"Jy", "Jy.km/s", "K.rad2"};
 
 template<class T> FluxRep<T>::
 FluxRep()
-  :itsVal(4, typename NumericTraits<T>::ConjugateType(0,0)),
+  :itsVal(4, typename casacore::NumericTraits<T>::ConjugateType(0,0)),
    itsPol(ComponentType::STOKES),
    itsUnit("Jy"),
-   itsErr(4, typename NumericTraits<T>::ConjugateType(0,0))
+   itsErr(4, typename casacore::NumericTraits<T>::ConjugateType(0,0))
 {
   itsVal(0) = 1;
 }
 
 template<class T> FluxRep<T>::
 FluxRep(T i) 
-  :itsVal(4, typename NumericTraits<T>::ConjugateType(0,0)),
+  :itsVal(4, typename casacore::NumericTraits<T>::ConjugateType(0,0)),
    itsPol(ComponentType::STOKES),
    itsUnit("Jy"),
-   itsErr(4, typename NumericTraits<T>::ConjugateType(0,0))
+   itsErr(4, typename casacore::NumericTraits<T>::ConjugateType(0,0))
 {
   itsVal(0) = i;
 }
 
 template<class T> FluxRep<T>::
 FluxRep(T i, T q, T u, T v)
-  :itsVal(4, typename NumericTraits<T>::ConjugateType(0,0)),
+  :itsVal(4, typename casacore::NumericTraits<T>::ConjugateType(0,0)),
    itsPol(ComponentType::STOKES),
    itsUnit("Jy"),
-   itsErr(4, typename NumericTraits<T>::ConjugateType(0,0))
+   itsErr(4, typename casacore::NumericTraits<T>::ConjugateType(0,0))
 {
   itsVal(0) = i;
   itsVal(1) = q;
@@ -81,15 +81,15 @@ FluxRep(T i, T q, T u, T v)
 }
 
 template<class T> FluxRep<T>::
-FluxRep(typename NumericTraits<T>::ConjugateType xx,
-	typename NumericTraits<T>::ConjugateType xy,
-	typename NumericTraits<T>::ConjugateType yx,
-	typename NumericTraits<T>::ConjugateType yy,
+FluxRep(typename casacore::NumericTraits<T>::ConjugateType xx,
+	typename casacore::NumericTraits<T>::ConjugateType xy,
+	typename casacore::NumericTraits<T>::ConjugateType yx,
+	typename casacore::NumericTraits<T>::ConjugateType yy,
 	ComponentType::Polarisation pol)
   :itsVal(4),
    itsPol(pol),
    itsUnit("Jy"),
-   itsErr(4, typename NumericTraits<T>::ConjugateType(0,0))
+   itsErr(4, typename casacore::NumericTraits<T>::ConjugateType(0,0))
 {
   itsVal(0) = xx;
   itsVal(1) = xy;
@@ -98,45 +98,45 @@ FluxRep(typename NumericTraits<T>::ConjugateType xx,
 }
 
 template<class T> FluxRep<T>::
-FluxRep(const Vector<T>& flux)
-  :itsVal(4, typename NumericTraits<T>::ConjugateType(0,0)),
+FluxRep(const casacore::Vector<T>& flux)
+  :itsVal(4, typename casacore::NumericTraits<T>::ConjugateType(0,0)),
    itsPol(ComponentType::STOKES),
    itsUnit("Jy"),
-   itsErr(4, typename NumericTraits<T>::ConjugateType(0,0))
+   itsErr(4, typename casacore::NumericTraits<T>::ConjugateType(0,0))
 {
-  for (uInt i = 0 ; i < 4; i++) {
+  for (casacore::uInt i = 0 ; i < 4; i++) {
     itsVal(i) = flux(i);
   }
 }
 
 template<class T> FluxRep<T>::
-FluxRep(const Vector<typename NumericTraits<T>::ConjugateType>& flux,
+FluxRep(const casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& flux,
 	ComponentType::Polarisation pol)
   :itsVal(flux.copy()),
    itsPol(pol),
    itsUnit("Jy"),
-   itsErr(4, typename NumericTraits<T>::ConjugateType(0,0))
+   itsErr(4, typename casacore::NumericTraits<T>::ConjugateType(0,0))
 {
 }
 
 template<class T> FluxRep<T>::
-FluxRep(const Quantum<Vector<T> >& flux)
-  :itsVal(4, typename NumericTraits<T>::ConjugateType(0,0)),
+FluxRep(const casacore::Quantum<casacore::Vector<T> >& flux)
+  :itsVal(4, typename casacore::NumericTraits<T>::ConjugateType(0,0)),
    itsPol(ComponentType::STOKES),
    itsUnit(flux.getFullUnit()),
-   itsErr(4, typename NumericTraits<T>::ConjugateType(0,0))
+   itsErr(4, typename casacore::NumericTraits<T>::ConjugateType(0,0))
 {
-  const Vector<T>& fluxVal(flux.getValue());
+  const casacore::Vector<T>& fluxVal(flux.getValue());
   convertArray(itsVal, fluxVal);
 }
 
 template<class T> FluxRep<T>::
-FluxRep(const Quantum<Vector<typename NumericTraits<T>::ConjugateType> >& flux,
+FluxRep(const casacore::Quantum<casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType> >& flux,
 	ComponentType::Polarisation pol)
   :itsVal(flux.getValue().copy()),
    itsPol(pol),
    itsUnit(flux.getFullUnit()),
-   itsErr(4, typename NumericTraits<T>::ConjugateType(0,0))
+   itsErr(4, typename casacore::NumericTraits<T>::ConjugateType(0,0))
 {
 }
 
@@ -164,26 +164,26 @@ operator=(const FluxRep<T>& other) {
   return *this;
 }
 
-template<class T> const Unit& FluxRep<T>::
+template<class T> const casacore::Unit& FluxRep<T>::
 unit() const {
   return itsUnit;
 }
 
 template<class T> void FluxRep<T>::
-unit(Unit& unit) const {
+unit(casacore::Unit& unit) const {
   unit = itsUnit;
 }
 
 template<class T> void FluxRep<T>::
-setUnit(const Unit& unit) {
+setUnit(const casacore::Unit& unit) {
   itsUnit = unit;
 }
 
 template<class T> void FluxRep<T>::
-convertUnit(const Unit& unit) {
+convertUnit(const casacore::Unit& unit) {
   if (unit.getName() != itsUnit.getName()) {
     T factor = itsUnit.getValue().getFac()/unit.getValue().getFac();
-    for (uInt i = 0; i < 4; i++) {
+    for (casacore::uInt i = 0; i < 4; i++) {
       itsVal(i) *= factor;
       itsErr(i) *= factor;
     }
@@ -232,127 +232,127 @@ convertPol(ComponentType::Polarisation pol) {
       }
       break;
     default:
-      throw(AipsError("FluxRep<T>::convertPol(...) - bad polarisation type"));
+      throw(casacore::AipsError("FluxRep<T>::convertPol(...) - bad polarisation type"));
     };
 
     setPol(pol);                     // New pol rep label
 
-    if (!allNearAbs(itsErr, typename NumericTraits<T>::ConjugateType(0,0), 
-		    C::dbl_epsilon)) {
-      LogIO logErr(LogOrigin("FluxRep", "convertPol()"));
-      logErr << LogIO::WARN 
+    if (!allNearAbs(itsErr, typename casacore::NumericTraits<T>::ConjugateType(0,0), 
+		    casacore::C::dbl_epsilon)) {
+      casacore::LogIO logErr(casacore::LogOrigin("FluxRep", "convertPol()"));
+      logErr << casacore::LogIO::WARN 
 	     << "The change in flux representation means the numerical values"
-	     << " have changed" << endl
+	     << " have changed" << std::endl
 	     << "But the errors in the flux are not being changed "
 	     << "and are probably now incorrect"
-	     << LogIO::POST;
+	     << casacore::LogIO::POST;
     }
   }
 }
 
 template<class T>
-const Vector<typename NumericTraits<T>::ConjugateType>& FluxRep<T>::
+const casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& FluxRep<T>::
 value() const {
   return itsVal;
 }
 
 template<class T>
-const typename NumericTraits<T>::ConjugateType& FluxRep<T>::
-value(uInt p) const {
+const typename casacore::NumericTraits<T>::ConjugateType& FluxRep<T>::
+value(casacore::uInt p) const {
   return itsVal(p);
 }
 
 template<class T> void FluxRep<T>::
-value(Vector<T>& value) {
-  const uInt len = value.nelements();
+value(casacore::Vector<T>& value) {
+  const casacore::uInt len = value.nelements();
   if (len == 0) value.resize(4);
   convertPol(ComponentType::STOKES);
-  for (uInt s = 0 ; s < 4; s++) {
+  for (casacore::uInt s = 0 ; s < 4; s++) {
     value(s) = itsVal(s).real();
   }
 }
 
 template<class T> void FluxRep<T>::
-value(Vector<typename NumericTraits<T>::ConjugateType>& value) const {
+value(casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& value) const {
   value = itsVal;
 }
 
 template<class T> void FluxRep<T>::
-value(Quantum<Vector<T> >& value) {
-  const Unit& curUnit = value.getFullUnit();
+value(casacore::Quantum<casacore::Vector<T> >& value) {
+  const casacore::Unit& curUnit = value.getFullUnit();
   if (curUnit != itsUnit) {
     value.setUnit(itsUnit);
   }
   convertPol(ComponentType::STOKES);
-  Vector<T>& newValue = value.getValue();
+  casacore::Vector<T>& newValue = value.getValue();
   if (newValue.nelements() != 4) newValue.resize(4);
-  for (uInt s = 0 ; s < 4; s++) {
+  for (casacore::uInt s = 0 ; s < 4; s++) {
     newValue(s) = itsVal(s).real();
   }
 }
 
-template<class T> Quantum<T>  FluxRep<T>::
-value (Stokes::StokesTypes stokes, Bool toJy) 
+template<class T> casacore::Quantum<T>  FluxRep<T>::
+value (casacore::Stokes::StokesTypes stokes, casacore::Bool toJy) 
 {
-   LogIO os(LogOrigin("FluxRep", "value(Stokes::StokesTypes)"));
+   casacore::LogIO os(casacore::LogOrigin("FluxRep", "value(casacore::Stokes::StokesTypes)"));
 
 // Get the vector of values that we are holding
   
-   Vector<T> values;
+   casacore::Vector<T> values;
    value(values);
   
 // Make a quantum for the result
       
-   Quantum<T> value;
+   casacore::Quantum<T> value;
    value.setUnit(unit());
 
 // Fish it out
    
    ComponentType::Polarisation cPol = pol();
-   if ( (stokes==Stokes::I || stokes==Stokes::Q ||
-         stokes==Stokes::U || stokes==Stokes::V)  &&
+   if ( (stokes==casacore::Stokes::I || stokes==casacore::Stokes::Q ||
+         stokes==casacore::Stokes::U || stokes==casacore::Stokes::V)  &&
          cPol==ComponentType::STOKES) {
 //
-      String error("Failed to extract Flux from SkyComponent because not enough Stokes values");
-      if (stokes==Stokes::I) {
-         if (values.nelements()<1) os << error << LogIO::EXCEPTION;
+      casacore::String error("Failed to extract Flux from SkyComponent because not enough casacore::Stokes values");
+      if (stokes==casacore::Stokes::I) {
+         if (values.nelements()<1) os << error << casacore::LogIO::EXCEPTION;
          value.setValue(values(0));
-      } else if (stokes==Stokes::Q) {
-         if (values.nelements()<2) os << error << LogIO::EXCEPTION;
+      } else if (stokes==casacore::Stokes::Q) {
+         if (values.nelements()<2) os << error << casacore::LogIO::EXCEPTION;
          value.setValue(values(1));
-      } else if (stokes==Stokes::U) {
-         if (values.nelements()<3) os << error << LogIO::EXCEPTION;
+      } else if (stokes==casacore::Stokes::U) {
+         if (values.nelements()<3) os << error << casacore::LogIO::EXCEPTION;
          value.setValue(values(2));
-      } else if (stokes==Stokes::V) {
-         if (values.nelements()<4) os << error << LogIO::EXCEPTION;
+      } else if (stokes==casacore::Stokes::V) {
+         if (values.nelements()<4) os << error << casacore::LogIO::EXCEPTION;
          value.setValue(values(3));
       }
    } else {
-      os << "It is not possible currently to extract the flux value" << endl;
-      os << "for Stokes type " << Stokes::name(stokes)  << " from the SkyComponent" << LogIO::EXCEPTION;
+      os << "It is not possible currently to extract the flux value" << std::endl;
+      os << "for casacore::Stokes type " << casacore::Stokes::name(stokes)  << " from the SkyComponent" << casacore::LogIO::EXCEPTION;
    }
 //
-   if (toJy) value.convert(Unit("Jy"));
+   if (toJy) value.convert(casacore::Unit("Jy"));
    return value;
 }
 
 template<class T> void FluxRep<T>::
-value(Quantum<Vector<typename NumericTraits<T>::ConjugateType> >&
+value(casacore::Quantum<casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType> >&
       value) const {
-  const Unit& curUnit = value.getFullUnit();
+  const casacore::Unit& curUnit = value.getFullUnit();
   if (curUnit != itsUnit) {
     value.setUnit(itsUnit);
   }
-  Vector<typename NumericTraits<T>::ConjugateType>& newValue = value.getValue();
+  casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& newValue = value.getValue();
   if (newValue.nelements() != 4) newValue.resize(4);
-  for (uInt s = 0 ; s < 4; s++) {
+  for (casacore::uInt s = 0 ; s < 4; s++) {
     newValue(s) = itsVal(s);
   }
 }
 
 template<class T> void FluxRep<T>::
 setValue(T value) {
-  for (uInt i = 0; i < 4; i++) {
+  for (casacore::uInt i = 0; i < 4; i++) {
     itsVal(i) = 0.0;
   }
   itsVal(0) = value;
@@ -360,22 +360,22 @@ setValue(T value) {
 }
 
 template<class T> void FluxRep<T>::
-setValue(const Vector<T>& value) {
-  for (uInt i = 0; i < 4; i++) {
+setValue(const casacore::Vector<T>& value) {
+  for (casacore::uInt i = 0; i < 4; i++) {
     itsVal(i) = value(i);
   }
   itsPol = ComponentType::STOKES;
 }
 
 template<class T> void FluxRep<T>::
-setValue(const Vector<typename NumericTraits<T>::ConjugateType>& value) {
+setValue(const casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& value) {
   itsVal = value;
 }
 
 template<class T> void FluxRep<T>::
-setValue(const Quantum<Vector<T> >& value) {
-  const Vector<T>& val = value.getValue();
-  for (uInt s = 0; s < 4; s++) {
+setValue(const casacore::Quantum<casacore::Vector<T> >& value) {
+  const casacore::Vector<T>& val = value.getValue();
+  for (casacore::uInt s = 0; s < 4; s++) {
     itsVal(s) = val(s);
   }
   itsUnit = value.getFullUnit();
@@ -384,14 +384,14 @@ setValue(const Quantum<Vector<T> >& value) {
 
 template<class T> void FluxRep<T>::
 setValue(const
-	 Quantum<Vector<typename NumericTraits<T>::ConjugateType> >& value,
+	 casacore::Quantum<casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType> >& value,
 	 ComponentType::Polarisation pol) {
   itsVal = value.getValue();
   itsUnit = value.getFullUnit();
   itsPol = pol;
 }
 
-template<class T> Unit FluxRep<T>::_getConversionUnit(const Unit& unit) {
+template<class T> casacore::Unit FluxRep<T>::_getConversionUnit(const casacore::Unit& unit) {
     auto iter = _allowedUnits.begin();
     auto end = _allowedUnits.end();
     for (; iter!=end; ++iter) {
@@ -399,7 +399,8 @@ template<class T> Unit FluxRep<T>::_getConversionUnit(const Unit& unit) {
 		    return *iter;
 		}
     }
-    ostringstream oss;
+    std::ostringstream oss;
+    using casacore::AipsError;
 	ThrowCc(
         "The flux unit "
 		+ unit.getName()
@@ -408,26 +409,26 @@ template<class T> Unit FluxRep<T>::_getConversionUnit(const Unit& unit) {
 }
 
 template<class T> void FluxRep<T>::setValue(
-		const Quantum<T>& value, Stokes::StokesTypes stokes
+		const casacore::Quantum<T>& value, casacore::Stokes::StokesTypes stokes
 ) {
-	LogIO os(LogOrigin("FluxRep", "setValue(const Quantum<Double>&, Stokes::StokesTypes)"));
-	Vector<T> tmp(4, 0.0);
+	casacore::LogIO os(casacore::LogOrigin("FluxRep", "setValue(const casacore::Quantum<casacore::Double>&, casacore::Stokes::StokesTypes)"));
+	casacore::Vector<T> tmp(4, 0.0);
 	auto conversionUnit = _getConversionUnit(value.getUnit()) ;
-	if (stokes==Stokes::I || stokes==Stokes::Q || stokes==Stokes::U || stokes==Stokes::V) {
-		if (stokes==Stokes::I) {
-			tmp(0) = value.getValue(Unit(conversionUnit));
-		} else if (stokes==Stokes::Q) {
-			tmp(1) = value.getValue(Unit(conversionUnit));
-		} else if (stokes==Stokes::U) {
-			tmp(2) = value.getValue(Unit(conversionUnit));
-		} else if (stokes==Stokes::V) {
-			tmp(3) = value.getValue(Unit(conversionUnit));
+	if (stokes==casacore::Stokes::I || stokes==casacore::Stokes::Q || stokes==casacore::Stokes::U || stokes==casacore::Stokes::V) {
+		if (stokes==casacore::Stokes::I) {
+			tmp(0) = value.getValue(casacore::Unit(conversionUnit));
+		} else if (stokes==casacore::Stokes::Q) {
+			tmp(1) = value.getValue(casacore::Unit(conversionUnit));
+		} else if (stokes==casacore::Stokes::U) {
+			tmp(2) = value.getValue(casacore::Unit(conversionUnit));
+		} else if (stokes==casacore::Stokes::V) {
+			tmp(3) = value.getValue(casacore::Unit(conversionUnit));
 		}
 	}
 	else {
-		os << LogIO::WARN << "Can only properly handle I,Q,U,V presently." << endl;
-		os << "The brightness is assumed to be Stokes I"  << LogIO::POST;
-		tmp(0) = value.getValue(Unit("Jy"));
+		os << casacore::LogIO::WARN << "Can only properly handle I,Q,U,V presently." << std::endl;
+		os << "The brightness is assumed to be casacore::Stokes I"  << casacore::LogIO::POST;
+		tmp(0) = value.getValue(casacore::Unit("Jy"));
 	}
 	setValue(tmp);
 }
@@ -447,15 +448,15 @@ scaleValue(const T& factor0, const T& factor1,
 }
 
 template<class T> void FluxRep<T>::
-scaleValue(const typename  NumericTraits<T>::ConjugateType& factor) {
+scaleValue(const typename  casacore::NumericTraits<T>::ConjugateType& factor) {
   itsVal(0) *= factor;
 }
 
 template<class T> void FluxRep<T>::
-scaleValue(const typename NumericTraits<T>::ConjugateType& factor0,
-	   const typename NumericTraits<T>::ConjugateType& factor1,
-	   const typename NumericTraits<T>::ConjugateType& factor2,
-	   const typename NumericTraits<T>::ConjugateType& factor3) {
+scaleValue(const typename casacore::NumericTraits<T>::ConjugateType& factor0,
+	   const typename casacore::NumericTraits<T>::ConjugateType& factor1,
+	   const typename casacore::NumericTraits<T>::ConjugateType& factor2,
+	   const typename casacore::NumericTraits<T>::ConjugateType& factor3) {
   itsVal(0) *= factor0;
   itsVal(1) *= factor1;
   itsVal(2) *= factor2;
@@ -463,10 +464,10 @@ scaleValue(const typename NumericTraits<T>::ConjugateType& factor0,
 }
 
 template<class T> void FluxRep<T>::
-setErrors(const typename NumericTraits<T>::ConjugateType& error0,
-	  const typename NumericTraits<T>::ConjugateType& error1,
-	  const typename NumericTraits<T>::ConjugateType& error2,
-	  const typename NumericTraits<T>::ConjugateType& error3) {
+setErrors(const typename casacore::NumericTraits<T>::ConjugateType& error0,
+	  const typename casacore::NumericTraits<T>::ConjugateType& error1,
+	  const typename casacore::NumericTraits<T>::ConjugateType& error2,
+	  const typename casacore::NumericTraits<T>::ConjugateType& error3) {
   itsErr(0) = error0;
   itsErr(1) = error1;
   itsErr(2) = error2;
@@ -474,198 +475,198 @@ setErrors(const typename NumericTraits<T>::ConjugateType& error0,
 }
 
 template<class T> void FluxRep<T>::setErrors(
-	const Vector<typename NumericTraits<T>::ConjugateType>& errors
+	const casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& errors
 ) {
 	itsErr = errors;
 }
 
 
 template<class T> const
-Vector<typename NumericTraits<T>::ConjugateType>& FluxRep<T>::errors() const {
+casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& FluxRep<T>::errors() const {
   return itsErr;
 }
 
-template<class T> Bool FluxRep<T>::
-fromRecord(String& errorMessage, const RecordInterface& record) {
+template<class T> casacore::Bool FluxRep<T>::
+fromRecord(casacore::String& errorMessage, const casacore::RecordInterface& record) {
   ComponentType::Polarisation newPol = ComponentType::UNKNOWN_POLARISATION;
   {
-    const String polarisationString("polarisation");
+    const casacore::String polarisationString("polarisation");
     if (!record.isDefined(polarisationString)) {
-      LogIO logErr(LogOrigin("FluxRep", "fromRecord()"));
-      logErr << LogIO::WARN 
-	     << "The flux does not have a 'polarisation' field." << endl
-	     << "Using the default of Stokes"
-	     << LogIO::POST;
+      casacore::LogIO logErr(casacore::LogOrigin("FluxRep", "fromRecord()"));
+      logErr << casacore::LogIO::WARN 
+	     << "The flux does not have a 'polarisation' field." << std::endl
+	     << "Using the default of casacore::Stokes"
+	     << casacore::LogIO::POST;
       setPol(ComponentType::STOKES);
     } else {
-      const RecordFieldId polarisation(polarisationString);
+      const casacore::RecordFieldId polarisation(polarisationString);
       // Maybe the polarisation field should contain ["I", "Q", "U", "V"]. This
       // is harder to parse but more flexible for the future.
-      if (record.dataType(polarisation) != TpString) {
+      if (record.dataType(polarisation) != casacore::TpString) {
 	errorMessage += "The 'polarisation' field must be a record\n";
-	return False;
+	return false;
       }      
-      if (record.shape(polarisation) != IPosition(1,1)) {
+      if (record.shape(polarisation) != casacore::IPosition(1,1)) {
 	errorMessage += "The 'polarisation' field must have only 1 element\n";
-	return False;
+	return false;
       } 
-      const String polVal = record.asString(polarisation);
+      const casacore::String polVal = record.asString(polarisation);
       newPol = ComponentType::polarisation(polVal);
       if (newPol == ComponentType::UNKNOWN_POLARISATION) {
-	errorMessage += String("The polarisation type is not known.\n") +
-	  String("Allowed values are 'Stokes', 'Linear' & 'Circular'\n");
-	return False;
+	errorMessage += casacore::String("The polarisation type is not known.\n") +
+	  casacore::String("Allowed values are 'casacore::Stokes', 'Linear' & 'Circular'\n");
+	return false;
       }
     }
   }
   setPol(newPol);
   {
-    QuantumHolder qh;
+    casacore::QuantumHolder qh;
     if (!qh.fromRecord(errorMessage, record)) {
       errorMessage += "Could not parse the flux record\n";
-      return False;
+      return false;
     }
     if (qh.isScalar() && pol() == ComponentType::STOKES) {
       if (qh.isReal()) {
-	const Quantum<Double>& qVal = qh.asQuantumDouble();
+	const casacore::Quantum<casacore::Double>& qVal = qh.asQuantumDouble();
 	setValue(qVal.getValue());
 	setUnit(qVal.getFullUnit());
       } else {
-	const Quantum<DComplex>& qVal = qh.asQuantumDComplex();
-	const DComplex& val = qVal.getValue();
-	if (!nearAbs(val.imag(), 0.0, NumericTraits<T>::minimum)) {
+	const casacore::Quantum<casacore::DComplex>& qVal = qh.asQuantumDComplex();
+	const casacore::DComplex& val = qVal.getValue();
+	if (! casacore::nearAbs(val.imag(), 0.0, casacore::NumericTraits<T>::minimum)) {
 	  errorMessage += "I value cannot be complex\n";
-	  return False;
+	  return false;
 	}
 	setValue(T(val.real()));
 	setUnit(qVal.getFullUnit());
       }
-      LogIO logErr(LogOrigin("FluxRep", "fromRecord()"));
-      logErr << LogIO::WARN
+      casacore::LogIO logErr(casacore::LogOrigin("FluxRep", "fromRecord()"));
+      logErr << casacore::LogIO::WARN
 	     << "Only the I flux specified. Assuming Q, U, & V are zero\n" 
-	     << LogIO::POST;
+	     << casacore::LogIO::POST;
     } else {
       if (qh.nelements() != 4u) {
-	errorMessage += String("Must specify all 4 flux values\n")
-	  + String("if the polarisation representation is not Stokes\n");
-	return False;
+	errorMessage += casacore::String("Must specify all 4 flux values\n")
+	  + casacore::String("if the polarisation representation is not casacore::Stokes\n");
+	return false;
       }
       if (qh.isQuantumVectorDouble()) {
-	const Quantum<Vector<Double> > qVal = qh.asQuantumVectorDouble();
+	const casacore::Quantum<casacore::Vector<casacore::Double> > qVal = qh.asQuantumVectorDouble();
 	setUnit(qVal.getFullUnit());
-	Vector<typename NumericTraits<T>::ConjugateType> val(4);
+	casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType> val(4);
 	convertArray(val, qVal.getValue());
 	setValue(val);
       } else if (qh.isQuantumVectorDComplex()) {
-	const Quantum<Vector<DComplex> >& qVal = qh.asQuantumVectorDComplex();
+	const casacore::Quantum<casacore::Vector<casacore::DComplex> >& qVal = qh.asQuantumVectorDComplex();
 	setUnit(qVal.getFullUnit());
-	Vector<typename NumericTraits<T>::ConjugateType> val(4);
+	casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType> val(4);
 	convertArray(val, qVal.getValue());
 	setValue(val);
       } else if (qh.isQuantumVectorComplex()) {
-	const Quantum<Vector<Complex> >& qVal = qh.asQuantumVectorComplex();
+	const casacore::Quantum<casacore::Vector<casacore::Complex> >& qVal = qh.asQuantumVectorComplex();
 	setUnit(qVal.getFullUnit());
-	Vector<typename NumericTraits<T>::ConjugateType> val(4);
+	casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType> val(4);
 	convertArray(val, qVal.getValue());
 	setValue(val);
       } else if (qh.isQuantumVectorFloat()) {
-	const Quantum<Vector<Float> >& qVal = qh.asQuantumVectorFloat();
+	const casacore::Quantum<casacore::Vector<casacore::Float> >& qVal = qh.asQuantumVectorFloat();
 	setUnit(qVal.getFullUnit());
-	Vector<typename NumericTraits<T>::ConjugateType> val(4);
+	casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType> val(4);
 	convertArray(val, qVal.getValue());
 	setValue(val);
       } else if (qh.isQuantumVectorInt()) {
-	const Quantum<Vector<Int> >& qVal = qh.asQuantumVectorInt();
+	const casacore::Quantum<casacore::Vector<casacore::Int> >& qVal = qh.asQuantumVectorInt();
 	setUnit(qVal.getFullUnit());
-	Vector<typename NumericTraits<T>::ConjugateType> val(4);
+	casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType> val(4);
 	convertArray(val, qVal.getValue());
 	setValue(val);
       } else {
 	errorMessage += "value field must be a real or complex vector\n";
-	return False;
+	return false;
       }
     }
   }
   {
-    const String errorString("error");
+    const casacore::String errorString("error");
     if (record.isDefined(errorString)) {
-      const RecordFieldId error(errorString);
-      Vector<DComplex> err(4, DComplex(0.0, 0.0));
-      if  (record.shape(error) != IPosition(1,4)) {
+      const casacore::RecordFieldId error(errorString);
+      casacore::Vector<casacore::DComplex> err(4, casacore::DComplex(0.0, 0.0));
+      if  (record.shape(error) != casacore::IPosition(1,4)) {
  	errorMessage += 
  	  "The 'error' field must be a vector with 4 elements\n";
- 	return False;
+ 	return false;
       }
-      if (record.dataType(error) == TpArrayDouble && 
+      if (record.dataType(error) == casacore::TpArrayDouble &&
 	  newPol == ComponentType::STOKES) {
 	convertArray(err, record.asArrayDouble(error));
-      } else if (record.dataType(error) == TpArrayDComplex) {
+      } else if (record.dataType(error) == casacore::TpArrayDComplex) {
 	err = record.asArrayDComplex(error);
       } else {
  	errorMessage += 
  	  "The 'error' field must be a complex vector with 4 elements\n";
- 	return False;
+ 	return false;
       }
       setErrors(err(0), err(1), err(2), err(3));
     }
   }
-  if (unit() != Unit("Jy") && unit() != Unit("K.rad.rad")) {
+  if (unit() != casacore::Unit("Jy") && unit() != casacore::Unit("K.rad.rad")) {
     errorMessage += "The dimensions of the units must be same as the Jy\n";
-    return False;
+    return false;
   }
   if (!ok()) {
     errorMessage += "Inconsistencies in the FluxRep object\n";
-    return False;
+    return false;
   }
-  return True;
+  return true;
 }
 
-template<class T> Bool FluxRep<T>::
-toRecord(String& errorMessage, RecordInterface& record) const {
+template<class T> casacore::Bool FluxRep<T>::
+toRecord(casacore::String& errorMessage, casacore::RecordInterface& record) const {
   if (!ok()) {
     errorMessage += "Inconsistancies in the FluxRep object\n";
-    return False;
+    return false;
   }
-  QuantumHolder qh;
+  casacore::QuantumHolder qh;
   if (pol() == ComponentType::STOKES) {
     FluxRep<T> fluxCopy = *this;
-    Quantum<Vector<T> > qVal;
+    casacore::Quantum<casacore::Vector<T> > qVal;
     fluxCopy.value(qVal);
-    qh = QuantumHolder(qVal);
+    qh = casacore::QuantumHolder(qVal);
   } else {
-    Quantum<Vector<typename NumericTraits<T>::ConjugateType> > qVal;
+    casacore::Quantum<casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType> > qVal;
     value(qVal);
-    qh = QuantumHolder(qVal);
+    qh = casacore::QuantumHolder(qVal);
   }
   if (!qh.toRecord(errorMessage, record)) {
     errorMessage += "Problem generating the flux record\n";
-    return False;
+    return false;
   }
-  record.define(RecordFieldId("polarisation"), ComponentType::name(pol()));
+  record.define(casacore::RecordFieldId("polarisation"), ComponentType::name(pol()));
   if (pol() != ComponentType::STOKES) {
-    record.define(RecordFieldId("error"), errors());
+    record.define(casacore::RecordFieldId("error"), errors());
   } else {
-    Vector<T> realErr(4);
+    casacore::Vector<T> realErr(4);
     real(realErr, errors());
-    record.define(RecordFieldId("error"), realErr);
+    record.define(casacore::RecordFieldId("error"), realErr);
   }
-  return True;
+  return true;
 }
 
 
-template<class T> Bool FluxRep<T>::ok() const {
-	// The LogIO class is only constructed if an Error is detected for
+template<class T> casacore::Bool FluxRep<T>::ok() const {
+	// The casacore::LogIO class is only constructed if an Error is detected for
 	// performance reasons. Both function static and file static variables
 	// where considered and rejected for this purpose.
 	if (itsVal.nelements() != 4) {
-		LogIO logErr(LogOrigin("FluxRep", "ok()"));
-		logErr << LogIO::SEVERE << "The flux does not have 4 elements"
+		casacore::LogIO logErr(casacore::LogOrigin("FluxRep", "ok()"));
+		logErr << casacore::LogIO::SEVERE << "The flux does not have 4 elements"
 				<< " (corresponding to four polarisations)"
-				<< LogIO::POST;
-		return False;
+				<< casacore::LogIO::POST;
+		return false;
 	}
     _getConversionUnit(itsUnit);
-    return True;
+    return true;
 }
 
 template<class T> Flux<T>::
@@ -687,30 +688,30 @@ Flux(T i, T q, T u, T v)
 }
 
 template<class T> Flux<T>::
-Flux(typename NumericTraits<T>::ConjugateType xx,
-     typename NumericTraits<T>::ConjugateType xy,
-     typename NumericTraits<T>::ConjugateType yx,
-     typename NumericTraits<T>::ConjugateType yy, 
+Flux(typename casacore::NumericTraits<T>::ConjugateType xx,
+     typename casacore::NumericTraits<T>::ConjugateType xy,
+     typename casacore::NumericTraits<T>::ConjugateType yx,
+     typename casacore::NumericTraits<T>::ConjugateType yy, 
      ComponentType::Polarisation pol)  
   :itsFluxPtr(new FluxRep<T>(xx, xy, yx, yy, pol))
 {
 }
 
 template<class T> Flux<T>::
-Flux(const Vector<T>& flux)
+Flux(const casacore::Vector<T>& flux)
   :itsFluxPtr(new FluxRep<T>(flux))
 {
 }
 
 template<class T> Flux<T>::
-Flux(const Vector<typename NumericTraits<T>::ConjugateType>& flux,
+Flux(const casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& flux,
      ComponentType::Polarisation pol)
   :itsFluxPtr(new FluxRep<T>(flux, pol))
 {
 }
   
 template<class T> Flux<T>::
-Flux(const Quantum<Vector<T> >& flux)
+Flux(const casacore::Quantum<casacore::Vector<T> >& flux)
   :itsFluxPtr(new FluxRep<T>(flux))
 {
 }
@@ -740,23 +741,23 @@ copy() const {
   return newFlux;
 }
 
-template<class T> const Unit& Flux<T>::
+template<class T> const casacore::Unit& Flux<T>::
 unit() const {
   return itsFluxPtr->unit();
 }
 
 template<class T> void Flux<T>::
-unit(Unit& unit) const {
+unit(casacore::Unit& unit) const {
   itsFluxPtr->unit(unit);
 }
 
 template<class T> void Flux<T>::
-setUnit(const Unit& unit) {
+setUnit(const casacore::Unit& unit) {
   itsFluxPtr->setUnit(unit);
 }
 
 template<class T> void Flux<T>::
-convertUnit(const Unit& unit) {
+convertUnit(const casacore::Unit& unit) {
   itsFluxPtr->convertUnit(unit);
 }
 
@@ -781,38 +782,38 @@ convertPol(ComponentType::Polarisation pol) {
 }
 
 template<class T> const
-Vector<typename NumericTraits<T>::ConjugateType>& Flux<T>::value() const {
+casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& Flux<T>::value() const {
   return itsFluxPtr->value();
 }
 
-template<class T> const typename NumericTraits<T>::ConjugateType& Flux<T>::
-value(uInt p) const {
+template<class T> const typename casacore::NumericTraits<T>::ConjugateType& Flux<T>::
+value(casacore::uInt p) const {
   return itsFluxPtr->value(p);
 }
 
 template<class T> void Flux<T>::
-value(Vector<T>& value) {
+value(casacore::Vector<T>& value) {
   itsFluxPtr->value(value);
 }
 
 template<class T> void Flux<T>::
-value(Vector<typename NumericTraits<T>::ConjugateType>& value) const {
+value(casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& value) const {
   itsFluxPtr->value(value);
 }
 
 template<class T> void Flux<T>::
-value(Quantum<Vector<T> >& value) {
+value(casacore::Quantum<casacore::Vector<T> >& value) {
   itsFluxPtr->value(value);
 }
 
 template<class T> void Flux<T>::
-value(Quantum<Vector<typename NumericTraits<T>::ConjugateType> >&
+value(casacore::Quantum<casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType> >&
       value) const {
   itsFluxPtr->value(value);
 }
 
-template<class T> Quantum<T>  Flux<T>::
-value (Stokes::StokesTypes stokes, Bool toJy) 
+template<class T> casacore::Quantum<T>  Flux<T>::
+value (casacore::Stokes::StokesTypes stokes, casacore::Bool toJy) 
 {
   return itsFluxPtr->value(stokes, toJy);
 }
@@ -825,29 +826,29 @@ setValue(T value) {
 }
 
 template<class T> void Flux<T>::
-setValue(const Vector<T>& value) {
+setValue(const casacore::Vector<T>& value) {
   itsFluxPtr->setValue(value);
 }
 
 template<class T> void Flux<T>::
-setValue(const Vector<typename NumericTraits<T>::ConjugateType>& value) {
+setValue(const casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& value) {
   itsFluxPtr->setValue(value);
 }
 
 template<class T> void Flux<T>::
-setValue(const Quantum<Vector<T> >& value) {
+setValue(const casacore::Quantum<casacore::Vector<T> >& value) {
   itsFluxPtr->setValue(value);
 }
 
 template<class T> void Flux<T>::
 setValue(const
-	 Quantum<Vector<typename NumericTraits<T>::ConjugateType> >& value,
+	 casacore::Quantum<casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType> >& value,
 	 ComponentType::Polarisation pol) {
   itsFluxPtr->setValue(value, pol);
 }
 
 template<class T> void Flux<T>::
-setValue(const Quantum<T>& value, Stokes::StokesTypes stokes)
+setValue(const casacore::Quantum<T>& value, casacore::Stokes::StokesTypes stokes)
 {
   itsFluxPtr->setValue(value, stokes);
 }
@@ -864,86 +865,86 @@ scaleValue(const T& factor0, const T& factor1,
 }
 
 template<class T> void Flux<T>::
-scaleValue(const typename NumericTraits<T>::ConjugateType& factor) {
+scaleValue(const typename casacore::NumericTraits<T>::ConjugateType& factor) {
   itsFluxPtr->scaleValue(factor);
 }
 
 template<class T> void Flux<T>::
-scaleValue(const typename NumericTraits<T>::ConjugateType& factor0,
-	   const typename NumericTraits<T>::ConjugateType& factor1,
-	   const typename NumericTraits<T>::ConjugateType& factor2,
-	   const typename NumericTraits<T>::ConjugateType& factor3) {
+scaleValue(const typename casacore::NumericTraits<T>::ConjugateType& factor0,
+	   const typename casacore::NumericTraits<T>::ConjugateType& factor1,
+	   const typename casacore::NumericTraits<T>::ConjugateType& factor2,
+	   const typename casacore::NumericTraits<T>::ConjugateType& factor3) {
   itsFluxPtr->scaleValue(factor0, factor1, factor2, factor3);
 }
 
 template<class T> void Flux<T>::
-setErrors(const typename NumericTraits<T>::ConjugateType& error0,
-	  const typename NumericTraits<T>::ConjugateType& error1,
-	  const typename NumericTraits<T>::ConjugateType& error2,
-	  const typename NumericTraits<T>::ConjugateType& error3) {
+setErrors(const typename casacore::NumericTraits<T>::ConjugateType& error0,
+	  const typename casacore::NumericTraits<T>::ConjugateType& error1,
+	  const typename casacore::NumericTraits<T>::ConjugateType& error2,
+	  const typename casacore::NumericTraits<T>::ConjugateType& error3) {
   itsFluxPtr->setErrors(error0, error1, error2, error3);
 }
 
 template<class T> void Flux<T>::setErrors(
-	const Vector<typename NumericTraits<T>::ConjugateType>& errors
+	const casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& errors
 ) {
 	itsFluxPtr->setErrors(errors);
 }
 
 
 template<class T> const
-Vector<typename NumericTraits<T>::ConjugateType>& Flux<T>::errors() const {
+casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& Flux<T>::errors() const {
   return itsFluxPtr->errors();
 }
 
-template<class T> Bool Flux<T>::
-fromRecord(String& errorMessage, const RecordInterface& record) {
+template<class T> casacore::Bool Flux<T>::
+fromRecord(casacore::String& errorMessage, const casacore::RecordInterface& record) {
   return itsFluxPtr->fromRecord(errorMessage, record);
 }
 
-template<class T> Bool Flux<T>::
-toRecord(String& errorMessage, RecordInterface& record) const {
+template<class T> casacore::Bool Flux<T>::
+toRecord(casacore::String& errorMessage, casacore::RecordInterface& record) const {
   return itsFluxPtr->toRecord(errorMessage, record);
 }
 
-template<class T> Bool Flux<T>::
+template<class T> casacore::Bool Flux<T>::
 ok() const {
-  if (itsFluxPtr.null() == True) {
-    LogIO logErr(LogOrigin("Flux", "ok()"));
-    logErr << LogIO::SEVERE << "Internal pointer is not pointing to anything"
-           << LogIO::POST;
-    return False;
+  if (itsFluxPtr.null() == true) {
+    casacore::LogIO logErr(casacore::LogOrigin("Flux", "ok()"));
+    logErr << casacore::LogIO::SEVERE << "Internal pointer is not pointing to anything"
+           << casacore::LogIO::POST;
+    return false;
   }
-  if (itsFluxPtr->ok() == False) {
-    LogIO logErr(LogOrigin("Flux", "ok()"));
-    logErr << LogIO::SEVERE << "Flux representation is not ok"
-           << LogIO::POST;
-    return False;
+  if (itsFluxPtr->ok() == false) {
+    casacore::LogIO logErr(casacore::LogOrigin("Flux", "ok()"));
+    logErr << casacore::LogIO::SEVERE << "Flux representation is not ok"
+           << casacore::LogIO::POST;
+    return false;
   }
-  return True;
+  return true;
 }
 
 template<class T> void Flux<T>::
-stokesToCircular(Vector<typename NumericTraits<T>::ConjugateType>& out, 
-		 const Vector<T>& in) {
+stokesToCircular(casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& out, 
+		 const casacore::Vector<T>& in) {
   const T i = in(0);
   const T q = in(1);
   const T u = in(2);
   const T v = in(3);
-  out(0) = typename NumericTraits<T>::ConjugateType(i + v);
-  out(1) = typename NumericTraits<T>::ConjugateType(q, u);
-  out(2) = typename NumericTraits<T>::ConjugateType(q, -u);
-  out(3) = typename NumericTraits<T>::ConjugateType(i - v);
+  out(0) = typename casacore::NumericTraits<T>::ConjugateType(i + v);
+  out(1) = typename casacore::NumericTraits<T>::ConjugateType(q, u);
+  out(2) = typename casacore::NumericTraits<T>::ConjugateType(q, -u);
+  out(3) = typename casacore::NumericTraits<T>::ConjugateType(i - v);
 }
 
 template<class T> void Flux<T>::
-stokesToCircular(Vector<typename NumericTraits<T>::ConjugateType>& out, 
-		 const Vector<typename NumericTraits<T>::ConjugateType>& in) {
-  const typename NumericTraits<T>::ConjugateType i = in(0);
-  const typename NumericTraits<T>::ConjugateType q = in(1);
-  const typename NumericTraits<T>::ConjugateType& u = in(2);
-  const typename NumericTraits<T>::ConjugateType ju(-u.imag(), u.real());
-  const typename NumericTraits<T>::ConjugateType v = in(3);
+stokesToCircular(casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& out, 
+		 const casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& in) {
+  const typename casacore::NumericTraits<T>::ConjugateType i = in(0);
+  const typename casacore::NumericTraits<T>::ConjugateType q = in(1);
+  const typename casacore::NumericTraits<T>::ConjugateType& u = in(2);
+  const typename casacore::NumericTraits<T>::ConjugateType ju(-u.imag(), u.real());
+  const typename casacore::NumericTraits<T>::ConjugateType v = in(3);
   out(0) = i + v;
   out(1) = q + ju;
   out(2) = q - ju;
@@ -951,11 +952,11 @@ stokesToCircular(Vector<typename NumericTraits<T>::ConjugateType>& out,
 }
 
 template<class T> void Flux<T>::
-circularToStokes(Vector<T>& out,
-		 const Vector<typename NumericTraits<T>::ConjugateType>& in) {
+circularToStokes(casacore::Vector<T>& out,
+		 const casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& in) {
   const T rr = in(0).real();
-  const typename NumericTraits<T>::ConjugateType rl = in(1);
-  const typename NumericTraits<T>::ConjugateType lr = in(2);
+  const typename casacore::NumericTraits<T>::ConjugateType rl = in(1);
+  const typename casacore::NumericTraits<T>::ConjugateType lr = in(2);
   const T ll = in(3).real();
   const T two(2);
   out(0) = (rr + ll)/two;
@@ -965,41 +966,41 @@ circularToStokes(Vector<T>& out,
 }
 
 template<class T> void Flux<T>::
-circularToStokes(Vector<typename NumericTraits<T>::ConjugateType>& out,
-		 const Vector<typename NumericTraits<T>::ConjugateType>& in) {
-  const typename NumericTraits<T>::ConjugateType rr = in(0);
-  const typename NumericTraits<T>::ConjugateType rl = in(1);
-  const typename NumericTraits<T>::ConjugateType lr = in(2);
-  const typename NumericTraits<T>::ConjugateType ll = in(3);
+circularToStokes(casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& out,
+		 const casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& in) {
+  const typename casacore::NumericTraits<T>::ConjugateType rr = in(0);
+  const typename casacore::NumericTraits<T>::ConjugateType rl = in(1);
+  const typename casacore::NumericTraits<T>::ConjugateType lr = in(2);
+  const typename casacore::NumericTraits<T>::ConjugateType ll = in(3);
   const T two(2);
   out(0) = (rr + ll)/two;
   out(1) = (rl + lr)/two;
-  out(2) = typename NumericTraits<T>::ConjugateType((rl.imag()-lr.imag())/two,
+  out(2) = typename casacore::NumericTraits<T>::ConjugateType((rl.imag()-lr.imag())/two,
 					   (lr.real()-rl.real())/two);
   out(3) = (rr - ll)/two;
 }
 
 template<class T> void Flux<T>::
-stokesToLinear(Vector<typename NumericTraits<T>::ConjugateType>& out, 
-	       const Vector<T>& in) {
+stokesToLinear(casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& out, 
+	       const casacore::Vector<T>& in) {
   const T i = in(0);
   const T q = in(1);
   const T u = in(2);
   const T v = in(3);
-  out(0) = typename NumericTraits<T>::ConjugateType(i + q);
-  out(1) = typename NumericTraits<T>::ConjugateType(u, v);
-  out(2) = typename NumericTraits<T>::ConjugateType(u, -v);
-  out(3) = typename NumericTraits<T>::ConjugateType(i - q);
+  out(0) = typename casacore::NumericTraits<T>::ConjugateType(i + q);
+  out(1) = typename casacore::NumericTraits<T>::ConjugateType(u, v);
+  out(2) = typename casacore::NumericTraits<T>::ConjugateType(u, -v);
+  out(3) = typename casacore::NumericTraits<T>::ConjugateType(i - q);
 }
 
 template<class T> void Flux<T>::
-stokesToLinear(Vector<typename NumericTraits<T>::ConjugateType>& out, 
-	       const Vector<typename NumericTraits<T>::ConjugateType>& in) {
-  const typename NumericTraits<T>::ConjugateType i = in(0);
-  const typename NumericTraits<T>::ConjugateType q = in(1);
-  const typename NumericTraits<T>::ConjugateType u = in(2);
-  const typename NumericTraits<T>::ConjugateType& v = in(3);
-  const typename NumericTraits<T>::ConjugateType jv(-v.imag(), v.real());
+stokesToLinear(casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& out, 
+	       const casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& in) {
+  const typename casacore::NumericTraits<T>::ConjugateType i = in(0);
+  const typename casacore::NumericTraits<T>::ConjugateType q = in(1);
+  const typename casacore::NumericTraits<T>::ConjugateType u = in(2);
+  const typename casacore::NumericTraits<T>::ConjugateType& v = in(3);
+  const typename casacore::NumericTraits<T>::ConjugateType jv(-v.imag(), v.real());
   out(0) = i + q;
   out(1) = u + jv;
   out(2) = u - jv;
@@ -1007,11 +1008,11 @@ stokesToLinear(Vector<typename NumericTraits<T>::ConjugateType>& out,
 }
 
 template<class T> void Flux<T>::
-linearToStokes(Vector<T>& out, 
-	       const Vector<typename NumericTraits<T>::ConjugateType>& in) {
+linearToStokes(casacore::Vector<T>& out, 
+	       const casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& in) {
   const T xx = in(0).real();
-  const typename NumericTraits<T>::ConjugateType xy = in(1);
-  const typename NumericTraits<T>::ConjugateType yx = in(2);
+  const typename casacore::NumericTraits<T>::ConjugateType xy = in(1);
+  const typename casacore::NumericTraits<T>::ConjugateType yx = in(2);
   const T yy = in(3).real();
   const T two(2);
   out(0) = (xx + yy)/two;
@@ -1021,29 +1022,29 @@ linearToStokes(Vector<T>& out,
 }
 
 template<class T> void Flux<T>::
-linearToStokes(Vector<typename NumericTraits<T>::ConjugateType>& out, 
-	       const Vector<typename NumericTraits<T>::ConjugateType>& in) {
-  const typename NumericTraits<T>::ConjugateType xx = in(0);
-  const typename NumericTraits<T>::ConjugateType xy = in(1);
-  const typename NumericTraits<T>::ConjugateType yx = in(2);
-  const typename NumericTraits<T>::ConjugateType yy = in(3);
+linearToStokes(casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& out, 
+	       const casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& in) {
+  const typename casacore::NumericTraits<T>::ConjugateType xx = in(0);
+  const typename casacore::NumericTraits<T>::ConjugateType xy = in(1);
+  const typename casacore::NumericTraits<T>::ConjugateType yx = in(2);
+  const typename casacore::NumericTraits<T>::ConjugateType yy = in(3);
   const T two(2);
   out(0) = (xx + yy)/two;
   out(1) = (xx - yy)/two;
   out(2) = (xy + yx)/two;
-  out(3) = typename NumericTraits<T>::ConjugateType((xy.imag()-yx.imag())/two,
+  out(3) = typename casacore::NumericTraits<T>::ConjugateType((xy.imag()-yx.imag())/two,
 					   (yx.real()-xy.real())/two);
 }
 
 template<class T> void Flux<T>::
-linearToCircular(Vector<typename NumericTraits<T>::ConjugateType>& out, 
-		 const Vector<typename NumericTraits<T>::ConjugateType>& in) {
-  const typename NumericTraits<T>::ConjugateType xx = in(0);
-  const typename NumericTraits<T>::ConjugateType& xy = in(1);
-  const typename NumericTraits<T>::ConjugateType jxy(-xy.imag(), xy.real());
-  const typename NumericTraits<T>::ConjugateType& yx = in(2);
-  const typename NumericTraits<T>::ConjugateType jyx(-yx.imag(), yx.real());
-  const typename NumericTraits<T>::ConjugateType yy = in(3);
+linearToCircular(casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& out, 
+		 const casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& in) {
+  const typename casacore::NumericTraits<T>::ConjugateType xx = in(0);
+  const typename casacore::NumericTraits<T>::ConjugateType& xy = in(1);
+  const typename casacore::NumericTraits<T>::ConjugateType jxy(-xy.imag(), xy.real());
+  const typename casacore::NumericTraits<T>::ConjugateType& yx = in(2);
+  const typename casacore::NumericTraits<T>::ConjugateType jyx(-yx.imag(), yx.real());
+  const typename casacore::NumericTraits<T>::ConjugateType yy = in(3);
   const T two(2);
   out(0) = (xx - jxy + jyx + yy)/two;
   out(1) = (xx + jxy + jyx - yy)/two;
@@ -1052,18 +1053,18 @@ linearToCircular(Vector<typename NumericTraits<T>::ConjugateType>& out,
 }
 
 template<class T> void Flux<T>::
-circularToLinear(Vector<typename NumericTraits<T>::ConjugateType>& out, 
-		 const Vector<typename NumericTraits<T>::ConjugateType>& in) {
-  const typename NumericTraits<T>::ConjugateType rr = in(0);
-  const typename NumericTraits<T>::ConjugateType rl = in(1);
-  const typename NumericTraits<T>::ConjugateType lr = in(2);
-  const typename NumericTraits<T>::ConjugateType ll = in(3);
+circularToLinear(casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& out, 
+		 const casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& in) {
+  const typename casacore::NumericTraits<T>::ConjugateType rr = in(0);
+  const typename casacore::NumericTraits<T>::ConjugateType rl = in(1);
+  const typename casacore::NumericTraits<T>::ConjugateType lr = in(2);
+  const typename casacore::NumericTraits<T>::ConjugateType ll = in(3);
   const T two(2);
   out(0) = (rr + rl + lr + ll)/two;
-  out(1) = typename NumericTraits<T>::ConjugateType(
+  out(1) = typename casacore::NumericTraits<T>::ConjugateType(
 		     (-rr.imag() + rl.imag() - lr.imag() + ll.imag())/two,
                      ( rr.real() - rl.real() + lr.real() - ll.real())/two);
-  out(2) = typename NumericTraits<T>::ConjugateType(
+  out(2) = typename casacore::NumericTraits<T>::ConjugateType(
 		     ( rr.imag() + rl.imag() - lr.imag() - ll.imag())/two,
                      (-rr.real() - rl.real() + lr.real() + ll.real())/two);
   out(3) = (rr - rl - lr + ll)/two;

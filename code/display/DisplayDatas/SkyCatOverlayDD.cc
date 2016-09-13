@@ -40,6 +40,7 @@
 #include <display/DisplayCanvas/WCAxisLabeller.h>
 #include <display/Display/WorldCanvas.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	SkyCatOverlayDD::SkyCatOverlayDD(Table *table) :
@@ -94,7 +95,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	Bool SkyCatOverlayDD::setOptions(Record &rec, Record &recOut) {
 		Bool ret = PassiveTableDD::setOptions(rec, recOut);
-		Bool localchange = False;
+		Bool localchange = false;
 		localchange = (itsParamNameColumn->fromRecord(rec) || localchange);
 		localchange = (itsParamLineWidth->fromRecord(rec) || localchange);
 
@@ -203,12 +204,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	Bool SkyCatOverlayDD::determineDirectionColumnMapping() {
 		if (!table()) {
-			return False;
+			return false;
 		}
 
 		itsColumnNames = table()->tableDesc().columnNames();
 		if (itsColumnNames.nelements() < 3) {
-			return False;
+			return false;
 		}
 
 		// logic is case insensitive, and is as follows:
@@ -248,7 +249,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// and return if we at least determined long,lat and type columns
 		if ((itsLongitudeColumn != "") && (itsLatitudeColumn != "") &&
 		        (itsDirectionTypeColumn !="")) {
-			return True;
+			return true;
 		}
 
 		// ok, we have more work to do.
@@ -269,7 +270,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 		if (itsLongitudeColumn == "") {
 			// haven't found anything suitable for longitude, so cannot go further.
-			return False;
+			return false;
 		}
 
 		if (itsLatitudeColumn == "") {
@@ -285,11 +286,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 		if (itsLatitudeColumn == "") {
 			// haven't found anything suitable for latitude, so cannot go further.
-			return False;
+			return false;
 		}
 
-		// we made it, so return True!
-		return True;
+		// we made it, so return true!
+		return true;
 	}
 
 	Unit SkyCatOverlayDD::columnUnit(const String columnName) const {
@@ -310,12 +311,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		for (uInt i=0; i< vstring2.nelements(); i++) {
 			// exclude direction type column since it is not useful
 			if (vstring2(i) != itsDirectionTypeColumn) {
-				vstring.resize(k+1,True);
+				vstring.resize(k+1,true);
 				vstring(k) = vstring2(i);
 				k++;
 			}
 		}
-		vstring.resize(vstring.nelements() + 1, True);
+		vstring.resize(vstring.nelements() + 1, true);
 		vstring(vstring.nelements() - 1) = "<none>";
 		itsParamNameColumn
 		    = new DParameterChoice("namecolumn", "Column listing names",
@@ -360,7 +361,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				// exclude direction type column since it is not useful
 				if (vflt(i) != itsLongitudeColumn &&
 				        vflt(i) != itsLatitudeColumn) {
-					vstring4.resize(k+1,True);
+					vstring4.resize(k+1,true);
 					vstring4(k) = vflt(i);
 					k++;
 				}
@@ -372,7 +373,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				// exclude direction type column since it is not useful
 				if (vdbl(i) != itsLongitudeColumn &&
 				        vdbl(i) != itsLatitudeColumn) {
-					vstring4.resize(k+1,True);
+					vstring4.resize(k+1,true);
 					vstring4(k) = vdbl(i);
 					k++;
 				}
@@ -383,12 +384,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Vector<String> vint = getColumnNamesOfType(TpInt);
 		if (vint.nelements()  > 0) {
 			for (uInt i=0; i< vint.nelements(); i++) {
-				vstring4.resize(k+1,True);
+				vstring4.resize(k+1,true);
 				vstring4(k) = vdbl(i);
 				k++;
 			}
 		}
-		vstring4.resize(vstring4.nelements() + 1, True);
+		vstring4.resize(vstring4.nelements() + 1, true);
 		vstring4(vstring4.nelements() - 1) = "<none>";
 
 		itsParamMapColumn

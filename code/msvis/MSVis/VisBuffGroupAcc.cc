@@ -31,6 +31,7 @@
 #include <ms/MSSel/MSSelection.h>
 #include <casa/Exceptions/Error.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //----------------------------------------------------------------------------
@@ -46,7 +47,7 @@ VisBuffGroupAcc::VisBuffGroupAcc(const Int& nAnt,
     nBuf_p(0),
     subinterval_p(subinterval),
     fillModel_p(fillModel),
-    prenorm_p(False),
+    prenorm_p(false),
     globalTimeStamp_p(0.0),
     VBA_p(),
     spwfldids_p(nSpw,nFld,-1),
@@ -110,12 +111,12 @@ Bool VisBuffGroupAcc::fillChanMask(std::map<Int, Vector<Bool>*>& chanmask,
 
       // Initialize this spw mask, if necessary (def = masked)
       if(chanmask.count(spw) < 1)
-      	chanmask[spw] = new Vector<Bool>(nChan0[spw], True);
+      	chanmask[spw] = new Vector<Bool>(nChan0[spw], true);
 
       Int unchan = uend[rangenum] - ustart[rangenum] + 1;
       
-      // Update the mask (False = selected)
-      (*chanmask[spw])(Slice(ustart[rangenum], unchan, ustep[rangenum])) = False;
+      // Update the mask (false = selected)
+      (*chanmask[spw])(Slice(ustart[rangenum], unchan, ustep[rangenum])) = false;
     } // rangenum
   } // non-triv spw selection
   return didSel;
@@ -163,7 +164,7 @@ void VisBuffGroupAcc::accumulate (const VisBuffer& vb)
   if (ibuf<0) {
     ibuf=nBuf_p;
     ++nBuf_p;
-    VBA_p.resize(nBuf_p, False, True);
+    VBA_p.resize(nBuf_p, false, true);
     spwfldids_p(spw, fld) = ibuf;
     VBA_p[ibuf] = new VisBuffAccumulator(nAnt_p, subinterval_p, prenorm_p, fillModel_p);
     VBA_p[ibuf]->setTVIDebug(tvi_debug);

@@ -35,6 +35,7 @@
 #include <casa/namespace.h>
 
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 VisVector::VisVector(const VisType& vistype, const Bool& owner) :

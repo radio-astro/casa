@@ -47,6 +47,7 @@
 #include <lattices/LEL/LatticeExprNode.h>
 #include <casa/BasicSL/Constants.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# These are the definitions of the fortran functions
@@ -149,13 +150,13 @@ ClarkCleanLatModel::ClarkCleanLatModel()
    itsMaxNumberMajorCycles(-1),
    itsMaxExtPsf(0.0),
    itsPsfPatchSize(2,51,51),
-   itsChoose(False),
+   itsChoose(false),
    itsSpeedup(0.0),
    itsCycleFactor(1.5),
    itsLog(LogOrigin("ClarkCleanLatModel", "ClarkCleanLatModel()")),
    itsProgressPtr(0),
-   itsJustStarting(True),
-   itsWarnFlag(False)
+   itsJustStarting(true),
+   itsWarnFlag(false)
 
 {
 };
@@ -171,13 +172,13 @@ ClarkCleanLatModel::ClarkCleanLatModel(Lattice<Float> & model)
    itsMaxNumberMajorCycles(-1),
    itsMaxExtPsf(0.0),
    itsPsfPatchSize(2, 51, 51),
-   itsChoose(False),
+   itsChoose(false),
    itsSpeedup(0.0), 
    itsCycleFactor(1.5),
    itsLog(LogOrigin("ClarkCleanLatModel", 
 		    "ClarkCleanLatModel(const Lattice<Float> & model)")),
    itsProgressPtr(0),
-   itsWarnFlag(False)
+   itsWarnFlag(false)
 {
   AlwaysAssert(getModel().ndim() >= 2, AipsError);
   if (getModel().ndim() >= 3)
@@ -202,15 +203,15 @@ ClarkCleanLatModel::ClarkCleanLatModel(Lattice<Float> & model,
    itsMaxNumberMajorCycles(-1),
    itsMaxExtPsf(0.0),
    itsPsfPatchSize(2, 51, 51),
-   itsChoose(False),
+   itsChoose(false),
    itsSpeedup(0.0), 
    itsCycleFactor(1.5),
    itsLog(LogOrigin("ClarkCleanLatModel", 
 		    "ClarkCleanLatModel(Lattice<Float> & model"
 		    ", Lattice<Float> & mask)")),
    itsProgressPtr(0),
-   itsJustStarting(True),
-   itsWarnFlag(False)
+   itsJustStarting(true),
+   itsWarnFlag(false)
 
 {
      AlwaysAssert(getModel().ndim() >= 2, AipsError);
@@ -241,15 +242,15 @@ ClarkCleanLatModel::ClarkCleanLatModel(Lattice<Float> & model,
    itsMaxNumberMajorCycles(-1),
    itsMaxExtPsf(0.0),
    itsPsfPatchSize(2, 51, 51),
-   itsChoose(False),
+   itsChoose(false),
    itsSpeedup(0.0), 
    itsCycleFactor(1.5),
    itsLog(LogOrigin("ClarkCleanLatModel", 
 		    "ClarkCleanLatModel(Lattice<Float> & model"
 		    ", Lattice<Float> & mask)")),
    itsProgressPtr(0),
-   itsJustStarting(True),
-   itsWarnFlag(False)
+   itsJustStarting(true),
+   itsWarnFlag(false)
 
 {
 
@@ -352,7 +353,7 @@ Bool ClarkCleanLatModel::solve(LatConvEquation & eqn){
   if (numIterations > 0)
     itsLog << LogIO::NORMAL << "Initial maximum residual: " << maxRes << LogIO::POST;
   // if flux limit or iteration limit reached then bail out. 
-  Bool userHalt = False;
+  Bool userHalt = false;
   Int numIt=numberIterations();
   //Pathological PSFs
   if(maxExtPsf > 0.5)
@@ -364,7 +365,7 @@ Bool ClarkCleanLatModel::solve(LatConvEquation & eqn){
 	 (maxRes > threshold()) &&
 	 ((itsMaxNumberMajorCycles<0)||
 	  (Int(numMajorCycles)<itsMaxNumberMajorCycles)) &&
-	 userHalt == False){
+	 userHalt == false){
 
     CCList activePixels(npol, 2, 0)  ; // cache of active pixel values and positions;
 
@@ -436,7 +437,7 @@ Bool ClarkCleanLatModel::solve(LatConvEquation & eqn){
 	}
 	factor=factor*3; //pathological PSF's go very slowly in minorcycles
 	itsMaxNumberMinorIterations=10;
-	itsWarnFlag=True;
+	itsWarnFlag=true;
       }
       maxResPrevious=maxRes;
 	
@@ -454,7 +455,7 @@ Bool ClarkCleanLatModel::solve(LatConvEquation & eqn){
 	     << "Zero Pixels selected with a Fluxlimit of " << fluxLimit
 	     << " and a maximum Residual of " << maxRes << LogIO::POST;
       if(itsWarnFlag){
-	userHalt=True;
+	userHalt=true;
 	itsLog << LogIO::WARN 
 	       << "Bailing out prior to reaching threshold as residual value is   not converging " 
 	       << LogIO::POST;
@@ -463,7 +464,7 @@ Bool ClarkCleanLatModel::solve(LatConvEquation & eqn){
 	//lets try to increase the depth  a little bit
 	factor=factor*1.2;
       }
-      itsWarnFlag=True;
+      itsWarnFlag=true;
 //    userHalt = stopnow();
 // The above is commented off as users do not seem to find this 
 // useful. If nobody ask for it again the function stopnow() 
@@ -481,7 +482,7 @@ Bool ClarkCleanLatModel::solve(LatConvEquation & eqn){
   setNumberIterations(numIterations);
   itsMaxNumPix = maxNumPix;
   itsMaxNumberMinorIterations = maxNumberMinorIterations;
-  return True;
+  return true;
 };
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
@@ -590,14 +591,14 @@ Bool ClarkCleanLatModel::singleSolve(LatConvEquation & eqn, Lattice<Float>& resi
     itsLog << LogIO::WARN 
 	    << "Zero Pixels selected with a Fluxlimit of " << fluxLimit
 	    << " and a maximum Residual of " << maxRes << endl;
-    return False;
+    return false;
   }
   
   setThreshold(maxRes);
   setNumberIterations(numIterations);
   itsMaxNumPix = maxNumPix;
   itsMaxNumberMinorIterations = maxNumberMinorIterations;
-  return True;
+  return true;
 };
 //----------------------------------------------------------------------
 void ClarkCleanLatModel::setResidual(Lattice<Float>& residual){
@@ -716,7 +717,7 @@ doMinorIterations(CCList & activePixels, Matrix<Float> & psfPatch,
   Int offRes;
   maxVect(maxRes, absRes, offRes, activePixels);
   Int *  maxPosPtr = activePixels.pixelPosition(offRes);
-  Block<Int> maxPos(2, maxPosPtr, False);
+  Block<Int> maxPos(2, maxPosPtr, false);
   // declare variables used inside the main loop
   Int curIter = 0;
   Float iterFluxLimit = std::max(fluxLimit, threshold());
@@ -739,7 +740,7 @@ doMinorIterations(CCList & activePixels, Matrix<Float> & psfPatch,
     // find the next residual
     maxVect(maxRes, absRes, offRes, activePixels);
     maxPosPtr =  activePixels.pixelPosition(offRes);
-    maxPos.replaceStorage(2, maxPosPtr, False);
+    maxPos.replaceStorage(2, maxPosPtr, false);
     // Update the uncertainty factors and fluxlimits
     Fmn += Fac/Float(totalIterations+curIter);
     iterFluxLimit = std::max(fluxLimit * Fmn, threshold());
@@ -747,10 +748,10 @@ doMinorIterations(CCList & activePixels, Matrix<Float> & psfPatch,
     if (itsProgressPtr) {
 	signedAbsRes = absRes * maxRes[0]/abs( maxRes[0] );
 	itsProgressPtr->
-	  info(False, (Int)(totalIterations+curIter),  (Int)numberIterations,
+	  info(false, (Int)(totalIterations+curIter),  (Int)numberIterations,
 	       signedAbsRes, IPosition(2,maxPos[0],maxPos[1]),
-	       totalFlux, False, itsJustStarting);
-        itsJustStarting = False;
+	       totalFlux, false, itsJustStarting);
+        itsJustStarting = false;
     }
   }
 
@@ -889,9 +890,9 @@ void ClarkCleanLatModel::absHistogram(Vector<Int> & hist,
   Bool histIsACopy;
   Int * histPtr = hist.getStorage(histIsACopy);
   
-  Bool residualIsACopy = False;
+  Bool residualIsACopy = false;
   const Float * residualPtr = 0;
-  Bool maskIsACopy = False;
+  Bool maskIsACopy = false;
   const Float * maskPtr = 0;
   for (residualIter.reset(); !residualIter.atEnd(); residualIter++) {
     residualPtr = residualIter.cursor().getStorage(residualIsACopy);
@@ -1095,9 +1096,9 @@ Float ClarkCleanLatModel::maxResidual(const Lattice<Float> & residual) {
   }
 
   Float maxVal = 0, iterMaxVal = 0;
-  Bool residualIsACopy = False;
+  Bool residualIsACopy = false;
   const Float * residualPtr = 0;
-  Bool maskIsACopy = False;
+  Bool maskIsACopy = false;
   const Float * maskPtr = 0;
   for (residualIter.reset(); !residualIter.atEnd(); residualIter++) {
     residualPtr = residualIter.cursor().getStorage(residualIsACopy);
@@ -1214,7 +1215,7 @@ Float ClarkCleanLatModel::absMaxBeyondDist(const IPosition & maxDist,
   Int nright = nx - (centre(0) + maxDist(0));
   Int rightoffset = centre(0) + maxDist(0);
   Float psfMax = 0, rowMax = 0;
-  Bool psfIsACopy = False;
+  Bool psfIsACopy = false;
   const Float * psfPtr = 0;
   const Float * endPtr = 0;
   for (iter.reset(); !iter.atEnd(); iter++) {
@@ -1236,7 +1237,7 @@ Float ClarkCleanLatModel::absMaxBeyondDist(const IPosition & maxDist,
 }
 
 Bool ClarkCleanLatModel::stopnow() {
-  if (itsChoose == True) {
+  if (itsChoose == true) {
     Vector<String> choices(2);
     choices(0) = "Continue";
     choices(1) = "Stop Now";
@@ -1245,14 +1246,14 @@ Bool ClarkCleanLatModel::stopnow() {
 				   choices);
     if (choice == choices(1)) {
       itsLog << "Clark clean stopped at user request" << LogIO::POST;
-      return True;
+      return true;
     }
     if (choice == choices(2)) {
-      setChoose(False);
+      setChoose(false);
       itsLog << "Continuing: won't ask again" << LogIO::POST;
     }
   }
-  return False;
+  return false;
 }
 
 Int ClarkCleanLatModel::

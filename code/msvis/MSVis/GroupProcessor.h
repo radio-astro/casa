@@ -33,11 +33,15 @@
 #include <msvis/MSVis/VisibilityIterator.h>
 #include <msvis/MSVis/GroupWorker.h>
 
+namespace casacore{
+
+//class Block;
+//class MeasurementSet;
+}
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# forward decl
-//class Block;
-//class MeasurementSet;
 
 // <summary>
 // GroupProcessor goes through one or more MeasurementSets, feeding VisBuffGroups
@@ -48,7 +52,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </reviewed>
 // <prerequisite>
 //   <li> <linkto class="VisibilityIterator">VisibilityIterator</linkto>
-//   <li> <linkto class="MeasurementSet">MeasurementSet</linkto>
+//   <li> <linkto class="casacore::MeasurementSet">casacore::MeasurementSet</linkto>
 //   <li> <linkto class="VisBuffer">VisBuffer</linkto>
 //   <li> <linkto class="VisBuffGroup">VisBuffGroup</linkto>
 //   <li> <linkto class="GroupWorker">GroupWorker</linkto>
@@ -68,33 +72,33 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // // VBGContinuumSubtractor is a GroupWorker.
 // VBGContinuumSubtractor vbgcs(msOut_p, fitorder_p);
 //
-// // sort is a Block<Int> with the right columns.
+// // sort is a casacore::Block<casacore::Int> with the right columns.
 // VisibilityIterator viIn(mssel_p, sort, 0.0);
 //
 // GroupProcessor rogp(viIn, &vbgcs);
-// Bool success = rogp.go();            // Encapsulates the nested for loops.
+// casacore::Bool success = rogp.go();            // Encapsulates the nested for loops.
 // </code>
 // </example>
 //
 // <motivation>
-// For imaging and calibration you need to access an MS in some consistent
+// For imaging and calibration you need to access an casacore::MS in some consistent
 // order (by field, spectralwindow, time interval etc.). This class provides
 // that access.  Furthermore, some calculations or applications need more than
 // one VisBuffer.  For example, one might want to estimate and subtract the
-// continuum from the visibilities of an MS that has a broad line completely
+// continuum from the visibilities of an casacore::MS that has a broad line completely
 // spanning spw 1, but spws 0 and 2 line-free, so the spws should be combined
 // (combine='spw') for the continuum estimation.
 //
 // It is much more efficient if the group of necessary data can be read only
 // once, worked on, and then written.  The CalTable approach is more flexible
-// in that a CalTable can be applied to an MS with a different number or
-// arrangement of rows from the input MS, but per chunk it requires two more
-// reads (the CalTable and the _output_ MS) and an extra write (the CalTable).
+// in that a CalTable can be applied to an casacore::MS with a different number or
+// arrangement of rows from the input casacore::MS, but per chunk it requires two more
+// reads (the CalTable and the _output_ casacore::MS) and an extra write (the CalTable).
 //
 // Another goal is to encapsulate the commonly repeated boilerplate of setting
 // up VisIters and VisBuffers, and then looping over chunks and then chunklets.
 //
-// A separate GroupProcessor is needed so the input MS can be declared const.
+// A separate GroupProcessor is needed so the input casacore::MS can be declared const.
 // </motivation>
 //
 // <thrown>
@@ -115,7 +119,7 @@ public:
   // calling this, but this will call vi.originChunks() and drive the iteration.
   //
   GroupProcessor(ROVisibilityIterator& vi, GroupWorkerBase *gw,
-                   Double groupInterval=0.0);
+                   casacore::Double groupInterval=0.0);
 
   // // Copy construct. This calls the assigment operator.
   // GroupProcessor(const GroupProcessor & other){
@@ -131,31 +135,31 @@ public:
   // Members
 
   // Return and set the "timebin" for each group, in s.
-  Double groupInterval() {return groupInterval_p;}
-  void setGroupInterval(Double gi) {groupInterval_p = abs(gi);}
+  casacore::Double groupInterval() {return groupInterval_p;}
+  void setGroupInterval(casacore::Double gi) {groupInterval_p = abs(gi);}
 
   // Once it's all set up, you should just have to tell it to go!
   // Returns true/false depending on whether it thinks it went all the way.
-  Bool go();
+  casacore::Bool go();
   
-  static String getAipsRcBase() {return "GroupProcessor";}
+  static casacore::String getAipsRcBase() {return "GroupProcessor";}
 
-  void setTVIDebug(Bool debug) {tvi_debug = debug;}
+  void setTVIDebug(bool debug) {tvi_debug = debug;}
 
 private:
-  void setGroupOrigin();        // Record the beginning of a new group.
-  Bool groupHasMore();          // Returns whether or not more VisBuffers
+  void setGroupOrigin();        // casacore::Record the beginning of a new group.
+  casacore::Bool groupHasMore();          // Returns whether or not more VisBuffers
                                 // should be added to the group.
 
   // Initialized by c'tor.
   ROVisibilityIterator vi_p;
   GroupWorkerBase      *gw_p;
-  Double               groupInterval_p;  // >= 0.0, in s.
+  casacore::Double               groupInterval_p;  // >= 0.0, in s.
 
   // Uninitialized by c'tor.
-  Vector<Double> timev_p;
-  Double groupStart_p;
-  Bool tvi_debug;
+  casacore::Vector<casacore::Double> timev_p;
+  casacore::Double groupStart_p;
+  bool tvi_debug;
 };
 
 } //# NAMESPACE CASA - END

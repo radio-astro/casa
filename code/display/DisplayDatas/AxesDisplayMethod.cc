@@ -34,6 +34,7 @@
 #include <display/DisplayDatas/AxesDisplayMethod.h>
 #include <cpgplot.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	AxesDisplayMethod::AxesDisplayMethod(WorldCanvas *worldCanvas,
@@ -100,7 +101,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		cpgbox("BC", 0.0, 0, "BC", 0.0, 0);
 
 		cpgswin(xmin, xmax, ymin, ymax);
-		return True;
+		return true;
 	}
 
 	void AxesDisplayMethod::cleanup() {

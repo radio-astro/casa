@@ -45,6 +45,7 @@
 
 using namespace std;
 
+using namespace casacore;
 namespace casa {
 
 	const QString QtCanvas::FONT_NAME = "Helvetica [Cronyx]";

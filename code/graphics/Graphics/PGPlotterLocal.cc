@@ -37,6 +37,7 @@
 
 #include <cpgplot.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // This helper class just avoids some repetitious typing in many functions.

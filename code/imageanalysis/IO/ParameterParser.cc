@@ -30,6 +30,7 @@
 #include <casacore/casa/Utilities/Sort.h>
 #include <casacore/measures/Measures/Stokes.h>
 
+using namespace casacore;
 namespace casa {
 
 vector<uInt> ParameterParser::consolidateAndOrderRanges(
@@ -55,7 +56,7 @@ vector<uInt> ParameterParser::consolidateAndOrderRanges(
         uInt max = arrMax[idx];
         uInt lastMax = (i == 0) ? 0 : consol[size-1];
         if (i==0) {
-            // consol.resize(2, True);
+            // consol.resize(2, true);
             // consol[0] = min;
             // consol[1] = max;
             consol.push_back(min);
@@ -200,7 +201,7 @@ std::vector<String> ParameterParser::stokesFromString(
 	specification.upcase();
 
 	Vector<String> parts = stringToVector(specification, Regex("[,;]"));
-	Vector<String> polNames = Stokes::allNames(False);
+	Vector<String> polNames = Stokes::allNames(false);
 	uInt nNames = polNames.size();
 	Vector<uInt> nameLengths(nNames);
 	for (uInt i=0; i<nNames; ++i) {

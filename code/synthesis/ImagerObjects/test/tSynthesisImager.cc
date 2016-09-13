@@ -56,7 +56,9 @@
 int main(int argc, char **argv)
 {
   using namespace std;
+using namespace casacore;
   using namespace casa;
+using namespace casacore;
   using namespace casa::test;
   try{
 
@@ -82,7 +84,7 @@ int main(int argc, char **argv)
 	  thems.flush();
 	  SynthesisImager* imgr = new SynthesisImager();
 	  imgr->selectData(msname, /*spw=*/"0",/*freqBeg*/"", /*freqEnd*/"", /*freqFrame*/MFrequency::LSRK, /*field=*/"0",  /*antenna=*/"",  /*timestr*/"", /*scan*/"", /*obs*/"", /*state*/"",/*uvdist*/"", 
-    		/*taql*/"", /*usescratch*/False, /*readonly*/False);
+    		/*taql*/"", /*usescratch*/false, /*readonly*/false);
 	  cout <<"--Imager created for MeasurementSet object. " << endl;
 	  MeasurementSet tab(msname);
 	  MDirection phasecenter=MSFieldColumns(tab.field()).phaseDirMeas(0,0.0);
@@ -116,7 +118,7 @@ int main(int argc, char **argv)
 			   const Projection& projection=Projection::SIN,
 			   const Quantity& distance=Quantity(0,"m"),
 			   const MFrequency::Types& freqFrame=MFrequency::LSRK,
-			   const Bool trackSource=False, const MDirection&
+			   const Bool trackSource=false, const MDirection&
 			   trackDir=MDirection(Quantity(0.0, "deg"),
 					       Quantity(90.0, "deg")))
 		   */
@@ -136,16 +138,16 @@ int main(int argc, char **argv)
 		  ny = 300;
 
 		  ///64 projplanes
-		  ////		  imgr->setupImaging(1.0, False, True, 64, "SF");
+		  ////		  imgr->setupImaging(1.0, false, true, 64, "SF");
 		  imgr->defineImage(/*imagename*/"test_widefield_image", nx, ny, cellx, celly,
 				  stokes,phasecenter, nchan,
 				    freqBeg, freqWidth, Vector<Quantity>(1,Quantity(1.420, "GHz")),
 
 				    /*facets*/1, 
 				    "wprojectft",/*ntaylor*/ 1,freqBeg, Projection::SIN, Quantity(0,"m"), 
-				    MFrequency::LSRK, /*tracksource*/ False,  
-				    MDirection(Quantity(0.0, "deg"), Quantity(90.0, "deg")), False, 
-				    1.0, /*useauto*/False,  /*doubleprec*/True, 64, "SF" );
+				    MFrequency::LSRK, /*tracksource*/ false,  
+				    MDirection(Quantity(0.0, "deg"), Quantity(90.0, "deg")), false, 
+				    1.0, /*useauto*/false,  /*doubleprec*/true, 64, "SF" );
 	  }
 	  else if(imtype==String("facet")){
 		  nx = 300;
@@ -178,11 +180,11 @@ int main(int argc, char **argv)
 //////#pragma omp for
 
 	  		  for (Int k=0; k < nchan; ++k){
-			    /*    std::shared_ptr<ImageInterface<Float> >subresid=std::make_shared<SubImage<Float> >(SpectralImageUtil::getChannel(*resid, k, k, True));
-			    SHARED_PTR<ImageInterface<Float> >subpsf= std::make_shared<SubImage<Float> >(SpectralImageUtil::getChannel(*psf, k, k, True));
-			    SHARED_PTR<ImageInterface<Float> > subwgt= std::make_shared<SubImage<Float> >(SpectralImageUtil::getChannel(*wgt, k, k, True));
-			    SHARED_PTR<ImageInterface<Float> > submod=std::make_shared<SubImage<Float> >( SpectralImageUtil::getChannel(*mod, k, k, True));
-			    SHARED_PTR<ImageInterface<Float> > subrestor= std::make_shared<SubImage<Float> >(SpectralImageUtil::getChannel(*restor, k, k, True));
+			    /*    std::shared_ptr<ImageInterface<Float> >subresid=std::make_shared<SubImage<Float> >(SpectralImageUtil::getChannel(*resid, k, k, true));
+			    SHARED_PTR<ImageInterface<Float> >subpsf= std::make_shared<SubImage<Float> >(SpectralImageUtil::getChannel(*psf, k, k, true));
+			    SHARED_PTR<ImageInterface<Float> > subwgt= std::make_shared<SubImage<Float> >(SpectralImageUtil::getChannel(*wgt, k, k, true));
+			    SHARED_PTR<ImageInterface<Float> > submod=std::make_shared<SubImage<Float> >( SpectralImageUtil::getChannel(*mod, k, k, true));
+			    SHARED_PTR<ImageInterface<Float> > subrestor= std::make_shared<SubImage<Float> >(SpectralImageUtil::getChannel(*restor, k, k, true));
 			    String freqBeg=String::toString(SpectralImageUtil::worldFreq(subresid->coordinates(), Double(-0.5)))+"Hz";
 			    String freqEnd=String::toString(SpectralImageUtil::worldFreq(subresid->coordinates(), Double(0.5)))+"Hz";
 			    CountedPtr<SIImageStore> subImStor=new SIImageStore(submod, subresid, subpsf, subwgt, subrestor, nullptr, nullptr, resid->coordinates(), "");
@@ -193,7 +195,7 @@ int main(int argc, char **argv)
 			    SynthesisImager subImgr;
 	  			  //can select the right channel to match subimage
 			    subImgr.selectData(msname, /*spw=*/"0", freqBeg, freqEnd, MFrequency::LSRK, /*field=*/"0",  /*antenna=*/"",  /*timestr*/"", /*scan*/"", /*obs*/"", /*state*/"",/*uvdist*/"", 
-						     /*taql*/"", /*usescratch*/False, /*readonly*/False, /*incrmodel*/True);
+						     /*taql*/"", /*usescratch*/false, /*readonly*/false, /*incrmodel*/true);
 
 			    subImgr.defineImage(subImStor, "gridft");
 			    subImgr.weight("natural");

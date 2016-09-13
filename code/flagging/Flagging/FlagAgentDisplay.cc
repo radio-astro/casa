@@ -22,18 +22,19 @@
 
 #include <flagging/Flagging/FlagAgentDisplay.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 FlagAgentDisplay::FlagAgentDisplay(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube):
         		FlagAgentBase(dh,config,ANTENNA_PAIRS_INTERACTIVE,writePrivateFlagCube),
         		dataplotter_p(NULL),reportplotter_p(NULL),
         		userChoice_p("Continue"), userFixA1_p(""), userFixA2_p(""),
-        		skipScan_p(-1), skipSpw_p(-1), skipField_p(-1),pause_p(False),
+        		skipScan_p(-1), skipSpw_p(-1), skipField_p(-1),pause_p(false),
         		fieldId_p(-1), fieldName_p(""), scanStart_p(-1), scanEnd_p(-1), spwId_p(-1),
         		nPolarizations_p(1), freqList_p(Vector<Double>()),
         		antenna1_p(""),antenna2_p(""),
-        		dataDisplay_p(False), reportDisplay_p(False),reportFormat_p("screen"),
-        		stopAndExit_p(False),reportReturn_p(False),showBandpass_p(False)
+        		dataDisplay_p(false), reportDisplay_p(false),reportFormat_p("screen"),
+        		stopAndExit_p(false),reportReturn_p(false),showBandpass_p(false)
 {
 	// Parse parameters and set base variables.
 	setAgentParameters(config);
@@ -84,7 +85,7 @@ void FlagAgentDisplay::setAgentParameters(Record config)
 	}
 	else
 	{
-		pause_p = True;
+		pause_p = true;
 	}
 
 	*logger_p << LogIO::NORMAL << " pause is " << pause_p << LogIO::POST;
@@ -101,7 +102,7 @@ void FlagAgentDisplay::setAgentParameters(Record config)
 	}
 	else
 	{
-		dataDisplay_p = False;
+		dataDisplay_p = false;
 	}
 
 	*logger_p << LogIO::NORMAL << " datadisplay is " << dataDisplay_p << LogIO::POST;
@@ -118,7 +119,7 @@ void FlagAgentDisplay::setAgentParameters(Record config)
 	}
 	else
 	{
-		reportDisplay_p = False;
+		reportDisplay_p = false;
 	}
 
 	*logger_p << LogIO::NORMAL << " reportdisplay is " << reportDisplay_p << LogIO::POST;
@@ -168,25 +169,25 @@ FlagAgentDisplay::iterateAntennaPairsInteractive(antennaPairMap *antennaPairMap_
 	// Iterate through antenna pair map
 	std::pair<Int,Int> antennaPair;
 	antennaPairMapIterator myAntennaPairMapIterator;
-	bool stepback=False;
+	bool stepback=false;
 	for (myAntennaPairMapIterator=antennaPairMap_ptr->begin(); myAntennaPairMapIterator != antennaPairMap_ptr->end(); ++myAntennaPairMapIterator)
 	{
 
 		// Check whether to skip the rest of this chunk or not
 		if(skipSpw_p != -1)
 		{
-			if(skipSpw_p == spwId_p) {dataDisplay_p=False;} // Skip the rest of this SPW
-			else {skipSpw_p = -1; dataDisplay_p=True;} // Reached next SPW. Reset state
+			if(skipSpw_p == spwId_p) {dataDisplay_p=false;} // Skip the rest of this SPW
+			else {skipSpw_p = -1; dataDisplay_p=true;} // Reached next SPW. Reset state
 		}
 		if(skipField_p != -1)
 		{
-			if(skipField_p == fieldId_p) {dataDisplay_p=False;} // Skip the rest of this Field
-			else {skipField_p = -1; dataDisplay_p=True;} // Reached next Field. Reset state
+			if(skipField_p == fieldId_p) {dataDisplay_p=false;} // Skip the rest of this Field
+			else {skipField_p = -1; dataDisplay_p=true;} // Reached next Field. Reset state
 		}
 		if(skipScan_p != -1)
 		{
-			if(skipScan_p == scanEnd_p) {dataDisplay_p=False;} // Skip the rest of this Scan
-			else {skipScan_p = -1; dataDisplay_p=True;} // Reached next Scan. Reset state
+			if(skipScan_p == scanEnd_p) {dataDisplay_p=false;} // Skip the rest of this Scan
+			else {skipScan_p = -1; dataDisplay_p=true;} // Reached next Scan. Reset state
 		}
 
 
@@ -208,10 +209,10 @@ FlagAgentDisplay::iterateAntennaPairsInteractive(antennaPairMap *antennaPairMap_
 				if( userFixA1_p != String("") || userFixA2_p != String("") )
 				{
 					antennaPairMapIterator tempIterator;
-					bool found=False;
+					bool found=false;
 					for(tempIterator = myAntennaPairMapIterator; tempIterator != antennaPairMap_ptr->begin() ; --tempIterator )
 					{
-						if( ! skipBaseline(tempIterator->first) ) {found=True; break;}
+						if( ! skipBaseline(tempIterator->first) ) {found=true; break;}
 					}
 					if(found) // Jump to this antenna pair
 					{
@@ -232,7 +233,7 @@ FlagAgentDisplay::iterateAntennaPairsInteractive(antennaPairMap *antennaPairMap_
 				}
 
 				// Reset state
-				stepback=False;
+				stepback=false;
 			}
 
 			// Get antenna pair from map
@@ -245,7 +246,7 @@ FlagAgentDisplay::iterateAntennaPairsInteractive(antennaPairMap *antennaPairMap_
 			processAntennaPair(antennaPair.first,antennaPair.second);
 
 			// If Plot window is visible, and, if asked for, get and react to user-choices.
-			if(pause_p==True)
+			if(pause_p==true)
 			{
 
 				// Wait for User Input
@@ -254,8 +255,8 @@ FlagAgentDisplay::iterateAntennaPairsInteractive(antennaPairMap *antennaPairMap_
 				// React to user-input
 				if(userChoice_p=="Quit")
 				{
-					dataDisplay_p = False;
-					stopAndExit_p = True;
+					dataDisplay_p = false;
+					stopAndExit_p = true;
 					*logger_p << "Exiting flagger" << LogIO::POST;
 					if(dataplotter_p!=NULL) { dataplotter_p->done(); dataplotter_p=NULL; }
 					flagDataHandler_p->stopIteration();
@@ -263,7 +264,7 @@ FlagAgentDisplay::iterateAntennaPairsInteractive(antennaPairMap *antennaPairMap_
 				}
 				else if(userChoice_p=="StopDisplay")
 				{
-					dataDisplay_p = False;
+					dataDisplay_p = false;
 					*logger_p << "Stopping display. Continuing flagging." << LogIO::POST;
 					if(dataplotter_p!=NULL) { dataplotter_p->done(); dataplotter_p=NULL; }
 				}
@@ -271,7 +272,7 @@ FlagAgentDisplay::iterateAntennaPairsInteractive(antennaPairMap *antennaPairMap_
 				{
 					if( myAntennaPairMapIterator==antennaPairMap_ptr->begin() )
 						*logger_p << "Already on first baseline..." << LogIO::POST;
-					stepback=True;
+					stepback=true;
 				}
 				else if(userChoice_p=="NextScan")
 				{
@@ -294,7 +295,7 @@ FlagAgentDisplay::iterateAntennaPairsInteractive(antennaPairMap *antennaPairMap_
 					return;
 				}
 
-			}// end if pause=True
+			}// end if pause=true
 
 		}// if dataDisplay_p
 
@@ -374,10 +375,10 @@ FlagAgentDisplay::computeAntennaPairFlags(const vi::VisBuffer2 &visBuffer,
 
 	// Adding this block of code as a fix for CAS-4052.
 	// J.G. : If you find a better way to do this, please change this...
-	if(dataDisplay_p==True && dataplotter_p!=NULL)
+	if(dataDisplay_p==true && dataplotter_p!=NULL)
 	{
 		Int nrows;
-		if(showBandpass_p==True) nrows=3;
+		if(showBandpass_p==true) nrows=3;
 		else nrows=2;
 
 		if(panels_p.nelements() != nPolarizations_p*nrows)
@@ -445,7 +446,7 @@ FlagAgentDisplay::computeAntennaPairFlags(const vi::VisBuffer2 &visBuffer,
 			DisplayRaster(nChannels,nTimes,vecflagdat,panels_p[pl+nPolarizations_p].getInt());
 			dataplotter_p->setlabel("Frequency",pl?" ":"Time",ostr2.str(),panels_p[pl+nPolarizations_p].getInt());
 
-			if(showBandpass_p==True)
+			if(showBandpass_p==true)
 			{
 
 				// Make the Before/After bandpass plots
@@ -460,9 +461,9 @@ FlagAgentDisplay::computeAntennaPairFlags(const vi::VisBuffer2 &visBuffer,
 				AlwaysAssert( freqList_p.nelements()==nChannels , AipsError);
 
 				DisplayLine(nChannels, freqList_p, origspectrum, String("before:")+String(corrTypes[pl]),
-						String("red"), False, panels_p[pl+(2*nPolarizations_p)].getInt());
+						String("red"), false, panels_p[pl+(2*nPolarizations_p)].getInt());
 				DisplayScatter(nChannels, freqList_p, flagspectrum, String("after:")+String(corrTypes[pl]),
-						String("blue"), True, panels_p[pl+(2*nPolarizations_p)].getInt());
+						String("blue"), true, panels_p[pl+(2*nPolarizations_p)].getInt());
 
 				//// TODO : Can I query the tfcrop agent for a "view" to overlay here.
 				// If available, get a plot from the agents
@@ -473,7 +474,7 @@ FlagAgentDisplay::computeAntennaPairFlags(const vi::VisBuffer2 &visBuffer,
 		  {
 		  //		    flagspectrum = log10(flagspectrum);
 		  DisplayLine(nChannels, freqlist_p, flagspectrum, flagmethods[fmeth]->methodName(), 
-		  String("green"), True, panels_p[pl+(2*nPolarizations_p)].getInt());
+		  String("green"), true, panels_p[pl+(2*nPolarizations_p)].getInt());
 		  }
 		  }
 				 */
@@ -578,14 +579,14 @@ FlagAgentDisplay::displayReports(FlagReport &combinedReport)
 		if(dataplotter_p!=NULL) { dataplotter_p->done(); dataplotter_p=NULL; }
 		if(nReports>0 && reportplotter_p==NULL) buildReportPlotWindow();
 
-		Bool stepback=False;
+		Bool stepback=false;
 
 		for (Int reportid=0; reportid<nReports; reportid++)
 		{
 			String agentName, title, xlabel, ylabel;
 			FlagReport oneRep;
 
-			if(stepback==True)
+			if(stepback==true)
 			{
 				// Go back until a valid one is found.
 				Int previd=-1;
@@ -612,7 +613,7 @@ FlagAgentDisplay::displayReports(FlagReport &combinedReport)
 					reportid = previd;
 				}
 
-				stepback=False;
+				stepback=false;
 			}
 
 
@@ -686,11 +687,11 @@ FlagAgentDisplay::displayReports(FlagReport &combinedReport)
 					// React to user-input
 					if(userChoice_p=="Quit")
 					{
-						dataDisplay_p = False;
-						stopAndExit_p = True;
+						dataDisplay_p = false;
+						stopAndExit_p = true;
 						//*logger_p << "Exiting flagger" << LogIO::POST;
 						if(reportplotter_p!=NULL) { reportplotter_p->done(); reportplotter_p=NULL; }
-						return True;
+						return true;
 					}
 					else if(userChoice_p=="Prev")
 					{
@@ -699,7 +700,7 @@ FlagAgentDisplay::displayReports(FlagReport &combinedReport)
 							*logger_p << "Already on first plot..." << LogIO::POST;
 						else
 							--reportid;
-						stepback=True;
+						stepback=true;
 					}
 					else if(userChoice_p=="Continue" || userChoice_p=="Next")
 					{
@@ -726,12 +727,12 @@ FlagAgentDisplay::displayReports(FlagReport &combinedReport)
 
 		}// end of for-report-in-combinedReport
 
-	}// end of reportDisplay_p==True
+	}// end of reportDisplay_p==true
 	else
 	{
 		*logger_p << "Report Displays are turned OFF " << LogIO::POST;
 	}
-	return True;
+	return true;
 } // end of displayReports()
 
 /***********************************************************************/
@@ -753,7 +754,7 @@ Bool FlagAgentDisplay::buildDataPlotWindow()
 	dataplotter_p = dbus::launch<FlagPlotServerProxy>();
 
 	Int nrows;
-	if(showBandpass_p==True) nrows=3;
+	if(showBandpass_p==true) nrows=3;
 	else nrows=2;
 	panels_p.resize(nPolarizations_p*nrows);
 	string zoomloc="";
@@ -785,7 +786,7 @@ Bool FlagAgentDisplay::buildDataPlotWindow()
 	}
 
 	// Third row : Average Bandpass
-	if(showBandpass_p==True)
+	if(showBandpass_p==true)
 	{
 		panels_p[2*nPolarizations_p] = dataplotter_p->panel( "", "", "", "",
 				std::vector<int>( ),legendloc,zoomloc, panels_p[0].getInt(),true,false);
@@ -822,7 +823,7 @@ Bool FlagAgentDisplay::buildDataPlotWindow()
 	loc.push_back("top");
 	dataplotter_p->loaddock(dock_xml_p,"bottom",loc,panels_p[0].getInt());
 
-	return True;
+	return true;
 
 }// end buildDataPlotWindow
 
@@ -853,7 +854,7 @@ Bool FlagAgentDisplay::buildReportPlotWindow()
 	loc.push_back("top");
 	reportplotter_p->loaddock(report_dock_xml_p,"bottom",loc,report_panels_p[0].getInt());
 
-	return True;
+	return true;
 
 }// end buildReportPlotWindow
 
@@ -864,7 +865,7 @@ void FlagAgentDisplay :: getUserInput()
 	userChoice_p = "Continue";
 	String returnvalue;
 
-	Bool exitEventLoop=False;
+	Bool exitEventLoop=false;
 
 	while( ! exitEventLoop)
 	{
@@ -875,21 +876,21 @@ void FlagAgentDisplay :: getUserInput()
 						|| returnvalue == "StopDisplay" || returnvalue == "Quit")
 		{
 			userChoice_p = returnvalue;
-			exitEventLoop=True;
+			exitEventLoop=true;
 		}
 		else if(returnvalue == "FixAntenna1:0" || returnvalue == "FixAntenna1:2" )
 		{
 			userChoice_p = "Continue";
 			//	    userFixA1_p=(returnvalue.lastchar()=='0')?-1:antenna1_p;
 			userFixA1_p=(returnvalue.lastchar()=='0')?String(""):antenna1_p;
-			exitEventLoop=False;
+			exitEventLoop=false;
 		}
 		else if(returnvalue == "FixAntenna2:0" || returnvalue == "FixAntenna2:2" )
 		{
 			userChoice_p = "Continue";
 			//	    userFixA2_p=(returnvalue.lastchar()=='0')?-1:antenna2_p;
 			userFixA2_p=(returnvalue.lastchar()=='0')?String(""):antenna2_p;
-			exitEventLoop=False;
+			exitEventLoop=false;
 		}
 		else *logger_p << LogIO::DEBUG2 << "Unknown GUI choice : " << returnvalue << LogIO::POST;
 
@@ -908,7 +909,7 @@ void FlagAgentDisplay :: getReportUserInput()
 	userChoice_p = "Continue";
 	String returnvalue;
 
-	Bool exitEventLoop=False;
+	Bool exitEventLoop=false;
 
 	while( ! exitEventLoop)
 	{
@@ -917,7 +918,7 @@ void FlagAgentDisplay :: getReportUserInput()
 		if(returnvalue == "Next" || returnvalue == "Prev" || returnvalue == "Quit")
 		{
 			userChoice_p = returnvalue;
-			exitEventLoop=True;
+			exitEventLoop=true;
 		}
 		else *logger_p << LogIO::DEBUG2 << "Unknown GUI choice (Not sure why eventloop is exiting without user-click... re-entering... )" << returnvalue << LogIO::POST;
 
@@ -959,7 +960,7 @@ void FlagAgentDisplay::DisplayLine(Int /*xdim*/, Vector<Double> &xdata, Vector<F
 		*logger_p << LogIO::WARN << "X and Y plot data have different sizes. Not plotting " << LogIO::POST;
 		return;
 	}
-	if( hold==False ) dataplotter_p->erase( frame );
+	if( hold==false ) dataplotter_p->erase( frame );
 	dataplotter_p->line(dbus::af(xdata), dbus::af(ydata),color,label,frame);
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -972,7 +973,7 @@ void FlagAgentDisplay::DisplayScatter(Int /*xdim*/, Vector<Double> &xdata, Vecto
 		*logger_p << LogIO::WARN << "X and Y plot data have different sizes. Not plotting " << LogIO::POST;
 		return;
 	}
-	if( hold==False ) dataplotter_p->erase( frame );
+	if( hold==false ) dataplotter_p->erase( frame );
 	dataplotter_p->scatter(dbus::af(xdata), dbus::af(ydata),color,label,"dot",1,4,frame);
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -989,7 +990,7 @@ void FlagAgentDisplay::DisplayLineScatterError(FlagPlotServerProxy *&plotter, St
 		return;
 	}
 
-	///    if( hold==False ) plotter->erase( frame );
+	///    if( hold==false ) plotter->erase( frame );
 
 	if(plottype==String("scatter"))
 	{
@@ -1193,7 +1194,7 @@ Bool FlagAgentDisplay :: setDataLayout()
 </ui>\
 ";
 
-	return True;
+	return true;
 
 }// end of SetLayout
 
@@ -1273,7 +1274,7 @@ Bool FlagAgentDisplay :: setReportLayout()
 </ui>\
 ";
 
-	return True;
+	return true;
 
 }
 

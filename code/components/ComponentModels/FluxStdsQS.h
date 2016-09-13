@@ -68,7 +68,7 @@ class FluxStdBaars : public virtual FluxCalcQS,
 	private FluxCalcLogFreqPolynomial 
 {
 private:
-  virtual Bool setSourceCoeffs();
+  virtual casacore::Bool setSourceCoeffs();
 };
 
 // <summary> 
@@ -105,7 +105,7 @@ class FluxStdPerley90 : public virtual FluxCalcQS,
 	private FluxCalcLogFreqPolynomial 
 {
 private:
-  virtual Bool setSourceCoeffs();
+  virtual casacore::Bool setSourceCoeffs();
 };
 
 // <summary> 
@@ -142,7 +142,7 @@ class FluxStdPerleyTaylor95 : public virtual FluxCalcQS,
 	private FluxCalcLogFreqPolynomial 
 {
 private:
-  virtual Bool setSourceCoeffs();
+  virtual casacore::Bool setSourceCoeffs();
 };
 
 // <summary> 
@@ -179,7 +179,7 @@ class FluxStdPerleyTaylor99 : public virtual FluxCalcQS,
 	private FluxCalcLogFreqBrokenPolynomial 
 {
 private:
-  virtual Bool setSourceCoeffs();
+  virtual casacore::Bool setSourceCoeffs();
 };
 
 // <summary> 
@@ -216,7 +216,7 @@ class FluxStdPerleyButler2010 : public virtual FluxCalcQS,
                                 private FluxCalcLogFreqBrokenPolynomial 
 {
 private:
-  virtual Bool setSourceCoeffs();
+  virtual casacore::Bool setSourceCoeffs();
 };
 // <summary>
 // FluxStdPerleyButler2013: The PerleyButler2013 flux standard.
@@ -252,7 +252,7 @@ class FluxStdPerleyButler2013 : public virtual FluxCalcQS,
                                 private FluxCalcLogFreqBrokenPolynomial
 {
 private:
-  virtual Bool setSourceCoeffs();
+  virtual casacore::Bool setSourceCoeffs();
 };
 
 

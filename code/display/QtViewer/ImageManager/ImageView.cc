@@ -38,6 +38,7 @@
 #include <QPainter>
 
 
+using namespace casacore;
 namespace casa {
 	const QString ImageView::DROP_ID = "Image Name";
 	ImageView::ImageView(QtDisplayData* data, QWidget *parent)

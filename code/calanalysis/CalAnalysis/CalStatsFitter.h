@@ -144,7 +144,7 @@ class CalStatsFitter {
 
     // Weight enums
     typedef enum WEIGHT {
-      WEIGHT_INIT=-1, NO=False, YES=True
+      WEIGHT_INIT=-1, NO=false, YES=true
     } WEIGHT;
 
     // FIT nested class
@@ -153,14 +153,14 @@ class CalStatsFitter {
         ORDER eOrder;           // Fit order
         TYPE eType;             // Fit type
         WEIGHT eWeight;         // Fit weight
-        Bool bValid;            // Fit validity boolean
-        Vector<Double> oPars;   // Fit parameters
-        Matrix<Double> oCovars; // Fit parameter covariances
-        Vector<Double> oModel;  // Fit model
-        Vector<Double> oRes;    // Fit residuals
-        Double dResVar;         // Fit variance of residuals
-        Double dResMean;        // Fit mean of residuals
-        Double dRedChi2;        // Fit reduced chi^2
+        casacore::Bool bValid;            // Fit validity boolean
+        casacore::Vector<casacore::Double> oPars;   // Fit parameters
+        casacore::Matrix<casacore::Double> oCovars; // Fit parameter covariances
+        casacore::Vector<casacore::Double> oModel;  // Fit model
+        casacore::Vector<casacore::Double> oRes;    // Fit residuals
+        casacore::Double dResVar;         // Fit variance of residuals
+        casacore::Double dResMean;        // Fit mean of residuals
+        casacore::Double dRedChi2;        // Fit reduced chi^2
         FIT( void );
         FIT( const FIT& oFit );
         ~FIT( void );
@@ -168,43 +168,43 @@ class CalStatsFitter {
     };
 
     // User interface to all fitting capabilities
-    static FIT& fit( const Vector<Double>& oAbs, const Vector<Double>& oValue,
-        const Vector<Double>& oValueErr, Vector<Bool>& oFlag,
+    static FIT& fit( const casacore::Vector<casacore::Double>& oAbs, const casacore::Vector<casacore::Double>& oValue,
+        const casacore::Vector<casacore::Double>& oValueErr, casacore::Vector<casacore::Bool>& oFlag,
         const ORDER& eOrder, const TYPE& eType, const WEIGHT& eWeight );
 
     // The enum names
-    static String& orderName( const ORDER& eOrder );
-    static String& typeName( const TYPE& eOrder );
-    static String& weightName( const WEIGHT& eOrder );
+    static casacore::String& orderName( const ORDER& eOrder );
+    static casacore::String& typeName( const TYPE& eOrder );
+    static casacore::String& weightName( const WEIGHT& eOrder );
 
   private:
 
     // Least-squares fitting function
-    static FIT& lsqFit( const Vector<Double>& oAbs,
-        const Vector<Double>& oValue, const Vector<Double>& oValueErr,
-        Vector<Bool>& oFlag, const ORDER& eOrder, const WEIGHT& eWeight );
+    static FIT& lsqFit( const casacore::Vector<casacore::Double>& oAbs,
+        const casacore::Vector<casacore::Double>& oValue, const casacore::Vector<casacore::Double>& oValueErr,
+        casacore::Vector<casacore::Bool>& oFlag, const ORDER& eOrder, const WEIGHT& eWeight );
 
     // Robust fitting function
-    static FIT& robustFit( const Vector<Double>& oAbs,
-        const Vector<Double>& oValue, const Vector<Double>& oValueErr,
-        Vector<Bool>& oFlag, const ORDER& eOrder, const WEIGHT& eWeight,
-        const Double& dTrim );
+    static FIT& robustFit( const casacore::Vector<casacore::Double>& oAbs,
+        const casacore::Vector<casacore::Double>& oValue, const casacore::Vector<casacore::Double>& oValueErr,
+        casacore::Vector<casacore::Bool>& oFlag, const ORDER& eOrder, const WEIGHT& eWeight,
+        const casacore::Double& dTrim );
 
     // Functions required to calculate a robust linear fit
-    static Double& slope( const Vector<Double>& oAbs,
-        const Vector<Double>& oValue, const Double& dSlope,
-        const Double& dSlopeErr, const Double& dFudge, const uInt& uiNumSlope,
-        const uInt& uiNumIter );
-    static Double& brackFunc( const Vector<Double>& oAbs,
-        const Vector<Double>& oValue, const Double& dSlope );
+    static casacore::Double& slope( const casacore::Vector<casacore::Double>& oAbs,
+        const casacore::Vector<casacore::Double>& oValue, const casacore::Double& dSlope,
+        const casacore::Double& dSlopeErr, const casacore::Double& dFudge, const casacore::uInt& uiNumSlope,
+        const casacore::uInt& uiNumIter );
+    static casacore::Double& brackFunc( const casacore::Vector<casacore::Double>& oAbs,
+        const casacore::Vector<casacore::Double>& oValue, const casacore::Double& dSlope );
 
     // Signum functions (also required to calculate a robust linear fit)
-    static Double& signum( const Double& dValue );
-    static Vector<Double>& signum( const Vector<Double>& oValue );
+    static casacore::Double& signum( const casacore::Double& dValue );
+    static casacore::Vector<casacore::Double>& signum( const casacore::Vector<casacore::Double>& oValue );
 
-    // Function for calculating slope estimate using Theil's method
-    static void theil( const Vector<Double>& oAbs, const Vector<Double>& oValue,
-        Double& dSlope, Double& dSlopeErr );
+    // casacore::Function for calculating slope estimate using Theil's method
+    static void theil( const casacore::Vector<casacore::Double>& oAbs, const casacore::Vector<casacore::Double>& oValue,
+        casacore::Double& dSlope, casacore::Double& dSlopeErr );
 
 };
 

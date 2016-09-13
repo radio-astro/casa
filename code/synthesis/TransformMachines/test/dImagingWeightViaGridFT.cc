@@ -76,7 +76,7 @@ main(int argc, char **argv){
     String cImageName="TempComplex.image";
     String rImageName="TempReal.image";
     {
-      Imager im(mssel, False, False);
+      Imager im(mssel, false, false);
       im.defineImage(500, 500, Quantity(1.0, "arcsec"), Quantity(1.0, "arcsec"),
 		     "I", myDir, 0, "mfs", 1, 0, 1, MFrequency(), MRadialVelocity(), Quantity(0.0, "km/s"), Vector<Int>(1,0));
       im.makeimage("psf", rImageName, cImageName);
@@ -106,7 +106,7 @@ main(int argc, char **argv){
     //vm.addModel(outRec, Vector<Int>(1, 0), vb);
     Vector<Int>spws(4);
     indgen(spws);
-    vm.putModel(myms, container, field, spws, Vector<Int>(1,0), Vector<Int>(1,63), Vector<Int>(1,1), True, False);
+    vm.putModel(myms, container, field, spws, Vector<Int>(1,0), Vector<Int>(1,63), Vector<Int>(1,1), true, false);
     vm.clearModel(myms, "1", "2");
     if(argc>2){
       PagedImage<Float> modim(argv[2]);
@@ -114,11 +114,11 @@ main(int argc, char **argv){
       StokesImageUtil::From(cmod, modim);
       MPosition loc;
       MeasTable::Observatory(loc, vi.msColumns().observation().telescopeName()(0));
-      GridFT ftm(1000000, 16, "SF", loc, 1.0, False, False);
+      GridFT ftm(1000000, 16, "SF", loc, 1.0, false, false);
       ftm.initializeToVis(cmod, vb);
       Record elrec;
       String err;
-      ftm.toRecord(err, elrec, True);
+      ftm.toRecord(err, elrec, true);
       Record ftrec;
       ftrec.define("type", "ftmachine");
       ftrec.define("fields", Vector<Int>(1, 0));
@@ -160,7 +160,7 @@ main(int argc, char **argv){
     cerr << "sum of weight "<< sumval << endl;
     VisImagingWeight vWghtNat("natural");
     vi.useImagingWeight(vWghtNat);
-    GridFT ft(Long(1000000), Int(200), "BOX",1.0, True, False);
+    GridFT ft(Long(1000000), Int(200), "BOX",1.0, true, false);
     PagedImage<Complex> theImage("TempComplex.image");
 
     ////////////////
@@ -175,7 +175,7 @@ main(int argc, char **argv){
     ft.modifyConvFunc(convFunc, 0, 1);
      for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
       for (vi.origin(); vi.more(); vi++) {
-	 ft.put(vb, -1, True, FTMachine::PSF);
+	 ft.put(vb, -1, true, FTMachine::PSF);
       }
      }
      Array<Float> griddedWght;

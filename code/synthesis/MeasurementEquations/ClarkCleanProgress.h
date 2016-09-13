@@ -36,11 +36,16 @@
 #include <casa/Arrays/IPosition.h>
 #include <casa/Arrays/Vector.h>
 
+namespace casacore{
+
+template <class T> class Vector;
+class PGPlotter;
+// the class ProgressMeter sounded bad. This abstract class serves
+}
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Forward Declarations
-template <class T> class Vector;
-class PGPlotter;
 
 // <summary>
 // Abstract base class to monitor progress in lattice operations
@@ -56,7 +61,7 @@ class PGPlotter;
 // progress of an operation on a Lattice. The default implementation
 // offered by this class does nothing.
 // However, a derived class could show the progress using for example
-// a <linkto class=ProgressMeter>ProgressMeter</linkto>. A derived
+// a <linkto class=casacore::ProgressMeter>ProgressMeter</linkto>. A derived
 // class should override the virtual functions from this class.
 //
 // The user of the ClarkCleanProgress object should first call
@@ -75,8 +80,7 @@ class PGPlotter;
 // <motivation>
 // Since operations on Lattices can take a while, it can be useful
 // to show the progress. However, making module Lattices dependent on
-// the class ProgressMeter sounded bad. This abstract class serves
-// as a bridge between the Lattice module and the ProgressMeter class
+// as a bridge between the casacore::Lattice module and the casacore::ProgressMeter class
 // (or any other class showing the progress).
 // </motivation>
 //
@@ -87,64 +91,64 @@ class PGPlotter;
 
 class ClarkCleanProgress {
 public:
-  ClarkCleanProgress(PGPlotter* pgplotter=0, Int plotterIncrement=10);
+  ClarkCleanProgress(casacore::PGPlotter* pgplotter=0, casacore::Int plotterIncrement=10);
 
   // delete its PGPlotter
   virtual ~ClarkCleanProgress();
   
   // Plot the information if it has a PGPlotter
-  Bool info(const Bool lastcall,
-	    const Int iteration,
-	    const Int numberIterations,
-	    const Float& maximum,
-	    const IPosition& posMaximum,
-	    const Float& totalFlux,
-	    const Bool majorIteration,
-	    const Bool resetBase=False);
+  casacore::Bool info(const casacore::Bool lastcall,
+	    const casacore::Int iteration,
+	    const casacore::Int numberIterations,
+	    const casacore::Float& maximum,
+	    const casacore::IPosition& posMaximum,
+	    const casacore::Float& totalFlux,
+	    const casacore::Bool majorIteration,
+	    const casacore::Bool resetBase=false);
   
   // Finish up any aspects of the plot which need to be finished
-  Bool finalize();
+  casacore::Bool finalize();
 
   // returns true if we have a live pgplotter_pointer
   // Use: do a     try { progress_pointer->hasPGPlotter(); }
-  Bool hasPGPlotter();
+  casacore::Bool hasPGPlotter();
 
 protected:
 
 private:
 
   // draw the outline of the plot;
-  // If doplot = True, redraw all the past data as well.
+  // If doplot = true, redraw all the past data as well.
   // THIS ASSUMES WE HAVE A VALID PGPLOTTER
-  void basicSetUp(Bool doPlot = False);
+  void basicSetUp(casacore::Bool doPlot = false);
 
   // plot just the current points
   // THIS ASSUMES WE HAVE A VALID PGPLOTTER
-  void plotOne(const Int iteration, 
-	       const Float resid, const Float flux);
+  void plotOne(const casacore::Int iteration, 
+	       const casacore::Float resid, const casacore::Float flux);
 
   // replot all points, but don't redraw plotter
   // THIS ASSUMES WE HAVE A VALID PGPLOTTER
   void plotVectors();
 
-  PGPlotter* itsPgplotter;
+  casacore::PGPlotter* itsPgplotter;
 
-  Vector<Float> iterationNumber;   	
-  Vector<Float> maxResiduals;		
-  Vector<Float> posResiduals;		
-  Vector<Float> negResiduals;		
-  Vector<Float> totalFluxes;
-  uInt currentIndex;
-  uInt currentTotalIterations;
-  Float currentFluxScale;
-  Float currentMinFluxScale;
-  Float currentMaxResidual;
-  Float currentMinResidual;
+  casacore::Vector<casacore::Float> iterationNumber;   	
+  casacore::Vector<casacore::Float> maxResiduals;		
+  casacore::Vector<casacore::Float> posResiduals;		
+  casacore::Vector<casacore::Float> negResiduals;		
+  casacore::Vector<casacore::Float> totalFluxes;
+  casacore::uInt currentIndex;
+  casacore::uInt currentTotalIterations;
+  casacore::Float currentFluxScale;
+  casacore::Float currentMinFluxScale;
+  casacore::Float currentMaxResidual;
+  casacore::Float currentMinResidual;
 
   // we are going to plot all points, but not all at once; every Increment iterations
-  Int plottingIncrement;
+  casacore::Int plottingIncrement;
 
-  Float baseFlux;
+  casacore::Float baseFlux;
 
 };
 

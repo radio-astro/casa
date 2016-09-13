@@ -111,15 +111,15 @@ class CEMemProgress;
 //
 // <example>
 // <srcblock>
-// Matrix<Float> psf(12,12), dirty(10,10), initialModel(10,10);
+// casacore::Matrix<casacore::Float> psf(12,12), dirty(10,10), initialModel(10,10);
 // ...put appropriate values into psf, dirty, & initialModel....
-// CEMemModel<Float> deconvolvedModel(initialModel); 
+// CEMemModel<casacore::Float> deconvolvedModel(initialModel); 
 // ConvolutionEquation convEqn(psf, dirty);
 // deconvolvedModel.setSigma(0.001); 
 // deconvolvedModel.setTargetFlux(-2.500); 
 // deconvolvedModel.setNumberIterations(30);
-// Bool convWorked = deconvolvedModel.solve(convEqn);
-// Array<Float> finalModel, residuals;
+// casacore::Bool convWorked = deconvolvedModel.solve(convEqn);
+// casacore::Array<casacore::Float> finalModel, residuals;
 // if (convWorked){
 //   finalModel = deconvolvedModel.getModel();
 //   ConvEqn.residual(deconvolvedModel, finalResidual);
@@ -135,7 +135,7 @@ class CEMemProgress;
 //
 // <templating arg=T>
 //    For testing:
-//    <li> Float: lets try it first
+//    <li> casacore::Float: lets try it first
 //    <li> StokesVector: will require lots more work
 // </templating>
 //
@@ -143,7 +143,7 @@ class CEMemProgress;
 //   <li> We need to implement soft Masking
 // </todo>
 
-class CEMemModel: public LinearModel< Lattice<Float> > 
+class CEMemModel: public LinearModel< casacore::Lattice<casacore::Float> > 
 {
 
   // Any new entropies derived from Entropy must sign the friend list:
@@ -156,37 +156,37 @@ public:
 
   // Construct the CEMemModel object and initialise the model.
   CEMemModel(Entropy &ent, 
-	     Lattice<Float> & model,
-	     uInt nIntegrations = 10,
-	     Float sigma = 0.001,
-	     Float targetFlux = 1.0,
-	     Bool useFluxConstraint = False,
-	     Bool initializeModel = True,
-	     Bool imagePlane = False);
+	     casacore::Lattice<casacore::Float> & model,
+	     casacore::uInt nIntegrations = 10,
+	     casacore::Float sigma = 0.001,
+	     casacore::Float targetFlux = 1.0,
+	     casacore::Bool useFluxConstraint = false,
+	     casacore::Bool initializeModel = true,
+	     casacore::Bool imagePlane = false);
 
   // Construct the CEMemModel object, initialise the model and Prior images.
   CEMemModel(Entropy &ent, 
-	     Lattice<Float> & model,
-	     Lattice<Float> & prior,
-	     uInt nIntegrations = 10,
-	     Float sigma = 0.001,
-	     Float targetFlux = 1.0,
-	     Bool useFluxConstraint = False,
-	     Bool initializeModel = True,
-	     Bool imagePlane = False);
+	     casacore::Lattice<casacore::Float> & model,
+	     casacore::Lattice<casacore::Float> & prior,
+	     casacore::uInt nIntegrations = 10,
+	     casacore::Float sigma = 0.001,
+	     casacore::Float targetFlux = 1.0,
+	     casacore::Bool useFluxConstraint = false,
+	     casacore::Bool initializeModel = true,
+	     casacore::Bool imagePlane = false);
 
   // Construct the CEMemModel object, initialise the model, Prior,
   // and mask images.
   CEMemModel(Entropy &ent, 
-	     Lattice<Float> & model, 
-	     Lattice<Float> & prior,
-	     Lattice<Float> & mask,
-	     uInt nIntegrations = 10,
-	     Float sigma = 0.001,
-	     Float targetFlux = 1.0,
-	     Bool useFluxConstraint = False,
-	     Bool initializeModel = True,
-	     Bool imagePlane = False);
+	     casacore::Lattice<casacore::Float> & model, 
+	     casacore::Lattice<casacore::Float> & prior,
+	     casacore::Lattice<casacore::Float> & mask,
+	     casacore::uInt nIntegrations = 10,
+	     casacore::Float sigma = 0.001,
+	     casacore::Float targetFlux = 1.0,
+	     casacore::Bool useFluxConstraint = false,
+	     casacore::Bool initializeModel = true,
+	     casacore::Bool imagePlane = false);
 
 
   // destructor
@@ -194,7 +194,7 @@ public:
 
   
   // solve the convolution equation
-  // returns True if converged
+  // returns true if converged
 
   // Gives information about the state of the CEMem
   // (ie, using mask image, using prior image; more work here!)
@@ -203,7 +203,7 @@ public:
 
   //  This needs to be "ResidualEquation", using LatConvEquation as
   //  polymorphism is broken
-  Bool solve(ResidualEquation<Lattice<Float> >  & eqn);
+  casacore::Bool solve(ResidualEquation<casacore::Lattice<casacore::Float> >  & eqn);
 
   // Set and get various state images and classes
   // <group>
@@ -212,23 +212,23 @@ public:
   void getEntropy(Entropy &myEntropy ) {myEntropy = *itsEntropy_ptr;}
 
   // set or get the Model image
-  Lattice<Float>& getModel() const 
+  casacore::Lattice<casacore::Float>& getModel() const 
     { return (*(itsModel_ptr->clone())); }
-  void setModel(const Lattice<Float> & model)
+  void setModel(const casacore::Lattice<casacore::Float> & model)
     { itsModel_ptr = model.clone(); }
 
   // set or get the Prior image
-  Lattice<Float>& getPrior() const 
+  casacore::Lattice<casacore::Float>& getPrior() const 
     { return (*(itsPrior_ptr->clone())); }
-  void setPrior(Lattice<Float> & prior);
+  void setPrior(casacore::Lattice<casacore::Float> & prior);
 
   // set or get the Mask image
-  Lattice<Float>& getMask() const 
+  casacore::Lattice<casacore::Float>& getMask() const 
     { return (*(itsMask_ptr->clone())); }
-  void setMask(Lattice<Float> & mask);
+  void setMask(casacore::Lattice<casacore::Float> & mask);
 
   // get the Residual image
-  Lattice<Float>& getResidual() const 
+  casacore::Lattice<casacore::Float>& getResidual() const 
     { return (*(itsResidual_ptr->clone())); }
 
   // </group>
@@ -236,34 +236,34 @@ public:
 
   // set and get alpha and beta
   // <group>
-  Float getAlpha() const { return itsAlpha; }
-  Float getBeta() const { return itsBeta; }
-  void setAlpha(Float alpha) {itsAlpha = alpha; }
-  void setBeta(Float beta) {itsBeta = beta; }
+  casacore::Float getAlpha() const { return itsAlpha; }
+  casacore::Float getBeta() const { return itsBeta; }
+  void setAlpha(casacore::Float alpha) {itsAlpha = alpha; }
+  void setBeta(casacore::Float beta) {itsBeta = beta; }
   // </group>
 
   // Set various controlling parameters
   // (The most popular controlling parameters are 
   // set in the constructor)
   // <group>
-  Float getTolerance() {return itsTolerance; }
-  void  setTolerance(Float x) { itsTolerance = x; }
-  Float getQ() {return itsQ; }
-  void  setQ(Float x) { itsQ= x; }
-  Float getGain() {return itsGain; }
-  void  setGain(Float x) { itsGain = x; }
-  Float getMaxNormGrad() {return itsMaxNormGrad; }
-  void  setMaxNormGrad(Float x) { itsMaxNormGrad = x; }
-  Int getInitialNumberIterations() {return itsFirstIteration; }
-  void  setInitialNumberIterations(Int x) { itsFirstIteration = x; }
+  casacore::Float getTolerance() {return itsTolerance; }
+  void  setTolerance(casacore::Float x) { itsTolerance = x; }
+  casacore::Float getQ() {return itsQ; }
+  void  setQ(casacore::Float x) { itsQ= x; }
+  casacore::Float getGain() {return itsGain; }
+  void  setGain(casacore::Float x) { itsGain = x; }
+  casacore::Float getMaxNormGrad() {return itsMaxNormGrad; }
+  void  setMaxNormGrad(casacore::Float x) { itsMaxNormGrad = x; }
+  casacore::Int getInitialNumberIterations() {return itsFirstIteration; }
+  void  setInitialNumberIterations(casacore::Int x) { itsFirstIteration = x; }
   // </group>
 
   // The convergence can also be in terms of the maximum residual
   // (ie, for use in stopping in a major cycle).
-  void setThreshold (const Float x ) { itsThreshold0 = x; }
+  void setThreshold (const casacore::Float x ) { itsThreshold0 = x; }
   // Thresh doubles in iter iterations
-  void setThresholdSpeedup (const Float iter) {itsThresholdSpeedup = iter; }
-  Float getThreshold();
+  void setThresholdSpeedup (const casacore::Float iter) {itsThresholdSpeedup = iter; }
+  casacore::Float getThreshold();
 
   // Set/get the progress display 
   // <group>
@@ -272,12 +272,12 @@ public:
   // </group>
 
   // return the number of iterations completed
-  Int numberIterations () { return itsIteration; }
+  casacore::Int numberIterations () { return itsIteration; }
 
   // if this MEMModel is constructed in a MF loop, we may need to
   // increment the flux by the last iterations flux
-  void setCycleFlux(Float x) { itsCycleFlux = x; }
-  Float getCycleFlux() { return itsCycleFlux; }
+  void setCycleFlux(casacore::Float x) { itsCycleFlux = x; }
+  casacore::Float getCycleFlux() { return itsCycleFlux; }
 
 protected:
 
@@ -285,9 +285,9 @@ protected:
   // Perform One Iteration
   void oneIteration();
 
-  // apply mask to a lattice; returns True if mask is available, 
-  // False if not
-  Bool applyMask( Lattice<Float> & lat );
+  // apply mask to a lattice; returns true if mask is available, 
+  // false if not
+  casacore::Bool applyMask( casacore::Lattice<casacore::Float> & lat );
 
   // Helper functions that interface with Entropy routines
   // Access to the entropy should be through this interface; the
@@ -304,11 +304,11 @@ protected:
 
   void formGDS() { itsGradDotStep1=itsEntropy_ptr->formGDS(); }
 
-  void entropyType(String &str) { itsEntropy_ptr->entropyType(str); }
+  void entropyType(casacore::String &str) { itsEntropy_ptr->entropyType(str); }
 
   void relaxMin() { itsRequiredModelMin = itsEntropy_ptr->relaxMin(); }
 
-  Bool testConvergence() { return itsEntropy_ptr->testConvergence(); }
+  casacore::Bool testConvergence() { return itsEntropy_ptr->testConvergence(); }
 
   // </group>
 
@@ -320,7 +320,7 @@ protected:
   void letEntropyDie() { itsEntropy_ptr = 0; }
 
   // initialize itsStep and itsResidual and other stuff
-  Bool initStuff();
+  casacore::Bool initStuff();
 
 
   // controls how to change Alpha and Beta
@@ -338,14 +338,14 @@ protected:
   // Generic utility functions
   // <group>
   // check that a single image is onf plausible shape
-  Bool checkImage(const Lattice<Float> *);
+  casacore::Bool checkImage(const casacore::Lattice<casacore::Float> *);
   // check that the lattices and the underlying tile sizes are consistent
-  Bool checkImages(const Lattice<Float> *one, const Lattice<Float> *other);
+  casacore::Bool checkImages(const casacore::Lattice<casacore::Float> *one, const casacore::Lattice<casacore::Float> *other);
   // check that all is well in Denmark:
   //     ensure all images are the same size,
   //     ensure we have an entropy,
   //     ensure state variables have reasonable values
-  Bool ok();
+  casacore::Bool ok();
   // </group>
   
 
@@ -358,92 +358,92 @@ protected:
 
   // take one step: clipped addition of
   // wt1*itsModel + wt2*itsStep
-  void takeStep(Float wt1, Float wt2);
+  void takeStep(casacore::Float wt1, casacore::Float wt2);
 
   // Calculate the flux, itsModMin, and itsModMax
-  Float formFlux();
+  casacore::Float formFlux();
   // </group>
 
   // Determine if the peak residual is less than the getThreshold()
-  Bool testConvergenceThreshold();
+  casacore::Bool testConvergenceThreshold();
 
-  // ------------Private Member Data---------------------
+  // ------------Private Member casacore::Data---------------------
   // functional form of the entropy
   Entropy  *itsEntropy_ptr;   
 
   // form of the Residual method
-  ResidualEquation< Lattice<Float> > * itsResidualEquation_ptr;
+  ResidualEquation< casacore::Lattice<casacore::Float> > * itsResidualEquation_ptr;
 
   // Images:
-  Lattice<Float> * itsModel_ptr;
-  Lattice<Float> * itsPrior_ptr;
-  Lattice<Float> * itsMask_ptr;
+  casacore::Lattice<casacore::Float> * itsModel_ptr;
+  casacore::Lattice<casacore::Float> * itsPrior_ptr;
+  casacore::Lattice<casacore::Float> * itsMask_ptr;
   // Our OWN internal temp images; delete these upon destruction
-  Lattice<Float> * itsStep_ptr;
-  Lattice<Float> * itsResidual_ptr;
+  casacore::Lattice<casacore::Float> * itsStep_ptr;
+  casacore::Lattice<casacore::Float> * itsResidual_ptr;
 
 
   // Controlling parameters
   // <group>
-  Bool itsInitializeModel;
-  uInt itsNumberIterations;
-  Bool  itsDoInit;
-  Float itsSigma;
-  Float itsTargetFlux;  
-  Float itsDefaultLevel;
-  Float itsTargetChisq;
+  casacore::Bool itsInitializeModel;
+  casacore::uInt itsNumberIterations;
+  casacore::Bool  itsDoInit;
+  casacore::Float itsSigma;
+  casacore::Float itsTargetFlux;  
+  casacore::Float itsDefaultLevel;
+  casacore::Float itsTargetChisq;
   // tolerance for convergence
-  Float itsTolerance;	
+  casacore::Float itsTolerance;	
   // N points per beam
-  Float itsQ;		
+  casacore::Float itsQ;		
   // gain for adding step image
-  Float itsGain;	
-  Float itsMaxNormGrad;
+  casacore::Float itsGain;	
+  casacore::Float itsMaxNormGrad;
   // constrain flux or not?
-  Bool  itsUseFluxConstraint;  
+  casacore::Bool  itsUseFluxConstraint;  
   // is this an image plane problem (like Single Dish or Optical?)
-  Bool  itsDoImagePlane;
-  Float itsThreshold0;
-  Float itsThresholdSpeedup;
-  Float itsCycleFlux; // flux from previous cycles
+  casacore::Bool  itsDoImagePlane;
+  casacore::Float itsThreshold0;
+  casacore::Float itsThresholdSpeedup;
+  casacore::Float itsCycleFlux; // flux from previous cycles
   // </group>
 
   // State variables
   // <group>  
-  Float itsAlpha;
-  Float itsBeta;
-  Float itsNormGrad;
-  Float itsFlux;
-  Float itsTotalFlux;      // itsCycleFlux + itsFlux
-  Float itsChisq;
+  casacore::Float itsAlpha;
+  casacore::Float itsBeta;
+  casacore::Float itsNormGrad;
+  casacore::Float itsFlux;
+  casacore::Float itsTotalFlux;      // itsCycleFlux + itsFlux
+  casacore::Float itsChisq;
   // sqrt( chi^2/target_chi^2 )
-  Float itsFit;	       
+  casacore::Float itsFit;	       
   // sqrt( chi^2/ Npixels )
-  Float itsAFit;       
+  casacore::Float itsAFit;       
   // numerical value of entropy
-  Float itsEntropy;    
+  casacore::Float itsEntropy;    
   // Model is constrained to be >= itsNewMin
-  Float itsRequiredModelMin; 
+  casacore::Float itsRequiredModelMin; 
   // maximum pixel value in model
-  Float itsModelMax;   
+  casacore::Float itsModelMax;   
   // minimum pixel value n model
-  Float itsModelMin;   
-  Float itsLength;
-  Double itsGradDotStep0;
-  Double itsGradDotStep1;
-  uInt   itsIteration;
-  uInt   itsFirstIteration;
+  casacore::Float itsModelMin;   
+  casacore::Float itsLength;
+  casacore::Double itsGradDotStep0;
+  casacore::Double itsGradDotStep1;
+  casacore::uInt   itsIteration;
+  casacore::uInt   itsFirstIteration;
   // matrix of gradient dot products
-  Matrix<Double> itsGDG;  
-  Float itsCurrentPeakResidual;
+  casacore::Matrix<casacore::Double> itsGDG;  
+  casacore::Float itsCurrentPeakResidual;
   // </group>
-  Float itsNumberPixels;
+  casacore::Float itsNumberPixels;
 
 
   // Accesories
   // <group>  
-  Bool itsChoose;
-  LogIO itsLog;
+  casacore::Bool itsChoose;
+  casacore::LogIO itsLog;
   // </group>  
 
   // Enumerate the different Gradient subscript types

@@ -38,6 +38,7 @@
 #include <casa/Logging/LogMessage.h>
 #include <casa/Logging/LogSink.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 CalInterp::CalInterp(CalSet<Complex>& cs,
@@ -47,15 +48,15 @@ CalInterp::CalInterp(CalSet<Complex>& cs,
   timeType_(timetype),
   freqType_(freqtype),
   spwMap_(cs.nSpw(),-1),
-  spwOK_(cs.nSpw(),False),
+  spwOK_(cs.nSpw(),false),
   lastTime_(cs.nSpw(),-1.0e99),
-  finit_(cs.nSpw(),False),
+  finit_(cs.nSpw(),false),
   nFreq_(cs.nSpw(),1),
   solFreq_(cs.nSpw(),NULL),
   datFreq_(cs.nSpw(),NULL),
   currSpw_(-1),
   currSlot_(cs.nSpw(),-1),
-  exactTime_(False),
+  exactTime_(false),
 
   ip4d_(cs.nSpw(),NULL),
   ip3d_(cs.nSpw(),NULL),
@@ -80,7 +81,7 @@ CalInterp::CalInterp(CalSet<Complex>& cs,
   fCC_(cs.nSpw(),NULL),
   fOk_(cs.nSpw(),NULL),
 
-  verbose_(False)
+  verbose_(false)
 
 {
 
@@ -141,7 +142,7 @@ Bool CalInterp::interpolate(const Double& time,
   //  - catch case where requested spw has no solutions
 
   // Assume no change, for starters
-  Bool newInterp(False);
+  Bool newInterp(false);
 
   // If spw has changed, re-map spw
   currSpw()=spw;
@@ -164,20 +165,20 @@ Bool CalInterp::interpTime(const Double& time) {
   // Interpolate in Time
   if (verbose_) cout << "CalInterp::interpTime()" << endl;
 
-  Bool newTime=False;         // assume no new calculations needed
+  Bool newTime=false;         // assume no new calculations needed
 
-  Bool newSlot(False);
+  Bool newSlot(false);
   if (time != lastTime() ) {
     lastTime()=time;
 
     // if not "nearest", must recalcuate time interp
-    if ( !nearestT() ) newTime=True;
+    if ( !nearestT() ) newTime=true;
 
     // Find relevant time slot
     newSlot = findSlot(time);
 
     if (newSlot) 
-      newTime = True;
+      newTime = true;
 
     if (!exactTime() && !nearestT())
       updTimeCoeff();
@@ -193,12 +194,12 @@ Bool CalInterp::interpTime(const Double& time) {
 		     << "nearestT() = " << nearestT()  << " "
 		     << endl;
 
-  // newTime=True here if we need to re-calc time interp (*any* mode)
+  // newTime=true here if we need to re-calc time interp (*any* mode)
 
   if (newTime) {
     
     if ( nearestT() || exactTime() ) {
-      exactTime_=True;   // Behave as exact
+      exactTime_=true;   // Behave as exact
 
       if (verbose_) cout << "   "
 			 << "FOUND EXACT TIME!" << endl;
@@ -246,7 +247,7 @@ void CalInterp::interpFreq(const Vector<Double>& freq) {
     initFreqInterp(freq);
 
     // if all exact freqs, just reference time interp result:
-    if ( allEQ(ef(),True) ) {
+    if ( allEQ(ef(),true) ) {
 
       // un-reference r
       r.resize();
@@ -275,31 +276,31 @@ Bool CalInterp::findSlot(const Double& time) {
 
   Int slot(-1);
 
-  Bool newSlot(False);               // Assume no change
+  Bool newSlot(false);               // Assume no change
 
   // If only one slot, we've found it
   if (nTime()==1) {
     slot=0;
-    exactTime_=True;
+    exactTime_=true;
 
   // More than one slot, find the right one:
   } else {
 
     Vector<Double> timelist(csTimes());
 
-    if (exactTime_) newSlot=True;
+    if (exactTime_) newSlot=true;
 
     // Behave as nearest outside absolute range of available calibration   
     //   to avoid wild extrapolation, else search for the correct soln slot
     if (time<timelist(0)) {
       // Before first timestamp, use first slot as nearest one
       slot=0;
-      exactTime_=True;
+      exactTime_=true;
     }
     else if (time>timelist(nTime()-1)) {
       // After last timestamp, use last slot as nearest one
       slot=nTime()-1;
-      exactTime_=True;
+      exactTime_=true;
     }
     else
       // Find index in timelist where time would be:
@@ -314,7 +315,7 @@ Bool CalInterp::findSlot(const Double& time) {
 
       // If nearest, fine-tune slot to actual nearest:
       if ( timeType()=="nearest" ) {
-	exactTime_=True;   // Nearest behaves like exact match
+	exactTime_=true;   // Nearest behaves like exact match
 	if (slot!=nTime()-1 && 
 	    (timelist(slot+1)-time) < (time-timelist(slot)) )
 	  slot++;
@@ -500,7 +501,7 @@ void CalInterp::initFreqInterp(const Vector<Double> freq) {
 
   if (nFreq() != Int(freq.nelements()) ||
       !allEQ(freq,datFreq()) )
-    finit()=False;
+    finit()=false;
 
   if (!finit()) {
 
@@ -511,13 +512,13 @@ void CalInterp::initFreqInterp(const Vector<Double> freq) {
     datFreq() = freq;
 
     ch0().resize(nFreq()); ch0()=-1;
-    ef().resize(nFreq());  ef()=False;
+    ef().resize(nFreq());  ef()=false;
 
     if (nChan()==1) {
       // one-to-many case (e.g., G)
       //  need not support non-trivial freq interpolation
       ch0()=0;
-      ef()=True;
+      ef()=true;
 
     } else {
       // many-to-many case (e.g., B)
@@ -533,7 +534,7 @@ void CalInterp::initFreqInterp(const Vector<Double> freq) {
 	if (!ef()(i)) {
 	  if ( freqType()=="nearest" ) {
 	    // refer to true nearest, behave as exact match
-	    ef()(i)=True;
+	    ef()(i)=true;
 	    if ( ichan==nChan() || 
 		 (ichan>0 && 
 		  abs(freq(i)-csFreq()(ichan-1))<abs(csFreq()(ichan)-freq(i))) )
@@ -549,7 +550,7 @@ void CalInterp::initFreqInterp(const Vector<Double> freq) {
       }
       
       // Fill in frac freq info if some non-exact freqs
-      if ( !allEQ(ef(),True) ) {
+      if ( !allEQ(ef(),true) ) {
 	
 	df().resize(nFreq());  df()=0.0;
 	fdf().resize(nFreq()); fdf()=0.0;

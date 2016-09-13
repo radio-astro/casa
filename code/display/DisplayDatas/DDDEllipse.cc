@@ -46,17 +46,18 @@
 #include <display/DisplayDatas/DrawingDisplayData.h>
 #include <display/DisplayDatas/DDDHandle.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	DDDEllipse::DDDEllipse(const Record &description, DrawingDisplayData *owner)
 		: DDDObject(description, owner),
-		  itsOutline(True),
+		  itsOutline(true),
 		  itsMode(DDDObject::None),
 		  itsLogger(LogOrigin("DDDEllipse", "DDDEllipse(...)")),
-		  itsRectangle(False),
-		  itsFracX(False),
-		  itsFracY(False),
-		  itsDoRef(False) {
+		  itsRectangle(false),
+		  itsFracX(false),
+		  itsFracY(false),
+		  itsDoRef(false) {
 		if (!(description.isDefined("center") &&
 		        description.isDefined("positionangle") &&
 		        description.isDefined("major") &&
@@ -68,7 +69,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		itsWorldParameters.resize(5);
 		try {
-			decode(description, True);
+			decode(description, true);
 		} catch (AipsError x) {
 			itsLogger << LogIO::SEVERE << x.getMesg() << LogIO::POST;
 		}
@@ -248,7 +249,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // new phrase in expression on next line...
 //!(ev.modifiers() & owner()->keyModifier())) {
 
-		        False) {
+		        false) {
 			return;
 		}
 
@@ -258,7 +259,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Double y = (Double)ev.pixY();
 //
 		if (showingHandles()) {
-			if (isFixed()) showHandles(False);
+			if (isFixed()) showHandles(false);
 //
 			if (ev.keystate()) {
 				Bool onH = onHandle(itsHandles, x,y);
@@ -267,7 +268,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // press button outside object, switch to handles invisible
 
 					clearClickBuffer();
-					showHandles(False);
+					showHandles(false);
 				} else {
 
 // press button inside object
@@ -299,7 +300,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		} else {
 			if (inPolygon(itsCorners,x,y)) {
 				if (!isFixed()) {
-					showHandles(True);
+					showHandles(true);
 					clearClickBuffer();
 					itsMode = DDDObject::None;
 					return;
@@ -422,9 +423,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	void DDDEllipse::setDescription(const Record& description) {
 
 		DDDObject::setDescription(description);
-		decode(description, False);
+		decode(description, false);
 		if (itsCoordinateSystem.nCoordinates()>0) convertToPixel();
-		if (isFixed()) showHandles(False);
+		if (isFixed()) showHandles(false);
 		owner()->refresh();
 	}
 
@@ -441,7 +442,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		String uy = itsWorldParameters(1).getUnit();
 //
 		Vector<Double> worldCen(itsCoordinateSystem.referenceValue().copy());
-		worldCen.resize(min(3, Int(itsCoordinateSystem.nWorldAxes())), True);
+		worldCen.resize(min(3, Int(itsCoordinateSystem.nWorldAxes())), true);
 //
 		if (!itsFracX) {
 			worldCen(0) = itsWorldParameters(0).getValue(units(0));

@@ -43,10 +43,14 @@
 #include <QComboBox>
 #include <graphics/X11/X_exit.h>
 
+namespace casacore{
+
+	class WCUnion;
+}
+
 namespace casa {
 
 	class RSComposite;
-	class WCUnion;
 
 	class MakeRegion : public QWidget {
 
@@ -60,20 +64,20 @@ namespace casa {
 	public slots:
 
 		//handle double click that announces a box is ready
-		void drawRegion(Record mousereg, WorldCanvasHolder *wch);
+		void drawRegion(casacore::Record mousereg, WorldCanvasHolder *wch);
 
 		//React to new region creation in display panel.
-		void newRegion_(String imgFilename);
+		void newRegion_(casacore::String imgFilename);
 
 		//handle switch display axis
-		void changeAxis(String, String, String, int);
+		void changeAxis(casacore::String, casacore::String, casacore::String, int);
 
 		//handle single click to select a box
-		void activate(Record);
+		void activate(casacore::Record);
 
 		//this is not used, it emits for any wc change, too often
-		void wcChanged(const String,
-		               const Vector<Double>, const Vector<Double>);
+		void wcChanged(const casacore::String,
+		               const casacore::Vector<casacore::Double>, const casacore::Vector<casacore::Double>);
 
 		virtual void closeEvent(QCloseEvent* event);
 
@@ -122,23 +126,23 @@ namespace casa {
 		void reDraw();
 
 		void addRegionsToShape(RSComposite*& theShapes,
-		                       const WCRegion*& wcreg);
+		                       const casacore::WCRegion*& wcreg);
 
-		WCUnion* unfoldCompositeRegionToSimpleUnion(const WCRegion*& wcreg);
-		void unfoldIntoSimpleRegionPtrs(PtrBlock<const WCRegion*>& outRegPtrs,
-		                                const WCRegion*& wcreg);
+		casacore::WCUnion* unfoldCompositeRegionToSimpleUnion(const casacore::WCRegion*& wcreg);
+		void unfoldIntoSimpleRegionPtrs(casacore::PtrBlock<const casacore::WCRegion*>& outRegPtrs,
+		                                const casacore::WCRegion*& wcreg);
 
 		//convert region to shape
 		RSComposite *regionToShape(
-		    QtDisplayData* qdd, const ImageRegion* wcreg);
+		    QtDisplayData* qdd, const casacore::ImageRegion* wcreg);
 
-		bool planeAllowed(String, String);
+		bool planeAllowed(casacore::String, casacore::String);
 
 	private:
 
 		QtDisplayPanel* qdp_;
 
-		PtrBlock<const ImageRegion*> unionRegions_p;
+		casacore::PtrBlock<const casacore::ImageRegion*> unionRegions_p;
 		DisplayData* regData;
 
 		RegionShape* activeShape;
@@ -149,7 +153,7 @@ namespace casa {
 		int cb;
 		int zIndex;
 		int pIndex;
-		String zAxis;
+		casacore::String zAxis;
 
 		QGroupBox* tGroup;
 		QPushButton* removeAll;

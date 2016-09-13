@@ -25,6 +25,7 @@
 #include "CanvasMode.h"
 #include <display/QtPlotter/QtCanvas.qo.h>
 
+using namespace casacore;
 namespace casa {
 
 	void CanvasMode::setReceiver( QtCanvas* canvas ) {
@@ -55,4 +56,5 @@ namespace casa {
 	CanvasMode::~CanvasMode() {
 	}
 
+using namespace casacore;
 } /* namespace casa */

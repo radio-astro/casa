@@ -39,7 +39,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <summary>
 // base class for models with an internal & external representation 
-// as a MaskedArray 
+// as a casacore::MaskedArray 
 // </summary>
 
 // <use visibility=export>
@@ -66,19 +66,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <linkto class=MaskedHogbomCleanModel>MaskedHogbomCleanModel</linkto> 
 // class.
 //
-// This class makes an internal copy of the Array supplied to it (either
+// This class makes an internal copy of the casacore::Array supplied to it (either
 // when constructed or when using the setModel function). If this is found
 // to significantly affect performance (execution speed or memory
 // requirements) this may be changed to a reference, perhaps using a smart
-// pointer like the <linkto class=COWPtr>COWPtr</linkto>
+// pointer like the <linkto class=casacore::COWPtr>COWPtr</linkto>
 // </synopsis>
 //
 // <example>
 // <srcblock>
-// MaskedArrayModel<Float> currentModel(); // Cannot use the model yet!
+// MaskedArrayModel<casacore::Float> currentModel(); // Cannot use the model yet!
 // {
-//   Matrix<Float> bestGuess(32,32);
-//    ... put your best guess into the Matrix ...
+//   casacore::Matrix<casacore::Float> bestGuess(32,32);
+//    ... put your best guess into the casacore::Matrix ...
 //   currentModel.setModel(bestGuess); // This does a real copy
 // }
 // ConvolutionEquation eqn(psf, dirty); // psf, and dirty are arrays defined
@@ -115,33 +115,33 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </todo>
 
 template<class T> class MaskedArrayModel: 
-  public LinearModel< MaskedArray<T> > {
+  public LinearModel< casacore::MaskedArray<T> > {
 public:
     // Default constructor sets the internal arrays to zero size
     MaskedArrayModel();
     // Construct the model from a masked array. The data is copied.
-    MaskedArrayModel(const MaskedArray<T> & model);
+    MaskedArrayModel(const casacore::MaskedArray<T> & model);
     // Construct the model from an array. The mask is set to be fully
     // transparent. 
-    MaskedArrayModel(const Array<T> & model);
+    MaskedArrayModel(const casacore::Array<T> & model);
 
     // These functions return the model, either as a masked array or just
     // the data array itself with the mask removed. 
     // <group>
-    void getModel(Array<T>& model) const;
-    virtual void getModel(MaskedArray<T>& model) const;
-    MaskedArray<T> getModel() const;
+    void getModel(casacore::Array<T>& model) const;
+    virtual void getModel(casacore::MaskedArray<T>& model) const;
+    casacore::MaskedArray<T> getModel() const;
     // </group>
     // These functions are analogous to the constructors above and must be
     // called when the default constructor is used. If no mask is specified
     // then it is by default set to totally transparent.  
     // <group>
-    void setModel(const Array<T>& model);
-    virtual void setModel(const MaskedArray<T>& model);
+    void setModel(const casacore::Array<T>& model);
+    virtual void setModel(const casacore::MaskedArray<T>& model);
     // </group>
     
 protected:
-    MaskedArray<T> theModel;
+    casacore::MaskedArray<T> theModel;
 };
 
 

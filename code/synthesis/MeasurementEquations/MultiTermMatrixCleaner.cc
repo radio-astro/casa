@@ -65,6 +65,7 @@
 
 #include<synthesis/MeasurementEquations/MultiTermMatrixCleaner.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 #define MIN(a,b) ((a)<=(b) ? (a) : (b))
@@ -74,8 +75,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     MatrixCleaner(),
     ntaylor_p(0),psfntaylor_p(0),nscales_p(0),nx_p(0),ny_p(0),totalIters_p(0),
     maxscaleindex_p(0), globalmaxpos_p(IPosition(0)),
-    donePSF_p(False),donePSP_p(False),doneCONV_p(False),memoryMB_p(0),
-    adbg(False)
+    donePSF_p(false),donePSP_p(false),doneCONV_p(false),memoryMB_p(0),
+    adbg(false)
   { }
 
   /*
@@ -110,7 +111,7 @@ Bool MultiTermMatrixCleaner::setscales(const Vector<Float> & scales)
    globalmaxval_p=-1e+10;
    globalmaxpos_p=IPosition(2,0);
    maxscaleindex_p=0;
-   return True;
+   return true;
 }
 
 
@@ -120,7 +121,7 @@ Bool MultiTermMatrixCleaner::setntaylorterms(const int & nterms)
    psfntaylor_p = 2*nterms-1;
    totalTaylorFlux_p.resize(ntaylor_p);
    totalTaylorFlux_p.set(0.0);
-   return True;
+   return true;
 }
 
 // Allocate memory, based on nscales and ntaylor
@@ -187,7 +188,7 @@ Bool MultiTermMatrixCleaner::initialise(Int nx, Int ny)
 
   /* Allocate memory for many many TempMatrices. */
   /* Check on a return value of -1 - for insuffucient memory */
-  if( allocateMemory() == -1 ) return False;
+  if( allocateMemory() == -1 ) return false;
 
   /* FFTServer */
   fftcomplex = FFTServer<Float,Complex>(IPosition(2,nx_p,ny_p));
@@ -201,7 +202,7 @@ Bool MultiTermMatrixCleaner::initialise(Int nx, Int ny)
   rmaxval_p = -1.0;
   
   if(adbg) os << "Finished initializing MultiTermMatrixCleaner" << LogIO::POST;
-  return True;
+  return true;
 }
 
 
@@ -231,7 +232,7 @@ Bool MultiTermMatrixCleaner::buildImagePatches()
 
    //cout << "maxpos : " << globalmaxpos_p <<  "  blc : " << blc_p << " trc : " << trc_p << "  blcPsf : " << blcPsf_p << " trcPsf : " << trcPsf_p << endl;
 
-   return True;
+   return true;
 }
 
 
@@ -241,11 +242,11 @@ Bool MultiTermMatrixCleaner::setpsf(int order, Matrix<Float> & psf)
 	if(order==0) AlwaysAssert(validatePsf(psf), AipsError);
         // Directly store the FFT of the PSFs.
         // The FT'd matrix is reshaped automatically.
-	fftcomplex.fft0(vecPsfFT_p[order],psf,False);
-        //fftcomplex.flip(vecPsfFT_p[order],False,False);
+	fftcomplex.fft0(vecPsfFT_p[order],psf,false);
+        //fftcomplex.flip(vecPsfFT_p[order],false,false);
 	//        Matrix<Float> temp(real(vecPsfFT_p[order]));
 	//        writeMatrixToDisk("psfFT_"+String::toString(order), temp);
-        return True;
+        return true;
 }
 
 /* Input : Dirty Images */
@@ -253,7 +254,7 @@ Bool MultiTermMatrixCleaner::setresidual(int order, Matrix<Float> & dirty)
 {
 	AlwaysAssert((order>=(int)0 && order<(int)vecDirty_p.nelements()), AipsError);
 	vecDirty_p[order].reference(dirty);
-  return True;
+  return true;
 }
 
 /* Input : Model Component Image */
@@ -263,7 +264,7 @@ Bool MultiTermMatrixCleaner::setmodel(int order, Matrix<Float> & model)
 	AlwaysAssert((order>=(int)0 && order<(int)vecModel_p.nelements()), AipsError);
 	vecModel_p[order].assign(model);
 	totalTaylorFlux_p[order] = (sum(vecModel_p[order]));
-  return True;
+  return true;
 }
 
 /* Input : Mask */
@@ -277,7 +278,7 @@ Bool MultiTermMatrixCleaner::setmask(Matrix<Float> & mask)
       AlwaysAssert(itsMask->shape()==mask.shape(), AipsError);
       (*itsMask).assign(mask);
     }
-  return True;
+  return true;
 }
 
 /* Output : Model Component Image */
@@ -286,7 +287,7 @@ Bool MultiTermMatrixCleaner::getmodel(int order, Matrix<Float> & model)
 {
 	AlwaysAssert((order>=(int)0 && order<(int)vecModel_p.nelements()), AipsError);
 	model.assign(vecModel_p[order]);
-  return True;
+  return true;
 }
 
 /* Output Residual Image */
@@ -299,7 +300,7 @@ Bool MultiTermMatrixCleaner::getresidual(int order, Matrix<Float> & residual)
 	residual.assign(vecDirty_p[order]);
 	///residual.assign( matR_p[IND2(order,0)]  ); // This is the one that gets updated during iters.
 
-  return True;
+  return true;
 }
 
 
@@ -309,7 +310,7 @@ Bool MultiTermMatrixCleaner::getinvhessian(Matrix<Double> & invhessian)
 {
         invhessian.resize((invMatA_p[0]).shape());
 	invhessian = (invMatA_p[0]); 
-  return True;
+  return true;
 }
 
 
@@ -339,7 +340,7 @@ Int MultiTermMatrixCleaner::mtclean(Int maxniter, Float stopfraction, Float inpu
   /* Compute all convolutions and the matrix A */
   /* If matrix is not invertible, return ! */
   /* This is done only once - for the first major cycle. Null operation otherwise */
-  if( doneCONV_p == False )
+  if( doneCONV_p == false )
     {
       if( computeHessianPeak() == -2 )
 	return -2;
@@ -524,9 +525,9 @@ Int MultiTermMatrixCleaner::verifyScaleSizes()
           AlwaysAssert(i==newscalesizes.nelements(), AipsError);
           scaleSizes_p.assign(newscalesizes);
           nscales_p = newscalesizes.nelements();
-          totalScaleFlux_p.resize(nscales_p,True);
-          maxScaleVal_p.resize(nscales_p,True);
-          maxScalePos_p.resize(nscales_p,True);
+          totalScaleFlux_p.resize(nscales_p,true);
+          maxScaleVal_p.resize(nscales_p,true);
+          maxScalePos_p.resize(nscales_p,true);
 
     }
   os << "Scale sizes to be used for deconvolution : " << scaleSizes_p << LogIO::POST;
@@ -660,14 +661,14 @@ Int MultiTermMatrixCleaner::setupUserMask()
       /* Compute the convolutions of the input mask with each scale size */
       if(adbg) os << "Convolving user mask with scales, and using 0.1 as a threshold." << LogIO::POST;
       Matrix<Complex> maskft;
-      fftcomplex.fft0(maskft , *itsMask , False);
+      fftcomplex.fft0(maskft , *itsMask , false);
 
       for(Int scale=0;scale<nscales_p;scale++)
       {
         AlwaysAssert(maskft.shape() == vecScalesFT_p[scale].shape(),AipsError);
         cWork_p.assign(maskft * vecScalesFT_p[scale]);
-       	fftcomplex.fft0( vecScaleMasks_p[scale] , cWork_p , False  );
-        fftcomplex.flip( vecScaleMasks_p[scale] , False , False);
+       	fftcomplex.fft0( vecScaleMasks_p[scale] , cWork_p , false  );
+        fftcomplex.flip( vecScaleMasks_p[scale] , false , false);
 	
         for (Int j=0 ; j < (itsMask->shape())(1); ++j)
         for (Int k =0 ; k < (itsMask->shape())(0); ++k)
@@ -697,7 +698,7 @@ Int MultiTermMatrixCleaner::setupUserMask()
 	    {
 	      itsScaleXfrs[scale].reference(vecScalesFT_p[scale]);
 	    }
-          itsScalesValid=True;
+          itsScalesValid=true;
 
 	  makeScaleMasks();
           AlwaysAssert(nscales_p==itsScaleMasks.nelements(),AipsError);
@@ -799,20 +800,20 @@ Int MultiTermMatrixCleaner::setupScaleFunctions()
 			// First make the scale
 			makeScale(vecScales_p[scale], scaleSizes_p(scale));
 			// Now store the XFR (shape of FT is set automatically)
-                        fftcomplex.fft0(vecScalesFT_p[scale] , vecScales_p[scale] , False);
-                        //fftcomplex.flip(vecScalesFT_p[scale] , False , False);
+                        fftcomplex.fft0(vecScalesFT_p[scale] , vecScales_p[scale] , false);
+                        //fftcomplex.flip(vecScalesFT_p[scale] , false , false);
 		  */
 			// First make the scale
 			makeScale(vecWork_p[0], scaleSizes_p(scale));
 			// Now store the XFR (shape of FT is set automatically)
-                        fftcomplex.fft0(vecScalesFT_p[scale] , vecWork_p[0] , False);
+                        fftcomplex.fft0(vecScalesFT_p[scale] , vecWork_p[0] , false);
 			// Copy the scale onto the smaller vecScales image.
 			IPosition immid(2,nx_p/2, ny_p/2);
 			Matrix<Float> psfpatch = ( vecWork_p[0] ) (immid-psfsupport_p/2,immid+psfsupport_p/2-IPosition(2,1,1));  
 			vecScales_p[scale] = psfpatch; 
 
 		}
-		donePSP_p=True;
+		donePSP_p=true;
 	}
 	
 	return 0;
@@ -854,16 +855,16 @@ Int MultiTermMatrixCleaner::computeHessianPeak()
 
         cWork_p.assign( (vecPsfFT_p[ttay1]) *(vecScalesFT_p[scale1])*(vecScalesFT_p[scale2]) );
 
-	Bool usepatch=True;
+	Bool usepatch=true;
 	if(usepatch)
 	  {
-	    fftcomplex.fft0( vecWork_p[0]  , cWork_p , False  );
+	    fftcomplex.fft0( vecWork_p[0]  , cWork_p , false  );
 	    Matrix<Float> psfpatch = ( vecWork_p[0] ) (itsPositionPeakPsf-psfsupport_p/2,itsPositionPeakPsf+psfsupport_p/2-IPosition(2,1,1));  
 	    cubeA_p[IND4(taylor1,taylor2,scale1,scale2)] = psfpatch; 
 	  }
 	else
 	  {
-	    fftcomplex.fft0( cubeA_p[IND4(taylor1,taylor2,scale1,scale2)]  , cWork_p , False  );
+	    fftcomplex.fft0( cubeA_p[IND4(taylor1,taylor2,scale1,scale2)]  , cWork_p , false  );
 	  }
 	
 	//writeMatrixToDisk("psfconv_t_"+String::toString(taylor1)+"-"+String::toString(taylor2)+"_s_"+String::toString(scale1)+"-"+String::toString(scale2)+".im", cubeA_p[IND4(taylor1,taylor2,scale1,scale2)] );
@@ -873,7 +874,7 @@ Int MultiTermMatrixCleaner::computeHessianPeak()
       if(itsPositionPeakPsf != IPosition(2,(nx_p/2),(ny_p/2)))
 	os << LogIO::WARN << "The PSF peak is not at the center of the image..." << LogIO::POST;
 
-      Int stopnow=False;
+      Int stopnow=false;
       for (Int scale=0; scale<nscales_p;scale++) 
       {
 	      // Fill up A
@@ -884,7 +885,7 @@ Int MultiTermMatrixCleaner::computeHessianPeak()
                 (matA_p[scale])(taylor1,taylor2) = (cubeA_p[IND4(taylor1,taylor2,scale,scale)])(psfpeak_p); // NEW
 		/* Check for exact zeros ON MAIN DIAGONAL. Usually indicative of error */
 		if( taylor1==taylor2 &&
-		    fabs( (matA_p[scale])(taylor1,taylor2) )  == 0.0 ) stopnow = True;
+		    fabs( (matA_p[scale])(taylor1,taylor2) )  == 0.0 ) stopnow = true;
 	      }
 	      
 	      if(stopnow)
@@ -906,7 +907,7 @@ Int MultiTermMatrixCleaner::computeHessianPeak()
 		   for(Int taylor2=0; taylor2<ntaylor_p-1; taylor2++)
 		      tsum += fabs(ratios[taylor2] - ratios[taylor2+1]);
 		   tsum /= ntaylor_p-1;
-		   if(tsum < 1e-04) stopnow=True;
+		   if(tsum < 1e-04) stopnow=true;
 
 		   //cout << "Ratios for row " << taylor1 << " are " << ratios << endl;
 		   //cout << "tsum : " << tsum << endl;
@@ -950,7 +951,7 @@ Int MultiTermMatrixCleaner::computeHessianPeak()
 	      
       }// end for scales
       
-      doneCONV_p=True;
+      doneCONV_p=true;
    } 
    
    return 0;
@@ -978,7 +979,7 @@ Int MultiTermMatrixCleaner::computeRHS()
 	for (Int taylor=0; taylor<ntaylor_p;taylor++) 
 	{
 	   /* Compute FT of dirty image */
-	  fftcomplex.fft0( dirtyFT_p , vecDirty_p[taylor] , False );
+	  fftcomplex.fft0( dirtyFT_p , vecDirty_p[taylor] , false );
 	   
 	   for (Int scale=0; scale<nscales_p;scale++) 
 	   {
@@ -988,8 +989,8 @@ Int MultiTermMatrixCleaner::computeRHS()
                 // Let cWork get resized if needed. Force matR to have the right shape
 		////                cWork_p.assign( (dirtyFT_p)*(vecPsfFT_p[0])*(vecScalesFT_p[scale]) );
                 cWork_p.assign( (dirtyFT_p)*(vecScalesFT_p[scale]) );
-                fftcomplex.fft0( matR_p[IND2(taylor,scale)] , cWork_p , False );
-                fftcomplex.flip(  matR_p[IND2(taylor,scale)] , False , False );
+                fftcomplex.fft0( matR_p[IND2(taylor,scale)] , cWork_p , false );
+                fftcomplex.flip(  matR_p[IND2(taylor,scale)] , false , false );
 	   }
 	   //	   writeMatrixToDisk("resid_"+String::toString(taylor)+".im", matR_p[IND2(taylor,0)] );
 	}
@@ -1405,7 +1406,7 @@ Int MultiTermMatrixCleaner::checkConvergence(Int /*criterion*/, Float &fluxlimit
     /* Stop, if there are negatives on the largest scale in the Io image */
     //if(nscales_p>1 && maxscaleindex_p == nscales_p-2)
     //	if((*matCoeffs_p[IND2(0,maxscaleindex_p)]).getAt(globalmaxpos_p) < 0.0)
-    //	{converged = False;break;}
+    //	{converged = false;break;}
 
     /* Detect divergence, and signal it.... */
     // TODO
@@ -1427,7 +1428,7 @@ Int MultiTermMatrixCleaner::checkConvergence(Int /*criterion*/, Float &fluxlimit
     else
     {
       //       if(1)
-	if( totalIters_p==maxniter_p || (adbg==(Bool)True) || maxniter_p < (int)5 || (totalIters_p%(Int)20==0) )
+	if( totalIters_p==maxniter_p || (adbg==(Bool)true) || maxniter_p < (int)5 || (totalIters_p%(Int)20==0) )
        {
 	 
 	    os << "[" << totalIters_p << "] Res: " << rmaxval << " Max: " << globalmaxval_p;
@@ -1481,36 +1482,36 @@ Int MultiTermMatrixCleaner::writeMatrixToDisk(String imagename, Matrix<Float>& t
        stores the results in-place in the residual images */
 Bool MultiTermMatrixCleaner::computeprincipalsolution()
 {
-  LogIO os(LogOrigin("MultiTermMatrixCleaner", "computeprincipalsolution()", WHERE));
+    LogIO os(LogOrigin("MultiTermMatrixCleaner", "computeprincipalsolution()", WHERE));
 
-  os << "MTMC :: Computing principal solution on residuals" << LogIO::POST;
+    os << "MTMC :: Computing principal solution on residuals" << LogIO::POST;
 
-  /// If this is being called with niter=0, the Hessian won't exist. So, make it.
-  if( doneCONV_p == False )
+    /// If this is being called with niter=0, the Hessian won't exist. So, make it.
+    if( doneCONV_p == false )
     {
-      if( computeHessianPeak() == -2 )
-	return False;
+	if( computeHessianPeak() == -2 )
+	    return false;
     }
 
-	AlwaysAssert((vecDirty_p.nelements()>0), AipsError);
+    AlwaysAssert((vecDirty_p.nelements()>0), AipsError);
 
-	/* Solve for the coefficients at the delta-function scale*/
-	for(Int taylor1=0;taylor1<ntaylor_p;taylor1++)
+    /* Solve for the coefficients at the delta-function scale*/
+    for(Int taylor1=0;taylor1<ntaylor_p;taylor1++)
+    {
+	(matCoeffs_p[IND2(taylor1,0)]) = 0.0; 
+	for(Int taylor2=0;taylor2<ntaylor_p;taylor2++)
 	{
-	     (matCoeffs_p[IND2(taylor1,0)]) = 0.0; 
-             for(Int taylor2=0;taylor2<ntaylor_p;taylor2++)
-	     {
-	       matCoeffs_p[IND2(taylor1,0)] = matCoeffs_p[IND2(taylor1,0)] + ((Float)(invMatA_p[0])(taylor1,taylor2))*(vecDirty_p[taylor2]);
-	     }
+	    matCoeffs_p[IND2(taylor1,0)] = matCoeffs_p[IND2(taylor1,0)] + ((Float)(invMatA_p[0])(taylor1,taylor2))*(vecDirty_p[taylor2]);
 	}
+    }
 	
-	/* Copy this into the residual vector */
-	for(Int taylor=0; taylor<ntaylor_p;taylor++)
-	  {
-	    vecDirty_p[taylor].assign(matCoeffs_p[IND2(taylor,0)]);
-	  }
+    /* Copy this into the residual vector */
+    for(Int taylor=0; taylor<ntaylor_p;taylor++)
+    {
+	vecDirty_p[taylor].assign(matCoeffs_p[IND2(taylor,0)]);
+    }
 
-  return True;
+    return true;
 }
 
 

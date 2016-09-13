@@ -47,7 +47,7 @@
 #include <casa/namespace.h>
 int main()
 {
-  Bool Failed = False;
+  Bool Failed = false;
   // Setup the sizes for the model,psf and dirty image.
   const uInt moddims = 2, modSize = 256; 
   const uInt dirtySize = modSize;
@@ -137,7 +137,7 @@ int main()
   PGPlotter *pgplotter_p = new PGPlotter("/xs");
   ClarkCleanProgress *cleanerProgress=0;
   //myModel.setProgress(*cleanerProgress);
-  //pgplotter_p->ask(False);
+  //pgplotter_p->ask(false);
 
   Timer timer;
   Bool ans = myModel.solve(convEqn);
@@ -180,7 +180,7 @@ int main()
     cout << "maxResidual " << maxResidual << " fluxLimit " << fluxLimit << endl;
     if (maxResidual > 2,0*fluxLimit) {
       cout << "Failed ";
-      Failed = True;
+      Failed = true;
     }
     else {
       cout << "Passed";
@@ -199,13 +199,13 @@ int main()
     }
     if (maxError > 2.0*fluxLimit) {
       cout << "Failed the model comparison test" << endl;
-      Failed = True;
+      Failed = true;
     }   else {
       cout << "Passed the model comparison test" << endl;
     }
   } else {
     cout << "Cannot complete the test. Too few iterations used" << endl;
-    Failed = True;
+    Failed = true;
   }
   if (Failed) {
     cout << "FAIL" << endl;

@@ -17,18 +17,18 @@ using namespace std;
 #include <measures/Measures/Muvw.h>
 #include <casa/Quanta.h>
 
-using namespace casa;
+using namespace casacore;
 
 #include "ASDMEntities.h"
 using namespace asdm;
 
 /** @Brief SDM UVW engine: compute the uvw these being not present in the SDM but
-    required to build MS main table.
+    required to build casacore::MS main table.
     
 
     This UvwCoords class is an engine to determine the UVW coordinates at any time for
-    any antenna (sub)array. It is based on the Measure classes in CASA and the ASDM 
-    classes. It requires as input the MS timeCentroids item which is an output in the 
+    any antenna (sub)array. It is based on the casacore::Measure classes in CASA and the ASDM 
+    classes. It requires as input the casacore::MS timeCentroids item which is an output in the 
     ASDM DAMs.
     @todo 
     - apply the chain of offsets for the reference point in the antenna to the position 
@@ -58,10 +58,10 @@ public:
       invariant within a dump (i.e. in an integration or a subintegration)
       @param configDescriptionId ConigDescription identifier
       @param phaseDir            Phase direction assumed to be J2000
-      @param timeCentroid        Time centroid (unit second) assumed to be MJD TAI
+      @param timeCentroid        casacore::Time centroid (unit second) assumed to be MJD TAI
       @param correlationMode     Correlation mode defined by the client (a user query) to filter out data.
       @param reverse             Parameter characterizing the order of the resulting baselines. 
-      @param autoTrailing        True if the cross baselines come first, the zero baselines trailing in the output v_uvw sequence
+      @param autoTrailing        true if the cross baselines come first, the zero baselines trailing in the output v_uvw sequence
       @param v_uvw               The returned UVW coordinates for all the pair of antenna and, for 
                                  each pair, for all the spectral windows and, for each spectral window,
                                  for each bin. 
@@ -81,24 +81,24 @@ public:
 	       double timeCentroid,
 	       Enum<CorrelationMode> correlationMode,
 	       bool reverse, bool autoTrailing,
-	       vector<Vector<casa::Double> >& v_uvw,
-	       casa::MSFieldColumns* msfc_p=0);
+	       vector<casacore::Vector<casacore::Double> >& v_uvw,
+	       casacore::MSFieldColumns* msfc_p=0);
 
   /** Determine the baseline-based uvw in case timeCentroid may change vs  baseline, spw or bin within a dump
       @param configDescriptionId ConigDescription identifier
       @param phaseDir            Phase direction assumed to be J2000
-      @param v_timeCentroid      Sequence of time centroids (unit second) assumed to be MJD TAI. The
+      @param v_timeCentroid      casacore::Sequence of time centroids (unit second) assumed to be MJD TAI. The
                                  order of these in the sequence is described by two parameters,
                                  the attributes reverse and autoTrailing. 
       @param correlationMode     Correlation mode defined by the client (his/her query) to filter out data.
       @param reverse             Parameter characterizing the order of the resulting baselines. 
-      @param autoTrailing        True if the cross baselines come first, the zero baselines trailing in 
+      @param autoTrailing        true if the cross baselines come first, the zero baselines trailing in 
                                  the output v_uvw sequence
       @param v_uvw               The returned UVW coordinates for all the pairs of antenna and, for 
                                  each pair, for all the spectral windows and, for each spectral window,
                                  for all the bins. There is a ono-to-one association between the uvw 
                                  ccordinates and the time centroids v_uvw v_timeCentroid having the
-				 same size (the number of MS rows per SDM row in the Main table)
+				 same size (the number of casacore::MS rows per SDM row in the Main table)
 				 and the same sequence order. 
                                    
       @warning 
@@ -112,8 +112,8 @@ public:
 	       const vector<double>& v_timeCentroid,
 	       Enum<CorrelationMode> correlationMode,
 	       bool reverse, bool autoTrailing, 
-	       vector<Vector<casa::Double> >& v_uvw,
-	       casa::MSFieldColumns* msfc_p=0);
+	       vector<casacore::Vector<casacore::Double> >& v_uvw,
+	       casacore::MSFieldColumns* msfc_p=0);
 
   /** Determine the baseline-based uvw for a sequence of epochs
       @param mainRow         Pointer to a SDM main table row
@@ -148,18 +148,18 @@ public:
       @warning This function will destroy the previous content of v_uvw.
       @note 
       - correlationMode must be identical to the one used with the DAMs. 
-      - v_tci is a product of the DAMs. Its size is the number of MS rows per SDM row in the Main tables. It is
+      - v_tci is a product of the DAMs. Its size is the number of casacore::MS rows per SDM row in the Main tables. It is
         available using the method timeSequence() of the DAMs (SDMBinData). 
       - for dataOrder (reverse and autoTrailing) it is available using a static method of the DAMs (SDMBinData).
   */
   void uvw_bl( asdm::MainRow* mainRow, vector<pair<unsigned int,double> > v_tci, 
 	       Enum<CorrelationMode> correlationMode,
-	       pair<bool,bool> dataOrder, vector<Vector<casa::Double> >& v_uvw);
+	       pair<bool,bool> dataOrder, vector<casacore::Vector<casacore::Double> >& v_uvw);
 
 
   /** Determine the baseline-based uvw for a sequence of epochs
       @param mainRow         Pointer to a SDM main table row
-      @param v_timeCentroid  Time centroid for every (sub)integration, baseline, spectral window and bin
+      @param v_timeCentroid  casacore::Time centroid for every (sub)integration, baseline, spectral window and bin
       @param correlationMode Correlation mode defined by the client (a use-query) to filter out data. 
       @param dataOrder       A pair of booleans characterizing the order of the time centroids
                              meta-data in the sequence v_timeCentroid. The first member
@@ -175,14 +175,14 @@ public:
                In that case it is more efficient than when the timeCentroid sequence is defined in a map. 
       @note 
       - correlationMode must be identical to the one used with the DAMs. 
-      - v_timeCentroid is a product of the DAMs. Its size is the number of MS rows per SDM row in the Main tables
+      - v_timeCentroid is a product of the DAMs. Its size is the number of casacore::MS rows per SDM row in the Main tables
       - for dataOrder (reverse and autoTrailing) it is available using a static method of the DAMs (SDMBinData).
   */
   void uvw_bl( asdm::MainRow* mainRow, vector<double> v_timeCentroid, 
 	       Enum<CorrelationMode> correlationMode,
 	       pair<bool,bool> dataOrder,
-	       vector<casa::Vector<casa::Double> >& v_uvw,
-	       casa::MSFieldColumns* msfc_p=0 );
+	       vector<casacore::Vector<casacore::Double> >& v_uvw,
+	       casacore::MSFieldColumns* msfc_p=0 );
 
 private:
 
@@ -193,7 +193,7 @@ private:
   public:
     Tag                   subarrayId;        //<! (sub)array identifier
     vector<Tag>           v_ant;             //<! sequence of antennas
-    unsigned int          nrepeat;           //<! number of MS main table rows per antenna baseline
+    unsigned int          nrepeat;           //<! number of casacore::MS main table rows per antenna baseline
     Enum<CorrelationMode> e_correlationMode; //<! correlation mode (original mode passed through the user filter)
     /** Concept Equality Comparable: 
 	@note Two subarrays are equals if they correspond to the same set (in mathematical sense)
@@ -221,15 +221,15 @@ private:
   };
 
   map<Tag,ArrayParam>            m_array_;
-  map<Tag,MPosition>             m_antPos_;
-  map<Tag,Vector<casa::Double> > m_antUVW_;
+  map<Tag,casacore::MPosition>             m_antPos_;
+  map<Tag,casacore::Vector<casacore::Double> > m_antUVW_;
 
   // the 3 fundamental attributes of the state machine
   double                         timeCentroid_;
   vector<vector<Angle> >         phaseDir_; 
   Tag                            subarrayId_;
 
-  Vector<casa::Double>           sduvw_;
+  casacore::Vector<casacore::Double>           sduvw_;
 
   /** ITRF coordinates of an ITRF point on which is added an offset defined in a ASCS.
       @param stationPos ITRF position of a station
@@ -259,7 +259,7 @@ private:
       adequately not only timeCentroid but also phaseDir (will be required for OTF)
       @warning The current implementation assumes that 
       - timeCentroid is MJD in TAI, the unit in second. Futhermore the accuracy is limited because there is no 
-      extra precision attribute (see Main table of MS v2)
+      extra precision attribute (see Main table of casacore::MS v2)
       - phaseDir is in J2000, the unit of the coordinates in radian
       @todo remove this note and all these warnings (to be coordinated with the release of SDM vers. 2)
   */ 
@@ -283,6 +283,6 @@ private:
         corresponding to reverse=false.
       @warning This function will destroy the previous content of v_uvw.
   */
-  void uvw_bl( const vector<Tag>& v_antennaId, unsigned int nrep, bool reverse, vector<Vector<casa::Double> >& v_uvw);
+  void uvw_bl( const vector<Tag>& v_antennaId, unsigned int nrep, bool reverse, vector<casacore::Vector<casacore::Double> >& v_uvw);
 
 };

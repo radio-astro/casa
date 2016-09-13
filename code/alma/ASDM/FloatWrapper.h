@@ -21,7 +21,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
  * MA 02111-1307  USA
  *
- * File Float.h
+ * casacore::File Float.h
  */
 # ifndef Float_CLASS
 # define Float_CLASS
@@ -36,7 +36,8 @@ namespace asdm {
  * A collection of static methods to perform conversions
  * between strings and float values.
  */
-class Float {
+
+    class Float {
 
 public:
 	/**

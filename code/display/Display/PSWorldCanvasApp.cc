@@ -38,6 +38,7 @@
 //# this include:
 #include <display/Display/PSWorldCanvasApp.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // default constructor

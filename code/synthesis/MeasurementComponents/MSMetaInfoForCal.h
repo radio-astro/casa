@@ -34,7 +34,11 @@
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <msvis/MSVis/SimpleSimVi2.h>
 
+namespace casacore {
+
 class MSMetaData;
+
+}
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -44,13 +48,13 @@ public:
 
   // Construct from the filename of an MS
   //  (If the MS doesn't exist, services will be trivialized)
-  MSMetaInfoForCal(String msname);
+  MSMetaInfoForCal(casacore::String msname);
 
   // Construct from a supplied MS object
-  MSMetaInfoForCal(const MeasurementSet& ms);
+  MSMetaInfoForCal(const casacore::MeasurementSet& ms);
 
   // Construct from nAnt,nSpw
-  MSMetaInfoForCal(uInt nAnt,uInt nSpw,uInt nFld);
+  MSMetaInfoForCal(casacore::uInt nAnt,casacore::uInt nSpw,casacore::uInt nFld);
 
   // Construct from SimpleSimVi2Paremeters
   //   (useful for testing w/ actual (spoofed) data iteration
@@ -60,61 +64,61 @@ public:
   ~MSMetaInfoForCal();
 
   // The MS name
-  String msname() const { return msname_; };
+  casacore::String msname() const { return msname_; };
 
   // Signal if a real MS was specified in ctor
-  Bool msOk() const { return msOk_; };
+  casacore::Bool msOk() const { return msOk_; };
 
   // Return access to MSMetaData object (if avail)
-  const MSMetaData& msmd() const;
+  const casacore::MSMetaData& msmd() const;
 
   // The number of antennas
-  uInt nAnt() const { return nAnt_;};
+  casacore::uInt nAnt() const { return nAnt_;};
 
   // Antenna name, by index
-  String antennaName(uInt iant) const;
+  casacore::String antennaName(casacore::uInt iant) const;
 
   // All antenna names, as vector
-  void antennaNames(Vector<String>& antnames) const;
+  void antennaNames(casacore::Vector<casacore::String>& antnames) const;
 
   // The number of spws
-  uInt nSpw() const { return nSpw_;};
+  casacore::uInt nSpw() const { return nSpw_;};
 
   // Spw name, by index
-  String spwName(uInt ispw) const;
+  casacore::String spwName(casacore::uInt ispw) const;
 
   // The number of fields
-  uInt nFld() const { return nFld_;};
+  casacore::uInt nFld() const { return nFld_;};
 
   // Field name, by index
-  String fieldName(uInt ifld) const;
+  casacore::String fieldName(casacore::uInt ifld) const;
 
   // All field names, as vector
-  void fieldNames(Vector<String>& fldnames) const;
+  void fieldNames(casacore::Vector<casacore::String>& fldnames) const;
 
   // Field id at time
-  Int fieldIdAtTime(Double time) const;
+  casacore::Int fieldIdAtTime(casacore::Double time) const;
 
   // Scan number at time
-  Int scanNumberAtTime(Double time) const;
+  casacore::Int scanNumberAtTime(casacore::Double time) const;
 
 
 private:
 
   // The supplied MS name
-  String msname_;
+  casacore::String msname_;
 
   // Is the MS available (else spoof)
-  Bool msOk_;
+  bool msOk_;
 
   // Remember basic shapes
-  uInt nAnt_, nSpw_, nFld_;
+  casacore::uInt nAnt_, nSpw_, nFld_;
 
   // MS pointer
-  MeasurementSet *ms_;
+  casacore::MeasurementSet *ms_;
 
   // MSMetaData pointer
-  MSMetaData *msmd_;
+  casacore::MSMetaData *msmd_;
 
 
 };

@@ -65,14 +65,14 @@ class ImageProfileFitterResults {
 
 public:
 	ImageProfileFitterResults(
-		const SHARED_PTR<LogIO> log, const CoordinateSystem& csysIm,
-		const Array<SHARED_PTR<ProfileFitResults> >* const &fitters,
+		const SHARED_PTR<casacore::LogIO> log, const casacore::CoordinateSystem& csysIm,
+		const casacore::Array<SHARED_PTR<ProfileFitResults> >* const &fitters,
 		const SpectralList& nonPolyEstimates,
-		const SHARED_PTR<const SubImage<Float> > subImage, Int fitAxis, Int polyOrder,
-		uInt nGaussSinglets, uInt nGaussMultiplets, uInt nLorentzSinglets,
-		uInt nPLPCoeffs, uInt nLTPCoeffs, Bool logResults, Bool multiFit,
-		const SHARED_PTR<LogFile> logfile, const String& xUnit,
-		const String& summaryHeader
+		const SHARED_PTR<const casacore::SubImage<casacore::Float> > subImage, casacore::Int fitAxis, casacore::Int polyOrder,
+		casacore::uInt nGaussSinglets, casacore::uInt nGaussMultiplets, casacore::uInt nLorentzSinglets,
+		casacore::uInt nPLPCoeffs, casacore::uInt nLTPCoeffs, casacore::Bool logResults, casacore::Bool multiFit,
+		const SHARED_PTR<LogFile> logfile, const casacore::String& xUnit,
+		const casacore::String& summaryHeader
 	);
 
 	~ImageProfileFitterResults();
@@ -81,71 +81,71 @@ public:
 	void createResults();
 
     // get the result Record
-	Record getResults() const;
+	casacore::Record getResults() const;
 
-    inline String getClass() const { return _class; };
+    inline casacore::String getClass() const { return _class; };
 
     // stream results to logger? This can be a lot of output.
-    inline void setLogResults(const Bool logResults) { _logResults = logResults; }
+    inline void setLogResults(const casacore::Bool logResults) { _logResults = logResults; }
 
     // <group>
     // gaussian amplitude image name
-    inline void setAmpName(const String& s) { _ampName = s; }
+    inline void setAmpName(const casacore::String& s) { _ampName = s; }
     // gaussian amplitude error image name
-    inline void setAmpErrName(const String& s) { _ampErrName = s; }
+    inline void setAmpErrName(const casacore::String& s) { _ampErrName = s; }
     // gaussian center image name
-    inline void setCenterName(const String& s) { _centerName = s; }
+    inline void setCenterName(const casacore::String& s) { _centerName = s; }
     // gaussian center error image name
-    inline void setCenterErrName(const String& s) { _centerErrName = s; }
+    inline void setCenterErrName(const casacore::String& s) { _centerErrName = s; }
     // gaussian fwhm image name
-    inline void setFWHMName(const String& s) { _fwhmName = s; }
+    inline void setFWHMName(const casacore::String& s) { _fwhmName = s; }
     // gaussian fwhm error image name
-    inline void setFWHMErrName(const String& s) { _fwhmErrName = s; }
+    inline void setFWHMErrName(const casacore::String& s) { _fwhmErrName = s; }
     // gaussian integral image name
-    inline void setIntegralName(const String& s) { _integralName = s; }
+    inline void setIntegralName(const casacore::String& s) { _integralName = s; }
     // gaussian integral error image name
-    inline void setIntegralErrName(const String& s) { _integralErrName = s; }
+    inline void setIntegralErrName(const casacore::String& s) { _integralErrName = s; }
     // </group>
 
     // set the name of the power logarithmic polynomial image.
-    inline void setPLPName(const String& s) { _plpName = s; }
+    inline void setPLPName(const casacore::String& s) { _plpName = s; }
 
     // set the name of the power logarithmic polynomial image.
-    inline void setPLPErrName(const String& s) { _plpErrName = s; }
+    inline void setPLPErrName(const casacore::String& s) { _plpErrName = s; }
 
     // set the name of the power logarithmic polynomial image.
-    inline void setLTPName(const String& s) { _ltpName = s; }
+    inline void setLTPName(const casacore::String& s) { _ltpName = s; }
 
     // set the name of the power logarithmic polynomial image.
-    inline void setLTPErrName(const String& s) { _ltpErrName = s; }
+    inline void setLTPErrName(const casacore::String& s) { _ltpErrName = s; }
 
 
-    //inline void setOutputSigmaImage(const String& s) { _sigmaName = s; }
+    //inline void setOutputSigmaImage(const casacore::String& s) { _sigmaName = s; }
     // </group>
 
 
-    const static String _CONVERGED;
-    const static String _SUCCEEDED;
-    const static String _VALID;
+    const static casacore::String _CONVERGED;
+    const static casacore::String _SUCCEEDED;
+    const static casacore::String _VALID;
 
-    const Array<ImageFit1D<Float> >& getFitters() const;
+    const casacore::Array<ImageFit1D<casacore::Float> >& getFitters() const;
     // Returns the center, in pixels of the indexth fit.
-    const Vector<Double> getPixelCenter( uint index ) const;
+    const casacore::Vector<casacore::Double> getPixelCenter( uint index ) const;
     //Converts a pixel value into a world value either in velocity, wavelength, or
     //frequency units.
-    Double getWorldValue(
-    	double pixelVal, const IPosition& imPos, const String& units,
+    casacore::Double getWorldValue(
+    	double pixelVal, const casacore::IPosition& imPos, const casacore::String& units,
         bool velocity, bool wavelength
     ) const;
 
-    void setPLPDivisor(const String& x) { _plpDivisor = x; }
+    void setPLPDivisor(const casacore::String& x) { _plpDivisor = x; }
 
     void logSummary(
-    	uInt nProfiles, uInt nAttempted, uInt nSucceeded,
-    	uInt nConverged, uInt nValid
+    	casacore::uInt nProfiles, casacore::uInt nAttempted, casacore::uInt nSucceeded,
+    	casacore::uInt nConverged, casacore::uInt nValid
     );
 
-    void writeImages(Bool someConverged) const;
+    void writeImages(casacore::Bool someConverged) const;
 
 private:
 	enum gaussSols {
@@ -161,128 +161,128 @@ private:
 		LONGITUDE, LATITUDE, FREQUENCY, POLARIZATION, NAXISTYPES
 	};
     
-    const static String _class;
-    Bool _logResults, _multiFit, _doVelocity;
-   	String _xUnit, _centerName, _centerErrName, _fwhmName,
+    const static casacore::String _class;
+    casacore::Bool _logResults, _multiFit, _doVelocity;
+   	casacore::String _xUnit, _centerName, _centerErrName, _fwhmName,
 		_fwhmErrName, _ampName, _ampErrName,
 		_integralName, _integralErrName, _plpName, _plpErrName,
 		_ltpName, _ltpErrName, /*_sigmaName, */ _summaryHeader;
-    uInt _nGaussSinglets, _nGaussMultiplets, _nLorentzSinglets,
+    casacore::uInt _nGaussSinglets, _nGaussMultiplets, _nLorentzSinglets,
 		_nPLPCoeffs, _nLTPCoeffs;
-    const Array<SHARED_PTR<ProfileFitResults> >* const  _fitters;
+    const casacore::Array<SHARED_PTR<ProfileFitResults> >* const  _fitters;
 	SpectralList _nonPolyEstimates;
 	// subimage contains the region of the original image
 	// on which the fit is performed.
-	const SHARED_PTR<const SubImage<Float> > _subImage;
-	Int _polyOrder, _fitAxis;
+	const SHARED_PTR<const casacore::SubImage<casacore::Float> > _subImage;
+	casacore::Int _polyOrder, _fitAxis;
 	vector<axisType> _axisTypes;
-	Array<String> _worldCoords;
-	Record _results;
-	const static uInt _nOthers, _gsPlane, _lsPlane;
+	casacore::Array<casacore::String> _worldCoords;
+	casacore::Record _results;
+	const static casacore::uInt _nOthers, _gsPlane, _lsPlane;
 	SHARED_PTR<LogFile> _logfile;
-	SHARED_PTR<LogIO> _log;
-   	Vector<Double> _goodAmpRange, _goodCenterRange, _goodFWHMRange;
-   	const CoordinateSystem _csysIm;
-   	String _plpDivisor;
+	SHARED_PTR<casacore::LogIO> _log;
+   	casacore::Vector<casacore::Double> _goodAmpRange, _goodCenterRange, _goodFWHMRange;
+   	const casacore::CoordinateSystem _csysIm;
+   	casacore::String _plpDivisor;
 
     void _setResults();
 
     void _resultsToLog();
 
-    String _getTag(const uInt i) const;
+    casacore::String _getTag(const casacore::uInt i) const;
 
-    std::unique_ptr<vector<vector<Array<Double> > > > _createPCFArrays() const;
+    std::unique_ptr<vector<vector<casacore::Array<casacore::Double> > > > _createPCFArrays() const;
 
-    String _elementToString(
-    	const Double value, const Double error,
-    	const String& unit, Bool isFixed
+    casacore::String _elementToString(
+    	const casacore::Double value, const casacore::Double error,
+    	const casacore::String& unit, casacore::Bool isFixed
     ) const;
 
-    String _pcfToString(
-    	const PCFSpectralElement *const &pcf, const CoordinateSystem& csys,
-    	const Vector<Double>& world, const IPosition& imPos, Bool showTypeString=True,
-    	const String& indent=""
+    casacore::String _pcfToString(
+    	const PCFSpectralElement *const &pcf, const casacore::CoordinateSystem& csys,
+    	const casacore::Vector<casacore::Double>& world, const casacore::IPosition& imPos, casacore::Bool showTypeString=true,
+    	const casacore::String& indent=""
     ) const;
 
-    String _gaussianMultipletToString(
+    casacore::String _gaussianMultipletToString(
     	const GaussianMultipletSpectralElement& gm,
-    	const CoordinateSystem& csys, const Vector<Double>& world,
-    	const IPosition& imPos
+    	const casacore::CoordinateSystem& csys, const casacore::Vector<casacore::Double>& world,
+    	const casacore::IPosition& imPos
     ) const;
 
-    Bool _setAxisTypes();
+    casacore::Bool _setAxisTypes();
 
-    String _polynomialToString(
-    	const PolynomialSpectralElement& poly, const CoordinateSystem& csys,
-    	const Vector<Double>& imPix, const Vector<Double>& world
+    casacore::String _polynomialToString(
+    	const PolynomialSpectralElement& poly, const casacore::CoordinateSystem& csys,
+    	const casacore::Vector<casacore::Double>& imPix, const casacore::Vector<casacore::Double>& world
     ) const;
 
-    String _powerLogPolyToString(
+    casacore::String _powerLogPolyToString(
     	const PowerLogPolynomialSpectralElement& plp
     ) const;
 
-    String _logTransPolyToString(
+    casacore::String _logTransPolyToString(
     	const LogTransformedPolynomialSpectralElement& ltp
     ) const;
 
     void _marshalFitResults(
-    	Array<Bool>& attemptedArr, Array<Bool>& successArr,
-        Array<Bool>& convergedArr, Array<Bool>& validArr,
-        Array<String>& typeMat, Array<Int>& niterArr,
-        Array<Int>& nCompArr, std::unique_ptr<vector<vector<Array<Double> > > >& pcfArrays,
-        vector<Array<Double> >& plpArrayss, vector<Array<Double> >& ltpArrays, Bool returnDirection,
-        Array<String>& directionInfo /*, Array<Bool>& mask */
+    	casacore::Array<casacore::Bool>& attemptedArr, casacore::Array<casacore::Bool>& successArr,
+        casacore::Array<casacore::Bool>& convergedArr, casacore::Array<casacore::Bool>& validArr,
+        casacore::Array<casacore::String>& typeMat, casacore::Array<casacore::Int>& niterArr,
+        casacore::Array<casacore::Int>& nCompArr, std::unique_ptr<vector<vector<casacore::Array<casacore::Double> > > >& pcfArrays,
+        vector<casacore::Array<casacore::Double> >& plpArrayss, vector<casacore::Array<casacore::Double> >& ltpArrays, casacore::Bool returnDirection,
+        casacore::Array<casacore::String>& directionInfo /*, casacore::Array<casacore::Bool>& mask */
     ); 
 
     static void _makeSolutionImages(
-    	const String& name, const CoordinateSystem& csys,
-		const Array<Double>& values, const String& unit,
-		const Array<Bool>& mask
+    	const casacore::String& name, const casacore::CoordinateSystem& csys,
+		const casacore::Array<casacore::Double>& values, const casacore::String& unit,
+		const casacore::Array<casacore::Bool>& mask
     );
 
     void _insertPCF(
-        vector<vector<Array<Double> > >& pcfArrays, /*Bool& isSolutionSane,*/
-        const IPosition& pixel, const PCFSpectralElement& pcf, 
-        const uInt row, const uInt col, 
-        const Double increment/*, const uInt npix*/
+        vector<vector<casacore::Array<casacore::Double> > >& pcfArrays, /*casacore::Bool& isSolutionSane,*/
+        const casacore::IPosition& pixel, const PCFSpectralElement& pcf, 
+        const casacore::uInt row, const casacore::uInt col, 
+        const casacore::Double increment/*, const casacore::uInt npix*/
     ) const;
 
     void _writeImages(
-    	const CoordinateSystem& csys,
-    	const Array<Bool>& mask, const String& yUnit
+    	const casacore::CoordinateSystem& csys,
+    	const casacore::Array<casacore::Bool>& mask, const casacore::String& yUnit
     ) const;
 
-    Double _fitAxisIncrement() const;
+    casacore::Double _fitAxisIncrement() const;
 
-    Double _centerWorld(
-    	const PCFSpectralElement& solution, const IPosition& imPos
+    casacore::Double _centerWorld(
+    	const PCFSpectralElement& solution, const casacore::IPosition& imPos
     ) const;
 
-    //Bool _inVelocitySpace() const;
+    //casacore::Bool _inVelocitySpace() const;
 
-    Vector< Vector<Double> > _pixelPositions;
+    casacore::Vector< casacore::Vector<casacore::Double> > _pixelPositions;
 
-    void _writeLogfile(const String& str, Bool open, Bool close);
+    void _writeLogfile(const casacore::String& str, casacore::Bool open, casacore::Bool close);
 
     // the input array must have a degenerate last axis. It will be replicated
     // along this axis n times to form an array with a last axis laength of n.
-    static Array<Bool> _replicateMask(const Array<Bool>& array, Int n);
+    static casacore::Array<casacore::Bool> _replicateMask(const casacore::Array<casacore::Bool>& array, casacore::Int n);
 
     void _doWorldCoords(
-    	Array<String>& directionInfo, const CoordinateSystem& csysSub,
-    	const IPosition& pixel, const DirectionCoordinate* const &dcoord,
-    	const SpectralCoordinate* const &spcoord, const StokesCoordinate* const &polcoord,
-    	Bool returnDirection, const String& directionType
+    	casacore::Array<casacore::String>& directionInfo, const casacore::CoordinateSystem& csysSub,
+    	const casacore::IPosition& pixel, const casacore::DirectionCoordinate* const &dcoord,
+    	const casacore::SpectralCoordinate* const &spcoord, const casacore::StokesCoordinate* const &polcoord,
+    	casacore::Bool returnDirection, const casacore::String& directionType
 	);
 
     void _processSolutions(
-    	/* Array<Bool>& mask, */ Array<String>& typeMat, Array<Int>& niterArr,
-    	Array<Int>& nCompArr, const IPosition& pixel,
+    	/* casacore::Array<casacore::Bool>& mask, */ casacore::Array<casacore::String>& typeMat, casacore::Array<casacore::Int>& niterArr,
+    	casacore::Array<casacore::Int>& nCompArr, const casacore::IPosition& pixel,
     	SHARED_PTR<const ProfileFitResults> fitter,
-    	/* const RO_MaskedLatticeIterator<Float>& inIter, */
-    	std::unique_ptr<vector<vector<Array<Double> > > >& pcfArrays,
-    	vector<Array<Double> >& plpArrays, vector<Array<Double> >& ltpArrays,
-    	Double increment
+    	/* const casacore::RO_MaskedLatticeIterator<casacore::Float>& inIter, */
+    	std::unique_ptr<vector<vector<casacore::Array<casacore::Double> > > >& pcfArrays,
+    	vector<casacore::Array<casacore::Double> >& plpArrays, vector<casacore::Array<casacore::Double> >& ltpArrays,
+    	casacore::Double increment
     );
 };
 }

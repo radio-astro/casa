@@ -85,7 +85,7 @@ int main()
 
     timer.mark();
     ImageDecomposer<imagetype> id(image);
-    id.setDeblend(False);
+    id.setDeblend(false);
     id.decomposeImage();
     cout << "(No component map generated without deblender.)" << endl;
     cout << "Given parameters: " << endl;
@@ -122,7 +122,7 @@ int main()
 
     timer.mark();
     id.setImage(image2);
-    id.setDeblend(True);
+    id.setDeblend(true);
     id.setDeblendOptions(1.0, 7);
     id.decomposeImage();
     id.display();

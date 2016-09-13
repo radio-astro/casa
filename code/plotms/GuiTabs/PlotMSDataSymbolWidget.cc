@@ -32,6 +32,8 @@
 
 #include <casa/namespace.h>
 
+namespace casa {
+
 PlotMSDataSymbolWidget::PlotMSDataSymbolWidget(PlotMSPlotter *parent)
     : QWidget(parent){
 	ui.setupUi(this);
@@ -154,3 +156,5 @@ PlotMSDataSymbolWidget::~PlotMSDataSymbolWidget()
 {
 
 }
+
+} // end namespace casa

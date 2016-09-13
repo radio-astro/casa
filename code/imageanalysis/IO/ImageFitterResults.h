@@ -31,9 +31,13 @@
 
 #include <imageanalysis/ImageTypedefs.h>
 
-namespace casa {
+namespace casacore{
 
 template<class T> class Vector;
+}
+
+namespace casa {
+
 
 class ImageFitterResults {
 	// <summary>
@@ -68,11 +72,11 @@ public:
 
 	ImageFitterResults() = delete;
 
-	ImageFitterResults(SPCIIF image, SHARED_PTR<LogIO> log);
+	ImageFitterResults(SPCIIF image, SHARED_PTR<casacore::LogIO> log);
 
 	~ImageFitterResults();
 
-	void setChannels(Vector<uInt> chans) { _channels = chans; }
+	void setChannels(casacore::Vector<casacore::uInt> chans) { _channels = chans; }
 
 	void setConvolvedList(const ComponentList& list) {
 		_convolvedList = list;
@@ -82,70 +86,70 @@ public:
 	    _deconvolvedList = list;
 	}
 
-	void setPeakIntensities(const Vector<Quantity>& p) {
+	void setPeakIntensities(const casacore::Vector<casacore::Quantity>& p) {
 		_peakIntensities.assign(p);
 	}
 
-	void setPeakIntensityErrors(const Vector<Quantity>& m) {
+	void setPeakIntensityErrors(const casacore::Vector<casacore::Quantity>& m) {
 		_peakIntensityErrors.assign(m);
 	}
-	void setMajorAxes(const Vector<Quantity>& m) {
+	void setMajorAxes(const casacore::Vector<casacore::Quantity>& m) {
 		_majorAxes = m;
 	}
 
-	void setMinorAxes(const Vector<Quantity>& m) {
+	void setMinorAxes(const casacore::Vector<casacore::Quantity>& m) {
 		_minorAxes = m;
 	}
 
-	void setPositionAngles(const Vector<Quantity>& m) {
+	void setPositionAngles(const casacore::Vector<casacore::Quantity>& m) {
 		_positionAngles = m;
 	}
 
-	void setFluxDensities(const Vector<Quantity>& m) {
+	void setFluxDensities(const casacore::Vector<casacore::Quantity>& m) {
 		_fluxDensities.assign(m);
 	}
 
-	void setFluxDensityErrors(const Vector<Quantity>& m) {
+	void setFluxDensityErrors(const casacore::Vector<casacore::Quantity>& m) {
 		_fluxDensityErrors.assign(m);
 	}
 
-	void writeNewEstimatesFile(const String& filename) const;
+	void writeNewEstimatesFile(const casacore::String& filename) const;
 
 	void writeCompList(
-		ComponentList& list, const String& compListName,
+		ComponentList& list, const casacore::String& compListName,
 		CompListWriteControl writeControl
 	) const;
 
-	String resultsHeader(
-		const String& chans, const Vector<uInt>& chanVec,
-		const String& region, const String& mask,
-		SHARED_PTR<std::pair<Float, Float> > includePixelRange,
-		SHARED_PTR<std::pair<Float, Float> > excludePixelRange,
-		const String& estimates
+	casacore::String resultsHeader(
+		const casacore::String& chans, const casacore::Vector<casacore::uInt>& chanVec,
+		const casacore::String& region, const casacore::String& mask,
+		SHARED_PTR<std::pair<casacore::Float, casacore::Float> > includePixelRange,
+		SHARED_PTR<std::pair<casacore::Float, casacore::Float> > excludePixelRange,
+		const casacore::String& estimates
 	) const;
 
-	static vector<String> unitPrefixes(Bool includeC);
+	static vector<casacore::String> unitPrefixes(casacore::Bool includeC);
 
-	void setStokes(const String& s) { _stokes = s; }
+	void setStokes(const casacore::String& s) { _stokes = s; }
 
-	String fluxToString(uInt compNumber, Bool hasBeam) const;
+	casacore::String fluxToString(casacore::uInt compNumber, casacore::Bool hasBeam) const;
 
-	void setFixed(const Vector<String>& s) { _fixed = s; }
+	void setFixed(const casacore::Vector<casacore::String>& s) { _fixed = s; }
 
-	void writeSummaryFile(const String& filename, const CoordinateSystem& csys) const;
+	void writeSummaryFile(const casacore::String& filename, const casacore::CoordinateSystem& csys) const;
 
 private:
 	SPCIIF _image;
-	SHARED_PTR<LogIO> _log;
+	SHARED_PTR<casacore::LogIO> _log;
 	ComponentList _convolvedList{}, _deconvolvedList{};
-	Vector<Quantity> _peakIntensities, _peakIntensityErrors,
+	casacore::Vector<casacore::Quantity> _peakIntensities, _peakIntensityErrors,
 		_majorAxes, _minorAxes,
 		_positionAngles, _fluxDensities, _fluxDensityErrors;
-	String _bUnit, _stokes;
-	Vector<String> _fixed;
-	Vector<uInt> _channels{};
-	const static String _class;
-	static std::vector<String> _prefixes, _prefixesWithCenti;
+	casacore::String _bUnit, _stokes;
+	casacore::Vector<casacore::String> _fixed;
+	casacore::Vector<casacore::uInt> _channels{};
+	const static casacore::String _class;
+	static std::vector<casacore::String> _prefixes, _prefixesWithCenti;
 };
 }
 

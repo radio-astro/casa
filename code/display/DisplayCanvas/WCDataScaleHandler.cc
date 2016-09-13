@@ -31,6 +31,7 @@
 #include <casa/Arrays/ArrayMath.h>
 #include <display/DisplayCanvas/WCDataScaleHandler.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Default Constructor Required
@@ -60,7 +61,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Apply new options to this object.
 	Bool WCDataScaleHandler::setOptions(Record &, Record &) {
 		// nothing yet
-		return False;
+		return false;
 	}
 
 // Retrieve the current and default options for this object.
@@ -70,7 +71,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return rec;
 	}
 
-// Default Boolean definition maps True to the max, False to zero
+// Default Boolean definition maps true to the max, false to zero
 	Bool WCDataScaleHandler::operator()(Array<uInt> & out, const Array<Bool> & in) {
 		out.resize(in.shape());
 		Bool inDel;
@@ -84,39 +85,39 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			*p++ = (*q++) ? rangeMax() : 0;
 		in.freeStorage(inp, inDel);
 		out.putStorage(outp, outDel);
-		return True;
+		return true;
 	}
 
 // Default floating-point definitions not implemented
 	Bool WCDataScaleHandler::operator()(Array<uInt> &, const Array<uChar> &) {
-		return False;
+		return false;
 	}
 	Bool WCDataScaleHandler::operator()(Array<uInt> &, const Array<Char> &) {
-		return False;
+		return false;
 	}
 	Bool WCDataScaleHandler::operator()(Array<uInt> &, const Array<uShort> &) {
-		return False;
+		return false;
 	}
 	Bool WCDataScaleHandler::operator()(Array<uInt> &, const Array<Short> &) {
-		return False;
+		return false;
 	}
 	Bool WCDataScaleHandler::operator()(Array<uInt> &, const Array<uInt> &) {
-		return False;
+		return false;
 	}
 	Bool WCDataScaleHandler::operator()(Array<uInt> &, const Array<Int> &) {
-		return False;
+		return false;
 	}
 	Bool WCDataScaleHandler::operator()(Array<uInt> &, const Array<uLong> &) {
-		return False;
+		return false;
 	}
 	Bool WCDataScaleHandler::operator()(Array<uInt> &, const Array<Long> &) {
-		return False;
+		return false;
 	}
 	Bool WCDataScaleHandler::operator()(Array<uInt> &, const Array<Float> &) {
-		return False;
+		return false;
 	}
 	Bool WCDataScaleHandler::operator()(Array<uInt> &, const Array<Double> &) {
-		return False;
+		return false;
 	}
 
 // Default Complex definitions plot amplitude

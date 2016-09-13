@@ -48,8 +48,8 @@ namespace casa {
 //   <returned type="[TYPE]">[VALUE]</returned>
 // </casa-dbus>
 // Currently supported types for parameters and returned values:
-//   bool, int, uInt, double, String, Record, Array<Bool> and
-//   Array<Int>, and Records with these types.
+//   bool, int, casacore::uInt, double, casacore::String, casacore::Record, casacore::Array<casacore::Bool> and
+//   casacore::Array<casacore::Int>, and Records with these types.
 // For a discussion of what these fields mean, see the documentation for
 // QtDBusXmlApp.
 class QtDBusXML {
@@ -59,22 +59,22 @@ public:
     // Constructs and returns an XML message using the given parameters.  Only
     // uses the non-empty values.  Sets the time to the current.
     // <group>
-    static QtDBusXML constructXML(const String& from = "",
-            const String& to = "", const String& methodName = "",
-            bool methodIsAsync = false, const Record& methodParams = Record(),
-            const Record& retValue = Record()) {
+    static QtDBusXML constructXML(const casacore::String& from = "",
+            const casacore::String& to = "", const casacore::String& methodName = "",
+            bool methodIsAsync = false, const casacore::Record& methodParams = casacore::Record(),
+            const casacore::Record& retValue = casacore::Record()) {
         return constructXML(QString(from.c_str()), QString(to.c_str()),
                 QString(methodName.c_str()), methodIsAsync, methodParams,
                 retValue); }
     static QtDBusXML constructXML(const QString& from = "",
             const QString& to = "", const QString& methodName = "",
-            bool methodIsAsync = false, const Record& methodParams = Record(),
-            const Record& retValue = Record());
+            bool methodIsAsync = false, const casacore::Record& methodParams = casacore::Record(),
+            const casacore::Record& retValue = casacore::Record());
     // </group>
     
     // Constructs and returns an XML message from the given XML string.
     // <group>
-    static QtDBusXML fromString(const String& xmlStr) {
+    static QtDBusXML fromString(const casacore::String& xmlStr) {
         return fromString(QString(xmlStr.c_str())); }
     static QtDBusXML fromString(const QString& xmlStr);
     // </group>
@@ -82,9 +82,9 @@ public:
     // Reads the values from the given XML message into the given parameters
     // which are not NULL.
     // <group>
-    static void extractXML(const QtDBusXML& xml, String* time = NULL,
-            String* from = NULL, String* to = NULL, String* methodName = NULL,
-            Record* methodParams = NULL, Record* retValue = NULL) {
+    static void extractXML(const QtDBusXML& xml, casacore::String* time = NULL,
+            casacore::String* from = NULL, casacore::String* to = NULL, casacore::String* methodName = NULL,
+            casacore::Record* methodParams = NULL, casacore::Record* retValue = NULL) {
         QString* qtime = NULL, *qfrom = NULL, *qto = NULL, *qmethodName = NULL;
         if(time != NULL)       qtime       = new QString();
         if(from != NULL)       qfrom       = new QString();
@@ -99,7 +99,7 @@ public:
     }
     static void extractXML(const QtDBusXML& xml, QString* time = NULL,
             QString* from = NULL, QString* to = NULL, QString* methodName=NULL,
-            Record* methodParams = NULL, Record* retValue = NULL);
+            casacore::Record* methodParams = NULL, casacore::Record* retValue = NULL);
     // </group>
     
     
@@ -117,7 +117,7 @@ public:
     
     // Gets the value of the time tag, or an empty string if there is none.
     // <group>
-    String time() const { return qtime().toStdString(); }
+    casacore::String time() const { return qtime().toStdString(); }
     QString qtime() const;
     // </group>
     
@@ -126,27 +126,27 @@ public:
     
     // Gets/Sets the from tag.
     // <group>
-    String from() const { return qfrom().toStdString(); }
+    casacore::String from() const { return qfrom().toStdString(); }
     QString qfrom() const;
-    void setFrom(const String& value) { setFrom(QString(value.c_str())); }
+    void setFrom(const casacore::String& value) { setFrom(QString(value.c_str())); }
     void setFrom(const QString& value);
     // </group>
     
     // Gets/Sets the to tag.
     // <group>
-    String to() const { return qto().toStdString(); }
+    casacore::String to() const { return qto().toStdString(); }
     QString qto() const;
-    void setTo(const String& value) { setTo(QString(value.c_str())); }
+    void setTo(const casacore::String& value) { setTo(QString(value.c_str())); }
     void setTo(const QString& value);
     // </group>
     
     // Gets/Sets the method name and whether the method call is asynchronous or
     // not (default is false).
     // <group>
-    String methodName() const { return qmethodName().toStdString(); }
+    casacore::String methodName() const { return qmethodName().toStdString(); }
     QString qmethodName() const;
     bool methodIsAsync() const;
-    void setMethodName(const String& value, bool isAsync = false) {
+    void setMethodName(const casacore::String& value, bool isAsync = false) {
         setMethodName(QString(value.c_str()), isAsync); }
     void setMethodName(const QString& value, bool isAsync = false);
     void setMethodIsAsync(bool value);
@@ -155,7 +155,7 @@ public:
     // Returns the type of the method parameter with the given name, or an
     // empty string if there is none.
     // <group>
-    String methodParamType(const String& paramName) const {
+    casacore::String methodParamType(const casacore::String& paramName) const {
         return qmethodParamType(QString(paramName.c_str())).toStdString(); }
     QString qmethodParamType(const QString& paramName) const;
     // </group>
@@ -163,14 +163,14 @@ public:
     // Returns whether the method parameter with the given name is the
     // specified type or not.
     // <group>
-    bool methodParamIsBool(const String& paramName) const;
-    bool methodParamIsInt(const String& paramName) const;
-    bool methodParamIsUInt(const String& paramName) const;
-    bool methodParamIsDouble(const String& paramName) const;
-    bool methodParamIsString(const String& paramName) const;
-    bool methodParamIsRecord(const String& paramName) const;
-    bool methodParamIsArrayBool(const String& paramName) const;
-    bool methodParamIsArrayInt(const String& paramName) const;
+    bool methodParamIsBool(const casacore::String& paramName) const;
+    bool methodParamIsInt(const casacore::String& paramName) const;
+    bool methodParamIsUInt(const casacore::String& paramName) const;
+    bool methodParamIsDouble(const casacore::String& paramName) const;
+    bool methodParamIsString(const casacore::String& paramName) const;
+    bool methodParamIsRecord(const casacore::String& paramName) const;
+    bool methodParamIsArrayBool(const casacore::String& paramName) const;
+    bool methodParamIsArrayInt(const casacore::String& paramName) const;
     // </group>
     
     // Returns the value of the method parameter with the given name as the
@@ -178,65 +178,65 @@ public:
     // type.  Note: the value can always be returned as a string
     // representation.
     // <group>
-    bool methodParamBool(const String& paramName) const {
+    bool methodParamBool(const casacore::String& paramName) const {
         return methodParamBool(QString(paramName.c_str())); }
     bool methodParamBool(const QString& paramName) const;
-    int methodParamInt(const String& paramName) const {
+    int methodParamInt(const casacore::String& paramName) const {
         return methodParamInt(QString(paramName.c_str())); }
     int methodParamInt(const QString& paramName) const;
-    uInt methodParamUInt(const String& paramName) const {
+    casacore::uInt methodParamUInt(const casacore::String& paramName) const {
         return methodParamUInt(QString(paramName.c_str())); }
-    uInt methodParamUInt(const QString& paramName) const;
-    double methodParamDouble(const String& paramName) const {
+    casacore::uInt methodParamUInt(const QString& paramName) const;
+    double methodParamDouble(const casacore::String& paramName) const {
         return methodParamDouble(QString(paramName.c_str())); }
     double methodParamDouble(const QString& paramName) const;
-    String methodParamString(const String& paramName) const {
+    casacore::String methodParamString(const casacore::String& paramName) const {
         return methodParamQString(QString(paramName.c_str())).toStdString(); }
     QString methodParamQString(const QString& paramName) const;
-    Record methodParamRecord(const String& paramName) const {
+    casacore::Record methodParamRecord(const casacore::String& paramName) const {
         return methodParamRecord(QString(paramName.c_str())); }
-    Record methodParamRecord(const QString& paramName) const;
-    Array<Bool> methodParamArrayBool(const String& paramName) const {
+    casacore::Record methodParamRecord(const QString& paramName) const;
+    casacore::Array<casacore::Bool> methodParamArrayBool(const casacore::String& paramName) const {
         return methodParamArrayBool(QString(paramName.c_str())); }
-    Array<Bool> methodParamArrayBool(const QString& paramName) const;
-    Array<Int> methodParamArrayInt(const String& paramName) const {
+    casacore::Array<casacore::Bool> methodParamArrayBool(const QString& paramName) const;
+    casacore::Array<casacore::Int> methodParamArrayInt(const casacore::String& paramName) const {
         return methodParamArrayInt(QString(paramName.c_str())); }
-    Array<Int> methodParamArrayInt(const QString& paramName) const;
+    casacore::Array<casacore::Int> methodParamArrayInt(const QString& paramName) const;
     // </group>
     
     // Sets the parameter with the given name to the given value (and
     // associated type).
     // <group>
-    void setMethodParam(const String& paramName, bool value) {
+    void setMethodParam(const casacore::String& paramName, bool value) {
         setMethodParam(QString(paramName.c_str()), value); }
     void setMethodParam(const QString& paramName, bool value);
-    void setMethodParam(const String& paramName, int value) {
+    void setMethodParam(const casacore::String& paramName, int value) {
         setMethodParam(QString(paramName.c_str()), value); }
     void setMethodParam(const QString& paramName, int value);
-    void setMethodParam(const String& paramName, uInt value) {
+    void setMethodParam(const casacore::String& paramName, casacore::uInt value) {
         setMethodParam(QString(paramName.c_str()), value); }
-    void setMethodParam(const QString& paramName, uInt value);
-    void setMethodParam(const String& paramName, double value) {
+    void setMethodParam(const QString& paramName, casacore::uInt value);
+    void setMethodParam(const casacore::String& paramName, double value) {
         setMethodParam(QString(paramName.c_str()), value); }
     void setMethodParam(const QString& paramName, double value);
-    void setMethodParam(const String& paramName, const String& value) {
+    void setMethodParam(const casacore::String& paramName, const casacore::String& value) {
         setMethodParam(QString(paramName.c_str()), QString(value.c_str())); }
     void setMethodParam(const QString& paramName, const QString& value);
-    void setMethodParam(const String& paramName, const Record& value) {
+    void setMethodParam(const casacore::String& paramName, const casacore::Record& value) {
         setMethodParam(QString(paramName.c_str()), value); }
-    void setMethodParam(const QString& paramName, const Record& value);
-    void setMethodParam(const String& paramName, const Array<bool>& value) {
+    void setMethodParam(const QString& paramName, const casacore::Record& value);
+    void setMethodParam(const casacore::String& paramName, const casacore::Array<bool>& value) {
         setMethodParam(QString(paramName.c_str()), value); }
-    void setMethodParam(const QString& paramName, const Array<bool>& value);
-    void setMethodParam(const String& paramName, const Array<int>& value) {
+    void setMethodParam(const QString& paramName, const casacore::Array<bool>& value);
+    void setMethodParam(const casacore::String& paramName, const casacore::Array<int>& value) {
         setMethodParam(QString(paramName.c_str()), value); }
-    void setMethodParam(const QString& paramName, const Array<int>& value);
+    void setMethodParam(const QString& paramName, const casacore::Array<int>& value);
     // </group>
     
     // Gets/Sets all method parameter values as a Record.
     // <group>
-    Record methodParams() const;
-    void setMethodParams(const Record& parameters);
+    casacore::Record methodParams() const;
+    void setMethodParams(const casacore::Record& parameters);
     // </group>
     
     // Returns whether or not a returned value was set.
@@ -244,7 +244,7 @@ public:
     
     // Returns the type of the returned value, or empty string for none.
     // <group>
-    String returnedType() const { return qreturnedType().toStdString(); }
+    casacore::String returnedType() const { return qreturnedType().toStdString(); }
     QString qreturnedType() const;
     // </group>
     
@@ -266,46 +266,46 @@ public:
     // <group>
     bool returnedBool() const;
     int returnedInt() const;
-    uInt returnedUInt() const;
+    casacore::uInt returnedUInt() const;
     double returnedDouble() const;
-    String returnedString() const { return returnedQString().toStdString(); }
+    casacore::String returnedString() const { return returnedQString().toStdString(); }
     QString returnedQString() const;
-    Record returnedRecord() const;
-    Array<bool> returnedArrayBool() const;
-    Array<int> returnedArrayInt() const;
+    casacore::Record returnedRecord() const;
+    casacore::Array<bool> returnedArrayBool() const;
+    casacore::Array<int> returnedArrayInt() const;
     // </group>
     
     // Sets the returned value to the given value (and associated type).
     // <group>
     void setReturnedValue(bool value);
     void setReturnedValue(int value);
-    void setReturnedValue(uInt value);
+    void setReturnedValue(casacore::uInt value);
     void setReturnedValue(double value);
-    void setReturnedValue(const String& value) {
+    void setReturnedValue(const casacore::String& value) {
         setReturnedValue(QString(value.c_str())); }
     void setReturnedValue(const QString& value);
-    void setReturnedValue(const Record& value);
-    void setReturnedValue(const Array<Bool>& value);
-    void setReturnedValue(const Array<Int>& value);
+    void setReturnedValue(const casacore::Record& value);
+    void setReturnedValue(const casacore::Array<casacore::Bool>& value);
+    void setReturnedValue(const casacore::Array<casacore::Int>& value);
     // </group>
     
     // Gets/Sets the returned value as a record.  ONLY the first field is used.
     // <group>
-    Record returnedValue() const;
-    void setReturnedValueRec(const Record& retValue);
+    casacore::Record returnedValue() const;
+    void setReturnedValueRec(const casacore::Record& retValue);
     // </group>
     
     
     // Returns the whole XML as a string.
     // <group>
-    String toXMLString() const { return toXMLQString().toStdString(); }
+    casacore::String toXMLString() const { return toXMLQString().toStdString(); }
     QString toXMLQString() const;
     // </group>
     
     // Sets the whole XML as a string, and returns whether the operation
     /// succeeded or not.
     // <group>
-    bool fromXMLString(const String& value) {
+    bool fromXMLString(const casacore::String& value) {
         return fromXMLString(QString(value.c_str())); }
     bool fromXMLString(const QString& value);
     // </group>
@@ -396,21 +396,21 @@ private:
     // given text.
     static void setElemText(QDomElement elem, const QString& text);
     
-    // Converts between a QDomElement and Record for values.
+    // Converts between a QDomElement and casacore::Record for values.
     // <group>
-    static Record elemToRecord(QDomElement value);
-    static void elemToRecord(Record& rec, QDomElement value);
-    static void elemFromRecord(QDomElement elem, const Record& value);
+    static casacore::Record elemToRecord(QDomElement value);
+    static void elemToRecord(casacore::Record& rec, QDomElement value);
+    static void elemFromRecord(QDomElement elem, const casacore::Record& value);
     // </group>
-    // Converts between a QDomElement and Bool Array for values.
+    // Converts between a QDomElement and casacore::Bool casacore::Array for values.
     // <group>
-    static Array<Bool> elemToArrayBool(QDomElement value);
-    static void elemFromArrayBool(QDomElement elem, const Array<Bool>& value);
+    static casacore::Array<casacore::Bool> elemToArrayBool(QDomElement value);
+    static void elemFromArrayBool(QDomElement elem, const casacore::Array<casacore::Bool>& value);
     // </group>
-    // Converts between a QDomElement and Int Array for values.
+    // Converts between a QDomElement and casacore::Int casacore::Array for values.
     // <group>
-    static Array<Int> elemToArrayInt(QDomElement value);
-    static void elemFromArrayInt(QDomElement elem, const Array<Int>& value);
+    static casacore::Array<casacore::Int> elemToArrayInt(QDomElement value);
+    static void elemFromArrayInt(QDomElement elem, const casacore::Array<casacore::Int>& value);
     // </group>
 };
 

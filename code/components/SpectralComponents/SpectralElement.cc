@@ -41,11 +41,12 @@
 
 #include <casa/iostream.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 SpectralElement::SpectralElement(SpectralElement::Types type, const Vector<Double>& parms)
 	: _type(type), _params(parms), _errors(parms.size(), 0),
-	  _fixed(parms.size(), False) {}
+	  _fixed(parms.size(), false) {}
 
 
 SpectralElement::SpectralElement(const SpectralElement &other)
@@ -89,7 +90,7 @@ Bool SpectralElement::operator==(
 	const SpectralElement& other
 ) const {
 	if (this == &other) {
-		return True;
+		return true;
 	}
 	return (
 		_type == other._type && allNear(_params, other._params, 1e-8)
@@ -157,10 +158,10 @@ Bool SpectralElement::toType(
 	tp = typ[0];
 	Int i = MUString::minimaxNC(typname, SpectralElement::N_Types, tname);
 	if (i >= nall) {
-		return False;
+		return false;
 	}
 	tp = typ[i];
-	return True;
+	return true;
 }
 
 void SpectralElement::_setFunction(
@@ -227,7 +228,7 @@ Bool SpectralElement::toRecord(RecordInterface &out) const {
 	out.define(RecordFieldId("parameters"), _params);
 	out.define(RecordFieldId("errors"), _errors);
 	out.define(RecordFieldId("fixed"), _fixed);
-	return True;
+	return true;
 }
 
 void SpectralElement::set(const Vector<Double>& params) {

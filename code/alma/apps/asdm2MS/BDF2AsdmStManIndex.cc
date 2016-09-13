@@ -4,6 +4,7 @@
 
 #include "BDF2AsdmStManIndex.h"
 
+using namespace casacore;
 using namespace casa;
 using namespace std;
 using namespace PrimitiveDataTypeMod;

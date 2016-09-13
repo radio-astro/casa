@@ -30,6 +30,7 @@
 #include <display/DisplayDatas/CachingDisplayData.h>
 #include <display/DisplayDatas/CachingDisplayMethod.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Constructor.
@@ -40,7 +41,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	        parentDisplayData) :
 		DisplayMethod(parentDisplayData),
 		itsWorldCanvas(worldCanvas),
-		itsHasList(False),
+		itsHasList(false),
 		itsCachedDrawingList(0) {
 		addRestrictions(*wchAttributes);
 		addRestrictions(*ddAttributes);
@@ -77,7 +78,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				wc->endList();
 				if(wc->validList(itsCachedDrawingList))
 					wc->deleteList(itsCachedDrawingList);
-				itsHasList = False;
+				itsHasList = false;
 				throw;
 			}		//  ...before passing exception on.
 

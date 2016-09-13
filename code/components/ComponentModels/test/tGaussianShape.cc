@@ -67,7 +67,7 @@ int main() {
       const GaussianShape defGaussian;
       AlwaysAssert(defGaussian.ok(), AipsError);
       AlwaysAssert(defGaussian.type() == ComponentType::GAUSSIAN, AipsError);
-      AlwaysAssert(defGaussian.isSymmetric() == True, AipsError);
+      AlwaysAssert(defGaussian.isSymmetric() == true, AipsError);
       const MVAngle pixelSize(Quantity(1.0,"''"));
       // Sample the Gaussian at the Maximum and half an arc-min on either side.
       MVDirection sampleDirVal(Quantity(0,"deg"), 
@@ -194,7 +194,7 @@ int main() {
 	AlwaysAssert(shapePtr->positionAngle().getFullUnit().getName() =="deg",
 		     AipsError);
 	AlwaysAssert(shapePtr->type() == ComponentType::GAUSSIAN, AipsError);
-	AlwaysAssert(shapePtr->isSymmetric() == True, AipsError);
+	AlwaysAssert(shapePtr->isSymmetric() == true, AipsError);
       }
       cout << "Passed the copy semantics test" << endl;
     }
@@ -563,7 +563,7 @@ Bool pixelReflection (const TwoSidedShape& shp, const DirectionCoordinate& dirCo
    cerr << pars2 << endl;
 */
    AlwaysAssert(allNear(pars1, pars2, tol), AipsError);
-   return True;
+   return true;
 }
 
 // Local Variables: 

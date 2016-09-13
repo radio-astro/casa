@@ -52,6 +52,7 @@
 #include <casa/Utilities/CountedPtr.h>
 
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //template <class T> class ImageInterface;
@@ -139,11 +140,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		        SIGNAL(clicked()),
 		        SLOT(exportRegions()));
 
-		planeOnlyCB->setChecked(True);
-		planeOnlyCB->setChecked(False);
+		planeOnlyCB->setChecked(true);
+		planeOnlyCB->setChecked(false);
 		planeOnlyCB->hide();
-		chanExt->setEnabled(True);
-		polExt->setEnabled(True);
+		chanExt->setEnabled(true);
+		polExt->setEnabled(true);
 		lineEdit->setReadOnly(true);
 
 		deleteButton->setEnabled(false);
@@ -194,7 +195,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			}
 			//cout << "before showreg csys" << endl;
 			Int dirInd=csys.findCoordinate(Coordinate::DIRECTION);
-			MDirection::Types dirType=csys.directionCoordinate(dirInd).directionType(True);
+			MDirection::Types dirType=csys.directionCoordinate(dirInd).directionType(true);
 			RSComposite *theShapes= new RSComposite(dirType);
 			//cout << "calling add" <<endl;
 			addRegionsToShape(theShapes, wcreg);
@@ -212,7 +213,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    const WCRegion*& wcreg) {
 		PtrBlock<const WCRegion* > outRegPtrs ;
 		unfoldIntoSimpleRegionPtrs(outRegPtrs, wcreg);
-		WCUnion* outputUnion = new WCUnion(True, outRegPtrs);
+		WCUnion* outputUnion = new WCUnion(true, outRegPtrs);
 		return outputUnion;
 	}
 
@@ -246,7 +247,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			DisplayCoordinateSystem coords=DisplayCoordinateSystem::restore(boxrec,"coordinates");
 			//cout << "coords rect " << coords.nCoordinates() << endl;
 			Int dirInd=coords.findCoordinate(Coordinate::DIRECTION);
-			MDirection::Types dirType=coords.directionCoordinate(dirInd).directionType(True);
+			MDirection::Types dirType=coords.directionCoordinate(dirInd).directionType(true);
 			//Assuming x, y axes are dirInd and dirInd+1
 			Vector<Double> blc(2);
 			Vector<Double> trc(2);
@@ -285,7 +286,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			//cout << "coords polyg " << coords.nCoordinates() << endl;
 
 			Int dirInd=coords.findCoordinate(Coordinate::DIRECTION);
-			MDirection::Types dirType=coords.directionCoordinate(dirInd).directionType(True);
+			MDirection::Types dirType=coords.directionCoordinate(dirInd).directionType(true);
 			Vector<Double> x;
 			Vector<Double> y;
 			const RecordInterface& subRecord0 = polyrec.asRecord("x");
@@ -357,7 +358,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			if( (qdd->imageInterface())) {
 				DisplayCoordinateSystem csys=(qdd->imageInterface())->coordinates();
 				Int dirInd=csys.findCoordinate(Coordinate::DIRECTION);
-				MDirection::Types dirType=csys.directionCoordinate(dirInd).directionType(True);
+				MDirection::Types dirType=csys.directionCoordinate(dirInd).directionType(true);
 				if(type.contains("box")) {
 					Record corners = mousereg.asRecord("world");
 					Vector<Double> blc = corners.asArrayDouble("blc");
@@ -428,7 +429,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 					SHARED_PTR<ImageInterface<Float> > pImage;
 					pImage.reset(new SubImage<Float>(
-					    *(qdd->imageInterface()), *reg, False));
+					    *(qdd->imageInterface()), *reg, false));
 
 					DisplayData *dd = 0;
 					if (!pImage)
@@ -724,21 +725,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if(planeOnlyCB->isChecked()) {
 			chan_sel->setText("");
 			pol_sel->setText("");
-			chan_sel->setEnabled(False);
-			pol_sel->setEnabled(False);
+			chan_sel->setEnabled(false);
+			pol_sel->setEnabled(false);
 		}
 	}
 
 	void QtRegionManager::extendChan() {
-		chan_sel->setEnabled(True);
+		chan_sel->setEnabled(true);
 		chan_sel->setText("");
-		//planeOnlyCB->setChecked(False);
+		//planeOnlyCB->setChecked(false);
 	}
 
 	void QtRegionManager::extendPol() {
-		pol_sel->setEnabled(True);
+		pol_sel->setEnabled(true);
 		pol_sel->setText("");
-		//planeOnlyCB->setChecked(False);
+		//planeOnlyCB->setChecked(false);
 	}
 
 	void QtRegionManager::loadRegionFromImage() {
@@ -813,13 +814,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	void QtRegionManager::addRegionToMenu(
 	    const QString& sName, const QString& source) {
 		QAction *action = new QAction(source + ": " + sName, showHideMenu);
-		action->setCheckable(True);
-		action->setChecked(True);
+		action->setCheckable(true);
+		action->setChecked(true);
 		showHideMenu->addAction(action);
 		connect(action, SIGNAL(triggered()), SLOT(showHideRegion()));
 
 		action = new QAction(source + ": " + sName, deleteMenu);
-		action->setCheckable(False);
+		action->setCheckable(false);
 		deleteMenu->addAction(action);
 		connect(action, SIGNAL(triggered()), SLOT(deleteRegion()));
 	}
@@ -861,7 +862,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			}
 
 		}
-		unionRegions_p.resize(0, True);
+		unionRegions_p.resize(0, true);
 		ListIter<RegionShape*> rgiter(regShapes_p);
 		rgiter.toEnd();
 		while(!rgiter.atStart()) {
@@ -1158,7 +1159,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			                   ->getImageRegionPtr(regname);
 
 			SHARED_PTR<ImageInterface<Float> > pImage( new SubImage<Float>(*(qdd->imageInterface()),
-			                             *reg, False));
+			                             *reg, false));
 
 			DisplayData *dd = 0;
 			uInt ndim = pImage->ndim();
@@ -1230,7 +1231,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				Int dirInd =
 				    csys.findCoordinate(Coordinate::DIRECTION);
 				MDirection::Types dirType = csys.
-				                            directionCoordinate(dirInd).directionType(True);
+				                            directionCoordinate(dirInd).directionType(true);
 				RSComposite *theShapes= new RSComposite(dirType);
 				//cout << "calling add" <<endl;
 				addRegionsToShape(theShapes, wcreg);
@@ -1258,7 +1259,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			Int dirInd =
 			    csys.findCoordinate(Coordinate::DIRECTION);
 			MDirection::Types dirType = csys.
-			                            directionCoordinate(dirInd).directionType(True);
+			                            directionCoordinate(dirInd).directionType(true);
 			RSComposite *theShapes= new RSComposite(dirType);
 			addRegionsToShape(theShapes, wcreg);
 			theShapes->setLineColor("cyan");
@@ -1759,7 +1760,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			    (static_cast<const WCCompound* >(wcr))->regions();
 
 			regPtrs.remove(comp);
-			WCUnion nu(True, regPtrs);
+			WCUnion nu(true, regPtrs);
 			ImageRegion newReg(nu);
 			qdp_->saveRegionInImage(regname, newReg);
 
@@ -1805,7 +1806,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			PtrBlock<const WCRegion*> regPtrs=
 			    (static_cast<const WCCompound* >(wcr))->regions();
 			regPtrs.remove(comp);
-			WCUnion nu(True, regPtrs);
+			WCUnion nu(true, regPtrs);
 			ImageRegion newReg(nu);
 
 			try {
@@ -1895,7 +1896,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					DisplayCoordinateSystem csys=(qdd->imageInterface())->coordinates();
 					//Int dirInd=csys.findCoordinate(Coordinate::DIRECTION);
 					//MDirection::Types dirType=csys.directionCoordinate(dirInd)
-					//                      .directionType(True);
+					//                      .directionType(true);
 					wx(0) = Quantity(wld(0), units(0)).getValue(RegionShape::UNIT);
 					wx(1) = Quantity(wld(1), units(1)).getValue(RegionShape::UNIT);
 				}

@@ -29,6 +29,7 @@
 #include <flagging/Flagging/RFAMedianClip.h>
 #include <casa/Arrays/ArrayMath.h>
     
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // -----------------------------------------------------------------------
@@ -66,7 +67,7 @@ const RecordInterface & RFATimeMedian::getDefaults ()
     rec = RFADiffMapBase::getDefaults();
     rec.define(RF_NAME,"TimeMedian");
     rec.define(RF_HW,10);
-    rec.define(RF_DEBUG,False);
+    rec.define(RF_DEBUG,false);
     rec.setComment(RF_HW,"Sliding window half-width");
     rec.setComment(RF_DEBUG,"Set to [CHAN,IFR] to produce debugging plots");
   }
@@ -80,18 +81,18 @@ Bool RFATimeMedian::newChunk (Int &maxmem)
   {
     os<<LogIO::WARN<<name()<<
       ": too few (" << num(TIME) << ") time slots (" << halfwin*4 << " needed), ignoring this chunk\n"<<LogIO::POST;
-    return active=False;
+    return active=false;
   }
   maxmem -= 2; 
 // reserve memory for our bunch of median sliders
   maxmem -= (num(CHAN)*num(IFR)*MedianSlider::objsize(halfwin))/(1024*1024)+1;
 // call parent's newChunk  
   if( !RFADiffMapBase::newChunk(maxmem) )
-    return active=False;
+    return active=false;
 // create local flag iterator
   flag_iter = flag.newCustomIter();
   pflagiter = &flag_iter;
-  return active=True;
+  return active=true;
 }
 
 void RFATimeMedian::endChunk ()
@@ -125,7 +126,7 @@ RFA::IterMode RFATimeMedian::iterTime ( uInt it )
 // gets pointer to visibilities cube
   setupMapper();
 // Advance sync flag iterator
-  flag.advance(it,True);
+  flag.advance(it,true);
 // During a data pass, keep the diff-lattice iterator lagging a half-window behind
 // and also maintain a custom flag iterator
   if( it >= halfwin )
@@ -261,7 +262,7 @@ Bool RFAFreqMedian::newChunk (Int &maxmem)
   if( num(CHAN) < halfwin*4 )
   {
     os<<LogIO::WARN<<name()<<": too few channels, ignoring this chunk\n"<<LogIO::POST;
-    return active=False;
+    return active=false;
   }
   return active=RFADiffMapBase::newChunk(maxmem);
 }

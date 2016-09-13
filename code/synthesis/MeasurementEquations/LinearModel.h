@@ -68,10 +68,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // I'll pass this class into a function as an actual instance of an
 // abstract class cannot be constructed. 
 // <srcblock>
-// void foo(LinearModel< Image<Float> > mod, 
-//          ResidualEquation< Image<Float> > eqn)
+// void foo(LinearModel< Image<casacore::Float> > mod, 
+//          ResidualEquation< Image<casacore::Float> > eqn)
 // {
-//   Image<Float> currentModel, newModel;
+//   Image<casacore::Float> currentModel, newModel;
 //   currentModel = mod.getModel(); // get the current model;
 // }
 // </srcblock>

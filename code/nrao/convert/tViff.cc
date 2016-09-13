@@ -53,9 +53,9 @@ main()
     big = 1.0;
 
     Viff viffer;
-    assert (viffer.put(a) == True);
-    assert (viffer.put(big) == False);
-    assert (viffer.put(a) == True);
+    assert (viffer.put(a) == true);
+    assert (viffer.put(big) == false);
+    assert (viffer.put(a) == true);
 
     Int nx, ny;
     Matrix<float> m(256,256);
@@ -66,14 +66,14 @@ main()
     for (Int i=0; i < nx; i++)
 	    m.row(i) = float(i);
 
-    assert(viffer.put(m) == True);
-    assert(viffer.write("xgradient.viff") == True);
+    assert(viffer.put(m) == true);
+    assert(viffer.write("xgradient.viff") == true);
     // Make a wedge in Y
     for (i=0; i < nx; i++)
 	    m.column(i) = float(i);
 
-    assert(viffer.put(m) == True);
-    assert(viffer.write("ygradient.viff") == True);
+    assert(viffer.put(m) == true);
+    assert(viffer.write("ygradient.viff") == true);
 
     // Check get from the structure.
     Matrix<float> m2;

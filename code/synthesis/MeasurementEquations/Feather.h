@@ -34,10 +34,14 @@
 #include <scimath/Mathematics/GaussianBeam.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
-  //Forward declaration
+namespace casacore{
+
   template<class T> class ImageInterface;
   template<class T> class Vector;
+}
+
+namespace casa { //# NAMESPACE CASA - BEGIN
+  //Forward declaration
   // <summary> Class that contains functions needed for feathering</summary>
 
   class Feather{
@@ -47,7 +51,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //default constructor
     Feather();
     //Constructor 
-    Feather(const ImageInterface<Float>& SDImage, const ImageInterface<Float>& INTImage, Float sdScale=1.0);
+    Feather(const casacore::ImageInterface<casacore::Float>& SDImage, const casacore::ImageInterface<casacore::Float>& INTImage, casacore::Float sdScale=1.0);
     //Destructor
     virtual ~Feather();
 
@@ -55,78 +59,78 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //SDimage and the dirty image.
     void clearWeightFlags();
 
-    //set the SDimage and Int images 
-    void setSDScale(Float sdscale=1.0);
-    void setSDImage(const ImageInterface<Float>& SDImage);
-    void setINTImage(const ImageInterface<Float>& IntImage);
+    //set the SDimage and casacore::Int images 
+    void setSDScale(casacore::Float sdscale=1.0);
+    void setSDImage(const casacore::ImageInterface<casacore::Float>& SDImage);
+    void setINTImage(const casacore::ImageInterface<casacore::Float>& IntImage);
     //set and get effective dish diameter to be used in feathering function
-    //setEffectiveDishDiam will return False if you are trying to assign a finer resolution than what 
+    //setEffectiveDishDiam will return false if you are trying to assign a finer resolution than what 
     //the original data came with 
-    Bool setEffectiveDishDiam(const Float xdiam, const Float ydiam=-1.0);
-    void getEffectiveDishDiam(Float& xdiam, Float& ydiam);
+    casacore::Bool setEffectiveDishDiam(const casacore::Float xdiam, const casacore::Float ydiam=-1.0);
+    void getEffectiveDishDiam(casacore::Float& xdiam, casacore::Float& ydiam);
     //Get the 1-D slices of amplitude  along the x and y axis of the FFT of images  
-    //if radial is set to True then the 1D slice is the the circular average rather that X and Y cuts...only the x-values are valid then 
+    //if radial is set to true then the 1D slice is the the circular average rather that X and Y cuts...only the x-values are valid then 
     //Note the SD image is already feathered by its beam..you cannot get unfeathered SD data as it implies deconvolution
-    void getFTCutSDImage(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp, const Bool radial=False );
-    void getFTCutIntImage(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp, Bool radial=False);
+    void getFTCutSDImage(casacore::Vector<casacore::Float>& ux, casacore::Vector<casacore::Float>& xamp, casacore::Vector<casacore::Float>& uy, casacore::Vector<casacore::Float>& yamp, const casacore::Bool radial=false );
+    void getFTCutIntImage(casacore::Vector<casacore::Float>& ux, casacore::Vector<casacore::Float>& xamp, casacore::Vector<casacore::Float>& uy, casacore::Vector<casacore::Float>& yamp, casacore::Bool radial=false);
     //Get the 1-D slices of the feathering function that will be applied on SD and INTerf data
-    //If normalize=False for the SD then the value for Jy/beam correction to final beam size is multiplied to 
+    //If normalize=false for the SD then the value for Jy/beam correction to final beam size is multiplied to 
     //the function
-    void getFeatherSD(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp, Bool radial=False, Bool normalize=True);
-    void getFeatherINT(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp, Bool radial=False);
+    void getFeatherSD(casacore::Vector<casacore::Float>& ux, casacore::Vector<casacore::Float>& xamp, casacore::Vector<casacore::Float>& uy, casacore::Vector<casacore::Float>& yamp, casacore::Bool radial=false, casacore::Bool normalize=true);
+    void getFeatherINT(casacore::Vector<casacore::Float>& ux, casacore::Vector<casacore::Float>& xamp, casacore::Vector<casacore::Float>& uy, casacore::Vector<casacore::Float>& yamp, casacore::Bool radial=false);
     //Get 1-D slices of the feathered data ...
     //note for SD  this
     //should return the same values as getFTCutSDImage
-    void getFeatheredCutSD(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp, Bool radial=False);
-    void getFeatheredCutINT(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp, Bool radial=False);
+    void getFeatheredCutSD(casacore::Vector<casacore::Float>& ux, casacore::Vector<casacore::Float>& xamp, casacore::Vector<casacore::Float>& uy, casacore::Vector<casacore::Float>& yamp, casacore::Bool radial=false);
+    void getFeatheredCutINT(casacore::Vector<casacore::Float>& ux, casacore::Vector<casacore::Float>& xamp, casacore::Vector<casacore::Float>& uy, casacore::Vector<casacore::Float>& yamp, casacore::Bool radial=false);
     //This function convolves the INT image to the new GaussianBeam
     //So the INT image stored in this object is going to be replaced by the new convolved image
-    void convolveINT(const GaussianBeam& newHighBeam);
+    void convolveINT(const casacore::GaussianBeam& newHighBeam);
 
     //write the feathered image to disk
-    Bool saveFeatheredImage(const String& imagename);
+    casacore::Bool saveFeatheredImage(const casacore::String& imagename);
     ///////Helper function to get XY slices and radial cuts for any generic image
-    static void getCutXY(Vector<Float>& ux, Vector<Float>& xamp, 
-			 Vector<Float>& uy, Vector<Float>& yamp, 
-			 const ImageInterface<Float>& image);
-    static void getRadialCut(Vector<Float>& radius, Vector<Float>& radialAmp, 
-			  const ImageInterface<Float>& image);
+    static void getCutXY(casacore::Vector<casacore::Float>& ux, casacore::Vector<casacore::Float>& xamp, 
+			 casacore::Vector<casacore::Float>& uy, casacore::Vector<casacore::Float>& yamp, 
+			 const casacore::ImageInterface<casacore::Float>& image);
+    static void getRadialCut(casacore::Vector<casacore::Float>& radius, casacore::Vector<casacore::Float>& radialAmp, 
+			  const casacore::ImageInterface<casacore::Float>& image);
 
 
     ///////////////Old methods left for now till new version is implemented
-    static void feather(const String& image, const ImageInterface<Float>& high, const ImageInterface<Float>& low, const Float& sdScale=1.0, const String& lowPSF="", const Bool useDefault=True, const String& vpTable="" , Float effSDDiam=-1.0, const Bool lowpassfiltersd=False);
+    static void feather(const casacore::String& image, const casacore::ImageInterface<casacore::Float>& high, const casacore::ImageInterface<casacore::Float>& low, const casacore::Float& sdScale=1.0, const casacore::String& lowPSF="", const casacore::Bool useDefault=true, const casacore::String& vpTable="" , casacore::Float effSDDiam=-1.0, const casacore::Bool lowpassfiltersd=false);
 
-    static Double worldFreq(const CoordinateSystem& cs, Int spectralpix=0);
+    static casacore::Double worldFreq(const casacore::CoordinateSystem& cs, casacore::Int spectralpix=0);
 
     
   private:
-    void fillXVectors( Vector<Float>& ux, Vector<Float>& uy ) const;
-    static void applyDishDiam(ImageInterface<Complex>& image, GaussianBeam& beam, Float effDiam, ImageInterface<Float>& newbeam, Vector<Quantity>& extraconv);
+    void fillXVectors( casacore::Vector<casacore::Float>& ux, casacore::Vector<casacore::Float>& uy ) const;
+    static void applyDishDiam(casacore::ImageInterface<casacore::Complex>& image, casacore::GaussianBeam& beam, casacore::Float effDiam, casacore::ImageInterface<casacore::Float>& newbeam, casacore::Vector<casacore::Quantity>& extraconv);
 
 
     
   
-    CountedPtr<ImageInterface<Float> > lowIm_p;
-    CountedPtr<ImageInterface<Float> > lowImOrig_p;
-    CountedPtr<ImageInterface<Float> > highIm_p;
-    CountedPtr<ImageInterface<Complex> > cwImage_p;
-    CountedPtr<ImageInterface<Complex> > cwHighIm_p;
-    static void getCutXY(Vector<Float>& ux, Vector<Float>& xamp, 
-		  Vector<Float>& uy, Vector<Float>& yamp, ImageInterface<Complex>& ftimage);
-    static void getRadialCut(Vector<Float>& radialAmp, ImageInterface<Complex>& ftimage);
+    casacore::CountedPtr<casacore::ImageInterface<casacore::Float> > lowIm_p;
+    casacore::CountedPtr<casacore::ImageInterface<casacore::Float> > lowImOrig_p;
+    casacore::CountedPtr<casacore::ImageInterface<casacore::Float> > highIm_p;
+    casacore::CountedPtr<casacore::ImageInterface<casacore::Complex> > cwImage_p;
+    casacore::CountedPtr<casacore::ImageInterface<casacore::Complex> > cwHighIm_p;
+    static void getCutXY(casacore::Vector<casacore::Float>& ux, casacore::Vector<casacore::Float>& xamp, 
+		  casacore::Vector<casacore::Float>& uy, casacore::Vector<casacore::Float>& yamp, casacore::ImageInterface<casacore::Complex>& ftimage);
+    static void getRadialCut(casacore::Vector<casacore::Float>& radialAmp, casacore::ImageInterface<casacore::Complex>& ftimage);
     //calculate the complex weight image to apply on the interf image
-    static void getLowBeam(const ImageInterface<Float>& low0, const String& lowPSF, const Bool useDefaultPB, const String& vpTableStr, GaussianBeam& lBeam);
+    static void getLowBeam(const casacore::ImageInterface<casacore::Float>& low0, const casacore::String& lowPSF, const casacore::Bool useDefaultPB, const casacore::String& vpTableStr, casacore::GaussianBeam& lBeam);
     void calcCWeightImage();
     void applyFeather();
-    static void getRadialUVval(const Int npix, const IPosition& imshape, const CoordinateSystem& csys, Vector<Float>& radius);
-    GaussianBeam hBeam_p;
-    GaussianBeam lBeam_p;
-    GaussianBeam lBeamOrig_p;
-    Float dishDiam_p;
-    Bool cweightCalced_p;
-    Bool cweightApplied_p;
-    Float sdScale_p;
-    CoordinateSystem csysHigh_p;
+    static void getRadialUVval(const casacore::Int npix, const casacore::IPosition& imshape, const casacore::CoordinateSystem& csys, casacore::Vector<casacore::Float>& radius);
+    casacore::GaussianBeam hBeam_p;
+    casacore::GaussianBeam lBeam_p;
+    casacore::GaussianBeam lBeamOrig_p;
+    casacore::Float dishDiam_p;
+    casacore::Bool cweightCalced_p;
+    casacore::Bool cweightApplied_p;
+    casacore::Float sdScale_p;
+    casacore::CoordinateSystem csysHigh_p;
   };
 
 

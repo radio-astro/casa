@@ -57,62 +57,62 @@ namespace casa{
     WTerm () : CFTerms() {};
     ~WTerm () {};
 
-    virtual void applySky(Matrix<Complex>& screen, 
-			  const Int wPixel, 
-			  const Vector<Double>& sampling,
-			  const Double wScale,
-			  const Int inner);
-    virtual void applySky(Matrix<Complex>& screen, 
-			  const Vector<Double>& sampling,
-			  const Double wValue,
-			  const Int inner);
-    int getVisParams(const VisBuffer& vb,const CoordinateSystem& skyCoord=CoordinateSystem()) 
+    virtual void applySky(casacore::Matrix<casacore::Complex>& screen, 
+			  const casacore::Int wPixel, 
+			  const casacore::Vector<casacore::Double>& sampling,
+			  const casacore::Double wScale,
+			  const casacore::Int inner);
+    virtual void applySky(casacore::Matrix<casacore::Complex>& screen, 
+			  const casacore::Vector<casacore::Double>& sampling,
+			  const casacore::Double wValue,
+			  const casacore::Int inner);
+    int getVisParams(const VisBuffer& vb,const casacore::CoordinateSystem& skyCoord=casacore::CoordinateSystem()) 
     {(void)vb;(void)skyCoord;return 0;};
-    void setPolMap(const Vector<Int>& polMap) {(void)polMap;};
-    virtual Float getSupportThreshold() {return 1e-3;};
+    void setPolMap(const casacore::Vector<casacore::Int>& polMap) {(void)polMap;};
+    virtual casacore::Float getSupportThreshold() {return 1e-3;};
 
     // WTerm normalizes the image be unity
-    virtual void normalizeImage(Lattice<Complex>& skyImage,
-				const Matrix<Float>& weights) 
+    virtual void normalizeImage(casacore::Lattice<casacore::Complex>& skyImage,
+				const casacore::Matrix<casacore::Float>& weights) 
     {(void)skyImage;(void)weights;};
-    virtual String name() {return String("W Term");};
+    virtual casacore::String name() {return casacore::String("W Term");};
     //
     // The following functions are not required for W-Term but need to
     // be implemented here since they are pure virtuals in CFTerms
     // base class.
-    void applySky(ImageInterface<Float>&,// outputImages,
+    void applySky(casacore::ImageInterface<casacore::Float>&,// outputImages,
 		  const VisBuffer&,// vb, 
-		  const Bool,/* doSquint=True,*/
-		  const Int&,/* cfKey=0,*/
-	          const Int&,/* muellerTerm=0,*/
-		  const Double /*freqVal*=-1*/) 
+		  const casacore::Bool,/* doSquint=true,*/
+		  const casacore::Int&,/* cfKey=0,*/
+	          const casacore::Int&,/* muellerTerm=0,*/
+		  const casacore::Double /*freqVal*=-1*/) 
     {};
-    void applySky(ImageInterface<Complex>&,// outputImages,
+    void applySky(casacore::ImageInterface<casacore::Complex>&,// outputImages,
 		  const VisBuffer&,// vb, 
-		  const Bool,/* doSquint=True,*/
-		  const Int&,/* cfKey=0,*/
-		  const Int&,/* muellerTerm=0,*/
-		  const Double /*freqVal=-1*/) 
+		  const casacore::Bool,/* doSquint=true,*/
+		  const casacore::Int&,/* cfKey=0,*/
+		  const casacore::Int&,/* muellerTerm=0,*/
+		  const casacore::Double /*freqVal=-1*/) 
     {};
-    Vector<Int> vbRow2CFKeyMap(const VisBuffer& vb, Int& nUnique) 
-    {(void)vb;(void)nUnique;return Vector<Int>();};
-    Int makePBPolnCoords(const VisBuffer& vb,
-			 const Int& convSize,
-			 const Int& convSampling,
-			 const CoordinateSystem& skyCoord,
-			 const Int& skyNx, const Int& skyNy,
-			 CoordinateSystem& feedCoord) 
+    casacore::Vector<casacore::Int> vbRow2CFKeyMap(const VisBuffer& vb, casacore::Int& nUnique) 
+    {(void)vb;(void)nUnique;return casacore::Vector<casacore::Int>();};
+    casacore::Int makePBPolnCoords(const VisBuffer& vb,
+			 const casacore::Int& convSize,
+			 const casacore::Int& convSampling,
+			 const casacore::CoordinateSystem& skyCoord,
+			 const casacore::Int& skyNx, const casacore::Int& skyNy,
+			 casacore::CoordinateSystem& feedCoord) 
     {
       (void)vb;(void)convSize;(void)convSampling;(void)skyCoord;(void)skyNx;(void)skyNy;(void)feedCoord;
       return 0;
     };
 
-    Bool rotationallySymmetric() {return True;};
+    casacore::Bool rotationallySymmetric() {return true;};
 
 
-    Int getConvSize() {return 0;};
-    Int getOversampling() {return 4;};
-    Float getConvWeightSizeFactor() {return 1.0;};
+    casacore::Int getConvSize() {return 0;};
+    casacore::Int getOversampling() {return 4;};
+    casacore::Float getConvWeightSizeFactor() {return 1.0;};
   };
 
 };

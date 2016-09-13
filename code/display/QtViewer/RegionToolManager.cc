@@ -44,6 +44,7 @@
 #include <casa/Quanta/QLogical.h>
 #include <casa/Quanta/MVAngle.h>
 
+using namespace casacore;
 namespace casa {
 	namespace viewer {
 

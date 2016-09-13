@@ -34,9 +34,13 @@
 // Include files for the DBus Service
 //#include <casadbus/interfaces/SynthImager.adaptor.h>
 
+namespace casacore{
+
+  class Record;
+}
+
 namespace casa { //# NAMESPACE CASA - BEGIN
   
-  class Record;
 
   class SIMinorCycleController
  {
@@ -53,7 +57,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
          - exceeded number maxcycleniter
          - exceeded cycle threshold
     */
-    virtual Int majorCycleRequired(Float currentPeakResidual);
+    virtual casacore::Int majorCycleRequired(casacore::Float currentPeakResidual);
 
     /* This method sets the following controls for the Minor Cycle Controller:
        - niter
@@ -65,9 +69,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        - loop gain
        - cycle factor
     */
-    void setCycleControls(Record& );
+    void setCycleControls(casacore::Record& );
 
-    /* Get Cycle Execution Data:
+    /* Get Cycle Execution casacore::Data:
        Returns information about the set of cycles just executed:
        - iterdone
        - maxcycleiterdone
@@ -75,7 +79,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        - peak residual
        - minor cycle summary
     */
-    Record getCycleExecutionRecord();
+    casacore::Record getCycleExecutionRecord();
 
 
     /* Get Initialization Data
@@ -83,63 +87,63 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        - peak residual
        - maxPSFSidelobe
     */
-    Record getCycleInitializationRecord();
+    casacore::Record getCycleInitializationRecord();
 
     /* Getter Methods for the control variables */
-    Float getLoopGain(); 
+    casacore::Float getLoopGain(); 
 
-    void incrementMinorCycleCount(Int itersDonePerStep=1);
+    void incrementMinorCycleCount(casacore::Int itersDonePerStep=1);
 
-    Int getIterDone();
-    Int getCycleNiter();
-    Float getCycleThreshold();
+    casacore::Int getIterDone();
+    casacore::Int getCycleNiter();
+    casacore::Float getCycleThreshold();
 
     /* This method resets the iteration counter for the cycle */
     void resetCycleIter();
 
     /* Flag to note that the model has been updated */
-    void setUpdatedModelFlag(Bool updatedmodel);
+    void setUpdatedModelFlag(casacore::Bool updatedmodel);
 
-   void addSummaryMinor(uInt deconvolverid, uInt subimageid, Float model, Float peakresidual);
+   void addSummaryMinor(casacore::uInt deconvolverid, casacore::uInt subimageid, casacore::Float model, casacore::Float peakresidual);
     
     /* Variables to track status inside each Deconvolver */
-    Float getPeakResidual();
-    Float getIntegratedFlux();
-    Float getMaxPsfSidelobe();
+    casacore::Float getPeakResidual();
+    casacore::Float getIntegratedFlux();
+    casacore::Float getMaxPsfSidelobe();
     
-    void setPeakResidual(Float peakResidual);
-    void addIntegratedFlux(Float integratedFlux);
-    void setMaxPsfSidelobe(Float maxPsfSidelobe);
+    void setPeakResidual(casacore::Float peakResidual);
+    void addIntegratedFlux(casacore::Float integratedFlux);
+    void setMaxPsfSidelobe(casacore::Float maxPsfSidelobe);
 
  protected:
     /* Control Variables */
-    Int    itsCycleNiter;
-    Float itsCycleThreshold;
-    Float itsLoopGain;
+    casacore::Int    itsCycleNiter;
+    casacore::Float itsCycleThreshold;
+    casacore::Float itsLoopGain;
     
-    Bool  itsUpdatedModelFlag;
+    casacore::Bool  itsUpdatedModelFlag;
 
     /* Status Reporting Variables */
-    Int   itsIterDone; // Iterations done during this set of cycles
-    Int   itsCycleIterDone; // Iterations done on this subimage
-   Int   itsIterDiff; // Difference between latest and previous count, to catch zero increments.
+    casacore::Int   itsIterDone; // Iterations done during this set of cycles
+    casacore::Int   itsCycleIterDone; // Iterations done on this subimage
+   casacore::Int   itsIterDiff; // Difference between latest and previous count, to catch zero increments.
 
     /* Useful only for reporting */
-    Int   itsTotalIterDone; // Total iterations done by deconvolver
+    casacore::Int   itsTotalIterDone; // Total iterations done by deconvolver
 
     /* This variable keeps track of the maximum number of iterations done
        during a major cycle */
-    Int   itsMaxCycleIterDone;
+    casacore::Int   itsMaxCycleIterDone;
 
-   Float itsPeakResidual;
-   Float itsIntegratedFlux;
-   Float itsMaxPsfSidelobe;
+   casacore::Float itsPeakResidual;
+   casacore::Float itsIntegratedFlux;
+   casacore::Float itsMaxPsfSidelobe;
    
 
     /* Summary Variable */
-    Array<Double> itsSummaryMinor;
-    Int itsNSummaryFields;
-    Int itsDeconvolverID;    /* An ID per Deconvolver. Used only for the summary */
+    casacore::Array<casacore::Double> itsSummaryMinor;
+    casacore::Int itsNSummaryFields;
+    casacore::Int itsDeconvolverID;    /* An ID per Deconvolver. Used only for the summary */
   };
 
     

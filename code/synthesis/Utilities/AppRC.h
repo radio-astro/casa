@@ -40,36 +40,36 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
   public:
     AppRC()
-      :rc_p(NULL), rcCleanup(),addPID_p(False), deleteFile_p(True),
+      :rc_p(NULL), rcCleanup(),addPID_p(false), deleteFile_p(true),
        id_p()
     {};
     
     AppRC(const string& filename, 
-	  const Bool addPID=False,
-	  const Bool deleteFile=True)
+	  const casacore::Bool addPID=false,
+	  const casacore::Bool deleteFile=true)
       :rc_p(NULL), rcCleanup(), deleteFile_p(deleteFile), id_p()
     {init(filename,addPID,deleteFile_p);};
     
     ~AppRC();
     
     void setID(const string& id) {id_p=id;};
-    void init(const string& filename, const Bool addPID=False, 
-	      const Bool deleteFile=True);
+    void init(const string& filename, const casacore::Bool addPID=false, 
+	      const casacore::Bool deleteFile=true);
 
     string get(const string& name);
-    string get(const string& name, Int& val);
-    string get(const string& name, Float& val);
-    string get(const string& name, Double& val);
+    string get(const string& name, casacore::Int& val);
+    string get(const string& name, casacore::Float& val);
+    string get(const string& name, casacore::Double& val);
     void put(const string& name, const string& val);
-    void put(const string& name, const Int& val);
-    void put(const string& name, const Float& val);
-    void put(const string& name, const Double& val);
+    void put(const string& name, const casacore::Int& val);
+    void put(const string& name, const casacore::Float& val);
+    void put(const string& name, const casacore::Double& val);
     
   private:
-    Casarc *rc_p;
+    casacore::Casarc *rc_p;
     CasarcCleanup rcCleanup;
     pid_t myPID_p, myTID_p;
-    Bool addPID_p,deleteFile_p;
+    casacore::Bool addPID_p,deleteFile_p;
     string fileName_p, id_p;
     void setPID() {/*myTID_p = gettid_p ();*/ myPID_p = getpid ();}
   };

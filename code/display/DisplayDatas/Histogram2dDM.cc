@@ -33,6 +33,7 @@
 #include <display/DisplayDatas/Histogram2dDD.h>
 #include <cpgplot.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	Histogram2dDM::Histogram2dDM(WorldCanvas *worldCanvas,
@@ -104,7 +105,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		cpgbin(nbins, x, data, 1);
 		values.freeStorage(x, delete1);
 		counts.freeStorage(data, delete2);
-		return True;
+		return true;
 	}
 
 	void Histogram2dDM::cleanup() {

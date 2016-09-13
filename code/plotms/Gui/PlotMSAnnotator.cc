@@ -32,6 +32,7 @@
 
 #include <QInputDialog>
 
+using namespace casacore;
 namespace casa {
 
 /////////////////////////////////

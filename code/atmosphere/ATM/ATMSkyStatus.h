@@ -939,7 +939,7 @@ public:
    case the returned value corresponds to the zenith water vapor column of the AtmProfile object.*/
   Angle getDispersiveH2OPhaseDelay(unsigned int spwid, unsigned int nc);
 
-  /** Accesor to get the integrated zenith H2O Atmospheric Path length (Dispersive part)
+  /** Accesor to get the integrated zenith H2O Atmospheric casacore::Path length (Dispersive part)
    for the current conditions, for a single frequency RefractiveIndexProfile object or
    for the point 0 of spectral window 0 of a multi-window RefractiveIndexProfile object.
    There is overloading. The same accessor exists in RefractiveIndexProfile but in that
@@ -949,13 +949,13 @@ public:
     unsigned int n = 0;
     return getDispersiveH2OPathLength(n);
   }
-  /** Accesor to get the integrated zenith H2O Atmospheric Path length (Dispersive part)
+  /** Accesor to get the integrated zenith H2O Atmospheric casacore::Path length (Dispersive part)
    for the current conditions, for a single frequency RefractiveIndexProfile object or
    for the point nc of spectral window 0.
    There is overloading. The same accessor exists in RefractiveIndexProfile but in that
    case the returned value corresponds to the zenith water vapor column of the AtmProfile object.*/
   Length getDispersiveH2OPathLength(unsigned int nc);
-  /** Accesor to get the integrated zenith H2O Atmospheric Path length (Dispersive part)
+  /** Accesor to get the integrated zenith H2O Atmospheric casacore::Path length (Dispersive part)
    for the current conditions, for a single frequency RefractiveIndexProfile object or
    for the point nc of spectral window spwid.
    There is overloading. The same accessor exists in RefractiveIndexProfile but in that
@@ -985,7 +985,7 @@ public:
    case the returned value corresponds to the zenith water vapor column of the AtmProfile object.*/
   Angle getNonDispersiveH2OPhaseDelay(unsigned int spwid, unsigned int nc);
 
-  /** Accesor to get the integrated zenith H2O Atmospheric Path length (Non-Dispersive part)
+  /** Accesor to get the integrated zenith H2O Atmospheric casacore::Path length (Non-Dispersive part)
    for the current conditions, for a single frequency RefractiveIndexProfile object or
    for the point 0 of spectral window 0 of a multi-window RefractiveIndexProfile object.
    There is overloading. The same accessor exists in RefractiveIndexProfile but in that
@@ -995,13 +995,13 @@ public:
     unsigned int n = 0;
     return getNonDispersiveH2OPathLength(n);
   }
-  /** Accesor to get the integrated zenith H2O Atmospheric Path length (Non-Dispersive part)
+  /** Accesor to get the integrated zenith H2O Atmospheric casacore::Path length (Non-Dispersive part)
    for the current conditions, for a single frequency RefractiveIndexProfile object or
    for the point nc of spectral window 0.
    There is overloading. The same accessor exists in RefractiveIndexProfile but in that
    case the returned value corresponds to the zenith water vapor column of the AtmProfile object.*/
   Length getNonDispersiveH2OPathLength(unsigned int nc);
-  /** Accesor to get the integrated zenith H2O Atmospheric Path length (Non-Dispersive part)
+  /** Accesor to get the integrated zenith H2O Atmospheric casacore::Path length (Non-Dispersive part)
    for the current conditions, for a single frequency RefractiveIndexProfile object or
    for the point nc of spectral window spwid.
    There is overloading. The same accessor exists in RefractiveIndexProfile but in that
@@ -1037,12 +1037,12 @@ public:
     return getAverageNonDispersiveH2OPhaseDelay(n);
   }
 
-  /** Accessor to get the average integrated zenith Atmospheric Path Length (Dispersive part)
+  /** Accessor to get the average integrated zenith Atmospheric casacore::Path Length (Dispersive part)
    in spectral Window spwid.
    There is overloading. The same accessor exists in RefractiveIndexProfile but in that
    case the returned value corresponds to the zenith water vapor column of the AtmProfile object.*/
   Length getAverageDispersiveH2OPathLength(unsigned int spwid);
-  /** Accessor to get the average integrated zenith Atmospheric Path Length (Dispersive part)
+  /** Accessor to get the average integrated zenith Atmospheric casacore::Path Length (Dispersive part)
    in spectral Window 0.
    There is overloading. The same accessor exists in RefractiveIndexProfile but in that
    case the returned value corresponds to the zenith water vapor column of the AtmProfile object.*/
@@ -1051,12 +1051,12 @@ public:
     unsigned int n = 0;
     return getAverageDispersiveH2OPathLength(n);
   }
-  /** Accessor to get the average integrated zenith Atmospheric Path Length (Non-Dispersive
+  /** Accessor to get the average integrated zenith Atmospheric casacore::Path Length (Non-Dispersive
    part) in spectral Window spwid.
    There is overloading. The same accessor exists in RefractiveIndexProfile but in that
    case the returned value corresponds to the zenith water vapor column of the AtmProfile object.*/
   Length getAverageNonDispersiveH2OPathLength(unsigned int spwid);
-  /** Accessor to get the average integrated zenith Atmospheric Path Length (Non-Dispersive
+  /** Accessor to get the average integrated zenith Atmospheric casacore::Path Length (Non-Dispersive
    part) in spectral Window 0.
    There is overloading. The same accessor exists in RefractiveIndexProfile but in that
    case the returned value corresponds to the zenith water vapor column of the AtmProfile object.*/

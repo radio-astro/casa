@@ -58,7 +58,7 @@ public:
     // Constructor that takes the initial widget to display and the text for
     // the close button.  If the text is empty, the default close button text
     // is displayed.
-    QCloseableWidget(QWidget* widget, String closeText = "");
+    QCloseableWidget(QWidget* widget, casacore::String closeText = "");
 
     ~QCloseableWidget();
 
@@ -71,7 +71,7 @@ public:
     void setWidget(QWidget* widget, bool shouldDeleteOld = false);
     
     // Sets the text on the "close" button to the given String.
-    void setCloseButtonText(String name);
+    void setCloseButtonText(casacore::String name);
 
     
     // "Clears" the current widget by replacing it with a blank widget.

@@ -39,18 +39,19 @@
 int main()
 {
   using namespace std;
+using namespace casacore;
   using namespace casa;
   try{
     cout <<"--Starting to add an entry to the history table." << endl;
     MeasurementSet ms( "/home/rrusk/testing/3C273XC1.ms", Table::Update );
     cout << "--MeasurementSet created." << endl;
 
-    Bool compress = False;
-    Bool useModel = False;
+    Bool compress = false;
+    Bool useModel = false;
     Imager* imgr = new Imager( ms, compress, useModel );
     cout <<"--Imager created for MeasurementSet object. " << endl;
 
-    LogSink logSink_p=LogSink(LogMessage::NORMAL, False);	  
+    LogSink logSink_p=LogSink(LogMessage::NORMAL, false);	  
     logSink_p.clearLocally();
     LogIO os(LogOrigin("tImager", "main()", WHERE), logSink_p);
 

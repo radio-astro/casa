@@ -22,6 +22,7 @@
 
 #include <mstransform/MSTransform/MSTransformBufferImpl.h>
 
+using namespace casacore;
 namespace casa
 {
 
@@ -62,13 +63,13 @@ MSTransformBufferImpl::MSTransformBufferImpl(MSTransformManager *manager)
 	// Check if phase shifting has to be applied
 	if ( manager_p->phaseShifting_p and not manager_p->timeAverage_p)
 	{
-		applyPhaseShifting_p = True;
+		applyPhaseShifting_p = true;
 		dx_p = manager_p->dx_p;
 		dy_p = manager_p->dy_p;
 	}
 	else
 	{
-		applyPhaseShifting_p = False;
+		applyPhaseShifting_p = false;
 		dx_p = 0;
 		dy_p = 0;
 	}
@@ -76,11 +77,11 @@ MSTransformBufferImpl::MSTransformBufferImpl(MSTransformManager *manager)
 	// NONE datacol handling
 	if (manager_p->datacolumn_p.contains("NONE"))
 	{
-		noneDataCol_p = True;
+		noneDataCol_p = true;
 	}
 	else
 	{
-		noneDataCol_p = False;
+		noneDataCol_p = false;
 	}
 
 	return;
@@ -91,76 +92,76 @@ MSTransformBufferImpl::MSTransformBufferImpl(MSTransformManager *manager)
 // -----------------------------------------------------------------------
 void MSTransformBufferImpl::resetState()
 {
-	observationIdOk_p = False;
-	arrayIdOk_p = False;
-	scanOk_p = False;
-	stateIdOk_p = False;
-	fieldIdOk_p = False;
-	dataDescIdOk_p = False;
-	spectralWindowsOk_p = False;
-	processorIdOk_p = False;
-	antenna1Ok_p = False;
-	antenna2Ok_p = False;
-	feed1Ok_p = False;
-	feed2Ok_p = False;
-	flagRowOk_p = False;
-	timeOk_p = False;
-	timeCentroidOk_p = False;
-	timeIntervalOk_p = False;
-	exposureOk_p = False;
-	uvwOk_p = False;
-	weightOk_p = False;
-	sigmaOk_p = False;
-	flagCubeOk_p = False;
-	visCubeOk_p = False;
-	visCubeCorrectedOk_p = False;
-	visCubeModelOk_p = False;
-	visCubeFloatOk_p = False;
-	weightSpectrumOk_p = False;
-	sigmaSpectrumOk_p = False;
-	feedPaOk_p = False;
-	parangOk_p = False;
-	azelOk_p = False;
-	frequenciesOk_p = False;
-	channelNumbersOk_p = False;
-	channelNumbersSelectedOk_p = False;
-	rowIdsOk_p = False;
-	shapeOk_p = False;
-	nRowsOk_p = False;
-	nChannelsOk_p = False;
-	nCorrelationsOk_p = False;
-	nAntennasOk_p = False;
-	freqRefFrameTypeOk_p = False;
+	observationIdOk_p = false;
+	arrayIdOk_p = false;
+	scanOk_p = false;
+	stateIdOk_p = false;
+	fieldIdOk_p = false;
+	dataDescIdOk_p = false;
+	spectralWindowsOk_p = false;
+	processorIdOk_p = false;
+	antenna1Ok_p = false;
+	antenna2Ok_p = false;
+	feed1Ok_p = false;
+	feed2Ok_p = false;
+	flagRowOk_p = false;
+	timeOk_p = false;
+	timeCentroidOk_p = false;
+	timeIntervalOk_p = false;
+	exposureOk_p = false;
+	uvwOk_p = false;
+	weightOk_p = false;
+	sigmaOk_p = false;
+	flagCubeOk_p = false;
+	visCubeOk_p = false;
+	visCubeCorrectedOk_p = false;
+	visCubeModelOk_p = false;
+	visCubeFloatOk_p = false;
+	weightSpectrumOk_p = false;
+	sigmaSpectrumOk_p = false;
+	feedPaOk_p = false;
+	parangOk_p = false;
+	azelOk_p = false;
+	frequenciesOk_p = false;
+	channelNumbersOk_p = false;
+	channelNumbersSelectedOk_p = false;
+	rowIdsOk_p = false;
+	shapeOk_p = false;
+	nRowsOk_p = false;
+	nChannelsOk_p = false;
+	nCorrelationsOk_p = false;
+	nAntennasOk_p = false;
+	freqRefFrameTypeOk_p = false;
 
-	observationIdTransformed_p = False;
-	arrayIdTransformed_p = False;
-	scanTransformed_p = False;
-	stateIdTransformed_p = False;
-	fieldIdTransformed_p = False;
-	dataDescIdTransformed_p = False;
-	spectralWindowsTransformed_p = False;
-	processorIdTransformed_p = False;
-	antenna1Transformed_p = False;
-	antenna2Transformed_p = False;
-	feed1Transformed_p = False;
-	feed2Transformed_p = False;
-	flagRowTransformed_p = False;
-	uvwTransformed_p = False;
-	weightTransformed_p = False;
-	sigmaTransformed_p = False;
-	timeTransformed_p = False;
-	timeCentroidTransformed_p = False;
-	timeIntervalTransformed_p = False;
-	exposureTransformed_p = False;
-	feedPaTransformed_p = False;
-	parangTransformed_p = False;
-	azelTransformed_p = False;
-	frequenciesTransformed_p = False;
-	channelNumbersTransformed_p = False;
-	rowIdsTransformed_p = False;
+	observationIdTransformed_p = false;
+	arrayIdTransformed_p = false;
+	scanTransformed_p = false;
+	stateIdTransformed_p = false;
+	fieldIdTransformed_p = false;
+	dataDescIdTransformed_p = false;
+	spectralWindowsTransformed_p = false;
+	processorIdTransformed_p = false;
+	antenna1Transformed_p = false;
+	antenna2Transformed_p = false;
+	feed1Transformed_p = false;
+	feed2Transformed_p = false;
+	flagRowTransformed_p = false;
+	uvwTransformed_p = false;
+	weightTransformed_p = false;
+	sigmaTransformed_p = false;
+	timeTransformed_p = false;
+	timeCentroidTransformed_p = false;
+	timeIntervalTransformed_p = false;
+	exposureTransformed_p = false;
+	feedPaTransformed_p = false;
+	parangTransformed_p = false;
+	azelTransformed_p = false;
+	frequenciesTransformed_p = false;
+	channelNumbersTransformed_p = false;
+	rowIdsTransformed_p = false;
 
-	manager_p->weightSpectrumFlatFilled_p = False;
-	manager_p->weightSpectrumFromSigmaFilled_p = False;
+	manager_p->weightSpectrumFlatFilled_p = false;
+	manager_p->weightSpectrumFromSigmaFilled_p = false;
 
 	return;
 }
@@ -178,10 +179,10 @@ void MSTransformBufferImpl::generateWeights() const
 	flagCube();
 
 	// Reshape arrays
-	sigmaSpectrum_p.resize(shape_p,False);
-	weightSpectrum_p.resize(shape_p,False);
-	weight_p.resize(nCorrelations_p,nRows_p,False);
-	sigma_p.resize(nCorrelations_p,nRows_p,False);
+	sigmaSpectrum_p.resize(shape_p,false);
+	weightSpectrum_p.resize(shape_p,false);
+	weight_p.resize(nCorrelations_p,nRows_p,false);
+	sigma_p.resize(nCorrelations_p,nRows_p,false);
 
 	// Assign array pointers in the manager to the arrays resident in this buffer
 	manager_p->weight_p = &weight_p;
@@ -195,12 +196,12 @@ void MSTransformBufferImpl::generateWeights() const
 	manager_p->fillWeightCols(manager_p->getVisBuffer(),dummyRefRows);
 
 	// Set state
-	weightOk_p = True;
-	sigmaOk_p = True;
-	weightSpectrumOk_p = True;
-	sigmaSpectrumOk_p = True;
-	sigmaTransformed_p = True;
-	weightTransformed_p = True;
+	weightOk_p = true;
+	sigmaOk_p = true;
+	weightSpectrumOk_p = true;
+	sigmaSpectrumOk_p = true;
+	sigmaTransformed_p = true;
+	weightTransformed_p = true;
 
 	return;
 }
@@ -213,7 +214,7 @@ const Vector<Int> & MSTransformBufferImpl::dataDescriptionIds () const
 	if (not dataDescIdOk_p)
 	{
 		getShape();
-		dataDescriptionIds_p.resize(nRows_p,False);
+		dataDescriptionIds_p.resize(nRows_p,false);
 
 		dataDescIdTransformed_p = manager_p->transformDDIVector(manager_p->getVisBuffer()->dataDescriptionIds(),
 																dataDescriptionIds_p);
@@ -223,7 +224,7 @@ const Vector<Int> & MSTransformBufferImpl::dataDescriptionIds () const
 			dataDescriptionIds_p = manager_p->getVisBuffer()->dataDescriptionIds();
 		}
 
-		dataDescIdOk_p = True;
+		dataDescIdOk_p = true;
 	}
 
 	return dataDescriptionIds_p;
@@ -239,7 +240,7 @@ const Vector<Int> & MSTransformBufferImpl::spectralWindows () const
 		dataDescriptionIds();
 
 		getShape();
-		spectralWindows_p.resize(nRows_p,False);
+		spectralWindows_p.resize(nRows_p,false);
 
 		if (not dataDescIdTransformed_p)
 		{
@@ -252,10 +253,10 @@ const Vector<Int> & MSTransformBufferImpl::spectralWindows () const
 				spectralWindows_p(rowIdx) = dataDescriptionIds_p(rowIdx);
 			}
 
-			spectralWindowsTransformed_p = True;
+			spectralWindowsTransformed_p = true;
 		}
 
-		spectralWindowsOk_p = True;
+		spectralWindowsOk_p = true;
 	}
 
 	return spectralWindows_p;
@@ -269,13 +270,13 @@ const Vector<Int> & MSTransformBufferImpl::observationId () const
 	if (not observationIdOk_p)
 	{
 		getShape();
-		observationId_p.resize(nRows_p,False);
+		observationId_p.resize(nRows_p,false);
 
 		observationIdTransformed_p = manager_p->transformReindexableVector(	manager_p->getVisBuffer()->observationId(),
 																			observationId_p,
-																			True,
+																			true,
 																			manager_p->inputOutputObservationIndexMap_p);
-		observationIdOk_p = True;
+		observationIdOk_p = true;
 	}
 
 	if (not observationIdTransformed_p)
@@ -294,13 +295,13 @@ const Vector<Int> & MSTransformBufferImpl::arrayId () const
 	if (not arrayIdOk_p)
 	{
 		getShape();
-		arrayId_p.resize(nRows_p,False);
+		arrayId_p.resize(nRows_p,false);
 
 		arrayIdTransformed_p = manager_p->transformReindexableVector(	manager_p->getVisBuffer()->arrayId(),
 																		arrayId_p,
-																		True,
+																		true,
 																		manager_p->inputOutputArrayIndexMap_p);
-		arrayIdOk_p = True;
+		arrayIdOk_p = true;
 	}
 
 	if (not arrayIdTransformed_p)
@@ -319,13 +320,13 @@ const Vector<Int> & MSTransformBufferImpl::fieldId () const
 	if (not fieldIdOk_p)
 	{
 		getShape();
-		fieldId_p.resize(nRows_p,False);
+		fieldId_p.resize(nRows_p,false);
 
 		fieldIdTransformed_p = manager_p->transformReindexableVector(	manager_p->getVisBuffer()->fieldId(),
 																		fieldId_p,
 																		!manager_p->timespan_p.contains("field"),
 																		manager_p->inputOutputFieldIndexMap_p);
-		fieldIdOk_p = True;
+		fieldIdOk_p = true;
 	}
 
 	if (not fieldIdTransformed_p)
@@ -344,13 +345,13 @@ const Vector<Int> & MSTransformBufferImpl::stateId () const
 	if (not stateIdOk_p)
 	{
 		getShape();
-		stateId_p.resize(nRows_p,False);
+		stateId_p.resize(nRows_p,false);
 
 		stateIdTransformed_p = manager_p->transformReindexableVector(	manager_p->getVisBuffer()->stateId(),
 																		stateId_p,
 																		!manager_p->timespan_p.contains("state"),
 																		manager_p->inputOutputScanIntentIndexMap_p);
-		stateIdOk_p = True;
+		stateIdOk_p = true;
 	}
 
 	if (not stateIdTransformed_p)
@@ -370,13 +371,13 @@ const Vector<Int> & MSTransformBufferImpl::antenna1 () const
 	if (not antenna1Ok_p)
 	{
 		getShape();
-		antenna1_p.resize(nRows_p,False);
+		antenna1_p.resize(nRows_p,false);
 
 		antenna1Transformed_p = manager_p->transformReindexableVector(	manager_p->getVisBuffer()->antenna1(),
 																		antenna1_p,
-																		False,
+																		false,
 																		manager_p->inputOutputAntennaIndexMap_p);
-		antenna1Ok_p = True;
+		antenna1Ok_p = true;
 	}
 
 	if (not antenna1Transformed_p)
@@ -395,13 +396,13 @@ const Vector<Int> & MSTransformBufferImpl::antenna2 () const
 	if (not antenna2Ok_p)
 	{
 		getShape();
-		antenna2_p.resize(nRows_p,False);
+		antenna2_p.resize(nRows_p,false);
 
 		antenna2Transformed_p = manager_p->transformReindexableVector(	manager_p->getVisBuffer()->antenna2(),
 																		antenna2_p,
-																		False,
+																		false,
 																		manager_p->inputOutputAntennaIndexMap_p);
-		antenna2Ok_p = True;
+		antenna2Ok_p = true;
 	}
 
 	if (not antenna2Transformed_p)
@@ -420,12 +421,12 @@ const Vector<Int> & MSTransformBufferImpl::scan () const
 	if (not scanOk_p)
 	{
 		getShape();
-		scan_p.resize(nRows_p,False);
+		scan_p.resize(nRows_p,false);
 
 		scanTransformed_p = manager_p->transformNotReindexableVector(	manager_p->getVisBuffer()->scan(),
 																		scan_p,
 																		!manager_p->timespan_p.contains("scan"));
-		scanOk_p = True;
+		scanOk_p = true;
 	}
 
 	if (not scanTransformed_p)
@@ -444,12 +445,12 @@ const Vector<Int> & MSTransformBufferImpl::processorId () const
 	if (not processorIdOk_p)
 	{
 		getShape();
-		processorId_p.resize(nRows_p,False);
+		processorId_p.resize(nRows_p,false);
 
 		processorIdTransformed_p = manager_p->transformNotReindexableVector(	manager_p->getVisBuffer()->processorId(),
 																				processorId_p,
-																				False);
-		processorIdOk_p = True;
+																				false);
+		processorIdOk_p = true;
 	}
 
 	if (not processorIdTransformed_p)
@@ -468,12 +469,12 @@ const Vector<Int> & MSTransformBufferImpl::feed1 () const
 	if (not feed1Ok_p)
 	{
 		getShape();
-		feed1_p.resize(nRows_p,False);
+		feed1_p.resize(nRows_p,false);
 
 		feed1Transformed_p = manager_p->transformNotReindexableVector(	manager_p->getVisBuffer()->feed1(),
 																		feed1_p,
-																		False);
-		feed1Ok_p = True;
+																		false);
+		feed1Ok_p = true;
 	}
 
 	if (not feed1Transformed_p)
@@ -492,12 +493,12 @@ const Vector<Int> & MSTransformBufferImpl::feed2 () const
 	if (not feed2Ok_p)
 	{
 		getShape();
-		feed2_p.resize(nRows_p,False);
+		feed2_p.resize(nRows_p,false);
 
 		feed2Transformed_p = manager_p->transformNotReindexableVector(	manager_p->getVisBuffer()->feed2(),
 																		feed2_p,
-																		False);
-		feed2Ok_p = True;
+																		false);
+		feed2Ok_p = true;
 	}
 
 	if (not feed2Transformed_p)
@@ -516,12 +517,12 @@ const Vector<Double> & MSTransformBufferImpl::time () const
 	if (not timeOk_p)
 	{
 		getShape();
-		time_p.resize(nRows_p,False);
+		time_p.resize(nRows_p,false);
 
 		timeTransformed_p = manager_p->transformNotReindexableVector(	manager_p->getVisBuffer()->time(),
 																		time_p,
-																		False);
-		timeOk_p = True;
+																		false);
+		timeOk_p = true;
 	}
 
 	if (not timeTransformed_p)
@@ -540,12 +541,12 @@ const Vector<Double> & MSTransformBufferImpl::timeCentroid () const
 	if (not timeCentroidOk_p)
 	{
 		getShape();
-		timeCentroid_p.resize(nRows_p,False);
+		timeCentroid_p.resize(nRows_p,false);
 
 		timeCentroidTransformed_p = manager_p->transformNotReindexableVector(	manager_p->getVisBuffer()->timeCentroid(),
 																				timeCentroid_p,
-																				False);
-		timeCentroidOk_p = True;
+																				false);
+		timeCentroidOk_p = true;
 	}
 
 	if (not timeCentroidTransformed_p)
@@ -564,12 +565,12 @@ const Vector<Double> & MSTransformBufferImpl::timeInterval () const
 	if (not timeIntervalOk_p)
 	{
 		getShape();
-		timeInterval_p.resize(nRows_p,False);
+		timeInterval_p.resize(nRows_p,false);
 
 		timeIntervalTransformed_p = manager_p->transformNotReindexableVector(	manager_p->getVisBuffer()->timeInterval(),
 																				timeInterval_p,
-																				False);
-		timeIntervalOk_p = True;
+																				false);
+		timeIntervalOk_p = true;
 	}
 
 	if (not timeIntervalTransformed_p)
@@ -588,19 +589,19 @@ const Vector<Double> & MSTransformBufferImpl::exposure () const
 	if (not exposureOk_p)
 	{
 		getShape();
-		exposure_p.resize(nRows_p,False);
+		exposure_p.resize(nRows_p,false);
 
 		if (manager_p->combinespws_p)
 		{
 			manager_p->mapAndAverageVector(	manager_p->getVisBuffer()->exposure(),exposure_p);
-			exposureTransformed_p = True;
+			exposureTransformed_p = true;
 		}
 		else
 		{
-			exposureTransformed_p = False;
+			exposureTransformed_p = false;
 		}
 
-		exposureOk_p = True;
+		exposureOk_p = true;
 	}
 
 	if (not exposureTransformed_p)
@@ -619,19 +620,19 @@ const Vector<Bool> & MSTransformBufferImpl::flagRow () const
 	if (not flagRowOk_p)
 	{
 		getShape();
-		flagRow_p.resize(nRows_p,False);
+		flagRow_p.resize(nRows_p,false);
 
 		if (manager_p->combinespws_p)
 		{
 			manager_p->mapAndAverageVector(	manager_p->getVisBuffer()->flagRow(),flagRow_p);
-			flagRowTransformed_p = True;
+			flagRowTransformed_p = true;
 		}
 		else
 		{
-			flagRowTransformed_p = False;
+			flagRowTransformed_p = false;
 		}
 
-		flagRowOk_p = True;
+		flagRowOk_p = true;
 	}
 
 	if (not flagRowTransformed_p)
@@ -650,19 +651,19 @@ const Matrix<Double> & MSTransformBufferImpl::uvw () const
 	if (not uvwOk_p)
 	{
 		getShape();
-		uvw_p.resize(3,nRows_p,False);
+		uvw_p.resize(3,nRows_p,false);
 
 		if (manager_p->combinespws_p)
 		{
 			manager_p->mapMatrix(manager_p->getVisBuffer()->uvw(),uvw_p);
-			uvwTransformed_p = True;
+			uvwTransformed_p = true;
 		}
 		else
 		{
-			uvwTransformed_p = False;
+			uvwTransformed_p = false;
 		}
 
-		uvwOk_p = True;
+		uvwOk_p = true;
 	}
 
 	if (not uvwTransformed_p)
@@ -683,7 +684,7 @@ const Matrix<Float> & MSTransformBufferImpl::weight () const
 		if (manager_p->cubeTransformation_p)
 		{
 			generateWeights();
-			weightTransformed_p = True;
+			weightTransformed_p = true;
 		}
 		else
 		{
@@ -691,7 +692,7 @@ const Matrix<Float> & MSTransformBufferImpl::weight () const
 
 			if (manager_p->combinespws_p)
 			{
-				weight_p.resize(nCorrelations_p,nRows_p,False);
+				weight_p.resize(nCorrelations_p,nRows_p,false);
 
 				if (manager_p->newWeightFactorMap_p.size() > 0)
 				{
@@ -704,11 +705,11 @@ const Matrix<Float> & MSTransformBufferImpl::weight () const
 				{
 					manager_p->mapMatrix(manager_p->getVisBuffer()->weight(),weight_p);
 				}
-				weightTransformed_p = True;
+				weightTransformed_p = true;
 			}
 			else if (manager_p->newWeightFactorMap_p.size() > 0)
 			{
-				weight_p.resize(nCorrelations_p,nRows_p,False);
+				weight_p.resize(nCorrelations_p,nRows_p,false);
 				weight_p = manager_p->getVisBuffer()->weight();
 
 				// Apply scale factor
@@ -717,15 +718,15 @@ const Matrix<Float> & MSTransformBufferImpl::weight () const
 				{
 					weight_p *= manager_p->newWeightFactorMap_p[manager_p->getVisBuffer()->spectralWindows()(0)];
 				}
-				weightTransformed_p = True;
+				weightTransformed_p = true;
 			}
 			else
 			{
-				weightTransformed_p = False;
+				weightTransformed_p = false;
 			}
 		}
 
-		weightOk_p = True;
+		weightOk_p = true;
 	}
 
 	if (not weightTransformed_p)
@@ -746,7 +747,7 @@ const Matrix<Float> & MSTransformBufferImpl::sigma () const
 		if (manager_p->cubeTransformation_p)
 		{
 			generateWeights();
-			sigmaTransformed_p = True;
+			sigmaTransformed_p = true;
 		}
 		else
 		{
@@ -754,7 +755,7 @@ const Matrix<Float> & MSTransformBufferImpl::sigma () const
 
 			if (manager_p->combinespws_p)
 			{
-				sigma_p.resize(nCorrelations_p,nRows_p,False);
+				sigma_p.resize(nCorrelations_p,nRows_p,false);
 
 				if (manager_p->correctedToData_p)
 				{
@@ -773,19 +774,19 @@ const Matrix<Float> & MSTransformBufferImpl::sigma () const
 				{
 					manager_p->mapMatrix(manager_p->getVisBuffer()->sigma(),sigma_p);
 				}
-				sigmaTransformed_p = True;
+				sigmaTransformed_p = true;
 			}
 			else if (manager_p->correctedToData_p)
 			{
 				// Sigma must be redefined to 1/weight when corrected data becomes data
-				sigma_p.resize(nCorrelations_p,nRows_p,False);
+				sigma_p.resize(nCorrelations_p,nRows_p,false);
 				sigma_p = weight(); // Copy operator implements an actual copy
 				arrayTransformInPlace(sigma_p, vi::AveragingTvi2::weightToSigma);
-				sigmaTransformed_p = True;
+				sigmaTransformed_p = true;
 			}
 			else if (manager_p->newSigmaFactorMap_p.size() > 0)
 			{
-				sigma_p.resize(nCorrelations_p,nRows_p,False);
+				sigma_p.resize(nCorrelations_p,nRows_p,false);
 				sigma_p = manager_p->getVisBuffer()->sigma();
 
 				// Apply scale factor
@@ -794,15 +795,15 @@ const Matrix<Float> & MSTransformBufferImpl::sigma () const
 				{
 					sigma_p *= manager_p->newSigmaFactorMap_p[manager_p->getVisBuffer()->spectralWindows()(0)];
 				}
-				sigmaTransformed_p = True;
+				sigmaTransformed_p = true;
 			}
 			else
 			{
-				sigmaTransformed_p = False;
+				sigmaTransformed_p = false;
 			}
 		}
 
-		sigmaOk_p = True;
+		sigmaOk_p = true;
 	}
 
 	if (not sigmaTransformed_p)
@@ -834,7 +835,7 @@ const Cube<Bool> & MSTransformBufferImpl::flagCube () const
 
 			// Setup output data map
 			DataCubeMap outputDataCubeMap;
-			flagCube_p.resize(getShape(),False);
+			flagCube_p.resize(getShape(),false);
 			DataCubeHolder<Bool> outputFlagDataHolder(flagCube_p);
 			outputDataCubeMap.add(MS::FLAG,static_cast<DataCubeHolderBase*>(&outputFlagDataHolder));
 
@@ -866,7 +867,7 @@ const Cube<Bool> & MSTransformBufferImpl::flagCube () const
 			visCubeFloat();
 		}
 
-		flagCubeOk_p = True;
+		flagCubeOk_p = true;
 	}
 
 	return flagCube_p;
@@ -893,15 +894,15 @@ const Cube<Complex> & MSTransformBufferImpl::visCube () const
 
 	if (not manager_p->cubeTransformation_p)
 	{
-		visCubeOk_p = True;
+		visCubeOk_p = true;
 		return manager_p->getVisBuffer()->visCube();
 	}
 	else if (not visCubeOk_p)
 	{
-		visCube_p.resize(getShape(),False);
+		visCube_p.resize(getShape(),false);
 		manager_p->visCube_p = &visCube_p;
 
-		flagCube_p.resize(getShape(),False);
+		flagCube_p.resize(getShape(),false);
 		manager_p->flagCube_p = &flagCube_p;
 
 		RefRows dummyRefRows(0,0);
@@ -916,8 +917,8 @@ const Cube<Complex> & MSTransformBufferImpl::visCube () const
 										dummyDataCol,
 										NULL,
 										applicableSpectrum);
-		flagCubeOk_p = True;
-		visCubeOk_p = True;
+		flagCubeOk_p = true;
+		visCubeOk_p = true;
 	}
 
 	return visCube_p;
@@ -943,15 +944,15 @@ const Cube<Complex> & MSTransformBufferImpl::visCubeCorrected () const
 
 	if (not manager_p->cubeTransformation_p)
 	{
-		visCubeCorrectedOk_p = True;
+		visCubeCorrectedOk_p = true;
 		return manager_p->getVisBuffer()->visCubeCorrected();
 	}
 	else if (not visCubeCorrectedOk_p)
 	{
-		visCubeCorrected_p.resize(getShape(),False);
+		visCubeCorrected_p.resize(getShape(),false);
 		manager_p->visCubeCorrected_p = &visCubeCorrected_p;
 
-		flagCube_p.resize(getShape(),False);
+		flagCube_p.resize(getShape(),false);
 		manager_p->flagCube_p = &flagCube_p;
 
 		RefRows dummyRefRows(0,0);
@@ -966,8 +967,8 @@ const Cube<Complex> & MSTransformBufferImpl::visCubeCorrected () const
 											dummyDataCol,
 											NULL,
 											applicableSpectrum);
-		flagCubeOk_p = True;
-		visCubeCorrectedOk_p = True;
+		flagCubeOk_p = true;
+		visCubeCorrectedOk_p = true;
 	}
 
 	return visCubeCorrected_p;
@@ -994,15 +995,15 @@ const Cube<Complex> & MSTransformBufferImpl::visCubeModel () const
 
 	if (not manager_p->cubeTransformation_p)
 	{
-		visCubeModelOk_p = True;
+		visCubeModelOk_p = true;
 		return manager_p->getVisBuffer()->visCubeModel();
 	}
 	else if (not visCubeModelOk_p)
 	{
-		visCubeModel_p.resize(getShape(),False);
+		visCubeModel_p.resize(getShape(),false);
 		manager_p->visCubeModel_p = &visCubeModel_p;
 
-		flagCube_p.resize(getShape(),False);
+		flagCube_p.resize(getShape(),false);
 		manager_p->flagCube_p = &flagCube_p;
 
 		RefRows dummyRefRows(0,0);
@@ -1017,8 +1018,8 @@ const Cube<Complex> & MSTransformBufferImpl::visCubeModel () const
 										dummyDataCol,
 										NULL,
 										applicableSpectrum);
-		flagCubeOk_p = True;
-		visCubeModelOk_p= True;
+		flagCubeOk_p = true;
+		visCubeModelOk_p= true;
 	}
 
 	return visCubeModel_p;
@@ -1041,10 +1042,10 @@ const Cube<Float> & MSTransformBufferImpl::visCubeFloat () const
 	}
 	else if (not visCubeFloatOk_p)
 	{
-		visCubeFloat_p.resize(getShape(),False);
+		visCubeFloat_p.resize(getShape(),false);
 		manager_p->visCubeFloat_p = &visCubeFloat_p;
 
-		flagCube_p.resize(getShape(),False);
+		flagCube_p.resize(getShape(),false);
 		manager_p->flagCube_p = &flagCube_p;
 
 		RefRows dummyRefRows(0,0);
@@ -1060,8 +1061,8 @@ const Cube<Float> & MSTransformBufferImpl::visCubeFloat () const
 										NULL,
 										applicableSpectrum);
 
-		flagCubeOk_p = True;
-		visCubeFloatOk_p = True;
+		flagCubeOk_p = true;
+		visCubeFloatOk_p = true;
 	}
 
 	return visCubeFloat_p;
@@ -1079,7 +1080,7 @@ const Cube<Float> & MSTransformBufferImpl::weightSpectrum () const
 	else if (not weightSpectrumOk_p)
 	{
 		generateWeights();
-		weightSpectrumOk_p = True;
+		weightSpectrumOk_p = true;
 	}
 
 	return weightSpectrum_p;
@@ -1097,7 +1098,7 @@ const Cube<Float> & MSTransformBufferImpl::sigmaSpectrum () const
 	if (not sigmaSpectrumOk_p)
 	{
 		generateWeights();
-		sigmaSpectrumOk_p = True;
+		sigmaSpectrumOk_p = true;
 	}
 
 	return sigmaSpectrum_p;
@@ -1122,8 +1123,8 @@ const Array<Bool> & MSTransformBufferImpl::flagCategory () const
 	{
 		uInt nCategories = manager_p->getVisBuffer()->flagCategory().shape()(2); // [nC,nF,nCategories,nR]
 		IPosition flagCategoryShape(4,nCorrelations_p,nChannels_p,nCategories,nRows_p);
-		flagCategory_p.resize(flagCategoryShape,False);
-		flagCategoryOk_p = True;
+		flagCategory_p.resize(flagCategoryShape,false);
+		flagCategoryOk_p = true;
 	}
 
 	return flagCategory_p;
@@ -1236,12 +1237,12 @@ Double MSTransformBufferImpl::getFrequency (Int rowInBuffer, Int frequencyIndex,
 const Vector<Double> & MSTransformBufferImpl::getFrequencies (Int rowInBuffer,Int frame) const
 {
 	// CAS-7699: Check if frequencies have to be transformed to a new ref. frame
-	Bool freqRefFrameTransRequested  = False;
+	Bool freqRefFrameTransRequested  = false;
 	MFrequency::Types requestedFreqRefFrame = static_cast<MFrequency::Types> (frame);
 	if (frame != FrameNotSpecified and requestedFreqRefFrame != freqRefFrameType())
 	{
-		frequenciesOk_p = False;
-		freqRefFrameTransRequested = True;
+		frequenciesOk_p = false;
+		freqRefFrameTransRequested = true;
 		freqRefFrameType_p = requestedFreqRefFrame;
 	}
 
@@ -1254,13 +1255,13 @@ const Vector<Double> & MSTransformBufferImpl::getFrequencies (Int rowInBuffer,In
 
 		if (not newFrequencies)
 		{
-			frequenciesTransformed_p = False;
+			frequenciesTransformed_p = false;
 		}
 		else
 		{
 			getShape();
 			spectralWindows();
-			frequencies_p.resize(nChannels_p,False);
+			frequencies_p.resize(nChannels_p,false);
 
 			if ( (manager_p->reindex_p) or inputOutputSPWIndexMap_p.size() == 0)
 			{
@@ -1276,17 +1277,17 @@ const Vector<Double> & MSTransformBufferImpl::getFrequencies (Int rowInBuffer,In
 			if (freqRefFrameTransRequested)
 			{
 
-				MFrequency::Convert freqRefTranEngine = generateFreqRefTranEngine(time()(rowInBuffer),frame,False);
+				MFrequency::Convert freqRefTranEngine = generateFreqRefTranEngine(time()(rowInBuffer),frame,false);
 				for (uInt chan_i=0;chan_i<frequencies_p.size();chan_i++)
 				{
 					frequencies_p(chan_i) = freqRefTranEngine (Quantity (frequencies_p(chan_i), "Hz")).get ("Hz").getValue();
 				}
 			}
 
-			frequenciesTransformed_p = True;
+			frequenciesTransformed_p = true;
 		}
 
-		frequenciesOk_p = True;
+		frequenciesOk_p = true;
 	}
 
 	if (not frequenciesTransformed_p)
@@ -1397,22 +1398,22 @@ const Vector<Int> & MSTransformBufferImpl::getChannelNumbers (Int rowInBuffer) c
 
 		if (not newFrequencies)
 		{
-			channelNumbersTransformed_p = False;
+			channelNumbersTransformed_p = false;
 		}
 		else
 		{
 			getShape();
-			channelNumbers_p.resize(nChannels_p,False);
+			channelNumbers_p.resize(nChannels_p,false);
 
 			for (uInt chanIdx = 0; chanIdx<nChannels_p;chanIdx++)
 			{
 				channelNumbers_p(chanIdx) = chanIdx;
 			}
 
-			channelNumbersTransformed_p = True;
+			channelNumbersTransformed_p = true;
 		}
 
-		channelNumbersOk_p = True;
+		channelNumbersOk_p = true;
 	}
 
 	if (not channelNumbersTransformed_p)
@@ -1472,7 +1473,7 @@ Vector<Int> MSTransformBufferImpl::getChannelNumbersSelected (Int outputChannelI
 			}
 		}
 
-		channelNumbersSelectedOk_p = True;
+		channelNumbersSelectedOk_p = true;
 	}
 
 	return outputInputChannelMap_p[outputChannelIndex];
@@ -1492,22 +1493,22 @@ const Vector<uInt> & MSTransformBufferImpl::rowIds () const
 
 		if (not newFrequencies)
 		{
-			rowIdsTransformed_p = False;
+			rowIdsTransformed_p = false;
 		}
 		else
 		{
 			getShape();
-			rowIds_p.resize(nRows_p,False);
+			rowIds_p.resize(nRows_p,false);
 
 			for (uInt rowIdx = 0; rowIdx<nRows_p;rowIdx++)
 			{
 				rowIds_p(rowIdx) = rowIdOffset_p + rowIdx;
 			}
 
-			rowIdsTransformed_p = True;
+			rowIdsTransformed_p = true;
 		}
 
-		rowIdsOk_p = True;
+		rowIdsOk_p = true;
 	}
 
 	if (not rowIdsTransformed_p)
@@ -1530,7 +1531,7 @@ IPosition MSTransformBufferImpl::getShape () const
 		nChannels_p = shape_p(1);
 		nCorrelations_p = shape_p(0);
 		nAntennas_p = manager_p->getVisBuffer()->nAntennas();
-		shapeOk_p = True;
+		shapeOk_p = true;
 	}
 
 	return shape_p;
@@ -1544,7 +1545,7 @@ Int MSTransformBufferImpl::nRows () const
 	if (not nRowsOk_p)
 	{
 		getShape();
-		nRowsOk_p = True;
+		nRowsOk_p = true;
 	}
 
 	return nRows_p;
@@ -1558,7 +1559,7 @@ Int MSTransformBufferImpl::nChannels () const
 	if (not nChannelsOk_p)
 	{
 		getShape();
-		nChannelsOk_p = True;
+		nChannelsOk_p = true;
 	}
 
 	return nChannels_p;
@@ -1572,7 +1573,7 @@ Int MSTransformBufferImpl::nCorrelations () const
 	if (not nCorrelationsOk_p)
 	{
 		getShape();
-		nCorrelationsOk_p  = True;
+		nCorrelationsOk_p  = true;
 	}
 
 	return nCorrelations_p;
@@ -1586,7 +1587,7 @@ Int MSTransformBufferImpl::nAntennas () const
 	if (not nAntennasOk_p)
 	{
 		getShape();
-		nAntennasOk_p = True;
+		nAntennasOk_p = true;
 	}
 
 	return nAntennas_p;
@@ -1604,9 +1605,9 @@ void MSTransformBufferImpl::phaseCenterShift(const Vector<Double>& phase)
 	manager_p->getVisBuffer()->phaseCenterShift(phase);
 
 	// Clear vis cube state so that they are re-filled and re-averaged with the shifted visibilities
-	visCubeOk_p = False;
-	visCubeCorrectedOk_p = False;
-	visCubeModelOk_p = False;
+	visCubeOk_p = false;
+	visCubeCorrectedOk_p = false;
+	visCubeModelOk_p = false;
 
 	return;
 }
@@ -1620,9 +1621,9 @@ void MSTransformBufferImpl::phaseCenterShift(Double dx, Double dy)
 	manager_p->getVisBuffer()->phaseCenterShift(dx,dy);
 
 	// Clear vis cube state so that they are re-filled and re-averaged with the shifted visibilities
-	visCubeOk_p = False;
-	visCubeCorrectedOk_p = False;
-	visCubeModelOk_p = False;
+	visCubeOk_p = false;
+	visCubeCorrectedOk_p = false;
+	visCubeModelOk_p = false;
 
 	return;
 }
@@ -1725,12 +1726,12 @@ void MSTransformBufferImpl::flagAverageKernel(	vi::VisBuffer2 *,
 	Vector<Bool> inputFlags =  inputDataCubeMap.getVector<Bool>(MS::FLAG);
 	Vector<Bool> outputFlags =  outputDataCubeMap.getVector<Bool>(MS::FLAG);
 
-	Bool outputFlag = True;
+	Bool outputFlag = true;
 	for (uInt deltaPos=0;deltaPos<kernelSize;deltaPos++)
 	{
 		if (not inputFlags(inputPos+deltaPos))
 		{
-			outputFlag = False;
+			outputFlag = false;
 			break;
 		}
 	}

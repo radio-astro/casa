@@ -32,11 +32,15 @@
 
 #include <casa/namespace.h>
 
+
+namespace casacore{
+
 class MDirection;
+}
 
 namespace casa {
 
-class ImagePadder : public ImageTask<Float> {
+class ImagePadder : public ImageTask<casacore::Float> {
 	// <summary>
 	// Top level interface for padding an image in direction space.
 	// </summary>
@@ -67,10 +71,10 @@ public:
 
 	ImagePadder(
 			const SPCIIF  image,
-		const Record *const regionRec=0,
-		const String& box="", const String& chanInp="",
-		const String& stokes="", const String& maskInp="",
-		const String& outname="", const Bool overwrite=""
+		const casacore::Record *const regionRec=0,
+		const casacore::String& box="", const casacore::String& chanInp="",
+		const casacore::String& stokes="", const casacore::String& maskInp="",
+		const casacore::String& outname="", const casacore::Bool overwrite=""
 	);
 
 	// </group>
@@ -78,35 +82,35 @@ public:
 	// destructor
 	~ImagePadder();
 
-	// perform the padding. If <src>wantReturn</src> is True, return a pointer to the
+	// perform the padding. If <src>wantReturn</src> is true, return a pointer to the
 	// padded image. The returned pointer is created via new(); it is the caller's
-	// responsibility to delete the returned pointer. If <src>wantReturn</src> is False,
+	// responsibility to delete the returned pointer. If <src>wantReturn</src> is false,
 	// a NULL pointer is returned and pointer deletion is performed internally.
-	SPIIF pad(const Bool wantReturn) const;
+	SPIIF pad(const casacore::Bool wantReturn) const;
 
 	// set the number of pixels to use for padding and their values and if they should be
-	// masked on each edge of the direction plane. <src>good</src>=True means the padding
-	// pixels will not be masked (set to good, mask values = True).
-	void setPaddingPixels(const uInt nPixels, const Double value=0, const Bool good=False);
+	// masked on each edge of the direction plane. <src>good</src>=true means the padding
+	// pixels will not be masked (set to good, mask values = true).
+	void setPaddingPixels(const casacore::uInt nPixels, const casacore::Double value=0, const casacore::Bool good=false);
 
-	String getClass() const;
+	casacore::String getClass() const;
 
 protected:
 	inline  CasacRegionManager::StokesControl _getStokesControl() const {
 		return CasacRegionManager::USE_ALL_STOKES;
 	}
 
-	inline vector<Coordinate::Type> _getNecessaryCoordinates() const {
-		vector<Coordinate::Type> v;
-		v.push_back(Coordinate::DIRECTION);
+	inline vector<casacore::Coordinate::Type> _getNecessaryCoordinates() const {
+		vector<casacore::Coordinate::Type> v;
+		v.push_back(casacore::Coordinate::DIRECTION);
 		return v;
  	}
 
 private:
-	uInt _nPixels;
-	Double _value;
-	Bool _good;
-	static const String _class;
+	casacore::uInt _nPixels;
+	casacore::Double _value;
+	casacore::Bool _good;
+	static const casacore::String _class;
 
 	// disallow default constructor
 	ImagePadder();

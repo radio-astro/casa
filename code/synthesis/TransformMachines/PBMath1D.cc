@@ -60,6 +60,7 @@
 
 
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 PBMath1D::PBMath1D()
@@ -74,7 +75,7 @@ PBMath1D::PBMath1D(Quantity maximumRadius,
 		   BeamSquint squint,
 		   Bool useSymmetricBeam) :
   PBMathInterface(isThisVP, squint, useSymmetricBeam),
-  wideFit_p(False),maximumRadius_p(maximumRadius),
+  wideFit_p(false),maximumRadius_p(maximumRadius),
   refFreq_p(refFreq),
   composite_p(2048)
 {
@@ -192,8 +193,8 @@ void  PBMath1D::refineSize(Vector<Float>& blc, Vector<Float>& trc, const IPositi
 			    SkyJones::SizeType sizeType)
 {
   // Round Down and Up for BLC and TRC, make them integers
-  Vector<Bool> blcTrouble(blc.nelements(), False);
-  Vector<Bool> trcTrouble(blc.nelements(), False);
+  Vector<Bool> blcTrouble(blc.nelements(), false);
+  Vector<Bool> trcTrouble(blc.nelements(), false);
   Vector<Float> d1(2);
   Vector<Float> d2(2);
 
@@ -204,11 +205,11 @@ void  PBMath1D::refineSize(Vector<Float>& blc, Vector<Float>& trc, const IPositi
 
    if (blc(i) < 0) {
       blc(i) = 0;
-      blcTrouble(i) = True;
+      blcTrouble(i) = true;
     }
    if (trc(i) > shape(i)-1) {
       trc(i) = shape(i)-1;
-      trcTrouble(i) = True;
+      trcTrouble(i) = true;
     }
 
     d1(i) = trc(i) - blc(i) + 1;
@@ -309,14 +310,14 @@ PBMath1D::extentguts (const CoordinateSystem& coords, const MDirection& pointDir
   Double delta = maximumRadius_p.getValue("rad") *  1.0e+9 / freq;
   {
     MDirection edgeDir( pointDirE );
-    edgeDir.shift( delta, 0.0, True);
+    edgeDir.shift( delta, 0.0, true);
     edgeWorld(0) = edgeDir.getAngle().getValue("deg")(0);
     edgeWorld(1) = edgeDir.getAngle().getValue("deg")(1);
     directionCoord.toPixel(edge1Pixel, edgeWorld);
   }
   {
     MDirection edgeDir( pointDirE );
-    edgeDir.shift( -delta, 0.0, True);
+    edgeDir.shift( -delta, 0.0, true);
     edgeWorld(0) = edgeDir.getAngle().getValue("deg")(0);
     edgeWorld(1) = edgeDir.getAngle().getValue("deg")(1);
     directionCoord.toPixel(edge2Pixel, edgeWorld);
@@ -330,14 +331,14 @@ PBMath1D::extentguts (const CoordinateSystem& coords, const MDirection& pointDir
   }
   {
     MDirection edgeDir( pointDirE );
-    edgeDir.shift( 0.0, delta, True);
+    edgeDir.shift( 0.0, delta, true);
     edgeWorld(0) = edgeDir.getAngle().getValue("deg")(0);
     edgeWorld(1) = edgeDir.getAngle().getValue("deg")(1);
     directionCoord.toPixel(edge1Pixel, edgeWorld);
   }
   {
     MDirection edgeDir( pointDirE );
-    edgeDir.shift( 0.0, -delta, True);
+    edgeDir.shift( 0.0, -delta, true);
     edgeWorld(0) = edgeDir.getAngle().getValue("deg")(0);
     edgeWorld(1) = edgeDir.getAngle().getValue("deg")(1);
     directionCoord.toPixel(edge2Pixel, edgeWorld);
@@ -1094,15 +1095,15 @@ void PBMath1D::summary(Int nValues)
 Bool PBMath1D::ok()
 {
   if (vp_p.nelements() == 0) {
-    return False;
+    return false;
   } else if (maximumRadius_p.getValue() <= 0.0) {
-    return False;
+    return false;
   } else if (refFreq_p.getValue() <= 0.0) {
-    return False;
+    return false;
   } else if (inverseIncrementRadius_p <= 0.0) {
-    return False;
+    return false;
   } else {
-    return True;
+    return true;
   }
 };
 

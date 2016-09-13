@@ -18,24 +18,24 @@
 
 namespace LibAIR2 {
 
-  void loadSpec(const casa::MeasurementSet &ms,
+  void loadSpec(const casacore::MeasurementSet &ms,
 		const std::vector<int> &spws,
 		MSSpec &s)
   {
-    casa::MSSpectralWindow specTable(ms.spectralWindow());
+    casacore::MSSpectralWindow specTable(ms.spectralWindow());
     // Number of spectral windows in this measurement set
 
     const size_t nspw=specTable.nrow();
 
     // Number of channels 
-    casa::ROScalarColumn<casa::Int> nc
+    casacore::ROScalarColumn<casacore::Int> nc
       (specTable,
-       casa::MSSpectralWindow::columnName(casa::MSSpectralWindow::NUM_CHAN));
+       casacore::MSSpectralWindow::columnName(casacore::MSSpectralWindow::NUM_CHAN));
 
     // Frequencies of the channels
-    casa::ROArrayColumn<casa::Double> 
+    casacore::ROArrayColumn<casacore::Double>
       chfreq(specTable,
-	     casa::MSSpectralWindow::columnName(casa::MSSpectralWindow::CHAN_FREQ));
+	     casacore::MSSpectralWindow::columnName(casacore::MSSpectralWindow::CHAN_FREQ));
 
     std::vector<int> spwsout = spws;
     size_t nspwout = spwsout.size();
@@ -55,12 +55,12 @@ namespace LibAIR2 {
       size_t spwid=spwsout[ispw];
 
       s.spws[ispw].spwid=spwid;
-      casa::Array<casa::Double> freq;
-      chfreq.get(spwid, freq, casa::True);
+      casacore::Array<casacore::Double> freq;
+      chfreq.get(spwid, freq, casacore::True);
       s.spws[ispw].chf.resize(nc(spwid));
       for(size_t i=0; i< static_cast<size_t>(nc(spwid)); ++i)
       {
-	s.spws[ispw].chf[i]=freq(casa::IPosition(1,i));
+	s.spws[ispw].chf[i]=freq(casacore::IPosition(1,i));
       }
     }
   }
@@ -89,15 +89,15 @@ namespace LibAIR2 {
   }
 
   std::map<size_t, size_t>
-  SPWDataDescMap(const casa::MeasurementSet &ms)
+  SPWDataDescMap(const casacore::MeasurementSet &ms)
   {
     std::map<size_t, size_t> res;
-    const casa::MSDataDescription dd(ms.dataDescription());
+    const casacore::MSDataDescription dd(ms.dataDescription());
     const size_t n=dd.nrow();
 
-    casa::ROScalarColumn<casa::Int> 
+    casacore::ROScalarColumn<casacore::Int>
       spwid(dd,
-	    casa::MSDataDescription::columnName(casa::MSDataDescriptionEnums::SPECTRAL_WINDOW_ID));
+	    casacore::MSDataDescription::columnName(casacore::MSDataDescriptionEnums::SPECTRAL_WINDOW_ID));
 
 
     for(size_t i=0; i<n; ++i)
@@ -110,15 +110,15 @@ namespace LibAIR2 {
   }
 
   std::map<size_t, size_t>
-  DataDescSPWMap(const casa::MeasurementSet &ms)
+  DataDescSPWMap(const casacore::MeasurementSet &ms)
   {
     std::map<size_t, size_t> res;
-    const casa::MSDataDescription dd(ms.dataDescription());
+    const casacore::MSDataDescription dd(ms.dataDescription());
     const size_t n=dd.nrow();
 
-    casa::ROScalarColumn<casa::Int> 
+    casacore::ROScalarColumn<casacore::Int>
       spwid(dd,
-	    casa::MSDataDescription::columnName(casa::MSDataDescriptionEnums::SPECTRAL_WINDOW_ID));
+	    casacore::MSDataDescription::columnName(casacore::MSDataDescriptionEnums::SPECTRAL_WINDOW_ID));
 
 
     for(size_t i=0; i<n; ++i)
@@ -130,13 +130,13 @@ namespace LibAIR2 {
     return res;
   }
 
-  void dataSPWs(const casa::MeasurementSet &ms,
+  void dataSPWs(const casacore::MeasurementSet &ms,
 		std::vector<size_t> &spw,
 		const std::vector<size_t> &sortedI)
   {
     std::map<size_t, size_t> map=DataDescSPWMap(ms);
-    const casa::ROMSMainColumns cols(ms);
-    const casa::ROScalarColumn<casa::Int> &dd=cols.dataDescId();
+    const casacore::ROMSMainColumns cols(ms);
+    const casacore::ROScalarColumn<casacore::Int> &dd=cols.dataDescId();
     const size_t nrows=dd.nrow();          
     spw.resize(nrows);
     for(size_t ii=0; ii<nrows; ++ii)
@@ -147,8 +147,8 @@ namespace LibAIR2 {
     }
   }
 
-  size_t numSPWs(const casa::MeasurementSet &ms){
-    casa::MSSpectralWindow specTable(ms.spectralWindow());
+  size_t numSPWs(const casacore::MeasurementSet &ms){
+    casacore::MSSpectralWindow specTable(ms.spectralWindow());
 
     return specTable.nrow();
   }

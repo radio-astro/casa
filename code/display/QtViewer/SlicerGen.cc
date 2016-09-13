@@ -29,6 +29,7 @@
 #include <display/Utilities/ImageProperties.h>
 #include <algorithm>
 
+using namespace casacore;
 namespace casa {
 	namespace viewer {
 

@@ -50,6 +50,7 @@
 #include <casa/System/ProgressMeter.h>
 #include <casa/sstream.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 SynDataSampling::SynDataSampling(MeasurementSet& ms,
@@ -98,7 +99,7 @@ SynDataSampling::SynDataSampling(MeasurementSet& ms,
   uvOffset(1)=ny/2;
 
   // Now fill in the data and position columns
-  ProgressMeter pm(1.0, Double(ms.nrow()), "Sampling Data", "", "", "", True);
+  ProgressMeter pm(1.0, Double(ms.nrow()), "Sampling Data", "", "", "", true);
 
   // Loop over all visibilities
   Int cohDone = 0;

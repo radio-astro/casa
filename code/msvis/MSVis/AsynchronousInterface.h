@@ -62,35 +62,35 @@ public:
 
     ChannelSelection () {}
 
-    ChannelSelection (const Block< Vector<Int> > & blockNGroup,
-                      const Block< Vector<Int> > & blockStart,
-                      const Block< Vector<Int> > & blockWidth,
-                      const Block< Vector<Int> > & blockIncr,
-                      const Block< Vector<Int> > & blockSpw);
+    ChannelSelection (const casacore::Block< casacore::Vector<casacore::Int> > & blockNGroup,
+                      const casacore::Block< casacore::Vector<casacore::Int> > & blockStart,
+                      const casacore::Block< casacore::Vector<casacore::Int> > & blockWidth,
+                      const casacore::Block< casacore::Vector<casacore::Int> > & blockIncr,
+                      const casacore::Block< casacore::Vector<casacore::Int> > & blockSpw);
 
     ChannelSelection (const ChannelSelection & other);
     ChannelSelection & operator= (const ChannelSelection & other);
 
 
     void
-    get (Block< Vector<Int> > & blockNGroup,
-         Block< Vector<Int> > & blockStart,
-         Block< Vector<Int> > & blockWidth,
-         Block< Vector<Int> > & blockIncr,
-         Block< Vector<Int> > & blockSpw) const;
+    get (casacore::Block< casacore::Vector<casacore::Int> > & blockNGroup,
+         casacore::Block< casacore::Vector<casacore::Int> > & blockStart,
+         casacore::Block< casacore::Vector<casacore::Int> > & blockWidth,
+         casacore::Block< casacore::Vector<casacore::Int> > & blockIncr,
+         casacore::Block< casacore::Vector<casacore::Int> > & blockSpw) const;
 
 protected:
 
-    void copyBlock (const Block <Vector<Int> > & src,
-                    Block <Vector<Int> > & to) const;
+    void copyBlock (const casacore::Block <casacore::Vector<casacore::Int> > & src,
+                    casacore::Block <casacore::Vector<casacore::Int> > & to) const;
 
 private:
 
-    Block< Vector<Int> > blockNGroup_p;
-    Block< Vector<Int> > blockStart_p;
-    Block< Vector<Int> > blockWidth_p;
-    Block< Vector<Int> > blockIncr_p;
-    Block< Vector<Int> > blockSpw_p;
+    casacore::Block< casacore::Vector<casacore::Int> > blockNGroup_p;
+    casacore::Block< casacore::Vector<casacore::Int> > blockStart_p;
+    casacore::Block< casacore::Vector<casacore::Int> > blockWidth_p;
+    casacore::Block< casacore::Vector<casacore::Int> > blockIncr_p;
+    casacore::Block< casacore::Vector<casacore::Int> > blockSpw_p;
 };
 
 
@@ -98,28 +98,28 @@ class SelectChannelModifier : public RoviaModifier {
 
 public:
 
-    SelectChannelModifier (Int nGroup, Int start, Int width, Int increment, Int spectralWindow);
-    SelectChannelModifier (const Block< Vector<Int> > & blockNGroup,
-                           const Block< Vector<Int> > & blockStart,
-                           const Block< Vector<Int> > & blockWidth,
-                           const Block< Vector<Int> > & blockIncr,
-                           const Block< Vector<Int> > & blockSpw);
+    SelectChannelModifier (casacore::Int nGroup, casacore::Int start, casacore::Int width, casacore::Int increment, casacore::Int spectralWindow);
+    SelectChannelModifier (const casacore::Block< casacore::Vector<casacore::Int> > & blockNGroup,
+                           const casacore::Block< casacore::Vector<casacore::Int> > & blockStart,
+                           const casacore::Block< casacore::Vector<casacore::Int> > & blockWidth,
+                           const casacore::Block< casacore::Vector<casacore::Int> > & blockIncr,
+                           const casacore::Block< casacore::Vector<casacore::Int> > & blockSpw);
 
     void apply (ROVisibilityIterator *) const;
 
 private:
 
-    Bool channelBlocks_p;
+    casacore::Bool channelBlocks_p;
     ChannelSelection channelSelection_p;
-    Int increment_p;
-    Int nGroup_p;
-    Int spectralWindow_p;
-    Int start_p;
-    Int width_p;
+    casacore::Int increment_p;
+    casacore::Int nGroup_p;
+    casacore::Int spectralWindow_p;
+    casacore::Int start_p;
+    casacore::Int width_p;
 
     void print (std::ostream & o) const;
-    String toCsv (const Block< Vector<Int> > & bv) const;
-    String toCsv (const Vector<Int> & v) const;
+    casacore::String toCsv (const casacore::Block< casacore::Vector<casacore::Int> > & bv) const;
+    casacore::String toCsv (const casacore::Vector<casacore::Int> & v) const;
 
 };
 
@@ -127,12 +127,12 @@ class SetIntervalModifier : public RoviaModifier {
 
 public:
 
-    SetIntervalModifier  (Double timeInterval);
+    SetIntervalModifier  (casacore::Double timeInterval);
     void apply (ROVisibilityIterator *) const;
 
 private:
 
-    Double timeInterval_p;
+    casacore::Double timeInterval_p;
 
     void print (std::ostream & o) const;
 };
@@ -142,16 +142,16 @@ class SetRowBlockingModifier : public RoviaModifier {
 
 public:
 
-    SetRowBlockingModifier (Int nRows);
+    SetRowBlockingModifier (casacore::Int nRows);
     void apply (ROVisibilityIterator *) const;
 
 private:
 
-    Int nRows_p;
-    Int nGroup_p;
-    Int spectralWindow_p;
-    Int start_p;
-    Int width_p;
+    casacore::Int nRows_p;
+    casacore::Int nGroup_p;
+    casacore::Int spectralWindow_p;
+    casacore::Int start_p;
+    casacore::Int width_p;
 
     void print (std::ostream & o) const;
 };
@@ -178,18 +178,18 @@ class SelectVelocityModifier : public RoviaModifier {
 
 public:
 
-    SelectVelocityModifier (Int nChan, const MVRadialVelocity& vStart, const MVRadialVelocity& vInc,
-                            MRadialVelocity::Types rvType, MDoppler::Types dType, Bool precise);
+    SelectVelocityModifier (casacore::Int nChan, const casacore::MVRadialVelocity& vStart, const casacore::MVRadialVelocity& vInc,
+                            casacore::MRadialVelocity::Types rvType, casacore::MDoppler::Types dType, casacore::Bool precise);
     void apply (ROVisibilityIterator *) const;
 
 private:
 
-    MDoppler::Types dType_p;
-    Int nChan_p;
-    Bool precise_p;
-    MRadialVelocity::Types rvType_p;
-    MVRadialVelocity vInc_p;
-    MVRadialVelocity vStart_p;
+    casacore::MDoppler::Types dType_p;
+    casacore::Int nChan_p;
+    casacore::Bool precise_p;
+    casacore::MRadialVelocity::Types rvType_p;
+    casacore::MVRadialVelocity vInc_p;
+    casacore::MVRadialVelocity vStart_p;
 
     virtual void print (std::ostream & o) const;
 
@@ -242,7 +242,7 @@ private:
 // </motivation>
 //
 // <thrown>
-//    <li>AipsError for unhandleable errors
+//    <li>casacore::AipsError for unhandleable errors
 // </thrown>
 //
 // <todo asof="yyyy/mm/dd">
@@ -261,7 +261,7 @@ public:
     SubChunkPair  getSubChunkPair () const;
     VisBufferAsync * getVisBuffer ();
     //const VisBufferAsync * getVisBuffer () const;
-    Bool isSubChunk (SubChunkPair) const;
+    casacore::Bool isSubChunk (SubChunkPair) const;
 
     VisBufferAsync * releaseVisBufferAsync ();
     void reset ();
@@ -331,10 +331,10 @@ class VLAT;
 //    does not block the main thread except potentially to acquire the mutex.
 //
 //    The concurrency scheme is fairly sound except for the possibility of low-level data sharing through
-//    CASA data structures.  Some of the CASA containers (e.g., Array<T>) can potentially share storage
+//    CASA data structures.  Some of the CASA containers (e.g., casacore::Array<T>) can potentially share storage
 //    although it appears that normal operation they do not.  Some problems have been encountered with
 //    objects that share data via reference-counted pointers.  For instance, objects derived from
-//    MeasBase<T,U> (e.g., MDirection, MPosition, MEpoch, etc.) share the object that serves as the
+//    casacore::MeasBase<T,U> (e.g., casacore::MDirection, casacore::MPosition, casacore::MEpoch, etc.) share the object that serves as the
 //    frame of reference for the measurement; only by converting the object to text and back again can
 //    a user easily obtain a copy which does not share values with another.  It is possible that other
 //    objects deep many layers down a complex object may still be waiting to trip up VlaData's
@@ -343,10 +343,10 @@ class VLAT;
 //    On unusual interaction mediated by VlaData occurs when it is necessary to reset the visibility
 //    iterator back to the start of a MeasurementSet.  This usually happens either at the start of the MS
 //    sweep (e.g., to reset the row blocking factor of the iterator) or at the end (e.g., to make an
-//    additional pass through the MS).  The main thread requests a reset of the VI and then is blocked
+//    additional pass through the casacore::MS).  The main thread requests a reset of the VI and then is blocked
 //    until the VI is reset.  The sweepTerminationRequested_p variable is set to true; when the VLAT
 //    discovers that this variable is true it resets the buffer ring, repositions its VI to the start
-//    of the MS and then informs the blocked main thread by setting viResetComplete to true and
+//    of the casacore::MS and then informs the blocked main thread by setting viResetComplete to true and
 //    signalling vlaDataChanged_p.
 // </synopsis>
 //
@@ -370,18 +370,18 @@ class VlaData {
 
 public:
 
-    VlaData (Int maxNBuffers, async::Mutex & mutex);
+    VlaData (casacore::Int maxNBuffers, async::Mutex & mutex);
     ~VlaData ();
 
-    Bool fillCanStart () const;
+    casacore::Bool fillCanStart () const;
     void fillComplete (VlaDatum * datum);
     VlaDatum * fillStart (SubChunkPair, const ThreadTimes & fillStartTime);
     asyncio::ChannelSelection getChannelSelection () const;
     void initialize (const AsynchronousInterface *);
-    void insertValidChunk (Int chunkNumber);
+    void insertValidChunk (casacore::Int chunkNumber);
     void insertValidSubChunk (SubChunkPair);
-    Bool isValidChunk (Int chunkNumber) const;
-    Bool isValidSubChunk (SubChunkPair) const;
+    casacore::Bool isValidChunk (casacore::Int chunkNumber) const;
+    casacore::Bool isValidSubChunk (SubChunkPair) const;
     void readComplete (SubChunkPair);
     VisBufferAsync * readStart (SubChunkPair);
     void resetBufferData ();
@@ -390,17 +390,17 @@ public:
 
     //static void debugBlock ();
     //static void debugUnblock ();
-    //static Bool logThis (Int level);
+    //static casacore::Bool logThis (casacore::Int level);
 
-    //static Bool loggingInitialized_p;
-    //static Int logLevel_p;
+    //static casacore::Bool loggingInitialized_p;
+    //static casacore::Int logLevel_p;
 
 protected:
 
 private:
 
     typedef std::queue<VlaDatum *> Data;
-    typedef std::queue<Int> ValidChunks;
+    typedef std::queue<casacore::Int> ValidChunks;
     typedef std::queue<SubChunkPair> ValidSubChunks;
 
     class Timing {
@@ -424,22 +424,22 @@ private:
     asyncio::ChannelSelection     channelSelection_p; // last channels selected for the VI in use
     Data                          data_p;             // Buffer queue
     const AsynchronousInterface * interface_p;
-    const Int                     MaxNBuffers_p;
+    const casacore::Int                     MaxNBuffers_p;
     async::Mutex &                mutex_p; // provided by Asynchronous interface
     Timing                        timing_p;
-    mutable ValidChunks           validChunks_p;       // Queue of valid chunk numbers
-    mutable ValidSubChunks        validSubChunks_p; // Queue of valid subchunk pairs
+    mutable ValidChunks           validChunks_p;       // casacore::Queue of valid chunk numbers
+    mutable ValidSubChunks        validSubChunks_p; // casacore::Queue of valid subchunk pairs
 
 
-    Int clock (Int arg, Int base);
-    String makeReport ();
+    casacore::Int clock (casacore::Int arg, casacore::Int base);
+    casacore::String makeReport ();
 
-    Bool statsEnabled () const;
+    casacore::Bool statsEnabled () const;
     void terminateSweep ();
 
     //// static Semaphore debugBlockSemaphore_p; // used to block a thread for debugging
 
-    static Bool initializeLogging ();
+    static casacore::Bool initializeLogging ();
 
     // Illegal operations
 
@@ -554,7 +554,7 @@ public:
     ~WriteQueue ();
 
     WriteData * dequeue ();
-    Bool empty (Bool alreadyLocked = False);
+    casacore::Bool empty (casacore::Bool alreadyLocked = false);
     void enqueue (WriteData * writeData);
 
     void initialize (const AsynchronousInterface *);
@@ -589,21 +589,21 @@ public:
     VLAT * getVlat ();
     WriteQueue & getWriteQueue ();
     void initialize ();
-    Bool isSweepTerminationRequested () const;
-    Bool isLookaheadTerminationRequested () const;
+    casacore::Bool isSweepTerminationRequested () const;
+    casacore::Bool isLookaheadTerminationRequested () const;
     void notifyAllInterfaceChanged () const;
     void requestViReset ();
-    pair<Bool, RoviaModifiers> resetVi ();
+    pair<casacore::Bool, RoviaModifiers> resetVi ();
     void terminate ();
     void terminateLookahead ();
     void terminateSweep ();
     RoviaModifiers transferRoviaModifiers ();
     void viResetComplete ();
-    Bool viResetRequested ();
+    casacore::Bool viResetRequested ();
     void waitForInterfaceChange (async::UniqueLock & uniqueLock) const;
 
-    static Bool initializeLogging ();
-    static Bool logThis (Int level);
+    static casacore::Bool initializeLogging ();
+    static casacore::Bool logThis (casacore::Int level);
 
 private:
 
@@ -611,19 +611,19 @@ private:
                                                       // o VisBuffer consumed
                                                       // o Write data queued
                                                       // o Sweep or thread termination requested
-    volatile Bool             lookaheadTerminationRequested_p; // True to request thread termination
-    mutable async::Mutex      mutex_p;                // Mutex protecting access to concurrent data
+    volatile casacore::Bool             lookaheadTerminationRequested_p; // true to request thread termination
+    mutable async::Mutex      mutex_p;                // casacore::Mutex protecting access to concurrent data
     asyncio::RoviaModifiers   roviaModifiers_p;
-    volatile Bool             sweepTerminationRequested_p;     // True to request sweep termination
+    volatile casacore::Bool             sweepTerminationRequested_p;     // true to request sweep termination
                                                                // (e.g., prior to rewinding
-    volatile Bool             viResetComplete_p; // VI reset process has completed
-    volatile Bool             viResetRequested_p; // VI reset has been requested
+    volatile casacore::Bool             viResetComplete_p; // VI reset process has completed
+    volatile casacore::Bool             viResetRequested_p; // VI reset has been requested
     VlaData                   vlaData_p;          // Lookahead data
     VLAT *                    vlat_p;             // Lookahead thread
-    WriteQueue                writeQueue_p;       // Data to be written (writable VIs only)
+    WriteQueue                writeQueue_p;       // casacore::Data to be written (writable VIs only)
 
-    static Bool loggingInitialized_p;
-    static Int logLevel_p;
+    static casacore::Bool loggingInitialized_p;
+    static casacore::Int logLevel_p;
 };
 
 } // end namespace asyncio

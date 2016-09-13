@@ -81,8 +81,8 @@ class TimeVarVisJonesMBuf : public VisJonesMBuf
   // their specified values. Non-index columns will be set 
   // to default values, and there is no connection to an 
   // underlying calibration table iterator in this case.
-  TimeVarVisJonesMBuf (const Vector<Int>& calIndices, 
-		       const Block<Vector<Int> >& indexValues);
+  TimeVarVisJonesMBuf (const casacore::Vector<casacore::Int>& calIndices, 
+		       const casacore::Block<casacore::Vector<casacore::Int> >& indexValues);
 
   // Construct from a calibration table iterator. The calibration
   // buffer will remain synchronized with the iterator.
@@ -140,8 +140,8 @@ class PJonesMBuf : public TimeVarVisJonesMBuf
   // their specified values. Non-index columns will be set 
   // to default values, and there is no connection to an 
   // underlying calibration table iterator in this case.
-  PJonesMBuf (const Vector<Int>& calIndices, 
-	      const Block<Vector<Int> >& indexValues);
+  PJonesMBuf (const casacore::Vector<casacore::Int>& calIndices, 
+	      const casacore::Block<casacore::Vector<casacore::Int> >& indexValues);
 
   // Construct from a calibration table iterator. The calibration
   // buffer will remain synchronized with the iterator.
@@ -199,8 +199,8 @@ class CJonesMBuf : public TimeVarVisJonesMBuf
   // their specified values. Non-index columns will be set 
   // to default values, and there is no connection to an 
   // underlying calibration table iterator in this case.
-  CJonesMBuf (const Vector<Int>& calIndices, 
-	      const Block<Vector<Int> >& indexValues);
+  CJonesMBuf (const casacore::Vector<casacore::Int>& calIndices, 
+	      const casacore::Block<casacore::Vector<casacore::Int> >& indexValues);
 
   // Construct from a calibration table iterator. The calibration
   // buffer will remain synchronized with the iterator.

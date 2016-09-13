@@ -56,6 +56,7 @@
 #include <stdcasa/version.h>
 
 
+using namespace casacore;
 namespace casa {
 
 ///////////////////////////////

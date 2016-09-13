@@ -32,11 +32,15 @@
 //# Includes
 #include <synthesis/MeasurementEquations/MatrixNACleaner.h>
 #include <casa/Utilities/CountedPtr.h>
+namespace casacore{
+
+template <class T> class Matrix;
+template <class T> class ImageInterface;
+}
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Forward Declarations
-template <class T> class Matrix;
-template <class T> class ImageInterface;
 
 
 
@@ -73,7 +77,7 @@ template <class T> class ImageInterface;
 // </motivation>
 //
 // <thrown>
-// <li> AipsError: if psf has more dimensions than the model. 
+// <li> casacore::AipsError: if psf has more dimensions than the model. 
 // </thrown>
 //
 
@@ -85,7 +89,7 @@ class ImageNACleaner
   //Default
   ImageNACleaner();
   // Create a cleaner with a psf and dirty image
-  ImageNACleaner(ImageInterface<Float>& psf, ImageInterface<Float>& dirty);
+  ImageNACleaner(casacore::ImageInterface<casacore::Float>& psf, casacore::ImageInterface<casacore::Float>& dirty);
   //assignmemnt constructor
   ImageNACleaner(const ImageNACleaner& other);
   //assignment operator
@@ -95,9 +99,9 @@ class ImageNACleaner
   ~ImageNACleaner();
   
   // Update the dirty image only
-  void setDirty(ImageInterface<Float> & dirty);
+  void setDirty(casacore::ImageInterface<casacore::Float> & dirty);
   // Change the psf image 
-  void setPsf(ImageInterface<Float> & psf);
+  void setPsf(casacore::ImageInterface<casacore::Float> & psf);
 
  
  
@@ -108,17 +112,17 @@ class ImageNACleaner
   // masksupport is +-number of pixel around a peak to remember
   // memtype is memory function to use 0- no memory standard clean, 1 weak memory, 2 medium, 3 strong
   // numsigma: keep memory of position if peak is above this value 
-  void setcontrol(const Int niter,
-		  const Float gain, const Quantity& aThreshold,
-		  const Int masksupp=3, const Int memtype=2, const Float numSigma=5.0);
+  void setcontrol(const casacore::Int niter,
+		  const casacore::Float gain, const casacore::Quantity& aThreshold,
+		  const casacore::Int masksupp=3, const casacore::Int memtype=2, const casacore::Float numSigma=5.0);
   
   
   // return how many iterations we did do
-  Int iteration() const ;
+  casacore::Int iteration() const ;
  
   
   // what iteration number to start on
-  void startingIteration(const Int starting = 0);
+  void startingIteration(const casacore::Int starting = 0);
 
   // Clean an image. 
   //return value gives you a hint of what's happening
@@ -127,35 +131,35 @@ class ImageNACleaner
   // -1 = not converged and stopped on cleaning consecutive smallest scale
   // -2 = not converged and either large scale hit negative or diverging 
   // -3 = clean is diverging rather than converging 
-  Int clean(ImageInterface<Float> & model, 
-	    const Int niter, const Float gain, const Quantity& threshold, const Int masksupp=3,
-	    const Int memType=2, const Float numsigma=5.0);
+  casacore::Int clean(casacore::ImageInterface<casacore::Float> & model, 
+	    const casacore::Int niter, const casacore::Float gain, const casacore::Quantity& threshold, const casacore::Int masksupp=3,
+	    const casacore::Int memType=2, const casacore::Float numsigma=5.0);
   // Set the mask
   // mask - input mask lattice
   // This is where the algorithm searched...the value of the mask shows the weight 
   //importance
   // code is exactly the same as before this parameter has been introduced.
-  void setMask(ImageInterface<Float> & mask);
+  void setMask(casacore::ImageInterface<casacore::Float> & mask);
   //Max residual after last clean
-  Float maxResidual() {return maxResidual_p;};
+  casacore::Float maxResidual() {return maxResidual_p;};
 
  private:
   //Helper function to setup some param
-  Bool setupMatCleaner(const Int niter, const Float gain, 
-		       const Quantity& threshold, const Int supp=3, const Int memType=2, const Float numsigma=5.0);
+  casacore::Bool setupMatCleaner(const casacore::Int niter, const casacore::Float gain, 
+		       const casacore::Quantity& threshold, const casacore::Int supp=3, const casacore::Int memType=2, const casacore::Float numsigma=5.0);
   MatrixNACleaner matClean_p;
-  CountedPtr<ImageInterface<Float> > psf_p;
-  CountedPtr<ImageInterface<Float> >dirty_p;
-  CountedPtr<ImageInterface<Float> > mask_p;
-  Int nPsfChan_p;
-  Int nImChan_p;
-  Int nPsfPol_p;
-  Int nImPol_p;
-  Int chanAxis_p;
-  Int polAxis_p;
-  Int nMaskChan_p;
-  Int nMaskPol_p;
-  Float maxResidual_p;
+  casacore::CountedPtr<casacore::ImageInterface<casacore::Float> > psf_p;
+  casacore::CountedPtr<casacore::ImageInterface<casacore::Float> >dirty_p;
+  casacore::CountedPtr<casacore::ImageInterface<casacore::Float> > mask_p;
+  casacore::Int nPsfChan_p;
+  casacore::Int nImChan_p;
+  casacore::Int nPsfPol_p;
+  casacore::Int nImPol_p;
+  casacore::Int chanAxis_p;
+  casacore::Int polAxis_p;
+  casacore::Int nMaskChan_p;
+  casacore::Int nMaskPol_p;
+  casacore::Float maxResidual_p;
 
 };
 

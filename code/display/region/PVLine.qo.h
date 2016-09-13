@@ -122,8 +122,8 @@ namespace casa {
 			RegionInfo::stats_t *get_ms_stats( MSAsRaster *msar, double x, double y );
 			void generate_nonimage_statistics( DisplayData*, std::list<RegionInfo> * );
 			std::list<SHARED_PTR<RegionInfo> > *generate_dds_centers( );
-			ImageRegion *get_image_region( DisplayData* ) const;
-			RegionInfo *newInfoObject( ImageInterface<Float> *image, PrincipalAxesDD * );
+			casacore::ImageRegion *get_image_region( DisplayData* ) const;
+			RegionInfo *newInfoObject( casacore::ImageInterface<casacore::Float> *image, PrincipalAxesDD * );
 
 			virtual void fetch_region_details( region::RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts,
 			                                   std::vector<std::pair<double,double> > &world_pts ) const;
@@ -156,7 +156,7 @@ namespace casa {
 			typedef std::list<display_element> display_list_t;
 			display_list_t display_list;
 
-            SHARED_PTR<ImageInterface<Float> > generatePVImage( SHARED_PTR<ImageInterface<Float> >, std::string, int, bool );
+            SHARED_PTR<casacore::ImageInterface<casacore::Float> > generatePVImage( SHARED_PTR<casacore::ImageInterface<casacore::Float> >, std::string, int, bool );
 
 		private:
 			bool within_vertex_handle( double x, double y ) const;

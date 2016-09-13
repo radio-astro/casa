@@ -34,6 +34,7 @@
 #include <casa/BasicSL/Constants.h>
 #include <casa/iostream.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	DSEllipse::DSEllipse(const Bool& onlyShowOneHandle) :
@@ -72,7 +73,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			calculateHandlePositions();
 			buildHandles(itsHandleLocation);
 		}
-		itsValid = True;
+		itsValid = true;
 	}
 
 	DSEllipse::~DSEllipse() {
@@ -88,13 +89,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 			if (getFillStyle() == DSClosed::No_Fill) {
 				pix->drawEllipse(itsCenter[0], itsCenter[1], Float(itsMajorAxis/2),
-				                 Float(itsMinorAxis/2), itsAngle, True);
+				                 Float(itsMinorAxis/2), itsAngle, true);
 			} else if (getFillStyle() == DSClosed::Full_Fill) {
 				pix->drawEllipse(itsCenter[0], itsCenter[1], Float(itsMajorAxis/2),
-				                 Float(itsMinorAxis/2),itsAngle, False);
+				                 Float(itsMinorAxis/2),itsAngle, false);
 			} else {
 				pix->drawEllipse(itsCenter[0], itsCenter[1], Float(itsMajorAxis/2),
-				                 Float(itsMinorAxis/2), itsAngle, True);
+				                 Float(itsMinorAxis/2), itsAngle, true);
 				//cerr << "Fill style NYI sorry" << endl;
 			}
 			DSClosed::draw(pix);
@@ -176,7 +177,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Bool DSEllipse::inObject(const Float& xPos, const Float& yPos) {
 
 		if (itsValid) {
-			//Bool inside = False;
+			//Bool inside = false;
 
 			//Not ideal, but ok:
 			Vector <Float> cent(getCenter());
@@ -203,31 +204,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 			return inPolygon(points, xPos, yPos) ; // inside;
 		}
-		return False;
+		return false;
 	}
 
 	Bool DSEllipse::setOptions(const Record& settings) {
-		Bool localChange = False;
+		Bool localChange = false;
 		if (settings.isDefined("angle")) {
 			itsAngle = settings.asFloat("angle");
-			localChange = True;
+			localChange = true;
 		}
 		if (settings.isDefined("majoraxis")) {
 			itsMajorAxis = settings.asFloat("majoraxis");
-			localChange = True;
+			localChange = true;
 		}
 		if (settings.isDefined("minoraxis")) {
 			itsMinorAxis = settings.asFloat("minoraxis");
-			localChange = True;
+			localChange = true;
 		}
 
 		if (settings.isDefined("center")) {
 			Vector<Float> cent(settings.asArrayFloat("center"));
 			setCenter(cent[0], cent[1]);
-			localChange = True;
+			localChange = true;
 		}
 
-		if (DSClosed::setOptions(settings)) localChange = True;
+		if (DSClosed::setOptions(settings)) localChange = true;
 
 		if (itsHandleLocation.nelements() == 0 &&
 		        DisplayShape::getOptions().asBool("hashandles")) {
@@ -282,7 +283,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		} else {
 			calculateHandlePositions();
 			buildHandles(itsHandleLocation);
-			itsValid = True;
+			itsValid = true;
 		}
 	}
 
@@ -324,9 +325,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsAngle = 0;
 		itsMajorAxis = 0;
 		itsMinorAxis = 0;
-		setHasHandles(True);
-		setDrawHandles(True);
-		itsValid = False;
+		setHasHandles(true);
+		setDrawHandles(true);
+		itsValid = false;
 	}
 
 

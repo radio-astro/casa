@@ -28,6 +28,7 @@
 #include <QDebug>
 #include <QtCore/qmath.h>
 
+using namespace casacore;
 namespace casa {
 
 	ColorHistogramScale::ColorHistogramScale(bool invert, int logScale ):QwtLinearColorMap(),
@@ -86,4 +87,5 @@ namespace casa {
 		delete colorDefinition;
 	}
 
+using namespace casacore;
 } /* namespace casa */

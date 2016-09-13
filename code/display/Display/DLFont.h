@@ -90,9 +90,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// <srcblock>
 		// DLFont myFont("Times - Roman");
 		// </srcblock>
-		DLFont(const String& description,
+		DLFont(const casacore::String& description,
 		       const DLFont::FontDescription whatType = DLFont::Name,
-		       const Int& size = 12);
+		       const casacore::Int& size = 12);
 
 		// Copy constructor using copy semantics.
 		DLFont(const DLFont& other);
@@ -108,13 +108,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// an entry in the size field will result in a XLFD with a valid size field.
 		// However, if you do a "setSize", then call this method, the change in
 		// size will not be reflected.
-		String getXValueNoSize();
+		casacore::String getXValueNoSize();
 
 		// Return the current font as a post-script recognisable name
-		//  String getPSValueNoSize();
+		//  casacore::String getPSValueNoSize();
 
 		// Return the current fonts desired size
-		Int getSize();
+		casacore::Int getSize();
 
 		// Return the current font as a XLFD, with the specific size.
 		// NB If there is any matrix transform in the pixel size field
@@ -122,32 +122,32 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// e.g. rotation, extract the desired font size (getSize) and the
 		// font info (getXFontNoSize) seperately before applying required
 		// transforms
-		String getXValue();
+		casacore::String getXValue();
 
 		// Return the current font as a PS recognisable name, with the specific size
 		// 'tagged onto' the end of it.
-		String getPSValue();
+		casacore::String getPSValue();
 
 		// Return the name (as it should be presented to users) of the font.
-		String getName();
+		casacore::String getName();
 
 		// Set the name of the font
-		void setName(const String& newName);
+		void setName(const casacore::String& newName);
 
 		// Set the desired size (pixelSize)
-		void setSize(const Int newSize);
+		void setSize(const casacore::Int newSize);
 
 		// Set the XLFD for this font (if you wish to set at matrix for any fields
 		// e.g. set the size field as a rotation matrix to rotate text, you will
 		// need to handle the size of the text independantly of this class.
 		// You can use the getXValueNoSize for that. i.e. class will not
 		// preserve rotated/scaled text via matrix transforms
-		void setXValue(const String& newX11);
+		void setXValue(const casacore::String& newX11);
 
 		// Set the Postscript representation of this font
-		void setPSValue(const String& newPS);
+		void setPSValue(const casacore::String& newPS);
 
-		Vector<String> getAllNames() {
+		casacore::Vector<casacore::String> getAllNames() {
 			return itsNames;
 		}
 
@@ -156,15 +156,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	private:
 		void fillArrays();
-		Bool lookUp(const String& desc, const DLFont::FontDescription,
-		            Int& returnIndex);
+		casacore::Bool lookUp(const casacore::String& desc, const DLFont::FontDescription,
+		            casacore::Int& returnIndex);
 
-		Vector<String> itsXFonts;
-		Vector<String> itsPSFonts;
-		Vector<String> itsNames;
+		casacore::Vector<casacore::String> itsXFonts;
+		casacore::Vector<casacore::String> itsPSFonts;
+		casacore::Vector<casacore::String> itsNames;
 
-		Int itsSize;
-		Int itsCurrentFont;
+		casacore::Int itsSize;
+		casacore::Int itsCurrentFont;
 	};
 
 

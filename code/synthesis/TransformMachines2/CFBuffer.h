@@ -62,7 +62,7 @@
 // <linto class=CFStore>CFStore</linkto> class is a collection of
 // CFBuffer objects.  A collection of CFStore objects is held and
 // managed by the <linto class=FTMachine>FTMachine</linkto> and the
-// appropriate one, depending on the Time/PA value, polarization and
+// appropriate one, depending on the casacore::Time/PA value, polarization and
 // frequency of the data in the <linkto
 // class=VisBuffer2>VisBuffer2</linkto>, is supplied to the <linkto
 // class=VisibilityResampler>VisibilityResampler</linkto> object for
@@ -74,7 +74,7 @@
 // term and implicitly a function of the frequency).  The <linkto
 // class=CFStore>CFStore</linkto> object holds a list of this object
 // index by the telescope related parameters (antenna1,
-// antenna2, Parallactic Angle or Time, etc.).
+// antenna2, Parallactic Angle or casacore::Time, etc.).
 //
 //</synopsis>
 //
@@ -93,22 +93,28 @@
 //
 
 using namespace std;
+namespace casacore{
+
+    //    extern template class Array<casacore::CountedPtr<CFBuffer> >;
+}
+
+namespace casa {
+
 using namespace casa::vi;
-namespace casa { //# NAMESPACE CASA - BEGIN
   //  template <class T>
-  typedef Complex TT;
+  typedef casacore::Complex TT;
   namespace refim{
     using namespace CFDefs;
 
   struct CFBStruct {
     CFCStruct *CFBStorage;
     int shape[3];
-    Double *freqValues, *wValues, *pointingOffset;
-    Double fIncr, wIncr;
-    Int **muellerElementsIndex, **muellerElements, 
+    casacore::Double *freqValues, *wValues, *pointingOffset;
+    casacore::Double fIncr, wIncr;
+    casacore::Int **muellerElementsIndex, **muellerElements, 
       **conjMuellerElementsIndex, **conjMuellerElements,
       **conjFreqNdxMap, **freqNdxMap;
-    Int nMueller;
+    casacore::Int nMueller;
     
 
     CFCStruct* getCFB(int i, int j, int k)
@@ -124,15 +130,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //------------------------------------------------------------------
     //
     CFBuffer(): wValues_p(), maxXSupport_p(-1), maxYSupport_p(-1), pointingOffset_p(), cfHitsStats(),
-		freqNdxMapsReady_p(False), freqNdxMap_p(), conjFreqNdxMap_p()
+		freqNdxMapsReady_p(false), freqNdxMap_p(), conjFreqNdxMap_p()
     {};
     
-    CFBuffer(Int maxXSup, Int maxYSup):
+    CFBuffer(casacore::Int maxXSup, casacore::Int maxYSup):
       wValues_p(), maxXSupport_p(maxXSup), maxYSupport_p(maxYSup), pointingOffset_p(), cfHitsStats(),
-      freqNdxMapsReady_p(False), freqNdxMap_p(), conjFreqNdxMap_p()
+      freqNdxMapsReady_p(false), freqNdxMap_p(), conjFreqNdxMap_p()
     {
       // storage_p.resize(1,1,1); 
-      // storage_p(0,0,0) = new Array<TT>(dataPtr);
+      // storage_p(0,0,0) = new casacore::Array<TT>(dataPtr);
       // coordSys_p.resize(1,1,1); 
       // coordSys_p(0,0,0) = cs;
     };
@@ -140,86 +146,86 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     ~CFBuffer() 
     {
       //cerr << "############### " << "~CFBuffer() called" << endl;
-      // LogIO log_l(LogOrigin("CFBuffer","~CFBuffer[R&D]"));
+      // casacore::LogIO log_l(casacore::LogOrigin("CFBuffer","~CFBuffer[R&D]"));
       // log_l << "CF Hits stats gathered: " << cfHitsStats << endl;
     };
     
-    CountedPtr<CFBuffer> clone();
-    void allocCells(const Cube<CountedPtr<CFCell> >& cells);
+    casacore::CountedPtr<CFBuffer> clone();
+    void allocCells(const casacore::Cube<casacore::CountedPtr<CFCell> >& cells);
     void setParams(const CFBuffer& other);
     //
-    //============================= Functional Parts ============================
+    //============================= casacore::Functional Parts ============================
     //------------------------------------------------------------------
     //
     //    CFBuffer& operator=(const CFBuffer& other);
     //
-    // Get the single convolution function as an Array<T> for the
+    // Get the single convolution function as an casacore::Array<T> for the
     // supplied value of the frequency and the muellerElement.
     // Mueller element is essentially the polarization product, but
     // can be any of the of 16 elements of the outer product.
     //
     //-------------------------------------------------------------------------
     //
-    inline Int nChan() {return nChan_p;}
-    inline Int nW() {return nW_p;}
-    inline Int nMuellerElements() {return nPol_p;}
-    inline IPosition shape() {IPosition shp(3,nChan_p, nW_p, nPol_p); return shp;}
+    inline casacore::Int nChan() {return nChan_p;}
+    inline casacore::Int nW() {return nW_p;}
+    inline casacore::Int nMuellerElements() {return nPol_p;}
+    inline casacore::IPosition shape() {casacore::IPosition shp(3,nChan_p, nW_p, nPol_p); return shp;}
     
-    inline Vector<Double> getFreqList() {return freqValues_p;};
-    inline Vector<Double> getWList() {return wValues_p;};
+    inline casacore::Vector<casacore::Double> getFreqList() {return freqValues_p;};
+    inline casacore::Vector<casacore::Double> getWList() {return wValues_p;};
     
-    CFCell& getCFCell(const Double& freqVal, const Double& wValue, 
-		      const Int & muellerElement); 
+    CFCell& getCFCell(const casacore::Double& freqVal, const casacore::Double& wValue, 
+		      const casacore::Int & muellerElement); 
     // muellerElement: (i,j) of the Mueller Matrix
-    CountedPtr<CFCell>& getCFCellPtr(const Double& freqVal, const Double& wValue, 
-				     const Int & muellerElement); 
-    CFCell& operator()(const Int& i, const Int& j, const Int& k) {return *cfCells_p(i,j,k);}
-    CFCell& getCFCell(const Int& i, const Int& j, const Int& k);
+    casacore::CountedPtr<CFCell>& getCFCellPtr(const casacore::Double& freqVal, const casacore::Double& wValue, 
+				     const casacore::Int & muellerElement); 
+    CFCell& operator()(const casacore::Int& i, const casacore::Int& j, const casacore::Int& k) {return *cfCells_p(i,j,k);}
+    CFCell& getCFCell(const casacore::Int& i, const casacore::Int& j, const casacore::Int& k);
 
-    CountedPtr<CFCell >& getCFCellPtr(const Int& i, const Int& j, const Int& k);
+    casacore::CountedPtr<CFCell >& getCFCellPtr(const casacore::Int& i, const casacore::Int& j, const casacore::Int& k);
     
     //=========================================================================
-    Array<TT>& getCF(const Double& freqVal, const Double& wValue, 
-		     const Int & muellerElement)
+    casacore::Array<TT>& getCF(const casacore::Double& freqVal, const casacore::Double& wValue, 
+		     const casacore::Int & muellerElement)
     {return *(getCFCell(freqVal, wValue, muellerElement).storage_p);}
     // muellerElement: (i,j) of the Mueller Matrix
     
-    CountedPtr<Array<TT> >& getCFPtr(const Double& freqVal, const Double& wValue, 
-				     const Int & muellerElement) 
+    casacore::CountedPtr<casacore::Array<TT> >& getCFPtr(const casacore::Double& freqVal, const casacore::Double& wValue, 
+				     const casacore::Int & muellerElement) 
     {return getCFCellPtr(freqVal, wValue, muellerElement)->storage_p;}
     
-    Array<TT>& getCF(const Int& i, const Int& j, const Int& k)
+    casacore::Array<TT>& getCF(const casacore::Int& i, const casacore::Int& j, const casacore::Int& k)
     {return *(getCFCell(i,j,k).storage_p);}
     
-    CountedPtr<Array<TT> >& getCFPtr(const Int& i, const Int& j, const Int& k)
+    casacore::CountedPtr<casacore::Array<TT> >& getCFPtr(const casacore::Int& i, const casacore::Int& j, const casacore::Int& k)
     {return getCFCellPtr(i,j,k)->storage_p;}
     
     
     //
     // Get the parameters of a the CFs indexed by values.  The version
-    // which returns also the Coordinate System associated with the
-    // CFs are slow (CoordinateSystem::operator=() is surprisingly
+    // which returns also the casacore::Coordinate System associated with the
+    // CFs are slow (casacore::CoordinateSystem::operator=() is surprisingly
     // expensive!).  So do not use this in tight loops.  If it is
     // required, use the version without the co-ordinate system below.
     //
-    void getParams(CoordinateSystem& cs, Float& sampling, 
-		   Int& xSupport, Int& ySupport, 
-		   const Double& freqVal, const Double& wValue, 
-		   const Int& muellerElement);
+    void getParams(casacore::CoordinateSystem& cs, casacore::Float& sampling, 
+		   casacore::Int& xSupport, casacore::Int& ySupport, 
+		   const casacore::Double& freqVal, const casacore::Double& wValue, 
+		   const casacore::Int& muellerElement);
     //-------------------------------------------------------------------------
     // Get CF by directly indexing in the list of CFs (data vector)
-    inline void getParams(CoordinateSystem& cs, Float& sampling, 
-			  Int& xSupport, Int& ySupport, 
-			  const Int& i, const Int& j, const Int& k)
+    inline void getParams(casacore::CoordinateSystem& cs, casacore::Float& sampling, 
+			  casacore::Int& xSupport, casacore::Int& ySupport, 
+			  const casacore::Int& i, const casacore::Int& j, const casacore::Int& k)
     {
       cs = cfCells_p(i,j,k)->coordSys_p;
       sampling = cfCells_p(i,j,k)->sampling_p;
       xSupport = cfCells_p(i,j,k)->xSupport_p;
       ySupport = cfCells_p(i,j,k)->ySupport_p;
     }
-    void getParams(Double& freqVal, Float& sampling, 
-		   Int& xSupport, Int& ySupport, 
-		   const Int& iFreq, const Int& iW, const Int& iPol)
+    void getParams(casacore::Double& freqVal, casacore::Float& sampling, 
+		   casacore::Int& xSupport, casacore::Int& ySupport, 
+		   const casacore::Int& iFreq, const casacore::Int& iW, const casacore::Int& iPol)
     {
       sampling = cfCells_p(iFreq,iW,iPol)->sampling_p;
       xSupport = cfCells_p(iFreq,iW,iPol)->xSupport_p;
@@ -227,10 +233,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       freqVal = freqValues_p(iFreq);
     }
     
-    inline void getCoordList(Vector<Double>& freqValues, Vector<Double>& wValues,
+    inline void getCoordList(casacore::Vector<casacore::Double>& freqValues, casacore::Vector<casacore::Double>& wValues,
 			     PolMapType& muellerElementsIndex, PolMapType& muellerElements, 
 			     PolMapType& conjMuellerElementsIndex, PolMapType& conjMuellerElements, 
-			     Double& fIncr, Double& wIncr)
+			     casacore::Double& fIncr, casacore::Double& wIncr)
     {
       freqValues.assign(freqValues_p);wValues.assign(wValues_p);
       muellerElements.assign(muellerElements_p);         muellerElementsIndex.assign(muellerElementsIndex_p);
@@ -238,26 +244,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       fIncr = freqValIncr_p; wIncr = wValIncr_p;
     }
     
-    Int nearestNdx(const Double& val, const Vector<Double>& valList, const Double& incr);
+    casacore::Int nearestNdx(const casacore::Double& val, const casacore::Vector<casacore::Double>& valList, const casacore::Double& incr);
     
-    Int nearestFreqNdx(const Double& freqVal) ;
+    casacore::Int nearestFreqNdx(const casacore::Double& freqVal) ;
     
-    inline Int nearestWNdx(const Double& wVal) 
+    inline casacore::Int nearestWNdx(const casacore::Double& wVal) 
     {
       //      return SynthesisUtils::nint(sqrt(wValIncr_p*abs(wVal)));
-      return max(0,min((int)(sqrt(wValIncr_p*abs(wVal))),wValues_p.nelements())-1);
+      return max(0,min((int)(sqrt(wValIncr_p*abs(wVal))),(int)wValues_p.nelements())-1);
       // Int ndx=(int)(sqrt(wValIncr_p*abs(wVal)));
       // if ((uInt)ndx >= wValues_p.nelements())
       // 	cerr << endl << endl << ndx << " " <<  wVal << " " << wValIncr_p << endl << endl;
       // return min(ndx,wValues_p.nelements()-1);
     }
     
-    Double nearest(Bool& found, const Double& val, const Vector<Double>& valList, const Double& incr);
+    casacore::Double nearest(casacore::Bool& found, const casacore::Double& val, const casacore::Vector<casacore::Double>& valList, const casacore::Double& incr);
     
-    inline Double nearestFreq(Bool& found, const Double& freqVal)
+    inline casacore::Double nearestFreq(casacore::Bool& found, const casacore::Double& freqVal)
     {return nearest(found, freqVal, freqValues_p, freqValIncr_p);}
     
-    inline Double nearestWVal(Bool& found, const Double& wVal)
+    inline casacore::Double nearestWVal(casacore::Bool& found, const casacore::Double& wVal)
     {return nearest(found, wVal, wValues_p, wValIncr_p);}
     
     //-------------------------------------------------------------------------
@@ -266,63 +272,63 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // to the index in the internal list of CFs.  This can be used in
     // tight loops to get get direct access to the required CF.
     //
-    void makeCFBufferMap(const Vector<Double>& freqVals, 
-			 const Vector<Double>& wValues,
+    void makeCFBufferMap(const casacore::Vector<casacore::Double>& freqVals, 
+			 const casacore::Vector<casacore::Double>& wValues,
 			 const MuellerMatrixType& muellerElements);
     //-------------------------------------------------------------------------
     //
-    // Add a Convolution Function with associated parameters.
+    // Add a Convolution casacore::Function with associated parameters.
     //
-    void addCF(Array<TT>*, //dataPtr, 
-	       CoordinateSystem&,// cs, 
-	       Float& ,//sampling, 
-	       Int& ,//xSupport, 
-	       Int& ,//ySupport,
-	       Double& ,//freqValue, 
-	       Double& ,//wValue, 
-	       Int& //muellerElement
+    void addCF(casacore::Array<TT>*, //dataPtr, 
+	       casacore::CoordinateSystem&,// cs, 
+	       casacore::Float& ,//sampling, 
+	       casacore::Int& ,//xSupport, 
+	       casacore::Int& ,//ySupport,
+	       casacore::Double& ,//freqValue, 
+	       casacore::Double& ,//wValue, 
+	       casacore::Int& //muellerElement
 	       )
-    {throw(AipsError("CFBuffer::addCF called"));}
+    {throw(casacore::AipsError("CFBuffer::addCF called"));}
     //-------------------------------------------------------------------------
     //
-    void resize(const IPosition& size) {cfCells_p.resize(size);};
-    void resize(const Double& wIncr, const Double& freqIncr,
-		const Vector<Double>& wValues, 
-		const Vector<Double>& freqValues,
+    void resize(const casacore::IPosition& size) {cfCells_p.resize(size);};
+    void resize(const casacore::Double& wIncr, const casacore::Double& freqIncr,
+		const casacore::Vector<casacore::Double>& wValues, 
+		const casacore::Vector<casacore::Double>& freqValues,
 		const PolMapType& muellerElements,
 		const PolMapType& muellerElementsIndex,
 		const PolMapType& conjMuellerElements,
 		const PolMapType& conjMuellerElementsIndex);
-    Int noOfMuellerElements(const PolMapType& muellerElements);
+    casacore::Int noOfMuellerElements(const PolMapType& muellerElements);
     //-------------------------------------------------------------------------
     // Set only the CF parameters.  Return to index of the CF that was set.
     //
-    RigidVector<Int, 3> setParams(const Int& i, const Int& j, const Int& ipx, const Int& ipy,
-				  CoordinateSystem& cs, Float& sampling,
-				  Int& xSupport, Int& ySupport,
-				  const Double& freqValue, const Double& wValue, 
-				  const Int& muellerElement,
-				  const String& fileName=String(),
-				  const Double& conjFreq=0.0,
-				  const Int& conjPol=-1,
-				  const String& telescopeName=String(),
-				  const Float& diameter=25.0);
-    // RigidVector<Int, 3> setParams(const Int& inu, const Int& iw, const Int& muellerElement,
-    // 				  const TableRecord& miscInfo);
-    void setPointingOffset(const Vector<Double>& offset) 
+    casacore::RigidVector<casacore::Int, 3> setParams(const casacore::Int& i, const casacore::Int& j, const casacore::Int& ipx, const casacore::Int& ipy,
+				  casacore::CoordinateSystem& cs, casacore::Float& sampling,
+				  casacore::Int& xSupport, casacore::Int& ySupport,
+				  const casacore::Double& freqValue, const casacore::Double& wValue, 
+				  const casacore::Int& muellerElement,
+				  const casacore::String& fileName=casacore::String(),
+				  const casacore::Double& conjFreq=0.0,
+				  const casacore::Int& conjPol=-1,
+				  const casacore::String& telescopeName=casacore::String(),
+				  const casacore::Float& diameter=25.0);
+    // casacore::RigidVector<casacore::Int, 3> setParams(const casacore::Int& inu, const casacore::Int& iw, const casacore::Int& muellerElement,
+    // 				  const casacore::TableRecord& miscInfo);
+    void setPointingOffset(const casacore::Vector<casacore::Double>& offset) 
     {pointingOffset_p.assign(offset);};
-    Vector<Double> getPointingOffset() {return pointingOffset_p;};
+    casacore::Vector<casacore::Double> getPointingOffset() {return pointingOffset_p;};
     //
     // Also set the size of the CF in x and y.
     //
-    void setParams(Int& nx, Int& ny, CoordinateSystem& cs, Float& sampling, 
-		   Int& xSupport, Int& ySupport, 
-		   const Double& freqVal, const Double& wValue, 
-		   const Int& muellerElement,
-		   const String& fileName);
-    void setPA(Float& pa);
-    RigidVector<Int,3> getIndex(const Double& freqVal, const Double& wValue, 
-				const Int& muellerElement);
+    void setParams(casacore::Int& nx, casacore::Int& ny, casacore::CoordinateSystem& cs, casacore::Float& sampling, 
+		   casacore::Int& xSupport, casacore::Int& ySupport, 
+		   const casacore::Double& freqVal, const casacore::Double& wValue, 
+		   const casacore::Int& muellerElement,
+		   const casacore::String& fileName);
+    void setPA(casacore::Float& pa);
+    casacore::RigidVector<casacore::Int,3> getIndex(const casacore::Double& freqVal, const casacore::Double& wValue, 
+				const casacore::Int& muellerElement);
     //-------------------------------------------------------------------------
     //
     // Copy just the parameters from other to this.
@@ -342,21 +348,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     void show(const char *Mesg=NULL,ostream &os=cerr);
     //
-    // Returns True if the internal storage is not yet initialized.
+    // Returns true if the internal storage is not yet initialized.
     //
-    Bool null() {return (cfCells_p.nelements() == 0);};
+    casacore::Bool null() {return (cfCells_p.nelements() == 0);};
     
-    Cube<CountedPtr<CFCell> >& getStorage() {return cfCells_p;};
+    casacore::Cube<casacore::CountedPtr<CFCell> >& getStorage() {return cfCells_p;};
     void makePersistent(const char *dir, const char *cfName="");
     
     void primeTheCache();
-    void initMaps(const VisBuffer2& vb,const Matrix<Double>& freqSelection,const Double& imRefFreq);
+    void initMaps(const VisBuffer2& vb,const casacore::Matrix<casacore::Double>& freqSelection,const casacore::Double& imRefFreq);
     void initPolMaps(PolMapType& polMap, PolMapType& conjPolMap);
     //
     // For CUDA kernel
     //
-    void getFreqNdxMaps(Vector<Vector<Int> >& freqNdx, Vector<Vector<Int> >& conjFreqNdx);
-    inline Int nearestFreqNdx(const Int& spw, const Int& chan, const Bool conj=False)
+    void getFreqNdxMaps(casacore::Vector<casacore::Vector<casacore::Int> >& freqNdx, casacore::Vector<casacore::Vector<casacore::Int> >& conjFreqNdx);
+    inline casacore::Int nearestFreqNdx(const casacore::Int& spw, const casacore::Int& chan, const casacore::Bool conj=false)
     {
       if (conj) return conjFreqNdxMap_p[spw][chan];
       else  return freqNdxMap_p[spw][chan];
@@ -376,40 +382,40 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       cfbSt.shape[0]=cfbSt.shape[1]=cfbSt.shape[2]=0;
       cfbSt.fIncr=cfbSt.wIncr=0.0;
     }
-    void fill(const Int& nx, const Int& ny, 
-	      const Vector<Double>& freqValues,
-	      const Vector<Double>& wValues,
+    void fill(const casacore::Int& nx, const casacore::Int& ny, 
+	      const casacore::Vector<casacore::Double>& freqValues,
+	      const casacore::Vector<casacore::Double>& wValues,
 	      const PolMapType& muellerElements);
     
-    IPosition getShape() {return cfCells_p.shape();}
+    casacore::IPosition getShape() {return cfCells_p.shape();}
     //
     //============================= Protected Parts ============================
     //------------------------------------------------------------------
     //
   protected:
     //
-    // The storage buffer for the pixel values in CFCell is Array<T>
-    // rather than Matrix<T> to accomodate rotationally symmetric CFs
-    // (like the Prolate Spheroidal) which can be held as a Vector of
+    // The storage buffer for the pixel values in CFCell is casacore::Array<T>
+    // rather than casacore::Matrix<T> to accomodate rotationally symmetric CFs
+    // (like the Prolate Spheroidal) which can be held as a casacore::Vector of
     // values.
     //
-    Cube<CountedPtr<CFCell> > cfCells_p;// freqValues x wValues x muellerElements
-    Vector<Double> wValues_p, freqValues_p;
+    casacore::Cube<casacore::CountedPtr<CFCell> > cfCells_p;// freqValues x wValues x muellerElements
+    casacore::Vector<casacore::Double> wValues_p, freqValues_p;
     PolMapType muellerElements_p, muellerElementsIndex_p,conjMuellerElements_p,conjMuellerElementsIndex_p; 
-    Double wValIncr_p, freqValIncr_p;
+    casacore::Double wValIncr_p, freqValIncr_p;
     MuellerMatrixType muellerMask_p;
     
-    Int nPol_p, nChan_p, nW_p, maxXSupport_p, maxYSupport_p;
-    Vector<Double> pointingOffset_p;
-    Cube<Int> cfHitsStats;
-    Bool freqNdxMapsReady_p;
-    Vector<Vector<Int> > freqNdxMap_p, conjFreqNdxMap_p;
-    void ASSIGNVVofI(Int** &target,Vector<Vector<Int> >& source, Bool& doAlloc);
+    casacore::Int nPol_p, nChan_p, nW_p, maxXSupport_p, maxYSupport_p;
+    casacore::Vector<casacore::Double> pointingOffset_p;
+    casacore::Cube<casacore::Int> cfHitsStats;
+    casacore::Bool freqNdxMapsReady_p;
+    casacore::Vector<casacore::Vector<casacore::Int> > freqNdxMap_p, conjFreqNdxMap_p;
+    void ASSIGNVVofI(casacore::Int** &target,casacore::Vector<casacore::Vector<casacore::Int> >& source, casacore::Bool& doAlloc);
   };
 
   // declare a commonly used template extern
-    //    extern template class Array<CountedPtr<CFBuffer> >;
   
-  } //# NAMESPACE CASA - END
-}
+} // end namesapce refim
+} // end namespace casa
+
 #endif

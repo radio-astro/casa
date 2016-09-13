@@ -22,6 +22,7 @@
 
 #include <flagging/Flagging/FlagAgentShadow.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Definition of static members for common pre-processing
@@ -76,7 +77,7 @@ FlagAgentShadow::FlagAgentShadow(FlagDataHandler *dh, Record config, Bool writeP
 		//cout << " Additional Antennas : " << recprint.str() << endl;
 
 		// TODO : Verify input Record. If invalid, print warning and proceed with no extra antennas.
-		Bool validants=True;
+		Bool validants=true;
 		String errorReason;
 		for(Int anew=0; anew<(Int) additionalAntennas_p.nfields(); anew++)
 		{
@@ -84,20 +85,20 @@ FlagAgentShadow::FlagAgentShadow(FlagDataHandler *dh, Record config, Bool writeP
 			Record arec = additionalAntennas_p.subRecord(RecordFieldId(String::toString(anew)));
 
 			if( ! arec.isDefined("diameter") ||
-					( arec.type(arec.fieldNumber("diameter")) != casa::TpFloat &&
-							arec.type(arec.fieldNumber("diameter")) != casa::TpInt &&
-							arec.type(arec.fieldNumber("diameter")) != casa::TpDouble  ) )
+					( arec.type(arec.fieldNumber("diameter")) != casacore::TpFloat &&
+							arec.type(arec.fieldNumber("diameter")) != casacore::TpInt &&
+							arec.type(arec.fieldNumber("diameter")) != casacore::TpDouble  ) )
 			{
-				validants=False;
+				validants=false;
 				errorReason += String("Input Record [") + String::toString(anew) + ("] needs a field 'diameter' of type <double> \n");
 			}
 
 			if( ! arec.isDefined("position") ||
-					( arec.type(arec.fieldNumber("position")) != casa::TpArrayFloat &&
-							arec.type(arec.fieldNumber("position")) != casa::TpInt &&
-							arec.type(arec.fieldNumber("position")) != casa::TpArrayDouble  ) )
+					( arec.type(arec.fieldNumber("position")) != casacore::TpArrayFloat &&
+							arec.type(arec.fieldNumber("position")) != casacore::TpInt &&
+							arec.type(arec.fieldNumber("position")) != casacore::TpArrayDouble  ) )
 			{
-				validants=False;
+				validants=false;
 				errorReason += String("Input Record [") + String::toString(anew) + ("] needs a field 'position' of type Array<double>\n");
 			}
 			else
@@ -106,7 +107,7 @@ FlagAgentShadow::FlagAgentShadow(FlagDataHandler *dh, Record config, Bool writeP
 				arec.get( RecordFieldId(String("position")) , tpos );
 				if(tpos.shape() != IPosition(1,3))
 				{
-					validants=False;
+					validants=false;
 					errorReason += String("'position' for Record [") + String::toString(anew)+ ("] must be a vector of 3 floats or doubles\n");
 				}
 			}
@@ -164,7 +165,7 @@ FlagAgentShadow::FlagAgentShadow(FlagDataHandler *dh, Record config, Bool writeP
 	}
 
 
-	firststep_p=False; // Set to True, to print a debug message (antenna uvw coordinates for the first row in the first visbuffer seen by this code...
+	firststep_p=false; // Set to true, to print a debug message (antenna uvw coordinates for the first row in the first visbuffer seen by this code...
 
 }// end of constructor
 
@@ -190,7 +191,7 @@ FlagAgentShadow::setAgentParameters(Record config)
 	exists = config.fieldNumber ("tolerance");
 	if (exists >= 0)
 	{
-		if( config.type(exists) != TpDouble && config.type(exists) != TpFloat && config.type(exists) != TpInt )
+		if( config.type(exists) != casacore::TpDouble && config.type(exists) != casacore::TpFloat && config.type(exists) != casacore::TpInt )
 		{
 			throw( AipsError ( "Parameter 'tolerance' must be of type 'double'" ) );
 		}
@@ -208,7 +209,7 @@ FlagAgentShadow::setAgentParameters(Record config)
 	exists = config.fieldNumber ("addantenna");
 	if (exists >= 0)
 	{
-		if( config.type(exists) != TpRecord )
+		if( config.type(exists) != casacore::TpRecord )
 		{
 			throw( AipsError ( "Parameter 'addantenna' must be of type 'record/dict'" ) );
 		}
@@ -289,7 +290,7 @@ void FlagAgentShadow::calculateShadowedAntennas(const vi::VisBuffer2 &visBuffer,
 
 	// Init the list of baselines, to later decide which to read and which to recalculate.
 	Vector<Bool> listBaselines(nAnt*(nAnt-1)/2);
-	listBaselines = False;
+	listBaselines = false;
 
 	/*
 	///
@@ -328,7 +329,7 @@ void FlagAgentShadow::calculateShadowedAntennas(const vi::VisBuffer2 &visBuffer,
 	if (antenna1 == antenna2) continue;
 
 	// Record the baseline being processed
-	listBaselines[baselineIndex(nAnt,antenna1,antenna2)] = True;
+	listBaselines[baselineIndex(nAnt,antenna1,antenna2)] = true;
 
 	// Compute uv distance
 	u = visBuffer.uvw()(0,row_i);
@@ -346,7 +347,7 @@ void FlagAgentShadow::calculateShadowedAntennas(const vi::VisBuffer2 &visBuffer,
 	//      and fill in missing baselines.
 	// This is the part that picks up invisible antennas, whether they come from the antenna_subtable or
 	// are externally supplied.
-	if(product(listBaselines)==False)
+	if(product(listBaselines)==false)
 	{
 		// For the current timestep, compute UVWs for all antennas.
 		//    uvwAnt_p will be filled these values.
@@ -362,7 +363,7 @@ void FlagAgentShadow::calculateShadowedAntennas(const vi::VisBuffer2 &visBuffer,
 				if (antenna1 == antenna2) continue;
 
 				// Proceed only if we don't already have this.
-				if(listBaselines[baselineIndex(nAnt,antenna1,antenna2)] == False)
+				if(listBaselines[baselineIndex(nAnt,antenna1,antenna2)] == false)
 				{
 					Double u2=uvwAnt_p(0,antenna2), v2=uvwAnt_p(1,antenna2), w2=uvwAnt_p(2,antenna2);
 
@@ -371,7 +372,7 @@ void FlagAgentShadow::calculateShadowedAntennas(const vi::VisBuffer2 &visBuffer,
 					w = w2-w1;
 					uvDistance = sqrt(u*u + v*v);
 
-					if(firststep_p==True) // this is only a debug message here....
+					if(firststep_p==true) // this is only a debug message here....
 					{
 						cout << "Ant1 : " << antenna1 << " : " << u1 << "," << v1 << "," << w1 << "      Ant2 : " << antenna2 << " : "  << u2 << "," << v2<< "," << w2 << "      UVW : " << u << "," << v << "," << w << endl;
 					}
@@ -382,7 +383,7 @@ void FlagAgentShadow::calculateShadowedAntennas(const vi::VisBuffer2 &visBuffer,
 		}
 	}
 
-	firststep_p=False;// debug message should happen only once (at most).
+	firststep_p=false;// debug message should happen only once (at most).
 
 }// end of calculateShadowedAntennas
 
@@ -510,7 +511,7 @@ Bool FlagAgentShadow::computeAntUVW(const vi::VisBuffer2 &vb, Int rownr)
 		uvwAnt_p.column(k)=xyz;
 	}
 
-	return True;
+	return true;
 }
 
 
@@ -561,13 +562,13 @@ FlagAgentShadow::computeRowFlags(const vi::VisBuffer2 &visBuffer, FlagMapper &/*
 
 //   // Init the list of baselines, to later decide which to read and which to recalculate.
 //   Vector<Bool> listBaselines(nAnt*(nAnt-1)/2);
-//   listBaselines = False;
+//   listBaselines = false;
 
 //   //uInt countread=0;
 //   //uInt countcalc=0;
 //   //Double reftime = 4.794e+09;
 
-//   if (decideUVW_p==True)
+//   if (decideUVW_p==true)
 //     {
 //       // We know the starting row for this timestep. Find the ending row.
 //       // This assumes that all baselines are grouped together.
@@ -602,7 +603,7 @@ FlagAgentShadow::computeRowFlags(const vi::VisBuffer2 &visBuffer, FlagMapper &/*
 // 	    if (antenna1 == antenna2) continue;
 
 // 	    // Record the baseline being processed
-// 	    listBaselines[baselineIndex(nAnt,antenna1,antenna2)] = True;
+// 	    listBaselines[baselineIndex(nAnt,antenna1,antenna2)] = true;
 
 // 	    // Compute uv distance
 // 	    u = visBuffer.uvw()(row_i)(0);
@@ -618,7 +619,7 @@ FlagAgentShadow::computeRowFlags(const vi::VisBuffer2 &visBuffer, FlagMapper &/*
 // 	  }// end of for 'row'
 
 // 	// Now, if there are any untouched baselines, calculate 'uvw' for all antennas, and fill in missing baselines.
-// 	if(product(listBaselines)==False)
+// 	if(product(listBaselines)==false)
 // 	  {
 // 	    // For the current timestep, compute UVWs for all antennas.
 // 	    //    uvwAnt_p will be filled these values.
@@ -632,7 +633,7 @@ FlagAgentShadow::computeRowFlags(const vi::VisBuffer2 &visBuffer, FlagMapper &/*
 // 		    // Check if this row corresponds to autocorrelation (Antennas don't shadow themselves)
 // 		    if (antenna1 == antenna2) continue;
 
-// 		    if(listBaselines[baselineIndex(nAnt,antenna1,antenna2)] == False)
+// 		    if(listBaselines[baselineIndex(nAnt,antenna1,antenna2)] == false)
 // 		      {
 // 			Double u2=uvwAnt_p(0,antenna2), v2=uvwAnt_p(1,antenna2), w2=uvwAnt_p(2,antenna2);
 
@@ -646,7 +647,7 @@ FlagAgentShadow::computeRowFlags(const vi::VisBuffer2 &visBuffer, FlagMapper &/*
 
 // 			decideBaselineShadow(uvDistance, w, antenna1, antenna2);
 
-// 			listBaselines[baselineIndex(nAnt,antenna1,antenna2)] = True;
+// 			listBaselines[baselineIndex(nAnt,antenna1,antenna2)] = true;
 // 		      }
 // 		  }
 // 	      }
@@ -687,8 +688,8 @@ FlagAgentShadow::computeRowFlags(const vi::VisBuffer2 &visBuffer, FlagMapper &/*
 // 	      }// end for antenna2
 // 	  }// end for antenna1
 
-//     }// end of recalculateUVW_p==True
-//   else // recalculateUVW_p = False
+//     }// end of recalculateUVW_p==true
+//   else // recalculateUVW_p = false
 //     {
 
 //       // We know the starting row for this timestep. Find the ending row.

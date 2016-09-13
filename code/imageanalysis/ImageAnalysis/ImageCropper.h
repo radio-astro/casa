@@ -70,37 +70,37 @@ public:
 	// and <src>box</src>="", <src>stokes</src>="", and <src>chanInp</src>="", that implies you want to use all
 	// of the input image.
 	ImageCropper(
-		const SHARED_PTR<const ImageInterface<T> > image,
-		const Record *const &regionRec, const String& box, const String& chanInp,
-		const String& stokes, const String& maskInp,
-		const String& outname, const Bool overwrite
+		const SHARED_PTR<const casacore::ImageInterface<T> > image,
+		const casacore::Record *const &regionRec, const casacore::String& box, const casacore::String& chanInp,
+		const casacore::String& stokes, const casacore::String& maskInp,
+		const casacore::String& outname, const casacore::Bool overwrite
 	);
 
 	// destructor
 	~ImageCropper();
 
-	// Perform the cropping. If <src>wantReturn</src> is True, a shared_ptr which
-	// wraps the cropped image is returned. If False, an empty shared_ptr is returned.
-	SHARED_PTR<ImageInterface<T> > crop(const Bool wantReturn) const;
+	// Perform the cropping. If <src>wantReturn</src> is true, a shared_ptr which
+	// wraps the cropped image is returned. If false, an empty shared_ptr is returned.
+	SHARED_PTR<casacore::ImageInterface<T> > crop(const casacore::Bool wantReturn) const;
 
 	// Set the axes along which to do the cropping. An empty set means
 	// crop all axes.
-	void setAxes(const std::set<uInt>& axes);
+	void setAxes(const std::set<casacore::uInt>& axes);
 
-	String getClass() const;
+	casacore::String getClass() const;
 
 protected:
 	inline  CasacRegionManager::StokesControl _getStokesControl() const {
 		return CasacRegionManager::USE_ALL_STOKES;
 	}
 
-	inline vector<Coordinate::Type> _getNecessaryCoordinates() const {
-		return vector<Coordinate::Type>(0);
+	inline vector<casacore::Coordinate::Type> _getNecessaryCoordinates() const {
+		return vector<casacore::Coordinate::Type>(0);
  	}
 
 private:
-	std::set<uInt> _axes;
-	static const String _class;
+	std::set<casacore::uInt> _axes;
+	static const casacore::String _class;
 
 
 	// disallow default constructor

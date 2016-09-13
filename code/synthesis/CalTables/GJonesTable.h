@@ -79,8 +79,8 @@ class GJonesPolyTable : public GJonesTable
 
    // Construct from a specified table name and table access option. 
    // Used for creating new tables or opening existing tables.
-   GJonesPolyTable (const String& tableName, 
-		      Table::TableOption access = Table::Old);
+   GJonesPolyTable (const casacore::String& tableName, 
+		      casacore::Table::TableOption access = casacore::Table::Old);
 
  private:
    GJonesPolyDesc itsGJonesPolyDesc;
@@ -131,8 +131,8 @@ class GJonesSplineTable : public GJonesPolyTable
 
    // Construct from a specified table name and table access option. 
    // Used for creating new tables or opening existing tables.
-   GJonesSplineTable (const String& tableName, 
-		      Table::TableOption access = Table::Old);
+   GJonesSplineTable (const casacore::String& tableName, 
+		      casacore::Table::TableOption access = casacore::Table::Old);
 
  private:
    GJonesSplineDesc itsGJonesSplineDesc;

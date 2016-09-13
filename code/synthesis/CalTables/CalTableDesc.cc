@@ -42,6 +42,7 @@
 #include <casa/Containers/Record.h>
 #include <casa/Arrays/IPosition.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //----------------------------------------------------------------------------

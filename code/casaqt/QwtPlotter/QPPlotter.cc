@@ -40,6 +40,7 @@
 
 using namespace std;
 
+using namespace casacore;
 namespace casa {
 
 // TODO PlotCanvas: way of providing custom tick labels for axes, print to

@@ -7,8 +7,10 @@
 #include <msvis/MSVis/UtilJ.h>
 #include <msvis/MSVis/VisBuffer2.h>
 
+using namespace casacore;
 using namespace casa::utilj;
 
+using namespace casacore;
 namespace casa {
 
 namespace vi {
@@ -17,7 +19,7 @@ FinalTvi2::FinalTvi2 (ViImplementation2 * inputVi,
                       MeasurementSet & finalMs, Bool isWritable)
 : TransformingVi2 (inputVi),
   columns_p (),
-  columnsAttached_p (False),
+  columnsAttached_p (false),
   ms_p (finalMs)
 {
     VisBufferOptions options = isWritable ? VbWritable : VbNoOptions;
@@ -41,7 +43,7 @@ FinalTvi2::~FinalTvi2 ()
 //
 //    getVisBuffer()->configureNewSubchunk (0, // always the first MS
 //                                          ms_p.tableName(),
-//                                          False,
+//                                          false,
 //                                          isNewArrayId (),
 //                                          isNewFieldId (),
 //                                          isNewSpectralWindow (),
@@ -78,15 +80,15 @@ FinalTvi2::writeBackChanges (VisBuffer2 * vb)
 
     if (! columnsAttached_p){
 
-        columns_p.attachColumns (ms_p, True);
-        columnsAttached_p = True;
+        columns_p.attachColumns (ms_p, true);
+        columnsAttached_p = true;
     }
 
     // Remember the current fillability state of the VB and then set it
     // to fillable.
 
     Bool wasFillable = vb->isFillable();
-    vb->setFillable (True);
+    vb->setFillable (true);
 
     Int firstRowAdded = ms_p.nrow();
     ms_p.addRow (vb->nRows());

@@ -22,6 +22,7 @@
 
 #include <mstransform/TVI/HanningSmoothTVI.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 namespace vi { //# NAMESPACE VI - BEGIN
@@ -47,7 +48,7 @@ HanningSmoothTVI::HanningSmoothTVI(	ViImplementation2 * inputVii,
 // -----------------------------------------------------------------------
 void HanningSmoothTVI::initialize()
 {
-	convCoeff_p.resize(3,False);
+	convCoeff_p.resize(3,false);
 	convCoeff_p(0) = 0.25;
 	convCoeff_p(1) = 0.5;
 	convCoeff_p(2) = 0.25;

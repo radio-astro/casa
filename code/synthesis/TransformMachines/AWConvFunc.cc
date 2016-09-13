@@ -56,6 +56,7 @@
 
 #define MAX_FREQ 1e30
 
+using namespace casacore;
 namespace casa{
   //
   //----------------------------------------------------------------------
@@ -78,8 +79,8 @@ namespace casa{
   {
     IPosition pbShape=PB.shape();
     IPosition cursorShape(4, pbShape(0), pbShape(1), 1, 1), axisPath(4,0,1,2,3);
-    Array<Complex> buf; PB.get(buf,False);
-    ArrayLattice<Complex> lat(buf, True);
+    Array<Complex> buf; PB.get(buf,false);
+    ArrayLattice<Complex> lat(buf, true);
     LatticeStepper latStepper(lat.shape(), cursorShape,axisPath);
     LatticeIterator<Complex> latIter(lat, latStepper);
     
@@ -229,8 +230,8 @@ namespace casa{
 		// }
 
 
-		Bool doSquint=True; Complex tt;
-		//		Bool doSquint=False; Complex tt;
+		Bool doSquint=true; Complex tt;
+		//		Bool doSquint=false; Complex tt;
 		ftATerm_l.set(Complex(1.0,0.0));   ftATermSq_l.set(Complex(1.0,0.0));
 
 		Int me=muellerElements(imx)(imy);
@@ -255,7 +256,7 @@ namespace casa{
 		//}
 		// TempImage<Complex> ftATermSq_l(pbshp,cs_l);
 		// ftATermSq_l.set(Complex(1.0,0.0));
-		// aTerm.applySky(ftATermSq_l, vb, False, 0);
+		// aTerm.applySky(ftATermSq_l, vb, false, 0);
 		// tt=max(ftATermSq_l.get());
 		// ftATermSq_l.put(ftATermSq_l.get()/tt);
 
@@ -320,7 +321,7 @@ namespace casa{
 		    //tim.show("PSTerm*2: ");
 
 		    // WBAWP CODE BEGIN  -- make PS*PS for Weights
-		    // psTerm.applySky(cfWtBufMat, True);  // Multiply
+		    // psTerm.applySky(cfWtBufMat, true);  // Multiply
 		    // WBAWP CODE END
 
 		    // psTerm.applySky(cfBufMat, s, inner/2.0);//pbshp(0)/(os));
@@ -364,7 +365,7 @@ namespace casa{
 		    
 
 		    // cfWtBuf = sqrt(cfWtBuf);
-		    // psTerm.applySky(cfWtBufMat,True);
+		    // psTerm.applySky(cfWtBufMat,true);
 
 		    //tim.mark();
 		    twoDPB_l.putSlice(cfBuf, PolnPlane);
@@ -378,7 +379,7 @@ namespace casa{
 
 		    // To accumulate avgPB2, call this function. 
 		    // PBSQWeight
-		    Bool PBSQ = False;
+		    Bool PBSQ = false;
 		    if(PBSQ) makePBSq(twoDPBSq_l); 
 		    
 
@@ -430,14 +431,14 @@ namespace casa{
 		      sliceLength(4,cfBuf.shape()[0]-1,cfBuf.shape()[1]-1,1,1);
 		    
 		    cfBuf(Slicer(start,sliceLength)).nonDegenerate()
-		      =(twoDPB_l.getSlice(start, pbSlice, True));
+		      =(twoDPB_l.getSlice(start, pbSlice, true));
 		    
 		    shp = twoDPBSq_l.shape();
 		    IPosition pbSqSlice(4, shp[0]-1, shp[1]-1, 1, 1),
 		      sqSliceLength(4,cfWtBuf.shape()(0)-1,cfWtBuf.shape()[1]-1,1,1);
 		    
 		    cfWtBuf(Slicer(start,sqSliceLength)).nonDegenerate()
-		      =(twoDPBSq_l.getSlice(start, pbSqSlice, True));
+		      =(twoDPBSq_l.getSlice(start, pbSqSlice, true));
 		    //tim.show("Slicer*2:");
 		    //
 		    // Finally, resize the buffers, limited to the
@@ -671,7 +672,7 @@ namespace casa{
   {
     (void)uvGrid; (void)dNU; (void)vb;
     Vector<Double> fValues;
-    if (wbAWP_p==False)
+    if (wbAWP_p==false)
       {
 	// Return the sky-image ref. freq.
 	fValues.resize(1);
@@ -700,7 +701,7 @@ namespace casa{
 	    // Int j=0;
 	    // while (j*dNU+spwFreqSelection_p(i,1) <= spwFreqSelection_p(i,2))
 	    //   {
-	    //     fValues.resize(j+1,True); 
+	    //     fValues.resize(j+1,true); 
 	    //     //	fValues(j)=spwFreqSelection_p(i,2); // Pick up the max. freq. for each selected SPW
 	    //     fValues(j)=j*dNU+spwFreqSelection_p(i,1);
 	    //     j=fValues.nelements();
@@ -908,7 +909,7 @@ namespace casa{
     //Quantity dPA(360.0,"deg");
     Quantity dPA(dpa,"rad");
     Int totalCFs=uniqueBaselineTypeList.shape().product()*wConvSize*freqValues.nelements()*polMap.shape().product();
-    ProgressMeter pm(1.0, Double(totalCFs), "makeCF", "","","",True);
+    ProgressMeter pm(1.0, Double(totalCFs), "makeCF", "","","",true);
     int cfDone=0;
     for(Int ib=0;ib<uniqueBaselineTypeList.shape()(0);ib++)
       {
@@ -1065,7 +1066,7 @@ namespace casa{
     //
     xSupport = ySupport = -1;
     Int convFuncOrigin=func.shape()[0]/2, R; 
-    Bool found=False;
+    Bool found=false;
     Float threshold;
     // Threshold as a fraction of the peak (presumed to be the center pixel).
     if (abs(peak) != 0) threshold = real(abs(peak));
@@ -1190,7 +1191,7 @@ namespace casa{
     Int nCFS=func.shape().nelements(),
       PixInc=1, R0, R1, R, convSize;
     Block<Int> cfShape(nCFS);
-    Bool found=False;
+    Bool found=false;
     Complex *funcPtr;
     Bool dummy;
     uInt Nth=1, threadID=0;
@@ -1228,7 +1229,7 @@ namespace casa{
 
 	    for (uInt th=0;th<Nth;th++)
 	      if (maxR[th] > 0)
-		{found=True; radius=maxR[th]; return found;}
+		{found=true; radius=maxR[th]; return found;}
       }
     return found;
   }
@@ -1243,7 +1244,7 @@ namespace casa{
   //   Int PixInc=1;
   //   Vector<Complex> vals;
   //   IPosition ndx(4,origin,0,0,0);
-  //   Bool found=False;
+  //   Bool found=false;
   //   IPosition cfShape=func.shape();
   //   Int convSize = cfShape(0);
 
@@ -1263,7 +1264,7 @@ namespace casa{
   // 	  }
 
   // 	if (max(abs(vals)) > threshold)
-  // 	  {found=True;break;}
+  // 	  {found=true;break;}
   //     }
   //   return found;
   // }
@@ -1303,9 +1304,9 @@ namespace casa{
 	theavgPB.set(1.0);
       }
     
-    aTerm_p->applySky(theavgPB, vb, True, 0);
+    aTerm_p->applySky(theavgPB, vb, true, 0);
     
-    return True; // i.e., an average PB was made 
+    return true; // i.e., an average PB was made 
   }
   //
   //----------------------------------------------------------------------
@@ -1407,9 +1408,9 @@ namespace casa{
     localPB.set(1.0);
     
     // Block<CountedPtr<ImageInterface<Float > > > tmpBlock(1);
-    // tmpBlock[0]=CountedPtr<ImageInterface<Float> >(&localPB, False);
-    // aTerm_p->applySky(tmpBlock, vb, 0, False);
-    aTerm_p->applySky(localPB, vb, False, 0);
+    // tmpBlock[0]=CountedPtr<ImageInterface<Float> >(&localPB, false);
+    // aTerm_p->applySky(tmpBlock, vb, 0, false);
+    aTerm_p->applySky(localPB, vb, false, 0);
     
     IPosition twoDPBShape(localPB.shape());
     TempImage<Complex> localTwoDPB(twoDPBShape,localPB.coordinates());
@@ -1452,14 +1453,14 @@ namespace casa{
 	}
       }
     theavgPB.setCoordinateInfo(localPB.coordinates());
-    return True; // i.e., an average PB was made
+    return true; // i.e., an average PB was made
   }
   //
   //----------------------------------------------------------------------
   //
   void AWConvFunc::prepareConvFunction(const VisBuffer& vb, VBRow2CFBMapType& theMap)
   {
-    if (aTerm_p->rotationallySymmetric() == False) return;
+    if (aTerm_p->rotationallySymmetric() == false) return;
     Int nRow=theMap.nelements();
     // CountedPtr<CFBuffer> cfb, cbPtr;
     // CountedPtr<CFCell>  cfc;
@@ -1569,7 +1570,7 @@ namespace casa{
       CoordinateSystem conjPolCS_l=cs_l;  AWConvFunc::makeConjPolAxis(conjPolCS_l, thisCell->conjPoln_p);
       IPosition pbshp(4,nx,ny,1,1);
       TempImage<Complex> ftATerm_l(pbshp, cs_l), ftATermSq_l(pbshp,conjPolCS_l);
-      Bool doSquint=True; Complex tt;
+      Bool doSquint=true; Complex tt;
       ftATerm_l.set(Complex(1.0,0.0));   ftATermSq_l.set(Complex(1.0,0.0));
       Double freq_l=miscInfo.freqValue;
       // {
@@ -1594,7 +1595,7 @@ namespace casa{
       // {
       // 	Int linIndex=cs_l.findCoordinate(Coordinate::LINEAR);
       // 	LinearCoordinate lc=cs_l.linearCoordinate(linIndex);
-      // 	Vector<Bool> axes(2); axes=True;
+      // 	Vector<Bool> axes(2); axes=true;
       // 	Vector<Int> dirShape(2); dirShape(0)=nx;dirShape(1)=ny;
       // 	Coordinate* FTlc=lc.makeFourierCoordinate(axes,dirShape);
       // 	cellSize = lc.increment();
@@ -1686,7 +1687,7 @@ namespace casa{
 
 	// To accumulate avgPB2, call this function. 
 	// PBSQWeight
-	// Bool PBSQ = False;
+	// Bool PBSQ = false;
 	// if(PBSQ) makePBSq(twoDPBSq_l); 
 		    
 	//
@@ -1717,14 +1718,14 @@ namespace casa{
 	  sliceLength(4,cfBuf.shape()[0]-1,cfBuf.shape()[1]-1,1,1);
 		    
 	cfBuf(Slicer(start,sliceLength)).nonDegenerate()
-	  =(twoDPB_l.getSlice(start, pbSlice, True));
+	  =(twoDPB_l.getSlice(start, pbSlice, true));
 		    
 	shp = twoDPBSq_l.shape();
 	IPosition pbSqSlice(4, shp[0]-1, shp[1]-1, 1, 1),
 	  sqSliceLength(4,cfWtBuf.shape()(0)-1,cfWtBuf.shape()[1]-1,1,1);
 		    
 	cfWtBuf(Slicer(start,sqSliceLength)).nonDegenerate()
-	  =(twoDPBSq_l.getSlice(start, pbSqSlice, True));
+	  =(twoDPBSq_l.getSlice(start, pbSqSlice, true));
 	//tim.show("Slicer*2:");
 	//
 	//tim.mark();
@@ -1924,7 +1925,7 @@ namespace casa{
     cfs2.makePersistent(cfCachePath.c_str());
     cfwts2.makePersistent(cfCachePath.c_str(),"","WT");
     // Directory dir(uvGridDiskImage);
-    // dir.removeRecursive(False);
+    // dir.removeRecursive(false);
     // dir.remove();
   }
   Int AWConvFunc::getOversampling(PSTerm& psTerm, WTerm& wTerm, ATerm& aTerm)

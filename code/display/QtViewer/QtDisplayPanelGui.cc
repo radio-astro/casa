@@ -69,6 +69,7 @@
 
 #include <display/QtViewer/InActiveDock.qo.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 namespace viewer {
@@ -205,7 +206,7 @@ std::string QtDisplayPanelGui::idGen( ) {
 
 QtDisplayPanelGui::QtDisplayPanelGui( const QtDisplayPanelGui *other, QWidget *parent, std::string rcstr, const std::list<std::string> &args ) :
 				QtPanelBase(parent), logger(LogOrigin("CASA", "Viewer")), qdm_(0),qem_(0),qdo_(0),
-				colorBarsVertical_(True), v_(other->viewer()), qdp_(0), qpm_(0), qcm_(0), qap_(0), qfb_(0), qmr_(0), qrm_(0),
+				colorBarsVertical_(true), v_(other->viewer()), qdp_(0), qpm_(0), qcm_(0), qap_(0), qfb_(0), qmr_(0), qrm_(0),
 				qsm_(0), qst_(0),
 				profile_(0), savedTool_(QtMouseToolNames::NONE),
 				profileDD_(0),
@@ -219,7 +220,7 @@ QtDisplayPanelGui::QtDisplayPanelGui( const QtDisplayPanelGui *other, QWidget *p
 				aboutDialog(NULL),
 				clean_tool(0), regionDock_(0),
 				status_bar_timer(new QTimer( )),
-				linkedCursorHandler(0), id_(idGen( )), autoDDOptionsShow(True) {
+				linkedCursorHandler(0), id_(idGen( )), autoDDOptionsShow(true) {
 
      construct_(new QtDisplayPanel(this, other->displayPanel( ),0,args),args);
 
@@ -227,7 +228,7 @@ QtDisplayPanelGui::QtDisplayPanelGui( const QtDisplayPanelGui *other, QWidget *p
 
 QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string rcstr, const std::list<std::string> &args ) :
 				QtPanelBase(parent), logger(LogOrigin("CASA", "Viewer")), qdm_(0),qem_(0),qdo_(0),
-				colorBarsVertical_(True), v_(v), qdp_(0), qpm_(0), qcm_(0), qap_(0), qfb_(0), qmr_(0), qrm_(0),
+				colorBarsVertical_(true), v_(v), qdp_(0), qpm_(0), qcm_(0), qap_(0), qfb_(0), qmr_(0), qrm_(0),
 				qsm_(0), qst_(0),
 				profile_(0), savedTool_(QtMouseToolNames::NONE),
 				profileDD_(0),
@@ -240,7 +241,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 				fitTool( NULL ), sliceTool( NULL ), imageManagerDialog(NULL),aboutDialog(NULL),
 				clean_tool(0), regionDock_(0),
 				status_bar_timer(new QTimer( )),
-				linkedCursorHandler(0), id_(idGen( )), autoDDOptionsShow(True) {
+				linkedCursorHandler(0), id_(idGen( )), autoDDOptionsShow(true) {
 
     construct_(new QtDisplayPanel(this,0,args),args);
 }
@@ -358,7 +359,7 @@ void QtDisplayPanelGui::construct_( QtDisplayPanel *newpanel, const std::list<st
 		fboxAct_      = tlMenu_->addAction("&Box in File");
 		annotAct_     = tlMenu_->addAction("Region in &File");
 		mkRgnAct_     = tlMenu_->addAction("Region in &Image");
-		//                  annotAct_->setEnabled(False);
+		//                  annotAct_->setEnabled(false);
 		connect(fboxAct_,    SIGNAL(triggered()),  SLOT(showFileBoxPanel()));
 		connect(annotAct_,   SIGNAL(triggered()),  SLOT(showAnnotatorPanel()));
 		connect(mkRgnAct_,   SIGNAL(triggered()),  SLOT(showMakeRegionPanel()));
@@ -366,7 +367,7 @@ void QtDisplayPanelGui::construct_( QtDisplayPanel *newpanel, const std::list<st
 
 	profileAct_   = tlMenu_->addAction("Spectral Profi&le...");
 	// rgnMgrAct_    = new QAction("Region Manager...", 0);
-	// rgnMgrAct_->setEnabled(False);
+	// rgnMgrAct_->setEnabled(false);
 
 	if ( ! use_new_regions ) {
 		shpMgrAct_    = tlMenu_->addAction("Shape Manager...");
@@ -417,7 +418,7 @@ void QtDisplayPanelGui::construct_( QtDisplayPanel *newpanel, const std::list<st
 	std::transform(mbpos.begin(), mbpos.end(), mbpos.begin(), ::tolower);
 	mouseToolBar_ = new QtMouseToolBar(v_->mouseBtns(), qdp_);
 	mouseToolBar_->setObjectName("Mouse Toolbar");
-	mouseToolBar_->setAllowedAreas( (Qt::ToolBarArea) ( Qt::LeftToolBarArea | Qt::TopToolBarArea |
+	mouseToolBar_->setAllowedAreas( (Qt::ToolBarAreas) ( Qt::LeftToolBarArea | Qt::TopToolBarArea |
 			Qt::RightToolBarArea | Qt::BottomToolBarArea ) );
 	addToolBarBreak();
 	addToolBar( mbpos == "left" ? Qt::LeftToolBarArea :
@@ -429,7 +430,7 @@ void QtDisplayPanelGui::construct_( QtDisplayPanel *newpanel, const std::list<st
 	customToolBar    = addToolBar("Custom Toolbar");
 	customToolBar->setObjectName("Custom Toolbar");
 	customToolBar->hide();	// (hidden by default).
-	customToolBar->toggleViewAction()->setVisible(False);
+	customToolBar->toggleViewAction()->setVisible(false);
 	// This can also be reversed: controls visibility
 	// of this toolbar in the 'View' (or rt.-click) menu.
 
@@ -438,7 +439,7 @@ void QtDisplayPanelGui::construct_( QtDisplayPanel *newpanel, const std::list<st
 	customToolBar2   = addToolBar("Custom Toolbar 2");
 	customToolBar2->setObjectName("Custom Toolbar 2");
 	customToolBar2->hide();
-	customToolBar2->toggleViewAction()->setVisible(False);
+	customToolBar2->toggleViewAction()->setVisible(false);
 
 	//Animation
 	initAnimationHolder();
@@ -547,7 +548,7 @@ void QtDisplayPanelGui::construct_( QtDisplayPanel *newpanel, const std::list<st
 	//  mainToolBar_->setIconSize(QSize(22,22));
 	setIconSize(QSize(22,22));
 
-	mainToolBar_->setMovable(False);
+	mainToolBar_->setMovable(false);
 
 	ddOpenAct_ ->setIcon(QIcon(":/icons/File_Open.png"));
 	ddSaveAct_ ->setIcon(QIcon(":/icons/Save_Img.png"));
@@ -598,14 +599,14 @@ void QtDisplayPanelGui::construct_( QtDisplayPanel *newpanel, const std::list<st
 
 
 	ddRegBtn_  ->setPopupMode(QToolButton::InstantPopup);
-	ddRegBtn_  ->setAutoRaise(True);
+	ddRegBtn_  ->setAutoRaise(true);
 	ddRegBtn_  ->setIconSize(QSize(22,22));
 
 	ddCloseBtn_->setPopupMode(QToolButton::InstantPopup);
-	ddCloseBtn_->setAutoRaise(True);
+	ddCloseBtn_->setAutoRaise(true);
 	ddCloseBtn_->setIconSize(QSize(22,22));
 
-	//  bottomToolBar_->setMovable(False);
+	//  bottomToolBar_->setMovable(false);
 	//  bottomToolBar_->hide();
 	//  (disabled unless/until something for it to contain).
 
@@ -1496,7 +1497,7 @@ QtDisplayData* QtDisplayPanelGui::addDD(String path, String dataType, String dis
 
 	// set flagg if requested
 	if (tmpData && dd != NULL ) {
-		dd->setDelTmpData(True);
+		dd->setDelTmpData(true);
 	}
 	return dd;
 }
@@ -1815,10 +1816,10 @@ List<QtDisplayData*> QtDisplayPanelGui::unregisteredDDs() {
 	while ( iter != displayDataHolder->endDD()) {
 		QtDisplayData* dd = (*iter);
 		iter++;
-		Bool regd = False;
+		Bool regd = false;
 		for ( std::list<QtDisplayPanelGui*>::iterator iter = dps.begin( ); iter != dps.end( ); ++iter ) {
 			if((*iter)->displayPanel( )->isRegistered(dd)) {
-				regd = True;
+				regd = true;
 				break;
 			}
 		}
@@ -1939,15 +1940,15 @@ void QtDisplayPanelGui::hideImageMenus() {
 			//      << ppd->isCSmaster(pdd->dd()) << endl;
 			if (ppd != 0 && ppd->isCSmaster(pdd->dd())) {
 				if (pdd->isImage() && img ) {
-					if ( fboxAct_ ) fboxAct_->setEnabled(True);
-					if ( mkRgnAct_ ) mkRgnAct_->setEnabled(True);
-					if ( annotAct_ ) annotAct_->setEnabled(True);
-					profileAct_->setEnabled(True);
-					momentsCollapseAct_->setEnabled(True);
-					histogramAct_->setEnabled(True);
-					fitAct_->setEnabled( True );
-					if ( shpMgrAct_ ) shpMgrAct_->setEnabled(True);
-					setUseRegion(False);
+					if ( fboxAct_ ) fboxAct_->setEnabled(true);
+					if ( mkRgnAct_ ) mkRgnAct_->setEnabled(true);
+					if ( annotAct_ ) annotAct_->setEnabled(true);
+					profileAct_->setEnabled(true);
+					momentsCollapseAct_->setEnabled(true);
+					histogramAct_->setEnabled(true);
+					fitAct_->setEnabled( true );
+					if ( shpMgrAct_ ) shpMgrAct_->setEnabled(true);
+					setUseRegion(false);
 					break;
 				}
 				if (pdd->isMS() || img ==0) {
@@ -1962,15 +1963,15 @@ void QtDisplayPanelGui::hideImageMenus() {
 					hideShapeManager();
 					hideStats();
 
-					if ( fboxAct_ ) fboxAct_->setEnabled(False);
-					if ( mkRgnAct_ ) mkRgnAct_->setEnabled(False);
-					if ( annotAct_ ) annotAct_->setEnabled(False);
-					profileAct_->setEnabled(False);
-					momentsCollapseAct_->setEnabled( False );
-					histogramAct_->setEnabled( False );
-					fitAct_->setEnabled( False );
-					if ( shpMgrAct_ ) shpMgrAct_->setEnabled(False);
-					setUseRegion(False);
+					if ( fboxAct_ ) fboxAct_->setEnabled(false);
+					if ( mkRgnAct_ ) mkRgnAct_->setEnabled(false);
+					if ( annotAct_ ) annotAct_->setEnabled(false);
+					profileAct_->setEnabled(false);
+					momentsCollapseAct_->setEnabled( false );
+					histogramAct_->setEnabled( false );
+					fitAct_->setEnabled( false );
+					if ( shpMgrAct_ ) shpMgrAct_->setEnabled(false);
+					setUseRegion(false);
 					//cout << "hide image menus" << endl;
 					break;
 				}
@@ -2061,7 +2062,7 @@ void QtDisplayPanelGui::showDataOptionsPanel() {
 			qdo_ = new QtDataOptionsPanel(this);
 			connect( qdo_, SIGNAL( globalColorSettingsChanged(bool)), this, SLOT(globalColorSettingsChanged( bool )));
 		}
-		if(qdo_!=0) {  // (should be True, barring exceptions above).
+		if(qdo_!=0) {  // (should be true, barring exceptions above).
 			qdo_->showNormal();
 			qdo_->raise();
 		}
@@ -2267,18 +2268,18 @@ void QtDisplayPanelGui::showFileBoxPanel() {
 	}
 	qfb_->showNormal();
 	qfb_->raise();
-	if ( annotAct_ ) annotAct_->setEnabled(False);
-	if ( mkRgnAct_ ) mkRgnAct_->setEnabled(False);
-	setUseRegion(True);
+	if ( annotAct_ ) annotAct_->setEnabled(false);
+	if ( mkRgnAct_ ) mkRgnAct_->setEnabled(false);
+	setUseRegion(true);
 }
 
 void QtDisplayPanelGui::hideFileBoxPanel() {
 	if (qfb_==0)
 		return;
 	qfb_->hide();
-	if ( annotAct_ ) annotAct_->setEnabled(True);
-	if ( mkRgnAct_ ) mkRgnAct_->setEnabled(True);
-	setUseRegion(False);
+	if ( annotAct_ ) annotAct_->setEnabled(true);
+	if ( mkRgnAct_ ) mkRgnAct_->setEnabled(true);
+	setUseRegion(false);
 }
 
 void QtDisplayPanelGui::showAnnotatorPanel() {
@@ -2302,9 +2303,9 @@ void QtDisplayPanelGui::showAnnotatorPanel() {
 	}
 	qap_->showNormal();
 	qap_->raise();
-	if ( fboxAct_ ) fboxAct_->setEnabled(False);
-	if ( mkRgnAct_ ) mkRgnAct_->setEnabled(False);
-	setUseRegion(True);
+	if ( fboxAct_ ) fboxAct_->setEnabled(false);
+	if ( mkRgnAct_ ) mkRgnAct_->setEnabled(false);
+	setUseRegion(true);
 }
 
 void QtDisplayPanelGui::hideAnnotatorPanel() {
@@ -2312,9 +2313,9 @@ void QtDisplayPanelGui::hideAnnotatorPanel() {
 	if (qap_==0)
 		return;
 	qap_->hide();
-	if ( fboxAct_ ) fboxAct_->setEnabled(True);
-	if ( mkRgnAct_ ) mkRgnAct_->setEnabled(True);
-	setUseRegion(False);
+	if ( fboxAct_ ) fboxAct_->setEnabled(true);
+	if ( mkRgnAct_ ) mkRgnAct_->setEnabled(true);
+	setUseRegion(false);
 }
 
 void QtDisplayPanelGui::showMakeRegionPanel() {
@@ -2342,9 +2343,9 @@ void QtDisplayPanelGui::showMakeRegionPanel() {
 			}
 		}
 	}
-	if ( fboxAct_ ) fboxAct_->setEnabled(False);
-	if ( annotAct_ ) annotAct_->setEnabled(False);
-	setUseRegion(True);
+	if ( fboxAct_ ) fboxAct_->setEnabled(false);
+	if ( annotAct_ ) annotAct_->setEnabled(false);
+	setUseRegion(true);
 
 }
 
@@ -2353,9 +2354,9 @@ void QtDisplayPanelGui::hideMakeRegionPanel() {
 	if (qmr_==0)
 		return;
 	qmr_->hide();
-	if ( fboxAct_ ) fboxAct_->setEnabled(True);
-	if ( annotAct_ ) annotAct_->setEnabled(True);
-	setUseRegion(False);
+	if ( fboxAct_ ) fboxAct_->setEnabled(true);
+	if ( annotAct_ ) annotAct_->setEnabled(true);
+	setUseRegion(false);
 }
 
 void QtDisplayPanelGui::initializeProfile( ){
@@ -2822,13 +2823,13 @@ Bool QtDisplayPanelGui::syncDataDir_(String filename) {
 	// DataManager window and save-restore dialogs.
 
 	QDir datadir = QFileInfo(filename.chars()).dir();
-	if(!datadir.exists()) return False;
+	if(!datadir.exists()) return false;
 
 	QString datadirname = datadir.path();
 
 	if(dataMgr()!=0) dataMgr()->updateDirectory(datadirname.toStdString( ));
 	else selectedDMDir = datadirname.toStdString();
-	return True;
+	return true;
 }
 
 
@@ -2898,7 +2899,7 @@ void QtDisplayPanelGui::restoreGuiState_(QDomDocument* restoredoc) {
 	QDomElement winsize = dpgSettings.firstChildElement("window-size");
 	QString wd = winsize.attribute("width", "#"),
 			ht = winsize.attribute("height", "#");
-	Bool w_ok = False, h_ok = False;
+	Bool w_ok = false, h_ok = false;
 	Int w = wd.toInt(&w_ok);
 	Int h = ht.toInt(&h_ok);
 

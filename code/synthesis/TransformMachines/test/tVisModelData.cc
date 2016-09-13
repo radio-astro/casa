@@ -87,7 +87,7 @@ main(int argc, char **argv){
     //vm.addModel(outRec, Vector<Int>(1, 0), vb);
     Vector<Int>spws(4);
     indgen(spws);
-    vm.putModel(myms, container, field, spws, Vector<Int>(1,0), Vector<Int>(1,63), Vector<Int>(1,1), True, False);
+    vm.putModel(myms, container, field, spws, Vector<Int>(1,0), Vector<Int>(1,63), Vector<Int>(1,1), true, false);
     vm.clearModel(myms, "1", "2");
     if(argc>2){
       PagedImage<Float> modim(argv[2]);
@@ -95,11 +95,11 @@ main(int argc, char **argv){
       StokesImageUtil::From(cmod, modim);
       MPosition loc;
       MeasTable::Observatory(loc, vi.msColumns().observation().telescopeName()(0));
-      GridFT ftm(1000000, 16, "SF", loc, 1.0, False, False);
+      GridFT ftm(1000000, 16, "SF", loc, 1.0, false, false);
       ftm.initializeToVis(cmod, vb);
       Record elrec;
       String err;
-      ftm.toRecord(err, elrec, True);
+      ftm.toRecord(err, elrec, true);
       Record ftrec;
       ftrec.define("type", "ftmachine");
       ftrec.define("fields", Vector<Int>(1, 0));

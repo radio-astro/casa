@@ -3,7 +3,7 @@
 #define CAxisName_H
 
 /*
- * ALMA - Atacama Large Millimeter Array
+ * ALMA - Atacama Large Millimeter casacore::Array
  * (c) European Southern Observatory, 2002
  * (c) Associated Universities Inc., 2002
  * Copyright by ESO (in the framework of the ALMA collaboration),
@@ -33,7 +33,7 @@
  * //  ---------------------------------------------------------  //
  * /////////////////////////////////////////////////////////////////
  *
- * File CAxisName.h
+ * casacore::File CAxisName.h
  */
 
 #ifndef __cplusplus
@@ -61,7 +61,7 @@ namespace AxisNameMod
   
   enum AxisName
   { 
-    TIM /*!< Time axis. */
+    TIM /*!< casacore::Time axis. */
      ,
     BAL /*!< Baseline axis. */
      ,
@@ -81,9 +81,9 @@ namespace AxisNameMod
      ,
     SPP /*!< Spectral point axis. */
      ,
-    POL /*!< Polarization axis (Stokes parameters). */
+    POL /*!< Polarization axis (casacore::Stokes parameters). */
      ,
-    STO /*!< Stokes parameter axis. */
+    STO /*!< casacore::Stokes parameter axis. */
      ,
     HOL /*!< Holography axis. */
      

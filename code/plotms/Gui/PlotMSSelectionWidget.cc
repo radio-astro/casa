@@ -28,6 +28,7 @@
 
 #include <QLabel>
 
+using namespace casacore;
 namespace casa {
 
 PlotMSSelectionWidget::PlotMSSelectionWidget(QWidget* parent) :

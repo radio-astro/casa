@@ -39,13 +39,17 @@
 #include <utility>
 #include <vector>
 
-namespace casa {
+namespace casacore{
 
 class CoordinateSystem;
 class IPosition;
 class Record;
 template <class T> class TempImage;
 template <class T> class Vector;
+}
+
+namespace casa {
+
 
 class ImageFactory {
 	// <summary>
@@ -75,163 +79,163 @@ public:
 
     ~ImageFactory() {};
 
-    // Create a TempImage if outfile is empty, otherwise a PagedImage.
-    // If log is True, log useful messages, quiet if False. Created image
+    // Create a casacore::TempImage if outfile is empty, otherwise a PagedImage.
+    // If log is true, log useful messages, quiet if false. Created image
     // has all pixel values set to zero and is unmasked.
     template <class T> static SPIIT createImage(
-        const String& outfile,
-        const CoordinateSystem& cSys, const IPosition& shape,
-        Bool log, Bool overwrite,
-        const std::vector<std::pair<LogOrigin, String> > *const &msgs
+        const casacore::String& outfile,
+        const casacore::CoordinateSystem& cSys, const casacore::IPosition& shape,
+        casacore::Bool log, casacore::Bool overwrite,
+        const std::vector<std::pair<casacore::LogOrigin, casacore::String> > *const &msgs
     );
 
-    static String className() { static const String s = "ImageFactory"; return s; }
+    static casacore::String className() { static const casacore::String s = "ImageFactory"; return s; }
 
     // create an image with the specified shape and specified coordinate system.
-    // If outfile is blank, the returned object is a TempImage, PagedImage otherwise.
+    // If outfile is blank, the returned object is a casacore::TempImage, casacore::PagedImage otherwise.
     // If csys is empty,
     // a default coordiante system is attached to the image, and if linear
-    // is True, it has linear coordinates in place of the direction coordinate.
+    // is true, it has linear coordinates in place of the direction coordinate.
 
     static SPIIF floatImageFromShape(
-    	const String& outfile, const Vector<Int>& shape,
-    	const Record& csys, Bool linear=True,
-    	Bool overwrite=False, Bool verbose=True,
-        const std::vector<std::pair<LogOrigin, String> > *const &msgs=0
+    	const casacore::String& outfile, const casacore::Vector<casacore::Int>& shape,
+    	const casacore::Record& csys, casacore::Bool linear=true,
+    	casacore::Bool overwrite=false, casacore::Bool verbose=true,
+        const std::vector<std::pair<casacore::LogOrigin, casacore::String> > *const &msgs=0
     );
 
     static SPIIC complexImageFromShape(
-    	const String& outfile, const Vector<Int>& shape,
-    	const Record& csys, Bool linear=True,
-    	Bool overwrite=False, Bool verbose=True,
-        const std::vector<std::pair<LogOrigin, String> > *const &msgs=0
+    	const casacore::String& outfile, const casacore::Vector<casacore::Int>& shape,
+    	const casacore::Record& csys, casacore::Bool linear=true,
+    	casacore::Bool overwrite=false, casacore::Bool verbose=true,
+        const std::vector<std::pair<casacore::LogOrigin, casacore::String> > *const &msgs=0
     );
 
     // only the pointer of the correct data type will be valid, the other
     // will be null.
     static std::pair<SPIIF, SPIIC> fromImage(
-        const String& outfile, const String& infile,
-        const Record& region, const String& mask,
-        Bool dropdeg=False,
-        Bool overwrite=False
+        const casacore::String& outfile, const casacore::String& infile,
+        const casacore::Record& region, const casacore::String& mask,
+        casacore::Bool dropdeg=false,
+        casacore::Bool overwrite=false
     );
 
     template <class T> static SPIIT imageFromArray(
-    	const String& outfile, const Array<T>& pixels,
-    	const Record& csys, Bool linear=False,
-    	Bool overwrite=False, Bool verbose=True,
-    	const vector<std::pair<LogOrigin, String> > *const &msgs=0
+    	const casacore::String& outfile, const casacore::Array<T>& pixels,
+    	const casacore::Record& csys, casacore::Bool linear=false,
+    	casacore::Bool overwrite=false, casacore::Bool verbose=true,
+    	const vector<std::pair<casacore::LogOrigin, casacore::String> > *const &msgs=0
     );
 
     static SPIIF fromASCII(
-        const String& outfile, const String& infile,
-        const IPosition& shape, const String& sep, const Record& csys,
-        const Bool linear, const Bool overwrite
+        const casacore::String& outfile, const casacore::String& infile,
+        const casacore::IPosition& shape, const casacore::String& sep, const casacore::Record& csys,
+        const casacore::Bool linear, const casacore::Bool overwrite
     );
 
     // Create a float-valued image from a complex-valued image. All metadata is copied
     // and pixel values are initialized according to <src>func</src>.
-    static SHARED_PTR<TempImage<Float> > floatFromComplex(
+    static SHARED_PTR<casacore::TempImage<casacore::Float> > floatFromComplex(
     	SPCIIC complexImage, ComplexToFloatFunction func
     );
 
     // Create a complex-valued image from a float-valued image (real part)
     // and float-valued array (imaginary part). All metadata is copied from the
     // real image and pixel values are initialized to realPart + i*complexPart
-    static SHARED_PTR<TempImage<Complex> > complexFromFloat(
-    	SPCIIF realPart, const Array<Float>& imagPart
+    static SHARED_PTR<casacore::TempImage<casacore::Complex> > complexFromFloat(
+    	SPCIIF realPart, const casacore::Array<casacore::Float>& imagPart
     );
 
     // Create a complex-valued image from a float-valued image (real part)
     // and float-valued array (imaginary part). All metadata is copied from the
     // real image and pixel values are initialized to realPart + i*complexPart
     static SPIIC makeComplex(
-    	SPCIIF realPart, SPCIIF imagPart, const String& outfile,
-		const Record& region, Bool overwrite = False
+    	SPCIIF realPart, SPCIIF imagPart, const casacore::String& outfile,
+		const casacore::Record& region, casacore::Bool overwrite = false
     );
 
     // exactly one of the pointers will not be null, indicating the
     // pixel data type
-    static std::pair<SPIIF, SPIIC> fromFile(const String& filename);
+    static std::pair<SPIIF, SPIIC> fromFile(const casacore::String& filename);
 
     static SPIIF fromFITS(
-        const String& outfile, const String& fitsfile,
-        const Int whichrep, const Int whichhdu,
-        const Bool zeroBlanks, const Bool overwrite
+        const casacore::String& outfile, const casacore::String& fitsfile,
+        const casacore::Int whichrep, const casacore::Int whichhdu,
+        const casacore::Bool zeroBlanks, const casacore::Bool overwrite
     );
 
     static std::pair<SPIIF, SPIIC> fromRecord(
-        const RecordInterface& rec, const String& imagename=""
+        const casacore::RecordInterface& rec, const casacore::String& imagename=""
     );
 
-    template <class T> static void remove(SPIIT& image, Bool verbose);
+    template <class T> static void remove(SPIIT& image, casacore::Bool verbose);
 
     // if successful, image will be reset to point to new image upon return
     static void rename(
-    	SPIIF& image, const String& name, const Bool overwrite
+    	SPIIF& image, const casacore::String& name, const casacore::Bool overwrite
     );
 
     static void rename(
-    	SPIIC& image, const String& name, const Bool overwrite
+    	SPIIC& image, const casacore::String& name, const casacore::Bool overwrite
     );
 
     // open a canonical image
     static SPIIF testImage(
-        const String& outfile, const Bool overwrite,
-        const String& imagetype="2d"
+        const casacore::String& outfile, const casacore::Bool overwrite,
+        const casacore::String& imagetype="2d"
     );
 
     static void toASCII(
     	SPCIIF image,
-    	const String& outfile, Record& region, const String& mask,
-        const String& sep=" ", const String& format="%e",
-        Double maskvalue=-999, Bool overwrite=False,
-        Bool extendMask=False
+    	const casacore::String& outfile, casacore::Record& region, const casacore::String& mask,
+        const casacore::String& sep=" ", const casacore::String& format="%e",
+        casacore::Double maskvalue=-999, casacore::Bool overwrite=false,
+        casacore::Bool extendMask=false
     );
 
     static void toFITS(
-    	SPCIIF image, const String& outfile, Bool velocity,
-		Bool optical, Int bitpix, Double minpix, Double maxpix,
-		const Record& region, const String& mask,
-		Bool overwrite=False, Bool dropdeg=False, Bool deglast=False,
-		Bool dropstokes=False, Bool stokeslast=False,
-		Bool wavelength=False, Bool airWavelength=False,
-		const String& origin="", Bool stretch=False, Bool history=True
+    	SPCIIF image, const casacore::String& outfile, casacore::Bool velocity,
+		casacore::Bool optical, casacore::Int bitpix, casacore::Double minpix, casacore::Double maxpix,
+		const casacore::Record& region, const casacore::String& mask,
+		casacore::Bool overwrite=false, casacore::Bool dropdeg=false, casacore::Bool deglast=false,
+		casacore::Bool dropstokes=false, casacore::Bool stokeslast=false,
+		casacore::Bool wavelength=false, casacore::Bool airWavelength=false,
+		const casacore::String& origin="", casacore::Bool stretch=false, casacore::Bool history=true
     );
 
 private:
 
 	template <class T> static SPIIT _fromShape(
-		const String& outfile, const Vector<Int>& shape,
-		const Record& csys, Bool linear,
-		Bool overwrite, Bool verbose,
-        const std::vector<std::pair<LogOrigin, String> > *const &msgs
+		const casacore::String& outfile, const casacore::Vector<casacore::Int>& shape,
+		const casacore::Record& csys, casacore::Bool linear,
+		casacore::Bool overwrite, casacore::Bool verbose,
+        const std::vector<std::pair<casacore::LogOrigin, casacore::String> > *const &msgs
 	);
 
 	template <class T> static SPIIT _fromRecord(
-	    const RecordInterface& rec, const String& name
+	    const casacore::RecordInterface& rec, const casacore::String& name
 	);
 
 	static void _centerRefPix(
-		CoordinateSystem& csys, const IPosition& shape
+		casacore::CoordinateSystem& csys, const casacore::IPosition& shape
 	);
 
-	static void _checkInfile(const String& infile);
+	static void _checkInfile(const casacore::String& infile);
 
-    // Convert a Record to a CoordinateSystem
-    static CoordinateSystem* _makeCoordinateSystem(
-        const casa::Record& cSys,
-        const casa::IPosition& shape
+    // Convert a casacore::Record to a CoordinateSystem
+    static casacore::CoordinateSystem* _makeCoordinateSystem(
+        const casacore::Record& cSys,
+        const casacore::IPosition& shape
     );
 
-    static void _checkOutfile(const String& outfile, Bool overwrite);
+    static void _checkOutfile(const casacore::String& outfile, casacore::Bool overwrite);
 
-    static std::pair<SPIIF, SPIIC> _fromLatticeBase(std::unique_ptr<LatticeBase>& latt);
+    static std::pair<SPIIF, SPIIC> _fromLatticeBase(std::unique_ptr<casacore::LatticeBase>& latt);
 
     // if successful, image will point to the newly named image
     // upone return
     template <class T> static std::pair<SPIIF, SPIIC> _rename(
-    	SPIIT& image, const String& name, const Bool overwrite
+    	SPIIT& image, const casacore::String& name, const casacore::Bool overwrite
     );
 
 };

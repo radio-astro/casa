@@ -81,7 +81,7 @@ public:
 
 
     //Get the files that the user loaded.
-    vector<String> getFiles() const;
+    vector<casacore::String> getFiles() const;
     void completePlotting( bool success, PlotMSPlot* plot );
 signals:
 	void changed( int index );

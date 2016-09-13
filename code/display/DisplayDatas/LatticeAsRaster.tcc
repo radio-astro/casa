@@ -39,20 +39,20 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	template <class T>
-	const String LatticeAsRaster<T>::HISTOGRAM_RANGE = "minmaxhist";
+	const casacore::String LatticeAsRaster<T>::HISTOGRAM_RANGE = "minmaxhist";
 	template <class T>
-	const String LatticeAsRaster<T>::COLOR_MODE = "colormode";
+	const casacore::String LatticeAsRaster<T>::COLOR_MODE = "colormode";
 
 
 // >2d array-based ctor
 	template <class T>
-	LatticeAsRaster<T>::LatticeAsRaster(Array<T> *array, const uInt xAxis,
-	                                    const uInt yAxis, const uInt mAxis,
-	                                    const IPosition fixedPos) :
+	LatticeAsRaster<T>::LatticeAsRaster(casacore::Array<T> *array, const casacore::uInt xAxis,
+	                                    const casacore::uInt yAxis, const casacore::uInt mAxis,
+	                                    const casacore::IPosition fixedPos) :
 		LatticePADisplayData<T>(array, xAxis, yAxis, mAxis, fixedPos) {
 		setupElements();
-		String attString("colormodel");
-		Attribute attColor(attString, Int(Display::Index));
+		casacore::String attString("colormodel");
+		Attribute attColor(attString, casacore::Int(Display::Index));
 		setAttribute(attColor);
 		itsPowerScaleHandler = new WCPowerScaleHandler;
 		setDefaultOptions();
@@ -60,12 +60,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // 2d array-based ctor
 	template <class T>
-	LatticeAsRaster<T>::LatticeAsRaster(Array<T> *array, const uInt xAxis,
-	                                    const uInt yAxis) :
+	LatticeAsRaster<T>::LatticeAsRaster(casacore::Array<T> *array, const casacore::uInt xAxis,
+	                                    const casacore::uInt yAxis) :
 		LatticePADisplayData<T>(array, xAxis, yAxis) {
 		setupElements();
-		String attString("colormodel");
-		Attribute attColor(attString, Int(Display::Index));
+		casacore::String attString("colormodel");
+		Attribute attColor(attString, casacore::Int(Display::Index));
 		setAttribute(attColor);
 		itsPowerScaleHandler = new WCPowerScaleHandler;
 		setDefaultOptions();
@@ -73,11 +73,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // >2d image-based ctor
 	template <class T>
-	LatticeAsRaster<T>::LatticeAsRaster( SHARED_PTR<ImageInterface<T> > image,const uInt xAxis, const uInt yAxis, const uInt mAxis, const IPosition fixedPos, viewer::StatusSink *sink ) :
+	LatticeAsRaster<T>::LatticeAsRaster( SHARED_PTR<casacore::ImageInterface<T> > image,const casacore::uInt xAxis, const casacore::uInt yAxis, const casacore::uInt mAxis, const casacore::IPosition fixedPos, viewer::StatusSink *sink ) :
 		LatticePADisplayData<T>( image, xAxis, yAxis, mAxis, fixedPos, sink ) {
 		setupElements();
-		String attString("colormodel");
-		Attribute attColor(attString, Int(Display::Index));
+		casacore::String attString("colormodel");
+		Attribute attColor(attString, casacore::Int(Display::Index));
 		setAttribute(attColor);
 		itsPowerScaleHandler = new WCPowerScaleHandler;
 		setDefaultOptions();
@@ -85,12 +85,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // 2d image-based ctor
 	template <class T>
-	LatticeAsRaster<T>::LatticeAsRaster(SHARED_PTR<ImageInterface<T> > image,
-	                                    const uInt xAxis, const uInt yAxis) :
+	LatticeAsRaster<T>::LatticeAsRaster(SHARED_PTR<casacore::ImageInterface<T> > image,
+	                                    const casacore::uInt xAxis, const casacore::uInt yAxis) :
 		LatticePADisplayData<T>(image, xAxis, yAxis) {
 		setupElements();
-		String attString("colormodel");
-		Attribute attColor(attString, Int(Display::Index));
+		casacore::String attString("colormodel");
+		Attribute attColor(attString, casacore::Int(Display::Index));
 		setAttribute(attColor);
 		itsPowerScaleHandler = new WCPowerScaleHandler;
 		setDefaultOptions();
@@ -98,7 +98,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	template <class T>
 	LatticeAsRaster<T>::~LatticeAsRaster() {
-		for (uInt i=0; i<nelements(); i++) if(DDelement[i]!=0)
+		for (casacore::uInt i=0; i<nelements(); i++) if(DDelement[i]!=0)
 				delete static_cast<LatticePADMRaster<T>*>(DDelement[i]);
 		if (itsPowerScaleHandler) {
 			delete itsPowerScaleHandler;
@@ -109,18 +109,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	template <class T>
 	void LatticeAsRaster<T>::setupElements() {
 
-		for (uInt i=0; i<nelements(); i++) if(DDelement[i]!=0) {
+		for (casacore::uInt i=0; i<nelements(); i++) if(DDelement[i]!=0) {
 				delete static_cast<LatticePADMRaster<T>*>(DDelement[i]);
 				DDelement[i]=0;
 			}
 		// Delete old DMs, if any.
 
-		IPosition fixedPos = fixedPosition();
-		Vector<Int> dispAxes = displayAxes();
+		casacore::IPosition fixedPos = fixedPosition();
+		casacore::Vector<casacore::Int> dispAxes = displayAxes();
 		if (nPixelAxes > 2) {
 			setNumImages(dataShape()(dispAxes(2)));
 			DDelement.resize(nelements());
-			for (uInt index = 0; index < nelements(); index++) {
+			for (casacore::uInt index = 0; index < nelements(); index++) {
 				fixedPos(dispAxes(2)) = index;
 				DDelement[index] = (LatticePADisplayMethod<T> *)new
 				                   LatticePADMRaster<T>(dispAxes(0), dispAxes(1), dispAxes(2),
@@ -180,8 +180,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	template <class T>
 	void LatticeAsRaster<T>::initializeDataMatrix( int index,
-			Matrix<T>& datMatrix, Matrix<Bool>& mask, const IPosition& start,
-			const IPosition& sliceShape, const IPosition& stride ){
+			casacore::Matrix<T>& datMatrix, casacore::Matrix<casacore::Bool>& mask, const casacore::IPosition& start,
+			const casacore::IPosition& sliceShape, const casacore::IPosition& stride ){
 		if ( index < static_cast<int>(DDelement.size())){
 			((LatticePADisplayMethod<T> *)(DDelement[index]))->dataGetSlice( datMatrix, mask, start, sliceShape, stride);
 		}
@@ -207,30 +207,30 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	template <class T>
-	Bool LatticeAsRaster<T>::setOptions(Record &rec, Record &recOut) {
+	casacore::Bool LatticeAsRaster<T>::setOptions(casacore::Record &rec, casacore::Record &recOut) {
 
-		Bool localchange = False;
-		Bool error;
+		casacore::Bool localchange = false;
+		casacore::Bool error;
 
 		//Do this to save some headaches later. Ensure the value array of minmaxhist
 		//(if it exists) is a float.
 
 		if (rec.isDefined(HISTOGRAM_RANGE)) {
-			if (rec.dataType(HISTOGRAM_RANGE) == TpRecord) {
-				Record minmax = rec.subRecord(HISTOGRAM_RANGE);
+			if (rec.dataType(HISTOGRAM_RANGE) == casacore::TpRecord) {
+				casacore::Record minmax = rec.subRecord(HISTOGRAM_RANGE);
 				if (minmax.isDefined("value")) {
-					DataType theType = minmax.dataType("value");
+					casacore::DataType theType = minmax.dataType("value");
 
-					if (theType != TpArrayFloat) {
-						Vector<Float> newValue(minmax.toArrayFloat("value"));
+					if (theType != casacore::TpArrayFloat) {
+						casacore::Vector<casacore::Float> newValue(minmax.toArrayFloat("value"));
 						minmax.removeField("value");
 						minmax.define("value", newValue);
 						rec.defineRecord(HISTOGRAM_RANGE, minmax);
 					}
 				}
 			} else {
-				if (rec.dataType(HISTOGRAM_RANGE) != TpArrayFloat) {
-					Vector<Float> newValue(rec.toArrayFloat(HISTOGRAM_RANGE));
+				if (rec.dataType(HISTOGRAM_RANGE) != casacore::TpArrayFloat) {
+					casacore::Vector<casacore::Float> newValue(rec.toArrayFloat(HISTOGRAM_RANGE));
 					rec.removeField(HISTOGRAM_RANGE);
 					rec.define(HISTOGRAM_RANGE, newValue);
 				}
@@ -239,7 +239,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 
-		Bool ret = LatticePADisplayData<T>::setOptions(rec, recOut);
+		casacore::Bool ret = LatticePADisplayData<T>::setOptions(rec, recOut);
 
 		//Check for a change
 		localchange = ((readOptionRecord(itsOptionsDataRange, error, rec, HISTOGRAM_RANGE)) ||
@@ -258,31 +258,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	template <class T>
-	Record LatticeAsRaster<T>::getOptions( bool scrub ) const {
+	casacore::Record LatticeAsRaster<T>::getOptions( bool scrub ) const {
 
-		Record rec = LatticePADisplayData<T>::getOptions(scrub);
+		casacore::Record rec = LatticePADisplayData<T>::getOptions(scrub);
 
-		((LatticeAsRaster<T>*)this)->itsOptionsDataDefault(0) = Float(getDataMin());
-		((LatticeAsRaster<T>*)this)->itsOptionsDataDefault(1) = Float(getDataMax());
+		((LatticeAsRaster<T>*)this)->itsOptionsDataDefault(0) = casacore::Float(getDataMin());
+		((LatticeAsRaster<T>*)this)->itsOptionsDataDefault(1) = casacore::Float(getDataMax());
 
-		Record minmaxhist;
+		casacore::Record minmaxhist;
 		minmaxhist.define("dlformat", HISTOGRAM_RANGE);
-		minmaxhist.define("listname", "Data Range");
+		minmaxhist.define("listname", "casacore::Data Range");
 		minmaxhist.define("ptype", HISTOGRAM_RANGE);
-		minmaxhist.define("pmin", Float(getDataMin()));
-		minmaxhist.define("pmax", Float(getDataMax()));
+		minmaxhist.define("pmin", casacore::Float(getDataMin()));
+		minmaxhist.define("pmax", casacore::Float(getDataMax()));
 		minmaxhist.define("default", itsOptionsDataDefault);
 		minmaxhist.define("value", itsOptionsDataRange);
 		minmaxhist.defineRecord("histarray", getHist());
 		minmaxhist.define("imageunits", getBrightnessUnits());
-		minmaxhist.define("allowunset", False);
+		minmaxhist.define("allowunset", false);
 		rec.defineRecord(HISTOGRAM_RANGE, minmaxhist);
 
-		Record colormode;
+		casacore::Record colormode;
 		colormode.define("dlformat", "colormode");
 		colormode.define("listname", "Color mode");
 		colormode.define("ptype", "choice");
-		Vector<String> vcolormode(7);
+		casacore::Vector<casacore::String> vcolormode(7);
 		vcolormode(0) = "colormap";
 		vcolormode(1) = "red";
 		vcolormode(2) = "green";
@@ -293,10 +293,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		colormode.define("popt", vcolormode);
 		colormode.define("default", vcolormode(0));
 		colormode.define("value", itsOptionsColorMode);
-		colormode.define("allowunset", False);
+		colormode.define("allowunset", false);
 		rec.defineRecord(COLOR_MODE, colormode);
 
-		Record powerscalerec = itsPowerScaleHandler->getOptions();
+		casacore::Record powerscalerec = itsPowerScaleHandler->getOptions();
 		rec.merge(powerscalerec);
 
 		return rec;

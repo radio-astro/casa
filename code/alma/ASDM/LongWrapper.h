@@ -21,7 +21,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
  * MA 02111-1307  USA
  *
- * File Long.h
+ * casacore::File Long.h
  */
 # ifndef Long_CLASS
 # define Long_CLASS
@@ -37,6 +37,7 @@ namespace asdm {
  * A collection of static methods to perform conversions
  * between strings and int64_t values.
  */
+
 class Long {
 
 public:

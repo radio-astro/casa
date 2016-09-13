@@ -43,6 +43,7 @@
 #include <map>
 
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 FluxCalcVQS::FluxCalcVQS() :
   srcEnum_p(FluxStdSrcs::UNKNOWN_SOURCE),
@@ -68,7 +69,7 @@ Bool FluxCalcVQS::operator()(Vector<Flux<Double> >& values,
 
   Bool success = true;
   for(uInt f = 0; f < nfreqs; ++f)
-    success &= (*this)(values[f], errors[f], mfreqs[f], False);
+    success &= (*this)(values[f], errors[f], mfreqs[f], false);
 
   return success;
 }
@@ -106,7 +107,7 @@ Bool FluxCalcVQS::operator()(Vector<Flux<Double> >& values,
   for(uInt f = 0; f < nfreqs; ++f){
     for(uInt iep=0; iep < (uInt)nep; ++iep) {
       setSourceCoeffsfromVec(iep);    
-      success &= (*this)(tmpfluxes,tmperrors,mfreqs[f],True);
+      success &= (*this)(tmpfluxes,tmperrors,mfreqs[f],true);
       tmpfluxes.value(tmpfluxvec);
       tmperrors.value(tmperrvec);
       // currently only I flux is returned...
@@ -170,9 +171,9 @@ void FluxCalcVQS::readQSCoeffsTable(const Path& fileName)
   const ROArrayColumn<Float> CoeffCol(Table_p, srcCoeffColName);
   const ROArrayColumn<Float> CoeffErrorCol(Table_p, srcCoeffErrorColName);
   Vector<Double> tempEpochs;
-  epochCol.getColumn(tempEpochs,True);
-  CoeffCol.getColumn(coeffsmat_p,True);
-  CoeffErrorCol.getColumn(coefferrsmat_p,True);
+  epochCol.getColumn(tempEpochs,true);
+  CoeffCol.getColumn(coeffsmat_p,true);
+  CoeffErrorCol.getColumn(coefferrsmat_p,true);
   //convert the epoch (year + fraction) to mjd
   convertYearFracToMjd(tempEpochs,epochvec_p);
   os << LogIO::DEBUG1

@@ -30,18 +30,20 @@
 #include <asdmstman/AsdmColumn.h>
 #include <casa/Arrays/Array.h>
 
+using namespace casacore;
 using namespace casa;
 
+using namespace casacore;
 namespace casa {
 
   AsdmColumn::~AsdmColumn()
   {}
   Bool AsdmColumn::isWritable() const
   {
-    // We return True even though the column is not writable. If an actual write is done,
+    // We return true even though the column is not writable. If an actual write is done,
     // an exception will be thrown. This ensures that the AsdmStMan will work with MSMainColumns.
     // The alternative solutions would cause too much code duplication.
-    return True;
+    return true;
   }
   void AsdmColumn::setShapeColumn (const IPosition&)
   {}
@@ -64,7 +66,7 @@ namespace casa {
   }
 
   void AsdmDataColumn::getSliceComplexV (uInt rowNumber, const Slicer & slicer,
-                                         Array<casa::Complex> * destination)
+                                         Array<casacore::Complex> * destination)
   {
      // Create an array to hold the entire table cell.
 
@@ -95,13 +97,13 @@ namespace casa {
   }
   void AsdmFlagColumn::getArrayBoolV (uInt, Array<Bool>* dataPtr)
   {
-    *dataPtr = False;
+    *dataPtr = false;
   }
 
   void AsdmFlagColumn::getSliceBoolV (uInt /*rowNumber*/, const Slicer & /* slicer */,
-                                       Array<casa::Bool> * destination)
+                                       Array<casacore::Bool> * destination)
   {
-    * destination = False;
+    * destination = false;
   }
 
 
@@ -116,7 +118,7 @@ namespace casa {
     *dataPtr = float(1);
   }
     void AsdmWeightColumn::getSlicefloatV (uInt /*rowNumber*/, const Slicer & /* slicer */,
-                                         Array<casa::Float> * destination)
+                                         Array<casacore::Float> * destination)
   {
     * destination = 1.0f;
   }
@@ -134,7 +136,7 @@ namespace casa {
   }
 
   void AsdmSigmaColumn::getSlicefloatV (uInt /*rowNumber*/, const Slicer & /* slicer */,
-                                        Array<casa::Float> * destination)
+                                        Array<casacore::Float> * destination)
   {
     * destination = 1.0f;
   }

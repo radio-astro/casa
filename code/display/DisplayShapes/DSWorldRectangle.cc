@@ -39,6 +39,7 @@
 #include <casa/Logging/LogOrigin.h>
 #include <casa/Logging/LogIO.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	DSWorldRectangle::DSWorldRectangle() :
@@ -138,7 +139,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	Bool DSWorldRectangle::setOptions(const Record& settings) {
 
-		Bool localChange = False;
+		Bool localChange = false;
 		Record toSet = settings;
 
 		if (settings.isDefined("coords")) {
@@ -152,26 +153,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		if (settings.isDefined("center")) {
 			toSet.removeField("center");
-			localChange = True;
+			localChange = true;
 		}
 		if (settings.isDefined("majoraxis")) {
 			toSet.removeField("majoraxis");
-			localChange = True;
+			localChange = true;
 		}
 		if (settings.isDefined("minoraxis")) {
 			toSet.removeField("minoraxis");
-			localChange = True;
+			localChange = true;
 		}
 		if (settings.isDefined("angle")) {
 			toSet.removeField("angle");
-			localChange = True;
+			localChange = true;
 		}
 
 
 		// TODO :: Must do a world to pix....
 
 		if (DSRectangle::setOptions(toSet)) {
-			localChange = True;
+			localChange = true;
 		}
 
 		return localChange;
@@ -197,7 +198,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Bool DSWorldRectangle::chooseWC(const Float& centerX, const Float& centerY,
 				 PanelDisplay* pd,
 				 WorldCanvas* wc) {
-	  Bool success = False;
+	  Bool success = false;
 
 	  // Look for ones where the point is in WC and in draw area
 	  ListIter<WorldCanvas* >* wcs = pd->wcs();
@@ -210,7 +211,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		wcs->getRight()->inDrawArea(Int(centerX), Int(centerY))) {
 
 	      itsWC = wcs->getRight();
-	      success = True;
+	      success = true;
 
 
 	    } else {
@@ -224,7 +225,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    while(!wcs->atEnd() && !success) {
 	      if (wcs->getRight()->inWC(centerX, centerY)) {
 		itsWC = wcs->getRight();
-		success = True;
+		success = true;
 	      } else {
 		wcs++;
 	      }

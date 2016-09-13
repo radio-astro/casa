@@ -32,11 +32,11 @@ class ImageMaskAttacher {
 public: 
 	// Moved from ImageAnalysis
 	// Make a mask and define it in the image.
-	template <class T> static Bool makeMask(
-		ImageInterface<T>& out,
-		String& maskName,
-		Bool init, Bool makeDefault,
-		LogIO& os, Bool list
+	template <class T> static casacore::Bool makeMask(
+		casacore::ImageInterface<T>& out,
+		casacore::String& maskName,
+		casacore::Bool init, casacore::Bool makeDefault,
+		casacore::LogIO& os, casacore::Bool list
 	);
 
 private:

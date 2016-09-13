@@ -44,7 +44,7 @@
 int main() {
   try {
     String fluxScaleName;
-    Bool matchedScale=False;
+    Bool matchedScale=false;
 
     Vector<String> qsScNames(5);          Vector<FluxStandard::FluxScale> qsScEnums(5);
     qsScNames[0] = "Perley-Butler 2010";  qsScEnums[0] = FluxStandard::PERLEY_BUTLER_2010;

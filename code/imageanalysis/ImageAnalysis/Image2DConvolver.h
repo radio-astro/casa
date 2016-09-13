@@ -36,7 +36,7 @@
 #include <scimath/Mathematics/VectorKernel.h>
 #include <casa/Quanta/Quantum.h>
 
-namespace casa {
+namespace casacore{
 
 template <class T> class ImageInterface;
 template <class T> class Matrix;
@@ -47,6 +47,10 @@ class CoordinateSystem;
 class ImageInfo;
 class Unit;
 class GaussianBeam;
+}
+
+namespace casa {
+
 
 // <summary>
 // This class does 2D convolution of an image by a functional form
@@ -58,8 +62,8 @@ class GaussianBeam;
 // </reviewed>
 
 // <prerequisite>
-//   <li> <linkto class="ImageInterface">ImageInterface</linkto>
-//   <li> <linkto class="Convolver">Convolver</linkto>
+//   <li> <linkto class="casacore::ImageInterface">casacore::ImageInterface</linkto>
+//   <li> <linkto class="casacore::Convolver">casacore::Convolver</linkto>
 // </prerequisite>
 
 // <etymology>
@@ -92,13 +96,13 @@ class GaussianBeam;
 template <class T> class Image2DConvolver : public ImageTask<T> {
 public:
 
-	const static String CLASS_NAME;
+	const static casacore::String CLASS_NAME;
 
 	Image2DConvolver() = delete;
 
 	Image2DConvolver(
-		const SPCIIT image, const Record *const &regionPtr,
-	    const String& mask, const String& outname, const Bool overwrite
+		const SPCIIT image, const casacore::Record *const &regionPtr,
+	    const casacore::String& mask, const casacore::String& outname, const casacore::Bool overwrite
 	);
 	
     Image2DConvolver(const Image2DConvolver<T> &other) = delete;
@@ -112,21 +116,21 @@ public:
 	// type is a string that starts with "g" (gaussian), "b" (boxcar), or "h" (hanning),
 	// and is case insensitive
 	void setKernel(
-		const String& type, const Quantity& major, const Quantity& minor,
-		const Quantity& pa
+		const casacore::String& type, const casacore::Quantity& major, const casacore::Quantity& minor,
+		const casacore::Quantity& pa
 	);
 
-	void setScale(Double d) { _scale = d; }
+	void setScale(casacore::Double d) { _scale = d; }
 
-	void setAxes(const std::pair<uInt, uInt>& axes);
+	void setAxes(const std::pair<casacore::uInt, casacore::uInt>& axes);
 
-	void setTargetRes(Bool b) { _targetres = b; }
+	void setTargetRes(casacore::Bool b) { _targetres = b; }
 
-	String getClass() const { return CLASS_NAME; }
+	casacore::String getClass() const { return CLASS_NAME; }
 
-	// if True, do not log certain warning messages which would normally
+	// if true, do not log certain warning messages which would normally
 	// be logged during convolution
-	void setSuppressWarnings(Bool b) { _suppressWarnings = b; }
+	void setSuppressWarnings(casacore::Bool b) { _suppressWarnings = b; }
 
 protected:
 
@@ -134,71 +138,71 @@ protected:
    		return CasacRegionManager::USE_ALL_STOKES;
    	}
 
-    vector<Coordinate::Type> _getNecessaryCoordinates() const {
-    	return vector<Coordinate::Type>();
+    vector<casacore::Coordinate::Type> _getNecessaryCoordinates() const {
+    	return vector<casacore::Coordinate::Type>();
     }
 
-    inline Bool _supportsMultipleRegions() const {return True;}
+    inline casacore::Bool _supportsMultipleRegions() const {return true;}
 
 private:
-    VectorKernel::KernelTypes _type;
-    Double _scale;
-    Quantity _major, _minor, _pa;
-    IPosition _axes;
-    Bool _targetres, _suppressWarnings;
+    casacore::VectorKernel::KernelTypes _type;
+    casacore::Double _scale;
+    casacore::Quantity _major, _minor, _pa;
+    casacore::IPosition _axes;
+    casacore::Bool _targetres, _suppressWarnings;
 
 	void _checkKernelParameters(
-		VectorKernel::KernelTypes kernelType,
-		const Vector<Quantity>& parameters
+		casacore::VectorKernel::KernelTypes kernelType,
+		const casacore::Vector<casacore::Quantity>& parameters
 	) const;
 
 	void _convolve(
-		LogIO& os, SPIIT imageOut, const ImageInterface<T>& imageIn,
-		VectorKernel::KernelTypes kernelType
+		casacore::LogIO& os, SPIIT imageOut, const casacore::ImageInterface<T>& imageIn,
+		casacore::VectorKernel::KernelTypes kernelType
 	) const;
 
 	// returns the value by which pixel values will be scaled
 	T _dealWithRestoringBeam (
-		LogIO& os, String& brightnessUnitOut, GaussianBeam& beamOut,
-		const Array<T>& kernelArray, const T kernelVolume,
-		const VectorKernel::KernelTypes kernelType,
-		const Vector<Quantity>& parameters,
-		const CoordinateSystem& cSys,
-		const GaussianBeam& beamIn, const Unit& brightnessUnit,
-		Bool emitMessage
+		casacore::LogIO& os, casacore::String& brightnessUnitOut, casacore::GaussianBeam& beamOut,
+		const casacore::Array<T>& kernelArray, const T kernelVolume,
+		const casacore::VectorKernel::KernelTypes kernelType,
+		const casacore::Vector<casacore::Quantity>& parameters,
+		const casacore::CoordinateSystem& cSys,
+		const casacore::GaussianBeam& beamIn, const casacore::Unit& brightnessUnit,
+		casacore::Bool emitMessage
 	) const;
 
 	T _fillKernel (
-		Matrix<T>& kernelMatrix,
-		VectorKernel::KernelTypes kernelType,
-		const IPosition& kernelShape,
-		const Vector<Double>& parameters
+		casacore::Matrix<T>& kernelMatrix,
+		casacore::VectorKernel::KernelTypes kernelType,
+		const casacore::IPosition& kernelShape,
+		const casacore::Vector<casacore::Double>& parameters
 	) const;
 
 	void _fillGaussian(
-		T& maxVal, T& volume, Matrix<T>& pixels,
+		T& maxVal, T& volume, casacore::Matrix<T>& pixels,
 		T height, T xCentre, T yCentre,
 		T majorAxis, T ratio, T positionAngle
 	) const;
 
 	T _makeKernel(
-		Array<T>& kernel,
-		VectorKernel::KernelTypes kernelType,
-		const std::vector<Quantity>& parameters,
-		const ImageInterface<T>& inImage
+		casacore::Array<T>& kernel,
+		casacore::VectorKernel::KernelTypes kernelType,
+		const std::vector<casacore::Quantity>& parameters,
+		const casacore::ImageInterface<T>& inImage
 	) const;
 
-	IPosition _shapeOfKernel(
-		const VectorKernel::KernelTypes kernelType,
-		const Vector<Double>& parameters,
-		const uInt ndim
+	casacore::IPosition _shapeOfKernel(
+		const casacore::VectorKernel::KernelTypes kernelType,
+		const casacore::Vector<casacore::Double>& parameters,
+		const casacore::uInt ndim
 	) const;
 
-	uInt _sizeOfGaussian(const Double width, const Double nSigma) const;
+	casacore::uInt _sizeOfGaussian(const casacore::Double width, const casacore::Double nSigma) const;
 
-	std::vector<Quantity> _getConvolvingBeamForTargetResolution(
-		const std::vector<Quantity>& targetBeamParms,
-		const GaussianBeam& inputBeam
+	std::vector<casacore::Quantity> _getConvolvingBeamForTargetResolution(
+		const std::vector<casacore::Quantity>& targetBeamParms,
+		const casacore::GaussianBeam& inputBeam
 	) const;
 };
 

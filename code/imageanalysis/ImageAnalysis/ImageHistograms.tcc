@@ -37,40 +37,42 @@
 
 #include <casa/sstream.h>
 
+using namespace casacore;
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Public functions
 
 template <class T>
-ImageHistograms<T>::ImageHistograms (const ImageInterface<T>& image, 
-                                     LogIO &os,
-                                     Bool showProgress,
-                                     Bool forceDisk)
-: LatticeHistograms<T>(image, os, showProgress, forceDisk),
+ImageHistograms<T>::ImageHistograms (const casacore::ImageInterface<T>& image, 
+                                     casacore::LogIO &os,
+                                     casacore::Bool showProgress,
+                                     casacore::Bool forceDisk)
+: casacore::LatticeHistograms<T>(image, os, showProgress, forceDisk),
   pInImage_p(0)
 {
    if (!this->setNewImage(image)) {
-      os_p << error_p << LogIO::EXCEPTION;
+      os_p << error_p << casacore::LogIO::EXCEPTION;
    }
 }
 
 
 template <class T>
-ImageHistograms<T>::ImageHistograms (const ImageInterface<T>& image, 
-                                     Bool showProgress,
-                                     Bool forceDisk)
-: LatticeHistograms<T>(image, showProgress, forceDisk),
+ImageHistograms<T>::ImageHistograms (const casacore::ImageInterface<T>& image, 
+                                     casacore::Bool showProgress,
+                                     casacore::Bool forceDisk)
+: casacore::LatticeHistograms<T>(image, showProgress, forceDisk),
   pInImage_p(0)
 {
    if (!this->setNewImage(image)) {
-      os_p << error_p << LogIO::EXCEPTION;
+      os_p << error_p << casacore::LogIO::EXCEPTION;
    }
 }
 
  
 template <class T>
 ImageHistograms<T>::ImageHistograms(const ImageHistograms<T> &other)
-: LatticeHistograms<T>(other),
+: casacore::LatticeHistograms<T>(other),
   pInImage_p(0)
 {
    if (pInImage_p!=0) delete pInImage_p;
@@ -82,7 +84,7 @@ template <class T>
 ImageHistograms<T> &ImageHistograms<T>::operator=(const ImageHistograms<T> &other)
 {
    if (this != &other) {
-      LatticeHistograms<T>::operator=(other);
+      casacore::LatticeHistograms<T>::operator=(other);
 //
       if (pInImage_p!=0) delete pInImage_p;
       pInImage_p = other.pInImage_p->cloneII();
@@ -100,10 +102,10 @@ ImageHistograms<T>::~ImageHistograms()
 }
 
 template <class T>
-Bool ImageHistograms<T>::setNewImage(const ImageInterface<T>& image)
+Bool ImageHistograms<T>::setNewImage(const casacore::ImageInterface<T>& image)
 {
    if (!goodParameterStatus_p) {
-      return False;
+      return false;
    }
       
 // Make a clone of the image
@@ -120,41 +122,41 @@ Bool ImageHistograms<T>::setNewImage(const ImageInterface<T>& image)
 }
 
 template <class T>
-String ImageHistograms<T>::writeCoordinates(const IPosition& histPos) const
+String ImageHistograms<T>::writeCoordinates(const casacore::IPosition& histPos) const
 {
    ostringstream oss;
-   const Int nDisplayAxes = displayAxes_p.nelements();
+   const casacore::Int nDisplayAxes = displayAxes_p.nelements();
    if (nDisplayAxes > 0) {
-      Vector<String> sWorld(1);
-      Vector<Double> pixels(1);
-      IPosition blc(pInImage_p->ndim(),0);
-      IPosition trc(pInImage_p->shape()-1);
+      casacore::Vector<casacore::String> sWorld(1);
+      casacore::Vector<casacore::Double> pixels(1);
+      casacore::IPosition blc(pInImage_p->ndim(),0);
+      casacore::IPosition trc(pInImage_p->shape()-1);
 //
-      CoordinateSystem cSys = pInImage_p->coordinates();
-      for (Int j=0; j<nDisplayAxes; j++) {
-         const Int worldAxis =cSys.pixelAxisToWorldAxis(displayAxes_p(j));
-         const String name = cSys.worldAxisNames()(worldAxis);
+      casacore::CoordinateSystem cSys = pInImage_p->coordinates();
+      for (casacore::Int j=0; j<nDisplayAxes; j++) {
+         const casacore::Int worldAxis =cSys.pixelAxisToWorldAxis(displayAxes_p(j));
+         const casacore::String name = cSys.worldAxisNames()(worldAxis);
 
 // Get pixel coordinate relative to current lattice
 
-         pixels(0) = Double(locHistInLattice(histPos,False)(j+1));
+         pixels(0) = casacore::Double(locHistInLattice(histPos,false)(j+1));
 //
-         if (ImageUtilities::pixToWorld (sWorld, cSys,
+         if (casacore::ImageUtilities::pixToWorld (sWorld, cSys,
                                          displayAxes_p(j), cursorAxes_p,
                                          blc, trc, pixels, -1)) {
-            oss <<  ImageUtilities::shortAxisName(name)
-                << "=" << locHistInLattice(histPos,True)+1 
+            oss <<  casacore::ImageUtilities::shortAxisName(name)
+                << "=" << locHistInLattice(histPos,true)+1 
                 << " (" << sWorld(0) << ")";
             if (j < nDisplayAxes-1) oss << ", ";
          } else {
             oss << "Axis " << displayAxes_p(j) + 1 
-                << "=" << locHistInLattice(histPos,True)+1;
+                << "=" << locHistInLattice(histPos,true)+1;
             if (j < nDisplayAxes-1) oss << ", ";
          }
       }
    }
 //
-   return String(oss);
+   return casacore::String(oss);
 }
 
 

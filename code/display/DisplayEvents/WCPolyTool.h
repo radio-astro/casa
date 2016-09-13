@@ -92,7 +92,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Constructor
 		WCPolyTool(WorldCanvas *wcanvas,
 		           Display::KeySym keysym = Display::K_Pointer_Button1,
-		           const Bool persistent = False);
+		           const casacore::Bool persistent = false);
 
 		// Destructor
 		virtual ~WCPolyTool();
@@ -129,24 +129,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// </group>
 
 		// Retrive the polygon vertices
-		virtual void get(Vector<Int> &x, Vector<Int> &y);
+		virtual void get(casacore::Vector<casacore::Int> &x, casacore::Vector<casacore::Int> &y);
 
 	private:
 
 		// do the polygons persist after double clicks?
-		Bool itsPolygonPersistent;
+		casacore::Bool itsPolygonPersistent;
 
 		// is the polygon on screen?
-		Bool itsOnScreen;
+		casacore::Bool itsOnScreen;
 
 		// are we actively drawing?
-		Bool itsActive;
+		casacore::Bool itsActive;
 
 		// have we moved?
-		Bool itsMoved;
+		casacore::Bool itsMoved;
 
 		// do we have a polygon yet?
-		Bool itsPolygonExists;
+		casacore::Bool itsPolygonExists;
 
 		// adjustment mode
 		enum AdjustMode {
@@ -157,17 +157,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		WCPolyTool::AdjustMode itsAdjustMode;
 
 		// Number of points
-		uInt itsNPoints;
+		casacore::uInt itsNPoints;
 
 		// Polygon points
 		// ... pixels
-		Vector<Int> itsX, itsY;
+		casacore::Vector<casacore::Int> itsX, itsY;
 		// ... world
-		Vector<Double> itsStoredWorldX, itsStoredWorldY;
+		casacore::Vector<casacore::Double> itsStoredWorldX, itsStoredWorldY;
 
 		// Point operations
 		// <group>
-		void pushPoint(uInt x1, uInt y1);
+		void pushPoint(casacore::uInt x1, casacore::uInt y1);
 		void popPoint();
 		// </group>
 
@@ -178,35 +178,35 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// </group>
 
 		// draw the polygon on a PixelCanvas
-		void draw(Bool drawHandles = False);
+		void draw(casacore::Bool drawHandles = false);
 
 		// reset this drawer
 		void reset();
 
 		// size in pixels of the handles
-		uInt itsHandleSize;
+		casacore::uInt itsHandleSize;
 
 		// are we within the specified handle?
-		Bool inHandle(const uInt &pt, const uInt &x, const uInt &y) const;
+		casacore::Bool inHandle(const casacore::uInt &pt, const casacore::uInt &x, const casacore::uInt &y) const;
 
 		// which handle to modify?
-		uInt itsSelectedHandle;
+		casacore::uInt itsSelectedHandle;
 
 		// are we inside the polygon?
-		Bool inPolygon(const uInt &x, const uInt &y) const;
+		casacore::Bool inPolygon(const casacore::uInt &x, const casacore::uInt &y) const;
 
 		// position that move started from
-		Int itsBaseMoveX, itsBaseMoveY;
+		casacore::Int itsBaseMoveX, itsBaseMoveY;
 
 		// position of last press event
-		Int itsLastPressX, itsLastPressY;
-		Int its2ndLastPressX, its2ndLastPressY;
+		casacore::Int itsLastPressX, itsLastPressY;
+		casacore::Int its2ndLastPressX, its2ndLastPressY;
 
 		// position of last release event
-		Int itsLastReleaseX, itsLastReleaseY;
+		casacore::Int itsLastReleaseX, itsLastReleaseY;
 
 		// store the times of the last two presses here:
-		Double itsLastPressTime, its2ndLastPressTime;
+		casacore::Double itsLastPressTime, its2ndLastPressTime;
 
 	};
 

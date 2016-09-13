@@ -31,6 +31,7 @@
 #include <casa/Logging/LogIO.h>
 #include <display/Display/GLPCTexture.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Which of GL_NEAREST or GL_LINEAR to default to.

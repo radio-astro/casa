@@ -47,6 +47,7 @@
 
 using std::ceil;
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 class ROVisIteratorImpl : public VisibilityIteratorReadImpl {
@@ -92,7 +93,7 @@ public:
   virtual void allSelectedSpectralWindows (Vector<Int> & spws, Vector<Int> & nvischan);
 
   // 
-  virtual void lsrFrequency(const Int& spw, Vector<Double>& freq, Bool& convert, const  Bool ignoreconv=False);
+  virtual void lsrFrequency(const Int& spw, Vector<Double>& freq, Bool& convert, const  Bool ignoreconv=false);
 
 
   // The following throws an exception, because this isn't the
@@ -179,18 +180,18 @@ protected:
 			     Cube<Complex>& data) const;
 
   // Column access functions
-  void getCol(const ROScalarColumn<Bool> &column, Vector<Bool> &array, Bool resize = False) const;
-  void getCol(const ROScalarColumn<Int> &column, Vector<Int> &array, Bool resize = False) const;
-  void getCol(const ROScalarColumn<Double> &column, Vector<Double> &array, Bool resize = False) const;
+  void getCol(const ROScalarColumn<Bool> &column, Vector<Bool> &array, Bool resize = false) const;
+  void getCol(const ROScalarColumn<Int> &column, Vector<Int> &array, Bool resize = false) const;
+  void getCol(const ROScalarColumn<Double> &column, Vector<Double> &array, Bool resize = false) const;
 
-  void getCol(const ROArrayColumn<Bool> &column, Array<Bool> &array, Bool resize = False) const;
-  void getCol(const ROArrayColumn<Float> &column, Array<Float> &array, Bool resize = False) const;
-  void getCol(const ROArrayColumn<Double> &column, Array<Double> &array, Bool resize = False) const;
-  void getCol(const ROArrayColumn<Complex> &column, Array<Complex> &array, Bool resize = False) const;
+  void getCol(const ROArrayColumn<Bool> &column, Array<Bool> &array, Bool resize = false) const;
+  void getCol(const ROArrayColumn<Float> &column, Array<Float> &array, Bool resize = false) const;
+  void getCol(const ROArrayColumn<Double> &column, Array<Double> &array, Bool resize = false) const;
+  void getCol(const ROArrayColumn<Complex> &column, Array<Complex> &array, Bool resize = false) const;
 
-  void getCol(const ROArrayColumn<Bool> &column, const Slicer &slicer, Array<Bool> &array, Bool resize = False) const;
-  void getCol(const ROArrayColumn<Float> &column, const Slicer &slicer, Array<Float> &array, Bool resize = False) const;
-  void getCol(const ROArrayColumn<Complex> &column, const Slicer &slicer, Array<Complex> &array, Bool resize = False) const;
+  void getCol(const ROArrayColumn<Bool> &column, const Slicer &slicer, Array<Bool> &array, Bool resize = false) const;
+  void getCol(const ROArrayColumn<Float> &column, const Slicer &slicer, Array<Float> &array, Bool resize = false) const;
+  void getCol(const ROArrayColumn<Complex> &column, const Slicer &slicer, Array<Complex> &array, Bool resize = false) const;
 
 
   // New slicer supports multiple Slices in channel and correlation
@@ -341,18 +342,18 @@ protected:
 			     Cube<Complex>& data) const;
 
   // Column access functions
-//  void getCol(const ROScalarColumn<Bool> &column, Vector<Bool> &array, Bool resize = False) const;
-//  void getCol(const ROScalarColumn<Int> &column, Vector<Int> &array, Bool resize = False) const;
-//  void getCol(const ROScalarColumn<Double> &column, Vector<Double> &array, Bool resize = False) const;
+//  void getCol(const ROScalarColumn<Bool> &column, Vector<Bool> &array, Bool resize = false) const;
+//  void getCol(const ROScalarColumn<Int> &column, Vector<Int> &array, Bool resize = false) const;
+//  void getCol(const ROScalarColumn<Double> &column, Vector<Double> &array, Bool resize = false) const;
 //
-//  void getCol(const ROArrayColumn<Bool> &column, Array<Bool> &array, Bool resize = False) const;
-//  void getCol(const ROArrayColumn<Float> &column, Array<Float> &array, Bool resize = False) const;
-//  void getCol(const ROArrayColumn<Double> &column, Array<Double> &array, Bool resize = False) const;
-//  void getCol(const ROArrayColumn<Complex> &column, Array<Complex> &array, Bool resize = False) const;
+//  void getCol(const ROArrayColumn<Bool> &column, Array<Bool> &array, Bool resize = false) const;
+//  void getCol(const ROArrayColumn<Float> &column, Array<Float> &array, Bool resize = false) const;
+//  void getCol(const ROArrayColumn<Double> &column, Array<Double> &array, Bool resize = false) const;
+//  void getCol(const ROArrayColumn<Complex> &column, Array<Complex> &array, Bool resize = false) const;
 //
-//  void getCol(const ROArrayColumn<Bool> &column, const Slicer &slicer, Array<Bool> &array, Bool resize = False) const;
-//  void getCol(const ROArrayColumn<Float> &column, const Slicer &slicer, Array<Float> &array, Bool resize = False) const;
-//  void getCol(const ROArrayColumn<Complex> &column, const Slicer &slicer, Array<Complex> &array, Bool resize = False) const;
+//  void getCol(const ROArrayColumn<Bool> &column, const Slicer &slicer, Array<Bool> &array, Bool resize = false) const;
+//  void getCol(const ROArrayColumn<Float> &column, const Slicer &slicer, Array<Float> &array, Bool resize = false) const;
+//  void getCol(const ROArrayColumn<Complex> &column, const Slicer &slicer, Array<Complex> &array, Bool resize = false) const;
 
   void putDataColumn(DataColumn whichOne,
                      const Cube<Complex>& data);
@@ -674,8 +675,8 @@ ROVisIteratorImpl::ROVisIteratorImpl(ROVisIterator * rovi,
                                      const MeasurementSet &ms,
                                      const Block<Int>& sortColumns,
                                      Double timeInterval)
-: VisibilityIteratorReadImpl(rovi, Block<MeasurementSet> (1, ms), sortColumns, True, timeInterval),
-  useNewSlicer_p(False)
+: VisibilityIteratorReadImpl(rovi, Block<MeasurementSet> (1, ms), sortColumns, true, timeInterval),
+  useNewSlicer_p(false)
 {
 
     // Initialize multi-slicers with empty slices
@@ -734,7 +735,7 @@ ROVisIteratorImpl & ROVisIteratorImpl::operator++()
 
 void ROVisIteratorImpl::updateSlicer()
 {
-  useNewSlicer_p=True;
+  useNewSlicer_p=true;
 
   //    cout << "Using new slicer!..." << flush;
   
@@ -743,7 +744,7 @@ void ROVisIteratorImpl::updateSlicer()
   
   //    cout << "newSlicer_p.shape() = " << newSlicer_p.shape() << endl;
   
-  useSlicer_p=False;
+  useSlicer_p=false;
   
   // Refer to correct slices for the current spwid/polid
   newSlicer_p(0).reference(corrSlices_p(this->polarizationId()));
@@ -762,7 +763,7 @@ void ROVisIteratorImpl::allSelectedSpectralWindows (Vector<Int> & spws, Vector<I
   Vector<Int> ddids;
   msColumns().dataDescId().getColumn(ddids);
   Int ndd=genSort(ddids, Sort::Ascending, (Sort::QuickSort | Sort::NoDuplicates));
-  ddids.resize(ndd,True);
+  ddids.resize(ndd,true);
   //  cout << "ddids = " << ddids << endl;
   Vector<Int> spwperdd;
   msColumns().dataDescription().spectralWindowId().getColumn(spwperdd);
@@ -783,7 +784,7 @@ void ROVisIteratorImpl::lsrFrequency(const Int& spw, Vector<Double>& freq,
 
   MFrequency::Types obsMFreqType = (MFrequency::Types) msIter_p.msColumns ().spectralWindow ().measFreqRef ()(spw);
   convert = obsMFreqType != MFrequency::LSRK; // make this parameter write-only
-  if (ignoreconv) convert=False;  // override if user says so
+  if (ignoreconv) convert=false;  // override if user says so
 
   // Set up the frequency converter
   MEpoch ep;
@@ -866,9 +867,9 @@ void ROVisIteratorImpl::setSelTable()
     // getReadImpl()->msIter_p.table() using VisibilityIterator::getReadImpl()->selRows_p).
 
     // Doing so would mean replacing calls like
-    //     colSigma.getColumn(newWtSlicer_p,sigmat,True);
+    //     colSigma.getColumn(newWtSlicer_p,sigmat,true);
     // with
-    //     colSigma.getColumnCells(getReadImpl()->selRows_p,newWtSlicer_p,sigmat,True);
+    //     colSigma.getColumnCells(getReadImpl()->selRows_p,newWtSlicer_p,sigmat,true);
     //
     // However the ArrayColumn class does allow passing both a 
     // Vector<Vector<Slice> > and a RefRows parameter to get-/putColumn.
@@ -916,7 +917,7 @@ ROVisIteratorImpl::corrType(Vector<Int>& corrTypes) const
   // Get the nominal corrType list
   Int polId = msIter_p.polarizationId();
   Vector<Int> nomCorrTypes;
-  msIter_p.msColumns().polarization().corrType().get(polId,nomCorrTypes,True);
+  msIter_p.msColumns().polarization().corrType().get(polId,nomCorrTypes,true);
 
   // Get the 0-based corr indices
   Vector<Int> corrids;
@@ -934,10 +935,10 @@ ROVisIteratorImpl::corrType(Vector<Int>& corrTypes) const
 Cube<Bool>& ROVisIteratorImpl::flag(Cube<Bool>& flags) const
 {
   if (useNewSlicer_p){
-      columns_p.flag_p.getColumn(newSlicer_p,flags,True);
+      columns_p.flag_p.getColumn(newSlicer_p,flags,true);
   }
   else {
-      columns_p.flag_p.getColumn(flags,True);
+      columns_p.flag_p.getColumn(flags,true);
   }
   return flags;
 }
@@ -949,7 +950,7 @@ Vector<Double>& ROVisIteratorImpl::frequency(Vector<Double>& freq) const
   //ROVisIteratorImpl* self = const_cast<ROVisIteratorImpl*>(this);
 
   if (! cache_p.freqCacheOK_p) {
-    cache_p.freqCacheOK_p=True;
+    cache_p.freqCacheOK_p=true;
     const Vector<Double>& chanFreq=msIter_p.frequency();
     Vector<Int> chan;
     channel(chan);
@@ -989,18 +990,18 @@ void ROVisIteratorImpl::getDataColumn(DataColumn whichOne,
   case ROVisIterator::Observed:
     if (floatDataFound_p) {
       Cube<Float> dataFloat;
-      columns_p.floatVis_p.getColumn(slices,dataFloat,True);
+      columns_p.floatVis_p.getColumn(slices,dataFloat,true);
       data.resize(dataFloat.shape());
       convertArray(data,dataFloat);
     } else {
-      columns_p.vis_p.getColumn(slices,data,True);
+      columns_p.vis_p.getColumn(slices,data,true);
     };
     break;
   case ROVisIterator::Corrected:
-    columns_p.corrVis_p.getColumn(slices,data,True);
+    columns_p.corrVis_p.getColumn(slices,data,true);
     break;
   case ROVisIterator::Model:
-    columns_p.modelVis_p.getColumn(slices,data,True);
+    columns_p.modelVis_p.getColumn(slices,data,true);
     break;
   };
  
@@ -1008,7 +1009,7 @@ void ROVisIteratorImpl::getDataColumn(DataColumn whichOne,
 
 Matrix<Float>& ROVisIteratorImpl::sigmaMat(Matrix<Float>& sigmat) const
 {
-  if (useNewSlicer_p) columns_p.sigma_p.getColumn(newWtSlicer_p,sigmat,True);
+  if (useNewSlicer_p) columns_p.sigma_p.getColumn(newWtSlicer_p,sigmat,true);
   else {
     sigmat.resize(nPol_p,curNumRow_p);
     columns_p.sigma_p.getColumn(sigmat);
@@ -1018,7 +1019,7 @@ Matrix<Float>& ROVisIteratorImpl::sigmaMat(Matrix<Float>& sigmat) const
 
 Matrix<Float>& ROVisIteratorImpl::weightMat(Matrix<Float>& wtmat) const
 {
-  if (useNewSlicer_p) columns_p.weight_p.getColumn(newWtSlicer_p,wtmat,True);
+  if (useNewSlicer_p) columns_p.weight_p.getColumn(newWtSlicer_p,wtmat,true);
   else {
     wtmat.resize(nPol_p,curNumRow_p);
     columns_p.weight_p.getColumn(wtmat);
@@ -1029,7 +1030,7 @@ Matrix<Float>& ROVisIteratorImpl::weightMat(Matrix<Float>& wtmat) const
 Cube<Float>& ROVisIteratorImpl::weightSpectrum(Cube<Float>& wtsp) const
 {
   if (this->existsWeightSpectrum()) {
-    if (useNewSlicer_p) columns_p.weightSpectrum_p.getColumn(newSlicer_p,wtsp,True);
+    if (useNewSlicer_p) columns_p.weightSpectrum_p.getColumn(newSlicer_p,wtsp,true);
     else {
       wtsp.resize(nPol_p,nChan_p,curNumRow_p);
       columns_p.weightSpectrum_p.getColumn(wtsp);
@@ -1046,11 +1047,11 @@ void ROVisIteratorImpl::selectChannel(const Vector<Vector<Slice> >& chansel) {
   if (chansel.nelements() != uInt(numberSpw()))
     throw(AipsError("Specified channel slices has incorrect number of spws."));
   
-  chanSlices_p.resize(numberSpw(),False);
+  chanSlices_p.resize(numberSpw(),false);
   chanSlices_p=chansel;
 
   // Enforce use of the new slicer downstream
-  useNewSlicer_p=True;
+  useNewSlicer_p=true;
     
   //  cout << "done." << endl;
 
@@ -1063,11 +1064,11 @@ void ROVisIteratorImpl::selectCorrelation(const Vector<Vector<Slice> >& corrsel)
   if (corrsel.nelements() != uInt(numberPol()))
     throw(AipsError("Specified correlation slices has incorrect number of polIds."));
   
-  corrSlices_p.resize(numberPol(),False);
+  corrSlices_p.resize(numberPol(),false);
   corrSlices_p=corrsel;
 
   // Enforce use of the new slicer downstream
-  useNewSlicer_p=True;
+  useNewSlicer_p=true;
     
   //  cout << "done." << endl;
 
@@ -1217,7 +1218,7 @@ Vector<Matrix<Int> >& ROVisIteratorImpl::setChanAveBounds(Float factor,
 
 //       // contract bounds container, if necessary
 //       if (nChanOut<nChanOut0)
-// 	currBounds.resize(nChanOut,4,True);
+// 	currBounds.resize(nChanOut,4,true);
       
 //     } // ispw
 
@@ -1325,7 +1326,7 @@ Vector<RigidVector<Double,3> >&
 ROVisIteratorImpl::uvw(Vector<RigidVector<Double,3> >& uvwvec) const
 {
     uvwvec.resize(curNumRow_p);
-    getCol(columns_p.uvw_p, cache_p.uvwMat_p,True);
+    getCol(columns_p.uvw_p, cache_p.uvwMat_p,true);
     // get a pointer to the raw storage for quick access
     Bool deleteIt;
     Double* pmat = cache_p.uvwMat_p.getStorage(deleteIt);
@@ -1569,11 +1570,11 @@ VisIteratorImpl::attachColumns(const Table &table)
     rwColFlagRow_p.attach(table,MS::columnName(MS::FLAG_ROW));
 
     if (cds.isDefined(MS::columnName(MS::FLOAT_DATA))) {
-        floatDataFound_p=True;
+        floatDataFound_p=true;
         rwColFloatVis_p.attach(table,MS::columnName(MS::FLOAT_DATA));
     }
     else {
-        floatDataFound_p=False;
+        floatDataFound_p=false;
     }
 
     if (cds.isDefined("MODEL_DATA")){

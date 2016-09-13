@@ -53,21 +53,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   public:
     
     // Empty constructor
-    SDAlgorithmMEM(String entropy);
+    SDAlgorithmMEM(casacore::String entropy);
     virtual  ~SDAlgorithmMEM();
     
   protected:
     
     // Local functions to be overloaded by various algorithm deconvolvers.
-    void takeOneStep( Float loopgain, Int cycleNiter, Float cycleThreshold, Float &peakresidual, Float &modelflux, Int &iterdone );
-    //    virtual void initializeDeconvolver( Float &peakresidual, Float &modelflux );
+    void takeOneStep( casacore::Float loopgain, casacore::Int cycleNiter, casacore::Float cycleThreshold, casacore::Float &peakresidual, casacore::Float &modelflux, casacore::Int &iterdone );
+    //    virtual void initializeDeconvolver( casacore::Float &peakresidual, casacore::Float &modelflux );
     void initializeDeconvolver();
     void finalizeDeconvolver();
 
-    Array<Float> itsMatResidual, itsMatModel, itsMatPsf, itsMatMask;
-    Array<Float> itsMatDeltaModel;
+    casacore::Array<casacore::Float> itsMatResidual, itsMatModel, itsMatPsf, itsMatMask;
+    casacore::Array<casacore::Float> itsMatDeltaModel;
 
-    CountedPtr<Entropy> itsEnt;
+    casacore::CountedPtr<Entropy> itsEnt;
 
 
   };

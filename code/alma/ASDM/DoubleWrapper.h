@@ -21,7 +21,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
  * MA 02111-1307  USA
  *
- * File Double.h
+ * casacore::File Double.h
  */
 # ifndef Double_CLASS
 # define Double_CLASS
@@ -36,7 +36,8 @@ namespace asdm {
  * A collection of static methods to perform conversions
  * between strings and double values.
  */
-class Double {
+
+    class Double {
 
 public:
 	/**

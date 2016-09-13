@@ -34,6 +34,7 @@
 
 #include <casa/iostream.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Constants
@@ -145,7 +146,7 @@ Bool GaussianSpectralElement::toRecord(
 	out.define("parameters", p);
 	e[2] = getFWHMErr();
 	out.define("errors", e);
-	return True;
+	return true;
 }
 
 ostream &operator<<(ostream &os, const GaussianSpectralElement &elem) {

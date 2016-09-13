@@ -35,6 +35,7 @@
 
 #include <casa/iostream.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //#define CDEBUG
@@ -231,12 +232,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			tmpMask.resize(0,0);
 		}
 
-		Bool allGood = True;
+		Bool allGood = true;
 
-		tmpData = latt->getSlice(start, sliceShape, stride, True);
-		tmpMask = latt->getMaskSlice(start, sliceShape, stride, True);
+		tmpData = latt->getSlice(start, sliceShape, stride, true);
+		tmpMask = latt->getMaskSlice(start, sliceShape, stride, true);
 
-		if (anyEQ(tmpMask, False)) allGood = False;
+		if (anyEQ(tmpMask, false)) allGood = false;
 
 		// reset Matrices, so they can resize automatically
 		data.resize(0,0);
@@ -256,7 +257,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				mask.resize(0,0);
 			}
 		}
-		return True;
+		return true;
 	}
 
 

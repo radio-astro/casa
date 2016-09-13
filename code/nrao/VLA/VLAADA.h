@@ -35,9 +35,13 @@
 #include <nrao/VLA/VLAEnum.h>
 
 #include <casa/namespace.h>
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore{
+
 class String;
 template <class T> class Vector;
+}
+
+namespace casa { //# NAMESPACE CASA - BEGIN
 } //# NAMESPACE CASA - END
 
 
@@ -73,16 +77,16 @@ template <class T> class Vector;
 // </synopsis>
 //
 // <example>
-// This code fragment shows how to initialise a Block of objects of this class
+// This code fragment shows how to initialise a casacore::Block of objects of this class
 // and then use these objects to determine which antenna is on which pad. It
 // is assumed that the Bytesource object contains a VLA Logical record.
 // <srcblock>
-//   ByteSource VLARecord(...);
-//   Block<VLAADA> adaBlock;
+//   casacore::ByteSource VLARecord(...);
+//   casacore::Block<VLAADA> adaBlock;
 //   VLARCA rca(VLARecord);
-//   const uInt nant = rca.nAntennas();
+//   const casacore::uInt nant = rca.nAntennas();
 //   adaBlock.resize(nant);
-//   for (uInt a = 0; a < nant; a++) {
+//   for (casacore::uInt a = 0; a < nant; a++) {
 //     adaBlock[a].attach(VLARecord, rca.ADAOffset(a));
 //     cout << "Antenna " << adaBlock[a].antName() 
 // 	 << " is on pad " << adaBlock[a].padName() << endl;
@@ -96,7 +100,7 @@ template <class T> class Vector;
 //
 // <thrown>
 // When compiled in debug mode this class does a lot of consistancy
-// checking. If it detects anomolies it will throw an exception (AipsError).
+// checking. If it detects anomolies it will throw an exception (casacore::AipsError).
 // </thrown>
 //
 // <todo asof="1999/08/11">
@@ -113,7 +117,7 @@ public:
   // Construct this object to read data from the specified VLA logical
   // record. The antenna data area that will be used begins at the specified
   // number of bytes from the beginning of the record.
-  VLAADA(ByteSource& record, uInt offset);
+  VLAADA(casacore::ByteSource& record, casacore::uInt offset);
 
   // The destructor is trivial.
   ~VLAADA();
@@ -127,88 +131,88 @@ public:
   // Re-initialise this object so that it now reads data from the given VLA
   // logical record.  The antenna data area that will be used begins at the
   // specified number of bytes from the beginning of the record.
-  void attach(ByteSource& record, uInt offset);
+  void attach(casacore::ByteSource& record, casacore::uInt offset);
   
   // return the antenna name. This is a string version of the antenna id n is a
   // one or two digit number that contains the antenna identifier (see below).
-  String antName(Bool newStyle=True) const;
+  casacore::String antName(casacore::Bool newStyle=true) const;
 
   // returns the antenna Id. This is a number which stays with the "steel" and
   // gets moved to new locations. It is not the pad number. It is between 1
   // and 28 inclusive.
-  uInt antId() const;
+  casacore::uInt antId() const;
 
   // Front end Temp...gives a clue if antenna is EVLA
-  Float frontEndTemp(VLAEnum::IF which) const;
+  casacore::Float frontEndTemp(VLAEnum::IF which) const;
   // return the pad name that this antenna is currently located on. This is
   // obtained by knowing where the pads are and looking at the bx position of
   // the antenna (the bx position in the logical record has to be within half a
   // meter of the value given in an table). Pad names are of the form "Nn" or
   // "En" or "Wn" where n is a one or two digit number that has an approximate
   // correspondence with the distance of the pad from the centre of the array.
-  String padName() const;
+  casacore::String padName() const;
 
   // return the u coordinate in meters of this antenna at the centre of the
   // integration. 
-  Double u() const;
+  casacore::Double u() const;
 
   // return the v coordinate in meters of this antenna at the centre of the
   // integration. 
-  Double v() const;
+  casacore::Double v() const;
 
   // return the w coordinate in meters of this antenna at the centre of the
   // integration. 
-  Double w() const;
+  casacore::Double w() const;
 
   // return the Bx position in meters of this antenna, from the centre of the
   // Array.
-  Double bx() const;
+  casacore::Double bx() const;
 
   // return the By position in meters of this antenna, from the centre of the
   // Array.
-  Double by() const;
+  casacore::Double by() const;
 
   // return the Bz position in meters of this antenna, from the centre of the
   // Array.
-  Double bz() const;
+  casacore::Double bz() const;
 
   // return the bx, by, bz positions in meters of this antenna, from the centre
   // of the Array.
-  Vector<Double> pos() const;
+  casacore::Vector<casacore::Double> pos() const;
 
   // return the IF status. The status indicates how bad the data probably is
   // for the specified if and the current antenna. Values of zero indicate the
   // IF is OK, 1 is a warning, 2 means not so good, and bigger numbers, up to
   // 15 mean the IF is successively worse.
-  uInt ifStatus(VLAEnum::IF which) const;
+  casacore::uInt ifStatus(VLAEnum::IF which) const;
 
   // returns the nominal sensitivity of the specified IF. These numbers are
   // multiplied by the raw correlaton co-efficients to produce the numbers in
   // the correlation data area.
-  Float nominalSensitivity(VLAEnum::IF which) const;
+  casacore::Float nominalSensitivity(VLAEnum::IF which) const;
 
   // return the IF polarisation. Normally at the VLA IF's A & B measure
   // right-hand-circular polarisation, and IF's C & D measure
   // left-hand-circular polarisation. But in special circumstances this can be
-  // swapped. This function returns Stokes::RCircular or Stokes::LCircular.
-  Stokes::StokesTypes ifPol(VLAEnum::IF which) const;
+  // swapped. This function returns casacore::Stokes::RCircular or casacore::Stokes::LCircular.
+  casacore::Stokes::StokesTypes ifPol(VLAEnum::IF which) const;
 
   // Has the nominal sensitivity amplitude scaling been applied?
-  //  (auto-True prior to revision 25 [exclusive])
-  Bool nomSensApplied(VLAEnum::IF which, const uInt rev) const;
+  //  (auto-true prior to revision 25 [exclusive])
+  casacore::Bool nomSensApplied(VLAEnum::IF which, const casacore::uInt rev) const;
 
   // Identifies which array an antennn belongs to: VLA, EVLA, or VLBA
-  String arrayName() const;
+  casacore::String arrayName() const;
 
-  // Function which checks the internal data of this class for consistant
-  // values. Returns True if everything is fine otherwise returns False.
-  Bool ok() const;
+  // casacore::Function which checks the internal data of this class for consistant
+  // values. Returns true if everything is fine otherwise returns false.
+  casacore::Bool ok() const;
 
 private:
   //# Contains a VLA logical record
-  mutable ByteSource itsRecord;
+  mutable casacore::ByteSource itsRecord;
   //# the offset to the start of this ADA in the record. An offset of zero
   //# means this ADA is not used in this record.
-  uInt itsOffset;
+  casacore::uInt itsOffset;
 };
 #endif

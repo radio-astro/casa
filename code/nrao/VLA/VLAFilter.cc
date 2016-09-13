@@ -34,7 +34,7 @@ VLAFilter::~VLAFilter() {
 }
 
 Bool VLAFilter::ok() const {
-  return True;
+  return true;
 }
 
 // Local Variables: 

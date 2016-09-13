@@ -30,6 +30,7 @@
 #include <components/ComponentModels/SkyCompRep.h>
 #include <images/Images/ImageUtilities.h>
 
+using namespace casacore;
 namespace casa {
 
 PeakIntensityFluxDensityConverter::PeakIntensityFluxDensityConverter(
@@ -38,7 +39,7 @@ PeakIntensityFluxDensityConverter::PeakIntensityFluxDensityConverter(
 		image, "", 0, "", "", "", "", "", ""
 	), _size(Angular2DGaussian::NULL_BEAM), _shape(ComponentType::GAUSSIAN),
 	_beam(GaussianBeam::NULL_BEAM) {
-	_construct(False);
+	_construct(false);
 }
 
 PeakIntensityFluxDensityConverter::~PeakIntensityFluxDensityConverter() {}
@@ -51,7 +52,7 @@ Quantity PeakIntensityFluxDensityConverter::fluxDensityToPeakIntensity(
 	Bool& hadToMakeFakeBeam, const Quantity& fluxDensity
 ) const {
 
-	hadToMakeFakeBeam = False;
+	hadToMakeFakeBeam = false;
 	const CoordinateSystem& csys = _getImage()->coordinates();
 	const Unit& brightnessUnit = _getImage()->units();
 	GaussianBeam beam = _beam;
@@ -59,7 +60,7 @@ Quantity PeakIntensityFluxDensityConverter::fluxDensityToPeakIntensity(
 		beam = ImageUtilities::makeFakeBeam(
 			*_getLog(), csys, _getVerbosity() >= ImageTask<Float>::WHISPER
 		);
-		hadToMakeFakeBeam = True;
+		hadToMakeFakeBeam = true;
 	}
 	return SkyCompRep::integralToPeakFlux(
 		csys.directionCoordinate(),
@@ -72,7 +73,7 @@ Quantity PeakIntensityFluxDensityConverter::peakIntensityToFluxDensity(
 	Bool& hadToMakeFakeBeam, const Quantity& peakIntensity
 ) const {
 
-	hadToMakeFakeBeam = False;
+	hadToMakeFakeBeam = false;
 	const Unit& brightnessUnit = _getImage()->units();
 	const CoordinateSystem& csys = _getImage()->coordinates();
 	GaussianBeam beam = _beam;
@@ -80,7 +81,7 @@ Quantity PeakIntensityFluxDensityConverter::peakIntensityToFluxDensity(
 		beam = ImageUtilities::makeFakeBeam(
 			*_getLog(), csys, _getVerbosity() >= ImageTask<Float>::WHISPER
 		);
-		hadToMakeFakeBeam = True;
+		hadToMakeFakeBeam = true;
 	}
 	return SkyCompRep::peakToIntegralFlux(
 		csys.directionCoordinate(),

@@ -49,7 +49,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </prerequisite>
 //
 // <etymology>
-// Samples single dish Data as needed for various estimation algorithms
+// Samples single dish casacore::Data as needed for various estimation algorithms
 // </etymology>
 //
 // <synopsis> 
@@ -73,10 +73,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 class SynDataSampling : public DataSampling {
 public:
 
-  SynDataSampling(MeasurementSet& ms, 
-		 const CoordinateSystem& coords,
-		 const IPosition& shape,
-		 const Quantity& sigma);
+  SynDataSampling(casacore::MeasurementSet& ms, 
+		 const casacore::CoordinateSystem& coords,
+		 const casacore::IPosition& shape,
+		 const casacore::Quantity& sigma);
 
   // Copy constructor
   SynDataSampling(const SynDataSampling &other);

@@ -38,11 +38,15 @@
 #include <map>
 
 
+namespace casacore{
+
+class MFrequency;
+//class Vector;
+}
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //class Flux;
-class MFrequency;
-//class Vector;
 
 // <summary> 
 // FluxCalcQS: Base class for flux standard calculations which do not
@@ -83,8 +87,8 @@ class FluxCalcQS
 {
 public:
   typedef FluxCalcQS FCQS;
-  typedef RigidVector<String, 4> RVS4;
-  typedef RigidVector<String, 5> RVS5;
+  typedef casacore::RigidVector<casacore::String, 4> RVS4;
+  typedef casacore::RigidVector<casacore::String, 5> RVS5;
 
   // Source identifiers.
   enum Source {
@@ -103,23 +107,23 @@ public:
   
   virtual ~FluxCalcQS();
 
-  virtual Bool operator()(Flux<Double>& value, Flux<Double>& error,
-                          const MFrequency& mfreq) = 0;
-  Bool operator()(Vector<Flux<Double> >& values,
-                  Vector<Flux<Double> >& errors,
-                  const Vector<MFrequency>& mfreqs);
+  virtual casacore::Bool operator()(Flux<casacore::Double>& value, Flux<casacore::Double>& error,
+                          const casacore::MFrequency& mfreq) = 0;
+  casacore::Bool operator()(casacore::Vector<Flux<casacore::Double> >& values,
+                  casacore::Vector<Flux<casacore::Double> >& errors,
+                  const casacore::Vector<casacore::MFrequency>& mfreqs);
 
   // If a FS::Source enum matches srcName, returns the enum.
   // Otherwise, FCQS::UNKNOWN_SOURCE.
-  FCQS::Source srcNameToEnum(const String& srcName) const;
+  FCQS::Source srcNameToEnum(const casacore::String& srcName) const;
 
   // Sets srcEnum_p = srcNameToEnum(sourceName), and returns
   // srcEnum_p != FCQS::UNKNOWN_SOURCE
-  virtual Bool setSource(const String& sourceName);
+  virtual casacore::Bool setSource(const casacore::String& sourceName);
 
   FCQS::Source getSrcEnum();
 
-  MDirection getDirection() {return directions_p[srcEnum_p];}
+  casacore::MDirection getDirection() {return directions_p[srcEnum_p];}
 
 protected:
   FluxCalcQS();   // Initializes names_p.
@@ -128,10 +132,10 @@ private:
   FCQS::Source srcEnum_p;       // The source identifier.
 
   // A map from an FS::Source enum to a list of recognized names for it.
-  std::map<FCQS::Source, Vector<String> > names_p;
+  std::map<FCQS::Source, casacore::Vector<casacore::String> > names_p;
 
   // A map from an FS::Source enum to its J2000 direction.
-  std::map<FCQS::Source, MDirection> directions_p;
+  std::map<FCQS::Source, casacore::MDirection> directions_p;
 };
 
 } //# NAMESPACE CASA - END

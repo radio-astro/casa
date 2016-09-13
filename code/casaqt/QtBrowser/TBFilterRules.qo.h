@@ -59,7 +59,7 @@ public:
     // negated rules, false otherwise.  anyField should be true if the rule
     // applies to any field, false otherwise.  The rule "owns" value and value2
     // in that, upon deletion, they are deleted as well.
-    TBFilterRule(String field, tb::Comparator comparator, TBData* value,
+    TBFilterRule(casacore::String field, tb::Comparator comparator, TBData* value,
              TBData* value2 = NULL, bool isNot = false, bool anyField = false);
     
     ~TBFilterRule();
@@ -67,7 +67,7 @@ public:
     
     // Returns the field this rule applies to, or blank if it applies to any
     // field.
-    String getField();
+    casacore::String getField();
 
     // Returns this rule's comparator.
     tb::Comparator getComparator();
@@ -96,7 +96,7 @@ public:
     
 private:
     // This rule's field.
-    String field;
+    casacore::String field;
 
     // This rule's comparator.
     tb::Comparator comparator;

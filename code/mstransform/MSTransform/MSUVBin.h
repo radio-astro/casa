@@ -47,115 +47,115 @@ class MSUVBin {
 public:
 	MSUVBin();
 	//npol should be only 1, 2 (parallel hands)  or 4
-	MSUVBin(const MDirection& phaseCenter, const Int nx,
-		const Int ny, const Int nchan, const Int npol, Quantity cellx, Quantity celly, Quantity freqStart, Quantity freqStep, Float memFraction=0.5, Bool dow=False, Bool doflag=False);
+	MSUVBin(const casacore::MDirection& phaseCenter, const casacore::Int nx,
+		const casacore::Int ny, const casacore::Int nchan, const casacore::Int npol, casacore::Quantity cellx, casacore::Quantity celly, casacore::Quantity freqStart, casacore::Quantity freqStep, casacore::Float memFraction=0.5, casacore::Bool dow=false, casacore::Bool doflag=false);
 	//Constructor to bin into an existing gridded ms
-	MSUVBin (MeasurementSet& ms);
+	MSUVBin (casacore::MeasurementSet& ms);
 	//The following can be called multiple times to setup multiple input MS
-	virtual Bool selectData(const String& msname, const String& spw = "", const String& field = "",
-			const String& baseline = "", const String& scan = "",
-			const String& uvrange = "", const String& taql = "",
-			const String& subarray = "", const String& correlation = "",
-			const String& intent = "", const String& obs = "");
-	//void setInputMS(const MeasurementSet& ms);
-	//void setInputMS(const Block<const MeasurementSet*> mssPtr);
-	void setOutputMS(const String& msname);
+	virtual casacore::Bool selectData(const casacore::String& msname, const casacore::String& spw = "", const casacore::String& field = "",
+			const casacore::String& baseline = "", const casacore::String& scan = "",
+			const casacore::String& uvrange = "", const casacore::String& taql = "",
+			const casacore::String& subarray = "", const casacore::String& correlation = "",
+			const casacore::String& intent = "", const casacore::String& obs = "");
+	//void setInputMS(const casacore::MeasurementSet& ms);
+	//void setInputMS(const casacore::Block<const casacore::MeasurementSet*> mssPtr);
+	void setOutputMS(const casacore::String& msname);
 	//forceDiskUsage is to avoid using in memory gridding even if there is
-	Bool fillOutputMS();
+	casacore::Bool fillOutputMS();
 	virtual ~MSUVBin();
-	//Helper function for creating MDirection from a string
-	static Bool String2MDirection(const String& theString,
-					            MDirection& theMeas, const String msname="");
+	//Helper function for creating casacore::MDirection from a string
+	static casacore::Bool String2MDirection(const casacore::String& theString,
+					            casacore::MDirection& theMeas, const casacore::String msname="");
 
 private:
-	static Int sepCommaEmptyToVectorStrings(Vector<String>& retStr,
-			  const String& str);
-	Bool fillSmallOutputMS();
-	Bool fillNewBigOutputMS();
-	Bool fillBigOutputMS();
-	Int recoverGridInfo(const String& msname);
+	static casacore::Int sepCommaEmptyToVectorStrings(casacore::Vector<casacore::String>& retStr,
+			  const casacore::String& str);
+	casacore::Bool fillSmallOutputMS();
+	casacore::Bool fillNewBigOutputMS();
+	casacore::Bool fillBigOutputMS();
+	casacore::Int recoverGridInfo(const casacore::String& msname);
 	void storeGridInfo();
-	void createOutputMS(const Int nrrows);
-	Int makeUVW(const Double reffreq, Vector<Double>& incr, Vector<Int>& cent, Matrix<Double>&uvw);
-	void locateuvw(Matrix<Int>& locuv, const Vector<Double>& increment,
-			const Vector<Int>& center, const Matrix<Double>& uvw);
-	void gridData(const vi::VisBuffer2& vb, Cube<Complex>& grid,
-			Matrix<Float>& wght, Cube<Float>& wghtSpec,
-			Cube<Bool>& flag, Vector<Bool>& rowFlag, Matrix<Double>& uvw, Vector<Int>& ant1,
-			Vector<Int>& ant2, Vector<Double>& time, const Matrix<Int>& locuv);
-	void gridData(const vi::VisBuffer2& vb, Cube<Complex>& grid,
-			Matrix<Float>& wght, Cube<Float>& wghtSpec,
-			Cube<Bool>& flag, Vector<Bool>& rowFlag, Matrix<Double>& uvw, Vector<Int>& ant1,
-			Vector<Int>& ant2, Vector<Double>& time, const Int startchan, const Int endchan);
-	void gridDataConv(const vi::VisBuffer2& vb, Cube<Complex>& grid,
-		       Matrix<Float>& /*wght*/, Cube<Complex>& wghtSpec,
-		       Cube<Bool>& flag, Vector<Bool>& rowFlag, Matrix<Double>& uvw, Vector<Int>& ant1,
-		       Vector<Int>& ant2, Vector<Double>& timeCen, const Int startchan, const Int endchan, 
-		       const Cube<Complex>& convFunc, const Vector<Int>& convSupport, const Double wScale, const Int convSampling);
-	void gridDataConvThr(const vi::VisBuffer2& vb, Cube<Complex>& grid,
-			     Cube<Complex>& wghtSpec,
-		       Cube<Bool>& flag, Vector<Bool>& rowFlag, Matrix<Double>& uvw, Vector<Int>& ant1,
-		       Vector<Int>& ant2, Vector<Double>& timeCen, const Int startchan, const Int endchan, 
-		       const Cube<Complex>& convFunc, const Vector<Int>& convSupport, const Double wScale, const Int convSampling);
+	void createOutputMS(const casacore::Int nrrows);
+	casacore::Int makeUVW(const casacore::Double reffreq, casacore::Vector<casacore::Double>& incr, casacore::Vector<casacore::Int>& cent, casacore::Matrix<casacore::Double>&uvw);
+	void locateuvw(casacore::Matrix<casacore::Int>& locuv, const casacore::Vector<casacore::Double>& increment,
+			const casacore::Vector<casacore::Int>& center, const casacore::Matrix<casacore::Double>& uvw);
+	void gridData(const vi::VisBuffer2& vb, casacore::Cube<casacore::Complex>& grid,
+			casacore::Matrix<casacore::Float>& wght, casacore::Cube<casacore::Float>& wghtSpec,
+			casacore::Cube<casacore::Bool>& flag, casacore::Vector<casacore::Bool>& rowFlag, casacore::Matrix<casacore::Double>& uvw, casacore::Vector<casacore::Int>& ant1,
+			casacore::Vector<casacore::Int>& ant2, casacore::Vector<casacore::Double>& time, const casacore::Matrix<casacore::Int>& locuv);
+	void gridData(const vi::VisBuffer2& vb, casacore::Cube<casacore::Complex>& grid,
+			casacore::Matrix<casacore::Float>& wght, casacore::Cube<casacore::Float>& wghtSpec,
+			casacore::Cube<casacore::Bool>& flag, casacore::Vector<casacore::Bool>& rowFlag, casacore::Matrix<casacore::Double>& uvw, casacore::Vector<casacore::Int>& ant1,
+			casacore::Vector<casacore::Int>& ant2, casacore::Vector<casacore::Double>& time, const casacore::Int startchan, const casacore::Int endchan);
+	void gridDataConv(const vi::VisBuffer2& vb, casacore::Cube<casacore::Complex>& grid,
+		       casacore::Matrix<casacore::Float>& /*wght*/, casacore::Cube<casacore::Complex>& wghtSpec,
+		       casacore::Cube<casacore::Bool>& flag, casacore::Vector<casacore::Bool>& rowFlag, casacore::Matrix<casacore::Double>& uvw, casacore::Vector<casacore::Int>& ant1,
+		       casacore::Vector<casacore::Int>& ant2, casacore::Vector<casacore::Double>& timeCen, const casacore::Int startchan, const casacore::Int endchan, 
+		       const casacore::Cube<casacore::Complex>& convFunc, const casacore::Vector<casacore::Int>& convSupport, const casacore::Double wScale, const casacore::Int convSampling);
+	void gridDataConvThr(const vi::VisBuffer2& vb, casacore::Cube<casacore::Complex>& grid,
+			     casacore::Cube<casacore::Complex>& wghtSpec,
+		       casacore::Cube<casacore::Bool>& flag, casacore::Vector<casacore::Bool>& rowFlag, casacore::Matrix<casacore::Double>& uvw, casacore::Vector<casacore::Int>& ant1,
+		       casacore::Vector<casacore::Int>& ant2, casacore::Vector<casacore::Double>& timeCen, const casacore::Int startchan, const casacore::Int endchan, 
+		       const casacore::Cube<casacore::Complex>& convFunc, const casacore::Vector<casacore::Int>& convSupport, const casacore::Double wScale, const casacore::Int convSampling);
 	void inplaceGridData(const vi::VisBuffer2& vb);
 	void inplaceLargeBW(const vi::VisBuffer2& vb);
 	void inplaceSmallBW(const vi::VisBuffer2& vb);
 	void makeCoordsys();
 	void weightSync();
-	void multiThrLoop(const Int outchan, const vi::VisBuffer2& vb, Double refFreq,  
-			 Vector<Float> scale, Bool hasCorrected,Bool needRot, 
-			 const Vector<Double>& phasor, const Vector<Double>& visFreq, 
-			 const Double& fracbw,  
-			 Complex*& grid, Complex*& wghtSpec, Bool*& flag, 
-			 Bool*& rowFlag, Double*& uvw, Int*& ant1,
-			  Int*& ant2, Double*& timeCen, Double*& sumWeight, Double*& numvis, 
-			  const Int startchan, 
-			 const Int endchan, const Cube<Complex>& convFunc, const Vector<Int>& convSupport, const Double wScale, const Int convSampling );
-	void locateFlagFromGrid(vi::VisBuffer2& vb, Cube<Bool>& datFlag,
-				Cube<Float>& wghtSpec,
-				Cube<Bool>& flag, Vector<Bool>& rowFlag, Matrix<Double>& uvw, Vector<Int>& ant1,
-				Vector<Int>& ant2, Vector<Double>& timeCen, const Int startchan, const Int endchan);
+	void multiThrLoop(const casacore::Int outchan, const vi::VisBuffer2& vb, casacore::Double refFreq,  
+			 casacore::Vector<casacore::Float> scale, casacore::Bool hasCorrected,casacore::Bool needRot, 
+			 const casacore::Vector<casacore::Double>& phasor, const casacore::Vector<casacore::Double>& visFreq, 
+			 const casacore::Double& fracbw,  
+			 casacore::Complex*& grid, casacore::Complex*& wghtSpec, casacore::Bool*& flag, 
+			 casacore::Bool*& rowFlag, casacore::Double*& uvw, casacore::Int*& ant1,
+			  casacore::Int*& ant2, casacore::Double*& timeCen, casacore::Double*& sumWeight, casacore::Double*& numvis, 
+			  const casacore::Int startchan, 
+			 const casacore::Int endchan, const casacore::Cube<casacore::Complex>& convFunc, const casacore::Vector<casacore::Int>& convSupport, const casacore::Double wScale, const casacore::Int convSampling );
+	void locateFlagFromGrid(vi::VisBuffer2& vb, casacore::Cube<casacore::Bool>& datFlag,
+				casacore::Cube<casacore::Float>& wghtSpec,
+				casacore::Cube<casacore::Bool>& flag, casacore::Vector<casacore::Bool>& rowFlag, casacore::Matrix<casacore::Double>& uvw, casacore::Vector<casacore::Int>& ant1,
+				casacore::Vector<casacore::Int>& ant2, casacore::Vector<casacore::Double>& timeCen, const casacore::Int startchan, const casacore::Int endchan);
 	// returns a false if either no channel map or pol map onto grid
-	Bool datadescMap(const vi::VisBuffer2& vb, Double& fracbw);
-	Bool datadescMap(const VisBuffer& vb);
-	Bool saveData(const Cube<Complex>& grid, const Cube<Bool>&flag, const Vector<Bool>& rowFlag,
-					const Cube<Float>&wghtSpec, const Matrix<Float>& wght,
-					const Matrix<Double>& uvw, const Vector<Int>& ant1,
-					const Vector<Int>& ant2, const Vector<Double>& time);
+	casacore::Bool datadescMap(const vi::VisBuffer2& vb, casacore::Double& fracbw);
+	casacore::Bool datadescMap(const VisBuffer& vb);
+	casacore::Bool saveData(const casacore::Cube<casacore::Complex>& grid, const casacore::Cube<casacore::Bool>&flag, const casacore::Vector<casacore::Bool>& rowFlag,
+					const casacore::Cube<casacore::Float>&wghtSpec, const casacore::Matrix<casacore::Float>& wght,
+					const casacore::Matrix<casacore::Double>& uvw, const casacore::Vector<casacore::Int>& ant1,
+					const casacore::Vector<casacore::Int>& ant2, const casacore::Vector<casacore::Double>& time);
 
-	Bool saveData(const Cube<Complex>& grid, const Cube<Bool>&flag, const Vector<Bool>& rowFlag,
-					const Cube<Float>&wghtSpec,
-					const Matrix<Double>& uvw, const Vector<Int>& ant1,
-		      const Vector<Int>& ant2, const Vector<Double>& time, const Int startchan, const Int endchan, 	const Cube<Float>& imagwghtSpec=Cube<Float>());
+	casacore::Bool saveData(const casacore::Cube<casacore::Complex>& grid, const casacore::Cube<casacore::Bool>&flag, const casacore::Vector<casacore::Bool>& rowFlag,
+					const casacore::Cube<casacore::Float>&wghtSpec,
+					const casacore::Matrix<casacore::Double>& uvw, const casacore::Vector<casacore::Int>& ant1,
+		      const casacore::Vector<casacore::Int>& ant2, const casacore::Vector<casacore::Double>& time, const casacore::Int startchan, const casacore::Int endchan, 	const casacore::Cube<casacore::Float>& imagwghtSpec=casacore::Cube<casacore::Float>());
 	void fillSubTables();
 	void fillFieldTable();
-	void copySubtable(const String& tabName, const Table& inTab,
-	                    const Bool noRows=False);
+	void copySubtable(const casacore::String& tabName, const casacore::Table& inTab,
+	                    const casacore::Bool noRows=false);
 	void fillDDTables();
 	void setTileCache();
-	void makeSFConv(Cube<Complex>&convFunc, 
-			Vector<Int>& convSupport, Double& wScale, Int& convSampling, 
-			Int& convSize);
-	void makeWConv(vi::VisibilityIterator2& iter,Cube<Complex>& convFunc, 
-		       Vector<Int>& convSupport,
-			Double& wScale, Int& convSampling, Int& convSize );
-	CoordinateSystem csys_p;
-	Int nx_p, ny_p, nchan_p, npol_p;
-	Double freqStart_p, freqStep_p;
-	Vector<Int> chanMap_p, polMap_p;
-	Vector<Vector<Int> > chanMapRev_p;
-	MDirection phaseCenter_p;
-	Vector<Double> deltas_p;
-	Vector<Int> whichStokes_p;
-	Bool existOut_p;
-	String outMSName_p;
-	CountedPtr<MeasurementSet> outMsPtr_p;
-	Block<const MeasurementSet *> mss_p;
+	void makeSFConv(casacore::Cube<casacore::Complex>&convFunc, 
+			casacore::Vector<casacore::Int>& convSupport, casacore::Double& wScale, casacore::Int& convSampling, 
+			casacore::Int& convSize);
+	void makeWConv(vi::VisibilityIterator2& iter,casacore::Cube<casacore::Complex>& convFunc, 
+		       casacore::Vector<casacore::Int>& convSupport,
+			casacore::Double& wScale, casacore::Int& convSampling, casacore::Int& convSize );
+	casacore::CoordinateSystem csys_p;
+	casacore::Int nx_p, ny_p, nchan_p, npol_p;
+	casacore::Double freqStart_p, freqStep_p;
+	casacore::Vector<casacore::Int> chanMap_p, polMap_p;
+	casacore::Vector<casacore::Vector<casacore::Int> > chanMapRev_p;
+	casacore::MDirection phaseCenter_p;
+	casacore::Vector<casacore::Double> deltas_p;
+	casacore::Vector<casacore::Int> whichStokes_p;
+	casacore::Bool existOut_p;
+	casacore::String outMSName_p;
+	casacore::CountedPtr<casacore::MeasurementSet> outMsPtr_p;
+	casacore::Block<const casacore::MeasurementSet *> mss_p;
 	VisBufferUtil vbutil_p;
-	Float memFraction_p;
-	Bool doW_p, doFlag_p;
-	Matrix<Double> numVis_p;
-	Matrix<Double> sumWeight_p;
+	casacore::Float memFraction_p;
+	casacore::Bool doW_p, doFlag_p;
+	casacore::Matrix<casacore::Double> numVis_p;
+	casacore::Matrix<casacore::Double> sumWeight_p;
 
 }; // end class MSUVBin
 } //# NAMESPACE CASA - END

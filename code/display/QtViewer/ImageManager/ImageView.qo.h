@@ -88,7 +88,7 @@ namespace casa {
 	signals:
 		//Register/unregister has changed.
 		void imageSelected(ImageView*);
-		//Raster/Contour/Vector has changed.
+		//Raster/Contour/casacore::Vector has changed.
 		void displayTypeChanged( ImageView* dd );
 		//User has requested to view the display properties of this data.
 		void showDataDisplayOptions( QtDisplayData* imageData );
@@ -174,8 +174,8 @@ namespace casa {
 		void makeDrag( QMouseEvent* event );
 
 		//Resetting the original rest frequency
-		void _sendRestFrequencyChange( String comboStr );
-		QString updateRestUI( String& restStr );
+		void _sendRestFrequencyChange( casacore::String comboStr );
+		QString updateRestUI( casacore::String& restStr );
 		void updateFreqUnitCombo();
 		void selectRestUnits( const QString& restUnits );
 
@@ -220,15 +220,15 @@ namespace casa {
 
 		//Method used to combine images using colors.
 		ColorCombinationMode colorMode;
-		Record displayOptionsSnapshot;
+		casacore::Record displayOptionsSnapshot;
 		bool empty;
 
 		//Rest frequency
 		QStringList frequencyUnits;
 		QStringList wavelengthUnits;
-		const String REST_FREQUENCY_KEY;
-		//const String SPECTRAL_UNIT_KEY;
-		const String VALUE_KEY;
+		const casacore::String REST_FREQUENCY_KEY;
+		//const casacore::String SPECTRAL_UNIT_KEY;
+		const casacore::String VALUE_KEY;
 
 		//Opening/closing
 		int minimumSize;
@@ -236,8 +236,8 @@ namespace casa {
 		const int SIZE_EXPANDED;
 
 		//Store original rest frequney value & units.
-		String originalFreq;
-		//String spectralUnit;
+		casacore::String originalFreq;
+		//casacore::String spectralUnit;
 
 		const int VIEWED_BORDER_SIZE;
 		const int NOT_VIEWED_BORDER_SIZE;

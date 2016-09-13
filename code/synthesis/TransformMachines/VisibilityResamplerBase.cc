@@ -34,6 +34,7 @@
 #include <casa/Quanta/MVTime.h>
 #include <fstream>
 
+using namespace casacore;
 namespace casa{
   //
   //-----------------------------------------------------------------------------------
@@ -190,7 +191,7 @@ namespace casa{
 		    // The code below translates, e.g.,
 		    // Stokes::RR-->PolCrossProduct::RR-->MuellerElement.
 		    MuellerElementType muellerElement;// = outerProduct.getMuellerElement(translateStokesToCrossPol(vbPol(ipol)));
-		    Bool found=False;
+		    Bool found=false;
 		    Double f,w;
 		    f=cfb_l->nearestFreq(found,freq);
 		    w=cfb_l->nearestWVal(found,wVal);
@@ -213,4 +214,5 @@ namespace casa{
     return statusCode;
   }
 
+using namespace casacore;
 };// end namespace casa

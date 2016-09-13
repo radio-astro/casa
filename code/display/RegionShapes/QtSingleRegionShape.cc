@@ -33,6 +33,7 @@
 #include <limits>
 #include <math.h>
 
+using namespace casacore;
 namespace casa {
 
 // QTSINGLEREGIONSHAPE DEFINITIONS //

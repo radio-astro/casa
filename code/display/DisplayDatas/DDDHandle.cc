@@ -33,6 +33,7 @@
 #include <display/DisplayDatas/DDDHandle.h>
 
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	DDDHandle::DDDHandle() {
@@ -100,9 +101,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Bool DDDHandle::underCursor(Double posx, Double posy) const {
 		if ( (posx >= min(blcX(),trcX())) && (posx <= max(blcX(),trcX())) &&
 		        (posy >= min(blcY(),trcY())) && (posy <= max(blcY(),trcY())) ) {
-			return True;
+			return true;
 		} else {
-			return False;
+			return false;
 		}
 	}
 

@@ -43,6 +43,7 @@
 #include <casa/Utilities/Assert.h>
 #include <casa/BasicSL/String.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 GaussianShape::GaussianShape()
@@ -157,12 +158,12 @@ Double GaussianShape::sample(const MDirection& direction,
   const MDirection& compDir(refDirection());
   const MDirection::Ref& compDirFrame(compDir.getRef());
   const MDirection::MVType* compDirValue = &(compDir.getValue());
-  Bool deleteValue = False;
+  Bool deleteValue = false;
   // Convert direction to the same frame as the reference direction
   if (ComponentShape::differentRefs(direction.getRef(), compDirFrame)) {
     compDirValue = new MDirection::MVType
       (MDirection::Convert(compDir, direction.getRef())().getValue());
-    deleteValue = True;
+    deleteValue = true;
   }
   const MDirection::MVType& dirValue = direction.getValue();
   const Double separation = compDirValue->separation(dirValue);
@@ -188,12 +189,12 @@ void GaussianShape::sample(Vector<Double>& scale,
   const MDirection& compDir(refDirection());
   const MDirection::Ref& compDirFrame(compDir.getRef());
   const MDirection::MVType* compDirValue = &(compDir.getValue());
-  Bool deleteValue = False;
+  Bool deleteValue = false;
   // Convert direction to the same frame as the reference direction
   if (refFrame != compDirFrame) {
     compDirValue = new MDirection::MVType
       (MDirection::Convert(compDir, refFrame)().getValue());
-    deleteValue = True;
+    deleteValue = true;
   }
   const Double pixArea = pixelLatSize.radian() * pixelLongSize.radian();
   const Double maxSep = 4.0 * itsShape.majorAxis();
@@ -243,13 +244,13 @@ Bool GaussianShape::ok() const {
   // The LogIO class is only constructed if an error is detected for
   // performance reasons. Both function static and file static variables
   // where considered and rejected for this purpose.
-  if (!TwoSidedShape::ok()) return False;
+  if (!TwoSidedShape::ok()) return false;
   if (!near(itsShape.flux(), Double(1.0), 2*C::dbl_epsilon)) {
     LogIO logErr(LogOrigin("GaussianCompRep", "ok()"));
     logErr << LogIO::SEVERE << "The internal Gaussian shape does not have"
 	   << " unit area"
            << LogIO::POST;
-    return False;
+    return false;
   }
   if (!near(itsFT.height(), 1.0, 2*C::dbl_epsilon)) {
     LogIO logErr(LogOrigin("GaussianCompRep", "ok()"));
@@ -257,9 +258,9 @@ Bool GaussianShape::ok() const {
 	   << " the internal Gaussian shape does not have"
 	   << " unit height"
            << LogIO::POST;
-    return False;
+    return false;
   }
-  return True;
+  return true;
 }
 
 const ComponentShape* GaussianShape::getPtr() const {
@@ -287,7 +288,7 @@ String GaussianShape::sizeToString() const {
 	return TwoSidedShape::sizeToString(
 		Quantity(itsShape.majorAxis(), "rad"),
 		Quantity(itsShape.minorAxis(), "rad"),
-		Quantity(itsShape.PA(), "rad"), True,
+		Quantity(itsShape.PA(), "rad"), true,
 		majorAxisError(), minorAxisError(),
 		positionAngleError()
 	);

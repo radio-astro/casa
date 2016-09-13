@@ -10,6 +10,7 @@
 #include <msvis/MSVis/VisBuffer2.h>
 #include <casa/Exceptions.h>
 
+using namespace casacore;
 namespace casa {
 namespace ms {
 
@@ -18,7 +19,7 @@ using vi::VisBuffer2;
 #define AssertWritable() ThrowIf (! isWritable_p, "Cannot write to this MsRow object")
 
 MsRow::MsRow (Int row, const VisBuffer2 * vb)
-: isWritable_p (False),
+: isWritable_p (false),
   row_p (row),
   vb_p (const_cast<VisBuffer2 * > (vb)) // take const into our own hands ;-(
 {
@@ -27,7 +28,7 @@ MsRow::MsRow (Int row, const VisBuffer2 * vb)
 
 
 MsRow::MsRow (Int row, VisBuffer2 * vb)
-: isWritable_p (True), row_p (row), vb_p (vb)
+: isWritable_p (true), row_p (row), vb_p (vb)
 {
     ThrowIf (vb == 0, "VisBuffer cannot be null.");
 }
@@ -63,4 +64,5 @@ MsRows::MsRows (vi::VisBuffer2 * vb)
 
 
 } // end namespace ms
+using namespace casacore;
 } // end namespace casa

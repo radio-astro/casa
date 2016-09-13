@@ -66,20 +66,20 @@ public:
 	bool interactiveInputRequired();
 	void waitForInteractiveInput(); 
 	int cleanComplete();
-	Record getMinorCycleControls();
-	void mergeCycleInitializationRecord(Record&);
-	void mergeCycleExecutionRecord(Record&);
-	Record getSummaryRecord();
-	Record getDetailsRecord();
+	casacore::Record getMinorCycleControls();
+	void mergeCycleInitializationRecord(casacore::Record&);
+	void mergeCycleExecutionRecord(casacore::Record&);
+	casacore::Record getSummaryRecord();
+	casacore::Record getDetailsRecord();
 
-	void mergeCycleInitializationRecords(const Vector<Record> &);
-	void mergeCycleExecutionRecords(const Vector<Record> &);
+	void mergeCycleInitializationRecords(const casacore::Vector<casacore::Record> &);
+	void mergeCycleExecutionRecords(const casacore::Vector<casacore::Record> &);
 
 	int rank;
 	int commSize;
 
 protected:
-	void mergeMinorCycleSummary(const Array<Double>&);
+	void mergeMinorCycleSummary(const casacore::Array<casacore::Double>&);
 
 	MPI_Comm comm;
 
@@ -93,9 +93,9 @@ struct ExecRecord {
 	ExecRecord(int iterDone, int maxCycleIterDone, float peakResidual,
 	           bool updatedModelFlag);
 
-	ExecRecord(const Record &rec);
+	ExecRecord(const casacore::Record &rec);
 
-	Record asRecord();
+	casacore::Record asRecord();
 
 	// Don't modify the following fields, including their order, without a
 	// corresponding change in the computation of datatype()!
@@ -160,9 +160,9 @@ struct ExecRecord {
 };
 
 struct DetailsRecord {
-	DetailsRecord(const Record &rec);
+	DetailsRecord(const casacore::Record &rec);
 
-	Record asRecord();
+	casacore::Record asRecord();
 
 	// Don't modify the following fields, including their order, without a
 	// corresponding change in the computation of datatype()!
@@ -208,9 +208,9 @@ struct ControlRecord {
 	              float threshold, float cycleThreshold,
 	              float loopGain, bool stopFlag);
 
-	ControlRecord(const Record &rec);
+	ControlRecord(const casacore::Record &rec);
 
-	Record asRecord();
+	casacore::Record asRecord();
 
 	// Don't modify the following fields, including their order, without a
 	// corresponding change in the computation of datatype()!

@@ -27,6 +27,7 @@
 
 #include <display/DisplayCanvas/DefaultWCSizeControlHandler.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Default Constructor Required
@@ -34,7 +35,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	Bool DefaultWCSizeControlHandler::executeSizeControl(WorldCanvas *) {
-		return True;
+		return true;
 	}
 
 // Destructor

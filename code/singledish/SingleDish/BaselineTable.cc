@@ -41,6 +41,13 @@
 #include <tables/Tables/TableRecord.h>
 #include <tables/Tables/TableProxy.h>
 
+using namespace casacore;
+using namespace casacore;
+using namespace casacore;
+using namespace casacore;
+using namespace casacore;
+using namespace casacore;
+using namespace casacore;
 namespace casa {
 
 const String BaselineTable::name_ = "APPLY_BASELINE";
@@ -243,7 +250,7 @@ void BaselineTable::appenddata(uInt scanno, uInt beamno,
 			       Array<uInt> lfedge)
 {
   uInt irow = nrow();
-  table_.addRow(1, True);
+  table_.addRow(1, true);
   setdata(irow, scanno, beamno, antno, ifno, freqid, time, 
 	  apply, ftype, fpar, ffpar, mask, res, rms, 
 	  nchan, cthres, citer, uself, lfthres, lfavg, lfedge);
@@ -254,7 +261,7 @@ void BaselineTable::appendbasedata(int scanno, int beamno,
 				   int freqid, Double time)
 {
   uInt irow = nrow();
-  table_.addRow(1, True);
+  table_.addRow(1, true);
   setbasedata(irow, uInt(scanno), uInt(beamno), uInt(antno), 
 	      uInt(ifno), uInt(freqid), time);
 }

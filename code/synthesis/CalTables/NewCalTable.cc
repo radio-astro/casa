@@ -44,6 +44,7 @@
 #include <casa/Logging/LogIO.h>
 #include <synthesis/CalTables/CTEnums.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //----------------------------------------------------------------------------
@@ -58,7 +59,7 @@ NewCalTable::NewCalTable() :
 
   // Form underlying generic Table according to the CTDesc
   SetupNewTable calMainTab("nullNewCalTable.tempMemCalTable",nctd.calMainDesc(),Table::New);
-  Table tab(calMainTab, Table::Memory, 0, False); 
+  Table tab(calMainTab, Table::Memory, 0, false); 
   *this = tab;
   
   // Set the table info record
@@ -91,7 +92,7 @@ NewCalTable::NewCalTable (const String& tableName, CTDesc& ctableDesc,
 
     // Form underlying generic Table according to the supplied desc
     SetupNewTable calMainTab(tableName,ctableDesc.calMainDesc(),access);
-    Table tab(calMainTab, ttype, 0, False); 
+    Table tab(calMainTab, ttype, 0, false); 
     *this = tab;
 
     // Set the table info record
@@ -131,7 +132,7 @@ NewCalTable::NewCalTable(String tableName,VisCalEnum::VCParType parType,
 
   // Form underlying generic Table according to the CTDesc
   SetupNewTable calMainTab(tableName+".tempMemCalTable",nctd.calMainDesc(),Table::New);
-  Table tab(calMainTab, Table::Memory, 0, False); 
+  Table tab(calMainTab, Table::Memory, 0, false); 
   *this = tab;
   
   // Set the table info record
@@ -225,7 +226,7 @@ NewCalTable::NewCalTable(String tableName, String CorF,
 
   // Form underlying generic Table according to the supplied desc
   SetupNewTable calMainTab(tableName+".tempMemCalTable",nctd.calMainDesc(),Table::New);
-  Table tab(calMainTab, Table::Memory, 0, False); 
+  Table tab(calMainTab, Table::Memory, 0, false); 
   *this = tab;
   
   // Set the table info record
@@ -295,7 +296,7 @@ NewCalTable& NewCalTable::operator= (const NewCalTable& other)
 // Handle backward compatibility
 Bool NewCalTable::CTBackCompat(const String& caltable) {
   
-  Bool doBC(False);
+  Bool doBC(false);
 
   // Detect backward compatibility issues 
   Table tab(caltable,Table::Old);
@@ -307,7 +308,7 @@ Bool NewCalTable::CTBackCompat(const String& caltable) {
   if (doBC)
     NewCalTable backcompat(caltable,Table::Update,Table::Plain);
 
-  return True;
+  return true;
 
 }
 
@@ -519,8 +520,8 @@ Bool NewCalTable::conformant(const TableDesc& tabDesc)
 // Check if input table description is confomrant with
 // the new caltable format (or should I named this "validate" ...as 
 // in MS case...)
-  Bool eqDType=False;
-  CTDesc calTD = CTDesc(False);  // opt out of OBS_ID, because we aren't insisting on it yet
+  Bool eqDType=false;
+  CTDesc calTD = CTDesc(false);  // opt out of OBS_ID, because we aren't insisting on it yet
   TableDesc requiredCalTD = calTD.calMainDesc();
   Bool isCalTableDesc = tabDesc.columnDescSet().isSuperset(requiredCalTD.columnDescSet(), eqDType);
   if (!isCalTableDesc) {
@@ -531,7 +532,7 @@ Bool NewCalTable::conformant(const TableDesc& tabDesc)
   uInt ncols = colNames.nelements();
   for (uInt j=0; j < ncols; j++) {
   }
-  Bool check = True;
+  Bool check = true;
   for (uInt i=0; i < ncols; i++) {
     TableRecord keySet = tabDesc[colNames(i)].keywordSet();
     TableRecord reqKeySet = requiredCalTD[colNames(i)].keywordSet();
@@ -687,7 +688,7 @@ void NewCalTable::fillGenericContents(Int nObs, Int nScanPerObs,Int nTimePerScan
 	  wt=1.0;
 	  ncmc.weight().putColumnCells(rows,wt);
 	  Cube<Bool> flag(nPar,nChan(ispw),nAddRows);
-	  flag=False;
+	  flag=false;
 	  ncmc.flag().putColumnCells(rows,flag);
 	}
       }
@@ -708,7 +709,7 @@ void NewCalTable::fillGenericObs(Int nObs) {
     oc.observer().put(iobs,String("unknown"));
     oc.project().put(iobs,String("unknown"));
     oc.telescopeName().put(iobs,String("unknown"));
-    oc.flagRow().put(iobs,False);
+    oc.flagRow().put(iobs,false);
   }
 }
 
@@ -719,7 +720,7 @@ void NewCalTable::fillGenericField(Int nFld) {
   MSFieldColumns fc(this->field());
   for (Int ifld=0;ifld<nFld;++ifld) {
     fc.name().put(ifld,("Field_"+String::toString(ifld)));
-    fc.flagRow().put(ifld,False);
+    fc.flagRow().put(ifld,false);
   }
 }
 
@@ -738,7 +739,7 @@ void NewCalTable::fillGenericAntenna(Int nAnt) {
     ac.dishDiameter().put(iant,25.0);
     ac.offset().put(iant,Vector<Double>(3,0.0));
     ac.position().put(iant,Vector<Double>(3,0.0));
-    ac.flagRow().put(iant,False);
+    ac.flagRow().put(iant,false);
   }
 
 }
@@ -766,7 +767,7 @@ void NewCalTable::fillGenericSpw(Int nSpw,Vector<Int>& nChan) {
     sc.effectiveBW().put(ispw,res);
     sc.resolution().put(ispw,res);
     sc.totalBandwidth().put(ispw,sum(res));
-    sc.flagRow().put(ispw,False);
+    sc.flagRow().put(ispw,false);
   }
 }
 
@@ -935,16 +936,16 @@ void NewCalTable::flagAbsentSpws() {
   Vector<Int> spwids;
   ctcol.spwId().getColumn(spwids);
   Int nspw=genSort(spwids,Sort::Ascending,(Sort::QuickSort | Sort::NoDuplicates));
-  spwids.resize(nspw,True);
+  spwids.resize(nspw,true);
 
   // Revise SPW FLAG_ROW
   Vector<Bool> spwfr;
   ctcol.spectralWindow().flagRow().getColumn(spwfr);
-  spwfr.set(True);
+  spwfr.set(true);
   for (Int ispw=0;ispw<nspw;++ispw) {
     uInt thisspw=spwids(ispw);
     if (thisspw<spwfr.nelements()) 
-      spwfr(thisspw)=False;  // unflagged
+      spwfr(thisspw)=false;  // unflagged
     else
       throw(AipsError("NewCalTable::flagAbsentSpws: Main table contains spwids not in SpW subtable"));
   }
@@ -1009,7 +1010,7 @@ void NewCalTable::mergeSpwMetaInfo(const NewCalTable& other) {
 	spwcols.totalBandwidth().put(ispw,ospwcols.totalBandwidth()(ispw));
 
 	// this' row now unflagged
-	spwcols.flagRow().put(ispw,False);
+	spwcols.flagRow().put(ispw,false);
 
       }
       else {
@@ -1077,7 +1078,7 @@ void NewCalTable::makeSpwSingleChan() {
       Vector<Double> midFreq;
       spwcol.chanFreq().get(ispw,midFreq);
       midFreq(0)=midFreq(nchan/2);
-      midFreq.resize(1,True);
+      midFreq.resize(1,true);
       Double totBW;
       spwcol.totalBandwidth().get(ispw,totBW);
       Vector<Double> totBWv(1,totBW);
@@ -1113,7 +1114,7 @@ void NewCalTable::addPhoneyObs() {
     // Add phoney OBSERVATION_ID column and fill with zeros
     if (!this->tableDesc().isColumn(NCT::fieldName(NCT::OBSERVATION_ID))) {
       ScalarColumnDesc<Int> obscoldesc(NCT::fieldName (NCT::OBSERVATION_ID),ColumnDesc::Direct);
-      this->addColumn(obscoldesc,False);
+      this->addColumn(obscoldesc,false);
       CTMainColumns mc(*this);
       mc.obsId().fillColumn(0);
     }

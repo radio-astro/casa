@@ -28,6 +28,7 @@
 #include <display/Display/Options.h>
 #include <QDebug>
 
+using namespace casacore;
 namespace casa {
 
 	Gaussian2DFitter::Gaussian2DFitter() :
@@ -142,4 +143,5 @@ namespace casa {
 	Gaussian2DFitter::~Gaussian2DFitter() {
 	}
 
+using namespace casacore;
 } /* namespace casa */

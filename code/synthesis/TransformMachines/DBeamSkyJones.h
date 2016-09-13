@@ -69,7 +69,7 @@ class SkyEquation;
 //
 //
 // <motivation>
-// To deal with the polarization leakage beam (mainly Stokes I into
+// To deal with the polarization leakage beam (mainly casacore::Stokes I into
 // polarization visibilities).  The main primary beam response, ie,
 // the diagonal Jones matrix elements, are handled by VPSkyJones.
 // The motivation for this split is differing storage requirements
@@ -89,9 +89,9 @@ class DBeamSkyJones : public BeamSkyJones {
 
 public:
 
-  DBeamSkyJones(MeasurementSet& ms, 	     
-		Bool makeDefaultPBsFromMS = True,
-		const Quantity &parallacticAngleIncrement = Quantity(5.0, "deg"),
+  DBeamSkyJones(casacore::MeasurementSet& ms, 	     
+		casacore::Bool makeDefaultPBsFromMS = true,
+		const casacore::Quantity &parallacticAngleIncrement = casacore::Quantity(5.0, "deg"),
 		BeamSquint::SquintType doSquint = BeamSquint::NONE);
 
   // Note that DBeamSkyJones uses BeamSkyJones' "apply" methods
@@ -100,7 +100,7 @@ public:
   Type type() {return SkyJones::D;};
 
   // Is this solveable?
-  virtual Bool isSolveable() {return False;};
+  virtual casacore::Bool isSolveable() {return false;};
 
 protected:
 

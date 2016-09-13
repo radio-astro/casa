@@ -34,6 +34,7 @@
 
 #include <casa/iostream.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 LorentzianSpectralElement::LorentzianSpectralElement()

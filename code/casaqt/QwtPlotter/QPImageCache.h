@@ -122,7 +122,7 @@ public:
     static const int DEFAULT_MEMORY_LIMIT_KB;
     
     // Convenient access to class name for logging.
-    static const String CLASS_NAME;
+    static const casacore::String CLASS_NAME;
     
     // Convenience class to use as a key.  Every axis that has at least one
     // item attached to it will get an entry in the map, along with its range.

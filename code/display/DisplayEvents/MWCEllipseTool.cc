@@ -31,6 +31,7 @@
 #include <casa/BasicMath/Math.h>
 #include <display/Display/DisplayCoordinateSystem.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	MWCEllipseTool::MWCEllipseTool(Display::KeySym keysym,
@@ -38,9 +39,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		MultiWCTool(keysym),
 		itsEllipsePersistent(persistent),
 		//itsRectanglePersistent(persistent),
-		itsEllipseExists(False),
-		//itsRectangleExists(False),
-		itsActive(False),
+		itsEllipseExists(false),
+		//itsRectangleExists(false),
+		itsActive(false),
 		itsP1(2), itsP2(2),
 		itsHX(4), itsHY(4),
 		itsLastPressTime(-1.),	// 'long ago..'
@@ -98,8 +99,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				}
 				set(x1, y1, x2, y2);
 
-				itsActive = True;
-				itsMoving = False;	// enter resizing state
+				itsActive = true;
+				itsMoving = false;	// enter resizing state
 				return;
 			}
 
@@ -108,8 +109,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 				// user has pressed inside the ellipse
 
-				itsActive = True;
-				itsMoving = True;		// enter moving state
+				itsActive = true;
+				itsMoving = true;		// enter moving state
 				itsBaseMoveX = x;
 				itsBaseMoveY = y;
 				return;
@@ -129,8 +130,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// or the press was on a different WC).
 		itsCurrentWC = ev.worldCanvas();
 		set(x,y, x,y);
-		itsActive = True;
-		itsMoving = False;	// enter resizing state
+		itsActive = true;
+		itsMoving = false;	// enter resizing state
 		ellipseReady();
 		return;
 	}
@@ -156,16 +157,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			Int x1, y1;
 			get(x1, y1);
 			set(x1, y1, x, y);
-			itsEllipseExists = True;
+			itsEllipseExists = true;
 		}
-		itsEmitted = False;	// (changed) rectangle has never been emitted.
+		itsEmitted = false;	// (changed) rectangle has never been emitted.
 		refresh();		// draw over in new state
 		updateRegion();
 	}
 
 	void MWCEllipseTool::keyReleased(const WCPositionEvent &ev) {
 		Bool wasActive = itsActive;
-		itsActive = False;
+		itsActive = false;
 		if (!itsEllipseExists) {
 			if (ev.timeOfEvent() - its2ndLastPressTime < doubleClickInterval()) {
 				Int x = ev.pixX();
@@ -193,7 +194,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 			// double click--invoke callbacks
 
-			itsEmitted = True;
+			itsEmitted = true;
 			itsLastPressTime = its2ndLastPressTime = -1.0;
 			if (!itsEllipsePersistent) reset();	// NB: rect. coordinates &
 			else refresh();	// current WC still valid, until new rect. started.
@@ -290,7 +291,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		YM = ((Float)Y2+(Float)Y1)/2.0;
 		CR = (Float)SL/2.0;
 		//pCanvas->setColor("red");
-		pCanvas->drawEllipse(XM, YM, CR, CR, 0.0, True, 1.0, 1.0);
+		pCanvas->drawEllipse(XM, YM, CR, CR, 0.0, true, 1.0, 1.0);
 		*/
 
 		// draw the rectangle
@@ -303,7 +304,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		AX2 = abs((Float)Y2-(Float)Y1)/2.0;
 		XM = ((Float)X2+(Float)X1)/2.0;
 		YM = ((Float)Y2+(Float)Y1)/2.0;
-		pCanvas->drawEllipse(XM, YM, AX1, AX2, 0.0, True, 1.0, 1.0);
+		pCanvas->drawEllipse(XM, YM, AX1, AX2, 0.0, true, 1.0, 1.0);
 
 		//std::cerr << "Draw square X1: " << X1 <<" Y1: "<< Y1<<" X2: " << X2 <<" Y2: "<< Y2 << endl;
 		//std::cerr << drawColor() << endl;
@@ -347,9 +348,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	void MWCEllipseTool::reset(Bool skipRefresh) {
-		itsActive = False;
+		itsActive = false;
 		Bool wasShowing = itsEllipseExists;
-		itsEllipseExists = False;
+		itsEllipseExists = false;
 		if(wasShowing && !skipRefresh) refresh();
 		itsLastPressTime = its2ndLastPressTime = -1.;
 	}

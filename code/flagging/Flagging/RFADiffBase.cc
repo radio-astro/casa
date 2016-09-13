@@ -34,6 +34,7 @@
 
 #include <casa/stdio.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 Bool RFADiffBase::dummy_Bool;
@@ -72,7 +73,7 @@ const RecordInterface & RFADiffBase::getDefaults ()
     rec.define(RF_THR,(Double)5);
     rec.define(RF_ROW_THR,(Double)10);
     rec.define(RF_ROW_HW,(Int)6);
-    rec.define(RF_ROW_DISABLE,False);
+    rec.define(RF_ROW_DISABLE,false);
     rec.setComment(RF_THR,"Pixel flagging threshold, in AADs");
     rec.setComment(RF_ROW_THR,"Row flagging threshold, in AADs");
     rec.setComment(RF_ROW_HW,"Row flagging, half-window of sliding median");
@@ -113,7 +114,7 @@ Bool RFADiffBase::newChunk (Int &maxmem)
   if( !corrmask )
   {
     os<<LogIO::WARN<<"missing selected correlations, ignoring this chunk\n"<<LogIO::POST;
-    return active=False;
+    return active=false;
   }
 // memory management. Estimate the max memory use for the diff 
 // lattice, plus a 5% margin
@@ -138,9 +139,9 @@ Bool RFADiffBase::newChunk (Int &maxmem)
 // based on their noise level
   clipping_rows = !disable_row_clip;
   if( num(CHAN)<10 )
-    clipping_rows = False;
+    clipping_rows = false;
   
-  return active=True;
+  return active=true;
 }
 
 // -----------------------------------------------------------------------
@@ -162,7 +163,7 @@ void RFADiffBase::endChunk ()
 void RFADiffBase::startData (bool verbose)
 {
   RFAFlagCubeBase::startData(verbose);
-  diff.reset(chunk.npass()>0,True);
+  diff.reset(chunk.npass()>0,true);
   rowclipper.reset();
 
   pflagiter = &flag.iterator();
@@ -175,7 +176,7 @@ void RFADiffBase::startData (bool verbose)
 void RFADiffBase::startDry (bool verbose)
 {
   RFAFlagCubeBase::startDry(verbose);
-  diff.reset(chunk.npass()>0,False);
+  diff.reset(chunk.npass()>0,false);
   rowclipper.reset();
   pflagiter = &flag.iterator();
 }
@@ -210,7 +211,7 @@ RFA::IterMode RFADiffBase::iterDry ( uInt it )
     }
     Float thr = clip_level*rowclipper.sigma0(ifr,it);
     idiffrow=0;
-    Bool updated=False;
+    Bool updated=false;
     for( uInt ich=0; ich<num(CHAN); ich++ ) // loop over channels
     {
       if( flag.preFlagged(ich,ifr) ) // skip pixel if pre-flagged
@@ -299,7 +300,7 @@ Float RFADiffBase::setDiff ( uInt ich,uInt ifr,Float d,Bool &flagged )
   // write diff to lattice
   diff(ich,ifr) = d;
   
-  flagged=False; 
+  flagged=false; 
   if( chunk.npass() && rowclipper.sigma0(ifr,it)>0 )
   {
     thr = rowclipper.sigma0(ifr,it);
@@ -308,7 +309,7 @@ Float RFADiffBase::setDiff ( uInt ich,uInt ifr,Float d,Bool &flagged )
     {
       if( flag.setFlag(ich,ifr,*pflagiter) )
         rowclipper.markSigma(ifr);
-      flagged=True;
+      flagged=true;
     }
   }
   if( !flagged )

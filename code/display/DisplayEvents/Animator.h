@@ -89,7 +89,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <srcblock>
 // // Create a PixelCanvas for X11 to draw on
 // X11PixelCanvas(parent, xpcctbl, width, height) ;
-// // and a World Coordinate  interface for this PixelCanvas
+// // and a World casacore::Coordinate  interface for this PixelCanvas
 // WorldCanvas  wCnvs(&pixelCnvs);
 //
 // // Create a WorldCanvasHolder
@@ -143,16 +143,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // ImageDataDisplay image(myImage, 0, 2);
 // wCnvsHldr.addDisplayData(&image);
 //
-// // Create a List to contain the AttributeBuffers
-// List<void *> buffList;
+// // Create a casacore::List to contain the AttributeBuffers
+// casacore::List<void *> buffList;
 // // and an iterator for this list
-// ListIter<void *> it(&buffList);
+// casacore::ListIter<void *> it(&buffList);
 //
 // // Create AttributeBuffers and fill them
 // AttributeBuffer atBuff1;
 // // This is to mark the cube. The name and value of the Attribute or
 // // Attributes that can be used is arbitrary, as long as the different
-// // AttributeBuffers in the List select different datasets (even that is
+// // AttributeBuffers in the casacore::List select different datasets (even that is
 // // not really necessary, but you will be blinking between the same frames
 // // and not many people will get excited about that....)
 // atBuff1.add("AjaxWordtKampioen", "yes");
@@ -215,7 +215,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // at.addRight((void *) &attBuff3);
 //
 // // set the updated list on the animator (strictly speaking not neseccary
-// // here, because animator already has the address of this List, but...)
+// // here, because animator already has the address of this casacore::List, but...)
 // animator.setBlinkList(&buffList);
 //
 // //and go!!!
@@ -309,16 +309,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// by the world coordinate of the 'Z-axis' (the "zValue" or "zIndex" used by the
 		// WorldCanvasHolders and the DisplayDatas), or only by the AttributeBuffers
 		enum MatchMode {
-		    // Sequence is defined by writing Attribute "zIndex" with the value of the
-		    // Z coordinate to WorldCanvasHolders, plus the ones from the List of
+		    // casacore::Sequence is defined by writing Attribute "zIndex" with the value of the
+		    // Z coordinate to WorldCanvasHolders, plus the ones from the casacore::List of
 		    // AttributeBuffers.
 		    // This is the default
 		    MATCH_INDEX,
-		    // Sequence is defined by writing Attribute "zValue"with the value of the
-		    // Z coordinate to WorldCanvasHolders, plus the ones from the List of
+		    // casacore::Sequence is defined by writing Attribute "zValue"with the value of the
+		    // Z coordinate to WorldCanvasHolders, plus the ones from the casacore::List of
 		    // AttributeBuffers
 		    MATCH_WORLD,
-		    // Only the Attributes from the List of AttributeBuffers are written
+		    // Only the Attributes from the casacore::List of AttributeBuffers are written
 		    MATCH_LIST_ONLY
 		};
 
@@ -349,22 +349,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void prevCoord();
 
 		// Go to  Z coordinate zCoord
-		virtual void gotoCoord(Double zCoord);
+		virtual void gotoCoord(casacore::Double zCoord);
 
 		// Set increment in the Z coordinate for the movie
 		// <group>
-		virtual void setStep(uInt zIncrement);
-		virtual void setStep(Double zIncrement);
+		virtual void setStep(casacore::uInt zIncrement);
+		virtual void setStep(casacore::Double zIncrement);
 		// </group>
 
 		// Set the tolerance in the Z coordinate
 		// <group>
-		virtual void setTolerance(uInt tolerance);
-		virtual void setTolerance(Double tolerance);
+		virtual void setTolerance(casacore::uInt tolerance);
+		virtual void setTolerance(casacore::Double tolerance);
 		// </group>
 
 		// Set the minimum and maximum Z coordinate for the movie
-		virtual void setMinAndMaxCoord(Double zMin, Double zMax);
+		virtual void setMinAndMaxCoord(casacore::Double zMin, casacore::Double zMax);
 
 		// Set whether "zIndex", "zValue" or none of the two should be written
 		// additionally to the AttributeBuffers.
@@ -381,13 +381,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void setUpdateMode(Animator::UpdateMode mode);
 
 		// Set update interval of movie in milliseconds
-		virtual void setUpdateInterval(Double interval);
+		virtual void setUpdateInterval(casacore::Double interval);
 
 		// Set the list of additional Attributes that the Animator  places on the
 		// WorldCanvasHolders before each update.
-		virtual void setBlinkRestrictions(List<void *> *attBuffers);
+		virtual void setBlinkRestrictions(casacore::List<void *> *attBuffers);
 
-		// Remove the List with AttributeBuffers
+		// Remove the casacore::List with AttributeBuffers
 		virtual void clearBlinkRestrictions();
 
 		// Stop and start movie
@@ -398,13 +398,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Return the length of the movie. In UpdateMode UPDATE_DIRECT this is the
 		// number of frames that follow from the minimum and maximum Z coordiante
-		// and the step. In UPDATE_BLINK mode this is the length of the List of
+		// and the step. In UPDATE_BLINK mode this is the length of the casacore::List of
 		// AttributeBuffers set on the Animator using setBlinkAttributes
-		virtual uInt getMovieLength();
+		virtual casacore::uInt getMovieLength();
 
 		// Return the current position in the movie.  This is really a bad
 		// thing, but needed in the interim for the viewer.
-		virtual Int getCurrentPosition();
+		virtual casacore::Int getCurrentPosition();
 
 		// Reset the Animator. This will set the minimum coordiante to 0, the
 		// maximum to the number of elements registered with the WorldCanvasHolders,
@@ -423,24 +423,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	private:
 
-		// List of WorldCanvasHolders
-		List<void *> holderList;
+		// casacore::List of WorldCanvasHolders
+		casacore::List<void *> holderList;
 
-		// List of the AttributeBuffers
-		List<void *> *attBufList;
+		// casacore::List of the AttributeBuffers
+		casacore::List<void *> *attBufList;
 
 		// parameters of movies
-		Double minCoord;
-		Double maxCoord;
+		casacore::Double minCoord;
+		casacore::Double maxCoord;
 
 		// Increment for computing currentCoord. Always postive
-		Double movieStep;
+		casacore::Double movieStep;
 
 		// State variables
 		// Tolerance for coordinate Restriction
-		Double coordTolerance;
+		casacore::Double coordTolerance;
 		// Current Z coordiante
-		Double currentCoord;
+		casacore::Double currentCoord;
 		// the MatchMode
 		Animator::MatchMode matchMode;
 		// the NextMode
@@ -448,14 +448,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// The UpdateMode
 		Animator::UpdateMode updateMode;
 		// and the interval of the timer
-		Double updateInterval;
+		casacore::Double updateInterval;
 
 		// The number of the AttributeBuffer to use. Computed by computeNewCoord()
-		// Has to be Int, not uInt! (because I sometimes subtract 1!)
-		Int numberInList;
+		// Has to be casacore::Int, not casacore::uInt! (because I sometimes subtract 1!)
+		casacore::Int numberInList;
 
 		// In which direction the movie is currently going
-		Int movieDirection;
+		casacore::Int movieDirection;
 
 		// Compute, based on the UPDATE_MODE and NEXT_MODE, the Z coordinate of the
 		// new frame to display (ie. the new currentCoord). If the updateMode ==
@@ -464,23 +464,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// value of movieStep, depending in whether the next_Mode is NEXT_FORWARD,
 		// NEXT_BACKWARD or NEXT_ROCKANDROLL and whether the new value goes outside
 		// the bounds set by minCoord and maxCoord.
-		void computeNextCoord(Int addOrSubtract);
+		void computeNextCoord(casacore::Int addOrSubtract);
 
 		// Helper routine for computeNewCoord(). If addOrSubtract > 0, 1 is added to
 		// number, if addOrSubtract < 0, 1 is subtracted
-		void increment(Int& number, Int addOrSubtract);
+		void increment(casacore::Int& number, casacore::Int addOrSubtract);
 
-		// Helper routine for computeNewCoord(). The inverse of <src>increment(Int&,
-		// Int)</src>
-		void decrement(Int& number, Int addOrSubtract);
+		// Helper routine for computeNewCoord(). The inverse of <src>increment(casacore::Int&,
+		// casacore::Int)</src>
+		void decrement(casacore::Int& number, casacore::Int addOrSubtract);
 
 		// Helper routine for computeNewCoord(). If addOrSubtract > 0, movieStep is added to
 		// number, if addOrSubtract < 0, movieStep is subtracted
-		void increment(Double& number, Int addOrSubtract);
+		void increment(casacore::Double& number, casacore::Int addOrSubtract);
 
-		// Helper routine for computeNewCoord(). The inverse of <src>increment(Double&,
-		// Int)</src>
-		void decrement(Double& number, Int addOrSubtract);
+		// Helper routine for computeNewCoord(). The inverse of <src>increment(casacore::Double&,
+		// casacore::Int)</src>
+		void decrement(casacore::Double& number, casacore::Int addOrSubtract);
 
 
 		// Write the necessary Attributes to all the WorldCanvasHolders. The content
@@ -499,8 +499,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Animator
 		void refresh();
 
-		// Return the number of AttributeBuffers in the List of AttributeBuffer
-		Int listLen();
+		// Return the number of AttributeBuffers in the casacore::List of AttributeBuffer
+		casacore::Int listLen();
 
 		// refresh event handler
 		AnimatorRefEH *itsAnimatorRefEH;

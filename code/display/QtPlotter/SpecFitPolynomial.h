@@ -31,12 +31,12 @@ namespace casa {
 
 	class SpecFitPolynomial : public SpecFit {
 	public:
-		SpecFitPolynomial( Vector<Double> coefficients );
+		SpecFitPolynomial( casacore::Vector<casacore::Double> coefficients );
 		bool isXPixels();
-		void evaluate( Vector<Float>& xValues );
+		void evaluate( casacore::Vector<casacore::Float>& xValues );
 		virtual ~SpecFitPolynomial();
 	private:
-		Vector<Double> coefficients;
+		casacore::Vector<casacore::Double> coefficients;
 	};
 
 } /* namespace casa */

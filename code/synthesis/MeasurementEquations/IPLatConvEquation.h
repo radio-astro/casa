@@ -92,16 +92,16 @@ template <class Domain> class LinearModel;
 //
 // <example>
 // <srcblock>
-// PagedArray<Float> psf(2,4,4), dirty(2,20,20), model(2,20,20);
+// casacore::PagedArray<casacore::Float> psf(2,4,4), dirty(2,20,20), model(2,20,20);
 // .... put some meaningful values into these Lattices....
-// // create a convolution equation, and a PagedArray model
+// // create a convolution equation, and a casacore::PagedArray model
 // LatConvEquation convEqn(psf, dirty);
-// LinearModel< Lattice<Float> > myModel(model);
+// LinearModel< casacore::Lattice<casacore::Float> > myModel(model);
 // // now calculate the convolution of the model and the psf
-// PagedArray<Float> prediction;
+// casacore::PagedArray<casacore::Float> prediction;
 // convEqn.evaluate(myModel, prediction);
 // // and calculate the difference between the predicted and actual convolution
-// PagedArray<Float> residual;
+// casacore::PagedArray<casacore::Float> residual;
 // convEqn.residual(mymodel, residual)
 // </srcblock>
 // </example>
@@ -114,7 +114,7 @@ template <class Domain> class LinearModel;
 //   <li> Reinstate the  evaluate() method with position argument.
 //   <li> Fix up copies and references with Ralph Marson's help
 //   <li> This class is not templated. If necessary I would use templating
-//        to produce a Double Precision Version.
+//        to produce a casacore::Double Precision Version.
 // </todo>
 
 class IPLatConvEquation: 
@@ -123,8 +123,8 @@ class IPLatConvEquation:
 public:
 
   // Construct the LatConvEquation setting the psf and measured data
-  IPLatConvEquation(Lattice<Float> & psf, 
-		  Lattice<Float> & dirtyImage);
+  IPLatConvEquation(casacore::Lattice<casacore::Float> & psf, 
+		  casacore::Lattice<casacore::Float> & dirtyImage);
 
   // Somewhere I read that a destructor should alway be defined even if it
   // does nothing (as this one does).
@@ -133,22 +133,22 @@ public:
   // Calculate the convolution of the model (supplied by the LinearModel
   // class) and the psf and the difference between this and the supplied
   // (presumably measured) convolution.  
-  virtual Bool residual(Lattice<Float> & result, 
-			const LinearModel< Lattice<Float> > & model);
+  virtual casacore::Bool residual(casacore::Lattice<casacore::Float> & result, 
+			const LinearModel< casacore::Lattice<casacore::Float> > & model);
 
   // Calculate the convolution of the model (supplied by the LinearModel
   // class) and the psf and the difference between this and the supplied
   // (presumably measured) convolution.   Also return chisq.
-  virtual Bool residual(Lattice<Float> & result, Float & chisq, 
-			const LinearModel< Lattice<Float> > & model);
+  virtual casacore::Bool residual(casacore::Lattice<casacore::Float> & result, casacore::Float & chisq, 
+			const LinearModel< casacore::Lattice<casacore::Float> > & model);
 
 private:
 
-  // Don't use this one, due to the Lattice<Float> &
+  // Don't use this one, due to the casacore::Lattice<casacore::Float> &
   IPLatConvEquation();
 
   // Factor by which we normalize the PSF for the second convolution
-  Float itsQ;
+  casacore::Float itsQ;
 
 };
 

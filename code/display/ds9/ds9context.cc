@@ -10,6 +10,7 @@
 #include <measures/Measures/MCDirection.h>
 #include <display/region/Region.qo.h>
 
+using namespace casacore;
 namespace casa {
 	namespace viewer {
 		double degToRad(double d) {
@@ -122,12 +123,12 @@ namespace casa {
 			return after;
 		}
 
-		static inline Quantum<casa::Vector<double> > convert_angle( double x, const std::string &xunits, double y, const std::string &yunits,
+		static inline Quantum<casacore::Vector<double> > convert_angle( double x, const std::string &xunits, double y, const std::string &yunits,
 		        MDirection::Types original_coordsys, MDirection::Types new_coordsys, const std::string &new_units="rad" ) {
 			Quantum<double> xq(x,String(xunits));
 			Quantum<double> yq(y,String(yunits));
 			MDirection md = MDirection::Convert(MDirection(xq,yq,original_coordsys), new_coordsys)();
-			casa::Quantum<casa::Vector<double> > result = md.getAngle("rad");
+			casacore::Quantum<casacore::Vector<double> > result = md.getAngle("rad");
 			xq.convert("rad");
 			yq.convert("rad");
 			result.getValue( )(0) = wrap_angle(xq.getValue( ), result.getValue( )(0));
@@ -150,10 +151,10 @@ namespace casa {
 					return result;
 				}
 			} else if ( sys == WCS ) {
-				casa::Vector<double> pts(2);
+				casacore::Vector<double> pts(2);
 				pts[0] = v[0];
 				pts[1] = v[1];
-				casa::Vector<double> pts_rad = Quantum<casa::Vector<double> >(pts,"deg").getValue("rad");
+				casacore::Vector<double> pts_rad = Quantum<casacore::Vector<double> >(pts,"deg").getValue("rad");
 				switch ( frame ) {
 				case FK5:
 					to_linear(wc_,MDirection::J2000,pts_rad[0],pts_rad[1],wx,wy);

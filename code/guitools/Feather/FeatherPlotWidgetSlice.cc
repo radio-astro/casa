@@ -27,6 +27,7 @@
 
 #include <QtCore/qmath.h>
 #include <QDebug>
+using namespace casacore;
 namespace casa {
 
 FeatherPlotWidgetSlice::FeatherPlotWidgetSlice(const QString& title, FeatherPlot::PlotType plotType, QWidget *parent)
@@ -160,4 +161,5 @@ FeatherPlotWidgetSlice::~FeatherPlotWidgetSlice() {
 	// TODO Auto-generated destructor stub
 }
 
+using namespace casacore;
 } /* namespace casa */

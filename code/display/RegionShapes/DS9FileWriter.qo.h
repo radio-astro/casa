@@ -45,26 +45,26 @@ namespace casa {
 	public:
 		// Options constants.
 		// </group>
-		static const String CSYS_INDIVIDUAL;
-		static const String CSYS_IMAGE;
-		static const String CSYS_B1950;
-		static const String CSYS_J2000;
-		static const String CSYS_GALACTIC;
-		static const String CSYS_ECLIPTIC;
-		static const String UNIT_IPIXELS;
-		static const String UNIT_DEGREES;
-		static const String UNIT_RADIANS;
-		static const String PUNIT_SEXAGESIMAL;
-		static const String PUNIT_HMS;
-		static const String PUNIT_DMS;
-		static const String SUNIT_ARCSEC;
-		static const String SUNIT_ARCMIN;
-		static const String DEFAULT_COMMENTS;
+		static const casacore::String CSYS_INDIVIDUAL;
+		static const casacore::String CSYS_IMAGE;
+		static const casacore::String CSYS_B1950;
+		static const casacore::String CSYS_J2000;
+		static const casacore::String CSYS_GALACTIC;
+		static const casacore::String CSYS_ECLIPTIC;
+		static const casacore::String UNIT_IPIXELS;
+		static const casacore::String UNIT_DEGREES;
+		static const casacore::String UNIT_RADIANS;
+		static const casacore::String PUNIT_SEXAGESIMAL;
+		static const casacore::String PUNIT_HMS;
+		static const casacore::String PUNIT_DMS;
+		static const casacore::String SUNIT_ARCSEC;
+		static const casacore::String SUNIT_ARCMIN;
+		static const casacore::String DEFAULT_COMMENTS;
 		// </group>
 
 		// Converts a coordinate system constant (as used in DS9RFWOptions) into
 		// its DS9::CoordinateSystem equivalent.
-		static DS9::CoordinateSystem coordinateSystem(const String& system) {
+		static DS9::CoordinateSystem coordinateSystem(const casacore::String& system) {
 			if(system == CSYS_IMAGE) return DS9::Image;
 			else if(system == CSYS_B1950) return DS9::FK4;
 			else if(system == CSYS_J2000) return DS9::FK5;
@@ -75,11 +75,11 @@ namespace casa {
 		}
 
 		// Returns true if the given CASA world system is supported by DS9.
-		static bool isValidDS9System(MDirection::Types worldSys) {
-			return worldSys == MDirection::B1950 ||
-			       worldSys == MDirection::J2000 ||
-			       worldSys == MDirection::GALACTIC ||
-			       worldSys == MDirection::ECLIPTIC;
+		static bool isValidDS9System(casacore::MDirection::Types worldSys) {
+			return worldSys == casacore::MDirection::B1950 ||
+			       worldSys == casacore::MDirection::J2000 ||
+			       worldSys == casacore::MDirection::GALACTIC ||
+			       worldSys == casacore::MDirection::ECLIPTIC;
 		}
 
 
@@ -108,10 +108,10 @@ namespace casa {
 		// <group>
 		bool m_custCoordSys;
 		bool m_pixelCoordSys;
-		String m_coordSys;
-		String m_posUnits, m_sizeUnits;
+		casacore::String m_coordSys;
+		casacore::String m_posUnits, m_sizeUnits;
 		int m_precision;
-		String m_comments;
+		casacore::String m_comments;
 		// </group>
 
 
@@ -131,8 +131,8 @@ namespace casa {
 
 
 		// Returns list of all properties to be used in the globals.
-		static vector<String> globalProperties() {
-			static vector<String> v(14);
+		static vector<casacore::String> globalProperties() {
+			static vector<casacore::String> v(14);
 
 			v[0]  = DS9Region::PROP_COLOR;
 			v[1]  = DS9Region::PROP_DASH;
@@ -174,14 +174,14 @@ namespace casa {
 		// be one of: UNIT_IPIXELS, UNIT_DEGREES, UNIT_RADIANS, PUNIT_HMS,
 		// PUNIT_DMS, SUNIT_ARCSEC, SUNIT_ARCMIN, or "".  If toUnits is blank, no
 		// converting or adding a unit is done.
-		static QString convertValue(double value, const String& toUnits,
+		static QString convertValue(double value, const casacore::String& toUnits,
 		                            int precision);
 
 		// Converts the given position unit, if applicable, from sexagesimal to
 		// either HMS or DMS.  Does nothing if the position unit is not
 		// sexagesimal.
-		static String sgUnit(const String& posUnit, int index,
-		                     const String& coordSys) {
+		static casacore::String sgUnit(const casacore::String& posUnit, int index,
+		                     const casacore::String& coordSys) {
 			if(posUnit == PUNIT_SEXAGESIMAL) {
 				if(index % 2 == 0 && coordSys != CSYS_GALACTIC) return PUNIT_HMS;
 				else return PUNIT_DMS;
@@ -213,21 +213,21 @@ namespace casa {
 		// Returns the selected coordinate system.  This should only be used if
 		// customCoordinateSystem() and pixelCoordinateSystem() were both false.
 		// One of: DS9RegionFileWriter::CSYS_*
-		String getCoordinateSystem() const;
+		casacore::String getCoordinateSystem() const;
 
 		// Returns the selected position units.
 		// One of: DS9RegionFileWriter::UNIT_* or DS9RegionFileWriter::PUNIT_*
-		String getPositionUnits() const;
+		casacore::String getPositionUnits() const;
 
 		// Returns the selected size units.
 		// One of: DS9RegionFileWriter::UNIT_* or DS9RegionFileWriter::SUNIT_*
-		String getSizeUnits() const;
+		casacore::String getSizeUnits() const;
 
 		// Returns the entered decimal precision.
 		int getPrecision() const;
 
 		// Returned the entered comments.
-		String getComments() const;
+		casacore::String getComments() const;
 
 	private slots:
 		// Enable/disable position and size unit chooser accordingly.

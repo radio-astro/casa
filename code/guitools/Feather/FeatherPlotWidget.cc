@@ -38,6 +38,7 @@
 
 #include <limits>
 
+using namespace casacore;
 namespace casa {
 
 FeatherPlotWidget::FeatherPlotWidget(const QString& title, FeatherPlot::PlotType plotType, QWidget *parent)

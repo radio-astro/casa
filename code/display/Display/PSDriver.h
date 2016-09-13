@@ -165,41 +165,41 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			PSInfo();
 			~PSInfo();
 			void Creator(const char *);
-			void Creator(const String &);
-			const String &Creator()const {
+			void Creator(const casacore::String &);
+			const casacore::String &Creator()const {
 				return creator_;
 			}
 			void For(const char *);
-			void For(const String &);
-			const String &For()const {
+			void For(const casacore::String &);
+			const casacore::String &For()const {
 				return for_;
 			}
 			void Title(const char *);
-			void Title(const String &);
-			const String &Title()const {
+			void Title(const casacore::String &);
+			const casacore::String &Title()const {
 				return title_;
 			}
-			void Comment(const String &);
+			void Comment(const casacore::String &);
 			void Comment(const char *);
-			const String &Comment()const {
+			const casacore::String &Comment()const {
 				return comment_;
 			}
 
 			void setMargins(const float lm, const float rm,
 			                const float tm, const float bm,
 			                const Dimension dim= PSDriver::INCHES);
-			// If setMargins has been called, returns True and the
-			// margin values. Otherwise, returns False and does not
+			// If setMargins has been called, returns true and the
+			// margin values. Otherwise, returns false and does not
 			// change the arguments.
-			Bool getMargins(float &lm, float &rm,
+			casacore::Bool getMargins(float &lm, float &rm,
 			                float &tm, float &bm);
 		private:
-			String	for_;
-			String	title_;
-			String	creator_;
-			String	comment_;
+			casacore::String	for_;
+			casacore::String	title_;
+			casacore::String	creator_;
+			casacore::String	comment_;
 			float	lm_, rm_, tm_, bm_;	// Margins.
-			Bool	haveMargins_;		// setMargins has been called.
+			casacore::Bool	haveMargins_;		// setMargins has been called.
 		};
 		// Generic PostScript
 
@@ -220,24 +220,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 		// INDEXED, PORTRAIT to a default file.
 		PSDriver();
-		PSDriver(ostream &out);
+		PSDriver(std::ostream &out);
 		PSDriver(const char *filename);
-		PSDriver(ostream &out, const MediaSize, const Layout=PORTRAIT,
+		PSDriver(std::ostream &out, const MediaSize, const Layout=PORTRAIT,
 		         PSInfo *info=NULL);
-		PSDriver(const String &fname, const MediaSize, const Layout=PORTRAIT,
+		PSDriver(const casacore::String &fname, const MediaSize, const Layout=PORTRAIT,
 		         PSInfo *info=NULL);
 		PSDriver(const char *fname, const MediaSize, const Layout=PORTRAIT,
 		         PSInfo *info=NULL);
 
-		PSDriver(ostream &out, const Dimension dim,
+		PSDriver(std::ostream &out, const Dimension dim,
 		         const float x0, const float y0,
 		         const float x1, const float y1,
 		         const Layout=PORTRAIT, PSInfo *info=NULL);
-		PSDriver(const String &outname, const Dimension dim,
+		PSDriver(const casacore::String &outname, const Dimension dim,
 		         const float x0, const float y0,
 		         const float x1, const float y1,
 		         const Layout=PORTRAIT, PSInfo *info=NULL);
-		PSDriver(const String &outname, const MediaSize,
+		PSDriver(const casacore::String &outname, const MediaSize,
 		         const Dimension dim,
 		         const float x0, const float y0,
 		         const float x1, const float y1,
@@ -300,7 +300,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Load linear ramps (0..1.0) into the first ncolors entries.
 		void setLinearRamps(const int ncolors);
 //#	////////////////////////////////////////////////////////////////
-//#	//		Coordinate commands.
+//#	//		casacore::Coordinate commands.
 		// Current transform matrix is changed by the given values, not
 		// replaced.
 // <group>
@@ -325,7 +325,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		//		coordinates were in inches, a size of 2 would create
 		//		a two inch output square regardless of the size of the
 		//		input image).
-		// data		Data for an image that is width pixels wide by
+		// data		casacore::Data for an image that is width pixels wide by
 		//		height pixels high. The actual length of the array
 		//		depends on the ColorSpace argument:
 		//		INDEXED:	The array contains width*height
@@ -349,7 +349,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void drawImage( const float x0, const float y0,
 		                const int width, const int height,
 		                const float xsize, const float ysize,
-		                const uShort *data,
+		                const casacore::uShort *data,
 		                const int bpc=0, const ColorSpace=INDEXED,
 		                const int imageopts=0);
 
@@ -421,21 +421,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //</srcblock>
 //
 		// Return page size (drawable area - margins).
-		// If userCoords is True, values are in current user coordinates.
+		// If userCoords is true, values are in current user coordinates.
 		// Otherwise, they are in transformed coordinates ( points).
 		void pageSize(float &width, float &height,
-		              const Bool userCoords=True);
+		              const casacore::Bool userCoords=true);
 
 		// Return bounding box.
-		// Return is True if a bounding box was declared initially. Otherwise,
-		// False and the current value of the bounding box will be returned.
-		// If userCoords is True, values are in current user coordinates.
+		// Return is true if a bounding box was declared initially. Otherwise,
+		// false and the current value of the bounding box will be returned.
+		// If userCoords is true, values are in current user coordinates.
 		// Otherwise, transformed coords.
-		Bool getBoundingBox( float &x0, float &y0, float &x1, float &y1,
-		                     const Bool userCoords=True)const;
+		casacore::Bool getBoundingBox( float &x0, float &y0, float &x1, float &y1,
+		                     const casacore::Bool userCoords=true)const;
 
-		// Returns True if bounding box size was given to the constructor.
-		inline Bool haveBoundingBox()const {
+		// Returns true if bounding box size was given to the constructor.
+		inline casacore::Bool haveBoundingBox()const {
 			return haveBoundingBox_;
 		}
 
@@ -443,7 +443,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// The comment may include newlines.
 //<group>
 		void comment(const char *);
-		void comment(const String &);
+		void comment(const casacore::String &);
 //</group>
 		// Push/pop transform matrix.
 //<group>
@@ -472,7 +472,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		static int bytesToAscii85(const char *in, const int inlength,
 		                          char *out);
-		static int uShorts8ToAscii85(const uShort *in,
+		static int uShorts8ToAscii85(const casacore::uShort *in,
 		                             const int inlength, char *out);
 
 
@@ -481,11 +481,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// a multiple of 5 bytes long.
 		// ( <1.5bytes/entry>*<inlength entries>*<1.25 expansion>).
 		// If inlength is odd, a 0 valued entry will be implicitly added.
-		static int uShorts12ToAscii85(const uShort *in,
+		static int uShorts12ToAscii85(const casacore::uShort *in,
 		                              const int width,
 		                              const int height, char *out);
 
-		// Encode data as ASCII85 chars. Function return is an array of
+		// Encode data as ASCII85 chars. casacore::Function return is an array of
 		// chars. (use delete [] to free). outlen is set to the number of
 		// bytes in the array.
 		// On input, if bpc is 8, data is treated as containing 1 byte per
@@ -493,7 +493,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// If bpc is 0, the array is scanned.
 		// On return, bpc is set the the value actually used.
 		static char *encodeUShorts(const int width, const int height,
-		                           int &bpc, const uShort *data,
+		                           int &bpc, const casacore::uShort *data,
 		                           int &outlen);
 
 //#	////////////////////////////////////////////////////////////////
@@ -516,16 +516,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //#	////////////////////////////////////////////////////////////////
 
 		// Do forward or reverse transformation on a point.
-		// If absolute is False, the translations aren't done.
+		// If absolute is false, the translations aren't done.
 		void toPoints(const float xin, const float yin,
 		              float &xout, float &yout,
-		              const Bool absolute=True)const {
+		              const casacore::Bool absolute=true)const {
 			state_.toPoints(xin, yin, xout, yout, absolute);
 		}
 
 		void fromPoints(const float xin, const float yin,
 		                float &xout, float &yout,
-		                const Bool absolute=True)const {
+		                const casacore::Bool absolute=true)const {
 			state_.fromPoints(xin, yin, xout, yout, absolute);
 		}
 
@@ -541,10 +541,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Is the output EPS? Portrait?
 //<group>
-		Bool isEPS()const {
+		casacore::Bool isEPS()const {
 			return eps_;
 		}
-		Bool isPortrait()const {
+		casacore::Bool isPortrait()const {
 			return portrait_;
 		}
 //</group>
@@ -593,7 +593,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 #if 0
 		void drawImage(const float imagematrix[6],
 		               const int width, const int height,
-		               const uShort *data,
+		               const casacore::uShort *data,
 		               const int bpc=-1, const ColorSpace cs=INDEXED,
 		               const int smooth=0);
 #endif
@@ -602,21 +602,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void stroke();
 		void closePath();
 //#	////////////////////////////////////////////////////////////////
-		void init(ostream &output, const ColorSpace cs,
+		void init(std::ostream &output, const ColorSpace cs,
 		          const PageInfo *, const Layout, PSInfo *);
-		void initname(const String &name, const ColorSpace cs,
+		void initname(const casacore::String &name, const ColorSpace cs,
 		              const PageInfo *, const Layout, PSInfo *);
 		// Compare x/y to current bounding box. x and y are in current
-		// user coordinates unless userCoords is False in which case they
+		// user coordinates unless userCoords is false in which case they
 		// have already been transformed.
-		void bbCheck(const float x, const float y, const Bool userCoords=True);
+		void bbCheck(const float x, const float y, const casacore::Bool userCoords=true);
 		void bbCheck();	// Do bbCheck on current position.
 
 		void setCurrXY( const float x, const float y,
-		                const Bool userCoords = True) {
+		                const casacore::Bool userCoords = true) {
 			state_.setXY(x, y, userCoords);
 		}
-		void getCurrXY( float &x, float &y, const Bool userCoords=True) {
+		void getCurrXY( float &x, float &y, const casacore::Bool userCoords=true) {
 			state_.getXY(x, y, userCoords);
 		}
 	private:
@@ -666,7 +666,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void emitString(const char *str);
 
 		// Draw a width x height PS image.
-		// matrix		Matrix to convert between user & image space.
+		// matrix		casacore::Matrix to convert between user & image space.
 		// width, height	size of input image in pixels.
 		// bpc			bits per color component. ( 8 or 12)
 		// smooth		0 - no smoothing, 1 - smooth pixels.
@@ -723,7 +723,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			// [ x' y' 1 ] = [ x y 1] * CTM
 			inline void toPoints(const float xin, const float yin,
 			                     float &xout, float &yout,
-			                     const Bool absolute=True)const {
+			                     const casacore::Bool absolute=true)const {
 				xout = (float)(a_*xin + c_*yin);
 				yout = (float)(b_*xin + d_*yin);
 				if(absolute) {
@@ -735,7 +735,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			// [ x y 1 ] = [ x' y' 1] * inverse(CTM);
 			inline void fromPoints(const float xin, const float yin,
 			                       float &xout, float &yout,
-			                       const Bool absolute=True)const {
+			                       const casacore::Bool absolute=true)const {
 				xout = (float)(ai_*xin + ci_*yin);
 				yout = (float)(bi_*xin + di_*yin);
 				if(absolute) {
@@ -748,8 +748,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			void operator=(const PSState &);
 			// Set/Get the current position.
 			void setXY(const float x, const float y,
-			           const Bool userCoords=True);
-			void getXY(float &x, float &y, const Bool userCoords=True);
+			           const casacore::Bool userCoords=true);
+			void getXY(float &x, float &y, const casacore::Bool userCoords=true);
 		private:
 			void invert();
 
@@ -765,21 +765,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		int		statestackindex_;
 		PSState		state_;
 		PSState		statestack_[STATESTACKLENGTH];
-		ostream		*out;
+		std::ostream		*out;
 		std::fstream	*mystream_;
 		ColorSpace	colorSpace_;
 		Dimension	dimension_;
-		Bool		portrait_;
-		Bool		eps_;
+		casacore::Bool		portrait_;
+		casacore::Bool		eps_;
 		LineStyle	lineStyle_;
 		float		defaultFontSize_;
 		float		xscale_, yscale_; // Paper size scale.
 		// Bounding box in points.
 		float		bbx0_, bby0_;
 		float		bbx1_, bby1_;
-		Bool		boxCheck0_;		// Has anything been checked?
-		Bool		haveBoundingBox_;
-		Bool		checkBoundingBox_;
+		casacore::Bool		boxCheck0_;		// Has anything been checked?
+		casacore::Bool		haveBoundingBox_;
+		casacore::Bool		checkBoundingBox_;
 		// user coords.
 		// Page boundaries in points;
 		float		xll_, yll_;

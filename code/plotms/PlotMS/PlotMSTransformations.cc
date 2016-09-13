@@ -26,6 +26,7 @@
 //# $Id: $
 #include <plotms/PlotMS/PlotMSTransformations.h>
 
+using namespace casacore;
 namespace casa {
 
 ///////////////////////////////////////
@@ -100,7 +101,7 @@ void PlotMSTransformations::setDefaults() {
   setRestFreq(0.0);               // Means generate relative velocity axis
   setXpcOffset(0.0);
   setYpcOffset(0.0);
-  setFormStokes(False);
+  setFormStokes(false);
 
 }
 

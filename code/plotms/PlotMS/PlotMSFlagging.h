@@ -37,7 +37,7 @@ class PlotMSFlagging {
 public:
     // Static //
     
-    // Enum and methods to define the different fields for an MS flagging.  All
+    // Enum and methods to define the different fields for an casacore::MS flagging.  All
     // fields have a bool flag for on/off, and some of them also have a double
     // value (see fieldHasValue()) or a PlotMSSelection value (see
     // fieldHasSelectionValue()).  Most fields are off by default (see
@@ -99,11 +99,11 @@ public:
     // also have double values will have an additional key that is its enum
     // name + "Value" for double values, or its enum name + "SelectionValue"
     // for PlotMSSelection values.  PlotMSSelection values are stored in Record
-    // form (see PlotMSSelection::fromRecord()).  The MS objects (the MS, the
-    // selected MS, and the vis set) are NOT included in the record.
+    // form (see PlotMSSelection::fromRecord()).  The casacore::MS objects (the casacore::MS, the
+    // selected casacore::MS, and the vis set) are NOT included in the record.
     // <group>
-    void fromRecord(const RecordInterface& record);
-    Record toRecord(bool useStrings = false) const;
+    void fromRecord(const casacore::RecordInterface& record);
+    casacore::Record toRecord(bool useStrings = false) const;
     // </group>
     
     // Gets/Sets the on/off flag for the given field.
@@ -125,9 +125,9 @@ public:
     // Correlation: "", "all", or "poln-dep".
     // Antenna: "", "all", or antenna-based value.
     // <group>
-    String getValueStr(Field f) const;
-    void getValue(Field f, String& value) const { value = getValueStr(f); }
-    void setValue(Field f, const String& value);
+    casacore::String getValueStr(Field f) const;
+    void getValue(Field f, casacore::String& value) const { value = getValueStr(f); }
+    void setValue(Field f, const casacore::String& value);
     // </group>
     
     // Gets/Sets the selection value for the given field, if applicable.
@@ -145,14 +145,14 @@ public:
     bool corr() const { return (extend() && getFlag(CORR)); }
     bool corrAll() const { return (corr() && getFlag(CORR_ALL)); }
     bool corrPolnDep() const { return (corr() && getFlag(CORR_POLN_DEP)); }
-    String corrStr() const { return getValueStr(CORR); }
+    casacore::String corrStr() const { return getValueStr(CORR); }
     bool channel() const { return (extend() && getFlag(CHANNEL)); }
     bool spw() const { return (extend() && getFlag(SPW)); }
     bool antenna() const { return (extend() && getFlag(ANTENNA)); }
     bool antennaAntennaBased() const { return (antenna() && getFlag(ANTENNA_ANTENNA)); }
     double antennaAntennaBasedValue() const{ return getValue(ANTENNA_ANTENNA);}
     bool antennaBaselinesBased() const { return (antenna() && getFlag(ANTENNA_BASELINES)); }
-    String antennaStr() const { return getValueStr(ANTENNA); }
+    casacore::String antennaStr() const { return getValueStr(ANTENNA); }
     bool time() const { return (extend() && getFlag(TIME)); }
     bool scans() const { return (time() && getFlag(SCANS)); }
     bool field() const { return (time() && getFlag(FIELD)); }
@@ -168,7 +168,7 @@ public:
     void setCorr(bool flag) { setFlag(CORR, flag); }
     void setCorrAll(bool flag) { setFlag(CORR_ALL, flag); }
     void setCorrPolnDep(bool flag) { setFlag(CORR_POLN_DEP, flag); }
-    void setCorr(const String& value) { setValue(CORR, value); }
+    void setCorr(const casacore::String& value) { setValue(CORR, value); }
     void setChannel(bool flag) { setFlag(CHANNEL, flag); }
     void setSpw(bool flag) { setFlag(SPW, flag); }
     void setAntenna(bool flag) { setFlag(ANTENNA, flag); }
@@ -176,7 +176,7 @@ public:
     void setAntennaAntennaBasedValue(double value) {
         setValue(ANTENNA_ANTENNA, value); }
     void setAntennaBaselinesBased(bool flag){setFlag(ANTENNA_BASELINES, flag);}
-    void setAntenna(const String& value) { setValue(ANTENNA, value); }
+    void setAntenna(const casacore::String& value) { setValue(ANTENNA, value); }
     void setTime(bool flag) { setFlag(TIME, flag); }
     void setScans(bool flag) { setFlag(SCANS, flag); }
     void setField(bool flag) { setFlag(FIELD, flag); }
@@ -210,11 +210,11 @@ private:
     void setDefaults();
     
     
-    // String constant for what to append to the enum name in the record to
+    // casacore::String constant for what to append to the enum name in the record to
     // get the key for the value.
     // <group>
-    static const String RKEY_VALUE;
-    static const String RKEY_SELVALUE;
+    static const casacore::String RKEY_VALUE;
+    static const casacore::String RKEY_SELVALUE;
     // </group>
 };
 

@@ -77,11 +77,11 @@ public:
 	// c_0 + c_1 * ln(x) + c_2 * ln(x)**2 + c_3 * ln(x)**3 + ... c_(n-1)*ln(x)**(n-1)
 	// where x = nu/nu0. <src> order</order> is the polynomial, so the actual
 	// function will have order+1 coefficients
-	explicit LogTransformedPolynomialSpectralElement(uInt order);
+	explicit LogTransformedPolynomialSpectralElement(casacore::uInt order);
 
 	// Construct with the given parameters. See above constructor for
 	// order in which the parameters should be supplied.
-	LogTransformedPolynomialSpectralElement(const Vector<Double> &param);
+	LogTransformedPolynomialSpectralElement(const casacore::Vector<casacore::Double> &param);
 
 	// Copy constructor (deep copy)
 	LogTransformedPolynomialSpectralElement(const LogTransformedPolynomialSpectralElement &other);
@@ -94,8 +94,8 @@ public:
 
 	SpectralElement* clone() const;
 };
-ostream &operator<<(
-	ostream &os, const LogTransformedPolynomialSpectralElement &elem
+std::ostream &operator<<(
+	std::ostream &os, const LogTransformedPolynomialSpectralElement &elem
 );
 
 

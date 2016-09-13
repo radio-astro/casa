@@ -34,23 +34,24 @@
 #include <casa/sstream.h>
 #include <casa/System/PGPlotter.h>
     
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-template<class T> RFlagWord RFChunkStats::getCorrMask ( const Vector<T> &corrspec )
+template<class T> RFlagWord RFChunkStats::getCorrMask ( const casacore::Vector<T> &corrspec )
 {
   RFlagWord mask=0;
   // loop over polzn spec
-  for( uInt i=0; i<corrspec.nelements(); i++ )
+  for( casacore::uInt i=0; i<corrspec.nelements(); i++ )
   {
-    // convert element of polspec to Stokes type
-    Stokes::StokesTypes type = Stokes::type( corrspec(i) );
-    if( type == Stokes::Undefined ){
-      ostringstream oss;
+    // convert element of polspec to casacore::Stokes type
+    casacore::Stokes::StokesTypes type = casacore::Stokes::type( corrspec(i) );
+    if( type == casacore::Stokes::Undefined ){
+      std::ostringstream oss;
       oss << corrspec(i);
-      throw(AipsError( String("Unknown correlation type: ")+ String(oss)));
+      throw(casacore::AipsError( casacore::String("Unknown correlation type: ")+ casacore::String(oss)));
     }
     // find this type in current corrarizations
-    Int icorr = findCorrType(type,corrtypes);
+    casacore::Int icorr = findCorrType(type,corrtypes);
     if( icorr>=0 )
       mask |= (1<<icorr);
   }

@@ -28,7 +28,7 @@
  * | If you do, all changes will be lost when the file is re-generated. |
  *  --------------------------------------------------------------------
  *
- * File CalPrimaryBeamTable.h
+ * casacore::File CalPrimaryBeamTable.h
  */
  
 #ifndef CalPrimaryBeamTable_CLASS
@@ -136,7 +136,7 @@ class CalPrimaryBeamRow;
  * <BR>
  * 
  * \par Role
- * Result of Primary Beam Map measurement.
+ * Result of Primary Beam casacore::Map measurement.
  * <BR>
  
  * Generated from model's revision "1.64", branch "HEAD"
@@ -392,7 +392,7 @@ public:
 	std::string toXML()  ;
 
 #ifndef WITHOUT_ACS
-	// Conversion Methods
+	// casacore::Conversion Methods
 	/**
 	 * Convert this table into a CalPrimaryBeamTableIDL CORBA structure.
 	 *

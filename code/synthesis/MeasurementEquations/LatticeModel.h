@@ -35,7 +35,7 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-// <summary> models with an internal & external representation as an Lattice </summary>
+// <summary> models with an internal & external representation as an casacore::Lattice </summary>
 
 // <use visibility=export>
 
@@ -64,10 +64,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <example>
 // <srcblock>
-// LatticeModel<Float> currentModel(); // Cannot use the model yet!
+// LatticeModel<casacore::Float> currentModel(); // Cannot use the model yet!
 // {
-//   PagedImage<Float> bestGuess(Iposition(2,32,32));
-//    ... put your best guess into the Matrix ...
+//   casacore::PagedImage<casacore::Float> bestGuess(Iposition(2,32,32));
+//    ... put your best guess into the casacore::Matrix ...
 //   currentModel.setModel(bestGuess); // This does a real copy
 // }
 // ConvolutionEquation eqn(psf, dirty); // psf, and dirty are PagedImages defined
@@ -79,7 +79,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <motivation>
 // All the different image plane based clean algorithms have a common
-// implementation in that they can use an Lattice (ie, PagedImage)
+// implementation in that they can use an casacore::Lattice (ie, casacore::PagedImage)
 // to store the current
 // model. This class provides a way to abstract this functionality.
 // </motivation>
@@ -101,28 +101,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <todo asof="1998/11/06">
 //   <li>  We don't have any "set" or "constructor" methods which
 //   take constants.  We work in terms of pointers now because of
-//   Lattice::operator= is protected, and Ger said it was the right thing.
+//   casacore::Lattice::operator= is protected, and Ger said it was the right thing.
 // </todo>
 
 class LatticeModel
-  :public LinearModel<Lattice<Float> > {
+  :public LinearModel<casacore::Lattice<casacore::Float> > {
 public:
 
-  LatticeModel(Lattice<Float>& mod);
+  LatticeModel(casacore::Lattice<casacore::Float>& mod);
 
   // The destructor does nothing.
   virtual ~LatticeModel();
 
   // returns a reference to the model
-  virtual const Lattice<Float> & getModel() const { return *itsModelPtr;}
+  virtual const casacore::Lattice<casacore::Float> & getModel() const { return *itsModelPtr;}
 
   // Change the underlying Model to to the one specified. Reference semantics
   // are used so that no data is copied.
-  virtual void setModel(const Lattice<Float> & model) { itsModelPtr = model.clone(); }
+  virtual void setModel(const casacore::Lattice<casacore::Float> & model) { itsModelPtr = model.clone(); }
 
 private:
 
-    Lattice<Float> * itsModelPtr;
+    casacore::Lattice<casacore::Float> * itsModelPtr;
 };
 
 

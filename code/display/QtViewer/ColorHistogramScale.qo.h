@@ -43,14 +43,14 @@ namespace casa {
 	class ColorHistogramScale : public QwtLinearColorMap {
 	public:
 		ColorHistogramScale( bool invert, int logarithmic );
-		String getColorMapName() const;
-		void setColorMapName( const String& colorMapName );
+		casacore::String getColorMapName() const;
+		void setColorMapName( const casacore::String& colorMapName );
 
 		virtual ~ColorHistogramScale();
 	private:
 		ColorHistogramScale( ColorHistogramScale& other );
 		ColorHistogramScale operator=(ColorHistogramScale& other);
-		String mapName;
+		casacore::String mapName;
 		bool invertMap;
 		int logScale;
 		ColormapDefinition* colorDefinition;

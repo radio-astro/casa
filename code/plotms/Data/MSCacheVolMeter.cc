@@ -43,6 +43,7 @@
 #include <plotms/PlotMS/PlotMS.h>
 #include <tables/Tables/Table.h>
 
+using namespace casacore;
 namespace casa {
 
 MSCacheVolMeter::MSCacheVolMeter():
@@ -272,7 +273,7 @@ String MSCacheVolMeter::evalVolume(map<PMS::Axis,Bool> axes, Vector<Bool> axesma
 
 	// Add in the plotting mask
 	//  (TBD: only if does not reference the flags)
-	if (True) {  // ntrue(axesmask)<2) {
+	if (true) {  // ntrue(axesmask)<2) {
 		Vector<uInt64> nplmaskPerDDID(nDDID_, 0);
 		nplmaskPerDDID(nPerDDID_>uInt64(0)) = 1;
 		if (axesmask(0)) nplmaskPerDDID *= nCorrPerDDID_;
@@ -340,19 +341,19 @@ String MSCacheVolMeter::evalVolume(map<PMS::Axis,Bool> axes, Vector<Bool> axesma
 			<< hostMemGB << " GB).";
 
 	// Trap too many points
-	Bool toomany(False);
+	Bool toomany(false);
 	if (totalPoints>UINT_MAX) {
 		ss << endl
 				<< "Too many points!  CASA plotms cannot plot more than " << UINT_MAX << " points.";
-		toomany=True;
+		toomany=true;
 	}
 
 	// Trap insufficient memory
-	Bool toomuch(False);
+	Bool toomuch(false);
 	if (totalVolGB>hostMemGB) {
 		ss << endl
 				<< "Insufficient memory!";
-		toomuch=True;
+		toomuch=true;
 	}
 
 	// Throw exception if toomuch or toomany
@@ -487,7 +488,7 @@ String MSCacheVolMeter::evalVolume(std::vector<IPosition> vbShapes,
 
 	// Add in the plotting mask
 	//  (TBD: only if does not reference the flags)
-	if (True) {  // ntrue(axesmask)<2) {
+	if (true) {  // ntrue(axesmask)<2) {
 		uInt64 plmaskVol = sizeof(Bool) * nElements;
 		//cout << " Collapsed flag (plot mask) volume = " << plmaskVol << " bytes." << endl;
 		totalVol += plmaskVol;
@@ -541,19 +542,19 @@ String MSCacheVolMeter::evalVolume(std::vector<IPosition> vbShapes,
 			<< hostMemGB << " GB).";
 
 	// Trap too many points
-	Bool toomany(False);
+	Bool toomany(false);
 	if (totalPoints>UINT_MAX) {
 		ss << endl
 				<< "Too many points!  CASA plotms cannot plot more than " << UINT_MAX << " points.";
-		toomany=True;
+		toomany=true;
 	}
 
 	// Trap insufficient memory
-	Bool toomuch(False);
+	Bool toomuch(false);
 	if (totalVolGB>hostMemGB) {
 		ss << endl
 				<< "Insufficient memory!";
-		toomuch=True;
+		toomuch=true;
 	}
 
 	// Throw exception if toomuch or toomany
@@ -563,4 +564,5 @@ String MSCacheVolMeter::evalVolume(std::vector<IPosition> vbShapes,
 	return ss.str();
 }
 
+using namespace casacore;
 }  // namespace casa

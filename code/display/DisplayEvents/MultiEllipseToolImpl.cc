@@ -38,9 +38,10 @@
 // this include:
 #include <display/DisplayEvents/MultiEllipseToolImpl.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-	MultiEllipseToolImpl::MultiEllipseToolImpl(viewer::RegionSourceFactory *rf, PanelDisplay* pd, Display::KeySym keysym) : MultiEllipseTool(rf, pd, keysym, True) {  }
+	MultiEllipseToolImpl::MultiEllipseToolImpl(viewer::RegionSourceFactory *rf, PanelDisplay* pd, Display::KeySym keysym) : MultiEllipseTool(rf, pd, keysym, true) {  }
 
 	MultiEllipseToolImpl::~MultiEllipseToolImpl() {  }
 

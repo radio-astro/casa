@@ -3,7 +3,7 @@
 #define CFilterMode_H
 
 /*
- * ALMA - Atacama Large Millimeter Array
+ * ALMA - Atacama Large Millimeter casacore::Array
  * (c) European Southern Observatory, 2002
  * (c) Associated Universities Inc., 2002
  * Copyright by ESO (in the framework of the ALMA collaboration),
@@ -33,7 +33,7 @@
  * //  ---------------------------------------------------------  //
  * /////////////////////////////////////////////////////////////////
  *
- * File CFilterMode.h
+ * casacore::File CFilterMode.h
  */
 
 #ifndef __cplusplus
@@ -63,7 +63,7 @@ namespace FilterModeMod
   { 
     FILTER_NA /*!<  Not Applicable (2 antenna prototype). The Tunable Filter Banks are not implemented */
      ,
-    FILTER_TDM /*!< Time Division Mode. In this mode the Tunable Filter banks are bypassed */
+    FILTER_TDM /*!< casacore::Time Division Mode. In this mode the Tunable Filter banks are bypassed */
      ,
     FILTER_TFB /*!< The Tunable Filter Bank is implemented and used */
      ,

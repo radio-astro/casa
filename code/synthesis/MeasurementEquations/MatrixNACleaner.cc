@@ -63,6 +63,7 @@
 #include <omp.h>
 #endif
 using namespace std;
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
  
@@ -92,7 +93,7 @@ MatrixNACleaner::MatrixNACleaner(const Matrix<Float> & psf,
 				 const Matrix<Float> &dirty, const Int memType, const Float  numSigma):
   itsBitPix( ), itsSupport(3), itsRms(0.0),typeOfMemory_p(memType), numSigma_p(numSigma)
 {
-  psfShape_p.resize(0, False);
+  psfShape_p.resize(0, false);
   psfShape_p=psf.shape();
   // Check that everything is the same dimension and that none of the
   // dimensions is zero length.
@@ -123,13 +124,13 @@ MatrixNACleaner::MatrixNACleaner(const Matrix<Float> & psf,
   MatrixCleaner::findPSFMaxAbs(psf, maxPsf, itsPositionPeakPsf, psfSupport);
   os << "Peak of PSF = " << maxPsf << " at " << itsPositionPeakPsf
      << LogIO::POST;
-  return True;
+  return true;
 }
   
 
 void MatrixNACleaner::setPsf(const Matrix<Float>& psf){
   AlwaysAssert(validatePsf(psf), AipsError);
-  psfShape_p.resize(0, False);
+  psfShape_p.resize(0, false);
   psfShape_p=psf.shape();
   itsPsf=make_shared<Matrix<Float> >();
   itsPsf->reference(psf);
@@ -151,7 +152,7 @@ MatrixNACleaner & MatrixNACleaner::operator=(const MatrixNACleaner & other) {
     itsResidual=other.itsResidual;
     itsBitPix=other.itsBitPix;
     itsTotalFlux=other.itsTotalFlux;
-    psfShape_p.resize(0, False);
+    psfShape_p.resize(0, false);
     psfShape_p=other.psfShape_p;
     itsSupport=other.itsSupport;
     itsRms=other.itsRms;
@@ -295,12 +296,12 @@ Int MatrixNACleaner::clean(Matrix<Float>& model)
     
     /*
     if(progress) {
-      progress->info(False, itsIteration, itsMaxNiter, maxima,
+      progress->info(false, itsIteration, itsMaxNiter, maxima,
 		     posMaximum, itsStrengthOptimum,
 		     optimumScale, positionOptimum,
 		     totalFlux, totalFluxScale,
 		     itsJustStarting );
-      itsJustStarting = False;
+      itsJustStarting = false;
       } else*/ {
       if (itsIteration ==   1) {
           os << "iteration    MaximumResidual   CleanedFlux" << LogIO::POST;
@@ -379,7 +380,7 @@ Int MatrixNACleaner::clean(Matrix<Float>& model)
   // Finish off the plot, etc.
   /*
   if(progress) {
-    progress->info(True, itsIteration, itsMaxNiter, maxima, posMaximum,
+    progress->info(true, itsIteration, itsMaxNiter, maxima, posMaximum,
 		   itsStrengthOptimum,
 		   optimumScale, positionOptimum,
 		   totalFlux, totalFluxScale);
@@ -472,9 +473,9 @@ Bool MatrixNACleaner::findMaxAbsMask(const Matrix<Float>& lattice,
   }
   itsMaximumResidual=peakval;
   //if(peakval > 2*itsRms)
-  //  return True;
+  //  return true;
 
-  return True;
+  return true;
 }
   Float  MatrixNACleaner::amnesiac(const Float& ){
     return 1.0;

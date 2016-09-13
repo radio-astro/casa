@@ -38,7 +38,7 @@ namespace casa {
 		QtPlotSettings( );
 		void adjust( const QString& topUnits, const QString& topType, const QString& bottomUnits,
 				const QString& bottomType, bool autoScaleX, bool autoScaleY, bool zoom = false );
-		void setSpectralCoordinate( const SpectralCoordinate& coord );
+		void setSpectralCoordinate( const casacore::SpectralCoordinate& coord );
 		void zoomOut( double zoomFactor, const QString& topUnits, const QString& topType,
 				const QString& bottomUnits, const QString& bottomType,
 		              bool autoScaleX, bool autoScaleY );
@@ -96,7 +96,7 @@ namespace casa {
 		void adjustAxisTop( double &min, double &max);
 		std::pair<double,double> convertBottomBounds(
 						double min, double max, const QString& topUnits, const QString& unitType );
-		MDoppler::Types getDoppler(  const QString& unitType );
+		casacore::MDoppler::Types getDoppler(  const QString& unitType );
 		double getTickValue(int tickIndex, int tickCount,
 							QtPlotSettings::AxisIndex axisIndex) const;
 		double minX[END_AXIS_INDEX];
@@ -113,7 +113,7 @@ namespace casa {
 		QString m_bottomUnits;
 
 		//Used for conversions
-		SpectralCoordinate m_spectralCoordinate;
+		casacore::SpectralCoordinate m_spectralCoordinate;
 
 	};
 

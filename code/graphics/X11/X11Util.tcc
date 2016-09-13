@@ -33,16 +33,16 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 Bool X11TestColormapAlloc(::XDisplay * display, XColormap colormap, 
-			  Bool contig, uInt nColors)
+			  casacore::Bool contig, casacore::uInt nColors)
 {
-  Bool retval = False;
-  uLong * colors = new uLong[nColors];
-  uLong planeMask[1];
+  casacore::Bool retval = false;
+  casacore::uLong * colors = new casacore::uLong[nColors];
+  casacore::uLong planeMask[1];
   if (XAllocColorCells(display, colormap, contig?1:0, 
 		       planeMask, 0, colors, nColors))
     {
       XFreeColors(display, colormap, colors, nColors, 0);
-      retval = True;
+      retval = true;
     } 
   delete [] colors;
   return retval;
@@ -50,11 +50,11 @@ Bool X11TestColormapAlloc(::XDisplay * display, XColormap colormap,
 
 uInt X11QueryColorsAvailable(::XDisplay * display,
 			     XColormap colormap,
-			     Bool contig)
+			     casacore::Bool contig)
 {
   // Initialize interval to reasonable guess
-  uInt a = 1;
-  uInt b = 256;
+  casacore::uInt a = 1;
+  casacore::uInt b = 256;
 
   // expand b quadratically until it fails
   while (X11TestColormapAlloc(display, colormap, contig, b)) b *= 2;
@@ -64,11 +64,11 @@ uInt X11QueryColorsAvailable(::XDisplay * display,
   // Use binary search to get the precise number of colors
   while(a < b-1)
     {
-      uInt m = (a+b)/2;
+      casacore::uInt m = (a+b)/2;
 
       //cout << "a,m,b = <" << a << "," << m << "," << b << ">\n";  cout.flush();
 
-      Bool fm = X11TestColormapAlloc(display, colormap, contig, m);
+      casacore::Bool fm = X11TestColormapAlloc(display, colormap, contig, m);
       if (fm)
 	a = m;
       else
@@ -127,7 +127,7 @@ XVisualInfo X11VisualInfoFromVisual(::XDisplay *display, Visual *visual) {
   XVisualInfo vtemplate;
   XVisualInfo *v = 0;
   if (!visual) {
-    throw(AipsError("X11VisualInfoFromVisual given null visual"));
+    throw(casacore::AipsError("X11VisualInfoFromVisual given null visual"));
   }
   int nVis;
   XVisualInfo *vlist = XGetVisualInfo(display, VisualNoMask,
@@ -140,12 +140,12 @@ XVisualInfo X11VisualInfoFromVisual(::XDisplay *display, Visual *visual) {
     }
     XFree(vlist);
   }
-  throw(AipsError("X11VisualInfoFromVisual given non-existent visual"));
+  throw(casacore::AipsError("X11VisualInfoFromVisual given non-existent visual"));
   return vtemplate;
 }
 
 // Returns best visual in class given
-Visual * X11BestVisual(Screen * screen, uInt vclass)
+Visual * X11BestVisual(Screen * screen, casacore::uInt vclass)
 {
   XVisualInfo vtemplate;
   vtemplate.c_class = vclass;
@@ -156,14 +156,14 @@ Visual * X11BestVisual(Screen * screen, uInt vclass)
 				       VisualClassMask | VisualScreenMask,
 				       &vtemplate, &nVis);
 
-  uInt matchDepth = 0;
+  casacore::uInt matchDepth = 0;
   Visual * matchVisual = 0;
 
   if (vlist)
     {
       for (XVisualInfo * v = vlist; v < vlist + nVis; v++)
 	{
-	  if (v->depth > Int(matchDepth))
+	  if (v->depth > casacore::Int(matchDepth))
 	    { matchDepth = v->depth; matchVisual = v->visual; }
 	}
       
@@ -174,7 +174,7 @@ Visual * X11BestVisual(Screen * screen, uInt vclass)
 }
 
 // map vis id to visual
-Visual * X11VisualIdToVisual(::XDisplay * display, uInt visId)
+Visual * X11VisualIdToVisual(::XDisplay * display, casacore::uInt visId)
 {
   XVisualInfo vtemplate;
   int nVis;
@@ -224,7 +224,7 @@ ostream & operator << (ostream & os, Visual * visual)
     case GrayScale:   os << "GrayScale";   break;
     case StaticColor: os << "StaticColor"; break;
     case PseudoColor: os << "PseudoColor"; break;
-    case TrueColor:   os << "TrueColor";   break;
+    case trueColor:   os << "trueColor";   break;
     case DirectColor: os << "DirectColor"; break;
     }
   os << endl;
@@ -240,7 +240,7 @@ ostream & operator << (ostream & os, Visual * visual)
 
 ostream & operator << (ostream & os, Screen * screen)
 {
-  Int i;
+  casacore::Int i;
   if (screen == NULL) { os << "(null)"; return os; }
   os << "----------------- Screen Information -------------------\n";
   os << "This screen number        : " << XScreenNumberOfScreen(screen) << endl;
@@ -257,8 +257,8 @@ ostream & operator << (ostream & os, Screen * screen)
   os << "Save Unders               : ";
   switch(DoesSaveUnders(screen))
     {
-    case True: os << "Supported\n"; break;
-    case False: os << "Not supported\n"; break;
+    case true: os << "Supported\n"; break;
+    case false: os << "Not supported\n"; break;
     }
 os << "Screen Width (pixels)     : " << XWidthOfScreen(screen) << endl;
   os << "Screen Height (pixels)    : " << XHeightOfScreen(screen) << endl;
@@ -295,7 +295,7 @@ os << "Screen Width (pixels)     : " << XWidthOfScreen(screen) << endl;
   os << "Depth of root window (planes)   : " << XPlanesOfScreen(screen) << endl;
 
   XVisualInfo vTemplate;
-  Int nVisualInfos;
+  casacore::Int nVisualInfos;
   vTemplate.screen = XScreenNumberOfScreen(screen);
   XVisualInfo * visualInfoList = XGetVisualInfo(DisplayOfScreen(screen), VisualScreenMask, 
 						&vTemplate, &nVisualInfos);
@@ -349,10 +349,10 @@ Bool X11InitializeStandardColormap(Screen * screen,
 				 XScreenNumberOfScreen(screen),
 				 visual->visualid,
 				 X11DepthOfVisual(display, visual),
-				 False,   // replace existing SCM?
-				 False);  // retain SCM permanently?
+				 false,   // replace existing SCM?
+				 false);  // retain SCM permanently?
       
-      Int count;
+      casacore::Int count;
       if (XGetRGBColormaps(display, 
 			   RootWindowOfScreen(screen),
 			   mapInfo,
@@ -360,7 +360,7 @@ Bool X11InitializeStandardColormap(Screen * screen,
 			   property) == 0)
 	{
 	  // FAIL1 property is not set
-	  return False;
+	  return false;
 	}
       XStandardColormap * mip = *mapInfo;
       cout << "mip is " << (void *)mip << endl;
@@ -368,17 +368,17 @@ Bool X11InitializeStandardColormap(Screen * screen,
 
       if (mapInfo[0]->colormap != 0)
 	{
-	  // Map created by another client
+	  // casacore::Map created by another client
 	  if (mapInfo[0]->red_max == 0)
 	    {
 	      // FAIL2 data missing ==> not created properly
-	      return False;
+	      return false;
 	    }
 	  else
 	    {
 	      // Created and usable
 	      cout << "inside X11ISC: mapInfo is " << (*mapInfo[0]) << endl << flush;
-	      return True;
+	      return true;
 	    }
 	}
       else
@@ -391,9 +391,9 @@ Bool X11InitializeStandardColormap(Screen * screen,
       // Placeholder for constructing custom "StandardColorMaps".
       // For example, a high-resolution Hue-Intensity map could
       // be generated using DirectColor visual.
-      return False;
+      return false;
     }
-  return False;
+  return false;
 }
 
 

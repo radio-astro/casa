@@ -36,6 +36,7 @@
 #include <msvis/MSVis/UtilJ.h>
 #include <limits>
 
+using namespace casacore;
 namespace casa {
 
 	ColorHistogram::ColorHistogram(QWidget *parent)

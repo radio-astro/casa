@@ -141,7 +141,6 @@ ATM_NAMESPACE_END
  \skip include
  \until using
 
- To illustrate how to use this class we take here an example defining a class Array with a constraint
  about a maximum index.
  \skip const
  \until testbed

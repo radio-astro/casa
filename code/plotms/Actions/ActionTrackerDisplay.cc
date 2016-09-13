@@ -25,6 +25,7 @@
 
 #include "ActionTrackerDisplay.h"
 
+using namespace casacore;
 namespace casa {
 
 ActionTrackerDisplay::ActionTrackerDisplay( Client* client )
@@ -39,4 +40,5 @@ bool ActionTrackerDisplay::isDisplay() const {
 ActionTrackerDisplay::~ActionTrackerDisplay() {
 }
 
+using namespace casacore;
 } /* namespace casa */

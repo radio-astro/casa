@@ -25,6 +25,7 @@
 
 #include "ActionSubtractRegions.h"
 
+using namespace casacore;
 namespace casa {
 
 ActionSubtractRegions::ActionSubtractRegions( Client* client )
@@ -39,4 +40,5 @@ ToolCode ActionSubtractRegions::getToolCode() const {
 ActionSubtractRegions::~ActionSubtractRegions() {
 }
 
+using namespace casacore;
 } /* namespace casa */

@@ -27,6 +27,7 @@
 #include <plotms/PlotMS/PlotMSIterParam.h>
 #include <QDebug>
 
+using namespace casacore;
 namespace casa {
 
 ///////////////////////////////////////
@@ -119,10 +120,10 @@ void PlotMSIterParam::setDefaults() {
 	setIterAxis(PMS::NONE);  // No iteration
 	setGridRow(0);
 	setGridCol(0);
-	setGlobalScaleX(False);
-	setGlobalScaleY(False);
-	setCommonAxisX(False);
-	setCommonAxisY(False);
+	setGlobalScaleX(false);
+	setGlobalScaleY(false);
+	setCommonAxisX(false);
+	setCommonAxisY(false);
 }
 
 bool PlotMSIterParam::isIteration() const {

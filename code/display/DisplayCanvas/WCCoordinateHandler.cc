@@ -31,6 +31,7 @@
 #include <casa/Utilities/Assert.h>
 #include <display/DisplayCanvas/WCCoordinateHandler.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Default Constructor Required
@@ -42,18 +43,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	                                     const Matrix<Double> &lin) {
 		uInt nTransforms = lin.nrow();
 		AlwaysAssert(nTransforms == world.nrow(), AipsError);
-		Bool retval = True;
+		Bool retval = true;
 
 		Vector<Double> worldOut(2);
 		for (uInt i = 0; i < nTransforms; i++) {
-			if (failures(i) == True) {
-				retval = False;
+			if (failures(i) == true) {
+				retval = false;
 				continue;
 			}
 			Bool succ = linToWorld(worldOut, lin.row(i));
-			if (succ == False) {
-				failures(i) = True;
-				retval = False;
+			if (succ == false) {
+				failures(i) = true;
+				retval = false;
 			} else {
 				world(i,0) = worldOut(0);
 				world(i,1) = worldOut(1);
@@ -67,18 +68,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	                                     const Matrix<Double> &world) {
 		uInt nTransforms = world.nrow();
 		AlwaysAssert(nTransforms == lin.nrow(), AipsError);
-		Bool retval = True;
+		Bool retval = true;
 
 		Vector<Double> linOut(2);
 		for (uInt i = 0; i < nTransforms; i++) {
-			if (failures(i) == True) {
-				retval = False;
+			if (failures(i) == true) {
+				retval = false;
 				continue;
 			}
 			Bool succ = worldToLin(linOut, world.row(i));
-			if (succ == False) {
-				failures(i) = True;
-				retval = False;
+			if (succ == false) {
+				failures(i) = true;
+				retval = false;
 			} else {
 				lin(i,0) = linOut(0);
 				lin(i,1) = linOut(1);

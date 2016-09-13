@@ -29,6 +29,7 @@
 #include <casaqt/QtUtilities/QtUtilities.h>
 #include <plotms/GuiTabs/PlotMSTab.qo.h>
 
+using namespace casacore;
 namespace casa {
 
 PlotMSCalibrationWidget::PlotMSCalibrationWidget(QWidget* parent) :

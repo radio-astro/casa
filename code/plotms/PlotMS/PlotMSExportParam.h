@@ -45,8 +45,8 @@ public:
   // Converts this object to/from a record.  Each field will have a key that
   // is its enum name
   // <group>
-  void fromRecord(const RecordInterface& record);
-  Record toRecord() const;
+  void fromRecord(const casacore::RecordInterface& record);
+  casacore::Record toRecord() const;
   // </group>
 
 
@@ -61,7 +61,7 @@ public:
   void setExportRange(PMS::ExportRange exportRange) {
 	  exportRange_ = exportRange;
   };
-  void setExportRange(String exportRangeStr);
+  void setExportRange(casacore::String exportRangeStr);
   // </group>
   
   
@@ -73,7 +73,7 @@ public:
   // </group>
 
   // Print out a summary
-  String summary() const;
+  casacore::String summary() const;
 
   // Sets the default values.
   void setDefaults();
@@ -82,7 +82,7 @@ private:
 
   // The export range
   PMS::ExportRange exportRange_;
-  static const String EXPORT_RANGE;
+  static const casacore::String EXPORT_RANGE;
 };
 
 }

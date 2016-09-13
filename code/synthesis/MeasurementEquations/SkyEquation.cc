@@ -75,6 +75,7 @@
 #include <memory>
 using std::auto_ptr;
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // ***************************************************************************
@@ -86,7 +87,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 SkyEquation::SkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft,
 			 FTMachine& ift)
   : sm_(&sm), vs_(&vs), ft_(&ft), ift_(&ift), cft_(0), ej_(0), dj_(0), 
-    tj_(0), fj_(0), iDebug_p(0), isPSFWork_p(False), noModelCol_p(False), isBeginingOfSkyJonesCache_p(True), doflat_p(False)
+    tj_(0), fj_(0), iDebug_p(0), isPSFWork_p(false), noModelCol_p(false), isBeginingOfSkyJonesCache_p(true), doflat_p(false)
 {
   rvi_p=&(vs_->iter());
   wvi_p=&(vs_->iter());
@@ -97,7 +98,7 @@ SkyEquation::SkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft,
 //----------------------------------------------------------------------
 SkyEquation::SkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft)
   : sm_(&sm), vs_(&vs), ft_(&ft), ift_(&ft), cft_(0), ej_(0), dj_(0), 
-    tj_(0), fj_(0), iDebug_p(0), isPSFWork_p(False),noModelCol_p(False), isBeginingOfSkyJonesCache_p(True), doflat_p(False)
+    tj_(0), fj_(0), iDebug_p(0), isPSFWork_p(false),noModelCol_p(false), isBeginingOfSkyJonesCache_p(true), doflat_p(false)
 {
   rvi_p=&(vs_->iter());
   wvi_p=&(vs_->iter());
@@ -110,7 +111,7 @@ SkyEquation::SkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft)
 SkyEquation::SkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft,
 			 FTMachine& ift, ComponentFTMachine& cft)
   : sm_(&sm), vs_(&vs), ft_(&ft), ift_(&ift), cft_(&cft), ej_(0),
-    dj_(0), tj_(0), fj_(0), iDebug_p(0), isPSFWork_p(False),noModelCol_p(False),isBeginingOfSkyJonesCache_p(True), doflat_p(False)
+    dj_(0), tj_(0), fj_(0), iDebug_p(0), isPSFWork_p(false),noModelCol_p(false),isBeginingOfSkyJonesCache_p(true), doflat_p(false)
 {
   rvi_p=&(vs_->iter());
   wvi_p=&(vs_->iter());
@@ -123,8 +124,8 @@ SkyEquation::SkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft,
 SkyEquation::SkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft,
 			 ComponentFTMachine& cft, Bool noModelCol)
   : sm_(&sm), vs_(&vs), ft_(&ft), ift_(&ft), cft_(&cft), ej_(0),
-    dj_(0), tj_(0), fj_(0), iDebug_p(0), isPSFWork_p(False), 
-    noModelCol_p(noModelCol),isBeginingOfSkyJonesCache_p(True),doflat_p(False)
+    dj_(0), tj_(0), fj_(0), iDebug_p(0), isPSFWork_p(false), 
+    noModelCol_p(noModelCol),isBeginingOfSkyJonesCache_p(true),doflat_p(false)
 {
 
   rvi_p=&(vs_->iter());
@@ -136,8 +137,8 @@ SkyEquation::SkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft,
 SkyEquation::SkyEquation(SkyModel& sm, ROVisibilityIterator& vi, FTMachine& ft,
 			 ComponentFTMachine& cft, Bool noModelCol)
   : sm_(&sm), ft_(&ft), ift_(&ft), cft_(&cft), ej_(0),
-    dj_(0), tj_(0), fj_(0), iDebug_p(0), isPSFWork_p(False), 
-    noModelCol_p(noModelCol),isBeginingOfSkyJonesCache_p(True), doflat_p(False){
+    dj_(0), tj_(0), fj_(0), iDebug_p(0), isPSFWork_p(false), 
+    noModelCol_p(noModelCol),isBeginingOfSkyJonesCache_p(true), doflat_p(false){
 
 
   //visiter is read only
@@ -231,7 +232,7 @@ void SkyEquation::predictComponents(Bool& incremental, Bool& initialized,  MS::P
 //    Int cohDone=0;
 //    ProgressMeter pm(1.0, Double(vi.numberCoh()),
 //		     "Predicting component coherences",
-//		     "", "", "", True);
+//		     "", "", "", true);
     Int oldmsid=-1;
 
     for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
@@ -272,7 +273,7 @@ void SkyEquation::predictComponents(Bool& incremental, Bool& initialized,  MS::P
 	    } 
 	    if(!sm_->componentList().toRecord(err, clrec))
 	      throw(AipsError("Error saving componentlist: "+err));
-	    vi.putModel(clrec, True, True);
+	    vi.putModel(clrec, true, true);
 	  }
 
 	}
@@ -281,7 +282,7 @@ void SkyEquation::predictComponents(Bool& incremental, Bool& initialized,  MS::P
 //	pm.update(Double(cohDone));
       }
     }
-    if(!incremental&&!initialized) initialized=True;
+    if(!incremental&&!initialized) initialized=true;
   }
 
 
@@ -305,7 +306,7 @@ void SkyEquation::predict(Bool incremental,  MS::PredefinedColumns Type) {
 
   // Reset the visibilities only if this is not an incremental
   // change to the model
-  Bool initialized=False;
+  Bool initialized=false;
   // **** predictcomponents doesn't do anything if incremental!
   // it gets components into vb->model, and writes to vi::(Type)
   predictComponents(incremental, initialized, Type);
@@ -335,7 +336,7 @@ void SkyEquation::predict(Bool incremental,  MS::PredefinedColumns Type) {
 	  }
 	}
       }
-      //if (!incremental&&!initialized) initialized=True;
+      //if (!incremental&&!initialized) initialized=true;
 
 
     }
@@ -367,7 +368,7 @@ void SkyEquation::predict(Bool incremental,  MS::PredefinedColumns Type) {
       ostringstream modelName;modelName<<"Model "<<model+1
 				    <<" : predicting coherences";
       ProgressMeter pm(1.0, Double(vi.numberCoh()),
-		       modelName, "", "", "", True);
+		       modelName, "", "", "", true);
       // Loop over all visibilities
       for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
 	for (vi.origin(); vi.more(); vi++) {
@@ -413,7 +414,7 @@ void SkyEquation::predict(Bool incremental,  MS::PredefinedColumns Type) {
       }
       finalizeGet();
       unScaleImage(model, incremental);
-      if(!incremental&&!initialized) initialized=True;
+      if(!incremental&&!initialized) initialized=true;
     
     } else {
       cout << "WARN: model is empty." << endl;
@@ -437,25 +438,25 @@ void SkyEquation::gradientsChiSquared(Bool incremental, Bool commitModel) {
 
   if ((ft_->name() == "PBWProjectFT"))
     {
-      ft_->setNoPadding(False);
+      ft_->setNoPadding(false);
       fullGradientsChiSquared(incremental);
     }
   else
     {
-  Bool forceFull=True;
+  Bool forceFull=true;
   // for these 2 gridders force incremental
   if((ft_->name() == "MosaicFT") || (ft_->name() == "WProjectFT"))
-    forceFull=True;
+    forceFull=true;
 
   if( (sm_->numberOfModels() != 1) || !ft_->isFourier() || !incremental 
       || forceFull){
     if(commitModel || !noModelCol_p){
-      ft_->setNoPadding(False);
+      ft_->setNoPadding(false);
       fullGradientsChiSquared(incremental);
     }
     else{
       // For now use corrected_data...
-      ft_->setNoPadding(True);
+      ft_->setNoPadding(true);
       cout << "This mode is gone...we should not be coming here" << endl;
     }
   }
@@ -514,14 +515,14 @@ void SkyEquation::fullGradientsChiSquared(Bool incremental) {
       ostringstream modelName;modelName<<"Model "<<model+1
 				    <<" : transforming residuals";
       ProgressMeter pm(1.0, Double(vi.numberCoh()),
-		       modelName, "", "", "", True);
+		       modelName, "", "", "", true);
       // Loop over the visibilities, putting VisBuffers
       
       for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
 	for (vi.origin(); vi.more(); vi++) {
 	  vb.modelVisCube()-=vb.correctedVisCube();
 	  //	  vb.setVisCube(vb.modelVisCube());
-	  put(vb, model, False, FTMachine::MODEL);
+	  put(vb, model, false, FTMachine::MODEL);
 	  cohDone+=vb.nRow();
 	  pm.update(Double(cohDone));
 	}
@@ -638,7 +639,7 @@ void SkyEquation::makeComplexXFRs()
       ostringstream modelName;modelName<<"Model "<<model+1
 				    <<" : transforming to PSF";
       ProgressMeter pm(1.0, Double(vi.numberCoh()),
-		       modelName, "", "", "", True);
+		       modelName, "", "", "", true);
       // Loop over the visibilities, putting VisBuffers
       
       for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
@@ -679,11 +680,11 @@ void SkyEquation::makeApproxPSF(Int model, ImageInterface<Float>& psf) {
   
   ft_->setNoPadding(noModelCol_p);
 
-  isPSFWork_p= True; // avoid PB correction etc for PSF estimation
-  Bool doPSF=True;
+  isPSFWork_p= true; // avoid PB correction etc for PSF estimation
+  Bool doPSF=true;
   if(ft_->name() == "MosaicFT") {
     // Reset the various SkyJones
-    doPSF=False;
+    doPSF=false;
     resetSkyJones();
     
     VisIter& vi(*wvi_p);
@@ -714,14 +715,14 @@ void SkyEquation::makeApproxPSF(Int model, ImageInterface<Float>& psf) {
     sm_->image(model).set(0.0);
     line=1.0;
     sm_->image(model).putSlice(line, start);
-    //initializeGet(vb, -1, model, False);
+    //initializeGet(vb, -1, model, false);
     StokesImageUtil::From(sm_->cImage(model), static_cast <const ImageInterface<Float>& >(sm_->image(model)));
     ft_->initializeToVis(sm_->cImage(model),vb);
     // Loop over all visibilities
     for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
       for (vi.origin(); vi.more(); vi++) {
        	vb.setModelVisCube(Complex(0.0,0.0));
-	//	get(vb, model, False);
+	//	get(vb, model, false);
 	ft_->get(vb);
 	vi.setVis(vb.modelVisCube(),VisibilityIterator::Model);
       }
@@ -794,7 +795,7 @@ void SkyEquation::makeApproxPSF(Int model, ImageInterface<Float>& psf) {
  
 
 
-  isPSFWork_p=False; // resseting this flag so that subsequent calculation uses
+  isPSFWork_p=false; // resseting this flag so that subsequent calculation uses
   // the right SkyJones correction;
   
   
@@ -869,8 +870,8 @@ VisBuffer& SkyEquation::get(VisBuffer& result, Int model,
 
   // we might need to recompute the "sky" for every single row, but we
   // avoid this if possible.
-  Bool internalChanges=False;  // Does this VB change inside itself?
-  Bool firstOneChanges=False;  // Has this VB changed from the previous one?
+  Bool internalChanges=false;  // Does this VB change inside itself?
+  Bool firstOneChanges=false;  // Has this VB changed from the previous one?
   if(ft_->name()!="MosaicFT"){
     changedSkyJonesLogic(result, firstOneChanges, internalChanges);
   } 
@@ -932,8 +933,8 @@ VisBuffer& SkyEquation::get(VisBuffer& result,
   }
   // we might need to recompute the "sky" for every single row, but
   // we avoid this, if possible
-  Bool internalChanges=False; // Does this VB change inside itself
-  Bool firstOneChanges=False; // Has this VB changed from the previous one?
+  Bool internalChanges=false; // Does this VB change inside itself
+  Bool firstOneChanges=false; // Has this VB changed from the previous one?
   changedSkyJonesLogic(result,firstOneChanges,internalChanges);
   if (internalChanges) // yes, we have to go row by row
       for (Int row=0;row<nRow;++row) {
@@ -973,8 +974,8 @@ VisBuffer& SkyEquation::get(VisBuffer& result,
   
   // we might need to recompute the "sky" for every single row, but
   // we avoid this, if possible
-  Bool internalChanges=False; // Does this VB change inside itself
-  Bool firstOneChanges=False; // Has this VB changed from the previous one?
+  Bool internalChanges=false; // Does this VB change inside itself
+  Bool firstOneChanges=false; // Has this VB changed from the previous one?
   changedSkyJonesLogic(result,firstOneChanges,internalChanges);
 
   uInt ncomponents=compList.nelements();
@@ -1026,7 +1027,7 @@ void SkyEquation::initializePut(const VisBuffer& vb, Int model) {
   AlwaysAssert(ok(),AipsError);
   ift_->initializeToSky(sm_->cImage(model),sm_->weight(model),vb);
   assertSkyJones(vb, -1);
-  vb_p->assign(vb, False);
+  vb_p->assign(vb, false);
   vb_p->updateCoordInfo();
 }
 
@@ -1042,8 +1043,8 @@ void SkyEquation::put(const VisBuffer & vb, Int model, Bool dopsf, FTMachine::Ty
 
   
   Int nRow=vb.nRow();
-  Bool internalChanges=False;  // Does this VB change inside itself?
-  Bool firstOneChanges=False;  // Has this VB changed from the previous one?
+  Bool internalChanges=false;  // Does this VB change inside itself?
+  Bool firstOneChanges=false;  // Has this VB changed from the previous one?
   if(ft_->name() != "MosaicFT"){
     changedSkyJonesLogic(vb, firstOneChanges, internalChanges);
   }
@@ -1065,14 +1066,14 @@ void SkyEquation::put(const VisBuffer & vb, Int model, Bool dopsf, FTMachine::Ty
       finalizePut(* vb_p, model);
     }
     initializePut(vb, model);
-    isBeginingOfSkyJonesCache_p=False;
+    isBeginingOfSkyJonesCache_p=false;
     ift_->put(vb, -1, dopsf, col);
   }
   else {
     ift_->put(vb, -1, dopsf, col);
   }
 
-  isBeginingOfSkyJonesCache_p=False;
+  isBeginingOfSkyJonesCache_p=false;
 }
 
 
@@ -1085,7 +1086,7 @@ void SkyEquation::finalizePut(const VisBuffer& vb, Int model) {
   // 1. Now get the (unnormalized) image and add the 
   // weight to the summed weights
   Matrix<Float> delta;
-  sm_->cImage(model).copyData(ift_->getImage(delta, False));
+  sm_->cImage(model).copyData(ift_->getImage(delta, false));
   sm_->weight(model)+=delta;
   // 2. Apply the SkyJones and add to grad chisquared
   applySkyJonesInv(vb, -1, sm_->cImage(model), sm_->work(model),
@@ -1109,7 +1110,7 @@ void SkyEquation::initializePutXFR(const VisBuffer& vb, Int model,
   Matrix<Float> weight;
   ift_->initializeToSky(sm_->XFR(model, numXFR), weight, vb);
   assertSkyJones(vb, -1);
-  vb_p->assign(vb, False);
+  vb_p->assign(vb, false);
   vb_p->updateCoordInfo();
 }
 
@@ -1119,8 +1120,8 @@ void SkyEquation::putXFR(const VisBuffer & vb, Int model, Int& numXFR) {
 
   Bool IFTChanged=changedIFTMachine(vb);
 
-  Bool internalChanges=False;  // Does this VB change inside itself?
-  Bool firstOneChanges=False;  // Has this VB changed from the previous one?
+  Bool internalChanges=false;  // Does this VB change inside itself?
+  Bool firstOneChanges=false;  // Has this VB changed from the previous one?
   changedSkyJonesLogic(vb, firstOneChanges, internalChanges);
   if(internalChanges) {
     // Yes there are changes within this buffer: go row by row. 
@@ -1134,16 +1135,16 @@ void SkyEquation::putXFR(const VisBuffer & vb, Int model, Int& numXFR) {
 	numXFR++; 
 	initializePutXFR(vb, model, numXFR);
       }
-      ift_->put(vb, row, True);
+      ift_->put(vb, row, true);
     }
   }
   else if (IFTChanged||firstOneChanges) {
     finalizePutXFR(* vb_p, model, numXFR);
     numXFR++; 
     initializePutXFR(vb, model, numXFR);
-    ift_->put(vb, -1, True);
+    ift_->put(vb, -1, true);
   } else {
-    ift_->put(vb, -1, True);
+    ift_->put(vb, -1, true);
   }
 }
 
@@ -1152,7 +1153,7 @@ void SkyEquation::finalizePutXFR(const VisBuffer& vb, Int model, Int numXFR)
   // Actually do the transform. FFT back to the visibility plane
   ift_->finalizeToSky();
   Matrix<Float> weights;
-  sm_->XFR(model, numXFR).copyData(ift_->getImage(weights, False));
+  sm_->XFR(model, numXFR).copyData(ift_->getImage(weights, false));
   LatticeFFT::cfft2d(sm_->XFR(model, numXFR));
   assertSkyJones(vb, -1);
   //  TempImage<Complex> *tip = ( TempImage<Complex> *) ( &(sm_->XFR(model, numXFR)) );
@@ -1169,7 +1170,7 @@ void SkyEquation::initializePutConvolve(const VisBuffer& vb, Int model,
   AlwaysAssert(model>-1, AipsError);
   AlwaysAssert(numXFR>-1, AipsError);
   assertSkyJones(vb, -1);
-  vb_p->assign(vb, False);
+  vb_p->assign(vb, false);
   vb_p->updateCoordInfo();
 }
 
@@ -1180,8 +1181,8 @@ void SkyEquation::putConvolve(const VisBuffer & vb, Int model, Int& numXFR) {
   AlwaysAssert(ok(),AipsError);
 
   Int nRow=vb.nRow();
-  Bool internalChanges=False;  // Does this VB change inside itself?
-  Bool firstOneChanges=False;  // Has this VB changed from the previous one?
+  Bool internalChanges=false;  // Does this VB change inside itself?
+  Bool firstOneChanges=false;  // Has this VB changed from the previous one?
   changedSkyJonesLogic(vb, firstOneChanges, internalChanges);
   if(internalChanges) {
     // Yes there are changes within this buffer: go row by row. 
@@ -1212,7 +1213,7 @@ void SkyEquation::finalizePutConvolve(const VisBuffer& vb, Int model,
   LatticeFFT::cfft2d(sm_->cImage(model));
   LatticeExpr<Complex> latticeExpr(conj(sm_->XFR(model, numXFR))*sm_->cImage(model));
   sm_->cImage(model).copyData(latticeExpr);
-  LatticeFFT::cfft2d(sm_->cImage(model), False);
+  LatticeFFT::cfft2d(sm_->cImage(model), false);
   applySkyJonesInv(vb, -1, sm_->cImage(model), sm_->work(model),
 		   sm_->gS(model));
 }
@@ -1222,11 +1223,11 @@ void SkyEquation::changedSkyJonesLogic(const VisBuffer& vb,
 				       Bool& internalChanges)
 {
   if(changedSkyJones(vb,0)) {
-    firstOneChanges=True;
+    firstOneChanges=true;
   }
   Int lastrow = -1;
   if(changedSkyJonesBuffer(vb, 0, lastrow)) {
-    internalChanges=True;
+    internalChanges=true;
   } 
   return;
 };
@@ -1234,11 +1235,11 @@ void SkyEquation::changedSkyJonesLogic(const VisBuffer& vb,
 
 // Has the total SkyJones changed since the last application of the SkyJones?
 Bool SkyEquation::changedSkyJones(const VisBuffer& vb, Int row) {
-  if(ej_) if(ej_->changed(vb,row)) return True; // Electric field pattern
-  if(dj_) if(dj_->changed(vb,row)) return True; // Polarization field pattern
-  if(tj_) if(tj_->changed(vb,row)) return True; // Atmospheric gain
-  if(fj_) if(fj_->changed(vb,row)) return True; // Faraday rotation
-  return False;
+  if(ej_) if(ej_->changed(vb,row)) return true; // Electric field pattern
+  if(dj_) if(dj_->changed(vb,row)) return true; // Polarization field pattern
+  if(tj_) if(tj_->changed(vb,row)) return true; // Atmospheric gain
+  if(fj_) if(fj_->changed(vb,row)) return true; // Faraday rotation
+  return false;
 };
 
 
@@ -1258,28 +1259,28 @@ Bool SkyEquation::changedSkyJonesBuffer
 (const VisBuffer& vb, Int row1, Int& row2) {
   Int row2temp = 0;
   row2 = vb.nRow() - 1;
-  Bool didChange = False;
+  Bool didChange = false;
   if(ej_) {  // Electric field pattern
     if(ej_->changedBuffer(vb,row1, row2temp)) {
-      didChange = True;
+      didChange = true;
       row2 = min (row2, row2temp);
     }
   }
   if(dj_) {  // Polarization field pattern
     if(dj_->changedBuffer(vb,row1, row2temp)) {
-      didChange = True;
+      didChange = true;
       row2 = min (row2, row2temp);
     }
   }
   if(tj_) {  // Atmospheric gain
     if(tj_->changedBuffer(vb,row1, row2temp)) {
-      didChange = True;
+      didChange = true;
       row2 = min (row2, row2temp);
     }
   }
   if(fj_) {  // Faraday rotation
     if(fj_->changedBuffer(vb,row1, row2temp)) {
-      didChange = True;
+      didChange = true;
       row2 = min (row2, row2temp);
     }
   }
@@ -1294,7 +1295,7 @@ void SkyEquation::resetSkyJones()
   if(tj_) tj_->reset(); // Atmospheric gain
   if(fj_) fj_->reset(); // Faraday rotation
 
-  isBeginingOfSkyJonesCache_p=True;
+  isBeginingOfSkyJonesCache_p=true;
   
 };
 
@@ -1321,10 +1322,10 @@ ImageInterface<Complex>& SkyEquation::applySkyJones(const VisBuffer& vb,
 
   // Now apply the SkyJones as needed
   if(!isPSFWork_p  && (ift_->name() != "MosaicFT")){
-    if(ej_) ej_->apply(out,out,vb,row,True);
-    if(dj_) dj_->apply(out,out,vb,row,True);
-    if(tj_) tj_->apply(out,out,vb,row,True);
-    if(fj_) fj_->apply(out,out,vb,row,True);
+    if(ej_) ej_->apply(out,out,vb,row,true);
+    if(dj_) dj_->apply(out,out,vb,row,true);
+    if(tj_) tj_->apply(out,out,vb,row,true);
+    if(fj_) fj_->apply(out,out,vb,row,true);
   }
   return out;
 };
@@ -1347,10 +1348,10 @@ void SkyEquation::applySkyJonesInv(const VisBuffer& vb, Int row,
   // direction
   if(!isPSFWork_p && (ift_->name() != "MosaicFT")){
 
-    if(ej_) ej_->apply(in,in,vb,row,False);
-    if(dj_) dj_->apply(in,in,vb,row,False);
-    if(tj_) tj_->apply(in,in,vb,row,False);
-    if(fj_) fj_->apply(in,in,vb,row,False);
+    if(ej_) ej_->apply(in,in,vb,row,false);
+    if(dj_) dj_->apply(in,in,vb,row,false);
+    if(tj_) tj_->apply(in,in,vb,row,false);
+    if(fj_) fj_->apply(in,in,vb,row,false);
   }
   // Convert to IQUV format
   if(isPSFWork_p) 
@@ -1410,7 +1411,7 @@ Bool SkyEquation::ok() {
   AlwaysAssert(ift_,AipsError);
   AlwaysAssert(rvi_p, AipsError);
 
-  return(True);
+  return(true);
 }
 
 
@@ -1522,7 +1523,7 @@ void SkyEquation::fixImageScale()
     */
 	
     for (Int model=0;model<sm_->numberOfModels();model++) {
-      sm_->fluxScale(model).removeRegion ("mask0", RegionHandler::Any, False);
+      sm_->fluxScale(model).removeRegion ("mask0", RegionHandler::Any, false);
       if ((ft_->name()!="MosaicFT")) {
 	if(scaleType_p=="SAULT"){
 	  
@@ -1589,8 +1590,8 @@ void SkyEquation::fixImageScale()
 	      blc(2)=j; trc(2)=j;
 	      blc(3)=k; trc(3)=k;
 	      Slicer sl(blc, trc, Slicer::endIsLast);
-	      SubImage<Float> fscalesub(sm_->fluxScale(model), sl, True);
-	      SubImage<Float> ggSSub(sm_->ggS(model), sl, True);
+	      SubImage<Float> fscalesub(sm_->fluxScale(model), sl, true);
+	      SubImage<Float> ggSSub(sm_->ggS(model), sl, true);
 	      Float planeMax;
 	      LatticeExprNode LEN = max( ggSSub );
 	      planeMax =  LEN.getFloat();

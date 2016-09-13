@@ -48,22 +48,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // most cases).  
     // <group>
     //
-    AWProjectWBFT(Int nFacets, Long cachesize,
-		  CountedPtr<CFCache>& cfcache,
-		  CountedPtr<ConvolutionFunction>& cf,
-		  CountedPtr<VisibilityResamplerBase>& visResampler,
-		  Bool applyPointingOffset=True,
-		  Bool doPBCorr=True,
-		  Int tilesize=16, 
-		  Float paSteps=5.0, 
-		  Float pbLimit=5e-4,
-		  Bool usezero=False,
-		  Bool conjBeams_p=True,
-		  Bool doublePrecGrid=False);
+    AWProjectWBFT(casacore::Int nFacets, casacore::Long cachesize,
+		  casacore::CountedPtr<CFCache>& cfcache,
+		  casacore::CountedPtr<ConvolutionFunction>& cf,
+		  casacore::CountedPtr<VisibilityResamplerBase>& visResampler,
+		  casacore::Bool applyPointingOffset=true,
+		  casacore::Bool doPBCorr=true,
+		  casacore::Int tilesize=16, 
+		  casacore::Float paSteps=5.0, 
+		  casacore::Float pbLimit=5e-4,
+		  casacore::Bool usezero=false,
+		  casacore::Bool conjBeams_p=true,
+		  casacore::Bool doublePrecGrid=false);
     // </group>
     
-    // Construct from a Record containing the AWProjectWBFT state
-    AWProjectWBFT(const RecordInterface& stateRec);
+    // Construct from a casacore::Record containing the AWProjectWBFT state
+    AWProjectWBFT(const casacore::RecordInterface& stateRec);
     
     // Copy constructor
     AWProjectWBFT(const AWProjectWBFT &other):AWProjectFT() {operator=(other);};
@@ -73,14 +73,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     ~AWProjectWBFT() {};
 
-    virtual String name() const {return "AWProjectWBFT";};
+    virtual casacore::String name() const {return "AWProjectWBFT";};
 
 
-    Int findPointingOffsets(const VisBuffer& vb, Array<Float> &l_off, Array<Float> &m_off,
-			    Bool Evaluate);
+    casacore::Int findPointingOffsets(const VisBuffer& vb, casacore::Array<casacore::Float> &l_off, casacore::Array<casacore::Float> &m_off,
+			    casacore::Bool Evaluate);
     void normalizeAvgPB();
-    void normalizeAvgPB(ImageInterface<Complex>& /*inImage*/, ImageInterface<Float>& /*outImage*/) 
-    {throw(AipsError("AWPWBFT::normalizeAvgPB(Complex,Float)"));}
+    void normalizeAvgPB(casacore::ImageInterface<casacore::Complex>& /*inImage*/, casacore::ImageInterface<casacore::Float>& /*outImage*/) 
+    {throw(casacore::AipsError("AWPWBFT::normalizeAvgPB(casacore::Complex,casacore::Float)"));}
 
     //
     // This method is called from AWProjectFT to compute the
@@ -97,8 +97,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // below.
     //
     virtual void makeSensitivityImage(const VisBuffer& vb, 
-				      const ImageInterface<Complex>& imageTemplate,
-				      ImageInterface<Float>& sensitivityImage);
+				      const casacore::ImageInterface<casacore::Complex>& imageTemplate,
+				      casacore::ImageInterface<casacore::Float>& sensitivityImage);
     //
     // In AWProjectWBFT and its derivatives, sensitivity image is
     // computed by accumulating weight functions (images) during the
@@ -106,17 +106,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // overloaded in AWProjectWBFT and only issues a log message.
     //
     // The following method is used to Fourier transform normalize the
-    // accumulated weight images.  doFFTNorm when True, the FFT
+    // accumulated weight images.  doFFTNorm when true, the FFT
     // normalization (by pixel volume) is also done.
     //
-    virtual void makeSensitivityImage(Lattice<Complex>& wtImage,
-				      ImageInterface<Float>& sensitivityImage,
-				      const Matrix<Float>& sumWt=Matrix<Float>(),
-				      const Bool& doFFTNorm=True);
-    virtual void makeSensitivitySqImage(Lattice<Complex>& wtImage,
-					ImageInterface<Complex>& sensitivitySqImage,
-					const Matrix<Float>& sumWt=Matrix<Float>(),
-					const Bool& doFFTNorm=True);
+    virtual void makeSensitivityImage(casacore::Lattice<casacore::Complex>& wtImage,
+				      casacore::ImageInterface<casacore::Float>& sensitivityImage,
+				      const casacore::Matrix<casacore::Float>& sumWt=casacore::Matrix<casacore::Float>(),
+				      const casacore::Bool& doFFTNorm=true);
+    virtual void makeSensitivitySqImage(casacore::Lattice<casacore::Complex>& wtImage,
+					casacore::ImageInterface<casacore::Complex>& sensitivitySqImage,
+					const casacore::Matrix<casacore::Float>& sumWt=casacore::Matrix<casacore::Float>(),
+					const casacore::Bool& doFFTNorm=true);
 
     //
     // Method used to make normalized image from gridded visibilites.
@@ -126,7 +126,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // normalizeImage() which uses the sensitivty image computed by
     // makeSensitivtyImage().
     //
-    virtual ImageInterface<Complex>& getImage(Matrix<Float>&, Bool normalize=True);
+    virtual casacore::ImageInterface<casacore::Complex>& getImage(casacore::Matrix<casacore::Float>&, casacore::Bool normalize=true);
     //
     // Method used to convert the pixel value of the PB image, passed
     // as pbPixValue, to a value used for PB-normalization.
@@ -136,110 +136,110 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // (this value is typically the user-defined parameter in the
     // private member variable pbLimit_p).
     //
-    inline virtual Float pbFunc(const Float& /*pbPixValue*/, const Float& /*pbLimit*/) 
+    inline virtual casacore::Float pbFunc(const casacore::Float& /*pbPixValue*/, const casacore::Float& /*pbLimit*/) 
     {return  1.0;};
-    //   {Float tt=(pbPixValue);return  (abs(tt) >= pbLimit)?tt:1.0;};
+    //   {casacore::Float tt=(pbPixValue);return  (abs(tt) >= pbLimit)?tt:1.0;};
  
 
-   //    {Float tt=sqrt(pbPixValue);return  (abs(tt) >= pbLimit)?tt:1.0;};
+   //    {casacore::Float tt=sqrt(pbPixValue);return  (abs(tt) >= pbLimit)?tt:1.0;};
 
     virtual void finalizeToSky();
-    virtual void initializeToSky(ImageInterface<Complex>& image,  Matrix<Float>& weight,
+    virtual void initializeToSky(casacore::ImageInterface<casacore::Complex>& image,  casacore::Matrix<casacore::Float>& weight,
 				 const VisBuffer& vb);
 
-    void setObservatoryLocation(const MPosition& mLocation) {mLocation_p=mLocation;};
+    void setObservatoryLocation(const casacore::MPosition& mLocation) {mLocation_p=mLocation;};
 
-    virtual Bool verifyShapes(IPosition shape0, IPosition shape1)
-    {(void)shape0; (void)shape1;return False;};
+    virtual casacore::Bool verifyShapes(casacore::IPosition shape0, casacore::IPosition shape1)
+    {(void)shape0; (void)shape1;return false;};
 
     //
-    // Returns True if accumulation during gridding to compute the
+    // Returns true if accumulation during gridding to compute the
     // average PB must be done.
     //
-    virtual Bool computeAvgPB(const Double& /*actualPA*/, const Double& /*lastPAUsedForWtImg*/) 
-    {return (avgPBReady_p==False);};
+    virtual casacore::Bool computeAvgPB(const casacore::Double& /*actualPA*/, const casacore::Double& /*lastPAUsedForWtImg*/) 
+    {return (avgPBReady_p==false);};
 
-    // virtual void setMiscInfo(const Int qualifier)
+    // virtual void setMiscInfo(const casacore::Int qualifier)
     // {sensitivityPatternQualifier_p=qualifier;}
-    //    {qualifier_p = qualifier;taylorQualifier_p = "_MFS_"+String::toString(qualifier_p)+"_";};
+    //    {qualifier_p = qualifier;taylorQualifier_p = "_MFS_"+casacore::String::toString(qualifier_p)+"_";};
 
-    //  virtual void ComputeResiduals(VisBuffer&vb, Bool useCorrected) {};
-    virtual void setCFCache(CountedPtr<CFCache>& cfc, const Bool resetCFC=True);
+    //  virtual void ComputeResiduals(VisBuffer&vb, casacore::Bool useCorrected) {};
+    virtual void setCFCache(casacore::CountedPtr<CFCache>& cfc, const casacore::Bool resetCFC=true);
 
   protected:
-    virtual void ftWeightImage(Lattice<Complex>& wtImage, 
-			       const Matrix<Float>& sumWt,
-			       const Bool& doFFTNorm);
+    virtual void ftWeightImage(casacore::Lattice<casacore::Complex>& wtImage, 
+			       const casacore::Matrix<casacore::Float>& sumWt,
+			       const casacore::Bool& doFFTNorm);
 
-    virtual void resampleDataToGrid(Array<Complex>& griddedData,VBStore& vbs, 
-				    const VisBuffer& vb, Bool& dopsf);
-    virtual void resampleDataToGrid(Array<DComplex>& griddedData,VBStore& vbs, 
-				    const VisBuffer& vb, Bool& dopsf);
+    virtual void resampleDataToGrid(casacore::Array<casacore::Complex>& griddedData,VBStore& vbs, 
+				    const VisBuffer& vb, casacore::Bool& dopsf);
+    virtual void resampleDataToGrid(casacore::Array<casacore::DComplex>& griddedData,VBStore& vbs, 
+				    const VisBuffer& vb, casacore::Bool& dopsf);
     //    virtual void resampleGridToData(VBStore& vbs, const VisBuffer& vb);
-    void resampleCFToGrid(Array<Complex>& wtsGrid, 
+    void resampleCFToGrid(casacore::Array<casacore::Complex>& wtsGrid, 
 			  VBStore& vbs, const VisBuffer& vb);
 
-    Bool avgPBReady_p,resetPBs_p, wtImageFTDone_p;
+    casacore::Bool avgPBReady_p,resetPBs_p, wtImageFTDone_p;
 
   private:
-    String tt_pp;
-    Vector<Int> fieldIds_p;
-    TempImage<Complex> griddedWeights, griddedConjWeights;
+    casacore::String tt_pp;
+    casacore::Vector<casacore::Int> fieldIds_p;
+    casacore::TempImage<casacore::Complex> griddedWeights, griddedConjWeights;
     CFStore rotatedCFWts_p;
-    Float pbNorm;
-    CountedPtr<VisibilityResamplerBase> visResamplerWt_p;
+    casacore::Float pbNorm;
+    casacore::CountedPtr<VisibilityResamplerBase> visResamplerWt_p;
     // //
     // // These ugly methods (ugly due to their flirtation with FORTRAN) should go!
     // //
-    // virtual void runFortranGet(Matrix<Double>& uvw,Vector<Double>& dphase,
-    // 			       Cube<Complex>& visdata,
-    // 			       IPosition& s,
-    // 			       Int& Conj,
-    // 			       Cube<Int>& flags,Vector<Int>& rowFlags,
-    // 			       Int& rownr,Vector<Double>& actualOffset,
-    // 			       Array<Complex>* dataPtr,
-    // 			       Int& aNx, Int& aNy, Int& npol, Int& nchan,
-    // 			       VisBuffer& vb,Int& Nant_p, Int& scanNo,
-    // 			       Double& sigma,
-    // 			       Array<Float>& raoffsets,
-    // 			       Array<Float>& decoffsets,
-    // 			       Double area,
-    // 			       Int& doGrad,Int paIndex);
-    // virtual void runFortranPut(Matrix<Double>& uvw,Vector<Double>& dphase,
-    // 			       const Complex& visdata_p,
-    // 			       IPosition& s,
-    // 			       Int& Conj,
-    // 			       Cube<Int>& flags,Vector<Int>& rowFlags,
-    // 			       const Matrix<Float>& weight,
-    // 			       Int& rownr,Vector<Double>& actualOffset,
-    // 			       Array<Complex>& dataPtr,
-    // 			       Int& aNx, Int& aNy, Int& npol, Int& nchan,
-    // 			       const VisBuffer& vb,Int& Nant_p, Int& scanNo,
-    // 			       Double& sigma,
-    // 			       Array<Float>& raoffsets,
-    // 			       Array<Float>& decoffsets,
-    // 			       Matrix<Double>& sumWeight,
-    // 			       Double& area,
-    // 			       Int& doGrad,
-    // 			       Int& doPSF,Int paIndex);
-    // virtual void runFortranGetGrad(Matrix<Double>& uvw,Vector<Double>& dphase,
-    // 				   Cube<Complex>& visdata,
-    // 				   IPosition& s,
-    // 				   Cube<Complex>& gradVisAzData,
-    // 				   Cube<Complex>& gradVisElData,
-    // 				   Int& Conj,
-    // 				   Cube<Int>& flags,Vector<Int>& rowFlags,
-    // 				   Int& rownr,Vector<Double>& actualOffset,
-    // 				   Array<Complex>* dataPtr,
-    // 				   Int& aNx, Int& aNy, Int& npol, Int& nchan,
-    // 				   VisBuffer& vb,Int& Nant_p, Int& scanNo,
-    // 				   Double& sigma,
-    // 				   Array<Float>& l_off,
-    // 				   Array<Float>& m_off,
-    // 				   Double area,
-    // 				   Int& doGrad,
-    // 				   Int paIndex);
-    Bool oneTimeMessage_p;
+    // virtual void runFortranGet(casacore::Matrix<casacore::Double>& uvw,casacore::Vector<casacore::Double>& dphase,
+    // 			       casacore::Cube<casacore::Complex>& visdata,
+    // 			       casacore::IPosition& s,
+    // 			       casacore::Int& Conj,
+    // 			       casacore::Cube<casacore::Int>& flags,casacore::Vector<casacore::Int>& rowFlags,
+    // 			       casacore::Int& rownr,casacore::Vector<casacore::Double>& actualOffset,
+    // 			       casacore::Array<casacore::Complex>* dataPtr,
+    // 			       casacore::Int& aNx, casacore::Int& aNy, casacore::Int& npol, casacore::Int& nchan,
+    // 			       VisBuffer& vb,casacore::Int& Nant_p, casacore::Int& scanNo,
+    // 			       casacore::Double& sigma,
+    // 			       casacore::Array<casacore::Float>& raoffsets,
+    // 			       casacore::Array<casacore::Float>& decoffsets,
+    // 			       casacore::Double area,
+    // 			       casacore::Int& doGrad,casacore::Int paIndex);
+    // virtual void runFortranPut(casacore::Matrix<casacore::Double>& uvw,casacore::Vector<casacore::Double>& dphase,
+    // 			       const casacore::Complex& visdata_p,
+    // 			       casacore::IPosition& s,
+    // 			       casacore::Int& Conj,
+    // 			       casacore::Cube<casacore::Int>& flags,casacore::Vector<casacore::Int>& rowFlags,
+    // 			       const casacore::Matrix<casacore::Float>& weight,
+    // 			       casacore::Int& rownr,casacore::Vector<casacore::Double>& actualOffset,
+    // 			       casacore::Array<casacore::Complex>& dataPtr,
+    // 			       casacore::Int& aNx, casacore::Int& aNy, casacore::Int& npol, casacore::Int& nchan,
+    // 			       const VisBuffer& vb,casacore::Int& Nant_p, casacore::Int& scanNo,
+    // 			       casacore::Double& sigma,
+    // 			       casacore::Array<casacore::Float>& raoffsets,
+    // 			       casacore::Array<casacore::Float>& decoffsets,
+    // 			       casacore::Matrix<casacore::Double>& sumWeight,
+    // 			       casacore::Double& area,
+    // 			       casacore::Int& doGrad,
+    // 			       casacore::Int& doPSF,casacore::Int paIndex);
+    // virtual void runFortranGetGrad(casacore::Matrix<casacore::Double>& uvw,casacore::Vector<casacore::Double>& dphase,
+    // 				   casacore::Cube<casacore::Complex>& visdata,
+    // 				   casacore::IPosition& s,
+    // 				   casacore::Cube<casacore::Complex>& gradVisAzData,
+    // 				   casacore::Cube<casacore::Complex>& gradVisElData,
+    // 				   casacore::Int& Conj,
+    // 				   casacore::Cube<casacore::Int>& flags,casacore::Vector<casacore::Int>& rowFlags,
+    // 				   casacore::Int& rownr,casacore::Vector<casacore::Double>& actualOffset,
+    // 				   casacore::Array<casacore::Complex>* dataPtr,
+    // 				   casacore::Int& aNx, casacore::Int& aNy, casacore::Int& npol, casacore::Int& nchan,
+    // 				   VisBuffer& vb,casacore::Int& Nant_p, casacore::Int& scanNo,
+    // 				   casacore::Double& sigma,
+    // 				   casacore::Array<casacore::Float>& l_off,
+    // 				   casacore::Array<casacore::Float>& m_off,
+    // 				   casacore::Double area,
+    // 				   casacore::Int& doGrad,
+    // 				   casacore::Int paIndex);
+    casacore::Bool oneTimeMessage_p;
   };
 } //# NAMESPACE CASA - END
 

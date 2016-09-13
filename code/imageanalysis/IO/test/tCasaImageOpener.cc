@@ -34,6 +34,7 @@
 #include <casa/OS/Directory.h>
 #include <casa/namespace.h>
 using namespace std;
+using namespace casacore;
 using namespace casa;
 Bool copyImages(const String& dirname, Vector<String>& images){
   
@@ -55,7 +56,7 @@ Bool copyImages(const String& dirname, Vector<String>& images){
     
   }
 
-  return True;
+  return true;
 
 }
 
@@ -68,7 +69,7 @@ Bool testImage(const String& image){
   AlwaysAssertExit(dtype==TpFloat);
   AlwaysAssertExit((latt->shape()[3])==2);
 
-  return True;
+  return true;
 }
 int main() {
   try {
@@ -92,8 +93,8 @@ int main() {
 			      "tImageConcat_tmp1.img");
 	PagedImage<Float> im2(shape, CoordinateUtil::defaultCoords4D(),
 			      "tImageConcat_tmp2.img");
-	im1.makeMask("mask0", True, True, True, True); 
-	im2.makeMask("mask0", True, True, True, False);
+	im1.makeMask("mask0", true, true, true, true); 
+	im2.makeMask("mask0", true, true, true, false);
 	im1.put(a1); 
 	im2.put(a2);
 
@@ -108,9 +109,9 @@ int main() {
 	
 	// Concatenate along Spectral axis
 
-	ImageConcat<Float> lc (3, True);
-	lc.setImage(im1, True);
-	lc.setImage(im2, True);
+	ImageConcat<Float> lc (3, true);
+	lc.setImage(im1, true);
+	lc.setImage(im2, true);
 	
 	// Find output shape
 
@@ -120,7 +121,7 @@ int main() {
 	IPosition outShape=lc.shape();
 	PagedImage<Float> ml3(outShape, CoordinateUtil::defaultCoords4D(),
 			      "tImageConcat_tmp3.img");
-	ml3.makeMask("mask0", True, True, True, True);
+	ml3.makeMask("mask0", true, true, true, true);
 	
 	// Copy to output
 	

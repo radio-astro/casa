@@ -56,17 +56,17 @@ public:
 	//***********************************************************************
 
 	//Worker classes can store and error message.
-	virtual void setError( const String& errorMessage );
+	virtual void setError( const casacore::String& errorMessage );
 	// Allows the cache to set the status.
-	virtual void setStatus(const String& status);
+	virtual void setStatus(const casacore::String& status);
 	virtual void setProgress(unsigned int progress);
 	virtual void finished( );
 	// These signals are used to update the QtProgressWidget across different
 	// threads.  They shouldn't need to be used by other classes, even
 	// children.
 	// <group>
-	virtual void initializeProgress(const String& operationName);
-	virtual void setProgress(unsigned int progress, const String& status);
+	virtual void initializeProgress(const casacore::String& operationName);
+	virtual void setProgress(unsigned int progress, const casacore::String& status);
 	virtual void finishProgress();
 
 	// </group>
@@ -106,9 +106,9 @@ public:
 	bool getResult() const;
 
 	//Returns any error from the background operation.
-	String getError() const;
+	casacore::String getError() const;
 	bool isErrorWarning() const;
-	String getErrorTitle() const;
+	casacore::String getErrorTitle() const;
 	PlotMSPlot* getPlot();
 protected:
 
@@ -119,8 +119,8 @@ protected:
 	volatile bool wasCanceled_;
 
 	//Holds error messages
-	String error;
-	String errorTitle;
+	casacore::String error;
+	casacore::String errorTitle;
 	bool errorWarning;
 
 

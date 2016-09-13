@@ -46,9 +46,9 @@ void plotLattice(Lattice<Float>* latp, const String& title);
 
 int main()
 {
-  Bool anyFailures = False;
+  Bool anyFailures = false;
   {
-    Bool failed = False;
+    Bool failed = false;
     const uInt moddims = 1, modSize = 6; 
     const uInt dirtydims = moddims, dirtySize = modSize;
     const uInt psfdims = 1, psfSize = 4;
@@ -103,9 +103,9 @@ int main()
 
     ConvEqn.evaluate(result, myModel);
     // cout << "Evaluate:" << result << endl;
-    if (allNearAbs(result.get(), dirty.get(), Double(1E-5)) == False){
+    if (allNearAbs(result.get(), dirty.get(), Double(1E-5)) == false){
       cout << "Failed";
-      failed = True;
+      failed = true;
     }
     else
       cout << "Passed";
@@ -117,9 +117,9 @@ int main()
       //      cout << "Residual:" << residual << endl;
       TempLattice<Float> zero(residual.shape());
       zero.set(0.0f);
-      if (allNearAbs(residual.get(), zero.get(), Double(1E-5)) == False){
+      if (allNearAbs(residual.get(), zero.get(), Double(1E-5)) == false){
 	cout << "Failed";
-	failed = True;
+	failed = true;
       }
       else
 	cout << "Passed";
@@ -135,24 +135,24 @@ int main()
       zero.set(0.0f);
       if (abs(chisq) > 1e-5){
 	cout << "Failed on residual chisq";
-	failed = True;
+	failed = true;
       }
-      if (allNearAbs(residual.get(), zero.get(), Double(1E-5)) == False){
+      if (allNearAbs(residual.get(), zero.get(), Double(1E-5)) == false){
 	cout << "Failed";
-	failed = True;
+	failed = true;
       }
       if (!failed) {
 	cout << "Passed";
 	cout << " the 1D test (residual with chis2)" << endl;
       }
     }
-    if (failed) anyFailures = True;
+    if (failed) anyFailures = true;
   }
 
 
 
-  if (anyFailures == False) {
-    Bool failed = False;
+  if (anyFailures == false) {
+    Bool failed = false;
     const uInt moddims = 2, modSize = 12; 
     const uInt dirtydims = moddims, dirtySize = modSize;
     const uInt psfdims = 2, psfSize = 12;
@@ -203,9 +203,9 @@ int main()
     TempLattice<Float> result(model.shape());
     ConvEqn.evaluate(result, myModel);
     //    cout << "Evaluate:" << result << endl;
-    if (allNearAbs(result.get(), dirty.get(), Double(1E-5)) == False){
+    if (allNearAbs(result.get(), dirty.get(), Double(1E-5)) == false){
       cout << "Failed";
-      failed = True;
+      failed = true;
     }
     else
       cout << "Passed";
@@ -217,20 +217,20 @@ int main()
       //      cout << "Residual:" << residual << endl;
       TempLattice<Float> zero(residual.shape());
       zero.set(0.0);
-      if (allNearAbs(residual.get(), zero.get(), Double(1E-5)) == False){
+      if (allNearAbs(residual.get(), zero.get(), Double(1E-5)) == false){
 	cout << "Failed";
-	failed = True;
+	failed = true;
       }
       else
 	cout << "Passed";
       cout << " the multiple 1D test (residual)" << endl;
     }
-    if (failed) anyFailures = True;
+    if (failed) anyFailures = true;
   }
 
 
-  if (anyFailures == False) {
-    Bool failed = False;
+  if (anyFailures == false) {
+    Bool failed = false;
     const uInt moddims = 2, modSize = 12; 
     const uInt dirtydims = moddims, dirtySize = modSize;
     const uInt psfdims = 2, psfSize = 12;
@@ -279,9 +279,9 @@ int main()
     TempLattice<Float> result(model.shape());
     ConvEqn.evaluate( result, myModel);
     //    cout << "Evaluate:" << result << endl;
-    if (allNearAbs(result.get(), dirty.get(), Double(1E-5)) == False){
+    if (allNearAbs(result.get(), dirty.get(), Double(1E-5)) == false){
       cout << "Failed";
-      failed = True;
+      failed = true;
     }
     else
       cout << "Passed";
@@ -293,15 +293,15 @@ int main()
       //      cout << "Residual:" << residual << endl;
       TempLattice<Float> zero(residual.shape());
       zero.set(0.0);
-      if (allNearAbs(residual.get(), zero.get(), Double(1E-5)) == False){
+      if (allNearAbs(residual.get(), zero.get(), Double(1E-5)) == false){
 	cout << "Failed";
-	failed = True;
+	failed = true;
       }
       else
 	cout << "Passed";
       cout << " the 2D test (residual)" << endl;
     }
-    if (failed) anyFailures = True;
+    if (failed) anyFailures = true;
 
 
     // Verify shift evaluate with Lattices
@@ -331,7 +331,7 @@ int main()
     ConvEqn.evaluate(psfPatch, psf.shape()/2, Float(1.0), psf.shape()/2);
     ConvEqn.evaluate(psfPatch, psf.shape()/2, Float(2.0), psf.shape()/2);
 
-    if (failed) anyFailures = True;
+    if (failed) anyFailures = true;
 
   }
   if (anyFailures) 

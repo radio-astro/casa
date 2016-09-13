@@ -61,7 +61,7 @@ namespace casa {
 // <todo>
 // </todo>
 
-class CasaImageBeamSet : public ImageBeamSet {
+class CasaImageBeamSet : public casacore::ImageBeamSet {
 public:
 
 	// Construct an empty beam set.
@@ -73,27 +73,27 @@ public:
 	// If the image has 0 spectral channels or stokes, the corresponding
 	// length of the axis in the provided matrix should be 1.
 	CasaImageBeamSet(
-		const Matrix<GaussianBeam>& beams
+		const casacore::Matrix<casacore::GaussianBeam>& beams
 	);
 
 	// construct an CasaImageBeamSet representing a single beam which is valid for
 	// all channels and stokes
-	CasaImageBeamSet(const GaussianBeam& beam);
+	CasaImageBeamSet(const casacore::GaussianBeam& beam);
 
     // Create an CasaImageBeamSet of the specified shape with all
     // GaussianBeams initialized to <src>beam</src>.
-    CasaImageBeamSet(uInt nchan, uInt nstokes, const GaussianBeam& beam=GaussianBeam::NULL_BEAM);
+    CasaImageBeamSet(casacore::uInt nchan, casacore::uInt nstokes, const casacore::GaussianBeam& beam=casacore::GaussianBeam::NULL_BEAM);
 
     // The copy constructor (reference semantics).
     CasaImageBeamSet(const CasaImageBeamSet& other);
-    CasaImageBeamSet(const ImageBeamSet& other);
+    CasaImageBeamSet(const casacore::ImageBeamSet& other);
 
 	~CasaImageBeamSet();
 
     // Assignment can change the shape (copy semantics).
 	CasaImageBeamSet& operator=(const CasaImageBeamSet& other);
 
-    static const String& className();
+    static const casacore::String& className();
 
 	// Get a beam to which all other beams in the set can be convolved.
 	// If all other beams can be convolved to the maximum area beam in the set, that beam will be returned.
@@ -101,18 +101,18 @@ public:
 	// all beams in the set can be convolved if all but one of the beams in the set can be convolved to the beam in the set with the
 	// largest area. Otherwise, the returned beam may or may not be the smallest possible beam to which all the beams in the set
 	// can be convolved.
-	GaussianBeam getCommonBeam() const;
+	casacore::GaussianBeam getCommonBeam() const;
 
 private:
 
 	static void _transformEllipseByScaling(
-		Double& transformedMajor, Double& transformedMinor,
-		Double& transformedPa, Double major, Double minor,
-		Double pa, Double xScaleFactor, Double yScaleFactor
+		casacore::Double& transformedMajor, casacore::Double& transformedMinor,
+		casacore::Double& transformedPa, casacore::Double major, casacore::Double minor,
+		casacore::Double pa, casacore::Double xScaleFactor, casacore::Double yScaleFactor
 	);
 };
 
-ostream &operator<<(ostream &os, const CasaImageBeamSet& beamSet);
+std::ostream &operator<<(std::ostream &os, const CasaImageBeamSet& beamSet);
 
 }
 

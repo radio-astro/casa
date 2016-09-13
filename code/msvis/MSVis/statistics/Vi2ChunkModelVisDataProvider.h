@@ -38,7 +38,7 @@
 namespace casa {
 
 //
-// Template class for model visibilities data provider. "DataIterator" template
+// casacore::Template class for model visibilities data provider. "DataIterator" template
 // parameter is used to select a transformation for the visibilities (amplitude
 // using Vi2StatsAmplitudeIterator, phase using Vi2StatsPhaseIterator, etc).
 //
@@ -49,15 +49,15 @@ class Vi2ChunkModelVisDataProvider final
 public:
 	Vi2ChunkModelVisDataProvider(
 		vi::VisibilityIterator2 *vi2,
-		Bool omit_flagged_data,
-		Bool use_data_weights)
+		casacore::Bool omit_flagged_data,
+		casacore::Bool use_data_weights)
 		: Vi2ChunkWeightsCubeDataProvider<DataIterator>(
 			vi2,
 			vi::VisBufferComponent2::VisibilityCubeModel,
 			omit_flagged_data,
 			use_data_weights) {}
 
-	const Cube<Complex>& dataArray() {
+	const casacore::Cube<casacore::Complex>& dataArray() {
 		return Vi2ChunkWeightsCubeDataProvider<DataIterator>::
 			vi2->getVisBuffer()->visCubeModel();
 	}

@@ -82,24 +82,24 @@ class ROCalHistoryColumns
   virtual ~ROCalHistoryColumns() {};
 
   // Read-only column accessors
-  const ROScalarColumn<String>& calParms() const {return calParms_p;};
-  const ROScalarColumn<String>& calTables() const {return calTables_p;};
-  const ROScalarColumn<String>& calSelect() const {return calSelect_p;};
-  const ROScalarColumn<String>& calNotes() const {return calNotes_p;};
+  const casacore::ROScalarColumn<casacore::String>& calParms() const {return calParms_p;};
+  const casacore::ROScalarColumn<casacore::String>& calTables() const {return calTables_p;};
+  const casacore::ROScalarColumn<casacore::String>& calSelect() const {return calSelect_p;};
+  const casacore::ROScalarColumn<casacore::String>& calNotes() const {return calNotes_p;};
 
  protected:
   // Prohibit public use of the null constructor, which
   // does not produce a usable object.
   ROCalHistoryColumns() {};
 
-  // Return a CalTable cal_history subtable as a Table reference. 
+  // Return a CalTable cal_history subtable as a casacore::Table reference. 
   // Utilizes friendship relationship with class CalTable.
-  const Table& calHistoryAsTable(const CalTable& calTable) 
+  const casacore::Table& calHistoryAsTable(const CalTable& calTable) 
     {return calTable.calHistoryAsTable();}
 
   // Attach a table column accessor
-  void attach (const CalTable& calTable, ROTableColumn& tabCol, 
-	       MSCalEnums::colDef colEnum, const Bool& optional = False);
+  void attach (const CalTable& calTable, casacore::ROTableColumn& tabCol, 
+	       MSCalEnums::colDef colEnum, const casacore::Bool& optional = false);
 
  private:
   // Prohibit copy constructor and assignment operator 
@@ -107,10 +107,10 @@ class ROCalHistoryColumns
   ROCalHistoryColumns& operator= (const ROCalHistoryColumns&);
 
   // Private column accessors
-  ROScalarColumn<String> calParms_p;
-  ROScalarColumn<String> calTables_p;
-  ROScalarColumn<String> calSelect_p;
-  ROScalarColumn<String> calNotes_p;
+  casacore::ROScalarColumn<casacore::String> calParms_p;
+  casacore::ROScalarColumn<casacore::String> calTables_p;
+  casacore::ROScalarColumn<casacore::String> calSelect_p;
+  casacore::ROScalarColumn<casacore::String> calNotes_p;
 };
 
 // <summary> 
@@ -157,24 +157,24 @@ class CalHistoryColumns
   virtual ~CalHistoryColumns() {};
 
   // Read-write column accessors
-  ScalarColumn<String>& calParms() {return calParms_p;};
-  ScalarColumn<String>& calTables() {return calTables_p;};
-  ScalarColumn<String>& calSelect() {return calSelect_p;};
-  ScalarColumn<String>& calNotes() {return calNotes_p;};
+  casacore::ScalarColumn<casacore::String>& calParms() {return calParms_p;};
+  casacore::ScalarColumn<casacore::String>& calTables() {return calTables_p;};
+  casacore::ScalarColumn<casacore::String>& calSelect() {return calSelect_p;};
+  casacore::ScalarColumn<casacore::String>& calNotes() {return calNotes_p;};
 
  protected:
   // Prohibit public use of the null constructor, which
   // does not produce a usable object.
   CalHistoryColumns() {};
 
-  // Return a CalTable cal_history subtable as a Table reference. 
+  // Return a CalTable cal_history subtable as a casacore::Table reference. 
   // Utilizes friendship relationship with class CalTable.
-  Table& calHistoryAsTable(CalTable& calTable) 
+  casacore::Table& calHistoryAsTable(CalTable& calTable) 
     {return calTable.calHistoryAsTable();}
 
   // Attach a table column accessor
-  void attach (CalTable& calTable, ROTableColumn& tabCol, 
-	       MSCalEnums::colDef colEnum, const Bool& optional = False);
+  void attach (CalTable& calTable, casacore::ROTableColumn& tabCol, 
+	       MSCalEnums::colDef colEnum, const casacore::Bool& optional = false);
 
  private:
   // Prohibit copy constructor and assignment operator 
@@ -182,10 +182,10 @@ class CalHistoryColumns
   CalHistoryColumns& operator= (const CalHistoryColumns&);
 
   // Private column accessors
-  ScalarColumn<String> calParms_p;
-  ScalarColumn<String> calTables_p;
-  ScalarColumn<String> calSelect_p;
-  ScalarColumn<String> calNotes_p;
+  casacore::ScalarColumn<casacore::String> calParms_p;
+  casacore::ScalarColumn<casacore::String> calTables_p;
+  casacore::ScalarColumn<casacore::String> calSelect_p;
+  casacore::ScalarColumn<casacore::String> calNotes_p;
 
 };
 

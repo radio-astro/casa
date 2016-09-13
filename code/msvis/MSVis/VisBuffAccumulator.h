@@ -76,8 +76,8 @@ class VisBuffAccumulator
 public:
   // Construct from the number of antennas, the averaging interval and
   // the pre-normalization flag
-  VisBuffAccumulator (const Int& nAnt, const Double& interval, 
-		      const Bool& prenorm, const Bool fillModel=True);
+  VisBuffAccumulator (const casacore::Int& nAnt, const casacore::Double& interval, 
+		      const casacore::Bool& prenorm, const casacore::Bool fillModel=true);
 
   // Null destructor
   ~VisBuffAccumulator();
@@ -98,11 +98,11 @@ public:
   CalVisBuffer& aveCalVisBuff() { return avBuf_p; }
 
   // Global timestamp info
-  Double& timeStamp() { return globalTime_p; };
-  Double& timeStampWt() { return globalTimeWt_p; };
+  casacore::Double& timeStamp() { return globalTime_p; };
+  casacore::Double& timeStampWt() { return globalTimeWt_p; };
 
   // The number of VisBuffers that have been accumulated.
-  uInt nBuf() {return nBuf_p;}
+  casacore::uInt nBuf() {return nBuf_p;}
 
   // Return a map from row numbers in the VisBuffer returned by aveVisBuff() or
   // aveCalVisBuff() to row numbers in the input VisBuffer.  Only useful if
@@ -110,20 +110,20 @@ public:
   // needs (i.e. all the input VisBuffers had same set of antennas and the
   // metadata you want also matches).  hurl controls whether an exception will
   // be thrown if nBuf() != 1.  Unfilled rows point to -1.
-  const Vector<Int>& outToInRow(const Bool hurl=true){
+  const casacore::Vector<casacore::Int>& outToInRow(const casacore::Bool hurl=true){
     if(hurl && nBuf_p != 1)
       throw_err("outToInRow", "The output to input row map is unreliable");
     return outToInRow_p;
   }
 
-  void setTVIDebug(Bool debug) {tvi_debug = debug;}
+  void setTVIDebug(bool debug) {tvi_debug = debug;}
 
 protected:
   // Averaging buffer
   CalVisBuffer avBuf_p;
 
   // Number of correlations and channels
-  Int nCorr_p, nChan_p;
+  casacore::Int nCorr_p, nChan_p;
 
 private:
   // Prohibit null constructor, copy constructor and assignment for now
@@ -132,60 +132,60 @@ private:
   VisBuffAccumulator (const VisBuffAccumulator&);
 
   // Diagnostic printing level
-  Int& prtlev() { return prtlev_; };
+  casacore::Int& prtlev() { return prtlev_; };
 
   // Initialize the next accumulation interval
-  void initialize(const Bool& copydata);
+  void initialize(const casacore::Bool& copydata);
 
   // Normalize the current accumulation
   void normalize();
 
   // Hash function to return the row offset for an interferometer (ant1, ant2)
-  Int hashFunction (const Int& ant1, const Int& ant2);
+  casacore::Int hashFunction (const casacore::Int& ant1, const casacore::Int& ant2);
 
   // Shuffle error handling elsewhere in an attempt to let the calling function
   // be efficient and inlinable.
-  void throw_err(const String& origin, const String &msg);
+  void throw_err(const casacore::String& origin, const casacore::String &msg);
 
   // Number of antennas
-  Int nAnt_p;
+  casacore::Int nAnt_p;
 
   // Averaging interval
-  Double interval_p;
+  casacore::Double interval_p;
 
   // Pre-normalization flag
-  Bool prenorm_p;
+  casacore::Bool prenorm_p;
 
   // Diagnostic print level
-  Int prtlev_;
+  casacore::Int prtlev_;
 
   // How many VisBuffers have been accumulated.
-  uInt nBuf_p;
+  casacore::uInt nBuf_p;
 
-  Bool fillModel_p;     // Whether or not to accumulate MODEL_DATA
+  casacore::Bool fillModel_p;     // Whether or not to accumulate MODEL_DATA
 
   // End of initialization list
 
   // Per-interval timestamp averaging
-  Double aveTime_p;
-  Double aveTimeWt_p;
+  casacore::Double aveTime_p;
+  casacore::Double aveTimeWt_p;
 
   // Global timestamp average
-  Double globalTime_p;
-  Double globalTimeWt_p;
+  casacore::Double globalTime_p;
+  casacore::Double globalTimeWt_p;
 
   // Start time and row of current accumulation
-  Double tStart_p;
-  Int avrow_p;
+  casacore::Double tStart_p;
+  casacore::Int avrow_p;
 
   // Flag to mark the first accumulation interval
-  Bool firstInterval_p;
+  casacore::Bool firstInterval_p;
   
   // A map from avBuf_p's row numbers to row numbers in the VisBuffer used to
   // fill avBuf_p.  Only useful if nBuf_p == 1.  Unfilled rows point to -1.
-  Vector<Int> outToInRow_p;
+  casacore::Vector<casacore::Int> outToInRow_p;
 
-  Bool tvi_debug;
+  bool tvi_debug;
 };
 
 

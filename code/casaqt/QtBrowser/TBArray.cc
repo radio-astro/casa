@@ -29,6 +29,7 @@
 #include <casaqt/QtBrowser/TBField.h>
 #include <casaqt/QtBrowser/TBKeyword.h>
 
+using namespace casacore;
 namespace casa {
 
 /////////////////////////

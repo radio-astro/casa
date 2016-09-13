@@ -31,11 +31,12 @@
 #include <display/DisplayEvents/PCRefreshEvent.h>
 #include <display/DisplayEvents/PCTestPattern.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Default Constructor Required
 	PCTestPattern::PCTestPattern() :
-		itsFirstTime(True),
+		itsFirstTime(true),
 		itsListLength(0),
 		itsImList(0) {
 	}
@@ -65,7 +66,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			        (pc->height() != itsHeight) ||
 			        (ev.reason() == Display::ColorTableChange) ||
 			        (ev.reason() == Display::ColormapChange)) {
-				itsFirstTime = False;
+				itsFirstTime = false;
 				itsWidth = pc->width();
 				itsHeight = pc->height();
 				uInt i;
@@ -200,7 +201,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			        (pc->height() != itsHeight) ||
 			        (ev.reason() == Display::ColorTableChange) ||
 			        (ev.reason() == Display::ColormapChange)) {
-				itsFirstTime = False;
+				itsFirstTime = false;
 				itsWidth = pc->width();
 				itsHeight = pc->height();
 				uInt i;
@@ -279,7 +280,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // (Required) copy constructor.
 	PCTestPattern::PCTestPattern(const PCTestPattern & other) :
 		PCRefreshEH(other),
-		itsFirstTime(True),
+		itsFirstTime(true),
 		itsListLength(0) {
 	}
 
@@ -288,7 +289,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if (this != &other) {
 			// below commented until PCRefreshEH has (required) copy assignment.
 			//PCRefreshEH::operator=(other);
-			itsFirstTime = True;
+			itsFirstTime = true;
 			itsListLength = 0;
 		}
 		return *this;

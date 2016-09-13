@@ -30,6 +30,7 @@
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
 #include <QDebug>
 
+using namespace casacore;
 namespace casa {
 
 ActionCacheLoad::ActionCacheLoad( Client* client )
@@ -162,4 +163,5 @@ bool ActionCacheLoad::loadAxes() {
 ActionCacheLoad::~ActionCacheLoad() {
 }
 
+using namespace casacore;
 } /* namespace casa */

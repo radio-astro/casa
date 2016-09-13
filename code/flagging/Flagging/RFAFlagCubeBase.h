@@ -61,26 +61,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 class RFAFlagCubeBase : public RFABase
 {
 public:
-  RFAFlagCubeBase  ( RFChunkStats &ch,const RecordInterface &parm );
+  RFAFlagCubeBase  ( RFChunkStats &ch,const casacore::RecordInterface &parm );
   virtual ~RFAFlagCubeBase ();
   
-  virtual uInt estimateMemoryUse ();  
-  virtual Bool newChunk ( Int &maxmem );
+  virtual casacore::uInt estimateMemoryUse ();  
+  virtual casacore::Bool newChunk ( casacore::Int &maxmem );
   virtual void endChunk ();
   virtual void startData (bool verbose);
   virtual void startDry (bool verbose);
   virtual void startFlag (bool verbose);
-  virtual IterMode iterTime (uInt it);
-  virtual IterMode iterDry  (uInt it);
-  virtual void iterFlag     (uInt it);
+  virtual IterMode iterTime (casacore::uInt it);
+  virtual IterMode iterDry  (casacore::uInt it);
+  virtual void iterFlag     (casacore::uInt it);
   virtual IterMode endData  ();
   virtual IterMode endDry   ();
 
-  virtual String getDesc ();
-  virtual String getStats ();
-  static const RecordInterface & getDefaults ();
+  virtual casacore::String getDesc ();
+  virtual casacore::String getStats ();
+  static const casacore::RecordInterface & getDefaults ();
 
-  virtual String getID() {return String("");};
+  virtual casacore::String getID() {return casacore::String("");};
   
 protected:
 // mask of active correlations. Must be setup somewhere before calling

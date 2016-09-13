@@ -5,9 +5,9 @@ namespace casa {
 
 template<class T> ImageHanningSmoother<T>::ImageHanningSmoother(
 	const SPCIIT image,
-	const Record *const region,
-	const String& mask,
-	const String& outname, Bool overwrite
+	const casacore::Record *const region,
+	const casacore::String& mask,
+	const casacore::String& outname, casacore::Bool overwrite
 ) : Image1DSmoother<T>(
 		image, region, mask, outname, overwrite
 	) {
@@ -16,21 +16,21 @@ template<class T> ImageHanningSmoother<T>::ImageHanningSmoother(
 }
 
 template<class T> SPIIT ImageHanningSmoother<T>::_smooth(
-	const ImageInterface<T>& image
+	const casacore::ImageInterface<T>& image
 ) const {
-	IPosition inTileShape = image.niceCursorShape();
-	uInt axis = this->_getAxis();
-	TiledLineStepper inNav(image.shape(), inTileShape, axis);
-	RO_MaskedLatticeIterator<T> inIter(image, inNav);
-	IPosition sliceShape(image.ndim(), 1);
+	casacore::IPosition inTileShape = image.niceCursorShape();
+	casacore::uInt axis = this->_getAxis();
+	casacore::TiledLineStepper inNav(image.shape(), inTileShape, axis);
+	casacore::RO_MaskedLatticeIterator<T> inIter(image, inNav);
+	casacore::IPosition sliceShape(image.ndim(), 1);
 	sliceShape[axis] = image.shape()[axis];
-	Array<T> slice(sliceShape);
-	String empty;
-	Record emptyRecord;
+	casacore::Array<T> slice(sliceShape);
+	casacore::String empty;
+	casacore::Record emptyRecord;
 	SPIIT out(
 		SubImageFactory<T>::createImage(
 			image, empty, emptyRecord, empty,
-			False, False, False, False
+			false, false, false, false
 		)
 	);
 
@@ -41,53 +41,53 @@ template<class T> SPIIT ImageHanningSmoother<T>::_smooth(
 	}
 	if (this->_getDecimate()) {
 		// remove the first plane from _axis
-		IPosition shape = out->shape();
-		IPosition blc(shape.size(), 0);
+		casacore::IPosition shape = out->shape();
+		casacore::IPosition blc(shape.size(), 0);
 		blc[axis] = 1;
 		ImageDecimatorData::Function f = this->_getDecimationFunction();
-		IPosition trc = shape - 1;
+		casacore::IPosition trc = shape - 1;
 		if (shape[axis] % 2 == 0) {
 			trc[axis]--;
 		}
-		LCBox lcbox(blc, trc, shape);
-		Record x = lcbox.toRecord("");
+		casacore::LCBox lcbox(blc, trc, shape);
+		casacore::Record x = lcbox.toRecord("");
 		ImageDecimator<T> decimator(
 			SPIIT(out->cloneII()), &x,
-			String(""), String(""), False
+			casacore::String(""), casacore::String(""), false
 		);
 		decimator.setFunction(f);
 		decimator.setAxis(axis);
 		decimator.setFactor(2);
-		decimator.suppressHistoryWriting(True);
+		decimator.suppressHistoryWriting(true);
 		out = decimator.decimate();
 		this->addHistory(decimator.getHistory());
 	}
 	return out;
 }
 
-template<class T> Array<T> ImageHanningSmoother<T>::_hanningSmooth(
-	const Array<T>& in
+template<class T> casacore::Array<T> ImageHanningSmoother<T>::_hanningSmooth(
+	const casacore::Array<T>& in
 ) const {
 	// although the passed in array may have more than one
 	// dimensions, only one of those will have length > 1
-	uInt size = in.size();
-	Array<T> out(in.shape(), T(0.0));
+	casacore::uInt size = in.size();
+	casacore::Array<T> out(in.shape(), T(0.0));
 
-	uInt count = 1;
-	uInt end = size - 1;
-	typename Array<T>::const_iterator prev = in.begin();
-	typename Array<T>::const_iterator cur = in.begin();
+	casacore::uInt count = 1;
+	casacore::uInt end = size - 1;
+	typename casacore::Array<T>::const_iterator prev = in.begin();
+	typename casacore::Array<T>::const_iterator cur = in.begin();
 	cur++;
-	typename Array<T>::const_iterator next = in.begin();
+	typename casacore::Array<T>::const_iterator next = in.begin();
 	next++;
 	next++;
-	Bool skip = this->_getDecimate()
+	casacore::Bool skip = this->_getDecimate()
 		&& this->_getDecimationFunction() == ImageDecimatorData::COPY;
-	uInt inc = skip ? 2 : 1;
+	casacore::uInt inc = skip ? 2 : 1;
 	if (skip && size % 2 == 0) {
 		end--;
 	}
-	typename Array<T>::iterator outIter = out.begin();
+	typename casacore::Array<T>::iterator outIter = out.begin();
 	if (! skip) {
 		*outIter = 0.5*(*cur + *prev);
 	}
@@ -95,7 +95,7 @@ template<class T> Array<T> ImageHanningSmoother<T>::_hanningSmooth(
 	while (count < end) {
 		*outIter = 0.25*(*prev + *next)
 			+ 0.5 * (*cur);
-		for (uInt i=0; i<inc; i++) {
+		for (casacore::uInt i=0; i<inc; i++) {
 			outIter++;
 			prev++;
 			cur++;

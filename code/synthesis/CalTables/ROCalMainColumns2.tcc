@@ -36,52 +36,52 @@ template<class T>
 ROCalMainColumns2<T>::ROCalMainColumns2(const CalTable2& calTable) 
 {
 // Construct from a calibration table
-// Input:
+// casacore::Input:
 //    calTable         const CalTable&                Calibration table
 // Output to private data:
-//    time_p           ROScalarColumn<Double>&        Time
-//    timeMeas_p       ROScalarMeasColumn<MEpoch>&    Time as a Measure
-//    timeEP_p         ROScalarColumn<Double>&        Extended precision time
-//    timeEPQuant_p    ROScalarQuantColumn<Double>&   EP time as Quantum
-//    interval_p       ROScalarColumn<Double>&        Time interval
-//    intervalQuant_p  ROScalarQuantColumn<Double>&   Time interval as Quantum
-//    antenna1_p       ROScalarColumn<Int>&           Antenna 1
-//    feed1_p          ROScalarColumn<Int>&           Feed 1
-//    fieldId_p        ROScalarColumn<Int>&           Field id.
-//    arrayId_p        ROScalarColumn<Int>&           Array id.
-//    obsId_p          ROScalarColumn<Int>&           Observation id.
-//    scanNo_p         ROScalarColumn<Int>&           Scan no.
-//    processorId_p    ROScalarColumn<Int>&           Processor id.
-//    stateId_p        ROScalarColumn<Int>&           State id.
-//    phaseId_p        ROScalarColumn<Int>&           Phase id.
-//    pulsarBin_p      ROScalarColumn<Int>&           Pulsar bin
-//    pulsarGateId_p   ROScalarColumn<Int>&           Pulsar gate id.
-//    freqGrp_p        ROScalarColumn<Int>&           Frequency group
-//    freqGrpName_p    ROScalarColumn<String>&        Frequency group name
-//    fieldName_p      ROScalarColumn<String>&        Field name
-//    fieldCode_p      ROScalarColumn<String>&        Field code
-//    sourceName_p     ROScalarColumn<String>&        Source name
-//    sourceCode_p     ROScalarColumn<String>&        Source code
-//    calGrp_p         ROScalarColumn<Int>&           Calibration group
-//    gain_p           ROArrayColumn<Complex>&        Gain
-//    refAnt_p         ROArrayColumn<Int>&            Reference antenna
-//    refFeed_p        ROArrayColumn<Int>&            Reference feed
-//    refReceptor_p    ROArrayColumn<Int>&            Reference receptor
-//    refFreq_p        ROArrayColumn<Double>&         Reference frequency
-//    refFreqMeas_p    ROArrayMeasColumn<MFrequency>& Ref. freq. as Measure
-//    measFreqRef_p    ROScalarColumn<Int>&           Frequency measures ref.
-//    refDir_p         ROArrayColumn<Double>&         Reference direction
-//    refDirMeas_p     ROArrayMeasColumn<MDirection>& Ref. dir. as Measure
-//    measDirRef_p     ROScalarColumn<Int>&           Direction measures ref.
-//    calDescId_p      ROScalarColumn<Int>&           CAL_DESC id.
-//    calHistoryId_p   ROScalarColumn<Int>&           CAL_HISTORY id.
+//    time_p           casacore::ROScalarColumn<casacore::Double>&        Time
+//    timeMeas_p       casacore::ROScalarMeasColumn<casacore::MEpoch>&    casacore::Time as a Measure
+//    timeEP_p         casacore::ROScalarColumn<casacore::Double>&        Extended precision time
+//    timeEPQuant_p    casacore::ROScalarQuantColumn<casacore::Double>&   EP time as Quantum
+//    interval_p       casacore::ROScalarColumn<casacore::Double>&        casacore::Time interval
+//    intervalQuant_p  casacore::ROScalarQuantColumn<casacore::Double>&   casacore::Time interval as Quantum
+//    antenna1_p       casacore::ROScalarColumn<casacore::Int>&           Antenna 1
+//    feed1_p          casacore::ROScalarColumn<casacore::Int>&           Feed 1
+//    fieldId_p        casacore::ROScalarColumn<casacore::Int>&           Field id.
+//    arrayId_p        casacore::ROScalarColumn<casacore::Int>&           casacore::Array id.
+//    obsId_p          casacore::ROScalarColumn<casacore::Int>&           Observation id.
+//    scanNo_p         casacore::ROScalarColumn<casacore::Int>&           Scan no.
+//    processorId_p    casacore::ROScalarColumn<casacore::Int>&           Processor id.
+//    stateId_p        casacore::ROScalarColumn<casacore::Int>&           State id.
+//    phaseId_p        casacore::ROScalarColumn<casacore::Int>&           Phase id.
+//    pulsarBin_p      casacore::ROScalarColumn<casacore::Int>&           Pulsar bin
+//    pulsarGateId_p   casacore::ROScalarColumn<casacore::Int>&           Pulsar gate id.
+//    freqGrp_p        casacore::ROScalarColumn<casacore::Int>&           Frequency group
+//    freqGrpName_p    casacore::ROScalarColumn<casacore::String>&        Frequency group name
+//    fieldName_p      casacore::ROScalarColumn<casacore::String>&        Field name
+//    fieldCode_p      casacore::ROScalarColumn<casacore::String>&        Field code
+//    sourceName_p     casacore::ROScalarColumn<casacore::String>&        Source name
+//    sourceCode_p     casacore::ROScalarColumn<casacore::String>&        Source code
+//    calGrp_p         casacore::ROScalarColumn<casacore::Int>&           Calibration group
+//    gain_p           casacore::ROArrayColumn<casacore::Complex>&        Gain
+//    refAnt_p         casacore::ROArrayColumn<casacore::Int>&            Reference antenna
+//    refFeed_p        casacore::ROArrayColumn<casacore::Int>&            Reference feed
+//    refReceptor_p    casacore::ROArrayColumn<casacore::Int>&            Reference receptor
+//    refFreq_p        casacore::ROArrayColumn<casacore::Double>&         Reference frequency
+//    refFreqMeas_p    casacore::ROArrayMeasColumn<casacore::MFrequency>& Ref. freq. as Measure
+//    measFreqRef_p    casacore::ROScalarColumn<casacore::Int>&           Frequency measures ref.
+//    refDir_p         casacore::ROArrayColumn<casacore::Double>&         Reference direction
+//    refDirMeas_p     casacore::ROArrayMeasColumn<casacore::MDirection>& Ref. dir. as Measure
+//    measDirRef_p     casacore::ROScalarColumn<casacore::Int>&           Direction measures ref.
+//    calDescId_p      casacore::ROScalarColumn<casacore::Int>&           CAL_DESC id.
+//    calHistoryId_p   casacore::ROScalarColumn<casacore::Int>&           CAL_HISTORY id.
 //
   // Attach all the column accessors (including required and
   // optional columns)
   attach (calTable, time_p, MSC::TIME);
   attach (calTable, timeMeas_p, MSC::TIME);
-  attach (calTable, timeEP_p, MSC::TIME_EXTRA_PREC, True);
-  attach (calTable, timeEPQuant_p, MSC::TIME_EXTRA_PREC, True);
+  attach (calTable, timeEP_p, MSC::TIME_EXTRA_PREC, true);
+  attach (calTable, timeEPQuant_p, MSC::TIME_EXTRA_PREC, true);
   attach (calTable, interval_p, MSC::INTERVAL);
   attach (calTable, intervalQuant_p, MSC::INTERVAL);
   attach (calTable, antenna1_p, MSC::ANTENNA1);
@@ -92,9 +92,9 @@ ROCalMainColumns2<T>::ROCalMainColumns2(const CalTable2& calTable)
   attach (calTable, scanNo_p, MSC::SCAN_NUMBER);
   attach (calTable, processorId_p, MSC::PROCESSOR_ID);
   attach (calTable, stateId_p, MSC::STATE_ID);
-  attach (calTable, phaseId_p, MSC::PHASE_ID, True);
-  attach (calTable, pulsarBin_p, MSC::PULSAR_BIN, True);
-  attach (calTable, pulsarGateId_p, MSC::PULSAR_GATE_ID, True);
+  attach (calTable, phaseId_p, MSC::PHASE_ID, true);
+  attach (calTable, pulsarBin_p, MSC::PULSAR_BIN, true);
+  attach (calTable, pulsarGateId_p, MSC::PULSAR_GATE_ID, true);
   attach (calTable, freqGrp_p, MSC::FREQ_GROUP);
   attach (calTable, freqGrpName_p, MSC::FREQ_GROUP_NAME);
   attach (calTable, fieldName_p, MSC::FIELD_NAME);
@@ -115,7 +115,7 @@ ROCalMainColumns2<T>::ROCalMainColumns2(const CalTable2& calTable)
   attach (calTable, sourceName_p, MSC::SOURCE_NAME);
   attach (calTable, sourceCode_p, MSC::SOURCE_CODE);
   attach (calTable, calGrp_p, MSC::CALIBRATION_GROUP);
-//   Int pType = ((CalTable2)calTable).parType();
+//   casacore::Int pType = ((CalTable2)calTable).parType();
 //   if (pType == 0) attach (calTable, gain_p, MSC::GAIN);
 //   else attach (calTable, solvePar_p, MSC::SOLVE_PAR);
   attach (calTable, gain_p, MSC::GAIN);
@@ -136,20 +136,20 @@ ROCalMainColumns2<T>::ROCalMainColumns2(const CalTable2& calTable)
 
 template<class T>
 void ROCalMainColumns2<T>::attach (const CalTable2& calTable, 
-				   ROTableColumn& tabCol, 
+				   casacore::ROTableColumn& tabCol, 
 				   MSCalEnums::colDef colEnum, 
-				   const Bool& optional)
+				   const casacore::Bool& optional)
 {
 // Attach a column accessor to the calibration table
-// Input:
+// casacore::Input:
 //    calTable         const CalTable&      Calibration table
-//    tabCol           ROTableColumn&       Table column accessor
+//    tabCol           casacore::ROTableColumn&       casacore::Table column accessor
 //    colEnum          MSCalEnums::colDef   Column enum
-//    optional         const Bool&          True if optional column
+//    optional         const casacore::Bool&          true if optional column
 // Output to private data:
 //
   // Convert to column name
-  String colName = MSC::fieldName (colEnum);
+  casacore::String colName = MSC::fieldName (colEnum);
 
   // Check if an optional column
   if (optional) {
@@ -165,21 +165,21 @@ void ROCalMainColumns2<T>::attach (const CalTable2& calTable,
 
 template<class T>
 void ROCalMainColumns2<T>::attach (const CalTable2& calTable, 
-				   ROArrayMeasColumn<MFrequency>& tabCol, 
+				   casacore::ROArrayMeasColumn<casacore::MFrequency>& tabCol,
 				   MSCalEnums::colDef colEnum, 
-				   const Bool& optional)
+				   const casacore::Bool& optional)
 {
 // Attach a column accessor to the calibration table
-// Input:
+// casacore::Input:
 //    calTable         const CalTable&                  Calibration table
-//    tabCol           ROArrayMeasColumn<MFrequency>&   Table measures 
+//    tabCol           casacore::ROArrayMeasColumn<casacore::MFrequency>&   casacore::Table measures
 //                                                      column accessor
 //    colEnum          MSCalEnums::colDef               Column enum
-//    optional         const Bool&                      True if optional column
+//    optional         const casacore::Bool&                      true if optional column
 // Output to private data:
 //
   // Convert to column name
-  String colName = MSC::fieldName (colEnum);
+  casacore::String colName = MSC::fieldName (colEnum);
 
   // Check if an optional column
   if (optional) {
@@ -195,21 +195,21 @@ void ROCalMainColumns2<T>::attach (const CalTable2& calTable,
 
 template<class T>
 void ROCalMainColumns2<T>::attach (const CalTable2& calTable, 
-				   ROArrayMeasColumn<MEpoch>& tabCol, 
+				   casacore::ROArrayMeasColumn<casacore::MEpoch>& tabCol,
 				   MSCalEnums::colDef colEnum, 
-				   const Bool& optional)
+				   const casacore::Bool& optional)
 {
 // Attach a column accessor to the calibration table
-// Input:
+// casacore::Input:
 //    calTable         const CalTable&                  Calibration table
-//    tabCol           ROArrayMeasColumn<MEpoch>&       Table measures 
+//    tabCol           casacore::ROArrayMeasColumn<casacore::MEpoch>&       casacore::Table measures
 //                                                      column accessor
 //    colEnum          MSCalEnums::colDef               Column enum
-//    optional         const Bool&                      True if optional column
+//    optional         const casacore::Bool&                      true if optional column
 // Output to private data:
 //
   // Convert to column name
-  String colName = MSC::fieldName (colEnum);
+  casacore::String colName = MSC::fieldName (colEnum);
 
   // Check if an optional column
   if (optional) {
@@ -225,21 +225,21 @@ void ROCalMainColumns2<T>::attach (const CalTable2& calTable,
 
 template<class T>
 void ROCalMainColumns2<T>::attach (const CalTable2& calTable, 
-				   ROArrayMeasColumn<MDirection>& tabCol, 
+				   casacore::ROArrayMeasColumn<casacore::MDirection>& tabCol,
 				   MSCalEnums::colDef colEnum, 
-				   const Bool& optional)
+				   const casacore::Bool& optional)
 {
 // Attach a column accessor to the calibration table
-// Input:
+// casacore::Input:
 //    calTable         const CalTable&                  Calibration table
-//    tabCol           ROArrayMeasColumn<MDirection>&   Table measures 
+//    tabCol           casacore::ROArrayMeasColumn<casacore::MDirection>&   casacore::Table measures
 //                                                      column accessor
 //    colEnum          MSCalEnums::colDef               Column enum
-//    optional         const Bool&                      True if optional column
+//    optional         const casacore::Bool&                      true if optional column
 // Output to private data:
 //
   // Convert to column name
-  String colName = MSC::fieldName (colEnum);
+  casacore::String colName = MSC::fieldName (colEnum);
 
   // Check if an optional column
   if (optional) {
@@ -255,21 +255,21 @@ void ROCalMainColumns2<T>::attach (const CalTable2& calTable,
 
 template<class T>
 void ROCalMainColumns2<T>::attach (const CalTable2& calTable, 
-				   ROScalarMeasColumn<MEpoch>& tabCol, 
+				   casacore::ROScalarMeasColumn<casacore::MEpoch>& tabCol,
 				   MSCalEnums::colDef colEnum, 
-				   const Bool& optional)
+				   const casacore::Bool& optional)
 {
 // Attach a column accessor to the calibration table
-// Input:
+// casacore::Input:
 //    calTable         const CalTable&              Calibration table
-//    tabCol           ROScalarMeasColumn<MEpoch>&  Table measures column 
+//    tabCol           casacore::ROScalarMeasColumn<casacore::MEpoch>&  casacore::Table measures column
 //                                                  accessor
 //    colEnum          MSCalEnums::colDef           Column enum
-//    optional         const Bool&                  True if optional column
+//    optional         const casacore::Bool&                  true if optional column
 // Output to private data:
 //
   // Convert to column name
-  String colName = MSC::fieldName (colEnum);
+  casacore::String colName = MSC::fieldName (colEnum);
 
   // Check if an optional column
   if (optional) {
@@ -285,20 +285,20 @@ void ROCalMainColumns2<T>::attach (const CalTable2& calTable,
 
 template<class T>
 void ROCalMainColumns2<T>::attach (const CalTable2& calTable, 
-				   ROScalarQuantColumn<Double>& tabCol, 
+				   casacore::ROScalarQuantColumn<casacore::Double>& tabCol,
 				   MSCalEnums::colDef colEnum, 
-				   const Bool& optional)
+				   const casacore::Bool& optional)
 {
 // Attach a column accessor to the calibration table
-// Input:
+// casacore::Input:
 //    calTable    const CalTable&                Calibration table
-//    tabCol      ROScalarQuantColumn<Double>&   Scalar quantum column accessor
+//    tabCol      casacore::ROScalarQuantColumn<casacore::Double>&   Scalar quantum column accessor
 //    colEnum     MSCalEnums::colDef             Column enum
-//    optional    const Bool&                    True if optional column
+//    optional    const casacore::Bool&                    true if optional column
 // Output to private data:
 //
   // Convert to column name
-  String colName = MSC::fieldName (colEnum);
+  casacore::String colName = MSC::fieldName (colEnum);
 
   // Check if an optional column
   if (optional) {

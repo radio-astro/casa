@@ -39,6 +39,11 @@
 #include <synthesis/TransformMachines/PBMath.h>
 
 
+namespace casacore{
+
+class ImageRegion;
+}
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //#forward
@@ -46,7 +51,6 @@ class SkyModel;
       
 //# Need forward declaration for Solve in the Jones Matrices
 class SkyEquation;
-class ImageRegion;
 
 // <summary> beam-like sky-plane effects for the SkyEquation </summary>
 
@@ -79,7 +83,7 @@ class ImageRegion;
 // <li> Solvable part needs implementation: we need to derive an
 // image of gradients of the elements of the Jones matrix. See VisJones
 // for how to do this.
-// <li> The MS, version II, will have a beam subtable, which will have PBMaths
+// <li> The casacore::MS, version II, will have a beam subtable, which will have PBMaths
 // for each antenna.  Until this becomes available, we need to do some
 // fudging; for example, we 
 // </todo>
@@ -88,13 +92,13 @@ class BeamSkyJones : virtual public SkyJones {
 
 public:
 
-  // Eventually, the MS will have all the beam information in its Beam Subtable.
+  // Eventually, the casacore::MS will have all the beam information in its Beam Subtable.
   // Till then, we either guess the PB to use or explicitly define it upon construction.
   // Construct from a Measurement Set, figure out the most appropriate PBMath object
-  // from MS information
-  BeamSkyJones(const Quantity &parallacticAngleIncrement = Quantity(720.0, "deg"), // def= 1 PA interval
+  // from casacore::MS information
+  BeamSkyJones(const casacore::Quantity &parallacticAngleIncrement = casacore::Quantity(720.0, "deg"), // def= 1 PA interval
 	       BeamSquint::SquintType doSquint = BeamSquint::NONE,  // def= no beam squint offsets
-	       const Quantity &skyPositionThreshold = Quantity(180,"deg"));  // def= assume there is no change of
+	       const casacore::Quantity &skyPositionThreshold = casacore::Quantity(180,"deg"));  // def= assume there is no change of
 	                                                     // this operator due to position offset
 
 
@@ -102,7 +106,7 @@ public:
   virtual ~BeamSkyJones() = 0;
 
   // Print out information concerning the state of this object
-  virtual void showState(LogIO& os);
+  virtual void showState(casacore::LogIO& os);
 
   // Apply Jones matrix to an image (and adjoint)
   // No "applyInverse" is available from the SkyJones classes,
@@ -110,28 +114,28 @@ public:
   // the equivalent effect by dividing by grad grad Chi^2
   // in ImageSkyModel.
   // <group>
-  ImageInterface<Complex>& apply(const ImageInterface<Complex>& in,
-				 ImageInterface<Complex>& out,
-				 const VisBuffer& vb, Int row,
-				 Bool forward=True);
-  ImageInterface<Float>& apply(const ImageInterface<Float>& in,
-				     ImageInterface<Float>& out,
-				     const VisBuffer& vb, Int row);
+  casacore::ImageInterface<casacore::Complex>& apply(const casacore::ImageInterface<casacore::Complex>& in,
+				 casacore::ImageInterface<casacore::Complex>& out,
+				 const VisBuffer& vb, casacore::Int row,
+				 casacore::Bool forward=true);
+  casacore::ImageInterface<casacore::Float>& apply(const casacore::ImageInterface<casacore::Float>& in,
+				     casacore::ImageInterface<casacore::Float>& out,
+				     const VisBuffer& vb, casacore::Int row);
 
-  ImageInterface<Float>& applySquare(const ImageInterface<Float>& in,
-				     ImageInterface<Float>& out,
-				     const VisBuffer& vb, Int row);
+  casacore::ImageInterface<casacore::Float>& applySquare(const casacore::ImageInterface<casacore::Float>& in,
+				     casacore::ImageInterface<casacore::Float>& out,
+				     const VisBuffer& vb, casacore::Int row);
   // </group>
 
   // Apply Jones matrix to a sky component (and adjoint)  
   // <group>
   SkyComponent& apply(SkyComponent& in,
 		      SkyComponent& out,
-		      const VisBuffer& vb, Int row,
-		      Bool forward = True);
+		      const VisBuffer& vb, casacore::Int row,
+		      casacore::Bool forward = true);
   SkyComponent& applySquare(SkyComponent& in,
 			    SkyComponent& out,
-			    const VisBuffer& vb, Int row);
+			    const VisBuffer& vb, casacore::Int row);
   // </group>
 
   // Understand if things have changed since last PB application
@@ -142,42 +146,42 @@ public:
 
   // Has this operator changed since the last Application?
   // (or more properly, since the last update() ) 
-  virtual Bool changed(const VisBuffer& vb, Int row);
+  virtual casacore::Bool changed(const VisBuffer& vb, casacore::Int row);
 
   // Does the operator change in this visbuffer or since the last call?
   // May not be useful -- check it out:  m.a.h. Dec 30 1999
-  virtual Bool change(const VisBuffer& vb);
+  virtual casacore::Bool change(const VisBuffer& vb);
 
   // Does this operator changed in this VisBuffer,
   // starting with row1?
   // If yes, we return in row2, the last row that has the
   // same SkyJones as row1.
-  // NOTE: need to first call changed(const VisBuffer& vb, Int row) and
+  // NOTE: need to first call changed(const VisBuffer& vb, casacore::Int row) and
   // shield the user from the case where the fieldID has changed
   // (which only changes in blocks)
-  virtual Bool changedBuffer(const VisBuffer& vb, Int row1, Int& row2);
+  virtual casacore::Bool changedBuffer(const VisBuffer& vb, casacore::Int row1, casacore::Int& row2);
 
   // Update the FieldID, Telescope, pointingDirection, Parallactic angle info
-  void update(const VisBuffer& vb, Int row);
+  void update(const VisBuffer& vb, casacore::Int row);
 
   // if (changed) {update()}
-  virtual void assure (const VisBuffer& vb, Int row);
+  virtual void assure (const VisBuffer& vb, casacore::Int row);
   // </group>
 
   // Return the type of this Jones matrix (actual type of derived class).
   virtual Type type() {return SkyJones::E;};
 
   // Apply gradient
-  virtual ImageInterface<Complex>& 
-  applyGradient(ImageInterface<Complex>& result, const VisBuffer& vb,
-		Int row);
+  virtual casacore::ImageInterface<casacore::Complex>& 
+  applyGradient(casacore::ImageInterface<casacore::Complex>& result, const VisBuffer& vb,
+		casacore::Int row);
 
   virtual SkyComponent&
   applyGradient(SkyComponent& result, const VisBuffer& vb,
-		Int row);
+		casacore::Int row);
 
   // Is this solveable?
-  virtual Bool isSolveable() {return False;};
+  virtual casacore::Bool isSolveable() {return false;};
 
   // Initialize for gradient search
   virtual void initializeGradients();
@@ -186,12 +190,12 @@ public:
   virtual void finalizeGradients();
  
   // Add to Gradient Chisq
-  virtual void addGradients(const VisBuffer& vb, Int row, const Float sumwt, 
-			    const Float chisq, const Matrix<Complex>& c, 
-			    const Matrix<Float>& f);
+  virtual void addGradients(const VisBuffer& vb, casacore::Int row, const casacore::Float sumwt, 
+			    const casacore::Float chisq, const casacore::Matrix<casacore::Complex>& c, 
+			    const casacore::Matrix<casacore::Float>& f);
  
   // Solve
-  virtual Bool solve (SkyEquation& se);
+  virtual casacore::Bool solve (SkyEquation& se);
   
   // Manage the PBMath objects
   // <group>
@@ -202,92 +206,92 @@ public:
   //
   // Note. It would be nice to change the interface and make antennaID
   // and feedID the second and the third parameter, respectively.
-  void setPBMath(const String &telescope, PBMath &myPBmath,
-                 const Int &antennaID = -1, const Int &feedID = -1);
+  void setPBMath(const casacore::String &telescope, PBMath &myPBmath,
+                 const casacore::Int &antennaID = -1, const casacore::Int &feedID = -1);
   
-  // get the PBMath object; returns False if that one doesn't exist,
-  // True if it does exist and is OK
+  // get the PBMath object; returns false if that one doesn't exist,
+  // true if it does exist and is OK
   // whichAnt is an index into an array of PBMaths, which is different
   // for all telescope/antenna/feed combinations
   // Not sure why we need such a low-level method declared as public,
   // retained to preserve old interface
-  Bool getPBMath(uInt whichAnt, PBMath &myPBMath) const;
+  casacore::Bool getPBMath(casacore::uInt whichAnt, PBMath &myPBMath) const;
   
-  // get the PBMath object; returns False if that one doesn't exist,
-  // True if it does exist and is OK
+  // get the PBMath object; returns false if that one doesn't exist,
+  // true if it does exist and is OK
   // antennaID and feedID default to -1 to preserve the old interface
   // TODO: change the interface and make antennaID and feedID the
   // second and third parameter respectively to have a better looking code
-  Bool getPBMath(const String &telescope, PBMath &myPBMath,
-                 const Int &antennaID = -1, const Int &feedID = -1) const;
+  casacore::Bool getPBMath(const casacore::String &telescope, PBMath &myPBMath,
+                 const casacore::Int &antennaID = -1, const casacore::Int &feedID = -1) const;
 
-  Quantity getPAIncrement() {return Quantity(parallacticAngleIncrement_p,"rad");}
+  casacore::Quantity getPAIncrement() {return casacore::Quantity(parallacticAngleIncrement_p,"rad");}
 
-  Quantity getSkyPositionThreshold() {return Quantity(skyPositionThreshold_p,"rad");}
+  casacore::Quantity getSkyPositionThreshold() {return casacore::Quantity(skyPositionThreshold_p,"rad");}
   
   // Return true if all antennas share a common VP
-  Bool isHomogeneous() const;
+  casacore::Bool isHomogeneous() const;
   //</group>
   
-  // Get the ImageRegion of the primary beam on an Image for a given pointing
-  // Note: ImageRegion is not necesarily constrained to lie within the
+  // Get the casacore::ImageRegion of the primary beam on an Image for a given pointing
+  // Note: casacore::ImageRegion is not necesarily constrained to lie within the
   // image region (for example, if the pointing center is near the edge of the
   // image).  fPad: extra padding over the primary beam supporrt, 
   // fractional (ie, 1.2 for 20% padding), in all directions.
   // (note: we do not properly treat squint yet, this will cover it for now)
   // iChan: frequency channel to take: lowest frequency channel is safe for all
   //
-  // Potential problem: this ImageRegion includes all Stokes and Frequency Channels
+  // Potential problem: this casacore::ImageRegion includes all casacore::Stokes and Frequency Channels
   // present in the input image.
-  ImageRegion*  extent (const ImageInterface<Complex>& im, 
+  casacore::ImageRegion*  extent (const casacore::ImageInterface<casacore::Complex>& im, 
 			const VisBuffer& vb,  
-			const Int irow=-1,			
-			const Float fPad=1.2,  
-			const Int iChan=0, 
+			const casacore::Int irow=-1,			
+			const casacore::Float fPad=1.2,  
+			const casacore::Int iChan=0, 
 			const SkyJones::SizeType sizeType=SkyJones::COMPOSITE);
 
-  ImageRegion*  extent (const ImageInterface<Float>& im, 
-			const VisBuffer& vb,  const Int irow=-1,
-			const Float fPad=1.2,  const Int iChan=0, 
+  casacore::ImageRegion*  extent (const casacore::ImageInterface<casacore::Float>& im, 
+			const VisBuffer& vb,  const casacore::Int irow=-1,
+			const casacore::Float fPad=1.2,  const casacore::Int iChan=0, 
 			const SkyJones::SizeType sizeType=SkyJones::COMPOSITE);
 
   // summarize the PBMaths contained here.
   // n = -1 => terse table
   // n =  0 => table plus constructor values
   // n =  m => plot m samples of the PB profile
-  virtual void summary(Int n=0);
+  virtual void summary(casacore::Int n=0);
 
   //return the telescope it is on at this state
-  String telescope();
+  casacore::String telescope();
 
   //Get an idea of the support of the PB in number of pixels
-  virtual Int support(const VisBuffer& vb, const CoordinateSystem& cs);
+  virtual casacore::Int support(const VisBuffer& vb, const casacore::CoordinateSystem& cs);
 
 private:  
 
 
-  String telescope_p;
+  casacore::String telescope_p;
 
-  Int lastFieldId_p;
+  casacore::Int lastFieldId_p;
 
-  Int lastArrayId_p;
+  casacore::Int lastArrayId_p;
 
-  Int lastMSId_p;
+  casacore::Int lastMSId_p;
 
   BeamSquint::SquintType doSquint_p;
 
-  Double  parallacticAngleIncrement_p; // a parallactic angle threshold
+  casacore::Double  parallacticAngleIncrement_p; // a parallactic angle threshold
                         // beyond which the operator is considered to be
 			// changed (in radians)
-  Double  skyPositionThreshold_p;     // a sky position threshold beyond
+  casacore::Double  skyPositionThreshold_p;     // a sky position threshold beyond
                         // which the operator is considered to be changed
 			// (in radians)
-  Block<Double> lastParallacticAngles_p; // a cache of parallactic angles
+  casacore::Block<casacore::Double> lastParallacticAngles_p; // a cache of parallactic angles
                         // used when the operator was applied last time.
 			// One value in radians for each beam model in PBMaths.
 			// A zero-length block means that the operator
 			// has never been applied
-  Block<MDirection> lastDirections_p; // a chache of directions
+  casacore::Block<casacore::MDirection> lastDirections_p; // a chache of directions
                         // used when the operator was applied last time.
 			// One element for each beam model in PBMaths.
 			// A zero-length block means that the operator
@@ -296,38 +300,38 @@ private:
   // One or more PBMaths (a common one for the
   // entire array, or one for each antenna)
   // This requires some sorting out for heterogeneous arrays!
-  Block<PBMath> myPBMaths_p;  
+  casacore::Block<PBMath> myPBMaths_p;  
   // Names of telescopes (parralel with PBMaths
-  Block<String> myTelescopes_p;
+  casacore::Block<casacore::String> myTelescopes_p;
 
   // Antenna IDs (parallel with PBMaths)
-  Block<Int> myAntennaIDs_p;
+  casacore::Block<casacore::Int> myAntennaIDs_p;
   // Feed IDs (parallel with PBMaths)
-  Block<Int> myFeedIDs_p;
+  casacore::Block<casacore::Int> myFeedIDs_p;
 
   // cache of the indices to the PBMaths container for antenna/feed 1 and 2  
   mutable const VisBuffer *lastUpdateVisBuffer_p; // to ensure that the cache
                                           // is filled for the correct
 					  // VisBuffer. The value is used
 					  // for comparison only
-  mutable Int lastUpdateRow_p;  // to ensure that the cache is filled for
+  mutable casacore::Int lastUpdateRow_p;  // to ensure that the cache is filled for
                                 // correct row in the VisBuffer
-  mutable Int lastUpdateIndex1_p; // index of the first antenna/feed
-  mutable Int lastUpdateIndex2_p; // index of the second antenna/feed
+  mutable casacore::Int lastUpdateIndex1_p; // index of the first antenna/feed
+  mutable casacore::Int lastUpdateIndex2_p; // index of the second antenna/feed
   //
 
-  mutable Bool hasBeenApplied;  // True if the operator has been applied at least once
+  mutable casacore::Bool hasBeenApplied;  // true if the operator has been applied at least once
 
   // update the indices cache. This method could be made protected in the
   // future (need access functions for lastUpdateIndex?_p to benefit from it)
   // Cache will be valid for a given VisBuffer and row
-  void updatePBMathIndices(const VisBuffer &vb, Int row) const;
+  void updatePBMathIndices(const VisBuffer &vb, casacore::Int row) const;
 
 protected:
-  // return True if two directions are close enough to consider the
-  // operator unchanged, False otherwise
-  Bool directionsCloseEnough(const MDirection &dir1,
-                             const MDirection &dir2) const;
+  // return true if two directions are close enough to consider the
+  // operator unchanged, false otherwise
+  casacore::Bool directionsCloseEnough(const casacore::MDirection &dir1,
+                             const casacore::MDirection &dir2) const;
   			     
   // return index of compareTelescope, compareAntenna and compareFeed in
   // myTelescopes_p, myAntennaIDs and myFeedIDs; -1 if not found
@@ -339,10 +343,10 @@ protected:
   // It would be good to rename this function to indexBeams as this name
   // is more appropriate. 
   //
-  Int indexTelescope(const String & compareTelescope,
-                     const Int &compareAntenna=-1,
-		     const Int &compareFeed=-1) const;
-  MDirection convertDir(const VisBuffer& vb, const MDirection& inDir, const MDirection::Types outType);
+  casacore::Int indexTelescope(const casacore::String & compareTelescope,
+                     const casacore::Int &compareAntenna=-1,
+		     const casacore::Int &compareFeed=-1) const;
+  casacore::MDirection convertDir(const VisBuffer& vb, const casacore::MDirection& inDir, const casacore::MDirection::Types outType);
 
 };
  

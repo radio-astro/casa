@@ -32,6 +32,7 @@
 #include <display/DisplayDatas/WedgeDD.h>
 #include <display/DisplayCanvas/WCPowerScaleHandler.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	WedgeDM::WedgeDM(WorldCanvas *worldCanvas,
@@ -59,7 +60,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		        (wc->pixelCanvas()->pcctbl()->colorModel() == Display::HSV)) {
 			throw(AipsError("Wedges for RGB and HSV not yet supported"));
 		}
-		if (parent->itsMin == parent->itsMax) return False;
+		if (parent->itsMin == parent->itsMax) return false;
 		Attribute dmin("dataMin", static_cast<Double>(0.0));
 		Attribute dmax("dataMax", static_cast<Double>(1.0));
 		wc->setAttribute(dmin);
@@ -82,7 +83,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			trc(1) = static_cast<Double>(parent->itsMax);
 			wc->drawImage(blc,trc, parent->itsColorbar);
 		}
-		return True;
+		return true;
 	}
 
 	void WedgeDM::cleanup() {

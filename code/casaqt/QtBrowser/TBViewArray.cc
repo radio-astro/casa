@@ -35,6 +35,7 @@
 #include <casaqt/QtBrowser/TBTableDriver.h>
 #include <casaqt/QtBrowser/TBKeyword.h>
 
+using namespace casacore;
 namespace casa {
 
 //////////////////////////////

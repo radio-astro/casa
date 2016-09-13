@@ -29,6 +29,7 @@
 #include <casa/Exceptions/Error.h>
 #include <display/Display/DLFont.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	DLFont::DLFont() {
@@ -64,7 +65,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			throw (AipsError("Bad arrays being used to search for font index!"));
 		}
 
-		Bool found = False;
+		Bool found = false;
 		uInt i=0;
 
 		while(!found && i < itsNames.nelements()) {

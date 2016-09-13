@@ -12,11 +12,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 class SakuraUtils {
 public:
-  static Bool InitializeSakura();
+  static casacore::Bool InitializeSakura();
   static void CleanUpSakura();
-  static Bool IsSakuraInitialized();
+  static casacore::Bool IsSakuraInitialized();
 private:
-  static Bool is_initialized_;
+  static casacore::Bool is_initialized_;
 };
 
 class SakuraDriver {

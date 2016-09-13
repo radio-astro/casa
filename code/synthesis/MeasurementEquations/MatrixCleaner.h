@@ -38,13 +38,17 @@
 #include <casa/Containers/Block.h>
 #include <lattices/LatticeMath/LatticeCleaner.h>
 
+namespace casacore{
+
+template <class T> class Matrix;
+}
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Forward Declarations
-template <class T> class Matrix;
 class MatrixNACleaner;
-// <summary>A copy of LatticeCleaner but just using 2-D matrices</summary>
-// <synopsis> It is a mimic of the LatticeCleaner class but avoid a lot of 
+// <summary>A copy of casacore::LatticeCleaner but just using 2-D matrices</summary>
+// <synopsis> It is a mimic of the casacore::LatticeCleaner class but avoid a lot of 
 // of the lattice to array and back copies and uses openmp in the obvious places
 // </synopsis>
 
@@ -80,7 +84,7 @@ class MatrixNACleaner;
 // </motivation>
 //
 // <thrown>
-// <li> AipsError: if psf has more dimensions than the model. 
+// <li> casacore::AipsError: if psf has more dimensions than the model. 
 // </thrown>
 //
 // <todo asof="yyyy/mm/dd">
@@ -94,7 +98,7 @@ public:
   MatrixCleaner();
 
   // Create a cleaner for a specific dirty image and PSF
-  MatrixCleaner(const Matrix<Float> & psf, const Matrix<Float> & dirty);
+  MatrixCleaner(const casacore::Matrix<casacore::Float> & psf, const casacore::Matrix<casacore::Float> & dirty);
 
   // The copy constructor uses reference semantics
   MatrixCleaner(const MatrixCleaner& other);
@@ -108,22 +112,22 @@ public:
   //just define the scales...nothing else is done
   //the user will need to call setPsf+makePsfScales+setDirty+makeDirtyScales
   //to be in a good state to clean.
-  void defineScales(const Vector<Float>& scales);
+  void defineScales(const casacore::Vector<casacore::Float>& scales);
   
   //Set the dirty image without calculating convolutions..
   //can be done by calling  makeDirtyScales or setscales if one want to redo the 
   //psfscales too.
-  void setDirty(const Matrix<Float>& dirty);
+  void setDirty(const casacore::Matrix<casacore::Float>& dirty);
   //Calculate the convolutions for the dirt
   //Obviously the 
   void makeDirtyScales();
   // Update the dirty image only (equiv of setDirty + makeDirtyScales)
-  void update(const Matrix<Float> & dirty);
+  void update(const casacore::Matrix<casacore::Float> & dirty);
 
   //change the psf
   //don't forget to redo the setscales or run makePsfScales, 
   //followed by makeDirtyScales 
-  void setPsf(const Matrix<Float>& psf);
+  void setPsf(const casacore::Matrix<casacore::Float>& psf);
   //calculate the convolutions of the psf 
   void makePsfScales();
   
@@ -131,10 +135,10 @@ public:
   // The 2 functions below assume you have the dirty image and the psf set
   // the convolutions are calculated automatically and the masks ones too 
   // if it is set ....kept so as to be compatible function wise with LatticeCleaner
-  Bool setscales(const Int nscales, const Float scaleInc=1.0);
+  casacore::Bool setscales(const casacore::Int nscales, const casacore::Float scaleInc=1.0);
 
   // Set a specific set of scales
-  Bool setscales(const Vector<Float> & scales);
+  casacore::Bool setscales(const casacore::Vector<casacore::Float> & scales);
 
   
  
@@ -146,27 +150,27 @@ public:
   // aThreshold - absolute threshold to stop iterations
   // fThreshold - fractional threshold (i.e. given w.r.t. maximum residual)
   //              to stop iterations. This parameter is specified as
-  //              Quantity so it can be given in per cents. 
-  // choose - unused at the moment, specify False. Original meaning is
+  //              casacore::Quantity so it can be given in per cents. 
+  // choose - unused at the moment, specify false. Original meaning is
   // to allow interactive decision on whether to continue iterations.
-  // This method always returns True.
-  Bool setcontrol(CleanEnums::CleanType cleanType, const Int niter,
-		  const Float gain, const Quantity& aThreshold,
-		  const Quantity& fThreshold);
+  // This method always returns true.
+  casacore::Bool setcontrol(casacore::CleanEnums::CleanType cleanType, const casacore::Int niter,
+		  const casacore::Float gain, const casacore::Quantity& aThreshold,
+		  const casacore::Quantity& fThreshold);
 
   // This version of the method disables stopping on fractional threshold
-  Bool setcontrol(CleanEnums::CleanType cleanType, const Int niter,
-		  const Float gain, const Quantity& threshold);
+  casacore::Bool setcontrol(casacore::CleanEnums::CleanType cleanType, const casacore::Int niter,
+		  const casacore::Float gain, const casacore::Quantity& threshold);
 
   // return how many iterations we did do
-  Int iteration() const { return itsIteration; }
-  Int numberIterations() const { return itsIteration; }
+  casacore::Int iteration() const { return itsIteration; }
+  casacore::Int numberIterations() const { return itsIteration; }
 
   // what iteration number to start on
-  void startingIteration(const Int starting = 0) {itsStartingIter = starting; }
+  void startingIteration(const casacore::Int starting = 0) {itsStartingIter = starting; }
   
  //Total flux accumulated so far
-  Float totalFlux() const {return itsTotalFlux;}
+  casacore::Float totalFlux() const {return itsTotalFlux;}
 
 
   // Clean an image. 
@@ -176,7 +180,7 @@ public:
   // -1 = not converged and stopped on cleaning consecutive smallest scale
   // -2 = not converged and either large scale hit negative or diverging 
   // -3 = clean is diverging rather than converging 
-  Int clean(Matrix<Float> & model, Bool doPlotProgress=False);
+  casacore::Int clean(casacore::Matrix<casacore::Float> & model, casacore::Bool doPlotProgress=false);
 
   // Set the mask
   // mask - input mask lattice
@@ -187,9 +191,9 @@ public:
   // to implement cleaning based on the signal-to-noise as opposed to the standard cleaning
   // based on the flux. The default threshold value is 0.9, which ensures the behavior of the
   // code is exactly the same as before this parameter has been introduced.
-  void setMask(Matrix<Float> & mask, const Float& maskThreshold = 0.9);
+  void setMask(casacore::Matrix<casacore::Float> & mask, const casacore::Float& maskThreshold = 0.9);
   // Call the function below if the psf is changed ..no need to setMask again
-  Bool makeScaleMasks();
+  casacore::Bool makeScaleMasks();
 
   // remove the mask;
   // useful when keeping object and sending a new dirty image to clean 
@@ -199,8 +203,8 @@ public:
   // Tell the algorithm to NOT clean just the inner quarter
   // (This is useful when multiscale clean is being used
   // inside a major cycle for MF or WF algorithms)
-  // if True, the full image deconvolution will be attempted
-  void ignoreCenterBox(Bool huh) { itsIgnoreCenterBox = huh; }
+  // if true, the full image deconvolution will be attempted
+  void ignoreCenterBox(casacore::Bool huh) { itsIgnoreCenterBox = huh; }
 
   // Consider the case of a point source: 
   // the flux on all scales is the same, and the first scale will be chosen.
@@ -210,22 +214,22 @@ public:
   // an ad hoc manner, multiplying the maxima found at each scale by
   // 1.0 - itsSmallScaleBias * itsScaleSizes(scale)/itsScaleSizes(nScalesToClean-1);
   // Typical bias values range from 0.2 to 1.0.
-  void setSmallScaleBias(const Float x=0.5) { itsSmallScaleBias = x; }
+  void setSmallScaleBias(const casacore::Float x=0.5) { itsSmallScaleBias = x; }
 
-  // During early iterations of a cycled MS Clean in mosaicing, it common
+  // During early iterations of a cycled casacore::MS Clean in mosaicing, it common
   // to come across an ocsilatory pattern going between positive and
   // negative in the large scale.  If this is set, we stop at the first
   // negative in the largest scale.
-  void stopAtLargeScaleNegative() {itsStopAtLargeScaleNegative = True; }
+  void stopAtLargeScaleNegative() {itsStopAtLargeScaleNegative = true; }
 
   // Some algorithms require that the cycles be terminated when the image
   // is dominated by point sources; if we get nStopPointMode of the
   // smallest scale components in a row, we terminate the cycles
-  void stopPointMode(Int nStopPointMode) {itsStopPointMode = nStopPointMode; }
+  void stopPointMode(casacore::Int nStopPointMode) {itsStopPointMode = nStopPointMode; }
 
   // After completion of cycle, querry this to find out if we stopped because
   // of stopPointMode
-  Bool queryStopPointMode() const {return itsDidStopPointMode; }
+  casacore::Bool queryStopPointMode() const {return itsDidStopPointMode; }
 
   // speedup() will speed the clean iteration by raising the
   // threshold.  This may be required if the threshold is
@@ -235,68 +239,68 @@ public:
   // threshold(iteration) = threshold(0) 
   //                        * ( exp( (iteration - startingiteration)/Ndouble )/ 2.718 )
   // If speedup() is NOT invoked, no effect on threshold
-  void speedup(const Float Ndouble);
+  void speedup(const casacore::Float Ndouble);
 
   // Look at what WE think the residuals look like
   // Assumes the first scale is zero-sized
-  Matrix<Float>  residual() { return itsDirtyConvScales[0]; }
+  casacore::Matrix<casacore::Float>  residual() { return itsDirtyConvScales[0]; }
 
   // Method to return threshold, including any speedup factors
-  Float threshold() const;
+  casacore::Float threshold() const;
 
   // Method to return the strength optimum achieved at the last clean iteration
   // The output of this method makes sense only if it is called after clean
-  Float strengthOptimum() const { return itsStrengthOptimum; }
+  casacore::Float strengthOptimum() const { return itsStrengthOptimum; }
 
   // Helper function to optimize adding
-  //static void addTo(Matrix<Float>& to, const Matrix<Float> & add);
+  //static void addTo(casacore::Matrix<casacore::Float>& to, const casacore::Matrix<casacore::Float> & add);
 
 protected:
   friend class MatrixNACleaner;
   // Make sure that the peak of the Psf is within the image
-  Bool validatePsf(const Matrix<Float> & psf);
+  casacore::Bool validatePsf(const casacore::Matrix<casacore::Float> & psf);
 
   // Make an array of the specified scale
-  void makeScale(Matrix<Float>& scale, const Float& scaleSize);
+  void makeScale(casacore::Matrix<casacore::Float>& scale, const casacore::Float& scaleSize);
   
   // Make Spheroidal function for scale images
-  Float spheroidal(Float nu);
+  casacore::Float spheroidal(casacore::Float nu);
   
   // Find the Peak of the matrix
-  static Bool findMaxAbs(const Matrix<Float>& lattice,
-                         Float& maxAbs, IPosition& posMax);
+  static casacore::Bool findMaxAbs(const casacore::Matrix<casacore::Float>& lattice,
+                         casacore::Float& maxAbs, casacore::IPosition& posMax);
 
   // This is made static since findMaxAbs is static(!).
   // Why is findMaxAbs static??? 
   //                       --SB
-  static Bool findPSFMaxAbs(const Matrix<Float>& lattice,
-			    Float& maxAbs, IPosition& posMax,
-			    const Int& supportSize=100);
+  static casacore::Bool findPSFMaxAbs(const casacore::Matrix<casacore::Float>& lattice,
+			    casacore::Float& maxAbs, casacore::IPosition& posMax,
+			    const casacore::Int& supportSize=100);
 
-  Int findBeamPatch(const Float maxScaleSize, const Int& nx, const Int& ny,
-		    const Float psfBeam=4.0, const Float nBeams=20.0);
+  casacore::Int findBeamPatch(const casacore::Float maxScaleSize, const casacore::Int& nx, const casacore::Int& ny,
+		    const casacore::Float psfBeam=4.0, const casacore::Float nBeams=20.0);
   // Find the Peak of the lattice, applying a mask
-  Bool findMaxAbsMask(const Matrix<Float>& lattice, const Matrix<Float>& mask,
-                             Float& maxAbs, IPosition& posMax);
+  casacore::Bool findMaxAbsMask(const casacore::Matrix<casacore::Float>& lattice, const casacore::Matrix<casacore::Float>& mask,
+                             casacore::Float& maxAbs, casacore::IPosition& posMax);
 
   // Helper function to reduce the box sizes until the have the same   
   // size keeping the centers intact  
-  static void makeBoxesSameSize(IPosition& blc1, IPosition& trc1,                               
-     IPosition &blc2, IPosition& trc2);
+  static void makeBoxesSameSize(casacore::IPosition& blc1, casacore::IPosition& trc1,                               
+     casacore::IPosition &blc2, casacore::IPosition& trc2);
 
 
-  CleanEnums::CleanType itsCleanType;
-  Float itsGain;
-  Int itsMaxNiter;      // maximum possible number of iterations
-  Quantum<Double> itsThreshold;
-  CountedPtr<Matrix<Float> > itsMask;
-  IPosition itsPositionPeakPsf;
-  Float itsSmallScaleBias;
-  Block<Matrix<Float> > itsScaleMasks;
-  Block<Matrix<Complex> > itsScaleXfrs;
-  Bool itsScalesValid;
-  Int itsNscales;
-  Float itsMaskThreshold;
+  casacore::CleanEnums::CleanType itsCleanType;
+  casacore::Float itsGain;
+  casacore::Int itsMaxNiter;      // maximum possible number of iterations
+  casacore::Quantum<casacore::Double> itsThreshold;
+  casacore::CountedPtr<casacore::Matrix<casacore::Float> > itsMask;
+  casacore::IPosition itsPositionPeakPsf;
+  casacore::Float itsSmallScaleBias;
+  casacore::Block<casacore::Matrix<casacore::Float> > itsScaleMasks;
+  casacore::Block<casacore::Matrix<casacore::Complex> > itsScaleXfrs;
+  casacore::Bool itsScalesValid;
+  casacore::Int itsNscales;
+  casacore::Float itsMaskThreshold;
 private:
 
   //# The following functions are used in various places in the code and are
@@ -306,59 +310,59 @@ private:
   //# because all information must be supplied in the input arguments
 
 
-  CountedPtr<Matrix<Float> > itsDirty;
-  CountedPtr<Matrix<Complex> >itsXfr;
+  casacore::CountedPtr<casacore::Matrix<casacore::Float> > itsDirty;
+  casacore::CountedPtr<casacore::Matrix<casacore::Complex> >itsXfr;
 
-  Vector<Float> itsScaleSizes;
+  casacore::Vector<casacore::Float> itsScaleSizes;
 
-  Block<Matrix<Float> > itsScales;
-  Block<Matrix<Float> > itsPsfConvScales;
-  Block<Matrix<Float> > itsDirtyConvScales;
-
-
-  Int itsIteration;	// what iteration did we get to?
-  Int itsStartingIter;	// what iteration did we get to?
-  Quantum<Double> itsFracThreshold;
-
-  Float itsMaximumResidual;
-  Float itsStrengthOptimum;
+  casacore::Block<casacore::Matrix<casacore::Float> > itsScales;
+  casacore::Block<casacore::Matrix<casacore::Float> > itsPsfConvScales;
+  casacore::Block<casacore::Matrix<casacore::Float> > itsDirtyConvScales;
 
 
-  Vector<Float> itsTotalFluxScale;
-  Float itsTotalFlux;
+  casacore::Int itsIteration;	// what iteration did we get to?
+  casacore::Int itsStartingIter;	// what iteration did we get to?
+  casacore::Quantum<casacore::Double> itsFracThreshold;
 
-  // Memory to be allocated per TempLattice
-  Double itsMemoryMB;
+  casacore::Float itsMaximumResidual;
+  casacore::Float itsStrengthOptimum;
+
+
+  casacore::Vector<casacore::Float> itsTotalFluxScale;
+  casacore::Float itsTotalFlux;
+
+  // casacore::Memory to be allocated per TempLattice
+  casacore::Double itsMemoryMB;
 
   // Let the user choose whether to stop
-  Bool itsChoose;
+  casacore::Bool itsChoose;
 
   // Threshold speedup factors:
-  Bool  itsDoSpeedup;  // if false, threshold does not change with iteration
-  Float itsNDouble;
+  casacore::Bool  itsDoSpeedup;  // if false, threshold does not change with iteration
+  casacore::Float itsNDouble;
 
   //# Stop now?
-  //#//  Bool stopnow();   Removed on 8-Apr-2004 by GvD
+  //#//  casacore::Bool stopnow();   Removed on 8-Apr-2004 by GvD
 
   // Calculate index into PsfConvScales
-  Int index(const Int scale, const Int otherscale);
+  casacore::Int index(const casacore::Int scale, const casacore::Int otherscale);
   
-  Bool destroyScales();
-  Bool destroyMasks();
+  casacore::Bool destroyScales();
+  casacore::Bool destroyMasks();
 
 
   
-  Bool itsIgnoreCenterBox;
-  Bool itsStopAtLargeScaleNegative;
-  Int itsStopPointMode;
-  Bool itsDidStopPointMode;
-  Bool itsJustStarting;
+  casacore::Bool itsIgnoreCenterBox;
+  casacore::Bool itsStopAtLargeScaleNegative;
+  casacore::Int itsStopPointMode;
+  casacore::Bool itsDidStopPointMode;
+  casacore::Bool itsJustStarting;
 
   // threshold for masks. If negative, mask values are used as weights and no pixels are
   // discarded (although effectively they would be discarded if the mask value is 0.)
 
-  IPosition psfShape_p;
-  Bool noClean_p;
+  casacore::IPosition psfShape_p;
+  casacore::Bool noClean_p;
 
 };
 

@@ -35,6 +35,7 @@
 #include <casa/Arrays/ArrayMath.h>
 
 #include <display/Display/DisplayCoordinateSystem.h>
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	DSWorldPolyLine::DSWorldPolyLine() :
@@ -135,7 +136,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	Bool DSWorldPolyLine::setOptions(const Record& settings) {
-		Bool localChange = False;
+		Bool localChange = false;
 		Record toSet = settings;
 
 		if (settings.isDefined("coords")) {
@@ -176,7 +177,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		if (DSPolyLine::setOptions(toSet)) {
-			localChange = True;
+			localChange = true;
 		}
 
 		return localChange;

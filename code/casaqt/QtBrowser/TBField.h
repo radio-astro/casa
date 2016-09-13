@@ -49,16 +49,16 @@ class TBField {
 public:
     // Constructor to take the name and type.  Other properties must be added
     // via method calls.
-    TBField(String name, String type);
+    TBField(casacore::String name, casacore::String type);
 
     ~TBField();
 
     
     // Returns this field's name.
-    String getName();
+    casacore::String getName();
 
     // Returns this field's type.
-    String getType();
+    casacore::String getType();
 
     // Returns this field's keywords.
     std::vector<TBKeyword*>* getKeywords();
@@ -67,7 +67,7 @@ public:
     TBKeyword* keyword(int i);
     
     // Returns the keyword with name i, or NULL if there is none.
-    TBKeyword* keyword(String name);
+    TBKeyword* keyword(casacore::String name);
 
     // Returns the number of keywords this field has.
     unsigned int numKeywords();
@@ -79,61 +79,61 @@ public:
     void addKeyword(TBKeyword* keyword);
 
     // Sets this field's UCD property.
-    void setUCD(String ucd);
+    void setUCD(casacore::String ucd);
 
-    // Returns this field's UCD property, or an empty String if it is not set.
-    String getUCD();
+    // Returns this field's UCD property, or an empty casacore::String if it is not set.
+    casacore::String getUCD();
 
     // Sets this field's ref property.
-    void setRef(String ref);
+    void setRef(casacore::String ref);
 
-    // Returns this field's ref property, or an empty String if it is not set.
-    String getRef();
+    // Returns this field's ref property, or an empty casacore::String if it is not set.
+    casacore::String getRef();
 
     // Sets this field's unit property.
-    void setUnit(String unit);
+    void setUnit(casacore::String unit);
     
-    // Returns this field's unit property, or an empty String if it is not set.
-    String getUnit();
+    // Returns this field's unit property, or an empty casacore::String if it is not set.
+    casacore::String getUnit();
 
     // Sets this field's precision property.
-    void setPrecision(String precision);
+    void setPrecision(casacore::String precision);
     
-    // Returns this field's precision property, or an empty String if it is not
+    // Returns this field's precision property, or an empty casacore::String if it is not
     // set.
-    String getPrecision();
+    casacore::String getPrecision();
 
     // Sets this field's width property.
-    void setWidth(String width);
+    void setWidth(casacore::String width);
     
-    // Returns this field's width property, or an empty String if it is not
+    // Returns this field's width property, or an empty casacore::String if it is not
     // set.
-    String getWidth();
+    casacore::String getWidth();
 
 private:
     // Field name.
-    String name;
+    casacore::String name;
 
     // Field type.
-    String type;
+    casacore::String type;
 
     // Field keywords.
     std::vector<TBKeyword*> keywords;
 
     // Field UCD.
-    String ucd;
+    casacore::String ucd;
 
     // Field ref.
-    String ref;
+    casacore::String ref;
 
     // Field unit.
-    String unit;
+    casacore::String unit;
 
     // Field precision.
-    String precision;
+    casacore::String precision;
 
     // Field width.
-    String width;
+    casacore::String width;
 };
 
 }

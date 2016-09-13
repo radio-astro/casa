@@ -83,15 +83,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	public:
 		// Constructor
 		MWCPannerTool(Display::KeySym keysym = Display::K_Pointer_Button1,
-		              Bool scrollingAllowed = True);
+		              casacore::Bool scrollingAllowed = true);
 
 		// Destructor
 		virtual ~MWCPannerTool();
 
 		// Reset to non-showing, non-active.  Refreshes if necessary to erase
-		// (unless skipRefresh==True).
+		// (unless skipRefresh==true).
 		// (Does not unregister from WCs or disable future event handling).
-		virtual void reset(Bool skipRefresh=False);
+		virtual void reset(casacore::Bool skipRefresh=false);
 
 	protected:
 
@@ -113,31 +113,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Output callback to indicate that we have zoomed.  Override to
 		// handle, if needed.
-		virtual void zoomed(const Vector<Double> &/*linBlc*/,
-		                    const Vector<Double> &/*linTrc*/) {  };
+		virtual void zoomed(const casacore::Vector<casacore::Double> &/*linBlc*/,
+		                    const casacore::Vector<casacore::Double> &/*linTrc*/) {  };
 
 	private:
 
 		// execute the pan.  shift is the (2-element) shift vector for the
 		// zoom window, in linear coordinates.  Resets the tool, removing
 		// the line (if any) from screen
-		virtual void pan(Vector<Double> &shift);
+		virtual void pan(casacore::Vector<casacore::Double> &shift);
 
 		// Should we respond to mouse movement and button release?  Should
 		// we draw?  Set when the button is pushed in one of the tool's WCs.
-		Bool itsActive;
+		casacore::Bool itsActive;
 
 		// pixel coordinates of the pan vector.  1 = anchor, 2 = new position.
-		Int itsX1, itsY1, itsX2, itsY2;
+		casacore::Int itsX1, itsY1, itsX2, itsY2;
 
 		// allow scrolling via arrow keys, et. al.?
-		Bool itsScrollingAllowed;
+		casacore::Bool itsScrollingAllowed;
 
 		// prevents key repeat from piling up scroll events,
 		// if refresh can't keep up with them
 		// <group>
-		Double itsLastScrollTime;
-		Int itsLastKey;
+		casacore::Double itsLastScrollTime;
+		casacore::Int itsLastKey;
 		// </group>
 
 	};

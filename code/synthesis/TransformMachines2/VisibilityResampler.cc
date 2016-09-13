@@ -32,6 +32,7 @@
 #include <msvis/MSVis/AsynchronousTools.h>
 #include <fstream>
 
+using namespace casacore;
 namespace casa{
   using namespace refim;
 #define NEED_UNDERSCORES
@@ -179,7 +180,7 @@ namespace casa{
 		      
 		      imgWt=imagingWeight[ichan+irow*nDataChan];
 
-		      Int idopsf = (dopsf==True);
+		      Int idopsf = (dopsf==true);
 		      Int ncf=(*convFuncStore_p.rdata).shape()(0);
 		      Int nrow = vbs.nRow();
 		      gridengine(&nx, &ny, &nGridPol, &nGridChan, (double*)gridStore, 
@@ -251,6 +252,8 @@ namespace casa{
   void VisibilityResampler::GridToData(VBStore& vbs, const Array<Complex>& grid)
   //  void VisibilityResampler::GridToData(VBStore& vbs, Array<Complex>& grid)
   {
+    using casacore::operator*;
+
     Int nDataChan, nDataPol, nGridPol, nGridChan, nx, ny;
     Int achan, apol, rbeg, rend;
     Vector<Float> sampling(2);
@@ -455,15 +458,15 @@ namespace casa{
 					     Matrix<Double>& sumwt,
 					     Bool /*useConjFreqCF*/)
   {
-
-static Bool beenThereDoneThat = False;
+      using casacore::operator*;
+static Bool beenThereDoneThat = false;
 if (! beenThereDoneThat){
 #if DoOld
     cerr << "==> Doing it the old way" << endl;
 #else
     cerr << "==> Doing it the new way" << endl;
 #endif
-    beenThereDoneThat = True;
+    beenThereDoneThat = true;
 }
 
     Int nDataChan, nDataPol, nGridPol, nGridChan, nx, ny;
@@ -689,4 +692,5 @@ if (! beenThereDoneThat){
   }
 
 
+using namespace casacore;
 };// end namespace casa

@@ -79,8 +79,8 @@ class TJonesPolyTable : public TJonesTable
 
    // Construct from a specified table name and table access option. 
    // Used for creating new tables or opening existing tables.
-   TJonesPolyTable (const String& tableName, 
-		      Table::TableOption access = Table::Old);
+   TJonesPolyTable (const casacore::String& tableName, 
+		      casacore::Table::TableOption access = casacore::Table::Old);
 
  private:
    TJonesPolyDesc itsTJonesPolyDesc;
@@ -131,8 +131,8 @@ class TJonesSplineTable : public TJonesPolyTable
 
    // Construct from a specified table name and table access option. 
    // Used for creating new tables or opening existing tables.
-   TJonesSplineTable (const String& tableName, 
-		      Table::TableOption access = Table::Old);
+   TJonesSplineTable (const casacore::String& tableName, 
+		      casacore::Table::TableOption access = casacore::Table::Old);
 
  private:
    TJonesSplineDesc itsTJonesSplineDesc;

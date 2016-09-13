@@ -38,10 +38,11 @@
 // this include:
 #include <display/DisplayEvents/MWCRTRegion.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	MWCRTRegion::MWCRTRegion(Display::KeySym keysym) :
-		MWCRectTool(keysym, True) {
+		MWCRectTool(keysym, true) {
 	}
 
 	MWCRTRegion::~MWCRTRegion() {

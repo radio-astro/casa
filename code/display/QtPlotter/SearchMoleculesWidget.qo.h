@@ -57,10 +57,10 @@ namespace casa {
 			this->offset = offset;
 			countNeeded = true;
 		}
-		String getErrorMessage() const {
+		casacore::String getErrorMessage() const {
 			return errorMsg;
 		}
-		String getErrorMessageCount() const {
+		casacore::String getErrorMessageCount() const {
 			return errorMsgCount;
 		}
 
@@ -113,16 +113,16 @@ namespace casa {
 		bool isLocal() const;
 
 		void setRange( double min, double max, QString units );
-		void setSpectralCoordinate(SpectralCoordinate coord );
+		void setSpectralCoordinate(casacore::SpectralCoordinate coord );
 		void updateReferenceFrame();
 		static void setInitialReferenceFrame( QString initialReferenceStr );
 		void setResultDisplay( SearchMoleculesResultDisplayer* resultDisplay );
 		double getRedShiftedValue( bool reverseRedshift, double value, bool* valid ) const;
 
 		vector<SplatResult> getSearchResults() const;
-		MDoppler::Types getDopplerType() const;
-		MRadialVelocity::Types getReferenceFrame() const;
-		MFrequency::Types getReferenceFrequency() const;
+		casacore::MDoppler::Types getDopplerType() const;
+		casacore::MRadialVelocity::Types getReferenceFrame() const;
+		casacore::MFrequency::Types getReferenceFrequency() const;
 		~SearchMoleculesWidget();
 		static const QString SPLATALOGUE_UNITS;
 		static const QString SEARCH_DEFAULT_UNITS;
@@ -148,7 +148,7 @@ namespace casa {
 
 		void setAstronomicalFilters( Searcher* searcher );
 		void convertRangeLineEdit( QLineEdit* lineEdit, Converter* converter );
-		void initializeSearchRange( QLineEdit* lineEdit, Double& value, bool* valid );
+		void initializeSearchRange( QLineEdit* lineEdit, casacore::Double& value, bool* valid );
 		vector<string> initializeChemicalNames();
 		vector<string> initializeChemicalFormulas();
 		QList<QString> getSearchChemicals();
@@ -159,7 +159,7 @@ namespace casa {
 		void setSearchRangeDefault();
 		double setRangeValue( double value, QString units );
 		double getRedShift() const;
-		MDoppler getRedShiftAdjustment( bool reverseRedshift) const;
+		casacore::MDoppler getRedShiftAdjustment( bool reverseRedshift) const;
 
 		enum AstroFilters { NONE, TOP_20, PLANETARY_ATMOSPHERE,HOT_CORES,
 		                    DARK_CLOUDS,DIFFUSE_CLOUDS,COMETS, AGB_PPN_PN,EXTRAGALACTIC
@@ -171,8 +171,8 @@ namespace casa {
 		QString dopplerVelocityUnitStr;
 		vector<SplatResult> searchResults;
 		QList<QString> velocityUnitsList;
-		QMap<QString, MRadialVelocity::Types> radialVelocityTypeMap;
-		QMap<QString, MDoppler::Types> dopplerTypeMap;
+		QMap<QString, casacore::MRadialVelocity::Types> radialVelocityTypeMap;
+		QMap<QString, casacore::MDoppler::Types> dopplerTypeMap;
 		bool dopplerInVelocity;
 		bool searchInterrupted;
 		SearchThread* searchThread;
@@ -181,7 +181,7 @@ namespace casa {
 		QProgressDialog progressBar;
 
 		//For conversion
-		SpectralCoordinate coord;
+		casacore::SpectralCoordinate coord;
 
 		//Scrolling support
 		int searchResultCount;
