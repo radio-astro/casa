@@ -55,11 +55,12 @@ Compute a clean map.
   </param>
 
   <param type="string" name="specmode">
-     <description>Spectral gridding type (mfs, cube, \'\' for default)</description>
+     <description>Spectral gridding type (mfs, cont, cube, \'\' for default)</description>
      <value></value>
        <allowed kind="enum">
          <value></value>
          <value>mfs</value>
+         <value>cont</value>
          <value>cube</value>
        </allowed>
   </param>
@@ -359,6 +360,8 @@ Compute a clean map.
       </equals>
       <equals type="string" value="mfs">
       </equals>
+      <equals type="string" value="cont">
+      </equals>
       <equals value="cube">
         <default param="nchan"><value>-1</value></default>
         <default param="start"><value type="string"></value></default>
@@ -462,10 +465,10 @@ spwsel_topo -- Per MS spectral window TOPO frequency selection for continuum. []
     default: {}
     example: {['spw16:89.1~89.5GHz;90.2~90.3GHz']}
 
-specmode -- Frequency imaging mode, 'mfs', 'cube'. \'\' defaults to
+specmode -- Frequency imaging mode, 'mfs', 'cont', 'cube'. \'\' defaults to
     'cube' if intent parameter includes 'TARGET' otherwise 'mfs'.
     default: ''
-    example: 'mfs', 'cube'
+    example: 'mfs', 'cont', 'cube'
 
 gridder -- Gridding options, 'standard', 'mosaic'.
    Derived as follows:
