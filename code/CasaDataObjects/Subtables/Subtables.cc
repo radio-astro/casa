@@ -6,7 +6,6 @@
  */
 
 #include "Subtables.h"
-#include "Subtable.h"
 #include <casacore/casa/BasicSL.h>
 #include <map>
 #include <msvis/MSVis/UtilJ.h>
@@ -19,73 +18,16 @@ namespace casa {
 namespace cdo {
 
 
-
 class Subtables::Impl {
-
-    // Pimpl class for Subtables.
 
 public:
 
-    typedef std::map<SubtableType, String> SubtablesRep;
+    typedef std::map<Subtables::ST, String> SubtablesRep;
 
-    std::map<SubtableType, Subtable *> subtables_p;
+    std::map<ST, Subtable *> subtables_p;
+    static std::map <String, ST> types_p;
+}
 
-    class CaselessCompare {
-
-    public:
-
-        bool operator () (String a, String b) const
-        {
-            a.downcase();
-            b.downcase();
-            return a < b;
-        }
-    };
-
-    static std::map <SubtableType, String> typeToName_p;
-    static std::map <String, SubtableType, CaselessCompare> nameToType_p;
-
-    static map <SubtableType, String> initializeTypeToName ()
-    {
-        // Single place to provide starting values for both direction
-        // lookup table
-
-        map <SubtableType, String> result =
-            {{SubtableType::Antenna, "Antenna"},
-             {SubtableType::DataDescription, "DataDescription"},
-             {SubtableType::Feed, "Feed"},
-             {SubtableType::Field, "Field"},
-             {SubtableType::Observation, "Observation"},
-             {SubtableType::Pointing, "Pointing"},
-             {SubtableType::Polarization, "Polarization"},
-             {SubtableType::Processor, "Processor"},
-             {SubtableType::SpectralWindow, "SpectralWindow"},
-             {SubtableType::State, "State"},
-             {SubtableType::Source, "Source"},
-             {SubtableType::Syscal, "Syscal"}};
-
-        return result;
-    }
-
-    static map <String, SubtableType, CaselessCompare> initializeNameToType ()
-    {
-        // The values are defined as type to name so we need to
-        // create a name to type mapping.
-
-        std::map <String, SubtableType, CaselessCompare> result;
-        for (auto i : initializeTypeToName()){
-            result [i.second] = i.first;
-        }
-
-        return result;
-    }
-};
-
-std::map<SubtableType, String>
-Subtables::Impl::typeToName_p = initializeTypeToName ();
-
-std::map<String, SubtableType, Subtables::Impl::CaselessCompare>
-Subtables::Impl::nameToType_p = initializeNameToType ();
 
 
 Subtables::Subtables ()
@@ -94,14 +36,12 @@ Subtables::Subtables ()
 
 Subtables::~Subtables ()
 {
-    // Destroy all of the subtables.
+    for (Impl::SubtablesRep::iterator i = impl_p->subtables_p.begin();
+         i != impl_p->subtables_p.end();
+         i++){
 
-    for (auto i : impl_p->subtables_p)
-    {
-        delete i.second;
+        delete i->second;
     }
-
-    // Now destroy the implementation.
 
     delete impl_p;
 }
@@ -109,7 +49,7 @@ Subtables::~Subtables ()
 void
 Subtables::add (Subtable * subtable)
 {
-    SubtableType type = subtable->getType ();
+    ST type = subtable->getType ();
 
     if (isPresent (type)){
         delete get (type);
@@ -119,59 +59,40 @@ Subtables::add (Subtable * subtable)
 }
 
 const Subtable *
-Subtables::get (SubtableType subtableType) const
+Subtables::get (ST subtableType) const
 {
     ThrowIf (! isPresent (subtableType),
-             String::format ("Subtables::get: table %s not present", typeToName (subtableType).c_str()));
+             String::format ("Subtables::get: table %s not present", stToString (subtableType)));
 
     return impl_p->subtables_p [subtableType];
 }
 
-//Subtable *
-//Subtables::get (SubtableType subtableType)
-//{
-//    ThrowIf (! isPresent (subtableType),
-//             String::format ("Subtables::get: table %s not present", stToString (subtableType)));
-//
-//    return impl_p->subtables_p [subtableType];
-//}
+Subtable *
+Subtables::get (ST subtableType)
+{
+    ThrowIf (! isPresent (subtableType),
+             String::format ("Subtables::get: table %s not present", stToString (subtableType)));
+
+    return impl_p->subtables_p [subtableType];
+}
 
 Bool
-Subtables::isPresent (SubtableType subtableType) const
+Subtables::isPresent (ST subtableType) const
 {
     Bool present = utilj::containsKey (subtableType, impl_p->subtables_p);
     present = present && impl_p->subtables_p [subtableType] != 0;
     return present;
 }
 
-
-SubtableType
-Subtables::nameToType (String name)
+void
+Subtables::set (ST type, Subtable * subtable)
 {
-    // Returns SubtableType::Unknown if no such type
-
-    SubtableType result = SubtableType::Unknown;
-    name.downcase ();
-
-    try {
-        result = Impl::nameToType_p.at (name);
-    } catch (out_of_range & e){
-        // Nothing to do
+    if (isPresent (type)){
+        delete get (type);
     }
 
-    return result;
+    impl_p->subtables_p [type] = subtable;
 }
-
-
-//void
-//Subtables::set (SubtableType type, Subtable * subtable)
-//{
-//    if (isPresent (type)){
-//        delete get (type);
-//    }
-//
-//    impl_p->subtables_p [type] = subtable;
-//}
 
 uInt
 Subtables::size () const
@@ -179,22 +100,29 @@ Subtables::size () const
     return impl_p->subtables_p.size();
 }
 
-String
-Subtables::typeToName (SubtableType type)
+Subtables::ST
+Subtables::stFromString (const String & text)
 {
-    // Returns "" if no such type
+    String canonical = downcase (text);
 
-    String result = "";
+    for (Impl::SubtablesRep::const_iterator i = Impl::types_p;
+         i != Impl::types_p.end();
+         i++){
 
-    try {
-        result = Impl::typeToName_p.at (type);
-    } catch (out_of_range & e){
-        // Nothing to do
+        if (downcase (i->second) == canonical){
+            return i->first;
+        }
     }
 
-    return result;
+    ThrowIf (True, String::format ("Unknown subtable type: '%s'", text));
 }
 
 
-} // end namespace cdo
-} // end namespace casa
+String
+Subtables::stToString (Subtables::ST type)
+{
+    return Impl::types_p [type];
+}
+
+
+};

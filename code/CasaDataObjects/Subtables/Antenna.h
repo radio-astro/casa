@@ -10,9 +10,6 @@
 
 #include "CasaTableRow.h"
 
-#include <casa/BasicSL/String.h>
-#include <casa/Arrays/Vector.h>
-
 namespace casa {
 
 class String;
@@ -26,35 +23,41 @@ public:
 
     Antenna ();
     Antenna (const Antenna & other);
-    Antenna (int id,
-             double dishDiameter,
-             bool flagged,
-             const String & mount,
-             const String & name,
-             const Vector<float> & offset,
-             const Vector<float> & position,
-             const String & station,
-             const String & type);
+    Antenna (Double dishDiameter_p,
+             Bool flagged_p,
+             const String & mount_p,
+             const String & name_p,
+             const Vector<Float> & offset_p,
+             const Vector<Float> & position_p,
+             const String & station_p,
+             const String & type_p);
 
-    Antenna & operator= (const Antenna &) = delete;
+    Antenna & operator= (const Antenna & other);
 
-    double dishDiameter () const;
-    bool flagged () const;
+    Double dishDiameter () const;
+    Bool flagged () const;
     String name () const;
     String station () const;
     String type () const;
     String mount () const;
-    const Vector<float> & position () const;
-    const Vector<float> & offset () const;
+    const Vector<Float> & position () const;
+    const Vector<Float> & offset () const;
 
-    String toString () const;
+    void setDishDiameter (Double);
+    void setFlagged (Bool);
+    void setName (const String &);
+    void setStation (const String &);
+    void setType (const String &);
+    void setMount (const String &);
+    void setPosition (const Vector<Float> &);
+    void setOffset (const Vector<Float> &);
 
 protected:
 
 private:
 
-    double dishDiameter_p;
-    bool flagged_p;
+    Double dishDiameter_p;
+    Bool flagged_p;
     String mount_p;
     String name_p;
     Vector<Float> offset_p;

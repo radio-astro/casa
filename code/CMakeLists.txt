@@ -105,8 +105,6 @@ if( CMAKE_Fortran_COMPILER STREQUAL CMAKE_Fortran_COMPILER-NOTFOUND )
     message( FATAL_ERROR "Could not find fortran compiler. Please check!" )
 endif()
 
-message (STATUS "CMAKE_CXX_COMPILER = ${CMAKE_CXX_COMPILER}")
-
 casa_always_install()
 
 #
@@ -1326,7 +1324,7 @@ file( WRITE ${CMAKE_INSTALL_PREFIX}/makedefs
   CFITSIOLIBD = ${cfitsiolibd}\n
   CFITSIOINCD =  ${CFITSIO_INCLUDE_DIRS}\n
   eval_vars :\n
-  "\t@\ echo\ \"$(foreach\ V, $(VARS), $V=\\\"$($V)\\\")\ \;\ export\ $(VARS)\"\n"
+  \t@\ echo\ \"$(foreach\ V,$(VARS),$V=\\\"$($V)\\\")\ \;\ export\ $(VARS)\"\n
 )
 
 add_subdirectory( doc/userman )

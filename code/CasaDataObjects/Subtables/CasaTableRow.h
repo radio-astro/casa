@@ -8,9 +8,8 @@
 #ifndef CASATABLEROW_H_
 #define CASATABLEROW_H_
 
-namespace casa {
 
-class String;
+namespace casa {
 
 namespace cdo {
 
@@ -20,22 +19,23 @@ public:
 
     enum { NoId = -1};
 
-    CasaTableRow (int id);
-    CasaTableRow (const CasaTableRow &);
+    CasaTableRow ();
 
     virtual ~CasaTableRow ();
 
-    int getId () const;
 
-    virtual String toString () const = 0;
+    Int getId () const;
+    Bool isDirty () const;
 
 protected:
 
-    void setDirty (bool isDirty);
+    virtual CasaTableRow * clone (Int id = NoId) const;
+    void setDirty (Bool isDirty);
 
 private:
 
-    int id_p;
+    Bool dirty_p;
+
 };
 
 }

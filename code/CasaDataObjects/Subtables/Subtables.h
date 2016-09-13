@@ -1,6 +1,3 @@
-#if ! defined (CasaDataObjects_Subtables_H_160222_1045)
-#define CasaDataObjects_Subtables_H_160222_1045
-
 #include <iosfwd>
 
 namespace casa {
@@ -9,26 +6,7 @@ class String;
 
 namespace cdo {
 
-    class Subtable;
-
-enum class SubtableType : int {
-
-        Unknown,
-        Antenna,
-        DataDescription,
-        Feed,
-        Field,
-        Observation,
-        Pointing,
-        Polarization,
-        Processor,
-        SpectralWindow,
-        State,
-        Source,
-        Syscal,
-
-        N_Types
-};
+class Subtable;
 
 class Subtables {
 
@@ -39,13 +17,12 @@ public:
     ~Subtables ();
 
     void add (Subtable * subtable);
-    const Subtable * get (SubtableType) const;
-    bool isPresent (SubtableType subtableType) const;
-    void set (SubtableType subtableType, Subtable * subtable);
-    unsigned int size () const;
+    const Subtable * get (const String & name) const;
+    Subtable * get (Subtable::ST subtableType);
+    bool isPresent (Subtable::ST subtableType) const;
+    void set (Subtable::ST subtableType, Subtable * subtable);
+    uInt size () const;
 
-   static String typeToName (SubtableType);
-   static SubtableType nameToType (String);
 
 protected:
 
@@ -62,5 +39,3 @@ private:
 } // end namespace cdo
 
 } // end namespace casa
-
-#endif // ! defined (CasaDataObjects_Subtables_H_160222_1045)

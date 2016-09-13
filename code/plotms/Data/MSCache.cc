@@ -714,20 +714,6 @@ void MSCache::loadChunks(vi::VisibilityIterator2& vi,
                     goodChunk_.resize(nChunk_, True);
                 }
 
-if (chunk < 2){
-   static FILE * debugLog = fopen ("/tmp/debug.log", "w");
-   fprintf (debugLog, "*** chunk=%d, spw=%d, t=%f, shape=%s\nwtSpec=", chunk, vb->spectralWindows()(0),
-            vb->time()(0), vb->weightSpectrum().shape().toString().c_str());
-for (int p = 0; p < vb->weightSpectrum().shape()(0); p++){
-    for (int c = 0; c < vb->weightSpectrum().shape()(1); c++){
-        fprintf (debugLog, "%f,", vb->weightSpectrum()(p, c, 0));
-    }
-}
-fprintf (debugLog, "\n");
-fflush (debugLog);
-}
-
-
                 // If a thread is given, update its chunk number and progress bar
                 if(thread != NULL)
                     updateProgress(thread, chunk);
