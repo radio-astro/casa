@@ -225,7 +225,7 @@ class ImportData(basetask.StandardTaskTemplate):
                 if os.path.exists(dst):
                     LOG.warning('%s already in %s. Will import existing data.'
                                 '' % (os.path.basename(src), inputs.output_dir))
-                    if clearcals:
+                    if inputs.clearcals:
                         LOG.info('Pipeline clearcal enabled for %s' % (dst))
                         to_clearcal.add(dst)
                     else:
