@@ -166,6 +166,7 @@
 import os
 import shutil
 from taskinit import *
+import re
 
 def immath(
     imagename, mode, outfile, expr, varnames, sigma,
@@ -291,7 +292,9 @@ def immath(
             lpolexpr = _immath_expr_from_varnames(lpolexpr, varnames, filenames)
             lpolexpr = lpolexpr + ")"
             lpol = tmpFilePrefix + "_lpol.im"
-            res = _myia.imagecalc(pixels=lpolexpr, outfile=lpol, imagemd=imagemd)
+            res = _myia.imagecalc(
+                pixels=lpolexpr, outfile=lpol, imagemd=_immath_translate_imagemd(imagename, imagemd)
+            )
             res.done()
     elif mode=='poli':
         [expr, isLPol, isTPol] = _doPolI(filenames, varnames, tmpFilePrefix, True, True)
@@ -327,7 +330,9 @@ def immath(
         expr = _immath_expr_from_varnames(expr, varnames, filenames)
         casalog.post( 'Will evaluate expression: '+expr, 'DEBUG1' )
         try:
-            res = _myia.imagecalc(pixels=expr, outfile=outfile, imagemd=imagemd)
+            res = _myia.imagecalc(
+                pixels=expr, outfile=outfile, imagemd=_immath_translate_imagemd(imagename, imagemd)
+            )
             # need to modify stokes type of output image for pol. intensity image
             if ( mode =="poli" ):
                 csys = res.coordsys()
@@ -420,8 +425,9 @@ def immath(
     casalog.post( 'Will evaluate expression of subimages: '+expr, 'DEBUG1' )
     try:
         # Do the calculation
-        res = _myia.imagecalc(pixels=expr, outfile=outfile, imagemd=imagemd )
-
+        res = _myia.imagecalc(
+            pixels=expr, outfile=outfile, imagemd=_immath_translate_imagemd(imagename, imagemd)
+        )
         # modify stokes type for polarization intensity image
         if (  mode=="poli" ):                
             csys=retValue.coordsys()
@@ -691,4 +697,21 @@ def _immath_createPolMask(polithresh, lpol, outfile):
     casalog.post('Calculated mask based on linear polarization threshold ' + str(polithresh),
         'INFO')
     _myia.done()
-            
+    
+def _immath_translate_imagemd(imagename, imagemd):
+    # may IM0 etc is a real file name
+    if os.path.exists(imagemd):
+        return imagemd
+    # match IM0, IM1, ... etc
+    m = re.match("^IM(\d+)$", imagemd)
+    if not m:
+        return imagemd
+    idx = int(m.groups()[0])
+    if idx == 0 and type(imagename) == str:
+        return imagename
+    # if here, then imagename is an array of strings
+    if idx >= len(imagename):
+        # out of range
+        return imagemd
+    return imagename[idx]
+

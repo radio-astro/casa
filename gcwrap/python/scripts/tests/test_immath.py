@@ -1631,12 +1631,15 @@ class immath_test3(unittest.TestCase):
             self.assertTrue(myia.brightnessunit() == units[i])
             myia.done()
         for i in [0, 1, 2]:
-            outfile = "immath_out" + str(i) + ".im"
-            immath("a.im", expr=expr, imagemd=images[i], outfile=outfile)
-            myia.open(outfile)
-            self.assertTrue(myia.restoringbeam() == beams[i])
-            self.assertTrue(myia.brightnessunit() == units[i])
-            myia.done()
+            outfile0 = "immath_out" + str(i) + ".im"
+            immath("a.im", expr=expr, imagemd=images[i], outfile=outfile0)
+            outfile1 = outfile0 + "IM" + str(i)
+            immath(images, expr=expr, imagemd='IM' + str(i), outfile=outfile1)
+            for outfile in (outfile0, outfile1):
+                myia.open(outfile)
+                self.assertTrue(myia.restoringbeam() == beams[i])
+                self.assertTrue(myia.brightnessunit() == units[i])
+                myia.done()
 
     def test_history(self):
         """Test that history records are added"""
