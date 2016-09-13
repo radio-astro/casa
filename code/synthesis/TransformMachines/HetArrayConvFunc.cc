@@ -21,7 +21,7 @@
 //#        Postal address: AIPS++ Project Office
 //#                        National Radio Astronomy Observatory
 //#                        520 Edgemont Road
-//#                        Charlottesville, VA 22903-2475 USA
+//#                        Charlottesville,p VA 22903-2475 USA
 //#
 //#
 //# $Id$
@@ -617,7 +617,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  IPosition blcQ(4, pbShape(0)/8*3, pbShape(1)/8*3, 0, 0);
 	  IPosition trcQ(4,  blcQ[0]+ pbShape(0)/4-1, blcQ[1]+pbShape(1)/4-1 , nBeamPols-1, nBeamChans-1);
 
-	  //cerr << "blcQ " << blcQ << " trcQ " << trcQ << " pbShape " << pbShape << endl;
+	  // cerr << "blcQ " << blcQ << " trcQ " << trcQ << " pbShape " << pbShape << endl;
 	  Slicer slQ(blcQ, trcQ, Slicer::endIsLast);
 	  {
 	    SubImage<Complex>  pBSSub(pBScreen, slQ, False);
@@ -662,6 +662,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       (*convSupportBlock_p[actualConvIndex_p])=convSupport_p;
      
       if(newConvSize < lattSize){
+	//cerr << "resizing " << endl;
 	IPosition blc(5, (lattSize/2)-(newConvSize/2),
 		      (lattSize/2)-(newConvSize/2),0,0,0);
 	IPosition trc(5, (lattSize/2)+(newConvSize/2-1),
@@ -722,6 +723,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool delc; Bool delw;
     Double dirX=pixFieldDir(0);
     Double dirY=pixFieldDir(1);
+    // cerr <<  "shapes " << convFunc_p.shape().asVector() << " " << weightConvFunc_p.shape().asVector() << " nBeamPols  " << nBeamPols << " nBeamVhans " << nBeamChans << " ndishpair "<< ndishpair << " convsize " << convSize_p << endl;
     Complex *convstor=convFunc_p.getStorage(delc);
     Complex *weightstor=weightConvFunc_p.getStorage(delw);
     Int elconvsize=convSize_p;
@@ -756,7 +758,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   
   }
-
+   
+typedef unsigned long long ooLong; 
 
   void HetArrayConvFunc::applyGradientToYLine(const Int iy, Complex*& convFunctions, Complex*& convWeights, const Double pixXdir, const Double pixYdir, Int convSize, const Int ndishpair, const Int nChan, const Int nPol){
     Double cy, sy;
@@ -772,7 +775,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	for (Int ichan=0; ichan < nChan; ++ichan){
 	  //Int chanoffset=ichan*ndishpair*convSize*convSize;
 	  for(Int iz=0; iz <ndishpair; ++iz){
-	    Int index=(((ipol*nChan+ichan)*ndishpair+iz)*convSize+iy)*convSize+ix;
+	    ooLong index=((ooLong(iz*nChan+ichan)*nPol+ipol)*ooLong(convSize)+ooLong(iy))*ooLong(convSize)+ooLong(ix);
 	    convFunctions[index]= convFunctions[index]*phx*phy;
 	    convWeights[index]= convWeights[index]*phx*phy;
 	  }
