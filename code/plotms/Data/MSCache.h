@@ -157,7 +157,7 @@ private:
 			  casacore::Bool setFlag,
 			  PlotMSIndexer* indexer, int dataIndex);
 
-  Vector<Double> calcVelocity(vi::VisBuffer2* vb); 
+  casacore::Vector<casacore::Double> calcVelocity(vi::VisBuffer2* vb); 
 
   // For averaging done by PlotMSVBAverager;
   // Some axes need to come from VB2 attached to VI2

@@ -177,7 +177,7 @@ public:
   FluxCalcLogFreqBrokenPolynomial();
   
   template <casacore::Int lford1, casacore::Int lford2>
-  void fill_lohi_coeffs(const RigidVector<Float, lford1>& lorv,
+  void fill_lohi_coeffs(const casacore::RigidVector<casacore::Float, lford1>& lorv,
                         const casacore::MFrequency& break_freq,
                         const casacore::RigidVector<casacore::Float, lford2>& hirv);
 

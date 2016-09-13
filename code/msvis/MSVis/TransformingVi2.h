@@ -566,7 +566,7 @@ public:
 
 protected:
 
-    const VisBuffer2 * getVisBufferConst () const /*__attribute__((deprecated))*/ { throw AipsError ("Not implemented"); }
+    const VisBuffer2 * getVisBufferConst () const /*__attribute__((deprecated))*/ { throw casacore::AipsError ("Not implemented"); }
 
     TransformingVi2 (ViImplementation2 * inputVi);
 
