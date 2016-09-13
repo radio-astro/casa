@@ -153,7 +153,7 @@ except:
                             <tr>
 				<th>beam</th>
                                 %if info_dict.get((field,str(spw),pol,'beam major')) is not None:
-                                    <td>${'%.2g x %.2g %s' % (info_dict[(field,str(spw),pol,'beam major')]['value'], info_dict[(field,str(spw),pol,'beam minor')]['value'], info_dict[(field,str(spw),pol,'beam major')]['unit'])}</td>
+                                    <td>${'%#.2g x %#.2g %s' % (info_dict[(field,str(spw),pol,'beam major')]['value'], info_dict[(field,str(spw),pol,'beam minor')]['value'], info_dict[(field,str(spw),pol,'beam major')]['unit'])}</td>
                                 %else:
                                     <td>-</td>
                                 %endif
@@ -203,7 +203,7 @@ except:
                             <tr>
                                 <th>non-pbcor image rms</th>
                                 %if info_dict.get((field,str(spw),pol,'masked rms')) is not None:
-                                            <td>${'%.2g %s' % (info_dict[(field,str(spw),pol,'masked rms')],
+                                            <td>${'%#.2g %s' % (info_dict[(field,str(spw),pol,'masked rms')],
                                                 info_dict[(field,str(spw),pol,'brightness unit')])}</td>
                                 %else:
                                             <td>-</td>
