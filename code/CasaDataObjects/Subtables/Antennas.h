@@ -24,20 +24,20 @@ public:
 
 };
 
-class AntennasFiller : SubtableFiller <Antennas> {
-
-public:
-
-    AntennasFiller (Table & table, Antennas & antennas);
-
-    void fill ();
-
-private:
-
-    Antennas & antennas_p;
-    Table & table_p;
-
-};
+//class AntennasFiller : public SubtableFiller <Antennas> {
+//
+//public:
+//
+//    AntennasFiller (Table & table, Antennas & antennas);
+//
+//    void fill ();
+//
+//private:
+//
+//    Antennas & antennas_p;
+//    Table & table_p;
+//
+//};
 
 }
 }

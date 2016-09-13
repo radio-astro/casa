@@ -85,9 +85,35 @@ macro( casa_add_library module )
       set_target_properties( lib${module} PROPERTIES SOVERSION ${casa_soversion} )
   endif()
 
+  set (binaryName "lib${module}.so.${casa_soversion}")
+  add_crashreporter_symbols (${module} ${binaryName} lib${module})
+
   install( TARGETS lib${module} LIBRARY DESTINATION lib )
 
 endmacro()
+
+macro ( add_crashreporter_symbols module binaryName target)
+
+  if (UseCrashReporter)
+
+message ("DEBUG add_crashreporter_symbols module=${module} binaryName=${binaryName} target=${target}")
+
+      set (binaryName "lib${module}.so.${casa_soversion}")
+      if (APPLE)
+	  set (os mac)
+      else ()
+	  set (os linux)
+      endif ()
+      set (breakpadSymbolDumper "${Breakpad_IncludeRoot}/tools/${os}/dump_syms/dump_syms")
+      add_custom_target (${target}.sym ALL
+          COMMAND ${CMAKE_SOURCE_DIR}/install/generateBreakpadSymbols.sh ${binaryName} 
+          ${breakpadSymbolDumper} ${CMAKE_INSTALL_PREFIX}/symbols ${CMAKE_BINARY_DIR}/${module})
+      add_dependencies (${target}.sym ${target})
+message ("DEBUG      add_dependencies (${target}.sym ${target})")
+
+  endif ()
+
+endmacro ()
 
 #
 # casa_add_executable( module name source1 [source2...] )
@@ -114,6 +140,9 @@ macro( casa_add_executable module name )
 
   add_dependencies( inst ${name} )
   add_custom_target( ${name}_fast ${CMAKE_BUILD_TOOL} ${name}/fast )
+
+  set (binaryName "lib${module}.so.${casa_soversion}")
+  add_crashreporter_symbols (${module} ${name} ${name})
 
   install( TARGETS ${name} RUNTIME DESTINATION bin )
 

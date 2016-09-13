@@ -359,19 +359,19 @@ public:
     // Return the antenna AZ/EL Vector (nant)
 
     virtual MDirection azel0 (Double time) const;
-    static void azel0Calculate (Double time, MSDerivedValues & msd,
-                                MDirection & azel0, const MEpoch & mEpoch0);
+//    static void azel0Calculate (Double time, MSDerivedValues & msd,
+//                                MDirection & azel0, const MEpoch & mEpoch0);
 
     virtual const Vector<MDirection> & azel (Double time) const;
-    static void azelCalculate (Double time, MSDerivedValues & msd, Vector<MDirection> & azel,
-                               Int nAnt, const MEpoch & mEpoch0);
+//    static void azelCalculate (Double time, MSDerivedValues & msd, Vector<MDirection> & azel,
+//                               Int nAnt, const MEpoch & mEpoch0);
 
     // Return feed parallactic angles Vector (nant) (1 feed/ant)
 
     virtual const Vector<Float> & feed_pa (Double time) const;
-    static Vector<Float> feed_paCalculate (Double time, MSDerivedValues & msd,
-                                           Int nAntennas, const MEpoch & mEpoch0,
-                                           const Vector<Float> & receptor0Angle);
+//    static Vector<Float> feed_paCalculate (Double time, MSDerivedValues & msd,
+//                                           Int nAntennas, const MEpoch & mEpoch0,
+//                                           const Vector<Float> & receptor0Angle);
 
     // Return a cube containing pairs of coordinate offsets for each
     // receptor of each feed (values are in radians, coordinate system is fixed
@@ -562,6 +562,8 @@ public:
 
 protected:
 
+    const VisBuffer2 * getVisBufferConst () const /*__attribute__((deprecated))*/ { throw AipsError ("Not implemented"); }
+
     TransformingVi2 (ViImplementation2 * inputVi);
 
     void configureNewSubchunk ();
@@ -577,7 +579,7 @@ protected:
     VisibilityIterator2 * getVi () const;
     ViImplementation2 * getVii () const;
     void setVisBuffer (VisBuffer2 * vb);
-    VisBuffer2 * getVisBufferConst () const {return vb_p;}
+    virtual VisBuffer2 * getVisBuffer () const {return vb_p;}
 
     // jagonzal (to be reviewed by jjacobs): I need to set inputVii_p to NULL from
     // MSTransformIterator destructor because MSTransformIteratorFactory is borrowing

@@ -459,6 +459,8 @@ public:
     // return a string mount identifier for each antenna
 
     virtual const Vector<String> & antennaMounts () const = 0;
+    virtual Vector<MPosition> antennaPositions () const;
+    MSDerivedValues makeMsd ();
 
     virtual MEpoch getEpoch () const = 0;
 
@@ -611,6 +613,8 @@ protected:
                                  WeightScaling * scaling,
                                  const Array<Float>& unscaled,
                                  Array<Float>& scaled);
+
+    static void setVisBufferFillable (VisBuffer2 * vb, Bool fillable);
 
 };
 

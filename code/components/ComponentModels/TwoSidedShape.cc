@@ -48,7 +48,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 TwoSidedShape::~TwoSidedShape() {
-  DebugAssert(ok(), AipsError);
+//  DebugAssert(ok(), AipsError);
 }
 
 TwoSidedShape& TwoSidedShape::operator=(const TwoSidedShape& other) {
