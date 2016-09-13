@@ -792,6 +792,8 @@ void CTPatchedInterp::makeInterpolators() {
 
   if (CTPATCHEDINTERPVERB) cout << "  CTPatchedInterp::initialize()" << endl;
 
+  LogIO log;
+
   // cal table name for messages
   Path pathname(ct_.tableName());
   String tabname=pathname.baseName().before(".tempMem");
@@ -803,6 +805,7 @@ void CTPatchedInterp::makeInterpolators() {
   tIdel_.resize(tIsize);
   tIdel_.set(False);
 
+  Int nflagged(0);
   Bool reportBadSpw(False);
   for (Int iMSObs=0;iMSObs<nMSObs_;++iMSObs) {
   for (Int iMSFld=0;iMSFld<nMSFld_;++iMSFld) {
@@ -841,13 +844,17 @@ void CTPatchedInterp::makeInterpolators() {
 	      tI_(tIip)=NULL; 
 	      tR.set(0.0);
 	      tRf.set(True);
-	      //	      cout << tIip << "<-" << ictip << " " << "ctSlices_(ictip) = " << ctSlices_(ictip) << endl;
-	      cout << "MS obs=" << iMSObs
+	      //	      cout << tIip << "<-" << ictip << " " << "ctSlices_(ictip) = " << ctSlices_(ictip) << end;
+	      ++nflagged;
+	      ostringstream msg;
+	      msg << "MS obs=" << iMSObs
 		   << ",fld=" << iMSFld
 		   << ",spw=" << iMSSpw
 		   << ",ant=" << iMSElem
 		   << " cannot be calibrated by " << tabname 
 		   << " as mapped, and will be flagged in this process." << endl;
+	      log << msg.str() << LogIO::POST;
+
 	    }
 	  } // iMSElem
 	} // spwOK
@@ -874,12 +881,23 @@ void CTPatchedInterp::makeInterpolators() {
   } // iMSFld
   } // iMSObs
 
+  if (nflagged>0) {
+    ostringstream msg;
+    msg << "Warning: " << nflagged 
+	<< " obs/fld/spw/ant combinations cannot be calibrated by "
+	<< tabname 
+	<< " as mapped, and will be flagged.  Examine log above for details."
+	<< endl;
+    log << msg.str() << LogIO::WARN;
+  }
 
   if (reportBadSpw) {
-    cout << "The following MS spws have no corresponding cal spws in " << tabname << ": ";
+    ostringstream msg;
+    msg << "The following MS spws have no corresponding cal spws in " << tabname << ": ";
     for (Int iMSSpw=0;iMSSpw<nMSSpw_;++iMSSpw)
-      if (!this->spwOK(spwMap_(iMSSpw))) cout << iMSSpw << " ";
-    cout << endl;
+      if (!this->spwOK(spwMap_(iMSSpw))) msg << iMSSpw << " ";
+    msg << endl;
+    log << msg.str() << LogIO::POST;
   }
 
 }
