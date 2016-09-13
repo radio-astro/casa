@@ -35,7 +35,8 @@ class ImportDataInputs(basetask.StandardInputs):
     def __init__(self, context=None, vis=None, output_dir=None,
                  asis=None, process_caldevice=None,
                  session=None, overwrite=None, save_flagonline=None,
-                 bdfflags=None, lazy=None, dbservice=None, createmms=None, ocorr_mode=None):
+                 bdfflags=None, lazy=None, dbservice=None, createmms=None,
+                 ocorr_mode=None, clearcals=None):
         self._init_properties(vars())
 
     # This are ALMA specific settings. Make them generic at some point.
@@ -49,6 +50,7 @@ class ImportDataInputs(basetask.StandardInputs):
     process_caldevice = basetask.property_with_default('process_caldevice', False)
     save_flagonline = basetask.property_with_default('save_flagonline', True)
     ocorr_mode = basetask.property_with_default('ocorr_mode', 'ca')
+    clearcals = basetask.property_with_default('clearcals', True)
 
     @property
     def session(self):
@@ -223,7 +225,11 @@ class ImportData(basetask.StandardTaskTemplate):
                 if os.path.exists(dst):
                     LOG.warning('%s already in %s. Will import existing data.'
                                 '' % (os.path.basename(src), inputs.output_dir))
-                    to_clearcal.add(dst)
+                    if inputs.clearcals:
+                        LOG.info('Pipeline clearcal enabled for %s' % (dst))
+                        to_clearcal.add(dst)
+                    else:
+                        LOG.info('Pipeline clearcal disabled for %s' % (dst))
                     continue
 
                 if not self._executor._dry_run:
