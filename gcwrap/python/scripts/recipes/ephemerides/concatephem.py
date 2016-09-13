@@ -255,7 +255,7 @@ def findephems(vis=[], field=''):
     return rval
 
 
-def concatreplaceephem(vis=[], field=''):
+def concatreplaceephem(vis=[], field='', commontime=False):
 
     """
        Search the MSs given in the list "vis" for ephemerides for
@@ -267,10 +267,21 @@ def concatreplaceephem(vis=[], field=''):
 
        field - field for which to seach ephemerides
              default:
+
+       commontime - set the FIELD table reference time in all input MSs to a common time.
+             If True, the common time is taken from the time of the first MS.
+             If a float value is provided, it is interpreted as a time in seconds in the native
+             CASA time representation.
+             default: False - do not modify the FIELD table TIME column
+
     """
       
     ephemfield = field
     thetabs = findephems(vis, ephemfield)
+
+    if not (type(commontime)==bool) and not (type(commontime)==float):
+        raise Exception, 'ERROR: parameter commontime must be bool or float'	
+
     if thetabs != [] and not ('' in thetabs):
         tmptab = os.path.basename(thetabs[0])+'.concattmp'
         concatephem(thetabs, tmptab)
@@ -285,6 +296,29 @@ def concatreplaceephem(vis=[], field=''):
             raise Exception, 'Concatenation of ephemerides for field '+str(ephemfield)+' failed.'
         
         os.system('rm -rf '+tmptab)
+
+        if type(commontime)==float or commontime==True:
+            casalog.post('Will set FIELD table referene time for field '+str(ephemfield)+' to common value:', 'INFO')
+            thecommontime = commontime
+            if type(commontime)==float:
+                casalog.post('   '+str(thecommontime), 'INFO')
+            mytb = tbtool()
+            for thevis in vis:
+                mytb.open(thevis+'/FIELD', nomodify=False)
+                thenames = mytb.getcol('NAME')
+                thetimes = mytb.getcol('TIME')
+                
+                for i in range(0,len(thenames)):
+                    if (thenames[i]==ephemfield):
+                        if thecommontime==True and thevis==vis[0]:
+                            thecommontime = thetimes[i] # memorize the common time
+                            casalog.post('   '+str(thecommontime), 'INFO')
+                        else:
+                            thetimes[i] = thecommontime
+                #end for
+                mytb.putcol('TIME', thetimes)
+            #end for
+            mytb.close()
 
     else:
         casalog.post('ERROR while searching for ephemerides for field '+str(ephemfield), 'SEVERE')
