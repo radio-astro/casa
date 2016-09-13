@@ -37,7 +37,6 @@
 #include <casa/stdio.h>
 #include <casa/stdlib.h>
     
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 void RFASpectralRej::addSegment ( Int spwid,Double fq0,Double fq1,Int ch0,Int ch1 )
@@ -55,7 +54,7 @@ void RFASpectralRej::addSegment ( Int spwid,Double fq0,Double fq1,Int ch0,Int ch
 // -----------------------------------------------------------------------
 void RFASpectralRej::parseRegion ( const RecordInterface &parm )
 {
-  Bool parsed = false;
+  Bool parsed = False;
   Int spwid = -1;
   if( isFieldSet(parm,RF_SPWID) && fieldType(parm,RF_SPWID,TpInt) )
     spwid = parm.asInt(RF_SPWID) - indexingBase();
@@ -84,7 +83,7 @@ void RFASpectralRej::parseRegion ( const RecordInterface &parm )
       }
       addSegment(spwid,fq(0,i),fq(1,i),-1,-1);
     }
-    parsed=true;
+    parsed=True;
   }
 // second option is channel numbers
   if( fieldSize(parm,RF_CHANS)>1 )
@@ -111,7 +110,7 @@ void RFASpectralRej::parseRegion ( const RecordInterface &parm )
       ch -= (Int)indexingBase();
       addSegment(spwid,0,0,ch(0,i),ch(1,i));
     }
-    parsed=true;
+    parsed=True;
   }
   if( !parsed )
     os<<"\""<<RF_FREQS<<"\" or \""<<RF_CHANS<<"\" must be specified\n"<<LogIO::EXCEPTION;
@@ -167,17 +166,17 @@ RFASpectralRej::RFASpectralRej  ( RFChunkStats &ch,const RecordInterface &parm )
 // -----------------------------------------------------------------------
   Bool RFASpectralRej::newChunk (Int &maxmem)
 {
-// compute correlations mask, return false if fails
+// compute correlations mask, return False if fails
   corrmask = RFDataMapper::corrMask(chunk.visIter());
   if( !corrmask )
   {
     os<<LogIO::WARN<<"missing selected correlations, ignoring this chunk\n"<<LogIO::POST;
-    return active=false;
+    return active=False;
   }
 // figure out active channels (i.e. within specified segments)
   Int spwid = chunk.visBuf().spectralWindow();
   fitchan.resize(num(CHAN));
-  fitchan.set(false);
+  fitchan.set(False);
   const Vector<Double> & fq( chunk.frequency()*1e-6 );
   for( uInt i=0; i<segments.nelements(); i++)
   {
@@ -192,7 +191,7 @@ RFASpectralRej::RFASpectralRej  ( RFChunkStats &ch,const RecordInterface &parm )
         Int ch1 = num(CHAN)-1;
         if( seg.ch1 < ch1 )
           ch1 = seg.ch1;
-        fitchan(Slice(seg.ch0,ch1-seg.ch0+1)) = true;
+        fitchan(Slice(seg.ch0,ch1-seg.ch0+1)) = True;
       }
     }
     else // use frequencies
@@ -215,12 +214,12 @@ RFASpectralRej::RFASpectralRej  ( RFChunkStats &ch,const RecordInterface &parm )
   if( num_fitchan<ndeg+2 )
   {
     os<<LogIO::WARN<<"not enough channels, ignoring chunk\n"<<LogIO::POST;
-    return active=false;
+    return active=False;
   }
 // finish with init  
   RFAFlagCubeBase::newChunk(maxmem-=1);
   rowclipper.init(num(IFR),num(TIME));
-  return active=true;
+  return active=True;
 }
 
 void RFASpectralRej::endChunk ()
@@ -348,11 +347,11 @@ const RecordInterface & RFASpectralRej::getDefaults ()
     rec.define(RF_NDEG,(Int)2);
     rec.define(RF_ROW_THR,(Double)5);
     rec.define(RF_ROW_HW,(Int)6);
-    rec.define(RF_REGION,false);
-    rec.define(RF_SPWID,false);
-    rec.define(RF_FREQS,false);
-    rec.define(RF_CHANS,false);
-    rec.define(RF_DEBUG,false);
+    rec.define(RF_REGION,False);
+    rec.define(RF_SPWID,False);
+    rec.define(RF_FREQS,False);
+    rec.define(RF_CHANS,False);
+    rec.define(RF_DEBUG,False);
     
     rec.setComment(RF_COLUMN,"Use column: [DATA|MODEL|CORRected]");
     rec.setComment(RF_EXPR,"Expression for deriving value (e.g. \"ABS XX\", \"+ ABS XX YY\")");

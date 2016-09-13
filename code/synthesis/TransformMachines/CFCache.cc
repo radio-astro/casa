@@ -37,7 +37,6 @@
 // #include <tables/Tables/SetupNewTab.h>
 // #include <tables/Tables/Table.h>
 
-using namespace casacore;
 namespace casa{
   CFCache::~CFCache()  
   {
@@ -77,10 +76,10 @@ namespace casa{
 	File file(name);
 	Int Npa=0,Nw=0;
 	ifstream aux;
-	Bool readFromFile=false;
+	Bool readFromFile=False;
 	if (file.exists() && file.isRegular()) 
 	  {
-	    readFromFile=true;
+	    readFromFile=True;
 	    aux.open(name.str().c_str());
 	    if (readFromFile && aux.good()) aux >> Npa >> Nw;
 	    else
@@ -90,12 +89,12 @@ namespace casa{
 
 	if (Npa > 0)
 	  {
-	    paList.resize(Npa,true);
+	    paList.resize(Npa,True);
 
 	    IPosition s(2,Nw,Npa);
-	    XSup.resize(s,true);
-	    YSup.resize(s,true);
-	    Sampling.resize(Npa,true);
+	    XSup.resize(s,True);
+	    YSup.resize(s,True);
+	    Sampling.resize(Npa,True);
 	    for(Int i=0;i<Npa;i++)
 	      {
 		Float pa, S;
@@ -127,13 +126,13 @@ namespace casa{
   //
   void CFCache::initPolMaps(PolMapType& polMap, PolMapType& conjPolMap)
   {
-    if (OTODone()==false)
+    if (OTODone()==False)
       {
 	for(Int i=0;i<(Int)memCache2_p.nelements();i++)
 	  memCache2_p[i].initPolMaps(polMap, conjPolMap);
 	for(Int i=0;i<(Int)memCacheWt2_p.nelements();i++)
 	  memCacheWt2_p[i].initPolMaps(polMap, conjPolMap);
-	OTODone_p=true;
+	OTODone_p=True;
       }
   }
   //
@@ -198,12 +197,12 @@ namespace casa{
     //   cf[i] = path+"/"+cfFileNames[i];
     // for (int i = 0; i < cfWtFileNames.nelements(); i++)
     //   wtcf[i] = path+"/"+cfWtFileNames[i];
-    fillCFListFromDisk(cf, path, memCache2_p, true, selectedPA, dPA,verbose);
-    fillCFListFromDisk(wtcf, path, memCacheWt2_p, false, selectedPA, dPA, verbose);
+    fillCFListFromDisk(cf, path, memCache2_p, True, selectedPA, dPA,verbose);
+    fillCFListFromDisk(wtcf, path, memCacheWt2_p, False, selectedPA, dPA, verbose);
     memCache2_p[0].primeTheCFB();
     memCacheWt2_p[0].primeTheCFB();
-    if (verbose > 0) summarize(memCache2_p,   "CFS",   true);
-    //summarize(memCacheWt2_p, "WTCFS", false);
+    if (verbose > 0) summarize(memCache2_p,   "CFS",   True);
+    //summarize(memCacheWt2_p, "WTCFS", False);
   }
 
   void CFCache::initCache2(Bool verbose, Float selectedPA, Float dPA)
@@ -227,8 +226,8 @@ namespace casa{
 					     " exists but is unreadable/unwriteable")));
       }
 
-    fillCFSFromDisk(dirObj,"CFS*", memCache2_p, true, selectedPA, dPA, verbose);
-    fillCFSFromDisk(dirObj,"WTCFS*", memCacheWt2_p, false, selectedPA, dPA, verbose);
+    fillCFSFromDisk(dirObj,"CFS*", memCache2_p, True, selectedPA, dPA, verbose);
+    fillCFSFromDisk(dirObj,"WTCFS*", memCacheWt2_p, False, selectedPA, dPA, verbose);
     // memCache2_p[0].show("Re-load CFS",cerr);
     // memCacheWt2_p[0].show("Re-load WTCFS",cerr);
     memCache2_p[0].primeTheCFB();
@@ -248,8 +247,8 @@ namespace casa{
 	memUnit="KB";
       }
 
-    summarize(memCache2_p,   "CFS",   true);
-    summarize(memCacheWt2_p, "WTCFS", false);
+    summarize(memCache2_p,   "CFS",   True);
+    summarize(memCacheWt2_p, "WTCFS", False);
 
     log_l << "Total CF Cache memory footprint: " << (memUsed0+memUsed1) << " (" << memUsed0 << "," << memUsed1 << ") " << memUnit << LogIO::POST;
     // memCache2_p[0].makePersistent("./junk.cf");
@@ -269,7 +268,7 @@ namespace casa{
     Bool selectPA = (fabs(selectPAVal) <= 360.0);
     try
       {
-	if (memStore.nelements() == 0) memStore.resize(1,true);
+	if (memStore.nelements() == 0) memStore.resize(1,True);
 
 	CFCacheTableType cfCacheTable_l;
 	// Regex regex(Regex::fromPattern(pattern));
@@ -288,7 +287,7 @@ namespace casa{
 	    //
 	    {
 	      ProgressMeter pm(1.0, Double(fileNames.nelements()),
-			       "Reading CFCache aux. info.", "","","",true);
+			       "Reading CFCache aux. info.", "","","",True);
 	      for (uInt i=0; i < fileNames.nelements(); i++)
 		{
 		  PagedImage<Complex> thisCF(CFCDir+'/'+fileNames[i]);
@@ -322,8 +321,8 @@ namespace casa{
 	    // 	CoordinateSystem coordSys;
 
 	    // 	getCFParams(fileNames[i], pixBuf, coordSys,  sampling, paVal, 
-	    // 		    xSupport, ySupport, fVal, wVal, mVal,false);
-	    // 	Bool pickThisCF=true;
+	    // 		    xSupport, ySupport, fVal, wVal, mVal,False);
+	    // 	Bool pickThisCF=True;
 	    // 	if (selectPA) pickThisCF = (fabs(paVal - selectPAVal) <= dPA);
 	    // 	cerr << fileNames[i] << " " << paVal << " " << selectPAVal << " " << dPA << " " << pickThisCF << endl;
 	    // 	if (pickThisCF) cfCount++;
@@ -332,16 +331,16 @@ namespace casa{
 	    TableRecord miscInfo;
 	    {
 	      ProgressMeter pm(1.0, Double(fileNames.nelements()),
-			       "Loading CFs", "","","",true);
+			       "Loading CFs", "","","",True);
 	      for (uInt i=0; i < fileNames.nelements(); i++)
 		{
 		  Double paVal, wVal, fVal, sampling, conjFreq; Int mVal, xSupport, ySupport, conjPoln;
 		  CoordinateSystem coordSys;
 
 		  miscInfo = getCFParams(fileNames[i], pixBuf, coordSys,  sampling, paVal, 
-			      xSupport, ySupport, fVal, wVal, mVal,conjFreq, conjPoln,false);
+			      xSupport, ySupport, fVal, wVal, mVal,conjFreq, conjPoln,False);
 		
-		  Bool pickThisCF=true;
+		  Bool pickThisCF=True;
 		  if (selectPA) pickThisCF = (fabs(paVal - selectPAVal) <= dPA);
 		  if (pickThisCF)
 		    {
@@ -537,7 +536,7 @@ namespace casa{
 	Int index= thisCF.coordinates().findCoordinate(Coordinate::SPECTRAL);
 	coordSys = thisCF.coordinates();
 	SpectralCoordinate spCS = coordSys.spectralCoordinate(index);
-	fVal=static_cast<casacore::Float>(spCS.referenceValue()(0));
+	fVal=static_cast<casa::Float>(spCS.referenceValue()(0));
 	return miscinfo;
       }
     catch(AipsError& x)
@@ -602,7 +601,7 @@ namespace casa{
     DirectionCoordinate dc;//=coords.directionCoordinate(directionIndex);
     //	AlwaysAssert(directionIndex>=0, AipsError);
     dc=coords.directionCoordinate(directionIndex);
-    Vector<Bool> axes(2); axes(0)=axes(1)=true;//axes(2)=true;
+    Vector<Bool> axes(2); axes(0)=axes(1)=True;//axes(2)=True;
     Vector<Int> shape(2,convSize);
 
     //cerr << "CFC: " << shape << endl;
@@ -650,13 +649,13 @@ namespace casa{
     //
     Int N=memCache_l.nelements();
 
-    memCache_l.resize(max(N,where+1), true);
+    memCache_l.resize(max(N,where+1), True);
     if ((Int)paList.nelements() <= where)
       {
 	IPosition s(2,wConvSize,where+1);
-	paList.resize(where+1,true);
-	XSup.resize(s,true);	YSup.resize(s,true);
-	Sampling.resize(where+1,true);
+	paList.resize(where+1,True);
+	XSup.resize(s,True);	YSup.resize(s,True);
+	Sampling.resize(where+1,True);
       }
     //
     // If the PA was not found, enter the aux. values in the internal
@@ -792,7 +791,7 @@ namespace casa{
 				   const Float pa, const Float dPA)
   {
     if (paList.nelements()==0) initCache();
-    Int i,NPA=paList.nelements(); Bool paFound=false;
+    Int i,NPA=paList.nelements(); Bool paFound=False;
     Float iPA;
     
     Float paDiff=2*dPA;
@@ -814,7 +813,7 @@ namespace casa{
 	if (fabs(iPA - pa) <= dPA)
 	  {
 	    i = saveNdx;
-	    paFound=true;
+	    paFound=True;
 	  }
       }
     if (paFound) which = i; 
@@ -876,7 +875,7 @@ namespace casa{
     try
       {
 	storeImg(Name, avgPB);
-	avgPBReady_p=true;
+	avgPBReady_p=True;
 	avgPBReadyQualifier_p = qualifier;
       }
     catch(AipsError &x)
@@ -928,7 +927,7 @@ namespace casa{
 	return NOTCACHED;
       }
     log_l << "Loaded \"" << name.str() << "\"" << LogIO::POST;
-    avgPBReady_p=true;
+    avgPBReady_p=True;
     return DISKCACHE;
 
   }  
@@ -965,7 +964,7 @@ namespace casa{
 	return NOTCACHED;
       }
     log_l << "Loaded \"" << name.str() << "\"" << LogIO::POST;
-    avgPBReady_p=true;
+    avgPBReady_p=True;
     return DISKCACHE;
   }
   //
@@ -1009,7 +1008,7 @@ namespace casa{
     // loop below to make a decision about allocating new memory or
     // not.
     //
-    convFuncCache.resize(max(where+1,N), true);
+    convFuncCache.resize(max(where+1,N), True);
     //    for(Int i=N;i<=where;i++) convFuncCache[i].data=NULL;
     //
     // Each w-plan is in a separate disk file.  Each file contains all
@@ -1067,8 +1066,8 @@ namespace casa{
 					  name.str( ) + string("\": ") + (string) x.getMesg()));
 	  }
       }
-    // xconvSupport.resize(wConvSize,true);
-    // yconvSupport.resize(wConvSize,true);
+    // xconvSupport.resize(wConvSize,True);
+    // yconvSupport.resize(wConvSize,True);
     // for(Int i=0;i<wConvSize;i++)
     //   {
     // 	xconvSupport(i) = XSup(i,where);

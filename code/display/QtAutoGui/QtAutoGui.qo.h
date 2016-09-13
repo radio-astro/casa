@@ -57,7 +57,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // ('popt' field), labels, limits, choices, help texts, etc., as applicable.
 //
 // When the user operates the control for a gui option, a setOptions
-// signal is emitted with a similar casacore::Record indicating which option was
+// signal is emitted with a similar Record indicating which option was
 // changed, and new value.  If the 'Apply' button of the gui is pressed,
 // the setOptions signal contains the current value of every option.
 // </synopsis>
@@ -69,8 +69,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	public:
 
 		QtAutoGui(QWidget *parent = 0);
-		QtAutoGui(casacore::Record rec, casacore::String dataName = "",
-		          casacore::String dataType = "Unknown", QWidget *parent = 0);
+		QtAutoGui(Record rec, String dataName = "",
+		          String dataType = "Unknown", QWidget *parent = 0);
 		~QtAutoGui();
 
 		void setFileName(const QString &file_name);
@@ -89,13 +89,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		enum ACTIONTYPE {Set, Copy, Paste, Default, Original, Memorize, Command};
 		// call once only during initialization, to populate the gui,
 		// if you used the QtAutoGui(QWidget=0) constructor.
-		void loadRecord(casacore::Record rec);
+		void loadRecord(Record rec);
 		static const QString HISTOGRAM_SHOW_KEY;
 		static const QString HISTOGRAM_RANGE_KEY;
 
 	signals:
 
-		void setOptions(casacore::Record options);
+		void setOptions(Record options);
 		//# dk note to hye:
 		//#
 		//# This is the signal that needs to be sent whenever a value
@@ -127,7 +127,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		//#dk virtual void paintEvent ( QPaintEvent * event );
 		void adjustHeight();
 
-		virtual void changeOptions(casacore::Record changedOptions);
+		virtual void changeOptions(Record changedOptions);
 		//# dk note to hye:
 		//#
 		//# This slot needs to be implemented to handle changes
@@ -172,7 +172,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		QSpacerItem *spacerItem;
 		//QScrollArea *scrollArea;
 
-		casacore::Bool recordLoaded_;
+		Bool recordLoaded_;
 		QString m_lockItem;
 		QMutex mutex;
 		void initialize();

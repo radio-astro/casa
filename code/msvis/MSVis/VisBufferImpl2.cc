@@ -39,10 +39,8 @@
 
 using namespace std;
 
-using namespace casacore;
 namespace casa {
 
-using namespace casacore;
 using namespace casa::ms;
 
 namespace vi {
@@ -73,7 +71,7 @@ VisBufferCache::initialize (VisBufferImpl2 * vb)
                          VisBufferComponent2::JonesC, NoCheck, false);
     correctedVisCube_p.initialize (this, vb, &VisBufferImpl2::fillCubeCorrected,
                                    VisBufferComponent2::VisibilityCubeCorrected,
-                                   NcNfNr, false);
+                                   NcNfNr, False);
     corrType_p.initialize (this, vb, &VisBufferImpl2::fillCorrType,
                            VisBufferComponent2::CorrType, NoCheck, false);
     dataDescriptionIds_p.initialize (this, vb, &VisBufferImpl2::fillDataDescriptionIds,
@@ -95,18 +93,18 @@ VisBufferCache::initialize (VisBufferImpl2 * vb)
     fieldId_p.initialize (this, vb, &VisBufferImpl2::fillFieldId,
                           VisBufferComponent2::FieldId, Nr, true);
     flagCategory_p.initialize (this, vb, &VisBufferImpl2::fillFlagCategory,
-                               VisBufferComponent2::FlagCategory, NoCheck, false);
+                               VisBufferComponent2::FlagCategory, NoCheck, False);
     // required column but not used in casa, make it a nocheck for shape validation
     flagCube_p.initialize (this, vb, &VisBufferImpl2::fillFlagCube,
-                           VisBufferComponent2::FlagCube, NcNfNr, false);
+                           VisBufferComponent2::FlagCube, NcNfNr, False);
     flagRow_p.initialize (this, vb, &VisBufferImpl2::fillFlagRow,
-                          VisBufferComponent2::FlagRow, Nr, false);
+                          VisBufferComponent2::FlagRow, Nr, False);
     floatDataCube_p.initialize (this, vb, &VisBufferImpl2::fillFloatData,
-                                VisBufferComponent2::VisibilityCubeFloat, NcNfNr, false);
+                                VisBufferComponent2::VisibilityCubeFloat, NcNfNr, False);
     imagingWeight_p.initialize (this, vb, &VisBufferImpl2::fillImagingWeight,
                                 VisBufferComponent2::ImagingWeight, NoCheck, false);
     modelVisCube_p.initialize (this, vb, &VisBufferImpl2::fillCubeModel,
-                               VisBufferComponent2::VisibilityCubeModel, NcNfNr, false);
+                               VisBufferComponent2::VisibilityCubeModel, NcNfNr, False);
     nAntennas_p.initialize (this, vb, &VisBufferImpl2::fillNAntennas,
                             VisBufferComponent2::NAntennas, false);
     nChannels_p.initialize (this, vb, &VisBufferImpl2::fillNChannel,
@@ -130,7 +128,7 @@ VisBufferCache::initialize (VisBufferImpl2 * vb)
     scan_p.initialize (this, vb, &VisBufferImpl2::fillScan,
                        VisBufferComponent2::Scan, Nr, true);
     sigma_p.initialize (this, vb, &VisBufferImpl2::fillSigma,
-                        VisBufferComponent2::Sigma, NcNr, false);
+                        VisBufferComponent2::Sigma, NcNr, False);
     spectralWindows_p.initialize (this, vb, &VisBufferImpl2::fillSpectralWindows,
                                   VisBufferComponent2::SpectralWindows, Nr, false);
     stateId_p.initialize (this, vb, &VisBufferImpl2::fillStateId,
@@ -144,15 +142,15 @@ VisBufferCache::initialize (VisBufferImpl2 * vb)
     uvw_p.initialize (this, vb, &VisBufferImpl2::fillUvw,
                       VisBufferComponent2::Uvw, I3Nr, false);
     visCube_p.initialize (this, vb, &VisBufferImpl2::fillCubeObserved,
-                          VisBufferComponent2::VisibilityCubeObserved, NcNfNr, false);
+                          VisBufferComponent2::VisibilityCubeObserved, NcNfNr, False);
     weight_p.initialize (this, vb, &VisBufferImpl2::fillWeight,
-                         VisBufferComponent2::Weight, NcNr, false);
+                         VisBufferComponent2::Weight, NcNr, False);
     weightSpectrum_p.initialize (this, vb, &VisBufferImpl2::fillWeightSpectrum,
                                  VisBufferComponent2::WeightSpectrum,
-                                 NcNfNr, false);
+                                 NcNfNr, False);
     sigmaSpectrum_p.initialize (this, vb, &VisBufferImpl2::fillSigmaSpectrum,
                                 VisBufferComponent2::SigmaSpectrum,
-                                NcNfNr, false);
+                                NcNfNr, False);
 }
 
 void
@@ -300,7 +298,7 @@ VisBufferImpl2::appendRowsComplete ()
             i != cache_p->registry_p.end();
             i++){
 
-        (*i)->appendRows (state_p->appendSize_p, true);
+        (*i)->appendRows (state_p->appendSize_p, True);
     }
 
     cache_p->nRows_p.setSpecial (state_p->appendSize_p);
@@ -332,7 +330,7 @@ VisBufferImpl2::areCorrelationsInCanonicalOrder () const
 Bool
 VisBufferImpl2::areCorrelationsSorted() const
 {
-    return state_p->areCorrelationsSorted_p = false;
+    return state_p->areCorrelationsSorted_p = False;
 }
 
 void
@@ -383,7 +381,7 @@ VisBufferImpl2::cacheResizeAndZero (const VisBufferComponents2 & components)
             continue; // this one is excluded
         }
 
-       (*i)->resize (false);
+       (*i)->resize (False);
 
        (*i)->setAsPresent();
     }
@@ -398,25 +396,25 @@ VisBufferImpl2::construct (ViImplementation2 * vi, VisBufferOptions options)
 
     // Initialize all non-object member variables
 
-    state_p->areCorrelationsSorted_p = false; // Have correlations been sorted by sortCorr?
+    state_p->areCorrelationsSorted_p = False; // Have correlations been sorted by sortCorr?
 
     state_p->isAttached_p = vi != 0;
     state_p->pointingTableLastRow_p = -1;
-    state_p->newMs_p = true;
+    state_p->newMs_p = True;
     state_p->vi_p = vi;
 
     // Handle the options
 
-    state_p->isWritable_p = false;
-    state_p->isRekeyable_p = false;
+    state_p->isWritable_p = False;
+    state_p->isRekeyable_p = False;
 
     if (options & VbRekeyable){
 
-        state_p->isWritable_p = true; // rekeyable implies writable
-        state_p->isRekeyable_p = true;
+        state_p->isWritable_p = True; // rekeyable implies writable
+        state_p->isRekeyable_p = True;
     }
     else if (options & VbWritable){
-        state_p->isWritable_p = true;
+        state_p->isWritable_p = True;
     }
 
     cache_p = new VisBufferCache (this);
@@ -427,7 +425,7 @@ void
 VisBufferImpl2::copy (const VisBuffer2 & otherRaw, Bool fetchIfNeeded)
 {
     copyComponents (otherRaw, VisBufferComponents2::exceptThese({VisBufferComponent2::FlagCategory}),
-                    true, fetchIfNeeded);
+                    True, fetchIfNeeded);
 }
 
 void
@@ -446,11 +444,11 @@ VisBufferImpl2::copyComponents (const VisBuffer2 & otherRaw,
 
         // If this VB is shapeless, then assume the shape of the source VB.
 
-        setShape (otherRaw.nCorrelations(), otherRaw.nChannels(), otherRaw.nRows(), true);
+        setShape (otherRaw.nCorrelations(), otherRaw.nChannels(), otherRaw.nRows(), True);
     }
     else if (allowShapeChange && getShape() != otherRaw.getShape()){
 
-        setShape (otherRaw.nCorrelations(), otherRaw.nChannels(), otherRaw.nRows(), true);
+        setShape (otherRaw.nCorrelations(), otherRaw.nChannels(), otherRaw.nRows(), True);
     }
 
     setIterationInfo (other->msId(),
@@ -466,7 +464,7 @@ VisBufferImpl2::copyComponents (const VisBuffer2 & otherRaw,
                       other->getWeightScaling());
 
     Bool wasFillable = isFillable();
-    setFillable (true);
+    setFillable (True);
 
     for (CacheRegistry::iterator dst = cache_p->registry_p.begin(),
                                  src = other->cache_p->registry_p.begin();
@@ -595,7 +593,7 @@ VisBufferImpl2::deleteRows (const Vector<Int> & rowsToDelete)
 
     Int newNRows = nRows() - rowsToDelete.nelements();
 
-    setShape (nCorrelations (), nChannels (), newNRows, false);
+    setShape (nCorrelations (), nChannels (), newNRows, False);
 
     resizeRows (newNRows);
 }
@@ -864,8 +862,8 @@ VisBufferImpl2::hasShape () const
 void
 VisBufferImpl2::invalidate ()
 {
-    cacheClear (false); // empty cached values
-    setFillable (false); // buffer is in limbo
+    cacheClear (False); // empty cached values
+    setFillable (False); // buffer is in limbo
 }
 
 Bool
@@ -1215,7 +1213,7 @@ VisBufferImpl2::configureNewSubchunk (Int msId,
                       isNewSpectralWindow, subchunk, correlations,
                       correlationsDefined, correlationsSelected, weightScaling);
 
-    setFillable (true); // New subchunk, so it's fillable
+    setFillable (True); // New subchunk, so it's fillable
 
     state_p->frequencies_p.flush();
     state_p->channelNumbers_p.flush();
@@ -1241,7 +1239,7 @@ VisBufferImpl2::setShape (Int nCorrelations, Int nChannels, Int nRows,
              "Operation setShape is illegal on nonrekeyable VisBuffer");
 
     if (clearTheCache){
-        cacheClear (false); // leave values alone so that array could be reused
+        cacheClear (False); // leave values alone so that array could be reused
     }
 
     cache_p->nCorrelations_p.setSpecial(nCorrelations);
@@ -1342,7 +1340,7 @@ VisBufferImpl2::sortCorrelationsAux (bool makeSorted)
 void
 VisBufferImpl2::sortCorr()
 {
-    sortCorrelationsAux (true);
+    sortCorrelationsAux (True);
 }
 
 
@@ -1353,7 +1351,7 @@ VisBufferImpl2::stateCopy (const VisBufferImpl2 & other)
 
     state_p->areCorrelationsSorted_p = other.areCorrelationsSorted ();
     state_p->dirtyComponents_p = other.dirtyComponentsGet ();
-    state_p->isAttached_p = false;  // attachment isn't copyabled
+    state_p->isAttached_p = False;  // attachment isn't copyabled
     state_p->isNewArrayId_p = other.isNewArrayId ();
     state_p->isNewFieldId_p = other.isNewFieldId ();
     state_p->isNewMs_p = other.isNewMs ();
@@ -1371,13 +1369,13 @@ VisBufferImpl2::stateCopy (const VisBufferImpl2 & other)
 void
 VisBufferImpl2::unSortCorr()
 {
-    sortCorrelationsAux (false);
+    sortCorrelationsAux (False);
 }
 
 void
 VisBufferImpl2::validate ()
 {
-    cacheClear (true); // empty values but mark as cached.
+    cacheClear (True); // empty values but mark as cached.
 }
 
 void
@@ -2318,7 +2316,7 @@ VisBufferImpl2::fillDirectionAux (Vector<MDirection>& value,
                 beamOffset *= xform; // parallactic angle rotation
             }
 
-            value(row).shift(-beamOffset(0), beamOffset(1), true);
+            value(row).shift(-beamOffset(0), beamOffset(1), True);
                 // x direction is flipped to convert az-el type frame to ra-dec
         }
     }
@@ -2984,5 +2982,4 @@ VisBufferImpl2::sigmaSpectrumPresent () const
 
 } // end namespace vi
 
-using namespace casacore;
 } // end namespace casa

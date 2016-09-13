@@ -38,7 +38,6 @@
 
 using namespace std;
 
-using namespace casacore;
 namespace casa {
 
 const AnnotationBase::RGB AnnotationBase::BLACK(3, 0.0);
@@ -61,7 +60,7 @@ const uInt AnnotationBase::DEFAULT_SYMBOLTHICKNESS = 1;
 const String AnnotationBase::DEFAULT_FONT = "Helvetica";
 const uInt AnnotationBase::DEFAULT_FONTSIZE = 10;
 const AnnotationBase::FontStyle AnnotationBase::DEFAULT_FONTSTYLE = AnnotationBase::BOLD;
-const Bool AnnotationBase::DEFAULT_USETEX = false;
+const Bool AnnotationBase::DEFAULT_USETEX = False;
 const AnnotationBase::RGB AnnotationBase::DEFAULT_LABELCOLOR = AnnotationBase::GREEN;
 const String AnnotationBase::DEFAULT_LABELPOS = "top";
 const vector<Int> AnnotationBase::DEFAULT_LABELOFF = vector<Int>(2, 0);
@@ -70,8 +69,8 @@ const String AnnotationBase::_class = "AnnotationBase";
 
 std::list<string> AnnotationBase::_colorNames;
 
-Bool AnnotationBase::_doneUnitInit = false;
-Bool AnnotationBase::_doneColorInit = false;
+Bool AnnotationBase::_doneUnitInit = False;
+Bool AnnotationBase::_doneColorInit = False;
 
 map<String, AnnotationBase::Type> AnnotationBase::_typeMap;
 map<String, AnnotationBase::LineStyle> AnnotationBase::_lineStyleMap;
@@ -99,7 +98,7 @@ AnnotationBase::AnnotationBase(
 
   _convertedFreqLimits(0), _stokes(stokes),
   _globals(map<Keyword, Bool>()), _params(map<Keyword, String>()),
-  _printGlobals(false), _labelOff(DEFAULT_LABELOFF) {
+  _printGlobals(False), _labelOff(DEFAULT_LABELOFF) {
 	ThrowIf(
 		! csys.hasDirectionCoordinate(),
 		"Coordinate system has no direction coordinate"
@@ -138,7 +137,7 @@ AnnotationBase::AnnotationBase(
   _convertedFreqLimits(0), _beginFreq(Quantity(0, "Hz")), _endFreq(Quantity(0, "Hz")),
 	_restFreq(Quantity(0, "Hz")), _stokes(stokes),
   _globals(map<Keyword, Bool>()), _params(map<Keyword, String>()),
-  _printGlobals(false), _labelOff(DEFAULT_LABELOFF)
+  _printGlobals(False), _labelOff(DEFAULT_LABELOFF)
  {
 	String preamble = String(__FUNCTION__) + ": ";
 	if (!csys.hasDirectionCoordinate()) {
@@ -191,7 +190,7 @@ void AnnotationBase::_init() {
 	String preamble = _class + ": " + String(__FUNCTION__) + ": ";
 	_initColors();
 	if (
-		_directionRefFrame != _csys.directionCoordinate().directionType(false)
+		_directionRefFrame != _csys.directionCoordinate().directionType(False)
 		&& _directionRefFrame != MDirection::B1950
 		&& _directionRefFrame != MDirection::B1950_VLA
 		&& _directionRefFrame != MDirection::BMEAN
@@ -223,7 +222,7 @@ void AnnotationBase::_init() {
 		_params[CORR] = os.str();
 	}
 	for(uInt i=0; i<N_KEYS; i++) {
-		_globals[(Keyword)i] = false;
+		_globals[(Keyword)i] = False;
 	}
 	_initParams();
 }
@@ -248,7 +247,7 @@ void AnnotationBase::unitInit() {
 		UnitMap::putUser("pix",UnitVal(1.0), "pixel units");
 		UnitMap::putUser("channel",UnitVal(1.0), "channel number");
         UnitMap::putUser("chan",UnitVal(1.0), "channel number");
-		_doneUnitInit = true;
+		_doneUnitInit = True;
 	}
 }
 
@@ -262,10 +261,10 @@ Bool AnnotationBase::setFrequencyLimits(
 ) {
 	String preamble(_class + ": " + String(__FUNCTION__) + ": ");
     if (beginFreq.getValue() == 0 && endFreq.getValue() == 0) {
-        return false;
+        return False;
     }
 	if (! getCsys().hasSpectralAxis()) {
-		return false;
+		return False;
 	}
     if ( beginFreq.getUnit().empty() && endFreq.getUnit().empty()) {
         throw AipsError(
@@ -340,9 +339,9 @@ Bool AnnotationBase::setFrequencyLimits(
 		_setParam(AnnotationBase::RESTFREQ, _printFreq(_restFreq));
 
 		_checkAndConvertFrequencies();
-		return true;
+		return True;
 	}
-	return false;
+	return False;
 }
 
 
@@ -357,14 +356,14 @@ Vector<Stokes::StokesTypes> AnnotationBase::getStokes() const {
 void AnnotationBase::_checkAndConvertFrequencies() {
 	const CoordinateSystem& csys = getCsys();
 	const SpectralCoordinate spcoord = csys.spectralCoordinate();
-    MFrequency::Types cFrameType = spcoord.frequencySystem(false);
+    MFrequency::Types cFrameType = spcoord.frequencySystem(False);
 	MDoppler::Types cDopplerType = spcoord.velocityDoppler();
 	_convertedFreqLimits.resize(2);
     for (Int i=0; i<2; i++) {
 		Quantity qFreq = i == 0 ? _beginFreq : _endFreq;
 		String unit = qFreq.getUnit();
 		if (qFreq.isConform("pix")) {
-			Int spectralAxisNumber = csys.spectralAxisNumber(true);
+			Int spectralAxisNumber = csys.spectralAxisNumber(True);
 			String unit = csys.worldAxisUnits()[spectralAxisNumber];
 			Double world;
 			if (! spcoord.toWorld(world, qFreq.getValue())) {
@@ -605,14 +604,14 @@ String AnnotationBase::getLabel() const {
 
 Bool AnnotationBase::_isRGB(const AnnotationBase::RGB& rgb) {
 	if (rgb.size() != 3) {
-		return false;
+		return False;
 	}
 	for (RGB::const_iterator iter=rgb.begin(); iter!=rgb.end(); iter++) {
 		if (*iter < 0 || *iter > 255) {
-			return false;
+			return False;
 		}
 	}
-	return true;
+	return True;
 }
 
 AnnotationBase::RGB AnnotationBase::_colorStringToRGB(const String& s) {
@@ -816,7 +815,7 @@ vector<Int> AnnotationBase::getLabelOffset() const {
 }
 
 Bool AnnotationBase::isRegion() const {
-	return false;
+	return False;
 }
 
 void AnnotationBase::setGlobals(
@@ -825,7 +824,7 @@ void AnnotationBase::setGlobals(
 	for (
 		Vector<Keyword>::const_iterator iter=globalKeys.begin();
 		iter != globalKeys.end(); iter++) {
-			_globals[*iter] = true;
+			_globals[*iter] = True;
 	}
 }
 
@@ -959,8 +958,8 @@ void AnnotationBase::_printPairs(ostream &os) const {
 void AnnotationBase::_checkMixed(
 	const String& origin, const AnnotationBase::Direction& quantities
 ) {
-	Bool isWorld = false;
-	Bool isPixel = false;
+	Bool isWorld = False;
+	Bool isPixel = False;
 	Quantity qArg;
 	for (
 		Direction::const_iterator iter = quantities.begin();
@@ -1002,7 +1001,7 @@ MDirection AnnotationBase::_directionFromQuantities(
 		Vector<String> axesUnits = _csys.worldAxisUnits();
 		d0 = Quantity(world[_directionAxes[0]], axesUnits[_directionAxes[0]]);
 		d1 = Quantity(world[_directionAxes[1]], axesUnits[_directionAxes[1]]);
-		MDirection::Types csysDirectionType = _csys.directionCoordinate().directionType(false);
+		MDirection::Types csysDirectionType = _csys.directionCoordinate().directionType(False);
 		if (_directionRefFrame != csysDirectionType) {
 			LogIO log;
 			log << LogOrigin(String(__FUNCTION__)) << LogIO::WARN
@@ -1031,7 +1030,7 @@ void AnnotationBase::_checkAndConvertDirections(
 ) {
 	_checkMixed(origin, quantities);
 
-	MDirection::Types csysDirectionRefFrame = _csys.directionCoordinate().directionType(false);
+	MDirection::Types csysDirectionRefFrame = _csys.directionCoordinate().directionType(False);
 	Bool needsConverting = _directionRefFrame != csysDirectionRefFrame;
 	_convertedDirections.resize(quantities.size());
 	for (uInt i=0; i<quantities.size(); i++) {
@@ -1081,7 +1080,7 @@ void AnnotationBase::_initColors() {
 		_rgbNameMap[iter->second] = iter->first;
 		_colorNames.push_back(iter->first);
 	}
-    _doneColorInit = true;
+    _doneColorInit = True;
 }
 
 std::list<std::string> AnnotationBase::colorChoices() {

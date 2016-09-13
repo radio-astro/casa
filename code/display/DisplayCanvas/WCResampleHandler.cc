@@ -28,7 +28,6 @@
 #include <casa/Arrays/Matrix.h>
 #include <display/DisplayCanvas/WCResampleHandler.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	WCResampleHandler::WCResampleHandler()

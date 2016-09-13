@@ -34,7 +34,6 @@
 #include <display/Display/AttValPoiTol.h>
 #include <display/Display/Attribute.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Constructor taking AtttributeValueBase.
@@ -248,15 +247,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	Bool Attribute::operator==(const Attribute &other) const {
 		// if the names of the Attributes are different, return that they match
-		if (itsAttributeName != other.getName())  return true;
+		if (itsAttributeName != other.getName())  return True;
 		return ((*itsAttributeValue) == *(other.getAttributeValue()));
 	}
 
 	Bool Attribute::operator!=(const Attribute &other) const {
 		if (*this == other) {
-			return false;
+			return False;
 		} else {
-			return true;
+			return True;
 		}
 	}
 

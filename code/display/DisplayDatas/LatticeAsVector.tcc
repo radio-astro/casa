@@ -43,41 +43,41 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	template <class T>
-	LatticeAsVector<T>::LatticeAsVector(casacore::Array<T>* array, const casacore::uInt xAxis,
-	                                    const casacore::uInt yAxis, const casacore::uInt mAxis,
-	                                    const casacore::IPosition fixedPos)
+	LatticeAsVector<T>::LatticeAsVector(Array<T>* array, const uInt xAxis,
+	                                    const uInt yAxis, const uInt mAxis,
+	                                    const IPosition fixedPos)
 		: LatticePADisplayData<T>(array, xAxis, yAxis, mAxis, fixedPos),
-		  itsUnits(casacore::Unit()) {
+		  itsUnits(Unit()) {
 		setupElements();
 		setDefaultOptions();
 	}
 
 	template <class T>
-	LatticeAsVector<T>::LatticeAsVector(casacore::Array<T>* array, const casacore::uInt xAxis,
-	                                    const casacore::uInt yAxis)
+	LatticeAsVector<T>::LatticeAsVector(Array<T>* array, const uInt xAxis,
+	                                    const uInt yAxis)
 		: LatticePADisplayData<T>(array, xAxis, yAxis),
-		  itsUnits(casacore::Unit()) {
+		  itsUnits(Unit()) {
 		setupElements();
 		setDefaultOptions();
 	}
 
 	template <class T>
-	LatticeAsVector<T>::LatticeAsVector(SHARED_PTR<casacore::ImageInterface<T> > image,
-	                                    const casacore::uInt xAxis, const casacore::uInt yAxis,
-	                                    const casacore::uInt mAxis,
-	                                    const casacore::IPosition fixedPos)
+	LatticeAsVector<T>::LatticeAsVector(SHARED_PTR<ImageInterface<T> > image,
+	                                    const uInt xAxis, const uInt yAxis,
+	                                    const uInt mAxis,
+	                                    const IPosition fixedPos)
 		: LatticePADisplayData<T>(image, xAxis, yAxis, mAxis, fixedPos),
-		  itsUnits(casacore::Unit()) {
+		  itsUnits(Unit()) {
 		setupElements();
 		setDefaultOptions();
 		itsUnits = image->units();
 	}
 
 	template <class T>
-	LatticeAsVector<T>::LatticeAsVector(SHARED_PTR<casacore::ImageInterface<T> > image,
-	                                    const casacore::uInt xAxis, const casacore::uInt yAxis)
+	LatticeAsVector<T>::LatticeAsVector(SHARED_PTR<ImageInterface<T> > image,
+	                                    const uInt xAxis, const uInt yAxis)
 		: LatticePADisplayData<T>(image, xAxis, yAxis),
-		  itsUnits(casacore::Unit()) {
+		  itsUnits(Unit()) {
 		setupElements();
 		setDefaultOptions();
 		itsUnits = image->units();
@@ -85,7 +85,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	template <class T>
 	LatticeAsVector<T>::~LatticeAsVector() {
-		for (casacore::uInt i = 0; i < nelements(); i++) {
+		for (uInt i = 0; i < nelements(); i++) {
 			if (DDelement[i]) {
 				delete (static_cast<LatticePADMVector<T>*>(DDelement[i]));
 			}
@@ -95,20 +95,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	template <class T>
 	void LatticeAsVector<T>::setupElements() {
-		for (casacore::uInt i=0; i<nelements(); i++) if(DDelement[i]!=0) {
+		for (uInt i=0; i<nelements(); i++) if(DDelement[i]!=0) {
 				delete static_cast<LatticePADMVector<T>*>(DDelement[i]);
 				DDelement[i]=0;
 			}
 		// Delete old DMs, if any.
 
-		casacore::IPosition fixedPos = fixedPosition();
-		casacore::Vector<casacore::Int> dispAxes = displayAxes();
-		AlwaysAssert(dispAxes.nelements()>=2,casacore::AipsError);
+		IPosition fixedPos = fixedPosition();
+		Vector<Int> dispAxes = displayAxes();
+		AlwaysAssert(dispAxes.nelements()>=2,AipsError);
 //
 		if (nPixelAxes > 2) {
 			setNumImages(dataShape()(dispAxes(2)));
 			DDelement.resize(nelements());
-			for (casacore::uInt index = 0; index < nelements(); index++) {
+			for (uInt index = 0; index < nelements(); index++) {
 				fixedPos(dispAxes(2)) = index;
 //
 				DDelement[index] = dynamic_cast<LatticePADisplayMethod<T>*>
@@ -136,39 +136,39 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // vectors are drawn because it's  quite time consuming
 // drawing billions of little vectors
 
-		casacore::IPosition shape = dataShape();
+		IPosition shape = dataShape();
 		itsIncX = max(3,shape(0) / 100);
 		itsIncY = max(3,shape(1) / 100);
-		casacore::LogIO os(casacore::LogOrigin("LatticeAsVector", "setDefaultOptions", WHERE));
-		os << casacore::LogIO::NORMAL << "Initial X and Y increments set to " << itsIncX << ", " << itsIncY << endl;
-		os << "Use Adjust GUI to change to suit" << casacore::LogIO::POST;
+		LogIO os(LogOrigin("LatticeAsVector", "setDefaultOptions", WHERE));
+		os << LogIO::NORMAL << "Initial X and Y increments set to " << itsIncX << ", " << itsIncY << endl;
+		os << "Use Adjust GUI to change to suit" << LogIO::POST;
 //
-		itsArrow = false;
+		itsArrow = False;
 		itsBarb = 0.3;
 		itsColor = "foreground";
 		itsRotation = 0.0;
-		itsConstAmp = false;
+		itsConstAmp = False;
 //
 		T* dummy = NULL;
-		casacore::DataType type = casacore::whatType(dummy);
-		AlwaysAssert(type==TpFloat || type==TpComplex, casacore::AipsError);
-		if (type == casacore::TpFloat) {
+		DataType type = whatType(dummy);
+		AlwaysAssert(type==TpFloat || type==TpComplex, AipsError);
+		if (type == TpFloat) {
 			itsPhaseType = "normal";
 			itsVar = 0.0;
 		} else {
 			itsPhaseType = "polarimetric";
 			itsVar = getVariance();
 		}
-		itsDebias = false;
+		itsDebias = False;
 	}
 
 
 	template <class T>
-	casacore::Bool LatticeAsVector<T>::setOptions(casacore::Record &rec, casacore::Record &recOut) {
-		casacore::Bool ret = LatticePADisplayData<T>::setOptions(rec, recOut);
+	Bool LatticeAsVector<T>::setOptions(Record &rec, Record &recOut) {
+		Bool ret = LatticePADisplayData<T>::setOptions(rec, recOut);
 //
-		casacore::Bool localchange = false;
-		casacore::Bool error;
+		Bool localchange = False;
+		Bool error;
 //
 		localchange = readOptionRecord(itsDebias, error, rec, "debias") ||
 		              localchange;
@@ -195,9 +195,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		localchange = readOptionRecord(itsConstAmp, error, rec, "constamp") ||
 		              localchange;
 //
-// must come last - this forces ret to be true or false:
+// must come last - this forces ret to be True or False:
 //
-		if (rec.isDefined("refresh") && (rec.dataType("refresh") == casacore::TpBool)) {
+		if (rec.isDefined("refresh") && (rec.dataType("refresh") == TpBool)) {
 			rec.get("refresh", ret);
 		}
 //
@@ -207,68 +207,68 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	template <class T>
-	casacore::Record LatticeAsVector<T>::getOptions( bool scrub ) const {
-		casacore::Record rec = LatticePADisplayData<T>::getOptions(scrub);
-		casacore::Record unset;
+	Record LatticeAsVector<T>::getOptions( bool scrub ) const {
+		Record rec = LatticePADisplayData<T>::getOptions(scrub);
+		Record unset;
 		unset.define("i_am_unset", "i_am_unset");
 //
 // phasetype and debiasing are only meaningful for COmplex data
 //
 		T* dummy = NULL;
-		casacore::DataType type = casacore::whatType(dummy);
-		AlwaysAssert(type==TpFloat || type==TpComplex, casacore::AipsError);
-		if (type == casacore::TpComplex) {
-			casacore::Record phasetype;
+		DataType type = whatType(dummy);
+		AlwaysAssert(type==TpFloat || type==TpComplex, AipsError);
+		if (type == TpComplex) {
+			Record phasetype;
 			phasetype.define("dlformat", "phasetype");
 			phasetype.define("listname", "Phase Type");
 			phasetype.define("ptype", "choice");
-			casacore::Vector<casacore::String> values(2);
+			Vector<String> values(2);
 			values(0) = "normal";
 			values(1) = "polarimetric";
 			phasetype.define("popt", values);
 			phasetype.define("default", values(1));
 			phasetype.define("value", itsPhaseType);
-			phasetype.define("allowunset", false);
+			phasetype.define("allowunset", False);
 			rec.defineRecord("phasetype", phasetype);
 //
-			casacore::Record constamp;
+			Record constamp;
 			constamp.define("dlformat", "constamp");
 			constamp.define("listname", "Constant amplitude ?");
 			constamp.define("ptype", "boolean");
-			constamp.define("default", false);
+			constamp.define("default", False);
 			constamp.define("value", itsConstAmp);
-			constamp.define("allowunset", false);
+			constamp.define("allowunset", False);
 			rec.defineRecord("constamp", constamp);
 //
-			casacore::Record debias;
+			Record debias;
 			debias.define("dlformat", "debias");
 			debias.define("listname", "Debias amplitude ?");
 			debias.define("ptype", "boolean");
-			debias.define("default", casacore::Bool(false));
+			debias.define("default", Bool(False));
 			debias.define("value", itsDebias);
-			debias.define("allowunset", false);
+			debias.define("allowunset", False);
 			rec.defineRecord("debias", debias);
 //
-			casacore::Record var;
+			Record var;
 			var.define("dlformat", "variance");
 			var.define("listname", "Variance of noise for debiasing");
 			var.define("ptype", "scalar");
 			var.define("default", itsVar);
 			var.define("value", itsVar);
-			var.define("allowunset", false);
+			var.define("allowunset", False);
 			rec.defineRecord("var", var);
 		}
 //
-		casacore::Record scale;
+		Record scale;
 		scale.define("dlformat", "scale");
 		scale.define("listname", "Amplitude scale factor");
 		scale.define("ptype", "scalar");
-		scale.define("default", casacore::Float(1.0));
+		scale.define("default", Float(1.0));
 		scale.define("value", itsScale);
-		scale.define("allowunset", false);
+		scale.define("allowunset", False);
 		rec.defineRecord("scale", scale);
 //
-		casacore::Record incX;
+		Record incX;
 		incX.define("dlformat", "incx");
 		incX.define("listname", "X-increment");
 		incX.define("ptype", "intrange");
@@ -276,11 +276,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		incX.define("pmax", itsIncX * 2);
 		incX.define("default", 3);
 		incX.define("value", itsIncX);
-		incX.define("provideentry", true);
-		incX.define("allowunset", false);
+		incX.define("provideentry", True);
+		incX.define("allowunset", False);
 		rec.defineRecord("incx", incX);
 //
-		casacore::Record incY;
+		Record incY;
 		incY.define("dlformat", "incy");
 		incY.define("listname", "Y-increment");
 		incY.define("ptype", "intrange");
@@ -288,57 +288,57 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		incY.define("pmax", itsIncY*2);
 		incY.define("default", 3);
 		incY.define("value", itsIncY);
-		incY.define("provideentry", true);
-		incY.define("allowunset", false);
+		incY.define("provideentry", True);
+		incY.define("allowunset", False);
 		rec.defineRecord("incy", incY);
 //
-		casacore::Record rot;
+		Record rot;
 		rot.define("dlformat", "rotation");
 		rot.define("listname", "Extra rotation");
 		rot.define("ptype", "scalar");
-		rot.define("default", casacore::Float(0.0));
+		rot.define("default", Float(0.0));
 		rot.define("value", itsRotation);
-		rot.define("allowunset", false);
+		rot.define("allowunset", False);
 		rec.defineRecord("rotation", rot);
 //
-		casacore::Record arrow;
+		Record arrow;
 		arrow.define("dlformat", "arrow");
 		arrow.define("listname", "Show arrow heads ?");
 		arrow.define("ptype", "boolean");
-		arrow.define("default", casacore::Bool(false));
+		arrow.define("default", Bool(False));
 		arrow.define("value", itsArrow);
-		arrow.define("allowunset", false);
+		arrow.define("allowunset", False);
 		rec.defineRecord("arrow", arrow);
 //
-		casacore::Record barb;
+		Record barb;
 		barb.define("dlformat", "barb");
 		barb.define("listname", "Arrow head shape");
 		barb.define("ptype", "floatrange");
-		barb.define("pmin", casacore::Float(0.0));
-		barb.define("pmax", casacore::Float(1.0));
-		barb.define("presolution", casacore::Float(0.1));
-		barb.define("default", casacore::Float(0.3));
+		barb.define("pmin", Float(0.0));
+		barb.define("pmax", Float(1.0));
+		barb.define("presolution", Float(0.1));
+		barb.define("default", Float(0.3));
 		barb.define("value", itsBarb);
-		barb.define("allowunset", false);
+		barb.define("allowunset", False);
 		rec.defineRecord("barb", barb);
 //
-		casacore::Record line;
+		Record line;
 		line.define("dlformat", "line");
 		line.define("listname", "Line width");
 		line.define("ptype", "floatrange");
-		line.define("pmin", casacore::Float(0.0));
-		line.define("pmax", casacore::Float(5.0));
-		line.define("presolution", casacore::Float(0.1));
-		line.define("default", casacore::Float(0.5));
+		line.define("pmin", Float(0.0));
+		line.define("pmax", Float(5.0));
+		line.define("presolution", Float(0.1));
+		line.define("default", Float(0.5));
 		line.define("value", itsLineWidth);
-		line.define("allowunset", false);
+		line.define("allowunset", False);
 		rec.defineRecord("line", line);
 //
-		casacore::Record color;
+		Record color;
 		color.define("dlformat", "color");
 		color.define("listname", "Line color");
 		color.define("ptype", "userchoice");
-		casacore::Vector<casacore::String> vcolor(11);
+		Vector<String> vcolor(11);
 		vcolor(0) = "foreground";
 		vcolor(1) = "background";
 		vcolor(2) = "black";
@@ -353,7 +353,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		color.define("popt", vcolor);
 		color.define("default", "foreground");
 		color.define("value", itsColor);
-		color.define("allowunset", false);
+		color.define("allowunset", False);
 		rec.defineRecord("color", color);
 //
 		return rec;
@@ -365,7 +365,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // and specializing results in multiply defined symbols on
 // Mac OSX
 	template <class T>
-	/*const*/ T LatticeAsVector<T>::dataValue(casacore::IPosition pos) {
+	/*const*/ T LatticeAsVector<T>::dataValue(IPosition pos) {
 
 		// Default template (needed by compiler(?); probably not used).
 

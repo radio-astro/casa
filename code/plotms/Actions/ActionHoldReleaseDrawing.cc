@@ -26,7 +26,6 @@
 #include "ActionHoldReleaseDrawing.h"
 #include <plotms/Client/Client.h>
 
-using namespace casacore;
 namespace casa {
 
 ActionHoldReleaseDrawing::ActionHoldReleaseDrawing( Client* client )
@@ -59,5 +58,4 @@ bool ActionHoldReleaseDrawing::doActionSpecific(PlotMSApp* /*plotms*/) {
 ActionHoldReleaseDrawing::~ActionHoldReleaseDrawing() {
 }
 
-using namespace casacore;
 } /* namespace casa */

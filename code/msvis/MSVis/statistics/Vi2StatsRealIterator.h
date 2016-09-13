@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //
-// casacore::Data provider data iterator to provide real part of visibilities.
+// Data provider data iterator to provide real part of visibilities.
 //
 #ifndef MSVIS_STATISTICS_VI2_STATS_REAL_ITERATOR_H_
 #define MSVIS_STATISTICS_VI2_STATS_REAL_ITERATOR_H_
@@ -35,12 +35,12 @@
 namespace casa {
 
 class Vi2StatsRealIterator final
-	: public Vi2StatsDataIterator<casacore::Double,casacore::Complex> {
+	: public Vi2StatsDataIterator<Double,Complex> {
 
 public:
-	using Vi2StatsDataIterator<casacore::Double,casacore::Complex>::Vi2StatsDataIterator;
+	using Vi2StatsDataIterator<Double,Complex>::Vi2StatsDataIterator;
 
-	casacore::Double operator*();
+	Double operator*();
 };
 
 } // namespace casa

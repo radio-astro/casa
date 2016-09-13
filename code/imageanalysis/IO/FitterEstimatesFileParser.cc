@@ -38,7 +38,6 @@
 #include <images/Images/ImageStatistics.h>
 
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 FitterEstimatesFileParser::FitterEstimatesFileParser (
@@ -89,7 +88,7 @@ void FitterEstimatesFileParser::_parseFile(
 	char *buffer = new char[bufSize];
 	int nRead;
 
-	while ((nRead = fileIO.read(bufSize, buffer, false)) == bufSize) {
+	while ((nRead = fileIO.read(bufSize, buffer, False)) == bufSize) {
 		*_log << LogIO::NORMAL << "read: " << nRead << LogIO::POST;
 		String chunk(buffer, bufSize);
 
@@ -126,13 +125,13 @@ void FitterEstimatesFileParser::_parseFile(
 		String pa = parts[5];
 
 		String fixedMask;
-		_peakValues.resize(componentIndex + 1, true);
-		_xposValues.resize(componentIndex + 1, true);
-		_yposValues.resize(componentIndex + 1, true);
-		_majValues.resize(componentIndex + 1, true);
-		_minValues.resize(componentIndex + 1, true);
-		_paValues.resize(componentIndex + 1, true);
-		_fixedValues.resize(componentIndex + 1, true);
+		_peakValues.resize(componentIndex + 1, True);
+		_xposValues.resize(componentIndex + 1, True);
+		_yposValues.resize(componentIndex + 1, True);
+		_majValues.resize(componentIndex + 1, True);
+		_minValues.resize(componentIndex + 1, True);
+		_paValues.resize(componentIndex + 1, True);
+		_fixedValues.resize(componentIndex + 1, True);
 
 		ThrowIf(
 			! peak.matches(RXdouble),

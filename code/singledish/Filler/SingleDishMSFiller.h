@@ -68,7 +68,7 @@ public:
     return reader_->getName();
   }
 
-  // top level method to fill casacore::MS by reading input data
+  // top level method to fill MS by reading input data
   void fill();
 
   // save
@@ -81,7 +81,7 @@ private:
   // finalization
   void finalize();
 
-  // setup casacore::MS as Scratch table
+  // setup MS as Scratch table
   // The table will be non-Scratch when it is saved
   void setupMS();
 
@@ -128,49 +128,49 @@ private:
   // @param[in] corr_type polarization type list
   // @param[in] num_pol number of polarization components
   // @return polarization id
-  inline casacore::Int updatePolarization(casacore::Vector<casacore::Int> const &corr_type,
-      casacore::Int const &num_pol);
+  inline Int updatePolarization(Vector<Int> const &corr_type,
+      Int const &num_pol);
 
   // update DATA_DESCRIPTION table
   // @param[in] polarization_id polarization id
   // @param[in] spw_id spectral window id
   // @return data description id
-  inline casacore::Int updateDataDescription(casacore::Int const &polarization_id,
-      casacore::Int const &spw_id);
+  inline Int updateDataDescription(Int const &polarization_id,
+      Int const &spw_id);
 
   // update STATE table
   // @param[in] subscan subscan number
   // @param[in] obs_mode observing mode string
   // @return state id
-  inline casacore::Int updateState(casacore::Int const &subscan, casacore::String const &obs_mode);
+  inline Int updateState(Int const &subscan, String const &obs_mode);
 
   // update FEED table
   // @param[in] feed_id feed ID
   // @param[in] spw_id spectral window ID
   // @param[in] pol_type polarization type
   // @return feed row number
-  inline casacore::Int updateFeed(casacore::Int const &feed_id, casacore::Int const &spw_id,
-      casacore::String const &pol_type);
+  inline Int updateFeed(Int const &feed_id, Int const &spw_id,
+      String const &pol_type);
 
   // update POINTING table
   // @param[in] antenna_id antenna id
   // @param[in] time time stamp
   // @param[in] direction pointing direction
-  inline casacore::Int updatePointing(casacore::Int const &antenna_id, casacore::Int const &feed_id,
-      casacore::Double const &time, casacore::Double const &interval,
-      casacore::Matrix<casacore::Double> const &direction);
+  inline Int updatePointing(Int const &antenna_id, Int const &feed_id,
+      Double const &time, Double const &interval,
+      Matrix<Double> const &direction);
 
-  inline void updateWeather(casacore::Int const &antenna_id, casacore::Double const &time,
-      casacore::Double const &interval, sdfiller::MSDataRecord const &data_record);
+  inline void updateWeather(Int const &antenna_id, Double const &time,
+      Double const &interval, sdfiller::MSDataRecord const &data_record);
 
-  inline void updateWeather(casacore::MSWeatherColumns &columns, casacore::uInt irow,
+  inline void updateWeather(MSWeatherColumns &columns, uInt irow,
       sdfiller::WeatherRecord const &record);
 
-  inline void updateSysCal(casacore::Int const &antenna_id, casacore::Int const &feed_id,
-      casacore::Int const &spw_id, casacore::Double const &time, casacore::Double const &interval,
+  inline void updateSysCal(Int const &antenna_id, Int const &feed_id,
+      Int const &spw_id, Double const &time, Double const &interval,
       sdfiller::MSDataRecord const &data_record);
 
-  inline void updateSysCal(casacore::MSSysCalColumns &columns, casacore::uInt irow,
+  inline void updateSysCal(MSSysCalColumns &columns, uInt irow,
       sdfiller::SysCalRecord const &record);
 
   // update MAIN table
@@ -179,47 +179,47 @@ private:
   // @param[in] dataDescriptionId data description id
   // @param[in] stateId state id
   // @param[in] mainSpec main table row specification except id
-  inline void updateMain(casacore::Int const &antenna_id, casacore::Int field_id, casacore::Int feedId,
-      casacore::Int dataDescriptionId, casacore::Int stateId, casacore::Int const &scan_number,
-      casacore::Double const &time, sdfiller::MSDataRecord const &dataRecord);
+  inline void updateMain(Int const &antenna_id, Int field_id, Int feedId,
+      Int dataDescriptionId, Int stateId, Int const &scan_number,
+      Double const &time, sdfiller::MSDataRecord const &dataRecord);
 
-  std::unique_ptr<casacore::MeasurementSet> ms_;
-  std::unique_ptr<casacore::MSMainColumns> ms_columns_;
-  std::unique_ptr<casacore::MSDataDescColumns> data_description_columns_;
-  std::unique_ptr<casacore::MSFeedColumns> feed_columns_;
-  std::unique_ptr<casacore::MSPointingColumns> pointing_columns_;
-  std::unique_ptr<casacore::MSPolarizationColumns> polarization_columns_;
-  std::unique_ptr<casacore::MSSysCalColumns> syscal_columns_;
-  std::unique_ptr<casacore::MSStateColumns> state_columns_;
-  std::unique_ptr<casacore::MSWeatherColumns> weather_columns_;
+  std::unique_ptr<MeasurementSet> ms_;
+  std::unique_ptr<MSMainColumns> ms_columns_;
+  std::unique_ptr<MSDataDescColumns> data_description_columns_;
+  std::unique_ptr<MSFeedColumns> feed_columns_;
+  std::unique_ptr<MSPointingColumns> pointing_columns_;
+  std::unique_ptr<MSPolarizationColumns> polarization_columns_;
+  std::unique_ptr<MSSysCalColumns> syscal_columns_;
+  std::unique_ptr<MSStateColumns> state_columns_;
+  std::unique_ptr<MSWeatherColumns> weather_columns_;
   std::unique_ptr<Reader> reader_;
   bool is_float_;
-  casacore::String data_key_;
+  String data_key_;
 
   // for POINTING table
-  casacore::Int reference_feed_;
-  std::map<casacore::Int, casacore::Vector<casacore::Double>> pointing_time_;
-  std::map<casacore::Int, casacore::Double> pointing_time_max_;
-  std::map<casacore::Int, casacore::Double> pointing_time_min_;
-  casacore::Vector<casacore::uInt> num_pointing_time_;
+  Int reference_feed_;
+  std::map<Int, Vector<Double>> pointing_time_;
+  std::map<Int, Double> pointing_time_max_;
+  std::map<Int, Double> pointing_time_min_;
+  Vector<uInt> num_pointing_time_;
 
   // for SYSCAL table
   std::vector<sdfiller::SysCalTableRecord> syscal_list_;
 
   // for STATE table
-  std::vector<casacore::Int> subscan_list_;
+  std::vector<Int> subscan_list_;
 
   // for FEED table
-  std::vector<casacore::Vector<casacore::String> *> polarization_type_pool_;
+  std::vector<Vector<String> *> polarization_type_pool_;
 
   // for WEATHER table
   std::vector<sdfiller::WeatherRecord> weather_list_;
 
-  // casacore::Data storage to interact with DataAccumulator
+  // Data storage to interact with DataAccumulator
   sdfiller::MSDataRecord record_;
 
   // for parallel processing
-  casacore::Bool const parallel_;
+  Bool const parallel_;
 }
 ;
 

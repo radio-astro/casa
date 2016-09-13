@@ -42,9 +42,7 @@
 #include <casa/iomanip.h>
 #include <casa/namespace.h>
 using namespace std;
-using namespace casacore;
 using namespace casa;
-using namespace casacore;
 using namespace casa::vi;
 
 
@@ -83,13 +81,13 @@ Double avetime(5000.0);  // non-trivial
 //Double avetime(0.1);  // trivial  (averaging code will be exercised, but no reduction in volume)
 
 // Should summary of each VB be printed out?
-Bool verbose(true);
+Bool verbose(True);
 
 // Control which tests are done
-Bool doCalVi2synth(false);  // Ordinary CalibratingVi2 test via synthesis interfaces
-Bool doCalVi2msvis(false);  // Ordinary CalibratingVi2 test via msvis interfaces (incl. static init)
-Bool doLayeredVi2(true);    // LayeredVi2Factory test, w/ cal and averaging
-Bool doMSTransVi2(true);    // MSTransformIteratorFactory test, w/ cal and averaging
+Bool doCalVi2synth(False);  // Ordinary CalibratingVi2 test via synthesis interfaces
+Bool doCalVi2msvis(False);  // Ordinary CalibratingVi2 test via msvis interfaces (incl. static init)
+Bool doLayeredVi2(True);    // LayeredVi2Factory test, w/ cal and averaging
+Bool doMSTransVi2(True);    // MSTransformIteratorFactory test, w/ cal and averaging
 
 // END OF CONFIGURATION
 //-----------------------------------------------------------------------------
@@ -129,7 +127,7 @@ Bool testVB(VisBuffer2* vb, Float calfactor, Bool verbose) {
 
   }
 
-  return true;  // will add actual tests later
+  return True;  // will add actual tests later
 }
 
 Bool doIteration(VisibilityIterator2* vi, Float calfactor, Bool verbose) {
@@ -144,7 +142,7 @@ Bool doIteration(VisibilityIterator2* vi, Float calfactor, Bool verbose) {
       testVB(vb,calfactor,verbose);
     }
   }
-  return true;
+  return True;
 }
 
 
@@ -305,7 +303,7 @@ int main() {
       Record config;
       config.define("inputms",msname);
       config.define("datacolumn",datacol);  //  from above
-      config.define("timeaverage",true);
+      config.define("timeaverage",True);
       config.define("timebin",String::toString(avetime)+"s"); 
       config.defineRecord("callib",calrec);
 
@@ -343,12 +341,12 @@ int main() {
 
     //-----------------------------------------------------------
     // this is just ordinary plane iteration
-    if (false)  // not really needed in this test
+    if (False)  // not really needed in this test
     {
 
       timer.mark();
       
-      VisibilityIterator2 vi(ms,sc,false);
+      VisibilityIterator2 vi(ms,sc,False);
       VisBuffer2* vb = vi.getVisBuffer();
       
       Int iChunk(0);

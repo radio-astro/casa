@@ -22,7 +22,6 @@
 
 #include <mstransform/MSTransform/MSTransformRegridder.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 /////////////////////////////////////////////
@@ -60,7 +59,7 @@ Bool MSTransformRegridder::combineSpws(	LogIO& os,
 										Bool verbose)
 {
 	MeasurementSet ms_p(msName, Table::Old);
-	Bool result = false;
+	Bool result = False;
 	result = combineSpwsCore(os,ms_p,spwids,newCHAN_FREQ,newCHAN_WIDTH,
 							 averageWhichChan, averageWhichSPW, averageChanFrac, verbose);
 	return result;
@@ -84,7 +83,7 @@ Bool MSTransformRegridder::combineSpwsCore(	LogIO& os,
 	{
 		os << LogIO::WARN << LogOrigin("MSTransformRegridder", __FUNCTION__)
 				<< "No SPWs selected for combination ..." << LogIO::POST;
-		return true;
+		return True;
 	}
 
 	// Find all existing spws,
@@ -92,7 +91,7 @@ Bool MSTransformRegridder::combineSpwsCore(	LogIO& os,
 	Int origNumSPWs = spwtable.nrow();
 
 	vector<Int> spwsToCombine;
-	Vector<Bool> includeIt(origNumSPWs, false);
+	Vector<Bool> includeIt(origNumSPWs, False);
 
 	// jagonzal: This covers for the case when we want to combine all the input SPWs
 	if (spwids(0) == -1)
@@ -100,7 +99,7 @@ Bool MSTransformRegridder::combineSpwsCore(	LogIO& os,
 		for (Int i = 0; i < origNumSPWs; i++)
 		{
 			spwsToCombine.push_back(i);
-			includeIt(i) = true;
+			includeIt(i) = True;
 		}
 	}
 	// jagonzal: Nominal case when we want to combine a sub-set of the input SPWs
@@ -111,7 +110,7 @@ Bool MSTransformRegridder::combineSpwsCore(	LogIO& os,
 			if (spwids(i) < origNumSPWs && spwids(i) >= 0)
 			{
 				spwsToCombine.push_back(spwids(i));
-				includeIt(spwids(i)) = true;
+				includeIt(spwids(i)) = True;
 			}
 			else
 			{
@@ -119,7 +118,7 @@ Bool MSTransformRegridder::combineSpwsCore(	LogIO& os,
 					<< "Invalid SPW ID selected for combination "
 					<< spwids(i) << "valid range is 0 - "
 					<< origNumSPWs - 1 << ")" << LogIO::POST;
-				return false;
+				return False;
 			}
 		}
 	}
@@ -133,7 +132,7 @@ Bool MSTransformRegridder::combineSpwsCore(	LogIO& os,
 				<< "Less than two SPWs selected. No combination necessary."
 				<< LogIO::POST;
 		}
-		return true;
+		return True;
 	}
 
 	// Sort the SPW Ids
@@ -154,8 +153,8 @@ Bool MSTransformRegridder::combineSpwsCore(	LogIO& os,
 
 	// Create a list of the SPW Ids sorted by first (lowest) channel frequency
 	vector<Int> spwsSorted(nSpwsToCombine);
-	Vector<Bool> isDescending(origNumSPWs, false);
-	Bool negChanWidthWarned = false;
+	Vector<Bool> isDescending(origNumSPWs, False);
+	Bool negChanWidthWarned = False;
 
 
 	Double* firstFreq = new Double[nSpwsToCombine];
@@ -175,7 +174,7 @@ Bool MSTransformRegridder::combineSpwsCore(	LogIO& os,
 			else
 			{
 				firstFreq[count] = CHAN_FREQ(nCh - 1);
-				isDescending(i) = true;
+				isDescending(i) = True;
 			}
 			count++;
 		}
@@ -199,12 +198,12 @@ Bool MSTransformRegridder::combineSpwsCore(	LogIO& os,
 	newCHAN_WIDTH.assign(chanWidthColr(id0));
 	Bool newIsDescending = isDescending(id0);
 	{
-		Bool negativeWidths = false;
+		Bool negativeWidths = False;
 		for (uInt i = 0; i < newNUM_CHAN; i++)
 		{
 			if (newCHAN_WIDTH(i) < 0.)
 			{
-				negativeWidths = true;
+				negativeWidths = True;
 				newCHAN_WIDTH(i) = -newCHAN_WIDTH(i);
 			}
 		}
@@ -213,7 +212,7 @@ Bool MSTransformRegridder::combineSpwsCore(	LogIO& os,
 			os	<< LogIO::NORMAL << LogOrigin("MSTransformRegridder", __FUNCTION__)
 				<< " *** Encountered negative channel widths in SPECTRAL_WINDOW table."
 				<< LogIO::POST;
-			negChanWidthWarned = true;
+			negChanWidthWarned = True;
 		}
 	}
 
@@ -290,12 +289,12 @@ Bool MSTransformRegridder::combineSpwsCore(	LogIO& os,
 		Vector<Double> newCHAN_WIDTHi(chanWidthColr(idi));
 		Bool newIsDescendingI = isDescending(idi);
 		{
-			Bool negativeWidths = false;
+			Bool negativeWidths = False;
 			for (uInt ii = 0; ii < newNUM_CHANi; ii++)
 			{
 				if (newCHAN_WIDTHi(ii) < 0.)
 				{
-					negativeWidths = true;
+					negativeWidths = True;
 					newCHAN_WIDTHi(ii) = -newCHAN_WIDTHi(ii);
 				}
 			}
@@ -304,7 +303,7 @@ Bool MSTransformRegridder::combineSpwsCore(	LogIO& os,
 				os 	<< LogIO::NORMAL << LogOrigin("MSTransformRegridder", __FUNCTION__)
 					<< " *** Encountered negative channel widths in SPECTRAL_WINDOW table."
 					<< LogIO::POST;
-				negChanWidthWarned = true;
+				negChanWidthWarned = True;
 			}
 		}
 
@@ -358,7 +357,7 @@ Bool MSTransformRegridder::combineSpwsCore(	LogIO& os,
 				<< "SPW " << idi
 				<< " cannot be combined with SPW " << id0
 				<< ". Non-matching ref. frame." << LogIO::POST;
-			return false;
+			return False;
 		}
 
 		// Append or prepend spw to new spw overlap at all?
@@ -711,7 +710,7 @@ Bool MSTransformRegridder::combineSpwsCore(	LogIO& os,
 		averageWhichChan.assign(mergedAverageWhichChan.begin(), mergedAverageWhichChan.end());
 	}
 
-	return true;
+	return True;
 }
 
 // -----------------------------------------------------------------------
@@ -765,12 +764,12 @@ Bool MSTransformRegridder::calcChanFreqs(	LogIO& os,
 						t_centerIsStart, t_startIsEnd, t_nchan, t_width, t_start))
 	{
 		// An error occurred
-		return false;
+		return False;
 	}
 
 	// Reference frame transformation
-	Bool needTransform = true;
-	Bool doRadVelCorr = false;
+	Bool needTransform = True;
+	Bool doRadVelCorr = False;
 	MFrequency::Types theFrame;
 	String oframe = outframe;
 	oframe.upcase();
@@ -780,23 +779,23 @@ Bool MSTransformRegridder::calcChanFreqs(	LogIO& os,
 	{
 		// Keep the reference frame as is
 		theFrame = theOldRefFrame;
-		needTransform = false;
+		needTransform = False;
 	}
 	// GEO transformation + radial velocity correction
 	else if (oframe == "SOURCE")
 	{
 		theFrame = MFrequency::GEO;
-		doRadVelCorr = true;
+		doRadVelCorr = True;
 	}
 	else if (!MFrequency::getType(theFrame, outframe))
 	{
 		os << LogIO::SEVERE << LogOrigin("MSTransformRegridder", __FUNCTION__)
 				<< "Parameter \"outframe\" value " << outframe << " is invalid." << LogIO::POST;
-		return false;
+		return False;
 	}
 	else if (theFrame == theOldRefFrame)
 	{
-		needTransform = false;
+		needTransform = False;
 	}
 
 	uInt oldNUM_CHAN = oldCHAN_FREQ.size();
@@ -804,7 +803,7 @@ Bool MSTransformRegridder::calcChanFreqs(	LogIO& os,
 	{
 		newCHAN_FREQ.resize(0);
 		newCHAN_WIDTH.resize(0);
-		return true;
+		return True;
 	}
 
 	if (oldNUM_CHAN != oldCHAN_WIDTH.size())
@@ -812,17 +811,17 @@ Bool MSTransformRegridder::calcChanFreqs(	LogIO& os,
 		os 		<< LogIO::SEVERE << LogOrigin("MSTransformRegridder", __FUNCTION__)
 				<< "Internal error: inconsistent dimensions of input channel frequency and width arrays."
 				<< LogIO::POST;
-		return false;
+		return False;
 	}
 
 	Vector<Double> absOldCHAN_WIDTH;
 	absOldCHAN_WIDTH.assign(oldCHAN_WIDTH);
-	Bool negativeWidths = false;
+	Bool negativeWidths = False;
 	for (uInt i = 0; i < oldCHAN_WIDTH.size(); i++)
 	{
 		if (oldCHAN_WIDTH(i) < 0.)
 		{
-			negativeWidths = true;
+			negativeWidths = True;
 			absOldCHAN_WIDTH(i) = -oldCHAN_WIDTH(i);
 		}
 	}
@@ -850,7 +849,7 @@ Bool MSTransformRegridder::calcChanFreqs(	LogIO& os,
 		MFrequency::Convert freqTrans(unit, fromFrame, toFrame);
 
 		MDoppler radVelCorr;
-		Bool radVelSignificant = false;
+		Bool radVelSignificant = False;
 
 		// Prepare correction for radial velocity if requested and possible
 		if (doRadVelCorr)
@@ -860,7 +859,7 @@ Bool MSTransformRegridder::calcChanFreqs(	LogIO& os,
 			Double mRVVal = mrv.getValue();
 			if (fabs(mRVVal) > 1E-6)
 			{
-				radVelSignificant = true;
+				radVelSignificant = True;
 			}
 
 			if (verbose)
@@ -910,7 +909,7 @@ Bool MSTransformRegridder::calcChanFreqs(	LogIO& os,
 	{
 		// There was an error
 		os << LogIO::WARN << LogOrigin("MSTransformRegridder", __FUNCTION__) << message << LogIO::POST;
-		return false;
+		return False;
 	}
 
 	if (verbose)
@@ -933,7 +932,7 @@ Bool MSTransformRegridder::calcChanFreqs(	LogIO& os,
 
 	weightScale = newCHAN_WIDTH[0]/transCHAN_WIDTH[0];
 
-	return true;
+	return True;
 }
 
 // -----------------------------------------------------------------------
@@ -962,11 +961,11 @@ Bool MSTransformRegridder::convertGridPars(	LogIO& os,
 											Int& t_width,
 											Int& t_start)
 {
-	Bool rstat(false);
+	Bool rstat(False);
 
 	try {
 
-		casacore::QuantumHolder qh;
+		casa::QuantumHolder qh;
 		String error;
 
 		t_mode = mode;
@@ -981,7 +980,7 @@ Bool MSTransformRegridder::convertGridPars(	LogIO& os,
 			{
 				os << LogIO::SEVERE << LogOrigin("MSTransformRegridder", __FUNCTION__)
 						<< "restfreq: " << error << LogIO::POST;
-				return false;
+				return False;
 			}
 		}
 
@@ -992,8 +991,8 @@ Bool MSTransformRegridder::convertGridPars(	LogIO& os,
 		t_nchan = -1;
 		t_width = 0;
 		t_start = -1;
-		t_startIsEnd = false; 	// false means that start specifies the lower end in frequency (default)
-								// true means that start specifies the upper end in frequency
+		t_startIsEnd = False; 	// False means that start specifies the lower end in frequency (default)
+								// True means that start specifies the upper end in frequency
 
 		// start was set
 		if (!start.empty() && !(start == "[]"))
@@ -1016,7 +1015,7 @@ Bool MSTransformRegridder::convertGridPars(	LogIO& os,
 				{
 					os << LogIO::SEVERE << LogOrigin("MSTransformRegridder", __FUNCTION__)
 							<< "start: " << error << LogIO::POST;
-					return false;
+					return False;
 				}
 			}
 			else if (t_mode == "velocity")
@@ -1029,7 +1028,7 @@ Bool MSTransformRegridder::convertGridPars(	LogIO& os,
 				{
 					os << LogIO::SEVERE << LogOrigin("MSTransformRegridder", __FUNCTION__)
 							<< "start: " << error << LogIO::POST;
-					return false;
+					return False;
 				}
 			}
 		}
@@ -1043,7 +1042,7 @@ Bool MSTransformRegridder::convertGridPars(	LogIO& os,
 				t_width = abs(w);
 				if (w < 0)
 				{
-					t_startIsEnd = true;
+					t_startIsEnd = True;
 				}
 			}
 			else if (t_mode == "channel_b")
@@ -1052,7 +1051,7 @@ Bool MSTransformRegridder::convertGridPars(	LogIO& os,
 				t_cwidth = abs(w);
 				if (w < 0)
 				{
-					t_startIsEnd = true;
+					t_startIsEnd = True;
 				}
 			}
 			else if (t_mode == "frequency")
@@ -1063,14 +1062,14 @@ Bool MSTransformRegridder::convertGridPars(	LogIO& os,
 					t_cwidth = abs(w);
 					if (w < 0)
 					{
-						t_startIsEnd = true;
+						t_startIsEnd = True;
 					}
 				}
 				else
 				{
 					os << LogIO::SEVERE << LogOrigin("MSTransformRegridder", __FUNCTION__)
 							<< "width: " << error << LogIO::POST;
-					return false;
+					return False;
 				}
 			}
 			else if (t_mode == "velocity")
@@ -1081,24 +1080,24 @@ Bool MSTransformRegridder::convertGridPars(	LogIO& os,
 					t_cwidth = abs(w);
 					if (w >= 0)
 					{
-						t_startIsEnd = true;
+						t_startIsEnd = True;
 					}
 				}
 				else
 				{
 					os << LogIO::SEVERE << LogOrigin("MSTransformRegridder", __FUNCTION__)
 							<< "width: " << error << LogIO::POST;
-					return false;
+					return False;
 				}
 			}
 		}
 		// width was not set
 		else
 		{
-			// For the velocity mode the default t_startIsEnd is true if the sign of width is not known
+			// For the velocity mode the default t_startIsEnd is True if the sign of width is not known
 			if (t_mode == "velocity")
 			{
-				t_startIsEnd = true;
+				t_startIsEnd = True;
 			}
 		}
 
@@ -1141,7 +1140,7 @@ Bool MSTransformRegridder::convertGridPars(	LogIO& os,
 				os << LogIO::SEVERE << LogOrigin("MSTransformRegridder", __FUNCTION__)
 						<< "Need to set restfreq in velocity mode."
 						<< LogIO::POST;
-				return false;
+				return False;
 			}
 
 			t_regridQuantity = "vrad";
@@ -1161,22 +1160,22 @@ Bool MSTransformRegridder::convertGridPars(	LogIO& os,
 		{
 			os << LogIO::WARN << LogOrigin("MSTransformRegridder", __FUNCTION__)
 					<< "Invalid mode " << t_mode << LogIO::POST;
-			return false;
+			return False;
 		}
 
 		t_outframe = outframe;
 		t_regridInterpMeth = interp;
-		t_centerIsStart = true;
+		t_centerIsStart = True;
 
 		// End prepare re-gridding parameters
-		rstat = true;
+		rstat = True;
 
 	}
 	catch (AipsError x)
 	{
 		os << LogIO::SEVERE << LogOrigin("MSTransformRegridder", __FUNCTION__)
 				<< "Exception Reported: " << x.getMesg() << LogIO::POST;
-		rstat = false;
+		rstat = False;
 	}
 
 	return rstat;
@@ -1185,7 +1184,7 @@ Bool MSTransformRegridder::convertGridPars(	LogIO& os,
 // -----------------------------------------------------------------------
 // Calculate the final new channel boundaries from the re-regridding parameters and
 // the old channel boundaries (already transformed to the desired reference frame).
-// Returns false if input parameters were invalid and no useful boundaries could be created
+// Returns False if input parameters were invalid and no useful boundaries could be created
 // -----------------------------------------------------------------------
 Bool MSTransformRegridder::regridChanBounds(	Vector<Double>& newChanLoBound,
 												Vector<Double>& newChanHiBound,
@@ -1217,19 +1216,19 @@ Bool MSTransformRegridder::regridChanBounds(	Vector<Double>& newChanLoBound,
 	Int oldNUM_CHAN = transNewXin.size();
 
 	// Detect spectral windows defined with descending frequency
-	Bool isDescending = false;
+	Bool isDescending = False;
 	for (uInt i = 1; i < transNewXin.size(); i++)
 	{
 		if (transNewXin(i) < transNewXin(i - 1))
 		{
-			isDescending = true;
+			isDescending = True;
 		}
 		// i.e. descending was detected but now we encounter ascending
 		else if (isDescending)
 		{
 			oss << "Channel frequencies are neither in ascending nor in descending order. Cannot process.";
 			message = oss.str();
-			return false;
+			return False;
 		}
 	}
 
@@ -1280,7 +1279,7 @@ Bool MSTransformRegridder::regridChanBounds(	Vector<Double>& newChanLoBound,
 					break;
 				}
 			}
-			centerIsStart = false;
+			centerIsStart = False;
 		}
 		// Valid input
 		else if (0. <= regridCenter && regridCenter < Double(oldNUM_CHAN))
@@ -1300,7 +1299,7 @@ Bool MSTransformRegridder::regridChanBounds(	Vector<Double>& newChanLoBound,
 			}
 			oss << regridCenter << " outside valid range which is " << 0 << " - " << oldNUM_CHAN - 1 << ".";
 			message = oss.str();
-			return false;
+			return False;
 		}
 
 		// Not set or nchan set
@@ -1330,7 +1329,7 @@ Bool MSTransformRegridder::regridChanBounds(	Vector<Double>& newChanLoBound,
 			{
 				regridCenterChan = regridCenterChan + regridBandwidthChan / 2;
 			}
-			centerIsStart = false;
+			centerIsStart = False;
 		}
 
 		// Center too close to lower edge
@@ -1506,7 +1505,7 @@ Bool MSTransformRegridder::regridChanBounds(	Vector<Double>& newChanLoBound,
 
 		message = oss.str();
 
-		return true;
+		return True;
 	}
 	// We operate on real numbers /////////////////
 	else
@@ -1523,13 +1522,13 @@ Bool MSTransformRegridder::regridChanBounds(	Vector<Double>& newChanLoBound,
 			{
 				oss << "Parameter \"restfreq\" needs to be set if regrid_quantity==vrad. Cannot proceed with regridSpw ...";
 				message = oss.str();
-				return false;
+				return False;
 			}
 			else if (regridVeloRestfrq < 0. || regridVeloRestfrq > 1E30)
 			{
 				oss << "Parameter \"restfreq\" value " << regridVeloRestfrq << " is invalid.";
 				message = oss.str();
-				return false;
+				return False;
 			}
 
 			lDouble regridCenterVel;
@@ -1572,7 +1571,7 @@ Bool MSTransformRegridder::regridChanBounds(	Vector<Double>& newChanLoBound,
 			{
 				regridCenterF = (transNewXin[0] + transNewXin[oldNUM_CHAN - 1])/ 2.;
 				regridCenterVel = vrad(regridCenterF, regridVeloRestfrq);
-				centerIsStart = false;
+				centerIsStart = False;
 			}
 			if (nchan > 0)
 			{
@@ -1599,7 +1598,7 @@ Bool MSTransformRegridder::regridChanBounds(	Vector<Double>& newChanLoBound,
 					{
 						regridCenterF = regridCenterF + regridBandwidthF / 2.;
 					}
-					centerIsStart = false;
+					centerIsStart = False;
 				}
 			}
 			else if (regridBandwidth > 0.)
@@ -1616,7 +1615,7 @@ Bool MSTransformRegridder::regridChanBounds(	Vector<Double>& newChanLoBound,
 						regridCenterVel = regridCenter - regridBandwidth / 2.;
 					}
 					regridCenterF = freq_from_vrad(regridCenterVel,regridVeloRestfrq);
-					centerIsStart = false;
+					centerIsStart = False;
 				}
 				lDouble bwUpperEndF = freq_from_vrad(regridCenterVel - regridBandwidth / 2.,regridVeloRestfrq);
 				regridBandwidthF = 2. * (bwUpperEndF - regridCenterF);
@@ -1635,13 +1634,13 @@ Bool MSTransformRegridder::regridChanBounds(	Vector<Double>& newChanLoBound,
 			{
 				oss << "Parameter \"restfreq\" needs to be set if regrid_quantity==vopt. Cannot proceed with regridSpw ...";
 				message = oss.str();
-				return false;
+				return False;
 			}
 			else if (regridVeloRestfrq <= 0. || regridVeloRestfrq > 1E30)
 			{
 				oss << "Parameter \"restfreq\" value " << regridVeloRestfrq << " is invalid.";
 				message = oss.str();
-				return false;
+				return False;
 			}
 
 			lDouble regridCenterVel;
@@ -1684,7 +1683,7 @@ Bool MSTransformRegridder::regridChanBounds(	Vector<Double>& newChanLoBound,
 				regridCenterF = (transNewXin[0] - transCHAN_WIDTH[0]
 				                 + transNewXin[oldNUM_CHAN - 1] + transCHAN_WIDTH[oldNUM_CHAN - 1]) / 2.;
 				regridCenterVel = vopt(regridCenterF, regridVeloRestfrq);
-				centerIsStart = false;
+				centerIsStart = False;
 			}
 
 			if (nchan > 0)
@@ -1733,7 +1732,7 @@ Bool MSTransformRegridder::regridChanBounds(	Vector<Double>& newChanLoBound,
 					}
 
 					regridCenterF = freq_from_vopt(regridCenterVel,regridVeloRestfrq);
-					centerIsStart = false;
+					centerIsStart = False;
 				}
 				nchan = 0; // indicate that nchan should not be used in the following
 			}
@@ -1751,7 +1750,7 @@ Bool MSTransformRegridder::regridChanBounds(	Vector<Double>& newChanLoBound,
 						regridCenterVel = regridCenter - regridBandwidth / 2.;
 					}
 					regridCenterF = freq_from_vopt(regridCenterVel, regridVeloRestfrq);
-					centerIsStart = false;
+					centerIsStart = False;
 				}
 
 				lDouble bwUpperEndF = freq_from_vopt(regridCenterVel - regridBandwidth / 2.,regridVeloRestfrq);
@@ -1780,7 +1779,7 @@ Bool MSTransformRegridder::regridChanBounds(	Vector<Double>& newChanLoBound,
 					oss << " *** Parameter start exceeds total number of channels which is "
 						<< transNewXin.size() << ". Set to 0." << endl;
 					firstChan = 0;
-					startIsEnd = false;
+					startIsEnd = False;
 				}
 
 				if (startIsEnd)
@@ -1791,7 +1790,7 @@ Bool MSTransformRegridder::regridChanBounds(	Vector<Double>& newChanLoBound,
 				{
 					regridCenter = transNewXin[firstChan] - transCHAN_WIDTH[firstChan] / 2.;
 				}
-				centerIsStart = true;
+				centerIsStart = True;
 			}
 			else
 			{
@@ -1859,7 +1858,7 @@ Bool MSTransformRegridder::regridChanBounds(	Vector<Double>& newChanLoBound,
 			{
 				regridCenterF = (transNewXin[0] + transNewXin[oldNUM_CHAN - 1])/ 2.;
 				regridCenterWav = lambda(regridCenterF);
-				centerIsStart = false;
+				centerIsStart = False;
 			}
 			if (nchan > 0)
 			{
@@ -1906,7 +1905,7 @@ Bool MSTransformRegridder::regridChanBounds(	Vector<Double>& newChanLoBound,
 						regridCenterWav = regridCenterWav - (lDouble) nchan* cw / 2.;
 					}
 					regridCenterF = freq_from_lambda(regridCenterWav);
-					centerIsStart = false;
+					centerIsStart = False;
 				}
 				nchan = 0; // indicate that nchan should not be used in the following
 
@@ -1925,7 +1924,7 @@ Bool MSTransformRegridder::regridChanBounds(	Vector<Double>& newChanLoBound,
 						regridCenterWav = regridCenter - regridBandwidth / 2.;
 					}
 					regridCenterF = freq_from_lambda(regridCenterWav);
-					centerIsStart = false;
+					centerIsStart = False;
 				}
 				lDouble bwUpperEndF = lambda(regridCenterWav - regridBandwidth / 2.);
 				regridBandwidthF = 2. * (bwUpperEndF - regridCenterF);
@@ -1941,7 +1940,7 @@ Bool MSTransformRegridder::regridChanBounds(	Vector<Double>& newChanLoBound,
 		{
 			oss << "Invalid value " << regridQuant << " for parameter \"mode\".";
 			message = oss.str();
-			return false;
+			return False;
 		}
 		// (transformation of regrid parameters to frequencies completed)
 
@@ -1958,7 +1957,7 @@ Bool MSTransformRegridder::regridChanBounds(	Vector<Double>& newChanLoBound,
 			// Keep regrid center as it is in the data
 			theRegridCenterF = (transNewXin[0] - transCHAN_WIDTH[0] / 2.
 								+ transNewXin[oldNUM_CHAN - 1] + transCHAN_WIDTH[oldNUM_CHAN - 1] / 2.) / 2.;
-			centerIsStart = false;
+			centerIsStart = False;
 		}
 		// regridCenterF was set
 		else
@@ -2037,7 +2036,7 @@ Bool MSTransformRegridder::regridChanBounds(	Vector<Double>& newChanLoBound,
 				{
 					// Need to update
 					theRegridCenterF = transNewXin[0] - transCHAN_WIDTH[0] / 2. + theRegridBWF / 2.;
-					centerIsStart = false;
+					centerIsStart = False;
 				}
 				// Center but not nchan was set by user
 				else if (nchan < 0)
@@ -2089,7 +2088,7 @@ Bool MSTransformRegridder::regridChanBounds(	Vector<Double>& newChanLoBound,
 				{
 					theRegridCenterF = theRegridCenterF + theRegridBWF / 2.;
 				}
-				centerIsStart = false;
+				centerIsStart = False;
 			}
 		}
 		// regridBandwidthF was set
@@ -2110,7 +2109,7 @@ Bool MSTransformRegridder::regridChanBounds(	Vector<Double>& newChanLoBound,
 				{
 					theRegridCenterF = theRegridCenterF + theRegridBWF / 2.;
 				}
-				centerIsStart = false;
+				centerIsStart = False;
 			}
 
 			Double rangeTol = 1.; // Hz
@@ -2223,7 +2222,7 @@ Bool MSTransformRegridder::regridChanBounds(	Vector<Double>& newChanLoBound,
 					}
 
 					message = oss.str();
-					return false;
+					return False;
 
 				}
 				// input channel width was OK, memorize
@@ -2694,7 +2693,7 @@ Bool MSTransformRegridder::regridChanBounds(	Vector<Double>& newChanLoBound,
 		{
 			oss << "Invalid value " << regridQuant << " for parameter \"mode\".";
 			message = oss.str();
-			return false;
+			return False;
 		}
 
 		Int numNewChanDown = loFBdown.size();
@@ -2737,7 +2736,7 @@ Bool MSTransformRegridder::regridChanBounds(	Vector<Double>& newChanLoBound,
 
 		message = oss.str();
 
-		return true;
+		return True;
 
 	} // end if (regridQuant== ...
 }

@@ -31,7 +31,6 @@
 
 #include <memory>
 
-using namespace casacore;
 namespace casa {
 
 const String ImageRotator::CLASS_NAME = "ImageRotator";
@@ -42,7 +41,7 @@ ImageRotator::ImageRotator(
 ) : ImageTask<Float>(
         image, "", regionPtr, "", "", "", mask, outname, overwrite
     ) {
-	this->_construct(true);
+	this->_construct(True);
 }
 
 ImageRotator::~ImageRotator() {}

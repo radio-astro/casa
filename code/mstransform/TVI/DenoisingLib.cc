@@ -29,7 +29,7 @@ namespace denoising { //# NAMESPACE DENOISING - BEGIN
 // -----------------------------------------------------------------------
 // Wrap CASA Vector with a gsl_vector structure
 // -----------------------------------------------------------------------
-void GslVectorWrap(casacore::Vector<casacore::Double> casa_vector, gsl_vector &wrapper)
+void GslVectorWrap(Vector<Double> casa_vector, gsl_vector &wrapper)
 {
 	wrapper.size = casa_vector.size();
 	wrapper.stride = casa_vector.steps()(0);
@@ -54,7 +54,7 @@ void GslVectorWrap(casacore::Vector<casacore::Double> casa_vector, gsl_vector &w
 //
 // Note that FORTRAN stores arrays in column-major order.
 // -----------------------------------------------------------------------
-void GslMatrixWrap(casacore::Matrix<casacore::Double> &casa_matrix, gsl_matrix &wrapper, size_t ncols)
+void GslMatrixWrap(Matrix<Double> &casa_matrix, gsl_matrix &wrapper, size_t ncols)
 {
     ThrowIf (not casa_matrix.contiguousStorage(),
              "Cannot map a non-contiguous CASA matrix to GSL matrix");
@@ -94,7 +94,7 @@ GslMultifitLinearBase::GslMultifitLinearBase()
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-GslMultifitLinearBase::GslMultifitLinearBase(GslLinearModelBase<casacore::Double> &model)
+GslMultifitLinearBase::GslMultifitLinearBase(GslLinearModelBase<Double> &model)
 {
 	setModel(model);
 
@@ -131,7 +131,7 @@ void GslMultifitLinearBase::freeGslResources()
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-void GslMultifitLinearBase::setModel(GslLinearModelBase<casacore::Double> &model)
+void GslMultifitLinearBase::setModel(GslLinearModelBase<Double> &model)
 {
 	model_p = &model;
 	ndata_p = model_p->ndata();
@@ -140,7 +140,7 @@ void GslMultifitLinearBase::setModel(GslLinearModelBase<casacore::Double> &model
 	ncomponents_p = max_ncomponents_p;
 	GslMatrixWrap(model_p->getModelMatrix(),gsl_model_p);
 
-	data_p.resize(ndata_p,1,casacore::False);
+	data_p.resize(ndata_p,1,False);
 
 	allocGslResources();
 }
@@ -163,7 +163,7 @@ void GslMultifitLinearBase::resetNComponents(size_t ncomponents)
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-void GslMultifitLinearBase::resetModel(GslLinearModelBase<casacore::Double> &model)
+void GslMultifitLinearBase::resetModel(GslLinearModelBase<Double> &model)
 {
 	freeGslResources();
 	setModel(model);
@@ -172,7 +172,7 @@ void GslMultifitLinearBase::resetModel(GslLinearModelBase<casacore::Double> &mod
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-void GslMultifitLinearBase::setData(casacore::Vector<casacore::Double> &data)
+void GslMultifitLinearBase::setData(Vector<Double> &data)
 {
     ThrowIf (data.size() != ndata_p,"Size of data does not match model");
 
@@ -182,7 +182,7 @@ void GslMultifitLinearBase::setData(casacore::Vector<casacore::Double> &data)
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-void GslMultifitLinearBase::setData(casacore::Vector<casacore::Float> &data)
+void GslMultifitLinearBase::setData(Vector<Float> &data)
 {
 	ThrowIf (data.size() != ndata_p,"Size of data does not match model");
 
@@ -195,11 +195,11 @@ void GslMultifitLinearBase::setData(casacore::Vector<casacore::Float> &data)
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-void GslMultifitLinearBase::setData(casacore::Vector<casacore::Complex> &data)
+void GslMultifitLinearBase::setData(Vector<Complex> &data)
 {
 	ThrowIf (data.size() != ndata_p,"Size of data does not match model");
 
-	if (data_p.ncolumn() != 2) data_p.resize(ndata_p,2,casacore::False);
+	if (data_p.ncolumn() != 2) data_p.resize(ndata_p,2,False);
 
 	for (size_t idx=0;idx<ndata_p;idx++)
 	{
@@ -223,7 +223,7 @@ void GslMultifitLinearBase::setData(casacore::Vector<casacore::Complex> &data)
 //       1   , x_n  , x_n^2 , ..., x_n^order]
 //
 // -----------------------------------------------------------------------
-gsl_vector* GslMultifitLinearBase::calcFitCoeffCore(casacore::Vector<casacore::Double> data)
+gsl_vector* GslMultifitLinearBase::calcFitCoeffCore(Vector<Double> data)
 {
 	// Wrap data vector in a gsl_vector
 	gsl_vector data_gsl;
@@ -242,7 +242,7 @@ gsl_vector* GslMultifitLinearBase::calcFitCoeffCore(casacore::Vector<casacore::D
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-casacore::Vector<casacore::Complex> GslMultifitLinearBase::calcFitCoeff(casacore::Vector<casacore::Complex> &data)
+Vector<Complex> GslMultifitLinearBase::calcFitCoeff(Vector<Complex> &data)
 {
 	// Store input data as double
 	setData(data);
@@ -252,10 +252,10 @@ casacore::Vector<casacore::Complex> GslMultifitLinearBase::calcFitCoeff(casacore
 	gsl_vector *imag_coeff = calcFitCoeffCore(data_p.column(1));
 
 	// Get imag coefficients
-	casacore::Vector<casacore::Complex> fitCoeff(ncomponents_p);
+	Vector<Complex> fitCoeff(ncomponents_p);
 	for (size_t coeff_idx=0;coeff_idx<ncomponents_p;coeff_idx++)
 	{
-		fitCoeff(coeff_idx) = casacore::Complex(	gsl_vector_get(real_coeff,coeff_idx),
+		fitCoeff(coeff_idx) = Complex(	gsl_vector_get(real_coeff,coeff_idx),
 										gsl_vector_get(imag_coeff,coeff_idx));
 	}
 
@@ -281,7 +281,7 @@ GslMultifitWeightedLinear::GslMultifitWeightedLinear() :
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-GslMultifitWeightedLinear::GslMultifitWeightedLinear(GslLinearModelBase<casacore::Double> &model) :
+GslMultifitWeightedLinear::GslMultifitWeightedLinear(GslLinearModelBase<Double> &model) :
 		GslMultifitLinearBase()
 {
 	setModel(model);
@@ -298,17 +298,17 @@ GslMultifitWeightedLinear::~GslMultifitWeightedLinear()
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-void GslMultifitWeightedLinear::setModel(GslLinearModelBase<casacore::Double> &model)
+void GslMultifitWeightedLinear::setModel(GslLinearModelBase<Double> &model)
 {
 	GslMultifitLinearBase::setModel(model);
-	weights_p.resize(ndata_p,casacore::False);
+	weights_p.resize(ndata_p,False);
 	GslVectorWrap(weights_p,gls_weights_p);
 }
 
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-void GslMultifitWeightedLinear::setWeights(casacore::Vector<casacore::Float> &weights)
+void GslMultifitWeightedLinear::setWeights(Vector<Float> &weights)
 {
 	// Dim check
 	ThrowIf (weights.size() != ndata_p,"Size of weights does not match model");
@@ -323,7 +323,7 @@ void GslMultifitWeightedLinear::setWeights(casacore::Vector<casacore::Float> &we
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-void GslMultifitWeightedLinear::setFlags(casacore::Vector<casacore::Bool> &flags, casacore::Bool goodIsTrue)
+void GslMultifitWeightedLinear::setFlags(Vector<Bool> &flags, Bool goodIsTrue)
 {
 	// Dim check
 	ThrowIf (flags.size() != ndata_p,"Size of flags does not match model");
@@ -348,7 +348,7 @@ void GslMultifitWeightedLinear::setFlags(casacore::Vector<casacore::Bool> &flags
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-void GslMultifitWeightedLinear::setWeightsAndFlags(casacore::Vector<casacore::Float> &weights, casacore::Vector<casacore::Bool> &flags, casacore::Bool goodIsTrue)
+void GslMultifitWeightedLinear::setWeightsAndFlags(Vector<Float> &weights, Vector<Bool> &flags, Bool goodIsTrue)
 {
 	// Dim check
 	ThrowIf (weights.size() != ndata_p,"Size of weights does not match model");
@@ -389,7 +389,7 @@ void GslMultifitWeightedLinear::setWeightsAndFlags(casacore::Vector<casacore::Fl
 //       Therefore input data is a matrix where each row represents a data series
 //
 // -----------------------------------------------------------------------
-gsl_vector* GslMultifitWeightedLinear::calcFitCoeffCore(casacore::Vector<casacore::Double> data)
+gsl_vector* GslMultifitWeightedLinear::calcFitCoeffCore(Vector<Double> data)
 {
 	// Wrap data vector in a gsl_vector
 	gsl_vector data_gsl;

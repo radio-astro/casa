@@ -37,7 +37,6 @@
 #include <synthesis/MeasurementComponents/MThWorkIDEnum.h>
 #include <fstream>
 
-using namespace casacore;
 namespace casa{
   template 
   void MultiThreadedVisibilityResampler::DataToGridImpl_p(Array<Complex>& griddedData,  
@@ -58,7 +57,7 @@ namespace casa{
 								     CountedPtr<VisibilityResamplerBase>& visResampler, 
 								     const Int& n):
     resamplers_p(), doubleGriddedData_p(), singleGriddedData_p(), sumwt_p(), gridderWorklets_p(), 
-    vbsVec_p(), threadClerk_p(),threadStarted_p(false), visResamplerCtor_p(visResampler), 
+    vbsVec_p(), threadClerk_p(),threadStarted_p(False), visResamplerCtor_p(visResampler), 
     whoLoadedVB_p(MThWorkID::NOONE), currentVBS_p(0)
     {
       if (n < 0) nelements_p = SynthesisUtils::getenv(FTMachineNumThreadsEnvVar, n);
@@ -73,7 +72,7 @@ namespace casa{
   MultiThreadedVisibilityResampler::MultiThreadedVisibilityResampler(const Bool& doublePrecision,
 								     const Int& n):
     resamplers_p(), doubleGriddedData_p(), singleGriddedData_p(), sumwt_p(), gridderWorklets_p(), 
-    vbsVec_p(), threadClerk_p(),threadStarted_p(false), visResamplerCtor_p(), 
+    vbsVec_p(), threadClerk_p(),threadStarted_p(False), visResamplerCtor_p(), 
     whoLoadedVB_p(MThWorkID::NOONE),currentVBS_p(0)
     {
       if (n < 0) nelements_p = SynthesisUtils::getenv(FTMachineNumThreadsEnvVar, n);
@@ -222,7 +221,7 @@ namespace casa{
 					     &(*resamplers_p[i]));
 	  (*gridderWorklets_p[i]).startThread();
 	}
-    threadStarted_p=true;
+    threadStarted_p=True;
   }
   //
   //---------------------------------------------------------------------------------------
@@ -424,7 +423,7 @@ namespace casa{
 	// 	<< "PID = " << (*gridderWorklets_p[i]).getPID() << " "
 	// 	<< "TID = " << (*gridderWorklets_p[i]).getTID() 
 	// 	<< LogIO::POST;
-	//	threadStarted_p = true;
+	//	threadStarted_p = True;
       }
   }
   //

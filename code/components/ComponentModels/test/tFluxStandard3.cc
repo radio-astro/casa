@@ -82,7 +82,7 @@ int main() {
 ***/
   try {
     String fluxScaleName;
-    Bool matchedScale=false;
+    Bool matchedScale=False;
 
     //leave possibility to expand
     Vector<String> qsScNames(1);          Vector<FluxStandard::FluxScale> qsScEnums(1);

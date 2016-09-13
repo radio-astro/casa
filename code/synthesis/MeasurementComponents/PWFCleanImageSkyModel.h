@@ -75,13 +75,13 @@ class PWFCleanImageSkyModel : public WFCleanImageSkyModel {
 public:
   // Constructors
   PWFCleanImageSkyModel();
-  PWFCleanImageSkyModel(const casacore::Int nfacets);
+  PWFCleanImageSkyModel(const Int nfacets);
 
   // Null destructor
   virtual ~PWFCleanImageSkyModel(){};
 
   // Parallelized solve for the sky model
-  virtual casacore::Bool solve(SkyEquation& se);
+  virtual Bool solve(SkyEquation& se);
 
   // Parallelized formation of the approximate PSF's
   virtual void makeApproxPSFs(SkyEquation& se);

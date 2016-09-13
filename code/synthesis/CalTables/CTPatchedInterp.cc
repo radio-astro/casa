@@ -32,14 +32,13 @@
 #include <casa/Utilities/GenSort.h>
 #include <casa/aips.h>
 
-#define CTPATCHEDINTERPVERB false
+#define CTPATCHEDINTERPVERB False
 
 //#include <casa/BasicSL/Constants.h>
 //#include <casa/OS/File.h>
 //#include <casa/Logging/LogMessage.h>
 //#include <casa/Logging/LogSink.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Ctor
@@ -53,7 +52,7 @@ CTPatchedInterp::CTPatchedInterp(NewCalTable& ct,
 				 Vector<Int> fldmap) :
   ct_(ct),
   mtype_(mtype),
-  isCmplx_(false),
+  isCmplx_(False),
   nPar_(nPar),
   nFPar_(nPar),
   timeType_(timetype),
@@ -123,7 +122,7 @@ CTPatchedInterp::CTPatchedInterp(NewCalTable& ct,
   ctspw.numChan().getColumn(nChanIn_);
   freqIn_.resize(nCTSpw_);
   for (uInt iCTspw=0;iCTspw<ctspw.nrow();++iCTspw) 
-    ctspw.chanFreq().get(iCTspw,freqIn_(iCTspw),true);
+    ctspw.chanFreq().get(iCTspw,freqIn_(iCTspw),True);
 
   // Manage 'byObs_' carefully
   if (byObs_) {
@@ -143,7 +142,7 @@ CTPatchedInterp::CTPatchedInterp(NewCalTable& ct,
     ostringstream msg;
     
     if (nctobsavail==1) {
-      byObs_=false;
+      byObs_=False;
       msg << "Only one ObsId found in "
 	  << ct_.tableName()
 	  << "; ignoring 'perobs' interpolation.";
@@ -160,7 +159,7 @@ CTPatchedInterp::CTPatchedInterp(NewCalTable& ct,
       }
       else {
 	// only 1 obs, or available nobs doesn't match MS
-	byObs_=false;
+	byObs_=False;
 	msg << "Multiple ObsIds found in "
 	    << ct_.tableName()
 	    << ", but they do not match the MS ObsIds;"
@@ -220,7 +219,7 @@ CTPatchedInterp::CTPatchedInterp(NewCalTable& ct,
 				 Vector<Int> spwmap) :
   ct_(ct),
   mtype_(mtype),
-  isCmplx_(false),
+  isCmplx_(False),
   nPar_(nPar),
   nFPar_(nPar),
   timeType_(timetype),
@@ -290,7 +289,7 @@ CTPatchedInterp::CTPatchedInterp(NewCalTable& ct,
   ctspw.numChan().getColumn(nChanIn_);
   freqIn_.resize(nCTSpw_);
   for (uInt iCTspw=0;iCTspw<ctspw.nrow();++iCTspw) 
-    ctspw.chanFreq().get(iCTspw,freqIn_(iCTspw),true);
+    ctspw.chanFreq().get(iCTspw,freqIn_(iCTspw),True);
 
 
   // Manage 'byObs_' carefully
@@ -310,7 +309,7 @@ CTPatchedInterp::CTPatchedInterp(NewCalTable& ct,
     ostringstream msg;
     
     if (nctobsavail==1) {
-      byObs_=false;
+      byObs_=False;
       msg << "Only one ObsId found in "
 	  << ct_.tableName()
 	  << "; ignoring 'perobs' interpolation.";
@@ -327,7 +326,7 @@ CTPatchedInterp::CTPatchedInterp(NewCalTable& ct,
       }
       else {
 	// only 1 obs, or available nobs doesn't match MS
-	byObs_=false;
+	byObs_=False;
 	msg << "Multiple ObsIds found in "
 	    << ct_.tableName()
 	    << ", but they do not match the MS ObsIds;"
@@ -383,12 +382,12 @@ CTPatchedInterp::CTPatchedInterp(NewCalTable& ct,
 				 Vector<Int> spwmap) :
   ct_(ct),
   mtype_(mtype),
-  isCmplx_(false),
+  isCmplx_(False),
   nPar_(nPar),
   nFPar_(nPar),
   timeType_(timetype),
   freqType_(freqtype),
-  byObs_(false),                // turn off for old-fashioned
+  byObs_(False),                // turn off for old-fashioned
   byField_(fieldtype=="nearest"),  // for now we are NOT slicing by field
   nChanIn_(),
   freqIn_(),
@@ -450,7 +449,7 @@ CTPatchedInterp::CTPatchedInterp(NewCalTable& ct,
   ctspw.numChan().getColumn(nChanIn_);
   freqIn_.resize(nCTSpw_);
   for (uInt iCTspw=0;iCTspw<ctspw.nrow();++iCTspw) 
-    ctspw.chanFreq().get(iCTspw,freqIn_(iCTspw),true);
+    ctspw.chanFreq().get(iCTspw,freqIn_(iCTspw),True);
 
   // Initialize caltable slices
   sliceTable();
@@ -525,7 +524,7 @@ Bool CTPatchedInterp::interpolate(Int msobs, Int msfld, Int msspw, Double time, 
 
   if (CTPATCHEDINTERPVERB) cout << "CTPatchedInterp::interpolate(...)" << endl;
 
-  Bool newcal(false);
+  Bool newcal(False);
   IPosition ip(4,0,msspw,msfld,thisobs(msobs));
 
   // Loop over _output_ elements
@@ -536,7 +535,7 @@ Bool CTPatchedInterp::interpolate(Int msobs, Int msfld, Int msspw, Double time, 
     
     if (!tI_(ip)) {
       //cout << "Flagging: " << ip << endl;
-      newcal=true;
+      newcal=True;
     }
     else {
       if (freq>0.0)
@@ -551,7 +550,7 @@ Bool CTPatchedInterp::interpolate(Int msobs, Int msfld, Int msspw, Double time, 
   resFlag_(msspw,msfld,thisobs(msobs)).reference(timeResFlag_(msspw,msfld,thisobs(msobs)));
 
   // Detect if obs or fld changed, and cal is obs- or fld-dep
-  Bool diffobsfld(false);
+  Bool diffobsfld(False);
   diffobsfld|=(byField_ && msfld!=lastFld_(msspw));   // field-dep, and field changed
   diffobsfld|=(byObs_ && msobs!=lastObs_(msspw));     // obs-dep, and obs changed
   newcal|=diffobsfld;  // update newcal for return
@@ -585,7 +584,7 @@ Bool CTPatchedInterp::interpolate(Int msobs, Int msfld, Int msspw, Double time, 
      }
   }
 
-  Bool newcal(false);
+  Bool newcal(False);
   IPosition ip(4,0,msspw,msfld,thisobs(msobs));
   // Loop over _output_ antennas
   for (Int iMSElem=0;iMSElem<nMSElem_;++iMSElem) {
@@ -594,7 +593,7 @@ Bool CTPatchedInterp::interpolate(Int msobs, Int msfld, Int msspw, Double time, 
     ip(0)=iMSElem;
     if (!tI_(ip)) {
       //      if (iMSElem==0) cout << "Flagging: " << ip << endl;
-      newcal=true;
+      newcal=True;
     }
     else {
 
@@ -607,7 +606,7 @@ Bool CTPatchedInterp::interpolate(Int msobs, Int msfld, Int msspw, Double time, 
 	resampleInFreq(fR,fRflg,freq,tR,tRflg,freqIn_(spwMap_(msspw)));
 	
 	// Calibration is new
-	newcal=true;
+	newcal=True;
       }
     }
   }
@@ -617,7 +616,7 @@ Bool CTPatchedInterp::interpolate(Int msobs, Int msfld, Int msspw, Double time, 
   resFlag_(msspw,msfld,thisobs(msobs)).reference(freqResFlag_(msspw,msfld,thisobs(msobs)));
 
   // Detect if obs or fld changed, and cal is obs- or fld-dep
-  Bool diffobsfld(false);
+  Bool diffobsfld(False);
   diffobsfld|=(byField_ && msfld!=lastFld_(msspw));   // field-dep, and field changed
   diffobsfld|=(byObs_ && msobs!=lastObs_(msspw));     // obs-dep, and obs changed
   newcal|=diffobsfld;  //  update newcal for return
@@ -653,7 +652,7 @@ Bool CTPatchedInterp::spwOK(Int spw) const {
     return this->spwInOK(spwMap_(spw));
 
   // Something wrong...
-  return false;
+  return False;
 
 }
 Bool CTPatchedInterp::spwInOK(Int spw) const {
@@ -662,7 +661,7 @@ Bool CTPatchedInterp::spwInOK(Int spw) const {
     return spwInOK_(spw);
 
   // Something wrong
-  return false;
+  return False;
 
 }
 
@@ -714,7 +713,7 @@ void CTPatchedInterp::sliceTable() {
 
   // Initialize spwInOK_
   spwInOK_.resize(nCTSpw_);
-  spwInOK_.set(false);
+  spwInOK_.set(False);
 
   // Set up iterator
   //  TBD: handle baseline-based case!
@@ -802,9 +801,9 @@ void CTPatchedInterp::makeInterpolators() {
   tI_.resize(tIsize);
   tI_.set(NULL);
   tIdel_.resize(tIsize);
-  tIdel_.set(false);
+  tIdel_.set(False);
 
-  Bool reportBadSpw(false);
+  Bool reportBadSpw(False);
   for (Int iMSObs=0;iMSObs<nMSObs_;++iMSObs) {
   for (Int iMSFld=0;iMSFld<nMSFld_;++iMSFld) {
 
@@ -834,14 +833,14 @@ void CTPatchedInterp::makeInterpolators() {
 	      NewCalTable& ict(*ctSlices_(ictip));
 	      if (!ict.isNull()) {
 		tI_(tIip)=new CTTimeInterp1(ict,timeType_,tR,tRf);
-		tIdel_(tIip)=true;
+		tIdel_(tIip)=True;
 	      }
 	    }
 	    else {
 	      // the required ct slice is empty, so arrange to flag it
 	      tI_(tIip)=NULL; 
 	      tR.set(0.0);
-	      tRf.set(true);
+	      tRf.set(True);
 	      //	      cout << tIip << "<-" << ictip << " " << "ctSlices_(ictip) = " << ctSlices_(ictip) << endl;
 	      cout << "MS obs=" << iMSObs
 		   << ",fld=" << iMSFld
@@ -853,7 +852,7 @@ void CTPatchedInterp::makeInterpolators() {
 	  } // iMSElem
 	} // spwOK
 	else
-	  reportBadSpw=true;
+	  reportBadSpw=True;
       } // iMSSpw
 
     } // not re-using
@@ -906,7 +905,7 @@ void CTPatchedInterp::setFldMap(const ROMSFieldColumns& fcol) {
    Vector<Int> ctFlds;
    ctcol.fieldId().getColumn(ctFlds);
    Int nAvFlds=genSort(ctFlds,Sort::Ascending,(Sort::QuickSort | Sort::NoDuplicates));
-   ctFlds.resize(nAvFlds,true);
+   ctFlds.resize(nAvFlds,True);
 
    //cout << "nAvFlds = " << nAvFlds << endl;
    //cout << "ctFlds  = " << ctFlds << endl;
@@ -982,7 +981,7 @@ void CTPatchedInterp::setFldMap(Vector<Int>& fldmap) {
   Vector<Int> ctFlds;
   ctcol.fieldId().getColumn(ctFlds);
   Int nAvFlds=genSort(ctFlds,Sort::Ascending,(Sort::QuickSort | Sort::NoDuplicates));
-  ctFlds.resize(nAvFlds,true);
+  ctFlds.resize(nAvFlds,True);
   
   for (Int i=0;i<nfld;++i) {
     if (!anyEQ(ctFlds,fldmap(i)))
@@ -1086,7 +1085,7 @@ void CTPatchedInterp::resampleInFreq(Matrix<Float>& fres,Matrix<Bool>& fflg,cons
 
   // if no good solutions coming in, return flagged
   if (nfalse(tflg)==0) {
-    fflg.set(true);
+    fflg.set(True);
     return;
   }
 
@@ -1112,7 +1111,7 @@ void CTPatchedInterp::resampleInFreq(Matrix<Float>& fres,Matrix<Bool>& fflg,cons
       //   cout << ifpar << " All chans flagged!" << endl;
       // Everything flagged this par
       //  Just flag, zero and go on to the next one
-      fflgi.set(true);
+      fflgi.set(True);
       fresi.set(0.0);
       continue;
     }
@@ -1124,7 +1123,7 @@ void CTPatchedInterp::resampleInFreq(Matrix<Float>& fres,Matrix<Bool>& fflg,cons
     if (fout.nelements()==mfin.nelements() && allNear(fout,mfin,1.e-10)) {
       // Just copy
       fresi=mtresi;
-      fflgi.set(false);  // none are flagged
+      fflgi.set(False);  // none are flagged
       continue;
     }
 
@@ -1207,7 +1206,7 @@ void CTPatchedInterp::resampleFlagsInFreq(Vector<Bool>& flgout,const Vector<Doub
     
     // Determine implied mode-dep flags indexed by channel registration
     uInt nflg=flgin.nelements();
-    Vector<Bool> flreg(nflg,false);
+    Vector<Bool> flreg(nflg,False);
     switch (ia1dmethod_) {
     case NEAREST: {
       // Just use input flags
@@ -1237,7 +1236,7 @@ void CTPatchedInterp::resampleFlagsInFreq(Vector<Bool>& flgout,const Vector<Doub
     for (uInt iflgout=0;iflgout<nflgout;++iflgout) {
       
       // Find nominal registration (the _index_ just left)
-      Bool exact(false);
+      Bool exact(False);
       ireg=binarySearch(exact,finGHz,fout(iflgout),nflg,0);
       if (ireg>0)
 	ireg-=1;
@@ -1285,7 +1284,7 @@ void CTPatchedInterp::resampleFlagsInFreq(Vector<Bool>& flgout,const Vector<Doub
   }
   else 
     // We are interp/extrap-olating gaps absolutely
-    flgout.set(false);
+    flgout.set(False);
 
 }
 
@@ -1311,7 +1310,7 @@ void CTPatchedInterp::setElemMap() {
   case VisCalEnum::MUELLER: {
     elemMap_.resize(nMSElem_);
     conjTab_.resize(nMSElem_);
-    conjTab_.set(false);
+    conjTab_.set(False);
     Int iMSElem(0),a1in(0),a2in(0);
     for (Int iMSAnt=0;iMSAnt<nMSAnt_;++iMSAnt) {
       a1in=antMap_(iMSAnt);
@@ -1321,7 +1320,7 @@ void CTPatchedInterp::setElemMap() {
 	  elemMap_(iMSElem)=blnidx(a1in,a2in,nMSAnt_);
 	else {
 	  elemMap_(iMSElem)=blnidx(a2in,a1in,nMSAnt_);
-	  conjTab_(iMSElem)=true;  // we must conjugate Complex params!
+	  conjTab_(iMSElem)=True;  // we must conjugate Complex params!
 	}
 	++iMSElem;
       } // jAntOut

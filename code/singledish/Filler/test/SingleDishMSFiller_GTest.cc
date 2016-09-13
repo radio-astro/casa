@@ -42,9 +42,7 @@
 #include <casacore/ms/MeasurementSets/MSSysCalColumns.h>
 #include <casacore/ms/MeasurementSets/MSWeatherColumns.h>
 
-using namespace casacore;
 using namespace casa;
-using namespace casacore;
 using namespace casacore;
 using namespace sdfiller;
 
@@ -187,7 +185,7 @@ private:
     File file(name);
     if (file.exists()) {
       std::cout << "Removing " << name << std::endl;
-      Table::deleteTable(name, true);
+      Table::deleteTable(name, True);
     }
   }
 };
@@ -1367,12 +1365,12 @@ TEST_F(SingleDishMSFillerTestWithStub, FillerTest) {
 
           // FEED
           Int feed_id = mycolumns.feed1()(krow);
-          Bool found = false;
+          Bool found = False;
           Int id_matrix_arr[2] = {feed_id, spw_id};
           Vector<Int> id_matrix(id_matrix_arr, 2, SHARE);
           for (uInt frow = 0; frow < feed_id_matrix.nrow(); ++frow) {
             if (allEQ(feed_id_matrix.row(frow), id_matrix)) {
-              found = true;
+              found = True;
               break;
             }
           }
@@ -1682,7 +1680,7 @@ struct BasicPolarizationTester {
     Bool out_flag_row = output_record.flag_row;
     Vector<Float> out_sigma = output_record.sigma;
     Vector<Float> out_weight = output_record.weight;
-    Bool net_flag_row = false;
+    Bool net_flag_row = False;
     for (size_t i = 0; i < num_pol; ++i) {
       std::cout << "Verifying i " << i << " polid " << input_record[i].polno
           << std::endl;
@@ -1732,8 +1730,8 @@ struct FullPolarizationTester {
 
     Matrix<Float> data_real(IPosition(2, num_pol, num_chan), 0.0f);
     Matrix<Float> data_imag(data_real.shape(), 0.0f);
-    Matrix<Bool> flag(data_real.shape(), false);
-    Bool net_flag_row = false;
+    Matrix<Bool> flag(data_real.shape(), False);
+    Bool net_flag_row = False;
     for (size_t i = 0; i < num_pol; ++i) {
       uInt polid = polid_list[i];
       ASSERT_LT(polid, num_pol);
@@ -1802,7 +1800,7 @@ struct StokesFullPolarizationTester {
     Bool out_flag_row = output_record.flag_row;
     Vector<Float> out_sigma = output_record.sigma;
     Vector<Float> out_weight = output_record.weight;
-    Bool net_flag_row = false;
+    Bool net_flag_row = False;
     for (size_t i = 0; i < num_pol; ++i) {
       uInt polid = polid_list[i];
       ASSERT_LT(polid, num_pol);
@@ -1825,15 +1823,15 @@ struct StandardInitializer {
       Vector<DataRecord> &input_record, DataChunk &chunk) {
     chunk.initialize(num_chan);
     Matrix<Float> data(4, num_chan, 0.5);
-    Matrix<Bool> flag(4, num_chan, false);
-    Vector<Bool> flag_row(4, false);
+    Matrix<Bool> flag(4, num_chan, False);
+    Vector<Bool> flag_row(4, False);
     data(0, 16) = -0.5;
-    flag(0, 16) = true;
+    flag(0, 16) = True;
     data(1, 8) = 1.e10;
-    flag(1, 8) = true;
+    flag(1, 8) = True;
     data.row(2) = -1.e10;
-    flag.row(2) = true;
-    flag_row[2] = true;
+    flag.row(2) = True;
+    flag_row[2] = True;
     for (size_t i = 0; i < polid_list.size(); ++i) {
       DataRecord &input_record0 = input_record[i];
       uInt polid = polid_list[i];
@@ -2003,7 +2001,7 @@ TEST(DataChunkTest, WhiteBoxTest) {
   record.polno = 0u;
   record.data.assign(data1);
   record.flag.assign(flag1);
-  record.flag_row = false;
+  record.flag_row = False;
   ASSERT_EQ(0u, chunk.getNumPol());
   bool status = chunk.accumulate(record);
   ASSERT_TRUE(status);
@@ -2032,7 +2030,7 @@ TEST(DataChunkTest, WhiteBoxTest) {
   record.polno = 0u;
   record.data.assign(data2);
   record.flag.assign(flag2);
-  record.flag_row = false;
+  record.flag_row = False;
   constexpr bool expected_status = false;
   status = chunk.accumulate(record);
   EXPECT_EQ(expected_status, status);
@@ -2051,7 +2049,7 @@ TEST(DataChunkTest, WhiteBoxTest) {
       2, 1, 0 }, { 0, 3, 1, 2 } };
   record.data.assign(data2);
   record.flag.assign(flag2);
-  record.flag_row = false;
+  record.flag_row = False;
   for (size_t j = 0; j < num_seq; ++j) {
     chunk.initialize(2);
     EXPECT_EQ(0u, chunk.getNumPol());
@@ -2129,7 +2127,7 @@ TEST(DataChunkTest, WhiteBoxTest) {
       { 1, 0, 2, 3 }, { 3, 2, 1, 0 }, { 0, 3, 1, 2 } };
   record.data.assign(data2);
   record.flag.assign(flag2);
-  record.flag_row = false;
+  record.flag_row = False;
   for (size_t j = 0; j < num_seq; ++j) {
     stokes_chunk.initialize(2);
     EXPECT_EQ(0u, stokes_chunk.getNumPol());
@@ -2172,7 +2170,7 @@ TEST(DataChunkTest, WhiteBoxTest) {
       { 1, 0, 2, 3 }, { 3, 2, 1, 0 }, { 0, 3, 1, 2 } };
   record.data.assign(data2);
   record.flag.assign(flag2);
-  record.flag_row = false;
+  record.flag_row = False;
   for (size_t j = 0; j < num_seq; ++j) {
     linpol_chunk.initialize(2);
     EXPECT_EQ(0u, linpol_chunk.getNumPol());
@@ -2271,17 +2269,17 @@ TEST(DataAccumulatorTest, WhiteBoxTest) {
   r1.interval = interval;
   size_t const num_chan = 4;
   Matrix<Float> data(IPosition(2, 4, num_chan), 0.0f);
-  Matrix<Bool> flag(IPosition(2, 4, num_chan), false);
+  Matrix<Bool> flag(IPosition(2, 4, num_chan), False);
   data(0, 0) = 1.e10;
-  flag(0, 0) = true;
+  flag(0, 0) = True;
   data(1, 1) = 1.e10;
-  flag(1, 1) = true;
+  flag(1, 1) = True;
   data(2, 2) = 1.e10;
-  flag(2, 2) = true;
+  flag(2, 2) = True;
   data(3, 3) = 1.e10;
-  flag(3, 3) = true;
-  Vector<Bool> flag_row(4, false);
-  flag_row[3] = true;
+  flag(3, 3) = True;
+  Vector<Bool> flag_row(4, False);
+  flag_row[3] = True;
   r1.polno = 0u;
   r1.setDataSize(num_chan);
   r1.data = data.row(0);
@@ -2402,7 +2400,7 @@ TEST(DataAccumulatorTest, WhiteBoxTest) {
   r1.intent = intent2;
   r1.pol_type = poltype2;
   Vector<Float> data2(8, -1.0f);
-  Vector<Bool> flag2(8, false);
+  Vector<Bool> flag2(8, False);
   r1.setDataSize(8);
   r1.data = data2;
   r1.flag = flag2;
@@ -2434,7 +2432,7 @@ TEST(DataAccumulatorTest, WhiteBoxTest) {
 // Accumulate another
   r1.polno = 1u;
   data2 *= 2.0f;
-  flag2 = true;
+  flag2 = True;
   r1.data = data2;
   r1.flag = flag2;
   status = a.accumulate(r1);

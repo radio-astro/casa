@@ -28,7 +28,6 @@
 #include <casaqt/QtBrowser/TBTable.h>
 #include <casaqt/QtBrowser/QProgressPanel.qo.h>
 
-using namespace casacore;
 namespace casa {
 
 ////////////////////////////////

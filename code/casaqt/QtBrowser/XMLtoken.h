@@ -40,50 +40,50 @@ namespace casa {
 //
 // <synopsis>
 // XMLtoken encapsulates an XML token which includes a name, zero or more
-// attributes, and optional content which can be a casacore::String or one or more
+// attributes, and optional content which can be a String or one or more
 // XMLtokens.
 // </synopsis>
 
 class XMLtoken {
 public:
 	// Constructor that takes the tag name.
-    XMLtoken(casacore::String n);
+    XMLtoken(String n);
 
     ~XMLtoken();
 
     
     // Returns the attributes for this tag.
-    std::map<casacore::String, casacore::String>* getAttributes();
+    std::map<String, String>* getAttributes();
 
     // Returns the list of content tags, or an empty list if there are none.
     std::vector<XMLtoken*>* getTags();
 
     // Returns this tag's name.
-    const casacore::String getName();
+    const String getName();
 
-    // Sets the casacore::String content of this tag to the given value.
-    void setContent(casacore::String c);
+    // Sets the String content of this tag to the given value.
+    void setContent(String c);
 
-    // Returns the casacore::String content of this tag, or blank if there is none.
-    const casacore::String getContent();
+    // Returns the String content of this tag, or blank if there is none.
+    const String getContent();
 
     
     // Returns the value for the given attribute, or blank if the attribute
     // is invalid.
-    casacore::String getAttribute(casacore::String attr);
+    String getAttribute(String attr);
     
 private:
 	// Tag name.
-    const casacore::String name;
+    const String name;
     
-    // casacore::String content (or blank for none).
-    casacore::String content;
+    // String content (or blank for none).
+    String content;
 
     // Token content (empty list for none).
     std::vector<XMLtoken*> tags;
     
     // Tag attributes.
-    std::map<casacore::String, casacore::String> attributes;
+    std::map<String, String> attributes;
 };
 
 }

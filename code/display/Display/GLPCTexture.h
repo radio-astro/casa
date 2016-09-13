@@ -98,7 +98,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // If the image is larger than the maximum texture size, it will be broken
 // into pieces that fit.
 // </synopsis>
-//<thrown><li> casacore::AipsError </thrown>
+//<thrown><li> AipsError </thrown>
 	class GLPCTexturedImage : public GLPCDisplayListEntry {
 	public:
 		GLPCTexturedImage(GLsizei width, GLsizei height,

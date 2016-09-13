@@ -38,7 +38,6 @@
 #include <components/SpectralComponents/PowerLogPolynomialSpectralElement.h>
 #include <components/SpectralComponents/SpectralElementFactory.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 SpectralElement* SpectralElementFactory::fromRecord(
@@ -198,7 +197,7 @@ SpectralElement* SpectralElementFactory::fromRecord(
 		Record gaussians = in.asRecord("gaussians");
 		uInt i = 0;
 		vector<GaussianSpectralElement> comps(0);
-		while(true) {
+		while(True) {
 			String id = "*" + String::toString(i);
 			if (gaussians.isDefined(id)) {
 				PtrHolder<SpectralElement> gauss(fromRecord(gaussians.asRecord(id)));
@@ -245,7 +244,7 @@ SpectralElement* SpectralElementFactory::fromRecord(
 	}
     // ready to return, fish out the pointer and return it without deleting it
     SpectralElement *sp = specEl.ptr();
-    specEl.clear(false);
+    specEl.clear(False);
 	return sp;
 }
 

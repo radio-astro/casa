@@ -51,8 +51,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <synopsis>
 // VisJonesDesc defines the format of VisJones calibration tables in terms
-// of table descriptors <linkto class="casacore::TableDesc">casacore::TableDesc</linkto>, as
-// used in the casacore::Table system. Specializations for time-variable and
+// of table descriptors <linkto class="TableDesc">TableDesc</linkto>, as
+// used in the Table system. Specializations for time-variable and
 // solvable VisJones calibration tables are provided through inheritance.
 // At present, this set of classes returns only the default table formats.
 // </etymology>
@@ -78,7 +78,7 @@ class VisJonesDesc : public CalTableDesc
    virtual ~VisJonesDesc() {};
 
    // Construct from the Jones table type
-   VisJonesDesc (const casacore::String& type);
+   VisJonesDesc (const String& type);
 
 };
 

@@ -52,8 +52,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <prerequisite>
 //   <li> <linkto class=SkyModel>SkyModel</linkto> class
 //   <li> <linkto class=SkyEquation>SkyEquation</linkto> class
-//   <li> <linkto class=casacore::ImageInterface>ImageInterface</linkto> class
-//   <li> <linkto class=casacore::PagedImage>PagedImage</linkto> class
+//   <li> <linkto class=ImageInterface>ImageInterface</linkto> class
+//   <li> <linkto class=PagedImage>PagedImage</linkto> class
 //   <li> <linkto module=MeasurementComponents>MeasurementComponents</linkto> module
 //   <li> <linkto class=VisSet>VisSet</linkto> class
 // </prerequisite>
@@ -94,27 +94,27 @@ class ImageSkyModel : public SkyModel {
 public:
 
   // Empty constructor
-  ImageSkyModel(const casacore::Int maxNumModels=1);
+  ImageSkyModel(const Int maxNumModels=1);
 
-  void setMaxNumberModels(const casacore::Int maxNumModels);
+  void setMaxNumberModels(const Int maxNumModels);
 
   // Copy constructor
   ImageSkyModel(const ImageSkyModel& sm);
 
   // Add a componentlist
-  virtual casacore::Bool add(ComponentList& compList);
+  virtual Bool add(ComponentList& compList);
   //update componentlist
-  virtual casacore::Bool updatemodel(ComponentList& compList);
+  virtual Bool updatemodel(ComponentList& compList);
 
 
   // Add an image. maxNumXfr is the maximum Number of transfer functions
   // that we might want to associate with this image.
-  virtual casacore::Int add(casacore::ImageInterface<casacore::Float>& image, const casacore::Int maxNumXfr=100);
+  virtual Int add(ImageInterface<Float>& image, const Int maxNumXfr=100);
   //update model image...you have to have added it before...nmodels_p held has to be bigger that image here
   //its left to the caller to make sure the image is conformant...otherwise you are in trouble.
-  virtual casacore::Bool  updatemodel(const casacore::Int thismodel, casacore::ImageInterface<casacore::Float>& image);
+  virtual Bool  updatemodel(const Int thismodel, ImageInterface<Float>& image);
   // Add a residual image
-  virtual casacore::Bool addResidual(casacore::Int image, casacore::ImageInterface<casacore::Float>& residual);
+  virtual Bool addResidual(Int image, ImageInterface<Float>& residual);
 
   // Destructor
   virtual ~ImageSkyModel();
@@ -123,31 +123,31 @@ public:
   ImageSkyModel& operator=(const ImageSkyModel& other);
 
   // Number of models contained
-  virtual casacore::Int numberOfModels() {return nmodels_p;};
+  virtual Int numberOfModels() {return nmodels_p;};
 
   // MFS : Number of taylor terms per model
-  virtual casacore::Int numberOfTaylorTerms() {return 1;};
+  virtual Int numberOfTaylorTerms() {return 1;};
 
   // MFS : In-place coefficient residual calculations
-  virtual casacore::Bool calculateCoeffResiduals(){return false;};
+  virtual Bool calculateCoeffResiduals(){return False;};
 
   // MFS : Calculate restored alpha and beta.
-  virtual casacore::Bool calculateAlphaBeta(const casacore::Vector<casacore::String>& /*restoredNames*/, const casacore::Vector<casacore::String>& /*residualNames*/){return false;};
+  virtual Bool calculateAlphaBeta(const Vector<String>& /*restoredNames*/, const Vector<String>& /*residualNames*/){return False;};
 
   // MFS : Reference Frequency
-  virtual casacore::Double getReferenceFrequency(){return 0.0;}
+  virtual Double getReferenceFrequency(){return 0.0;}
 
   // MFS : Index of Taylor term in array of nmodels x ntaylorterms
-  //virtual casacore::Int getTaylorIndex(casacore::Int index){return 0;}
-  virtual casacore::Int getTaylorIndex(casacore::Int index){return (casacore::Int)(index/nfields_p);}
+  //virtual Int getTaylorIndex(Int index){return 0;}
+  virtual Int getTaylorIndex(Int index){return (Int)(index/nfields_p);}
 
   // Is this model solveable?
-  casacore::Bool isSolveable(casacore::Int model=0);
+  Bool isSolveable(Int model=0);
 
   // Free and fix the model (returns previous status). Free means that
   // it will be solved for in any solution.
-  casacore::Bool free(casacore::Int model=0);
-  casacore::Bool  fix(casacore::Int model=0);
+  Bool free(Int model=0);
+  Bool  fix(Int model=0);
 
   // Initialize for gradient search
   virtual void initializeGradients();
@@ -156,50 +156,50 @@ public:
   virtual void finalizeGradients() {};
 
   // Does this have a component list?
-  casacore::Bool hasComponentList();
+  Bool hasComponentList();
 
-  casacore::Bool isEmpty(casacore::Int model=0);
+  Bool isEmpty(Int model=0);
 
   // Return the component list
   virtual ComponentList& componentList();
 
   // Return actual images to be used by SkyEquation. 
   // <group>
-  casacore::ImageInterface<casacore::Float>& image(casacore::Int model=0);
-  casacore::ImageInterface<casacore::Complex>& cImage(casacore::Int model=0);
-  casacore::ImageInterface<casacore::Complex>& XFR(casacore::Int model=0, casacore::Int numXFR=0);
-  casacore::ImageInterface<casacore::Float>& PSF(casacore::Int model=0);
-  casacore::ImageInterface<casacore::Float>& gS(casacore::Int model=0);
-  casacore::ImageInterface<casacore::Float>& residual(casacore::Int model=0);
-  casacore::ImageInterface<casacore::Float>& ggS(casacore::Int model=0);
+  ImageInterface<Float>& image(Int model=0);
+  ImageInterface<Complex>& cImage(Int model=0);
+  ImageInterface<Complex>& XFR(Int model=0, Int numXFR=0);
+  ImageInterface<Float>& PSF(Int model=0);
+  ImageInterface<Float>& gS(Int model=0);
+  ImageInterface<Float>& residual(Int model=0);
+  ImageInterface<Float>& ggS(Int model=0);
   // if (doFluxScale(mod))  image(mod) *  fluxScale(mod)  
   // gives actual brightness distribution
-  casacore::ImageInterface<casacore::Float>& fluxScale(casacore::Int model=0);
-  casacore::ImageInterface<casacore::Float>& work(casacore::Int model=0);
-  casacore::ImageInterface<casacore::Float>& deltaImage(casacore::Int model=0);
+  ImageInterface<Float>& fluxScale(Int model=0);
+  ImageInterface<Float>& work(Int model=0);
+  ImageInterface<Float>& deltaImage(Int model=0);
   // </group>
 
   // tells if this model needs to be multiplied by a flux scale image
-  casacore::Bool doFluxScale(casacore::Int model=0);
+  Bool doFluxScale(Int model=0);
   // require use of flux scale image
-  void mandateFluxScale(casacore::Int model=0);
+  void mandateFluxScale(Int model=0);
 
-  casacore::Bool hasXFR(casacore::Int model=0);
+  Bool hasXFR(Int model=0);
 
   // Add to Sum weights, Chi-Squared
-  void addStatistics(casacore::Float sumwt, casacore::Float chisq) {sumwt_p+=sumwt;chisq_p+=chisq;}
+  void addStatistics(Float sumwt, Float chisq) {sumwt_p+=sumwt;chisq_p+=chisq;}
 
   // Weight per model (channels, polarizations)
-  casacore::Matrix<casacore::Float>& weight(casacore::Int model=0);
+  Matrix<Float>& weight(Int model=0);
 
   // Solve for this SkyModel: This replaces the image with
   // the residual image
-  virtual casacore::Bool solve (SkyEquation& me);
+  virtual Bool solve (SkyEquation& me);
 
   // Solve explicitly for the residuals: same as solve for
   // this class
   // modelToMs determines if predicted vis is put in the MODEL_DATA column
-  casacore::Bool solveResiduals (SkyEquation& me, casacore::Bool modelToMS=false);
+  Bool solveResiduals (SkyEquation& me, Bool modelToMS=False);
 
   // Make the approximate PSFs needed for each model
   virtual void makeApproxPSFs(SkyEquation& se);
@@ -208,13 +208,13 @@ public:
   // addResidual, or a scratch image.
   // For example in WFImageSkyModel it might return the whole main image
   //rather than facets 
-  virtual casacore::ImageInterface<casacore::Float>& getResidual (casacore::Int model=0);
+  virtual ImageInterface<Float>& getResidual (Int model=0);
 
   // Return the fitted beam for each model
-  casacore::ImageBeamSet& beam(casacore::Int model=0);
+  ImageBeamSet& beam(Int model=0);
 
-  // Set casacore::PGPlotter to be used
-  void setPGPlotter(casacore::PGPlotter& pgp) { pgplotter_p = &pgp; }
+  // Set PGPlotter to be used
+  void setPGPlotter(PGPlotter& pgp) { pgplotter_p = &pgp; }
 
   // This is the factor by which you multiply the worst outer
   // sidelobe by to get the threshold for the current cycle
@@ -231,14 +231,14 @@ public:
   void setCycleMaxPsfFraction(float x) { cycleMaxPsfFraction_p = x; }
 
   // Set the variable that switches on the progress display
-  void setDisplayProgress (const casacore::Bool display ) {displayProgress_p = display; };
+  void setDisplayProgress (const Bool display ) {displayProgress_p = display; };
 
   // Set a variable to indicate the polarization frame in the data (circular or linear).
-  // This is used along with the user's choice of output casacore::Stokes parameter
+  // This is used along with the user's choice of output Stokes parameter
   // to decide the stokesCoordinate of the temporary images "cImage".
   void setDataPolFrame(StokesImageUtil::PolRep datapolrep) {dataPolRep_p = datapolrep;};
 
-  // Tries to return a pointer to a casacore::TempImage (allocated with new, so remember
+  // Tries to return a pointer to a TempImage (allocated with new, so remember
   // to use delete) with the given shape and CoordinateSystem.
   //
   // @param imgShp
@@ -247,21 +247,21 @@ public:
   //                       room for nMouthsToFeed - 1 more TempImages. 
   //
   // <throws>
-  // casacore::AipsError on memory allocation error.
+  // AipsError on memory allocation error.
   // </throws>
   template<class M>
-  static casacore::TempImage<M>* getTempImage(const casacore::TiledShape& imgShp,
-                                    const casacore::CoordinateSystem& imgCoords,
-                                    const casacore::uInt nMouthsToFeed=1);
+  static TempImage<M>* getTempImage(const TiledShape& imgShp,
+                                    const CoordinateSystem& imgCoords,
+                                    const uInt nMouthsToFeed=1);
   
-  virtual casacore::Int getModelIndex(casacore::uInt field, casacore::uInt /*taylor*/){return field;};
+  virtual Int getModelIndex(uInt field, uInt /*taylor*/){return field;};
 
   //try to make templattices use memory if possible
   //if set to false then always use disk
-  virtual void setMemoryUse(casacore::Bool useMem=false);
-  virtual casacore::Bool getMemoryUse(){return useMem_p;};
+  virtual void setMemoryUse(Bool useMem=False);
+  virtual Bool getMemoryUse(){return useMem_p;};
   //Set templattice tile vol  in pixels
-  void setTileVol(const casacore::Int tileVol=1000000);
+  void setTileVol(const Int tileVol=1000000);
 protected:
 
   // Make Newton Raphson step internally. This is really an implementation
@@ -269,78 +269,78 @@ protected:
   // The modelToMS parameter is for committing to MODEL_DATA column of the MS
   // the predicted visibilities.
 
-  casacore::Bool makeNewtonRaphsonStep(SkyEquation& se, 
-			     casacore::Bool incremental=false, casacore::Bool modelToMS=false);
+  Bool makeNewtonRaphsonStep(SkyEquation& se, 
+			     Bool incremental=False, Bool modelToMS=False);
 
 
-  // Get casacore::PGPlotter to be used
-  casacore::PGPlotter* getPGPlotter() { return pgplotter_p; }
+  // Get PGPlotter to be used
+  PGPlotter* getPGPlotter() { return pgplotter_p; }
 
-  casacore::Int maxnmodels_p;
-  casacore::Int nmodels_p;
+  Int maxnmodels_p;
+  Int nmodels_p;
   //MFS
-  casacore::Int nfields_p;
+  Int nfields_p;
 
-  casacore::Int maxNumXFR_p;
+  Int maxNumXFR_p;
 
-  casacore::Float sumwt_p; 
-  casacore::Float chisq_p; 
+  Float sumwt_p; 
+  Float chisq_p; 
 
   // ComponentList
   ComponentList* componentList_p;
 
   // Images
-  casacore::Vector<casacore::String> imageNames_p;
+  Vector<String> imageNames_p;
   // Everything here can be just interface
-  casacore::PtrBlock<casacore::ImageInterface<casacore::Float> * > image_p;
-  casacore::PtrBlock<casacore::ImageInterface<casacore::Float> * > residual_p;
+  PtrBlock<ImageInterface<Float> * > image_p;
+  PtrBlock<ImageInterface<Float> * > residual_p;
 
   // We actually create these
-  casacore::PtrBlock<casacore::ImageInterface<casacore::Complex> * > cimage_p;
-  casacore::PtrBlock<casacore::ImageInterface<casacore::Complex> * > cxfr_p;
-  casacore::PtrBlock<casacore::ImageInterface<casacore::Float> * > residualImage_p;
-  casacore::PtrBlock<casacore::ImageInterface<casacore::Float> * > gS_p;
-  casacore::PtrBlock<casacore::ImageInterface<casacore::Float> * > psf_p;
-  casacore::PtrBlock<casacore::ImageInterface<casacore::Float> * > ggS_p;
+  PtrBlock<ImageInterface<Complex> * > cimage_p;
+  PtrBlock<ImageInterface<Complex> * > cxfr_p;
+  PtrBlock<ImageInterface<Float> * > residualImage_p;
+  PtrBlock<ImageInterface<Float> * > gS_p;
+  PtrBlock<ImageInterface<Float> * > psf_p;
+  PtrBlock<ImageInterface<Float> * > ggS_p;
   // if (doFluxScale_p), image_p * fluxScale_p gives the true brightness
-  casacore::PtrBlock<casacore::ImageInterface<casacore::Float> * > fluxScale_p;
-  casacore::PtrBlock<casacore::ImageInterface<casacore::Float> * > work_p;
-  casacore::PtrBlock<casacore::ImageInterface<casacore::Float> * > deltaimage_p;
-  casacore::Block<casacore::Bool> solve_p;
-  casacore::Block<casacore::Bool> doFluxScale_p;
+  PtrBlock<ImageInterface<Float> * > fluxScale_p;
+  PtrBlock<ImageInterface<Float> * > work_p;
+  PtrBlock<ImageInterface<Float> * > deltaimage_p;
+  Block<Bool> solve_p;
+  Block<Bool> doFluxScale_p;
 
-  casacore::PtrBlock<casacore::Matrix<casacore::Float> * > weight_p;
+  PtrBlock<Matrix<Float> * > weight_p;
 
-  casacore::PtrBlock<casacore::ImageBeamSet * > beam_p;
+  PtrBlock<ImageBeamSet * > beam_p;
 
-  casacore::LogSink logSink_p;
-  casacore::LogSink& logSink() {return logSink_p;};
+  LogSink logSink_p;
+  LogSink& logSink() {return logSink_p;};
   
-  casacore::Long cacheSize(casacore::Int model);
-  casacore::IPosition tileShape(casacore::Int model);
+  Long cacheSize(Int model);
+  IPosition tileShape(Int model);
 
-  casacore::PGPlotter *pgplotter_p;
-  casacore::Bool displayProgress_p;
+  PGPlotter *pgplotter_p;
+  Bool displayProgress_p;
   // This is the factor by which you multiply the worst outer
   // sidelobe by to get the threshold for the current cycle
-  casacore::Float cycleFactor_p;
+  Float cycleFactor_p;
   // Cycle threshold will double in this number of iterations
   // (ie, use a large number if you don't want cycle threshold
   // to inch up)
-  casacore::Float cycleSpeedup_p;
+  Float cycleSpeedup_p;
   // Cycle threshold = maxResidual x min(Max-Psf-Fraction , cyclefactor x maxpsfsidelobe)
-  casacore::Float cycleMaxPsfFraction_p;
+  Float cycleMaxPsfFraction_p;
   // If PSF is done..should not redo it.
-  casacore::Bool donePSF_p;
+  Bool donePSF_p;
   // check if model has been modified especially for continuing
   // a deconvolution
-  casacore::Bool modified_p;
+  Bool modified_p;
   // Parameter to indicate the polaraization type of the data (circular or linear)
   // Required by cImage() to decide shapes.
   StokesImageUtil::PolRep dataPolRep_p;
-  casacore::Bool workDirOnNFS_p;
-  casacore::Bool useMem_p;
-  casacore::Int tileVol_p;
+  Bool workDirOnNFS_p;
+  Bool useMem_p;
+  Int tileVol_p;
 };
 
 

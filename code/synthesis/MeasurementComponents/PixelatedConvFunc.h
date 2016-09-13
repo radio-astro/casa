@@ -40,28 +40,28 @@ namespace casa{
   {
   public:
     PixelatedConvFunc():ConvolutionFunction() {};
-    PixelatedConvFunc(casacore::IPosition& shape):ConvolutionFunction(shape.nelements()) 
+    PixelatedConvFunc(IPosition& shape):ConvolutionFunction(shape.nelements()) 
     {setSize(shape);}
     ~PixelatedConvFunc() {};
     
-    virtual void setSize(casacore::IPosition& size)
+    virtual void setSize(IPosition& size)
     {
       nDim=size.nelements(); 
       shape=size;
       cache.resize(shape);
     };
 
-    virtual T getValue(casacore::Vector<T>& coord, casacore::Vector<T>& offset) { return (T)(1.0);};
-    virtual int getVisParams(const VisBuffer& vb,const casacore::CoordinateSystem& skyCoord=casacore::CoordinateSystem()) {return 0;};
-    virtual void makeConvFunction(const casacore::ImageInterface<casacore::Complex>& image,
+    virtual T getValue(Vector<T>& coord, Vector<T>& offset) { return (T)(1.0);};
+    virtual int getVisParams(const VisBuffer& vb,const CoordinateSystem& skyCoord=CoordinateSystem()) {return 0;};
+    virtual void makeConvFunction(const ImageInterface<Complex>& image,
 				  const VisBuffer& vb,
-				  const casacore::Int wConvSize,
-				  const casacore::Float pa,
-				  const casacore::Float dpa,
+				  const Int wConvSize,
+				  const Float pa,
+				  const Float dpa,
 				  CFStore& cfs,
-				  CFStore& cfwts,casacore::Bool fillCF=true) {};
-    virtual void setPolMap(const casacore::Vector<casacore::Int>& polMap) {(void)polMap;};
-    virtual void setFeedStokes(const casacore::Vector<casacore::Int>& feedStokes){(void)feedStokes;};
+				  CFStore& cfwts,Bool fillCF=True) {};
+    virtual void setPolMap(const Vector<Int>& polMap) {(void)polMap;};
+    virtual void setFeedStokes(const Vector<Int>& feedStokes){(void)feedStokes;};
     PixelatedConvFunc& operator=(const PixelatedConvFunc& other)
     {
       cerr << "******* PixelatedConvFunc& operator=(PixelatedConvFunc&) called!" << endl;
@@ -72,17 +72,17 @@ namespace casa{
       cerr << "******* PixelatedConvFunc& operator=(ConvolutionFunction&) called!" << endl;
       return *this;
     }
-    virtual casacore::Bool makeAverageResponse(const VisBuffer& vb, 
-				     const casacore::ImageInterface<casacore::Complex>& image,
-				     casacore::ImageInterface<casacore::Complex>& theavgPB,
-				     casacore::Bool reset=true)
-    {throw(casacore::AipsError("PixelatedConvFunc::makeAverageRes(casacore::Complex) called"));};
+    virtual Bool makeAverageResponse(const VisBuffer& vb, 
+				     const ImageInterface<Complex>& image,
+				     ImageInterface<Complex>& theavgPB,
+				     Bool reset=True)
+    {throw(AipsError("PixelatedConvFunc::makeAverageRes(Complex) called"));};
     virtual void prepareConvFunction(const VisBuffer& vb, CFStore& cfs) {};
 
   private:
-    casacore::Int nDim;
-    casacore::IPosition shape;
-    casacore::Array<T> cache;
+    Int nDim;
+    IPosition shape;
+    Array<T> cache;
   };
 
 };

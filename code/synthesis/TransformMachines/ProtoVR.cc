@@ -41,7 +41,6 @@
 #include <omp.h>
 #endif
 //#include <casa/BasicMath/Functors.h>
-using namespace casacore;
 namespace casa{
 
   //
@@ -479,7 +478,7 @@ void ProtoVR::DataToGridImpl_p(T* gridStore,  Int* gridShape /*4-elements*/,
   //           {
   //             for (Int ichan=0;ichan<nDataChan;ichan++)
   //               for (Int irow=rbeg;irow<rend;irow++)
-  //                 allPolNChanDone_l(ipol,ichan,irow)=true;
+  //                 allPolNChanDone_l(ipol,ichan,irow)=True;
   //           }
   //       }
   Int nDataChan=vbs.nDataChan_p,
@@ -548,7 +547,7 @@ void ProtoVR::DataToGridImpl_p(T* gridStore,  Int* gridShape /*4-elements*/,
 				  {
 				    igrdpos[2]=targetIMPol; igrdpos[3]=targetIMChan;
 				    
-				    // if(accumCFs)     allPolNChanDone_l(ipol,ichan,irow)=true;
+				    // if(accumCFs)     allPolNChanDone_l(ipol,ichan,irow)=True;
 				    if(dopsf) nvalue=Complex(*(imgWts_ptr + ichan + irow*nDataChan));
 				    else      nvalue= *(imgWts_ptr+ichan+irow*nDataChan)*
 						(*(visCube_ptr+ipol+ichan*nDataPol+irow*nDataChan*nDataPol)*phasor);
@@ -569,7 +568,7 @@ void ProtoVR::DataToGridImpl_p(T* gridStore,  Int* gridShape /*4-elements*/,
 					convOrigin[1]=cfShape[1]/2;
 					convOrigin[2]=cfShape[2]/2;
 					convOrigin[3]=cfShape[3]/2;
-					Bool psfOnly=((dopsf==true) && (accumCFs==false));
+					Bool psfOnly=((dopsf==True) && (accumCFs==False));
 					// // CUWORK: Convert to a global function with native types
 					Int cachedPhaseGradNX=cached_phaseGrad_p.shape()[0],
 					  cachedPhaseGradNY=cached_phaseGrad_p.shape()[1];
@@ -663,7 +662,7 @@ Bool ProtoVR::reindex(const Vector<Int>& in, Vector<Int>& out,
 			       const Vector<Int>& Origin, const Vector<Int>& size)
 {
   
-  Bool onGrid=false;
+  Bool onGrid=False;
   Int ix=in[0], iy=in[1];
   if (sinDPA != 0.0)
     {
@@ -758,5 +757,4 @@ Complex ProtoVR::getCFArea(Complex* __restrict__& convFuncV,
   return cfArea;
 }
 
-using namespace casacore;
 };// end namespace casa

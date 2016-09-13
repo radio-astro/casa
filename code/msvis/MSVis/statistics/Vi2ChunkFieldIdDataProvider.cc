@@ -28,7 +28,6 @@
 #include <msvis/MSVis/statistics/Vi2ChunkFieldIdDataProvider.h>
 #include <msvis/MSVis/VisBufferComponents2.h>
 
-using namespace casacore;
 namespace casa {
 
 Vi2ChunkFieldIdDataProvider::Vi2ChunkFieldIdDataProvider(
@@ -44,5 +43,4 @@ Vi2ChunkFieldIdDataProvider::dataArray() {
 	return vi2->getVisBuffer()->fieldId();
 }
 
-using namespace casacore;
 } // namespace casa

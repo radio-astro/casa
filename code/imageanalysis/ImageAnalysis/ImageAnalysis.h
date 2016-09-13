@@ -34,18 +34,14 @@
 
 #include <utility>
 
-namespace casacore{
+namespace casa {
 
 class CoordinateSystem;
+class ImageMomentsProgressMonitor;
 class ImageRegion;
 class LatticeExprNode;
 class LELImageCoord;
 class RecordInterface;
-}
-
-namespace casa {
-
-class ImageMomentsProgressMonitor;
 
 //template<class T> class ImageHistograms;
 
@@ -75,9 +71,9 @@ public:
     virtual ~ImageAnalysis();
 
     /*
-    inline static casacore::String className() {const static casacore::String x = "ImageAnalysis"; return x; }
+    inline static String className() {const static String x = "ImageAnalysis"; return x; }
 
-    // get the associated casacore::ImageInterface object
+    // get the associated ImageInterface object
     */
     SPCIIF getImage() const;
     /*
@@ -87,19 +83,19 @@ public:
 
     SPIIC getComplexImage();
 
-    casacore::Bool isFloat() const { return _imageFloat ? true : false; }
+    Bool isFloat() const { return _imageFloat ? true : false; }
 */
  private:
     SPIIF _imageFloat;
     SPIIC _imageComplex;
 
-    std::unique_ptr<casacore::LogIO> _log;
+    std::unique_ptr<LogIO> _log;
 
-    casacore::IPosition last_chunk_shape_p;
+    IPosition last_chunk_shape_p;
    
-    void _onlyFloat(const casacore::String& method) const;
+    void _onlyFloat(const String& method) const;
 
-    template<class T> static void _destruct(casacore::ImageInterface<T>& image);
+    template<class T> static void _destruct(ImageInterface<T>& image);
 
 };
 

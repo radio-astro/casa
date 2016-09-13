@@ -68,54 +68,54 @@ public:
   // construct from a chunk accessor and flag cube. Clip is the clipping
   // level, HW is the sliding median window half-width, MAXP is maximum
   // iterative passes.
-  RFRowClipper  ( RFChunkStats &chunk,RFFlagCube &flag,casacore::Float clip,casacore::uInt hw=6,casacore::uInt maxp=5 );
+  RFRowClipper  ( RFChunkStats &chunk,RFFlagCube &flag,Float clip,uInt hw=6,uInt maxp=5 );
   // destructor
   ~RFRowClipper () {}; 
   
   // initialize for an [NI,NT] matrix
-  void init     ( casacore::uInt ni,casacore::uInt nt );
+  void init     ( uInt ni,uInt nt );
   // deallocate matrices
   void cleanup  ();
   // reset at start of pass
   void reset    ();
   
   // returns the current noise estimate
-  casacore::Float sigma0   ( casacore::uInt ifr,casacore::uInt it );
+  Float sigma0   ( uInt ifr,uInt it );
   // sets a new noise estimate
-  void  setSigma ( casacore::uInt ifr,casacore::uInt it,casacore::Float level );
+  void  setSigma ( uInt ifr,uInt it,Float level );
   // marks a noise estimate as updated without changing it
-  void  markSigma ( casacore::uInt ifr );
+  void  markSigma ( uInt ifr );
 
   // recompute updated estimates and optionally do row flagging
-  casacore::Float updateSigma (casacore::uInt &ifrmax,casacore::uInt &itmax,casacore::Bool flagrows = true, bool clear_flags = true );
+  Float updateSigma (uInt &ifrmax,uInt &itmax,Bool flagrows = True, bool clear_flags = true );
         
 private:
   RFChunkStats &chunk;
   RFFlagCube   &flag;
-  casacore::Float clip_level;
-  casacore::uInt halfwin,maxpass;
+  Float clip_level;
+  uInt halfwin,maxpass;
   
-  casacore::uInt nifr,ntime;
-  casacore::Matrix<casacore::Float> sig,sig0;
-  casacore::Vector<casacore::Bool> sigupdated;
+  uInt nifr,ntime;
+  Matrix<Float> sig,sig0;
+  Vector<Bool> sigupdated;
   
-  casacore::LogIO &os;
+  LogIO &os;
 };
 
-inline casacore::Float RFRowClipper::sigma0 (casacore::uInt ifr,casacore::uInt it)
+inline Float RFRowClipper::sigma0 (uInt ifr,uInt it)
 {
   return sig0(it,ifr);
 }
 
-inline void RFRowClipper::setSigma (casacore::uInt ifr,casacore::uInt it,casacore::Float level) 
+inline void RFRowClipper::setSigma (uInt ifr,uInt it,Float level) 
 {
   sig(it,ifr) = level;
-  sigupdated(ifr) = true;
+  sigupdated(ifr) = True;
 }
 
-inline void RFRowClipper::markSigma (casacore::uInt ifr) 
+inline void RFRowClipper::markSigma (uInt ifr) 
 {
-  sigupdated(ifr) = true;
+  sigupdated(ifr) = True;
 }
 
 

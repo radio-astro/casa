@@ -45,7 +45,6 @@
 // template bool casa::memory::operator==(casa::shared_ptr<casa::viewer::Rectangle> const&, casa::viewer::Rectangle*);
 
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	static inline int FLOOR( double v ) {
@@ -56,8 +55,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		RegionTool(keysym),
 		rfactory(rcs->newSource(this)),
 		itsRectanglePersistent(persistent),
-		itsrectangleexists(false),
-		itsActive(false),
+		itsrectangleexists(False),
+		itsActive(False),
 		itsP1(2), itsP2(2),
 		itsHX(4), itsHY(4),
 		itsLastPressTime(-1.),		// 'long ago..'
@@ -213,7 +212,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		// 	Bool wasActive = itsActive;
-		itsActive = false;
+		itsActive = False;
 		if ( rectangles.size( ) == 0 ) {
 			if (ev.timeOfEvent() - its2ndLastPressTime < doubleClickInterval()) {
 				Int x = ev.pixX();
@@ -265,7 +264,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if ( ev.modifiers( ) & Display::KM_Double_Click ) {
 
 			// double click--invoke callbacks
-			itsEmitted = true;
+			itsEmitted = True;
 			itsLastPressTime = its2ndLastPressTime = -1.0;
 
 			Int x = ev.pixX(), y = ev.pixY();
@@ -411,9 +410,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	void MultiRectTool::reset(Bool skipRefresh) {
-		itsActive = false;
+		itsActive = False;
 		Bool wasShowing = rectangleDefined();
-		itsrectangleexists= false;
+		itsrectangleexists= False;
 		if(wasShowing && !skipRefresh) refresh();
 		itsLastPressTime = its2ndLastPressTime = -1.;
 	}
@@ -462,7 +461,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    Vector<Int> dispAxes = padd->displayAxes();
 
 	    if (nAxes == 2)
-		dispAxes.resize(2, true);
+		dispAxes.resize(2, True);
 
 	    if ( nAxes < 2 || Int(shp.nelements()) != nAxes ||
 		 Int(pos.nelements()) != nAxes ||
@@ -472,7 +471,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    if (dispAxes.nelements() > 2u)
 		pos[dispAxes[2]] = zIndex;
 
-	    dispAxes.resize(2, true);
+	    dispAxes.resize(2, True);
 
 	    WCBox dummy;
 
@@ -594,9 +593,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 			IPosition pos = padd->fixedPosition();
 
-			ImageStatistics<Float> stats(subImg, false);
+			ImageStatistics<Float> stats(subImg, False);
 			if ( ! stats.setAxes(cursorAxes) ) return 0;
-			stats.setList(true);
+			stats.setList(True);
 			String layerStats;
 			Vector<String> nm = cs.worldAxisNames();
 
@@ -716,7 +715,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				return layerstats;
 			}
 
-		} catch (const casacore::AipsError& err) {
+		} catch (const casa::AipsError& err) {
 			std::string errMsg_ = err.getMesg();
 			return 0;
 		} catch (...) {
@@ -825,7 +824,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				IPosition pos = padd->fixedPosition( );
 				Vector<Int> dispAxes = padd->displayAxes( );
 
-				if ( nAxes == 2 ) dispAxes.resize(2,true);
+				if ( nAxes == 2 ) dispAxes.resize(2,True);
 
 				if ( nAxes < 2 || Int(shp.nelements()) != nAxes ||
 				        Int(pos.nelements()) != nAxes ||
@@ -835,7 +834,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				if ( dispAxes.nelements() > 2u )
 					pos[dispAxes[2]] = zIndex;
 
-				dispAxes.resize(2,true);
+				dispAxes.resize(2,True);
 
 				WCBox dummy;
 				Quantum<Double> px0(0.,"pix");
@@ -878,7 +877,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 #endif
 				delete layerstats;
 
-			} catch (const casacore::AipsError& err) {
+			} catch (const casa::AipsError& err) {
 				errMsg_ = err.getMesg();
 				continue;
 			} catch (...) {

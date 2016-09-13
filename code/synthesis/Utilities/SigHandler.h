@@ -48,7 +48,7 @@ public:
   ~SigHandler();
 
   static bool gotStopSignal();
-  static void setStopSignal(casacore::Bool lala);
+  static void setStopSignal(Bool lala);
   //Reset handled signals back to default behavior
   static void resetSignalHandlers();
   //Will handle some signals; Abort and Interrupt

@@ -28,7 +28,6 @@
 
 #include <casacore/lattices/Lattices/MaskedLatticeIterator.h>
 
-using namespace casacore;
 namespace casa {
 
 ImageMask::~ImageMask() {}
@@ -41,10 +40,10 @@ Bool ImageMask::isAllMaskTrue(
 	RO_LatticeIterator<Bool> iter(mask, stepper);
 	for (iter.reset(); ! iter.atEnd(); ++iter) {
 		if (! allTrue(iter.cursor())) {
-			return false;
+			return False;
 		}
 	}
-	return true;
+	return True;
 }
 
 }

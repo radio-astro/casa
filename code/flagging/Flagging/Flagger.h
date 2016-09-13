@@ -60,7 +60,7 @@ class RFChunkStats;
 // </prerequisite>
 //
 // <etymology>
-// casacore::MSFlagger and plain flagger were already taken.
+// MSFlagger and plain flagger were already taken.
 // </etymology>
 //
 // <synopsis>
@@ -70,23 +70,23 @@ class RFChunkStats;
 // </synopsis>
 //
 // <example>
-//        // construct casacore::MS and flagger
-//        casacore::MeasurementSet ms("test.MS2",casacore::Table::Update);
+//        // construct MS and flagger
+//        MeasurementSet ms("test.MS2",Table::Update);
 //        Flagger flagger(ms);
 //        // build record of global flagging options
-//        casacore::Record opt(casacore::Record::Variable);
+//        Record opt(Record::Variable);
 //        // build record of flagging agents to be run
-//        casacore::Record selopt( flagger.defaultAgents().asRecord("select") );
+//        Record selopt( flagger.defaultAgents().asRecord("select") );
 //        selopt.define(RF_POLICY,"RESET");
-//        selopt.define(RF_AUTOCORR,true);
-//        casacore::Record agents(casacore::Record::Variable);
+//        selopt.define(RF_AUTOCORR,True);
+//        Record agents(Record::Variable);
 //        agents.defineRecord("select",selopt);
 //        // perform the flagging
 //        flagger.run(agents,opt);
 // </example>
 //
 // <motivation>
-// We need an automated flagging tool. Existing tools (casacore::MSFlagger and flagger.g)
+// We need an automated flagging tool. Existing tools (MSFlagger and flagger.g)
 // were too slow. Hence, Flagger was developed.
 // </motivation>
 //
@@ -101,165 +101,165 @@ class Flagger : public FlaggerEnums
 {
 protected:
 // creates an agent by name
-  std::shared_ptr<RFABase> createAgent ( const casacore::String &name,RFChunkStats &chunk,const casacore::RecordInterface &parms, bool &only_selector );
+  std::shared_ptr<RFABase> createAgent ( const String &name,RFChunkStats &chunk,const RecordInterface &parms, bool &only_selector );
 
 // sets up record of agents and default parameters
-  const casacore::RecordInterface & setupAgentDefaults ();
+  const RecordInterface & setupAgentDefaults ();
 
 // print flagging reports from individual agents
   void printAgentReports  ( );
 
   void printSummaryReport ( RFChunkStats &chunk );
-  casacore::Bool selectDataChannel();
+  Bool selectDataChannel();
  
-  casacore::MeasurementSet   ms;
-  casacore::MeasurementSet   originalms;
+  MeasurementSet   ms;
+  MeasurementSet   originalms;
   std::vector<std::shared_ptr<RFABase> > acc;
 
   //new added
-  casacore::MeasurementSet *mssel_p;
+  MeasurementSet *mssel_p;
   VisSet *vs_p;
   bool scan_looping;     /* Is scan number part of visiter looping? */
-  casacore::String msname_p;
-  casacore::Bool nullSelect_p;
-  casacore::Bool setdata_p;
-  casacore::Bool selectdata_p;
-  casacore::String dataMode_p;  
+  String msname_p;
+  Bool nullSelect_p;
+  Bool setdata_p;
+  Bool selectdata_p;
+  String dataMode_p;  
 
-//  casacore::Vector<casacore::Int> dataEnd_p;
-//  casacore::Vector<casacore::Int> dataStart_p, dataStep_p;
-//  casacore::Vector<casacore::Int> dataspectralwindowids_p;
-//  casacore::Vector<casacore::Int> spwidnchans_p;
-  casacore::Vector<casacore::String> correlations_p;
-  casacore::Vector<casacore::Int> datafieldids_p;
-  casacore::Vector<casacore::Int> datadescids_p;
-  casacore::MRadialVelocity mDataStart_p;
-  casacore::MRadialVelocity mDataStep_p;
+//  Vector<Int> dataEnd_p;
+//  Vector<Int> dataStart_p, dataStep_p;
+//  Vector<Int> dataspectralwindowids_p;
+//  Vector<Int> spwidnchans_p;
+  Vector<String> correlations_p;
+  Vector<Int> datafieldids_p;
+  Vector<Int> datadescids_p;
+  MRadialVelocity mDataStart_p;
+  MRadialVelocity mDataStep_p;
 
   //
-  casacore::uInt nant,nifr,nfeed,nfeedcorr;
-  casacore::Vector<casacore::Int> ifr2ant1,ifr2ant2;
-  casacore::Vector<casacore::String> antnames;
-  casacore::Vector<casacore::Double> spwfreqs;
+  uInt nant,nifr,nfeed,nfeedcorr;
+  Vector<Int> ifr2ant1,ifr2ant2;
+  Vector<String> antnames;
+  Vector<Double> spwfreqs;
     
-  casacore::Record agent_defaults;
+  Record agent_defaults;
 
-  static casacore::LogIO os;
+  static LogIO os;
 
 public:  
 // default constructor 
   Flagger  ();
 // construct and attach to a measurement set
-  Flagger  ( casacore::MeasurementSet &ms );
+  Flagger  ( MeasurementSet &ms );
   
   ~Flagger ();
   
-// Change or set the casacore::MS this Flagger refers to.
-  bool attach( casacore::MeasurementSet &ms, casacore::Bool setupAgentDefaults=true );
+// Change or set the MS this Flagger refers to.
+  bool attach( MeasurementSet &ms, Bool setupAgentDefaults=True );
 
   // Set the data selection parameters
-  casacore::Bool selectdata(casacore::Bool useoriginalms=false, 
-                  casacore::String field="", casacore::String spw="", casacore::String array="", casacore::String feed="", casacore::String scan="",
-	          casacore::String baseline="", casacore::String uvrange="", casacore::String time="",
-	          casacore::String correlation="", casacore::String intent="", casacore::String observation="");
+  Bool selectdata(Bool useoriginalms=False, 
+                  String field="", String spw="", String array="", String feed="", String scan="",
+	          String baseline="", String uvrange="", String time="",
+	          String correlation="", String intent="", String observation="");
 
   // Make a data selection
-  casacore::Bool setdata(casacore::String field, casacore::String spw, casacore::String array, casacore::String feed, casacore::String scan,
-	       casacore::String baseline, casacore::String uvrange, casacore::String time,
-	       casacore::String correlation, casacore::String intent, casacore::String observation="");
+  Bool setdata(String field, String spw, String array, String feed, String scan,
+	       String baseline, String uvrange, String time,
+	       String correlation, String intent, String observation="");
   
   // Make a selection for manual flagging
-  casacore::Bool setmanualflags(casacore::Bool autocorr,
-                      casacore::Bool unflag, 
-                      casacore::String clipexpr, 
-                      casacore::Vector<casacore::Double> cliprange, 
-                      casacore::String clipcolumn, 
-                      casacore::Bool outside, 
-                      casacore::Bool channel_average,
-                      casacore::Double quackinterval=0.0, 
-                      casacore::String quackmode=casacore::String("beg"),
-                      casacore::Bool quackincrement=casacore::Bool(false),
-                      casacore::String opmode=casacore::String("flag"),
-                      casacore::Double diameter = -1.0,
-                      casacore::Double lowerlimit = -1.0,
-                      casacore::Double upperlimit = 91.0);
+  Bool setmanualflags(Bool autocorr,
+                      Bool unflag, 
+                      String clipexpr, 
+                      Vector<Double> cliprange, 
+                      String clipcolumn, 
+                      Bool outside, 
+                      Bool channel_average,
+                      Double quackinterval=0.0, 
+                      String quackmode=String("beg"),
+                      Bool quackincrement=Bool(false),
+                      String opmode=String("flag"),
+                      Double diameter = -1.0,
+                      Double lowerlimit = -1.0,
+                      Double upperlimit = 91.0);
 
   // Clean up all agents of type "select".
-  //casacore::Bool clearflagselections(casacore::Vector<casacore::Int> &recordlist,casacore::Vector<casacore::String> &agentlist);
-  casacore::Bool clearflagselections(casacore::Int recordindex);
-  casacore::Bool printflagselections();
+  //Bool clearflagselections(Vector<Int> &recordlist,Vector<String> &agentlist);
+  Bool clearflagselections(Int recordindex);
+  Bool printflagselections();
 
   // Fill the selection record to attach to the list of agents
-  casacore::Bool fillSelections(casacore::Record &rec);
+  Bool fillSelections(Record &rec);
 
   // Set autoflag params
-  casacore::Bool setautoflagparams(casacore::String algorithm, casacore::Record &parameters);
+  Bool setautoflagparams(String algorithm, Record &parameters);
 
   // Get default autoflag params
-  casacore::Record getautoflagparams(casacore::String algorithm);
+  Record getautoflagparams(String algorithm);
 
-  casacore::Bool addAgent(casacore::RecordInterface &newAgent);
+  Bool addAgent(RecordInterface &newAgent);
   
-  // Detaches from the casacore::MS  
+  // Detaches from the MS  
   void detach();
   
-  casacore::Record run(casacore::Bool trial, casacore::Bool reset);    
+  Record run(Bool trial, Bool reset);    
 
-  void summary ( const casacore::RecordInterface &agents ); 
+  void summary ( const RecordInterface &agents ); 
 
     // flag version support.
-  casacore::Bool  saveFlagVersion(casacore::String versionname, casacore::String comment, casacore::String merge);
-  casacore::Bool  restoreFlagVersion(casacore::Vector<casacore::String> versionname, casacore::String merge);
-  casacore::Bool  deleteFlagVersion(casacore::Vector<casacore::String> versionname);
-  casacore::Bool  getFlagVersionList( casacore::Vector<casacore::String> &verlist);
+  Bool  saveFlagVersion(String versionname, String comment, String merge);
+  Bool  restoreFlagVersion(Vector<String> versionname, String merge);
+  Bool  deleteFlagVersion(Vector<String> versionname);
+  Bool  getFlagVersionList( Vector<String> &verlist);
  
   
   // returns current MS
-  const casacore::MeasurementSet & measSet() const { return ms; }
+  const MeasurementSet & measSet() const { return ms; }
     
 // number of antennas in MS
-  casacore::uInt numAnt    () const 
+  uInt numAnt    () const 
       { return nant; };
 
 // number of IFRs in MS
-  casacore::uInt numIfr    () const 
+  uInt numIfr    () const 
       { return nifr; };
 
 // number of feeds in MS
-  casacore::uInt numFeed    () const 
+  uInt numFeed    () const 
       { return nfeed; };
 
 // number of feed correlations in MS
-  casacore::uInt numFeedCorr    () const 
+  uInt numFeedCorr    () const 
       { return nfeedcorr; };
 
 // names of antennas
-  const casacore::Vector<casacore::String> & antNames() const 
+  const Vector<String> & antNames() const 
       { return antnames; };
   
 // derives a flat IFR index from two antenna indices
-  casacore::uInt ifrNumber ( casacore::Int ant1,casacore::Int ant2 ) const;
+  uInt ifrNumber ( Int ant1,Int ant2 ) const;
 
 // vector version of above
-  casacore::Vector<casacore::Int> ifrNumbers ( casacore::Vector<casacore::Int> ant1,casacore::Vector<casacore::Int> ant2 ) const;
+  Vector<Int> ifrNumbers ( Vector<Int> ant1,Vector<Int> ant2 ) const;
 
 // derives antenna indices from a flat IFR index
-  void ifrToAnt ( casacore::uInt &ant1,casacore::uInt &ant2,casacore::uInt ifr ) const;
+  void ifrToAnt ( uInt &ant1,uInt &ant2,uInt ifr ) const;
 
 // returns a record with all available agents and their default options
-  const casacore::RecordInterface & defaultAgents () const 
+  const RecordInterface & defaultAgents () const 
       { return agent_defaults; }
 
 // returns a record of available options
-  static const casacore::RecordInterface & defaultOptions ();
+  static const RecordInterface & defaultOptions ();
 
 // returns the log sink 
-  static casacore::LogIO & logSink ()       { return os; }
+  static LogIO & logSink ()       { return os; }
 
   /* Get rid of negative indices (meaning negation of antenna) in baselinelist */
-  static void reform_baselinelist(casacore::Matrix<casacore::Int> &baselinelist, unsigned nant);
+  static void reform_baselinelist(Matrix<Int> &baselinelist, unsigned nant);
   
-  static int my_aipspp_sum(const casacore::Array<casacore::Bool> &a);
+  static int my_aipspp_sum(const Array<Bool> &a);
 
 private:
     
@@ -267,29 +267,29 @@ private:
 
   Flagger& operator=(const Flagger &)  { return *this; };
 
-  void printAgentRecord(casacore::String &, casacore::uInt, const casacore::RecordInterface &);
+  void printAgentRecord(String &, uInt, const RecordInterface &);
 
   // Sink used to store history
-  casacore::LogSink logSink_p;
+  LogSink logSink_p;
 
   // Hold the original ms 
-  casacore::MeasurementSet *originalms_p;
+  MeasurementSet *originalms_p;
   
-  // casacore::MS Selection
-  casacore::MSSelection *msselection_p;
+  // MS Selection
+  MSSelection *msselection_p;
   bool spw_selection;  //non-trivial spw-selection
 
-  // casacore::List of Agents
-  casacore::Record *agents_p;
-  casacore::Int agentCount_p;
+  // List of Agents
+  Record *agents_p;
+  Int agentCount_p;
 
-  // casacore::List of extra options
-  casacore::Record *opts_p;
+  // List of extra options
+  Record *opts_p;
 
   // Debug Message flag
   static const bool dbg;
 
-  casacore::Bool quack_agent_exists;
+  Bool quack_agent_exists;
   /* More initialization is required, if there exists a quacking agent */
 };
 

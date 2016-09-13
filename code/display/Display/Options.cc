@@ -33,7 +33,6 @@
 #include <string.h>		/***for strlen( )***/
 #include <unistd.h>
 
-using namespace casacore;
 namespace casa {
 	namespace viewer {
 

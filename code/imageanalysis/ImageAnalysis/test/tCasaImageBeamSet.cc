@@ -101,7 +101,7 @@ int main() {
 			GaussianBeam beam1(Quantity(5, "arcsec"), Quantity(4, "arcsec"), Quantity(20, "deg"));
 			x.setBeam(1, 2, beam1);
 			IPosition axisPath = IPosition::makeAxisPath(x.shape().size());
-            ArrayPositionIterator iter(x.shape(), axisPath, false);
+            ArrayPositionIterator iter(x.shape(), axisPath, False);
             while (! iter.pastEnd()) {
                 const IPosition pos = iter.pos();
 				GaussianBeam beam = x.getBeam(pos[0], pos[1]);
@@ -229,7 +229,7 @@ int main() {
             );
             x.setBeam(1, 2, beam1);
             IPosition axisPath = IPosition::makeAxisPath(x.shape().size());
-            ArrayPositionIterator iter(x.shape(), axisPath, false);
+            ArrayPositionIterator iter(x.shape(), axisPath, False);
             while (! iter.pastEnd()) {
             	const IPosition pos = iter.pos();
             	GaussianBeam beam = x(pos[0], pos[1]);
@@ -270,7 +270,7 @@ int main() {
             	x.setBeam(-1, 2, beam1);
             	AlwaysAssert(x.getBeams().size() == 12, AipsError);
             	IPosition axisPath = IPosition::makeAxisPath(x.shape().size());
-            	ArrayPositionIterator iter(x.shape(), axisPath, false);
+            	ArrayPositionIterator iter(x.shape(), axisPath, False);
             	while (! iter.pastEnd()) {
             		const IPosition pos = iter.pos();
             		GaussianBeam beam = x(pos[0], pos[1]);
@@ -297,7 +297,7 @@ int main() {
             	x.setBeam(2, -1, beam1);
             	AlwaysAssert(x.getBeams().size() == 12, AipsError);
             	IPosition axisPath = IPosition::makeAxisPath(x.shape().size());
-            	ArrayPositionIterator iter(x.shape(), axisPath, false);
+            	ArrayPositionIterator iter(x.shape(), axisPath, False);
             	while (! iter.pastEnd()) {
             		const IPosition pos = iter.pos();
             		GaussianBeam beam = x(pos[0], pos[1]);
@@ -457,7 +457,7 @@ int main() {
         	CasaImageBeamSet beamSet(beams);
         	GaussianBeam myBeam = beamSet.getCommonBeam();
         	cout << "Minimum area enclosing beam " << myBeam << endl;
-        	AlwaysAssert(abs(myBeam.getPA("deg", true) - 30) < 1e-7, AipsError);
+        	AlwaysAssert(abs(myBeam.getPA("deg", True) - 30) < 1e-7, AipsError);
         	AlwaysAssert(myBeam.getMajor("arcsec") < 4.486, AipsError);
         	AlwaysAssert(myBeam.getMinor("arcsec") < 3.292, AipsError);
         }
@@ -544,7 +544,7 @@ int main() {
         	CasaImageBeamSet beamSet(beams);
         	GaussianBeam myBeam = beamSet.getCommonBeam();
         	cout << "Minimum area enclosing beam " << myBeam << endl;
-        	AlwaysAssert(abs(myBeam.getPA("deg", true) - 50) < 1e-7, AipsError);
+        	AlwaysAssert(abs(myBeam.getPA("deg", True) - 50) < 1e-7, AipsError);
         	AlwaysAssert(myBeam.getMajor("arcsec") < 4.486, AipsError);
         	AlwaysAssert(myBeam.getMinor("arcsec") < 3.292, AipsError);
         }
@@ -564,7 +564,7 @@ int main() {
         	CasaImageBeamSet beamSet(beams);
         	GaussianBeam myBeam = beamSet.getCommonBeam();
         	cout << "Minimum area enclosing beam " << myBeam << endl;
-        	AlwaysAssert(abs(myBeam.getPA("deg", true) - 45) < 1e-7, AipsError);
+        	AlwaysAssert(abs(myBeam.getPA("deg", True) - 45) < 1e-7, AipsError);
         	AlwaysAssert(myBeam.getMajor("arcsec") < 4.042, AipsError);
         	AlwaysAssert(myBeam.getMinor("arcsec") < 3.958, AipsError);
         }
@@ -584,7 +584,7 @@ int main() {
         	CasaImageBeamSet beamSet(beams);
         	GaussianBeam myBeam = beamSet.getCommonBeam();
         	cout << "Minimum area enclosing beam " << myBeam << endl;
-        	//AlwaysAssert(abs(myBeam.getPA("deg", true) - 45) < 1e-7, AipsError);
+        	//AlwaysAssert(abs(myBeam.getPA("deg", True) - 45) < 1e-7, AipsError);
         	AlwaysAssert(myBeam.getMajor("arcsec") == 4, AipsError);
         	AlwaysAssert(myBeam.getMinor("arcsec") == 4, AipsError);
 
@@ -605,7 +605,7 @@ int main() {
         	CasaImageBeamSet beamSet(beams);
         	GaussianBeam myBeam = beamSet.getCommonBeam();
         	cout << "Minimum area enclosing beam " << myBeam << endl;
-        	AlwaysAssert(myBeam.getPA("deg", true) == 0, AipsError);
+        	AlwaysAssert(myBeam.getPA("deg", True) == 0, AipsError);
         	AlwaysAssert(myBeam.getMajor("arcsec") == 4, AipsError);
         	AlwaysAssert(myBeam.getMinor("arcsec") == 2, AipsError);
         }
@@ -625,7 +625,7 @@ int main() {
         	CasaImageBeamSet beamSet(beams);
         	GaussianBeam myBeam = beamSet.getCommonBeam();
         	cout << "Minimum area enclosing beam " << myBeam << endl;
-        	AlwaysAssert(abs(myBeam.getPA("deg", true) - 2.76795337) < 1e-5, AipsError);
+        	AlwaysAssert(abs(myBeam.getPA("deg", True) - 2.76795337) < 1e-5, AipsError);
         	AlwaysAssert(myBeam.getMajor("arcsec") < 8.377, AipsError);
         	AlwaysAssert(myBeam.getMinor("arcsec") < 1.628, AipsError);
         }
@@ -645,7 +645,7 @@ int main() {
         	CasaImageBeamSet beamSet(beams);
         	GaussianBeam myBeam = beamSet.getCommonBeam();
         	cout << "Minimum area enclosing beam " << myBeam << endl;
-        	AlwaysAssert(abs(myBeam.getPA("deg", true) - 17.232049) < 1e-5, AipsError);
+        	AlwaysAssert(abs(myBeam.getPA("deg", True) - 17.232049) < 1e-5, AipsError);
         	AlwaysAssert(myBeam.getMajor("arcsec") < 8.369, AipsError);
         	AlwaysAssert(myBeam.getMinor("arcsec") < 1.626, AipsError);
         }
@@ -719,7 +719,7 @@ int main() {
         	CasaImageBeamSet beamSet(beams);
         	GaussianBeam myBeam = beamSet.getCommonBeam();
         	cout << "Minimum area enclosing beam " << myBeam << endl;
-        	AlwaysAssert(myBeam.getPA("deg", true) == 0, AipsError);
+        	AlwaysAssert(myBeam.getPA("deg", True) == 0, AipsError);
         	AlwaysAssert(myBeam.getMajor("arcsec") == 4, AipsError);
             AlwaysAssert(myBeam.getMinor("arcsec") == 2, AipsError);
         }

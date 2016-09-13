@@ -31,7 +31,6 @@
 
 #include <QHBoxLayout>
 
-using namespace casacore;
 namespace casa {
 
 //////////////////////////////

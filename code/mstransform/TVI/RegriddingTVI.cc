@@ -22,7 +22,6 @@
 
 #include <mstransform/TVI/RegriddingTVI.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 namespace vi { //# NAMESPACE VI - BEGIN
@@ -51,8 +50,8 @@ RegriddingTVI::RegriddingTVI(	ViImplementation2 * inputVii,
 	regriddingMethod_p = linear;
 
 	// Sub-cases
-	refFrameTransformation_p = false;
-	radialVelocityCorrection_p = false;
+	refFrameTransformation_p = False;
+	radialVelocityCorrection_p = False;
 	fftShift_p = 0;
 
 	// SPW-indexed maps
@@ -80,7 +79,7 @@ RegriddingTVI::RegriddingTVI(	ViImplementation2 * inputVii,
 Bool RegriddingTVI::parseConfiguration(const Record &configuration)
 {
 	int exists = -1;
-	Bool ret = true;
+	Bool ret = True;
 
 	exists = configuration.fieldNumber ("phasecenter");
 	if (exists >= 0)
@@ -232,8 +231,8 @@ void RegriddingTVI::initialize()
     inputReferenceFrame_p = MFrequency::castType(spwCols.measFreqRef()(0));
 
     // Parse output reference frame
-    refFrameTransformation_p = true;
-    radialVelocityCorrection_p = false;
+    refFrameTransformation_p = True;
+    radialVelocityCorrection_p = False;
     if(outputReferenceFramePar_p.empty())
     {
     	outputReferenceFrame_p = inputReferenceFrame_p;
@@ -242,7 +241,7 @@ void RegriddingTVI::initialize()
     else if (outputReferenceFramePar_p == "SOURCE")
     {
     	outputReferenceFrame_p = MFrequency::GEO;
-    	radialVelocityCorrection_p = true;
+    	radialVelocityCorrection_p = True;
     }
     else if(!MFrequency::getType(outputReferenceFrame_p, outputReferenceFramePar_p))
     {
@@ -251,7 +250,7 @@ void RegriddingTVI::initialize()
     }
 
     if (outputReferenceFrame_p == inputReferenceFrame_p) {
-    	refFrameTransformation_p = false;
+    	refFrameTransformation_p = False;
     }
 
 
@@ -298,7 +297,7 @@ void RegriddingTVI::initialize()
     }
     else
     {
-    	String phaseCenter = phaseCenterPar_p->toString(true);
+    	String phaseCenter = phaseCenterPar_p->toString(True);
 
     	// Determine phase center from the first row in the FIELD sub-table of the output (selected) MS
     	if (phaseCenter.empty())
@@ -403,7 +402,7 @@ void RegriddingTVI::initFrequencyGrid()
 														restFrequency_p,
 														outputReferenceFramePar_p,
 														velocityType_p,
-														true, // verbose
+														True, // verbose
 														radialVelocity_p
 														);
 
@@ -453,14 +452,14 @@ void RegriddingTVI::initFrequencyTransformationEngine() const
 		// Check if radial velocity correction if necessary
 		MDoppler radVelCorr;
 		MDirection inputFieldDirection;
-		Bool radVelSignificant = false;
+		Bool radVelSignificant = False;
 		if (radialVelocityCorrection_p && inputMSFieldCols_p->needInterTime(vb->fieldId()(0)))
 		{
 			MRadialVelocity mRV = inputMSFieldCols_p->radVelMeas(vb->fieldId()(0),vb->time()(0));
 			Quantity mrv = mRV.get("m/s");
 			Quantity offsetMrv = radialVelocity_p.get("m/s"); // the radvel by which the out SPW def was shifted
 			radVelCorr =  MDoppler(mrv-(Quantity(2.)*offsetMrv));
-			if (fabs(mrv.getValue()) > 1E-6) radVelSignificant = true;
+			if (fabs(mrv.getValue()) > 1E-6) radVelSignificant = True;
 
 			inputFieldDirection = inputMSFieldCols_p->phaseDirMeas(vb->fieldId()(0), vb->time()(0));
 		}
@@ -570,7 +569,7 @@ Vector<Double> RegriddingTVI::getFrequencies (	Double time,
 												restFrequency_p,
 												frameOfReferenceStr,
 												velocityType_p,
-												false, // verbose
+												False, // verbose
 												radialVelocity_p
 												);
 
@@ -592,7 +591,7 @@ void RegriddingTVI::flag(Cube<Bool>& flagCube) const
 	initFrequencyTransformationEngine();
 
 	// Reshape output data before passing it to the DataCubeHolder
-	flagCube.resize(getVisBufferConst()->getShape(),false);
+	flagCube.resize(getVisBufferConst()->getShape(),False);
 
 	// Gather input data
 	DataCubeMap inputData;
@@ -714,7 +713,7 @@ template<class T> void RegriddingTVI::transformDataCube(	const Cube<T> &inputVis
 	initFrequencyTransformationEngine();
 
 	// Reshape output data before passing it to the DataCubeHolder
-	outputVis.resize(getVisBufferConst()->getShape(),false);
+	outputVis.resize(getVisBufferConst()->getShape(),False);
 
 	// Gather input data
 	DataCubeMap inputData;
@@ -814,10 +813,10 @@ template<class T> void RegriddingTransformEngine<T>::transform()
 // -----------------------------------------------------------------------
 template<class T> RegriddingKernel<T>::RegriddingKernel()
 {
-	inputDummyFlagVectorInitialized_p = false;
-	outputDummyFlagVectorInitialized_p = false;
-	inputDummyDataVectorInitialized_p = false;
-	outputDummyDataVectorInitialized_p = false;
+	inputDummyFlagVectorInitialized_p = False;
+	outputDummyFlagVectorInitialized_p = False;
+	inputDummyDataVectorInitialized_p = False;
+	outputDummyDataVectorInitialized_p = False;
 }
 
 // -----------------------------------------------------------------------
@@ -831,8 +830,8 @@ template<class T> Vector<Bool>& RegriddingKernel<T>::getInputFlagVector(DataCube
 	}
 	else if (not inputDummyFlagVectorInitialized_p)
 	{
-		inputDummyFlagVectorInitialized_p = true;
-		inputDummyFlagVector_p.resize(inputData->getVectorShape()(0),false);
+		inputDummyFlagVectorInitialized_p = True;
+		inputDummyFlagVector_p.resize(inputData->getVectorShape()(0),False);
 	}
 
 	return inputDummyFlagVector_p;
@@ -849,8 +848,8 @@ template<class T> Vector<Bool>& RegriddingKernel<T>::getOutputFlagVector(DataCub
 	}
 	else if (not outputDummyFlagVectorInitialized_p)
 	{
-		outputDummyFlagVectorInitialized_p = true;
-		outputDummyFlagVector_p.resize(outputData->getVectorShape()(0),false);
+		outputDummyFlagVectorInitialized_p = True;
+		outputDummyFlagVector_p.resize(outputData->getVectorShape()(0),False);
 	}
 
 	return outputDummyFlagVector_p;
@@ -867,8 +866,8 @@ template<class T> Vector<T>& RegriddingKernel<T>::getInputDataVector(DataCubeMap
 	}
 	else if (not inputDummyDataVectorInitialized_p)
 	{
-		inputDummyDataVectorInitialized_p = true;
-		inputDummyDataVector_p.resize(inputData->getVectorShape()(0),false);
+		inputDummyDataVectorInitialized_p = True;
+		inputDummyDataVector_p.resize(inputData->getVectorShape()(0),False);
 	}
 
 	return inputDummyDataVector_p;
@@ -885,8 +884,8 @@ template<class T> Vector<T>& RegriddingKernel<T>::getOutputDataVector(DataCubeMa
 	}
 	else if (not outputDummyDataVectorInitialized_p)
 	{
-		outputDummyDataVectorInitialized_p = true;
-		outputDummyDataVector_p.resize(outputData->getVectorShape()(0),false);
+		outputDummyDataVectorInitialized_p = True;
+		outputDummyDataVector_p.resize(outputData->getVectorShape()(0),False);
 	}
 
 	return outputDummyDataVector_p;
@@ -929,8 +928,8 @@ template<class T> void DataInterpolationKernel<T>::kernel(	DataCubeMap *inputDat
 		    										inputDataVector, // Input data
 		    										inputFlagVector, // Input Flags
 		    										interpolationMethod_p, // Interpolation method
-		    										false, // A good data point has its flag set to false
-		    										false // If false extrapolated data points are set flagged
+		    										False, // A good data point has its flag set to False
+		    										False // If False extrapolated data points are set flagged
 								    				);
 	}
 	else
@@ -992,8 +991,8 @@ template<class T> void DataFFTKernel<T>::fftshift(	Vector<Complex> &inputDataVec
     						(const Vector<Bool>)inputFlagVector,
     						(const uInt)0, // In vectors axis 0 is the only dimension
     						(const Double)fftShift_p,
-    						false, // A good data point has its flag set to false
-    						false);
+    						False, // A good data point has its flag set to False
+    						False);
 
 	return;
 }
@@ -1012,7 +1011,7 @@ template<class T> void DataFFTKernel<T>::fftshift(	Vector<Float> &inputDataVecto
     						(const Vector<Bool>)inputFlagVector,
     						(const uInt)0, // In vectors axis 0 is the only dimension
     						(const Double)fftShift_p,
-    						false); // A good data point has its flag set to false
+    						False); // A good data point has its flag set to False
 
 	return;
 }

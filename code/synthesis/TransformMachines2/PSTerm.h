@@ -57,83 +57,83 @@ namespace casa{
   {
   public:
     PSTerm(): CFTerms() {};
-    PSTerm (const casacore::IPosition shape, 
-	    const casacore::Vector<casacore::Double>& uvScale,
-	    const casacore::Vector<casacore::Double>& uvOffset,
-	    const casacore::Double& psScale):psCtor_p() 
+    PSTerm (const IPosition shape, 
+	    const Vector<Double>& uvScale,
+	    const Vector<Double>& uvOffset,
+	    const Double& psScale):psCtor_p() 
     {init(shape,uvScale,uvOffset,psScale);};
 
     virtual ~PSTerm () {};
 
-    void init(const casacore::IPosition shape, 
-	      const casacore::Vector<casacore::Double>& uvScale,
-	      const casacore::Vector<casacore::Double>& uvOffset,
-	      const casacore::Double& psScale);
-    casacore::Matrix<casacore::Complex>& operator=(casacore::Matrix<casacore::Complex>&);
-    casacore::Matrix<casacore::Complex>& operator*=(casacore::Matrix<casacore::Complex>&);
+    void init(const IPosition shape, 
+	      const Vector<Double>& uvScale,
+	      const Vector<Double>& uvOffset,
+	      const Double& psScale);
+    Matrix<Complex>& operator=(Matrix<Complex>&);
+    Matrix<Complex>& operator*=(Matrix<Complex>&);
 
-    void applySky(casacore::Matrix<casacore::Complex>& screen,casacore::Bool multiply=false);
-    void applySky(casacore::Matrix<casacore::Complex>& screen, 
-		  const casacore::Vector<casacore::Double>& sampling,
-		  const casacore::Int inner);
-    void normalizeImage(casacore::Lattice<casacore::Complex>& skyImage,
-			const casacore::Matrix<casacore::Float>& weights);
-    virtual casacore::String name() {return casacore::String("PS Term");};
+    void applySky(Matrix<Complex>& screen,Bool multiply=False);
+    void applySky(Matrix<Complex>& screen, 
+		  const Vector<Double>& sampling,
+		  const Int inner);
+    void normalizeImage(Lattice<Complex>& skyImage,
+			const Matrix<Float>& weights);
+    virtual String name() {return String("PS Term");};
 
     //----------------------------------------------------------
     // Implementation of pure-virtual methods of CFTerms parent class.
     // CFTerms (and its derived classes) ned clean-up so that this
     // kind of code is not required everywhere).
-    int getVisParams(const VisBuffer2& vb,const casacore::CoordinateSystem& skyCoord=casacore::CoordinateSystem()) 
+    int getVisParams(const VisBuffer2& vb,const CoordinateSystem& skyCoord=CoordinateSystem()) 
     {(void)vb;(void)skyCoord;return 0;};
 
-    void setPolMap(const casacore::Vector<casacore::Int>& polMap) {(void)polMap;};
+    void setPolMap(const Vector<Int>& polMap) {(void)polMap;};
 
-    virtual casacore::Float getSupportThreshold() {return 1e-3;};
+    virtual Float getSupportThreshold() {return 1e-3;};
 
-    void applySky(casacore::ImageInterface<casacore::Float>&,// outputImages,
+    void applySky(ImageInterface<Float>&,// outputImages,
 		  const VisBuffer2&,// vb, 
-		  const casacore::Bool,// doSquint=true,
-		  const casacore::Int&,// cfKey=0,
-		  const casacore::Int&,// muellerTerm=0,
-		  const casacore::Double /*freqVal=-1*/) 
+		  const Bool,// doSquint=True,
+		  const Int&,// cfKey=0,
+		  const Int&,// muellerTerm=0,
+		  const Double /*freqVal=-1*/) 
     {};
 
-    void applySky(casacore::ImageInterface<casacore::Complex>&,// outputImages,
+    void applySky(ImageInterface<Complex>&,// outputImages,
 		  const VisBuffer2&,// vb, 
-		  const casacore::Bool,// doSquint=true,
-		  const casacore::Int&,// cfKey=0,
-		  const casacore::Int&,// muellerTerm=0,
-		  const casacore::Double /*freqVal= -1*/ ) 
+		  const Bool,// doSquint=True,
+		  const Int&,// cfKey=0,
+		  const Int&,// muellerTerm=0,
+		  const Double /*freqVal= -1*/ ) 
     {};
 
-    casacore::Vector<casacore::Int> vbRow2CFKeyMap(const VisBuffer2& /*vb*/, casacore::Int& /*nUnique*/) 
-    {casacore::Vector<casacore::Int> tt;return tt;};
+    Vector<Int> vbRow2CFKeyMap(const VisBuffer2& /*vb*/, Int& /*nUnique*/) 
+    {Vector<Int> tt;return tt;};
 
-    casacore::Int makePBPolnCoords(const VisBuffer2&,// vb,
-			 const casacore::Int&,// convSize,
-			 const casacore::Int&,// convSampling,
-			 const casacore::CoordinateSystem&,// skyCoord,
-			 const casacore::Int&,// skyNx, 
-			 const casacore::Int&,// skyNy,
-			 casacore::CoordinateSystem&// feedCoord
+    Int makePBPolnCoords(const VisBuffer2&,// vb,
+			 const Int&,// convSize,
+			 const Int&,// convSampling,
+			 const CoordinateSystem&,// skyCoord,
+			 const Int&,// skyNx, 
+			 const Int&,// skyNy,
+			 CoordinateSystem&// feedCoord
 			 ) 
     {return 0;};
 
-    casacore::Int getConvSize() {return 0;};
-    casacore::Int getOversampling() {return 20;};
-    void setConvSize(const casacore::Int) {};
-    void setOversampling(const casacore::Int) {};
-    casacore::Float getConvWeightSizeFactor() {return 1.0;};
+    Int getConvSize() {return 0;};
+    Int getOversampling() {return 20;};
+    void setConvSize(const Int) {};
+    void setOversampling(const Int) {};
+    Float getConvWeightSizeFactor() {return 1.0;};
 
-    casacore::Bool rotationallySymmetric() {return true;};
+    Bool rotationallySymmetric() {return True;};
 
   private:
     // spheroidal function
-    casacore::CountedPtr<casacore::ConvolveGridder<casacore::Double, casacore::Complex> > psCtor_p;
-    casacore::Vector<casacore::Double>  support_p;
-    casacore::Vector<casacore::Int> sampling_p;
-    casacore::Double psScale_p;
+    CountedPtr<ConvolveGridder<Double, Complex> > psCtor_p;
+    Vector<Double>  support_p;
+    Vector<Int> sampling_p;
+    Double psScale_p;
   };
   };
 };

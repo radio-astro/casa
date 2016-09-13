@@ -36,16 +36,11 @@
 #include <casa/Arrays/IPosition.h>
 #include <casa/Arrays/Vector.h>
 
-namespace casacore{
-
-template <class T> class Vector;
-class PGPlotter;
-// the class ProgressMeter sounded bad. This abstract class serves
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Forward Declarations
+template <class T> class Vector;
+class PGPlotter;
 
 // <summary>
 // Class to monitor progress in MEM deconvolution
@@ -67,7 +62,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <motivation>
 // Since operations on Lattices can take a while, it can be useful
 // to show the progress. However, making module Lattices dependent on
-// as a bridge between the casacore::Lattice module and the casacore::ProgressMeter class
+// the class ProgressMeter sounded bad. This abstract class serves
+// as a bridge between the Lattice module and the ProgressMeter class
 // (or any other class showing the progress).
 // </motivation>
 //
@@ -86,49 +82,49 @@ public:
   
 
 
-  CEMemProgress(casacore::PGPlotter* pgplotter=0);
+  CEMemProgress(PGPlotter* pgplotter=0);
 
   virtual ~CEMemProgress();
   
  // people usually don't worry about maximum residual with MEM; we'll do it, though
 
-  void info(const casacore::Bool lastcall,
-	    const casacore::Int iteration,
-	    const casacore::Int numberIterations,
-	    const casacore::Lattice<casacore::Float>& model,
-	    const casacore::Lattice<casacore::Float>& resid,
-	    const casacore::Float& maximumRes,         
-	    const casacore::IPosition& posMaximum,
-	    const casacore::Float& totalFlux,
-	    const casacore::Float& sigma,
-	    const casacore::Float& normGrad,
-	    const casacore::Float& entropy);
+  void info(const Bool lastcall,
+	    const Int iteration,
+	    const Int numberIterations,
+	    const Lattice<Float>& model,
+	    const Lattice<Float>& resid,
+	    const Float& maximumRes,         
+	    const IPosition& posMaximum,
+	    const Float& totalFlux,
+	    const Float& sigma,
+	    const Float& normGrad,
+	    const Float& entropy);
   
 protected:
 
 private:
 
-  void basicSetUp(casacore::Bool doPlot = false);
+  void basicSetUp(Bool doPlot = False);
 
-  void plotOne(const casacore::Int iteration, 
-	       const casacore::Float sigma, const casacore::Float maxResid, 
-	       const casacore::Float flux);
+  void plotOne(const Int iteration, 
+	       const Float sigma, const Float maxResid, 
+	       const Float flux);
 
-  casacore::PGPlotter* itsPgplotter;
+  PGPlotter* itsPgplotter;
 
-  casacore::Vector<casacore::Float> itsIterationNumbers;
-  casacore::Vector<casacore::Float> itsTotalFluxes;
-  casacore::Vector<casacore::Float> itsMaxResiduals;
-  casacore::Vector<casacore::Float> itsSigmas;
-  casacore::Vector<casacore::Float> itsNormGrads;
-  casacore::Vector<casacore::Float> itsEntropies;
-  casacore::uInt itsCurrentIndex;
-  casacore::uInt itsCurrentTotalIterations;
-  casacore::Float itsCurrentFluxScale;
-  casacore::Float itsCurrentMaxResidualScale;
-  casacore::Float itsCurrentSigmaScale;        
-  casacore::Float itsCurrentNormGradScale;        
-  casacore::Float itsCurrentEntropyScale;        
+  Vector<Float> itsIterationNumbers;
+  Vector<Float> itsTotalFluxes;
+  Vector<Float> itsMaxResiduals;
+  Vector<Float> itsSigmas;
+  Vector<Float> itsNormGrads;
+  Vector<Float> itsEntropies;
+  uInt itsCurrentIndex;
+  uInt itsCurrentTotalIterations;
+  Float itsCurrentFluxScale;
+  Float itsCurrentMaxResidualScale;
+  Float itsCurrentSigmaScale;        
+  Float itsCurrentNormGradScale;        
+  Float itsCurrentEntropyScale;        
 };
 
 

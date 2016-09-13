@@ -32,13 +32,12 @@
 #include <display/Display/PixelCanvas.h>
 #include <display/Display/DisplayEnums.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Constructor.
 	CachingDisplayData::CachingDisplayData() :
-		DisplayData(), restorePCColormap_(false),
-		itsCachingState(true) {
+		DisplayData(), restorePCColormap_(False),
+		itsCachingState(True) {
 		AipsrcValue<Int>::find(itsDefaultMaximumCacheSize,
 		                       String("display.cachesize"), 256);
 		itsOptionsMaximumCacheSize = itsDefaultMaximumCacheSize;
@@ -61,7 +60,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Apply options stored in rec to the DisplayData.
 	Bool CachingDisplayData::setOptions(Record &rec, Record &recOut) {
 		Bool ret = DisplayData::setOptions(rec, recOut);
-		Bool localchange = false, error;
+		Bool localchange = False, error;
 
 		if (readOptionRecord(itsOptionsMaximumCacheSize, error, rec, "cachesize")) {
 			// must trim cache in case max cache size has been made smaller
@@ -89,7 +88,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		cachesize.define("pmax", Int(2048));
 		cachesize.define("default", itsDefaultMaximumCacheSize);
 		cachesize.define("value", itsOptionsMaximumCacheSize);
-		cachesize.define("allowunset", false);
+		cachesize.define("allowunset", False);
 		cachesize.define("context", "advanced");
 		rec.defineRecord("cachesize", cachesize);
 
@@ -160,7 +159,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			// Try and find an existing suitable CachingDisplayMethod, and
 			// store position of oldest cached CachingDisplayMethod in case
 			// we have reached maximum allowed and need to delete one.
-			Bool found = false;
+			Bool found = False;
 			itsElementListIter->toStart();
 			while (!itsElementListIter->atEnd() && !found) {
 				cdMethod = (CachingDisplayMethod *)itsElementListIter->getRight();
@@ -173,7 +172,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			String newCoordsAttr("newCoordinates");
 
 			if (wc->existsAttribute(newCoordsAttr)) {
-				found = false;
+				found = False;
 			}
 
 
@@ -217,8 +216,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		cdMethod->draw(ev.reason(), *holder);
 
 
-		// The default for restorePCColormap_ is false.  Derived DDs (such as
-		// WedgeDD) can set it true so that the colormap on the PixelCanvas
+		// The default for restorePCColormap_ is False.  Derived DDs (such as
+		// WedgeDD) can set it True so that the colormap on the PixelCanvas
 		// before the DD draws is restored to it afterward.  The 'colormap
 		// fiddling' mouse tools can (unfortunately) only operate on the PC's
 		// current colormap; this kludge is an attempt to assure that the 'right'

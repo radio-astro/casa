@@ -43,7 +43,6 @@
 #include <display/DisplayDatas/MSAsRaster.h>
 #include <display/DisplayErrors.h>
 
-using namespace casacore;
 namespace casa {
 	namespace viewer {
 
@@ -549,7 +548,7 @@ namespace casa {
 					IPosition pos = padd->fixedPosition( );
 					Vector<Int> dispAxes = padd->displayAxes( );
 
-					if ( nAxes == 2 ) dispAxes.resize(2,true);
+					if ( nAxes == 2 ) dispAxes.resize(2,True);
 
 					if ( nAxes < 2 || Int(shp.nelements()) != nAxes ||
 					        Int(pos.nelements()) != nAxes ||
@@ -559,7 +558,7 @@ namespace casa {
 					if ( dispAxes.nelements() > 2u )
 						pos[dispAxes[2]] = zIndex;
 
-					dispAxes.resize(2,true);
+					dispAxes.resize(2,True);
 
 					// WCBox dummy;
 					Quantum<Double> px0(0.,"pix");
@@ -598,7 +597,7 @@ namespace casa {
 					region_centers->push_back(SHARED_PTR<RegionInfo>(new ImageRegionInfo(name,description,getLayerCenter(padd, image, *imageregion))));
 
 					delete imageregion;
-				} catch (const casacore::AipsError& err) {
+				} catch (const casa::AipsError& err) {
 					errMsg_ = err.getMesg();
 					continue;
 				} catch (...) {
@@ -632,7 +631,7 @@ namespace casa {
 			if ( image == 0 ) return 0;
 
 			Vector<Int> dispAxes = padd->displayAxes( );
-			dispAxes.resize(2,true);
+			dispAxes.resize(2,True);
 
 			const Vector<String> &units = wc_->worldAxisUnits( );
 			const DisplayCoordinateSystem &cs = image->coordinates( );

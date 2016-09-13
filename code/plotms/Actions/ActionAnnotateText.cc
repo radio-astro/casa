@@ -25,7 +25,6 @@
 
 #include "ActionAnnotateText.h"
 
-using namespace casacore;
 namespace casa {
 
 ActionAnnotateText::ActionAnnotateText( Client* client )
@@ -38,5 +37,4 @@ ActionAnnotateText::ActionAnnotateText( Client* client )
 ActionAnnotateText::~ActionAnnotateText() {
 }
 
-using namespace casacore;
 } /* namespace casa */

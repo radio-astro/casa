@@ -51,7 +51,7 @@ class TBExportThread : public QThread {
 public:
     // Constructor that takes the table to export, the file to export to, and an
 	// optional ProgressHelper to show the progress of the export.
-    TBExportThread(TBTable* table, casacore::String file,
+    TBExportThread(TBTable* table, String file,
     			   ProgressHelper* progressPanel = NULL);
 
     ~TBExportThread();
@@ -62,11 +62,11 @@ public:
     void run();
 
 private:
-    // casacore::Table to export.
+    // Table to export.
     TBTable* table;
 
-    // casacore::File to export to.
-    casacore::String file;
+    // File to export to.
+    String file;
 
     // (Optional) progress helper.
     ProgressHelper* progressPanel;

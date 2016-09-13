@@ -88,9 +88,9 @@ class CalStatsReal : public CalStats {
   public:
 
     // Generic constructor
-    CalStatsReal( const casacore::Cube<casacore::Double>& oValue, const casacore::Cube<casacore::Double>& oValueErr,
-        const casacore::Cube<casacore::Bool>& oFlag, const casacore::Vector<casacore::String>& oFeed,
-        const casacore::Vector<casacore::Double>& oFrequency, const casacore::Vector<casacore::Double>& oTime,
+    CalStatsReal( const Cube<Double>& oValue, const Cube<Double>& oValueErr,
+        const Cube<Bool>& oFlag, const Vector<String>& oFeed,
+        const Vector<Double>& oFrequency, const Vector<Double>& oTime,
         const CalStats::AXIS& eAxisIterUserID );
 
     // Destructor
@@ -142,17 +142,17 @@ class CalStatsAmp : public CalStats {
   public:
 
     // Generic constructor
-    CalStatsAmp( const casacore::Cube<casacore::DComplex>& oValue, const casacore::Cube<casacore::Double>& oValueErr,
-        const casacore::Cube<casacore::Bool>& oFlag, const casacore::Vector<casacore::String>& oFeed,
-        const casacore::Vector<casacore::Double>& oFrequency, const casacore::Vector<casacore::Double>& oTime,
-        const CalStats::AXIS& eAxisIterUserID, const casacore::Bool& bNorm );
+    CalStatsAmp( const Cube<DComplex>& oValue, const Cube<Double>& oValueErr,
+        const Cube<Bool>& oFlag, const Vector<String>& oFeed,
+        const Vector<Double>& oFrequency, const Vector<Double>& oTime,
+        const CalStats::AXIS& eAxisIterUserID, const Bool& bNorm );
 
     // Destructor
     ~CalStatsAmp( void );
 
     // Normalize member function
-    static void norm( casacore::Vector<casacore::Double>& oAmp, casacore::Vector<casacore::Double>& oAmpErr,
-        casacore::Vector<casacore::Bool>& oFlag );
+    static void norm( Vector<Double>& oAmp, Vector<Double>& oAmpErr,
+        Vector<Bool>& oFlag );
 
 };
 
@@ -222,39 +222,39 @@ class CalStatsPhase : public CalStats {
   public:
 
     // Generic constructor
-    CalStatsPhase( const casacore::Cube<casacore::DComplex>& oValue, const casacore::Cube<casacore::Double>& oValueErr,
-        const casacore::Cube<casacore::Bool>& oFlag, const casacore::Vector<casacore::String>& oFeed,
-        const casacore::Vector<casacore::Double>& oFrequency, const casacore::Vector<casacore::Double>& oTime,
-        const CalStats::AXIS& eAxisIterUserID, const casacore::Bool& bUnwrap,
-        const casacore::Double& dJumpMax );
+    CalStatsPhase( const Cube<DComplex>& oValue, const Cube<Double>& oValueErr,
+        const Cube<Bool>& oFlag, const Vector<String>& oFeed,
+        const Vector<Double>& oFrequency, const Vector<Double>& oTime,
+        const CalStats::AXIS& eAxisIterUserID, const Bool& bUnwrap,
+        const Double& dJumpMax );
 
     // Destructor
     ~CalStatsPhase( void );
 
     // Group-delay unwrapping member function
-    static void unwrapGD( casacore::Vector<casacore::Double>& oPhase,
-        const casacore::Vector<casacore::Double>& oFrequency, const casacore::Vector<casacore::Bool>& oFlag );
+    static void unwrapGD( Vector<Double>& oPhase,
+        const Vector<Double>& oFrequency, const Vector<Bool>& oFlag );
 
     // Simple phase unwrapping member function
-    static void unwrapSimple( casacore::Vector<casacore::Double>& oPhase, const casacore::Double& dJumpMax,
-        const casacore::Vector<casacore::Bool>& oFlag );
+    static void unwrapSimple( Vector<Double>& oPhase, const Double& dJumpMax,
+        const Vector<Bool>& oFlag );
 
   private:
 
     // Form the squared-amplitude fringe packet
-    static casacore::Vector<casacore::Double>& fringePacket2( const casacore::Vector<casacore::Double>& oPhase,
-        const casacore::Vector<casacore::Double>& oFrequency, const casacore::Vector<casacore::Double>& oTime );
+    static Vector<Double>& fringePacket2( const Vector<Double>& oPhase,
+        const Vector<Double>& oFrequency, const Vector<Double>& oTime );
 
     // Find the abscissa corresponding to the peak value of an ordinate vector
-    template <typename T> static casacore::Double& maxLocation( const casacore::Vector<T>& oAbs,
-        const casacore::Vector<T>& oValue );
+    template <typename T> static Double& maxLocation( const Vector<T>& oAbs,
+        const Vector<T>& oValue );
 
     // The maximum number of iterations for unwrapping
-    static const casacore::uInt NUM_ITER_UNWRAP;
+    static const uInt NUM_ITER_UNWRAP;
 
     // The new time range per unwrapping iteration is this factor times the
     // present time increment
-    static const casacore::Double NEW_RANGE_FACTOR;
+    static const Double NEW_RANGE_FACTOR;
 
 };
 
@@ -278,12 +278,12 @@ ordinate vector.
 
 Inputs:
 -------
-oAbs   - This casacore::Vector<T>() instance contains the abscissae.
-oValue - This casacore::Vector<T>() instance contains the ordinates.
+oAbs   - This Vector<T>() instance contains the abscissae.
+oValue - This Vector<T>() instance contains the ordinates.
 
 Outputs:
 --------
-The reference to the casacore::Double variable containing the abscissa corresponding to
+The reference to the Double variable containing the abscissa corresponding to
 the peak value of the ordinate vector, returned via the function value.
 
 Modification history:
@@ -296,20 +296,20 @@ Modification history:
 // -----------------------------------------------------------------------------
 
 template <typename T>
-casacore::Double& CalStatsPhase::maxLocation( const casacore::Vector<T>& oAbs,
-    const casacore::Vector<T>& oValue ) {
+Double& CalStatsPhase::maxLocation( const Vector<T>& oAbs,
+    const Vector<T>& oValue ) {
 
   // Call the minMax() function and return the position of the maximum value
 
-  casacore::Double dValMin = 0.0;
-  casacore::Double dValMax = 0.0;
+  Double dValMin = 0.0;
+  Double dValMax = 0.0;
 
-  casacore::IPosition oPosMin( 1, 0 );
-  casacore::IPosition oPosMax( 1, 0 );
+  IPosition oPosMin( 1, 0 );
+  IPosition oPosMax( 1, 0 );
 
   minMax( dValMin, dValMax, oPosMin, oPosMax, oValue );
 
-  casacore::Double* pdAbsMax = new casacore::Double;
+  Double* pdAbsMax = new Double;
   *pdAbsMax = oAbs(oPosMax);
 
   return( *pdAbsMax );

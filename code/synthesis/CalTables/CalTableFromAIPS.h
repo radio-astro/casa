@@ -35,7 +35,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <summary> 
-// CalTableFromAIPS: Calibration table creation from AIPS casacore::FITS file
+// CalTableFromAIPS: Calibration table creation from AIPS FITS file
 // </summary>
 
 // <use visibility=export>
@@ -53,7 +53,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <synopsis>
 // The CalTable classes provide basic access to calibration tables.
 // This child class of CalTable adds the possibility to construct
-// a caltable from an AIPS casacore::FITS file.
+// a caltable from an AIPS FITS file.
 // </etymology>
 //
 // <example>
@@ -75,8 +75,8 @@ class CalTableFromAIPS : public CalTable
     // Default destructor
     ~CalTableFromAIPS();
 
-    // Construct from a specified casacore::FITS file name and table name.
-    CalTableFromAIPS(const casacore::String& fitsFileName, const casacore::String& tableName);
+    // Construct from a specified FITS file name and table name.
+    CalTableFromAIPS(const String& fitsFileName, const String& tableName);
 
  protected:
 

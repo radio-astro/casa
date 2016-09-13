@@ -31,7 +31,6 @@
 #include <display/QtViewer/QtDisplayDataGui.qo.h>
 
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 

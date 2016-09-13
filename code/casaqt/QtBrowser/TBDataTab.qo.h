@@ -57,14 +57,14 @@ class TBData;
 // QTableWidget.  The data stored with Qt::UserRole, however, may be of a
 // different type, such as an integer.  This storage is used when sorting
 // so that, for example, numbers can be sorted numerically rather than
-// lexiographically.  casacore::Array types are sorted using the first element for
+// lexiographically.  Array types are sorted using the first element for
 // one-dimensional arrays and the first dimension for other arrays.
 // </synopsis>
 
 class TBDataItem : public QTableWidgetItem {
 public:
-    // Constructor to take the casacore::String value and the type.
-    //TBDataItem(casacore::String value, casacore::String type);
+    // Constructor to take the String value and the type.
+    //TBDataItem(String value, String type);
     
     TBDataItem(TBData* data);
 
@@ -80,7 +80,7 @@ public:
     
 private:
     // Holds the data type.
-    casacore::String type;
+    String type;
     
     // Is true if the value stored for Qt::UserRole is an array dimension,
     // false otherwise.
@@ -90,7 +90,7 @@ private:
 
     
     // Set the Qt::UserRole and, if text is true, the Qt::DisplayRole values.
-    void set(casacore::String value, bool text);
+    void set(String value, bool text);
 };
 
 // <summary>
@@ -138,7 +138,7 @@ public:
     // Returns the current sort on the displayed data.  Each pair in the vector
     // is the name of the field with a bool indicating whether the sort is
     // ascending or not.
-    std::vector<std::pair<casacore::String, bool> >* getSortFields();
+    std::vector<std::pair<String, bool> >* getSortFields();
     
     
     // Updates the QTableWidget with new data that has been loaded into the
@@ -163,7 +163,7 @@ public:
     // Sorts the displayed data with the given order.  Each pair in the vector
     // is the name of the field with a bool indicating whether the sort is
     // ascending or not.
-    void sortBy(std::vector<std::pair<casacore::String, bool> >& s);
+    void sortBy(std::vector<std::pair<String, bool> >& s);
     
     // Sets the sort indicator on the QTableWidget for the given column with an
     // ascending arrow if asc is true or a descending arrow otherwise.
@@ -218,7 +218,7 @@ public slots:
 signals:
     // This signal is emitted when the user has edited a cell.  The parameter
     // describe which cell was edited and its new value.
-    void dataChanged(int row, int col, casacore::String newVal);
+    void dataChanged(int row, int col, String newVal);
 
     // This signal is emitted when the side panel is closed.  The QWidget
     // points to the widget that was just closed.
@@ -228,7 +228,7 @@ signals:
     // selects the "Follow subtable index reference" command.  The String
     // indicates which subtable was chosen, and the index indicates the chosen
     // index which is the value of the cell that was right-clicked on.
-    void followReferenceRequested(casacore::String subtable, int index);
+    void followReferenceRequested(String subtable, int index);
     
     // This signal is emitted when a sort is applied to the table.
     void sortEntered();
@@ -261,7 +261,7 @@ private:
     // Side panel.
     QCloseableWidget* rightWidget;
 
-    // casacore::List of cells that are highlighted (the row and column of the currently
+    // List of cells that are highlighted (the row and column of the currently
     // selected cell).
     std::vector<QTableWidgetItem*> highlightedCells;
 
@@ -296,7 +296,7 @@ private:
     std::vector<int> rowIndices;
 
     // The current sort order.
-    std::vector<std::pair<casacore::String, bool> > currSort;
+    std::vector<std::pair<String, bool> > currSort;
     
     // Used for handling right-clicks on headers.  Keeps track of the last
     // right-clicked header column number.

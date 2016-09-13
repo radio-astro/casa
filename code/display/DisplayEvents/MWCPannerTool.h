@@ -83,15 +83,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	public:
 		// Constructor
 		MWCPannerTool(Display::KeySym keysym = Display::K_Pointer_Button1,
-		              casacore::Bool scrollingAllowed = true);
+		              Bool scrollingAllowed = True);
 
 		// Destructor
 		virtual ~MWCPannerTool();
 
 		// Reset to non-showing, non-active.  Refreshes if necessary to erase
-		// (unless skipRefresh==true).
+		// (unless skipRefresh==True).
 		// (Does not unregister from WCs or disable future event handling).
-		virtual void reset(casacore::Bool skipRefresh=false);
+		virtual void reset(Bool skipRefresh=False);
 
 	protected:
 
@@ -113,31 +113,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Output callback to indicate that we have zoomed.  Override to
 		// handle, if needed.
-		virtual void zoomed(const casacore::Vector<casacore::Double> &/*linBlc*/,
-		                    const casacore::Vector<casacore::Double> &/*linTrc*/) {  };
+		virtual void zoomed(const Vector<Double> &/*linBlc*/,
+		                    const Vector<Double> &/*linTrc*/) {  };
 
 	private:
 
 		// execute the pan.  shift is the (2-element) shift vector for the
 		// zoom window, in linear coordinates.  Resets the tool, removing
 		// the line (if any) from screen
-		virtual void pan(casacore::Vector<casacore::Double> &shift);
+		virtual void pan(Vector<Double> &shift);
 
 		// Should we respond to mouse movement and button release?  Should
 		// we draw?  Set when the button is pushed in one of the tool's WCs.
-		casacore::Bool itsActive;
+		Bool itsActive;
 
 		// pixel coordinates of the pan vector.  1 = anchor, 2 = new position.
-		casacore::Int itsX1, itsY1, itsX2, itsY2;
+		Int itsX1, itsY1, itsX2, itsY2;
 
 		// allow scrolling via arrow keys, et. al.?
-		casacore::Bool itsScrollingAllowed;
+		Bool itsScrollingAllowed;
 
 		// prevents key repeat from piling up scroll events,
 		// if refresh can't keep up with them
 		// <group>
-		casacore::Double itsLastScrollTime;
-		casacore::Int itsLastKey;
+		Double itsLastScrollTime;
+		Int itsLastKey;
 		// </group>
 
 	};

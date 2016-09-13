@@ -128,10 +128,10 @@ CalAnalysis  - This constructor gets information from the new format calibration
 ~CalAnalysis - This destructor deallocates the internal memory of an instance.
 calName      - This member function returns the new format calibration table
                name.
-msName       - This member function returns the associated casacore::MS name.
+msName       - This member function returns the associated MS name.
 visCal       - This member function returns the visibility calibration type.
-parType      - This member function returns the parameter type ("casacore::Complex" or
-               "casacore::Float").
+parType      - This member function returns the parameter type ("Complex" or
+               "Float").
 polBasis     - This member function returns the polarization basis ("L" or "C").
 field        - This member function returns the field numbers.
 antenna      - This member function returns the antenna numbers.
@@ -166,18 +166,18 @@ calNameGet      - This member function gets the new format calibration table
                   name from the new format calibration table.
 calNameSet      - This member function sets the new format calibration table
                   name private variable.
-msNameGet       - This member function gets the associated casacore::MS name from the new
+msNameGet       - This member function gets the associated MS name from the new
                   format calibration table.
-msNameSet       - This member function sets the associated casacore::MS name private
+msNameSet       - This member function sets the associated MS name private
                   variable.
 visCalGet       - This member function gets the visibility calibration type from
                   the new format calibration table.
 visCalSet       - This member function sets the visibility calibration type
                   private variable.
-parTypeGet      - This member function gets the parameter type ("casacore::Complex" or
-                  "casacore::Float") from the new format calibration table.
-parTypeSet      - This member function sets the parameter type ("casacore::Complex" or
-                  "casacore::Float") private variable.
+parTypeGet      - This member function gets the parameter type ("Complex" or
+                  "Float") from the new format calibration table.
+parTypeSet      - This member function sets the parameter type ("Complex" or
+                  "Float") private variable.
 polBasisGet     - This member function gets the polarization basis ("L" or "C")
                   from the new format calibration table.
 polBasisSet     - This member function sets the polarization basis ("L" or "C")
@@ -298,8 +298,8 @@ Modification history:
               Private member functions antenna1Get(), antenna1Set(),
               antenna2Get(), and antenna2Set() added.
 2012 May 06 - Nick Elias, NRAO
-              casacore::Template private member functions parse<T>() and select<T>()
-              removed.  casacore::Template static public member function where<T>() added.
+              Template private member functions parse<T>() and select<T>()
+              removed.  Template static public member function where<T>() added.
               Private member functions getGroup(), rowSelect(), rowGroup(),
               chanSPW(), freqGroup(), and cubeGroup() added.
 2012 May 07 - Nick Elias, NRAO
@@ -321,42 +321,42 @@ class CalAnalysis {
     // SPW_INFO nested class
     class SPW_INFO {
       public:
-        casacore::Bool bValid;
-        casacore::uInt uiNumSPW;
-        casacore::Vector<casacore::uInt> oSPW;
-        casacore::Vector<casacore::uInt> oNumChannel;
-        casacore::Vector<casacore::Vector<casacore::Double> > oFrequency;
-        SPW_INFO( const casacore::String& oTableName );
+        Bool bValid;
+        uInt uiNumSPW;
+        Vector<uInt> oSPW;
+        Vector<uInt> oNumChannel;
+        Vector<Vector<Double> > oFrequency;
+        SPW_INFO( const String& oTableName );
         SPW_INFO( const SPW_INFO& oSPWInfoIn );
         SPW_INFO( void );
         ~SPW_INFO( void );
         SPW_INFO& operator=( const SPW_INFO& oSPWInfoIn );
-        casacore::Bool& freq( const casacore::Vector<casacore::uInt>& oSPWIn,
-            const casacore::Vector<casacore::Vector<casacore::uInt> >& oChannelIn,
-            casacore::Vector<casacore::Double>& oFreqOut ) const;
-        casacore::Bool& spwInfoCheck( const casacore::Vector<casacore::uInt>& oSPWIn,
-            const casacore::Vector<casacore::Vector<casacore::uInt> >& oChannelIn, casacore::Vector<casacore::uInt>& oSPWOut,
-            casacore::Vector<casacore::Vector<casacore::uInt> >& oChannelOut ) const;
+        Bool& freq( const Vector<uInt>& oSPWIn,
+            const Vector<Vector<uInt> >& oChannelIn,
+            Vector<Double>& oFreqOut ) const;
+        Bool& spwInfoCheck( const Vector<uInt>& oSPWIn,
+            const Vector<Vector<uInt> >& oChannelIn, Vector<uInt>& oSPWOut,
+            Vector<Vector<uInt> >& oChannelOut ) const;
     };
 
     // INPUT nested class (allowed T: CalStats::NONE, CalStatsFitter::FIT, or
     // CalStatsHist::HIST), used to hold the vector output of stats<T>()
     class INPUT {
       public:
-        casacore::Vector<casacore::uInt> oField;
-        casacore::Vector<casacore::uInt> oAntenna1;
-        casacore::Vector<casacore::Int> oAntenna2;
-        casacore::Double dStartTime;
-        casacore::Double dStopTime;
-        casacore::Vector<casacore::Double> oTime;
-        casacore::Vector<casacore::uInt> oSPW;
-        casacore::Vector<casacore::Vector<casacore::uInt> > oChannel;
-        casacore::Vector<casacore::String> oFeed;
+        Vector<uInt> oField;
+        Vector<uInt> oAntenna1;
+        Vector<Int> oAntenna2;
+        Double dStartTime;
+        Double dStopTime;
+        Vector<Double> oTime;
+        Vector<uInt> oSPW;
+        Vector<Vector<uInt> > oChannel;
+        Vector<String> oFeed;
         CalStats::AXIS eAxisIterUserID;
         RAP eRAP;
-        casacore::Bool bNorm;
-        casacore::Bool bUnwrap;
-        casacore::Double dJumpMax;
+        Bool bNorm;
+        Bool bUnwrap;
+        Double dJumpMax;
     };
 
     // OUTPUT nested class (allowed T: CalStats::NONE, CalStatsFitter::FIT, or
@@ -364,189 +364,189 @@ class CalAnalysis {
     template <typename T>
     class OUTPUT {
       public:
-        casacore::uInt uiField;
-        casacore::uInt uiAntenna1;
-        casacore::Int iAntenna2;
+        uInt uiField;
+        uInt uiAntenna1;
+        Int iAntenna2;
         RAP eRAP;
-        casacore::Bool bNorm;
-        casacore::Bool bUnwrap;
-        casacore::Double dJumpMax;
-        casacore::Matrix<CalStats::OUT<T> > oOut;
+        Bool bNorm;
+        Bool bUnwrap;
+        Double dJumpMax;
+        Matrix<CalStats::OUT<T> > oOut;
     };
 
     // Generic constructor
-    CalAnalysis( const casacore::String& oTableName );
+    CalAnalysis( const String& oTableName );
 
     // Destructor
     virtual ~CalAnalysis( void );
 
     // Return the calibration table name and keyword private variables
-    casacore::String& calName( void ) const;
-    casacore::String& msName( void ) const;
-    casacore::String& visCal( void ) const;
-    casacore::String& parType( void ) const;
-    casacore::String& polBasis( void ) const;
+    String& calName( void ) const;
+    String& msName( void ) const;
+    String& visCal( void ) const;
+    String& parType( void ) const;
+    String& polBasis( void ) const;
 
     // Get the fields, antennas, times, and feeds
     // spectral windows
-    casacore::Vector<casacore::uInt>& field( void ) const;
-    casacore::Vector<casacore::uInt>& antenna( void ) const;
-    casacore::Vector<casacore::uInt>& antenna1( void ) const;
-    casacore::Vector<casacore::Int>& antenna2( void ) const;
-    casacore::Vector<casacore::Double>& time( void ) const;
-    casacore::Vector<casacore::String>& feed( void ) const;
+    Vector<uInt>& field( void ) const;
+    Vector<uInt>& antenna( void ) const;
+    Vector<uInt>& antenna1( void ) const;
+    Vector<Int>& antenna2( void ) const;
+    Vector<Double>& time( void ) const;
+    Vector<String>& feed( void ) const;
 
     // Get the number of spectral windows, spectral windows, number of channels
     // for each spectral window, and frequencies for each spectral window
-    casacore::uInt& numspw( void ) const;
-    casacore::Vector<casacore::uInt>& spw( void ) const;
-    casacore::Vector<casacore::uInt>& numChannel( void ) const;
-    casacore::Vector<casacore::Vector<casacore::Double> >& freq( void ) const;
+    uInt& numspw( void ) const;
+    Vector<uInt>& spw( void ) const;
+    Vector<uInt>& numChannel( void ) const;
+    Vector<Vector<Double> >& freq( void ) const;
 
     // Calculate statistics for the specified fields, antennas, time range,
     // feeds, spectral windows, and channels (allowed T: CalStats::NONE gets
     // data without calculating statistics, CalStatsFitter::FIT calculates fits,
     // and CalStatsHist::HIST calculates histogram statistics).
     template <typename T>
-    casacore::Vector<OUTPUT<T> >& stats( const INPUT& oInput,
+    Vector<OUTPUT<T> >& stats( const INPUT& oInput,
         const CalStats::ARG<T>& oArg );
 
-    // casacore::Function to determine whether a value is present in an array
+    // Function to determine whether a value is present in an array
     template <typename T>
-    static casacore::Bool& exists( const T& tValue, const casacore::Vector<T>& oValue );
+    static Bool& exists( const T& tValue, const Vector<T>& oValue );
 
-    // casacore::Function to determine the index of a value present in an array
+    // Function to determine the index of a value present in an array
     template <typename T>
-    static casacore::Bool& where( const T& tValue, const casacore::Vector<T>& oInput,
-        casacore::uInt& uiIndex );
+    static Bool& where( const T& tValue, const Vector<T>& oInput,
+        uInt& uiIndex );
 
-    // casacore::Function to return sorted unique values of a vector
+    // Function to return sorted unique values of a vector
     template <typename T>
-    static casacore::Vector<T>& unique( const casacore::Vector<T>& oVector );
+    static Vector<T>& unique( const Vector<T>& oVector );
 
   private:
     
     // Get the calibration table name and set the private variable
-    casacore::String oCalName;
-    casacore::String& calNameGet( const casacore::String& oTableName );
-    void calNameSet( const casacore::String& oCalNameIn );
+    String oCalName;
+    String& calNameGet( const String& oTableName );
+    void calNameSet( const String& oCalNameIn );
 
-    // Get the associated casacore::MS name and set the private variable
-    casacore::String oMSName;
-    casacore::String& msNameGet( const casacore::String& oTableName );
-    void msNameSet( const casacore::String& oMSNameIn );
+    // Get the associated MS name and set the private variable
+    String oMSName;
+    String& msNameGet( const String& oTableName );
+    void msNameSet( const String& oMSNameIn );
 
     // Get the visibility calibration type and set the private variable
-    casacore::String oVisCal;
-    casacore::String& visCalGet( const casacore::String& oTableName );
-    void visCalSet( const casacore::String& oVisCalIn );
+    String oVisCal;
+    String& visCalGet( const String& oTableName );
+    void visCalSet( const String& oVisCalIn );
 
     // Get the parameter column type and set the private variable
-    casacore::String oParType;
-    casacore::String& parTypeGet( const casacore::String& oTableName );
-    void parTypeSet( const casacore::String& oParTypeIn );
+    String oParType;
+    String& parTypeGet( const String& oTableName );
+    void parTypeSet( const String& oParTypeIn );
 
     // Get the polarization basis and set the private variable
-    casacore::String oPolBasis;
-    casacore::String& polBasisGet( const casacore::String& oTableName );
-    void polBasisSet( const casacore::String& oPolBasisIn );
+    String oPolBasis;
+    String& polBasisGet( const String& oTableName );
+    void polBasisSet( const String& oPolBasisIn );
 
     // Get the field numbers and set the private variables
-    casacore::uInt uiNumField; casacore::Vector<casacore::uInt> oField;
-    casacore::Vector<casacore::uInt>& fieldGet( const casacore::String& oTableName );
-    void fieldSet( const casacore::Vector<casacore::uInt>& oFieldIn );
-    casacore::Bool& fieldCheck( const casacore::Vector<casacore::uInt>& oFieldIn,
-        casacore::Vector<casacore::uInt>& oFieldOut ) const;
+    uInt uiNumField; Vector<uInt> oField;
+    Vector<uInt>& fieldGet( const String& oTableName );
+    void fieldSet( const Vector<uInt>& oFieldIn );
+    Bool& fieldCheck( const Vector<uInt>& oFieldIn,
+        Vector<uInt>& oFieldOut ) const;
 
     // Get the antenna numbers and set the private variables
-    casacore::uInt uiNumAntenna; casacore::Vector<casacore::uInt> oAntenna;
-    casacore::Vector<casacore::uInt>& antennaGet( const casacore::String& oTableName );
-    void antennaSet( const casacore::Vector<casacore::uInt>& oAntennaIn );
+    uInt uiNumAntenna; Vector<uInt> oAntenna;
+    Vector<uInt>& antennaGet( const String& oTableName );
+    void antennaSet( const Vector<uInt>& oAntennaIn );
 
     // Get the antenna 1 numbers and set the private variables
-    casacore::uInt uiNumAntenna1; casacore::Vector<casacore::uInt> oAntenna1;
-    casacore::Vector<casacore::uInt>& antenna1Get( const casacore::String& oTableName );
-    void antenna1Set( const casacore::Vector<casacore::uInt>& oAntenna1In );
-    casacore::Bool& antenna1Check( const casacore::Vector<casacore::uInt>& oAntenna1In,
-        casacore::Vector<casacore::uInt>& oAntenna1Out ) const;
+    uInt uiNumAntenna1; Vector<uInt> oAntenna1;
+    Vector<uInt>& antenna1Get( const String& oTableName );
+    void antenna1Set( const Vector<uInt>& oAntenna1In );
+    Bool& antenna1Check( const Vector<uInt>& oAntenna1In,
+        Vector<uInt>& oAntenna1Out ) const;
 
     // Get the antenna 2 numbers and set the private variables
-    casacore::uInt uiNumAntenna2; casacore::Vector<casacore::Int> oAntenna2;
-    casacore::Vector<casacore::Int>& antenna2Get( const casacore::String& oTableName );
-    void antenna2Set( const casacore::Vector<casacore::Int>& oAntenna2In );
-    casacore::Bool& antenna2Check( const casacore::Vector<casacore::Int>& oAntenna2In,
-        casacore::Vector<casacore::Int>& oAntenna2Out ) const;
+    uInt uiNumAntenna2; Vector<Int> oAntenna2;
+    Vector<Int>& antenna2Get( const String& oTableName );
+    void antenna2Set( const Vector<Int>& oAntenna2In );
+    Bool& antenna2Check( const Vector<Int>& oAntenna2In,
+        Vector<Int>& oAntenna2Out ) const;
 
     // Get the times and set the private variables
-    casacore::uInt uiNumTime; casacore::Vector<casacore::Double> oTime;
-    casacore::Vector<casacore::Double>& timeGet( const casacore::String& oTableName );
-    void timeSet( const casacore::Vector<casacore::Double>& oTimeIn );
-    casacore::Bool& timeCheck( const casacore::Double& dStartTimeIn, const casacore::Double& dStopTimeIn,
-        casacore::Double& dStartTimeOut, casacore::Double& dStopTimeOut,
-        casacore::Vector<casacore::Double>& oTimeOut ) const;
+    uInt uiNumTime; Vector<Double> oTime;
+    Vector<Double>& timeGet( const String& oTableName );
+    void timeSet( const Vector<Double>& oTimeIn );
+    Bool& timeCheck( const Double& dStartTimeIn, const Double& dStopTimeIn,
+        Double& dStartTimeOut, Double& dStopTimeOut,
+        Vector<Double>& oTimeOut ) const;
 
     // Get the feeds and set the private variables
-    casacore::uInt uiNumFeed; casacore::Vector<casacore::String> oFeed;
-    casacore::Vector<casacore::String>& feedGet( const casacore::String& oTableName );
-    void feedSet( const casacore::Vector<casacore::String>& oFeedIn );
-    casacore::Bool& feedCheck( const casacore::Vector<casacore::String>& oFeedIn,
-        casacore::Vector<casacore::String>& oFeedOut ) const;
+    uInt uiNumFeed; Vector<String> oFeed;
+    Vector<String>& feedGet( const String& oTableName );
+    void feedSet( const Vector<String>& oFeedIn );
+    Bool& feedCheck( const Vector<String>& oFeedIn,
+        Vector<String>& oFeedOut ) const;
 
     // Get the spectral window information and set the private variables
     SPW_INFO oSPWInfo;
-    SPW_INFO& spwInfoGet( const casacore::String& oTableName );
+    SPW_INFO& spwInfoGet( const String& oTableName );
     void spwInfoSet( const SPW_INFO& oSPWInfoIn );
 
     // Check and possibly fix the inputs to the stats<T>() member function
-    casacore::Bool& statsCheckInput( const CalAnalysis::INPUT& oInputIn,
+    Bool& statsCheckInput( const CalAnalysis::INPUT& oInputIn,
         CalAnalysis::INPUT& oInputOut );
 
     // Gets the data from the new format calibration table grouped according to
     // unique combinations of (field,antenna1,antenna2)
-    casacore::Bool& getGroup( const NewCalTable& oNCT, const CalAnalysis::INPUT& oInput,
-        casacore::Vector<casacore::uInt>& oFieldGroup, casacore::Vector<casacore::uInt>& oAntenna1Group,
-        casacore::Vector<casacore::Int>& oAntenna2Group, casacore::Vector<casacore::Vector<casacore::Double> >& oTimeUniqueGroup,
-        casacore::Vector<casacore::Vector<casacore::Double> >& oFreqGroup,
-        casacore::Vector<casacore::Cube<casacore::DComplex> >& oCParamGroup,
-        casacore::Vector<casacore::Cube<casacore::Double> >& oFParamGroup,
-        casacore::Vector<casacore::Cube<casacore::Double> >& oParamErrGroup,
-        casacore::Vector<casacore::Cube<casacore::Bool> >& oFlagGroup ) const;
+    Bool& getGroup( const NewCalTable& oNCT, const CalAnalysis::INPUT& oInput,
+        Vector<uInt>& oFieldGroup, Vector<uInt>& oAntenna1Group,
+        Vector<Int>& oAntenna2Group, Vector<Vector<Double> >& oTimeUniqueGroup,
+        Vector<Vector<Double> >& oFreqGroup,
+        Vector<Cube<DComplex> >& oCParamGroup,
+        Vector<Cube<Double> >& oFParamGroup,
+        Vector<Cube<Double> >& oParamErrGroup,
+        Vector<Cube<Bool> >& oFlagGroup ) const;
 
     // Select the rows based on the inputs
-    casacore::Bool& rowSelect( const NewCalTable& oNCT, const CalAnalysis::INPUT& oInput,
-        casacore::Vector<casacore::uInt>& oRowSelect ) const;
+    Bool& rowSelect( const NewCalTable& oNCT, const CalAnalysis::INPUT& oInput,
+        Vector<uInt>& oRowSelect ) const;
 
     // Return rows and other quantities for each group
-    casacore::Bool& rowGroup( const NewCalTable& oNCT, const casacore::Vector<casacore::uInt>& oRowSelect,
-        casacore::Vector<casacore::Vector<casacore::uInt> >& oRowGroup, casacore::Vector<casacore::uInt>& oFieldGroup,
-        casacore::Vector<casacore::uInt>& oAntenna1Group, casacore::Vector<casacore::Int>& oAntenna2Group,
-        casacore::Vector<casacore::Vector<casacore::uInt> >& oSPWGroup,
-        casacore::Vector<casacore::Vector<casacore::uInt> >& oSPWUniqueGroup,
-        casacore::Vector<casacore::Vector<casacore::Double> >& oTimeGroup,
-        casacore::Vector<casacore::Vector<casacore::Double> >& oTimeUniqueGroup ) const;
+    Bool& rowGroup( const NewCalTable& oNCT, const Vector<uInt>& oRowSelect,
+        Vector<Vector<uInt> >& oRowGroup, Vector<uInt>& oFieldGroup,
+        Vector<uInt>& oAntenna1Group, Vector<Int>& oAntenna2Group,
+        Vector<Vector<uInt> >& oSPWGroup,
+        Vector<Vector<uInt> >& oSPWUniqueGroup,
+        Vector<Vector<Double> >& oTimeGroup,
+        Vector<Vector<Double> >& oTimeUniqueGroup ) const;
 
-    // casacore::Map the spectral windows and determine the start channels (for
+    // Map the spectral windows and determine the start channels (for
     // concatenating frequencies from different spectral windows)
-    casacore::Bool& chanSPW( const casacore::Vector<casacore::uInt>& oSPW, const INPUT& oInput,
-        casacore::Vector<casacore::uInt>& oSPWMap, casacore::Vector<casacore::uInt>& oChanStart ) const;
+    Bool& chanSPW( const Vector<uInt>& oSPW, const INPUT& oInput,
+        Vector<uInt>& oSPWMap, Vector<uInt>& oChanStart ) const;
 
     // Get the frequencies for each goup
-    casacore::Bool& freqGroup( const INPUT& oInput,
-        const casacore::Vector<casacore::Vector<casacore::uInt> >& oSPWUniqueGroup,
-        casacore::Vector<casacore::Vector<casacore::Double> >& oFreqGroup ) const;
+    Bool& freqGroup( const INPUT& oInput,
+        const Vector<Vector<uInt> >& oSPWUniqueGroup,
+        Vector<Vector<Double> >& oFreqGroup ) const;
 
     // Get the data cubes for each group
-    casacore::Bool& cubeGroup( const NewCalTable& oNCT, const INPUT& oInput,
-        const casacore::Vector<casacore::Vector<casacore::uInt> >& oRowGroup,
-        const casacore::Vector<casacore::Vector<casacore::uInt> >& oSPWGroup,
-        const casacore::Vector<casacore::Vector<casacore::uInt> >& oSPWUniqueGroup,
-        const casacore::Vector<casacore::Vector<casacore::Double> >& oTimeGroup,
-        const casacore::Vector<casacore::Vector<casacore::Double> >& oTimeUniqueGroup,
-        const casacore::Vector<casacore::Vector<casacore::Double> >& oFreqGroup,
-        casacore::Vector<casacore::Cube<casacore::DComplex> >& oCParamGroup,
-        casacore::Vector<casacore::Cube<casacore::Double> >& oFParamGroup,
-        casacore::Vector<casacore::Cube<casacore::Double> >& oParamErrGroup,
-        casacore::Vector<casacore::Cube<casacore::Bool> >& oFlagGroup ) const;
+    Bool& cubeGroup( const NewCalTable& oNCT, const INPUT& oInput,
+        const Vector<Vector<uInt> >& oRowGroup,
+        const Vector<Vector<uInt> >& oSPWGroup,
+        const Vector<Vector<uInt> >& oSPWUniqueGroup,
+        const Vector<Vector<Double> >& oTimeGroup,
+        const Vector<Vector<Double> >& oTimeUniqueGroup,
+        const Vector<Vector<Double> >& oFreqGroup,
+        Vector<Cube<DComplex> >& oCParamGroup,
+        Vector<Cube<Double> >& oFParamGroup,
+        Vector<Cube<Double> >& oParamErrGroup,
+        Vector<Cube<Bool> >& oFlagGroup ) const;
 
   protected:
 
@@ -599,7 +599,7 @@ oArg<T> - This reference to a CalStats::ARG<T>() instance contains the extra
 
 Outputs:
 --------
-The reference to the casacore::Vector<CalAnalysis::OUTPUT<T> >() instance containing the
+The reference to the Vector<CalAnalysis::OUTPUT<T> >() instance containing the
 statistics, returned via the function value.
 
 Modification history:
@@ -613,7 +613,7 @@ Modification history:
               ROCTIter()) and other classes.  Added a RAP enum as an input
               parameter.
 2012 Apr 02 - Nick Elias, NRAO
-              casacore::Input parameter dJumpMax added.
+              Input parameter dJumpMax added.
 2012 Apr 25 - Nick Elias, NRAO
               The start and stop channel lists versus spectral window are
               replaced with a channel list versus spectral window.
@@ -621,7 +621,7 @@ Modification history:
               All input parameter instances grouped together as a INPUT()
               instance.
 2012 Apr 27 - Nick Elias, NRAO
-              casacore::Input parameters are now checked and fixed by the
+              Input parameters are now checked and fixed by the
               statsCheckInput() member function.
 2012 May 03 - Nick Elias, NRAO
               Replaced the new format calibration table iterator with straight
@@ -637,70 +637,70 @@ Modification history:
 // -----------------------------------------------------------------------------
 
 template <typename T>
-casacore::Vector<CalAnalysis::OUTPUT<T> >& CalAnalysis::stats(
+Vector<CalAnalysis::OUTPUT<T> >& CalAnalysis::stats(
     const CalAnalysis::INPUT& oInput, const CalStats::ARG<T>& oArg ) {
 
   // Initialize the output vector containing statistics for each field ID,
   // antenna 1, and antenna 2
 
-  casacore::Vector<CalAnalysis::OUTPUT<T> >* poOutput =
-      new casacore::Vector<CalAnalysis::OUTPUT<T> >();
+  Vector<CalAnalysis::OUTPUT<T> >* poOutput =
+      new Vector<CalAnalysis::OUTPUT<T> >();
 
 
   // Check and fix the inputs
 
   INPUT oInputNew;
 
-  casacore::Bool bCheck = statsCheckInput( oInput, oInputNew );
+  Bool bCheck = statsCheckInput( oInput, oInputNew );
 
   if ( !bCheck ) {
-    casacore::LogIO log( casacore::LogOrigin( "CalAnalysis", "stats<T>()", WHERE ) );
-    log << casacore::LogIO::WARN << "Invalid parameter(s)" << casacore::LogIO::POST;
+    LogIO log( LogOrigin( "CalAnalysis", "stats<T>()", WHERE ) );
+    log << LogIO::WARN << "Invalid parameter(s)" << LogIO::POST;
     return( *poOutput );
   }
 
 
   // Create an instance of the new format calibration table class
   // Use createCT to enforce backward compatibility
-  NewCalTable oNCT =  NewCalTable::createCT( oCalName, casacore::Table::Old, casacore::Table::Memory );
+  NewCalTable oNCT =  NewCalTable::createCT( oCalName, Table::Old, Table::Memory );
 
 
   // Get the cubes for each group
 
-  casacore::Vector<casacore::uInt> oFieldGroup;
-  casacore::Vector<casacore::uInt> oAntenna1Group;
-  casacore::Vector<casacore::Int> oAntenna2Group;
+  Vector<uInt> oFieldGroup;
+  Vector<uInt> oAntenna1Group;
+  Vector<Int> oAntenna2Group;
 
-  casacore::Vector<casacore::Vector<casacore::Double> > oTimeUniqueGroup;
-  casacore::Vector<casacore::Vector<casacore::Double> > oFreqGroup;
+  Vector<Vector<Double> > oTimeUniqueGroup;
+  Vector<Vector<Double> > oFreqGroup;
 
-  casacore::Vector<casacore::Cube<casacore::DComplex> > oCParamGroup;
-  casacore::Vector<casacore::Cube<casacore::Double> > oFParamGroup;
-  casacore::Vector<casacore::Cube<casacore::Double> > oParamErrGroup;
-  casacore::Vector<casacore::Cube<casacore::Bool> > oFlagGroup;
+  Vector<Cube<DComplex> > oCParamGroup;
+  Vector<Cube<Double> > oFParamGroup;
+  Vector<Cube<Double> > oParamErrGroup;
+  Vector<Cube<Bool> > oFlagGroup;
 
-  casacore::Bool bGetGroup = getGroup( oNCT, oInputNew, oFieldGroup, oAntenna1Group,
+  Bool bGetGroup = getGroup( oNCT, oInputNew, oFieldGroup, oAntenna1Group,
       oAntenna2Group, oTimeUniqueGroup, oFreqGroup, oCParamGroup, oFParamGroup,
       oParamErrGroup, oFlagGroup );
 
   if ( !bGetGroup ) {
-    casacore::LogIO log( casacore::LogOrigin( "CalAnalysis", "stats<T>()", WHERE ) );
-    log << casacore::LogIO::WARN << "Cannot parse group(s)" << casacore::LogIO::POST;
+    LogIO log( LogOrigin( "CalAnalysis", "stats<T>()", WHERE ) );
+    log << LogIO::WARN << "Cannot parse group(s)" << LogIO::POST;
     return( *poOutput );
   }
 
 
   // Resize the output vector (each group corresponds to an element of
-  // casacore::Vector<OUTPUT<T> >())
+  // Vector<OUTPUT<T> >())
 
-  casacore::uInt uiNumGroup = oFieldGroup.nelements();
+  uInt uiNumGroup = oFieldGroup.nelements();
 
-  poOutput->resize( uiNumGroup, false );
+  poOutput->resize( uiNumGroup, False );
 
 
   // Send each group to CalStats<T>() and perform the desired operation
 
-  for ( casacore::uInt g=0; g<uiNumGroup; g++ ) {
+  for ( uInt g=0; g<uiNumGroup; g++ ) {
 
     poOutput->operator[](g).uiField = oFieldGroup[g];
     poOutput->operator[](g).uiAntenna1 = oAntenna1Group[g];
@@ -714,25 +714,25 @@ casacore::Vector<CalAnalysis::OUTPUT<T> >& CalAnalysis::stats(
 
     try {
 
-      switch ((casacore::uInt) oInputNew.eRAP) {
-        case (casacore::uInt) REAL:
+      switch ((uInt) oInputNew.eRAP) {
+        case (uInt) REAL:
           poCS = (CalStats*) new CalStatsReal( oFParamGroup[g],
               oParamErrGroup[g], oFlagGroup[g], oInputNew.oFeed, oFreqGroup[g],
               oTimeUniqueGroup[g], oInputNew.eAxisIterUserID );
           break;
-	case (casacore::uInt) AMPLITUDE:
+	case (uInt) AMPLITUDE:
 	  poCS = (CalStats*) new CalStatsAmp( oCParamGroup[g],
               oParamErrGroup[g], oFlagGroup[g], oInputNew.oFeed, oFreqGroup[g],
               oTimeUniqueGroup[g], oInputNew.eAxisIterUserID, oInputNew.bNorm );
           break;
-	case (casacore::uInt) PHASE:
+	case (uInt) PHASE:
 	  poCS = (CalStats*) new CalStatsPhase( oCParamGroup[g],
               oParamErrGroup[g], oFlagGroup[g], oInputNew.oFeed, oFreqGroup[g],
               oTimeUniqueGroup[g], oInputNew.eAxisIterUserID, oInputNew.bUnwrap,
               oInputNew.dJumpMax );
           break;
         default:
-          throw( casacore::AipsError( "Invalid parameter (REAL, AMPLITUDE, or PHASE)" ) );
+          throw( AipsError( "Invalid parameter (REAL, AMPLITUDE, or PHASE)" ) );
       }
 
       poOutput->operator[](g).oOut = poCS->stats<T>( oArg );
@@ -741,19 +741,19 @@ casacore::Vector<CalAnalysis::OUTPUT<T> >& CalAnalysis::stats(
 
     }
 
-    catch ( casacore::AipsError oAE ) {
-      casacore::LogIO log( casacore::LogOrigin( "CalAnalysis", "stats<T>()", WHERE ) );
-      log << casacore::LogIO::WARN << oAE.getMesg()
+    catch ( AipsError oAE ) {
+      LogIO log( LogOrigin( "CalAnalysis", "stats<T>()", WHERE ) );
+      log << LogIO::WARN << oAE.getMesg()
           << ", iteration (field,antenna1,antenna2) = (" << oFieldGroup[g]
           << "," << oAntenna1Group[g] << "," << oAntenna2Group[g]
-          << "), continuing ..." << casacore::LogIO::POST;
+          << "), continuing ..." << LogIO::POST;
       poOutput->operator[](g).oOut = CalStats::OUT<T>();
     }
 
   }
 
 
-  // Return the reference to the casacore::Vector<CalAnalysis::OUTPUT<T> > instance
+  // Return the reference to the Vector<CalAnalysis::OUTPUT<T> > instance
 
   return( *poOutput );
 
@@ -778,11 +778,11 @@ This member function determines whether a value appears in a vector.
 Inputs:
 -------
 tValue - This reference to a T variable contains the desired value.
-oValue - This reference to a casacore::Vector<T> instance contains the values.
+oValue - This reference to a Vector<T> instance contains the values.
 
 Outputs:
 --------
-The reference to the existance casacore::Bool variable, returned via the function value.
+The reference to the existance Bool variable, returned via the function value.
 
 Modification history:
 ---------------------
@@ -794,14 +794,14 @@ Modification history:
 // -----------------------------------------------------------------------------
 
 template <typename T>
-casacore::Bool& CalAnalysis::exists( const T& tValue, const casacore::Vector<T>& oValue ) {
+Bool& CalAnalysis::exists( const T& tValue, const Vector<T>& oValue ) {
 
   // Determine whether the value is present in an array and return the boolean
 
-  casacore::Bool* pbValue = new casacore::Bool( false );
+  Bool* pbValue = new Bool( False );
 
-  for ( casacore::uInt v=0; v<oValue.nelements(); v++ ) {
-    if ( tValue == oValue[v] ) *pbValue = true;
+  for ( uInt v=0; v<oValue.nelements(); v++ ) {
+    if ( tValue == oValue[v] ) *pbValue = True;
   }
 
   return( *pbValue );
@@ -821,13 +821,13 @@ This member function returns the index of a search value in a vector.
 Inputs:
 -------
 tValue - The T instance containing the value for which to search.
-oInput - The casacore::Vector<T> instance containing the values to be searched.
+oInput - The Vector<T> instance containing the values to be searched.
 
 Outputs:
 --------
-uiIndex - The casacore::uInt instance containing the index of the search T instance in the
-          searched casacore::Vector<T> instance.
-The reference to the casacore::Bool containing the success boolean, returned via the
+uiIndex - The uInt instance containing the index of the search T instance in the
+          searched Vector<T> instance.
+The reference to the Bool containing the success boolean, returned via the
 function value.
 
 Modification history:
@@ -840,12 +840,12 @@ Modification history:
 // -----------------------------------------------------------------------------
 
 template <typename T>
-casacore::Bool& CalAnalysis::where( const T& tValue, const casacore::Vector<T>& oInput,
-    casacore::uInt& uiIndex ) {
+Bool& CalAnalysis::where( const T& tValue, const Vector<T>& oInput,
+    uInt& uiIndex ) {
 
   // Find the index in the input vector
 
-  for ( casacore::uInt i=0; i<oInput.nelements(); i++ ) {
+  for ( uInt i=0; i<oInput.nelements(); i++ ) {
     if ( oInput[i] == tValue ) {
       uiIndex = i;
       break;
@@ -853,14 +853,14 @@ casacore::Bool& CalAnalysis::where( const T& tValue, const casacore::Vector<T>& 
   }
 
 
-  // If the value was found return true, otherwise return false
+  // If the value was found return True, otherwise return False
 
-  casacore::Bool* pbSuccess = new casacore::Bool;
+  Bool* pbSuccess = new Bool;
 
   if ( uiIndex < oInput.nelements() ) {
-    *pbSuccess = true;
+    *pbSuccess = True;
   } else {
-    *pbSuccess = false;
+    *pbSuccess = False;
   }
 
   return( *pbSuccess );
@@ -879,11 +879,11 @@ This member function returns a unique sorted vector from an input vector.
 
 Inputs:
 -------
-oVector - This reference to a casacore::Vector<T> instance contains the values.
+oVector - This reference to a Vector<T> instance contains the values.
 
 Outputs:
 --------
-The reference to the unique sorted casacore::Vector<T> instance, returned via the function
+The reference to the unique sorted Vector<T> instance, returned via the function
 value.
 
 Modification history:
@@ -896,40 +896,40 @@ Modification history:
 // -----------------------------------------------------------------------------
 
 template <typename T>
-casacore::Vector<T>& CalAnalysis::unique( const casacore::Vector<T>& oVector ) {
+Vector<T>& CalAnalysis::unique( const Vector<T>& oVector ) {
 
   // Initialize the unique vector
 
-  casacore::Vector<T>* poVectorUnique = new casacore::Vector<T>();
+  Vector<T>* poVectorUnique = new Vector<T>();
 
 
   // Form the unique vector
 
-  for ( casacore::uInt v1=0; v1<oVector.nelements(); v1++ ) {
+  for ( uInt v1=0; v1<oVector.nelements(); v1++ ) {
 
-    casacore::Bool bDupe = false;
+    Bool bDupe = False;
 
-    for ( casacore::uInt v2=0; v2<v1; v2++ ) {
+    for ( uInt v2=0; v2<v1; v2++ ) {
       if ( oVector[v1] == oVector[v2] ) {
-        bDupe = true;
+        bDupe = True;
 	break;
       }
     }
 
     if ( !bDupe ) {
-      poVectorUnique->resize( poVectorUnique->nelements()+1, true );
+      poVectorUnique->resize( poVectorUnique->nelements()+1, True );
       poVectorUnique->operator[](poVectorUnique->nelements()-1) = oVector[v1];
     }
 
   }
 
 
-  // casacore::Sort the unique vector
+  // Sort the unique vector
 
-  casacore::Sort::Order eOrder = casacore::Sort::Ascending;
-  casacore::Int iOptions = casacore::Sort::QuickSort;
+  Sort::Order eOrder = Sort::Ascending;
+  Int iOptions = Sort::QuickSort;
 
-  casacore::GenSort<T>::sort( *poVectorUnique, eOrder, (int) iOptions );
+  GenSort<T>::sort( *poVectorUnique, eOrder, (int) iOptions );
 
 
   // Return the unique sorted vector

@@ -74,7 +74,6 @@
 
 #include <sstream>
 
-using namespace casacore;
 namespace casa {
 
 const bool Flagger::dbg = false;
@@ -96,15 +95,15 @@ Flagger::Flagger ():mssel_p(0), vs_p(0), scan_looping(false)
 	agentCount_p=0;
 	opts_p = NULL;
 
-	logSink_p = LogSink(LogMessage::NORMAL, false);
+	logSink_p = LogSink(LogMessage::NORMAL, False);
 
 	nant = 0;
 	nifr = 0;
 	nfeed = 0;
 	nfeedcorr = 0;
 
-	setdata_p = false;
-	selectdata_p = false;
+	setdata_p = False;
+	selectdata_p = False;
 	// setupAgentDefaults();
 
 	quack_agent_exists = false;
@@ -123,11 +122,11 @@ Flagger::Flagger ( MeasurementSet &mset ) : mssel_p(0), vs_p(0), scan_looping(fa
 	agentCount_p=0;
 	opts_p = NULL;
 
-	logSink_p = LogSink(LogMessage::NORMAL, false);
+	logSink_p = LogSink(LogMessage::NORMAL, False);
 
 	nant = 0;
-	setdata_p = false;
-	selectdata_p = false;
+	setdata_p = False;
+	selectdata_p = False;
 	attach(mset);
 
 	quack_agent_exists = false;
@@ -144,7 +143,7 @@ Flagger::~Flagger ()
 	if ( !ms.tableName().length()) {
 		os << "Flagger closing out " << ms.tableName() << LogIO::POST;
 		ms.flush();
-		ms.relinquishAutoLocks(true);
+		ms.relinquishAutoLocks(True);
 		ms.unlock();
 
 		//originalms = NULL;
@@ -182,8 +181,8 @@ const RecordInterface & Flagger::defaultOptions ()
 	if ( !rec.nfields() )
 	{
 		rec.defineRecord(RF_GLOBAL, Record());
-		rec.define(RF_TRIAL, false);
-		rec.define(RF_RESET, false);
+		rec.define(RF_TRIAL, False);
+		rec.define(RF_RESET, False);
 
 		rec.setComment(RF_GLOBAL, "Record of global parameters applied to all methods");
 		rec.setComment(RF_TRIAL, "T for trial run (no flags written out)");
@@ -200,8 +199,8 @@ const RecordInterface & Flagger::defaultOptions ()
 bool Flagger::attach( MeasurementSet &mset, Bool setAgentDefaults )
 {
 	nant = 0;
-	setdata_p = false;
-	selectdata_p = false;
+	setdata_p = False;
+	selectdata_p = False;
 	if (vs_p)
 		delete vs_p;
 	vs_p = 0;
@@ -285,7 +284,7 @@ bool Flagger::attach( MeasurementSet &mset, Bool setAgentDefaults )
 	//os << "--------------------------------------------------" << LogIO::POST;
 	os<<str<<LogIO::POST;
 
-	return true;
+	return True;
 }
 
 // -----------------------------------------------------------------------
@@ -300,17 +299,17 @@ void Flagger::detach()
 	else {
 		os << "detaching from MS " << ms.tableName() << LogIO::POST;
 		nant = 0;
-		setdata_p = false;
-		selectdata_p = false;
+		setdata_p = False;
+		selectdata_p = False;
 		ms.flush();
-		ms.relinquishAutoLocks(true);
+		ms.relinquishAutoLocks(True);
 		ms.unlock();
 		ms = MeasurementSet();
 	}
 }
 
 /************************************ DATA SELECTION **************************************/
-/* return: true iff succesful
+/* return: True iff succesful
  */
 Bool Flagger::selectdata(Bool useoriginalms,
 		String field, String spw, String array,
@@ -331,7 +330,7 @@ Bool Flagger::selectdata(Bool useoriginalms,
 	if (ms.isNull()) {
 		os << LogIO::SEVERE << "NO MeasurementSet attached"
 				<< LogIO::POST;
-		return false;
+		return False;
 	}
 
 	/* If a diff sort-order is required, put it in here, and
@@ -344,7 +343,7 @@ Bool Flagger::selectdata(Bool useoriginalms,
 		if (!mssel_p)
 		{
 			cout << "Flagger::selectdata -> mssel_p is NULL !!!" << endl;
-			return false;
+			return False;
 		}
 		tms = mssel_p;
 	}
@@ -381,7 +380,7 @@ Bool Flagger::selectdata(Bool useoriginalms,
 	spw_selection = ((spw != "" && spw != "*") || uvrange.length() > 0);
 	// multiple spw agents are also needed for uvrange selections...
 
-	selectdata_p = false;
+	selectdata_p = False;
 	/* Print out selection info - before selecting ! */
 	if (dbg)
 	{
@@ -428,8 +427,8 @@ Bool Flagger::selectdata(Bool useoriginalms,
 
 	if (dbg) cout << "Correlations : " << correlations_p << endl;
 
-	selectdata_p = true;
-	return true;
+	selectdata_p = True;
+	return True;
 }
 
 Bool Flagger::setdata(
@@ -447,24 +446,24 @@ Bool Flagger::setdata(
 			<< " observation=" << observation << endl;
 
 	LogIO os(LogOrigin("Flagger", "setdata()", WHERE));
-	setdata_p = false;
+	setdata_p = False;
 
 
 	/* check the MS */
 	if (ms.isNull()) {
 		os << LogIO::SEVERE << "NO MeasurementSet attached"
 				<< LogIO::POST;
-		return false;
+		return False;
 	}
 
 	/* Parse selection parameters */
 	if (!spw.length()) spw = String("*");
 
-	if (!selectdata(true,field,spw,array,feed,scan, baseline,uvrange,time,correlation,intent,observation))
+	if (!selectdata(True,field,spw,array,feed,scan, baseline,uvrange,time,correlation,intent,observation))
 	{
 		os << LogIO::SEVERE << "Selection failed !!"
 				<< LogIO::POST;
-		return false;
+		return False;
 	}
 
 	/* Create selected reference MS */
@@ -500,7 +499,7 @@ Bool Flagger::setdata(
 			delete mssel_p; 
 			mssel_p=NULL;
 		}
-		return false;
+		return False;
 	}
 
 	/* Print out selection info - before selecting ! */
@@ -536,7 +535,7 @@ Bool Flagger::setdata(
 			throw AipsError("No measurement set selection available");
 		//vs_p = new VisSet(*mssel_p,sort,noselection,0.0);
 
-		Bool addScratch = false;
+		Bool addScratch = False;
 		vs_p = new VisSet(*mssel_p, sort2, noselection,
 				addScratch, timeInterval);
 		// Use default sort order - and no scratch cols....
@@ -552,14 +551,14 @@ Bool Flagger::setdata(
 	ms = *mssel_p;
 
 
-	setdata_p = true;
-	return true;
+	setdata_p = True;
+	return True;
 }
 
 
 Bool Flagger::selectDataChannel(){
 
-	if (!vs_p || !msselection_p) return false;
+	if (!vs_p || !msselection_p) return False;
 	/* Set channel selection in visiter */
 	/* Set channel selection per spectral window - from msselection_p->getChanList(); */
 	// this is needed when "setdata" is used to select data for autoflag algorithms
@@ -583,11 +582,11 @@ Bool Flagger::selectDataChannel(){
 		}
 	}
 	else{
-		return false;
+		return False;
 	}
 
 
-	return true;
+	return True;
 }
 
 
@@ -732,7 +731,7 @@ Bool Flagger::fillSelections(Record &rec)
 		rec.mergeField(flagRec, RF_OBSERVATION, RecordInterface::OverwriteDuplicates);
 	}
 
-	return true;
+	return True;
 }
 
 
@@ -775,12 +774,12 @@ Bool Flagger::setmanualflags(Bool autocorr,
 	if (ms.isNull()) {
 		os << LogIO::SEVERE << "NO MeasurementSet attached"
 				<< LogIO::POST;
-		return false;
+		return False;
 	}
 	if (!selectdata_p) {
 		os << LogIO::SEVERE << "Please run selectdata with/without arguments before setmanualflags"
 				<< LogIO::POST;
-		return false;
+		return False;
 	}
 
 	/* Fill in an agent record */
@@ -797,14 +796,14 @@ Bool Flagger::setmanualflags(Bool autocorr,
 
 	/* If no selection depends on spw, ( i.e. no spw, chan, uvrange )
        then no need to make separate records for each spw. */
-	bool separatespw = false;
+	bool separatespw = False;
 	Int nrec;
 	if (spwlist.nelements() && spw_selection) {
-		separatespw = true;
+		separatespw = True;
 		nrec = spwlist.nelements();
 	}
 	else {
-		separatespw = false; nrec = 1;
+		separatespw = False; nrec = 1;
 	}
 
 	if (dbg) {
@@ -908,7 +907,7 @@ Bool Flagger::setmanualflags(Bool autocorr,
 			RecordDesc flagDesc;
 			flagDesc.addField(RF_SHADOW, TpBool);
 			Record flagRec(flagDesc);
-			flagRec.define(RF_SHADOW, true);
+			flagRec.define(RF_SHADOW, True);
 			selrec.mergeField(flagRec, RF_SHADOW, RecordInterface::OverwriteDuplicates);
 		}
 
@@ -916,7 +915,7 @@ Bool Flagger::setmanualflags(Bool autocorr,
 			RecordDesc flagDesc;
 			flagDesc.addField(RF_ELEVATION, TpBool);
 			Record flagRec(flagDesc);
-			flagRec.define(RF_ELEVATION, true);
+			flagRec.define(RF_ELEVATION, True);
 			selrec.mergeField(flagRec, RF_ELEVATION, RecordInterface::OverwriteDuplicates);
 		}
 
@@ -945,7 +944,7 @@ Bool Flagger::setmanualflags(Bool autocorr,
 	  RecordDesc flagDesc;       
 	  flagDesc.addField(RF_RESET, TpBool);
 	  Record flagRec(flagDesc);  
-	  flagRec.define(RF_RESET, true);
+	  flagRec.define(RF_RESET, True);
 	  selrec.mergeField(flagRec, RF_RESET, RecordInterface::OverwriteDuplicates);
 	  }
 		 */
@@ -1043,7 +1042,7 @@ Bool Flagger::setmanualflags(Bool autocorr,
 		addAgent(selrec);
 	}
 
-	return true;
+	return True;
 }
 
 Bool Flagger::setautoflagparams(String algorithm,Record &parameters)
@@ -1052,12 +1051,12 @@ Bool Flagger::setautoflagparams(String algorithm,Record &parameters)
 	if (ms.isNull()) {
 		os << LogIO::SEVERE << "NO MeasurementSet attached"
 				<< LogIO::POST;
-		return false;
+		return False;
 	}
 	if (!selectdata_p) {
 		os << LogIO::SEVERE << "Please run setdata with/without arguments before setautoflagparams"
 				<< LogIO::POST;
-		return false;
+		return False;
 	}
 
 	/* Create an agent record */
@@ -1132,7 +1131,7 @@ Bool Flagger::setautoflagparams(String algorithm,Record &parameters)
 	/* Add this agent to the list */
 	addAgent(selrec);
 
-	return true;
+	return True;
 }
 
 
@@ -1185,7 +1184,7 @@ Bool Flagger::clearflagselections(Int recordindex)
 
 	//      printflagselections();
 
-	return true;
+	return True;
 }
 
 Bool Flagger::printflagselections()
@@ -1200,7 +1199,7 @@ Bool Flagger::printflagselections()
 	}
 	else os << " No current agents " << LogIO::POST;
 
-	return true;
+	return True;
 }
 
 Bool Flagger::addAgent(RecordInterface &newAgent)
@@ -1218,7 +1217,7 @@ Bool Flagger::addAgent(RecordInterface &newAgent)
 
 	//      printflagselections();
 
-	return true;
+	return True;
 }
 
 
@@ -1671,7 +1670,7 @@ Record Flagger::run (Bool trial, Bool reset)
 
 					std::auto_ptr<ProgressMeter> progmeter(NULL);
 					if (chunk.num(TIME) > progmeter_limit) {
-						progmeter = std::auto_ptr<ProgressMeter>(new ProgressMeter(1.0,static_cast<Double>(chunk.num(TIME)+0.001),title+subtitle,"","","",true,pm_update_freq));
+						progmeter = std::auto_ptr<ProgressMeter>(new ProgressMeter(1.0,static_cast<Double>(chunk.num(TIME)+0.001),title+subtitle,"","","",True,pm_update_freq));
 					}
 
 					// start pass for all active agents
@@ -1690,13 +1689,13 @@ Record Flagger::run (Bool trial, Bool reset)
 							progmeter->update(itime);
 						}
 						chunk.newTime();
-						Bool anyActive = false;
-						anyActive=false;
+						Bool anyActive = False;
+						anyActive=False;
 						for( uInt i = 0; i<acc.size(); i++ )
 						{
 							//if ((acc[i]->getID() != "FlagExaminer") &&
 							if (active_init(i)) {
-								anyActive=true;
+								anyActive=True;
 							}
 						}
 
@@ -1723,7 +1722,7 @@ Record Flagger::run (Bool trial, Bool reset)
 								// change requested? Deactivate agent
 								if ( ! ( res == RFA::CONT || res == iter_mode(ival) ) )
 								{
-									active(ival) = false;
+									active(ival) = False;
 									nactive--;
 									iter_mode(ival)==RFA::DATA ? ndata-- : ndry--;
 									iter_mode(ival) = res;
@@ -1742,7 +1741,7 @@ Record Flagger::run (Bool trial, Bool reset)
 									{
 										ndata--; nactive--;
 										iter_mode(ival) = res;
-										active(ival) = false;
+										active(ival) = False;
 										if ( ndata <= 0 )
 											break;
 									}
@@ -1774,7 +1773,7 @@ Record Flagger::run (Bool trial, Bool reset)
 
 					std::auto_ptr<ProgressMeter> progmeter(NULL);
 					if (chunk.num(TIME) > progmeter_limit) {
-						progmeter = std::auto_ptr<ProgressMeter>(new ProgressMeter (1.0,static_cast<Double>(chunk.num(TIME)+0.001),title+subtitle,"","","",true,pm_update_freq));
+						progmeter = std::auto_ptr<ProgressMeter>(new ProgressMeter (1.0,static_cast<Double>(chunk.num(TIME)+0.001),title+subtitle,"","","",True,pm_update_freq));
 					}
 					// start pass for all active agents
 					for( uInt ival = 0; ival<acc.size(); ival++ )
@@ -1795,7 +1794,7 @@ Record Flagger::run (Bool trial, Bool reset)
 								if ( ! ( res == RFA::CONT || res == RFA::DRY ) )
 								{
 									iter_mode(ival) = res;
-									active(ival) = false;
+									active(ival) = False;
 									if ( --ndry <= 0 )
 										break;
 								}
@@ -1811,14 +1810,14 @@ Record Flagger::run (Bool trial, Bool reset)
 			//cout << opt << endl;
 			//cout << "any active = " << active_init << endl;
 
-			if ( !isFieldSet(opt, RF_TRIAL) && anyNE(active_init, false) )
+			if ( !isFieldSet(opt, RF_TRIAL) && anyNE(active_init, False) )
 			{
 				sprintf(subtitle,"pass (flag)");
 				//cout << "-----------subtitle=" << subtitle << endl;
 
 				std::auto_ptr<ProgressMeter> progmeter(NULL);
 				if (chunk.num(TIME) > progmeter_limit) {
-					progmeter = std::auto_ptr<ProgressMeter>(new ProgressMeter(1.0,static_cast<Double>(chunk.num(TIME)+0.001),title+"storing flags","","","",true,pm_update_freq));
+					progmeter = std::auto_ptr<ProgressMeter>(new ProgressMeter(1.0,static_cast<Double>(chunk.num(TIME)+0.001),title+"storing flags","","","",True,pm_update_freq));
 				}
 				for (uInt i = 0; i<acc.size(); i++)
 					if (active_init(i))
@@ -1832,18 +1831,18 @@ Record Flagger::run (Bool trial, Bool reset)
 					chunk.newTime();
 					//		  inRowFlags += sum(chunk.nrfIfr());
 
-					Bool anyActive = false;
-					anyActive=false;
+					Bool anyActive = False;
+					anyActive=False;
 					for( uInt i = 0; i<acc.size(); i++ ) {
 						//		      cout << i << " " << acc[i]->getID() << " " << active_init(i) << endl;
 						if ((acc[i]->getID() != "FlagExaminer") &&
 								active_init(i))
-							anyActive=true;
+							anyActive=True;
 					}
 
 					//cout << "anyActive" << anyActive << endl;
 
-					didSomething = (anyActive==true);
+					didSomething = (anyActive==True);
 					for( uInt i = 0; i<acc.size(); i++ ) {
 						if ( active_init(i) ) {
 							//if (acc[i]->getID() != "FlagExaminer" )
@@ -2046,7 +2045,7 @@ Bool Flagger::saveFlagVersion(String versionname, String comment, String merge )
 		os << LogIO::SEVERE << "Could not save Flag Version : " << x.getMesg() << LogIO::POST;
 		throw;
 	}
-	return true;
+	return True;
 }
 Bool Flagger::restoreFlagVersion(Vector<String> versionname, String merge )
 {
@@ -2059,9 +2058,9 @@ Bool Flagger::restoreFlagVersion(Vector<String> versionname, String merge )
 	catch (AipsError x)
 	{
 		os << LogIO::SEVERE << "Could not restore Flag Version : " << x.getMesg() << LogIO::POST;
-		return false;
+		return False;
 	}
-	return true;
+	return True;
 }
 Bool Flagger::deleteFlagVersion(Vector<String> versionname)
 {
@@ -2074,9 +2073,9 @@ Bool Flagger::deleteFlagVersion(Vector<String> versionname)
 	catch (AipsError x)
 	{
 		os << LogIO::SEVERE << "Could not delete Flag Version : " << x.getMesg() << LogIO::POST;
-		return false;
+		return False;
 	}
-	return true;
+	return True;
 }
 Bool Flagger::getFlagVersionList(Vector<String> &verlist)
 {
@@ -2088,7 +2087,7 @@ Bool Flagger::getFlagVersionList(Vector<String> &verlist)
 		Vector<String> vlist = fv.getVersionList();
 
 		num = verlist.nelements();
-		verlist.resize( num + vlist.nelements() + 1, true );
+		verlist.resize( num + vlist.nelements() + 1, True );
 		verlist[num] = String("\nMS : ") + originalms.tableName() + String("\n");
 		for(Int j=0;j<(Int)vlist.nelements();j++)
 			verlist[num+j+1] = vlist[j];
@@ -2096,9 +2095,9 @@ Bool Flagger::getFlagVersionList(Vector<String> &verlist)
 	catch (AipsError x)
 	{
 		os << LogIO::SEVERE << "Could not get Flag Version List : " << x.getMesg() << LogIO::POST;
-		return false;
+		return False;
 	}
-	return true;
+	return True;
 }
 
 

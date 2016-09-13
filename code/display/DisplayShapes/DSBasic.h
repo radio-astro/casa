@@ -80,23 +80,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Manage line width
 		// <group>
-		virtual void setLineWidth(const casacore::Int pixels);
-		virtual casacore::Int getLineWidth();
+		virtual void setLineWidth(const Int pixels);
+		virtual Int getLineWidth();
 		// </group>
 
 		// Standard fns
 		// <group>
 		virtual void draw(PixelCanvas* pc);
-		virtual void rotateAbout(const casacore::Float& angle, const casacore::Float& aboutX,
-		                         const casacore::Float& aboutY);
-		virtual void move(const casacore::Float& dX, const casacore::Float& dY);
-		virtual casacore::Record getOptions();
-		virtual casacore::Bool setOptions(const casacore::Record& settings);
+		virtual void rotateAbout(const Float& angle, const Float& aboutX,
+		                         const Float& aboutY);
+		virtual void move(const Float& dX, const Float& dY);
+		virtual Record getOptions();
+		virtual Bool setOptions(const Record& settings);
 		// </group>
 
 	private:
 
-		DParameterRange<casacore::Int>* itsLineWidth;
+		DParameterRange<Int>* itsLineWidth;
 
 	};
 

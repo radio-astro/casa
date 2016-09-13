@@ -33,9 +33,6 @@
 
 #include <casa/namespace.h>
 
-using namespace casacore;
-using namespace casa;
-
 Int main(Int argc, char *argv[]) {
 	Input input(1);
 	input.version("$ID:$");

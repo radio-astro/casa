@@ -25,7 +25,6 @@
 #include <flagging/Flagging/FlagAgentManual.h>
 #include <iostream>
 
-using namespace casacore;
 using namespace casa;
 
 void deleteFlags(string inputFile,Record dataSelection)

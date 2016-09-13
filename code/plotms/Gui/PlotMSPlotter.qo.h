@@ -73,13 +73,13 @@ public:
     virtual bool isInteractive() const;
 	virtual void canvasAdded( PlotCanvasPtr& canvas );
 	virtual void setAnnotationModeActive( PlotMSAction::Type type, bool active );
-	virtual vector<casacore::String> getFiles() const;
+	virtual vector<String> getFiles() const;
 
 
 	// Static //
     
     // Returns "about" text for the given implementation, using HTML or not.
-    static casacore::String aboutText(Plotter::Implementation implementation,
+    static String aboutText(Plotter::Implementation implementation,
                             bool useHTML = true);
     
     
@@ -143,7 +143,7 @@ public:
     // Pops up a dialog to ask the user the given question with the given
     // window title.  Returns true if the user says "Yes"; false for "No" or
     // otherwise rejecting the dialog.
-    bool showQuestion(const casacore::String& message, const casacore::String& title);
+    bool showQuestion(const String& message, const String& title);
     
 
 
@@ -152,10 +152,10 @@ public:
     // Plotter Customization Methods //
     
     // Sets the window title to the given.
-    void setWindowTitle(const casacore::String& windowTitle);
+    void setWindowTitle(const String& windowTitle);
     
     // Sets the status bar text to the given.
-    void setStatusText(const casacore::String& statusText);
+    void setStatusText(const String& statusText);
     
     // Clears the status bar text.
     void clearStatusText() { setStatusText(""); }
@@ -178,8 +178,8 @@ public:
     // Gets/Sets the text for the QAction associated with the given PlotMSApp
     // action.
     // <group>
-    casacore::String actionText(PlotMSAction::Type type);
-    void setActionText(PlotMSAction::Type type, const casacore::String& text);
+    String actionText(PlotMSAction::Type type);
+    void setActionText(PlotMSAction::Type type, const String& text);
     // </group>
     
     // Gets/Sets whether the QAction associated with the given PlotMSApp action
@@ -197,10 +197,10 @@ public:
 
 public slots:
     // Shows the given error/warning message in a GUI window.
-    virtual void showError(const casacore::String& message, const casacore::String& title, bool isWarning);
+    virtual void showError(const String& message, const String& title, bool isWarning);
     
     // Shows the given informational message in a GUI window.
-    virtual void showMessage(const casacore::String& message, const casacore::String& title, bool warning = false);
+    virtual void showMessage(const String& message, const String& title, bool warning = false);
    
     // Clears the message in a GUI window.
     virtual void clearMessage() { clearStatusText(); }
@@ -267,7 +267,7 @@ private:
     // Waiting threads.
     vector<PlotMSThread*> itsWaitingThreads_;
     
-    // casacore::Map between PlotMSApp actions and QActions.
+    // Map between PlotMSApp actions and QActions.
     QMap<PlotMSAction::Type, QAction*> itsActionMap_;
     
     // Action synchronizer.
@@ -309,7 +309,7 @@ private slots:
 
 	void tabChanged( );
 };
-typedef casacore::CountedPtr<PlotMSPlotter> PlotMSPlotterPtr;
+typedef CountedPtr<PlotMSPlotter> PlotMSPlotterPtr;
 
 }
 

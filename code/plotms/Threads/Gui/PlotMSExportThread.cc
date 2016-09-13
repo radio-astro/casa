@@ -32,7 +32,6 @@
 
 #include <QDebug>
 
-using namespace casacore;
 namespace casa {
 
 ////////////////////////////////////

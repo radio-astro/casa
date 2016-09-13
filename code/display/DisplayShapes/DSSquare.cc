@@ -31,7 +31,6 @@
 #include <casa/BasicSL/Constants.h>
 #include <casa/iostream.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	DSSquare::DSSquare() :
@@ -58,7 +57,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	Bool DSSquare::setOptions(const Record& settings) {
-		Bool localChange = false;
+		Bool localChange = False;
 		Record newsettings(settings);
 
 		if (newsettings.isDefined("size")) {
@@ -71,7 +70,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		}
 
-		if (DSRectangle::setOptions(newsettings)) localChange = true;
+		if (DSRectangle::setOptions(newsettings)) localChange = True;
 		return localChange;
 
 	}

@@ -73,7 +73,7 @@ class SimACoh  : public ACoh
 {
 public:
     // Construct from VisSet, seed and rms of additive noise (normal dist.)
-    SimACoh(casacore::Int seed=1, casacore::Double rms=0.1);
+    SimACoh(Int seed=1, Double rms=0.1);
  
     // Apply additive error (Inverse is minus)
     // <group>
@@ -81,11 +81,11 @@ public:
     virtual VisBuffer& applyInv(VisBuffer& vb);
     // </group>
 private:
-    casacore::Bool solve(VisEquation& /*ve*/) {return true;}
+    Bool solve(VisEquation& /*ve*/) {return True;}
     
     SimACoh();
-    casacore::MLCG rndGen_p;
-    casacore::Normal noiseDist_p;
+    MLCG rndGen_p;
+    Normal noiseDist_p;
 };
 
 

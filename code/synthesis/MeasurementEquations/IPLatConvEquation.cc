@@ -39,7 +39,6 @@
 #include <casa/Arrays/IPosition.h>
 #include <casa/Exceptions/Error.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 IPLatConvEquation::IPLatConvEquation(Lattice<Float> & psf, 
@@ -63,10 +62,10 @@ Bool IPLatConvEquation::residual(Lattice<Float> & result,
     LatticeModel intermediateModel (intermediate);
     if (LatConvEquation::evaluate(result, intermediateModel)) {
       result.copyData( LatticeExpr<Float>(result/itsQ) );
-      return true;
+      return True;
     }
   }
-  return false;
+  return False;
 }
 
 
@@ -80,10 +79,10 @@ Bool IPLatConvEquation::residual(Lattice<Float> & result,
     LatticeModel intermediateModel (intermediate);
     if (LatConvEquation::evaluate(result, intermediateModel)) {
      result.copyData( LatticeExpr<Float>(result/itsQ) );
-      return true;
+      return True;
     }
   }
-  return false;
+  return False;
 }
 
 // Local Variables: 

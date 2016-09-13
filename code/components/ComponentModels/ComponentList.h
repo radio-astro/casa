@@ -37,7 +37,7 @@
 #include <casa/Containers/Block.h>
 #include <tables/Tables/Table.h>
 
-namespace casacore{
+namespace casa { //# NAMESPACE CASA - BEGIN
 
 class String;
 class Path;
@@ -47,10 +47,6 @@ class MVAngle;
 class Unit;
 template <class T> class Vector;
 template <class Ms> class MeasRef;
-}
-
-namespace casa { //# NAMESPACE CASA - BEGIN
-
 
 // <summary> A class for manipulating groups of components </summary>
 
@@ -66,7 +62,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <etymology>
 //  Because the SkyComponents were originally stored in a linked list
 //  ComponentList seemed like a good name for this class. Now the list is gone
-//  (in favour of a casacore::Block<SkyComponent>) but the name has stuck.
+//  (in favour of a Block<SkyComponent>) but the name has stuck.
 // </etymology>
 //
 // <synopsis> 
@@ -100,11 +96,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </dl>
 
 // ComponentLists are memory based objects that can write their contents to and
-// from disk (ie a casacore::Table). To read a componentList from a casacore::Table the appropriate
+// from disk (ie a Table). To read a componentList from a Table the appropriate
 // constructor must be used. Alternatively an empty componentlist can be
 // created that is not associated with a Table. To save the list to disk it
 // must be given a name. This is done using the rename function. This will
-// rename the casacore::Table if the ComponentList was already associated with a Table.
+// rename the Table if the ComponentList was already associated with a Table.
 // Saving changes to the table on disk happens automatically when the list
 // is destructed or reset via the assignment operator (unless the table was
 // opened read-only).
@@ -131,7 +127,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </motivation>
 //
 // <thrown>
-// <li> casacore::AipsError - If an internal inconsistancy is detected, when compiled in 
+// <li> AipsError - If an internal inconsistancy is detected, when compiled in 
 // debug mode only.
 // </thrown>
 //
@@ -143,11 +139,11 @@ class ComponentList {
 public:
   // Sorting criteria for components
   enum SortCriteria {
-    // casacore::Sort the components by ABS(I flux), largest first.
+    // Sort the components by ABS(I flux), largest first.
     FLUX = 0,
-    // casacore::Sort the components by distance from the reference, closest first.
+    // Sort the components by distance from the reference, closest first.
     POSITION,
-    // casacore::Sort the components by fractional polarisation, biggest first.
+    // Sort the components by fractional polarisation, biggest first.
     POLARISATION,
     // No sorting is necessary
     UNSORTED,
@@ -157,11 +153,11 @@ public:
   // Construct a componentList with no members in the list
   ComponentList();
 
-  // Read a componentList from an existing table. By default the casacore::Table is
+  // Read a componentList from an existing table. By default the Table is
   // opened read-write.  Any subsequent changes made to a list opened 
   // read-only (i.e. via add(), remove(), or editing a non-const member 
   // component returned by component()) will not be saved to disk.
-  ComponentList(const casacore::Path& fileName, const casacore::Bool readOnly=false);
+  ComponentList(const Path& fileName, const Bool readOnly=False);
 
   // The Copy constructor uses reference semantics
   ComponentList(const ComponentList& other);
@@ -173,36 +169,36 @@ public:
   // The assignment operator uses reference semantics
   ComponentList& operator=(const ComponentList& other);
 
-  // Returns true if all the specified components are physically plausable. See
+  // Returns True if all the specified components are physically plausable. See
   // the  isPhysical function in the 
   // <linkto class="SkyCompBase">SkyCompBase</linkto> class 
   // for a precise definition of what this means.
   // <thrown>
-  // <li> casacore::AipsError - If the index is equal to or larger than the number of
+  // <li> AipsError - If the index is equal to or larger than the number of
   //                  elements in the list or less than zero
   // </thrown>
-  casacore::Bool isPhysical(const casacore::Vector<casacore::Int>& index) const;
+  Bool isPhysical(const Vector<Int>& index) const;
 
   // Calculate the integrated flux of all the members of the componentlist at
   // the specified direction & frequency, in a pixel of specified size.
-  Flux<casacore::Double> sample(const casacore::MDirection& sampleDir,
-		      const casacore::MVAngle& pixelLatSize,
-		      const casacore::MVAngle& pixelLongSize,
-		      const casacore::MFrequency& centerFreq) const;
+  Flux<Double> sample(const MDirection& sampleDir,
+		      const MVAngle& pixelLatSize,
+		      const MVAngle& pixelLongSize,
+		      const MFrequency& centerFreq) const;
 
   // Same as the previous function except that many directions & frequencies
   // are done at once.  The Flux is added into the values supplied in the
   // samples argument and this cube must have dimensions of:
   // [4, nDirs, nFreqs]. The polarisation and units of the flux added are
   // specified with the reqUnit and reqPol arguments.
-  void sample(casacore::Cube<casacore::Double>& samples,
-	      const casacore::Unit& reqUnit,
-	      const casacore::Vector<casacore::MVDirection>& directions, 
-	      const casacore::MeasRef<casacore::MDirection>& dirRef, 
-	      const casacore::MVAngle& pixelLatSize, 
-	      const casacore::MVAngle& pixelLongSize, 
-	      const casacore::Vector<casacore::MVFrequency>& frequencies,
-	      const casacore::MeasRef<casacore::MFrequency>& freqRef) const;
+  void sample(Cube<Double>& samples,
+	      const Unit& reqUnit,
+	      const Vector<MVDirection>& directions, 
+	      const MeasRef<MDirection>& dirRef, 
+	      const MVAngle& pixelLatSize, 
+	      const MVAngle& pixelLongSize, 
+	      const Vector<MVFrequency>& frequencies,
+	      const MeasRef<MFrequency>& freqRef) const;
 
   // Add a SkyComponent to the end of the ComponentList. The list length is
   // increased by one when using this function. By default the newly added
@@ -227,253 +223,253 @@ public:
   // from a list that was opened read-only; however, the table on disk will 
   // not be updated accordingly.  
   // <thrown>
-  // <li> casacore::AipsError - If the index is equal to or larger than the number of
+  // <li> AipsError - If the index is equal to or larger than the number of
   //                  elements in the list or is negative.
   // </thrown>
   // <group>
-  void remove(const casacore::uInt& index);
-  void remove(const casacore::Vector<casacore::Int>& indices);
+  void remove(const uInt& index);
+  void remove(const Vector<Int>& indices);
   // </group>
 
   // returns how many components are in the list.
-  casacore::uInt nelements() const;
+  uInt nelements() const;
 
-  // deselect the specified component. Throws an exception (casacore::AipsError) if any
+  // deselect the specified component. Throws an exception (AipsError) if any
   // element in the index is out of range, ie. index >= nelements().
   // <thrown>
-  // <li> casacore::AipsError - If the index is equal to or larger than the number of
+  // <li> AipsError - If the index is equal to or larger than the number of
   //                  elements in the list or less than zero
   // </thrown>
-  void deselect(const casacore::Vector<casacore::Int>& index);
+  void deselect(const Vector<Int>& index);
 
-  // select the specified component. Throws an exception (casacore::AipsError) if any
+  // select the specified component. Throws an exception (AipsError) if any
   // element in the index is out of range, ie. index >= nelements().
   // <thrown>
-  // <li> casacore::AipsError - If the index is equal to or larger than the number of
+  // <li> AipsError - If the index is equal to or larger than the number of
   //                  elements in the list or less than zero
   // </thrown>
-  void select(const casacore::Vector<casacore::Int>& index);
+  void select(const Vector<Int>& index);
 
-  // Returns a casacore::Vector whose indices indicate which components are selected
-  casacore::Vector<casacore::Int> selected() const;
+  // Returns a Vector whose indices indicate which components are selected
+  Vector<Int> selected() const;
 
 
   // set the label on the specified components to the specified string
   // <thrown>
-  // <li> casacore::AipsError - If the index is equal to or larger than the number of
+  // <li> AipsError - If the index is equal to or larger than the number of
   //                  elements in the list or less than zero
   // </thrown>
-  void setLabel(const casacore::Vector<casacore::Int>& which,
-		const casacore::String& newLabel);
+  void setLabel(const Vector<Int>& which,
+		const String& newLabel);
 
   // get the the flux as a double
   // param: which - the component number (0 based)
   // return The flux as a Quantity
-  void getFlux(casacore::Vector<casacore::Quantity>& fluxQuant, const casacore::Int& which) const;
-  void getFlux(casacore::Vector<casacore::Quantum<casacore::Complex> >& fluxQuant, const casacore::Int& which);
+  void getFlux(Vector<Quantity>& fluxQuant, const Int& which) const;
+  void getFlux(Vector<Quantum<Complex> >& fluxQuant, const Int& which);
 
   // get the associated polarizations as a vector of strings for the
   // specified component. Returned vector always has 4 elements.
-  casacore::Vector<casacore::String> getStokes(const casacore::Int& which) const;
+  Vector<String> getStokes(const Int& which) const;
 
   // set the flux on the specified components to the specified flux
   // <thrown>
-  // <li> casacore::AipsError - If the index is equal to or larger than the number of
+  // <li> AipsError - If the index is equal to or larger than the number of
   //                  elements in the list or less than zero
   // </thrown>
-  void setFlux(const casacore::Vector<casacore::Int>& which,
-	       const Flux<casacore::Double>& newFlux);
+  void setFlux(const Vector<Int>& which,
+	       const Flux<Double>& newFlux);
 
   // convert the flux on the specified components to the specified units
   // <thrown>
-  // <li> casacore::AipsError - If the index is equal to or larger than the number of
+  // <li> AipsError - If the index is equal to or larger than the number of
   //                  elements in the list or less than zero
   // </thrown>
-  void convertFluxUnit(const casacore::Vector<casacore::Int>& which,
-		       const casacore::Unit& unit);
+  void convertFluxUnit(const Vector<Int>& which,
+		       const Unit& unit);
   
   // convert the flux on the specified components to the specified 
   // polarisation representation
   // <thrown>
-  // <li> casacore::AipsError - If the index is equal to or larger than the number of
+  // <li> AipsError - If the index is equal to or larger than the number of
   //                  elements in the list or less than zero
   // </thrown>
-  void convertFluxPol(const casacore::Vector<casacore::Int>& which,
+  void convertFluxPol(const Vector<Int>& which,
 		      ComponentType::Polarisation pol);
   
   // set the reference direction on the specified components to the specified
   // direction. The reference frame is not changed, use the
   // <src>setRefFrame</src> function to do that.
   // <thrown>
-  // <li> casacore::AipsError - If the index is equal to or larger than the number of
+  // <li> AipsError - If the index is equal to or larger than the number of
   //                  elements in the list or less than zero
   // </thrown>
-  void setRefDirection(const casacore::Vector<casacore::Int>& which,
-		       const casacore::MVDirection& newDir);
+  void setRefDirection(const Vector<Int>& which,
+		       const MVDirection& newDir);
 
   // set the reference direction frame on the specified components to the
   // specified one. Does not convert the direction values.
   // <thrown>
-  // <li> casacore::AipsError - If the index is equal to or larger than the number of
+  // <li> AipsError - If the index is equal to or larger than the number of
   //                  elements in the list or less than zero
   // </thrown>
-  void setRefDirectionFrame(const casacore::Vector<casacore::Int>& which,
-			    casacore::MDirection::Types newFrame);
+  void setRefDirectionFrame(const Vector<Int>& which,
+			    MDirection::Types newFrame);
 
   // Convert the reference direction frame on the specified components to the
   // specified one. Changes the direction values.
   // <thrown>
-  // <li> casacore::AipsError - If the index is equal to or larger than the number of
+  // <li> AipsError - If the index is equal to or larger than the number of
   //                  elements in the list or less than zero
   // </thrown>
-  void convertRefDirection(const casacore::Vector<casacore::Int>& which,
-			   casacore::MDirection::Types newFrame);
+  void convertRefDirection(const Vector<Int>& which,
+			   MDirection::Types newFrame);
 
-  casacore::MDirection getRefDirection(casacore::Int which) const;
+  MDirection getRefDirection(Int which) const;
 
   // set the shape on the specified components to the specified one.
   // <thrown>
-  // <li> casacore::AipsError - If the index is equal to or larger than the number of
+  // <li> AipsError - If the index is equal to or larger than the number of
   //                  elements in the list or less than zero
   // </thrown>
-  void setShape(const casacore::Vector<casacore::Int>& which,
+  void setShape(const Vector<Int>& which,
 		const ComponentShape& newShape);
 
   // get the shape of the specified component as a const pointer. No need to
   // delete it, it will be deleted when the variable goes out of scope.
-  const ComponentShape* getShape(casacore::Int which) const;
+  const ComponentShape* getShape(Int which) const;
 
   // set the shape on the specified components to the specified one. However
   // this function unlike the previous one does not change the reference
   // direction to the one specified in the newShape object.
   // <thrown>
-  // <li> casacore::AipsError - If the index is equal to or larger than the number of
+  // <li> AipsError - If the index is equal to or larger than the number of
   //                  elements in the list or less than zero
   // </thrown>
-  void setShapeParms(const casacore::Vector<casacore::Int>& which,
+  void setShapeParms(const Vector<Int>& which,
 		     const ComponentShape& newShape);
 
   
-  void setOptParms(const casacore::Vector<casacore::Int>& which,
+  void setOptParms(const Vector<Int>& which,
                    const ComponentShape& newShape);
 
   // set the spectrum on the specified components to the specified one.
   // <thrown>
-  // <li> casacore::AipsError - If the index is equal to or larger than the number of
+  // <li> AipsError - If the index is equal to or larger than the number of
   //                  elements in the list or less than zero
   // </thrown>
-  void setSpectrum(const casacore::Vector<casacore::Int>& which,
+  void setSpectrum(const Vector<Int>& which,
 		   const SpectralModel& newSpectrum);
 
   // set the spectrum on the specified components to the specified one. However
   // this function unlike the previous one does not change the reference
   // frequency to the one specified in the newSpectrum object.
   // <thrown>
-  // <li> casacore::AipsError - If the index is equal to or larger than the number of
+  // <li> AipsError - If the index is equal to or larger than the number of
   //                  elements in the list or less than zero
   // </thrown>
-  void setSpectrumParms(const casacore::Vector<casacore::Int>& which,
+  void setSpectrumParms(const Vector<Int>& which,
 			const SpectralModel& newSpectrum);
 
   // set the reference frequency on the specified components to the specified
   // frequency. The reference frame is not changed, use the
   // <src>setRefFrequencyFrame</src> function to do that.
   // <thrown>
-  // <li> casacore::AipsError - If the index is equal to or larger than the number of
+  // <li> AipsError - If the index is equal to or larger than the number of
   //                  elements in the list or less than zero
   // </thrown>
-  void setRefFrequency(const casacore::Vector<casacore::Int>& which, const casacore::MVFrequency& newFreq);
+  void setRefFrequency(const Vector<Int>& which, const MVFrequency& newFreq);
 
   // set the reference frequency frame on the specified components to the
   // specified one. Does not convert the frequency values.
   // <thrown>
-  // <li> casacore::AipsError - If the index is equal to or larger than the number of
+  // <li> AipsError - If the index is equal to or larger than the number of
   //                  elements in the list or less than zero
   // </thrown>
-  void setRefFrequencyFrame(const casacore::Vector<casacore::Int>& which,
-			    casacore::MFrequency::Types newFrame);
+  void setRefFrequencyFrame(const Vector<Int>& which,
+			    MFrequency::Types newFrame);
 
   // set the reference frequency unit on the specified components to the
   // specified one. The unit must have the same dimensions as the Hz.
   // <thrown>
-  // <li> casacore::AipsError - If the index is equal to or larger than the number of
+  // <li> AipsError - If the index is equal to or larger than the number of
   //                  elements in the list or less than zero
   // </thrown>
-  void setRefFrequencyUnit(const casacore::Vector<casacore::Int>& which, const casacore::Unit& unit);
+  void setRefFrequencyUnit(const Vector<Int>& which, const Unit& unit);
 
   // returns a reference to the specified element in the list.
   // <thrown>
-  // <li> casacore::AipsError - If the list is associated with a table that was opened
+  // <li> AipsError - If the list is associated with a table that was opened
   //                  readonly (non-const version only).
-  // <li> casacore::AipsError - If the index is equal to or larger than the number of
+  // <li> AipsError - If the index is equal to or larger than the number of
   //                  elements in the list.
   // </thrown>
   // <group>
-  const SkyComponent& component(const casacore::uInt& index) const;
-  SkyComponent& component(const casacore::uInt& index);
+  const SkyComponent& component(const uInt& index) const;
+  SkyComponent& component(const uInt& index);
   // </group>
 
   // Make the ComponentList persistant by supplying a filename. If the
-  // ComponentList is already associated with a casacore::Table then the casacore::Table will be
+  // ComponentList is already associated with a Table then the Table will be
   // renamed. Hence this function cannot be used with ComponentLists that are
-  // constructed with readonly=true.
+  // constructed with readonly=True.
   // <thrown>
-  // <li> casacore::AipsError - If the list is associated with a table that was opened
+  // <li> AipsError - If the list is associated with a table that was opened
   //                  readonly
-  // <li> casacore::AipsError - If option is casacore::Table::Old as this does not make sense
+  // <li> AipsError - If option is Table::Old as this does not make sense
   // </thrown>
-  void rename(const casacore::Path& newName, 
-	      const casacore::Table::TableOption option=casacore::Table::New);
+  void rename(const Path& newName, 
+	      const Table::TableOption option=Table::New);
 
   // Make a real copy of this componentList. As the copy constructor and the
   // assignment operator use reference semantics this is the only way to get a
   // distinct version of the componentList.
   ComponentList copy() const;
 
-  // casacore::Sort the components in the list using the given criteria.
+  // Sort the components in the list using the given criteria.
   void sort(ComponentList::SortCriteria criteria); 
 
   // Convert the SortCriteria enumerator to a string
-  static casacore::String name(ComponentList::SortCriteria enumerator);
+  static String name(ComponentList::SortCriteria enumerator);
 
-  // Convert a given casacore::String to a Type enumerator
-  static ComponentList::SortCriteria type(const casacore::String& criteria);
+  // Convert a given String to a Type enumerator
+  static ComponentList::SortCriteria type(const String& criteria);
 
-  // casacore::Function which checks the internal data of this class for consistant
-  // values. Returns true if everything is fine otherwise returns false.
-  casacore::Bool ok() const;
+  // Function which checks the internal data of this class for consistant
+  // values. Returns True if everything is fine otherwise returns False.
+  Bool ok() const;
 
-  // methods to store itself as a casacore::Record and recover from a casacore::Record its state
+  // methods to store itself as a Record and recover from a Record its state
 
-  casacore::Bool fromRecord(casacore::String& error, const casacore::RecordInterface& inRec);
-  casacore::Bool toRecord(casacore::String& error, casacore::RecordInterface& outRec) const;
+  Bool fromRecord(String& error, const RecordInterface& inRec);
+  Bool toRecord(String& error, RecordInterface& outRec) const;
 
   // Summarize specified component as a formatted string.
-  casacore::String summarize(casacore::uInt index) const;
+  String summarize(uInt index) const;
 
 private:
-  // Privarte function to create the casacore::Table which will hold the components
-  //void createTable(const casacore::Path& fileName, const casacore::Table::TableOption option, const casacore::Bool addOptCol);
-  void createTable(const casacore::Path& fileName, const casacore::Table::TableOption option);
+  // Privarte function to create the Table which will hold the components
+  //void createTable(const Path& fileName, const Table::TableOption option, const Bool addOptCol);
+  void createTable(const Path& fileName, const Table::TableOption option);
   // Private function to write the components to disk
   // <thrown>
-  // <li> casacore::AipsError - If the table is not writable
+  // <li> AipsError - If the table is not writable
   // </thrown>
   void writeTable();
 
   // Private function to read the components from disk
   // <thrown>
-  // <li> casacore::AipsError - If the table is not readable
-  // <li> casacore::AipsError - If the table is not writable (and readOnly==false)
+  // <li> AipsError - If the table is not readable
+  // <li> AipsError - If the table is not writable (and readOnly==False)
   // </thrown>
-  void readTable(const casacore::Path& fileName, const casacore::Bool readOnly);
-  casacore::Block<SkyComponent> itsList;
-  casacore::uInt itsNelements;
-  casacore::Table itsTable;
-  casacore::Bool itsROFlag;
-  casacore::Block<casacore::Bool> itsSelectedFlags;
-  casacore::Block<casacore::uInt> itsOrder;
-  casacore::Bool itsAddOptCol;
+  void readTable(const Path& fileName, const Bool readOnly);
+  Block<SkyComponent> itsList;
+  uInt itsNelements;
+  Table itsTable;
+  Bool itsROFlag;
+  Block<Bool> itsSelectedFlags;
+  Block<uInt> itsOrder;
+  Bool itsAddOptCol;
 };
 
 } //# NAMESPACE CASA - END

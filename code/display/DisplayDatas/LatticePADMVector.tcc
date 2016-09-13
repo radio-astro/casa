@@ -54,16 +54,16 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	template <class T>
-	LatticePADMVector<T>::LatticePADMVector(const casacore::uInt xAxis,
-	                                        const casacore::uInt yAxis, const casacore::uInt mAxis,
-	                                        const casacore::IPosition fixedPos,
+	LatticePADMVector<T>::LatticePADMVector(const uInt xAxis,
+	                                        const uInt yAxis, const uInt mAxis,
+	                                        const IPosition fixedPos,
 	                                        LatticePADisplayData<T>* arDat)
 		: LatticePADisplayMethod<T>(xAxis, yAxis, mAxis, fixedPos, arDat)
 	{}
 
 	template <class T>
-	LatticePADMVector<T>::LatticePADMVector(const casacore::uInt xAxis,
-	                                        const casacore::uInt yAxis,
+	LatticePADMVector<T>::LatticePADMVector(const uInt xAxis,
+	                                        const uInt yAxis,
 	                                        LatticePADisplayData<T>* arDat)
 		: LatticePADisplayMethod<T>(xAxis, yAxis, arDat)
 	{}
@@ -73,64 +73,64 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	{}
 
 	template <class T>
-	casacore::uInt LatticePADMVector<T>::dataDrawSelf(WorldCanvas *wCanvas,
-	                                        const casacore::Vector<casacore::Double> &blc,
-	                                        const casacore::Vector<casacore::Double> &trc,
-	                                        const casacore::IPosition &start,
-	                                        const casacore::IPosition &shape,
-	                                        const casacore::IPosition &stride,
-	                                        const casacore::Bool usePixelEdges)
+	uInt LatticePADMVector<T>::dataDrawSelf(WorldCanvas *wCanvas,
+	                                        const Vector<Double> &blc,
+	                                        const Vector<Double> &trc,
+	                                        const IPosition &start,
+	                                        const IPosition &shape,
+	                                        const IPosition &stride,
+	                                        const Bool usePixelEdges)
 //
 // blc and trc are world coordinates.  they will be 2-D
 // if there is no dependency on any third axis. If there
 // is (e.g. ra/freq/dec) then they will be 3-D
 //
-// start and shape are appropriate to the casacore::SubImage if the
+// start and shape are appropriate to the SubImage if the
 // user has applied an image region.
 //
 	{
-		casacore::uInt drawListNumber = wCanvas->newList();
+		uInt drawListNumber = wCanvas->newList();
 		LatticeAsVector<T>* lav = dynamic_cast<LatticeAsVector<T>*>(parentDisplayData());
-		casacore::LogIO os(casacore::LogOrigin("LatticePADMVector", "drawDataSelf", WHERE));
+		LogIO os(LogOrigin("LatticePADMVector", "drawDataSelf", WHERE));
 		T* dummy = NULL;
-		casacore::DataType dataType = casacore::whatType(dummy);
+		DataType dataType = whatType(dummy);
 
 // Get options
 
-		casacore::Bool debias = lav->itsDebias;
-		casacore::Float variance = lav->itsVar;
+		Bool debias = lav->itsDebias;
+		Float variance = lav->itsVar;
 		if (variance<=0.0) {
 			if (debias) {
-				os << casacore::LogIO::WARN <<
-				   "Variance is illegal (non-positive) - amplitude will not be debiased" << casacore::LogIO::POST;
-				debias = false;
+				os << LogIO::WARN <<
+				   "Variance is illegal (non-positive) - amplitude will not be debiased" << LogIO::POST;
+				debias = False;
 			}
 		}
-		casacore::Float scale = lav->itsScale;
-		casacore::Int incX = lav->itsIncX;
-		casacore::Int incY = lav->itsIncY;
-		casacore::Bool arrow = lav->itsArrow;
-		casacore::Float barb = lav->itsBarb;
-		casacore::Float rotation = lav->itsRotation * C::pi / 180.0;      // radians
-		casacore::Bool constAmp = lav->itsConstAmp;
+		Float scale = lav->itsScale;
+		Int incX = lav->itsIncX;
+		Int incY = lav->itsIncY;
+		Bool arrow = lav->itsArrow;
+		Float barb = lav->itsBarb;
+		Float rotation = lav->itsRotation * C::pi / 180.0;      // radians
+		Bool constAmp = lav->itsConstAmp;
 		if (constAmp) {
 			if (debias) {
-				os << casacore::LogIO::WARN <<
-				   "Debiasing request ignored for constant amplitude" << casacore::LogIO::POST;
+				os << LogIO::WARN <<
+				   "Debiasing request ignored for constant amplitude" << LogIO::POST;
 			}
-			debias = false;
+			debias = False;
 		}
 
-// Find scale factor to convert to radians if casacore::Float data
+// Find scale factor to convert to radians if Float data
 
-		casacore::Float angleConversionFactor = 1.0;
-		if (dataType == casacore::TpFloat) {
-			casacore::Unit units = lav->itsUnits;
-			casacore::Unit rad("rad");
+		Float angleConversionFactor = 1.0;
+		if (dataType == TpFloat) {
+			Unit units = lav->itsUnits;
+			Unit rad("rad");
 			if (units==rad) {
 				angleConversionFactor = units.getValue().getFac();
 			} else {
-				os << casacore::LogIO::WARN << "Units of image are not angular, assuming degrees" << casacore::LogIO::POST;
+				os << LogIO::WARN << "Units of image are not angular, assuming degrees" << LogIO::POST;
 				angleConversionFactor = C::pi / 180.0;
 			}
 		}
@@ -138,54 +138,54 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // If we are holding the sky, p.a. is defined N->E (+y -> +x).  Else +x -> +y
 // in world coordinate frame
 
-		casacore::Vector<casacore::Int> displayAxes = lav->displayAxes();
-		const casacore::CoordinateSystem cSys = lav->coordinateSystem();
-		casacore::Vector<casacore::Double> inc = cSys.increment();
+		Vector<Int> displayAxes = lav->displayAxes();
+		const CoordinateSystem cSys = lav->coordinateSystem();
+		Vector<Double> inc = cSys.increment();
 //
-		casacore::Bool holdsOneSkyAxis = false;
-		casacore::Vector<casacore::Int> tAxes(2);
+		Bool holdsOneSkyAxis = False;
+		Vector<Int> tAxes(2);
 		tAxes(0) = displayAxes(0);
 		tAxes(1) = displayAxes(1);
-		if (!casacore::CoordinateUtil::holdsSky (holdsOneSkyAxis, cSys, tAxes)) {
+		if (!CoordinateUtil::holdsSky (holdsOneSkyAxis, cSys, tAxes)) {
 			angleConversionFactor *= -1.0;
 			rotation += C::pi_2;
 		}
 
-// Make some effort to see if this image is a casacore::Complex polarization
+// Make some effort to see if this image is a Complex polarization
 // for which phase type should be "polarimetric"
 
-		casacore::Bool isPol = false;
+		Bool isPol = False;
 		if (dataType==TpComplex) {
-			casacore::Vector<casacore::Stokes::StokesTypes> whichStokes;
-			casacore::Int stokes = casacore::CoordinateUtil::findStokesAxis(whichStokes, cSys);
+			Vector<Stokes::StokesTypes> whichStokes;
+			Int stokes = CoordinateUtil::findStokesAxis(whichStokes, cSys);
 			if (stokes >=0) {
 				if (whichStokes.nelements()==1) {
-					if (whichStokes(0)==casacore::Stokes::Plinear || whichStokes(0)==casacore::Stokes::PFlinear) isPol = true;
+					if (whichStokes(0)==Stokes::Plinear || whichStokes(0)==Stokes::PFlinear) isPol = True;
 				}
 			}
 		}
 //
-		casacore::String phaseType = lav->itsPhaseType;
-		casacore::Float phasePolarity = 2.0;
-		if (phaseType==casacore::String("normal")) {
+		String phaseType = lav->itsPhaseType;
+		Float phasePolarity = 2.0;
+		if (phaseType==String("normal")) {
 			phasePolarity = 1.0;
 //
 			if (isPol) {
-				os << casacore::LogIO::WARN << "The image appears to be a casacore::Complex polarization type" << endl;
-				os << "If this is correct, you should probably set the phase type to 'polarimetric'" << casacore::LogIO::POST;
+				os << LogIO::WARN << "The image appears to be a Complex polarization type" << endl;
+				os << "If this is correct, you should probably set the phase type to 'polarimetric'" << LogIO::POST;
 			}
-		} else if (phaseType==casacore::String("polarimetric")) {
+		} else if (phaseType==String("polarimetric")) {
 			phasePolarity = 2.0;
 //
 			if (!isPol) {
-				os << casacore::LogIO::WARN << "The image does not appear to be a casacore::Complex polarization type" << endl;
-				os << "If this is correct, you should probably set the phase type to 'normal'" << casacore::LogIO::POST;
+				os << LogIO::WARN << "The image does not appear to be a Complex polarization type" << endl;
+				os << "If this is correct, you should probably set the phase type to 'normal'" << LogIO::POST;
 			}
 //
 			if (arrow) {
-				os << casacore::LogIO::WARN << "Arrow heads are meaningless for Polarimetric displays" << casacore::LogIO::POST;
+				os << LogIO::WARN << "Arrow heads are meaningless for Polarimetric displays" << LogIO::POST;
 			}
-			arrow = false;
+			arrow = False;
 		}
 
 //
@@ -199,19 +199,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Get data; should put inc{X,Y} into stride but then need to
 // subimage CoordinateSYstem as well
 
-			casacore::Matrix<T> datMatrix;
-			casacore::Matrix<casacore::Bool> datMask;
+			Matrix<T> datMatrix;
+			Matrix<Bool> datMask;
 			this->dataGetSlice(datMatrix, datMask, start, shape, stride);
 
 // Draw vector map
 
 			if (constAmp && dataType==TpComplex) {
 
-// If we wish to discard the amplitude from casacore::Complex data, make
-// amplitude and call casacore::Float version.  We must set phasePol to
+// If we wish to discard the amplitude from Complex data, make
+// amplitude and call Float version.  We must set phasePol to
 // 1.0 otherwise it would get applied again
 
-				casacore::Matrix<casacore::Float> datMatrix2 = getAmplitude(datMatrix) / phasePolarity;
+				Matrix<Float> datMatrix2 = getAmplitude(datMatrix) / phasePolarity;
 				phasePolarity = 1.0;
 				angleConversionFactor = 1.0;
 				wCanvas->drawVectorMap(blc, trc, datMatrix2, datMask,
@@ -226,12 +226,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				                       arrow, barb, rotation, inc(displayAxes(0)),
 				                       inc(displayAxes(1)), usePixelEdges);
 			}
-		} catch (const casacore::AipsError &x) {
+		} catch (const AipsError &x) {
 			wCanvas->endList();
 			if (wCanvas->validList(drawListNumber)) {
 				wCanvas->deleteList(drawListNumber);
 			}
-			throw(casacore::AipsError(x));
+			throw(AipsError(x));
 		}
 //
 		wCanvas->endList();

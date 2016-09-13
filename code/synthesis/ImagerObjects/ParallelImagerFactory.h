@@ -55,14 +55,14 @@ public:
 	 * allowing the caller to use 'task_comm' freely after this method returns.
 	 */
 	static ParallelImager *make(MPI_Comm task_comm,
-	                            casacore::Record clean_params,
-	                            casacore::Record selection_params,
-	                            casacore::Record image_params,
-	                            casacore::Record grid_params,
-	                            casacore::Record weight_params,
-	                            casacore::Record normalization_params,
-	                            casacore::Record deconvolution_params,
-	                            casacore::Record iteration_params);
+	                            Record clean_params,
+	                            Record selection_params,
+	                            Record image_params,
+	                            Record grid_params,
+	                            Record weight_params,
+	                            Record normalization_params,
+	                            Record deconvolution_params,
+	                            Record iteration_params);
 
 private:
 	// Convenience method for creating communicator for normalization

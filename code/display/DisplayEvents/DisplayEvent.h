@@ -64,7 +64,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // de1 = new DisplayEvent();
 // de2 = new DisplayEvent();
 // if (de1.timeOfEvent() >= de2.timeOfEvent()) {
-//     throw(casacore::AipsError("I have invented a time machine!"));
+//     throw(AipsError("I have invented a time machine!"));
 // }
 // </srcblock>
 // </example>
@@ -99,12 +99,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Return the Julian date (in fractional seconds) that this event
 		// occured.
-		virtual casacore::Double timeOfEvent() const;
+		virtual Double timeOfEvent() const;
 
 	private:
 
 		// Store the time of the event here at construction.
-		casacore::Double itsTimeOfEvent;
+		Double itsTimeOfEvent;
 
 	};
 

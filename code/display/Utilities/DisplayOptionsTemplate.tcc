@@ -34,19 +34,19 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	template <class T>
-	casacore::Bool DisplayOptions::readOptionRecord(T &target, casacore::Bool &error,
-	                                      const casacore::Record &rec,
-	                                      const casacore::String &fieldname) const {
+	Bool DisplayOptions::readOptionRecord(T &target, Bool &error,
+	                                      const Record &rec,
+	                                      const String &fieldname) const {
 		// check that the specified field exists in the supplied record
 		if (!rec.isDefined(fieldname)) {
-			error = true;
-			return false;
+			error = True;
+			return False;
 		}
 
-		casacore::Record subrec;
-		casacore::String subfield;
-		casacore::DataType targ = casacore::whatType(&target);
-		casacore::DataType field = rec.dataType(fieldname);
+		Record subrec;
+		String subfield;
+		DataType targ = whatType(&target);
+		DataType field = rec.dataType(fieldname);
 
 		if (compatible(targ, field)) {
 			// the record type is the same as that of the target,
@@ -54,60 +54,60 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			subrec = rec;
 			subfield = fieldname;
 
-		} else if (rec.dataType(fieldname) ==casacore:: TpRecord) {
-			// the record type is casacore::Record, so see if the value is stored in a sub-record
+		} else if (rec.dataType(fieldname) == TpRecord) {
+			// the record type is Record, so see if the value is stored in a sub-record
 			subrec = rec.subRecord(fieldname);
 			subfield = "value";
 			// see if there is a value sub-record
 			if (!subrec.isDefined(subfield)) {
-				error = true;
-				return false;
+				error = True;
+				return False;
 			}
 			// there is, so check that its type is of the correct type.
 			field = subrec.dataType(subfield);
 			if (!compatible(targ , field)) {
-				error = true;
-				return false;
+				error = True;
+				return False;
 
 			}
 		} else {
 			// wrong record type
-			error = true;
-			return false;
+			error = True;
+			return False;
 
 		}
 		// now subrec is the record containing a field called fieldname which
 		// actually contains the required value --- extract the value
 
 		T temp;
-		//  casacore::DataType toGet = whatType(&temp);
-		casacore::Bool changed = false;
+		//  DataType toGet = whatType(&temp);
+		Bool changed = False;
 
 		subrec.get(subfield, temp);
 
 		changed = (target != temp);
 
 		target = temp;
-		error = false;
+		error = False;
 		return changed;
 
 	}
 
 	template <class T>
-	casacore::Bool DisplayOptions::readOptionRecord(casacore::Vector<T> &target, casacore::Bool &error,
-	                                      const casacore::Record &rec,
-	                                      const casacore::String &fieldname) const {
+	Bool DisplayOptions::readOptionRecord(Vector<T> &target, Bool &error,
+	                                      const Record &rec,
+	                                      const String &fieldname) const {
 
 		// check that the specified field exists in the supplied record
 		if (!rec.isDefined(fieldname)) {
-			error = true;
-			return false;
+			error = True;
+			return False;
 		}
 
-		casacore::Record subrec;
-		casacore::String subfield;
-		casacore::DataType targ = whatType(&target);
-		casacore::DataType field = rec.dataType(fieldname);
+		Record subrec;
+		String subfield;
+		DataType targ = whatType(&target);
+		DataType field = rec.dataType(fieldname);
 
 		if (compatible(targ, field)) {
 			// the record type is the same as that of the target,
@@ -115,34 +115,34 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			subrec = rec;
 			subfield = fieldname;
 
-		} else if (rec.dataType(fieldname) == casacore::TpRecord) {
-			// the record type is casacore::Record, so see if the value is stored in a sub-record
+		} else if (rec.dataType(fieldname) == TpRecord) {
+			// the record type is Record, so see if the value is stored in a sub-record
 			subrec = rec.subRecord(fieldname);
 			subfield = "value";
 			// see if there is a value sub-record
 			if (!subrec.isDefined(subfield)) {
-				error = true;
-				return false;
+				error = True;
+				return False;
 			}
 			// there is, so check that its type is of the correct type.
 			field = subrec.dataType(subfield);
 
 			if (!compatible(targ , field)) {
-				error = true;
-				return false;
+				error = True;
+				return False;
 
 			}
 		} else {
 			// wrong record type
-			error = true;
-			return false;
+			error = True;
+			return False;
 
 		}
 		// now subrec is the record containing a field called fieldname which
 		// actually contains the required value --- extract the value
 
-		casacore::Vector<T> temp;
-		casacore::Bool changed = false;
+		Vector<T> temp;
+		Bool changed = False;
 
 		subrec.get(subfield, temp);
 
@@ -154,12 +154,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		temp.shape(recordLength);
 
 		if (targetLength != recordLength) {
-			changed = true;
+			changed = True;
 			target.resize(recordLength);
 		} else changed = !allEQ(target, temp);
 
 		target = temp;
-		error = false;
+		error = False;
 		return changed;
 
 	}

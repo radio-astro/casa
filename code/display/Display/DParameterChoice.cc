@@ -30,7 +30,6 @@
 #include <display/Utilities/DisplayOptions.h>
 #include <display/Display/DParameterChoice.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Constructor.
@@ -40,7 +39,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	                                   const String defaultvalue,
 	                                   const String value, const String context,
 	                                   const Bool editable) :
-		DisplayParameter(name, description, help, context, false, false),
+		DisplayParameter(name, description, help, context, False, False),
 		itsEditable(editable),
 		itsOptions(options),
 		itsDefaultValue(defaultvalue),
@@ -56,7 +55,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	                                    const String help, const ColormapDefinition::colormapnamemap &options,
 	                                    const String defaultvalue, const String value,
 	                                    const String context, const Bool editable ) :
-		DisplayParameter(name, description, help, context, false, false),
+		DisplayParameter(name, description, help, context, False, False),
 		itsEditable(editable),
 		itsDefaultValue(defaultvalue),
 		itsValue(value) {
@@ -107,18 +106,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if (result) {
 			// check that new itsValue is a member of itsOption
 			if (existsOption(itsValue)) {
-				return true;
+				return True;
 			} else {
 				if (itsEditable) {
-					itsOptions.resize(itsOptions.nelements()+1,true);
+					itsOptions.resize(itsOptions.nelements()+1,True);
 					itsOptions(itsOptions.nelements()-1) = itsValue;
-					return true;
+					return True;
 				}
 				itsValue = previousval;
-				return false;
+				return False;
 			}
 		}
-		return false;
+		return False;
 	}
 
 // Describe this parameter in a record.
@@ -147,14 +146,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Default constructor.
 	DParameterChoice::DParameterChoice() :
 		DisplayParameter(),
-		itsEditable(false),
+		itsEditable(False),
 		itsDefaultValue(""),
 		itsValue("") {
 		itsOptions.resize(0);
 	}
 
 	Bool DParameterChoice::existsOption(const String value) {
-		Bool exists = false;
+		Bool exists = False;
 		for (uInt i = 0; (i < itsOptions.nelements()) && !exists; i++) {
 			exists = (itsOptions(i) == value);
 		}

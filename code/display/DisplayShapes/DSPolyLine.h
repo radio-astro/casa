@@ -81,50 +81,50 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// <group>
 		DSPolyLine();
 		DSPolyLine(const DSPolyLine& other);
-		DSPolyLine(const casacore::Matrix<casacore::Float>& points, const casacore::Bool& handles,
-		           const casacore::Bool& drawHandles);
+		DSPolyLine(const Matrix<Float>& points, const Bool& handles,
+		           const Bool& drawHandles);
 		virtual ~DSPolyLine();
 		// </group>
 
 		// General DisplayShape functions
 		// <group>
 		virtual void draw(PixelCanvas* pc);
-		virtual casacore::Bool inObject(const casacore::Float& xPos, const casacore::Float& yPos);
-		virtual void move(const casacore::Float& dX, const casacore::Float& dY);
-		virtual casacore::Vector<casacore::Float> getCenter();
-		virtual void setCenter(const casacore::Float& xPos, const casacore::Float& yPos);
-		virtual void scale(const casacore::Float& scaleFactor);
-		virtual void rotate(const casacore::Float& angle);
-		virtual void rotateAbout(const casacore::Float& angle, const casacore::Float& aboutX,
-		                         const casacore::Float& aboutY);
+		virtual Bool inObject(const Float& xPos, const Float& yPos);
+		virtual void move(const Float& dX, const Float& dY);
+		virtual Vector<Float> getCenter();
+		virtual void setCenter(const Float& xPos, const Float& yPos);
+		virtual void scale(const Float& scaleFactor);
+		virtual void rotate(const Float& angle);
+		virtual void rotateAbout(const Float& angle, const Float& aboutX,
+		                         const Float& aboutY);
 		// </group>
 
 		// Point manipulation functions. The changePoint with only one argument
 		// moves the closest point to the location specified.
 		// <group>
-		virtual void changePoint(const casacore::Vector<casacore::Float>& pos);
-		virtual void changePoint(const casacore::Vector<casacore::Float>& pos, const casacore::Int n);
-		virtual void addPoint(const casacore::Vector<casacore::Float>& newPos);
-		virtual void setPoints(const casacore::Matrix<casacore::Float>& points);
+		virtual void changePoint(const Vector<Float>& pos);
+		virtual void changePoint(const Vector<Float>& pos, const Int n);
+		virtual void addPoint(const Vector<Float>& newPos);
+		virtual void setPoints(const Matrix<Float>& points);
 		// </group>
 
 		// Return the number of points.
-		virtual casacore::uInt nPoints();
+		virtual uInt nPoints();
 
 		// Get and set this shapes options.
 		// <group>
-		virtual casacore::Bool setOptions(const casacore::Record& newSettings);
-		virtual casacore::Record getOptions();
+		virtual Bool setOptions(const Record& newSettings);
+		virtual Record getOptions();
 		// </group>
 
 	protected:
 		// Return all my points.
-		virtual casacore::Matrix<casacore::Float> getPoints();
+		virtual Matrix<Float> getPoints();
 
 	private:
-		casacore::Matrix<casacore::Float> itsPoints;
-		casacore::Vector<casacore::Float> itsCenter;
-		casacore::Bool itsValidCenter;
+		Matrix<Float> itsPoints;
+		Vector<Float> itsCenter;
+		Bool itsValidCenter;
 		// Used when default constructor called.
 		virtual void setDefaultOptions();
 	};

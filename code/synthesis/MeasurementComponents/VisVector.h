@@ -43,14 +43,14 @@ public:
   enum VisType{One=1, Two=2, Four=4};
   
   // Construct from length 
-  VisVector(const VisType& len, const casacore::Bool& owner=false);
+  VisVector(const VisType& len, const Bool& owner=False);
 
   // Dtor
   ~VisVector();
 
   // Assignment (data copy)
   inline VisVector& operator=(const VisVector& vv) {
-    for (casacore::Int i=0;i<vistype_;i++) {
+    for (Int i=0;i<vistype_;i++) {
       v_[i]=vv.v_[i];
       if (f0_ && vv.f0_) f_[i]=vv.f_[i];
     }
@@ -64,15 +64,15 @@ public:
   inline VisType& type() { return vistype_; };
   
   // Reassign origin
-  inline void sync(casacore::Complex& vis) { 
+  inline void sync(Complex& vis) { 
     if (!owner_)  {v0_=&vis; f0_=NULL; origin();}
-    else          {throw(casacore::AipsError("Illegal VisVector sync")); }
+    else          {throw(AipsError("Illegal VisVector sync")); }
   };
   
   // Reassign origin
-  inline void sync(casacore::Complex& vis, casacore::Bool& flag) { 
+  inline void sync(Complex& vis, Bool& flag) { 
     if (!owner_)  {v0_=&vis; f0_=&flag; origin();}
-    else          {throw(casacore::AipsError("Illegal VisVector sync")); }
+    else          {throw(AipsError("Illegal VisVector sync")); }
   };
   
 
@@ -83,17 +83,17 @@ public:
   //  (use function pointers in ctor to handle owner_ case?)
   inline void operator++() { 
     if (!owner_)  {v_+=vistype_; if (f0_) f_+=vistype_;}
-    else          throw(casacore::AipsError("Illegal VisVector ++")); 
+    else          throw(AipsError("Illegal VisVector ++")); 
   };
   inline void operator++(int) { 
     if (!owner_)  {v_+=vistype_; if (f0_) f_+=vistype_;}
-    else          throw(casacore::AipsError("Illegal VisVector ++")); 
+    else          throw(AipsError("Illegal VisVector ++")); 
   };
 
   // Advance step vectors forward
-  inline void advance(const casacore::Int& step) { 
+  inline void advance(const Int& step) { 
     if (!owner_)  {v_+=(step*vistype_); if (f0_) f_+=(step*vistype_);}
-    else          throw(casacore::AipsError("Illegal VisVector advance")); 
+    else          throw(AipsError("Illegal VisVector advance")); 
   };
 
   // Re-order elements
@@ -101,11 +101,11 @@ public:
   void polznUnMap();
 
   inline void zero() { 
-    for (casacore::Int i=0;i<vistype_;i++) {v_[i]=casacore::Complex(0.0);if (f0_) f_[i]=true;} 
+    for (Int i=0;i<vistype_;i++) {v_[i]=Complex(0.0);if (f0_) f_[i]=True;} 
   };
 
   // Print it out
-  friend std::ostream& operator<<(std::ostream& os, const VisVector& vec);
+  friend ostream& operator<<(ostream& os, const VisVector& vec);
 
   // Give access to Mueller,Jones classes for application
   friend class Mueller;
@@ -131,15 +131,15 @@ private:
   
   // Does the VisVector own the storage, or are
   //  we pointing to something external
-  casacore::Bool owner_;
+  Bool owner_;
 
   // Pointer to origin
-  casacore::Complex *v0_;
-  casacore::Bool *f0_;
+  Complex *v0_;
+  Bool *f0_;
 
   // Moving pointer
-  casacore::Complex *v_;
-  casacore::Bool *f_;
+  Complex *v_;
+  Bool *f_;
 
   
 };
@@ -147,7 +147,7 @@ private:
 // Globals:
 
 // Return VisType according to length of data array corr axis
-VisVector::VisType visType(const casacore::Int& ncorr);
+VisVector::VisType visType(const Int& ncorr);
 
 
 } //# NAMESPACE CASA - END

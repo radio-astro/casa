@@ -97,7 +97,6 @@
 
 #include <casa/namespace.h>
 
-namespace casa {
 
 Simulator::Simulator(): 
   msname_p(String("")), ms_p(0), mssel_p(0), vs_p(0), 
@@ -175,7 +174,7 @@ Simulator::Simulator(MeasurementSet &theMs)
   if (!sim_p->getFeedMode(feedMode_p))
     os << "Can't find Feed information for loaded MS" << LogIO::WARN;
   else
-    feedsHaveBeenSet=true;
+    feedsHaveBeenSet=True;
 
 }
 
@@ -284,7 +283,7 @@ void Simulator::defaults()
   images_p = 0;
   nmodels_p = 1;
   // info for configurations
-  areStationCoordsSet_p = false;
+  areStationCoordsSet_p = False;
   telescope_p = "UNSET";
   nmodels_p = 0;
 
@@ -314,18 +313,18 @@ void Simulator::defaults()
   // feeds
   feedMode_p = "perfect R L";
   nFeeds_p = 1;
-  feedsHaveBeenSet = false;
-  feedsInitialized = false;
+  feedsHaveBeenSet = False;
+  feedsInitialized = False;
 
   // times
   integrationTime_p = Quantity(10.0, "s");
-  useHourAngle_p=true;
+  useHourAngle_p=True;
   refTime_p = MEpoch(Quantity(0.0, "s"), MEpoch::UTC);
-  timesHaveBeenSet_p=false;
+  timesHaveBeenSet_p=False;
 
   // VP stuff
-  doVP_p=false;
-  doDefaultVP_p = true;
+  doVP_p=False;
+  doDefaultVP_p = True;
 
 };
 
@@ -350,7 +349,7 @@ Bool Simulator::close()
   if(ft_p) delete ft_p; ft_p = 0;
   if(cft_p) delete cft_p; cft_p = 0;
 
-  return true;
+  return True;
 }
 
 Bool Simulator::resetviscal() {
@@ -365,16 +364,16 @@ Bool Simulator::resetviscal() {
     // Delete all VisCals
     for (uInt i=0;i<vc_p.nelements();++i)
       if (vc_p[i]) delete vc_p[i];
-    vc_p.resize(0,true);
+    vc_p.resize(0,True);
 
     // reset the VisEquation (by sending an empty vc_p)
     ve_p.setapply(vc_p);
 
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
-    return false;
+    return False;
   } 
-  return true;
+  return True;
 }
 
 
@@ -392,9 +391,9 @@ Bool Simulator::resetimcal() {
 
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
-    return false;
+    return False;
   } 
-  return true;
+  return True;
 }
 
 
@@ -410,9 +409,9 @@ Bool Simulator::reset() {
 
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
-    return false;
+    return False;
   } 
-  return true;
+  return True;
 }
 
 
@@ -441,7 +440,7 @@ Bool Simulator::summary()
   predictSummary(os);
   corruptSummary(os);
 
-  return true;
+  return True;
 }
 
 
@@ -456,7 +455,7 @@ Bool Simulator::createSummary(LogIO& os)
     os << "=======================================" << LogIO::POST;
     os << "No create-type information has been set" << LogIO::POST;
     os << "=======================================" << LogIO::POST;
-    return false;
+    return False;
   } else {
     // user has set at least ONE, so we report on each
     if (!configResult) {
@@ -474,7 +473,7 @@ Bool Simulator::createSummary(LogIO& os)
     }
     os << "======================================================================" << LogIO::POST;
   }
-  return true;
+  return True;
 }
 
 
@@ -482,7 +481,7 @@ Bool Simulator::createSummary(LogIO& os)
 Bool Simulator::configSummary(LogIO& os)
 {
   if ( ! areStationCoordsSet_p ) {
-    return false;
+    return False;
   } else {
     os << "----------------------------------------------------------------------" << LogIO::POST;
     os << "Generating (u,v,w) using this configuration: " << LogIO::POST;
@@ -500,7 +499,7 @@ Bool Simulator::configSummary(LogIO& os)
     os << " RefLocation = " << 
       mRefLocation_p.getAngle("deg").getValue("deg") << LogIO::POST;
   }
-  return true;
+  return True;
 
 }
 
@@ -519,7 +518,7 @@ Bool Simulator::fieldSummary(LogIO& os)
        << "  " << formatDirection(sourceDirection_p[i])
        << "  " << calCode_p[i]
        << LogIO::POST;
-  return true;
+  return True;
 }
 
 
@@ -527,7 +526,7 @@ Bool Simulator::fieldSummary(LogIO& os)
 Bool Simulator::timeSummary(LogIO& os)
 {
   if(integrationTime_p.getValue("s") <= 0.0) {
-    return false;
+    return False;
   } else {
     os << "----------------------------------------------------------------------" << LogIO::POST;
     os << " Time information: " << LogIO::POST;
@@ -536,7 +535,7 @@ Bool Simulator::timeSummary(LogIO& os)
     os << " reference time = " << MVTime(refTime_p.get("s").getValue("d")).string()
        << LogIO::POST;
   }
-  return true;
+  return True;
 }
 
 
@@ -557,20 +556,20 @@ Bool Simulator::spWindowSummary(LogIO& os)
        << "  " << freqRes_p[i].getValue("MHz")
        << "  " << stokesString_p[i]
        << LogIO::POST;
-  return true;
+  return True;
 }
 
 
 Bool Simulator::feedSummary(LogIO& os)
 {
   if (!feedsHaveBeenSet) {
-    return false;
+    return False;
   } else {
     os << "----------------------------------------------------------------------" << LogIO::POST;
     os << " Feed information: " << LogIO::POST;
     os << feedMode_p << LogIO::POST;
   }
-  return true;
+  return True;
 }
 
 
@@ -581,7 +580,7 @@ Bool Simulator::predictSummary(LogIO& os)
 
   // keep compiler happy
   if (!vpResult && !optionsResult) {}
-  return true;
+  return True;
 }
 
 
@@ -589,16 +588,16 @@ Bool Simulator::vpSummary(LogIO& /*os*/)
 {
   if (vp_p) {
     vp_p->summary();
-    return true;
+    return True;
   } else {
-    return false;
+    return False;
   }
 }
 
 
 Bool Simulator::optionsSummary(LogIO& /*os*/)
 {
-  return true;
+  return True;
 }
  
 
@@ -608,7 +607,7 @@ Bool Simulator::corruptSummary(LogIO& os)
     os << "===========================================" << LogIO::POST;
     os << "No corrupting-type information has been set" << LogIO::POST;
     os << "===========================================" << LogIO::POST;
-    return false;
+    return False;
   }
   else {
     os << "Visibilities will be CORRUPTED with the following terms:" << LogIO::POST;
@@ -623,19 +622,19 @@ Bool Simulator::corruptSummary(LogIO& os)
     noiseSummary(os);  
 
   }
-  return true;
+  return True;
 }
 
 
 Bool Simulator::noiseSummary(LogIO& os)
 {
   if (!ac_p) {
-   return false;
+   return False;
   } else {
     os << "Thermal noise corruption activated" << LogIO::POST;
     os << "Thermal noise mode: " << noisemode_p << LogIO::POST;
   }
-  return true;
+  return True;
 }
 
 
@@ -676,14 +675,14 @@ Bool Simulator::settimes(const Quantity& integrationTime,
 
     sim_p->settimes(integrationTime, useHourAngle, refTime);
     
-    timesHaveBeenSet_p=true;
+    timesHaveBeenSet_p=True;
     
-    return true;
+    return True;
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
-    return false;
+    return False;
   } 
-  return true;
+  return True;
   
 }
 
@@ -691,7 +690,7 @@ Bool Simulator::settimes(const Quantity& integrationTime,
 
 Bool Simulator::setseed(const Int seed) {
   seed_p = seed;
-  return true;
+  return True;
 }
 
 
@@ -774,12 +773,12 @@ Bool Simulator::setconfig(const String& telname,
   AlwaysAssert( (nn == offset_p.nelements())  , AipsError);
   AlwaysAssert( (nn == mount_p.nelements())  , AipsError);
 
-  areStationCoordsSet_p = true;
+  areStationCoordsSet_p = True;
   
   sim_p->initAnt(telescope_p, x_p, y_p, z_p, diam_p, offset_p, mount_p, antName_p, padName_p,
 		 coordsystem_p, mRefLocation_p);
   
-  return true;  
+  return True;  
 }
 
 
@@ -798,10 +797,10 @@ Bool Simulator::getconfig() {
       y_p(i)=xyz_p(1,i);
       z_p(i)=xyz_p(2,i);
     }
-    areStationCoordsSet_p = true;
-    return true;
+    areStationCoordsSet_p = True;
+    return True;
   } else {
-    return false;
+    return False;
   }
 }
 
@@ -817,29 +816,29 @@ Bool Simulator::setfield(const String& sourceName,
     
     if (sourceName == "") {
       os << LogIO::SEVERE << "must provide a source name" << LogIO::POST;  
-      return false;
+      return False;
     }
 
     nField++;    
 
     if (prtlev()>2) os << "nField = " << nField << LogIO::POST;  
 
-    distance_p.resize(nField,true);
+    distance_p.resize(nField,True);
     distance_p[nField-1]=distance;
-    sourceName_p.resize(nField,true);
+    sourceName_p.resize(nField,True);
     sourceName_p[nField-1]=sourceName;
-    sourceDirection_p.resize(nField,true);
+    sourceDirection_p.resize(nField,True);
     sourceDirection_p[nField-1]=sourceDirection;
-    calCode_p.resize(nField,true);
+    calCode_p.resize(nField,True);
     calCode_p[nField-1]=calCode;
 
     sim_p->initFields(sourceName, sourceDirection, calCode);
 
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
-    return false;
+    return False;
   } 
-  return true;
+  return True;
 };
 
 
@@ -900,7 +899,7 @@ Bool Simulator::setmosaicfield(const String& sourcename, const String& calcode, 
 	}
 
 
-	return true;
+	return True;
 }
 
 
@@ -918,24 +917,24 @@ Bool Simulator::setspwindow(const String& spwName,
   try {
     if (nChan == 0) {
       os << LogIO::SEVERE << "must provide nchannels" << LogIO::POST;  
-      return false;
+      return False;
     }
 
     nSpw++;    
 #ifdef RI_DEBUG
     os << "nspw = " << nSpw << LogIO::POST;  
 #endif
-    spWindowName_p.resize(nSpw,true);
+    spWindowName_p.resize(nSpw,True);
     spWindowName_p[nSpw-1] = spwName;   
-    nChan_p.resize(nSpw,true);
+    nChan_p.resize(nSpw,True);
     nChan_p[nSpw-1] = nChan;
-    startFreq_p.resize(nSpw,true);
+    startFreq_p.resize(nSpw,True);
     startFreq_p[nSpw-1] = freq;
-    freqInc_p.resize(nSpw,true);
+    freqInc_p.resize(nSpw,True);
     freqInc_p[nSpw-1] = deltafreq;
-    freqRes_p.resize(nSpw,true);
+    freqRes_p.resize(nSpw,True);
     freqRes_p[nSpw-1] = freqresolution;        
-    stokesString_p.resize(nSpw,true);
+    stokesString_p.resize(nSpw,True);
     stokesString_p[nSpw-1] = stokes;   
 
 #ifdef RI_DEBUG
@@ -950,9 +949,9 @@ Bool Simulator::setspwindow(const String& spwName,
 
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
-    return false;
+    return False;
   } 
-  return true;
+  return True;
 };
 
 
@@ -967,15 +966,15 @@ Bool Simulator::setfeed(const String& mode,
     os << LogIO::SEVERE << 
       "Currently, only perfect R L or perfect X Y feeds or list are recognized" 
        << LogIO::POST;
-    return false;
+    return False;
   }
   feedMode_p = mode;
   sim_p->initFeeds(feedMode_p, x, y, pol);
 
   nFeeds_p = x.nelements();
-  feedsHaveBeenSet = true;
+  feedsHaveBeenSet = True;
 
-  return true;
+  return True;
 };
 
 
@@ -1016,7 +1015,7 @@ Bool Simulator::setvp(const Bool dovp,
        << parAngleInc_p.getValue("deg") << " degrees"  << LogIO::POST;
   }
   pbLimit_p = pbLimit;
-  return true;
+  return True;
 };
 
 
@@ -1056,7 +1055,7 @@ Bool Simulator::setnoise(const String& mode,
 			 const Float trx=150.0, 
 			 const Float tground=270.0, 
 			 const Float tcmb=2.73, 
-			 const Bool OTF=true,
+			 const Bool OTF=True,
 			 const Float senscoeff=0.0,
 			 const Int rxtype=0
 			 ) {
@@ -1149,7 +1148,7 @@ Bool Simulator::setnoise(const String& mode,
       throw(AipsError("unsupported mode "+mode+" in setnoise()"));
     }
 
-    Bool saveOnthefly=false;
+    Bool saveOnthefly=False;
     if (simpar.isDefined("onthefly")) {
       saveOnthefly=simpar.asBool("onthefly");
     }
@@ -1209,7 +1208,7 @@ Bool Simulator::setnoise(const String& mode,
 	// an MF in tsys-manual mode - it will use ATM to calculate 
 	// the relative opacity across the band, but it won't properly
 	// integrate the atmosphere to get T_ebb.  
-	// so for now we'll just make tsys-manual mean freqDepPar=false
+	// so for now we'll just make tsys-manual mean freqDepPar=False
 
 	simpar.define ("type", "T");
 	//simpar.define ("type", "M");
@@ -1241,7 +1240,7 @@ Bool Simulator::setnoise(const String& mode,
 	  simpar.define ("waterheight", Double(2.0));
 	  os<<"User has not set water scale height, using 2km"<<LogIO::POST;
 	}
-	// as a function of frequency  (freqDepPar=true)
+	// as a function of frequency  (freqDepPar=True)
 	//simpar.define ("type", "TF");
 	simpar.define ("type", "TF NOISE");
 	// simpar.define ("type", "MF");
@@ -1261,9 +1260,9 @@ Bool Simulator::setnoise(const String& mode,
 
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
-    return false;
+    return False;
   } 
-  return true;
+  return True;
 }
 
 
@@ -1280,7 +1279,7 @@ Bool Simulator::setgain(const String& mode,
         
     if(mode=="table") {      
       os << LogIO::SEVERE << "Cannot yet read from table" << LogIO::POST;
-      return false;
+      return False;
     }
     else {
       // RI TODO Sim::setgain add mode=simple and =normal
@@ -1327,9 +1326,9 @@ Bool Simulator::setgain(const String& mode,
     }
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
-    return false;
+    return False;
   } 
-  return true;
+  return True;
 }
 
 
@@ -1437,10 +1436,10 @@ Bool Simulator::settrop(const String& mode,
 #ifndef RI_DEBUG
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
-    return false;
+    return False;
   } 
 #endif
-  return true;
+  return True;
 }
 
 
@@ -1509,10 +1508,10 @@ Bool Simulator::setleakage(const String& /*mode*/, const String& table,
 #ifndef RI_DEBUG
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
-    return false;
+    return False;
   } 
 #endif
-  return true;
+  return True;
 }
 
 
@@ -1558,7 +1557,7 @@ Bool Simulator::oldsetnoise(const String& mode,
 
     if(mode=="table") {
       os << LogIO::SEVERE << "Cannot yet read from table" << LogIO::POST;
-      return false;
+      return False;
     }
     else if (mode=="simplenoise") {
       os << "Using simple noise model with noise level of " << simplenoise.getValue("Jy")
@@ -1576,12 +1575,12 @@ Bool Simulator::oldsetnoise(const String& mode,
 			       Quantity(tatmos, "K"), Quantity(tcmb, "K"));
     }
 
-    return true;
+    return True;
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
-    return false;
+    return False;
   } 
-  return true;
+  return True;
   
 }
 
@@ -1600,7 +1599,7 @@ Bool Simulator::setpa(const String& /*mode*/, const String& /*table*/,
  /*
     if(mode=="table") {
       os << LogIO::SEVERE << "Cannot yet read from table" << LogIO::POST;
-      return false;
+      return False;
     }
     else {
       makeVisSet();
@@ -1609,12 +1608,12 @@ Bool Simulator::setpa(const String& /*mode*/, const String& /*table*/,
       os <<"Using parallactic angle correction"<< LogIO::POST;
     }
  */
-    return true;
+    return True;
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
-    return false;
+    return False;
   } 
-  return true;
+  return True;
 };
 
 
@@ -1633,20 +1632,20 @@ Bool Simulator::setbandpass(const String& /*mode*/, const String& /*table*/,
     /*    
     if(mode=="table") {
       os << LogIO::SEVERE << "Cannot yet read from table" << LogIO::POST;
-      return false;
+      return False;
     }
     else {
       os << LogIO::SEVERE << "Cannot yet calculate bandpass" << LogIO::POST;
-      return false;
+      return False;
     }
-    return true;
+    return True;
     */
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
 
-    return false;
+    return False;
   } 
-  return true;
+  return True;
 }
 
 
@@ -1673,12 +1672,12 @@ Bool Simulator::setpointingerror(const String& epJTableName,
     {
       os << LogIO::SEVERE << "Caught exception: "
 	 << x.getMesg() << LogIO::POST;
-      return false;
+      return False;
     }
 
   applyPointingOffsets_p = applyPointingOffsets;
   doPBCorrection_p = doPBCorrection;
-  return true;
+  return True;
 }
 
 
@@ -1719,7 +1718,7 @@ Bool Simulator::create_corrupt(Record& simpar)
     
     // add to the pointer block of VCs:
     uInt napp=vc_p.nelements();
-    vc_p.resize(napp+1,false,true);
+    vc_p.resize(napp+1,False,True);
     vc_p[napp] = (VisCal*) svc;
     // svc=NULL;
     ve_p.setapply(vc_p);
@@ -1728,9 +1727,9 @@ Bool Simulator::create_corrupt(Record& simpar)
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
     if (svc) delete svc;
     throw(AipsError("Error in Simulator::create_corrupt"));
-    return false;
+    return False;
   }
-  return true;
+  return True;
 }
 
 
@@ -1815,7 +1814,7 @@ Bool Simulator::setapply(const String& type,
        << LogIO::POST;
     if (vc) delete vc;
     throw(AipsError("Error in Simulator::setapply."));
-    return false;
+    return False;
   }
 
   // Creation apparently successful, so add to the apply list
@@ -1823,23 +1822,23 @@ Bool Simulator::setapply(const String& type,
   try {
 
     uInt napp=vc_p.nelements();
-    vc_p.resize(napp+1,false,true);
+    vc_p.resize(napp+1,False,True);
     vc_p[napp] = vc;
     vc=NULL;
 
     // Maintain sort of apply list
     ve_p.setapply(vc_p);
 
-    return true;
+    return True;
 
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg()
        << LogIO::POST;
     if (vc) delete vc;
     throw(AipsError("Error in Simulator::setapply."));
-    return false;
+    return False;
   }
-  return false;
+  return False;
 }
 
 
@@ -1980,9 +1979,9 @@ Bool Simulator::corrupt() {
     ms_p->unlock();
     if(mssel_p) mssel_p->unlock();
     throw(AipsError(x.what()));
-    return false;
+    return False;
   } 
-  return true;
+  return True;
 }
 
 
@@ -2026,7 +2025,7 @@ Bool Simulator::observe(const String&   sourcename,
     if(!feedsHaveBeenSet && !feedsInitialized) {
       os << "Feeds have not been set - using default " << feedMode_p << LogIO::WARN;
       sim_p->initFeeds(feedMode_p);
-      feedsInitialized = true;
+      feedsInitialized = True;
     }
     if(!timesHaveBeenSet_p) {
       os << "Times have not been set - using defaults " << endl
@@ -2049,9 +2048,9 @@ Bool Simulator::observe(const String&   sourcename,
 
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
-    return false;
+    return False;
   } 
-  return true;
+  return True;
 }
 
 
@@ -2062,9 +2061,9 @@ Bool Simulator::observemany(const Vector<String>&   sourcenames,
 			    const Vector<Quantity>& startTimes, 
 			    const Vector<Quantity>& stopTimes,
 			    const Vector<MDirection>& directions,
-			    const Bool add_observation=true,
-			    const Bool state_sig=true,
-			    const Bool state_ref=true,
+			    const Bool add_observation=True,
+			    const Bool state_sig=True,
+			    const Bool state_ref=True,
 			    const double& state_cal=0.,
 			    const double& state_load=0.,
 			    const unsigned int state_sub_scan=0,
@@ -2080,7 +2079,7 @@ Bool Simulator::observemany(const Vector<String>&   sourcenames,
     if(!feedsHaveBeenSet && !feedsInitialized) {
       os << "Feeds have not been set - using default " << feedMode_p << LogIO::WARN;
       sim_p->initFeeds(feedMode_p);
-      feedsInitialized = true;
+      feedsInitialized = True;
     }
     if(!timesHaveBeenSet_p) {
       os << "Times have not been set - using defaults " << endl
@@ -2102,9 +2101,9 @@ Bool Simulator::observemany(const Vector<String>&   sourcenames,
 
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
-    return false;
+    return False;
   } 
-  return true;
+  return True;
 }
 
 
@@ -2118,7 +2117,7 @@ Bool Simulator::predict(const Vector<String>& modelImage,
   
   LogIO os(LogOrigin("Simulator", "predict()", WHERE));
   
-  // Note that incremental here does not apply to se_p->predict(false),
+  // Note that incremental here does not apply to se_p->predict(False),
   // Rather it means: add the calculated model visibility to the data visibility.
   // We return a MS with Data, Model, and Corrected columns identical
 
@@ -2139,13 +2138,13 @@ Bool Simulator::predict(const Vector<String>& modelImage,
     if(mssel_p) mssel_p->lock();   
     if (!createSkyEquation( modelImage, compList)) {
       os << LogIO::SEVERE << "Failed to create SkyEquation" << LogIO::POST;
-      return false;
+      return False;
     }
 
     if (incremental) {
-      se_p->predict(false,MS::MODEL_DATA);  
+      se_p->predict(False,MS::MODEL_DATA);  
     } else {
-      se_p->predict(false,MS::DATA);   //20091030 RI changed SE::predict to use DATA
+      se_p->predict(False,MS::DATA);   //20091030 RI changed SE::predict to use DATA
     }
     destroySkyEquation();
 
@@ -2189,9 +2188,9 @@ Bool Simulator::predict(const Vector<String>& modelImage,
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
     ms_p->unlock();     
     if(mssel_p) mssel_p->lock();   
-    return false;
+    return False;
   } 
-  return true;
+  return True;
 }
 
 Bool Simulator::createSkyEquation(const Vector<String>& image,
@@ -2211,18 +2210,18 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
       if(!Table::isReadable(complist)) {
 	os << LogIO::SEVERE << "ComponentList " << complist
 	   << " not readable" << LogIO::POST;
-	return false;
+	return False;
       }
-      componentList_p=new ComponentList(complist, true);
+      componentList_p=new ComponentList(complist, True);
       if(componentList_p==0) {
 	os << LogIO::SEVERE << "Cannot create ComponentList from " << complist
 	   << LogIO::POST;
-	return false;
+	return False;
       }
       if(!sm_p->add(*componentList_p)) {
 	os << LogIO::SEVERE << "Cannot add ComponentList " << complist
 	   << " to SkyModel" << LogIO::POST;
-	return false;
+	return False;
       }
     } else {
       componentList_p=0;
@@ -2239,7 +2238,7 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
 	if(image(model)=="") {
 	  os << LogIO::SEVERE << "Need a name for model "  << model+1
 	     << LogIO::POST;
-	  return false;
+	  return False;
 	} else {
 	  if(!Table::isReadable(image(model))) {
 	    os << LogIO::SEVERE << image(model) << " is unreadable" << LogIO::POST;
@@ -2277,7 +2276,7 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
 
 	    if(sm_p->add(*images_p[model])!=model) {
 	      os << LogIO::SEVERE << "Error adding model " << model+1 << LogIO::POST;
-	      return false;
+	      return False;
 	    }
 	    models_found++;
 	  }
@@ -2287,7 +2286,7 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
 
     if(models_found<=0 and componentList_p==0) {
       os << LogIO::SEVERE << "No model images found" << LogIO::POST;
-      return false;
+      return False;
     }
 
     
@@ -2311,7 +2310,7 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
       if(!gvp_p) {
 	os << "Using default primary beams for gridding" << LogIO::POST;
 	ROMSColumns msc(*ams);
-	gvp_p=new VPSkyJones(msc, true, parAngleInc_p, squintType_p);
+	gvp_p=new VPSkyJones(msc, True, parAngleInc_p, squintType_p);
       }
       if(ftmachine_p=="sd") {
 	os << "Single dish gridding " << LogIO::POST;
@@ -2325,7 +2324,7 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
       else if(ftmachine_p=="mosaic") {
 	os << "Performing Mosaic gridding" << LogIO::POST;
 	// RI TODO need stokesString for current spw - e.g. currSpw()?
-	ft_p = new MosaicFT(gvp_p, mLocation_p, stokesString_p[0], cache_p/2, tile_p, true);
+	ft_p = new MosaicFT(gvp_p, mLocation_p, stokesString_p[0], cache_p/2, tile_p, True);
       }
       else if(ftmachine_p=="both") {
 	os << "Performing single dish gridding with convolution function "
@@ -2351,8 +2350,8 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
 	os << "Fourier transforms will use specified common tangent point:" << LogIO::POST;
 	// RI TODO how does this work with more than one field?
 	os << formatDirection(sourceDirection_p[nField-1]) << LogIO::POST;
-	//      ft_p = new WProjectFT(*ams, facets_p, cache_p/2, tile_p, false);
-	ft_p = new WProjectFT(wprojPlanes_p, mLocation_p, cache_p/2, tile_p, false);
+	//      ft_p = new WProjectFT(*ams, facets_p, cache_p/2, tile_p, False);
+	ft_p = new WProjectFT(wprojPlanes_p, mLocation_p, cache_p/2, tile_p, False);
       }
       else if (ftmachine_p=="pbwproject") {
 	os << "Fourier transfroms will use specified common tangent point and PBs" 
@@ -2366,7 +2365,7 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
 	     << LogIO::EXCEPTION;
 
    /*
-	doVP_p = false; // Since this FTMachine includes PB
+	doVP_p = False; // Since this FTMachine includes PB
 	if (wprojPlanes_p<=1)
 	  {
 	    os << LogIO::NORMAL
@@ -2389,11 +2388,11 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
 	if(!gvp_p) 
 	  {
 	    os << "Using defaults for primary beams used in gridding" << LogIO::POST;
-	    gvp_p=new VPSkyJones(*ms_p, true, parAngleInc_p, squintType_p);
+	    gvp_p=new VPSkyJones(*ms_p, True, parAngleInc_p, squintType_p);
 	  }
 //	  ft_p = new PBWProjectFT(*ms_p, epJ, gvp_p, facets_p, cache_p/2, 
 //	  doPointing, tile_p, paStep_p, 
-//	  pbLimit_p, true);
+//	  pbLimit_p, True);
 
 	String cfCacheDirName = "cache";
 	if (mssel_p)
@@ -2404,7 +2403,7 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
 				  applyPointingOffsets_p, doPBCorrection_p, 
 				  tile_p, 
 				  0.0, // Not required here. parAngleInc_p is used in gvp_p 
-				  pbLimit_p, true);
+				  pbLimit_p, True);
 	else
 	  ft_p = new PBWProjectFT(*ms_p, epJ_p, 
 				  // gvp_p, 
@@ -2413,7 +2412,7 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
 				  applyPointingOffsets_p, doPBCorrection_p, 
 				  tile_p, 
 				  0.0, // Not required here. parAngleInc_p is used in gvp_p 
-				  pbLimit_p, true);
+				  pbLimit_p, True);
 	AlwaysAssert(ft_p, AipsError);
 	cft_p = new SimpleComponentFTMachine();
 	AlwaysAssert(cft_p, AipsError);
@@ -2429,7 +2428,7 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
 
     // tell ftmachine about the transformations in model images above - no.
     //Vector<Int> dataspectralwindowids_p;
-    //Bool freqFrameValid_p = true;
+    //Bool freqFrameValid_p = True;
     //ft_p->setSpw(dataspectralwindowids_p, freqFrameValid_p);
 
     
@@ -2440,7 +2439,7 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
       ROMSColumns msc(*ams);
       if (doDefaultVP_p) {
 	os << "Using default primary beams for mosaicing (use setvp to change)" << LogIO::POST;
-	vp_p=new VPSkyJones(msc, true, parAngleInc_p, squintType_p, skyPosThreshold_p);
+	vp_p=new VPSkyJones(msc, True, parAngleInc_p, squintType_p, skyPosThreshold_p);
       } else {
 	Table vpTable( vpTableStr_p );
 	vp_p=new VPSkyJones(msc, vpTable, parAngleInc_p, squintType_p);
@@ -2455,9 +2454,9 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
     ms_p->unlock();     
     if(mssel_p) mssel_p->lock();   
-    return false;
+    return False;
   } 
-  return true;
+  return True;
 };
 
 void Simulator::destroySkyEquation() 
@@ -2497,9 +2496,9 @@ Bool Simulator::setlimits(const Double shadowLimit,
     sim_p->setElevationLimit( elevationLimit );
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
-    return false;
+    return False;
   } 
-  return true;
+  return True;
 }
       
 Bool Simulator::setauto(const Double autocorrwt) 
@@ -2513,9 +2512,9 @@ Bool Simulator::setauto(const Double autocorrwt)
 
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
-    return false;
+    return False;
   } 
-  return true;
+  return True;
 }
       
 void Simulator::makeVisSet() {
@@ -2570,13 +2569,13 @@ Bool Simulator::setoptions(const String& ftmachine, const Int cache, const Int t
   if(ft_p) {delete ft_p; ft_p=0;}
   if(cft_p) {delete cft_p; cft_p=0;}
 
-  return true;
+  return True;
 }
 
 
 Bool Simulator::detached() const
 {
-  return false;
+  return False;
 }
 
 String Simulator::formatDirection(const MDirection& direction) {
@@ -2611,7 +2610,7 @@ Bool Simulator::setdata(const Vector<Int>& spectralwindowids,
   if(!ms_p) {
     os << LogIO::SEVERE << "Program logic error: MeasurementSet pointer ms_p not yet set"
        << LogIO::POST;
-    return false;
+    return False;
   }
 
   try {
@@ -2624,12 +2623,12 @@ Bool Simulator::setdata(const Vector<Int>& spectralwindowids,
 
     Vector<Int> datadescids(0);
     for (uInt row=0; row<ddSpwIds.nelements(); row++) {
-      Bool found=false;
+      Bool found=False;
       for (uInt j=0; j<spectralwindowids.nelements(); j++) {
-	if (ddSpwIds(row)==spectralwindowids(j)) found=true;
+	if (ddSpwIds(row)==spectralwindowids(j)) found=True;
       };
       if (found) {
-	datadescids.resize(datadescids.nelements()+1,true);
+	datadescids.resize(datadescids.nelements()+1,True);
 	datadescids(datadescids.nelements()-1)=row;
       };
     };
@@ -2740,13 +2739,12 @@ Bool Simulator::setdata(const Vector<Int>& spectralwindowids,
 	}       
       }
     }
-    return true;
+    return True;
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg()
        << LogIO::POST;
-    return false;
+    return False;
   } 
-  return true;
+  return True;
 }
 
-} // end namespace casa

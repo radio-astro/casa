@@ -75,7 +75,6 @@
 
 #include <fstream>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // **********************************************************
@@ -88,21 +87,21 @@ SolvableVisCal::SolvableVisCal(VisSet& vs) :
   ct_(NULL),
   ci_(NULL),
   cpp_(NULL),
-  spwOK_(vs.numberSpw(),false),
+  spwOK_(vs.numberSpw(),False),
   maxTimePerSolution_p(0), 
   minTimePerSolution_p(10000000), 
   avgTimePerSolution_p(0),
   timer_p(),
   calTableName_(""),
   calTableSelect_(""),
-  append_(false),
+  append_(False),
   tInterpType_(""),
   fInterpType_(""),
   spwMap_(1,-1),
   urefantlist_(1,-1),
   minblperant_(4),
-  solved_(false),
-  byCallib_(false),
+  solved_(False),
+  byCallib_(False),
   apmode_(""),
   usolint_("inf"),
   solint_("inf"),
@@ -129,9 +128,9 @@ SolvableVisCal::SolvableVisCal(VisSet& vs) :
   solveAllParSNR_(vs.numberSpw(),NULL),
   srcPolPar_(),
   chanmask_(NULL),
-  simulated_(false),
+  simulated_(False),
   simint_("integration"),
-  onthefly_(false)
+  onthefly_(False)
 {
   if (prtlev()>2) cout << "SVC::SVC(vs)" << endl;
 
@@ -155,21 +154,21 @@ SolvableVisCal::SolvableVisCal(String msname,Int MSnAnt,Int MSnSpw) :
   ct_(NULL),
   ci_(NULL),
   cpp_(NULL),
-  spwOK_(MSnSpw,false),
+  spwOK_(MSnSpw,False),
   maxTimePerSolution_p(0), 
   minTimePerSolution_p(10000000), 
   avgTimePerSolution_p(0),
   timer_p(),
   calTableName_(""),
   calTableSelect_(""),
-  append_(false),
+  append_(False),
   tInterpType_(""),
   fInterpType_(""),
   spwMap_(1,-1),
   urefantlist_(1,-1),
   minblperant_(4),
-  solved_(false),
-  byCallib_(false),
+  solved_(False),
+  byCallib_(False),
   apmode_(""),
   usolint_("inf"),
   solint_("inf"),
@@ -196,9 +195,9 @@ SolvableVisCal::SolvableVisCal(String msname,Int MSnAnt,Int MSnSpw) :
   solveAllParSNR_(MSnSpw,NULL),
   srcPolPar_(),
   chanmask_(NULL),
-  simulated_(false),
+  simulated_(False),
   simint_("integration"),
-  onthefly_(false)
+  onthefly_(False)
 {
   if (prtlev()>2) cout << "SVC::SVC(msname,MSnAnt,MSnSpw)" << endl;
 
@@ -296,19 +295,19 @@ SolvableVisCal::SolvableVisCal(const Int& nAnt) :
   timer_p(),
   calTableName_(""),
   calTableSelect_(""),
-  append_(false),
+  append_(False),
   tInterpType_(""),
   fInterpType_(""),
   spwMap_(1,-1),
   urefantlist_(1,-1),
   minblperant_(4),
-  solved_(false),
+  solved_(False),
   apmode_(""),
   usolint_("inf"),
   solint_("inf"),
   solTimeInterval_(DBL_MAX),
   fsolint_("none"),
-  solnorm_(false),
+  solnorm_(False),
   minSNR_(0.0),
   combine_(""),
   focusChan_(0),
@@ -322,9 +321,9 @@ SolvableVisCal::SolvableVisCal(const Int& nAnt) :
   solveParSNR_(1,NULL),
   srcPolPar_(),
   chanmask_(NULL),
-  simulated_(false),
+  simulated_(False),
   simint_("inf"),
-  onthefly_(false)
+  onthefly_(False)
 {  
   if (prtlev()>2) cout << "SVC::SVC(i,j,k)" << endl;
 
@@ -372,8 +371,8 @@ void SolvableVisCal::setApply() {
   interval()=DBL_MAX;
 
   // This is apply context  
-  setApplied(true);
-  setSolved(false);
+  setApplied(True);
+  setSolved(False);
 
 }
 
@@ -477,8 +476,8 @@ void SolvableVisCal::setApply(const Record& apply) {
     interval()=apply.asFloat("t");
 
   // This is apply context  
-  setApplied(true);
-  setSolved(false);
+  setApplied(True);
+  setSolved(False);
 
   //  TBD:  "Arranging to apply...."
 
@@ -517,7 +516,7 @@ void SolvableVisCal::setCallib(const Record& callib,
   VisCal::setCallib(callib,selms);
 
   // signal that we are using a callib
-  byCallib_=true;
+  byCallib_=True;
 
   // Collect Cal table parameters
   if (callib.isDefined("tablename")) {
@@ -527,8 +526,8 @@ void SolvableVisCal::setCallib(const Record& callib,
   }
 
   // This is apply context  
-  setApplied(true);
-  setSolved(false);
+  setApplied(True);
+  setSolved(False);
 
   logSink() << LogIO::NORMAL << ".   "
 	    << this->applyinfo()
@@ -667,7 +666,7 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
     calTableName()=simpar.asString("caltable");
     // RI todo SVC::setSimulate deal with over-writing existing caltables
     // verifyCalTable(calTableName());
-    append()=false;
+    append()=False;
   } else {
     calTableName()="<none>";
   }
@@ -675,24 +674,24 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
     calTableName()="<none>";
    
   // on the fly (only implemented for ANoise 20100817)
-  simOnTheFly()=false;
+  simOnTheFly()=False;
   if (simpar.isDefined("onthefly")) {
     if (simpar.asBool("onthefly")) {
       if (type() != VisCal::ANoise) {
 	throw(AipsError("Logic Error: onthefly simulation not available for type "+typeName()));
       } else {
-	simOnTheFly()=true;
+	simOnTheFly()=True;
 	os << LogIO::DEBUG1 << " using OTF simulation" << LogIO::POST;  
 	calTableName()="<none>";
       }
     }
   }
 
-  setSolved(false);
+  setSolved(False);
   // this has to be true for some of George's VE stuff 
   // but be careful about VC structure and inflation!
-  setApplied(true); 
-  setSimulated(true);
+  setApplied(True); 
+  setSimulated(True);
 
   // without this, CI gets created without a sensible time
   // interpolation, and ends up bombing
@@ -782,7 +781,7 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
     corruptor_p->slot_times()=solTimes;
     corruptor_p->startTime()=min(solTimes);
     corruptor_p->stopTime()=max(solTimes);
-    corruptor_p->times_initialized()=true;
+    corruptor_p->times_initialized()=True;
   }
 
   if (simOnTheFly()) {
@@ -815,15 +814,15 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
     Vector<Int> a2;
     Matrix<Bool> flags;
     
-    ProgressMeter meter(0.,1. , "Simulating "+nameOfType(type())+" ", "", "", "", true, 1);
+    ProgressMeter meter(0.,1. , "Simulating "+nameOfType(type())+" ", "", "", "", True, 1);
 
     // check if it's possible to simulate ACs
-    Bool knownACtype(false);
+    Bool knownACtype(False);
     String mode(corruptor_p->mode());
     if (type()==VisCal::ANoise)
-     knownACtype = true;
+     knownACtype = True;
     else if (type()==VisCal::T && (mode=="tsys-manual" || mode=="tsys-atm"))
-      knownACtype = true;
+      knownACtype = True;
     
     for (Int isim=0;isim<nSim && vi.moreChunks();++isim) {      
     
@@ -844,8 +843,8 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
       IPosition trc(3,nPar()-1,nChanPar()-1,0);
       IPosition gpos(3,0,0,0);
       
-      Bool useBase(false);
-      if (nElem()==nBln()) useBase=true;
+      Bool useBase(False);
+      if (nElem()==nBln()) useBase=True;
     
       for (Int ichunk=0;ichunk<nChunkPerSol[isim];++ichunk) {
         // RI todo: SVC:setSim deal with spwmap and spwcomb() here
@@ -880,7 +879,7 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
 	  corruptor_p->setCurrTime(refTime());
     	
     	solveCPar()=Complex(0.0);
-    	solveParOK()=false;
+    	solveParOK()=False;
     	
     	for (Int irow=0;irow<vi.nRow();++irow) {
     	  
@@ -916,11 +915,11 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
 		    solveCPar()(gpos) = corruptor_p->simPar(vi,type(),ipar);
     		  else
     		    solveCPar()(gpos)=1.0;
-		  solveParOK()(gpos)=true;		     
+		  solveParOK()(gpos)=True;		     
     		} else {
     		  // specialized simPar for each VC - may depend on mode etc
     		  solveCPar()(gpos) = corruptor_p->simPar(vi,type(),ipar); 
-		  solveParOK()(gpos)=true;	      
+		  solveParOK()(gpos)=True;	      
 
 		  // if MS doesn't have ACs we need to fill ant2 b/c it'll 
 		  // never get selected in this loop over ant1
@@ -930,7 +929,7 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
 		    if (solveCPar()(gpos)==Complex(0.0)) {
 		      corruptor_p->currAnt()=a2(irow);
 		      solveCPar()(gpos) = corruptor_p->simPar(vi,type(),ipar); 
-		      solveParOK()(gpos)=true;	      
+		      solveParOK()(gpos)=True;	      
 		      corruptor_p->currAnt()=a1(irow);		      
 		    }
 		    gpos(2)=a1(irow);
@@ -961,7 +960,7 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
     	    //trc(1)=nChanPar()-1;
 	    //    	    blc(2)=gpos(2);
 	    //    	    trc(2)=gpos(2);
-    	    //solveParOK()(blc,trc)=true;
+    	    //solveParOK()(blc,trc)=True;
     	  }// if not flagged
     	}// row
 
@@ -991,7 +990,7 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
        << "Writing calTable = "+calTableName()+" ("+typeName()+")" 
        << endl << LogIO::POST;      
     // write the table
-    append()=false; 
+    append()=False; 
     storeNCT();
   } else {
     os << LogIO::NORMAL 
@@ -1079,13 +1078,13 @@ void SolvableVisCal::setSolve() {
   urefantlist_(0)=-1;
   apmode()="AP";
   calTableName()="<none>";
-  solnorm()=false;
+  solnorm()=False;
   minSNR()=0.0f;
 
   // This is the solve context
-  setSolved(true);
-  setApplied(false);
-  setSimulated(false);
+  setSolved(True);
+  setApplied(False);
+  setSimulated(False);
 
 }
 
@@ -1232,8 +1231,8 @@ void SolvableVisCal::setSolve(const Record& solve)
     preavg()=DBL_MAX;
 
   // This is the solve context
-  setSolved(true);
-  setApplied(false);
+  setSolved(True);
+  setApplied(False);
 
   //  state();
 
@@ -1285,8 +1284,8 @@ void SolvableVisCal::setAccumulate(VisSet& vs,
   interval()=t;
 
   // Not actually applying or solving
-  setSolved(false);
-  setApplied(false);
+  setSolved(False);
+  setApplied(False);
 
   // If interval<0, this signals an existing input cumulative table
   if (interval()<0.0) {
@@ -1338,11 +1337,11 @@ void SolvableVisCal::setSpecify(const Record& specify) {
   LogMessage message(LogOrigin("SolvableVisCal","setSpecify"));
 
   // Not actually applying or solving
-  setSolved(false);
-  setApplied(false);
+  setSolved(False);
+  setApplied(False);
 
   // Collect Cal table parameters
-  Bool tableExists(false);
+  Bool tableExists(False);
   if (specify.isDefined("caltable")) {
     calTableName()=specify.asString("caltable");
 
@@ -1433,7 +1432,7 @@ void SolvableVisCal::setSpecify(const Record& specify) {
 	throw(AipsError("Internal SVC::setAccumulate(...) error: Got invalid VisCalEnum"));
       }
       }
-      solveAllParOK().set(true);
+      solveAllParOK().set(True);
       solveAllParSNR().set(1.0);
       solveAllParErr().set(0.0);
       
@@ -1459,7 +1458,7 @@ void SolvableVisCal::specify(const Record& specify) {
   Int Nant(0);
   Int Npol(1);
   
-  Bool repspw(false);
+  Bool repspw(False);
   
   IPosition ip0(3,0,0,0);
   IPosition ip1(3,0,0,0);
@@ -1499,7 +1498,7 @@ void SolvableVisCal::specify(const Record& specify) {
       logSink() << 
 	"Specified parameter(s) (per antenna and pol) repeated on all spws." 
 		<< LogIO::POST;
-      repspw=true;
+      repspw=True;
       nUserSpw=nSpw();
       spws.resize(nUserSpw);
       indgen(spws);
@@ -1667,7 +1666,7 @@ Int SolvableVisCal::sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol) {
   // New version that counts solutions (which may overlap in 
   //   field and/or ddid) rather than chunks
 
-  Bool verby(false);
+  Bool verby(False);
 
   // Set Nominal per-spw channelization
   setSolveChannelization(vs);
@@ -1743,7 +1742,7 @@ Int SolvableVisCal::sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol) {
       }
       // increase size of nChunkPerSol array, if needed
       if (nChunkPerSol.nelements()<uInt(sol+1))
-	nChunkPerSol.resize(nChunkPerSol.nelements()+100,true);
+	nChunkPerSol.resize(nChunkPerSol.nelements()+100,True);
       nChunkPerSol(sol)=0;
     }
 
@@ -1785,7 +1784,7 @@ Int SolvableVisCal::sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol) {
 
   Int nSol(sol+1);
   
-  nChunkPerSol.resize(nSol,true);
+  nChunkPerSol.resize(nSol,True);
   
   spwMap().resize(vs.numberSpw());
   indgen(spwMap());
@@ -1957,11 +1956,11 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
       }
       // increase size of nChunkPerSol array, if needed
       if (nChunkPerSol.nelements()<uInt(sol+1))
-	nChunkPerSol.resize(nChunkPerSol.nelements()+100,true);
+	nChunkPerSol.resize(nChunkPerSol.nelements()+100,True);
       nChunkPerSol(sol)=0;
       // keep the times!
       if (solTimes.nelements()<uInt(sol+1))
-	solTimes.resize(solTimes.nelements()+100,true);
+	solTimes.resize(solTimes.nelements()+100,True);
       solTimes(sol)=soltime1;
     }
 
@@ -1994,8 +1993,8 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
   
   nSol = sol+1;
 
-  nChunkPerSol.resize(nSol,true);
-  solTimes.resize(nSol,true);
+  nChunkPerSol.resize(nSol,True);
+  solTimes.resize(nSol,True);
 
   if (prtlev()>5) {
     cout << "   solTimes = " << solTimes-solTimes[0] << endl;
@@ -2091,7 +2090,7 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
 	  solveParSNR().resize(nPar(),nChanPar(),nElem());
 	  	  
 	  solveCPar()=Complex(1.0);
-	  solveParOK()=true;
+	  solveParOK()=True;
 	  solveParErr()=0.0;
 	  solveParSNR()=0.0;
 	  break;
@@ -2104,7 +2103,7 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
 	  solveParSNR().resize(nPar(),nChanPar(),nElem());
 	  
 	  solveRPar()=0.0;
-	  solveParOK()=true;
+	  solveParOK()=True;
 	  solveParErr()=0.0;
 	  solveParSNR()=0.0;
 	  break;
@@ -2669,7 +2668,7 @@ void SolvableVisCal::inflateNCTwithMetaData(VisSet& vs) {
     default:
       break;
     }
-    solveAllParOK().set(true);
+    solveAllParOK().set(True);
     solveAllParErr().set(Float(0.0));
     solveAllParSNR().set(1.0);
 
@@ -2699,10 +2698,10 @@ Bool SolvableVisCal::syncSolveMeta(VisBuffGroupAcc& vbga) {
   Double& rTime(vbga.globalTimeStamp());
   if (rTime > 0.0) {
     refTime()=rTime;
-    return true;
+    return True;
   }
   else
-    return false;
+    return False;
 
 }
 
@@ -2726,7 +2725,7 @@ Bool SolvableVisCal::syncSolveMeta(VisBuffer& vb,
 
   if (prtlev()>2) cout << "SVC::syncSolveMeta(,,)" << endl;
 
-  // Returns true, only if sum of weights is positive,
+  // Returns True, only if sum of weights is positive,
   //  i.e., there is data to solve with
 
   // TBD: freq info, etc.
@@ -2757,10 +2756,10 @@ Bool SolvableVisCal::syncSolveMeta(VisBuffer& vb,
     gTimes*=gWts;
     refTime()=sum(gTimes);
     refTime()/=sumWts;
-    return true;
+    return True;
   }
   else
-    return false;
+    return False;
 
 }
 
@@ -2864,7 +2863,7 @@ void SolvableVisCal::setUpForPolSolve(VisBuffer& vb) {
 	      } // icorr
 	    }
 	    else
-	      vb.flag()(ich,irow)=true;
+	      vb.flag()(ich,irow)=True;
 	    
 	  } // !*fl
 	} // ich
@@ -2914,7 +2913,7 @@ Bool SolvableVisCal::verifyConstraints(VisBuffGroupAcc& vbag) {
   // Recursively apply threshold on baselines per antenna
   //  Currently, we insist on at least 3 baselines per antenna
   //  (This will eventually be a user-specified parameter: blperant)
-  Vector<Bool> antOK(nAnt(),true);  // nominally OK
+  Vector<Bool> antOK(nAnt(),True);  // nominally OK
   Vector<Int> blperant(nAnt(),0);
   Int iant=0;
   while (iant<nAnt()) {
@@ -2924,7 +2923,7 @@ Bool SolvableVisCal::verifyConstraints(VisBuffGroupAcc& vbag) {
       if (nbl<minblperant()) {
 	// some baselines available, but not enough
 	//  so eliminate this antenna 
-	antOK(iant)=false;
+	antOK(iant)=False;
 	blwtsum.row(iant)=0.0;
 	blwtsum.column(iant)=0.0;
 	blperant(iant)=0;
@@ -2940,11 +2939,11 @@ Bool SolvableVisCal::verifyConstraints(VisBuffGroupAcc& vbag) {
   //  cout << "  ntrue(antOK) = " << ntrue(antOK) << endl;
 
   // Apply constraints results to solutions and data
-  solveParOK()=false;   // Solutions nominally bad
+  solveParOK()=False;   // Solutions nominally bad
   for (Int iant=0;iant<nAnt();++iant) {
     if (antOK(iant)) {
       // set solution good
-      solveParOK().xyPlane(iant) = true;
+      solveParOK().xyPlane(iant) = True;
     }
     else {
       // This ant not ok, set soln to zero
@@ -2960,12 +2959,12 @@ Bool SolvableVisCal::verifyConstraints(VisBuffGroupAcc& vbag) {
 	Vector<Int>& a2(cvb.antenna2());
 	for (Int irow=0;irow<cvb.nRow();++irow) {
 	  if (a1(irow)==iant || a2(irow)==iant)
-	    cvb.infocusFlag()(0,irow)=true;
+	    cvb.infocusFlag()(0,irow)=True;
 	}
 	// the following didn't work because row(0) behaved
 	//  as contiguous and set the wrong flags for multi-chan data!
-	//	cvb.infocusFlag().row(0)(a1==iant)=true;
-	//	cvb.infocusFlag().row(0)(a2==iant)=true;
+	//	cvb.infocusFlag().row(0)(a1==iant)=True;
+	//	cvb.infocusFlag().row(0)(a2==iant)=True;
       } // ivb
 
     } // antOK
@@ -3098,7 +3097,7 @@ Bool SolvableVisCal::verifyForSolve(VisBuffer& vb) {
   //   and set solveParOK accordingly
   Vector<Int> blperant(nAnt(),0);
   Vector<Double> wtperant(nAnt(),0.0);
-  Vector<Bool> antOK(nAnt(),false);
+  Vector<Bool> antOK(nAnt(),False);
     
   while (nAntForSolve!=nAntForSolveFinal) {
 
@@ -3127,20 +3126,20 @@ Bool SolvableVisCal::verifyForSolve(VisBuffer& vb) {
       }
     }
     
-    antOK=false;
+    antOK=False;
     for (Int iant=0;iant<nAnt();++iant) {
       if (blperant(iant)>3 &&
 	  wtperant(iant)>0.0) {
 	// This antenna is good, keep it
 	nAntForSolve+=1;
-	antOK(iant)=true;
+	antOK(iant)=True;
       }
       else {
 	// This antenna under-represented; flag it
-	vb.flag().row(focusChan())(vb.antenna1()==iant)=true;
-	vb.flag().row(focusChan())(vb.antenna2()==iant)=true;
-	//	vb.flagRow()(vb.antenna1()==iant)=true;
-	//	vb.flagRow()(vb.antenna2()==iant)=true;
+	vb.flag().row(focusChan())(vb.antenna1()==iant)=True;
+	vb.flag().row(focusChan())(vb.antenna2()==iant)=True;
+	//	vb.flagRow()(vb.antenna1()==iant)=True;
+	//	vb.flagRow()(vb.antenna2()==iant)=True;
       }
     }
 
@@ -3154,11 +3153,11 @@ Bool SolvableVisCal::verifyForSolve(VisBuffer& vb) {
   nAntForSolveFinal=nAntForSolve;
 
   // Set a priori solution flags  
-  solveParOK() = false;
+  solveParOK() = False;
   for (Int iant=0;iant<nAnt();++iant)
     if (antOK(iant))
       // This ant ok
-      solveParOK().xyPlane(iant) = true;
+      solveParOK().xyPlane(iant) = True;
     else
       // This ant not ok, set soln to zero
       if (parType()==VisCalEnum::COMPLEX)
@@ -3223,7 +3222,7 @@ void SolvableVisCal::updatePar(const Vector<Complex> dCalPar,const Vector<Comple
   //  if (apmode()=='P') {   
   //  NB: Disable this, for the moment (07May24); testing a fix for
   //      a problem Kumar noticed.  See VC::makeSolnPhaseOnly(), etc.
-  if (false) {
+  if (False) {
     Float amp(0.0);
     for (Int iant=0;iant<nAnt();++iant) {
       for (Int ipar=0;ipar<nPar();++ipar) {
@@ -3302,7 +3301,7 @@ void SolvableVisCal::applySNRThreshold() {
   Int nOk2(ntrue(solveParOK()));
   Int nFail=nOk1-nOk2;    
   
-  if (false) {
+  if (False) {
     // Report some stuff re SNR
     cout << endl 
 	 << "Time = " << MVTime(refTime()/C::day).string(MVTime::YMD,7) << endl;
@@ -3364,7 +3363,7 @@ void SolvableVisCal::syncSolveCal() {
     throw(AipsError("No valid parameters in syncSolveCal"));
 
   // Sync up matrices using current params
-  syncCalMat(false);    // NEVER invert in solve context
+  syncCalMat(False);    // NEVER invert in solve context
   syncDiffMat();
 
 }
@@ -3398,7 +3397,7 @@ void SolvableVisCal::calcPar() {
     this->calcParByCLPP();
   else { // use CTPatchedInterp
 
-  Bool newcal(false);
+  Bool newcal(False);
 
   // Interpolate solution   (CTPatchedInterp)
   if (freqDepPar()) {
@@ -3459,7 +3458,7 @@ void SolvableVisCal::calcPar() {
 
 void SolvableVisCal::calcParByCLPP() {
 
-  Bool newcal(false);
+  Bool newcal(False);
   Cube<Bool> resFlag;
 
   // Interpolate solution   
@@ -3637,20 +3636,20 @@ void SolvableVisCal::createMemCalTable() {
       ncc.spectralWindow().totalBandwidth().put(ispw,abs(sum(calwid)));
     }
     else
-      ncc.spectralWindow().flagRow().put(ispw,true);
+      ncc.spectralWindow().flagRow().put(ispw,True);
   }
 
   // When combining in spw, further revise freq info to average over combined spws
-  //  Only for freqDepPar()=false types, for now (nothing bandpass-like)
+  //  Only for freqDepPar()=False types, for now (nothing bandpass-like)
   //  NB: Currently, this will only handle a single aggregation..., e.g., not CAS-5687
   if (combspw() && !freqDepPar()) {
 
     try {
 
     Matrix<Double> chanFreq,chanWidth,effectiveBW;
-    ncc.spectralWindow().chanFreq().getColumn(chanFreq,true);
-    ncc.spectralWindow().chanWidth().getColumn(chanWidth,true);
-    ncc.spectralWindow().effectiveBW().getColumn(effectiveBW,true);
+    ncc.spectralWindow().chanFreq().getColumn(chanFreq,True);
+    ncc.spectralWindow().chanWidth().getColumn(chanWidth,True);
+    ncc.spectralWindow().effectiveBW().getColumn(effectiveBW,True);
 
     // Insist on a single channel!   (NO BANDPASS-LIKE TYPES!)
     Int nChan=chanFreq.shape()[0];
@@ -3667,7 +3666,7 @@ void SolvableVisCal::createMemCalTable() {
     //      a reasonable argument (the phase correction is ~appropriate over this
     //      limited range without further refinement...)  (the width isn't used
     //      decisively anywhere yet, in any case)
-    if (false) {
+    if (False) {
       
       Vector<Double> f(chanFreq.row(0));
       Vector<Double> chW(chanWidth.row(0));
@@ -3735,7 +3734,7 @@ Bool SolvableVisCal::spwOK(Int ispw) {
   else {
     // Assume ok (e.g., non-ci_ types like TOpac, GainCurve)
     // TBD: be more careful by specializing this method
-    return true;
+    return True;
   }
 }
 
@@ -3780,7 +3779,7 @@ void SolvableVisCal::keepNCT() {
   ncmc.flag().putColumnCells(rows,!solveAllParOK());
 
   // This spw now has some solutions in it
-  spwOK_(currSpw())=true;
+  spwOK_(currSpw())=True;
 
 }
 
@@ -3873,7 +3872,7 @@ void SolvableVisCal::normalize() {
       Cube<Complex> p(ctiter.cparam());
       Cube<Bool> fl(ctiter.flag());
       if (nfalse(fl)>0)
-	normSolnArray(p,!fl,false);  // don't do phase
+	normSolnArray(p,!fl,False);  // don't do phase
 
       // record result...
       ctiter.setcparam(p);
@@ -4210,11 +4209,11 @@ void SolvableVisCal::applyChanMask(VisBuffer& vb) {
     nMesg = (Int)boost;
     
     Int tmp=abs(nSlots-slotNo); Bool print;
-    print = false;
-    if (nMesg <= 0) print=false;
-    else if ((slotNo == 0) || (slotNo == nSlots-1))  print=true;
-    else if ((tmp > 0 ) && ((slotNo+1)%nMesg ==0)) print=true;
-    else print=false;
+    print = False;
+    if (nMesg <= 0) print=False;
+    else if ((slotNo == 0) || (slotNo == nSlots-1))  print=True;
+    else if ((tmp > 0 ) && ((slotNo+1)%nMesg ==0)) print=True;
+    else print=False;
 
     if (print)
       {
@@ -4240,7 +4239,7 @@ SolvableVisMueller::SolvableVisMueller(VisSet& vs) :
   SolvableVisCal(vs),
   dM_(NULL),
   diffMElem_(),
-  DMValid_(false)
+  DMValid_(False)
 {
   if (prtlev()>2) cout << "SVM::SVM(vs)" << endl;
 }
@@ -4251,7 +4250,7 @@ SolvableVisMueller::SolvableVisMueller(String msname,Int MSnAnt,Int MSnSpw) :
   SolvableVisCal(msname,MSnAnt,MSnSpw),
   dM_(NULL),
   diffMElem_(),
-  DMValid_(false)
+  DMValid_(False)
 {
   if (prtlev()>2) cout << "SVM::SVM(msname,MSnAnt,MSnSpw)" << endl;
 }
@@ -4273,7 +4272,7 @@ SolvableVisMueller::SolvableVisMueller(const Int& nAnt) :
   SolvableVisCal(nAnt),
   dM_(NULL),
   diffMElem_(),
-  DMValid_(false)
+  DMValid_(False)
 {
   if (prtlev()>2) cout << "SVM::SVM(i,j,k)" << endl;
 }
@@ -4318,7 +4317,7 @@ void SolvableVisMueller::initSolvePar() {
     solveAllParOK().resize(nPar(),nChanPar(),nBln());
     solveAllParErr().resize(nPar(),nChanPar(),nBln());
     solveAllParSNR().resize(nPar(),nChanPar(),nBln());
-    solveAllParOK()=true;
+    solveAllParOK()=True;
     solveAllParErr()=0.0;
     solveAllParSNR()=0.0;
     solveParOK().reference(solveAllParOK());
@@ -4342,7 +4341,7 @@ void SolvableVisMueller::syncDiffMueller() {
 
   if (prtlev()>6) cout << "      SVM::syncDiffMueller()" << endl;
 
-  // TBD:  validateDM() for trivialMuellerElem()=true??
+  // TBD:  validateDM() for trivialMuellerElem()=True??
   //    (cf. where does invalidateDM() occur?)
 
   if (trivialDM())
@@ -4485,7 +4484,7 @@ void SolvableVisMueller::stateSVM(const Bool& doVC) {
   if (doVC) VisMueller::state();
   
   // Get parent's state (w/out VC):
-  SolvableVisCal::stateSVC(false);
+  SolvableVisCal::stateSVC(False);
 
   if (applyByMueller()) {
     if (prtlev()>3) cout << "SVM::stateSVM()" << endl;
@@ -4529,7 +4528,7 @@ SolvableVisJones::SolvableVisJones(VisSet& vs) :
   dJ1_(NULL),                           // data...
   dJ2_(NULL),
   diffJElem_(),
-  DJValid_(false),
+  DJValid_(False),
   plotter_(NULL)
 {
   if (prtlev()>2) cout << "SVJ::SVJ(vs)" << endl;
@@ -4543,7 +4542,7 @@ SolvableVisJones::SolvableVisJones(String msname,Int MSnAnt,Int MSnSpw) :
   dJ1_(NULL),                           // data...
   dJ2_(NULL),
   diffJElem_(),
-  DJValid_(false),
+  DJValid_(False),
   plotter_(NULL)
 {
   if (prtlev()>2) cout << "SVJ::SVJ(msname,MSnAnt,MSnSpw)" << endl;
@@ -4572,7 +4571,7 @@ SolvableVisJones::SolvableVisJones(const Int& nAnt) :
   dJ1_(NULL),                 // data...
   dJ2_(NULL),
   diffJElem_(),
-  DJValid_(false),
+  DJValid_(False),
   plotter_(NULL)
 {
   if (prtlev()>2) cout << "SVJ::SVJ(i,j,k)" << endl;
@@ -4634,7 +4633,7 @@ void SolvableVisJones::differentiate(CalVisBuffer& cvb) {
 
   if (prtlev()>3) cout << "  SVJ::differentiate(CVB)" << endl;
 
-  // NB: For freqDepPar()=true, the data and solutions are
+  // NB: For freqDepPar()=True, the data and solutions are
   //     multi-channel, but nChanMat()=1 because we only 
   //     consider one channel at a time.  In this case,
   //     focusChan is the specific channel under consideration.
@@ -4682,8 +4681,8 @@ void SolvableVisJones::differentiate(CalVisBuffer& cvb) {
   VisVector dV2(vt);  // The deriv of V wrt pars of 2nd ant in bln 
 
   // Temporary non-iterating VisVectors to hold partial applies
-  VisVector J1V(vt,true);
-  VisVector VJ2(vt,true);
+  VisVector J1V(vt,True);
+  VisVector VJ2(vt,True);
 
   // Starting synchronization for output visibility data
   cVm.sync(Vout(0,0,0));
@@ -4717,7 +4716,7 @@ void SolvableVisJones::differentiate(CalVisBuffer& cvb) {
   for (Int irow=0; irow<nRow; irow++,flagR++,a1++,a2++,time++) {
     
     // Avoid ACs
-    if (*a1==*a2) *flagR=true;
+    if (*a1==*a2) *flagR=True;
 
     if (!*flagR) {  // if this row unflagged
 	
@@ -4981,7 +4980,7 @@ void SolvableVisJones::differentiate(VisBuffer& vb,
     
   if (prtlev()>3) cout << "  SVJ::differentiate()" << endl;
 
-  // NB: For freqDepPar()=true, the data and solutions are
+  // NB: For freqDepPar()=True, the data and solutions are
   //     multi-channel, but nChanMat()=1 because we only 
   //     consider one channel at a time.  In this case,
   //     focusChan is the specific channel under consideration.
@@ -5049,8 +5048,8 @@ void SolvableVisJones::differentiate(VisBuffer& vb,
   VisVector dV2(vt);  // The deriv of V wrt pars of 2nd ant in bln 
 
   // Temporary non-iterating VisVectors to hold partial applies
-  VisVector J1V(vt,true);
-  VisVector VJ2(vt,true);
+  VisVector J1V(vt,True);
+  VisVector VJ2(vt,True);
 
   // Starting synchronization for output visibility data
   cVm.sync(Vout(0,0,0));
@@ -5084,7 +5083,7 @@ void SolvableVisJones::differentiate(VisBuffer& vb,
   for (Int irow=0; irow<nRow; irow++,flagR++,a1++,a2++,time++) {
     
     // Avoid ACs
-    if (*a1==*a2) *flagR=true;
+    if (*a1==*a2) *flagR=True;
 
     if (!*flagR) {  // if this row unflagged
 	
@@ -5251,7 +5250,7 @@ void SolvableVisJones::diffSrc(VisBuffer& vb,
   for (Int irow=0; irow<nRow; irow++,flagR++,a1++,a2++,time++) {
     
     // Avoid ACs
-    if (*a1==*a2) *flagR=true;
+    if (*a1==*a2) *flagR=True;
 
     if (!*flagR) {  // if this row unflagged
 	
@@ -5311,7 +5310,7 @@ void SolvableVisJones::accumulate(SolvableVisCal* incr,
 
   Int nfield(fields.nelements());
 
-  Bool fldok(true);
+  Bool fldok(True);
 
   // TBD: Iterate over the ct_
   Block<String> cols(2);
@@ -5350,7 +5349,7 @@ void SolvableVisJones::accumulate(SolvableVisCal* incr,
 	currCPar().assign(ctiter.cparam());
 	currParOK().assign(!ctiter.flag());
 
-	syncCalMat(false);  // a reference!!
+	syncCalMat(False);  // a reference!!
 	  
 	// Sync svj with this
 	svj->syncCal(*this);
@@ -5430,7 +5429,7 @@ void SolvableVisJones::initSolvePar() {
     solveAllParOK().resize(nPar(),nChanPar(),nAnt());
     solveAllParErr().resize(nPar(),nChanPar(),nAnt());
     solveAllParSNR().resize(nPar(),nChanPar(),nAnt());
-    solveAllParOK()=true;
+    solveAllParOK()=True;
     solveAllParErr()=0.0;
     solveAllParSNR()=0.0;
     if (nChanPar()==1) {
@@ -5443,7 +5442,7 @@ void SolvableVisJones::initSolvePar() {
       solveParOK().resize(nPar(),1,nAnt());
       solveParErr().resize(nPar(),1,nAnt());
       solveParSNR().resize(nPar(),1,nAnt());
-      solveParOK()=true;
+      solveParOK()=True;
       solveParErr()=0.0;
       solveParSNR()=0.0;
     }
@@ -5473,7 +5472,7 @@ void SolvableVisJones::syncDiffJones() {
 
   // If differentiated Jones are trivial, we are
   // already referencing the type-dep trivial versions
-  //  TBD: Review this for D, where trivialJonesElem()=false,
+  //  TBD: Review this for D, where trivialJonesElem()=False,
   //   but diffJ is "trivial-ish"!!!  (Probably need trivDiffJonesElem(),
   //   or override this method in D to make it no-op)
 
@@ -5610,7 +5609,7 @@ void SolvableVisJones::stateSVJ(const Bool& doVC) {
   if (doVC) VisJones::state();
 
   // Get parent's state (w/out VC):
-  SolvableVisMueller::stateSVM(false);
+  SolvableVisMueller::stateSVM(False);
 
   if (applyByJones()) {
     if (prtlev()>3) cout << "SVJ::stateSVJ()" << endl;
@@ -5764,7 +5763,7 @@ void SolvableVisJones::applyRefAnt() {
   }
   //  cout << "nPol = " << nPol << endl;
 
-  Bool usedaltrefant(false);
+  Bool usedaltrefant(False);
   Int currrefant(refantchoices(0)), lastrefant(-1);
 
   Block<String> cols(2);
@@ -5778,10 +5777,10 @@ void SolvableVisJones::applyRefAnt() {
   Vector<Int> ant1A, ant1B, ant2B;
   Matrix<Complex> refPhsr;  // the reference phasor [npol,nchan] 
   Int lastspw(-1);
-  Bool first(true);
+  Bool first(True);
   while (!ctiter.pastEnd()) {
     Int ispw=ctiter.thisSpw();
-    if (ispw!=lastspw) first=true;  // spw changed, start over
+    if (ispw!=lastspw) first=True;  // spw changed, start over
 
     // Read in the current sol, fl, ant1:
     solB.assign(ctiter.cparam());
@@ -5803,7 +5802,7 @@ void SolvableVisJones::applyRefAnt() {
     //     in the current(B) and previous(A) intervals (so they can be connected)
     Int irefA(0),irefB(0);  // index on 3rd axis of solution arrays
     Int ichoice(0);  // index in refantchoicelist
-    Bool found(false);
+    Bool found(False);
     IPosition blcA(3,0,0,0),trcA(shA),blcB(3,0,0,0),trcB(shB);
     trcA-=1; trcA(0)=trcA(2)=0;
     trcB-=1; trcB(0)=trcB(2)=0;
@@ -5821,7 +5820,7 @@ void SolvableVisJones::applyRefAnt() {
 
 	blcA(2)=trcA(2)=irefA;
 	blcB(2)=trcB(2)=irefB;
-	found=true;  // maybe
+	found=True;  // maybe
 	for (Int ipol=0;ipol<nPol(ispw);++ipol) {
 	  blcA(0)=trcA(0)=blcB(0)=trcB(0)=ipol;
 	  found &= (nfalse(flA(blcA,trcA))>0);  // previous interval
@@ -5830,7 +5829,7 @@ void SolvableVisJones::applyRefAnt() {
       }
       else
 	// irefA or irefB out-of-range
-	found=false;  // Just to be sure
+	found=False;  // Just to be sure
 
       if (!found) ++ichoice;  // try next choice next round
 
@@ -5876,7 +5875,7 @@ void SolvableVisJones::applyRefAnt() {
       case VisCal::B:
       case VisCal::T: {
 	ampB=amplitude(rB);
-	rflB(ampB<FLT_EPSILON)=true; // flag... 
+	rflB(ampB<FLT_EPSILON)=True; // flag... 
 	rB(rflB)=Complex(1.0);       //  ...and reset zeros
 	ampB(rflB)=1.0;
 	rB/=ampB;  // rB now normalized ("phase"-only)
@@ -5900,7 +5899,7 @@ void SolvableVisJones::applyRefAnt() {
 	case VisCal::B:
 	case VisCal::T: {
 	  ampA=amplitude(rA);
-	  rflA(ampA<FLT_EPSILON)=true;  // flag...
+	  rflA(ampA<FLT_EPSILON)=True;  // flag...
 	  rA(rflA)=Complex(1.0);        // ...and reset zeros
 	  ampA(rflA)=1.0;
 	  rA/=ampA; // rA now normalized ("phase"-only)
@@ -5967,7 +5966,7 @@ void SolvableVisJones::applyRefAnt() {
       ant1B.resize();
 	
       lastrefant=currrefant;
-      first=false;  // avoid first-pass stuff from now on
+      first=False;  // avoid first-pass stuff from now on
       
     } // found
 
@@ -6012,8 +6011,8 @@ void SolvableVisJones::fluxscale(const String& outfile,
   //String timerange("");
   //String scanSel("");
   // turn on incremental caltable mode
-  //Bool incremental = true;
-  //Bool fitperchan = true;
+  //Bool incremental = True;
+  //Bool fitperchan = True;
 
   // threshold for gain (amplitude) to be used in 
   // fluxscale determination
@@ -6031,7 +6030,7 @@ void SolvableVisJones::fluxscale(const String& outfile,
     throw(AipsError("SVJ:fluxscale: Empty or absent caltable specified"));
 
   // For updating the MS History Table
-  //  LogSink logSink_p = LogSink(LogMessage::NORMAL, false);
+  //  LogSink logSink_p = LogSink(LogMessage::NORMAL, False);
   //  logSink_p.clearLocally();
   //  LogIO oss(LogOrigin("calibrater", "fluxscale()"), logSink_p);
 
@@ -6051,7 +6050,7 @@ void SolvableVisJones::fluxscale(const String& outfile,
   Vector<Int> fldList;
   mcols.fieldId().getColumn(fldList);
   Int nFldList=genSort(fldList,Sort::Ascending,(Sort::QuickSort | Sort::NoDuplicates));
-  fldList.resize(nFldList,true);
+  fldList.resize(nFldList,True);
 
   Int nFld=max(fldList)+1;
 
@@ -6082,13 +6081,13 @@ void SolvableVisJones::fluxscale(const String& outfile,
     nTran=genSort(tranField,Sort::Ascending,(Sort::QuickSort | Sort::NoDuplicates));
 
     // make masks for ref/tran among available fields
-    Vector<Bool> tranmask(nFldList,true);
-    Vector<Bool> refmask(nFldList,false);
+    Vector<Bool> tranmask(nFldList,True);
+    Vector<Bool> refmask(nFldList,False);
     for (Int iFld=0; iFld<nFldList; iFld++) {
       if ( anyEQ(refField,fldList(iFld)) ) {
         // this is a ref field
-        refmask(iFld)=true;
-        tranmask(iFld)=false;
+        refmask(iFld)=True;
+        tranmask(iFld)=False;
       }
     }
 
@@ -6243,8 +6242,8 @@ void SolvableVisJones::fluxscale(const String& outfile,
     Bool doPerAntSel(false);
     Vector<Double> selTime;
     if (antSel!="" ) {
-      if (antSel.contains(casacore::Regex("^!")) && (timerangeSel!="" || scanSel!="")) {
-        doPerAntSel = true;
+      if (antSel.contains(casa::Regex("^!")) && (timerangeSel!="" || scanSel!="")) {
+        doPerAntSel = True;
       // if doPerAntSel time/scan sel only applied to deselected ant in antSel
       // so need to construct selected table based on that
         MSSelection msssub;
@@ -6259,7 +6258,7 @@ void SolvableVisJones::fluxscale(const String& outfile,
         selTime=ctmc.time().getColumn();
         deselAntList=ctmc.antenna1().getColumn();
 	Int ndeselAnt=genSort(deselAntList,Sort::Ascending,(Sort::QuickSort | Sort::NoDuplicates));
-	deselAntList.resize(ndeselAnt,true);
+	deselAntList.resize(ndeselAnt,True);
       }
     }         
 
@@ -6282,7 +6281,7 @@ void SolvableVisJones::fluxscale(const String& outfile,
         selAntList=allAntList;
       } 
       std::vector<Int> tmpSelAntList;
-      Vector<Bool> validSels(nSpw(),true);
+      Vector<Bool> validSels(nSpw(),True);
       for (Int iSpw=0; iSpw<nSpw(); iSpw++) {
         //reset MSSelection
         mss.clear(MSSelection::SPW_EXPR);
@@ -6330,7 +6329,7 @@ void SolvableVisJones::fluxscale(const String& outfile,
           if (antSel!="" && firstpass) {
             Vector<Int> selantlist=ctmc.antenna1().getColumn();
 	    Int nSelAnt=genSort(selantlist,Sort::Ascending,(Sort::QuickSort | Sort::NoDuplicates));
-	    selantlist.resize(nSelAnt,true);
+	    selantlist.resize(nSelAnt,True);
             selAntList=selantlist;
             //cerr<<"selantlist.nelements()="<<selantlist.nelements()<<endl;
             String oMsg( "" );
@@ -6397,7 +6396,7 @@ void SolvableVisJones::fluxscale(const String& outfile,
 	
       if (MGOK[iFld]==NULL) {
 	// First time this field, allocate ant/spw matrices
-	MGOK[iFld]   = new Cube<Bool>(nPar(),nElem(),nSpw(),false);
+	MGOK[iFld]   = new Cube<Bool>(nPar(),nElem(),nSpw(),False);
 	MG[iFld]     = new Cube<Double>(nPar(),nElem(),nSpw(),0.0);
 	MG2[iFld]    = new Cube<Double>(nPar(),nElem(),nSpw(),0.0);
 	MGWT[iFld]   = new Cube<Double>(nPar(),nElem(),nSpw(),0.0);
@@ -6429,7 +6428,7 @@ void SolvableVisJones::fluxscale(const String& outfile,
       IPosition testShape=CParam.shape();
       if (testShape[2]!=1) {
         if (testShape[2]>1) { 
-          // possible cause: append=true in gaincal
+          // possible cause: append=True in gaincal
           throw(AipsError("Found multiple gain solutions in a single timestamp for fieldid="+String::toString(iFld)+". Please check the input Caltable."));
         }
         else {
@@ -6459,7 +6458,7 @@ void SolvableVisJones::fluxscale(const String& outfile,
                }
             } 
             //cerr<<"fld="<<iFld<<" spw="<<iSpw<<" ant="<<iAnt<<" gn="<<gn<<" median="<<medianGains(iFld,iSpw)<<endl;
-	    mgok(ipar,iAnt,iSpw)=true;
+	    mgok(ipar,iAnt,iSpw)=True;
 	    mg(ipar,iAnt,iSpw) += (wt*gn);
 	    mg2(ipar,iAnt,iSpw)+= (wt*gn*gn);
 	    mgn(ipar,iAnt,iSpw)++;
@@ -6545,7 +6544,7 @@ void SolvableVisJones::fluxscale(const String& outfile,
           Int iFld=cs().fieldId(iSpw)(islot);
           if (MGOK[iFld]==NULL) {
             // First time this field, allocate ant/spw matrices
-            MGOK[iFld]   = new Cube<Bool>(nPar(),nElem(),nSpw(),false);
+            MGOK[iFld]   = new Cube<Bool>(nPar(),nElem(),nSpw(),False);
             MG[iFld]     = new Cube<Double>(nPar(),nElem(),nSpw(),0.0);
             MG2[iFld]    = new Cube<Double>(nPar(),nElem(),nSpw(),0.0);
             MGWT[iFld]   = new Cube<Double>(nPar(),nElem(),nSpw(),0.0);
@@ -6561,14 +6560,14 @@ void SolvableVisJones::fluxscale(const String& outfile,
           Cube<Int>    mgn;    mgn.reference(*(MGN[iFld]));
 
           for (Int iAnt=0; iAnt<nElem(); iAnt++) {
-	    if (true) { // || antmask(iAnt)) {
+	    if (True) { // || antmask(iAnt)) {
 	      Double wt=cs().iFitwt(iSpw)(iAnt,islot);
 	      
 	      for (Int ipar=0; ipar<nPar(); ipar++) {
 		IPosition ip(4,ipar,0,iAnt,islot);
 		if (cs().parOK(iSpw)(ip)) {
 		  Double gn=abs( cs().par(iSpw)(ip) );
-		  mgok(ipar,iAnt,iSpw)=true;
+		  mgok(ipar,iAnt,iSpw)=True;
 		  mg(ipar,iAnt,iSpw) += (wt*gn);
 		  mg2(ipar,iAnt,iSpw)+= (wt*gn*gn);
 		  mgn(ipar,iAnt,iSpw)++;
@@ -6615,7 +6614,7 @@ void SolvableVisJones::fluxscale(const String& outfile,
 	      } else {
 		mg(ipar,iAnt,iSpw)=0.0;
 		mgwt(ipar,iAnt,iSpw)=0.0;
-		mgok(ipar,iAnt,iSpw)=false;
+		mgok(ipar,iAnt,iSpw)=False;
 	      }
 	    }
    /*
@@ -6674,12 +6673,12 @@ void SolvableVisJones::fluxscale(const String& outfile,
               // at the last ref field...
               if(iref==nRef-1 ) {
                 if (nokref(ipar,iant,ispw)==0.0) {
-	          mgrefok(ipar,iant,ispw)=false;
+	          mgrefok(ipar,iant,ispw)=False;
                   mgref(ipar,iant,ispw)=0.0;
                 } 
                 else {
-                  // overwrite to turn to true for the case of mgrefok=false for refField(0)
-                  mgrefok(ipar,iant,ispw)=true;
+                  // overwrite to turn to True for the case of mgrefok=False for refField(0)
+                  mgrefok(ipar,iant,ispw)=True;
                 }
               }
 
@@ -6687,7 +6686,7 @@ void SolvableVisJones::fluxscale(const String& outfile,
 	      //if (mgrefok(ipar,iant,ispw) && mgokR(ipar,iant,ispw))
 	      //  mgref(ipar,iant,ispw)+=mgR(ipar,iant,ispw);
 	      // else {
-	      //  mgrefok(ipar,iant,ispw)=false;
+	      //  mgrefok(ipar,iant,ispw)=False;
               //  mgref(ipar,iant,ispw)=0.0;
 	      //} 
 
@@ -6712,7 +6711,7 @@ void SolvableVisJones::fluxscale(const String& outfile,
 //    numSol.resize( nSpw() );
 //    numSol.set( -1 );
 
-    Matrix<Bool> scaleOK(nSpw(),nFld,false);
+    Matrix<Bool> scaleOK(nSpw(),nFld,False);
     Matrix<Double> mgratio(nSpw(),nFld,-1.0);
     Matrix<Double> mgrms(nSpw(),nFld,-1.0);
     Matrix<Double> mgerr(nSpw(),nFld,-1.0);
@@ -6746,7 +6745,7 @@ void SolvableVisJones::fluxscale(const String& outfile,
 	      }
 	      else {
 		mgT(ipar,iant,ispw)=0.0;
-		mgokT(ipar,iant,ispw)=false;
+		mgokT(ipar,iant,ispw)=False;
 	      }
 	    } // ipar
 	  } // iant
@@ -6777,7 +6776,7 @@ void SolvableVisJones::fluxscale(const String& outfile,
           }
 
 	  //	  cout << "mgTspw = " << mgTspw << endl;
-	  scaleOK(ispw,tranidx)=true;
+	  scaleOK(ispw,tranidx)=True;
 	  //mgratio(ispw,tranidx)=mean(mgTspw(mgokTspw));
 	  mgratio(ispw,tranidx)=median(mgTspw(mgokTspw));
           if (nPA==1) { // flux scaling based on a single gain ratio... 
@@ -7101,7 +7100,7 @@ void SolvableVisJones::fluxscale(const String& outfile,
         ctiter.setfparam(fpar);
         ctiter.next(); 
       }
-      storeNCT(outfile,false);
+      storeNCT(outfile,False);
 ***/
     }
     else {
@@ -7153,7 +7152,7 @@ void SolvableVisJones::fluxscale(const String& outfile,
                                TableLock(TableLock::UserNoReadLocking),
                                Table::Update);
       MSHistoryHandler hist = MSHistoryHandler(ms, "calibrater");
-      historytab.lock(true);
+      historytab.lock(True);
       oss.postLocally();
       hist.addMessage(oss);
       historytab.unlock();
@@ -7258,8 +7257,8 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
     uInt nSpws = uchanids.nrow();
     
     // Prep for listing
-    Bool endOutput = false; // if true, end output immediately
-    Bool prompt = true; // if true, issue prompt
+    Bool endOutput = False; // if true, end output immediately
+    Bool prompt = True; // if true, issue prompt
     Int isol = 0; // total solution counter
     Int scrRows=0; // screen row counter, reset after continue prompt
     
@@ -7267,7 +7266,7 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
     ofstream file;
     streambuf* sbuf = cout.rdbuf();
     if(listfile!="") { // non-interactive
-        prompt = false;
+        prompt = False;
         // Guard against trampling existing file
         File diskfile(listfile);
         if (diskfile.exists()) {
@@ -7407,7 +7406,7 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
 	    Vector<Int> fldids;
 	    fldids=ctiter.field();
 	    Int nUniqFlds=genSort(fldids,Sort::Ascending,(Sort::QuickSort | Sort::NoDuplicates));
-	    fldids.resize(nUniqFlds,true);  // shrink the Vector
+	    fldids.resize(nUniqFlds,True);  // shrink the Vector
 
 	    for (Int ifld=0;ifld<nUniqFlds;++ifld) {
 	      String fldstr=(fldname(ifld)); 
@@ -7511,8 +7510,8 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
 	      timelist(i)=timelist(i*NANT);
 	      fieldlist(i)=fieldlist(i*NANT);
 	    }
-	    timelist.resize(NTIME,true);
-	    fieldlist.resize(NTIME,true);
+	    timelist.resize(NTIME,True);
+	    fieldlist.resize(NTIME,True);
 
 	    Array<Float> v1,v2;
 	    Array<Bool> vok;
@@ -7575,7 +7574,7 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
             for (uInt iElem=0;iElem<numAnts;iElem+=numAntCols) { 
                 gidx(2)=pAntids(iElem);
                 
-                Bool header=true; // New antenna, require print header
+                Bool header=True; // New antenna, require print header
                 
                 // If antenna element is among selected antennas, print it
                 if (uantids.nelements()==0 || anyEQ(uantids,pAntids(iElem))) {
@@ -7609,7 +7608,7 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
                                 
                                 // If beginning new screen, print the header
                                 if (scrRows == 0 || header) {
-                                    header=false;
+                                    header=False;
                                     // Write Antenna line (put spaces over the time, field cols)
                                     for(uInt k=0; k<(wPreAnt_p); k++) { cout<<" "; }
                                     cout << "|";
@@ -7665,9 +7664,9 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
                                         cout << "Type Q to quit, A to list all, or RETURN to continue [continue]: ";
                                         getline(cin,contStr);
                                         if ( (contStr.compare(0,1,"q") == 0) or 
-                                             (contStr.compare(0,1,"Q") == 0) ) { endOutput=true; }
+                                             (contStr.compare(0,1,"Q") == 0) ) { endOutput=True; }
                                         if ( (contStr.compare(0,1,"a") == 0) or 
-                                             (contStr.compare(0,1,"A") == 0) ) { prompt = false; }
+                                             (contStr.compare(0,1,"A") == 0) ) { prompt = False; }
                                     }
                                 }
                             } // end iChan loop

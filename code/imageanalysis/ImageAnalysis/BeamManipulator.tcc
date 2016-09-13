@@ -33,7 +33,7 @@ template <class T> BeamManipulator<T>::BeamManipulator(SPIIT image)
 	: _image(image), _log() {}
 
 template <class T> void BeamManipulator<T>::remove() {
-	casacore::ImageInfo ii = _image->imageInfo();
+	ImageInfo ii = _image->imageInfo();
 
 	ii.removeRestoringBeam();
 	ThrowIf(
@@ -41,83 +41,83 @@ template <class T> void BeamManipulator<T>::remove() {
 		"Failed to remove restoring beam"
 	);
 	if (_log) {
-		*_log << casacore::LogIO::NORMAL << "Deleted restoring beam(s)"
-			<< casacore::LogIO::POST;
+		*_log << LogIO::NORMAL << "Deleted restoring beam(s)"
+			<< LogIO::POST;
 	}
 }
 
-template <class T> void BeamManipulator<T>::rotate(const casacore::Quantity& angle) {
-	casacore::ImageInfo ii = _image->imageInfo();
-	casacore::ImageBeamSet beams = ii.getBeamSet();
+template <class T> void BeamManipulator<T>::rotate(const Quantity& angle) {
+	ImageInfo ii = _image->imageInfo();
+	ImageBeamSet beams = ii.getBeamSet();
 	beams.rotate(angle);
 	ii.setBeams(beams);
 	_image->setImageInfo(ii);
 }
 
-template <class T> void BeamManipulator<T>::setVerbose(casacore::Bool v) {
+template <class T> void BeamManipulator<T>::setVerbose(Bool v) {
 	if (v && ! _log) {
-		_log.reset(new casacore::LogIO());
+		_log.reset(new LogIO());
 	}
 	else {
 		_log.reset();
 	}
 }
 
-template <class T> void BeamManipulator<T>::set(const casacore::ImageBeamSet& beamSet) {
+template <class T> void BeamManipulator<T>::set(const ImageBeamSet& beamSet) {
 	ThrowIf(
 		beamSet.empty(),
-		"casacore::Input beam set cannot be empty"
+		"Input beam set cannot be empty"
 	);
-	casacore::ImageInfo ii = _image->imageInfo();
+	ImageInfo ii = _image->imageInfo();
 	ii.setBeams(beamSet);
 	ThrowIf(
 		! _image->setImageInfo(ii),
 		"Failed to set beams"
 	);
 	if(_log) {
-		*_log << casacore::LogOrigin("BeamManipulator", __func__);
-		*_log << casacore::LogIO::NORMAL << "Set image beam set" << casacore::LogIO::POST;
+		*_log << LogOrigin("BeamManipulator", __func__);
+		*_log << LogIO::NORMAL << "Set image beam set" << LogIO::POST;
 	}
 }
 
 template <class T> void BeamManipulator<T>::set(
-	const casacore::Quantity& major, const casacore::Quantity& minor,
-	const casacore::Quantity& pa, const casacore::Record& rec,
-	casacore::Int channel, casacore::Int polarization
+	const Quantity& major, const Quantity& minor,
+	const Quantity& pa, const Record& rec,
+	Int channel, Int polarization
 ) {
 	if (_log) {
-		*_log << casacore::LogOrigin("BeamManipulator", __func__);
+		*_log << LogOrigin("BeamManipulator", __func__);
 	}
-	casacore::ImageInfo ii = _image->imageInfo();
-	casacore::Quantity bmajor, bminor, bpa;
+	ImageInfo ii = _image->imageInfo();
+	Quantity bmajor, bminor, bpa;
 	if (rec.nfields() != 0) {
 		if (
 			rec.isDefined("beams") && rec.isDefined("nChannels")
 			&& rec.isDefined("nStokes")
 		) {
 			ImageMetaData md(_image);
-			casacore::uInt nChanIm = md.nChannels();
-			casacore::uInt nStokesIm = md.nStokes();
-			casacore::uInt nChanBeam = rec.asuInt("nChannels");
-			casacore::uInt nStokesBeam = rec.asuInt("nStokes");
+			uInt nChanIm = md.nChannels();
+			uInt nStokesIm = md.nStokes();
+			uInt nChanBeam = rec.asuInt("nChannels");
+			uInt nStokesBeam = rec.asuInt("nStokes");
 			if (nChanIm == nChanBeam && nStokesIm == nStokesBeam) {
 				if (ii.hasBeam()) {
 					if (_log) {
-						*_log << casacore::LogIO::WARN << "Overwriting existing beam(s)" << casacore::LogIO::POST;
+						*_log << LogIO::WARN << "Overwriting existing beam(s)" << LogIO::POST;
 					}
 					ii.removeRestoringBeam();
 				}
 			}
 		}
 		else {
-			casacore::String error;
+			String error;
 			// instantiating this object will do implicit consistency checks
 			// on the passed-in record
-			casacore::GaussianBeam beam = casacore::GaussianBeam::fromRecord(rec);
+			GaussianBeam beam = GaussianBeam::fromRecord(rec);
 
 			bmajor = beam.getMajor();
 			bminor = beam.getMinor();
-			bpa = beam.getPA(true);
+			bpa = beam.getPA(True);
 		}
 	}
 	else {
@@ -126,11 +126,11 @@ template <class T> void BeamManipulator<T>::set(
 		bpa = pa;
 	}
 	if (bmajor.getValue() == 0 || bminor.getValue() == 0) {
-		casacore::GaussianBeam currentBeam = ii.restoringBeam(channel, polarization);
+		GaussianBeam currentBeam = ii.restoringBeam(channel, polarization);
 		if (! currentBeam.isNull()) {
 			bmajor = major.getValue() == 0 ? currentBeam.getMajor() : major;
 			bminor = minor.getValue() == 0 ? currentBeam.getMinor() : minor;
-			bpa = pa.isConform("rad") ? pa : casacore::Quantity(0, "deg");
+			bpa = pa.isConform("rad") ? pa : Quantity(0, "deg");
 		}
 		else {
 			ThrowIf(
@@ -148,14 +148,14 @@ template <class T> void BeamManipulator<T>::set(
 	if (ii.hasMultipleBeams()) {
 		if (channel < 0 && polarization < 0) {
 			if (_log) {
-				*_log << casacore::LogIO::WARN << "This image has per plane beams"
+				*_log << LogIO::WARN << "This image has per plane beams"
 					<< "but no plane (channel/polarization) was specified. All beams will be set "
-					<< "equal to the specified beam." << casacore::LogIO::POST;
+					<< "equal to the specified beam." << LogIO::POST;
 			}
 			ImageMetaData md(_image);
 			ii.setAllBeams(
 				md.nChannels(), md.nStokes(),
-				casacore::GaussianBeam(bmajor, bminor, bpa)
+				GaussianBeam(bmajor, bminor, bpa)
 			);
 		}
 		else {
@@ -165,15 +165,15 @@ template <class T> void BeamManipulator<T>::set(
 	else if (channel >= 0 || polarization >= 0) {
 		if (ii.restoringBeam().isNull()) {
 			if (_log) {
-				*_log << casacore::LogIO::NORMAL << "This image currently has no beams of any kind. "
+				*_log << LogIO::NORMAL << "This image currently has no beams of any kind. "
 					<< "Since channel and/or polarization were specified, "
 					<< "a set of per plane beams, each equal to the specified beam, "
-					<< "will be created." << casacore::LogIO::POST;
+					<< "will be created." << LogIO::POST;
 			}
 			ImageMetaData md(_image);
 			ii.setAllBeams(
 				md.nChannels(), md.nStokes(),
-				casacore::GaussianBeam(bmajor, bminor, bpa)
+				GaussianBeam(bmajor, bminor, bpa)
 			);
 		}
 		else {
@@ -188,21 +188,21 @@ template <class T> void BeamManipulator<T>::set(
 	}
 	else {
 		if (_log) {
-			*_log << casacore::LogIO::NORMAL
-				<< "Setting (global) restoring beam." << casacore::LogIO::POST;
+			*_log << LogIO::NORMAL
+				<< "Setting (global) restoring beam." << LogIO::POST;
 		}
-		ii.setRestoringBeam(casacore::GaussianBeam(bmajor, bminor, bpa));
+		ii.setRestoringBeam(GaussianBeam(bmajor, bminor, bpa));
 	}
 	ThrowIf(
 		! _image->setImageInfo(ii),
 		"Failed to set restoring beam"
 	);
 	if (_log) {
-		*_log << casacore::LogIO::NORMAL << "Beam parameters:"
+		*_log << LogIO::NORMAL << "Beam parameters:"
 			<< "  Major          : " << bmajor.getValue() << " " << bmajor.getUnit() << endl
 			<< "  Minor          : " << bminor.getValue() << " " << bminor.getUnit() << endl
 			<< "  Position Angle : " << bpa.getValue() << " " << bpa.getUnit() << endl
-			<< casacore::LogIO::POST;
+			<< LogIO::POST;
 	}
 }
 

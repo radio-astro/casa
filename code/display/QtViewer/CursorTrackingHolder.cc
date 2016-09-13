@@ -29,7 +29,6 @@
 #include <display/DisplayDatas/PrincipalAxesDD.h>
 #include <QDebug>
 
-using namespace casacore;
 namespace casa {
 
     CursorTrackingHolder::CursorTrackingHolder( QtDisplayPanelGui *panel, QWidget *parent )

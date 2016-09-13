@@ -65,18 +65,17 @@
 
 #include <components/ComponentModels/GaussianDeconvolver.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
-  Feather::Feather(): dishDiam_p(-1.0), cweightCalced_p(false), cweightApplied_p(false), sdScale_p(1.0){
+  Feather::Feather(): dishDiam_p(-1.0), cweightCalced_p(False), cweightApplied_p(False), sdScale_p(1.0){
     highIm_p=NULL;
     lowIm_p=NULL;
     lowImOrig_p=NULL;
     cwImage_p=NULL;
     cwHighIm_p=NULL;
   }
-  Feather::Feather(const ImageInterface<Float>& SDImage, const ImageInterface<Float>& INTImage, Float sdscale) : dishDiam_p(-1.0), cweightCalced_p(false), cweightApplied_p(false), sdScale_p(sdscale){
+  Feather::Feather(const ImageInterface<Float>& SDImage, const ImageInterface<Float>& INTImage, Float sdscale) : dishDiam_p(-1.0), cweightCalced_p(False), cweightApplied_p(False), sdScale_p(sdscale){
     
     setINTImage(INTImage);
     lowImOrig_p=NULL;
@@ -116,18 +115,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       CoordinateUtil::addIAxis(csyslow);
       
       ImageUtilities::addDegenerateAxes (os, copyPtr, *sdcopy, "",
-					 false, false,"I", false, false,
-					 true);
-      sdcopy=CountedPtr<ImageInterface<Float> >(copyPtr.ptr(), false);
+					 False, False,"I", False, False,
+					 True);
+      sdcopy=CountedPtr<ImageInterface<Float> >(copyPtr.ptr(), False);
       
     }
     if(CoordinateUtil::findSpectralAxis(csyslow) <0){
       CoordinateUtil::addFreqAxis(csyslow);
       ImageUtilities::addDegenerateAxes (os, copyPtr2, *sdcopy, "",
-					 false, true,
-					 "", false, false,
-					 true);
-      sdcopy=CountedPtr<ImageInterface<Float> >(copyPtr2.ptr(), false);
+					 False, True,
+					 "", False, False,
+					 True);
+      sdcopy=CountedPtr<ImageInterface<Float> >(copyPtr2.ptr(), False);
     }
     lowIm_p=new TempImage<Float>(highIm_p->shape(), csysHigh_p);
     // regrid the single dish image
@@ -137,14 +136,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       Int spectralAxisIndex=CoordinateUtil::findSpectralAxis(csysHigh_p);
       axes(2)=spectralAxisIndex;
       if(sdcopy->getDefaultMask() != "")
-	lowIm_p->makeMask(sdcopy->getDefaultMask(), true, true, true, true);
+	lowIm_p->makeMask(sdcopy->getDefaultMask(), True, True, True, True);
 
       ImageRegrid<Float> ir;
       ir.regrid(*lowIm_p, Interpolate2D::LINEAR, axes,  *sdcopy);
     }
     /*if(sdcopy->getDefaultMask() != ""){
       //Imager::copyMask(*lowIm_p, *sdcopy, sdcopy->getDefaultMask());
-      lowIm_p->makeMask(sdcopy->getDefaultMask(), true, true);
+      lowIm_p->makeMask(sdcopy->getDefaultMask(), True, True);
       ImageUtilities::copyMask(*lowIm_p, *sdcopy,sdcopy->getDefaultMask() , sdcopy->getDefaultMask(), AxesSpecifier());
       lowIm_p->setDefaultMask(sdcopy->getDefaultMask());
 
@@ -156,12 +155,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       lowImOrig_p->copyData(*lowIm_p);
       lBeamOrig_p=lBeam_p;
     }   
-    cweightCalced_p=false;
+    cweightCalced_p=False;
   }
 
   void Feather::convolveINT(const GaussianBeam& newHighBeam){
     GaussianBeam toBeUsed(Quantity(0.0, "arcsec"),Quantity(0.0, "arcsec"), Quantity(0.0, "deg")) ;
-    Bool retval=true;
+    Bool retval=True;
     try {
       //cerr << "highBeam " << hBeam_p.getMajor() << " " << hBeam_p.getMinor() << " " << hBeam_p.getPA() << endl; 
       retval=
@@ -173,7 +172,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	throw(AipsError("new Beam may be smaller than the beam of original Interferometer  image"));	
     }
     try{
-      StokesImageUtil::Convolve(*highIm_p, toBeUsed, true);
+      StokesImageUtil::Convolve(*highIm_p, toBeUsed, True);
     }
     catch(const AipsError& x){
       throw(AipsError("Could not convolve INT image for some reason; try a lower resolution may be"));
@@ -181,7 +180,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     hBeam_p=newHighBeam; 
 
     //need to  redo feather  application
-    cweightApplied_p=false;
+    cweightApplied_p=False;
     (void)retval; // avoid compiler warning
   }
 
@@ -205,18 +204,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if(CoordinateUtil::findStokesAxis(stokesvec, csysHigh_p) <0){
       CoordinateUtil::addIAxis(csysHigh_p);
       ImageUtilities::addDegenerateAxes (os, copyPtr, *intcopy, "",
-					 false, false,"I", false, false,
-					 true);
-      intcopy=CountedPtr<ImageInterface<Float> >(copyPtr.ptr(), false);
+					 False, False,"I", False, False,
+					 True);
+      intcopy=CountedPtr<ImageInterface<Float> >(copyPtr.ptr(), False);
       
     }
     if(CoordinateUtil::findSpectralAxis(csysHigh_p) <0){
       CoordinateUtil::addFreqAxis(csysHigh_p);
       ImageUtilities::addDegenerateAxes (os, copyPtr2, *intcopy, "",
-					 false, true,
-					 "", false, false,
-					 true);
-      intcopy=CountedPtr<ImageInterface<Float> >(copyPtr2.ptr(), false);
+					 False, True,
+					 "", False, False,
+					 True);
+      intcopy=CountedPtr<ImageInterface<Float> >(copyPtr2.ptr(), False);
     }
 
 
@@ -229,7 +228,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       Imager::copyMask(*highIm_p, *intcopy, maskname);
 
     }
-    cweightCalced_p=false;
+    cweightCalced_p=False;
 
   }
 
@@ -254,17 +253,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     try{
       //cerr <<"To be used " << toBeUsed.getMajor() << "  " << toBeUsed.getMinor() <<
       //"  " << toBeUsed.getPA() << endl;
-      StokesImageUtil::Convolve(*lowIm_p, toBeUsed, true);
+      StokesImageUtil::Convolve(*lowIm_p, toBeUsed, True);
     }
     catch(const AipsError& x){
       throw(AipsError("Could not convolve SD image for some reason; try a smaller effective diameter may be"));
     }
     lBeam_p=newBeam; 
     //reset cweight if it was calculated already
-    cweightCalced_p=false;
-    cweightApplied_p=false;
+    cweightCalced_p=False;
+    cweightApplied_p=False;
 
-    return true;
+    return True;
   }
   void Feather::getEffectiveDishDiam(Float& xdiam, Float& ydiam){
     if(dishDiam_p <0){
@@ -369,8 +368,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   void Feather::clearWeightFlags(){
-    cweightCalced_p=false;
-    cweightApplied_p = false;
+    cweightCalced_p=False;
+    cweightApplied_p = False;
   }
 
   void Feather::applyFeather(){
@@ -398,7 +397,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    blc(2)=j; trc(2)=j;
 	      blc(3)=k; trc(3)=k;
 	      Slicer sl(blc, trc, Slicer::endIsLast);
-	      SubImage<Complex> cimagehighSub(*cwHighIm_p, sl, true);
+	      SubImage<Complex> cimagehighSub(*cwHighIm_p, sl, True);
 	      cimagehighSub.copyData(  (LatticeExpr<Complex>)((cimagehighSub * (*cwImage_p))));
 	    }
 	  }
@@ -408,7 +407,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	cwHighIm_p->copyData(  
 			     (LatticeExpr<Complex>)(((*cwHighIm_p) * (*cwImage_p) )));
       }
-    cweightApplied_p=true;
+    cweightApplied_p=True;
 
   }
 
@@ -432,15 +431,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       IPosition center(4, Int((myshap(0)/4)*2), 
 		       Int((myshap(1)/4)*2),0,0);
       lowpsf.putAt(1.0, center);
-      StokesImageUtil::Convolve(lowpsf, lBeam_p, false);
+      StokesImageUtil::Convolve(lowpsf, lBeam_p, False);
       StokesImageUtil::From(*cwImage_p, lowpsf);
     }
     LatticeFFT::cfft2d( *cwImage_p );
     LatticeExprNode node = max( *cwImage_p );
     Float fmax = abs(node.getComplex());
     cwImage_p->copyData(  (LatticeExpr<Complex>)( 1.0f - (*cwImage_p)/fmax ) );
-    cweightCalced_p=true;
-    cweightApplied_p=false;
+    cweightCalced_p=True;
+    cweightApplied_p=False;
   }
 
   void Feather::getCutXY(Vector<Float>& ux, Vector<Float>& xamp, 
@@ -480,7 +479,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     /* Double freq=worldFreq(image.coordinates(), 0);
     Int dirCoordIndex=image.coordinates().findCoordinate(Coordinate::DIRECTION);
     DirectionCoordinate dc=image.coordinates().directionCoordinate(dirCoordIndex);
-    Vector<Bool> axes(2); axes(0)=true;axes(1)=true;
+    Vector<Bool> axes(2); axes(0)=True;axes(1)=True;
     Vector<Int> elshape(2); 
     Vector<Int> directionIndex=CoordinateUtil::findDirectionAxes(image.coordinates());
     elshape(0)=image.shape()[directionIndex(0)];
@@ -508,7 +507,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Double freq=worldFreq(csys, 0);
     Int dirCoordIndex=csys.findCoordinate(Coordinate::DIRECTION);
     DirectionCoordinate dc=csys.directionCoordinate(dirCoordIndex);
-    Vector<Bool> axes(2); axes(0)=true;axes(1)=true;
+    Vector<Bool> axes(2); axes(0)=True;axes(1)=True;
     Vector<Int> elshape(2); 
     Vector<Int> directionIndex=CoordinateUtil::findDirectionAxes(csys);
     elshape(0)=imshape[directionIndex(0)];
@@ -566,7 +565,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	 start[directionIndex[0]]=xval+centreX;
 	 start[directionIndex[1]]=yval+centreY;
 	 tmpval.resize();
-	 ftimage.getSlice(tmpval, start, shape, true); 
+	 ftimage.getSlice(tmpval, start, shape, True); 
 	 sumval+=fabs(mean(tmpval));
 	 counter+=1;
        }
@@ -597,7 +596,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     start[directionIndex(1)]=ftimage.shape()[directionIndex(1)]/2;
     start[directionIndex(0)]=ftimage.shape()[directionIndex(0)]/2;
-    ftimage.getSlice(tmpval, start, shape, true);
+    ftimage.getSlice(tmpval, start, shape, True);
     if(shape[spectralIndex] >1){
       meanval.resize(shape[directionIndex(1)]);
       Matrix<Complex> retmpval(tmpval);
@@ -622,7 +621,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     start[directionIndex(1)]=ftimage.shape()[directionIndex(1)]/2;
     start[directionIndex(0)]=ftimage.shape()[directionIndex(0)]/2;
-    ftimage.getSlice(tmpval, start, shape, true);
+    ftimage.getSlice(tmpval, start, shape, True);
     if(shape[spectralIndex] >1){
       meanval.resize(shape[directionIndex(0)]);
       Bool colOrRow=spectralIndex > directionIndex(0);
@@ -639,7 +638,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     yamp=amplitude(meanval); 
     Int dirCoordIndex=ftCoords.findCoordinate(Coordinate::DIRECTION);
     DirectionCoordinate dc=ftCoords.directionCoordinate(dirCoordIndex);
-    Vector<Bool> axes(2); axes(0)=true;axes(1)=true;
+    Vector<Bool> axes(2); axes(0)=True;axes(1)=True;
     Vector<Int> elshape(2); 
     elshape(0)=ftimage.shape()[directionIndex(0)];
     elshape(1)=ftimage.shape()[directionIndex(1)];
@@ -699,13 +698,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	blc(stokesAxis)=j; trc(stokesAxis)=j;
 	blc(spectralAxis)=k; trc(spectralAxis)=k;
 	Slicer sl(blc, trc, Slicer::endIsLast);
-	SubImage<Complex> cimagehighSub(*cwHighIm_p, sl, true);
-	SubImage<Complex> cimagelowSub(cimagelow, sl, true);
+	SubImage<Complex> cimagehighSub(*cwHighIm_p, sl, True);
+	SubImage<Complex> cimagelowSub(cimagelow, sl, True);
 	cimagelowSub.copyData(  (LatticeExpr<Complex>)((cimagehighSub + cimagelowSub * sdScaling)));
       }
     }
     // FT back to image plane
-    LatticeFFT::cfft2d( cimagelow, false);
+    LatticeFFT::cfft2d( cimagelow, False);
     
     // write to output image
     PagedImage<Float> featherImage(highIm_p->shape(), highIm_p->coordinates(), imagename );
@@ -775,14 +774,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //1 GHz equivalent   
     //    halfpb=Quantity(1.22*C::c/1.0e9/effDiam, "rad");
     //cerr << "halfpb " << halfpb << endl;
-    //PBMath1DGauss elpb(halfpb, Quantity(0.8564,"deg"), Quantity(1.0,"GHz"), true);
+    //PBMath1DGauss elpb(halfpb, Quantity(0.8564,"deg"), Quantity(1.0,"GHz"), True);
     
     fftim.set(0.0);
    
     IPosition center(4, Int((fftim.shape()(0)/4)*2), 
 		     Int((fftim.shape()(1)/4)*2),0,0);
     fftim.putAt(1.0, center);
-    StokesImageUtil::Convolve(fftim, newBeam, false);
+    StokesImageUtil::Convolve(fftim, newBeam, False);
     StokesImageUtil::From(image, fftim);
     /*
     TempImage<Complex> elbeamo(image.shape(), image.coordinates());
@@ -813,7 +812,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LatticeFFT::cfft2d(image);
     //image.copyData((LatticeExpr<Complex>)(elbeamo) );
     //elbeamo.copyData(image);
-    // LatticeFFT::cfft2d(elbeamo, false);
+    // LatticeFFT::cfft2d(elbeamo, False);
     //StokesImageUtil::To(fftim, elbeamo);
     //StokesImageUtil::FitGaussianPSF(fftim, 
     //				    beam);
@@ -955,7 +954,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  IPosition center(4, Int((cweight.shape()(0)/4)*2), 
 			   Int((cweight.shape()(1)/4)*2),0,0);
 	  lowpsf0.putAt(1.0, center);
-	  StokesImageUtil::Convolve(lowpsf0, lBeam, false);
+	  StokesImageUtil::Convolve(lowpsf0, lBeam, False);
 	  StokesImageUtil::From(cweight, lowpsf0);
 
 	}
@@ -979,7 +978,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  blc(k)=0; trc(k)=0;	  	  
 	}// taking first plane
 	Slicer sl(blc, trc, Slicer::endIsLast);
-	lowpsf.copyData(SubImage<Float>(lowpsfDisk, sl, false));
+	lowpsf.copyData(SubImage<Float>(lowpsfDisk, sl, False));
 	lowpsf0=TempImage<Float> (myshap, high.coordinates());
 	{
 	  ImageRegrid<Float> ir;
@@ -1005,7 +1004,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  cweight.coordinates().findCoordinate(Coordinate::DIRECTION);
 	Image2DConvolver<Float>::convolve(
 		    os, low, low, VectorKernel::toKernelType("gauss"), IPosition(2, directionIndex, directionIndex+1),
-		    extraconv, true, 1.0, true
+		    extraconv, True, 1.0, True
 		    );
 
       }
@@ -1028,7 +1027,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 	start[directionIndex+1]=cweight.shape()[directionIndex+1]/2;
 	start[directionIndex]=cweight.shape()[directionIndex]/2;
-	cweight.getSlice(tmpval, start, shape, true);
+	cweight.getSlice(tmpval, start, shape, True);
 	Vector<Float> x=amplitude(tmpval);
 	Vector<Float> xdish=(Float(1.0) - x)*Float(sdScale);
 	tmpval.resize();
@@ -1040,11 +1039,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 	start[directionIndex+1]=cweight.shape()[directionIndex+1]/2;
 	start[directionIndex]=cweight.shape()[directionIndex]/2;
-	cweight.getSlice(tmpval, start, shape, true);
+	cweight.getSlice(tmpval, start, shape, True);
 	Vector<Float> y=amplitude(tmpval);
 	Vector<Float> ydish=(Float(1.0)-y)*Float(sdScale);
 	DirectionCoordinate dc=ftCoords.directionCoordinate(directionIndex);
-	Vector<Bool> axes(2); axes(0)=true;axes(1)=true;
+	Vector<Bool> axes(2); axes(0)=True;axes(1)=True;
 	Vector<Int> elshape(2); 
 	elshape(0)=cweight.shape()[directionIndex];
 	elshape(1)=cweight.shape()[directionIndex+1];
@@ -1140,8 +1139,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      blc(2)=j; trc(2)=j;
 	      blc(3)=k; trc(3)=k;
 	      Slicer sl(blc, trc, Slicer::endIsLast);
-	      SubImage<Complex> cimagehighSub(cimagehigh, sl, true);
-	      SubImage<Complex> cimagelowSub(cimagelow, sl, true);
+	      SubImage<Complex> cimagehighSub(cimagehigh, sl, True);
+	      SubImage<Complex> cimagelowSub(cimagelow, sl, True);
 	      cimagehighSub.copyData(  (LatticeExpr<Complex>)((cimagehighSub * cweight + cimagelowSub * sdScaling)));
 	    }
 	  }
@@ -1153,7 +1152,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 						    + cimagelow * sdScaling)));
       }
       // FT back to image plane
-      LatticeFFT::cfft2d( cimagehigh, false);
+      LatticeFFT::cfft2d( cimagehigh, False);
     
       // write to output image
       PagedImage<Float> featherImage(high.shape(), high.coordinates(), image );
@@ -1162,7 +1161,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
       try{
       { // write data processing history into image logtable
-	LoggerHolder imagelog (false);
+	LoggerHolder imagelog (False);
 	LogSink& sink = imagelog.sink();
 	LogOrigin lor(String("Feather"), String("feather()"));
 	LogMessage msg(lor);
@@ -1345,7 +1344,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  blc(k)=0; trc(k)=0;	  	  
 	}// taking first plane
 	Slicer sl(blc, trc, Slicer::endIsLast);
-	lowpsf.copyData(SubImage<Float>(lowpsfDisk, sl, false));
+	lowpsf.copyData(SubImage<Float>(lowpsfDisk, sl, False));
 	os << LogIO::NORMAL // Loglevel INFO
 	   << "Determining scaling from low resolution PSF.\n" << LogIO::POST;
 	StokesImageUtil::FitGaussianPSF(lowpsf, lBeam);

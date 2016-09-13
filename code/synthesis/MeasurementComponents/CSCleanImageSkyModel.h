@@ -31,15 +31,11 @@
 
 #include <synthesis/MeasurementComponents/CleanImageSkyModel.h>
 #include <synthesis/MeasurementEquations/ClarkCleanProgress.h>
-namespace casacore{
-
-template<class T> class Lattice;
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //forward
 class SkyEquation;
+template<class T> class Lattice;
 
 // <summary> 
 // CS Image Sky Model: Image Sky Model implementing the CS Clean algorithm
@@ -88,20 +84,20 @@ class SkyEquation;
 class CSCleanImageSkyModel : public CleanImageSkyModel {
 public:
 
-  virtual casacore::Int add(casacore::ImageInterface<casacore::Float>& image, const casacore::Int maxNumXfr=100);
+  virtual Int add(ImageInterface<Float>& image, const Int maxNumXfr=100);
 
-  virtual casacore::Bool addResidual(casacore::Int image, casacore::ImageInterface<casacore::Float>& residual);
+  virtual Bool addResidual(Int image, ImageInterface<Float>& residual);
 
-  virtual casacore::Bool addMask(casacore::Int image, casacore::ImageInterface<casacore::Float>& mask);
+  virtual Bool addMask(Int image, ImageInterface<Float>& mask);
 
   // Solve for this SkyModel
-  virtual casacore::Bool solve (SkyEquation& me);
+  virtual Bool solve (SkyEquation& me);
 
 protected:
   // Return the maximum absolute value per field
-  casacore::Float maxField(casacore::Block<casacore::Vector<casacore::Float> >& imagemax, casacore::Block<casacore::Vector<casacore::Float> >& imagemin);
+  Float maxField(Block<Vector<Float> >& imagemax, Block<Vector<Float> >& imagemin);
   // Return maximum abs outer sidelobe, more than nCenter pixels from the center
-  casacore::Vector<casacore::Float> outerMinMax(casacore::Lattice<casacore::Float> & lat, const casacore::uInt nCenter );
+  Vector<Float> outerMinMax(Lattice<Float> & lat, const uInt nCenter );
   // Pointer to the progress display object
   ClarkCleanProgress *progress_p;
 

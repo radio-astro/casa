@@ -254,8 +254,8 @@ template <class	T, class R, class RFilter>
    */
   TableSAXReader(bool verbose, RFilter& rFilter, TableFiller tableFiller_f_p, std::map<AtmPhaseCorrectionMod::AtmPhaseCorrection, ASDM2MSFiller*>& msFillers_m) {
 
-    //casacore::LogSinkInterface& lsif = casacore::LogSink::globalSink();
-    static_cast<void>(casacore::LogSink::globalSink());
+    //LogSinkInterface& lsif = LogSink::globalSink();
+    static_cast<void>(LogSink::globalSink());
 
     // The top level element name can be derived from the template parameter T.
     myContext.asdm_p		       = &asdm;
@@ -264,7 +264,7 @@ template <class	T, class R, class RFilter>
     myContext.tableFiller_f_p          = tableFiller_f_p;
     myContext.msFillers_m_p            = &msFillers_m;
     myContext.state		       = ParserContext<T, R, RFilter>::START;
-    topLevelElement_s		       = T::name()+"casacore::Table";
+    topLevelElement_s		       = T::name()+"Table";
     myContext.topLevelElement_p	       = (const xmlChar *) topLevelElement_s.c_str(); 
     myContext.entityElement_p	       = (const xmlChar *) "Entity";
     myContext.containerEntityElement_p = (const xmlChar *)"ContainerEntity";
@@ -382,13 +382,13 @@ template <class	T, class R, class RFilter>
 	  if (V2CTX_P(v_p)->verbose){
 	    std::ostringstream oss;
 	    oss.str("");
-	    oss << "Appended " << filteredRows.size() << " rows to the casacore::MS SYSPOWER table." << endl;
+	    oss << "Appended " << filteredRows.size() << " rows to the MS SYSPOWER table." << endl;
 #if (BOOST_FILESYSTEM_VERSION == 3)
-	    casacore::LogSink::postGlobally(casacore::LogMessage(oss.str(), casacore::LogOrigin((boost::filesystem::path(getexepath())).filename().string(), WHERE),
+	    LogSink::postGlobally(LogMessage(oss.str(), LogOrigin((boost::filesystem::path(getexepath())).filename().string(), WHERE),
 #else
-	    casacore::LogSink::postGlobally(casacore::LogMessage(oss.str(), casacore::LogOrigin((boost::filesystem::path(getexepath())).filename(), WHERE),
+	    LogSink::postGlobally(LogMessage(oss.str(), LogOrigin((boost::filesystem::path(getexepath())).filename(), WHERE),
 #endif
-					     casacore::LogMessage::NORMAL
+					     LogMessage::NORMAL
 					     )
 				  );	
 	  }
@@ -434,13 +434,13 @@ template <class	T, class R, class RFilter>
 	  if (V2CTX_P(v_p)->verbose){
 	    std::ostringstream oss;
 	    oss.str("");
-	    oss << "Appended " << filteredRows.size() << " rows to the casacore::MS SYSPOWER table." << endl;
+	    oss << "Appended " << filteredRows.size() << " rows to the MS SYSPOWER table." << endl;
 #if (BOOST_FILESYSTEM_VERSION == 3)
-	    casacore::LogSink::postGlobally(casacore::LogMessage(oss.str(), casacore::LogOrigin((boost::filesystem::path(getexepath())).filename().string(), WHERE),
+	    LogSink::postGlobally(LogMessage(oss.str(), LogOrigin((boost::filesystem::path(getexepath())).filename().string(), WHERE),
 #else
-	    casacore::LogSink::postGlobally(casacore::LogMessage(oss.str(), casacore::LogOrigin((boost::filesystem::path(getexepath())).filename(), WHERE),
+	    LogSink::postGlobally(LogMessage(oss.str(), LogOrigin((boost::filesystem::path(getexepath())).filename(), WHERE),
 #endif
-					     casacore::LogMessage::NORMAL
+					     LogMessage::NORMAL
 					     )
 				  );	
 	  }

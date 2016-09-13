@@ -18,26 +18,26 @@ class DisplayData3 : public QGLWidget
     Q_OBJECT
 
 public:
-    DisplayData3(const casacore::String& = "");
+    DisplayData3(const String& = "");
     ~DisplayData3();
 
-    void getCube(casacore::Cube<casacore::Float>&, int& pol);
-    static void getDefaultCube(casacore::Cube<casacore::Float>&);
+    void getCube(Cube<Float>&, int& pol);
+    static void getDefaultCube(Cube<Float>&);
 
     void getAxes();
-    void getStartEnd(casacore::IPosition& start, casacore::IPosition& end, 
-                     casacore::IPosition& stride,
-                     casacore::Int freq = 0, casacore::Int pol = 0);
+    void getStartEnd(IPosition& start, IPosition& end, 
+                     IPosition& stride,
+                     Int freq = 0, Int pol = 0);
 private:
 
-    casacore::ImageInterface<casacore::Float>* im_;
-    casacore::ImageInterface<casacore::Complex>* cim_;
+    ImageInterface<Float>* im_;
+    ImageInterface<Complex>* cim_;
     //DisplayData* dd_;
-    casacore::IPosition ip;
+    IPosition ip;
 
-    casacore::Cube<casacore::Float> fileCube;
-    casacore::Vector<casacore::Int> axes;
-    casacore::Vector<casacore::String> tAxes;
+    Cube<Float> fileCube;
+    Vector<Int> axes;
+    Vector<String> tAxes;
 
 };
 

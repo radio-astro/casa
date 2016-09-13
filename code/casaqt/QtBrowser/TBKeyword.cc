@@ -26,7 +26,6 @@
 //# $Id: $
 #include <casaqt/QtBrowser/TBKeyword.h>
 
-using namespace casacore;
 namespace casa {
 ///////////////////////////
 // TBKEYWORD DEFINITIONS //

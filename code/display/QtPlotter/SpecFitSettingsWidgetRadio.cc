@@ -52,7 +52,6 @@
 #include <cmath>
 
 
-using namespace casacore;
 namespace casa {
 
 	/**
@@ -959,7 +958,7 @@ namespace casa {
 		uint fitIndex = 0;
 		bool successfulFit = false;
         IPosition axisPath = IPosition::makeAxisPath(image1DFitters.ndim());
-        ArrayPositionIterator myiter(image1DFitters.shape(), axisPath, false);
+        ArrayPositionIterator myiter(image1DFitters.shape(), axisPath, False);
         for (myiter.reset(); ! myiter.pastEnd(); myiter.next()) {
         	const IPosition pos = myiter.pos();
            	SHARED_PTR<ProfileFitResults> image1DFitter = image1DFitters(pos);
@@ -1084,7 +1083,7 @@ namespace casa {
 		//using.
 		QString xAxisUnit = pixelCanvas->getUnits();
 		QString fitCurveName = ui.curveComboBox->currentText();
-		SHARED_PTR<const casacore::ImageInterface<float> > img = taskMonitor->getImage(fitCurveName);
+		SHARED_PTR<const casa::ImageInterface<float> > img = taskMonitor->getImage(fitCurveName);
 		DisplayCoordinateSystem cSys = img->coordinates();
 		int axisCount = cSys.nPixelAxes();
 		IPosition imPos(axisCount);

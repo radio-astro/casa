@@ -109,7 +109,7 @@ void VLASpectralLineRecord::data(Array<Complex>& values) const {
 
 Vector<Bool> VLASpectralLineRecord::flags() const {
   const uInt trueChan = itsNchan-1;
-  Vector<Bool> flags(trueChan, false);
+  Vector<Bool> flags(trueChan, False);
 //   Bool isACopy;
 //   Bool* dataPtr = flags.getStorage(isACopy);
 //   const Int64 where = itsOffset;

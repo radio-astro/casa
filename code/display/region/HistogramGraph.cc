@@ -28,7 +28,6 @@
 #include <images/Images/ImageInterface.h>
 #include <images/Regions/ImageRegion.h>
 
-using namespace casacore;
 namespace casa {
 
 

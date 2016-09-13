@@ -10,7 +10,6 @@
 #include <algorithm>
 using namespace std;
 
-using namespace casacore;
 namespace casa {
 
 namespace vi {
@@ -240,5 +239,4 @@ ViImplementation2::setVisBufferFillable (VisBuffer2 * vb, Bool fillable)
 
 } // end namespace vi
 
-using namespace casacore;
 } // end namespace casa

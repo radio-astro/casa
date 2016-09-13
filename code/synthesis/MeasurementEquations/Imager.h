@@ -54,25 +54,21 @@
 #include <graphics/GenericPlotter/SimplePlotter.h>
 
 
-namespace casacore{
-
-class MSHistoryHandler;
-class MeasurementSet;
-class MDirection;
-class MFrequency;
-class File;
-template<class T> class ImageInterface;
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Forward declarations
 class VisSet;
 class VisImagingWeight_p;
+class MSHistoryHandler;
 class PBMath;
+class MeasurementSet;
+class MDirection;
+class MFrequency;
+class File;
 class VPSkyJones;
 class EPJones;
 class ViewerProxy;
+template<class T> class ImageInterface;
 
 // <summary> Class that contains functions needed for imager </summary>
 
@@ -84,8 +80,8 @@ class Imager
 
   Imager();
 
-  Imager(casacore::MeasurementSet& ms, casacore::Bool compress=false, casacore::Bool useModel=false);
-  Imager(casacore::MeasurementSet& ms, casacore::Bool compress=false);
+  Imager(MeasurementSet& ms, Bool compress=False, Bool useModel=False);
+  Imager(MeasurementSet& ms, Bool compress=False);
 
   // Copy constructor and assignment operator
   Imager(const Imager&);
@@ -95,495 +91,495 @@ class Imager
   virtual ~Imager();
   
   // open all the subtables as userNoReadLock
-  virtual casacore::Bool openSubTables();
+  virtual Bool openSubTables();
 
 
   // Lock the ms and its subtables
-  virtual casacore::Bool lock();
+  virtual Bool lock();
 
   // Unlock the ms and its subtables
-  virtual casacore::Bool unlock();
+  virtual Bool unlock();
 
 
   // Utility function to do channel selection
 
-  casacore::Bool selectDataChannel(casacore::Vector<casacore::Int>& spectralwindowids, 
-				 casacore::String& dataMode, 
-				 casacore::Vector<casacore::Int>& dataNchan, 
-				 casacore::Vector<casacore::Int>& dataStart, casacore::Vector<casacore::Int>& dataStep,
-				 casacore::MRadialVelocity& mDataStart, 
-				 casacore::MRadialVelocity& mDataStep);
+  Bool selectDataChannel(Vector<Int>& spectralwindowids, 
+				 String& dataMode, 
+				 Vector<Int>& dataNchan, 
+				 Vector<Int>& dataStart, Vector<Int>& dataStep,
+				 MRadialVelocity& mDataStart, 
+				 MRadialVelocity& mDataStep);
   //Utility function to check coordinate match with existing image
 
-  virtual casacore::Bool checkCoord(const casacore::CoordinateSystem& coordsys, 
-			  const casacore::String& imageName); 
+  virtual Bool checkCoord(const CoordinateSystem& coordsys, 
+			  const String& imageName); 
 
-  virtual void setImageParam(casacore::Int& nx, casacore::Int& ny, casacore::Int& npol, casacore::Int& nchan); 
+  virtual void setImageParam(Int& nx, Int& ny, Int& npol, Int& nchan); 
 
   //VisSet and resort 
-  virtual void makeVisSet(casacore::MeasurementSet& ms, 
-			  casacore::Bool compress=false, casacore::Bool mosaicOrder=false);
+  virtual void makeVisSet(MeasurementSet& ms, 
+			  Bool compress=False, Bool mosaicOrder=False);
   //Just to create the SORTED_TABLE if one can
-  //virtual void makeVisSet(casacore::MeasurementSet& ms, 
-  //			  casacore::Bool compress=false, casacore::Bool mosaicOrder=false);
+  //virtual void makeVisSet(MeasurementSet& ms, 
+  //			  Bool compress=False, Bool mosaicOrder=False);
 
-  virtual void writeHistory(casacore::LogIO& os);
+  virtual void writeHistory(LogIO& os);
 
-  virtual void writeCommand(casacore::LogIO& os);
+  virtual void writeCommand(LogIO& os);
 
   //make an empty image
-  casacore::Bool makeEmptyImage(casacore::CoordinateSystem& imageCoord, casacore::String& name, casacore::Int fieldID=0);
+  Bool makeEmptyImage(CoordinateSystem& imageCoord, String& name, Int fieldID=0);
 
   //Functions to make Primary beams 
-  casacore::Bool makePBImage(casacore::ImageInterface<casacore::Float>& pbImage, 
-		   casacore::Bool useSymmetricBeam=true);
-  casacore::Bool makePBImage(const casacore::CoordinateSystem& imageCoord, 
-		   const casacore::String& telescopeName, const casacore::String& diskPBName, 
-		   casacore::Bool useSymmetricBeam=true, casacore::Double dishdiam=-1.0);
+  Bool makePBImage(ImageInterface<Float>& pbImage, 
+		   Bool useSymmetricBeam=True);
+  Bool makePBImage(const CoordinateSystem& imageCoord, 
+		   const String& telescopeName, const String& diskPBName, 
+		   Bool useSymmetricBeam=True, Double dishdiam=-1.0);
   
-  casacore::Bool makePBImage(const casacore::CoordinateSystem& imageCoord, 
-		   const casacore::Table& vpTable, const casacore::String& diskPBName);
+  Bool makePBImage(const CoordinateSystem& imageCoord, 
+		   const Table& vpTable, const String& diskPBName);
   
-  casacore::Bool makePBImage(const casacore::Table& vpTable, casacore::ImageInterface<casacore::Float>& pbImage);
+  Bool makePBImage(const Table& vpTable, ImageInterface<Float>& pbImage);
   
-  casacore::Bool makePBImage(const casacore::CoordinateSystem& imageCoord, PBMath& pbMath, const casacore::String& diskPBName);
+  Bool makePBImage(const CoordinateSystem& imageCoord, PBMath& pbMath, const String& diskPBName);
   
-  casacore::Bool makePBImage(PBMath& pbMath, casacore::ImageInterface<casacore::Float>& pbImage);
+  Bool makePBImage(PBMath& pbMath, ImageInterface<Float>& pbImage);
   
-  void setObsInfo(casacore::ObsInfo& obsinfo);
-  casacore::ObsInfo& latestObsInfo();
+  void setObsInfo(ObsInfo& obsinfo);
+  ObsInfo& latestObsInfo();
 // Close the current ms, and replace it with the supplied ms.
   // Optionally compress the attached calibration data
   // columns if they are created here.
-  casacore::Bool open(casacore::MeasurementSet &thems, casacore::Bool compress=false, casacore::Bool useModel=false);
+  Bool open(MeasurementSet &thems, Bool compress=False, Bool useModel=False);
   
   // Flush the ms to disk and detach from the ms file. All function
   // calls after this will be a no-op.
-  casacore::Bool close();
+  Bool close();
   
   // Return the name of the MeasurementSet
-  casacore::String name() const;
+  String name() const;
   
   // The following setup methods define the state of the imager.
   // <group>
   // Set image construction parameters
-  virtual casacore::Bool setimage(const casacore::Int nx, const casacore::Int ny,
-		const casacore::Quantity& cellx, const casacore::Quantity& celly,
-		const casacore::String& stokes,
-                casacore::Bool doShift,
-		const casacore::MDirection& phaseCenter, 
-                const casacore::Quantity& shiftx, const casacore::Quantity& shifty,
-		const casacore::String& mode, const casacore::Int nchan,
-                const casacore::Int start, const casacore::Int step,
-		const casacore::MRadialVelocity& mStart, const casacore::MRadialVelocity& mStep,
-		const casacore::Vector<casacore::Int>& spectralwindowids, const casacore::Int fieldid,
-		const casacore::Int facets, const casacore::Quantity& distance);
+  virtual Bool setimage(const Int nx, const Int ny,
+		const Quantity& cellx, const Quantity& celly,
+		const String& stokes,
+                Bool doShift,
+		const MDirection& phaseCenter, 
+                const Quantity& shiftx, const Quantity& shifty,
+		const String& mode, const Int nchan,
+                const Int start, const Int step,
+		const MRadialVelocity& mStart, const MRadialVelocity& mStep,
+		const Vector<Int>& spectralwindowids, const Int fieldid,
+		const Int facets, const Quantity& distance);
 
-  virtual casacore::Bool defineImage(const casacore::Int nx, const casacore::Int ny,
-			   const casacore::Quantity& cellx, const casacore::Quantity& celly,
-			   const casacore::String& stokes,
-			   const casacore::MDirection& phaseCenter, 
-			   const casacore::Int fieldid,
-			   const casacore::String& mode, const casacore::Int nchan,
-			   const casacore::Int start, const casacore::Int step,
-			   const casacore::MFrequency& mFreqStart,
-			   const casacore::MRadialVelocity& mStart, 
-			   const casacore::Quantity& qStep,
-			   const casacore::Vector<casacore::Int>& spectralwindowids, 
-			   const casacore::Int facets=1, 
-			   const casacore::Quantity& restFreq=casacore::Quantity(0,"Hz"),
-                           const casacore::MFrequency::Types& mFreqFrame=casacore::MFrequency::LSRK,
-			   const casacore::Quantity& distance=casacore::Quantity(0,"m"),
-			   const casacore::Bool trackSource=false, const casacore::MDirection& 
-			   trackDir=casacore::MDirection(casacore::Quantity(0.0, "deg"), 
-					       casacore::Quantity(90.0, "deg")));
+  virtual Bool defineImage(const Int nx, const Int ny,
+			   const Quantity& cellx, const Quantity& celly,
+			   const String& stokes,
+			   const MDirection& phaseCenter, 
+			   const Int fieldid,
+			   const String& mode, const Int nchan,
+			   const Int start, const Int step,
+			   const MFrequency& mFreqStart,
+			   const MRadialVelocity& mStart, 
+			   const Quantity& qStep,
+			   const Vector<Int>& spectralwindowids, 
+			   const Int facets=1, 
+			   const Quantity& restFreq=Quantity(0,"Hz"),
+                           const MFrequency::Types& mFreqFrame=MFrequency::LSRK,
+			   const Quantity& distance=Quantity(0,"m"),
+			   const Bool trackSource=False, const MDirection& 
+			   trackDir=MDirection(Quantity(0.0, "deg"), 
+					       Quantity(90.0, "deg")));
   // Set the data selection parameters
  
   // The parameters useModelcol and readonly is dummy here
   //as they are useful for the ImagerMultiMS version only
-  virtual  casacore::Bool setDataPerMS(const casacore::String& msname, const casacore::String& mode, 
-			     const casacore::Vector<casacore::Int>& nchan, 
-			     const casacore::Vector<casacore::Int>& start,
-			     const casacore::Vector<casacore::Int>& step,
-			     const casacore::Vector<casacore::Int>& spectralwindowids,
-			     const casacore::Vector<casacore::Int>& fieldid,
-			     const casacore::String& msSelect="",
-                             const casacore::String& timerng="",
-			     const casacore::String& fieldnames="",
-			     const casacore::Vector<casacore::Int>& antIndex=casacore::Vector<casacore::Int>(),
-			     const casacore::String& antnames="",
-			     const casacore::String& spwstring="",
-			     const casacore::String& uvdist="",
-                             const casacore::String& scan="",
-                             const casacore::String& intent="",
-                             const casacore::String& obs="",
-                             const casacore::Bool useModelCol=false,
-			     const casacore::Bool readonly=false);
+  virtual  Bool setDataPerMS(const String& msname, const String& mode, 
+			     const Vector<Int>& nchan, 
+			     const Vector<Int>& start,
+			     const Vector<Int>& step,
+			     const Vector<Int>& spectralwindowids,
+			     const Vector<Int>& fieldid,
+			     const String& msSelect="",
+                             const String& timerng="",
+			     const String& fieldnames="",
+			     const Vector<Int>& antIndex=Vector<Int>(),
+			     const String& antnames="",
+			     const String& spwstring="",
+			     const String& uvdist="",
+                             const String& scan="",
+                             const String& intent="",
+                             const String& obs="",
+                             const Bool useModelCol=False,
+			     const Bool readonly=False);
 
   // Select some data.
   // Sets nullSelect_p and returns !nullSelect_p.
-  // be_calm: lowers the logging level of some messages if true.
-  casacore::Bool setdata(const casacore::String& mode, const casacore::Vector<casacore::Int>& nchan, 
-	       const casacore::Vector<casacore::Int>& start,
-	       const casacore::Vector<casacore::Int>& step, const casacore::MRadialVelocity& mStart,
-	       const casacore::MRadialVelocity& mStep,
-	       const casacore::Vector<casacore::Int>& spectralwindowids,
-	       const casacore::Vector<casacore::Int>& fieldid,
-	       const casacore::String& msSelect="",
-	       const casacore::String& timerng="",
-	       const casacore::String& fieldnames="",
-	       const casacore::Vector<casacore::Int>& antIndex=casacore::Vector<casacore::Int>(),
-	       const casacore::String& antnames="",
-	       const casacore::String& spwstring="",
-	       const casacore::String& uvdist="",
-               const casacore::String& scan="",
-               const casacore::String& intent="",
-               const casacore::String& obs="",
-               const casacore::Bool usemodelCol=false,
-               const casacore::Bool be_calm=false);
+  // be_calm: lowers the logging level of some messages if True.
+  Bool setdata(const String& mode, const Vector<Int>& nchan, 
+	       const Vector<Int>& start,
+	       const Vector<Int>& step, const MRadialVelocity& mStart,
+	       const MRadialVelocity& mStep,
+	       const Vector<Int>& spectralwindowids,
+	       const Vector<Int>& fieldid,
+	       const String& msSelect="",
+	       const String& timerng="",
+	       const String& fieldnames="",
+	       const Vector<Int>& antIndex=Vector<Int>(),
+	       const String& antnames="",
+	       const String& spwstring="",
+	       const String& uvdist="",
+               const String& scan="",
+               const String& intent="",
+               const String& obs="",
+               const Bool usemodelCol=False,
+               const Bool be_calm=false);
   
   // Set the processing options
-  casacore::Bool setoptions(const casacore::String& ftmachine, const casacore::Long cache, const casacore::Int tile,
-		  const casacore::String& gridfunction, const casacore::MPosition& mLocation,
-                  const casacore::Float padding,
-		  const casacore::Int wprojplanes=-1,
-		  const casacore::String& epJTableName="",
-		  const casacore::Bool applyPointingOffsets=true,
-		  const casacore::Bool doPointingCorrection=true,
-		  const casacore::String& cfCacheDirName="", 
-		  const casacore::Float& rotpastep=5.0,
-		  const casacore::Float& computepastep=360.0,
-		  const casacore::Float& pbLimit=5.0e-2,
-		  const casacore::String& freqinterpmethod="linear",
-		  const casacore::Int imageTileSizeInPix=0,
-		  const casacore::Bool singleprecisiononly=false,
-		  const casacore::Int numthreads=-1,
-		  const casacore::Bool psTermOn=true,
-		  const casacore::Bool aTermOn=true,
-		  const casacore::Bool mTermOn=false,
-		  const casacore::Bool wbAWP=false,
-		  const casacore::Bool conjBeams=true);
+  Bool setoptions(const String& ftmachine, const Long cache, const Int tile,
+		  const String& gridfunction, const MPosition& mLocation,
+                  const Float padding,
+		  const Int wprojplanes=-1,
+		  const String& epJTableName="",
+		  const Bool applyPointingOffsets=True,
+		  const Bool doPointingCorrection=True,
+		  const String& cfCacheDirName="", 
+		  const Float& rotpastep=5.0,
+		  const Float& computepastep=360.0,
+		  const Float& pbLimit=5.0e-2,
+		  const String& freqinterpmethod="linear",
+		  const Int imageTileSizeInPix=0,
+		  const Bool singleprecisiononly=False,
+		  const Int numthreads=-1,
+		  const Bool psTermOn=True,
+		  const Bool aTermOn=True,
+		  const Bool mTermOn=False,
+		  const Bool wbAWP=False,
+		  const Bool conjBeams=True);
 
   // Set the single dish processing options
-  casacore::Bool setsdoptions(const casacore::Float scale, const casacore::Float weight, 
-		    const casacore::Int convsupport=-1, casacore::String pointingColToUse="DIRECTION",
-		    const casacore::Quantity truncate=casacore::Quantity(),
-		    const casacore::Quantity gwidth=casacore::Quantity(),
-		    const casacore::Quantity jwidth=casacore::Quantity(),
-		    const casacore::Float minweight=0.,
-		    const casacore::Bool clipminmax=false);
+  Bool setsdoptions(const Float scale, const Float weight, 
+		    const Int convsupport=-1, String pointingColToUse="DIRECTION",
+		    const Quantity truncate=Quantity(),
+		    const Quantity gwidth=Quantity(),
+		    const Quantity jwidth=Quantity(),
+		    const Float minweight=0.,
+		    const Bool clipminmax=False);
 
   // Set the voltage pattern
-  casacore::Bool setvp(const casacore::Bool dovp,
-	     const casacore::Bool defaultVP,
-	     const casacore::String& vpTable,
-	     const casacore::Bool doSquint,
-	     const casacore::Quantity &parAngleInc,
-	     const casacore::Quantity &skyPosThreshold,
-	     casacore::String defaultTel="",
-             const casacore::Bool verbose=true);
+  Bool setvp(const Bool dovp,
+	     const Bool defaultVP,
+	     const String& vpTable,
+	     const Bool doSquint,
+	     const Quantity &parAngleInc,
+	     const Quantity &skyPosThreshold,
+	     String defaultTel="",
+             const Bool verbose=true);
 
   // Set the scales to be searched in Multi Scale clean
-  casacore::Bool setscales(const casacore::String& scaleMethod,          // "nscales"  or  "uservector"
-		 const casacore::Int inscales,
-		 const casacore::Vector<casacore::Float>& userScaleSizes);
+  Bool setscales(const String& scaleMethod,          // "nscales"  or  "uservector"
+		 const Int inscales,
+		 const Vector<Float>& userScaleSizes);
   // set bias
-  casacore::Bool setSmallScaleBias(const casacore::Float inbias);
+  Bool setSmallScaleBias(const Float inbias);
 
   // Set the number of taylor series terms in the expansion of the
   // image as a function of frequency.
-  casacore::Bool settaylorterms(const casacore::Int intaylor, 
-		      const casacore::Double inreffreq);
+  Bool settaylorterms(const Int intaylor, 
+		      const Double inreffreq);
 
   // </group>
   
   // Advise on suitable values
-  casacore::Bool advise(const casacore::Bool takeAdvice, const casacore::Float amplitudeloss,
-              const casacore::Quantity& fieldOfView,
-	      casacore::Quantity& cell, casacore::Int& npixels, casacore::Int& facets,
-	      casacore::MDirection& phaseCenter);
+  Bool advise(const Bool takeAdvice, const Float amplitudeloss,
+              const Quantity& fieldOfView,
+	      Quantity& cell, Int& npixels, Int& facets,
+	      MDirection& phaseCenter);
 
   // Output a summary of the state of the object
-  casacore::Bool summary();
+  Bool summary();
   
   // Return the state of the object as a string
-  casacore::String state();
+  String state();
   
   // Return the # of visibilities accessible to *rvi, optionally excluding
   // flagged ones (if unflagged_only is true) and/or ones without imaging
   // weights (if must_have_imwt is true).
-  casacore::uInt count_visibilities(ROVisibilityIterator *rvi,
-                          const casacore::Bool unflagged_only, const casacore::Bool must_have_imwt);
+  uInt count_visibilities(ROVisibilityIterator *rvi,
+                          const Bool unflagged_only, const Bool must_have_imwt);
 
   // Return the image coordinates
-  casacore::Bool imagecoordinates(casacore::CoordinateSystem& coordInfo, const casacore::Bool verbose=true);
+  Bool imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose=true);
   // new version
-  casacore::Bool imagecoordinates2(casacore::CoordinateSystem& coordInfo, const casacore::Bool verbose=true);
+  Bool imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose=true);
 
   // Return the image shape
-  casacore::IPosition imageshape() const;
+  IPosition imageshape() const;
 
   // Weight the MeasurementSet
   //For some time of weighting briggs/uniform ...one can do it on a per field basis to calculate 
-  //weight density distribution. If that is what is wanted multiField should be set to true
+  //weight density distribution. If that is what is wanted multiField should be set to True
   //multifield is inoperative for natural, radial weighting
-  casacore::Bool weight(const casacore::String& algorithm, const casacore::String& rmode,
-	      const casacore::Quantity& noise, const casacore::Double robust,
-              const casacore::Quantity& fieldofview, const casacore::Int npixels, const casacore::Bool multiField=false);
+  Bool weight(const String& algorithm, const String& rmode,
+	      const Quantity& noise, const Double robust,
+              const Quantity& fieldofview, const Int npixels, const Bool multiField=False);
   
   // Filter the MeasurementSet
-  casacore::Bool filter(const casacore::String& type, const casacore::Quantity& bmaj, const casacore::Quantity& bmin,
-	      const casacore::Quantity& bpa);
+  Bool filter(const String& type, const Quantity& bmaj, const Quantity& bmin,
+	      const Quantity& bpa);
   
   // Apply a uvrange
-  casacore::Bool uvrange(const casacore::Double& uvmin, const casacore::Double& uvmax);
+  Bool uvrange(const Double& uvmin, const Double& uvmax);
   
   // Sensitivity
-  casacore::Bool sensitivity(casacore::Quantity& pointsourcesens, casacore::Double& relativesens, casacore::Double& sumwt,
-		   casacore::Double& effectiveBandwidth, casacore::Double& effectiveIntegration, casacore::Int& mBaselines,
-		   casacore::Matrix<casacore::Int>& mssChanSel,
-		   casacore::Vector<casacore::Vector<casacore::Int> >& nData,
-		   casacore::Vector<casacore::Vector<casacore::Double> >& sumwtChan,
-		   casacore::Vector<casacore::Vector<casacore::Double> >& sumwtsqChan,
-		   casacore::Vector<casacore::Vector<casacore::Double> >& sumInverseVarianceChan);
+  Bool sensitivity(Quantity& pointsourcesens, Double& relativesens, Double& sumwt,
+		   Double& effectiveBandwidth, Double& effectiveIntegration, Int& mBaselines,
+		   Matrix<Int>& mssChanSel,
+		   Vector<Vector<Int> >& nData,
+		   Vector<Vector<Double> >& sumwtChan,
+		   Vector<Vector<Double> >& sumwtsqChan,
+		   Vector<Vector<Double> >& sumInverseVarianceChan);
   
   // Apparent sensitivity calculator 
-  //   Accounts for gridding weights and assumes casacore::MS weights have correct units
-  casacore::Bool apparentSensitivity(casacore::Double& effSensitivity,
-			   casacore::Double& relToNat);
+  //   Accounts for gridding weights and assumes MS weights have correct units
+  Bool apparentSensitivity(Double& effSensitivity,
+			   Double& relToNat);
 
   // Make plain image + keep the complex image as well if complexImageName != "".
-  casacore::Bool makeimage(const casacore::String& type, const casacore::String& imageName,
-                 const casacore::String& complexImageName="", const casacore::Bool verbose=true);
+  Bool makeimage(const String& type, const String& imageName,
+                 const String& complexImageName="", const Bool verbose=true);
   
   // Fill in a region of a mask
-  casacore::Bool boxmask(const casacore::String& mask, const casacore::Vector<casacore::Int>& blc,
-	       const casacore::Vector<casacore::Int>& trc,const casacore::Float value);
+  Bool boxmask(const String& mask, const Vector<Int>& blc,
+	       const Vector<Int>& trc,const Float value);
 
   //Make a region either from record or array of blc trc 
-  //(casacore::Matrix(nboxes,4)) into a mask image
+  //(Matrix(nboxes,4)) into a mask image
   //value is the value of the mask pixels
-  //circular masks has form casacore::Matrix(ncircles,3)
+  //circular masks has form Matrix(ncircles,3)
   //where the 3 values on a row are radius, x, y pixel values 
-  casacore::Bool regionmask(const casacore::String& maskimage, casacore::Record* imageRegRec, 
-		  casacore::Matrix<casacore::Quantity>& blctrcs, casacore::Matrix<casacore::Float>& circles, 
-		  const casacore::Float& value=1.0);
+  Bool regionmask(const String& maskimage, Record* imageRegRec, 
+		  Matrix<Quantity>& blctrcs, Matrix<Float>& circles, 
+		  const Float& value=1.0);
 
-  static casacore::Bool regionToImageMask(const casacore::String& maskimage, casacore::Record* imageRegRec, 
-				casacore::Matrix<casacore::Quantity>& blctrcs, 
-				casacore::Matrix<casacore::Float>& circles, 
-				const casacore::Float& value=1.0);
-  // Clip on casacore::Stokes I
-  casacore::Bool clipimage(const casacore::String& image, const casacore::Quantity& threshold);
+  static Bool regionToImageMask(const String& maskimage, Record* imageRegRec, 
+				Matrix<Quantity>& blctrcs, 
+				Matrix<Float>& circles, 
+				const Float& value=1.0);
+  // Clip on Stokes I
+  Bool clipimage(const String& image, const Quantity& threshold);
 
   // Make a mask image
-  static casacore::Bool mask(const casacore::String& mask, const casacore::String& imageName,
-                   const casacore::Quantity& threshold);
+  static Bool mask(const String& mask, const String& imageName,
+                   const Quantity& threshold);
   
   // Restore
-  casacore::Bool restore(const casacore::Vector<casacore::String>& model, const casacore::String& complist,
-	       const casacore::Vector<casacore::String>& image, const casacore::Vector<casacore::String>& residual);
+  Bool restore(const Vector<String>& model, const String& complist,
+	       const Vector<String>& image, const Vector<String>& residual);
 
   // similar to restore except this is to be called if you fiddle with the model and complist
   // outside of this object (say you clip stuff etc) ...keep the sm_p and se_p state but just calculate new residuals and 
   // restored images. Will throw an exception is se_p or sm_p is not valid (i.e you should have used clean, mem etc before hand).
-  casacore::Bool updateresidual(const casacore::Vector<casacore::String>& model, const casacore::String& complist,
-	       const casacore::Vector<casacore::String>& image, const casacore::Vector<casacore::String>& residual);
+  Bool updateresidual(const Vector<String>& model, const String& complist,
+	       const Vector<String>& image, const Vector<String>& residual);
 
   // Setbeam
-  casacore::Bool setbeam(const casacore::ImageBeamSet& beam);
+  Bool setbeam(const ImageBeamSet& beam);
 
   // Residual
-  casacore::Bool residual(const casacore::Vector<casacore::String>& model, const casacore::String& complist,
-	       const casacore::Vector<casacore::String>& image);
+  Bool residual(const Vector<String>& model, const String& complist,
+	       const Vector<String>& image);
 
   // Approximate PSF
-  casacore::Bool approximatepsf(const casacore::String& psf);
+  Bool approximatepsf(const String& psf);
 
   // Smooth
-  casacore::Bool smooth(const casacore::Vector<casacore::String>& model, 
-	      const casacore::Vector<casacore::String>& image, casacore::Bool usefit,
-	      casacore::ImageBeamSet& mbeam,
-	      casacore::Bool normalizeVolume);
+  Bool smooth(const Vector<String>& model, 
+	      const Vector<String>& image, Bool usefit,
+	      ImageBeamSet& mbeam,
+	      Bool normalizeVolume);
 
   // Clean algorithm
-  casacore::Record clean(const casacore::String& algorithm,
-	     const casacore::Int niter, 
-	     const casacore::Float gain, 
-	     const casacore::Quantity& threshold, 
-	     const casacore::Bool displayProgress, 
-	     const casacore::Vector<casacore::String>& model, const casacore::Vector<casacore::Bool>& fixed,
-	     const casacore::String& complist,
-	     const casacore::Vector<casacore::String>& mask,
-	     const casacore::Vector<casacore::String>& restored,
-	     const casacore::Vector<casacore::String>& residual,
-	     const casacore::Vector<casacore::String>& psf=casacore::Vector<casacore::String>(0),
-             const casacore::Bool firstrun=true);
+  Record clean(const String& algorithm,
+	     const Int niter, 
+	     const Float gain, 
+	     const Quantity& threshold, 
+	     const Bool displayProgress, 
+	     const Vector<String>& model, const Vector<Bool>& fixed,
+	     const String& complist,
+	     const Vector<String>& mask,
+	     const Vector<String>& restored,
+	     const Vector<String>& residual,
+	     const Vector<String>& psf=Vector<String>(0),
+             const Bool firstrun=true);
 
-  casacore::Record iClean(const casacore::String& algorithm, 
-	      const casacore::Int niter, 
-	      const casacore::Double gain,
-	      //const casacore::String& threshold, 
-	      const casacore::Quantity& threshold,
-	      const casacore::Bool displayprogress,
-	      const casacore::Vector<casacore::String>& model,
-	      const casacore::Vector<casacore::Bool>& keepfixed, const casacore::String& complist,
-	      const casacore::Vector<casacore::String>& mask,
-	      const casacore::Vector<casacore::String>& image,
-	      const casacore::Vector<casacore::String>& residual,
-	      const casacore::Vector<casacore::String>& psfnames,
-	      const casacore::Bool interactive, const casacore::Int npercycle,
-	      const casacore::String& masktemplate);
+  Record iClean(const String& algorithm, 
+	      const Int niter, 
+	      const Double gain,
+	      //const String& threshold, 
+	      const Quantity& threshold,
+	      const Bool displayprogress,
+	      const Vector<String>& model,
+	      const Vector<Bool>& keepfixed, const String& complist,
+	      const Vector<String>& mask,
+	      const Vector<String>& image,
+	      const Vector<String>& residual,
+	      const Vector<String>& psfnames,
+	      const Bool interactive, const Int npercycle,
+	      const String& masktemplate);
   
   // MEM algorithm
-  casacore::Bool mem(const casacore::String& algorithm,
-	   const casacore::Int niter, const casacore::Quantity& sigma, 
-	   const casacore::Quantity& targetflux,
-	   const casacore::Bool constrainflux,
-	   const casacore::Bool displayProgress, 
-	   const casacore::Vector<casacore::String>& model, const casacore::Vector<casacore::Bool>& fixed,
-	   const casacore::String& complist,
-	   const casacore::Vector<casacore::String>& prior,
-	   const casacore::Vector<casacore::String>& mask,
-	   const casacore::Vector<casacore::String>& restored,
-	   const casacore::Vector<casacore::String>& residual);
+  Bool mem(const String& algorithm,
+	   const Int niter, const Quantity& sigma, 
+	   const Quantity& targetflux,
+	   const Bool constrainflux,
+	   const Bool displayProgress, 
+	   const Vector<String>& model, const Vector<Bool>& fixed,
+	   const String& complist,
+	   const Vector<String>& prior,
+	   const Vector<String>& mask,
+	   const Vector<String>& restored,
+	   const Vector<String>& residual);
   
   // pixon algorithm
-  casacore::Bool pixon(const casacore::String& algorithm,
-	     const casacore::Quantity& sigma, 
-	     const casacore::String& model);
+  Bool pixon(const String& algorithm,
+	     const Quantity& sigma, 
+	     const String& model);
   
   // NNLS algorithm
-  casacore::Bool nnls(const casacore::String& algorithm, const casacore::Int niter, const casacore::Float tolerance,
-	    const casacore::Vector<casacore::String>& model, const casacore::Vector<casacore::Bool>& fixed,
-	    const casacore::String& complist,
-	    const casacore::Vector<casacore::String>& fluxMask, const casacore::Vector<casacore::String>& dataMask,
-	    const casacore::Vector<casacore::String>& restored,
-	    const casacore::Vector<casacore::String>& residual);
+  Bool nnls(const String& algorithm, const Int niter, const Float tolerance,
+	    const Vector<String>& model, const Vector<Bool>& fixed,
+	    const String& complist,
+	    const Vector<String>& fluxMask, const Vector<String>& dataMask,
+	    const Vector<String>& restored,
+	    const Vector<String>& residual);
 
   // Multi-field control parameters
   //flat noise is the parameter that control the search of clean components
   //in a flat noise image or an optimum beam^2 image
-  casacore::Bool setmfcontrol(const casacore::Float cyclefactor,
-		    const casacore::Float cyclespeedup,
-		    const casacore::Float cyclemaxpsffraction,
-		    const casacore::Int stoplargenegatives, 
-		    const casacore::Int stoppointmode,
-		    const casacore::String& scaleType,
-		    const casacore::Float  minPB,
-		    const casacore::Float constPB,
-		    const casacore::Vector<casacore::String>& fluxscale,
-		    const casacore::Bool flatnoise=true);
+  Bool setmfcontrol(const Float cyclefactor,
+		    const Float cyclespeedup,
+		    const Float cyclemaxpsffraction,
+		    const Int stoplargenegatives, 
+		    const Int stoppointmode,
+		    const String& scaleType,
+		    const Float  minPB,
+		    const Float constPB,
+		    const Vector<String>& fluxscale,
+		    const Bool flatnoise=True);
   
   // Feathering algorithm
-  casacore::Bool feather(const casacore::String& image,
-	       const casacore::String& highres,
-	       const casacore::String& lowres,
-	       const casacore::String& lowpsf, const casacore::Float dishDiam=-1.0, const casacore::Bool lowPassFilterSD=false);
+  Bool feather(const String& image,
+	       const String& highres,
+	       const String& lowres,
+	       const String& lowpsf, const Float dishDiam=-1.0, const Bool lowPassFilterSD=False);
   
   // Apply or correct for Primary Beam or Voltage Pattern
-  casacore::Bool pb(const casacore::String& inimage,
-	  const casacore::String& outimage,
-	  const casacore::String& incomps,
-	  const casacore::String& outcomps,
-	  const casacore::String& operation,
-	  const casacore::MDirection& pointngCenter,
-	  const casacore::Quantity& pa,
-	  const casacore::String& pborvp);
+  Bool pb(const String& inimage,
+	  const String& outimage,
+	  const String& incomps,
+	  const String& outcomps,
+	  const String& operation,
+	  const MDirection& pointngCenter,
+	  const Quantity& pa,
+	  const String& pborvp);
 
   // Make a linear mosaic of several images
-  casacore::Bool linearmosaic(const casacore::String& mosaic,
-		    const casacore::String& fluxscale,
-		    const casacore::String& sensitivity,
-		    const casacore::Vector<casacore::String>& images,
-		    const casacore::Vector<casacore::Int>& fieldids);
+  Bool linearmosaic(const String& mosaic,
+		    const String& fluxscale,
+		    const String& sensitivity,
+		    const Vector<String>& images,
+		    const Vector<Int>& fieldids);
   
   // Fourier transform the model and componentlist.
   // Returns its nominal success value.
-  casacore::Bool ft(const casacore::Vector<casacore::String>& model, const casacore::String& complist,
-	  casacore::Bool incremental=false);
+  Bool ft(const Vector<String>& model, const String& complist,
+	  Bool incremental=False);
 
   // Compute the model visibility using specified source flux densities
-  casacore::Bool setjy(const casacore::Int fieldid, const casacore::Int spectralwindowid,
-	     const casacore::Vector<casacore::Double>& fluxDensity, const casacore::String& standard);
-  casacore::Bool setjy(const casacore::Vector<casacore::Int>& fieldid, const casacore::Vector<casacore::Int>& spectralwindowid, 
-	     const casacore::String& fieldnames, const casacore::String& spwstring, 
-	     const casacore::Vector<casacore::Double>& fluxDensity, const casacore::String& standard);
+  Bool setjy(const Int fieldid, const Int spectralwindowid,
+	     const Vector<Double>& fluxDensity, const String& standard);
+  Bool setjy(const Vector<Int>& fieldid, const Vector<Int>& spectralwindowid, 
+	     const String& fieldnames, const String& spwstring, 
+	     const Vector<Double>& fluxDensity, const String& standard);
   
-  //Setjy with model image. If chanDep=true then the scaling is calculated on a 
+  //Setjy with model image. If chanDep=True then the scaling is calculated on a 
   //per channel basis for the model image...otherwise the whole spw gets the
   //same flux density.
-  //casacore::Bool setjy(const casacore::Vector<casacore::Int>& fieldid, 
-  casacore::Record setjy(const casacore::Vector<casacore::Int>& fieldid, 
-	     const casacore::Vector<casacore::Int>& spectralwindowid, 
-	     const casacore::String& fieldnames, const casacore::String& spwstring, 
-	     const casacore::String& model,
-	     const casacore::Vector<casacore::Double>& fluxDensity, const casacore::String& standard, 
-	     const casacore::Bool chanDep=false, //const casacore::Double spix=0.0,
-             const casacore::Vector<casacore::Double>& spix=casacore::Vector<casacore::Double>(),
-             const casacore::MFrequency& reffreq=casacore::MFrequency(casacore::Quantity(1.0, "GHz"),
-                                                  casacore::MFrequency::LSRK),
-             const casacore::Vector<casacore::Double>& pipars=casacore::Vector<casacore::Double>(),
-             const casacore::Vector<casacore::Double>& papars=casacore::Vector<casacore::Double>(),
-             const casacore::Double& rotMeas=0.0, 
-             const casacore::String& timerange="", const casacore::String& scanstr="",
-             const casacore::String& intentstr="", const casacore::String& obsidstr="",
-             const casacore::String& interpolation="nearest");
+  //Bool setjy(const Vector<Int>& fieldid, 
+  Record setjy(const Vector<Int>& fieldid, 
+	     const Vector<Int>& spectralwindowid, 
+	     const String& fieldnames, const String& spwstring, 
+	     const String& model,
+	     const Vector<Double>& fluxDensity, const String& standard, 
+	     const Bool chanDep=False, //const Double spix=0.0,
+             const Vector<Double>& spix=Vector<Double>(),
+             const MFrequency& reffreq=MFrequency(Quantity(1.0, "GHz"),
+                                                  MFrequency::LSRK),
+             const Vector<Double>& pipars=Vector<Double>(),
+             const Vector<Double>& papars=Vector<Double>(),
+             const Double& rotMeas=0.0, 
+             const String& timerange="", const String& scanstr="",
+             const String& intentstr="", const String& obsidstr="",
+             const String& interpolation="nearest");
 
   // Make an empty image
-  casacore::Bool make(const casacore::String& model);
+  Bool make(const String& model);
 
   // make a model from a SD image. 
   // This model then can be used as initial clean model to include the 
   // shorter spacing.
-  casacore::Bool makemodelfromsd(const casacore::String& sdImage, const casacore::String& modelimage,
-		       const casacore::String& lowPSF,
-		       casacore::String& maskImage);
+  Bool makemodelfromsd(const String& sdImage, const String& modelimage,
+		       const String& lowPSF,
+		       String& maskImage);
 
   // Write a component list to disk, starting with prefix, using a setjy
   // standard, and return the name of the list.
-  casacore::String make_comp(const casacore::String& objName, const casacore::String& standard,
-		   const casacore::MEpoch& mtime, const casacore::Vector<casacore::MFrequency>& freqv,
-		   const casacore::String& prefix);
+  String make_comp(const String& objName, const String& standard,
+		   const MEpoch& mtime, const Vector<MFrequency>& freqv,
+		   const String& prefix);
 
   // Clone an image
-  static casacore::Bool clone(const casacore::String& imageName, const casacore::String& newImageName);
+  static Bool clone(const String& imageName, const String& newImageName);
   
   // Fit the psf
-  casacore::Bool fitpsf(const casacore::String& psf, casacore::ImageBeamSet& mbeam);
+  Bool fitpsf(const String& psf, ImageBeamSet& mbeam);
 
   // Correct the visibility data (OBSERVED->CORRECTED)
-  casacore::Bool correct(const casacore::Bool doparallactic, const casacore::Quantity& t);
+  Bool correct(const Bool doparallactic, const Quantity& t);
 
   // Plot the uv plane
-  casacore::Bool plotuv(const casacore::Bool rotate);
+  Bool plotuv(const Bool rotate);
 
   // Plot the visibilities
-  casacore::Bool plotvis(const casacore::String& type, const casacore::Int increment);
+  Bool plotvis(const String& type, const Int increment);
 
   // Plot the weights
-  casacore::Bool plotweights(const casacore::Bool gridded, const casacore::Int increment);
+  Bool plotweights(const Bool gridded, const Int increment);
 
   // Plot a summary
-  casacore::Bool plotsummary();
+  Bool plotsummary();
 
   // Clip visibilities
-  casacore::Bool clipvis(const casacore::Quantity& threshold);
+  Bool clipvis(const Quantity& threshold);
 
 
   //Check if can proceed with this object
-  casacore::Bool valid() const;
+  Bool valid() const;
 
 
   //Interactive mask drawing
   //forceReload..forces the viewer to dump previous image that is being displayed
-  casacore::Int interactivemask(const casacore::String& imagename, const casacore::String& maskname, 
-		      casacore::Int& niter, casacore::Int& ncycles, casacore::String& threshold, const casacore::Bool forceReload=false);
+  Int interactivemask(const String& imagename, const String& maskname, 
+		      Int& niter, Int& ncycles, String& threshold, const Bool forceReload=False);
 
 
   //helper function to copy a mask from one image to another
 
-  static casacore::Bool copyMask(casacore::ImageInterface<casacore::Float>& out, const casacore::ImageInterface<casacore::Float>& in, casacore::String maskname="mask0", casacore::Bool setdefault=true); 
+  static Bool copyMask(ImageInterface<Float>& out, const ImageInterface<Float>& in, String maskname="mask0", Bool setdefault=True); 
 
 
   // Supports the "[] or -1 => everything" convention using the rule:
@@ -591,32 +587,32 @@ class Imager
   //     replace v with 0, 1, ..., nelem - 1.
   // Returns whether or not it modified v.
   //   If so, v is modified in place.
-  static casacore::Bool expand_blank_sel(casacore::Vector<casacore::Int>& v, const casacore::uInt nelem);  
+  static Bool expand_blank_sel(Vector<Int>& v, const uInt nelem);  
 
   //spectral gridding calculation for output images (use SubMS::calcChanFreqs)
-  casacore::Bool calcImFreqs(casacore::Vector<casacore::Double>& imfreqs, casacore::Vector<casacore::Double>& imfreqres,
-                   const casacore::MFrequency::Types& oldRefFrame,
-                   const casacore::MEpoch& obsEpoch, const casacore::MPosition& obsPosition,
-                   const casacore::Double& restFreq);
+  Bool calcImFreqs(Vector<Double>& imfreqs, Vector<Double>& imfreqres,
+                   const MFrequency::Types& oldRefFrame,
+                   const MEpoch& obsEpoch, const MPosition& obsPosition,
+                   const Double& restFreq);
 
   // Advise the chanselection needed for the frequency range or
-  // give the frequency range for a give spwselection  if getFreqRange==true
+  // give the frequency range for a give spwselection  if getFreqRange==True
   // if the parameter msname is used then the MSs associated associated with
   // this object (that have been either 'open'ed or 'selectvis'ed) are ignored
   // In this mode it is a helper function to the general world ...no need to
   // open or selectvis. You need to specify the field_id for which this calculation is 
   // being done for in the helper mode. 
-  // If you have already set casacore::MS's and selected data and msname="" then 
+  // If you have already set MS's and selected data and msname="" then 
   // the calulation is done for the field(s) selected in selectvis.
-  // getFreqRange=true then the freqrange in the frame and spwselection  you choose is 
+  // getFreqRange=True then the freqrange in the frame and spwselection  you choose is 
   // returned in freqStart and freqEnd (in the case of msname="" then it is for the fields 
   //and spw you have chosen in selectvis). 
-  casacore::Bool adviseChanSelex(casacore::Double& freqStart, casacore::Double& freqEnd, 
-		       const casacore::Double& freqStep,  const casacore::MFrequency::Types& freqframe,
-		       casacore::Vector< casacore::Vector<casacore::Int> >& spw, casacore::Vector< casacore::Vector<casacore::Int> >& start,
-		       casacore::Vector< casacore::Vector<casacore::Int> >& nchan, const casacore::String& msname="", 
-		       const casacore::Int fieldid=0, const casacore::Bool getFreqRange=false, 
-		       const casacore::String spwselection="");
+  Bool adviseChanSelex(Double& freqStart, Double& freqEnd, 
+		       const Double& freqStep,  const MFrequency::Types& freqframe,
+		       Vector< Vector<Int> >& spw, Vector< Vector<Int> >& start,
+		       Vector< Vector<Int> >& nchan, const String& msname="", 
+		       const Int fieldid=0, const Bool getFreqRange=False, 
+		       const String spwselection="");
 
 
   //These are utility functions when weights from different imager instances 
@@ -624,14 +620,14 @@ class Imager
   //for example.
   // when type is "imaging"
   // getweightGrid will get the weight density for uniform style imaging weight
-  // the casacore::Block elements are for different fields if independent field weighting 
+  // the Block elements are for different fields if independent field weighting 
   // was done.
-  // when type is "ftweight"..then a casacore::Vector of string is expected in weightimage 
+  // when type is "ftweight"..then a Vector of string is expected in weightimage 
   // which is of the same length as the number of models put in clean etc 
 
-  casacore::Bool getWeightGrid(casacore::Block<casacore::Matrix<casacore::Float> >&weightgrid, const casacore::String& type, const casacore::Vector<casacore::String>& weightImagenames=casacore::Vector<casacore::String>());
-  casacore::Bool setWeightGrid(const casacore::Block<casacore::Matrix<casacore::Float> >& weightgrid, const casacore::String& type);
-  casacore::String dQuantitytoString(const casacore::Quantity& dq);
+  Bool getWeightGrid(Block<Matrix<Float> >&weightgrid, const String& type, const Vector<String>& weightImagenames=Vector<String>());
+  Bool setWeightGrid(const Block<Matrix<Float> >& weightgrid, const String& type);
+  String dQuantitytoString(const Quantity& dq);
 
   // Automatic evaluation of map extent for given visibility.
   //
@@ -645,45 +641,45 @@ class Imager
   // @param[out] extent map extent
   //
   // @return
-  virtual casacore::Bool mapExtent(const casacore::String &referenceFrame, const casacore::String &movingSource,
-          const casacore::String &pointingColumn, casacore::Vector<casacore::Double> &center, casacore::Vector<casacore::Double> &blc,
-          casacore::Vector<casacore::Double> &trc, casacore::Vector<casacore::Double> &extent);
+  virtual Bool mapExtent(const String &referenceFrame, const String &movingSource,
+          const String &pointingColumn, Vector<Double> &center, Vector<Double> &blc,
+          Vector<Double> &trc, Vector<Double> &extent);
 
   //Helper function to transfer history table to a logger holder
   //which can be stored in images
-  static void transferHistory(casacore::LoggerHolder& imageLog, casacore::ROMSHistoryColumns& msHis);
+  static void transferHistory(LoggerHolder& imageLog, ROMSHistoryColumns& msHis);
 
 protected:
 
-  casacore::CountedPtr<casacore::MeasurementSet> ms_p;
-  casacore::CountedPtr<casacore::MSHistoryHandler> hist_p;
-  casacore::Table antab_p;
-  casacore::Table datadesctab_p;
-  casacore::Table feedtab_p;
-  casacore::Table fieldtab_p;
-  casacore::Table obstab_p;
-  casacore::Table pointingtab_p;
-  casacore::Table poltab_p;
-  casacore::Table proctab_p;
-  casacore::Table spwtab_p;
-  casacore::Table statetab_p;
-  casacore::Table dopplertab_p;
-  casacore::Table flagcmdtab_p;
-  casacore::Table freqoffsettab_p;
-  casacore::Table historytab_p;
-  casacore::Table sourcetab_p;
-  casacore::Table syscaltab_p;
-  casacore::Table weathertab_p;
-  casacore::Int lockCounter_p;
-  casacore::Int nx_p, ny_p, npol_p, nchan_p;
-  casacore::ObsInfo latestObsInfo_p;
+  CountedPtr<MeasurementSet> ms_p;
+  CountedPtr<MSHistoryHandler> hist_p;
+  Table antab_p;
+  Table datadesctab_p;
+  Table feedtab_p;
+  Table fieldtab_p;
+  Table obstab_p;
+  Table pointingtab_p;
+  Table poltab_p;
+  Table proctab_p;
+  Table spwtab_p;
+  Table statetab_p;
+  Table dopplertab_p;
+  Table flagcmdtab_p;
+  Table freqoffsettab_p;
+  Table historytab_p;
+  Table sourcetab_p;
+  Table syscaltab_p;
+  Table weathertab_p;
+  Int lockCounter_p;
+  Int nx_p, ny_p, npol_p, nchan_p;
+  ObsInfo latestObsInfo_p;
   //What should be the tile volume on disk
-  casacore::Int imageTileVol_p;
+  Int imageTileVol_p;
 
 
 
-  casacore::String msname_p;
-  casacore::CountedPtr<casacore::MeasurementSet> mssel_p;
+  String msname_p;
+  CountedPtr<MeasurementSet> mssel_p;
   VisSet *vs_p;
   ROVisibilityIterator* rvi_p;
   VisibilityIterator* wvi_p;
@@ -694,250 +690,250 @@ protected:
   VPSkyJones* vp_p;
   VPSkyJones* gvp_p;
 
-  casacore::Bool setimaged_p, nullSelect_p;
-  casacore::Bool redoSkyModel_p;   // if clean is run multiply ..use this to check
+  Bool setimaged_p, nullSelect_p;
+  Bool redoSkyModel_p;   // if clean is run multiply ..use this to check
                          // if setimage was changed hence redo the skyModel.
-  casacore::Float rotPAStep_p, computePAStep_p, pbLimit_p;
-  casacore::Int facets_p;
-  casacore::Int wprojPlanes_p;
-  casacore::Quantity mcellx_p, mcelly_p;
-  casacore::String stokes_p;
-  casacore::String dataMode_p;
-  casacore::String imageMode_p;           // channel, (optical)velocity, mfs, or frequency
-  casacore::Vector<casacore::Int> dataNchan_p;
-  casacore::Int imageNchan_p;
-  casacore::Vector<casacore::Int> dataStart_p, dataStep_p;
-  casacore::Int imageStart_p, imageStep_p;
-  casacore::MRadialVelocity mDataStart_p, mImageStart_p;
-  casacore::MRadialVelocity mDataStep_p,  mImageStep_p;
-  casacore::MFrequency mfImageStart_p, mfImageStep_p;
-  casacore::MFrequency::Types freqFrame_p;
-  casacore::MDirection phaseCenter_p;
-  casacore::Quantity restFreq_p;
-  casacore::Quantity distance_p;
-  casacore::Bool doShift_p;
-  casacore::Quantity shiftx_p;
-  casacore::Quantity shifty_p;
-  casacore::String ftmachine_p, gridfunction_p;
-  casacore::Bool wfGridding_p;
-  casacore::Long cache_p;
-  casacore::Int  tile_p;
-  casacore::MPosition mLocation_p;
-  casacore::Bool doVP_p;
-  casacore::ImageBeamSet beam_p;
-  casacore::Bool beamValid_p;
-  casacore::Float padding_p;
-  casacore::Float sdScale_p;
-  casacore::Float sdWeight_p;
-  casacore::Int sdConvSupport_p;
+  Float rotPAStep_p, computePAStep_p, pbLimit_p;
+  Int facets_p;
+  Int wprojPlanes_p;
+  Quantity mcellx_p, mcelly_p;
+  String stokes_p;
+  String dataMode_p;
+  String imageMode_p;           // channel, (optical)velocity, mfs, or frequency
+  Vector<Int> dataNchan_p;
+  Int imageNchan_p;
+  Vector<Int> dataStart_p, dataStep_p;
+  Int imageStart_p, imageStep_p;
+  MRadialVelocity mDataStart_p, mImageStart_p;
+  MRadialVelocity mDataStep_p,  mImageStep_p;
+  MFrequency mfImageStart_p, mfImageStep_p;
+  MFrequency::Types freqFrame_p;
+  MDirection phaseCenter_p;
+  Quantity restFreq_p;
+  Quantity distance_p;
+  Bool doShift_p;
+  Quantity shiftx_p;
+  Quantity shifty_p;
+  String ftmachine_p, gridfunction_p;
+  Bool wfGridding_p;
+  Long cache_p;
+  Int  tile_p;
+  MPosition mLocation_p;
+  Bool doVP_p;
+  ImageBeamSet beam_p;
+  Bool beamValid_p;
+  Float padding_p;
+  Float sdScale_p;
+  Float sdWeight_p;
+  Int sdConvSupport_p;
 
-  casacore::Quantity qtruncate_p;
-  casacore::Quantity qgwidth_p;
-  casacore::Quantity qjwidth_p;
+  Quantity qtruncate_p;
+  Quantity qgwidth_p;
+  Quantity qjwidth_p;
 
-  casacore::Float minWeight_p;
+  Float minWeight_p;
 
-  casacore::Bool clipminmax_p;
+  Bool clipminmax_p;
 
   // special mf control parms, etc
-  casacore::Float cyclefactor_p;
-  casacore::Float cyclespeedup_p;
-  casacore::Float cyclemaxpsffraction_p;
-  casacore::Int stoplargenegatives_p;
-  casacore::Int stoppointmode_p;
-  casacore::Vector<casacore::String> fluxscale_p;
-  casacore::String scaleType_p;		// type of image-plane scaling: NONE, SAULT
-  casacore::Float minPB_p;		// minimum value of generalized-PB pattern
-  casacore::Float constPB_p;		// above this level, constant flux-scale
+  Float cyclefactor_p;
+  Float cyclespeedup_p;
+  Float cyclemaxpsffraction_p;
+  Int stoplargenegatives_p;
+  Int stoppointmode_p;
+  Vector<String> fluxscale_p;
+  String scaleType_p;		// type of image-plane scaling: NONE, SAULT
+  Float minPB_p;		// minimum value of generalized-PB pattern
+  Float constPB_p;		// above this level, constant flux-scale
 
-  casacore::Vector<casacore::Int> spectralwindowids_p;
-  casacore::Int fieldid_p;
+  Vector<Int> spectralwindowids_p;
+  Int fieldid_p;
 
-  casacore::Vector<casacore::Int> dataspectralwindowids_p;
-  casacore::Vector<casacore::Int> datadescids_p;
-  casacore::Vector<casacore::Int> datafieldids_p;
+  Vector<Int> dataspectralwindowids_p;
+  Vector<Int> datadescids_p;
+  Vector<Int> datafieldids_p;
   //TT
-  casacore::Cube<casacore::Int> spwchansels_p;
-  casacore::Matrix<casacore::Double> freqrange_p;
-  casacore::Matrix<casacore::Double> mssFreqSel_p;
-  casacore::Matrix<casacore::Int> mssChanSel_p;
+  Cube<Int> spwchansels_p;
+  Matrix<Double> freqrange_p;
+  Matrix<Double> mssFreqSel_p;
+  Matrix<Int> mssChanSel_p;
 
-  casacore::Int numMS_p;
+  Int numMS_p;
 
-  casacore::String telescope_p;
-  casacore::String vpTableStr_p;         // description of voltage patterns for various telescopes
+  String telescope_p;
+  String vpTableStr_p;         // description of voltage patterns for various telescopes
                                //  in the MS
-  casacore::Quantity parAngleInc_p;
-  casacore::Quantity skyPosThreshold_p;
+  Quantity parAngleInc_p;
+  Quantity skyPosThreshold_p;
   BeamSquint::SquintType  squintType_p;
-  casacore::Bool doDefaultVP_p;          // make default VPs, rather than reading in a vpTable
+  Bool doDefaultVP_p;          // make default VPs, rather than reading in a vpTable
 
 
-  casacore::Bool  doMultiFields_p;      // Do multiple fields?
-  casacore::Bool  multiFields_p; 	      // multiple fields have been specified in setdata
+  Bool  doMultiFields_p;      // Do multiple fields?
+  Bool  multiFields_p; 	      // multiple fields have been specified in setdata
 
-  casacore::Bool doWideBand_p;          // Do Multi Frequency Synthesis Imaging
-  casacore::String freqInterpMethod_p; //frequency interpolation mode
+  Bool doWideBand_p;          // Do Multi Frequency Synthesis Imaging
+  String freqInterpMethod_p; //frequency interpolation mode
 
-  casacore::Bool flatnoise_p;
+  Bool flatnoise_p;
 
   // Set the defaults
   void defaults();
 
   // check if it is  dettahced from ms.
-  casacore::Bool detached() const;
+  Bool detached() const;
 
   // Create the FTMachines when necessary or when the control parameters
   // have changed. 
-  virtual casacore::Bool createFTMachine();
+  virtual Bool createFTMachine();
 
-  void openSubTable (const casacore::Table & otherTable, casacore::Table & table, const casacore::TableLock & tableLock);
+  void openSubTable (const Table & otherTable, Table & table, const TableLock & tableLock);
 
-  casacore::Bool removeTable(const casacore::String& tablename);
-  casacore::Bool updateSkyModel(const casacore::Vector<casacore::String>& model,
-		      const casacore::String complist);
-  casacore::Bool createSkyEquation(const casacore::String complist="");
-  casacore::Bool createSkyEquation(const casacore::Vector<casacore::String>& image, 
-			 const casacore::Vector<casacore::Bool>& fixed,
-			 const casacore::String complist="");
-  casacore::Bool createSkyEquation(const casacore::Vector<casacore::String>& image, 
-			 const casacore::String complist="");
-  casacore::Bool createSkyEquation(const casacore::Vector<casacore::String>& image, 
-			 const casacore::Vector<casacore::Bool>& fixed,
-			 const casacore::Vector<casacore::String>& mask,
-			 const casacore::String complist="");
-  casacore::Bool createSkyEquation(const casacore::Vector<casacore::String>& image, 
-			 const casacore::Vector<casacore::Bool>& fixed,
-			 const casacore::Vector<casacore::String>& mask,
-			 const casacore::Vector<casacore::String>& fluxMask,
-			 const casacore::String complist="");
-  ATerm* createTelescopeATerm(casacore::MeasurementSet& ms, const casacore::Bool& isATermOn=true);
+  Bool removeTable(const String& tablename);
+  Bool updateSkyModel(const Vector<String>& model,
+		      const String complist);
+  Bool createSkyEquation(const String complist="");
+  Bool createSkyEquation(const Vector<String>& image, 
+			 const Vector<Bool>& fixed,
+			 const String complist="");
+  Bool createSkyEquation(const Vector<String>& image, 
+			 const String complist="");
+  Bool createSkyEquation(const Vector<String>& image, 
+			 const Vector<Bool>& fixed,
+			 const Vector<String>& mask,
+			 const String complist="");
+  Bool createSkyEquation(const Vector<String>& image, 
+			 const Vector<Bool>& fixed,
+			 const Vector<String>& mask,
+			 const Vector<String>& fluxMask,
+			 const String complist="");
+  ATerm* createTelescopeATerm(MeasurementSet& ms, const Bool& isATermOn=True);
   void destroySkyEquation();
 
   //add residual to the private vars or create residual images
-  casacore::Bool addResiduals(const casacore::Vector<casacore::String>& residual);
+  Bool addResiduals(const Vector<String>& residual);
   // Add the residuals to the SkyEquation
-  casacore::Bool addResidualsToSkyEquation(const casacore::Vector<casacore::String>& residual);
+  Bool addResidualsToSkyEquation(const Vector<String>& residual);
 
   // Add or replace the masks
-  casacore::Bool addMasksToSkyEquation(const casacore::Vector<casacore::String>& mask, const casacore::Vector<casacore::Bool>& fixed=casacore::Vector<casacore::Bool>(0));
+  Bool addMasksToSkyEquation(const Vector<String>& mask, const Vector<Bool>& fixed=Vector<Bool>(0));
 
   // Get the rest frequency ..returns 1 element in restfreq 
   // if user specified or try to get the info from the SOURCE table 
-  casacore::Bool getRestFreq(casacore::Vector<casacore::Double>& restFreq, const casacore::Int& spw);
+  Bool getRestFreq(Vector<Double>& restFreq, const Int& spw);
 
-  casacore::Bool restoreImages(const casacore::Vector<casacore::String>& restored, casacore::Bool modresiduals=true);
+  Bool restoreImages(const Vector<String>& restored, Bool modresiduals=True);
 
   // names of flux scale images
-  casacore::Bool writeFluxScales(const casacore::Vector<casacore::String>& fluxScaleNames);
+  Bool writeFluxScales(const Vector<String>& fluxScaleNames);
 
   // Helper functions to hide some setjy code.
-  casacore::Unit sjy_setup_arrs(casacore::Vector<casacore::Vector<Flux<casacore::Double> > >& returnFluxes,
-                      casacore::Vector<casacore::Vector<Flux<casacore::Double> > >& returnFluxErrs,
-                      casacore::Vector<casacore::Vector<casacore::Double> >& fluxUsed, // mainly for logging purpose
-                      casacore::Vector<casacore::String>& tempCLs,
-                      casacore::Vector<casacore::Vector<casacore::MFrequency> >& mfreqs,
-                      const casacore::ROMSSpWindowColumns& spwcols, const casacore::uInt nspws,
-                      const casacore::Vector<casacore::Int>& selToRawSpwIds, const casacore::Bool chanDep);
+  Unit sjy_setup_arrs(Vector<Vector<Flux<Double> > >& returnFluxes,
+                      Vector<Vector<Flux<Double> > >& returnFluxErrs,
+                      Vector<Vector<Double> >& fluxUsed, // mainly for logging purpose
+                      Vector<String>& tempCLs,
+                      Vector<Vector<MFrequency> >& mfreqs,
+                      const ROMSSpWindowColumns& spwcols, const uInt nspws,
+                      const Vector<Int>& selToRawSpwIds, const Bool chanDep);
   // Returns whether it might have made any visibilities.
-  casacore::Bool sjy_make_visibilities(casacore::TempImage<casacore::Float> *tmodimage, casacore::LogIO& os,
-  //casacore::Bool sjy_make_visibilities(casacore::Block<casacore::CountedPtr<casacore::TempImage<casacore::Float> > >& tmodimages, casacore::LogIO& os,
-                             //const casacore::Int rawspwid, const casacore::Int fldid,
+  Bool sjy_make_visibilities(TempImage<Float> *tmodimage, LogIO& os,
+  //Bool sjy_make_visibilities(Block<CountedPtr<TempImage<Float> > >& tmodimages, LogIO& os,
+                             //const Int rawspwid, const Int fldid,
   // for new one                           
-  //                           const casacore::Vector<casacore::Int>& rawspwids, const casacore::Int fldid,
-                             const casacore::Int rawspwid, const casacore::Int fldid,
-                             const casacore::String& clname, const casacore::String& timerange="",
-                             const casacore::String& scanstr="", 
-			     const casacore::String& obsidstr="",
-                             const casacore::String& intentstr="", 
-			    const casacore::Vector<casacore::Double>& freqofscale=casacore::Vector<casacore::Double>(0),
-			     const casacore::Vector<casacore::Double>& scale=casacore::Vector<casacore::Double>(0) );
+  //                           const Vector<Int>& rawspwids, const Int fldid,
+                             const Int rawspwid, const Int fldid,
+                             const String& clname, const String& timerange="",
+                             const String& scanstr="", 
+			     const String& obsidstr="",
+                             const String& intentstr="", 
+			    const Vector<Double>& freqofscale=Vector<Double>(0),
+			     const Vector<Double>& scale=Vector<Double>(0) );
   // Concatenate multiple CLs 
-  casacore::Bool sjy_concatComponentLists(casacore::LogIO& os, const casacore::Vector<casacore::String>& tempCLs, const casacore::String& outTempCL);
+  Bool sjy_concatComponentLists(LogIO& os, const Vector<String>& tempCLs, const String& outTempCL);
   // Returns whether it found a source.
-  casacore::Bool sjy_computeFlux(casacore::LogIO& os, FluxStandard& fluxStd,
-                       casacore::Vector<casacore::Vector<Flux<casacore::Double> > >& returnFluxes,
-                       casacore::Vector<casacore::Vector<Flux<casacore::Double> > >& returnFluxErrs,
-                       casacore::Vector<casacore::String>& tempCLs, 
-                       //casacore::Vector<casacore::Double>& fluxUsed,
-                       casacore::Vector<casacore::Vector<casacore::Double> >& fluxUsed,
-                       casacore::String& fluxScaleName, casacore::MEpoch& aveEpoch,
-                       const casacore::Vector<casacore::Vector<casacore::MFrequency> >& mfreqs,
-                       const casacore::String& model, const casacore::String& fieldName, 
-                       const casacore::ROMSColumns& msc, const casacore::Int fldid,
-                       const casacore::MDirection& fieldDir, const casacore::Vector<casacore::Int>& selToRawSpwIds,
-                       const casacore::String& standard);
+  Bool sjy_computeFlux(LogIO& os, FluxStandard& fluxStd,
+                       Vector<Vector<Flux<Double> > >& returnFluxes,
+                       Vector<Vector<Flux<Double> > >& returnFluxErrs,
+                       Vector<String>& tempCLs, 
+                       //Vector<Double>& fluxUsed,
+                       Vector<Vector<Double> >& fluxUsed,
+                       String& fluxScaleName, MEpoch& aveEpoch,
+                       const Vector<Vector<MFrequency> >& mfreqs,
+                       const String& model, const String& fieldName, 
+                       const ROMSColumns& msc, const Int fldid,
+                       const MDirection& fieldDir, const Vector<Int>& selToRawSpwIds,
+                       const String& standard);
 
-  void sjy_makeComponentList(casacore::LogIO& os, casacore::Vector<casacore::String>& tempCLs,
-                             casacore::Vector<casacore::Vector<Flux<casacore::Double> > >& returnFluxes,
-                             const casacore::Vector<casacore::Double>& fluxUsed,
-                             const casacore::Vector<casacore::Int>& selToRawSpwIds,
-                             const casacore::Vector<casacore::Vector<casacore::MFrequency> >& mfreqs,
-                             const casacore::String& fieldName,
-                             const casacore::MDirection& fieldDir,
-                             const casacore::Vector<casacore::Double>& spix,
-                             const casacore::Vector<casacore::Double>& pipars,
-                             const casacore::Vector<casacore::Double>& papars,
-                             const casacore::Double& rotMeas,
-                             //const casacore::Vector<casacore::Double>& cppars,
-                             const casacore::MFrequency& reffreq,
-                             const casacore::MEpoch& aveEpoch,
-                             const casacore::Int fldId);
+  void sjy_makeComponentList(LogIO& os, Vector<String>& tempCLs,
+                             Vector<Vector<Flux<Double> > >& returnFluxes,
+                             const Vector<Double>& fluxUsed,
+                             const Vector<Int>& selToRawSpwIds,
+                             const Vector<Vector<MFrequency> >& mfreqs,
+                             const String& fieldName,
+                             const MDirection& fieldDir,
+                             const Vector<Double>& spix,
+                             const Vector<Double>& pipars,
+                             const Vector<Double>& papars,
+                             const Double& rotMeas,
+                             //const Vector<Double>& cppars,
+                             const MFrequency& reffreq,
+                             const MEpoch& aveEpoch,
+                             const Int fldId);
   //
   // Returns NULL if no image is prepared.
-  casacore::TempImage<casacore::Float>* sjy_prepImage(casacore::LogIO& os, FluxStandard& fluxStd,
-                                  casacore::Vector<casacore::Double>& fluxUsed, 
-				  casacore::Vector<casacore::Double>& freq, 
-				  casacore::Vector<casacore::Double>& scale, const casacore::String& model,
-                                  const casacore::ROMSSpWindowColumns& spwcols,
-                                  //const casacore::Int rawspwid, const casacore::Bool chanDep,
-                                  const casacore::Vector<casacore::Int> rawspwids, const casacore::Bool chanDep,
-                                  const casacore::Vector<casacore::Vector<casacore::MFrequency> >& mfreqs,
-                                  //const casacore::uInt selspw, const casacore::String& fieldName,
-                                  const casacore::String& fieldName,
-                                  const casacore::MDirection& fieldDir, const casacore::Unit& freqUnit,
-                                  const casacore::Vector<casacore::Double>& fluxdens,
-                                  const casacore::Bool precompute, 
-                                  //const casacore::Double spix,
-                                  const casacore::Vector<casacore::Double>& spix,
-                                  const casacore::MFrequency& reffreq, 
-				  const casacore::MEpoch& aveEpoch, const casacore::Int fieldId);
-  // Returns true or throws up.
-  casacore::Bool sjy_regridCubeChans(casacore::TempImage<casacore::Float>* tmodimage,
-                           casacore::PagedImage<casacore::Float>& modimage, casacore::Int freqAxis);
+  TempImage<Float>* sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
+                                  Vector<Double>& fluxUsed, 
+				  Vector<Double>& freq, 
+				  Vector<Double>& scale, const String& model,
+                                  const ROMSSpWindowColumns& spwcols,
+                                  //const Int rawspwid, const Bool chanDep,
+                                  const Vector<Int> rawspwids, const Bool chanDep,
+                                  const Vector<Vector<MFrequency> >& mfreqs,
+                                  //const uInt selspw, const String& fieldName,
+                                  const String& fieldName,
+                                  const MDirection& fieldDir, const Unit& freqUnit,
+                                  const Vector<Double>& fluxdens,
+                                  const Bool precompute, 
+                                  //const Double spix,
+                                  const Vector<Double>& spix,
+                                  const MFrequency& reffreq, 
+				  const MEpoch& aveEpoch, const Int fieldId);
+  // Returns True or throws up.
+  Bool sjy_regridCubeChans(TempImage<Float>* tmodimage,
+                           PagedImage<Float>& modimage, Int freqAxis);
 
   // set a radius limit if the model image is one of the known source
   // otherwise simply copy modimage to tmodimage
-  casacore::Bool sjy_setRadiusLimit(casacore::TempImage<casacore::Float>* tmodimage,
-                          casacore::PagedImage<casacore::Float>& modimage, const casacore::String& model,
-                          casacore::DirectionCoordinate& dircsys);
+  Bool sjy_setRadiusLimit(TempImage<Float>* tmodimage,
+                          PagedImage<Float>& modimage, const String& model,
+                          DirectionCoordinate& dircsys);
 
-  casacore::Bool sjy_calciflux(const casacore::Vector<casacore::MFrequency>& freqs, const casacore::MFrequency& reffreq, 
-                     const casacore::Double refflux, const casacore::Vector<casacore::Double>& vspix, casacore::Vector<casacore::Double>& iflux);
+  Bool sjy_calciflux(const Vector<MFrequency>& freqs, const MFrequency& reffreq, 
+                     const Double refflux, const Vector<Double>& vspix, Vector<Double>& iflux);
 
-  casacore::Bool sjy_calcquflux(const casacore::Vector<casacore::Double>& pipars, const casacore::Vector<casacore::Double>& papars,
-                      const casacore::Vector<casacore::Double>& iflux, const casacore::Double rotMeas,
-                      const casacore::Vector<casacore::MFrequency>& freqs, 
-                      const casacore::MFrequency& reffreq, casacore::Vector<casacore::Double>& qflux,
-                      casacore::Vector<casacore::Double>& uflux);
+  Bool sjy_calcquflux(const Vector<Double>& pipars, const Vector<Double>& papars,
+                      const Vector<Double>& iflux, const Double rotMeas,
+                      const Vector<MFrequency>& freqs, 
+                      const MFrequency& reffreq, Vector<Double>& qflux,
+                      Vector<Double>& uflux);
 
-  casacore::String imageName();
+  String imageName();
 
-  casacore::Bool pbguts(casacore::ImageInterface<casacore::Float>& in,  
-	      casacore::ImageInterface<casacore::Float>& out, 
-	      const casacore::MDirection&,
-	      const casacore::Quantity&);
+  Bool pbguts(ImageInterface<Float>& in,  
+	      ImageInterface<Float>& out, 
+	      const MDirection&,
+	      const Quantity&);
 
   // Helper func for printing clean's restoring beam to the logger.  May find
   // the restoring beam as a side effect, so sm_p can't be const.
-  void printbeam(CleanImageSkyModel *sm_p, casacore::LogIO &os, const casacore::Bool firstrun=true);
+  void printbeam(CleanImageSkyModel *sm_p, LogIO &os, const Bool firstrun=true);
 
-  // Helper func for createFTMachine().  Returns phaseCenter_p as a casacore::String,
+  // Helper func for createFTMachine().  Returns phaseCenter_p as a String,
   // *assuming* it is set.  It does not check!
-  casacore::String tangentPoint();
+  String tangentPoint();
   
 
-  casacore::Bool assertDefinedImageParameters() const;
+  Bool assertDefinedImageParameters() const;
  // Virtual methods to set the ImageSkyModel and SkyEquation.
   // This allows derived class pimager to set parallelized
   // specializations.
@@ -949,80 +945,80 @@ protected:
     {sm_p = new ClarkCleanImageSkyModel(); return;};
   virtual void setSkyEquation();
     
-  virtual void savePSF(const casacore::Vector<casacore::String>& psf);
+  virtual void savePSF(const Vector<String>& psf);
 
-  casacore::String frmtTime(const casacore::Double time);
+  String frmtTime(const Double time);
 
   //copy imageregion to pixels on image as value given
-  static casacore::Bool regionToMask(casacore::ImageInterface<casacore::Float>& maskImage, casacore::ImageRegion& imagreg, const casacore::Float& value=1.0);
+  static Bool regionToMask(ImageInterface<Float>& maskImage, ImageRegion& imagreg, const Float& value=1.0);
 
   //set the mosaic ft machine and right convolution function
-  virtual void setMosaicFTMachine(casacore::Bool useDoublePrec=false); 
+  virtual void setMosaicFTMachine(Bool useDoublePrec=False); 
 
   // Makes a component list on disk containing cmp (with fluxval and cspectrum)
   // named msname_p.fieldName.spw<spwid>.tempcl and returns the name.
-  casacore::String makeComponentList(const casacore::String& fieldName, const casacore::Int spwid,
-                           const Flux<casacore::Double>& fluxval,
+  String makeComponentList(const String& fieldName, const Int spwid,
+                           const Flux<Double>& fluxval,
                            const ComponentShape& cmp,
                            const ConstantSpectrum& cspectrum) const;
 
-  casacore::Vector<casacore::Int> decideNPolPlanes(casacore::Bool checkwithMS);
+  Vector<Int> decideNPolPlanes(Bool checkwithMS);
 
-  //returns if mLocation_p is set (= non-default casacore::MPosition)
-  casacore::Bool nonDefaultLocation();
+  //returns if mLocation_p is set (= non-default MPosition)
+  Bool nonDefaultLocation();
  
   // implementation of mapExtent
-  casacore::Bool getMapExtent(const casacore::MeasurementSet &ms,
-          const casacore::String &referenceFrame, const casacore::String &movingSource,
-          const casacore::String &pointingColumn, casacore::Vector<casacore::Double> &center, casacore::Vector<casacore::Double> &blc,
-          casacore::Vector<casacore::Double> &trc, casacore::Vector<casacore::Double> &extent);
+  Bool getMapExtent(const MeasurementSet &ms,
+          const String &referenceFrame, const String &movingSource,
+          const String &pointingColumn, Vector<Double> &center, Vector<Double> &blc,
+          Vector<Double> &trc, Vector<Double> &extent);
 
   ComponentList* componentList_p;
 
-  casacore::String scaleMethod_p;   // "nscales"   or  "uservector"
-  casacore::Int nscales_p;
-  casacore::Int ntaylor_p;
-  casacore::Double reffreq_p;
-  casacore::Bool useNewMTFT_p;
-  casacore::Vector<casacore::Float> userScaleSizes_p;
-  casacore::Bool scaleInfoValid_p;  // This means that we have set the information, not the scale beams
-  casacore::Float smallScaleBias_p; //ms-clean
-  casacore::Int nmodels_p;
+  String scaleMethod_p;   // "nscales"   or  "uservector"
+  Int nscales_p;
+  Int ntaylor_p;
+  Double reffreq_p;
+  Bool useNewMTFT_p;
+  Vector<Float> userScaleSizes_p;
+  Bool scaleInfoValid_p;  // This means that we have set the information, not the scale beams
+  Float smallScaleBias_p; //ms-clean
+  Int nmodels_p;
   // Everything here must be a real class since we make, handle and
   // destroy these.
-  casacore::Block<casacore::CountedPtr<casacore::PagedImage<casacore::Float> > > images_p;
-  casacore::Block<casacore::CountedPtr<casacore::PagedImage<casacore::Float> > > masks_p;
-  casacore::Block<casacore::CountedPtr<casacore::PagedImage<casacore::Float> > > fluxMasks_p;
-  casacore::Block<casacore::CountedPtr<casacore::PagedImage<casacore::Float> > > residuals_p;
+  Block<CountedPtr<PagedImage<Float> > > images_p;
+  Block<CountedPtr<PagedImage<Float> > > masks_p;
+  Block<CountedPtr<PagedImage<Float> > > fluxMasks_p;
+  Block<CountedPtr<PagedImage<Float> > > residuals_p;
   
   // Freq frame is good and valid conversions can be done (or not)
-  casacore::Bool freqFrameValid_p;
+  Bool freqFrameValid_p;
 
   // Preferred complex polarization representation
   StokesImageUtil::PolRep polRep_p;
 
   //Whether to use model column or use it in memory on the fly
-  casacore::Bool useModelCol_p;
+  Bool useModelCol_p;
 
   //Force single precision always
-  casacore::Bool singlePrec_p;
+  Bool singlePrec_p;
   //sink used to store history mainly
-  casacore::LogSink logSink_p;
+  LogSink logSink_p;
 
 
   //
   // Objects required for pointing correction (ftmachine=PBWProject)
   //
   EPJones *epJ;
-  casacore::String epJTableName_p, cfCacheDirName_p;
-  casacore::Bool doPointing, doPBCorr, psTermOn_p, aTermOn_p, mTermOn_p, wbAWP_p, conjBeams_p;
+  String epJTableName_p, cfCacheDirName_p;
+  Bool doPointing, doPBCorr, psTermOn_p, aTermOn_p, mTermOn_p, wbAWP_p, conjBeams_p;
   //SimplePlotterPtr plotter_p;
-  casacore::Record interactiveState_p;
+  Record interactiveState_p;
 
   //Track moving source stuff
-  casacore::Bool doTrackSource_p;
-  casacore::MDirection trackDir_p;
-  casacore::String pointingDirCol_p;
+  Bool doTrackSource_p;
+  MDirection trackDir_p;
+  String pointingDirCol_p;
   VisImagingWeight imwgt_p;
 
   // viewer connection
@@ -1033,8 +1029,8 @@ protected:
   int prev_image_id_p;
   int prev_mask_id_p;
   //numthreads
-  casacore::Int numthreads_p;
-  casacore::Bool avoidTempLatt_p;
+  Int numthreads_p;
+  Bool avoidTempLatt_p;
 };
 
 

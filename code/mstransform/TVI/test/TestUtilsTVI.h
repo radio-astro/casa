@@ -70,56 +70,56 @@ class FreqAxisTVITest: public ::testing::Test {
 public:
 
 	FreqAxisTVITest();
-	FreqAxisTVITest(casacore::Record configuration);
+	FreqAxisTVITest(Record configuration);
     virtual ~FreqAxisTVITest();
 
     void SetUp();
     void TearDown();
-    casacore::Bool getTestResult() {return testResult_p;}
+    Bool getTestResult() {return testResult_p;}
 
 protected:
 
-    void init(casacore::Record &configuration);
+    void init(Record &configuration);
     virtual void generateTestFile() = 0;
     virtual void generateReferenceFile() = 0;
-    virtual void initTestConfiguration(casacore::Record &configuration) = 0;
-    virtual void initReferenceConfiguration(casacore::Record &configuration) = 0;
+    virtual void initTestConfiguration(Record &configuration) = 0;
+    virtual void initReferenceConfiguration(Record &configuration) = 0;
 
-    casacore::Bool autoMode_p;
-    casacore::Bool testResult_p;
-    casacore::String inpFile_p;
-    casacore::String testFile_p;
-    casacore::String referenceFile_p;
-    casacore::Record refConfiguration_p;
-    casacore::Record testConfiguration_p;
+    Bool autoMode_p;
+    Bool testResult_p;
+    String inpFile_p;
+    String testFile_p;
+    String referenceFile_p;
+    Record refConfiguration_p;
+    Record testConfiguration_p;
 };
 
 
 //////////////////////////////////////////////////////////////////////////
 // Convenience methods
 //////////////////////////////////////////////////////////////////////////
-template <class T> casacore::Bool compareVector(	const casacore::Char* column,
-										const casacore::Vector<T> &inp,
-										const casacore::Vector<T> &ref,
-										const casacore::Vector<uInt> &rowIds,
-										casacore::Float tolerance = FLT_EPSILON);
+template <class T> Bool compareVector(	const Char* column,
+										const Vector<T> &inp,
+										const Vector<T> &ref,
+										const Vector<uInt> &rowIds,
+										Float tolerance = FLT_EPSILON);
 
-template <class T> casacore::Bool compareMatrix(	const casacore::Char* column,
-										const casacore::Matrix<T> &inp,
-										const casacore::Matrix<T> &ref,
-										const casacore::Vector<uInt> &rowIds,
-										casacore::Float tolerance = FLT_EPSILON);
+template <class T> Bool compareMatrix(	const Char* column,
+										const Matrix<T> &inp,
+										const Matrix<T> &ref,
+										const Vector<uInt> &rowIds,
+										Float tolerance = FLT_EPSILON);
 
-template <class T> casacore::Bool compareCube(const casacore::Char* column,
-									const casacore::Cube<T> &inp,
-									const casacore::Cube<T> &ref,
-									const casacore::Vector<uInt> &rowIds,
-									casacore::Float tolerance = FLT_EPSILON);
+template <class T> Bool compareCube(const Char* column,
+									const Cube<T> &inp,
+									const Cube<T> &ref,
+									const Vector<uInt> &rowIds,
+									Float tolerance = FLT_EPSILON);
 
 Bool compareVisibilityIterators(VisibilityIterator2 &testTVI,
 								VisibilityIterator2 &refTVI,
 								VisBufferComponents2 &columns,
-								casacore::Float tolerance = FLT_EPSILON,
+								Float tolerance = FLT_EPSILON,
 								dataColMap *datacolmap = NULL);
 
 Bool copyTestFile(String &path,String &filename,String &outfilename);

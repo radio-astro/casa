@@ -47,7 +47,6 @@
 
 //#include <algorithm>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 VBContinuumSubtractor::VBContinuumSubtractor():
@@ -114,7 +113,7 @@ void VBContinuumSubtractor::init(const IPosition& shp, const uInt maxAnt,
 
 Bool VBContinuumSubtractor::initFromVBGA(VisBuffGroupAcc& vbga)
 {
-  Bool retval = true;
+  Bool retval = True;
 
   if(vbga.nBuf() > 0){
     ncorr_p = vbga(0).nCorr();
@@ -129,13 +128,13 @@ Bool VBContinuumSubtractor::initFromVBGA(VisBuffGroupAcc& vbga)
       VisBuffer& vb(vbga(ibuf));
 
       totnumchan_p += vb.nChannel();
-      getMinMaxFreq(vb, lofreq_p, hifreq_p, false);
+      getMinMaxFreq(vb, lofreq_p, hifreq_p, False);
     }
     midfreq_p = 0.5 * (lofreq_p + hifreq_p);
     freqscale_p = calcFreqScale();
   }
   else
-    retval = false;
+    retval = False;
   return retval;
 }
 
@@ -186,7 +185,7 @@ void VBContinuumSubtractor::fit(VisBuffGroupAcc& vbga, const Int fitorder,
   LinearFitSVD<Float> fitter;
   fitter.asWeight(true);        // Makes the "sigma" arg = w = 1/sig**2
 
-  coeffsOK.set(false);
+  coeffsOK.set(False);
 
   // Translate vbga to arrays for use by LinearFitSVD.
 
@@ -235,7 +234,7 @@ void VBContinuumSubtractor::fit(VisBuffGroupAcc& vbga, const Int fitorder,
       for(Int ibuf = 0; ibuf < vbga.nBuf(); ++ibuf){
         VisBuffer& vb(vbga(ibuf));
         uInt nchan = vb.nChannel();
-        //Int vbrow = vbga.outToInRow(ibuf, false)[blind];
+        //Int vbrow = vbga.outToInRow(ibuf, False)[blind];
 
         if(!vb.flagRow()[blind]){
           Cube<Complex>& viscube(vb.dataCube(whichcol));
@@ -318,10 +317,10 @@ void VBContinuumSubtractor::fit(VisBuffGroupAcc& vbga, const Int fitorder,
 
       if(totunflaggedchan > 0){                 // OK, try a fit.
         // Truncate the Vectors.
-        wt.resize(totunflaggedchan, true);
-        //vizzes.resize(totunflaggedchan, true);
+        wt.resize(totunflaggedchan, True);
+        //vizzes.resize(totunflaggedchan, True);
         floatvs.resize(totunflaggedchan);
-        unflaggedfreqs.resize(totunflaggedchan, true);
+        unflaggedfreqs.resize(totunflaggedchan, True);
 
         // perform least-squares fit of a polynomial.
         // Don't try to solve for more coefficients than valid channels.
@@ -416,7 +415,7 @@ void VBContinuumSubtractor::fit(VisBuffGroupAcc& vbga, const Int fitorder,
         for(Int ordind = 0; ordind <= locFitOrd; ++ordind){      // Note <=.
           coeffs(corrind, ordind, blind) = Complex(realsolution[ordind],
                                                    imagsolution[ordind]);
-          coeffsOK(corrind, ordind, blind) = true;
+          coeffsOK(corrind, ordind, blind) = True;
         }
 
         // Pad remaining orders (if any) with 0.0.  Note <=.
@@ -427,7 +426,7 @@ void VBContinuumSubtractor::fit(VisBuffGroupAcc& vbga, const Int fitorder,
           // pay attention to coeffsOK(corrind, ordind, blind) (especially?) if
           // ordind > 0.  But Calibrater's SolvableVisCal::keep() and store()
           // quietly go awry if you try coeffsOK.resize(ncorr_p, 1, nHashes_p);
-          coeffsOK(corrind, ordind, blind) = false;
+          coeffsOK(corrind, ordind, blind) = False;
         }
 
         // TODO: store uncertainties
@@ -487,10 +486,10 @@ Bool VBContinuumSubtractor::areFreqsInBounds(VisBuffer& vb,
 Bool VBContinuumSubtractor::doShapesMatch(VisBuffer& vb,
                                           LogIO& os, const Bool squawk) const
 {
-  Bool theydo = true;
+  Bool theydo = True;
 
   if(vb.nCorr() != static_cast<Int>(ncorr_p)){
-    theydo = false;
+    theydo = False;
     if(squawk)
       os << LogIO::SEVERE
          << "The supplied number of correlations, " << vb.nCorr()
@@ -500,7 +499,7 @@ Bool VBContinuumSubtractor::doShapesMatch(VisBuffer& vb,
   // It's no longer the # of rows that matter but the maximum antenna #.
   // if(vb.nRow() != nrow_p){
   if(max(vb.antenna2()) > maxAnt_p){
-    theydo = false;             // Should it just flag unknown baselines?
+    theydo = False;             // Should it just flag unknown baselines?
     if(squawk)
       os << LogIO::SEVERE
          << "The fit is only valid for antennas with indices <= " << maxAnt_p
@@ -517,15 +516,13 @@ Bool VBContinuumSubtractor::apply(VisBuffer& vb,
                                   const Bool doSubtraction,
                                   const Bool squawk)
 {
-    using casacore::operator*;
-
   LogIO os(LogOrigin("VBContinuumSubtractor", "apply"));
 
   if(!doShapesMatch(vb, os, squawk))
-    return false;
+    return False;
     
   Bool ok = areFreqsInBounds(vb, squawk); // A Bool might be too Boolean here.
-  ok = true;                              // Yep, returning false for a slight
+  ok = True;                              // Yep, returning False for a slight
                                           // extrapolation is too harsh.
 
   if(!(whichcol == MS::DATA || whichcol == MS::MODEL_DATA ||
@@ -534,7 +531,7 @@ Bool VBContinuumSubtractor::apply(VisBuffer& vb,
       os << LogIO::SEVERE
          << MS::columnName(whichcol) << " is not supported."
          << LogIO::POST;
-    return false;
+    return False;
   }
   Cube<Complex>& viscube(vb.dataCube(whichcol));
   

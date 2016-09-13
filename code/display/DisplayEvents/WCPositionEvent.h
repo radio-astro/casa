@@ -91,11 +91,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// event.
 		WCPositionEvent(WorldCanvas * wc,
 		                const Display::KeySym &key,
-		                const casacore::Bool &keyState,
-		                const casacore::uInt &modifiers,
-		                const casacore::Int &pixX, const casacore::Int &pixY,
-		                const casacore::Double &linX, const casacore::Double &linY,
-		                const casacore::Vector<casacore::Double> &world);
+		                const Bool &keyState,
+		                const uInt &modifiers,
+		                const Int &pixX, const Int &pixY,
+		                const Double &linX, const Double &linY,
+		                const Vector<Double> &world);
 
 		// Destructor.
 		virtual ~WCPositionEvent();
@@ -105,9 +105,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			return itsKey;
 		}
 
-		// What state is the key in: <src>true</src> for pressed,
-		// <src>false</src> for released.
-		virtual casacore::Bool keystate() const {
+		// What state is the key in: <src>True</src> for pressed,
+		// <src>False</src> for released.
+		virtual Bool keystate() const {
 			return itsKeyState;
 		}
 
@@ -128,7 +128,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Display::KeySym itsKey;
 
 		// Store the state of that key here.
-		casacore::Bool itsKeyState;
+		Bool itsKeyState;
 
 	};
 

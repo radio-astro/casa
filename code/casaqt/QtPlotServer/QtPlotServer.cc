@@ -30,7 +30,6 @@
 #include <casaqt/QtPlotServer/QtDBusPlotSvrAdaptor.qo.h>
 
 
-using namespace casacore;
 namespace casa {
 
     QString QtPlotServer::name_;

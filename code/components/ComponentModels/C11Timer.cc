@@ -27,7 +27,6 @@
 
 using namespace std::chrono;
 
-using namespace casacore;
 namespace casa {
 C11Timer::C11Timer()
 	: _start(), _duration(), _totalDuration(), _nCycles(0) {}

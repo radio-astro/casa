@@ -28,7 +28,6 @@
 #include <casacore/casa/Logging/LogIO.h>
 #include <casa/Logging/LogSink.h>
 
-using namespace casacore;
 namespace casa {
 
 CalLibraryParse* CalLibraryParse::thisCalLibParser = 0x0;
@@ -56,7 +55,7 @@ void CalLibraryParse::resetCaltable() {
     caltableName_ = "";
     mapName_ = "";
     mapList_.resize(0);
-    calwt_ = true;
+    calwt_ = True;
     resetParamRecord();
 }
 
@@ -117,7 +116,7 @@ void CalLibraryParse::addMapParam(String mapname, Int val) {
 
 void CalLibraryParse::addMapParam(Int val) {
     size_t mapsize = mapList_.size();
-    mapList_.resize(mapsize + 1, true);
+    mapList_.resize(mapsize + 1, True);
     mapList_[mapsize] = val;
 }
 

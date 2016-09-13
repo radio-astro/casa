@@ -64,23 +64,23 @@
 //             
 //            The default is to include all data.
 //
-//   gauss    If true, a Gaussian overlay with the same mean, sigma
+//   gauss    If True, a Gaussian overlay with the same mean, sigma
 //            (of the pixels that were binned) and integral (of the histogram)
 //            will be drawn on each histogram.
 //
-//            The default is true.
+//            The default is True.
 //
-//   cumu     If true, a cumulative histogram is drawn.
+//   cumu     If True, a cumulative histogram is drawn.
 //
-//            The defaults is false.
+//            The defaults is False.
 //
-//   log      If true, the log of the histogram values is drawn.
+//   log      If True, the log of the histogram values is drawn.
 //
-//            The default is false.
+//            The default is False.
 //
-//   list     If true list some statistical information about each histogram
+//   list     If True list some statistical information about each histogram
 //
-//            The default is false.
+//            The default is False.
 //
 //   plotter  The PGPLOT device.
 //
@@ -145,13 +145,13 @@ try {
    inputs.create("inc", "-10", "inc");
    inputs.create("nbins", "25", "Number of bins");
    inputs.create("include", "0.0", "Pixel range to include");
-   inputs.create("gauss", "true", "Plot Gaussian equivalent ?");
-   inputs.create("cumu", "false", "Plot cumulative histogram ?");
-   inputs.create("log", "false", "Take log of y axis ?");
-   inputs.create("list", "false", "List statistics for each histogram");
+   inputs.create("gauss", "True", "Plot Gaussian equivalent ?");
+   inputs.create("cumu", "False", "Plot cumulative histogram ?");
+   inputs.create("log", "False", "Take log of y axis ?");
+   inputs.create("list", "False", "List statistics for each histogram");
    inputs.create("plotter", "", "Plot device");
    inputs.create("nxy", "1,1", "Number of subplots in x & y");
-   inputs.create("disk", "false", "Force storage image to be disk based");
+   inputs.create("disk", "False", "Force storage image to be disk based");
    inputs.readArguments(argc, argv);
 
    const String in = inputs.getString("in");
@@ -173,7 +173,7 @@ try {
 // Create defaults array
  
    Vector<Bool> validInputs(NDEFAULTS);
-   validInputs = false;
+   validInputs = False;
    LogOrigin lor("imhist", "main()", WHERE);
    LogIO os(lor);
 
@@ -192,7 +192,7 @@ try {
    } else {
       cursorAxes.resize(cursorAxesB.nelements());
       for (uInt i=0; i<cursorAxes.nelements(); i++) cursorAxes(i) = cursorAxesB[i] - 1;
-      validInputs(AXES) = true;
+      validInputs(AXES) = True;
    }
 
 // Convert region things to IPositions (0 relative)
@@ -205,21 +205,21 @@ try {
    } else {
       blc.resize(blcB.nelements());
       for (uInt i=0; i<blcB.nelements(); i++) blc(i) = blcB[i] - 1;
-      validInputs(REGION) = true;
+      validInputs(REGION) = True;
    }
    if (trcB.nelements() == 1 && trcB[0] == -10) {
       trc.resize(0);
    } else {
       trc.resize(trcB.nelements());
       for (uInt i=0; i<trcB.nelements(); i++) trc(i) = trcB[i] - 1;
-      validInputs(REGION) = true;
+      validInputs(REGION) = True;
    }
    if (incB.nelements() == 1 && incB[0] == -10) {
       inc.resize(0);
    } else {
       inc.resize(incB.nelements());
       for (uInt i=0; i<incB.nelements(); i++) inc(i) = incB[i];
-      validInputs(REGION) = true;
+      validInputs(REGION) = True;
    }
 
 // Convert inclusion range to vector
@@ -232,7 +232,7 @@ try {
    if (include.nelements() == 1 && include(0)==0) {
       include.resize(0);
    } else {
-      validInputs(RANGE) = true;
+      validInputs(RANGE) = True;
    }
 
 
@@ -287,7 +287,7 @@ try {
 
 // Construct histogram object
   
-      ImageHistograms<Float> histo(*pSubImage2, os, true, force);
+      ImageHistograms<Float> histo(*pSubImage2, os, True, force);
       if (pSubImage2!=0) delete pSubImage2;
 
    
@@ -350,7 +350,7 @@ try {
       os << LogIO::NORMAL << "Recovering individual histogram arrays" << LogIO::POST;
       Vector<Float> valuesV, countsV;
       IPosition pos(histo.displayAxes().nelements(),0);
-      if (!histo.getHistogram(valuesV,countsV,pos,false)) {
+      if (!histo.getHistogram(valuesV,countsV,pos,False)) {
          os << histo.errorMessage() << LogIO::POST;
          return 1;
       }

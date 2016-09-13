@@ -36,27 +36,26 @@
 #include <display/DisplayEvents/PCPositionEH.h>
 #include <display/DisplayEvents/PCRefreshEH.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	PixelCanvas::PixelCanvas() :
-		defaultColormapActive_(false),
+		defaultColormapActive_(False),
 		colormap_(0),
 		drawMode_(Display::Draw),
 		drawBuffer_(Display::DefaultBuffer),
 		colorModel_(Display::RGB),
-		refreshActive_(false),
+		refreshActive_(False),
 		nRegisteredColormaps_(0),
 		vgbuf_(this, 1024) {
 	}
 
     PixelCanvas::PixelCanvas( const PixelCanvas *that ) :
-		defaultColormapActive_(true),
+		defaultColormapActive_(True),
 		colormap_(0),
 		drawMode_(Display::Draw),
 		drawBuffer_(Display::DefaultBuffer),
 		colorModel_(Display::RGB),
-		refreshActive_(false),
+		refreshActive_(False),
 		nRegisteredColormaps_(0),
 		vgbuf_(this, 1024) {
     	if ( that ){
@@ -65,25 +64,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     			colormap_ = new Colormap( oldMap->name());
     		}
     		else {
-    			defaultColormapActive_ = false;
+    			defaultColormapActive_ = False;
     		}
     	}
     }
 
 	PixelCanvas::PixelCanvas(PixelCanvasColorTable * pcctbl) :
-		defaultColormapActive_(false),
+		defaultColormapActive_(False),
 		colormap_(0),
 		drawMode_(Display::Draw),
 		drawBuffer_(Display::DefaultBuffer),
 		colorModel_(Display::RGB),
-		refreshActive_(false),
+		refreshActive_(False),
 		nRegisteredColormaps_(0),
 		vgbuf_(this, 1024) {
 		// register the default colormap if color table is in index mode
 		if (pcctbl->colorModel() == Display::Index) {
 			pcctbl->registerColormap(pcctbl->defaultColormap());
 			setColormap(pcctbl->defaultColormap());
-			defaultColormapActive_ = true;
+			defaultColormapActive_ = True;
 		}
 
 		// register with the PixelCanvasColorTable
@@ -183,14 +182,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if (!refreshAllowed()) {
 			return;
 		}
-		refreshActive_ = true;
+		refreshActive_ = True;
 		PCRefreshEvent ev(this,reason);
 		ListIter<void *> it1(&refreshEHList_);
 		while(!it1.atEnd()) {
 			(*((PCRefreshEH *) it1.getRight()))(ev);
 			it1++;
 		}
-		refreshActive_ = false;
+		refreshActive_ = False;
 	}
 
 	void PixelCanvas::addRefreshEventHandler(const PCRefreshEH & eh) {
@@ -308,7 +307,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			pcctbl()->unregisterColormap(pcctbl()->defaultColormap());
 			pcctbl()->registerColormap(cmap, weight);
 			setColormap(cmap);
-			defaultColormapActive_ = false;
+			defaultColormapActive_ = False;
 		} else {
 			pcctbl()->registerColormap(cmap, weight);
 		}
@@ -345,7 +344,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if (cmm.nMaps() == 0) {
 			pcctbl()->registerColormap(pcctbl()->defaultColormap());
 			setColormap(pcctbl()->defaultColormap());
-			defaultColormapActive_ = true;
+			defaultColormapActive_ = True;
 		} else if(!colormapRegistered()) {
 			setColormap((Colormap *)(cmm.getMap(0)));
 		}
@@ -404,7 +403,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			drawPolyline(scaled);
 			break;
 		case Display::Circle:
-			drawEllipse(x1,y1, adjustedHeight / 2, adjustedHeight / 2 , 0, true);
+			drawEllipse(x1,y1, adjustedHeight / 2, adjustedHeight / 2 , 0, True);
 			break;
 			// NYI in DisplayMarkerDefinitions.cc
 			/*
@@ -416,7 +415,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			  break;
 			*/
 		case Display::FilledCircle:
-			drawEllipse(x1,y1,adjustedHeight / 2, adjustedHeight / 2, 0, false);
+			drawEllipse(x1,y1,adjustedHeight / 2, adjustedHeight / 2, 0, False);
 			break;
 		case Display::FilledSquare:
 			x = scaled.column(0);
@@ -453,15 +452,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			*/
 		case Display::CircleAndCross:
 			drawPolyline(scaled);
-			drawEllipse(x1,y1,adjustedHeight / 2, adjustedHeight / 2, true);
+			drawEllipse(x1,y1,adjustedHeight / 2, adjustedHeight / 2, True);
 			break;
 		case Display::CircleAndX:
 			drawPolyline(scaled);
-			drawEllipse(x1,y1,adjustedHeight / 2, adjustedHeight  / 2, true);
+			drawEllipse(x1,y1,adjustedHeight / 2, adjustedHeight  / 2, True);
 			break;
 		case Display::CircleAndDot:
-			drawEllipse(x1,y1,adjustedHeight / 2, adjustedHeight  / 2, true);
-			drawEllipse(x1,y1,adjustedHeight / 15, adjustedHeight  / 15, false);
+			drawEllipse(x1,y1,adjustedHeight / 2, adjustedHeight  / 2, True);
+			drawEllipse(x1,y1,adjustedHeight / 15, adjustedHeight  / 15, False);
 			break;
 		default:
 			drawPolyline(scaled);

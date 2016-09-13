@@ -33,7 +33,6 @@
 #include <qwt_plot_curve.h>
 #include <qwt_plot_grid.h>
 
-using namespace casacore;
 namespace casa {
 
 	QColor GaussianEstimateWidget::fitCurveColor = "#CA5F00";

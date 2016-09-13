@@ -36,29 +36,25 @@
 #include <components/ComponentModels/SkyCompBase.h>
 #include <measures/Measures/Stokes.h>
 
-namespace casacore{
+namespace casa { //# NAMESPACE CASA - BEGIN
 
+class ComponentShape;
 class MDirection;
 class MFrequency;
 class MVAngle;
 class MVDirection;
 class MVFrequency;
 class RecordInterface;
+class SkyCompRep;
+class SpectralModel;
 class String;
 class Unit;
 class GaussianBeam;
 template<class Ms> class MeasRef;
+template<class T> class Flux;
 template<class T> class Cube;
 template<class T> class Vector;
 template<class T> class Quantum;
-}
-
-namespace casa { //# NAMESPACE CASA - BEGIN
-
-class ComponentShape;
-class SkyCompRep;
-class SpectralModel;
-template<class T> class Flux;
 
 // <summary>A component of a model of the sky </summary>
 
@@ -114,7 +110,7 @@ template<class T> class Flux;
 // </motivation>
 
 // <thrown>
-// <li> casacore::AipsError - If an internal inconsistancy is detected, when compiled in 
+// <li> AipsError - If an internal inconsistancy is detected, when compiled in 
 // debug mode only.
 // </thrown>
 //
@@ -149,14 +145,14 @@ public:
   
   // Construct a SkyComponent with a fully specified model for the shape, 
   // spectrum and flux.
-  SkyComponent(const Flux<casacore::Double> & flux,
+  SkyComponent(const Flux<Double> & flux,
 	       const ComponentShape & shape, 
 	       const SpectralModel & spectrum);
 
   // The copy Constructor uses reference semantics
   SkyComponent(const SkyComponent & other);
 
-  // the destructor does nothing obvious (its all done by the casacore::CountedPtr)
+  // the destructor does nothing obvious (its all done by the CountedPtr)
   virtual ~SkyComponent();
 
   // The assignment operator uses reference semantics
@@ -166,8 +162,8 @@ public:
   // <linkto class="SkyCompBase">SkyCompBase</linkto>
   // class for a description of these functions.
   // <group>
-  virtual Flux<casacore::Double> & flux();
-  virtual const Flux<casacore::Double> & flux() const;
+  virtual Flux<Double> & flux();
+  virtual const Flux<Double> & flux() const;
   // </group>
 
   // See the corresponding functions in the
@@ -192,64 +188,64 @@ public:
   // <linkto class="SkyCompBase">SkyCompBase</linkto>
   // class for a description of these functions.
   // <group>
-  virtual casacore::String & label();
-  virtual const casacore::String & label() const;
+  virtual String & label();
+  virtual const String & label() const;
   // </group>
 
   // See the corresponding functions in the
   // <linkto class="SkyCompBase">SkyCompBase</linkto>
   // class for a description of these functions.
   // <group>
-  virtual casacore::Vector<casacore::Double> & optionalParameters();
-  virtual const casacore::Vector<casacore::Double> & optionalParameters() const;
+  virtual Vector<Double> & optionalParameters();
+  virtual const Vector<Double> & optionalParameters() const;
   // </group>
 
   // See the corresponding function in the
   // <linkto class="SkyCompBase">SkyCompBase</linkto>
   // class for a description of this function.
-  virtual casacore::Bool isPhysical() const;
+  virtual Bool isPhysical() const;
   
   // See the corresponding functions in the
   // <linkto class="SkyCompBase">SkyCompBase</linkto>
   // class for a description of this function.
-  virtual Flux<casacore::Double> sample(const casacore::MDirection & direction, 
-			      const casacore::MVAngle & pixelLatSize, 
-			      const casacore::MVAngle & pixelLongSize, 
-			      const casacore::MFrequency & centerFrequency) const;
+  virtual Flux<Double> sample(const MDirection & direction, 
+			      const MVAngle & pixelLatSize, 
+			      const MVAngle & pixelLongSize, 
+			      const MFrequency & centerFrequency) const;
 
   // See the corresponding function in the
   // <linkto class="SkyCompBase">SkyCompBase</linkto>
   // class for a description of this function.
-  virtual void sample(casacore::Cube<casacore::Double>& samples,
-		      const casacore::Unit& reqUnit,
-		      const casacore::Vector<casacore::MVDirection>& directions, 
-		      const casacore::MeasRef<casacore::MDirection>& dirRef, 
-		      const casacore::MVAngle& pixelLatSize, 
-		      const casacore::MVAngle& pixelLongSize, 
-		      const casacore::Vector<casacore::MVFrequency>& frequencies,
-		      const casacore::MeasRef<casacore::MFrequency>& freqRef) const;
+  virtual void sample(Cube<Double>& samples,
+		      const Unit& reqUnit,
+		      const Vector<MVDirection>& directions, 
+		      const MeasRef<MDirection>& dirRef, 
+		      const MVAngle& pixelLatSize, 
+		      const MVAngle& pixelLongSize, 
+		      const Vector<MVFrequency>& frequencies,
+		      const MeasRef<MFrequency>& freqRef) const;
 
   // See the corresponding function in the
   // <linkto class="SkyCompBase">SkyCompBase</linkto>
   // class for a description of this function.
-  virtual Flux<casacore::Double> visibility(const casacore::Vector<casacore::Double> & uvw,
-				  const casacore::Double & frequency) const;
+  virtual Flux<Double> visibility(const Vector<Double> & uvw,
+				  const Double & frequency) const;
 
   // See the corresponding function in the
   // <linkto class="SkyCompBase">SkyCompBase</linkto>
   // class for a description of this function.
-  virtual void visibility(casacore::Cube<casacore::DComplex>& visibilities,
-			  const casacore::Matrix<casacore::Double>& uvws,
-			  const casacore::Vector<casacore::Double>& frequencies) const;
+  virtual void visibility(Cube<DComplex>& visibilities,
+			  const Matrix<Double>& uvws,
+			  const Vector<Double>& frequencies) const;
 
   // See the corresponding functions in the
   // <linkto class="SkyCompBase">SkyCompBase</linkto>
   // class for a description of these functions.
   // <group>
-  virtual casacore::Bool fromRecord(casacore::String & errorMessage, 
-			  const casacore::RecordInterface & record);
-  virtual casacore::Bool toRecord(casacore::String & errorMessage, 
-			casacore::RecordInterface & record) const;
+  virtual Bool fromRecord(String & errorMessage, 
+			  const RecordInterface & record);
+  virtual Bool toRecord(String & errorMessage, 
+			RecordInterface & record) const;
   // </group>
 
   // Return a distinct copy of this component. As both the assignment operator
@@ -260,20 +256,20 @@ public:
   // See the corresponding functions in the
   // <linkto class="SkyCompBase">SkyCompBase</linkto>
   // class for a description of this function.
-  casacore::Bool ok() const;
+  Bool ok() const;
 
   // Convert from and to pixel vectors. See the SkyCompRep class for details.
   // <group>
-   casacore::Vector<casacore::Double> toPixel (const casacore::Unit& brightnessUnitIn,
-                           const casacore::GaussianBeam& restoringBeam,
-                           const casacore::CoordinateSystem& cSys,
-                           casacore::Stokes::StokesTypes stokes) const;
-  void fromPixel (casacore::Double& fluxRatio, const casacore::Vector<casacore::Double>& parameters,
-                  const casacore::Unit& brightnessUnitIn,
-                  const casacore::GaussianBeam& restoringBeam,
-                  const casacore::CoordinateSystem& cSys,
+   Vector<Double> toPixel (const Unit& brightnessUnitIn,
+                           const GaussianBeam& restoringBeam,
+                           const CoordinateSystem& cSys,
+                           Stokes::StokesTypes stokes) const;
+  void fromPixel (Double& fluxRatio, const Vector<Double>& parameters,
+                  const Unit& brightnessUnitIn,
+                  const GaussianBeam& restoringBeam,
+                  const CoordinateSystem& cSys,
                   ComponentType::Shape componentShape,
-                  casacore::Stokes::StokesTypes stokes);
+                  Stokes::StokesTypes stokes);
 
   // </group>
 
@@ -283,8 +279,8 @@ public:
   // circle of constant longitude. In this case, the longitude error presented as a time has
   // been multiplied by 1/cos(latitude), but the associated angle reported as an angular measure
   // will not have this factor applied to it, nor will the error reported in pixels.
-  virtual casacore::String summarize(
-		 const casacore::DirectionCoordinate *const &dc = 0, casacore::Bool longErrOnGreatCircle=false
+  virtual String summarize(
+		 const DirectionCoordinate *const &dc = 0, Bool longErrOnGreatCircle=False
   ) const;
 
   // If the <src>dc</src> parameter is specified, also return the corresponding world
@@ -293,15 +289,15 @@ public:
   // circle of constant longitude. In this case, the longitude error presented as a time has
   // been multiplied by 1/cos(latitude), but the associated angle reported as an angular measure
   // will not have this factor applied to it, nor will the error reported in pixels.
-  casacore::String positionToString(
-		  const casacore::DirectionCoordinate *const &dc = 0, casacore::Bool longErrOnGreatCircle=false
+  String positionToString(
+		  const DirectionCoordinate *const &dc = 0, Bool longErrOnGreatCircle=False
   ) const;
 
 private:
-  casacore::CountedPtr<SkyCompRep> itsCompPtr;
+  CountedPtr<SkyCompRep> itsCompPtr;
 
-  static std::pair<casacore::String, casacore::String> _axisLabels(
-		const casacore::DirectionCoordinate *const &dc
+  static std::pair<String, String> _axisLabels(
+		const DirectionCoordinate *const &dc
   );
 
 };

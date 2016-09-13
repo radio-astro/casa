@@ -32,7 +32,6 @@
 #include <display/DisplayShapes/DSBasic.h>
 #include <display/Display/PixelCanvas.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	DSBasic::DSBasic() :
@@ -65,10 +64,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	Bool DSBasic::setOptions(const Record& settings) {
-		Bool localChange = false;
+		Bool localChange = False;
 
-		if (itsLineWidth->fromRecord(settings)) localChange = true;
-		if (DisplayShape::setOptions(settings)) localChange = true;
+		if (itsLineWidth->fromRecord(settings)) localChange = True;
+		if (DisplayShape::setOptions(settings)) localChange = True;
 
 		return localChange;
 	}

@@ -35,7 +35,6 @@
 #include <map>
 
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 FluxCalcQS::FluxCalcQS() :

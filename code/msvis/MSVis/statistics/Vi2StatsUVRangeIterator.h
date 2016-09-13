@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //
-// casacore::Data provider of uvrange values, based on uvw column
+// Data provider of uvrange values, based on uvw column
 //
 #ifndef MSVIS_STATISTICS_VI2_STATS_UV_RANGE_ITERATOR_H_
 #define MSVIS_STATISTICS_VI2_STATS_UV_RANGE_ITERATOR_H_
@@ -37,14 +37,14 @@
 namespace casa {
 
 class Vi2StatsUVRangeIterator final
-	: public std::iterator<std::input_iterator_tag,casacore::Double> {
+	: public std::iterator<std::input_iterator_tag,Double> {
 
 public:
 
-	typedef casacore::Double AccumType;
-	typedef casacore::Double DataType;
+	typedef Double AccumType;
+	typedef Double DataType;
 
-	Vi2StatsUVRangeIterator(const casacore::Array<casacore::Double>& a);
+	Vi2StatsUVRangeIterator(const Array<Double>& a);
 
 	Vi2StatsUVRangeIterator();
 
@@ -56,21 +56,21 @@ public:
 
 	bool operator!=(const Vi2StatsUVRangeIterator& rhs);
 
-	casacore::Double operator*();
+	Double operator*();
 
 	bool atEnd();
 
-	casacore::uInt64 getCount();
+	uInt64 getCount();
 
 protected:
 
-	const casacore::Array<casacore::Double>* array;
+	const Array<Double>* array;
 
-	casacore::Array<casacore::Double>::const_iterator array_iter;
+	Array<Double>::const_iterator array_iter;
 
-	casacore::Array<casacore::Double>::const_iterator end_iter;
+	Array<Double>::const_iterator end_iter;
 
-	static const casacore::Array<casacore::Double> empty_array;
+	static const Array<Double> empty_array;
 };
 
 } // namespace casa

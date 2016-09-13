@@ -31,7 +31,6 @@
 #include <QScrollArea>
 #include <QDebug>
 
-using namespace casacore;
 namespace casa {
 	GaussianEstimateDialog::GaussianEstimateDialog(QWidget *parent)
 		: QDialog(parent),/* searchDialog( this ),*/ plotsCoordinated( false )

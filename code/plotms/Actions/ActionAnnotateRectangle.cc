@@ -25,7 +25,6 @@
 
 #include "ActionAnnotateRectangle.h"
 
-using namespace casacore;
 namespace casa {
 
 ActionAnnotateRectangle::ActionAnnotateRectangle( Client* client )
@@ -38,5 +37,4 @@ ActionAnnotateRectangle::ActionAnnotateRectangle( Client* client )
 ActionAnnotateRectangle::~ActionAnnotateRectangle() {
 }
 
-using namespace casacore;
 } /* namespace casa */

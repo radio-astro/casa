@@ -41,7 +41,6 @@
 //---------------------------------------------------------------------
 //
 
-using namespace casacore;
 namespace casa{
   using namespace vi;
   using namespace refim;
@@ -243,7 +242,7 @@ namespace casa{
     Int PixInc=1;
     Vector<Complex> vals;
     IPosition ndx(4,origin,0,0,0);
-    Bool found=false;
+    Bool found=False;
     IPosition cfShape=func.shape();
     Int convSize = cfShape(0);
     for(R=convSize/4;R>1;R--)
@@ -261,7 +260,7 @@ namespace casa{
 	      vals(th)=func(ndx);
 	  }
 	if (max(abs(vals)) > threshold)
-	  {found=true;break;}
+	  {found=True;break;}
       }
     return found;
   }

@@ -89,7 +89,7 @@ public:
 
 class TableParams {
 public:
-    TableParams(casacore::String& l, bool& ir, bool& rr,
+    TableParams(String& l, bool& ir, bool& rr,
                 std::vector<std::vector<TBData*>*>& d,
                 std::vector<TBField*>& f, std::vector<TBKeyword*>& k,
                 std::vector<int>& sr, int& tr, int& lr, std::vector<bool>& w, bool& t,
@@ -100,7 +100,7 @@ public:
 
                 
     // See TBTable::location.
-    casacore::String& location;
+    String& location;
     
     // See TBTable::insertRow.
     bool& insertRow;
@@ -154,17 +154,17 @@ public:
     // Constructor that takes the filename and driver parameters.  If taql is
     // true, then this table is a table constructed from a TaQL command stored
     // in filename; otherwise filename holds the location on disk of the table.
-    TBTable(casacore::String filename, DriverParams* dp, bool taql = false);
+    TBTable(String filename, DriverParams* dp, bool taql = false);
 
     ~TBTable();
     
 
     // Returns the filename where this table is located.
-    casacore::String getFile();
+    String getFile();
 
     // Returns the name of this table (which the last the part of the
-    // filename).  If this is a TaQL table, returns "TaQL casacore::Table".
-    casacore::String getName();
+    // filename).  If this is a TaQL table, returns "TaQL Table".
+    String getName();
 
     // Returns the driver parameters for this table.
     DriverParams* getDriverParams();
@@ -176,7 +176,7 @@ public:
     TBField* field(int i);
     
     // Returns the field with the given name, or NULL if there is none.
-    TBField* field(casacore::String name);
+    TBField* field(String name);
 
     // Returns the table keywords.
     std::vector<TBKeyword*>* getTableKeywords();
@@ -185,7 +185,7 @@ public:
     TBKeyword* keyword(int i);
     
     // Returns the keyword with the given name, or NULL if there is none.
-    TBKeyword* keyword(casacore::String name);
+    TBKeyword* keyword(String name);
     
     // Indicates if the table is ready for access or not.
     bool isReady();
@@ -268,15 +268,15 @@ public:
     // as progress is made.
     Result loadRows(int start = 0,
                     int number = TBConstants::DEFAULT_SELECT_NUM,
-                    bool full = false, std::vector<casacore::String>* columns = NULL,
+                    bool full = false, std::vector<String>* columns = NULL,
                     bool parsedata = true,
                     ProgressHelper* progressPanel = NULL);
 
     // Returns the column headers (field names) for this table.
-    std::vector<casacore::String> getColumnHeaders();
+    std::vector<String> getColumnHeaders();
 
     // Returns the row headers (row numbers) for the loaded rows in this table.
-    std::vector<casacore::String> getRowHeaders();
+    std::vector<String> getRowHeaders();
 
     // Loads and returns the array at the given indices.
     TBArrayData* loadArray(unsigned int row, unsigned int col);
@@ -299,7 +299,7 @@ public:
     // Exports the entirety of this table to VOTable XML format to the given
     // file.  If a ProgressHelper is provided, progress information is updated
     // periodically.
-    void exportVOTable(casacore::String file, ProgressHelper* progressPanel = NULL);
+    void exportVOTable(String file, ProgressHelper* progressPanel = NULL);
 
     // Returns data used for plotting, using the given plot parameters and row
     // information.  If a ProgressHelper is provided, progress information is
@@ -319,13 +319,13 @@ public:
     // Returns the total number of rows for the table at the given location, or
     // -1 for an invalid location or other problem.  TBTable caches the total
     // rows of all subtables (i.e., tables pointed to in the table keywords).
-    int totalRowsOf(casacore::String location);
+    int totalRowsOf(String location);
 
     // Returns a tooltip for the field at index i.
-    casacore::String fieldToolTip(int i);
+    String fieldToolTip(int i);
 
     // Returns a tooltip for this table.
-    casacore::String tableToolTip();
+    String tableToolTip();
 
     // Inserts the given number of rows at the end of the table.  Returns a
     // Result indicating the success of the operation.
@@ -341,7 +341,7 @@ private:
     DriverParams* dParams;
 
     // Location of the table.
-    casacore::String location;
+    String location;
     
     // Indicates whether the table is ready for access or not.
     bool ready;
@@ -382,7 +382,7 @@ private:
     // Indates whether this table was constructed from a TaQL command or not.
     bool taql;
 
-    // casacore::Table driver.
+    // Table driver.
     TBTableDriver* driver;
 
     

@@ -28,7 +28,6 @@
 #include <flagging/Flagging/RFFloatLattice.h>
 #include <flagging/Flagging/RFCommon.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 RFFloatLatticeIterator::RFFloatLatticeIterator ()

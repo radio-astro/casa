@@ -51,7 +51,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </prerequisite>
 //
 // <etymology>
-// Samples single dish casacore::Data as needed for various estimation algorithms
+// Samples single dish Data as needed for various estimation algorithms
 // </etymology>
 //
 // <synopsis> 
@@ -76,13 +76,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 class ImageDataSampling : public DataSampling {
 public:
 
-  ImageDataSampling(const casacore::ImageInterface<casacore::Float>& dirty,
-		    const casacore::ImageInterface<casacore::Float>& psf,
-		    const casacore::ImageInterface<casacore::Float>& sigma);
+  ImageDataSampling(const ImageInterface<Float>& dirty,
+		    const ImageInterface<Float>& psf,
+		    const ImageInterface<Float>& sigma);
 
-  ImageDataSampling(const casacore::ImageInterface<casacore::Float>& dirty,
-		    const casacore::ImageInterface<casacore::Float>& psf,
-		    const casacore::Float sigma);
+  ImageDataSampling(const ImageInterface<Float>& dirty,
+		    const ImageInterface<Float>& psf,
+		    const Float sigma);
 
   // Copy constructor
   ImageDataSampling(const ImageDataSampling &other);
@@ -94,10 +94,10 @@ public:
 
 private:
 
-  void init(const casacore::ImageInterface<casacore::Float>& dirty,
-	    const casacore::ImageInterface<casacore::Float>& psf,
-	    const casacore::ImageInterface<casacore::Float>* sigmaImagePtr,
-	    const casacore::Float sigma);
+  void init(const ImageInterface<Float>& dirty,
+	    const ImageInterface<Float>& psf,
+	    const ImageInterface<Float>* sigmaImagePtr,
+	    const Float sigma);
 
   void ok();
 

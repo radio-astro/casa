@@ -208,7 +208,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		PixelCanvas *itsPixelCanvas;
 
 		// whether the event handlers are registered
-		casacore::Bool itsEventHandlersRegistered;
+		Bool itsEventHandlersRegistered;
 
 		// event handlers:
 		WCToolPosEH *itsPositionEH;

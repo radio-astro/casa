@@ -6,7 +6,6 @@
  */
 
 #include "UtilJ.h"
-using namespace casacore;
 using namespace casa::utilj;
 
 #include <casa/Containers/Record.h>
@@ -28,7 +27,6 @@ using std::transform;
     {if (casa::asyncio::AsynchronousInterface::logThis (level)) \
          casa::async::Logger::get()->log (__VA_ARGS__);};
 
-using namespace casacore;
 namespace casa {
 
 namespace asyncio {
@@ -111,7 +109,7 @@ VisBufferAsync::operator= (const VisBufferAsync & other)
 {
     if (this != & other){
 
-        assign (other, true);
+        assign (other, True);
     }
 
     return * this;
@@ -150,7 +148,7 @@ VisBufferAsync::assign (const VisBuffer & other, Bool copy)
             // Let the standard VisBuffer do the copying of values
             // from the old VisBuffer
 
-            copyCache (other, false);
+            copyCache (other, False);
 
             // Copy over the async values
 
@@ -165,7 +163,7 @@ VisBufferAsync::assign (const VisBuffer & other, Bool copy)
 void
 VisBufferAsync::attachToVisIter(ROVisibilityIterator & iter)
 {
-    Assert (isFilling_p == true); // Only allowed while being filled
+    Assert (isFilling_p == True); // Only allowed while being filled
     Assert (visIter_p == NULL);   // Shouldn't already be attached
 
     VisBuffer::attachToVisIter(iter);
@@ -329,7 +327,7 @@ VisBufferAsync::clear ()
     selFreq_p.resize (0);
     selectedNVisibilityChannels_p.resize (0);
     selectedSpectralWindows_p.resize (0);
-    visibilityShape_p.resize (0, false);
+    visibilityShape_p.resize (0, False);
 }
 
 VisBuffer *
@@ -351,7 +349,7 @@ VisBufferAsync::construct ()
     parangCachedTime_p = 0; // tag azel as currently uncached
     msColumns_p = NULL;
     visIter_p = NULL;
-    isFilling_p = false;
+    isFilling_p = False;
     msd_p = new MSDerivedValues();
 
     clear ();
@@ -363,7 +361,7 @@ VisBufferAsync::copyCache (const VisBuffer & other, Bool force)
     assert (! force);
     UnusedVariable (force);
 
-    VisBuffer::copyCache (other, false);
+    VisBuffer::copyCache (other, False);
 }
 
 
@@ -565,7 +563,7 @@ VisBufferAsync::fillFrom (const VisBufferAsync & other)
 
     Log (2, "Fill from VisBufferAsync @ 0x%08x to VisBufferAsync @ 0x%08x\n", & other, this);
 
-    copyCache (other, false);
+    copyCache (other, False);
     copyAsyncValues (other);
 
 }
@@ -618,7 +616,7 @@ VisBufferAsync::fillPhaseCenter()
     // Now convert the value to an unshared one.
 
     phaseCenter_p = unsharedCopyDirection (phaseCenter_p);
-    phaseCenterOK_p = true;
+    phaseCenterOK_p = True;
 
     return phaseCenter_p;
 }
@@ -687,20 +685,20 @@ VisBufferAsync::initializeScalars ()
 
     dataDescriptionId_p = -1;
     feedpaCachedTime_p = -1;
-    isFilling_p = false;
+    isFilling_p = False;
     measurementSet_p = NULL;
     msColumns_p = NULL;
     msd_p = NULL;
     nAntennas_p = -1;
     nCoh_p = -1;
-    newArrayId_p = false;
-    newFieldId_p = false;
-    newSpectralWindow_p = false;
+    newArrayId_p = False;
+    newFieldId_p = False;
+    newSpectralWindow_p = False;
     nRowChunk_p = -1;
     nSpw_p = -1;
     parangCachedTime_p = -1;
     polarizationId_p = -1;
-    velSelection_p = false;
+    velSelection_p = False;
 }
 
 void
@@ -725,7 +723,7 @@ VisBufferAsync::lsrFrequency (const Int& spw, Vector<Double>& freq, Bool& conver
 {
     if (velSelection_p) {
         freq.assign (lsrFrequency_p);
-        convert = false;
+        convert = False;
         return;
     }
 
@@ -854,7 +852,7 @@ VisBufferAsync::setCorrectedVisCube(Complex c)
 {
     correctedVisCube_p.resize(visibilityShape_p);
     correctedVisCube_p.set(c);
-    correctedVisCubeOK_p=true;
+    correctedVisCubeOK_p=True;
 }
 
 void
@@ -919,7 +917,7 @@ void
 VisBufferAsync::setMeasurementSetId (Int id, Bool isNew)
 {
     oldMSId_p = id;
-    msOK_p = true;
+    msOK_p = True;
     newMS_p = isNew;
 }
 
@@ -935,14 +933,12 @@ VisBufferAsync::setModelVisCube(Complex c)
 {
     modelVisCube_p.resize(visibilityShape_p);
     modelVisCube_p.set(c);
-    modelVisCubeOK_p=true;
+    modelVisCubeOK_p=True;
 }
 
 void
 VisBufferAsync::setMSD (const MSDerivedValues & msd)
 {
-    * msd_p = msd;
-
     msd_p->setEpoch (mEpoch_p);
 
     // set antennas
@@ -958,6 +954,8 @@ VisBufferAsync::setMSD (const MSDerivedValues & msd)
     }
 
     msd_p->setAntennaPositions (unsharedAntennaPositions);
+
+    msd_p->mount_p.assign (msd.mount_p);
 
     msd_p->setObservatoryPosition (observatoryPosition_p);
 
@@ -1037,7 +1035,7 @@ VisBufferAsync::setVisCube(Complex c)
 {
     visCube_p.resize(visibilityShape_p);
     visCube_p.set(c);
-    visCubeOK_p=true;
+    visCubeOK_p=True;
 }
 
 void
@@ -1141,17 +1139,16 @@ VisBufferAsync::updateCoordInfo(const VisBuffer * other, const Bool dirDepend)
       //copyVector (direction2_p);
     }
     else{
-      feed1_paOK_p=false; 
-      feed2_paOK_p=false;
-      direction1OK_p=false;
-      direction2OK_p=false;
+      feed1_paOK_p=False; 
+      feed2_paOK_p=False;
+      direction1OK_p=False;
+      direction2OK_p=False;
     }
 }
 
 
 
 
-using namespace casacore;
 } // end namespace casa
 
 

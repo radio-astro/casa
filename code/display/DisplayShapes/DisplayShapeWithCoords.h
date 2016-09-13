@@ -30,71 +30,67 @@
 #include <casa/aips.h>
 #include <display/DisplayShapes/DisplayShape.h>
 
-namespace casacore{
-
-	class Record;
-	template <class T> class Vector;
-	template <class T> class Matrix;
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <summary>
 // Base class for DisplayShapes with Coords
 // </summary>
 
+	class Record;
 	class PixelCanvas;
 	class PanelDisplay;
 	class WorldCanvas;
 
+	template <class T> class Vector;
+	template <class T> class Matrix;
 
 	class DisplayShapeWithCoords {
 
 	public:
-		virtual casacore::Record getRawOptions() = 0;
+		virtual Record getRawOptions() = 0;
 
-		static void floatToPix(casacore::Record& inHere, const casacore::String& field);
-		static void floatPointToPix(casacore::Record& inHere, const casacore::String& field);
+		static void floatToPix(Record& inHere, const String& field);
+		static void floatPointToPix(Record& inHere, const String& field);
 
-		static void matrixFloatToQuant(casacore::Record& inHere, const casacore::String& field,
-		                               const casacore::String& unit);
-		static void matrixFloatFromQuant(casacore::Record& inHere,
-		                                 const casacore::String& field,
-		                                 const casacore::String& onlyParseTheseUnits);
+		static void matrixFloatToQuant(Record& inHere, const String& field,
+		                               const String& unit);
+		static void matrixFloatFromQuant(Record& inHere,
+		                                 const String& field,
+		                                 const String& onlyParseTheseUnits);
 
-		static void floatFromPix(casacore::Record& inHere, const casacore::String& field);
-		static void floatPointFromPix(casacore::Record& inHere, const casacore::String& field);
+		static void floatFromPix(Record& inHere, const String& field);
+		static void floatPointFromPix(Record& inHere, const String& field);
 
-		static WorldCanvas* chooseWCFromWorldPoint(const casacore::Record& settings,
+		static WorldCanvas* chooseWCFromWorldPoint(const Record& settings,
 		        PanelDisplay* pd);
 
-		static WorldCanvas* chooseWCFromWorldPoints(const casacore::Record& settings,
-		        const casacore::String& fieldWithPoints,
+		static WorldCanvas* chooseWCFromWorldPoints(const Record& settings,
+		        const String& fieldWithPoints,
 		        PanelDisplay* pd);
 
-		static WorldCanvas* chooseWCFromPixPoint(const casacore::Float& xPos,
-		        const casacore::Float& yPos,
+		static WorldCanvas* chooseWCFromPixPoint(const Float& xPos,
+		        const Float& yPos,
 		        PanelDisplay* pd);
 
-		static WorldCanvas* chooseWCFromPixPoints(const casacore::Matrix<casacore::Float> points,
+		static WorldCanvas* chooseWCFromPixPoints(const Matrix<Float> points,
 		        PanelDisplay* pd);
 
-		static casacore::Vector<casacore::Float> floatPointFromQuant(const casacore::Record &inHere,
-		        const casacore::String& field,
-		        casacore::String& units);
+		static Vector<Float> floatPointFromQuant(const Record &inHere,
+		        const String& field,
+		        String& units);
 
-		static casacore::Vector<casacore::Float> relToScreen(const casacore::Vector<casacore::Float>& rel, PixelCanvas* pc);
-		static casacore::Vector<casacore::Float> screenToRel(const casacore::Vector<casacore::Float>& screen,
+		static Vector<Float> relToScreen(const Vector<Float>& rel, PixelCanvas* pc);
+		static Vector<Float> screenToRel(const Vector<Float>& screen,
 		                                 PixelCanvas* pc);
 
-		static casacore::Matrix<casacore::Float> relToScreen(const casacore::Matrix<casacore::Float>& rel, PixelCanvas* pc);
-		static casacore::Matrix<casacore::Float> screenToRel(const casacore::Matrix<casacore::Float>& screen,
+		static Matrix<Float> relToScreen(const Matrix<Float>& rel, PixelCanvas* pc);
+		static Matrix<Float> screenToRel(const Matrix<Float>& screen,
 		                                 PixelCanvas* pc);
 
-		static casacore::Bool inWorldCanvasDrawArea(const casacore::Matrix<casacore::Float> points,
+		static Bool inWorldCanvasDrawArea(const Matrix<Float> points,
 		                                  WorldCanvas* wc);
 
-		static void pixelToWorldPoints(casacore::Record& inHere, const casacore::String& fieldname,
+		static void pixelToWorldPoints(Record& inHere, const String& fieldname,
 		                               WorldCanvas* wc);
 		virtual ~DisplayShapeWithCoords() {}
 

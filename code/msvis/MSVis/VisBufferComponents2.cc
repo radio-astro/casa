@@ -11,7 +11,6 @@
 
 using namespace std;
 
-using namespace casacore;
 namespace casa {
 
 namespace vi {
@@ -235,5 +234,4 @@ VisBufferComponents2::toString () const
 
 } // end namespace vi
 
-using namespace casacore;
 } // end namespace casa

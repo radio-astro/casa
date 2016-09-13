@@ -33,10 +33,10 @@
 namespace casa {
 
 class ParamFieldIterator
-	: public std::iterator<std::forward_iterator_tag, casacore::Record *, int> {
-	casacore::Record *record;
-	casacore::String prefix;
-	casacore::uInt field_index;
+	: public std::iterator<std::forward_iterator_tag, Record *, int> {
+	Record *record;
+	String prefix;
+	uInt field_index;
 
 public:
 	ParamFieldIterator()
@@ -44,9 +44,9 @@ public:
 		, prefix("")
 		, field_index(0) {};
 
-	ParamFieldIterator(casacore::Record *rec, const string &prefix = "")
+	ParamFieldIterator(Record *rec, const string &prefix = "")
 		: record(rec)
-		, prefix(casacore::String(prefix))
+		, prefix(String(prefix))
 		, field_index(0) {};
 
 	ParamFieldIterator(const ParamFieldIterator &fit)
@@ -75,15 +75,15 @@ public:
 		return !operator==(rhs);
 	};
 
-	casacore::Record & operator*() {
-		return record->rwSubRecord(prefix + casacore::String::toString(field_index));
+	Record & operator*() {
+		return record->rwSubRecord(prefix + String::toString(field_index));
 	};
 
-	static ParamFieldIterator begin(casacore::Record *rec, const string &prefix = "") {
+	static ParamFieldIterator begin(Record *rec, const string &prefix = "") {
 		return ParamFieldIterator(rec, prefix);
 	};
 
-	static ParamFieldIterator end(casacore::Record *rec, const string &prefix = "") {
+	static ParamFieldIterator end(Record *rec, const string &prefix = "") {
 		ParamFieldIterator result(rec, prefix);
 		result.field_index = rec->nfields();
 		return result;

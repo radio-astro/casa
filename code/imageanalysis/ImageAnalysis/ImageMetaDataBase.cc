@@ -45,7 +45,6 @@
 
 using namespace std;
 
-using namespace casacore;
 namespace casa {
 
 const String ImageMetaDataBase::_BEAMMAJOR = "beammajor";
@@ -119,7 +118,7 @@ Record ImageMetaDataBase::_makeHeader() const {
         );
         header.defineRecord(
             _BEAMPA,
-            QuantumHolder(beam.getPA(true)).toRecord()
+            QuantumHolder(beam.getPA(True)).toRecord()
         );
     }
     else if (info.hasMultipleBeams()) {
@@ -238,8 +237,8 @@ CoordinateSystem ImageMetaDataBase::coordsys(
 	// Remove unwanted world (and pixel) axes.  Better would be to just
 	// remove the pixel axes and leave the world axes there...
 	if (j > 0) {
-		keepList.resize(j, true);
-		CoordinateUtil::removeAxes(cSys2, worldReplace, keepList, false);
+		keepList.resize(j, True);
+		CoordinateUtil::removeAxes(cSys2, worldReplace, keepList, False);
 	}
 
 	// Copy the ObsInfo
@@ -304,7 +303,7 @@ ValueHolder ImageMetaDataBase::getFITSValue(const String& key) const {
 			return ValueHolder(_getRefPixel()[n-1]);
 		}
 		else if (prefix == _CRVAL) {
-			if (_getCoords().polarizationAxisNumber(false) == (Int)(n-1)) {
+			if (_getCoords().polarizationAxisNumber(False) == (Int)(n-1)) {
 				return ValueHolder(
 					_getStokes()
 				);
@@ -568,7 +567,7 @@ void ImageMetaDataBase::_toLog(const Record& header) const {
 
 	uInt i = 1;
 	_log << LogIO::NORMAL << "axes --" << LogIO::POST;
-	while (true) {
+	while (True) {
 		String iString = String::toString(i);
 		String key = _CTYPE + iString;
 		if (! header.isDefined(key)) {
@@ -581,7 +580,7 @@ void ImageMetaDataBase::_toLog(const Record& header) const {
 	}
 	i = 1;
 	_log << LogIO::NORMAL << _CRPIX << " --" << LogIO::POST;
-	while (true) {
+	while (True) {
 		String iString = String::toString(i);
 		String key = _CRPIX + iString;
 		if (! header.isDefined(key)) {
@@ -594,7 +593,7 @@ void ImageMetaDataBase::_toLog(const Record& header) const {
 	}
 	i = 1;
 	_log << LogIO::NORMAL << _CRVAL << " --" << LogIO::POST;
-	while (true) {
+	while (True) {
 		String iString = String::toString(i);
 		String key = _CRVAL + iString;
 		if (! header.isDefined(key)) {
@@ -632,7 +631,7 @@ void ImageMetaDataBase::_toLog(const Record& header) const {
 	}
 	i = 1;
 	_log << LogIO::NORMAL << _CDELT << " --" << LogIO::POST;
-	while (true) {
+	while (True) {
 		String iString = String::toString(i);
 		String key = _CDELT + iString;
 		if (! header.isDefined(key)) {
@@ -662,7 +661,7 @@ void ImageMetaDataBase::_toLog(const Record& header) const {
 	}
 	i = 1;
 	_log << LogIO::NORMAL << "units --" << LogIO::POST;
-	while (true) {
+	while (True) {
 		String iString = String::toString(i);
 		String key = _CUNIT + iString;
 		if (! header.isDefined(key)) {
@@ -708,7 +707,7 @@ Bool ImageMetaDataBase::isChannelNumberValid(
 	const uInt chan
 ) const {
 	if (! _getCoords().hasSpectralAxis()) {
-		return false;
+		return False;
     }
 	return (chan < nChannels());
 }
@@ -769,7 +768,7 @@ Bool ImageMetaDataBase::isStokesValid(
 	const String& stokesString
 ) const {
 	if (! _getCoords().hasPolarizationCoordinate()) {
-		return false;
+		return False;
     }
 	Int stokesPixNum = stokesPixelNumber(stokesString);
 	return stokesPixNum >= 0 && stokesPixNum < (Int)nStokes();
@@ -791,18 +790,18 @@ Bool ImageMetaDataBase::areChannelAndStokesValid(
 	String& message, const uInt chan, const String& stokesString
 ) const {
 	ostringstream os;
-	Bool areValid = true;
+	Bool areValid = True;
 	if (! isChannelNumberValid(chan)) {
 		os << "Zero-based channel number " << chan << " is too large. There are only "
 			<< nChannels() << " spectral channels in this image.";
-		areValid = false;
+		areValid = False;
     }
 	if (! isStokesValid(stokesString)) {
         if (! areValid) {
         	os << " and ";
         }
         os << "Stokes parameter " << stokesString << " is not in image";
-        areValid = false;
+        areValid = False;
     }
 	if (! areValid) {
 		message = os.str();
@@ -919,7 +918,7 @@ Record ImageMetaDataBase::toWorld(
         && (! csys.hasSpectralAxis() || fFrame == "CL")
     ) {
         ThrowIf(
-            ! csys.toWorld(world, pixel2, true),
+            ! csys.toWorld(world, pixel2, True),
             "Error converting to world coordinates: " + csys.errorMessage()
         );
     }
@@ -928,14 +927,14 @@ Record ImageMetaDataBase::toWorld(
         && (! csys.hasSpectralAxis() || fFrame == "NATIVE")
     ) {
         ThrowIf(
-            ! csys.toWorld(world, pixel2, false),
+            ! csys.toWorld(world, pixel2, False),
             "Error converting to world coordinates: " + csys.errorMessage()
         );
     }
     else {
         if (csys.hasDirectionCoordinate() && dFrame != "CL") {
             if (dFrame == "NATIVE") {
-                dirType = csys.directionCoordinate().directionType(false);
+                dirType = csys.directionCoordinate().directionType(False);
             }
             else {
                 ThrowIf(
@@ -949,7 +948,7 @@ Record ImageMetaDataBase::toWorld(
         }
         if (csys.hasSpectralAxis() && fFrame != "CL") {
             if (fFrame == "NATIVE") {
-                freqType = csys.spectralCoordinate().frequencySystem(false);
+                freqType = csys.spectralCoordinate().frequencySystem(False);
             }
             else {
                 ThrowIf(
@@ -967,13 +966,13 @@ Record ImageMetaDataBase::toWorld(
             csys.replaceCoordinate(specCoord, csys.spectralCoordinateNumber());
         }
         ThrowIf(
-            ! csys.toWorld(world, pixel2, true),
+            ! csys.toWorld(world, pixel2, True),
             "Error converting to world coordinates: " + csys.errorMessage()
         );
 
     }
     return _worldVectorToRecord(
-        csys, world, -1, format, true, true,
+        csys, world, -1, format, True, True,
         doVelocity, dirType, freqType
     );
 }
@@ -1089,7 +1088,7 @@ Record ImageMetaDataBase::_worldVectorToMeasures(
         Vector<Double> world2(nWorldAxes);
         const auto& coord = csys.coordinate(i);
         auto units = coord.worldAxisUnits();
-        Bool none = true;
+        Bool none = True;
 
         // Fill in missing world axes if all coordinates specified
 
@@ -1100,13 +1099,13 @@ Record ImageMetaDataBase::_worldVectorToMeasures(
                 }
                 else {
                     world2(j) = world(worldAxes[j]);
-                    none = false;
+                    none = False;
                 }
             }
         }
         else {
             world2 = world;
-            none = false;
+            none = False;
         }
         if (
             csys.type(i) == Coordinate::LINEAR
@@ -1239,7 +1238,7 @@ Record ImageMetaDataBase::_worldVectorToMeasures(
                 String u;
                 auto s = coord.format(
                     u, Coordinate::DEFAULT, world2(0),
-                    0, true, true, -1
+                    0, True, True, -1
                 );
                 rec.define("stokes", s);
             }

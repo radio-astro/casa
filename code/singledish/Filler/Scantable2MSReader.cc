@@ -20,6 +20,7 @@
 #include <casacore/tables/Tables/Table.h>
 
 using namespace casacore;
+using namespace sdfiller;
 
 namespace {
 Double queryAntennaDiameter(String const &name) {
@@ -156,10 +157,7 @@ Int getSubscan(Int srctype) {
 }
 }
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
-
-using namespace sdfiller;
 
 Scantable2MSReader::Scantable2MSReader(std::string const &scantable_name) :
     ReaderInterface(scantable_name), main_table_(nullptr), tcal_table_(),
@@ -301,7 +299,7 @@ Bool Scantable2MSReader::getAntennaRowImpl(AntennaRecord &record) {
   // only one entry so redirect function pointer to noMoreRowImpl
   get_antenna_row_ = &Scantable2MSReader::noMoreRowImpl<AntennaRecord>;
 
-  return true;
+  return True;
 }
 
 Bool Scantable2MSReader::getObservationRowImpl(ObservationRecord &record) {
@@ -329,7 +327,7 @@ Bool Scantable2MSReader::getObservationRowImpl(ObservationRecord &record) {
   // only one entry so redirect function pointer to noMoreRowImpl
   get_observation_row_ = &Scantable2MSReader::noMoreRowImpl<ObservationRecord>;
 
-  return true;
+  return True;
 }
 
 Bool Scantable2MSReader::getProcessorRowImpl(ProcessorRecord &/*record*/) {
@@ -340,7 +338,7 @@ Bool Scantable2MSReader::getProcessorRowImpl(ProcessorRecord &/*record*/) {
   // only one entry so redirect function pointer to noMoreRowImpl
   get_processor_row_ = &Scantable2MSReader::noMoreRowImpl<ProcessorRecord>;
 
-  return true;
+  return True;
 }
 
 Bool Scantable2MSReader::getSourceRowImpl(SourceRecord &record) {
@@ -360,7 +358,7 @@ Bool Scantable2MSReader::getData(size_t irow, DataRecord &record) {
 //  std::cout << "Scantable2MSReader::getData(irow=" << irow << ")" << std::endl;
 
   if (irow >= main_table_->nrow()) {
-    return false;
+    return False;
   }
 
   constexpr double kDay2Sec = 86400.0;
@@ -429,7 +427,7 @@ Bool Scantable2MSReader::getData(size_t irow, DataRecord &record) {
     record.wind_direction = wind_direction_column_(weather_row);
   }
 
-  return true;
+  return True;
 }
 
 } //# NAMESPACE CASA - END

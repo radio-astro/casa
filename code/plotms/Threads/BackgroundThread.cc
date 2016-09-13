@@ -26,7 +26,6 @@
 #include "BackgroundThread.h"
 #include <plotms/Threads/ThreadCommunication.h>
 
-using namespace casacore;
 namespace casa {
 
 BackgroundThread::BackgroundThread() {
@@ -65,5 +64,4 @@ BackgroundThread::~BackgroundThread() {
 	// TODO Auto-generated destructor stub
 }
 
-using namespace casacore;
 } /* namespace casa */

@@ -41,7 +41,7 @@
 // Test program for class CalIntpMatch.
 // </summary>
 
-Bool foundError = false;
+Bool foundError = False;
 
 
 void doTest1(const Int& nAnt=10)
@@ -50,7 +50,7 @@ void doTest1(const Int& nAnt=10)
   // Input:
   //    nAnt        Int       Number of antennas
   // Output to global data:
-  //    foundError  Bool      true if any test fails
+  //    foundError  Bool      True if any test fails
   //
 
   // Construct and fill a visibility buffer (detached from a 
@@ -100,7 +100,7 @@ void doTest1(const Int& nAnt=10)
       Vector<Int> matchingRows = calMatch.calRows(index, calRowMask);
       Int expectVal = (ipos == 0) ? vb.antenna1()(row) : vb.antenna2()(row);
       if ((matchingRows.nelements() != 1) || (matchingRows(0) != expectVal)) {
-	foundError = true;
+	foundError = True;
       };
     };
   };

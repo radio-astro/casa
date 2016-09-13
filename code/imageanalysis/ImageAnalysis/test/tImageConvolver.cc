@@ -109,7 +109,7 @@ try {
 // This function calls the other convolve function
 
       aic.convolve (os, outImage, inImage, kernel, ImageConvolver<Float>::AUTOSCALE, 
-                    1.0, true);
+                    1.0, True);
    }
 
 
@@ -122,7 +122,7 @@ try {
    }
 //
 
-   Table::deleteTable(out, true);
+   Table::deleteTable(out, True);
 }
 
   catch (AipsError x) {

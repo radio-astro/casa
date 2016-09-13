@@ -26,7 +26,6 @@
 //#
 //# $Id$
 #include <synthesis/TransformMachines2/ConvolutionFunction.h>
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
   using namespace refim;
   ConvolutionFunction::~ConvolutionFunction() {};

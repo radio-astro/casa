@@ -32,11 +32,6 @@
 #include <synthesis/TransformMachines/GridFT.h>
 #include <synthesis/MeasurementComponents/SDGrid.h>
 
-namespace casacore{
-
-template<class T> class TempImage;
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <summary> An FTMachine for Gridding Single Dish data
@@ -70,7 +65,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Gridding and degridding in GridBoth are performed using a
 // novel sort-less algorithm. In this approach, the gridded plane is
 // divided into small patches, a cache of which is maintained in memory
-// using a general-purpose <linkto class=casacore::LatticeCache>LatticeCache</linkto> class. As the (time-sorted)
+// using a general-purpose <linkto class=LatticeCache>LatticeCache</linkto> class. As the (time-sorted)
 // visibility data move around slowly in the image plane, patches are
 // swapped in and out as necessary. Thus, optimally, one would keep at
 // least one patch per scan line of data.
@@ -105,6 +100,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <ul> Deal with large VLA spectral line case 
 // </todo>
 
+template<class T> class TempImage;
 
 class GridBoth : public FTMachine {
 public:
@@ -119,26 +115,26 @@ public:
   // mTangent is specified then the uvw rotation is done for
   // that location iso the image center.
   // <group>
-  GridBoth(SkyJones& sj, casacore::Long cachesize, casacore::Int tilesize,
-	   casacore::String sdConvType="BOX",
-	   casacore::String synConvType="SF",
-	   casacore::Float padding=1.0,
-	   casacore::Float sdScale=1.0,
-	   casacore::Float sdWeight=1.0);
-  GridBoth(SkyJones& sj, casacore::Long cachesize, casacore::Int tilesize,
-	   casacore::MPosition mLocation,
-	   casacore::String sdConvType="BOX",
-	   casacore::String synConvType="SF",
-	   casacore::Float padding=1.0,
-	   casacore::Float sdScale=1.0,
-	   casacore::Float sdWeight=1.0);
-  GridBoth(SkyJones& sj, casacore::Long cachesize, casacore::Int tilesize,
-	   casacore::MPosition mLocation, casacore::MDirection mTangent,
-	   casacore::String sdConvType="BOX",
-	   casacore::String synConvType="SF",
-	   casacore::Float padding=1.0,
-	   casacore::Float sdScale=1.0,
-	   casacore::Float sdWeight=1.0);
+  GridBoth(SkyJones& sj, Long cachesize, Int tilesize,
+	   String sdConvType="BOX",
+	   String synConvType="SF",
+	   Float padding=1.0,
+	   Float sdScale=1.0,
+	   Float sdWeight=1.0);
+  GridBoth(SkyJones& sj, Long cachesize, Int tilesize,
+	   MPosition mLocation,
+	   String sdConvType="BOX",
+	   String synConvType="SF",
+	   Float padding=1.0,
+	   Float sdScale=1.0,
+	   Float sdWeight=1.0);
+  GridBoth(SkyJones& sj, Long cachesize, Int tilesize,
+	   MPosition mLocation, MDirection mTangent,
+	   String sdConvType="BOX",
+	   String synConvType="SF",
+	   Float padding=1.0,
+	   Float sdScale=1.0,
+	   Float sdWeight=1.0);
   // </group>
 
   // Copy constructor
@@ -149,12 +145,12 @@ public:
 
   ~GridBoth();
 
-  // Construct from a casacore::Record containing the GridFT state
-  GridBoth(const casacore::RecordInterface& stateRec);
+  // Construct from a Record containing the GridFT state
+  GridBoth(const RecordInterface& stateRec);
 
   // Initialize transform to Visibility plane using the image
   // as a template. The image is loaded and Fourier transformed.
-  void initializeToVis(casacore::ImageInterface<casacore::Complex>& image,
+  void initializeToVis(ImageInterface<Complex>& image,
 		       const VisBuffer& vb);
 
   // Finalize transform to Visibility plane: flushes the image
@@ -162,7 +158,7 @@ public:
   void finalizeToVis();
 
   // Initialize transform to Sky plane: initializes the image
-  void initializeToSky(casacore::ImageInterface<casacore::Complex>& image,  casacore::Matrix<casacore::Float>& weight,
+  void initializeToSky(ImageInterface<Complex>& image,  Matrix<Float>& weight,
 		       const VisBuffer& vb);
 
   // Finalize transform to Sky plane: flushes the image
@@ -171,34 +167,34 @@ public:
   void finalizeToSky();
 
   // Get actual coherence from grid by degridding
-  void get(VisBuffer& vb, casacore::Int row=-1);
+  void get(VisBuffer& vb, Int row=-1);
 
   // Put coherence to grid by gridding.
-  void put(const VisBuffer& vb, casacore::Int row=-1, casacore::Bool dopsf=false,
+  void put(const VisBuffer& vb, Int row=-1, Bool dopsf=False,
 	   FTMachine::Type type=FTMachine::OBSERVED);
 
   // Get the final image: do the Fourier transform and
   // grid-correct, then optionally normalize by the summed weights
-  casacore::ImageInterface<casacore::Complex>& getImage(casacore::Matrix<casacore::Float>&, casacore::Bool normalize=true);
-  virtual void normalizeImage(casacore::Lattice<casacore::Complex>& /*skyImage*/,
-			      const casacore::Matrix<casacore::Double>& /*sumOfWts*/,
-			      casacore::Lattice<casacore::Float>& /*sensitivityImage*/,
-			      casacore::Bool /*fftNorm*/)
-    {throw(casacore::AipsError("GridBoth::normalizeImage() called"));}
+  ImageInterface<Complex>& getImage(Matrix<Float>&, Bool normalize=True);
+  virtual void normalizeImage(Lattice<Complex>& /*skyImage*/,
+			      const Matrix<Double>& /*sumOfWts*/,
+			      Lattice<Float>& /*sensitivityImage*/,
+			      Bool /*fftNorm*/)
+    {throw(AipsError("GridBoth::normalizeImage() called"));}
 
   // Get the final weights image
-  void getWeightImage(casacore::ImageInterface<casacore::Float>&, casacore::Matrix<casacore::Float>&);
+  void getWeightImage(ImageInterface<Float>&, Matrix<Float>&);
 
   // Save and restore the GridFT to and from a record
-  virtual casacore::Bool toRecord(casacore::String& error, casacore::RecordInterface& outRec, 
-			casacore::Bool withImage=false, const casacore::String diskimage="");
-  virtual casacore::Bool fromRecord(casacore::String& error, const casacore::RecordInterface& inRec);
+  virtual Bool toRecord(String& error, RecordInterface& outRec, 
+			Bool withImage=False, const String diskimage="");
+  virtual Bool fromRecord(String& error, const RecordInterface& inRec);
 
   // Has this operator changed since the last application?
-  virtual casacore::Bool changed(const VisBuffer& vb);
-  virtual void setMiscInfo(const casacore::Int qualifier){(void)qualifier;};
-  virtual void ComputeResiduals(VisBuffer&/*vb*/, casacore::Bool /*useCorrected*/) {};
-  virtual casacore::String name() const { return "GridBoth";};
+  virtual Bool changed(const VisBuffer& vb);
+  virtual void setMiscInfo(const Int qualifier){(void)qualifier;};
+  virtual void ComputeResiduals(VisBuffer&/*vb*/, Bool /*useCorrected*/) {};
+  virtual String name() const { return "GridBoth";};
 
 private:
 
@@ -207,10 +203,10 @@ private:
   FTMachine* lastMachine_p; // Last Machine used
 
   // Images for Synthesis and SD 
-  casacore::TempImage<casacore::Complex>* sdImage_p;
-  casacore::TempImage<casacore::Complex>* synImage_p;
+  TempImage<Complex>* sdImage_p;
+  TempImage<Complex>* synImage_p;
 
-  casacore::Float sdScale_p, sdWeight_p;
+  Float sdScale_p, sdWeight_p;
 
   void ok();
 

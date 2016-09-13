@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //
-// casacore::Data provider for interval column
+// Data provider for interval column
 //
 #ifndef MSVIS_STATISTICS_VI2_CHUNK_INTERVAL_DATA_PROVIDER_H_
 #define MSVIS_STATISTICS_VI2_CHUNK_INTERVAL_DATA_PROVIDER_H_
@@ -43,9 +43,9 @@ class Vi2ChunkIntervalDataProvider final
 public:
 	Vi2ChunkIntervalDataProvider(
 		vi::VisibilityIterator2 *vi2, 
-		casacore::Bool omit_flagged_data);
+		Bool omit_flagged_data);
 
-	const casacore::Vector<casacore::Double>& dataArray();
+	const Vector<Double>& dataArray();
 };
 
 } // namespace casa

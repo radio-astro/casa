@@ -35,13 +35,9 @@ using namespace std;
 
 class QDoubleValidator;
 
-namespace casacore{
-
-template <class T> class ImageInterface;
-}
-
 namespace casa {
 
+template <class T> class ImageInterface;
 
 /**
  * Designed as a separaclass so if it needs to go into a different thread,
@@ -49,7 +45,7 @@ namespace casa {
  */
 class PercentageCalculator {
 public:
-	PercentageCalculator( float minValue, float maxValue, const SHARED_PTR<const casacore::ImageInterface<casacore::Float> > image );
+	PercentageCalculator( float minValue, float maxValue, const SHARED_PTR<const ImageInterface<Float> > image );
 	void work();
 	float getRangeMin() const;
 	float getRangeMax() const;
@@ -60,7 +56,7 @@ private:
 	float maxValue;
 	float rangeMin;
 	float rangeMax;
-    SHARED_PTR<const casacore::ImageInterface<casacore::Float> > image;
+    SHARED_PTR<const ImageInterface<Float> > image;
 };
 
 
@@ -74,7 +70,7 @@ class RangeControlsWidget : public QWidget {
 
 public:
     RangeControlsWidget(QWidget *parent = 0);
-    void setImage(const SHARED_PTR<const casacore::ImageInterface<casacore::Float > > image );
+    void setImage(const SHARED_PTR<const ImageInterface<Float > > image );
     void hideMaximum();
     void setRange( double min, double max, bool signal=true );
     void setDataLimits( double min, double max );
@@ -104,7 +100,7 @@ private:
     QDoubleValidator* minMaxValidator;
     PercentageCalculator* percentCalculator;
     Ui::RangeControlsWidgetClass ui;
-    SHARED_PTR<const casacore::ImageInterface<casacore::Float > > image;
+    SHARED_PTR<const ImageInterface<Float > > image;
     QString percentage;
     double rangeMin;
     double rangeMax;

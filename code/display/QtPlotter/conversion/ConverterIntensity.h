@@ -52,20 +52,20 @@ namespace casa {
 		//only.  Both oldUnits and newUnits refer to the old and new units of the values
 		//array.  In order to do FRACTION_OF_PEAK conversions, a maximum value with
 		//corresponding maximum units must be passed in.
-		static void convert( casacore::Vector<float>& values, const casacore::Vector<float> hertzValues,
+		static void convert( Vector<float>& values, const Vector<float> hertzValues,
 		                     const QString& oldUnits, const QString& newUnits,
 		                     double maxValue, const QString& maxUnits,
-		                     double beamAngle, double beamArea, casacore::SpectralCoordinate coord );
+		                     double beamAngle, double beamArea, SpectralCoordinate coord );
 
 		//Converts between Jy/Beam units.  For example, MJy/Beam <-> Jy/Beam
 		static double convertJyBeams( const QString& sourceUnits, const QString& destUnits,
-				double value, casacore::SpectralCoordinate& coord );
+				double value, SpectralCoordinate& coord );
 		static double convertJY( const QString& oldUnits, const QString& newUnits,
-				double value, casacore::SpectralCoordinate& coord );
+				double value, SpectralCoordinate& coord );
 		static double convertJYSR( const QString& oldUnits,const QString& newUnits,
-				double value, casacore::SpectralCoordinate& coord );
+				double value, SpectralCoordinate& coord );
 		static double convertKelvin( const QString& oldUnits,const QString& newUnits,
-				double value, casacore::SpectralCoordinate& coord );
+				double value, SpectralCoordinate& coord );
 		virtual ~ConverterIntensity();
 
 	private:
@@ -75,10 +75,10 @@ namespace casa {
 		static double convertQuantity( double yValue, double frequencyValue,
 		                               const QString& oldUnits, const QString& newUnits,
 		                               double beamSolidAngle, double beamArea );
-		static void convertJansky( casacore::Vector<float>& values, const QString& oldUnits,
-		                           const QString& newUnits, casacore::SpectralCoordinate& coord );
-		static void convertKelvin( casacore::Vector<float>& values, const QString& oldUnits,
-		                           const QString& newUnits, casacore::SpectralCoordinate& coord );
+		static void convertJansky( Vector<float>& values, const QString& oldUnits,
+		                           const QString& newUnits, SpectralCoordinate& coord );
+		static void convertKelvin( Vector<float>& values, const QString& oldUnits,
+		                           const QString& newUnits, SpectralCoordinate& coord );
 		static bool isJansky( const QString& units );
 		static bool isKelvin( const QString& units );
 		static double convertNonKelvinUnits( double yValue, const QString& oldUnits,

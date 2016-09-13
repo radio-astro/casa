@@ -27,7 +27,6 @@
 
 #include <display/Display/ColorConversion.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // assumes h, s, and v to be in range [0, 1]. Returns r, g, b in range [0, 1].

@@ -35,11 +35,10 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-using namespace casacore;
 namespace casa {
 
 LogFile::LogFile(const String& filename) :
-	_filename(filename), _append(false), _fileHandle(-1),
+	_filename(filename), _append(False), _fileHandle(-1),
 	_fileIO() {
 	ThrowIf(
 		filename.empty(),
@@ -48,8 +47,8 @@ LogFile::LogFile(const String& filename) :
 	OutputDestinationChecker::OutputStruct logFile;
 	logFile.label = "log file";
 	logFile.outputFile = &_filename;
-	logFile.required = false;
-	logFile.replaceable = true;
+	logFile.required = False;
+	logFile.replaceable = True;
 	LogIO log;
 	OutputDestinationChecker::checkOutput(logFile, log);
 	ThrowIf(
@@ -83,7 +82,7 @@ Bool LogFile::open() {
 		break;
 	}
 	_fileIO.reset(new FiledesIO(_fileHandle, _filename.c_str()));
-	return true;
+	return True;
 }
 
 void LogFile::close() const {
@@ -97,14 +96,14 @@ Bool LogFile::write(
 ) {
 	if (openFile) {
 		if (! open()) {
-			return false;
+			return False;
 		}
 	}
 	_fileIO->write(output.length(), output.c_str());
 	if (closeFile) {
 		close();
 	}
-	return true;
+	return True;
 }
 
 void LogFile::setAppend(Bool a) { _append = a; }

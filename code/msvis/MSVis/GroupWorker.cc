@@ -33,7 +33,6 @@
 //#include <casa/Exceptions/Error.h>
 //#include <casa/Logging/LogIO.h>
 
-using namespace casacore;
 namespace casa {
 
 const asyncio::PrefetchColumns *GroupWorkerBase::prefetchColumns() const
@@ -50,7 +49,7 @@ GroupWorker::GroupWorker(const ROVisibilityIterator& invi) :
   invi_p.origin();
 
   outvi_p = VisibilityIterator(const_cast<MeasurementSet&>(invi.ms()),
-                               invi.getSortColumns(), false,
+                               invi.getSortColumns(), False,
                                invi.getInterval());
 
   // Consistency.
@@ -131,5 +130,4 @@ uInt GroupWriteToNewMS::write(MeasurementSet& outms, MSColumns *msc, VisBuffer& 
   return rowsdone;
 }
 
-using namespace casacore;
 } // end namespace casa

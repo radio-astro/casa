@@ -33,7 +33,6 @@
 #include <display/RegionShapes/RSUtils.qo.h>
 #include <display/RegionShapes/XMLFileReaderWriter.h>
 
-using namespace casacore;
 namespace casa {
 
 // QTREGIONSHAPEMANAGER DEFINITIONS //

@@ -32,7 +32,6 @@
 #include <QColorDialog>
 #include <QDebug>
 
-using namespace casacore;
 namespace casa {
 
 	const QString ColorSummaryWidget::CUSTOM_PROFILE_COLOR = "Custom Profile Color";

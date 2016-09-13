@@ -47,11 +47,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   class AWConvFuncEPJones : public AWConvFunc
   {
   public:
-    AWConvFuncEPJones(const casacore::CountedPtr<ATerm> ATerm,
-		      const casacore::CountedPtr<PSTerm> psTerm,
-		      const casacore::CountedPtr<WTerm> wTerm,
-		      const casacore::Bool wbAWP=false,
-		      const casacore::Bool conjPB=casacore::True):
+    AWConvFuncEPJones(const CountedPtr<ATerm> ATerm,
+		      const CountedPtr<PSTerm> psTerm,
+		      const CountedPtr<WTerm> wTerm,
+		      const Bool wbAWP=False,
+		      const Bool conjPB=True):
       AWConvFunc(ATerm,psTerm,wTerm,wbAWP,conjPB), imageDC_p(),imageObsInfo_p(),
       nx_p(-1), ny_p(-1),nchan_p(-1),npol_p(-1),csys_p(),dc_p(),pointToPix_p(),
       pointFrame_p(),timeMType_p(),timeUnit_p(),directionIndex_p(-1),
@@ -61,40 +61,40 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     AWConvFuncEPJones& operator=(const AWConvFuncEPJones& other);
 
     // MosaicFT related
-    virtual void makeConvFunction(const casacore::ImageInterface<casacore::Complex>& image,
+    virtual void makeConvFunction(const ImageInterface<Complex>& image,
 				  const VisBuffer& vb,
-				  const casacore::Int wConvSize,
-				  const casacore::CountedPtr<PolOuterProduct>& pop,
-				  const casacore::Float pa,
-				  const casacore::Float dpa,
-				  const casacore::Vector<casacore::Double>& uvScale, const casacore::Vector<casacore::Double>& uvOffset,
-				  const casacore::Matrix<casacore::Double>& vbFreqSelection,
+				  const Int wConvSize,
+				  const CountedPtr<PolOuterProduct>& pop,
+				  const Float pa,
+				  const Float dpa,
+				  const Vector<Double>& uvScale, const Vector<Double>& uvOffset,
+				  const Matrix<Double>& vbFreqSelection,
 				  CFStore2& cfs,
 				  CFStore2& cfwts,
-				  casacore::Bool fillCF=true);
-    virtual casacore::Vector<casacore::Double> findPointingOffset(const casacore::ImageInterface<casacore::Complex>& image,
+				  Bool fillCF=True);
+    virtual Vector<Double> findPointingOffset(const ImageInterface<Complex>& image,
 					      const VisBuffer& vb);
 
     void toPix(const VisBuffer& vb);
-    void storeImageParams(const casacore::ImageInterface<casacore::Complex>& iimage,
+    void storeImageParams(const ImageInterface<Complex>& iimage,
 			  const VisBuffer& vb);
   private:
     // MosaicFT related
-    casacore::DirectionCoordinate imageDC_p;
-    casacore::ObsInfo imageObsInfo_p;
-    casacore::Int nx_p; 
-    casacore::Int ny_p;
-    casacore::Int nchan_p;
-    casacore::Int npol_p;
-    casacore::CoordinateSystem csys_p;
-    casacore::DirectionCoordinate dc_p;
-    casacore::MDirection::Convert pointToPix_p;
-    casacore::MeasFrame pointFrame_p;
-    casacore::MEpoch::Types timeMType_p;
-    casacore::Unit timeUnit_p;
-    casacore::Int directionIndex_p;
-    casacore::MDirection direction1_p;
-    casacore::MDirection direction2_p;
+    DirectionCoordinate imageDC_p;
+    ObsInfo imageObsInfo_p;
+    Int nx_p; 
+    Int ny_p;
+    Int nchan_p;
+    Int npol_p;
+    CoordinateSystem csys_p;
+    DirectionCoordinate dc_p;
+    MDirection::Convert pointToPix_p;
+    MeasFrame pointFrame_p;
+    MEpoch::Types timeMType_p;
+    Unit timeUnit_p;
+    Int directionIndex_p;
+    MDirection direction1_p;
+    MDirection direction2_p;
   };
   //
   //-------------------------------------------------------------------------------------------

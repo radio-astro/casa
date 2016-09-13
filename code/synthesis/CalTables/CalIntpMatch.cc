@@ -29,7 +29,6 @@
 #include <synthesis/CalTables/CalIntpMatch.h>
 #include <msvis/MSVis/MSCalEnums.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //----------------------------------------------------------------------------
@@ -305,7 +304,7 @@ void CalIntpMatch::setCalBuffer (CalMainBuffer& cb)
     switch (type_p) {
     case MATCHING_ANT_SPW: {
       Int numSpw = cdb.numSpw()(calDescId);
-      keys.resize(numSpw, true, true);
+      keys.resize(numSpw, True, True);
       for (Int iSpw=0; iSpw < numSpw; iSpw++) {
 	keys[iSpw] = new Record();
 	keys[iSpw]->define(MSC::fieldName(MSC::ANTENNA1), cb.antenna1()(row));
@@ -323,7 +322,7 @@ void CalIntpMatch::setCalBuffer (CalMainBuffer& cb)
     // Match the row keys in the key index and set the
     // calibration index accordingly
     Int nKeys = keys.nelements();
-    cbIndex_p[row].resize(nKeys, true);
+    cbIndex_p[row].resize(nKeys, True);
     for (Int i=0; i < nKeys; i++) {
       cbIndex_p[row](i) = matchOrAddKey (*keys[i]);
     };
@@ -346,17 +345,17 @@ Int CalIntpMatch::matchOrAddKey (const Record& key)
 
   for (Int i=0; i < nKeys; i++) {
     // Match the key entry
-    Bool match = true;
+    Bool match = True;
     for (uInt j=0; j < key.nfields(); j++) {
       if (matchKeys_p[i]->asInt(j) != key.asInt(j)) {
-	match = false;
+	match = False;
       };
     };
     if (match) return i;
   };
 
   // Add a new key entry
-  matchKeys_p.resize(nKeys+1, true, true);
+  matchKeys_p.resize(nKeys+1, True, True);
   matchKeys_p[nKeys] = new Record(key);
   
   return nKeys;
@@ -379,7 +378,7 @@ Vector<Int> CalIntpMatch::calRows (const Int& matchIndex,
 //
   // Initialization
   calRowMask.resize(IPosition(1,cb_p->nRow()));
-  calRowMask = false;
+  calRowMask = False;
   Vector<Int> retval(cb_p->nRow());
   Int nMatch = 0;
 
@@ -388,13 +387,13 @@ Vector<Int> CalIntpMatch::calRows (const Int& matchIndex,
     for (uInt col=0; col < cbIndex_p[row].nelements(); col++) {
       if (cbIndex_p[row](col) == matchIndex) {
 	retval(nMatch) = row;
-	calRowMask(IPosition(1,nMatch)) = true;
+	calRowMask(IPosition(1,nMatch)) = True;
 	nMatch++;
       };
     };
   };
   
-  retval.resize(nMatch, true);
+  retval.resize(nMatch, True);
   return retval;
 };
 

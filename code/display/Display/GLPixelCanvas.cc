@@ -90,7 +90,6 @@ that don't. (SGI <-> SGI works, SGI <-> Sun doesn't).
 #include <display/Display/GLPCDisplayList.h>
 #include <display/Display/GLPCTexture.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 ////////////////////////////////////////////////////////////////
@@ -157,7 +156,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		           GLfloat xscale, GLfloat yscale,
 		           GLenum format, const GLushort *pixels,
 		           const char *name=NULL);
-		virtual void call(Bool force=false, const uInt nspaces=0);
+		virtual void call(Bool force=False, const uInt nspaces=0);
 		virtual ~ImageEntry();
 	private:
 		GLfloat	x_, y_, z_;
@@ -224,7 +223,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  width_(0),
 		  height_(0),
 		  depth_(glpcctbl->depth()),
-		  doClipping_(false),
+		  doClipping_(False),
 		  clipX1_(0),
 		  clipY1_(0),
 		  clipX2_(width-1),
@@ -232,11 +231,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  itsDeviceForegroundColor_("white"),
 		  itsDeviceBackgroundColor_("black"),
 		  lineStyle_(Display::LSSolid),
-		  exposeHandlerFirstTime_(true),
+		  exposeHandlerFirstTime_(True),
 		  listSize_(0), numinuse_(0), nextfree_(0), sizeincr_(16),
 		  currentListID_(0),
 		  dlists_(NULL), currentElement_(NULL),
-		  trace_(false), traceLevel_(GLTraceNormal), autoRefresh_(true) {
+		  trace_(False), traceLevel_(GLTraceNormal), autoRefresh_(True) {
 		// What buffers to clear
 		bufferMask_ = GL_COLOR_BUFFER_BIT;
 		itsComponents_ = NULL;
@@ -253,7 +252,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		clearColor_.alpha = 1.0;
 
 		nspaces_ = 0;
-//  trace(true);		//# For debugging.
+//  trace(True);		//# For debugging.
 		makeList("RepaintList"); //# list 0 is used to repaint window.
 
 		//# Pick up useful information.
@@ -264,10 +263,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				throw(AipsError("GLPixelCanvas: visual does not support OpenGL."));
 
 			glXGetConfig(display_, visualInfo_, GLX_RGBA, &isRGB);
-			isRGB_ = (isRGB != 0) ? true : false;
+			isRGB_ = (isRGB != 0) ? True : False;
 
 			glXGetConfig(display_, visualInfo_, GLX_DOUBLEBUFFER, &isdouble);
-			doubleBuffered_ = (isdouble != 0) ? true : false;
+			doubleBuffered_ = (isdouble != 0) ? True : False;
 		}
 
 		/////!! Should check '*color' resources for valid values.
@@ -302,14 +301,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		                                    GLwNvisualInfo, visualInfo_,
 		                                    NULL);
 
-		context_ = glXCreateContext(display_, visualInfo_, NULL, true);
+		context_ = glXCreateContext(display_, visualInfo_, NULL, True);
 
 		//# Button and Mouse Event Handler
 		XtAddEventHandler (drawArea_,
 		                   ButtonPressMask | ButtonReleaseMask
 		                   | KeyPressMask | KeyReleaseMask | PointerMotionMask
 		                   | ExposureMask | StructureNotifyMask,
-		                   false,
+		                   False,
 		                   (XtEventHandler) GLPixelCanvas::handleEventsCB,
 		                   this);
 
@@ -355,7 +354,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //# result when an attempt is made to use a list on a PixelCanvas
 //# which does not support lists.
 	Bool GLPixelCanvas::supportsLists() {
-		return true;
+		return True;
 	}
 
 //# Notes on Display lists.
@@ -482,7 +481,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		dlists_[currentListID_]->add(wlist);
 
 		if(currentListID_ == 0)		//# Draw if not currently recording.
-			wlist->call(false, nspaces_);
+			wlist->call(False, nspaces_);
 	}
 
 //# translate all lists
@@ -531,24 +530,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			deleteList(i);
 	}
 
-//# return true if the list exists
+//# return True if the list exists
 	Bool GLPixelCanvas::validList(uInt list) {
 		//# Check for valid list id (0 is reserved).
 		if((list == 0) || (list >= nextfree_) || (dlists_[list] == NULL))
-			return false;
+			return False;
 		else
-			return true;
+			return True;
 	}
 
 //# Remove list from list of display lists.
 	Boolean GLPixelCanvas::removeList(uInt listID) {
 		//# Check for valid list id.
 		if(listID >= nextfree_)		//# Valid value?
-			return false;
+			return False;
 
 		//# Make sure it hasn't already been deleted.
 		if(dlists_[listID] == NULL)
-			return false;
+			return False;
 
 		dlists_[listID]->unref();	//# Remove dlists's ref.
 		dlists_[listID] = NULL;
@@ -564,7 +563,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			     << "numinuse_ tried to go below 0 for listid "
 			     << listID << LogIO::POST;
 		}
-		return true;
+		return True;
 	}
 
 //# Called when window gets resized or is cleared.
@@ -642,24 +641,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 ////////////////////////////////////////////////////////////////
 //# (Cacheable) Set the font to the recognizable font name
 	Bool GLPixelCanvas::setFont(const String &fontName) {
-		static Boolean print = true;
+		static Boolean print = True;
 
 		if(print) {
 			unimplemented("setFont", WHERE);
-			print = false;
+			print = False;
 		}
-		return false;
+		return False;
 	}
 
 //# (Cacheable) Draw text using that font aligned in some way to the
 //# position
 	void GLPixelCanvas::drawText(Int x, Int y, const String &text,
 	                             Display::TextAlign alignment) {
-		static Boolean print = true;
+		static Boolean print = True;
 
 		if(print) {
 			unimplemented("drawText", WHERE);
-			print = false;
+			print = False;
 		}
 	}
 ////////////////////////////////////////////////////////////////
@@ -2469,11 +2468,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Currently, background color is not supported.
 	void GLPixelCanvas::setBackground(uLong color) {
-		static Boolean print = true;
+		static Boolean print = True;
 
 		if(print) {
 			unimplemented("setBackground", WHERE);
-			print = false;
+			print = False;
 		}
 	}
 
@@ -2524,20 +2523,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	void GLPixelCanvas::setCapStyle(Display::CapStyle style) {
-		static Boolean print = true;
+		static Boolean print = True;
 
 		if(print) {
 			unimplemented("setCapStyle", WHERE);
-			print = false;
+			print = False;
 		}
 	}
 
 	void GLPixelCanvas::setJoinStyle(Display::JoinStyle style) {
-		static Boolean print = true;
+		static Boolean print = True;
 
 		if(print) {
 			unimplemented("setJoinStyle", WHERE);
-			print = false;
+			print = False;
 		}
 	}
 
@@ -2684,20 +2683,20 @@ void GLPixelCanvas::setFillStyle(Display::FillStyle style) {
 }
 
 void GLPixelCanvas::setFillRule(Display::FillRule rule) {
-	static Boolean print = true;
+	static Boolean print = True;
 
 	if(print) {
 		unimplemented("setFillRule", WHERE);
-		print = false;
+		print = False;
 	}
 }
 
 void GLPixelCanvas::setArcMode(Display::ArcMode mode) {
-	static Boolean print = true;
+	static Boolean print = True;
 
 	if(print) {
 		unimplemented("setArcMode", WHERE);
-		print = false;
+		print = False;
 	}
 }
 
@@ -2766,11 +2765,11 @@ uLong GLPixelCanvas::getForeground() const {
 }
 
 uLong GLPixelCanvas::getBackground() const {
-	static Boolean print = true;
+	static Boolean print = True;
 
 	if(print) {
 		unimplemented("getBackground", WHERE);
-		print = false;
+		print = False;
 	}
 	return 0;
 }
@@ -2787,21 +2786,21 @@ Display::LineStyle GLPixelCanvas::getLineStyle() const {
 }
 
 Display::CapStyle  GLPixelCanvas::getCapStyle()  const {
-	static Boolean print = true;
+	static Boolean print = True;
 
 	if(print) {
 		unimplemented("getCapStyle", WHERE);
-		print = false;
+		print = False;
 	}
 	return Display::CSNotLast;
 }
 
 Display::JoinStyle GLPixelCanvas::getJoinStyle() const {
-	static Boolean print = true;
+	static Boolean print = True;
 
 	if(print) {
 		unimplemented("getJoinStyle", WHERE);
-		print = false;
+		print = False;
 	}
 	return Display::JSMiter;
 }
@@ -2811,21 +2810,21 @@ Display::FillStyle GLPixelCanvas::getFillStyle() const {
 }
 
 Display::FillRule  GLPixelCanvas::getFillRule()  const {
-	static Boolean print = true;
+	static Boolean print = True;
 
 	if(print) {
 		unimplemented("getFillRule", WHERE);
-		print = false;
+		print = False;
 	}
 	return Display::FREvenOdd;
 }
 
 Display::ArcMode   GLPixelCanvas::getArcMode()   const {
-	static Boolean print = true;
+	static Boolean print = True;
 
 	if(print) {
 		unimplemented("getArcMode", WHERE);
-		print = false;
+		print = False;
 	}
 	return Display::AMChord;
 }
@@ -2836,7 +2835,7 @@ Bool GLPixelCanvas::enable(Display::Option option) {
 	beginListEntry("enable");
 	switch(option) {
 	case Display::ClipWindow:
-		doClipping_ = true;
+		doClipping_ = True;
 		glEnable(GL_SCISSOR_TEST);
 		break;
 	default:
@@ -2844,14 +2843,14 @@ Bool GLPixelCanvas::enable(Display::Option option) {
 	}
 	endListEntry();
 	traceCheck("enable(ClipWindow)", GLTraceOther);
-	return true;
+	return True;
 }
 
 Bool GLPixelCanvas::disable(Display::Option option) {
 	beginListEntry("disable");
 	switch(option) {
 	case Display::ClipWindow:
-		doClipping_ = false;
+		doClipping_ = False;
 		glDisable(GL_SCISSOR_TEST);
 		break;
 	default:
@@ -2859,7 +2858,7 @@ Bool GLPixelCanvas::disable(Display::Option option) {
 	}
 	endListEntry();
 	traceCheck("disable(ClipWindow)", GLTraceOther);
-	return true;
+	return True;
 }
 
 //# Control the image-caching strategy
@@ -2958,7 +2957,7 @@ void GLPixelCanvas::repaint(const Bool redraw) {
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();		//# Initialize origin.
 		traceCheck("Repaint", GLTraceOther, nspaces_++);
-		dlists_[0]->call(true);
+		dlists_[0]->call(True);
 		swapBuffers();
 		nspaces_--;
 	}
@@ -3301,9 +3300,9 @@ Bool GLPixelCanvas::getColorComponents( const String &colorname, Float &r,
 		r = (float) (c.red / 65535.0);
 		g = (float) (c.green / 65535.0);
 		b = (float) (c.blue / 65535.0);
-		return true;
+		return True;
 	}
-	return false;
+	return False;
 }
 
 //# (Not Cacheable) Returns the current color as a color index
@@ -3321,16 +3320,16 @@ void GLPixelCanvas::getColor(float &r, float &g, float &b) const {
 //# (Not Cacheable) Get color index value (works in RGB or colormap mode)
 // (Not implemented).
 Bool GLPixelCanvas::getColor(Int x, Int y, uInt &color) {
-	return false;
+	return False;
 }
 
 // (Not implemented).
 Bool GLPixelCanvas::getRGBColor(Int x, Int y, float &r, float &g, float &b) {
-	return false;
+	return False;
 }
 
 //# (Not Cacheable) resize request.  returns true if window was resized.
-//# Will refresh if doCallbacks is true.
+//# Will refresh if doCallbacks is True.
 //# This has not been tested!
 Bool GLPixelCanvas::resize(uInt reqXSize, uInt reqYSize, Bool doCallbacks) {
 	XtVaSetValues(form_, XmNwidth, reqXSize, XmNheight, reqYSize, NULL);
@@ -3340,9 +3339,9 @@ Bool GLPixelCanvas::resize(uInt reqXSize, uInt reqYSize, Bool doCallbacks) {
 
 	getwidthheight(form_, width, height);
 	if((reqXSize != width) || (reqYSize != height))
-		return false;
+		return False;
 	else
-		return true;
+		return True;
 }
 
 
@@ -3607,9 +3606,9 @@ void GLPixelCanvas::swapBuffers(Int x1, Int y1, Int x2, Int y2) {
 	traceCheck("Ignored swapBuffers(IIII)", GLTraceOther);
 }
 
-//# return true if refresh is allowed right now...
+//# return True if refresh is allowed right now...
 Bool GLPixelCanvas::refreshAllowed() const {
-	return true;
+	return True;
 }
 
 //# Make this context (window) the current OpenGL context.
@@ -3705,7 +3704,7 @@ void GLPixelCanvas::handleEvents(Widget, XEvent *ev) {
 		}
 
 		callPositionEventHandlers(ks,
-		                          (ev->type == ButtonPress ? true : false),
+		                          (ev->type == ButtonPress ? True : False),
 		                          ev->xbutton.x,
 		                          height_ - 1 - ev->xbutton.y,
 		                          ev->xbutton.state);
@@ -3713,7 +3712,7 @@ void GLPixelCanvas::handleEvents(Widget, XEvent *ev) {
 	break;
 	case KeyPress:
 	case KeyRelease: {
-		Bool keystate = (ev->type == KeyPress ? true : false);
+		Bool keystate = (ev->type == KeyPress ? True : False);
 		uInt state = ev->xkey.state;
 		uInt keycode = ev->xkey.keycode;
 		Int index = 0;
@@ -3813,7 +3812,7 @@ void GLPixelCanvas::exposeHandler() {
 			log_.append(buf);
 			log_.post();
 		}
-		exposeHandlerFirstTime_ = false;
+		exposeHandlerFirstTime_ = False;
 	}
 
 	Bool sizeChanged = handleResizeEvent(0, 0);
@@ -3843,7 +3842,7 @@ void GLPixelCanvas::exposeHandler() {
 //
 //-----------------------------------------------------
 
-//# Reset the viewport and return true if the size has changed.
+//# Reset the viewport and return True if the size has changed.
 Boolean GLPixelCanvas::handleResizeEvent(uInt w, uInt h) {
 	Boolean resized;
 
@@ -3862,9 +3861,9 @@ Boolean GLPixelCanvas::handleResizeEvent(uInt w, uInt h) {
 		glLoadIdentity();
 		glOrtho(0.0,  (GLdouble)w, 0.0, (GLdouble)h, -1, 1);
 		glMatrixMode(GL_MODELVIEW);
-		resized = true;
+		resized = True;
 	} else
-		resized = false;
+		resized = False;
 
 	return resized;
 }

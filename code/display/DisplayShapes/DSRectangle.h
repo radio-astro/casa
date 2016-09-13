@@ -84,59 +84,59 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Constructors and Destructors
 		// <group>
 		DSRectangle();
-		DSRectangle(const casacore::Float& xPos, const casacore::Float& yPos, const casacore::Float& width,
-		            const casacore::Float& height, const casacore::Bool& handles = false,
-		            const casacore::Bool& drawHandles = false);
+		DSRectangle(const Float& xPos, const Float& yPos, const Float& width,
+		            const Float& height, const Bool& handles = False,
+		            const Bool& drawHandles = False);
 		DSRectangle(const DSRectangle& other);
 		virtual ~DSRectangle();
 		// </group>
 
 		// Standard DisplayShape functions
 		// <group>
-		virtual void move(const casacore::Float& dX, const casacore::Float& dY);
-		virtual void rotate(const casacore::Float& angle);
-		virtual void rotateAbout(const casacore::Float& angle, const casacore::Float& aboutX,
-		                         const casacore::Float& aboutY);
-		virtual void setCenter(const casacore::Float& xPos, const casacore::Float& yPos);
-		virtual void changePoint(const casacore::Vector<casacore::Float>& pos);
-		virtual void changePoint(const casacore::Vector<casacore::Float>& newPoints, const casacore::Int whichOne);
-		virtual void addPoint(const casacore::Vector<casacore::Float>& toAdd);
+		virtual void move(const Float& dX, const Float& dY);
+		virtual void rotate(const Float& angle);
+		virtual void rotateAbout(const Float& angle, const Float& aboutX,
+		                         const Float& aboutY);
+		virtual void setCenter(const Float& xPos, const Float& yPos);
+		virtual void changePoint(const Vector<Float>& pos);
+		virtual void changePoint(const Vector<Float>& newPoints, const Int whichOne);
+		virtual void addPoint(const Vector<Float>& toAdd);
 		// </group>
 
 
 		// Rectangle specific. Get / set width and height in pixels.
 		// <group>
-		virtual void setHeight(const casacore::Float& height);
-		virtual void setWidth(const casacore::Float& width);
-		virtual casacore::Float getHeight();
-		virtual casacore::Float getWidth();
+		virtual void setHeight(const Float& height);
+		virtual void setWidth(const Float& width);
+		virtual Float getHeight();
+		virtual Float getWidth();
 		// </group>
 
 		// Get and set options
 		// <group>
-		virtual casacore::Bool setOptions(const casacore::Record& settings);
-		virtual casacore::Record getOptions();
+		virtual Bool setOptions(const Record& settings);
+		virtual Record getOptions();
 		// </group>
 
 		// Using supplied parameters, make a polygon of four points representing the
 		// rectangle. This can then be used to create / alter a DSPoly.
-		virtual casacore::Matrix<casacore::Float> makeAsPoly(const casacore::Float& xPos, const casacore::Float& yPos,
-		                                 const casacore::Float& width, const casacore::Float& height);
+		virtual Matrix<Float> makeAsPoly(const Float& xPos, const Float& yPos,
+		                                 const Float& width, const Float& height);
 
 	private:
 
 		// Always valid
-		casacore::Float itsAngle;
-		casacore::Bool itsValid;
+		Float itsAngle;
+		Bool itsValid;
 
 		//Ony used during the set-up period
-		casacore::Float itsCenter, itsWidth, itsHeight;
+		Float itsCenter, itsWidth, itsHeight;
 
 		virtual void setDefaultOptions();
-		virtual void setAngle(const casacore::Float& newAngle);
+		virtual void setAngle(const Float& newAngle);
 
 	protected:
-		virtual casacore::Float getAngle();
+		virtual Float getAngle();
 	};
 
 

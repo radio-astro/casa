@@ -28,7 +28,6 @@
 #include <display/Display/PixelCanvas.h>
 #include <display/DisplayEvents/PCInvisTool.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Constructor.

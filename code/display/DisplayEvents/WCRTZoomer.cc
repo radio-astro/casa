@@ -38,7 +38,6 @@
 // this include:
 #include <display/DisplayEvents/WCRTZoomer.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	WCRTZoomer::WCRTZoomer(WorldCanvas *wcanvas,

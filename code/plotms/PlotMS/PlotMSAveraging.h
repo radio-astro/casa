@@ -38,7 +38,7 @@ class PlotMSAveraging {
 public:
     // Static //
     
-    // Enum and methods to define the different fields for an casacore::MS averaging.
+    // Enum and methods to define the different fields for an MS averaging.
     // All fields have a bool flag for on/off, and some of them also have a
     // double value (see fieldHasValue()).  Fields are off by default, with a
     // default double value of 0 if applicable.  Some fields are in mutually
@@ -86,8 +86,8 @@ public:
     // also have double values will have an additional key that is its enum
     // name + "Value" (i.e. "channelValue" for CHANNEL) with a double value.
     // <group>
-    void fromRecord(const casacore::RecordInterface& record);
-    casacore::Record toRecord(bool useStrings = false) const;
+    void fromRecord(const RecordInterface& record);
+    Record toRecord(bool useStrings = false) const;
     // </group>
     
     // Gets/Sets the on/off flag for the given field.
@@ -106,15 +106,15 @@ public:
     
     // Gets/Sets the value for the given field as a String.  Blank means a
     // false value (or a field that does not have a double value); otherwise
-    // the double value in casacore::String form is used.
+    // the double value in String form is used.
     // <group>
-    casacore::String getValueStr(Field f) const;
-    void getValue(Field f, casacore::String& value) const { value = getValueStr(f); }
-    void setValue(Field f, const casacore::String& value);
+    String getValueStr(Field f) const;
+    void getValue(Field f, String& value) const { value = getValueStr(f); }
+    void setValue(Field f, const String& value);
     // </group>
 
 
-    // If any explicit averaging is turned ON, return true
+    // If any explicit averaging is turned ON, return True
     bool anyAveraging() const { return (channel() || time() || 
 				  baseline() || antenna() ||spw()); }
     
@@ -122,10 +122,10 @@ public:
     // <group>
     bool channel() const { return getFlag(CHANNEL); }
     double channelValue() const { return getValue(CHANNEL); }
-    casacore::String channelStr() const { return getValueStr(CHANNEL); }
+    String channelStr() const { return getValueStr(CHANNEL); }
     bool time() const { return getFlag(TIME); }
     double timeValue() const { return getValue(TIME); }
-    casacore::String timeStr() const { return getValueStr(TIME); }
+    String timeStr() const { return getValueStr(TIME); }
     bool scan() const { return getFlag(SCAN); }
     bool field() const { return getFlag(FIELD); }
     bool baseline() const { return getFlag(BASELINE); }
@@ -136,10 +136,10 @@ public:
     
     // Convenience methods for setting the standard field values.
     // <group>
-    void setChannel(const casacore::String& value) { setValue(CHANNEL, value); }
+    void setChannel(const String& value) { setValue(CHANNEL, value); }
     void setChannel(bool flag) { setFlag(CHANNEL, flag); }
     void setChannelValue(double value) { setValue(CHANNEL, value); }
-    void setTime(const casacore::String& value) { setValue(TIME, value); }
+    void setTime(const String& value) { setValue(TIME, value); }
     void setTime(bool flag) { setFlag(TIME, flag); }
     void setTimeValue(double value) { setValue(TIME, value); }
     void setScan(bool flag) { setFlag(SCAN, flag); }
@@ -159,10 +159,10 @@ public:
     // </group>
     
     // Print out a summary of the averaging state:
-    casacore::String summary() const;
+    String summary() const;
 
     //Print out an abbreviated summary of the averaging state.
-    casacore::String toStringShort() const;
+    String toStringShort() const;
 
 private:
     // Averaging field flags.
@@ -176,9 +176,9 @@ private:
     void setDefaults();
     
     
-    // casacore::String constant for what to append to the enum name in the record to
+    // String constant for what to append to the enum name in the record to
     // get the key for the double value.
-    static const casacore::String RKEY_VALUE;
+    static const String RKEY_VALUE;
 };
 
 }

@@ -27,7 +27,6 @@
 
 #include <display/Display/DParameterButton.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Constructor.
@@ -35,7 +34,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	                                   const String description, const String text,
 	                                   const String help, const String context,
 	                                   const Bool editable) :
-		DisplayParameter(name, description, help, context, false, editable),
+		DisplayParameter(name, description, help, context, False, editable),
 		itsText(text) {  }
 
 // Copy constructor.
@@ -52,7 +51,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 // Determine whether the record indicated that the button was pressed.
-// (This will be true if the record simply contains a field with this
+// (This will be True if the record simply contains a field with this
 // DParameter's name-id).
 	Bool DParameterButton::fromRecord(const RecordInterface &record) {
 		Bool btnval, notFound;
@@ -71,8 +70,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Record rec = baseDescription();
 		rec.define("ptype", "button");
 		rec.define("text", itsText);
-		rec.define("default", true);
-		rec.define("value", true);
+		rec.define("default", True);
+		rec.define("value", True);
 
 		record.defineRecord(name(), rec);
 	}

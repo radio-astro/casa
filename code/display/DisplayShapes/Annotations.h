@@ -67,7 +67,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // it is supplied. It can then add, delete or modify shapes based on function
 // calls and user mouse input.
 //
-// The class is essentially a casacore::PtrBlock of DisplayShapeInterfaces, with
+// The class is essentially a PtrBlock of DisplayShapeInterfaces, with
 // pixelcanvas event handling to control them.
 // </synopsis>
 //
@@ -103,7 +103,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// <group>
 		Annotations(PanelDisplay* panDisp,
 		            const Display::KeySym& keysym = Display::K_Pointer_Button1,
-		            const casacore::Bool useEH = true);
+		            const Bool useEH = True);
 		virtual ~Annotations();
 		// </group>
 
@@ -115,14 +115,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void operator()(const WCRefreshEvent& ev);
 		// </group>
 
-		// Redraw all the shapes. Turns all handles off if noHandles is true
-		virtual void draw(PixelCanvas* pc, const casacore::Bool noHandles = false);
+		// Redraw all the shapes. Turns all handles off if noHandles is True
+		virtual void draw(PixelCanvas* pc, const Bool noHandles = False);
 
 		// Instantly creates a shape on screen, and hence requires
 		// certain information in its record such as the center of the
-		// new object on screen. Refresh == false can be used to surpress a
+		// new object on screen. Refresh == False can be used to surpress a
 		// refresh.
-		virtual void newShape(casacore::Record& settings, const casacore::Bool& refresh = true);
+		virtual void newShape(Record& settings, const Bool& refresh = True);
 
 		// Set the key assigned to control shapes.
 		virtual void setKey(const Display::KeySym& newKey);
@@ -133,7 +133,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// If createShape is called, and the shape is no longer required,
 		// the function 'cancelShapes' can be used to reset the state of the
 		// annotator.
-		virtual void createShape(casacore::Record& settings);
+		virtual void createShape(Record& settings);
 
 		// Disable event handling (with the exception of refresh calls). This stops
 		// the user from moving shapes etc via the mouse motion / position event
@@ -151,65 +151,65 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Delete the shape at the specified point in the collection of shapes
 		// The current (selected) shape can be determined by using the
 		// activeShape() function.
-		virtual casacore::Bool deleteShape(const casacore::uInt& toDel);
+		virtual Bool deleteShape(const uInt& toDel);
 
 		// These allow shapes to be "locked" together. Adding a locked shape
 		// to the current shape means that whenever the current shape
 		// moves, so too will the specified shape. removeLockedFromCurrent
 		// can be used to remove this effect.
 		// <group>
-		virtual void removeLockedFromCurrent(const casacore::uInt& removeMe);
-		virtual void addLockedToCurrent(const casacore::uInt& addMe);
+		virtual void removeLockedFromCurrent(const uInt& removeMe);
+		virtual void addLockedToCurrent(const uInt& addMe);
 		// </group>
 
 		// Return the currently selected shapes' index
-		virtual casacore::Int activeShape();
+		virtual Int activeShape();
 
 		// Return a brief summary of all current shapes
-		virtual casacore::Record shapesSummary();
+		virtual Record shapesSummary();
 
 		// Set the options for the specified shape. The user selected shape
 		// can be determined by call the 'activeShape' method. To see a list of
 		// available options for different types of shapes / objects, see their
 		// individual documentation.
-		virtual void setShapeOptions(const casacore::uInt& whichShape,
-		                             const casacore::Record& newOptions);
+		virtual void setShapeOptions(const uInt& whichShape,
+		                             const Record& newOptions);
 
 		// Returns a record containing the options for the specified shape.
 		// The user selected shape can be determined by calling the 'activeShape'
 		// method. To see a list of the options returned by shapes / objects,
 		// see their individual documentation.
-		virtual casacore::Record getShapeOptions(const casacore::uInt& whichShape);
+		virtual Record getShapeOptions(const uInt& whichShape);
 
 		// Returns a record which contains a sub record (containing options) for
 		// each shape. e.g. To obtain options for the first shape:
 		// <srcblock>
-		// casacore::Record all = myAnnotator.getAllOptions();
-		// casacore::Record shape = all.subRecord(0);
+		// Record all = myAnnotator.getAllOptions();
+		// Record shape = all.subRecord(0);
 		// </srcblock>
-		virtual casacore::Record getAllOptions();
+		virtual Record getAllOptions();
 
 		// Deletes all existing shapes, and rebuilds new shapes based on records
 		// in sub records of the supplied record. A record returned from
 		// getAllOptions() can therefore be used to copy a set of shapes.
-		virtual void setAllOptions(const casacore::Record& newSettings);
+		virtual void setAllOptions(const Record& newSettings);
 
 		// Called when a refresh is required. It copies back to front buffer,
 		// then causes a refresh with reason = backCopiedToFront.
 		virtual void update(PixelCanvas* pc);
 
 		// Overwrite this to fire glish events.
-		virtual void annotEvent(const casacore::String& /*event*/) {};
+		virtual void annotEvent(const String& /*event*/) {};
 
 		// Functions for changing the co-ords system of a shape
 		// <group>
-		virtual casacore::Bool revertToPix(const casacore::Int& whichOne);
-		virtual casacore::Bool revertToFrac(const casacore::Int& whichOne);
-		virtual casacore::Bool lockToWC(const casacore::Int& whichOne);
+		virtual Bool revertToPix(const Int& whichOne);
+		virtual Bool revertToFrac(const Int& whichOne);
+		virtual Bool lockToWC(const Int& whichOne);
 		// </group>
 
 		// Returns a list of shapes annotations knows about
-		virtual casacore::Record availableShapes();
+		virtual Record availableShapes();
 
 
 	protected:
@@ -227,57 +227,57 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// My copy of the list of Worldcanvases. I can check this against
 		// itsPanelDisplay to see if anything has changed.
-		casacore::ListIter<WorldCanvas* >* itsWCLI;
-		casacore::List<WorldCanvas* > itsWCs;
+		ListIter<WorldCanvas* >* itsWCLI;
+		List<WorldCanvas* > itsWCs;
 
-		// casacore::List of shapes
-		casacore::PtrBlock<DisplayShape*> itsShapes;
+		// List of shapes
+		PtrBlock<DisplayShape*> itsShapes;
 
 		// Some overall settings
 		// <group>
 		Display::KeySym itsKey;
-		casacore::Bool itsUseEH;
+		Bool itsUseEH;
 		// </group>
 
 		// Stuff to remember my current state:
 		// <group>
 		Annotations::State itsState;
 		Annotations::CreationType itsCreation;
-		casacore::Bool itsShapeMoved;
-		casacore::Int itsActiveShape;
-		casacore::Int itsActiveHandle;
-		casacore::uInt itsX, itsY;
-		casacore::Bool itsEnabled;
-		casacore::Bool itsRefreshedYet;
+		Bool itsShapeMoved;
+		Int itsActiveShape;
+		Int itsActiveHandle;
+		uInt itsX, itsY;
+		Bool itsEnabled;
+		Bool itsRefreshedYet;
 		// </group>
 		//
 
 
 		// Internal functions
 		// <group>
-		casacore::Bool changeCoordSys(const casacore::Int shapeIndex, const casacore::String& type,
-		                    const casacore::String& currentCoords, const casacore::String& toCoords);
+		Bool changeCoordSys(const Int shapeIndex, const String& type,
+		                    const String& currentCoords, const String& toCoords);
 
-		DisplayShape* constructShape(const casacore::Record& settings);
+		DisplayShape* constructShape(const Record& settings);
 		void handleKeyUp();
 		void handleCreation(const PCPositionEvent& ev);
-		void handleNormalCreation(const casacore::Vector<casacore::Float>& createPix);
-		void handleMarkerCreation(const casacore::Vector<casacore::Float>& createPix);
-		void handlePolyLineCreation(const casacore::Vector<casacore::Float>& createPix);
-		void handlePolygonCreation(const casacore::Vector<casacore::Float>& createPix);
-		void handleArrowCreation(const casacore::Vector<casacore::Float>& createPix);
-		void select(const casacore::Int i);
-		casacore::Bool determineState(const PCPositionEvent& ev);
+		void handleNormalCreation(const Vector<Float>& createPix);
+		void handleMarkerCreation(const Vector<Float>& createPix);
+		void handlePolyLineCreation(const Vector<Float>& createPix);
+		void handlePolygonCreation(const Vector<Float>& createPix);
+		void handleArrowCreation(const Vector<Float>& createPix);
+		void select(const Int i);
+		Bool determineState(const PCPositionEvent& ev);
 		void registerToWCs();
-		casacore::Bool validateWCs();
+		Bool validateWCs();
 		void changedWC();
-		casacore::Bool validShape(const casacore::Record& shape);
-		void polyLineToPolygon(const casacore::Int whichShape);
+		Bool validShape(const Record& shape);
+		void polyLineToPolygon(const Int whichShape);
 		// </group>
 	};
 
 // Ostream, mainly for debugging the state of the annotator.
-	std::ostream& operator << (std::ostream& os, Annotations::State st);
+	ostream& operator << (ostream& os, Annotations::State st);
 
 
 } //# NAMESPACE CASA - END

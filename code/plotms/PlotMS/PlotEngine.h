@@ -55,9 +55,9 @@ public:
 	virtual PlotMSExportParam& getExportParameters() = 0;
 
 	//Symbols
-	virtual PlotSymbolPtr createSymbol (const casacore::String& descriptor,
-	    		casacore::Int size, const casacore::String& color,
-	        	const casacore::String& fillPattern, bool outline ) = 0;
+	virtual PlotSymbolPtr createSymbol (const String& descriptor,
+	    		Int size, const String& color,
+	        	const String& fillPattern, bool outline ) = 0;
 
 	virtual PlotMSPlot* addOverPlot(const PlotMSPlotParameters* p = NULL) = 0;
 
@@ -76,7 +76,7 @@ public:
 	virtual void quitApplication() = 0;
 	virtual bool isDrawing() const = 0;
 
-	virtual casacore::Record locateInfo( casacore::Bool& success, casacore::String& errorMessage ) = 0;
+	virtual Record locateInfo( Bool& success, String& errorMessage ) = 0;
 
 protected:
 	PlotEngine(){}

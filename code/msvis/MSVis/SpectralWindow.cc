@@ -14,7 +14,7 @@
 #include <msvis/MSVis/UtilJ.h>
 
 using namespace std;
-using namespace casacore;
+
 
 namespace casa {
 namespace ms {
@@ -50,7 +50,7 @@ Vector<Double>
 SpectralWindow::getArray (const ArrayColumn<Double> & arrayColumn)
 {
     Vector<Double> array;
-    arrayColumn.get (id_p, array, true);
+    arrayColumn.get (id_p, array, True);
 
     return array;
 }

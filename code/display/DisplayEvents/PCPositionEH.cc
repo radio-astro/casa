@@ -28,7 +28,6 @@
 #include <casa/aips.h>
 #include <display/DisplayEvents/PCPositionEH.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Default Constructor Required

@@ -21,13 +21,13 @@ namespace sdmbin {
 
     /** Definition of the second level of the tree hierarchy 
      * @pre the lower levels of the tree hierarchy are already known
-     * @param v_antennaIdArray  casacore::Array of antenna identifiers
-     * @param v_feedIdArray     casacore::Array of feed identifiers 
+     * @param v_antennaIdArray  Array of antenna identifiers
+     * @param v_feedIdArray     Array of feed identifiers 
      *   \note                    Because with ALMA there is only one feed used at any time this vector has 
-     the same size as v_antennaIdArray. With Focal Plane casacore::Array this size is
+     the same size as v_antennaIdArray. With Focal Plane Array this size is
      *                            multiplied by the number of feeds in the FPA
      * @param v_phasedArrayList Place-holder, not yet implemented
-     * @param v_antennaUsedArray casacore::Array to tell in the antennaIdArray which antenna have been actually used
+     * @param v_antennaUsedArray Array to tell in the antennaIdArray which antenna have been actually used
      *                           for the data being stored. v_antennaUsedArray and v_antennaIdArray must have
      *                           the same size.
      * @param dataDescriptionsSet a dataDescriptionsSet object (<i>i.e.</i> the lower levels of the hierarchy 
@@ -260,11 +260,11 @@ namespace sdmbin {
     unsigned int getNumPDTvalue(Enum<DataContent> e_dc, EnumSet<AxisName> es_an, bool effective);
 
   private:
-    vector<Tag>  v_AntennaIdArray_;   //!< casacore::Input array set of antenna identifiers (size numAntennas_)
-    vector<int>  v_FeedIdArray_;      //!< casacore::Input array list of feed identifiers (size numFeed*numAntennas_)
-    vector<int>  v_PhasedArrayList_;  //!< casacore::Input phasedArray list (not yet implemented) 
-    unsigned int numFeeds_;           //!< casacore::Input number of feeds
-    unsigned int numAntennas_;        //!< casacore::Input number of antennas
+    vector<Tag>  v_AntennaIdArray_;   //!< Input array set of antenna identifiers (size numAntennas_)
+    vector<int>  v_FeedIdArray_;      //!< Input array list of feed identifiers (size numFeed*numAntennas_)
+    vector<int>  v_PhasedArrayList_;  //!< Input phasedArray list (not yet implemented) 
+    unsigned int numFeeds_;           //!< Input number of feeds
+    unsigned int numAntennas_;        //!< Input number of antennas
     unsigned int numEffAntennas_;     //!< Effective number of antennas with data
     unsigned int numBaselines_;       //!< number of antenna pairs
     unsigned int numEffBaselines_;    //!< Effective number of antenna pairs

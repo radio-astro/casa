@@ -54,19 +54,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // class will catch only Synthesis module exceptions (but all
   // exceptions from the Synthesis module).  To catch more specific
   // exceptions, catch the derived classes.  Note that you have to
-  // catch casacore::AipsError to catch all possible exceptions thrown by all of
+  // catch AipsError to catch all possible exceptions thrown by all of
   // AIPS++ modules!
   //
   //</synopsis>
   
-  class SynthesisError : public casacore::AipsError {
+  class SynthesisError : public AipsError {
   public:
-    // The default constructor generates the message "casacore::Table error".
+    // The default constructor generates the message "Table error".
     SynthesisError (Category c=GENERAL);
     // Construct with given message.
-    void changeMessage(casacore::String& message);
-    void addMessage(casacore::String& message);
-    SynthesisError (const casacore::String& message,Category c=GENERAL);
+    void changeMessage(String& message);
+    void addMessage(String& message);
+    SynthesisError (const String& message,Category c=GENERAL);
     ~SynthesisError () throw();
   };
   
@@ -83,25 +83,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
   class SynthesisFTMachineError : public SynthesisError {
   public:
-    SynthesisFTMachineError (const casacore::String& message,Category c=GENERAL);
+    SynthesisFTMachineError (const String& message,Category c=GENERAL);
     ~SynthesisFTMachineError () throw();
   };
 
   class PSFZero: public SynthesisFTMachineError {
   public:
-    PSFZero (const casacore::String& message,Category c=GENERAL);
+    PSFZero (const String& message,Category c=GENERAL);
     ~PSFZero () throw();
   };
 
   class NoSenPattern: public SynthesisFTMachineError {
   public:
-    NoSenPattern(const casacore::String& message, Category c=GENERAL);
+    NoSenPattern(const String& message, Category c=GENERAL);
     ~NoSenPattern() throw();
   };
 
   class CFNotCached: public SynthesisError{
   public:
-    CFNotCached(const casacore::String& message, Category c=GENERAL);
+    CFNotCached(const String& message, Category c=GENERAL);
     ~CFNotCached() throw();
   };
 } //# NAMESPACE CASA - END

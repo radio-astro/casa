@@ -34,22 +34,16 @@
 #include <casa/Containers/Block.h>
 #include <casa/Utilities/CountedPtr.h>
 
-namespace casacore{
-
-  template<class T> class ImageInterface;
-  template<class T> class Matrix;
-}
-
 namespace casa{
 
-  // <summary>  A class to support FTMachines get their convolution casacore::Function </summary>
+  // <summary>  A class to support FTMachines get their convolution Function </summary>
   
   // <use visibility=export>
   // <prerequisite>
   //   <li> <linkto class=VisBuffer>VisBuffer</linkto> module
 // </prerequisite>
   // <etymology>
-  // WP for W-casacore::Projection 
+  // WP for W-Projection 
   // ConvFunc => returns the convolution functions
   // </etymology>
   //
@@ -58,13 +52,15 @@ namespace casa{
   // deal with directional dependent issues...
   // this class and related ones provide and cache  such functions for re-use 
   //</synopsis>
+  template<class T> class ImageInterface;
+  template<class T> class Matrix;
   class VisBuffer;
 
   class WPConvFunc 
     {
     public:
-      WPConvFunc(const casacore::Double minW=-1.0, const casacore::Double maxW=-1.0, const casacore::Double rmsW=-1.0);
-      WPConvFunc(const casacore::RecordInterface& rec);
+      WPConvFunc(const Double minW=-1.0, const Double maxW=-1.0, const Double rmsW=-1.0);
+      WPConvFunc(const RecordInterface& rec);
       //Copy constructor
       WPConvFunc(const WPConvFunc& other);
       //
@@ -75,46 +71,46 @@ namespace casa{
       // Inputs are the image, visbuffer,  wConvsize
       // findconv return a cached convolution function appropriate for this 
       // visbuffer and number of w conv plane
-      void findConvFunction(const casacore::ImageInterface<casacore::Complex>& iimage, 
+      void findConvFunction(const ImageInterface<Complex>& iimage, 
 			    const VisBuffer& vb,
-			    const casacore::Int& wConvSize,
-			    const casacore::Vector<casacore::Double>& uvScale,
-			    const casacore::Vector<casacore::Double>& uvOffset,
-			    const casacore::Float& padding, 
-			    casacore::Int& convSampling,
-			    casacore::Cube<casacore::Complex>& convFunc, 
-			    casacore::Int& convsize,
-			    casacore::Vector<casacore::Int>& convSupport,
-			    casacore::Double& wScale);
+			    const Int& wConvSize,
+			    const Vector<Double>& uvScale,
+			    const Vector<Double>& uvOffset,
+			    const Float& padding, 
+			    Int& convSampling,
+			    Cube<Complex>& convFunc, 
+			    Int& convsize,
+			    Vector<Int>& convSupport,
+			    Double& wScale);
 
-      casacore::Bool findSupport(casacore::Array<casacore::Complex>& /*func*/, casacore::Float& /*threshold*/,casacore::Int& /*origin*/, casacore::Int& /*R*/) 
-    {throw(casacore::AipsError("IlluminationConvFunc::findSupport() not implemented"));};
-      virtual casacore::Bool makeAverageResponse(const VisBuffer& /*vb*/, 
-				       const casacore::ImageInterface<casacore::Complex>& /*image*/,
-				     //				     casacore::TempImage<casacore::Float>& theavgPB,
-				       casacore::ImageInterface<casacore::Float>& /*theavgPB*/,
-				       casacore::Bool /*reset=true*/)
-    {throw(casacore::AipsError("WPConvFunc::makeAverageRes() called"));};
+      Bool findSupport(Array<Complex>& /*func*/, Float& /*threshold*/,Int& /*origin*/, Int& /*R*/) 
+    {throw(AipsError("IlluminationConvFunc::findSupport() not implemented"));};
+      virtual Bool makeAverageResponse(const VisBuffer& /*vb*/, 
+				       const ImageInterface<Complex>& /*image*/,
+				     //				     TempImage<Float>& theavgPB,
+				       ImageInterface<Float>& /*theavgPB*/,
+				       Bool /*reset=True*/)
+    {throw(AipsError("WPConvFunc::makeAverageRes() called"));};
       //Serialization
-      casacore::Bool toRecord(casacore::RecordInterface& rec);
-      casacore::Bool fromRecord(casacore::String& err, const casacore::RecordInterface& rec);
+      Bool toRecord(RecordInterface& rec);
+      Bool fromRecord(String& err, const RecordInterface& rec);
       
       
     private:
-      casacore::Bool checkCenterPix(const casacore::ImageInterface<casacore::Complex>& image);
-      casacore::Block <casacore::CountedPtr<casacore::Cube<casacore::Complex> > > convFunctions_p;
-      casacore::Block <casacore::CountedPtr<casacore::Vector<casacore::Int> > > convSupportBlock_p;
-      casacore::SimpleOrderedMap <casacore::String, casacore::Int> convFunctionMap_p;
-      casacore::Vector<casacore::Int> convSizes_p;
+      Bool checkCenterPix(const ImageInterface<Complex>& image);
+      Block <CountedPtr<Cube<Complex> > > convFunctions_p;
+      Block <CountedPtr<Vector<Int> > > convSupportBlock_p;
+      SimpleOrderedMap <String, Int> convFunctionMap_p;
+      Vector<Int> convSizes_p;
 
-      casacore::Int actualConvIndex_p;
-      casacore::Int convSize_p;
-      casacore::Vector<casacore::Int> convSupport_p;
-      casacore::Cube<casacore::Complex> convFunc_p;
-      casacore::Double wScaler_p;
-      casacore::Int convSampling_p;
-      casacore::Int nx_p, ny_p;
-      casacore::Double minW_p, maxW_p, rmsW_p;
+      Int actualConvIndex_p;
+      Int convSize_p;
+      Vector<Int> convSupport_p;
+      Cube<Complex> convFunc_p;
+      Double wScaler_p;
+      Int convSampling_p;
+      Int nx_p, ny_p;
+      Double minW_p, maxW_p, rmsW_p;
       
 
     };

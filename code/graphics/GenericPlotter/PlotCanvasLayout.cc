@@ -27,7 +27,6 @@
 #include <graphics/GenericPlotter/PlotCanvasLayout.h>
 #include <graphics/GenericPlotter/Plotter.h>
 
-using namespace casacore;
 namespace casa {
 
 //////////////////////////////////

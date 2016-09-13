@@ -51,7 +51,6 @@
 #include <unistd.h>
 #include <casa/Containers/Record.h>   
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 extern Applicator applicator;
@@ -103,7 +102,7 @@ void ResidualAlgorithm::put(){
   String errorString;
   cImage_p->toRecord(errorString, container_image);
   applicator.put(container_image);
-  Bool withImage=false;
+  Bool withImage=False;
 
   // Sending FT machine parameters
   Record container_ft;
@@ -174,7 +173,7 @@ void ResidualAlgorithm::task(){
   ft_p->finalizeToSky();
       
   Matrix<Float> delta;
-  cImage_p->copyData(ft_p->getImage(delta, false));
+  cImage_p->copyData(ft_p->getImage(delta, False));
   (*weight_p)+=delta;
 
   ms_p->unlock();
@@ -188,7 +187,7 @@ void ResidualAlgorithm::initializePut(const VisBuffer& vb, Int /*model*/) {
 
 
 void ResidualAlgorithm::putResidualVis(VisBuffer& vb, Int /*model*/) {
-    Bool dopsf=false;
+    Bool dopsf=False;
     // Need to add support for varying SkyJones
     ft_p->put(vb, -1, dopsf);
 }

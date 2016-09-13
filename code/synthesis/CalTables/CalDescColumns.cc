@@ -28,7 +28,6 @@
 
 #include <synthesis/CalTables/CalDescColumns.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //----------------------------------------------------------------------------
@@ -84,7 +83,7 @@ void ROCalDescColumns::attach (const CalTable& calTable,
 //    calTable         const CalTable&      Calibration table
 //    tabCol           ROTableColumn&       Table column accessor
 //    colEnum          MSCalEnums::colDef   Column enum
-//    optional         const Bool&          true if optional column
+//    optional         const Bool&          True if optional column
 // Output to private data:
 //
   // Convert to column name
@@ -112,7 +111,7 @@ void ROCalDescColumns::attach (const CalTable& calTable,
 //    calTable         const CalTable&      Calibration table
 //    tabCol           ROTableMeasColumn&   Table measures column accessor
 //    colEnum          MSCalEnums::colDef   Column enum
-//    optional         const Bool&          true if optional column
+//    optional         const Bool&          True if optional column
 // Output to private data:
 //
   // Convert to column name
@@ -141,7 +140,7 @@ void ROCalDescColumns::attach (const CalTable& calTable,
 //    tabCol           ROArrayQuantColumn<Double>&  Table quanta column
 //                                                  accessor
 //    colEnum          MSCalEnums::colDef           Column enum
-//    optional         const Bool&                  true if optional column
+//    optional         const Bool&                  True if optional column
 // Output to private data:
 //
   // Convert to column name
@@ -210,7 +209,7 @@ void CalDescColumns::attach (CalTable& calTable,
 //    calTable         CalTable&            Calibration table
 //    tabCol           ROTableColumn&       Table column accessor
 //    colEnum          MSCalEnums::colDef   Column enum
-//    optional         const Bool&          true if optional column
+//    optional         const Bool&          True if optional column
 // Output to private data:
 //
   // Convert to column name
@@ -238,7 +237,7 @@ void CalDescColumns::attach (CalTable& calTable,
 //    calTable         CalTable&            Calibration table
 //    tabCol           ROTableMeasColumn&   Table measures column accessor
 //    colEnum          MSCalEnums::colDef   Column enum
-//    optional         const Bool&          true if optional column
+//    optional         const Bool&          True if optional column
 // Output to private data:
 //
   // Convert to column name
@@ -267,7 +266,7 @@ void CalDescColumns::attach (CalTable& calTable,
 //    tabCol           ROArrayQuantColumn<Double>&  Table quanta 
 //                                                  column accessor
 //    colEnum          MSCalEnums::colDef           Column enum
-//    optional         const Bool&                  true if optional column
+//    optional         const Bool&                  True if optional column
 // Output to private data:
 //
   // Convert to column name

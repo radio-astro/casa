@@ -36,7 +36,6 @@
 #include <casa/BasicSL/STLIO.h>
 #include <memory>
 
-using namespace casacore;
 namespace casa {
 
 const String  ImageRegridder::_class = "ImageRegridder";
@@ -68,9 +67,9 @@ ImageRegridder::~ImageRegridder() {}
 SPIIF ImageRegridder::regrid() const {
     _subimage = SubImageFactory<Float>::createImage(
 		*this->_getImage(), "", *this->_getRegion(), this->_getMask(),
-		this->_getDropDegen(), false, false, this->_getStretch()
+		this->_getDropDegen(), False, False, this->_getStretch()
 	);
-	auto regridByVel = false;
+	auto regridByVel = False;
 	const auto axes = _getAxes();
 	auto hasMultipleBeams = _getImage()->imageInfo().hasMultipleBeams();
 	if (
@@ -78,7 +77,7 @@ SPIIF ImageRegridder::regrid() const {
 		&& _getImage()->coordinates().hasSpectralAxis()
 		&& _getTemplateCoords().hasSpectralAxis()
 	) {
-		auto inputSpecAxis = _getImage()->coordinates().spectralAxisNumber(false);
+		auto inputSpecAxis = _getImage()->coordinates().spectralAxisNumber(False);
 		auto isInputSpecDegen = _subimage->shape()[inputSpecAxis] == 1;
 		if (axes.empty()) {
 			ThrowIf(
@@ -87,7 +86,7 @@ SPIIF ImageRegridder::regrid() const {
 				"You may wish to convolve all channels to a common resolution and retry"
 			);
 			if (! isInputSpecDegen && _getSpecAsVelocity()) {
-				regridByVel = true;
+				regridByVel = True;
 			}
 		}
 		else {
@@ -100,7 +99,7 @@ SPIIF ImageRegridder::regrid() const {
 						"You may wish to convolve all channels to a common resolution and retry"
 					);
 					if (! isInputSpecDegen && _getSpecAsVelocity()) {
-						regridByVel = true;
+						regridByVel = True;
 					}
 					break;
 				}
@@ -118,7 +117,7 @@ SPIIF ImageRegridder::_regrid() const {
         // for when this method is called directly by regridByVelocity
         _subimage = SubImageFactory<Float>::createImage(
             *this->_getImage(), "", *this->_getRegion(), this->_getMask(),
-            this->_getDropDegen(), false, false, this->_getStretch()
+            this->_getDropDegen(), False, False, this->_getStretch()
         );
     }
     *this->_getLog() << LogOrigin(_class, __func__);
@@ -129,7 +128,7 @@ SPIIF ImageRegridder::_regrid() const {
     std::set<Coordinate::Type> coordsToRegrid;
     CoordinateSystem csys = ImageRegrid<Float>::makeCoordinateSystem(
         *this->_getLog(), coordsToRegrid, csysTo, csysFrom, _getAxes(),
-        _subimage->shape(), false
+        _subimage->shape(), False
     );
     ThrowIf(
         csys.nPixelAxes() != _getShape().size(),
@@ -141,7 +140,7 @@ SPIIF ImageRegridder::_regrid() const {
     SPIIF workIm(new TempImage<Float>(_getKludgedShape(), csys));
     ImageUtilities::copyMiscellaneous(*workIm, *_subimage);
     String maskName("");
-    ImageMaskAttacher::makeMask(*workIm, maskName, true, true, *this->_getLog(), true);
+    ImageMaskAttacher::makeMask(*workIm, maskName, True, True, *this->_getLog(), True);
     ThrowIf (
         ! _doImagesOverlap(_subimage, workIm),
         "There is no overlap between the (region chosen in) the input image"
@@ -173,7 +172,7 @@ SPIIF ImageRegridder::_regrid() const {
     ir.disableReferenceConversions(! _getDoRefChange());
     ir.regrid(
         *workIm, _getMethod(), _getAxes(), *_subimage,
-        _getReplicate(), _getDecimate(), true,
+        _getReplicate(), _getDecimate(), True,
         _getForceRegrid()
     );
     if (! _getOutputStokes().empty()) {
@@ -193,7 +192,7 @@ SPIIF ImageRegridder::_regrid() const {
         // and spectral coordinate of the template needs to be copied to the
         // output.
         IPosition finalShape = _getKludgedShape();
-        Int specAxisNumber = workIm->coordinates().spectralAxisNumber(false);
+        Int specAxisNumber = workIm->coordinates().spectralAxisNumber(False);
         finalShape[specAxisNumber] = _getNReplicatedChans();
         SPIIF replicatedIm(new TempImage<Float>(finalShape, csys));
         // FIXME this will exhaust memory for large images
@@ -240,14 +239,14 @@ SPIIF ImageRegridder::_decimateStokes(SPIIF workIm) const {
 			"", workIm->shape()
 		).toRecord("");
 		return SubImageFactory<Float>::createImage(
-			*workIm, "", region, "", false, false, false, false
+			*workIm, "", region, "", False, False, False, False
 		);
 	}
 	else {
 		// Only include the wanted stokes
 		SHARED_PTR<ImageConcat<Float> > concat(
 			new ImageConcat<Float>(
-				workIm->coordinates().polarizationAxisNumber(false)
+				workIm->coordinates().polarizationAxisNumber(False)
 			)
 		);
 		for( String stokes: _getOutputStokes() ) {
@@ -258,8 +257,8 @@ SPIIF ImageRegridder::_decimateStokes(SPIIF workIm) const {
 			).toRecord("");
 			concat->setImage(
 				*SubImageFactory<Float>::createImage(
-					*workIm, "", region, "", false, false, false, false
-				), true
+					*workIm, "", region, "", False, False, False, False
+				), True
 			);
 		}
 		return concat;
@@ -309,8 +308,8 @@ void ImageRegridder::_checkOutputShape(
 SPIIF ImageRegridder::_regridByVelocity() const {
 	const CoordinateSystem csysTo = _getTemplateCoords();
 	ThrowIf(
-		csysTo.spectralCoordinate().frequencySystem(true)
-		!= this->_getImage()->coordinates().spectralCoordinate().frequencySystem(true),
+		csysTo.spectralCoordinate().frequencySystem(True)
+		!= this->_getImage()->coordinates().spectralCoordinate().frequencySystem(True),
 		"Image to be regridded has different frequency system from template coordinate system."
 	);
 	ThrowIf(
@@ -336,7 +335,7 @@ SPIIF ImageRegridder::_regridByVelocity() const {
 	Double newVelRefVal = 0;
 	Double newVelInc = 0;
 	std::pair<Double, Double> toVelLimits;
-	auto inSpecAxis = coordClone->spectralAxisNumber(false);
+	auto inSpecAxis = coordClone->spectralAxisNumber(False);
 	for (uInt i=0; i<2; i++) {
 		// i == 0 => csysTo, i == 1 => csysFrom
 		CoordinateSystem *cs = i == 0 ? csys.get() : coordClone.get();
@@ -346,7 +345,7 @@ SPIIF ImageRegridder::_regridByVelocity() const {
 		Int specCoordNum = cs->spectralCoordinateNumber();
 		SpectralCoordinate specCoord = cs->spectralCoordinate();
 		if (
-			specCoord.frequencySystem(false) != specCoord.frequencySystem(true)
+			specCoord.frequencySystem(False) != specCoord.frequencySystem(True)
 		) {
 			// the underlying conversion system is different from the overlying one, so this
 			// is pretty confusing. We want the underlying one also be the overlying one before
@@ -358,7 +357,7 @@ SPIIF ImageRegridder::_regridByVelocity() const {
 			specCoord.toWorld(newVal, Vector<Double>(1, newRefPix+1));
 
 			specCoord = SpectralCoordinate(
-				specCoord.frequencySystem(true), newRefVal[0],
+				specCoord.frequencySystem(True), newRefVal[0],
 				newVal[0] - newRefVal[0], newRefPix, specCoord.restFrequency()
 			);
 			if (cs == coordClone.get()) {
@@ -414,7 +413,7 @@ SPIIF ImageRegridder::_regridByVelocity() const {
 			pc, specCoord.referencePixel()
 		);
 		// don't bother checking the return value of the replaceCoordinate call
-		// as it will always be false because the replaced and replacement coordinate
+		// as it will always be False because the replaced and replacement coordinate
 		// types differ, but the coordinate will be replaced anyway.
 		// Yes I find it nonintuitive and am scratching my head regarding the usefulness
 		// of the return value as well. Just check that replacement coordinate is equal to
@@ -498,7 +497,7 @@ Bool ImageRegridder::_doImagesOverlap(
 	IPosition shape1 = image1->shape();
 	ImageMetaData md0(image0);
 	ImageMetaData md1(image1);
-	Bool overlap = false;
+	Bool overlap = False;
 	if (
 		csys0.hasDirectionCoordinate()
 		&& csys1.hasDirectionCoordinate()
@@ -511,18 +510,18 @@ Bool ImageRegridder::_doImagesOverlap(
 		Vector<Double> inc1 = dc1.increment();
 		Vector<String> units0 = dc0.worldAxisUnits();
 		Vector<String> units1 = dc1.worldAxisUnits();
-		Bool reallyBig = false;
+		Bool reallyBig = False;
 		Quantity extent;
 		Quantity oneDeg(1, "deg");
 		for (uInt i=0; i<2; ++i) {
 			extent = Quantity(dirShape0[i]*abs(inc0[i]), units0[i]);
 			if (extent > oneDeg) {
-				reallyBig = true;
+				reallyBig = True;
 				break;
 			}
 			extent = Quantity(dirShape1[i]*abs(inc1[i]), units1[i]);
 			if (extent > oneDeg) {
-				reallyBig = true;
+				reallyBig = True;
 				break;
 			}
 		}
@@ -533,9 +532,9 @@ Bool ImageRegridder::_doImagesOverlap(
 				<< "for direction plane overlap." << LogIO::POST;
 		}
 		else {
-			Bool sameFrame = dc0.directionType(true) == dc1.directionType(true);
+			Bool sameFrame = dc0.directionType(True) == dc1.directionType(True);
 			if (!sameFrame) {
-				dc1.setReferenceConversion(dc0.directionType(true));
+				dc1.setReferenceConversion(dc0.directionType(True));
 			}
 			Vector<std::pair<Double, Double> > corners0 = _getDirectionCorners(
 				dc0, dirShape0
@@ -545,7 +544,7 @@ Bool ImageRegridder::_doImagesOverlap(
 			);
 			overlap = _doRectanglesIntersect(corners0, corners1);
 			if (! overlap) {
-				return false;
+				return False;
 			}
 		}
 	}
@@ -570,10 +569,10 @@ Bool ImageRegridder::_doImagesOverlap(
 			max(end00, end01) < min(end10, end11)
 			|| max(end10, end11) < min(end00, end01)
 		) {
-			return false;
+			return False;
 		}
 	}
-	return true;
+	return True;
 }
 
 Vector<std::pair<Double, Double> > ImageRegridder::_getDirectionCorners(
@@ -654,14 +653,14 @@ Bool ImageRegridder::_doRectanglesIntersect(
 		|| miny0 > maxy1 || maxy0 < miny1
 	) {
 		// bounds check shows images do not intersect
-		return false;
+		return False;
 	}
 	else if (
 		(minx0 >= minx1 && maxx0 <= maxx1 && miny0 >= miny1 && maxy0 <= maxy1)
 		|| (minx0 < minx1 && maxx0 > maxx1 && miny0 < miny1 && maxy0 > maxy1)
 	) {
 		// one image lies completely inside the other
-		return true;
+		return True;
 	}
 	else {
 		// determine intersection
@@ -693,13 +692,13 @@ Bool ImageRegridder::_doRectanglesIntersect(
 						start1[0], start1[1], end1[0], end1[1]
 					)
 				) {
-					return true;
+					return True;
 					break;
 				}
 			}
 		}
 	}
-	return false;
+	return False;
 }
 
 }

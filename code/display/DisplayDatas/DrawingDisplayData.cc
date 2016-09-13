@@ -36,14 +36,13 @@
 #include <display/DisplayDatas/DDDEllipse.h>
 #include <display/DisplayDatas/DDDPolygon.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	DrawingDisplayData::DrawingDisplayData(const Display::KeySym keysym) :
 		PassiveCachingDD(),
 		itsKeySym(keysym),
 		itsObjectWhichIsShowingHandles(0) {
-		setCaching(false);
+		setCaching(False);
 		try {
 			itsKeyModifier = Display::keyModifierFromKeySym(itsKeySym);
 		} catch(AipsError x) {
@@ -67,7 +66,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	Bool DrawingDisplayData::setOptions(Record &rec, Record &recOut) {
 		Bool ret = PassiveCachingDD::setOptions(rec, recOut);
-		Bool localchange = false, error;
+		Bool localchange = False, error;
 
 		localchange = (readOptionRecord(itsOptionsLabelPosition, error, rec,
 		                                "labelposition") || localchange);
@@ -89,7 +88,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		labelposition.define("popt", vlabelposition);
 		labelposition.define("default", "none");
 		labelposition.define("value", itsOptionsLabelPosition);
-		labelposition.define("allowunset", false);
+		labelposition.define("allowunset", False);
 		rec.defineRecord("labelposition", labelposition);
 
 		return rec;
@@ -155,7 +154,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Record rec;
 //
 		itsDDDOListIter->toStart();
-		Bool found = false;
+		Bool found = False;
 		DDDObject* temp;
 
 		while (!itsDDDOListIter->atEnd() && !found) {
@@ -180,7 +179,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	void DrawingDisplayData::setDescription(const Int objectID,
 	                                        const Record &rec) {
 		itsDDDOListIter->toStart();
-		Bool found = false;
+		Bool found = False;
 		DDDObject *temp = 0;
 		while (!itsDDDOListIter->atEnd() && !found) {
 			temp = (DDDObject *)itsDDDOListIter->getRight();
@@ -200,7 +199,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	void DrawingDisplayData::removeObject(const Int objectID) {
 		itsDDDOListIter->toStart();
-		Bool found = false;
+		Bool found = False;
 		DDDObject *temp = 0;
 		while (!itsDDDOListIter->atEnd() && !found) {
 			temp = (DDDObject *)itsDDDOListIter->getRight();
@@ -210,7 +209,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				if (itsObjectWhichIsShowingHandles == temp) {
 					itsObjectWhichIsShowingHandles = 0;
 				}
-				temp->showHandles(false, false); // this removes motion EH
+				temp->showHandles(False, False); // this removes motion EH
 				removePositionEventHandler(*temp);
 				break;
 			}
@@ -232,7 +231,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	void DrawingDisplayData::setHandleState(DDDObject *item, const Bool state) {
 		itsDDDOListIter->toStart();
-		Bool found = false;
+		Bool found = False;
 		DDDObject *temp = 0;
 		while (!itsDDDOListIter->atEnd() && !found) {
 			temp = (DDDObject *)itsDDDOListIter->getRight();
@@ -245,7 +244,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if (state) {
 			if (itsObjectWhichIsShowingHandles) {
 				// switch other off
-				itsObjectWhichIsShowingHandles->showHandles(false, false);
+				itsObjectWhichIsShowingHandles->showHandles(False, False);
 			}
 			itsObjectWhichIsShowingHandles = item;
 		} else {

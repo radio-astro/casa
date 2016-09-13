@@ -82,9 +82,9 @@ class SimpleComponentGridMachine : public ComponentFTMachine {
 public:
 
   // Get actual coherence 
-  virtual void get(VisBuffer& vb, SkyComponent& component, casacore::Int row=-1);
+  virtual void get(VisBuffer& vb, SkyComponent& component, Int row=-1);
   // Get actual coherence 
-  virtual void get(VisBuffer& vb, const ComponentList& skycomponentlist, casacore::Int row=-1);
+  virtual void get(VisBuffer& vb, const ComponentList& skycomponentlist, Int row=-1);
 
 
 

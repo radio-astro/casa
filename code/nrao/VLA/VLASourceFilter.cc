@@ -36,7 +36,7 @@
 VLASourceFilter::VLASourceFilter()
   :itsSource(""),
    itsQual(INT_MIN),
-   itsKeepBlanks(false)
+   itsKeepBlanks(False)
 {
   DebugAssert(ok(), AipsError);
 }
@@ -81,9 +81,9 @@ Bool VLASourceFilter::passThru(const VLALogicalRecord& record) const {
   String sourceName = record.SDA().sourceName();
   //cerr  << sourceName << " "<< itsSource.empty()  << " " << itsKeepBlanks << " " << sourceName.length() << " " << sourceName.matches(RXwhite) << endl;
   if(!itsKeepBlanks && (sourceName.empty() || sourceName.matches(RXwhite))) 
-    return false;
+    return False;
   if (!itsSource.empty() && !record.SDA().sourceName().matches(itsSource)) {
-    return false;
+    return False;
   }
 //     cerr << "source match" << endl;
 //   } else {
@@ -92,9 +92,9 @@ Bool VLASourceFilter::passThru(const VLALogicalRecord& record) const {
 //        << "| \trequired source qualifier: |" << itsQual << "|";
   if (itsQual >= 0 && itsQual != record.SDA().sourceQual()) {
 //     cerr << "full match" << endl;
-    return false;
+    return False;
   } 
-  return true;
+  return True;
 }
 
 VLAFilter* VLASourceFilter::clone() const {
@@ -108,20 +108,20 @@ Bool VLASourceFilter::ok() const {
   // The LogIO class is only constructed if an error is detected for
   // performance reasons. Both function static and file static variables
   // where considered and rejected for this purpose.
-  if (!VLAFilter::ok()) return false; 
+  if (!VLAFilter::ok()) return False; 
   if (itsSource.length() > 16) {
     LogIO logErr(LogOrigin("VLASourceFilter", "ok()"));
     logErr << LogIO::SEVERE 
 	   << "The source name must have no more than 16 characters"
            << LogIO::POST;
-    return false;
+    return False;
   }
   if (abs(itsQual) > SHRT_MAX && itsQual != -65536) {
     LogIO logErr(LogOrigin("VLASourceFilter", "ok()"));
     logErr << LogIO::SEVERE 
 	   << "The source qualifier has a bad value: " << itsQual
            << LogIO::POST;
-    return false;
+    return False;
   }
-  return true;
+  return True;
 }

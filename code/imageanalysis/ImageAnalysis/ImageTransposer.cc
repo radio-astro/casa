@@ -13,7 +13,6 @@
 
 #include <imageanalysis/ImageAnalysis/SubImageFactory.h>
 
-using namespace casacore;
 namespace casa {
 
 const String ImageTransposer::_class = "ImageTransposer";
@@ -23,7 +22,7 @@ ImageTransposer::ImageTransposer(
 )
 	: ImageTask<Float>(
 		image, "", 0, "", "", "",
-		"", outputImage, false
+		"", outputImage, False
 	),
 	_order(Vector<Int>(0)), _reverse(IPosition(0)) {
 	LogOrigin origin(_class, String(__FUNCTION__) + "_1");
@@ -46,7 +45,7 @@ ImageTransposer::ImageTransposer(
 )
 :  ImageTask<Float>(
 		image, "", 0, "", "", "",
-		"", outputImage, false
+		"", outputImage, False
 	), _order(Vector<Int>()), _reverse(IPosition(0)) {
 	LogOrigin origin(_class, String(__FUNCTION__) + "_2");
 	*_getLog() << origin;
@@ -59,14 +58,14 @@ ImageTransposer::ImageTransposer(
 	for (uInt i=0; i<orderCopy.size(); i++) {
 		if (orderCopy[i].startsWith("-")) {
 			orderCopy[i] = orderCopy[i].substr(1);
-			rev[i] = true;
+			rev[i] = True;
 			nRev++;
 		}
 		else {
-			rev[i] = false;
+			rev[i] = False;
 		}
 	}
-	_order = _getImage()->coordinates().getWorldAxesOrder(orderCopy, true);
+	_order = _getImage()->coordinates().getWorldAxesOrder(orderCopy, True);
 	uInt n = 0;
 	if (nRev > 0) {
 		_reverse.resize(nRev);
@@ -86,7 +85,7 @@ ImageTransposer::ImageTransposer(
 )
 :  ImageTask<Float>(
 		image, "", 0, "", "", "",
-		"", outputImage, false
+		"", outputImage, False
 	), _order(Vector<Int>()), _reverse(IPosition(0)) {
 	LogOrigin origin(_class, String(__FUNCTION__) + "_3");
 	*_getLog() << origin;

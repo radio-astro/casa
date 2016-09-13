@@ -46,7 +46,6 @@
 #include <ms/MeasurementSets/MSColumns.h>
 #include <casa/OS/Timer.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //---------------------------------------------------------------------- 
@@ -99,7 +98,7 @@ void ComponentFTMachine::rotateUVW(Matrix<Double>& uvw, Vector<Double>& dphase,
 		   vb.msColumns().antenna().positionMeas()(0));
 
   UVWMachine uvwMachine(mDesired, vb.phaseCenter(), mFrame,
-			false, true);
+			False, True);
 
   // Now we convert all rows and also calculate the
   // change in phase
@@ -131,7 +130,7 @@ void ComponentFTMachine::rotateUVW(Double*& uvw, Double*& dphase, const Int nrow
 
 
   UVWMachine uvwMachine(mDesired, vb.phaseCenter(), mFrame,
-			false, true);
+			False, True);
 
   // Now we convert all rows and also calculate the
   // change in phase

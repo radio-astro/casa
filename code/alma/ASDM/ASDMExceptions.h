@@ -22,7 +22,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
  * MA 02111-1307  USA
  *
- * casacore::File ASDMExceptions.h
+ * File ASDMExceptions.h
  */
 #ifndef ASDMExceptions_h
 #define ASDMExceptions_h

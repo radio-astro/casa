@@ -75,7 +75,7 @@ private:
 
 	bool isSumCurve() const;
 	bool isWeightCurve() const;
-	double logarithm( double value, casacore::Bool& valid ) const;
+	double logarithm( double value, Bool& valid ) const;
 	QList<int> doLogs( double* values, int count ) const;
 
 	void resetDataBounds();

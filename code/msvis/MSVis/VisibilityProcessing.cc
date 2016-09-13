@@ -21,16 +21,12 @@
 #include <memory>
 #include <numeric>
 
-using namespace casacore;
 using namespace casa;
-using namespace casacore;
 using namespace casa::asyncio;
-using namespace casacore;
 using namespace casa::utilj;
 using namespace std;
 using std::shared_ptr;
 
-using namespace casacore;
 namespace casa {
 
 namespace vpf {
@@ -107,7 +103,7 @@ void
 SplitterVp::validateImpl ()
 {
     throwIfAnyInputsUnconnected ();
-    ThrowIf (getOutputs (true).empty(),
+    ThrowIf (getOutputs (True).empty(),
              String::format ("SplitterVp %s has no outputs connected.", getFullName().c_str()));
 }
 
@@ -174,7 +170,7 @@ VisibilityProcessorStub::validateImpl ()
 //VisBuffer *
 //VbPtr::release ()
 //{
-//    freeOnDelete_p = false;
+//    freeOnDelete_p = False;
 //    VisBuffer * vb = vb_p;
 //    vb_p = NULL;
 //
@@ -285,7 +281,7 @@ VisibilityProcessor::throwIfAnyPortsUnconnected () const
 
         message += ".";
 
-        ThrowIf (true, message);
+        ThrowIf (True, message);
 
     }
 
@@ -557,7 +553,7 @@ VisibilityProcessor::validate ()
 }
 
 VpContainer::VpContainer (const String & name, const vector<String> & inputs, const vector<String> & outputs)
-: VisibilityProcessor (name, inputs, outputs, true)
+: VisibilityProcessor (name, inputs, outputs, True)
 {}
 
 void
@@ -922,9 +918,9 @@ VpContainer::findReadyVpFlushing (VpSet & vpsWaiting, VpData & data) const
     // are available.  They may not be present if an upstream node didn't have any
     // data to flush out.
 
-    VpPorts connectedInputList = readyVp -> getInputs (true);
+    VpPorts connectedInputList = readyVp -> getInputs (True);
 
-    ReadyVpAndData result = ReadyVpAndData (readyVp, data.getSelection (connectedInputList, true));
+    ReadyVpAndData result = ReadyVpAndData (readyVp, data.getSelection (connectedInputList, True));
 
     return result;
 }
@@ -941,7 +937,7 @@ VpContainer::findReadyVpNormal (VpSet & vps, VpData & data) const
 
     for (VpSet::const_iterator vp = vps.begin(); vp != vps.end(); vp ++){
 
-        VpPorts connectedInputList = (* vp)->getInputs (true);
+        VpPorts connectedInputList = (* vp)->getInputs (True);
 
         set<VpPort> connectedInputSet (connectedInputList.begin(), connectedInputList.end());
 
@@ -971,10 +967,10 @@ VpContainer::follows (const VisibilityProcessor * a, const VisibilityProcessor *
     // Go through the interconnection network and see if one of processor b's outputs go to
     // processor a's inputs
 
-    Bool result = false;
+    Bool result = False;
     for (Network::const_iterator arc = network_p.begin(); arc != network_p.end(); arc ++){
         if (arc->first.getVp() == b && arc->second.getVp() == a){
-            result = true;
+            result = True;
             break;
         }
     }
@@ -985,11 +981,11 @@ VpContainer::follows (const VisibilityProcessor * a, const VisibilityProcessor *
 bool
 VpContainer::followsSet (const VisibilityProcessor * a, const VpSet & vpSet) const
 {
-    Bool result = false;
+    Bool result = False;
 
     for (VpSet::const_iterator vp = vpSet.begin(); vp != vpSet.end(); vp++){
         if (follows (a, * vp)){
-            result = true;
+            result = True;
             break;
         }
     }
@@ -1181,7 +1177,7 @@ VpData::getSelection (const VpPorts & ports, bool missingIsOk) const
 Int VpEngine::logLevel_p = std::numeric_limits<int>::min();
 LogIO * VpEngine::logIo_p = NULL;
 LogSink * VpEngine::logSink_p = NULL;
-Bool VpEngine::loggingInitialized_p = false;
+Bool VpEngine::loggingInitialized_p = False;
 
 Bool
 VpEngine::initializeLogging()
@@ -1193,7 +1189,7 @@ VpEngine::initializeLogging()
     if (logLevel_p >= 0){
 
         if (logSink_p == 0){
-            logSink_p = new LogSink(LogMessage::NORMAL, false);
+            logSink_p = new LogSink(LogMessage::NORMAL, False);
         }
 
         logIo_p = new LogIO (LogOrigin ("VisibilityProcessing"));
@@ -1201,9 +1197,9 @@ VpEngine::initializeLogging()
 
     }
 
-    loggingInitialized_p = true;
+    loggingInitialized_p = True;
 
-    return true;
+    return True;
 }
 
 String
@@ -1351,8 +1347,8 @@ VpEngine::process (VisibilityProcessor & processor,
 }
 
 VpPort::VpPort()
-: connectedInput_p (false),
-  connectedOutput_p (false),
+: connectedInput_p (False),
+  connectedOutput_p (False),
   name_p (""),
   visibilityProcessor_p (NULL),
   type_p (Unknown)
@@ -1360,8 +1356,8 @@ VpPort::VpPort()
 
 
 VpPort::VpPort (VisibilityProcessor * vp, const String & name, VpPort::Type type)
-: connectedInput_p (false),
-  connectedOutput_p (false),
+: connectedInput_p (False),
+  connectedOutput_p (False),
   name_p (name),
   visibilityProcessor_p (vp),
   type_p (type)
@@ -1449,7 +1445,7 @@ VpPort::setConnectedInput ()
 {
     AssertAlways (! empty() && ! connectedInput_p && isType (Input));
 
-    connectedInput_p = true;
+    connectedInput_p = True;
 }
 
 void
@@ -1457,7 +1453,7 @@ VpPort::setConnectedOutput ()
 {
     AssertAlways (! empty() && ! connectedOutput_p && isType (Output));
 
-    connectedOutput_p = true;
+    connectedOutput_p = True;
 }
 
 Bool
@@ -1513,11 +1509,11 @@ WriterVp::WriterVp (const String & name,
                     const String & output)
 : VisibilityProcessor (name, vector<String> (1, input), vector<String> (1, output)),
   advanceVi_p (advanceVi),
-  disableOutput_p (false),
+  disableOutput_p (False),
   vi_p (vi)
 {
     ThrowIf (advanceVi_p && vi == NULL,
-             String::format ("Parameter advanceVi can only be true if a VI is provided for WriterVp '%s',",
+             String::format ("Parameter advanceVi can only be True if a VI is provided for WriterVp '%s',",
                      name.c_str()));
 }
 
@@ -1584,7 +1580,7 @@ WriterVp::doProcessingImpl (ProcessingType /*processingType*/,
 
     VpData outputData; // Start out with empty outputs
 
-    VpPorts outputs = getOutputs(true); // get connected outputs
+    VpPorts outputs = getOutputs(True); // get connected outputs
 
     if (! outputs.empty()){
 
@@ -1626,5 +1622,4 @@ operator<< (ostream & os, const VisibilityProcessor::ProcessingType & processing
 
 } // end namespace vpu
 
-using namespace casacore;
 } // end namespace casa

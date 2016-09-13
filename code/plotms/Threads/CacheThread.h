@@ -48,7 +48,7 @@ public:
 	void setAxes( vector<PMS::Axis> axes );
 	void setAxesData( int size  );
 	void setAxesData( vector<PMS::DataColumn> cachedData );
-	void setName( casacore::String msName );
+	void setName( String msName );
 	void setSelection( PlotMSSelection selection );
 	void setAveraging( PlotMSAveraging averaging );
 	void setTransformations( PlotMSTransformations transforms );
@@ -63,14 +63,14 @@ private:
 
 	//Log error, set status, and do clean up when an
 	//exception is thrown.
-	void handleError(casacore::String message );
+	void handleError(String message );
 
 	bool itsLoad;
 	bool itsSetupPlot;
 	PlotMSCacheBase* itsCache;
 	vector<PMS::Axis> workAxes;
 	vector<PMS::DataColumn> itsAxesData;
-	casacore::String itsMSName;
+	String itsMSName;
 	PlotMSSelection itsSelection;
 	PlotMSAveraging itsAveraging;
 	PlotMSTransformations itsTransformations;

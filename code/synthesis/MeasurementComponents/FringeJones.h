@@ -40,48 +40,48 @@ public:
   // Constructor
   //  TBD:  MSMetaInfoForCal-aware version; deprecate older ones
   FringeJones(VisSet& vs);
-  FringeJones(casacore::String msname,casacore::Int MSnAnt,casacore::Int MSnSpw);
+  FringeJones(String msname,Int MSnAnt,Int MSnSpw);
   FringeJones(const MSMetaInfoForCal& msmc);
-  FringeJones(const casacore::Int& nAnt);
+  FringeJones(const Int& nAnt);
 
   virtual ~FringeJones();
 
-  // We have casacore::Float parameters
+  // We have Float parameters
   virtual VisCalEnum::VCParType parType() { return VisCalEnum::REAL; };
 
   // Return the type enum
   virtual Type type() { return VisCal::K; };
 
   // Return type name as string
-  virtual casacore::String typeName()     { return "Fringe Jones"; };
-  virtual casacore::String longTypeName() { return "Fringe Jones (parametrized phase)"; };
+  virtual String typeName()     { return "Fringe Jones"; };
+  virtual String longTypeName() { return "Fringe Jones (parametrized phase)"; };
 
   // Type of Jones matrix according to nPar()
   virtual Jones::JonesType jonesType() { return Jones::Diagonal; };
 
-  virtual bool timeDepMat() { return true; };
+  virtual Bool timeDepMat() { return True; };
 
   // Freq dependence (delays)
-  virtual casacore::Bool freqDepPar() { return false; };
-  virtual casacore::Bool freqDepMat() { return true; };
+  virtual Bool freqDepPar() { return False; };
+  virtual Bool freqDepMat() { return True; };
 
   // Local setApply to enforce calWt=F for delays
-  virtual void setApply(const casacore::Record& apply);
+  virtual void setApply(const Record& apply);
   using SolvableVisJones::setApply;
-  virtual void setCallib(const casacore::Record& callib,
-			 const casacore::MeasurementSet& selms);
+  virtual void setCallib(const Record& callib,
+			 const MeasurementSet& selms);
 
   // Local setSolve (traps lack of refant)
-  virtual void setSolve(const casacore::Record& solve);
+  virtual void setSolve(const Record& solve);
   using SolvableVisJones::setSolve;
 
   // This type is not yet accumulatable
   //  Deprecate?
-  virtual casacore::Bool accumulatable() { return false; };
+  virtual Bool accumulatable() { return False; };
 
   // This type is smoothable
   //  TBD?
-  virtual casacore::Bool smoothable() { return true; };
+  virtual Bool smoothable() { return True; };
 
   // Delay to phase calculator
   virtual void calcAllJones();
@@ -91,8 +91,8 @@ public:
   virtual void guessPar(VisBuffer& ) {};
 
   // K now uses generic gather, but solves for itself per solution
-  virtual casacore::Bool useGenericGatherForSolve() { return true; };
-  virtual casacore::Bool useGenericSolveOne() { return false; }
+  virtual Bool useGenericGatherForSolve() { return True; };
+  virtual Bool useGenericSolveOne() { return False; }
 
   // Override G here; nothing to do for K, for now
   //   TBD: refant apply, etc.
@@ -103,14 +103,14 @@ protected:
 
   // phase, delay, rate
   //  TBD:  Need to cater for parameter opt-out  (e.g., no rate solve, etc.)
-  virtual casacore::Int nPar() { return 6; };
+  virtual Int nPar() { return 6; };
 
   // Jones matrix elements are NOT trivial
-  virtual casacore::Bool trivialJonesElem() { return false; };
+  virtual Bool trivialJonesElem() { return False; };
 
   // dJ/dp are trivial
   //  TBD: make this default in SVC?
-  virtual casacore::Bool trivialDJ() { return false; };
+  virtual Bool trivialDJ() { return False; };
 
   // Initialize trivial dJs
   //  TBD: make this default in SVC?
@@ -121,7 +121,7 @@ protected:
   virtual void selfSolveOne(VisBuffGroupAcc& vbga);
 
   // Reference frequencies
-  casacore::Vector<casacore::Double> KrefFreqs_;
+  Vector<Double> KrefFreqs_;
 
 private:
 

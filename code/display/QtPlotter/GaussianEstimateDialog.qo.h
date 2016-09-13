@@ -45,9 +45,9 @@ namespace casa {
 		GaussianEstimateDialog(QWidget *parent = 0);
 		~GaussianEstimateDialog();
 		void setGaussCount( int count );
-		void setCurveData( const casacore::Vector<float>& xValues, const casacore::Vector<float>& yValues);
-		void setRangeX( casacore::Float min, casacore::Float max );
-		void setRangeY( casacore::Float min, casacore::Float max );
+		void setCurveData( const Vector<float>& xValues, const Vector<float>& yValues);
+		void setRangeX( Float min, Float max );
+		void setRangeY( Float min, Float max );
 		void setSpecFitUnits( const QString& specUnits );
 		void setDisplayYUnits( const QString& units );
 		QString getDisplayYUnits() const;
@@ -55,7 +55,7 @@ namespace casa {
 		void setCurveColor( QColor color );
 		SpecFitGaussian getEstimate(int index );
 		void setEstimates( QList<SpecFitGaussian>& estimates );
-		void setSpectralCoordinate( casacore::SpectralCoordinate& coord );
+		void setSpectralCoordinate( SpectralCoordinate& coord );
 
 	private slots:
 		void unitsChanged( int index );
@@ -68,10 +68,10 @@ namespace casa {
 		void setCurveData();
 		void setDisplayYUnits();
 		void setCurveColor();
-		void initializeLimits( const casacore::Vector<float>& values, casacore::Float* const min, casacore::Float* const max );
-		casacore::Vector<float> translateDataUnits( const casacore::Vector<float>& xValues, Converter* converter );
-		casacore::Vector<float> xVals;
-		casacore::Vector<float> yVals;
+		void initializeLimits( const Vector<float>& values, Float* const min, Float* const max );
+		Vector<float> translateDataUnits( const Vector<float>& xValues, Converter* converter );
+		Vector<float> xVals;
+		Vector<float> yVals;
 		QColor curveColor;
 		QString specUnitStr;
 		QString displayYUnits;
@@ -81,7 +81,7 @@ namespace casa {
 		bool plotsCoordinated;
 
 		QWidget* plotHolderWidget;
-		casacore::SpectralCoordinate spectralCoordinate;
+		SpectralCoordinate spectralCoordinate;
 	};
 }
 #endif // GAUSSIANESTIMATEDIALOG_QO_H

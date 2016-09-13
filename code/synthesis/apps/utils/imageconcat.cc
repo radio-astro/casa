@@ -41,7 +41,6 @@
 #include <casa/Inputs/Input.h>
 #include <casa/namespace.h>
 using namespace std;
-using namespace casacore;
 using namespace casa;
 
 Bool moveImages(const String& dirname, Vector<String>& images){
@@ -50,7 +49,7 @@ Bool moveImages(const String& dirname, Vector<String>& images){
     File elfil(dirname);
     if(elfil.exists()){
       cerr << dirname << " exists; do something about it ! " << endl; 
-      return false;
+      return False;
     }
   }
   Directory eldir(dirname);
@@ -63,7 +62,7 @@ Bool moveImages(const String& dirname, Vector<String>& images){
     
   }
 
-  return true;
+  return True;
 
 }
 Bool copyImages(const String& dirname, Vector<String>& images){
@@ -72,7 +71,7 @@ Bool copyImages(const String& dirname, Vector<String>& images){
     File elfil(dirname);
     if(elfil.exists()){
       cerr << dirname << " exists; do something about it ! " << endl; 
-      return false;
+      return False;
     }
   }
   Directory eldir(dirname);
@@ -85,7 +84,7 @@ Bool copyImages(const String& dirname, Vector<String>& images){
     
   }
 
-  return true;
+  return True;
 
 }
 int main(int argc, char **argv)
@@ -151,9 +150,9 @@ int main(int argc, char **argv)
     */
     //tim.mark();
     {
-      ImageConcat<Float> ic(3, true);
+      ImageConcat<Float> ic(3, True);
       for (Int k=0; k < nimages; ++k){
-	ic.setImage(*vim[k], true);
+	ic.setImage(*vim[k], True);
       }
 
       if(conctype !="real")
@@ -169,7 +168,7 @@ int main(int argc, char **argv)
 	//out2.tempClose();
 	out2.copyData(ic);
 	if(ic.isMasked()){
-	  out2.makeMask ("mask0", true, true, false, true);
+	  out2.makeMask ("mask0", True, True, False, True);
 	  out2.pixelMask().put(ic.getMask());
 	}
       }
@@ -185,7 +184,7 @@ int main(int argc, char **argv)
     /*
     tim.mark();
       {
-	LatticeConcat<Float> lc(3, false);
+	LatticeConcat<Float> lc(3, False);
 	for(Int k=0; k < nimages; ++k){
 	  lc.setLattice(*vim[k]);
 	}
@@ -208,17 +207,17 @@ int main(int argc, char **argv)
       PagedImage<Float> out3(TiledShape(imshp)
 			     //, tileShape)
 			     , cs, "Output3.image");
-      ImageRegion outreg=out3.makeMask("mask0", false, false);
+      ImageRegion outreg=out3.makeMask("mask0", False, False);
       LCRegion& outmask=outreg.asMask();
       
       for (Int k=0; k < nimages; ++k){
 	trc[3]=blc[3]+vim[k]->shape()[3]-1;
 	//cerr << "blc trc " << blc << "  " << trc << endl;
 	Slicer sl(blc, trc, Slicer::endIsLast);
-	SubImage<Float> subIm(out3, sl, true);
+	SubImage<Float> subIm(out3, sl, True);
 	subIm.copyData(*vim[k]);
 	if( (vim[k]->getDefaultMask()) != String("")){	
-	  SubLattice<Bool> subMask(outmask, sl, true);
+	  SubLattice<Bool> subMask(outmask, sl, True);
 	  subMask.copyData(vim[k]->getRegion(vim[k]->getDefaultMask()).asMask());
 	}
 	//vim[k]->tempClose();

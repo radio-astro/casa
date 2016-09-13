@@ -53,8 +53,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <synopsis>
 // CalTableDesc defines the format of calibration tables in terms
-// of table descriptors <linkto class="casacore::TableDesc">casacore::TableDesc</linkto>, as
-// defined in the casacore::Table system. This is a base class and defines the
+// of table descriptors <linkto class="TableDesc">TableDesc</linkto>, as
+// defined in the Table system. This is a base class and defines the
 // overall calibration table structure. Specializations for both
 // antenna-based (ViJones and SkyJones) and baseline-based (MJones)
 // calibration tables are provided through inheritance. At present this 
@@ -90,42 +90,42 @@ public:
   virtual ~CalTableDesc2() {};
   
   // Construct from the Jones table type
-  CalTableDesc2 (const casacore::String& jonesType, const casacore::Int& parType=VisCalEnum::COMPLEX);
+  CalTableDesc2 (const String& jonesType, const Int& parType=VisCalEnum::COMPLEX);
   
   // Return the table descriptors for the main calibration table
   // and the cal_history and cal_desc sub-tables
-  virtual casacore::TableDesc& calMainDesc();
-  virtual casacore::TableDesc calHistoryDesc();
-  virtual casacore::TableDesc calDescDesc();
-  casacore::Int parType() {return parType_;}
+  virtual TableDesc& calMainDesc();
+  virtual TableDesc calHistoryDesc();
+  virtual TableDesc calDescDesc();
+  Int parType() {return parType_;}
   // Generate the default table descriptor for fit parameters
-  casacore::TableDesc defaultFitDesc();
-  void addDesc (const casacore::TableDesc& sourceTableDesc, casacore::TableDesc& targetTableDesc);
-  void init(const casacore::String& jonesType, const casacore::Int& parType);
+  TableDesc defaultFitDesc();
+  void addDesc (const TableDesc& sourceTableDesc, TableDesc& targetTableDesc);
+  void init(const String& jonesType, const Int& parType);
 protected:
   
   // Generate the default table descriptor for general polynomial parameters
-  casacore::TableDesc defaultPolyDesc();
+  TableDesc defaultPolyDesc();
   
   // Generate the default table descriptor for spline polynomial parameters
-  casacore::TableDesc defaultSplineDesc();
+  TableDesc defaultSplineDesc();
   
   // Method to insert one table descriptor into another after
   // a specified column name.
-  casacore::TableDesc insertDesc (const casacore::TableDesc& tableDesc, const casacore::TableDesc& insert,
-			const casacore::String& insertAfter);
+  TableDesc insertDesc (const TableDesc& tableDesc, const TableDesc& insert,
+			const String& insertAfter);
 
 private:
   // Generate the default sub-table descriptors
-  casacore::TableDesc defaultCalMain (const casacore::String& jonesType, const casacore::Int& parType);
-  casacore::TableDesc defaultCalDesc();
-  casacore::TableDesc defaultCalHistory();
+  TableDesc defaultCalMain (const String& jonesType, const Int& parType);
+  TableDesc defaultCalDesc();
+  TableDesc defaultCalHistory();
   
-  // casacore::Table descriptors
-  casacore::TableDesc itsCalMainDesc;
-  casacore::TableDesc itsCalHistoryDesc;
-  casacore::TableDesc itsCalDescDesc;
-  casacore::Int parType_;
+  // Table descriptors
+  TableDesc itsCalMainDesc;
+  TableDesc itsCalHistoryDesc;
+  TableDesc itsCalDescDesc;
+  Int parType_;
 };
   
   

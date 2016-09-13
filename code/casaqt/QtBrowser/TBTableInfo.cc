@@ -29,7 +29,6 @@
 #include <casaqt/QtBrowser/TBConstants.h>
 #include <casaqt/QtBrowser/TBTable.h>
 
-using namespace casacore;
 namespace casa {
 
 /////////////////////////////

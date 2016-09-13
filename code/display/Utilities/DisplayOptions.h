@@ -45,7 +45,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </reviewed>
 
 // <prerequisite>
-// <li> <linkto class=casacore::Record>Record</linkto>
+// <li> <linkto class=Record>Record</linkto>
 // </prerequisite>
 
 // <etymology>
@@ -68,7 +68,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <src>rec</src>, regardless of whether the value itself is stored in
 // a <src>value</src> sub-field, or at the next higher level.  The
 // DisplayOptions methods also offer the capability to detect "unset"
-// casacore::Record values.
+// Record values.
 //
 // This class can be used as-is, or inherited from by higher-level
 // classes.
@@ -78,17 +78,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // The following example shows the use of DisplayOptions as a
 // stand-alone class.
 // <srcblock>
-// /* assume some casacore::Record "rec" is to be parsed */
+// /* assume some Record "rec" is to be parsed */
 // DisplayOptions dopt;
-// casacore::Bool error;
+// Bool error;
 //
-// casacore::Float min = 0.0;
+// Float min = 0.0;
 // if (dopt.readOptionRecord(min, error, rec, "minimum") && !error) {
 //   cerr << "minimum found and changed, new value is " << min << endl;
 // }
 //
-// casacore::String color;
-// casacore::Bool colorIsUnset = false;
+// String color;
+// Bool colorIsUnset = False;
 // if (dopt.readOptionRecord(color, colorIsUnset, error,
 //                           rec, "color") && !error) {
 //   if (colorIsUnset) {
@@ -110,7 +110,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </thrown>
 
 // <todo asof="1999/08/26">
-// <li> add unset support for casacore::Bool, casacore::Float and casacore::Int types
+// <li> add unset support for Bool, Float and Int types
 // </todo>
 
 	class DisplayOptions {
@@ -123,50 +123,50 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Destructor.
 		virtual ~DisplayOptions() { };
 
-		// Find the field <src>fieldname</src> in casacore::Record <src>rec</src>,
-		// containing the requested type (casacore::Bool, casacore::String, casacore::Float, casacore::Int) in
+		// Find the field <src>fieldname</src> in Record <src>rec</src>,
+		// containing the requested type (Bool, String, Float, Int) in
 		// itself or its "value" sub-field, and return the value in
 		// <src>target</src>.  If the field doesn't exist, or does not
 		// contain the requested type, or a "value" sub-field containing the
-		// requested type, then <src>error</src> is set true.  When
-		// <src>error</src> is false, the return value indicates whether
-		// <src>target</src> was modified.  The casacore::Float version will also read
+		// requested type, then <src>error</src> is set True.  When
+		// <src>error</src> is False, the return value indicates whether
+		// <src>target</src> was modified.  The Float version will also read
 		// records containing Ints or Doubles, and cast their value to
 		// Float.
 		// <group>
 
-		template <class T> casacore::Bool readOptionRecord(casacore::Vector<T> &target, casacore::Bool &error,
-		        const casacore::Record &rec,
-		        const casacore::String &fieldname) const;
+		template <class T> Bool readOptionRecord(Vector<T> &target, Bool &error,
+		        const Record &rec,
+		        const String &fieldname) const;
 
-		template <class T> casacore::Bool readOptionRecord(T &target, casacore::Bool &error, const casacore::Record &rec,
-		        const casacore::String &fieldname) const;
+		template <class T> Bool readOptionRecord(T &target, Bool &error, const Record &rec,
+		        const String &fieldname) const;
 		// </group>
 
-		// Find the field <src>fieldname</src> in casacore::Record <src>rec</src>,
-		// containing the requested type (casacore::String) in itself or its "value"
+		// Find the field <src>fieldname</src> in Record <src>rec</src>,
+		// containing the requested type (String) in itself or its "value"
 		// sub-field, and return the value in <src>target</src>.  If the
-		// field (or "value" sub-field) instead contains an "unset" casacore::Record,
-		// then <src>unsetTarget</src> is set true.  If the field doesn't
-		// exist, or does not contain the requested type (casacore::String) or an
-		// "unset" casacore::Record, or a "value" sub-field containing either of
-		// these, then <src>error</src> is set true.  When <src>error</src>
-		// is false, the return value indicates whether <src>target</src>
+		// field (or "value" sub-field) instead contains an "unset" Record,
+		// then <src>unsetTarget</src> is set True.  If the field doesn't
+		// exist, or does not contain the requested type (String) or an
+		// "unset" Record, or a "value" sub-field containing either of
+		// these, then <src>error</src> is set True.  When <src>error</src>
+		// is False, the return value indicates whether <src>target</src>
 		// (or <src>unsetTarget</src>) was modified.
-		virtual casacore::Bool readOptionRecord(casacore::String &target, casacore::Bool &unsetTarget,
-		                              casacore::Bool &error, const casacore::Record &rec,
-		                              const casacore::String &fieldname) const;
+		virtual Bool readOptionRecord(String &target, Bool &unsetTarget,
+		                              Bool &error, const Record &rec,
+		                              const String &fieldname) const;
 
-		// Return a casacore::Record which is an "unset" casacore::Record, ie. has a field with
-		// name <src>casacore::String("i_am_unset")</src> whose value is
-		// <src>casacore::String("i_am_unset")</src>.
-		casacore::Record unset() const {
+		// Return a Record which is an "unset" Record, ie. has a field with
+		// name <src>String("i_am_unset")</src> whose value is
+		// <src>String("i_am_unset")</src>.
+		Record unset() const {
 			return itsUnsetRecord;
 		}
 
-		// Return true or false indicating if the provided casacore::Record is equal
+		// Return True or False indicating if the provided Record is equal
 		// to an "unset" Record.
-		casacore::Bool isUnset(const casacore::Record &rec) const;
+		Bool isUnset(const Record &rec) const;
 
 	protected:
 
@@ -179,11 +179,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	private:
 		// A utility to check if two types are compatible. (I.e. double is
 		// "compatible" with int. Used by readOptionRecord.
-		casacore::Bool compatible(const casacore::DataType &compareme, const casacore::DataType &tome) const;
+		Bool compatible(const DataType &compareme, const DataType &tome) const;
 
 		// An unset record to return with protected <src>unset()</src>
 		// function.
-		casacore::Record itsUnsetRecord;
+		Record itsUnsetRecord;
 
 	};
 

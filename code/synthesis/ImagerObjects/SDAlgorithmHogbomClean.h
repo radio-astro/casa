@@ -58,11 +58,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   protected:
     
     // Local functions to be overloaded by various algorithm deconvolvers.
-    virtual void takeOneStep( casacore::Float loopgain, casacore::Int cycleNiter, casacore::Float cycleThreshold, casacore::Float &peakresidual, casacore::Float &modelflux, casacore::Int &iterdone );
+    virtual void takeOneStep( Float loopgain, Int cycleNiter, Float cycleThreshold, Float &peakresidual, Float &modelflux, Int &iterdone );
     virtual void initializeDeconvolver();
     virtual void finalizeDeconvolver();
 
-    casacore::Array<casacore::Float> itsMatResidual, itsMatModel, itsMatPsf, itsMatMask;
+    Array<Float> itsMatResidual, itsMatModel, itsMatPsf, itsMatMask;
 
   };
 

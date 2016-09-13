@@ -39,7 +39,6 @@
 #include <casa/namespace.h>
 using namespace std;
 
-using namespace casacore;
 namespace casa {
 
 ///////////////////////////////

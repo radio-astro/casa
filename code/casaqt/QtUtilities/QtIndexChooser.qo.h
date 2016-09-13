@@ -68,15 +68,15 @@ public:
     
     // Only valid if type is NAME.  Sets the name for the given index and makes
     // it available in the GUI.
-    void setName(unsigned int index, const casacore::String& name);
+    void setName(unsigned int index, const String& name);
     
     // Only valid if type is NAME.  Sets the available names to the given.
     // <group>
-    void setNames(const std::vector<casacore::String>& names);
+    void setNames(const std::vector<String>& names);
     void setNames(const std::vector<unsigned int>& indices,
-            const std::vector<casacore::String>& names);
-    void setNames(const std::map<unsigned int, casacore::String>& names);
-    void setNames(const std::map<casacore::String, unsigned int>& names);
+            const std::vector<String>& names);
+    void setNames(const std::map<unsigned int, String>& names);
+    void setNames(const std::map<String, unsigned int>& names);
     // </group>
     
     // Only valid if type is ROW_COL.  Sets the number of rows and columns.

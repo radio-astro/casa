@@ -36,7 +36,6 @@
 #include <QPainter>
 #include <QDebug>
 
-using namespace casacore;
 namespace casa {
 
 ///////////////////////////////

@@ -55,7 +55,6 @@
 #include <unistd.h>
 using namespace std;
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
   
   SynthesisDeconvolver::SynthesisDeconvolver() : 
@@ -69,7 +68,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                                        itsMaskType(""),
                                        itsPBMask(0.0),
 				       //itsMaskString(String("")),
-				       itsIsMaskLoaded(false)
+				       itsIsMaskLoaded(False)
   {
   }
   
@@ -183,7 +182,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	throw( AipsError("Error in constructing a Deconvolver : "+x.getMesg()) );
       }
     
-    itsAddedModel=false;
+    itsAddedModel=False;
   }
   
    Record SynthesisDeconvolver::initMinorCycle( )
@@ -274,12 +273,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       Int stopcode = itsMaskHandler->makeInteractiveMask( itsImages, iterleft, cycleniter, strthresh, strcycthresh );
       
       Quantity qa;
-      casacore::Quantity::read(qa,strthresh);
+      casa::Quantity::read(qa,strthresh);
       threshold = qa.getValue(Unit("Jy"));
-      casacore::Quantity::read(qa,strcycthresh);
+      casa::Quantity::read(qa,strcycthresh);
       cyclethreshold = qa.getValue(Unit("Jy"));
       
-      itsIsMaskLoaded=true;
+      itsIsMaskLoaded=True;
 
       returnRecord.define( RecordFieldId("actioncode"), stopcode );
       returnRecord.define( RecordFieldId("niter"), iterdone + iterleft );
@@ -364,9 +363,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     SHARED_PTR<SIImageStore> imstore;
     if( itsDeconvolver->getAlgorithmName() == "mtmfs" )
-      {  imstore.reset( new SIImageStoreMultiTerm( imagename, itsDeconvolver->getNTaylorTerms(), true ) ); }
+      {  imstore.reset( new SIImageStoreMultiTerm( imagename, itsDeconvolver->getNTaylorTerms(), True ) ); }
     else
-      {  imstore.reset( new SIImageStore( imagename, true ) ); }
+      {  imstore.reset( new SIImageStore( imagename, True ) ); }
 
     return imstore;
 
@@ -383,7 +382,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SynthesisDeconvolver","setStartingModel",WHERE) );
 
-    if(itsAddedModel==true) {return;}
+    if(itsAddedModel==True) {return;}
     
     try
       {
@@ -394,7 +393,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    itsImages->setModelImage( itsStartingModelNames );
 	  }
 
-	itsAddedModel=true;
+	itsAddedModel=True;
 	
       }
     catch(AipsError &x)
@@ -408,7 +407,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SynthesisDeconvolver::setupMask()
   {
     LogIO os( LogOrigin("SynthesisDeconvolver","setupMask",WHERE) );
-    if( itsIsMaskLoaded==false ) {
+    if( itsIsMaskLoaded==False ) {
       // use mask(s) 
       if(  itsMaskList[0] != "" || itsMaskType == "pb" || itsAutoMaskAlgorithm != "" ) {
         // Skip automask for non-interactive mode. 
@@ -445,7 +444,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	
       // If anything other than automasking, don't re-make the mask here.
       if ( itsAutoMaskAlgorithm == "" )
-        {	itsIsMaskLoaded=true; }
+        {	itsIsMaskLoaded=True; }
     }
     else {
     }

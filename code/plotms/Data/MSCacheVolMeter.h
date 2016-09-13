@@ -44,9 +44,9 @@ public:
 
   // Constructor/Destructor
   MSCacheVolMeter();
-  MSCacheVolMeter(const casacore::MeasurementSet& ms, const PlotMSAveraging ave,
-		   const casacore::Vector<casacore::Vector<casacore::Slice> >& chansel,
-		   const casacore::Vector<casacore::Vector<casacore::Slice> >& corrsel);
+  MSCacheVolMeter(const MeasurementSet& ms, const PlotMSAveraging ave,
+		   const Vector<Vector<Slice> >& chansel,
+		   const Vector<Vector<Slice> >& corrsel);
   ~MSCacheVolMeter();
 
   // reset (as if default ctor was run)
@@ -56,22 +56,22 @@ public:
   void add(const vi::VisBuffer2* vb);
 
   // add in via counts
-  void add(casacore::Int DDID,casacore::Int nRows);
+  void add(Int DDID,Int nRows);
 
   // evaluate the volume for specified axes, and complain if 
-  casacore::String evalVolume(std::map<PMS::Axis,casacore::Bool> axes,casacore::Vector<casacore::Bool> axesmask);
-  casacore::String evalVolume(std::vector<casacore::IPosition> vbShapes, std::map<PMS::Axis,casacore::Bool> axes);
+  String evalVolume(std::map<PMS::Axis,Bool> axes,Vector<Bool> axesmask);
+  String evalVolume(std::vector<IPosition> vbShapes, std::map<PMS::Axis,Bool> axes);
 
 private:
 
   // The number of DATA_DESCRIPTIONs
-  casacore::Int nDDID_;
+  Int nDDID_;
 
   // Counters
-  casacore::Vector<casacore::uInt64> nPerDDID_,nRowsPerDDID_,nChanPerDDID_,nCorrPerDDID_;
+  Vector<uInt64> nPerDDID_,nRowsPerDDID_,nChanPerDDID_,nCorrPerDDID_;
 
   // The number of antennas (max)
-  casacore::Int nAnt_;
+  Int nAnt_;
 
 };
 

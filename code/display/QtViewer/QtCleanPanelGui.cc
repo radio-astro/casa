@@ -50,7 +50,6 @@
 #include <casa/fstream.h>
 #include <casa/sstream.h>
 
-using namespace casacore;
 namespace casa {
 
 	static const char *comp_freq_ = "Frequency";
@@ -77,8 +76,8 @@ namespace casa {
 		std::string tmp;
 		if ( rc.get("viewer.iclean.dimensions",tmp) == false ) resize(700,900);
 
-		autoDDOptionsShow = false;		// Prevents automatically showing 'adjust' panel.
-		setStatsPrint(false);			// Turns off statistics printing.
+		autoDDOptionsShow = False;		// Prevents automatically showing 'adjust' panel.
+		setStatsPrint(False);			// Turns off statistics printing.
 
 		QDockWidget *dock = new QDockWidget(this, Qt::Widget);
 		dock->setAllowedAreas( Qt::TopDockWidgetArea );
@@ -108,13 +107,13 @@ namespace casa {
 		addRB_ = new QRadioButton(frame_2);
 		addRB_->setObjectName(QString::fromUtf8("addRB_"));
 		addRB_->setGeometry(QRect(20, 4, 79, 21));
-		addRB_->setChecked(true);
+		addRB_->setChecked(True);
 		addRB_->setToolTip("Set the mask under drawn region");
 
 		eraseRB_ = new QRadioButton(frame_2);
 		eraseRB_->setObjectName(QString::fromUtf8("eraseRB_"));
 		eraseRB_->setGeometry(QRect(20, 28, 79, 21));
-		eraseRB_->setChecked(false);
+		eraseRB_->setChecked(False);
 		eraseRB_->setToolTip("Erase the mask under drawn region");
 
 		frame_2->setEnabled(false);
@@ -137,13 +136,13 @@ namespace casa {
 		thisPlaneRB_ = new QRadioButton(frame_4);
 		thisPlaneRB_->setObjectName(QString::fromUtf8("thisPlaneRB_"));
 		thisPlaneRB_->setGeometry(QRect(10, 4, 121, 16));
-		thisPlaneRB_->setChecked(true);
+		thisPlaneRB_->setChecked(True);
 		thisPlaneRB_->setToolTip("Limit mask(or erasure) to the displayed plane only");
 
 		allChanRB_ = new QRadioButton(frame_4);
 		allChanRB_->setObjectName(QString::fromUtf8("allChanRB_"));
 		allChanRB_->setGeometry(QRect(10, 28, 113, 16));
-		allChanRB_->setChecked(false);
+		allChanRB_->setChecked(False);
 		allChanRB_->setToolTip("Propagate mask(or erasure) to all channels");
 
 		frame_4->setEnabled(false);
@@ -162,13 +161,13 @@ namespace casa {
 		thisHiddenRB_ = new QRadioButton(frame_4H);
 		thisHiddenRB_->setObjectName(QString::fromUtf8("thisHiddenRB_"));
 		thisHiddenRB_->setGeometry(QRect(10, 4, 171, 16));
-		thisHiddenRB_->setChecked(true);
+		thisHiddenRB_->setChecked(True);
 		thisHiddenRB_->setToolTip("Limit mask(or erasure) to the current hidden plane only");
 
 		allHiddenRB_ = new QRadioButton(frame_4H);
 		allHiddenRB_->setObjectName(QString::fromUtf8("allHiddenRB_"));
 		allHiddenRB_->setGeometry(QRect(10, 28, 163, 16));
-		allHiddenRB_->setChecked(false);
+		allHiddenRB_->setChecked(False);
 		allHiddenRB_->setToolTip("Propagate mask(or erasure) to all hidden planes");
 
 		frame_4H->setEnabled(false);
@@ -404,7 +403,7 @@ namespace casa {
 		} else if ( type == "raster" ) {
 			imagedd_ = dd;
 			Record opts;
-			opts.define("axislabelswitch", true);
+			opts.define("axislabelswitch", True);
 			imagedd_->setOptions(opts);
 			connect(dd, SIGNAL(axisChanged(String, String, String, std::vector<int> )),
 			        SLOT(changeImageAxis(String, String, String, std::vector<int> )));
@@ -608,12 +607,12 @@ void QtCleanPanelGui::NAME( String x, String y, String z, std::vector<int> hidde
 
 				//writeRegionText(*imagereg, maskim->name(), value);
 
-				SubImage<Float> partToMask(*maskim, *imagereg, true);
+				SubImage<Float> partToMask(*maskim, *imagereg, True);
 				LatticeRegion latReg=imagereg->toLatticeRegion(csys_p, maskim->shape());
 				ArrayLattice<Bool> pixmask(latReg.get());
 				LatticeExpr<Float> myexpr(iif(pixmask, value, partToMask) );
 				partToMask.copyData(myexpr);
-				((*maskdd_).dd())->refresh(true);
+				((*maskdd_).dd())->refresh(True);
 
 			} catch(...) { }
 
@@ -640,8 +639,8 @@ void QtCleanPanelGui::NAME( String x, String y, String z, std::vector<int> hidde
 			y.resize();
 			x=Vector<Float>(regRec.asArrayFloat("blc"));
 			y=Vector<Float>(regRec.asArrayFloat("trc"));
-			x.resize(2,true);
-			y.resize(2,true);
+			x.resize(2,True);
+			y.resize(2,True);
 		}
 
 		if(regRec.isDefined("name") && regRec.asString("name")=="LCPolygon") {

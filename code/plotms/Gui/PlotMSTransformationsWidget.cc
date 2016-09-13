@@ -29,7 +29,6 @@
 #include <casaqt/QtUtilities/QtUtilities.h>
 #include <plotms/GuiTabs/PlotMSTab.qo.h>
 
-using namespace casacore;
 namespace casa {
 
 PlotMSTransformationsWidget::PlotMSTransformationsWidget(QWidget* parent) :

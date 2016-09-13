@@ -47,8 +47,8 @@ public:
 
     //Is the summary verbose?
     bool isVerbose() const;
-    casacore::String getFileName() const;
-    void filesChanged(const vector<casacore::String>& fileNamees);
+    String getFileName() const;
+    void filesChanged(const vector<String>& fileNamees);
     //Return the summary type.
     PMS::SummaryType getSummaryType() const;
     ~PlotMSSummaryDialog();

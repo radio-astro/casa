@@ -30,18 +30,14 @@
 
 #include <imageanalysis/ImageAnalysis/ImagePolarimetry.h>
 
-namespace casacore{
+namespace casa {
 
+//# Forward declarations
 class LogIO;
 class String;
 class Record;
 class Normal;
 template<class T> class ImageInterface;
-}
-
-namespace casa {
-
-//# Forward declarations
 
 // Implementation of the image polarimetry functionality
 // available from casapy.
@@ -52,168 +48,168 @@ class ImagePol
  public:
   // "imagepol" constructors 
   ImagePol();
-  ImagePol(casacore::ImageInterface<casacore::Float>& im);
+  ImagePol(ImageInterface<Float>& im);
   virtual ~ImagePol();
 
   // Make test image
-  casacore::Bool imagepoltestimage(const casacore::String& outFile = "imagepol.iquv",
-			 const casacore::Vector<casacore::Double>& rm = casacore::Vector<casacore::Double>(1, 0.0),
-			 casacore::Bool rmDefault = true,
-			 casacore::Double pa0 = 0.0, casacore::Double sigma = 0.01,
-			 casacore::Int nx = 32, casacore::Int ny = 32, casacore::Int nf = 32,
-			 casacore::Double f0 = 1.4e9, casacore::Double df = 128.0e6);
+  Bool imagepoltestimage(const String& outFile = "imagepol.iquv",
+			 const Vector<Double>& rm = Vector<Double>(1, 0.0),
+			 Bool rmDefault = True,
+			 Double pa0 = 0.0, Double sigma = 0.01,
+			 Int nx = 32, Int ny = 32, Int nf = 32,
+			 Double f0 = 1.4e9, Double df = 128.0e6);
 
-  casacore::Bool open(casacore::ImageInterface<casacore::Float>& im);
-  casacore::Bool open(const casacore::String& infile);
+  Bool open(ImageInterface<Float>& im);
+  Bool open(const String& infile);
 
   // Depolarization ratio
   // The image containing the delpolratio is in the returnrec 
-  // Can be recovered using casacore::ImageInterface::fromRecord
-  casacore::Bool depolratio(casacore::ImageInterface<casacore::Float>*& rtnim, const casacore::String& infile, 
-		  casacore::Bool debias = false,
-		  casacore::Double clip = 10.0, casacore::Double sigma = -1, 
-		  const casacore::String& oufile="");  
+  // Can be recovered using ImageInterface::fromRecord
+  Bool depolratio(ImageInterface<Float>*& rtnim, const String& infile, 
+		  Bool debias = False,
+		  Double clip = 10.0, Double sigma = -1, 
+		  const String& oufile="");  
 
-  //casacore::Complex linear polarization image is stored in outfile
-  casacore::Bool complexlinpol(const casacore::String& outfile);
+  //Complex linear polarization image is stored in outfile
+  Bool complexlinpol(const String& outfile);
 
 
   // Summary
   void summary() const;
 
   // sigma
-  casacore::Float sigma(casacore::Float clip = 10.0) const;
+  Float sigma(Float clip = 10.0) const;
 
-  // casacore::Stokes I
-  casacore::Bool stokesI(casacore::ImageInterface<casacore::Float>*& rtnim, const casacore::String& outfile="");
-  casacore::Float sigmaStokesI(casacore::Float clip = 10.0) const;
+  // Stokes I
+  Bool stokesI(ImageInterface<Float>*& rtnim, const String& outfile="");
+  Float sigmaStokesI(Float clip = 10.0) const;
 
-  // casacore::Stokes Q
-  casacore::Bool stokesQ(casacore::ImageInterface<casacore::Float>*& rtnim, const casacore::String& outfile="");
-  casacore::Float sigmaStokesQ(casacore::Float clip = 10.0) const;
+  // Stokes Q
+  Bool stokesQ(ImageInterface<Float>*& rtnim, const String& outfile="");
+  Float sigmaStokesQ(Float clip = 10.0) const;
 
-  // casacore::Stokes U
-  casacore::Bool stokesU(casacore::ImageInterface<casacore::Float>*& rtnim, const casacore::String& outfile="");
-  casacore::Float sigmaStokesU(casacore::Float clip = 10.0) const;
+  // Stokes U
+  Bool stokesU(ImageInterface<Float>*& rtnim, const String& outfile="");
+  Float sigmaStokesU(Float clip = 10.0) const;
 
-  // casacore::Stokes V
-  casacore::Bool stokesV(casacore::ImageInterface<casacore::Float>*& rtnim, const casacore::String& outfile="");
-  casacore::Float sigmaStokesV(casacore::Float clip = 10.0) const;
+  // Stokes V
+  Bool stokesV(ImageInterface<Float>*& rtnim, const String& outfile="");
+  Float sigmaStokesV(Float clip = 10.0) const;
 
   // Linearly polarized intensity
-  casacore::Bool linPolInt(casacore::ImageInterface<casacore::Float>*& rtnim, casacore::Bool debias = false,
-		 casacore::Float clip = 10.0,
-		 casacore::Float sigma = -1, const casacore::String& outfile = "");
-  casacore::Float sigmaLinPolInt(casacore::Float clip = 10.0, casacore::Float sigma = -1) const;
+  Bool linPolInt(ImageInterface<Float>*& rtnim, Bool debias = False,
+		 Float clip = 10.0,
+		 Float sigma = -1, const String& outfile = "");
+  Float sigmaLinPolInt(Float clip = 10.0, Float sigma = -1) const;
 
   // Total polarized intensity.
-  casacore::Bool totPolInt(casacore::ImageInterface<casacore::Float>*& rtnim, casacore::Bool debias = false,
-		 casacore::Float clip = 10.0,
-		 casacore::Float sigma = -1, const casacore::String& outfile = "");
-  casacore::Float sigmaTotPolInt(casacore::Float clip = 10.0, casacore::Float sigma = -1) const;
+  Bool totPolInt(ImageInterface<Float>*& rtnim, Bool debias = False,
+		 Float clip = 10.0,
+		 Float sigma = -1, const String& outfile = "");
+  Float sigmaTotPolInt(Float clip = 10.0, Float sigma = -1) const;
 
-  // casacore::Complex linear polarization
-  void complexLinearPolarization (const casacore::String& outfile);
+  // Complex linear polarization
+  void complexLinearPolarization (const String& outfile);
 
-  // casacore::Complex linear polarization
-  void complexFractionalLinearPolarization (const casacore::String& outfile);
+  // Complex linear polarization
+  void complexFractionalLinearPolarization (const String& outfile);
 
   // Linearly polarized position angle
-  casacore::Bool linPolPosAng(casacore::ImageInterface<casacore::Float>*& rtnim,
-		    const casacore::String& outfile = "");
-  casacore::Bool sigmaLinPolPosAng(casacore::ImageInterface<casacore::Float>*& rtnim, casacore::Float clip = 10.0,
-			 casacore::Float sigma = -1, const casacore::String& outfile = "");
+  Bool linPolPosAng(ImageInterface<Float>*& rtnim,
+		    const String& outfile = "");
+  Bool sigmaLinPolPosAng(ImageInterface<Float>*& rtnim, Float clip = 10.0,
+			 Float sigma = -1, const String& outfile = "");
 
   // Fractional linearly polarized intensity
-  casacore::Bool fracLinPol(casacore::ImageInterface<casacore::Float>*& rtnim, casacore::Bool debias = false,
-		  casacore::Float clip = 10.0,
-		  casacore::Float sigma = -1, const casacore::String& outfile = "");
-  casacore::Bool sigmaFracLinPol(casacore::ImageInterface<casacore::Float>*& rtnim, casacore::Float clip = 10.0,
-		       casacore::Float sigma = -1, const casacore::String& outfile = "");
+  Bool fracLinPol(ImageInterface<Float>*& rtnim, Bool debias = False,
+		  Float clip = 10.0,
+		  Float sigma = -1, const String& outfile = "");
+  Bool sigmaFracLinPol(ImageInterface<Float>*& rtnim, Float clip = 10.0,
+		       Float sigma = -1, const String& outfile = "");
 
   // Fractional total polarized intensity
-  casacore::Bool fracTotPol(casacore::ImageInterface<casacore::Float>*& rtnim, casacore::Bool debias = false,
-		  casacore::Float clip = 10.0,
-		  casacore::Float sigma = -1, const casacore::String& outfile = "");
-  casacore::Bool sigmaFracTotPol(casacore::ImageInterface<casacore::Float>*& rtnim, casacore::Float clip = 10.0,
-		       casacore::Float sigma = -1, const casacore::String& outfile = "");
+  Bool fracTotPol(ImageInterface<Float>*& rtnim, Bool debias = False,
+		  Float clip = 10.0,
+		  Float sigma = -1, const String& outfile = "");
+  Bool sigmaFracTotPol(ImageInterface<Float>*& rtnim, Float clip = 10.0,
+		       Float sigma = -1, const String& outfile = "");
 
   // Depolarization ratio
-  casacore::Bool depolarizationRatio (casacore::ImageInterface<casacore::Float>*& rtnim, 
-			    const casacore::String& infile,
-			    casacore::Bool debias = false, casacore::Float clip = 10.0,
-			    casacore::Float sigma = -1, const casacore::String& outfile = "");
-  casacore::Bool sigmaDepolarizationRatio (casacore::ImageInterface<casacore::Float>*& rtnim,
-				 const casacore::String& infile,
-				 casacore::Bool debias = false, casacore::Float clip = 10.0,
-				 casacore::Float sigma = -1, const casacore::String& outfile = "");
+  Bool depolarizationRatio (ImageInterface<Float>*& rtnim, 
+			    const String& infile,
+			    Bool debias = False, Float clip = 10.0,
+			    Float sigma = -1, const String& outfile = "");
+  Bool sigmaDepolarizationRatio (ImageInterface<Float>*& rtnim,
+				 const String& infile,
+				 Bool debias = False, Float clip = 10.0,
+				 Float sigma = -1, const String& outfile = "");
 
-  // Find Rotation casacore::Measure from Fourier method
-  void fourierRotationMeasure(const casacore::String& outfile = "",
-			      const casacore::String& outfileAmp = "",
-			      const casacore::String& outfilePA = "",
-			      const casacore::String& outfileReal = "",
-			      const casacore::String& outfileImag = "",
-			      casacore::Bool zeroZeroLag = false);
+  // Find Rotation Measure from Fourier method
+  void fourierRotationMeasure(const String& outfile = "",
+			      const String& outfileAmp = "",
+			      const String& outfilePA = "",
+			      const String& outfileReal = "",
+			      const String& outfileImag = "",
+			      Bool zeroZeroLag = False);
 
-  // Find Rotation casacore::Measure from traditional method
-  void rotationMeasure(const casacore::String& outRM = "", const casacore::String& outRMErr = "",
-		       const casacore::String& outPA0 = "", const casacore::String& outPA0Err = "",
-		       const casacore::String& outNTurns = "",
-		       const casacore::String& outChiSq = "",
-		       casacore::Int axis = -1, casacore::Float varQU = -1, casacore::Float rmFg = 0.0,
-		       casacore::Float rmMax = 0.0, casacore::Float maxPaErr = 1e30/*,
-		       const casacore::String& plotter = "",
-		       casacore::Int nx = 5, casacore::Int ny = 5*/);
+  // Find Rotation Measure from traditional method
+  void rotationMeasure(const String& outRM = "", const String& outRMErr = "",
+		       const String& outPA0 = "", const String& outPA0Err = "",
+		       const String& outNTurns = "",
+		       const String& outChiSq = "",
+		       Int axis = -1, Float varQU = -1, Float rmFg = 0.0,
+		       Float rmMax = 0.0, Float maxPaErr = 1e30/*,
+		       const String& plotter = "",
+		       Int nx = 5, Int ny = 5*/);
 
   // Make a complex image
-  void makeComplex (const casacore::String& complex, const casacore::String& real = "",
-		    const casacore::String& imag = "", const casacore::String& amp = "",
-		    const casacore::String& phase = "");
+  void makeComplex (const String& complex, const String& real = "",
+		    const String& imag = "", const String& amp = "",
+		    const String& phase = "");
 
  private:
-  casacore::LogIO *itsLog;
+  LogIO *itsLog;
   ImagePolarimetry *itsImPol;
   
-  casacore::Bool copyImage(casacore::ImageInterface<casacore::Float>*& out, const casacore::ImageInterface<casacore::Float>&in, 
-	    const casacore::String& outfile="", casacore::Bool overwrite=true);
-  // Copy miscellaneous (MiscInfo, casacore::ImageInfo, history, units)
-  void copyMiscellaneous (casacore::ImageInterface<casacore::Complex>& out,
-			  const casacore::ImageInterface<casacore::Float>& in);
-  void copyMiscellaneous (casacore::ImageInterface<casacore::Float>& out,
-			 const casacore::ImageInterface<casacore::Float>& in);
-  void fiddleStokesCoordinate(casacore::ImageInterface<casacore::Float>& ie,
-			      casacore::Stokes::StokesTypes type);
-  void fiddleStokesCoordinate(casacore::ImageInterface<casacore::Complex>& ie,
-			      casacore::Stokes::StokesTypes type);
-  // Make a casacore::PagedImage or casacore::TempImage output
-  casacore::Bool makeImage (casacore::ImageInterface<casacore::Complex>*& out, 
-		  const casacore::String& outfile, const casacore::CoordinateSystem& cSys,
-		  const casacore::IPosition& shape, casacore::Bool isMasked=false,
-		  casacore::Bool tempAllowed=true);
-  casacore::Bool makeImage (casacore::ImageInterface<casacore::Float>*& out, 
-		  const casacore::String& outfile, const casacore::CoordinateSystem& cSys,
-		  const casacore::IPosition& shape, casacore::Bool isMasked=false,
-		  casacore::Bool tempAllowed=true);
+  Bool copyImage(ImageInterface<Float>*& out, const ImageInterface<Float>&in, 
+	    const String& outfile="", Bool overwrite=true);
+  // Copy miscellaneous (MiscInfo, ImageInfo, history, units)
+  void copyMiscellaneous (ImageInterface<Complex>& out,
+			  const ImageInterface<Float>& in);
+  void copyMiscellaneous (ImageInterface<Float>& out,
+			 const ImageInterface<Float>& in);
+  void fiddleStokesCoordinate(ImageInterface<Float>& ie,
+			      Stokes::StokesTypes type);
+  void fiddleStokesCoordinate(ImageInterface<Complex>& ie,
+			      Stokes::StokesTypes type);
+  // Make a PagedImage or TempImage output
+  Bool makeImage (ImageInterface<Complex>*& out, 
+		  const String& outfile, const CoordinateSystem& cSys,
+		  const IPosition& shape, Bool isMasked=False,
+		  Bool tempAllowed=True);
+  Bool makeImage (ImageInterface<Float>*& out, 
+		  const String& outfile, const CoordinateSystem& cSys,
+		  const IPosition& shape, Bool isMasked=False,
+		  Bool tempAllowed=True);
   // Make an IQUV image with some dummy RM data
-  casacore::Bool  makeIQUVImage (casacore::ImageInterface<casacore::Float>*& pImOut, const casacore::String& outfile, 
-		       casacore::Double sigma, 
-                       casacore::Double pa0, const casacore::Vector<casacore::Float>& rm, 
-		       const casacore::IPosition& shape,
-                       casacore::Double f0, casacore::Double dF);
-  // Fill IQUV image with casacore::Stokes values from RM data
-  casacore::Bool fillIQUV (casacore::ImageInterface<casacore::Float>& im, casacore::uInt stokesAxis,
-		 casacore::uInt spectralAxis, const casacore::Vector<casacore::Float>& rm, 
-		 casacore::Float pa0);
+  Bool  makeIQUVImage (ImageInterface<Float>*& pImOut, const String& outfile, 
+		       Double sigma, 
+                       Double pa0, const Vector<Float>& rm, 
+		       const IPosition& shape,
+                       Double f0, Double dF);
+  // Fill IQUV image with Stokes values from RM data
+  Bool fillIQUV (ImageInterface<Float>& im, uInt stokesAxis,
+		 uInt spectralAxis, const Vector<Float>& rm, 
+		 Float pa0);
   // Add noise to Array
-  void addNoise (casacore::Array<casacore::Float>& slice, casacore::Normal& noiseGen);
+  void addNoise (Array<Float>& slice, Normal& noiseGen);
   // Centre reference pixelin image
-  void centreRefPix (casacore::CoordinateSystem& cSys, const casacore::IPosition& shape);
+  void centreRefPix (CoordinateSystem& cSys, const IPosition& shape);
   // Make and define a mask
-  casacore::Bool makeMask(casacore::ImageInterface<casacore::Float>& out, casacore::Bool init=false);
-  casacore::Bool makeMask(casacore::ImageInterface<casacore::Complex>& out, casacore::Bool init=false);
-  // What casacore::Stokes type?  Exception if more than one.
-  casacore::Stokes::StokesTypes stokesType(const casacore::CoordinateSystem& cSys);
+  Bool makeMask(ImageInterface<Float>& out, Bool init=False);
+  Bool makeMask(ImageInterface<Complex>& out, Bool init=False);
+  // What Stokes type?  Exception if more than one.
+  Stokes::StokesTypes stokesType(const CoordinateSystem& cSys);
 
 
 };

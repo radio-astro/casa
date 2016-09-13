@@ -21,7 +21,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
  * MA 02111-1307  USA
  *
- * casacore::File Tag.h
+ * File Tag.h
  */
 
 #ifndef Tag_CLASS
@@ -139,7 +139,7 @@ public:
 	/**
 	 * Return the Tag as a String.
 	 * The resulting string consists in the string representation of the type followed by an underscore
-	 *  followed by the casacore::String representation of the value. Examples : "Antenna_12", "SpectralWindow_0".
+	 *  followed by the String representation of the value. Examples : "Antenna_12", "SpectralWindow_0".
 	 * @return The Tag as a String.
 	 */
 	 string toString() const;

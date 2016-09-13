@@ -29,7 +29,6 @@
 
 #include <casaqt/QwtPlotter/QPCanvas.qo.h>
 
-using namespace casacore;
 namespace casa {
 
 //////////////////////////////

@@ -81,15 +81,15 @@ try {
 
 // Vector image
 
-      testSpectral(0, true, fac);
-      testSpectral(1, true, fac);
-      testSpectral(2, true, fac);
+      testSpectral(0, True, fac);
+      testSpectral(1, True, fac);
+      testSpectral(2, True, fac);
 
 // Non-vector image
 
-      testSpectral(0, false, fac);
-      testSpectral(1, false, fac);
-      testSpectral(2, false, fac);
+      testSpectral(0, False, fac);
+      testSpectral(1, False, fac);
+      testSpectral(2, False, fac);
 
 // Forced failure
 
@@ -144,8 +144,8 @@ void testSpectral (uInt abcType, Bool doVector, Double fac)
    Vector<Float> y;
    {
       cerr << "   Gaussian" << endl;
-      Bool doGauss = true;
-      Bool doPoly = false;
+      Bool doGauss = True;
+      Bool doPoly = False;
       makeSpectralData (pPars, gPars, y, doGauss, doPoly, x);
       TempImage<Float>* pIm = 0;
       makeImage(pIm, n, sC, y, doVector);
@@ -158,8 +158,8 @@ void testSpectral (uInt abcType, Bool doVector, Double fac)
 
  {
       cerr << "   Polynomial" << endl;
-      Bool doGauss = false;
-      Bool doPoly = true;
+      Bool doGauss = False;
+      Bool doPoly = True;
       makeSpectralData (pPars, gPars, y, doGauss, doPoly, x);
       TempImage<Float>* pIm = 0;
       makeImage(pIm, n, sC, y, doVector);
@@ -172,8 +172,8 @@ void testSpectral (uInt abcType, Bool doVector, Double fac)
 
  {
       cerr << "   Gaussian + polynomial" << endl;
-      Bool doGauss = true;
-      Bool doPoly = true;
+      Bool doGauss = True;
+      Bool doPoly = True;
       makeSpectralData (pPars, gPars, y, doGauss, doPoly, x);
       TempImage<Float>* pIm = 0;
       makeImage(pIm, n, sC, y, doVector);
@@ -276,7 +276,7 @@ void makeImage (TempImage<Float>*& pIm, Int n, const Coordinate& c,
       pIm->put(y);
 //
       ArrayLattice<Bool> maskLat(shape);
-      maskLat.set(true);
+      maskLat.set(True);
       pIm->attachMask(maskLat);
    } else {
       IPosition shape(2, n, 10);
@@ -291,7 +291,7 @@ void makeImage (TempImage<Float>*& pIm, Int n, const Coordinate& c,
       LatticeUtilities::replicate (*pIm, sl, y);
 //
       ArrayLattice<Bool> maskLat(shape);
-      maskLat.set(true);
+      maskLat.set(True);
       pIm->attachMask(maskLat);
    }
 }
@@ -344,7 +344,7 @@ void check(
 
 	// Compare
 
-	const SpectralList list = fitter.getList(true);
+	const SpectralList list = fitter.getList(True);
 	Double tol(1e-2);
 	Vector<Double> p;
 	//

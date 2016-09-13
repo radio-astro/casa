@@ -31,15 +31,11 @@
 #include <imageanalysis/ImageAnalysis/ImageTask.h>
 #include <casa/namespace.h>
 
-
-namespace casacore{
-
 class MDirection;
-}
 
 namespace casa {
 
-class PVGenerator : public ImageTask<casacore::Float> {
+class PVGenerator : public ImageTask<Float> {
 	// <summary>
 	// Top level interface for generating position-velocity images
 	// </summary>
@@ -80,9 +76,9 @@ public:
 	// spectral channels and all polarization planes in the input image.
 	PVGenerator(
 		const SPCIIF image,
-		const casacore::Record *const &regionRec, const casacore::String& chanInp,
-		const casacore::String& stokes, const casacore::String& maskInp,
-		const casacore::String& outname, const casacore::Bool overwrite
+		const Record *const &regionRec, const String& chanInp,
+		const String& stokes, const String& maskInp,
+		const String& outname, const Bool overwrite
 	);
 
 	// destructor
@@ -92,38 +88,38 @@ public:
 	// collapsed image.
 	SPIIF generate() const;
 
-	// set the end points of the slice in direction space. casacore::Input values represent pixel
+	// set the end points of the slice in direction space. Input values represent pixel
 	// coordinates in the input image.
 	void setEndpoints(
-		const std::pair<casacore::Double, casacore::Double>& start,
-		const std::pair<casacore::Double, casacore::Double>& end
+		const std::pair<Double, Double>& start,
+		const std::pair<Double, Double>& end
 	);
 
 	// set end points given center in pixels, length of segment in pixels, and position angle
 	// taken in the normal astronomical sense, measured from north through east.
 	void setEndpoints(
-		const std::pair<casacore::Double, casacore::Double>& center, casacore::Double length,
-		const casacore::Quantity& pa
+		const std::pair<Double, Double>& center, Double length,
+		const Quantity& pa
 	);
 
 	void setEndpoints(
-		const std::pair<casacore::Double, casacore::Double>& center, const casacore::Quantity& length,
-		const casacore::Quantity& pa
+		const std::pair<Double, Double>& center, const Quantity& length,
+		const Quantity& pa
 	);
 
 	void setEndpoints(
-		const casacore::MDirection& center, const casacore::Quantity& length,
-		const casacore::Quantity& pa
+		const MDirection& center, const Quantity& length,
+		const Quantity& pa
 	);
 
 	// <src>length in pixels</src>
 	void setEndpoints(
-		const casacore::MDirection& center, casacore::Double length,
-		const casacore::Quantity& pa
+		const MDirection& center, Double length,
+		const Quantity& pa
 	);
 
 	void setEndpoints(
-		const casacore::MDirection& start, const casacore::MDirection& end
+		const MDirection& start, const MDirection& end
 	);
 
 	// Set the number of pixels perpendicular to the slice for which averaging
@@ -131,15 +127,15 @@ public:
 	// (no averaging). 3 => Average three pixels, one pixel on either side of the slice and the
 	// pixel lying on the slice.
 	// Note this average is done after the image has been rotated.
-	void setWidth(casacore::uInt width);
+	void setWidth(uInt width);
 	// This will set the width by rounding <src>q</src> up so that the width is an odd number of pixels.
-	void setWidth(const casacore::Quantity& q);
+	void setWidth(const Quantity& q);
 
-	casacore::String getClass() const;
+	String getClass() const;
 
 	// set the unit to be used for the offset axis in the resulting image (from calling
 	// generate()). Must conform to angular units
-	void setOffsetUnit(const casacore::String& s);
+	void setOffsetUnit(const String& s);
 
 
 protected:
@@ -147,31 +143,31 @@ protected:
 		return CasacRegionManager::USE_ALL_STOKES;
 	}
 
-	inline vector<casacore::Coordinate::Type> _getNecessaryCoordinates() const {
-		vector<casacore::Coordinate::Type> v;
-		v.push_back(casacore::Coordinate::SPECTRAL);
-		v.push_back(casacore::Coordinate::DIRECTION);
+	inline vector<Coordinate::Type> _getNecessaryCoordinates() const {
+		vector<Coordinate::Type> v;
+		v.push_back(Coordinate::SPECTRAL);
+		v.push_back(Coordinate::DIRECTION);
 		return v;
  	}
 
-    virtual casacore::Bool _mustHaveSquareDirectionPixels() const {return true;}
+    virtual Bool _mustHaveSquareDirectionPixels() const {return True;}
 
 
 private:
-	std::unique_ptr<vector<casacore::Double> > _start, _end;
-	casacore::uInt _width;
-	casacore::String _unit;
-	static const casacore::String _class;
+	std::unique_ptr<vector<Double> > _start, _end;
+	uInt _width;
+	String _unit;
+	static const String _class;
 
 
 	// disallow default constructor
 	PVGenerator();
 
-	void _checkWidth(const casacore::Int64 xShape, const casacore::Int64 yShape) const;
+	void _checkWidth(const Int64 xShape, const Int64 yShape) const;
 
-	casacore::Quantity _increment() const;
+	Quantity _increment() const;
 
-	static casacore::String _pairToString(const std::pair<casacore::Double, casacore::Double>& p);
+	static String _pairToString(const std::pair<Double, Double>& p);
 
 };
 }

@@ -33,7 +33,6 @@
 
 #define PRTLEV_VBA 0
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //----------------------------------------------------------------------------
@@ -94,7 +93,7 @@ void VisBuffAccumulator::reset()
 //    avBuf_p          VisBuffer     Averaging buffer
 //
   tStart_p = 0.0;
-  firstInterval_p = true;
+  firstInterval_p = True;
   nCorr_p = 0;
   nChan_p = 0;
   avrow_p = 0;
@@ -133,10 +132,10 @@ void VisBuffAccumulator::accumulate (const VisBuffer& vb)
     //    avBuf_p = vb;
 
     // Assign main meta info only
-    //    avBuf_p.assign(vb,true);  
-    avBuf_p.assign(vb,false);  
+    //    avBuf_p.assign(vb,True);  
+    avBuf_p.assign(vb,False);  
     //avBuf_p.updateCoordInfo();  // This is (simplified) CalVisBuffer version!
-    avBuf_p.copyCoordInfo(vb, true);    // This only goes to VisIter if vb is
+    avBuf_p.copyCoordInfo(vb, True);    // This only goes to VisIter if vb is
                                         // missing something needed.
 
     // Zero row count
@@ -149,7 +148,7 @@ void VisBuffAccumulator::accumulate (const VisBuffer& vb)
 
     // Initialize the first accumulation interval
     //   without copy (nothing accumulated yet)
-    initialize(false);
+    initialize(False);
 
   }
 
@@ -166,7 +165,7 @@ void VisBuffAccumulator::accumulate (const VisBuffer& vb)
       // Check for the first accumulation interval
       if (firstInterval_p) {
 	tStart_p = thisTime;
-	firstInterval_p = false;
+	firstInterval_p = False;
       }
 
       // Check for end of the current accumulation interval
@@ -179,7 +178,7 @@ void VisBuffAccumulator::accumulate (const VisBuffer& vb)
 	avrow_p += hashFunction(nAnt_p-1, nAnt_p-1) + 1;
 	// Initialize the next accumulation interval
 	//  (copy prior preavg'd intervals)
-	initialize(true);
+	initialize(True);
       }
 
       // Add the VisBuffer row to the current accumulation
@@ -222,7 +221,7 @@ void VisBuffAccumulator::accumulate (const VisBuffer& vb)
       for (Int chn=0; chn<vb.nChannel(); chn++) {
 	if (!vb.flag()(chn,row) or tvi_debug) {// jagonzal: Always copy inputVis to outputVis
 	  goodChan++;
-	  avBuf_p.flag()(chn,outrow) = false;
+	  avBuf_p.flag()(chn,outrow) = False;
 	  for (Int cor=0;cor<nCorr;cor++) {
 	    avBuf_p.visCube()(cor,chn,outrow) += 
 	      (wtM(cor)*vb.visCube()(cor,chn,row));
@@ -235,7 +234,7 @@ void VisBuffAccumulator::accumulate (const VisBuffer& vb)
 
       // Only if there is any good channels this row
       if (goodChan > 0) {
-	avBuf_p.flagRow()(outrow) = false;
+	avBuf_p.flagRow()(outrow) = False;
 	avBuf_p.weight()(outrow) += wt;
 	for (Int cor=0;cor<nCorr;cor++) 
 	  avBuf_p.weightMat()(cor,outrow) += wtM(cor);
@@ -371,7 +370,7 @@ void VisBuffAccumulator::initialize(const Bool& copydata)
     avBuf_p.time()(row) = 0.0;
     avBuf_p.uvw()(row) = 0.0;
     for (Int chn = 0; chn < nChan_p; chn++) {
-      avBuf_p.flag()(chn,row) = true;
+      avBuf_p.flag()(chn,row) = True;
       for (Int cor=0; cor < nCorr_p; cor++) {
 	avBuf_p.visCube()(cor,chn,row) = Complex(0.0);
         if(fillModel_p)
@@ -380,7 +379,7 @@ void VisBuffAccumulator::initialize(const Bool& copydata)
     }
     avBuf_p.weight()(row) = 0.0f;
     avBuf_p.weightMat().column(row) = 0.0f;
-    avBuf_p.flagRow()(row) = true;
+    avBuf_p.flagRow()(row) = True;
   }
 
   // Init global timestamp
@@ -419,7 +418,7 @@ void VisBuffAccumulator::normalize()
     for (Int row=avrow_p; row<avBuf_p.nRow(); row++) {
       Float wt=avBuf_p.weight()(row);
       Vector<Float> wtM(avBuf_p.weightMat().column(row));
-      if (wt==0.0f) avBuf_p.flagRow()(row)=true;
+      if (wt==0.0f) avBuf_p.flagRow()(row)=True;
       if (!avBuf_p.flagRow()(row)) {
 	avBuf_p.time()(row)=aveTime_p;
 	avBuf_p.uvw()(row)*=(1.0f/wt);
@@ -445,7 +444,7 @@ void VisBuffAccumulator::normalize()
   else {
     // Ensure this interval is entirely flagged
     for (Int row=avrow_p; row<avBuf_p.nRow(); row++) {
-      avBuf_p.flagRow()(row)=true;
+      avBuf_p.flagRow()(row)=True;
       avBuf_p.weight()(row)=0.0f;
       avBuf_p.weightMat().column(row)=0.0f;
     }

@@ -29,24 +29,24 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-template <casacore::Int lford, casacore::Int errord>
-void FluxCalcLogFreqPolynomial::fill_coeffs(const casacore::RigidVector<casacore::Float, lford>& lfrv,
-                                            const casacore::RigidVector<casacore::Float, errord>& errrv)
+template <Int lford, Int errord>
+void FluxCalcLogFreqPolynomial::fill_coeffs(const RigidVector<Float, lford>& lfrv,
+                                            const RigidVector<Float, errord>& errrv)
 {
   coeffs_p(0) = lfrv.vector();
   coeffs_p(1) = errrv.vector();
 }
 
-template <casacore::Int lford>
-void FluxCalcLogFreqPolynomial::fill_coeffs(const casacore::RigidVector<casacore::Float, lford>& lfrv)
+template <Int lford>
+void FluxCalcLogFreqPolynomial::fill_coeffs(const RigidVector<Float, lford>& lfrv)
 {
   coeffs_p(0) = lfrv.vector();
 }
 
-template <casacore::Int lford1, casacore::Int lford2>
-void FluxCalcLogFreqBrokenPolynomial::fill_lohi_coeffs(const casacore::RigidVector<casacore::Float, lford1>& lorv,
-                                                       const casacore::MFrequency& break_freq,
-                                                       const casacore::RigidVector<casacore::Float, lford2>& hirv)
+template <Int lford1, Int lford2>
+void FluxCalcLogFreqBrokenPolynomial::fill_lohi_coeffs(const RigidVector<Float, lford1>& lorv,
+                                                       const MFrequency& break_freq,
+                                                       const RigidVector<Float, lford2>& hirv)
 {
   low_coeffs_p = lorv.vector();
   break_freq_p = break_freq;

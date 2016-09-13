@@ -60,7 +60,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </linkto>.  What is stored in the AttributeValue is a value and the
 // type of that value.  Only some types are supported; see
 // AttributeValueBase for a list. The value is always stored as a
-// casacore::Vector, even if the value used in the constructor is a single
+// Vector, even if the value used in the constructor is a single
 // value.  The operation needed for the AttributeValue is to be able
 // to check whether it matches another AttributeValue.  For two
 // AttributeValues to match they must have the same value and be of
@@ -70,42 +70,42 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // The parameter <src>strict</src> in some constructors defines
 // whether matching has to be done for each element (<src> strict ==
-// true </src>), or whether AttributeValues match if any one element
-// of one casacore::Vector is equal to any other element of the other Vector.
+// True </src>), or whether AttributeValues match if any one element
+// of one Vector is equal to any other element of the other Vector.
 // An AttributeValue created with a scalar type can match an
-// AttributeValue created with a casacore::Vector of that scalar type.
+// AttributeValue created with a Vector of that scalar type.
 // </synopsis>
 //
 // <example>
 // A few simple examples of the use of the AttributeValue class follow.
 // <srcblock>
-// AttributeValue<casacore::Int> intAtt1(3, false);
-// AttributeValue<casacore::Int> intAtt2(3, false);
-// AttributeValue<casacore::Int> intAtt3(2, false);
+// AttributeValue<Int> intAtt1(3, False);
+// AttributeValue<Int> intAtt2(3, False);
+// AttributeValue<Int> intAtt3(2, False);
 // </srcblock>
 //
 // At this point, <src>intAtt1==intAtt2</src> will return
-// <src>true</src>, and <src>intAtt1==intAtt3</src> will return
-// <src>false</src>.
+// <src>True</src>, and <src>intAtt1==intAtt3</src> will return
+// <src>False</src>.
 //
 // <srcblock>
-// casacore::Vector<casacore::Int> vec(2);
+// Vector<Int> vec(2);
 // vec(0) = 1;
 // vec(1) = 3;
-// AttributeValue<casacore::Vector<casacore::Int> > vecAtt1(vec, false);
+// AttributeValue<Vector<Int> > vecAtt1(vec, False);
 // </srcblock>
 //
-// and now <src>vecAtt1==intAtt1</src> is <src>true</src>, and
-// <src>vecAtt1==intAtt3</src> returns <src>false</src>.
+// and now <src>vecAtt1==intAtt1</src> is <src>True</src>, and
+// <src>vecAtt1==intAtt3</src> returns <src>False</src>.
 //
 // Finally,
 // <srcblock>
-// AttributeValue<casacore::Vector<casacore::Int> > vecAtt2(vec, true);
+// AttributeValue<Vector<Int> > vecAtt2(vec, True);
 // </srcblock>
 
-// gives <src>false</src> for <src>vecAtt2==intAtt1</src>, since
+// gives <src>False</src> for <src>vecAtt2==intAtt1</src>, since
 // they cannot match element wise because they have different lengths,
-// and similarly <src>vecAtt2==intAtt2</src> is also <src>false</src>.
+// and similarly <src>vecAtt2==intAtt2</src> is also <src>False</src>.
 // </example>
 
 // <motivation>
@@ -122,18 +122,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Construct from a scalar value. The parameter <src>strict</src>
 		// defines whether whether matching has to be done for each element
-		// (<src>strict == true</src>) (a scalar value AttributeValue is
-		// considered a casacore::Vector of length one), or whether AttributeValues
-		// match if any one element of one casacore::Vector is equal to any other
-		// element of the other casacore::Vector (<src>strict == false</src>).
-		AttributeValue(const T &value, const casacore::Bool strict);
+		// (<src>strict == True</src>) (a scalar value AttributeValue is
+		// considered a Vector of length one), or whether AttributeValues
+		// match if any one element of one Vector is equal to any other
+		// element of the other Vector (<src>strict == False</src>).
+		AttributeValue(const T &value, const Bool strict);
 
-		// Construct from a <src>casacore::Vector</src>.  The parameter
+		// Construct from a <src>Vector</src>.  The parameter
 		// <src>strict</src> defines whether whether matching has to be done
-		// for each element (<src>strict == true</src>), or whether
-		// AttributeValues match if any one element of one casacore::Vector is equal
-		// to any other element of the other casacore::Vector (<src>strict == false</src>).
-		AttributeValue(const casacore::Vector<T> &value, const casacore::Bool strict);
+		// for each element (<src>strict == True</src>), or whether
+		// AttributeValues match if any one element of one Vector is equal
+		// to any other element of the other Vector (<src>strict == False</src>).
+		AttributeValue(const Vector<T> &value, const Bool strict);
 
 		// Destructor.
 		virtual ~AttributeValue();
@@ -147,8 +147,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Set/get the value of the AttributeValue.
 		// <group>
 		virtual void setValue(const T &value);
-		virtual void setValue(const casacore::Vector<T> &value);
-		virtual casacore::Vector<T> getValue() const {
+		virtual void setValue(const Vector<T> &value);
+		virtual Vector<T> getValue() const {
 			return itsValue;
 		};
 		// </group>
@@ -160,21 +160,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void operator+=(const AttributeValueBase& other);
 
 		// Return class name
-		virtual casacore::String className() const {
-			return casacore::String("AttributeValue");
+		virtual String className() const {
+			return String("AttributeValue");
 		};
 
-		virtual void print(std::ostream& os) {
+		virtual void print(ostream& os) {
 			os<<itsValue;
 		}
 
 	protected:
 		// Implements when the values of two Attributes match or not.  The
 		// state of <src>strict</src> determines whether whether matching
-		// has to be done for each element (<src> strict == true </src>), or
-		// whether AttributeValues match if any one element of one casacore::Vector is
+		// has to be done for each element (<src> strict == True </src>), or
+		// whether AttributeValues match if any one element of one Vector is
 		// equal to any other element of the other Vector.
-		virtual casacore::Bool matches(const AttributeValueBase& other) const;
+		virtual Bool matches(const AttributeValueBase& other) const;
 
 		// Cast from Base class
 		const AttributeValue<T>& myCast (const AttributeValueBase& other) const;
@@ -182,13 +182,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	private:
 		// The attribute value
-		casacore::Vector<T> itsValue;
+		Vector<T> itsValue;
 
 		// Sett T type in base class
 		void setType();
 
 		// Do actual matching
-		casacore::Bool myMatch(const AttributeValue<T>& other) const;
+		Bool myMatch(const AttributeValue<T>& other) const;
 
 		// Default constructor
 		AttributeValue();

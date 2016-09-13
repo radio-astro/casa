@@ -29,7 +29,6 @@
 #include <plotms/Client/Client.h>
 #include <plotms/Plots/PlotMSPlot.h>
 
-using namespace casacore;
 namespace casa {
 
 ActionTracker::ActionTracker( Client* client )
@@ -82,5 +81,4 @@ bool ActionTracker::loadParameters(){
 ActionTracker::~ActionTracker() {
 }
 
-using namespace casacore;
 } /* namespace casa */

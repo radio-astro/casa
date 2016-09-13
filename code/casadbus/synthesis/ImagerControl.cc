@@ -3,7 +3,6 @@
 #include <casadbus/utilities/BusAccess.h>
 #include <casadbus/utilities/Conversion.h>
 #define DEBUG 1
-using namespace casacore;
 namespace casa {
     ImagerControl::ImagerControl( const std::string &connection_name_, const std::string &object_path_ )
 #ifdef INTERACTIVE_ITERATION

@@ -10,12 +10,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 #endif
 
 template<class M>
-casacore::TempImage<M>* ImageSkyModel::getTempImage(const casacore::TiledShape& imgShp,
-                                          const casacore::CoordinateSystem& imgCoords,
-                                          const casacore::uInt nMouthsToFeed)
+TempImage<M>* ImageSkyModel::getTempImage(const TiledShape& imgShp,
+                                          const CoordinateSystem& imgCoords,
+                                          const uInt nMouthsToFeed)
 {
-  casacore::TempImage<M>* timgptr = NULL;
-  casacore::Double memoryMB = casacore::HostInfo::memoryTotal() / 1024.0 / MEMFACTOR;
+  TempImage<M>* timgptr = NULL;
+  Double memoryMB = HostInfo::memoryTotal() / 1024.0 / MEMFACTOR;
 
   if(nMouthsToFeed > 1) // esp. !0
     memoryMB /= nMouthsToFeed;
@@ -23,8 +23,8 @@ casacore::TempImage<M>* ImageSkyModel::getTempImage(const casacore::TiledShape& 
   if(memoryMB > 0.0){
     while(!timgptr && memoryMB > 1.0){
       try{
-        timgptr = new casacore::TempImage<M> (imgShp, imgCoords, memoryMB);
-        AlwaysAssert(timgptr, casacore::AipsError);
+        timgptr = new TempImage<M> (imgShp, imgCoords, memoryMB);
+        AlwaysAssert(timgptr, AipsError);
       }
       catch(...){
         memoryMB *= 0.5;
@@ -32,12 +32,11 @@ casacore::TempImage<M>* ImageSkyModel::getTempImage(const casacore::TiledShape& 
     }
   }
   else{
-    timgptr = new casacore::TempImage<M> (imgShp, imgCoords, 0.0);
+    timgptr = new TempImage<M> (imgShp, imgCoords, 0.0);
   }
-  AlwaysAssert(timgptr, casacore::AipsError);
+  AlwaysAssert(timgptr, AipsError);
   return timgptr;
 }
 
 } //# NAMESPACE CASA - END
-
 

@@ -32,14 +32,10 @@
 #include <guitools/Feather/FeatheredData.h>
 #include <guitools/Feather/FeatherDataType.h>
 
-namespace casacore{
-
-template <class T> class ImageInterface;
-}
-
 namespace casa {
 
 class Feather;
+template <class T> class ImageInterface;
 
 /**
  * Gathers up the data from the feathering process and stores
@@ -56,15 +52,15 @@ public:
 	 * Computes First Image x Second Image.  Caller is responsible
 	 * for deleting the convolved image.
 	 */
-	casacore::ImageInterface<float>* makeConvolvedImage(casacore::ImageInterface<float>* firstImage, casacore::ImageInterface<float>* secondImage );
+	ImageInterface<float>* makeConvolvedImage(ImageInterface<float>* firstImage, ImageInterface<float>* secondImage );
 	FeatherThread();
 	enum DataTypes { SD_WEIGHT, INT_WEIGHT, SD_CUT, INT_CUT, DIRTY_CUT,
 				SD_ORIGINAL, INT_ORIGINAL, INT_CONVOLVED_LOW, INT_CONVOLVED_LOW_WEIGHTED,
 				DIRTY_ORIGINAL, DIRTY_CONVOLVED_LOW, DIRTY_CONVOLVED_LOW_WEIGHTED, LOW_CONVOLVED_HIGH,
 				LOW_CONVOLVED_HIGH_WEIGHTED, /*LOW_CONVOLVED_DIRTY, LOW_CONVOLVED_DIRTY_WEIGHTED,*/ END_DATA };
-	void setImages(casacore::ImageInterface<float>* lowImage, casacore::ImageInterface<float>* highImage, casacore::ImageInterface<float>* dirtyImage );
+	void setImages(ImageInterface<float>* lowImage, ImageInterface<float>* highImage, ImageInterface<float>* dirtyImage );
 	void setFeatherWorker( Feather* worker );
-	static void setLogger( casacore::LogIO* logger );
+	static void setLogger( LogIO* logger );
 	void setRadial( bool radialPlot );
 	bool isSuccess() const;
 	QString getErrorMessage() const;
@@ -77,14 +73,14 @@ private:
 	FeatherThread operator=( const FeatherThread& other );
 	bool collectLowHighData();
 	bool collectLowDirtyData();
-	static casacore::ImageInterface<float>* addMissingAxes( casacore::ImageInterface<float>* firstImage );
+	static ImageInterface<float>* addMissingAxes( ImageInterface<float>* firstImage );
 	bool collectConvolvedData( DataTypes original, DataTypes cut);
-	bool setWorkerImages( casacore::ImageInterface<float>* imageLow, casacore::ImageInterface<float>* imageHigh );
+	bool setWorkerImages( ImageInterface<float>* imageLow, ImageInterface<float>* imageHigh );
 	Feather* featherWorker;
-	static casacore::LogIO* logger;
-	casacore::ImageInterface<float>* lowImage;
-	casacore::ImageInterface<float>* highImage;
-	casacore::ImageInterface<float>* dirtyImage;
+	static LogIO* logger;
+	ImageInterface<float>* lowImage;
+	ImageInterface<float>* highImage;
+	ImageInterface<float>* dirtyImage;
 
 
 	QMap<DataTypes, FeatheredData> dataMap;
@@ -98,6 +94,5 @@ private:
 };
 
 
-} // end namespace casa
-
+} /* namespace casa */
 #endif /* FEATHERTHREAD_H_ */

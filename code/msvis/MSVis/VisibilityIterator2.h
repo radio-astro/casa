@@ -41,8 +41,11 @@
 #include <utility>
 #include <vector>
 
-namespace casacore{
+namespace casa { //# NAMESPACE CASA - BEGIN
 
+//# forward decl
+
+//class CStokesVector;
 class MDirection;
 class MSDerivedValues;
 class MSIter;
@@ -66,13 +69,6 @@ class ROMSSysCalColumns;
 class ROMSWeatherColumns;
 template <typename T, Int N> class RigidVector;
 template <typename T, Int N> class SquareMatrix;
-}
-
-namespace casa { //# NAMESPACE CASA - BEGIN
-
-//# forward decl
-
-//class CStokesVector;
 class VisBufferType;
 class VisBufferOptions;
 class VisImagingWeight;
@@ -100,33 +96,33 @@ class SubtableColumns {
 public:
 
     // Simple wrapper class to limit access to only the columns associated with the
-    // current casacore::MS's subtables.  This prevents misuse of the main table data columns
-    // which are provided as part of the casacore::MSColumns object returned by
+    // current MS's subtables.  This prevents misuse of the main table data columns
+    // which are provided as part of the MSColumns object returned by
     // MSIter::msColumns.
 
-    SubtableColumns (casacore::CountedPtr <casacore::MSIter> msIter);
+    SubtableColumns (CountedPtr <MSIter> msIter);
 
-    const casacore::ROMSAntennaColumns& antenna() const;
-    const casacore::ROMSDataDescColumns& dataDescription() const;
-    const casacore::ROMSFeedColumns& feed() const;
-    const casacore::ROMSFieldColumns& field() const;
-    const casacore::ROMSFlagCmdColumns& flagCmd() const;
-    const casacore::ROMSHistoryColumns& history() const;
-    const casacore::ROMSObservationColumns& observation() const;
-    const casacore::ROMSPointingColumns& pointing() const;
-    const casacore::ROMSPolarizationColumns& polarization() const;
-    const casacore::ROMSProcessorColumns& processor() const;
-    const casacore::ROMSSpWindowColumns& spectralWindow() const;
-    const casacore::ROMSStateColumns& state() const;
-    const casacore::ROMSDopplerColumns& doppler() const;
-    const casacore::ROMSFreqOffsetColumns& freqOffset() const;
-    const casacore::ROMSSourceColumns& source() const;
-    const casacore::ROMSSysCalColumns& sysCal() const;
-    const casacore::ROMSWeatherColumns& weather() const;
+    const ROMSAntennaColumns& antenna() const;
+    const ROMSDataDescColumns& dataDescription() const;
+    const ROMSFeedColumns& feed() const;
+    const ROMSFieldColumns& field() const;
+    const ROMSFlagCmdColumns& flagCmd() const;
+    const ROMSHistoryColumns& history() const;
+    const ROMSObservationColumns& observation() const;
+    const ROMSPointingColumns& pointing() const;
+    const ROMSPolarizationColumns& polarization() const;
+    const ROMSProcessorColumns& processor() const;
+    const ROMSSpWindowColumns& spectralWindow() const;
+    const ROMSStateColumns& state() const;
+    const ROMSDopplerColumns& doppler() const;
+    const ROMSFreqOffsetColumns& freqOffset() const;
+    const ROMSSourceColumns& source() const;
+    const ROMSSysCalColumns& sysCal() const;
+    const ROMSWeatherColumns& weather() const;
 
 private:
 
-    casacore::CountedPtr <casacore::MSIter> msIter_p;
+    CountedPtr <MSIter> msIter_p;
 };
 
 ///////////////////////////////////////////////////////////////////
@@ -137,28 +133,28 @@ private:
 //    component is the chunk (goes from 0 to nChunks-1 during the outer loop
 //    iteration).  The second component is the subchunk number which is
 //    zero after VisibilityIterator::origin is called and is increment
-//    until ROVI::more returns false.
+//    until ROVI::more returns False.
 
-class Subchunk : public std::pair<casacore::Int, casacore::Int>{
+class Subchunk : public std::pair<Int, Int>{
 
 public:
 
     // First component is Chunk and second is Subchunk
 
     Subchunk () { resetToOrigin ();}
-    Subchunk (casacore::Int a , casacore::Int b) : std::pair<casacore::Int,casacore::Int> (a,b) {}
+    Subchunk (Int a , Int b) : std::pair<Int,Int> (a,b) {}
 
-    casacore::Bool operator== (const Subchunk & other){
+    Bool operator== (const Subchunk & other){
         return first == other.first && second == other.second;
     }
 
-    casacore::Bool operator< (const Subchunk & other){
+    Bool operator< (const Subchunk & other){
         return first < other.first ||
                (first == other.first && second < other.second);
     }
 
-    casacore::Bool atOrigin () const { return * this == Subchunk ();}
-    casacore::Int chunk () const { return first;}
+    Bool atOrigin () const { return * this == Subchunk ();}
+    Int chunk () const { return first;}
     void incrementSubChunk () { second ++;}
     void incrementChunk () { first ++; second = 0; }
 
@@ -168,8 +164,8 @@ public:
        // Make a subchunk pair that is positioned to the first subchunk of the
        // first chunk (i.e., 0,0)
 
-    casacore::Int subchunk () const { return second;}
-    casacore::String toString () const;
+    Int subchunk () const { return second;}
+    String toString () const;
 
     static Subchunk noMoreData ();
 
@@ -193,30 +189,30 @@ class WeightScaling {
 public:
 
     virtual ~WeightScaling () {}
-    casacore::Float operator() (casacore::Float x) { return apply (x);}
+    Float operator() (Float x) { return apply (x);}
 
-    static casacore::CountedPtr<WeightScaling> generateUnityWeightScaling ();
-    static casacore::CountedPtr<WeightScaling> generateIdentityWeightScaling ();
-    static casacore::CountedPtr<WeightScaling> generateSquareWeightScaling ();
+    static CountedPtr<WeightScaling> generateUnityWeightScaling ();
+    static CountedPtr<WeightScaling> generateIdentityWeightScaling ();
+    static CountedPtr<WeightScaling> generateSquareWeightScaling ();
 
 protected:
 
-    virtual casacore::Float apply (casacore::Float) = 0;
-    static casacore::Float unity (casacore::Float);
-    static casacore::Float identity (casacore::Float x);
-    static casacore::Float square (casacore::Float x);
+    virtual Float apply (Float) = 0;
+    static Float unity (Float);
+    static Float identity (Float x);
+    static Float square (Float x);
 };
 
 template<typename F>
 class WeightScalingImpl : public WeightScaling {
 public:
 
-    // Provide either a unary function, casacore::Float (*) (casacore::Float), or
-    // a functor class having a casacore::Float operator() (casacore::Float) method.
+    // Provide either a unary function, Float (*) (Float), or
+    // a functor class having a Float operator() (Float) method.
 
     WeightScalingImpl (F f) : function_p (f) {}
 
-    casacore::Float apply (casacore::Float f) { return function_p (f);}
+    Float apply (Float f) { return function_p (f);}
 
 private:
 
@@ -225,20 +221,20 @@ private:
 
 
 template<typename F>
-casacore::CountedPtr <WeightScaling> generateWeightScaling (F f) { return new WeightScalingImpl<F> (f);}
+CountedPtr <WeightScaling> generateWeightScaling (F f) { return new WeightScalingImpl<F> (f);}
 
 class SortColumns {
 public:
 
-    explicit SortColumns (const casacore::Block<casacore::Int> & columnIds = casacore::Block<casacore::Int> (), casacore::Bool addDefaultColumns = true);
+    explicit SortColumns (const Block<Int> & columnIds = Block<Int> (), Bool addDefaultColumns = True);
 
-    casacore::Bool shouldAddDefaultColumns () const;
-    const casacore::Block<casacore::Int> & getColumnIds () const;
+    Bool shouldAddDefaultColumns () const;
+    const Block<Int> & getColumnIds () const;
 
 private:
 
-    casacore::Bool addDefaultColumns_p;
-    casacore::Block<casacore::Int> columnIds_p;
+    Bool addDefaultColumns_p;
+    Block<Int> columnIds_p;
 };
 
 class VisibilityIterator2;
@@ -274,7 +270,7 @@ protected:
 // </reviewed>
 // <prerequisite>
 //   <li> <linkto class="MSIter">MSIter</linkto>
-//   <li> <linkto class="casacore::MeasurementSet">casacore::MeasurementSet</linkto>
+//   <li> <linkto class="MeasurementSet">MeasurementSet</linkto>
 //   <li> <linkto class="VisSet">VisSet</linkto>
 //   <li> <linkto class="PrefetchColumns">PrefetchColumns</linkto>
 // </prerequisite>
@@ -317,7 +313,7 @@ protected:
 //
 // Because of the multithreaded nature of asynchronous I/O, the user
 // needs to be a bit more careful in the use of the VI and it's attached VisBuffer.
-// casacore::Data access operations need to be directed to the VisBuffer.  Additionally
+// Data access operations need to be directed to the VisBuffer.  Additionally
 // the user must not attempt to access the data using a separate VI since
 // the underlying casacore objects are not threadsafe and bizarre errors
 // will likely occur.
@@ -325,11 +321,11 @@ protected:
 // CASARC Settings
 // ===============
 //
-// casacore::Normal settings
+// Normal settings
 // ---------------
 //
 // VisibilityIterator2.async.enabled - Boolean value that enables or disables
-//     async I/O.  The default value is currently false (i.e., disabled).
+//     async I/O.  The default value is currently False (i.e., disabled).
 // VisibilityIterator2.async.nBuffers - The number of lookahead buffers.  This
 //     defaults to 2.
 //
@@ -351,7 +347,7 @@ protected:
 // </example>
 //
 // <motivation>
-// For imaging and calibration you need to access an casacore::MS in some consistent
+// For imaging and calibration you need to access an MS in some consistent
 // order (by field, spectralwindow, time interval etc.). This class provides
 // that access.
 // </motivation>
@@ -398,16 +394,16 @@ public:
 
       virtual ViImplementation2 *
       operator() (const VisBufferComponents2 * /*prefetchColumns*/,
-                  const casacore::Block<casacore::MeasurementSet>& /*mss*/,
-                  const casacore::Block<casacore::Int>& /*sortColumns*/,
-                  const casacore::Bool /*addDefaultSortCols*/,
-                  casacore::Double /*timeInterval*/) const
+                  const Block<MeasurementSet>& /*mss*/,
+                  const Block<Int>& /*sortColumns*/,
+                  const Bool /*addDefaultSortCols*/,
+                  Double /*timeInterval*/) const
       {
           return NULL;
       }
   };
 
-  typedef enum casacore::MSIter::PolFrame PolFrame;
+  typedef enum MSIter::PolFrame PolFrame;
 
   typedef enum DataColumn {
       Observed=0,  // Observed data
@@ -415,8 +411,8 @@ public:
       Corrected    // Corrected data
   } DataColumn;
 
-  // Construct from an casacore::MS and a casacore::Block of casacore::MS column enums specifying the
-  // iteration order.  These can be specified as casacore::MS::ANTENNA1, casacore::MS::ARRAY_ID,
+  // Construct from an MS and a Block of MS column enums specifying the
+  // iteration order.  These can be specified as MS::ANTENNA1, MS::ARRAY_ID,
   // etc.; they are defined in MSMainEnums.h.
   // If no order is specified, it uses the default sort
   // order of MSIter, which is not necessarily the raw order of ms!
@@ -437,35 +433,35 @@ public:
   // enable/disable of asynchronous I/O then they must implement logic that
   // either either provides prefetch columns (enables) or a null pointer (disables).
 
-  VisibilityIterator2 (const casacore::MeasurementSet& ms,
+  VisibilityIterator2 (const MeasurementSet& ms,
                        const SortColumns & sortColumns = SortColumns (),
-                       casacore::Bool isWritable = false,
+                       Bool isWritable = False,
                        const VisBufferComponents2 * prefetchColumns = 0,
-                       casacore::Double timeInterval = 0);
+                       Double timeInterval = 0);
 
-  VisibilityIterator2 (const casacore::Block<const casacore::MeasurementSet *>& mss,
+  VisibilityIterator2 (const Block<const MeasurementSet *>& mss,
                        const SortColumns & sortColumns = SortColumns (),
-                       casacore::Bool isWritable = false,
+                       Bool isWritable = False,
                        const VisBufferComponents2 * prefetchColumns = 0,
-                       casacore::Double timeInterval = 0);
+                       Double timeInterval = 0);
 
   VisibilityIterator2 (const ViFactory & factory);
-  VisibilityIterator2 (const casacore::Vector<ViiLayerFactory*> & factories);
+  VisibilityIterator2 (const Vector<ViiLayerFactory*> & factories);
 
   // Destructor
 
   virtual ~VisibilityIterator2();
 
   // Report the the ViImplementation type
-  casacore::String ViiType() const;
+  String ViiType() const; 
 
   ///////////////////////////////////////////////////////////////////
   //
   // BEGIN Experimental Section
   //
 
-  static VisibilityIterator2 * copyingViFactory (const casacore::MeasurementSet & srcMs,
-                                                 casacore::MeasurementSet & dstMs);
+  static VisibilityIterator2 * copyingViFactory (const MeasurementSet & srcMs,
+                                                 MeasurementSet & dstMs);
 
   template <typename KlugeIn, typename KlugeOut>
   static KlugeOut KlugeForTesting (KlugeIn);
@@ -494,9 +490,9 @@ public:
   // timestamps that are within that interval of the first row in the
   // chunk; if no interval is specified then the chunk will contain only
   // rows having the identical timestamp.  If multiple MSs are specified
-  // in the constructor then changing from one casacore::MS to the next will occur
+  // in the constructor then changing from one MS to the next will occur
   // on a chunk boundary (i.e., a chunk will never contain data from more
-  // than one casacore::MS).
+  // than one MS).
   //
   // A subchunk typically contains all the rows in the chunk having identical
   // timestamps.  The only exception is when the user calls setRowBlocking(N)
@@ -512,19 +508,19 @@ public:
   //
   // origin () - positions VI to the start of the current chunk
   // operator++ - advance VI to next subchunk if it exists
-  // more - returns true if the VI is pointing to a valid subchunk
+  // more - returns True if the VI is pointing to a valid subchunk
   //
   // originChunks - Move to the first chunk of data.
   // operator++ - advance VI to the next chunk if it exists
-  // moreChunks - returns true if the VI is pointing to a valid chunk.
+  // moreChunks - returns True if the VI is pointing to a valid chunk.
 
   void origin(); // Reset to start of the chunk
   void next ();
-  casacore::Bool more() const;
+  Bool more() const;
 
   void originChunks();
   void nextChunk();
-  casacore::Bool moreChunks() const;
+  Bool moreChunks() const;
 
   // Returns the pair (chunk,subchunk) for the current position of the VI.  Only
   // valid after origin has been called.
@@ -558,29 +554,29 @@ public:
   // numbers of frequencies, etc.).  The latter case will mainly occur
   // when the row visibility shape changes from one row to the next.
 
-  casacore::Int getRowBlocking() const;
-  void setRowBlocking(casacore::Int nRows=0);
+  Int getRowBlocking() const;
+  void setRowBlocking(Int nRows=0);
 
   // In this context the interval determines what rows will be contained
-  // in a chunk.  A chunk is all the rows in an casacore::MS that have the same values
+  // in a chunk.  A chunk is all the rows in an MS that have the same values
   // in the sort columns, except for time; all rows that otherwise have the
   // same values for the sort columns will be in the chunk if they are no
   // later than "interval" seconds after the first row in the chunk.
   //
-  // *** This value is unrelated to the interval field of the casacore::MS main table.
+  // *** This value is unrelated to the interval field of the MS main table.
 
-  casacore::Double getInterval() const;
-  void setInterval(casacore::Double timeInterval);
+  Double getInterval() const;
+  void setInterval(Double timeInterval);
 
   // Call to use the slurp i/o method for all scalar columns. This
-  // will set the casacore::BucketCache cache size to the full column length
+  // will set the BucketCache cache size to the full column length
   // and cause the full column to be cached in memory, if
   // any value of the column is used. In case of out-of-memory,
   // it will automatically fall-back on the smaller cache size.
   // Slurping the column is to be considered as a work-around for the
-  // casacore::Table i/o code, which uses casacore::BucketCache and performs extremely bad
+  // Table i/o code, which uses BucketCache and performs extremely bad
   // for random access. Slurping is useful when iterating non-sequentially
-  // an casacore::MS or parts of an casacore::MS, it is not tested with multiple MSs.
+  // an MS or parts of an MS, it is not tested with multiple MSs.
 
   void slurp() const;
 
@@ -589,22 +585,22 @@ public:
   // Other methods
   //
 
-  // Returns true if this is an asynchronous VI
+  // Returns True if this is an asynchronous VI
 
-  casacore::Bool isAsynchronous () const;
+  Bool isAsynchronous () const;
 
-  // Returns true if async I/O is globally enabled.
+  // Returns True if async I/O is globally enabled.
 
-  static casacore::Bool isAsynchronousIoEnabled();
+  static Bool isAsynchronousIoEnabled();
 
-  // Returns true if this VI is writable (always false for ROVI and
-  // true for VI; see VisibilityIterator class).
+  // Returns True if this VI is writable (always False for ROVI and
+  // True for VI; see VisibilityIterator class).
 
-  casacore::Bool isWritable () const;
+  Bool isWritable () const;
 
   // Returns the columns that the VisibilityIterator2 is sorting by.  These are
-  // defined in MSMainEnums.h.  These can be specified as casacore::MS::ANTENNA1,
-  // casacore::MS::ARRAY_ID, etc.
+  // defined in MSMainEnums.h.  These can be specified as MS::ANTENNA1,
+  // MS::ARRAY_ID, etc.
 
   const SortColumns & getSortColumns() const;
 
@@ -619,8 +615,8 @@ public:
   // Manages the weight function that can be used to process the weights
   // produced by the "scaled" variants of the weight accessors.  Use
   // generateWeightscaling to create a WeightScaling object.  This allow you
-  // to use either a function (FLoat (casacore::Float)) or a functor (object having
-  // method casacore::Float operator () (casacore::Float)).
+  // to use either a function (FLoat (Float)) or a functor (object having
+  // method Float operator () (Float)).
   //
   // To revert to having no scaling function, call setWeightScaling with
   // 0 as the argument.  Any call to setWeightScaling needs to be followed
@@ -632,31 +628,31 @@ public:
   // way for VI to know if the user has passed in the identity function;
   // doing so will still cause hasWeightScaling to return true.
 
-  virtual void setWeightScaling (casacore::CountedPtr<WeightScaling> weightscaling);
-  virtual casacore::Bool hasWeightScaling () const;
+  virtual void setWeightScaling (CountedPtr<WeightScaling> weightscaling);
+  virtual Bool hasWeightScaling () const;
 
   // Return number of spws, polids, ddids for the current MS
 
-  casacore::Int nSpectralWindows () const;
-  casacore::Int nPolarizationIds () const; // number of different polarization configurations
+  Int nSpectralWindows () const;
+  Int nPolarizationIds () const; // number of different polarization configurations
                                  // (i.e., length of polarization subtable)
-  casacore::Int nDataDescriptionIds () const;
+  Int nDataDescriptionIds () const;
 
   // Determine whether WEIGHT_SPECTRUM exists.
 
-  casacore::Bool weightSpectrumExists() const;
+  Bool weightSpectrumExists() const;
 
   // Determine whether WEIGHT_SPECTRUM exists.
 
-  casacore::Bool sigmaSpectrumExists() const;
+  Bool sigmaSpectrumExists() const;
 
   //reference to actual ms in interator
 
-  const casacore::MeasurementSet& ms() const /*__attribute__((deprecated))*/;
+  const MeasurementSet& ms() const /*__attribute__((deprecated))*/;
 
   const vi::SubtableColumns & subtableColumns () const /*__attribute__((deprecated))*/;
 
-  static casacore::String getAipsRcBase () { return "VisibilityIterator2";}
+  static String getAipsRcBase () { return "VisibilityIterator2";}
 
   // The reporting frame of reference is the default frame of reference to be
   // used when the user requests the frequencies of the current data selection
@@ -667,12 +663,12 @@ public:
   //
   // These *do not* change the selection in any way.
 
-  casacore::Int getReportingFrameOfReference () const;
-  void setReportingFrameOfReference (casacore::Int);
+  Int getReportingFrameOfReference () const;
+  void setReportingFrameOfReference (Int);
 
   // Return the numbers of rows in the current chunk
 
-  casacore::Int nRowsInChunk() const;
+  Int nRowsInChunk() const;
 
   // Assign a VisImagingWeight object to this iterator.  This object is used
   // to generate imaging weights.
@@ -686,70 +682,70 @@ public:
   // All polarizations have the same flag value.
 
   // Write/modify the flags in the data.
-  // This writes the flags as found in the casacore::MS, casacore::Cube(npol,nchan,nrow),
+  // This writes the flags as found in the MS, Cube(npol,nchan,nrow),
   // where nrow is the number of rows in the current iteration (given by
   // nRow()).
 
-  virtual void writeFlag(const casacore::Cube<casacore::Bool>& flag);
+  virtual void writeFlag(const Cube<Bool>& flag);
 
-  // Write/modify the flag row column; dimension casacore::Vector(nrow)
+  // Write/modify the flag row column; dimension Vector(nrow)
 
-  virtual void writeFlagRow(const casacore::Vector<casacore::Bool>& rowflags);
+  virtual void writeFlagRow(const Vector<Bool>& rowflags);
 
-  void writeFlagCategory(const casacore::Array<casacore::Bool>& fc);
+  void writeFlagCategory(const Array<Bool>& fc);
 
   // Write/modify the visibilities.
-  // This is possibly only for a 'reference' casacore::MS which has a new DATA column.
+  // This is possibly only for a 'reference' MS which has a new DATA column.
   // The first axis of the matrix should equal the selected number of channels
   // in the original MS.
-  // If the casacore::MS does not contain all polarizations, only the parallel
+  // If the MS does not contain all polarizations, only the parallel
   // hand polarizations are used.
 
-//  void writeVisCorrected (const casacore::Matrix<CStokesVector>& vis);
-//  void writeVisModel (const casacore::Matrix<CStokesVector>& vis);
-//  void writeVisObserved (const casacore::Matrix<CStokesVector>& vis);
+//  void writeVisCorrected (const Matrix<CStokesVector>& vis);
+//  void writeVisModel (const Matrix<CStokesVector>& vis);
+//  void writeVisObserved (const Matrix<CStokesVector>& vis);
 
   // Write/modify the visibilities
-  // This writes the data as found in the casacore::MS, casacore::Cube(npol,nchan,nrow).
+  // This writes the data as found in the MS, Cube(npol,nchan,nrow).
 
-  void writeVisCorrected (const casacore::Cube <casacore::Complex> & vis);
-  void writeVisModel (const casacore::Cube <casacore::Complex> & vis);
-  void writeVisObserved (const casacore::Cube <casacore::Complex> & vis);
+  void writeVisCorrected (const Cube <Complex> & vis);
+  void writeVisModel (const Cube <Complex> & vis);
+  void writeVisObserved (const Cube <Complex> & vis);
 
   // Write/modify the weights
 
-  void writeWeight(const casacore::Matrix<casacore::Float>& wt);
+  void writeWeight(const Matrix<Float>& wt);
 
   // Write/modify the weightMat
 
-  //virtual void writeWeightMat(const casacore::Matrix<casacore::Float>& wtmat);
+  //virtual void writeWeightMat(const Matrix<Float>& wtmat);
 
   // Write/modify the weightSpectrum
 
-  virtual void writeWeightSpectrum(const casacore::Cube<casacore::Float>& wtsp);
+  virtual void writeWeightSpectrum(const Cube<Float>& wtsp);
 
 
   // Initialize the weightSpectrum
-  virtual void initWeightSpectrum(const casacore::Cube<casacore::Float>& wtsp);
+  virtual void initWeightSpectrum(const Cube<Float>& wtsp);
 
   // Write/modify the Sigma
 
-  void writeSigma(const casacore::Matrix<casacore::Float>& sig);
+  void writeSigma(const Matrix<Float>& sig);
 
   // Write/modify the ncorr x nrow SigmaMat.
 
-  //void writeSigmaMat(const casacore::Matrix<casacore::Float>& sigmat);
+  //void writeSigmaMat(const Matrix<Float>& sigmat);
 
   // This puts a model into the descriptor of the current ms in the iterator
-  // Set iscomponentlist to true if the record represent a componentlist
-  // if false then it is a FTMachine casacore::Record that holds the model image
+  // Set iscomponentlist to True if the record represent a componentlist
+  // if False then it is a FTMachine Record that holds the model image
   // note the spw and fields selected are going to be associated with this model
-  // incremetal =true implies add the model to previous any existant model
+  // incremetal =True implies add the model to previous any existant model
   // in the ms for the spw and fields
   // false means any existant model will be replaces.
 
-  void writeModel(const casacore::RecordInterface& rec, casacore::Bool iscomponentlist=true,
-                  casacore::Bool incremental=false);
+  void writeModel(const RecordInterface& rec, Bool iscomponentlist=True,
+                  Bool incremental=False);
 
   // Requests that the modified VisBuffer2 be written back to the visibility
   // at the same spot that it came from.  The dirtyComponents feature of
@@ -770,14 +766,14 @@ protected:
   VisibilityIterator2();
 
   void construct (const VisBufferComponents2 * prefetchColumns,
-                  const casacore::Block<const casacore::MeasurementSet *>& mss,
+                  const Block<const MeasurementSet *>& mss,
                   const SortColumns & sortColumns,
-                  casacore::Double timeInterval,
-                  casacore::Bool writable);
+                  Double timeInterval,
+                  Bool writable);
 
 // advance the iteration
 
-  void originChunks(casacore::Bool forceRewind);
+  void originChunks(Bool forceRewind);
 
 
 private:

@@ -28,7 +28,6 @@
 //
 #include <synthesis/TransformMachines2/AzElAperture.h>
 #include <ostream>
-using namespace casacore;
 namespace casa{
   namespace refim{
   //

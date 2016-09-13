@@ -46,18 +46,14 @@
 #include <graphics/X11/X_exit.h>
 
 
-namespace casacore{
-
-	class ImageRegion;
-	class Record;
-	class WCUnion;
-	template <class T> class PtrBlock;
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	class QtViewer;
+	class ImageRegion;
+	class Record;
 	class RSComposite;
+	class WCUnion;
+	template <class T> class PtrBlock;
 
 
 	class QtRegionManager : public QWidget, protected Ui::QtRegionMgr {
@@ -72,14 +68,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		~QtRegionManager() {  }
 
 	public slots:
-		void changeAxis(casacore::String, casacore::String, casacore::String);
-		void activate(casacore::Record);
+		void changeAxis(String, String, String);
+		void activate(Record);
 
 	protected slots:
 		//draw region on viewer
-		void drawRegion(casacore::Record mousereg, WorldCanvasHolder *wch);
+		void drawRegion(Record mousereg, WorldCanvasHolder *wch);
 		// React to new region creation in display panel.
-		void newRegion_(casacore::String imgFilename);
+		void newRegion_(String imgFilename);
 
 		// Load region from current displayed image
 		void loadRegionFromImage();
@@ -101,7 +97,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		//convert region to shape
 		RSComposite *regionToShape(
-		    QtDisplayData* qdd, const casacore::ImageRegion* wcreg);
+		    QtDisplayData* qdd, const ImageRegion* wcreg);
 
 		// Cleanup on destruction
 		void cleanup();
@@ -129,14 +125,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void exportRegions();
 
 	public:
-		bool planeAllowed(int, casacore::String&, casacore::String&);
+		bool planeAllowed(int, String&, String&);
 
 	protected:
 		void addRegionsToShape(RSComposite*& theShapes,
-		                       const casacore::WCRegion*& wcreg);
-		casacore::WCUnion* unfoldCompositeRegionToSimpleUnion(const casacore::WCRegion*& wcreg);
+		                       const WCRegion*& wcreg);
+		WCUnion* unfoldCompositeRegionToSimpleUnion(const WCRegion*& wcreg);
 		void displaySelectedRegion();
-		void showRegion(const casacore::String& regName);
+		void showRegion(const String& regName);
 
 		bool deleteBox(QString&, int);
 		bool insertBox(QString&);
@@ -148,9 +144,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		QWidget* parent_;
 
 	private:
-		casacore::PtrBlock<const casacore::ImageRegion * >  unionRegions_p;
-		casacore::List<RegionShape*> regShapes_p;
-		void unfoldIntoSimpleRegionPtrs(casacore::PtrBlock<const casacore::WCRegion*>& outRegPtrs, const casacore::WCRegion*& wcreg);
+		PtrBlock<const ImageRegion * >  unionRegions_p;
+		List<RegionShape*> regShapes_p;
+		void unfoldIntoSimpleRegionPtrs(PtrBlock<const WCRegion*>& outRegPtrs, const WCRegion*& wcreg);
 		QHash<QString, DisplayData*> regData;
 		QHash<QString, bool> regState;
 		QMenu *showHideMenu;
@@ -165,7 +161,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		int cb;
 
 	signals:
-		void extendRegion(casacore::String, casacore::String);
+		void extendRegion(String, String);
 
 	};
 

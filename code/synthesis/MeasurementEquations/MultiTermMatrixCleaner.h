@@ -48,53 +48,53 @@ public:
   // The destructor resizes arrays to empty before destruction.
   ~MultiTermMatrixCleaner();
 
-  // casacore::Input : number of Taylor terms
+  // Input : number of Taylor terms
   //         Reshapes PtrBlocks to hold the correct number of PSFs and Residual images
-  casacore::Bool setntaylorterms(const int & nterms);
+  Bool setntaylorterms(const int & nterms);
   
-  // casacore::Input : scales
-  casacore::Bool setscales(const casacore::Vector<casacore::Float> & scales);
+  // Input : scales
+  Bool setscales(const Vector<Float> & scales);
 
   // Initialize all the memory being used.
-  casacore::Bool initialise(casacore::Int nx,casacore::Int ny);
+  Bool initialise(Int nx,Int ny);
 
   // Calculate Hessian elements and check for invertibility
   // Does not have to be called externally, but can be. Either way, it executes only once.
-  casacore::Int computeHessianPeak();
+  Int computeHessianPeak();
 
-  // casacore::Input : psfs and dirty images
-  casacore::Bool setpsf(int order, casacore::Matrix<casacore::Float> & psf);
+  // Input : psfs and dirty images
+  Bool setpsf(int order, Matrix<Float> & psf);
   
-  // casacore::Input : psfs and dirty images
-  casacore::Bool setresidual(int order, casacore::Matrix<casacore::Float> & dirty);
+  // Input : psfs and dirty images
+  Bool setresidual(int order, Matrix<Float> & dirty);
  
-  // casacore::Input : model images
-  casacore::Bool setmodel(int order, casacore::Matrix<casacore::Float> & model);
+  // Input : model images
+  Bool setmodel(int order, Matrix<Float> & model);
 
-  // casacore::Input : mask
-  casacore::Bool setmask(casacore::Matrix<casacore::Float> & mask);
+  // Input : mask
+  Bool setmask(Matrix<Float> & mask);
  
   // Run the minor cycle
-  casacore::Int mtclean(casacore::Int maxniter, casacore::Float stopfraction, casacore::Float inputgain, casacore::Float userthreshold);
+  Int mtclean(Int maxniter, Float stopfraction, Float inputgain, Float userthreshold);
 
   // Output : Model images
-  casacore::Bool getmodel(int order, casacore::Matrix<casacore::Float> & model);
+  Bool getmodel(int order, Matrix<Float> & model);
   
   // Output : psfs and dirty images
-  casacore::Bool getresidual(int order, casacore::Matrix<casacore::Float> & residual);
+  Bool getresidual(int order, Matrix<Float> & residual);
   
   // Compute principal solution - in-place on the residual images in vecDirty. 
-  casacore::Bool computeprincipalsolution();
+  Bool computeprincipalsolution();
  
   // Output : Hessian matrix
-  casacore::Bool getinvhessian(casacore::Matrix<casacore::Double> & invhessian);
+  Bool getinvhessian(Matrix<Double> & invhessian);
 
   // Output : Peak residual computed from matR_p (residual convolved with PSF).
-  casacore::Float getpeakresidual(){return rmaxval_p;}
+  Float getpeakresidual(){return rmaxval_p;}
 
 
 private:
-  casacore::LogIO os;
+  LogIO os;
 
   using MatrixCleaner::itsCleanType;
   using MatrixCleaner::itsMaxNiter;
@@ -116,105 +116,105 @@ private:
   using MatrixCleaner::validatePsf;
   //using MatrixCleaner::makeScaleMasks;
 
-  casacore::Int ntaylor_p; // Number of terms in the Taylor expansion to use.
-  casacore::Int psfntaylor_p; // Number of terms in the Taylor expansion for PSF.
-  casacore::Int nscales_p; // Number of scales to use for the multiscale part.
-  casacore::Int nx_p;
-  casacore::Int ny_p;
-  casacore::Int totalIters_p; // Total number of minor-cycle iterations
-  casacore::Float globalmaxval_p;
-  casacore::Int maxscaleindex_p;
-  casacore::IPosition globalmaxpos_p;
-  casacore::Int itercount_p; // Number of minor cycle iterations
-  casacore::Int maxniter_p;
-  casacore::Float stopfraction_p;
-  casacore::Float inputgain_p;
-  casacore::Float userthreshold_p;
-  casacore::Float prev_max_p;
-  casacore::Float min_max_p;
-  casacore::Float rmaxval_p;
+  Int ntaylor_p; // Number of terms in the Taylor expansion to use.
+  Int psfntaylor_p; // Number of terms in the Taylor expansion for PSF.
+  Int nscales_p; // Number of scales to use for the multiscale part.
+  Int nx_p;
+  Int ny_p;
+  Int totalIters_p; // Total number of minor-cycle iterations
+  Float globalmaxval_p;
+  Int maxscaleindex_p;
+  IPosition globalmaxpos_p;
+  Int itercount_p; // Number of minor cycle iterations
+  Int maxniter_p;
+  Float stopfraction_p;
+  Float inputgain_p;
+  Float userthreshold_p;
+  Float prev_max_p;
+  Float min_max_p;
+  Float rmaxval_p;
 
-  casacore::IPosition psfsupport_p;
-  casacore::IPosition psfpeak_p;
-  casacore::IPosition blc_p, trc_p, blcPsf_p, trcPsf_p;
+  IPosition psfsupport_p;
+  IPosition psfpeak_p;
+  IPosition blc_p, trc_p, blcPsf_p, trcPsf_p;
 
-  casacore::Vector<casacore::Float> scaleSizes_p; // casacore::Vector of scale sizes in pixels.
-  casacore::Vector<casacore::Float> scaleBias_p; // casacore::Vector of scale biases !!
-  casacore::Vector<casacore::Float> totalScaleFlux_p; // casacore::Vector of total scale fluxes.
-  casacore::Vector<casacore::Float> totalTaylorFlux_p; // casacore::Vector of total flux in each taylor term.
-  casacore::Vector<casacore::Float> maxScaleVal_p; // casacore::Vector for peaks at each scale size
-  casacore::Vector<casacore::IPosition> maxScalePos_p; // casacore::Vector of peak positions at each scale size.
+  Vector<Float> scaleSizes_p; // Vector of scale sizes in pixels.
+  Vector<Float> scaleBias_p; // Vector of scale biases !!
+  Vector<Float> totalScaleFlux_p; // Vector of total scale fluxes.
+  Vector<Float> totalTaylorFlux_p; // Vector of total flux in each taylor term.
+  Vector<Float> maxScaleVal_p; // Vector for peaks at each scale size
+  Vector<IPosition> maxScalePos_p; // Vector of peak positions at each scale size.
 
-  casacore::IPosition gip;
-  casacore::Int nx,ny;
-  casacore::Bool donePSF_p,donePSP_p,doneCONV_p;
+  IPosition gip;
+  Int nx,ny;
+  Bool donePSF_p,donePSP_p,doneCONV_p;
  
-  casacore::Matrix<casacore::Complex> dirtyFT_p;
-  casacore::Block<casacore::Matrix<casacore::Float> > vecScaleMasks_p;
+  Matrix<Complex> dirtyFT_p;
+  Block<Matrix<Float> > vecScaleMasks_p;
   
-  casacore::Matrix<casacore::Complex> cWork_p;
-  casacore::Block<casacore::Matrix<casacore::Float> > vecWork_p;
+  Matrix<Complex> cWork_p;
+  Block<Matrix<Float> > vecWork_p;
   
   // h(s) [nx,ny,nscales]
-  casacore::Block<casacore::Matrix<casacore::Float> > vecScales_p; 
-  casacore::Block<casacore::Matrix<casacore::Complex> > vecScalesFT_p; 
+  Block<Matrix<Float> > vecScales_p; 
+  Block<Matrix<Complex> > vecScalesFT_p; 
   
   // B_k  [nx,ny,ntaylor]
-  // casacore::Block<casacore::Matrix<casacore::Float> > vecPsf_p; 
-  casacore::Block<casacore::Matrix<casacore::Complex> > vecPsfFT_p; 
+  // Block<Matrix<Float> > vecPsf_p; 
+  Block<Matrix<Complex> > vecPsfFT_p; 
   
   // I_D : Residual/Dirty Images [nx,ny,ntaylor]
-  casacore::Block<casacore::Matrix<casacore::Float> > vecDirty_p; 
+  Block<Matrix<Float> > vecDirty_p; 
  
   // I_M : Model Images [nx,ny,ntaylor]
-  casacore::Block<casacore::Matrix<casacore::Float> > vecModel_p; 
-  //  casacore::Block <casacore::Matrix<casacore::Float> > vecScaleModel_p;
+  Block<Matrix<Float> > vecModel_p; 
+  //  Block <Matrix<Float> > vecScaleModel_p;
  
   // A_{smn} = B_{sm} * B{sn} [nx,ny,ntaylor,ntaylor,nscales,nscales]
   // A_{s1s2mn} = B_{s1m} * B{s2n} [nx,ny,ntaylor,ntaylor,nscales,nscales]
-  casacore::Block<casacore::Matrix<casacore::Float> > cubeA_p; 
+  Block<Matrix<Float> > cubeA_p; 
 
   // R_{sk} = I_D * B_{sk} [nx,ny,ntaylor,nscales]
-  casacore::Block<casacore::Matrix<casacore::Float> > matR_p; 
+  Block<Matrix<Float> > matR_p; 
   
   // a_{sk} = Solution vectors. [nx,ny,ntaylor,nscales]
-  casacore::Block<casacore::Matrix<casacore::Float> > matCoeffs_p; 
+  Block<Matrix<Float> > matCoeffs_p; 
 
-  // casacore::Memory to be allocated per Matrix
-  casacore::Double memoryMB_p;
+  // Memory to be allocated per Matrix
+  Double memoryMB_p;
   
   // Solve [A][Coeffs] = [I_D * B]
   // Shape of A : [ntaylor,ntaylor]
-  casacore::Block<casacore::Matrix<casacore::Double> > matA_p;    // 2D matrix to be inverted.
-  casacore::Block<casacore::Matrix<casacore::Double> > invMatA_p; // Inverse of matA_p;
+  Block<Matrix<Double> > matA_p;    // 2D matrix to be inverted.
+  Block<Matrix<Double> > invMatA_p; // Inverse of matA_p;
 
   // FFTserver
-  casacore::FFTServer<casacore::Float,casacore::Complex> fftcomplex;
+  FFTServer<Float,Complex> fftcomplex;
 
   // Initial setup functions  
-  casacore::Int verifyScaleSizes();
-  casacore::Int allocateMemory();
-  casacore::Int setupScaleFunctions();
+  Int verifyScaleSizes();
+  Int allocateMemory();
+  Int setupScaleFunctions();
 
   // Setup per major cycle
-  casacore::Int setupUserMask();
-  casacore::Int computeFluxLimit(casacore::Float &fluxlimit, casacore::Float threshold);
-  casacore::Int computeRHS();
+  Int setupUserMask();
+  Int computeFluxLimit(Float &fluxlimit, Float threshold);
+  Int computeRHS();
 
   // Solver functions : minor-cycle iterations. Need to be efficient.
-  casacore::Int solveMatrixEqn(casacore::Int ntaylor,casacore::Int scale, casacore::IPosition blc, casacore::IPosition trc);
-  casacore::Int chooseComponent(casacore::Int ntaylor,casacore::Int scale, casacore::Int criterion, casacore::IPosition blc, casacore::IPosition trc);
-  casacore::Int updateModelAndRHS(casacore::Float loopgain);
-  casacore::Int updateRHS(casacore::Int ntaylor, casacore::Int scale, casacore::Float loopgain,casacore::Vector<casacore::Float> coeffs, casacore::IPosition blc, casacore::IPosition trc, casacore::IPosition blcPsf, casacore::IPosition trcPsf);
-  casacore::Int checkConvergence(casacore::Int updatetype, casacore::Float &fluxlimit, casacore::Float &loopgain); 
-  casacore::Bool buildImagePatches();
+  Int solveMatrixEqn(Int ntaylor,Int scale, IPosition blc, IPosition trc);
+  Int chooseComponent(Int ntaylor,Int scale, Int criterion, IPosition blc, IPosition trc);
+  Int updateModelAndRHS(Float loopgain);
+  Int updateRHS(Int ntaylor, Int scale, Float loopgain,Vector<Float> coeffs, IPosition blc, IPosition trc, IPosition blcPsf, IPosition trcPsf);
+  Int checkConvergence(Int updatetype, Float &fluxlimit, Float &loopgain); 
+  Bool buildImagePatches();
 
   // Helper functions
-  casacore::Int writeMatrixToDisk(casacore::String imagename, casacore::Matrix<casacore::Float> &themat);
-  casacore::Int IND2(casacore::Int taylor,casacore::Int scale);
-  casacore::Int IND4(casacore::Int taylor1, casacore::Int taylor2, casacore::Int scale1, casacore::Int scale2);
+  Int writeMatrixToDisk(String imagename, Matrix<Float> &themat);
+  Int IND2(Int taylor,Int scale);
+  Int IND4(Int taylor1, Int taylor2, Int scale1, Int scale2);
   
-  casacore::Bool adbg;
+  Bool adbg;
 };
 
 } //# NAMESPACE CASA - END

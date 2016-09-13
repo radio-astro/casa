@@ -46,13 +46,13 @@ const ByteSource& VLAArchiveInput::logicalRecord() const {
 
 Bool VLAArchiveInput::hasData() const {
   MemoryIO& nonconstmemio = const_cast<MemoryIO&>(itsMemIO);
-  return nonconstmemio.length() != 0 ? true: false;
+  return nonconstmemio.length() != 0 ? True: False;
 }
 
 VLAArchiveInput::VLAArchiveInput()
   :itsMemIO(VLAArchiveInput::BlockSize, VLAArchiveInput::BlockSize),
    itsModComp(),
-   itsCtrIO(&itsModComp, &itsMemIO, VLAArchiveInput::BlockSize, false),
+   itsCtrIO(&itsModComp, &itsMemIO, VLAArchiveInput::BlockSize, False),
    itsRecord(&itsCtrIO)
 {
 }

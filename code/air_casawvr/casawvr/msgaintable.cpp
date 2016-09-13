@@ -29,8 +29,6 @@
 #define bnstringer1(x) #x
 #define bnstringer2(x) bnstringer1(x)
 
-using namespace casacore;
-
 namespace LibAIR2 {
 
   // Write a NewCalTable
@@ -162,7 +160,7 @@ namespace LibAIR2 {
     h.defineCalParms(invocation);
 
     casa::CalTable c(fnameout,
-		     casacore::Table::Update);
+		     casa::Table::Update);
     size_t j= c.nRowHistory() +1;
     c.addRowHistory();
     c.putRowHistory(j, h);

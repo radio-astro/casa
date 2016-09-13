@@ -29,7 +29,6 @@
 #include <synthesis/CalTables/EPointTable.h>
 #include <synthesis/CalTables/EPointDesc.h>
 //----------------------------------------------------------------------------
-using namespace casacore;
 namespace casa {
 EPointTable::EPointTable (const String& tableName, 
 			  Table::TableOption access) :

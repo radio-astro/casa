@@ -34,7 +34,7 @@ namespace casa {
 	class ActionFactory {
 	public:
 
-		static casacore::CountedPtr<PlotMSAction> getAction( PlotMSAction::Type actionType, Client* client );
+		static CountedPtr<PlotMSAction> getAction( PlotMSAction::Type actionType, Client* client );
 		virtual ~ActionFactory();
 	private:
 		ActionFactory();

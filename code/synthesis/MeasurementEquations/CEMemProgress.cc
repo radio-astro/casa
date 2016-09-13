@@ -35,7 +35,6 @@
 #include <casa/sstream.h>
 
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 CEMemProgress::CEMemProgress(PGPlotter* pgplotter)
@@ -101,11 +100,11 @@ CEMemProgress::~CEMemProgress()
   if (itsCurrentIndex >= itsTotalFluxes.nelements() ) {
     uInt nn = itsTotalFluxes.nelements();
     
-    itsTotalFluxes.resize(2*nn+1, true);
-    itsMaxResiduals.resize(2*nn+1, true);
-    itsSigmas.resize(2*nn+1, true);
-    itsNormGrads.resize(2*nn+1, true);
-    itsEntropies.resize(2*nn+1, true);
+    itsTotalFluxes.resize(2*nn+1, True);
+    itsMaxResiduals.resize(2*nn+1, True);
+    itsSigmas.resize(2*nn+1, True);
+    itsNormGrads.resize(2*nn+1, True);
+    itsEntropies.resize(2*nn+1, True);
 
 
     Vector<Float> inr(itsIterationNumbers);
@@ -126,21 +125,21 @@ CEMemProgress::~CEMemProgress()
   itsCurrentIndex++;
 
   if(itsPgplotter) {
-    Bool rePlot = false;
+    Bool rePlot = False;
     if ( totalFlux > (0.9*itsCurrentFluxScale)) {
-      rePlot = true;
+      rePlot = True;
       itsCurrentFluxScale *= 2.0;
     }
     if ( numberIterations > (Int)itsCurrentTotalIterations) {
       itsCurrentTotalIterations = numberIterations;
-      rePlot = true;
+      rePlot = True;
     }
     // If we ever plot normGrad, we will need to test/rest its
     // Scale and rePlot
 
 
     if (rePlot) {      
-      basicSetUp(true);      
+      basicSetUp(True);      
     } else {
       plotOne(iteration+1, sigma, maxResid, totalFlux);
     }

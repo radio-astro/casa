@@ -39,7 +39,7 @@ void writeTestString(const String& test) {
 
 
 int main() {
-	Bool ok = true;
+	Bool ok = True;
 	try {
          String casapath = EnvironmentVariable::get("CASAPATH");
          if (casapath.empty()) {
@@ -146,16 +146,16 @@ int main() {
             Vector<Int> axes(0);
             Int nbins = 25;
             Vector<Double> includepix(0);
-            Bool gauss = false;
-            Bool cumu = false;
-            Bool log = false;
-            Bool list = false;
+            Bool gauss = False;
+            Bool cumu = False;
+            Bool log = False;
+            Bool list = False;
             Vector<Int> size(2);
             size[0] = 600;
             size[1] = 450;
-            Bool force = false;
-            Bool disk = false;
-            Bool extendMask = false;
+            Bool force = False;
+            Bool disk = False;
+            Bool extendMask = False;
             Record histOut = ia.histograms(
             	axes, regionRec, mask, nbins, includepix,
             	gauss, cumu, log, list, force, disk, extendMask
@@ -166,7 +166,7 @@ int main() {
             AlwaysAssert((Int)counts.size() == nbins, AipsError);
             Float expValue = -96;
             IPosition axisPath = IPosition::makeAxisPath(values.ndim());
-            ArrayPositionIterator iter(values.shape(), axisPath, false);
+            ArrayPositionIterator iter(values.shape(), axisPath, False);
             while (! iter.pastEnd()) {
                 const IPosition pos = iter.pos();
                 AlwaysAssert(values(pos) == expValue, AipsError);
@@ -197,7 +197,7 @@ int main() {
         	try {
         		// should throw exception, xy.size() != 2
         		ia.getFreqProfile(xy, zxaxis, zyaxis);
-        		AlwaysAssert(false, AipsError);
+        		AlwaysAssert(False, AipsError);
         	}
         	catch (AipsError x) {
         		cout << "Exception thrown as expected: " << x.getMesg() << endl;
@@ -223,8 +223,8 @@ int main() {
         	Vector<String> plotstats(0);
         	Vector<Float> includepix(0), excludepix(0);
         	Int nx = 1, ny = 1;
-        	Bool list = false, force = false, disk = false, robust = true;
-        	Bool verbose = true, extendMask = false;
+        	Bool list = False, force = False, disk = False, robust = True;
+        	Bool verbose = True, extendMask = False;
         	vector<String> *messageStore = 0;
 
         	ia.statistics(
@@ -254,9 +254,9 @@ int main() {
         	TempImage<Float> templ(TiledShape(IPosition(3, 10, 10, 10)), csysTemp);
         	ImageAnalysis ia(&input);
         	ImageInterface<Float> *output = ia.regrid(
-			"", &templ, "linear", true,
+			"", &templ, "linear", True,
 			Vector<Int>(1, 2), Record(),
-        		"", 10, false, true, false, false, false
+        		"", 10, False, True, False, False, False
         	);
         	SpectralCoordinate specOut = output->coordinates().spectralCoordinate();
         	SpectralCoordinate specTemp = templ.coordinates().spectralCoordinate();
@@ -285,7 +285,7 @@ int main() {
         cout << "ok" << endl;
 	}
     catch (AipsError x) {
-    	ok = false;
+    	ok = False;
         cerr << "Exception caught: " << x.getMesg() << endl;
     }
 	return ok ? 0 : 1;

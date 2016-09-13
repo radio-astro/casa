@@ -56,21 +56,21 @@ public:
 	DataCubeHolderBase() {}
 	virtual ~DataCubeHolderBase() {}
 	virtual DataCubeHolderBase * selfReference() = 0;
-	virtual void setMatrixIndex(casacore::uInt matrixIndex) = 0;
-	virtual void setVectorIndex(casacore::uInt vectorIndex) = 0;
-	casacore::uInt getMatrixIndex();
-	casacore::uInt getVectorIndex();
-	casacore::IPosition & getCubeShape();
-	casacore::IPosition & getMatrixShape();
-	casacore::IPosition & getVectorShape();
+	virtual void setMatrixIndex(uInt matrixIndex) = 0;
+	virtual void setVectorIndex(uInt vectorIndex) = 0;
+	uInt getMatrixIndex();
+	uInt getVectorIndex();
+	IPosition & getCubeShape();
+	IPosition & getMatrixShape();
+	IPosition & getVectorShape();
 
 protected:
 
-	casacore::uInt matrixIndex_p;
-	casacore::uInt vectorIndex_p;
-	casacore::IPosition cubeShape_p;
-	casacore::IPosition matrixShape_p;
-	casacore::IPosition vectorShape_p;
+	uInt matrixIndex_p;
+	uInt vectorIndex_p;
+	IPosition cubeShape_p;
+	IPosition matrixShape_p;
+	IPosition vectorShape_p;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -82,46 +82,46 @@ template <class T> class DataCubeHolder : public DataCubeHolderBase
 
 public:
 
-	DataCubeHolder(casacore::Cube<T> &dataCube)
+	DataCubeHolder(Cube<T> &dataCube)
 	{
 		cube_p.reference(dataCube);
 		cubeShape_p = cube_p.shape();
 	}
 
-	DataCubeHolder(const casacore::Cube<T> &dataCube)
+	DataCubeHolder(const Cube<T> &dataCube)
 	{
 		cube_p.reference(dataCube);
 		cubeShape_p = cube_p.shape();
 	}
 
-	DataCubeHolder(casacore::Matrix<T> &dataMatrix)
+	DataCubeHolder(Matrix<T> &dataMatrix)
 	{
 		matrix_p.reference(dataMatrix);
 		matrixShape_p = matrix_p.shape();
 	}
 
-	DataCubeHolder(const casacore::Matrix<T> &dataMatrix)
+	DataCubeHolder(const Matrix<T> &dataMatrix)
 	{
 		matrix_p.reference(dataMatrix);
 		matrixShape_p = matrix_p.shape();
 	}
 
-	DataCubeHolder(casacore::Vector<T> &dataVector)
+	DataCubeHolder(Vector<T> &dataVector)
 	{
 		vector_p.reference(dataVector);
 		vectorShape_p = vector_p.shape();
 	}
 
-	DataCubeHolder(const casacore::Vector<T> &dataVector)
+	DataCubeHolder(const Vector<T> &dataVector)
 	{
 		vector_p.reference(dataVector);
 		vectorShape_p = vector_p.shape();
 	}
 
-	casacore::Matrix<T> & getMatrix() {return matrix_p;}
-	casacore::Vector<T> & getVector() {return vector_p;}
+	Matrix<T> & getMatrix() {return matrix_p;}
+	Vector<T> & getVector() {return vector_p;}
 
-	void setMatrixIndex(casacore::uInt matrixIndex)
+	void setMatrixIndex(uInt matrixIndex)
 	{
 		matrix_p.resize(); // Resize to 0 to avoid shape conformance problems
 		matrixIndex_p = matrixIndex;
@@ -131,7 +131,7 @@ public:
 		return;
 	}
 
-	void setVectorIndex(casacore::uInt vectorIndex)
+	void setVectorIndex(uInt vectorIndex)
 	{
 		vector_p.resize(); // Resize to 0 to avoid shape conformance problems
 		vectorIndex_p = vectorIndex;
@@ -150,9 +150,9 @@ public:
 
 protected:
 
-	casacore::Cube<T> cube_p;
-	casacore::Matrix<T> matrix_p;
-	casacore::Vector<T> vector_p;
+	Cube<T> cube_p;
+	Matrix<T> matrix_p;
+	Vector<T> vector_p;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -168,37 +168,37 @@ public:
 	DataCubeMap(DataCubeMap& other);
 	~DataCubeMap();
 
-	void add(casacore::MS::PredefinedColumns key,DataCubeHolderBase* dataCubeHolder);
-	void add(casacore::MS::PredefinedColumns key,DataCubeHolderBase &dataCubeHolder);
+	void add(MS::PredefinedColumns key,DataCubeHolderBase* dataCubeHolder);
+	void add(MS::PredefinedColumns key,DataCubeHolderBase &dataCubeHolder);
 
-	casacore::Bool present(casacore::MS::PredefinedColumns key);
+	Bool present(MS::PredefinedColumns key);
 
-	template <class T> casacore::Vector<T> & getVector(casacore::MS::PredefinedColumns key)
+	template <class T> Vector<T> & getVector(MS::PredefinedColumns key)
 	{
 		DataCubeHolder<T> *dataCubeHolder = static_cast< DataCubeHolder<T>* >(dataCubeMap_p[key]);
 		return dataCubeHolder->getVector();
 	}
 
-	template <class T> casacore::Matrix<T> & getMatrix(casacore::MS::PredefinedColumns key)
+	template <class T> Matrix<T> & getMatrix(MS::PredefinedColumns key)
 	{
 		DataCubeHolder<T> *dataCubeHolder = static_cast< DataCubeHolder<T>* >(dataCubeMap_p[key]);
 		return dataCubeHolder->getVector();
 	}
 
-	void setMatrixIndex(casacore::uInt rowIndex);
-	void setVectorIndex(casacore::uInt vectorIndex);
+	void setMatrixIndex(uInt rowIndex);
+	void setVectorIndex(uInt vectorIndex);
 
-	casacore::IPosition & getCubeShape();
-	casacore::IPosition & getMatrixShape();
-	casacore::IPosition & getVectorShape();
+	IPosition & getCubeShape();
+	IPosition & getMatrixShape();
+	IPosition & getVectorShape();
 
 	size_t nelements();
 
 
 protected:
 
-	std::map<casacore::MS::PredefinedColumns, DataCubeHolderBase*> dataCubeMap_p;
-	std::map<casacore::MS::PredefinedColumns, DataCubeHolderBase*>::iterator dataCubeMapIter_p;
+	std::map<MS::PredefinedColumns, DataCubeHolderBase*> dataCubeMap_p;
+	std::map<MS::PredefinedColumns, DataCubeHolderBase*>::iterator dataCubeMapIter_p;
 };
 
 
@@ -206,26 +206,26 @@ protected:
 // Convenience methods
 //////////////////////////////////////////////////////////////////////////
 
-inline casacore::Float weightToSigma (casacore::Float weight)
+inline Float weightToSigma (Float weight)
 {
 	return weight > FLT_MIN ? 1.0 / std::sqrt (weight) : -1.0;
 }
 
-inline casacore::Float sigmaToWeight (casacore::Float sigma)
+inline Float sigmaToWeight (Float sigma)
 {
 	return sigma > FLT_MIN ? 1.0 / (sigma * sigma) : 0.0;
 }
 
-void accumulateWeightCube (	const casacore::Cube<casacore::Float> &weightCube,
-							const casacore::Cube<casacore::Bool> &flags,
-							casacore::Matrix<casacore::Float> &result);
+void accumulateWeightCube (	const Cube<Float> &weightCube,
+							const Cube<Bool> &flags,
+							Matrix<Float> &result);
 
-void accumulateWeightMatrix (	const casacore::Matrix<casacore::Float> &weightMatrix,
-								const casacore::Matrix<casacore::Bool> &flags,
-								casacore::Vector<casacore::Float> &result);
+void accumulateWeightMatrix (	const Matrix<Float> &weightMatrix,
+								const Matrix<Bool> &flags,
+								Vector<Float> &result);
 
-void accumulateFlagCube (	const casacore::Cube<casacore::Bool> &flagCube,
-							casacore::Vector<casacore::Bool> &flagRow);
+void accumulateFlagCube (	const Cube<Bool> &flagCube,
+							Vector<Bool> &flagRow);
 
 
 

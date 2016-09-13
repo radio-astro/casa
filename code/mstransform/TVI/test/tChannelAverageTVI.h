@@ -40,7 +40,7 @@ class ChannelAverageTVITest: public FreqAxisTVITest {
 public:
 
 	ChannelAverageTVITest();
-	ChannelAverageTVITest(casacore::Record configuration);
+	ChannelAverageTVITest(Record configuration);
 
     void TestBody();
     void testCompareTransformedData();
@@ -51,8 +51,8 @@ protected:
     void propagateFlags();
     void generateTestFile();
     void generateReferenceFile();
-    void initTestConfiguration(casacore::Record &configuration);
-    void initReferenceConfiguration(casacore::Record &configuration);
+    void initTestConfiguration(Record &configuration);
+    void initReferenceConfiguration(Record &configuration);
 };
 
 #endif /* ChannelAverageTVITest_H_ */

@@ -43,13 +43,9 @@
 
 #include <casa/namespace.h>
 //# Forward Declarations
-namespace casacore{
-
+namespace casa { //# NAMESPACE CASA - BEGIN
   class MeasurementSet;
   class MSColumns;
-}
-
-namespace casa { //# NAMESPACE CASA - BEGIN
 } //# NAMESPACE CASA - END
 
 
@@ -117,40 +113,40 @@ class MirField : public MirInfo
 {
  public:
     // the position offsets
-    casacore::Float dra, ddec;
+    Float dra, ddec;
 
-    // the ID assigned to this field within the casacore::MeasurementSet being filled.
+    // the ID assigned to this field within the MeasurementSet being filled.
     // A value of -1 means that the ID has not yet been assigned.
-    casacore::Int id;
+    Int id;
 
     // create a new field description
-    MirField(casacore::Float delra, casacore::Float deldec, casacore::Int fid=-1);
+    MirField(Float delra, Float deldec, Int fid=-1);
 
     // delete this field
     virtual ~MirField();
 
     // return true if this field's offsets match those of another 
-    casacore::Bool operator==(const MirField &that) {
+    Bool operator==(const MirField &that) {
 	return (dra==that.dra && ddec==that.ddec);
     }
 
     // return false if this field's offsets match those of another 
-    casacore::Bool operator!=(const MirField &that) {
+    Bool operator!=(const MirField &that) {
 	return ! (*this == that);
     }
 
     // return a pointer to a field in a given list of fields that is equal 
     // to this field.
-    MirField *findIn(casacore::List<MirField*> &fldlist) {
-	casacore::ListIter<MirField*> li(fldlist);
+    MirField *findIn(List<MirField*> &fldlist) {
+	ListIter<MirField*> li(fldlist);
         while (! li.atEnd() && *(li.getRight()) != *this) li++;
         return ((li.atEnd()) ? NULL : li.getRight());
     }
 
     // clear the ID values for all the fields in a field list by setting them
     // to -1.  
-    static void clearIDs(casacore::List<MirField*> &fldlist) {
-	for(casacore::ListIter<MirField*> li(fldlist); ! li.atEnd(); ++li) 
+    static void clearIDs(List<MirField*> &fldlist) {
+	for(ListIter<MirField*> li(fldlist); ! li.atEnd(); ++li) 
             li.getRight()->id = -1;
     }
 	
@@ -189,63 +185,63 @@ class MirFreqSetup : public MirInfo {
  public: 
 
     // the correlator mode
-    casacore::Int mode;
+    Int mode;
 
     // the correlator filter bandwidths
-    casacore::Float *corbw;
+    Float *corbw;
 
     // the correlator LO frequencies
-    casacore::Float *corf;
+    Float *corf;
 
     // the number of spectral windows
-    casacore::Int nspect;
+    Int nspect;
 
     // the number of wideband channels
-    casacore::Int nwide;
+    Int nwide;
 
     // the total number of spectral line channels
-    casacore::Int nchan;
+    Int nchan;
 
     // the number of channels in each window
-    casacore::Int *nschan;
+    Int *nschan;
 
     // the number of the first channel in each window
-    casacore::Int *ischan;
+    Int *ischan;
 
     // the frequency of the first channel in each window
-    casacore::Double *sfreq;
+    Double *sfreq;
 
     // the frequency separation between channels in each window
-    casacore::Double *sdf;
+    Double *sdf;
 
     // the rest frequency for each window
-    casacore::Double *rfreq;
+    Double *rfreq;
 
     // the center frequency of each wideband channel
-    casacore::Float *wfreq;
+    Float *wfreq;
 
     // the bandwidth of each wideband channel
-    casacore::Float *wwidth;
+    Float *wwidth;
 
     // the reference frequency for this setup.  Usually the rest frequency
     // of the primary line of the observations.
-    casacore::Double freq;
+    Double freq;
 
-    // the ID assigned to this setup within the casacore::MeasurementSet being filled.
+    // the ID assigned to this setup within the MeasurementSet being filled.
     // A value of -1 means that the ID has not yet been assigned.
-    casacore::Int id;
+    Int id;
 
     // the narrow window mapping index.  This maps
-    // Miriad window numbers to casacore::MS spectral window IDs.
+    // Miriad window numbers to MS spectral window IDs.
     IDIndex nfidx;
 
     // the wideband mapping index.  This maps
-    // Miriad wideband channel numbers to casacore::MS spectral window IDs.
+    // Miriad wideband channel numbers to MS spectral window IDs.
     IDIndex wfidx;
 
     // create a new setup by reading the relevent variable data from 
     // the given miriad dataset handle
-    MirFreqSetup(casacore::Int mir_handle);
+    MirFreqSetup(Int mir_handle);
 
     virtual ~MirFreqSetup();
 
@@ -254,10 +250,10 @@ class MirFreqSetup : public MirInfo {
     // corfs and corbws are identical.  (The window starting frequencies can
     // change as they are topocentric; this may cause problems for miriad 
     // data that did not originate from BIMA.)
-    casacore::Bool operator==(MirFreqSetup &that);
+    Bool operator==(MirFreqSetup &that);
 
     // return false if this setup is the same as another.
-    casacore::Bool operator!=(MirFreqSetup &that) {
+    Bool operator!=(MirFreqSetup &that) {
 	return ! (*this == that);
     }
 
@@ -270,16 +266,16 @@ class MirFreqSetup : public MirInfo {
 
     // return a pointer to a setup in a given list of setups that is equal 
     // to this setup.
-    MirFreqSetup *findIn(casacore::List<MirFreqSetup*> &setuplist) {
-        casacore::ListIter<MirFreqSetup*> li(setuplist);
+    MirFreqSetup *findIn(List<MirFreqSetup*> &setuplist) {
+        ListIter<MirFreqSetup*> li(setuplist);
         while (! li.atEnd() && *(li.getRight()) != *this) li++;
         return ((li.atEnd()) ? NULL : li.getRight());
     }
 
     // clear the ID values for all the setups in a setup list by setting them
     // to -1.  
-    static void clearIDs(casacore::List<MirFreqSetup*> &setuplist) {
-	for(casacore::ListIter<MirFreqSetup*> li(setuplist); ! li.atEnd(); ++li) 
+    static void clearIDs(List<MirFreqSetup*> &setuplist) {
+	for(ListIter<MirFreqSetup*> li(setuplist); ! li.atEnd(); ++li) 
             li.getRight()->clear();
     }
 };
@@ -318,16 +314,16 @@ class MirFreqSetup : public MirInfo {
 // 
 class MirPolCorr : public MirInfo {
  private:
-    casacore::Int corr;
-    mutable casacore::Int id;
+    Int corr;
+    mutable Int id;
 
-    static const casacore::Stokes::StokesTypes corratopol[];
-    static const casacore::Stokes::StokesTypes corrbtopol[];
+    static const Stokes::StokesTypes corratopol[];
+    static const Stokes::StokesTypes corrbtopol[];
 
  public:
     // create a container.  Poltype is the polarization type in the Miriad 
     // convention (i.e. as read from the "pol" variable in a Miriad dataset).
-    MirPolCorr(casacore::Int poltype);
+    MirPolCorr(Int poltype);
 
     // create a copy of a container.  
     MirPolCorr(const MirPolCorr& that) : id(-1) { corr = that.corr; }
@@ -335,57 +331,57 @@ class MirPolCorr : public MirInfo {
     // delete the container
     virtual ~MirPolCorr();
 
-    casacore::Bool operator==(const MirPolCorr& that) const { return corr == that.corr; }
-    casacore::Bool operator==(casacore::Int poltype) const { return corr == poltype; }
+    Bool operator==(const MirPolCorr& that) const { return corr == that.corr; }
+    Bool operator==(Int poltype) const { return corr == poltype; }
 
     // set the independent ID.  A value less than zero should be interpreted
     // as meaning unset.
-    void setID(casacore::Int val) const { id = val; }
+    void setID(Int val) const { id = val; }
 
     // return the independent ID.  A value less than zero should be interpreted
     // as meaning unset.
-    casacore::Int getID() const { return id; }
+    Int getID() const { return id; }
 
     // clear the independent ID value
     void clearID() const { id = -1; }
 
     // return the polarization correlation type in the Miriad 
     // convention (i.e. as read from the "pol" variable in a Miriad dataset).
-    casacore::Int getType() const { return corr; }
+    Int getType() const { return corr; }
 
     // return the polarization type associated with the first 
     // receptor for this correlation type.  The returned StokesType for 
-    // non-true casacore::Stokes types will be that for a single type cross-correlated
+    // non-true Stokes types will be that for a single type cross-correlated
     // with itself.
-    casacore::Stokes::StokesTypes getFirstPolType() const {
+    Stokes::StokesTypes getFirstPolType() const {
 	return corratopol[corr+8];
     }
 
     // return the polarization type associated with the second
     // receptor for the given correlation type.  The returned StokesType for 
-    // non-true casacore::Stokes types will be that for a single type cross-correlated
+    // non-true Stokes types will be that for a single type cross-correlated
     // with itself.
-    casacore::Stokes::StokesTypes getSecondPolType() const {
+    Stokes::StokesTypes getSecondPolType() const {
 	return corrbtopol[corr+8];
     }
 
-    // return true if the given single polarization type is one of the 
+    // return True if the given single polarization type is one of the 
     // components of this correlation type
-    casacore::Bool hasPol(casacore::Stokes::StokesTypes pol) const {
+    Bool hasPol(Stokes::StokesTypes pol) const {
 	return (getFirstPolType() == pol || getSecondPolType() == pol);
     }
 
     // convert the Miriad polarization code to the AIPS
-    static casacore::Stokes::StokesTypes toAips(casacore::Int pol);
+    static Stokes::StokesTypes toAips(Int pol);
 
-    // convert the Aips casacore::Stokes polarization code to the Miriad convention
-    static casacore::Int toMiriad(casacore::Stokes::StokesTypes pol);
+    // convert the Aips Stokes polarization code to the Miriad convention
+    static Int toMiriad(Stokes::StokesTypes pol);
 
-    // return the AIPS++ casacore::Stokes type for the current polarization
-    casacore::Stokes::StokesTypes getAipsType() const { return toAips(corr); }
+    // return the AIPS++ Stokes type for the current polarization
+    Stokes::StokesTypes getAipsType() const { return toAips(corr); }
 
     // return a string representation of this polarization 
-    casacore::String toString() const { return casacore::Stokes::name(getAipsType()); }
+    String toString() const { return Stokes::name(getAipsType()); }
 };
 
 // <summary>
@@ -421,52 +417,52 @@ class ConstMirPolSetup : public MirInfo {
     virtual ~ConstMirPolSetup();
 
  protected:
-    casacore::List<MirPolCorr> corrs;
-    casacore::ListIter<MirPolCorr> iter;
+    List<MirPolCorr> corrs;
+    ListIter<MirPolCorr> iter;
 
     ConstMirPolSetup();
     ConstMirPolSetup(ConstMirPolSetup& other);
-    casacore::Bool find(casacore::Int poltype, casacore::ConstListIter<MirPolCorr>& li);
+    Bool find(Int poltype, ConstListIter<MirPolCorr>& li);
     
  public:
 
     // return the number of polarization correlation types in this setup
-    casacore::uInt getCorrCount() { return corrs.len(); }
+    uInt getCorrCount() { return corrs.len(); }
 
-    // set the current polarization correlation to the given type.  true 
+    // set the current polarization correlation to the given type.  True 
     // is returned if the type is found; if it is not, the current 
     // polarization is unchanged.
-    casacore::Bool setCorr(casacore::Int poltype) {
+    Bool setCorr(Int poltype) {
 	// Note: this has been made non-virtual on purpose
 	return find(poltype, iter);
     }
 
-    // return true if the given polarization correlation type is a member
+    // return True if the given polarization correlation type is a member
     // of this set
-    casacore::Bool hasCorr(casacore::Int poltype) {
-	casacore::ConstListIter<MirPolCorr> li(corrs);
+    Bool hasCorr(Int poltype) {
+	ConstListIter<MirPolCorr> li(corrs);
 	return find(poltype, li);
     }
 
     // clear all the IDs associated with the polarization correlation types
     // in this list
     void clearIDs() {
-	casacore::ConstListIter<MirPolCorr> li(corrs);
+	ConstListIter<MirPolCorr> li(corrs);
 	for(li.toStart(); ! li.atEnd(); ++li) {
 	    li.getRight().clearID();
 	}
     }
 
     // return the list of polarization correlation types stored in this set
-    const casacore::List<MirPolCorr>& getCorrs() { return corrs; }
+    const List<MirPolCorr>& getCorrs() { return corrs; }
 
     // return the currently selected polarization
     MirPolCorr& getCurrent() { return iter.getRight(); }
 
     // return the AIPS type for the current polarization.  If no
     // current polarization correlation type is set, YY is returned
-    casacore::Stokes::StokesTypes getCurrentAipsType() {
-	return ((iter.atEnd()) ? casacore::Stokes::YY : iter.getRight().getAipsType());
+    Stokes::StokesTypes getCurrentAipsType() {
+	return ((iter.atEnd()) ? Stokes::YY : iter.getRight().getAipsType());
     }
 };
 
@@ -502,7 +498,7 @@ class MirPolSetup : public ConstMirPolSetup {
  private:
     // add a new correlation type to this list.  This function assumes that
     // the type does not already exist in the list.
-    void addCorr(casacore::Int poltype);
+    void addCorr(Int poltype);
 
  public: 
     MirPolSetup();
@@ -510,14 +506,14 @@ class MirPolSetup : public ConstMirPolSetup {
     virtual ~MirPolSetup();
 
     // set the current polarization correlation to the given type.  If 
-    // the type is not already part of this set, it will be added.  true 
+    // the type is not already part of this set, it will be added.  True 
     // is returned if the type is found without having to add it.
-    casacore::Bool setCorr(casacore::Int poltype) {
+    Bool setCorr(Int poltype) {
 	if (! find(poltype, iter)) {
 	    addCorr(poltype);
-	    return false;
+	    return False;
 	}
-	return true;
+	return True;
     }
 
 }; 
@@ -540,7 +536,7 @@ class MirPolSetup : public ConstMirPolSetup {
 // the types of polarizations a group of receptors are sensitive to.
 //
 // Single Polarization types are identified using the AIPS' StokesTypes 
-// enumeration.  For non-true casacore::Stokes types, the value for the polarization
+// enumeration.  For non-true Stokes types, the value for the polarization
 // cross-correlated with itself is used.
 // </synopsis>
 //
@@ -556,8 +552,8 @@ class MirPolSetup : public ConstMirPolSetup {
 // 
 class MirPolRecps : public MirInfo {
  private:
-    casacore::List<casacore::Stokes::StokesTypes> pols;
-    mutable casacore::ListIter<casacore::Stokes::StokesTypes> iter;
+    List<Stokes::StokesTypes> pols;
+    mutable ListIter<Stokes::StokesTypes> iter;
 
  public:
     MirPolRecps() : pols(), iter(pols) { }
@@ -565,10 +561,10 @@ class MirPolRecps : public MirInfo {
 
     // return the number of distinct single polarization that make up 
     // this setup
-    casacore::uInt getPolCount() const { return pols.len(); }
+    uInt getPolCount() const { return pols.len(); }
 
     // add a polarization type if it isn't already added.
-    void addPol(casacore::Stokes::StokesTypes pol) {
+    void addPol(Stokes::StokesTypes pol) {
 	if (! hasPol(pol)) {
 	    iter.toEnd();
 	    iter.addRight(pol);
@@ -585,39 +581,39 @@ class MirPolRecps : public MirInfo {
     // add the polarization types involved in the cross-correlations
     // represented by the correlation types in the given list
     void addPolsFor(ConstMirPolSetup &pol) {
-	casacore::ConstListIter<MirPolCorr> li(pol.getCorrs());
+	ConstListIter<MirPolCorr> li(pol.getCorrs());
 	for(li.toStart(); ! li.atEnd(); ++li) 
 	    addPolsFor(li.getRight());
     }
 
     // return the i-th polarization 
-    casacore::Stokes::StokesTypes getPol(casacore::Int i) const { 
+    Stokes::StokesTypes getPol(Int i) const { 
 	iter.pos(i); 
 	return iter.getRight();
     }
 
     // find the position of the given polarization type.  -1 is returned
     // if the polarization is not found
-    casacore::Int find(casacore::Stokes::StokesTypes pol) {
+    Int find(Stokes::StokesTypes pol) {
 	for(iter.toStart(); ! iter.atEnd(); ++iter) {
 	    if (iter.getRight() == pol) return iter.pos();
 	}
 	return -1;
     }
 
-    // return true if the given polarization is present in this list
-    casacore::Bool hasPol(casacore::Stokes::StokesTypes pol) { return (find(pol) >= 0); }
+    // return True if the given polarization is present in this list
+    Bool hasPol(Stokes::StokesTypes pol) { return (find(pol) >= 0); }
 
     // return the unique list of single polarization types that comprise
     // the correlation types.
-    const casacore::List<casacore::Stokes::StokesTypes>& getPols() const { return pols; }
+    const List<Stokes::StokesTypes>& getPols() const { return pols; }
 
     // return a string representing the i-th polarization 
-    casacore::String toString(casacore::Int i) const { return polToString(getPol(i)); }
+    String toString(Int i) const { return polToString(getPol(i)); }
 
     // return a string representing the given polarization 
-    static casacore::String polToString(casacore::Stokes::StokesTypes pol) {
-	return casacore::String( (casacore::Stokes::name(pol)).at(0,1) );
+    static String polToString(Stokes::StokesTypes pol) {
+	return String( (Stokes::name(pol)).at(0,1) );
     }
 };
 
@@ -666,69 +662,69 @@ class MirSource : public MirInfo {
     };
 
     // the source name
-    casacore::String name;
+    String name;
 
     // the initial source position
-    casacore::Double ra, dec;
+    Double ra, dec;
 
     // the position epoch
-    casacore::Float epoch;
+    Float epoch;
 
     // the time of first observation
-    casacore::Double time;
+    Double time;
 
     // the source id
-    casacore::Int id;
+    Int id;
 
     // the first row of this source record appears in the SOURCE table.  
-    casacore::Int row;
+    Int row;
 
     // a planet identifier
     SolSysObject solsys;
 
     // Planet names
-    static const casacore::String solSysNames[];
+    static const String solSysNames[];
 
     // a list of fields
-    casacore::List<MirField*> flds;
+    List<MirField*> flds;
 
-    MirSource(casacore::String source, casacore::Double sra, casacore::Double sdec, casacore::Float sepoch, 
-              casacore::Double stime=0, casacore::Int sid=-1);
-    MirSource(int mirh, casacore::Double stime=0);
+    MirSource(String source, Double sra, Double sdec, Float sepoch, 
+              Double stime=0, Int sid=-1);
+    MirSource(int mirh, Double stime=0);
     virtual ~MirSource();
 
     // return true if this source is the same as another.
     // Two sources are considered the same if they have the same name and 
     // position epoch.
-    casacore::Bool operator==(const MirSource &that) {
+    Bool operator==(const MirSource &that) {
 	return (name==that.name && epoch==that.epoch);
     }
 
     // return false if this source is the same as another.
-    casacore::Bool operator!=(const MirSource &that) {
+    Bool operator!=(const MirSource &that) {
 	return ! (*this == that);
     }
 
     // return a pointer to a source in a given list of source that is equal 
     // to this source.
-    MirSource *findIn(casacore::List<MirSource*> &srclist) {
-	casacore::ListIter<MirSource*> li(srclist);
+    MirSource *findIn(List<MirSource*> &srclist) {
+	ListIter<MirSource*> li(srclist);
         while (! li.atEnd() && *(li.getRight()) != *this) li++;
         return ((li.atEnd()) ? NULL : li.getRight());
     }
 
     // return a pointer to a source in a given list of source that has the same
     // name as this source.
-    MirSource *findNameIn(casacore::List<MirSource*> &srclist) {
-	casacore::ListIter<MirSource*> li(srclist);
+    MirSource *findNameIn(List<MirSource*> &srclist) {
+	ListIter<MirSource*> li(srclist);
         while (! li.atEnd() && li.getRight()->name != this->name) li++;
         return ((li.atEnd()) ? NULL : li.getRight());
     }
 
     // clear the ID values for all the source in a source list by setting them
     // to -1.  
-    static void clearIDs(casacore::List<MirSource*> &srclist) {
-	for(casacore::ListIter<MirSource*> li(srclist); ! li.atEnd(); ++li) {
+    static void clearIDs(List<MirSource*> &srclist) {
+	for(ListIter<MirSource*> li(srclist); ! li.atEnd(); ++li) {
             li.getRight()->id = -1;
             if (li.getRight()->flds.len() > 0) {
                 MirField::clearIDs(li.getRight()->flds);
@@ -736,64 +732,64 @@ class MirSource : public MirInfo {
         }
     }
 
-    // return true if this source is a moving object (by virtue of having 
+    // return True if this source is a moving object (by virtue of having 
     // multiple positions added to this container).
-    casacore::Bool isMoving() { return (motion_p != 0); }
+    Bool isMoving() { return (motion_p != 0); }
 
-    // return true if this source is identified as a major solar system object
-    casacore::Bool isSolSysObj() { return (solsys < N_Objects); }
+    // return True if this source is identified as a major solar system object
+    Bool isSolSysObj() { return (solsys < N_Objects); }
 
-    // return true if this source is identified as a planet
-    casacore::Bool isPlanet() { return (solsys < SUN); }
+    // return True if this source is identified as a planet
+    Bool isPlanet() { return (solsys < SUN); }
 
-    // return true if any of the fields is pointed off the main source 
+    // return True if any of the fields is pointed off the main source 
     // position (as given by ra and dec)
-    casacore::Bool offSource() {
-	if (flds.len() > 1) return true;
-	casacore::ListIter<MirField*> f(flds);
+    Bool offSource() {
+	if (flds.len() > 1) return True;
+	ListIter<MirField*> f(flds);
 	return (f.getRight()->dra != 0 || f.getRight()->ddec != 0);
     }
 
     // add a new position for this source
-    void addPosition(casacore::Double mtime, casacore::Double mra, casacore::Double mdec) {
+    void addPosition(Double mtime, Double mra, Double mdec) {
 	if (! motion_p) {
-	    motion_p = new casacore::OrderedMap<casacore::Double, casacore::OrderedPair<casacore::Double, casacore::Double> >(
-		casacore::OrderedPair<casacore::Double,Double>(0,0), 2);
-	    motion_p->define(time, casacore::OrderedPair<casacore::Double, casacore::Double>(ra, dec));
+	    motion_p = new OrderedMap<Double, OrderedPair<Double, Double> >(
+		OrderedPair<Double,Double>(0,0), 2);
+	    motion_p->define(time, OrderedPair<Double, Double>(ra, dec));
 	}
 	if (! motion_p->isDefined(mtime))
-	    motion_p->define(mtime, casacore::OrderedPair<casacore::Double, casacore::Double>(mra, mdec));
+	    motion_p->define(mtime, OrderedPair<Double, Double>(mra, mdec));
     }
 
     // load the motion data into the given arrays
-    void getMotion(casacore::Vector<casacore::Double> &time, 
-		   casacore::Vector<casacore::Double> &ra, casacore::Vector<casacore::Double> &dec) 
+    void getMotion(Vector<Double> &time, 
+		   Vector<Double> &ra, Vector<Double> &dec) 
     {
 	if (! motion_p) return;
-	casacore::uInt n = motion_p->ndefined();
+	uInt n = motion_p->ndefined();
 	time.resize(n);
 	ra.resize(n);
 	dec.resize(n);
 
-	casacore::MapIter<casacore::Double, casacore::OrderedPair<casacore::Double, casacore::Double> > iter(*motion_p);
-	for(casacore::uInt i=0; ! iter.atEnd(); ++iter, ++i) {
+	MapIter<Double, OrderedPair<Double, Double> > iter(*motion_p);
+	for(uInt i=0; ! iter.atEnd(); ++iter, ++i) {
 	    time(i) = iter.getKey();
 	    ra(i) = iter.getVal().x();
 	    dec(i) = iter.getVal().y();
 	}
     }
 
-    static SolSysObject matchSolSysObj(const casacore::String &name);
+    static SolSysObject matchSolSysObj(const String &name);
 
-    static casacore::Int nextID() {  
-	casacore::Int out = nxtid_p;
+    static Int nextID() {  
+	Int out = nxtid_p;
 	nxtid_p++;
 	return out;
     }
 
 private:
-    casacore::OrderedMap<casacore::Double, casacore::OrderedPair<casacore::Double, casacore::Double> > *motion_p;
-    static casacore::Int nxtid_p;
+    OrderedMap<Double, OrderedPair<Double, Double> > *motion_p;
+    static Int nxtid_p;
 };
 
 // <summary>
@@ -807,44 +803,44 @@ private:
 // </reviewed>
 // 
 // <etymology>
-// The casacore::Data Description subtable record has two main components: a spectral
+// The Data Description subtable record has two main components: a spectral
 // window ID and a polarization ID.
 // </etymology>
 //
 // <synopsis>
 // This class holds two IDs that make up the "data description" of a record
-// in an casacore::MS MAIN table: the spectral window ID and the polarization ID.  
+// in an MS MAIN table: the spectral window ID and the polarization ID.  
 // </synopsis>
 //
 // <motivation>
-// Records in the MAIN casacore::MS table are linked to rows in the SPECTRAL_WINDOW and 
+// Records in the MAIN MS table are linked to rows in the SPECTRAL_WINDOW and 
 // POLARIZATION subtables via a single DATA_DESC_ID; this class collects the
 // indicies into those two subtables into a single class that can be linked to
-// an ID in the DATA_DESCRIPTION subtable (via a casacore::Map).  
+// an ID in the DATA_DESCRIPTION subtable (via a Map).  
 // </motivation>
 //
 class DataDescComponents {
  private:
-    casacore::Int spw;
-    casacore::Int pol;
+    Int spw;
+    Int pol;
  public:
-    DataDescComponents(casacore::Int spwid=-1, casacore::Int polid=-1) : spw(spwid), pol(polid) { }
+    DataDescComponents(Int spwid=-1, Int polid=-1) : spw(spwid), pol(polid) { }
     ~DataDescComponents() { }
 
     // return the spectral window ID component
-    casacore::Int getSpectralWindowID() const { return spw; }
+    Int getSpectralWindowID() const { return spw; }
     
     // return the polarization ID component
-    casacore::Int getPolarizationID() const { return pol; }
+    Int getPolarizationID() const { return pol; }
 
-    casacore::Bool operator==(const DataDescComponents& other) const {
+    Bool operator==(const DataDescComponents& other) const {
 	return (spw == other.spw && pol == other.pol);
     }
 
-    casacore::Bool exists() const { return (spw >= 0 && pol >= 0); }
+    Bool exists() const { return (spw >= 0 && pol >= 0); }
 };
 
-extern casacore::uInt hashFunc(const DataDescComponents& key);
+extern uInt hashFunc(const DataDescComponents& key);
 
 // <summary>
 // a container for storing the Miriad metadata that must be tracked while 
@@ -890,65 +886,65 @@ class FillMetadata {
  public:
 
     // info that doesn't change during filling
-    casacore::MeasurementSet *ms;              // the output ms
-    casacore::MSColumns *msc;                  // a pointer to its columns
-    casacore::String outname;
+    MeasurementSet *ms;              // the output ms
+    MSColumns *msc;                  // a pointer to its columns
+    String outname;
 
-    // output casacore::MS info that can vary during filling process
-    casacore::Int obsid;                       // ids & offsets
-    casacore::Float inttime;                   // the current integration time
-    casacore::Float jyperk;
-	casacore::Float plangle, plmaj, plmin, pltb;	 // miriad planet variables
-	casacore::Double freq; // rest frequency of the primary line -- used to convert
+    // output MS info that can vary during filling process
+    Int obsid;                       // ids & offsets
+    Float inttime;                   // the current integration time
+    Float jyperk;
+	Float plangle, plmaj, plmin, pltb;	 // miriad planet variables
+	Double freq; // rest frequency of the primary line -- used to convert
 	             // pltb to flux using Raleigh-Jeans appx to BB.
-    casacore::String telescope, project;
-    casacore::Bool obsupd;
-    casacore::Int nants, narrays, arrayAnt;
-    casacore::Vector<casacore::Double> antpos;
-    casacore::Vector<casacore::Double> arrayXYZ;
-    casacore::Int *mount;
-    casacore::Double *diam;
-    casacore::Double starttime, obstime, feedtime, modeltime, lasttime;
+    String telescope, project;
+    Bool obsupd;
+    Int nants, narrays, arrayAnt;
+    Vector<Double> antpos;
+    Vector<Double> arrayXYZ;
+    Int *mount;
+    Double *diam;
+    Double starttime, obstime, feedtime, modeltime, lasttime;
 
     MirFreqSetup *fsetup;
-//    casacore::ListIter<MirFreqSetup *> fsiter;
+//    ListIter<MirFreqSetup *> fsiter;
 //     IDIndex wfidx;   // moved to MirFreqSetup
 //     IDIndex nfidx;
 
     MirSource *source;
-    casacore::Bool movingsrc;
-//    const casacore::List<MirSource*> *srclist;
+    Bool movingsrc;
+//    const List<MirSource*> *srclist;
 
-//    casacore::ListIter<MirField *> flditer;
+//    ListIter<MirField *> flditer;
     MirField *field;
 
     ConstMirPolSetup *pol;
     MirPolRecps *polrecp;
-    casacore::Bool polotf;           // set to true if loading polarizations on the fly
+    Bool polotf;           // set to true if loading polarizations on the fly
     // PJT
-    //casacore::HashMap<DataDescComponents, casacore::Int> ddids;
+    //HashMap<DataDescComponents, Int> ddids;
 
-    casacore::Matrix<casacore::Float> nsystemp;
-    casacore::Matrix<casacore::Float> wsystemp;
-    casacore::Int tsyscorrect;
+    Matrix<Float> nsystemp;
+    Matrix<Float> wsystemp;
+    Int tsyscorrect;
 
     // data-loading buffers
     DataLoadingBuf buf;
 
-    static const casacore::String HATCREEK;      // "HATCREEK"
-    static const casacore::String BIMA;          // "BIMA"
-    static const casacore::String CARMA;         // "CARMA"
-    static const casacore::String ATCA;          // "ATCA"
-    static const casacore::String VLA;           // "VLA"
+    static const String HATCREEK;      // "HATCREEK"
+    static const String BIMA;          // "BIMA"
+    static const String CARMA;         // "CARMA"
+    static const String ATCA;          // "ATCA"
+    static const String VLA;           // "VLA"
 
-    FillMetadata(const casacore::String &msfile="");
+    FillMetadata(const String &msfile="");
     ~FillMetadata();
 
     // return the antenna id for a given miriad antenna number.
-    casacore::Int getAntennaID(casacore::Int antnum) { return arrayAnt+antnum-1; }
+    Int getAntennaID(Int antnum) { return arrayAnt+antnum-1; }
 
     // return the data description id for a given spectral window id.
-    casacore::Int getDataDescID(casacore::Int /*sid*/=0, casacore::Int /*pid*/=0) {
+    Int getDataDescID(Int /*sid*/=0, Int /*pid*/=0) {
 #if 0
         DataDescComponents ddid(sid, pid);
 	return (ddids.isDefined(ddid) ? ddids(ddid) : -1);
@@ -958,17 +954,17 @@ class FillMetadata {
     }
 
     // set all fiducial times to the given time
-    void inittime(casacore::Double time, casacore::Double updmodelint=0) { 
+    void inittime(Double time, Double updmodelint=0) { 
 	lasttime = feedtime = obstime = starttime = time;
 	modeltime = time - updmodelint;
     }
 
     // set the telescope.  This will also set the telescope location if 
     // it is known.
-    void setTelescope(casacore::String tel);
+    void setTelescope(String tel);
 
-    casacore::Int bimaAntCount() {
-	casacore::Int i;
+    Int bimaAntCount() {
+	Int i;
 	for(i=nants-1; i >= 0; i--) {
 	    if (antpos(i) != 999            ||
 		antpos(i+nants) != 999   ||

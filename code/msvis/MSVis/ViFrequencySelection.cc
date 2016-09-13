@@ -6,7 +6,6 @@
 
 using namespace std;
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 namespace vi {
@@ -42,7 +41,7 @@ FrequencySelection::frameName (Int referenceFrame)
     }
     else{
 
-        ThrowIf (true, String::format ("Unknown frame of reference: id=%d", referenceFrame));
+        ThrowIf (True, String::format ("Unknown frame of reference: id=%d", referenceFrame));
     }
 
     return result;
@@ -446,13 +445,13 @@ FrequencySelections::isSpectralWindowSelected (Int msIndex, Int spectralWindowId
     // Empty selections means everything is selected
 
     if (selections_p.empty()){
-        return true;
+        return True;
     }
 
     Assert (msIndex >= 0 && msIndex < (int) selections_p.size() && selections_p [msIndex] != 0);
 
     if (selections_p [msIndex]->empty()){
-        return true;
+        return True;
     }
 
     SelectedWindows::const_iterator swi =
@@ -470,5 +469,4 @@ FrequencySelections::size () const
 
 } // end namespace vi
 
-using namespace casacore;
 } // end namespace casa

@@ -46,7 +46,7 @@ namespace casa {
 // </reviewed>
 
 // <prerequisite>
-//   <li> <linkto class=casacore::ImageInterface>ImageInterface</linkto>
+//   <li> <linkto class=ImageInterface>ImageInterface</linkto>
 // </prerequisite>
 
 // <etymology>
@@ -64,14 +64,14 @@ namespace casa {
 // <example>
 // Construct an object of this class by passing the associated image to the constructor.
 // <srcblock>
-// casacore::PagedImage<casacore::Float> myImage("myImage");
-// ImageMetaDataRW<casacore::Float> myImageMetaData(myImage);
+// PagedImage<Float> myImage("myImage");
+// ImageMetaDataRW<Float> myImageMetaData(myImage);
 // </srcblock>
 // </example>
 
 // <motivation> 
 // This class is meant to provide an object-oriented interface for accessing
-// image metadata without polluting the casacore::ImageInterface and CoordinateSystem
+// image metadata without polluting the ImageInterface and CoordinateSystem
 // classes with these methods.
 // </motivation>
 
@@ -84,25 +84,25 @@ public:
     ImageMetaDataRW(SPIIF image);
     ImageMetaDataRW(SPIIC image);
 
-    // remove, if possible, the specified parameter. Returns true if removal
+    // remove, if possible, the specified parameter. Returns True if removal
     // was successful.
-    casacore::Bool remove(const casacore::String& key);
+    Bool remove(const String& key);
 
     // remove the specified mask. If the empty string is given, all masks will
-    // be removed. Returns true if successful, false otherwise or if the specfied
+    // be removed. Returns True if successful, False otherwise or if the specfied
     // mask does not exist.
-    casacore::Bool removeMask(const casacore::String& maskName);
+    Bool removeMask(const String& maskName);
 
-    casacore::Record toRecord(casacore::Bool verbose) const;
+    Record toRecord(Bool verbose) const;
 
     // add a key-value pair
-    casacore::Bool add(const casacore::String& key, const casacore::ValueHolder& value);
+    Bool add(const String& key, const ValueHolder& value);
 
     // set (update) the value associated with the key.
-    casacore::Bool set(const casacore::String& key, const casacore::ValueHolder& value);
+    Bool set(const String& key, const ValueHolder& value);
 
     // set the coordinate system from a Record.
-    void setCsys(const casacore::Record& coordinates);
+    void setCsys(const Record& coordinates);
 
 protected:
 
@@ -110,47 +110,47 @@ protected:
 
     SPCIIC _getComplexImage() const {return _complexImage;}
 
-    const casacore::ImageInfo& _getInfo() const;
+    const ImageInfo& _getInfo() const;
 
-    const casacore::CoordinateSystem& _getCoords() const;
+    const CoordinateSystem& _getCoords() const;
 
-    casacore::Vector<casacore::String> _getAxisNames() const;
+    Vector<String> _getAxisNames() const;
 
-    casacore::Vector<casacore::String> _getAxisUnits() const;
+    Vector<String> _getAxisUnits() const;
 
-    casacore::GaussianBeam _getBeam() const;
+    GaussianBeam _getBeam() const;
 
-    casacore::String _getBrightnessUnit() const;
+    String _getBrightnessUnit() const;
 
-    casacore::String _getImType() const;
+    String _getImType() const;
 
-    vector<casacore::Quantity> _getIncrements() const;
+    vector<Quantity> _getIncrements() const;
 
-    casacore::Vector<casacore::String> _getMasks() const;
+    Vector<String> _getMasks() const;
 
-    casacore::String _getObject() const;
+    String _getObject() const;
 
-    casacore::String _getEquinox() const;
+    String _getEquinox() const;
 
-    casacore::MEpoch _getObsDate() const;
+    MEpoch _getObsDate() const;
 
-    casacore::String _getObserver() const;
+    String _getObserver() const;
 
-    casacore::String _getProjection() const;
+    String _getProjection() const;
 
-    casacore::String _getRefFreqType() const;
+    String _getRefFreqType() const;
 
-    casacore::Vector<casacore::Double> _getRefPixel() const;
+    Vector<Double> _getRefPixel() const;
 
-    casacore::Vector<casacore::Quantity> _getRefValue() const;
+    Vector<Quantity> _getRefValue() const;
 
-    casacore::Quantity _getRestFrequency() const;
+    Quantity _getRestFrequency() const;
 
-    casacore::String _getTelescope() const;
+    String _getTelescope() const;
 
-    casacore::Record _getStatistics() const;
+    Record _getStatistics() const;
 
-    casacore::Vector<casacore::String> _getStokes() const;
+    Vector<String> _getStokes() const;
 
 private:
     SPIIF _floatImage;
@@ -159,55 +159,55 @@ private:
     // These are mutable because they are only to be set once and
     // then cached. If this contract is broken, and they are set elsewhere
     // defects will likely occur.
-    mutable casacore::String _bunit, _imtype, _object, _equinox, _observer, _projection,
+    mutable String _bunit, _imtype, _object, _equinox, _observer, _projection,
         _reffreqtype, _telescope;
-    mutable casacore::MEpoch _obsdate;
-    mutable casacore::Quantity _restFreq;
-    mutable casacore::Vector<casacore::String> _masks, _stokes;
-    mutable casacore::GaussianBeam _beam;
-    mutable casacore::Vector<casacore::String> _axisNames, _axisUnits;
-    mutable casacore::Vector<casacore::Double> _refPixel;
-    mutable vector<casacore::Quantity> _refVal, _increment;
-    mutable casacore::Record _header, _stats;
+    mutable MEpoch _obsdate;
+    mutable Quantity _restFreq;
+    mutable Vector<String> _masks, _stokes;
+    mutable GaussianBeam _beam;
+    mutable Vector<String> _axisNames, _axisUnits;
+    mutable Vector<Double> _refPixel;
+    mutable vector<Quantity> _refVal, _increment;
+    mutable Record _header, _stats;
 
-    std::unique_ptr<casacore::CoordinateSystem> _makeCoordinateSystem(
-        const casacore::Record& coordinates, const casacore::IPosition& shape
+    std::unique_ptr<CoordinateSystem> _makeCoordinateSystem(
+        const Record& coordinates, const IPosition& shape
     );
 
-    void _setCoordinateValue(const casacore::String& key, const casacore::ValueHolder& value);
+    void _setCoordinateValue(const String& key, const ValueHolder& value);
 
-    casacore::String  _getString(const casacore::String& key, const casacore::ValueHolder& value) const;
+    String  _getString(const String& key, const ValueHolder& value) const;
 
-    void _setUserDefined(const casacore::String& key, const casacore::ValueHolder& v);
+    void _setUserDefined(const String& key, const ValueHolder& v);
 
-    casacore::Bool _setUnit(const casacore::String& unit);
+    Bool _setUnit(const String& unit);
 
-    casacore::Bool _setCsys(const casacore::CoordinateSystem& csys);
+    Bool _setCsys(const CoordinateSystem& csys);
 
-    casacore::Bool _setImageInfo(const casacore::ImageInfo& info);
+    Bool _setImageInfo(const ImageInfo& info);
 
-    const casacore::TableRecord _miscInfo() const;
+    const TableRecord _miscInfo() const;
 
-    void _setMiscInfo(const casacore::TableRecord& rec);
+    void _setMiscInfo(const TableRecord& rec);
 
-    casacore::Bool _hasRegion(const casacore::String& maskName) const;
+    Bool _hasRegion(const String& maskName) const;
 
-    static casacore::Quantity _getQuantity(const casacore::ValueHolder& v);
+    static Quantity _getQuantity(const ValueHolder& v);
 
-    casacore::Bool _isWritable() const;
+    Bool _isWritable() const;
 
     template <class T, class U> void _modHistory(
-        const casacore::String& func, const casacore::String& keyword,
+        const String& func, const String& keyword,
         const T& oldVal, const U& newVal
     );
 
     template <class T> void _addHistory(
-        const casacore::String& func, const casacore::String& keyword, const T& newVal
+        const String& func, const String& keyword, const T& newVal
     );
 
-    void _toHistory(const casacore::String& origin, const casacore::String& record);
+    void _toHistory(const String& origin, const String& record);
 
-    template <class T> static casacore::String _quotify(const T& val);
+    template <class T> static String _quotify(const T& val);
 };
 
 }

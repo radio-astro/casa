@@ -1,4 +1,4 @@
-//# TblAsXYDD.h: Display casacore::Data for xy displays of data from a table
+//# TblAsXYDD.h: Display Data for xy displays of data from a table
 //# Copyright (C) 2000,2001,2002
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -37,15 +37,11 @@
 #include <coordinates/Coordinates/LinearCoordinate.h>
 #include <display/DisplayDatas/ActiveCaching2dDD.h>
 
-namespace casacore{
-
-	class Table;
-	class Regex;
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+	class Table;
 	class TblAsXYDM;
+	class Regex;
 
 //# Forward Declarations
 
@@ -74,7 +70,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <synopsis>
 // This class adds to the interface defined in <linkto
 // class=DisplayData>DisplayData </linkto>.  It adds the capability to
-// display data from a <linkto class=casacore::Table>Table</linkto>
+// display data from a <linkto class=Table>Table</linkto>
 // column as a xy image.  It is assumed that the Y axis is defined
 // to be either the row number of the table column being displayed or
 // the scalar value from the same row number in a different table
@@ -122,33 +118,33 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// constructors
 		// given an already constructed table
-		TblAsXYDD(casacore::Table *table);
+		TblAsXYDD(Table *table);
 
 		// given a string which gives the full pathname and filename of a table
 		// on disk
-		TblAsXYDD(const casacore::String tablename);
+		TblAsXYDD(const String tablename);
 
 		// Destructor
 		virtual ~TblAsXYDD();
 
 		// format the table value at the give world position
-		virtual casacore::String showValue(const casacore::Vector<casacore::Double> &world);
+		virtual String showValue(const Vector<Double> &world);
 
 		// get the data unit
-		virtual const casacore::Unit dataUnit(const casacore::String column);
-		virtual const casacore::Unit dataUnit();
+		virtual const Unit dataUnit(const String column);
+		virtual const Unit dataUnit();
 
 		// install the default options for this DisplayData
 		virtual void setDefaultOptions();
 
 		// Apply options stored in <src>rec</src> to the DisplayData.  A
-		// return value of <src>true</src> means a refresh is needed.
+		// return value of <src>True</src> means a refresh is needed.
 		// <src>recOut</src> contains any fields which were implicitly
 		// changed as a result of the call to this function.
-		virtual casacore::Bool setOptions(casacore::Record &rec, casacore::Record &recOut);
+		virtual Bool setOptions(Record &rec, Record &recOut);
 
 		// Retrieve the current and default options and parameter types.
-		virtual casacore::Record getOptions( bool scrub=false ) const;
+		virtual Record getOptions( bool scrub=false ) const;
 
 		// Return the type of this DisplayData.
 		virtual Display::DisplayDataType classType() {
@@ -170,7 +166,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual AttributeBuffer optionsAsAttributes();
 
 		//provide read-only access to the table
-		casacore::Table *table();
+		Table *table();
 
 		// Clean up (ie. delete any existing cached display list).
 		virtual void cleanup();
@@ -188,38 +184,38 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Get the value of the named keyword, or the first keyword matching
 		// <src>regex</src>, and return it in <src>value</src>.  The return
-		// value is <src>true</src> for success, and <src>false</src> for
+		// value is <src>True</src> for success, and <src>False</src> for
 		// failure, which is the result if the wrong type <src>T</src> is
 		// requested.
 		// <group>
-		template <class T> casacore::Bool getTableKeyword(T &value,
-		                                        const casacore::String keyword) const;
-		template <class T> casacore::Bool getTableKeyword(T &value, const casacore::Regex &regex) const;
+		template <class T> Bool getTableKeyword(T &value,
+		                                        const String keyword) const;
+		template <class T> Bool getTableKeyword(T &value, const Regex &regex) const;
 		// </group>
 
 		// Get the value of the named keyword, or the first keyword matching
 		// <src>regex</src> for the named column, and return it in
-		// <src>value</src>. The return value is <src>true</src> for
-		// success, and <src>false</src> for failure, which is the result if           // the wrong type <src>T</src> is requested, or if the keyword
+		// <src>value</src>. The return value is <src>True</src> for
+		// success, and <src>False</src> for failure, which is the result if           // the wrong type <src>T</src> is requested, or if the keyword
 		// doesn't exist.
 		// <group>
-		template <class T> casacore::Bool getColumnKeyword(T &value, const casacore::String column,
-		        const casacore::String keyword) const;
-		template <class T> casacore::Bool getColumnKeyword(T &value, const casacore::String column,
-		        const casacore::Regex &regex) const;
+		template <class T> Bool getColumnKeyword(T &value, const String column,
+		        const String keyword) const;
+		template <class T> Bool getColumnKeyword(T &value, const String column,
+		        const Regex &regex) const;
 		// </group>
 	private:
 
 		friend class TblAsXYDM;
 
 		// The table to be displayed
-		casacore::Table *itsTable;
+		Table *itsTable;
 
 		// The result from a table query
-		casacore::Table *itsQueryTable;
+		Table *itsQueryTable;
 
 		// store all the table column names
-		casacore::Vector<casacore::String> itsColumnNames;
+		Vector<String> itsColumnNames;
 
 		// what columns are we displaying and do we have a movie axis available
 		DParameterChoice *itsXColumnName;
@@ -228,18 +224,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		DParameterChoice *itsMColumnSet;
 
 		// options - what is the query string and is it unset?
-		casacore::String itsOptQueryString;
-		casacore::Bool itsOptQueryStringUnset;
+		String itsOptQueryString;
+		Bool itsOptQueryStringUnset;
 
 		// set the default options for this display data
 		void installDefaultOptions();
 
 		// Arrange the query table (called after changing an option).
-		casacore::Bool arrangeQueryTable();
+		Bool arrangeQueryTable();
 
 		// holder for the current coordinate system
 		DisplayCoordinateSystem itsCoord;
-		casacore::Vector<casacore::Double> itsLinblc, itsLintrc;
+		Vector<Double> itsLinblc, itsLintrc;
 
 		// update/set the coordinate system
 		void getCoordinateSystem();
@@ -249,10 +245,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void getTableColumnNames();
 
 		// get the table column world coordinate range
-		casacore::Vector<double> columnStatistics(const casacore::String& columnName);
+		Vector<double> columnStatistics(const String& columnName);
 
 		// get all of the table columnNames with a certain data type
-		casacore::Vector<casacore::String> getColumnNamesOfType();
+		Vector<String> getColumnNamesOfType();
 
 		// Construct and destruct the parameter set.
 		// <group>

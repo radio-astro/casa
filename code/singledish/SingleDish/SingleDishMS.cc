@@ -51,11 +51,11 @@ double gettimeofday_sec() {
 }
 
 using casa::vi::VisBuffer2;
-using casacore::Matrix;
-using casacore::Cube;
-using casacore::Float;
-using casacore::Complex;
-using casacore::AipsError;
+using casa::Matrix;
+using casa::Cube;
+using casa::Float;
+using casa::Complex;
+using casa::AipsError;
 
 template<class CUBE_ACCESSOR>
 struct DataAccessorInterface {
@@ -111,13 +111,6 @@ inline void GetCubeFromFloat(VisBuffer2 const &vb, Cube<Float> &cube) {
 }
 } // anonymous namespace
 
-using namespace casacore;
-using namespace casacore;
-using namespace casacore;
-using namespace casacore;
-using namespace casacore;
-using namespace casacore;
-using namespace casacore;
 namespace casa {
 
 SingleDishMS::SingleDishMS() :
@@ -142,7 +135,7 @@ SingleDishMS::~SingleDishMS() {
 void SingleDishMS::initialize() {
   in_column_ = MS::UNDEFINED_COLUMN;
   //  out_column_ = MS::UNDEFINED_COLUMN;
-  doSmoothing_ = false;
+  doSmoothing_ = False;
   visCubeAccessor_ = GetCubeDefault;
 }
 
@@ -156,7 +149,7 @@ bool SingleDishMS::close() {
   }
   msname_ = "";
 
-  return true;
+  return True;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -359,7 +352,7 @@ bool SingleDishMS::prepare_for_process(string const &in_column_name,
 
     Int ifield;
     ifield = configure_param.fieldNumber(String("timeaverage"));
-    Bool average_time = ifield < 0 ? false : configure_param.asBool(ifield);
+    Bool average_time = ifield < 0 ? False : configure_param.asBool(ifield);
     if (timeBin < 0 || (average_time && timeBin == 0.0))
       throw(AipsError("time bin should be positive"));
   }
@@ -529,7 +522,7 @@ void SingleDishMS::get_mask_from_rec(Int spwid, Matrix<Int> const &rec_chan,
     Vector<Bool> &mask, bool initialize) {
   if (initialize) {
     for (size_t j = 0; j < mask.nelements(); ++j) {
-      mask(j) = false;
+      mask(j) = False;
     }
   }
   //construct a list of (start, end, stride, start, end, stride, ...)
@@ -546,7 +539,7 @@ void SingleDishMS::get_mask_from_rec(Int spwid, Matrix<Int> const &rec_chan,
   //generate mask
   for (size_t j = 0; j < edge.size()-2; j += 3) {
     for (size_t k = edge[j]; k <= edge[j + 1] && k < mask.size(); k += edge[j + 2]) {
-      mask(k) = true;
+      mask(k) = True;
     }
   }
 }
@@ -741,7 +734,7 @@ void SingleDishMS::flag_spectrum_in_cube(Cube<Bool> &flag_cube,
     size_t const row, size_t const plane) {
   uInt const num_flag = flag_cube.ncolumn();
   for (uInt ichan = 0; ichan < num_flag; ++ichan)
-    flag_cube(plane, ichan, row) = true;
+    flag_cube(plane, ichan, row) = True;
 }
 
 bool SingleDishMS::allchannels_flagged(size_t const num_flag,
@@ -1289,7 +1282,7 @@ void SingleDishMS::doSubtractBaseline(string const& in_column_name,
         }
 
         //prepare variables for writing baseline table
-        Array<Bool> apply_mtx(IPosition(2, num_pol, 1), true);
+        Array<Bool> apply_mtx(IPosition(2, num_pol, 1), True);
         Array<uInt> bltype_mtx(IPosition(2, num_pol, 1), (uInt)bltype);
         //Array<Int> fpar_mtx(IPosition(2, num_pol, 1), (Int)blparam[blparam.size()-1]);
         std::vector<std::vector<size_t> > fpar_mtx_tmp(num_pol);
@@ -1321,7 +1314,7 @@ void SingleDishMS::doSubtractBaseline(string const& in_column_name,
           get_flag_from_cube(flag_chunk, irow, ipol, num_chan, mask_data);
           // skip spectrum if all channels flagged
           if (allchannels_flagged(num_chan, mask_data)) {
-            apply_mtx[0][ipol] = false;
+            apply_mtx[0][ipol] = False;
             continue;
           }
 
@@ -1373,7 +1366,7 @@ void SingleDishMS::doSubtractBaseline(string const& in_column_name,
             (bltype == BaselineType_kCubicSpline) ? blparam[blparam.size()-1] + 3 : num_coeff;
           if (NValidMask(num_chan, mask_data) < num_min) {
             flag_spectrum_in_cube(flag_chunk, irow, ipol);
-            apply_mtx[0][ipol] = false;
+            apply_mtx[0][ipol] = False;
             os << LogIO::WARN
                << "Too few valid channels to fit. Skipping Antenna "
                << antennas[irow] << ", Beam " << beams[irow] << ", SPW "
@@ -1448,7 +1441,7 @@ void SingleDishMS::doSubtractBaseline(string const& in_column_name,
 
             cthres_mtx[0][ipol] = clip_threshold_sigma;
             citer_mtx[0][ipol] = (uInt)num_fitting_max - 1;
-            uself_mtx[0][ipol] = false;
+            uself_mtx[0][ipol] = False;
             lfthres_mtx[0][ipol] = 0.0;
             lfavg_mtx[0][ipol] = 0;
             for (size_t iedge = 0; iedge < 2; ++iedge) {
@@ -1502,7 +1495,7 @@ void SingleDishMS::doSubtractBaseline(string const& in_column_name,
 
         if (write_baseline_text) {
           for (size_t ipol = 0; ipol < num_pol; ++ipol) {
-            if (apply_mtx2(ipol, 0) == false) continue;
+            if (apply_mtx2(ipol, 0) == False) continue;
 
             ofs_txt << "Scan" << '[' << (uInt)scans[irow] << ']' << ' '
                     << "Beam" << '[' << (uInt)beams[irow] << ']' << ' ' 
@@ -1612,7 +1605,7 @@ void SingleDishMS::doSubtractBaseline(string const& in_column_name,
 
         if (write_baseline_csv) {
           for (size_t ipol = 0; ipol < num_pol; ++ipol) {
-            if (apply_mtx2(ipol, 0) == false) continue;
+            if (apply_mtx2(ipol, 0) == False) continue;
               
             ofs_csv << (uInt)scans[irow] << ',' << (uInt)beams[irow] << ','
                     << (uInt)data_spw[irow] << ',' << ipol << ','
@@ -2408,7 +2401,7 @@ void SingleDishMS::fitLine(string const& in_column_name, string const& in_spw,
                   && (ichan <= fitrange_end[ifit])) {
                 m_[ichan] = mask_data[ichan];
               } else {
-                m_[ichan] = false;
+                m_[ichan] = False;
               }
             }
 
@@ -2676,7 +2669,7 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
         }
 
         //prepare varables for writing baseline table
-        Array<Bool> apply_mtx(IPosition(2, num_pol, 1), true);
+        Array<Bool> apply_mtx(IPosition(2, num_pol, 1), True);
         Array<uInt> bltype_mtx(IPosition(2, num_pol, 1));
         Array<Int> fpar_mtx(IPosition(2, num_pol, 1));
         std::vector<std::vector<double> > ffpar_mtx_tmp(num_pol);
@@ -2707,7 +2700,7 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
           if (allchannels_flagged(num_chan, mask_data)) {
             os << LogIO::DEBUG1 << "Row " << orig_rows[irow] << ", Pol " << ipol
                 << ": All channels flagged. Skipping." << LogIO::POST;
-            apply_mtx[0][ipol] = false;
+            apply_mtx[0][ipol] = False;
             continue;
           }
 
@@ -2722,7 +2715,7 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
             flag_spectrum_in_cube(flag_chunk, irow, ipol);
             os << LogIO::DEBUG1 << "Row " << orig_rows[irow] << ", Pol " << ipol
                 << ": Fit not requested. Skipping." << LogIO::POST;
-            apply_mtx[0][ipol] = false;
+            apply_mtx[0][ipol] = False;
             continue;
           }
           if (true) {
@@ -2748,7 +2741,7 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
             local_spw << data_spw[irow] << ":" << fit_param.baseline_mask;
             Record selrec = sdh_->getSelRec(local_spw.str());
             Matrix<Int> local_rec_chan = selrec.asArrayInt("channel");
-            Vector<Bool> local_mask(num_chan, false);
+            Vector<Bool> local_mask(num_chan, False);
             get_mask_from_rec(data_spw[irow], local_rec_chan, local_mask,
                 false);
             for (size_t ichan = 0; ichan < num_chan; ++ichan) {
@@ -2758,7 +2751,7 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
           // check for composit mask and flag if no valid channel to fit
           if (NValidMask(num_chan, mask_data) == 0) {
             flag_spectrum_in_cube(flag_chunk, irow, ipol);
-            apply_mtx[0][ipol] = false;
+            apply_mtx[0][ipol] = False;
             os << LogIO::DEBUG1 << "Row " << orig_rows[irow] << ", Pol " << ipol
                 << ": No valid channel to fit. Skipping" << LogIO::POST;
             continue;
@@ -2794,7 +2787,7 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
           size_t num_min = (bltype == BaselineType_kCubicSpline) ? fit_param.npiece + 3 : num_coeff;
           if (NValidMask(num_chan, mask_data) < num_min) {
             flag_spectrum_in_cube(flag_chunk, irow, ipol);
-            apply_mtx[0][ipol] = false;
+            apply_mtx[0][ipol] = False;
             os << LogIO::WARN
                 << "Too few valid channels to fit. Skipping Antenna "
                 << antennas[irow] << ", Beam " << beams[irow] << ", SPW "
@@ -2994,7 +2987,7 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
 
         if (write_baseline_text) {
           for (size_t ipol = 0; ipol < num_pol; ++ipol) {
-            if (apply_mtx2(ipol, 0) == false) continue;
+            if (apply_mtx2(ipol, 0) == False) continue;
 
             ofs_txt << "Scan" << '[' << (uInt)scans[irow] << ']' << ' '
                     << "Beam" << '[' << (uInt)beams[irow] << ']' << ' '
@@ -3060,7 +3053,7 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
 
         if (write_baseline_csv) {
           for (size_t ipol = 0; ipol < num_pol; ++ipol) {
-            if (apply_mtx2(ipol, 0) == false) continue;
+            if (apply_mtx2(ipol, 0) == False) continue;
 
             ofs_csv << (uInt)scans[irow] << ',' << (uInt)beams[irow] << ','
                     << (uInt)data_spw[irow] << ',' << ipol << ','
@@ -3266,7 +3259,7 @@ void SingleDishMS::smooth(string const &kernelType, float const kernelWidth,
       << outMSName << LogIO::POST;
 
   // Initialization
-  doSmoothing_ = true;
+  doSmoothing_ = True;
   prepare_for_process(columnName, outMSName);
 
   // configure smoothing

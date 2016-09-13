@@ -79,7 +79,7 @@ namespace vi { //# NAMESPACE VI - BEGIN
 //
 // </srcblock>
 //
-// Then these parameter objects, along with a casacore::MeasurementSet pointer, are used to make 
+// Then these parameter objects, along with a MeasurementSet pointer, are used to make 
 //  a factory suitable for the generic VisibilityIterator2 ctor, which is then invoked
 //
 // <srcblock>
@@ -98,10 +98,10 @@ namespace vi { //# NAMESPACE VI - BEGIN
 //		while (visIter->more())
 //		{
 //
-//			casacore::Vector<casacore::Int> ddi = visBuffer->dataDescriptionIds();
-//			casacore::Vector<casacore::Int> antenna1 = visBuffer->antenna1();
-//			casacore::Vector<casacore::Int> antenna2 = visBuffer->antenna2();
-//                      casacore::Cube<casacore::Complex> cvis = visBuffer->visCubeCorrected();
+//			Vector<Int> ddi = visBuffer->dataDescriptionIds();
+//			Vector<Int> antenna1 = visBuffer->antenna1();
+//			Vector<Int> antenna2 = visBuffer->antenna2();
+//                      Cube<Complex> cvis = visBuffer->visCubeCorrected();
 //
 //			visIter->next();
 //		}
@@ -111,7 +111,7 @@ namespace vi { //# NAMESPACE VI - BEGIN
 // </srcblock>
 //
 //
-// casacore::Notice that it is the responsibility of the application layer to delete the VisibilityIterator2
+// Notice that it is the responsibility of the application layer to delete the VisibilityIterator2
 // pointer returned by the factory method. However the life cycle of the VisBuffer2 object is
 // responsibility of the VisibilityIterator2 object.
 //
@@ -126,28 +126,28 @@ class CalibratingVi2Factory : public vi::CalibratingVi2FactoryI
 
 public:
 
-  CalibratingVi2Factory(casacore::MeasurementSet* ms,
+  CalibratingVi2Factory(MeasurementSet* ms,
 			const CalibratingParameters& calpar, 
 			const IteratingParameters& iterpar=IteratingParameters());
 
   CalibratingVi2Factory();
 			
-  CalibratingVi2Factory(casacore::MeasurementSet* ms,
-			const casacore::Record& calrec,
+  CalibratingVi2Factory(MeasurementSet* ms,
+			const Record& calrec,
 			const IteratingParameters& iterpar=IteratingParameters());
 			
-  CalibratingVi2Factory(casacore::MeasurementSet* ms,
-			const casacore::String& callib,
+  CalibratingVi2Factory(MeasurementSet* ms,
+			const String& callib,
 			const IteratingParameters& iterpar=IteratingParameters());
 			
   virtual ~CalibratingVi2Factory();
 
   // Public functions to initialize a generic CVi2F
-  virtual void initialize(casacore::MeasurementSet* ms,
-			  const casacore::Record& calrec,
+  virtual void initialize(MeasurementSet* ms,
+			  const Record& calrec,
 			  const IteratingParameters& iterpar);
-  virtual void initialize(casacore::MeasurementSet* ms,
-			  const casacore::String& callib,
+  virtual void initialize(MeasurementSet* ms,
+			  const String& callib,
 			  const IteratingParameters& iterpar);
 
 
@@ -161,8 +161,8 @@ protected:
 
 private:
 
-  casacore::Bool valid_p;
-  casacore::MeasurementSet* ms_p;
+  Bool valid_p;
+  MeasurementSet* ms_p;
   CalibratingParameters calpar_p;
   IteratingParameters iterpar_p;
 

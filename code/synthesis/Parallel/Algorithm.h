@@ -33,16 +33,12 @@
 //# Includes
 #include <synthesis/Parallel/Applicator.h>
 
-namespace casacore{
-
-class String;
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Forward Declarations
 
 class PTransport;
+class String;
 extern Applicator applicator;
 
 // <summary>
@@ -106,7 +102,7 @@ class Algorithm {
   virtual void put() = 0;
 
   // Return the name of the algorithm
-  virtual casacore::String &name() = 0;
+  virtual String &name() = 0;
 
  protected:
   // Do the work assigned as a parallel task

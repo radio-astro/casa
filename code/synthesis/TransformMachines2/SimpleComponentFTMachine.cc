@@ -50,15 +50,11 @@
 #endif
 
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 namespace refim { // namespace for refactor
-using namespace casacore;
 using namespace casa;
-using namespace casacore;
 using namespace casa::refim;
-using namespace casacore;
 using namespace casa::vi;
 
 void SimpleComponentFTMachine::get(VisBuffer2& vb, SkyComponent& component,

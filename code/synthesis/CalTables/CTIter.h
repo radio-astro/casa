@@ -77,19 +77,19 @@ class ROCTIter
 {
 public:
   // Constructor/Destructor 
-  ROCTIter(NewCalTable tab,const casacore::Block<casacore::String>& sortcol);
+  ROCTIter(NewCalTable tab,const Block<String>& sortcol);
   virtual ~ROCTIter();
   
   // Iteration operators
   inline void reset() { ti_->reset(); this->attach(); };
-  inline casacore::Bool pastEnd() { return ti_->pastEnd(); };
+  inline Bool pastEnd() { return ti_->pastEnd(); };
   void next();
   void next0();
 
   // Return the current table iteration
   NewCalTable table() const { return NewCalTable(ti_->table()); };
 
-  casacore::Int nrow() const { return ti_->table().nrow(); };
+  Int nrow() const { return ti_->table().nrow(); };
 
   // Column accessors
   // Those methods that return scalars for data coordinates 
@@ -100,60 +100,60 @@ public:
   //  of the vector is in fact a unique value.  (TBD: return -1 from
   //  scalar methods when column is not unique?)
 
-  casacore::Double thisTime() const;
-  casacore::Vector<casacore::Double> time() const;
-  void time(casacore::Vector<casacore::Double>& v) const;
+  Double thisTime() const;
+  Vector<Double> time() const;
+  void time(Vector<Double>& v) const;
 
-  casacore::Int thisField() const;
-  casacore::Vector<casacore::Int> field() const;
-  void field(casacore::Vector<casacore::Int>& v) const;
+  Int thisField() const;
+  Vector<Int> field() const;
+  void field(Vector<Int>& v) const;
 
-  casacore::Int thisSpw() const;
-  casacore::Vector<casacore::Int> spw() const;
-  void spw(casacore::Vector<casacore::Int>& v) const;
+  Int thisSpw() const;
+  Vector<Int> spw() const;
+  void spw(Vector<Int>& v) const;
 
-  casacore::Int thisScan() const;
-  casacore::Vector<casacore::Int> scan() const;
-  void scan(casacore::Vector<casacore::Int>& v) const;
+  Int thisScan() const;
+  Vector<Int> scan() const;
+  void scan(Vector<Int>& v) const;
 
-  casacore::Int thisObs() const;
-  casacore::Vector<casacore::Int> obs() const;
-  void obs(casacore::Vector<casacore::Int>& v) const;
+  Int thisObs() const;
+  Vector<Int> obs() const;
+  void obs(Vector<Int>& v) const;
 
-  casacore::Int thisAntenna1() const;
-  casacore::Vector<casacore::Int> antenna1() const;
-  void antenna1(casacore::Vector<casacore::Int>& v) const;
-  casacore::Int thisAntenna2() const;
-  casacore::Vector<casacore::Int> antenna2() const;
-  void antenna2(casacore::Vector<casacore::Int>& v) const;
+  Int thisAntenna1() const;
+  Vector<Int> antenna1() const;
+  void antenna1(Vector<Int>& v) const;
+  Int thisAntenna2() const;
+  Vector<Int> antenna2() const;
+  void antenna2(Vector<Int>& v) const;
 
-  casacore::Cube<casacore::Complex> cparam() const;
-  void cparam(casacore::Cube<casacore::Complex>& c) const;
+  Cube<Complex> cparam() const;
+  void cparam(Cube<Complex>& c) const;
 
-  casacore::Cube<casacore::Float> fparam() const;
-  void fparam(casacore::Cube<casacore::Float>& c) const;
+  Cube<Float> fparam() const;
+  void fparam(Cube<Float>& c) const;
 
-  casacore::Cube<casacore::Float> casfparam(casacore::String what="") const;
-  void casfparam(casacore::Cube<casacore::Float>& casf, casacore::String what="") const;
+  Cube<Float> casfparam(String what="") const;
+  void casfparam(Cube<Float>& casf, String what="") const;
 
 
-  casacore::Cube<casacore::Float> paramErr() const;
-  void paramErr(casacore::Cube<casacore::Float>& c) const;
+  Cube<Float> paramErr() const;
+  void paramErr(Cube<Float>& c) const;
 
-  casacore::Cube<casacore::Float> snr() const;
-  void snr(casacore::Cube<casacore::Float>& c) const;
+  Cube<Float> snr() const;
+  void snr(Cube<Float>& c) const;
 
-  casacore::Cube<casacore::Float> wt() const;
-  void wt(casacore::Cube<casacore::Float>& c) const;
+  Cube<Float> wt() const;
+  void wt(Cube<Float>& c) const;
 
-  casacore::Cube<casacore::Bool> flag() const;
-  void flag(casacore::Cube<casacore::Bool>& c) const;
+  Cube<Bool> flag() const;
+  void flag(Cube<Bool>& c) const;
 
-  casacore::Int nchan() const;
-  casacore::Vector<casacore::Int> chan() const;
-  void chan(casacore::Vector<casacore::Int>& v) const;
-  casacore::Vector<casacore::Double> freq() const;
-  void freq(casacore::Vector<casacore::Double>& v) const;
+  Int nchan() const;
+  Vector<Int> chan() const;
+  void chan(Vector<Int>& v) const;
+  Vector<Double> freq() const;
+  void freq(Vector<Double>& v) const;
 
  protected:
 
@@ -166,16 +166,16 @@ public:
   ROCTIter (const ROCTIter& other);
   ROCTIter& operator= (const ROCTIter& other);
 
-  // casacore::Data:
+  // Data:
 
   // Remember the sort columns...
-  casacore::Vector<casacore::String> sortCols_;
+  Vector<String> sortCols_;
 
   // If true, spw is unique per iteration, and it is
   //   safe to access channel axis info
-  casacore::Bool singleSpw_;
+  Bool singleSpw_;
 
-  // The parent NewCalTable (casacore::Table) object 
+  // The parent NewCalTable (Table) object 
   //  (stays in scope for the life of the CTIter)
   NewCalTable parentNCT_;
 
@@ -183,7 +183,7 @@ public:
   ROCTColumns calCol_;
 
   // The underlying TableIterator
-  casacore::TableIterator *ti_;
+  TableIterator *ti_;
 
   // Per-iteration table
   NewCalTable *inct_;
@@ -199,27 +199,27 @@ class CTIter : public ROCTIter
 {
 public:
   // Constructor/Destructor 
-  CTIter(NewCalTable tab,const casacore::Block<casacore::String>& sortcol);
+  CTIter(NewCalTable tab,const Block<String>& sortcol);
   virtual ~CTIter();
 
   // Set fieldid
-  void setfield(casacore::Int fieldid);
+  void setfield(Int fieldid);
 
   // Set scan number
-  void setscan(casacore::Int scan);
+  void setscan(Int scan);
 
   // Set obsid
-  void setobs(casacore::Int obs);
+  void setobs(Int obs);
 
   // Set antenna2 (e.g., used for setting refant)
-  void setantenna2(const casacore::Vector<casacore::Int>& a2);
+  void setantenna2(const Vector<Int>& a2);
 
   // Set the flags
-  void setflag(const casacore::Cube<casacore::Bool>& flag);
+  void setflag(const Cube<Bool>& flag);
 
   // Set the parameters
-  void setfparam(const casacore::Cube<casacore::Float>& f);
-  void setcparam(const casacore::Cube<casacore::Complex>& c);
+  void setfparam(const Cube<Float>& f);
+  void setcparam(const Cube<Complex>& c);
 
 protected:
 

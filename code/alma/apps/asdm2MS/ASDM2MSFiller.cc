@@ -63,7 +63,6 @@ void	timer( double *cpu_time ,		/* cpu timer */
 #include "ASDM2MSFiller.h"
 #include "msvis/MSVis/SubMS.h"
 
-using namespace casacore;
 using namespace casa;
 
 // Methods of timeMgr class.
@@ -234,7 +233,7 @@ ASDM2MSFiller::ASDM2MSFiller(const string& name_,
   itsWeatherTimeMgr(0),
 
   itsWithRadioMeters(withRadioMeters_),
-  itsFirstScan(true),
+  itsFirstScan(True),
   itsMSMainRow(0),
   itsDataShapes(0),
   itsNCat(3)
@@ -297,7 +296,7 @@ int ASDM2MSFiller::createMS(const string& msName,
   
   //needed to call setupMS
   String telescop(telescopeName);
-  casacore::Int inint = 0;
+  casa::Int inint = 0;
   Vector<MS::PredefinedColumns> colnames;
   if (complexData) {
     if (withCorrectedData) {
@@ -328,11 +327,11 @@ int ASDM2MSFiller::createMS(const string& msName,
 			 );
 
   if (! itsMS) {
-    return false;
+    return False;
   }
   //cout << "Measurement Set just created, main table nrow=" << itsMS->nrow()<< endl;
   
-  itsMSCol = new casacore::MSMainColumns(*itsMS);
+  itsMSCol = new casa::MSMainColumns(*itsMS);
 
   // Feed (just missing column
   {
@@ -348,7 +347,7 @@ int ASDM2MSFiller::createMS(const string& msName,
   // And also add an Ephemeris column.
   
   const String& ephemerisId = MSField::columnName(MSField::EPHEMERIS_ID);
-  itsMS->field().addColumn(ScalarColumnDesc<Int>(ephemerisId, "Ephemeris id, pointer to EPHEMERIS table"), false);
+  itsMS->field().addColumn(ScalarColumnDesc<Int>(ephemerisId, "Ephemeris id, pointer to EPHEMERIS table"), False);
 
   {
     //TableDesc td = MSField::requiredTableDesc();
@@ -568,7 +567,7 @@ int ASDM2MSFiller::createMS(const string& msName,
     itsMSCalDeviceTable = itsMS->rwKeywordSet().asTable("CALDEVICE");
   }
 
-  itsMS->initRefs(true);
+  itsMS->initRefs(True);
   MSPointing& mspointing = itsMS -> pointing();
   MSPointingColumns mspointingCol(mspointing);
   /**
@@ -597,7 +596,7 @@ int ASDM2MSFiller::createMS(const string& msName,
     itsMSPath = absolute;
   }
 
-  return true;
+  return True;
 }
 
 const char** ASDM2MSFiller::getPolCombinations(int numCorr) {
@@ -659,16 +658,16 @@ int ASDM2MSFiller::addAntenna( const string& name_,
   
   msantCol.offset().put(crow, antOffset);
   msantCol.dishDiameter().put(crow, dish_diam_);
-  msantCol.flagRow().put(crow, false);
+  msantCol.flagRow().put(crow, False);
   
-  //msant.flush(true);
+  //msant.flush(True);
   // cout << "addAntenna : table flushed \n";
   // cout << "addAntenna : exiting \n";
   // cout << "\n";
   return crow;
 }
 
-const casacore::MeasurementSet* ASDM2MSFiller::ms() { return itsMS; }
+const casa::MeasurementSet* ASDM2MSFiller::ms() { return itsMS; }
 
 
 void ASDM2MSFiller::addData (bool                      complexData,
@@ -1144,7 +1143,7 @@ int  ASDM2MSFiller::addDataDescription(int spectral_window_id_,
     
   msddCol.spectralWindowId().put(crow, spectral_window_id_);
   msddCol.polarizationId().put(crow, polarization_id_);
-  msddCol.flagRow().put(crow, false);
+  msddCol.flagRow().put(crow, False);
     
   return crow;
 }
@@ -1171,9 +1170,9 @@ int  ASDM2MSFiller::addUniqueDataDescription( int spectral_window_id_,
     
   msddCol.spectralWindowId().put(crow, spectral_window_id_);
   msddCol.polarizationId().put(crow, polarization_id_);
-  msddCol.flagRow().put(crow, false);
+  msddCol.flagRow().put(crow, False);
     
-  //msdd.flush(true);
+  //msdd.flush(True);
   return crow;
 }
 
@@ -1351,7 +1350,7 @@ void ASDM2MSFiller::addField(const string&		name_,
 
   msfieldCol.ephemerisId().put(crow, -1);
 
-  msfieldCol.flagRow().put(crow, false);
+  msfieldCol.flagRow().put(crow, False);
   //cout << "\naddField : exiting";
   //msfield.flush();
 }
@@ -1395,7 +1394,7 @@ void ASDM2MSFiller::addFlagCmd(double		time_,
   msflagcmdCol.applied().put(crow, 0);
   msflagcmdCol.command().put(crow, "");
   
-  //msflagcmd.flush(true);
+  //msflagcmd.flush(True);
   // cout << "\n";
 }
 			  
@@ -1433,7 +1432,7 @@ void ASDM2MSFiller::addHistory( double		time_,
   mshistoryCol.cliCommand().put(crow, cliCommand);
   mshistoryCol.appParams().put(crow, appParms);
   
-  //mshistory.flush(true);
+  //mshistory.flush(True);
   // cout << "\n";
 }
 	     
@@ -1494,7 +1493,7 @@ void ASDM2MSFiller::addObservation(const string&		telescopeName_,
   msobsCol.schedule().put(crow, schedule);
   msobsCol.project().put(crow, String(project_));
   msobsCol.releaseDate().put(crow, release_date_);
-  msobsCol.flagRow().put(crow, false);
+  msobsCol.flagRow().put(crow, False);
   //msobs.flush();
 
   // cout << "\n addObservation: exiting";
@@ -1653,7 +1652,7 @@ int ASDM2MSFiller::addUniquePolarization(int num_corr_,
   mspolarCol.corrType().put(crow,corrType);
   mspolarCol.corrProduct().put(crow, corrProduct);
 
-  //mspolar.flush(true);
+  //mspolar.flush(True);
   return crow;
 }
 
@@ -1675,7 +1674,7 @@ void ASDM2MSFiller::addProcessor(string& type_,
   msprocCol.typeId().put(crow, type_id_);
   msprocCol.modeId().put(crow, mode_id_);
   
-  msprocCol.flagRow().put(crow, false);
+  msprocCol.flagRow().put(crow, False);
 
   //msproc.flush();
   // cout << "\n";
@@ -1764,17 +1763,17 @@ void ASDM2MSFiller::addSource(int             source_id_,
     //cout << "Setting Source table direction reference to " << (int)theType << endl;
     if( ((int)theType) >= MDirection::N_Types ){
       cout << "Solar system object reference frame handling in Source table not yet implemented. Falling back to J2000." << endl;
-      mssourceCol.directionMeas().setDescRefCode((int)MDirection::J2000, true); 
+      mssourceCol.directionMeas().setDescRefCode((int)MDirection::J2000, True); 
     }
     else{
-      mssourceCol.directionMeas().setDescRefCode((int)theType, true); 
+      mssourceCol.directionMeas().setDescRefCode((int)theType, True); 
     }
   }
   else{
-    casacore::MDirection::Types theFirstType;
-    casacore::MDirection mD;
+    casa::MDirection::Types theFirstType;
+    casa::MDirection mD;
     mssourceCol.directionMeas().get(0, mD);
-    casacore::MDirection::getType(theFirstType, mD.getRefString());
+    casa::MDirection::getType(theFirstType, mD.getRefString());
     if(theType != theFirstType){
       cout << "Inconsistent directionCodes in Source table for ID " << source_id_
 	   << ", SPW ID " << spectral_window_id_
@@ -1885,7 +1884,7 @@ int ASDM2MSFiller::addSpectralWindow(int			num_chan_,
     msspwinCol.assocNature().put(crow, assocNature);
   }
 
-  msspwinCol.flagRow().put(crow, false);
+  msspwinCol.flagRow().put(crow, False);
 
   //msspwin.flush();
   // cout << "\n";
@@ -1913,7 +1912,7 @@ void ASDM2MSFiller::addState(bool    sig_,
   msstateCol.load().put(crow, load_);
   msstateCol.subScan().put(crow, sub_scan_);
   msstateCol.obsMode().put(crow, obs_mode_);
-  msstateCol.flagRow().put(crow, false);
+  msstateCol.flagRow().put(crow, False);
   //msstate.flush();
 
   // cout << "\n";

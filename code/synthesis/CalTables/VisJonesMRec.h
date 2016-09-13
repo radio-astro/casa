@@ -79,7 +79,7 @@ class VisJonesMRec : public CalMainRecord
    ~VisJonesMRec() {};
 
    // Construct from an existing record
-   VisJonesMRec (const casacore::Record& inpRec);
+   VisJonesMRec (const Record& inpRec);
 
  };
 

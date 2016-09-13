@@ -115,7 +115,7 @@ namespace casa {
 			void disableNextButton( );
 			void reset( );
 #if OLDSTUFF
-			void addstats( std::list<std::pair<casacore::String,String> > *stats );
+			void addstats( std::list<std::pair<String,String> > *stats );
 #endif
 
 			void updateStatistics( SHARED_PTR<casa::viewer::RegionInfo> stats, Region* region = NULL );

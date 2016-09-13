@@ -55,10 +55,8 @@
 #include <synthesis/TransformMachines2/EVLAAperture.h>
 #include <synthesis/TransformMachines2/AWVisResampler.h>
 
-using namespace casa;
-using namespace casacore;
+//using namespace casa;
 using namespace casa::refim;
-using namespace casacore;
 using namespace casa::test;
 
 void createAWPFTMachine(CountedPtr<refim::FTMachine>& theFT, CountedPtr<refim::FTMachine>& theIFT, 
@@ -69,16 +67,16 @@ void createAWPFTMachine(CountedPtr<refim::FTMachine>& theFT, CountedPtr<refim::F
 			//------------------------------
 			const Int wprojPlane=1,
 			//const Float=1.0,
-			const Bool useDoublePrec=true,
+			const Bool useDoublePrec=True,
 			//------------------------------
-			const Bool aTermOn= true,
-			const Bool psTermOn= true,
-			const Bool mTermOn= false,
-			const Bool wbAWP= true,
+			const Bool aTermOn= True,
+			const Bool psTermOn= True,
+			const Bool mTermOn= False,
+			const Bool wbAWP= True,
 			const String cfCache= "testCF.cf",
-			const Bool doPointing= false,
-			const Bool doPBCorr= true,
-			const Bool conjBeams= true,
+			const Bool doPointing= False,
+			const Bool doPBCorr= True,
+			const Bool conjBeams= True,
 			const Float computePAStep=360.0,
 			const Float rotatePAStep=5.0,
 			const Int cache=1000000000,
@@ -107,7 +105,7 @@ void createAWPFTMachine(CountedPtr<refim::FTMachine>& theFT, CountedPtr<refim::F
   // String telescopeName=msoc.telescopeName()(0);
   CountedPtr<refim::ConvolutionFunction> awConvFunc = AWProjectFT::makeCFObject(telescopeName, 
 									 aTermOn,
-									 psTermOn, true, mTermOn, wbAWP,
+									 psTermOn, True, mTermOn, wbAWP,
 									 cfBufferSize, cfOversampling);
   //
   // Construct the appropriate re-sampler.
@@ -127,8 +125,8 @@ void createAWPFTMachine(CountedPtr<refim::FTMachine>& theFT, CountedPtr<refim::F
   theFT = new refim::AWProjectWBFTNew(wprojPlane, cache/2, 
 			       cfCacheObj, awConvFunc, 
 			       visResampler,
-			       /*true */doPointing, doPBCorr, 
-			       tile, computePAStep, pbLimit_l, true,conjBeams,
+			       /*True */doPointing, doPBCorr, 
+			       tile, computePAStep, pbLimit_l, True,conjBeams,
 			       useDoublePrec);
   
   cfCacheObj = new refim::CFCache();
@@ -166,7 +164,7 @@ Int main(int argc, char **argv)
       MakeMS::makems(msname, thedir);
       MeasurementSet thems(msname, Table::Update);
       thems.markForDelete();
-      vi::VisibilityIterator2 vi2(thems,vi::SortColumns(),true);
+      vi::VisibilityIterator2 vi2(thems,vi::SortColumns(),True);
       vi::VisBuffer2 *vb=vi2.getVisBuffer();
       VisImagingWeight viw("natural");
       vi2.useImagingWeight(viw);
@@ -202,7 +200,7 @@ Int main(int argc, char **argv)
 	TableExprNode exprNode=thisSelection.toTableExprNode(&thems);
 	
 	Matrix<Double> mssFreqSel;
-	mssFreqSel  = thisSelection.getChanFreqList(NULL,true);
+	mssFreqSel  = thisSelection.getChanFreqList(NULL,True);
 	// Send in Freq info.
 	cerr << "Sending frequency selection information " <<  mssFreqSel  <<  " to AWP FTM." << endl;
 	ftm->setSpwFreqSelection( mssFreqSel );
@@ -228,7 +226,7 @@ Int main(int argc, char **argv)
 	  }
 	ftm->finalizeToSky();
 	
-	ftm->getImage(weight, true);
+	ftm->getImage(weight, True);
 	
 	//  cerr << "val at center " << im.getAt(IPosition(4, 50, 50, 0, 0)) << endl;
 	AlwaysAssertExit(near(6.66e-2, real( im.getAt(IPosition(4, (NX/2), (NY/2), 0, 0))), 1.0e-5));

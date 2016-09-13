@@ -27,7 +27,6 @@
 //
 #include <msvis/MSVis/statistics/Vi2StatsSigmasIterator.h>
 
-using namespace casacore;
 namespace casa {
 
 Vi2StatsSigmasCubeIterator::Vi2StatsSigmasCubeIterator(vi::VisBuffer2 *vb2)
@@ -141,5 +140,4 @@ Vi2StatsSigmasRowIterator::atEnd()
 	return row == nRows;
 }
 
-using namespace casacore;
 } // namespace casa

@@ -22,7 +22,6 @@
 
 #include <flagging/Flagging/FlagReport.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
@@ -70,7 +69,7 @@ FlagReport::FlagReport(String type, String name, const Record &other)
 {
 
     assign(other);
-    logger_p = casacore::LogIO();
+    logger_p = casa::LogIO();
 
     // Type of report. Options : none, summary
     if( ! ( type == "summary" || type == "rflag" || type == "none" ) )
@@ -96,7 +95,7 @@ FlagReport::FlagReport(String type, String name, const Record &other)
 FlagReport::FlagReport(const Record &other)
 {
     assign(other);
-    logger_p = casacore::LogIO();
+    logger_p = casa::LogIO();
 
     if( ! isDefined( "type" ) )
     {
@@ -127,14 +126,14 @@ FlagReport::addReport(FlagReport inpReport)
     // Verify and read type of current record
     if( !verifyFields() )
     {
-        return false;
+        return False;
     }
 
     // Reports can be added only to flagreports of type 'list'
     if( reportType() != String("list"))
     {
         logger_p << LogIO::WARN << "Current FlagReport must be of type 'list' " << LogIO::POST;
-        return false;
+        return False;
     }
 
     // Now that we know it's of type list, read nreport
@@ -159,7 +158,7 @@ FlagReport::addReport(FlagReport inpReport)
         }
         define( RecordFieldId("nreport") , (Int)(numReport + nInpReps) );
     }
-    return true;
+    return True;
 }// end of addReport
 
 //----------------------------------------------------------------------------------------------
@@ -169,13 +168,13 @@ FlagReport::addData(Array<Float> data)
     logger_p.origin(LogOrigin("FlagReport",__FUNCTION__,WHERE));
 
     String thisType = reportType();
-    Bool retval = true;
+    Bool retval = True;
 
     if( thisType != "plotraster" )
     {
         logger_p << LogIO::WARN << "Current FlagReport must be of type 'plotraster' " << LogIO::POST;
-        //		return false;
-        retval = false;
+        //		return False;
+        retval = False;
     }
     else
     {
@@ -183,15 +182,15 @@ FlagReport::addData(Array<Float> data)
         if(numData == 1)
         {
             logger_p << LogIO::WARN << "Cannot overlay raster plots." << LogIO::POST;
-            //			return false;
-            retval = false;
+            //			return False;
+            retval = False;
 
         }
         else
         {
             define( RecordFieldId(String("data")+String::toString(numData)) , data );
             define( RecordFieldId("ndata") , (Int)(numData+1) );
-            retval = true;
+            retval = True;
         }
     }
 
@@ -208,7 +207,7 @@ FlagReport::addData(String plottype, Vector<Float> xdata, Vector<Float> ydata, S
     if( thisType != "plotpoints" )
     {
         logger_p << LogIO::WARN << "Current FlagReport must be of type 'plotpoints' " << LogIO::POST;
-        return false;
+        return False;
     }
     else
     {
@@ -227,7 +226,7 @@ FlagReport::addData(String plottype, Vector<Float> xdata, Vector<Float> ydata, S
 
     }
 
-    return true;
+    return True;
 }
 
 //----------------------------------------------------------------------------------------------
@@ -285,22 +284,22 @@ FlagReport::accessReport(Int index, FlagReport &outReport)
     // Verify and read type of current record
     if( !verifyFields() )
     {
-        return false;
+        return False;
     }
 
     if( reportType() != "list" )
     {
-        return false;
+        return False;
     }
 
     if( index < 0 || index >= nReport() )
     {
-        return false;
+        return False;
     }
 
     String repName(String("report")+String::toString(index));
     outReport = subRecord( RecordFieldId(repName) );
-    return true;
+    return True;
 }
 
 
@@ -315,7 +314,7 @@ FlagReport::verifyFields()
     if( ! (isDefined("type") ) )
     {
         logger_p << LogIO::WARN << "Invalid FlagReport state ! No type is defined." << LogIO::POST;
-        return false;
+        return False;
     }
 
     // Read type of current record
@@ -328,7 +327,7 @@ FlagReport::verifyFields()
         if( ! isDefined("nreport") )
         {
             logger_p << LogIO::WARN << "No 'nreport' defined" << LogIO::POST;
-            return false; // nreport field is not defined
+            return False; // nreport field is not defined
         }
         else // check that nreport subRecords exist, and verify each one.
         {
@@ -340,7 +339,7 @@ FlagReport::verifyFields()
                 if( ! isDefined(repname) )
                 {
                     logger_p << LogIO::WARN << "Report : " << repname << " is not defined" << LogIO::POST;
-                    return false; // Does not contain a subReport
+                    return False; // Does not contain a subReport
                 }
                 else
                 {
@@ -348,7 +347,7 @@ FlagReport::verifyFields()
                     if( ! subRep.verifyFields() )
                     {
                         logger_p << LogIO::WARN << "Invalid subRecord for " << repname << LogIO::POST;
-                        return false; // subReport is invalid
+                        return False; // subReport is invalid
                     }
                 }
             }
@@ -361,7 +360,7 @@ FlagReport::verifyFields()
                 !isDefined("ndata") )
         {
             logger_p << LogIO::WARN << "Invalid FlagReport of type " << thisType << LogIO::POST;
-            return false;
+            return False;
         }
 
         Int numData;
@@ -373,7 +372,7 @@ FlagReport::verifyFields()
                     ( (thisType=="plotpoints")  && (!isDefined(String("xdata")+String::toString(dat)) || !isDefined(String("ydata")+String::toString(dat)) ) ) )
             {
                 logger_p << LogIO::WARN << "Data for  " << dat << " is not defined" << LogIO::POST;
-                return false; // Does not contain data.
+                return False; // Does not contain data.
             }
 
         }
@@ -381,7 +380,7 @@ FlagReport::verifyFields()
     }
     // else it is of type 'summary' or 'none' and we don't check anything there.
 
-    return true;
+    return True;
 
 }// end of verifyFields()
 

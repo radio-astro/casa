@@ -31,9 +31,9 @@ using namespace casacore;
 
 namespace {
 template<class T>
-inline void resizeTo(T &array, casacore::IPosition const &shape) {
+inline void resizeTo(T &array, IPosition const &shape) {
   if (array.shape() != shape) {
-    array.resize(shape, false);
+    array.resize(shape, False);
   }
 }
 
@@ -45,16 +45,16 @@ inline void setValue1(ssize_t n, T const *src, T *dst) {
 }
 
 template<class T>
-inline void setValueToMatrixColumn(casacore::Vector<T> const &src, ssize_t icolumn,
-    casacore::Matrix<T> &dst) {
-  casacore::IPosition const &shape = dst.shape();
+inline void setValueToMatrixColumn(Vector<T> const &src, ssize_t icolumn,
+    Matrix<T> &dst) {
+  IPosition const &shape = dst.shape();
   ssize_t const nrow = shape[0];
   ssize_t const ncolumn = shape[1];
   if (icolumn >= ncolumn) {
-    throw casacore::AipsError("Specified column doesn't exist.");
+    throw AipsError("Specified column doesn't exist.");
   }
 
-  casacore::Bool b1, b2;
+  Bool b1, b2;
   T *dst_p = dst.getStorage(b1);
   T *work_p = dst_p + icolumn * nrow;
   T const *src_p = src.getStorage(b2);
@@ -66,9 +66,9 @@ inline void setValueToMatrixColumn(casacore::Vector<T> const &src, ssize_t icolu
 }
 
 template<class T, class Executor>
-inline void transposeMatrix(ssize_t n, ssize_t offset_src, casacore::Matrix<T> const &src,
-    casacore::Matrix<T> &dst) {
-  casacore::Bool b1, b2;
+inline void transposeMatrix(ssize_t n, ssize_t offset_src, Matrix<T> const &src,
+    Matrix<T> &dst) {
+  Bool b1, b2;
   T const *src_p = src.getStorage(b1);
   T *dst_p = dst.getStorage(b2);
   T const *wsrc_p = src_p + offset_src * n;
@@ -107,14 +107,14 @@ struct ExecuteMatrix4X {
 };
 
 template<>
-inline void ExecuteMatrix4X::execute(ssize_t n, casacore::Bool const *src, casacore::Bool *dst) {
-  casacore::Bool const *row0_p = src + 0 * n;
-  casacore::Bool const *row1_p = src + 1 * n;
-  casacore::Bool const *row2_p = src + 2 * n;
-  casacore::Bool const *row3_p = src + 3 * n;
+inline void ExecuteMatrix4X::execute(ssize_t n, Bool const *src, Bool *dst) {
+  Bool const *row0_p = src + 0 * n;
+  Bool const *row1_p = src + 1 * n;
+  Bool const *row2_p = src + 2 * n;
+  Bool const *row3_p = src + 3 * n;
   for (ssize_t i = 0; i < n; ++i) {
     dst[4 * i + 0] = row0_p[i];
-    casacore::Bool b = row2_p[i] || row3_p[i];
+    Bool b = row2_p[i] || row3_p[i];
     dst[4 * i + 1] = b;
     dst[4 * i + 2] = b;
     dst[4 * i + 3] = row1_p[i];
@@ -137,21 +137,21 @@ struct ExecuteMatrix4 {
   }
 };
 
-inline void transposeMatrix4F2C(ssize_t n, casacore::Matrix<casacore::Float> const &src,
-    casacore::Matrix<casacore::Complex> &dst) {
-  casacore::Bool b1, b2;
-  casacore::Float const *src_p = src.getStorage(b1);
-  casacore::Complex *dst_p = dst.getStorage(b2);
+inline void transposeMatrix4F2C(ssize_t n, Matrix<Float> const &src,
+    Matrix<Complex> &dst) {
+  Bool b1, b2;
+  Float const *src_p = src.getStorage(b1);
+  Complex *dst_p = dst.getStorage(b2);
 
-  casacore::Float const *row0_p = src_p + 0 * n;
-  casacore::Float const *row1_p = src_p + 1 * n;
-  casacore::Float const *row2_p = src_p + 2 * n;
-  casacore::Float const *row3_p = src_p + 3 * n;
+  Float const *row0_p = src_p + 0 * n;
+  Float const *row1_p = src_p + 1 * n;
+  Float const *row2_p = src_p + 2 * n;
+  Float const *row3_p = src_p + 3 * n;
   for (ssize_t i = 0; i < n; ++i) {
     dst_p[4 * i].real(row0_p[i]);
     dst_p[4 * i].imag(0.0f);
-    casacore::Float fr = row2_p[i];
-    casacore::Float fi = row3_p[i];
+    Float fr = row2_p[i];
+    Float fi = row3_p[i];
     dst_p[4 * i + 1].real(fr);
     dst_p[4 * i + 1].imag(fi);
     dst_p[4 * i + 2].real(fr);
@@ -174,9 +174,9 @@ class DataChunk {
 public:
   friend DataAccumulator;
 
-  DataChunk(casacore::String const &poltype) :
+  DataChunk(String const &poltype) :
       num_pol_max_(4), num_chan_(0), data_(), flag_(),
-      flag_row_(num_pol_max_, false), tsys_(), tcal_(),
+      flag_row_(num_pol_max_, False), tsys_(), tcal_(),
       weight_(num_pol_max_, 1.0f), sigma_(weight_), poltype_(poltype),
       corr_type_(), filled_(NoData()), get_chunk_(nullptr),
       get_num_pol_(nullptr) {
@@ -190,22 +190,22 @@ public:
   virtual ~DataChunk() {
   }
 
-  casacore::String getPolType() const {
+  String getPolType() const {
     return poltype_;
   }
 
-  void resetPolType(casacore::String const &poltype) {
+  void resetPolType(String const &poltype) {
     initialize(num_chan_);
     setPolType(poltype);
   }
 
-  casacore::uInt getNumPol() const {
+  uInt getNumPol() const {
     return (*this.*get_num_pol_)();
   }
 
   void initialize(size_t num_chan) {
     num_chan_ = num_chan;
-    casacore::IPosition const shape(2, num_chan_, num_pol_max_);
+    IPosition const shape(2, num_chan_, num_pol_max_);
     ::resizeTo(data_, shape);
     ::resizeTo(flag_, shape);
     ::resizeTo(tsys_, shape);
@@ -231,29 +231,29 @@ public:
       return false;
     }
 
-    casacore::uInt polid = record.polno;
+    uInt polid = record.polno;
 
     if (num_pol_max_ <= polid) {
       return false;
     }
-    casacore::Vector<casacore::Float> const &data = record.data;
+    Vector<Float> const &data = record.data;
     if (num_chan_ == 0) {
       size_t num_chan = data.size();
       initialize(num_chan);
     }
-    casacore::Vector<casacore::Bool> const &flag = record.flag;
-    casacore::Bool flagrow = record.flag_row;
+    Vector<Bool> const &flag = record.flag;
+    Bool flagrow = record.flag_row;
 
     if (data.shape() != flag.shape()) {
       return false;
     }
 
-    casacore::Vector<casacore::Float> tsys;
+    Vector<Float> tsys;
     if (!record.tsys.empty()) {
 //      std::cout << "tsys is not empty: " << record.tsys << std::endl;
       tsys.assign(record.tsys);
     }
-    casacore::Vector<casacore::Float> tcal;
+    Vector<Float> tcal;
     if (!record.tcal.empty()) {
 //      std::cout << "tcal is not empty: " << record.tcal << std::endl;
       tcal.assign(record.tcal);
@@ -330,7 +330,7 @@ private:
   bool isValidRecord(DataRecord const &record) {
     return !record.data.empty() && !record.flag.empty();
   }
-  void setPolType(casacore::String const &poltype) {
+  void setPolType(String const &poltype) {
     POST_START;
 
     poltype_ = poltype;
@@ -338,52 +338,52 @@ private:
       get_chunk_ = &DataChunk::getLinear;
       get_num_pol_ = &DataChunk::getNumPolLinear;
       corr_type_.resize(4);
-      corr_type_[0] = casacore::Stokes::XX;
-      corr_type_[1] = casacore::Stokes::XY;
-      corr_type_[2] = casacore::Stokes::YX;
-      corr_type_[3] = casacore::Stokes::YY;
+      corr_type_[0] = Stokes::XX;
+      corr_type_[1] = Stokes::XY;
+      corr_type_[2] = Stokes::YX;
+      corr_type_[3] = Stokes::YY;
     } else if (poltype_ == "circular") {
       get_chunk_ = &DataChunk::getCircular;
       get_num_pol_ = &DataChunk::getNumPolCircular;
       corr_type_.resize(4);
-      corr_type_[0] = casacore::Stokes::RR;
-      corr_type_[1] = casacore::Stokes::RL;
-      corr_type_[2] = casacore::Stokes::LR;
-      corr_type_[3] = casacore::Stokes::LL;
+      corr_type_[0] = Stokes::RR;
+      corr_type_[1] = Stokes::RL;
+      corr_type_[2] = Stokes::LR;
+      corr_type_[3] = Stokes::LL;
     } else if (poltype_ == "stokes") {
       get_chunk_ = &DataChunk::getStokes;
       get_num_pol_ = &DataChunk::getNumPolStokes;
       corr_type_.resize(4);
-      corr_type_[0] = casacore::Stokes::I;
-      corr_type_[1] = casacore::Stokes::Q;
-      corr_type_[2] = casacore::Stokes::U;
-      corr_type_[3] = casacore::Stokes::V;
+      corr_type_[0] = Stokes::I;
+      corr_type_[1] = Stokes::Q;
+      corr_type_[2] = Stokes::U;
+      corr_type_[3] = Stokes::V;
     } else if (poltype_ == "linpol") {
       get_chunk_ = &DataChunk::getLinpol;
       get_num_pol_ = &DataChunk::getNumPolLinpol;
       corr_type_.resize(2);
-      corr_type_[0] = casacore::Stokes::Plinear;
-      corr_type_[1] = casacore::Stokes::Pangle;
+      corr_type_[0] = Stokes::Plinear;
+      corr_type_[1] = Stokes::Pangle;
     } else {
-      throw casacore::AipsError(casacore::String("Invalid poltype") + poltype);
+      throw AipsError(String("Invalid poltype") + poltype);
     }
 
     POST_END;
   }
   size_t const num_pol_max_;
   size_t num_chan_;
-  casacore::Matrix<casacore::Float> data_;
-  casacore::Matrix<casacore::Bool> flag_;
-  casacore::Vector<casacore::Bool> flag_row_;
-  casacore::Matrix<casacore::Float> tsys_;
-  casacore::Matrix<casacore::Float> tcal_;
-  casacore::Vector<casacore::Float> weight_;
-  casacore::Vector<casacore::Float> sigma_;
-  casacore::String poltype_;
-  casacore::Vector<casacore::Int> corr_type_;
+  Matrix<Float> data_;
+  Matrix<Bool> flag_;
+  Vector<Bool> flag_row_;
+  Matrix<Float> tsys_;
+  Matrix<Float> tcal_;
+  Vector<Float> weight_;
+  Vector<Float> sigma_;
+  String poltype_;
+  Vector<Int> corr_type_;
   unsigned char filled_;
   bool (DataChunk::*get_chunk_)(MSDataRecord &record);
-  casacore::uInt (DataChunk::*get_num_pol_)() const;
+  uInt (DataChunk::*get_num_pol_)() const;
 
   void setTsys2(MSDataRecord &record) {
     if (num_chan_ == 1) {
@@ -391,14 +391,14 @@ private:
       record.tsys(0, 0) = tsys_(0, 0);
       record.tsys(1, 0) = tsys_(0, 1);
     } else {
-      casacore::Float tsys00 = tsys_(0, 0);
-      casacore::Float tsys01 = tsys_(0, 1);
-      casacore::Float tsys10 = tsys_(1, 0);
-      casacore::Float tsys11 = tsys_(1, 1);
+      Float tsys00 = tsys_(0, 0);
+      Float tsys01 = tsys_(0, 1);
+      Float tsys10 = tsys_(1, 0);
+      Float tsys11 = tsys_(1, 1);
       if ((tsys00 > 0.0f && tsys10 > 0.0f)
           || (tsys01 > 0.0f && tsys11 > 0.0f)) {
         record.setTsysSize(2, num_chan_);
-        transposeMatrix<casacore::Float, ExecuteMatrix2>(num_chan_, 0, tsys_,
+        transposeMatrix<Float, ExecuteMatrix2>(num_chan_, 0, tsys_,
             record.tsys);
       } else if (tsys00 > 0.0f || tsys01 > 0.0f) {
         record.setTsysSize(2, 1);
@@ -414,14 +414,14 @@ private:
       record.tcal(0, 0) = tcal_(0, 0);
       record.tcal(1, 0) = tcal_(0, 1);
     } else {
-      casacore::Float tcal00 = tcal_(0, 0);
-      casacore::Float tcal01 = tcal_(0, 1);
-      casacore::Float tcal10 = tcal_(1, 0);
-      casacore::Float tcal11 = tcal_(1, 1);
+      Float tcal00 = tcal_(0, 0);
+      Float tcal01 = tcal_(0, 1);
+      Float tcal10 = tcal_(1, 0);
+      Float tcal11 = tcal_(1, 1);
       if ((tcal00 > 0.0f && tcal10 > 0.0f)
           || (tcal01 > 0.0f && tcal11 > 0.0f)) {
         record.setTcalSize(2, num_chan_);
-        transposeMatrix<casacore::Float, ExecuteMatrix2>(num_chan_, 0, tcal_,
+        transposeMatrix<Float, ExecuteMatrix2>(num_chan_, 0, tcal_,
             record.tcal);
       } else if (tcal00 > 0.0f || tcal01 > 0.0f) {
         record.setTcalSize(2, 1);
@@ -439,7 +439,7 @@ private:
       // should be spectral Tsys
       record.setTsysSize(1, num_chan_);
       //record.tsys = -1;
-      transposeMatrix<casacore::Float, ExecuteMatrix1>(num_chan_, start_src, tsys_,
+      transposeMatrix<Float, ExecuteMatrix1>(num_chan_, start_src, tsys_,
           record.tsys);
       //record.tsys.row(0) = tsys_.column(0);
     } else if (tsys_(0, start_src) > 0.0f) {
@@ -457,7 +457,7 @@ private:
       // should be spectral Tsys
       record.setTcalSize(1, num_chan_);
       //record.tsys = -1;
-      transposeMatrix<casacore::Float, ExecuteMatrix1>(num_chan_, start_src, tcal_,
+      transposeMatrix<Float, ExecuteMatrix1>(num_chan_, start_src, tcal_,
           record.tcal);
       //record.tsys.row(0) = tsys_.column(0);
     } else if (tcal_(0, start_src) > 0.0f) {
@@ -470,16 +470,16 @@ private:
   bool getLinear(MSDataRecord &record) {
     POST_START;
 
-    casacore::Vector<casacore::Float> weight;
-    casacore::Vector<casacore::Float> sigma;
+    Vector<Float> weight;
+    Vector<Float> sigma;
     if (isFullPol()) {
       // POL 0, 1, 2, and 3
 //      std::cout << "set data/flag" << std::endl;
       record.setComplex();
       record.setDataSize(4, num_chan_);
       transposeMatrix4F2C(num_chan_, data_, record.complex_data);
-      transposeMatrix<casacore::Bool, ExecuteMatrix4X>(num_chan_, 0, flag_, record.flag);
-      record.flag_row = anyEQ(flag_row_, true);
+      transposeMatrix<Bool, ExecuteMatrix4X>(num_chan_, 0, flag_, record.flag);
+      record.flag_row = anyEQ(flag_row_, True);
 //      std::cout << "weight = " << record.weight << std::endl;
 
 //      std::cout << "set tsys" << std::endl;
@@ -495,9 +495,9 @@ private:
 //      std::cout << "set data/flag" << std::endl;
       record.setFloat();
       record.setDataSize(2, num_chan_);
-      transposeMatrix<casacore::Float, ExecuteMatrix2>(num_chan_, 0, data_,
+      transposeMatrix<Float, ExecuteMatrix2>(num_chan_, 0, data_,
           record.float_data);
-      transposeMatrix<casacore::Bool, ExecuteMatrix2>(num_chan_, 0, flag_, record.flag);
+      transposeMatrix<Bool, ExecuteMatrix2>(num_chan_, 0, flag_, record.flag);
       record.flag_row = flag_row_[0] || flag_row_[1];
 //      std::cout << "weight = " << record.weight << std::endl;
 
@@ -515,9 +515,9 @@ private:
 //      std::cout << "set data/flag (pol 0)" << std::endl;
       record.setFloat();
       record.setDataSize(1, num_chan_);
-      transposeMatrix<casacore::Float, ExecuteMatrix1>(num_chan_, 0, data_,
+      transposeMatrix<Float, ExecuteMatrix1>(num_chan_, 0, data_,
           record.float_data);
-      transposeMatrix<casacore::Bool, ExecuteMatrix1>(num_chan_, 0, flag_, record.flag);
+      transposeMatrix<Bool, ExecuteMatrix1>(num_chan_, 0, flag_, record.flag);
       record.flag_row = flag_row_(0);
 
       setTsys1(0, record);
@@ -532,9 +532,9 @@ private:
 //      std::cout << "set data/flag (pol 1)" << std::endl;
       record.setFloat();
       record.setDataSize(1, num_chan_);
-      transposeMatrix<casacore::Float, ExecuteMatrix1>(num_chan_, 1, data_,
+      transposeMatrix<Float, ExecuteMatrix1>(num_chan_, 1, data_,
           record.float_data);
-      transposeMatrix<casacore::Bool, ExecuteMatrix1>(num_chan_, 1, flag_, record.flag);
+      transposeMatrix<Bool, ExecuteMatrix1>(num_chan_, 1, flag_, record.flag);
       record.flag_row = flag_row_(1);
 
       setTsys1(1, record);
@@ -563,18 +563,18 @@ private:
     record.setFloat();
     if (isFullPol()) {
       record.setDataSize(4, num_chan_);
-      transposeMatrix<casacore::Float, ExecuteMatrix4>(num_chan_, 0, data_,
+      transposeMatrix<Float, ExecuteMatrix4>(num_chan_, 0, data_,
           record.float_data);
-      transposeMatrix<casacore::Bool, ExecuteMatrix4>(num_chan_, 0, flag_, record.flag);
+      transposeMatrix<Bool, ExecuteMatrix4>(num_chan_, 0, flag_, record.flag);
       record.flag_row = anyTrue(flag_row_);
 
       record.num_pol = 4;
       record.corr_type = corr_type_;
     } else if (isSinglePol0()) {
       record.setDataSize(1, num_chan_);
-      transposeMatrix<casacore::Float, ExecuteMatrix1>(num_chan_, 0, data_,
+      transposeMatrix<Float, ExecuteMatrix1>(num_chan_, 0, data_,
           record.float_data);
-      transposeMatrix<casacore::Bool, ExecuteMatrix1>(num_chan_, 0, flag_, record.flag);
+      transposeMatrix<Bool, ExecuteMatrix1>(num_chan_, 0, flag_, record.flag);
       record.flag_row = flag_row_[0];
 
       record.num_pol = 1;
@@ -594,18 +594,18 @@ private:
     if (isDualPol()) {
       // POL 0 and 1
       record.setDataSize(2, num_chan_);
-      transposeMatrix<casacore::Float, ExecuteMatrix2>(num_chan_, 0, data_,
+      transposeMatrix<Float, ExecuteMatrix2>(num_chan_, 0, data_,
           record.float_data);
-      transposeMatrix<casacore::Bool, ExecuteMatrix2>(num_chan_, 0, flag_, record.flag);
+      transposeMatrix<Bool, ExecuteMatrix2>(num_chan_, 0, flag_, record.flag);
       record.flag_row = flag_row_[0] || flag_row_[1];
 
       record.num_pol = 2;
       record.corr_type = corr_type_;
     } else if (isSinglePol0()) {
       record.setDataSize(1, num_chan_);
-      transposeMatrix<casacore::Float, ExecuteMatrix1>(num_chan_, 0, data_,
+      transposeMatrix<Float, ExecuteMatrix1>(num_chan_, 0, data_,
           record.float_data);
-      transposeMatrix<casacore::Bool, ExecuteMatrix1>(num_chan_, 0, flag_, record.flag);
+      transposeMatrix<Bool, ExecuteMatrix1>(num_chan_, 0, flag_, record.flag);
       record.flag_row = flag_row_[0];
 
       record.num_pol = 1;
@@ -618,7 +618,7 @@ private:
     return true;
   }
 
-  casacore::uInt getNumPolLinear() const {
+  uInt getNumPolLinear() const {
     if (isFullPol()) {
       return 4;
     } else if (isDualPol()) {
@@ -630,11 +630,11 @@ private:
     }
   }
 
-  casacore::uInt getNumPolCircular() const {
+  uInt getNumPolCircular() const {
     return getNumPolLinear();
   }
 
-  casacore::uInt getNumPolStokes() const {
+  uInt getNumPolStokes() const {
     if (isFullPol()) {
       return 4;
     } else if (isSinglePol0()) {
@@ -644,7 +644,7 @@ private:
     }
   }
 
-  casacore::uInt getNumPolLinpol() const {
+  uInt getNumPolLinpol() const {
     if (isDualPol()) {
       return 2;
     } else if (isSinglePol0()) {
@@ -658,12 +658,12 @@ private:
 class DataAccumulator {
 private:
   struct DataAccumulatorKey {
-    casacore::Int antenna_id;
-    casacore::Int field_id;
-    casacore::Int feed_id;
-    casacore::Int spw_id;
-    casacore::String pol_type;
-    casacore::String intent;
+    Int antenna_id;
+    Int field_id;
+    Int feed_id;
+    Int spw_id;
+    String pol_type;
+    String intent;
 
     template<class T, class C>
     bool comp(T const &a, T const &b, C const &c) const {
@@ -716,12 +716,12 @@ public:
   }
 
   bool queryForGet(DataRecord const &record) const {
-    casacore::Double const time = record.time;
+    Double const time = record.time;
     bool is_ready = (0.0 <= time_) && !(time_ == time);
     return is_ready;
   }
 
-  bool queryForGet(casacore::Double const &time) const {
+  bool queryForGet(Double const &time) const {
     bool is_ready = (0.0 <= time_) && !(time_ == time);
     return is_ready;
   }
@@ -776,7 +776,7 @@ public:
       return false;
     }
 
-    casacore::Double time = record.time;
+    Double time = record.time;
     if (time_ < 0.0) {
       time_ = time;
     }
@@ -784,14 +784,14 @@ public:
 //      std::cout << "timestamp mismatch" << std::endl;
       return false;
     }
-    casacore::Int antennaid = record.antenna_id;
-    casacore::Int spwid = record.spw_id;
-    casacore::Int fieldid = record.field_id;
-    casacore::Int feedid = record.feed_id;
-    casacore::Int scan = record.scan;
-    casacore::Int subscan = record.subscan;
-    casacore::String intent = record.intent;
-    casacore::String poltype = record.pol_type;
+    Int antennaid = record.antenna_id;
+    Int spwid = record.spw_id;
+    Int fieldid = record.field_id;
+    Int feedid = record.feed_id;
+    Int scan = record.scan;
+    Int subscan = record.subscan;
+    String intent = record.intent;
+    String poltype = record.pol_type;
     DataAccumulatorKey key;
     key.antenna_id = record.antenna_id;
     key.field_id = record.field_id;
@@ -799,17 +799,17 @@ public:
     key.spw_id = record.spw_id;
     key.intent = record.intent;
     key.pol_type = record.pol_type;
-    casacore::Matrix<casacore::Double> const &direction = record.direction;
-    casacore::Double interval = record.interval;
-    casacore::Float temperature = record.temperature;
-    casacore::Float pressure = record.pressure;
-    casacore::Float rel_humidity = record.rel_humidity;
-    casacore::Float wind_speed = record.wind_speed;
-    casacore::Float wind_direction = record.wind_direction;
+    Matrix<Double> const &direction = record.direction;
+    Double interval = record.interval;
+    Float temperature = record.temperature;
+    Float pressure = record.pressure;
+    Float rel_humidity = record.rel_humidity;
+    Float wind_speed = record.wind_speed;
+    Float wind_direction = record.wind_direction;
     bool status = false;
     auto iter = indexer_.find(key);
     if (iter != indexer_.end()) {
-      casacore::uInt index = iter->second;
+      uInt index = iter->second;
       status = pool_[index]->accumulate(record);
       if (status) {
         antenna_id_[index] = antennaid;
@@ -836,14 +836,14 @@ public:
       scan_.push_back(-1);
       subscan_.push_back(-1);
       intent_.push_back("");
-      direction_.push_back(casacore::Matrix<casacore::Double>());
+      direction_.push_back(Matrix<Double>());
       interval_.push_back(-1.0);
       temperature_.push_back(0.0f);
       pressure_.push_back(0.0f);
       rel_humidity_.push_back(0.0f);
       wind_speed_.push_back(0.0f);
       wind_direction_.push_back(0.0f);
-      casacore::uInt index = pool_.size() - 1;
+      uInt index = pool_.size() - 1;
       indexer_[key] = index;
       status = pool_[index]->accumulate(record);
       if (status) {
@@ -873,12 +873,12 @@ public:
     return status;
   }
 
-  casacore::String getPolType(size_t ichunk) const {
+  String getPolType(size_t ichunk) const {
     assert(ichunk < pool_.size());
     return pool_[ichunk]->getPolType();
   }
 
-  casacore::uInt getNumPol(size_t ichunk) const {
+  uInt getNumPol(size_t ichunk) const {
     assert(ichunk < pool_.size());
     return pool_[ichunk]->getNumPol();
   }
@@ -895,22 +895,22 @@ private:
   }
 
   std::vector<DataChunk *> pool_;
-  std::vector<casacore::Int> antenna_id_;
-  std::vector<casacore::Int> spw_id_;
-  std::vector<casacore::Int> field_id_;
-  std::vector<casacore::Int> feed_id_;
-  std::vector<casacore::Int> scan_;
-  std::vector<casacore::Int> subscan_;
-  std::vector<casacore::String> intent_;
-  std::vector<casacore::Matrix<casacore::Double> > direction_;
-  std::vector<casacore::Double> interval_;
-  std::vector<casacore::Float> temperature_;
-  std::vector<casacore::Float> pressure_;
-  std::vector<casacore::Float> rel_humidity_;
-  std::vector<casacore::Float> wind_speed_;
-  std::vector<casacore::Float> wind_direction_;
-  std::map<DataAccumulatorKey, casacore::uInt, DataAccumulatorKey> indexer_;
-  casacore::Double time_;
+  std::vector<Int> antenna_id_;
+  std::vector<Int> spw_id_;
+  std::vector<Int> field_id_;
+  std::vector<Int> feed_id_;
+  std::vector<Int> scan_;
+  std::vector<Int> subscan_;
+  std::vector<String> intent_;
+  std::vector<Matrix<Double> > direction_;
+  std::vector<Double> interval_;
+  std::vector<Float> temperature_;
+  std::vector<Float> pressure_;
+  std::vector<Float> rel_humidity_;
+  std::vector<Float> wind_speed_;
+  std::vector<Float> wind_direction_;
+  std::map<DataAccumulatorKey, uInt, DataAccumulatorKey> indexer_;
+  Double time_;
   std::vector<bool> is_free_;
 };
 

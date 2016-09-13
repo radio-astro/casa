@@ -24,9 +24,7 @@
 #include <mstransform/TVI/test/tPhaseShiftingTVI.h>
 
 using namespace std;
-using namespace casacore;
 using namespace casa;
-using namespace casacore;
 using namespace casa::vi;
 
 
@@ -78,7 +76,7 @@ void PhaseShiftingTVITest::initReferenceConfiguration(Record &configuration)
 {
 	refConfiguration_p = configuration;
 	refConfiguration_p.define ("inputms", referenceFile_p);
-	refConfiguration_p.define ("reindex", false);
+	refConfiguration_p.define ("reindex", False);
 	refConfiguration_p.define ("XpcOffset", 0.15);
 	refConfiguration_p.define ("YpcOffset", -0.25);
 	refConfiguration_p.define ("datacolumn", String("ALL"));
@@ -177,7 +175,7 @@ int main(int argc, char **argv)
 	int ret;
 	string parameter,value;
 	Record configuration;
-	Bool autoMode = true;
+	Bool autoMode = True;
 
 	for (unsigned short i=0;i<argc-1;i++)
 	{
@@ -187,7 +185,7 @@ int main(int argc, char **argv)
 		if (parameter == string("-vis"))
 		{
 			configuration.define ("inputms", value);
-			autoMode = false;
+			autoMode = False;
 		}
 		else if (parameter == string("-spw"))
 		{

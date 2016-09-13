@@ -8,7 +8,6 @@
 #include <measures/Measures/MeasureHolder.h>
 #include <measures/Measures/MeasTable.h>
 
-using namespace casacore;
 namespace casa {
 
 Vector<String> toVectorString(const std::vector<std::string> &theVec){
@@ -62,7 +61,7 @@ Quantity casaQuantity(const casac::Quantity &cquant){
 }
 
 Quantity casaQuantity(const casac::variant &theVar){
-   casacore::QuantumHolder qh;
+   casa::QuantumHolder qh;
    String error;
 
    // Strange "defaults" like BOOLVECs can come in are expected to go out as
@@ -86,22 +85,22 @@ Quantity casaQuantity(const casac::variant &theVar){
    }
    else if(::casac::variant::compatible_type(theType, ::casac::variant::DOUBLE)
 	   == ::casac::variant::DOUBLE){
-     const casacore::Unit unitless("_");	 		// Dimensionless
+     const casa::Unit unitless("_");	 		// Dimensionless
 
-     //qh = casacore::QuantumHolder(casacore::Quantity(const_cast<Double &>(const_cast<casac::variant &>(theVar).asDouble()),
+     //qh = casa::QuantumHolder(casa::Quantity(const_cast<Double &>(const_cast<casac::variant &>(theVar).asDouble()),
      //unitless));
-     qh = casacore::QuantumHolder(casacore::Quantity(const_cast<Double &>(const_cast<casac::variant &>(theVar).asDouble())));
+     qh = casa::QuantumHolder(casa::Quantity(const_cast<Double &>(const_cast<casac::variant &>(theVar).asDouble())));
      
      triedAndFailed = false;
    }
    else if(::casac::variant::compatible_type(theType, ::casac::variant::COMPLEX)
 	   == ::casac::variant::COMPLEX){
-     const casacore::Unit unitless("_");	 		// Dimensionless
-     const casacore::Complex casaVal(const_cast<casac::variant &>(theVar).asComplex());
+     const casa::Unit unitless("_");	 		// Dimensionless
+     const casa::Complex casaVal(const_cast<casac::variant &>(theVar).asComplex());
      
-     //qh = casacore::QuantumHolder(casacore::Quantum<casacore::Complex>(casaVal,
+     //qh = casa::QuantumHolder(casa::Quantum<casa::Complex>(casaVal,
      //unitless));
-     qh = casacore::QuantumHolder(casacore::Quantum<casacore::Complex>(casaVal));
+     qh = casa::QuantumHolder(casa::Quantum<casa::Complex>(casaVal));
      triedAndFailed = false;
    }
    
@@ -113,10 +112,10 @@ Quantity casaQuantity(const casac::variant &theVar){
    }
 
    if(qh.isQuantum()){		// Remember casac::Quantity is a broader class
-     return qh.asQuantity();	// than casacore::Quantity, so use qh.isQuantum().
+     return qh.asQuantity();	// than casa::Quantity, so use qh.isQuantum().
    }
    else{			// Probably variant's type was not handled above.
-     casacore::Quantity retval;	// Defaults to 0.0.
+     casa::Quantity retval;	// Defaults to 0.0.
 
      return retval;
    }
@@ -150,9 +149,9 @@ Quantum<Vector<Double> > casaQuantumVector(const casac::variant& thevar){
   return retval;
 }
 
-Bool toCasaVectorQuantity(const ::casac::variant& theval, casacore::Vector<casacore::Quantity>& theQuants){
+Bool toCasaVectorQuantity(const ::casac::variant& theval, casa::Vector<casa::Quantity>& theQuants){
 
-  casacore::Vector<casacore::String> lesStrings;
+  casa::Vector<casa::String> lesStrings;
   if (theval.type()== ::casac::variant::STRING){
     sepCommaEmptyToVectorStrings(lesStrings, theval.toString());
   }
@@ -160,10 +159,10 @@ Bool toCasaVectorQuantity(const ::casac::variant& theval, casacore::Vector<casac
     //Force resize as toStringVec sometimes give the wrong length (bug?)
     Vector<Int> leShape=theval.arrayshape();
     lesStrings=toVectorString(theval.toStringVec());
-    lesStrings.resize(product(leShape), true);
+    lesStrings.resize(product(leShape), True);
   }
 
-  casacore::QuantumHolder qh;
+  casa::QuantumHolder qh;
   String error;
   theQuants.resize(lesStrings.nelements());
   for (uInt k=0; k < lesStrings.nelements(); ++k){
@@ -171,7 +170,7 @@ Bool toCasaVectorQuantity(const ::casac::variant& theval, casacore::Vector<casac
     if(lesStrings[k].contains("pix")){
       lesStrings[k]=lesStrings[k].before("pix");
       Double value=atof(lesStrings[k].chars());
-      theQuants[k]=casacore::Quantity(value, "pix");
+      theQuants[k]=casa::Quantity(value, "pix");
     }
     else{
       if(!qh.fromString(error, lesStrings[k])){
@@ -185,7 +184,7 @@ Bool toCasaVectorQuantity(const ::casac::variant& theval, casacore::Vector<casac
     }
   }
 
-  return true;
+  return True;
 
 }
 
@@ -214,7 +213,7 @@ Bool toCasaVectorQuantity(const ::casac::variant& theval, casacore::Vector<casac
   ::casac::record *r=0;
   try {
     String error;
-    casacore::Record R;
+    casa::Record R;
     if(QuantumHolder(q).toRecord(error, R))
       r = fromRecord(R);
     else
@@ -363,11 +362,11 @@ Bool toCasaVectorQuantity(const ::casac::variant& theval, casacore::Vector<casac
                break;
           case TpArrayComplex :
                {
-               Array<casacore::Complex> tmpArray = theRec.asArrayComplex(i);
+               Array<casa::Complex> tmpArray = theRec.asArrayComplex(i);
                Vector<Int> tmpShape = (tmpArray.shape()).asVector();
                std::vector<Int> vecShape;
                tmpShape.tovector(vecShape);
-               std::vector<casacore::Complex> tmpVec;
+               std::vector<casa::Complex> tmpVec;
                tmpArray.tovector(tmpVec);
 	       std::vector<std::complex<double> > dtmpVec(tmpVec.size());
 	       for(unsigned int j=0;j<tmpVec.size();j++)
@@ -395,7 +394,7 @@ Bool toCasaVectorQuantity(const ::casac::variant& theval, casacore::Vector<casac
                Vector<Int> tmpShape = (tmpArray.shape()).asVector();
                std::vector<Int> vecShape;
                tmpShape.tovector(vecShape);
-               std::vector<casacore::String> tmpVec;
+               std::vector<casa::String> tmpVec;
                tmpArray.tovector(tmpVec);
 	       std::vector<std::string> dtmpVec(tmpVec.size());
 	       for(unsigned int j=0;j<tmpVec.size();j++)
@@ -405,7 +404,7 @@ Bool toCasaVectorQuantity(const ::casac::variant& theval, casacore::Vector<casac
                break;
           case TpRecord :
 	       {
-	       //std::cerr << "casacore::fromRecord is Record" << std::endl;
+	       //std::cerr << "casa::fromRecord is Record" << std::endl;
 	       casac::record *dummy = fromRecord(theRec.asRecord(i));
 	       casac::variant dum2(dummy);
                transcribedRec->insert(theRec.name(i).c_str(), dum2);
@@ -866,8 +865,8 @@ ValueHolder *toValueHolder(const casac::variant &theV){
 Bool casaMDirection(const ::casac::variant& theVar, 
 		    MDirection& theMeas){
 
-  casacore::MeasureHolder mh;
-  casacore::QuantumHolder qh;
+  casa::MeasureHolder mh;
+  casa::QuantumHolder qh;
   String error;
   if(theVar.type()== ::casac::variant::RECORD){
     ::casac::variant localvar(theVar); //cause its const
@@ -875,13 +874,13 @@ Bool casaMDirection(const ::casac::variant& theVar,
     if(mh.fromRecord(error, *ptrRec)){
       delete ptrRec;
       theMeas=mh.asMDirection();
-      return true;
+      return True;
     }
     else{
        ostringstream oss;
        oss << "Error " << error <<  " in converting Direction parameter";
        throw( AipsError(oss.str()));
-       return false;
+       return False;
     }	
   }
   if(theVar.type()== ::casac::variant::STRING || 
@@ -896,9 +895,9 @@ Bool casaMDirection(const ::casac::variant& theVar,
     }
     if(str.nelements()==3){
       qh.fromString(error, str[1]);
-      casacore::Quantity val1=qh.asQuantity();
+      casa::Quantity val1=qh.asQuantity();
       qh.fromString(error, str[2]);
-      casacore::Quantity val2=qh.asQuantity();
+      casa::Quantity val2=qh.asQuantity();
       if(val2.getFullUnit()==Unit("deg") && str[2].contains(":")){
 	ostringstream oss;
 	oss << "NOTE: you provided the Declination/Latitude value \""<< str[2]
@@ -914,13 +913,13 @@ Bool casaMDirection(const ::casac::variant& theVar,
 	tp=MDirection::J2000;
       }
       theMeas=MDirection(val1,val2,  tp);
-      return true;
+      return True;
     }
     else if(str.nelements()==2){
       qh.fromString(error, str[0]);
-      casacore::Quantity val1=qh.asQuantity();
+      casa::Quantity val1=qh.asQuantity();
       qh.fromString(error, str[1]);
-      casacore::Quantity val2=qh.asQuantity();
+      casa::Quantity val2=qh.asQuantity();
       if(val2.getFullUnit()==Unit("deg") && str[1].contains(":")){
 	ostringstream oss;
 	oss << "NOTE: you provided the Declination/Latitude value \""<< str[2]
@@ -929,12 +928,12 @@ Bool casaMDirection(const ::casac::variant& theVar,
 	cerr << oss.str() << endl;
       }
       theMeas=MDirection(val1, val2);
-      return true;
+      return True;
     }
     else if(str.nelements()==1){
       //Must be a string like sun, moon, jupiter
-      casacore::Quantity val1(0.0, "deg");
-      casacore::Quantity val2(90.0, "deg");
+      casa::Quantity val1(0.0, "deg");
+      casa::Quantity val2(90.0, "deg");
       theMeas=MDirection(val1, val2);
       MDirection::Types ref;
       Int numAll;
@@ -945,10 +944,10 @@ Bool casaMDirection(const ::casac::variant& theVar,
       if(MDirection::getType(ref,str[0])){
 
 	theMeas=MDirection(val1, val2, ref);
-	return true;
+	return True;
       }
       if(MeasTable::Source(theMeas, str[0])){
-	return true;
+	return True;
       } 
       if(!MDirection::getType(ref, str[0])){
 	Vector<String> all(numExtra);
@@ -960,7 +959,7 @@ Bool casaMDirection(const ::casac::variant& theVar,
 	oss << "Valid ones are " << all;
 	cerr << oss.str() <<  " or one of the valid known sources in the data repos" << endl;
 	theMeas=MDirection(val1, val2);
-	return false;
+	return False;
       }
       
     }
@@ -969,23 +968,23 @@ Bool casaMDirection(const ::casac::variant& theVar,
   ///If i am here i don't know how to interprete this
   
 
-  return false;
+  return False;
 }
 
-//Bool ang_as_formatted_str(string& out, const casacore::Quantity& qang,
+//Bool ang_as_formatted_str(string& out, const casa::Quantity& qang,
 //                          const std::string& format)
 //{
 //  return ang_as_formatted_str(out,qang,format,precision=2);
 //}
 
-Bool ang_as_formatted_str(string& out, const casacore::Quantity& qang,
+Bool ang_as_formatted_str(string& out, const casa::Quantity& qang,
                           const std::string& format, const Int precision=2)
 {
   Bool retval = true;
   
   try{
     //hms, dms, deg, rad, +deg.
-    casacore::String form(format);
+    casa::String form(format);
     form.downcase();
 
     Int ndig=6+precision;
@@ -1031,8 +1030,8 @@ Bool MDirection2str(const MDirection& in, std::string& out)
   Unit           inunit(lonlat.getUnit());
   string refcode(in.getRefString());
   
-  casacore::Quantity qlon(lonlatval[0], inunit);
-  casacore::Quantity qlat(lonlatval[1], inunit);
+  casa::Quantity qlon(lonlatval[0], inunit);
+  casa::Quantity qlat(lonlatval[1], inunit);
   
   string lon("");
   string lat("");
@@ -1053,28 +1052,28 @@ Bool MDirection2str(const MDirection& in, std::string& out)
 
 Bool casaMFrequency(const ::casac::variant& theVar, 
 		    MFrequency& theMeas){
-  casacore::MeasureHolder mh;
-  casacore::QuantumHolder qh;
+  casa::MeasureHolder mh;
+  casa::QuantumHolder qh;
   String error;
   if(theVar.type()== ::casac::variant::RECORD){
     ::casac::variant localvar(theVar); //cause its const
     Record * ptrRec = toRecord(localvar.asRecord());
     if(mh.fromRecord(error, *ptrRec)){
       theMeas=mh.asMFrequency();
-      return true;
+      return True;
     }
     else{//could be a quantity
       if(qh.fromRecord(error, *ptrRec)){
 	theMeas=MFrequency(qh.asQuantity());
 	delete ptrRec;
-	return true;
+	return True;
       }
       else{
 	ostringstream oss;
 	oss << "Error " << error 
             << "In converting Frequency parameter";
 	throw( AipsError(oss.str()));
-	return false;
+	return False;
       }
     }	
   }
@@ -1089,7 +1088,7 @@ Bool casaMFrequency(const ::casac::variant& theVar,
     }
     if(str.nelements()==2){
       qh.fromString(error, str[1]);
-      casacore::Quantity val=qh.asQuantity();
+      casa::Quantity val=qh.asQuantity();
       MFrequency::Types tp;
       if(!MFrequency::getType(tp, str[0])){
 	
@@ -1100,28 +1099,28 @@ Bool casaMFrequency(const ::casac::variant& theVar,
 	val=qh.asQuantity();  
       }
       theMeas=MFrequency(val, tp);
-      return true;
+      return True;
     }
     else if(str.nelements()==1){
       if(str[0]=="")
-	return false;
+	return False;
       qh.fromString(error, str[0]);
       theMeas=MFrequency(qh.asQuantity());
-      return true;
+      return True;
     }
   }
   ///If i am here then it can be an integer or double then using Hz
-  theMeas=MFrequency(casacore::Quantity(theVar.toDouble(), "Hz"));
+  theMeas=MFrequency(casa::Quantity(theVar.toDouble(), "Hz"));
   
 
-  return true;
+  return True;
 
 }
 
 Bool casaMPosition(const ::casac::variant& theVar, 
 		   MPosition& theMeas){
-  casacore::MeasureHolder mh;
-  casacore::QuantumHolder qh;
+  casa::MeasureHolder mh;
+  casa::QuantumHolder qh;
   String error;
   if(theVar.type()== ::casac::variant::RECORD){
     ::casac::variant localvar(theVar); //cause its const
@@ -1129,14 +1128,14 @@ Bool casaMPosition(const ::casac::variant& theVar,
     if(mh.fromRecord(error, *ptrRec)){
       theMeas=mh.asMPosition();
       delete ptrRec;
-      return true;
+      return True;
     }
     else{
       ostringstream oss;
       oss << "Error " << error << "In converting Position parameter";
       delete ptrRec;
       throw( AipsError(oss.str()));
-      return false;
+      return False;
     }	
   }
   if(theVar.type()== ::casac::variant::STRING || 
@@ -1150,11 +1149,11 @@ Bool casaMPosition(const ::casac::variant& theVar,
     }
     if(str.nelements()==4){
       qh.fromString(error, str[1]);
-      casacore::Quantity val1=qh.asQuantity();
+      casa::Quantity val1=qh.asQuantity();
       qh.fromString(error, str[2]);
-      casacore::Quantity val2=qh.asQuantity();
+      casa::Quantity val2=qh.asQuantity();
       qh.fromString(error, str[3]);
-      casacore::Quantity val3=qh.asQuantity();
+      casa::Quantity val3=qh.asQuantity();
       MPosition::Types tp;
       if(!MPosition::getType(tp, str[0])){
 	cerr << "Could not understand Position frame...defaulting to ITRF" 
@@ -1162,34 +1161,34 @@ Bool casaMPosition(const ::casac::variant& theVar,
 	tp=MPosition::ITRF;
       }
       theMeas=MPosition(val1, val2, val3, tp);
-      return true;
+      return True;
     }
     else if(str.nelements()==3){
       qh.fromString(error, str[0]);
-      casacore::Quantity val1=qh.asQuantity();
+      casa::Quantity val1=qh.asQuantity();
       qh.fromString(error, str[1]);
-      casacore::Quantity val2=qh.asQuantity();
+      casa::Quantity val2=qh.asQuantity();
       qh.fromString(error, str[2]);
-      casacore::Quantity val3=qh.asQuantity();
+      casa::Quantity val3=qh.asQuantity();
       theMeas=MPosition(val1, val2, val3);
-      return true;
+      return True;
     }
     else if(str.nelements()==1){
       //must be an observatory string hopefully 
       str[0].upcase();
-      if(casacore::MeasTable::Observatory(theMeas, str[0])){
-	return true;
+      if(casa::MeasTable::Observatory(theMeas, str[0])){
+	return True;
       }
       else{
 	throw( AipsError("Could not understand Position parameter")); 
-	return false;
+	return False;
       }
     }
   }
   ///If i am here i don't know how to interprete this
   
 
-  return false;
+  return False;
 
 
 }
@@ -1197,8 +1196,8 @@ Bool casaMPosition(const ::casac::variant& theVar,
 
 Bool casaMRadialVelocity(const ::casac::variant& theVar, 
 			 MRadialVelocity& theMeas){
-  casacore::MeasureHolder mh;
-  casacore::QuantumHolder qh;
+  casa::MeasureHolder mh;
+  casa::QuantumHolder qh;
   String error;
   if(theVar.type()== ::casac::variant::RECORD){
     ::casac::variant localvar(theVar); //cause its const
@@ -1206,13 +1205,13 @@ Bool casaMRadialVelocity(const ::casac::variant& theVar,
     if(mh.fromRecord(error, *ptrRec)){
       theMeas=mh.asMRadialVelocity();
       delete ptrRec;
-      return true;
+      return True;
     }
     else{//could be a quantity
       if(qh.fromRecord(error, *ptrRec)){
 	theMeas=MRadialVelocity(qh.asQuantity());
 	delete ptrRec;
-	return true;
+	return True;
       }
       else{
 	ostringstream oss;
@@ -1220,7 +1219,7 @@ Bool casaMRadialVelocity(const ::casac::variant& theVar,
 	      << "In converting Radial velocity parameter";
 	throw( AipsError(oss.str()));
 	delete ptrRec;
-	return false;
+	return False;
       }
     }	
   }
@@ -1235,7 +1234,7 @@ Bool casaMRadialVelocity(const ::casac::variant& theVar,
     }
     if(str.nelements()==2){
       qh.fromString(error, str[1]);
-      casacore::Quantity val=qh.asQuantity();
+      casa::Quantity val=qh.asQuantity();
       MRadialVelocity::Types tp;
       if(!MRadialVelocity::getType(tp, str[0])){
 	cerr << "Could not understand velocity frame..defaulting to LSRK " 
@@ -1243,27 +1242,27 @@ Bool casaMRadialVelocity(const ::casac::variant& theVar,
 	tp=MRadialVelocity::LSRK;
       }
       theMeas=MRadialVelocity(val, tp);
-      return true;
+      return True;
     }
     else if(str.nelements()==1){
       if(str[0]=="")
-	return false;
+	return False;
       qh.fromString(error, str[0]);
       theMeas=MRadialVelocity(qh.asQuantity());
-      return true;
+      return True;
     }
   }
   ///If i am here then it can be an integer or double then using m/s
-  theMeas=MRadialVelocity(casacore::Quantity(theVar.toDouble(), "m/s"));
+  theMeas=MRadialVelocity(casa::Quantity(theVar.toDouble(), "m/s"));
 
-  return true;
+  return True;
 }
 
 Bool casaMEpoch(const ::casac::variant& theVar,
                 MEpoch& theMeas){
 
-  casacore::MeasureHolder mh;
-  casacore::QuantumHolder qh;
+  casa::MeasureHolder mh;
+  casa::QuantumHolder qh;
   String error;
   if(theVar.type()== ::casac::variant::RECORD){
     ::casac::variant localvar(theVar); //cause its const
@@ -1271,13 +1270,13 @@ Bool casaMEpoch(const ::casac::variant& theVar,
     if(mh.fromRecord(error, *ptrRec)){
       theMeas=mh.asMEpoch();
       delete ptrRec;
-      return true;
+      return True;
     }
     else{//could be a quantity
       if(qh.fromRecord(error, *ptrRec)){
 	theMeas=MEpoch(qh.asQuantity());
 	delete ptrRec;
-	return true;
+	return True;
       }
       else{
 	ostringstream oss;
@@ -1285,7 +1284,7 @@ Bool casaMEpoch(const ::casac::variant& theVar,
 	      << "In converting Epoch parameter";
 	throw( AipsError(oss.str()));
 	delete ptrRec;
-	return false;
+	return False;
       }
     }	
   }
@@ -1300,7 +1299,7 @@ Bool casaMEpoch(const ::casac::variant& theVar,
     }
     if(str.nelements()==2){
       qh.fromString(error, str[1]);
-      casacore::Quantity val=qh.asQuantity();
+      casa::Quantity val=qh.asQuantity();
       MEpoch::Types tp;
       if(!MEpoch::getType(tp, str[0])){
 	cerr << "Could not understand epoch frame...defaulting to UTC " 
@@ -1308,31 +1307,31 @@ Bool casaMEpoch(const ::casac::variant& theVar,
 	tp=MEpoch::UTC;
       }
       theMeas=MEpoch(val, tp);
-      return true;
+      return True;
     }
     else if(str.nelements()==1){
       if(str[0]=="")
-	return false;
+	return False;
       qh.fromString(error, str[0]);
       theMeas=MEpoch(qh.asQuantity());
-      return true;
+      return True;
     }
   }
   ///If i am here then it can be an integer or double then using days
-  theMeas=MEpoch(casacore::Quantity(theVar.toDouble(), "d"));
+  theMeas=MEpoch(casa::Quantity(theVar.toDouble(), "d"));
   
 
-  return true;
+  return True;
 
 
 }
 Int sepCommaEmptyToVectorStrings(Vector<String>& lesStrings, 
 				 const std::string& str){
 
-    casacore::String oneStr=String(str);
+    casa::String oneStr=String(str);
     Int nsep=0;
     // decide if its comma seperated or empty space seperated
-    casacore::String sep;
+    casa::String sep;
     if((nsep=oneStr.freq(",")) > 0){
       sep=",";
     }
@@ -1353,7 +1352,7 @@ Int sepCommaEmptyToVectorStrings(Vector<String>& lesStrings,
       for (Int k=0; k < nsep; ++k){
 	if((String(splitstrings[k]) == String(""))  
 	   || (String(splitstrings[k]) == String(" "))){
-	  lesStrings.resize(lesStrings.nelements()-1, true);
+	  lesStrings.resize(lesStrings.nelements()-1, True);
 	}
 	else{
 	  lesStrings[index]=splitstrings[k];
@@ -1370,7 +1369,7 @@ Int sepCommaEmptyToVectorStrings(Vector<String>& lesStrings,
 Int sepCommaToVectorStrings(Vector<String>& lesStrings,
 				 const std::string& str){
 
-    casacore::String oneStr=String(str);
+    casa::String oneStr=String(str);
     // decide if its comma seperated or empty space seperated
     String sep=",";
     Int nsep=oneStr.freq(sep);
@@ -1387,7 +1386,7 @@ Int sepCommaToVectorStrings(Vector<String>& lesStrings,
       for (Int k=0; k < nsep; ++k){
 	if((String(splitstrings[k]) == String(""))
 	   || (String(splitstrings[k]) == String(" "))){
-	  lesStrings.resize(lesStrings.nelements()-1, true);
+	  lesStrings.resize(lesStrings.nelements()-1, True);
 	}
 	else{
 	  lesStrings[index]=splitstrings[k];
@@ -1506,5 +1505,4 @@ Vector<String> toCasaVectorString(const vector<string>& vs) {
 
 
 
-using namespace casacore;
 }  // End namespace casa

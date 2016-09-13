@@ -52,19 +52,19 @@ class AnnCircle: public AnnRegion {
 public:
 
 	AnnCircle(
-		const casacore::Quantity& xcenter,
-		const casacore::Quantity& ycneter,
-		const casacore::Quantity& radius,
-		const casacore::String& dirRefFrameString,
-		const casacore::CoordinateSystem& csys,
-		const casacore::IPosition& imShape,
-		const casacore::Quantity& beginFreq,
-		const casacore::Quantity& endFreq,
-		const casacore::String& freqRefFrameString,
-		const casacore::String& dopplerString,
-		const casacore::Quantity& restfreq,
-		const casacore::Vector<casacore::Stokes::StokesTypes> stokes,
-		const casacore::Bool annotationOnly
+		const Quantity& xcenter,
+		const Quantity& ycneter,
+		const Quantity& radius,
+		const String& dirRefFrameString,
+		const CoordinateSystem& csys,
+		const IPosition& imShape,
+		const Quantity& beginFreq,
+		const Quantity& endFreq,
+		const String& freqRefFrameString,
+		const String& dopplerString,
+		const Quantity& restfreq,
+		const Vector<Stokes::StokesTypes> stokes,
+		const Bool annotationOnly
 	);
 
 	// Simplified constructor.
@@ -74,12 +74,12 @@ public:
 	// is a region (not just an annotation), although this value can be changed after
 	// construction.
 	AnnCircle(
-		const casacore::Quantity& xcenter,
-		const casacore::Quantity& ycneter,
-		const casacore::Quantity& radius,
-		const casacore::CoordinateSystem& csys,
-		const casacore::IPosition& imShape,
-		const casacore::Vector<casacore::Stokes::StokesTypes>& stokes
+		const Quantity& xcenter,
+		const Quantity& ycneter,
+		const Quantity& radius,
+		const CoordinateSystem& csys,
+		const IPosition& imShape,
+		const Vector<Stokes::StokesTypes>& stokes
 	);
 
 	// implicit copy constructor and destructor are fine
@@ -88,18 +88,18 @@ public:
 
 	// get center position, converted to the reference frame
 	// of the coordinate system if necessary
-	casacore::MDirection getCenter() const;
+	MDirection getCenter() const;
 
 	// get the radius of the circle with angular units
-	casacore::Quantity getRadius() const;
+	Quantity getRadius() const;
 
-	virtual std::ostream& print(std::ostream &os) const;
+	virtual ostream& print(ostream &os) const;
 
 private:
 	AnnotationBase::Direction _inputCenter;
-	casacore::Quantity _inputRadius, _convertedRadius;
+	Quantity _inputRadius, _convertedRadius;
 
-	void _init(const casacore::Quantity& xcenter, const casacore::Quantity& ycenter);
+	void _init(const Quantity& xcenter, const Quantity& ycenter);
 
 };
 

@@ -40,7 +40,7 @@
 
 namespace casa {
 
-template <class T> void ImageFactory::remove(SPIIT& image, casacore::Bool verbose) {
+template <class T> void ImageFactory::remove(SPIIT& image, Bool verbose) {
 	ThrowIf(
 		! image, "Image cannot be null"
 	);
@@ -49,12 +49,12 @@ template <class T> void ImageFactory::remove(SPIIT& image, casacore::Bool verbos
 		"This image tool is not associated with a "
 		"persistent disk file. It cannot be deleted"
 	);
-	auto fileName = image->name(false);
+	auto fileName = image->name(False);
 	ThrowIf(
 		fileName.empty(),
 		"Filename is empty or does not exist."
     );
-	casacore::File f(fileName);
+	File f(fileName);
 	ThrowIf(
 		! f.exists(),
 		fileName + " does not exist."
@@ -65,15 +65,15 @@ template <class T> void ImageFactory::remove(SPIIT& image, casacore::Bool verbos
 	image.reset();
 
 	// Now try and blow it away.  If it's open, tabledelete won't delete it.
-	casacore::String message;
-	casacore::LogIO log;
-	if (casacore::Table::canDeleteTable(message, fileName, true)) {
+	String message;
+	LogIO log;
+	if (Table::canDeleteTable(message, fileName, True)) {
 		try {
-			casacore::Table::deleteTable(fileName, true);
-			log << (verbose ? casacore::LogIO::NORMAL : casacore::LogIO::DEBUG1)
-            	<< "deleted table " << fileName << casacore::LogIO::POST;
+			Table::deleteTable(fileName, True);
+			log << (verbose ? LogIO::NORMAL : LogIO::DEBUG1)
+            	<< "deleted table " << fileName << LogIO::POST;
 		}
-		catch (const casacore::AipsError& x) {
+		catch (const AipsError& x) {
 			ThrowCc(
 				"Failed to delete file " + fileName
 				+ " because " + x.getMesg()
@@ -89,27 +89,27 @@ template <class T> void ImageFactory::remove(SPIIT& image, casacore::Bool verbos
 }
 
 template <class T> SPIIT ImageFactory::createImage(
-    const casacore::String& outfile,
-    const casacore::CoordinateSystem& cSys, const casacore::IPosition& shape,
-    casacore::Bool log, casacore::Bool overwrite,
-    const vector<std::pair<casacore::LogOrigin, casacore::String> > *const &msgs
+    const String& outfile,
+    const CoordinateSystem& cSys, const IPosition& shape,
+    Bool log, Bool overwrite,
+    const vector<std::pair<LogOrigin, String> > *const &msgs
 ) {
     _checkOutfile(outfile, overwrite);
-    casacore::Bool blank = outfile.empty();
+    Bool blank = outfile.empty();
     ThrowIf(
         shape.nelements() != cSys.nPixelAxes(),
-        "Supplied casacore::CoordinateSystem and image shape are inconsistent"
+        "Supplied CoordinateSystem and image shape are inconsistent"
     );
     SPIIT image;
     if (blank) {
-        image.reset(new casacore::TempImage<T>(shape, cSys));
-        ThrowIf(! image, "Failed to create casacore::TempImage");
+        image.reset(new TempImage<T>(shape, cSys));
+        ThrowIf(! image, "Failed to create TempImage");
     }
     else {
-        image.reset(new casacore::PagedImage<T>(shape, cSys, outfile));
+        image.reset(new PagedImage<T>(shape, cSys, outfile));
         ThrowIf(
             ! image,
-            "Failed to create casacore::PagedImage"
+            "Failed to create PagedImage"
         );
     }
     ostringstream os;
@@ -123,21 +123,21 @@ template <class T> SPIIT ImageFactory::createImage(
     if (msgs) {
         hist.addHistory(*msgs);
     }
-    casacore::LogOrigin lor("ImageFactory", __func__);
+    LogOrigin lor("ImageFactory", __func__);
     hist.addHistory(lor, os.str());
     image->set(0.0);
     if (log) {
-        casacore::LogIO mylog;
-        mylog << casacore::LogIO::NORMAL << os.str() << casacore::LogIO::POST; 
+        LogIO mylog;
+        mylog << LogIO::NORMAL << os.str() << LogIO::POST; 
     }
     return image;
 }
 
 template <class T> SPIIT ImageFactory::_fromShape(
-	const casacore::String& outfile, const casacore::Vector<casacore::Int>& shapeV,
-	const casacore::Record& coordinates, casacore::Bool linear,
-	casacore::Bool overwrite, casacore::Bool verbose,
-    const vector<std::pair<casacore::LogOrigin, casacore::String> > *const &msgs
+	const String& outfile, const Vector<Int>& shapeV,
+	const Record& coordinates, Bool linear,
+	Bool overwrite, Bool verbose,
+    const vector<std::pair<LogOrigin, String> > *const &msgs
 ) {
 	ThrowIf(
 		shapeV.nelements() == 0,
@@ -148,11 +148,11 @@ template <class T> SPIIT ImageFactory::_fromShape(
 		"All elements of shape must be positive"
 	);
 
-    casacore::CoordinateSystem mycsys;
-	std::unique_ptr<casacore::CoordinateSystem> csysPtr;
+    CoordinateSystem mycsys;
+	std::unique_ptr<CoordinateSystem> csysPtr;
 
 	if (coordinates.empty()) {
-		mycsys = casacore::CoordinateUtil::makeCoordinateSystem(
+		mycsys = CoordinateUtil::makeCoordinateSystem(
 			shapeV, linear
 		);
 		_centerRefPix(mycsys, shapeV);
@@ -172,10 +172,10 @@ template <class T> SPIIT ImageFactory::_fromShape(
 }
 
 template <class T> SPIIT ImageFactory::imageFromArray(
-    const casacore::String& outfile, const casacore::Array<T>& pixels,
-    const casacore::Record& csys, casacore::Bool linear,
-    casacore::Bool overwrite, casacore::Bool verbose,
-    const vector<std::pair<casacore::LogOrigin, casacore::String> > *const &msgs
+    const String& outfile, const Array<T>& pixels,
+    const Record& csys, Bool linear,
+    Bool overwrite, Bool verbose,
+    const vector<std::pair<LogOrigin, String> > *const &msgs
 ) {
 	SPIIT myim = _fromShape<T>(
 		outfile, pixels.shape().asVector(),
@@ -186,29 +186,29 @@ template <class T> SPIIT ImageFactory::imageFromArray(
 }
 
 template <class T> SPIIT ImageFactory::_fromRecord(
-    const casacore::RecordInterface& rec, const casacore::String& name
+    const RecordInterface& rec, const String& name
 ) {
     SPIIT image;
-    casacore::String err;
-    image.reset(new casacore::TempImage<T>());
+    String err;
+    image.reset(new TempImage<T>());
     ThrowIf(
         ! image->fromRecord(err, rec),
         "Error converting image from record: " + err
     );
     if (! name.empty()) {
         image = SubImageFactory<T>::createImage(
-            *image, name, casacore::Record(), "", false,
-            true, false, false
+            *image, name, Record(), "", False,
+            True, False, False
         );
     }
     return image;
 }
 
 template <class T> pair<SPIIF, SPIIC> ImageFactory::_rename(
-	SPIIT& image, const casacore::String& name, const casacore::Bool overwrite
+	SPIIT& image, const String& name, const Bool overwrite
 ) {
-	casacore::LogIO mylog;
-	mylog << casacore::LogOrigin(className(), __func__);
+	LogIO mylog;
+	mylog << LogOrigin(className(), __func__);
 	ThrowIf (! image, "Image pointer cannot be null");
 	ThrowIf(
 		! image->isPersistent(),
@@ -218,7 +218,7 @@ template <class T> pair<SPIIF, SPIIC> ImageFactory::_rename(
 	ThrowIf(
 		name.empty(), "new file name must be specified"
 	);
-	casacore::String oldName = image->name(false);
+	String oldName = image->name(False);
 	ThrowIf(
 		oldName.empty(),
 		"Current file name is empty, cannot rename"
@@ -229,9 +229,9 @@ template <class T> pair<SPIIF, SPIIC> ImageFactory::_rename(
 	);
 
 	// Let's see if it exists.  If it doesn't, then the user has deleted it
-	casacore::File file(oldName);
+	File file(oldName);
 	if (file.isSymLink()) {
-		file = casacore::File(casacore::SymLink(file).followSymLink());
+		file = File(SymLink(file).followSymLink());
 	}
 	ThrowIf(
 		! file.exists(), "The image to be renamed no longer exists"
@@ -242,22 +242,22 @@ template <class T> pair<SPIIF, SPIIC> ImageFactory::_rename(
 	image.reset();
 
 	// Now try and move it
-	casacore::Bool follow(true);
+	Bool follow(True);
 	if (file.isRegular(follow)) {
-		casacore::RegularFile(file).move(name, overwrite);
+		RegularFile(file).move(name, overwrite);
 	}
 	else if (file.isDirectory(follow)) {
-		casacore::Directory(file).move(name, overwrite);
+		Directory(file).move(name, overwrite);
 	}
 	else if (file.isSymLink()) {
-		casacore::SymLink(file).copy(name, overwrite);
+		SymLink(file).copy(name, overwrite);
 	}
 	else {
 		ThrowCc("Failed to rename file " + oldName + " to " + name);
 	}
 
-	mylog << casacore::LogIO::NORMAL << "Successfully renamed file " << oldName
-			<< " to " << name << casacore::LogIO::POST;
+	mylog << LogIO::NORMAL << "Successfully renamed file " << oldName
+			<< " to " << name << LogIO::POST;
 
 	return fromFile(name);
 

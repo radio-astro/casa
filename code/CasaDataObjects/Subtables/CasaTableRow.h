@@ -27,9 +27,7 @@ public:
 
     int getId () const;
 
-    virtual casacore::String toString () const = 0;
-    casacore::Int getId () const;
-    casacore::Bool isDirty () const;
+    virtual String toString () const = 0;
 
 protected:
 

@@ -54,20 +54,20 @@ class TBTypes : public QWidget, Ui::Types {
 public:
 	// Constructor that takes the starting type and whether or not to include
 	// arrays in the list of types available.
-    TBTypes(casacore::String type, bool incArrays = true);
+    TBTypes(String type, bool incArrays = true);
 
     ~TBTypes();
 
     
     // Sets the current display to allow values for the given type.
-    void setType(casacore::String type);
+    void setType(String type);
 
 private:
 	// Current type.
-    casacore::String type;
+    String type;
     
     // All available types.
-    std::vector<casacore::String>* types;
+    std::vector<String>* types;
     
     // TBTypes panel for entering single array cell values.
     TBTypes* arrayTypes;

@@ -21,7 +21,6 @@
 #include <cmath>
 
 using namespace casacore;
-using namespace casacore;
 
 #define LOG logger_ << LogOrigin("SDDoubleCircleGainCal", __FUNCTION__, WHERE)
 #define POSTLOG LogIO::POST
@@ -70,7 +69,7 @@ inline Double average(size_t const index_from, size_t const index_to,
   assert(index_from <= index_to);
   //cout << "number of data to be averaged " << index_to - index_from << endl;
   for (size_t i = index_from; i < index_to; ++i) {
-    if (flag[i] == false) {
+    if (flag[i] == False) {
       sum += data[i];
       count++;
     }
@@ -131,7 +130,7 @@ inline void smooth(Int const smooth_size, Vector<Double> const &data,
       size_t l = 0;
       size_t r = i + right_edge;
       //cout << "i = " << i << ": l, r = " << l << "," << r << endl;
-      if (flag[i] == true) {
+      if (flag[i] == True) {
         smoothed_data[i] = data[i];
       } else {
         smoothed_data[i] = average(l, r, data, flag);
@@ -141,7 +140,7 @@ inline void smooth(Int const smooth_size, Vector<Double> const &data,
       size_t l = i - left_edge;
       size_t r = i + right_edge;
       //cout << "i = " << i << ": l, r = " << l << "," << r << endl;
-      if (flag[i] == true) {
+      if (flag[i] == True) {
         smoothed_data[i] = data[i];
       } else {
         smoothed_data[i] = average(l, r, data, flag);
@@ -151,7 +150,7 @@ inline void smooth(Int const smooth_size, Vector<Double> const &data,
       size_t l = i - left_edge;
       size_t r = num_data;
       //cout << "i = " << i << ": l, r = " << l << "," << r << endl;
-      if (flag[i] == true) {
+      if (flag[i] == True) {
         smoothed_data[i] = data[i];
       } else {
         smoothed_data[i] = average(l, r, data, flag);
@@ -166,7 +165,7 @@ inline void interpolateLinear(Vector<Double> const &x0,
   // TODO replace with sakura function (need to add double precision version of interpolation function)
   Interpolate1D<Double, Double> interpolator(
       ScalarSampledFunctional<Double>(x0), ScalarSampledFunctional<Double>(y0),
-      true, true);
+      True, True);
   interpolator.setMethod(Interpolate1D<Double, Double>::linear);
   for (size_t i = 0; i < x1.nelements(); ++i) {
     y1[i] = interpolator(x1[i]);
@@ -180,10 +179,9 @@ inline size_t toUnsigned(ssize_t const v) {
 }
 } // anonymous namespace END
 
-using namespace casacore;
 namespace casa { // namespace casa START
 SDDoubleCircleGainCalImpl::SDDoubleCircleGainCalImpl() :
-    central_region_(-1.0), do_smooth_(false), smooth_size_(-1),
+    central_region_(-1.0), do_smooth_(False), smooth_size_(-1),
     observing_frequency_(0.0), antenna_diameter_(0.0), logger_() {
 }
 
@@ -503,5 +501,4 @@ void SDDoubleCircleGainCalImpl::findDataWithinRadius(Double const radius,
 //  // TODO implement
 //  // not necessary to implement? reuse G type application?
 //}
-using namespace casacore;
 }// namespace casa END

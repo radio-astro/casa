@@ -52,8 +52,8 @@ class SkyEquation;
 //
 // <synopsis> 
 // NNLS is implemented using the 
-// <linkto class=casacore::NNLSMatrixSolver>NNLSMatrixSolver</linkto> 
-// class. Since the brightness must be non-negative, only the casacore::Stokes I
+// <linkto class=NNLSMatrixSolver>NNLSMatrixSolver</linkto> 
+// class. Since the brightness must be non-negative, only the Stokes I
 // is solved for. Any other polarizations are not changed.
 //
 // Two masks are needed: the fluxmask determining the
@@ -80,11 +80,11 @@ class NNLSImageSkyModel : public CleanImageSkyModel {
 public:
 
   // Solve for this SkyModel
-  virtual casacore::Bool solve (SkyEquation& me);
+  virtual Bool solve (SkyEquation& me);
 
 private:
 
-  casacore::Bool maskedZeroI();
+  Bool maskedZeroI();
 
 };
 

@@ -38,12 +38,11 @@
 // this include:
 #include <display/DisplayEvents/WCRTRegion.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	WCRTRegion::WCRTRegion(WorldCanvas *wcanvas,
 	                       Display::KeySym keysym) :
-		WCRectTool(wcanvas, keysym, true) {
+		WCRectTool(wcanvas, keysym, True) {
 	}
 
 	WCRTRegion::~WCRTRegion() {

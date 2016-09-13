@@ -63,7 +63,6 @@ void	timer( double *cpu_time ,		/* cpu timer */
 #include "ASDM2MSFiller.h"
 #include "msvis/MSVis/SubMS.h"
 
-using namespace casacore;
 using namespace casa;
 
 // Methods of timeMgr class.
@@ -205,7 +204,7 @@ ASDM2MSFiller::ASDM2MSFiller(const string& name_,
   itsWeatherTimeMgr(0),
 
   itsWithRadioMeters(withRadioMeters_),
-  itsFirstScan(true),
+  itsFirstScan(True),
   itsMSMainRow(0),
   itsDataShapes(0),
   itsNCat(3)
@@ -493,7 +492,7 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
   itsMS = SubMS::setupMS(msName,nTileChan,nTileCorr,telescop,colnames,inint,withCompression);
   cout << "createMS MeasurementSet, adress=" << (int) itsMS << endl;
   if (! itsMS) {
-    return false;
+    return False;
   }
   cout << "Measurement Set just created, main table nrow=" << itsMS->nrow()<< endl;
   
@@ -872,7 +871,7 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
     itsMS->addColumn(asdmcoltd,asdmcolStMan);
   }
 
-  itsMS->initRefs(true);
+  itsMS->initRefs(True);
   MSPointing& mspointing = itsMS -> pointing();
   MSPointingColumns mspointingCol(mspointing);
   /**
@@ -901,7 +900,7 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
     itsMSPath = absolute;
   }
 
-  return true;
+  return True;
 }
 
 const char** ASDM2MSFiller::getPolCombinations(int numCorr) {
@@ -963,9 +962,9 @@ int ASDM2MSFiller::addAntenna( const string& name_,
   
   msantCol.offset().put(crow, antOffset);
   msantCol.dishDiameter().put(crow, dish_diam_);
-  msantCol.flagRow().put(crow, false);
+  msantCol.flagRow().put(crow, False);
   
-  msant.flush(true);
+  msant.flush(True);
   // cout << "addAntenna : table flushed \n";
   // cout << "addAntenna : exiting \n";
   // cout << "\n";
@@ -1269,7 +1268,7 @@ int  ASDM2MSFiller::addDataDescription(int spectral_window_id_,
     
   msddCol.spectralWindowId().put(crow, spectral_window_id_);
   msddCol.polarizationId().put(crow, polarization_id_);
-  msddCol.flagRow().put(crow, false);
+  msddCol.flagRow().put(crow, False);
     
   return crow;
 }
@@ -1296,9 +1295,9 @@ int  ASDM2MSFiller::addUniqueDataDescription( int spectral_window_id_,
     
   msddCol.spectralWindowId().put(crow, spectral_window_id_);
   msddCol.polarizationId().put(crow, polarization_id_);
-  msddCol.flagRow().put(crow, false);
+  msddCol.flagRow().put(crow, False);
     
-  msdd.flush(true);
+  msdd.flush(True);
   return crow;
 }
 
@@ -1476,7 +1475,7 @@ void ASDM2MSFiller::addField(const string&      name_,
   /*
     msfieldCol.sourceId().put(crow, -1);
   */
-  msfieldCol.flagRow().put(crow, false);
+  msfieldCol.flagRow().put(crow, False);
   // cout << "\naddField : exiting";
   msfield.flush();
   // cout << "\n";
@@ -1509,7 +1508,7 @@ void ASDM2MSFiller::addFlagCmd(double		time_,
   msflagcmdCol.applied().put(crow, 0);
   msflagcmdCol.command().put(crow, "");
   
-  msflagcmd.flush(true);
+  msflagcmd.flush(True);
   // cout << "\n";
 }
 			  
@@ -1547,7 +1546,7 @@ void ASDM2MSFiller::addHistory( double		time_,
   mshistoryCol.cliCommand().put(crow, cliCommand);
   mshistoryCol.appParams().put(crow, appParms);
   
-  mshistory.flush(true);
+  mshistory.flush(True);
   // cout << "\n";
 }
 	     
@@ -1608,7 +1607,7 @@ void ASDM2MSFiller::addObservation(const string&		telescopeName_,
   msobsCol.schedule().put(crow, schedule);
   msobsCol.project().put(crow, String(project_));
   msobsCol.releaseDate().put(crow, release_date_);
-  msobsCol.flagRow().put(crow, false);
+  msobsCol.flagRow().put(crow, False);
   msobs.flush();
 
   // cout << "\n addObservation: exiting";
@@ -1766,7 +1765,7 @@ int ASDM2MSFiller::addUniquePolarization(int num_corr_,
   mspolarCol.corrType().put(crow,corrType);
   mspolarCol.corrProduct().put(crow, corrProduct);
 
-  mspolar.flush(true);
+  mspolar.flush(True);
   return crow;
 }
 
@@ -1788,7 +1787,7 @@ void ASDM2MSFiller::addProcessor(string& type_,
   msprocCol.typeId().put(crow, type_id_);
   msprocCol.modeId().put(crow, mode_id_);
   
-  msprocCol.flagRow().put(crow, false);
+  msprocCol.flagRow().put(crow, False);
 
   msproc.flush();
   // cout << "\n";
@@ -1947,7 +1946,7 @@ int ASDM2MSFiller::addSpectralWindow(int			num_chan_,
     msspwinCol.assocNature().put(crow, assocNature);
   }
 
-  msspwinCol.flagRow().put(crow, false);
+  msspwinCol.flagRow().put(crow, False);
 
   msspwin.flush();
   // cout << "\n";
@@ -1975,7 +1974,7 @@ void ASDM2MSFiller::addState(bool    sig_,
   msstateCol.load().put(crow, load_);
   msstateCol.subScan().put(crow, sub_scan_);
   msstateCol.obsMode().put(crow, obs_mode_);
-  msstateCol.flagRow().put(crow, false);
+  msstateCol.flagRow().put(crow, False);
   msstate.flush();
 
   // cout << "\n";

@@ -36,7 +36,6 @@
 #include <QDebug>
 #include <QWidget>
 #include <QHBoxLayout>
-using namespace casacore;
 namespace casa {
 
 ClientScript::ClientScript(PlotMSApp* controllerApp, Plotter::Implementation impl) :
@@ -193,5 +192,4 @@ ClientScript::~ClientScript() {
 	// TODO Auto-generated destructor stub
 }
 
-using namespace casacore;
 } /* namespace casa */

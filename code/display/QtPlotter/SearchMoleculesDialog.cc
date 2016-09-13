@@ -29,7 +29,6 @@
 #include <QSpacerItem>
 #include <QDebug>
 
-using namespace casacore;
 namespace casa {
 
 

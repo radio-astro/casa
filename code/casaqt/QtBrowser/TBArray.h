@@ -42,7 +42,7 @@ class TBTable;
 //
 // <synopsis>
 // A TBArray holds a array object as used by the table browser.  The data
-// is represented by casacore::String values, while the array structure is represented by
+// is represented by String values, while the array structure is represented by
 // vectors of void*s.  For all but the "last" dimension, the void*s point to
 // other vector<void*>s, and on the last dimension the void*s point to Strings.
 // NOTE: this class is mostly obsolete now that the browser uses the TBData
@@ -53,26 +53,26 @@ class TBArray {
 public:
     // Constructor for a data array (in other words, an array found in the data
     // of a table).  Takes as input the row and column of the array in table,
-    // the type of table, and the casacore::String holding the values of the array which
+    // the type of table, and the String holding the values of the array which
     // need to be parsed.
-    TBArray(int row, int col, casacore::String type, casacore::String array);
+    TBArray(int row, int col, String type, String array);
 
     // Constructor for a table keyword array (in other words, an array found in
     // the table keywords).  Takes as input the index of the keyword in the
-    // table keywords list, the type of the array, and the casacore::String holding the
+    // table keywords list, the type of the array, and the String holding the
     // values of the array which need to be parsed.
-    TBArray(int keywordIndex, casacore::String type, casacore::String array);
+    TBArray(int keywordIndex, String type, String array);
 
     // Constructor for a field keyword array (in other words, an array found in
     // the field keywords).  Takes as input the name of the field, the index of
     // the keyword in the field keywords list, the type of the array, and the
-    // casacore::String holding the values of the array which need to be parsed.
-    TBArray(casacore::String col, int index, casacore::String type, casacore::String array);
+    // String holding the values of the array which need to be parsed.
+    TBArray(String col, int index, String type, String array);
     
     // Constructor for a non-specific array.  Takes as input the type of the
-    // array and the casacore::String holding the values of the array which need to be
+    // array and the String holding the values of the array which need to be
     // parsed.
-    TBArray(casacore::String type, casacore::String array);
+    TBArray(String type, String array);
 
     ~TBArray();
 
@@ -95,7 +95,7 @@ public:
     bool isOneDimensional();
 
     // Returns the type of the array.
-    casacore::String getType();
+    String getType();
 
     // Returns the data representation.  In all but the last dimension, the
     // void*s point to vector<void*>s; in the last dimension the void*s point
@@ -123,52 +123,52 @@ public:
     // table. For data arrays: "[table name][[row],[col]]";
     // for table keyword arrays: "[table name] [keyword name]";
     // for field keyword arrays: "[table name] [field name, keyword name]".
-    casacore::String getName(TBTable* table);
+    String getName(TBTable* table);
 
     // Returns the data at the given coordinates, or blank if the coordinates
     // are invalid.
-    casacore::String dataAt(std::vector<int> d);
+    String dataAt(std::vector<int> d);
 
     // Sets the data at the given coordinates to the given value.  This call
     // does NOT write through to the underlying table; it only updates the data
     // representation.
-    void setDataAt(std::vector<int> d, casacore::String newVal);
+    void setDataAt(std::vector<int> d, String newVal);
 
     // Returns true if the given coordinates are valid for this array, false
     // otherwise.
     bool dimensionIsValid(std::vector<int> d);
 
-    // Returns a "flattened" casacore::String representation of this array.  Each cell
-    // is appended to the casacore::String separated by a space.
-    casacore::String toFlattenedString();
+    // Returns a "flattened" String representation of this array.  Each cell
+    // is appended to the String separated by a space.
+    String toFlattenedString();
 
     // Returns true if this array contains the given value, false otherwise.
-    bool contains(casacore::String value);
+    bool contains(String value);
 
     // Returns true if this array contains any value that is between the two
     // given values, false otherwise.
-    bool containsBetween(casacore::String value1, casacore::String value2);
+    bool containsBetween(String value1, String value2);
 
     // Returns true if this array contains any value that is less than the
     // given value, false otherwise.
-    bool containsLessThan(casacore::String value);
+    bool containsLessThan(String value);
     
     // Returns true if this array contains any value that is greater than the
     // given value, false otherwise.
-    bool containsGreaterThan(casacore::String value);
+    bool containsGreaterThan(String value);
 
 private:
     // Holds the dimensions of this array.
     std::vector<int> dimensions;
 
-    // casacore::Data representation.
+    // Data representation.
     std::vector<void*> data;
 
     // Indicates whether the array is valid or not.
     bool valid;
 
     // The type of the array.
-    casacore::String type;
+    String type;
 
     // The row of the array for data arrays, or the keyword index for other
     // arrays.
@@ -187,27 +187,27 @@ private:
     bool isColKeyword;
 
     // Holds the field name for a field keyword array, empty otherwise.
-    casacore::String field;
+    String field;
 
     
-    // Parses the given casacore::String into the array.
-    void parseArray(casacore::String* table);
+    // Parses the given String into the array.
+    void parseArray(String* table);
 
     // Helper for parseArray().  Parses a single row into the given vector.
-    casacore::String parseRow(casacore::String& str, std::vector<void*>* r, std::vector<int> d, int x);
+    String parseRow(String& str, std::vector<void*>* r, std::vector<int> d, int x);
 
     // Helper for parseArray().  Parses a table with dimension > 1.
-    void parseMultidimensionalTable(casacore::String str);
+    void parseMultidimensionalTable(String str);
 
     // Helper for parseArray().  Creates placeholder objects (such as empty
     // Strings and vectors) into the given row.
     void insertPlaceholders(std::vector<void*>* r, std::vector<int> d, int x);
 
     // Helper method for toFlattenedString();
-    casacore::String toFlattenedString(std::vector<void*>* row, int d);
+    String toFlattenedString(std::vector<void*>* row, int d);
 
     // Helper method for contains().
-    bool contains(std::vector<void*>* data, int n, casacore::String v);
+    bool contains(std::vector<void*>* data, int n, String v);
 
     // Helper method for containsBetween().
     bool containsBetween(std::vector<void*>* data, int n, double v1, double v2);

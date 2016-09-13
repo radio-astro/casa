@@ -48,31 +48,31 @@ namespace casa {
   class SteepestDescentSolver: public Iterate
   {
   public:
-    SteepestDescentSolver(casacore::Int nParams, casacore::Vector<casacore::Int> polMap, 
-			  casacore::Int nIter=20, casacore::Double tol=1E-5);
+    SteepestDescentSolver(Int nParams, Vector<Int> polMap, 
+			  Int nIter=20, Double tol=1E-5);
     ~SteepestDescentSolver(){};
 
-    void setMaxParams(casacore::Int nParams){maxParams=nParams;};
+    void setMaxParams(Int nParams){maxParams=nParams;};
     
-    casacore::Double solve(VisEquation& ve, EPJones& vj, VisBuffer& vb,
-		 casacore::Int nAnt, casacore::Int SlotNo);
+    Double solve(VisEquation& ve, EPJones& vj, VisBuffer& vb,
+		 Int nAnt, Int SlotNo);
 
-    casacore::Double solve2(VisEquation& ve, VisIter& vi, EPJones& epj, casacore::Int nAnt, casacore::Int SlotNo);
+    Double solve2(VisEquation& ve, VisIter& vi, EPJones& epj, Int nAnt, Int SlotNo);
 
-    casacore::LogIO& logIO() {return logIO_p;};
+    LogIO& logIO() {return logIO_p;};
     
   private:
-    casacore::Vector<casacore::Complex> getVj(const VisBuffer& vb, casacore::Int NAnt, casacore::Int whichAnt, casacore::Int whichPol,
-			  casacore::Double& sumWt,casacore::Int negate=0, casacore::Int weighted=1);
-    casacore::Double getGOF(const VisBuffer& residual,casacore::Int& whichPol, casacore::Double& sumWt,const char *msg="");
+    Vector<Complex> getVj(const VisBuffer& vb, Int NAnt, Int whichAnt, Int whichPol,
+			  Double& sumWt,Int negate=0, Int weighted=1);
+    Double getGOF(const VisBuffer& residual,Int& whichPol, Double& sumWt,const char *msg="");
 
-    casacore::Int maxIter,maxParams;
+    Int maxIter,maxParams;
     
     VisBuffer residual_p,gradient0_p,gradient1_p;
-    casacore::Matrix<casacore::Bool> flags;
+    Matrix<Bool> flags;
 
-    casacore::LogIO logIO_p;
-    casacore::Vector<casacore::Int> polMap_p;
+    LogIO logIO_p;
+    Vector<Int> polMap_p;
   };
 };
 

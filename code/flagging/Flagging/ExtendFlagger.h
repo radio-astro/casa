@@ -230,12 +230,12 @@ class FlagIDS {
        chan = "";
     }
 
-    casacore::String bl;
-    casacore::uInt field;
-    casacore::String time;
-    casacore::String spw;
-    casacore::String corr;
-    casacore::String chan;
+    String bl;
+    uInt field;
+    String time;
+    String spw;
+    String corr;
+    String chan;
 
     FlagIDS &operator=(const FlagIDS &other) {
        bl = other.bl;
@@ -265,7 +265,7 @@ class FlagID {
   public:
     FlagID() {
        rowNum = 0;
-       //casacore::uInt npts;
+       //uInt npts;
        ant1 = 0;
        ant2 = 0;
        field = 0;
@@ -276,20 +276,20 @@ class FlagID {
        polid = 0;
     }
 
-    casacore::uInt rowNum;
-    //casacore::uInt npts;
-    casacore::uInt ant1;
-    casacore::uInt ant2;
-    casacore::uInt field;
-    casacore::String time;
-    casacore::uInt spw;
-    casacore::String corr;
-    casacore::String chan;
-    casacore::uInt polid;
+    uInt rowNum;
+    //uInt npts;
+    uInt ant1;
+    uInt ant2;
+    uInt field;
+    String time;
+    uInt spw;
+    String corr;
+    String chan;
+    uInt polid;
 
     FlagID &operator=(const FlagID &other) {
        rowNum = other.rowNum; 
-       //casacore::uInt npts;
+       //uInt npts;
        ant1 = other.ant1;
        ant2 = other.ant2;
        field = other.field;
@@ -305,7 +305,7 @@ class FlagID {
 
    void show() {
        cout << "rowNum=" << rowNum
-            //casacore::uInt npts;
+            //uInt npts;
             << " ant1=" << ant1
             << " ant2=" << ant2
             << " field=" << field
@@ -323,10 +323,10 @@ class ExtendFlagger
    public:
       // Constructor
       ExtendFlagger();  
-      ExtendFlagger(casacore::MeasurementSet& ms, const casacore::String& exchan,
-                const casacore::String& excorr, const casacore::String& exant,
-                const casacore::String& exspw, const casacore::String& time,
-                const casacore::Vector<casacore::Vector<casacore::String> >& corrs, const casacore::Vector<casacore::Int>& chans);
+      ExtendFlagger(MeasurementSet& ms, const String& exchan,
+                const String& excorr, const String& exant,
+                const String& exspw, const String& time,
+                const Vector<Vector<String> >& corrs, const Vector<Int>& chans);
 
       // Destructor
       virtual ~ExtendFlagger();
@@ -335,87 +335,87 @@ class ExtendFlagger
       // Equate by reference.
       ExtendFlagger& operator=(const ExtendFlagger&){return *this;}
 
-      casacore::Bool attach(casacore::MeasurementSet &ms);
+      Bool attach(MeasurementSet &ms);
       void detach();
 
-      casacore::Bool initdata(const casacore::String& field = "", const casacore::String& spw = "", 
-            const casacore::String& array = "", const casacore::String& feed = "", 
-            const casacore::String& scan = "", const casacore::String& baseline = "", 
-            const casacore::String& uvrange = "", const casacore::String& time = "", 
-            const casacore::String& correlation = "", const casacore::String& intent = "");
+      Bool initdata(const String& field = "", const String& spw = "", 
+            const String& array = "", const String& feed = "", 
+            const String& scan = "", const String& baseline = "", 
+            const String& uvrange = "", const String& time = "", 
+            const String& correlation = "", const String& intent = "");
 
-      casacore::Bool setdata();
+      Bool setdata();
 
-      casacore::Bool selectdata(casacore::Bool useoriginalms = true);
+      Bool selectdata(Bool useoriginalms = True);
 
-      casacore::Bool setmanualflags(casacore::Bool unflag = false,
-			  casacore::Bool autocorr = false);
+      Bool setmanualflags(Bool unflag = False,
+			  Bool autocorr = False);
 
-      casacore::Bool run(casacore::Bool trial = false, casacore::Bool reset = false);
+      Bool run(Bool trial = False, Bool reset = False);
 
-      casacore::Bool extend(const casacore::Vector<FlagID>& flagids);
-      casacore::Bool extend2(const casacore::Vector<FlagID>& flagids);
+      Bool extend(const Vector<FlagID>& flagids);
+      Bool extend2(const Vector<FlagID>& flagids);
 
-      void setField(const casacore::String& field);
-      void setSpw(const casacore::String& spw);
-      void setArray(const casacore::String& array);
-      void setFeed(const casacore::String& feed);
-      void setScan(const casacore::String& scan);
-      void setBaseline(const casacore::String& baseline);
-      void setUvrange(const casacore::String& uvrange);
-      void setTime(const casacore::String& time);
-      void setCorrelation(const casacore::String& correlation);
-      void setIntent(const casacore::String& intent);
-      void setUnflag(casacore::Bool unflg);
+      void setField(const String& field);
+      void setSpw(const String& spw);
+      void setArray(const String& array);
+      void setFeed(const String& feed);
+      void setScan(const String& scan);
+      void setBaseline(const String& baseline);
+      void setUvrange(const String& uvrange);
+      void setTime(const String& time);
+      void setCorrelation(const String& correlation);
+      void setIntent(const String& intent);
+      void setUnflag(Bool unflg);
 
-      void setExtendChan(const casacore::String& exchan);
-      void setExtendCorr(const casacore::String& excorr);
-      void setExtendSpw(const casacore::String& exspw);
-      void setExtendTime(const casacore::String& extime);
-      void setExtendAnt(const casacore::String& exant);
-      void setExtend(const casacore::String& exchan, const casacore::String& excorr,
-                     const casacore::String& exspw, const casacore::String& exant,
-                     const casacore::String& extime,
-                const casacore::Vector<casacore::Vector<casacore::String> >& corrs, const casacore::Vector<casacore::Int>& chans);
-      void setAbleCorr(const casacore::Vector<casacore::Vector<casacore::String> >& corrName);
-      void setChanNum(const casacore::Vector<casacore::Int>& chanNum);
-      casacore::String halfExtendCorr(const casacore::String& corr, const casacore::uInt polid = 0);
-      casacore::String ableSpw(const casacore::Int spw);
+      void setExtendChan(const String& exchan);
+      void setExtendCorr(const String& excorr);
+      void setExtendSpw(const String& exspw);
+      void setExtendTime(const String& extime);
+      void setExtendAnt(const String& exant);
+      void setExtend(const String& exchan, const String& excorr,
+                     const String& exspw, const String& exant,
+                     const String& extime,
+                const Vector<Vector<String> >& corrs, const Vector<Int>& chans);
+      void setAbleCorr(const Vector<Vector<String> >& corrName);
+      void setChanNum(const Vector<Int>& chanNum);
+      String halfExtendCorr(const String& corr, const uInt polid = 0);
+      String ableSpw(const Int spw);
       void show();
    private:
       
       Flagger flagger;
-      casacore::Bool useoriginalms;
+      Bool useoriginalms;
 
-      casacore::String field;
-      casacore::String spw;
-      casacore::String array;
-      casacore::String feed;
-      casacore::String scan;
-      casacore::String baseline;
-      casacore::String uvrange;
-      casacore::String time;
-      casacore::String correlation;
-      casacore::String intent;
+      String field;
+      String spw;
+      String array;
+      String feed;
+      String scan;
+      String baseline;
+      String uvrange;
+      String time;
+      String correlation;
+      String intent;
    
-      casacore::String clipexpr;
-      casacore::Vector<casacore::Double> cliprange;
-      casacore::String clipcolumn;
-      casacore::Bool outside;
-      casacore::Bool channelavg;
-      casacore::Double quackinterval;
-      casacore::String opmode;
+      String clipexpr;
+      Vector<Double> cliprange;
+      String clipcolumn;
+      Bool outside;
+      Bool channelavg;
+      Double quackinterval;
+      String opmode;
 
-      casacore::Bool unflag;
+      Bool unflag;
 
-      casacore::String extendChan;
-      casacore::String extendCorr;
-      casacore::String extendSpw;
-      casacore::String extendAnt;
-      casacore::String extendTime;
+      String extendChan;
+      String extendCorr;
+      String extendSpw;
+      String extendAnt;
+      String extendTime;
 
-      casacore::Vector<casacore::Vector<casacore::String> > ableCorr;
-      casacore::Vector<casacore::Int> chanNum;
+      Vector<Vector<String> > ableCorr;
+      Vector<Int> chanNum;
 
 };
 

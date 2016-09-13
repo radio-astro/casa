@@ -85,12 +85,12 @@ public:
   virtual Type type() { return VisCal::G; };
 
   // Return type name as a string
-  virtual casacore::String typeName()     { return "GSPLINE"; };
-  virtual casacore::String longTypeName() { return "G Jones SPLINE (elec. gain)"; };
+  virtual String typeName()     { return "GSPLINE"; };
+  virtual String longTypeName() { return "G Jones SPLINE (elec. gain)"; };
 
 
   // GSpline gathers/solves for itself
-  virtual casacore::Bool useGenericGatherForSolve() { return false; };
+  virtual Bool useGenericGatherForSolve() { return False; };
 
   // Type of Jones matrix according to nPar()
   // TBD:
@@ -98,11 +98,11 @@ public:
 
   // Set the solver parameters
   using GJones::setSolve;
-  virtual void setSolve(const casacore::Record& solvepar);
+  virtual void setSolve(const Record& solvepar);
 
   // Set the interpolation parameters
   using GJones::setApply;
-  virtual void setApply(const casacore::Record& applypar);
+  virtual void setApply(const Record& applypar);
 
   // Solve
   virtual void selfGatherAndSolve (VisSet& vs, VisEquation& ve);
@@ -112,14 +112,14 @@ public:
   void setRawPhaseVisSet(VisSet& rawvs_p);
 
   // Set parameters for phase wrapping resolution
-  void setPhaseWrapHelp(const casacore::Int& numpoi, const casacore::Double& phaseWrap);
+  void setPhaseWrapHelp(const Int& numpoi, const Double& phaseWrap);
 */
 
  protected:
 
-  // GSPLINE has one trivial casacore::Complex parameter (single pol, for now)
+  // GSPLINE has one trivial Complex parameter (single pol, for now)
   // TBD:
-  virtual casacore::Int nPar() { return 2; };
+  virtual Int nPar() { return 2; };
 
   // Calc G pars from spline info
   virtual void calcPar();
@@ -130,11 +130,11 @@ public:
   VisSet* vs_p;
 
   // Private variables containing the solver parameters
-  casacore::Bool solveAmp_p, solvePhase_p;
-  casacore::Double splinetime_p;
+  Bool solveAmp_p, solvePhase_p;
+  Double splinetime_p;
 
-  // casacore::Time for which the current calibration cache is valid
-  casacore::Double cacheTimeValid_p;
+  // Time for which the current calibration cache is valid
+  Double cacheTimeValid_p;
 
   // Ptr to a calibration buffer associated with the calibration
   // solutions which are to be interpolated and applied to the data
@@ -143,39 +143,39 @@ public:
 
   // Parameters for raw phase removal from another spw
   VisSet* rawvs_p;
-  casacore::Bool rawPhaseRemoval_p;
-  casacore::SimpleOrderedMap<casacore::String, casacore::Int> timeValueMap_p;
-  casacore::Matrix<casacore::Double> rawPhase_p;
+  Bool rawPhaseRemoval_p;
+  SimpleOrderedMap<String, Int> timeValueMap_p;
+  Matrix<Double> rawPhase_p;
 
   // Solution timestamp
-  casacore::Double solTimeStamp_p;
+  Double solTimeStamp_p;
 
 
   // Create and fill an empty output calibration buffer
-  void newCalBuffer (const casacore::Vector<casacore::Int>& fieldIdKeys, 
-		     const casacore::Vector<casacore::Int>& antennaId);
+  void newCalBuffer (const Vector<Int>& fieldIdKeys, 
+		     const Vector<Int>& antennaId);
 
   // Compute the number of spline knots required and their location
-  casacore::Int getKnots (const casacore::Vector<casacore::Double>& times, casacore::Vector<casacore::Double>& knots);
+  Int getKnots (const Vector<Double>& times, Vector<Double>& knots);
 
   // Update the output calibration table
-  virtual void updateCalTable (const casacore::Vector<casacore::Int>& fieldIdKeys,
-			       const casacore::Vector<casacore::Int>& antennaId,
-			       const casacore::Vector<casacore::String>& freqGrpName,
-			       const casacore::Vector<casacore::String>& polyType,
-			       const casacore::Vector<casacore::String>& polyMode,
-			       const casacore::Vector<casacore::Complex>& scaleFactor,
-			       const casacore::Matrix<casacore::Double>& polyCoeffAmp,
-			       const casacore::Matrix<casacore::Double>& polyCoeffPhase,
-			       const casacore::Vector<casacore::String>& phaseUnits,
-			       const casacore::Vector<casacore::Double>& splineKnotsAmp,
-			       const casacore::Vector<casacore::Double>& splineKnotsPhase,
-			       const casacore::Vector<casacore::MFrequency>& refFreq,
-			       const casacore::Vector<casacore::Int>& refAnt);
+  virtual void updateCalTable (const Vector<Int>& fieldIdKeys,
+			       const Vector<Int>& antennaId,
+			       const Vector<String>& freqGrpName,
+			       const Vector<String>& polyType,
+			       const Vector<String>& polyMode,
+			       const Vector<Complex>& scaleFactor,
+			       const Matrix<Double>& polyCoeffAmp,
+			       const Matrix<Double>& polyCoeffPhase,
+			       const Vector<String>& phaseUnits,
+			       const Vector<Double>& splineKnotsAmp,
+			       const Vector<Double>& splineKnotsPhase,
+			       const Vector<MFrequency>& refFreq,
+			       const Vector<Int>& refAnt);
   
   // Compute a spline polynomial value
-  casacore::Double getSplineVal (casacore::Double x, casacore::Vector<casacore::Double>& knots,
-		       casacore::Vector<casacore::Double>& coeff);
+  Double getSplineVal (Double x, Vector<Double>& knots,
+		       Vector<Double>& coeff);
 
 
 /*
@@ -183,25 +183,25 @@ public:
   void fillRawPhaseBuff();
 
   // return the rawphase of 
-  casacore::Double getRawPhase(casacore::Int ant1, casacore::Int ant2, casacore::Double time);
+  Double getRawPhase(Int ant1, Int ant2, Double time);
 
 */
 
   //Plot solutions as compare with data
-  void plotsolve(const casacore::Vector<casacore::Double>& x, 
-		 const casacore::Matrix<casacore::Double>& yall, 
-		 const casacore::Matrix<casacore::Double>& weightall, 
-		 const casacore::Vector<casacore::Double>& errall, 
-		 casacore::Matrix<casacore::Double>& coeff, casacore::Bool phasesoln);
+  void plotsolve(const Vector<Double>& x, 
+		 const Matrix<Double>& yall, 
+		 const Matrix<Double>& weightall, 
+		 const Vector<Double>& errall, 
+		 Matrix<Double>& coeff, Bool phasesoln);
 
   // Return all field id.'s in the underlying MS
-  casacore::Vector<casacore::Int> fieldIdRange();
+  Vector<Int> fieldIdRange();
 
   //Logging solution and rms
-  void writeAsciiLog(const casacore::String& filename, const casacore::Matrix<casacore::Double>& coeff, const casacore::Vector<casacore::Double>& rmsFit, casacore::Bool phasesoln);
+  void writeAsciiLog(const String& filename, const Matrix<Double>& coeff, const Vector<Double>& rmsFit, Bool phasesoln);
 
-  casacore::Int numpoint_p;
-  casacore::Double phaseWrap_p;
+  Int numpoint_p;
+  Double phaseWrap_p;
 
 
 };

@@ -42,11 +42,11 @@ class EPointTable : public SolvableVisJonesTable
 
    // Construct from a specified table name and table access option. 
    // Used for creating new tables or opening existing tables.
-   EPointTable (const casacore::String& tableName, 
-		casacore::Table::TableOption access = casacore::Table::Old);
-   EPointTable (const casacore::String& tableName, 
-		const casacore::String& type,
-		casacore::Table::TableOption access = casacore::Table::Old);
+   EPointTable (const String& tableName, 
+		Table::TableOption access = Table::Old);
+   EPointTable (const String& tableName, 
+		const String& type,
+		Table::TableOption access = Table::Old);
 
  private:
    EPointDesc itsEPointDesc;

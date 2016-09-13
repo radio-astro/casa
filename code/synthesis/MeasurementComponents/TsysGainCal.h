@@ -52,9 +52,9 @@ public:
 
   // Constructor
   StandardTsys(VisSet& vs);
-  StandardTsys(casacore::String msname,casacore::Int MSnAnt,casacore::Int MSnSpw);
+  StandardTsys(String msname,Int MSnAnt,Int MSnSpw);
   StandardTsys(const MSMetaInfoForCal& msmc);
-  StandardTsys(const casacore::Int& nAnt);
+  StandardTsys(const Int& nAnt);
 
   virtual ~StandardTsys();
 
@@ -62,36 +62,36 @@ public:
   virtual Type type() { return VisCal::B; };
 
   // Return type name as string (ditto)
-  virtual casacore::String typeName()     { return "B TSYS"; };
-  virtual casacore::String longTypeName() { return "B TSYS (freq-dep Tsys)"; };
+  virtual String typeName()     { return "B TSYS"; };
+  virtual String longTypeName() { return "B TSYS (freq-dep Tsys)"; };
 
-  // Tsys are casacore::Float parameters
+  // Tsys are Float parameters
   virtual VisCalEnum::VCParType parType() { return VisCalEnum::REAL; };
 
   // Local setSpecify
   using BJones::setSpecify;
-  virtual void setSpecify(const casacore::Record& specify);
+  virtual void setSpecify(const Record& specify);
 
   // Specific specify() that reads the SYSCAL subtable
-  virtual void specify(const casacore::Record& specify);
+  virtual void specify(const Record& specify);
 
   // In general, we are freq-dep
-  virtual casacore::Bool freqDepPar() { return true; };
+  virtual Bool freqDepPar() { return True; };
 
   // Specialized to turn on spectral weight calibration
-  virtual void correct2(vi::VisBuffer2& vb, casacore::Bool trial=false, casacore::Bool doWtSp=false);
+  virtual void correct2(vi::VisBuffer2& vb, Bool trial=False, Bool doWtSp=False);
 
 protected:
 
   // The Jones matrix elements are not the parameters
   //  ( j = sqrt(p) )
-  virtual casacore::Bool trivialJonesElem() { return false; };
+  virtual Bool trivialJonesElem() { return False; };
 
   // Specialized calcPar that does some sanity checking
   virtual void calcPar();
 
   // Invert doInv for Tsys corrections
-  virtual void syncJones(const casacore::Bool& doInv) { BJones::syncJones(!doInv); };
+  virtual void syncJones(const Bool& doInv) { BJones::syncJones(!doInv); };
   
   // Calculate Jones matrix elements from Tsys (j = sqrt(p) )
   virtual void calcAllJones();
@@ -106,10 +106,10 @@ protected:
 private:
 
   // The name of the SYSCAL table
-  casacore::String sysCalTabName_;
+  String sysCalTabName_;
 
   // Signal formation of channelized weight calibration
-  casacore::Bool freqDepCalWt_;
+  Bool freqDepCalWt_;
 
   // <nothing>
 

@@ -38,7 +38,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 class SkyEquation;
 
 // <summary> 
-// casacore::MS Clean Image Sky Model: Image Sky Model implementing the casacore::MS Clean algorithm
+// MS Clean Image Sky Model: Image Sky Model implementing the MS Clean algorithm
 // </summary>
 
 // <use visibility=export>
@@ -46,24 +46,24 @@ class SkyEquation;
 // <reviewed reviewer="" date="" tests="" demos="">
 
 // <prerequisite>
-//   <li> <linkto class=casacore::LatticeCleaner>LatticeCleaner</linkto> module
+//   <li> <linkto class=LatticeCleaner>LatticeCleaner</linkto> module
 //   <li> <linkto class=ImageSkyModel>ImageSkyModel</linkto> module
 //   <li> <linkto class=LinearModel>LinearModel</linkto> module
 // </prerequisite>
 //
 // <etymology>
-// MSCleanImageSkyModel implements the casacore::MS Clean algorithm.
+// MSCleanImageSkyModel implements the MS Clean algorithm.
 // It is derived from <linkto class=SkyModel>SkyModel</linkto>.
 // </etymology>
 //
 // <synopsis> 
-// The casacore::MS Clean is the Multi-Scale clean, collecting flux
+// The MS Clean is the Multi-Scale clean, collecting flux
 // in several different scale size Gaussian components.
 // It is highly effective in imaging extended structure
 // and results in residuals with excellent statistics.
 //
-// The casacore::MS Clean is implemented using the 
-// <linkto class=casacore::LatticeCleaner>LatticeCleaner</linkto>
+// The MS Clean is implemented using the 
+// <linkto class=LatticeCleaner>LatticeCleaner</linkto>
 // class.
 //
 // Masking is optionally performed using a mask image: only points
@@ -89,38 +89,38 @@ class MSCleanImageSkyModel : public CleanImageSkyModel {
 public:
 
   // Create a MSCleanImageSkyModel with nScales, we figure out what they are
-  MSCleanImageSkyModel(const casacore::Int nscales, const casacore::Int stoplargenegatives=2,
-			 const casacore::Int stoppointmode=-1, const casacore::Float smallScaleBias=0.6);
+  MSCleanImageSkyModel(const Int nscales, const Int stoplargenegatives=2,
+			 const Int stoppointmode=-1, const Float smallScaleBias=0.6);
 
   // Create a MSCleanImageSkyModel, you provide the scale sizes, IN PIXELS
-  // for example:  casacore::Vector<casacore::Float> scales(4); scales(0) = 0.0;  scales(1) = 3.0;  
+  // for example:  Vector<Float> scales(4); scales(0) = 0.0;  scales(1) = 3.0;  
   // scales(2) = 10.0;  scales(3) = 30.0; 
-  MSCleanImageSkyModel(const casacore::Vector<casacore::Float>& useScaleSize, const casacore::Int stoplargenegatives=2,
-			 const casacore::Int stoppointmode=-1, const casacore::Float smallScaleBias=0.6);
+  MSCleanImageSkyModel(const Vector<Float>& useScaleSize, const Int stoplargenegatives=2,
+			 const Int stoppointmode=-1, const Float smallScaleBias=0.6);
  
   // destructor
   ~MSCleanImageSkyModel();
 
   // Solve for this SkyModel
-  virtual casacore::Bool solve (SkyEquation& me);
+  virtual Bool solve (SkyEquation& me);
 
 private:
   enum Scale_Method{NSCALES, USERVECTOR};
   Scale_Method method_p;
 
-  casacore::Int nscales_p;
-  casacore::Vector<casacore::Float> userScaleSizes_p;
+  Int nscales_p;
+  Vector<Float> userScaleSizes_p;
   // parameter to stop the cycle (for the first N cycles) if you get a 
   // negative on the largest scale;
   // To disable, use < 0
-  casacore::Int stopLargeNegatives_p;
+  Int stopLargeNegatives_p;
 
   // parameter which stops the cycle if you hit the smallest scale this many
   // consecutive times; if < 0, don't stop for this
-  casacore::Int stopPointMode_p;
-  casacore::Float smallScaleBias_p; 
+  Int stopPointMode_p;
+  Float smallScaleBias_p; 
 
-  //casacore::LatticeCleanProgress  *progress_p;
+  //LatticeCleanProgress  *progress_p;
 
 };
 

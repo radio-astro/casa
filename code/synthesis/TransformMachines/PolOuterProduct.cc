@@ -28,7 +28,6 @@
 //
 #include <synthesis/TransformMachines/PolOuterProduct.h>
 
-using namespace casacore;
 namespace casa{
   //---------------------------------------------------------------------
   //
@@ -51,7 +50,7 @@ namespace casa{
 	if (visPol2ImMap(i) >= 0) 
 	  {
 	    n=translateStokesToGeneric(vbPol(i));
-	    cfIndices_p.resize(n+1,true);
+	    cfIndices_p.resize(n+1,True);
 	    if (muellerType_p == DIAGONAL)	  cfIndices_p(n).resize(1);
 	    else if (muellerType_p == FULL)	  cfIndices_p(n).resize(4);
 	

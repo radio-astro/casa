@@ -46,10 +46,8 @@
 #include <QtCore>
 
 using namespace xercesc;
-using namespace casacore;
 using namespace casa::xerces;
 
-using namespace casacore;
 namespace casa {
 
 ////////////////////////

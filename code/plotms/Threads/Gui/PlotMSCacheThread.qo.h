@@ -79,11 +79,11 @@ protected:
         setProgressAndStatus(progress, itsLastStatus_); }
     
     // Allows the cache to set the status.
-    void setStatus(const casacore::String& status) {
+    void setStatus(const String& status) {
         setProgressAndStatus(itsLastProgress_, status); }
     
     // Allows the cache to set the progress and the status.
-    void setProgressAndStatus(unsigned int progress, const casacore::String& status);
+    void setProgressAndStatus(unsigned int progress, const String& status);
     
     // Slot for when the QThread finishes.
     virtual void threadFinished();
@@ -107,8 +107,8 @@ private:
     // Axes data columns.
     std::vector<PMS::DataColumn> itsAxesData_;
     
-    // casacore::MS selection/averaging info
-    casacore::String itsMSName_;
+    // MS selection/averaging info
+    String itsMSName_;
     PlotMSSelection itsSelection_;
     PlotMSAveraging itsAveraging_;
     PlotMSTransformations itsTransformations_;
@@ -120,7 +120,7 @@ private:
     unsigned int itsLastProgress_;
     
     // Last set status.
-    casacore::String itsLastStatus_;
+    String itsLastStatus_;
 
 };
 

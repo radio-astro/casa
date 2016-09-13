@@ -51,7 +51,7 @@ class FlagAgentShadow : public FlagAgentBase {
 
 public:
 
-	FlagAgentShadow(FlagDataHandler *dh, casacore::Record config, casacore::Bool writePrivateFlagCube = false, casacore::Bool flag = true);
+	FlagAgentShadow(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube = false, Bool flag = true);
 	~FlagAgentShadow();
 
 protected:
@@ -63,44 +63,44 @@ protected:
 	void preProcessBufferCore(const vi::VisBuffer2 &visBuffer);
 
 	// Compute flags afor a given mapped visibility point
-	bool computeRowFlags(const vi::VisBuffer2 &visBuffer, FlagMapper &flags, casacore::uInt row);
+	bool computeRowFlags(const vi::VisBuffer2 &visBuffer, FlagMapper &flags, uInt row);
 
 	// Parse configuration parameters
-	void setAgentParameters(casacore::Record config);
+	void setAgentParameters(Record config);
 
 private:
 
-        // casacore::Function to compute antenna UVW values for the current timestep
-        casacore::Bool computeAntUVW(const vi::VisBuffer2 &vb, casacore::Int rownr);
-        // casacore::Function to compute shadowed antennas, given a list of antenna UVWs.
-        void calculateShadowedAntennas(const vi::VisBuffer2 &visBuffer, casacore::Int rownr);
-        // casacore::Function to decide if the 'behind' antenna is shadowed or not, for one baseline
-        void decideBaselineShadow(casacore::Double uvDistance, casacore::Double w, casacore::Int antenna1, casacore::Int antenna2);
-        // casacore::Function to return baseline index.
-        casacore::uInt baselineIndex(casacore::uInt nAnt, casacore::uInt a1, casacore::uInt a2);
+        // Function to compute antenna UVW values for the current timestep
+        Bool computeAntUVW(const vi::VisBuffer2 &vb, Int rownr);
+        // Function to compute shadowed antennas, given a list of antenna UVWs.
+        void calculateShadowedAntennas(const vi::VisBuffer2 &visBuffer, Int rownr);
+        // Function to decide if the 'behind' antenna is shadowed or not, for one baseline
+        void decideBaselineShadow(Double uvDistance, Double w, Int antenna1, Int antenna2);
+        // Function to return baseline index.
+        uInt baselineIndex(uInt nAnt, uInt a1, uInt a2);
  
-	/// casacore::Input parameters ///
-	casacore::Double shadowTolerance_p;
-        casacore::Record additionalAntennas_p;
+	/// Input parameters ///
+	Double shadowTolerance_p;
+        Record additionalAntennas_p;
 
         // Copies of antenna-information lists, containing extra antennas if specified.
-        ///casacore::Vector<casacore::String> shadowAntennaNames_p;
-        casacore::Vector<casacore::Double> shadowAntennaDiameters_p;
-        casacore::Vector<casacore::MPosition> shadowAntennaPositions_p;
+        ///Vector<String> shadowAntennaNames_p;
+        Vector<Double> shadowAntennaDiameters_p;
+        Vector<MPosition> shadowAntennaPositions_p;
 
 	// Declaration of static members for common pre-processing
-	casacore::uShort agentNumber_p;
-	static vector<casacore::Int> shadowedAntennas_p;
+	uShort agentNumber_p;
+	static vector<Int> shadowedAntennas_p;
 	static casa::async::Mutex staticMembersMutex_p;
 	static vector<bool> startedProcessing_p;
 	static bool preProcessingDone_p;
-	static casacore::uShort nAgents_p;
+	static uShort nAgents_p;
         
         // Private variables that change with each timestep
-        casacore::Matrix<casacore::Double> uvwAnt_p;
-        casacore::Double currTime_p;
+        Matrix<Double> uvwAnt_p;
+        Double currTime_p;
 
-        casacore::Bool firststep_p; // helper variable to control a debug print statement
+        Bool firststep_p; // helper variable to control a debug print statement
     
 };
 

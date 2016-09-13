@@ -42,7 +42,6 @@
 #define OVERSAMPLING 20
 #define THRESHOLD 1E-4
 
-using namespace casacore;
 namespace casa{
   using namespace refim;
   EVLAConvFunc& EVLAConvFunc::operator=(const EVLAConvFunc& other)
@@ -228,7 +227,7 @@ namespace casa{
     Int PixInc=1;
     Vector<Complex> vals;
     IPosition ndx(4,origin,0,0,0);
-    Bool found=false;
+    Bool found=False;
     IPosition cfShape=func.shape();
     Int convSize = cfShape(0);
     for(R=convSize/4;R>1;R--)
@@ -246,7 +245,7 @@ namespace casa{
 	      vals(th)=func(ndx);
 	  }
 	if (max(abs(vals)) > threshold)
-	  {found=true;break;}
+	  {found=True;break;}
       }
     return found;
   }
@@ -469,10 +468,10 @@ namespace casa{
 	//
 	// Apply the PB...
 	//
-	Bool doSquint=true;
+	Bool doSquint=True;
 	Double pa=getPA(vb);
 	vlaPB.applyPB(twoDPB, pa, bandID_p, doSquint);
-	doSquint = false;
+	doSquint = False;
 	//	vlaPB.applyPBSq(twoDPBSq, vb, bandID_p, doSquint);
 	vlaPB.applyPB(twoDPBSq, pa, bandID_p, doSquint);
 	/*
@@ -526,7 +525,7 @@ namespace casa{
 	    sliceLength(4,convFunc_l.shape()[0]-1,convFunc_l.shape()[1]-1,1,polInUse);
 	  
 	  convFunc_l(Slicer(sliceStart,sliceLength)).nonDegenerate()
-	    =(twoDPB.getSlice(start, pbSlice, true));
+	    =(twoDPB.getSlice(start, pbSlice, True));
 	  
 	  IPosition shp(twoDPBSq.shape());
 	  
@@ -536,7 +535,7 @@ namespace casa{
 	    sqSliceLength(4,shp[0]-1,shp[1]-1,1,polInUse);
 	  
 	  convWeights_l(Slicer(sqSliceStart,sqSliceLength)).nonDegenerate()
-	    =(twoDPBSq.getSlice(sqStart, pbSqSlice, true));
+	    =(twoDPBSq.getSlice(sqStart, pbSqSlice, True));
 	  
 	}
       }
@@ -560,7 +559,7 @@ namespace casa{
     Int maxConvWtSupport=0, supportBuffer;
     for (Int iw=0;iw<wConvSize;iw++)
       {
-	Bool found=false;
+	Bool found=False;
 	Float threshold;
 	Int R;
 	ndx(2) = iw;

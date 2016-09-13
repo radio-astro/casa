@@ -36,7 +36,6 @@
 
 
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 PBMath1DNumeric::PBMath1DNumeric(const Vector<Float>& numericArray,

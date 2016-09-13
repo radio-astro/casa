@@ -41,21 +41,17 @@
 #include <synthesis/MeasurementEquations/MultiTermMatrixCleaner.h>
 
 #include <casa/namespace.h>
-namespace casacore{
-
+namespace casa { //# NAMESPACE CASA - BEGIN
 template<class T> class Lattice;
 template<class T> class PagedImage;
 template<class T> class TempImage;
 template<class T> class ImageInterface;
 template<class T> class LatticeConvolver;
-template<class T> class SubImage;
-class File;
-}
-
-namespace casa { //# NAMESPACE CASA - BEGIN
 template<class T> class ResidualEquation;
+template<class T> class SubImage;
 
 
+class File;
 class CEMemModel;
 class ClarkCleanLatModel;
 class LatConvEquation;
@@ -121,7 +117,7 @@ class ImageNACleaner;
 // </motivation>
 //
 // <thrown>
-// <li> casacore::AipsError - If an internal inconsistancy is detected, when compiled in 
+// <li> AipsError - If an internal inconsistancy is detected, when compiled in 
 // debug mode only.
 // </thrown>
 //
@@ -135,7 +131,7 @@ public:
   // "deconvolver" ctor
   Deconvolver();
   
-  Deconvolver(const casacore::String& dirty, const casacore::String& psf);
+  Deconvolver(const String& dirty, const String& psf);
   
   Deconvolver(const Deconvolver &other);
   Deconvolver &operator=(const Deconvolver &other);
@@ -144,174 +140,174 @@ public:
   // Open the given dirty image and psf
   // If warn is true,  print warnings about there being
   // no psf if one is not supplied.
-  casacore::Bool open(const casacore::String& dirty, const casacore::String& psf, casacore::Bool warn=true);
+  Bool open(const String& dirty, const String& psf, Bool warn=True);
 
   // After some cleaning, the dirty image is replaced with the
   // residual image in the deconvolver tool.  reopen reinstates
   // that dirty image; cannot be invoked before open has been
   // invoked
-  casacore::Bool reopen();
+  Bool reopen();
   
   // Flush the ms to disk and detach from the ms file. All function
   // calls after this will be a no-op.
-  casacore::Bool close();
+  Bool close();
   
-  casacore::String dirtyname() const;
-  casacore::String psfname() const;
+  String dirtyname() const;
+  String psfname() const;
 
   // Output a summary of the state of the object
-  casacore::Bool summary() const;
+  Bool summary() const;
   
   // Return the state of the object as a string
-  casacore::String state() const;
+  String state() const;
   
   // Return the image shape
-  casacore::IPosition imageshape() const;
+  IPosition imageshape() const;
 
   // Restore
-  casacore::Bool restore(const casacore::String& model,
-	       const casacore::String& image, casacore::GaussianBeam& mbeam);
+  Bool restore(const String& model,
+	       const String& image, GaussianBeam& mbeam);
 
   // Residual
-  casacore::Bool residual(const casacore::String& model, 
-	       const casacore::String& image);
+  Bool residual(const String& model, 
+	       const String& image);
 
   // Smooth
-  casacore::Bool smooth(const casacore::String& model, 
-	      const casacore::String& image,
-	      casacore::GaussianBeam& mbeam,
-	      casacore::Bool normalizeVolume);
+  Bool smooth(const String& model, 
+	      const String& image,
+	      GaussianBeam& mbeam,
+	      Bool normalizeVolume);
 
   // Clean algorithm
   //maxResidual and iterationsDone are return values
-  casacore::Bool clean(const casacore::String& algorithm,
-	     const casacore::Int niter, const casacore::Float gain, const casacore::Quantity& threshold, 
-	     const casacore::Bool displayProgress,
-             const casacore::String& model, const casacore::String& mask, casacore::Float& maxResidual, 
-	     casacore::Int& iterationsDone );
-  casacore::Bool naclean(const casacore::Int niter,
-			const casacore::Float gain, const casacore::Quantity& threshold, 
-	       const casacore::String& model, const casacore::String& mask, const casacore::Int masksupp, const casacore::Int memoryType, const casacore::Float numSigma, casacore::Float& maxResidual, casacore::Int& iterationsDone) ;
+  Bool clean(const String& algorithm,
+	     const Int niter, const Float gain, const Quantity& threshold, 
+	     const Bool displayProgress,
+             const String& model, const String& mask, Float& maxResidual, 
+	     Int& iterationsDone );
+  Bool naclean(const Int niter,
+			const Float gain, const Quantity& threshold, 
+	       const String& model, const String& mask, const Int masksupp, const Int memoryType, const Float numSigma, Float& maxResidual, Int& iterationsDone) ;
 
   //Clark Clean but image, psf, mask has to be 4-axes in the canonical casa order.
   //Useful for cleaning dirty images made in CASA
   //if mask is larger than a quarter of the image it will do a full image clean ...unlike the one below
-  casacore::Bool clarkclean(const casacore::Int niter, 
-		  const casacore::Float gain, const casacore::Quantity& threshold, 
-		  const casacore::String& model, const casacore::String& maskName,
-		  casacore::Float& maxresid, casacore::Int& iterused,
-		  casacore::Float cycleFactor=1.5);
+  Bool clarkclean(const Int niter, 
+		  const Float gain, const Quantity& threshold, 
+		  const String& model, const String& maskName,
+		  Float& maxresid, Int& iterused,
+		  Float cycleFactor=1.5);
 
   // Clark Clean algorithm
-  casacore::Bool clarkclean(const casacore::Int niter, 
-		  const casacore::Float gain, const casacore::Quantity& threshold, 
-		  const casacore::Bool displayProgress, 
-		  const casacore::String& model, const casacore::String& mask,
-		  const casacore::Int histBins, 
-		  const casacore::Vector<casacore::Int>& psfPatchSize, const casacore::Float maxExtPsf,
-		  const casacore::Float speedUp, casacore::Int maxNumPix,
-		  const casacore::Int maxNumMajorCycles,
-		  const casacore::Int maxNumMinorIterations);
+  Bool clarkclean(const Int niter, 
+		  const Float gain, const Quantity& threshold, 
+		  const Bool displayProgress, 
+		  const String& model, const String& mask,
+		  const Int histBins, 
+		  const Vector<Int>& psfPatchSize, const Float maxExtPsf,
+		  const Float speedUp, Int maxNumPix,
+		  const Int maxNumMajorCycles,
+		  const Int maxNumMinorIterations);
   
   
   // MEM algorithm    add other inputs as required
-  casacore::Bool mem(const casacore::String& algorithm,
-	   const casacore::Int niter, const casacore::Quantity& sigma, 
-	   const casacore::Quantity& targetFlux, 
-	   casacore::Bool constrainTargetFlux, 
-	   casacore::Bool displayprogress, 
-	   const casacore::String& model, 
-	   const casacore::String& prior = "",
-	   const casacore::String& mask = "",
-	   const casacore::Bool imagePlane = false);
+  Bool mem(const String& algorithm,
+	   const Int niter, const Quantity& sigma, 
+	   const Quantity& targetFlux, 
+	   Bool constrainTargetFlux, 
+	   Bool displayprogress, 
+	   const String& model, 
+	   const String& prior = "",
+	   const String& mask = "",
+	   const Bool imagePlane = False);
   
   // make a prior image
-  casacore::Bool makeprior(const casacore::String& prior,
-		 const casacore::String& templateImage,
-		 const casacore::Quantity& lowClipfrom, 
-		 const casacore::Quantity& lowClipto, 
-		 const casacore::Quantity& highClipfrom, 
-		 const casacore::Quantity& highClipto, 
-		 const casacore::Vector<casacore::Int>& blc,
-		 const casacore::Vector<casacore::Int>& trc);
+  Bool makeprior(const String& prior,
+		 const String& templateImage,
+		 const Quantity& lowClipfrom, 
+		 const Quantity& lowClipto, 
+		 const Quantity& highClipfrom, 
+		 const Quantity& highClipto, 
+		 const Vector<Int>& blc,
+		 const Vector<Int>& trc);
   
   // Set up scales: based on scaleMethod = "nscales" or "uservector",
   // we will create the scale sizes in pixels via a power law or
   // use the user specified scale sizes.
-  casacore::Bool setscales(const casacore::String& scaleMethod, const casacore::Int nscales, 
-		 const casacore::Vector<casacore::Float>& userScaleSizes);
+  Bool setscales(const String& scaleMethod, const Int nscales, 
+		 const Vector<Float>& userScaleSizes);
   
   // NNLS algorithm
-  casacore::Bool nnls(const casacore::String& algorithm, const casacore::Int niter, const casacore::Float tolerance,
-	    const casacore::String& model, 
-	    const casacore::String& fluxMask, const casacore::String& dataMask);
+  Bool nnls(const String& algorithm, const Int niter, const Float tolerance,
+	    const String& model, 
+	    const String& fluxMask, const String& dataMask);
 
   // Fourier transform the model and componentlist
-  casacore::Bool ft(const casacore::String& model, const casacore::String& transform);
+  Bool ft(const String& model, const String& transform);
 
   // Make an empty image
-  casacore::Bool make(const casacore::String& model);
+  Bool make(const String& model);
 
-  // Make an empty image with just one casacore::Stokes pixel (ie, for a mask)
-  casacore::Bool make1(const casacore::String& imagename);
+  // Make an empty image with just one Stokes pixel (ie, for a mask)
+  Bool make1(const String& imagename);
 
   // Make an empty image modeled after templateImage
-  casacore::Bool make(const casacore::String& model, casacore::ImageInterface<casacore::Float>& templateImage);
+  Bool make(const String& model, ImageInterface<Float>& templateImage);
 
   // Make a Box Mask
-  casacore::Bool boxmask(const casacore::String& boxmask,
-	       const casacore::Vector<casacore::Int> blc,
-	       const casacore::Vector<casacore::Int> trc,
-	       const casacore::Quantity& fillValue=1.0,
-	       const casacore::Quantity& externalValue=0.0);
+  Bool boxmask(const String& boxmask,
+	       const Vector<Int> blc,
+	       const Vector<Int> trc,
+	       const Quantity& fillValue=1.0,
+	       const Quantity& externalValue=0.0);
 
   //make a mask image from regions
-  casacore::Bool regionmask(const casacore::String& maskimage, casacore::Record* imageRegRec, 
-		  casacore::Matrix<casacore::Quantity>& blctrcs, const casacore::Float& value=1.0);
+  Bool regionmask(const String& maskimage, Record* imageRegRec, 
+		  Matrix<Quantity>& blctrcs, const Float& value=1.0);
 
-  // Clip an image below some casacore::Stokes I threshold
-  casacore::Bool clipimage(const casacore::String& clippedImage, const casacore::String& inputImage,
-		 const casacore::Quantity& threshold);
+  // Clip an image below some Stokes I threshold
+  Bool clipimage(const String& clippedImage, const String& inputImage,
+		 const Quantity& threshold);
 
   // Fit the psf
-  casacore::Bool fitpsf(const casacore::String& psf, casacore::GaussianBeam& beam);
+  Bool fitpsf(const String& psf, GaussianBeam& beam);
 
   // Convolve one image with another
-  casacore::Bool convolve(const casacore::String& convolvedmodel, 
-		const casacore::String& model);
+  Bool convolve(const String& convolvedmodel, 
+		const String& model);
 
   // Make a Gaussian -- you might want to use it for convolution, etc
-  casacore::Bool makegaussian(const casacore::String& gaussianimage, casacore::GaussianBeam& mbeam, casacore::Bool normalizeVolume);
+  Bool makegaussian(const String& gaussianimage, GaussianBeam& mbeam, Bool normalizeVolume);
 
   // ------------------  Multi-Term Deconvolver functions - START ----------------------
-  // Initialize the Multi-Term casacore::Matrix Cleaners and compute Hessian elements.
-  casacore::Bool mtopen(const casacore::Int nTaylor,
-	      const casacore::Vector<casacore::Float>& userScaleSizes,
-	      const casacore::Vector<casacore::String>& psfs);
+  // Initialize the Multi-Term Matrix Cleaners and compute Hessian elements.
+  Bool mtopen(const Int nTaylor,
+	      const Vector<Float>& userScaleSizes,
+	      const Vector<String>& psfs);
 
   // Do component-finding iterations
-  casacore::Bool mtclean(const casacore::Vector<casacore::String>& residuals,
-	       const casacore::Vector<casacore::String>& models,
-	       const casacore::Int niter,
-	       const casacore::Float gain, 
-	       const casacore::Quantity& threshold, 
-	       const casacore::Bool displayProgress,
-	       const casacore::String& mask, 
-	       casacore::Float& maxResidual, casacore::Int& iterationsDone);
+  Bool mtclean(const Vector<String>& residuals,
+	       const Vector<String>& models,
+	       const Int niter,
+	       const Float gain, 
+	       const Quantity& threshold, 
+	       const Bool displayProgress,
+	       const String& mask, 
+	       Float& maxResidual, Int& iterationsDone);
 
   // Restore the output images
-  casacore::Bool mtrestore(const casacore::Vector<casacore::String>& models,
-		 const casacore::Vector<casacore::String>& residuals,
-		 const casacore::Vector<casacore::String>& images,
-		 casacore::GaussianBeam& mbeam);
+  Bool mtrestore(const Vector<String>& models,
+		 const Vector<String>& residuals,
+		 const Vector<String>& images,
+		 GaussianBeam& mbeam);
 
   // Calculate alpha and beta from restored images.
-  casacore::Bool mtcalcpowerlaw(const casacore::Vector<casacore::String>& images,
-                      const casacore::Vector<casacore::String>& residuals,
-                      const casacore::String& alphaname,
-                      const casacore::String& betaname,
-                      const casacore::Quantity& threshold,
-                      const casacore::Bool calcerror);
+  Bool mtcalcpowerlaw(const Vector<String>& images,
+                      const Vector<String>& residuals,
+                      const String& alphaname,
+                      const String& betaname,
+                      const Quantity& threshold,
+                      const Bool calcerror);
 
 
   // ------------------  Multi-Term Deconvolver functions - END ----------------------
@@ -320,13 +316,13 @@ public:
 private:
   
   // Cut the inner quarter out of an image
-  casacore::SubImage<casacore::Float>* innerQuarter(casacore::PagedImage<casacore::Float>& in);
+  SubImage<Float>* innerQuarter(PagedImage<Float>& in);
 
   // Return full image as a SubImage
-  casacore::SubImage<casacore::Float>* allQuarters(casacore::PagedImage<casacore::Float>& in);
+  SubImage<Float>* allQuarters(PagedImage<Float>& in);
 
   // Clone an image
-  casacore::Bool clone(const casacore::String& imageName, const casacore::String& newImageName);
+  Bool clone(const String& imageName, const String& newImageName);
   
 
   //find which axes are the spectral and pol one
@@ -334,60 +330,60 @@ private:
 
   //check mask
 
-  void checkMask(casacore::ImageInterface<casacore::Float>& maskimage, casacore::Int& xbeg, casacore::Int& xend, 
-		 casacore::Int& ybeg, casacore::Int& yend);
+  void checkMask(ImageInterface<Float>& maskimage, Int& xbeg, Int& xend, 
+		 Int& ybeg, Int& yend);
 
 
   // setup lattice cleaner
-  casacore::Bool setupLatCleaner(const casacore::String& algorithm,
-		       const casacore::Int niter, const casacore::Float gain, const casacore::Quantity& threshold, 
-		       const casacore::Bool displayProgress);
+  Bool setupLatCleaner(const String& algorithm,
+		       const Int niter, const Float gain, const Quantity& threshold, 
+		       const Bool displayProgress);
 
   // Embed a mask into an image. A convenience function.
-  casacore::Bool createMask(casacore::LatticeExpr<casacore::Bool> &lemask, casacore::ImageInterface<casacore::Float> &outimage);
+  Bool createMask(LatticeExpr<Bool> &lemask, ImageInterface<Float> &outimage);
   //Put a unit peak gaussian at centre
-  casacore::Bool putGaussian(casacore::ImageInterface<casacore::Float>& im, const casacore::GaussianBeam& beam);
-  casacore::PagedImage<casacore::Float>* dirty_p;
-  casacore::PagedImage<casacore::Float>* psf_p;
+  Bool putGaussian(ImageInterface<Float>& im, const GaussianBeam& beam);
+  PagedImage<Float>* dirty_p;
+  PagedImage<Float>* psf_p;
 
-  casacore::LatticeConvolver<casacore::Float>* convolver_p;
-  ResidualEquation<casacore::Lattice<casacore::Float> >* residEqn_p;
+  LatticeConvolver<Float>* convolver_p;
+  ResidualEquation<Lattice<Float> >* residEqn_p;
   LatConvEquation* latConvEqn_p;
-  casacore::CountedPtr <ImageMSCleaner> cleaner_p;
+  CountedPtr <ImageMSCleaner> cleaner_p;
   std::shared_ptr <ImageNACleaner> naCleaner_p;
 
-  casacore::Bool scalesValid_p;
+  Bool scalesValid_p;
 
-  casacore::Int nx_p, ny_p, npol_p, nchan_p;
-  casacore::Int chanAxis_p, polAxis_p;
-  casacore::String mode_p;
-  casacore::GaussianBeam beam_p;
-//  casacore::Quantity bmaj_p, bmin_p, bpa_p;
-  casacore::Bool beamValid_p;
-  casacore::String dirtyName_p;
-  casacore::String psfName_p;
-  casacore::Bool fullPlane_p;
+  Int nx_p, ny_p, npol_p, nchan_p;
+  Int chanAxis_p, polAxis_p;
+  String mode_p;
+  GaussianBeam beam_p;
+//  Quantity bmaj_p, bmin_p, bpa_p;
+  Bool beamValid_p;
+  String dirtyName_p;
+  String psfName_p;
+  Bool fullPlane_p;
 
-  casacore::Vector<casacore::Float> itsTotalFluxScale;
-  casacore::Float itsTotalFlux;
-  casacore::Vector<casacore::Float> scaleSizes_p;
+  Vector<Float> itsTotalFluxScale;
+  Float itsTotalFlux;
+  Vector<Float> scaleSizes_p;
 
   // Multi-Term private variables
-  casacore::Int mt_nterms_p;
+  Int mt_nterms_p;
   MultiTermMatrixCleaner mt_cleaner_p;
-  casacore::Bool mt_valid_p;
+  Bool mt_valid_p;
 
   // Set the defaults
   void defaults();
 
-  casacore::Bool removeTable(const casacore::String& tablename);
+  Bool removeTable(const String& tablename);
   
-  // Prints an error message if the deconvolver DO is detached and returns true.
-  casacore::Bool detached() const;
+  // Prints an error message if the deconvolver DO is detached and returns True.
+  Bool detached() const;
 
-  casacore::String imageName() const;
+  String imageName() const;
 
-  casacore::Bool valid() const;
+  Bool valid() const;
 
 };
 

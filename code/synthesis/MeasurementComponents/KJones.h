@@ -35,24 +35,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 class DelayFFT {
 public:
-  // Construct from freq info and data-like casacore::Cube<casacore::Complex>
-  //  (for generic testing w/out casacore::MS data)
-  DelayFFT(casacore::Double f0, casacore::Double df, casacore::Double padBW, 
-	   casacore::Cube<casacore::Complex> V);
+  // Construct from freq info and data-like Cube<Complex>
+  //  (for generic testing w/out MS data)
+  DelayFFT(Double f0, Double df, Double padBW, 
+	   Cube<Complex> V);
 
   // Construct from freq info and shape, w/ initialization
   //   (for accumulation)
-  DelayFFT(casacore::Double f0, casacore::Double df, casacore::Double padBW, 
-	   casacore::Int nCorr, casacore::Int nElem, casacore::Int refant, casacore::Complex v0);
+  DelayFFT(Double f0, Double df, Double padBW, 
+	   Int nCorr, Int nElem, Int refant, Complex v0);
 
   // Construct from a VB
-  DelayFFT(const VisBuffer& vb,casacore::Double padBW,casacore::Int refant);
+  DelayFFT(const VisBuffer& vb,Double padBW,Int refant);
 
   // Perform FFT
   void FFT();
 
   // Apply shift theorem
-  void shift(casacore::Double f);
+  void shift(Double f);
 
   // Accumulate another DelayFFT
   void add(const DelayFFT& other);
@@ -60,22 +60,22 @@ public:
   // Find peaks
   void searchPeak();
 
-  const casacore::Cube<casacore::Complex>& Vpad() const { return Vpad_; };
+  const Cube<Complex>& Vpad() const { return Vpad_; };
 
   // Access to results
-  const casacore::Matrix<casacore::Float>& delay() const { return delay_; };
-  const casacore::Matrix<casacore::Bool>& flag() const { return flag_; };
+  const Matrix<Float>& delay() const { return delay_; };
+  const Matrix<Bool>& flag() const { return flag_; };
 
   // Report some stateinfo
   void state();
 
 private:
-  casacore::Double f0_, df_, padBW_;
-  casacore::Int nCorr_, nPadChan_, nElem_;
-  casacore::Int refant_;
-  casacore::Cube<casacore::Complex> Vpad_;
-  casacore::Matrix<casacore::Float> delay_;
-  casacore::Matrix<casacore::Bool> flag_;
+  Double f0_, df_, padBW_;
+  Int nCorr_, nPadChan_, nElem_;
+  Int refant_;
+  Cube<Complex> Vpad_;
+  Matrix<Float> delay_;
+  Matrix<Bool> flag_;
 
 };
 
@@ -92,33 +92,33 @@ public:
 
   // Constructor
   KJones(VisSet& vs);
-  KJones(casacore::String msname,casacore::Int MSnAnt,casacore::Int MSnSpw);
+  KJones(String msname,Int MSnAnt,Int MSnSpw);
   KJones(const MSMetaInfoForCal& msmc);
-  KJones(const casacore::Int& nAnt);
+  KJones(const Int& nAnt);
 
   virtual ~KJones();
 
   // Local setApply to enforce calWt=F for delays
-  virtual void setApply(const casacore::Record& apply);
+  virtual void setApply(const Record& apply);
   using GJones::setApply;
-  virtual void setCallib(const casacore::Record& callib,
-			 const casacore::MeasurementSet& selms);
+  virtual void setCallib(const Record& callib,
+			 const MeasurementSet& selms);
 
   // Local setSolve (traps lack of refant)
-  virtual void setSolve(const casacore::Record& solve);
+  virtual void setSolve(const Record& solve);
   using GJones::setSolve;
 
-  // We have casacore::Float parameters
+  // We have Float parameters
   virtual VisCalEnum::VCParType parType() { return VisCalEnum::REAL; };
 
   // Return the type enum
   virtual Type type() { return VisCal::K; };
 
   // Return type name as string
-  virtual casacore::String typeName()     { return ( (isSolved() && combspw()) ? 
+  virtual String typeName()     { return ( (isSolved() && combspw()) ? 
 					   "KMBD Jones" : 
 					   "K Jones" ); };
-  virtual casacore::String longTypeName() { return ( (isSolved() && combspw()) ? 
+  virtual String longTypeName() { return ( (isSolved() && combspw()) ? 
 					   "KMBD Jones (multi-band delay)" : 
 					   "K Jones (single-band delay)"  ); };
 
@@ -126,35 +126,35 @@ public:
   virtual Jones::JonesType jonesType() { return Jones::Diagonal; };
 
   // Freq dependence (delays)
-  virtual casacore::Bool freqDepPar() { return false; };
-  virtual casacore::Bool freqDepMat() { return true; };
+  virtual Bool freqDepPar() { return False; };
+  virtual Bool freqDepMat() { return True; };
 
   // Default parameter value
-  virtual casacore::Complex defaultPar() { return casacore::Complex(0.0); };
+  virtual Complex defaultPar() { return Complex(0.0); };
 
   // Type-specific specify
-  virtual void specify(const casacore::Record& specify);
+  virtual void specify(const Record& specify);
 
   // This type is not yet accumulatable
-  virtual casacore::Bool accumulatable() { return false; };
+  virtual Bool accumulatable() { return False; };
 
   // This type is smoothable
-  virtual casacore::Bool smoothable() { return true; };
+  virtual Bool smoothable() { return True; };
 
   // Calculate phase(chan) from delay
   virtual void calcAllJones();
 
   // Delay to phase calculator
-  //  virtual void calcOneJones(casacore::Vector<casacore::Complex>& mat, casacore::Vector<casacore::Bool>& mOk, 
-  //                            const casacore::Vector<casacore::Complex>& par, const casacore::Vector<casacore::Bool>& pOk );
+  //  virtual void calcOneJones(Vector<Complex>& mat, Vector<Bool>& mOk, 
+  //                            const Vector<Complex>& par, const Vector<Bool>& pOk );
 
 
   // Hazard a guess at parameters (unneeded here)
   virtual void guessPar(VisBuffer& ) {};
 
   // K now uses generic gather, but solves for itself per solution
-  virtual casacore::Bool useGenericGatherForSolve() { return true; };
-  virtual casacore::Bool useGenericSolveOne() { return false; }
+  virtual Bool useGenericGatherForSolve() { return True; };
+  virtual Bool useGenericSolveOne() { return False; }
 
   // Override G here; nothing to do for K, for now
   virtual void globalPostSolveTinker() {};
@@ -163,13 +163,13 @@ public:
 protected:
 
   // K has two "real" parameters
-  virtual casacore::Int nPar() { return 2; };
+  virtual Int nPar() { return 2; };
 
   // Jones matrix elements are trivial
-  virtual casacore::Bool trivialJonesElem() { return false; };
+  virtual Bool trivialJonesElem() { return False; };
 
   // dG/dp are trivial
-  virtual casacore::Bool trivialDJ() { return false; };
+  virtual Bool trivialDJ() { return False; };
 
   // Initialize trivial dJs
   virtual void initTrivDJ() {};
@@ -184,7 +184,7 @@ protected:
   virtual void solveOneVBmbd(VisBuffGroupAcc& vbga);
 
   // Reference frequencies
-  casacore::Vector<casacore::Double> KrefFreqs_;
+  Vector<Double> KrefFreqs_;
 
 private:
 
@@ -197,19 +197,18 @@ public:
 
   // Constructor
   KcrossJones(VisSet& vs);
-  KcrossJones(casacore::String msname,casacore::Int MSnAnt,casacore::Int MSnSpw);
+  KcrossJones(String msname,Int MSnAnt,Int MSnSpw);
   KcrossJones(const MSMetaInfoForCal& msmc);
-  KcrossJones(const casacore::Int& nAnt);
-
+  KcrossJones(const Int& nAnt);
 
   virtual ~KcrossJones();
 
   // Return type name as string
-  virtual casacore::String typeName()     { return "Kcross Jones"; };
-  virtual casacore::String longTypeName() { return "Kcross Jones (single-band cross delay)"; };
+  virtual String typeName()     { return "Kcross Jones"; };
+  virtual String longTypeName() { return "Kcross Jones (single-band cross delay)"; };
 
   // By definition, we consider cross-hands
-  virtual casacore::Bool phandonly() { return false; };
+  virtual Bool phandonly() { return False; };
 
 protected:
 
@@ -229,9 +228,9 @@ public:
 
   // Constructor
   KMBDJones(VisSet& vs);
-  KMBDJones(casacore::String msname,casacore::Int MSnAnt,casacore::Int MSnSpw);
+  KMBDJones(String msname,Int MSnAnt,Int MSnSpw);
   KMBDJones(const MSMetaInfoForCal& msmc);
-  KMBDJones(const casacore::Int& nAnt);
+  KMBDJones(const Int& nAnt);
 
   virtual ~KMBDJones();
 
@@ -239,11 +238,11 @@ public:
   virtual Type type() { return VisCal::K; };
 
   // Return type name as string
-  virtual casacore::String typeName()     { return "KMBD Jones"; };
-  virtual casacore::String longTypeName() { return "KMBD Jones (multi-band delay)"; };
+  virtual String typeName()     { return "KMBD Jones"; };
+  virtual String longTypeName() { return "KMBD Jones (multi-band delay)"; };
 
   // Local setApply (to enforce KrefFreq_=0.0)
-  virtual void setApply(const casacore::Record& apply);
+  virtual void setApply(const Record& apply);
 
  
 };
@@ -255,10 +254,9 @@ public:
 
   // Constructor
   KAntPosJones(VisSet& vs);
-  KAntPosJones(casacore::String msname,casacore::Int MSnAnt,casacore::Int MSnSpw);
+  KAntPosJones(String msname,Int MSnAnt,Int MSnSpw);
   KAntPosJones(const MSMetaInfoForCal& msmc);
-  KAntPosJones(const casacore::Int& nAnt);
-
+  KAntPosJones(const Int& nAnt);
 
   virtual ~KAntPosJones();
 
@@ -266,24 +264,24 @@ public:
   virtual Type type() { return VisCal::KAntPos; };
 
   // Return type name as string
-  virtual casacore::String typeName()     { return "KAntPos Jones"; };
-  virtual casacore::String longTypeName() { return "KAntPos Jones (antenna position errors)"; };
+  virtual String typeName()     { return "KAntPos Jones"; };
+  virtual String longTypeName() { return "KAntPos Jones (antenna position errors)"; };
 
   // This is a scalar Jones matrix
   virtual Jones::JonesType jonesType() { return Jones::Scalar; };
 
-  virtual casacore::Bool timeDepMat() { return true; };
+  virtual Bool timeDepMat() { return True; };
 
   // This type is not smoothable
-  virtual casacore::Bool smoothable() { return false; };
+  virtual Bool smoothable() { return False; };
 
   // Local setApply to enforce spwmap=0 for all spw
-  virtual void setApply(const casacore::Record& apply);
+  virtual void setApply(const Record& apply);
   using KJones::setApply;
-  virtual void setCallib(const casacore::Record& callib,const casacore::MeasurementSet& selms);
+  virtual void setCallib(const Record& callib,const MeasurementSet& selms);
 
   // Type-specific specify
-  virtual void specify(const casacore::Record& specify);
+  virtual void specify(const Record& specify);
 
   // Calculate phase(chan) from delay
   virtual void calcAllJones();
@@ -295,23 +293,23 @@ protected:
   virtual void syncMeta2(const vi::VisBuffer2& vb);
 
   // AntPos has three "real" parameters (dBx, dBy, dBz)
-  virtual casacore::Int nPar() { return 3; };
+  virtual Int nPar() { return 3; };
 
   // Jones matrix elements are not trivial
-  virtual casacore::Bool trivialJonesElem() { return false; };
+  virtual Bool trivialJonesElem() { return False; };
 
   // dG/dp are not trivial
-  virtual casacore::Bool trivialDJ() { return false; };
+  virtual Bool trivialDJ() { return False; };
 
   // Initialize trivial dJs
   virtual void initTrivDJ() {};
 
 private:
   
-  // casacore::Geometry info for internal calculations (updated per VB)
-  casacore::String epochref_p;
-  casacore::MDirection phasedir_p;
-  casacore::MPosition antpos0_p;
+  // Geometry info for internal calculations (updated per VB)
+  String epochref_p;
+  MDirection phasedir_p;
+  MPosition antpos0_p;
 
 };
 

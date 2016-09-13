@@ -169,11 +169,11 @@ void buildTable(Table& tab)
       record.defineRecord(RecordFieldId("squintreffreq"), subrec);
     }
     {
-      Bool use=false;
+      Bool use=False;
       record.define(RecordFieldId("usesymmetricbeam"), use);
     }
     {
-      Bool is=false;
+      Bool is=False;
       record.define(RecordFieldId("isthisvp"), is);
     }
     
@@ -235,11 +235,11 @@ void buildTable(Table& tab)
       record.defineRecord(RecordFieldId("squintreffreq"), subrec);
     }
     {
-      Bool use=false;
+      Bool use=False;
       record.define(RecordFieldId("usesymmetricbeam"), use);
     }
     {
-      Bool is=false;
+      Bool is=False;
       record.define(RecordFieldId("isthisvp"), is);
     }
     
@@ -262,11 +262,11 @@ void buildTable(Table& tab)
     record.define (RecordFieldId("name"), "COMMONPB");
     record.define (RecordFieldId("commonpb"), "WSRT");
     {
-      Bool use=false;
+      Bool use=False;
       record.define(RecordFieldId("usesymmetricbeam"), use);
     }
     {
-      Bool is=false;
+      Bool is=False;
       record.define(RecordFieldId("isthisvp"), is);
     }
     
@@ -287,11 +287,11 @@ void buildTable(Table& tab)
     record.define (RecordFieldId("name"), "COMMONPB");
     record.define (RecordFieldId("commonpb"), "VLA_INVERSE");
     {
-      Bool use=false;
+      Bool use=False;
       record.define(RecordFieldId("usesymmetricbeam"), use);
     }
     {
-      Bool is=false;
+      Bool is=False;
       record.define(RecordFieldId("isthisvp"), is);
     }
     

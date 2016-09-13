@@ -29,7 +29,6 @@
 #include <synthesis/CalTables/CTInterface.h>
 #include <ms/MeasurementSets/MSColumns.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
   //

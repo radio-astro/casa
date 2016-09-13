@@ -53,7 +53,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // Colormap values are written to a virtual colortable (an internal array).
 // For Indexed (PseudoColor) windows, the values are sent to the hardware
-// colormap. For RGB (trueColor) windows, the virtual colortable is used
+// colormap. For RGB (TrueColor) windows, the virtual colortable is used
 // to emulate a hardware lookup table.
 // </synopsis>
 //
@@ -90,14 +90,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			blue = blue_;
 		}
 
-		casacore::uInt	getIndex()const {
+		uInt	getIndex()const {
 			return index_;
 		}
-		void	setIndex(const casacore::uInt i) {
+		void	setIndex(const uInt i) {
 			index_ = i;
 		}
 
-		casacore::uLong getPixel()const {
+		uLong getPixel()const {
 			return pixel_;
 		}
 		void setPixel(const unsigned long p) {
@@ -107,8 +107,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		friend ostream &operator<<(ostream &s, const GLVColorTableEntry &x);
 
 	private:
-		casacore::uInt	index_;			// Index into map for this entry.
-		casacore::uLong	pixel_;			// Real index or color value.
+		uInt	index_;			// Index into map for this entry.
+		uLong	pixel_;			// Real index or color value.
 		float	red_, green_, blue_;	// Color component values. (0..1).
 	};
 
@@ -122,36 +122,36 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		GLPixelCanvasColorTable(::XDisplay *dpy,
 		                        Display::ColorModel mapType = Display::RGB,
-		                        casacore::Float percent=90.0,
+		                        Float percent=90.0,
 		                        XVisualInfo *visInfo=NULL);
 		// </group>
 
 		// allocate cells for colormaps
-		casacore::Bool allocCells(casacore::uInt nCells);
+		Bool allocCells(uInt nCells);
 
 		// deallocate cells for colormaps
-		casacore::Bool deallocCells();
+		Bool deallocCells();
 
 		// Allocate the best color cube given the map
-		casacore::Bool allocColorCube();
+		Bool allocColorCube();
 		// Allocate a color cube of a specific size
-		casacore::Bool allocColorCube(casacore::uInt n1, casacore::uInt n2, casacore::uInt n3);
+		Bool allocColorCube(uInt n1, uInt n2, uInt n3);
 		// Allocate a color cube within the ranges of sizes
-		casacore::Bool allocColorCubeMinMax(casacore::uInt n1min, casacore::uInt n2min, casacore::uInt n3min,
-		                          casacore::uInt n1max, casacore::uInt n2max, casacore::uInt n3max);
+		Bool allocColorCubeMinMax(uInt n1min, uInt n2min, uInt n3min,
+		                          uInt n1max, uInt n2max, uInt n3max);
 		// Copy color cube info from the mapRef
 		void copyColorCube(const GLPixelCanvasColorTable & mapRef);
 		// Fill a color cube with an RGB spectrum
 		void fillColorCubeRGB();
 		enum FILLMODE {FILLRGB, FILLRBG, FILLGRB, FILLGBR, FILLBRG, FILLBGR};
 		static void colorFillRGB(
-		    casacore::Vector<casacore::Float> &r, casacore::Vector<casacore::Float> &g, casacore::Vector<casacore::Float> &b,
-		    casacore::uInt nr, casacore::uInt ng, casacore::uInt nb,
+		    Vector<Float> &r, Vector<Float> &g, Vector<Float> &b,
+		    uInt nr, uInt ng, uInt nb,
 		    FILLMODE mode = FILLRGB);
 
 		static void colorFillRGB(
-		    casacore::Vector<casacore::Float> &r, casacore::Vector<casacore::Float> &g, casacore::Vector<casacore::Float> &b,
-		    casacore::uInt ncolors, FILLMODE mode= FILLRGB);
+		    Vector<Float> &r, Vector<Float> &g, Vector<Float> &b,
+		    uInt ncolors, FILLMODE mode= FILLRGB);
 		// Fill a color cube with an HSV spectrum
 		void fillColorCubeHSV();
 
@@ -159,28 +159,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// This function maps floating values between 0 and 1
 		// into a output image suitable for PixelCanvas::drawImage().
 		// <group>
-		void mapToColor3(casacore::Array<casacore::uLong> & out,
-		                 const casacore::Array<casacore::Float> & chan1in,
-		                 const casacore::Array<casacore::Float> & chan2in,
-		                 const casacore::Array<casacore::Float> & chan3in);
-		void mapToColor3(casacore::Array<casacore::uLong> & out,
-		                 const casacore::Array<casacore::Double> & chan1in,
-		                 const casacore::Array<casacore::Double> & chan2in,
-		                 const casacore::Array<casacore::Double> & chan3in);
+		void mapToColor3(Array<uLong> & out,
+		                 const Array<Float> & chan1in,
+		                 const Array<Float> & chan2in,
+		                 const Array<Float> & chan3in);
+		void mapToColor3(Array<uLong> & out,
+		                 const Array<Double> & chan1in,
+		                 const Array<Double> & chan2in,
+		                 const Array<Double> & chan3in);
 		// </group>
 
 		// This one maps values between 0 and the integer
 		// maximum value for each channel into a single
 		// output image suitable for PixelCanvas::drawImage().
 		// <group>
-		void mapToColor3(casacore::Array<casacore::uLong> & out,
-		                 const casacore::Array<casacore::uShort> & chan1in,
-		                 const casacore::Array<casacore::uShort> & chan2in,
-		                 const casacore::Array<casacore::uShort> & chan3in);
-		void mapToColor3(casacore::Array<casacore::uLong> & out,
-		                 const casacore::Array<casacore::uInt> & chan1in,
-		                 const casacore::Array<casacore::uInt> & chan2in,
-		                 const casacore::Array<casacore::uInt> & chan3in);
+		void mapToColor3(Array<uLong> & out,
+		                 const Array<uShort> & chan1in,
+		                 const Array<uShort> & chan2in,
+		                 const Array<uShort> & chan3in);
+		void mapToColor3(Array<uLong> & out,
+		                 const Array<uInt> & chan1in,
+		                 const Array<uInt> & chan2in,
+		                 const Array<uInt> & chan3in);
 		// </group>
 
 		// (Multichannel Color)
@@ -188,78 +188,78 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// the colormodel of the XPCCT.
 		// Does nothing if colorModel is Display::Index.
 		// It is assumed that input arrays are in the range of [0,1]
-		casacore::Bool colorSpaceMap(Display::ColorModel,
-		                   const casacore::Array<casacore::Float> & chan1in,
-		                   const casacore::Array<casacore::Float> & chan2in,
-		                   const casacore::Array<casacore::Float> & chan3in,
-		                   casacore::Array<casacore::Float> & chan1out,
-		                   casacore::Array<casacore::Float> & chan2out,
-		                   casacore::Array<casacore::Float> & chan3out);
+		Bool colorSpaceMap(Display::ColorModel,
+		                   const Array<Float> & chan1in,
+		                   const Array<Float> & chan2in,
+		                   const Array<Float> & chan3in,
+		                   Array<Float> & chan1out,
+		                   Array<Float> & chan2out,
+		                   Array<Float> & chan3out);
 
 		// map [0,N-1] into colorpixels, where N is the current colormap size
 		// The values are returned as unsigned integers in their respective
 		// array.
-		// <note role="warning">casacore::uChar type may not have enough bits
+		// <note role="warning">uChar type may not have enough bits
 		// to hold the pixel index on some high-end graphics systems </note>
-		// <note role="warning">casacore::uShort type may not have enough bits
+		// <note role="warning">uShort type may not have enough bits
 		// to hold the pixel index on some high-end graphics systems </note>
 		// <group>
-		void mapToColor(const Colormap * map, casacore::Array<casacore::uChar> & outArray,
-		                const casacore::Array<casacore::uChar> & inArray, casacore::Bool rangeCheck = true) const;
-		void mapToColor(const Colormap * map, casacore::Array<casacore::uShort> & outArray,
-		                const casacore::Array<casacore::uShort> & inArray, casacore::Bool rangeCheck = true) const;
-		void mapToColor(const Colormap * map, casacore::Array<casacore::uInt> & outArray,
-		                const casacore::Array<casacore::uInt> & inArray, casacore::Bool rangeCheck = true) const;
-		void mapToColor(const Colormap * map, casacore::Array<casacore::uLong> & outArray,
-		                const casacore::Array<casacore::uLong> & inArray, casacore::Bool rangeCheck = true) const;
+		void mapToColor(const Colormap * map, Array<uChar> & outArray,
+		                const Array<uChar> & inArray, Bool rangeCheck = True) const;
+		void mapToColor(const Colormap * map, Array<uShort> & outArray,
+		                const Array<uShort> & inArray, Bool rangeCheck = True) const;
+		void mapToColor(const Colormap * map, Array<uInt> & outArray,
+		                const Array<uInt> & inArray, Bool rangeCheck = True) const;
+		void mapToColor(const Colormap * map, Array<uLong> & outArray,
+		                const Array<uLong> & inArray, Bool rangeCheck = True) const;
 		// </group>
 
 		// same as above except the matrix is operated on in place.  Only unsigned
 		// values make sense here.
 		// <group>
-		void mapToColor(const Colormap * map, casacore::Array<casacore::uChar> & inOutArray,
-		                casacore::Bool rangeCheck = true) const;
-		void mapToColor(const Colormap * map, casacore::Array<casacore::uShort> & inOutArray,
-		                casacore::Bool rangeCheck = true) const;
-		void mapToColor(const Colormap * map, casacore::Array<casacore::uInt> & inOutArray,
-		                casacore::Bool rangeCheck = true) const;
-		void mapToColor(const Colormap * map, casacore::Array<casacore::uLong> & inOutArray,
-		                casacore::Bool rangeCheck = true) const;
+		void mapToColor(const Colormap * map, Array<uChar> & inOutArray,
+		                Bool rangeCheck = True) const;
+		void mapToColor(const Colormap * map, Array<uShort> & inOutArray,
+		                Bool rangeCheck = True) const;
+		void mapToColor(const Colormap * map, Array<uInt> & inOutArray,
+		                Bool rangeCheck = True) const;
+		void mapToColor(const Colormap * map, Array<uLong> & inOutArray,
+		                Bool rangeCheck = True) const;
 		// </group>
 
 		// print details of class to ostream
 		friend ostream & operator << (ostream & os, const GLPixelCanvasColorTable & pcc);
 
 		// Is the hardware colormap resizeable?  ie. is it write-only?
-		virtual casacore::Bool staticSize() {
+		virtual Bool staticSize() {
 			return (readOnly_ && decomposedIndex_);
 		}
 
-		// resize the map if allowed.  Returns true if resize was accepted
+		// resize the map if allowed.  Returns True if resize was accepted
 		// <group>
-		casacore::Bool resize(casacore::uInt newSize);
-		casacore::Bool resize(casacore::uInt nReds, casacore::uInt nGreens, casacore::uInt nBlues);
+		Bool resize(uInt newSize);
+		Bool resize(uInt nReds, uInt nGreens, uInt nBlues);
 		// </group>
 
 		// Install colors into the color table. Offset is zero-based. Colors
 		// are installed into the PixelCanvasColorTable until the Arrays run out
 		// or until the end of the colortable is reached.  This only has an
 		// effect if the ColorModel is Index.  Values are clamped to [0.0,1.0].
-		casacore::Bool installRGBColors(const casacore::Vector<casacore::Float> & r, const casacore::Vector<casacore::Float> & g,
-		                      const casacore::Vector<casacore::Float> & b, casacore::uInt offset = 0);
+		Bool installRGBColors(const Vector<Float> & r, const Vector<Float> & g,
+		                      const Vector<Float> & b, uInt offset = 0);
 
 		// Return the total number of RW colors currently in use.
-		casacore::uInt nColors() const;
+		uInt nColors() const;
 
 		// Return the number of colors per component in the map.  Throws
 		// an exception if this is not an HSV or RGB ColorTable.
-		virtual void nColors(casacore::uInt &n1, casacore::uInt &n2, casacore::uInt &n3) const;
+		virtual void nColors(uInt &n1, uInt &n2, uInt &n3) const;
 
 		// Return the depth in bits of the colors
-		casacore::uInt depth() const;
+		uInt depth() const;
 
 		// Return the number of colors that are still unallocated
-		casacore::uInt nSpareColors() const;
+		uInt nSpareColors() const;
 
 		// Return pointer to display that is being used
 		::XDisplay * display() const;
@@ -274,21 +274,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Return XID of X "virtual colormap" being used
 		XColormap xcmap() const;
 
-		// Return true if the table is in colorIndex mode
-		casacore::Bool indexMode() const {
+		// Return True if the table is in colorIndex mode
+		Bool indexMode() const {
 			return (colorModel_ == Display::Index);
 		}
-		// Return true if the table is in RGB mode
-		casacore::Bool rgbMode() const {
+		// Return True if the table is in RGB mode
+		Bool rgbMode() const {
 			return (colorModel_ == Display::RGB);
 		}
-		// Return true if the table is in HSV mode
-		casacore::Bool hsvMode() const {
+		// Return True if the table is in HSV mode
+		Bool hsvMode() const {
 			return (colorModel_ == Display::HSV);
 		}
 
-		// Return true if the colortable can be resized.
-		casacore::Bool rigid() const {
+		// Return True if the colortable can be resized.
+		Bool rigid() const {
 			return rigid_;
 		}
 
@@ -296,44 +296,44 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Display::ColorModel colorModel() const {
 			return colorModel_;
 		}
-		casacore::Bool readOnly()const {
+		Bool readOnly()const {
 			return readOnly_;
 		}
-		casacore::Bool decomposedIndex()const {
+		Bool decomposedIndex()const {
 			return decomposedIndex_;
 		}
 		// Return the number of currently unallocated cells that can be allocated RW.
-		casacore::uInt QueryColorsAvailable(const casacore::Bool contig)const;
-		virtual casacore::uInt QueryHWColorsAvailable(const casacore::Bool contig)const;
+		uInt QueryColorsAvailable(const Bool contig)const;
+		virtual uInt QueryHWColorsAvailable(const Bool contig)const;
 		// Convert a virtual index to a physical pixel.
-		casacore::Bool virtualToPhysical(const unsigned long vindex,
+		Bool virtualToPhysical(const unsigned long vindex,
 		                       unsigned long &pindex)const;
 		// Store an RGB value at index. For RGV visuals, only the virtual colormap
 		// is updated.
-		void storeColor(const casacore::uInt index,
+		void storeColor(const uInt index,
 		                const float r, const float g, const float b);
 		// Convert a pixel to color components. If decomposed index (eg TC),
 		// the pixel contains the color information. Otherwise, (eg. PseudoColor),
 		// The information is looked up in the virtual colormap.
-		void pixelToComponents(const casacore::uLong pixel, casacore::Float &r, casacore::Float &g, casacore::Float &b);
+		void pixelToComponents(const uLong pixel, Float &r, Float &g, Float &b);
 		// Return a GL capable visual that supports the colormodel or NULL.
 		static XVisualInfo *getVisualInfo(::XDisplay *dpy,
 		                                  const Display::ColorModel colormodel);
 		// Returns the color values for the index. (Inverse of installRGBColors()).
-		void indexToRGB(const casacore::uInt index, float &r, float &g, float &b);
+		void indexToRGB(const uInt index, float &r, float &g, float &b);
 	private:
 
-		// Return the log power 2 of n and return true if n is
+		// Return the log power 2 of n and return True if n is
 		// a power of two.  Otherwise return false.
-		casacore::Bool isPow2(casacore::uInt n, casacore::uInt & log2n);
+		Bool isPow2(uInt n, uInt & log2n);
 
 		// (Multi-Channel)
-		void setupColorCube(casacore::uLong n1, casacore::uLong n2, casacore::uLong n3,
-		                    casacore::uLong n1m, casacore::uLong n2m, casacore::uLong n3m);
+		void setupColorCube(uLong n1, uLong n2, uLong n3,
+		                    uLong n1m, uLong n2m, uLong n3m);
 		// (Multi-Channel)
 		void setupStandardMapping(const XStandardColormap * mapInfo);
 
-		casacore::Bool initVisual(XVisualInfo *vi=NULL);
+		Bool initVisual(XVisualInfo *vi=NULL);
 		// A pointer to the XDisplay
 		::XDisplay * display_;
 		// A pointer the the X Screen
@@ -345,30 +345,30 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		XColormap xcmap_;
 
 		// (Valid Always) number of bits of depth
-		casacore::uInt depth_;
+		uInt depth_;
 		// (Valid Always) number of total colors available for RW.
-		casacore::uInt nColors_;
+		uInt nColors_;
 		// (Valid only when implementation uses a PseudoColor or a
-		// StaticColor visual).  casacore::Table of color indices available.
-		casacore::uLong * colors_;	// converts pixel index into vcmap index. Always valid.
-		casacore::uShort vcmapLength_;	// Length of virtual colormap.
+		// StaticColor visual).  Table of color indices available.
+		uLong * colors_;	// converts pixel index into vcmap index. Always valid.
+		uShort vcmapLength_;	// Length of virtual colormap.
 		// (& HW map if it exists)
 		GLVColorTableEntry *vcmap_;
 		// (Valid Always)
-		// true if the table may not be resized, such as when a
-		// standard XColormap is used.  Generally this is set to true
+		// True if the table may not be resized, such as when a
+		// standard XColormap is used.  Generally this is set to True
 		// unless the visual is PseudoColor/StaticColor and the color
 		// model is Display::Index.
-		casacore::Bool rigid_;
+		Bool rigid_;
 		////////////////////////////////////////////////////////////////
-		// true if the colormap is read only.
-		casacore::Bool	readOnly_;
-		// true if trueColor or DirectColor.
-		casacore::Bool  decomposedIndex_;
+		// True if the colormap is read only.
+		Bool	readOnly_;
+		// True if TrueColor or DirectColor.
+		Bool  decomposedIndex_;
 		void checkVisual();
 		// Write an RGB value to hardware colormap at physical index.
 		// (Called by storeColor()).
-		virtual void storeHWColor(const casacore::uLong pindex,
+		virtual void storeHWColor(const uLong pindex,
 		                          const float r, const float g, const float b);
 		// Shift counts, masks, and max values used to build pixels for
 		// decomposed index colormaps.
@@ -376,9 +376,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		unsigned short red_max_, green_max_, blue_max_;
 		unsigned long red_mask_, green_mask_, blue_mask_;
 		// Convert from integer HSV components to RGB pixel components.
-		void HSV2RGB(const casacore::uLong H, const casacore::uLong S, const casacore::uLong V,
-		             casacore::uLong &R, casacore::uLong &G, casacore::uLong &B);
-		casacore::uInt HSV2Index(float h, float s, float v);
+		void HSV2RGB(const uLong H, const uLong S, const uLong V,
+		             uLong &R, uLong &G, uLong &B);
+		uInt HSV2Index(float h, float s, float v);
 
 		////////////////////////////////////////////////////////////////
 		// (Valid only for multi-channel color modes (RGB, HSV, etc))
@@ -386,7 +386,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// making indexing possible with shift/add using the values of
 		// <nBits1_, nBits2_, nBits3_>.  If not true, indexing
 		// using <n1_,n2_,n3_> and multiplication is required.
-		casacore::Bool pow2Mapping_;
+		Bool pow2Mapping_;
 
 		// (Valid Always)
 		// The colormodel that this GLPixelCanvasColorTable has been
@@ -397,7 +397,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Represents the first cell used for the color cube.
 		// baseColor_ is zero for PseudoColor/StaticColor implementations
 		// because they use a table.
-		casacore::uLong baseColor_;
+		uLong baseColor_;
 
 		// (Valid only for multi-channel color modes (RGB, HSV, etc))
 		// Specifies the color resolution for each side of the
@@ -405,13 +405,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// index = n1Mult_*R + n2Mult_*G + n3Mult_*B for RGB in
 		// the range of <[0,n1_-1],[0,n2_-1],[0,n3_-1]>
 		// <group>
-		casacore::uInt n1_;
-		casacore::uInt n2_;
-		casacore::uInt n3_;
+		uInt n1_;
+		uInt n2_;
+		uInt n3_;
 
-		casacore::uInt n1Mult_;
-		casacore::uInt n2Mult_;
-		casacore::uInt n3Mult_;
+		uInt n1Mult_;
+		uInt n2Mult_;
+		uInt n3Mult_;
 		// </group>
 
 		// (Valid only for multi-channel color modes (RGB, HSV, etc))
@@ -419,9 +419,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// index = (R << n1Shift_) | (G << n2Shift_) | (B << n3Shift_)
 		// for RGB the range of <[0,n1_-1],[0,n2_-1],[0,n3_-1]>
 		// <group>
-		casacore::uInt n1Shift_;
-		casacore::uInt n2Shift_;
-		casacore::uInt n3Shift_;
+		uInt n1Shift_;
+		uInt n2Shift_;
+		uInt n3Shift_;
 		// </group>
 	};
 

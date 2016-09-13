@@ -46,8 +46,8 @@ public:
     // Constructor which takes the maximum width for the widget and an optional
     // parent.  MUST be created after plotms' extended log types have already
     // been registered with PlotLogger.
-    PlotMSLoggerWidget(const casacore::String& filename, int events,
-            casacore::LogMessage::Priority priority, int maxWidth,
+    PlotMSLoggerWidget(const String& filename, int events,
+            LogMessage::Priority priority, int maxWidth,
             bool editFilename = true, bool editPriority = true,
             QWidget* parent = NULL);
     
@@ -56,8 +56,8 @@ public:
     
     // Gets/Sets the currently set filename.
     // <group>
-    casacore::String filename() const;
-    void setFilename(const casacore::String& filename);
+    String filename() const;
+    void setFilename(const String& filename);
     // </group>
     
     // Gets/Sets the currently set events flag.
@@ -68,13 +68,13 @@ public:
     
     // Gets/Sets the currently set priority.
     // <group>
-    casacore::LogMessage::Priority priority() const;
-    void setPriority(casacore::LogMessage::Priority priority);
+    LogMessage::Priority priority() const;
+    void setPriority(LogMessage::Priority priority);
     // </group>
     
 private:
     // Last set filename.
-    casacore::String itsFilename_;
+    String itsFilename_;
     
     // Widget for editing filename.
     QtFileWidget* itsFilenameWidget_;
@@ -89,7 +89,7 @@ private:
     QList<int> itsEventsIndexValues_;
     
     // Last set priority.
-    casacore::LogMessage::Priority itsPriority_;
+    LogMessage::Priority itsPriority_;
     
     // Combo box.
     QComboBox* itsPriorityBox_;

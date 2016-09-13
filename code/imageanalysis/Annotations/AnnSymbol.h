@@ -75,49 +75,49 @@ public:
 	};
 
 	AnnSymbol(
-		const casacore::Quantity& x, const casacore::Quantity& y,
-		const casacore::String& dirRefFrameString,
-		const casacore::CoordinateSystem& csys,
-		const casacore::Char symbolChar,
-		const casacore::Quantity& beginFreq,
-		const casacore::Quantity& endFreq,
-		const casacore::String& freqRefFrame,
-		const casacore::String& dopplerString,
-		const casacore::Quantity& restfreq,
-		const casacore::Vector<casacore::Stokes::StokesTypes>& stokes
+		const Quantity& x, const Quantity& y,
+		const String& dirRefFrameString,
+		const CoordinateSystem& csys,
+		const Char symbolChar,
+		const Quantity& beginFreq,
+		const Quantity& endFreq,
+		const String& freqRefFrame,
+		const String& dopplerString,
+		const Quantity& restfreq,
+		const Vector<Stokes::StokesTypes>& stokes
 	);
 
 	AnnSymbol(
-		const casacore::Quantity& x, const casacore::Quantity& y,
-		const casacore::CoordinateSystem& csys,
+		const Quantity& x, const Quantity& y,
+		const CoordinateSystem& csys,
 		const Symbol symbol,
-		const casacore::Vector<casacore::Stokes::StokesTypes>& stokes
+		const Vector<Stokes::StokesTypes>& stokes
 	);
 
 	// implicit copy constructor and destructor are fine
 
 	AnnSymbol& operator=(const AnnSymbol& other);
 
-	casacore::MDirection getDirection() const;
+	MDirection getDirection() const;
 
 	Symbol getSymbol() const;
 
-	static Symbol charToSymbol(const casacore::Char c);
+	static Symbol charToSymbol(const Char c);
 
-	static casacore::Char symbolToChar(const Symbol s);
+	static Char symbolToChar(const Symbol s);
 
-	virtual std::ostream& print(std::ostream &os) const;
+	virtual ostream& print(ostream &os) const;
 
 private:
 	AnnotationBase::Direction _inputDirection;
 	Symbol _symbol;
-	casacore::Char _symbolChar;
-	const static casacore::String _class;
-	static map<casacore::Char, Symbol> _symbolMap;
+	Char _symbolChar;
+	const static String _class;
+	static map<Char, Symbol> _symbolMap;
 
 	static void _initMap();
 
-	void _init(const casacore::Quantity& x, const casacore::Quantity& y);
+	void _init(const Quantity& x, const Quantity& y);
 
 };
 

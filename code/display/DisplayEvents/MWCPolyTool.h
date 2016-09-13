@@ -91,7 +91,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Constructor
 		MWCPolyTool(Display::KeySym keysym = Display::K_Pointer_Button1,
-		            const casacore::Bool persistent = false);
+		            const Bool persistent = False);
 
 		// Destructor
 		virtual ~MWCPolyTool();
@@ -101,12 +101,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void disable();
 
 		// reset to non-existent, non-active polygon.
-		// Refreshes if necessary to erase (unless skipRefresh==true).
+		// Refreshes if necessary to erase (unless skipRefresh==True).
 		// (Does not unregister from WCs or disable future event handling).
-		virtual void reset(casacore::Bool skipRefresh=false);
+		virtual void reset(Bool skipRefresh=False);
 
 		// Is a polygon currently defined?
-		virtual casacore::Bool polygonDefined() {
+		virtual Bool polygonDefined() {
 			return itsMode>=Ready;
 		}
 
@@ -136,7 +136,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void doubleOutside() { };
 		// </group>
 
-		// casacore::Function called when a polygon is ready and not being
+		// Function called when a polygon is ready and not being
 		// edited.  (Unused so far on the glish level (12/01)).
 		virtual void polygonReady() { };
 
@@ -144,33 +144,33 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Valid results during the callback functions; to be used by them,
 		// as well as internally.
 		// <group>
-		virtual void get(casacore::Vector<casacore::Int> &x, casacore::Vector<casacore::Int> &y) const;
-		virtual void get(casacore::Int &x, casacore::Int &y, const casacore::Int pt) const;
+		virtual void get(Vector<Int> &x, Vector<Int> &y) const;
+		virtual void get(Int &x, Int &y, const Int pt) const;
 		// </group>
 
 	private:
 
 		// Set the polygon vertices. itsNPoints should already be set, and
 		// x and y must contain (at least) this many points.
-		virtual void set(const casacore::Vector<casacore::Int> &x, const casacore::Vector<casacore::Int> &y);
+		virtual void set(const Vector<Int> &x, const Vector<Int> &y);
 
 		// replace a single vertex.
-		virtual void set(const casacore::Int x, const casacore::Int y, const casacore::Int pt);
+		virtual void set(const Int x, const Int y, const Int pt);
 		// push/pop last vertex
 		// <group>
-		void pushPoint(casacore::Int x1, casacore::Int y1);
+		void pushPoint(Int x1, Int y1);
 		void popPoint();
 		// </group>
 
 		// are we inside the polygon?
-		casacore::Bool inPolygon(const casacore::Int &x, const casacore::Int &y) const;
+		Bool inPolygon(const Int &x, const Int &y) const;
 
 		// are we within the specified handle?
-		casacore::Bool inHandle(const casacore::Int &pt, const casacore::Int &x, const casacore::Int &y) const;
+		Bool inHandle(const Int &pt, const Int &x, const Int &y) const;
 
 
 		// should the polygon remain on screen after double clicks?
-		casacore::Bool itsPolygonPersistent;
+		Bool itsPolygonPersistent;
 
 		// state of the polygon tool
 		enum AdjustMode {
@@ -182,31 +182,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		};	// moving single vertex whose handle was pressed
 		MWCPolyTool::AdjustMode itsMode;
 
-		// set true on double-click, if the polygon is persistent.
-		// set false when the polygon is moved, resized or reset.
-		// If true, a click outside the polygon will erase it and begin
+		// set True on double-click, if the polygon is persistent.
+		// set False when the polygon is moved, resized or reset.
+		// If True, a click outside the polygon will erase it and begin
 		// definition of a new one.
-		casacore::Bool itsEmitted;
+		Bool itsEmitted;
 
 		// Number of points
-		casacore::Int itsNPoints;
+		Int itsNPoints;
 
 		// Polygon points (linear).  Not to be used directly.
 		// use get, set, push, pop instead, which take pixel coordinate arguments.
 		// It's done this way so that zooms work on the figures.
-		casacore::Vector<casacore::Double> itsX, itsY;
+		Vector<Double> itsX, itsY;
 
 		// size in pixels of the handles
-		casacore::Int itsHandleSize;
+		Int itsHandleSize;
 
 		// vertex being moved
-		casacore::Int itsSelectedHandle;
+		Int itsSelectedHandle;
 
 		// position that move started from
-		casacore::Int itsBaseMoveX, itsBaseMoveY;
+		Int itsBaseMoveX, itsBaseMoveY;
 
 		// times of the last two presses
-		casacore::Double itsLastPressTime, its2ndLastPressTime;
+		Double itsLastPressTime, its2ndLastPressTime;
 
 	};
 

@@ -33,7 +33,6 @@
 
 #include <fstream>
 
-using namespace casacore;
 namespace casa {
 
 // DS9COORDINATE DEFINITIONS //

@@ -20,6 +20,7 @@
 #include <casacore/tables/Tables/Table.h>
 
 using namespace casacore;
+using namespace sdfiller;
 
 namespace {
 Double queryAntennaDiameter(String const &name) {
@@ -156,10 +157,7 @@ Int getSubscan(Int srctype) {
 }
 }
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
-
-using namespace sdfiller;
 
 NRO2MSReader::NRO2MSReader(std::string const &scantable_name) :
   ReaderInterface(scantable_name, true), fp_(NULL), obs_header_(),
@@ -596,7 +594,7 @@ Bool NRO2MSReader::getAntennaRowImpl(AntennaRecord &record) {
     get_antenna_row_ = &NRO2MSReader::noMoreRowImpl<AntennaRecord>;
   }
 
-  return true;
+  return True;
 }
 
 Bool NRO2MSReader::getObservationRowImpl(ObservationRecord &record) {
@@ -616,7 +614,7 @@ Bool NRO2MSReader::getObservationRowImpl(ObservationRecord &record) {
   // only one entry so redirect function pointer to noMoreRowImpl
   get_observation_row_ = &NRO2MSReader::noMoreRowImpl<ObservationRecord>;
 
-  return true;
+  return True;
 }
 
 
@@ -628,7 +626,7 @@ Bool NRO2MSReader::getProcessorRowImpl(ProcessorRecord &/*record*/) {
   // only one entry so redirect function pointer to noMoreRowImpl
   get_processor_row_ = &NRO2MSReader::noMoreRowImpl<ProcessorRecord>;
 
-  return true;
+  return True;
 }
 
 Bool NRO2MSReader::getSourceRowImpl(SourceRecord &record) {
@@ -655,7 +653,7 @@ Bool NRO2MSReader::getSourceRowImpl(SourceRecord &record) {
     get_source_row_ = &NRO2MSReader::noMoreRowImpl<SourceRecord>;
   }
 
-  return true;
+  return True;
 }
 
 Bool NRO2MSReader::getFieldRowImpl(FieldRecord &record) {
@@ -673,7 +671,7 @@ Bool NRO2MSReader::getFieldRowImpl(FieldRecord &record) {
   // only one entry so redirect function pointer to noMoreRowImpl
   get_field_row_ = &NRO2MSReader::noMoreRowImpl<FieldRecord>;
 
-  return true;
+  return True;
 }
 
 Bool NRO2MSReader::getSpectralWindowRowImpl(
@@ -719,14 +717,14 @@ Bool NRO2MSReader::getSpectralWindowRowImpl(
     get_spw_row_ = &NRO2MSReader::noMoreRowImpl<SpectralWindowRecord>;
   }
 
-  return true;
+  return True;
 }
 
 Bool NRO2MSReader::getData(size_t irow, DataRecord &record) {
 //  std::cout << "NRO2MSReader::getData(irow=" << irow << ")" << std::endl;
 
   if (irow >= getNumberOfRows()) {
-    return false;
+    return False;
   }
 
 //  std::cout << "Accessing row " << irow << std::endl;
@@ -760,9 +758,9 @@ Bool NRO2MSReader::getData(size_t irow, DataRecord &record) {
   record.data = getSpectrum(irow, scan_data);
   size_t flag_len = obs_header_.NCH0;
   for (size_t i = 0; i < flag_len; ++i) {
-    record.flag(i) = false;
+    record.flag(i) = False;
   }
-  record.flag_row = false;
+  record.flag_row = False;
 
 //    std::cout << "set tsys size to " << tsys_column_.shape(index)[0]
 //        << " shape " << record.tsys.shape() << std::endl;
@@ -775,7 +773,7 @@ Bool NRO2MSReader::getData(size_t irow, DataRecord &record) {
   record.wind_speed = scan_data.VWIND0;
   record.wind_direction = scan_data.DWIND0;
 
-  return true;
+  return True;
 }
 
 } //# NAMESPACE CASA - END

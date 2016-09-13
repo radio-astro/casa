@@ -34,7 +34,6 @@
 #include <casa/Logging/LogFilter.h>
 #include <QDebug>
 
-using namespace casacore;
 namespace casa {
 
 ActionSummary::ActionSummary( Client* client )
@@ -135,5 +134,4 @@ bool ActionSummary::doActionSpecific(PlotMSApp* plotms) {
 ActionSummary::~ActionSummary() {
 }
 
-using namespace casacore;
 } /* namespace casa */

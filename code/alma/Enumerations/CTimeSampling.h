@@ -3,7 +3,7 @@
 #define CTimeSampling_H
 
 /*
- * ALMA - Atacama Large Millimeter casacore::Array
+ * ALMA - Atacama Large Millimeter Array
  * (c) European Southern Observatory, 2002
  * (c) Associated Universities Inc., 2002
  * Copyright by ESO (in the framework of the ALMA collaboration),
@@ -33,7 +33,7 @@
  * //  ---------------------------------------------------------  //
  * /////////////////////////////////////////////////////////////////
  *
- * casacore::File CTimeSampling.h
+ * File CTimeSampling.h
  */
 
 #ifndef __cplusplus
@@ -54,7 +54,7 @@
 namespace TimeSamplingMod
 {
   //! TimeSampling.
-  //! casacore::Time granularity for data
+  //! Time granularity for data
   
   const char *const revision = "-1";
   const int version = 1;

@@ -1,4 +1,4 @@
-//# Importmiriad: miriad dataset to casacore::MeasurementSet conversion
+//# Importmiriad: miriad dataset to MeasurementSet conversion
 //# Copyright (C) 1997,2000,2001,2002,2013,2015
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -51,7 +51,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
-// MIRIAD dataset casacore::MeasurementSet filler. Derived from carmafiller.
+// MIRIAD dataset MeasurementSet filler. Derived from carmafiller.
 //
 // Despite that this program is written in C++ and uses classes, it is
 // really a set of routines manipulating a huge common block.....
@@ -66,7 +66,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //    - does not apply the various (miriad) complex gain corrections
 //      (uvcat and friends should be used for that in miriad, it would be
 //      silly to duplicate that code here)
-//    - this code won't run if casacore::Double!=double or casacore::Float!=float or casacore::Int!=int
+//    - this code won't run if Double!=double or Float!=float or Int!=int
 //      On some future 64bit machines this may cause problems?
 //    - CARMA type arrays when dishes are not the same size
 //    - do not mix arrays from different telescopes (e.g. BIMA and ATCA)
@@ -87,7 +87,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //    - although no more wides are written, there is a way to make a small MS
 //      from the wides only by preprocessing in miriad, but conceivably
 //      could be done here as well??  -- except the narrow= keyword seems to write
-//      files that suffer from the casacore::Table array conformance error
+//      files that suffer from the Table array conformance error
 //
 //      Todo: to deal with multiple zoom setups (freq changes), we need
 //      to track which spectral windows each source appears to make a proper
@@ -102,7 +102,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //   May 2000:      fixed up for various new AIPS++ conventions         PJT
 //                  and added multi-source & field                      PJT
 //   Sep 2000:      development now on linux, converted to OldMS        PJT
-//   Dec 2000:      casacore::Conversion to casacore::MS (MS2)                              PJT
+//   Dec 2000:      Conversion to MS (MS2)                              PJT
 //                  typical compile time: (P600/256M/15MBps HD: 36")
 //                  typical 3c273 conversion time:  2.6" (5.3->11.3 MB)
 //                  Cf. that to "uvio" processing time, which runs at disk I/O
@@ -170,36 +170,36 @@ class Importmiriad
   // during the filling process.
 public:
   // Create from a miriad dataset (a directory)
-  Importmiriad(casacore::String& infile, casacore::Int debug=0, 
-              casacore::Bool Qtsys=false,
-              casacore::Bool Qarrays=false,
-              casacore::Bool Qlinecal=false);
+  Importmiriad(String& infile, Int debug=0, 
+              Bool Qtsys=False,
+              Bool Qarrays=False,
+              Bool Qlinecal=False);
 
   // Standard destructor
   ~Importmiriad();
   
   // Check some of the contents of the data and header read
-  void checkInput(casacore::Block<casacore::Int>& spw, casacore::Block<casacore::Int>& wide);
+  void checkInput(Block<Int>& spw, Block<Int>& wide);
 
   // Debug output level
-  casacore::Bool Debug(int level);
+  Bool Debug(int level);
 
-  // Set up the casacore::MeasurementSet, including StorageManagers and fixed columns.
-  // If useTSM is true, the Tiled Storage Manager will be used to store
+  // Set up the MeasurementSet, including StorageManagers and fixed columns.
+  // If useTSM is True, the Tiled Storage Manager will be used to store
   // DATA, FLAG and WEIGHT_SPECTRUM
-  void setupMeasurementSet(const casacore::String& MSFileName, casacore::Bool useTSM=true);
+  void setupMeasurementSet(const String& MSFileName, Bool useTSM=True);
 
   // Fill the main table by reading in all the visibilities
   void fillMSMainTable();
 
-  // Make an Antenna casacore::Table (can be called incrementally now)
+  // Make an Antenna Table (can be called incrementally now)
   void fillAntennaTable();
 
-  // Make a Syscal casacore::Table (can be called incrementally)
+  // Make a Syscal Table (can be called incrementally)
   void fillSyscalTable();
 
   // fill Spectralwindow table 
-  void fillSpectralWindowTable(casacore::String vel);
+  void fillSpectralWindowTable(String vel);
 
   // fill Field table 
   void fillFieldTable();
@@ -219,46 +219,46 @@ public:
 
   void Tracking(int record);
   void check_window();
-  casacore::Bool compareWindows(WINDOW& w1, WINDOW& w2);
+  Bool compareWindows(WINDOW& w1, WINDOW& w2);
   void Error(char *msg);
   void Warning(char *msg);
   void show();
   void close();
 
 private:
-  casacore::String                 infile_p;     // filename
-  casacore::Int                    uv_handle_p;  // miriad handle 
-  casacore::MeasurementSet         ms_p;         // the casacore::MS itself
-  casacore::MSColumns             *msc_p;        // handy pointer to the columns in an casacore::MS  
-  casacore::Int                    debug_p;      // debug level
-  casacore::String                 array_p, 
+  String                 infile_p;     // filename
+  Int                    uv_handle_p;  // miriad handle 
+  MeasurementSet         ms_p;         // the MS itself
+  MSColumns             *msc_p;        // handy pointer to the columns in an MS  
+  Int                    debug_p;      // debug level
+  String                 array_p, 
                          project_p, 
                          object_p, 
                          telescope_p, 
                          observer_p, 
                          version_p,
                          timsys_p;
-  casacore::Vector<casacore::Int>            nPixel_p, corrType_p, corrIndex_p;
-  casacore::Matrix<casacore::Int>            corrProduct_p;
-  casacore::Double                 epoch_p;
-  casacore::MDirection::Types      epochRef_p;
-  casacore::Int                    nArray_p;      // number of arrays (nAnt_p.nelements())
-  casacore::Block<casacore::Int>             nAnt_p;        // number of antennas per array
-  casacore::Block<casacore::Vector<casacore::Double> > receptorAngle_p;
-  casacore::Vector<casacore::Double>         arrayXYZ_p;    // needs to be made with 3 elements
-  casacore::Vector<casacore::Double>         ras_p, decs_p; // ra/dec for source list (source_p)
-  casacore::Vector<casacore::String>         source_p,      // list of source names (?? object_p ??)
+  Vector<Int>            nPixel_p, corrType_p, corrIndex_p;
+  Matrix<Int>            corrProduct_p;
+  Double                 epoch_p;
+  MDirection::Types      epochRef_p;
+  Int                    nArray_p;      // number of arrays (nAnt_p.nelements())
+  Block<Int>             nAnt_p;        // number of antennas per array
+  Block<Vector<Double> > receptorAngle_p;
+  Vector<Double>         arrayXYZ_p;    // needs to be made with 3 elements
+  Vector<Double>         ras_p, decs_p; // ra/dec for source list (source_p)
+  Vector<String>         source_p,      // list of source names (?? object_p ??)
                          purpose_p;     // purpose of this source 
-  casacore::LogIO                  os_p;          // logger
+  LogIO                  os_p;          // logger
 
 
-  // the following variables are for miriad, hence not casacore::Double/casacore::Int/Float
+  // the following variables are for miriad, hence not Double/Int/Float
   // thus the code may have to be fixed on machines where these do not
   // agree ... may need special access code to get those into CASA
   // types on 64 bit machines??
 
   double preamble[5], first_time;
-  int    ifield, nfield, npoint, nsource;     // both dra/ddec should become casacore::Vector's
+  int    ifield, nfield, npoint, nsource;     // both dra/ddec should become Vector's
   float  dra[MAXFIELD], ddec[MAXFIELD];       // offset in radians
   double ra[MAXFIELD], dec[MAXFIELD];
   int    field[MAXFIELD];                     // source index
@@ -269,26 +269,26 @@ private:
 
 
   // The following items more or less follow the uv variables in a dataset
-  casacore::Int    nants_p, nants_offset_p, nchan_p, nwide_p, npol_p;
-  casacore::Double antpos[3*MAXANT];
-  casacore::Float  phasem1[MAXANT];
-  casacore::Double ra_p, dec_p;       // current pointing center RA,DEC at EPOCH 
-  casacore::Float  inttime_p, jyperk_p;
-  casacore::Double freq_p;            // rest frequency of the primary line
-  casacore::Int    mount_p;
-  casacore::Double time_p;            // current MJD time
-  casacore::Double timeFirst_p;       // First MJD time encountered
+  Int    nants_p, nants_offset_p, nchan_p, nwide_p, npol_p;
+  Double antpos[3*MAXANT];
+  Float  phasem1[MAXANT];
+  Double ra_p, dec_p;       // current pointing center RA,DEC at EPOCH 
+  Float  inttime_p, jyperk_p;
+  Double freq_p;            // rest frequency of the primary line
+  Int    mount_p;
+  Double time_p;            // current MJD time
+  Double timeFirst_p;       // First MJD time encountered
 
   // MIRIAD spectral window definition
-  casacore::Int    freqSet_p,nFreqSet_p,ddid_p;
+  Int    freqSet_p,nFreqSet_p,ddid_p;
   WINDOW win[MAXFSET];  // allow for 16 different frequency setups
   
-  casacore::Bool   Qtsys_p;    /* tsys weight's */
-  casacore::Bool   Qarrays_p;  /* write separate arrays */
-  casacore::Bool   Qlinecal_p; /* do linecal */
-  casacore::Bool   keep[MAXWIN+MAXWIDE]; // keep this window for output to MS
+  Bool   Qtsys_p;    /* tsys weight's */
+  Bool   Qarrays_p;  /* write separate arrays */
+  Bool   Qlinecal_p; /* do linecal */
+  Bool   keep[MAXWIN+MAXWIDE]; // keep this window for output to MS
 
-  // casacore::Data buffers.... again in MIRIAD format
+  // Data buffers.... again in MIRIAD format
   
   float  data[2*MAXCHAN], wdata[2*MAXCHAN];     // 2*MAXCHAN since (Re,Im) pairs complex numbers
   int    flags[MAXCHAN], wflags[MAXCHAN];

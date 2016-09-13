@@ -10,9 +10,7 @@
 #include <ostream>
 #include <utility>
 
-using namespace casacore;
 using namespace casa::async;
-using namespace casacore;
 using namespace casa::utilj;
 using namespace std;
 
@@ -22,19 +20,18 @@ using namespace std;
 
 using casa::async::Mutex;
 
-using namespace casacore;
 namespace casa {
 
 namespace asyncio {
 
-Bool AsynchronousInterface::loggingInitialized_p = false;
+Bool AsynchronousInterface::loggingInitialized_p = False;
 Int AsynchronousInterface::logLevel_p = -1;
 
 AsynchronousInterface::AsynchronousInterface (int maxNBuffers)
-: lookaheadTerminationRequested_p (false),
-  sweepTerminationRequested_p (false),
-  viResetComplete_p (false),
-  viResetRequested_p (false),
+: lookaheadTerminationRequested_p (False),
+  sweepTerminationRequested_p (False),
+  viResetComplete_p (False),
+  viResetRequested_p (False),
   vlaData_p (maxNBuffers, mutex_p),
   vlat_p (NULL),
   writeQueue_p ()
@@ -95,10 +92,10 @@ Bool
 AsynchronousInterface::initializeLogging ()
 {
     if (loggingInitialized_p){
-        return true;
+        return True;
     }
 
-    loggingInitialized_p = true;
+    loggingInitialized_p = True;
 
     // If the log file variable is defined then start
     // up the logger
@@ -123,11 +120,11 @@ AsynchronousInterface::initializeLogging ()
                             ROVisibilityIterator::isAsynchronousIoEnabled() ? "enabled" : "disabled",
                             ViReadImplAsync::getDefaultNBuffers() );
 
-        return true;
+        return True;
 
     }
 
-    return false;
+    return False;
 }
 
 Bool
@@ -165,8 +162,8 @@ AsynchronousInterface::requestViReset ()
 
     Log (1, "Requesting VI reset\n");
 
-    viResetRequested_p = true; // officially request the reset
-    viResetComplete_p = false; // clear any previous completions
+    viResetRequested_p = True; // officially request the reset
+    viResetComplete_p = False; // clear any previous completions
 
     terminateSweep ();
 
@@ -203,7 +200,7 @@ AsynchronousInterface::terminateLookahead ()
 
     LockGuard lg (& mutex_p);
 
-    lookaheadTerminationRequested_p = true;
+    lookaheadTerminationRequested_p = True;
 
     terminateSweep();
 }
@@ -213,7 +210,7 @@ AsynchronousInterface::terminateSweep ()
 {
     // Called internally to terminate VI sweeping.
 
-    sweepTerminationRequested_p = true;   // stop filling
+    sweepTerminationRequested_p = True;   // stop filling
 
     notifyAllInterfaceChanged();
 }
@@ -229,9 +226,9 @@ AsynchronousInterface::viResetComplete ()
 {
     ////Assert (mutex_p.isLockedByThisThread());
 
-    viResetRequested_p = false;
-    sweepTerminationRequested_p = false;
-    viResetComplete_p = true;
+    viResetRequested_p = False;
+    sweepTerminationRequested_p = False;
+    viResetComplete_p = True;
 
     notifyAllInterfaceChanged();
 }
@@ -293,7 +290,7 @@ ChannelSelection::copyBlock (const Block <Vector<Int> > & src,
     // of Vector::operator= will generate an exception if there
     // is a difference in length of any of the vector elements.
 
-    to.resize (0, true);
+    to.resize (0, True);
     to = src;
 }
 
@@ -370,7 +367,7 @@ RoviaModifiers::transferModifiers ()
 }
 
 SelectChannelModifier::SelectChannelModifier (Int nGroup, Int start, Int width, Int increment, Int spectralWindow)
-: channelBlocks_p (false),
+: channelBlocks_p (False),
   increment_p (increment),
   nGroup_p (nGroup),
   spectralWindow_p (spectralWindow),
@@ -383,7 +380,7 @@ SelectChannelModifier::SelectChannelModifier (const Block< Vector<Int> > & block
                                               const Block< Vector<Int> > & blockWidth,
                                               const Block< Vector<Int> > & blockIncr,
                                               const Block< Vector<Int> > & blockSpw)
-: channelBlocks_p (true),
+: channelBlocks_p (True),
   channelSelection_p (blockNGroup, blockStart, blockWidth, blockIncr, blockSpw)
 {}
 
@@ -552,12 +549,12 @@ VlaData::VlaData (Int maxNBuffers, async::Mutex & mutex)
 : MaxNBuffers_p (maxNBuffers),
   mutex_p (mutex)
 {
-    timing_p.fillCycle_p = DeltaThreadTimes (true);
-    timing_p.fillOperate_p = DeltaThreadTimes (true);
-    timing_p.fillWait_p = DeltaThreadTimes (true);
-    timing_p.readCycle_p = DeltaThreadTimes (true);
-    timing_p.readOperate_p = DeltaThreadTimes (true);
-    timing_p.readWait_p = DeltaThreadTimes (true);
+    timing_p.fillCycle_p = DeltaThreadTimes (True);
+    timing_p.fillOperate_p = DeltaThreadTimes (True);
+    timing_p.fillWait_p = DeltaThreadTimes (True);
+    timing_p.readCycle_p = DeltaThreadTimes (True);
+    timing_p.readOperate_p = DeltaThreadTimes (True);
+    timing_p.readWait_p = DeltaThreadTimes (True);
     timing_p.timeStart_p = ThreadTimes();
 }
 
@@ -646,7 +643,7 @@ VlaData::fillStart (SubChunkPair subchunk, const ThreadTimes & fillStartTime)
 {
     LockGuard lg (mutex_p);
 
-    statsEnabled () && (timing_p.fill1_p = fillStartTime, true);
+    statsEnabled () && (timing_p.fill1_p = fillStartTime, True);
 
     Assert ((int) data_p.size() < MaxNBuffers_p);
 
@@ -659,7 +656,7 @@ VlaData::fillStart (SubChunkPair subchunk, const ThreadTimes & fillStartTime)
 
     insertValidSubChunk (subchunk);
 
-    statsEnabled () && (timing_p.fill2_p = ThreadTimes(), true);
+    statsEnabled () && (timing_p.fill2_p = ThreadTimes(), True);
 
     if (interface_p->isSweepTerminationRequested()){
         delete datum;
@@ -717,7 +714,7 @@ VlaData::insertValidSubChunk (SubChunkPair subchunk)
 Bool
 VlaData::isValidChunk (Int chunkNumber) const
 {
-    bool validChunk = false;
+    bool validChunk = False;
 
     // Check to see if this is a valid chunk.  If the data structure is empty
     // then sleep for a tiny bit to allow the VLAT thread to either make more
@@ -751,7 +748,7 @@ VlaData::isValidSubChunk (SubChunkPair subchunk) const
 {
     SubChunkPair s;
 
-    bool validSubChunk = false;
+    bool validSubChunk = False;
 
     // Check to see if this is a valid subchunk.  If the data structure is empty
     // then sleep for a tiny bit to allow the VLAT thread to either make more
@@ -830,7 +827,7 @@ VlaData::readStart (SubChunkPair subchunk)
 
     UniqueLock uniqueLock (mutex_p);
 
-    statsEnabled () && (timing_p.read1_p = ThreadTimes(), true);
+    statsEnabled () && (timing_p.read1_p = ThreadTimes(), True);
 
     // Wait for a subchunk's worth of data to be available.
 
@@ -850,7 +847,7 @@ VlaData::readStart (SubChunkPair subchunk)
 
     Log (2, "VlaData::readStart on %s\n", subchunk.toString().c_str());
 
-    statsEnabled () && (timing_p.read2_p = ThreadTimes(), true);
+    statsEnabled () && (timing_p.read2_p = ThreadTimes(), True);
 
     // Extract the VisBufferAsync enclosed in the datum for return to caller,
     // then destroy the rest of the datum object
@@ -898,7 +895,7 @@ VlaData::statsEnabled () const
     // expected AipsRc value.  If not found then async i/o is disabled.
 
     Bool doStats;
-    AipsrcValue<Bool>::find (doStats, ROVisibilityIterator::getAsyncRcBase () + ".doStats", false);
+    AipsrcValue<Bool>::find (doStats, ROVisibilityIterator::getAsyncRcBase () + ".doStats", False);
 
     return doStats;
 }
@@ -980,7 +977,7 @@ WriteQueue::dequeue ()
 
     WriteData * result = NULL;
 
-    if (! empty (true)){
+    if (! empty (True)){
 
         result = queue_p.front(); // get the first value
         queue_p.pop();            // remove it from the queue
@@ -1025,5 +1022,4 @@ WriteQueue::initialize (const AsynchronousInterface * interface)
 
 } // end namespace asyncio
 
-using namespace casacore;
 } // end namespace casa

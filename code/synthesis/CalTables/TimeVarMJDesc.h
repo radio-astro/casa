@@ -52,8 +52,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <synopsis>
 // TimeVarMJonesDesc defines the format of TimeVarMJones calibration 
-// tables in terms of table descriptors <linkto class="casacore::TableDesc">TableDesc
-// </linkto>, as used in the casacore::Table system. Specializations for 
+// tables in terms of table descriptors <linkto class="TableDesc">TableDesc
+// </linkto>, as used in the Table system. Specializations for 
 // solvable MJones calibration tables are provided through inheritance. 
 // At present, this set of classes returns only the default table formats.
 // </etymology>

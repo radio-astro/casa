@@ -33,15 +33,11 @@
 #include <casa/aips.h>
 #include <components/SpectralComponents/SpectralList.h>
 
-namespace casacore{
-
-template <class T> class Vector;
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Forward Declarations
 class SpectralElement;
+template <class T> class Vector;
 
 // <summary>
 // Least Squares fitting of spectral elements to spectrum
@@ -100,9 +96,9 @@ class SpectralFit {
   //# Member functions
   // Set an element to be fitted
   // <thrown>
-  //   <li> casacore::AipsError if index too large
+  //   <li> AipsError if index too large
   // </thrown>
-  void setFitElement(casacore::uInt index, const SpectralElement &elem);
+  void setFitElement(uInt index, const SpectralElement &elem);
 
   // Add elements to be fitted
   // <group>
@@ -118,61 +114,61 @@ class SpectralFit {
 
   // Fit the elements as given by the specified spectral elements
   // at the frequencies x with values y. Weights of all points are equal.
-  // The mask (if specified) means: use point if true. Returns 
+  // The mask (if specified) means: use point if True. Returns 
   // the convergence status.
   // <group>
   template <class MT>
-    casacore::Bool fit(const casacore::Vector<MT> &y, const casacore::Vector<MT> &x) {
-       return fit(y, x, static_cast<const casacore::Vector<casacore::Bool> *const>(0)); }
+    Bool fit(const Vector<MT> &y, const Vector<MT> &x) {
+       return fit(y, x, static_cast<const Vector<Bool> *const>(0)); }
   template <class MT> 
-    casacore::Bool fit(const casacore::Vector<MT> &y,
-	     const casacore::Vector<MT> &x, const casacore::Vector<casacore::Bool> &mask) {
+    Bool fit(const Vector<MT> &y,
+	     const Vector<MT> &x, const Vector<Bool> &mask) {
     return fit(y, x, &mask); }
   // </group>
 
   // Fit the elements as given by the specified spectral elements
   // at the frequencies x with values y and weights sigma.
-  // The mask (if specified) means: use point if true.
+  // The mask (if specified) means: use point if True.
   // <group>
   template <class MT>
-    casacore::Bool fit(const casacore::Vector<MT> &sigma,
-             const casacore::Vector<MT> &y,
-	     const casacore::Vector<MT> &x) {
-    return fit(sigma, y, x, static_cast<const casacore::Vector<casacore::Bool> *const>(0)); }
+    Bool fit(const Vector<MT> &sigma,
+             const Vector<MT> &y,
+	     const Vector<MT> &x) {
+    return fit(sigma, y, x, static_cast<const Vector<Bool> *const>(0)); }
   template <class MT> 
-    casacore::Bool fit(const casacore::Vector<MT> &sigma,
-             const casacore::Vector<MT> &y,
-	     const casacore::Vector<MT> &x, const casacore::Vector<casacore::Bool> &mask) {
+    Bool fit(const Vector<MT> &sigma,
+             const Vector<MT> &y,
+	     const Vector<MT> &x, const Vector<Bool> &mask) {
     return fit(sigma, y, x, &mask); }
   // </group>
 
   // Get the number of iterations last fit
-  casacore::uInt nIterations() const { return iter_p; }
+  uInt nIterations() const { return iter_p; }
 
   // Get ChiSq of the last fit
-  casacore::Double chiSq () const { return chiSq_p; }
+  Double chiSq () const { return chiSq_p; }
 
  private:
   //#Data
   // Elements to be fitted
   SpectralList slist_p;
   // Number of iterations last fit
-  casacore::uInt iter_p;
+  uInt iter_p;
   // ChiSq of last fit
-  casacore::Double chiSq_p;
+  Double chiSq_p;
 
   //# Member functions
   // Real fitters
   // <group>
   template <class MT>
-    casacore::Bool fit(const casacore::Vector<MT> &y,
-	     const casacore::Vector<MT> &x,
-	     const casacore::Vector<casacore::Bool> *mask);
+    Bool fit(const Vector<MT> &y,
+	     const Vector<MT> &x,
+	     const Vector<Bool> *mask);
   template <class MT>
-    casacore::Bool fit(const casacore::Vector<MT> &sigma,
-             const casacore::Vector<MT> &y,
-	     const casacore::Vector<MT> &x,
-	     const casacore::Vector<casacore::Bool> *mask);
+    Bool fit(const Vector<MT> &sigma,
+             const Vector<MT> &y,
+	     const Vector<MT> &x,
+	     const Vector<Bool> *mask);
   // </group>
 };
 

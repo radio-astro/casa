@@ -46,7 +46,6 @@
 #include <fstream>
 #include <casa/sstream.h>
 #include <casa/OS/Timer.h>
-using namespace casacore;
 namespace casa{
 
   //
@@ -88,7 +87,7 @@ namespace casa{
 
     dirIndex=FTCoords.findCoordinate(Coordinate::DIRECTION);
     DirectionCoordinate dc=imageCoordSys.directionCoordinate(dirIndex);
-    Vector<Bool> axes(2); axes=true;
+    Vector<Bool> axes(2); axes=True;
     Vector<Int> dirShape(2); dirShape(0)=shape(0);dirShape(1)=shape(1);
     Coordinate* FTdc=dc.makeFourierCoordinate(axes,dirShape);
     // if (refFreq > 0)
@@ -123,7 +122,7 @@ namespace casa{
     // IPosition skyShape(pbImage.shape());
     // TempImage<Complex> uvGrid;
     // if (maximumCacheSize() > 0) uvGrid.setMaximumCacheSize(maximumCacheSize());
-    // //    regridAperture(skyCS, skyShape, uvGrid, vb, paList, false, bandID);
+    // //    regridAperture(skyCS, skyShape, uvGrid, vb, paList, False, bandID);
     // regridAperture(skyCS, skyShape, uvGrid, pa, paList, doSquint, bandID);
 
     // fillPB(*(ap.aperture),pbImage);
@@ -139,7 +138,7 @@ namespace casa{
 
     TempImage<Complex> uvGrid;
     if (maximumCacheSize() > 0) uvGrid.setMaximumCacheSize(maximumCacheSize());
-    //    regridAperture(skyCS, skyShape, uvGrid, vb,false, bandID);
+    //    regridAperture(skyCS, skyShape, uvGrid, vb,False, bandID);
     regridAperture(skyCS, skyShape, uvGrid, pa, doSquint, bandID, 0, freqVal);
     fillPB(*(ap.aperture),pbImage);
   }
@@ -156,7 +155,7 @@ namespace casa{
     TempImage<Complex> uvGrid;
 
     if (maximumCacheSize() > 0) uvGrid.setMaximumCacheSize(maximumCacheSize());
-    //    regridAperture(skyCS, skyShape, uvGrid, vb, true, bandID);
+    //    regridAperture(skyCS, skyShape, uvGrid, vb, True, bandID);
     Int index= skyCS.findCoordinate(Coordinate::SPECTRAL);
     SpectralCoordinate spCS = skyCS.spectralCoordinate(index);
 //    cout<<"Ref Freq for sky jones is :"<<spCS.referenceValue()(0);
@@ -191,10 +190,10 @@ namespace casa{
     // IPosition skyShape(pbImage.shape());
     // TempImage<Complex> uvGrid;
     // if (maximumCacheSize() > 0) uvGrid.setMaximumCacheSize(maximumCacheSize());
-    // //    regridAperture(skyCS, skyShape, uvGrid, vb, paList, false, bandID);
+    // //    regridAperture(skyCS, skyShape, uvGrid, vb, paList, False, bandID);
     // regridAperture(skyCS, skyShape, uvGrid, pa, paList, doSquint, bandID);
 
-    // fillPB(*(ap.aperture),pbImage, true);
+    // fillPB(*(ap.aperture),pbImage, True);
   }
   void VLACalcIlluminationConvFunc::applyPBSq(ImageInterface<Float>& pbImage,
 					      //const VisBuffer& vb, 
@@ -207,9 +206,9 @@ namespace casa{
 
     TempImage<Complex> uvGrid;
     if (maximumCacheSize() > 0) uvGrid.setMaximumCacheSize(maximumCacheSize());
-    //    regridAperture(skyCS, skyShape, uvGrid, vb,false, bandID);
+    //    regridAperture(skyCS, skyShape, uvGrid, vb,False, bandID);
     regridAperture(skyCS, skyShape, uvGrid, pa, doSquint, bandID);
-    fillPB(*(ap.aperture),pbImage,true);
+    fillPB(*(ap.aperture),pbImage,True);
   }
   void VLACalcIlluminationConvFunc::applyPBSq(ImageInterface<Complex>& pbImage, 
 					      //const VisBuffer& vb, 
@@ -222,9 +221,9 @@ namespace casa{
 
     TempImage<Complex> uvGrid;
     if (maximumCacheSize() > 0) uvGrid.setMaximumCacheSize(maximumCacheSize());
-    //    regridAperture(skyCS, skyShape, uvGrid, vb, true, bandID);
+    //    regridAperture(skyCS, skyShape, uvGrid, vb, True, bandID);
     regridAperture(skyCS, skyShape, uvGrid, pa, doSquint, bandID);
-    fillPB(*(ap.aperture),pbImage, true);
+    fillPB(*(ap.aperture),pbImage, True);
   }
   //
   //--------------------------------------------------------------------------
@@ -397,7 +396,7 @@ namespace casa{
     uvCoords.replaceCoordinate(spectralCoord,index);
     //logIO << "The Stokes coordinate is", poln(0)<< LogIO::POST;
     ap.aperture->setCoordinateInfo(uvCoords);
-     if (doSquint==true)
+     if (doSquint==True)
     {
     //  String name("aperture.im");
     //  storeImg(name,*(ap.aperture));
@@ -407,7 +406,7 @@ namespace casa{
     // Now FT the re-gridded Fourier plane to get the primary beam.
     //
     ftAperture(*(ap.aperture),muellerTerm);
-     if (doSquint==true)
+     if (doSquint==True)
     {
     //  String name("ftaperture.im");
     //  storeImg(name,*(ap.aperture));
@@ -533,7 +532,7 @@ namespace casa{
     uvCoords.replaceCoordinate(spectralCoord,index);
     
     ap.aperture->setCoordinateInfo(uvCoords);
-     //if (doSquint==false)
+     //if (doSquint==False)
      //{
      //	String name("aperture.im");
      //	storeImg(name,*(ap.aperture));

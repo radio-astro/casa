@@ -83,10 +83,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Constructor taking a pointer to the WorldCanvas for which the
 		// event is valid, the state of the keyboard and pointer modifiers,
 		// and the pixel, linear and world coordinates of the event.
-		WCMotionEvent(WorldCanvas *wc, const casacore::uInt &modifiers,
-		              const casacore::Int &pixX, const casacore::Int &pixY,
-		              const casacore::Double &linX, const casacore::Double &linY,
-		              const casacore::Vector<casacore::Double> &world);
+		WCMotionEvent(WorldCanvas *wc, const uInt &modifiers,
+		              const Int &pixX, const Int &pixY,
+		              const Double &linX, const Double &linY,
+		              const Vector<Double> &world);
 
 		// copy constructor.
 		WCMotionEvent(const WCMotionEvent &other);
@@ -97,33 +97,33 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// The x and y pixel position of the pointer when the event
 		// occurred.
 		// <group>
-		virtual casacore::Int pixX() const {
+		virtual Int pixX() const {
 			return itsPixX;
 		}
-		virtual casacore::Int pixY() const {
+		virtual Int pixY() const {
 			return itsPixY;
 		}
 		// </group>
 
 		// The x and y linear coordinates of the event.
 		// <group>
-		virtual casacore::Double linX() const {
+		virtual Double linX() const {
 			return itsLinX;
 		}
-		virtual casacore::Double linY() const {
+		virtual Double linY() const {
 			return itsLinY;
 		}
 		// </group>
 
 		// The world coordinates describing where the event occurred.
-		virtual const casacore::Vector<casacore::Double> &world() const {
+		virtual const Vector<Double> &world() const {
 			return itsWorld;
 		}
 
 		// Return the state of the "modifiers": this is made up of mask bits
 		// referring to various keys on the keyboard (eg. Control, Shift,
 		// etc.) and the mouse buttons.
-		virtual casacore::uInt modifiers() const {
+		virtual uInt modifiers() const {
 			return itsModifiers;
 		}
 
@@ -139,16 +139,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	private:
 
 		// Store the pixel position of the event here.
-		casacore::Int itsPixX, itsPixY;
+		Int itsPixX, itsPixY;
 
 		// Store the linear position of the event here.
-		casacore::Double itsLinX, itsLinY;
+		Double itsLinX, itsLinY;
 
 		// Store the world position of the event here.
-		casacore::Vector<casacore::Double> itsWorld;
+		Vector<Double> itsWorld;
 
 		// Store the button and keyboard modifier masks here.
-		casacore::uInt itsModifiers;
+		uInt itsModifiers;
 
 	};
 

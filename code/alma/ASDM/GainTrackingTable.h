@@ -28,7 +28,7 @@
  * | If you do, all changes will be lost when the file is re-generated. |
  *  --------------------------------------------------------------------
  *
- * casacore::File GainTrackingTable.h
+ * File GainTrackingTable.h
  */
  
 #ifndef GainTrackingTable_CLASS
@@ -146,7 +146,7 @@ class GainTrackingRow;
  		 
  * <TD> int</TD>
  * <TD> &nbsp; </TD>
- * <TD> &nbsp;refers to a unique row in Feed casacore::Table </TD>
+ * <TD> &nbsp;refers to a unique row in Feed Table </TD>
  * </TR>
 	
 
@@ -201,7 +201,7 @@ class GainTrackingRow;
 	
  * <TR>
  * <TD> attSpectrum </TD> 
- * <TD> vector<casacore::Complex > </TD>
+ * <TD> vector<Complex > </TD>
  * <TD>  numAttFreq  </TD>
  * <TD>&nbsp; the attenuator's measured spectrum. </TD>
  * </TR>
@@ -298,7 +298,7 @@ public:
 	std::string toXML()  ;
 
 #ifndef WITHOUT_ACS
-	// casacore::Conversion Methods
+	// Conversion Methods
 	/**
 	 * Convert this table into a GainTrackingTableIDL CORBA structure.
 	 *

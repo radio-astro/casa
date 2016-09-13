@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //
-// casacore::Data provider weights iterators, based on sigma column
+// Data provider weights iterators, based on sigma column
 //
 #ifndef MSVIS_STATISTICS_VI2_STATS_SIGMAS_ITERATOR_H_
 #define MSVIS_STATISTICS_VI2_STATS_SIGMAS_ITERATOR_H_
@@ -42,7 +42,7 @@ namespace casa {
 //
 template<class T>
 class Vi2StatsSigmasIterator
-	: public std::iterator<std::input_iterator_tag,casacore::Float> {
+	: public std::iterator<std::input_iterator_tag,Float> {
 
 public:
 	Vi2StatsSigmasIterator& operator++();
@@ -53,7 +53,7 @@ public:
 
 	bool operator!=(const Vi2StatsSigmasIterator& rhs);
 
-	casacore::Float operator*();
+	Float operator*();
 
 	bool atEnd();
 
@@ -83,17 +83,17 @@ public:
 
 	bool operator!=(const Vi2StatsSigmasCubeIterator& rhs);
 
-	casacore::Float operator*();
+	Float operator*();
 
 	bool atEnd();
 
 protected:
-	casacore::uInt correlation;
-	casacore::uInt nCorrelations;
-	casacore::uInt channel;
-	casacore::uInt nChannels;
-	casacore::uInt row;
-	casacore::uInt nRows;
+	uInt correlation;
+	uInt nCorrelations;
+	uInt channel;
+	uInt nChannels;
+	uInt row;
+	uInt nRows;
 };
 
 // Weights iterator over row sigmas.
@@ -113,13 +113,13 @@ public:
 
 	bool operator!=(const Vi2StatsSigmasRowIterator& rhs);
 
-	casacore::Float operator*();
+	Float operator*();
 
 	bool atEnd();
 
 protected:
-	casacore::uInt row;
-	casacore::uInt nRows;
+	uInt row;
+	uInt nRows;
 };
 
 } // namespace casa

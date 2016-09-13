@@ -51,12 +51,12 @@ int main() {
             writeTestString(
                 "test constructor throws error in case where file does not exist"
             );
-            Bool thrown = false;
+            Bool thrown = False;
             try {
             	ProfileFitterEstimatesFileParser parser(datadir + "bogusfile.txt");
             }
             catch (AipsError x) {
-            	thrown = true;
+            	thrown = True;
             }
             if (! thrown) {
             	// if we get here an exception wasn't thrown so the test failed
@@ -67,12 +67,12 @@ int main() {
         	writeTestString(
         		"test constructor throws error in case where file is formatted incorrectly"
         	);
-        	Bool thrown = false;
+        	Bool thrown = False;
             try {
             	ProfileFitterEstimatesFileParser parser(datadir + "badProfileEstimatesFormat.txt");
             }
             catch (AipsError x) {
-            	thrown = true;
+            	thrown = True;
             }
             if (! thrown) {
             	// if we get here an exception wasn't thrown so the test failed
@@ -83,14 +83,14 @@ int main() {
         	writeTestString(
         		"test constructor throws error in case where fixed parameters contain unrecognized flag"
         	);
-        	Bool thrown = false;
+        	Bool thrown = False;
             try {
             	ProfileFitterEstimatesFileParser parser(
             		datadir + "badProfileFixedFormat.txt"
             	);
             }
             catch (AipsError x) {
-            	thrown = true;
+            	thrown = True;
             }
             if (! thrown) {
             	// if we get here an exception wasn't thrown so the test failed

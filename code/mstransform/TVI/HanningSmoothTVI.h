@@ -41,10 +41,10 @@ class HanningSmoothTVI : public ConvolutionTVI
 public:
 
 	HanningSmoothTVI(	ViImplementation2 * inputVii,
-						const casacore::Record &configuration);
+						const Record &configuration);
 
 	// Report the the ViImplementation type
-	virtual casacore::String ViiType() const { return casacore::String("HanningSmooth( ")+getVii()->ViiType()+" )"; };
+	virtual String ViiType() const { return String("HanningSmooth( ")+getVii()->ViiType()+" )"; };
 
 protected:
 
@@ -60,14 +60,14 @@ class HanningSmoothTVIFactory : public ViFactory
 
 public:
 
-	HanningSmoothTVIFactory(casacore::Record &configuration,ViImplementation2 *inputVII);
+	HanningSmoothTVIFactory(Record &configuration,ViImplementation2 *inputVII);
 
 protected:
 
 	vi::ViImplementation2 * createVi (VisibilityIterator2 *) const;
 	vi::ViImplementation2 * createVi () const;
 
-	casacore::Record configuration_p;
+	Record configuration_p;
 	ViImplementation2 *inputVii_p;;
 };
 

@@ -84,21 +84,21 @@ class MFCEMemImageSkyModel : public CEMemImageSkyModel {
 public:
 
   // constructor
-  MFCEMemImageSkyModel(casacore::Float sigma, 
-		       casacore::Float targetFlux,
-		       casacore::Bool constrainFlux,
-		       const casacore::Vector<casacore::String>& priors,
-		       const casacore::String& entropy);
+  MFCEMemImageSkyModel(Float sigma, 
+		       Float targetFlux,
+		       Bool constrainFlux,
+		       const Vector<String>& priors,
+		       const String& entropy);
 
 
   // Solve for this SkyModel
-  virtual casacore::Bool solve (SkyEquation& me);
+  virtual Bool solve (SkyEquation& me);
 
 private:
   // Return the maximum absolute value per field
-  casacore::Float maxField(casacore::Vector<casacore::Float>& imagemax, casacore::Vector<casacore::Float>& imagemin);
+  Float maxField(Vector<Float>& imagemax, Vector<Float>& imagemin);
   // Return maximum abs outer sidelobe, more than nCenter pixels from the center
-  casacore::Float maxOuter(casacore::Lattice<casacore::Float> & lat, const casacore::uInt nCenter );
+  Float maxOuter(Lattice<Float> & lat, const uInt nCenter );
 
 };
 

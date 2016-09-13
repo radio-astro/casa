@@ -24,7 +24,6 @@
 //#
 #include "SpecFitPolynomial.h"
 
-using namespace casacore;
 namespace casa {
 
 	SpecFitPolynomial::SpecFitPolynomial( Vector<Double> coeffs) :
@@ -43,7 +42,7 @@ namespace casa {
 		for( int i = 0; i < static_cast<int>(xVals.size()); i++ ) {
 			yValues[i] = 0;
 			for ( int j = 0; j < polyOrder; j++ ) {
-				yValues[i] = yValues[i] + coefficients[j] * casacore::pow( xVals[i], j);
+				yValues[i] = yValues[i] + coefficients[j] * casa::pow( xVals[i], j);
 			}
 		}
 	}
@@ -51,5 +50,4 @@ namespace casa {
 	SpecFitPolynomial::~SpecFitPolynomial() {
 	}
 
-using namespace casacore;
 } /* namespace casa */

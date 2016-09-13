@@ -37,12 +37,8 @@
 #include <ms/MeasurementSets/MSColumns.h>
 
 #include <casa/namespace.h>
-namespace casacore{
-
-class String;
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
+class String;
 
 class ATCAFiller {
 public:
@@ -54,71 +50,71 @@ public:
 
   // return the ATCA required tabledesc, this is the standard MeasurementSet
   // plus ATCA specific additions.
-  static casacore::TableDesc atcaTableDesc(casacore::Bool compress);
+  static TableDesc atcaTableDesc(Bool compress);
 
   // make the ATCA specific MeasurementSet
-  static casacore::MeasurementSet makeTable(const casacore::String& tableName, casacore::Bool compress,
-    casacore::Bool cabb);
+  static MeasurementSet makeTable(const String& tableName, Bool compress,
+    Bool cabb);
 
   // make the subtables with ATCA specific additions
-  static void makeSubTables(casacore::MS& ms, casacore::Table::TableOption option, casacore::Bool cabb);
+  static void makeSubTables(MS& ms, Table::TableOption option, Bool cabb);
 
   // Open the measurement set and one or more RPFits files.
   // Opacity correction is not yet implemented - could go
   // in gencal or here, if gencal scheme doesn't improve
-  casacore::Bool open(const casacore::String& msName, const casacore::Vector<casacore::String>& rpfitsFiles,
-	          const casacore::Vector<casacore::String> & options, casacore::Int opcor=2);
+  Bool open(const String& msName, const Vector<String>& rpfitsFiles,
+	          const Vector<String> & options, Int opcor=2);
 
  // Fill the measurement set
-  casacore::Bool fill();
+  Bool fill();
  
   // Select a number of fields by name.
-  ATCAFiller & fields(const casacore::Vector<casacore::String> & fieldList);
+  ATCAFiller & fields(const Vector<String> & fieldList);
 
   // Select a range of frequencies, lowFreq=0 => everything below higFreq,
   //  highFreq=0 => everything above lowFreq.
-  ATCAFiller & freqRange(casacore::Double lowFreq, casacore::Double highFreq=0);
+  ATCAFiller & freqRange(Double lowFreq, Double highFreq=0);
  
   // Select frequencies within windowWidth of specified ones.
   // (This selects on center-frequencies only, not channelfrequencies)
-  ATCAFiller & frequencies(casacore::Vector<casacore::Double> freqs, casacore::Double windowWidth=1e6);
+  ATCAFiller & frequencies(Vector<Double> freqs, Double windowWidth=1e6);
 
   // Select a range of scans to read. first=0 or 1 => start at first one,
   //   last=0 => read to end of file.
-  ATCAFiller & scanRange(casacore::Int firstScan, casacore::Int lastScan=0);
+  ATCAFiller & scanRange(Int firstScan, Int lastScan=0);
 
   // Select range of channels, with optional increment.
   // We may want multiple channel ranges -> use matrix(3,n) for selection?
-  ATCAFiller & chanRange(casacore::Int firstChan, casacore::Int lastChan, casacore::Int ChanInc=1);
+  ATCAFiller & chanRange(Int firstChan, Int lastChan, Int ChanInc=1);
 
-  // casacore::Time range selection.
-  ATCAFiller & timeRange(casacore::Double firstTime, casacore::Double lastTime=0);
+  // Time range selection.
+  ATCAFiller & timeRange(Double firstTime, Double lastTime=0);
 
   // Select the Freq (which one of the simult. freqs), 0=> no selection.
   // 
-  ATCAFiller & freqSel(const casacore::Vector<casacore::Int>& spws); 
+  ATCAFiller & freqSel(const Vector<Int>& spws); 
 
   // Select on bandwidth of IF 1.
-  ATCAFiller & bandwidth1(casacore::Int bandwidth1);
+  ATCAFiller & bandwidth1(Int bandwidth1);
 
   // Select on number of channels of IF 1
-  ATCAFiller & numChan1(casacore::Int numchan1);
+  ATCAFiller & numChan1(Int numchan1);
 
   // Set shadowing limit
-  ATCAFiller & shadow(casacore::Float diam);
+  ATCAFiller & shadow(Float diam);
 
   // Deselect antennas.
-  ATCAFiller & deselectAntenna(casacore::Vector<casacore::Int> antennas);
+  ATCAFiller & deselectAntenna(Vector<Int> antennas);
 
-  // casacore::Smooth xy-phases with running median and 
+  // Smooth xy-phases with running median and 
   // flag data with discrepant xy-phase.
-  ATCAFiller & xyPhaseSmooth(casacore::Int window=9, casacore::Double tolerance=10.0);
+  ATCAFiller & xyPhaseSmooth(Int window=9, Double tolerance=10.0);
 
-  // casacore::Smooth Tsys values with running median and recalibrate the data.
-  ATCAFiller & tsysSmooth(casacore::Int window=9);
+  // Smooth Tsys values with running median and recalibrate the data.
+  ATCAFiller & tsysSmooth(Int window=9);
   
   // Set percentage of channels to flag at band edges
-  ATCAFiller & edge(casacore::Float edge);
+  ATCAFiller & edge(Float edge);
 
 private:
   //# disallow all these
@@ -134,154 +130,154 @@ private:
   void storeSysCal();
 
   // fill a single input file
-  casacore::Bool fill1(const casacore::String & rpfitsname);
+  Bool fill1(const String & rpfitsname);
 
-  // casacore::List the file on cout
+  // List the file on cout
   void list();
 
    // Flag data if samplerstats are bad.
-  casacore::Bool samplerFlag(casacore::Int row, casacore::Double posNegTolerance=3.0, 
-                   casacore::Double zeroTolerance=0.5);
+  Bool samplerFlag(Int row, Double posNegTolerance=3.0, 
+                   Double zeroTolerance=0.5);
   
-  casacore::Int birdChan(casacore::Double refFreq, casacore::Int refChan, casacore::Double chanSpac);
+  Int birdChan(Double refFreq, Int refChan, Double chanSpac);
   void reweight();
   void storeData();
-  casacore::Int checkSpW(casacore::Int ifNumber,casacore::Bool log=true);
+  Int checkSpW(Int ifNumber,Bool log=True);
   void checkField();
   void checkObservation();
   // Fill the feed table (with dummy values)
   void fillFeedTable();
   void fillObservationTable();
   void fillMeasureReferences();
-  casacore::Bool selected(casacore::Int ifNum);
-  void listScan(casacore::Double & mjd, casacore::Int scan, casacore::Double ut);
-  casacore::Bool checkCABB(const casacore::String & rpfitsname);
-  void rfiFlag(casacore::Matrix<casacore::Bool> & flags);
+  Bool selected(Int ifNum);
+  void listScan(Double & mjd, Int scan, Double ut);
+  Bool checkCABB(const String & rpfitsname);
+  void rfiFlag(Matrix<Bool> & flags);
   
 
-  casacore::String atcaPosToStation(casacore::Vector<casacore::Double>& xyz);
+  String atcaPosToStation(Vector<Double>& xyz);
   void flush();
   void unlock();
 
-  void shadow(casacore::Int row, casacore::Bool last=false);
+  void shadow(Int row, Bool last=False);
 
   // Constants
   // MaxNPol needs to agree with if_cstok in RPFITS.h
   enum{MaxNChan=16385, MaxNPol=4};
   // Data
-  casacore::MeasurementSet atms_p;
-  casacore::MSColumns *msc_p;
+  MeasurementSet atms_p;
+  MSColumns *msc_p;
 
   // Filenames
-  casacore::Vector<casacore::String> rpfitsFiles_p;
-  casacore::Int opcor_p;
-  casacore::String currentFile_p;
+  Vector<String> rpfitsFiles_p;
+  Int opcor_p;
+  String currentFile_p;
 
   // The following should be constant throughout the rpfits file
-  casacore::Int nAnt_p; 
+  Int nAnt_p; 
 
   // Number of scans seen; #SpWs, #fields stored sofar
-  casacore::Int nScan_p, nSpW_p, nField_p;
-  // #scanheaders stored, index into casacore::MS SpW and Field Tables for current data
-  casacore::Int scanNo_p, spWId_p, fieldId_p, prev_fieldId_p, obsId_p;
+  Int nScan_p, nSpW_p, nField_p;
+  // #scanheaders stored, index into MS SpW and Field Tables for current data
+  Int scanNo_p, spWId_p, fieldId_p, prev_fieldId_p, obsId_p;
 
   // Bools
-  casacore::Bool gotAN_p; //have we got an antenna casacore::Table yet?
-  casacore::Bool appendMode_p;
-  casacore::Bool storedHeader_p;
-  casacore::Bool skipScan_p;
-  casacore::Bool skipData_p;
-  casacore::Bool firstHeader_p;
-  casacore::Bool listHeader_p;
-  casacore::uInt fileSize_p;
-  casacore::Bool eof_p;
-  casacore::Bool birdie_p;   // flag birdie channels
-  casacore::Bool reweight_p; // gibbs reweighting
-  casacore::Bool noxycorr_p; // do not apply xy phase correction
-  casacore::Bool noac_p;    // Don't load the autocorrelation data
-  casacore::Int obsType_p; // the type of observation: 0= standard, 1= fastmosaic
-  casacore::Bool hires_p; // transform binned data into high time res data
-  casacore::Bool init_p; // Are we initialized yet?
-  casacore::Bool cabb_p; // Are we reading CABB data?
+  Bool gotAN_p; //have we got an antenna Table yet?
+  Bool appendMode_p;
+  Bool storedHeader_p;
+  Bool skipScan_p;
+  Bool skipData_p;
+  Bool firstHeader_p;
+  Bool listHeader_p;
+  uInt fileSize_p;
+  Bool eof_p;
+  Bool birdie_p;   // flag birdie channels
+  Bool reweight_p; // gibbs reweighting
+  Bool noxycorr_p; // do not apply xy phase correction
+  Bool noac_p;    // Don't load the autocorrelation data
+  Int obsType_p; // the type of observation: 0= standard, 1= fastmosaic
+  Bool hires_p; // transform binned data into high time res data
+  Bool init_p; // Are we initialized yet?
+  Bool cabb_p; // Are we reading CABB data?
 
   // rpfits data
-  casacore::Float vis[2*MaxNPol*MaxNChan];
-  casacore::Float weight[MaxNPol*MaxNChan];
-  casacore::Int baseline, flg, bin, if_no, sourceno; //index into rpfits casacore::Table(not casacore::MS) 
-  casacore::Float ut, u, v, w;
+  Float vis[2*MaxNPol*MaxNChan];
+  Float weight[MaxNPol*MaxNChan];
+  Int baseline, flg, bin, if_no, sourceno; //index into rpfits Table(not MS) 
+  Float ut, u, v, w;
 
   // storage manager accessor
-  casacore::TiledDataStManAccessor dataAccessor_p,sigmaAccessor_p,flagAccessor_p,
+  TiledDataStManAccessor dataAccessor_p,sigmaAccessor_p,flagAccessor_p,
     flagCatAccessor_p;
-  casacore::TiledDataStManAccessor modelDataAccessor_p,corrDataAccessor_p,imWtAccessor_p;
+  TiledDataStManAccessor modelDataAccessor_p,corrDataAccessor_p,imWtAccessor_p;
 
   // Column objects to access Tables
 
-  // colXXX objects are ATCA specific columns in the casacore::MeasurementSet 
-  casacore::ScalarColumn<casacore::Int> colSysCalIdAnt1, colSysCalIdAnt2;
-  casacore::ScalarColumn<casacore::Float> colXYAmplitude,colTrackErrMax,colTrackErrRMS,
+  // colXXX objects are ATCA specific columns in the MeasurementSet 
+  ScalarColumn<Int> colSysCalIdAnt1, colSysCalIdAnt2;
+  ScalarColumn<Float> colXYAmplitude,colTrackErrMax,colTrackErrRMS,
       colWeatherSeeMonPhase,colWeatherSeeMonRMS,colWeatherRainGauge;
-  casacore::ScalarColumn<casacore::Int> colSamplerBits;
-  casacore::ArrayColumn<casacore::Float> colSamplerStatsNeg, colSamplerStatsZero,
+  ScalarColumn<Int> colSamplerBits;
+  ArrayColumn<Float> colSamplerStatsNeg, colSamplerStatsZero,
       colSamplerStatsPos;
-  casacore::ArrayColumn<casacore::Float> colGTP, colSDO, colCalJy;
-  casacore::ScalarColumn<casacore::Bool> colWeatherSeeMonFlag;
+  ArrayColumn<Float> colGTP, colSDO, colCalJy;
+  ScalarColumn<Bool> colWeatherSeeMonFlag;
   // ATCA_SCAN_INFO columns & table
-  casacore::ScalarColumn<casacore::Int> colScanInfoAntId, colScanInfoScanId, colScanInfoSpWId,
+  ScalarColumn<Int> colScanInfoAntId, colScanInfoScanId, colScanInfoSpWId,
        colScanInfoCacal;
-  casacore::ArrayColumn<casacore::Int> colScanInfoFine, colScanInfoCoarse, colScanInfommAtt;
-  casacore::ArrayColumn<casacore::Float> colScanInfoSubreflector;
-  casacore::ScalarColumn<casacore::String> colScanInfoCorrConfig, colScanInfoScanType,
+  ArrayColumn<Int> colScanInfoFine, colScanInfoCoarse, colScanInfommAtt;
+  ArrayColumn<Float> colScanInfoSubreflector;
+  ScalarColumn<String> colScanInfoCorrConfig, colScanInfoScanType,
       colScanInfoCoordType,colScanInfoPointInfo;
-  casacore::ScalarColumn<casacore::Bool> colScanInfoLineMode;
-  casacore::Table msScanInfo_p;
-  casacore::Matrix<casacore::Float> pointingCorr_p;
-  casacore::Bool newPointingCorr_p;
+  ScalarColumn<Bool> colScanInfoLineMode;
+  Table msScanInfo_p;
+  Matrix<Float> pointingCorr_p;
+  Bool newPointingCorr_p;
 
   // reference date
-  casacore::Double mjd0_p;
+  Double mjd0_p;
 
   // variables to keep the state of the sysCal search & binning state
-  casacore::Vector<casacore::Int> sysCalId_p;
-  casacore::Float lastUT_p;
-  casacore::Int lastSpWId_p;
-  casacore::Bool gotSysCalId_p;
-  casacore::Float lastWeatherUT_p;
-  casacore::Int errCount_p;
+  Vector<Int> sysCalId_p;
+  Float lastUT_p;
+  Int lastSpWId_p;
+  Bool gotSysCalId_p;
+  Float lastWeatherUT_p;
+  Int errCount_p;
 
   // Selection parameters
-  casacore::Vector<casacore::String> fieldSelection_p;
-  casacore::Double lowFreq_p, highFreq_p;
-  casacore::Vector<casacore::Double> freqs_p;
-  casacore::Double windowWidth_p;
-  casacore::Int firstScan_p, lastScan_p;
-  casacore::Int firstChan_p, lastChan_p;
-  casacore::Double firstTime_p, lastTime_p;
-  casacore::Vector<casacore::Int> spws_p;
-  casacore::Int bandWidth1_p, numChan1_p;
-  casacore::Vector<casacore::Int> baselines_p, antennas_p;
+  Vector<String> fieldSelection_p;
+  Double lowFreq_p, highFreq_p;
+  Vector<Double> freqs_p;
+  Double windowWidth_p;
+  Int firstScan_p, lastScan_p;
+  Int firstChan_p, lastChan_p;
+  Double firstTime_p, lastTime_p;
+  Vector<Int> spws_p;
+  Int bandWidth1_p, numChan1_p;
+  Vector<Int> baselines_p, antennas_p;
 
   // Track sources
-  casacore::String sources_p;
-  casacore::Int nsources_p;
+  String sources_p;
+  Int nsources_p;
   
   // Polarization order
-  casacore::Matrix<casacore::Int> corrIndex_p;
+  Matrix<Int> corrIndex_p;
 
   // Check for shadowing
-  casacore::Float shadow_p;
-  casacore::Float edge_p;
-  casacore::Block<casacore::Int> rowCache_p;
-  casacore::Int nRowCache_p;
-  casacore::Double prevTime_p;
+  Float shadow_p;
+  Float edge_p;
+  Block<Int> rowCache_p;
+  Int nRowCache_p;
+  Double prevTime_p;
   
   // Flagging
-  casacore::Bool autoFlag_p,flagScanType_p;
+  Bool autoFlag_p,flagScanType_p;
   enum {COUNT=0, FLAG, ONLINE, SCANTYPE, SYSCAL, SHADOW, NFLAG};
-  casacore::Vector<casacore::Int> flagCount_p;
+  Vector<Int> flagCount_p;
 
   // Logger
-  casacore::LogIO os_p;
+  LogIO os_p;
       
 };
 

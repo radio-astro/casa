@@ -69,7 +69,7 @@
 
 #include <memory>
 
-namespace casacore{
+namespace casa {
 
 template <class T> class ImageInterface;
 class Unit;
@@ -80,10 +80,6 @@ class MVAngle;
 template <class T> class Vector;
 class MVFrequency;
 class MFrequency;
-}
-
-namespace casa {
-
 
 // <summary>
 // </summary>
@@ -116,14 +112,14 @@ namespace casa {
 // <motivation>
 // </motivation>
 
-class ComponentImager: public ImageTask<casacore::Float> {
+class ComponentImager: public ImageTask<Float> {
 public:
 
 	ComponentImager() = delete;
 
 	ComponentImager(
-		const SPIIF image, const casacore::Record *const &regionPtr,
-	    const casacore::String& maskInp
+		const SPIIF image, const Record *const &regionPtr,
+	    const String& maskInp
 	);
 
 	~ComponentImager();
@@ -132,11 +128,11 @@ public:
 		_list = list;
 	}
 
-	void setSubtract(casacore::Bool b) { _subtract = b; }
+	void setSubtract(Bool b) { _subtract = b; }
 
-	casacore::String getClass() const { return "ComponentImager"; }
+	String getClass() const { return "ComponentImager"; }
 
-	void modify(casacore::Bool verbose);
+	void modify(Bool verbose);
 
 	// Project the componentlist onto the image.  If any of the coordinate
 	// transformations for a particular pixel fail (e.g. coordinate system
@@ -145,7 +141,7 @@ public:
 	// that are already masked mask=F) will not have their values changed
 	// (perhaps this behaviour should be changed).
 	static void project(
-		casacore::ImageInterface<casacore::Float>& image,
+		ImageInterface<Float>& image,
 		const ComponentList& list
 	);
 
@@ -155,22 +151,22 @@ private:
 
 	ComponentList _list;
 
-	casacore::Bool _subtract = false;
+	Bool _subtract = False;
 
    	CasacRegionManager::StokesControl _getStokesControl() const {
    		return CasacRegionManager::USE_ALL_STOKES;
    	}
 
-    std::vector<casacore::Coordinate::Type> _getNecessaryCoordinates() const {
-    	return std::vector<casacore::Coordinate::Type>(1, casacore::Coordinate::DIRECTION);
+    std::vector<Coordinate::Type> _getNecessaryCoordinates() const {
+    	return std::vector<Coordinate::Type>(1, Coordinate::DIRECTION);
     }
 
 	static std::unique_ptr<ComponentList> _doPoints(
-		casacore::ImageInterface<casacore::Float>& image, const ComponentList& list,
-		int longAxis, int latAxis, const casacore::Unit& fluxUnits,
-		const casacore::MeasRef<casacore::MDirection>& dirRef, const casacore::MVAngle& pixelLatSize,
-		const casacore::MVAngle& pixelLongSize, const casacore::Vector<casacore::MVFrequency>& freqValues,
-		const casacore::MeasRef<casacore::MFrequency>& freqRef, casacore::Int freqAxis, casacore::Int polAxis, casacore::uInt nStokes
+		ImageInterface<Float>& image, const ComponentList& list,
+		int longAxis, int latAxis, const Unit& fluxUnits,
+		const MeasRef<MDirection>& dirRef, const MVAngle& pixelLatSize,
+		const MVAngle& pixelLongSize, const Vector<MVFrequency>& freqValues,
+		const MeasRef<MFrequency>& freqRef, Int freqAxis, Int polAxis, uInt nStokes
 	);
 
 };

@@ -55,37 +55,37 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Destructor.
 		virtual ~PassiveCachingDD();
 
-		// casacore::Coordinate transformation handlers, called by WorldCanvasHolder.
-		// These functions simply return false because this DisplayData is
+		// Coordinate transformation handlers, called by WorldCanvasHolder.
+		// These functions simply return False because this DisplayData is
 		// passive.
 		// <group>
-		virtual casacore::Bool linToWorld(casacore::Vector<casacore::Double> &world, const casacore::Vector<casacore::Double> &lin);
-		virtual casacore::Bool worldToLin(casacore::Vector<casacore::Double> &lin, const casacore::Vector<casacore::Double> &world);
+		virtual Bool linToWorld(Vector<Double> &world, const Vector<Double> &lin);
+		virtual Bool worldToLin(Vector<Double> &lin, const Vector<Double> &world);
 		// </group>
 
-		// casacore::Format a string containing coordinate or value information at the
+		// Format a string containing coordinate or value information at the
 		// given world coordinate.  They simply return empty Strings because
 		// this DisplayData is passive.
 		// <group>
-		virtual casacore::String showPosition(const casacore::Vector<casacore::Double> &world,
-		                            const casacore::Bool &displayAxesOnly = false);
-		virtual casacore::String showValue(const casacore::Vector<casacore::Double> &world);
+		virtual String showPosition(const Vector<Double> &world,
+		                            const Bool &displayAxesOnly = False);
+		virtual String showValue(const Vector<Double> &world);
 		// </group>
 
 
 		// World axis information suppliers.
 		// <group>
-		virtual casacore::Vector<casacore::String> worldAxisNames() const;
-		virtual casacore::Vector<casacore::String> worldAxisUnits() const;
+		virtual Vector<String> worldAxisNames() const;
+		virtual Vector<String> worldAxisUnits() const;
 		// </group>
 
-		const casacore::Unit dataUnit() const {
-			return casacore::Unit("_");
+		const Unit dataUnit() const {
+			return Unit("_");
 		}
-		const casacore::IPosition dataShape() const {
-			return casacore::IPosition( );
+		const IPosition dataShape() const {
+			return IPosition( );
 		}
-		casacore::uInt dataDim() const {
+		uInt dataDim() const {
 			return 0;
 		}
 		std::vector<int> displayAxes( ) const {
@@ -95,31 +95,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Return the number of display elements (ie. drawable images) in
 		// this DisplayData.
 		// <group>
-		virtual casacore::uInt nelements(const WorldCanvasHolder &wcHolder) const;
-		virtual casacore::uInt nelements() const;
+		virtual uInt nelements(const WorldCanvasHolder &wcHolder) const;
+		virtual uInt nelements() const;
 		// </group>
 
 		// Install the default options for this DisplayData.
 		virtual void setDefaultOptions();
 
 		// Apply options stored in <src>rec</src> to the DisplayData.  A
-		// return value of <src>true</src> means a refresh is needed.
+		// return value of <src>True</src> means a refresh is needed.
 		// <src>recOut</src> contains any fields which were implicitly
 		// changed as a result of the call to this function.
-		virtual casacore::Bool setOptions(casacore::Record &rec, casacore::Record &recOut);
+		virtual Bool setOptions(Record &rec, Record &recOut);
 
 		// Retrieve the current and default options and parameter types.
-		virtual casacore::Record getOptions( bool scrub=false ) const;
+		virtual Record getOptions( bool scrub=false ) const;
 
 		// Negotiatiate WorldCanvas linear coordinate system when asked to
 		// do so by the WorldCanvasHolder.  In this implementation, simply
-		// return false to indicate that this DisplayData will not negotiate
+		// return False to indicate that this DisplayData will not negotiate
 		// coordinates: it is a passive DisplayData.
 
 		virtual void refreshEH(const WCRefreshEvent &ev);
-		virtual casacore::Bool sizeControl(WorldCanvasHolder &/*wcHolder*/,
+		virtual Bool sizeControl(WorldCanvasHolder &/*wcHolder*/,
 		                         AttributeBuffer &/*holderBuf*/) {
-			return false;
+			return False;
 		}
 
 		// Tidy up the elements of this DisplayData.

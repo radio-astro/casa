@@ -68,7 +68,7 @@ public:
 
 	// Construct a compiled string
 	explicit CompiledSpectralElement(
-		const casacore::String& function, const casacore::Vector<casacore::Double>& param
+		const String& function, const Vector<Double>& param
 	);
 
 	CompiledSpectralElement(const CompiledSpectralElement& other);
@@ -82,21 +82,21 @@ public:
 	);
 
 	/*
-	casacore::Bool operator==(
+	Bool operator==(
 		const CompiledSpectralElement& other
 	) const;
 */
 	/*
 	// Evaluate the value of the element at x
-	virtual casacore::Double operator()(const casacore::Double x) const;
+	virtual Double operator()(const Double x) const;
 */
 
 	// Get the string of a compiled functional
-	const casacore::String& getFunction() const;
+	const String& getFunction() const;
 	// </group>
 
 	// Save to a record.
-	virtual casacore::Bool toRecord(casacore::RecordInterface& out) const;
+	virtual Bool toRecord(RecordInterface& out) const;
 
 protected:
 
@@ -104,19 +104,19 @@ protected:
 
 	// For subclasses. Parameters and function must be set after construction.
 	explicit CompiledSpectralElement(
-		SpectralElement::Types type, const casacore::Vector<casacore::Double>& param=casacore::Vector<casacore::Double>(0)
+		SpectralElement::Types type, const Vector<Double>& param=Vector<Double>(0)
 	);
 
 	CompiledSpectralElement(
-		SpectralElement::Types type, casacore::uInt nParam
+		SpectralElement::Types type, uInt nParam
 	);
 
-	virtual void _setFunction(const casacore::String& function);
+	virtual void _setFunction(const String& function);
 
 	/*
 private:
 	// The string value for compiled functional
-	casacore::String _function;
+	String _function;
 	*/
 };
 
@@ -125,7 +125,7 @@ private:
 // <summary> Global functions </summary>
 // <group name=Output>
 // Output declaration
-std::ostream &operator<<(std::ostream &os, const CompiledSpectralElement &elem);
+ostream &operator<<(ostream &os, const CompiledSpectralElement &elem);
 // </group>
 
 

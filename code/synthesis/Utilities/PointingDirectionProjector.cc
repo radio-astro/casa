@@ -7,12 +7,10 @@
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 
 using namespace casacore;
-using namespace casacore;
 
-using namespace casacore;
 namespace casa {
 Projector::Projector() :
-    user_defined_center_(false), user_defined_pcenter_(false) {
+    user_defined_center_(False), user_defined_pcenter_(False) {
 }
 
 void Projector::setDirection(const Matrix<Double> &dir) {
@@ -24,19 +22,19 @@ void Projector::setDirection(const Matrix<Double> &dir) {
 void Projector::setReferenceCoordinate(Double const lat, Double const lon) {
   cenx_user_ = lat;
   ceny_user_ = lon;
-  user_defined_center_ = true;
+  user_defined_center_ = True;
 }
 void Projector::setReferencePixel(Double const refx, Double const refy) {
   pcenx_user_ = refx;
   pceny_user_ = refy;
-  user_defined_pcenter_ = true;
+  user_defined_pcenter_ = True;
 }
 
 void Projector::unsetReferenceCoordinate() {
-  user_defined_center_ = false;
+  user_defined_center_ = False;
 }
 void Projector::unsetReferencePixel() {
-  user_defined_pcenter_ = false;
+  user_defined_pcenter_ = False;
 }
 
 void Projector::rotateRA(Vector<Double> &v) {
@@ -58,10 +56,10 @@ void Projector::rotateRA(Vector<Double> &v) {
     quad[i] = q;
   }
 
-  Vector<Bool> rot(4, false);
+  Vector<Bool> rot(4, False);
   if (nquad[0] > 0 && nquad[3] > 0 && (nquad[1] == 0 || nquad[2] == 0)) {
     //cout << "need rotation" << endl ;
-    rot[3] = true;
+    rot[3] = True;
     rot[2] = (nquad[1] == 0 && nquad[2] > 0);
   }
 
@@ -148,7 +146,7 @@ void OrthographicProjector::scale_and_center() {
         y_p += 2;
       }
       dir_.freeStorage( dir_p, b );
-      Double med = median( dr, false, true, true );
+      Double med = median( dr, False, True, True );
       dy_ = med * pixel_scale_;
       dx_ = dy_ / decCorr;
 

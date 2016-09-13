@@ -46,7 +46,6 @@
 
 #include <gsl/gsl_sf_bessel.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 LimbDarkenedDiskShape::LimbDarkenedDiskShape()
@@ -189,12 +188,12 @@ Double LimbDarkenedDiskShape::sample(const MDirection& direction,
   const MDirection& compDir(refDirection());
   const MDirection::Ref& compDirFrame(compDir.getRef());
   const MDirection::MVType* compDirValue = &(compDir.getValue());
-  Bool deleteValue = false;
+  Bool deleteValue = False;
   // Convert direction to the same frame as the reference direction
   if (ComponentShape::differentRefs(direction.getRef(), compDirFrame)) {
     compDirValue = new MDirection::MVType
       (MDirection::Convert(compDir, direction.getRef())().getValue());
-    deleteValue = true;
+    deleteValue = True;
   }
   Double retVal = calcSample(*compDirValue, direction.getValue(),
                              itsMajValue/2.0, itsMinValue/2.0,
@@ -220,12 +219,12 @@ void LimbDarkenedDiskShape::sample(Vector<Double>& scale,
   const MDirection& compDir(refDirection());
   const MDirection::Ref& compDirFrame(compDir.getRef());
   const MDirection::MVType* compDirValue = &(compDir.getValue());
-  Bool deleteValue = false;
+  Bool deleteValue = False;
   // Convert direction to the same frame as the reference direction
   if (refFrame != compDirFrame) {
     compDirValue = new MDirection::MVType
       (MDirection::Convert(compDir, refFrame)().getValue());
-    deleteValue = true;
+    deleteValue = True;
   }
   const Double majRad = itsMajValue/2.0;
   const Double minRad = itsMinValue/2.0;
@@ -274,10 +273,10 @@ void LimbDarkenedDiskShape::visibility(Vector<DComplex>& scale,
   DebugAssert(uvw.nrow() == 3, AipsError);
   DebugAssert(frequency > 0, AipsError);
 
-  Bool doRotation = false;
+  Bool doRotation = False;
   Double cpa = 1.0, spa = 0.0;
   if (!nearAbs(itsPaValue, 0.0)) {
-    doRotation = true;
+    doRotation = True;
     cpa = cos(itsPaValue);
     spa = sin(itsPaValue);
   }
@@ -313,34 +312,34 @@ Bool LimbDarkenedDiskShape::ok() const {
   // The LogIO class is only constructed if an error is detected for
   // performance reasons. Both function static and file static variables
   // where considered and rejected for this purpose.
-  if (!TwoSidedShape::ok()) return false;
+  if (!TwoSidedShape::ok()) return False;
   if (itsMajValue <= 0) {
     LogIO logErr(LogOrigin("DiskCompRep", "ok()"));
     logErr << LogIO::SEVERE << "The major axis width is zero or negative"
            << LogIO::POST;
-    return false;
+    return False;
   }
   if (itsMinValue <= 0) {
     LogIO logErr(LogOrigin("DiskCompRep", "ok()"));
     logErr << LogIO::SEVERE << "The minor axis width is zero or negative"
            << LogIO::POST;
-    return false;
+    return False;
   }
   if (itsMinValue > itsMajValue) {
     LogIO logErr(LogOrigin("DiskCompRep", "ok()"));
     logErr << LogIO::SEVERE << "The minor axis width is larger than "
            << "the major axis width"
            << LogIO::POST;
-    return false;
+    return False;
   }
   if (!near(itsHeight, 1.0/(C::pi*itsMajValue*itsMinValue), 2*C::dbl_epsilon)) {
     LogIO logErr(LogOrigin("DiskCompRep", "ok()"));
     logErr << LogIO::SEVERE << "The disk shape does not have"
            << " unit area"
            << LogIO::POST;
-    return false;
+    return False;
   }
-  return true;
+  return True;
 }
 
 
@@ -354,7 +353,7 @@ String LimbDarkenedDiskShape::sizeToString() const {
                 Quantity(itsMajValue, "rad"),
                 Quantity(itsMinValue, "rad"),
                 Quantity(itsPaValue, "rad"),
-                false
+                False
         );
 }
 

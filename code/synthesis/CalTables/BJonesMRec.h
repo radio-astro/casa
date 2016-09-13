@@ -80,7 +80,7 @@ class BJonesMRec : public SolvableVisJonesMRec
    ~BJonesMRec() {};
 
    // Construct from an existing record
-   BJonesMRec (const casacore::Record& inpRec);
+   BJonesMRec (const Record& inpRec);
 
 };
 

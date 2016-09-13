@@ -21,7 +21,6 @@
 
 #include <casa/iostream.h>
 
-using namespace casacore;
 namespace casa {
 
 FixVis::FixVis(MeasurementSet& ms, const String& dataColName) :
@@ -399,11 +398,11 @@ Bool FixVis::fixvis(const String& refcode)
 	logSink() << LogIO::WARN << "Please contact CASA to add it to the repository."
 		  << LogIO::POST;
 	logSink() << LogIO::WARN << "Frequency conversion will not work " << LogIO::POST;
-	freqFrameValid_p = false;
+	freqFrameValid_p = False;
       }
       else{
 	mLocation_p = obsPosition;
-	freqFrameValid_p = true;
+	freqFrameValid_p = True;
       }
 
       MSFieldColumns& msfcs = msc_p->field();
@@ -466,15 +465,15 @@ Bool FixVis::setImageField(const Int fieldid,
 
     fieldid_p = fieldid;
 
-    return true;
+    return True;
   }
   catch(AipsError x){
     this->unlock();
     logSink() << LogIO::SEVERE << "Caught exception: " << x.getMesg()
        << LogIO::POST;
-    return false;
+    return False;
   } 
-  return true;
+  return True;
 }
 
 Bool FixVis::lock()

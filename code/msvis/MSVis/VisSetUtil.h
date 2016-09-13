@@ -1,4 +1,4 @@
-//# VisSetUtil.h: Definitions for casacore::Stokes Image utilities
+//# VisSetUtil.h: Definitions for Stokes Image utilities
 //# Copyright (C) 1996,1997,1998
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -70,57 +70,57 @@ class VisSetUtil {
   
 public:
   // Calculate sensitivity
-  static void Sensitivity(VisSet &vs, casacore::Matrix<casacore::Double>& mssFreqSel,casacore::Matrix<casacore::Int>& mssChanSel,
-			  casacore::Quantity& pointsourcesens, casacore::Double& relativesens,
-			  casacore::Double& sumwt,
-			  casacore::Double& effectiveBandwidth,
-			  casacore::Double& effectiveIntegration,
-			  casacore::Int& nBaselines,
-			  casacore::Vector<casacore::Vector<casacore::Int> >& nData,
-			  casacore::Vector<casacore::Vector<casacore::Double> >& sumwtChan,
-			  casacore::Vector<casacore::Vector<casacore::Double> >& sumwtsqChan,
-			  casacore::Vector<casacore::Vector<casacore::Double> >& sumInverseVarianceChan);
+  static void Sensitivity(VisSet &vs, Matrix<Double>& mssFreqSel,Matrix<Int>& mssChanSel,
+			  Quantity& pointsourcesens, Double& relativesens,
+			  Double& sumwt,
+			  Double& effectiveBandwidth,
+			  Double& effectiveIntegration,
+			  Int& nBaselines,
+			  Vector<Vector<Int> >& nData,
+			  Vector<Vector<Double> >& sumwtChan,
+			  Vector<Vector<Double> >& sumwtsqChan,
+			  Vector<Vector<Double> >& sumInverseVarianceChan);
   static void Sensitivity(ROVisibilityIterator &vi, 
-			  casacore::Matrix<casacore::Double>& mssFreqSel,
-			  casacore::Matrix<casacore::Int>& mssChanSel,
-			  casacore::Quantity& pointsourcesens, 
-			  casacore::Double& relativesens,
-			  casacore::Double& sumwt,
-			  casacore::Double& effectiveBandwidth,
-			  casacore::Double& effectiveIntegration,
-			  casacore::Int& nBaselines,
-			  casacore::Vector<casacore::Vector<casacore::Int> >& nData,
-			  casacore::Vector<casacore::Vector<casacore::Double> >& sumwtChan,
-			  casacore::Vector<casacore::Vector<casacore::Double> >& sumwtsqChan,
-			  casacore::Vector<casacore::Vector<casacore::Double> >& sumInverseVarianceChan);
+			  Matrix<Double>& mssFreqSel,
+			  Matrix<Int>& mssChanSel,
+			  Quantity& pointsourcesens, 
+			  Double& relativesens,
+			  Double& sumwt,
+			  Double& effectiveBandwidth,
+			  Double& effectiveIntegration,
+			  Int& nBaselines,
+			  Vector<Vector<Int> >& nData,
+			  Vector<Vector<Double> >& sumwtChan,
+			  Vector<Vector<Double> >& sumwtsqChan,
+			  Vector<Vector<Double> >& sumInverseVarianceChan);
   // Hanning smoothing of spectral channels
-  static void HanningSmooth(VisSet &vs, const casacore::String& dataCol="corrected", 
-			    const casacore::Bool& doFlagAndWeight=true);
-  static void HanningSmooth(VisibilityIterator &vi, const casacore::String& dataCol="corrected",
-			    const casacore::Bool& doFlagAndWeight=true);
+  static void HanningSmooth(VisSet &vs, const String& dataCol="corrected", 
+			    const Bool& doFlagAndWeight=True);
+  static void HanningSmooth(VisibilityIterator &vi, const String& dataCol="corrected",
+			    const Bool& doFlagAndWeight=True);
   // Subtract/add model from/to corrected visibility data
-  static void UVSub(VisSet &vs, casacore::Bool reverse=false);
-  static void UVSub(VisibilityIterator &vs, casacore::Bool reverse=false);
+  static void UVSub(VisSet &vs, Bool reverse=False);
+  static void UVSub(VisibilityIterator &vs, Bool reverse=False);
 
 
   // Add and (optionally) initialize scratch columns
-  static void addScrCols(casacore::MeasurementSet& ms, casacore::Bool addModel, casacore::Bool addCorr, 
-			 casacore::Bool init, casacore::Bool compress);
+  static void addScrCols(MeasurementSet& ms, Bool addModel, Bool addCorr, 
+			 Bool init, Bool compress);
 
   // Initialize scr cols
-  static void initScrCols(casacore::MeasurementSet& ms, casacore::Bool initModel, casacore::Bool initCorr);
-  static void initScrCols(VisibilityIterator& ms, casacore::Bool initModel, casacore::Bool initCorr);
+  static void initScrCols(MeasurementSet& ms, Bool initModel, Bool initCorr);
+  static void initScrCols(VisibilityIterator& ms, Bool initModel, Bool initCorr);
 
   // Remove OTF model keywords
-  static void remOTFModel(casacore::MeasurementSet& ms);
+  static void remOTFModel(MeasurementSet& ms);
 
   // Remove physical scrcols
-  static void remScrCols(casacore::MeasurementSet& ms, casacore::Bool remModel, casacore::Bool remCorr);
+  static void remScrCols(MeasurementSet& ms, Bool remModel, Bool remCorr);
 
    // Remove an existing cal set (a CORRECTED_DATA and MODEL_DATA 
   // column set and, optionally, any associated compression columns)
-  //if removeModel=true...any model for OTF model vis saved in the header is removed
-  static void removeCalSet(casacore::MeasurementSet& ms, casacore::Bool removeModel=false);
+  //if removeModel=True...any model for OTF model vis saved in the header is removed
+  static void removeCalSet(MeasurementSet& ms, Bool removeModel=False);
 
 };
 

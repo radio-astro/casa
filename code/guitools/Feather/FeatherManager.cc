@@ -34,7 +34,6 @@
 
 #include <QDebug>
 
-using namespace casacore;
 namespace casa {
 
 FeatherManager::FeatherManager() :
@@ -557,5 +556,4 @@ FeatherManager::~FeatherManager() {
 	delete featherWorker;
 }
 
-using namespace casacore;
 } /* namespace casa */

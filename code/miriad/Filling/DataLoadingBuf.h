@@ -60,14 +60,14 @@
 // <synopsis>
 // This class allows one to create reusable buffers for each of the spectral 
 // windows that can be passed to an 
-// <linkto class="casacore::ArrayColumn">casacore::ArrayColumn's</linkto>
+// <linkto class="ArrayColumn">ArrayColumn's</linkto>
 // <src>put()</src> function.  This avoids the cost of recreating the buffers
 // inside a loading loop that cycles through the input Miriad windows.  The 
 // buffers can be resized if necessary if the Miriad correllator setup 
 // changes.  <p>
 //
-// This class stores for each window a casacore::Matrix<casacore::Complex> to store the visibility data
-// and a casacore::Cube<casacore::Bool> to hold the flags.  Normally, you can have all wide-band windows 
+// This class stores for each window a Matrix<Complex> to store the visibility data
+// and a Cube<Bool> to hold the flags.  Normally, you can have all wide-band windows 
 // share a single buffer
 // (since they are all the same size, namely having 1 channel).  The buffers are 
 // access via their (zero-base) window index, starting with the narrow band windows.  
@@ -84,32 +84,32 @@
 // To set up the buffers, you need to know how many windows you have, and the 
 // number of channels in each window.
 // <srcblock>
-//     casacore::Int nspec = 6
-//     casacore::Int *nchan = { 512, 256, 256, 512, 256, 256 };
+//     Int nspec = 6
+//     Int *nchan = { 512, 256, 256, 512, 256, 256 };
 //     DataLoadingBuf buf();
 //     buf.resizeForNspect(nspec+1)  // to hold both narrow and wide band data
-//     for(casacore::Int i=0; i < nspec; i++)
+//     for(Int i=0; i < nspec; i++)
 //         buf.resizeForSpWin(i, nchan[i]);
 //     buf.resizeForSpWin(nspec, 1);
 // </srcblock>
 //
 // Now to use the buffers...
 // <srcblock>
-//     for(casacore::Int i=0; i < 2*nspec; i++) {
+//     for(Int i=0; i < 2*nspec; i++) {
 //
 //         // get data-loading buffers
-//         casacore::Matrix<casacore::Complex> &vis = buf.visForSpWin(i);
-//         casacore::Cube<casacore::Bool> &flgs = buf.flagsForSpWin(i);
+//         Matrix<Complex> &vis = buf.visForSpWin(i);
+//         Cube<Bool> &flgs = buf.flagsForSpWin(i);
 // 
 //         // load in the data
-//         casacore::Int n = (i < nspec) ? nchan[i] : 1;
-//         for(casacore::Int j=0; j < n; j++) {
-//             vis(0,j) = casacore::Complex( corr[2*(j+offset)], 
+//         Int n = (i < nspec) ? nchan[i] : 1;
+//         for(Int j=0; j < n; j++) {
+//             vis(0,j) = Complex( corr[2*(j+offset)], 
 //                                -corr[2*(j+offset)+1] );
 //             flgs(0,j,1) = (flags[j+offset] == 0);
 //         }
 //     
-//         // load it into casacore::MS column
+//         // load it into MS column
 //         msc->data().put(row, vis);
 //         msc->flagCategory().put(row, flgs);
 //     }
@@ -126,10 +126,10 @@
 //
 class DataLoadingBuf {
 private:
-    casacore::Block< casacore::Matrix<casacore::Complex>* > vislist;
-    casacore::Block< casacore::Cube<casacore::Bool>* > flgslist;
-    casacore::Vector<casacore::Float> wt;
-    casacore::Vector<casacore::Float> rms;
+    Block< Matrix<Complex>* > vislist;
+    Block< Cube<Bool>* > flgslist;
+    Vector<Float> wt;
+    Vector<Float> rms;
 
     DataLoadingBuf(DataLoadingBuf&);
 public:
@@ -143,61 +143,61 @@ public:
     // resize our arrays of containers to hold data for wide band data 
     // and a given number of narrow band spectral windows.  <src>i</src>
     // is the number of narrow band spectral windows.  
-    void resizeForNspect(casacore::Int i);
+    void resizeForNspect(Int i);
 
     // return the number of channels that can be stored in a given window.
     // A value for <src>i</src> greater than or equal to the number of 
     // narrow band windows is assumed to refer to a wideband window; thus, 
     // 1 will be returned.
-    casacore::Int nchanForSpWin(casacore::Int i) { return visForSpWin(i).ncolumn(); }
+    Int nchanForSpWin(Int i) { return visForSpWin(i).ncolumn(); }
 
-    // return a reference to the flags casacore::Cube for a given window.
+    // return a reference to the flags Cube for a given window.
     // A value for <src>i</src> greater than or equal to the number of 
     // narrow band windows is assumed to refer to a wideband window.
-    casacore::Cube<casacore::Bool>& flagsForSpWin(casacore::Int winid) {
-        if ((casacore::uInt)winid >= flgslist.nelements()) 
+    Cube<Bool>& flagsForSpWin(Int winid) {
+        if ((uInt)winid >= flgslist.nelements()) 
             winid = flgslist.nelements()-1;
-        if (flgslist[winid] == NULL) flgslist[winid] = new casacore::Cube<casacore::Bool>();
+        if (flgslist[winid] == NULL) flgslist[winid] = new Cube<Bool>();
         return *(flgslist[winid]);
     }
 
-    // return a reference to the vis casacore::Matrix for a given window
-    casacore::Matrix<casacore::Complex>& visForSpWin(casacore::Int winid) {
-        if ((casacore::uInt)winid >= vislist.nelements()) winid = vislist.nelements()-1;
-        if (vislist[winid] == NULL) vislist[winid] = new casacore::Matrix<casacore::Complex>();
+    // return a reference to the vis Matrix for a given window
+    Matrix<Complex>& visForSpWin(Int winid) {
+        if ((uInt)winid >= vislist.nelements()) winid = vislist.nelements()-1;
+        if (vislist[winid] == NULL) vislist[winid] = new Matrix<Complex>();
         return *(vislist[winid]);
     }
 
     // return a reference to the weight vector
-    casacore::Vector<casacore::Float>& weight() { return wt; }
+    Vector<Float>& weight() { return wt; }
 
     // return a reference to the sigma vector
-    casacore::Vector<casacore::Float>& sigma() { return rms; }
+    Vector<Float>& sigma() { return rms; }
 
     // resize the containers for a given window to the given number of channels
-    void resizeForSpWin(casacore::Int winid, casacore::Int nchan) {
-	casacore::Int npol;
+    void resizeForSpWin(Int winid, Int nchan) {
+	Int npol;
 
-	if (winid > casacore::Int(vislist.nelements())) winid = vislist.nelements();
+	if (winid > Int(vislist.nelements())) winid = vislist.nelements();
         if (vislist[winid] == NULL ||
-            visForSpWin(winid).ncolumn() != (casacore::uInt)nchan) 
+            visForSpWin(winid).ncolumn() != (uInt)nchan) 
         {
 	    npol = (vislist[winid] == NULL) ? 1 : vislist[winid]->nrow();
             if (vislist[winid] != NULL) delete vislist[winid];
-            vislist[winid] = new casacore::Matrix<casacore::Complex>(npol, nchan);
+            vislist[winid] = new Matrix<Complex>(npol, nchan);
             if (flgslist[winid] != NULL) delete flgslist[winid];
-            flgslist[winid] = new casacore::Cube<casacore::Bool>(npol, nchan, 2, false);
+            flgslist[winid] = new Cube<Bool>(npol, nchan, 2, False);
         }
     }
 
     // resize the containers for a given number of polarization correlations
-    void resizeForNpol(casacore::Int npol) {
-	for(casacore::Int i=0; i < casacore::Int(vislist.nelements()); i++) {
+    void resizeForNpol(Int npol) {
+	for(Int i=0; i < Int(vislist.nelements()); i++) {
 	    if (vislist[i] != NULL) {
-		casacore::Int nchan = vislist[i]->ncolumn();
+		Int nchan = vislist[i]->ncolumn();
 		vislist[i]->resize(npol, nchan);
 		flgslist[i]->resize(npol, nchan, 2);
-		*(flgslist[i]) = false;
+		*(flgslist[i]) = False;
 	    }
 	}
 	wt.resize(npol);

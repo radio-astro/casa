@@ -28,7 +28,6 @@
 #include <casaqt/QtBrowser/TBBrowser.qo.h>
 #include <casaqt/QtBrowser/TBTest.h>
 
-using namespace casacore;
 namespace casa {
 
 ///////////////////////////////////

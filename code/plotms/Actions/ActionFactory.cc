@@ -56,7 +56,6 @@
 #include <plotms/Actions/ActionZoom.h>
 #include <QDebug>
 
-using namespace casacore;
 namespace casa {
 
 ActionFactory::ActionFactory() {
@@ -167,5 +166,4 @@ CountedPtr<PlotMSAction> ActionFactory::getAction( PlotMSAction::Type actionType
 ActionFactory::~ActionFactory() {
 }
 
-using namespace casacore;
 } /* namespace casa */

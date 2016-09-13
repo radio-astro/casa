@@ -53,7 +53,6 @@
 
 #define PRTLEV 0
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // **********************************************************
@@ -80,13 +79,13 @@ VisCal::VisCal(VisSet& vs) :
   nChanMat_(vs.numberSpw(),1),
   startChan_(vs.numberSpw(),0),
   interval_(0.0),
-  applied_(false),
+  applied_(False),
   V_(vs.numberSpw(),NULL),
   currCPar_(vs.numberSpw(),NULL),
   currRPar_(vs.numberSpw(),NULL),
   currParOK_(vs.numberSpw(),NULL),
-  PValid_(vs.numberSpw(),false),
-  calWt_(false),
+  PValid_(vs.numberSpw(),False),
+  calWt_(False),
   currWtScale_(vs.numberSpw(),NULL),
   prtlev_(PRTLEV),
   extratag_("")
@@ -117,13 +116,13 @@ VisCal::VisCal(String msname,Int MSnAnt,Int MSnSpw) :
   nChanMat_(MSnSpw,1),
   startChan_(MSnSpw,0),
   interval_(0.0),
-  applied_(false),
+  applied_(False),
   V_(MSnSpw,NULL),
   currCPar_(MSnSpw,NULL),
   currRPar_(MSnSpw,NULL),
   currParOK_(MSnSpw,NULL),
-  PValid_(MSnSpw,false),
-  calWt_(false),
+  PValid_(MSnSpw,False),
+  calWt_(False),
   currWtScale_(MSnSpw,NULL),
   prtlev_(PRTLEV),
   extratag_("")
@@ -189,13 +188,13 @@ VisCal::VisCal(const Int& nAnt) :
   nChanMat_(1,1),
   startChan_(1,0),
   interval_(0.0),
-  applied_(false),
+  applied_(False),
   V_(1,NULL),
   currCPar_(1,NULL),
   currRPar_(1,NULL),
   currParOK_(1,NULL),
-  PValid_(1,false),
-  calWt_(false),
+  PValid_(1,False),
+  calWt_(False),
   currWtScale_(1,NULL),
   prtlev_(PRTLEV),
   extratag_("")
@@ -222,7 +221,7 @@ void VisCal::setApply() {
   if (prtlev()>2) cout << "VC::setApply()" << endl;
 
   // This is the apply context
-  setApplied(true);
+  setApplied(True);
 
   // Establish non-trivial paramter arrays
   for (Int ispw=0;ispw<nSpw();ispw++) {
@@ -244,7 +243,7 @@ void VisCal::setApply() {
 	throw(AipsError("Parameters must be entirely Real or entirely Complex for now!"));
       }
       currParOK().resize(nPar(),nChanPar(),nElem());
-    currParOK()=true;
+      currParOK()=True;
     }
   }
 
@@ -262,7 +261,7 @@ void VisCal::setApply(const Record& apply) {
     calWt()=apply.asBool("calwt");
 
   // This is apply context  
-  setApplied(true);
+  setApplied(True);
 
   // Initialize flag counting
   initCalFlagCount();
@@ -310,7 +309,7 @@ void VisCal::correct2(vi::VisBuffer2& vb, Bool trial, Bool doWtSp) {
   countInFlag2(vb);
 
   // Bring calibration up-to-date w/ the vb
-  syncCal2(vb,true);
+  syncCal2(vb,True);
 
   // Organize for weight calibration
   Cube<Float> wtcube;
@@ -365,7 +364,7 @@ void VisCal::correct(VisBuffer& vb, Cube<Complex>& Vout, Bool trial) {
 
   // Bring calibration up-to-date with the vb, 
   //   with inversion turned ON
-  syncCal(vb,true);
+  syncCal(vb,True);
 
   // Call generic row-by-row apply, with inversion turned ON
   applyCal(vb,Vout,trial);
@@ -381,7 +380,7 @@ void VisCal::corrupt(VisBuffer& vb, Cube<Complex>& Mout) {
   // Ensure weight calibration off internally for corrupt
   //   (corruption doesn't re-scale the data!)
   Bool userCalWt=calWt();
-  calWt()=false;
+  calWt()=False;
 
   // Prepare output Cube<Complex> for its own in-place apply:
   //  (this is a no-op if referencing same storage)
@@ -389,7 +388,7 @@ void VisCal::corrupt(VisBuffer& vb, Cube<Complex>& Mout) {
 
   // Bring calibration up-to-date with the vb, 
   //   with inversion turned OFF
-  syncCal(vb,false);
+  syncCal(vb,False);
 
   // Call generic row-by-row apply, with inversion turned OFF
   applyCal(vb,Mout);
@@ -643,7 +642,7 @@ void VisCal::syncCal(VisCal& vc) {
   checkCurrCal();
 
   // Procede with generalized sync of calibration
-  syncCal(false);
+  syncCal(False);
 
   //  cout << "    VisCal::syncCal(VisCal): " << currCPar().data() 
   //       << endl;
@@ -778,7 +777,7 @@ void VisCal::setCalChannelization(const Int& nChanDat) {
 void VisCal::checkCurrCal() {
   // Based on meta-data changes, determine mainly if
   //  new calibration PARAMETERS should be sought
-  //  NB: A finding of "true" does not necessarily 
+  //  NB: A finding of "True" does not necessarily 
   //   mean new pars will be found by CalInterp (we are
   //   here only forcing it to try)
   //  NB: this method may also invalidateCalMat(), to
@@ -924,7 +923,7 @@ VisMueller::VisMueller(VisSet& vs) :
   M_(vs.numberSpw(),NULL),
   currMElem_(vs.numberSpw(),NULL),
   currMElemOK_(vs.numberSpw(),NULL),
-  MValid_(vs.numberSpw(),false)
+  MValid_(vs.numberSpw(),False)
 {
 
   if (prtlev()>2) cout << "VM::VM(vs)" << endl;
@@ -937,7 +936,7 @@ VisMueller::VisMueller(String msname,Int MSnAnt,Int MSnSpw) :
   M_(MSnSpw,NULL),
   currMElem_(MSnSpw,NULL),
   currMElemOK_(MSnSpw,NULL),
-  MValid_(MSnSpw,false)
+  MValid_(MSnSpw,False)
 {
 
   if (prtlev()>2) cout << "VM::VM(msname,MSnAnt,MSnSpw)" << endl;
@@ -964,7 +963,7 @@ VisMueller::VisMueller(const Int& nAnt) :
   M_(1,NULL),
   currMElem_(1,NULL),
   currMElemOK_(1,NULL),
-  MValid_(1,false)
+  MValid_(1,False)
 {
   if (prtlev()>2) cout << "VM::VM(i,j,k)" << endl;
 
@@ -1034,10 +1033,10 @@ void VisMueller::applyCal(VisBuffer& vb, Cube<Complex>& Vout,
   Vector<Float> wtvec;
 
   if (V().type()==VisVector::One) {
-    M().setScalarData(true);
+    M().setScalarData(True);
   }
   else
-    M().setScalarData(false);
+    M().setScalarData(False);
 
   // iterate rows
   Int& nRow(vb.nRow());
@@ -1122,10 +1121,10 @@ void VisMueller::applyCal2(vi::VisBuffer2& vb,
 
 
   if (V().type()==VisVector::One) {
-    M().setScalarData(true);
+    M().setScalarData(True);
   }
   else
-    M().setScalarData(false);
+    M().setScalarData(False);
 
   // iterate rows
   Int nRow=vb.nRows();
@@ -1213,7 +1212,7 @@ void VisMueller::syncMueller(const Bool& doInv) {
     // OK is the shape of the M matrix itself
     currMElemOK().resize(muellerNPar(this->muellerType()),nChanMat(),nCalMat());
     currMElemOK().unique();
-    currMElemOK()=false;
+    currMElemOK()=False;
     
     // The matrix state is invalid until we actually calculate them
     invalidateM();
@@ -1378,7 +1377,7 @@ void VisMueller::syncWtScale() {
   default: {
     // Only diag and scalar versions can adjust weights
     //    cout<< "Turning off calWt()" << endl;
-    calWt()=false;
+    calWt()=False;
     return;
     break;
   }
@@ -1464,7 +1463,7 @@ VisJones::VisJones(VisSet& vs) :
   J2_(vs.numberSpw(),NULL),
   currJElem_(vs.numberSpw(),NULL),
   currJElemOK_(vs.numberSpw(),NULL),
-  JValid_(vs.numberSpw(),false)
+  JValid_(vs.numberSpw(),False)
 {
   if (prtlev()>2) cout << "VJ::VJ(vs)" << endl;
 
@@ -1478,7 +1477,7 @@ VisJones::VisJones(String msname,Int MSnAnt,Int MSnSpw) :
   J2_(MSnSpw,NULL),
   currJElem_(MSnSpw,NULL),
   currJElemOK_(MSnSpw,NULL),
-  JValid_(MSnSpw,false)
+  JValid_(MSnSpw,False)
 {
   if (prtlev()>2) cout << "VJ::VJ(msname,MSnAnt,MSnSpw)" << endl;
 
@@ -1507,7 +1506,7 @@ VisJones::VisJones(const Int& nAnt) :
   J2_(1,NULL),
   currJElem_(1,NULL),
   currJElemOK_(1,NULL),
-  JValid_(1,false)
+  JValid_(1,False)
 {
   if (prtlev()>2) cout << "VJ::VJ(i,j,k)" << endl;
 
@@ -1574,7 +1573,7 @@ void VisJones::applyCal(VisBuffer& vb, Cube<Complex>& Vout,
     VisMueller::applyCal(vb,Vout);
   else {
 
-    // TBD: applyByJones()=true necessarily
+    // TBD: applyByJones()=True necessarily
 
     // Data info/indices
     Int* dataChan;
@@ -1595,12 +1594,12 @@ void VisJones::applyCal(VisBuffer& vb, Cube<Complex>& Vout,
     //  (this is relevant only for proper handling of flags
     //   in case of scalar data, for now)
     if (V().type()==VisVector::One) {
-      J1().setScalarData(true);
-      J2().setScalarData(true);
+      J1().setScalarData(True);
+      J2().setScalarData(True);
     }
     else {
-      J1().setScalarData(false);
-      J2().setScalarData(false);
+      J1().setScalarData(False);
+      J2().setScalarData(False);
     }
 
     // iterate rows
@@ -1684,7 +1683,7 @@ void VisJones::applyCal2(vi::VisBuffer2& vb,
   //    VisMueller::applyCal(vb,Vout);
   else {
 
-    // TBD: applyByJones()=true necessarily
+    // TBD: applyByJones()=True necessarily
 
     // References to VB2's contents' _data_
     Vector<Bool> flagRv(vb.flagRow());
@@ -1705,12 +1704,12 @@ void VisJones::applyCal2(vi::VisBuffer2& vb,
     //  (this is relevant only for proper handling of flags
     //   in case of scalar data, for now)
     if (V().type()==VisVector::One) {
-      J1().setScalarData(true);
-      J2().setScalarData(true);
+      J1().setScalarData(True);
+      J2().setScalarData(True);
     }
     else {
-      J1().setScalarData(false);
-      J2().setScalarData(false);
+      J1().setScalarData(False);
+      J2().setScalarData(False);
     }
 
     // iterate rows
@@ -1792,7 +1791,7 @@ void VisJones::syncCalMat(const Bool& doInv) {
 
   // If requested and necessary, synchronize the Mueller matrices
   //   (NEVER invert Muellers, as Jones already have been)
-  if (applyByMueller() && !MValid()) syncMueller(false);
+  if (applyByMueller() && !MValid()) syncMueller(False);
 
 }
 
@@ -1825,7 +1824,7 @@ void VisJones::syncJones(const Bool& doInv) {
     // OK matches size of the J matrix itself
     currJElemOK().resize(jonesNPar(jonesType()),nChanMat(),nAnt());
     currJElem().unique();    // Ensure uniqueness!
-    currJElem()=false;
+    currJElem()=False;
 
     // The matrix state is invalid until we actually calculate them
     invalidateJ();
@@ -2013,7 +2012,7 @@ void VisJones::syncWtScale() {
   default: {
     // Only diag and scalar versions can adjust weights
     //    cout<< "Turning off calWt()" << endl;
-    calWt()=false;
+    calWt()=False;
     return;
     break;
   }

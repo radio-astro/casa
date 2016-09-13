@@ -40,22 +40,22 @@ public:
 	void remove();
 
 	// rotate all the beams counterclockwise by the specified angle
-	void rotate(const casacore::Quantity& angle);
+	void rotate(const Quantity& angle);
 
 	void set(
-		const casacore::Quantity& major, const casacore::Quantity& minor,
-		const casacore::Quantity& pa, const casacore::Record& rec,
-	    casacore::Int channel, casacore::Int polarization
+		const Quantity& major, const Quantity& minor,
+		const Quantity& pa, const Record& rec,
+	    Int channel, Int polarization
 	);
 
 	// set all beams in one go
-	void set(const casacore::ImageBeamSet& beamSet);
+	void set(const ImageBeamSet& beamSet);
 
-	void setVerbose(casacore::Bool v);
+	void setVerbose(Bool v);
 
 private:
 	SPIIT _image;
-	SHARED_PTR<casacore::LogIO> _log;
+	SHARED_PTR<LogIO> _log;
 };
 }
 

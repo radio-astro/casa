@@ -1,5 +1,5 @@
-//# Partition.h: this defines Partition which creates an casacore::MS that is a subset of
-//# an casacore::MS without any changes to the subtables.
+//# Partition.h: this defines Partition which creates an MS that is a subset of
+//# an MS without any changes to the subtables.
 //# 
 //# Copyright (C) 2011
 //# Associated Universities, Inc. Washington DC, USA.
@@ -39,17 +39,12 @@
 #include <msvis/MSVis/SubMS.h>
 
 #ifndef MSVIS_PARTITION_H
-namespace casacore{
-
-template<class T> class ROArrayColumn;
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 #define MSVIS_PARTITION_H
 
 // <summary>
-// Partition makes a subset of an existing casacore::MS without remapping any indices
+// Partition makes a subset of an existing MS without remapping any indices
 // or resizing any subtables (unlike SubMS).
 // </summary>
 
@@ -75,56 +70,57 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //      makePartition
 // </synopsis>
 
-//casacore::Bool isAllColumns(const casacore::Vector<casacore::MS::PredefinedColumns>& colNames);
+template<class T> class ROArrayColumn;
+//Bool isAllColumns(const Vector<MS::PredefinedColumns>& colNames);
 
 class Partition
 {
 public:
-  Partition(casacore::String& theMS, casacore::Table::TableOption option = casacore::Table::Old);
+  Partition(String& theMS, Table::TableOption option = Table::Old);
   
   // construct from an MS
-  Partition(casacore::MeasurementSet& ms);
+  Partition(MeasurementSet& ms);
 
   virtual ~Partition();
   
-  // Change or Set the casacore::MS this casacore::MSSelector refers to.
-  void setMS(casacore::MeasurementSet& ms);
+  // Change or Set the MS this MSSelector refers to.
+  void setMS(MeasurementSet& ms);
 
   // Select spw and channels for each spw.
   // It returns true on success and false on failure.
-  casacore::Bool selectSpw(const casacore::String& spwstr);
+  Bool selectSpw(const String& spwstr);
 
-  //select casacore::Time and time averaging or regridding
+  //select Time and time averaging or regridding
   //void selectTime();
 
   //select stuff using msselection syntax ...time is left out
   // call it separately with timebin
-  casacore::Bool setmsselect(const casacore::String& spw="", const casacore::String& field="", 
-		   const casacore::String& baseline="", const casacore::String& scan="",
-                   const casacore::String& uvrange="", const casacore::String& taql="", 
-		   const casacore::String& subarray="", const casacore::String& intent="",
-                   const casacore::String& obs="");
+  Bool setmsselect(const String& spw="", const String& field="", 
+		   const String& baseline="", const String& scan="",
+                   const String& uvrange="", const String& taql="", 
+		   const String& subarray="", const String& intent="",
+                   const String& obs="");
 
   // Select source or field
-  casacore::Bool selectSource(const casacore::Vector<casacore::Int>& fieldid);
+  Bool selectSource(const Vector<Int>& fieldid);
   
   // Select Antennas to split out  
-  void selectAntenna(casacore::Vector<casacore::Int>& antennaids, casacore::Vector<casacore::String>& antennaSel)
+  void selectAntenna(Vector<Int>& antennaids, Vector<String>& antennaSel)
   {
     antennaSel_p = SubMS::pickAntennas(antennaId_p, antennaSelStr_p,
 				       antennaids, antennaSel);
   } 
 
   // Select array IDs to use.
-  void selectArray(const casacore::String& subarray);
+  void selectArray(const String& subarray);
 
   //select time parameters
-  void selectTime(casacore::Double timeBin=-1.0, casacore::String timerng="");
+  void selectTime(Double timeBin=-1.0, String timerng="");
 
-  //void selectSource(casacore::Vector<casacore::String> sourceid);
+  //void selectSource(Vector<String> sourceid);
 
   //Method to set if a phase Center rotation is needed
-  //void setPhaseCenter(casacore::Int fieldid, casacore::MDirection& newPhaseCenter);
+  //void setPhaseCenter(Int fieldid, MDirection& newPhaseCenter);
 
   //Method to make the partition.
   //
@@ -135,104 +131,104 @@ public:
   //
   // combine sets combine_p.  (Columns to ignore while time averaging.)
   //
-  casacore::Bool makePartition(casacore::String& outname, casacore::String& whichDataCol,
-		     const casacore::Vector<casacore::Int>& tileShape=casacore::Vector<casacore::Int>(1, 0),
-		     const casacore::String& combine="");
+  Bool makePartition(String& outname, String& whichDataCol,
+		     const Vector<Int>& tileShape=Vector<Int>(1, 0),
+		     const String& combine="");
 
   //Method to make a scratch partition and even in memory if posssible
   //Useful if temporary subselection/averaging is necessary
   // It'll be in memory if the basic output ms is less than half of 
-  // memory reported by casacore::HostInfo unless forced to by user...
-  virtual casacore::MeasurementSet* makeScratchPartition(const casacore::Vector<casacore::MS::PredefinedColumns>& whichDataCols, 
-  				   const casacore::Bool forceInMemory=false);
+  // memory reported by HostInfo unless forced to by user...
+  virtual MeasurementSet* makeScratchPartition(const Vector<MS::PredefinedColumns>& whichDataCols, 
+  				   const Bool forceInMemory=False);
   // In this form whichDataCol gets passed to parseColumnNames().
-  virtual casacore::MeasurementSet* makeScratchPartition(const casacore::String& whichDataCol, 
-  				   const casacore::Bool forceInMemory=false);
+  virtual MeasurementSet* makeScratchPartition(const String& whichDataCol, 
+  				   const Bool forceInMemory=False);
 
   // This sets up a default new ms
   // Declared static as it can be called directly outside of Partition.
   // Therefore it is not dependent on any member variable.
-  static casacore::MeasurementSet* setupMS(const casacore::String& msname, const casacore::MeasurementSet& inms,
-				 const casacore::Int nchan, const casacore::Int npol, const casacore::String& telescop,
-                                 const casacore::Vector<casacore::MS::PredefinedColumns>& colNamesTok,
-  				 const casacore::Int obstype=0);
+  static MeasurementSet* setupMS(const String& msname, const MeasurementSet& inms,
+				 const Int nchan, const Int npol, const String& telescop,
+                                 const Vector<MS::PredefinedColumns>& colNamesTok,
+  				 const Int obstype=0);
 
   // Same as above except allowing manual tileshapes
-  static casacore::MeasurementSet* setupMS(const casacore::String& msname, const casacore::MeasurementSet& inms,
-				 const casacore::Int nchan, const casacore::Int npol,
-                                 const casacore::Vector<casacore::MS::PredefinedColumns>& colNamesTok,
-  				 const casacore::Vector<casacore::Int>& tileShape=casacore::Vector<casacore::Int>(1,0));
+  static MeasurementSet* setupMS(const String& msname, const MeasurementSet& inms,
+				 const Int nchan, const Int npol,
+                                 const Vector<MS::PredefinedColumns>& colNamesTok,
+  				 const Vector<Int>& tileShape=Vector<Int>(1,0));
   
-  void verifyColumns(const casacore::MeasurementSet& ms, const casacore::Vector<casacore::MS::PredefinedColumns>& colNames);
+  void verifyColumns(const MeasurementSet& ms, const Vector<MS::PredefinedColumns>& colNames);
 private:
   //method that returns the selected ms (?! - but it's Boolean - RR)
-  casacore::Bool makeSelection();
+  Bool makeSelection();
 
   // (Sub)table fillers.
-  casacore::Bool fillAllTables(const casacore::Vector<casacore::MS::PredefinedColumns>& colNames);
-  casacore::Bool fillMainTable(const casacore::Vector<casacore::MS::PredefinedColumns>& colNames);
+  Bool fillAllTables(const Vector<MS::PredefinedColumns>& colNames);
+  Bool fillMainTable(const Vector<MS::PredefinedColumns>& colNames);
 
-  //  casacore::Bool writeDiffSpwShape(const casacore::Vector<casacore::MS::PredefinedColumns>& colNames);
-  casacore::Bool fillAccessoryMainCols();
+  //  Bool writeDiffSpwShape(const Vector<MS::PredefinedColumns>& colNames);
+  Bool fillAccessoryMainCols();
 
   // *** Private member functions ***
-  casacore::Bool getDataColumn(casacore::ROArrayColumn<casacore::Complex>& data,
-                     const casacore::MS::PredefinedColumns colName);
-  casacore::Bool getDataColumn(casacore::ROArrayColumn<casacore::Float>& data,
-                     const casacore::MS::PredefinedColumns colName);
-  casacore::Bool putDataColumn(casacore::MSColumns& msc, casacore::ROArrayColumn<casacore::Complex>& data,
-                     const casacore::MS::PredefinedColumns datacol,
-                     const casacore::Bool writeToDataCol=false);
-  casacore::Bool putDataColumn(casacore::MSColumns& msc, casacore::ROArrayColumn<casacore::Float>& data,
-                     const casacore::MS::PredefinedColumns datacol,
-                     const casacore::Bool writeToDataCol=false);
+  Bool getDataColumn(ROArrayColumn<Complex>& data,
+                     const MS::PredefinedColumns colName);
+  Bool getDataColumn(ROArrayColumn<Float>& data,
+                     const MS::PredefinedColumns colName);
+  Bool putDataColumn(MSColumns& msc, ROArrayColumn<Complex>& data,
+                     const MS::PredefinedColumns datacol,
+                     const Bool writeToDataCol=False);
+  Bool putDataColumn(MSColumns& msc, ROArrayColumn<Float>& data,
+                     const MS::PredefinedColumns datacol,
+                     const Bool writeToDataCol=False);
 
   // This method uses VisIter for efficient copy mode data transfer
-  casacore::Bool copyDataFlagsWtSp(const casacore::Vector<casacore::MS::PredefinedColumns>& colNames,
-                         const casacore::Bool writeToDataCol);
+  Bool copyDataFlagsWtSp(const Vector<MS::PredefinedColumns>& colNames,
+                         const Bool writeToDataCol);
 
   // Used in a couple of places to estimate how much memory to grab.
-  casacore::Double n_bytes() {return mssel_p.nrow() * maxnchan_p * maxncorr_p *
-                           sizeof(casacore::Complex);}
+  Double n_bytes() {return mssel_p.nrow() * maxnchan_p * maxncorr_p *
+                           sizeof(Complex);}
 
   // Read the input, time average it to timeBin_p, and write the output.
-  casacore::Bool doTimeAver(const casacore::Vector<casacore::MS::PredefinedColumns>& dataColNames);
+  Bool doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames);
 
   // Fills mapper[ntok] with a map from dataColumn indices to ArrayColumns in
   // the output.  mapper must have ntok slots!
-  static void getDataColMap(casacore::MSMainColumns* msc, casacore::ArrayColumn<casacore::Complex>* mapper,
-			    casacore::uInt ntok,
-			    const casacore::Vector<casacore::MS::PredefinedColumns>& colEnums);
+  static void getDataColMap(MSMainColumns* msc, ArrayColumn<Complex>* mapper,
+			    uInt ntok,
+			    const Vector<MS::PredefinedColumns>& colEnums);
 
   // *** Member variables ***
 
   // Initialized* by ctors.  (Maintain order both here and in ctors.)
   //  * not necessarily to anything useful.
-  casacore::MeasurementSet ms_p, mssel_p;
-  casacore::MSMainColumns * msc_p;		// columns of msOut_p
-  casacore::ROMSColumns * mscIn_p;
-  casacore::Bool   antennaSel_p;		// Selecting by antenna?
-  casacore::Double timeBin_p;
-  casacore::String scanString_p,          // Selects scans by #number#.  Historically named.
+  MeasurementSet ms_p, mssel_p;
+  MSMainColumns * msc_p;		// columns of msOut_p
+  ROMSColumns * mscIn_p;
+  Bool   antennaSel_p;		// Selecting by antenna?
+  Double timeBin_p;
+  String scanString_p,          // Selects scans by #number#.  Historically named.
          intentString_p,        // Selects scans by string.  scanString_p was taken.
-         obsString_p,           // casacore::String for observationID selection.
+         obsString_p,           // String for observationID selection.
          uvrangeString_p, taqlString_p;
-  casacore::String timeRange_p, arrayExpr_p, corrString_p;
-  casacore::String combine_p;          // Should time averaging not split bins by
+  String timeRange_p, arrayExpr_p, corrString_p;
+  String combine_p;          // Should time averaging not split bins by
                              // scan #, observation, and/or state ID?
                              // Must be lowercase at all times.
-  casacore::Int maxnchan_p,    // The maximum # of channels and correlations for each
-      maxncorr_p;    // selected DDID.  (casacore::Int because NUM_CHAN and NUM_CORR
-                     // are casacore::Int instead of uInt.)
+  Int maxnchan_p,    // The maximum # of channels and correlations for each
+      maxncorr_p;    // selected DDID.  (Int because NUM_CHAN and NUM_CORR
+                     // are Int instead of uInt.)
 
   // Uninitialized by ctors.
-  casacore::MeasurementSet msOut_p;
-  casacore::Vector<casacore::Int> spw_p;      // Selected spw numbers
-  casacore::Vector<casacore::Int> fieldid_p;
-  casacore::Vector<casacore::String> antennaSelStr_p;
-  casacore::Vector<casacore::Int> antennaId_p;
-  casacore::Vector<casacore::Int> arrayId_p;
-  casacore::Matrix<casacore::Double> selTimeRanges_p;
+  MeasurementSet msOut_p;
+  Vector<Int> spw_p;      // Selected spw numbers
+  Vector<Int> fieldid_p;
+  Vector<String> antennaSelStr_p;
+  Vector<Int> antennaId_p;
+  Vector<Int> arrayId_p;
+  Matrix<Double> selTimeRanges_p;
 };
 
 } //# NAMESPACE CASA - END

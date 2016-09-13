@@ -30,11 +30,10 @@
 #include <display/DisplayShapes/DSCircle.h>
 #include <casa/BasicMath/Math.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	DSCircle::DSCircle() :
-		DSEllipse(true) {
+		DSEllipse(True) {
 		setDefaultOptions();
 	}
 
@@ -42,7 +41,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	DSCircle::DSCircle(const Float& xPos, const Float& yPos, const Float& radius,
 	                   const Bool& hasHandles,
 	                   const Bool& drawHandles) :
-		DSEllipse(xPos, yPos, radius, radius, false, false, true) {
+		DSEllipse(xPos, yPos, radius, radius, False, False, True) {
 
 		setHasHandles(hasHandles);
 		if (hasHandles) {
@@ -85,7 +84,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	Bool DSCircle::inObject(const Float& xPos, const Float& yPos) {
-		Bool inside = false;
+		Bool inside = False;
 		Vector<Float> cent(getCenter());
 		inside = (hypot(xPos - cent[0], yPos - cent[1]) < getMinorAxis());
 		return inside;
@@ -96,14 +95,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	Bool DSCircle::setOptions(const Record& settings) {
-		Bool localChange = false;
+		Bool localChange = False;
 
 		if (settings.isDefined("radius")) {
 			DSEllipse::setMinorAxis(settings.asFloat("radius"));
 			DSEllipse::setMajorAxis(settings.asFloat("radius"));
 		}
 
-		if (DSEllipse::setOptions(settings)) localChange = true;
+		if (DSEllipse::setOptions(settings)) localChange = True;
 		return localChange;
 	}
 

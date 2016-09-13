@@ -85,7 +85,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // coordinates are then sent on to the <linkto
 // class="PixelCanvas">PixelCanvas</linkto> where they are plotted.
 //
-// Images are drawn by sending a casacore::Matrix and specifying the
+// Images are drawn by sending a Matrix and specifying the
 // world-coordinate location of the center of the lower-left pixel.
 // If the dataMin and dataMax values have been set, they will be used
 // to scale the data, otherwise the min and max will be scanned.
@@ -118,7 +118,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // The WorldCanvas maintains a set of <linkto
 // class="Attribute">Attribute</linkto>s which the user can set on the
 // WorldCanvas. An Attribute is a combination of a name and a value,
-// the value can be of type casacore::uInt, casacore::Int, casacore::Float, casacore::Double, casacore::Bool and casacore::String,
+// the value can be of type uInt, Int, Float, Double, Bool and String,
 // and Vectors of these. These Attributes serve two purposes: 1) to
 // allow to place (using the member functions <src>setAttribute</src>
 // and <src> setAttributes</src>) more or less arbitrary information
@@ -136,28 +136,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // The following Attributes (and their types) are pre-defined on the
 // WorldCanvas and can be accessed using the Attribute interface
 // (note: these Attributes cannot be deleted using removeAttribute()):
-// <ul> <li> canvasXOffset (casacore::uInt): The offset of the WorldCanvas on
-// the PixelCanvas (X) in 'screen pixels' <li> canvasYOffset (casacore::uInt):
+// <ul> <li> canvasXOffset (uInt): The offset of the WorldCanvas on
+// the PixelCanvas (X) in 'screen pixels' <li> canvasYOffset (uInt):
 // The offset of the WorldCanvas on the PixelCanvas (Y) in 'screen
-// pixels' <li> canvasYSize (casacore::uInt): The size of the WorldCanvas on the
-// PixelCanvas (X) in 'screen pixels' <li> canvasYSize (casacore::uInt): The
+// pixels' <li> canvasYSize (uInt): The size of the WorldCanvas on the
+// PixelCanvas (X) in 'screen pixels' <li> canvasYSize (uInt): The
 // size of the WorldCanvas on the PixelCanvas (Y) in 'screen pixels'
-// <li> fracXOffset (casacore::Double): The fractional offset of the WorldCanvas
-// on the Pixelcanvas (X) <li> fracYOffset (casacore::Double): The fractional
+// <li> fracXOffset (Double): The fractional offset of the WorldCanvas
+// on the Pixelcanvas (X) <li> fracYOffset (Double): The fractional
 // offset of the WorldCanvas on the Pixelcanvas (Y) <li> fracXSize
-// (casacore::Double): The fractional size of the WorldCanvas on the Pixelcanvas
-// (X) <li> fracYSize (casacore::Double): The fractional size of the WorldCanvas
-// on the Pixelcanvas (Y) <li> linXMin (casacore::Double): The current minimum
-// linear coordinate (X) <li> linXMax (casacore::Double): The current maximum
-// linear coordinate (X) <li> linYMin (casacore::Double): The current minimum
-// linear coordinate (Y) <li> linYMax (casacore::Double): The current maximum
-// linear coordinate (Y) <li> linXMinLimit (casacore::Double): The current limit
-// on the minimum linear coordinate (X) <li> linXMaxLimit (casacore::Double):
+// (Double): The fractional size of the WorldCanvas on the Pixelcanvas
+// (X) <li> fracYSize (Double): The fractional size of the WorldCanvas
+// on the Pixelcanvas (Y) <li> linXMin (Double): The current minimum
+// linear coordinate (X) <li> linXMax (Double): The current maximum
+// linear coordinate (X) <li> linYMin (Double): The current minimum
+// linear coordinate (Y) <li> linYMax (Double): The current maximum
+// linear coordinate (Y) <li> linXMinLimit (Double): The current limit
+// on the minimum linear coordinate (X) <li> linXMaxLimit (Double):
 // The current limit on the maximum linear coordinate (X) <li>
-// linYMinLimit (casacore::Double): The current limit on the minimum linear
-// coordinate (Y) <li> linYMaxLimit (casacore::Double): The current limit on the
-// maximum linear coordinate (Y) <li> dataMin (casacore::Double): The data
-// minimum of the WorldCanvas <li> dataMax (casacore::Double): The data maximum
+// linYMinLimit (Double): The current limit on the minimum linear
+// coordinate (Y) <li> linYMaxLimit (Double): The current limit on the
+// maximum linear coordinate (Y) <li> dataMin (Double): The data
+// minimum of the WorldCanvas <li> dataMax (Double): The data maximum
 // of the WorldCanvas </ul>
 //
 // The WorldCanvas knows three coordinate systems.
@@ -213,8 +213,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Construct a WorldCanvas on the given PixelCanvas, at the given
 		// origin (in fractions of the PixelCanvas extent), and having the
 		// given size (in the same units).
-		WorldCanvas(PixelCanvas *pc, casacore::Double xOrigin = 0.0, casacore::Double yOrigin = 0.0,
-		            casacore::Double xSize = 1.0, casacore::Double ySize = 1.0);
+		WorldCanvas(PixelCanvas *pc, Double xOrigin = 0.0, Double yOrigin = 0.0,
+		            Double xSize = 1.0, Double ySize = 1.0);
 
 		// Destructor.
 		virtual ~WorldCanvas();
@@ -275,10 +275,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// call/s to hold() which has/have not been matched with the same
 		// number of calls to release().
 		void refresh(const Display::RefreshReason &reason = Display::UserCommand,
-		             const casacore::Bool &explicitrequest = true);
+		             const Bool &explicitrequest = True);
 
 		// Is a refresh currently allowed?
-		casacore::Bool refreshAllowed();
+		Bool refreshAllowed();
 
 		// Hold and release response to refreshes requested with the
 		// <src>refresh()</src> member function.  Multiple calls to
@@ -293,7 +293,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void release();
 		// </group>
 
-		// Set casacore::Coordinate, SizeControl, Resample and DataScale handlers for
+		// Set Coordinate, SizeControl, Resample and DataScale handlers for
 		// the WorldCanvas.  If the given handler is 0, then resort to using
 		// the default handler.
 		// <group>
@@ -304,36 +304,36 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// </group>
 
 		// Set the location of the WorldCanvas on its PixelCanvas.
-		void setWorldCanvasPosition(casacore::Double fracXOffset, casacore::Double fracYOffset,
-		                            casacore::Double fracXSize, casacore::Double fracYSize);
+		void setWorldCanvasPosition(Double fracXOffset, Double fracYOffset,
+		                            Double fracXSize, Double fracYSize);
 
 		// Pixel, linear and world coordinate transformation functions.  For
-		// the casacore::Vector versions, the coordinate mapping returns false if the
-		// transformation failed.  For the casacore::Matrix versions, failures(i) on
-		// input should be set to true if the i'th transformation should not
-		// be attempted.  On output, failures(i) is true if the
+		// the Vector versions, the coordinate mapping returns False if the
+		// transformation failed.  For the Matrix versions, failures(i) on
+		// input should be set to True if the i'th transformation should not
+		// be attempted.  On output, failures(i) is True if the
 		// transformation was not attempted, or failed.  If on input the
 		// failures vector has zero length, it will be assumed that no prior
 		// failures have occurred.
 		// <group>
-		casacore::Bool pixToLin(casacore::Vector<casacore::Double> &lin, const casacore::Vector<casacore::Double> &pix);
-		casacore::Bool pixToLin(casacore::Matrix<casacore::Double> &lin, casacore::Vector<casacore::Bool> &failures,
-		              const casacore::Matrix<casacore::Double> &pix);
-		casacore::Bool linToPix(casacore::Vector<casacore::Double> &pix, const casacore::Vector<casacore::Double> &lin);
-		casacore::Bool linToPix(casacore::Matrix<casacore::Double> &pix, casacore::Vector<casacore::Bool> &failures,
-		              const casacore::Matrix<casacore::Double> &lin);
-		casacore::Bool linToWorld(casacore::Vector<casacore::Double> &world, const casacore::Vector<casacore::Double> &lin);
-		casacore::Bool linToWorld(casacore::Matrix<casacore::Double> &world, casacore::Vector<casacore::Bool> &failures,
-		                const casacore::Matrix<casacore::Double> &lin);
-		casacore::Bool worldToLin(casacore::Vector<casacore::Double> &lin, const casacore::Vector<casacore::Double> &world);
-		casacore::Bool worldToLin(casacore::Matrix<casacore::Double> &lin, casacore::Vector<casacore::Bool> &failures,
-		                const casacore::Matrix<casacore::Double> &world);
-		casacore::Bool pixToWorld(casacore::Vector<casacore::Double> &world, const casacore::Vector<casacore::Double> &pix);
-		casacore::Bool pixToWorld(casacore::Matrix<casacore::Double> &world, casacore::Vector<casacore::Bool> &failures,
-		                const casacore::Matrix<casacore::Double> &pix);
-		casacore::Bool worldToPix(casacore::Vector<casacore::Double> &pix, const casacore::Vector<casacore::Double> &world);
-		casacore::Bool worldToPix(casacore::Matrix<casacore::Double> &pix, casacore::Vector<casacore::Bool> &failures,
-		                const casacore::Matrix<casacore::Double> &world);
+		Bool pixToLin(Vector<Double> &lin, const Vector<Double> &pix);
+		Bool pixToLin(Matrix<Double> &lin, Vector<Bool> &failures,
+		              const Matrix<Double> &pix);
+		Bool linToPix(Vector<Double> &pix, const Vector<Double> &lin);
+		Bool linToPix(Matrix<Double> &pix, Vector<Bool> &failures,
+		              const Matrix<Double> &lin);
+		Bool linToWorld(Vector<Double> &world, const Vector<Double> &lin);
+		Bool linToWorld(Matrix<Double> &world, Vector<Bool> &failures,
+		                const Matrix<Double> &lin);
+		Bool worldToLin(Vector<Double> &lin, const Vector<Double> &world);
+		Bool worldToLin(Matrix<Double> &lin, Vector<Bool> &failures,
+		                const Matrix<Double> &world);
+		Bool pixToWorld(Vector<Double> &world, const Vector<Double> &pix);
+		Bool pixToWorld(Matrix<Double> &world, Vector<Bool> &failures,
+		                const Matrix<Double> &pix);
+		Bool worldToPix(Vector<Double> &pix, const Vector<Double> &world);
+		Bool worldToPix(Matrix<Double> &pix, Vector<Bool> &failures,
+		                const Matrix<Double> &world);
 		// </group>
 
 		// Register/unregister a Colormap on the PixelCanvas.  Registration
@@ -342,7 +342,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// registered more times than it has been unregistered.  Requests
 		// are forwarded to the PixelCanvas.
 		// <group>
-		void registerColormap(Colormap *cmap, casacore::Float weight = 1.0);
+		void registerColormap(Colormap *cmap, Float weight = 1.0);
 		void registerColormap(Colormap *cmap, Colormap *cmapToReplace) ;
 		void unregisterColormap(Colormap *cmap);
 		// </group>
@@ -368,12 +368,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// <src>deleteLists()</src>.  Requests are forwarded to the
 		// PixelCanvas.
 		// <group>
-		casacore::uInt newList();
+		uInt newList();
 		void endList();
-		void drawList(casacore::uInt list);
-		void deleteList(casacore::uInt list);
+		void drawList(uInt list);
+		void deleteList(uInt list);
 		void deleteLists();
-		casacore::Bool validList(casacore::uInt list);
+		Bool validList(uInt list);
 		// </group>
 
 		// Set various graphics attributes.  All of these requests are
@@ -381,12 +381,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// <src>setColor</src>, which also installs the requested color for
 		// subsequent calls to PgPlot functions.
 		// <group>
-		void setColor(const casacore::String &color);
-		void setClearColor(const casacore::String &color);
-		casacore::Bool setFont(const casacore::String &fontName);
-		void setForeground(casacore::uLong color);
-		void setBackground(casacore::uLong color);
-		void setLineWidth(casacore::Float width);
+		void setColor(const String &color);
+		void setClearColor(const String &color);
+		Bool setFont(const String &fontName);
+		void setForeground(uLong color);
+		void setBackground(uLong color);
+		void setLineWidth(Float width);
 		void setLineStyle(Display::LineStyle style);
 		void setCapStyle(Display::CapStyle style);
 		void setJoinStyle(Display::JoinStyle style);
@@ -400,12 +400,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// PixelCanvas.  Indeed, they will be used as default colors on the
 		// WorldCanvas when necessary.
 		// <group>
-		casacore::Bool setWorldBackgroundColor(const casacore::String color);
-		casacore::Bool setWorldForegroundColor(const casacore::String color);
-		casacore::String getWorldBackgroundColor() {
+		Bool setWorldBackgroundColor(const String color);
+		Bool setWorldForegroundColor(const String color);
+		String getWorldBackgroundColor() {
 			return itsWorldBackgroundColor;
 		}
-		casacore::String getWorldForegroundColor() {
+		String getWorldForegroundColor() {
 			return itsWorldForegroundColor;
 		}
 		// </group>
@@ -440,15 +440,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Install the default options for this DisplayData
 		virtual void setDefaultOptions();
 
-		// Apply options stored in rec to the DisplayData; return value true
+		// Apply options stored in rec to the DisplayData; return value True
 		// means a refresh is needed.  Any fields added to the
 		// updatedOptions argument are options which have changed in some
 		// way due to the setting of other options - ie. they are context
 		// sensitive.
-		virtual casacore::Bool setOptions(const casacore::Record &rec, casacore::Record &updatedOptions);
+		virtual Bool setOptions(const Record &rec, Record &updatedOptions);
 
 		// Retrieve the current and default options and parameter types.
-		virtual casacore::Record getOptions() const;
+		virtual Record getOptions() const;
 
 		// Set an Attribute or Attributes on the WorldCanvas.
 		// <group>
@@ -459,34 +459,34 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Remove an Attribute.  Pre-defined Attributes of the WorldCanvas
 		// cannot be removed (although nothing serious will happen if you
 		// try).
-		void removeAttribute(casacore::String& name);
+		void removeAttribute(String& name);
 
 		// User interface to get individual values from the attribute buffer.
 		// <group>
-		casacore::Bool getAttributeValue(const casacore::String& name, casacore::uInt& newValue) const;
-		casacore::Bool getAttributeValue(const casacore::String& name, casacore::Int& newValue) const;
-		casacore::Bool getAttributeValue(const casacore::String& name, casacore::Float& newValue) const;
-		casacore::Bool getAttributeValue(const casacore::String& name, casacore::Double& newValue) const;
-		casacore::Bool getAttributeValue(const casacore::String& name, casacore::Bool& newValue) const;
-		casacore::Bool getAttributeValue(const casacore::String& name, casacore::String& newValue) const;
-		casacore::Bool getAttributeValue(const casacore::String& name, casacore::Vector<casacore::uInt>& newValue) const;
-		casacore::Bool getAttributeValue(const casacore::String& name, casacore::Vector<casacore::Int>& newValue) const;
-		casacore::Bool getAttributeValue(const casacore::String& name, casacore::Vector<casacore::Float>& newValue) const;
-		casacore::Bool getAttributeValue(const casacore::String& name, casacore::Vector<casacore::Double>& newValue) const;
-		casacore::Bool getAttributeValue(const casacore::String& name, casacore::Vector<casacore::Bool>& newValue) const;
-		casacore::Bool getAttributeValue(const casacore::String& name, casacore::Vector<casacore::String>& newValue) const;
+		Bool getAttributeValue(const String& name, uInt& newValue) const;
+		Bool getAttributeValue(const String& name, Int& newValue) const;
+		Bool getAttributeValue(const String& name, Float& newValue) const;
+		Bool getAttributeValue(const String& name, Double& newValue) const;
+		Bool getAttributeValue(const String& name, Bool& newValue) const;
+		Bool getAttributeValue(const String& name, String& newValue) const;
+		Bool getAttributeValue(const String& name, Vector<uInt>& newValue) const;
+		Bool getAttributeValue(const String& name, Vector<Int>& newValue) const;
+		Bool getAttributeValue(const String& name, Vector<Float>& newValue) const;
+		Bool getAttributeValue(const String& name, Vector<Double>& newValue) const;
+		Bool getAttributeValue(const String& name, Vector<Bool>& newValue) const;
+		Bool getAttributeValue(const String& name, Vector<String>& newValue) const;
 		// </group>
 
 		// Check if a certain Attribute exists.
-		casacore::Bool existsAttribute(casacore::String& name) const;
+		Bool existsAttribute(String& name) const;
 
 		// Get the type of an Attribute.
-		AttValue::ValueType attributeType(casacore::String& name) const;
+		AttValue::ValueType attributeType(String& name) const;
 
 		// Position the PGPLOT filter on the WorldCanvas.  If linear is
-		// specified false, then the alignment is done by world coordinates,
+		// specified False, then the alignment is done by world coordinates,
 		// assuming that a linear approximation is valid.
-		// void verifyPGFilterAlignment(const casacore::Bool &linear = true);
+		// void verifyPGFilterAlignment(const Bool &linear = True);
 
 		// Acquire and release a PGPLOT device for this WorldCanvas.  This
 		// is necessary since PGPLOT generally only supports 8 currently
@@ -494,53 +494,53 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// PGPLOT device at the start, and release it at the end.  Cycles
 		// are counted so that external user-classes can call these functions
 		// if necessary in a nested state.  If <src>linear</src> is specified
-		// as <src>false</src>, then the PGPLOT device is aligned by world
+		// as <src>False</src>, then the PGPLOT device is aligned by world
 		// coordinates, under the assumption that a linear approximation is
 		// valid, that is, the curvature is small.
 		// <group>
-		virtual void acquirePGPLOTdevice(const casacore::Bool &linear = true);
+		virtual void acquirePGPLOTdevice(const Bool &linear = True);
 		virtual void releasePGPLOTdevice();
 		// </group>
 
 		// Return the PGPLOT device id for external use.
-		virtual casacore::Int pgid() const;
+		virtual Int pgid() const;
 
 		// Draw unrotated text at the given position.  If the conversion
 		// from world to pixel coordinates fails, the text is not drawn, and
-		// false is returned.  If linear is true, then the provided position
+		// False is returned.  If linear is True, then the provided position
 		// is actually in linear world canvas coordinates, rather than true
 		// world coordinates.
-		casacore::Bool drawText(const casacore::Vector<casacore::Double> &point, const casacore::String &text,
+		Bool drawText(const Vector<Double> &point, const String &text,
 		              Display::TextAlign alignment = Display::AlignCenter,
-		              const casacore::Bool &linear = false);
+		              const Bool &linear = False);
 
 		// Draw a single point using the current color.  If the conversion
 		// from world to pixel coordinates fails, the point is not drawn,
-		// and false is the return value.  If linear is true, then the point
+		// and False is the return value.  If linear is True, then the point
 		// position is given in linear world canvas coordinates, not true
 		// world coordinates.
-		casacore::Bool drawPoint(const casacore::Vector<casacore::Double> &point, const casacore::Bool &linear = false);
+		Bool drawPoint(const Vector<Double> &point, const Bool &linear = False);
 
 		// Draw a single line using the current color.  If either of the
 		// conversions from world to pixel coordinates fail, then the line
-		// is not drawn, and false is returned.  If linear is true, then the
+		// is not drawn, and False is returned.  If linear is True, then the
 		// line endpoints are given in world canvas linear coordinates
 		// rather than real world coordinates.
-		casacore::Bool drawLine(const casacore::Vector<casacore::Double> &a, const casacore::Vector<casacore::Double> &b,
-		              const casacore::Bool &linear = false);
+		Bool drawLine(const Vector<Double> &a, const Vector<Double> &b,
+		              const Bool &linear = False);
 
 		// Draw a bunch of points using the current color.  If any points
-		// fail to convert then none of them are drawn, and false is
-		// returned.  If linear is true, then the vertices are given in
+		// fail to convert then none of them are drawn, and False is
+		// returned.  If linear is True, then the vertices are given in
 		// linear world canvas coordinates rather than real world
 		// coordinates.
-		casacore::Bool drawPoints(const casacore::Matrix<casacore::Double> &points, const casacore::Bool &linear = false);
+		Bool drawPoints(const Matrix<Double> &points, const Bool &linear = False);
 
 		// Draw a set of points using the current color.  Those points which
 		// fail to convert, or lie outside the WorldCanvas drawing area, are
 		// not drawn.
-		casacore::Bool drawPoints(const casacore::Vector<casacore::Float> &px, const casacore::Vector<casacore::Float> &py,
-		                casacore::Bool linear = false);
+		Bool drawPoints(const Vector<Float> &px, const Vector<Float> &py,
+		                Bool linear = False);
 
 		// Draw a set of text strings using the current color.  If any
 		// points fail to convert, then those particular strings are not
@@ -548,76 +548,76 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// degrees counter-clockwise from horizontal.  <src>xoffset</src>
 		// and <src>yoffset</src> can be given to globally shift the labels
 		// by the specified amounts (in units of the character height).  If
-		// linear is true, then the vertices are given in linear world
+		// linear is True, then the vertices are given in linear world
 		// canvas coordinates rather than true world coordinates.
-		casacore::Bool drawTextStrings(const casacore::Vector<casacore::Float> &px, const casacore::Vector<casacore::Float> &py,
-		                     const casacore::Vector<casacore::String> &strings,
-		                     const casacore::Float rotation = 0.0,
-		                     const casacore::Float xoffset = 0.0,
-		                     const casacore::Float yoffset = 0.0,
-		                     const casacore::Bool linear = false);
+		Bool drawTextStrings(const Vector<Float> &px, const Vector<Float> &py,
+		                     const Vector<String> &strings,
+		                     const Float rotation = 0.0,
+		                     const Float xoffset = 0.0,
+		                     const Float yoffset = 0.0,
+		                     const Bool linear = False);
 
 		// Draw a set of markers using the current color and a given pixel
 		// <src>size</src>. If any points fail to convert, then those
 		// particular points are not marked.  <src>markertype</src> is an
-		// <src>Display::Marker</src>. If linear is true, then the points
+		// <src>Display::Marker</src>. If linear is True, then the points
 		// are given in linear world canvas coordinates rather than true
 		// world coordinates.
-		casacore::Bool drawMarkers(const casacore::Vector<casacore::Float> &px, const casacore::Vector<casacore::Float> &py,
-		                 const Display::Marker = Display::Cross, const casacore::Int size = 5,
-		                 const casacore::Bool& linear = false);
+		Bool drawMarkers(const Vector<Float> &px, const Vector<Float> &py,
+		                 const Display::Marker = Display::Cross, const Int size = 5,
+		                 const Bool& linear = False);
 
-		casacore::Bool drawMappedMarkers(const casacore::Vector<casacore::Float> &px, const casacore::Vector<casacore::Float> &py,
-		                       const casacore::Vector<casacore::Float>& values,
-		                       const casacore::Int sizemin = 1, const casacore::Int sizemax = 20,
+		Bool drawMappedMarkers(const Vector<Float> &px, const Vector<Float> &py,
+		                       const Vector<Float>& values,
+		                       const Int sizemin = 1, const Int sizemax = 20,
 		                       const Display::Marker = Display::Cross,
-		                       const casacore::Bool& linear = false);
+		                       const Bool& linear = False);
 
 		// Draw pairs of lines using the current color.  If any points fail
-		// to convert then the lines are not drawn and false is returned.
-		// If linear is true, then the vertices are given as linear world
+		// to convert then the lines are not drawn and False is returned.
+		// If linear is True, then the vertices are given as linear world
 		// coordinates rather than true world coordinates.
-		casacore::Bool drawLines(const casacore::Matrix<casacore::Double> &vertices, const casacore::Bool &linear = false);
+		Bool drawLines(const Matrix<Double> &vertices, const Bool &linear = False);
 
 
 		// Draw a polyline (connected line) between the vertices using the
 		// current color.  If any coordinates fail to convert from world to
-		// pixel, then the entire polyline is not drawn and false is
+		// pixel, then the entire polyline is not drawn and False is
 		// returned.  The end point is not implicitly connected to the
-		// starting point.  If linear is true, then the provided vertices
+		// starting point.  If linear is True, then the provided vertices
 		// are actually linear world canvas coordinates.
-		casacore::Bool drawPolyline(const casacore::Matrix<casacore::Double> &vertices,
-		                  const casacore::Bool &linear = false);
+		Bool drawPolyline(const Matrix<Double> &vertices,
+		                  const Bool &linear = False);
 
 		// Draw a polygon (closed line, or line loop using the points)
 		// using the current color.  If any coordinates fail to convert
 		// then the polygon is not drawn.  The end point is implicitly
-		// connected to the start point.  If linear is true, then the
+		// connected to the start point.  If linear is True, then the
 		// provided vertices are actually linear world coordinates.
-		casacore::Bool drawPolygon(const casacore::Matrix<casacore::Double> &vertices,
-		                 const casacore::Bool &linear = false);
+		Bool drawPolygon(const Matrix<Double> &vertices,
+		                 const Bool &linear = False);
 
 		// Draw a set of points in colors which are taken from the current
 		// Colormap.
-		casacore::Bool drawColormappedPoints(const casacore::Matrix<casacore::Double> &points,
-		                           const casacore::Vector<casacore::Float> &values,
-		                           const casacore::Bool &linear = false);
+		Bool drawColormappedPoints(const Matrix<Double> &points,
+		                           const Vector<Float> &values,
+		                           const Bool &linear = False);
 
 		// Draw a set of colored ellipses, possibly with outlines.  The x
 		// and y locations must given, along with semi-major and semi-minor
 		// axes, and position angle measured in degrees positive from the x
 		// axis in a counter-clockwise direction.  The size of the ellipses
 		// is globally scaled by the scale factor, and if <src>outline</src>
-		// is <src>true</src>, then each ellipse will have an outline in the
+		// is <src>True</src>, then each ellipse will have an outline in the
 		// current pen color.
-		casacore::Bool drawColormappedEllipses(const casacore::Matrix<casacore::Double> &centres,
-		                             const casacore::Vector<casacore::Float> &smajor,
-		                             const casacore::Vector<casacore::Float> &sminor,
-		                             const casacore::Vector<casacore::Float> &pangle,
-		                             const casacore::Vector<casacore::Float> &colors,
-		                             const casacore::Float &scale = 1.0,
-		                             const casacore::Bool &outline = true,
-		                             const casacore::Bool &linear = false);
+		Bool drawColormappedEllipses(const Matrix<Double> &centres,
+		                             const Vector<Float> &smajor,
+		                             const Vector<Float> &sminor,
+		                             const Vector<Float> &pangle,
+		                             const Vector<Float> &colors,
+		                             const Float &scale = 1.0,
+		                             const Bool &outline = True,
+		                             const Bool &linear = False);
 
 
 		// This routine is specialized for drawing image restoring-beam ellipses.
@@ -625,7 +625,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// possible of restoring beam information as stored in an image header.
 		//
 		// It does nothing unless the axes on display map to the two axes of a
-		// casacore::DirectionCoordinate within the WC CS (WorldCanvas::itsDisplayCoordinateSystem).
+		// DirectionCoordinate within the WC CS (WorldCanvas::itsDisplayCoordinateSystem).
 		// Center location cx,cy is specified as a fraction of WC draw area:
 		// (0,0) is blc, (1,1) is trc; they default to (.1, .1).
 		//
@@ -638,7 +638,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// pa uses the image header convention "North-to-East"; more precisely,
 		// 0 degrees aligns the major axis along increasing DirCoord(1) (commonly
 		// Dec), 90 degrees aligns it along increasing DirCoord(0) (commonly RA).
-		// (NB: increasing RA commonly means decreasing pixel/casacore::Lattice coordinates).
+		// (NB: increasing RA commonly means decreasing pixel/Lattice coordinates).
 		// In the common case, this means that pa increases counterclockwise from
 		// vertical.  Note that this is _not_ the pa convention in some other
 		// PixelCanvas/WorldCanvas drawEllipse() routines (where pa is always
@@ -652,18 +652,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// It should even take care of uneven coordinate 'increments' (non-square
 		// image data pixels).
 		// (So far, it does _not_ correctly handle non-identity transformation
-		// matrices in the casacore::DirectionCoordinate (e.g. rotated "North")-- which I
+		// matrices in the DirectionCoordinate (e.g. rotated "North")-- which I
 		// think is true in many other places as well... -- for someone's to-do list
 		// (not mine, I hope)).
-		casacore::Bool drawBeamEllipse(casacore::Float major, casacore::Float minor,  casacore::Float pa,
-		                     casacore::String majunit="arcsec", casacore::String minunit="arcsec",
-		                     casacore::String paunit="deg",
-		                     casacore::Float cx=.1f, casacore::Float cy=.1f, casacore::Bool outline=true);
+		Bool drawBeamEllipse(Float major, Float minor,  Float pa,
+		                     String majunit="arcsec", String minunit="arcsec",
+		                     String paunit="deg",
+		                     Float cx=.1f, Float cy=.1f, Bool outline=True);
 
 
 		// Draw a contour map at the specified levels, and place the lower
 		// left pixel at blPos, and the upper right pixel at trPos.  If
-		// <src>usePixelEdges</src> is true, then the given world positions
+		// <src>usePixelEdges</src> is True, then the given world positions
 		// are the position of the blc and trc of the blc and trc pixels,
 		// otherwise they are the positions of the centres of the pixels.
 		// Note that the contours are not intrinsically drawn in world
@@ -671,23 +671,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// done according to the last call to setComplexToRealMethod.
 		// Returns true if OK, false if error...
 		// <group>
-		bool drawContourMap(const casacore::Vector<casacore::Double> &blPos,
-		                    const casacore::Vector<casacore::Double> &trPos,
-		                    const casacore::Matrix<casacore::Float> &data,
-		                    const casacore::Vector<casacore::Float> &levels,
-		                    const casacore::Bool usePixelEdges = false);
+		bool drawContourMap(const Vector<Double> &blPos,
+		                    const Vector<Double> &trPos,
+		                    const Matrix<Float> &data,
+		                    const Vector<Float> &levels,
+		                    const Bool usePixelEdges = False);
 
 
-		bool drawContourMap(const casacore::Vector<casacore::Double> &blPos,
-		                    const casacore::Vector<casacore::Double> &trPos,
-		                    const casacore::Matrix<casacore::Complex> &data,
-		                    const casacore::Vector<casacore::Float> &levels,
-		                    const casacore::Bool usePixelEdges = false);
+		bool drawContourMap(const Vector<Double> &blPos,
+		                    const Vector<Double> &trPos,
+		                    const Matrix<Complex> &data,
+		                    const Vector<Float> &levels,
+		                    const Bool usePixelEdges = False);
 		// </group>
 
 		// Draw a contour map at the specified levels, and place the lower
 		// left pixel at blPos, and the upper right pixel at trPos.  If
-		// <src>usePixelEdges</src> is true, then the given world positions
+		// <src>usePixelEdges</src> is True, then the given world positions
 		// are the position of the blc and trc of the blc and trc pixels,
 		// otherwise they are the positions of the centres of the pixels.
 		// Note that the contours are not intrinsically drawn in world
@@ -696,130 +696,130 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// functions also have a <src>mask</src> argument, which is a
 		// Boolean pixel mask whose shape must match that of
 		// <src>data</src>, and only pixels in <src>data</src> where
-		// corresponding pixels in <src>mask</src> are <src>true</src> will
+		// corresponding pixels in <src>mask</src> are <src>True</src> will
 		// be contoured.
 		// Returns true if OK, false if error...
 		// <group>
-		bool drawContourMap(const casacore::Vector<casacore::Double> &blPos,
-		                    const casacore::Vector<casacore::Double> &trPos,
-		                    const casacore::Matrix<casacore::Float> &data,
-		                    const casacore::Matrix<casacore::Bool> &mask,
-		                    const casacore::Vector<casacore::Float> &levels,
-		                    const casacore::Bool usePixelEdges = false);
-		bool drawContourMap(const casacore::Vector<casacore::Double> &blPos,
-		                    const casacore::Vector<casacore::Double> &trPos,
-		                    const casacore::Matrix<casacore::Complex> &data,
-		                    const casacore::Matrix<casacore::Bool> &mask,
-		                    const casacore::Vector<casacore::Float> &levels,
-		                    const casacore::Bool usePixelEdges = false);
+		bool drawContourMap(const Vector<Double> &blPos,
+		                    const Vector<Double> &trPos,
+		                    const Matrix<Float> &data,
+		                    const Matrix<Bool> &mask,
+		                    const Vector<Float> &levels,
+		                    const Bool usePixelEdges = False);
+		bool drawContourMap(const Vector<Double> &blPos,
+		                    const Vector<Double> &trPos,
+		                    const Matrix<Complex> &data,
+		                    const Matrix<Bool> &mask,
+		                    const Vector<Float> &levels,
+		                    const Bool usePixelEdges = False);
 		// </group>
 
 		// Optimization to speed up colormap fiddling in 24bit mode (software
-		// Colormap); see images_, below for usage.  Set opaqueMask to true to
+		// Colormap); see images_, below for usage.  Set opaqueMask to True to
 		// draw masked pixels in the background color; otherwise they will be
 		// transparent (letting whatever was drawn previously at that point show
 		// through).
-		casacore::Bool redrawIndexedImage(void* drawObj, Display::RefreshReason reason,
-		                        casacore::Bool opaqueMask=false);
+		Bool redrawIndexedImage(void* drawObj, Display::RefreshReason reason,
+		                        Bool opaqueMask=False);
 
 		// Remove image from the colormap change cache, if any (see images_, below).
 		// Return value indicates whether there was anything to remove.
-		casacore::Bool removeIndexedImage(void* drawObj);
+		Bool removeIndexedImage(void* drawObj);
 
 		// Clear the whole colormap change cache (see images_, below).
 		void clearColormapChangeCache();
 
 		// Draw an image, mapping data values to Colormap entries, and place
 		// the lower left pixel at blPos, and the upper right pixel at
-		// trPos.  If <src>usePixelEdges</src> is true, then the given world
+		// trPos.  If <src>usePixelEdges</src> is True, then the given world
 		// positions are the position of the blc and trc of the blc and trc
 		// pixels, otherwise they are the positions of the centres of the
 		// pixels.
 		// See images_, below, for non-default usage of the drawObj parameter.
 		// <group>
-		void drawImage(const casacore::Vector<casacore::Double> &blPos, const casacore::Vector<casacore::Double> &trPos,
-		               const casacore::Matrix<casacore::Float> &data, const casacore::Bool usePixelEdges = false,
+		void drawImage(const Vector<Double> &blPos, const Vector<Double> &trPos,
+		               const Matrix<Float> &data, const Bool usePixelEdges = False,
 		               void* drawObj=0);
-		void drawImage(const casacore::Vector<casacore::Double> &blPos, const casacore::Vector<casacore::Double> &trPos,
-		               const casacore::Matrix<casacore::Complex> &data,
-		               const casacore::Bool usePixelEdges = false, void* drawObj=0);
-		void drawImage(const casacore::Vector<casacore::Double> &blc,const casacore::Vector<casacore::Double> &trc, const casacore::Matrix<casacore::Float> &data,
-			           const casacore::Matrix<casacore::Float> &dataRed, const casacore::Matrix<casacore::Float> &dataGreen,
-			           const casacore::Matrix<casacore::Float> &dataBlue,const casacore::Bool usePixelEdges,void* drawObj = 0);
-		void drawImage(const casacore::Vector<casacore::Double> &blc,const casacore::Vector<casacore::Double> &trc, const casacore::Matrix<casacore::Complex> &data,
-					   const casacore::Matrix<casacore::Complex> &dataRed, const casacore::Matrix<casacore::Complex> &dataGreen,
-					   const casacore::Matrix<casacore::Complex> &dataBlue,const casacore::Bool usePixelEdges,void* drawObj = 0);
+		void drawImage(const Vector<Double> &blPos, const Vector<Double> &trPos,
+		               const Matrix<Complex> &data,
+		               const Bool usePixelEdges = False, void* drawObj=0);
+		void drawImage(const Vector<Double> &blc,const Vector<Double> &trc, const Matrix<Float> &data,
+			           const Matrix<Float> &dataRed, const Matrix<Float> &dataGreen,
+			           const Matrix<Float> &dataBlue,const Bool usePixelEdges,void* drawObj = 0);
+		void drawImage(const Vector<Double> &blc,const Vector<Double> &trc, const Matrix<Complex> &data,
+					   const Matrix<Complex> &dataRed, const Matrix<Complex> &dataGreen,
+					   const Matrix<Complex> &dataBlue,const Bool usePixelEdges,void* drawObj = 0);
 		// </group>
 
 		// Draw an image, mapping data values to Colormap entries, and place
 		// the lower left pixel at blPos, and the upper right pixel at
-		// trPos.  If <src>usePixelEdges</src> is true, then the given world
+		// trPos.  If <src>usePixelEdges</src> is True, then the given world
 		// positions are the position of the blc and trc of the blc and trc
 		// pixels, otherwise they are the positions of the centres of the
 		// pixels.  These functions also have a <src>mask</src> argument,
 		// which is a Boolean pixel mask whose shape must match that of
 		// <src>data</src>, and only pixels in <src>data</src> where
-		// corresponding pixels in <src>mask</src> are <src>true</src>
-		// will be drawn.  Set opaqueMask to true to draw masked pixels in
+		// corresponding pixels in <src>mask</src> are <src>True</src>
+		// will be drawn.  Set opaqueMask to True to draw masked pixels in
 		// the background color; otherwise they will be transparent (letting
 		// whatever was drawn previously at that point show through).
 		// See images_, below, for non-default usage of the drawObj parameter.
 		// <group>
-		void drawImage(const casacore::Vector<casacore::Double> &blPos, const casacore::Vector<casacore::Double> &trPos,
-		               const casacore::Matrix<casacore::Float> &data, const casacore::Matrix<casacore::Bool> &mask,
-		               const casacore::Bool usePixelEdges = false, void* drawObj=0,
-		               casacore::Bool opaqueMask=false);
-		void drawImage(const casacore::Vector<casacore::Double> &blPos, const casacore::Vector<casacore::Double> &trPos,
-		               const casacore::Matrix<casacore::Complex> &data, const casacore::Matrix<casacore::Bool> &mask,
-		               const casacore::Bool usePixelEdges = false, void* drawObj=0,
-		               casacore::Bool opaqueMask=false);
+		void drawImage(const Vector<Double> &blPos, const Vector<Double> &trPos,
+		               const Matrix<Float> &data, const Matrix<Bool> &mask,
+		               const Bool usePixelEdges = False, void* drawObj=0,
+		               Bool opaqueMask=False);
+		void drawImage(const Vector<Double> &blPos, const Vector<Double> &trPos,
+		               const Matrix<Complex> &data, const Matrix<Bool> &mask,
+		               const Bool usePixelEdges = False, void* drawObj=0,
+		               Bool opaqueMask=False);
 
 		// </group>
 		// Draw a component of a multi-channel image, mapping data values to
 		// component levels, and place the lower left pixel at blPos, and
 		// the upper right pixel at trPos.  If <src>usePixelEdges</src> is
-		// true, then the given world positions are the position of the blc
+		// True, then the given world positions are the position of the blc
 		// and trc of the blc and trc pixels, otherwise they are the
 		// positions of the centres of the pixels.  The components are not
 		// drawn until flushComponentImages() is called.
 		// <group>
-		void drawImage(const casacore::Vector<casacore::Double> &blPos, const casacore::Vector<casacore::Double> &trPos,
-		               const casacore::Matrix<casacore::Float> &data,
+		void drawImage(const Vector<Double> &blPos, const Vector<Double> &trPos,
+		               const Matrix<Float> &data,
 		               const Display::ColorComponent &colorcomponent,
-		               const casacore::Bool usePixelEdges = false);
-		void drawImage(const casacore::Vector<casacore::Double> &blPos, const casacore::Vector<casacore::Double> &trPos,
-		               const casacore::Matrix<casacore::Complex> &data,
+		               const Bool usePixelEdges = False);
+		void drawImage(const Vector<Double> &blPos, const Vector<Double> &trPos,
+		               const Matrix<Complex> &data,
 		               const Display::ColorComponent &colorcomponent,
-		               const casacore::Bool usePixelEdges = false);
+		               const Bool usePixelEdges = False);
 		// </group>
 
 		// Draw a vector map.
 		// <group>
-		bool drawVectorMap(const casacore::Vector<casacore::Double>& blc,
-		                   const casacore::Vector<casacore::Double>& trc,
-		                   const casacore::Matrix<casacore::Complex>& data,
-		                   const casacore::Matrix<casacore::Bool>& mask,
-		                   casacore::Float angleConversionFactor,
-		                   casacore::Float phasePolarity,
-		                   casacore::Bool debias, casacore::Float variance,
-		                   casacore::Int xPixelInc, casacore::Int yPixelInc,
-		                   casacore::Float scale, casacore::Bool arrow, casacore::Float barb,
-		                   casacore::Float rotation,
-		                   casacore::Double xWorldInc, casacore::Double yWorldInc,
-		                   const casacore::Bool usePixelEdges);
+		bool drawVectorMap(const Vector<Double>& blc,
+		                   const Vector<Double>& trc,
+		                   const Matrix<Complex>& data,
+		                   const Matrix<Bool>& mask,
+		                   Float angleConversionFactor,
+		                   Float phasePolarity,
+		                   Bool debias, Float variance,
+		                   Int xPixelInc, Int yPixelInc,
+		                   Float scale, Bool arrow, Float barb,
+		                   Float rotation,
+		                   Double xWorldInc, Double yWorldInc,
+		                   const Bool usePixelEdges);
 
-		bool drawVectorMap(const casacore::Vector<casacore::Double>& blc,
-		                   const casacore::Vector<casacore::Double>& trc,
-		                   const casacore::Matrix<casacore::Float>& data,
-		                   const casacore::Matrix<casacore::Bool>& mask,
-		                   casacore::Float angleConversionFactor,
-		                   casacore::Float phasePolarity,
-		                   casacore::Bool debias, casacore::Float variance,
-		                   casacore::Int xPixelInc, casacore::Int yPixelInc,
-		                   casacore::Float scale, casacore::Bool arrow, casacore::Float barb,
-		                   casacore::Float rotation,
-		                   casacore::Double xWorldInc, casacore::Double yWorldInc,
-		                   const casacore::Bool usePixelEdges);
+		bool drawVectorMap(const Vector<Double>& blc,
+		                   const Vector<Double>& trc,
+		                   const Matrix<Float>& data,
+		                   const Matrix<Bool>& mask,
+		                   Float angleConversionFactor,
+		                   Float phasePolarity,
+		                   Bool debias, Float variance,
+		                   Int xPixelInc, Int yPixelInc,
+		                   Float scale, Bool arrow, Float barb,
+		                   Float rotation,
+		                   Double xWorldInc, Double yWorldInc,
+		                   const Bool usePixelEdges);
 		// </group>
 
 // Draw marker maps.  Only makerType "square" available presently.
@@ -827,22 +827,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // means a square is always a square regardless of aspect ratio
 // Returns true if OK, false if error...
 // <group>
-		bool drawMarkerMap(const casacore::Vector<casacore::Double>& blc,
-		                   const casacore::Vector<casacore::Double>& trc,
-		                   const casacore::Matrix<casacore::Float>& data,
-		                   const casacore::Matrix<casacore::Bool>& mask,
-		                   casacore::Int xPixelInc, casacore::Int yPixelInc,
-		                   casacore::Float scale, casacore::Double xWorldInc, casacore::Double yWorldInc,
-		                   const casacore::String& markeType,
-		                   casacore::Bool usePixelEdges);
-		bool drawMarkerMap(const casacore::Vector<casacore::Double>& blc,
-		                   const casacore::Vector<casacore::Double>& trc,
-		                   const casacore::Matrix<casacore::Complex>& data,
-		                   const casacore::Matrix<casacore::Bool>& mask,
-		                   casacore::Int xPixelInc, casacore::Int yPixelInc,
-		                   casacore::Float scale, casacore::Double xWorldInc, casacore::Double yWorldInc,
-		                   const casacore::String& markerType,
-		                   casacore::Bool usePixelEdges);
+		bool drawMarkerMap(const Vector<Double>& blc,
+		                   const Vector<Double>& trc,
+		                   const Matrix<Float>& data,
+		                   const Matrix<Bool>& mask,
+		                   Int xPixelInc, Int yPixelInc,
+		                   Float scale, Double xWorldInc, Double yWorldInc,
+		                   const String& markeType,
+		                   Bool usePixelEdges);
+		bool drawMarkerMap(const Vector<Double>& blc,
+		                   const Vector<Double>& trc,
+		                   const Matrix<Complex>& data,
+		                   const Matrix<Bool>& mask,
+		                   Int xPixelInc, Int yPixelInc,
+		                   Float scale, Double xWorldInc, Double yWorldInc,
+		                   const String& markerType,
+		                   Bool usePixelEdges);
 // </group>
 
 
@@ -863,16 +863,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Provide information on the extents of the linear coordinate
 		// system.
 		//  <group>
-		casacore::Double linXMin() const {
+		Double linXMin() const {
 			return itsLinXMin;
 		}
-		casacore::Double linYMin() const {
+		Double linYMin() const {
 			return itsLinYMin;
 		}
-		casacore::Double linXMax() const {
+		Double linXMax() const {
 			return itsLinXMax;
 		}
-		casacore::Double linYMax() const {
+		Double linYMax() const {
 			return itsLinYMax;
 		}
 		// </group>
@@ -880,55 +880,55 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Provide information on the limits of the linear coordinate
 		// system.
 		// <group>
-		casacore::Double linXMinLimit() const {
+		Double linXMinLimit() const {
 			return itsLinXMinLimit;
 		}
-		casacore::Double linYMinLimit() const {
+		Double linYMinLimit() const {
 			return itsLinYMinLimit;
 		}
-		casacore::Double linXMaxLimit() const {
+		Double linXMaxLimit() const {
 			return itsLinXMaxLimit;
 		}
-		casacore::Double linYMaxLimit() const {
+		Double linYMaxLimit() const {
 			return itsLinYMaxLimit;
 		}
 		// </group>
 
 		// Provide information on the WorldCanvas offset and size.
 		// <group>
-		casacore::uInt canvasXOffset() const {
+		uInt canvasXOffset() const {
 			return itsCanvasXOffset;
 		}
-		casacore::uInt canvasYOffset() const {
+		uInt canvasYOffset() const {
 			return itsCanvasYOffset;
 		}
-		casacore::uInt canvasXSize() const {
+		uInt canvasXSize() const {
 			return itsCanvasXSize;
 		}
-		casacore::uInt canvasYSize() const {
+		uInt canvasYSize() const {
 			return itsCanvasYSize;
 		}
 		// </group>
 
 		// Provide information on the WorldCanvas drawable offset and size.
 		// <group>
-		casacore::uInt canvasDrawXOffset() const {
+		uInt canvasDrawXOffset() const {
 			return itsCanvasDrawXOffset;
 		}
-		casacore::uInt canvasDrawYOffset() const {
+		uInt canvasDrawYOffset() const {
 			return itsCanvasDrawYOffset;
 		}
-		casacore::uInt canvasDrawXSize() const {
+		uInt canvasDrawXSize() const {
 			return itsCanvasDrawXSize;
 		}
-		casacore::uInt canvasDrawYSize() const {
+		uInt canvasDrawYSize() const {
 			return itsCanvasDrawYSize;
 		}
 		// </group>
 
 		// Set the zoom rectangle to the specfied linear coordinate range.
-		void setZoomRectangleLCS(const casacore::Vector<casacore::Double> &min,
-		                         const casacore::Vector<casacore::Double> &max);
+		void setZoomRectangleLCS(const Vector<Double> &min,
+		                         const Vector<Double> &max);
 
 		// Move the zoom rectangle across the screen, ie. pan.
 		void moveZoomRectangleLCS(double dx, double dy);
@@ -938,35 +938,35 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void resetZoomRectangle();
 
 		// Set the allowable range of the linear coordinate system.
-		void setLinearCoordinateSystem(const casacore::Vector<casacore::Double> &blc,
-		                               const casacore::Vector<casacore::Double> &trc,
-		                               casacore::Bool resetZoom = true);
+		void setLinearCoordinateSystem(const Vector<Double> &blc,
+		                               const Vector<Double> &trc,
+		                               Bool resetZoom = True);
 
 		// Functions to set and retrieve the minimum and maximum data values
 		// for scaling data that is drawn on the WorldCanvas.  These values
 		// are forwarded to the scale handler, when, for example, images are
 		// drawn.
 		// <group>
-		casacore::Double dataMin() const {
+		Double dataMin() const {
 			return itsDataMin;
 		}
-		void setDataMin(casacore::Double min) {
+		void setDataMin(Double min) {
 			itsDataMin = min;
 		}
-		casacore::Double dataMax() const {
+		Double dataMax() const {
 			return itsDataMax;
 		}
-		void setDataMax(casacore::Double max) {
+		void setDataMax(Double max) {
 			itsDataMax = max;
 		}
-		void setDataMinMax(casacore::Double min, casacore::Double max) {
+		void setDataMinMax(Double min, Double max) {
 			itsDataMin = min;
 			itsDataMax = max;
 		}
 		// </group>
 
 		// ComplexToRealMethod defines which real component of a Complex
-		// image to extract when it is necessary to convert casacore::Complex data
+		// image to extract when it is necessary to convert Complex data
 		// into real data.
 		// <group>
 		Display::ComplexToRealMethod complexToRealMethod() const {
@@ -987,7 +987,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// <group>
 		void setCoordinateSystem(const DisplayCoordinateSystem &csys);
 		const DisplayCoordinateSystem &coordinateSystem() const;
-		casacore::Bool hasCS() const {
+		Bool hasCS() const {
 			return itsCoordinateSystem!=0;
 		}
 		// </group>
@@ -996,23 +996,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// within bounds of the WC's inner draw area, the WC, or the underlying PC.
 		// <group>
 
-		casacore::Bool inDrawArea(casacore::Int x, casacore::Int y) const {
-			casacore::Int x0 = itsCanvasXOffset + itsCanvasDrawXOffset;
-			casacore::Int x1 = x0 + itsCanvasDrawXSize;
-			casacore::Int y0 = itsCanvasYOffset + itsCanvasDrawYOffset;
-			casacore::Int y1 = y0 + itsCanvasDrawYSize;
+		Bool inDrawArea(Int x, Int y) const {
+			Int x0 = itsCanvasXOffset + itsCanvasDrawXOffset;
+			Int x1 = x0 + itsCanvasDrawXSize;
+			Int y0 = itsCanvasYOffset + itsCanvasDrawYOffset;
+			Int y1 = y0 + itsCanvasDrawYSize;
 			return  x>=x0 && x<x1  &&  y>=y0  && y<y1 ;
 		}
 
-		casacore::Bool inWC(casacore::Int x, casacore::Int y) const {
-			casacore::Int x0 = itsCanvasXOffset;
-			casacore::Int x1 = x0 + itsCanvasXSize;
-			casacore::Int y0 = itsCanvasYOffset;
-			casacore::Int y1 = y0 + itsCanvasYSize;
+		Bool inWC(Int x, Int y) const {
+			Int x0 = itsCanvasXOffset;
+			Int x1 = x0 + itsCanvasXSize;
+			Int y0 = itsCanvasYOffset;
+			Int y1 = y0 + itsCanvasYSize;
 			return  x>=x0 && x<x1  &&  y>=y0  && y<y1 ;
 		}
 
-		casacore::Bool inPC(casacore::Int x, casacore::Int y);
+		Bool inPC(Int x, Int y);
 
 		// </group>
 
@@ -1026,12 +1026,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// </group>
 
 		// Check if a named restriction exists.
-		casacore::Bool existRestriction(const casacore::String& name) const;
+		Bool existRestriction(const String& name) const;
 
 		// Remove the named restriction, or all restrictions, from the
 		// WorldCanvas.
 		// <group>
-		void removeRestriction(const casacore::String& restrictionName);
+		void removeRestriction(const String& restrictionName);
 		void removeRestrictions();
 		// </group>
 
@@ -1039,8 +1039,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// WorldCanvas match the given restriction or buffer of
 		// restrictions.
 		// <group>
-		casacore::Bool matchesRestriction(const Attribute& restriction) const;
-		casacore::Bool matchesRestrictions(const AttributeBuffer& buffer) const;
+		Bool matchesRestriction(const Attribute& restriction) const;
+		Bool matchesRestrictions(const AttributeBuffer& buffer) const;
 		// </group>
 
 		// Return the buffer of restrictions installed on this
@@ -1060,7 +1060,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Is the specified DisplayData the one in charge of WC state?
 		// (During DD::sizeControl() execution, it means instead that the
 		// DD has permission to become CSmaster, if it can).
-		casacore::Bool isCSmaster(const DisplayData *dd) const {
+		Bool isCSmaster(const DisplayData *dd) const {
 			return dd==csMaster() && dd!=0;
 		}
 
@@ -1072,16 +1072,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Return the names and units of the world coordinate axes.
 		// <group>
-		virtual casacore::Vector<casacore::String> worldAxisNames() const;
-		virtual casacore::Vector<casacore::String> worldAxisUnits() const;
+		virtual Vector<String> worldAxisNames() const;
+		virtual Vector<String> worldAxisUnits() const;
 		// </group>
 
 		const std::list<DisplayData*> &displaylist( ) const;
 
-		static const casacore::String LEFT_MARGIN_SPACE_PG;
-		static const casacore::String RIGHT_MARGIN_SPACE_PG;
-		static const casacore::String BOTTOM_MARGIN_SPACE_PG;
-		static const casacore::String TOP_MARGIN_SPACE_PG;
+		static const String LEFT_MARGIN_SPACE_PG;
+		static const String RIGHT_MARGIN_SPACE_PG;
+		static const String BOTTOM_MARGIN_SPACE_PG;
+		static const String TOP_MARGIN_SPACE_PG;
 
 		std::string errorMessage( ) const { return error_string; }
 
@@ -1102,107 +1102,107 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// </group>
 
 		// Convert the given coordinate/s to pixel coordinates.  If linear
-		// is true, then the given coordinates are in linear world coordinates,
-		// otherwise they are real world coordinates.  A return value of false
+		// is True, then the given coordinates are in linear world coordinates,
+		// otherwise they are real world coordinates.  A return value of False
 		// indicates the conversion failed.
 		// <group>
-		casacore::Bool castingConversion(casacore::Vector<casacore::Int> &pixelpt, const casacore::Vector<casacore::Double> &worldpt,
-		                       const casacore::Bool &linear);
-		casacore::Bool castingConversion(casacore::Matrix<casacore::Int> &pixelpts, const casacore::Matrix<casacore::Double> &worldpts,
-		                       const casacore::Bool &linear);
-		casacore::Bool castingConversion(casacore::Matrix<casacore::Float> &pixelpts,
-		                       const casacore::Matrix<casacore::Double> &worldpts,
-		                       const casacore::Bool &linear);
+		Bool castingConversion(Vector<Int> &pixelpt, const Vector<Double> &worldpt,
+		                       const Bool &linear);
+		Bool castingConversion(Matrix<Int> &pixelpts, const Matrix<Double> &worldpts,
+		                       const Bool &linear);
+		Bool castingConversion(Matrix<Float> &pixelpts,
+		                       const Matrix<Double> &worldpts,
+		                       const Bool &linear);
 		// </group>
 
 		// Convert the given coordinate/s to pixel coordinates.  If
-		// <src>linear</src> is <src>true</src>, then the input coordinates
+		// <src>linear</src> is <src>True</src>, then the input coordinates
 		// are linear world coordinates, otherwise they are true world
 		// coordinates.  This version applies clipping, so that any points
 		// in the series which lie outside the linear coordinate range of
 		// the WorldCanvas are discarded.  Thus the output Vectors can be
 		// shorter than the input Vectors.  A mask indicating which of the
 		// input points were valid is returned for user reference.
-		casacore::Bool castingClippingConversion(casacore::Vector<casacore::Int> &pixelx, casacore::Vector<casacore::Int> &pixely,
-		                               casacore::Vector<casacore::Bool> &validConversions,
-		                               const casacore::Vector<casacore::Float> &worldx,
-		                               const casacore::Vector<casacore::Float> &worldy,
-		                               const casacore::Bool linear);
+		Bool castingClippingConversion(Vector<Int> &pixelx, Vector<Int> &pixely,
+		                               Vector<Bool> &validConversions,
+		                               const Vector<Float> &worldx,
+		                               const Vector<Float> &worldy,
+		                               const Bool linear);
 
 		// Actually draw the vector field.   All pa * angleConversionFactor
 		// must be radians.  rotation  must be radians.  if amp is of
 		// dimension 0, amplitude unity is assumed.  if mask if dimension
 		// 0 all data are assumed good.
-		bool drawVectorMap(const casacore::Vector<casacore::Double>& blc,
-		                   const casacore::Vector<casacore::Double>& trc,
-		                   const casacore::Matrix<casacore::Float>& amp,
-		                   const casacore::Matrix<casacore::Float>& pa,
-		                   const casacore::Matrix<casacore::Bool>& mask,
-		                   casacore::Float angleConversionFactor,
-		                   casacore::Float phasePolarity,
-		                   casacore::Bool debias, casacore::Float variance,
-		                   casacore::Int xPixelInc, casacore::Int yPixelInc,
-		                   casacore::Float scale, casacore::Bool arrow, casacore::Float barb, casacore::Float rotation,
-		                   casacore::Double xWorldInc, casacore::Double yWorldInc,
-		                   const casacore::Bool usePixelEdges);
+		bool drawVectorMap(const Vector<Double>& blc,
+		                   const Vector<Double>& trc,
+		                   const Matrix<Float>& amp,
+		                   const Matrix<Float>& pa,
+		                   const Matrix<Bool>& mask,
+		                   Float angleConversionFactor,
+		                   Float phasePolarity,
+		                   Bool debias, Float variance,
+		                   Int xPixelInc, Int yPixelInc,
+		                   Float scale, Bool arrow, Float barb, Float rotation,
+		                   Double xWorldInc, Double yWorldInc,
+		                   const Bool usePixelEdges);
 
 
 		// Trim and resample an image, returning the actual world BLC and
 		// TRC for drawing, and the resampled image.
-		void trimAndResampleImage(casacore::Vector<casacore::Double> &drawBlc,
-		                          casacore::Vector<casacore::Double> &drawTrc,
-		                          casacore::Matrix<casacore::Float> &sampledImage,
-		                          const casacore::Vector<casacore::Double> &blc,
-		                          const casacore::Vector<casacore::Double> &trc,
-		                          const casacore::Matrix<casacore::Float> &data,
-		                          const casacore::Bool &usePixelEdges = false);
+		void trimAndResampleImage(Vector<Double> &drawBlc,
+		                          Vector<Double> &drawTrc,
+		                          Matrix<Float> &sampledImage,
+		                          const Vector<Double> &blc,
+		                          const Vector<Double> &trc,
+		                          const Matrix<Float> &data,
+		                          const Bool &usePixelEdges = False);
 
 		// Trim and resample an image, returning the actual world BLC and
 		// TRC for drawing, and the resampled image.  This function takes
 		// a mask indicating which pixels should be drawn.  This function
 		// therefore also trims and resamples the mask.
-		void trimAndResampleImage(casacore::Vector<casacore::Double> &drawBlc,
-		                          casacore::Vector<casacore::Double> &drawTrc,
-		                          casacore::Matrix<casacore::Float> &sampledImage,
-		                          casacore::Matrix<casacore::Bool> &resampledMask,
-		                          const casacore::Vector<casacore::Double> &blc,
-		                          const casacore::Vector<casacore::Double> &trc,
-		                          const casacore::Matrix<casacore::Float> &data,
-		                          const casacore::Matrix<casacore::Bool> &mask,
-		                          const casacore::Bool &usePixelEdges = false);
+		void trimAndResampleImage(Vector<Double> &drawBlc,
+		                          Vector<Double> &drawTrc,
+		                          Matrix<Float> &sampledImage,
+		                          Matrix<Bool> &resampledMask,
+		                          const Vector<Double> &blc,
+		                          const Vector<Double> &trc,
+		                          const Matrix<Float> &data,
+		                          const Matrix<Bool> &mask,
+		                          const Bool &usePixelEdges = False);
 
 		// Draw an image where <src>scaledImage</src> gives the Colormap
 		// index of each screen (PixelCanvas) pixel.  'blc' contains X and Y
 		// PixelCanvas coordinates.  Masked version as well.
-		// For masked version, set opaqueMask to true to draw masked pixels in
+		// For masked version, set opaqueMask to True to draw masked pixels in
 		// the background color; otherwise they will be transparent (letting
 		// whatever was drawn previously at that point show through).
 		// <group>
-		void mapToColorAndDrawImage(const casacore::Vector<casacore::Int> &blc,
-		                            const casacore::Matrix<casacore::uInt> &scaledImage);
-		void mapToColorAndDrawImage(const casacore::Vector<casacore::Int> &blc,
-		                            const casacore::Matrix<casacore::uInt> &scaledImage,
-		                            const casacore::Matrix<casacore::Bool> &mask,
-		                            casacore::Bool opaqueMask=false);
+		void mapToColorAndDrawImage(const Vector<Int> &blc,
+		                            const Matrix<uInt> &scaledImage);
+		void mapToColorAndDrawImage(const Vector<Int> &blc,
+		                            const Matrix<uInt> &scaledImage,
+		                            const Matrix<Bool> &mask,
+		                            Bool opaqueMask=False);
 		// </group>
 		// Draw a set of points where <src>scaledValues</src> gives the
 		// Colormap index of each point.  Point coordinates ('points')
 		// are either linear or world coordinates, as specified by 'linear'.
-		casacore::Bool mapToColorAndDrawPoints(const casacore::Matrix<casacore::Double> &points,
-		                             const casacore::Vector<casacore::uInt> &scaledValues,
-		                             const casacore::Bool &linear = false);
+		Bool mapToColorAndDrawPoints(const Matrix<Double> &points,
+		                             const Vector<uInt> &scaledValues,
+		                             const Bool &linear = False);
 
 		// Draw a set of ellipses where <src>scaledValues</src> gives the
 		// Colormap index of each point.  Point coordinates ('points')
 		// are either linear or world coordinates, as specified by 'linear'.
-		casacore::Bool mapToColorAndDrawEllipses(const casacore::Matrix<casacore::Double> &centres,
-		                               const casacore::Vector<casacore::Float> &smajor,
-		                               const casacore::Vector<casacore::Float> &sminor,
-		                               const casacore::Vector<casacore::Float> &pangle,
-		                               const casacore::Vector<casacore::uInt> scaledValues,
-		                               const casacore::Float &scale,
-		                               const casacore::Bool &outline,
-		                               const casacore::Bool &linear);
+		Bool mapToColorAndDrawEllipses(const Matrix<Double> &centres,
+		                               const Vector<Float> &smajor,
+		                               const Vector<Float> &sminor,
+		                               const Vector<Float> &pangle,
+		                               const Vector<uInt> scaledValues,
+		                               const Float &scale,
+		                               const Bool &outline,
+		                               const Bool &linear);
 
 
 
@@ -1210,71 +1210,71 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// <b>***Cached***</b> blc pixel where this world canvas begins =
 		// itsPixelCanvas->width()*frac(X|Y)Offset_.
 		// <group>
-		casacore::uInt itsCanvasXOffset;
-		casacore::uInt itsCanvasYOffset;
+		uInt itsCanvasXOffset;
+		uInt itsCanvasYOffset;
 		// </group>
 
 		// <b>***Cached***</b> number of pixels in each dimension given to
 		// the world canvas = itsPixelCanvas->width()*(frac(X|Y)Size_.
 		// <group>
-		casacore::uInt itsCanvasXSize;
-		casacore::uInt itsCanvasYSize;
+		uInt itsCanvasXSize;
+		uInt itsCanvasYSize;
 		// </group>
 
 		// Fractional position of world canvas on pixel canvas.  The offset
 		// values are always in the range of [0.0,1.0], and sizes must be
 		// smaller or equal to (1.0 - offset) for each dimension.
 		// <group>
-		casacore::Double itsFracXOffset;
-		casacore::Double itsFracYOffset;
-		casacore::Double itsFracXSize;
-		casacore::Double itsFracYSize;
+		Double itsFracXOffset;
+		Double itsFracYOffset;
+		Double itsFracXSize;
+		Double itsFracYSize;
 		// </group>
 
 		// <b>***Cached***</b> blc pixel where the world canvas 'draw area'
 		// (inside margins, labels) begins, relative to WC blc.
 		// <group>
-		casacore::uInt itsCanvasDrawXOffset;
-		casacore::uInt itsCanvasDrawYOffset;
+		uInt itsCanvasDrawXOffset;
+		uInt itsCanvasDrawYOffset;
 		// </group>
 
 		// <b>***Cached***</b> number of pixels in each dimension given to
 		// the drawable part of the world canvas
 		// <group>
-		casacore::uInt itsCanvasDrawXSize;
-		casacore::uInt itsCanvasDrawYSize;
+		uInt itsCanvasDrawXSize;
+		uInt itsCanvasDrawYSize;
 		// </group>
 
-		// Linear casacore::Coordinate System ranges.
+		// Linear Coordinate System ranges.
 		// <group>
-		casacore::Double itsLinXMin;
-		casacore::Double itsLinYMin;
-		casacore::Double itsLinXMax;
-		casacore::Double itsLinYMax;
+		Double itsLinXMin;
+		Double itsLinYMin;
+		Double itsLinXMax;
+		Double itsLinYMax;
 		// </group>
 
-		// Linear casacore::Coordinate System Limits.
+		// Linear Coordinate System Limits.
 		// <group>
-		casacore::Double itsLinXMinLimit;
-		casacore::Double itsLinYMinLimit;
-		casacore::Double itsLinXMaxLimit;
-		casacore::Double itsLinYMaxLimit;
+		Double itsLinXMinLimit;
+		Double itsLinYMinLimit;
+		Double itsLinXMaxLimit;
+		Double itsLinYMaxLimit;
 		// </group>
 
 		// Dynamic data minimum and maximum for this WorldCanvas.
-		casacore::Double itsDataMin, itsDataMax;
+		Double itsDataMin, itsDataMax;
 
 		// Method to use to convert complex data into real values.
 		Display::ComplexToRealMethod itsComplexToRealMethod;
 
 		// Event handler lists and convenient iterators.
 		// <group>
-		casacore::List<DisplayEH *> itsRefreshEHList;
-		casacore::List<WCPositionEH *> itsPositionEHList;
-		casacore::List<WCMotionEH *> itsMotionEHList;
-		mutable casacore::ListIter<DisplayEH *> *itsREHListIter;
-		mutable casacore::ListIter<WCPositionEH *> *itsPEHListIter;
-		mutable casacore::ListIter<WCMotionEH *> *itsMEHListIter;
+		List<DisplayEH *> itsRefreshEHList;
+		List<WCPositionEH *> itsPositionEHList;
+		List<WCMotionEH *> itsMotionEHList;
+		mutable ListIter<DisplayEH *> *itsREHListIter;
+		mutable ListIter<WCPositionEH *> *itsPEHListIter;
+		mutable ListIter<WCMotionEH *> *itsMEHListIter;
 		// </group>
 
 		// Other handler lists.
@@ -1287,18 +1287,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Store whether we "own" the various handlers.
 		// <group>
-		casacore::Bool itsOwnSizeControlHandler;
-		casacore::Bool itsOwnCoordinateHandler;
-		casacore::Bool itsOwnResampleHandler;
-		casacore::Bool itsOwnDataScaleHandler;
+		Bool itsOwnSizeControlHandler;
+		Bool itsOwnCoordinateHandler;
+		Bool itsOwnResampleHandler;
+		Bool itsOwnDataScaleHandler;
 		// </group>
 
 		// Buffer for Attributes.
 		AttributeBuffer attributes;
 
 		// Background/foreground colors.
-		casacore::String itsWorldBackgroundColor;
-		casacore::String itsWorldForegroundColor;
+		String itsWorldBackgroundColor;
+		String itsWorldForegroundColor;
 
 		// PixelCanvas pointer.
 		PixelCanvas *itsPixelCanvas;
@@ -1307,29 +1307,29 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		WCPGFilter *itsPGFilter;
 
 		// Status of hold/release.
-		casacore::Int itsHoldCount;
-		casacore::Bool itsRefreshHeld;
+		Int itsHoldCount;
+		Bool itsRefreshHeld;
 		Display::RefreshReason itsHeldReason;
 
 		// The DisplayCoordinateSystem for this WorldCanvas.  New addition, only
 		// supported and used by "new" classes.
 		DisplayCoordinateSystem *itsCoordinateSystem;
 
-		// This state is set true when the pointer is in this WC and a pointer
-		// button is pressed (with no buttons pressed previously).  When true,
+		// This state is set True when the pointer is in this WC and a pointer
+		// button is pressed (with no buttons pressed previously).  When True,
 		// all PC motion and pointer button events are propagated to this WC's
 		// handlers (only), regardless of whether the pointer has moved off the WC.
-		// It is reset to false when all buttons are released.  This simulates
+		// It is reset to False when all buttons are released.  This simulates
 		// the 'automatic grab' (implemented in X for whole windows), on the WC
 		// level.
-		casacore::Bool itsGrabbing;
+		Bool itsGrabbing;
 
 
 		// ColorIndexedImage_ stores the state of a WorldCanvas::drawImage()
 		// rendering after the chosen data plane has been resampled to screen
 		// (Pixelcanvas) pixels and scaled to indices within a fixed-size
 		// Colormap, but prior to mapping to actual colors for display.
-		// 'Caching' of this state is useful in 24-bit (trueColor) applications,
+		// 'Caching' of this state is useful in 24-bit (TrueColor) applications,
 		// greatly speeding up redrawing when only the mapping to colors is changed.
 		//# Formerly only one instance of this state was stored in a WorldCanvas
 		//# (itsCachedImage and friends), but this caused confusion and errors
@@ -1345,10 +1345,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// 'drawlists' which are supported by WC/PC and cached in DisplayMethods.
 
 		struct ColorIndexedImage_ {
-			casacore::Matrix<casacore::uInt> data;		// colormap indices
-			casacore::Matrix<casacore::Bool> mask;
-			casacore::Vector<casacore::Int> blc;
-			casacore::uInt colormapSize;
+			Matrix<uInt> data;		// colormap indices
+			Matrix<Bool> mask;
+			Vector<Int> blc;
+			uInt colormapSize;
 
 			ColorIndexedImage_() : data(), mask(), blc(2,0) {  }
 			void clear() {
@@ -1356,24 +1356,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				mask.resize();
 				blc=0;
 			}
-			casacore::Bool maskValid() {
+			Bool maskValid() {
 				return mask.nelements()!=0u &&
 				       mask.shape().isEqual(data.shape());
 			}
 		};
 
-		ColorIndexedImage_* makeColorIndexedImage(const casacore::Vector<casacore::Double> &blc,
-				            const casacore::Vector<casacore::Double> &trc,
-				            const casacore::Matrix<casacore::Float> &data,
-				            const casacore::Bool usePixelEdges, void* drawObj);
-		casacore::Matrix<casacore::uInt> mapToColor( const casacore::Matrix<casacore::uInt> & scaledImage);
+		ColorIndexedImage_* makeColorIndexedImage(const Vector<Double> &blc,
+				            const Vector<Double> &trc,
+				            const Matrix<Float> &data,
+				            const Bool usePixelEdges, void* drawObj);
+		Matrix<uInt> mapToColor( const Matrix<uInt> & scaledImage);
 		// Cache of pre-drawn ColorIndexedImage_'s.   When a caller of drawImage()
 		// wants to save one, it passes a drawing-object pointer in the 'drawObj'
 		// parameter for use as a retrieval key.  It should provide the same key
 		// to redrawIndexedImage() in order to reuse the image.
 		//# This mechanism attempts to avoid some erroneous reuses of
 		//# 'itsCachedImage' among different DDs (bugs 4937, 5032).   (dk 3/05)
-		casacore::SimpleOrderedMap<void*, ColorIndexedImage_*> images_;
+		SimpleOrderedMap<void*, ColorIndexedImage_*> images_;
 
 		// Retrieve an indexed image to write onto.  Used (exclusively) by
 		// WC::drawImage().  If one exists in the cache under this objId key,
@@ -1403,13 +1403,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// itsId & itsRef used to ensure thread-safe execution of pgplot
 
-		casacore::uInt itsId; // id of wc instance
+		uInt itsId; // id of wc instance
 
 
 		// WorldCanvas::refresh is a recursive function. itsRef is used to
 		// determine when the recursion is over. i.e, when the initial
 		// refresh call is exiting
-		casacore::uInt itsRef;
+		uInt itsRef;
 
 		std::string error_string;
 	};

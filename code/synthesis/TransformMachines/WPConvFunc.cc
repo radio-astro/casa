@@ -67,7 +67,6 @@
 #endif
 
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
   typedef unsigned long long ooLong; 
@@ -100,8 +99,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   WPConvFunc& WPConvFunc::operator=(const WPConvFunc& other){
     if(this != &other){
       uInt numConv=other.convFunctions_p.nelements();
-      convFunctions_p.resize(numConv, true, false);
-      convSupportBlock_p.resize(numConv, true, false);
+      convFunctions_p.resize(numConv, True, False);
+      convSupportBlock_p.resize(numConv, True, False);
       for (uInt k=0; k < numConv; ++k){
 	convFunctions_p[k]=new Cube<Complex>();
 	*(convFunctions_p[k])=*(other.convFunctions_p[k]);
@@ -300,13 +299,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   convFunc.resize(); // break any reference 
   convFunc.resize(convSize/2-1, convSize/2-1, wConvSize);
   convFunc.set(0.0);
-  Bool convFuncStor=false;
+  Bool convFuncStor=False;
   Complex *convFuncPtr=convFunc.getStorage(convFuncStor);
 
   IPosition start(4, 0, 0, 0, 0);
   IPosition pbSlice(4, convSize, convSize, 1, 1);
   
-  //Bool writeResults=false;
+  //Bool writeResults=False;
   Int warner=0;
 
 
@@ -423,7 +422,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       directionIndex=ftCoords.findCoordinate(Coordinate::DIRECTION);
       AlwaysAssert(directionIndex>=0, AipsError);
       dc=coords.directionCoordinate(directionIndex);
-      Vector<Bool> axes(2); axes(0)=true;axes(1)=true;
+      Vector<Bool> axes(2); axes(0)=True;axes(1)=True;
       Vector<Int> shape(2); shape(0)=convSize;shape(1)=convSize;
       Coordinate* ftdc=dc.makeFourierCoordinate(axes,shape);
       ftCoords.replaceCoordinate(*ftdc, directionIndex);
@@ -439,8 +438,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     */
     ////////IPosition start(4, convSize/2, convSize/2, 0, 0);
     ////////IPosition pbSlice(4, convSize/2-1, convSize/2-1, 1, 1);
-    ///////convFunc.xyPlane(iw)=twoDPB.getSlice(start, pbSlice, true);
-    //////Matrix<Complex> quarter(twoDPB.getSlice(start, pbSlice, true));
+    ///////convFunc.xyPlane(iw)=twoDPB.getSlice(start, pbSlice, True);
+    //////Matrix<Complex> quarter(twoDPB.getSlice(start, pbSlice, True));
     //   cerr << "quartershape " << quarter.shape() << endl;
     ooLong offset=ooLong(ooLong(iw)*ooLong(cpConvSize/2-1)*ooLong(cpConvSize/2-1));
     //    cerr << "offset " << offset << " convfuncshape " << convFunc.shape() << " convSize " << convSize  << endl;
@@ -477,7 +476,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   convFuncPtr=convFunc.getStorage(convFuncStor);
 #pragma omp parallel for default(none) firstprivate(suppstor, cpConvSize, cpWConvSize, convFuncPtr, maxConvSize) reduction(+: warner) 
   for (Int iw=0;iw<cpWConvSize;iw++) {
-    Bool found=false;
+    Bool found=False;
     Int trial=0;
     ooLong ploffset=(ooLong)(cpConvSize/2-1)*(ooLong)(cpConvSize/2-1)*(ooLong)iw;
     for (trial=cpConvSize/2-2;trial>0;trial--) {
@@ -485,7 +484,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       if((abs(convFuncPtr[(ooLong)(trial)+ploffset])>1e-3)||(abs(convFuncPtr[(ooLong)(trial*(cpConvSize/2-1))+ploffset])>1e-3) ) {
 	//cout <<"iw " << iw << " x " << abs(convFunc(trial,0,iw)) << " y " 
 	//   <<abs(convFunc(0,trial,iw)) << endl; 
-	found=true;
+	found=True;
 	break;
       }
     }
@@ -523,7 +522,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       Int directionIndex=ftCoords.findCoordinate(Coordinate::DIRECTION);
       AlwaysAssert(directionIndex>=0, AipsError);
       dc=coords.directionCoordinate(directionIndex);
-      Vector<Bool> axes(2); axes(0)=true;axes(1)=true;
+      Vector<Bool> axes(2); axes(0)=True;axes(1)=True;
       Vector<Int> shape(2); shape(0)=convSize;shape(1)=convSize;
       Coordinate* ftdc=dc.makeFourierCoordinate(axes,shape);
       ftCoords.replaceCoordinate(*ftdc, directionIndex);
@@ -588,7 +587,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  << maxMemoryMB << " MB" << LogIO::POST;
   convFunc.resize();
   convFunc.reference(*convFunctions_p[actualConvIndex_p]);
-  convSizes_p.resize(actualConvIndex_p+1, true);
+  convSizes_p.resize(actualConvIndex_p+1, True);
   convSizes_p(actualConvIndex_p)=convSize;
 
   convSampling=convSampling_p;
@@ -622,13 +621,13 @@ Bool WPConvFunc::checkCenterPix(const ImageInterface<Complex>& image){
   if(convFunctionMap_p.ndefined() == 0){
     convFunctionMap_p.define(imageKey, 0);    
     actualConvIndex_p=0;
-    return false;
+    return False;
   }
    
   if(!convFunctionMap_p.isDefined(imageKey)){
     actualConvIndex_p=convFunctionMap_p.ndefined();
     convFunctionMap_p.define(imageKey,actualConvIndex_p);
-    return false;
+    return False;
   }
   else{
     actualConvIndex_p=convFunctionMap_p(imageKey);
@@ -640,7 +639,7 @@ Bool WPConvFunc::checkCenterPix(const ImageInterface<Complex>& image){
 
   }
 
-  return true;
+  return True;
 }
 
 Bool WPConvFunc::toRecord(RecordInterface& rec){
@@ -665,9 +664,9 @@ Bool WPConvFunc::toRecord(RecordInterface& rec){
     rec.define("ny", ny_p);
   }
   catch(AipsError x) {
-    return false;
+    return False;
   }
-  return true;
+  return True;
 
  
 
@@ -678,8 +677,8 @@ Bool WPConvFunc::toRecord(RecordInterface& rec){
   Int numConv=0;
   try{
     rec.get("numconv", numConv);
-    convFunctions_p.resize(numConv, true, false);
-    convSupportBlock_p.resize(numConv, true, false);
+    convFunctions_p.resize(numConv, True, False);
+    convSupportBlock_p.resize(numConv, True, False);
     convFunctionMap_p=SimpleOrderedMap<String, Int>(-1);
     for (Int k=0; k < numConv; ++k){
       convFunctions_p[k]=new Cube<Complex>();
@@ -705,9 +704,9 @@ Bool WPConvFunc::toRecord(RecordInterface& rec){
   }
   catch(AipsError x) {
     err=x.getMesg();
-    return false;
+    return False;
   }
-  return true;
+  return True;
 
   }
 

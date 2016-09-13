@@ -9,7 +9,6 @@
 
 using namespace std;
 
-using namespace casacore;
 namespace casa {
 
 namespace vi {
@@ -18,8 +17,8 @@ namespace test {
 
 
 MsFactory::MsFactory (const String & msName)
- : addWeightSpectrum_p (true),
-   includeAutocorrelations_p (false),
+ : addWeightSpectrum_p (True),
+   includeAutocorrelations_p (False),
    simulator_p (new NewMSSimulator (msName)),
    timeStart_p (-1)
 {
@@ -267,9 +266,9 @@ MsFactory::attachColumns ()
 
     if (cds.isDefined (MS::columnName (MS::FLOAT_DATA))) {
         columns_p.floatVis_p.attach (* ms_p, MS::columnName (MS::FLOAT_DATA));
-        //floatDataFound_p = true;
+        //floatDataFound_p = True;
     } else {
-        //floatDataFound_p = false;
+        //floatDataFound_p = False;
     }
 
     if (cds.isDefined ("MODEL_DATA")) {
@@ -356,7 +355,7 @@ MsFactory::fillData ()
 
             fillState.spectralWindow_p = j;
             fillState.nChannels_p = nChannels [j];
-            vector<String> stokesComponents = utilj::split (stokesString [j], " ", true);
+            vector<String> stokesComponents = utilj::split (stokesString [j], " ", True);
             fillState.nCorrelations_p = stokesComponents.size();
 
             fillRows (fillState);
@@ -643,5 +642,4 @@ MsFactory::setTimeInfo (Double startingTime, Double endingTime, Double interval)
 
 } // end namespace vi
 
-using namespace casacore;
 } // end namespace casa

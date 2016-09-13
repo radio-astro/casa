@@ -45,7 +45,6 @@
 #include <components/SpectralComponents/ProfileFit1D.h>
 #include <lattices/Lattices/LatticeUtilities.h>
 
-using namespace casacore;
 namespace casa {
 SpectralFitter::SpectralFitter():
 	_log(new LogIO()), _resultMsg(""){
@@ -68,12 +67,12 @@ Bool SpectralFitter::fit(const Vector<Float> &spcVals,
 	if (spcVals.size() < 1) {
 		msg = String("No spectral values provided!");
 		*_log << LogIO::WARN << msg << LogIO::POST;
-		return false;
+		return False;
 	}
 
-	Bool ascending = true;
+	Bool ascending = True;
 	if (spcVals(spcVals.size() - 1) < spcVals(0))
-		ascending = false;
+		ascending = False;
 
 	uInt startIndex, endIndex;
 	if (ascending) {
@@ -81,13 +80,13 @@ Bool SpectralFitter::fit(const Vector<Float> &spcVals,
 			msg = String("Start value: ") + String::toString(endVal) + String(
 					" is smaller than all spectral values!");
 			*_log << LogIO::WARN << msg << LogIO::POST;
-			return false;
+			return False;
 		}
 		if (startVal > spcVals(spcVals.size() - 1)) {
 			msg = String("End value: ") + String::toString(startVal) + String(
 					" is larger than all spectral values!");
 			*_log << LogIO::WARN << msg << LogIO::POST;
-			return false;
+			return False;
 		}
 		startIndex = 0;
 		while (spcVals(startIndex) < startVal)
@@ -101,13 +100,13 @@ Bool SpectralFitter::fit(const Vector<Float> &spcVals,
 			msg = String("Start value: ") + String::toString(endVal) + String(
 					" is smaller than all spectral values!");
 			*_log << LogIO::WARN << msg << LogIO::POST;
-			return false;
+			return False;
 		}
 		if (startVal > spcVals(0)) {
 			msg = String("End value: ") + String::toString(startVal) + String(
 					" is larger than all spectral values!");
 			*_log << LogIO::WARN << msg << LogIO::POST;
-			return false;
+			return False;
 		}
 		startIndex = 0;
 		while (spcVals(startIndex) > endVal)
@@ -124,19 +123,19 @@ Bool SpectralFitter::fit(const Vector<Float> &spcVals,
 	if (!_prepareData(spcVals, eVals, startIndex, endIndex, maskVals, weightVals)){
 		msg = String("The error array contains values <0.0!");
 		*_log << LogIO::WARN << msg << LogIO::POST;
-		return false;
+		return False;
 	}
 
 	// make sure that something can be done
 	if ((endIndex-startIndex) + 1 < 2){
 		msg = String("Only one data value selected. Can not fit anything.");
 		*_log << LogIO::WARN << msg << LogIO::POST;
-		return false;
+		return False;
 	}
 	else if (fitGauss && ((endIndex-startIndex) + 1 < 3)){
 		msg = String("Only two data value selected. Can not fit a Gaussian.");
 		*_log << LogIO::WARN << msg << LogIO::POST;
-		return false;
+		return False;
 	}
 
 	// convert the input values to Double
@@ -164,16 +163,16 @@ Bool SpectralFitter::fit(const Vector<Float> &spcVals,
 	SpectralList elemList;
 	_prepareElems(fitGauss, fitPoly, nPoly, dspcVals, dyVals, elemList);
 	_fit.setElements(elemList);
-	//_report(_fit.getList(false), *_log);
+	//_report(_fit.getList(False), *_log);
 
 	// do the fit
-	Bool ok(false);
+	Bool ok(False);
 	try {
 		ok = _fit.fit();
 	} catch (AipsError x) {
 		msg = x.getMesg();
 		*_log << LogIO::WARN << msg << LogIO::POST;
-		return false;
+		return False;
 	}
 	if (ok){
 		_fitStatus=SpectralFitter::SUCCESS;
@@ -182,10 +181,10 @@ Bool SpectralFitter::fit(const Vector<Float> &spcVals,
 		_fitStatus=SpectralFitter::FAILED;
 	   msg = "Fitter did not converge in " + String::toString(_fit.getNumberIterations()) + " iterations";
 	   *_log << LogIO::NORMAL  << msg << LogIO::POST;
-	   return false;
+	   return False;
 	}
 
-	return true;
+	return True;
 }
 
 void SpectralFitter::getFit(const Vector<Float> &spcVals, Vector<Float> &spcFit, Vector<Float> &yFit) const{
@@ -208,7 +207,7 @@ void SpectralFitter::getFit(const Vector<Float> &spcVals, Vector<Float> &spcFit,
 
 String SpectralFitter::report(LogIO &os, const String &xUnit, const String &yUnit, const String &yPrefixUnit) const{
 	String resultMsg("");
-	SpectralList list = _fit.getList(true);
+	SpectralList list = _fit.getList(True);
 
 	switch (_fitStatus){
 	case SpectralFitter::SUCCESS:
@@ -247,8 +246,8 @@ Bool SpectralFitter::_prepareData(const Vector<Float> &xVals, const Vector<Float
 
 	// create the mask
 	maskVals.resize(xVals.size());
-	maskVals = false;
-	maskVals(IPosition(1, startIndex), IPosition(1, endIndex)) = true;
+	maskVals = False;
+	maskVals(IPosition(1, startIndex), IPosition(1, endIndex)) = True;
 
 	// if possible, compute the weights
 	if (eVals.size()>0){
@@ -263,7 +262,7 @@ Bool SpectralFitter::_prepareData(const Vector<Float> &xVals, const Vector<Float
 
 		// a value smaller zero make no sense
 		if (minVal<0.0){
-			return false;
+			return False;
 		}
 		// if the error is zero, discard all errors
 		else if (minVal==0.0){
@@ -276,7 +275,7 @@ Bool SpectralFitter::_prepareData(const Vector<Float> &xVals, const Vector<Float
 			weightVals(IPosition(1, startIndex), IPosition(1, endIndex)) = one(IPosition(1, startIndex), IPosition(1, endIndex)) / deVals(IPosition(1, startIndex), IPosition(1, endIndex));
 		}
 	}
-	return true;
+	return True;
 }
 
 Bool SpectralFitter::_prepareElems(const Bool fitGauss, const Bool fitPoly, const uInt nPoly, Vector<Double> &xVals,
@@ -356,7 +355,7 @@ Bool SpectralFitter::_prepareElems(const Bool fitGauss, const Bool fitPoly, cons
 		list.add(GaussianSpectralElement(gAmp, gCentre, gSigma));
 	}
 
-	return true;
+	return True;
 }
 
 String SpectralFitter::_report(LogIO &os, const SpectralList &list, const String &xUnit, const String &yUnit, const String &yPrefixUnit) const{

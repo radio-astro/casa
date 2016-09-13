@@ -32,12 +32,12 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-template<class T> casacore::Bool MaskedHogbomCleanModel<T>::
-solve(ResidualEquation<casacore::MaskedArray<T> > & eqn){
-   casacore::MaskedArray<T> res;
+template<class T> Bool MaskedHogbomCleanModel<T>::
+solve(ResidualEquation<MaskedArray<T> > & eqn){
+   MaskedArray<T> res;
    T minVal, maxVal;
-   casacore::IPosition minPos(theModel.ndim(), 0), maxPos(theModel.ndim(), 0);
-   for (casacore::uInt n = 0; n < numberIterations(); n++){
+   IPosition minPos(theModel.ndim(), 0), maxPos(theModel.ndim(), 0);
+   for (uInt n = 0; n < numberIterations(); n++){
      eqn.residual(res, *this); 
      minMax(minVal, maxVal, minPos, maxPos, res);
      if (abs(minVal) > abs(maxVal)){ // select the max residual even if it 
@@ -46,19 +46,19 @@ solve(ResidualEquation<casacore::MaskedArray<T> > & eqn){
      }
      theModel(maxPos) += gain()*maxVal;
    }
-   return true;
+   return True;
 }
 
 
-template<class T> casacore::Bool MaskedHogbomCleanModel<T>::
+template<class T> Bool MaskedHogbomCleanModel<T>::
 solve(ConvolutionEquation & eqn){
-  casacore::MaskedArray<T> residual;
+  MaskedArray<T> residual;
   T minVal, maxVal;
-  casacore::IPosition minPos(theModel.ndim(), 0), maxPos(theModel.ndim(), 0);
+  IPosition minPos(theModel.ndim(), 0), maxPos(theModel.ndim(), 0);
   eqn.residual(residual, *this); 
-  casacore::Array<casacore::Float> psf(residual.shape());
+  Array<Float> psf(residual.shape());
   T amplitude;
-  casacore::uInt n = 0;
+  uInt n = 0;
   minMax(minVal, maxVal, minPos, maxPos, residual); 
   if (abs(minVal) > abs(maxVal)){
     maxVal = minVal; 
@@ -79,7 +79,7 @@ solve(ConvolutionEquation & eqn){
   }
   setNumberIterations(n);
   setThreshold(abs(maxVal));
-  return true;
+  return True;
 };
 
 

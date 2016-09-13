@@ -30,15 +30,11 @@
 #define SYNTHESIS_HOGBOMCLEANIMAGESKYMODEL_H
 
 #include <synthesis/MeasurementComponents/CleanImageSkyModel.h>
-namespace casacore{
-
-template <class T> class RO_LatticeIterator;
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //forward
 class SkyEquation;
+template <class T> class RO_LatticeIterator;
 // <summary> 
 // Hogbom Clean Image Sky Model: Image Sky Model implementing the Hogbom Clean algorithm
 // </summary>
@@ -83,16 +79,16 @@ class HogbomCleanImageSkyModel : public CleanImageSkyModel {
 public:
 
   // Solve for this SkyModel
-  virtual casacore::Bool solve (SkyEquation& me);
-  casacore::Matrix<casacore::Float>* makeMaskMatrix(const casacore::Int& nx, 
-				const casacore::Int& ny,
-				casacore::Int& newNx,
-				casacore::Int& newNy,
-				casacore::RO_LatticeIterator<casacore::Float>& maskIter,
-				casacore::Int& xbeg,
-				casacore::Int& xend,
-				casacore::Int& ybeg,
-				casacore::Int& yend);
+  virtual Bool solve (SkyEquation& me);
+  Matrix<Float>* makeMaskMatrix(const Int& nx, 
+				const Int& ny,
+				Int& newNx,
+				Int& newNy,
+				RO_LatticeIterator<Float>& maskIter,
+				Int& xbeg,
+				Int& xend,
+				Int& ybeg,
+				Int& yend);
 
 private:
 };

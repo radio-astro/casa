@@ -7,14 +7,10 @@
 
 #include <utility>
 
-namespace casacore{
+namespace casa {
 
     class MeasurementSet;
     class NewMSSimulator;
-}
-
-namespace casa {
-
     class ROVisibilityIterator;
 
 namespace vi {
@@ -28,17 +24,17 @@ class FillState {
 
 public:
 
-    casacore::Int antenna1_p;
-    casacore::Int antenna2_p;
-    casacore::Int nAntennas_p;
-    casacore::Int nFlagCategories_p;
-    casacore::Int nChannels_p;
-    casacore::Int nCorrelations_p;
-    casacore::Int rowNumber_p;
-    casacore::Int spectralWindow_p;
-    casacore::Double time_p;
-    casacore::Double timeDelta_p;
-    casacore::Double uvw_p [3];
+    Int antenna1_p;
+    Int antenna2_p;
+    Int nAntennas_p;
+    Int nFlagCategories_p;
+    Int nChannels_p;
+    Int nCorrelations_p;
+    Int rowNumber_p;
+    Int spectralWindow_p;
+    Double time_p;
+    Double timeDelta_p;
+    Double uvw_p [3];
 
 };
 
@@ -56,7 +52,7 @@ public:
 
     virtual ~Generator () {}
 
-    virtual T operator() (const FillState &, casacore::Int channel, casacore::Int correlation) const = 0;
+    virtual T operator() (const FillState &, Int channel, Int correlation) const = 0;
 
 };
 
@@ -68,7 +64,7 @@ public:
     GenerateConstant (const T & c) : c_p (c) {}
 
     T
-    operator () (const FillState &, casacore::Int, casacore::Int ) const {
+    operator () (const FillState &, Int, Int ) const {
         return c_p;
     }
 
@@ -77,71 +73,71 @@ private:
     T c_p;
 };
 
-class GenerateAntenna1 : public Generator<casacore::Int> {
+class GenerateAntenna1 : public Generator<Int> {
 
 public:
 
     Int
-    operator () (const FillState & fillState, casacore::Int, casacore::Int ) const {
+    operator () (const FillState & fillState, Int, Int ) const {
         return fillState.antenna1_p;
     }
 };
 
-class GenerateAntenna2 : public Generator<casacore::Int> {
+class GenerateAntenna2 : public Generator<Int> {
 
 
 public:
 
     Int
-    operator () (const FillState & fillState, casacore::Int, casacore::Int ) const {
+    operator () (const FillState & fillState, Int, Int ) const {
         return fillState.antenna2_p;
     }
 };
 
-class GenerateDdi: public Generator<casacore::Int> {
+class GenerateDdi: public Generator<Int> {
 
 public:
 
     Int
-    operator () (const FillState & fillState, casacore::Int, casacore::Int ) const {
+    operator () (const FillState & fillState, Int, Int ) const {
         return fillState.spectralWindow_p;
     }
 };
 
-class GenerateExposure : public Generator<casacore::Double> {
+class GenerateExposure : public Generator<Double> {
 
 public:
 
     Double
-    operator () (const FillState & fillState, casacore::Int, casacore::Int ) const {
+    operator () (const FillState & fillState, Int, Int ) const {
         return fillState.timeDelta_p * .98;
     }
 };
 
-class GenerateFlag : public Generator<casacore::Bool> {
+class GenerateFlag : public Generator<Bool> {
 
 public:
 
     Bool
-    operator () (const FillState & /*fillState*/, casacore::Int channel, casacore::Int correlation) const {
+    operator () (const FillState & /*fillState*/, Int channel, Int correlation) const {
 
         // Generate a of T F T F ... for even rows and F T F T ... for odd rows
 
-        casacore::Bool value = (channel % 2 == 0) == (correlation % 2 == 0);
+        Bool value = (channel % 2 == 0) == (correlation % 2 == 0);
         return value;
     }
 };
 
-class GenerateFlagRow : public Generator<casacore::Bool> {
+class GenerateFlagRow : public Generator<Bool> {
 
 public:
 
     Bool
-    operator () (const FillState & fillState, casacore::Int /*channel*/, casacore::Int /*correlation*/) const {
+    operator () (const FillState & fillState, Int /*channel*/, Int /*correlation*/) const {
 
         // Generate a of T F T F ... for even rows and F T F T ... for odd rows
 
-        casacore::Bool value = (fillState.rowNumber_p % 3 == 0) || (fillState.rowNumber_p % 5 == 0);
+        Bool value = (fillState.rowNumber_p % 3 == 0) || (fillState.rowNumber_p % 5 == 0);
         return value;
     }
 };
@@ -151,9 +147,9 @@ class GenerateFlagCategory : public GeneratorBase {
 public:
 
     virtual Bool
-    operator () (const FillState & fillState, casacore::Int channel, casacore::Int correlation, casacore::Int /*category*/) const {
+    operator () (const FillState & fillState, Int channel, Int correlation, Int /*category*/) const {
 
-        casacore::Bool result;
+        Bool result;
 
         switch (correlation){
 
@@ -179,7 +175,7 @@ public:
 
         default:
 
-            Assert (false);
+            Assert (False);
             result = false;
             break;
 
@@ -199,7 +195,7 @@ public:
     GenerateUsingRow (T c) : c_p (c) {}
 
     T
-    operator () (const FillState & fillState, casacore::Int, casacore::Int ) const {
+    operator () (const FillState & fillState, Int, Int ) const {
         return fillState.rowNumber_p * 100 + c_p;
     }
 
@@ -209,43 +205,43 @@ private:
 };
 
 
-class GenerateTime : public Generator<casacore::Double> {
+class GenerateTime : public Generator<Double> {
 
 
 public:
 
     Double
-    operator () (const FillState & fillState, casacore::Int, casacore::Int ) const {
+    operator () (const FillState & fillState, Int, Int ) const {
         return fillState.time_p;
     }
 };
 
-class GenerateTimeCentroid : public Generator<casacore::Double> {
+class GenerateTimeCentroid : public Generator<Double> {
 
 public:
 
     Double
-    operator () (const FillState & fillState, casacore::Int, casacore::Int ) const {
+    operator () (const FillState & fillState, Int, Int ) const {
         return fillState.time_p; // same as time for this model
     }
 };
 
-class GenerateTimeInterval : public Generator<casacore::Double> {
+class GenerateTimeInterval : public Generator<Double> {
 
 public:
 
     Double
-    operator () (const FillState & fillState, casacore::Int, casacore::Int ) const {
+    operator () (const FillState & fillState, Int, Int ) const {
         return fillState.timeDelta_p;
     }
 };
 
-class GenerateUvw : public Generator <casacore::Vector <casacore::Double> > {
+class GenerateUvw : public Generator <Vector <Double> > {
 
-    casacore::Vector<casacore::Double>
-    operator () (const FillState & fillState, casacore::Int, casacore::Int ) const {
+    Vector<Double>
+    operator () (const FillState & fillState, Int, Int ) const {
 
-        casacore::Vector <casacore::Double> result (3);
+        Vector <Double> result (3);
         result [0] = fillState.rowNumber_p * 10;
         result [1] = result [0] + 1;
         result [2] = result [0] + 2;
@@ -253,47 +249,47 @@ class GenerateUvw : public Generator <casacore::Vector <casacore::Double> > {
     }
 };
 
-class GenerateVisibility : public Generator<casacore::Complex> {
+class GenerateVisibility : public Generator<Complex> {
 
 public:
 
-    GenerateVisibility (casacore::Int c) : c_p (c) {}
+    GenerateVisibility (Int c) : c_p (c) {}
 
     Complex
-    operator () (const FillState & fillState, casacore::Int channel, casacore::Int correlation) const {
+    operator () (const FillState & fillState, Int channel, Int correlation) const {
 
-        casacore::Float r = fillState.rowNumber_p * 10 + fillState.spectralWindow_p;
-        casacore::Float i = channel * 100 + correlation * 10 + c_p;
-        return casacore::Complex (r, i);
+        Float r = fillState.rowNumber_p * 10 + fillState.spectralWindow_p;
+        Float i = channel * 100 + correlation * 10 + c_p;
+        return Complex (r, i);
     }
 
 private:
 
-    const casacore::Int c_p;
+    const Int c_p;
 };
 
 
-class GenerateWeightSpectrum : public Generator<casacore::Float> {
+class GenerateWeightSpectrum : public Generator<Float> {
 
 public:
 
     Float
-    operator () (const FillState & fillState, casacore::Int channel, casacore::Int correlation) const {
+    operator () (const FillState & fillState, Int channel, Int correlation) const {
 
-        casacore::Float r = fillState.rowNumber_p * 1000 + fillState.spectralWindow_p * 100 +
+        Float r = fillState.rowNumber_p * 1000 + fillState.spectralWindow_p * 100 +
                   channel * 10 + correlation + 1;
         return r;
     }
 };
 
-class GenerateWeightSpectrumCorrected : public Generator<casacore::Float> {
+class GenerateWeightSpectrumCorrected : public Generator<Float> {
 
 public:
 
     Float
-    operator () (const FillState & fillState, casacore::Int channel, casacore::Int correlation) const {
+    operator () (const FillState & fillState, Int channel, Int correlation) const {
 
-        casacore::Float r = fillState.rowNumber_p * 1000 + fillState.spectralWindow_p * 100 +
+        Float r = fillState.rowNumber_p * 1000 + fillState.spectralWindow_p * 100 +
                   channel * 10 + correlation + 2;
         return r;
     }
@@ -304,38 +300,38 @@ class MsFactory {
 
 public:
 
-    MsFactory (const casacore::String & name);
+    MsFactory (const String & name);
 
     ~MsFactory ();
 
-    std::pair<casacore::MeasurementSet *, casacore::Int> createMs ();
+    std::pair<MeasurementSet *, Int> createMs ();
 
-    void addAntennas (casacore::Int nAntennas);
+    void addAntennas (Int nAntennas);
 
-    //// void addColumn (casacore::MSMainEnums::PredefinedColumns columnId);
-    void addWeightSpectrum (casacore::Bool addIt);
+    //// void addColumn (MSMainEnums::PredefinedColumns columnId);
+    void addWeightSpectrum (Bool addIt);
 
-    void addCubeColumn (casacore::MSMainEnums::PredefinedColumns columnId,
-                        const casacore::String & dataStorageMangerName);
+    void addCubeColumn (MSMainEnums::PredefinedColumns columnId,
+                        const String & dataStorageMangerName);
 
 
-    void addFeeds (casacore::Int nFeeds);
-    void addField (const casacore::String & name,
-                   const casacore::MDirection & direction);
-    void addSpectralWindow (const casacore::String & name,
-                            casacore::Int nChannels,
-                            casacore::Double frequency,
-                            casacore::Double frequencyDelta,
-                            const casacore::String & stokes);
+    void addFeeds (Int nFeeds);
+    void addField (const String & name,
+                   const MDirection & direction);
+    void addSpectralWindow (const String & name,
+                            Int nChannels,
+                            Double frequency,
+                            Double frequencyDelta,
+                            const String & stokes);
     void addSpectralWindows (int nSpectralWindows);
 
-    void setDataGenerator (casacore::MSMainEnums::PredefinedColumns, GeneratorBase * generator);
+    void setDataGenerator (MSMainEnums::PredefinedColumns, GeneratorBase * generator);
 
-    void setIncludeAutocorrelations (casacore::Bool includeThem);
+    void setIncludeAutocorrelations (Bool includeThem);
 
-    void setTimeInfo (casacore::Double startingTime,
-                      casacore::Double endingTime,
-                      casacore::Double interval);
+    void setTimeInfo (Double startingTime,
+                      Double endingTime,
+                      Double interval);
 
 protected:
 
@@ -345,7 +341,7 @@ protected:
     void fillCollections (FillState & fillState);
     template <typename T>
     void
-    fillCube (casacore::ArrayColumn<T> & column, const FillState & fillState,
+    fillCube (ArrayColumn<T> & column, const FillState & fillState,
               const GeneratorBase * generator);
     void fillCubes (FillState & fillState);
     void fillData ();
@@ -353,11 +349,11 @@ protected:
 
     template <typename T>
     void
-    fillScalar (casacore::ScalarColumn<T> & column, const FillState & fillState,
+    fillScalar (ScalarColumn<T> & column, const FillState & fillState,
                 const GeneratorBase * generator);
     template <typename T>
     void
-    fillCollection (casacore::ArrayColumn<T> & column, const FillState & fillState,
+    fillCollection (ArrayColumn<T> & column, const FillState & fillState,
                     const GeneratorBase * generator);
     void fillScalars (FillState & fillState);
     void fillVisCubeCorrected (FillState & fillState);
@@ -373,7 +369,7 @@ protected:
 
 private:
 
-    typedef std::set<casacore::MSMainEnums::PredefinedColumns> ColumnIds;
+    typedef std::set<MSMainEnums::PredefinedColumns> ColumnIds;
 
     class Columns {
 
@@ -381,33 +377,33 @@ private:
 
         Columns & operator= (const Columns & other);
 
-        casacore::ScalarColumn<casacore::Int>    antenna1_p;
-        casacore::ScalarColumn<casacore::Int>    antenna2_p;
-        casacore::ScalarColumn<casacore::Int>    array_p;
-        casacore::ArrayColumn<casacore::Complex> corrVis_p;
-        casacore::ScalarColumn<casacore::Int>    dataDescriptionId_p;
-        casacore::ScalarColumn<casacore::Double> exposure_p;
-        casacore::ScalarColumn<casacore::Int>    feed1_p;
-        casacore::ScalarColumn<casacore::Int>    feed2_p;
-        casacore::ScalarColumn<casacore::Int>    field_p;
-        casacore::ArrayColumn<casacore::Bool>    flagCategory_p;
-        casacore::ScalarColumn<casacore::Bool>   flagRow_p;
-        casacore::ArrayColumn<casacore::Bool>    flag_p;
-        casacore::ArrayColumn<casacore::Float>   floatVis_p;
-        casacore::ArrayColumn<casacore::Complex> modelVis_p;
-        casacore::ScalarColumn<casacore::Int>    observation_p;
-        casacore::ScalarColumn<casacore::Int>    processor_p;
-        casacore::ScalarColumn<casacore::Int>    scan_p;
-        casacore::ArrayColumn<casacore::Float>   sigma_p;
-        casacore::ScalarColumn<casacore::Int>    state_p;
-        casacore::ScalarColumn<casacore::Double> timeCentroid_p;
-        casacore::ScalarColumn<casacore::Double> timeInterval_p;
-        casacore::ScalarColumn<casacore::Double> time_p;
-        casacore::ArrayColumn<casacore::Double>  uvw_p;
-        casacore::ArrayColumn<casacore::Complex> vis_p;
-        casacore::ArrayColumn<casacore::Float>   weightSpectrum_p;
-        casacore::ArrayColumn<casacore::Float>   weightSpectrumCorrected_p;
-        casacore::ArrayColumn<casacore::Float>   weight_p;
+        ScalarColumn<Int>    antenna1_p;
+        ScalarColumn<Int>    antenna2_p;
+        ScalarColumn<Int>    array_p;
+        ArrayColumn<Complex> corrVis_p;
+        ScalarColumn<Int>    dataDescriptionId_p;
+        ScalarColumn<Double> exposure_p;
+        ScalarColumn<Int>    feed1_p;
+        ScalarColumn<Int>    feed2_p;
+        ScalarColumn<Int>    field_p;
+        ArrayColumn<Bool>    flagCategory_p;
+        ScalarColumn<Bool>   flagRow_p;
+        ArrayColumn<Bool>    flag_p;
+        ArrayColumn<Float>   floatVis_p;
+        ArrayColumn<Complex> modelVis_p;
+        ScalarColumn<Int>    observation_p;
+        ScalarColumn<Int>    processor_p;
+        ScalarColumn<Int>    scan_p;
+        ArrayColumn<Float>   sigma_p;
+        ScalarColumn<Int>    state_p;
+        ScalarColumn<Double> timeCentroid_p;
+        ScalarColumn<Double> timeInterval_p;
+        ScalarColumn<Double> time_p;
+        ArrayColumn<Double>  uvw_p;
+        ArrayColumn<Complex> vis_p;
+        ArrayColumn<Float>   weightSpectrum_p;
+        ArrayColumn<Float>   weightSpectrumCorrected_p;
+        ArrayColumn<Float>   weight_p;
 
     };
 
@@ -415,37 +411,37 @@ private:
 
     public:
 
-        typedef std::map<casacore::MSMainEnums::PredefinedColumns, const GeneratorBase *> GeneratorMap;
+        typedef std::map<MSMainEnums::PredefinedColumns, const GeneratorBase *> GeneratorMap;
 
         Generators ()
         {
-            generatorMap_p [casacore::MSMainEnums::ANTENNA1] = new GenerateAntenna1 ();
-            generatorMap_p [casacore::MSMainEnums::ANTENNA2] = new GenerateAntenna2 ();
-            generatorMap_p [casacore::MSMainEnums::ARRAY_ID] = new GenerateConstant<casacore::Int> (17);
-            generatorMap_p [casacore::MSMainEnums::DATA_DESC_ID] = new GenerateDdi ();
-            generatorMap_p [casacore::MSMainEnums::EXPOSURE] = new GenerateUsingRow<casacore::Double> (8);
-            generatorMap_p [casacore::MSMainEnums::FEED1] = new GenerateConstant<casacore::Int> (0);
-            generatorMap_p [casacore::MSMainEnums::FEED2] = new GenerateConstant<casacore::Int> (0);
-            generatorMap_p [casacore::MSMainEnums::FIELD_ID] = new GenerateConstant<casacore::Int> (0);
-            generatorMap_p [casacore::MSMainEnums::FLAG_CATEGORY] = new GenerateFlagCategory ();
-            generatorMap_p [casacore::MSMainEnums::FLAG_ROW] = new GenerateFlagRow ();
-            generatorMap_p [casacore::MSMainEnums::OBSERVATION_ID] = new GenerateUsingRow<casacore::Int> (7);
-            generatorMap_p [casacore::MSMainEnums::PROCESSOR_ID] = new GenerateConstant<casacore::Int> (0);
-            generatorMap_p [casacore::MSMainEnums::SCAN_NUMBER] = new GenerateUsingRow<casacore::Int> (5);
-            generatorMap_p [casacore::MSMainEnums::STATE_ID] = new GenerateConstant<casacore::Int> (0);
-            generatorMap_p [casacore::MSMainEnums::TIME_CENTROID] = new GenerateUsingRow<casacore::Double> (1);
-            generatorMap_p [casacore::MSMainEnums::INTERVAL] = new GenerateUsingRow<casacore::Double> (2);
-            generatorMap_p [casacore::MSMainEnums::TIME] = new GenerateTime ();
-            generatorMap_p [casacore::MSMainEnums::FLAG] = new GenerateFlag ();
-            generatorMap_p [casacore::MSMainEnums::SIGMA] = new GenerateUsingRow<casacore::Float> (3);
-            generatorMap_p [casacore::MSMainEnums::SIGMA_SPECTRUM] = new GenerateConstant<casacore::Float> (0);
-            generatorMap_p [casacore::MSMainEnums::UVW] = new GenerateUvw ();
-            generatorMap_p [casacore::MSMainEnums::CORRECTED_DATA] = new GenerateVisibility (1);
-            generatorMap_p [casacore::MSMainEnums::MODEL_DATA] = new GenerateVisibility (2);
-            generatorMap_p [casacore::MSMainEnums::DATA] = new GenerateVisibility (0);
-            generatorMap_p [casacore::MSMainEnums::WEIGHT] = new GenerateUsingRow<casacore::Float> (4);
-            generatorMap_p [casacore::MSMainEnums::WEIGHT_SPECTRUM] = new GenerateWeightSpectrum ();
-            generatorMap_p [casacore::MSMainEnums::CORRECTED_WEIGHT_SPECTRUM] = new GenerateWeightSpectrumCorrected ();
+            generatorMap_p [MSMainEnums::ANTENNA1] = new GenerateAntenna1 ();
+            generatorMap_p [MSMainEnums::ANTENNA2] = new GenerateAntenna2 ();
+            generatorMap_p [MSMainEnums::ARRAY_ID] = new GenerateConstant<Int> (17);
+            generatorMap_p [MSMainEnums::DATA_DESC_ID] = new GenerateDdi ();
+            generatorMap_p [MSMainEnums::EXPOSURE] = new GenerateUsingRow<Double> (8);
+            generatorMap_p [MSMainEnums::FEED1] = new GenerateConstant<Int> (0);
+            generatorMap_p [MSMainEnums::FEED2] = new GenerateConstant<Int> (0);
+            generatorMap_p [MSMainEnums::FIELD_ID] = new GenerateConstant<Int> (0);
+            generatorMap_p [MSMainEnums::FLAG_CATEGORY] = new GenerateFlagCategory ();
+            generatorMap_p [MSMainEnums::FLAG_ROW] = new GenerateFlagRow ();
+            generatorMap_p [MSMainEnums::OBSERVATION_ID] = new GenerateUsingRow<Int> (7);
+            generatorMap_p [MSMainEnums::PROCESSOR_ID] = new GenerateConstant<Int> (0);
+            generatorMap_p [MSMainEnums::SCAN_NUMBER] = new GenerateUsingRow<Int> (5);
+            generatorMap_p [MSMainEnums::STATE_ID] = new GenerateConstant<Int> (0);
+            generatorMap_p [MSMainEnums::TIME_CENTROID] = new GenerateUsingRow<Double> (1);
+            generatorMap_p [MSMainEnums::INTERVAL] = new GenerateUsingRow<Double> (2);
+            generatorMap_p [MSMainEnums::TIME] = new GenerateTime ();
+            generatorMap_p [MSMainEnums::FLAG] = new GenerateFlag ();
+            generatorMap_p [MSMainEnums::SIGMA] = new GenerateUsingRow<Float> (3);
+            generatorMap_p [MSMainEnums::SIGMA_SPECTRUM] = new GenerateConstant<Float> (0);
+            generatorMap_p [MSMainEnums::UVW] = new GenerateUvw ();
+            generatorMap_p [MSMainEnums::CORRECTED_DATA] = new GenerateVisibility (1);
+            generatorMap_p [MSMainEnums::MODEL_DATA] = new GenerateVisibility (2);
+            generatorMap_p [MSMainEnums::DATA] = new GenerateVisibility (0);
+            generatorMap_p [MSMainEnums::WEIGHT] = new GenerateUsingRow<Float> (4);
+            generatorMap_p [MSMainEnums::WEIGHT_SPECTRUM] = new GenerateWeightSpectrum ();
+            generatorMap_p [MSMainEnums::CORRECTED_WEIGHT_SPECTRUM] = new GenerateWeightSpectrumCorrected ();
 
         }
 
@@ -460,18 +456,18 @@ private:
         }
 
         const GeneratorBase *
-        get (casacore::MSMainEnums::PredefinedColumns key) const
+        get (MSMainEnums::PredefinedColumns key) const
         {
             GeneratorMap::const_iterator i = generatorMap_p.find (key);
 
             ThrowIf (i == generatorMap_p.end(),
-                     casacore::String::format ("No such key: %d", key));
+                     String::format ("No such key: %d", key));
 
             return i->second;
         }
 
         void
-        set (casacore::MSMainEnums::PredefinedColumns key, const GeneratorBase * newValue)
+        set (MSMainEnums::PredefinedColumns key, const GeneratorBase * newValue)
         {
             GeneratorMap::iterator i = generatorMap_p.find (key);
 
@@ -491,18 +487,18 @@ private:
 
     };
 
-    casacore::Bool addWeightSpectrum_p;
+    Bool addWeightSpectrum_p;
     Columns columns_p;
     ColumnIds columnIds_p;
     Generators generators_p;
-    casacore::Bool includeAutocorrelations_p;
-    casacore::MeasurementSet * ms_p;
-    casacore::Int nAntennas_p;
-    casacore::Int nRows_p;
-    casacore::NewMSSimulator * simulator_p;
-    casacore::Double timeEnd_p;
-    casacore::Double timeInterval_p;
-    casacore::Double timeStart_p;
+    Bool includeAutocorrelations_p;
+    MeasurementSet * ms_p;
+    Int nAntennas_p;
+    Int nRows_p;
+    NewMSSimulator * simulator_p;
+    Double timeEnd_p;
+    Double timeInterval_p;
+    Double timeStart_p;
 };
 
 } // end namespace test

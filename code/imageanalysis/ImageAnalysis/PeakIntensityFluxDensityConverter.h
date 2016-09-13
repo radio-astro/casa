@@ -37,7 +37,7 @@
 
 namespace casa {
 
-class PeakIntensityFluxDensityConverter : public ImageTask<casacore::Float> {
+class PeakIntensityFluxDensityConverter : public ImageTask<Float> {
 	// <summary>
 	// Class for converting between peak intensity and flux density of a source
 	// of specified shape.
@@ -62,7 +62,7 @@ class PeakIntensityFluxDensityConverter : public ImageTask<casacore::Float> {
 	// </example>
 
 public:
-    using Angular2DGaussian = casacore::GaussianBeam;
+    using Angular2DGaussian = GaussianBeam;
 
     // Specify image to get beam and coordinate info from
 	PeakIntensityFluxDensityConverter(
@@ -80,24 +80,24 @@ public:
 
 	// set the component shape
 
-	void setShape(const casacore::String& shape) { _shape = ComponentType::shape(shape); }
+	void setShape(const String& shape) { _shape = ComponentType::shape(shape); }
 
 	void setShape (ComponentType::Shape shape) { _shape = shape; }
 
 	// Given the channel and polarization, determine which beam in the
 	// image to use for the resolution area.
-	void setBeam(casacore::Int channel, casacore::Int polarization);
+	void setBeam(Int channel, Int polarization);
 
-	casacore::Quantity fluxDensityToPeakIntensity(
-		casacore::Bool& hadToMakeFakeBeam, const casacore::Quantity& fluxDensity
+	Quantity fluxDensityToPeakIntensity(
+		Bool& hadToMakeFakeBeam, const Quantity& fluxDensity
 	) const;
 
-	casacore::Quantity peakIntensityToFluxDensity(
-		casacore::Bool& hadToMakeFakeBeam, const casacore::Quantity& fluxDensity
+	Quantity peakIntensityToFluxDensity(
+		Bool& hadToMakeFakeBeam, const Quantity& fluxDensity
 	) const;
 
-	casacore::String getClass() const {
-		static const casacore::String s = "PeakIntensityFluxDensityConverter";
+	String getClass() const {
+		static const String s = "PeakIntensityFluxDensityConverter";
 		return s;
 	}
 
@@ -106,15 +106,15 @@ protected:
 		return CasacRegionManager::USE_ALL_STOKES;
 	}
 
-	inline vector<casacore::Coordinate::Type> _getNecessaryCoordinates() const {
-		return vector<casacore::Coordinate::Type>(1, casacore::Coordinate::DIRECTION);
+	inline vector<Coordinate::Type> _getNecessaryCoordinates() const {
+		return vector<Coordinate::Type>(1, Coordinate::DIRECTION);
 	}
 
 private:
 
 	Angular2DGaussian _size;
 	ComponentType::Shape _shape;
-	casacore::GaussianBeam _beam;
+	GaussianBeam _beam;
 
 
 

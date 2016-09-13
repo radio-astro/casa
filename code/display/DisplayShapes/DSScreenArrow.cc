@@ -38,7 +38,6 @@
 
 #include <scimath/Mathematics.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	DSScreenArrow::DSScreenArrow() :
@@ -91,7 +90,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	Bool DSScreenArrow::setOptions(const Record& settings) {
-		Bool localChange = false;
+		Bool localChange = False;
 		Record toSet = settings;
 
 		if (settings.isDefined("coords")) {
@@ -233,7 +232,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 		if (DSArrow::setOptions(toSet)) {
-			localChange = true;
+			localChange = True;
 		}
 
 		return localChange;

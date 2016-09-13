@@ -79,11 +79,11 @@ class VisBuffGroupAcc
 {
 public:
   // Construct from the number of antennas, spws, fields, the averaging interval and the pre-normalization flag
-  VisBuffGroupAcc (const casacore::Int& nAnt, 
-		   const casacore::Int& nSpw, 
-		   const casacore::Int& nFld,
-		   const casacore::Double& subinterval,
-                   const casacore::Bool fillModel=true);
+  VisBuffGroupAcc (const Int& nAnt, 
+		   const Int& nSpw, 
+		   const Int& nFld,
+		   const Double& subinterval,
+                   const Bool fillModel=True);
 
   // Null destructor
   ~VisBuffGroupAcc();
@@ -95,27 +95,27 @@ public:
   void finalizeAverage();
 
   // Make data amp- or phase-only
-  void enforceAPonData(const casacore::String& apmode);
+  void enforceAPonData(const String& apmode);
 
   // Optionally set cross-hands weights to zero, so they are 
   //   not used (e.g., for solving) subsequently, but remain
   //   present in case a general calibration (like P for linears)
   //   is applied that will mix them with the parallel hands
-  void enforceSolveCorrWeights(const casacore::Bool phandonly=false);
+  void enforceSolveCorrWeights(const Bool phandonly=False);
 
   // How many separate VisBuffers are contained herein?
-  casacore::Int nBuf() const {return nBuf_p;}
+  Int nBuf() const {return nBuf_p;}
 
-  casacore::Int nAnt() const {return nAnt_p;}
-  casacore::Int nSpw() const {return nSpw_p;}
-  casacore::Int nFld() const {return nFld_p;}
+  Int nAnt() const {return nAnt_p;}
+  Int nSpw() const {return nSpw_p;}
+  Int nFld() const {return nFld_p;}
 
   // The global timestamp
-  casacore::Double& globalTimeStamp() { return globalTimeStamp_p; };
+  Double& globalTimeStamp() { return globalTimeStamp_p; };
 
   // Return reference to the indexed VisBuffer
-  CalVisBuffer& operator()(const casacore::Int& buf);
-  CalVisBuffer& operator()(const casacore::Int& spw, const casacore::Int& fld);
+  CalVisBuffer& operator()(const Int& buf);
+  CalVisBuffer& operator()(const Int& spw, const Int& fld);
 
   // Return a map from row numbers in the VisBuffer returned by the above
   // operator()s to row numbers in the corresponding input VisBuffer.  Only
@@ -125,24 +125,24 @@ public:
   // antennas and the metadata you want also matches).  hurl controls whether
   // an exception will be thrown if the number of VisBuffers that went into the
   // output of operator() != 1.  Unfilled rows point to -1.
-  const casacore::Vector<casacore::Int>& outToInRow(const casacore::Int buf, const casacore::Bool hurl=true) const;
-  const casacore::Vector<casacore::Int>& outToInRow(const casacore::Int spw, const casacore::Int fld,
-                                const casacore::Bool hurl=true) const;
+  const Vector<Int>& outToInRow(const Int buf, const Bool hurl=true) const;
+  const Vector<Int>& outToInRow(const Int spw, const Int fld,
+                                const Bool hurl=true) const;
 
   // Setup chanmask from a spw:chan selection string and an MS.
   // static so a chanmask can be made once and provided to multiple VBGAs.
-  static casacore::Bool fillChanMask(std::map<casacore::Int, casacore::Vector<casacore::Bool>*>& chanmask,
-                           const casacore::String& spwstr,
-                           const casacore::MeasurementSet& ms);
+  static Bool fillChanMask(std::map<Int, Vector<Bool>*>& chanmask,
+                           const String& spwstr,
+                           const MeasurementSet& ms);
 
   // Select channels in the accumulated buffers by flagging with the chanmask.
   // Returns the number of VisBuffers that the chanmask operated on.
-  casacore::uInt applyChanMask(std::map<casacore::Int, casacore::Vector<casacore::Bool>*>& chanmask);
+  uInt applyChanMask(std::map<Int, Vector<Bool>*>& chanmask);
 
   // Empties chanmask (which may have some newed elements).
-  static void clearChanMask(std::map<casacore::Int, casacore::Vector<casacore::Bool>*>& chanmask);
+  static void clearChanMask(std::map<Int, Vector<Bool>*>& chanmask);
 
-  void setTVIDebug(bool debug) {tvi_debug = debug;}
+  void setTVIDebug(Bool debug) {tvi_debug = debug;}
 
 private:
 
@@ -152,26 +152,26 @@ private:
   VisBuffGroupAcc (const VisBuffGroupAcc&);
 
   // Number of antennas, spw, fld, buffers
-  casacore::Int nAnt_p, nSpw_p, nFld_p, nBuf_p;
+  Int nAnt_p, nSpw_p, nFld_p, nBuf_p;
 
   // Averaging interval
-  casacore::Double subinterval_p;
+  Double subinterval_p;
 
-  casacore::Bool fillModel_p;     // Whether or not to accumulate MODEL_DATA  
+  Bool fillModel_p;     // Whether or not to accumulate MODEL_DATA  
 
   // Pre-normalization flag
-  casacore::Bool prenorm_p;
+  Bool prenorm_p;
 
   // Per-interval timestamp averaging
-  casacore::Double globalTimeStamp_p;
+  Double globalTimeStamp_p;
 
   // Averaging buffer  (length = nSpw_p x nFld_p)
-  casacore::PtrBlock<VisBuffAccumulator*> VBA_p;
+  PtrBlock<VisBuffAccumulator*> VBA_p;
   
-  // casacore::Map spw,fld to the buffer id
-  casacore::Matrix<casacore::Int> spwfldids_p;
+  // Map spw,fld to the buffer id
+  Matrix<Int> spwfldids_p;
 
-  bool tvi_debug;
+  Bool tvi_debug;
 };
 
 

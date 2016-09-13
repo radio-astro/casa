@@ -37,7 +37,6 @@
 #include <QFileDialog>
 #include <display/DisplayErrors.h>
 
-using namespace casacore;
 namespace casa {
 	namespace viewer {
 

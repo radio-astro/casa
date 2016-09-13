@@ -47,7 +47,6 @@
 #include <casa/System/Aipsrc.h>
 #include <msvis/MSVis/VisibilityIterator2.h>
 
-using namespace casacore;
 namespace casa{
   using namespace vi;
   namespace refim{
@@ -271,9 +270,9 @@ namespace casa{
 	    //<< vb.flag()(0,ndx(2)) << " " 
 	     << vb.weight();
 	  mesg = os.str().c_str();
-	  return true;
+	  return True;
 	}
-    return false;
+    return False;
   }
   //
   //--------------------------------------------------------------------------------------------
@@ -284,16 +283,16 @@ namespace casa{
   //     Exact meaning of the "change" is defined in the derived classes
   //     (e.g. a change in the parallactic angle)
   
-  // return true if a change occurs somewhere in the buffer
+  // return True if a change occurs somewhere in the buffer
   using namespace vi;
   Bool IChangeDetector::changed(const VisBuffer2 &vb) const
   {
      for (Int i=0;i<vb.nRows();++i)
-          if (changed(vb,i)) return true;
-     return false;
+          if (changed(vb,i)) return True;
+     return False;
   }
 
-  // return true if a change occurs somewhere in the buffer starting from row1
+  // return True if a change occurs somewhere in the buffer starting from row1
   // up to row2 (row2=-1 means up to the end of the buffer). The row number,
   // where the change occurs is returned in the row2 parameter
   Bool IChangeDetector::changedBuffer(const VisBuffer2 &vb, Int row1, 
@@ -314,9 +313,9 @@ namespace casa{
     for (Int ii=row1;ii<=jrow;++ii)
          if (changed(vb,ii)) {
              row2 = ii;
-             return true;
+             return True;
          }
-    return false;
+    return False;
   }
   
   // a virtual destructor to make the compiler happy
@@ -355,7 +354,7 @@ namespace casa{
       return Quantity(pa_tolerance_p,"rad");
   }
   
-  // return true if a change occurs in the given row since the last call 
+  // return True if a change occurs in the given row since the last call 
   // of update
   Bool ParAngleChangeDetector::changed(const VisBuffer2 &vb, Int row) const
   {
@@ -365,7 +364,7 @@ namespace casa{
      if (abs(feed1_pa-last_pa_p) > pa_tolerance_p) 
        {
 //  	 cout << "Utils: " << feed1_pa*57.295 << " " << last_pa_p*57.295 << " " << abs(feed1_pa-last_pa_p)*57.295 << " " << ttt*57.295 << " " << vb.time()(0)-4.51738e+09 << endl;
-	 return true;
+	 return True;
        }
      //     const Double feed2_pa=vb.feed2_pa()[row];
      Double feed2_pa = getPA(vb);
@@ -374,9 +373,9 @@ namespace casa{
 //  	 cout << "Utils: " << feed2_pa*57.295 << " " 
 //  	      << last_pa_p*57.295 << " " 
 //  	      << abs(feed2_pa-last_pa_p)*57.295 << " " << ttt*57.295 << vb.time()(0)-4.51738e+09 <<endl;
-	 return true;
+	 return True;
        }
-     return false;
+     return False;
   }
   
   // start looking for a change from the given row of the VisBuffer
@@ -473,7 +472,7 @@ namespace casa{
 	}
     }
 
-    return true;
+    return True;
   };
   //
   //------------------------------------------------------------------
@@ -520,7 +519,7 @@ namespace casa{
 	}
     }
 
-    return true;
+    return True;
   }
   //
   //---------------------------------------------------------------
@@ -572,11 +571,11 @@ namespace casa{
     }
 
     coordInd = inCS.findCoordinate(Coordinate::LINEAR);
-    Bool haveLinear = true;
+    Bool haveLinear = True;
 
     if(coordInd == -1){ // no linear coordinate found, look for DIRECTION instead
       coordInd = inCS.findCoordinate(Coordinate::DIRECTION);
-      haveLinear = false;
+      haveLinear = False;
     }
 
     pixelAxes=inCS.pixelAxes(coordInd);
@@ -858,7 +857,7 @@ namespace casa{
     DirectionCoordinate dc;//=coords.directionCoordinate(directionIndex);
     //	AlwaysAssert(directionIndex>=0, AipsError);
     dc=coords.directionCoordinate(directionIndex);
-    Vector<Bool> axes(2); axes(0)=axes(1)=true;//axes(2)=true;
+    Vector<Bool> axes(2); axes(0)=axes(1)=True;//axes(2)=True;
     Vector<Int> shape(2,convSize);
 
     Vector<Double>ref(4);
@@ -924,15 +923,15 @@ namespace casa{
     c2tmp.assign(c2);
 
     if (c1.shape().product() > c2tmp.shape().product())
-      c2tmp.resize(c1.shape(),true);
+      c2tmp.resize(c1.shape(),True);
     else
-      c1.resize(c2tmp.shape(),true);
+      c1.resize(c2tmp.shape(),True);
 
 
     ArrayLattice<T> c2tmp_lat(c2tmp), c1_lat(c1);
 
-    LatticeFFT::cfft2d(c1_lat,false);
-    LatticeFFT::cfft2d(c2tmp_lat,false);
+    LatticeFFT::cfft2d(c1_lat,False);
+    LatticeFFT::cfft2d(c2tmp_lat,False);
     //cerr << "########## " << c1.shape() << " " << c2tmp.shape() << endl;
     c1 = sqrt(c1);
     c2tmp=sqrt(c2tmp);
@@ -994,7 +993,7 @@ namespace casa{
     
     Int dirIndex=FTCoords.findCoordinate(Coordinate::DIRECTION);
     DirectionCoordinate dc=imageCoordSys.directionCoordinate(dirIndex);
-    Vector<Bool> axes(2); axes=true;
+    Vector<Bool> axes(2); axes=True;
     Vector<Int> dirShape(2); dirShape(0)=shape(0);dirShape(1)=shape(1);
     Coordinate* FTdc=dc.makeFourierCoordinate(axes,dirShape);
     FTCoords.replaceCoordinate(*FTdc,dirIndex);
@@ -1013,7 +1012,7 @@ namespace casa{
 	if((vb.getVi()->subtableColumns()).dataDescription().spectralWindowId().get(i) == spwID)
 	  {
 	    Int n=ddidList.nelements();
-	    ddidList.resize(n+1,true);
+	    ddidList.resize(n+1,True);
 	    ddidList(n) = i;
 	  }
       }
@@ -1080,14 +1079,14 @@ namespace casa{
     // trc2[2] = {xmax2, ymax2};
 
     if ((blc1[0] > trc2[0]) || (trc1[0] < blc2[0]) || (blc1[1] > trc2[1]) || (trc1[1] < blc2[1])) 
-      return false;
+      return False;
     else
-      return true;
+      return True;
 // def checkintersect(  xmin1, ymin1, xmax1, ymax1,   xmin2, ymin2, xmax2, ymax2 ):
 //     if  xmin1 > xmax2  or xmax1 < xmin2 or ymin1 > ymax2 or ymax1 < ymin2 :
-//         return false
+//         return False
 //     else : 
-//         return true
+//         return True
   }
 
   // template<class Iterator>
@@ -1103,7 +1102,7 @@ namespace casa{
   //   return last;
   // }
 
-  String SynthesisUtils::mjdToString(casacore::Time& time)
+  String SynthesisUtils::mjdToString(casa::Time& time)
   {
     String tStr;
     tStr = String::toString(time.year()) + "/" +
@@ -1131,7 +1130,7 @@ namespace casa{
     return last;
   }
 
-  void SynthesisUtils::showCS(const CoordinateSystem& cs, std::ostream &os, const String& msg)
+  void SynthesisUtils::showCS(const CoordinateSystem& cs, ostream &os, const String& msg)
   {
     LogIO log_l(LogOrigin("SynthesisUtils","showCS"));
     IPosition dummy;
@@ -1139,7 +1138,7 @@ namespace casa{
     if (msg!="")
       os << "CoordSys: ";
     csList = cs.list(log_l,MDoppler::RADIO,dummy,dummy);
-    os << csList << std::endl;
+    os << csList << endl;
   }
 
   template
@@ -1159,5 +1158,4 @@ namespace casa{
 
   };
 
-using namespace casacore;
 } // namespace casa

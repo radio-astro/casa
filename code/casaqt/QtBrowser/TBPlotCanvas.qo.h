@@ -45,7 +45,7 @@ class TBPlotData;
 class TBLocateParams;
 
 // <summary>
-// casacore::Format for the curves on the plot canvas.
+// Format for the curves on the plot canvas.
 // </summary>
 //
 // <synopsis>
@@ -117,10 +117,10 @@ public:
 
     
     // Sets the X-axis title to the given String.
-    void setXAxisTitle(casacore::String title);
+    void setXAxisTitle(String title);
 
     // Sets the Y-axis title to the given String.
-    void setYAxisTitle(casacore::String title);
+    void setYAxisTitle(String title);
     
     // Sets which grids are shown on the canvas.
     void setShownGrids(bool xMaj, bool xMin, bool yMaj, bool yMin);
@@ -132,10 +132,10 @@ public:
     void setYAxisDate(bool date = true, bool mjsec = true);
 
     // Returns the name of the current table being plotted.
-    casacore::String getCurrentTable();
+    String getCurrentTable();
 
     // Sets the name of the current table being plotted.
-    void setTable(casacore::String table);
+    void setTable(String table);
     
     // Returns the current number of plots currently on the canvas.
     int getNumPlots();
@@ -155,7 +155,7 @@ public:
     
     // Exports the PlotCanvas to an image in the given format at the given
     // location and returns whether the operation succeeded or not.
-    Result exportToImage(casacore::String format, casacore::String location);
+    Result exportToImage(String format, String location);
     
     // If there is a rectangle shape from a user-selected region, clear it
     // from the canvas.
@@ -187,7 +187,7 @@ private:
     PlotCanvasPtr canvas;
     
     // Holds the name of the current table being plotted.
-    casacore::String currentTable;
+    String currentTable;
     
     // Currently selected region, or NULL if there is none.
     PlotShapeRectanglePtr selectedRegion;

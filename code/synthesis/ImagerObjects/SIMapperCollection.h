@@ -48,81 +48,81 @@ class SIMapperCollection
   SIMapperCollection();
   ~SIMapperCollection();
 
-  void addMapper(casacore::CountedPtr <SIMapper> map);
-  casacore::Int nMappers();
-  casacore::Vector<casacore::String> getImageNames();
+  void addMapper(CountedPtr <SIMapper> map);
+  Int nMappers();
+  Vector<String> getImageNames();
 
   /*  // No need for now.
       // Write this function only if we need to support multiple facets on outlier fields too.
       // In that case, hold a list of original ImageStores and a map to the list of Mappers
       //  to keep track of which original image points to which subset of the Mapper list.
       //  Also add code into "finalizeGrid" to copy only one PSF to the original. 
-  void addMapper( casacore::Int mapperId, 
-		  casacore::String mapperType,
-		  casacore::uInt nTaylorTerms,
-		  casacore::CountedPtr<FTMachine> ftm,
-		  casacore::CountedPtr<FTMachine> iftm,
-		  casacore::String imageName,
-		  casacore::CoordinateSystem& cSys,
-		  casacore::IPosition imShape, 
-		  const casacore::Bool overwrite );
+  void addMapper( Int mapperId, 
+		  String mapperType,
+		  uInt nTaylorTerms,
+		  CountedPtr<FTMachine> ftm,
+		  CountedPtr<FTMachine> iftm,
+		  String imageName,
+		  CoordinateSystem& cSys,
+		  IPosition imShape, 
+		  const Bool overwrite );
   */
-  void initializeGrid(vi::VisBuffer2& vb, casacore::Bool dopsf=false,const casacore::Int mapperid=-1);
-  void grid(vi::VisBuffer2& vb, casacore::Bool dopsf=false, refim::FTMachine::Type col=refim::FTMachine::CORRECTED,
-	    const casacore::Int mapperid=-1);
-  void finalizeGrid(vi::VisBuffer2& vb, casacore::Bool dopsf=false,const casacore::Int mapperid=-1);
-  void initializeDegrid(vi::VisBuffer2& vb,const casacore::Int mapperid=-1);
-  void degrid(vi::VisBuffer2& vb, casacore::Bool saveVirtualMod=false,const casacore::Int mapperid=-1);
+  void initializeGrid(vi::VisBuffer2& vb, Bool dopsf=False,const Int mapperid=-1);
+  void grid(vi::VisBuffer2& vb, Bool dopsf=False, refim::FTMachine::Type col=refim::FTMachine::CORRECTED,
+	    const Int mapperid=-1);
+  void finalizeGrid(vi::VisBuffer2& vb, Bool dopsf=False,const Int mapperid=-1);
+  void initializeDegrid(vi::VisBuffer2& vb,const Int mapperid=-1);
+  void degrid(vi::VisBuffer2& vb, Bool saveVirtualMod=False,const Int mapperid=-1);
   void saveVirtualModel(vi::VisBuffer2& vb);
-  void finalizeDegrid(vi::VisBuffer2& vb,const casacore::Int mapperid=-1);
+  void finalizeDegrid(vi::VisBuffer2& vb,const Int mapperid=-1);
   void addPB(vi::VisBuffer2& vb, PBMath& pbMath);
 
   //////////// OLD VI/VB : Version that use old vi/vb can be removed the vi2/vb2 works
-  void initializeGrid(VisBuffer& vb, casacore::Bool dopsf=false,const casacore::Int mapperid=-1);
-  void grid(VisBuffer& vb, casacore::Bool dopsf=false, FTMachine::Type col=FTMachine::CORRECTED,
-	    const casacore::Int mapperid=-1);
-  void finalizeGrid(VisBuffer& vb, casacore::Bool dopsf=false,const casacore::Int mapperid=-1);
-  void initializeDegrid(VisBuffer& vb,const casacore::Int mapperid=-1);
-  void degrid(VisBuffer& vb, casacore::Bool saveVirtualMod=false,const casacore::Int mapperid=-1);
+  void initializeGrid(VisBuffer& vb, Bool dopsf=False,const Int mapperid=-1);
+  void grid(VisBuffer& vb, Bool dopsf=False, FTMachine::Type col=FTMachine::CORRECTED,
+	    const Int mapperid=-1);
+  void finalizeGrid(VisBuffer& vb, Bool dopsf=False,const Int mapperid=-1);
+  void initializeDegrid(VisBuffer& vb,const Int mapperid=-1);
+  void degrid(VisBuffer& vb, Bool saveVirtualMod=False,const Int mapperid=-1);
   void saveVirtualModel(VisBuffer& vb);
-  void finalizeDegrid(VisBuffer& vb,const casacore::Int mapperid=-1);
+  void finalizeDegrid(VisBuffer& vb,const Int mapperid=-1);
   void addPB(VisBuffer& vb, PBMath& pbMath);
   ////////////////////////////////////////////////////
-  casacore::Record getFTMRecord(casacore::Int mapperid);
+  Record getFTMRecord(Int mapperid);
 
-  casacore::CountedPtr<SIImageStore> imageStore(const casacore::Int id=0);
-  casacore::Bool releaseImageLocks();
+  CountedPtr<SIImageStore> imageStore(const Int id=0);
+  Bool releaseImageLocks();
 
-  void checkOverlappingModels(casacore::String action); // action='blank' or 'restore'
+  void checkOverlappingModels(String action); // action='blank' or 'restore'
 
-  casacore::Bool anyNonZeroModels();
+  Bool anyNonZeroModels();
 
-  const casacore::CountedPtr<FTMachine> getFTM(casacore::Int which, const casacore::Bool ift=true) 
+  const CountedPtr<FTMachine> getFTM(Int which, const Bool ift=True) 
   {
-    AlwaysAssert(which>=0 && which<(casacore::Int)itsMappers.nelements(),casacore::AipsError);
+    AlwaysAssert(which>=0 && which<(Int)itsMappers.nelements(),AipsError);
     return itsMappers[which]->getFTM(ift);
   };
-  const casacore::CountedPtr<refim::FTMachine>& getFTM2(casacore::Int which, const casacore::Bool ift=true) 
+  const CountedPtr<refim::FTMachine>& getFTM2(Int which, const Bool ift=True) 
   {
-    AlwaysAssert(which>=0 && which<(casacore::Int)itsMappers.nelements(),casacore::AipsError);
+    AlwaysAssert(which>=0 && which<(Int)itsMappers.nelements(),AipsError);
     return itsMappers[which]->getFTM2(ift);
   };
 
   
   void initPB();
 
-  const casacore::CountedPtr<SIMapper> getMapper(casacore::Int which)
-  {AlwaysAssert(which>=0 && which<(casacore::Int)itsMappers.nelements(),casacore::AipsError);
+  const CountedPtr<SIMapper> getMapper(Int which)
+  {AlwaysAssert(which>=0 && which<(Int)itsMappers.nelements(),AipsError);
     return itsMappers[which];};
 
 protected:
 
   ///////////////////// Member Objects
 
-  casacore::Block<casacore::CountedPtr<SIMapper> >  itsMappers;
-  casacore::Int oldMsId_p;
+  Block<CountedPtr<SIMapper> >  itsMappers;
+  Int oldMsId_p;
 
-  casacore::Bool itsIsNonZeroModel;
+  Bool itsIsNonZeroModel;
 
 };
 

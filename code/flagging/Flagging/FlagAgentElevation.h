@@ -31,7 +31,7 @@ class FlagAgentElevation : public FlagAgentBase {
 
 public:
 
-	FlagAgentElevation(FlagDataHandler *dh, casacore::Record config, casacore::Bool writePrivateFlagCube = false, casacore::Bool flag = true);
+	FlagAgentElevation(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube = false, Bool flag = true);
 	~FlagAgentElevation();
 
 protected:
@@ -43,24 +43,24 @@ protected:
 	void preProcessBufferCore(const vi::VisBuffer2 &visBuffer);
 
 	// Compute flags afor a given mapped visibility point
-	bool computeRowFlags(const vi::VisBuffer2 &visBuffer, FlagMapper &flags, casacore::uInt row);
+	bool computeRowFlags(const vi::VisBuffer2 &visBuffer, FlagMapper &flags, uInt row);
 
 	// Parse configuration parameters
-	void setAgentParameters(casacore::Record config);
+	void setAgentParameters(Record config);
 
 private:
 
-	/// casacore::Input parameters ///
-	casacore::Double lowerlimit_p;
-	casacore::Double upperlimit_p;
+	/// Input parameters ///
+	Double lowerlimit_p;
+	Double upperlimit_p;
 
 	// Declaration of static members for common pre-processing
-	casacore::uShort agentNumber_p;
-	static vector< vector<casacore::Double> > antennaPointingMap_p;
+	uShort agentNumber_p;
+	static vector< vector<Double> > antennaPointingMap_p;
 	static casa::async::Mutex staticMembersMutex_p;
 	static vector<bool> startedProcessing_p;
 	static bool preProcessingDone_p;
-	static casacore::uShort nAgents_p;
+	static uShort nAgents_p;
 };
 
 

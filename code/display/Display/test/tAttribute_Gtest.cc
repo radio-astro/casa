@@ -5,9 +5,7 @@
 #include <display/Display/AttVal.h>
 
 using namespace std;
-using namespace casacore;
 using namespace casa;
-using namespace casacore;
 using namespace casacore;
 
 int
@@ -16,7 +14,6 @@ main (int nArgs, char * args []){
     return RUN_ALL_TESTS();
 }
 
-using namespace casacore;
 namespace casa {
 namespace viewer {
 namespace test {
@@ -51,11 +48,11 @@ TestAttributeString::TestAttributeString ():
 
 void TestAttributeString::SetUp(){
 	TestAttribute::SetUp();
-	m_val1 = "true";
-	m_val2 = "false";
+	m_val1 = "True";
+	m_val2 = "False";
 	m_vecVal(0) = "Maybe";
-	m_vecVal(1) = "true";
-	m_vecVal(2) = "false";
+	m_vecVal(1) = "True";
+	m_vecVal(2) = "False";
 }
 
 void TestAttributeString::checkConstruction(){
@@ -73,10 +70,10 @@ void TestAttributeString::checkConstructionVector(){
 	m_att2 = new Attribute(m_att1name, m_vecVal); // ditto
 	ASSERT_TRUE(*m_att1 == *m_att2);
 	delete m_att2;
-	m_att2 = new Attribute(m_att1name, m_vecVal, true); // strict
+	m_att2 = new Attribute(m_att1name, m_vecVal, True); // strict
 	ASSERT_TRUE(*m_att1 != *m_att2);
 	delete m_att1;
-	m_att1 = new Attribute(m_att1name, m_val1, true); // strict
+	m_att1 = new Attribute(m_att1name, m_val1, True); // strict
 	ASSERT_TRUE(*m_att1 != *m_att2);
 	delete m_att2;
 	m_att2 = new Attribute(m_att1name, m_vecVal); // non-strict again
@@ -149,10 +146,10 @@ void TestAttributeQuantity::checkConstructionVector(){
 	m_att2 = new Attribute(m_att1name, m_vecVal); // ditto
 	ASSERT_TRUE(*m_att1 == *m_att2);
 	delete m_att2;
-	m_att2 = new Attribute(m_att1name, m_vecVal, true); // strict
+	m_att2 = new Attribute(m_att1name, m_vecVal, True); // strict
 	ASSERT_TRUE(*m_att1 != *m_att2);
 	delete m_att1;
-	m_att1 = new Attribute(m_att1name, m_val1, true); // strict
+	m_att1 = new Attribute(m_att1name, m_val1, True); // strict
 	ASSERT_TRUE(*m_att1 != *m_att2);
 	delete m_att2;
 	m_att2 = new Attribute(m_att1name, m_vecVal); // non-strict again
@@ -164,10 +161,10 @@ void TestAttributeQuantity::checkConstructionVectorPointer(){
 	m_att2 = new Attribute(m_att1name, &m_vecVal); // ditto
 	ASSERT_TRUE(*m_att1 == *m_att2);
 	delete m_att2;
-	m_att2 = new Attribute(m_att1name, &m_vecVal, true); // strict
+	m_att2 = new Attribute(m_att1name, &m_vecVal, True); // strict
 	ASSERT_TRUE(*m_att1 != *m_att2);
 	delete m_att1;
-	m_att1 = new Attribute(m_att1name, &m_val1, true); // strict
+	m_att1 = new Attribute(m_att1name, &m_val1, True); // strict
 	ASSERT_TRUE(*m_att1 != *m_att2);
 	delete m_att2;
 	m_att2 = new Attribute(m_att1name, &m_vecVal); // non-strict again
@@ -342,10 +339,10 @@ void TestAttributeNumeric<T>::checkConstructionVector(){
 	m_att2 = new Attribute(m_att1name, m_vecVal1);
 	ASSERT_TRUE(*m_att1 == *m_att2);
 	delete m_att2;
-	m_att2 = new Attribute(m_att1name, m_vecVal1, T(0), true); // notol, strict
+	m_att2 = new Attribute(m_att1name, m_vecVal1, T(0), True); // notol, strict
 	ASSERT_TRUE(*m_att1 != *m_att2);
 	delete m_att1;
-	m_att1 = new Attribute(m_att1name, m_val1, T(0), true); // no tol, strict
+	m_att1 = new Attribute(m_att1name, m_val1, T(0), True); // no tol, strict
 	ASSERT_TRUE(*m_att1 != *m_att2);
 	delete m_att2;
 	m_att2 = new Attribute(m_att1name, m_vecVal1); // no tol, non-strict again
@@ -455,10 +452,10 @@ void TestAttributeNumeric<T>::checkComparisonToleranceVector(){
 	ASSERT_TRUE(*m_att1 == *m_att2);
 	delete m_att2;
 	m_att2 = new Attribute(m_att1name, &m_vecVal1, T(0),
-			                     true); // notol, strict
+			                     True); // notol, strict
 	ASSERT_TRUE(*m_att1 != *m_att2);
 	delete m_att1;
-	m_att1 = new Attribute(m_att1name, &m_val1, T(0), true); // no tol, strict
+	m_att1 = new Attribute(m_att1name, &m_val1, T(0), True); // no tol, strict
 	ASSERT_TRUE(*m_att1 != *m_att2);
 	delete m_att2;
 	m_att2 = new Attribute(m_att1name, &m_vecVal1); // no tol, non-strict again
@@ -571,6 +568,5 @@ TYPED_TEST( TestAttributeNumeric, checkAdditionVectorPointer ){
 
 } // end namespace test
 } // end namespace display
-using namespace casacore;
 } // end namespace casa
 

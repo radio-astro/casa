@@ -40,7 +40,7 @@ class PhaseShiftingTVITest: public FreqAxisTVITest {
 public:
 
 	PhaseShiftingTVITest();
-	PhaseShiftingTVITest(casacore::Record configuration);
+	PhaseShiftingTVITest(Record configuration);
 
     void TestBody();
     void testCompareTransformedData();
@@ -50,8 +50,8 @@ protected:
     void propagateFlags();
     void generateTestFile();
     void generateReferenceFile();
-    void initTestConfiguration(casacore::Record &configuration);
-    void initReferenceConfiguration(casacore::Record &configuration);
+    void initTestConfiguration(Record &configuration);
+    void initReferenceConfiguration(Record &configuration);
 };
 
 #endif /* PhaseShiftingTVITest_H_ */

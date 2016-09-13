@@ -35,17 +35,17 @@ public:
     return main_table_->nrow();
   }
 
-  virtual casacore::Bool isFloatData() const {
-    casacore::Bool is_float = true;
+  virtual Bool isFloatData() const {
+    Bool is_float = True;
     if (!main_table_) {
-      is_float = false;
+      is_float = False;
     } else {
-      casacore::String pol_type = main_table_->keywordSet().asString("POLTYPE");
-      casacore::ROScalarColumn<casacore::uInt> polno_column(*main_table_, "POLNO");
-      casacore::uInt max_pol = max(polno_column.getColumn());
+      String pol_type = main_table_->keywordSet().asString("POLTYPE");
+      ROScalarColumn<uInt> polno_column(*main_table_, "POLNO");
+      uInt max_pol = max(polno_column.getColumn());
 //      std::cout << "pol_type=" << pol_type << " max_pol=" << max_pol << std::endl;
       if ((max_pol == 3) && (pol_type == "linear" || pol_type == "circular")) {
-        is_float = false;
+        is_float = False;
       }
     }
 //    std::cout << "is_float = " << is_float << std::endl;
@@ -53,124 +53,124 @@ public:
   }
 
   // to get OBSERVATION table
-  virtual casacore::Bool getObservationRow(sdfiller::ObservationRecord &record) {
+  virtual Bool getObservationRow(sdfiller::ObservationRecord &record) {
     POST_START;
 
-    casacore::Bool return_value = (*this.*get_observation_row_)(record);
+    Bool return_value = (*this.*get_observation_row_)(record);
 
     POST_END;
     return return_value;
   }
 
   // to get ANTENNA table
-  virtual casacore::Bool getAntennaRow(sdfiller::AntennaRecord &record) {
+  virtual Bool getAntennaRow(sdfiller::AntennaRecord &record) {
     POST_START;
 
-    casacore::Bool return_value = (*this.*get_antenna_row_)(record);
+    Bool return_value = (*this.*get_antenna_row_)(record);
 
     POST_END;
     return return_value;
   }
 
   // to get PROCESSOR table
-  virtual casacore::Bool getProcessorRow(sdfiller::ProcessorRecord &record) {
+  virtual Bool getProcessorRow(sdfiller::ProcessorRecord &record) {
     POST_START;
 
-    casacore::Bool return_value = (*this.*get_processor_row_)(record);
+    Bool return_value = (*this.*get_processor_row_)(record);
 
     POST_END;
     return return_value;
   }
 
   // to get SOURCE table
-  virtual casacore::Bool getSourceRow(sdfiller::SourceRecord &record) {
+  virtual Bool getSourceRow(sdfiller::SourceRecord &record) {
     POST_START;
 
-    casacore::Bool return_value = (*this.*get_source_row_)(record);
+    Bool return_value = (*this.*get_source_row_)(record);
 
     POST_END;
     return return_value;
   }
 
   // to get FIELD table
-  virtual casacore::Bool getFieldRow(sdfiller::FieldRecord &record) {
+  virtual Bool getFieldRow(sdfiller::FieldRecord &record) {
     POST_START;
 
-    casacore::Bool return_value = (*this.*get_field_row_)(record);
+    Bool return_value = (*this.*get_field_row_)(record);
 
     POST_END;
     return return_value;
   }
 
   // to get SOURCE table
-  virtual casacore::Bool getSpectralWindowRow(sdfiller::SpectralWindowRecord &record) {
+  virtual Bool getSpectralWindowRow(sdfiller::SpectralWindowRecord &record) {
     POST_START;
 
-    casacore::Bool return_value = (*this.*get_spw_row_)(record);
+    Bool return_value = (*this.*get_spw_row_)(record);
 
     POST_END;
     return return_value;
   }
 
   // for DataAccumulator
-  virtual casacore::Bool getData(size_t irow, sdfiller::DataRecord &record);
+  virtual Bool getData(size_t irow, sdfiller::DataRecord &record);
 
 protected:
   void initializeSpecific();
   void finalizeSpecific();
 
 private:
-  std::unique_ptr<casacore::Table> main_table_;
-  casacore::Table tcal_table_;
-  casacore::Table weather_table_;
+  std::unique_ptr<Table> main_table_;
+  Table tcal_table_;
+  Table weather_table_;
 
-  casacore::ROScalarColumn<casacore::uInt> scan_column_;casacore::ROScalarColumn<casacore::uInt> cycle_column_;casacore::ROScalarColumn<
-      casacore::uInt> ifno_column_;casacore::ROScalarColumn<casacore::uInt> polno_column_;casacore::ROScalarColumn<casacore::uInt> beam_column_;casacore::ROScalarColumn<
-      casacore::uInt> flagrow_column_;casacore::ROScalarColumn<casacore::Double> time_column_;casacore::ROScalarColumn<
-      casacore::Double> interval_column_;casacore::ROScalarColumn<casacore::Int> srctype_column_;
-  casacore::ArrayColumn<casacore::Float> data_column_;
-  casacore::ArrayColumn<casacore::uChar> flag_column_;
-  casacore::ArrayColumn<casacore::Double> direction_column_;
-  casacore::ArrayColumn<casacore::Double> scanrate_column_;casacore::ROScalarColumn<casacore::String> fieldname_column_;
-  casacore::ArrayColumn<casacore::Float> tsys_column_;casacore::ROScalarColumn<casacore::uInt> tcal_id_column_;casacore::ROScalarColumn<
-      casacore::uInt> weather_id_column_;
-  casacore::ArrayColumn<casacore::Float> tcal_column_;casacore::ROScalarColumn<casacore::Float> temperature_column_;casacore::ROScalarColumn<
-      casacore::Float> pressure_column_;casacore::ROScalarColumn<casacore::Float> humidity_column_;casacore::ROScalarColumn<
-      casacore::Float> wind_speed_column_;casacore::ROScalarColumn<casacore::Float> wind_direction_column_;
-  casacore::Vector<casacore::uInt> sorted_rows_;
+  ROScalarColumn<uInt> scan_column_;ROScalarColumn<uInt> cycle_column_;ROScalarColumn<
+      uInt> ifno_column_;ROScalarColumn<uInt> polno_column_;ROScalarColumn<uInt> beam_column_;ROScalarColumn<
+      uInt> flagrow_column_;ROScalarColumn<Double> time_column_;ROScalarColumn<
+      Double> interval_column_;ROScalarColumn<Int> srctype_column_;
+  ArrayColumn<Float> data_column_;
+  ArrayColumn<uChar> flag_column_;
+  ArrayColumn<Double> direction_column_;
+  ArrayColumn<Double> scanrate_column_;ROScalarColumn<String> fieldname_column_;
+  ArrayColumn<Float> tsys_column_;ROScalarColumn<uInt> tcal_id_column_;ROScalarColumn<
+      uInt> weather_id_column_;
+  ArrayColumn<Float> tcal_column_;ROScalarColumn<Float> temperature_column_;ROScalarColumn<
+      Float> pressure_column_;ROScalarColumn<Float> humidity_column_;ROScalarColumn<
+      Float> wind_speed_column_;ROScalarColumn<Float> wind_direction_column_;
+  Vector<uInt> sorted_rows_;
   ScantableFieldIterator::Product field_map_;
   ScantableFrequenciesIterator::Product num_chan_map_;
-  std::map<casacore::uInt, casacore::uInt> tcal_id_map_;
-  std::map<casacore::uInt, casacore::uInt> weather_id_map_;
-  casacore::String pol_type_;
+  std::map<uInt, uInt> tcal_id_map_;
+  std::map<uInt, uInt> weather_id_map_;
+  String pol_type_;
 
-  casacore::Bool (Scantable2MSReader::*get_antenna_row_)(sdfiller::AntennaRecord &);
-  casacore::Bool (Scantable2MSReader::*get_field_row_)(sdfiller::FieldRecord &);
-  casacore::Bool (Scantable2MSReader::*get_observation_row_)(
+  Bool (Scantable2MSReader::*get_antenna_row_)(sdfiller::AntennaRecord &);
+  Bool (Scantable2MSReader::*get_field_row_)(sdfiller::FieldRecord &);
+  Bool (Scantable2MSReader::*get_observation_row_)(
       sdfiller::ObservationRecord &);
-  casacore::Bool (Scantable2MSReader::*get_processor_row_)(sdfiller::ProcessorRecord &);
-  casacore::Bool (Scantable2MSReader::*get_source_row_)(sdfiller::SourceRecord &);
-  casacore::Bool (Scantable2MSReader::*get_spw_row_)(sdfiller::SpectralWindowRecord &);
+  Bool (Scantable2MSReader::*get_processor_row_)(sdfiller::ProcessorRecord &);
+  Bool (Scantable2MSReader::*get_source_row_)(sdfiller::SourceRecord &);
+  Bool (Scantable2MSReader::*get_spw_row_)(sdfiller::SpectralWindowRecord &);
 
   std::unique_ptr<ScantableFieldIterator> field_iter_;
   std::unique_ptr<ScantableFrequenciesIterator> freq_iter_;
   std::unique_ptr<ScantableSourceIterator> source_iter_;
 
-  casacore::Bool getAntennaRowImpl(sdfiller::AntennaRecord &record);
-  casacore::Bool getFieldRowImpl(sdfiller::FieldRecord &record);
-  casacore::Bool getObservationRowImpl(sdfiller::ObservationRecord &record);
-  casacore::Bool getProcessorRowImpl(sdfiller::ProcessorRecord &record);
-  casacore::Bool getSourceRowImpl(sdfiller::SourceRecord &record);
-  casacore::Bool getSpectralWindowRowImpl(sdfiller::SpectralWindowRecord &record);
+  Bool getAntennaRowImpl(sdfiller::AntennaRecord &record);
+  Bool getFieldRowImpl(sdfiller::FieldRecord &record);
+  Bool getObservationRowImpl(sdfiller::ObservationRecord &record);
+  Bool getProcessorRowImpl(sdfiller::ProcessorRecord &record);
+  Bool getSourceRowImpl(sdfiller::SourceRecord &record);
+  Bool getSpectralWindowRowImpl(sdfiller::SpectralWindowRecord &record);
 
   template<class _Record>
-  casacore::Bool noMoreRowImpl(_Record &) {
+  Bool noMoreRowImpl(_Record &) {
     POST_START;POST_END;
-    return false;
+    return False;
   }
 
   template<class _Iterator, class _Record, class _Func>
-  casacore::Bool getRowImplTemplate(std::unique_ptr<_Iterator> &iter, _Record &record,
+  Bool getRowImplTemplate(std::unique_ptr<_Iterator> &iter, _Record &record,
       _Func &func, typename _Iterator::Product *product = nullptr) {
     POST_START;
 
@@ -178,7 +178,7 @@ private:
       iter.reset(new _Iterator(*main_table_));
     }
 
-    casacore::Bool more_data = iter->moreData();
+    Bool more_data = iter->moreData();
     if (more_data) {
       iter->getEntry(record);
       iter->next();

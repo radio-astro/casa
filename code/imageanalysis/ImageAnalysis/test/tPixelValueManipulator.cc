@@ -38,7 +38,7 @@ void writeTestString(const String& test) {
 
 
 int main() {
-	Bool ok = true;
+	Bool ok = True;
 	try {
 		CoordinateSystem csys = CoordinateUtil::defaultCoords3D();
 		ObsInfo obsInfo = csys.obsInfo();
@@ -84,7 +84,7 @@ int main() {
         cout << "ok" << endl;
 	}
     catch (const AipsError& x) {
-    	ok = false;
+    	ok = False;
         cerr << "Exception caught: " << x.getMesg() << endl;
     }
 	return ok ? 0 : 1;

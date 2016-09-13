@@ -21,7 +21,6 @@
 #include <images/Regions/WCEllipsoid.h>
 
 
-using namespace casacore;
 namespace casa {
 
 AnnCircle::AnnCircle(

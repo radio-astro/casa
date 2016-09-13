@@ -7,54 +7,54 @@
 namespace casa {
 
 template<class T> ImageMomentsTask<T>::ImageMomentsTask(
-	const SPCIIT image,	const casacore::Record *const region,
-	const casacore::String& maskInp, const casacore::String& outname, casacore::Bool overwrite
+	const SPCIIT image,	const Record *const region,
+	const String& maskInp, const String& outname, Bool overwrite
 ) : ImageTask<T>(
 	image, "", region, "", "", "", maskInp, outname, overwrite
 ), _moments(), _axis(-1), _methods(), _kernels(), _smoothAxes(),
-    _kernelWidths(), _range(), _isIncludeRange(false),
-    _removeAxis(true), _snr(-1), _stddev(0), _velocityType("RADIO"),
+    _kernelWidths(), _range(), _isIncludeRange(False),
+    _removeAxis(True), _snr(-1), _stddev(0), _velocityType("RADIO"),
     _momentName(), _imageMomentsProgressMonitor(nullptr) {
     this->_construct();
 }
 
 template<class T> SPIIT ImageMomentsTask<T>::makeMoments() const {
-    *this->_getLog() << casacore::LogOrigin(getClass(), __func__);
+    *this->_getLog() << LogOrigin(getClass(), __func__);
     // Note that the user may give the strings (method & kernels)
     // as either vectors of strings or one string with separators.
     // Hence the code below that deals with it.
-    casacore::String tmpImageName;
-    casacore::Record r;
+    String tmpImageName;
+    Record r;
     SPIIT pIm;
     try {
         SPCIIT x;
-        if (this->_getImage()->imageType() != casacore::PagedImage<casacore::Float>::className()) {
-            casacore::Path tmpImage = casacore::File::newUniqueName (".", "moments.scratch.image");
+        if (this->_getImage()->imageType() != PagedImage<Float>::className()) {
+            Path tmpImage = File::newUniqueName (".", "moments.scratch.image");
             tmpImageName = tmpImage.baseName();
-            *this->_getLog() << casacore::LogIO::NORMAL
+            *this->_getLog() << LogIO::NORMAL
                 << "Calculating moments of non-paged images can be notoriously slow, "
                 << "so converting to a CASA temporary paged image named "
                 << tmpImageName  << " first which will be written to the current "
-                << "directory" << casacore::LogIO::POST;
+                << "directory" << LogIO::POST;
             x = SubImageFactory<T>::createSubImageRO(
                 *this->_getImage(), *this->_getRegion(), this->_getMask(),
-                this->_getLog().get(), casacore::AxesSpecifier(),
+                this->_getLog().get(), AxesSpecifier(),
                 this->_getStretch()
             );
             x = SubImageFactory<T>::createImage(
-                *x, tmpImageName, r, "", false,
-                false, true, false
+                *x, tmpImageName, r, "", False,
+                False, True, False
             );
         }
         else {
             x = SubImageFactory<T>::createSubImageRO(
                 *this->_getImage(), *this->_getRegion(), this->_getMask(),
-                this->_getLog().get(), casacore::AxesSpecifier(),
+                this->_getLog().get(), AxesSpecifier(),
                 this->_getStretch()
             );
         }
         // Create ImageMoments object
-        ImageMoments<T> momentMaker(*x, *this->_getLog(), this->_getOverwrite(), true);
+        ImageMoments<T> momentMaker(*x, *this->_getLog(), this->_getOverwrite(), True);
         if (_imageMomentsProgressMonitor) {
             momentMaker.setProgressMonitor( _imageMomentsProgressMonitor );
         }
@@ -69,16 +69,16 @@ template<class T> SPIIT ImageMomentsTask<T>::makeMoments() const {
             momentMaker.setMomentAxis(_axis);
         }
         if (x->imageInfo().hasMultipleBeams()) {
-            const casacore::CoordinateSystem& csys = x->coordinates();
+            const CoordinateSystem& csys = x->coordinates();
             if (csys.hasPolarizationCoordinate() && _axis == csys.polarizationAxisNumber()) {
-                *this->_getLog() << casacore::LogIO::WARN << "This image has multiple beams and you are determining "
+                *this->_getLog() << LogIO::WARN << "This image has multiple beams and you are determining "
                     << " moments along the polarization axis. Interpret your results carefully"
-                    << casacore::LogIO::POST;
+                    << LogIO::POST;
             }
         }
         // Set moment methods
         if (! _methods.empty() && ! _methods[0].empty()) {
-            casacore::String tmp;
+            String tmp;
             for (const auto& m : _methods) {
                 tmp += m + " ";
             }
@@ -93,29 +93,29 @@ template<class T> SPIIT ImageMomentsTask<T>::makeMoments() const {
             _kernels.size() >= 1 && _kernels[0] != "" && _smoothAxes.size() >= 1
             && _kernelWidths.size() >= 1
         ) {
-            auto intkernels = casacore::VectorKernel::toKernelTypes(casacore::Vector<casacore::String>(_kernels));
+            auto intkernels = VectorKernel::toKernelTypes(Vector<String>(_kernels));
             ThrowIf(
                 ! momentMaker.setSmoothMethod(
-                    casacore::Vector<casacore::Int>(_smoothAxes), intkernels,
-                    casacore::Vector<casacore::Quantity>(_kernelWidths)
+                    Vector<Int>(_smoothAxes), intkernels,
+                    Vector<Quantity>(_kernelWidths)
                 ), momentMaker.errorMessage()
             );
         }
         // Set pixel include/exclude range
         if (! _range.empty()) {
-            auto includepix = _isIncludeRange ? casacore::Vector<T>(_range) : casacore::Vector<T>();
-            auto excludepix = _isIncludeRange ? casacore::Vector<T>() : casacore::Vector<T>(_range);
+            auto includepix = _isIncludeRange ? Vector<T>(_range) : Vector<T>();
+            auto excludepix = _isIncludeRange ? Vector<T>() : Vector<T>(_range);
             momentMaker.setInExCludeRange(includepix, excludepix);
         }
         // Set SNR cutoff
         momentMaker.setSnr(_snr, _stddev);
         // Set velocity type
         if (! _velocityType.empty()) {
-            casacore::MDoppler::Types velType;
-            if (! casacore::MDoppler::getType(velType, _velocityType)) {
-                *this->_getLog() << casacore::LogIO::WARN << "Illegal velocity type "
-                    << _velocityType << ". Using RADIO" << casacore::LogIO::POST;
-                velType = casacore::MDoppler::RADIO;
+            MDoppler::Types velType;
+            if (! MDoppler::getType(velType, _velocityType)) {
+                *this->_getLog() << LogIO::WARN << "Illegal velocity type "
+                    << _velocityType << ". Using RADIO" << LogIO::POST;
+                velType = MDoppler::RADIO;
             }
             momentMaker.setVelocityType(velType);
         }
@@ -126,19 +126,19 @@ template<class T> SPIIT ImageMomentsTask<T>::makeMoments() const {
             momentMaker.errorMessage()
         );
         // If no file name given for one moment image, make TempImage.
-        // Else casacore::PagedImage results
-        casacore::Bool doTemp = _momentName.empty() && _moments.size() == 1;
+        // Else PagedImage results
+        Bool doTemp = _momentName.empty() && _moments.size() == 1;
         // Create moments
         auto images = momentMaker.createMoments(doTemp, _momentName, _removeAxis);
         for (auto& image: images) {
             // copy history from input to all created images
-            SPIIT x = dynamic_pointer_cast<casacore::ImageInterface<T>>(image);
+            SPIIT x = dynamic_pointer_cast<ImageInterface<T>>(image);
             this->_doHistory(x);
         }
         // Return handle of first image
-        pIm = dynamic_pointer_cast<casacore::ImageInterface<T>>(images[0]);
+        pIm = dynamic_pointer_cast<ImageInterface<T>>(images[0]);
     }
-    catch (const casacore::AipsError& x) {
+    catch (const AipsError& x) {
         _deleteTempImage(tmpImageName);
         RETHROW(x);
     }
@@ -147,28 +147,28 @@ template<class T> SPIIT ImageMomentsTask<T>::makeMoments() const {
 }
 
 template<class T> void ImageMomentsTask<T>::_deleteTempImage(
-    const casacore::String& tmpImage
+    const String& tmpImage
 ) const {
     if (! tmpImage.empty()) {
-        casacore::Directory dir(tmpImage);
+        Directory dir(tmpImage);
         if (dir.exists()) {
-            dir.removeRecursive(false);
+            dir.removeRecursive(False);
         }
     }
 }
 
-template<class T> void ImageMomentsTask<T>::setAxis(casacore::Int axis) {
+template<class T> void ImageMomentsTask<T>::setAxis(Int axis) {
     ThrowIf(
-        axis >= (casacore::Int)this->_getImage()->ndim(),
-        "Axis " + casacore::String::toString(axis) + " doesn't exist."
+        axis >= (Int)this->_getImage()->ndim(),
+        "Axis " + String::toString(axis) + " doesn't exist."
         "Image has only "
-        + casacore::String::toString(this->_getImage()->ndim()) + " dimensions"
+        + String::toString(this->_getImage()->ndim()) + " dimensions"
     );
     _axis = axis;
 }
 
 template<class T> void ImageMomentsTask<T>::setIncludeExcludeRange(
-    const vector<T>& range, casacore::Bool isInclude
+    const vector<T>& range, Bool isInclude
 ) {
     ThrowIf(
        _range.size() > 2, "range cannot have more than 2 values"
@@ -178,9 +178,9 @@ template<class T> void ImageMomentsTask<T>::setIncludeExcludeRange(
 }
 
 template<class T> void ImageMomentsTask<T>::setMoments(
-    const casacore::Vector<casacore::Int>& moments
+    const Vector<Int>& moments
 ) {
-    casacore::uInt nMom = moments.nelements();
+    uInt nMom = moments.nelements();
     ThrowIf(nMom == 0, "No moments requested");
     ThrowIf(
         nMom > MomentsBase<T>::NMOMENTS,
@@ -190,13 +190,13 @@ template<class T> void ImageMomentsTask<T>::setMoments(
 }
 
 template<class T> void ImageMomentsTask<T>::setSmoothAxes(
-    const std::vector<casacore::uInt>& axes
+    const std::vector<uInt>& axes
 ) {
     auto mymax = *max_element(axes.begin(), axes.end());
     ThrowIf(
         mymax >= this->_getImage()->ndim(),
-        "Axis " + casacore::String::toString(mymax) + " doesn't exist."
-        "Image has only " + casacore::String::toString(this->_getImage()->ndim())
+        "Axis " + String::toString(mymax) + " doesn't exist."
+        "Image has only " + String::toString(this->_getImage()->ndim())
         + " dimensions"
     );
     _smoothAxes = axes;

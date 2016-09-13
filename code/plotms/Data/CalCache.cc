@@ -42,8 +42,6 @@
 #include <synthesis/CalTables/CTMainColumns.h>
 #include <synthesis/MeasurementComponents/VisCalGlobals.h>
 
-using namespace casacore;
-
 namespace casa {
 
 CalCache::CalCache(PlotMSApp* parent):

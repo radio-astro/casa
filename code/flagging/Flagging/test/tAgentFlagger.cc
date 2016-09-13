@@ -25,7 +25,6 @@
 #include <sstream>
 
 
-using namespace casacore;
 using namespace casa;
 
 String

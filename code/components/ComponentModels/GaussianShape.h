@@ -35,17 +35,13 @@
 #include <components/ComponentModels/ComponentType.h>
 #include <components/ComponentModels/TwoSidedShape.h>
 
-namespace casacore{
+namespace casa { //# NAMESPACE CASA - BEGIN
 
 class MDirection;
 class MVAngle;
 template <class Qtype> class Quantum;
 template <class T> class Matrix;
 template <class T> class Vector;
-}
-
-namespace casa { //# NAMESPACE CASA - BEGIN
-
 
 // <summary>A Gaussian model for the spatial distribution of emission</summary>
 
@@ -71,7 +67,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // groups of SkyComponent objects.
 
 // The reference direction is defined in celestial co-ordinates, using a
-// <linkto class=casacore::MDirection>MDirection</linkto> object. It indicates where the
+// <linkto class=MDirection>MDirection</linkto> object. It indicates where the
 // centre of the Gaussian is on the sky. The direction can be specified both in
 // the constructor or with the <src>setRefDirection</src> function.
 
@@ -80,7 +76,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // and is aligned North-South when the position angle is zero. A positive
 // position angle moves the Northern side of the component to the East.  The
 // axial ratio is the ratio of the minor to major axis widths. The major axis
-// MUST not be smaller than the minor axis otherwise an exception (casacore::AipsError)
+// MUST not be smaller than the minor axis otherwise an exception (AipsError)
 // is thrown.
 
 // These parameters of the Gaussian (width, position angle, direction etc.) can
@@ -123,18 +119,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // subtraction of components in the (u,v) domain.
 // <srcblock>
 // { // Construct a Gaussian shape
-//   casacore::MDirection blob_dir;
+//   MDirection blob_dir;
 //   { // get the right direction into blob_dir
-//     casacore::Quantity blob_ra; casacore::MVAngle::read(blob_ra, "19:39:");
-//     casacore::Quantity blob_dec; casacore::MVAngle::read(blob_dec, "-63.43.");
-//     blob_dir = casacore::MDirection(blob_ra, blob_dec, casacore::MDirection::J2000);
+//     Quantity blob_ra; MVAngle::read(blob_ra, "19:39:");
+//     Quantity blob_dec; MVAngle::read(blob_dec, "-63.43.");
+//     blob_dir = MDirection(blob_ra, blob_dec, MDirection::J2000);
 //   }
 //   {
-//     const Flux<casacore::Double> flux(6.28, 0.1, 0.15, 0.01);
+//     const Flux<Double> flux(6.28, 0.1, 0.15, 0.01);
 //     const GaussianShape shape(blob_dir,
-//                         casacore::Quantity(30, "arcmin"), 
-//                         casacore::Quantity(2000, "mas"), 
-//                         casacore::Quantity(C::pi_2, "rad"));
+//                         Quantity(30, "arcmin"), 
+//                         Quantity(2000, "mas"), 
+//                         Quantity(C::pi_2, "rad"));
 //     const ConstantSpectrum spectrum;
 //     SkyComponent component(flux, shape, spectrum);
 //     printShape(shape);
@@ -165,13 +161,13 @@ public:
   // Construct a Gaussian shape centred in the specified direction, specifying
   // the widths & position angle.
   // <group>
-  GaussianShape(const casacore::MDirection& direction,
-		const casacore::Quantum<casacore::Double>& majorAxis,
-		const casacore::Quantum<casacore::Double>& minorAxis,
-		const casacore::Quantum<casacore::Double>& positionAngle);
-  GaussianShape(const casacore::MDirection& direction, const casacore::Quantum<casacore::Double>& width,
-		const casacore::Double axialRatio,
-		const casacore::Quantum<casacore::Double>& positionAngle);
+  GaussianShape(const MDirection& direction,
+		const Quantum<Double>& majorAxis,
+		const Quantum<Double>& minorAxis,
+		const Quantum<Double>& positionAngle);
+  GaussianShape(const MDirection& direction, const Quantum<Double>& width,
+		const Double axialRatio,
+		const Quantum<Double>& positionAngle);
   // </group>
 
   // The copy constructor uses copy semantics.
@@ -191,30 +187,30 @@ public:
   // values are in radians. There are also functions in the base class for
   // doing this with other angular units.
   // <group>
-  virtual void setWidthInRad(const casacore::Double majorAxis,
-			     const casacore::Double minorAxis, 
-			     const casacore::Double positionAngle);
-  virtual casacore::Double majorAxisInRad() const;
-  virtual casacore::Double minorAxisInRad() const;
-  virtual casacore::Double positionAngleInRad() const;
-  virtual casacore::Double axialRatio() const;
+  virtual void setWidthInRad(const Double majorAxis,
+			     const Double minorAxis, 
+			     const Double positionAngle);
+  virtual Double majorAxisInRad() const;
+  virtual Double minorAxisInRad() const;
+  virtual Double positionAngleInRad() const;
+  virtual Double axialRatio() const;
   // </group>
 
   // Calculate the proportion of the flux that is in a pixel of specified size
   // centered in the specified direction. The returned value will always be
   // between zero and one (inclusive).
-  virtual casacore::Double sample(const casacore::MDirection& direction, 
-			const casacore::MVAngle& pixelLatSize,
-			const casacore::MVAngle& pixelLongSize) const;
+  virtual Double sample(const MDirection& direction, 
+			const MVAngle& pixelLatSize,
+			const MVAngle& pixelLongSize) const;
 
   // Same as the previous function except that many directions can be sampled
   // at once. The reference frame and pixel size must be the same for all the
   // specified directions.
-  virtual void sample(casacore::Vector<casacore::Double>& scale, 
-		      const casacore::Vector<casacore::MDirection::MVType>& directions, 
-		      const casacore::MDirection::Ref& refFrame,
-		      const casacore::MVAngle& pixelLatSize,
-		      const casacore::MVAngle& pixelLongSize) const;
+  virtual void sample(Vector<Double>& scale, 
+		      const Vector<MDirection::MVType>& directions, 
+		      const MDirection::Ref& refFrame,
+		      const MVAngle& pixelLatSize,
+		      const MVAngle& pixelLongSize) const;
 
   // Return the Fourier transform of the component at the specified point in
   // the spatial frequency domain. The point is specified by a 3 element vector
@@ -226,47 +222,47 @@ public:
   // The reference position for the transform is the direction of the
   // component. As this component is symmetric about this point the transform
   // is always a real value.
-  virtual casacore::DComplex visibility(const casacore::Vector<casacore::Double>& uvw,
-			      const casacore::Double& frequency) const;
+  virtual DComplex visibility(const Vector<Double>& uvw,
+			      const Double& frequency) const;
 
   // Same as the previous function except that many (u,v,w) points can be
-  // sampled at once. The uvw casacore::Matrix must have a first dimension of three, and
+  // sampled at once. The uvw Matrix must have a first dimension of three, and
   // a second dimension that is the same as the length of the scale
   // Vector. Otherwise and exception is thrown (when compiled in debug mode).
-  virtual void visibility(casacore::Vector<casacore::DComplex>& scale, const casacore::Matrix<casacore::Double>& uvw,
-			  const casacore::Double& frequency) const;
+  virtual void visibility(Vector<DComplex>& scale, const Matrix<Double>& uvw,
+			  const Double& frequency) const;
 
   // as above but with many frequencies
-  virtual void visibility(casacore::Matrix<casacore::DComplex>& scale, const casacore::Matrix<casacore::Double>& uvw,
-			  const casacore::Vector<casacore::Double>& frequency) const;
+  virtual void visibility(Matrix<DComplex>& scale, const Matrix<Double>& uvw,
+			  const Vector<Double>& frequency) const;
 
   // Return a pointer to a copy of this object upcast to a ComponentShape
   // object. The class that uses this function is responsible for deleting the
   // pointer. This is used to implement a virtual copy constructor.
   virtual ComponentShape* clone() const;
 
-  // casacore::Function which checks the internal data of this class for correct
-  // dimensionality and consistent values. Returns true if everything is fine
-  // otherwise returns false.
-  virtual casacore::Bool ok() const;
+  // Function which checks the internal data of this class for correct
+  // dimensionality and consistent values. Returns True if everything is fine
+  // otherwise returns False.
+  virtual Bool ok() const;
 
   // return a pointer to this object.
   virtual const ComponentShape* getPtr() const; 
 
   // TODO This probably should be made a pure virtual method in TwoSidedShape
   // Return the effective area of the Gaussian (pi/(4*ln(2))*maj*min.
-  // Units of the returned casacore::Quantity are steradians.
-  virtual casacore::Quantity getArea() const;
+  // Units of the returned Quantity are steradians.
+  virtual Quantity getArea() const;
 
-  virtual casacore::String sizeToString() const;
+  virtual String sizeToString() const;
 
 private:
   //# Updates the parameters of the itsFT object
   void updateFT();
   //# A generic Gaussian function
-  casacore::Gaussian2D<casacore::Double> itsShape;
+  Gaussian2D<Double> itsShape;
   //# The FT of a Gaussian is also a Gaussian. Its parameters are stored here
-  casacore::Gaussian2D<casacore::Double> itsFT;
+  Gaussian2D<Double> itsFT;
 };
 
 } //# NAMESPACE CASA - END

@@ -133,81 +133,81 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// canvas should always check this, because undefined behaviour can
 		// result when an attempt is made to use a list on a PixelCanvas
 		// which does not support lists.
-		virtual casacore::Bool supportsLists() {
-			return false;
+		virtual Bool supportsLists() {
+			return False;
 		}
 
 		// begin caching display commands - return list ID
-		virtual casacore::uInt newList();
+		virtual uInt newList();
 		// end caching display commands
 		virtual void endList();
 		// (Cacheable) recall cached display commands
-		virtual void drawList(casacore::uInt list);
+		virtual void drawList(uInt list);
 		// translate all lists
-		virtual void translateAllLists(casacore::Int xt, casacore::Int yt);
+		virtual void translateAllLists(Int xt, Int yt);
 		// translate the list
-		virtual void translateList(casacore::uInt list, casacore::Int xt, casacore::Int yt);
+		virtual void translateList(uInt list, Int xt, Int yt);
 		// remove list from cache
-		virtual void deleteList(casacore::uInt list);
+		virtual void deleteList(uInt list);
 		// flush all lists from the cache
 		virtual void deleteLists();
-		// return true if the list exists
-		virtual casacore::Bool validList(casacore::uInt list);
+		// return True if the list exists
+		virtual Bool validList(uInt list);
 
 		// (Cacheable) Set the font to the PostScript font name and size.
-		virtual casacore::Bool setFont(const casacore::String &fontName, const casacore::Int size);
-		virtual casacore::Bool setFont(DLFont* font) {
+		virtual Bool setFont(const String &fontName, const Int size);
+		virtual Bool setFont(DLFont* font) {
 			return setFont(font->getPSValue(), font->getSize());
 		}
 
 		// (Cacheable) Set the font to the PostScript font name.
-		virtual casacore::Bool setFont(const casacore::String &fontName);
+		virtual Bool setFont(const String &fontName);
 		// (Cacheable) Draw text using that font aligned in some way to the
 		// position
-		virtual void drawText(casacore::Int x, casacore::Int y, const casacore::String &text,
+		virtual void drawText(Int x, Int y, const String &text,
 		                      Display::TextAlign alignment = Display::AlignCenter);
-		virtual void drawText(casacore::Int x, casacore::Int y, const casacore::String &text, const casacore::Float& angle,
+		virtual void drawText(Int x, Int y, const String &text, const Float& angle,
 		                      Display::TextAlign alignment = Display::AlignCenter);
 		// (Cacheable) Draw an array of 2D color data as a raster image for zoom = <1,1>
 		// <group>
-		virtual void drawImage(const casacore::Matrix<casacore::uInt> &data, casacore::Int x, casacore::Int y);
-		virtual void drawImage(const casacore::Matrix<casacore::Int> &data, casacore::Int x, casacore::Int y);
-		virtual void drawImage(const casacore::Matrix<casacore::uLong> &data, casacore::Int x, casacore::Int y);
-		virtual void drawImage(const casacore::Matrix<casacore::Float> &data, casacore::Int x, casacore::Int y);
-		virtual void drawImage(const casacore::Matrix<casacore::Double> &data, casacore::Int x, casacore::Int y);
+		virtual void drawImage(const Matrix<uInt> &data, Int x, Int y);
+		virtual void drawImage(const Matrix<Int> &data, Int x, Int y);
+		virtual void drawImage(const Matrix<uLong> &data, Int x, Int y);
+		virtual void drawImage(const Matrix<Float> &data, Int x, Int y);
+		virtual void drawImage(const Matrix<Double> &data, Int x, Int y);
 		// </group>
 		// <group>
 		// Draw a 2D color image with masking.
 		// (opaqueMask ignored; (unfortunately,) PSPixelcanvas always draws
 		// _opaque_ masks).
-		virtual void drawImage(const casacore::Int &x, const casacore::Int &y,
-		                       const casacore::Matrix<casacore::uInt> &data,
-		                       const casacore::Matrix<casacore::Bool> &mask,
-		                       casacore::Bool opaqueMask=false);
+		virtual void drawImage(const Int &x, const Int &y,
+		                       const Matrix<uInt> &data,
+		                       const Matrix<Bool> &mask,
+		                       Bool opaqueMask=False);
 		// </group>
 
 		// (Cacheable) Draw an array of 2D color data as a raster image for any positive integer zoom
 		// <group>
-		virtual void drawImage(const casacore::Matrix<casacore::uInt> &data, casacore::Int x, casacore::Int y,
-		                       casacore::uInt xzoom, casacore::uInt yzoom);
-		virtual void drawImage(const casacore::Matrix<casacore::Int> &data, casacore::Int x, casacore::Int y,
-		                       casacore::uInt xzoom, casacore::uInt yzoom);
-		virtual void drawImage(const casacore::Matrix<casacore::uLong> &data, casacore::Int x, casacore::Int y,
-		                       casacore::uInt xzoom, casacore::uInt yzoom);
-		virtual void drawImage(const casacore::Matrix<casacore::Float> &data, casacore::Int x, casacore::Int y,
-		                       casacore::uInt xzoom, casacore::uInt yzoom);
-		virtual void drawImage(const casacore::Matrix<casacore::Double> &data, casacore::Int x, casacore::Int y,
-		                       casacore::uInt xzoom, casacore::uInt yzoom);
+		virtual void drawImage(const Matrix<uInt> &data, Int x, Int y,
+		                       uInt xzoom, uInt yzoom);
+		virtual void drawImage(const Matrix<Int> &data, Int x, Int y,
+		                       uInt xzoom, uInt yzoom);
+		virtual void drawImage(const Matrix<uLong> &data, Int x, Int y,
+		                       uInt xzoom, uInt yzoom);
+		virtual void drawImage(const Matrix<Float> &data, Int x, Int y,
+		                       uInt xzoom, uInt yzoom);
+		virtual void drawImage(const Matrix<Double> &data, Int x, Int y,
+		                       uInt xzoom, uInt yzoom);
 		// </group>
 
 		// (Cacheable) Draw a component of a multi-channel image, storing it
 		// in buffers until flushComponentImages() is called.
-		virtual void drawImage(const casacore::Matrix<casacore::uInt> &data, const casacore::Int &x, const casacore::Int &y,
+		virtual void drawImage(const Matrix<uInt> &data, const Int &x, const Int &y,
 		                       const Display::ColorComponent &colorcomponent);
 
 		// Fill one of the channel buffers.
-		void bufferComponent(const casacore::Matrix<casacore::uInt> &data,
-		                     const casacore::Int &x, const casacore::Int &y,
+		void bufferComponent(const Matrix<uInt> &data,
+		                     const Int &x, const Int &y,
 		                     const Display::ColorComponent &colorcomponent);
 
 		// (NOT CACHEABLE!) Flush the component buffers.
@@ -215,171 +215,171 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// (Cacheable) Draw a single point using current color
 		// <group>
-		virtual void drawPoint(casacore::Int x1, casacore::Int y1);
-		virtual void drawPoint(casacore::Float x1, casacore::Float y1);
-		virtual void drawPoint(casacore::Double x1, casacore::Double y1);
+		virtual void drawPoint(Int x1, Int y1);
+		virtual void drawPoint(Float x1, Float y1);
+		virtual void drawPoint(Double x1, Double y1);
 		// </group>
 
 		// (Cacheable) Draw N points specified as a Nx2 matrix
 		// <group>
-		virtual void drawPoints(const casacore::Matrix<casacore::Int> &verts);
-		virtual void drawPoints(const casacore::Matrix<casacore::Float> &verts);
-		virtual void drawPoints(const casacore::Matrix<casacore::Double> &verts);
+		virtual void drawPoints(const Matrix<Int> &verts);
+		virtual void drawPoints(const Matrix<Float> &verts);
+		virtual void drawPoints(const Matrix<Double> &verts);
 		// </group>
 
 		// (Cacheable) Draw a bunch of points using current color
 		// <group>
-		virtual void drawPoints(const casacore::Vector<casacore::Int> &x1, const casacore::Vector<casacore::Int> &y1);
-		virtual void drawPoints(const casacore::Vector<casacore::Float> &x1, const casacore::Vector<casacore::Float> &y1);
-		virtual void drawPoints(const casacore::Vector<casacore::Double> &x1,
-		                        const casacore::Vector<casacore::Double> &y1);
+		virtual void drawPoints(const Vector<Int> &x1, const Vector<Int> &y1);
+		virtual void drawPoints(const Vector<Float> &x1, const Vector<Float> &y1);
+		virtual void drawPoints(const Vector<Double> &x1,
+		                        const Vector<Double> &y1);
 		// </group>
 
 		// (Cacheable) Draw a single line using current color
 		// <group>
-		virtual void drawLine(casacore::Int x1, casacore::Int y1, casacore::Int x2, casacore::Int y2);
-		virtual void drawLine(casacore::Float x1, casacore::Float y1, casacore::Float x2, casacore::Float y2);
-		virtual void drawLine(casacore::Double x1, casacore::Double y1, casacore::Double x2, casacore::Double y2);
+		virtual void drawLine(Int x1, Int y1, Int x2, Int y2);
+		virtual void drawLine(Float x1, Float y1, Float x2, Float y2);
+		virtual void drawLine(Double x1, Double y1, Double x2, Double y2);
 		// </group>
 
 		// (Cacheable) Draw N/2 lines from an Nx2 matrix
 		// <group>
-		virtual void drawLines(const casacore::Matrix<casacore::Int> &verts);
-		virtual void drawLines(const casacore::Matrix<casacore::Float> &verts);
-		virtual void drawLines(const casacore::Matrix<casacore::Double> &verts);
+		virtual void drawLines(const Matrix<Int> &verts);
+		virtual void drawLines(const Matrix<Float> &verts);
+		virtual void drawLines(const Matrix<Double> &verts);
 		// </group>
 
 		// (Cacheable) Draw a bunch of unrelated lines using current color
 		// <group>
-		virtual void drawLines(const casacore::Vector<casacore::Int> &x1, const casacore::Vector<casacore::Int> &y1,
-		                       const casacore::Vector<casacore::Int> &x2, const casacore::Vector<casacore::Int> &y2);
-		virtual void drawLines(const casacore::Vector<casacore::Float> &x1, const casacore::Vector<casacore::Float> &y1,
-		                       const casacore::Vector<casacore::Float> &x2, const casacore::Vector<casacore::Float> &y2);
-		virtual void drawLines(const casacore::Vector<casacore::Double> &x1, const casacore::Vector<casacore::Double> &y1,
-		                       const casacore::Vector<casacore::Double> &x2, const casacore::Vector<casacore::Double> &y2);
+		virtual void drawLines(const Vector<Int> &x1, const Vector<Int> &y1,
+		                       const Vector<Int> &x2, const Vector<Int> &y2);
+		virtual void drawLines(const Vector<Float> &x1, const Vector<Float> &y1,
+		                       const Vector<Float> &x2, const Vector<Float> &y2);
+		virtual void drawLines(const Vector<Double> &x1, const Vector<Double> &y1,
+		                       const Vector<Double> &x2, const Vector<Double> &y2);
 		// </group>
 
 		// (Cacheable) Draw a single connected line between the points given
 		// <group>
-		virtual void drawPolyline(const casacore::Vector<casacore::Int> &x1, const casacore::Vector<casacore::Int> &y1);
-		virtual void drawPolyline(const casacore::Vector<casacore::Float> &x1,
-		                          const casacore::Vector<casacore::Float> &y1);
-		virtual void drawPolyline(const casacore::Vector<casacore::Double> &x1,
-		                          const casacore::Vector<casacore::Double> &y1);
+		virtual void drawPolyline(const Vector<Int> &x1, const Vector<Int> &y1);
+		virtual void drawPolyline(const Vector<Float> &x1,
+		                          const Vector<Float> &y1);
+		virtual void drawPolyline(const Vector<Double> &x1,
+		                          const Vector<Double> &y1);
 		// </group>
 		// <group>
-		virtual void drawPolylines(const casacore::Vector<casacore::Int> &x1, const casacore::Vector<casacore::Int> &y1,
+		virtual void drawPolylines(const Vector<Int> &x1, const Vector<Int> &y1,
 		                           const int close=0, const int fill=0);
-		virtual void drawPolylines(const casacore::Vector<casacore::Float> &x1,
-		                           const casacore::Vector<casacore::Float> &y1,
+		virtual void drawPolylines(const Vector<Float> &x1,
+		                           const Vector<Float> &y1,
 		                           const int close=0, const int fill=0);
-		virtual void drawPolylines(const casacore::Vector<casacore::Double> &x1,
-		                           const casacore::Vector<casacore::Double> &y1,
+		virtual void drawPolylines(const Vector<Double> &x1,
+		                           const Vector<Double> &y1,
 		                           const int close=0, const int fill=0);
-		// </group>
-
-		// (Cacheable) Draw N-1 connected lines from Nx2 matrix of vertices
-		// <group>
-		virtual void drawPolyline(const casacore::Matrix<casacore::Int> &verts);
-		virtual void drawPolyline(const casacore::Matrix<casacore::Float> &verts);
-		virtual void drawPolyline(const casacore::Matrix<casacore::Double> &verts);
 		// </group>
 
 		// (Cacheable) Draw N-1 connected lines from Nx2 matrix of vertices
 		// <group>
-		virtual void drawPolylines(const casacore::Matrix<casacore::Int> &verts,
+		virtual void drawPolyline(const Matrix<Int> &verts);
+		virtual void drawPolyline(const Matrix<Float> &verts);
+		virtual void drawPolyline(const Matrix<Double> &verts);
+		// </group>
+
+		// (Cacheable) Draw N-1 connected lines from Nx2 matrix of vertices
+		// <group>
+		virtual void drawPolylines(const Matrix<Int> &verts,
 		                           const int close=0, const int fill=0);
-		virtual void drawPolylines(const casacore::Matrix<casacore::Float> &verts,
+		virtual void drawPolylines(const Matrix<Float> &verts,
 		                           const int close=0, const int fill=0);
-		virtual void drawPolylines(const casacore::Matrix<casacore::Double> &verts,
+		virtual void drawPolylines(const Matrix<Double> &verts,
 		                           const int close=0, const int fill=0);
 		// </group>
 
 		// (Cacheable) Draw a closed polygon
 		// <group>
-		virtual void drawPolygon(const casacore::Vector<casacore::Int> &x1, const casacore::Vector<casacore::Int> &y1);
-		virtual void drawPolygon(const casacore::Vector<casacore::Float> &x1, const casacore::Vector<casacore::Float> &y1);
-		virtual void drawPolygon(const casacore::Vector<casacore::Double> &x1,
-		                         const casacore::Vector<casacore::Double> &y1);
+		virtual void drawPolygon(const Vector<Int> &x1, const Vector<Int> &y1);
+		virtual void drawPolygon(const Vector<Float> &x1, const Vector<Float> &y1);
+		virtual void drawPolygon(const Vector<Double> &x1,
+		                         const Vector<Double> &y1);
 		// </group>
 
 		// (Cacheable) Draw and fill a closed polygon
 		// <group>
-		virtual void drawFilledPolygon(const casacore::Vector<casacore::Int> &x1,
-		                               const casacore::Vector<casacore::Int> &y1);
-		virtual void drawFilledPolygon(const casacore::Vector<casacore::Float> &x1,
-		                               const casacore::Vector<casacore::Float> &y1);
-		virtual void drawFilledPolygon(const casacore::Vector<casacore::Double> &x1,
-		                               const casacore::Vector<casacore::Double> &y1);
+		virtual void drawFilledPolygon(const Vector<Int> &x1,
+		                               const Vector<Int> &y1);
+		virtual void drawFilledPolygon(const Vector<Float> &x1,
+		                               const Vector<Float> &y1);
+		virtual void drawFilledPolygon(const Vector<Double> &x1,
+		                               const Vector<Double> &y1);
 		// </group>
 
 		// (Cacheable) Draw a closed N-sided polygon from Nx2 matrix of vertices
 		// <group>
-		virtual void drawPolygon(const casacore::Matrix<casacore::Int> &verts);
-		virtual void drawPolygon(const casacore::Matrix<casacore::Float> &verts);
-		virtual void drawPolygon(const casacore::Matrix<casacore::Double> &verts);
+		virtual void drawPolygon(const Matrix<Int> &verts);
+		virtual void drawPolygon(const Matrix<Float> &verts);
+		virtual void drawPolygon(const Matrix<Double> &verts);
 		// </group>
 
 		// (Cacheable) Draw a rectangle
 		// <group>
-		virtual void drawRectangle(casacore::Int x1, casacore::Int y1, casacore::Int x2, casacore::Int y2, const int fill);
-		virtual void drawRectangle(casacore::Float x1, casacore::Float y1, casacore::Float x2, casacore::Float y2,
+		virtual void drawRectangle(Int x1, Int y1, Int x2, Int y2, const int fill);
+		virtual void drawRectangle(Float x1, Float y1, Float x2, Float y2,
 		                           const int fill);
-		virtual void drawRectangle(casacore::Double x1, casacore::Double y1, casacore::Double x2, casacore::Double y2,
+		virtual void drawRectangle(Double x1, Double y1, Double x2, Double y2,
 		                           const int fill);
 		// </group>
 
 		// (Cacheable) Draw a rectangle
 		// <group>
-		virtual void drawRectangle(casacore::Int x1, casacore::Int y1, casacore::Int x2, casacore::Int y2);
-		virtual void drawRectangle(casacore::Float x1, casacore::Float y1, casacore::Float x2, casacore::Float y2);
-		virtual void drawRectangle(casacore::Double x1, casacore::Double y1, casacore::Double x2, casacore::Double y2);
+		virtual void drawRectangle(Int x1, Int y1, Int x2, Int y2);
+		virtual void drawRectangle(Float x1, Float y1, Float x2, Float y2);
+		virtual void drawRectangle(Double x1, Double y1, Double x2, Double y2);
 		// </group>
 
 		// (Cacheable) Draw a filled rectangle
 		// <group>
-		virtual void drawFilledRectangle(casacore::Int x1, casacore::Int y1, casacore::Int x2, casacore::Int y2);
-		virtual void drawFilledRectangle(casacore::Float x1, casacore::Float y1, casacore::Float x2, casacore::Float y2);
-		virtual void drawFilledRectangle(casacore::Double x1, casacore::Double y1, casacore::Double x2,
-		                                 casacore::Double y2);
+		virtual void drawFilledRectangle(Int x1, Int y1, Int x2, Int y2);
+		virtual void drawFilledRectangle(Float x1, Float y1, Float x2, Float y2);
+		virtual void drawFilledRectangle(Double x1, Double y1, Double x2,
+		                                 Double y2);
 		// </group>
 
 		// (Cacheable) Draw a set of points, specifying a color per point to be drawn.
 		// <group>
-		virtual void drawColoredPoints(const casacore::Vector<casacore::Int> &x1,
-		                               const casacore::Vector<casacore::Int> &y1,
-		                               const casacore::Vector<casacore::uInt> &colors);
-		virtual void drawColoredPoints(const casacore::Vector<casacore::Float> &x1,
-		                               const casacore::Vector<casacore::Float> &y1,
-		                               const casacore::Vector<casacore::uInt> &colors);
-		virtual void drawColoredPoints(const casacore::Vector<casacore::Double> &x1,
-		                               const casacore::Vector<casacore::Double> &y1,
-		                               const casacore::Vector<casacore::uInt> &colors);
-		virtual void drawColoredPoints(const casacore::Matrix<casacore::Int> &xy,
-		                               const casacore::Vector<casacore::uInt> &colors);
-		virtual void drawColoredPoints(const casacore::Matrix<casacore::Float> &xy,
-		                               const casacore::Vector<casacore::uInt> &colors);
-		virtual void drawColoredPoints(const casacore::Matrix<casacore::Double> &xy,
-		                               const casacore::Vector<casacore::uInt> &colors);
+		virtual void drawColoredPoints(const Vector<Int> &x1,
+		                               const Vector<Int> &y1,
+		                               const Vector<uInt> &colors);
+		virtual void drawColoredPoints(const Vector<Float> &x1,
+		                               const Vector<Float> &y1,
+		                               const Vector<uInt> &colors);
+		virtual void drawColoredPoints(const Vector<Double> &x1,
+		                               const Vector<Double> &y1,
+		                               const Vector<uInt> &colors);
+		virtual void drawColoredPoints(const Matrix<Int> &xy,
+		                               const Vector<uInt> &colors);
+		virtual void drawColoredPoints(const Matrix<Float> &xy,
+		                               const Vector<uInt> &colors);
+		virtual void drawColoredPoints(const Matrix<Double> &xy,
+		                               const Vector<uInt> &colors);
 		// </group>
 
 		// (Cacheable) Draw a set of lines, specifying a color per line to be drawn.
 		// <group>
-		virtual void drawColoredLines(const casacore::Vector<casacore::Int> &x1,
-		                              const casacore::Vector<casacore::Int> &y1,
-		                              const casacore::Vector<casacore::Int> &x2,
-		                              const casacore::Vector<casacore::Int> &y2,
-		                              const casacore::Vector<casacore::uInt> &colors);
-		virtual void drawColoredLines(const casacore::Vector<casacore::Float> &x1,
-		                              const casacore::Vector<casacore::Float> &y1,
-		                              const casacore::Vector<casacore::Float> &x2,
-		                              const casacore::Vector<casacore::Float> &y2,
-		                              const casacore::Vector<casacore::uInt> &colors);
-		virtual void drawColoredLines(const casacore::Vector<casacore::Double> &x1,
-		                              const casacore::Vector<casacore::Double> &y1,
-		                              const casacore::Vector<casacore::Double> &x2,
-		                              const casacore::Vector<casacore::Double> &y2,
-		                              const casacore::Vector<casacore::uInt> &colors);
+		virtual void drawColoredLines(const Vector<Int> &x1,
+		                              const Vector<Int> &y1,
+		                              const Vector<Int> &x2,
+		                              const Vector<Int> &y2,
+		                              const Vector<uInt> &colors);
+		virtual void drawColoredLines(const Vector<Float> &x1,
+		                              const Vector<Float> &y1,
+		                              const Vector<Float> &x2,
+		                              const Vector<Float> &y2,
+		                              const Vector<uInt> &colors);
+		virtual void drawColoredLines(const Vector<Double> &x1,
+		                              const Vector<Double> &y1,
+		                              const Vector<Double> &x2,
+		                              const Vector<Double> &y2,
+		                              const Vector<uInt> &colors);
 		// </group>
 
 		// Set Graphics Attributes
@@ -387,11 +387,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// listed in <linkto class=Display>DisplayEnums</linkto>
 		// <group>
 		virtual void setDrawFunction(Display::DrawFunction function);
-		virtual void setForeground(casacore::uLong color);
-		virtual void setBackground(casacore::uLong color);
-		//virtual void setLineWidth(casacore::uInt width);
-		virtual void setLineWidth(casacore::Float width);
-		void lineWidth(casacore::Float width);
+		virtual void setForeground(uLong color);
+		virtual void setBackground(uLong color);
+		//virtual void setLineWidth(uInt width);
+		virtual void setLineWidth(Float width);
+		void lineWidth(Float width);
 		float lineWidth()const {
 			return lineWidth_;
 		}
@@ -406,10 +406,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Get Graphics Attributes
 		// <group>
 		virtual Display::DrawFunction getDrawFunction() const;
-		virtual casacore::uLong                 getForeground()   const;
-		virtual casacore::uLong                 getBackground()   const;
-		//#virtual casacore::uInt                getLineWidth()    const;
-		virtual casacore::Float                 getLineWidth()    const;
+		virtual uLong                 getForeground()   const;
+		virtual uLong                 getBackground()   const;
+		//#virtual uInt                getLineWidth()    const;
+		virtual Float                 getLineWidth()    const;
 		virtual Display::LineStyle    getLineStyle()    const;
 		virtual Display::CapStyle     getCapStyle()     const;
 		virtual Display::JoinStyle    getJoinStyle()    const;
@@ -421,8 +421,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// (Cacheable) Option Control
 		// Options listed in <linkto class=Display>DisplayEnums</linkto>
 		// <group>
-		virtual casacore::Bool enable(Display::Option option);
-		virtual casacore::Bool disable(Display::Option option);
+		virtual Bool enable(Display::Option option);
+		virtual Bool disable(Display::Option option);
 		// </group>
 
 		// Control the image-caching strategy
@@ -435,15 +435,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Once set, it is only possible to REDUCE the size of the current clip
 		// window, not increase it.
 		// <group>
-		virtual void setClipWindow(casacore::Int x1, casacore::Int y1, casacore::Int x2, casacore::Int y2);
-		virtual void getClipWindow(casacore::Int &x1, casacore::Int &y1, casacore::Int &x2, casacore::Int &y2);
+		virtual void setClipWindow(Int x1, Int y1, Int x2, Int y2);
+		virtual void getClipWindow(Int &x1, Int &y1, Int &x2, Int &y2);
 		// </group>
 
 		// (Not Cacheable) Redraw the window
 		// <group>
 		virtual void refresh(const Display::RefreshReason &reason =
 		                         Display::UserCommand,
-		                     const casacore::Bool &explicitrequest = true);
+		                     const Bool &explicitrequest = True);
 		// </group>
 
 		// Cause display to flush any graphics commands not yet drawn
@@ -452,71 +452,71 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// (Cacheable) Clear the window using the background color
 		// <group>
 		virtual void clear();
-		virtual void clear(casacore::Int x1, casacore::Int y1, casacore::Int x2, casacore::Int y2);
+		virtual void clear(Int x1, Int y1, Int x2, Int y2);
 		// </group>
 
 		// (Cacheable) Set the color to use for clearing the display
 		// <group>
-		virtual void setClearColor(casacore::uInt colorIndex);
-		virtual void setClearColor(const casacore::String &colorname);
+		virtual void setClearColor(uInt colorIndex);
+		virtual void setClearColor(const String &colorname);
 		virtual void setClearColor(float r, float g, float b);
 		// </group>
 
 		// (Not Cacheable) Get the current color to use for clearing the display.
-		virtual casacore::uInt clearColor() const;
+		virtual uInt clearColor() const;
 		virtual void getClearColor(float &r, float &g, float &b) const;
 
 		// Return the width of the PSPixelCanvas in pixels
-		virtual casacore::uInt width() const;
+		virtual uInt width() const;
 		// Return the height of the PSPixelCanvas in pixels
-		virtual casacore::uInt height() const;
+		virtual uInt height() const;
 		// Return the depth of the PSPixelCanvas in bits
-		virtual casacore::uInt depth() const;
+		virtual uInt depth() const;
 
 		// Get the pixel density (in dots per inch [dpi]) of the PixelCanvas
-		virtual void pixelDensity(casacore::Float &xdpi, casacore::Float &ydpi) const;
+		virtual void pixelDensity(Float &xdpi, Float &ydpi) const;
 
 		// (Cacheable) Set current color (works in RGB or colormap mode)
 		// <group>
-		virtual void setColor(casacore::uInt colorIndex);
-		virtual void setColor(const casacore::String &colorname);
+		virtual void setColor(uInt colorIndex);
+		virtual void setColor(const String &colorname);
 		virtual void setRGBColor(float r, float g, float b);
 		virtual void setHSVColor(float h, float s, float v);
 		// </group>
 
 		// (Not Cacheable) Returns the current color as a color index
-		virtual casacore::uInt color() const;
+		virtual uInt color() const;
 
 		// (Not Cacheable) Retuns the current color as an RGB triple
 		virtual void getColor(float &r, float &g, float &b) const;
-		virtual casacore::Bool getColorComponents(const casacore::String &colorname,
-		                                casacore::Float &r, casacore::Float &g, casacore::Float &b);
+		virtual Bool getColorComponents(const String &colorname,
+		                                Float &r, Float &g, Float &b);
 		// (Not Cacheable) Get color index value (works in RGB or colormap mode)
 		// <group>
-		virtual casacore::Bool getColor(casacore::Int x, casacore::Int y, casacore::uInt &color);
-		virtual casacore::Bool getRGBColor(casacore::Int x, casacore::Int y, float &r, float &g, float &b);
-		virtual casacore::Bool getHSVColor(casacore::Int x, casacore::Int y, float &h, float &s, float &v);
+		virtual Bool getColor(Int x, Int y, uInt &color);
+		virtual Bool getRGBColor(Int x, Int y, float &r, float &g, float &b);
+		virtual Bool getHSVColor(Int x, Int y, float &h, float &s, float &v);
 		// </group>
 		// Get/set the current foreground/background colors.  These colors
 		// should be used when the special Strings "foreground" and "background"
 		// are given for a color.
 		// <group>
-		virtual void setDeviceForegroundColor(const casacore::String colorname);
-		virtual casacore::String deviceForegroundColor() const;
-		virtual void setDeviceBackgroundColor(const casacore::String colorname);
-		virtual casacore::String deviceBackgroundColor() const;
+		virtual void setDeviceForegroundColor(const String colorname);
+		virtual String deviceForegroundColor() const;
+		virtual void setDeviceBackgroundColor(const String colorname);
+		virtual String deviceBackgroundColor() const;
 		// </group>
 
 		// <group>
 		// (Not Cacheable) resize request.  returns true if window was resized.
-		// Will refresh if doCallbacks is true.
-		virtual casacore::Bool resize(casacore::uInt reqXSize, casacore::uInt reqYSize, casacore::Bool doCallbacks = true);
+		// Will refresh if doCallbacks is True.
+		virtual Bool resize(uInt reqXSize, uInt reqYSize, Bool doCallbacks = True);
 
 		// (Not Cacheable) resize the colortable by requesting a new number of cells
-		virtual casacore::Bool resizeColorTable(casacore::uInt newSize);
+		virtual Bool resizeColorTable(uInt newSize);
 
 		// (Not Cacheable) resize the colortable by requesting a new RGB/HSV cube
-		virtual casacore::Bool resizeColorTable(casacore::uInt nReds, casacore::uInt nGreens, casacore::uInt nBlues);
+		virtual Bool resizeColorTable(uInt nReds, uInt nGreens, uInt nBlues);
 
 		// Need a mechanism to return the PSPixelCanvasColorTable so
 		// drawing functions within classes can operate.
@@ -543,10 +543,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// can be used to position graphics.  Together with pushMatrix and
 		// popMatrix it can be used to build heirarchical scenes.
 		// <group>
-		virtual void translate(casacore::Int xt, casacore::Int yt);
-		virtual void getTranslation(casacore::Int &xt, casacore::Int &yt) const;
-		virtual casacore::Int xTranslation() const;
-		virtual casacore::Int yTranslation() const;
+		virtual void translate(Int xt, Int yt);
+		virtual void getTranslation(Int &xt, Int &yt) const;
+		virtual Int xTranslation() const;
+		virtual Int yTranslation() const;
 		// </group>
 
 		// (Not cacheable) set the draw buffer
@@ -562,9 +562,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// partial buffer memory exchanges.  (x1,y1 are blc, x2,y2 are trc)
 		// <group>
-		virtual void copyBackBufferToFrontBuffer(casacore::Int x1, casacore::Int y1, casacore::Int x2, casacore::Int y2);
-		virtual void copyFrontBufferToBackBuffer(casacore::Int x1, casacore::Int y1, casacore::Int x2, casacore::Int y2);
-		virtual void swapBuffers(casacore::Int x1, casacore::Int y1, casacore::Int x2, casacore::Int y2);
+		virtual void copyBackBufferToFrontBuffer(Int x1, Int y1, Int x2, Int y2);
+		virtual void copyFrontBufferToBackBuffer(Int x1, Int y1, Int x2, Int y2);
+		virtual void swapBuffers(Int x1, Int y1, Int x2, Int y2);
 		// </group>
 
 //#  ////////////////////////////////////////////////////////////////
@@ -585,7 +585,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void drawPSImage(const int x, const int y,
 		                 const int iwidth, const int iheight,
 		                 const float xzoom, const float yzoom,
-		                 const casacore::uShort *data, const int bpc,
+		                 const uShort *data, const int bpc,
 		                 const Display::ColorModel=Display::Index);
 		// Set/get declared resolution in pixels per supplied dimension.
 //<group>
@@ -596,24 +596,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //</group>
 		// Whether to enable pixel interpolation for drawImage().
 //<group>
-		void smooth(const casacore::Bool smth) {
+		void smooth(const Bool smth) {
 			smooth_ = smth;
 		}
-		casacore::Bool smooth()const {
+		Bool smooth()const {
 			return smooth_;
 		}
 //</group>
 		// Whether to put tracing comments in the output.
 //<group>
-		casacore::Bool annotate()const {
+		Bool annotate()const {
 			return annotate_;
 		}
-		void annotate(const casacore::Bool a) {
+		void annotate(const Bool a) {
 			annotate_ = a;
 		}
 //</group>
 
-		virtual casacore::Float pixelScaling() const;
+		virtual Float pixelScaling() const;
 
 //#  ////////////////////////////////////////////////////////////////
 
@@ -627,7 +627,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Used in annotating output file.
 //<group>
 		void note(const char *);
-		void note(const char *, const casacore::uLong);
+		void note(const char *, const uLong);
 //</group>
 	private:
 		PSPixelCanvasColorTable *pcct_;
@@ -640,21 +640,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Display::FillStyle	fillStyle_;
 		Display::FillRule	fillRule_;
 		Display::ArcMode	arcMode_;
-		casacore::String			defaultForegroundColorName_;
-		casacore::String			defaultBackgroundColorName_;
+		String			defaultForegroundColorName_;
+		String			defaultBackgroundColorName_;
 		// Color indexes the three colors we know about.
-		casacore::uLong			foreground_, background_, clearColor_;
+		uLong			foreground_, background_, clearColor_;
 		float			xt_, yt_;
 		float			clipx0_, clipy0_, clipx1_, clipy1_;
-		casacore::Bool			haveClipInfo_;
-		casacore::Bool			clipEnabled_;
-		casacore::Bool			smooth_;
-		casacore::Bool			annotate_;
+		Bool			haveClipInfo_;
+		Bool			clipEnabled_;
+		Bool			smooth_;
+		Bool			annotate_;
 		// Component support
-		casacore::Float itsComponentX, itsComponentY;
-		casacore::uLong itsComponentWidth, itsComponentHeight;
-		casacore::Int itsComponentBPC;
-		casacore::uShort *itsComponents; // Length = 3*width*height.
+		Float itsComponentX, itsComponentY;
+		uLong itsComponentWidth, itsComponentHeight;
+		Int itsComponentBPC;
+		uShort *itsComponents; // Length = 3*width*height.
 	};
 
 

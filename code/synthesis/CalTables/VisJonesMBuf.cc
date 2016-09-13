@@ -28,7 +28,6 @@
 
 #include <synthesis/CalTables/VisJonesMBuf.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //----------------------------------------------------------------------------

@@ -35,7 +35,6 @@
 
 
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 PBMath1DPoly::PBMath1DPoly(const Vector<Double>& coeff, Quantity maxRad,

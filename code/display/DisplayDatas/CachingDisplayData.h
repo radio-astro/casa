@@ -114,7 +114,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void setDefaultOptions();
 
 		// Apply options stored in <src>rec</src> to the DisplayData.  A
-		// return value of <src>true</src> means a refresh is needed.
+		// return value of <src>True</src> means a refresh is needed.
 		// <src>recOut</src> contains any fields which were implicitly
 		// changed as a result of the call to this function.  The options
 		// handled by this class are:
@@ -125,10 +125,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// of that, will be 256.  If <src>cachesize</src> is lowered by
 		// a call to this method, the cache will be shrunk in size, with
 		// the oldest drawings being removed first. </li>
-		virtual casacore::Bool setOptions(casacore::Record &rec, casacore::Record &recOut);
+		virtual Bool setOptions(Record &rec, Record &recOut);
 
 		// Retrieve the current and default options and parameter types.
-		virtual casacore::Record getOptions( bool scrub=false ) const;
+		virtual Record getOptions( bool scrub=false ) const;
 
 		// Refresh event handler which is called indirectly by the
 		// WorldCanvas, via the WorldCanvasHolder.  This function will take
@@ -139,12 +139,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// <group>
 		virtual void notifyRegister(WorldCanvasHolder *wcHolder) ;
 		virtual void notifyUnregister(WorldCanvasHolder& wcHolder,
-		                              casacore::Bool ignoreRefresh = false) ;
+		                              Bool ignoreRefresh = False) ;
 		// </group>
 
 		// Purges cache, to avoid reusing images with the
 		// wrong colormap, then calls base class version.
-		virtual void setColormap(Colormap *cmap, casacore::Float weight);
+		virtual void setColormap(Colormap *cmap, Float weight);
 
 		// Empty cache completely.
 		virtual void purgeCache();
@@ -178,7 +178,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		*/
 
 		// Turn caching on/off.
-		virtual void setCaching(const casacore::Bool caching);
+		virtual void setCaching(const Bool caching);
 
 		// (Required) copy constructor.
 		CachingDisplayData(const CachingDisplayData &other);
@@ -187,27 +187,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void operator=(const CachingDisplayData &other);
 
 
-		// The default is false.  Derived DDs (such as WedgeDD) can set it true
+		// The default is False.  Derived DDs (such as WedgeDD) can set it True
 		// so that the colormap on the PixelCanvas before the DD draws is
 		// restored to it afterward.  The 'colormap fiddling' mouse tools can
 		// (unfortunately) only operate on the PC's current colormap; this
 		// kludge is an attempt to assure that the 'right' one is left there.
-		casacore::Bool restorePCColormap_;
+		Bool restorePCColormap_;
 
 	private:
 
 		// Caching state.
-		casacore::Bool itsCachingState;
+		Bool itsCachingState;
 
 		// Default and actual maximum length of element list.
-		casacore::Int itsDefaultMaximumCacheSize, itsOptionsMaximumCacheSize;
+		Int itsDefaultMaximumCacheSize, itsOptionsMaximumCacheSize;
 
-		// casacore::List containing the CachingDisplayMethods for this
+		// List containing the CachingDisplayMethods for this
 		// CachingDisplayData.
-		casacore::List<void *> itsElementList;
+		List<void *> itsElementList;
 
 		// Iterator for itsElementList.
-		casacore::ListIter<void *> *itsElementListIter;
+		ListIter<void *> *itsElementListIter;
 
 		// Clear out cache entries beyond end of list.
 		void trimCache();

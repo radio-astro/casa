@@ -33,7 +33,6 @@
 #include <msvis/MSVis/UtilJ.h>
 #include <casa/BasicSL/String.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 namespace vi { //# NAMESPACE VI - BEGIN
 
@@ -45,7 +44,7 @@ LayeredVi2Factory::LayeredVi2Factory(MeasurementSet* ms,
   ms_p(ms),
   iterpar_p(iterpar),
   avepar_p(avepar),
-  doCal_p(false),
+  doCal_p(False),
   callib_p(""),
   calrec_p(),  
   nlayer_p(1),
@@ -64,7 +63,7 @@ LayeredVi2Factory::LayeredVi2Factory(MeasurementSet* ms,
   ms_p(ms),
   iterpar_p(iterpar),
   avepar_p(avepar),
-  doCal_p(false),
+  doCal_p(False),
   callib_p(""),
   calrec_p(calrec),  // This ctor, by Record _only_
   nlayer_p(1),
@@ -77,7 +76,7 @@ LayeredVi2Factory::LayeredVi2Factory(MeasurementSet* ms,
   // ...and arrange for calibration, if necessary
   if (calrec_p.nfields()>0) {
     ++nlayer_p;  
-    doCal_p=true;
+    doCal_p=True;
 
     // Set up the CalibratingVi2Factory (via Record)
     calvi2factory_p = CalibratingVi2FactoryI::generate();
@@ -94,7 +93,7 @@ LayeredVi2Factory::LayeredVi2Factory(MeasurementSet* ms,
   ms_p(ms),
   iterpar_p(iterpar),
   avepar_p(avepar),
-  doCal_p(false),
+  doCal_p(False),
   callib_p(callib),    // This ctor, by String _only_
   calrec_p(),
   nlayer_p(1),
@@ -107,7 +106,7 @@ LayeredVi2Factory::LayeredVi2Factory(MeasurementSet* ms,
 
   if (callib_p.length()>0) {
     ++nlayer_p;  
-    doCal_p=true;  // Calibration is turned on
+    doCal_p=True;  // Calibration is turned on
 
     // Set up the CalibratingVi2Factory (via String)
     calvi2factory_p = CalibratingVi2FactoryI::generate();
@@ -142,7 +141,7 @@ vi::ViImplementation2 * LayeredVi2Factory::createVi () const
                                                  iterpar_p->getSortColumns(),
                                                  iterpar_p->getChunkInterval(),
                                                  vi::VbPlain,
-                                                 true); // writable!  (hardwired?)
+                                                 True); // writable!  (hardwired?)
   
   // TBD: consider if this is the layer where weight scaling should be applied?
   viis[ilayer]->setWeightScaling(iterpar_p->getWeightScaling());

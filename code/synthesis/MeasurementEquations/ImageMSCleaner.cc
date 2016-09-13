@@ -29,7 +29,6 @@
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
   ImageMSCleaner::ImageMSCleaner(): psf_p(0), dirty_p(0), mask_p(0), nPsfChan_p(0), 
@@ -223,7 +222,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //os << "Cleaning image using multi-scale algorithm" << LogIO::POST;
       if(scales_p.nelements()==0) {
 	os << LogIO::SEVERE << "Scales not yet set" << LogIO::POST;
-	return false;
+	return False;
       }
       //matClean_p.setscales(scaleSizes_p);
       matClean_p.setcontrol(CleanEnums::MULTISCALE, niter, gain, threshold, fthresh);
@@ -234,13 +233,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       matClean_p.setcontrol(CleanEnums::HOGBOM, niter, gain, threshold, fthresh);
     } else {
       os << LogIO::SEVERE << "Unknown algorithm: " << algorithm << LogIO::POST;
-      return false; 
+      return False; 
     }
 
     if(algorithm=="fullmsclean" || algorithm=="fullmultiscale") {
-      matClean_p.ignoreCenterBox(true);
+      matClean_p.ignoreCenterBox(True);
     }
-    return true;
+    return True;
   }
 
   Int ImageMSCleaner::clean(ImageInterface<Float> & modelimage, const String& algorithm, 
@@ -255,7 +254,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     ///case of single plane mask
     //now may be a time to set stuff  scales will be done later
     if(!setupMatCleaner(algorithm, niter, gain, threshold, fthresh))
-      return false;
+      return False;
     matClean_p.defineScales(scales_p);
     //cerr << "nPol " << nMaskPol_p << " " << nPsfPol_p << " " << nImPol_p << endl;
     //cerr << "nChan " << nMaskChan_p << " " << nPsfChan_p << " " << nImChan_p << endl;
@@ -264,7 +263,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if(mask_p && nMaskChan_p < 2 && nMaskPol_p < 2){
       Matrix<Float> maskMat;
       Array<Float> mbuf;
-      mask_p->get(mbuf, true);
+      mask_p->get(mbuf, True);
       maskMat.reference(mbuf);
      
       matClean_p.setMask(maskMat, maskThresh_p);
@@ -281,10 +280,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	IPosition trc=(dirty_p->shape()) -1;
 	trc(polAxis_p)=0;
 	Slicer sl(blc, trc, Slicer::endIsLast);
-	psf_p->getSlice(mbuf, sl, true);
+	psf_p->getSlice(mbuf, sl, True);
       }
       else{
-	psf_p->get(mbuf, true);
+	psf_p->get(mbuf, True);
       }
       psfMat.reference(mbuf);
       matClean_p.setPsf(psfMat);
@@ -302,7 +301,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	npol=nImPol_p;
       }
       Matrix<Float> subModel;
-      Bool getModel=false;
+      Bool getModel=False;
       IPosition blc(dirty_p->ndim(), 0);
       IPosition trc=dirty_p->shape() -1;
       for (Int k=0; k < nImChan_p ; ++k){
@@ -316,17 +315,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  Slicer sl(blc, trc, Slicer::endIsLast);
 	  Matrix<Float> dirtySub ;
 	  Array<Float> buf;
-	  dirty_p->getSlice(buf, sl, true);
+	  dirty_p->getSlice(buf, sl, True);
 	  dirtySub.reference(buf);
 	  matClean_p.setDirty(dirtySub);
 	  Array<Float> bufMod;
-	  getModel=modelimage.getSlice(bufMod, sl, true);
+	  getModel=modelimage.getSlice(bufMod, sl, True);
 	  subModel.reference(bufMod);
 	  
 	  if((nPsfChan_p>1) && (k<(nPsfChan_p-1))){
 	    Matrix<Float> psfSub;
 	    Array<Float> buf1;
-	    psf_p->getSlice(buf1, sl, true);
+	    psf_p->getSlice(buf1, sl, True);
 	    psfSub.reference(buf1);
 	    matClean_p.setPsf(psfSub);
 	    matClean_p.makePsfScales();
@@ -336,7 +335,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    if((nMaskChan_p >1) && (k<(nMaskChan_p-1))){
 	      Matrix<Float> maskSub;
 	      Array<Float> buf2;
-	      mask_p->getSlice(buf2, sl, true);
+	      mask_p->getSlice(buf2, sl, True);
 	      maskSub.reference(buf2);
 	      matClean_p.setMask(maskSub, maskThresh_p);
 	      //Set mask above does the makeScaleMasks as psf-scale-Xfr are valid	    	
@@ -346,7 +345,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      if((nMaskPol_p >1) && (mask_p !=0) ){
 		Matrix<Float> maskSub;
 		Array<Float> buf2;
-		mask_p->getSlice(buf2, sl, true);
+		mask_p->getSlice(buf2, sl, True);
 		maskSub.reference(buf2);
 		matClean_p.setMask(maskSub, maskThresh_p);
 	      }
@@ -356,7 +355,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      matClean_p.unsetMask();
 	    }
 	  }
-	  result=matClean_p.clean(subModel, true);
+	  result=matClean_p.clean(subModel, True);
 	  //Update the private flux and residuals here
 	  maxResidual_p=max(maxResidual_p, matClean_p.strengthOptimum()); 
 	  if(!getModel)
@@ -370,7 +369,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //The psf should have been set above before the if loop
       //for this case
       Matrix<Float> subModel;
-      Bool getModel=false;
+      Bool getModel=False;
       IPosition blc(dirty_p->ndim(), 0);
       IPosition trc=dirty_p->shape() -1;
       for (Int j=0; j < nImPol_p; ++j){
@@ -379,24 +378,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Slicer sl(blc, trc, Slicer::endIsLast);
 	Matrix<Float> dirtySub ;
 	Array<Float> buf;
-	dirty_p->getSlice(buf, sl, true);
+	dirty_p->getSlice(buf, sl, True);
 	dirtySub.reference(buf);
 	matClean_p.setDirty(dirtySub);
 	matClean_p.makeDirtyScales();
 	Array<Float> bufMod;
-	getModel=modelimage.getSlice(bufMod, sl, true);
+	getModel=modelimage.getSlice(bufMod, sl, True);
 	subModel.reference(bufMod);
 	if(mask_p !=0){
 	  if((nMaskPol_p >1)){
 	    Matrix<Float> maskSub;
 	    Array<Float> buf2;
-	    mask_p->getSlice(buf2, sl, true);
+	    mask_p->getSlice(buf2, sl, True);
 	    maskSub.reference(buf2);
 	    matClean_p.setMask(maskSub, maskThresh_p);
 	  }
 	  matClean_p.makeScaleMasks();
 	}
-	result=matClean_p.clean(subModel, true);
+	result=matClean_p.clean(subModel, True);
 	//Update the private flux and residuals here
 	maxResidual_p=max(maxResidual_p, matClean_p.strengthOptimum()); 
 	if(!getModel)
@@ -408,7 +407,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //psf and mask should have been set above if 
       Matrix<Float> dirtySub ;
       Array<Float> buf;
-      dirty_p->get(buf, true);
+      dirty_p->get(buf, True);
       if(buf.shape().nelements() != 2){
 	throw(AipsError("Non-expected axes in this image"));
       } 
@@ -417,10 +416,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       matClean_p.makeDirtyScales();
       Matrix<Float> subModel;
       Array<Float> buf0;
-      Bool getModel=false;
-      getModel=modelimage.get(buf0, true);
+      Bool getModel=False;
+      getModel=modelimage.get(buf0, True);
       subModel.reference(buf0);
-      result=matClean_p.clean(subModel, true);
+      result=matClean_p.clean(subModel, True);
       //Update the private flux and residuals here
       maxResidual_p=max(maxResidual_p, matClean_p.strengthOptimum()); 
       if(!getModel)

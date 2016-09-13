@@ -28,7 +28,6 @@
 #include <msvis/MSVis/VisBufferComponents2.h>
 #include <msvis/MSVis/statistics/Vi2ChunkFloatVisDataProvider.h>
 
-using namespace casacore;
 namespace casa {
 
 Vi2ChunkFloatVisDataProvider::Vi2ChunkFloatVisDataProvider(
@@ -46,5 +45,4 @@ Vi2ChunkFloatVisDataProvider::dataArray() {
 	return vi2->getVisBuffer()->visCubeFloat();
 }
 
-using namespace casacore;
 } // namespace casa

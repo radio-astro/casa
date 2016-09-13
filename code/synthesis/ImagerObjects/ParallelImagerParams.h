@@ -36,8 +36,8 @@ namespace casa {
  * component.
  */
 struct ParallelImagerParams {
-	ParallelImagerParams(casacore::Record sl, casacore::Record im, casacore::Record gr, casacore::Record wt, casacore::Record nm,
-	                     casacore::Record dc, casacore::Record it)
+	ParallelImagerParams(Record sl, Record im, Record gr, Record wt, Record nm,
+	                     Record dc, Record it)
 		: selection(sl)
 		, image(im)
 		, grid(gr)
@@ -47,21 +47,21 @@ struct ParallelImagerParams {
 		, iteration(it) {};
 
 	ParallelImagerParams()
-		: selection(casacore::Record())
-		, image(casacore::Record())
-		, grid(casacore::Record())
-		, weight(casacore::Record())
-		, normalization(casacore::Record())
-		, deconvolution(casacore::Record())
-		, iteration(casacore::Record()) {};
+		: selection(Record())
+		, image(Record())
+		, grid(Record())
+		, weight(Record())
+		, normalization(Record())
+		, deconvolution(Record())
+		, iteration(Record()) {};
 
-	casacore::Record selection;
-	casacore::Record image;
-	casacore::Record grid;
-	casacore::Record weight;
-	casacore::Record normalization;
-	casacore::Record deconvolution;
-	casacore::Record iteration;
+	Record selection;
+	Record image;
+	Record grid;
+	Record weight;
+	Record normalization;
+	Record deconvolution;
+	Record iteration;
 };
 
 } // namespace casa

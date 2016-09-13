@@ -47,7 +47,6 @@
 
 #include <sstream>
 
-using namespace casacore;
 namespace casa {
 
 ///////////////////////////////

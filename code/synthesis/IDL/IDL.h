@@ -77,7 +77,7 @@ class IDL  {
 public:
 
   // The constructor will start IDL.
-  IDL(casacore::Int options=0);
+  IDL(Int options=0);
 
   // Copy constructor
   IDL(const IDL &other);
@@ -89,32 +89,32 @@ public:
   ~IDL();
 
   // Run a sequence of IDL commands
-  casacore::Bool runCommands(const casacore::Vector<casacore::String>& commands, casacore::Bool log=true);
+  Bool runCommands(const Vector<String>& commands, Bool log=True);
 
   // Run a single IDL command
-  casacore::Bool runCommand(const casacore::String& command, casacore::Bool log=true);
+  Bool runCommand(const String& command, Bool log=True);
 
   // Send an array to IDL and name it
-  casacore::Bool sendArray(const casacore::Array<casacore::Float>& a, casacore::String aname);
+  Bool sendArray(const Array<Float>& a, String aname);
 
   // Get an array from IDL
-  casacore::Array<casacore::Float> getArray(casacore::String aname);
+  Array<Float> getArray(String aname);
 
   // Get an scalar from IDL
-  casacore::Float getFloat(casacore::String aname);
+  Float getFloat(String aname);
 
   // Get an scalar from IDL
-  casacore::Int getInt(casacore::String aname);
+  Int getInt(String aname);
 
   // Set the path inside IDL
-  casacore::Bool setPath(const casacore::Vector<casacore::String>&);
+  Bool setPath(const Vector<String>&);
 
 protected:
 
-  char* getIDLName(const casacore::String);
+  char* getIDLName(const String);
 
 #ifdef HAVE_IDL_LIB
-  IDL_VPTR getPointer(const casacore::String);
+  IDL_VPTR getPointer(const String);
 #endif
 
   void ok();

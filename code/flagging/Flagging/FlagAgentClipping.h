@@ -31,7 +31,7 @@ class FlagAgentClipping : public FlagAgentBase {
 
 public:
 
-	FlagAgentClipping(FlagDataHandler *dh, casacore::Record config, casacore::Bool writePrivateFlagCube = false, casacore::Bool flag = true);
+	FlagAgentClipping(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube = false, Bool flag = true);
 	~FlagAgentClipping();
 
 protected:
@@ -42,33 +42,33 @@ protected:
 	// void preProcessBuffer(const vi::VisBuffer2 &visBuffer);
 
 	// Compute flags afor a given mapped visibility point
-	bool computeInRowFlags(const vi::VisBuffer2 &visBuffer, VisMapper &visibilities,FlagMapper &flags, casacore::uInt row);
+	bool computeInRowFlags(const vi::VisBuffer2 &visBuffer, VisMapper &visibilities,FlagMapper &flags, uInt row);
 
 	// Specialization of the different clipping cases
-	bool checkVisForClipOutside(casacore::Float visExpression);
-	bool checkVisForClipInside(casacore::Float visExpression);
-	bool checkVisForClipOutsideAndZeros(casacore::Float visExpression);
-	bool checkVisForClipInsideAndZeros(casacore::Float visExpression);
-	bool checkVisForNaNs(casacore::Float visExpression);
-	bool checkVisForNaNsAndZeros(casacore::Float visExpression);
+	bool checkVisForClipOutside(Float visExpression);
+	bool checkVisForClipInside(Float visExpression);
+	bool checkVisForClipOutsideAndZeros(Float visExpression);
+	bool checkVisForClipInsideAndZeros(Float visExpression);
+	bool checkVisForNaNs(Float visExpression);
+	bool checkVisForNaNsAndZeros(Float visExpression);
 
 	// Parse configuration parameters
-	void setAgentParameters(casacore::Record config);
+	void setAgentParameters(Record config);
 
 private:
 
-	/// casacore::Input parameters ///
-	casacore::Bool clipminmax_p;
-	casacore::Bool clipoutside_p;
-	casacore::Bool clipzeros_p;
-	casacore::Bool weightcol_p;
-	casacore::Float clipmin_p;
-	casacore::Float clipmax_p;
-	casacore::Float original_clipmin_p;
-	casacore::Float original_clipmax_p;
+	/// Input parameters ///
+	Bool clipminmax_p;
+	Bool clipoutside_p;
+	Bool clipzeros_p;
+	Bool weightcol_p;
+	Float clipmin_p;
+	Float clipmax_p;
+	Float original_clipmin_p;
+	Float original_clipmax_p;
 
 	// Specialization for the clipping case
-	bool (casa::FlagAgentClipping::*checkVis_p)(casacore::Float);
+	bool (casa::FlagAgentClipping::*checkVis_p)(Float);
 
 };
 

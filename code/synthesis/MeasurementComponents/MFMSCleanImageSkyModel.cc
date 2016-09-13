@@ -48,7 +48,6 @@
 
 #include <synthesis/MeasurementEquations/LatConvEquation.h>
 
-using namespace casacore;
 namespace casa {
 
 
@@ -59,8 +58,8 @@ MFMSCleanImageSkyModel::MFMSCleanImageSkyModel()
    stopLargeNegatives_p(2), stopPointMode_p(-1)
 {
 
-  donePSF_p=false;
-  modified_p=true;
+  donePSF_p=False;
+  modified_p=True;
   getScales();
 
 };
@@ -73,8 +72,8 @@ MFMSCleanImageSkyModel::MFMSCleanImageSkyModel(const Int nscales,
   stopLargeNegatives_p(sln), stopPointMode_p(spm),smallScaleBias_p(inbias)
 {
 
-  donePSF_p=false;
-  modified_p=true;
+  donePSF_p=False;
+  modified_p=True;
   getScales();
 
 };
@@ -87,8 +86,8 @@ MFMSCleanImageSkyModel::MFMSCleanImageSkyModel(const Vector<Float>& userScaleSiz
   stopLargeNegatives_p(sln), stopPointMode_p(spm), smallScaleBias_p(inbias)
 {
 
-  donePSF_p=false;
-  modified_p=true;
+  donePSF_p=False;
+  modified_p=True;
   getScales();
 
 };
@@ -131,11 +130,11 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
   LogIO os(LogOrigin("MFMSCleanImageSkyModel","solve"));
   /*backed out for now
   if(modified_p){
-    makeNewtonRaphsonStep(se, false);
+    makeNewtonRaphsonStep(se, False);
   }
   
   if(numberIterations() < 1){
-    return true;
+    return True;
   }
   */
   //Make the PSFs, one per field
@@ -145,7 +144,7 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
     makeApproxPSFs(se);
   }
 
-  Int converged=true;
+  Int converged=True;
   Int converging=0;
   
   // Validate PSFs for each field
@@ -172,7 +171,7 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
 	trc(3)=k;
 	LCBox onePlane(blc, trc, PSF(model).shape());
 
-	subPSF=SubImage<Float> ( PSF(model), onePlane, true);
+	subPSF=SubImage<Float> ( PSF(model), onePlane, True);
 	{
 	  LatticeExprNode node = max(subPSF);
 	  psfmax(model) = node.getFloat();
@@ -207,8 +206,8 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
   cleaner=0;
 
   Int cycle=0;
-  Bool stop=false;
-  Bool lastCycleWriteModel=false;
+  Bool stop=False;
+  Bool lastCycleWriteModel=False;
 
   while(absmax>=threshold()&&maxIterations<numberIterations()&&!stop) {
 
@@ -227,20 +226,20 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
 	os << LogIO::NORMAL1    // Loglevel INFO
            << "Using visibility-subtraction for residual calculation"
 	   << LogIO::POST;
-	makeNewtonRaphsonStep(se, false, (numberIterations()<1)?true:False);
+	makeNewtonRaphsonStep(se, False, (numberIterations()<1)?True:False);
 	
       }
       else {
 	os << LogIO::NORMAL1    // Loglevel INFO
            << "Using XFR-based shortcut for residual calculation"
 	   << LogIO::POST;
-	makeNewtonRaphsonStep(se, true);
+	makeNewtonRaphsonStep(se, True);
       }
     
     }
     if(numberIterations() < 1){
       // Why waste the time to set up
-      return true;
+      return True;
     }
 
     absmax=maxField(resmax, resmin);
@@ -257,9 +256,9 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
       os << LogIO::NORMAL    // Loglevel PROGRESS?
          << "Reached stopping peak point source residual = "
 	 << absmax << LogIO::POST;
-      stop=true;
+      stop=True;
       if(cycle >1)
-	lastCycleWriteModel=true;
+	lastCycleWriteModel=True;
     }
     else {
       // Calculate the threshold for this cycle. Add a safety factor
@@ -297,15 +296,15 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
 	  
 	  // If mask exists, use it;
 	  // If not, use the fluxScale image to figure out
-	  Bool doMask = false;
-	  Bool mustDeleteMask = false;
+	  Bool doMask = False;
+	  Bool mustDeleteMask = False;
 	  ImageInterface<Float> *maskPointer = 0;
 	  
 	  if (hasMask(model)) {
-	    doMask = true;
+	    doMask = True;
 	    maskPointer = &mask(model);
 	  } else if (doFluxScale(model)) {
-	    doMask = true;
+	    doMask = True;
 	    mustDeleteMask = true;
 	    
 	    maskPointer = new TempImage<Float> ( fluxScale(model).shape(),
@@ -342,15 +341,15 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
 		}
 		LCBox onePlane(blcDirty, trcDirty, image(model).shape());
 		
-		SubImage<Float> subImage( image(model), onePlane, true);
+		SubImage<Float> subImage( image(model), onePlane, True);
 		SubImage<Float> subResid( residual(model), onePlane);
-		SubImage<Float> subDeltaImage( deltaImage(model), onePlane, true);
+		SubImage<Float> subDeltaImage( deltaImage(model), onePlane, True);
 		SubImage<Float>  subMask;
-		Bool skipThisPlane=false;
+		Bool skipThisPlane=False;
 		if (doMask) {
-		  subMask = SubImage<Float> ( *maskPointer, onePlane, true);
+		  subMask = SubImage<Float> ( *maskPointer, onePlane, True);
 		  if(max(subMask).getFloat() <= 0.0){
-		    skipThisPlane=true;
+		    skipThisPlane=True;
 		  }
 		}
 		if(!skipThisPlane){
@@ -387,19 +386,19 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
 		    cleaner[model]->stopAtLargeScaleNegative();
 		  }
 		  cleaner[model]->stopPointMode(stopPointMode_p);
-		  cleaner[model]->ignoreCenterBox(true);
+		  cleaner[model]->ignoreCenterBox(True);
 		  converging=cleaner[model]->clean(subDeltaImage, "fullmsclean", numberIterations(), gain(), aThreshold, fThreshold, displayProgress_p );
 		  //diverging
 		  if(converging==-3)
-		    stop=true;
+		    stop=True;
 		  //reduce scales on main field only
 		  if(converging==-2 && model==0){
 		    if(userScaleSizes_p.nelements() > 1){
-		       userScaleSizes_p.resize(userScaleSizes_p.nelements()-1, true);
+		       userScaleSizes_p.resize(userScaleSizes_p.nelements()-1, True);
 		       cleaner[model]->setscales(userScaleSizes_p); 
 		    }
 		    else
-		      stop=true;
+		      stop=True;
 		  }
 		  iterations[model](chan,pol)=cleaner[model]->numberIterations();
 		  maxIterations=(iterations[model](chan,pol)>maxIterations) ?
@@ -408,12 +407,12 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
                      << "Clean used " << iterations[model](chan,pol)
                      << " iterations" 
 		     << LogIO::POST;
-		  modified_p=true;
+		  modified_p=True;
 		  
 		  subImage.copyData( LatticeExpr<Float>( subImage + subDeltaImage));
 		 
 		  if (cleaner[model]->queryStopPointMode()) {
-		    stop = true;		
+		    stop = True;		
 		    os << LogIO::NORMAL    // Loglevel INFO
                        << "MSClean terminating because we hit " 
 		       << stopPointMode_p
@@ -435,7 +434,7 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
 	 os << LogIO::NORMAL    // Loglevel INFO
                        << "MSClean terminating because components search stopped " 
 		       << LogIO::POST;
-	stop=true;
+	stop=True;
       }
       else{
 	oldMaxIterations=maxIterations; 
@@ -446,7 +445,7 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
   if(modified_p || lastCycleWriteModel) {
     os << LogIO::NORMAL    // Loglevel PROGRESS?
        << "Finalizing residual images for all fields" << LogIO::POST;
-    makeNewtonRaphsonStep(se, false, true);
+    makeNewtonRaphsonStep(se, False, True);
     Float finalabsmax=maxField(resmax, resmin);
     setNumberIterations(numberIterations()-maxIterations);
     converged=(finalabsmax < 1.05 * threshold());

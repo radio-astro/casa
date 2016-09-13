@@ -26,7 +26,6 @@
 #include "ActionAnnotateText.h"
 #include <plotms/PlotMS/PlotMS.h>
 
-using namespace casacore;
 namespace casa {
 
 ActionAnnotate::ActionAnnotate( Client* client )
@@ -52,5 +51,4 @@ bool ActionAnnotate::doTool(PlotMSApp* plotms){
 ActionAnnotate::~ActionAnnotate() {
 }
 
-using namespace casacore;
 } /* namespace casa */

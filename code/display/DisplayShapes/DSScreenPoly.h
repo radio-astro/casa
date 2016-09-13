@@ -53,7 +53,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	public:
 		DSScreenPoly();
-		DSScreenPoly(const casacore::Record& settings, PixelCanvas* pc);
+		DSScreenPoly(const Record& settings, PixelCanvas* pc);
 		DSScreenPoly(DSPixelPoly& other, PixelCanvas* pc);
 		DSScreenPoly(DSWorldPoly& other);
 		DSScreenPoly(DSScreenPolyLine& other, PixelCanvas* pc);
@@ -62,26 +62,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		virtual void recalculateScreenPosition();
 
-		virtual void setCenter(const casacore::Float& xPos, const casacore::Float& yPos);
-		virtual void move(const casacore::Float& dX, const casacore::Float& dY);
-		virtual void scale(const casacore::Float& scaleFactor);
-		virtual void rotate(const casacore::Float& angle);
+		virtual void setCenter(const Float& xPos, const Float& yPos);
+		virtual void move(const Float& dX, const Float& dY);
+		virtual void scale(const Float& scaleFactor);
+		virtual void rotate(const Float& angle);
 
-		virtual void changePoint(const casacore::Vector<casacore::Float>&pos, const casacore::Int n);
-		virtual void changePoint(const casacore::Vector<casacore::Float>& pos);
-		virtual void addPoint(const casacore::Vector<casacore::Float>& newPos);
-		virtual void setPoints(const casacore::Matrix<casacore::Float>& points);
+		virtual void changePoint(const Vector<Float>&pos, const Int n);
+		virtual void changePoint(const Vector<Float>& pos);
+		virtual void addPoint(const Vector<Float>& newPos);
+		virtual void setPoints(const Matrix<Float>& points);
 
-		virtual casacore::Bool setOptions(const casacore::Record& settings);
-		virtual casacore::Record getOptions();
+		virtual Bool setOptions(const Record& settings);
+		virtual Record getOptions();
 
-		virtual casacore::Record getRawOptions() {
+		virtual Record getRawOptions() {
 			return DSPoly::getOptions();
 		}
 
 	private:
 		PixelCanvas* itsPC;
-		casacore::Matrix<casacore::Float> itsRelativePoints;
+		Matrix<Float> itsRelativePoints;
 
 		void updateRelative();
 

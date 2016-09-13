@@ -56,7 +56,6 @@
 #include <casa/Logging/LogSink.h>
 
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
   VisSet::VisSet(MeasurementSet& ms,const Block<Int>& columns, 
@@ -70,7 +69,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     blockOfMS_p= new Block<MeasurementSet> ();
     blockOfMS_p->resize(1);
     (*blockOfMS_p)[0]=ms_p;
-    multims_p=false;
+    multims_p=False;
     // sort out the channel selection
     Int nSpw=ms_p.spectralWindow().nrow();
     ROMSSpWindowColumns msSpW(ms_p.spectralWindow());
@@ -90,13 +89,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     }
 
-    Bool init=true;
+    Bool init=True;
     if (ms.tableDesc().isColumn("CORRECTED_DATA")) {
-      init=false;
+      init=False;
     }
     // in case model data exists and the user do not want it anymore
     if(ms.tableDesc().isColumn("MODEL_DATA") && !doModelData){
-      init=true;
+      init=True;
     }
     // Add scratch columns
     if (init) {
@@ -136,7 +135,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     blockOfMS_p= new Block<MeasurementSet> ();
     blockOfMS_p->resize(1);
     (*blockOfMS_p)[0]=ms_p;
-    multims_p=false;
+    multims_p=False;
     // sort out the channel selection
     Int nSpw=ms_p.spectralWindow().nrow();
     ROMSSpWindowColumns msSpW(ms_p.spectralWindow());
@@ -156,14 +155,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     }
 
-    Bool init=true;
+    Bool init=True;
 
     if (ms.tableDesc().isColumn("CORRECTED_DATA")) {
-      init=false;
+      init=False;
     }
     // in case model data exists and the user do not want it anymore
     if(ms.tableDesc().isColumn("MODEL_DATA") && !doModelData){
-      init=true;
+      init=True;
     }
     //    cout << boolalpha << "addScratch = " << addScratch << endl;
 
@@ -199,7 +198,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		 Bool compress, Bool addModelData)
   {
     
-    multims_p=true;
+    multims_p=True;
     blockOfMS_p = &mss;
     Int numMS=mss.nelements();
     ms_p=mss[numMS-1];
@@ -267,7 +266,7 @@ VisSet::VisSet(ROVisibilityIterator& vi){
   blockOfMS_p= new Block<MeasurementSet> ();
   blockOfMS_p->resize(1);
   (*blockOfMS_p)[0]=ms_p;
-  multims_p=false;
+  multims_p=False;
   Block<Int> columns(0);
   Double timeInterval=0.0;
   iter_p=new VisIter(ms_p,columns,timeInterval);
@@ -291,7 +290,7 @@ VisSet::VisSet(MeasurementSet& ms, const Matrix<Int>& chanSelection,
     blockOfMS_p= new Block<MeasurementSet> ();
     blockOfMS_p->resize(1);
     (*blockOfMS_p)[0]=ms_p;
-    multims_p=false;
+    multims_p=False;
     // sort out the channel selection
     Int nSpw=ms_p.spectralWindow().nrow();
     if(nSpw==0)
@@ -330,7 +329,7 @@ VisSet::VisSet(const VisSet& vs,const Block<Int>& columns,
     blockOfMS_p=new Block<MeasurementSet>();
     blockOfMS_p->resize(1);
     (*blockOfMS_p)[0]=ms_p;
-    multims_p=false;
+    multims_p=False;
     selection_p.resize(vs.selection_p.shape());
     selection_p=vs.selection_p;
 
@@ -378,7 +377,7 @@ VisSet::resetVisIter(const Block<Int>& columns, Double timeInterval,
 
   // Make new VisIter with existing ms_p, and new sort/interval
 
-  iter_p = new VisIter (prefetchColumns, ms_p, columns, true, timeInterval);
+  iter_p = new VisIter (prefetchColumns, ms_p, columns, True, timeInterval);
 
   // Inform new VisIter of channel selection
 
@@ -467,8 +466,8 @@ VisIter& VisSet::iter() { return *iter_p; }
 void VisSet::selectChannel(Int nGroup,Int start, Int width, Int increment, 
 			   Int spectralWindow) {
 
-  // Delegate, with callOrigin=true:
-  VisSet::selectChannel(nGroup,start,width,increment,spectralWindow,true);
+  // Delegate, with callOrigin=True:
+  VisSet::selectChannel(nGroup,start,width,increment,spectralWindow,True);
 
 }
 
@@ -504,7 +503,7 @@ void VisSet::selectChannel(const Matrix<Int>& chansel) {
     message.message(os);
     logSink.post(message);
     
-    this->selectChannel(1,start,nchan,step,spw,false);
+    this->selectChannel(1,start,nchan,step,spw,False);
   }
 
 }
@@ -606,7 +605,7 @@ void VisSet::addCalSet(MeasurementSet& ms, Bool compress, Bool doModelData) {
 
         IPosition dataTileShape;
         Bool tiled = (dataManType.contains("Tiled"));
-        Bool simpleTiling = false;
+        Bool simpleTiling = False;
   
 
         if (tiled) {
@@ -663,7 +662,7 @@ void VisSet::addCalSet(MeasurementSet& ms, Bool compress, Bool doModelData) {
             tdModelScale.addColumn(ScalarColumnDesc<Float>(colModel+"_SCALE"));
             tdModelScale.addColumn(ScalarColumnDesc<Float>(colModel+"_OFFSET"));
             ccModel = new CompressComplex(colModel, colModel+"_COMPRESSED",
-                                          colModel+"_SCALE", colModel+"_OFFSET", true);
+                                          colModel+"_SCALE", colModel+"_OFFSET", True);
 	    
             StandardStMan modelScaleStMan("ModelScaleOffset");
             ms.addColumn(tdModelScale, modelScaleStMan);
@@ -701,7 +700,7 @@ void VisSet::addCalSet(MeasurementSet& ms, Bool compress, Bool doModelData) {
             tdCorrScale.addColumn(ScalarColumnDesc<Float>(colCorr+"_SCALE"));
             tdCorrScale.addColumn(ScalarColumnDesc<Float>(colCorr+"_OFFSET"));
             ccCorr = new CompressComplex(colCorr, colCorr+"_COMPRESSED",
-                                         colCorr+"_SCALE", colCorr+"_OFFSET", true);
+                                         colCorr+"_SCALE", colCorr+"_OFFSET", True);
 
             StandardStMan corrScaleStMan("CorrScaleOffset");
             ms.addColumn(tdCorrScale, corrScaleStMan);
@@ -858,7 +857,7 @@ void VisSet::addCalSet2(MeasurementSet& ms, Bool compress, Bool doModelData) {
       
       IPosition dataTileShape;
       Bool tiled = (dataManType.contains("Tiled"));
-      Bool simpleTiling = false;
+      Bool simpleTiling = False;
       
       
       if (tiled) {
@@ -917,7 +916,7 @@ void VisSet::addCalSet2(MeasurementSet& ms, Bool compress, Bool doModelData) {
 	  tdModelScale.addColumn(ScalarColumnDesc<Float>(colModel+"_SCALE"));
 	  tdModelScale.addColumn(ScalarColumnDesc<Float>(colModel+"_OFFSET"));
 	  ccModel = new CompressComplex(colModel, colModel+"_COMPRESSED",
-					colModel+"_SCALE", colModel+"_OFFSET", true);
+					colModel+"_SCALE", colModel+"_OFFSET", True);
 	
 	  StandardStMan modelScaleStMan("ModelScaleOffset");
 	  ms.addColumn(tdModelScale, modelScaleStMan);
@@ -953,7 +952,7 @@ void VisSet::addCalSet2(MeasurementSet& ms, Bool compress, Bool doModelData) {
 	tdCorrScale.addColumn(ScalarColumnDesc<Float>(colCorr+"_SCALE"));
 	tdCorrScale.addColumn(ScalarColumnDesc<Float>(colCorr+"_OFFSET"));
 	ccCorr = new CompressComplex(colCorr, colCorr+"_COMPRESSED",
-				     colCorr+"_SCALE", colCorr+"_OFFSET", true);
+				     colCorr+"_SCALE", colCorr+"_OFFSET", True);
 	
 	StandardStMan corrScaleStMan("CorrScaleOffset");
 	ms.addColumn(tdCorrScale, corrScaleStMan);
@@ -987,7 +986,7 @@ void VisSet::addScratchCols(MeasurementSet& ms, Bool compress, Bool doModelData)
   LogMessage message(LogOrigin("VisSet","VisSet"));
 
   //function to add scratchy column
-  Bool init=true;
+  Bool init=True;
 
   Int nSpw=ms.spectralWindow().nrow();
   MSSpWindowColumns msSpW(ms.spectralWindow());
@@ -1002,7 +1001,7 @@ void VisSet::addScratchCols(MeasurementSet& ms, Bool compress, Bool doModelData)
       col.keywordSet().get("CHANNEL_SELECTION",storedSelection);
       if (selection_p.shape()==storedSelection.shape() && 
 	  allEQ(selection_p,storedSelection)) {
-	init=false;
+	init=False;
       } 
     }
   }
@@ -1026,7 +1025,7 @@ String VisSet::msName(){
 
   String name;
   if(ms_p.isMarkedForDelete()){ // this is a temporary selected table
-    Block<String> refTables = ms_p.getPartNames(false);
+    Block<String> refTables = ms_p.getPartNames(False);
     name = refTables[0];
   }
   else{

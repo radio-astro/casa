@@ -70,14 +70,14 @@ public:
         
         // Returns the name of this group of subparameters.  Will be used as an
         // update flag.
-        virtual const casacore::String& name() const = 0;
+        virtual const String& name() const = 0;
         
-        // Returns a casacore::Record representing this group of subparameters.
-        virtual casacore::Record toRecord() const = 0;
+        // Returns a Record representing this group of subparameters.
+        virtual Record toRecord() const = 0;
         
         // Sets the values for this group of subparameters using the given
         // Record.
-        virtual void fromRecord(const casacore::Record& record) = 0;
+        virtual void fromRecord(const Record& record) = 0;
         
         // Returns true if the plot needs to be redrawn when subpamarameters in
         // this group have changed, false otherwise.
@@ -163,8 +163,8 @@ public:
     
     // Returns the subparameters group with the given name, or NULL for none.
     // <group>
-    const Group* group(const casacore::String& name) const;
-    Group* group(const casacore::String& name);
+    const Group* group(const String& name) const;
+    Group* group(const String& name);
     // </group>
     
     // Returns the templated type of subparameters group, or NULL for none.
@@ -209,7 +209,7 @@ protected:
     // <group>
     void notifyWatchers(int updateFlags,
             PlotMSParametersWatcher* updater = NULL);
-    void notifyWatchers(const casacore::String& updateName,
+    void notifyWatchers(const String& updateName,
             PlotMSParametersWatcher* updater = NULL) {
         notifyWatchers(UPDATE_FLAG(updateName), updater); }
     // </group>

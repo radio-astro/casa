@@ -68,7 +68,6 @@
 #include <cassert>
 
 using namespace std;
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	const int QtDisplayPanel::LEFT_MARGIN_SPACE_DEFAULT = 15;//13
@@ -87,16 +86,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		region_source_factory(0),
 		polyline_(0), rulerline_(0), pvtool_(0), snsFidd_(0), bncFidd_(0),
 		mouseToolNames_(),
-		tracking_(true),
-		modeZ_(true),
+		tracking_(True),
+		modeZ_(True),
 		zLen_(1), bLen_(1),
 		zIndex_(0), bIndex_(0),
 		animRate_(10), minRate_(1), maxRate_(50), animating_(0),
 		blankCBPanel_(0), mainPanelSize_(1.),
-		hasRgn_(false), rgnExtent_(0), qsm_(0),
+		hasRgn_(False), rgnExtent_(0), qsm_(0),
 		lastMotionEvent_(0), bkgdClrOpt_(0),
 		extChan_(""), extPol_(""), cursorBoundaryState(OUTSIDE_PLOT),
-		printStats(true), useRegion(false),PGP_MARGIN_UNIT(65),
+		printStats(True), useRegion(False),PGP_MARGIN_UNIT(65),
 		zStart_(0), zEnd_(1), zStep_(1),
 		bStart_(0), bEnd_(1), bStep_(1) {
 
@@ -116,16 +115,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		region_source_factory(0),
 		polyline_(0), rulerline_(0), pvtool_(0), snsFidd_(0), bncFidd_(0),
 		mouseToolNames_(),
-		tracking_(true),
-		modeZ_(true),
+		tracking_(True),
+		modeZ_(True),
 		zLen_(1), bLen_(1),
 		zIndex_(0), bIndex_(0),
 		animRate_(10), minRate_(1), maxRate_(50), animating_(0),
 		blankCBPanel_(0), mainPanelSize_(1.),
-		hasRgn_(false), rgnExtent_(0), qsm_(0),
+		hasRgn_(False), rgnExtent_(0), qsm_(0),
 		lastMotionEvent_(0), bkgdClrOpt_(0),
 		extChan_(""), extPol_(""), cursorBoundaryState(OUTSIDE_PLOT),
-		printStats(true), useRegion(false),PGP_MARGIN_UNIT(65),
+		printStats(True), useRegion(False),PGP_MARGIN_UNIT(65),
 		zStart_(0), zEnd_(1), zStep_(1),
 		bStart_(0), bEnd_(1), bStep_(1) {
 
@@ -394,7 +393,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		//    serialized and saved as a file with saveLastRegion().
 
 		emit mouseRegionReady(mouseRegion, wch);  // echo mouseTool signal.
-		Bool rgnSaved = false;
+		Bool rgnSaved = False;
 
 		/*for(ListIter<QtDisplayData*> qdds(qdds_);
 				!qdds.atEnd(); qdds++) {
@@ -434,11 +433,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 				lastRgn_ = *imReg;
 				rgnImgPath_ = qdd->path();
-				hasRgn_ = true;
+				hasRgn_ = True;
 				emit newRegion(rgnImgPath_);
 				// rgnImgPath_: pathname of the active image used to make the region.
 				// Will be transformed into regionPathname() if saved to disk.
-				rgnSaved = true;
+				rgnSaved = True;
 			}
 			if (useRegion)
 				resetRTRegion();
@@ -518,21 +517,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	Bool QtDisplayPanel::worldToLin(Vector<Double> &lin, const Vector<Double> &world) {
-		Bool filled = false;
+		Bool filled = False;
 		lin.resize(world.nelements( ));
 		ConstListIter<WorldCanvas*>& wcs = *(pd_->myWCLI);
 		for(wcs.toStart(); !wcs.atEnd(); wcs++) {
-			if ( filled == false ) {
+			if ( filled == False ) {
 				wcs.getRight()->worldToLin(lin,world);
-				filled = true;
+				filled = True;
 			} else {
 				Vector<Double> tmp((uInt)world.nelements());
 				wcs.getRight()->worldToLin(tmp,world);
 				if ( tmp.nelements() != lin.nelements() )
-					return false;
+					return False;
 				for ( int i=0; i < static_cast<int>(tmp.nelements()); ++i )
 					if ( tmp[i] != lin[i] )
-						return false;
+						return False;
 			}
 		}
 		return filled;
@@ -740,10 +739,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// time to create new PanelDisplay interface at the moment...).
 
 		for(wcs.toStart(); !wcs.atEnd(); wcs++) {
-			if (wc==wcs.getRight()) return true;
+			if (wc==wcs.getRight()) return True;
 		}
 
-		return false;
+		return False;
 	}
 
 
@@ -812,7 +811,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Internal method, called by public register method above,
 		// or in reaction to new DD creation (ddCreated_() slot).
-		// Precondition: isUnregistered(qdd) should be true before this is called.
+		// Precondition: isUnregistered(qdd) should be True before this is called.
 		displayDataHolder->addDD( qdd, position, true );
 
 		DisplayData* dd = qdd->dd();
@@ -1037,9 +1036,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	Bool QtDisplayPanel::isRegistered(RegionShape* rs) {
 		for(ListIter<RegionShape*> qrss(rshapes_); !qrss.atEnd(); qrss++) {
-			if(rs == qrss.getRight()) return true;
+			if(rs == qrss.getRight()) return True;
 		}
-		return false;
+		return False;
 	}
 
 
@@ -1081,7 +1080,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// (i.e. the one stored in lastRgn_).  Return value indicates success.
 		// (The ImageRegion is transformed to a TableRecord, then saved via AipsIO).
 
-		if(!hasRgn_) return false;	// (No region ever created here).
+		if(!hasRgn_) return False;	// (No region ever created here).
 
 		try {
 
@@ -1094,10 +1093,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// value to pass to it...).
 
 		catch(...) {
-			return false;
+			return False;
 		}
 
-		return true;
+		return True;
 	}
 
 	String QtDisplayPanel::saveRegionInImage(String regname,
@@ -1120,7 +1119,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			QtDisplayData* qdd = (*iter);
 			if( (qdd->imageInterface()) && ((qdd->imageInterface())->canDefineRegion())) {
 
-				(qdd->imageInterface())->defineRegion(regname, imreg, RegionHandler::Regions, true);
+				(qdd->imageInterface())->defineRegion(regname, imreg, RegionHandler::Regions, True);
 			}
 
 
@@ -1148,7 +1147,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			QtDisplayData* qdd = (*iter);
 			if( (qdd->imageInterface()) && ((qdd->imageInterface())->canDefineRegion())) {
 
-				(qdd->imageInterface())->removeRegion(regname, RegionHandler::Any, false);
+				(qdd->imageInterface())->removeRegion(regname, RegionHandler::Any, False);
 			}
 
 
@@ -1278,7 +1277,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		Record opts = pd_->getOptions();
 
-		bkgdClrOpt_->toRecord(opts, true, true);
+		bkgdClrOpt_->toRecord(opts, True, True);
 
 		return opts;
 	}
@@ -1290,7 +1289,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// form of the record (along with current settings) is returned by
 		// getOptions().  (These Records are an older form of 'parameter sets';
 		// they are used in various places within the display library).
-		// Set emitAll = true if the call was not initiated by the options gui
+		// Set emitAll = True if the call was not initiated by the options gui
 		// itself (e.g. via scripting or save-restore); that will assure that
 		// the options gui does receive all option updates (via the optionsChanged
 		// signal) and updates its user interface accordingly.
@@ -1328,7 +1327,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 			if(emitAll) chgdOpts.merge(opts, Record::SkipDuplicates);
-			// When emitAll==true this assures that the options gui
+			// When emitAll==True this assures that the options gui
 			// receives all option updates via the optionsChanged
 			// signal, not just internally-generated ones.  For use
 			// when the gui itself didn't initiate the setOptions call.
@@ -1378,7 +1377,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 			if ( cbdd != NULL ) {
 				bool wouldDisplay = cbdd->wouldDisplayColorBar();
-				bool conforms = pd_->conforms(cbdd->dd(), false, true, false);
+				bool conforms = pd_->conforms(cbdd->dd(), False, True, False);
 				if( wouldDisplay && conforms ) {
 					acbdds++;	 // (keep).
 				} else {
@@ -1412,10 +1411,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 				QtDisplayData* ccbdd = ccbdds.getRight();
 
-				// 'true, false, false' == 'does DD conform to this sub-panel's
+				// 'True, False, False' == 'does DD conform to this sub-panel's
 				// blink restriction (if any)?'  (dd's Coordinate compatibility
 				// has already been tested farther above).
-				if(pd_->conforms(ccbdd->dd(), true, false, false, panel_i)) {
+				if(pd_->conforms(ccbdd->dd(), True, False, False, panel_i)) {
 
 					// dd will display.  Move it off the candidate list, onto the
 					// end of the list of DDs whose colorbars should also display.
@@ -1508,7 +1507,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// 'reorient' means color bars are changing from horizontal to vertical or
 		// vice versa.  That helps determine how much action (if any) this routine
 		// needs to take.
-		// Only the pcResizing_() slot should set resizing=true; in this case,
+		// Only the pcResizing_() slot should set resizing=True; in this case,
 		// arrangeColorBars_ lets the PC take care of refresh.
 
 		// Store copy of the old List, for comparison.
@@ -1674,7 +1673,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		// Determine whether the number or relative sizes of color bar panels and
-		// main panel will change.  If 'placementChange' remains false, no change
+		// main panel will change.  If 'placementChange' remains False, no change
 		// will be needed to the relative placement ('geometry') of panels within
 		// pc_.  (The colorbar panels' margins will be updated anyway, though,
 		// just in case -- not an expensive operation if there's no change).
@@ -1687,7 +1686,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if(!placementChange) {
 			for(Int i=0; i<nNew; i++) {
 				if(oldcbpszs[i]!=newcbpszs[i]) {
-					placementChange = true;
+					placementChange = True;
 					break;
 				}
 			}
@@ -1729,7 +1728,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Current relative position (and size) for panel placement;
 		// ranges from 0 (left edge of pc) to 1 (right edge)
-		// for vertical = true (otherwise 0 = bottom, 1 = top).
+		// for vertical = True (otherwise 0 = bottom, 1 = top).
 		if(mainPlacementChange) {
 			setPanelGeometry( pd_, orgn, siz );
 		}
@@ -2294,7 +2293,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	void QtDisplayPanel::setMode(bool modez, bool channelCubes) {
-		// true: "Normal" ("Z") mode.  false: "Blink" ("B") mode.
+		// True: "Normal" ("Z") mode.  False: "Blink" ("B") mode.
 		// (NB: small 'b' bool for a reason -- see declataion of goTo(int)).
 		stop_();
 		if(modeZ_!=modez) {	// (already there otherwise).
@@ -2577,7 +2576,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		QDomElement restoreElem =
 		    restoredoc.firstChildElement(panel_->viewer()->cvRestoreID.chars());
-		if(restoreElem.isNull()) return false;
+		if(restoreElem.isNull()) return False;
 
 		QString origrestorefile = restoreElem.attribute("original-path");
 
@@ -2669,8 +2668,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 					xr.optsElemToRecord(ddelem, opts);
 
-					dd->setOptions(opts, true);
-					// 'true' assures that all options in opts
+					dd->setOptions(opts, True);
+					// 'True' assures that all options in opts
 					// are emitted to update the gui as well.
 
 
@@ -2704,7 +2703,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 				Record dpOptsRec;
 				xr.optsElemToRecord(dpOptsElem, dpOptsRec);
-				setOptions(dpOptsRec, true);
+				setOptions(dpOptsRec, True);
 			}
 
 			catch(...) {  }
@@ -2725,7 +2724,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		String blcstr = zoom.attribute("blc").toStdString(),
 		       trcstr = zoom.attribute("trc").toStdString();
 
-		Bool b_ok = false, t_ok=false;
+		Bool b_ok = False, t_ok=False;
 		Vector<Double> blc = panel_->viewer()->toVectorD(blcstr, &b_ok),
 		               trc = panel_->viewer()->toVectorD(trcstr, &t_ok);
 
@@ -2744,7 +2743,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		        bi = anim.attribute("bindex", "#"),
 		        rt = anim.attribute("animrate", "#");
 
-		Bool ok = false;
+		Bool ok = False;
 
 		Int zind = zi.toInt(&ok);
 		if(ok) goToZ(zind);
@@ -2773,7 +2772,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		release();
 
-		return true;
+		return True;
 	}
 
 
@@ -2782,19 +2781,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Bool QtDisplayPanel::savePanelState(String filename, Bool overwrite) {
 		// Save panel state to a file (as xml).  State is also stored to an
 		// internal lastSavedState_ String (only there, if filename=="").
-		// When overwrite is true (default) the file is overwritten if it exists
+		// When overwrite is True (default) the file is overwritten if it exists
 		// (and is writable).
 
 		lastSavedState_ = dpState(filename);	// Save to 'clipboard' in any case.
-		if(filename=="") return true;
+		if(filename=="") return True;
 
 		QFileInfo fi(filename.chars());
-		if( fi.exists() && (!overwrite || !fi.isFile()) ) return false;
+		if( fi.exists() && (!overwrite || !fi.isFile()) ) return False;
 
 		QFile fl(filename.chars());
 
 		if(!fl.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
-			return false;
+			return False;
 		}
 
 		QString state = lastSavedState_.chars();
@@ -2804,7 +2803,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		fl.close();
 
-		return true;
+		return True;
 	}
 
 
@@ -2815,7 +2814,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		if(xmlState=="") xmlState = lastSavedState_;
 		QDomDocument restoredoc;
-		if(!restoredoc.setContent(QString(xmlState.chars()))) return false;
+		if(!restoredoc.setContent(QString(xmlState.chars()))) return False;
 
 		return setPanelState(restoredoc);
 	}
@@ -2830,7 +2829,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		QDomDocument restoredoc;
 
-		if(!panel_->viewer()->isRestoreFile(filename, restoredoc)) return false;
+		if(!panel_->viewer()->isRestoreFile(filename, restoredoc)) return False;
 
 		QFileInfo fi(filename.chars());
 		QString restoredir = fi.dir().path();
@@ -2961,7 +2960,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if(dd!=0) {			// (existing dd)
 
 			if(dataType!=dd->dataType() || displayType!=dd->displayType()) {
-				return false;
+				return False;
 			}		// type mismatch.
 
 			if(dataType=="lel")  return path==dd->path();
@@ -2979,7 +2978,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// no dd was passed in, the test is whether the file exists and can
 		// be successfully used to create the desired type of dd.
 
-		Bool noAutoReg = false;	// No automatic registration of
+		Bool noAutoReg = False;	// No automatic registration of
 		// any newly-created dd.
 
 		if(dataType=="lel") {
@@ -3005,7 +3004,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		for(Int loc=1; loc<=5; loc++) {
 
-			Bool testok = true;
+			Bool testok = True;
 
 			switch(loc) {
 
@@ -3021,7 +3020,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 			case 3: {
 				if(dmDir=="") {
-					testok = false;
+					testok = False;
 					break;
 				}
 				testfi.setFile(QDir(dmDir), filename);
@@ -3030,7 +3029,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 			case 4: {
 				if(restoredir=="") {
-					testok = false;
+					testok = False;
 					break;
 				}
 				testfi.setFile(restoredir, filename);
@@ -3039,7 +3038,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 			case 5: {
 				if(origrestorefile=="" || restoredir=="") {
-					testok = false;
+					testok = False;
 					break;
 				}
 				QDir origdir(QFileInfo(origrestorefile).dir());
@@ -3057,7 +3056,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 			if(dd!=0) {				// Existing dd
 
-				if(ddfi==testfi) return true;
+				if(ddfi==testfi) return True;
 			}	// existing dd matches test path.
 
 
@@ -3070,12 +3069,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 				dd = panel_->createDD(testpath, dataType, displayType, noAutoReg);
 
-				if(dd!=0) return true;
+				if(dd!=0) return True;
 			}
 		}
 
 
-		return false;
+		return False;
 	}	// No matching file or dd.
 
 

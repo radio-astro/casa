@@ -29,7 +29,6 @@
 #include <casa/Logging/LogIO.h>
 #include <casa/System/ProgressMeter.h>
 
-using namespace casacore;
 namespace casa {
 
 GroupProcessor::GroupProcessor(ROVisibilityIterator& vi, GroupWorkerBase *gw,
@@ -58,7 +57,7 @@ void GroupProcessor::setGroupOrigin()
 
 Bool GroupProcessor::groupHasMore()
 {
-  Bool answer = false;
+  Bool answer = False;
   if(vi_p.moreChunks()){
     vi_p.time(timev_p);
     answer = abs(timev_p[0] - groupStart_p) <= groupInterval_p;
@@ -73,7 +72,7 @@ Bool GroupProcessor::go()
   // Process the MS(es) chunk by chunk.
   uInt ninrows = vi_p.numberCoh();      // Apparently this accounts for selection.
   ProgressMeter meter(0.0, ninrows * 1.0, "GroupProcessor", "rows processed", "", "",
-                      true, 1);
+                      True, 1);
   uInt inrowsdone = 0;  // only for the meter.
   vi_p.originChunks();
   while(vi_p.moreChunks()){
@@ -103,5 +102,4 @@ Bool GroupProcessor::go()
   return true;
 }
 
-using namespace casacore;
 } // end namespace casa

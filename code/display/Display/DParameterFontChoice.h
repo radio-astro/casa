@@ -80,8 +80,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// description and some help text.  The context of the
 		// parameter, and whether it is editable, can also be
 		// given.
-		DParameterFontChoice(const casacore::String name, const casacore::String description,
-		                     const casacore::String help, const casacore::String context = "");
+		DParameterFontChoice(const String name, const String description,
+		                     const String help, const String context = "");
 
 		// Copy constructor using copy semantics.
 		DParameterFontChoice(const DParameterFontChoice &other);

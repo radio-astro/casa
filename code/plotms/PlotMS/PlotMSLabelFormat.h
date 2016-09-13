@@ -36,7 +36,7 @@ class PlotMSPlotParameters;
 
 
 // Class for generating labels based upon axes, units, etc.  A format is a
-// casacore::String that consists of tags and non-tags.  Tags are special substrings
+// String that consists of tags and non-tags.  Tags are special substrings
 // differentiated by being surrounded by a separator; tags are replaced with
 // given values when the label is built.  For example: the %%axis%% tag is
 // replaced with the name of the Axis that is passed in when generating the
@@ -49,23 +49,23 @@ public:
     // Static //
     
     // Separator that goes before and after tags.
-    static const casacore::String& TAGSEPARATOR();
+    static const String& TAGSEPARATOR();
     
     // Tag for axes, both the single case and the double case.  This tag is
     // replaced with the axis name (see PMS::axis()) during generation.
     // <group>
-    static const casacore::String& TAG_AXIS();
-    static const casacore::String& TAG_XAXIS();
-    static const casacore::String& TAG_YAXIS();
+    static const String& TAG_AXIS();
+    static const String& TAG_XAXIS();
+    static const String& TAG_YAXIS();
     // </group>
     
     // Tag for axes units, both the single case and the double case.  This tag
     // is replaced with the axis unit name (see PMS::axisUnit()) during
     // generation.
     // <group>
-    static const casacore::String& TAG_UNIT();
-    static const casacore::String& TAG_XUNIT();
-    static const casacore::String& TAG_YUNIT();
+    static const String& TAG_UNIT();
+    static const String& TAG_XUNIT();
+    static const String& TAG_YUNIT();
     // </group>
     
     // Tags for if/endif for axes units.  Parts of the format that are
@@ -74,12 +74,12 @@ public:
     // "TAG_IF_UNIT(sample text)TAG_ENDIF_UNIT" would copy over "(sample text)"
     // only if the given unit was NOT PMS::UNONE.
     // <group>
-    static const casacore::String& TAG_IF_UNIT();
-    static const casacore::String& TAG_IF_XUNIT();
-    static const casacore::String& TAG_IF_YUNIT();
-    static const casacore::String& TAG_ENDIF_UNIT();
-    static const casacore::String& TAG_ENDIF_XUNIT();
-    static const casacore::String& TAG_ENDIF_YUNIT();
+    static const String& TAG_IF_UNIT();
+    static const String& TAG_IF_XUNIT();
+    static const String& TAG_IF_YUNIT();
+    static const String& TAG_ENDIF_UNIT();
+    static const String& TAG_ENDIF_XUNIT();
+    static const String& TAG_ENDIF_YUNIT();
     // </group>
     
     // Tags for axis reference values, both the single case and the double
@@ -87,9 +87,9 @@ public:
     // if there is one, during generation.  Note: if the associated axis is a
     // date, the value will be in date format.
     // <group>
-    static const casacore::String& TAG_REFVALUE();
-    static const casacore::String& TAG_XREFVALUE();
-    static const casacore::String& TAG_YREFVALUE();
+    static const String& TAG_REFVALUE();
+    static const String& TAG_XREFVALUE();
+    static const String& TAG_YREFVALUE();
     // </group>
     
     // Tags for if/endif for axis reference values.  Parts of the format that
@@ -98,22 +98,22 @@ public:
     // example, "TAG_IF_REFVALUE(sample text)TAG_ENDIF_REFVALUE" would copy
     // over "(sample text)" only if the given axis had a set reference value.
     // <group>
-    static const casacore::String& TAG_IF_REFVALUE();
-    static const casacore::String& TAG_IF_XREFVALUE();
-    static const casacore::String& TAG_IF_YREFVALUE();
-    static const casacore::String& TAG_ENDIF_REFVALUE();
-    static const casacore::String& TAG_ENDIF_XREFVALUE();
-    static const casacore::String& TAG_ENDIF_YREFVALUE();
+    static const String& TAG_IF_REFVALUE();
+    static const String& TAG_IF_XREFVALUE();
+    static const String& TAG_IF_YREFVALUE();
+    static const String& TAG_ENDIF_REFVALUE();
+    static const String& TAG_ENDIF_XREFVALUE();
+    static const String& TAG_ENDIF_YREFVALUE();
     // </group>
     
     // Convenience method to surround the given tag with the separator.
-    static casacore::String TAG(const casacore::String& tag);
+    static String TAG(const String& tag);
     
     
     // Non-Static //
     
     // Constructor which takes an optional starting format.
-    PlotMSLabelFormat(const casacore::String& format = "");
+    PlotMSLabelFormat(const String& format = "");
     
     // Copy constructor.  See operator=().
     PlotMSLabelFormat(const PlotMSLabelFormat& copy);
@@ -123,23 +123,23 @@ public:
     
     
     // Format.
-    casacore::String format;
+    String format;
     
     
     // Generates a label, using the given single axis and reference value.  If
     // any double axes tags are in the format, the given axis will be used for
     // them.
-    casacore::String getLabel(PMS::Axis axis, bool refValueSet = false,
+    String getLabel(PMS::Axis axis, bool refValueSet = false,
             double refValue = 0, PMS::DataColumn data = PMS::DATA,
             bool polnRatio = false) const;
     
-    casacore::String getLabel(vector<PMS::Axis> axes, vector<bool> refValueSets,
+    String getLabel(vector<PMS::Axis> axes, vector<bool> refValueSets,
     		vector<double> refValues, vector<PMS::DataColumn> datas,
             bool polnRatio = false ) const;
 
     // Generates a label, using the given double axes and reference values.  If
     // any single axes tags are in the format, the x axis will be used for it.
-    casacore::String getLabel(PMS::Axis xAxis, vector<PMS::Axis> yAxes,
+    String getLabel(PMS::Axis xAxis, vector<PMS::Axis> yAxes,
             bool xRefValueSet = false, double xRefValue = 0,
             vector<bool> yRefValueSets=vector<bool>(1,false), 
             vector<double> yRefValues =vector<double>(1,0.0),
@@ -159,7 +159,7 @@ public:
     
 private:
     // Generates a label using the given format, single axis, and double axes.
-    static casacore::String getLabel(const casacore::String& format, PMS::Axis axis,
+    static String getLabel(const String& format, PMS::Axis axis,
             PMS::Axis xAxis, vector<PMS::Axis> yAxes, bool refValueSet,
             double refValue, bool xRefValueSet, double xRefValue,
             vector<bool> yRefValueSets, vector<double> yRefValues,
@@ -167,9 +167,9 @@ private:
             bool polnRatio);
     
     //Adds the data label such as DATA, MODEL, CORRECTED, etc to the tag
-    static void addDataToTag( casacore::String& tag, PMS::Axis axis, PMS::DataColumn column );
+    static void addDataToTag( String& tag, PMS::Axis axis, PMS::DataColumn column );
     // Adds "POLN Ratio" to tag for cal table ratio plots
-    static void addPolnRatioToTag( casacore::String& tag, PMS::Axis axis );
+    static void addPolnRatioToTag( String& tag, PMS::Axis axis );
 
     // Helper method for getLabel() which gets the next token in the format.
     // Returns true if a token was returned; false if the end of the format was
@@ -177,10 +177,10 @@ private:
     // taken out.  The next token is put in the token parameter, and the
     // tokenWasTag parameter is set to true if the token was a tag, false
     // otherwise.
-    static bool nextToken(casacore::String& format, casacore::String& token, bool& tokenWasTag);
+    static bool nextToken(String& format, String& token, bool& tokenWasTag);
     
-    // casacore::Format for when reference values are dates.
-    static const casacore::String REFERENCE_DATE_FORMAT;
+    // Format for when reference values are dates.
+    static const String REFERENCE_DATE_FORMAT;
 };
 
 }

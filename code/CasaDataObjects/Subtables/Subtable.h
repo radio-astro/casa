@@ -10,33 +10,37 @@
 
 #include <vector>
 
+#include <casa/BasicSL/String.h>
+
+#include "Subtables.h"
+
 namespace casa {
 
 namespace cdo {
 
-template <typename T>
+template <typename It>
 class SubtableIterator {
 
 public:
 
-    typedef T Value;
-    typedef T & Reference;
-    typedef T * Pointer;
+    typedef typename It::value_type T;
+    typedef const T & ConstReference;
+    typedef const T * ConstPointer;
     typedef SubtableIterator<T> Iterator;
 
-    SubtableIterator (Pointer begin, Pointer end)
+    SubtableIterator (It begin, It end)
     : begin_p (begin),
       current_p (begin),
       end_p (end)
     {}
 
-    SubtableIterator (const Iterator & other)
+    SubtableIterator (const It & other)
     : begin_p (other.begin_p),
       current_p (other.current_p),
       end_p (other.end_p)
     {}
 
-    Reference
+    ConstReference
     operator*() const
     {
         ThrowIf (current_p >= end_p,
@@ -45,7 +49,7 @@ public:
         return * current_p;
     }
 
-    Pointer
+    ConstPointer
     operator->() const
     {
         ThrowIf (current_p >= end_p,
@@ -57,6 +61,9 @@ public:
     Iterator &
     operator++()
     {
+        ThrowIf (current_p >= end_p,
+                 "Attempt to advance iterator pointing at end()");
+
         ++ current_p;
 
         return *this;
@@ -65,85 +72,67 @@ public:
     Iterator
     operator++(int)
     {
+        ThrowIf (current_p >= end_p,
+                 "Attempt to advance iterator pointing at end()");
+
         return Iterator(current_p ++);
     }
 
+    bool
+    operator== (const SubtableIterator<T> & other)
+    {
+        return current_p == other.current_p;
+    }
 
-    const Pointer
-    base() const
-    { return current_p; }
 
+    bool
+    operator!= (const SubtableIterator<T> & other)
+    {
+        return current_p != other.current_p;
+    }
 private:
 
-    const Pointer begin_p;
-    Pointer current_p;
-    const Pointer end_p;
+    const It begin_p;
+    It current_p;
+    const It end_p;
 };
 
-template <typename T>
-Bool
-operator== (const SubtableIterator<T> & a, const SubtableIterator<T> & b)
-{
-    return a.base() == b.base();
-}
 
-template <typename T>
-Bool
-operator!= (const SubtableIterator<T> & a, const SubtableIterator<T> & b)
-{
-    return a.base() != b.base();
-}
+
+
+
 
 class Subtable {
 
 public:
 
-    enum class ST : casacore::uInt {
-
-        Antenna,
-        DataDescription,
-        Feed,
-        Field,
-        Observation,
-        Pointing,
-        Polarization,
-        Processor,
-        SpectralWindow,
-        State,
-        Source,
-        Syscal,
-
-        N_Types
-    };
-
     virtual ~Subtable () {}
 
-    Subtable * clone () const = 0;
-    ST getType () const;
-    casacore::String getName () const;
-    casacore::Bool isMemoryResident () const;
-    casacore::Bool isWritable () const;
+    SubtableType getType () const;
+    String getName () const;
+    bool isMemoryResident () const;
+    bool isWritable () const;
 
-    static Subtable * create (ST type, const casacore::String & msPath);
-    static ST stFromString (const casacore::String & text);
-    static casacore::String stToString (ST type);
+    static Subtable * create (SubtableType type, const String & msPath);
+    static SubtableType stFromString (const String & text);
+    static String stToString (SubtableType type);
 
 protected:
 
-    Subtable (ST type, const casacore::String & name, bool isMemoryResident,
-              bool isWritable);
+    Subtable (SubtableType type, const String & name, bool isMemoryResident = true,
+              bool isWritable = false);
 
 private:
 
     class Impl;
 
-    casacore::Bool isMemoryResident_p;
-    casacore::Bool isWritable_p;
-    casacore::String name_p;
-    ST type_p;
+    bool isMemoryResident_p;
+    bool isWritable_p;
+    String name_p;
+    SubtableType type_p;
 
-    Subtable (const Subtable & other); // not implemented
-    Subtable & operator= (const Subtable & other); // not implemented
+    Subtable (const Subtable & other) = delete; // not implemented
+    Subtable & operator= (const Subtable & other) = delete; // not implemented
 };
 
 
@@ -154,133 +143,70 @@ public:
 
     typedef T RowType;
 
-    typedef SubtableIterator<T> iterator;
     typedef SubtableIterator<const T> const_iterator;
 
-    explicit SubtableImpl (casacore::Int nRows = 0);
-    virtual ~SubtableImpl ();
+//    SubtableImpl (bool isMutable, bool isWritable)
+//    : isMutable_p (isMutable), isWritable_p (isWritable)
+//    {}
 
-    casacore::Int append (const CasaTableRow & newRow);
+    SubtableImpl (SubtableType type, const String & name,
+                  bool isMemoryResident, bool isWritable)
+    : Subtable (type, name, isMemoryResident, isWritable)
+    {}
 
-    virtual iterator begin ();
-    virtual const_iterator begin () const;
+    virtual ~SubtableImpl () {}
 
-    casacore::Bool empty () const;
+    void
+    append (const T & newRow)
+    {
+        rows_p.push_back (newRow);
+    }
 
-    virtual iterator end ();
-    virtual const_iterator end () const;
+    virtual SubtableIterator<T> begin () const
+    {
+        return SubtableIterator<T> (rows_p.begin(), rows_p.end());
+    }
 
-    casacore::String filename () const;
-    const T & get (casacore::Int id) const;
-    casacore::String name () const;
+    bool empty () const
+    {
+        return rows_p.empty();
+    }
 
-    void resize (casacore::Int newSize);
+    virtual SubtableIterator<T> end () const
+    {
+        return SubtableIterator<T> (rows_p.end(), rows_p.end());
+    }
 
-    template <typename P>
-    const_iterator select (P predicate) const;
-    template <typename P>
-    iterator select (P predicate);
+    virtual String filename () const { return ""; }
 
-    void set (casacore::Int id, const T &);
-    casacore::uInt size () const;
+    const T &
+    get (Int id) const
+    {
+        ThrowIf (id < 0 || id >= rows_p.size(),
+                 String::format ("SubtableImpl::get: index %d out of bounds [0, %d]",
+                                 id, rows_p.size()-1));
+
+        return rows_p [id];
+    }
+
+    unsigned int
+    size () const
+    {
+        return rows_p.size();
+    }
 
 protected:
 
-    casacore::String identifyTable () const;
+    String identifyTable () const;
 
 private:
 
-    std::vector<T *> rows_p;
+    std::vector<T> rows_p;
 };
 
-template <typename T>
-SubtableImpl<T>::SubtableImpl (casacore::Int nRows)
-: rows_p (nRows, 0)
-{}
+} // end namespace cdo
 
-template <typename T>
-SubtableImpl<T>::~SubtableImpl ()
-{
-    // Delete all of the subtable row objects
-
-    for (casacore::Int i = 0; i < size(); i++){
-        delete rows_p [i];
-    }
-}
-
-
-template <typename T>
-const T &
-SubtableImpl<T>::get (casacore::Int id) const
-{
-    ThrowIf (id < 0 || id >= size(),
-             casacore::String::format ("SubtableImpl::get index %d out of range [0, %d]\n%s",
-                             id,
-                             size()),
-                             identifyTable().c_str());
-    return rows_p.size();
-}
-
-template <typename T>
-Int
-SubtableImpl<T>::append (const T & subtable)
-{
-    rows_p.push_back (subtable->clone());
-
-    return rows_p.size() - 1;
-}
-
-
-template <typename T>
-const T &
-SubtableImpl<T>::set (casacore::Int id, const T & row)
-{
-    ThrowIf (id < 0 || id >= size(),
-             casacore::String::format ("SubtableImpl::set index %d out of range [0, %d]\n%s",
-                             id,
-                             size()),
-                             identifyTable().c_str());
-
-    delete rows_p [id];
-
-    rows_p [id] = row->clone();
-}
-
-
-
-template <typename T>
-uInt
-SubtableImpl<T>::size () const
-{
-    return rows_p.size();
-}
-
-template <typename T>
-void
-SubtableImpl<T>::resize (casacore::Int newSize) const
-{
-    if (newSize < size()){
-
-        // Delete the rows that are being truncated
-
-        for (casacore::Int i = newSize; i < size(); i++){
-            delete rows_p [i];
-        }
-
-    }
-
-    // Resize the vector to the appropriate size filling any added
-    // elements to 0.
-
-    rows_p.resize (newSize, 0);
-}
-
-std::ostream & operator<< (std::ostream & os, Subtable::ST type);
-
-
-}
-
-}
+} // end namespace casa
 
 
 #endif /* SUBTABLE_H_ */

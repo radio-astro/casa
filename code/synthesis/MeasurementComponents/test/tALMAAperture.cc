@@ -356,15 +356,15 @@ int main()
 
 	    if(vb.spectralWindow()<4){ // i.e. not a WVR SPW for this dataset
 	      try{
-		apB.applySky(im1, vb, true, cfKey);
+		apB.applySky(im1, vb, True, cfKey);
 	      } catch (AipsError x) {
 		cout << "Caught expected error: " << x.getMesg() << endl;
 	      } 
-	      apB.applySky(im3, vb, true, cfKey);
+	      apB.applySky(im3, vb, True, cfKey);
 	    }
 	    else{
 	      try{
-		apB.applySky(im1, vb, true, cfKey);
+		apB.applySky(im1, vb, True, cfKey);
 	      } catch (AipsError x) {
 		cout << "Caught expected error: " << x.getMesg() << endl;
 	      } 
@@ -397,43 +397,43 @@ int main()
 
 		PagedImage<Complex> im5(ts2, coordsys3, "pb_squintDVDV");
 		im5.set(Complex(1.0,0.0));
-		apB.applySky(im5, vb, true, cfKey);
+		apB.applySky(im5, vb, True, cfKey);
 		
 		PagedImage<Complex> im6(ts2, coordsys3, "pb_nosquintDVDV");
 		im6.set(Complex(1.0,0.0));
-		apB.applySky(im6, vb, false, cfKey);
+		apB.applySky(im6, vb, False, cfKey);
 		
 		PagedImage<Complex> im7(ts2, coordsys3, "pb_squintDVPM");
 		im7.set(Complex(1.0,0.0));
-		apB.applySky(im7, vb, true, cfKey2);
+		apB.applySky(im7, vb, True, cfKey2);
 		
 		PagedImage<Complex> im8(ts2, coordsys3, "pb_nosquintDVPM");
 		im8.set(Complex(1.0,0.0));
-		apB.applySky(im8, vb, false, cfKey2);
+		apB.applySky(im8, vb, False, cfKey2);
 		
 		PagedImage<Complex> im9(ts2, coordsys3, "pb_squintPMPM");
 		im9.set(Complex(1.0,0.0));
-		apB.applySky(im9, vb, true, cfKey3);
+		apB.applySky(im9, vb, True, cfKey3);
 		
 		PagedImage<Complex> im10(ts2, coordsys3, "pb_nosquintPMPM");
 		im10.set(Complex(1.0,0.0));
-		apB.applySky(im10, vb, false, cfKey3);
+		apB.applySky(im10, vb, False, cfKey3);
 		
 		PagedImage<Complex> im11(ts2, coordsys3, "pb_squintDVDA");
 		im11.set(Complex(1.0,0.0));
-		apB.applySky(im11, vb, true, cfKey4);
+		apB.applySky(im11, vb, True, cfKey4);
 		
 		PagedImage<Complex> im12(ts2, coordsys3, "pb_squintDADA");
 		im12.set(Complex(1.0,0.0));
-		apB.applySky(im12, vb, true, cfKey5);
+		apB.applySky(im12, vb, True, cfKey5);
 		
 		PagedImage<Complex> im13(ts2, coordsys3Big, "pb_squintDVDABig");
 		im13.set(Complex(1.0,0.0));
-		apB.applySky(im13, vb, true, cfKey4);
+		apB.applySky(im13, vb, True, cfKey4);
 		
 		PagedImage<Complex> im14(ts2, coordsys3Small, "pb_squintDVDASmall");
 		im14.set(Complex(1.0,0.0));
-		apB.applySky(im14, vb, true, cfKey4);
+		apB.applySky(im14, vb, True, cfKey4);
 
  		count2++;
 		
@@ -452,23 +452,23 @@ int main()
 		
 		PagedImage<Complex> im15(ts2, coordsys3, "pb2_squintDVDA");
 		im15.set(Complex(1.0,0.0));
-		apB.applySky(im15, vb, true, cfKey4);
+		apB.applySky(im15, vb, True, cfKey4);
 		
 		PagedImage<Complex> im16(ts2, coordsys3, "pb2_squintDADA");
 		im16.set(Complex(1.0,0.0));
-		apB.applySky(im16, vb, true, cfKey5);
+		apB.applySky(im16, vb, True, cfKey5);
 		
 		PagedImage<Complex> im17(ts2, coordsys3Big, "pb2_squintDVDABig");
 		im17.set(Complex(1.0,0.0));
-		apB.applySky(im17, vb, true, cfKey4);
+		apB.applySky(im17, vb, True, cfKey4);
 		
 		PagedImage<Complex> im18(ts2, coordsys3Small, "pb2_squintDVDASmall");
 		im18.set(Complex(1.0,0.0));
-		apB.applySky(im18, vb, true, cfKey4);
+		apB.applySky(im18, vb, True, cfKey4);
 
 		PagedImage<Float> im18b(ts2, coordsys3Small, "pb2_squintDVDASmall_float");
 		im18b.set(1.0);
-		apB.applySky(im18b, vb, true, cfKey4);
+		apB.applySky(im18b, vb, True, cfKey4);
 
 		////////// with ray tracing
 
@@ -476,51 +476,51 @@ int main()
 
 		PagedImage<Complex> im19(ts2, coordsys3, "pb2_squintDVDVray");
 		im19.set(Complex(1.0,0.0));
-		apB.applySky(im19, vb, true, cfKey7, true);
+		apB.applySky(im19, vb, True, cfKey7, True);
 		
 		PagedImage<Complex> im21(ts3, coordsys3BigHiRes, "pb2_squintDVDVBigrayHiRes");
 		im21.set(Complex(1.0,0.0));
-		apB.applySky(im21, vb, true, cfKey7, true);
+		apB.applySky(im21, vb, True, cfKey7, True);
 		
 		PagedImage<Complex> im22(ts2, coordsys3Small, "pb2_squintDVDVSmallray");
 		im22.set(Complex(1.0,0.0));
-		apB.applySky(im22, vb, true, cfKey7, true);
+		apB.applySky(im22, vb, True, cfKey7, True);
 
 		PagedImage<Complex> im23(ts2, coordsys3, "pb2_squintDADAray");
 		im23.set(Complex(1.0,0.0));
-		apB.applySky(im23, vb, true, cfKey5, true);
+		apB.applySky(im23, vb, True, cfKey5, True);
 		
 		PagedImage<Complex> im24(ts2, coordsys3Big, "pb2_squintDADABigray");
 		im24.set(Complex(1.0,0.0));
-		apB.applySky(im24, vb, true, cfKey5, true);
+		apB.applySky(im24, vb, True, cfKey5, True);
 		
 		PagedImage<Complex> im25(ts2, coordsys3Small, "pb2_squintDADASmallray");
 		im25.set(Complex(1.0,0.0));
-		apB.applySky(im25, vb, true, cfKey5, true);
+		apB.applySky(im25, vb, True, cfKey5, True);
 
 		PagedImage<Complex> im26(ts2, coordsys3, "pb2_squintPMPMray");
 		im26.set(Complex(1.0,0.0));
-		apB.applySky(im26, vb, true, cfKey6, true);
+		apB.applySky(im26, vb, True, cfKey6, True);
 		
 		PagedImage<Complex> im27(ts2, coordsys3Big, "pb2_squintPMPMBigray");
 		im27.set(Complex(1.0,0.0));
-		apB.applySky(im27, vb, true, cfKey6, true);
+		apB.applySky(im27, vb, True, cfKey6, True);
 		
 		PagedImage<Complex> im28(ts2, coordsys3Small, "pb2_squintPMPMSmallray");
 		im28.set(Complex(1.0,0.0));
-		apB.applySky(im28, vb, true, cfKey6, true);
+		apB.applySky(im28, vb, True, cfKey6, True);
 
 		PagedImage<Complex> im29(ts2, coordsys3, "pb2_squintCMCMray");
 		im29.set(Complex(1.0,0.0));
-		apB.applySky(im29, vb, true, cfKey8, true);
+		apB.applySky(im29, vb, True, cfKey8, True);
 		
 		PagedImage<Complex> im30(ts2, coordsys3Big, "pb2_squintCMCMBigray");
 		im30.set(Complex(1.0,0.0));
-		apB.applySky(im30, vb, true, cfKey8, true);
+		apB.applySky(im30, vb, True, cfKey8, True);
 		
 		PagedImage<Complex> im31(ts2, coordsys3Small, "pb2_squintCMCMSmallray");
 		im31.set(Complex(1.0,0.0));
-		apB.applySky(im31, vb, true, cfKey8, true);
+		apB.applySky(im31, vb, True, cfKey8, True);
 
 		count2++;		
 

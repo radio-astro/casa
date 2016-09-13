@@ -28,7 +28,7 @@
  * | If you do, all changes will be lost when the file is re-generated. |
  *  --------------------------------------------------------------------
  *
- * casacore::File SysCalRow.h
+ * File SysCalRow.h
  */
  
 #ifndef SysCalRow_CLASS
@@ -155,7 +155,7 @@ public:
 	bool isAdded() const;
 		
 	////////////////////////////////
-	// Intrinsic casacore::Table Attributes //
+	// Intrinsic Table Attributes //
 	////////////////////////////////
 	
 	
@@ -825,7 +825,7 @@ public:
 
 
 	////////////////////////////////
-	// Extrinsic casacore::Table Attributes //
+	// Extrinsic Table Attributes //
 	////////////////////////////////
 	
 	
@@ -947,7 +947,7 @@ public:
 
 	
 		
-	// ===> casacore::Slice link from a row of SysCal table to a collection of row of Feed table.
+	// ===> Slice link from a row of SysCal table to a collection of row of Feed table.
 	
 	/**
 	 * Get the collection of row in the Feed table having feedId == this.feedId
@@ -1119,7 +1119,7 @@ private:
 	 */
 	bool hasBeenAdded;
 
-	// This method is used by the casacore::Table class when this row is added to the table.
+	// This method is used by the Table class when this row is added to the table.
 	void isAdded(bool added);
 
 
@@ -1153,7 +1153,7 @@ private:
 	 SysCalRow (SysCalTable &table, SysCalRow &row);
 	 	
 	////////////////////////////////
-	// Intrinsic casacore::Table Attributes //
+	// Intrinsic Table Attributes //
 	////////////////////////////////
 	
 	
@@ -1372,7 +1372,7 @@ private:
  	
 
 	////////////////////////////////
-	// Extrinsic casacore::Table Attributes //
+	// Extrinsic Table Attributes //
 	////////////////////////////////
 	
 	

@@ -24,9 +24,7 @@
 #include <mstransform/TVI/test/tRegriddingTVI.h>
 
 using namespace std;
-using namespace casacore;
 using namespace casa;
-using namespace casacore;
 using namespace casa::vi;
 
 
@@ -76,7 +74,7 @@ void RegriddingTVITest::initReferenceConfiguration(Record &configuration)
 {
 	refConfiguration_p = configuration;
 	refConfiguration_p.define ("inputms", referenceFile_p);
-	refConfiguration_p.define ("regridms", true);
+	refConfiguration_p.define ("regridms", True);
 
 	return;
 }
@@ -99,7 +97,7 @@ RegriddingTVITest::RegriddingTVITest(): FreqAxisTVITest ()
     configuration.define ("restfreq", "349.45370GHz");
     configuration.define ("outframe", "SOURCE");
     configuration.define ("datacolumn", String("ALL"));
-    configuration.define ("reindex", false);
+    configuration.define ("reindex", False);
 
 	init(configuration);
 }
@@ -188,7 +186,7 @@ int main(int argc, char **argv)
 	int ret;
 	string parameter,value;
 	Record configuration;
-	Bool autoMode = true;
+	Bool autoMode = True;
 
 	for (unsigned short i=0;i<argc-1;i++)
 	{
@@ -198,7 +196,7 @@ int main(int argc, char **argv)
 		if (parameter == string("-vis"))
 		{
 			configuration.define ("inputms", value);
-			autoMode = false;
+			autoMode = False;
 		}
 		else if (parameter == string("-spw"))
 		{

@@ -26,7 +26,6 @@
 
 #include "FeatheredData.h"
 
-using namespace casacore;
 namespace casa {
 
 FeatheredData::FeatheredData() {
@@ -88,5 +87,4 @@ FeatheredData::~FeatheredData() {
 	// TODO Auto-generated destructor stub
 }
 
-using namespace casacore;
 } /* namespace casa */

@@ -88,7 +88,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <li> F is the Faraday rotation Jones matrix
 // <li> A is the complex additive component
 // <li> X is the non-linear correlator function
-// <li> S is the casacore::Stokes conversion matrix
+// <li> S is the Stokes conversion matrix
 // <li> I is the (real) sky brightness 4-vector
 // </ul>
 //
@@ -139,7 +139,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // The SkyBrightness is modelled by a special type of
 // MeasurementComponent called a <linkto class="SkyModel">SkyModel</linkto>.  This has an interface to the
-// SkyEquation via a <linkto class="casacore::PagedImage">casacore::PagedImage</linkto>.
+// SkyEquation via a <linkto class="PagedImage">PagedImage</linkto>.
 //
 // Another type of <linkto module="MeasurementComponents">MeasurementComponent</linkto> is the
 // Fourier transform machine <linkto
@@ -149,12 +149,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // and degrid FFT-based Fourier transform.  We anticipate that other
 // FTMachines will be needed for e.g.  wide-field imaging.
 //
-// Visibility casacore::Data is held in a 
-// <linkto module="MeasurementSets">casacore::MeasurementSet</linkto>.
+// Visibility Data is held in a 
+// <linkto module="MeasurementSets">MeasurementSet</linkto>.
 // To expedite processing, we use a 
 // <linkto class="VisibilityIterator">VisibilityIterator</linkto>
 // (found in msvis/)
-// to iterate through the casacore::MeasurementSet as needed. Setting up the
+// to iterate through the MeasurementSet as needed. Setting up the
 // iterator is relatively expensive so we store the iterator
 // in a <linkto class="VisSet">VisSet</linkto> (also found in this
 // module). Thus one should
@@ -170,16 +170,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <example>
 // <srcblock>
-//      // Create a VisSet from a casacore::MeasurementSet on disk
+//      // Create a VisSet from a MeasurementSet on disk
 //      VisSet vs("3c84.MS");
 //
 //      // Now make an FTMachine with a 2048 by 2048
 //      // complex pixel cache of 16 by 16 tiles,
-//      // using Spheriodal casacore::Function gridding
+//      // using Spheriodal Function gridding
 //      GridFT ft(2048*2048, 16, "SF")
 //
 //      // Create an ImageSkyModel from an image on disk
-//      casacore::PagedImage<casacore::Float> im("3c84.modelImage"));
+//      PagedImage<Float> im("3c84.modelImage"));
 //      ImageSkyModel ism(im);
 //
 //      // For the imaging, we need a SkyEquation and

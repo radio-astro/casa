@@ -35,7 +35,6 @@
 int main()
 {
   using namespace std;
-using namespace casacore;
   using namespace casa;
   try{
      cout <<"--Starting the creation or update of the history table." << endl;
@@ -46,7 +45,7 @@ using namespace casacore;
      cal->initialize(ms);
      cout << "--initialize() called." << endl;
      //LogIO os;
-     LogSink logSink_p=LogSink(LogMessage::NORMAL, false);	  
+     LogSink logSink_p=LogSink(LogMessage::NORMAL, False);	  
      logSink_p.clearLocally();
      LogIO os(LogOrigin("tCalibrater", "main()", WHERE), logSink_p);
 	  

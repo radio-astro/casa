@@ -39,17 +39,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Constructor for the case of multiple slices
 	template <class T>
-	LatticePADMContour<T>::LatticePADMContour(const casacore::uInt xAxis,
-	        const casacore::uInt yAxis, const casacore::uInt mAxis,
-	        const casacore::IPosition fixedPos,
+	LatticePADMContour<T>::LatticePADMContour(const uInt xAxis,
+	        const uInt yAxis, const uInt mAxis,
+	        const IPosition fixedPos,
 	        LatticeAsContour<T> *arDat) :
 		LatticePADisplayMethod<T>(xAxis, yAxis, mAxis, fixedPos, arDat) {
 	}
 
 // Constructor for a single slice
 	template <class T>
-	LatticePADMContour<T>::LatticePADMContour(const casacore::uInt xAxis,
-	        const casacore::uInt yAxis,
+	LatticePADMContour<T>::LatticePADMContour(const uInt xAxis,
+	        const uInt yAxis,
 	        LatticeAsContour<T> *arDat) :
 		LatticePADisplayMethod<T>(xAxis, yAxis, arDat) {
 	}
@@ -61,28 +61,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Actually draw the slice as an contour
 	template <class T>
-	casacore::uInt LatticePADMContour<T>::dataDrawSelf(WorldCanvas *wCanvas,
-	        const casacore::Vector<casacore::Double> &blc,
-	        const casacore::Vector<casacore::Double> &trc,
-	        const casacore::IPosition &start,
-	        const casacore::IPosition &shape,
-	        const casacore::IPosition &stride,
-	        const casacore::Bool usePixelEdges) {
-		casacore::uInt drawListNumber = wCanvas->newList();
+	uInt LatticePADMContour<T>::dataDrawSelf(WorldCanvas *wCanvas,
+	        const Vector<Double> &blc,
+	        const Vector<Double> &trc,
+	        const IPosition &start,
+	        const IPosition &shape,
+	        const IPosition &stride,
+	        const Bool usePixelEdges) {
+		uInt drawListNumber = wCanvas->newList();
 		LatticeAsContour<T> *lac = (LatticeAsContour<T> *)parentDisplayData();
 
 		/*
 		// set min and max datavalues to help out scalehandler on WC.
-		Attribute dmin("dataMin", casacore::Double(lac->getDataMin()));
-		Attribute dmax("dataMax", casacore::Double(lac->getDataMax()));
+		Attribute dmin("dataMin", Double(lac->getDataMin()));
+		Attribute dmax("dataMax", Double(lac->getDataMax()));
 		wCanvas->setAttribute(dmin);
 		wCanvas->setAttribute(dmax);
 		*/
 
 		// Set the complex-to-real mode on the WorldCanvas if necessary:
 		T t;
-		casacore::DataType dtype = casacore::whatType(&t);
-		if ((dtype == casacore::TpComplex) || (dtype == casacore::TpDComplex)) {
+		DataType dtype = whatType(&t);
+		if ((dtype == TpComplex) || (dtype == TpDComplex)) {
 			wCanvas->setComplexToRealMethod
 			//(((LatticeAsContour<T> *)parentDisplayData())->complexMode());
 			(lac->complexMode());
@@ -92,14 +92,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			wCanvas->setResampleHandler(lac->resampleHandler());
 			wCanvas->setColor(lac->itsColor);
 			wCanvas->pixelCanvas()->setLineWidth(lac->itsLine);
-			Attribute dashNeg("dashNegativeContours", casacore::Bool(lac->itsDashNeg));
-			Attribute dashPos("dashPositiveContours", casacore::Bool(lac->itsDashPos));
+			Attribute dashNeg("dashNegativeContours", Bool(lac->itsDashNeg));
+			Attribute dashPos("dashPositiveContours", Bool(lac->itsDashPos));
 			wCanvas->setAttribute(dashNeg);
 			wCanvas->setAttribute(dashPos);
-			casacore::Matrix<T> datMatrix;
-			casacore::Matrix<casacore::Bool> maskMatrix;
+			Matrix<T> datMatrix;
+			Matrix<Bool> maskMatrix;
 			this->dataGetSlice(datMatrix, maskMatrix, start, shape, stride);
-			casacore::Vector<casacore::Float> levels;
+			Vector<Float> levels;
 			levels = lac->levels();
 			if (maskMatrix.nelements() == datMatrix.nelements()) {
 				//cerr << "mask available, but being ignored in "
@@ -110,12 +110,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				wCanvas->drawContourMap(blc, trc, datMatrix, levels, usePixelEdges);
 			}
 			wCanvas->setResampleHandler(0);
-		} catch (const casacore::AipsError &x) {
+		} catch (const AipsError &x) {
 			wCanvas->endList();
 			if (wCanvas->validList(drawListNumber)) {
 				wCanvas->deleteList(drawListNumber);
 			}
-			throw(casacore::AipsError(x));
+			throw(AipsError(x));
 		}
 
 		wCanvas->endList();

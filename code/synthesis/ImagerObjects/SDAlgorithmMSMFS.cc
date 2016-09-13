@@ -58,7 +58,6 @@
 #include <msvis/MSVis/StokesVector.h>
 
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
@@ -71,7 +70,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsNTerms(nTaylorTerms),
     itsScaleSizes(scalesizes),
     itsMTCleaner(),
-    itsMTCsetup(false)
+    itsMTCsetup(False)
  {
    itsAlgorithmName=String("mtmfs");
    if( itsScaleSizes.nelements()==0 ){ itsScaleSizes.resize(1); itsScaleSizes[0]=0.0; }
@@ -100,18 +99,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	if(tix<itsNTerms)
 	  {
-	    (itsImages->residual(tix))->get( itsMatResiduals[tix], true );
-	    (itsImages->model(tix))->get( itsMatModels[tix], true );
+	    (itsImages->residual(tix))->get( itsMatResiduals[tix], True );
+	    (itsImages->model(tix))->get( itsMatModels[tix], True );
 	  }
-	(itsImages->psf(tix))->get( itsMatPsfs[tix], true );
+	(itsImages->psf(tix))->get( itsMatPsfs[tix], True );
       }
 
-    itsImages->mask()->get( itsMatMask, true );
+    itsImages->mask()->get( itsMatMask, True );
 
     //// Initialize the MultiTermMatrixCleaner.
 
     ///  ----------- do once ----------
-    if( itsMTCsetup == false)
+    if( itsMTCsetup == False)
       {
 	//cout << "Setting up the MT Cleaner once" << endl;
 	//Vector<Float> scalesizes(1); scalesizes[0]=0.0;
@@ -126,7 +125,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    itsMTCleaner.setpsf( tix, tempMat );
 	    ///	itsMTCleaner.setpsf( tix, itsMatPsfs[tix] );
 	  }
-	itsMTCsetup=true;
+	itsMTCsetup=True;
       }
     /// -----------------------------------------
 
@@ -222,7 +221,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    itsImages = imagestore->getSubImageStore( 0, 1, chanid, nSubChans, polid, nSubPols );
 
     ///  ----------- do once if trying to 'only restore' without model ----------
-    if( itsMTCsetup == false)
+    if( itsMTCsetup == False)
       {
 
 	itsMatPsfs.resize( 2*itsNTerms-1 );
@@ -244,7 +243,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    itsMTCleaner.setpsf( tix, tempMat );
 	    ///	itsMTCleaner.setpsf( tix, itsMatPsfs[tix] );
 	  }
-	itsMTCsetup=true;
+	itsMTCsetup=True;
       }
     /// -----------------------------------------
 
@@ -347,7 +346,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //      itsImages->alpha()->table().unmarkForDelete();
 
       // Make a mask for the alpha image
-      LatticeExpr<Bool> lemask(iif(((*(itsImages->image(0))) > specthreshold) , true, false));
+      LatticeExpr<Bool> lemask(iif(((*(itsImages->image(0))) > specthreshold) , True, False));
 
       createMask(lemask, *(itsImages->alpha()));
 
@@ -362,12 +361,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 Bool SDAlgorithmMSMFS::createMask(LatticeExpr<Bool> &lemask, ImageInterface<Float> &outimage)
 {
-      ImageRegion outreg = outimage.makeMask("mask0",false,true);
+      ImageRegion outreg = outimage.makeMask("mask0",False,True);
       LCRegion& outmask=outreg.asMask();
       outmask.copyData(lemask);
-      outimage.defineRegion("mask0",outreg, RegionHandler::Masks, true);
+      outimage.defineRegion("mask0",outreg, RegionHandler::Masks, True);
       outimage.setDefaultMask("mask0");
-      return true;
+      return True;
 }
 
 */

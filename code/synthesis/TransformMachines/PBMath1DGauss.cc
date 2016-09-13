@@ -36,7 +36,6 @@
 
 
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 PBMath1DGauss::PBMath1DGauss(Quantity halfWidth, Quantity maxRad, Quantity refFreq, 

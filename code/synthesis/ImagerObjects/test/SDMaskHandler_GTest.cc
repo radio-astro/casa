@@ -23,7 +23,6 @@
 #include <images/Regions/WCBox.h>
 #include <images/Regions/ImageRegion.h>
 
-using namespace casacore;
 using namespace casa;
 using namespace std;
 

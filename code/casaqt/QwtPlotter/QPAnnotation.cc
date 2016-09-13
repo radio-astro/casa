@@ -33,7 +33,6 @@
 
 #include <qwt_text_label.h>
 
-using namespace casacore;
 namespace casa {
 
 //////////////////////////////

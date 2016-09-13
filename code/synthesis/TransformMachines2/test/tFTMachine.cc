@@ -52,18 +52,15 @@
 #include <casa/OS/Directory.h>
 #include <casa/Utilities/Regex.h>
 #include <synthesis/TransformMachines2/test/MakeMS.h>
-using namespace casacore;
 using namespace casa;
-using namespace casacore;
 using namespace casa::refim;
-using namespace casacore;
 using namespace casa::test;
 
 FTMachine* makeFTM(String ftmachine, MPosition loc, MDirection dir){
   if(ftmachine=="GridFT")
-    return new refim::GridFT(1000000, 16, "SF", loc, 1.0, false, false);
+    return new refim::GridFT(1000000, 16, "SF", loc, 1.0, False, False);
   if(ftmachine=="SetJyGridFT")
-    return new refim::SetJyGridFT(1000000, 16, "SF", loc, dir, 1.0, false, false);
+    return new refim::SetJyGridFT(1000000, 16, "SF", loc, dir, 1.0, False, False);
   if(ftmachine=="WProjectFT")
     return new refim::WProjectFT(50, loc, 1000000, 16);
   return nullptr;
@@ -77,7 +74,7 @@ Int main(/*int argc, char **argv*/){
     MakeMS::makems(msname, thedir);
     MeasurementSet thems(msname, Table::Update);
     thems.markForDelete();
-    vi::VisibilityIterator2 vi2(thems,vi::SortColumns(),true);
+    vi::VisibilityIterator2 vi2(thems,vi::SortColumns(),True);
     vi::VisBuffer2 *vb=vi2.getVisBuffer();
     VisImagingWeight viw("natural");
     vi2.useImagingWeight(viw);
@@ -122,7 +119,7 @@ Int main(/*int argc, char **argv*/){
       }
       ftm->finalizeToSky();
       
-      ftm->getImage(weight, true);
+      ftm->getImage(weight, True);
     
     //  cerr << "val at center " << im.getAt(IPosition(4, 50, 50, 0, 0)) << endl;
       AlwaysAssertExit(near(6.66e-2, real( im.getAt(IPosition(4, 50, 50, 0, 0))), 1.0e-5));

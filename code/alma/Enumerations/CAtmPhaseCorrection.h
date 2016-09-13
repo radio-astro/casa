@@ -3,7 +3,7 @@
 #define CAtmPhaseCorrection_H
 
 /*
- * ALMA - Atacama Large Millimeter casacore::Array
+ * ALMA - Atacama Large Millimeter Array
  * (c) European Southern Observatory, 2002
  * (c) Associated Universities Inc., 2002
  * Copyright by ESO (in the framework of the ALMA collaboration),
@@ -33,7 +33,7 @@
  * //  ---------------------------------------------------------  //
  * /////////////////////////////////////////////////////////////////
  *
- * casacore::File CAtmPhaseCorrection.h
+ * File CAtmPhaseCorrection.h
  */
 
 #ifndef __cplusplus
@@ -61,9 +61,9 @@ namespace AtmPhaseCorrectionMod
   
   enum AtmPhaseCorrection
   { 
-    AP_UNCORRECTED /*!< casacore::Data has no WVR phase correction */
+    AP_UNCORRECTED /*!< Data has no WVR phase correction */
      ,
-    AP_CORRECTED /*!< casacore::Data phases have been corrected using WVR data */
+    AP_CORRECTED /*!< Data phases have been corrected using WVR data */
      
   };
   typedef AtmPhaseCorrection &AtmPhaseCorrection_out;

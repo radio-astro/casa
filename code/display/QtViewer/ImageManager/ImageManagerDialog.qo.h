@@ -31,11 +31,6 @@
 #include <display/QtViewer/ImageManager/ImageView.qo.h>
 #include <casa/BasicSL/String.h>
 
-namespace casacore{
-
-	template <class T> class ImageInterface;
-}
-
 namespace casa {
 
 	class DisplayOptionsDialog;
@@ -45,6 +40,7 @@ namespace casa {
 	class DisplayDataHolder;
 	class ColormapDefinition;
 	class Colormap;
+	template <class T> class ImageInterface;
 
 	/**
 	 * Allows users to manipulate the images loaded in the viewer.  Includes
@@ -79,8 +75,8 @@ namespace casa {
 
 	signals:
 		void ddClosed( QtDisplayData*& dd );
-		void ddOpened( const casacore::String& path, const casacore::String& dataType,
-		               const casacore::String& displayType,/*, const QColor singleColor*/
+		void ddOpened( const String& path, const String& dataType,
+		               const String& displayType,/*, const QColor singleColor*/
 		               int insertionIndex, bool registered,
 		               bool masterCoordinate, bool masterSaturation,
 		               bool masterHue);
@@ -135,7 +131,7 @@ namespace casa {
 		//Returns the transparency to use when combining images.
 		//float getTransparency() const;
 		//Get the min and max intensity of the image.
-		bool getIntensityMinMax( SHARED_PTR<casacore::ImageInterface<float> > img,
+		bool getIntensityMinMax( SHARED_PTR<ImageInterface<float> > img,
 		                         double* intensityMin, double* intensityMax );
         //Generate a color map based on a single base color (RGB mode).
 		Colormap* generateColorMap( QColor baseColor);
@@ -165,8 +161,8 @@ namespace casa {
 		DisplayDataHolder* displayedImages;
 		Ui::ImageManagerDialogClass ui;
 		ImageScroll* imageScroll;
-		const casacore::String SINGLE_COLOR_MAP;
-		const casacore::String MASTER_COLOR_MAP;
+		const String SINGLE_COLOR_MAP;
+		const String MASTER_COLOR_MAP;
 		const int COLOR_MAP_SIZE;
 	};
 

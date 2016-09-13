@@ -45,19 +45,19 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-	class QtXmlRecord : public casacore::Record, public QObject {
+	class QtXmlRecord : public Record, public QObject {
 
 	public:
 		QtXmlRecord();
 		~QtXmlRecord();
-		bool recordToElement(const casacore::Record *rec, QDomElement *parent,
+		bool recordToElement(const Record *rec, QDomElement *parent,
 		                     QDomDocument &doc);
-		casacore::Bool elementToRecord(QDomElement *ele, casacore::Record &rec, casacore::Bool useOptName=true);
-		casacore::Bool domToRecord(QDomDocument *doc, casacore::Record &rec);
-		casacore::Bool optsElemToRecord(QDomElement optsElem, casacore::Record &rec);
+		Bool elementToRecord(QDomElement *ele, Record &rec, Bool useOptName=True);
+		Bool domToRecord(QDomDocument *doc, Record &rec);
+		Bool optsElemToRecord(QDomElement optsElem, Record &rec);
 		bool readDomFrom(QDomDocument &doc, QIODevice *device);
 		bool writeDomTo(QDomDocument *doc, QIODevice *device);
-		bool recordToDom(casacore::Record *rec, QDomDocument &doc);
+		bool recordToDom(Record *rec, QDomDocument &doc);
 		const QString rootName;
 		static QString domToString(const QDomElement &elt);
 		static QDomDocument stringToDom(const QString &xml);

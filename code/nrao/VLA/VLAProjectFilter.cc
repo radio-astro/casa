@@ -67,14 +67,14 @@ VLAProjectFilter& VLAProjectFilter::operator=(const VLAProjectFilter& other) {
 Bool VLAProjectFilter::passThru(const VLALogicalRecord& record) const {
 //   cerr << "This record ID: |" << record.SDA().obsId()
 //        << "| \trequired ID: |" << itsProject << "|";
-  if (itsProject.empty()) return true;
+  if (itsProject.empty()) return True;
   const String thisProject = upcase(record.SDA().obsId());
   if (thisProject.matches(itsProject)) {
     //     cerr << " match" << endl;
-    return true;
+    return True;
   } else {
 //     cerr << " NO match" << endl;
-    return false;
+    return False;
   }
 }
 
@@ -89,15 +89,15 @@ Bool VLAProjectFilter::ok() const {
   // The LogIO class is only constructed if an error is detected for
   // performance reasons. Both function static and file static variables
   // where considered and rejected for this purpose.
-  if (!VLAFilter::ok()) return false; 
+  if (!VLAFilter::ok()) return False; 
   if (itsProject.length() > 6) {
     LogIO logErr(LogOrigin("VLAProjectFilter", "ok()"));
     logErr << LogIO::SEVERE 
 	   << "The project name must have no more than 6 characters"
            << LogIO::POST;
-    return false;
+    return False;
   }
-  return true;
+  return True;
 }
 
 // Local Variables: 

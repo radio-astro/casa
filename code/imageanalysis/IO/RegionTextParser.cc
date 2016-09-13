@@ -41,7 +41,6 @@
 
 #define _ORIGIN "RegionTextParser::" + String(__FUNCTION__) + ": "
 
-using namespace casacore;
 namespace casa {
 
 const Int RegionTextParser::CURRENT_VERSION = 0;
@@ -88,13 +87,13 @@ RegionTextParser::RegionTextParser(
 	_setOverridingCorrelations(globalOverrrideStokes);
 	RegularFileIO fileIO(file);
 	Int bufSize = 4096;
-	PtrHolder<char> buffer(new char[bufSize], true);
+	PtrHolder<char> buffer(new char[bufSize], True);
 	int nRead;
 	String contents;
 	if (! prependRegion.empty()) {
 		contents = prependRegion + "\n";
 	}
-	while ((nRead = fileIO.read(bufSize, buffer, false)) == bufSize) {
+	while ((nRead = fileIO.read(bufSize, buffer, False)) == bufSize) {
 		String chunk(buffer, bufSize);
 		if (_fileVersion < 0) {
 			_determineVersion(chunk, filename, requireAtLeastThisVersion);
@@ -158,7 +157,7 @@ void RegionTextParser::_determineVersion(
 	Regex version(MAGIC.regexp() + "v[0-9]+");
 	if (chunk.contains(version)) {
 		const auto vString = chunk.substr(6);
-		auto done = false;
+		auto done = False;
 		auto count = 1;
 		auto oldVersion = -2000;
 		while (! done) {
@@ -166,14 +165,14 @@ void RegionTextParser::_determineVersion(
 				_fileVersion = String::toInt(vString.substr(0, count));
 				++count;
 				if (_fileVersion == oldVersion) {
-					done = true;
+					done = True;
 				}
 				else {
 					oldVersion = _fileVersion;
 				}
 			}
 			catch (const AipsError&) {
-				done = true;
+				done = True;
 			}
 		}
 		if (_fileVersion < requireAtLeastThisVersion) {
@@ -219,11 +218,11 @@ void RegionTextParser::_parse(const String& contents, const String& fileDesc) {
 		: std::pair<Quantity, Quantity>(Quantity(0), Quantity(0));
 	for(/*Vector<String>::iterator*/ auto iter=lines.cbegin(); iter!=lines.cend(); ++iter) {
 		++lineCount;
-		Bool annOnly = false;
+		Bool annOnly = False;
 		ostringstream preambleoss;
 		preambleoss << fileDesc + " line# " << lineCount << ": ";
 		/*String*/ const auto preamble = preambleoss.str();
-		Bool difference = false;
+		Bool difference = False;
 		iter->trim();
 		if (
 			iter->empty() || iter->startsWith("#")
@@ -237,14 +236,14 @@ void RegionTextParser::_parse(const String& contents, const String& fileDesc) {
 		Bool spectralParmsUpdated;
 		ParamSet newParams;
 		if (consumeMe.contains(startDiff)) {
-			difference = true;
+			difference = True;
 			// consume the difference character to allow further processing of string
 			consumeMe.del(0, 1);
 			consumeMe.trim();
 			*_log << LogIO::NORMAL << preamble << "difference found" << LogIO::POST;
 		}
 		else if(consumeMe.contains(startAnn)) {
-			annOnly = true;
+			annOnly = True;
 			// consume the annotation chars
 			consumeMe.del(0, 3);
 			consumeMe.trim();
@@ -332,7 +331,7 @@ void RegionTextParser::_parse(const String& contents, const String& fileDesc) {
 				globalsLessLocal.erase(key);
 			}
 		}
-		_globalKeysToApply.resize(globalsLessLocal.size(), false);
+		_globalKeysToApply.resize(globalsLessLocal.size(), False);
 		uInt i = 0;
 		for (
 			ParamSet::const_iterator iter=globalsLessLocal.begin();
@@ -527,7 +526,7 @@ AnnotationBase::Type RegionTextParser::_getAnnotationType(
 		}
 		qDirs.resize(2);
 		_extractQuantityPairAndString(
-			myPair, textString, consumeMe, preamble, true
+			myPair, textString, consumeMe, preamble, True
 		);
 		qDirs[0] = myPair.first;
 		qDirs[1] = myPair.second;
@@ -539,7 +538,7 @@ AnnotationBase::Type RegionTextParser::_getAnnotationType(
 		}
 		qDirs.resize(2);
 		_extractQuantityPairAndString(
-			myPair, textString, consumeMe, preamble, false
+			myPair, textString, consumeMe, preamble, False
 		);
 		qDirs[0] = myPair.first;
 		qDirs[1] = myPair.second;
@@ -569,7 +568,7 @@ RegionTextParser::ParamSet RegionTextParser::getParamSet(
 	SHARED_PTR<Vector<Stokes::StokesTypes> > overridingCorrRange
 ) {
 	ParamSet parms;
-	spectralParmsUpdated = false;
+	spectralParmsUpdated = False;
 	auto consumeMe = text;
 	// get key-value pairs on the line
 	while (consumeMe.size() > 0) {
@@ -619,9 +618,9 @@ RegionTextParser::ParamSet RegionTextParser::getParamSet(
 				    || keyword == "veltype" || keyword == "restfreq"
                 )
 			) {
-				spectralParmsUpdated = true;
+				spectralParmsUpdated = True;
 				if (! csys.hasSpectralAxis()) {
-					spectralParmsUpdated = false;
+					spectralParmsUpdated = False;
 					log << LogIO::WARN << preamble
 						<< "Keyword " << keyword << " specified but will be ignored "
 						<< "because the coordinate system has no spectral axis."
@@ -1117,7 +1116,7 @@ Vector<Quantity> RegionTextParser::_extractTwoQuantityPairsAndSingleQuantity(
 	qString.trim();
 
 	qString.trim(quotes, 2);
-	quantities.resize(5, true);
+	quantities.resize(5, True);
 	if (! readQuantity(quantities[4], qString)) {
 		*_log << preamble + "Could not convert "
 			<< qString << " to quantity." << LogIO::EXCEPTION;
@@ -1172,7 +1171,7 @@ Vector<Quantity> RegionTextParser::_extractQuantityPairAndSingleQuantity(
 
 	std::pair<Quantity, Quantity> myPair;
 	_extractQuantityPairAndString(
-		myPair, qString, consumeMe, preamble, false
+		myPair, qString, consumeMe, preamble, False
 	);
 	Vector<Quantity> quantities(3);
 	quantities[0] = myPair.first;
@@ -1218,7 +1217,7 @@ Vector<Quantity> RegionTextParser::_extractNQuantityPairs (
 	Vector<Quantity> qs(0);
 	while (pairs.length() > 1) {
 		std::pair<Quantity, Quantity> myqs = _extractSingleQuantityPair(pairs, preamble);
-		qs.resize(qs.size() + 2, true);
+		qs.resize(qs.size() + 2, True);
 		qs[qs.size() - 2] = myqs.first;
 		qs[qs.size() - 1] = myqs.second;
 		pairs.del(0, (Int)pairs.find(']', 0) + 1);
@@ -1284,7 +1283,7 @@ void RegionTextParser::_setOverridingChannelRange(
 		return;
 	}
     uInt nSelectedChannels = 0;
-    uInt nChannels = _imShape[_csys.spectralAxisNumber(false)];
+    uInt nChannels = _imShape[_csys.spectralAxisNumber(False)];
     std::vector<uInt> myChanRange =  ParameterParser::spectralRangesFromChans(
         nSelectedChannels, globalOverrideChans,
         nChannels
@@ -1309,7 +1308,7 @@ void RegionTextParser::_setOverridingChannelRange(
     _currentGlobals[AnnotationBase::RANGE] = range;
 
     ParamValue frame;
-	frame.intVal = specCoord.frequencySystem(false);
+	frame.intVal = specCoord.frequencySystem(False);
 	_currentGlobals[AnnotationBase::FRAME] = frame;
 
     ParamValue veltype;
@@ -1328,7 +1327,7 @@ RegionTextParser::_stokesFromString(
 	const String& stokes, const String& preamble
 ) {
 	const auto maxn = Stokes::NumberOfTypes;
-	PtrHolder<string> res(new string[maxn], true);
+	PtrHolder<string> res(new string[maxn], True);
 	Int nStokes = split(stokes, res, maxn, ",");
 	Vector<Stokes::StokesTypes> myTypes(nStokes);
 	for (Int i=0; i<nStokes; ++i) {
@@ -1346,7 +1345,7 @@ void RegionTextParser::_setInitialGlobals() {
 	ParamValue coord;
 	coord.intVal = _csys.directionCoordinate(
 		_csys.findCoordinate(Coordinate::DIRECTION)
-	).directionType(false);
+	).directionType(False);
 	coord.stringVal = MDirection::showType(coord.intVal);
 	_currentGlobals[AnnotationBase::COORD] = coord;
 
@@ -1364,7 +1363,7 @@ void RegionTextParser::_setInitialGlobals() {
 		);
 
 		ParamValue frame;
-		frame.intVal = spectral.frequencySystem(false);
+		frame.intVal = spectral.frequencySystem(False);
 		_currentGlobals[AnnotationBase::FRAME] = frame;
 
 		ParamValue veltype;

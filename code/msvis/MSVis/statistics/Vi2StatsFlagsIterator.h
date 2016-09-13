@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //
-// casacore::Data provider mask iterators, based on a flag column.
+// Data provider mask iterators, based on a flag column.
 //
 #ifndef MSVIS_STATISTICS_VI2_STATS_FLAGS_ITERATOR_H_
 #define MSVIS_STATISTICS_VI2_STATS_FLAGS_ITERATOR_H_
@@ -43,7 +43,7 @@ namespace casa {
 //
 template <class T>
 class Vi2StatsFlagsIterator
-	: public std::iterator<std::input_iterator_tag,casacore::Bool> {
+	: public std::iterator<std::input_iterator_tag,Bool> {
 
 public:
 	Vi2StatsFlagsIterator& operator++();
@@ -54,7 +54,7 @@ public:
 
 	bool operator!=(const Vi2StatsFlagsIterator& rhs);
 
-	casacore::Bool operator*();
+	Bool operator*();
 
 	bool atEnd();
 
@@ -64,17 +64,17 @@ protected:
 		, flags_iter(empty_array.begin())
 		, end_iter(empty_array.end()) {};
 
-	const casacore::Array<casacore::Bool>* flags_array;
+	const Array<Bool>* flags_array;
 
-	casacore::Array<casacore::Bool>::const_iterator flags_iter;
+	Array<Bool>::const_iterator flags_iter;
 
-	casacore::Array<casacore::Bool>::const_iterator end_iter;
+	Array<Bool>::const_iterator end_iter;
 
-	static const casacore::Array<casacore::Bool> empty_array;
+	static const Array<Bool> empty_array;
 };
 
 template <class T>
-const casacore::Array<casacore::Bool> Vi2StatsFlagsIterator<T>::empty_array;
+const Array<Bool> Vi2StatsFlagsIterator<T>::empty_array;
 
 // Mask iterator over flag cube. If the flag cube column is not present, this
 // iterator will provide values as if the flag cube were present by replicating
@@ -94,15 +94,15 @@ public:
 
 	bool operator!=(const Vi2StatsFlagsCubeIterator& rhs);
 
-	casacore::Bool operator*();
+	Bool operator*();
 
 	bool atEnd();
 
 protected:
-	casacore::uInt expansion_factor;
+	uInt expansion_factor;
 
 private:
-	casacore::uInt replicate_count;
+	uInt replicate_count;
 };
 
 // Mask iterator over row flags. If the row flags column is not present, this
@@ -123,15 +123,15 @@ public:
 
 	bool operator!=(const Vi2StatsFlagsRowIterator& rhs);
 
-	casacore::Bool operator*();
+	Bool operator*();
 
 	bool atEnd();
 
 protected:
-	casacore::uInt reduction_factor;
+	uInt reduction_factor;
 
 private:
-	casacore::Bool rowFlag;
+	Bool rowFlag;
 	void prepareNextRow();
 };
 

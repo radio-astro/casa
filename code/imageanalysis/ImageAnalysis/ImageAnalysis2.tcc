@@ -40,12 +40,12 @@
 
 namespace casa {
 
-template<class T> void ImageAnalysis::_destruct(casacore::ImageInterface<T>& image) {
-	if((image.isPersistent()) && ((image.imageType()) == "casacore::PagedImage")) {
-		casacore::ImageOpener::ImageTypes type = casacore::ImageOpener::imageType(image.name());
-		if (type == casacore::ImageOpener::AIPSPP) {
-			casacore::Table::relinquishAutoLocks(true);
-			(static_cast<casacore::PagedImage<T>& >(image)).table().unlock();
+template<class T> void ImageAnalysis::_destruct(ImageInterface<T>& image) {
+	if((image.isPersistent()) && ((image.imageType()) == "PagedImage")) {
+		ImageOpener::ImageTypes type = ImageOpener::imageType(image.name());
+		if (type == ImageOpener::AIPSPP) {
+			Table::relinquishAutoLocks(True);
+			(static_cast<PagedImage<T>& >(image)).table().unlock();
 		}
 	}
 }

@@ -36,23 +36,23 @@ namespace LibAIR2 {
       SPWs with 4 channels are WVRs
    */
   SPWSet
-  WVRSPWIDs(const casacore::MeasurementSet &ms);
+  WVRSPWIDs(const casa::MeasurementSet &ms);
 
   /** Set of DATA_DESC_IDs associated with WVRs
       among those given by spws
    */
   std::set<size_t>
-  WVRDataDescIDs(const casacore::MeasurementSet &ms,
+  WVRDataDescIDs(const casa::MeasurementSet &ms,
 		 const std::vector<int> &spws);
 
   /** Number of spectral windows associated with ALMA WVRs
    */
-  size_t nWVRSPWIDs(const casacore::MeasurementSet &ms);
+  size_t nWVRSPWIDs(const casa::MeasurementSet &ms);
 
   /** Set of antennas with data from WVRs available
    */
   AntSet
-  WVRAntennas(const casacore::MeasurementSet &ms,
+  WVRAntennas(const casa::MeasurementSet &ms,
 	      const std::vector<int> &wvrspws);
 
   /** Set of antennas with data from WVRs available
@@ -61,7 +61,7 @@ namespace LibAIR2 {
       have WVRs
    */
   AntSet
-  WVRAntennasFeedTab(const casacore::MeasurementSet &ms,
+  WVRAntennasFeedTab(const casa::MeasurementSet &ms,
 		     const std::vector<int> &wvrspws);
 
   /** Set of antennas with data from WVRs available
@@ -71,19 +71,19 @@ namespace LibAIR2 {
       feedtable is corrupted
    */
   AntSet
-  WVRAntennasMainTab(const casacore::MeasurementSet &ms,
+  WVRAntennasMainTab(const casa::MeasurementSet &ms, 
 		     const std::vector<int> &wvrspws);
 
   /** Add the antennas flagged in the ANTENNA table to the set
    */
-  void WVRAddFlaggedAnts(const casacore::MeasurementSet &ms,
+  void WVRAddFlaggedAnts(const casa::MeasurementSet &ms,
 			 LibAIR2::AntSet &flaggedAnts);
 
   /** Time points, states, and field IDs at which WVR data have been
       recorded
 
    */
-  void WVRTimeStatePoints(const casacore::MeasurementSet &ms,
+  void WVRTimeStatePoints(const casa::MeasurementSet &ms,
 			  std::vector<double> &times,
 			  std::vector<size_t> &states,
 			  std::vector<size_t> &field,
@@ -94,7 +94,7 @@ namespace LibAIR2 {
   /** Load all WVR data from a measurment set
       
    */
-  InterpArrayData *loadWVRData(const casacore::MeasurementSet &ms,
+  InterpArrayData *loadWVRData(const casa::MeasurementSet &ms,
 			       const std::vector<int>& spws, 
 			       std::vector<size_t> &sortedI,
 			       std::set<int> &flaggedantsInMain,

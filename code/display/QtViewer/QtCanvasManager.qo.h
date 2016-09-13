@@ -59,8 +59,8 @@ namespace casa {
 	public:
 		QtCanvasManagerOptions( QtDisplayPanel* qdp, QWidget *parent ) : QtAutoGui(parent) {
 			loadRecord(qdp->getOptions());
-			connect( this, SIGNAL(setOptions(casacore::Record)), qdp, SLOT(setOptions(casacore::Record)) );
-			connect( qdp, SIGNAL(optionsChanged(casacore::Record)), SLOT(changeOptions(casacore::Record)) );
+			connect( this, SIGNAL(setOptions(Record)), qdp, SLOT(setOptions(Record)) );
+			connect( qdp, SIGNAL(optionsChanged(Record)), SLOT(changeOptions(Record)) );
 		}
 		~QtCanvasManagerOptions() {  }
 	};

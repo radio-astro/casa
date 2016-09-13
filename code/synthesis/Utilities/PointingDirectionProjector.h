@@ -31,11 +31,11 @@ public:
 protected:
   // From asap/src/MathUtils
   void rotateRA(casacore::Vector<casacore::Double> &v);
-  // casacore::Input data
+  // Input data
   casacore::Matrix<casacore::Double> dir_;
 
   // logging
-  casacore::LogIO os_;
+  casa::LogIO os_;
 
 private:
   // private attributes

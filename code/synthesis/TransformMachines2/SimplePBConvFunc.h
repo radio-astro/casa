@@ -46,17 +46,9 @@
 #endif
 
 
-namespace casacore{
-
-  template<class T> class ImageInterface;
-  template<class T> class Matrix;
-  class CoordinateSystem;
-  class DirectionCoordinate;
-}
-
 namespace casa{
 
-  // <summary>  A class to support FTMachines get their convolution casacore::Function </summary>
+  // <summary>  A class to support FTMachines get their convolution Function </summary>
   
   // <use visibility=export>
   // <prerequisite>
@@ -74,8 +66,12 @@ namespace casa{
   // this class and related ones provide and cache  such functions for re-use 
   //</synopsis>
   //Forward declarations
+  template<class T> class ImageInterface;
+  template<class T> class Matrix;
   
  
+  class CoordinateSystem;
+  class DirectionCoordinate;
   namespace vi{class VisBuffer2;}
 
 
@@ -89,108 +85,108 @@ namespace refim{ //namespace for imaging refactor
     public:
       SimplePBConvFunc();
       SimplePBConvFunc(const PBMathInterface::PBClass typeToUse);
-      SimplePBConvFunc(const casacore::RecordInterface& rec, casacore::Bool calcFlux_needed);
+      SimplePBConvFunc(const RecordInterface& rec, Bool calcFlux_needed);
       virtual ~SimplePBConvFunc();
       // Inputs are the image, visbuffer, convSampling and skyjones
       // findconv return a cached convvolution function appropriate for this 
       // visbuffer and skyjones ...this one should be superseded 
       // by the one below and call setSkyJones when necessary
-      virtual void findConvFunction(const casacore::ImageInterface<casacore::Complex>& , 
-				    const vi::VisBuffer2& ,const casacore::Int& ,
+      virtual void findConvFunction(const ImageInterface<Complex>& , 
+				    const vi::VisBuffer2& ,const Int& ,
 			    SkyJones& ,
-			    casacore::Matrix<casacore::Complex>& , 
-			    casacore::Matrix<casacore::Complex>& , casacore::Int& ,
-				    casacore::Int& ){};
+			    Matrix<Complex>& , 
+			    Matrix<Complex>& , Int& ,
+				    Int& ){};
       
-      ////Returns the convfunctions in the Cubes...the casacore::Matrix rowChanMap maps 
+      ////Returns the convfunctions in the Cubes...the Matrix rowChanMap maps 
       // the vb.row and channel 
       //to the plane of the convfunc appropriate 
       
-      virtual void findConvFunction(const casacore::ImageInterface<casacore::Complex>& iimage, 
+      virtual void findConvFunction(const ImageInterface<Complex>& iimage, 
 				    const vi::VisBuffer2& vb,
-				    const casacore::Int& convSampling,
-				    const casacore::Vector<casacore::Double>& visFreq,
-				    casacore::Array<casacore::Complex>& convFunc,
-				    casacore::Array<casacore::Complex>& weightConvFunc,
-				    casacore::Vector<casacore::Int>& convsize,
-				    casacore::Vector<casacore::Int>& convSupport,
-				    casacore::Vector<casacore::Int>& polMap, casacore::Vector<casacore::Int>& chanMap, casacore::Vector<casacore::Int>& rowMap);
-      virtual casacore::ImageInterface<casacore::Float>&  getFluxScaleImage();
+				    const Int& convSampling,
+				    const Vector<Double>& visFreq,
+				    Array<Complex>& convFunc,
+				    Array<Complex>& weightConvFunc,
+				    Vector<Int>& convsize,
+				    Vector<Int>& convSupport,
+				    Vector<Int>& polMap, Vector<Int>& chanMap, Vector<Int>& rowMap);
+      virtual ImageInterface<Float>&  getFluxScaleImage();
       // slice fluxscale image by npol 
-      virtual void sliceFluxScale(casacore::Int npol);
+      virtual void sliceFluxScale(Int npol);
       //This is a function to just store the final weight image
       //as FT machines will share this object ...they can get share this too
-      virtual void setWeightImage(casacore::CountedPtr<casacore::TempImage<casacore::Float> >& wgtimage);
+      virtual void setWeightImage(CountedPtr<TempImage<Float> >& wgtimage);
 
       virtual void setSkyJones(SkyJones* sj);
 
-      casacore::Bool findSupport(casacore::Array<casacore::Complex>& /*func*/, casacore::Float& /*threshold*/,casacore::Int& /*origin*/, casacore::Int& /*R*/) 
-      {throw(casacore::AipsError("SimplePBConvFunc::findSupport() not implemented"));};
-      virtual casacore::Bool makeAverageResponse(const vi::VisBuffer2& /*vb*/, 
-				       const casacore::ImageInterface<casacore::Complex>& /*image*/,
-				       casacore::ImageInterface<casacore::Float>& /*theavgPB*/,
-				       casacore::Bool /*reset=true*/)
-      {throw(casacore::AipsError("SimplePBConvFunc::makeAverageRes() called"));};
+      Bool findSupport(Array<Complex>& /*func*/, Float& /*threshold*/,Int& /*origin*/, Int& /*R*/) 
+      {throw(AipsError("SimplePBConvFunc::findSupport() not implemented"));};
+      virtual Bool makeAverageResponse(const vi::VisBuffer2& /*vb*/, 
+				       const ImageInterface<Complex>& /*image*/,
+				       ImageInterface<Float>& /*theavgPB*/,
+				       Bool /*reset=True*/)
+      {throw(AipsError("SimplePBConvFunc::makeAverageRes() called"));};
 
       //Serialization
-     virtual  casacore::Bool toRecord(casacore::RecordInterface& outRec);
+     virtual  Bool toRecord(RecordInterface& outRec);
       //From record 
-      //set calcfluxneeded to true if flux scale need to be computed
-      virtual casacore::Bool fromRecord(casacore::String& err, const casacore::RecordInterface& rec, casacore::Bool calcFluxneeded=false);
+      //set calcfluxneeded to True if flux scale need to be computed
+      virtual Bool fromRecord(String& err, const RecordInterface& rec, Bool calcFluxneeded=False);
       //give possibility to erase history
       virtual void reset();
 
     protected:
       SkyJones* sj_p;
-      casacore::TempImage<casacore::Float> fluxScale_p;
-      casacore::Int nx_p; 
-      casacore::Int ny_p;
-      casacore::Int nchan_p;
-      casacore::Int npol_p;
-      casacore::CoordinateSystem csys_p;
-      casacore::DirectionCoordinate dc_p;
-      casacore::MDirection::Convert pointToPix_p;
-      casacore::MeasFrame pointFrame_p;
-      casacore::MEpoch::Types timeMType_p;
-      casacore::Unit timeUnit_p;
-      casacore::Int directionIndex_p;
-      casacore::MDirection direction1_p;
-      casacore::MDirection direction2_p;
-      casacore::Vector<casacore::Double> thePix_p;
-      casacore::Bool filledFluxScale_p;
-      casacore::Vector<casacore::Bool> doneMainConv_p;
-      casacore::Bool calcFluxScale_p;
-      std::map<casacore::String, casacore::Int> vbConvIndex_p;
-      virtual casacore::Int convIndex(const vi::VisBuffer2& vb);
-      std::map<casacore::String, casacore::Int> ant1PointVal_p;
-      casacore::Vector<casacore::MDirection> ant1PointingCache_p;
-      const casacore::MDirection& pointingDirAnt1(const vi::VisBuffer2& vb);
-      virtual void storeImageParams(const casacore::ImageInterface<casacore::Complex>& iimage, const vi::VisBuffer2& vb);
-      virtual void findUsefulChannels(casacore::Vector<casacore::Int>& chanMap, casacore::Vector<casacore::Double>& chanFreqs,  const vi::VisBuffer2& vb, const casacore::Vector<casacore::Double>& visFreq);
+      TempImage<Float> fluxScale_p;
+      Int nx_p; 
+      Int ny_p;
+      Int nchan_p;
+      Int npol_p;
+      CoordinateSystem csys_p;
+      DirectionCoordinate dc_p;
+      MDirection::Convert pointToPix_p;
+      MeasFrame pointFrame_p;
+      MEpoch::Types timeMType_p;
+      Unit timeUnit_p;
+      Int directionIndex_p;
+      MDirection direction1_p;
+      MDirection direction2_p;
+      Vector<Double> thePix_p;
+      Bool filledFluxScale_p;
+      Vector<Bool> doneMainConv_p;
+      Bool calcFluxScale_p;
+      std::map<String, Int> vbConvIndex_p;
+      virtual Int convIndex(const vi::VisBuffer2& vb);
+      std::map<String, Int> ant1PointVal_p;
+      Vector<MDirection> ant1PointingCache_p;
+      const MDirection& pointingDirAnt1(const vi::VisBuffer2& vb);
+      virtual void storeImageParams(const ImageInterface<Complex>& iimage, const vi::VisBuffer2& vb);
+      virtual void findUsefulChannels(Vector<Int>& chanMap, Vector<Double>& chanFreqs,  const vi::VisBuffer2& vb, const Vector<Double>& visFreq);
       //return the direction pixel corresponding to a direction
       virtual void toPix(const vi::VisBuffer2& vb);
       FFT2D ft_p;
-      casacore::CountedPtr<casacore::TempImage<casacore::Float> > convWeightImage_p;
+      CountedPtr<TempImage<Float> > convWeightImage_p;
     private:
-      casacore::Bool checkPBOfField(const vi::VisBuffer2& vb);
+      Bool checkPBOfField(const vi::VisBuffer2& vb);
       void addPBToFlux(const vi::VisBuffer2& vb);
-      casacore::SimpleOrderedMap <casacore::String, casacore::Int> convFunctionMap_p;
-      casacore::Int actualConvIndex_p;
+      SimpleOrderedMap <String, Int> convFunctionMap_p;
+      Int actualConvIndex_p;
       PBMathInterface::PBClass pbClass_p;
 
-      casacore::Matrix<casacore::Complex> convFunc_p;
-      casacore::Matrix<casacore::Complex> weightConvFunc_p;
-      casacore::Matrix<casacore::Complex> convSave_p;
-      casacore::Matrix<casacore::Complex> weightSave_p;
-      casacore::Int convSize_p; 
-      casacore::Int convSupport_p;
+      Matrix<Complex> convFunc_p;
+      Matrix<Complex> weightConvFunc_p;
+      Matrix<Complex> convSave_p;
+      Matrix<Complex> weightSave_p;
+      Int convSize_p; 
+      Int convSupport_p;
       //These are Arrays of 5 dimension (x, y, npol, nchan, nrow)
       //Thus every baseline may have its own.
-      casacore::Block <casacore::CountedPtr<casacore::Array<casacore::Complex> > > convFunctions_p;
-      casacore::Block <casacore::CountedPtr<casacore::Array<casacore::Complex> > > convWeights_p;
-      casacore::Block<casacore::CountedPtr<casacore::Vector<casacore::Int> > > convSizes_p;
-      casacore::Block <casacore::CountedPtr<casacore::Vector<casacore::Int> > > convSupportBlock_p;
-      casacore::Matrix<casacore::Bool> pointingPix_p;
+      Block <CountedPtr<Array<Complex> > > convFunctions_p;
+      Block <CountedPtr<Array<Complex> > > convWeights_p;
+      Block<CountedPtr<Vector<Int> > > convSizes_p;
+      Block <CountedPtr<Vector<Int> > > convSupportBlock_p;
+      Matrix<Bool> pointingPix_p;
       VisBufferUtil vbUtil_p;
       
     };

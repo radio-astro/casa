@@ -1,4 +1,4 @@
-//# StokesVector.h: A fast casacore::RigidVector with casacore::Stokes conversions
+//# StokesVector.h: A fast RigidVector with Stokes conversions
 //# Copyright (C) 1996,1999,2001,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -60,7 +60,7 @@ class StokesVector;
 // </prerequisite>
 //
 // <etymology>
-// StokesVector and CStokesVector (casacore::Complex StokesVector) are two classes
+// StokesVector and CStokesVector (Complex StokesVector) are two classes
 // designed to handle a 4-vector of polarization values (I,Q,U,V or
 // e.g., RR,RL,LR,LL).
 // </etymology>
@@ -76,7 +76,7 @@ class StokesVector;
 // <srcblock>
 // // Create a real valued I,Q,U,V StokesVector
 // StokesVector pixel(4.0,2.0,1.0,0.1);
-// // convert to a casacore::Complex valued vector of linear polarizations
+// // convert to a Complex valued vector of linear polarizations
 // CStokesVector cohVec=applySlin(pixel);
 // // convert back to I,Q,U,V
 // cohVec.applySlinInv();
@@ -88,7 +88,7 @@ class StokesVector;
 // <motivation>
 // Full polarization processing of interferometry data uses real and complex
 // valued 4-vectors. The StokesVector specialization handles this more 
-// efficiently than a standard casacore::Vector of size 4.
+// efficiently than a standard Vector of size 4.
 // </motivation>
 //
 // <thrown>
@@ -100,216 +100,212 @@ class StokesVector;
 // </todo>
 
 
-class CStokesVector:public casacore::RigidVector<casacore::Complex,4> {
+class CStokesVector:public RigidVector<Complex,4> {
 public:
-
-  static casacore::String dataTypeId() {return "CStokesVector";};
-  //  CStokesVector(casacore::Int n):RigidVector<casacore::Complex,4>(n) {} 
-  // The casacore::Complex data members are automatically initialized to 0.
-  CStokesVector():RigidVector<casacore::Complex,4>() {} 
+  static String dataTypeId() {return "CStokesVector";};
+  //  CStokesVector(Int n):RigidVector<Complex,4>(n) {} 
+  // The Complex data members are automatically initialized to 0.
+  CStokesVector():RigidVector<Complex,4>() {} 
   // Construct from scalar, setting all values to a constant.
-  explicit CStokesVector(const casacore::Complex& c):RigidVector<casacore::Complex,4>(c) {}
+  CStokesVector(const Complex& c):RigidVector<Complex,4>(c) {}
   // Construct with four values specified.
-  CStokesVector(const casacore::Complex& v0, const casacore::Complex& v1, 
-		const casacore::Complex& v2, const casacore::Complex& v3):
-    casacore::RigidVector<casacore::Complex,4>(v0,v1,v2,v3) {}
+  CStokesVector(const Complex& v0, const Complex& v1, 
+		const Complex& v2, const Complex& v3):
+    RigidVector<Complex,4>(v0,v1,v2,v3) {}
   // Construct from c-array
-  CStokesVector(const casacore::Complex v[4]):RigidVector<casacore::Complex,4>(v) {}
-  // Construct from casacore::Vector (should have length 4)
-//  CStokesVector(const casacore::Vector<casacore::Complex> & v):RigidVector<casacore::Complex,4>(v) {}
+  CStokesVector(const Complex v[4]):RigidVector<Complex,4>(v) {}
+  // Construct from Vector (should have length 4)
+//  CStokesVector(const Vector<Complex> & v):RigidVector<Complex,4>(v) {}
   // Copy constructor with copy semantics.
-  CStokesVector(const CStokesVector& v):RigidVector<casacore::Complex,4>(v){}
+  CStokesVector(const CStokesVector& v):RigidVector<Complex,4>(v){}
   // Construct from RigidVector
-//  CStokesVector(const casacore::RigidVector<casacore::Complex,4>& v):RigidVector<casacore::Complex,4>(v) {}
+//  CStokesVector(const RigidVector<Complex,4>& v):RigidVector<Complex,4>(v) {}
   // Assignment
   CStokesVector& operator=(const CStokesVector& v) {
-    casacore::RigidVector<casacore::Complex,4>::operator=(v); return *this;
+    RigidVector<Complex,4>::operator=(v); return *this;
   }
   // Assign from a Vector
-  CStokesVector& operator=(const casacore::Vector<casacore::Complex>& v) {
-    casacore::RigidVector<casacore::Complex,4>::operator=(v); return *this;
+  CStokesVector& operator=(const Vector<Complex>& v) {
+    RigidVector<Complex,4>::operator=(v); return *this;
   }
   // Assign from a scalar, setting all values to a constant
-  CStokesVector& operator=(const casacore::Complex& c) {
-    casacore::RigidVector<casacore::Complex,4>::operator=(c); return *this;
+  CStokesVector& operator=(const Complex& c) {
+    RigidVector<Complex,4>::operator=(c); return *this;
   }
   // Negation
   CStokesVector& operator-() {
-    casacore::RigidVector<casacore::Complex,4>::operator-(); return *this;
+    RigidVector<Complex,4>::operator-(); return *this;
   }
   // Addition
   CStokesVector& operator+=(const CStokesVector& v) {
-    casacore::RigidVector<casacore::Complex,4>::operator+=(v); return *this;
+    RigidVector<Complex,4>::operator+=(v); return *this;
   }
   // Subtraction
   CStokesVector& operator-=(const CStokesVector& v) {
-    casacore::RigidVector<casacore::Complex,4>::operator-=(v); return *this;
+    RigidVector<Complex,4>::operator-=(v); return *this;
   }
   CStokesVector& operator*=(const CStokesVector& v) {
-    casacore::RigidVector<casacore::Complex,4>::operator*=(v); return *this;
+    RigidVector<Complex,4>::operator*=(v); return *this;
   }
-  // casacore::Matrix multiplication - v*=m is equivalent to v=m*v
-  CStokesVector& operator*=(const casacore::SquareMatrix<casacore::Complex,4>& m) {
-    casacore::RigidVector<casacore::Complex,4>::operator*=(m); return *this;
+  // Matrix multiplication - v*=m is equivalent to v=m*v
+  CStokesVector& operator*=(const SquareMatrix<Complex,4>& m) {
+    RigidVector<Complex,4>::operator*=(m); return *this;
   }
-  CStokesVector& operator*=(casacore::Float f) {
+  CStokesVector& operator*=(Float f) {
     v_p[0]*=f; v_p[1]*=f; v_p[2]*=f; v_p[3]*=f; return *this;
   }
   // Equality
-  casacore::Bool operator==(const CStokesVector& v) const {
+  Bool operator==(const CStokesVector& v) const {
     return (v_p[0]==v.v_p[0] && v_p[1]==v.v_p[1] &&
 		  v_p[2]==v.v_p[2] && v_p[3]==v.v_p[3]);
   }
   // Inequality
-  casacore::Bool operator!=(const CStokesVector& v) const {
+  Bool operator!=(const CStokesVector& v) const {
     return (v_p[0]!=v.v_p[0] || v_p[1]!=v.v_p[1] ||
 		  v_p[2]!=v.v_p[2] || v_p[3]!=v.v_p[3]);
   }
 
-  // Apply conversion matrix from casacore::Stokes to linear, in place.
+  // Apply conversion matrix from Stokes to linear, in place.
   CStokesVector& applySlin() {
-    casacore::Complex i=v_p[0],q=v_p[1], u=v_p[2],iv=v_p[3]*casacore::Complex(0,1);
+    Complex i=v_p[0],q=v_p[1], u=v_p[2],iv=v_p[3]*Complex(0,1);
     v_p[0]=(i+q);  v_p[1]=(u+iv); 
     v_p[2]=(u-iv); v_p[3]=(i-q);
     return *this;
   }
-  // Apply conversion matrix from casacore::Stokes to circular, in place
+  // Apply conversion matrix from Stokes to circular, in place
   CStokesVector& applyScirc() {
-    casacore::Complex i=v_p[0],q=v_p[1],iu=v_p[2]*casacore::Complex(0,1),v=v_p[3];
+    Complex i=v_p[0],q=v_p[1],iu=v_p[2]*Complex(0,1),v=v_p[3];
     v_p[0]=(i+v);  v_p[1]=(q+iu); 
     v_p[2]=(q-iu); v_p[3]=(i-v);
     return *this;
   }
-  // Apply conversion matrix from linear to casacore::Stokes, in place
+  // Apply conversion matrix from linear to Stokes, in place
   CStokesVector& applySlinInv() {
-      using namespace casacore;
-    casacore::Complex xx=v_p[0],xy=v_p[1],yx=v_p[2],yy=v_p[3];
+    Complex xx=v_p[0],xy=v_p[1],yx=v_p[2],yy=v_p[3];
     v_p[0]=(xx+yy)/2; v_p[1]=(xx-yy)/2;
-    v_p[2]=(xy+yx)/2; v_p[3]=casacore::Complex(0,1)*(yx-xy)/2;
+    v_p[2]=(xy+yx)/2; v_p[3]=Complex(0,1)*(yx-xy)/2;
     return *this;
   }
-  // Apply conversion matrix from circular to casacore::Stokes, in place
+  // Apply conversion matrix from circular to Stokes, in place
   CStokesVector& applyScircInv() {
-      using namespace casacore;
-    casacore::Complex rr=v_p[0],rl=v_p[1],lr=v_p[2],ll=v_p[3];
+    Complex rr=v_p[0],rl=v_p[1],lr=v_p[2],ll=v_p[3];
     v_p[0]=(rr+ll)/2; v_p[3]=(rr-ll)/2;
-    v_p[1]=(rl+lr)/2; v_p[2]=casacore::Complex(0,1)*(lr-rl)/2;
+    v_p[1]=(rl+lr)/2; v_p[2]=Complex(0,1)*(lr-rl)/2;
     return *this;
   }
   // Return a StokesVector with the real part.
 //  StokesVector real();
   // inner product of two complex vectors
-  friend casacore::Complex innerProduct(const CStokesVector& l,
+  friend Complex innerProduct(const CStokesVector& l,
 			      const CStokesVector& r) {
     return l.v_p[0]*conj(r.v_p[0])+ l.v_p[1]*conj(r.v_p[1])+
       l.v_p[2]*conj(r.v_p[2])+ l.v_p[3]*conj(r.v_p[3]);
   }
   friend double norm(const CStokesVector& l) {
-      using namespace casacore;
     return ::sqrt(square(l.v_p[0].real())+square(l.v_p[0].imag())+
 		  square(l.v_p[1].real())+square(l.v_p[1].imag())+
 		  square(l.v_p[2].real())+square(l.v_p[2].imag())+
 		  square(l.v_p[3].real())+square(l.v_p[3].imag()));
 }
-  // Write out a CStokesVector using the casacore::Vector output method.
-  friend std::ostream& operator<<(std::ostream& os, const CStokesVector& v) {
+  // Write out a CStokesVector using the Vector output method.
+  friend ostream& operator<<(ostream& os, const CStokesVector& v) {
     os << v.vector();
     return os;
   }
 };
 
-// Multiplication of CStokesVector by a casacore::Complex SquareMatrix
-inline CStokesVector operator*(const casacore::SquareMatrix<casacore::Complex,4>& m,
+// Multiplication of CStokesVector by a Complex SquareMatrix
+inline CStokesVector operator*(const SquareMatrix<Complex,4>& m,
 			       const CStokesVector& v) {
   CStokesVector result(v);
   return result*=m;
 }
 
 inline void defaultValue(CStokesVector& v) {
-  v=casacore::Complex(0.0,0.0);
+  v=Complex(0.0,0.0);
 }
 
-class StokesVector:public casacore::RigidVector<casacore::Float,4> {
+class StokesVector:public RigidVector<Float,4> {
   
 public:
-  static casacore::String dataTypeId() {return "StokesVector";};
-  //  StokesVector(casacore::Int n):RigidVector<casacore::Float,4>(n) {} 
+  static String dataTypeId() {return "StokesVector";};
+  //  StokesVector(Int n):RigidVector<Float,4>(n) {} 
   // Default constructor zeroes vector.
-  StokesVector():RigidVector<casacore::Float,4>() {}
+  StokesVector():RigidVector<Float,4>() {}
   // Construct from scalar, setting all values to a constant.
-  StokesVector(casacore::Float f):RigidVector<casacore::Float,4>(f) {};
+  StokesVector(Float f):RigidVector<Float,4>(f) {};
   // Construct with four values specified.
-  StokesVector(casacore::Float v0, casacore::Float v1, casacore::Float v2, casacore::Float v3): casacore::RigidVector<casacore::Float,4>(v0,v1,v2,v3){}
-  // Construct from casacore::Vector (should have length 4)
-//  StokesVector(const casacore::Vector<casacore::Float> & v):RigidVector<casacore::Float,4>(v) {}
+  StokesVector(Float v0, Float v1, Float v2, Float v3): RigidVector<Float,4>(v0,v1,v2,v3){}
+  // Construct from Vector (should have length 4)
+//  StokesVector(const Vector<Float> & v):RigidVector<Float,4>(v) {}
   // Copy constructor with copy semantics.
-  StokesVector(const StokesVector& v):RigidVector<casacore::Float,4>(v) {}
+  StokesVector(const StokesVector& v):RigidVector<Float,4>(v) {}
   // Construct from RigidVector
-//  StokesVector(const casacore::RigidVector<casacore::Float,4>& v):RigidVector<casacore::Float,4>(v) {}
+//  StokesVector(const RigidVector<Float,4>& v):RigidVector<Float,4>(v) {}
   // Assignment
   StokesVector& operator=(const StokesVector& v) {
-    casacore::RigidVector<casacore::Float,4>::operator=(v); return *this;
+    RigidVector<Float,4>::operator=(v); return *this;
   }
   // Assign from a Vector
-  StokesVector& operator=(const casacore::Vector<casacore::Float>& v) {
-    casacore::RigidVector<casacore::Float,4>::operator=(v); return *this;
+  StokesVector& operator=(const Vector<Float>& v) {
+    RigidVector<Float,4>::operator=(v); return *this;
   }
   // Assign from a scalar, setting all values to a constant
-  StokesVector& operator=(casacore::Float f) {
-    casacore::RigidVector<casacore::Float,4>::operator=(f); return *this;
+  StokesVector& operator=(Float f) {
+    RigidVector<Float,4>::operator=(f); return *this;
   }
   // Negation
   StokesVector& operator-() {
-    casacore::RigidVector<casacore::Float,4>::operator-(); return *this;
+    RigidVector<Float,4>::operator-(); return *this;
   }
   // Addition
   StokesVector& operator+=(const StokesVector& v) {
-    casacore::RigidVector<casacore::Float,4>::operator+=(v); return *this;
+    RigidVector<Float,4>::operator+=(v); return *this;
   }
   // Subtraction
   StokesVector& operator-=(const StokesVector& v) {
-    casacore::RigidVector<casacore::Float,4>::operator-=(v); return *this;
+    RigidVector<Float,4>::operator-=(v); return *this;
   }
-  StokesVector& operator*=(casacore::Float f) {
-    casacore::RigidVector<casacore::Float,4>::operator*=(f); return *this;
+  StokesVector& operator*=(Float f) {
+    RigidVector<Float,4>::operator*=(f); return *this;
   }
   StokesVector& operator*=(const StokesVector& v) {
-    casacore::RigidVector<casacore::Float,4>::operator*=(v); return *this;
+    RigidVector<Float,4>::operator*=(v); return *this;
   }
-  // casacore::Matrix multiplication - v*=m is equivalent to v=m*v
-  StokesVector& operator*=(const casacore::SquareMatrix<casacore::Float,4>& m) {
-    casacore::RigidVector<casacore::Float,4>::operator*=(m); return *this;
+  // Matrix multiplication - v*=m is equivalent to v=m*v
+  StokesVector& operator*=(const SquareMatrix<Float,4>& m) {
+    RigidVector<Float,4>::operator*=(m); return *this;
   }
   // Equality
-  casacore::Bool operator==(const StokesVector& v) const {
+  Bool operator==(const StokesVector& v) const {
     return (v_p[0]==v.v_p[0] && v_p[1]==v.v_p[1] &&
 		  v_p[2]==v.v_p[2] && v_p[3]==v.v_p[3]);
   }
   // Inequality
-  casacore::Bool operator!=(const StokesVector& v) const {
+  Bool operator!=(const StokesVector& v) const {
     return (v_p[0]!=v.v_p[0] || v_p[1]!=v.v_p[1] ||
 		  v_p[2]!=v.v_p[2] || v_p[3]!=v.v_p[3]);
   }
   // Compute the maximum EigenValue
-  casacore::Float maxEigenValue() const;
+  Float maxEigenValue() const;
   // Compute the minimum EigenValue
-  casacore::Float minEigenValue() const;
+  Float minEigenValue() const;
   // Compute the determinant of the coherence matrix
-  casacore::Float determinant() const;
+  Float determinant() const;
 
   // The innerproduct of 2 StokesVectors
-  friend casacore::Float innerProduct(const StokesVector& l, const StokesVector& r) {
+  friend Float innerProduct(const StokesVector& l, const StokesVector& r) {
     return l.v_p[0]*r.v_p[0]+ l.v_p[1]*r.v_p[1]+
       l.v_p[2]*r.v_p[2]+ l.v_p[3]*r.v_p[3];
   }
-  // Multiplication of StokesVector by a casacore::Complex SquareMatrix
-  friend CStokesVector operator*(const casacore::SquareMatrix<casacore::Complex,4>& m,
+  // Multiplication of StokesVector by a Complex SquareMatrix
+  friend CStokesVector operator*(const SquareMatrix<Complex,4>& m,
 				 const StokesVector& v) {
-//    return m * (casacore::RigidVector<casacore::Float,4>&)v;
+//    return m * (RigidVector<Float,4>&)v;
     return m * v;
   }
-  // Write out a StokesVector using the casacore::Vector output method.
-  friend std::ostream& operator<<(std::ostream& os, const StokesVector& v) {
+  // Write out a StokesVector using the Vector output method.
+  friend ostream& operator<<(ostream& os, const StokesVector& v) {
     os << v.vector();
     return os;
   }
@@ -321,49 +317,49 @@ inline void defaultValue(StokesVector& v) {
 }
 
 // Multiply by a scalar
-inline StokesVector operator*(casacore::Float f, const StokesVector& v) {
+inline StokesVector operator*(Float f, const StokesVector& v) {
   StokesVector r(v);
   return r*=f;
 }
 // Multiply by a scalar
-inline StokesVector operator*(const StokesVector& v, casacore::Float f) {
+inline StokesVector operator*(const StokesVector& v, Float f) {
   StokesVector r(v);
   return r*=f;
 }
 
 // Multiplication of StokesVector by a SquareMatrix
-inline StokesVector operator*(const casacore::SquareMatrix<casacore::Float,4>& m,
+inline StokesVector operator*(const SquareMatrix<Float,4>& m,
 			      const StokesVector& v) {
   StokesVector result(v);
   return result*=m;
 }
 
-// Apply conversion matrix from casacore::Stokes to linear(returns result)
+// Apply conversion matrix from Stokes to linear(returns result)
 inline CStokesVector& applySlin(CStokesVector& result, 
 				const StokesVector& v) {
-  casacore::Complex t=casacore::Complex(0.,v(3)); 
+  Complex t=Complex(0.,v(3)); 
   result(0)=v(0)+v(1);
   result(1)=v(2)+t;
   result(2)=v(2)-t;
   result(3)=v(0)-v(1);
   return result;
 }
-// Apply conversion matrix from casacore::Stokes to linear.
+// Apply conversion matrix from Stokes to linear.
 inline CStokesVector applySlin(const StokesVector& v) {
   CStokesVector result;
   return applySlin(result,v);
 }
-// Apply conversion matrix from casacore::Stokes to circular.
+// Apply conversion matrix from Stokes to circular.
 inline CStokesVector& applyScirc(CStokesVector& result,
 				 const StokesVector& v) {
-  casacore::Complex t=casacore::Complex(0.,1.0)*v(2);
+  Complex t=Complex(0.,1.0)*v(2);
   result(0)=v(0)+v(3);
   result(1)=v(1)+t;
   result(2)=v(1)-t;
   result(3)=v(0)-v(3);
   return result;
 }
-// Apply conversion matrix from casacore::Stokes to circular.
+// Apply conversion matrix from Stokes to circular.
 inline CStokesVector applyScirc(const StokesVector& v) {
   CStokesVector result;
   return applyScirc(result,v);
@@ -371,11 +367,10 @@ inline CStokesVector applyScirc(const StokesVector& v) {
 
 // Apply conversion matrix from linear to Stokes.
 inline StokesVector& applySlinInv(StokesVector& result, const CStokesVector& v) {
-    using namespace casacore;
   result(0)=real(v(0)+v(3))/2;
   result(1)=real(v(0)-v(3))/2;
   result(2)=real(v(1)+v(2))/2;
-  result(3)=real(casacore::Complex(0.,1.0)*(v(2)-v(1))/2);
+  result(3)=real(Complex(0.,1.0)*(v(2)-v(1))/2);
   return result;
 }
 
@@ -387,10 +382,9 @@ inline StokesVector applySlinInv(const CStokesVector& v) {
 
 // Apply conversion matrix from circular to Stokes.
 inline StokesVector& applyScircInv(StokesVector& result, const CStokesVector& v) {
-    using namespace casacore;
   result(0)=real(v(0)+v(3))/2;
   result(1)=real(v(1)+v(2))/2;
-  result(2)=real(casacore::Complex(0.,1.0)*(v(2)-v(1))/2);
+  result(2)=real(Complex(0.,1.0)*(v(2)-v(1))/2);
   result(3)=real(v(0)-v(3))/2;
   return result;
 }

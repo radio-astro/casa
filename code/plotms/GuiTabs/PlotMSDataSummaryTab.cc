@@ -34,7 +34,6 @@
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
 #include <QDebug>
 
-using namespace casacore;
 namespace casa {
 
 

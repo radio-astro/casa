@@ -61,14 +61,14 @@ public:
     // success (mutex is now locked), or false (mutex is unavailable).
     virtual bool tryLock() = 0;
 };
-typedef casacore::CountedPtr<PlotMutex> PlotMutexPtr;
+typedef CountedPtr<PlotMutex> PlotMutexPtr;
 
 
 // Simple object to synchronize operation progress information across threads.
 class PlotOperation {    
 public:
     // Constructor which takes the operation name and a synchronization mutex.
-    PlotOperation(const casacore::String& name, PlotMutexPtr mutex);
+    PlotOperation(const String& name, PlotMutexPtr mutex);
     
     // Destructor.
     ~PlotOperation();
@@ -76,11 +76,11 @@ public:
     
     // Accessors (synchronized).
     // <group>
-    casacore::String name() const;    
+    String name() const;    
     bool inProgress() const;    
     bool isFinished() const;    
     unsigned int currentProgress() const;    
-    casacore::String currentStatus() const;
+    String currentStatus() const;
     bool cancelRequested() const;
     // </group>
     
@@ -90,7 +90,7 @@ public:
     void setInProgress(bool inProgress);
     void setIsFinished(bool isFinished);
     void setCurrentProgress(unsigned int currentProgress);
-    void setCurrentStatus(const casacore::String& currentStatus);
+    void setCurrentStatus(const String& currentStatus);
     void setCancelRequested(bool cancel);
     // </group>
     
@@ -114,7 +114,7 @@ public:
     
 private:    
     // Name.
-    casacore::String m_name;
+    String m_name;
     
     // Flags.
     bool m_inProgress, m_isFinished;
@@ -123,7 +123,7 @@ private:
     unsigned int m_currentProgress;
     
     // Current status message.
-    casacore::String m_currentStatus;
+    String m_currentStatus;
     
     // Cancel requested flag.
     bool m_cancelRequested;
@@ -138,7 +138,7 @@ private:
     // Notifies any registered watchers that the operation has changed.
     void notifyWatchers() const;
 };
-typedef casacore::CountedPtr<PlotOperation> PlotOperationPtr;
+typedef CountedPtr<PlotOperation> PlotOperationPtr;
 
 
 // Abstract interface for any object that wants to watch a PlotOperation object

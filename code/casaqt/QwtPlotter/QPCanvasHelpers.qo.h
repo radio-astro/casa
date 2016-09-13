@@ -89,7 +89,7 @@ private:
 // of which PlotAxisScale is set, and can use reference values instead of
 // absolute values (see PlotCanvas::setAxisReferenceValue()).  Additionally,
 // for date values it can convert a double in either modified julian seconds or
-// modified julian days into a casacore::String representation of the date, using a
+// modified julian days into a String representation of the date, using a
 // format that can be set.
 class QPScaleDraw : public QwtScaleDraw {
 public:	
@@ -107,15 +107,15 @@ public:
     
     // Gets/Sets the format used for date values.  See Plotter::dateFormat().
     // <group>
-    const casacore::String& dateFormat() const;
-    void setDateFormat(const casacore::String& newFormat);
+    const String& dateFormat() const;
+    void setDateFormat(const String& newFormat);
     // </group>
     
     // Gets/Sets the format used for relative date values.  See
     // Plotter::relativeDateFormat().
     // <group>
-    const casacore::String& relativeDateFormat() const;
-    void setRelativeDateFormat(const casacore::String& newFormat);
+    const String& relativeDateFormat() const;
+    void setRelativeDateFormat(const String& newFormat);
     // </group>
     
     // Gets/Sets the reference value.  See PlotCanvas::setAxisReferenceValue().
@@ -146,8 +146,8 @@ private:
 	
 	// Date formats.
 	// <group>
-	casacore::String m_dateFormat;
-	casacore::String m_relativeDateFormat;
+	String m_dateFormat;
+	String m_relativeDateFormat;
 	// </group>
 	
 	// Reference value.
@@ -362,7 +362,7 @@ public:
     bool shouldDraw() const;
     
     // Implements QPLayerItem::itemTitle().
-    casacore::String itemTitle() const { return "grid"; }
+    String itemTitle() const { return "grid"; }
     
     // Overrides QwtPlotItem::boundingRect() to use QwtPlotGrid's definition.
     QwtDoubleRect boundingRect() const { return QwtPlotGrid::boundingRect(); }
@@ -376,13 +376,12 @@ protected:
 #if QWT_VERSION >= 0x060000
     void draw_(QPainter* p, const QwtScaleMap& xMap,
                 const QwtScaleMap& yMap, const QRectF& drawRect,
-                unsigned int drawIndex, unsigned int drawCount) const
+                unsigned int drawIndex, unsigned int drawCount) const {
 #else
     void draw_(QPainter* p, const QwtScaleMap& xMap,
                 const QwtScaleMap& yMap, const QRect& drawRect,
-                unsigned int drawIndex, unsigned int drawCount) const
+                unsigned int drawIndex, unsigned int drawCount) const {
 #endif
-        {
 		(void)drawIndex; (void)drawCount;
         QwtPlotGrid::draw(p, xMap, yMap, drawRect); }
 };
@@ -404,7 +403,7 @@ public:
     bool shouldDraw() const { return true; }
     
     // Implements QPLayerItem::itemTitle().
-    casacore::String itemTitle() const { return "cartesian axis"; }
+    String itemTitle() const { return "cartesian axis"; }
     
 protected:
     // Implements QPLayerItem::draw_().  Ignores draw index and count.
@@ -426,7 +425,7 @@ private:
     QwtScaleDraw m_scaleDraw;
 };
 
-} // end namespace casa
+}
 
 #endif
 

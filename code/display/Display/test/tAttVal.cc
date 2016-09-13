@@ -40,7 +40,7 @@ int main(int, char **) {
 
 		{
 			Int val0 = 10;
-			Bool strict = true;
+			Bool strict = True;
 			AttributeValue<Int> av0(val0, strict);
 			AlwaysAssert(av0.getType()==AttValue::AtInt, AipsError);
 			AlwaysAssert(av0.getStrictness()==strict, AipsError);
@@ -98,7 +98,7 @@ int main(int, char **) {
 
 		{
 			uInt val0 = 10;
-			Bool strict = true;
+			Bool strict = True;
 			AttributeValue<uInt> av0(val0, strict);
 			AlwaysAssert(av0.getType()==AttValue::AtuInt, AipsError);
 			AlwaysAssert(av0.getStrictness()==strict, AipsError);
@@ -156,7 +156,7 @@ int main(int, char **) {
 
 		{
 			Float val0 = 10;
-			Bool strict = true;
+			Bool strict = True;
 			AttributeValue<Float> av0(val0, strict);
 			AlwaysAssert(av0.getType()==AttValue::AtFloat, AipsError);
 			AlwaysAssert(av0.getStrictness()==strict, AipsError);
@@ -214,7 +214,7 @@ int main(int, char **) {
 
 		{
 			Double val0 = 10;
-			Bool strict = true;
+			Bool strict = True;
 			AttributeValue<Double> av0(val0, strict);
 			AlwaysAssert(av0.getType()==AttValue::AtDouble, AipsError);
 			AlwaysAssert(av0.getStrictness()==strict, AipsError);
@@ -272,7 +272,7 @@ int main(int, char **) {
 
 		{
 			String val0 = "10";
-			Bool strict = true;
+			Bool strict = True;
 			AttributeValue<String> av0(val0, strict);
 			AlwaysAssert(av0.getType()==AttValue::AtString, AipsError);
 			AlwaysAssert(av0.getStrictness()==strict, AipsError);
@@ -329,8 +329,8 @@ int main(int, char **) {
 // Bool
 
 		{
-			Bool val0 = true;
-			Bool strict = true;
+			Bool val0 = True;
+			Bool strict = True;
 			AttributeValue<Bool> av0(val0, strict);
 			AlwaysAssert(av0.getType()==AttValue::AtBool, AipsError);
 			AlwaysAssert(av0.getStrictness()==strict, AipsError);
@@ -352,7 +352,7 @@ int main(int, char **) {
 			AlwaysAssert(av1==av0, AipsError);
 			AlwaysAssert(!(av1!=av0), AipsError);
 //
-			Bool val2 = false;
+			Bool val2 = False;
 			AttributeValue<Bool> av2(val2, strict);
 			av2 = av0;
 			Vector<Bool> vval2 = av2.getValue();

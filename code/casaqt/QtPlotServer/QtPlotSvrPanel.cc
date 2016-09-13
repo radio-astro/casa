@@ -64,7 +64,6 @@
 #define PATHMAX 1024
 #endif
 
-using namespace casacore;
 namespace casa {
 
     QtPlotSvrPanel::colormap_map *QtPlotSvrPanel::colormaps_ = 0;
@@ -656,29 +655,29 @@ namespace casa {
 
 	colormaps_ = new colormap_map( );
 
-        casacore::Table colormap_table;
+        casa::Table colormap_table;
 
-	casacore::String root = Aipsrc::aipsRoot();
-	casacore::String defaultpath = root+"/data/gui/colormaps/default.tbl";
-	casacore::String useSystemCmap;
-	casacore::String altpath,userpath;
-	casacore::Aipsrc::find(useSystemCmap,"display.colormaps.usedefault","yes");
-	casacore::Aipsrc::find(userpath,"display.colormaps.usertable","");
+	casa::String root = Aipsrc::aipsRoot();
+	casa::String defaultpath = root+"/data/gui/colormaps/default.tbl";
+	casa::String useSystemCmap;
+	casa::String altpath,userpath;
+	casa::Aipsrc::find(useSystemCmap,"display.colormaps.usedefault","yes");
+	casa::Aipsrc::find(userpath,"display.colormaps.usertable","");  
 	try {
 	    if (!useSystemCmap.matches(Regex("[ \t]*(([nN]o)|([fF]alse))[ \t\n]*"))) {
 		// default cmaps
-		colormap_table = casacore::Table(defaultpath);
+		colormap_table = casa::Table(defaultpath);
 		if (!userpath.empty()) {
 		    // default and user cmaps
-		    colormap_table = casacore::Table(userpath);
+		    colormap_table = casa::Table(userpath);
 		}
 	    } else {      
 		if (!userpath.empty()) {
 		    // user cmaps only
-		    colormap_table = casacore::Table(userpath);
+		    colormap_table = casa::Table(userpath);
 		}
 	    }    
-	} catch (const casacore::AipsError &x) {
+	} catch (const casa::AipsError &x) {
 	    fprintf( stderr, "could not load default CASA colormaps: %s\n", x.what() );
 	    return;
 	} catch (...) {
@@ -688,19 +687,19 @@ namespace casa {
 
         unsigned int n = colormap_table.nrow();
 
-        casacore::ROArrayColumn<casacore::String> synonym_col(colormap_table, "SYNONYMS");
-        casacore::ROScalarColumn<casacore::String> name_col (colormap_table, "CMAP_NAME");
-        casacore::ROArrayColumn<casacore::Float> red_col (colormap_table, "RED");
-        casacore::ROArrayColumn<casacore::Float> green_col (colormap_table, "GREEN");
-        casacore::ROArrayColumn<casacore::Float> blue_col (colormap_table, "BLUE");
+        casa::ROArrayColumn<casa::String> synonym_col(colormap_table, "SYNONYMS");
+        casa::ROScalarColumn<casa::String> name_col (colormap_table, "CMAP_NAME");
+        casa::ROArrayColumn<casa::Float> red_col (colormap_table, "RED");
+        casa::ROArrayColumn<casa::Float> green_col (colormap_table, "GREEN");
+        casa::ROArrayColumn<casa::Float> blue_col (colormap_table, "BLUE");
 
         for ( unsigned int i=0; i < n; ++i ) {
-            casacore::String name = name_col(i);
-            casacore::Vector<casacore::String> synonyms(synonym_col(i));
+            casa::String name = name_col(i);
+            casa::Vector<casa::String> synonyms(synonym_col(i));
 
-            casacore::Vector<casacore::Float> red(red_col(i));
-            casacore::Vector<casacore::Float> green(green_col(i));
-            casacore::Vector<casacore::Float> blue(blue_col(i));
+            casa::Vector<casa::Float> red(red_col(i));
+            casa::Vector<casa::Float> green(green_col(i));
+            casa::Vector<casa::Float> blue(blue_col(i));
 
             unsigned int len = red.nelements() < green.nelements() ? red.nelements() : green.nelements();
             len = len < blue.nelements() ? len : blue.nelements( );

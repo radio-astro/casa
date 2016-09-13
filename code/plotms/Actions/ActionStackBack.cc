@@ -25,7 +25,6 @@
 
 #include "ActionStackBack.h"
 
-using namespace casacore;
 namespace casa {
 
 ActionStackBack::ActionStackBack( Client * client)
@@ -40,5 +39,4 @@ int ActionStackBack::getDelta() const {
 ActionStackBack::~ActionStackBack() {
 }
 
-using namespace casacore;
 } /* namespace casa */

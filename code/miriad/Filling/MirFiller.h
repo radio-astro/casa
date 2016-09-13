@@ -40,15 +40,11 @@
 
 #include <casa/namespace.h>
 //# Forward Declarations
-namespace casacore{
-
+namespace casa { //# NAMESPACE CASA - BEGIN
 class Record;
 class String;
 class AipsError;
 class MeasurementSet;
-}
-
-namespace casa { //# NAMESPACE CASA - BEGIN
 //class FillMetadata;
 //class GlishRecord;
 } //# NAMESPACE CASA - END
@@ -70,7 +66,7 @@ class FillMetadata;
 // </reviewed>
 // 
 // <prerequisite>
-//   <li> <linkto class="casacore::Record">casacore::Record</linkto> -- for holding options
+//   <li> <linkto class="Record">Record</linkto> -- for holding options
 // </prerequisite>
 //
 // <etymology>
@@ -80,7 +76,7 @@ class FillMetadata;
 // </etymology>
 //
 // <synopsis>
-// MirFiller converts an input Miriad dataset into an output casacore::MeasurementSet 
+// MirFiller converts an input Miriad dataset into an output MeasurementSet 
 // (ver. 2).  It is attached to its Miriad dataset at construction; it can 
 // subsequently be used to fill several output MSes, perhaps with different 
 // data from the input dataset, in sequence (i.e. it is not thread-safe).  
@@ -116,9 +112,9 @@ class FillMetadata;
 // there will be Nwin+2 wideband channels.  The first Nwin/2 windows will
 // be from the lower sideband, and the rest, from the upper sideband.  
 // 
-// When the Miriad data is converted to an casacore::MS, each spectral window and each 
-// wideband channel is loaded into a separate casacore::MS spectral window.  Thus, for
-// a BIMA dataset with Nwin windows, the output casacore::MS (by default) will contain 
+// When the Miriad data is converted to an MS, each spectral window and each 
+// wideband channel is loaded into a separate MS spectral window.  Thus, for
+// a BIMA dataset with Nwin windows, the output MS (by default) will contain 
 // Nwin*2+2 spectral windows.  The <src>select()</src> function can be used
 // to restrict the windows that get written.
 //
@@ -127,7 +123,7 @@ class FillMetadata;
 // Miriad datasets stores correlations for different polarizations in
 // separate records, even if they were observed simultaneously.
 // (Thus, it is up to the Miriad I/O software to properly combine
-// records to form new casacore::Stokes correlations.)  This is in contrast to
+// records to form new Stokes correlations.)  This is in contrast to
 // AIPS++ which can store polarizations observed at the same time in the 
 // same record.  Furthermore, BIMA can only observe one polarization at 
 // a time.  Thus, how polarizations should be loaded from a Miriad dataset
@@ -166,15 +162,15 @@ class FillMetadata;
 //    MirFiller filler('3c273');
 //
 //    // if needed, set some options
-//    casacore::Record opts = filler.getOptions();
-//    casacore::RecordFieldPtr<casacore::Double>(opts, "scanlim").define(600);
-//    casacore::RecordFieldPtr<casacore::Bool>(opts, "verbose").define(true);
+//    Record opts = filler.getOptions();
+//    RecordFieldPtr<Double>(opts, "scanlim").define(600);
+//    RecordFieldPtr<Bool>(opts, "verbose").define(True);
 //    filler.setOptions(opts);
 //
 //    // if desired, chose the windows to write
-//    casacore::Vector<casacore::Int> wide(0)    // do not write out any wideband channels
-//    casacore::Vector<casacore::Int> splwin(filler.nspect());
-//    for(casacore::Int i=0; i < splwin.nelements(); i++) splwin(i) = i;
+//    Vector<Int> wide(0)    // do not write out any wideband channels
+//    Vector<Int> splwin(filler.nspect());
+//    for(Int i=0; i < splwin.nelements(); i++) splwin(i) = i;
 //    filler.select(wide, splwin);
 //
 //    // fill the output MS
@@ -185,7 +181,7 @@ class FillMetadata;
 // <motivation>
 // The important features of this class are:
 // <ul>
-//    <li> casacore::Input spectral windows are loaded into separate output windows.
+//    <li> Input spectral windows are loaded into separate output windows.
 //         This allows windows to have different rest frequencies associated
 //         with them.  It also allows channels within a window to be 
 //         contiguous in frequency and having the same width.
@@ -204,7 +200,7 @@ class FillMetadata;
 // </motivation>
 //
 // <thrown>
-//    <li> <linkto class="casacore::AipsError">casacore::AipsError</linkto> -- if the input
+//    <li> <linkto class="AipsError">AipsError</linkto> -- if the input
 //         dataset is not in Miriad format or cannot be opened.
 //    <li> <linkto class="MiriadFormatError">MiriadFormatError</linkto>
 //         -- if an illegal format condition is found in the input
@@ -228,14 +224,14 @@ class FillMetadata;
 
 class MirFiller : public MirVarHandler {
 private:
-    casacore::uInt debug;  // debugging level
+    uInt debug;  // debugging level
 
 public:
 
     // create the filler, attaching it to a Miriad dataset.  <src>mirfile</src>
     // is the dataset filename, and <src>dbg</src> is the debug level (see 
     // <linkto class="MirFiller:setDebug"><src>setDebugLevel()</src></linkto>).
-    MirFiller(const casacore::String& mirfile, casacore::Bool scan=true, casacore::Int dbg=0);
+    MirFiller(const String& mirfile, Bool scan=True, Int dbg=0);
 
     // destruct this filler
     virtual ~MirFiller();
@@ -244,8 +240,8 @@ public:
     // messages that are printed to the terminal (as opposed to the logger).  
     // A value of zero or less will cause no extra messages to be printed; 
     // increasing values will increase the amount of messages.
-    void setDebugLevel(casacore::Int level) { 
-	debug = (level < 0) ? 0 : (casacore::uInt) level; 
+    void setDebugLevel(Int level) { 
+	debug = (level < 0) ? 0 : (uInt) level; 
 	rdr_p.setDebugLevel(debug);
     }
 
@@ -253,27 +249,27 @@ public:
     // messages that are printed to the terminal.  A value of zero or less 
     // means that no extra messages will be printed; increasing values will 
     // increase the amount of messages.
-    casacore::Int getDebugLevel() const { return debug; }
+    Int getDebugLevel() const { return debug; }
 
     // return true if the debugging level is at least as high as a given 
     // level.
-    casacore::Bool Debug(casacore::Int level) { return (((casacore::uInt) level) <= debug); }
+    Bool Debug(Int level) { return (((uInt) level) <= debug); }
 
     // return true if this filler should be verbose in its messages.  This
     // will be true if the verbose option is enabled or the debug level is
     // greater than 1.
-    casacore::Bool verbose() { return (verbose_p || debug > 1); }
+    Bool verbose() { return (verbose_p || debug > 1); }
 
     // return basic characteristics of the input dataset as a GlishRecord.  If
-    // scan is true (the default), the entire file will be (re-) scanned 
+    // scan is True (the default), the entire file will be (re-) scanned 
     // using the current values for the obslim and scanlim options.
     // If verbose is true (the 
     // default), send a description to the logger.
-    //GlishRecord summary(casacore::Bool verbose=true, casacore::Bool scan=true);
+    //GlishRecord summary(Bool verbose=True, Bool scan=True);
 
-    // fill the output casacore::MS according to the current selections and options
+    // fill the output MS according to the current selections and options
     // msfile is the output name to use; it should not already exist.
-    void fill(const casacore::String& msfile) {
+    void fill(const String& msfile) {
 	if (joinpol_p) 
 	    joinFill(msfile);
 	else 
@@ -286,15 +282,15 @@ public:
     // and windows.  polsel is a polarization selection: only the correlation
     // types present will be loaded; a NULL value means take all polarizations
     // found.  (See also the joinpol option under setOptions().)
-    void selectSpectra(const casacore::Vector<casacore::Int>& wideChans, 
-		       const casacore::Vector<casacore::Int>& narrowWins);
+    void selectSpectra(const Vector<Int>& wideChans, 
+		       const Vector<Int>& narrowWins);
 //	throw(UnavailableMiriadDataSelectionError);
 
     // select the polarizations to load.  An empty setup means by default 
     // take all polarizations found in the dataset.
     void selectPols(ConstMirPolSetup &polsel);
 
-    // set the options for filling.  The options are set via a casacore::Record object
+    // set the options for filling.  The options are set via a Record object
     // for which the following keys are recognized:
     // <pre>
     // scanlim  the scan time jump limit, in seconds.  If the jump in
@@ -317,7 +313,7 @@ public:
     //          ID.  The default is 4 hours.
     // 
     // tilesize the tiling size to use (in channels?) for storing data
-    //          in the casacore::MS using the TiledStorageManager.  If the value 
+    //          in the MS using the TiledStorageManager.  If the value 
     //          is <= 0, the standard (non-tiled) storage manager will
     //          be used.  The default is 32.
     // 
@@ -357,65 +353,65 @@ public:
     //
     // verbose  if true, send extra messages to the logger
     // </pre>
-    void setOptions(const casacore::Record &opts);
+    void setOptions(const Record &opts);
 
     // get the current filling options
-    casacore::Record getOptions();
+    Record getOptions();
 
     // handle an update to the integration time; 
     // this is a callback routine that is part of the MirVarHandler 
     // interface which must be implemented.  This implementation does
     // nothing.
-    virtual void updateIntTime(FillMetadata &fm, casacore::Double time);
+    virtual void updateIntTime(FillMetadata &fm, Double time);
 
     // handle an update to the observatory; 
     // this is a callback routine that is part of the MirVarHandler 
     // interface which must be implemented.  This implementation flushes
     // records for the FEED subtable for the last observatory, and adds
     // a PROCESSOR subtable record for the next table.
-    virtual void updateObservatory(FillMetadata &fm, casacore::Double time);
+    virtual void updateObservatory(FillMetadata &fm, Double time);
 
     // handle an update to the array configuration; 
     // this is a callback routine that is part of the MirVarHandler 
     // interface which must be implemented
-    virtual void updateArray(FillMetadata &fm, casacore::Double time);
+    virtual void updateArray(FillMetadata &fm, Double time);
 
 	// handle an update to the SOURCE_MODEL column of the SOURCE subtable.
 	// Maybe that this gets incorporated into updateSource at sometime, have
 	// to examine logistics.  REWRITEME. dgoscha
-    virtual void updateSourceModel(FillMetadata &fm, casacore::Double time);
+    virtual void updateSourceModel(FillMetadata &fm, Double time);
 
     // handle an update to the array configuration; 
     // this is a callback routine that is part of the MirVarHandler 
     // interface which must be implemented
-    virtual void updatePolSetup(FillMetadata &fm, casacore::Double time);
+    virtual void updatePolSetup(FillMetadata &fm, Double time);
 
     // handle an update to the source; 
     // this is a callback routine that is part of the MirVarHandler 
     // interface which must be implemented
-    virtual void updateSource(FillMetadata &fm, casacore::Double time);
+    virtual void updateSource(FillMetadata &fm, Double time);
 
     // handle an update to the observing field; 
     // this is a callback routine that is part of the MirVarHandler 
     // interface which must be implemented
-    virtual void updateField(FillMetadata &fm, casacore::Double time);
+    virtual void updateField(FillMetadata &fm, Double time);
 
     // handle an update to the frequency setup; 
     // this is a callback routine that is part of the MirVarHandler 
     // interface which must be implemented
-    virtual void updateFreqSetup(FillMetadata &fm, casacore::Double time);
+    virtual void updateFreqSetup(FillMetadata &fm, Double time);
 
     // handle an update to system temperatures
     // this is a callback routine that is part of the MirVarHandler 
     // interface which must be implemented
-    virtual void updateTsys(FillMetadata &fm, casacore::Double time);
+    virtual void updateTsys(FillMetadata &fm, Double time);
 
 private:
 
     // open and setup the output MS.  This includes all initialization that 
     // can be done without reading any data from the input Miriad dataset.
-    casacore::MeasurementSet *setupMS(const casacore::String& msfile, casacore::Int tileSize=0,
-			    casacore::Bool needSrcModel=true);
+    MeasurementSet *setupMS(const String& msfile, Int tileSize=0,
+			    Bool needSrcModel=True);
 
     // initialize the output MS.  This is called after the first input record 
     // is read in from the input Miriad dataset.  It will initialize certain
@@ -424,33 +420,33 @@ private:
     // information.
     void initMS(::FillMetadata& fm);
 
-    void noJoinFill(const casacore::String& msfile);
-    void joinFill(const casacore::String& msfile);
+    void noJoinFill(const String& msfile);
+    void joinFill(const String& msfile);
 
-    casacore::Bool nearAbs(casacore::Double a, casacore::Double b, casacore::Double tol) {
+    Bool nearAbs(Double a, Double b, Double tol) {
         return (abs(a-b) < tol);
     }
 
     // add the current observation information as a new record to the
     // output ms's OBSERVATION subtable
-    void flushObsRecord(FillMetadata& fm, casacore::Double time);
+    void flushObsRecord(FillMetadata& fm, Double time);
 
     // add the records to the FEED subtable for the current set of antennas
     // and polarizations
-    void flushFeedRecords(FillMetadata& fm, casacore::Double time);
+    void flushFeedRecords(FillMetadata& fm, Double time);
 
     // check for moving objects in source list and adjust FIELD subtable
     // accordingly
-    void flushMovingFields(FillMetadata& fm, casacore::Double time);
+    void flushMovingFields(FillMetadata& fm, Double time);
 
     // add the records to the POINTING subtable for the current set of antennas
-    void flushPointingRecords(FillMetadata& fm, casacore::Double time);
+    void flushPointingRecords(FillMetadata& fm, Double time);
 
     // add a new set of antenna positions
-    void addAntennaPositions(FillMetadata &fm, casacore::Double time);
+    void addAntennaPositions(FillMetadata &fm, Double time);
 
     // add the current source to the SOURCE subtable
-    casacore::uInt addSource(FillMetadata &fm, double time);
+    uInt addSource(FillMetadata &fm, double time);
 
     // add the current field to the FIELD subtable
     void addField(FillMetadata &fm, double time);
@@ -459,7 +455,7 @@ private:
     void addCorrelatorSetup(FillMetadata &fm, double time);
 
     // add a POLARIZATION record for the current polarization type.
-    void addPolarization(FillMetadata &fm, casacore::Bool addCurrentOnly=false);
+    void addPolarization(FillMetadata &fm, Bool addCurrentOnly=False);
 
     // add DATA_DESCRIPTION records for the current polarization
     // and frequency setup
@@ -469,46 +465,46 @@ private:
     void flushHistory(FillMetadata &fm);
 
     // copy the history from a given HISTORY table
-    void copyHistoryFrom(FillMetadata &fm, casacore::String tablename);
+    void copyHistoryFrom(FillMetadata &fm, String tablename);
 
     // add a processor record for the current frequency setup
     void addProcessor(FillMetadata &fm);
 
     // add a filler message to the HISTORY table
-    void addHistoryMessage(FillMetadata &fm, casacore::String priority, 
-			   casacore::String origin, casacore::String msg);
+    void addHistoryMessage(FillMetadata &fm, String priority, 
+			   String origin, String msg);
 
     // add a record to the SysCal table
-    void addTsysRecords(FillMetadata &fm, casacore::Double time, casacore::Cube<casacore::Float>& tsys);
+    void addTsysRecords(FillMetadata &fm, Double time, Cube<Float>& tsys);
 
     // initialize the STATE table
     void initState(FillMetadata &fm);
 
     // create a polynomial fit for the direction to a moving source 
     //PJT
-    casacore::Bool fitskymotion(casacore::Matrix<casacore::Double> &dirfit, const casacore::Vector<casacore::Double> &time, 
-		      const casacore::Vector<casacore::Double> &ra, const casacore::Vector<casacore::Double> &dec);
+    Bool fitskymotion(Matrix<Double> &dirfit, const Vector<Double> &time, 
+		      const Vector<Double> &ra, const Vector<Double> &dec);
 
     // info that doesn't change during life of filler
     MirVisReader rdr_p;
-    casacore::LogIO log_p;
+    LogIO log_p;
 
     // selection info
-    casacore::Vector<casacore::Bool> widesel_p, winsel_p;
-    casacore::Int nwinsel_p, nwidesel_p;
+    Vector<Bool> widesel_p, winsel_p;
+    Int nwinsel_p, nwidesel_p;
     ConstMirPolSetup *defpolsel_p;
 
     // options
-    casacore::String histbl_p;
-    casacore::Double scanlim_p, obslim_p;
-    casacore::Int tilesize_p, planetfit_p;
-    casacore::Bool verbose_p, joinpol_p, tsyswt_p, movfield_p, compress_p;
+    String histbl_p;
+    Double scanlim_p, obslim_p;
+    Int tilesize_p, planetfit_p;
+    Bool verbose_p, joinpol_p, tsyswt_p, movfield_p, compress_p;
 
     enum wideConventions { NONE=0, BIMA, MIRIAD, NCONV };
-    static casacore::String wideconvnames[];
+    static String wideconvnames[];
     wideConventions wideconv_p;
 
-    casacore::Double updmodelint_p;
+    Double updmodelint_p;
 };
 
 

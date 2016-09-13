@@ -37,7 +37,6 @@
 #include <qwt_plot_marker.h>
 #include <qwt_symbol.h>
 
-using namespace casacore;
 namespace casa {
 
 	ImageSlice::ImageSlice( int id, QWidget* parent ): QFrame(parent) {
@@ -439,5 +438,4 @@ namespace casa {
 	}
 
 
-using namespace casacore;
 } /* namespace casa */

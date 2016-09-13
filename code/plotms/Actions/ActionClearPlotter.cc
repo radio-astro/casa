@@ -25,7 +25,6 @@
 
 #include "ActionClearPlotter.h"
 #include <plotms/PlotMS/PlotMS.h>
-using namespace casacore;
 namespace casa {
 
 ActionClearPlotter::ActionClearPlotter( Client* client )
@@ -41,5 +40,4 @@ bool ActionClearPlotter::doActionSpecific(PlotMSApp* plotms) {
 ActionClearPlotter::~ActionClearPlotter() {
 }
 
-using namespace casacore;
 } /* namespace casa */

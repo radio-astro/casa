@@ -17,7 +17,6 @@
 
 using casa::vi::VisBufferImpl2;
 
-using namespace casacore;
 namespace casa {
 
 namespace ms {
@@ -310,7 +309,7 @@ Vbi2MsRow::setAntenna1 (Int value)
 {
     AssertWritable();
 
-    vbi2_p->cache_p->antenna1_p.getRef (false) (row ()) = value;
+    vbi2_p->cache_p->antenna1_p.getRef (False) (row ()) = value;
 }
 
 void
@@ -318,7 +317,7 @@ Vbi2MsRow::setAntenna2 (Int value)
 {
     AssertWritable();
 
-    vbi2_p->cache_p->antenna2_p.getRef (false)(row ()) = value;
+    vbi2_p->cache_p->antenna2_p.getRef (False)(row ()) = value;
 }
 
 void
@@ -326,7 +325,7 @@ Vbi2MsRow::setArrayId (Int value)
 {
     AssertWritable();
 
-    vbi2_p->cache_p->arrayId_p.getRef (false)(row ()) = value;
+    vbi2_p->cache_p->arrayId_p.getRef (False)(row ()) = value;
 }
 
 void
@@ -334,7 +333,7 @@ Vbi2MsRow::setCorrelationType (Int value)
 {
     AssertWritable();
 
-    vbi2_p->cache_p->corrType_p.getRef (false)(row ()) = value;
+    vbi2_p->cache_p->corrType_p.getRef (False)(row ()) = value;
 }
 
 
@@ -344,7 +343,7 @@ Vbi2MsRow::setDataDescriptionId (Int value)
 {
     AssertWritable();
 
-    vbi2_p->cache_p->dataDescriptionIds_p.getRef (false)(row ()) = value;
+    vbi2_p->cache_p->dataDescriptionIds_p.getRef (False)(row ()) = value;
 }
 
 void
@@ -352,7 +351,7 @@ Vbi2MsRow::setFeed1 (Int value)
 {
     AssertWritable();
 
-    vbi2_p->cache_p->feed1_p.getRef (false)(row ()) = value;
+    vbi2_p->cache_p->feed1_p.getRef (False)(row ()) = value;
 }
 
 void
@@ -360,7 +359,7 @@ Vbi2MsRow::setFeed2 (Int value)
 {
     AssertWritable();
 
-    vbi2_p->cache_p->feed2_p.getRef (false)(row ()) = value;
+    vbi2_p->cache_p->feed2_p.getRef (False)(row ()) = value;
 }
 
 void
@@ -368,7 +367,7 @@ Vbi2MsRow::setFieldId (Int value)
 {
     AssertWritable();
 
-    vbi2_p->cache_p->fieldId_p.getRef (false)(row ()) = value;
+    vbi2_p->cache_p->fieldId_p.getRef (False)(row ()) = value;
 }
 
 void
@@ -376,7 +375,7 @@ Vbi2MsRow::setRowId (Int value)
 {
     AssertWritable();
 
-    vbi2_p->cache_p->rowIds_p.getRef (false) (row ()) = value;
+    vbi2_p->cache_p->rowIds_p.getRef (False) (row ()) = value;
 }
 
 void
@@ -384,7 +383,7 @@ Vbi2MsRow::setRowFlag (Bool isFlagged)
 {
     AssertWritable ();
 
-    vbi2_p->cache_p->flagRow_p.getRef (false)(row ()) = isFlagged;
+    vbi2_p->cache_p->flagRow_p.getRef (False)(row ()) = isFlagged;
 }
 
 void
@@ -392,7 +391,7 @@ Vbi2MsRow::setFlags (Bool isFlagged, Int correlation, Int channel)
 {
     AssertWritable ();
 
-    vbi2_p->cache_p->flagCube_p.getRef (false)(correlation,channel, row ()) = isFlagged;
+    vbi2_p->cache_p->flagCube_p.getRef (False)(correlation,channel, row ()) = isFlagged;
 }
 
 void
@@ -409,7 +408,7 @@ Vbi2MsRow::setObservationId (Int value)
 {
     AssertWritable();
 
-    vbi2_p->cache_p->observationId_p.getRef (false)(row ()) = value;
+    vbi2_p->cache_p->observationId_p.getRef (False)(row ()) = value;
 }
 
 void
@@ -417,7 +416,7 @@ Vbi2MsRow::setProcessorId (Int value)
 {
     AssertWritable();
 
-    vbi2_p->cache_p->processorId_p.getRef (false)(row ()) = value;
+    vbi2_p->cache_p->processorId_p.getRef (False)(row ()) = value;
 }
 
 void
@@ -425,13 +424,13 @@ Vbi2MsRow::setScanNumber (Int value)
 {
     AssertWritable();
 
-    vbi2_p->cache_p->scan_p.getRef (false)(row ()) = value;
+    vbi2_p->cache_p->scan_p.getRef (False)(row ()) = value;
 }
 
 void
 Vbi2MsRow::setSpectralWindow (Int value)
 {
-    vbi2_p->cache_p->spectralWindows_p.getRef (false)(row ()) = value;
+    vbi2_p->cache_p->spectralWindows_p.getRef (False)(row ()) = value;
 }
 
 void
@@ -439,7 +438,7 @@ Vbi2MsRow::setStateId (Int value)
 {
     AssertWritable();
 
-    vbi2_p->cache_p->stateId_p.getRef (false)(row ()) = value;
+    vbi2_p->cache_p->stateId_p.getRef (False)(row ()) = value;
 }
 
 void
@@ -447,7 +446,7 @@ Vbi2MsRow::setExposure (Double value)
 {
     AssertWritable();
 
-    vbi2_p->cache_p->exposure_p.getRef (false)(row ()) = value;
+    vbi2_p->cache_p->exposure_p.getRef (False)(row ()) = value;
 }
 
 void
@@ -455,7 +454,7 @@ Vbi2MsRow::setInterval (Double value)
 {
     AssertWritable();
 
-    vbi2_p->cache_p->timeInterval_p.getRef (false)(row ()) = value;
+    vbi2_p->cache_p->timeInterval_p.getRef (False)(row ()) = value;
 }
 
 void
@@ -463,7 +462,7 @@ Vbi2MsRow::setSigma (Int correlation, Float value)
 {
     AssertWritable();
 
-    vbi2_p->cache_p->sigma_p.getRef (false)(correlation, row ()) = value;
+    vbi2_p->cache_p->sigma_p.getRef (False)(correlation, row ()) = value;
 }
 
 void
@@ -471,7 +470,7 @@ Vbi2MsRow::setTime (Double value)
 {
     AssertWritable();
 
-    vbi2_p->cache_p->time_p.getRef (false)(row ()) = value;
+    vbi2_p->cache_p->time_p.getRef (False)(row ()) = value;
 }
 
 void
@@ -479,7 +478,7 @@ Vbi2MsRow::setTimeCentroid (Double value)
 {
     AssertWritable();
 
-    vbi2_p->cache_p->timeCentroid_p.getRef (false)(row ()) = value;
+    vbi2_p->cache_p->timeCentroid_p.getRef (False)(row ()) = value;
 }
 
 void
@@ -487,7 +486,7 @@ Vbi2MsRow::setWeight (Int correlation, Float value)
 {
     AssertWritable();
 
-    vbi2_p->cache_p->weight_p.getRef (false)(correlation, row ()) = value;
+    vbi2_p->cache_p->weight_p.getRef (False)(correlation, row ()) = value;
 }
 
 ////////////////////////////////////////////////////////////
@@ -543,7 +542,7 @@ Vbi2MsRow::uvw () const
 void
 Vbi2MsRow::setUvw (const Vector<Double> & value)
 {
-    vbi2_p->cache_p->uvw_p.getRef(false).column (row()) = value;
+    vbi2_p->cache_p->uvw_p.getRef(False).column (row()) = value;
 }
 
 const Matrix<Complex> &
@@ -644,7 +643,7 @@ Vbi2MsRow::singleDishDataMutable ()
 void
 Vbi2MsRow::setSingleDishData (const Matrix<Float> & value)
 {
-    vbi2_p->cache_p->floatDataCube_p.getRef(false).xyPlane (row()) = value;
+    vbi2_p->cache_p->floatDataCube_p.getRef(False).xyPlane (row()) = value;
 }
 
 
@@ -722,7 +721,7 @@ Vbi2MsRow::setCorrected (Int correlation, Int channel, const Complex & value)
 {
     AssertWritable();
 
-    vbi2_p->cache_p->correctedVisCube_p.getRef (false)(correlation, channel, row ()) = value;
+    vbi2_p->cache_p->correctedVisCube_p.getRef (False)(correlation, channel, row ()) = value;
 }
 
 void
@@ -730,7 +729,7 @@ Vbi2MsRow::setWeightSpectrum (Int correlation, Int channel, Float value)
 {
     AssertWritable();
 
-    vbi2_p->cache_p->weightSpectrum_p.getRef (false)(correlation, channel, row ()) = value;
+    vbi2_p->cache_p->weightSpectrum_p.getRef (False)(correlation, channel, row ()) = value;
 }
 
 
@@ -739,7 +738,7 @@ Vbi2MsRow::setSigmaSpectrum (Int correlation, Int channel, Float value)
 {
     AssertWritable();
 
-    vbi2_p->cache_p->sigmaSpectrum_p.getRef (false)(correlation, channel, row ()) = value;
+    vbi2_p->cache_p->sigmaSpectrum_p.getRef (False)(correlation, channel, row ()) = value;
 }
 
 
@@ -748,7 +747,7 @@ Vbi2MsRow::setModel (Int correlation, Int channel, const Complex & value)
 {
     AssertWritable();
 
-    vbi2_p->cache_p->modelVisCube_p.getRef (false)(correlation, channel, row ()) = value;
+    vbi2_p->cache_p->modelVisCube_p.getRef (False)(correlation, channel, row ()) = value;
 }
 
 void
@@ -756,7 +755,7 @@ Vbi2MsRow::setObserved (Int correlation, Int channel, const Complex & value)
 {
     AssertWritable();
 
-    vbi2_p->cache_p->visCube_p.getRef (false)(correlation, channel, row ()) = value;
+    vbi2_p->cache_p->visCube_p.getRef (False)(correlation, channel, row ()) = value;
 }
 
 void
@@ -764,7 +763,7 @@ Vbi2MsRow::setSingleDishData (Int correlation, Int channel, const Float & value)
 {
     AssertWritable();
 
-    vbi2_p->cache_p->floatDataCube_p.getRef (false)(correlation, channel, row ()) = value;
+    vbi2_p->cache_p->floatDataCube_p.getRef (False)(correlation, channel, row ()) = value;
 }
 
 

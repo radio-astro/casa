@@ -93,16 +93,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <example>
 // <srcblock>
-// casacore::Matrix<casacore::Float> psf(4,4), dirty(20,20), model(20,20);
+// Matrix<Float> psf(4,4), dirty(20,20), model(20,20);
 // .... put some meaningful values into these Arrays....
 // // create a convolution equation, and an array model
 // ConvolutionEquation convEqn(psf, dirty);
-// ArrayModel<casacore::Float> myModel(model);
+// ArrayModel<Float> myModel(model);
 // // now calculate the convolution of the model and the psf
-// casacore::Matrix<casacore::Float> prediction;
+// Matrix<Float> prediction;
 // convEqn.evaluate(myModel, prediction);
 // // and calculate the difference between the predicted and actual convolution
-// casacore::Matrix<casacore::Float> residual;
+// Matrix<Float> residual;
 // convEqn.residual(mymodel, residual)
 // </srcblock>
 // </example>
@@ -114,14 +114,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <todo asof="1990/05/03">
 //   <li> Fix up the way this class works for other data types. 
 //        It currently can handle Arrays of Floats only.
-//        I do not intend to extend it to handle casacore::Double, casacore::Complex, & DComplex
+//        I do not intend to extend it to handle Double, Complex, & DComplex
 //        until there is a demand.
 //   <li> This class is not templated. If necessary I would use templating
-//        to produce a casacore::Double Precision Version.
+//        to produce a Double Precision Version.
 // </todo>
 
 class ConvolutionEquation: 
-  public LinearEquation< casacore::Array<casacore::Float>, casacore::Array<casacore::Float> >
+  public LinearEquation< Array<Float>, Array<Float> >
 {
 public:
   // Construct the ConvolutionEquation. Until I write some functions for
@@ -129,14 +129,14 @@ public:
   ConvolutionEquation();
 
   // Construct the ConvolutionEquation setting the psf and measured data
-  ConvolutionEquation(const casacore::Array<casacore::Float> & psf, 
-		      const casacore::Array<casacore::Float> & dirtyImage);
+  ConvolutionEquation(const Array<Float> & psf, 
+		      const Array<Float> & dirtyImage);
 
   // Construct the ConvolutionEquation setting the psf and measured data
-  // Even though a casacore::MaskedArray is used as an arguement the mask is discarded
+  // Even though a MaskedArray is used as an arguement the mask is discarded
   // internally and hence not used by residual().
-  ConvolutionEquation(const casacore::Array<casacore::Float> & psf, 
-		      const casacore::MaskedArray<casacore::Float> & dirtyImage);
+  ConvolutionEquation(const Array<Float> & psf, 
+		      const MaskedArray<Float> & dirtyImage);
 
   // Somewhere I read that a destructor should alway be defined even if it
   // does nothing (as this one does).
@@ -144,78 +144,78 @@ public:
   
   // Do the convolution of the model supplied by the LinearModel class with
   // the internal psf. Return the answer in result .
-  virtual casacore::Bool evaluate(casacore::Array<casacore::Float> & result, 
-			const LinearModel< casacore::Array<casacore::Float> > & model);
+  virtual Bool evaluate(Array<Float> & result, 
+			const LinearModel< Array<Float> > & model);
 
   // Do the convolution of the model supplied by the LinearModel class with
   // the internal psf. Return the answer in result. This version 
   // uses Masked arrays. but the mask is currently discarded internally. 
-  casacore::Bool evaluate(casacore::Array<casacore::Float> & result, 
-		const LinearModel< casacore::MaskedArray<casacore::Float> > & model);
+  Bool evaluate(Array<Float> & result, 
+		const LinearModel< MaskedArray<Float> > & model);
 
   // Do the convolution of the model supplied by the LinearModel class with
   // the internal psf. Return the answer in result. This version 
   // uses MaskedArrays,  but the mask is not currently used. However
   // the model mask is transfered to the result unchanged.
-  casacore::Bool evaluate(casacore::MaskedArray<casacore::Float> & result, 
-		const LinearModel< casacore::MaskedArray<casacore::Float> > & model);
+  Bool evaluate(MaskedArray<Float> & result, 
+		const LinearModel< MaskedArray<Float> > & model);
 
   // Do the convolution of the a point source model at position 'position'
   // with amplitude 'amplitude' and the internal psf. Return the answer in
   // result. 
-  casacore::Bool evaluate(casacore::Array<casacore::Float> & result, const casacore::IPosition & position, 
-		const casacore::Float amplitude, 
-		const casacore::IPosition & modelShape);
+  Bool evaluate(Array<Float> & result, const IPosition & position, 
+		const Float amplitude, 
+		const IPosition & modelShape);
 
   // Calculate the convolution of the model (supplied by the LinearModel
   // class) and the psf and the difference between this and the supplied
   // (presumably measured) convolution.  
-  virtual casacore::Bool residual(casacore::Array<casacore::Float> & result, 
-			const LinearModel< casacore::Array<casacore::Float> > & model);
+  virtual Bool residual(Array<Float> & result, 
+			const LinearModel< Array<Float> > & model);
 
 
   // Calculate the convolution of the model (supplied by the LinearModel
   // class) and the psf and the difference between this and the supplied
   // (presumably measured) convolution.   Also return chisq.
-  virtual casacore::Bool residual( casacore::Array<casacore::Float> & result, casacore::Float & chisq, 
-                        const LinearModel< casacore::Array<casacore::Float> > & model);
+  virtual Bool residual( Array<Float> & result, Float & chisq, 
+                        const LinearModel< Array<Float> > & model);
 
   // Calculate the convolution of the model (supplied by the LinearModel
   // class) and the psf and the difference between this and the supplied
   // (presumably measured) convolution.   Also return chisq,
   // considering a mask image
-  virtual casacore::Bool residual( casacore::Array<casacore::Float> & result, casacore::Float & chisq, 
-			 casacore::Array<casacore::Float> & mask,
-			 const LinearModel< casacore::Array<casacore::Float> > & model);
+  virtual Bool residual( Array<Float> & result, Float & chisq, 
+			 Array<Float> & mask,
+			 const LinearModel< Array<Float> > & model);
 
   // Calculate the convolution of the model (supplied by the LinearModel
   // class) and the psf and the difference between this and the supplied
   // (presumably measured) convolution. This version 
   // uses Masked arrays. but the mask is currently discarded internally.
-  casacore::Bool residual(casacore::Array<casacore::Float> & result, 
-		const LinearModel< casacore::MaskedArray<casacore::Float> > & model);
+  Bool residual(Array<Float> & result, 
+		const LinearModel< MaskedArray<Float> > & model);
 
   // Calculate the convolution of the model (supplied by the LinearModel
   // class) and the psf and the difference between this and the supplied
   // (presumably measured) convolution. This version 
   // uses Masked arrays. but the mask is currently discarded in the
   // calculations and transfered unchanged from the model to the result.
-  casacore::Bool residual(casacore::MaskedArray<casacore::Float> & result, 
-		const LinearModel< casacore::MaskedArray<casacore::Float> > & model);
+  Bool residual(MaskedArray<Float> & result, 
+		const LinearModel< MaskedArray<Float> > & model);
 
   // return the psf size used in the convolution. The returned size does not
   // include any zero padding  
-  casacore::IPosition psfSize();
+  IPosition psfSize();
   // release the storage associated with the cached psf. The psf can 
-  // however still be recovered from the casacore::Convolver object
+  // however still be recovered from the Convolver object
   void flushPsf();
 
 private:
-  casacore::Array<casacore::Float> theMeas;
-  casacore::Array<casacore::Float> thePsf;
-  casacore::IPosition theRealPsfSize;
-  casacore::IPosition thePsfOrigin;
-  casacore::Convolver<casacore::Float> theConv;
+  Array<Float> theMeas;
+  Array<Float> thePsf;
+  IPosition theRealPsfSize;
+  IPosition thePsfOrigin;
+  Convolver<Float> theConv;
 };
 
 

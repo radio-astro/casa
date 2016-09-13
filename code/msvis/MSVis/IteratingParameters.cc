@@ -23,7 +23,6 @@
 #include <msvis/MSVis/IteratingParameters.h>
 #include <msvis/MSVis/UtilJ.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 namespace vi { //# NAMESPACE VI - BEGIN
 

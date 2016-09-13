@@ -78,7 +78,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// These respond to DD creation/removal signals from viewer_
 		// <group>
-		virtual void createDDTab_(QtDisplayData*, casacore::Bool autoRegister, int insertPosition);
+		virtual void createDDTab_(QtDisplayData*, Bool autoRegister, int insertPosition);
 		virtual void removeDDTab_(QtDisplayData*);
 		// </group>
 		virtual void auto_apply_state_change(bool);

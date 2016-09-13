@@ -79,19 +79,18 @@
 #endif
 
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
   HetArrayConvFunc::HetArrayConvFunc() : SimplePBConvFunc(), convFunctionMap_p(0), nDefined_p(0), antDiam2IndexMap_p(-1),msId_p(-1), actualConvIndex_p(-1)
   {
-    calcFluxScale_p=true;
+    calcFluxScale_p=True;
     init(PBMathInterface::AIRY);
   }
 
   HetArrayConvFunc::HetArrayConvFunc(const PBMathInterface::PBClass typeToUse, const String vpTable): SimplePBConvFunc(),
 												      convFunctionMap_p(0), nDefined_p(0), antDiam2IndexMap_p(-1),msId_p(-1), actualConvIndex_p(-1), vpTable_p(vpTable)
   {
-    calcFluxScale_p=true;
+    calcFluxScale_p=True;
     init(typeToUse);
 
   }
@@ -106,8 +105,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   void HetArrayConvFunc::init(const PBMathInterface::PBClass typeTouse){
-    doneMainConv_p=false;
-    filledFluxScale_p=false;
+    doneMainConv_p=False;
+    filledFluxScale_p=False;
     pbClass_p=typeTouse;
   }
 
@@ -227,22 +226,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Vector<Vector<String> > antnames;
 
 	if(vpman->imagepbinfo(antnames, recs)){
-	  Vector<Bool> dishDefined(dishName.nelements(), false);
+	  Vector<Bool> dishDefined(dishName.nelements(), False);
 	  Int nbeams=antnames.nelements();
 	  ///will be keying on file image file name here 
 	  for (uInt k=0; k < dishDiam.nelements(); ++k){
 	    String key;
-	    Bool beamDone=false;
+	    Bool beamDone=False;
 	    Int recordToUse=0;
 	    for (Int j =0; j < nbeams; ++j){
 	      key=recs[j].isDefined("realimage") ? recs[j].asString("realimage") : recs[j].asString("compleximage");
 	      if(antnames[j][0]=="*" || anyEQ(dishName[k], antnames[j])){
-		  dishDefined[k]=true;
+		  dishDefined[k]=True;
 		  recordToUse=j;
 	      
 		  if((diamIndex !=0) && antDiam2IndexMap_p.isDefined(key)){
 		    antIndexToDiamIndex_p(k)=antDiam2IndexMap_p(key);
-		    beamDone=true;
+		    beamDone=True;
 		  }
 	      }
 	    }
@@ -300,11 +299,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   void  HetArrayConvFunc::reset(){
-    doneMainConv_p=false;
-    convFunctions_p.resize(0, true);
-    convWeights_p.resize(0, true);
-    convSizes_p.resize(0, true);
-    convSupportBlock_p.resize(0, true);
+    doneMainConv_p=False;
+    convFunctions_p.resize(0, True);
+    convWeights_p.resize(0, True);
+    convSizes_p.resize(0, True);
+    convSupportBlock_p.resize(0, True);
     convFunctionMap_p.resize(0);
 
   }
@@ -372,15 +371,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     actualConvIndex_p=convIndex(vb);
     if(doneMainConv_p.shape()[0] < (actualConvIndex_p+1)){
       //cerr << "resizing DONEMAIN " <<   doneMainConv_p.shape()[0] << endl;
-    	doneMainConv_p.resize(actualConvIndex_p+1, true);
-    	doneMainConv_p[actualConvIndex_p]=false;
+    	doneMainConv_p.resize(actualConvIndex_p+1, True);
+    	doneMainConv_p[actualConvIndex_p]=False;
 	convFunctions_p.resize(actualConvIndex_p+1);
 	convFunctions_p[actualConvIndex_p]=nullptr;
     }
     ///// In multi ms mode ndishpair may change when meeting a new ms
     //// redo the calculation then
     if(msChanged){
-      doneMainConv_p[actualConvIndex_p]=false;
+      doneMainConv_p[actualConvIndex_p]=False;
       //cerr << "invalidating doneMainConv " << endl; //<<  convFunctions_p[actualConvIndex_p]->shape()[3] << " =? " << nBeamChans << " convsupp " << convSupport_p.nelements() << endl;
     }
 
@@ -412,8 +411,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Vector<Double> pixFieldDir(2);
     if(doneMainConv_p.shape()[0] < (actualConvIndex_p+1)){
       //cerr << "resizing DONEMAIN " <<   doneMainConv_p.shape()[0] << endl;
-    	doneMainConv_p.resize(actualConvIndex_p+1, true);
-    	doneMainConv_p[actualConvIndex_p]=false;
+    	doneMainConv_p.resize(actualConvIndex_p+1, True);
+    	doneMainConv_p[actualConvIndex_p]=False;
     }
     //no need to call toPix here as its been done already above in checkOFPB
     //thus the values are still current.
@@ -498,7 +497,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	   // Double wtime0=omp_get_wtime();
 	   //cerr << "Doing channel " << kk << endl;
 	   Slicer slin(blcin, trcin, Slicer::endIsLast);
-	   SubImage<Complex> subim(pBScreen, slin, true);
+	   SubImage<Complex> subim(pBScreen, slin, True);
 	   subim.set(Complex(1.0, 0.0));
 	   (antMath_p[k])->applyVP(subim, subim, direction1_p);
 
@@ -507,7 +506,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	   //tim.show("After Apply ");
 	   //tim.mark();
 	   //pB2Screen.set(Complex(1.0,0.0));
-	   SubImage<Complex> subim2(pB2Screen, slin, true);
+	   SubImage<Complex> subim2(pB2Screen, slin, True);
 	   subim2.set(Complex(1.0,0.0));
 	  //one antenna 
 	   (antMath_p[k])->applyPB(subim2, subim2, direction1_p);
@@ -532,11 +531,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	 /*
 	 if(nBeamChans >1){
 	   Slicer slin(blcin, trcin, Slicer::endIsLast);
-	   SubImage<Complex> origPB(pBScreen, slin, false);
+	   SubImage<Complex> origPB(pBScreen, slin, False);
 	   IPosition elshape= origPB.shape();
-	   Matrix<Complex> i1=origPB.get(true);
-	   SubImage<Complex> origPB2(pB2Screen, slin, false);
-	   Matrix<Complex> i2=origPB2.get(true);
+	   Matrix<Complex> i1=origPB.get(True);
+	   SubImage<Complex> origPB2(pB2Screen, slin, False);
+	   Matrix<Complex> i2=origPB2.get(True);
 	   Int cenX=i1.shape()(0)/2;
 	   Int cenY=i1.shape()(1)/2;
 	   
@@ -583,13 +582,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	 //LatticeFFT::cfft2d(pBScreen);
 	 //LatticeFFT::cfft2d(pB2Screen);
 	  
-	  //Matrix<Complex> lala=pBScreen.get(true);
-	  //fft.fft0(lala, true);
-	  //fft.flip(lala, false, false);
+	  //Matrix<Complex> lala=pBScreen.get(True);
+	  //fft.fft0(lala, True);
+	  //fft.flip(lala, False, False);
 	  // pBScreen.put(lala.reform(IPosition(4, convSize_p, convSize_p, 1, 1)));
-	  //lala=pB2Screen.get(true);
-	  //fft.fft0(lala, true);
-	  //fft.flip(lala, false, false);
+	  //lala=pB2Screen.get(True);
+	  //fft.fft0(lala, True);
+	  //fft.flip(lala, False, False);
 	  //pB2Screen.put(lala.reform(IPosition(4, convSize_p, convSize_p, 1, 1)));
 	  
 	  //////////*****************
@@ -612,17 +611,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  begin[4]=plane;
 	  end[4]=plane;
 	  Slicer slplane(begin, end, Slicer::endIsLast);
-	  //cerr <<  "SHAPES " << convFunc_p(begin, end).shape() << "  " << pBScreen.get(false).shape() << " begin and end " << begin << "    " << end << endl;
-	  //convFunc_p(begin, end).copyMatchingPart(pBScreen.get(false));
-	  //weightConvFunc_p(begin, end).copyMatchingPart(pB2Screen.get(false));
+	  //cerr <<  "SHAPES " << convFunc_p(begin, end).shape() << "  " << pBScreen.get(False).shape() << " begin and end " << begin << "    " << end << endl;
+	  //convFunc_p(begin, end).copyMatchingPart(pBScreen.get(False));
+	  //weightConvFunc_p(begin, end).copyMatchingPart(pB2Screen.get(False));
 	  IPosition blcQ(4, pbShape(0)/8*3, pbShape(1)/8*3, 0, 0);
 	  IPosition trcQ(4,  blcQ[0]+ pbShape(0)/4-1, blcQ[1]+pbShape(1)/4-1 , nBeamPols-1, nBeamChans-1);
 
 	  // cerr << "blcQ " << blcQ << " trcQ " << trcQ << " pbShape " << pbShape << endl;
 	  Slicer slQ(blcQ, trcQ, Slicer::endIsLast);
 	  {
-	    SubImage<Complex>  pBSSub(pBScreen, slQ, false);
-	    SubLattice<Complex> cFTempSub(convFuncTemp,  slplane, true);
+	    SubImage<Complex>  pBSSub(pBScreen, slQ, False);
+	    SubLattice<Complex> cFTempSub(convFuncTemp,  slplane, True);
 	    LatticeConcat<Complex> lc(4);
 	    lc.setLattice(pBSSub);
 	    //cerr << "SHAPES " << cFTempSub.shape() << "   " <<  lc.shape() << endl;
@@ -630,13 +629,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    //cFTempSub.copyData(pBScreen);
 	  }
 	  {
-	    SubImage<Complex>  pB2SSub(pB2Screen, slQ, false);
-	    SubLattice<Complex> cFTempSub2(weightConvFuncTemp,  slplane, true);
+	    SubImage<Complex>  pB2SSub(pB2Screen, slQ, False);
+	    SubLattice<Complex> cFTempSub2(weightConvFuncTemp,  slplane, True);
 	    LatticeConcat<Complex> lc(4);
 	    lc.setLattice(pB2SSub);
 	    cFTempSub2.copyData(lc);
 	    // cFTempSub2.copyData(pB2Screen);
-	    //weightConvFuncTemp.putSlice(pB2Screen.get(false), begin);
+	    //weightConvFuncTemp.putSlice(pB2Screen.get(False), begin);
 
 	  }
 	  //	  supportAndNormalize(plane, convSampling);
@@ -650,7 +649,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
 
 
-      doneMainConv_p[actualConvIndex_p]=true;
+      doneMainConv_p[actualConvIndex_p]=True;
       convFunctions_p.resize(actualConvIndex_p+1);
       convWeights_p.resize(actualConvIndex_p+1);
       convSupportBlock_p.resize(actualConvIndex_p+1);
@@ -809,9 +808,9 @@ typedef unsigned long long ooLong;
        
     }
     catch(AipsError& x) {
-      return false;
+      return False;
     }
-    return true;   
+    return True;   
 
    }
 
@@ -825,10 +824,10 @@ typedef unsigned long long ooLong;
       }
       nDefined_p=rec.asInt("ndefined");
       //rec.get("convfunctionmap", convFunctionMap_p);
-      convFunctions_p.resize(nDefined_p, true, false);
-      convSupportBlock_p.resize(nDefined_p, true, false);
-      convWeights_p.resize(nDefined_p, true, false);
-      convSizes_p.resize(nDefined_p, true, false);
+      convFunctions_p.resize(nDefined_p, True, False);
+      convSupportBlock_p.resize(nDefined_p, True, False);
+      convWeights_p.resize(nDefined_p, True, False);
+      convSizes_p.resize(nDefined_p, True, False);
       vbConvIndex_p.erase(vbConvIndex_p.begin(), vbConvIndex_p.end());
       for (Int64 k=0; k < nDefined_p; ++k){
 	convFunctions_p[k]=new Array<Complex>();
@@ -862,10 +861,10 @@ typedef unsigned long long ooLong;
     }
     catch(AipsError& x) {
       err=x.getMesg();
-      return false;
+      return False;
     } 
       
-    return true;
+    return True;
   }
 
 
@@ -880,19 +879,19 @@ typedef unsigned long long ooLong;
 	Matrix<Complex> convPlane(convFunc_p(begin, end).reform(IPosition(2,convFunc_p.shape()[0], convFunc_p.shape()[1]))) ;
 	Float maxAbsConvFunc=max(amplitude(convPlane));
 	Float minAbsConvFunc=min(amplitude(convPlane));
-	Bool found=false;
+	Bool found=False;
 	Int trial=0;
 	for (trial=convSize_p/2-2;trial>0;trial--) {
 	  //Searching down a diagonal
 	  if(abs(convPlane(convSize_p/2-trial,convSize_p/2-trial)) >  (1.0e-2*maxAbsConvFunc)) {
-	    found=true;
+	    found=True;
 	    trial=Int(sqrt(2.0*Float(trial*trial)));
 	    break;
 	  }
 	}
 	if(!found){
 	  if((maxAbsConvFunc-minAbsConvFunc) > (1.0e-2*maxAbsConvFunc)) 
-	  found=true;
+	  found=True;
 	  // if it drops by more than 2 magnitudes per pixel
 	  trial=( (10*convSampling) < convSize_p) ? 5*convSampling : (convSize_p/2 - 4*convSampling);
 	}
@@ -980,22 +979,22 @@ typedef unsigned long long ooLong;
 	IPosition shape(5, convFuncLat.shape()[0],  convFuncLat.shape()[1], 1, 1, 1);
 	//Int convSize=convSize_p;
 	Int convSize=shape(0);
-	Matrix<Complex> convPlane=convFuncLat.getSlice(begin, shape, true);
+	Matrix<Complex> convPlane=convFuncLat.getSlice(begin, shape, True);
 	Float maxAbsConvFunc=max(amplitude(convPlane));
 	Float minAbsConvFunc=min(amplitude(convPlane));
-	Bool found=false;
+	Bool found=False;
 	Int trial=0;
 	for (trial=convSize/2-2;trial>0;trial--) {
 	  //Searching down a diagonal
 	  if(abs(convPlane(convSize/2-trial,convSize/2-trial)) >  (1.0e-2*maxAbsConvFunc)) {
-	    found=true;
+	    found=True;
 	    trial=Int(sqrt(2.0*Float(trial*trial)));
 	    break;
 	  }
 	}
 	if(!found){
 	  if((maxAbsConvFunc-minAbsConvFunc) > (1.0e-2*maxAbsConvFunc)) 
-	  found=true;
+	  found=True;
 	  // if it drops by more than 2 magnitudes per pixel
 	  trial=( (10*convSampling) < convSize) ? 5*convSampling : (convSize/2 - 4*convSampling);
 	}
@@ -1045,13 +1044,13 @@ typedef unsigned long long ooLong;
 	    begin[3]=chan;
 	    //end[3]=chan;
 	    convPlane.resize();
-	    convPlane=convFuncLat.getSlice(begin, shape, true);
+	    convPlane=convFuncLat.getSlice(begin, shape, True);
 	    pbSum=real(sum(convPlane(blc,trc)))/Double(convSampling)/Double(convSampling);
 	    if(pbSum>0.0) {
 	      (convPlane)=convPlane*Complex(1.0/pbSum,0.0);
 	      convFuncLat.putSlice(convPlane, begin);
 	      convPlane.resize();
-	      convPlane=weightConvFuncLat.getSlice(begin, shape, true);
+	      convPlane=weightConvFuncLat.getSlice(begin, shape, True);
 	      (convPlane) =(convPlane)*Complex(1.0/pbSum,0.0);
 	      weightConvFuncLat.putSlice(convPlane, begin);
 	    }
@@ -1098,7 +1097,7 @@ typedef unsigned long long ooLong;
     }
     String pointingid=String::toString(pixdepoint(0))+"_"+String::toString(pixdepoint(1));
     //Int fieldid=vb.fieldId();
-    String msid=vb.msName(true);
+    String msid=vb.msName(True);
     //If channel or pol length has changed underneath...then its time to 
     //restart the map
     /*
@@ -1121,7 +1120,7 @@ typedef unsigned long long ooLong;
       convFunctionMap_p.define(mapid, 0);    
       actualConvIndex_p=0;
       fluxScale_p=TempImage<Float>(IPosition(4,nx_p,ny_p,npol_p,nchan_p), csys_p);
-      filledFluxScale_p=false;
+      filledFluxScale_p=False;
       fluxScale_p.set(0.0);
       return -1;
     }
@@ -1134,7 +1133,7 @@ typedef unsigned long long ooLong;
       actualConvIndex_p=0;
       if(calcFluxScale_p){
 	fluxScale_p=TempImage<Float>(IPosition(4,nx_p,ny_p,npol_p,nchan_p), csys_p);
-	filledFluxScale_p=false;
+	filledFluxScale_p=False;
 	fluxScale_p.set(0.0);
       }
       return -1;
@@ -1215,7 +1214,7 @@ typedef unsigned long long ooLong;
 	  blc(2)=j; trc(2)=j;
 	  blc(3)=k; trc(3)=k;
 	  Slicer sl(blc, trc, Slicer::endIsLast);
-	  SubImage<Float> fscalesub(fluxScale_p, sl, true);
+	  SubImage<Float> fscalesub(fluxScale_p, sl, True);
 	  Float planeMax;
 	  LatticeExprNode LEN = max( fscalesub );
 	  planeMax =  LEN.getFloat();
@@ -1225,7 +1224,7 @@ typedef unsigned long long ooLong;
 	  }
 	}
       }
-      filledFluxScale_p=true;  
+      filledFluxScale_p=True;  
     }
     
 
@@ -1242,8 +1241,8 @@ void HetArrayConvFunc::sliceFluxScale(Int npol) {
        IPosition trc(4,fluxScale_p.shape()(0)-1, fluxScale_p.shape()(1)-1,npol-1,fluxScale_p.shape()(3)-1);
        Slicer sl=Slicer(blc, trc, Slicer::endIsLast);
        //writeable if possible
-       SubImage<Float> fluxScaleSub = SubImage<Float> (fluxScale_p, sl, true);
-       SubImage<Float> convWeightImageSub = SubImage<Float> (*convWeightImage_p, sl, true);
+       SubImage<Float> fluxScaleSub = SubImage<Float> (fluxScale_p, sl, True);
+       SubImage<Float> convWeightImageSub = SubImage<Float> (*convWeightImage_p, sl, True);
        fluxScale_p = TempImage<Float>(fluxScaleSub.shape(),fluxScaleSub.coordinates());
        convWeightImage_p = new TempImage<Float> (convWeightImageSub.shape(),convWeightImageSub.coordinates());
        LatticeExpr<Float> le(fluxScaleSub);

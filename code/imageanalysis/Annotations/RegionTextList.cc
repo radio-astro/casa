@@ -30,20 +30,19 @@
 #include <imageanalysis/Annotations/AnnRegion.h>
 #include <images/Regions/WCDifference.h>
 
-using namespace casacore;
 namespace casa {
 
 RegionTextList::RegionTextList()
 	: _lines(),
 	_csys(CoordinateSystem()), _shape(IPosition()),
-	_canGetRegion(false), _union(), _composite() {}
+	_canGetRegion(False), _union(), _composite() {}
 
 
 RegionTextList::RegionTextList(
 	const CoordinateSystem& csys,
 	const IPosition shape
 ) : _lines(),
-	_csys(csys),_shape(shape), _canGetRegion(true), _union(), _composite() {}
+	_csys(csys),_shape(shape), _canGetRegion(True), _union(), _composite() {}
 
 RegionTextList::RegionTextList(
 	const String& filename, const CoordinateSystem& csys,
@@ -51,7 +50,7 @@ RegionTextList::RegionTextList(
 	const String& prependRegion, const String& globalOverrideChans, const String& globalOverrrideStokes,
 	const Int requireAtLeastThisVersion
 ) : _lines(),
-	_csys(csys), _shape(shape), _canGetRegion(true), _union(), _composite() {
+	_csys(csys), _shape(shape), _canGetRegion(True), _union(), _composite() {
 	RegionTextParser parser(
 		filename, csys, shape, requireAtLeastThisVersion,
 		prependRegion,
@@ -71,7 +70,7 @@ RegionTextList::RegionTextList(
 	const IPosition shape, const String& prependRegion,
 	const String& globalOverrideChans, const String& globalOverrrideStokes
 ) : _lines(),
-	_csys(csys), _shape(shape), _canGetRegion(true), _union(), _composite() {
+	_csys(csys), _shape(shape), _canGetRegion(True), _union(), _composite() {
 	RegionTextParser parser(
 		csys, shape, text, prependRegion, globalOverrideChans, globalOverrrideStokes
 	);
@@ -88,7 +87,7 @@ RegionTextList::~RegionTextList() {}
 
 void RegionTextList::addLine(const AsciiAnnotationFileLine& line) {
 	AsciiAnnotationFileLine x = line;
-	_lines.resize(_lines.size()+1, true);
+	_lines.resize(_lines.size()+1, True);
 	_lines[_lines.size()-1] = x;
 	if (x.getType() == AsciiAnnotationFileLine::ANNOTATION && _canGetRegion) {
 		CountedPtr<const AnnotationBase> annotation = x.getAnnotationBase();
@@ -112,7 +111,7 @@ void RegionTextList::addLine(const AsciiAnnotationFileLine& line) {
 							new WCBox(qblc, qtrc, _csys, absRel)
 						)
 					);
-					_union.push_back(true);
+					_union.push_back(True);
 				}
 				_regions.push_back(wcregion);
 				_union.push_back(! region->isDifference());
@@ -145,7 +144,7 @@ CountedPtr<const WCRegion> RegionTextList::getRegion() const {
 	}
 	vector<Bool>::const_iterator iter = _union.begin();
 	vector<Bool>::const_iterator end = _union.end();
-	vector<Bool>::const_iterator foundDifference = std::find(iter, end, false);
+	vector<Bool>::const_iterator foundDifference = std::find(iter, end, False);
 	PtrBlock<const WCRegion *> unionRegions;
 	if (foundDifference == end) {
 		// no complementary regions, just union the whole lot
@@ -153,7 +152,7 @@ CountedPtr<const WCRegion> RegionTextList::getRegion() const {
 		for (uInt i=0; i<_regions.size(); ++i) {
 			unionRegions[i] = _regions[i].get();
 		}
-		_composite.reset(new WCUnion(false, unionRegions));
+		_composite.reset(new WCUnion(False, unionRegions));
 		return _composite;
 	}
 	uInt count = 0;
@@ -163,7 +162,7 @@ CountedPtr<const WCRegion> RegionTextList::getRegion() const {
 			unionRegions[_regions.size() - 1] = _regions[count].get();
 		}
 		else {
-			WCUnion myUnion(false, unionRegions);
+			WCUnion myUnion(False, unionRegions);
 			const WCDifference *myDiff = new WCDifference(myUnion, *_regions[count]);
 			_myDiff.push_back(SHARED_PTR<const WCDifference>(myDiff));
 			unionRegions.resize(1);
@@ -175,7 +174,7 @@ CountedPtr<const WCRegion> RegionTextList::getRegion() const {
 	_composite.reset(
 		(unionRegions.size() == 1)
 		? unionRegions[0]
-		: new WCUnion(false, unionRegions)
+		: new WCUnion(False, unionRegions)
 	);
 	return _composite;
 }

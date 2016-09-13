@@ -218,7 +218,7 @@ class variant {
 	void resize( int size );
 	void dump() const;
 
-	// return true if empty string, empty record, or size 0 vector.
+	// return True if empty string, empty record, or size 0 vector.
 	// always returns false if object is a non-array bool or numerical type
 	bool empty() const;
 

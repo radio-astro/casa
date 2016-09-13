@@ -48,7 +48,7 @@ class CubePartitionMixin
 
 public:
 	void concat_images(const string &type) {
-		casacore::LogIO log(casacore::LogOrigin("CubePartitionMixin", "concat_images", WHERE));
+		LogIO log(LogOrigin("CubePartitionMixin", "concat_images", WHERE));
 		if (worker_rank >= 0) {
 			const std::string image_types[] =
 				{"image", "psf", "model", "residual", "mask", "pb", "weight"};
@@ -57,9 +57,9 @@ public:
 			MPI_Barrier(worker_comm);
 			// round-robin allocation of image concatenation tasks to worker
 			// ranks
-			for (casacore::uInt i = (casacore::uInt)worker_rank;
+			for (uInt i = (uInt)worker_rank;
 			     i < image_parameters.nfields();
-			     i += (casacore::uInt)num_workers) {
+			     i += (uInt)num_workers) {
 				std::string imagename =
 					image_parameters.subRecord(i).asString("imagename");
 				std::string image_prefix = cwd + "/" + imagename;
@@ -69,7 +69,7 @@ public:
 					std::string ext_suffix = "." + ext;
 					std::string concat_imagename =
 						image_prefix + ext_suffix;
-					for (casacore::uInt j = 0; j < (casacore::uInt)num_workers; ++j) {
+					for (uInt j = 0; j < (uInt)num_workers; ++j) {
 						std::string component_imagename =
 							image_prefix + ".n" + std::to_string(j) + ext_suffix;
 						if (access(component_imagename.c_str(), F_OK) == 0)
@@ -82,10 +82,10 @@ public:
 						cmd += type;
 						int rc = std::system(cmd.c_str());
 						if (rc == -1 || WEXITSTATUS(rc) != 0)
-							log << casacore::LogIO::WARN
+							log << LogIO::WARN
 							    << ("concatenation of " + concat_imagename
 							        + " failed")
-							    << casacore::LogIO::POST;
+							    << LogIO::POST;
 					}
 				}
 			}
@@ -100,7 +100,7 @@ protected:
 
 	int worker_rank;
 
-	casacore::Record image_parameters;
+	Record image_parameters;
 
 	ParallelImagerParams
 	get_params(MPI_Comm wcomm, ParallelImagerParams &initial) {
@@ -123,36 +123,36 @@ protected:
 		std::string my_worker_suffix =
 			((worker_rank >= 0) ? all_worker_suffixes[worker_rank] : "");
 
-		image_parameters = casacore::Record(initial.image);
+		image_parameters = Record(initial.image);
 
 		SynthesisUtilMethods util;
 		ParallelImagerParams result;
 
-		casacore::Record data_image_partition;
+		Record data_image_partition;
 		if (worker_rank >= 0) {
 			std::string worker_rank_str = std::to_string(worker_rank);
 			// need a SynthesisImager instance to do cube partitioning
 			std::unique_ptr<SynthesisImager> si(new SynthesisImager());
-			for (casacore::uInt i = 0; i < initial.selection.nfields(); ++i) {
+			for (uInt i = 0; i < initial.selection.nfields(); ++i) {
 				SynthesisParamsSelect selection_pars;
 				selection_pars.fromRecord(initial.selection.subRecord(i));
 				si->selectData(selection_pars);
 			}
-			for (casacore::uInt i = 0; i < initial.image.nfields(); ++i) {
-				casacore::String i_name = initial.image.name(i);
+			for (uInt i = 0; i < initial.image.nfields(); ++i) {
+				String i_name = initial.image.name(i);
 				if (initial.grid.isDefined(i_name)) {
 					SynthesisParamsImage image_pars;
 					image_pars.fromRecord(initial.image.subRecord(i_name));
 					SynthesisParamsGrid grid_pars;
 					grid_pars.fromRecord(initial.grid.subRecord(i_name));
 					si->defineImage(image_pars, grid_pars);
-					casacore::Record csys = si->getcsys();
+					Record csys = si->getcsys();
 					if (csys.nfields() > 0) {
 						int nchan = ((image_pars.nchan == -1)
 						             ? si->updateNchan()
 						             : image_pars.nchan);;
-						casacore::Vector<casacore::Int> numchans;
-						casacore::Vector<casacore::CoordinateSystem> csystems;
+						Vector<Int> numchans;
+						Vector<CoordinateSystem> csystems;
 						// save only that part of the record returned from
 						// util.cubeDataImagePartition that is handled by the
 						// current rank
@@ -160,7 +160,7 @@ protected:
 							i_name,
 							util.cubeDataImagePartition(
 								initial.selection,
-								*casacore::CoordinateSystem::restore(csys, "coordsys"),
+								*CoordinateSystem::restore(csys, "coordsys"),
 								num_workers, nchan, csystems, numchans).
 							rwSubRecord(worker_rank_str));
 					}
@@ -170,13 +170,13 @@ protected:
 
 		// selection_params
 		if (worker_rank >= 0) {
-			casacore::Record sel;
-			for (casacore::uInt i = 0; i < data_image_partition.nfields(); ++i) {
-				casacore::Record &di = data_image_partition.rwSubRecord(i);
-				for (casacore::uInt f = 0; f < di.nfields(); ++f) {
-					casacore::String name = di.name(f);
+			Record sel;
+			for (uInt i = 0; i < data_image_partition.nfields(); ++i) {
+				Record &di = data_image_partition.rwSubRecord(i);
+				for (uInt f = 0; f < di.nfields(); ++f) {
+					String name = di.name(f);
 					if (name.find("ms") == 0) {
-						casacore::Record &ms = di.rwSubRecord(f);
+						Record &ms = di.rwSubRecord(f);
 						if (ms.isDefined("spw") && ms.asString("spw") == "-1")
 							ms.define("spw", "");
 						sel.defineRecord(name, ms);
@@ -185,21 +185,21 @@ protected:
 			}
 			result.selection = sel;
 		} else {
-			result.selection = casacore::Record();
+			result.selection = Record();
 		}
 
 		// image_params
 		if (worker_rank >= 0) {
 			result.image = initial.image;
-			for (casacore::uInt i = 0; i < data_image_partition.nfields(); ++i) {
-				const casacore::Record &di = data_image_partition.subRecord(i);
-				casacore::String i_name = data_image_partition.name(i);
-				casacore::Record &i_image = result.image.rwSubRecord(i_name);
+			for (uInt i = 0; i < data_image_partition.nfields(); ++i) {
+				const Record &di = data_image_partition.subRecord(i);
+				String i_name = data_image_partition.name(i);
+				Record &i_image = result.image.rwSubRecord(i_name);
 				i_image.define("csys", di.asString("coordsys"));
 				i_image.define("nchan", di.asString("nchan"));
 				i_image.define(
 					"imagename",
-					i_image.asString("imagename") + casacore::String(my_worker_suffix));
+					i_image.asString("imagename") + String(my_worker_suffix));
 			}
 		} else {
 			result.image = empty_fields(initial.image, "imagename");
@@ -220,15 +220,15 @@ protected:
 
 		// normalization_params
 		result.normalization =
-			((worker_rank >= 0) ? initial.normalization : casacore::Record());
+			((worker_rank >= 0) ? initial.normalization : Record());
 
 		// deconvolution params
 		result.deconvolution =
-			((worker_rank >= 0) ? initial.deconvolution : casacore::Record());
+			((worker_rank >= 0) ? initial.deconvolution : Record());
 
 		// weight params
 		result.weight =
-			((worker_rank >= 0) ? initial.weight : casacore::Record());
+			((worker_rank >= 0) ? initial.weight : Record());
 
 		// iteration params
 		result.iteration = initial.iteration;
@@ -239,12 +239,12 @@ protected:
 private:
 
 	// Convenience method to transform certain record fields
-	casacore::Record convert_fields(casacore::Record &rec, const char *field,
+	Record convert_fields(Record &rec, const char *field,
 	                      std::function<std::string(const char *)> fn) {
-		auto modify_field_val = [&](casacore::Record &msRec) {
+		auto modify_field_val = [&](Record &msRec) {
 			msRec.define(field, fn(msRec.asString(field).c_str()));
 		};
-		casacore::Record result(rec);
+		Record result(rec);
 		for_each(ParamFieldIterator::begin(&result),
 		         ParamFieldIterator::end(&result),
 		         modify_field_val);
@@ -252,11 +252,11 @@ private:
 	}
 
 	// Convenience method to clear certain record fields
-	casacore::Record empty_fields(casacore::Record &rec, const char *field) {
-		auto modify_field_val = [&](casacore::Record &msRec) {
-			msRec.defineRecord(field, casacore::Record());
+	Record empty_fields(Record &rec, const char *field) {
+		auto modify_field_val = [&](Record &msRec) {
+			msRec.defineRecord(field, Record());
 		};
-		casacore::Record result(rec);
+		Record result(rec);
 		for_each(ParamFieldIterator::begin(&result),
 		         ParamFieldIterator::end(&result),
 		         modify_field_val);

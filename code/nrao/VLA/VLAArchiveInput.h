@@ -35,12 +35,8 @@
 #include <casa/OS/ModcompDataConversion.h>
 
 #include <casa/namespace.h>
-namespace casacore{
-
-class ByteSource;
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
+class ByteSource;
 } //# NAMESPACE CASA - END
 
 
@@ -66,7 +62,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // archive data record from the input. A reference to this data can be
 // obtained using the logicalRecord function.
 //
-// Refer to the "VLA Archive casacore::Data casacore::Format", VLA Computer Memorandum 186
+// Refer to the "VLA Archive Data Format", VLA Computer Memorandum 186
 // by G.C. Hunt, K.P. Sowinski, and T.J. Bottomly; June 1993.
 // (This is also available as AIPS++ note 159)
 //
@@ -81,7 +77,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // The helper classes VlaDiskInput, VlaTapeInput, and VlaStdInput are
 // designed to deal with the low level input from the devices in an
-// analogous fashion to the ones used for casacore::FITS input.
+// analogous fashion to the ones used for FITS input.
 //
 // Since a read may be issued for an arbitrary number of bytes from a
 // disk, the chunk multiple is arbitrary and may be used to tune the
@@ -131,19 +127,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // To open and read a VLA archive data file
 // <code>
 //    VLAArchiveInput *in;
-//    casacore::Block <casacore::Char> *buff;
-//    casacore::String fileName = " ";
-//    casacore::String fileType = "tape";
+//    Block <Char> *buff;
+//    String fileName = " ";
+//    String fileType = "tape";
 //
-//    if (fileType == casacore::String("tape")) {
+//    if (fileType == String("tape")) {
 //        in = new VLAArchiveInput(fileName.chars(), VLAArchiveInput::Tape);
 //    } else {
 //        in = new VLAArchiveInput(fileName.chars(), VLAArchiveInput::Disk);
 //    }
 //
-//    casacore::uInt record = 0;
-//    for (buff=&(in->next()); in->atEnd()==false; buff=&(in->next()), record++) {
-//        cout << "casacore::Record" << record << endl;
+//    uInt record = 0;
+//    for (buff=&(in->next()); in->atEnd()==False; buff=&(in->next()), record++) {
+//        cout << "Record" << record << endl;
 //        // process record pointed to by buff
 //    }
 // </code>
@@ -171,16 +167,16 @@ public:
   virtual ~VLAArchiveInput();
 
   // This returns a reconstructed VLA logical record from the input
-  // stream. This casacore::ByteSource has the data stored in memory, and hence is
-  // seekable. casacore::Data read from this casacore::ByteSource will have the ModComp numeric
+  // stream. This ByteSource has the data stored in memory, and hence is
+  // seekable. Data read from this ByteSource will have the ModComp numeric
   // conversions applied.
-  casacore::ByteSource& logicalRecord();
-  const casacore::ByteSource& logicalRecord() const;
+  ByteSource& logicalRecord();
+  const ByteSource& logicalRecord() const;
 
-  // Reads the next logical record from specified IO source. Returns false if
+  // Reads the next logical record from specified IO source. Returns False if
   // there was a problem assembling the next record ie., it returns the value
   // of the hasData() member function.
-  virtual casacore::Bool read() = 0;
+  virtual Bool read() = 0;
 
   // Returns if true if the current record contains data. The current record
   // could be empty for a number of reasons including:
@@ -191,29 +187,29 @@ public:
   // <li> The beginning of a logical record could not be found. This is after
   //      searching 5MB of data.
   // </ul>
-  casacore::Bool hasData() const;
+  Bool hasData() const;
 
 protected: 
   //# the default constructor initialises the itsRecord data member
   VLAArchiveInput();
   
   //# All reads will be in multiples of this blocksize.
-  static const casacore::uInt BlockSize;
+  static const uInt BlockSize;
   //# The size in bytes of the physical record sequence numbers
-  static const casacore::uInt HeaderSize;
-  //# A Physical casacore::Record can never be bigger than this many blocks.
-  static const casacore::uInt MaxBlocksPerPhysicalRecord;
+  static const uInt HeaderSize;
+  //# A Physical Record can never be bigger than this many blocks.
+  static const uInt MaxBlocksPerPhysicalRecord;
 
   //# These objects contains the current logical record. The memory IO object
-  //# is used to put the data. It is taken out using the casacore::ByteSinkSource which
+  //# is used to put the data. It is taken out using the ByteSinkSource which
   //# will apply any numeric conversions.
-  casacore::MemoryIO itsMemIO;
+  MemoryIO itsMemIO;
 
 private:
-  casacore::ModcompDataConversion itsModComp;
-  casacore::ConversionIO itsCtrIO;
+  ModcompDataConversion itsModComp;
+  ConversionIO itsCtrIO;
 
 protected: 
-  casacore::ByteSinkSource itsRecord;
+  ByteSinkSource itsRecord;
 };
 #endif

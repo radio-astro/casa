@@ -71,7 +71,6 @@ using std::tr1::function;
 using std::map;
 using std::set;
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	struct dismiss_button_t : public QPushButton {
@@ -1022,7 +1021,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				ddo.insert( "slice", "none" );
 		}
 
-		panel_->createDD( path, datatype, displaytype, true, -1,
+		panel_->createDD( path, datatype, displaytype, True, -1,
 				false, false, false, ddo, image_properties );
 
 		if(!leaveOpen_->isChecked()) close();  // (will hide dialog for now).
@@ -1163,7 +1162,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	Bool QtDataManager::isQualImg(const QString &/*extexpr*/) {
-		return true;
+		return True;
 	}
 
 // finally, this string is examined by LatticeSlice1D<T>::stringToMethod,
@@ -1836,21 +1835,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// thats the default values for the call "ImageFITSConverter::ImageToFITS"
 		String error;
 		uInt memoryInMB(64);
-		Bool preferVelocity(true);
-		Bool opticalVelocity(true);
+		Bool preferVelocity(True);
+		Bool opticalVelocity(True);
 		Int BITPIX(-32);
 		Float minPix(1.0);
 		Float maxPix(-1.0);
-		Bool allowOverwrite(false);
-		Bool degenerateLast(false);
-		Bool verbose(true);
-		Bool stokesLast(false);
-		Bool preferWavelength(false);
-		Bool preferAirWavelength(false);
+		Bool allowOverwrite(False);
+		Bool degenerateLast(False);
+		Bool verbose(True);
+		Bool stokesLast(False);
+		Bool preferWavelength(False);
+		Bool preferAirWavelength(False);
 		String origin("CASA Viewer / FITS export");
 
 		// overwrite was confirmed
-		allowOverwrite = true;
+		allowOverwrite = True;
 		getSpectralCoordFlags(img, preferVelocity, opticalVelocity, preferWavelength, preferAirWavelength);
 
 		// overwrite the default "origin" if already
@@ -1904,46 +1903,46 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		switch (spcType) {
 		case SpectralCoordinate::FREQ:
-			preferVelocity      = false;
-			opticalVelocity     = false;
-			preferWavelength    = false;
-			preferAirWavelength = false;
+			preferVelocity      = False;
+			opticalVelocity     = False;
+			preferWavelength    = False;
+			preferAirWavelength = False;
 			break;
 		case SpectralCoordinate::VRAD:
-			preferVelocity      = true;
-			opticalVelocity     = false;
-			preferWavelength    = false;
-			preferAirWavelength = false;
+			preferVelocity      = True;
+			opticalVelocity     = False;
+			preferWavelength    = False;
+			preferAirWavelength = False;
 			break;
 		case SpectralCoordinate::VOPT:
-			preferVelocity      = true;
-			opticalVelocity     = true;
-			preferWavelength    = false;
-			preferAirWavelength = false;
+			preferVelocity      = True;
+			opticalVelocity     = True;
+			preferWavelength    = False;
+			preferAirWavelength = False;
 			break;
 		case SpectralCoordinate::BETA:
-			preferVelocity      = false;
-			opticalVelocity     = false;
-			preferWavelength    = false;
-			preferAirWavelength = false;
+			preferVelocity      = False;
+			opticalVelocity     = False;
+			preferWavelength    = False;
+			preferAirWavelength = False;
 			break;
 		case SpectralCoordinate::WAVE:
-			preferVelocity      = false;
-			opticalVelocity     = false;
-			preferWavelength    = true;
-			preferAirWavelength = false;
+			preferVelocity      = False;
+			opticalVelocity     = False;
+			preferWavelength    = True;
+			preferAirWavelength = False;
 			break;
 		case SpectralCoordinate::AWAV:
-			preferVelocity      = false;
-			opticalVelocity     = false;
-			preferWavelength    = true;
-			preferAirWavelength = true;
+			preferVelocity      = False;
+			opticalVelocity     = False;
+			preferWavelength    = True;
+			preferAirWavelength = True;
 			break;
 		default:
-			preferVelocity      = false;
-			opticalVelocity     = false;
-			preferWavelength    = false;
-			preferAirWavelength = false;
+			preferVelocity      = False;
+			opticalVelocity     = False;
+			preferWavelength    = False;
+			preferAirWavelength = False;
 		}
 
 	}
@@ -1964,9 +1963,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 				// create a mask in the output image
 				if (maskName.size()>0)
-					newPagedImage.makeMask(maskName, true, true);
+					newPagedImage.makeMask(maskName, True, True);
 				else
-					newPagedImage.makeMask("default", true, true);
+					newPagedImage.makeMask("default", True, True);
 
 				// copy the mask over
 				(newPagedImage.pixelMask()).copyData(img->pixelMask());
@@ -2281,7 +2280,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			dismiss_button_t *disb = static_cast<dismiss_button_t*>(vo_current_action);
 			if ( disb && disb->path.isEmpty( ) == false ) {
 				panel_->createDD( disb->path.toStdString( ), "image",
-								  disb->display_type.toStdString( ), true, -1,
+								  disb->display_type.toStdString( ), True, -1,
 								  false, false, false/*, ddo, image_properties*/ );
 			}
 			vo_clear_status_delayed(3);

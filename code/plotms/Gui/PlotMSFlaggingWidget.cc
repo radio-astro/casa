@@ -32,7 +32,6 @@
 
 #include <QDoubleValidator>
 
-using namespace casacore;
 namespace casa {
 
 //////////////////////////////////////

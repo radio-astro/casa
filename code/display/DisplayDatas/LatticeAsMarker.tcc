@@ -42,35 +42,35 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	template <class T>
-	LatticeAsMarker<T>::LatticeAsMarker(casacore::Array<T>* array, const casacore::uInt xAxis,
-	                                    const casacore::uInt yAxis, const casacore::uInt mAxis,
-	                                    const casacore::IPosition fixedPos)
+	LatticeAsMarker<T>::LatticeAsMarker(Array<T>* array, const uInt xAxis,
+	                                    const uInt yAxis, const uInt mAxis,
+	                                    const IPosition fixedPos)
 		: LatticePADisplayData<T>(array, xAxis, yAxis, mAxis, fixedPos) {
 		setupElements();
 		setDefaultOptions();
 	}
 
 	template <class T>
-	LatticeAsMarker<T>::LatticeAsMarker(casacore::Array<T>* array, const casacore::uInt xAxis,
-	                                    const casacore::uInt yAxis)
+	LatticeAsMarker<T>::LatticeAsMarker(Array<T>* array, const uInt xAxis,
+	                                    const uInt yAxis)
 		: LatticePADisplayData<T>(array, xAxis, yAxis) {
 		setupElements();
 		setDefaultOptions();
 	}
 
 	template <class T>
-	LatticeAsMarker<T>::LatticeAsMarker(SHARED_PTR<casacore::ImageInterface<T> > image,
-	                                    const casacore::uInt xAxis, const casacore::uInt yAxis,
-	                                    const casacore::uInt mAxis,
-	                                    const casacore::IPosition fixedPos)
+	LatticeAsMarker<T>::LatticeAsMarker(SHARED_PTR<ImageInterface<T> > image,
+	                                    const uInt xAxis, const uInt yAxis,
+	                                    const uInt mAxis,
+	                                    const IPosition fixedPos)
 		: LatticePADisplayData<T>(image, xAxis, yAxis, mAxis, fixedPos) {
 		setupElements();
 		setDefaultOptions();
 	}
 
 	template <class T>
-	LatticeAsMarker<T>::LatticeAsMarker(SHARED_PTR<casacore::ImageInterface<T> > image,
-	                                    const casacore::uInt xAxis, const casacore::uInt yAxis)
+	LatticeAsMarker<T>::LatticeAsMarker(SHARED_PTR<ImageInterface<T> > image,
+	                                    const uInt xAxis, const uInt yAxis)
 		: LatticePADisplayData<T>(image, xAxis, yAxis) {
 		setupElements();
 		setDefaultOptions();
@@ -78,7 +78,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	template <class T>
 	LatticeAsMarker<T>::~LatticeAsMarker() {
-		for (casacore::uInt i = 0; i < nelements(); i++) {
+		for (uInt i = 0; i < nelements(); i++) {
 			if (DDelement[i]) {
 				delete (static_cast<LatticePADMMarker<T>*>(DDelement[i]));
 			}
@@ -89,20 +89,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	template <class T>
 	void LatticeAsMarker<T>::setupElements() {
 
-		for (casacore::uInt i=0; i<nelements(); i++) if(DDelement[i]!=0) {
+		for (uInt i=0; i<nelements(); i++) if(DDelement[i]!=0) {
 				delete static_cast<LatticePADMMarker<T>*>(DDelement[i]);
 				DDelement[i]=0;
 			}
 		// Delete old DMs, if any.
 
-		casacore::IPosition fixedPos = fixedPosition();
-		casacore::Vector<casacore::Int> dispAxes = displayAxes();
-		AlwaysAssert(dispAxes.nelements()>=2,casacore::AipsError);
+		IPosition fixedPos = fixedPosition();
+		Vector<Int> dispAxes = displayAxes();
+		AlwaysAssert(dispAxes.nelements()>=2,AipsError);
 //
 		if (nPixelAxes > 2) {
 			setNumImages(dataShape()(dispAxes(2)));
 			DDelement.resize(nelements());
-			for (casacore::uInt index = 0; index < nelements(); index++) {
+			for (uInt index = 0; index < nelements(); index++) {
 				fixedPos(dispAxes(2)) = index;
 //
 				DDelement[index] = dynamic_cast<LatticePADisplayMethod<T>*>
@@ -129,7 +129,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // We try to make the initial increments so that not too many
 // markers are drawn
 
-		casacore::IPosition shape = dataShape();
+		IPosition shape = dataShape();
 		itsIncX = max(3,shape(0) / 100);
 		itsIncY = max(3,shape(1) / 100);
 		itsColor = "foreground";
@@ -138,11 +138,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	template <class T>
-	casacore::Bool LatticeAsMarker<T>::setOptions(casacore::Record &rec, casacore::Record &recOut) {
-		casacore::Bool ret = LatticePADisplayData<T>::setOptions(rec, recOut);
+	Bool LatticeAsMarker<T>::setOptions(Record &rec, Record &recOut) {
+		Bool ret = LatticePADisplayData<T>::setOptions(rec, recOut);
 //
-		casacore::Bool localchange = false;
-		casacore::Bool error;
+		Bool localchange = False;
+		Bool error;
 //
 		localchange = readOptionRecord(itsScale, error, rec, "scale") ||
 		              localchange;
@@ -157,9 +157,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		localchange = readOptionRecord(itsMarker, error, rec, "marker") ||
 		              localchange;
 //
-// must come last - this forces ret to be true or false:
+// must come last - this forces ret to be True or False:
 //
-		if (rec.isDefined("refresh") && (rec.dataType("refresh") == casacore::TpBool)) {
+		if (rec.isDefined("refresh") && (rec.dataType("refresh") == TpBool)) {
 			rec.get("refresh", ret);
 		}
 //
@@ -169,39 +169,39 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	template <class T>
-	casacore::Record LatticeAsMarker<T>::getOptions( bool scrub ) const {
-		casacore::Record rec = LatticePADisplayData<T>::getOptions(scrub);
-		casacore::Record unset;
+	Record LatticeAsMarker<T>::getOptions( bool scrub ) const {
+		Record rec = LatticePADisplayData<T>::getOptions(scrub);
+		Record unset;
 		unset.define("i_am_unset", "i_am_unset");
 //
 // phasetype and debiasing are only meaningful for COmplex data
 //
 		T* dummy = NULL;
-		casacore::DataType type = casacore::whatType(dummy);
-		AlwaysAssert(type==TpFloat || type==TpComplex, casacore::AipsError);
+		DataType type = whatType(dummy);
+		AlwaysAssert(type==TpFloat || type==TpComplex, AipsError);
 //
-		casacore::Record marker;
+		Record marker;
 		marker.define("dlformat", "marker");
 		marker.define("listname", "Marker shape");
 		marker.define("ptype", "choice");
-		casacore::Vector<casacore::String> markerShape(1);
+		Vector<String> markerShape(1);
 		markerShape(0) = "square";
 		marker.define("popt", markerShape);
 		marker.define("default", "square");
 		marker.define("value", itsMarker);
-		marker.define("allowunset", false);
+		marker.define("allowunset", False);
 		rec.defineRecord("marker", marker);
 //
-		casacore::Record scale;
+		Record scale;
 		scale.define("dlformat", "scale");
 		scale.define("listname", "Scale factor");
 		scale.define("ptype", "scalar");
-		scale.define("default", casacore::Float(1.0));
+		scale.define("default", Float(1.0));
 		scale.define("value", itsScale);
-		scale.define("allowunset", false);
+		scale.define("allowunset", False);
 		rec.defineRecord("scale", scale);
 //
-		casacore::Record incX;
+		Record incX;
 		incX.define("dlformat", "incx");
 		incX.define("listname", "X-increment");
 		incX.define("ptype", "intrange");
@@ -209,11 +209,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		incX.define("pmax", itsIncX * 2);
 		incX.define("default", 3);
 		incX.define("value", itsIncX);
-		incX.define("provideentry", true);
-		incX.define("allowunset", false);
+		incX.define("provideentry", True);
+		incX.define("allowunset", False);
 		rec.defineRecord("incx", incX);
 //
-		casacore::Record incY;
+		Record incY;
 		incY.define("dlformat", "incy");
 		incY.define("listname", "Y-increment");
 		incY.define("ptype", "intrange");
@@ -221,27 +221,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		incY.define("pmax", itsIncY*2);
 		incY.define("default", 3);
 		incY.define("value", itsIncY);
-		incY.define("provideentry", true);
-		incY.define("allowunset", false);
+		incY.define("provideentry", True);
+		incY.define("allowunset", False);
 		rec.defineRecord("incy", incY);
 //
-		casacore::Record line;
+		Record line;
 		line.define("dlformat", "line");
 		line.define("listname", "Line width");
 		line.define("ptype", "floatrange");
-		line.define("pmin", casacore::Float(0.0));
-		line.define("pmax", casacore::Float(5.0));
-		line.define("presolution", casacore::Float(0.1));
-		line.define("default", casacore::Float(0.5));
+		line.define("pmin", Float(0.0));
+		line.define("pmax", Float(5.0));
+		line.define("presolution", Float(0.1));
+		line.define("default", Float(0.5));
 		line.define("value", itsLineWidth);
-		line.define("allowunset", false);
+		line.define("allowunset", False);
 		rec.defineRecord("line", line);
 //
-		casacore::Record color;
+		Record color;
 		color.define("dlformat", "color");
 		color.define("listname", "Marker color");
 		color.define("ptype", "userchoice");
-		casacore::Vector<casacore::String> vcolor(11);
+		Vector<String> vcolor(11);
 		vcolor(0) = "foreground";
 		vcolor(1) = "background";
 		vcolor(2) = "black";
@@ -256,7 +256,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		color.define("popt", vcolor);
 		color.define("default", "foreground");
 		color.define("value", itsColor);
-		color.define("allowunset", false);
+		color.define("allowunset", False);
 		rec.defineRecord("color", color);
 //
 		return rec;

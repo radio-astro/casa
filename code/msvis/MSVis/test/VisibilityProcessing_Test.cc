@@ -21,9 +21,7 @@
 #include <msvis/MSVis/VisibilityIterator.h>
 
 using namespace std;
-using namespace casacore;
 using namespace casa;
-using namespace casacore;
 using namespace casa::vpf;
 namespace po = boost::program_options;
 
@@ -33,7 +31,6 @@ main (int argc, char * args [])
     return casa::vpf::VpTests::singleton().run (argc, args);
 }
 
-using namespace casacore;
 namespace casa {
 
 namespace vpf {
@@ -668,5 +665,4 @@ VpTestListener::startTest (Test * test)
 
 
 } // end namespace vpf
-using namespace casacore;
 } // end namespace casa

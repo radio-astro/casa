@@ -41,20 +41,20 @@ int main () {
 			log << LogIO::NORMAL
 				<< "mixed world and pixel coordinates throws exception"
 				<< LogIO::POST;
-			Bool thrown = true;
+			Bool thrown = True;
 			Quantity x(0.01, "pix");
 			Quantity y(0, "deg");
 			Char s = 'o';
 
 			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(false)
+				csys.directionCoordinate().directionType(False)
 			);
 			try {
 				AnnSymbol symbol(
 					x, y,
 					csys, AnnSymbol::charToSymbol(s), Vector<Stokes::StokesTypes>(0)
 				);
-				thrown = false;
+				thrown = False;
 			} catch (const AipsError& x) {
 				log << LogIO::NORMAL
 					<< "Exception thrown as expected: " << x.getMesg()
@@ -67,20 +67,20 @@ int main () {
 			log << LogIO::NORMAL
 				<< "Test bad quantity for world direction coordinate throws exception"
 				<< LogIO::POST;
-			Bool thrown = true;
+			Bool thrown = True;
 			Quantity x(0.01, "km/s");
 			Quantity y(0, "deg");
 			Char s = 'o';
 
 			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(false)
+				csys.directionCoordinate().directionType(False)
 			);
 			try {
 				AnnSymbol symbol(
 					x, y, csys, AnnSymbol::charToSymbol(s),
 					Vector<Stokes::StokesTypes>(0)
 				);
-				thrown = false;
+				thrown = False;
 			} catch (const AipsError& x) {
 				log << LogIO::NORMAL
 					<< "Exception thrown as expected: "
@@ -92,20 +92,20 @@ int main () {
 			log << LogIO::NORMAL
 				<< "Test bad symbol character throws exception"
 				<< LogIO::POST;
-			Bool thrown = true;
+			Bool thrown = True;
 			Quantity x(0.01, "km/s");
 			Quantity y(0, "deg");
 			Char c = '?';
 
 			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(false)
+				csys.directionCoordinate().directionType(False)
 			);
 			try {
 				AnnSymbol symbol(
 					x, y, csys, AnnSymbol::charToSymbol(c),
 					Vector<Stokes::StokesTypes>(0)
 				);
-				thrown = false;
+				thrown = False;
 			} catch (AipsError x) {
 				log << LogIO::NORMAL
 					<< "Exception thrown as expected: "
@@ -122,7 +122,7 @@ int main () {
 			Char s = 'o';
 
 			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(false)
+				csys.directionCoordinate().directionType(False)
 			);
 			AnnSymbol symbol(
 				x, y,
@@ -184,7 +184,7 @@ int main () {
 			Char s = 'o';
 
 			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(false)
+				csys.directionCoordinate().directionType(False)
 			);
 			AnnSymbol symbol(
 				x, y,

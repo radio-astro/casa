@@ -64,7 +64,6 @@
 #include <iostream>
 using namespace std;
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	static const Coordinate &axisToCoordinate( DisplayCoordinateSystem *csys, int axis ) {
@@ -76,14 +75,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	const String PrincipalAxesDD::HISTOGRAM_RANGE = "minmaxhist";
 // constructor
 	PrincipalAxesDD::PrincipalAxesDD(uInt xAxis, uInt yAxis, Int mAxis, Bool axisLabels, viewer::StatusSink *sink )
-		: iAmRubbish(true),
+		: iAmRubbish(True),
 		  itsNotation(Coordinate::MIXED),
 		  itsNumImages(0),
 		  itsSpectralUnit(""),
 		  //itsSpectralUnit("GHz"),
 		  itsSpectralQuantity("radio"),
-		  itsAbsolute(true),
-		  itsFractionalPixels(false),
+		  itsAbsolute(True),
+		  itsFractionalPixels(False),
 		  itsUsesAxisLabels(axisLabels),
 		  ssink(sink) {
 		itsDisplayAxes.resize(3);
@@ -130,9 +129,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 			world(0) = itsFullWorldTmp1(0);
 			world(1) = itsFullWorldTmp1(1);
-			return true;
+			return True;
 		} else {
-			return false;
+			return False;
 		}
 	}
 
@@ -143,14 +142,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // some sanity checks
 
 		if (iAmRubbish) {
-			return false;
+			return False;
 		}
 
 // the input must be a 2d WorldCanvas linear (data pixel) coordinate,
 // and the output will be a full world coordinate on the WorldCanvas.
 
 		if (lin.nelements() != 2) {
-			return false;
+			return False;
 		}
 
 // The first 3 pixel axes of itsCoordSys have been transposed
@@ -199,14 +198,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		error_string = "";
 		if (iAmRubbish) {
 			error_string = "inconsistent PrincipalAxesDD state";
-			return false;
+			return False;
 		}
 
 // the input must be a 2d or 3d world coordinate on the WorldCanvas, and the
 // output will be a 2d linear coordinate on the WorldCanvas.
 
 		uInt nWorld = world.nelements();
-		if (nWorld < 2 || nWorld> 3) return false;
+		if (nWorld < 2 || nWorld> 3) return False;
 
 //
 		if (itsWorldInTmp3.nelements() != nWorldAxes) {
@@ -218,18 +217,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			itsPixelAxesTmp3.resize(nPixelAxes);
 		}
 //
-		itsWorldAxesTmp3 = false;
-		itsPixelAxesTmp3 = true;
+		itsWorldAxesTmp3 = False;
+		itsPixelAxesTmp3 = True;
 
 // fill in what we know in world coords
 
 		itsWorldInTmp3(0) = world(0);
 		itsWorldInTmp3(1) = world(1);
-		itsWorldAxesTmp3(0) = itsWorldAxesTmp3(1) = true;
+		itsWorldAxesTmp3(0) = itsWorldAxesTmp3(1) = True;
 
 // fill in what we know in pixel coords
 
-		itsPixelAxesTmp3(0) = itsPixelAxesTmp3(1) = false;
+		itsPixelAxesTmp3(0) = itsPixelAxesTmp3(1) = False;
 		if (nPixelAxes > 2) {
 			itsPixelInTmp3(2) = activeZIndex_;
 		}
@@ -245,9 +244,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				Int pAxis = itsCoordSys.worldAxisToPixelAxis(hiddenDependentWorldAxis);
 				if (nWorld==3) {
 					itsWorldInTmp3(hiddenDependentWorldAxis) = world(2);
-					itsWorldAxesTmp3(hiddenDependentWorldAxis) = true;
+					itsWorldAxesTmp3(hiddenDependentWorldAxis) = True;
 					if (pAxis >= 0) {
-						itsPixelAxesTmp3(pAxis) = false;
+						itsPixelAxesTmp3(pAxis) = False;
 					}
 				} else {
 					attString = "hiddenDependentAxisWorldValue";
@@ -255,9 +254,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 						Double attValue;
 						getAttributeValue(attString, attValue);
 						itsWorldInTmp3(hiddenDependentWorldAxis) = attValue;
-						itsWorldAxesTmp3(hiddenDependentWorldAxis) = true;
+						itsWorldAxesTmp3(hiddenDependentWorldAxis) = True;
 						if (pAxis >= 0) {
-							itsPixelAxesTmp3(pAxis) = false;
+							itsPixelAxesTmp3(pAxis) = False;
 						}
 					}
 				}
@@ -274,10 +273,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			lin.resize(2);
 			lin(0) = itsPixelOutTmp3(0);
 			lin(1) = itsPixelOutTmp3(1);
-			return true;
+			return True;
 		} else {
 			error_string = itsCoordSys.errorMessage( );
-			return false;
+			return False;
 		}
 	}
 
@@ -374,7 +373,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 			String fmtdCoord = itsPosTrackCoordSys.format(units, notation,
 			                   itsFullWorldTmp4[j], j,
-			                   true, showAbs);
+			                   True, showAbs);
 
 			if ((units != String("")) && (units != String(" "))) {
 				fmtdCoord += String(" ") + units;
@@ -402,7 +401,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Old world or pixel code:
 		/*
 		if (showWorld) {
-		   Bool firstline=true;
+		   Bool firstline=True;
 		   for (uInt i=0; i<n; i++) {
 		      if (displayAxesOnly) {
 		         j = itsDisplayAxes[i];
@@ -436,7 +435,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		String fmtdCoord = itsPosTrackCoordSys.format(units,
 					      format,
 		                             	      itsFullWorldTmp4[j], j,
-		                                    true, showAbs);
+		                                    True, showAbs);
 		//
 		      if ((units != String("")) && (units != String(" "))) {
 		          fmtdCoord += String(" ") + units;
@@ -446,7 +445,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		   if(firstline &&
 		      (i==n/2 || retval.length() + fmtdCoord.length() >= 36)) {
 		      retval += String("\n");	// use second line--avoid overruns
-		      firstline = false;	// which cause irritating resizes.
+		      firstline = False;	// which cause irritating resizes.
 		   } else {
 		      retval += String(" ");
 		   }
@@ -491,7 +490,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Bool PrincipalAxesDD::setActiveZIndex_(Int zindex) {
 		if (nelements()==1) {			// (If there is only one frame on
 			activeZIndex_ = 0;			// the animation axis, use that frame
-			zIndexConformed_ =  true;
+			zIndexConformed_ =  True;
 		}	// regardless of zindex passed in).
 		else {
 			activeZIndex_ = zindex;
@@ -661,23 +660,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// zoom window.  The 'CS master' handles it.
 		// See notes at top of DisplayData.h.
 
-		// During a sizeControl call, isCSmaster()==true means that the CS master
+		// During a sizeControl call, isCSmaster()==True means that the CS master
 		// role is on offer.  In that case, acceptance of the role is indicated by
 		// the sizeControl return value.  A DD could still refuse the role at this
-		// point by returning false (although this derivation does not).  In
+		// point by returning False (although this derivation does not).  In
 		// that case, the role would be offered to other DDs, if any.
 
-		// If isCSmaster()==false, another DD is CS master, and we are not
+		// If isCSmaster()==False, another DD is CS master, and we are not
 		// allowed to change WC CS or axis codes.  We _would_ be allowed to alter
 		// maximum zoom extents or, e.g., tweak the zoom window to align on pixel
 		// boundaries, but this derivation does not.
-		if(!isCSmaster(&wch)) return false;
+		if(!isCSmaster(&wch)) return False;
 
 		// If the CSmaster has no nondegenerate, nondisplayed axes, assume that the
 		// user has *not* selected the display axes (because all the non-displayed
 		// axes are degenerate). Check to see if any other registered display datas
 		// have nondegenerate, nondisplayed axes. If one is found, allow it to
-		// become the CSmaster (by returning false)...
+		// become the CSmaster (by returning False)...
 
 		// The check below was removed, because there is a requirement that if
 		// no CSMaster is set by the user then ANY display data can be the cs master
@@ -692,13 +691,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				// draw region boxes... e.g. things with 'dataType( ) == "composite [rectangle]"...
 				if ( dd->dataType() == "image" && has_nonsingleton_nondegenerate_nondisplayed_axis(*dd) ) {
 					cout << "PrincipalAxesDD returning false because of nondegenerate axis"<<endl;
-					return false;
+					return False;
 				}
 			}
 		}
 		cout << "Past axes check"<<endl;*/
 
-		// CS master is on offer; we will accept that role by returning true.
+		// CS master is on offer; we will accept that role by returning True.
 		// This means taking charge of setting the WC CS (and its 'axis codes'),
 		// the canvas draw area, zoom window, and maixmum zoom extents.
 
@@ -750,7 +749,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// a DD in most cases to decide whether it is compatible with the WC's
 		// current world coordinates (although if necessary a DD can look at
 		// WC CS info directly as well).   If the DD is not compatible, it should
-		// return false from conformsToCS(), and should not draw.
+		// return False from conformsToCS(), and should not draw.
 		// Ideally, axis codes would not be limited to two world coordinates as
 		// they are now.  (In the example above, world space is 3-dimensional, and
 		// axis codes should include a Declination world coordinate as well).
@@ -847,7 +846,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		static String unZoom = "resetCoordinates",
 		              zoomB = "manualZoomBlc", zoomT = "manualZoomTrc";
 
-		Bool zoom = false;
+		Bool zoom = False;
 
 		Vector<Double> zoomBlc, zoomTrc;
 		if (!reset &&  wCanvas->existsAttribute(zoomB) &&
@@ -1004,7 +1003,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		sizeControlBuf = holderBuf;
 
 
-		return true;
+		return True;
 	}
 
 
@@ -1119,7 +1118,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			}
 		}
 //
-		iAmRubbish = false;
+		iAmRubbish = False;
 		itsDisplayAxes[0] = xAxis;
 		itsDisplayAxes[1] = yAxis;
 		itsDisplayAxes[2] = mAxis;
@@ -1129,7 +1128,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		if(reset) {
 
-			// dk note: 'reset' (default true) is passed as false instead by setOptions
+			// dk note: 'reset' (default True) is passed as False instead by setOptions
 			// if only a slider position was changed.  In that case, we don't want
 			// to unzoom or reset animator position (this is a bugfix).
 			// Properly, the code which switches axes should be separated from the code
@@ -1143,7 +1142,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 			// order unzoom
 			String attString("resetCoordinates");
-			Attribute resetCoordinatesAtt(attString, true);
+			Attribute resetCoordinatesAtt(attString, True);
 			setAttributeOnPrimaryWCHs(resetCoordinatesAtt);
 
 			// convince all WCes with this DD as first registered that they
@@ -1154,7 +1153,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			// record (below) for the real message).
 
 			attString = "resetAnimator";
-			Attribute resetAnimatorAtt(attString, true);
+			Attribute resetAnimatorAtt(attString, True);
 			setAttributeOnPrimaryWCHs(resetAnimatorAtt);
 		}
 
@@ -1210,7 +1209,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	void PrincipalAxesDD::installFakeCoordinateSystem() {
 		itsCoordSysBackup = itsCoordSys;
 		itsCoordSys =
-		    CoordinateUtil::makeCoordinateSystem(dataShape(), true);
+		    CoordinateUtil::makeCoordinateSystem(dataShape(), True);
 	}
 
 	void PrincipalAxesDD::removeFakeCoordinateSystem() {
@@ -1234,13 +1233,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		Vector<String> wAxisNames(tCS.worldAxisNames().copy());
 		for (uInt i = 0; i < wAxisNames.nelements(); i++) {
-			Bool rename = false;
+			Bool rename = False;
 			if (wAxisNames(i) == String("")) {
-				rename = true;
+				rename = True;
 			} else {
 				for (uInt j = 0; j < i; j++) {
 					if (wAxisNames(j) == wAxisNames(i)) {
-						rename = true;
+						rename = True;
 					}
 				}
 			}
@@ -1439,10 +1438,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				itsAxisLabellers[i] = NULL;
 			}
 
-// forceSmaller=true necessary here; otherwise, after
+// forceSmaller=True necessary here; otherwise, after
 // itsAxisLabellers.resize(nnew),
 // itsAxisLabellers.nelements() may not be == nnew!!  )-;
-			itsAxisLabellers.resize(nnew, true);
+			itsAxisLabellers.resize(nnew, True);
 
 // Copy the DisplayCoordinateSystem for the Axis Labeller.
 // We copy the working version which has been reordered to
@@ -1487,7 +1486,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				}
 // Now give the labeller its own CS and set the default options
 				tLab->setCoordinateSystem(tCS);
-				tLab->useWCCS = true;
+				tLab->useWCCS = True;
 				// (new) signal to use WC CS anyway where appropriate (but tCS
 				// still needed for some things).
 				tLab->setDefaultOptions();  // (needed after setCS(), for CS opts...).
@@ -1508,14 +1507,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // sanity checks
 
 		if (iAmRubbish) {
-			return false;
+			return False;
 		}
 
 // the input must be a 2d world coordinate on the WorldCanvas, and the
 // output will be a 2d linear coordinate on the WorldCanvas.
 
 		if (world.shape()(0) < 2) {
-			return false;
+			return False;
 		}
 
 // temporary holding places
@@ -1532,8 +1531,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Fill in what we know in pixel coords
 
-		itsPixelAxesTmp1 = true;
-		itsPixelAxesTmp1(0) = itsPixelAxesTmp1(1) = false;
+		itsPixelAxesTmp1 = True;
+		itsPixelAxesTmp1(0) = itsPixelAxesTmp1(1) = False;
 		if (nPixelAxes > 2) {
 			itsPixelInTmp1(2) = activeZIndex_;
 		}
@@ -1550,8 +1549,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		itsWorldInTmp1(0) = world(0);
 		itsWorldInTmp1(1) = world(1);
-		itsWorldAxesTmp1 = false;
-		itsWorldAxesTmp1(0) = itsWorldAxesTmp1(1) = true;
+		itsWorldAxesTmp1 = False;
+		itsWorldAxesTmp1(0) = itsWorldAxesTmp1(1) = True;
 
 // do conversion
 
@@ -1562,9 +1561,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 			transposedToNormal(fullWorld, itsTransWorldAxes);
 			transposedToNormal(fullPixel, itsTransPixelAxes);
-			return true;
+			return True;
 		} else {
-			return false;
+			return False;
 		}
 	}
 
@@ -1572,17 +1571,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	                                    Vector<Int> &testVec) {
 		// sanity check
 		if (length>=Int(testVec.nelements()) || length <= 0) {
-			return false;
+			return False;
 		}
 
 		for (Int i=0; i<length; i++) {
 			if (testVec(i) == index) {
-				return false;
+				return False;
 			}
 		}
 
 		testVec(length) = index;
-		return true;
+		return True;
 	}
 
 	void PrincipalAxesDD::normalToTransposed(Vector<Double>& coord,
@@ -1640,7 +1639,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// via MultiWCHolder.  DD conformity to canvas-wide state is tested via
 		// conformsTo(wch).
 
-		zIndexConformed_ = false;
+		zIndexConformed_ = False;
 		activeZIndex_ = 0;
 
 		WorldCanvas *wCanvas = wch.worldCanvas();
@@ -1662,7 +1661,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				if (static_cast<PrincipalAxesDM*>(DDelement[i])->matches(
 				            *const_cast<AttributeBuffer*>(wcRes) )) {
 					activeZIndex_ = i;
-					zIndexConformed_ = true;
+					zIndexConformed_ = True;
 				}
 			}
 		}
@@ -1698,7 +1697,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		setDisplayState( DisplayData::DISPLAYED );
 
 		// not using internal labellers
-		if (!itsUsesAxisLabels) return false;
+		if (!itsUsesAxisLabels) return False;
 
 		if( !csConformed_ || activeZIndex_<0 ||
 		        uInt(activeZIndex_) >= itsAxisLabellers.nelements() ) {
@@ -1709,14 +1708,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				if ( out.str( ) != last ) ssink->status( out.str( ), "error" );
 				last = out.str( );
 			}
-			return false;
+			return False;
 		}
 		// (...but CS master with invalid blink restriction can still label--
 		// its labelling CS is more reliable than other DDs'....  This
 		// still needs work.  dk 12/04)
 		bool labelSwitch = ((WCAxisLabeller *)(itsAxisLabellers[activeZIndex_]))->axisLabelSwitch();
 		if (!labelSwitch) {
-			return false;
+			return False;
 		}
 
 		try {
@@ -1733,10 +1732,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				static LogIO os(LogOrigin("PrincipleAxesDD", "labelAxes", WHERE));
 				os << LogIO::WARN
 					<< "Could not label axes: "<< x.getMesg().c_str() << LogIO::POST;
-				return false;
+				return False;
 			}
 		}
-		return true;
+		return True;
 	}
 	void PrincipalAxesDD::setSubstituteTitleText( const String text ){
 		titleText = text;
@@ -1832,7 +1831,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	Bool PrincipalAxesDD::setLabellerOptions(Record &rec, Record &recout) {
-		if (!itsUsesAxisLabels) return false;
+		if (!itsUsesAxisLabels) return False;
 
 		WCCSNLAxisLabeller* tLab =
 		    static_cast<WCCSNLAxisLabeller*>(itsAxisLabellers[0]);
@@ -1878,7 +1877,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			else itsNotation = Coordinate::MIXED;
 		}
 //
-		Bool localchange = false;
+		Bool localchange = False;
 
 // distribute options to all the axis labellers...
 
@@ -1889,11 +1888,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Deal with changes to display/animator axes or to slice positions
 		// on 'hidden axis' sliders.
 
-		Bool axischange = false;
-		Bool x_axischange = false;
-		Bool y_axischange = false;
-		Bool z_axischange = false;
-		Bool sliderchange = false;
+		Bool axischange = False;
+		Bool x_axischange = False;
+		Bool y_axischange = False;
+		Bool z_axischange = False;
+		Bool sliderchange = False;
 
 		String oldXAxis = itsOptionsXAxis;
 		String oldYAxis = itsOptionsYAxis;
@@ -1912,42 +1911,42 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			if ( x_axischange && ! y_axischange &&
 			        itsOptionsXAxis == itsOptionsYAxis ) {
 				itsOptionsYAxis = oldXAxis;
-				y_axischange = true;
+				y_axischange = True;
 				Record yaxis;
 				yaxis.define("value",itsOptionsYAxis);
 				recOut.defineRecord("yaxis", yaxis);
 			} else if ( x_axischange && ! z_axischange &&
 			            itsOptionsXAxis == itsOptionsZAxis ) {
 				itsOptionsZAxis = oldXAxis;
-				z_axischange = true;
+				z_axischange = True;
 				Record zaxis;
 				zaxis.define("value",itsOptionsZAxis);
 				recOut.defineRecord("zaxis", zaxis);
 			} else if ( y_axischange && ! x_axischange &&
 			            itsOptionsYAxis == itsOptionsXAxis ) {
 				itsOptionsXAxis = oldYAxis;
-				x_axischange = true;
+				x_axischange = True;
 				Record xaxis;
 				xaxis.define("value",itsOptionsXAxis);
 				recOut.defineRecord("xaxis", xaxis);
 			} else if ( y_axischange && ! z_axischange &&
 			            itsOptionsYAxis == itsOptionsZAxis ) {
 				itsOptionsZAxis = oldYAxis;
-				z_axischange = true;
+				z_axischange = True;
 				Record zaxis;
 				zaxis.define("value",itsOptionsZAxis);
 				recOut.defineRecord("zaxis", zaxis);
 			} else if ( z_axischange && ! x_axischange &&
 			            itsOptionsZAxis == itsOptionsXAxis ) {
 				itsOptionsXAxis = oldZAxis;
-				x_axischange = true;
+				x_axischange = True;
 				Record xaxis;
 				xaxis.define("value",itsOptionsXAxis);
 				recOut.defineRecord("xaxis", xaxis);
 			} else if ( z_axischange && ! y_axischange &&
 			            itsOptionsZAxis == itsOptionsYAxis ) {
 				itsOptionsYAxis = oldZAxis;
-				y_axischange = true;
+				y_axischange = True;
 				Record yaxis;
 				yaxis.define("value",itsOptionsYAxis);
 				recOut.defineRecord("yaxis", yaxis);
@@ -1982,7 +1981,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					Int axis = itsTransPixelAxes(loc);
 					if (itsFixedPosition(axis) != temp) {
 						itsFixedPosition(axis) = temp;
-						sliderchange = true;
+						sliderchange = True;
 					}
 				}
 			}
@@ -2058,7 +2057,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				haxis.define("value", (Int)itsFixedPosition(axis) + uiBase());
 				// see uiBase() for information about slider position
 				// numbering from either 0 or 1.
-				haxis.define("allowunset", false);
+				haxis.define("allowunset", False);
 				haxis.define("context", "hidden_axes");
 				recOut.defineRecord(dlformatchr, haxis);
 			}
@@ -2090,7 +2089,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		xaxis.define("popt", pixelAxisNames);
 		xaxis.define("default", pixelAxisNames(0));
 		xaxis.define("value", itsOptionsXAxis);
-		xaxis.define("allowunset", false);
+		xaxis.define("allowunset", False);
 		xaxis.define("context", "display_axes");
 		xaxis.define("dependency_group", "axes");
 		xaxis.define("dependency_type", "exclusive");
@@ -2104,7 +2103,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		yaxis.define("popt", pixelAxisNames);
 		yaxis.define("default", pixelAxisNames(1));
 		yaxis.define("value", itsOptionsYAxis);
-		yaxis.define("allowunset", false);
+		yaxis.define("allowunset", False);
 		yaxis.define("context", "display_axes");
 		yaxis.define("dependency_group", "axes");
 		yaxis.define("dependency_type", "exclusive");
@@ -2120,7 +2119,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			zaxis.define("popt", pixelAxisNames);
 			zaxis.define("default", pixelAxisNames(2));
 			zaxis.define("value", itsOptionsZAxis);
-			zaxis.define("allowunset", false);
+			zaxis.define("allowunset", False);
 			zaxis.define("context", "display_axes");
 			zaxis.define("dependency_group", "axes");
 			zaxis.define("dependency_type", "exclusive");
@@ -2142,7 +2141,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			haxis.define("value", (Int)itsFixedPosition(axis) + uiBase());
 			// see uiBase() for information about slider position
 			// numbering from either 0 or 1.
-			haxis.define("allowunset", false);
+			haxis.define("allowunset", False);
 			haxis.define("context", "hidden_axes");
 			rec.defineRecord(dlformatchr, haxis);
 		}
@@ -2169,7 +2168,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		aspect.define("popt", vaspect);
 		aspect.define("default", vaspect(1));
 		aspect.define("value", itsOptionsAspect);
-		aspect.define("allowunset", false);
+		aspect.define("allowunset", False);
 		rec.defineRecord("aspect", aspect);
 //
 		Record pixeltreatment;
@@ -2182,7 +2181,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		pixeltreatment.define("popt", vpixeltreatment);
 		pixeltreatment.define("default", "center");
 		pixeltreatment.define("value", itsOptionsPixelTreatment);
-		pixeltreatment.define("allowunset", false);
+		pixeltreatment.define("allowunset", False);
 		rec.defineRecord("pixeltreatment", pixeltreatment);
 //
 		Record absrel;
@@ -2200,7 +2199,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		} else {
 			absrel.define("value", "relative");
 		}
-		absrel.define("allowunset", false);
+		absrel.define("allowunset", False);
 		rec.defineRecord("absrel", absrel);
 //
 		Record fracpix;
@@ -2218,7 +2217,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		} else {
 			fracpix.define("value", "integral");
 		}
-		fracpix.define("allowunset", false);
+		fracpix.define("allowunset", False);
 		rec.defineRecord("fracpix", fracpix);
 
 		//
@@ -2270,7 +2269,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 				veltype.define("popt", stunits);
 				veltype.define("value", itsSpectralQuantity);
-				veltype.define("allowunset", false);
+				veltype.define("allowunset", False);
 				rec.defineRecord("spectraltype", veltype);
 
 				Record spectralunit;
@@ -2301,7 +2300,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				}
 				spectralunit.define("popt", specunits);
 				spectralunit.define("value", itsSpectralUnit);
-				spectralunit.define("allowunset", false);
+				spectralunit.define("allowunset", False);
 				rec.defineRecord("spectralunit", spectralunit);
 			}
 
@@ -2317,7 +2316,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			spectralnotation.define("popt", choices);
 			spectralnotation.define("default", "Flexible");
 			spectralnotation.define("value", "Flexible");
-			spectralnotation.define("allowunset", false);
+			spectralnotation.define("allowunset", False);
 			rec.defineRecord("spectralnotation", spectralnotation);
 
 		}
@@ -2382,7 +2381,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				removeAxes(i) = j;
 				replacementValues(i) = fixedPosition(k);
 			}
-			cSys.removePixelAxes( replacementValues, removeAxes, true );
+			cSys.removePixelAxes( replacementValues, removeAxes, True );
 		}
 	}
 
@@ -2392,9 +2391,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Int iS = cSys.findCoordinate(Coordinate::SPECTRAL, after);
 		if (iS>=0) {
 			const SpectralCoordinate& sc = cSys.spectralCoordinate(iS);
-			if (sc.restFrequency() > 0) return true;
+			if (sc.restFrequency() > 0) return True;
 		}
-		return false;
+		return False;
 	}
 
 

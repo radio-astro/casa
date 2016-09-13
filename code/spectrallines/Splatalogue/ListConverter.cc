@@ -39,7 +39,6 @@
 #include <tables/DataMan/StandardStMan.h>
 #include <tables/Tables/TableDesc.h>
 
-using namespace casacore;
 namespace casa {
 
 ListConverter::ListConverter(const Vector<String>& filenames, const String& table) :
@@ -60,7 +59,7 @@ ListConverter::ListConverter(const Vector<String>& filenames, const String& tabl
 		if (! file.isReadable()) {
 			*_log << "File " << *iter << " does not have read permission" << LogIO::EXCEPTION;
 		}
-		_listFiles.resize(_listFiles.size()+1, true);
+		_listFiles.resize(_listFiles.size()+1, True);
 		_listFiles[_listFiles.size() - 1] = file;
 	}
 }
@@ -97,7 +96,7 @@ void ListConverter::_parseLists() {
 		char *buffer = new char[bufSize];
 		int nRead;
 		String contents;
-		while ((nRead = fileIO.read(bufSize, buffer, false)) == bufSize) {
+		while ((nRead = fileIO.read(bufSize, buffer, False)) == bufSize) {
 			String chunk(buffer, bufSize);
 			contents += chunk;
 		}
@@ -107,17 +106,17 @@ void ListConverter::_parseLists() {
 
 		Vector<String> lines = stringToVector(contents, '\n');
 		uInt newSize = _frequency.size() + lines.size();
-		_species.resize(newSize, true);
-		_chemName.resize(newSize, true);
-		_qns.resize(newSize, true);
-		_lineList.resize(newSize, true);
-		_recommended.resize(newSize, true);
-		_frequency.resize(newSize, true);
-		_intensity.resize(newSize, true);
-		_smu2.resize(newSize, true);
-		_logA.resize(newSize, true);
-		_eL.resize(newSize, true);
-		_eU.resize(newSize, true);
+		_species.resize(newSize, True);
+		_chemName.resize(newSize, True);
+		_qns.resize(newSize, True);
+		_lineList.resize(newSize, True);
+		_recommended.resize(newSize, True);
+		_frequency.resize(newSize, True);
+		_intensity.resize(newSize, True);
+		_smu2.resize(newSize, True);
+		_logA.resize(newSize, True);
+		_eL.resize(newSize, True);
+		_eU.resize(newSize, True);
 		uInt lineCount = 0;
 		for(Vector<String>::iterator liter=lines.begin(); liter!=lines.end(); liter++) {
 			if (
@@ -265,17 +264,17 @@ void ListConverter::_parseLists() {
 			lineCount++;
 		}
 	}
-	_species.resize(transitionIndex, true);
-	_chemName.resize(transitionIndex, true);
-	_qns.resize(transitionIndex, true);
-	_lineList.resize(transitionIndex, true);
-	_recommended.resize(transitionIndex, true);
-	_frequency.resize(transitionIndex, true);
-	_intensity.resize(transitionIndex, true);
-	_smu2.resize(transitionIndex, true);
-	_logA.resize(transitionIndex, true);
-	_eL.resize(transitionIndex, true);
-	_eU.resize(transitionIndex, true);
+	_species.resize(transitionIndex, True);
+	_chemName.resize(transitionIndex, True);
+	_qns.resize(transitionIndex, True);
+	_lineList.resize(transitionIndex, True);
+	_recommended.resize(transitionIndex, True);
+	_frequency.resize(transitionIndex, True);
+	_intensity.resize(transitionIndex, True);
+	_smu2.resize(transitionIndex, True);
+	_logA.resize(transitionIndex, True);
+	_eL.resize(transitionIndex, True);
+	_eU.resize(transitionIndex, True);
 }
 
 

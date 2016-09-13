@@ -56,7 +56,7 @@ namespace casa {
 //
 // <example>
 // <srcBlock>
-// casacore::Vector<casacore::String> files(2);
+// Vector<String> files(2);
 // files[0] = "myfile1";
 // files[1] = "myfile2";
 // Converter converter(files, "mytable");
@@ -75,7 +75,7 @@ namespace casa {
 class ListConverter {
 public:
 	// Constructor
-	ListConverter(const casacore::Vector<casacore::String>& filename, const casacore::String& table);
+	ListConverter(const Vector<String>& filename, const String& table);
 
 	//destuctor
 	~ListConverter();
@@ -85,17 +85,17 @@ public:
 	SplatalogueTable* load();
 
 private:
-	casacore::LogIO *_log;
+	LogIO *_log;
 	ListConverter();
-	casacore::Vector<casacore::RegularFile> _listFiles;
-	casacore::String _tableName, _freqUnit, _smu2Unit, _elUnit, _euUnit;
-	casacore::Vector<casacore::String> _species, _chemName, _qns, _lineList;
-	casacore::Vector<casacore::Bool> _recommended;
-	casacore::Vector<casacore::Double> _frequency;
-	casacore::Vector<casacore::Float> _intensity, _smu2, _logA, _eL, _eU;
+	Vector<RegularFile> _listFiles;
+	String _tableName, _freqUnit, _smu2Unit, _elUnit, _euUnit;
+	Vector<String> _species, _chemName, _qns, _lineList;
+	Vector<Bool> _recommended;
+	Vector<Double> _frequency;
+	Vector<Float> _intensity, _smu2, _logA, _eL, _eU;
 
 	void _parseLists();
-	SplatalogueTable* _defineTable(const casacore::uInt nrows);
+	SplatalogueTable* _defineTable(const uInt nrows);
 	void _addData(const SplatalogueTable* table) const;
 };
 

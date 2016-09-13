@@ -69,7 +69,7 @@ public:
 
   PixonProcessor();
 
-  PixonProcessor(casacore::ImageInterface<casacore::Float>& model);
+  PixonProcessor(ImageInterface<Float>& model);
 
   // Copy constructor
   PixonProcessor(const PixonProcessor &other);
@@ -79,21 +79,21 @@ public:
 
   virtual ~PixonProcessor();
 
-  casacore::Bool calculate(const DataSampling& dsm, casacore::Array<casacore::Float>& a);
+  Bool calculate(const DataSampling& dsm, Array<Float>& a);
   
-  casacore::Bool save(const DataSampling& ds, const casacore::String& saveName);
+  Bool save(const DataSampling& ds, const String& saveName);
   
-  casacore::Bool standardTest();
+  Bool standardTest();
 
 protected:
 
-  casacore::String IDLPixonHome;
+  String IDLPixonHome;
 
-  casacore::String IDLPublicHome;
+  String IDLPublicHome;
 
   IDL idl;
 
-  casacore::ImageInterface<casacore::Float>* model_p;
+  ImageInterface<Float>* model_p;
 
   void ok();
 

@@ -40,15 +40,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	template <class T>
 	AttributeValueTol<T>::AttributeValueTol(const T &value, const T &tolerance,
-	                                        const casacore::Bool strict)
+	                                        const Bool strict)
 		: AttributeValue<T>(value, strict),
 		  itsValueTolerance(tolerance)
 	{}
 
 	template <class T>
-	AttributeValueTol<T>::AttributeValueTol(const casacore::Vector<T> &value,
+	AttributeValueTol<T>::AttributeValueTol(const Vector<T> &value,
 	                                        const T &tolerance,
-	                                        const casacore::Bool strict)
+	                                        const Bool strict)
 		: AttributeValue<T>(value, strict),
 		  itsValueTolerance(tolerance)
 	{}
@@ -81,31 +81,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	template <class T>
-	casacore::Bool AttributeValueTol<T>::matches(const AttributeValueBase& other) const {
+	Bool AttributeValueTol<T>::matches(const AttributeValueBase& other) const {
 		return myMatch(AttributeValue<T>::myCast(other));
 	}
 
 	template <class T>
-	casacore::Bool AttributeValueTol<T>::myMatch(const AttributeValue<T>& other) const {
-		casacore::Vector<T> thisValue = getValue();
-		const casacore::Vector<T>& otherValue = other.getValue();
+	Bool AttributeValueTol<T>::myMatch(const AttributeValue<T>& other) const {
+		Vector<T> thisValue = getValue();
+		const Vector<T>& otherValue = other.getValue();
 //
 		if (getStrictness()) {
-			if (thisValue.nelements() != otherValue.nelements()) return false;
-			//if( !allTrue(nearAbs(thisValue, otherValue, itsValueTolerance))) return false;
-			for (casacore::uInt i = 0; i < thisValue.nelements(); i++) {
-				if (abs(thisValue(i) - otherValue(i)) > itsValueTolerance) return false;
+			if (thisValue.nelements() != otherValue.nelements()) return False;
+			//if( !allTrue(nearAbs(thisValue, otherValue, itsValueTolerance))) return False;
+			for (uInt i = 0; i < thisValue.nelements(); i++) {
+				if (abs(thisValue(i) - otherValue(i)) > itsValueTolerance) return False;
 			}
-			return true;
+			return True;
 		} else {
-			//if(anyTrue(nearAbs(thisValue, otherValue, itsValueTolerance))) return true;
-			for (casacore::uInt i = 0; i < thisValue.nelements(); i++) {
-				for (casacore::uInt j = 0; j < otherValue.nelements(); j++) {
-					if (abs(thisValue(i) - otherValue(j)) <= itsValueTolerance) return true;
+			//if(anyTrue(nearAbs(thisValue, otherValue, itsValueTolerance))) return True;
+			for (uInt i = 0; i < thisValue.nelements(); i++) {
+				for (uInt j = 0; j < otherValue.nelements(); j++) {
+					if (abs(thisValue(i) - otherValue(j)) <= itsValueTolerance) return True;
 				}
 			}
 		}
-		return false;
+		return False;
 	}
 
 

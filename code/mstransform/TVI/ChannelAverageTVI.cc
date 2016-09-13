@@ -22,7 +22,6 @@
 
 #include <mstransform/TVI/ChannelAverageTVI.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 namespace vi { //# NAMESPACE VI - BEGIN
@@ -57,26 +56,26 @@ ChannelAverageTVI::ChannelAverageTVI(	ViImplementation2 * inputVii,
 Bool ChannelAverageTVI::parseConfiguration(const Record &configuration)
 {
 	int exists = -1;
-	Bool ret = true;
+	Bool ret = True;
 
 	// Parse chanbin parameter (mandatory)
 	exists = -1;
 	exists = configuration.fieldNumber ("chanbin");
 	if (exists >= 0)
 	{
-		if ( configuration.type(exists) == casacore::TpInt )
+		if ( configuration.type(exists) == casa::TpInt )
 		{
 			Int freqbin;
 			configuration.get (exists, freqbin);
 			chanbin_p = Vector<Int>(spwInpChanIdxMap_p.size(),freqbin);
 		}
-		else if ( configuration.type(exists) == casacore::TpArrayInt)
+		else if ( configuration.type(exists) == casa::TpArrayInt)
 		{
 			configuration.get (exists, chanbin_p);
 		}
 		else
 		{
-			ret = false;
+			ret = False;
 			logger_p << LogIO::SEVERE << LogOrigin("ChannelAverageTVI", __FUNCTION__)
 					<< "Wrong format for chanbin parameter (only Int and arrayInt are supported) "
 					<< LogIO::POST;
@@ -87,7 +86,7 @@ Bool ChannelAverageTVI::parseConfiguration(const Record &configuration)
 	}
 	else
 	{
-		ret = false;
+		ret = False;
 		logger_p << LogIO::SEVERE << LogOrigin("ChannelAverageTVI", __FUNCTION__)
 				<< "chanbin parameter not found in configuration "
 				<< LogIO::POST;
@@ -96,7 +95,7 @@ Bool ChannelAverageTVI::parseConfiguration(const Record &configuration)
 	// Check consistency between chanbin vector and selected SPW/Chan map
 	if (chanbin_p.size() !=  spwInpChanIdxMap_p.size())
 	{
-		ret = false;
+		ret = False;
 		logger_p << LogIO::SEVERE << LogOrigin("ChannelAverageTVI", __FUNCTION__)
 				<< "Number of elements in chanbin vector does not match number of selected SPWs"
 				<< LogIO::POST;
@@ -166,7 +165,7 @@ void ChannelAverageTVI::flag(Cube<Bool>& flagCube) const
 	Int inputSPW = vb->spectralWindows()(0);
 
 	// Reshape output data before passing it to the DataCubeHolder
-	flagCube.resize(getVisBufferConst()->getShape(),false);
+	flagCube.resize(getVisBufferConst()->getShape(),False);
 
 	// Gather input data
 	DataCubeMap inputData;
@@ -200,7 +199,7 @@ void ChannelAverageTVI::floatData (Cube<Float> & vis) const
 	Int inputSPW = vb->spectralWindows()(0);
 
 	// Reshape output data before passing it to the DataCubeHolder
-	vis.resize(getVisBufferConst()->getShape(),false);
+	vis.resize(getVisBufferConst()->getShape(),False);
 
 	// Gather input data
 	DataCubeMap inputData;
@@ -237,11 +236,11 @@ void ChannelAverageTVI::visibilityObserved (Cube<Complex> & vis) const
 	Int inputSPW = vb->spectralWindows()(0);
 
 	// Reshape output data before passing it to the DataCubeHolder
-	vis.resize(getVisBufferConst()->getShape(),false);
+	vis.resize(getVisBufferConst()->getShape(),False);
 
 	// Get weightSpectrum from sigmaSpectrum
 	Cube<Float> weightSpFromSigmaSp;
-	weightSpFromSigmaSp.resize(vb->sigmaSpectrum().shape(),false);
+	weightSpFromSigmaSp.resize(vb->sigmaSpectrum().shape(),False);
 	weightSpFromSigmaSp = vb->sigmaSpectrum(); // = Operator makes a copy
 	arrayTransformInPlace (weightSpFromSigmaSp,sigmaToWeight);
 
@@ -280,7 +279,7 @@ void ChannelAverageTVI::visibilityCorrected (Cube<Complex> & vis) const
 	Int inputSPW = vb->spectralWindows()(0);
 
 	// Reshape output data before passing it to the DataCubeHolder
-	vis.resize(getVisBufferConst()->getShape(),false);
+	vis.resize(getVisBufferConst()->getShape(),False);
 
 	// Gather input data
 	DataCubeMap inputData;
@@ -317,7 +316,7 @@ void ChannelAverageTVI::visibilityModel (Cube<Complex> & vis) const
 	Int inputSPW = vb->spectralWindows()(0);
 
 	// Reshape output data before passing it to the DataCubeHolder
-	vis.resize(getVisBufferConst()->getShape(),false);
+	vis.resize(getVisBufferConst()->getShape(),False);
 
 	// Gather input data
 	DataCubeMap inputData;
@@ -354,7 +353,7 @@ void ChannelAverageTVI::weightSpectrum(Cube<Float> &weightSp) const
 	Int inputSPW = vb->spectralWindows()(0);
 
 	// Reshape output data before passing it to the DataCubeHolder
-	weightSp.resize(getVisBufferConst()->getShape(),false);
+	weightSp.resize(getVisBufferConst()->getShape(),False);
 
 	// Gather input data
 	DataCubeMap inputData;
@@ -389,11 +388,11 @@ void ChannelAverageTVI::sigmaSpectrum(Cube<Float> &sigmaSp) const
 	Int inputSPW = vb->spectralWindows()(0);
 
 	// Reshape output data before passing it to the DataCubeHolder
-	sigmaSp.resize(getVisBufferConst()->getShape(),false);
+	sigmaSp.resize(getVisBufferConst()->getShape(),False);
 
 	// Get weightSpectrum from sigmaSpectrum
 	Cube<Float> weightSpFromSigmaSp;
-	weightSpFromSigmaSp.resize(vb->sigmaSpectrum().shape(),false);
+	weightSpFromSigmaSp.resize(vb->sigmaSpectrum().shape(),False);
 	weightSpFromSigmaSp = vb->sigmaSpectrum(); // = Operator makes a copy
 	arrayTransformInPlace (weightSpFromSigmaSp,sigmaToWeight);
 
@@ -526,7 +525,7 @@ void ChannelAverageTVI::propagateChanAvgFlags (const Cube<Bool> &transformedFlag
 			{
 				for (size_t corr_i =0;corr_i<nCorr;corr_i++)
 				{
-					if (transformedFlagCube(corr_i,outChan,row_i)) propagatedFlagCube(corr_i,chan_i,row_i) = true;
+					if (transformedFlagCube(corr_i,outChan,row_i)) propagatedFlagCube(corr_i,chan_i,row_i) = True;
 				}
 			}
 		}
@@ -692,16 +691,16 @@ template<class T> void WeightedChannelAverageKernel<T>::kernel(	DataCubeMap *inp
 		// Get input index
 		inputPos = startInputPos + sample_i;
 
-		// true/true or false/false
+		// True/True or False/False
 		if (accumulatorFlag == inputFlagVector(inputPos))
 		{
 			normalization += inputWeightVector(inputPos);
 			avg += inputVector(inputPos)*inputWeightVector(inputPos);
 		}
-		// true/false: Reset accumulation when accumulator switches from flagged to unflag
-		else if ( (accumulatorFlag == true) and (inputFlagVector(inputPos) == false) )
+		// True/False: Reset accumulation when accumulator switches from flagged to unflag
+		else if ( (accumulatorFlag == True) and (inputFlagVector(inputPos) == False) )
 		{
-			accumulatorFlag = false;
+			accumulatorFlag = False;
 			normalization = inputWeightVector(inputPos);
 			avg = inputVector(inputPos)*inputWeightVector(inputPos);
 		}
@@ -714,10 +713,10 @@ template<class T> void WeightedChannelAverageKernel<T>::kernel(	DataCubeMap *inp
 		avg /= normalization;
 		outputVector(outputPos) = avg;
 	}
-	// If all weights are zero set accumulatorFlag to true
+	// If all weights are zero set accumulatorFlag to True
 	else
 	{
-		accumulatorFlag = true;
+		accumulatorFlag = True;
 		outputVector(outputPos) = 0; // If all weights are zero then the avg is 0 too
 	}
 
@@ -740,12 +739,12 @@ template<class T> void LogicalANDKernel<T>::kernel(	DataCubeMap *inputData,
 	Vector<Bool> &inputVector = inputData->getVector<Bool>(MS::FLAG);
 	Vector<Bool> &outputVector = outputData->getVector<Bool>(MS::FLAG);
 
-	Bool outputFlag = true;
+	Bool outputFlag = True;
 	for (uInt sample_i=0;sample_i<width;sample_i++)
 	{
 		if (not inputVector(startInputPos+sample_i))
 		{
-			outputFlag = false;
+			outputFlag = False;
 			break;
 		}
 	}
@@ -780,15 +779,15 @@ template<class T> void ChannelAccumulationKernel<T>::kernel(	DataCubeMap *inputD
 		// Get input index
 		inputPos = startInputPos + sample_i;
 
-		// true/true or false/false
+		// True/True or False/False
 		if (accumulatorFlag == inputFlagVector(inputPos))
 		{
 			acc += inputVector(inputPos);
 		}
-		// true/false: Reset accumulation when accumulator switches from flagged to unflag
-		else if ( (accumulatorFlag == true) and (inputFlagVector(inputPos) == false) )
+		// True/False: Reset accumulation when accumulator switches from flagged to unflag
+		else if ( (accumulatorFlag == True) and (inputFlagVector(inputPos) == False) )
 		{
-			accumulatorFlag = false;
+			accumulatorFlag = False;
 			acc = inputVector(inputPos);
 		}
 	}

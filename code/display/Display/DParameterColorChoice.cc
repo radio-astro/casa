@@ -29,7 +29,6 @@
 #include <casa/Arrays/Vector.h>
 #include <display/Display/DParameterColorChoice.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Constructor

@@ -78,12 +78,12 @@
 // </synopsis>
 //
 // <example>
-//   casacore::MS ms("ngc5921.ms" casacore::Table::Update);
+//   MS ms("ngc5921.ms" Table::Update);
 //   MsAverager msa(ms);
 //   //chanlist is matrix of int its rows [spwid, start, end, step] 
 //   msa.setAverager(chanlist, 90, 32, "data", "SCALAR");
 //   if (msa.ok()) { 
-//      casacore::MS avems;
+//      MS avems;
 //      msa.getMS(avems);   
 //   }
 //   
@@ -118,115 +118,115 @@ public:
      ListBuffer
    };
 
-   MsAverager(casacore::MS*, OutputMode = MsAverager::TableMS);
+   MsAverager(MS*, OutputMode = MsAverager::TableMS);
    ~MsAverager();
 
-   void reset(casacore::MS*, OutputMode = MsAverager::TableMS);
-   void getMS(casacore::MS& ms);
-   void getXY(casacore::Vector<casacore::Double>& x, casacore::Vector<casacore::Double>& y, 
-              casacore::Vector<casacore::Int>& f, casacore::Int pol);
-   void getMap(casacore::Matrix<casacore::Int>& rowMap, casacore::Matrix<casacore::Int>& chanMap);
+   void reset(MS*, OutputMode = MsAverager::TableMS);
+   void getMS(MS& ms);
+   void getXY(Vector<Double>& x, Vector<Double>& y, 
+              Vector<Int>& f, Int pol);
+   void getMap(Matrix<Int>& rowMap, Matrix<Int>& chanMap);
     
    //average engine and its status 
    void setAverager(
-              const casacore::Matrix<casacore::Int>& chanList,
-              const casacore::Matrix<casacore::Int>& baselines,
-              casacore::Double aveTime, casacore::Int aveChan,
-              const casacore::String& column = "DATA",
-              const casacore::String& aveMode = "VECTOR",
-              const casacore::Bool& aveFlag = false,
-              const casacore::Bool& aveScan = false,
-              const casacore::Bool& aveBline = false,
-              const casacore::Bool& aveArray = false,
-              const casacore::Bool& aveVelo = false,
-              const casacore::String& restfreq = "",
-              const casacore::String& frame = "",
-              const casacore::String& doppler = "");
-   casacore::Bool ok() {return aveOK;}
-   casacore::Int outputFormat() {return outputMode;}
+              const Matrix<Int>& chanList,
+              const Matrix<Int>& baselines,
+              Double aveTime, Int aveChan,
+              const String& column = "DATA",
+              const String& aveMode = "VECTOR",
+              const Bool& aveFlag = False,
+              const Bool& aveScan = False,
+              const Bool& aveBline = False,
+              const Bool& aveArray = False,
+              const Bool& aveVelo = False,
+              const String& restfreq = "",
+              const String& frame = "",
+              const String& doppler = "");
+   Bool ok() {return aveOK;}
+   Int outputFormat() {return outputMode;}
 
    void showColumnNames();
-   casacore::Bool isDataColumn(const casacore::String& colNmae);
-   casacore::Bool hasColumn(const casacore::String& colName);
-   static casacore::Int baselineRow(const casacore::Int& nAnt, const casacore::Int& a, const casacore::Int& b); 
-   casacore::Int baselineRow(const casacore::Int& a = -1, const casacore::Int& b = -1); 
+   Bool isDataColumn(const String& colNmae);
+   Bool hasColumn(const String& colName);
+   static Int baselineRow(const Int& nAnt, const Int& a, const Int& b); 
+   Int baselineRow(const Int& a = -1, const Int& b = -1); 
 
-   void putAveBuffer(casacore::Double bufTime, casacore::Int bufField, casacore::Int bufScan,
-                     casacore::Int bufArray, VisBuffer& p, casacore::Int nTime);
-   void initAveBuffer(casacore::Double bufTime, VisBuffer& p, casacore::Int nAnt, casacore::Int nChan);
-   void putAveTable(casacore::Double bufTime, casacore::Int bufField, casacore::Int bufScan,
-                    casacore::Int bufArray, casacore::Int bufSpw, VisBuffer& p, casacore::Int nTime, 
-                    casacore::Double timeShift);
-   void showVisRow(casacore::Cube<casacore::Complex>& vc, casacore::Int row);
-   void showMsRow(casacore::MSMainColumns* msc, casacore::Int row);
-   void showAveMap(casacore::Matrix<casacore::Int>& rmap, casacore::Matrix<casacore::Int>& cmap);
+   void putAveBuffer(Double bufTime, Int bufField, Int bufScan,
+                     Int bufArray, VisBuffer& p, Int nTime);
+   void initAveBuffer(Double bufTime, VisBuffer& p, Int nAnt, Int nChan);
+   void putAveTable(Double bufTime, Int bufField, Int bufScan,
+                    Int bufArray, Int bufSpw, VisBuffer& p, Int nTime, 
+                    Double timeShift);
+   void showVisRow(Cube<Complex>& vc, Int row);
+   void showMsRow(MSMainColumns* msc, Int row);
+   void showAveMap(Matrix<Int>& rmap, Matrix<Int>& cmap);
 
-   const static casacore::String DataColumn[4];
-   casacore::Int npol() {return nAvePol;}
-   casacore::Int nchan() {return nAveChan;}
-   casacore::Int nAnt() {return nAntenna;}
+   const static String DataColumn[4];
+   Int npol() {return nAvePol;}
+   Int nchan() {return nAveChan;}
+   Int nAnt() {return nAntenna;}
 
 private:
    //to be averaged
    void cleanup();
-   casacore::MS* pMS;
+   MS* pMS;
    VisSet* vs;
-   casacore::String msName;
-   //casacore::MSDerivedValues *msdv;
+   String msName;
+   //MSDerivedValues *msdv;
 
    //averaged, store as MS
-   casacore::MS aMS;
-   casacore::Int msRow;
-   casacore::MSMainColumns *msc;
-   //casacore::MSColumns *msc;
+   MS aMS;
+   Int msRow;
+   MSMainColumns *msc;
+   //MSColumns *msc;
    
    //averaged, store as VBs 
    VisBuffer* pAveBuff;
-   casacore::List<VisBuffer*> aveList;
+   List<VisBuffer*> aveList;
 
    //averaging inputs, ideally, calculate only needed column
-   casacore::String column;
+   String column;
 
    //selected channels for each piece for spw expression
    //each row contains [spwid, start, end, stride]
    //may contains multiple rows of same spwid
-   casacore::Matrix<casacore::Int> chanList;
+   Matrix<Int> chanList;
 
-   casacore::Vector<SAS> spw;
+   Vector<SAS> spw;
 
    //map between averaged and original 
-   casacore::Matrix<casacore::Int> aveChanMap;
-   //casacore::Matrix<casacore::Double> aveTimeMap;
-   casacore::Matrix<casacore::Int> aveRowMap;
+   Matrix<Int> aveChanMap;
+   //Matrix<Double> aveTimeMap;
+   Matrix<Int> aveRowMap;
 
    //averaging requirements
-   casacore::String aveMode;
-   casacore::Double aveTime;
-   casacore::Int aveChan;
-   casacore::Bool aveFlag;
-   casacore::Bool crossScans;
-   casacore::Bool crossBlines;
-   casacore::Bool crossArrays;
-   casacore::Bool crossSpws;
-   casacore::Bool aveVel;
-   casacore::Bool sorryVel;
-   casacore::Matrix<casacore::Int> baselines;
+   String aveMode;
+   Double aveTime;
+   Int aveChan;
+   Bool aveFlag;
+   Bool crossScans;
+   Bool crossBlines;
+   Bool crossArrays;
+   Bool crossSpws;
+   Bool aveVel;
+   Bool sorryVel;
+   Matrix<Int> baselines;
 
    //size of the averaged
-   casacore::Int nAveChan;
-   casacore::Int nAveTime;
-   casacore::Int nAveRow;
-   casacore::Int nAvePol;
-   casacore::Int nAntenna;
+   Int nAveChan;
+   Int nAveTime;
+   Int nAveRow;
+   Int nAvePol;
+   Int nAntenna;
 
-   casacore::String restfreq;
-   casacore::String frame;
-   casacore::String doppler;
+   String restfreq;
+   String frame;
+   String doppler;
 
-   casacore::Bool aveOK;
+   Bool aveOK;
 
    //utility
-   static const casacore::String clname;
+   static const String clname;
    //SLog *log;
 
    int outputMode;

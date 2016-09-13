@@ -45,7 +45,6 @@
 #include <unistd.h>
 
 
-using namespace casacore;
 namespace casa {
 
 const String ImagePrimaryBeamCorrector::_class = "ImagePrimaryBeamCorrector";
@@ -101,7 +100,7 @@ ImagePrimaryBeamCorrector::ImagePrimaryBeamCorrector(
 			boxShape[dirAxes[1]] = imShape[dirAxes[1]];
 			LCBox x(IPosition(imShape.size(), 0), boxShape - 1, imShape);
 			SHARED_PTR<const SubImage<Float> > sub = SubImageFactory<Float>::createSubImageRO(
-				*_getImage(), x.toRecord(""), "", _getLog().get(), AxesSpecifier(false)
+				*_getImage(), x.toRecord(""), "", _getLog().get(), AxesSpecifier(False)
 			);
 			_pbImage.reset(new TempImage<Float>(sub->shape(), sub->coordinates()));
 		}

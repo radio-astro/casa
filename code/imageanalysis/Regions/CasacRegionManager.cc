@@ -48,7 +48,6 @@
 #include <casa/namespace.h>
 #include <memory>
 
-using namespace casacore;
 namespace casa { //# name space casa begins
 
 const String CasacRegionManager::ALL = "ALL";
@@ -108,7 +107,7 @@ vector<uInt> CasacRegionManager::_setPolarizationRanges(
 	// in the past for polarization specification.
 
 	Vector<String> parts = stringToVector(specification, Regex("[,;]"));
-	Vector<String> polNames = Stokes::allNames(false);
+	Vector<String> polNames = Stokes::allNames(False);
 	uInt nNames = polNames.size();
 	Vector<uInt> nameLengths(nNames);
 	for (uInt i=0; i<nNames; i++) {
@@ -163,7 +162,7 @@ vector<uInt> CasacRegionManager::_setPolarizationRanges(
 }
 
 Bool CasacRegionManager::_supports2DBox(Bool except) const {
-	Bool ok = true;
+	Bool ok = True;
 	const CoordinateSystem& csys = getcoordsys();
 	Vector<Int> axes;
 	if (csys.hasDirectionCoordinate()) {
@@ -173,7 +172,7 @@ Bool CasacRegionManager::_supports2DBox(Bool except) const {
 		axes = csys.linearAxesNumbers();
 	}
 	else {
-		ok = false;
+		ok = False;
 	}
 	if (ok) {
 		uInt nGood = 0;
@@ -183,7 +182,7 @@ Bool CasacRegionManager::_supports2DBox(Bool except) const {
 			}
 		}
 		if (nGood != 2) {
-			ok = false;
+			ok = False;
 		}
 	}
 	if (except && ! ok) {
@@ -195,7 +194,7 @@ Bool CasacRegionManager::_supports2DBox(Bool except) const {
 
 vector<Double> CasacRegionManager::_setBoxCorners(const String& box) const {
 	if (! box.empty()) {
-		_supports2DBox(true);
+		_supports2DBox(True);
 	}
 	Vector<String> boxParts = stringToVector(box);
 	AlwaysAssert(boxParts.size() % 4 == 0, AipsError);
@@ -301,7 +300,7 @@ Record CasacRegionManager::fromBCS(
 			const CoordinateSystem& csys = getcoordsys();
 			if (csys.hasSpectralAxis()) {
 				chanDesc.chanSpec = chans;
-				chanDesc.nChannels = imShape[csys.spectralAxisNumber(false)];
+				chanDesc.nChannels = imShape[csys.spectralAxisNumber(False)];
 				chanDesc.specCoord = csys.spectralCoordinate();
 				chanDescPtr = &chanDesc;
 			}
@@ -466,7 +465,7 @@ void CasacRegionManager::_setRegion(
 		String imagename, region;
 		if (regionName.matches(image)) {
 			String res[2];
-			casacore::split(regionName, res, 2, ":");
+			casa::split(regionName, res, 2, ":");
 			imagename = res[0];
 			region = res[1];
 		}
@@ -533,7 +532,7 @@ ImageRegion CasacRegionManager::fromBCS(
 	);
 	vector<Double> boxCorners;
 	if (box.empty()) {
-		if (_supports2DBox(false)) {
+		if (_supports2DBox(False)) {
 			if (
 				csys.hasDirectionCoordinate()
 				|| csys.hasLinearCoordinate()
@@ -628,7 +627,7 @@ ImageRegion CasacRegionManager::_fromBCS(
 		polEndPtsDouble[i] = (Double)polEndPts[i];
 	}
 
-	Bool csysSupports2DBox = _supports2DBox(false);
+	Bool csysSupports2DBox = _supports2DBox(False);
 	uInt nRegions = 1;
 	if (csysSupports2DBox) {
 		if (csys.hasDirectionCoordinate())  {
@@ -808,7 +807,7 @@ String CasacRegionManager::_stokesFromRecord(
 	else {
 		ImageRegion *imreg = ImageRegion::fromRecord(region, "");
 		Array<Float> blc, trc;
-		Bool oneRelAccountedFor = false;
+		Bool oneRelAccountedFor = False;
 		if (imreg->isLCSlicer()) {
 			blc = imreg->asLCSlicer().blc();
 			if ((Int)blc.size() <= polAxis) {
@@ -826,7 +825,7 @@ String CasacRegionManager::_stokesFromRecord(
 			}
 			stokesBegin = (uInt)((Vector<Float>)blc)[polAxis];
 			stokesEnd = (uInt)((Vector<Float>)trc)[polAxis];
-			oneRelAccountedFor = true;
+			oneRelAccountedFor = True;
 		}
 		else if (
 				RegionManager::isPixelRegion(
@@ -840,7 +839,7 @@ String CasacRegionManager::_stokesFromRecord(
 		}
 		else if (region.fieldNumber("x") >= 0 && region.fieldNumber("y") >= 0) {
 			// world polygon
-			oneRelAccountedFor = true;
+			oneRelAccountedFor = True;
 			stokesBegin = 0;
 			stokesEnd = stokesControl == USE_FIRST_STOKES
 				? 0 : shape[polAxis];
@@ -863,7 +862,7 @@ String CasacRegionManager::_stokesFromRecord(
 				  ? 0
 				  : shape[polAxis];
 			if (! blcRec.isDefined(polField)) {
-				oneRelAccountedFor = true;
+				oneRelAccountedFor = True;
 			}
 		}
 		else {
@@ -962,7 +961,7 @@ vector<uInt> CasacRegionManager::_spectralRangeFromRegionRecord(
 	TempImage<Float> x(imShape, csys);
 	x.set(0);
 	SPCIIF subimage = SubImageFactory<Float>::createSubImageRO(
-		x, *regionRec, "", _getLog(), AxesSpecifier(), false, true
+		x, *regionRec, "", _getLog(), AxesSpecifier(), False, True
 	);
     uInt nChan = 0;
     {

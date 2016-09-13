@@ -30,13 +30,9 @@
 
 #include <casa/aipstype.h>
 
-namespace casacore{
-
-class GaussianBeam;
-}
-
 namespace casa {
 
+class GaussianBeam;
 
 // <summary>
 // Deconvolve a gaussian source from a gaussian beam
@@ -67,17 +63,17 @@ namespace casa {
 class GaussianDeconvolver {
 
 public:
-	typedef casacore::GaussianBeam Angular2DGaussian;
+	typedef GaussianBeam Angular2DGaussian;
 
 
 	// Deconvolve the parameters of a source Gaussian from a a GaussianBeam
-	// to give the deconvolved Gaussian source.  The return is true if the model appears
+	// to give the deconvolved Gaussian source.  The return is True if the model appears
 	// to be a point source and the output model will be set to
 	// the parameters of the beam.
-	static casacore::Bool deconvolve(
+	static Bool deconvolve(
 		Angular2DGaussian& deconvolvedSize,
 		const Angular2DGaussian& convolvedSize,
-		const casacore::GaussianBeam& beam
+		const GaussianBeam& beam
 	);
 };
 

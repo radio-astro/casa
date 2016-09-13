@@ -81,13 +81,13 @@ public:
     // Plotter customization
     
     // Sets the title of the plotting window to the given.
-    void setWindowTitle(const casacore::String& windowTitle);
+    void setWindowTitle(const String& windowTitle);
     
     // Sets the title of the canvas to the given.
-    void setCanvasTitle(const casacore::String& canvasTitle);
+    void setCanvasTitle(const String& canvasTitle);
     
     // Sets the X_BOTTOM and Y_LEFT axes labels to the given.
-    void setAxesLabels(const casacore::String& xLabel, const casacore::String& yLabel);
+    void setAxesLabels(const String& xLabel, const String& yLabel);
     
     // Show/hide Cartesian axes.  (See PlotCanvas::showCartesianAxis()).
     void showCartesianAxes(bool show = true);
@@ -116,16 +116,16 @@ public:
     
     // Set the line for future plots to the given characteristics.  Color can
     // be hexadecimal form ("000000") or name form ("black").
-    void setLine(const casacore::String& color,
+    void setLine(const String& color,
             PlotLine::Style style = PlotLine::SOLID,  double width = 1.0);
     
     // Set the symbol for future plots and points to the given characteristics.
-    void setSymbol(PlotSymbol::Symbol symbol, const casacore::String& color = "blue",
+    void setSymbol(PlotSymbol::Symbol symbol, const String& color = "blue",
                    double size = 5, bool outline = true);
     
     // Set the area fill for future histograms, shapes, etc. to the given
     // characteristics.
-    void setAreaFill(const casacore::String& color,
+    void setAreaFill(const String& color,
                      PlotAreaFill::Pattern pattern = PlotAreaFill::FILL);
     
     
@@ -144,11 +144,11 @@ public:
     ScatterPlotPtr plotxy(int*& x, int*& y, unsigned int n,
                           bool overplot = true);
     
-    ScatterPlotPtr plotxy(casacore::Vector<double>& x, casacore::Vector<double>& y,
+    ScatterPlotPtr plotxy(Vector<double>& x, Vector<double>& y,
                           bool overplot = true);
-    ScatterPlotPtr plotxy(casacore::Vector<float>& x, casacore::Vector<float>& y,
+    ScatterPlotPtr plotxy(Vector<float>& x, Vector<float>& y,
                           bool overplot = true);
-    ScatterPlotPtr plotxy(casacore::Vector<int>& x, casacore::Vector<int>& y,
+    ScatterPlotPtr plotxy(Vector<int>& x, Vector<int>& y,
                           bool overplot = true);
     
     ScatterPlotPtr plotxy(PlotPointDataPtr data, bool overplot = true);
@@ -157,9 +157,9 @@ public:
     ScatterPlotPtr ploty(float*& y, unsigned int n, bool overplot = true);
     ScatterPlotPtr ploty(int*& y, unsigned int n, bool overplot = true);
     
-    ScatterPlotPtr ploty(casacore::Vector<double>& y, bool overplot = true);
-    ScatterPlotPtr ploty(casacore::Vector<float>& y, bool overplot = true);
-    ScatterPlotPtr ploty(casacore::Vector<int>& y, bool overplot = true);
+    ScatterPlotPtr ploty(Vector<double>& y, bool overplot = true);
+    ScatterPlotPtr ploty(Vector<float>& y, bool overplot = true);
+    ScatterPlotPtr ploty(Vector<int>& y, bool overplot = true);
     
     ScatterPlotPtr ploty(PlotPointDataPtr data, bool overplot = true);
     // </group>
@@ -174,11 +174,11 @@ public:
     BarPlotPtr barPlot(int*& x, int*& y, unsigned int n,
                        bool overplot = false);
     
-    BarPlotPtr barPlot(casacore::Vector<double>& x, casacore::Vector<double>& y,
+    BarPlotPtr barPlot(Vector<double>& x, Vector<double>& y,
                        bool overplot = false);
-    BarPlotPtr barPlot(casacore::Vector<float>& x, casacore::Vector<float>& y,
+    BarPlotPtr barPlot(Vector<float>& x, Vector<float>& y,
                        bool overplot = false);
-    BarPlotPtr barPlot(casacore::Vector<int>& x, casacore::Vector<int>& y,
+    BarPlotPtr barPlot(Vector<int>& x, Vector<int>& y,
                        bool overplot = false);
     
     BarPlotPtr barPlot(PlotPointDataPtr data, bool overplot = false);
@@ -193,11 +193,11 @@ public:
                              unsigned int numBins, bool overplot= false);
     BarPlotPtr histogramPlot(int*& data, unsigned int n,
                              unsigned int numBins, bool overplot= false);
-    BarPlotPtr histogramPlot(casacore::Vector<double>& data, unsigned int numBins,
+    BarPlotPtr histogramPlot(Vector<double>& data, unsigned int numBins,
                              bool overplot = false);
-    BarPlotPtr histogramPlot(casacore::Vector<float>& data, unsigned int numBins,
+    BarPlotPtr histogramPlot(Vector<float>& data, unsigned int numBins,
                              bool overplot = false);
-    BarPlotPtr histogramPlot(casacore::Vector<int>& data, unsigned int numBins,
+    BarPlotPtr histogramPlot(Vector<int>& data, unsigned int numBins,
                              bool overplot = false);
     
     BarPlotPtr histogramPlot(PlotSingleDataPtr data, unsigned int numBins,
@@ -207,76 +207,76 @@ public:
     // Display a raster or contour plot for the given data, using the current
     // line for the contours if applicable.
     // <group>
-    RasterPlotPtr rasterPlot(casacore::Matrix<double>& data, bool overplot = false);
-    RasterPlotPtr rasterPlot(casacore::Matrix<float>& data, bool overplot = false);
-    RasterPlotPtr rasterPlot(casacore::Matrix<int>& data, bool overplot = false);
-    RasterPlotPtr rasterPlot(casacore::Matrix<casacore::uInt>& data, bool overplot = false);
-    RasterPlotPtr rasterPlot(casacore::Matrix<double>& data, double fromX, double toX,
+    RasterPlotPtr rasterPlot(Matrix<double>& data, bool overplot = false);
+    RasterPlotPtr rasterPlot(Matrix<float>& data, bool overplot = false);
+    RasterPlotPtr rasterPlot(Matrix<int>& data, bool overplot = false);
+    RasterPlotPtr rasterPlot(Matrix<uInt>& data, bool overplot = false);
+    RasterPlotPtr rasterPlot(Matrix<double>& data, double fromX, double toX,
                              double fromY, double toY, bool overplot = false);
-    RasterPlotPtr rasterPlot(casacore::Matrix<float>& data, double fromX, double toX,
+    RasterPlotPtr rasterPlot(Matrix<float>& data, double fromX, double toX,
                              double fromY, double toY, bool overplot = false);
-    RasterPlotPtr rasterPlot(casacore::Matrix<int>& data, double fromX, double toX,
+    RasterPlotPtr rasterPlot(Matrix<int>& data, double fromX, double toX,
                              double fromY, double toY, bool overplot = false);
-    RasterPlotPtr rasterPlot(casacore::Matrix<casacore::uInt>& data, double fromX, double toX,
+    RasterPlotPtr rasterPlot(Matrix<uInt>& data, double fromX, double toX,
                              double fromY, double toY, bool overplot = false);
     RasterPlotPtr rasterPlot(PlotRasterDataPtr data, bool overplot = false);
     
-    RasterPlotPtr contourPlot(casacore::Matrix<double>& data, casacore::Vector<double>& contours,
+    RasterPlotPtr contourPlot(Matrix<double>& data, Vector<double>& contours,
                               bool overplot = false);
-    RasterPlotPtr contourPlot(casacore::Matrix<float>& data, casacore::Vector<float>& contours,
+    RasterPlotPtr contourPlot(Matrix<float>& data, Vector<float>& contours,
                               bool overplot = false);
-    RasterPlotPtr contourPlot(casacore::Matrix<int>& data, casacore::Vector<int>& contours,
+    RasterPlotPtr contourPlot(Matrix<int>& data, Vector<int>& contours,
                               bool overplot = false);
-    RasterPlotPtr contourPlot(casacore::Matrix<casacore::uInt>& data, casacore::Vector<casacore::uInt>& contours,
+    RasterPlotPtr contourPlot(Matrix<uInt>& data, Vector<uInt>& contours,
                               bool overplot = false);
-    RasterPlotPtr contourPlot(casacore::Matrix<double>& data, double fromX, double toX,
-                              double fromY,double toY,casacore::Vector<double>& contours,
+    RasterPlotPtr contourPlot(Matrix<double>& data, double fromX, double toX,
+                              double fromY,double toY,Vector<double>& contours,
                               bool overplot = false);
-    RasterPlotPtr contourPlot(casacore::Matrix<float>& data, double fromX, double toX,
-                              double fromY,double toY, casacore::Vector<float>& contours,
+    RasterPlotPtr contourPlot(Matrix<float>& data, double fromX, double toX,
+                              double fromY,double toY, Vector<float>& contours,
                               bool overplot = false);
-    RasterPlotPtr contourPlot(casacore::Matrix<int>& data, double fromX, double toX,
-                              double fromY, double toY, casacore::Vector<int>& contours,
+    RasterPlotPtr contourPlot(Matrix<int>& data, double fromX, double toX,
+                              double fromY, double toY, Vector<int>& contours,
                               bool overplot = false);
-    RasterPlotPtr contourPlot(casacore::Matrix<casacore::uInt>& data, double fromX, double toX,
-                              double fromY, double toY, casacore::Vector<casacore::uInt>& contours,
+    RasterPlotPtr contourPlot(Matrix<uInt>& data, double fromX, double toX,
+                              double fromY, double toY, Vector<uInt>& contours,
                               bool overplot = false);
     RasterPlotPtr contourPlot(PlotRasterDataPtr data, vector<double>& contours,
                               bool overplot = false);
 
-    RasterPlotPtr spectrogram(casacore::Matrix<double>& data, bool overplt = false);
-    RasterPlotPtr spectrogram(casacore::Matrix<float>& data, bool overplot = false);
-    RasterPlotPtr spectrogram(casacore::Matrix<int>& data, bool overplot = false);
-    RasterPlotPtr spectrogram(casacore::Matrix<casacore::uInt>& data, bool overplot = false);
-    RasterPlotPtr spectrogram(casacore::Matrix<double>& data, double fromX, double toX,
+    RasterPlotPtr spectrogram(Matrix<double>& data, bool overplt = false);
+    RasterPlotPtr spectrogram(Matrix<float>& data, bool overplot = false);
+    RasterPlotPtr spectrogram(Matrix<int>& data, bool overplot = false);
+    RasterPlotPtr spectrogram(Matrix<uInt>& data, bool overplot = false);
+    RasterPlotPtr spectrogram(Matrix<double>& data, double fromX, double toX,
                               double fromY, double toY, bool overplot = false);
-    RasterPlotPtr spectrogram(casacore::Matrix<float>& data, double fromX, double toX,
+    RasterPlotPtr spectrogram(Matrix<float>& data, double fromX, double toX,
                               double fromY, double toY, bool overplot = false);
-    RasterPlotPtr spectrogram(casacore::Matrix<int>& data, double fromX, double toX,
+    RasterPlotPtr spectrogram(Matrix<int>& data, double fromX, double toX,
                               double fromY, double toY, bool overplot = false);
-    RasterPlotPtr spectrogram(casacore::Matrix<casacore::uInt>& data, double fromX, double toX,
+    RasterPlotPtr spectrogram(Matrix<uInt>& data, double fromX, double toX,
                               double fromY, double toY, bool overplot = false);
     RasterPlotPtr spectrogram(PlotRasterDataPtr data, bool overplot = false);
     
-    RasterPlotPtr spectrogram(casacore::Matrix<double>& d, casacore::Vector<double>& contours,
+    RasterPlotPtr spectrogram(Matrix<double>& d, Vector<double>& contours,
                               bool overplot = false);
-    RasterPlotPtr spectrogram(casacore::Matrix<float>& data,casacore::Vector<float>& contours,
+    RasterPlotPtr spectrogram(Matrix<float>& data,Vector<float>& contours,
                               bool overplot = false);
-    RasterPlotPtr spectrogram(casacore::Matrix<int>& data, casacore::Vector<int>& contours,
+    RasterPlotPtr spectrogram(Matrix<int>& data, Vector<int>& contours,
                               bool overplot = false);
-    RasterPlotPtr spectrogram(casacore::Matrix<casacore::uInt>& data, casacore::Vector<casacore::uInt>& contours,
+    RasterPlotPtr spectrogram(Matrix<uInt>& data, Vector<uInt>& contours,
                               bool overplot = false);
-    RasterPlotPtr spectrogram(casacore::Matrix<double>& d, double fromX, double toX,
-                              double fromY,double toY,casacore::Vector<double>& contours,
+    RasterPlotPtr spectrogram(Matrix<double>& d, double fromX, double toX,
+                              double fromY,double toY,Vector<double>& contours,
                               bool overplot = false);
-    RasterPlotPtr spectrogram(casacore::Matrix<float>& data,double fromX,double toX,
-                              double fromY,double toY, casacore::Vector<float>& contours,
+    RasterPlotPtr spectrogram(Matrix<float>& data,double fromX,double toX,
+                              double fromY,double toY, Vector<float>& contours,
                               bool overplot = false);
-    RasterPlotPtr spectrogram(casacore::Matrix<int>& data, double fromX, double toX,
-                              double fromY, double toY, casacore::Vector<int>& contours,
+    RasterPlotPtr spectrogram(Matrix<int>& data, double fromX, double toX,
+                              double fromY, double toY, Vector<int>& contours,
                               bool overplot = false);
-    RasterPlotPtr spectrogram(casacore::Matrix<casacore::uInt>& data, double fromX,double toX,
-                              double fromY, double toY, casacore::Vector<casacore::uInt>& contours,
+    RasterPlotPtr spectrogram(Matrix<uInt>& data, double fromX,double toX,
+                              double fromY, double toY, Vector<uInt>& contours,
                               bool overplot = false);
     RasterPlotPtr spectrogram(PlotRasterDataPtr data, vector<double>& contours,
                               bool overplot = false);
@@ -289,7 +289,7 @@ public:
     // Shapes, Annotations, etc.
     
     // Draw an annotation (text) on the canvas at the given point.
-    PlotAnnotationPtr annotation(double x, double y, const casacore::String& text);
+    PlotAnnotationPtr annotation(double x, double y, const String& text);
     
     // Draw a rectangle from the given upper left point to the given
     // lower right point.
@@ -351,32 +351,32 @@ public:
     
     // Show a file chooser dialog with the given optional window title and
     // starting directory.  Returns the absolute filename that the user
-    // selected, or an empty casacore::String if they pushed "Cancel".
-    casacore::String fileChooserDialog(const casacore::String& title = "casacore::File Chooser",
-                             const casacore::String& directory = "");
+    // selected, or an empty String if they pushed "Cancel".
+    String fileChooserDialog(const String& title = "File Chooser",
+                             const String& directory = "");
     
     // Exports the plotter to a PDF file at the given location.  If highQuality
     // is false, a screenshot-like export is used.  Dots per inch can be set
     // using dpi.
-    bool exportPDF(const casacore::String& location, bool highQuality = false,
+    bool exportPDF(const String& location, bool highQuality = false,
                    int dpi = -1);
     
     // Exports the plotter to a PS file at the given location.  If highQuality
     // is false, a screenshot-like export is used.  Dots per inch can be set
     // using dpi.
-    bool exportPS(const casacore::String& location, bool highQuality = false,
+    bool exportPS(const String& location, bool highQuality = false,
                   int dpi = -1);
     
     // Exports the plotter to a JPG file at the given location.  If highQuality
     // is false, a screenshot-like export is used.  Width and height of the
     // image can be set.
-    bool exportJPG(const casacore::String& location, bool highQuality = false,
+    bool exportJPG(const String& location, bool highQuality = false,
                    int width = -1, int height = -1);
     
     // Exports the plotter to a PNG file at the given location.  If highQuality
     // is false, a screenshot-like export is used.  Width and height of the
     // image can be set.
-    bool exportPNG(const casacore::String& location, bool highQuality = false,
+    bool exportPNG(const String& location, bool highQuality = false,
                    int width = -1, int height = -1);
     
     // Exports the plotter using the given format.
@@ -408,7 +408,7 @@ private:
     PlotAreaFillPtr m_areaFill;
 };
 
-typedef casacore::CountedPtr<SimplePlotter> SimplePlotterPtr;
+typedef CountedPtr<SimplePlotter> SimplePlotterPtr;
 
 }
 

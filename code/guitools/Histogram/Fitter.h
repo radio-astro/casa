@@ -38,12 +38,12 @@ namespace casa {
 class Fitter {
 public:
 	Fitter();
-	void setData( casacore::Vector<casacore::Float> xValues, casacore::Vector<casacore::Float> yValues );
+	void setData( Vector<Float> xValues, Vector<Float> yValues );
 	virtual void restrictDomain( double xMin, double xMax );
 	virtual void clearDomainLimits();
 	void setUnits( QString units );
-	casacore::Vector<casacore::Float> getFitValues() const;
-	casacore::Vector<casacore::Float> getFitValuesX() const;
+	Vector<Float> getFitValues() const;
+	Vector<Float> getFitValuesX() const;
 	virtual bool doFit() = 0;
 	virtual void clearFit();
 
@@ -59,9 +59,9 @@ protected:
 	float solutionChiSquared;
 	bool solutionConverged;
 
-	casacore::Vector<casacore::Float> actualXValues;
-	casacore::Vector<casacore::Float> actualYValues;
-	casacore::Vector<casacore::Float> fitValues;
+	Vector<Float> actualXValues;
+	Vector<Float> actualYValues;
+	Vector<Float> fitValues;
 	double domainMin;
 	double domainMax;
 	QString errorMsg;
@@ -72,8 +72,8 @@ protected:
 	void resetDataWithLimits();
 private:
 
-	casacore::Vector<casacore::Float> xValues;
-	casacore::Vector<casacore::Float> yValues;
+	Vector<Float> xValues;
+	Vector<Float> yValues;
 
 
 };

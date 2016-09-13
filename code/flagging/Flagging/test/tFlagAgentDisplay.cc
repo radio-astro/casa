@@ -24,7 +24,6 @@
 #include <flagging/Flagging/FlagAgentManual.h>
 #include <iostream>
 
-using namespace casacore;
 using namespace casa;
 
 void deleteFlags(string inputFile,Record dataSelection,vector<Record> agentParameters)
@@ -289,7 +288,7 @@ void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParame
 		stringstream agentName;
 		agentName << agentNumber;
 		iter->define("name","FlagAgentDisplay_" + agentName.str());
-		flaggingAgent = new FlagAgentDisplay(dh,*iter,false/*writePrivFlagCube*/);
+		flaggingAgent = new FlagAgentDisplay(dh,*iter,False/*writePrivFlagCube*/);
 		agentList.push_back(flaggingAgent);
 		agentNumber++;
 	}
@@ -602,7 +601,7 @@ int main(int argc, char **argv)
 		}
 		else if (parameter == string("-unflag"))
 		{
-			if (value.compare("true") == 0)
+			if (value.compare("True") == 0)
 			{
 				deleteFlagsActivated = true;
 				cout << "Clean flags step activated" << endl;
@@ -688,22 +687,22 @@ int main(int argc, char **argv)
 		}
 		else if (parameter == string("-pause"))
 		{
-                        Bool pause=true;
-                        if(value.compare("false")==0) pause=false;
+                        Bool pause=True;
+                        if(value.compare("False")==0) pause=False;
 			agentParameters.define ("pause", pause);
 			cout << "pause is: " << pause << endl;
 		}
 		else if (parameter == string("-datadisplay"))
 		{
-                        Bool datadisplay=true;
-                        if(value.compare("false")==0) datadisplay=false;
+                        Bool datadisplay=True;
+                        if(value.compare("False")==0) datadisplay=False;
 			agentParameters.define ("datadisplay", datadisplay);
 			cout << "datadisplay is: " << datadisplay << endl;
 		}
 		else if (parameter == string("-reportdisplay"))
 		{
-                        Bool reportdisplay=true;
-                        if(value.compare("false")==0) reportdisplay=false;
+                        Bool reportdisplay=True;
+                        if(value.compare("False")==0) reportdisplay=False;
 			agentParameters.define ("reportdisplay", reportdisplay);
 			cout << "reportdisplay is: " << reportdisplay << endl;
 		}

@@ -40,7 +40,7 @@ class RegriddingTVITest: public FreqAxisTVITest {
 public:
 
 	RegriddingTVITest();
-	RegriddingTVITest(casacore::Record configuration);
+	RegriddingTVITest(Record configuration);
 
     void TestBody();
     void testCompareTransformedData();
@@ -50,8 +50,8 @@ protected:
     void propagateFlags();
     void generateTestFile();
     void generateReferenceFile();
-    void initTestConfiguration(casacore::Record &configuration);
-    void initReferenceConfiguration(casacore::Record &configuration);
+    void initTestConfiguration(Record &configuration);
+    void initReferenceConfiguration(Record &configuration);
 };
 
 #endif /* RegriddingTVITest_H_ */

@@ -29,7 +29,6 @@
 #define USETABLES 0
 #include <synthesis/TransformMachines/IlluminationConvFunc.h>
 
-using namespace casacore;
 namespace casa{
   //
   //------------------------------------------------------------------------

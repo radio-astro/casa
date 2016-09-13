@@ -30,17 +30,17 @@
 
 namespace casa {
 
-template <class T> casacore::Bool ImageMask::isAllMaskFalse(const casacore::ImageInterface<T>& image) {
+template <class T> Bool ImageMask::isAllMaskFalse(const ImageInterface<T>& image) {
 	if (! image.isMasked() && ! image.hasPixelMask()) {
-		return false;
+		return False;
 	}
 	auto cursorShape = image.niceCursorShape(4096*4096);
-	casacore::LatticeStepper stepper(image.shape(), cursorShape, casacore::LatticeStepper::RESIZE);
-	casacore::RO_MaskedLatticeIterator<T> iter(image, stepper);
+	LatticeStepper stepper(image.shape(), cursorShape, LatticeStepper::RESIZE);
+	RO_MaskedLatticeIterator<T> iter(image, stepper);
 	/*
-    std::unique_ptr<casacore::RO_LatticeIterator<casacore::Bool>> pmiter;
+    std::unique_ptr<RO_LatticeIterator<Bool>> pmiter;
 	if (image.hasPixelMask()) {
-		pmiter.reset(new casacore::RO_LatticeIterator<casacore::Bool>(image.pixelMask(), stepper));
+		pmiter.reset(new RO_LatticeIterator<Bool>(image.pixelMask(), stepper));
 	}
     */
 	for (iter.reset(); ! iter.atEnd(); ++iter) {
@@ -53,28 +53,28 @@ template <class T> casacore::Bool ImageMask::isAllMaskFalse(const casacore::Imag
 		}
         */
 		if (anyTrue(mymask)) {
-			return false;
+			return False;
 		}
 	}
-	return true;
+	return True;
 }
 
-template <class T> casacore::Bool ImageMask::isAllMaskTrue(
-	const casacore::MaskedLattice<T>& image
+template <class T> Bool ImageMask::isAllMaskTrue(
+	const MaskedLattice<T>& image
 ) {
 	if (! image.isMasked()) {
-		return true;
+		return True;
 	}
 	auto cursorShape = image.niceCursorShape(4096*4096);
-	casacore::LatticeStepper stepper(image.shape(), cursorShape, casacore::LatticeStepper::RESIZE);
-	casacore::RO_MaskedLatticeIterator<T> iter(image, stepper);
+	LatticeStepper stepper(image.shape(), cursorShape, LatticeStepper::RESIZE);
+	RO_MaskedLatticeIterator<T> iter(image, stepper);
 	for (iter.reset(); ! iter.atEnd(); ++iter) {
 		auto mymask = iter.getMask();
 		if (! allTrue(mymask)) {
-			return false;
+			return False;
 		}
 	}
-	return true;
+	return True;
 }
 
 }

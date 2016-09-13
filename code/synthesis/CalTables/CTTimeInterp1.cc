@@ -39,9 +39,8 @@
 #include <scimath/Functionals/ScalarSampledFunctional.h>
 #include <scimath/Functionals/ArraySampledFunctional.h>
 
-#define CTTIMEINTERPVERB1 false
+#define CTTIMEINTERPVERB1 False
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN                                                   
 
 // Null ctor 
@@ -57,7 +56,7 @@ CTTimeInterp1::CTTimeInterp1(NewCalTable& ct,
   timeType_(timetype),
   currTime_(-999.0),
   currIdx_(-1),
-  lastWasExact_(false),
+  lastWasExact_(False),
   timeRef_(0.0),
   timelist_(),
   domain_(2,0.0),
@@ -128,7 +127,7 @@ Bool CTTimeInterp1::interpolate(Double newtime) {
 
   // Don't work unnecessarily
   if (newtime==currTime_)
-    return false;  // no change
+    return False;  // no change
 
   if (CTTIMEINTERPVERB1) cout << " newtime is new..." << endl;
 
@@ -138,7 +137,7 @@ Bool CTTimeInterp1::interpolate(Double newtime) {
   Float fnewtime(newtime-timeRef_);
 
   // Establish registration in time
-  Bool exact(false);
+  Bool exact(False);
   Int newIdx(currIdx_);
   Bool newReg=findTimeRegistration(newIdx,exact,fnewtime);
 
@@ -154,12 +153,12 @@ Bool CTTimeInterp1::interpolate(Double newtime) {
       Vector<uInt> rows(2); indgen(rows); rows+=uInt(newIdx);
       Array<Float> ya(mcols_p->fparamArray("",rows));
       ArraySampledFunctional<Array<Float> > yf(ya);
-      tInterpolator_p->setData(xf,yf,true);
+      tInterpolator_p->setData(xf,yf,True);
     }
   }
   else
     // Escape if registration unchanged and 'nearest' or exact
-    if (timeType().contains("nearest") || exact) return false;  // no change
+    if (timeType().contains("nearest") || exact) return False;  // no change
 
   // Now calculate the interpolation result
 
@@ -181,7 +180,7 @@ Bool CTTimeInterp1::interpolate(Double newtime) {
   currIdx_=newIdx;
   lastWasExact_=exact;
 
-  return true;
+  return True;
  
 }
 
@@ -237,7 +236,7 @@ Bool CTTimeInterp1::findTimeRegistration(Int& idx,Bool& exact,Float newtime) {
   // If only one time in timelist, that's it, and its exact (behave as nearest)
   if (ntime==1) {
     idx=0;
-    exact=true;
+    exact=True;
   } 
   else {
     // More than one element in timelist, find the right one:
@@ -247,12 +246,12 @@ Bool CTTimeInterp1::findTimeRegistration(Int& idx,Bool& exact,Float newtime) {
     if (newtime<timelist_(0)) {
       // Before first timestamp, use first slot as nearest one
       idx=0;
-      exact=true;
+      exact=True;
     }
     else if (newtime>timelist_(ntime-1)) {
       // After last timestamp, use last slot as nearest one
       idx=ntime-1;
-      exact=true;
+      exact=True;
     }
     else
       // Find index in timelist where time would be:
@@ -267,7 +266,7 @@ Bool CTTimeInterp1::findTimeRegistration(Int& idx,Bool& exact,Float newtime) {
 
       // If nearest, fine-tune slot to actual nearest:
       if ( timeType().contains("nearest") ) {
-	//        exact=true;   // Nearest behaves like exact match
+	//        exact=True;   // Nearest behaves like exact match
         if (idx!=(ntime-1) && 
             (timelist_(idx+1)-newtime) < (newtime-timelist_(idx)) )
           idx++;

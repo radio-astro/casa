@@ -34,12 +34,8 @@
 #include <nrao/VLA/VLAArchiveInput.h>
 
 #include <casa/namespace.h>
-namespace casacore{
-
-class Path;
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
+class Path;
 } //# NAMESPACE CASA - END
 
 
@@ -76,15 +72,15 @@ public:
 
   // Create an object that reads its data from the vis-server disk
   // An exception is thrown if a connection cannot be made.
-  VLAOnlineInput(casacore::String &online, casacore::Int afiles=0);
+  VLAOnlineInput(String &online, Int afiles=0);
     
   // The destructor closes the file.
   virtual ~VLAOnlineInput();
 
-  // Reads the next logical record from specified IO source. Returns false if
+  // Reads the next logical record from specified IO source. Returns False if
   // there was a problem assembling the next record ie., it returns the value
   // of the hasData() member function.
-  virtual casacore::Bool read();
+  virtual Bool read();
 
 private: 
   //# The copy constructor is private and undefined
@@ -93,13 +89,13 @@ private:
   //# The assignment operator is private and undefined
   VLAOnlineInput& operator=(const VLAOnlineInput& other);
 
-  casacore::Bool   onlineFill;
-  casacore::String visDir;
-  casacore::Int oldDay;
-  casacore::Int previousDay;
+  Bool   onlineFill;
+  String visDir;
+  Int oldDay;
+  Int previousDay;
 
-  casacore::String getTodaysFile(int relDay=0);
-  casacore::Int whatsToday();
+  String getTodaysFile(int relDay=0);
+  Int whatsToday();
 
 };
 

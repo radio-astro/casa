@@ -46,12 +46,11 @@
 #include <casa/sstream.h>
 
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	WCCSNLAxisLabeller::WCCSNLAxisLabeller()
 		: WCCSAxisLabeller(),
-		  itsValid(false) {
+		  itsValid(False) {
 		setDefaultOptions();
 	}
 
@@ -101,8 +100,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		WCCSAxisLabeller::SpecAxisType WCCSNLAxisLabellerSpecAxisType = WCCSAxisLabeller::FREQ;
 		Int WCCSNLAxisLabellerSpecCoordIdx = -1;
 		SpectralCoordinate WCCSNLAxisLabellerSpecCoord;
-		Bool WCCSNLAxisLabellerAbsolute = true;
-		Bool WCCSNLAxisLabellerWorldLabels = true;
+		Bool WCCSNLAxisLabellerAbsolute = True;
+		Bool WCCSNLAxisLabellerWorldLabels = True;
 		Double WCCSNLAxisLabellerVelRef = 0.0;
 		Double WCCSNLAxisLabellerWavRef = 0.0;
 		Double WCCSNLAxisLabellerFreqRef = 0.0;
@@ -112,7 +111,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // The supplied DisplayCoordinateSystem should only have 2 Pixel axes, those being displayed
 // The coordinate for these axes will always be supplied as a world coordinate
 
-		Vector<Bool> WCCSNLAxisLabellerPixelAxes(2, false);
+		Vector<Bool> WCCSNLAxisLabellerPixelAxes(2, False);
 
 // The CS may have more than 2 world axes.  This vector will be intiialized
 // when the CS has been set.
@@ -543,7 +542,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			// dk note (12/03): DDs using this object and calling draw()
 			// on it normally invoke invalidate() in their notifyUnregister(wch),
 			// assuring that itsLastWorldCanvas still exists whenever
-			// itsValid==true.  Note that it _is_ the responsibility of the
+			// itsValid==True.  Note that it _is_ the responsibility of the
 			// caller of draw() to assure this object is invalidated before
 			// the corresponding wc is destroyed.
 
@@ -555,7 +554,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 					// reuse applicable drawlist.
 					wc->drawList(itsDrawListNumber);
-					return true;
+					return True;
 				}
 
 				// otherwise, delete the old drawlist.
@@ -568,7 +567,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			itsDrawListNumber = wc->newList();
 			itsLastWorldCanvas = wc;
 			itsDrawStateBuffer = worldCanvasState;
-			itsValid = true;
+			itsValid = True;
 		}
 
 		try {
@@ -579,12 +578,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			if(useWCCS && wc->hasCS()) {
 
 				// dk note:
-				// As of 9/07, the preferred usage for this class is to set useWCCS true.
+				// As of 9/07, the preferred usage for this class is to set useWCCS True.
 				// If this is done, the labeller will use the CS of the WC on which it is
 				// to draw for creating labels (modified as always according to user
 				// formatting preferences).  itsCoordinateSystem is still used/needed (in
 				// getOptions(), e.g., for coordinate types and user interface) when the
-				// WC is unknown.  If useWCCS is false (the default), itsCoordinateSystem
+				// WC is unknown.  If useWCCS is False (the default), itsCoordinateSystem
 				// is still used for everything, as before.
 				//
 				// (Actually, it is preferred to use WorldAxesDD _instead_ of this class
@@ -605,7 +604,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 			else {	// (the old-fashioned way: use externally-set CS for all).
 
-				if(!hasCoordinateSystem()) return false;	// No CS set: can't draw.
+				if(!hasCoordinateSystem()) return False;	// No CS set: can't draw.
 
 				cSys = coordinateSystem();
 			}
@@ -645,7 +644,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 							Double velRef;
 							if (!WCCSNLAxisLabellerSpecCoord.frequencyToVelocity (velRef,
 							        WCCSNLAxisLabellerSpecCoord.referenceValue()[0])) {
-								return false;
+								return False;
 							}
 							WCCSNLAxisLabellerVelRef = velRef;
 							WCCSNLAxisLabellerFreqRef = WCCSNLAxisLabellerSpecCoord.referenceValue()(0);
@@ -653,7 +652,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 							Vector<Double> wavRef(1), freqRef(1);
 							freqRef(0)=WCCSNLAxisLabellerSpecCoord.referenceValue()[0];
 							if (!WCCSNLAxisLabellerSpecCoord.frequencyToWavelength (wavRef, freqRef)) {
-								return false;
+								return False;
 							}
 							WCCSNLAxisLabellerWavRef = wavRef(0);
 							WCCSNLAxisLabellerFreqRef = WCCSNLAxisLabellerSpecCoord.referenceValue()(0);
@@ -661,7 +660,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 							Vector<Double> wavRef(1), freqRef(1);
 							freqRef(0)=WCCSNLAxisLabellerSpecCoord.referenceValue()[0];
 							if (!WCCSNLAxisLabellerSpecCoord.frequencyToAirWavelength (wavRef, freqRef)) {
-								return false;
+								return False;
 							}
 							WCCSNLAxisLabellerWavRef = wavRef(0);
 							WCCSNLAxisLabellerFreqRef = WCCSNLAxisLabellerSpecCoord.referenceValue()(0);
@@ -697,8 +696,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // The rest have a pixel coordinate given by the removed pixel
 // axes replacement value
 			WCCSNLAxisLabellerWorldAxes.resize(nWorld);
-			WCCSNLAxisLabellerWorldAxes = false;
-			WCCSNLAxisLabellerWorldAxes[0] = WCCSNLAxisLabellerWorldAxes[1] = true;
+			WCCSNLAxisLabellerWorldAxes = False;
+			WCCSNLAxisLabellerWorldAxes[0] = WCCSNLAxisLabellerWorldAxes[1] = True;
 
 // Assign reference to CS for nlfunc
 			WCCSNLAxisLabellerCoordinateSystem = &cSys;
@@ -990,7 +989,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					}
 				} else if (zLabelType() == "world") {
 					DisplayCoordinateSystem cs = coordinateSystem();
-					// itsCoordinateSystem used advisedly here even when useWCCS==true:
+					// itsCoordinateSystem used advisedly here even when useWCCS==True:
 					// itsCoordinateSystem may have better information about our owner's
 					// 'movie axis' than the WC CS (esp. in the case where our 'owner'
 					// is an Image PADD with a spectral axis, but the 'CS master' (which
@@ -1031,7 +1030,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		}	// try
 
-		catch (const casacore::AipsError& err) {
+		catch (const casa::AipsError& err) {
 			//cerr<<"WCN Err:"<<err.getMesg()<<endl;	//#diag
 			if (dolist) {
 				wc->endList();	// At least clean up drawlist state...
@@ -1055,14 +1054,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			wc->drawList(itsDrawListNumber);    // draw the new drawlist
 		}
 
-		return true;
+		return True;
 	}
 
 
 	void WCCSNLAxisLabeller::invalidate() {
 		if(itsValid && itsLastWorldCanvas->validList(itsDrawListNumber))
 			itsLastWorldCanvas->deleteList(itsDrawListNumber);
-		itsValid = false;
+		itsValid = False;
 	}
 
 
@@ -1082,7 +1081,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	Bool WCCSNLAxisLabeller::setOptions(const Record &rec, Record &updatedOptions) {
 		Bool ret = WCCSAxisLabeller::setOptions(rec, updatedOptions);
-		Bool localchange = false;
+		Bool localchange = False;
 //
 		ret = (ret || localchange);
 		return ret;

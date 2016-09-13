@@ -36,7 +36,6 @@ Modification history:
 // Start of casa namespace
 // -----------------------------------------------------------------------------
 
-using namespace casacore;
 namespace casa {
 
 // -----------------------------------------------------------------------------
@@ -1448,7 +1447,7 @@ Vector<uInt>& CalAnalysis::fieldGet( const String& oTableName ) {
   ROScalarColumn<Int> oROSC( oTable, String("FIELD_ID") );
 
   Vector<Int> oFieldInt;
-  oROSC.getColumn( oFieldInt, true );
+  oROSC.getColumn( oFieldInt, True );
 
   Vector<Int> oFieldUnique( unique<Int>(oFieldInt) );
 
@@ -1533,13 +1532,13 @@ Bool& CalAnalysis::fieldCheck( const Vector<uInt>& oFieldIn,
 
   // Declare the success boolean
 
-  Bool* poSuccess = new Bool( false );
+  Bool* poSuccess = new Bool( False );
 
 
   // Check the input field numbers and return the fixed field numbers
 
   if ( oFieldIn.nelements() == 0 ) {
-    *poSuccess = false;
+    *poSuccess = False;
     return( *poSuccess );
   }
 
@@ -1549,20 +1548,20 @@ Bool& CalAnalysis::fieldCheck( const Vector<uInt>& oFieldIn,
   for ( uInt f=0; f<oFieldIn.nelements(); f++ ) {
     if ( exists<uInt>( oFieldIn[f], oField ) ) {
       uiNumFieldOut += 1;
-      oFieldOut.resize( uiNumFieldOut, true );
+      oFieldOut.resize( uiNumFieldOut, True );
       oFieldOut[uiNumFieldOut-1] = oFieldIn[f];
     }
   }
 
   if ( uiNumFieldOut == 0 ) {
-    *poSuccess = false;
+    *poSuccess = False;
     return( *poSuccess );
   }
 
 
-  // Return true
+  // Return True
 
-  *poSuccess = true;
+  *poSuccess = True;
 
   return( *poSuccess );
 
@@ -1694,7 +1693,7 @@ Vector<uInt>& CalAnalysis::antenna1Get( const String& oTableName ) {
   ROScalarColumn<Int> oROSC( oTable, String("ANTENNA1") );
 
   Vector<Int> oAntenna1Int;
-  oROSC.getColumn( oAntenna1Int, true );
+  oROSC.getColumn( oAntenna1Int, True );
 
   Vector<Int> oAntenna1Unique( unique<Int>(oAntenna1Int) );
 
@@ -1785,13 +1784,13 @@ Bool& CalAnalysis::antenna1Check( const Vector<uInt>& oAntenna1In,
 
   // Declare the success boolean
 
-  Bool* poSuccess = new Bool( false );
+  Bool* poSuccess = new Bool( False );
 
 
   // Check the input antenna 1 numbers and return the fixed antenna 1 numbers
 
   if ( oAntenna1In.nelements() == 0 ) {
-    *poSuccess = false;
+    *poSuccess = False;
     return( *poSuccess );
   }
 
@@ -1801,20 +1800,20 @@ Bool& CalAnalysis::antenna1Check( const Vector<uInt>& oAntenna1In,
   for ( uInt a=0; a<oAntenna1In.nelements(); a++ ) {
     if ( exists<uInt>( oAntenna1In[a], oAntenna1 ) ) {
       uiNumAntenna1Out += 1;
-      oAntenna1Out.resize( uiNumAntenna1Out, true );
+      oAntenna1Out.resize( uiNumAntenna1Out, True );
       oAntenna1Out[uiNumAntenna1Out-1] = oAntenna1In[a];
     }
   }
 
   if ( uiNumAntenna1Out == 0 ) {
-    *poSuccess = false;
+    *poSuccess = False;
     return( *poSuccess );
   }
 
 
-  // Return true
+  // Return True
 
-  *poSuccess = true;
+  *poSuccess = True;
 
   return( *poSuccess );
 
@@ -1858,7 +1857,7 @@ Vector<Int>& CalAnalysis::antenna2Get( const String& oTableName ) {
   ROScalarColumn<Int> oROSC( oTable, String("ANTENNA2") );
 
   Vector<Int> oAntenna2Int;
-  oROSC.getColumn( oAntenna2Int, true );
+  oROSC.getColumn( oAntenna2Int, True );
 
   Vector<Int>* poAntenna2 = new Vector<Int>( unique<Int>(oAntenna2Int) );
 
@@ -1944,13 +1943,13 @@ Bool& CalAnalysis::antenna2Check( const Vector<Int>& oAntenna2In,
 
   // Declare the success boolean
 
-  Bool* poSuccess = new Bool( false );
+  Bool* poSuccess = new Bool( False );
 
 
   // Check the input antenna 1 numbers and return the fixed antenna 1 numbers
 
   if ( oAntenna2In.nelements() == 0 ) {
-    *poSuccess = false;
+    *poSuccess = False;
     return( *poSuccess );
   }
 
@@ -1960,20 +1959,20 @@ Bool& CalAnalysis::antenna2Check( const Vector<Int>& oAntenna2In,
   for ( uInt a=0; a<oAntenna2In.nelements(); a++ ) {
     if ( oAntenna2In[a] == -1 || exists<Int>( oAntenna2In[a], oAntenna2 ) ) {
       uiNumAntenna2Out += 1;
-      oAntenna2Out.resize( uiNumAntenna2Out, true );
+      oAntenna2Out.resize( uiNumAntenna2Out, True );
       oAntenna2Out[uiNumAntenna2Out-1] = oAntenna2In[a];
     }
   }
 
   if ( uiNumAntenna2Out == 0 ) {
-    *poSuccess = false;
+    *poSuccess = False;
     return( *poSuccess );
   }
 
 
-  // Return true
+  // Return True
 
-  *poSuccess = true;
+  *poSuccess = True;
 
   return( *poSuccess );
 
@@ -2019,7 +2018,7 @@ Vector<Double>& CalAnalysis::timeGet( const String& oTableName ) {
   // Get the sorted and unique time stamps
 
   Vector<Double> oTimeTemp;
-  oROSC.getColumn( oTimeTemp, true );
+  oROSC.getColumn( oTimeTemp, True );
 
   Vector<Double>* poTime = new Vector<Double>( 0 );
   *poTime = unique<Double>( oTimeTemp );
@@ -2111,23 +2110,23 @@ Bool& CalAnalysis::timeCheck( const Double& dStartTimeIn,
 
   // Declare the success boolean
 
-  Bool* poSuccess = new Bool( false );
+  Bool* poSuccess = new Bool( False );
 
 
   // Check the start and stop times
 
   if ( dStartTimeIn > dStopTimeIn ) {
-    *poSuccess = false;
+    *poSuccess = False;
     return( *poSuccess );
   }
 
   if ( dStartTimeIn > oTime[uiNumTime-1] ) {
-    *poSuccess = false;
+    *poSuccess = False;
     return( *poSuccess );
   }
 
   if ( dStopTimeIn < oTime[0] ) {
-    *poSuccess = false;
+    *poSuccess = False;
     return( *poSuccess );
   }
 
@@ -2139,13 +2138,13 @@ Bool& CalAnalysis::timeCheck( const Double& dStartTimeIn,
 
   for ( uInt t=0; t<uiNumTime; t++ ) {
     if ( oTime[t] >= dStartTimeIn && oTime[t] <= dStopTimeIn ) {
-      oTimeOut.resize( ++uiNumTimeOut, true );
+      oTimeOut.resize( ++uiNumTimeOut, True );
       oTimeOut[uiNumTimeOut-1] = oTime[t];
     }
   }
 
   if ( oTimeOut.nelements() == 0 ) {
-    *poSuccess = false;
+    *poSuccess = False;
     return( *poSuccess );
   }
 
@@ -2153,9 +2152,9 @@ Bool& CalAnalysis::timeCheck( const Double& dStartTimeIn,
   dStopTimeOut = max( oTimeOut );
 
 
-  // Return true
+  // Return True
 
-  *poSuccess = true;
+  *poSuccess = True;
 
   return( *poSuccess );
 
@@ -2322,13 +2321,13 @@ Bool& CalAnalysis::feedCheck( const Vector<String>& oFeedIn,
 
   // Declare the success boolean
 
-  Bool* poSuccess = new Bool( false );
+  Bool* poSuccess = new Bool( False );
 
 
   // Check the input feed values
 
   if ( oFeedIn.nelements() == 0 ) {
-    *poSuccess = false;
+    *poSuccess = False;
     return( *poSuccess );
   }
 
@@ -2338,13 +2337,13 @@ Bool& CalAnalysis::feedCheck( const Vector<String>& oFeedIn,
   for ( uInt f=0; f<oFeedIn.nelements(); f++ ) {
     if ( exists<String>( oFeedIn[f], oFeed ) ) {
       uiNumFeedOut += 1;
-      oFeedOut.resize( uiNumFeedOut, true );
+      oFeedOut.resize( uiNumFeedOut, True );
       oFeedOut[uiNumFeedOut-1] = oFeedIn[f];
     }
   }
 
   if ( uiNumFeedOut == 0 ) {
-    *poSuccess = false;
+    *poSuccess = False;
     return( *poSuccess );
   }
 
@@ -2355,7 +2354,7 @@ Bool& CalAnalysis::feedCheck( const Vector<String>& oFeedIn,
   oFeedOut = unique<String>( oFeedIn );
 
   if ( oFeedOut.nelements() > 2 ) {
-    *poSuccess = false;
+    *poSuccess = False;
     return( *poSuccess );
   }
 
@@ -2363,7 +2362,7 @@ Bool& CalAnalysis::feedCheck( const Vector<String>& oFeedIn,
     if ( oFeedOut[0] != "R" && oFeedOut[0] != "L" &&
          oFeedOut[0] != "X" && oFeedOut[0] != "Y" &&
          oFeedOut[0] != "1" && oFeedOut[0] != "2" && oFeedOut[0] != "S" ) {
-      *poSuccess = false;
+      *poSuccess = False;
       return( *poSuccess );
     }
   }
@@ -2373,14 +2372,14 @@ Bool& CalAnalysis::feedCheck( const Vector<String>& oFeedIn,
     if ( oFeedOut[0] != "R" && oFeedOut[0] != "L" &&
          oFeedOut[0] != "X" && oFeedOut[0] != "Y" &&
          oFeedOut[0] != "1" && oFeedOut[0] != "2" ) {
-      *poSuccess = false;
+      *poSuccess = False;
       return( *poSuccess );
     }
 
     if ( oFeedOut[1] != "R" && oFeedOut[1] != "L" &&
          oFeedOut[1] != "X" && oFeedOut[1] != "Y" &&
          oFeedOut[1] != "1" && oFeedOut[1] != "2" ) {
-      *poSuccess = false;
+      *poSuccess = False;
       return( *poSuccess );
     }
 
@@ -2402,9 +2401,9 @@ Bool& CalAnalysis::feedCheck( const Vector<String>& oFeedIn,
   }
 
 
-  // Return true
+  // Return True
 
-  *poSuccess = true;
+  *poSuccess = True;
 
   return( *poSuccess );
 
@@ -2526,7 +2525,7 @@ Bool& CalAnalysis::statsCheckInput( const CalAnalysis::INPUT& oInputIn,
 
   // Declare the success boolean
 
-  Bool* poSuccess = new Bool( false );
+  Bool* poSuccess = new Bool( False );
 
 
   // Check the fields and create a new field vector
@@ -2534,7 +2533,7 @@ Bool& CalAnalysis::statsCheckInput( const CalAnalysis::INPUT& oInputIn,
   if ( !fieldCheck( oInputIn.oField, oInputOut.oField ) ) {
     LogIO log( LogOrigin( "CalAnalysis", "statsCheckInput()", WHERE ) );
     log << LogIO::WARN << "One or more invalid fields" << LogIO::POST;
-    *poSuccess = false;
+    *poSuccess = False;
     return( *poSuccess );
   }
 
@@ -2544,14 +2543,14 @@ Bool& CalAnalysis::statsCheckInput( const CalAnalysis::INPUT& oInputIn,
   if ( !antenna1Check( oInputIn.oAntenna1, oInputOut.oAntenna1 ) ) {
     LogIO log( LogOrigin( "CalAnalysis", "statsCheckInput()", WHERE ) );
     log << LogIO::WARN << "One or more invalid antenna 1" << LogIO::POST;
-    *poSuccess = false;
+    *poSuccess = False;
     return( *poSuccess );
   }
 
   if ( !antenna2Check( oInputIn.oAntenna2, oInputOut.oAntenna2 ) ) {
     LogIO log( LogOrigin( "CalAnalysis", "statsCheckInput<T>()", WHERE ) );
     log << LogIO::WARN << "One or more invalid antenna 2" << LogIO::POST;
-    *poSuccess = false;
+    *poSuccess = False;
     return( *poSuccess );
   }
 
@@ -2564,7 +2563,7 @@ Bool& CalAnalysis::statsCheckInput( const CalAnalysis::INPUT& oInputIn,
   if ( !bTimeCheck ) {
     LogIO log( LogOrigin( "CalAnalysis", "statsCheckInput<T>()", WHERE ) );
     log << LogIO::WARN << "Invalid start and/or stop times" << LogIO::POST;
-    *poSuccess = false;
+    *poSuccess = False;
     return( *poSuccess );
   }
 
@@ -2574,7 +2573,7 @@ Bool& CalAnalysis::statsCheckInput( const CalAnalysis::INPUT& oInputIn,
   if ( !feedCheck( oInputIn.oFeed, oInputOut.oFeed ) ) {
     LogIO log( LogOrigin( "CalAnalysis", "statsCheckInput<T>()", WHERE ) );
     log << LogIO::WARN << "Invalid feed(s)" << LogIO::POST;
-    *poSuccess = false;
+    *poSuccess = False;
     return( *poSuccess );
   }
 
@@ -2593,7 +2592,7 @@ Bool& CalAnalysis::statsCheckInput( const CalAnalysis::INPUT& oInputIn,
   if ( !bSPWCheck ) {
     LogIO log( LogOrigin( "CalAnalysis", "statsCheckInput<T>()", WHERE ) );
     log << LogIO::WARN << "Invalid spectral window information" << LogIO::POST;
-    *poSuccess = false;
+    *poSuccess = False;
     return( *poSuccess );
   }
 
@@ -2605,7 +2604,7 @@ Bool& CalAnalysis::statsCheckInput( const CalAnalysis::INPUT& oInputIn,
     LogIO log( LogOrigin( "CalAnalysis", "statsCheckInput<T>()", WHERE ) );
     log << LogIO::WARN << "User-defined iteration axis must be frequency/time"
         << LogIO::POST;
-    *poSuccess = false;
+    *poSuccess = False;
     return( *poSuccess );
   }
 
@@ -2619,7 +2618,7 @@ Bool& CalAnalysis::statsCheckInput( const CalAnalysis::INPUT& oInputIn,
        oInputIn.eRAP != CalAnalysis::PHASE ) {
     LogIO log( LogOrigin( "CalAnalysis", "statsCheckInput<T>()", WHERE ) );
     log << LogIO::WARN << "Invalid RAP parameter" << LogIO::POST;
-    *poSuccess = false;
+    *poSuccess = False;
     return( *poSuccess );
   }
 
@@ -2638,16 +2637,16 @@ Bool& CalAnalysis::statsCheckInput( const CalAnalysis::INPUT& oInputIn,
   if ( oInputIn.dJumpMax < 0.0 ) {
     LogIO log( LogOrigin( "CalAnalysis", "statsCheckInput<T>()", WHERE ) );
     log << LogIO::WARN << "Invalid maximum jump parameter" << LogIO::POST;
-    *poSuccess = false;
+    *poSuccess = False;
     return( *poSuccess );
   }
 
   oInputOut.dJumpMax = oInputIn.dJumpMax;
 
 
-  // Return true
+  // Return True
 
-  *poSuccess = true;
+  *poSuccess = True;
 
   return( *poSuccess );
 
@@ -2680,7 +2679,7 @@ calibration table wth real values.
 
 NB: Sometimes the cubes cannot be completely filled because of the shape of the
 new format calibration table.  In this case, the empty cube elements are set to
-zero and the corresponding flags set to true.
+zero and the corresponding flags set to True.
 
 Inputs:
 -------
@@ -2732,7 +2731,7 @@ Bool& CalAnalysis::getGroup( const NewCalTable& oNCT,
 
   // Declare the success boolean
 
-  Bool* poSuccess = new Bool( false );
+  Bool* poSuccess = new Bool( False );
 
 
   // Get the selected rows
@@ -2742,7 +2741,7 @@ Bool& CalAnalysis::getGroup( const NewCalTable& oNCT,
   if ( !rowSelect( oNCT, oInput, oRowSelect ) ) {
     LogIO log( LogOrigin( "CalAnalysis", "getGroup()", WHERE ) );
     log << LogIO::WARN << "No matching rows selected" << LogIO::POST;
-    *poSuccess = false;
+    *poSuccess = False;
     return( *poSuccess );
   }
 
@@ -2764,7 +2763,7 @@ Bool& CalAnalysis::getGroup( const NewCalTable& oNCT,
   if ( !bRowGroup ) {
     LogIO log( LogOrigin( "CalAnalysis", "getGroup()", WHERE ) );
     log << LogIO::WARN << "Cannot group the data" << LogIO::POST;
-    *poSuccess = false;
+    *poSuccess = False;
     return( *poSuccess );
   }
 
@@ -2777,7 +2776,7 @@ Bool& CalAnalysis::getGroup( const NewCalTable& oNCT,
   if ( !bFreqGroup ) {
     LogIO log( LogOrigin( "CalAnalysis", "getGroup()", WHERE ) );
     log << LogIO::WARN << "Cannot group frequencies" << LogIO::POST;
-    *poSuccess = false;
+    *poSuccess = False;
     return( *poSuccess );
   }
 
@@ -2791,14 +2790,14 @@ Bool& CalAnalysis::getGroup( const NewCalTable& oNCT,
   if ( !bCubeGroup ) {
     LogIO log( LogOrigin( "CalAnalysis", "getGroup()", WHERE ) );
     log << LogIO::WARN << "Cannot group cubes" << LogIO::POST;
-    *poSuccess = false;
+    *poSuccess = False;
     return( *poSuccess );
   }
 
 
-  // Return true
+  // Return True
 
-  *poSuccess = true;
+  *poSuccess = True;
 
   return( *poSuccess );
 
@@ -2840,7 +2839,7 @@ Bool& CalAnalysis::rowSelect( const NewCalTable& oNCT,
 
   // Declare the success boolean
 
-  Bool* poSuccess = new Bool( false );
+  Bool* poSuccess = new Bool( False );
 
 
   // Create the column accessors
@@ -2882,23 +2881,23 @@ Bool& CalAnalysis::rowSelect( const NewCalTable& oNCT,
     if ( !exists<Double>( dTime, oInput.oTime ) ) continue;
 
     // Record the selected row
-    oRowSelect.resize( ++uiNumRowSelect, true );
+    oRowSelect.resize( ++uiNumRowSelect, True );
     oRowSelect[uiNumRowSelect-1] = r;
 
   }
 
 
-  // Were any rows found?  It not, return false
+  // Were any rows found?  It not, return False
 
   if ( uiNumRowSelect == 0 ) {
-    *poSuccess = false;
+    *poSuccess = False;
     return( *poSuccess );
   }
 
 
-  // Return true
+  // Return True
 
-  *poSuccess = true;
+  *poSuccess = True;
 
   return( *poSuccess );
 
@@ -2962,15 +2961,15 @@ Bool& CalAnalysis::rowGroup( const NewCalTable& oNCT,
 
   // Declare the success boolean
 
-  Bool* poSuccess = new Bool( false );
+  Bool* poSuccess = new Bool( False );
 
 
-  // If there are no rows, return false
+  // If there are no rows, return False
 
   uInt uiNumRow = oRowSelect.nelements();
 
   if ( uiNumRow == 0 ) {
-    *poSuccess = false;
+    *poSuccess = False;
     return( *poSuccess );
   }
 
@@ -2990,17 +2989,17 @@ Bool& CalAnalysis::rowGroup( const NewCalTable& oNCT,
 
   uInt uiNumGroup = 0;
 
-  oRowGroup.resize( uiNumGroup, false );
+  oRowGroup.resize( uiNumGroup, False );
 
-  oFieldGroup.resize( uiNumGroup, false );
-  oAntenna1Group.resize( uiNumGroup, false );
-  oAntenna2Group.resize( uiNumGroup, false );
+  oFieldGroup.resize( uiNumGroup, False );
+  oAntenna1Group.resize( uiNumGroup, False );
+  oAntenna2Group.resize( uiNumGroup, False );
 
-  oSPWGroup.resize( uiNumGroup, false );
-  oSPWUniqueGroup.resize( uiNumGroup, false );
+  oSPWGroup.resize( uiNumGroup, False );
+  oSPWUniqueGroup.resize( uiNumGroup, False );
 
-  oTimeGroup.resize( uiNumGroup, false );
-  oTimeUniqueGroup.resize( uiNumGroup, false );
+  oTimeGroup.resize( uiNumGroup, False );
+  oTimeUniqueGroup.resize( uiNumGroup, False );
 
 
   // Loop over the rows and form the groups
@@ -3031,30 +3030,30 @@ Bool& CalAnalysis::rowGroup( const NewCalTable& oNCT,
       uiNumGroup++;
 
       // Add the row to the new group
-      oRowGroup.resize( uiNumGroup, true );
-      oRowGroup[uiNumGroup-1].resize( 1, true );
+      oRowGroup.resize( uiNumGroup, True );
+      oRowGroup[uiNumGroup-1].resize( 1, True );
       oRowGroup[uiNumGroup-1][0] = oRowSelect[r];
 
       // Add the field to the new group
-      oFieldGroup.resize( uiNumGroup, true );
+      oFieldGroup.resize( uiNumGroup, True );
       oFieldGroup[uiNumGroup-1] = uiField;
 
       // Add the antenna 1 to the new group
-      oAntenna1Group.resize( uiNumGroup, true );
+      oAntenna1Group.resize( uiNumGroup, True );
       oAntenna1Group[uiNumGroup-1] = uiAntenna1;
 
       // Add the antenna 2 to the new group
-      oAntenna2Group.resize( uiNumGroup, true );
+      oAntenna2Group.resize( uiNumGroup, True );
       oAntenna2Group[uiNumGroup-1] = iAntenna2;
 
       // Add the spectral window to the new group
-      oSPWGroup.resize( uiNumGroup, true );
-      oSPWGroup[uiNumGroup-1].resize( 1, true );
+      oSPWGroup.resize( uiNumGroup, True );
+      oSPWGroup[uiNumGroup-1].resize( 1, True );
       oSPWGroup[uiNumGroup-1][0] = uiSPW;
 
       // Add the time to the new group
-      oTimeGroup.resize( uiNumGroup, true );
-      oTimeGroup[uiNumGroup-1].resize( 1, true );
+      oTimeGroup.resize( uiNumGroup, True );
+      oTimeGroup[uiNumGroup-1].resize( 1, True );
       oTimeGroup[uiNumGroup-1][0] = dTime;
 
     } else { // Existing group
@@ -3063,15 +3062,15 @@ Bool& CalAnalysis::rowGroup( const NewCalTable& oNCT,
       uInt uiNumRowGroup = oRowGroup[g].nelements() + 1;
 
       // Add the row to the group
-      oRowGroup[g].resize( uiNumRowGroup, true );
+      oRowGroup[g].resize( uiNumRowGroup, True );
       oRowGroup[g][uiNumRowGroup-1] = oRowSelect[r];
 
       // Add the spectral window to the group
-      oSPWGroup[g].resize( uiNumRowGroup, true );
+      oSPWGroup[g].resize( uiNumRowGroup, True );
       oSPWGroup[g][uiNumRowGroup-1] = uiSPW;
 
       // Add the time to the group
-      oTimeGroup[g].resize( uiNumRowGroup, true );
+      oTimeGroup[g].resize( uiNumRowGroup, True );
       oTimeGroup[g][uiNumRowGroup-1] = dTime;
 
     }
@@ -3081,8 +3080,8 @@ Bool& CalAnalysis::rowGroup( const NewCalTable& oNCT,
 
   // Create the unique sorted spectral window and time vectors for each group
 
-  oSPWUniqueGroup.resize( uiNumGroup, false );
-  oTimeUniqueGroup.resize( uiNumGroup, false );
+  oSPWUniqueGroup.resize( uiNumGroup, False );
+  oTimeUniqueGroup.resize( uiNumGroup, False );
 
   for ( uInt g=0; g<uiNumGroup; g++ ) {
     oSPWUniqueGroup[g].resize();
@@ -3092,9 +3091,9 @@ Bool& CalAnalysis::rowGroup( const NewCalTable& oNCT,
   }
 
 
-  // Return true
+  // Return True
 
-  *poSuccess = true;
+  *poSuccess = True;
 
   return( *poSuccess );
 
@@ -3141,7 +3140,7 @@ Bool& CalAnalysis::chanSPW( const Vector<uInt>& oSPW, const INPUT& oInput,
 
   // Declare the success boolean
 
-  Bool* poSuccess = new Bool( false );
+  Bool* poSuccess = new Bool( False );
 
 
   // Initialize the number of spectral windows, the spectral window map and
@@ -3149,15 +3148,15 @@ Bool& CalAnalysis::chanSPW( const Vector<uInt>& oSPW, const INPUT& oInput,
 
   uInt uiNumSPW = oSPW.nelements();
 
-  oSPWMap.resize( uiNumSPW, false );
-  oChanStart.resize( uiNumSPW, false );
+  oSPWMap.resize( uiNumSPW, False );
+  oChanStart.resize( uiNumSPW, False );
 
 
   // Load the spectral window map
 
   for ( uInt s=0; s<uiNumSPW; s++ ) {
     if ( !where( oSPW[s], oInput.oSPW, oSPWMap[s] ) ) {
-      *poSuccess = false;
+      *poSuccess = False;
       return( *poSuccess );
     }
   }
@@ -3172,9 +3171,9 @@ Bool& CalAnalysis::chanSPW( const Vector<uInt>& oSPW, const INPUT& oInput,
   }
 
 
-  // Return true
+  // Return True
 
-  *poSuccess = true;
+  *poSuccess = True;
 
   return( *poSuccess );
 
@@ -3220,7 +3219,7 @@ Bool& CalAnalysis::freqGroup( const INPUT& oInput,
 
   // Declare the success boolean
 
-  Bool* poSuccess = new Bool( false );
+  Bool* poSuccess = new Bool( False );
 
 
   // Create the instance for the spectral window subtable of the new format
@@ -3235,7 +3234,7 @@ Bool& CalAnalysis::freqGroup( const INPUT& oInput,
 
   uInt uiNumGroup = oSPWUniqueGroup.nelements();
 
-  oFreqGroup.resize( uiNumGroup, false );
+  oFreqGroup.resize( uiNumGroup, False );
 
 
   // Load the output instances
@@ -3246,7 +3245,7 @@ Bool& CalAnalysis::freqGroup( const INPUT& oInput,
     Vector<uInt> oSPWMap;
     Vector<uInt> oChanStart;
     if ( !chanSPW( oSPWUniqueGroup[g], oInput, oSPWMap, oChanStart ) ) {
-      *poSuccess = false;
+      *poSuccess = False;
       return( *poSuccess );
     }
 
@@ -3256,7 +3255,7 @@ Bool& CalAnalysis::freqGroup( const INPUT& oInput,
       uInt uiNumChannelInput = oInput.oChannel[oSPWMap[s]].nelements();
 
       // Resize the frequency vector for the group
-      oFreqGroup[g].resize( oChanStart[s]+uiNumChannelInput, true );
+      oFreqGroup[g].resize( oChanStart[s]+uiNumChannelInput, True );
 
       // Get the channels for the group and spectral window from the spectral
       // window subtable of the new format calibration table
@@ -3274,9 +3273,9 @@ Bool& CalAnalysis::freqGroup( const INPUT& oInput,
   }
 
 
-  // Return true
+  // Return True
 
-  *poSuccess = true;
+  *poSuccess = True;
 
   return( *poSuccess );
 
@@ -3348,7 +3347,7 @@ Bool& CalAnalysis::cubeGroup( const NewCalTable& oNCT, const INPUT& oInput,
 
   // Declare the success boolean
 
-  Bool* poSuccess = new Bool( false );
+  Bool* poSuccess = new Bool( False );
 
 
   // Create accessors for the CPARAM/FPARAM, PARAMERR, and FLAG columns
@@ -3371,10 +3370,10 @@ Bool& CalAnalysis::cubeGroup( const NewCalTable& oNCT, const INPUT& oInput,
 
   uInt uiNumGroup = oRowGroup.nelements();
 
-  oCParamGroup.resize( uiNumGroup, false );
-  oFParamGroup.resize( uiNumGroup, false );
-  oParamErrGroup.resize( uiNumGroup, false );
-  oFlagGroup.resize( uiNumGroup, false );
+  oCParamGroup.resize( uiNumGroup, False );
+  oFParamGroup.resize( uiNumGroup, False );
+  oParamErrGroup.resize( uiNumGroup, False );
+  oFlagGroup.resize( uiNumGroup, False );
 
 
   // Load the output instances for each group
@@ -3385,7 +3384,7 @@ Bool& CalAnalysis::cubeGroup( const NewCalTable& oNCT, const INPUT& oInput,
     Vector<uInt> oSPWMap;
     Vector<uInt> oChanStart;
     if ( !chanSPW( oSPWUniqueGroup[g], oInput, oSPWMap, oChanStart ) ) {
-      *poSuccess = false;
+      *poSuccess = False;
       return( *poSuccess );
     }
 
@@ -3395,16 +3394,16 @@ Bool& CalAnalysis::cubeGroup( const NewCalTable& oNCT, const INPUT& oInput,
     IPosition oShape( 3, uiNumFeed, uiNumFreq, uiNumTimeUnique );
 
     // Allocate the output instances for the group
-    oCParamGroup[g].resize( oShape, false );
-    oFParamGroup[g].resize( oShape, false );
-    oParamErrGroup[g].resize( oShape, false );
-    oFlagGroup[g].resize( oShape, false );
+    oCParamGroup[g].resize( oShape, False );
+    oFParamGroup[g].resize( oShape, False );
+    oParamErrGroup[g].resize( oShape, False );
+    oFlagGroup[g].resize( oShape, False );
 
     // Initialize the output instances for the group
     oCParamGroup[g] = DComplex( 0.0, 0.0 );
     oFParamGroup[g] = 0.0;
     oParamErrGroup[g] = 0.0;
-    oFlagGroup[g] = true;
+    oFlagGroup[g] = True;
 
     // Get the number of rows for the group
     uInt uiNumRow = oRowGroup[g].nelements();
@@ -3419,12 +3418,12 @@ Bool& CalAnalysis::cubeGroup( const NewCalTable& oNCT, const INPUT& oInput,
       Array<Float> oFParamCube;
       if ( oParType == String("Complex") ) {
         IPosition oShape( poCParamCol->operator()(uiRow).shape() );
-        oCParamCube.resize( oShape, false );
+        oCParamCube.resize( oShape, False );
         oCParamCube = poCParamCol->operator()( uiRow );
         oFParamCube = Array<Float>( oShape, 0.0 );
       } else {
         IPosition oShape( poFParamCol->operator()(uiRow).shape() );
-        oFParamCube.resize( oShape, false );
+        oFParamCube.resize( oShape, False );
         oFParamCube = poFParamCol->operator()( uiRow );
         oCParamCube = Array<Complex>( oShape, Complex(0.0,0.0) );
       }
@@ -3434,13 +3433,13 @@ Bool& CalAnalysis::cubeGroup( const NewCalTable& oNCT, const INPUT& oInput,
       oParamErrCube = oParamErrCol( uiRow );
 
       // Get the FLAG cell from the new format calibration table
-      Array<Bool> oFlagCube( oFlagCol(uiRow).shape(), false );
+      Array<Bool> oFlagCube( oFlagCol(uiRow).shape(), False );
       oFlagCube = oFlagCol( uiRow );
 
       // Map the spectral window
       uInt s;
       if ( !where( oSPWGroup[g][r], oSPWUniqueGroup[g], s ) ) {
-        *poSuccess = false;
+        *poSuccess = False;
         return( *poSuccess );
       }
 
@@ -3452,7 +3451,7 @@ Bool& CalAnalysis::cubeGroup( const NewCalTable& oNCT, const INPUT& oInput,
       // Map the time
       uInt t;
       if ( !where( oTimeGroup[g][r], oTimeUniqueGroup[g], t ) ) {
-         *poSuccess = false;
+         *poSuccess = False;
         return( *poSuccess );
       }
 
@@ -3474,9 +3473,9 @@ Bool& CalAnalysis::cubeGroup( const NewCalTable& oNCT, const INPUT& oInput,
   }
 
 
-  // Return true
+  // Return True
 
-  *poSuccess = true;
+  *poSuccess = True;
 
   return( *poSuccess );
 

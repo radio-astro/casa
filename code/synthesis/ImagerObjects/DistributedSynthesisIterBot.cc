@@ -47,7 +47,6 @@
 #include <algorithm>
 #include <thread>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 DistributedSynthesisIterBot::DistributedSynthesisIterBot(MPI_Comm comm)
@@ -255,7 +254,7 @@ DistributedSynthesisIterBotWithOldGUI::setIterationDetails(Record iterpars) {
 				uInt nfields = allnames.nfields();
 				itsImageList.resize(nfields);
 				itsMultiTermList.resize(nfields);
-				itsMultiTermList = false;
+				itsMultiTermList = False;
 				for (uInt fld = 0; fld < nfields; fld++ ) {
 					Record onename = allnames.subRecord(
 						RecordFieldId(String::toString(fld)));
@@ -347,9 +346,9 @@ DistributedSynthesisIterBotWithOldGUI::pauseForUserInteraction() {
 		//cout << "ActionCodes : " << itsActionCodes << endl;
 
 		Quantity qa;
-		casacore::Quantity::read(qa, strthresh);
+		casa::Quantity::read(qa, strthresh);
 		threshold = qa.getValue(Unit("Jy"));
-		casacore::Quantity::read(qa, strcycthresh);
+		casa::Quantity::read(qa, strcycthresh);
 		cyclethreshold = qa.getValue(Unit("Jy"));
 
 		itsLoopController->changeNiter(iterdone + iterleft);
@@ -359,7 +358,7 @@ DistributedSynthesisIterBotWithOldGUI::pauseForUserInteraction() {
 
 		if (std::all_of(itsActionCodes.cbegin(), itsActionCodes.cend(),
 		           [](Int c){return c == 2;}))
-			changeStopFlag(true);
+			changeStopFlag(True);
 	}
 
 	// TODO - The following was originally returned from this function. What's

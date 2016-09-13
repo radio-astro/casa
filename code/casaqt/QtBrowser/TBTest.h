@@ -51,30 +51,30 @@ class TBBrowser;
 class TBTest {
 public:
 	// Constructor that takes the browser parent and the name of the test.
-    TBTest(TBBrowser* browser, casacore::String name);
+    TBTest(TBBrowser* browser, String name);
 
     virtual ~TBTest();
 
     
     // Returns the name of the test.
-    casacore::String getName();
+    String getName();
     
     
     // checks() must be implemented by any subclass.
     // Returns a list of the names of the checks in this test, given the name
     // of the table on which the test will be run.
-    virtual std::vector<casacore::String> checks(casacore::String table) = 0;
+    virtual std::vector<String> checks(String table) = 0;
 
     // runCheck() must be implemented by any subclass.
     // Runs the given check on the given table and returns the result.
-    virtual bool runCheck(casacore::String table, int i) = 0;
+    virtual bool runCheck(String table, int i) = 0;
 
 protected:
 	// Browser parent.
 	TBBrowser* browser;
 	
 	// Name of the test.
-    casacore::String name;
+    String name;
 };
 
 // <summary>
@@ -91,10 +91,10 @@ public:
     // Implements TBTest::checks().
     // For each field ending in _ID: "Field [name]_ID has corresponding table
     // keyword [name]."
-    std::vector<casacore::String> checks(casacore::String table);
+    std::vector<String> checks(String table);
 
     // Implements TBTest::runCheck().
-    bool runCheck(casacore::String table, int i);
+    bool runCheck(String table, int i);
 };
 
 // <summary>
@@ -111,10 +111,10 @@ public:
     // Implements TBTest::checks().
     // For each subtable in the keywords: "Subtable [name] exists on disk at 
     // [location]."
-    std::vector<casacore::String> checks(casacore::String table);
+    std::vector<String> checks(String table);
 
     // Implements TBTest::runCheck().
-    bool runCheck(casacore::String table, int i);
+    bool runCheck(String table, int i);
 };
 
 // <summary>
@@ -131,10 +131,10 @@ public:
     // Implements TBTest::checks().
     // For each subtable in the keywords: "Subtable [name] can be opened and
     // has at least one row of data."
-    std::vector<casacore::String> checks(casacore::String table);
+    std::vector<String> checks(String table);
 
     // Implements TBTest::runCheck().
-    bool runCheck(casacore::String table, int i);
+    bool runCheck(String table, int i);
 };
 
 }

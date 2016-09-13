@@ -43,7 +43,6 @@
 #include <casa/Arrays/ArrayMath.h>
 
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	DisplayShape::DisplayShape() {
@@ -80,9 +79,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	void DisplayShape::setDefaultOptions() {
-		itsHasHandles = true;
-		itsDrawHandles = false;
-		itsValidHandles = false;
+		itsHasHandles = True;
+		itsDrawHandles = False;
+		itsValidHandles = False;
 		itsHandleColor = "Green";
 		itsHandleSize = 8;
 		itsHandleShape = DisplayShape::Filled_Circle;
@@ -174,7 +173,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		const Vector<Float>& yP = points.column(1);
 
 		AlwaysAssert(xP.nelements() == yP.nelements(), AipsError);
-		Bool isInside = false;
+		Bool isInside = False;
 		uInt n = xP.nelements();
 		for (uInt i=0,j=n-1; i < n; j=i++) {
 			if ((((yP(i)<=yPos) && (yPos<yP(j))) ||
@@ -246,7 +245,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	Bool DisplayShape::onHandles(const Float& xPos, const Float& yPos) {
-		Bool onHandle = false;
+		Bool onHandle = False;
 
 		if (itsHasHandles && itsValidHandles) {
 			if (itsHandles.nelements()) {
@@ -367,7 +366,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 			}
 		}
-		return true;
+		return True;
 
 
 	}
@@ -392,14 +391,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				}
 			}
 		}
-		return true;
+		return True;
 	}
 	Bool DisplayShape::setOptions(const Record& settings) {
-		Bool localChange = false;
-		//Bool handleRebuild = false;
+		Bool localChange = False;
+		//Bool handleRebuild = False;
 
 		//Pick out all the settings I'm interested in.
-		if (itsColor->fromRecord(settings)) localChange = true;
+		if (itsColor->fromRecord(settings)) localChange = True;
 
 		if (settings.isDefined("hashandles"))
 			itsHasHandles = settings.asBool("hashandles");
@@ -413,7 +412,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				Int newSize = settings.asInt("handlesize");
 				if (itsHandleSize != newSize) {
 					itsHandleSize = newSize;
-					//handleRebuild = true;
+					//handleRebuild = True;
 				}
 			}
 
@@ -427,7 +426,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 				if (cast != itsHandleShape) {
 					itsHandleShape = cast;
-					//handleRebuild = true;
+					//handleRebuild = True;
 				}
 
 			}
@@ -470,7 +469,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	Bool DisplayShape::whichHandle(const Float& xPos, const Float& yPos,
 	                               Int& out) {
-		Bool found = false;
+		Bool found = False;
 		Int i = -1;
 
 		if (itsHasHandles && itsValidHandles) {
@@ -484,13 +483,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			}
 		}
 
-		return false;
+		return False;
 	}
 
 	void DisplayShape::setHasHandles(const Bool& hasHandles) {
 		itsHasHandles = hasHandles;
 
-		if (!hasHandles) itsDrawHandles = false;
+		if (!hasHandles) itsDrawHandles = False;
 	}
 
 	void DisplayShape::setDrawHandles(const Bool& shouldIDraw) {
@@ -506,21 +505,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			//Create new Handle
 			if (itsHandleShape == DisplayShape::Open_Square) {
 				toAdd = new DSRectangle(newHandlePos[0], newHandlePos[1], itsHandleSize,
-				                        itsHandleSize, false, false);
+				                        itsHandleSize, False, False);
 				toAdd->setColor(itsHandleColor);
 			} else if (itsHandleShape == DisplayShape::Filled_Square) {
 				toAdd = new DSRectangle(newHandlePos[0], newHandlePos[1], itsHandleSize,
-				                        itsHandleSize, false, false);
+				                        itsHandleSize, False, False);
 				toAdd->setColor(itsHandleColor);
 				toAdd->setFillStyle(DSClosed::Full_Fill);
 			} else if (itsHandleShape == DisplayShape::Filled_Circle) {
 				toAdd = new DSCircle(newHandlePos[0], newHandlePos[1], itsHandleSize,
-				                     false, false);
+				                     False, False);
 				toAdd->setColor(itsHandleColor);
 				toAdd->setFillStyle(DSClosed::Full_Fill);
 			} else {
 				toAdd = new DSCircle(newHandlePos[0], newHandlePos[1], itsHandleSize,
-				                     false, false);
+				                     False, False);
 				toAdd->setColor(itsHandleColor);
 				toAdd->setFillStyle(DSClosed::Full_Fill);
 			}
@@ -563,22 +562,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			} else {
 				itsHandles.resize(1);
 				itsHandles[0] = toAdd;
-				itsValidHandles = true;
+				itsValidHandles = True;
 			}
 		}
 	}
 
 	Bool DisplayShape::removeHandle(const Vector<Float>& /*getRidOf*/) {
 
-		return false;
+		return False;
 	}
 
 	Bool DisplayShape::removeHandle(const Int nHandle) {
 		if (nHandle < 0 || nHandle >= Int(itsHandles.nelements()))
-			return false;
+			return False;
 
-		itsHandles.remove(uInt(nHandle), true);
-		return true;
+		itsHandles.remove(uInt(nHandle), True);
+		return True;
 	}
 
 	void DisplayShape::setHandleShape(const DisplayShape::HandleShape& shape) {
@@ -594,13 +593,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	void DisplayShape::addLocked(DisplayShape* toLock) {
-		itsLocks.resize(itsLocks.nelements() + 1, false, true);
+		itsLocks.resize(itsLocks.nelements() + 1, False, True);
 		itsLocks[itsLocks.nelements() - 1] = toLock;
 	}
 
 	void DisplayShape::removeLocked(DisplayShape* removeLock) {
 		for (uInt i=0; i<itsLocks.nelements(); i++) {
-			if (itsLocks[i] == removeLock) itsLocks.remove(i, true);
+			if (itsLocks[i] == removeLock) itsLocks.remove(i, True);
 		}
 	}
 
@@ -613,7 +612,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			}
 
 			itsHandles.resize(startPoints.nrow());
-			itsValidHandles = true;
+			itsValidHandles = True;
 
 			Vector<Float> temp(2);
 			for (uInt i =0 ; i< startPoints.nrow(); i++) {

@@ -41,7 +41,6 @@
 #include <imageanalysis/ImageAnalysis/ImageStatsCalculator.h>
 #include <limits>
 
-using namespace casacore;
 namespace casa {
 
 	const QStringList FindSourcesDialog::colorNames = QStringList()<<"yellow"<<"white"<<"red"<<
@@ -418,10 +417,10 @@ namespace casa {
 		}
 		int maxEstimates = ui.sourceEstimateCountSpinBox->value();
 		try {
-			//Record sources = analysis->findsources(maxEstimates,cutoff,region,"",true );
+			//Record sources = analysis->findsources(maxEstimates,cutoff,region,"",True );
             ImageSourceFinder<Float> isf(analysis->getImage(), &region, "");
             isf.setCutoff(cutoff);
-            isf.setDoPoint(true);
+            isf.setDoPoint(True);
             skyList.fromComponentList(isf.findSources(maxEstimates));
 
             // String errorMsg;
@@ -649,8 +648,8 @@ namespace casa {
 
 	void FindSourcesDialog::populateImageBounds() {
 		ImageStatsCalculator calc( image, NULL, "", false);
-		calc.setVerbose(false);
-		calc.setList(false);
+		calc.setVerbose(False);
+		calc.setList(False);
 		Record result = calc.calculate();
 		Vector<int> blc(result.asArrayInt( "blc"));
 		blcVector.resize(blc.size( ));

@@ -37,14 +37,10 @@
 #include <casa/Utilities/CountedPtr.h>
 #include <components/ComponentModels/ComponentType.h>
 
-namespace casacore{
+namespace casa { //# NAMESPACE CASA - BEGIN
 
 class RecordInterface;
 template <class Qtype> class Quantum;
-}
-
-namespace casa { //# NAMESPACE CASA - BEGIN
-
 
 // <summary>A class that represents the Flux (copy semantics)</summary>
 
@@ -54,8 +50,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </reviewed>
 
 // <prerequisite>
-//   <li> <linkto class="casacore::Vector">casacore::Vector</linkto>
-//   <li> <linkto class="casacore::Unit">casacore::Unit</linkto>
+//   <li> <linkto class="Vector">Vector</linkto>
+//   <li> <linkto class="Unit">Unit</linkto>
 // </prerequisite>
 //
 // <etymology>
@@ -77,12 +73,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <dt> Flux units.
 // <dd> These are the units for the flux values. The units must have dimensions
 //      of W/m^2/Hz and are represented using the
-//      <linkto class="casacore::Unit">casacore::Unit</linkto> class. The most common unit is "Jy".
+//      <linkto class="Unit">Unit</linkto> class. The most common unit is "Jy".
 // <dt> Polarisation representation.
 // <dd> This describes how the polarised flux is represented. It can be one of
 //      the following:
-//      <dl compact><dt>casacore::Stokes<dd>
-//      The flux is representing using the casacore::Stokes I, Q, U, V components
+//      <dl compact><dt>Stokes<dd>
+//      The flux is representing using the Stokes I, Q, U, V components
 //      respectively.
 //      <dt>Linear<dd>
 //      The flux is representing using the XX,XY,YX,YY correlation products
@@ -110,28 +106,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // This class does not require, or check a number of constraints such as
 // <src>XY = conj(YX)</src> and hence it is possible to define a flux using a
 // linear or circular representation that cannot be completely represented
-// using the casacore::Stokes representation. Because this class stores the flux values
+// using the Stokes representation. Because this class stores the flux values
 // as complex numbers there is no loss of accuracy when converting between
 // different polarisation representations. But it discards the imaginary
 // component of the flux when externally representing the flux using with a
-// casacore::Stokes representation (eg., when calling the <src>value(casacore::Vector<T>&)</src>
+// Stokes representation (eg., when calling the <src>value(Vector<T>&)</src>
 // function).
 //
-// Because this class using casacore::Complex numbers with a precision that depends on
+// Because this class using Complex numbers with a precision that depends on
 // the template type many of the function arguments are of type
-// <src>casacore::NumericTraits<T></src>. This simply a type that maps to casacore::Complex if T is
-// casacore::Float and casacore::DComplex if T is a Double. Because of problems with the the gnu
+// <src>NumericTraits<T></src>. This simply a type that maps to Complex if T is
+// Float and DComplex if T is a Double. Because of problems with the the gnu
 // compiler functions which use this type as an argument MUST be
 // inline. Hopefully this problem will go away sometime.
 // </synopsis>
 //
 // <example>
-// The following example creates a FluxRep object using a casacore::Stokes representation
+// The following example creates a FluxRep object using a Stokes representation
 // and converts it to "WU" (Westerbork Units). After printing out the converted
 // I flux it converts the Flux to a linear representation and prints out a
-// casacore::Vector with the [XX,XY,YX,YY] values (still in "WU")
+// Vector with the [XX,XY,YX,YY] values (still in "WU")
 // <srcblock>
-// FluxRep<casacore::Double> flux(1.0, 0.0, 0.0, 0.1); // I = 1.0, V = 0.1
+// FluxRep<Double> flux(1.0, 0.0, 0.0, 0.1); // I = 1.0, V = 0.1
 // flux.convertUnit("WU");
 // cout << "The I flux (in WU is)" << flux.value(0) << endl;
 // flux.convertPol(ComponentType::LINEAR);
@@ -146,7 +142,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </motivation>
 //
 // <thrown>
-//    <li> casacore::AipsError, When the Vectors are not of length 4 or when indices are
+//    <li> AipsError, When the Vectors are not of length 4 or when indices are
 //          greater than 4
 // </thrown>
 //
@@ -159,50 +155,50 @@ template<class T> class FluxRep
 public:
 
   // The default constructor makes an object with <src>I = 1, Q=U=V=0</src>,
-  // a casacore::Stokes representation, and units of "Jy".
+  // a Stokes representation, and units of "Jy".
   FluxRep();
 
   // This constructor makes an object where I is specified and
-  // <src>Q=U=V=0</src>. It assumes a casacore::Stokes representation, and units of "Jy".
+  // <src>Q=U=V=0</src>. It assumes a Stokes representation, and units of "Jy".
   FluxRep(T i);
 
   // This constructor makes an object where I,Q,U,V are all specified. It
-  // assumes a casacore::Stokes representation, and units of "Jy".
+  // assumes a Stokes representation, and units of "Jy".
   FluxRep(T i, T q, T u, T v);
 
   // This constructor makes an object where the flux values and polarisation
   // representation are specified. It assumes the units are "Jy".
-  FluxRep(typename casacore::NumericTraits<T>::ConjugateType xx,
-	  typename casacore::NumericTraits<T>::ConjugateType xy,
-	  typename casacore::NumericTraits<T>::ConjugateType yx,
-	  typename casacore::NumericTraits<T>::ConjugateType yy,
+  FluxRep(typename NumericTraits<T>::ConjugateType xx,
+	  typename NumericTraits<T>::ConjugateType xy,
+	  typename NumericTraits<T>::ConjugateType yx,
+	  typename NumericTraits<T>::ConjugateType yy,
 	  ComponentType::Polarisation pol);
   
   // This constructor makes an object where I,Q,U,V are all specified by a
-  // casacore::Vector that must have four elements. It assumes a casacore::Stokes representation,
+  // Vector that must have four elements. It assumes a Stokes representation,
   // and units of "Jy".
-  FluxRep(const casacore::Vector<T>& flux);
+  FluxRep(const Vector<T>& flux);
 
   // This constructor makes an object where the flux values are all specified
-  // by a casacore::Vector that must have four elements. The polarisation representation
+  // by a Vector that must have four elements. The polarisation representation
   // must also be specified. It assumes the units are "Jy".
-  FluxRep(const casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& flux,
+  FluxRep(const Vector<typename NumericTraits<T>::ConjugateType>& flux,
 	  ComponentType::Polarisation pol);
   
   // This constructor makes an object where the flux values are all specified
-  // by a casacore::Quantum<casacore::Vector> that must have four elements.  The casacore::Quantum must have
+  // by a Quantum<Vector> that must have four elements.  The Quantum must have
   // units that are dimensionally equivalent to the "Jy" and these are the
-  // units of the FluxRep object. A casacore::Stokes polarisation representation is
+  // units of the FluxRep object. A Stokes polarisation representation is
   // assumed.
-  FluxRep(const casacore::Quantum<casacore::Vector<T> >& flux);
+  FluxRep(const Quantum<Vector<T> >& flux);
 
   // This constructor makes an object where the flux values are all specified
-  // by a casacore::Quantum<casacore::Vector> that must have four elements. The casacore::Quantum must have
+  // by a Quantum<Vector> that must have four elements. The Quantum must have
   // units that are dimensionally equivalent to the "Jy" and these are the
   // units of the FluxRep object. The polarisation representation must also be
   // specified.
   FluxRep(const
-	  casacore::Quantum<casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType> >& flux,
+	  Quantum<Vector<typename NumericTraits<T>::ConjugateType> >& flux,
 	  ComponentType::Polarisation pol);
 
   // The copy constructor uses copy semantics.
@@ -216,19 +212,19 @@ public:
 
   // These two functions return the current units
   // <group>
-  const casacore::Unit& unit() const;
-  void unit(casacore::Unit& unit) const;
+  const Unit& unit() const;
+  void unit(Unit& unit) const;
   // </group>
 
   // This function sets the current unit. It does NOT convert the flux values
   // to correspond to the new unit. The new unit must be dimensionally
   // equivalent to the "Jy".
-  void setUnit(const casacore::Unit& unit);
+  void setUnit(const Unit& unit);
 
   // This function sets the current units to the supplied value and
   // additionally converts the internal flux values to the correspond to the
   // new unit.
-  void convertUnit(const casacore::Unit& unit);
+  void convertUnit(const Unit& unit);
 
   // These two functions return the current polarisation representation.
   // <group>
@@ -247,69 +243,69 @@ public:
 
   // This function returns the flux values. The polarisation representation and
   // units are in whatever is current.
-  const casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& value() const;
+  const Vector<typename NumericTraits<T>::ConjugateType>& value() const;
 
   // This function returns the specified component of the flux values.
   // The polarisation representation and units are in whatever is current.
-  const typename casacore::NumericTraits<T>::ConjugateType& value(casacore::uInt p) const;
+  const typename NumericTraits<T>::ConjugateType& value(uInt p) const;
 
   // This function returns the flux values after converting it to the Stokes
-  // representation. The units of the returned casacore::Vector are the current units.
-  void value(casacore::Vector<T>& value);
+  // representation. The units of the returned Vector are the current units.
+  void value(Vector<T>& value);
 
   // This function returns the flux values. The polarisation representation and
   // units are in whatever is current.
-  void value(casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& value) const;
+  void value(Vector<typename NumericTraits<T>::ConjugateType>& value) const;
 
   // This function returns the flux values after converting it to the Stokes
-  // representation. The units of the returned casacore::Quantum are the current units of
-  // the FluxRep object. The length of the casacore::Vector in the casacore::Quantum will be
+  // representation. The units of the returned Quantum are the current units of
+  // the FluxRep object. The length of the Vector in the Quantum will be
   // resized to 4 elements if it is not already that length.
-  void value(casacore::Quantum<casacore::Vector<T> >& value);
+  void value(Quantum<Vector<T> >& value);
 
   // This function returns the flux values. The units of the returned Quantum
   // are the current units of the FluxRep object. Similarly the polarisation
-  // representation of the returned casacore::Quantum is the current polarisation
-  // representation. The length of the casacore::Vector in the casacore::Quantum will be resized to
+  // representation of the returned Quantum is the current polarisation
+  // representation. The length of the Vector in the Quantum will be resized to
   // 4 elements if it is not already that length.
-  void value(casacore::Quantum
-	     <casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType> >& value) const;
+  void value(Quantum
+	     <Vector<typename NumericTraits<T>::ConjugateType> >& value) const;
 
-  // Return the flux value in a casacore::Quantum for the specified Stokes.  Can convert
+  // Return the flux value in a Quantum for the specified Stokes.  Can convert
   // to Jy if requested.  
-  casacore::Quantum<T> value (casacore::Stokes::StokesTypes stokes, casacore::Bool toJy=true);
+  Quantum<T> value (Stokes::StokesTypes stokes, Bool toJy=True);
 
   // This function sets the Flux values assuming the supplied value represents
-  // the casacore::Stokes I flux in the current units. The other casacore::Stokes parameters are
+  // the Stokes I flux in the current units. The other Stokes parameters are
   // set to zero.
   void setValue(T value);
  
   // This function sets the Flux values assuming the supplied values represent
-  // the flux in the casacore::Stokes representation and is in the current units. The
-  // casacore::Vector must have four elements.
-  void setValue(const casacore::Vector<T>& value); 
+  // the flux in the Stokes representation and is in the current units. The
+  // Vector must have four elements.
+  void setValue(const Vector<T>& value); 
 
   // This function sets the Flux values assuming the supplied values represent
-  // the flux in the current representation and units. The casacore::Vector must have
+  // the flux in the current representation and units. The Vector must have
   // four elements.
-  void setValue(const casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& value);
+  void setValue(const Vector<typename NumericTraits<T>::ConjugateType>& value);
 
   // This function sets the flux values and units assuming the supplied values
-  // represent the flux in the casacore::Stokes representation. The units of the Quantum
-  // must be dimensionally equivalent to the "Jy" and the casacore::Vector must have four
+  // represent the flux in the Stokes representation. The units of the Quantum
+  // must be dimensionally equivalent to the "Jy" and the Vector must have four
   // elements.
-  void setValue(const casacore::Quantum<casacore::Vector<T> >& value);
+  void setValue(const Quantum<Vector<T> >& value);
 
   // This function sets the flux values, units and polarisation assuming the
   // supplied values represent the flux in the specified representation. The
-  // units of the casacore::Quantum must be dimensionally equivalent to the "Jy" and the
-  // casacore::Vector must have four elements.
+  // units of the Quantum must be dimensionally equivalent to the "Jy" and the
+  // Vector must have four elements.
   void setValue(const
-		casacore::Quantum<casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType> >& value,
+		Quantum<Vector<typename NumericTraits<T>::ConjugateType> >& value,
 		ComponentType::Polarisation pol);
 
-  // Set flux for given casacore::Stokes from Quantum. 
-  void setValue (const casacore::Quantum<T>& value, casacore::Stokes::StokesTypes stokes);
+  // Set flux for given Stokes from Quantum. 
+  void setValue (const Quantum<T>& value, Stokes::StokesTypes stokes);
 
   // Scale the Flux value by the specified amount. These functions multiply the
   // flux values irrespective of the current polarisation representation. If
@@ -319,50 +315,50 @@ public:
   void scaleValue(const T& factor);
   void scaleValue(const T& factor0, const T& factor1,
 		  const T& factor2, const T& factor3);
-  void scaleValue(const typename casacore::NumericTraits<T>::ConjugateType& factor);
-  void scaleValue(const typename casacore::NumericTraits<T>::ConjugateType& factor0,
-		  const typename casacore::NumericTraits<T>::ConjugateType& factor1,
-		  const typename casacore::NumericTraits<T>::ConjugateType& factor2,
-		  const typename casacore::NumericTraits<T>::ConjugateType& factor3);
+  void scaleValue(const typename NumericTraits<T>::ConjugateType& factor);
+  void scaleValue(const typename NumericTraits<T>::ConjugateType& factor0,
+		  const typename NumericTraits<T>::ConjugateType& factor1,
+		  const typename NumericTraits<T>::ConjugateType& factor2,
+		  const typename NumericTraits<T>::ConjugateType& factor3);
   // </group>
 
   // Set/get the errors in the flux
   // <group>
-  void setErrors(const typename casacore::NumericTraits<T>::ConjugateType& error0,
-		 const typename casacore::NumericTraits<T>::ConjugateType& error1,
-		 const typename casacore::NumericTraits<T>::ConjugateType& error2,
-		 const typename casacore::NumericTraits<T>::ConjugateType& error3);
+  void setErrors(const typename NumericTraits<T>::ConjugateType& error0,
+		 const typename NumericTraits<T>::ConjugateType& error1,
+		 const typename NumericTraits<T>::ConjugateType& error2,
+		 const typename NumericTraits<T>::ConjugateType& error3);
 
-  void setErrors(const casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& errors);
+  void setErrors(const Vector<typename NumericTraits<T>::ConjugateType>& errors);
 
-  const casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& errors() const;
+  const Vector<typename NumericTraits<T>::ConjugateType>& errors() const;
   // </group>
 
-  // This functions convert between a casacore::RecordInterface and a FluxRep object and
-  // define how the FluxRep is represented in glish.  They return false if the
-  // casacore::RecordInterface is malformed and append an error message to the supplied
+  // This functions convert between a RecordInterface and a FluxRep object and
+  // define how the FluxRep is represented in glish.  They return False if the
+  // RecordInterface is malformed and append an error message to the supplied
   // string giving the reason.
   // <group>
-  casacore::Bool fromRecord(casacore::String& errorMessage, const casacore::RecordInterface& record);
-  casacore::Bool toRecord(casacore::String& errorMessage, casacore::RecordInterface& record) const;
+  Bool fromRecord(String& errorMessage, const RecordInterface& record);
+  Bool toRecord(String& errorMessage, RecordInterface& record) const;
   // </group>
 
-  // casacore::Function which checks the internal data of this class for correct
-  // dimensionality and consistent values. Returns true if everything is fine
-  // otherwise returns false.
-  casacore::Bool ok() const;
+  // Function which checks the internal data of this class for correct
+  // dimensionality and consistent values. Returns True if everything is fine
+  // otherwise returns False.
+  Bool ok() const;
 
 private:
-  casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType> itsVal;
+  Vector<typename NumericTraits<T>::ConjugateType> itsVal;
   ComponentType::Polarisation itsPol;
-  casacore::Unit itsUnit;
-  casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType> itsErr;
-  static const std::vector<casacore::Unit> _allowedUnits;
+  Unit itsUnit;
+  Vector<typename NumericTraits<T>::ConjugateType> itsErr;
+  static const std::vector<Unit> _allowedUnits;
 
     // returns the conversion unit to which <src>unit</src> conforms.
     // If <src>unit</src> does not conform to a supported unit, an
     // exception is thrown.
-    static casacore::Unit _getConversionUnit(const casacore::Unit& unit);
+    static Unit _getConversionUnit(const Unit& unit);
 
 };
 
@@ -374,8 +370,8 @@ private:
 // </reviewed>
 
 // <prerequisite>
-//   <li> <linkto class="casacore::Vector">casacore::Vector</linkto>
-//   <li> <linkto class="casacore::Unit">casacore::Unit</linkto>
+//   <li> <linkto class="Vector">Vector</linkto>
+//   <li> <linkto class="Unit">Unit</linkto>
 //   <li> <linkto class="FluxRep">FluxRep</linkto>
 // </prerequisite>
 //
@@ -402,35 +398,35 @@ private:
 // </ul>
 // The functions for converting between different polarisation representations
 // require that the supplied and returned vector have all four polarisations.
-// In the casacore::Stokes representation the order of the elements is I,Q,U,V, in the
+// In the Stokes representation the order of the elements is I,Q,U,V, in the
 // linear representation it is XX,XY,YX,YY, and in the circular representation
 // it is RR,RL,LR,LL.
 //
 // These functions will correctly convert between Linear/Circular
-// representations and the casacore::Stokes representation even if the linear or circular
+// representations and the Stokes representation even if the linear or circular
 // polarisation cannot represent a physically realisable polarisation (eg if
 // <src>XY != conj(YX)</src>). In these cases the stokes representation will
 // have an imaginary component and be complex. When converting the complex
-// casacore::Stokes representation to a real one the imaginary components are simply
+// Stokes representation to a real one the imaginary components are simply
 // discarded.
 // </synopsis>
 //
 // <example>
 // The function in this example calculates the total flux of all the
-// components in a list. It accumulates the flux in a casacore::Vector after ensuring
+// components in a list. It accumulates the flux in a Vector after ensuring
 // that the flux is in the appropriate units and Polarisation. It then returns
 // the sum as a Flux object. Because this class uses reference semantics the
 // returned object is passed by reference and hence this is a relatively cheap
 // operation.
 // <srcblock>
-// Flux<casacore::Double> totalFlux(ComponentList& list) {
-//   casacore::Vector<casacore::DComplex> sum(4, casacore::DComplex(0.0, 0.0));
-//   for (casacore::uInt i = 0; i < list.nelements(); i++) {
+// Flux<Double> totalFlux(ComponentList& list) {
+//   Vector<DComplex> sum(4, DComplex(0.0, 0.0));
+//   for (uInt i = 0; i < list.nelements(); i++) {
 //     list.component(i).flux().convertPol(ComponentType::STOKES);
 //     list.component(i).flux().convertUnit("Jy");
 //     sum += list.component(i).flux().value()
 //   }
-//   return Flux<casacore::Double>(value, ComponentType::STOKES);
+//   return Flux<Double>(value, ComponentType::STOKES);
 // }
 // </srcblock>
 // </example>
@@ -442,7 +438,7 @@ private:
 // </motivation>
 //
 // <thrown>
-//    <li> casacore::AipsError, When the Vectors are not of length 4 or when indices are
+//    <li> AipsError, When the Vectors are not of length 4 or when indices are
 //          greater than 4
 // </thrown>
 //
@@ -454,49 +450,49 @@ template<class T> class Flux
 {
 public:
   // The default constructor makes an object with <src>I = 1, Q=U=V=0</src>,
-  // a casacore::Stokes representation, and units of "Jy".
+  // a Stokes representation, and units of "Jy".
   Flux();
 
   // The default constructor makes an object with <src>I = 1, Q=U=V=0</src>,
-  // a casacore::Stokes representation, and units of "Jy".
+  // a Stokes representation, and units of "Jy".
    Flux(T i);
 
   // This constructor makes an object where I,Q,U,V are all specified. It
-  // assumes a casacore::Stokes representation, and units of "Jy".
+  // assumes a Stokes representation, and units of "Jy".
   Flux(T i, T q, T u, T v);
 
   // This constructor makes an object where the flux values and polarisation
   // representation are specified. It assumes the units are "Jy".
-  Flux(typename casacore::NumericTraits<T>::ConjugateType xx,
-       typename casacore::NumericTraits<T>::ConjugateType xy,
-       typename casacore::NumericTraits<T>::ConjugateType yx,
-       typename casacore::NumericTraits<T>::ConjugateType yy, 
+  Flux(typename NumericTraits<T>::ConjugateType xx,
+       typename NumericTraits<T>::ConjugateType xy,
+       typename NumericTraits<T>::ConjugateType yx,
+       typename NumericTraits<T>::ConjugateType yy, 
        ComponentType::Polarisation pol);
 
   // This constructor makes an object where I,Q,U,V are all specified by a
-  // casacore::Vector that must have four elements. It assumes a casacore::Stokes representation,
+  // Vector that must have four elements. It assumes a Stokes representation,
   // and units of "Jy".
-  Flux(const casacore::Vector<T>& flux);
+  Flux(const Vector<T>& flux);
 
   // This constructor makes an object where the flux values are all specified
-  // by a casacore::Vector that must have four elements. The polarisation representation
+  // by a Vector that must have four elements. The polarisation representation
   // must also be specified. It assumes the units are "Jy".
-  Flux(const casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& flux,
+  Flux(const Vector<typename NumericTraits<T>::ConjugateType>& flux,
        ComponentType::Polarisation pol);
   
   // This constructor makes an object where the flux values are all specified
-  // by a casacore::Quantum<casacore::Vector> that must have four elements.  The casacore::Quantum must have
+  // by a Quantum<Vector> that must have four elements.  The Quantum must have
   // units that are dimensionally equivalent to the "Jy" and these are the
-  // units of the FluxRep object. A casacore::Stokes polarisation representation is
+  // units of the FluxRep object. A Stokes polarisation representation is
   // assumed.
-  Flux(const casacore::Quantum<casacore::Vector<T> >& flux);
+  Flux(const Quantum<Vector<T> >& flux);
 
   // This constructor makes an object where the flux values are all specified
-  // by a casacore::Quantum<casacore::Vector> that must have four elements. The casacore::Quantum must have
+  // by a Quantum<Vector> that must have four elements. The Quantum must have
   // units that are dimensionally equivalent to the "Jy" and these are the
   // units of the FluxRep object. The polarisation representation must also be
   // specified.
-  Flux(const casacore::Quantum<casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType> >& flux,
+  Flux(const Quantum<Vector<typename NumericTraits<T>::ConjugateType> >& flux,
        ComponentType::Polarisation pol);
 
   // The copy constructor uses reference semantics.
@@ -515,19 +511,19 @@ public:
 
   // These two functions return the current units.
   // <group>
-  const casacore::Unit& unit() const;
-  void unit(casacore::Unit& unit) const;
+  const Unit& unit() const;
+  void unit(Unit& unit) const;
   // </group>
 
   // This function sets the current unit. It does NOT convert the flux values
   // to correspond to the new unit. The new unit must be dimensionally
   // equivalent to the "Jy".
-  void setUnit(const casacore::Unit& unit);
+  void setUnit(const Unit& unit);
 
   // This function sets the current units to the supplied value and
   // additionally converts the internal flux values to the correspond to the
   // new unit.
-  void convertUnit(const casacore::Unit& unit);
+  void convertUnit(const Unit& unit);
 
   // These two functions return the current polarisation representation.
   // <group>
@@ -546,69 +542,69 @@ public:
 
   // This function returns the flux values. The polarisation representation and
   // units are in whatever is current.
-  const casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& value() const;
+  const Vector<typename NumericTraits<T>::ConjugateType>& value() const;
 
   // This function returns the specified component of the flux values.
   // The polarisation representation and units are in whatever is current.
-  const typename casacore::NumericTraits<T>::ConjugateType& value(casacore::uInt p) const;
+  const typename NumericTraits<T>::ConjugateType& value(uInt p) const;
 
   // This function returns the flux values after converting it to the Stokes
-  // representation. The units of the returned casacore::Vector are the current units.
-  void value(casacore::Vector<T>& value);
+  // representation. The units of the returned Vector are the current units.
+  void value(Vector<T>& value);
 
   // This function returns the flux values. The polarisation representation and
   // units are in whatever is current.
-  void value(casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& value) const;
+  void value(Vector<typename NumericTraits<T>::ConjugateType>& value) const;
 
   // This function returns the flux values after converting it to the Stokes
-  // representation. The units of the returned casacore::Quantum are the current units of
-  // the FluxRep object. The length of the casacore::Vector in the casacore::Quantum will be
+  // representation. The units of the returned Quantum are the current units of
+  // the FluxRep object. The length of the Vector in the Quantum will be
   // resized to 4 elements if it is not already that length.
-  void value(casacore::Quantum<casacore::Vector<T> >& value);
+  void value(Quantum<Vector<T> >& value);
 
   // This function returns the flux values. The units of the returned Quantum
   // are the current units of the FluxRep object. Similarly the polarisation
-  // representation of the returned casacore::Quantum is the current polarisation
-  // representation. The length of the casacore::Vector in the casacore::Quantum will be resized to
+  // representation of the returned Quantum is the current polarisation
+  // representation. The length of the Vector in the Quantum will be resized to
   // 4 elements if it is not already that length.
-  void value(casacore::Quantum
-	     <casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType> >& value) const;
+  void value(Quantum
+	     <Vector<typename NumericTraits<T>::ConjugateType> >& value) const;
 
-  // Return the flux value in a casacore::Quantum for the specified Stokes. Can convert
+  // Return the flux value in a Quantum for the specified Stokes. Can convert
   // to Jy if requested.  
-   casacore::Quantum<T> value (casacore::Stokes::StokesTypes stokes, casacore::Bool toJy=true);
+   Quantum<T> value (Stokes::StokesTypes stokes, Bool toJy=True);
 
   // This function sets the Flux values assuming the supplied value represents
-  // the casacore::Stokes I flux in the current units. The other casacore::Stokes parameters are
+  // the Stokes I flux in the current units. The other Stokes parameters are
   // set to zero.
   void setValue(T value);
 
   // This function sets the Flux values assuming the supplied values represent
-  // the flux in the casacore::Stokes representation and is in the current units. The
-  // casacore::Vector must have four elements.
-  void setValue(const casacore::Vector<T>& value); 
+  // the flux in the Stokes representation and is in the current units. The
+  // Vector must have four elements.
+  void setValue(const Vector<T>& value); 
 
   // This function sets the Flux values assuming the supplied values represent
-  // the flux in the current representation and units. The casacore::Vector must have
+  // the flux in the current representation and units. The Vector must have
   // four elements.
-  void setValue(const casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& value);
+  void setValue(const Vector<typename NumericTraits<T>::ConjugateType>& value);
 
   // This function sets the flux values and units assuming the supplied values
-  // represent the flux in the casacore::Stokes representation. The units of the Quantum
-  // must be dimensionally equivalent to the "Jy" and the casacore::Vector must have four
+  // represent the flux in the Stokes representation. The units of the Quantum
+  // must be dimensionally equivalent to the "Jy" and the Vector must have four
   // elements.
-  void setValue(const casacore::Quantum<casacore::Vector<T> >& value);
+  void setValue(const Quantum<Vector<T> >& value);
 
   // This function sets the flux values, units and polarisation assuming the
   // supplied values represent the flux in the specified representation. The
-  // units of the casacore::Quantum must be dimensionally equivalent to the "Jy" and the
-  // casacore::Vector must have four elements.
+  // units of the Quantum must be dimensionally equivalent to the "Jy" and the
+  // Vector must have four elements.
   void setValue(const
-		casacore::Quantum<casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType> >& value,
+		Quantum<Vector<typename NumericTraits<T>::ConjugateType> >& value,
 		ComponentType::Polarisation pol);
 
-// Set flux for given casacore::Stokes from Quantum. 
-  void setValue (const casacore::Quantum<T>& value, casacore::Stokes::StokesTypes stokes);
+// Set flux for given Stokes from Quantum. 
+  void setValue (const Quantum<T>& value, Stokes::StokesTypes stokes);
 
   // Scale the Flux value by the specified amount. These functions multiply the
   // flux values irrespective of the current polarisation representation. If
@@ -618,114 +614,114 @@ public:
   void scaleValue(const T& factor);
   void scaleValue(const T& factor0, const T& factor1,
 		  const T& factor2, const T& factor3);
-  void scaleValue(const typename casacore::NumericTraits<T>::ConjugateType& factor);
-  void scaleValue(const typename casacore::NumericTraits<T>::ConjugateType& factor0,
-		  const typename casacore::NumericTraits<T>::ConjugateType& factor1,
-		  const typename casacore::NumericTraits<T>::ConjugateType& factor2,
-		  const typename casacore::NumericTraits<T>::ConjugateType& factor3);
+  void scaleValue(const typename NumericTraits<T>::ConjugateType& factor);
+  void scaleValue(const typename NumericTraits<T>::ConjugateType& factor0,
+		  const typename NumericTraits<T>::ConjugateType& factor1,
+		  const typename NumericTraits<T>::ConjugateType& factor2,
+		  const typename NumericTraits<T>::ConjugateType& factor3);
   // </group>
 
   // Set/get the errors in the flux
   // <group>
-  void setErrors(const typename casacore::NumericTraits<T>::ConjugateType& error0,
-		 const typename casacore::NumericTraits<T>::ConjugateType& error1,
-		 const typename casacore::NumericTraits<T>::ConjugateType& error2,
-		 const typename casacore::NumericTraits<T>::ConjugateType& error3);
+  void setErrors(const typename NumericTraits<T>::ConjugateType& error0,
+		 const typename NumericTraits<T>::ConjugateType& error1,
+		 const typename NumericTraits<T>::ConjugateType& error2,
+		 const typename NumericTraits<T>::ConjugateType& error3);
 
-  void setErrors(const casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& errors);
+  void setErrors(const Vector<typename NumericTraits<T>::ConjugateType>& errors);
 
-  const casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& errors() const;
+  const Vector<typename NumericTraits<T>::ConjugateType>& errors() const;
   // </group>
 
-  // This functions convert between a casacore::RecordInterface and a Flux object and
-  // define how the Flux is represented in glish.  They return false if the
-  // casacore::RecordInterface is malformed and append an error message to the supplied
+  // This functions convert between a RecordInterface and a Flux object and
+  // define how the Flux is represented in glish.  They return False if the
+  // RecordInterface is malformed and append an error message to the supplied
   // string giving the reason.
   // <group>
-  casacore::Bool fromRecord(casacore::String& errorMessage, const casacore::RecordInterface& record);
-  casacore::Bool toRecord(casacore::String& errorMessage, casacore::RecordInterface& record) const;
+  Bool fromRecord(String& errorMessage, const RecordInterface& record);
+  Bool toRecord(String& errorMessage, RecordInterface& record) const;
   // </group>
 
-  // casacore::Function which checks the internal data of this class for correct
-  // dimensionality and consistent values. Returns true if everything is fine
-  // otherwise returns false.
-  casacore::Bool ok() const;
+  // Function which checks the internal data of this class for correct
+  // dimensionality and consistent values. Returns True if everything is fine
+  // otherwise returns False.
+  Bool ok() const;
 
-  // This function converts between a casacore::Vector in casacore::Stokes representation and one
+  // This function converts between a Vector in Stokes representation and one
   // in Circular representation.
   static void 
-    stokesToCircular(casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& out, 
-		     const casacore::Vector<T>& in);
+    stokesToCircular(Vector<typename NumericTraits<T>::ConjugateType>& out, 
+		     const Vector<T>& in);
 
-  // This function converts between a casacore::Vector in casacore::Stokes representation and one
-  // in Circular representation. The imaginary components of the casacore::Stokes vector
+  // This function converts between a Vector in Stokes representation and one
+  // in Circular representation. The imaginary components of the Stokes vector
   // are NOT ignored.
   static void 
-    stokesToCircular(casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& out, 
+    stokesToCircular(Vector<typename NumericTraits<T>::ConjugateType>& out, 
 		     const
-		     casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& in);
+		     Vector<typename NumericTraits<T>::ConjugateType>& in);
 
-  // This function converts between a casacore::Vector in Circular representation and one
-  // in casacore::Stokes representation. The imaginary components of the casacore::Stokes vector
+  // This function converts between a Vector in Circular representation and one
+  // in Stokes representation. The imaginary components of the Stokes vector
   // are discarded.
   static 
-  void circularToStokes(casacore::Vector<T>& out,
+  void circularToStokes(Vector<T>& out,
 			const
-			casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& in);
+			Vector<typename NumericTraits<T>::ConjugateType>& in);
 
-  // This function converts between a casacore::Vector in Circular representation and one
-  // in casacore::Stokes representation. The imaginary components of the casacore::Stokes vector
+  // This function converts between a Vector in Circular representation and one
+  // in Stokes representation. The imaginary components of the Stokes vector
   // are NOT ignored.
   static 
-  void circularToStokes(casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& out,
+  void circularToStokes(Vector<typename NumericTraits<T>::ConjugateType>& out,
 			const
-			casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& in);
+			Vector<typename NumericTraits<T>::ConjugateType>& in);
 
-  // This function converts between a casacore::Vector in casacore::Stokes representation and one
+  // This function converts between a Vector in Stokes representation and one
   // in Linear representation.
   static void
-    stokesToLinear(casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& out, 
-		   const casacore::Vector<T>& in);
+    stokesToLinear(Vector<typename NumericTraits<T>::ConjugateType>& out, 
+		   const Vector<T>& in);
 
-  // This function converts between a casacore::Vector in casacore::Stokes representation and one
-  // in Linear representation. The imaginary components of the casacore::Stokes vector
+  // This function converts between a Vector in Stokes representation and one
+  // in Linear representation. The imaginary components of the Stokes vector
   // are NOT ignored.
   static 
-  void stokesToLinear(casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& out, 
+  void stokesToLinear(Vector<typename NumericTraits<T>::ConjugateType>& out, 
 		      const
-		      casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& in);
+		      Vector<typename NumericTraits<T>::ConjugateType>& in);
 
-  // This function converts between a casacore::Vector in Linear representation and one
-  // in casacore::Stokes representation. The imaginary components of the casacore::Stokes vector
+  // This function converts between a Vector in Linear representation and one
+  // in Stokes representation. The imaginary components of the Stokes vector
   // are discarded.
   static void
-    linearToStokes(casacore::Vector<T>& out, 
+    linearToStokes(Vector<T>& out, 
 		   const
-		   casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& in);
+		   Vector<typename NumericTraits<T>::ConjugateType>& in);
 
-  // This function converts between a casacore::Vector in Linear representation and one
-  // in casacore::Stokes representation. The imaginary components of the casacore::Stokes vector
+  // This function converts between a Vector in Linear representation and one
+  // in Stokes representation. The imaginary components of the Stokes vector
   // are NOT ignored.
   static void
-    linearToStokes(casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& out, 
-		   const casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& in);
+    linearToStokes(Vector<typename NumericTraits<T>::ConjugateType>& out, 
+		   const Vector<typename NumericTraits<T>::ConjugateType>& in);
 
-  // This function converts between a casacore::Vector in Linear representation and one
+  // This function converts between a Vector in Linear representation and one
   // in Circular representation.
   static void
-    linearToCircular(casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& out, 
+    linearToCircular(Vector<typename NumericTraits<T>::ConjugateType>& out, 
 		     const
-		     casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& in);
+		     Vector<typename NumericTraits<T>::ConjugateType>& in);
 
-  // This function converts between a casacore::Vector in Circular representation and one
+  // This function converts between a Vector in Circular representation and one
   // in Linear representation.
   static void
-    circularToLinear(casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& out, 
+    circularToLinear(Vector<typename NumericTraits<T>::ConjugateType>& out, 
 		     const
-		     casacore::Vector<typename casacore::NumericTraits<T>::ConjugateType>& in);
+		     Vector<typename NumericTraits<T>::ConjugateType>& in);
 
 private:
-  casacore::CountedPtr<FluxRep<T> > itsFluxPtr;
+  CountedPtr<FluxRep<T> > itsFluxPtr;
 };
 
 

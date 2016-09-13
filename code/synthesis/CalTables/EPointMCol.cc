@@ -27,7 +27,6 @@
 //----------------------------------------------------------------------------
 
 #include <synthesis/CalTables/EPointMCol.h>
-using namespace casacore;
 namespace casa {
 //----------------------------------------------------------------------------
 
@@ -42,7 +41,7 @@ ROEPointMCol::ROEPointMCol (const EPointTable& epTable) :
   //                                                        cal main col
   // Attach all column accessors for additional SolvableVisJones columns
   // (all of which are required columns)
-  attach (epTable, pointingOffset_p, MSC::POINTING_OFFSET, false);
+  attach (epTable, pointingOffset_p, MSC::POINTING_OFFSET, False);
   //  cerr << "ROEPointMCol::ROEPointMCol: " 
   //       << asTable(epTable).tableDesc().isColumn(MSC::fieldName(MSC::POINTING_OFFSET))
   //       << endl;
@@ -61,7 +60,7 @@ EPointMCol::EPointMCol (EPointTable& epTable) :
   //                                                     cal main col
   // Attach all column accessors for additional SolvableVisJones columns
   // (all of which are required columns)
-  attach (epTable, pointingOffset_p, MSC::POINTING_OFFSET, false);
+  attach (epTable, pointingOffset_p, MSC::POINTING_OFFSET, False);
   //  cerr << "EPointMCol::EPointMCol: " 
   //       << asTable(epTable).tableDesc().isColumn(MSC::fieldName(MSC::POINTING_OFFSET))
   //       << endl;

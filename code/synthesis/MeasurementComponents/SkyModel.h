@@ -50,8 +50,8 @@ class SkyEquation;
 // <reviewed reviewer="" date="" tests="" demos="">
 
 // <prerequisite>
-//   <li> casacore::Matrix module
-//   <li> casacore::Vector module
+//   <li> Matrix module
+//   <li> Vector module
 //   <li> MeasurementComponents module
 //   <li> VisSet module
 // </prerequisite>
@@ -99,7 +99,7 @@ class SkyEquation;
 //      VisSet vs("3c84.MS");
 //
 //      // Create an ImageSkyModel from an image on disk
-//      ImageSkyModel ism(casacore::PagedImage<casacore::Float>("3c84.modelImage"));
+//      ImageSkyModel ism(PagedImage<Float>("3c84.modelImage"));
 //
 //      // Make an FTMachine: here we use a simple Grid and FT.
 //      GridFT ft;
@@ -112,7 +112,7 @@ class SkyEquation;
 //      // Make a Clean Image and write it out
 //      HogbomCleanImageSkyModel csm(ism);
 //      if (csm.solve()) {
-//        casacore::PagedImage<casacore::Float> cleanImage=csm.image(0);
+//        PagedImage<Float> cleanImage=csm.image(0);
 //        cleanImage.setName("3c84.cleanImage");
 //      }
 //
@@ -138,25 +138,25 @@ public:
     LINEAR=StokesImageUtil::LINEAR
   };
 
-  SkyModel() : itsAlgorithm(""), itsSubAlgorithm(""), imageRegion_p(0), isImageNormalized_p(false) { }  
+  SkyModel() : itsAlgorithm(""), itsSubAlgorithm(""), imageRegion_p(0), isImageNormalized_p(False) { }  
 
   // Number of models contained
-  virtual casacore::Int numberOfModels() = 0;
+  virtual Int numberOfModels() = 0;
 
   // MFS : Number of taylor terms per model
-  virtual casacore::Int numberOfTaylorTerms() = 0;
+  virtual Int numberOfTaylorTerms() = 0;
 
   // MFS : Reference Frequency
-  virtual casacore::Double getReferenceFrequency() = 0;
+  virtual Double getReferenceFrequency() = 0;
 
   // MFS : Index of Taylor term in array of nmodels x ntaylorterms
-  virtual casacore::Int getTaylorIndex(casacore::Int index=0) = 0;
+  virtual Int getTaylorIndex(Int index=0) = 0;
 
   // Is this SkyModel solveable?
-  virtual casacore::Bool isSolveable(casacore::Int model=0) = 0;
+  virtual Bool isSolveable(Int model=0) = 0;
 
   // Is there a flux scale image associated with this model?
-  virtual casacore::Bool doFluxScale(casacore::Int model=0) = 0;
+  virtual Bool doFluxScale(Int model=0) = 0;
 
   // Initialize for gradient search
   virtual void initializeGradients() = 0;
@@ -168,83 +168,83 @@ public:
   virtual ComponentList& componentList() = 0;
 
   // Return the component list
-  virtual casacore::Bool hasComponentList() = 0;
+  virtual Bool hasComponentList() = 0;
 
-  // Image interface for this model (casacore::Stokes representation)
-  virtual casacore::ImageInterface<casacore::Float>& image(casacore::Int model=0) = 0;
+  // Image interface for this model (Stokes representation)
+  virtual ImageInterface<Float>& image(Int model=0) = 0;
 
   // Increment in the image
-  virtual casacore::ImageInterface<casacore::Float>& deltaImage(casacore::Int model=0) = 0;
+  virtual ImageInterface<Float>& deltaImage(Int model=0) = 0;
 
-  // casacore::Complex image (needed for e.g. RR,RL,LR,LL)
-  virtual casacore::ImageInterface<casacore::Complex>& cImage(casacore::Int model=0) = 0;
+  // Complex image (needed for e.g. RR,RL,LR,LL)
+  virtual ImageInterface<Complex>& cImage(Int model=0) = 0;
 
-  // casacore::Complex XFR
-  virtual casacore::ImageInterface<casacore::Complex>& XFR(casacore::Int model=0, casacore::Int numXFR=0) = 0;
-  virtual casacore::Bool hasXFR(casacore::Int model=0) = 0;
+  // Complex XFR
+  virtual ImageInterface<Complex>& XFR(Int model=0, Int numXFR=0) = 0;
+  virtual Bool hasXFR(Int model=0) = 0;
 
   // PSF 
-  virtual casacore::ImageInterface<casacore::Float>& PSF(casacore::Int model=0) = 0;
+  virtual ImageInterface<Float>& PSF(Int model=0) = 0;
 
   // Gradient of chi-squared wrt pixels
-  virtual casacore::ImageInterface<casacore::Float>& gS(casacore::Int model=0) = 0;
+  virtual ImageInterface<Float>& gS(Int model=0) = 0;
 
   // Grad Grad chi-squared wrt pixels (diagonal elements only)
-  virtual casacore::ImageInterface<casacore::Float>& ggS(casacore::Int model=0) = 0;
+  virtual ImageInterface<Float>& ggS(Int model=0) = 0;
 
   // FluxScale image:   image * fluxScale => true brightness distribution
-  virtual casacore::ImageInterface<casacore::Float>& fluxScale(casacore::Int model=0) = 0;
+  virtual ImageInterface<Float>& fluxScale(Int model=0) = 0;
   
   // Work image
-  virtual casacore::ImageInterface<casacore::Float>& work(casacore::Int model=0) = 0;
+  virtual ImageInterface<Float>& work(Int model=0) = 0;
 
   // Add to Sum weights, Chi-Squared
-  virtual void addStatistics(casacore::Float sumwt, casacore::Float chisq) = 0;
+  virtual void addStatistics(Float sumwt, Float chisq) = 0;
 
   // Weight per model (channels, polarizations)
-  virtual casacore::Matrix<casacore::Float>& weight(casacore::Int model=0) = 0;
+  virtual Matrix<Float>& weight(Int model=0) = 0;
 
   // Solve for this SkyModel
-  virtual casacore::Bool solve (SkyEquation& se) = 0;
+  virtual Bool solve (SkyEquation& se) = 0;
 
   // Is this model empty
-  virtual casacore::Bool isEmpty(casacore::Int model=0) = 0;
+  virtual Bool isEmpty(Int model=0) = 0;
 
-  virtual casacore::Int getModelIndex(casacore::uInt field=0, casacore::uInt taylor=0) = 0;
+  virtual Int getModelIndex(uInt field=0, uInt taylor=0) = 0;
 
   //set Algorithm (e.g clean, mem, nnls)
-  void setAlgorithm(const casacore::String& alg) {itsAlgorithm = alg;}
+  void setAlgorithm(const String& alg) {itsAlgorithm = alg;}
     
   // get  Algorithm
-  const casacore::String getAlgorithm() { return itsAlgorithm; }
+  const String getAlgorithm() { return itsAlgorithm; }
 
   // set Sub Algorithm
-  void setSubAlgorithm(const casacore::String& alg) { itsSubAlgorithm = alg; }
+  void setSubAlgorithm(const String& alg) { itsSubAlgorithm = alg; }
 
   // get Sub Algorithm
-  const casacore::String getSubAlgorithm() { return itsSubAlgorithm; }
+  const String getSubAlgorithm() { return itsSubAlgorithm; }
 
   // Set the imageregion that will be used for the next XFR generation
   // <group>
-  void setImageRegion( casacore::ImageRegion& ir ) { imageRegion_p = &ir; }
+  void setImageRegion( ImageRegion& ir ) { imageRegion_p = &ir; }
   // use the default shape
   void unsetImageRegion() { imageRegion_p = 0; }
   // </group>
 
-  void setImageNormalization(casacore::Bool val) {isImageNormalized_p = val;};
-  casacore::Bool isImageNormalized() {return isImageNormalized_p;};
+  void setImageNormalization(Bool val) {isImageNormalized_p = val;};
+  Bool isImageNormalized() {return isImageNormalized_p;};
 
   //set and get memory usage model
-  virtual void setMemoryUse(casacore::Bool memuse)=0;
-  virtual casacore::Bool getMemoryUse()=0;
+  virtual void setMemoryUse(Bool memuse)=0;
+  virtual Bool getMemoryUse()=0;
   
 protected:
-  casacore::String itsAlgorithm;
-  casacore::String itsSubAlgorithm;
-  // this casacore::ImageRegion is used to suggest the shape for the
+  String itsAlgorithm;
+  String itsSubAlgorithm;
+  // this ImageRegion is used to suggest the shape for the
   // XFR.  If null, then just use the shape of image(model)
-  casacore::ImageRegion *imageRegion_p;
-  casacore::Bool isImageNormalized_p;
+  ImageRegion *imageRegion_p;
+  Bool isImageNormalized_p;
 
 private:
 };

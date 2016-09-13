@@ -29,7 +29,6 @@
 #include <display/QtViewer/QtDisplayData.qo.h>
 #include <QVBoxLayout>
 
-using namespace casacore;
 namespace casa {
 	TrackBox::TrackBox(QtDisplayData* qdd, QWidget* parent) :
 		QGroupBox(parent), qdd_(qdd) {
@@ -50,8 +49,8 @@ namespace casa {
 		setFlat(true);
 		setObjectName(qdd_->name().c_str());
 		setTitle(objectName());
-		setCheckable(true);
-		setChecked(true);
+		setCheckable(True);
+		setChecked(True);
 		// setAlignment(Qt::AlignHCenter);
 		// setAlignment(Qt::AlignRight);
 		String tltp="Uncheck if you do not need to see position tracking data for\n"
@@ -66,15 +65,15 @@ namespace casa {
 
 		QFont trkgFont("Monospace");
 		trkgFont.setStyleHint(QFont::TypeWriter);
-		// trkgFont.setBold(true);
+		// trkgFont.setBold(True);
 		trkgFont.setPixelSize(11);
 		trkgEdit_->setFont(trkgFont);
 
 		trkgEdit_->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 		trkgEdit_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 		trkgEdit_->setLineWrapMode(QTextEdit::NoWrap);
-		trkgEdit_->setReadOnly(true);
-		trkgEdit_->setAcceptRichText(true);
+		trkgEdit_->setReadOnly(True);
+		trkgEdit_->setAcceptRichText(True);
 	}
 
 
@@ -105,7 +104,7 @@ namespace casa {
 		// this kludgy routine was arrived at by laborious trial-and-error....
 		// (dk  11/06)
 
-		trkgEdit_->setUpdatesEnabled(false);
+		trkgEdit_->setUpdatesEnabled(False);
 		// temporarily disables widget painting, avoiding flicker
 		// from next statement.
 
@@ -132,7 +131,7 @@ namespace casa {
 		trkgEdit_->setTextCursor(c);		// (assures left edge is visible
 		trkgEdit_->ensureCursorVisible();	//  when tracking is updated).
 
-		trkgEdit_->setUpdatesEnabled(true);
+		trkgEdit_->setUpdatesEnabled(True);
 	}
 
     void TrackBox::visibility_event( bool visible ) {

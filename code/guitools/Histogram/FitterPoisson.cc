@@ -30,8 +30,6 @@
 #include <assert.h>
 #include <QtCore/qmath.h>
 
-using namespace casacore;
-
 namespace casa {
 
 FitterPoisson::FitterPoisson() {

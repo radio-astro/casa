@@ -29,33 +29,33 @@ public:
 
 	ImageBoxcarSmoother(
 		const SPCIIT image,
-		const casacore::Record *const region,
-		const casacore::String& maskInp,
-		const casacore::String& outname, casacore::Bool overwrite
+		const Record *const region,
+		const String& maskInp,
+		const String& outname, Bool overwrite
 	);
 
 	// destructor
 	~ImageBoxcarSmoother() {}
 
-	casacore::String getClass() const { const static casacore::String s = "ImageBoxcarSmoother"; return s; }
+	String getClass() const { const static String s = "ImageBoxcarSmoother"; return s; }
 
     // set witdth of boxcar
-    void setWidth(casacore::uInt w);
+    void setWidth(uInt w);
 
 protected:
 
 	SPIIT _smooth(
-		const casacore::ImageInterface<T>& image
+		const ImageInterface<T>& image
 	) const;
 
 private:
 
-    casacore::uInt _width;
+    uInt _width;
 
 	// disallow default constructor
 	ImageBoxcarSmoother();
 
-	void _boxcarSmooth(casacore::Array<T>& out, const casacore::Array<T>& in) const ;
+	void _boxcarSmooth(Array<T>& out, const Array<T>& in) const ;
 };
 }
 

@@ -28,7 +28,6 @@
 %{
 #include <errno.h>
 using namespace casacore;
-using namespace casa;
 %}
 
 %pure-parser                /* make parser re-entrant */
@@ -62,7 +61,7 @@ int CalLibraryGramlex (YYSTYPE*);
 
 callibrary: calibration_lines
     {
-        $$ = casa::CalLibraryParse().record();
+        $$ = CalLibraryParse().record();
     }
     ;
 calibration_lines:

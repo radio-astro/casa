@@ -95,85 +95,85 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// (These calls should be propogated up through the class tree).
 		// <group>
 		virtual void draw(PixelCanvas* pc);
-		virtual void rotateAbout(const casacore::Float& relAngle, const casacore::Float& aboutX,
-		                         const casacore::Float& aboutY) ;
-		virtual void move(const casacore::Float& dX, const casacore::Float& dY);
+		virtual void rotateAbout(const Float& relAngle, const Float& aboutX,
+		                         const Float& aboutY) ;
+		virtual void move(const Float& dX, const Float& dY);
 		// </group>
 
 
 		// Rotate the supplied polygon (column 1 - x values, column 2 - y values)
 		// about the supplied point by the supplied angle. NB Angle in radians
-		virtual casacore::Matrix<casacore::Float> rotatePolygon(const casacore::Matrix<casacore::Float>& toRotate,
-		                                    const casacore::Float& angle,
-		                                    const casacore::Float& aboutX,
-		                                    const casacore::Float& aboutY);
+		virtual Matrix<Float> rotatePolygon(const Matrix<Float>& toRotate,
+		                                    const Float& angle,
+		                                    const Float& aboutX,
+		                                    const Float& aboutY);
 
 		// Rotates a point around the point specified. NB Angle in radians.
-		virtual casacore::Vector<casacore::Float> rotatePoint(const casacore::Vector<casacore::Float>& toRotate,
-		                                  const casacore::Float& angle,
-		                                  const casacore::Float& aboutX, const casacore::Float& aboutY);
+		virtual Vector<Float> rotatePoint(const Vector<Float>& toRotate,
+		                                  const Float& angle,
+		                                  const Float& aboutX, const Float& aboutY);
 
 		// Translate an entire matrix by the specified dx / dy amounts.
-		virtual casacore::Matrix<casacore::Float> translateMatrix(const casacore::Matrix<casacore::Float>& points,
-		                                      const casacore::Float& dx, const casacore::Float& dy);
+		virtual Matrix<Float> translateMatrix(const Matrix<Float>& points,
+		                                      const Float& dx, const Float& dy);
 
 		// Is xPos, YPos inside the supplied points (column 1 - x values,
 		// clolumn 2 - y values)
-		virtual casacore::Bool inPolygon(const casacore::Matrix<casacore::Float>& points, const casacore::Float& xPos,
-		                       const casacore::Float& yPos);
+		virtual Bool inPolygon(const Matrix<Float>& points, const Float& xPos,
+		                       const Float& yPos);
 
 		// Determine the two vertices (firstVert, secondVert) which join the line
 		// closest to the xPos, yPos point supplied. If closedPoly is left as
 		// true, the points supplied are treated as a polygon, if not as a poly
 		// line.
-		virtual casacore::Bool closestLine(const casacore::Matrix<casacore::Float>& points, const casacore::Float& xPos,
-		                         const casacore::Float& yPos,
-		                         casacore::Int& firstVert, casacore::Int& secondVert,
-		                         const casacore::Bool& closedPoly = true);
+		virtual Bool closestLine(const Matrix<Float>& points, const Float& xPos,
+		                         const Float& yPos,
+		                         Int& firstVert, Int& secondVert,
+		                         const Bool& closedPoly = True);
 
 		// For a specified set of points, find the closest to xPos,YPos. out
 		// relates the matrix index (row number) of the closest point.
-		virtual casacore::Bool closestPoint(const casacore::Matrix<casacore::Float>& points,
-		                          const casacore::Float& xPos, const casacore::Float& yPos,
-		                          casacore::Int& out);
+		virtual Bool closestPoint(const Matrix<Float>& points,
+		                          const Float& xPos, const Float& yPos,
+		                          Int& out);
 
-		// Find the closest two Points from a casacore::Matrix to the specified point.
-		virtual casacore::Bool closestPoints(const casacore::Matrix<casacore::Float>& points,
-		                           const casacore::Float& xPos, const casacore::Float& yPos,
-		                           casacore::Int& outClosest, casacore::Int& outSecond);
+		// Find the closest two Points from a Matrix to the specified point.
+		virtual Bool closestPoints(const Matrix<Float>& points,
+		                           const Float& xPos, const Float& yPos,
+		                           Int& outClosest, Int& outSecond);
 
 		// Is the supplied point within the DisplayShape?
-		virtual casacore::Bool inObject(const casacore::Float& xPos, const casacore::Float& yPos) = 0;
+		virtual Bool inObject(const Float& xPos, const Float& yPos) = 0;
 
 		// Convert degrees to radians
-		virtual casacore::Float toRadians(const casacore::Float& degrees);
+		virtual Float toRadians(const Float& degrees);
 
 		// Conver radians to degree
-		virtual casacore::Float toDegrees(const casacore::Float& radians);
+		virtual Float toDegrees(const Float& radians);
 
 		// Sets the center of the DisplayShape
-		virtual void setCenter(const casacore::Float& xPos, const casacore::Float& yPos) = 0;
+		virtual void setCenter(const Float& xPos, const Float& yPos) = 0;
 
 		// Returns the center of the DisplayShape (x,y).
-		virtual casacore::Vector<casacore::Float> getCenter() = 0;
+		virtual Vector<Float> getCenter() = 0;
 
 		// Changes the closest point to the supplied location to that location
-		virtual void changePoint(const casacore::Vector<casacore::Float>& newPos) = 0;
+		virtual void changePoint(const Vector<Float>& newPos) = 0;
 
 		// Changes the nth point making up the DisplayShape ot the specified
 		// location.
-		virtual void changePoint(const casacore::Vector<casacore::Float>& newPoint,
-		                         const casacore::Int nPoint) = 0;
+		virtual void changePoint(const Vector<Float>& newPoint,
+		                         const Int nPoint) = 0;
 
 		// If applicable, this function will add a point to the shape in the
 		// most meaningful location.
-		virtual void addPoint(const casacore::Vector<casacore::Float>& /*newPoint*/) { };
+		virtual void addPoint(const Vector<Float>& /*newPoint*/) { };
 
 		// Rotate the shape about its center by a set angle (angle in degrees).
-		virtual void rotate(const casacore::Float& angle) = 0;
+		virtual void rotate(const Float& angle) = 0;
 
 		// Scale the shape about its center by the scaleFactor
-		virtual void scale(const casacore::Float& scaleFactor) = 0;
+		virtual void scale(const Float& scaleFactor) = 0;
 
 		// Allow locking of other shapes onto this one. When a shape is locked,
 		// if the current shape is moved, so to will the locked shape.
@@ -184,40 +184,40 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Handle management.
 		// <group>
-		virtual void buildHandles(const casacore::Matrix<casacore::Float>& startPoints);
-		virtual casacore::Matrix<casacore::Float> getHandleLocations();
-		virtual void setHandlePositions(const casacore::Matrix<casacore::Float>& newPoints);
-		virtual DSClosed*  makeHandle(const casacore::Vector<casacore::Float>& newHandlePos);
-		virtual void addHandle(const casacore::Vector<casacore::Float>& newHandlePos,
-		                       const casacore::Bool& atEnd = true
-		                               , const casacore::Int position = 0);
-		virtual casacore::Bool removeHandle(const casacore::Vector<casacore::Float>& getRidOf);
-		virtual casacore::Bool removeHandle(const casacore::Int nHandle);
+		virtual void buildHandles(const Matrix<Float>& startPoints);
+		virtual Matrix<Float> getHandleLocations();
+		virtual void setHandlePositions(const Matrix<Float>& newPoints);
+		virtual DSClosed*  makeHandle(const Vector<Float>& newHandlePos);
+		virtual void addHandle(const Vector<Float>& newHandlePos,
+		                       const Bool& atEnd = True
+		                               , const Int position = 0);
+		virtual Bool removeHandle(const Vector<Float>& getRidOf);
+		virtual Bool removeHandle(const Int nHandle);
 
-		virtual casacore::Bool onHandles(const casacore::Float& xPos, const casacore::Float& yPos);
-		virtual casacore::Bool whichHandle(const casacore::Float& xPos, const casacore::Float& yPos, casacore::Int& out);
+		virtual Bool onHandles(const Float& xPos, const Float& yPos);
+		virtual Bool whichHandle(const Float& xPos, const Float& yPos, Int& out);
 
-		virtual void setDrawHandles(const casacore::Bool& shouldIDraw);
-		virtual casacore::Bool drawingHandles() {
+		virtual void setDrawHandles(const Bool& shouldIDraw);
+		virtual Bool drawingHandles() {
 			return itsDrawHandles;
 		}
-		virtual void setHasHandles(const casacore::Bool& hasHandles);
+		virtual void setHasHandles(const Bool& hasHandles);
 		virtual void setHandleShape(const DisplayShape::HandleShape& shape);
-		virtual void setHandleSize(const casacore::Int pixelSize);
-		virtual void setHandleColor(const casacore::String& handleColor);
-		virtual casacore::uInt nHandles();
+		virtual void setHandleSize(const Int pixelSize);
+		virtual void setHandleColor(const String& handleColor);
+		virtual uInt nHandles();
 		// </group>
 
 		// Manage the color of object. (Does not include handles)
 		// <group>
-		virtual void setColor(const casacore::String& newColor);
-		virtual casacore::String getColor();
+		virtual void setColor(const String& newColor);
+		virtual String getColor();
 		// </group>
 
 		// Settings
 		// <group>
-		virtual casacore::Record getOptions();
-		virtual casacore::Bool setOptions(const casacore::Record& settings);
+		virtual Record getOptions();
+		virtual Bool setOptions(const Record& settings);
 		// </group>
 
 		virtual void recalculateScreenPosition() {}
@@ -231,27 +231,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		DParameterColorChoice* itsColor;
 
 		// Handles
-		casacore::PtrBlock<DSClosed*> itsHandles;
+		PtrBlock<DSClosed*> itsHandles;
 
 		// Locks
-		casacore::PtrBlock<DisplayShape*> itsLocks;
+		PtrBlock<DisplayShape*> itsLocks;
 
 		// Do I have handles / can a user resize me?
 		// i.e. Do I *ever* want to draw handles (e.g. will be false for an object
 		//      which IS a handle!)
-		casacore::Bool itsHasHandles;
+		Bool itsHasHandles;
 
 		// Should handles be shown if they exist
-		casacore::Bool itsDrawHandles;
+		Bool itsDrawHandles;
 
 		// Have valid handles been made/supplied yet?
-		casacore::Bool itsValidHandles;
+		Bool itsValidHandles;
 
 		// Handle settings
 		// <group>
-		casacore::String itsHandleColor;
+		String itsHandleColor;
 		DisplayShape::HandleShape itsHandleShape;
-		casacore::Int itsHandleSize;
+		Int itsHandleSize;
 		// </group>
 
 	};

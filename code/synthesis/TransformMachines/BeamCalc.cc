@@ -52,7 +52,6 @@
 
 
 using namespace std;
-using namespace casacore;
 namespace casa{
 
   const Double BeamCalc::METER_INCH  = 39.37008;
@@ -89,7 +88,7 @@ namespace casa{
 				       const String& otherAntRayPath){
     
     Unit uS("s");
-    Bool verbose = false;
+    Bool verbose = False;
 
 
     if(obsName==obsName_p 
@@ -120,14 +119,14 @@ namespace casa{
     String antRespPath;
     String antRayPath = otherAntRayPath;
 
-    Bool useInternal = false;
+    Bool useInternal = False;
 
     os <<  LogIO::NORMAL << "Initialisation of geometries for observatory " << obsName_p 
        << ", antenna type " << antType_p << LogIO::POST;
 
     if(otherAntRayPath.empty()){
       if(!MeasTable::AntennaResponsesPath(antRespPath, obsName_p)) {
-	useInternal = true;
+	useInternal = True;
       }
       else{
 	if(!aR.init(antRespPath)){
@@ -157,7 +156,7 @@ namespace casa{
 	   ){ // no matching response found
 	  os <<  LogIO::NORMAL << "No matching antenna response found for observatory "
 	     << obsName_p  << LogIO::POST;
-	  useInternal = true;
+	  useInternal = True;
 	}
       }
 
@@ -226,13 +225,13 @@ namespace casa{
     try {
       // read temp table from ASCII file
       TableProxy antParTab = TableProxy(antRayPath, String(""), String("tempRayTraceTab.tab"), 
-					false, IPosition(), // autoheader, autoshape 
+					False, IPosition(), // autoheader, autoshape 
 					String(" "), // separator 
 					String("#"), // comment marker
 					0,-1, // first and last line 
 					Vector<String>(), Vector<String>());
 
-      antParTab.deleteTable(true); // table will be deleted when it goes out of scope
+      antParTab.deleteTable(True); // table will be deleted when it goes out of scope
       
       // read the table
       uInt nRows = antParTab.nrows();

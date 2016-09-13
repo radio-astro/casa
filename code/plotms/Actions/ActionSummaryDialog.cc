@@ -33,7 +33,6 @@
 #include <QMessageBox>
 #include <QDebug>
 
-using namespace casacore;
 namespace casa {
 
 ActionSummaryDialog::ActionSummaryDialog(Client* client)
@@ -78,5 +77,4 @@ ActionSummaryDialog::~ActionSummaryDialog() {
 	delete summarizeDialog;
 }
 
-using namespace casacore;
 } /* namespace casa */

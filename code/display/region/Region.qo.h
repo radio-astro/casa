@@ -52,17 +52,13 @@ extern "C" void casa_viewer_pure_virtual( const char *file, int line, const char
 #define DISPLAY_PURE_VIRTUAL(FUNCTION,RESULT) \
   { casa_viewer_pure_virtual( __FILE__, __LINE__, #FUNCTION ); return RESULT; }
 
-namespace casacore{
-
-	template <class T> class ImageInterface;
-	class ImageRegion;
-}
-
 namespace casa {
 
 	class WorldCanvas;
 	class PrincipalAxesDD;
+	template <class T> class ImageInterface;
 
+	class ImageRegion;
 	class DisplayData;
 	class HistogramTab;
 
@@ -112,22 +108,22 @@ namespace casa {
 		void linear_to_ecliptic( WorldCanvas *wc_, double, double, double &, double & );
 		void linear_to_ecliptic( WorldCanvas *wc_, double, double, double, double, double &, double &, double &, double & );
 
-		void to_linear( WorldCanvas *, casacore::MDirection::Types in_type, double, double, double &, double & );
-		void to_linear( WorldCanvas *, casacore::MDirection::Types in_type, double, double, double, double, double &, double &, double &, double & );
-		void to_linear_offset( WorldCanvas *, casacore::MDirection::Types in_type, double, double, double &, double & );
+		void to_linear( WorldCanvas *, MDirection::Types in_type, double, double, double &, double & );
+		void to_linear( WorldCanvas *, MDirection::Types in_type, double, double, double, double, double &, double &, double &, double & );
+		void to_linear_offset( WorldCanvas *, MDirection::Types in_type, double, double, double &, double & );
 
 		void screen_offset_to_linear_offset( WorldCanvas *wc_, int, int, double &, double & );
 		void pixel_offset_to_linear_offset( WorldCanvas *wc_, double, double, double &, double & );
 		void linear_offset_to_pixel_offset( WorldCanvas *wc_, double, double, double &, double & );
 
-		casacore::MDirection::Types get_coordinate_type( const DisplayCoordinateSystem &wc );
+		MDirection::Types get_coordinate_type( const DisplayCoordinateSystem &wc );
 
 		class ImageRegion_state {
 		public:
 			ImageRegion_state( ) : count_(0) { }
-			ImageRegion_state( casacore::ImageRegion *ir, size_t region_count ) : imageregion(ir), count_(region_count) { }
+			ImageRegion_state( ImageRegion *ir, size_t region_count ) : imageregion(ir), count_(region_count) { }
 			ImageRegion_state( const ImageRegion_state &other ) : imageregion(other.imageregion), count_(other.count_) { }
-			operator SHARED_PTR<casacore::ImageRegion>( ) {
+			operator SHARED_PTR<ImageRegion>( ) {
 				return imageregion;
 			}
 			size_t regionCount( ) const {
@@ -137,7 +133,7 @@ namespace casa {
 			void* operator new (std::size_t) throw (std::logic_error) {
 				throw std::logic_error("allocating an object not intended for dynamic allocation");
 			}
-			SHARED_PTR<casacore::ImageRegion> imageregion;
+			SHARED_PTR<ImageRegion> imageregion;
 			size_t count_;
 		};
 
@@ -358,7 +354,7 @@ namespace casa {
 			int getId() const {
 				return id_;
 			}
-			casacore::ImageRegion *getImageRegion( DisplayData* dd ) const {
+			ImageRegion *getImageRegion( DisplayData* dd ) const {
 				return get_image_region( dd );
 			}
 
@@ -419,8 +415,8 @@ namespace casa {
 
 			virtual AnnotationBase *annotation( ) const DISPLAY_PURE_VIRTUAL(Region::annotation,0);
 
-			static casacore::Quantum< ::casacore::Vector<double> > convert_angle( double x, const std::string &xunits, double y, const std::string &yunits,
-			        casacore::MDirection::Types original_coordsys, casacore::MDirection::Types new_coordsys, const std::string &new_units="rad" );
+			static Quantum< ::casa::Vector<double> > convert_angle( double x, const std::string &xunits, double y, const std::string &yunits,
+			        MDirection::Types original_coordsys, MDirection::Types new_coordsys, const std::string &new_units="rad" );
 
 		signals:
 			void selectionChanged(viewer::Region*,bool);
@@ -505,11 +501,11 @@ namespace casa {
 			// newInfoObject(...) is currently only used for PVLine regions, but it should be used for
 			// other regions to allow for specialized creation of the region info objects for display
 			// in "statistics"...
-			virtual RegionInfo *newInfoObject( casacore::ImageInterface<casacore::Float> *, PrincipalAxesDD * ) {
+			virtual RegionInfo *newInfoObject( ImageInterface<Float> *, PrincipalAxesDD * ) {
 				return 0;
 			}
 
-			virtual casacore::ImageRegion *get_image_region( DisplayData* ) const
+			virtual ImageRegion *get_image_region( DisplayData* ) const
 			DISPLAY_PURE_VIRTUAL(Region::get_image_region,0);
 
 			virtual const std::set<Region*> &get_selected_regions( );
@@ -517,18 +513,18 @@ namespace casa {
 
 			virtual std::list<SHARED_PTR<RegionInfo> > *generate_dds_centers( ) = 0;
 
-			static casacore::Int getAxisIndex( casacore::ImageInterface<casacore::Float> *image, std::string axtype );
+			static Int getAxisIndex( ImageInterface<Float> *image, std::string axtype );
 
 			inline double linear_average( double a, double b ) const {
 				return (a + b) / 2.0;
 			}
-			RegionInfo::center_t *getLayerCenter( PrincipalAxesDD *padd, SHARED_PTR<casacore::ImageInterface<casacore::Float> > image, casacore::ImageRegion& imgReg);
-			RegionInfo::stats_t  *getLayerStats( PrincipalAxesDD *padd, casacore::ImageInterface<casacore::Float> *image, casacore::ImageRegion& imgReg );
+			RegionInfo::center_t *getLayerCenter( PrincipalAxesDD *padd, SHARED_PTR<ImageInterface<Float> > image, ImageRegion& imgReg);
+			RegionInfo::stats_t  *getLayerStats( PrincipalAxesDD *padd, ImageInterface<Float> *image, ImageRegion& imgReg );
 
 			region::Units current_xunits( ) const;
 			region::Units current_yunits( ) const;
 			region::Coord current_region_coordsys( ) const;
-			casacore::MDirection::Types current_casa_coordsys( ) const;
+			MDirection::Types current_casa_coordsys( ) const;
 
 			virtual void drawRegion( bool /*selected*/ ) = 0; //DISPLAY_PURE_VIRTUAL(Region::drawRegion,);
 			virtual void drawText( );

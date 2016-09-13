@@ -37,19 +37,15 @@
 #include <casa/Arrays/Vector.h>
 #include <casa/Quanta/Quantum.h>
 
-namespace casacore{
-
-	class LCRegion;
-	class TableRecord;
-	class IPosition;
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Forward Declarations
+	class LCRegion;
+	class TableRecord;
+	class IPosition;
 
 
-	class QtWCBox : public casacore::WCRegion {
+	class QtWCBox : public WCRegion {
 	public:
 		QtWCBox();
 
@@ -58,25 +54,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// order of the values is in the order of the pixel axes
 		// in the given coordinate system.
 		// <group>
-		QtWCBox(const casacore::Vector<casacore::Quantum<casacore::Double> >& blc,
-		        const casacore::Vector<casacore::Quantum<casacore::Double> >& trc,
+		QtWCBox(const Vector<Quantum<Double> >& blc,
+		        const Vector<Quantum<Double> >& trc,
 		        const DisplayCoordinateSystem& cSys,
-		        const casacore::Vector<casacore::Int>& absRel);
+		        const Vector<Int>& absRel);
 		// </group>
 
 		// Construct from vectors of world coordinates
 		// defining the box corners.   You specify the pixel
 		// axis order of the world values.
 		// <group>
-		QtWCBox(const casacore::Vector<casacore::Quantum<casacore::Double> >& blc,
-		        const casacore::Vector<casacore::Quantum<casacore::Double> >& trc,
-		        const casacore::IPosition& pixelAxes,
+		QtWCBox(const Vector<Quantum<Double> >& blc,
+		        const Vector<Quantum<Double> >& trc,
+		        const IPosition& pixelAxes,
 		        const DisplayCoordinateSystem& cSys,
-		        const casacore::Vector<casacore::Int>& absRel);
+		        const Vector<Int>& absRel);
 		// </group>
 
-		// Construct from the bounding box of an  <src>casacore::LCRegion</src>.
-		QtWCBox(const casacore::LCRegion& region,
+		// Construct from the bounding box of an  <src>LCRegion</src>.
+		QtWCBox(const LCRegion& region,
 		        const DisplayCoordinateSystem& cSys);
 
 		// Copy constructor (reference semantics [except for <src>DisplayCoordinateSystem</src>])
@@ -89,78 +85,78 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		QtWCBox& operator= (const QtWCBox& other);
 
 		// Comparison
-		virtual casacore::Bool operator==(const casacore::WCRegion& other) const;
+		virtual Bool operator==(const WCRegion& other) const;
 
 		// Clone a QtWCBox object.
-		virtual casacore::WCRegion* cloneRegion() const;
+		virtual WCRegion* cloneRegion() const;
 
 		// QtWCBox can extend a region.
-		virtual casacore::Bool canExtend() const;
+		virtual Bool canExtend() const;
 
 		// Make a new box from the given axesin this box.
-		QtWCBox splitBox (const casacore::IPosition& axes) const;
+		QtWCBox splitBox (const IPosition& axes) const;
 
-		// Convert to an casacore::LCRegion using the supplied <src>DisplayCoordinateSystem</src>
+		// Convert to an LCRegion using the supplied <src>DisplayCoordinateSystem</src>
 		// and shape.
-		virtual casacore::LCRegion* doToLCRegion (const casacore::CoordinateSystem& cSys,
-		                                const casacore::IPosition& latticeShape,
-		                                const casacore::IPosition& pixelAxesMap,
-		                                const casacore::IPosition& outOrder) const;
+		virtual LCRegion* doToLCRegion (const CoordinateSystem& cSys,
+		                                const IPosition& latticeShape,
+		                                const IPosition& pixelAxesMap,
+		                                const IPosition& outOrder) const;
 
 		// Convert the QtWCBox object to a record.
 		// The record can be used to make the object persistent.
 		// The <src>tableName</src> argument can be used by derived
-		// classes (e.g. casacore::LCPagedMask) to put very large objects.
-		virtual casacore::TableRecord toRecord(const casacore::String& tableName) const;
+		// classes (e.g. LCPagedMask) to put very large objects.
+		virtual TableRecord toRecord(const String& tableName) const;
 
 		// Convert to a QtWCBox from a record.
-		static QtWCBox* fromRecord (const casacore::TableRecord& rec,
-		                            const casacore::String& tableName);
+		static QtWCBox* fromRecord (const TableRecord& rec,
+		                            const String& tableName);
 
 		// Returns QtWCBox
-		static casacore::String className();
+		static String className();
 
 		// Return region type.  Returns the class name
-		virtual casacore::String type() const;
+		virtual String type() const;
 
 		// Convert from/to boxit format string
-		casacore::String toBoxString() const;
-		static QtWCBox* fromBoxString(const casacore::String&,
-		                              const DisplayCoordinateSystem& cSys, casacore::String& err);
+		String toBoxString() const;
+		static QtWCBox* fromBoxString(const String&,
+		                              const DisplayCoordinateSystem& cSys, String& err);
 
 		// FIXME: refactor to someplace more appropriate
 		// get/set chan extension
-		void setChanExt(const casacore::Double, const casacore::Double);
-		casacore::Bool getChanExt(casacore::Double&, casacore::Double&);
+		void setChanExt(const Double, const Double);
+		Bool getChanExt(Double&, Double&);
 
 		// FIXME: refactor to someplace more appropriate
 		// get/set pol extension
-		void setPolExt(const casacore::Double, const casacore::Double);
-		casacore::Bool getPolExt(casacore::Double&, casacore::Double&);
+		void setPolExt(const Double, const Double);
+		Bool getPolExt(Double&, Double&);
 
 		static void unitInit();
 
 	private:
-		casacore::Vector<casacore::Quantum<casacore::Double> > itsBlc;
-		casacore::Vector<casacore::Quantum<casacore::Double> > itsTrc;
-		casacore::IPosition itsPixelAxes;
+		Vector<Quantum<Double> > itsBlc;
+		Vector<Quantum<Double> > itsTrc;
+		IPosition itsPixelAxes;
 		DisplayCoordinateSystem itsCSys;
-		casacore::Vector<casacore::Int> itsAbsRel;
-		casacore::Bool itsNull;
+		Vector<Int> itsAbsRel;
+		Bool itsNull;
 
 
 // Check units of quanta are consistent with DisplayCoordinateSystem
-		void checkUnits (const casacore::IPosition& pixelAxes,
-		                 const casacore::Vector<casacore::Quantum<casacore::Double> >& values,
+		void checkUnits (const IPosition& pixelAxes,
+		                 const Vector<Quantum<Double> >& values,
 		                 const DisplayCoordinateSystem& cSys);
 
 // Convert relative pixels to absolute or fill in defaults
-		void convertPixel(casacore::Double& pixel,
-		                  const casacore::Quantum<casacore::Double>& value,
-		                  const casacore::Int absRel,
-		                  const casacore::Double refPix,
-		                  const casacore::Int shape,
-		                  const casacore::Bool isBlc) const;
+		void convertPixel(Double& pixel,
+		                  const Quantum<Double>& value,
+		                  const Int absRel,
+		                  const Double refPix,
+		                  const Int shape,
+		                  const Bool isBlc) const;
 
 	};
 

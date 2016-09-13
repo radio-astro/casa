@@ -112,7 +112,7 @@ namespace casa {
 			RegionInfo::stats_t *get_ms_stats( MSAsRaster *msar, double x, double y );
 			void generate_nonimage_statistics( DisplayData*, std::list<RegionInfo> * );
 			std::list<SHARED_PTR<RegionInfo> > *generate_dds_centers( );
-			casacore::ImageRegion *get_image_region( DisplayData* ) const;
+			ImageRegion *get_image_region( DisplayData* ) const;
 
 			virtual void fetch_region_details( region::RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts,
 			                                   std::vector<std::pair<double,double> > &world_pts ) const;

@@ -31,11 +31,6 @@
 
 #include <synthesis/MeasurementComponents/ImageSkyModel.h>
 
-namespace casacore{
-
-template <class T> class PagedImage;
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <summary> 
@@ -49,8 +44,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <prerequisite>
 //   <li> <linkto class=SkyModel>SkyModel</linkto> class
 //   <li> <linkto class=SkyEquation>SkyEquation</linkto> class
-//   <li> <linkto class=casacore::ImageInterface>ImageInterface</linkto> class
-//   <li> <linkto class=casacore::PagedImage>PagedImage</linkto> class
+//   <li> <linkto class=ImageInterface>ImageInterface</linkto> class
+//   <li> <linkto class=PagedImage>PagedImage</linkto> class
 //   <li> <linkto module=MeasurementComponents>MeasurementComponents</linkto> module
 //   <li> <linkto class=VisSet>VisSet</linkto> class
 // </prerequisite>
@@ -87,6 +82,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <li> ComponentModel
 // </todo>
 
+template <class T> class PagedImage;
 
 class CleanImageSkyModel : public ImageSkyModel {
 public:
@@ -98,24 +94,24 @@ public:
   CleanImageSkyModel(const CleanImageSkyModel& sm);
 
   // Has a mask for model?
-  casacore::Bool hasMask(casacore::Int model=0);
+  Bool hasMask(Int model=0);
 
   // Add a componentlist
-  virtual casacore::Bool add(ComponentList& compList);
+  virtual Bool add(ComponentList& compList);
 
   // Add an image. maxNumXfr is the maximum Number of transfer functions
   // that we might want to associate with this image.
-  virtual casacore::Int add(casacore::ImageInterface<casacore::Float>& image, const casacore::Int maxNumXfr=100);
+  virtual Int add(ImageInterface<Float>& image, const Int maxNumXfr=100);
   
   // Add an mask  
-  virtual casacore::Bool addMask(casacore::Int image, casacore::ImageInterface<casacore::Float>& mask);
+  virtual Bool addMask(Int image, ImageInterface<Float>& mask);
 
   // Has a flux mask?
-  casacore::Bool hasFluxMask(casacore::Int model=0);
+  Bool hasFluxMask(Int model=0);
 
-  virtual casacore::Bool addFluxMask(casacore::Int image, casacore::ImageInterface<casacore::Float>& fluxMask);
+  virtual Bool addFluxMask(Int image, ImageInterface<Float>& fluxMask);
   
-  casacore::ImageInterface<casacore::Float>& fluxMask(casacore::Int model=0);
+  ImageInterface<Float>& fluxMask(Int model=0);
 
   // Destructor
   virtual ~CleanImageSkyModel();
@@ -125,22 +121,22 @@ public:
 
   // Return masks
   // <group>
-  casacore::ImageInterface<casacore::Float>& mask(casacore::Int model=0);
+  ImageInterface<Float>& mask(Int model=0);
   // </group>
   //set to search for peak in I^2+Q^2+U^2+V^2 domain or each stokes plane seperately
   //Ignored for hogbom and msclean for now
-  virtual void setJointStokesClean(casacore::Bool joint=true);
+  virtual void setJointStokesClean(Bool joint=True);
 
 
    // Return the maximum absolute value from residual images per field
-  virtual casacore::Float maxField(casacore::Vector<casacore::Float>& imagemax, casacore::Vector<casacore::Float>& imagemin);
+  virtual Float maxField(Vector<Float>& imagemax, Vector<Float>& imagemin);
 
 
 protected:
 
-  casacore::PtrBlock<casacore::ImageInterface<casacore::Float> * > mask_p;
-  casacore::PtrBlock<casacore::ImageInterface<casacore::Float> * > fluxmask_p;
-  casacore::Bool doPolJoint_p;
+  PtrBlock<ImageInterface<Float> * > mask_p;
+  PtrBlock<ImageInterface<Float> * > fluxmask_p;
+  Bool doPolJoint_p;
 
 };
 

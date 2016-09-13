@@ -50,7 +50,7 @@
 //    
 // Code in each worker thread:
 //    
-//    while (true){
+//    while (True){
 //    
 //      VisBuffer * workingBuffer = threadCoordinator_p->waitForWork (this);
 //      if (workingBuffer == NULL)
@@ -63,12 +63,6 @@
 #ifndef SYNTHESIS_THREADCOORDINATOR_H
 #define SYNTHESIS_THREADCOORDINATOR_H
 
-namespace casacore{
-
-  class Mutex;
-class String;
-}
-
 namespace casa {
 
 class Barrier;
@@ -79,6 +73,7 @@ namespace async {
   class Thread;
 }
 
+class String;
 class VisBuffer;
 
 class ThreadCoordinatorBase {
@@ -91,7 +86,7 @@ public:
 
 protected:
 
-  ThreadCoordinatorBase (casacore::Int nThreads, bool logStates);
+  ThreadCoordinatorBase (Int nThreads, bool logStates);
 
 
   void dispatchWork ();
@@ -99,7 +94,7 @@ protected:
   virtual void installWorkInfo () = 0;
   bool waitForWork (const async::Thread * thisThread);
   void waitForWorkersToReport ();
-  casacore::Int nThreads_p;
+  Int nThreads_p;
 
 
 private:
@@ -107,15 +102,15 @@ private:
   Barrier * barrier_p;
   bool logStates_p;
   async::Mutex * mutex_p;
-  volatile casacore::Int nThreadsAtBarrier_p;
-  volatile casacore::Int nThreadsDispatched_p;
-  volatile casacore::Bool readyForWork_p;
+  volatile Int nThreadsAtBarrier_p;
+  volatile Int nThreadsDispatched_p;
+  volatile Bool readyForWork_p;
   async::Condition * stateChanged_p;
   const VisBuffer * vb_p;
   volatile bool workCompleted_p;
   volatile bool workToBeDone_p;
 
-  void logState (const casacore::String & tag) const;
+  void logState (const String & tag) const;
 
 };
 
@@ -124,7 +119,7 @@ class ThreadCoordinator : public ThreadCoordinatorBase {
 
 public:
 
-    ThreadCoordinator (casacore::Int nThreads, casacore::Bool logStates = false) : ThreadCoordinatorBase (nThreads, logStates) {}
+    ThreadCoordinator (Int nThreads, Bool logStates = False) : ThreadCoordinatorBase (nThreads, logStates) {}
 
     void
     giveWorkToWorkers (T * workInfo)
@@ -150,8 +145,8 @@ public:
         return result;
     }
 
-   void setNThreads(casacore::Int n) {nThreads_p=n;};
-   casacore::Int nThreads() {return nThreads_p;};
+   void setNThreads(Int n) {nThreads_p=n;};
+   Int nThreads() {return nThreads_p;};
 protected:
 
     void
@@ -169,5 +164,4 @@ private:
 };
 
 } // end namespace casa
-
 #endif // 

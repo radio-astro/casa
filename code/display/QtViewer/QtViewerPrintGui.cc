@@ -47,7 +47,6 @@
 #include <display/Display/AttributeBuffer.h>
 #include <casa/BasicSL/String.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 ////////////////////////  QtViewerPrintGui /////////////////////////////////
@@ -540,12 +539,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				//pDP->setAllowBackToFront(false); <-- for back buffer
 				// have to add pixels for the border that the QtDisplayPanel adds
 				// around the QtPixelCanvas
-				pDP->setUpdateAllowed(false);
+				pDP->setUpdateAllowed(False);
 				// (Prevent display widget flashing during temporary resize.)
 				pDP->resize(scaledSize.width() + dw, scaledSize.height() + dh);
 				QPixmap* mp = pDP->contents();
 				pDP->popCurrentDrawingState( );
-				pDP->setUpdateAllowed(true);
+				pDP->setUpdateAllowed(True);
 				pDP->resize(oldSize);
 				QCoreApplication::processEvents();
 				//pDP->getBackBuffer()->save(printfilename, format);<-- back buffer

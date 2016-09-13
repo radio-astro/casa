@@ -30,7 +30,6 @@
 #include <casa/aips.h>
 #include <synthesis/TransformMachines2/SkyJones.h>
 
-using namespace casacore;
 namespace casa{
 namespace refim {//# refactored imaging namespace
   SkyJones::SkyJones():threshold_p(0.0) {
@@ -44,6 +43,5 @@ namespace refim {//# refactored imaging namespace
   };
 
 } //#end of refim namespace
-using namespace casacore;
 }//# end of namespace casa
 

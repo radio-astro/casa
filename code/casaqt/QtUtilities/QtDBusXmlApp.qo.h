@@ -89,9 +89,9 @@ public:
     // does NOT give a return value, even if the remote method does.  Returns
     // true for success, false for failure.  Will fail if the given object
     // name is not registered with CASA's DBus server.
-    static bool dbusXmlCallNoRet(const casacore::String& fromName,
-            const casacore::String& objectName, const casacore::String& methodName,
-            const casacore::Record& parameters, bool isAsync = false);
+    static bool dbusXmlCallNoRet(const String& fromName,
+            const String& objectName, const String& methodName,
+            const Record& parameters, bool isAsync = false);
     
     // Like dbusXmlCallNoRet(), except that if the remote method has a
     // return value of the given type, then the value is set accordingly.  If
@@ -99,37 +99,37 @@ public:
     // set.  If retValueSet is given, it will be set to true if the return
     // value was set and false otherwise.
     // <group>
-    static bool dbusXmlCall(const casacore::String& fromName,
-            const casacore::String& objectName, const casacore::String& methodName,
-            const casacore::Record& parameters, bool& retValue,
+    static bool dbusXmlCall(const String& fromName,
+            const String& objectName, const String& methodName,
+            const Record& parameters, bool& retValue,
             bool* retValueSet = NULL);
-    static bool dbusXmlCall(const casacore::String& fromName,
-            const casacore::String& objectName, const casacore::String& methodName,
-            const casacore::Record& parameters, int& retValue,
+    static bool dbusXmlCall(const String& fromName,
+            const String& objectName, const String& methodName,
+            const Record& parameters, int& retValue,
             bool* retValueSet = NULL);
-    static bool dbusXmlCall(const casacore::String& fromName,
-            const casacore::String& objectName, const casacore::String& methodName,
-            const casacore::Record& parameters, casacore::uInt& retValue,
+    static bool dbusXmlCall(const String& fromName,
+            const String& objectName, const String& methodName,
+            const Record& parameters, uInt& retValue,
             bool* retValueSet = NULL);
-    static bool dbusXmlCall(const casacore::String& fromName,
-            const casacore::String& objectName, const casacore::String& methodName,
-            const casacore::Record& parameters, double& retValue,
+    static bool dbusXmlCall(const String& fromName,
+            const String& objectName, const String& methodName,
+            const Record& parameters, double& retValue,
             bool* retValueSet = NULL);
-    static bool dbusXmlCall(const casacore::String& fromName,
-            const casacore::String& objectName, const casacore::String& methodName,
-            const casacore::Record& parameters, casacore::String& retValue,
+    static bool dbusXmlCall(const String& fromName,
+            const String& objectName, const String& methodName,
+            const Record& parameters, String& retValue,
             bool* retValueSet = NULL);
-    static bool dbusXmlCall(const casacore::String& fromName,
-            const casacore::String& objectName, const casacore::String& methodName,
-            const casacore::Record& parameters, casacore::Record& retValue,
+    static bool dbusXmlCall(const String& fromName,
+            const String& objectName, const String& methodName,
+            const Record& parameters, Record& retValue,
             bool* retValueSet = NULL);
-    static bool dbusXmlCall(const casacore::String& fromName,
-            const casacore::String& objectName, const casacore::String& methodName,
-            const casacore::Record& parameters, casacore::Array<casacore::Bool>& retValue,
+    static bool dbusXmlCall(const String& fromName,
+            const String& objectName, const String& methodName,
+            const Record& parameters, Array<Bool>& retValue,
             bool* retValueSet = NULL);
-    static bool dbusXmlCall(const casacore::String& fromName,
-            const casacore::String& objectName, const casacore::String& methodName,
-            const casacore::Record& parameters, casacore::Array<casacore::Int>& retValue,
+    static bool dbusXmlCall(const String& fromName,
+            const String& objectName, const String& methodName,
+            const Record& parameters, Array<Int>& retValue,
             bool* retValueSet = NULL);
     // </group>
     
@@ -150,9 +150,9 @@ protected:
     // asynchronous call or not, are also provided but do not need to be used.
     // Note, however, that asynchronous method calls will NOT use a return
     // value even if one is set.
-    virtual void dbusRunXmlMethod(const casacore::String& methodName,
-            const casacore::Record& parameters, casacore::Record& retValue,
-            const casacore::String& callerName, bool isAsync) = 0;
+    virtual void dbusRunXmlMethod(const String& methodName,
+            const Record& parameters, Record& retValue,
+            const String& callerName, bool isAsync) = 0;
     
     
     // VIRTUAL METHODS //
@@ -179,7 +179,7 @@ protected:
     // names.)  Trying to register when already registered (see
     // dbusSelfIsRegistered()) will result in registration failure; to change
     // names, you must unregister and then reregister with the new name.
-    bool dbusRegisterSelf(const casacore::String& name = "");
+    bool dbusRegisterSelf(const String& name = "");
     
     // Unregisters this object with CASA's DBus server, if it is registered.
     void dbusUnregisterSelf();
@@ -189,54 +189,54 @@ protected:
     bool dbusSelfIsRegistered() const;
     
     // Returns the name that this object is registered with with CASA's DBus
-    // server, or an empty casacore::String if this application is not currently
+    // server, or an empty String if this application is not currently
     // registered.
-    casacore::String dbusSelfRegisteredName() const;
+    String dbusSelfRegisteredName() const;
     
     // Calls the static version of the method with this application's name.
     // <group>
-    bool dbusXmlCallNoRet(const casacore::String& objectName,
-            const casacore::String& methodName, const casacore::Record& parameters,
+    bool dbusXmlCallNoRet(const String& objectName,
+            const String& methodName, const Record& parameters,
             bool isAsync = false) {
         return dbusXmlCallNoRet(dbusSelfRegisteredName(), objectName,
                                    methodName, parameters, isAsync); }
-    bool dbusXmlCall(const casacore::String& objectName, const casacore::String& methodName,
-            const casacore::Record& parameters, bool& retValue,
+    bool dbusXmlCall(const String& objectName, const String& methodName,
+            const Record& parameters, bool& retValue,
             bool* retValueSet = NULL) {
         return dbusXmlCall(dbusSelfRegisteredName(), objectName, methodName,
                               parameters, retValue, retValueSet); }
-    bool dbusXmlCall(const casacore::String& objectName, const casacore::String& methodName,
-            const casacore::Record& parameters, int& retValue,
+    bool dbusXmlCall(const String& objectName, const String& methodName,
+            const Record& parameters, int& retValue,
             bool* retValueSet = NULL) {
         return dbusXmlCall(dbusSelfRegisteredName(), objectName, methodName,
                               parameters, retValue, retValueSet); }
-    bool dbusXmlCall(const casacore::String& objectName, const casacore::String& methodName,
-            const casacore::Record& parameters, casacore::uInt& retValue,
+    bool dbusXmlCall(const String& objectName, const String& methodName,
+            const Record& parameters, uInt& retValue,
             bool* retValueSet = NULL) {
         return dbusXmlCall(dbusSelfRegisteredName(), objectName, methodName,
                               parameters, retValue, retValueSet); }
-    bool dbusXmlCall(const casacore::String& objectName, const casacore::String& methodName,
-            const casacore::Record& parameters, double& retValue,
+    bool dbusXmlCall(const String& objectName, const String& methodName,
+            const Record& parameters, double& retValue,
             bool* retValueSet = NULL) {
         return dbusXmlCall(dbusSelfRegisteredName(), objectName, methodName,
                               parameters, retValue, retValueSet); }
-    bool dbusXmlCall(const casacore::String& objectName, const casacore::String& methodName,
-            const casacore::Record& parameters, casacore::String& retValue,
+    bool dbusXmlCall(const String& objectName, const String& methodName,
+            const Record& parameters, String& retValue,
             bool* retValueSet = NULL) {
         return dbusXmlCall(dbusSelfRegisteredName(), objectName, methodName,
                               parameters, retValue, retValueSet); }
-    bool dbusXmlCall(const casacore::String& objectName, const casacore::String& methodName,
-            const casacore::Record& parameters, casacore::Record& retValue,
+    bool dbusXmlCall(const String& objectName, const String& methodName,
+            const Record& parameters, Record& retValue,
             bool* retValueSet = NULL) {
         return dbusXmlCall(dbusSelfRegisteredName(), objectName, methodName,
                               parameters, retValue, retValueSet); }
-    bool dbusXmlCall(const casacore::String& objectName, const casacore::String& methodName,
-            const casacore::Record& parameters, casacore::Array<casacore::Bool>& retValue,
+    bool dbusXmlCall(const String& objectName, const String& methodName,
+            const Record& parameters, Array<Bool>& retValue,
             bool* retValueSet = NULL) {
         return dbusXmlCall(dbusSelfRegisteredName(), objectName, methodName,
                               parameters, retValue, retValueSet); }
-    bool dbusXmlCall(const casacore::String& objectName, const casacore::String& methodName,
-            const casacore::Record& parameters, casacore::Array<casacore::Int>& retValue,
+    bool dbusXmlCall(const String& objectName, const String& methodName,
+            const Record& parameters, Array<Int>& retValue,
             bool* retValueSet = NULL) {
         return dbusXmlCall(dbusSelfRegisteredName(), objectName, methodName,
                               parameters, retValue, retValueSet); }
@@ -262,9 +262,9 @@ private:
     // Private Static Methods //
     
     // Helper method for calling remote methods.
-    static bool dbusXmlCall(const casacore::String& from, const casacore::String& to,
-            const casacore::String& methodName, bool methodIsAsync,
-            const casacore::Record& parameters, casacore::Record* retValue);
+    static bool dbusXmlCall(const String& from, const String& to,
+            const String& methodName, bool methodIsAsync,
+            const Record& parameters, Record* retValue);
 };
 
 

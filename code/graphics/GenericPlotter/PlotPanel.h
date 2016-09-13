@@ -54,12 +54,12 @@ public:
     virtual void setVisible(bool visible = true) = 0;
     
     // Returns the tooltip for this widget.
-    virtual casacore::String tooltip() const = 0;
+    virtual String tooltip() const = 0;
     
     // Sets the tooltip for this widget.
-    virtual void setTooltip(const casacore::String& text) = 0;
+    virtual void setTooltip(const String& text) = 0;
 };
-typedef casacore::CountedPtr<PlotWidget> PlotWidgetPtr;
+typedef CountedPtr<PlotWidget> PlotWidgetPtr;
 
 
 // Generic class for a button that goes on a PlotPanel.  A button has
@@ -80,10 +80,10 @@ public:
     virtual void showText(bool show = true) = 0;
     
     // Currently set button text.  (May not be displayed.)
-    virtual casacore::String text() const = 0;
+    virtual String text() const = 0;
     
     // Sets the button text.
-    virtual void setText(const casacore::String& text) = 0;
+    virtual void setText(const String& text) = 0;
     
     // Returns true if an image is being shown on the button, false otherwise.
     virtual bool imageShown() const = 0;
@@ -92,7 +92,7 @@ public:
     virtual void showImage(bool show = true) = 0;
     
     // Set the image path to be shown on the button.
-    virtual void setImagePath(const casacore::String& imgPath) = 0;
+    virtual void setImagePath(const String& imgPath) = 0;
     
     // Returns true if the button is "toggleable", false otherwise.  A button
     // that is toggleable sticks down when pushed, then comes back up when
@@ -132,10 +132,10 @@ public:
     virtual ~PlotCheckbox() { }
     
     // Returns the text for this checkbox.
-    virtual casacore::String text() const = 0;
+    virtual String text() const = 0;
     
     // Sets the text for this checkbox.
-    virtual void setText(const casacore::String& text) = 0;
+    virtual void setText(const String& text) = 0;
     
     // Returns true if the checkbox is currently checked, false otherwise.
     virtual bool isChecked() const = 0;
@@ -185,7 +185,7 @@ public:
 
 INHERITANCE_POINTER2(PlotButton, PlotButtonPtr, PlotWidget, PlotWidgetPtr)
 INHERITANCE_POINTER2(PlotCheckbox, PlotCheckboxPtr, PlotWidget, PlotWidgetPtr)
-typedef casacore::CountedPtr<PlotPanel> PlotPanelPtr;
+typedef CountedPtr<PlotPanel> PlotPanelPtr;
 
 }
 

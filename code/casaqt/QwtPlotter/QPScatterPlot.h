@@ -44,13 +44,13 @@ public:
     // Static //
     
     // Convenient access to class name (QPScatterPlot).
-    const static casacore::String CLASS_NAME;
+    const static String CLASS_NAME;
         
     // Non-Static //
     
     // Constructor which takes the data (and determines its type) and an
     // optional title.
-    QPScatterPlot(PlotPointDataPtr data, const casacore::String& title = "Scatter Plot");
+    QPScatterPlot(PlotPointDataPtr data, const String& title = "Scatter Plot");
     
     // Copy constructor for generic ScatterPlot.
     QPScatterPlot(const ScatterPlot& copy);
@@ -196,7 +196,7 @@ public:
     
 protected:
     // Implements QPPlotItem::className().
-    const casacore::String& className() const { return CLASS_NAME; }
+    const String& className() const { return CLASS_NAME; }
     
     // Implements QPLayerItem::draw_().
 #if QWT_VERSION >= 0x060000
@@ -210,7 +210,7 @@ protected:
 #endif
     
 private:
-    // casacore::Data pointers.
+    // Data pointers.
     // <group>
     PlotPointDataPtr m_data;
     PlotMaskedPointDataPtr m_maskedData;

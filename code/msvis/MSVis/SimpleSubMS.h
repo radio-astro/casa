@@ -1,4 +1,4 @@
-//# SimpleSubMS.h: this defines SubMS which creates a subset of an casacore::MS with some
+//# SimpleSubMS.h: this defines SubMS which creates a subset of an MS with some
 //# transformation
 //# Copyright (C) 1997,1998,1999,2000,2001,2003
 //# Associated Universities, Inc. Washington DC, USA.
@@ -52,7 +52,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </prerequisite>
 //
 // <etymology>
-// SimpleSubMS ...from the SUBset of an casacore::MS and Simple
+// SimpleSubMS ...from the SUBset of an MS and Simple
 // </etymology>
 //
 // <synopsis>
@@ -69,11 +69,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
  public:
 
   // Constructor with an ms
-  SimpleSubMS(casacore::MeasurementSet& ms);
+  SimpleSubMS(MeasurementSet& ms);
   //Die...die
   ~SimpleSubMS();
   // In this form whichDataCol gets passed to parseColumnNames().
-  virtual casacore::MeasurementSet* makeMemSubMS(const casacore::MS::PredefinedColumns& datacol, const casacore::String& diskname=casacore::String(""));
+  virtual MeasurementSet* makeMemSubMS(const MS::PredefinedColumns& datacol, const String& diskname=String(""));
   
 
 

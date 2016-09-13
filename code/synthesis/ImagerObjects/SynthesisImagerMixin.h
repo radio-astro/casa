@@ -56,9 +56,9 @@ class SynthesisImagerMixin
 private:
 	std::unique_ptr<SynthesisImager> si;
 
-	static casacore::Quantity asQuantity(const casacore::Record &rec, const char *field_name);
+	static Quantity asQuantity(const Record &rec, const char *field_name);
 
-	static casacore::Quantity asQuantity(const casacore::String &field_name);
+	static Quantity asQuantity(const String &field_name);
 
 	static bool haveCFCache(const std::string &dirname);
 
@@ -68,49 +68,49 @@ private:
 		const SynthesisParamsGrid &grid_pars, int size, int rank);
 
 	void
-	set_weighting(const casacore::Record &weight_pars, 
+	set_weighting(const Record &weight_pars, 
 	              const std::vector<SynthesisParamsImage> &image_pars) {
-		casacore::String type =
+		String type =
 			((weight_pars.fieldNumber("type") != -1)
 			 ? weight_pars.asString("type")
-			 : casacore::String("natural"));
-		casacore::String rmode =
+			 : String("natural"));
+		String rmode =
 			((weight_pars.fieldNumber("rmode") != -1)
 			 ? weight_pars.asString("rmode")
-			 : casacore::String("norm"));
-		casacore::Double robust =
+			 : String("norm"));
+		Double robust =
 			((weight_pars.fieldNumber("robust") != -1)
 			 ? weight_pars.asDouble("robust")
 			 : 0.0);
-		casacore::Int npixels =
+		Int npixels =
 			((weight_pars.fieldNumber("npixels") != -1)
 			 ? weight_pars.asInt("npixels")
 			 : 0);
-		casacore::Bool multifield =
+		Bool multifield =
 			((weight_pars.fieldNumber("multifield") != -1)
 			 ? weight_pars.asBool("multifield")
 			 : false);
-		casacore::Quantity noise =
+		Quantity noise =
 			((weight_pars.fieldNumber("noise") != -1)
 			 ? asQuantity(weight_pars, "noise")
-			 : casacore::Quantity(0.0, "Jy"));
-		casacore::Quantity field_of_view =
+			 : Quantity(0.0, "Jy"));
+		Quantity field_of_view =
 			((weight_pars.fieldNumber("fieldofview") != -1)
 			 ? asQuantity(weight_pars, "fieldofview")
-			 : casacore::Quantity(0.0, "arcsec"));
-		const casacore::Array<casacore::String> &uv_taper_pars =
+			 : Quantity(0.0, "arcsec"));
+		const Array<String> &uv_taper_pars =
 			((weight_pars.fieldNumber("uvtaper") != -1)
 			 ? weight_pars.asArrayString("uvtaper")
-			 : casacore::Array<casacore::String>());
-		casacore::Quantity bmaj(0.0, "deg"), bmin(0.0, "deg"), bpa(0.0, "deg");
-		casacore::String filter_type("");
+			 : Array<String>());
+		Quantity bmaj(0.0, "deg"), bmin(0.0, "deg"), bpa(0.0, "deg");
+		String filter_type("");
 		if (uv_taper_pars.nelements() > 0) {
-			bmaj = asQuantity(uv_taper_pars(casacore::IPosition(1, 0)));
-			filter_type = casacore::String("gaussian");
+			bmaj = asQuantity(uv_taper_pars(IPosition(1, 0)));
+			filter_type = String("gaussian");
 			if (uv_taper_pars.nelements() > 1) {
-				bmin = asQuantity(uv_taper_pars(casacore::IPosition(1, 1)));
+				bmin = asQuantity(uv_taper_pars(IPosition(1, 1)));
 				if (uv_taper_pars.nelements() > 2)
-					bpa = asQuantity(uv_taper_pars(casacore::IPosition(1, 2)));
+					bpa = asQuantity(uv_taper_pars(IPosition(1, 2)));
 			} else /* uv_taper_pars.nelements() == 1 */ {
 				bmin = bmaj;
 			}
@@ -120,12 +120,12 @@ private:
 		// length is not required here
 		//
 		// if (uv_taper_pars.nelements() > 0 && uv_taper_pars[0].length() > 0)
-		//     filter_type = casacore::String("gaussian");
+		//     filter_type = String("gaussian");
 		si->weight(type, rmode, noise, robust, field_of_view, npixels,
 		           multifield, filter_type, bmaj, bmin, bpa);
 		if (image_pars.size() == 1
-		    && image_pars[0].stokes == casacore::String("I")
-		    && weight_pars.asString("type") != casacore::String("natural")) {
+		    && image_pars[0].stokes == String("I")
+		    && weight_pars.asString("type") != String("natural")) {
 			si->getWeightDensity();
 			T::reduce_weight_density();
 			si->setWeightDensity();
@@ -138,7 +138,7 @@ protected:
 	             std::vector<SynthesisParamsSelect> &select_pars,
 	             std::vector<SynthesisParamsImage> &image_pars,
 	             std::vector<SynthesisParamsGrid> &grid_pars,
-	             casacore::Record &weight_pars) {
+	             Record &weight_pars) {
 		// Create a single imager component for every rank in comm.
 
 		teardown_imager();
@@ -194,7 +194,7 @@ public:
 
 	void
 	execute_major_cycle() {
-		casacore::Record rec;
+		Record rec;
 		rec.define("lastcycle", T::is_clean_complete());
 		// TODO: verify this is correct for all ranks
 		if (si != nullptr) si->executeMajorCycle(rec);
@@ -210,17 +210,17 @@ public:
 
 // TODO: this method is a utility function...move it into another module?
 template <class T>
-casacore::Quantity
+Quantity
 SynthesisImagerMixin<T>::asQuantity(
-	const casacore::Record &rec, const char *field_name) {
-	casacore::Bool success = false;
-	casacore::QuantumHolder qh;
-	casacore::String err_str;
+	const Record &rec, const char *field_name) {
+	Bool success = false;
+	QuantumHolder qh;
+	String err_str;
 	switch (rec.dataType(field_name)) {
-	case casacore::DataType::TpRecord:
+	case DataType::TpRecord:
 		success = qh.fromRecord(err_str, rec.subRecord(field_name));
 		break;
-	case casacore::DataType::TpString:
+	case DataType::TpString:
 		success = qh.fromString(err_str, rec.asString(field_name));
 		break;
 	default:
@@ -229,22 +229,22 @@ SynthesisImagerMixin<T>::asQuantity(
 	if (!(success && qh.isQuantity())) {
 		ostringstream oss;
 		oss << "Error in converting quantity: " << err_str;
-		throw (casacore::AipsError(oss.str()));
+		throw (AipsError(oss.str()));
 	}
 	return qh.asQuantity();
 };
 
 // TODO: this method is a utility function...move it into another module?
 template <class T>
-casacore::Quantity
-SynthesisImagerMixin<T>::asQuantity(const casacore::String &field_name) {
-	casacore::QuantumHolder qh;
-	casacore::String err_str;
-	casacore::Bool success = qh.fromString(err_str, field_name);
+Quantity
+SynthesisImagerMixin<T>::asQuantity(const String &field_name) {
+	QuantumHolder qh;
+	String err_str;
+	Bool success = qh.fromString(err_str, field_name);
 	if (!(success && qh.isQuantity())) {
 		ostringstream oss;
 		oss << "Error in converting quantity: " << err_str;
-		throw (casacore::AipsError(oss.str()));
+		throw (AipsError(oss.str()));
 	}
 	return qh.asQuantity();
 };
@@ -286,9 +286,9 @@ SynthesisImagerMixin<T>::getCFCacheList(
 	} else {
 		// errno == ENOMEM
 		std::error_condition ec(errno, std::generic_category());
-		throw casacore::AipsError(casacore::String("Failed to scan cf cache directory '")
-		                + grid_pars.cfCache + casacore::String("': ")
-		                + casacore::String(ec.message()));
+		throw AipsError(String("Failed to scan cf cache directory '")
+		                + grid_pars.cfCache + String("': ")
+		                + String(ec.message()));
 	}
 	return result;
 };

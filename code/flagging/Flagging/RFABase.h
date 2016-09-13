@@ -71,7 +71,7 @@ public:
 // An agent is always constructed from a chunk stats accessor, and a 
 // record of parameters. No other constructors are defined, and no others
 // may be used.
-  RFABase ( RFChunkStats &ch,const casacore::RecordInterface &parm );
+  RFABase ( RFChunkStats &ch,const RecordInterface &parm );
 // Destructor 
   virtual ~RFABase () {};
 
@@ -82,12 +82,12 @@ public:
 // expected memory use. Should return the max desired memory footprint, in MB.
 // Available physical memory is divided between agents in proportion to their 
 // requests.
-  virtual casacore::uInt estimateMemoryUse () { return 1; }  
+  virtual uInt estimateMemoryUse () { return 1; }  
 
-// Called before iterating over a chunk. Returns true if agent will
-// process this chunk, or false if this the agent is unable to process it.
+// Called before iterating over a chunk. Returns True if agent will
+// process this chunk, or False if this the agent is unable to process it.
 // (this can happen if, e.g., the requisite correlations are not present).
-// The casacore::Int & maxmem argument is the number of MB memory which is still 
+// The Int & maxmem argument is the number of MB memory which is still 
 // available in the memory pool. The agent class should plan its memory 
 // use accordingly, and subtract its expected memory use from maxmem. In effect, 
 // the agent "reserves" some amount of memory. This is used by RedFlagger to 
@@ -95,8 +95,8 @@ public:
 // is sufficient, so only bother estimating the biggest data structures.
 // See implementations in RFADiffBase and RFATimeMedian for good examples.
 // nAgent is the total number of agents.
-  virtual casacore::Bool newChunk (casacore::Int &) 
-         { return active=false; };
+  virtual Bool newChunk (Int &) 
+         { return active=False; };
 // Called once finished with a chunk
   virtual void endChunk () {}
   
@@ -121,65 +121,65 @@ public:
   virtual void endFlag () {};
 
 // Called at end of time chunk
-virtual void endRows(casacore::uInt /* itime */) {};
+virtual void endRows(uInt /* itime */) {};
   
 // Iteration methods for a data pass. Either or both may be implemented.
 // iterTime() is called once for each new VisBuffer (= new time slot)
 // Return value: STOP to finish iterating, CONT/DATA to continue, or DRY
 // to cancel the data pass and request a dry pass.
-  virtual IterMode iterTime ( casacore::uInt /* itime */ ) { return CONT; };
+  virtual IterMode iterTime ( uInt /* itime */ ) { return CONT; };
 
 // iterRow() is called once per each row in the VisBuffer.
 // Iterating over rows is perhaps preferrable in terms of performance,
 // at least for data iterations.
-  virtual IterMode iterRow  ( casacore::uInt /* irow */ ) { return CONT; };
+  virtual IterMode iterRow  ( uInt /* irow */ ) { return CONT; };
 
 // Iteration method for a dry pass. Called once per each time slot.
 // Return value: STOP to finish iterating, CONT/DRY to continue, or DATA
 // to cancel the dry pass and request another data pass.
-  virtual IterMode iterDry  ( casacore::uInt /* itime */ ) { return CONT; };
+  virtual IterMode iterDry  ( uInt /* itime */ ) { return CONT; };
 
 // Iteration method for a flag pass. Called once per each VisBuffer.
-  virtual void iterFlag ( casacore::uInt /* itime */ ) {}
+  virtual void iterFlag ( uInt /* itime */ ) {}
 
 // called to obtain a short description of this RFA
-  virtual casacore::String getDesc () { return ""; }
+  virtual String getDesc () { return ""; }
 // called (before endChunk()) to obtain a statistics report 
-  virtual casacore::String getStats () { return ""; }
+  virtual String getStats () { return ""; }
 
   virtual void printFlaggingReport ( ) {};
 
-  virtual casacore::String getID() {return casacore::String("");};
+  virtual String getID() {return String("");};
   
 // returns the name of this RFA (set in myname)
-  const casacore::String & name ();
+  const String & name ();
 // returns the active status
-  casacore::Bool isActive ()   { return active; }
-// accessor to a casacore::LogIO for this agent
-  casacore::LogIO & logSink ();
+  Bool isActive ()   { return active; }
+// accessor to a LogIO for this agent
+  LogIO & logSink ();
 
 // static method for setting the indexing base for agent arguments
-  static void setIndexingBase ( casacore::uInt base );
+  static void setIndexingBase ( uInt base );
 
-  virtual casacore::Record getResult( ) { return casacore::Record(); };
+  virtual Record getResult( ) { return Record(); };
 
   virtual void finalize() {};
   // Initialize chunk
   virtual void initialize() {};
-  virtual void initializeIter(casacore::uInt /* iter */) {};
-  virtual void finalizeIter(casacore::uInt /* iter */) {};
+  virtual void initializeIter(uInt /* iter */) {};
+  virtual void finalizeIter(uInt /* iter */) {};
 
-  virtual void setNAgent(casacore::uInt n) { nAgent = n; };
+  virtual void setNAgent(uInt n) { nAgent = n; };
   virtual void setOnlySelector(bool only_sel) { only_selector = only_sel; };
 
 protected:
-  casacore::uInt nAgent;
+  uInt nAgent;
   RFChunkStats &chunk;
-  casacore::Record params;
-  casacore::String myname;
+  Record params;
+  String myname;
   bool only_selector;  //Do only RFASelector agents exist?
 
-  casacore::uInt num (StatEnums which) { return chunk.num(which); };
+  uInt num (StatEnums which) { return chunk.num(which); };
 
 // Bit mask of correlations which are used & flagged by this RFA. This mask is
 // used to (a) interpret the pre-flags of the FLAG column, and (b) apply the
@@ -188,34 +188,34 @@ protected:
   RFlagWord corrMask()  { return corrmask; }
 
 // flag: agent is active for this chunk (set in newChunk)  
-  casacore::Bool active;
+  Bool active;
 
-  casacore::LogIO os;
+  LogIO os;
   
 // global flag indicates that Glish (1-based) indexing is in use
 // for agent arguments
-  static casacore::uInt indexingBase (); 
+  static uInt indexingBase (); 
   
 private:
     
-  static casacore::uInt indexing_base;
+  static uInt indexing_base;
 };
 
-inline casacore::uInt RFABase::indexingBase () 
+inline uInt RFABase::indexingBase () 
 { 
   return indexing_base; 
 }
 
-inline void RFABase::setIndexingBase ( casacore::uInt base ) 
+inline void RFABase::setIndexingBase ( uInt base ) 
 { 
   indexing_base = base; 
 }
   
-inline casacore::LogIO & RFABase::logSink ()
+inline LogIO & RFABase::logSink ()
 {
   return os;
 }
-inline const casacore::String & RFABase::name ()
+inline const String & RFABase::name ()
 {
   return myname;
 }

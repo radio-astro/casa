@@ -71,7 +71,7 @@ class FluxStdBaars : public virtual FluxCalcVQS,
 	private FluxCalcLogFreqPolynomial 
 {
 private:
-  virtual casacore::Bool setSourceCoeffs();
+  virtual Bool setSourceCoeffs();
 };
 
 // <summary> 
@@ -108,7 +108,7 @@ class FluxStdPerley90 : public virtual FluxCalcVQS,
 	private FluxCalcLogFreqPolynomial 
 {
 private:
-  virtual casacore::Bool setSourceCoeffs();
+  virtual Bool setSourceCoeffs();
 };
 
 // <summary> 
@@ -145,7 +145,7 @@ class FluxStdPerleyTaylor95 : public virtual FluxCalcVQS,
 	private FluxCalcLogFreqPolynomial 
 {
 private:
-  virtual casacore::Bool setSourceCoeffs();
+  virtual Bool setSourceCoeffs();
 };
 
 // <summary> 
@@ -182,7 +182,7 @@ class FluxStdPerleyTaylor99 : public virtual FluxCalcVQS,
 	private FluxCalcLogFreqBrokenPolynomial 
 {
 private:
-  virtual casacore::Bool setSourceCoeffs();
+  virtual Bool setSourceCoeffs();
 };
 
 // <summary> 
@@ -219,7 +219,7 @@ class FluxStdPerleyButler2010 : public virtual FluxCalcVQS,
                                 private FluxCalcLogFreqBrokenPolynomial 
 {
 private:
-  virtual casacore::Bool setSourceCoeffs();
+  virtual Bool setSourceCoeffs();
 };
 // <summary>
 // FluxStdPerleyButler2013: The PerleyButler2013 flux standard.
@@ -257,13 +257,13 @@ class FluxStdPerleyButler2013 : public virtual FluxCalcVQS,
 {
 /***
 public:
-Bool operator()(casacore::Vector<Flux<casacore::Double> >& values,
-                  casacore::Vector<Flux<casacore::Double> >& errors,
-                  const casacore::Vector<casacore::MFrequency>& mfreqs,
-                  const casacore::MEpoch& mtime);
+Bool operator()(Vector<Flux<Double> >& values,
+                  Vector<Flux<Double> >& errors,
+                  const Vector<MFrequency>& mfreqs,
+                  const MEpoch& mtime);
 **/ 
 private:
-  virtual casacore::Bool setSourceCoeffs();
+  virtual Bool setSourceCoeffs();
 };
 
 // <summary>
@@ -300,7 +300,7 @@ class FluxStdScaifeHeald2012 : public virtual FluxCalcVQS,
                                private FluxCalcLogFreqPolynomialSH
 {
 private:
-  virtual casacore::Bool setSourceCoeffs();
+  virtual Bool setSourceCoeffs();
 };
 
 // <summary>
@@ -337,7 +337,7 @@ class FluxStdStevensReynolds2016 : public virtual FluxCalcVQS,
                                   private FluxCalcLogFreqBrokenPolynomial
 {
 private:
-  virtual casacore::Bool setSourceCoeffs();
+  virtual Bool setSourceCoeffs();
 };
 
 } //# NAMESPACE NSTDS -END

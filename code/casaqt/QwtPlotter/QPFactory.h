@@ -77,14 +77,14 @@ public:
     
     
     // Implements PlotFactory::plotter().
-    PlotterPtr plotter(const casacore::String& windowTitle = "Qwt Plotter",
+    PlotterPtr plotter(const String& windowTitle = "Qwt Plotter",
             bool showSingleCanvas = true, bool showGUI = true,
             int logEventFlags = PlotLogger::NO_EVENTS,
             bool smartDelete = true) const;
     
     // Implements PlotFactory::plotter().
     PlotterPtr plotter(unsigned int nrows, unsigned int ncols,
-            const casacore::String& windowTitle = "Qwt Plotter", bool showGUI = true,
+            const String& windowTitle = "Qwt Plotter", bool showGUI = true,
             int logEventFlags = PlotLogger::NO_EVENTS,
             bool smartDelete = true) const;
     
@@ -95,29 +95,29 @@ public:
     PlotPanelPtr panel(bool smartDelete = true) const;
     
     // Implements PlotFactory::button().
-    PlotButtonPtr button(const casacore::String& str, bool isText = true,
+    PlotButtonPtr button(const String& str, bool isText = true,
             bool toggleable = false, bool smartDelete = true) const;
     
     // Implements PlotFactory::checkbox().
-    PlotCheckboxPtr checkbox(const casacore::String& str, bool smartDelete = true) const;
+    PlotCheckboxPtr checkbox(const String& str, bool smartDelete = true) const;
 
 
     // Implements PlotFactory::scatterPlot().
     ScatterPlotPtr scatterPlot(PlotPointDataPtr data,
-            const casacore::String& title= "Scatter Plot", bool smartDelete= true) const;
+            const String& title= "Scatter Plot", bool smartDelete= true) const;
     
     // Implements PlotFactory::barPlot().
-    BarPlotPtr barPlot(PlotPointDataPtr data, const casacore::String& title = "Bar Plot",
+    BarPlotPtr barPlot(PlotPointDataPtr data, const String& title = "Bar Plot",
             bool smartDelete = true) const;
     
     // Implements PlotFactory::rasterPlot().
     RasterPlotPtr rasterPlot(PlotRasterDataPtr data,
-            const casacore::String& title = "Raster Plot",
+            const String& title = "Raster Plot",
             PlotRasterData::Format format = PlotRasterData::RGB32,
             bool smartDelete = true) const;
     
     // Implements PlotFactory::annotation().
-    PlotAnnotationPtr annotation(const casacore::String& text,
+    PlotAnnotationPtr annotation(const String& text,
             const PlotCoordinate& coord, bool smartDelete = true) const;
     
     // Implements PlotFactory::shapeRectangle().
@@ -158,17 +158,17 @@ public:
     
     // Implements PlotFactory::color().
     // <group>
-    PlotColorPtr color(const casacore::String& color, bool smartDelete = true) const;
+    PlotColorPtr color(const String& color, bool smartDelete = true) const;
     PlotColorPtr color(const PlotColor& copy, bool smartDelete = true) const;
     // </group>
     
     // Implements PlotFactory::allNamedColors().
-    vector<casacore::String> allNamedColors() const;
+    vector<String> allNamedColors() const;
     
     // Implements PlotFactory::font().
     // <group>
-    PlotFontPtr font(const casacore::String& family = "Arial", double pointSize = 12.0,
-            const casacore::String& color = "000000", bool bold = false,
+    PlotFontPtr font(const String& family = "Arial", double pointSize = 12.0,
+            const String& color = "000000", bool bold = false,
             bool italics = false, bool underline = false,
             bool smartDelete = true) const;
     PlotFontPtr font(const PlotFont& copy, bool smartDelete = true) const;
@@ -176,7 +176,7 @@ public:
     
     // Implements PlotFactory::areaFill().
     // <group>
-    PlotAreaFillPtr areaFill(const casacore::String& color,
+    PlotAreaFillPtr areaFill(const String& color,
             PlotAreaFill::Pattern pattern = PlotAreaFill::NOFILL,
             bool smartDelete = true) const;    
     PlotAreaFillPtr areaFill(const PlotAreaFill& copy,
@@ -185,7 +185,7 @@ public:
     
     // Implements PlotFactory::line().
     // <group>
-    PlotLinePtr line(const casacore::String& color,
+    PlotLinePtr line(const String& color,
             PlotLine::Style style = PlotLine::SOLID, double width = 1.0,
             bool smartDelete = true) const;
     PlotLinePtr line(const PlotLine& copy, bool smartDelete = true) const;

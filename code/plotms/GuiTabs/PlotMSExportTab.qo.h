@@ -55,8 +55,8 @@ public:
     //Returns the export range (All, Current, etc).
     PlotMSExportParam getExportParams() const;
 
-    // Retrieve selected casacore::MS names to use in export filename
-    inline void setMSNames(vector<casacore::String> msNames) { MSNames_ = msNames; }
+    // Retrieve selected MS names to use in export filename
+    inline void setMSNames(vector<String> msNames) { MSNames_ = msNames; }
 
 private slots:
 	void closeDialog();
@@ -66,14 +66,14 @@ private slots:
     void sizeChanged();
 
 private:
-    casacore::String getMsNameFromPath(casacore::String msfilepath);
+    String getMsNameFromPath(String msfilepath);
 
     // Widget for file selection.
     QtFileWidget* itsFileWidget_;
     Ui::ExportTab ui;
 
-    // Selected casacore::MS names
-    vector<casacore::String> MSNames_;
+    // Selected MS names
+    vector<String> MSNames_;
 };
 
 }

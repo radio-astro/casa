@@ -51,13 +51,13 @@ public:
   // Dtor
   ~CalSolVi2Organizer();
 
-  int nLayers() const { return factories_.nelements(); };
+  Int nLayers() const { return factories_.nelements(); };
 
   // Build and Return a reference to the fully-stacked VI
   vi::VisibilityIterator2& makeFullVI();
 
   // Count solutions
-  int countSolutions(casacore::Vector<int>& nChunkPerSolve);
+  Int countSolutions(Vector<Int>& nChunkPerSolve);
 
   // Add disk-accesing layer factory
   //  void addDiskIO();
@@ -67,14 +67,14 @@ public:
   void addSimIO(const vi::SimpleSimVi2Parameters& ss);
 
   // Add calibrating layer factory (one way or another)
-  void addCalForSolving(float calfactor);
+  void addCalForSolving(Float calfactor);
   void addCalForSolving(VisEquation& ve);
 
   // Add chan-averaging layer factory
-  void addChanAve(int chanbin);
+  void addChanAve(Int chanbin);
 
   // Add time-averaging layer factory
-  void addTimeAve(float timebin);
+  void addTimeAve(Float timebin);
 
 private:
 
@@ -87,9 +87,9 @@ private:
   void cleanUp();
 
   // Derive MS iteration sort order, based on comb*
-  void deriveVI2Sort(casacore::Block<int>& sortcols, // Double& iterInterval
-		     bool combobs,bool combscan,
-		     bool combfld,bool combspw);
+  void deriveVI2Sort(Block<Int>& sortcols, // Double& iterInterval
+		     Bool combobs,Bool combscan,
+		     Bool combfld,Bool combspw);
 
   // Pointers to the various kinds of layer factories we may use
   vi::ViiLayerFactory *ss_, *cal_, *chanave_, *timeave_;
@@ -99,7 +99,7 @@ private:
   //vi::ChannelAverageTVILayerFactory *chanave_;
   //  AveragingVi2LayerFactory *timeave_;
 
-  casacore::Vector<vi::ViiLayerFactory*> factories_;
+  Vector<vi::ViiLayerFactory*> factories_;
 
   vi::VisibilityIterator2* vi_;
 

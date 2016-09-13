@@ -55,7 +55,6 @@
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <display/DisplayDatas/DisplayData.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 const String WorldCanvas::LEFT_MARGIN_SPACE_PG = "leftmarginspacepg";
@@ -95,10 +94,10 @@ WorldCanvas::WorldCanvas(PixelCanvas * pc,
   itsPixelCanvas(pc),
   itsPGFilter(0),
   itsHoldCount(0),
-  itsRefreshHeld(false),
+  itsRefreshHeld(False),
   itsHeldReason(Display::BackCopiedToFront),
   itsCoordinateSystem(0),
-  itsGrabbing(false),
+  itsGrabbing(False),
   images_(0,16),
   itsCSmaster(0) {
 	setWorldCanvasPosition(xOrigin, yOrigin, xSize, ySize);
@@ -253,10 +252,10 @@ void WorldCanvas::operator()(const PCMotionEvent &pev) {
 			Display::KM_Pointer_Button_5 ;
 
 	uInt buttonsDown = pev.modifiers() & mouseButtons;
-	Bool distrib=false;	// Do we distribute this event to this WC's handlers?
+	Bool distrib=False;	// Do we distribute this event to this WC's handlers?
 
 			if(buttonsDown == 0) {	// no mouse buttons pressed
-				itsGrabbing = false;	// insurance--should already be false.
+				itsGrabbing = False;	// insurance--should already be False.
 				distrib = inWC(x,y);
 			}	// who gets event depends on location...
 			else distrib = itsGrabbing;	// ..or who has a grab, if buttons are down.
@@ -293,7 +292,7 @@ void WorldCanvas::operator()(const PCPositionEvent &pev) {
 	uInt priorButtons = pev.modifiers() & mouseButtons;
 	// NB: this is the state of mouse buttons _before_ the press/release.
 
-	Bool kbdEvent = false;
+	Bool kbdEvent = False;
 	uInt eventButton = 0;
 	switch(key) {
 	case Display::K_Pointer_Button1:
@@ -312,7 +311,7 @@ void WorldCanvas::operator()(const PCPositionEvent &pev) {
 		eventButton = Display::KM_Pointer_Button_5;
 		break;
 	default:
-		kbdEvent = true;
+		kbdEvent = True;
 	}
 
 	Bool distrib;	// Do we distribute this event to this WC's handlers?
@@ -346,7 +345,7 @@ void WorldCanvas::operator()(const PCPositionEvent &pev) {
 			// The escape key is used to reset (erase) mouse tools.
 
 		case Display::K_Escape:
-			distrib = true;
+			distrib = True;
 			break;
 			// (Remove if you really need to make the 'escape' key (which
 			// resets mouse tools) specific to a particular WC...).
@@ -366,16 +365,16 @@ void WorldCanvas::operator()(const PCPositionEvent &pev) {
 			if(inWC(x,y) && priorButtons == 0) {
 				// It _is_ for this WC
 				// (no priorButtons means no prior grab somewhere else).
-				distrib = true;
-				if(pressed) itsGrabbing = true;
+				distrib = True;
+				if(pressed) itsGrabbing = True;
 			}	// start grab.
-			else distrib = false;
+			else distrib = False;
 		} else {
-			distrib = true;	// distribute any mouse event when grab is on.
+			distrib = True;	// distribute any mouse event when grab is on.
 			if(!pressed) {	// button release event
 				uInt currentButtons = (priorButtons & ~eventButton);
 				// button state after this button was released.
-				if(currentButtons == 0) itsGrabbing = false;
+				if(currentButtons == 0) itsGrabbing = False;
 			}
 		}
 	}
@@ -414,7 +413,7 @@ void WorldCanvas::refresh(const Display::RefreshReason &reason,
 		if (!itsRefreshHeld || itsHeldReason == Display::BackCopiedToFront) {
 			itsHeldReason = reason;
 		}
-		itsRefreshHeld = true;
+		itsRefreshHeld = True;
 
 	} else if (refreshAllowed()) {
 		if (reason == Display::BackCopiedToFront) {
@@ -459,7 +458,7 @@ void WorldCanvas::release() {
 		if (itsRefreshHeld) {
 			refresh(itsHeldReason);
 		}
-		itsRefreshHeld = false;
+		itsRefreshHeld = False;
 	}
 }
 
@@ -468,12 +467,12 @@ void WorldCanvas::setCoordinateHandler(WCCoordinateHandler *handler) {
 	if (!handler) {
 		if (!itsOwnCoordinateHandler) {
 			itsCoordinateHandler = new DefaultWCCoordinateHandler;
-			itsOwnCoordinateHandler = true;
+			itsOwnCoordinateHandler = True;
 		}
 	} else {
 		if (itsOwnCoordinateHandler) {
 			delete itsCoordinateHandler;
-			itsOwnCoordinateHandler = false;
+			itsOwnCoordinateHandler = False;
 		}
 		itsCoordinateHandler = handler;
 	}
@@ -482,12 +481,12 @@ void WorldCanvas::setSizeControlHandler(WCSizeControlHandler *handler) {
 	if (!handler) {
 		if (!itsOwnSizeControlHandler) {
 			itsSizeControlHandler = new DefaultWCSizeControlHandler;
-			itsOwnSizeControlHandler = true;
+			itsOwnSizeControlHandler = True;
 		}
 	} else {
 		if (itsOwnSizeControlHandler) {
 			delete itsSizeControlHandler;
-			itsOwnSizeControlHandler = false;
+			itsOwnSizeControlHandler = False;
 		}
 		itsSizeControlHandler = handler;
 	}
@@ -496,12 +495,12 @@ void WorldCanvas::setResampleHandler(WCResampleHandler *handler) {
 	if (!handler) {
 		if (!itsOwnResampleHandler) {
 			itsResampleHandler = new WCSimpleResampleHandler(Interpolate2D::NEAREST);
-			itsOwnResampleHandler = true;
+			itsOwnResampleHandler = True;
 		}
 	} else {
 		if (itsOwnResampleHandler) {
 			delete itsResampleHandler;
-			itsOwnResampleHandler = false;
+			itsOwnResampleHandler = False;
 		}
 		itsResampleHandler = handler;
 	}
@@ -510,12 +509,12 @@ void WorldCanvas::setDataScaleHandler(WCDataScaleHandler *handler) {
 	if (!handler) {
 		if (!itsOwnDataScaleHandler) {
 			itsDataScaleHandler = new WCLinearScaleHandler;
-			itsOwnDataScaleHandler = true;
+			itsOwnDataScaleHandler = True;
 		}
 	} else {
 		if (itsOwnDataScaleHandler) {
 			delete itsDataScaleHandler;
-			itsOwnDataScaleHandler = false;
+			itsOwnDataScaleHandler = False;
 		}
 		itsDataScaleHandler = handler;
 	}
@@ -537,7 +536,7 @@ void WorldCanvas::setWorldCanvasPosition(Double fracXOffset,
 Bool WorldCanvas::pixToLin(Vector<Double> &lin, const Vector<Double> &pix) {
 	if ( Int(itsCanvasDrawXSize * (itsLinXMax - itsLinXMin)+0.5) == 0 ||
 			Int(itsCanvasDrawYSize * (itsLinYMax - itsLinYMin)+0.5) == 0 ) {
-		return false;
+		return False;
 	}
 	lin(0) = (pix(0) - itsCanvasDrawXOffset - itsCanvasXOffset) /
 			itsCanvasDrawXSize * (itsLinXMax - itsLinXMin) + itsLinXMin;
@@ -550,13 +549,13 @@ Bool WorldCanvas::pixToLin(Vector<Double> &lin, const Vector<Double> &pix) {
 	//if (lin(1) < itsLinYMin) lin(1) = itsLinYMin;
 	//if (lin(1) > itsLinYMax) lin(1) = itsLinYMax;
 
-	return true;
+	return True;
 }
 Bool WorldCanvas::pixToLin(Matrix<Double> &lin, Vector<Bool> &,
 		const Matrix<Double> &pix) {
 	if ( Int(itsCanvasDrawXSize * (itsLinXMax - itsLinXMin)+0.5) == 0 ||
 			Int(itsCanvasDrawYSize * (itsLinYMax - itsLinYMin)+0.5) == 0 ) {
-		return false;
+		return False;
 	}
 	Double tmpX = 1.0/itsCanvasDrawXSize * (itsLinXMax - itsLinXMin);
 	Double tmpY = 1.0/itsCanvasDrawYSize *(itsLinYMax - itsLinYMin);
@@ -566,24 +565,24 @@ Bool WorldCanvas::pixToLin(Matrix<Double> &lin, Vector<Bool> &,
 		lin(i, 1) = (pix(i, 1) - itsCanvasDrawYOffset - itsCanvasYOffset) *
 				tmpY + itsLinYMin;
 	}
-	return true;
+	return True;
 }
 Bool WorldCanvas::linToPix(Vector<Double> &pix, const Vector<Double> &lin) {
 	if ( Int((itsLinXMax - itsLinXMin)+0.5) == 0 ||
 			Int((itsLinYMax - itsLinYMin)+0.5) == 0 ) {
-		return false;
+		return False;
 	}
 	pix(0) = (lin(0) - itsLinXMin) / (itsLinXMax - itsLinXMin) *
 			itsCanvasDrawXSize + itsCanvasDrawXOffset + itsCanvasXOffset;
 	pix(1) = (lin(1) - itsLinYMin) / (itsLinYMax - itsLinYMin) *
 			itsCanvasDrawYSize + itsCanvasDrawYOffset + itsCanvasYOffset;
-	return true;
+	return True;
 }
 Bool WorldCanvas::linToPix(Matrix<Double> &pix, Vector<Bool> &,
 		const Matrix<Double> &lin) {
 	if ( Int((itsLinXMax - itsLinXMin)+0.5) == 0 ||
 			Int((itsLinYMax - itsLinYMin)+0.5) == 0 ) {
-		return false;
+		return False;
 	}
 	Double tmpX = 1.0/(itsLinXMax - itsLinXMin)*itsCanvasDrawXSize;
 	Double tmpY = 1.0/(itsLinYMax - itsLinYMin)*itsCanvasDrawYSize;
@@ -593,7 +592,7 @@ Bool WorldCanvas::linToPix(Matrix<Double> &pix, Vector<Bool> &,
 		pix(i,1) = (lin(i,1) - itsLinYMin) * tmpY + itsCanvasDrawYOffset +
 				itsCanvasYOffset;
 	}
-	return true;
+	return True;
 }
 Bool WorldCanvas::linToWorld(Vector<Double> &world,
 		const Vector<Double> &lin) {
@@ -607,7 +606,7 @@ Bool WorldCanvas::worldToLin(Vector<Double> &lin,
 		const Vector<Double> &world) {
 	error_string = "";
 	Bool result = itsCoordinateHandler->worldToLin(lin, world);
-	if ( result == false ) {
+	if ( result == False ) {
 		error_string = itsCoordinateHandler->errorMessage( );
 	}
 	return result;
@@ -619,7 +618,7 @@ Bool WorldCanvas::worldToLin(Matrix<Double> &lin, Vector<Bool> &failures,
 Bool WorldCanvas::pixToWorld(Vector<Double> &world,
 		const Vector<Double> &pix) {
 	static Vector<Double> lin(2);
-	return (pixToLin(lin, pix) ? linToWorld(world, lin) : false);
+	return (pixToLin(lin, pix) ? linToWorld(world, lin) : False);
 }
 Bool WorldCanvas::pixToWorld(Matrix<Double> &world, Vector<Bool> &failures,
 		const Matrix<Double> &pix) {
@@ -630,7 +629,7 @@ Bool WorldCanvas::pixToWorld(Matrix<Double> &world, Vector<Bool> &failures,
 Bool WorldCanvas::worldToPix(Vector<Double> &pix,
 		const Vector<Double> &world) {
 	static Vector<Double> lin(2);
-	return (worldToLin(lin, world) ? linToPix(pix, lin) : false);
+	return (worldToLin(lin, world) ? linToPix(pix, lin) : False);
 }
 Bool WorldCanvas::worldToPix(Matrix<Double> &pix, Vector<Bool> &failures,
 		const Matrix<Double> &world) {
@@ -683,7 +682,7 @@ Bool WorldCanvas::validList(uInt list) {
 	if (itsPixelCanvas) {
 		return itsPixelCanvas->validList(list);
 	}
-	return false;
+	return False;
 }
 
 // Set color on WorldCanvas and PgPlot.
@@ -835,7 +834,7 @@ void WorldCanvas::setDefaultOptions() {
 	setAttributes(attBuffer);
 }
 Bool WorldCanvas::setOptions(const Record &rec, Record &) {
-	Bool ret = false, localchange = false;
+	Bool ret = False, localchange = False;
 	Bool error;
 
 	Int temp;
@@ -888,7 +887,7 @@ Record WorldCanvas::getOptions() const {
 	attString = "leftMarginSpacePG";
 	getAttributeValue(attString, temp);
 	leftmarginspacepg.define("value", temp);
-	leftmarginspacepg.define("allowunset", false);
+	leftmarginspacepg.define("allowunset", False);
 	leftmarginspacepg.define("context", "Margins");
 	rec.defineRecord(LEFT_MARGIN_SPACE_PG, leftmarginspacepg);
 
@@ -902,7 +901,7 @@ Record WorldCanvas::getOptions() const {
 	attString = "bottomMarginSpacePG";
 	getAttributeValue(attString, temp);
 	bottommarginspacepg.define("value", temp);
-	bottommarginspacepg.define("allowunset", false);
+	bottommarginspacepg.define("allowunset", False);
 	bottommarginspacepg.define("context", "Margins");
 	rec.defineRecord(BOTTOM_MARGIN_SPACE_PG, bottommarginspacepg);
 
@@ -916,7 +915,7 @@ Record WorldCanvas::getOptions() const {
 	attString = "rightMarginSpacePG";
 	getAttributeValue(attString, temp);
 	rightmarginspacepg.define("value", temp);
-	rightmarginspacepg.define("allowunset", false);
+	rightmarginspacepg.define("allowunset", False);
 	rightmarginspacepg.define("context", "Margins");
 	rec.defineRecord(RIGHT_MARGIN_SPACE_PG, rightmarginspacepg);
 
@@ -930,7 +929,7 @@ Record WorldCanvas::getOptions() const {
 	attString = "topMarginSpacePG";
 	getAttributeValue(attString, temp);
 	topmarginspacepg.define("value", temp);
-	topmarginspacepg.define("allowunset", false);
+	topmarginspacepg.define("allowunset", False);
 	topmarginspacepg.define("context", "Margins");
 	rec.defineRecord( TOP_MARGIN_SPACE_PG, topmarginspacepg);
 
@@ -1047,9 +1046,9 @@ Bool WorldCanvas::drawText(const Vector<Double> &point, const String &text,
 	Vector<Int> pixelpt;
 	if (castingConversion(pixelpt, point, linear)) {
 		itsPixelCanvas->drawText(pixelpt(0), pixelpt(1), text, alignment);
-		return true;
+		return True;
 	} else {
-		return false;
+		return False;
 	}
 }
 
@@ -1058,9 +1057,9 @@ Bool WorldCanvas::drawPoint(const Vector<Double> &point, const Bool &linear) {
 	Vector<Int> pixelpt;
 	if (castingConversion(pixelpt, point, linear)) {
 		itsPixelCanvas->drawPoint(pixelpt(0), pixelpt(1));
-		return true;
+		return True;
 	} else {
-		return false;
+		return False;
 	}
 }
 
@@ -1071,9 +1070,9 @@ Bool WorldCanvas::drawLine(const Vector<Double> &a, const Vector<Double> &b,
 	if (castingConversion(pixa, a, linear) &&
 			castingConversion(pixb, b, linear)) {
 		itsPixelCanvas->drawLine(pixa(0), pixa(1), pixb(0), pixb(1));
-		return true;
+		return True;
 	} else {
-		return false;
+		return False;
 	}
 }
 
@@ -1083,9 +1082,9 @@ Bool WorldCanvas::drawPoints(const Matrix<Double> &points,
 	Matrix<Int> pixelpts;
 	if (castingConversion(pixelpts, points, linear)) {
 		itsPixelCanvas->drawPoints(pixelpts);
-		return true;
+		return True;
 	} else {
-		return false;
+		return False;
 	}
 }
 
@@ -1097,9 +1096,9 @@ Bool WorldCanvas::drawPoints(const Vector<Float> &px, const Vector<Float> &py,
 	if (castingClippingConversion(pixelx, pixely, validconversions,
 			px, py, linear)) {
 		itsPixelCanvas->drawPoints(pixelx, pixely);
-		return true;
+		return True;
 	} else {
-		return false;
+		return False;
 	}
 }
 
@@ -1122,7 +1121,7 @@ Bool WorldCanvas::drawTextStrings(const Vector<Float> &px,
 			throw(AipsError("Non-conformant conversion result in WorldCanvas::"
 					"drawTextStrings"));
 		}
-		MaskedArray<String> mask(strings, LogicalArray(validconversions == true));
+		MaskedArray<String> mask(strings, LogicalArray(validconversions == True));
 		Vector<String> vstrings(mask.getCompressedArray());
 		if (vstrings.nelements() != pixelx.nelements()) {
 			throw(AipsError("Failure parsing output of conversion in "
@@ -1146,9 +1145,9 @@ Bool WorldCanvas::drawTextStrings(const Vector<Float> &px,
 						vstrings(i).chars());
 			}
 		}
-		return true;
+		return True;
 	} else {
-		return false;
+		return False;
 	}
 }
 
@@ -1172,9 +1171,9 @@ Bool WorldCanvas::drawMarkers(const Vector<Float> &px, const Vector<Float> &py,
 			itsPixelCanvas->drawMarker(pixelx(i), pixely(i), markertype, size);
 		}
 	} else {
-		return false;
+		return False;
 	}
-	return true;
+	return True;
 }
 
 Bool WorldCanvas::drawMappedMarkers(const Vector<Float> &px,
@@ -1198,7 +1197,7 @@ Bool WorldCanvas::drawMappedMarkers(const Vector<Float> &px,
 	for (uInt i = 0; i < px.nelements(); i++) {
 		wpos(0) = px(i);
 		wpos(1) = py(i);
-		Bool success = false;
+		Bool success = False;
 		success = castingConversion(ppos, wpos, linear);
 		if ( success && inDrawArea(ppos(0),ppos(1)) ) {
 			size = Int(ceil(sizemin + fabs(min-values(i))/delta*deltasize)+0.5);
@@ -1206,7 +1205,7 @@ Bool WorldCanvas::drawMappedMarkers(const Vector<Float> &px,
 		}
 	}
 	clearNonDrawArea();
-	return true;
+	return True;
 }
 
 // Draw a set of lines.
@@ -1215,9 +1214,9 @@ Bool WorldCanvas::drawLines(const Matrix<Double> &vertices,
 	Matrix<Int> pixelpts;
 	if (castingConversion(pixelpts, vertices, linear)) {
 		itsPixelCanvas->drawLines(pixelpts);
-		return true;
+		return True;
 	} else {
-		return false;
+		return False;
 	}
 }
 
@@ -1227,9 +1226,9 @@ Bool WorldCanvas::drawPolyline(const Matrix<Double> &vertices,
 	Matrix<Int> pixelpts;
 	if (castingConversion(pixelpts, vertices, linear)) {
 		itsPixelCanvas->drawPolyline(pixelpts);
-		return true;
+		return True;
 	} else {
-		return false;
+		return False;
 	}
 }
 
@@ -1239,9 +1238,9 @@ Bool WorldCanvas::drawPolygon(const Matrix<Double> &vertices,
 	Matrix<Int> pixelpts;
 	if (castingConversion(pixelpts, vertices, linear)) {
 		itsPixelCanvas->drawPolygon(pixelpts);
-		return true;
+		return True;
 	} else {
-		return false;
+		return False;
 	}
 }
 
@@ -1302,16 +1301,16 @@ Bool WorldCanvas::drawBeamEllipse(Float major, Float minor,  Float pa,
 	// (not mine, I hope)).
 
 	Unit rad("rad");
-	if(rad!=majunit || rad!=minunit || rad!=paunit) return false;
+	if(rad!=majunit || rad!=minunit || rad!=paunit) return False;
 	// Check that passed units are angular.
 
 	DisplayCoordinateSystem* cs = itsCoordinateSystem;
-	if(cs==0) return false;
-	if(cs->nPixelAxes()<2) return false;	// (shouldn't happen).
+	if(cs==0) return False;
+	if(cs->nPixelAxes()<2) return False;	// (shouldn't happen).
 
 	Int dcno = cs->findCoordinate(Coordinate::DIRECTION);
-	if(dcno<0) return false;	// We need a direction coordinate.
-	if(cs->findCoordinate(Coordinate::DIRECTION, dcno)!=-1) return false;
+	if(dcno<0) return False;	// We need a direction coordinate.
+	if(cs->findCoordinate(Coordinate::DIRECTION, dcno)!=-1) return False;
 	// (too weird to deal with...).
 
 	const DirectionCoordinate& dc = cs->directionCoordinate(dcno);
@@ -1334,7 +1333,7 @@ Bool WorldCanvas::drawBeamEllipse(Float major, Float minor,  Float pa,
 	// (data Lattice element) on the WC
 
 
-	if(itsLinXMax<=itsLinXMin || itsLinYMax<=itsLinYMin) return false;
+	if(itsLinXMax<=itsLinXMin || itsLinYMax<=itsLinYMin) return False;
 	// (shouldn't happen).
 
 	screenPerLin[0] = itsCanvasDrawXSize / (itsLinXMax - itsLinXMin);
@@ -1344,7 +1343,7 @@ Bool WorldCanvas::drawBeamEllipse(Float major, Float minor,  Float pa,
 	for(Int ax=0; ax<2; ax++) {
 		Int coordno, dirax;
 		cs->findPixelAxis(coordno, dirax, ax);
-		if(coordno!=dcno) return false;
+		if(coordno!=dcno) return False;
 		// Direction Coordinatess (sky) must be on display.
 		dirAxNo[ax] = dirax;
 		// dirax:  0 means the Long/Ra-like axis,  1 the Lat/Dec-like axis.
@@ -1352,14 +1351,14 @@ Bool WorldCanvas::drawBeamEllipse(Float major, Float minor,  Float pa,
 		Int wax = cs->pixelAxisToWorldAxis(ax);
 		// (I dislike the philosophy of requiring a particular pixel
 		// axis to be identified with a particular sky axis, actually...).
-		if(wax<0) return false;
+		if(wax<0) return False;
 		String csunit = cs->worldAxisUnits()[wax];
 
-		if(rad!=csunit) return false;	// (cs units should be angular).
+		if(rad!=csunit) return False;	// (cs units should be angular).
 
 		Double radincr = Quantum<Double>(incr[dirax], csunit).getValue(rad);
 		// relevant axis's world coordinate increment in radians.
-		if(radincr==0.) return false;
+		if(radincr==0.) return False;
 		stretch[ax] = (1./radincr) *  screenPerLin[ax];
 	}
 	// On each canvas axis, the current conversion factor from relative
@@ -1367,7 +1366,7 @@ Bool WorldCanvas::drawBeamEllipse(Float major, Float minor,  Float pa,
 
 
 	if( (dirAxNo[0] != 0 && dirAxNo[0] !=1 ) ||
-			(dirAxNo[1] != 1-dirAxNo[0]) ) return false;
+			(dirAxNo[1] != 1-dirAxNo[0]) ) return False;
 	// (Will usually be (0,1), but will be (1,0) if the sky coordinates
 	// are transposed from their normal order on the WorldCanvas.
 	// It must be one or the other -- _both_ direction axes must
@@ -1402,7 +1401,7 @@ Bool WorldCanvas::drawBeamEllipse(Float major, Float minor,  Float pa,
 
 	Matrix<Double> pc = dc.linearTransform();	// ('PC Matrix')
 
-	if(pc.nrow()==2 && pc.ncolumn()==2) {		// (should be true)
+	if(pc.nrow()==2 && pc.ncolumn()==2) {		// (should be True)
 		if( abs(pc(0,0)*pc(0,1) + pc(1,0)*pc(1,1)) < 1.e-5 &&
 				near(pc(0,0)*pc(0,0) + pc(1,0)*pc(1,0) , 1.)   &&
 				near(pc(0,1)*pc(0,1) + pc(1,1)*pc(1,1) , 1.) ) {
@@ -1452,7 +1451,7 @@ Bool WorldCanvas::drawBeamEllipse(Float major, Float minor,  Float pa,
 	itsPixelCanvas->drawEllipse(scrcx, scrcy,  radsmaj, radsmin,  degpa,
 			outline,    stretch[0], stretch[1]);
 
-	return true;
+	return True;
 }
 
 
@@ -1558,7 +1557,7 @@ bool WorldCanvas::drawContourMap(const Vector<Double> &blc,
 
 	// Set values of sampledImage to magic value where blanked
 
-	MaskedArray<Float> t(sampledImage, sampledMask == false);
+	MaskedArray<Float> t(sampledImage, sampledMask == False);
 	t = blank;
 
 	// scaling - must finish at itsLinXMax, itsLinYMax:
@@ -1861,14 +1860,14 @@ Bool WorldCanvas::redrawIndexedImage(void* drawObj,
 	// Redraw from color-indexed image cache, if possible (speeds up
 	// colormap-only changes considerably).
 
-	if(!images_.isDefined(drawObj)) return false;	// No such image.
+	if(!images_.isDefined(drawObj)) return False;	// No such image.
 
 	ColorIndexedImage_* im = images_(drawObj);
 
 	if( reason != Display::ColorTableChange ||
 			im->colormapSize != itsPixelCanvas->getColormapSize() ) {
 		removeIndexedImage(drawObj);
-		return false;
+		return False;
 	}
 	// not a colormap-only refresh, or colormap size has changed.
 	// Old color-indexed image can't be reused -- remove it.
@@ -1876,7 +1875,7 @@ Bool WorldCanvas::redrawIndexedImage(void* drawObj,
 	if(im->maskValid()) mapToColorAndDrawImage(im->blc, im->data,
 			im->mask, opaqueMask);
 	else		      mapToColorAndDrawImage(im->blc, im->data);
-	return true;
+	return True;
 }	// Successful redraw.
 
 
@@ -1885,10 +1884,10 @@ Bool WorldCanvas::removeIndexedImage(void* drawObj) {
 	// Remove a color-indexed image from the cache, if any.  Return value
 	// indicates whether there was anything to remove.
 
-	if(!images_.isDefined(drawObj)) return false;
+	if(!images_.isDefined(drawObj)) return False;
 	delete images_(drawObj);
 	images_.remove(drawObj);
-	return true;
+	return True;
 }
 
 
@@ -2170,7 +2169,7 @@ bool WorldCanvas::drawVectorMap(const Vector<Double>& blc,
 		dMax = 1.0;
 	} else {
 		if (useMask) {
-			MaskedArray<Float> mData(amp, mask, true);
+			MaskedArray<Float> mData(amp, mask, True);
 			dMax = max(mData);
 		} else {
 			dMax = max(amp);
@@ -2535,10 +2534,10 @@ void WorldCanvas::ctorInit() {
 	itsResampleHandler = new WCSimpleResampleHandler(Interpolate2D::NEAREST);
 	itsDataScaleHandler = new WCLinearScaleHandler;
 
-	itsOwnSizeControlHandler = true;
-	itsOwnCoordinateHandler = true;
-	itsOwnResampleHandler = true;
-	itsOwnDataScaleHandler = true;
+	itsOwnSizeControlHandler = True;
+	itsOwnCoordinateHandler = True;
+	itsOwnResampleHandler = True;
+	itsOwnDataScaleHandler = True;
 
 	itsREHListIter = new ListIter<DisplayEH *>(&itsRefreshEHList);
 	itsPEHListIter = new ListIter<WCPositionEH *>(&itsPositionEHList);
@@ -2550,23 +2549,23 @@ void WorldCanvas::ctorInit() {
 
 	// These are inter-dependent attributes!!!  Can't use
 	// attributes for these variables.
-	attributes.add("canvasDrawXOffset", &itsCanvasDrawXOffset, 0, false, true);
-	attributes.add("canvasDrawYOffset", &itsCanvasDrawYOffset, 0, false, true);
-	attributes.add("canvasDrawXSize", &itsCanvasDrawXSize, 0, false, true);
-	attributes.add("canvasDrawYSize", &itsCanvasDrawYSize, 0, false, true);
+	attributes.add("canvasDrawXOffset", &itsCanvasDrawXOffset, 0, False, True);
+	attributes.add("canvasDrawYOffset", &itsCanvasDrawYOffset, 0, False, True);
+	attributes.add("canvasDrawXSize", &itsCanvasDrawXSize, 0, False, True);
+	attributes.add("canvasDrawYSize", &itsCanvasDrawYSize, 0, False, True);
 
-	attributes.add("linXMin", &itsLinXMin, 0.0, false, true);
-	attributes.add("linXMax", &itsLinXMax, 0.0, false, true);
-	attributes.add("linYMin", &itsLinYMin, 0.0, false, true);
-	attributes.add("linYMax", &itsLinYMax, 0.0, false, true);
+	attributes.add("linXMin", &itsLinXMin, 0.0, False, True);
+	attributes.add("linXMax", &itsLinXMax, 0.0, False, True);
+	attributes.add("linYMin", &itsLinYMin, 0.0, False, True);
+	attributes.add("linYMax", &itsLinYMax, 0.0, False, True);
 
-	attributes.add("linXMinLimit", &itsLinXMinLimit, 0.0, false, true);
-	attributes.add("linXMaxLimit", &itsLinXMaxLimit, 0.0, false, true);
-	attributes.add("linYMinLimit", &itsLinYMinLimit, 0.0, false, true);
-	attributes.add("linYMaxLimit", &itsLinYMaxLimit, 0.0, false, true);
+	attributes.add("linXMinLimit", &itsLinXMinLimit, 0.0, False, True);
+	attributes.add("linXMaxLimit", &itsLinXMaxLimit, 0.0, False, True);
+	attributes.add("linYMinLimit", &itsLinYMinLimit, 0.0, False, True);
+	attributes.add("linYMaxLimit", &itsLinYMaxLimit, 0.0, False, True);
 
-	attributes.add("dataMin", &itsDataMin, 0.0, false, true);
-	attributes.add("dataMax", &itsDataMax, 0.0, false, true);
+	attributes.add("dataMin", &itsDataMin, 0.0, False, True);
+	attributes.add("dataMax", &itsDataMax, 0.0, False, True);
 
 	setDefaultOptions();
 }
@@ -2612,15 +2611,15 @@ Bool WorldCanvas::castingConversion(Vector<Int> &pixelpt,
 			pixelpt(iter.pos()) = Int(pixelLoc(iter.pos()) + 0.5);
 			iter.next();
 		}
-		return true;
+		return True;
 	} else {
-		return false;
+		return False;
 	}
 }
 Bool WorldCanvas::castingConversion(Matrix<Int> &pixelpts,
 		const Matrix<Double> &worldpts,
 		const Bool &linear) {
-	Vector<Bool> failures(worldpts.nrow(), false);
+	Vector<Bool> failures(worldpts.nrow(), False);
 	Matrix<Double> pixelLocs(worldpts.nrow(), 2);
 	Bool succ;
 	if (linear) {
@@ -2635,7 +2634,7 @@ Bool WorldCanvas::castingConversion(Matrix<Int> &pixelpts,
 			pixelpts(iter.pos()) = Int(pixelLocs(iter.pos()) + 0.5);
 			iter.next();
 		}
-		return true;
+		return True;
 	} else {
 		// partial success is possible:
 		uInt count = 0;
@@ -2654,17 +2653,17 @@ Bool WorldCanvas::castingConversion(Matrix<Int> &pixelpts,
 					j++;
 				}
 			}
-			return true;
+			return True;
 		} else {
 			// no successful conversions at all!
-			return false;
+			return False;
 		}
 	}
 }
 Bool WorldCanvas::castingConversion(Matrix<Float> &pixelpts,
 		const Matrix<Double> &worldpts,
 		const Bool &linear) {
-	Vector<Bool> failures(worldpts.nrow(), false);
+	Vector<Bool> failures(worldpts.nrow(), False);
 	Matrix<Double> pixelLocs(worldpts.nrow(), 2);
 	Bool succ;
 	if (linear) {
@@ -2679,9 +2678,9 @@ Bool WorldCanvas::castingConversion(Matrix<Float> &pixelpts,
 			pixelpts(iter.pos()) = Float(pixelLocs(iter.pos()));
 			iter.next();
 		}
-		return true;
+		return True;
 	} else {
-		return false;
+		return False;
 	}
 }
 
@@ -2693,7 +2692,7 @@ Bool WorldCanvas::castingClippingConversion(Vector<Int> &pixelx,
 		const Bool /*linear*/) {
 	if (worldx.nelements() != worldy.nelements()) {
 		throw(AipsError("Non-conformant input to WorldCanvas::castingConversion"));
-		//return false;
+		//return False;
 	}
 
 	Vector<Double> worldco(2), linearco(2), pixelco(2);
@@ -2706,7 +2705,7 @@ Bool WorldCanvas::castingClippingConversion(Vector<Int> &pixelx,
 	pixelx.resize(worldx.shape());
 	pixely.resize(worldy.shape());
 	validConversions.resize(worldx.shape());
-	validConversions = false;
+	validConversions = False;
 
 	for (uInt i = 0; i < worldx.nelements(); i++) {
 		worldco(0) = worldx(i);
@@ -2727,15 +2726,15 @@ Bool WorldCanvas::castingClippingConversion(Vector<Int> &pixelx,
 		// ok - so lets cast to Int and store it
 		pixelx(count) = Int(pixelco(0) + 0.5);
 		pixely(count) = Int(pixelco(1) + 0.5);
-		validConversions(i) = true;
+		validConversions(i) = True;
 		count++;
 	}
-	pixelx.resize(count, true);
-	pixely.resize(count, true);
+	pixelx.resize(count, True);
+	pixely.resize(count, True);
 	if (count>0) {
-		return true;
+		return True;
 	} else {
-		return false;
+		return False;
 	}
 }
 
@@ -2918,13 +2917,13 @@ void WorldCanvas::mapToColorAndDrawImage(const Vector<Int> &blc,
 		const Matrix<uInt> &scaledImage) {
 
 	Matrix<uInt> colorImage(scaledImage.shape());
-	itsPixelCanvas->mapToColor(colorImage, scaledImage, true);
+	itsPixelCanvas->mapToColor(colorImage, scaledImage, True);
 	itsPixelCanvas->drawImage(colorImage, blc(0), blc(1));
 }
 
 Matrix<uInt> WorldCanvas::mapToColor( const Matrix<uInt> & scaledImage ){
 	Matrix<uInt> colorImage(scaledImage.shape());
-	itsPixelCanvas->mapToColor(colorImage, scaledImage, true);
+	itsPixelCanvas->mapToColor(colorImage, scaledImage, True);
 	return colorImage;
 }
 
@@ -2937,7 +2936,7 @@ void WorldCanvas::mapToColorAndDrawImage(const Vector<Int> &blc,
 		Bool opaqueMask) {
 
 	Matrix<uInt> colorImage(scaledImage.shape());
-	itsPixelCanvas->mapToColor(colorImage, scaledImage, true);
+	itsPixelCanvas->mapToColor(colorImage, scaledImage, True);
 	itsPixelCanvas->drawImage(blc(0), blc(1), colorImage, mask, opaqueMask);
 }
 
@@ -2949,12 +2948,12 @@ Bool WorldCanvas::mapToColorAndDrawPoints(const Matrix<Double> &points,
 	// 1. convert world/linear to pixel
 	Matrix<Int> pixelpts;
 	if (!castingConversion(pixelpts, points, linear)) {
-		return false;
+		return False;
 	}
 	Vector<uInt> colorValues(scaledValues.shape());
-	itsPixelCanvas->mapToColor(colorValues, scaledValues, true);
+	itsPixelCanvas->mapToColor(colorValues, scaledValues, True);
 	itsPixelCanvas->drawColoredPoints(pixelpts, colorValues);
-	return true;
+	return True;
 }
 
 // Draw a set of Colormapped ellipses.
@@ -2969,18 +2968,18 @@ Bool WorldCanvas::mapToColorAndDrawEllipses(const Matrix<Double> &centres,
 	// 1. convert world/linear to pixel
 	Matrix<Float> pixelpts;
 	if (!castingConversion(pixelpts, centres, linear)) {
-		return false;
+		return False;
 	}
 
 	// 2. get true pixelcanvas color values
 	Vector<uInt> colorValues(scaledValues.shape());
-	itsPixelCanvas->mapToColor(colorValues, scaledValues, true);
+	itsPixelCanvas->mapToColor(colorValues, scaledValues, True);
 
 	// 3. draw the ellipses
 	itsPixelCanvas->drawColoredEllipses(pixelpts, smajor, sminor,
 			pangle, colorValues,
 			scale, outline);
-	return true;
+	return True;
 }
 
 Bool WorldCanvas::inPC(Int x, Int y) {

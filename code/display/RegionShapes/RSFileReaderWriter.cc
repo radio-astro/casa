@@ -29,7 +29,6 @@
 #include <display/RegionShapes/DS9FileReader.h>
 #include <display/RegionShapes/XMLFileReaderWriter.h>
 
-using namespace casacore;
 namespace casa {
 
 // RFERROR DEFINITIONS //

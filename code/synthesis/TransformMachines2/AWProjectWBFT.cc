@@ -51,7 +51,6 @@
 #define MAXPOINTINGERROR 250.0 // Max. pointing error in arcsec used to
 // determine the resolution of the
 // tabulated exp() function.
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
   namespace refim{
   //
@@ -71,7 +70,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			       Bool conjBeams,
 			       Bool doublePrecGrid)
     : AWProjectFT(nWPlanes,icachesize,cfcache,cf,visResampler,applyPointingOffset,doPBCorr, itilesize,pbLimit,usezero,conjBeams,doublePrecGrid),
-      avgPBReady_p(false),resetPBs_p(true),wtImageFTDone_p(false),fieldIds_p(0),rotatedCFWts_p(),visResamplerWt_p(),oneTimeMessage_p(false)
+      avgPBReady_p(False),resetPBs_p(True),wtImageFTDone_p(False),fieldIds_p(0),rotatedCFWts_p(),visResamplerWt_p(),oneTimeMessage_p(False)
   {
     (void)paSteps;
     //
@@ -101,7 +100,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //---------------------------------------------------------------
   //
   AWProjectWBFT::AWProjectWBFT(const RecordInterface& stateRec)
-    : AWProjectFT(stateRec), oneTimeMessage_p(false)
+    : AWProjectFT(stateRec), oneTimeMessage_p(False)
   {
     LogIO log_l(LogOrigin("AWProjectWBFT2", "AWProjectWBFT[R&D]"));
     // Construct from the input state record
@@ -267,7 +266,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO log_l(LogOrigin("AWProjectWBFT2","normalizeAvgPB[R&D]"));
     // We accumulated normalized PBs.  So don't normalize the average
     // PB.
-    pbNormalized_p = false;
+    pbNormalized_p = False;
     
   }
   //
@@ -287,7 +286,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					   const ImageInterface<Complex>& /*imageTemplate*/,
 					   ImageInterface<Float>& /*sensitivityImage*/)
   {
-    if (oneTimeMessage_p == false)
+    if (oneTimeMessage_p == False)
       {
 	LogIO log_l(LogOrigin("AWProjectWBFT2", "makeSensitivityImage[R&D]"));
 	log_l << "Setting up for weights accumulation ";
@@ -296,7 +295,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      << endl
 	      << "Consequently, the first gridding cycle will be slower than the subsequent ones." 
 	      << LogIO::WARN;
-	oneTimeMessage_p=true;
+	oneTimeMessage_p=True;
       }
   }
   //
@@ -311,8 +310,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     //cerr << "From ftWeightImage" << endl;
 
-    Bool doSumWtNorm=true;
-    if (sumWt.shape().nelements()==0) doSumWtNorm=false;
+    Bool doSumWtNorm=True;
+    if (sumWt.shape().nelements()==0) doSumWtNorm=False;
     doSumWtNorm = doSumWtNorm; // Dummy statement to get rid of compiler warnings
     if ((sumWt.shape().nelements() < 2) || 
 	(sumWt.shape()(0) != wtImage.shape()(2)) || 
@@ -331,17 +330,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //   String name("wtimg.im");
     //   storeArrayAsImage(name,griddedWeights.coordinates(),wtImage.get());
     // }
-    LatticeFFT::cfft2d(wtImage,false);
+    LatticeFFT::cfft2d(wtImage,False);
     // {
     //   String name("ftwtimg.im");
     //   storeArrayAsImage(name,griddedWeights.coordinates(),wtImage.get());
     // }
-    wtImageFTDone_p=true;
+    wtImageFTDone_p=True;
 
     Int sizeX=wtImage.shape()(0), sizeY=wtImage.shape()(1);
 
-    Array<Complex> wtBuf; wtImage.get(wtBuf,false);
-    ArrayLattice<Complex> wtLat(wtBuf,true);
+    Array<Complex> wtBuf; wtImage.get(wtBuf,False);
+    ArrayLattice<Complex> wtLat(wtBuf,True);
     //
     // Copy one 2D plane at a time, normalizing by the sum of weights
     // and possibly 2D FFT.
@@ -402,7 +401,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //    if (avgPBReady_p) return;
     LogIO log_l(LogOrigin("AWProjectWBFT2", "makeSensitivitySqImage[R&D]"));
 
-    //    avgPBReady_p=true;
+    //    avgPBReady_p=True;
 
     ftWeightImage(wtImage, sumWt, doFFTNorm);
 
@@ -410,11 +409,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     sensitivitySqImage.setCoordinateInfo(griddedWeights.coordinates());
 
     Int sizeX=wtImage.shape()(0), sizeY=wtImage.shape()(1);
-    Array<Complex> senSqBuf; sensitivitySqImage.get(senSqBuf,false); 
-    ArrayLattice<Complex> senSqLat(senSqBuf, true);
+    Array<Complex> senSqBuf; sensitivitySqImage.get(senSqBuf,False); 
+    ArrayLattice<Complex> senSqLat(senSqBuf, True);
 
-    Array<Complex> wtBuf; wtImage.get(wtBuf,false);
-    ArrayLattice<Complex> wtLat(wtBuf,true);
+    Array<Complex> wtBuf; wtImage.get(wtBuf,False);
+    ArrayLattice<Complex> wtLat(wtBuf,True);
     //
     // Copy one 2D plane at a time, normalizing by the sum of weights
     // and possibly 2D FFT.
@@ -449,9 +448,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     polPlaneSq0C = polPlane0C*polPlane1C;
     polPlaneSq1C = polPlaneSq0C;
 
-    pbNormalized_p=false;
+    pbNormalized_p=False;
 
-    resetPBs_p=false;
+    resetPBs_p=False;
     // String name("avgPBSq.im");
     // storeImg(name,sensitivitySqImage);
   }
@@ -494,11 +493,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     sensitivityImage.setCoordinateInfo(griddedWeights.coordinates());
 
     Int sizeX=wtImage.shape()(0), sizeY=wtImage.shape()(1);
-    Array<Float> senBuf; sensitivityImage.get(senBuf,false); 
-    ArrayLattice<Float> senLat(senBuf, true);
+    Array<Float> senBuf; sensitivityImage.get(senBuf,False); 
+    ArrayLattice<Float> senLat(senBuf, True);
 
-    Array<Complex> wtBuf; wtImage.get(wtBuf,false);
-    ArrayLattice<Complex> wtLat(wtBuf,true);
+    Array<Complex> wtBuf; wtImage.get(wtBuf,False);
+    ArrayLattice<Complex> wtLat(wtBuf,True);
     //
     // Set up Lattice iteratos on wtImage and sensitivityImage
     //
@@ -547,10 +546,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if (tt_pp == "")
       cfCache_p->flush(sensitivityImage,sensitivityPatternQualifierStr_p);
 
-    pbNormalized_p=false;
-    resetPBs_p=false;
+    pbNormalized_p=False;
+    resetPBs_p=False;
 
-    avgPBReady_p=true;
+    avgPBReady_p=True;
   }
   //
   //---------------------------------------------------------------
@@ -587,15 +586,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // // REMOVE THIS CODE
     // {
     //   tt_pp="_conj_";
-    //   makeSensitivityImage(griddedConjWeights, *avgPB_p, weights, true);
+    //   makeSensitivityImage(griddedConjWeights, *avgPB_p, weights, True);
     //   tt_pp="";
-    //   wtImageFTDone_p = avgPBReady_p=false;
+    //   wtImageFTDone_p = avgPBReady_p=False;
     // }
     // // REMOVE THIS CODE
-    makeSensitivityImage(griddedWeights, *avgPB_p, weights, true);
+    makeSensitivityImage(griddedWeights, *avgPB_p, weights, True);
 
     //        if (avgPBSq_p.null()) avgPBSq_p = new TempImage<Complex>();
-    //    makeSensitivitySqImage(griddedWeights, *avgPBSq_p, weights, true);
+    //    makeSensitivitySqImage(griddedWeights, *avgPBSq_p, weights, True);
 
     //
     // This calls the overloadable method normalizeImage() which
@@ -1173,11 +1172,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
 //     Int npa=1,actualConvSize, actualConvWtSize;
 //     Int paIndex_Fortran = paIndex; 
-//     // Int doAvgPB=((avgPBReady_p==false) && 
+//     // Int doAvgPB=((avgPBReady_p==False) && 
 //     //     	 ((fabs(lastPAUsedForWtImg-actualPA)*57.2956 >= DELTAPA) || 
 //     //     	  (lastPAUsedForWtImg == MAGICPAVALUE)));
 
-//     Int doAvgPB=computeAvgPB(actualPA, lastPAUsedForWtImg);//(avgPBReady_p==false);
+//     Int doAvgPB=computeAvgPB(actualPA, lastPAUsedForWtImg);//(avgPBReady_p==False);
 //     //    actualConvSize = convFunc_p.shape()(0);
 //     actualConvSize = cfs_p.data->shape()(0);
 //     //    actualConvWtSize = convWeights_p.shape()(0);
@@ -1267,7 +1266,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //     if (!avgPBReady_p)
 //       {
 // 	// Get the griddedWeigths as a referenced array
-// 	Array<Complex> gwts; Bool removeDegenerateAxis=false;
+// 	Array<Complex> gwts; Bool removeDegenerateAxis=False;
 // 	griddedWeights.get(gwts, removeDegenerateAxis);
 // 	//	griddedWeights.put(griddedWeights.get()+avgPB_p);
 // 	gwts = gwts + avgAperture;
@@ -1297,7 +1296,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //     npol  = image->shape()(2);
 //     nchan = image->shape()(3);
 
-//     isTiled = false;
+//     isTiled = False;
 
 //     sumWeight=0.0;
 //     weight.resize(sumWeight.shape());
@@ -1308,7 +1307,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // 	imageCache->flush();
 // 	image->set(Complex(0.0));
 // 	//lattice=image;
-// 	lattice=CountedPtr<Lattice<Complex> > (image, false);
+// 	lattice=CountedPtr<Lattice<Complex> > (image, False);
 //       }
 //     else 
 //       {
@@ -1330,7 +1329,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	pbPeaks.resize(griddedWeights.shape()(2));
 	pbPeaks.set(0.0);
 
-	resetPBs_p=false;
+	resetPBs_p=False;
       }
     avgPBReady_p = (cfCache_p->loadAvgPB(avgPB_p,sensitivityPatternQualifierStr_p) != CFDefs::NOTCACHED);
     //    avgPBReady_p = cfCache_p->avgPBReady(sensitivityPatternQualifierStr_p);
@@ -1341,7 +1340,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if (visResamplerWt_p.null()) visResamplerWt_p = visResampler_p->clone();
 	visResamplerWt_p = visResampler_p;
 	visResamplerWt_p->setMaps(chanMap, polMap);
-	Array<Complex> gwts; Bool removeDegenerateAxis=false;
+	Array<Complex> gwts; Bool removeDegenerateAxis=False;
 	griddedWeights.get(gwts, removeDegenerateAxis);
 	//	cerr << "initializeToSky for gwts" << endl;
 	visResamplerWt_p->initializeToSky(gwts, sumCFWeight);
@@ -1375,7 +1374,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     if (!avgPBReady_p) 
       {
-	Array<Complex> gwts; Bool removeDegenerateAxis=false;
+	Array<Complex> gwts; Bool removeDegenerateAxis=False;
 	griddedWeights.get(gwts, removeDegenerateAxis);
 	visResamplerWt_p->finalizeToSky(gwts, sumCFWeight);
 	visResamplerWt_p->releaseBuffers();
@@ -1425,18 +1424,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     convFuncCtor_p->prepareConvFunction(vb,theMap);
     runTime1_p += timer_p.real();
     //
-    // Set the uvw array to zero-sized array and dopsf=true.
+    // Set the uvw array to zero-sized array and dopsf=True.
     // uvw.nelements()==0 is a hint to the re-sampler to put the
-    // gridded weights at the origin of the uv-grid. dopsf=true so
+    // gridded weights at the origin of the uv-grid. dopsf=True so
     // that CF*Wts are accumulated (as against CF*Wts*Vis).
     //
     // Receive the sum-of-weights in a dummy array.
     Matrix<Double> uvwOrigin;
     vbs.uvw_p.reference(uvwOrigin); 
-    Bool dopsf_l=true;
+    Bool dopsf_l=True;
     vbs.accumCFs_p=((vbs.uvw_p.nelements() == 0) && dopsf_l);
     
-    // Array<Complex> gwts; Bool removeDegenerateAxis=false;
+    // Array<Complex> gwts; Bool removeDegenerateAxis=False;
     // wtsGrid.get(gwts, removeDegenerateAxis);
     Int nDataChan = vbs.flagCube_p.shape()[1];
     
@@ -1457,7 +1456,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// Get a reference to the pixels of griddedWeights (a
 	// TempImage!)
 	//
-	Array<Complex> gwts; Bool removeDegenerateAxis=false;
+	Array<Complex> gwts; Bool removeDegenerateAxis=False;
 	griddedWeights.get(gwts, removeDegenerateAxis);
 	resampleCFToGrid(gwts, vbs, vb);
       }
@@ -1476,7 +1475,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// Get a reference to the pixels of griddedWeights (a
 	// TempImage!)
 	//
-	Array<Complex> gwts; Bool removeDegenerateAxis=false;
+	Array<Complex> gwts; Bool removeDegenerateAxis=False;
 	griddedWeights.get(gwts, removeDegenerateAxis);
 	resampleCFToGrid(gwts, vbs, vb);
       }
@@ -1488,12 +1487,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if (resetCFC) cfCache_p = cfc;
     if (!cfCache_p.null())
       {
-	cfs2_p = CountedPtr<CFStore2>(&cfCache_p->memCache2_p[0],false);//new CFStore2;
-	cfwts2_p =  CountedPtr<CFStore2>(&cfCache_p->memCacheWt2_p[0],false);//new CFStore2;
+	cfs2_p = CountedPtr<CFStore2>(&cfCache_p->memCache2_p[0],False);//new CFStore2;
+	cfwts2_p =  CountedPtr<CFStore2>(&cfCache_p->memCacheWt2_p[0],False);//new CFStore2;
 	
 	// cfCache_p->summarize(cfCache_p->memCache2_p,String("New CFC"));
 	// cfCache_p->summarize(cfCache_p->memCacheWt2_p,String(""));
-	avgPBReady_p=false;
+	avgPBReady_p=False;
       }
   }
 

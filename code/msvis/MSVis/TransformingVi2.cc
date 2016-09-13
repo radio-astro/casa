@@ -33,10 +33,8 @@
 
 #define Tvi2NotImplemented() {Throw ("Not implemented.");}
 
-using namespace casacore;
 using namespace casa::utilj;
 
-using namespace casacore;
 namespace casa {
 
 namespace vi {
@@ -172,9 +170,9 @@ TransformingVi2::dataDescriptionId ()  const
 }
 
 void
-TransformingVi2::dataDescriptionIds(Vector<int>& ddIds) const
+TransformingVi2::dataDescriptionIds(casa::Vector<int>& ddIds) const
 {
-    getVii()->dataDescriptionIds (ddIds);
+    return getVii()->dataDescriptionIds (ddIds);
 }
 
 Bool
@@ -896,13 +894,13 @@ void TransformingVi2::calculateFlagRowFromFlagCube (const Cube<Bool> &flagCube, 
 	size_t nRows = shape(2);
 
 	// Reshape flag cube to match the input shape
-	flagRow.resize(nRows,false);
-	flagRow = false;
+	flagRow.resize(nRows,False);
+	flagRow = False;
 
-	Bool rowFlagValue = false;
+	Bool rowFlagValue = False;
 	for (size_t row_i =0;row_i<nRows;row_i++)
 	{
-		rowFlagValue = true;
+		rowFlagValue = True;
 		for (size_t chan_i =0;chan_i<nChan;chan_i++)
 		{
 			if (rowFlagValue)
@@ -911,7 +909,7 @@ void TransformingVi2::calculateFlagRowFromFlagCube (const Cube<Bool> &flagCube, 
 				{
 					if (not flagCube(corr_i,chan_i,row_i))
 					{
-						rowFlagValue = false;
+						rowFlagValue = False;
 						break;
 					}
 				}
@@ -931,5 +929,4 @@ void TransformingVi2::calculateFlagRowFromFlagCube (const Cube<Bool> &flagCube, 
 
 } // end namespace vi
 
-using namespace casacore;
 } // end namespace casa

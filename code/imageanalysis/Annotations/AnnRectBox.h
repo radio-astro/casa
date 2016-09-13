@@ -50,20 +50,20 @@ class AnnRectBox: public AnnPolygon {
 public:
 
 	AnnRectBox(
-		const casacore::Quantity& blcx,
-		const casacore::Quantity& blcy,
-		const casacore::Quantity& trcx,
-		const casacore::Quantity& trcy,
-		const casacore::String& dirRefFrameString,
-		const casacore::CoordinateSystem& csys,
-		const casacore::IPosition& imShape,
-		const casacore::Quantity& beginFreq,
-		const casacore::Quantity& endFreq,
-		const casacore::String& freqRefFrameString,
-		const casacore::String& dopplerString,
-		const casacore::Quantity& restfreq,
-		const casacore::Vector<casacore::Stokes::StokesTypes> stokes,
-		const casacore::Bool annotationOnly
+		const Quantity& blcx,
+		const Quantity& blcy,
+		const Quantity& trcx,
+		const Quantity& trcy,
+		const String& dirRefFrameString,
+		const CoordinateSystem& csys,
+		const IPosition& imShape,
+		const Quantity& beginFreq,
+		const Quantity& endFreq,
+		const String& freqRefFrameString,
+		const String& dopplerString,
+		const Quantity& restfreq,
+		const Vector<Stokes::StokesTypes> stokes,
+		const Bool annotationOnly
 	);
 
 	// Simplified constructor.
@@ -73,13 +73,13 @@ public:
 	// is a region (not just an annotation), although this value can be changed after
 	// construction.
 	AnnRectBox(
-		const casacore::Quantity& blcx,
-		const casacore::Quantity& blcy,
-		const casacore::Quantity& trcx,
-		const casacore::Quantity& trcy,
-		const casacore::CoordinateSystem& csys,
-		const casacore::IPosition& imShape,
-		const casacore::Vector<casacore::Stokes::StokesTypes>& stokes
+		const Quantity& blcx,
+		const Quantity& blcy,
+		const Quantity& trcx,
+		const Quantity& trcy,
+		const CoordinateSystem& csys,
+		const IPosition& imShape,
+		const Vector<Stokes::StokesTypes>& stokes
 	);
 
 	// implicit copy constructor and destructor are fine
@@ -92,9 +92,9 @@ public:
 	// coordinate system if necessary.
 	// blc is the 0th component, trc the 1st in the returned vector.
 
-	//casacore::Vector<casacore::MDirection> getCorners() const;
+	//Vector<MDirection> getCorners() const;
 
-	std::ostream& print(std::ostream &os) const;
+	ostream& print(ostream &os) const;
 
 private:
 	AnnotationBase::Direction _inputCorners;

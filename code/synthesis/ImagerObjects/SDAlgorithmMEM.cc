@@ -63,7 +63,6 @@
 #include <synthesis/MeasurementEquations/IPLatConvEquation.h>
 
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
   SDAlgorithmMEM::SDAlgorithmMEM(String entropy):
@@ -84,7 +83,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       // Put check in Deconvolver parameter object.
       os << " Known MEM entropies: entropy | emptiness " << LogIO::POST;
       os << LogIO::SEVERE << "Unknown MEM entropy: " << entropy << LogIO::POST;
-      //      return false;
+      //      return False;
     }
    
  }
@@ -99,10 +98,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SDAlgorithmMEM","initializeDeconvolver",WHERE) );
 
-    itsImages->residual()->get( itsMatResidual, true );
-    itsImages->model()->get( itsMatModel, true );
-    itsImages->psf()->get( itsMatPsf, true );
-    itsImages->mask()->get( itsMatMask, true );
+    itsImages->residual()->get( itsMatResidual, True );
+    itsImages->model()->get( itsMatModel, True );
+    itsImages->psf()->get( itsMatPsf, True );
+    itsImages->mask()->get( itsMatMask, True );
 
 
     //    cout << "initDecon : " << itsImages->residual()->shape() << " : " << itsMatResidual.shape() 
@@ -136,15 +135,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os( LogOrigin("SDAlgorithmMEM","takeOneStep",WHERE) );
 
     // tmp
-    itsImages->residual()->get( itsMatResidual, true );
-    itsImages->mask()->get( itsMatMask, true );
+    itsImages->residual()->get( itsMatResidual, True );
+    itsImages->mask()->get( itsMatMask, True );
     findMaxAbsMask( itsMatResidual, itsMatMask, itsPeakResidual, itsMaxPos );
     cout << "Peak Res at start of step : " << itsPeakResidual << endl;
     // tmp
 
 
     // Store current model in this matrix.
-    itsImages->model()->get( itsMatDeltaModel, true );
+    itsImages->model()->get( itsMatDeltaModel, True );
     itsMatModel.assign( itsMatDeltaModel ); // This should make an explicit copy
     cout << "Flux at start of step : " << sum(itsMatModel) << endl;
 
@@ -153,9 +152,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     // Add to construction params
     Float targetFlux=1.0;
-    Bool constrainTargetFlux=false;
-    Bool initializeModel=true; // Use incremental model ?
-    Bool imagePlane=true; // Use full image plane. Otherwise, use inner quarter.
+    Bool constrainTargetFlux=False;
+    Bool initializeModel=True; // Use incremental model ?
+    Bool imagePlane=True; // Use full image plane. Otherwise, use inner quarter.
     
     CEMemModel memer( *itsEnt, *(itsImages->model()), cycleNiter, cycleThreshold,
 		      targetFlux, constrainTargetFlux, 
@@ -211,14 +210,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     // Add delta model to old model
     //Bool ret2 = 
-    itsImages->model()->get( itsMatDeltaModel, true );
+    itsImages->model()->get( itsMatDeltaModel, True );
     itsMatModel += itsMatDeltaModel;
 
     //---------------------------------
 
     //  Find Peak Residual
-    itsImages->residual()->get( itsMatResidual, true );
-    itsImages->mask()->get( itsMatMask, true );
+    itsImages->residual()->get( itsMatResidual, True );
+    itsImages->mask()->get( itsMatMask, True );
     findMaxAbsMask( itsMatResidual, itsMatMask, itsPeakResidual, itsMaxPos );
     peakresidual = itsPeakResidual;
 

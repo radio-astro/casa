@@ -82,23 +82,23 @@ public:
   // current iteration (or reattach)
   CalVisBuffer& operator=(const VisBuffer& cvb);
 
-  // Assignment, optionally without copying the data across; with copy=true
+  // Assignment, optionally without copying the data across; with copy=True
   // this is identical to normal assignment operator
-  CalVisBuffer& assign(const VisBuffer& vb, casacore::Bool copy=true);
+  CalVisBuffer& assign(const VisBuffer& vb, Bool copy=True);
 
   // Update (simple) coord info 
   // (this OVERRIDES VisBuffer::updateCoordInfo(), which does more)
-  void updateCoordInfo(const VisBuffer * vb = NULL, const casacore::Bool dirDependent=true);
+  void updateCoordInfo(const VisBuffer * vb = NULL, const Bool dirDependent=True);
 
   // Apply amp-only or phase-only to data
-  void enforceAPonData(const casacore::String& apmode);
+  void enforceAPonData(const String& apmode);
 
   // Set the focus channel
   //  (forms references to focus-channel flag/data/model)
-  void setFocusChan(const casacore::Int focusChan=-1);
+  void setFocusChan(const Int focusChan=-1);
 
   // Size/init/finalize the residuals workspaces
-  void sizeResiduals(const casacore::Int& nPar,const casacore::Int& nDiff);
+  void sizeResiduals(const Int& nPar,const Int& nDiff);
   void initResidWithModel();
   void finalizeResiduals();
 
@@ -110,46 +110,46 @@ public:
   //
 
   // Access to focus-channel slices of the flags, data, and model
-  //  casacore::Cube<casacore::Bool>& infocusFlagCube() { return infocusFlagCube_p; }
-  //  const casacore::Cube<casacore::Bool>& infocusFlagCube() const {return this->infocusFlagCube();}
+  //  Cube<Bool>& infocusFlagCube() { return infocusFlagCube_p; }
+  //  const Cube<Bool>& infocusFlagCube() const {return this->infocusFlagCube();}
 
-  casacore::Matrix<casacore::Bool>& infocusFlag() { return infocusFlag_p; }
-  const casacore::Matrix<casacore::Bool>& infocusFlag() const {return this->infocusFlag();}
+  Matrix<Bool>& infocusFlag() { return infocusFlag_p; }
+  const Matrix<Bool>& infocusFlag() const {return this->infocusFlag();}
 
-  casacore::Cube<casacore::Complex>& infocusVisCube() { return infocusVisCube_p; }
-  const casacore::Cube<casacore::Complex>& infocusVisCube() const {return this->infocusVisCube();}
+  Cube<Complex>& infocusVisCube() { return infocusVisCube_p; }
+  const Cube<Complex>& infocusVisCube() const {return this->infocusVisCube();}
 
-  casacore::Cube<casacore::Complex>& infocusModelVisCube() { return infocusModelVisCube_p; }
-  const casacore::Cube<casacore::Complex>& infocusModelVisCube() const {return this->infocusModelVisCube();}
+  Cube<Complex>& infocusModelVisCube() { return infocusModelVisCube_p; }
+  const Cube<Complex>& infocusModelVisCube() const {return this->infocusModelVisCube();}
 
   // Workspace for the residual visibilities
-  casacore::Cube<casacore::Complex>& residuals() { return residuals_p; }
-  const casacore::Cube<casacore::Complex>& residuals() const {return this->residuals();}
+  Cube<Complex>& residuals() { return residuals_p; }
+  const Cube<Complex>& residuals() const {return this->residuals();}
 
   // Workspace for flags of the residuals
-  casacore::Matrix<casacore::Bool>& residFlag() { return residFlag_p; }
-  const casacore::Matrix<casacore::Bool>& residFlag() const {return this->residFlag();}
+  Matrix<Bool>& residFlag() { return residFlag_p; }
+  const Matrix<Bool>& residFlag() const {return this->residFlag();}
 
   // Workspace for the differentiated residuals
-  casacore::Array<casacore::Complex>& diffResiduals() { return diffResiduals_p; }
-  const casacore::Array<casacore::Complex>& diffResiduals() const {return this->diffResiduals();}
+  Array<Complex>& diffResiduals() { return diffResiduals_p; }
+  const Array<Complex>& diffResiduals() const {return this->diffResiduals();}
 
   //</group>
 
 private:
 
   // The current in-focus channel
-  casacore::Int focusChan_p;
+  Int focusChan_p;
 
   // actual storage for the data
-  //  casacore::Cube<casacore::Bool> infocusFlagCube_p;
-  casacore::Matrix<casacore::Bool> infocusFlag_p;
-  casacore::Cube<casacore::Complex> infocusVisCube_p;
-  casacore::Cube<casacore::Complex> infocusModelVisCube_p;
+  //  Cube<Bool> infocusFlagCube_p;
+  Matrix<Bool> infocusFlag_p;
+  Cube<Complex> infocusVisCube_p;
+  Cube<Complex> infocusModelVisCube_p;
 
-  casacore::Cube<casacore::Complex> residuals_p;
-  casacore::Matrix<casacore::Bool> residFlag_p;
-  casacore::Array<casacore::Complex> diffResiduals_p;
+  Cube<Complex> residuals_p;
+  Matrix<Bool> residFlag_p;
+  Array<Complex> diffResiduals_p;
 };
 
 

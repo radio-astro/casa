@@ -85,8 +85,8 @@ MirFiller::MirFiller(const String& mirfile, Bool scan, Int dbg)
       defpolsel_p(NULL), histbl_p(), scanlim_p(5*60), obslim_p(4*60*60), 
       tilesize_p(32), // 256
       planetfit_p(4), 
-      verbose_p(false), joinpol_p(false), tsyswt_p(true), 
-      movfield_p(true), compress_p(false), wideconv_p(MirFiller::NONE),
+      verbose_p(False), joinpol_p(False), tsyswt_p(True), 
+      movfield_p(True), compress_p(False), wideconv_p(MirFiller::NONE),
       updmodelint_p(8*60*60)
 {
     // create the filler
@@ -100,14 +100,14 @@ MirFiller::MirFiller(const String& mirfile, Bool scan, Int dbg)
 //    rdr_p = new MirVisReader(mirfile, scan, dbg);
 #if 0
     //TODO
-    GlishRecord sum = rdr_p.summary(false, false);
+    GlishRecord sum = rdr_p.summary(False, False);
     Int nwide, nspect;
     ((GlishArray) sum.get("nwide")).get(nwide);
     ((GlishArray) sum.get("nspect")).get(nspect);
     widesel_p.resize(IPosition(1,nwide));
-    widesel_p = true;
+    widesel_p = True;
     winsel_p.resize(IPosition(1,nspect));
-    winsel_p = true;
+    winsel_p = True;
 #endif
 }
 
@@ -132,10 +132,10 @@ void MirFiller::noJoinFill(const String& /*msfile*/) {
     MirDataRecord *rec = NULL;
 
     // initialize the reader 
-    //PJT    GlishRecord sum = rdr_p.summary(false, false);
+    //PJT    GlishRecord sum = rdr_p.summary(False, False);
     //rdr_p.reset(this, verbose_p, nwidesel_p > 0, 0);
 
-    Bool prescanned = false;
+    Bool prescanned = False;
     //((GlishArray) sum.get("scanned")).get(prescanned);
 
     // determine if we need a SOURCE_MODEL column (for planets).  Assume
@@ -231,7 +231,7 @@ void MirFiller::noJoinFill(const String& /*msfile*/) {
 	    }
 	    fm.obstime = time;
 	}
-	fm.obsupd = false;
+	fm.obsupd = False;
 
 	// figure out proper polarization setup
 	if (source != fm.source) {
@@ -310,7 +310,7 @@ void MirFiller::noJoinFill(const String& /*msfile*/) {
                 fm.msc->data().put(row, vis);
                 fm.msc->flag().put(row, flgs.xyPlane(1));
                 fm.msc->flagCategory().put(row, flgs);
-                fm.msc->flagRow().put(row, false);
+                fm.msc->flagRow().put(row, False);
                 row++; a++;
 	    } // end rec iter
 
@@ -327,7 +327,7 @@ void MirFiller::noJoinFill(const String& /*msfile*/) {
 	    // polarization
 	    if (! fm.pol->setCorr(rec->pol())) continue;
 	    if (fm.pol->getCurrent().getID() < 0) {
-		addPolarization(fm, true);
+		addPolarization(fm, True);
 	    }
 	    if (fm.getDataDescID(fm.fsetup->id, 
 				 fm.pol->getCurrent().getID()) < 0) 
@@ -438,19 +438,19 @@ void MirFiller::joinFill(const String& msfile) {
     Int i,j,k, a,r,s,w, offset, scan=0, accepted=0, nvis=0, 
 	row, nspw, mant1, mant2, aant1, aant2, p1, p2;
     Double time=0, intv=0, timecent, baseline;
-    Bool matched = false;
+    Bool matched = False;
     Vector<Double> uvw(3);
     MirSource *source = NULL;
     MirDataRecord *rec = NULL;
 
     // initialize the reader 
     //PJT 
-    //GlishRecord sum = rdr_p.summary(false, true);
+    //GlishRecord sum = rdr_p.summary(False, True);
     //rdr_p.reset(this, verbose_p, nwidesel_p > 0, 0);
 
     // determine if we need a SOURCE_MODEL column (for planets).  Assume
     // we do if we have not prescanned (as "hasplanet" may not be correct).
-    Bool prescanned = false;
+    Bool prescanned = False;
     // ((GlishArray) sum.get("scanned")).get(prescanned);
     Bool needSrcMods = ! prescanned;
     // if (! needSrcMods) ((GlishArray) sum.get("hasplanet")).get(needSrcMods);
@@ -543,7 +543,7 @@ void MirFiller::joinFill(const String& msfile) {
 	    }
 	    fm.obstime = time;
 	}
-	fm.obsupd = false;
+	fm.obsupd = False;
 
 	// figure out proper polarization setup
 	if (source != fm.source) {
@@ -670,7 +670,7 @@ void MirFiller::joinFill(const String& msfile) {
  					       -rec->narrow()[2*(k+offset)+1]);
 				flgs(i,k,1) = (rec->flags()[k+offset] == 0);
 			    }
-			    rec->setMarked(true);
+			    rec->setMarked(True);
 
 			    if (tsyswt_p && fm.nsystemp.nelements() > 0) {
 				fwidth = abs(fm.fsetup->sdf[s]);
@@ -691,7 +691,7 @@ void MirFiller::joinFill(const String& msfile) {
 
 			    // polarization was not found; flag zero values
 			    vis.row(i) = Complex(0, 0);
-			    flgs.xyPlane(1).row(i) = true;
+			    flgs.xyPlane(1).row(i) = True;
 			}
 		    }
 		    else {                          // wideband data
@@ -701,7 +701,7 @@ void MirFiller::joinFill(const String& msfile) {
 			    vis(i,0) = Complex( rec->wide()[2*k], 
                                                -rec->wide()[2*k+1]);
 			    flgs(i,0,1) = (rec->wflags()[k] == 0);
-			    rec->setMarked(true);
+			    rec->setMarked(True);
 
 			    if (tsyswt_p && fm.wsystemp.nelements() > 0) {
 				fwidth = 
@@ -722,7 +722,7 @@ void MirFiller::joinFill(const String& msfile) {
 			} 
 			else {
 			    vis(i,0) = Complex(0, 0);
-			    flgs(i,0,1) = true;
+			    flgs(i,0,1) = True;
 			}
 		    }
 		}
@@ -745,7 +745,7 @@ void MirFiller::joinFill(const String& msfile) {
                 fm.msc->weight().put(row, wt); 
                 fm.msc->flag().put(row, flgs.xyPlane(1));
                 fm.msc->flagCategory().put(row, flgs);
-                fm.msc->flagRow().put(row, false);
+                fm.msc->flagRow().put(row, False);
 
 		fm.msc->antenna1().put(row, aant1);
 		fm.msc->antenna2().put(row, aant2);
@@ -834,7 +834,7 @@ MeasurementSet *MirFiller::setupMS(const String& msfile, Int tileSize,
   
     // Set the default Storage Manager to be the Incr one
     IncrementalStMan incrStMan ("ISMData");;
-    newtab.bindAll(incrStMan, true);
+    newtab.bindAll(incrStMan, True);
     StandardStMan aipsStMan;
     newtab.bindColumn(MS::columnName(MS::ANTENNA1), aipsStMan);
     newtab.bindColumn(MS::columnName(MS::ANTENNA2), aipsStMan);
@@ -961,7 +961,7 @@ MeasurementSet *MirFiller::setupMS(const String& msfile, Int tileSize,
 GlishRecord MirFiller::summary(Bool verbose, Bool scan) {
     if (scan) 
 	return rdr_p.summary(scanlim_p, obslim_p, verbose);
-    return rdr_p.summary(verbose, false);
+    return rdr_p.summary(verbose, False);
 }
 #endif
 
@@ -975,7 +975,7 @@ void MirFiller::initMS(FillMetadata &fm) {
     if (Debug(3)) cout << FILLERNAME << "::initMS()" << endl;
 
     // set the Epoch reference
-    fm.msc->setEpochRef(MEpoch::UTC, false);
+    fm.msc->setEpochRef(MEpoch::UTC, False);
 
     // initialize the HISTORY table
     if (histbl_p.length() > 0) {
@@ -999,14 +999,14 @@ void MirFiller::selectSpectra(const Vector<Int>& wideChans,
     // one-based channel indices.  narrowWins is a list of zero-based
     // window indices.  The default is to choose all available wide channels
     // and windows.
-    // GlishRecord sum = rdr_p.summary(false, false);
+    // GlishRecord sum = rdr_p.summary(False, False);
     Int nwide, nspect;
     //((GlishArray) sum.get("nwide")).get(nwide);
     //((GlishArray) sum.get("nspect")).get(nspect);
     nwide = 16;   // PJT TODO
     nspect = 16;
 
-    Vector<Bool> widesel(nwide, false), winsel(nspect, false);
+    Vector<Bool> widesel(nwide, False), winsel(nspect, False);
     Int i, nsel, sel, nwidesel=0, nwinsel=0;
 
     nsel = narrowWins.nelements();
@@ -1299,7 +1299,7 @@ void MirFiller::addAntennaPositions(FillMetadata &fm, Double /*time*/) {
         // mount-feed offsets
         ant.offset().put(row,offsets);
 
-        ant.flagRow().put(row,false);
+        ant.flagRow().put(row,False);
         row++;
     }
 
@@ -1432,9 +1432,9 @@ void MirFiller::addCorrelatorSetup(FillMetadata &fm, double time) {
     Int nlines = (src.numLines())(fm.source->row);
     Vector<Double> rfs(nlines);
     if (nlines > 0) {
-        src.restFrequency().get(fm.source->row, rfs, true);
+        src.restFrequency().get(fm.source->row, rfs, True);
     } 
-    if (fs->nspect > 0) rfs.resize(nlines+fs->nspect, true);
+    if (fs->nspect > 0) rfs.resize(nlines+fs->nspect, True);
 
     // handle narrow band channels
     for(i=0; i < fs->nspect; i++) {
@@ -1538,7 +1538,7 @@ void MirFiller::addCorrelatorSetup(FillMetadata &fm, double time) {
     }
 
     // update the transitions for the current source
-    rfs.resize(nlines, true);
+    rfs.resize(nlines, True);
     src.numLines().put(fm.source->row, nlines);
     src.restFrequency().put(fm.source->row, rfs);
 
@@ -1685,7 +1685,7 @@ uInt MirFiller::addSource(FillMetadata &fm, double time) {
         // copy over the transition information
         Int nlines = (src.numLines())(fm.source->row);
         Vector<Double> rfs(nlines);
-        src.restFrequency().get(fm.source->row, rfs, true);
+        src.restFrequency().get(fm.source->row, rfs, True);
         src.numLines().put(row, nlines);
         src.restFrequency().put(row, rfs);
     }
@@ -1821,7 +1821,7 @@ void MirFiller::addPolarization(FillMetadata& fm, Bool addCurrentOnly) {
 	pc.numCorr().put(row, ncorr);
 	pc.corrType().put(row, type);
 	pc.corrProduct().put(row, prod);
-	pc.flagRow().put(row, false);
+	pc.flagRow().put(row, False);
     }
     else {
 
@@ -1841,7 +1841,7 @@ void MirFiller::addPolarization(FillMetadata& fm, Bool addCurrentOnly) {
 	    pc.numCorr().put(row, 1);
 	    pc.corrType().put(row, type);
 	    pc.corrProduct().put(row, prod);
-	    pc.flagRow().put(row, false);
+	    pc.flagRow().put(row, False);
             li.getRight().setID(i);
 	}
     }
@@ -1870,7 +1870,7 @@ void MirFiller::addDataDesc(FillMetadata &fm) {
 	ddtbl.addRow();
 	dd.spectralWindowId().put(row, j);
 	dd.polarizationId().put(row, i);  
-	dd.flagRow().put(row, false);
+	dd.flagRow().put(row, False);
 #if 0
 	// PJT 2011, no more ddid
         DataDescComponents ddid(j, i);
@@ -1890,13 +1890,13 @@ void MirFiller::initState(FillMetadata &fm) {
     MSStateColumns &st = fm.msc->state();
     Int row = tbl.nrow();
     tbl.addRow();
-    st.sig().put(row, false);
-    st.ref().put(row, false);
+    st.sig().put(row, False);
+    st.ref().put(row, False);
     st.cal().put(row, 0);
     st.load().put(row, 0);
     st.subScan().put(row, 0);
     st.obsMode().put(row, "UNKNOWN");
-    st.flagRow().put(row, false);
+    st.flagRow().put(row, False);
 }
 
 void MirFiller::copyHistoryFrom(FillMetadata &/*fm*/, String /*tablename*/) {
@@ -1958,7 +1958,7 @@ void MirFiller::addProcessor(FillMetadata &fm) {
 	proc.type().put(row, "UNKNOWN");
     }
     proc.subType().put(row, fm.telescope);
-    proc.flagRow().put(row, false);
+    proc.flagRow().put(row, False);
 }
 
 void MirFiller::flushPointingRecords(FillMetadata &/*fm*/, Double /*time*/) {
@@ -2155,7 +2155,7 @@ void MirFiller::updatePolSetup(FillMetadata &fm, Double /*time*/) {
     // loading polarizations on-the-fly (i.e. dataset was not prescanned) 
     // as single-polarization setups.
     if (fm.polotf) {
-	addPolarization(fm, true);
+	addPolarization(fm, True);
 	if (fm.getDataDescID() < 0) addDataDesc(fm);
     }
 }
@@ -2191,7 +2191,7 @@ void MirFiller::updateTsys(FillMetadata &fm, Double time) {
 	    syscal.spectralWindowId().put(row, w+winoff);
 	    syscal.time().put(row, time);
 	    syscal.interval().put(row, -1);
-	    syscal.tsysFlag().put(row, false);
+	    syscal.tsysFlag().put(row, False);
 	    jyperk.put(row, fm.jyperk);
 	    row++;
 	    w++;
@@ -2211,7 +2211,7 @@ void MirFiller::updateTsys(FillMetadata &fm, Double time) {
 	    syscal.spectralWindowId().put(row, w+winoff);
 	    syscal.time().put(row, time);
 	    syscal.interval().put(row, -1);
-	    syscal.tsysFlag().put(row, false);
+	    syscal.tsysFlag().put(row, False);
 	    jyperk.put(row, fm.jyperk);
 	    row++;
 	    w++;
@@ -2245,7 +2245,7 @@ void MirFiller::addTsysRecords(FillMetadata &fm, Double time,
 	    syscal.time().put(row, time);
 	    syscal.interval().put(row, -1);
 	    syscal.tsys().put(row, temps);
-	    syscal.tsysFlag().put(row, false);
+	    syscal.tsysFlag().put(row, False);
 	    jyperk.put(row, fm.jyperk);
 	    row++;
 	}
@@ -2368,7 +2368,7 @@ Bool MirFiller::fitskymotion(Matrix<Double> &dirfit,
 {
     Int order = time.nelements() - 1;
     if (order > planetfit_p) order = planetfit_p;
-    if (order < 0) return false;
+    if (order < 0) return False;
     dirfit.resize(2, order+1);
     dirfit = 0.0;
 
@@ -2390,6 +2390,6 @@ Bool MirFiller::fitskymotion(Matrix<Double> &dirfit,
 //      cout << "RA fit: " << dirfit.row(0) << endl;
 //      cout << "Dec fit: " << dirfit.row(1) << endl;
 
-    return true;
+    return True;
 }
 

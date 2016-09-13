@@ -32,7 +32,6 @@
 
 #include <map>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 Bool FluxCalcLogFreqPolynomial::operator()(Flux<Double>& value,

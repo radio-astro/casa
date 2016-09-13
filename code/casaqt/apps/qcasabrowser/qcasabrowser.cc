@@ -20,7 +20,7 @@ int main(int argc, const char* argv[] ) {
 
     Q_INIT_RESOURCE(QtBrowser);
 
-    casa::TBMain* main = new casa::TBMain();
+    TBMain* main = new TBMain();
     
     for(int i = 1; i < numargs; i++)
       main->openTable(args[i]);

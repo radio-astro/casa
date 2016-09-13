@@ -36,22 +36,22 @@ namespace casa {
 
 template<size_t N>
 class MultiParamFieldIterator
-	: public std::iterator<std::forward_iterator_tag, std::array<casacore::Record *,N>,
+	: public std::iterator<std::forward_iterator_tag, std::array<Record *,N>,
 	                       int> {
-	std::array<casacore::Record *,N> records;
-	casacore::String prefix;
-	casacore::uInt field_index;
+	std::array<Record *,N> records;
+	String prefix;
+	uInt field_index;
 
 public:
 	MultiParamFieldIterator()
-		: records(std::array<casacore::Record *,N> {})
-		, prefix(casacore::String(""))
+		: records(std::array<Record *,N> {})
+		, prefix(String(""))
 		, field_index(0) {};
 
 	MultiParamFieldIterator(
-		std::array<casacore::Record *,N> &recs, const string prefix = "")
+		std::array<Record *,N> &recs, const string prefix = "")
 		: records(recs)
-		, prefix(casacore::String(prefix))
+		, prefix(String(prefix))
 		, field_index(0) {};
 
 	MultiParamFieldIterator(const MultiParamFieldIterator &fit)
@@ -80,20 +80,20 @@ public:
 		return !operator==(rhs);
 	};
 
-	std::array<casacore::Record *,N> operator*() {
-		std::array<casacore::Record *,N> result;
-		casacore::String field_name = prefix + casacore::String::toString(field_index);
+	std::array<Record *,N> operator*() {
+		std::array<Record *,N> result;
+		String field_name = prefix + String::toString(field_index);
 		for (size_t i = 0; i < N; ++i)
 			result[i] = &records[i]->rwSubRecord(field_name);
 		return result;
 	};
 
-	static MultiParamFieldIterator<N> begin(std::array<casacore::Record *,N> &recs,
+	static MultiParamFieldIterator<N> begin(std::array<Record *,N> &recs,
 	                                        const string &prefix = "") {
 		return MultiParamFieldIterator(recs, prefix);
 	};
 
-	static MultiParamFieldIterator<N> end(std::array<casacore::Record *,N> &recs,
+	static MultiParamFieldIterator<N> end(std::array<Record *,N> &recs,
 	                                      const string &prefix = "") {
 		MultiParamFieldIterator result(recs, prefix);
 		result.field_index = recs[0]->nfields();

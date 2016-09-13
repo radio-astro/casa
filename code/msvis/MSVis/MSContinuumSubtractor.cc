@@ -51,7 +51,6 @@
 #include <casa/iostream.h>
 
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //
@@ -64,7 +63,7 @@ MSContinuumSubtractor::MSContinuumSubtractor (MeasurementSet& ms)
   Block<Int> nosort(0);
   Matrix<Int> noselection;
   Double timeInterval=0.0;
-  Bool compress(false);
+  Bool compress(False);
   VisSet vs(ms,nosort,noselection,timeInterval,compress);
 
   nSpw_= vs.numberSpw();
@@ -260,18 +259,18 @@ void MSContinuumSubtractor::subtract()
 
 
     // default to fit all channels
-    Vector<Bool> fitChanMask(nChan,true);
+    Vector<Bool> fitChanMask(nChan,True);
 
     // Handle non-trivial channel selection:
 
     if (itsFitChans.nelements()>0 && anyEQ(itsFitChans.column(0),itsDDIds(iDD))) {
-      // If subset of channels selected, set mask all false...
-      fitChanMask=false;
+      // If subset of channels selected, set mask all False...
+      fitChanMask=False;
       
       IPosition blc(1,0);
       IPosition trc(1,0);
 
-      // ... and set only selected channels true:
+      // ... and set only selected channels True:
       for (uInt i=0;i<itsFitChans.nrow();++i) {
 	Vector<Int> chansel(itsFitChans.row(i));
 
@@ -279,7 +278,7 @@ void MSContinuumSubtractor::subtract()
 	if (chansel(0)==itsDDIds(iDD)) {
 	  blc(0)=chansel(1);
 	  trc(0)=chansel(2);
-	  fitChanMask(blc,trc)=true;
+	  fitChanMask(blc,trc)=True;
 	}
       }
     }
@@ -287,15 +286,15 @@ void MSContinuumSubtractor::subtract()
     //    cout << "fitChanMask = " << fitChanMask << endl;
 
     // default to subtract from all channels
-    Vector<Bool> subChanMask(nChan,true);
+    Vector<Bool> subChanMask(nChan,True);
     if (itsSubChans.nelements()>0 && anyEQ(itsSubChans.column(0),itsDDIds(iDD))) {
-      // If subset of channels selected, set sub mask all false...
-      subChanMask=false;
+      // If subset of channels selected, set sub mask all False...
+      subChanMask=False;
       
       IPosition blc(1,0);
       IPosition trc(1,0);
 
-      // ... and set only selected sub channels true:
+      // ... and set only selected sub channels True:
       for (uInt i=0;i<itsSubChans.nrow();++i) {
 	Vector<Int> chansel(itsSubChans.row(i));
 
@@ -303,7 +302,7 @@ void MSContinuumSubtractor::subtract()
 	if (chansel(0)==itsDDIds(iDD)) {
 	  blc(0)=chansel(1);
 	  trc(0)=chansel(2);
-	  subChanMask(blc,trc)=true;
+	  subChanMask(blc,trc)=True;
 	}
       }
     }
@@ -317,21 +316,21 @@ void MSContinuumSubtractor::subtract()
         polSel(nPol++)=Stokes::name(Stokes::type(corrTypes(j)));
       }
     }
-    polSel.resize(nPol,true);
+    polSel.resize(nPol,True);
     msSel.selectPolarization(polSel);
      
     msSel.iterInit(
         stringToVector("ARRAY_ID,DATA_DESC_ID,SCAN_NUMBER,FIELD_ID,TIME"),
-        itsSolInt,0,false);
+        itsSolInt,0,False);
     msSel.iterOrigin();
     Int nIter=1;
     while (msSel.iterNext()) nIter++;
     os<<"Processing "<<nIter<<" slots."<< LogIO::POST;
     msSel.iterOrigin();
     do {
-      Record avRec = msSel.getData(stringToVector("corrected_data"),true,0,1,true);
+      Record avRec = msSel.getData(stringToVector("corrected_data"),True,0,1,True);
       Record dataRec = msSel.getData(stringToVector("model_data,corrected_data"),
-                                     true,0,1);
+                                     True,0,1);
       Array<Complex> avCorData(avRec.asArrayComplex("corrected_data"));
       Array<Complex> modelData(dataRec.asArrayComplex("model_data"));
       Array<Complex> correctedData(dataRec.asArrayComplex("corrected_data"));

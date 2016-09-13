@@ -38,16 +38,12 @@
 #include <display/DisplayDatas/LatticePADD.h>
 #include <display/Display/DParameterRange.h>
 
-namespace casacore{
-
-	template <class T> class Array;
-	class IPosition;
-	class Record;
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# forwards:
+	template <class T> class Array;
+	class IPosition;
+	class Record;
 	template <class T> class LatticePADMContour;
 
 // <summary>Class to manage the drawing of contour maps of slices from AIPS++ Lattices</summary>
@@ -88,54 +84,54 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // The LatticeAsContour object supports a number of options which can
 // be set or retrieved using the setOptions and getOptions functions.
-// These functions simply accept a casacore::Record, which can be converted from
+// These functions simply accept a Record, which can be converted from
 // a GlishRecord: this is done in the <linkto
 // class="GTkDisplayData">GTkDisplayData</linkto> class.  The options
 // for the LatticeAsContour class are:
-// <li> levels: a casacore::Vector<casacore::Float> (or casacore::Vector<casacore::Double>) of one or more
+// <li> levels: a Vector<Float> (or Vector<Double>) of one or more
 // elements, being the data
 // values at which the contours are drawn.  Depending on type,
 // the values in the vector are interpreted as absolute or
 // fractions between the data minimum and maximum.
-// <li> type: a casacore::String, one of "frac" or "abs", indicating whether the
+// <li> type: a String, one of "frac" or "abs", indicating whether the
 // contour values in "levels" (multiplied by "scale") are fractions of the
 // data range between the minimum and maximum, or are instead absolute
 // contour levels in the native units of the data.
-// <li> scale: a casacore::Float or casacore::Double which provides an additional scale
+// <li> scale: a Float or Double which provides an additional scale
 // factor to apply to the contour levels in "levels."
 // <li> line: a positive Integer specifying the line width of
 // contours.
-// <li> dashneg: a Boolean value, which if true, will force contours
+// <li> dashneg: a Boolean value, which if True, will force contours
 // at negative data values to be drawn in dashed line style.
-// <li> dashpos: a Boolean value, which if true, will force contours
+// <li> dashpos: a Boolean value, which if True, will force contours
 // at positive data values to be drawn in dashed line style.
-// <li> color: a casacore::String which is the color with which to draw the
+// <li> color: a String which is the color with which to draw the
 // contours.  A valid X Color is required.
-//# <li> complexmode: this is a casacore::String, and is only relevant for
-//# LatticeAsContour<casacore::Complex> or LatticeAsContour<casacore::DComplex>
+//# <li> complexmode: this is a String, and is only relevant for
+//# LatticeAsContour<Complex> or LatticeAsContour<DComplex>
 //# instantantiations.  One of "phase", "real", "imaginary" or
 //# "magnitude" is appropriate for this option, and indicates how
 //# complex data values should be translated to real pixel values.
 //#
-//# LatticeAsContour is templated, and can be used to draw casacore::Complex or Real
-//# Images or Arrays.  For casacore::Complex data, the default complexmode is
+//# LatticeAsContour is templated, and can be used to draw Complex or Real
+//# Images or Arrays.  For Complex data, the default complexmode is
 //# "magnitude."
 //# </synopsis>
 //
 // <example>
 // A LatticeAsContour object could be constructed and used as follows:
 // <srcblock>
-// casacore::PagedImage<casacore::Float> *pimage = new casacore::PagedImage<casacore::Float>(casacore::String("test.im"));
+// PagedImage<Float> *pimage = new PagedImage<Float>(String("test.im"));
 // DisplayData *dd;
-// casacore::uInt ndim = pimage->ndim();
+// uInt ndim = pimage->ndim();
 // if (ndim < 2) {
-//   throw(casacore::AipsError(casacore::String("Image has less than two dimensions")));
+//   throw(AipsError(String("Image has less than two dimensions")));
 // } else if (ndim == 2) {
-//   dd = (DisplayData *)(new LatticeAsContour<casacore::Float>(pimage, 0, 1));
+//   dd = (DisplayData *)(new LatticeAsContour<Float>(pimage, 0, 1));
 // } else {
-//   casacore::IPosition fixedPos(ndim);
+//   IPosition fixedPos(ndim);
 //   fixedPos = 0;
-//   dd = (DisplayData *)(new LatticeAsContour<casacore::Float>(pimage, 0, 1, 2,
+//   dd = (DisplayData *)(new LatticeAsContour<Float>(pimage, 0, 1, 2,
 //                                                   fixedPos));
 // }
 // // wcHolder is an existing WorldCanvasHolder *...
@@ -163,7 +159,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	public:
 
-		// casacore::Array-based constructors: >2d and 2d.  xAxis and yAxis specify
+		// Array-based constructors: >2d and 2d.  xAxis and yAxis specify
 		// which axis in the array (0-based) should be mapped to X and Y
 		// on the display device: ie. 2-d slices of the data to be displayed
 		// have these axes.  mAxis specifies the "movie" axis, which is the axis
@@ -172,11 +168,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// and indicate the fixed axis values for axes in the data that are
 		// not specified as xAxis, yAxis or mAxis.
 		// <group>
-		LatticeAsContour(casacore::Array<T> *array, const casacore::uInt xAxis,
-		                 const casacore::uInt yAxis, const casacore::uInt mAxis,
-		                 const casacore::IPosition fixedPos);
-		LatticeAsContour(casacore::Array<T> *array, const casacore::uInt xAxis,
-		                 const casacore::uInt yAxis);
+		LatticeAsContour(Array<T> *array, const uInt xAxis,
+		                 const uInt yAxis, const uInt mAxis,
+		                 const IPosition fixedPos);
+		LatticeAsContour(Array<T> *array, const uInt xAxis,
+		                 const uInt yAxis);
 		// </group>
 
 		// Image-based constructors: >2d and 2d.  xAxis and yAxis specify
@@ -188,9 +184,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// and indicate the fixed axis values for axes in the data that are
 		// not specified as xAxis, yAxis or mAxis.
 		// <group>
-		LatticeAsContour(SHARED_PTR<casacore::ImageInterface<T> > image, const casacore::uInt xAxis, const casacore::uInt yAxis, const casacore::uInt mAxis, const casacore::IPosition fixedPos, viewer::StatusSink *sink=0 );
-		LatticeAsContour(SHARED_PTR<casacore::ImageInterface<T> > image, const casacore::uInt xAxis,
-		                 const casacore::uInt yAxis);
+		LatticeAsContour(SHARED_PTR<ImageInterface<T> > image, const uInt xAxis, const uInt yAxis, const uInt mAxis, const IPosition fixedPos, viewer::StatusSink *sink=0 );
+		LatticeAsContour(SHARED_PTR<ImageInterface<T> > image, const uInt xAxis,
+		                 const uInt yAxis);
 		// </group>
 
 		// Destructor
@@ -200,24 +196,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// maps.  This is called upon construction as well as whenever
 		// the display and/or movie axes are changed via a call to
 		// PrincipalAxesDD::setAxes.
-		//virtual void setupElements(casacore::IPosition fixedPos = casacore::IPosition(2));
+		//virtual void setupElements(IPosition fixedPos = IPosition(2));
 		virtual void setupElements();
 
 		// install the default options for display
 		virtual void setDefaultOptions();
 
-		// Apply the options stored in the provided casacore::Record to the
-		// LatticeAsContour object.  If the return value is true, then
+		// Apply the options stored in the provided Record to the
+		// LatticeAsContour object.  If the return value is True, then
 		// some options have changed, and a refresh is needed to update
 		// the display.
-		virtual casacore::Bool setOptions(casacore::Record &rec, casacore::Record &recOut);
+		virtual Bool setOptions(Record &rec, Record &recOut);
 
 		// Retrieve the currently set options, and their types, default
 		// values, and any help text associated with each parameter.  This
 		// information can be used to generate form-type graphical user
 		// interfaces or command-line interfaces to set the options with
 		// prompts.
-		virtual casacore::Record getOptions( bool scrub=false ) const;
+		virtual Record getOptions( bool scrub=false ) const;
 
 		// Return the DisplayData type; used by the WorldCanvasHolder to
 		// determine the order of drawing.
@@ -226,21 +222,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		// class name
-		virtual casacore::String className() const {
-			return casacore::String("LatticeAsContour");
+		virtual String className() const {
+			return String("LatticeAsContour");
 		}
 
 		// Actual selected contour levels
-		virtual casacore::Vector<casacore::Float> levels();
+		virtual Vector<Float> levels();
 
-		// Actual levels, in casacore::String format.  If precision is unspecified,
+		// Actual levels, in String format.  If precision is unspecified,
 		// one that is low enough not to be cluttered is used.
-		virtual casacore::String levelString(casacore::Int prec=0);
+		virtual String levelString(Int prec=0);
 
 		// Adds contour level information to the standard position tracking
 		// string from PADD.
-		virtual casacore::String showPosition(const casacore::Vector<casacore::Double> &wld, const casacore::Bool &abs,
-		                            const casacore::Bool &dsp);
+		virtual String showPosition(const Vector<Double> &wld, const Bool &abs,
+		                            const Bool &dsp);
 
 		using LatticePADisplayData<T>::dataUnit;
 
@@ -254,24 +250,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Set standard limits/values for contour sliders.  If recOut is provided,
 		// they will be set onto it in a manner suitable for updating gui via
 		// setOptions.
-		virtual void setStdContourLimits_(casacore::Record* recOut=0);
+		virtual void setStdContourLimits_(Record* recOut=0);
 
 
 	private:
 
 		// Relative contour levels.
-		casacore::Vector<casacore::Float> itsLevels;
+		Vector<Float> itsLevels;
 
 		// Min and Max actual contours. linearly scaled from itsLevels to fit these.
 		// <group>
-		DParameterRange<casacore::Float> *itsBaseContour;
-		DParameterRange<casacore::Float> *itsUnitContour;
+		DParameterRange<Float> *itsBaseContour;
+		DParameterRange<Float> *itsUnitContour;
 		// </group>
 
-		casacore::Float itsLine;
-		casacore::Bool itsDashNeg;
-		casacore::Bool itsDashPos;
-		casacore::String itsColor;
+		Float itsLine;
+		Bool itsDashNeg;
+		Bool itsDashPos;
+		String itsColor;
 
 		friend class LatticePADMContour<T>;
 

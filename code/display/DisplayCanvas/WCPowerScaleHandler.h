@@ -85,10 +85,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// set/get the number of log cycles into which to compress the data
 		// <group>
-		void setCycles(casacore::Float cyc) {
+		void setCycles(Float cyc) {
 			itsOptionsPowerCycles = cyc;
 		}
-		casacore::Float cycles() {
+		Float cycles() {
 			return itsOptionsPowerCycles;
 		}
 		// </group>
@@ -97,40 +97,40 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void setDefaultOptions();
 
 		// apply options stored in val to the DisplayData; return value
-		// true means a refresh is needed...
-		virtual casacore::Bool setOptions(casacore::Record &rec, casacore::Record &recOut);
+		// True means a refresh is needed...
+		virtual Bool setOptions(Record &rec, Record &recOut);
 
 		// retrieve the current and default options and parameter types.
-		virtual casacore::Record getOptions( bool scrub=false ) const;
+		virtual Record getOptions( bool scrub=false ) const;
 
-		// apply returns true if the array in was converted to the array out
+		// apply returns True if the array in was converted to the array out
 		// successfully the last parameter sets the output range
 		// <group>
-		virtual casacore::Bool operator()(casacore::Array<casacore::uInt> & out, const casacore::Array<casacore::Bool> & in);
-		virtual casacore::Bool operator()(casacore::Array<casacore::uInt> & out, const casacore::Array<casacore::uChar> & in);
-		virtual casacore::Bool operator()(casacore::Array<casacore::uInt> & out, const casacore::Array<casacore::Char> & in);
-		virtual casacore::Bool operator()(casacore::Array<casacore::uInt> & out, const casacore::Array<casacore::uShort> & in);
-		virtual casacore::Bool operator()(casacore::Array<casacore::uInt> & out, const casacore::Array<casacore::Short> & in);
-		virtual casacore::Bool operator()(casacore::Array<casacore::uInt> & out, const casacore::Array<casacore::uInt> & in);
-		virtual casacore::Bool operator()(casacore::Array<casacore::uInt> & out, const casacore::Array<casacore::Int> & in);
-		virtual casacore::Bool operator()(casacore::Array<casacore::uInt> & out, const casacore::Array<casacore::uLong> & in);
-		virtual casacore::Bool operator()(casacore::Array<casacore::uInt> & out, const casacore::Array<casacore::Long> & in);
-		virtual casacore::Bool operator()(casacore::Array<casacore::uInt> & out, const casacore::Array<casacore::Float> & in);
-		virtual casacore::Bool operator()(casacore::Array<casacore::uInt> & out, const casacore::Array<casacore::Double> & in);
-		virtual casacore::Bool operator()(casacore::Array<casacore::uInt> & out, const casacore::Array<casacore::Complex> & in);
-		virtual casacore::Bool operator()(casacore::Array<casacore::uInt> & out, const casacore::Array<casacore::DComplex> & in);
+		virtual Bool operator()(Array<uInt> & out, const Array<Bool> & in);
+		virtual Bool operator()(Array<uInt> & out, const Array<uChar> & in);
+		virtual Bool operator()(Array<uInt> & out, const Array<Char> & in);
+		virtual Bool operator()(Array<uInt> & out, const Array<uShort> & in);
+		virtual Bool operator()(Array<uInt> & out, const Array<Short> & in);
+		virtual Bool operator()(Array<uInt> & out, const Array<uInt> & in);
+		virtual Bool operator()(Array<uInt> & out, const Array<Int> & in);
+		virtual Bool operator()(Array<uInt> & out, const Array<uLong> & in);
+		virtual Bool operator()(Array<uInt> & out, const Array<Long> & in);
+		virtual Bool operator()(Array<uInt> & out, const Array<Float> & in);
+		virtual Bool operator()(Array<uInt> & out, const Array<Double> & in);
+		virtual Bool operator()(Array<uInt> & out, const Array<Complex> & in);
+		virtual Bool operator()(Array<uInt> & out, const Array<DComplex> & in);
 		// </group>
 
-		casacore::Bool histoEqualise(casacore::Array<casacore::Float> &out, const casacore::Array<casacore::Float> &in);
-		static const casacore::String POWER_CYCLES;
+		Bool histoEqualise(Array<Float> &out, const Array<Float> &in);
+		static const String POWER_CYCLES;
 	private:
 
 		// Scaling power cycles: < 0 => log scaling, > 0 => exp scaling,
 		// == 0 => linear scaling
-		casacore::Float itsOptionsPowerCycles;
+		Float itsOptionsPowerCycles;
 
 		// Is histogram equalisation required?
-		casacore::Bool itsOptionsHistoEqualisation;
+		Bool itsOptionsHistoEqualisation;
 
 	};
 

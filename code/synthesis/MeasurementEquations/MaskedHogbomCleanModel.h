@@ -60,7 +60,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // MaskedArray. It is functionally equivalent to the HogbomCleanModel class and
 // all the documention for that class will not be repreated here. The only
 // difference is that the model used to represent the sky in this class is a
-// casacore::MaskedArray, and hence this class can implement the concept of clean
+// MaskedArray, and hence this class can implement the concept of clean
 // boxes.
 // 
 // Masking is used to deliniate the search region when clean is determing
@@ -74,15 +74,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <example>
 // <srcblock>
-// casacore::Matrix<casacore::Float> psf(12,12); // The psf cannot be masked!
+// Matrix<Float> psf(12,12); // The psf cannot be masked!
 // MaskedMatrix dirty(10,10), initialModel(10,10);
 // ...put appropriate values into psf, dirty, & initialModel....
 // ConvolutionEquation convEqn(psf, dirty);
-// MaskedHogbomCleanModel<casacore::Float> deconvolvedModel(initialModel); 
+// MaskedHogbomCleanModel<Float> deconvolvedModel(initialModel); 
 // deconvolvedModel.setGain(0.2); 
 // deconvolvedModel.setNumberIterations(1000);
-// casacore::Bool convWorked = deconvolvedModel.solve(convEqn);
-// casacore::Array<casacore::Float> finalModel, residuals;
+// Bool convWorked = deconvolvedModel.solve(convEqn);
+// Array<Float> finalModel, residuals;
 // if (convWorked){
 //   finalModel = deconvolvedModel.getModel();
 //   ConvEqn.residual(deconvolvedModel, finalResidual);
@@ -117,17 +117,17 @@ public:
   // ArrayModel class.
   MaskedHogbomCleanModel():MaskedArrayModel<T>(){};
   // Construct the HogbomCleanModel object and initialise the model.
-  MaskedHogbomCleanModel(const casacore::MaskedArray<T> & model)
+  MaskedHogbomCleanModel(const MaskedArray<T> & model)
     :MaskedArrayModel<T>(model){};
   // Using a Hogbom clean deconvolution proceedure solve for an improved
   // estimate of the deconvolved object. The convolution/residual equation
   // contains the psf and dirty image. When called with a ResidualEquation
   // arguement a quite general interface is used that is slow. The
   // convolution equation contains functions that speed things up. The
-  // functions return false if the deconvolution could not be done.
+  // functions return False if the deconvolution could not be done.
   // <group>
-  casacore::Bool solve(ResidualEquation<casacore::MaskedArray<T> > & eqn);
-  casacore::Bool solve(ConvolutionEquation & eqn);
+  Bool solve(ResidualEquation<MaskedArray<T> > & eqn);
+  Bool solve(ConvolutionEquation & eqn);
   // </group>
 
   //# Make parent members known.

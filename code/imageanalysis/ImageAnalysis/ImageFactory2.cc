@@ -37,7 +37,6 @@
 
 using namespace std;
 
-using namespace casacore;
 namespace casa {
 
 SPIIF ImageFactory::floatImageFromShape(
@@ -123,7 +122,7 @@ pair<SPIIF, SPIIC> ImageFactory::fromImage(
     if (imagePair.first) {
         imagePair.first = SubImageFactory<Float>::createImage(
                 *imagePair.first, outfile, region,
-                mask, dropdeg, overwrite, false, false
+                mask, dropdeg, overwrite, False, False
         );
         ThrowIf(
            ! imagePair.first,
@@ -135,7 +134,7 @@ pair<SPIIF, SPIIC> ImageFactory::fromImage(
     else {
         imagePair.second = SubImageFactory<Complex>::createImage(
             *imagePair.second, outfile, region,
-            mask, dropdeg, overwrite, false, false
+            mask, dropdeg, overwrite, False, False
         );
         ThrowIf(
             ! imagePair.second,
@@ -221,7 +220,7 @@ SHARED_PTR<TempImage<Complex> > ImageFactory::complexFromFloat(
 		}
 	}
 	ImageUtilities::copyMiscellaneous(*newImage, *realPart);
-	newImage->put(casacore::makeComplex(realPart->get(), imagPart));
+	newImage->put(casa::makeComplex(realPart->get(), imagPart));
 	return newImage;
 }
 
@@ -251,11 +250,11 @@ SPIIC ImageFactory::makeComplex(
 		*imagPart, region, mask, nullptr
 	);
 	auto complexImage = complexFromFloat(
-		subRealImage, subImagImage->get(false)
+		subRealImage, subImagImage->get(False)
 	);
 	return SubImageFactory<Complex>::createImage(
 		*complexImage, outfile, Record(), "", AxesSpecifier(),
-		overwrite, false, false
+		overwrite, False, False
 	);
 }
 
@@ -488,7 +487,7 @@ void ImageFactory::toFITS(
 	}
 	AxesSpecifier axesSpecifier;
 	if (dropdeg) {
-		axesSpecifier = AxesSpecifier(false);
+		axesSpecifier = AxesSpecifier(False);
 	}
 	else if (! keepAxes.empty()) {
 		axesSpecifier = AxesSpecifier(keepAxes);
@@ -505,9 +504,9 @@ void ImageFactory::toFITS(
 			HostInfo::memoryFree() / 1024,
 			velocity, optical, bitpix, minpix,
 			maxpix, overwrite, deglast,
-			false, //  verbose default
+			False, //  verbose default
 			stokeslast,	wavelength,
-			airWavelength, // for airWavelength=true
+			airWavelength, // for airWavelength=True
 			origin, history
 		), error
 	);
@@ -539,7 +538,7 @@ SPIIF ImageFactory::testImage(
         ThrowCc("imageType must be either \"cube\" or \"2d\"");
     }
     return fromFITS(
-        outfile, fitsfile, 0, 0, false, overwrite
+        outfile, fitsfile, 0, 0, False, overwrite
     );
 }
 

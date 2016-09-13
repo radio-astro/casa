@@ -38,7 +38,6 @@
 
 #include <scimath/Mathematics.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	DSScreenEllipse::DSScreenEllipse() :
@@ -92,7 +91,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	Bool DSScreenEllipse::setOptions(const Record& settings) {
-		Bool localChange = false;
+		Bool localChange = False;
 		Record toSet = settings;
 
 		if (settings.isDefined("coords")) {
@@ -105,7 +104,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		if (DSEllipse::setOptions(toSet)) {
-			localChange = true;
+			localChange = True;
 		}
 
 		return localChange;

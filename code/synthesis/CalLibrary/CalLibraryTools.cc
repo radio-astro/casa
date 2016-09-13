@@ -43,7 +43,6 @@ int CalLibraryGramwrap()
 }
 
 
-using namespace casacore;
 namespace casa {
 
 static Int callib_linenum = 0;

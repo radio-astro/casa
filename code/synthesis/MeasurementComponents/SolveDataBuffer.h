@@ -82,20 +82,20 @@ public:
   SolveDataBuffer& operator=(const SolveDataBuffer& sdb);
 
   // Does SDB contain finite weight?
-  bool Ok();
+  Bool Ok();
 
   // Apply amp-only or phase-only to data
-  void enforceAPonData(const casacore::String& apmode);
+  void enforceAPonData(const String& apmode);
 
   // Zero flagged weights, and optionally the cross-hand weights
-  void enforceSolveWeights(const casacore::Bool pHandOnly);
+  void enforceSolveWeights(const Bool pHandOnly);
 
   // Set the focus channel
   //  (forms references to focus-channel flag/data/model)
-  void setFocusChan(const casacore::Int focusChan=-1);
+  void setFocusChan(const Int focusChan=-1);
 
   // Size/init/finalize the residuals workspaces
-  void sizeResiduals(const casacore::Int& nPar,const casacore::Int& nDiff);
+  void sizeResiduals(const Int& nPar,const Int& nDiff);
   void initResidWithModel();
   void finalizeResiduals();
 
@@ -104,54 +104,54 @@ public:
 
 
   // VB2-like data access methods (mostly const)
-  casacore::Int nRows() const { return vb_->nRows(); };
-  const casacore::Vector<int>& observationId() const { return vb_->observationId(); };
-  const casacore::Vector<casacore::Int>& arrayId() const { return vb_->arrayId(); };
-  const casacore::Vector<casacore::Int>& antenna1() const { return vb_->antenna1(); };
-  const casacore::Vector<casacore::Int>& antenna2() const { return vb_->antenna2(); };
-  const casacore::Vector<casacore::Int>& dataDescriptionIds() const { return vb_->dataDescriptionIds(); };
-  const casacore::Vector<casacore::Int>& spectralWindow() const { return vb_->spectralWindows(); };
-  const casacore::Vector<casacore::Int>& scan() const { return vb_->scan(); };
-  const casacore::Vector<casacore::Double>& time() const { return vb_->time(); };
-  const casacore::Vector<casacore::Int>& fieldId() const { return vb_->fieldId(); };
-  casacore::Int nChannels() const { return vb_->nChannels(); };
-  const casacore::Vector<casacore::Double>& freqs() const { return freqs_; };
-  casacore::Int nCorrelations() const { return vb_->nCorrelations(); };
-  const casacore::Cube<casacore::Complex>& visCubeModel() const { return vb_->visCubeModel(); };
-  const casacore::Cube<casacore::Complex>& visCubeCorrected() const { return vb_->visCubeCorrected(); };
+  Int nRows() const { return vb_->nRows(); };
+  const Vector<Int>& observationId() const { return vb_->observationId(); };
+  const Vector<Int>& arrayId() const { return vb_->arrayId(); };
+  const Vector<Int>& antenna1() const { return vb_->antenna1(); };
+  const Vector<Int>& antenna2() const { return vb_->antenna2(); };
+  const Vector<Int>& dataDescriptionIds() const { return vb_->dataDescriptionIds(); };
+  const Vector<Int>& spectralWindow() const { return vb_->spectralWindows(); };
+  const Vector<Int>& scan() const { return vb_->scan(); };
+  const Vector<Double>& time() const { return vb_->time(); };
+  const Vector<Int>& fieldId() const { return vb_->fieldId(); };
+  const Vector<Double>& freqs() const { return freqs_; };
+  Int nChannels() const { return vb_->nChannels(); };
+  Int nCorrelations() const { return vb_->nCorrelations(); };
+  const Cube<Complex>& visCubeModel() const { return vb_->visCubeModel(); };
+  const Cube<Complex>& visCubeCorrected() const { return vb_->visCubeCorrected(); };
   // These are not const, because we will generally amend them:
-  casacore::Vector<casacore::Bool>& flagRow() {fR_.reference(vb_->flagRow());return fR_;};
-  casacore::Cube<casacore::Bool>& flagCube() {fC_.reference(vb_->flagCube());return fC_;};
-  casacore::Cube<casacore::Float>& weightSpectrum() {wS_.reference(vb_->weightSpectrum());return wS_;};
+  Vector<Bool>& flagRow() {fR_.reference(vb_->flagRow());return fR_;};
+  Cube<Bool>& flagCube() {fC_.reference(vb_->flagCube());return fC_;};
+  Cube<Float>& weightSpectrum() {wS_.reference(vb_->weightSpectrum());return wS_;};
 
   // <group>
 
   // Access functions
   //
   // Access to focus-channel slices of the flags, data, and model
-  casacore::Cube<casacore::Bool>& infocusFlagCube() { return infocusFlagCube_p; }
-  const casacore::Cube<casacore::Bool>& infocusFlagCube() const {return this->infocusFlagCube();}
+  Cube<Bool>& infocusFlagCube() { return infocusFlagCube_p; }
+  const Cube<Bool>& infocusFlagCube() const {return this->infocusFlagCube();}
 
-  casacore::Cube<casacore::Complex>& infocusVisCube() { return infocusVisCube_p; }
-  const casacore::Cube<casacore::Complex>& infocusVisCube() const {return this->infocusVisCube();}
+  Cube<Complex>& infocusVisCube() { return infocusVisCube_p; }
+  const Cube<Complex>& infocusVisCube() const {return this->infocusVisCube();}
 
-  casacore::Cube<casacore::Float>& infocusWtSpec() { return infocusWtSpec_p; }
-  const casacore::Cube<casacore::Float>& infocusWtSpec() const {return this->infocusWtSpec();}
+  Cube<Float>& infocusWtSpec() { return infocusWtSpec_p; }
+  const Cube<Float>& infocusWtSpec() const {return this->infocusWtSpec();}
 
-  casacore::Cube<casacore::Complex>& infocusModelVisCube() { return infocusModelVisCube_p; }
-  const casacore::Cube<casacore::Complex>& infocusModelVisCube() const {return this->infocusModelVisCube();}
+  Cube<Complex>& infocusModelVisCube() { return infocusModelVisCube_p; }
+  const Cube<Complex>& infocusModelVisCube() const {return this->infocusModelVisCube();}
 
   // Workspace for the residual visibilities
-  casacore::Cube<casacore::Complex>& residuals() { return residuals_p; }
-  const casacore::Cube<casacore::Complex>& residuals() const {return this->residuals();}
+  Cube<Complex>& residuals() { return residuals_p; }
+  const Cube<Complex>& residuals() const {return this->residuals();}
 
   // Workspace for flags of the residuals
-  casacore::Cube<casacore::Bool>& residFlagCube() { return residFlagCube_p; }
-  const casacore::Cube<casacore::Bool>& residFlagCube() const {return this->residFlagCube();}
+  Cube<Bool>& residFlagCube() { return residFlagCube_p; }
+  const Cube<Bool>& residFlagCube() const {return this->residFlagCube();}
 
   // Workspace for the differentiated residuals
-  casacore::Array<casacore::Complex>& diffResiduals() { return diffResiduals_p; }
-  const casacore::Array<casacore::Complex>& diffResiduals() const {return this->diffResiduals();}
+  Array<Complex>& diffResiduals() { return diffResiduals_p; }
+  const Array<Complex>& diffResiduals() const {return this->diffResiduals();}
 
   //</group>
 
@@ -168,26 +168,25 @@ private:
 
   // The frequencies
   //  Currently, assumed uniform over rows
-  casacore::Vector<double> freqs_;
-
-    // Array reference objects for things in the vb we need to mess with
-  casacore::Vector<casacore::Bool> fR_;
-  casacore::Cube<casacore::Bool> fC_;
-  casacore::Cube<casacore::Float> wS_;
+  Vector<Double> freqs_;
   
+  // Array reference objects for things in the vb we need to mess with
+  Vector<Bool> fR_;
+  Cube<Bool> fC_;
+  Cube<Float> wS_;
 
   // The current in-focus channel
-  casacore::Int focusChan_p;
+  Int focusChan_p;
 
   // actual storage for the data
-  casacore::Cube<casacore::Bool> infocusFlagCube_p;
-  casacore::Cube<casacore::Float> infocusWtSpec_p;
-  casacore::Cube<casacore::Complex> infocusVisCube_p;
-  casacore::Cube<casacore::Complex> infocusModelVisCube_p;
+  Cube<Bool> infocusFlagCube_p;
+  Cube<Float> infocusWtSpec_p;
+  Cube<Complex> infocusVisCube_p;
+  Cube<Complex> infocusModelVisCube_p;
 
-  casacore::Cube<casacore::Complex> residuals_p;
-  casacore::Cube<casacore::Bool> residFlagCube_p;
-  casacore::Array<casacore::Complex> diffResiduals_p;
+  Cube<Complex> residuals_p;
+  Cube<Bool> residFlagCube_p;
+  Array<Complex> diffResiduals_p;
 };
 
 
@@ -202,47 +201,47 @@ public:
   ~SDBList();
 
   // How many SDBs?
-  casacore::Int nSDB() const { return nSDB_; };
+  Int nSDB() const { return nSDB_; };
 
   // Generate a new SDB from an input VB2
   void add(const vi::VisBuffer2& vb);
 
   // Access an SDB by index
-  SolveDataBuffer& operator()(casacore::Int i);
+  SolveDataBuffer& operator()(Int i);
 
   // Aggregate meta info
-  int aggregateObsId() const;
-  int aggregateScan() const;
-  int aggregateSpw() const;
-  int aggregateFld() const;
-  double aggregateTime() const;
+  Int aggregateObsId() const;
+  Int aggregateScan() const;
+  Int aggregateSpw() const;
+  Int aggregateFld() const;
+  Double aggregateTime() const;
 
   // How many data chans?
   //   Currently, this insists on uniformity over all SDBs
-  int nChannels() const;
+  Int nChannels() const;
 
   // The frequencies
   //   Currently, this insists on uniformity over all SDBs
-  const casacore::Vector<double>& freqs() const;
+  const Vector<Double>& freqs() const;
 
   // Does the SDBList contain usable data?
   //  (at least one SDB, with non-zero net weight)
-  bool Ok();
+  Bool Ok();
 
   // Aggregated methods
-  void enforceAPonData(const casacore::String& apmode);
-  void enforceSolveWeights(const casacore::Bool pHandOnly);
-  void sizeResiduals(const casacore::Int& nPar, const casacore::Int& nDiff);
+  void enforceAPonData(const String& apmode);
+  void enforceSolveWeights(const Bool pHandOnly);
+  void sizeResiduals(const Int& nPar, const Int& nDiff);
   void initResidWithModel();
   void finalizeResiduals();
 
 private:
 
   // How many SDBs contained herein
-  casacore::Int nSDB_;
+  Int nSDB_;
 
   // Keep SDBs as a list of pointers
-  casacore::PtrBlock<SolveDataBuffer*> SDB_;
+  PtrBlock<SolveDataBuffer*> SDB_;
 
 };
 

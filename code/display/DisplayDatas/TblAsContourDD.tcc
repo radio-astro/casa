@@ -1,4 +1,4 @@
-//# TblAsContourDD.cc:  Display casacore::Data for contour displays of data from a table
+//# TblAsContourDD.cc:  Display Data for contour displays of data from a table
 //# Copyright (C) 2000,2001
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -47,7 +47,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // constructors
 // given an already constructed table
-	TblAsContourDD::TblAsContourDD(casacore::Table *table):
+	TblAsContourDD::TblAsContourDD(Table *table):
 		// NEED TO CLONE/COPY THE TABLE AND PUT THE CLONE IN ITSTABLE
 		// SO THAT NO ONE ELSE CAN REMOVE THE TABLE ON US
 		itsTable(table),
@@ -59,7 +59,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsLevels(0),
 		itsScale(0),
 		itsLine(0),
-		itsDash(true),
+		itsDash(True),
 		itsColor("foreground"),
 		itsType("frac") {
 		// get the names of the columns from the table
@@ -75,7 +75,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // given a string which gives the full pathname and filename of a table
 // on disk
-	TblAsContourDD::TblAsContourDD(const casacore::String tablename):
+	TblAsContourDD::TblAsContourDD(const String tablename):
 		itsTable(0),
 		itsQueryTable(0),
 		itsXColumnName(0),
@@ -85,13 +85,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsLevels(0),
 		itsScale(0),
 		itsLine(0),
-		itsDash(true),
+		itsDash(True),
 		itsColor("foreground"),
 		itsType("frac") {
 		// open the table file - throw and error if there is a problem
-		itsTable = new casacore::Table(tablename);
+		itsTable = new Table(tablename);
 		if (!itsTable) {
-			throw(casacore::AipsError("Cannot open named table"));
+			throw(AipsError("Cannot open named table"));
 		}
 		// get the names of the columns from the table
 		getTableColumnNames();
@@ -116,15 +116,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 	}
 
-	const casacore::Unit TblAsContourDD::dataUnit() {
-		casacore::String value = "_";
+	const Unit TblAsContourDD::dataUnit() {
+		String value = "_";
 		return value;
 	}
 
 // get the units of the columns being displayed
-	const casacore::Unit TblAsContourDD::dataUnit(const casacore::String column) {
-		static casacore::Regex rxUnit("^[uU][nN][iI][tT]$");
-		casacore::String value;
+	const Unit TblAsContourDD::dataUnit(const String column) {
+		static Regex rxUnit("^[uU][nN][iI][tT]$");
+		String value;
 		if (getColumnKeyword(value, column, rxUnit)) {
 		} else {
 			value = "_";
@@ -142,15 +142,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 // set a record
-	casacore::Bool TblAsContourDD::setOptions(casacore::Record &rec, casacore::Record &recOut) {
-		casacore::Bool ret = ActiveCaching2dDD::setOptions(rec,recOut);
-		casacore::Bool localchange = false, coordchange = false, error;
+	Bool TblAsContourDD::setOptions(Record &rec, Record &recOut) {
+		Bool ret = ActiveCaching2dDD::setOptions(rec,recOut);
+		Bool localchange = False, coordchange = False, error;
 
 		if (readOptionRecord(itsOptQueryString, itsOptQueryStringUnset,
 		                     error, rec, "querystring")) {
 
 			arrangeQueryTable();
-			localchange = true;
+			localchange = True;
 		}
 
 		// set options for apperance of contours
@@ -166,25 +166,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		              localchange;
 
 		// set options for contour levels
-		casacore::Vector<casacore::Float> newLevels;
+		Vector<Float> newLevels;
 		if (rec.isDefined("levels")) {
 			rec.get("levels",newLevels);
-			casacore::Bool diff = (newLevels.nelements() != itsLevels.nelements());
+			Bool diff = (newLevels.nelements() != itsLevels.nelements());
 			if (!diff) {
-				for (casacore::uInt i = 0; i < newLevels.nelements(); i++) {
+				for (uInt i = 0; i < newLevels.nelements(); i++) {
 					diff = (newLevels(i) != itsLevels(i));
 					if (diff) break;
 				}
 			}
 			if (diff) {
 				itsLevels.resize(newLevels.nelements());
-				for (casacore::uInt i = 0; i < newLevels.nelements(); i++) {
+				for (uInt i = 0; i < newLevels.nelements(); i++) {
 					itsLevels(i) = newLevels(i);
 				}
-				ret = true;
+				ret = True;
 			}
 		} else {
-			// throw(casacore::AipsError("no levels option set in TblAsContourDD"));
+			// throw(AipsError("no levels option set in TblAsContourDD"));
 		}
 
 
@@ -205,10 +205,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return (ret || localchange || coordchange);
 	}
 
-	casacore::Record TblAsContourDD::getOptions( bool scrub ) const {
-		casacore::Record rec = ActiveCaching2dDD::getOptions(scrub);
+	Record TblAsContourDD::getOptions( bool scrub ) const {
+		Record rec = ActiveCaching2dDD::getOptions(scrub);
 
-		casacore::Record querystring;
+		Record querystring;
 		querystring.define("dlformat", "querystring");
 		querystring.define("listname", "\"WHERE\" query");
 		querystring.define("ptype", "string");
@@ -218,15 +218,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		} else {
 			querystring.define("value", itsOptQueryString);
 		}
-		querystring.define("allowunset", true);
+		querystring.define("allowunset", True);
 		rec.defineRecord("querystring", querystring);
 
 		// record for contour levels
-		casacore::Record levels;
+		Record levels;
 		levels.define("dlformat", "levels");
 		levels.define("listname", "Contour levels");
 		levels.define("ptype", "array");
-		casacore::Vector<casacore::Float> vlevels(11);
+		Vector<Float> vlevels(11);
 		vlevels(0) = 0.0;
 		vlevels(1) = 1.0;
 		vlevels(2) = 2.0;
@@ -240,63 +240,63 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		vlevels(10) = 10.0;
 		levels.define("default", vlevels);
 		levels.define("value", itsLevels);
-		levels.define("allowunset", false);
+		levels.define("allowunset", False);
 		rec.defineRecord("levels", levels);
 
 		// record for the scaling of the contour levels
-		casacore::Record scale;
-		casacore::Float vscale=0.1;
+		Record scale;
+		Float vscale=0.1;
 		scale.define("dlformat", "scale");
 		scale.define("listname", "Contour scale factor");
 		scale.define("ptype", "scalar");
 		scale.define("default", vscale);
 		scale.define("value", itsScale);
-		scale.define("allowunset", false);
+		scale.define("allowunset", False);
 		rec.defineRecord("scale", scale);
 
 		// record for the contour level type: absolute or (fractal?)
-		casacore::Record type;
+		Record type;
 		type.define("dlformat", "type");
 		type.define("listname", "Level type");
 		type.define("ptype", "choice");
-		casacore::Vector<casacore::String> vtype(2);
+		Vector<String> vtype(2);
 		vtype(0) = "frac";
 		vtype(1) = "abs";
 		type.define("popt", vtype);
 		type.define("default", "frac");
 		type.define("value", itsType);
-		type.define("allowunset", false);
+		type.define("allowunset", False);
 		rec.defineRecord("type", type);
 
 		// record for contour line parameters
-		casacore::Record line;
+		Record line;
 		line.define("dlformat", "line");
 		line.define("listname", "Line width");
 		line.define("ptype", "floatrange");
-		line.define("pmin", casacore::Float(0.0));
-		line.define("pmax", casacore::Float(5.0));
-		line.define("presolution", casacore::Float(0.1));
-		line.define("default", casacore::Float(0.5));
+		line.define("pmin", Float(0.0));
+		line.define("pmax", Float(5.0));
+		line.define("presolution", Float(0.1));
+		line.define("default", Float(0.5));
 		line.define("value", itsLine);
-		line.define("allowunset", false);
+		line.define("allowunset", False);
 		rec.defineRecord("line", line);
 
 		// record for type of contour line for negative values: dash or solid
-		casacore::Record dash;
+		Record dash;
 		dash.define("dlformat", "dash");
 		dash.define("listname", "Dash negative contours?");
 		dash.define("ptype", "boolean");
-		dash.define("default", casacore::Bool(true));
+		dash.define("default", Bool(True));
 		dash.define("value", itsDash);
-		dash.define("allowunset", false);
+		dash.define("allowunset", False);
 		rec.defineRecord("dash", dash);
 
 		// record for color of contour lines
-		casacore::Record color;
+		Record color;
 		color.define("dlformat", "color");
 		color.define("listname", "Line color");
 		color.define("ptype", "userchoice");
-		casacore::Vector<casacore::String> vcolor(8);
+		Vector<String> vcolor(8);
 		vcolor(0) = "foreground";
 		vcolor(1) = "background";
 		vcolor(2) = "black";
@@ -308,7 +308,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		color.define("popt", vcolor);
 		color.define("default", "foreground");
 		color.define("value", itsColor);
-		color.define("allowunset", false);
+		color.define("allowunset", False);
 		rec.defineRecord("color", color);
 
 		// get DParameter values which have information on the axis (columns) used
@@ -347,7 +347,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 // obtain a pointer to the table to be displayed
-	casacore::Table *TblAsContourDD::table() {
+	Table *TblAsContourDD::table() {
 		if (itsQueryTable) {
 			return itsQueryTable;
 		} else {
@@ -375,7 +375,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// setup values for query options
 		itsOptQueryString = "";
-		itsOptQueryStringUnset = true;
+		itsOptQueryStringUnset = True;
 		arrangeQueryTable();
 
 		// set contour level and apperance options
@@ -394,13 +394,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsScale = 0.1;
 		itsType = "frac";
 		itsLine = 0.5;
-		itsDash = true;
+		itsDash = True;
 		itsColor = "foreground";
 
 
 	}
 
-	casacore::Bool TblAsContourDD::arrangeQueryTable() {
+	Bool TblAsContourDD::arrangeQueryTable() {
 		// remove old version of query table and make ready for new entries
 		if (itsQueryTable) {
 			itsQueryTable->markForDelete();
@@ -410,16 +410,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// now add to new query table if requested
 		if (!itsOptQueryStringUnset) {
-			casacore::String selectStr = "SELECT ";
-			casacore::String fromStr = "FROM " + casacore::String(itsTable->tableName()) + casacore::String(" ");
-			casacore::String whereStr = "WHERE " + itsOptQueryString;
-			itsQueryTable = new casacore::Table(tableCommand(selectStr + fromStr + whereStr));
+			String selectStr = "SELECT ";
+			String fromStr = "FROM " + String(itsTable->tableName()) + String(" ");
+			String whereStr = "WHERE " + itsOptQueryString;
+			itsQueryTable = new Table(tableCommand(selectStr + fromStr + whereStr));
 			if (itsQueryTable) {
-				return true;
+				return True;
 			}
 		}
 		// query table was not set
-		return false;
+		return False;
 	}
 
 	void TblAsContourDD::getCoordinateSystem() {
@@ -428,7 +428,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 		// linear extent of coordinates
-		casacore::Vector<casacore::Double> linblc(2), lintrc(2), extrema;
+		Vector<Double> linblc(2), lintrc(2), extrema;
 		extrema = columnStatistics(itsXColumnName->value());
 		linblc(0)=extrema(0);
 		lintrc(0)=extrema(1)-1.0;
@@ -437,36 +437,36 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		lintrc(1)=extrema(1)-1.0;
 
 		// coordinate axis names
-		casacore::Vector<casacore::String> names(2);
+		Vector<String> names(2);
 		names(0) = itsXColumnName->value();
 		names(1) = itsYColumnName->value();
 
 		// coordinate axis units
-		casacore::Vector<casacore::String> units(2);
-		casacore::Unit temp = dataUnit(itsXColumnName->value());
+		Vector<String> units(2);
+		Unit temp = dataUnit(itsXColumnName->value());
 		units(0) = temp.getName();
 		if (itsYColumnName->value() == "<row>") {  // row is not a table column
 			units(1) = "_";
 		} else {
-			casacore::Unit temp2 = dataUnit(itsYColumnName->value());
+			Unit temp2 = dataUnit(itsYColumnName->value());
 			units(1)= temp2.getName();
 		}
 
-		casacore::Matrix<casacore::Double> pc(2,2);
+		Matrix<Double> pc(2,2);
 		pc = 0.0;
 		pc(0, 0) = pc(1, 1) = 1.0;
 
 		// reference values for mapping for mapping coordinates
-		casacore::Vector<double> refVal = linblc;
+		Vector<double> refVal = linblc;
 
 		// coordinate increments
-		casacore::Vector<double> inc(2);
+		Vector<double> inc(2);
 		inc = 1.0;
 
 		// reference pixel for mapping coordinates
-		casacore::Vector<double> refPix = linblc;
+		Vector<double> refPix = linblc;
 
-		casacore::LinearCoordinate lc(names, units, refVal, inc, pc, refPix);
+		LinearCoordinate lc(names, units, refVal, inc, pc, refPix);
 		itsCoord.addCoordinate(lc);
 		itsLinblc = linblc;
 		itsLintrc = lintrc;
@@ -477,12 +477,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		ActiveCaching2dDD::setCoordinateSystem( itsCoord, itsLinblc, itsLintrc);
 	}
 
-	casacore::String TblAsContourDD::showValue(const casacore::Vector<casacore::Double> &world) {
+	String TblAsContourDD::showValue(const Vector<Double> &world) {
 
 		// NEED TO IMPLEMENT
 		// no examples of this function exist in any other DD but it should be
 		// easy to implement?
-		casacore::String temp="";
+		String temp="";
 		return temp;
 	}
 
@@ -491,7 +491,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// make sure there is a table to be read
 		if (!table()) {
-			throw(casacore::AipsError("could not obtain table in TblAsContourDD"));
+			throw(AipsError("could not obtain table in TblAsContourDD"));
 		}
 
 		// determine the column names
@@ -499,58 +499,58 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// check to make sure there are at least two column names
 		if (itsColumnNames.nelements() < 2) {
-			throw(casacore::AipsError("too few columns for TblAsContourDD to plot table"));
+			throw(AipsError("too few columns for TblAsContourDD to plot table"));
 		}
 
 	}
 
 // get all of the table columnNames with a certain data type
-	casacore::Vector<casacore::String> TblAsContourDD::getColumnNamesOfType( const casacore::Bool isarray) {
+	Vector<String> TblAsContourDD::getColumnNamesOfType( const Bool isarray) {
 
-		casacore::uInt n = 0;
+		uInt n = 0;
 
 		// get all the table column names available
 		// we must do this since a table query may be active
 		getTableColumnNames();
-		casacore::Vector<casacore::String> cnames = itsColumnNames;
+		Vector<String> cnames = itsColumnNames;
 
 		// get a description of the columns
-		casacore::TableDesc tdesc(table()->tableDesc());
+		TableDesc tdesc(table()->tableDesc());
 
 		// now keep only columns of specified data types
-		casacore::Vector<casacore::String> retval (cnames.shape());
-		for (casacore::uInt i = 0; i < cnames.nelements(); i++ ) {
+		Vector<String> retval (cnames.shape());
+		for (uInt i = 0; i < cnames.nelements(); i++ ) {
 			if (isarray ) {
 				// columns with arrays suitable for x axis
-				if (tdesc.columnDesc(cnames(i)).trueDataType() == casacore::TpArrayShort ||
-				        tdesc.columnDesc(cnames(i)).trueDataType() == casacore::TpArrayShort ||
-				        tdesc.columnDesc(cnames(i)).trueDataType() == casacore::TpArrayUShort ||
-				        tdesc.columnDesc(cnames(i)).trueDataType() == casacore::TpArrayInt ||
-				        tdesc.columnDesc(cnames(i)).trueDataType() == casacore::TpArrayUInt ||
-				        tdesc.columnDesc(cnames(i)).trueDataType() == casacore::TpArrayFloat ||
-				        tdesc.columnDesc(cnames(i)).trueDataType() == casacore::TpArrayDouble ||
-				        tdesc.columnDesc(cnames(i)).trueDataType() == casacore::TpArrayComplex ||
-				        tdesc.columnDesc(cnames(i)).trueDataType() == casacore::TpArrayDComplex ) {
+				if (tdesc.columnDesc(cnames(i)).trueDataType() == TpArrayShort ||
+				        tdesc.columnDesc(cnames(i)).trueDataType() == TpArrayShort ||
+				        tdesc.columnDesc(cnames(i)).trueDataType() == TpArrayUShort ||
+				        tdesc.columnDesc(cnames(i)).trueDataType() == TpArrayInt ||
+				        tdesc.columnDesc(cnames(i)).trueDataType() == TpArrayUInt ||
+				        tdesc.columnDesc(cnames(i)).trueDataType() == TpArrayFloat ||
+				        tdesc.columnDesc(cnames(i)).trueDataType() == TpArrayDouble ||
+				        tdesc.columnDesc(cnames(i)).trueDataType() == TpArrayComplex ||
+				        tdesc.columnDesc(cnames(i)).trueDataType() == TpArrayDComplex ) {
 					retval(n++) = cnames(i);
 				}
 			} else {
 				// columns with scalars suitable for y axis
-				if (tdesc.columnDesc(cnames(i)).trueDataType() == casacore::TpShort ||
-				        tdesc.columnDesc(cnames(i)).trueDataType() == casacore::TpShort ||
-				        tdesc.columnDesc(cnames(i)).trueDataType() == casacore::TpUShort ||
-				        tdesc.columnDesc(cnames(i)).trueDataType() == casacore::TpInt ||
-				        tdesc.columnDesc(cnames(i)).trueDataType() == casacore::TpUInt ||
-				        tdesc.columnDesc(cnames(i)).trueDataType() == casacore::TpFloat ||
-				        tdesc.columnDesc(cnames(i)).trueDataType() == casacore::TpDouble ||
-				        tdesc.columnDesc(cnames(i)).trueDataType() == casacore::TpComplex ||
-				        tdesc.columnDesc(cnames(i)).trueDataType() == casacore::TpDComplex ) {
+				if (tdesc.columnDesc(cnames(i)).trueDataType() == TpShort ||
+				        tdesc.columnDesc(cnames(i)).trueDataType() == TpShort ||
+				        tdesc.columnDesc(cnames(i)).trueDataType() == TpUShort ||
+				        tdesc.columnDesc(cnames(i)).trueDataType() == TpInt ||
+				        tdesc.columnDesc(cnames(i)).trueDataType() == TpUInt ||
+				        tdesc.columnDesc(cnames(i)).trueDataType() == TpFloat ||
+				        tdesc.columnDesc(cnames(i)).trueDataType() == TpDouble ||
+				        tdesc.columnDesc(cnames(i)).trueDataType() == TpComplex ||
+				        tdesc.columnDesc(cnames(i)).trueDataType() == TpDComplex ) {
 					retval(n++) = cnames(i);
 				}
 			}
 		}
 
 		// now resize the selected column names vector
-		retval.resize(n, true);
+		retval.resize(n, True);
 
 		return retval;
 	}
@@ -559,26 +559,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // construct the parameters list
 	void TblAsContourDD::constructParameters() {
 
-		casacore::Bool isarray = true, notarray = false;
+		Bool isarray = true, notarray = False;
 
 		// get a list of column names with numerical data in arrays
-		casacore::Vector<casacore::String> xstring = getColumnNamesOfType(isarray);
+		Vector<String> xstring = getColumnNamesOfType(isarray);
 
 		// if no columns are returned then throw exception
 		if (xstring.nelements() < 1) {
-			throw(casacore::AipsError("no valid columns found in table for a contour plot"));
+			throw(AipsError("no valid columns found in table for a contour plot"));
 		}
 
 		// get a list of column names with numerical data in non-arrays
 		// ystring can have zero elements since we can plot against "row number"
-		casacore::Vector<casacore::String> ystring = getColumnNamesOfType(notarray);
+		Vector<String> ystring = getColumnNamesOfType(notarray);
 
 		// increase the size of the x column string and add the "none" option
-		xstring.resize(xstring.nelements() + 1, true);
+		xstring.resize(xstring.nelements() + 1, True);
 		xstring(xstring.nelements() - 1) = "<none>";
 
 		// increase the size of the y column string and add the "rows" option
-		ystring.resize(ystring.nelements() + 1, true);
+		ystring.resize(ystring.nelements() + 1, True);
 		ystring(ystring.nelements() - 1) = "<row>";
 
 		// now set up the X column choice parameters
@@ -652,9 +652,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // we need to add support for complex values
 //
-	casacore::Vector<double> TblAsContourDD::columnStatistics(const casacore::String& columnName) {
+	Vector<double> TblAsContourDD::columnStatistics(const String& columnName) {
 
-		casacore::Vector<double> extrema(2);  // first value is minima second is maxima
+		Vector<double> extrema(2);  // first value is minima second is maxima
 
 		// for now the min is allows zero - until we can determine if a
 		// table measures exists to tell us the world coordinate values
@@ -672,124 +672,124 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		// get the table column data type
-		casacore::TableDesc tdesc(table()->tableDesc());
-		casacore::DataType type=tdesc.columnDesc(columnName).trueDataType();
+		TableDesc tdesc(table()->tableDesc());
+		DataType type=tdesc.columnDesc(columnName).trueDataType();
 
-		if (type == casacore::TpArrayDouble) {
+		if (type == TpArrayDouble) {
 			// array to contain data from column in columns data type
-			casacore::Array<double> typedata;
+			Array<double> typedata;
 			// read the column into an array
-			casacore::ROArrayColumn<double> dataCol(*table(),columnName);
-			dataCol.getColumn(typedata,true);
+			ROArrayColumn<double> dataCol(*table(),columnName);
+			dataCol.getColumn(typedata,True);
 			// let the maximum value be the number of elements in the array
 			// typedata is ndim+row so we need to look at its shape the get
 			// the number of pixels in a column row (nx)
-			casacore::IPosition length = typedata.shape();
+			IPosition length = typedata.shape();
 			extrema(1) = length(0); // get the length of the first axis which is nx
 			// for use in the future or TableAsXY
 			// find the minimum and maximum in the array
 			//minMax(extrema(0),extrema(1),data);
 		}
-		if (type == casacore::TpArrayFloat) {
-			casacore::Array<float> typedata;
-			casacore::ROArrayColumn<float> dataCol(*table(),columnName);
-			dataCol.getColumn(typedata,true);
+		if (type == TpArrayFloat) {
+			Array<float> typedata;
+			ROArrayColumn<float> dataCol(*table(),columnName);
+			dataCol.getColumn(typedata,True);
 			// let the maximum value be the number of elements - assume 1-D array
-			casacore::IPosition length = typedata.shape();
+			IPosition length = typedata.shape();
 			extrema(1) = length(0); // get the length of the first axis which is nx
 			// for use in the future or TableAsXY
 			// now convert array to type double
-			// casacore::Array<double> data;
+			// Array<double> data;
 			//data.resize(typedata.shape());
 			//convertArray(data,typedata);
 			// find the minimum and maximum in the array
 			//minMax(extrema(0),extrema(1),data);
 		}
-		if (type == casacore::TpArrayShort) {
-			casacore::Array<short> typedata;
-			casacore::ROArrayColumn<short> dataCol(*table(),columnName);
-			dataCol.getColumn(typedata,true);
-			casacore::IPosition length = typedata.shape();
+		if (type == TpArrayShort) {
+			Array<short> typedata;
+			ROArrayColumn<short> dataCol(*table(),columnName);
+			dataCol.getColumn(typedata,True);
+			IPosition length = typedata.shape();
 			extrema(1) = length(0); // get the length of the first axis which is nx
 		}
-		if (type == casacore::TpArrayUShort) {
-			casacore::Array<casacore::uShort> typedata;
-			casacore::ROArrayColumn<casacore::uShort> dataCol(*table(),columnName);
-			dataCol.getColumn(typedata,true);
-			casacore::IPosition length = typedata.shape();
+		if (type == TpArrayUShort) {
+			Array<uShort> typedata;
+			ROArrayColumn<uShort> dataCol(*table(),columnName);
+			dataCol.getColumn(typedata,True);
+			IPosition length = typedata.shape();
 			extrema(1) = length(0); // get the length of the first axis which is nx
 		}
-		if (type == casacore::TpArrayInt) {
-			casacore::Array<int> typedata;
-			casacore::ROArrayColumn<int> dataCol(*table(),columnName);
-			dataCol.getColumn(typedata,true);
-			casacore::IPosition length = typedata.shape();
+		if (type == TpArrayInt) {
+			Array<int> typedata;
+			ROArrayColumn<int> dataCol(*table(),columnName);
+			dataCol.getColumn(typedata,True);
+			IPosition length = typedata.shape();
 			extrema(1) = length(0); // get the length of the first axis which is nx
 		}
-		if (type == casacore::TpArrayUInt) {
-			casacore::Array<casacore::uInt> typedata;
-			casacore::ROArrayColumn<casacore::uInt> dataCol(*table(),columnName);
-			dataCol.getColumn(typedata,true);
-			casacore::IPosition length = typedata.shape();
+		if (type == TpArrayUInt) {
+			Array<uInt> typedata;
+			ROArrayColumn<uInt> dataCol(*table(),columnName);
+			dataCol.getColumn(typedata,True);
+			IPosition length = typedata.shape();
 			extrema(1) = length(0); // get the length of the first axis which is nx
 		}
 		//
 		// scalar column cases
 		//
-		if (type == casacore::TpDouble) {
+		if (type == TpDouble) {
 			// array to contain data from column in columns data type
-			casacore::Vector<double> typedata;
+			Vector<double> typedata;
 			// read the scalar column into an array
-			casacore::ROScalarColumn<double> dataCol(*table(),columnName);
-			dataCol.getColumn(typedata,true);
+			ROScalarColumn<double> dataCol(*table(),columnName);
+			dataCol.getColumn(typedata,True);
 			// minima and maxima of data are world coordinate min and max
 			minMax(extrema(0),extrema(1),typedata);
 		}
-		if (type == casacore::TpFloat) {
-			casacore::Vector<float> typedata;
-			casacore::ROScalarColumn<float> dataCol(*table(),columnName);
-			dataCol.getColumn(typedata,true);
-			casacore::Array<double> data;
+		if (type == TpFloat) {
+			Vector<float> typedata;
+			ROScalarColumn<float> dataCol(*table(),columnName);
+			dataCol.getColumn(typedata,True);
+			Array<double> data;
 			data.resize(typedata.shape());
 			convertArray(data,typedata);
 			// minima and maxima of data are world coordinate min and max
 			minMax(extrema(0),extrema(1),data);
 		}
-		if (type == casacore::TpShort) {
-			casacore::Vector<short> typedata;
-			casacore::ROScalarColumn<short> dataCol(*table(),columnName);
-			dataCol.getColumn(typedata,true);
-			casacore::Array<double> data;
+		if (type == TpShort) {
+			Vector<short> typedata;
+			ROScalarColumn<short> dataCol(*table(),columnName);
+			dataCol.getColumn(typedata,True);
+			Array<double> data;
 			data.resize(typedata.shape());
 			convertArray(data,typedata);
 			// minima and maxima of data are world coordinate min and max
 			minMax(extrema(0),extrema(1),data);
 		}
-		if (type == casacore::TpUShort) {
-			casacore::Vector<casacore::uShort> typedata;
-			casacore::ROScalarColumn<casacore::uShort> dataCol(*table(),columnName);
-			dataCol.getColumn(typedata,true);
-			casacore::Array<double> data;
+		if (type == TpUShort) {
+			Vector<uShort> typedata;
+			ROScalarColumn<uShort> dataCol(*table(),columnName);
+			dataCol.getColumn(typedata,True);
+			Array<double> data;
 			data.resize(typedata.shape());
 			convertArray(data,typedata);
 			// minima and maxima of data are world coordinate min and max
 			minMax(extrema(0),extrema(1),data);
 		}
-		if (type == casacore::TpInt) {
-			casacore::Vector<int> typedata;
-			casacore::ROScalarColumn<int> dataCol(*table(),columnName);
-			dataCol.getColumn(typedata,true);
-			casacore::Array<double> data;
+		if (type == TpInt) {
+			Vector<int> typedata;
+			ROScalarColumn<int> dataCol(*table(),columnName);
+			dataCol.getColumn(typedata,True);
+			Array<double> data;
 			data.resize(typedata.shape());
 			convertArray(data,typedata);
 			// minima and maxima of data are world coordinate min and max
 			minMax(extrema(0),extrema(1),data);
 		}
-		if (type == casacore::TpUInt) {
-			casacore::Vector<casacore::uInt> typedata;
-			casacore::ROScalarColumn<casacore::uInt> dataCol(*table(),columnName);
-			dataCol.getColumn(typedata,true);
-			casacore::Array<double> data;
+		if (type == TpUInt) {
+			Vector<uInt> typedata;
+			ROScalarColumn<uInt> dataCol(*table(),columnName);
+			dataCol.getColumn(typedata,True);
+			Array<double> data;
 			data.resize(typedata.shape());
 			// have to change template file
 			convertArray(data,typedata);

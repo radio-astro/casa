@@ -30,20 +30,20 @@ public:
 
 	ImageHanningSmoother(
 		const SPCIIT image,
-		const casacore::Record *const region,
-		const casacore::String& maskInp,
-		const casacore::String& outname, casacore::Bool overwrite
+		const Record *const region,
+		const String& maskInp,
+		const String& outname, Bool overwrite
 	);
 
 	// destructor
 	~ImageHanningSmoother() {}
 
-	casacore::String getClass() const { const static casacore::String s = "HanningSmoother"; return s; }
+	String getClass() const { const static String s = "HanningSmoother"; return s; }
 
 protected:
 
 	SPIIT _smooth(
-		const casacore::ImageInterface<T>& image
+		const ImageInterface<T>& image
 	) const;
 
 private:
@@ -51,7 +51,7 @@ private:
 	// disallow default constructor
 	ImageHanningSmoother();
 
-	casacore::Array<T> _hanningSmooth(const casacore::Array<T>& in) const ;
+	Array<T> _hanningSmooth(const Array<T>& in) const ;
 };
 }
 

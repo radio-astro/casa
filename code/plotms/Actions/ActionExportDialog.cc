@@ -32,7 +32,6 @@
 #include <plotms/GuiTabs/PlotMSExportTab.qo.h>
 #include <QDebug>
 
-using namespace casacore;
 namespace casa {
 
 ActionExportDialog::ActionExportDialog(Client* client)
@@ -76,5 +75,4 @@ ActionExportDialog::~ActionExportDialog() {
 	delete exportDialog;
 }
 
-using namespace casacore;
 } /* namespace casa */

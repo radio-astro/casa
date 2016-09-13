@@ -49,8 +49,6 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-using namespace casacore;
-
 
 // **********************************************************
 //  VisCalSolver2 Implementations

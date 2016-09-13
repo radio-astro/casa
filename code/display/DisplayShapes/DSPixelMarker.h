@@ -49,16 +49,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	public:
 
 		DSPixelMarker();
-		DSPixelMarker(const casacore::Record& settings);
+		DSPixelMarker(const Record& settings);
 		DSPixelMarker(DSScreenMarker& other);
 		DSPixelMarker(DSWorldMarker& other);
 
 		virtual ~DSPixelMarker();
 
-		virtual casacore::Record getOptions();
-		virtual casacore::Bool setOptions(const casacore::Record& settings);
+		virtual Record getOptions();
+		virtual Bool setOptions(const Record& settings);
 
-		virtual casacore::Record getRawOptions() {
+		virtual Record getRawOptions() {
 			return DSMarker::getOptions();
 		}
 

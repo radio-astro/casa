@@ -91,7 +91,6 @@
 #include <measures/Measures/MeasTable.h>
 #include <casa/Quanta/MVTime.h>
 
-using namespace casacore;
 namespace casa {
 
 //typedef ROVisibilityIterator ROVisIter;
@@ -102,8 +101,8 @@ Partition::Partition(String& theMS, Table::TableOption option) :
 		  mssel_p(ms_p),
 		  msc_p(NULL),
 		  mscIn_p(NULL),
-		  //    sameShape_p(true),
-		  antennaSel_p(false),
+		  //    sameShape_p(True),
+		  antennaSel_p(False),
 		  timeBin_p(-1.0),
 		  scanString_p(""),
 		  intentString_p(""),
@@ -123,8 +122,8 @@ Partition::Partition(MeasurementSet& ms) :
 		  mssel_p(ms_p),
 		  msc_p(NULL),
 		  mscIn_p(NULL),
-		  //sameShape_p(true),
-		  antennaSel_p(false),
+		  //sameShape_p(True),
+		  antennaSel_p(False),
 		  timeBin_p(-1.0),
 		  scanString_p(""),
 		  intentString_p(""),
@@ -320,7 +319,7 @@ Bool Partition::makePartition(String& msname, String& colname,
 					<< "this MS"
 					<< LogIO::POST;
 			ms_p=MeasurementSet();
-			return false;
+			return False;
 		}
 
 		// Watch out!  This throws an AipsError if ms_p doesn't have the
@@ -334,7 +333,7 @@ Bool Partition::makePartition(String& msname, String& colname,
 					<< "and timerange may be invalid."
 					<< LogIO::POST;
 			ms_p = MeasurementSet();
-			return false;
+			return False;
 		}
 		mscIn_p = new ROMSColumns(mssel_p);
 		// Note again the parseColumnNames() a few lines back that stops setupMS()
@@ -440,10 +439,10 @@ Bool Partition::makePartition(String& msname, String& colname,
 			delete outpointer;
 			os << LogIO::WARN << msname << " left unfinished." << LogIO::POST;
 			ms_p=MeasurementSet();
-			return false;
+			return False;
 		}
 
-		//  msOut_p.relinquishAutoLocks (true);
+		//  msOut_p.relinquishAutoLocks (True);
 		//  msOut_p.unlock();
 		//Detaching the selected part
 		ms_p=MeasurementSet();
@@ -471,7 +470,7 @@ Bool Partition::makePartition(String& msname, String& colname,
 		}
 
 		delete outpointer;
-		return true;
+		return True;
 	}
 	catch(AipsError x){
 		ms_p=MeasurementSet();
@@ -571,7 +570,7 @@ Bool Partition::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	// here.
 	msc_p = new MSMainColumns(msOut_p);
 	msc_p->setEpochRef(MEpoch::castType(mscIn_p->timeMeas().getMeasRef().getType()),
-			false);
+			False);
 
 	// UVW is the only other Measures column in the main table.
 	msc_p->uvwMeas().setDescRefCode(Muvw::castType(mscIn_p->uvwMeas().getMeasRef().getType()));
@@ -677,7 +676,7 @@ Bool Partition::makeSelection()
 	}
 	//mssel_p.rename(ms_p.tableName()+"/SELECTED_TABLE", Table::Scratch);
 	if(mssel_p.nrow() == 0)
-		return false;
+		return False;
 
 	if(mssel_p.nrow() < ms_p.nrow()){
 		os << LogIO::NORMAL
@@ -685,7 +684,7 @@ Bool Partition::makeSelection()
 				<< " considered due to the selection criteria."
 				<< LogIO::POST;
 	}
-	return true;
+	return True;
 }
 
 MeasurementSet* Partition::setupMS(const String& outFileName, const MeasurementSet& inms,
@@ -798,7 +797,7 @@ MeasurementSet* Partition::setupMS(const String& outFileName, const MeasurementS
 	uInt cache_val=32768;
 	// Set the default Storage Manager to be the Incr one
 	IncrementalStMan incrStMan ("ISMData",cache_val);
-	newtab.bindAll(incrStMan, true);
+	newtab.bindAll(incrStMan, True);
 	//Override the binding for specific columns
 
 	IncrementalStMan incrStMan0("Array_ID",cache_val);
@@ -930,7 +929,7 @@ Bool Partition::fillAccessoryMainCols(){
 	LogIO os(LogOrigin("Partition", "fillAccessoryMainCols()"));
 	uInt nrows = mssel_p.nrow();
 
-	msOut_p.addRow(nrows, true);
+	msOut_p.addRow(nrows, True);
 
 	//#ifdef COPYTIMER
 	Timer timer;
@@ -1012,7 +1011,7 @@ Bool Partition::fillAccessoryMainCols(){
 			<< LogIO::POST;
 
 	timer.mark();
-	return true;
+	return True;
 }
 
 Bool Partition::fillMainTable(const Vector<MS::PredefinedColumns>& colNames)
@@ -1089,7 +1088,7 @@ Bool Partition::getDataColumn(ROArrayColumn<Complex>& data,
 		data.reference(mscIn_p->lagData());
 	else                                // The honored-by-time-if-nothing-else
 		data.reference(mscIn_p->correctedData()); // default.
-	return true;
+	return True;
 }
 
 Bool Partition::getDataColumn(ROArrayColumn<Float>& data,
@@ -1104,7 +1103,7 @@ Bool Partition::getDataColumn(ROArrayColumn<Float>& data,
 		<< LogIO::POST;
 
 	data.reference(mscIn_p->floatData());
-	return true;
+	return True;
 }
 
 Bool Partition::putDataColumn(MSColumns& msc, ROArrayColumn<Complex>& data, 
@@ -1161,7 +1160,7 @@ Bool Partition::copyDataFlagsWtSp(const Vector<MS::PredefinedColumns>& colNames,
 
 	uInt ninrows = mssel_p.nrow();
 	ProgressMeter meter(0.0, ninrows * 1.0, "partition", "rows copied", "", "",
-			true, 1);
+			True, 1);
 	uInt inrowsdone = 0;  // only for the meter.
 
 	for (iChunk=0,viOut.originChunks(),viIn.originChunks();
@@ -1361,7 +1360,7 @@ Bool Partition::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
 
 	uInt ninrows = mssel_p.nrow();
 	ProgressMeter meter(0.0, ninrows * 1.0, "partition", "rows averaged", "", "",
-			true, 1);
+			True, 1);
 	uInt inrowsdone = 0;  // only for the meter.
 
 	VisChunkAverager vca(dataColNames, doSpWeight);
@@ -1380,7 +1379,7 @@ Bool Partition::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
 		if(rowsnow > 0){
 			RefRows rowstoadd(rowsdone, rowsdone + rowsnow - 1);
 
-			// msOut_p.addRow(rowsnow, true);
+			// msOut_p.addRow(rowsnow, True);
 			msOut_p.addRow(rowsnow);            // Try it without initialization.
 
 			//    relabelIDs();
@@ -1461,7 +1460,7 @@ Bool Partition::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
 				<< LogIO::POST;
 		return false;
 	}
-	return true;
+	return True;
 }
 
 void Partition::getDataColMap(MSMainColumns* msc, ArrayColumn<Complex>* mapper,

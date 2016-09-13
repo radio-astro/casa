@@ -42,11 +42,11 @@ namespace casa {
 
 // Connects PlotPointData and QwtData.
 #if QWT_VERSION >= 0x060000
-class QPPointData : public QwtSeriesData<QPointF>
+class QPPointData : public QwtSeriesData<QPointF> {
 #else
-class QPPointData : public QwtData
+class QPPointData : public QwtData {
 #endif
-    {
+    
 public:
     // Constructor which takes the data.
     QPPointData(PlotPointDataPtr data);
@@ -128,7 +128,7 @@ private:
     PlotRasterDataPtr m_data; // Data
 };
 
-} // end namespace casa
+}
 
 #endif
 

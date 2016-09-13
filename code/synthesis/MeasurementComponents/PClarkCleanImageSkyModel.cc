@@ -53,7 +53,6 @@
 #include <synthesis/MeasurementComponents/ClarkCleanAlgorithm.h>
 #include <synthesis/Parallel/Applicator.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 extern Applicator applicator;
@@ -124,11 +123,11 @@ Bool PClarkCleanImageSkyModel::solve(SkyEquation& se) {
   if (hasMask(0) & (xend > xbeg) && (yend > ybeg) ) {
     LCBox maskbox (IPosition(4, xbeg, ybeg, 0, 0), 
 		   IPosition(4, xend, yend, 0, 0), mask(0).shape());
-    mask_sl_p = new SubLattice<Float> (mask(0), maskbox, false);
+    mask_sl_p = new SubLattice<Float> (mask(0), maskbox, False);
   }
 
   // Start of the parallelization (over channel no.)
-  Bool rStat=true;
+  Bool rStat=True;
   Array<Float> maskTmp;
   if (mask_sl_p) {
     rStat = mask_sl_p->get(maskTmp);
@@ -150,9 +149,9 @@ Bool PClarkCleanImageSkyModel::solve(SkyEquation& se) {
 		 IPosition(4, nx-1, ny-1, 0, ichan),
 		 PSF(0).shape());
     
-    SubLattice<Float>  psf_sl (PSF(0), psfbox, false);
-    SubLattice<Float>  residual_sl (residual(0), imagebox, true);
-    SubLattice<Float>  model_sl (image(0), imagebox, true);
+    SubLattice<Float>  psf_sl (PSF(0), psfbox, False);
+    SubLattice<Float>  residual_sl (residual(0), imagebox, True);
+    SubLattice<Float>  model_sl (image(0), imagebox, True);
 
     // Assign the next available process to this algorithm
     assigned = applicator.nextAvailProcess(clarkClean, rank);

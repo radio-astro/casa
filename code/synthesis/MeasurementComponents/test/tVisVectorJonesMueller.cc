@@ -42,10 +42,10 @@
 // </summary>
 
 // Control verbosity
-#define JONES_VERBOSE true
+#define JONES_VERBOSE True
 
 
-void testVisVector (Bool verbose=false) {
+void testVisVector (Bool verbose=False) {
 
   cout << endl << "testVisVector:" << endl;
 
@@ -57,7 +57,7 @@ void testVisVector (Bool verbose=false) {
     visCube(Slice(0,1,1),Slice(),Slice())=Complex(1.,0);
     visCube(Slice(nCorr-1,1,1),Slice(),Slice())=Complex(1.,0);
     Cube<Bool> flagCube(nCorr,nChan,nRow);
-    flagCube.set(false);
+    flagCube.set(False);
 
     if (verbose) {
       cout << "ntrue(flagCube) = " << ntrue(flagCube) << endl;
@@ -67,7 +67,7 @@ void testVisVector (Bool verbose=false) {
     AlwaysAssert( ntrue(flagCube)==0, AipsError);
     AlwaysAssert( real(sum(visCube))==visCube.nelements()/2, AipsError)
 
-    VisVector V(visType(nCorr),false);
+    VisVector V(visType(nCorr),False);
     for (Int irow=0;irow<nRow;++irow) {
       V.sync(visCube(0,0,irow),flagCube(0,0,irow));
       for (Int ich=0;ich<nChan;++ich,++V) 
@@ -111,7 +111,7 @@ void initVis(Cube<Complex>& v,Float I,Float Q,Float U,Float V) {
 
 }
 
-void testJonesApply (Bool verbose=false) {
+void testJonesApply (Bool verbose=False) {
 
   cout << endl << "testJonesApply:" << endl;
 
@@ -129,11 +129,11 @@ void testJonesApply (Bool verbose=false) {
     visCubeMod(Slice(2,1,1),Slice(),Slice())=Complex(Q,-U);
     visCubeMod(Slice(3,1,1),Slice(),Slice())=Complex(I,0);
     Cube<Bool> flagCube(nCorr,nChan,nRow);
-    flagCube.set(false);
+    flagCube.set(False);
 
     Cube<Complex> B(2,nChan,nAnt);
     Cube<Bool> Bok(2,nChan,nAnt);
-    Bok.set(true);
+    Bok.set(True);
 
     for (Int ia1=0;ia1<nAnt;++ia1) {
       for (Int ich=0;ich<nChan;++ich) {
@@ -143,7 +143,7 @@ void testJonesApply (Bool verbose=false) {
       }
     }
 
-    Bok(1,nChan/2,nAnt/2)=false;
+    Bok(1,nChan/2,nAnt/2)=False;
 
     cout << "B = " << B << endl;
     cout << "Bok = " << boolalpha << Bok << endl;
@@ -177,7 +177,7 @@ void testJonesApply (Bool verbose=false) {
     visCubeCorr=visCubeObs;
 
     
-    VisVector V(visType(nCorr),false);
+    VisVector V(visType(nCorr),False);
     JonesDiag J1, J2;
 
     // Invert the matrices
@@ -239,7 +239,7 @@ void testJonesApply (Bool verbose=false) {
 }
 
 
-void testGenLinJones (Bool /*verbose=false*/) {
+void testGenLinJones (Bool /*verbose=False*/) {
 
   cout << endl << "testGenLinJones:" << endl;
 
@@ -250,7 +250,7 @@ void testGenLinJones (Bool /*verbose=false*/) {
     vis(1)=vis(2)=Complex(0.);
 
     Vector<Bool> fl(4);
-    fl.set(false);
+    fl.set(False);
     
     Vector<Complex> D1(4), D2(4);
     D1(0)=Complex(1.);
@@ -262,8 +262,8 @@ void testGenLinJones (Bool /*verbose=false*/) {
     D2(2)=Complex(-0.035,-0.045);
     D2(3)=Complex(1.);
     Vector<Bool> Ok1(4), Ok2(4);
-    Ok1.set(true);
-    Ok2.set(true);
+    Ok1.set(True);
+    Ok2.set(True);
 
     // JonesGenLin D
     Vector<Complex> d1(2), d2(2);
@@ -272,10 +272,10 @@ void testGenLinJones (Bool /*verbose=false*/) {
     d2(0)=D2(1);
     d2(1)=D2(2);
     Vector<Bool> ok1(2), ok2(2);
-    ok1.set(true);
-    ok2.set(true);
+    ok1.set(True);
+    ok2.set(True);
       
-    VisVector VV(visType(4),false);
+    VisVector VV(visType(4),False);
     VV.sync(vis(0),fl(0));
 
     cout << "VV raw = " << VV << endl;
@@ -291,7 +291,7 @@ void testGenLinJones (Bool /*verbose=false*/) {
     }
     cout << "VV corrupted = " << VV << endl;
 
-    //    ok1(0)=false;
+    //    ok1(0)=False;
 
     JonesGenLin J1, J2;
 
@@ -312,7 +312,7 @@ void testGenLinJones (Bool /*verbose=false*/) {
 
 
 
-void testGenJones (Bool /*verbose=false*/) {
+void testGenJones (Bool /*verbose=False*/) {
 
   cout << endl << "testGenJones:" << endl;
 
@@ -323,7 +323,7 @@ void testGenJones (Bool /*verbose=false*/) {
     vis(1)=vis(2)=Complex(0.);
 
     Vector<Bool> fl(4);
-    fl.set(false);
+    fl.set(False);
     
 
     // Jones (general) D
@@ -335,10 +335,10 @@ void testGenJones (Bool /*verbose=false*/) {
     d2(1)=Complex(0.01,0.02);
     d2(2)=Complex(0.03,0.04);
     Vector<Bool> ok1(4), ok2(4);
-    ok1.set(true);
-    ok2.set(true);
+    ok1.set(True);
+    ok2.set(True);
       
-    VisVector VV(visType(4),false);
+    VisVector VV(visType(4),False);
     VV.sync(vis(0),fl(0));
 
     cout << "VV raw = " << VV << endl;
@@ -353,7 +353,7 @@ void testGenJones (Bool /*verbose=false*/) {
 
     cout << "VV corrupted = " << VV << endl;
 
-    //ok1(2)=false;
+    //ok1(2)=False;
 
     J1.invert();
     J2.invert();
@@ -367,7 +367,7 @@ void testGenJones (Bool /*verbose=false*/) {
   }
 }
 
-void testGenJones2 (Bool /*verbose=false*/) {
+void testGenJones2 (Bool /*verbose=False*/) {
 
   cout << endl << "testGenJones2" << endl;
 
@@ -378,7 +378,7 @@ void testGenJones2 (Bool /*verbose=false*/) {
     vis(1)=vis(2)=Complex(0.);
 
     Vector<Bool> fl(4);
-    fl.set(false);
+    fl.set(False);
     
 
     // Jones (general) D
@@ -390,13 +390,13 @@ void testGenJones2 (Bool /*verbose=false*/) {
     d2(1)=Complex(0.01,0.02);
     d2(2)=Complex(0.03,0.04);
     Vector<Bool> ok1(4), ok2(4);
-    ok1.set(true);
-    ok2.set(true);
+    ok1.set(True);
+    ok2.set(True);
       
     cout << "d1=" << d1 << endl;
     cout << "d2=" << d2 << endl;
 
-    VisVector VV(visType(4),false);
+    VisVector VV(visType(4),False);
     VV.sync(vis(0),fl(0));
 
     cout << "VV raw = " << VV << endl;
@@ -433,7 +433,7 @@ void testGenJones2 (Bool /*verbose=false*/) {
   }
 }
 
-void testDiagJones (Bool /*verbose=false*/) {
+void testDiagJones (Bool /*verbose=False*/) {
 
   cout << endl << "testDiagJones:" << endl;
 
@@ -445,7 +445,7 @@ void testDiagJones (Bool /*verbose=false*/) {
     vis(1)=vis(2)=Complex(0.);
 
     Vector<Bool> fl(4);
-    fl.set(false);
+    fl.set(False);
     
 
     // Jones (general) D
@@ -455,10 +455,10 @@ void testDiagJones (Bool /*verbose=false*/) {
     g2(0)=Complex(0.01,0.02);
     g2(1)=Complex(0.03,0.04);
     Vector<Bool> ok1(2), ok2(2);
-    ok1.set(true);
-    ok2.set(true);
+    ok1.set(True);
+    ok2.set(True);
       
-    VisVector VV(visType(4),false);
+    VisVector VV(visType(4),False);
     VV.sync(vis(0),fl(0));
 
     cout << "VV raw = " << VV << endl;
@@ -473,7 +473,7 @@ void testDiagJones (Bool /*verbose=false*/) {
 
     cout << "VV corrupted = " << VV << endl;
 
-    //    ok2(1)=false;
+    //    ok2(1)=False;
 
     J1.invert();
     J2.invert();
@@ -490,7 +490,7 @@ void testDiagJones (Bool /*verbose=false*/) {
 #define complextype Complex
 #define floattype Float 
 
-void testMueller (Bool verbose=false) {
+void testMueller (Bool verbose=False) {
 
   cout << endl << "testMueller:" << endl;
 
@@ -508,26 +508,26 @@ void testMueller (Bool verbose=false) {
     // vis4o,fl4o
     Cube<complextype> vis4o(4,1,16);
     initVis(vis4o,I,Q,U,V);
-    Cube<Bool> fl4o(4,1,16,false);  
-    fl4o(Slice(0,1,1),Slice(),Slice(8,8,1))=true;
-    fl4o(Slice(1,1,1),Slice(),Slice(4,4,1))=true;
-    fl4o(Slice(1,1,1),Slice(),Slice(12,4,1))=true;
-    fl4o(Slice(2,1,1),Slice(),Slice(2,4,4))=true;
-    fl4o(Slice(2,1,1),Slice(),Slice(3,4,4))=true;
-    fl4o(Slice(3,1,1),Slice(),Slice(1,8,2))=true;
+    Cube<Bool> fl4o(4,1,16,False);  
+    fl4o(Slice(0,1,1),Slice(),Slice(8,8,1))=True;
+    fl4o(Slice(1,1,1),Slice(),Slice(4,4,1))=True;
+    fl4o(Slice(1,1,1),Slice(),Slice(12,4,1))=True;
+    fl4o(Slice(2,1,1),Slice(),Slice(2,4,4))=True;
+    fl4o(Slice(2,1,1),Slice(),Slice(3,4,4))=True;
+    fl4o(Slice(3,1,1),Slice(),Slice(1,8,2))=True;
 
     // vis2o,fl2o
     Cube<complextype> vis2o(2,1,3); 
     initVis(vis2o,I,Q,U,V);
-    Cube<Bool> fl2o(2,1,3,false);
-    fl2o(0,0,1)=true;
-    fl2o(1,0,2)=true;
+    Cube<Bool> fl2o(2,1,3,False);
+    fl2o(0,0,1)=True;
+    fl2o(1,0,2)=True;
 
     // M4, all ok
     Vector<complextype> m4o(4);
     m4o(0)=m4o(3)=Complex(Q);
     m4o(1)=m4o(2)=Complex(I);
-    Vector<Bool> ok4o(4,true);
+    Vector<Bool> ok4o(4,True);
     Vector<complextype> m4;
     m4.assign(m4o);
     Vector<Bool> ok4;
@@ -538,7 +538,7 @@ void testMueller (Bool verbose=false) {
     // M2, all ok
     Vector<complextype> m2o(2);
     m2o(0)=m2o(1)=Complex(Q);
-    Vector<Bool> ok2o(2,true);
+    Vector<Bool> ok2o(2,True);
     Vector<complextype> m2;
     m2.assign(m2o);
     Vector<Bool> ok2;
@@ -554,7 +554,7 @@ void testMueller (Bool verbose=false) {
 
       Cube<complextype> vis4(4,1,16);
       Cube<Bool> fl4(4,1,16);
-      VisVector V4(visType(4),false);
+      VisVector V4(visType(4),False);
 
       // M4(V4) tests
       {
@@ -575,11 +575,11 @@ void testMueller (Bool verbose=false) {
 	  //cout << V4 << endl;
 	}
 	
-	Cube<Bool> tfl(4,1,16,false);
+	Cube<Bool> tfl(4,1,16,False);
 	tfl.assign(fl4o);
 	for (Int i=0;i<4;++i) {
 	  if (!ok4o(i))
-	    tfl(Slice(i,1,1),Slice(),Slice())=true;
+	    tfl(Slice(i,1,1),Slice(),Slice())=True;
 	}
 	
 	if (verbose) {
@@ -621,7 +621,7 @@ void testMueller (Bool verbose=false) {
 	M4.invert();
 	
 	// Flag 3rd and 4th element of Mueller
-	ok4(2)=ok4(3)=false;
+	ok4(2)=ok4(3)=False;
 	
 	V4.sync(vis4(0,0,0),fl4(0,0,0));
 	for (Int i=0;i<16;++i,V4++) {
@@ -636,13 +636,13 @@ void testMueller (Bool verbose=false) {
 	       << allEQ(fl4(Slice(0,1,1),Slice(),Slice()),fl4o(Slice(0,1,1),Slice(),Slice())) << endl;
 	  cout << " allEQ(fl4(Slice(1,1,1),Slice(),Slice()),fl4o(Slice(1,1,1),Slice(),Slice())) = " 
 	       << allEQ(fl4(Slice(1,1,1),Slice(),Slice()),fl4o(Slice(1,1,1),Slice(),Slice())) << endl;
-	  cout << " allEQ(fl4(Slice(2,1,1),Slice(),Slice()),true) = " << allEQ(fl4(Slice(2,1,1),Slice(),Slice()),true) << endl;
-	  cout << " allEQ(fl4(Slice(3,1,1),Slice(),Slice()),true) = " << allEQ(fl4(Slice(3,1,1),Slice(),Slice()),true) << endl;
+	  cout << " allEQ(fl4(Slice(2,1,1),Slice(),Slice()),True) = " << allEQ(fl4(Slice(2,1,1),Slice(),Slice()),True) << endl;
+	  cout << " allEQ(fl4(Slice(3,1,1),Slice(),Slice()),True) = " << allEQ(fl4(Slice(3,1,1),Slice(),Slice()),True) << endl;
 	}
 	AlwaysAssert(allEQ(fl4(Slice(0,1,1),Slice(),Slice()),fl4o(Slice(0,1,1),Slice(),Slice())),AipsError);
 	AlwaysAssert(allEQ(fl4(Slice(1,1,1),Slice(),Slice()),fl4o(Slice(1,1,1),Slice(),Slice())),AipsError);
-	AlwaysAssert(allEQ(fl4(Slice(2,1,1),Slice(),Slice()),true),AipsError);
-	AlwaysAssert(allEQ(fl4(Slice(3,1,1),Slice(),Slice()),true),AipsError);
+	AlwaysAssert(allEQ(fl4(Slice(2,1,1),Slice(),Slice()),True),AipsError);
+	AlwaysAssert(allEQ(fl4(Slice(3,1,1),Slice(),Slice()),True),AipsError);
       } // M4(V4) tests
 
 
@@ -702,7 +702,7 @@ void testMueller (Bool verbose=false) {
 	M2.invert();
 	
 	// Flag 2nd Mueller element
-	ok2(1)=false;
+	ok2(1)=False;
 	
 	V4.sync(vis4(0,0,0),fl4(0,0,0));
 	for (Int i=0;i<16;++i,V4++) {
@@ -715,10 +715,10 @@ void testMueller (Bool verbose=false) {
 	if (verbose) {
 	  cout << " allEQ(fl4(Slice(0,1,1),Slice(),Slice()),fl4o(Slice(0,1,1),Slice(),Slice())) = " 
 	       << allEQ(fl4(Slice(0,1,1),Slice(),Slice()),fl4o(Slice(0,1,1),Slice(),Slice())) << endl;
-	  cout << " allEQ(fl4(Slice(3,1,1),Slice(),Slice()),true) = " << allEQ(fl4(Slice(3,1,1),Slice(),Slice()),true) << endl;
+	  cout << " allEQ(fl4(Slice(3,1,1),Slice(),Slice()),True) = " << allEQ(fl4(Slice(3,1,1),Slice(),Slice()),True) << endl;
 	}
 	AlwaysAssert(allEQ(fl4(Slice(0,1,1),Slice(),Slice()),fl4o(Slice(0,1,1),Slice(),Slice())),AipsError);
-	AlwaysAssert(allEQ(fl4(Slice(3,1,1),Slice(),Slice()),true),AipsError);
+	AlwaysAssert(allEQ(fl4(Slice(3,1,1),Slice(),Slice()),True),AipsError);
       }
     }
 
@@ -730,7 +730,7 @@ void testMueller (Bool verbose=false) {
 
       Cube<complextype> vis2(2,1,3);
       Cube<Bool> fl2(2,1,3);
-      VisVector V2(visType(2),false);
+      VisVector V2(visType(2),False);
 
       // M4(V2) tests
       {
@@ -789,7 +789,7 @@ void testMueller (Bool verbose=false) {
 	M4.invert();
 	
 	// Flag 3rd and 4th element of Mueller
-	ok4(2)=ok4(3)=false;
+	ok4(2)=ok4(3)=False;
 	
 	V2.sync(vis2(0,0,0),fl2(0,0,0));
 	for (Int i=0;i<3;++i,V2++) {
@@ -802,10 +802,10 @@ void testMueller (Bool verbose=false) {
 	if (verbose) {
 	  cout << " allEQ(fl2(Slice(0,1,1),Slice(),Slice()),fl2o(Slice(0,1,1),Slice(),Slice())) = " 
 	       << allEQ(fl2(Slice(0,1,1),Slice(),Slice()),fl2o(Slice(0,1,1),Slice(),Slice())) << endl;
-	  cout << " allEQ(fl2(Slice(1,1,1),Slice(),Slice()),true) = " << allEQ(fl2(Slice(1,1,1),Slice(),Slice()),true) << endl;
+	  cout << " allEQ(fl2(Slice(1,1,1),Slice(),Slice()),True) = " << allEQ(fl2(Slice(1,1,1),Slice(),Slice()),True) << endl;
 	}
 	AlwaysAssert(allEQ(fl2(Slice(0,1,1),Slice(),Slice()),fl2o(Slice(0,1,1),Slice(),Slice())),AipsError);
-	AlwaysAssert(allEQ(fl2(Slice(1,1,1),Slice(),Slice()),true),AipsError);
+	AlwaysAssert(allEQ(fl2(Slice(1,1,1),Slice(),Slice()),True),AipsError);
       } // M4(V2) tests
 
 
@@ -868,7 +868,7 @@ void testMueller (Bool verbose=false) {
 	M2.invert();
 	
 	// Flag 2nd Mueller element
-	ok2(1)=false;
+	ok2(1)=False;
 	
 	V2.sync(vis2(0,0,0),fl2(0,0,0));
 	for (Int i=0;i<3;++i,V2++) {
@@ -881,10 +881,10 @@ void testMueller (Bool verbose=false) {
 	if (verbose) {
 	  cout << " allEQ(fl2(Slice(0,1,1),Slice(),Slice()),fl2o(Slice(0,1,1),Slice(),Slice())) = " 
 	       << allEQ(fl2(Slice(0,1,1),Slice(),Slice()),fl2o(Slice(0,1,1),Slice(),Slice())) << endl;
-	  cout << " allEQ(fl2(Slice(1,1,1),Slice(),Slice()),true) = " << allEQ(fl2(Slice(1,1,1),Slice(),Slice()),true) << endl;
+	  cout << " allEQ(fl2(Slice(1,1,1),Slice(),Slice()),True) = " << allEQ(fl2(Slice(1,1,1),Slice(),Slice()),True) << endl;
 	}
 	AlwaysAssert(allEQ(fl2(Slice(0,1,1),Slice(),Slice()),fl2o(Slice(0,1,1),Slice(),Slice())),AipsError);
-	AlwaysAssert(allEQ(fl2(Slice(1,1,1),Slice(),Slice()),true),AipsError);
+	AlwaysAssert(allEQ(fl2(Slice(1,1,1),Slice(),Slice()),True),AipsError);
       } // M2(V2)
 
     } // V2 tests

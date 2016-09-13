@@ -83,7 +83,7 @@ class CEMemModel;
 // <srcblock>
 // EntropyI myEntropyEngine(myCEMemModel&);
 //
-// casacore::Float  theEntropy myEntropyEngine.getEntropy();
+// Float  theEntropy myEntropyEngine.getEntropy();
 // </srcblock> 
 // </example>
 //
@@ -114,19 +114,19 @@ class Entropy
 
   
   // calculate the entropy for the whole image
-  virtual casacore::Float formEntropy() = 0;
+  virtual Float formEntropy() = 0;
   
   // calculate the Gradient dot Gradient matrix
-  virtual void formGDG(casacore::Matrix<double> & ) = 0;
+  virtual void formGDG(Matrix<double> & ) = 0;
   
   // calculate the Gradient dot Gradient matrix, calculate Step
-  virtual void formGDGStep(casacore::Matrix<double> & ) = 0;
+  virtual void formGDGStep(Matrix<double> & ) = 0;
   
   // calculate Gradient dot Step
-  virtual casacore::Double formGDS() = 0;
+  virtual Double formGDS() = 0;
   
   // report the entropy type for a logging message
-  virtual void  entropyType(casacore::String &) = 0;
+  virtual void  entropyType(String &) = 0;
   
   // set the MemModel
   void setMemModel(CEMemModel& mmm) { cemem_ptr = &mmm; }
@@ -135,15 +135,15 @@ class Entropy
   virtual void infoBanner() = 0;
 
   // infoPerIteration
-  virtual void infoPerIteration(casacore::uInt iteration) = 0;
+  virtual void infoPerIteration(uInt iteration) = 0;
 
   // are there any constraints on how the Image minimum
   // gets relaxed?
-  virtual casacore::Float relaxMin() = 0;
+  virtual Float relaxMin() = 0;
   
   // each entropy type can have its distinct convergence
   // criteria
-  virtual casacore::Bool testConvergence() = 0;
+  virtual Bool testConvergence() = 0;
 
  protected:
 
@@ -176,33 +176,33 @@ public:
   ~EntropyI();
 
   // calculate the entropy for the whole image
-  casacore::Float formEntropy();
+  Float formEntropy();
   
   // calculate the Gradient dot Gradient matrix
-  void formGDG(casacore::Matrix<casacore::Double>& );
+  void formGDG(Matrix<Double>& );
   
   // calculate the Gradient dot Gradient matrix, calculate Step
-  void formGDGStep(casacore::Matrix<double> & );
+  void formGDGStep(Matrix<double> & );
   
   // calculate Gradient dot Step
-  casacore::Double formGDS();
+  Double formGDS();
   
   // report the entropy type for a logging message
-  void entropyType(casacore::String & str) 
+  void entropyType(String & str) 
     { str = "entropy type I (information/thermodynamic)"; }
   
   // infoBanner
   void infoBanner();
 
   // infoIteration
-  void infoPerIteration(casacore::uInt iteration);
+  void infoPerIteration(uInt iteration);
 
   // relax image Min
-  casacore::Float relaxMin();
+  Float relaxMin();
 
   // each entropy type can have its distinct convergence
   // criteria
-  casacore::Bool testConvergence();
+  Bool testConvergence();
 
 
 protected:
@@ -228,33 +228,33 @@ public:
   ~EntropyEmptiness();
 
   // calculate the entropy for the whole image
-  casacore::Float formEntropy();
+  Float formEntropy();
   
   // calculate the Gradient dot Gradient matrix
-  void formGDG(casacore::Matrix<casacore::Double>& );
+  void formGDG(Matrix<Double>& );
   
   // calculate the Gradient dot Gradient matrix, calculate Step
-  void formGDGStep(casacore::Matrix<double> & );
+  void formGDGStep(Matrix<double> & );
   
   // calculate Gradient dot Step
-  casacore::Double formGDS();
+  Double formGDS();
   
   // report the entropy type for a logging message
-  void entropyType(casacore::String & str) 
+  void entropyType(String & str) 
     { str = "entropy type I (information/thermodynamic)"; }
   
   // infoBanner
   void infoBanner();
 
   // infoIteration
-  void infoPerIteration(casacore::uInt iteration);
+  void infoPerIteration(uInt iteration);
 
   // relax image Min
-  casacore::Float relaxMin();
+  Float relaxMin();
 
   // each entropy type can have its distinct convergence
   // criteria
-  casacore::Bool testConvergence();
+  Bool testConvergence();
 
 
 protected:

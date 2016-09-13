@@ -42,7 +42,6 @@
 //# this include
 #include <display/DisplayEvents/Animator.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	AnimatorRefEH::AnimatorRefEH(Animator *animator) :
@@ -260,7 +259,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		WorldCanvas *wcanvas = ev.worldCanvas();
 		String resetString("resetAnimator");
 		if (wcanvas->existsAttribute(resetString)) {
-			Bool resetValue = false;
+			Bool resetValue = False;
 			wcanvas->getAttributeValue(resetString, resetValue);
 			wcanvas->removeAttribute(resetString);
 			if (resetValue) {
@@ -435,7 +434,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// commented out dgb 1998/12/17: don't want to renegotiate spatial
 		// coords on screen, just movie plane...
-		//Attribute coordReset("resetCoordinates", true);
+		//Attribute coordReset("resetCoordinates", True);
 
 		// while something in the list
 		while(!it.atEnd()) {
@@ -457,10 +456,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		setMatchMode(Animator::MATCH_INDEX);
 		setNextMode(Animator::NEXT_FORWARD);
 		setUpdateMode(Animator::UPDATE_DIRECT);
-		Bool needToReRefresh = false;
+		Bool needToReRefresh = False;
 		if ((currentCoord < minCoord) || (currentCoord > maxCoord)) {
 			currentCoord = 0.0;
-			needToReRefresh = true;
+			needToReRefresh = True;
 		}
 		clearBlinkRestrictions();
 

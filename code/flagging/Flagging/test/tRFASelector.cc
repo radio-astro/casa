@@ -97,7 +97,7 @@ MeasurementSet create_ms()
     
     ddCol.spectralWindowId().put(crow, spectral_window_id);
     ddCol.polarizationId().put(crow, polarization_id);
-    ddCol.flagRow().put(crow, false);
+    ddCol.flagRow().put(crow, False);
     
     // POLARIZATION
     MSPolarization pol = ms.polarization();
@@ -200,7 +200,7 @@ MeasurementSet create_ms()
         msspwinCol.freqGroup().put(crow, 0);
         msspwinCol.freqGroupName().put(crow, "A frequency group");
 
-        msspwinCol.flagRow().put(crow, false);
+        msspwinCol.flagRow().put(crow, False);
         
     }    
 
@@ -253,15 +253,15 @@ int run()
 
     // longer record
     spec.define("name", "Selector");
-    spec.define("spwid", false);
-    spec.define("field", false);
-    spec.define("fq", false);
-    spec.define("chan", false);
-    spec.define("corr", false);
-    spec.define("ant", false);
-    spec.define("baseline", false);
-    spec.define("timerng", false);
-    spec.define("autocorr", false);
+    spec.define("spwid", False);
+    spec.define("field", False);
+    spec.define("fq", False);
+    spec.define("chan", False);
+    spec.define("corr", False);
+    spec.define("ant", False);
+    spec.define("baseline", False);
+    spec.define("timerng", False);
+    spec.define("autocorr", False);
 
     Record clip;
     clip.define(RF_EXPR, "ABS RR");
@@ -284,7 +284,7 @@ int run()
     assert( fabs(vmax - 0.5) < epsilon );
 
     // test parseClipField
-    Bool c = true;
+    Bool c = True;
     // cout << "Calling parseClipField with: " << spec << ", " << c << endl;
 
     s.fortestingonly_parseClipField(clip, c);

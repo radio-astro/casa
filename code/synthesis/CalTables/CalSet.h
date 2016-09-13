@@ -56,24 +56,24 @@ public:
 
   // Minimal, knows only how many potential spws
   //   (solve context)
-  CalSet(const casacore::Int& nSpw);
+  CalSet(const Int& nSpw);
 
   // From full shape
-  CalSet(const casacore::Int& nSpw,
-	 const casacore::Int& nPar,
-	 const casacore::Vector<casacore::Int>& nChan,
-	 const casacore::Int& nElem,
-	 const casacore::Vector<casacore::Int>& nTime);
+  CalSet(const Int& nSpw,
+	 const Int& nPar,
+	 const Vector<Int>& nChan,
+	 const Int& nElem,
+	 const Vector<Int>& nTime);
 
 
   // From existing CalTable
   //   (apply context)
   //   (for now, we will verify that filled solutions match nPar,nElem,nSpw)
-  CalSet(const casacore::String& calTableName,
-	 const casacore::String& select,
-	 const casacore::Int& nSpw,
-	 const casacore::Int& nPar,
-	 const casacore::Int& nElem);
+  CalSet(const String& calTableName,
+	 const String& select,
+	 const Int& nSpw,
+	 const Int& nPar,
+	 const Int& nElem);
 
   // Copy
   CalSet(const CalSet& other);
@@ -85,65 +85,65 @@ public:
   virtual ~CalSet();
 
   // Resize caches
-  void resize(const casacore::Int& nPar,
-	      const casacore::Vector<casacore::Int>& nChan,
-	      const casacore::Int& nElem,
-	      const casacore::Vector<casacore::Int>& nTime);
+  void resize(const Int& nPar,
+	      const Vector<Int>& nChan,
+	      const Int& nElem,
+	      const Vector<Int>& nTime);
 
   // Access to shape info:
-  casacore::Int& nSpw() { return nSpw_; };
-  casacore::Int& nPar() { return nPar_; };
-  casacore::Vector<casacore::Int>& nChan()  { return nChan_; };
-  casacore::Int& nChan(const casacore::Int& spw)  { return nChan_(spw); };
-  casacore::Int& nElem()  { return nElem_; };
-  casacore::Vector<casacore::Int>& nTime()  { return nTime_; };
-  casacore::Int& nTime(const casacore::Int& spw) { return nTime_(spw); };
+  Int& nSpw() { return nSpw_; };
+  Int& nPar() { return nPar_; };
+  Vector<Int>& nChan()  { return nChan_; };
+  Int& nChan(const Int& spw)  { return nChan_(spw); };
+  Int& nElem()  { return nElem_; };
+  Vector<Int>& nTime()  { return nTime_; };
+  Int& nTime(const Int& spw) { return nTime_(spw); };
 
-  //  casacore::IPosition& shape(const casacore::Int& spw) { return casacore::IPosition(4,nPar(),nChan(spw),nElem(),nTime(spw)); };
-  casacore::IPosition shape(const casacore::Int& spw) { return casacore::IPosition(4,nPar_,nChan_(spw),nElem_,nTime_(spw)); };
+  //  IPosition& shape(const Int& spw) { return IPosition(4,nPar(),nChan(spw),nElem(),nTime(spw)); };
+  IPosition shape(const Int& spw) { return IPosition(4,nPar_,nChan_(spw),nElem_,nTime_(spw)); };
 
   // Set up spwOK according to solution availability
   inline void setSpwOK() { spwOK_ = (nTime()!=0); };
 
   // Report if solutions available for specified spw
-  casacore::Vector<casacore::Bool> spwOK() { return spwOK_; };
+  Vector<Bool> spwOK() { return spwOK_; };
 
   // Freq list per spw
-  casacore::Vector<casacore::Double>& frequencies(const casacore::Int& spw) { return *freq_[spw]; };
+  Vector<Double>& frequencies(const Int& spw) { return *freq_[spw]; };
 
   // Temporary method to support current conventions in SVJ
-  void setStartChan(const casacore::Vector<casacore::Int>& startChan) {startChan_ = startChan;};
-  casacore::Vector<casacore::Int>& startChan() {return startChan_;};
+  void setStartChan(const Vector<Int>& startChan) {startChan_ = startChan;};
+  Vector<Int>& startChan() {return startChan_;};
 
   // Access to whole solution caches 
-  casacore::Vector<casacore::Double>& startTime(const casacore::Int& spw)    { return *MJDStart_[spw]; };
-  casacore::Vector<casacore::Double>& stopTime(const casacore::Int& spw)     { return *MJDStop_[spw]; };
-  casacore::Vector<casacore::Double>& time(const casacore::Int& spw)         { return *MJDTimeStamp_[spw]; };
-  casacore::Vector<casacore::Int>&    fieldId(const casacore::Int& spw)      { return *fieldId_[spw]; };
-  casacore::Vector<casacore::String>& fieldName(const casacore::Int& spw)    { return *fieldName_[spw]; };
-  casacore::Vector<casacore::String>& sourceName(const casacore::Int& spw)   { return *sourceName_[spw]; };
-  casacore::Array<T>&       par(const casacore::Int& spw)          { return *par_[spw]; };
-  casacore::Array<casacore::Bool>&    parOK(const casacore::Int& spw)        { return *parOK_[spw]; };
-  casacore::Array<casacore::Float>&   parErr(const casacore::Int& spw)       { return *parErr_[spw]; };
-  casacore::Array<casacore::Float>&   parSNR(const casacore::Int& spw)       { return *parSNR_[spw]; };
+  Vector<Double>& startTime(const Int& spw)    { return *MJDStart_[spw]; };
+  Vector<Double>& stopTime(const Int& spw)     { return *MJDStop_[spw]; };
+  Vector<Double>& time(const Int& spw)         { return *MJDTimeStamp_[spw]; };
+  Vector<Int>&    fieldId(const Int& spw)      { return *fieldId_[spw]; };
+  Vector<String>& fieldName(const Int& spw)    { return *fieldName_[spw]; };
+  Vector<String>& sourceName(const Int& spw)   { return *sourceName_[spw]; };
+  Array<T>&       par(const Int& spw)          { return *par_[spw]; };
+  Array<Bool>&    parOK(const Int& spw)        { return *parOK_[spw]; };
+  Array<Float>&   parErr(const Int& spw)       { return *parErr_[spw]; };
+  Array<Float>&   parSNR(const Int& spw)       { return *parSNR_[spw]; };
 
   // Statistics
-  //  casacore::Matrix<casacore::Bool>&   iSolutionOK(const casacore::Int& spw)  { return *iSolutionOK_[spw]; };
-  casacore::Matrix<casacore::Float>&  iFit(const casacore::Int& spw)         { return *iFit_[spw]; };
-  casacore::Matrix<casacore::Float>&  iFitwt(const casacore::Int& spw)       { return *iFitwt_[spw]; };
-  casacore::Vector<casacore::Bool>&   solutionOK(const casacore::Int& spw)   { return *solutionOK_[spw]; };
-  casacore::Vector<casacore::Float>&  fit(const casacore::Int& spw)          { return *fit_[spw]; };
-  casacore::Vector<casacore::Float>&  fitwt(const casacore::Int& spw)        { return *fitwt_[spw]; };
+  //  Matrix<Bool>&   iSolutionOK(const Int& spw)  { return *iSolutionOK_[spw]; };
+  Matrix<Float>&  iFit(const Int& spw)         { return *iFit_[spw]; };
+  Matrix<Float>&  iFitwt(const Int& spw)       { return *iFitwt_[spw]; };
+  Vector<Bool>&   solutionOK(const Int& spw)   { return *solutionOK_[spw]; };
+  Vector<Float>&  fit(const Int& spw)          { return *fit_[spw]; };
+  Vector<Float>&  fitwt(const Int& spw)        { return *fitwt_[spw]; };
 
   // Store/Retrieve solutions to/from a table.
   //  (will evolve to use table iteration)
-  virtual void initCalTableDesc(const casacore::String& type, const casacore::Int& parType);
+  virtual void initCalTableDesc(const String& type, const Int& parType);
   virtual void attach();
-  virtual void store(const casacore::String& file, const casacore::String& type, const casacore::Bool& append,
-		     const casacore::String& msname="");
-//   virtual void store(const casacore::String& file, const casacore::String& type, 
-// 		     const casacore::String& msname, const casacore::Bool& append);
-  virtual void load(const casacore::String& file, const casacore::String& select);
+  virtual void store(const String& file, const String& type, const Bool& append,
+		     const String& msname="");
+//   virtual void store(const String& file, const String& type, 
+// 		     const String& msname, const Bool& append);
+  virtual void load(const String& file, const String& select);
 
 protected:
 
@@ -155,56 +155,56 @@ private:
   void deflate();
 
 
-  // casacore::Table name
-  casacore::String calTableName_;
+  // Table name
+  String calTableName_;
 
   // Number of Spectral windows
-  casacore::Int nSpw_;
+  Int nSpw_;
 
   // Number of parameters describing this calibration component
-  casacore::Int nPar_;
+  Int nPar_;
 
   // Number of channels
-  casacore::Vector<casacore::Int> nChan_;          // (nSpw_) number of _soln_ channels per spw
+  Vector<Int> nChan_;          // (nSpw_) number of _soln_ channels per spw
 
   // Number of elements (ants or baselines)
-  casacore::Int nElem_;
+  Int nElem_;
 
   // Number of time slots
-  casacore::Vector<casacore::Int> nTime_;         // (nSpw_) number of slots per spw
+  Vector<Int> nTime_;         // (nSpw_) number of slots per spw
 
   // Spw OK?
-  casacore::Vector<casacore::Bool> spwOK_;
+  Vector<Bool> spwOK_;
 
   // Channel frequencies, etc.
-  casacore::Vector<casacore::Int> startChan_;            // (nSpw_) start data channel per spw
-  casacore::PtrBlock<casacore::Vector<casacore::Double>*> freq_;   // [nSpw_](nChan_)
+  Vector<Int> startChan_;            // (nSpw_) start data channel per spw
+  PtrBlock<Vector<Double>*> freq_;   // [nSpw_](nChan_)
 
   // Per spw, per slot Meta information
-  casacore::PtrBlock<casacore::Vector<casacore::Double>*> MJDStart_;       // (nSpw_)(numberSlots_)
-  casacore::PtrBlock<casacore::Vector<casacore::Double>*> MJDStop_;        // (nSpw_)(numberSlots_)
-  casacore::PtrBlock<casacore::Vector<casacore::Double>*> MJDTimeStamp_;   // (nSpw_)(numberSlots_)
-  casacore::PtrBlock<casacore::Vector<casacore::Int>*>    fieldId_;        // (nSpw_)(numberSlots_)
-  casacore::PtrBlock<casacore::Vector<casacore::String>*> fieldName_;      // (nSpw_)(numberSlots_)
-  casacore::PtrBlock<casacore::Vector<casacore::String>*> sourceName_;     // (nSpw_)(numberSlots_)
+  PtrBlock<Vector<Double>*> MJDStart_;       // (nSpw_)(numberSlots_)
+  PtrBlock<Vector<Double>*> MJDStop_;        // (nSpw_)(numberSlots_)
+  PtrBlock<Vector<Double>*> MJDTimeStamp_;   // (nSpw_)(numberSlots_)
+  PtrBlock<Vector<Int>*>    fieldId_;        // (nSpw_)(numberSlots_)
+  PtrBlock<Vector<String>*> fieldName_;      // (nSpw_)(numberSlots_)
+  PtrBlock<Vector<String>*> sourceName_;     // (nSpw_)(numberSlots_)
 
   // Per spw, per channel, per element, per slot solution generic PARAMETER storage  
-  casacore::PtrBlock<casacore::Array<T>*>      par_;    // (nSpw_)(nPar_,nSolnChan_,nElem_,numberSlots_)
-  casacore::PtrBlock<casacore::Array<casacore::Bool>*>   parOK_;  // (nSpw_)(nPar_,nSolnChan_,nElem_,numberSlots_)
-  casacore::PtrBlock<casacore::Array<casacore::Float>*>  parErr_; // (nSpw_)(nPar_,nSolnChan_,nElem_,numberSlots_)
-  casacore::PtrBlock<casacore::Array<casacore::Float>*>  parSNR_; // (nSpw_)(nPar_,nSolnChan_,nElem_,numberSlots_)
+  PtrBlock<Array<T>*>      par_;    // (nSpw_)(nPar_,nSolnChan_,nElem_,numberSlots_)
+  PtrBlock<Array<Bool>*>   parOK_;  // (nSpw_)(nPar_,nSolnChan_,nElem_,numberSlots_)
+  PtrBlock<Array<Float>*>  parErr_; // (nSpw_)(nPar_,nSolnChan_,nElem_,numberSlots_)
+  PtrBlock<Array<Float>*>  parSNR_; // (nSpw_)(nPar_,nSolnChan_,nElem_,numberSlots_)
 
   // Statistics
-  //  casacore::PtrBlock<casacore::Matrix<casacore::Bool>*> iSolutionOK_;  // [nSpw_](nElem_,nSlots_)
-  casacore::PtrBlock<casacore::Matrix<casacore::Float>*> iFit_;        // [nSpw_](nElem_,nSlots_)
-  casacore::PtrBlock<casacore::Matrix<casacore::Float>*> iFitwt_;      // [nSpw_](nElem_,nSlots_)
+  //  PtrBlock<Matrix<Bool>*> iSolutionOK_;  // [nSpw_](nElem_,nSlots_)
+  PtrBlock<Matrix<Float>*> iFit_;        // [nSpw_](nElem_,nSlots_)
+  PtrBlock<Matrix<Float>*> iFitwt_;      // [nSpw_](nElem_,nSlots_)
 
-  casacore::PtrBlock<casacore::Vector<casacore::Bool>*> solutionOK_;   // [nSpw_](numberSlots_)
-  casacore::PtrBlock<casacore::Vector<casacore::Float>*> fit_;         // [nSpw_](numberSlots_)
-  casacore::PtrBlock<casacore::Vector<casacore::Float>*> fitwt_;       // [nSpw_](numberSlots_)
+  PtrBlock<Vector<Bool>*> solutionOK_;   // [nSpw_](numberSlots_)
+  PtrBlock<Vector<Float>*> fit_;         // [nSpw_](numberSlots_)
+  PtrBlock<Vector<Float>*> fitwt_;       // [nSpw_](numberSlots_)
 
-  casacore::LogSink logSink_p;
-  casacore::LogSink& logSink() {return logSink_p;};
+  LogSink logSink_p;
+  LogSink& logSink() {return logSink_p;};
 
   CalTableDesc2 *calTabDesc_;
   CalTable2 *calTab_;
@@ -214,11 +214,11 @@ private:
 
 // Globals
 
-// casacore::Smooth the solutions in a CalSet
-  void smooth(CalSet<casacore::Complex>& cs,
-	      const casacore::String& smtype,
-	      const casacore::Double& smtime,
-	      casacore::Vector<casacore::Int> selfields);
+// Smooth the solutions in a CalSet
+  void smooth(CalSet<Complex>& cs,
+	      const String& smtype,
+	      const Double& smtime,
+	      Vector<Int> selfields);
 
 } //# NAMESPACE CASA - END
 

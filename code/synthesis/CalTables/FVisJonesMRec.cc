@@ -29,7 +29,6 @@
 #include <synthesis/CalTables/FVisJonesMRec.h>
 #include <msvis/MSVis/MSCalEnums.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 #define AddField(Class,Type,Field,Name) \

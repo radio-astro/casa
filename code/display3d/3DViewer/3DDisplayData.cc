@@ -54,7 +54,6 @@
 #include <display3d/3DViewer/3DDisplayData.qo.h>
 
 
-using namespace casacore;
 namespace casa {
 
 DisplayData3::DisplayData3(const String& fn) :
@@ -231,7 +230,7 @@ void DisplayData3::getCube(Cube<Float>& data, int& pol)
    Float dataMin;
    Float dataMax;
    Vector<Float> range(2);
-   LattStatsSpecialize::minMax(dataMin, dataMax, im_, range, true, true);
+   LattStatsSpecialize::minMax(dataMin, dataMax, im_, range, True, True);
    //cout << "dataMin=" << dataMin << " dataMax=" << dataMax
    //     << " range=" << range << endl;
 
@@ -287,11 +286,11 @@ void DisplayData3::getCube(Cube<Float>& data, int& pol)
      //cout << "start:" << start << " end:" << end << endl;
      if (scale < 2) {
        data.xyPlane(chn) = 
-             im_->getSlice(start, end, stride, true); 
+             im_->getSlice(start, end, stride, True); 
      }
      else {
        out = 0; 
-       in = im_->getSlice(start, end, stride, true); 
+       in = im_->getSlice(start, end, stride, True); 
 
        Vector<Double> inloc(2);
        /*
@@ -427,7 +426,7 @@ void DisplayData3::getAxes() {
 //           Interpolate2D::stringToMethod("Linear");
 //           //Interpolate2D::stringToMethod("cubic");
 //      //regridder.showDebugInfo(3);
-//      regridder.regrid(*pOut, emethod, axes, *im_, false, 0, true, true);
+//      regridder.regrid(*pOut, emethod, axes, *im_, False, 0, True, True);
 //      //------------------------------------------------------
 //   }
 //   */

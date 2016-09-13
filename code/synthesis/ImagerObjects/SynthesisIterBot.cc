@@ -62,7 +62,6 @@
 using namespace std;
 
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
   
 	SynthesisIterBot::SynthesisIterBot() : actionRequestSync(new SIIterBot_callback( )),
@@ -258,7 +257,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		      Record allnames = iterpars.subRecord(RecordFieldId("allimages"));
 		      uInt nfields = allnames.nfields();
 		      itsImageList.resize( nfields );
-		      itsMultiTermList.resize( nfields ); itsMultiTermList=false;
+		      itsMultiTermList.resize( nfields ); itsMultiTermList=False;
 		      for ( uInt fld=0; fld<nfields; fld++ )
 			{
 			  Record onename = allnames.subRecord( RecordFieldId(String::toString(fld)) );
@@ -337,9 +336,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  //cout << "ActionCodes : " << itsActionCodes << endl;
 		  
 		  Quantity qa;
-		  casacore::Quantity::read(qa,strthresh);
+		  casa::Quantity::read(qa,strthresh);
 		  threshold = qa.getValue(Unit("Jy"));
-		  casacore::Quantity::read(qa,strcycthresh);
+		  casa::Quantity::read(qa,strcycthresh);
 		  cyclethreshold = qa.getValue(Unit("Jy"));
 
 		  if( itsLoopController ){
@@ -349,12 +348,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		    itsLoopController->changeCycleThreshold( cyclethreshold );
 		    }
 
-		  Bool alldone=true;
+		  Bool alldone=True;
 		  for(uInt ind=0;ind<nIm;ind++)
 		    {
 		      alldone = alldone & ( itsActionCodes[ind]==2 );
 		    }
-		  if( alldone==true ) changeStopFlag( true );
+		  if( alldone==True ) changeStopFlag( True );
 
 		}// If interaction required
 

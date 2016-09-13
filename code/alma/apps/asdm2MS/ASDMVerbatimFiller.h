@@ -13,8 +13,8 @@ class ASDMVerbatimFiller {
 
  public:
   virtual ~ASDMVerbatimFiller();
-  //  ASDMVerbatimFiller(casacore::MS* ms_p, const set<const ASDM_TABLE_BASE*>& table); 
-  ASDMVerbatimFiller(casacore::MS* ms_p, const set<ASDM_TABLE_BASE*>& table); 
+  //  ASDMVerbatimFiller(MS* ms_p, const set<const ASDM_TABLE_BASE*>& table); 
+  ASDMVerbatimFiller(MS* ms_p, const set<ASDM_TABLE_BASE*>& table); 
   void fill(const ASDM& asdm);
   
  private:

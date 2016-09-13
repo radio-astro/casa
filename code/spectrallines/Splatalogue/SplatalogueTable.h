@@ -36,7 +36,7 @@
 
 namespace casa {
 
-// <summary>Representation of a Splatalogue casacore::Table</summary>
+// <summary>Representation of a Splatalogue Table</summary>
 // <use visibility=export>
 // 
 // <reviewed reviewer="" date="yyyy/mm/dd" tests="" demos="">
@@ -64,63 +64,63 @@ namespace casa {
 // <todo asof="">
 // </todo>
  
-class SplatalogueTable : public casacore::Table {
+class SplatalogueTable : public Table {
 public:
 
-	const static casacore::String SPECIES;
-	const static casacore::String RECOMMENDED;
-	const static casacore::String CHEMICAL_NAME;
-	const static casacore::String FREQUENCY;
-	const static casacore::String QUANTUM_NUMBERS;
-	const static casacore::String INTENSITY;
-	const static casacore::String SMU2;
-	const static casacore::String LOGA;
-	const static casacore::String EL;
-	const static casacore::String EU;
-	const static casacore::String LINELIST;
-	const static casacore::String ISSPLAT;
+	const static String SPECIES;
+	const static String RECOMMENDED;
+	const static String CHEMICAL_NAME;
+	const static String FREQUENCY;
+	const static String QUANTUM_NUMBERS;
+	const static String INTENSITY;
+	const static String SMU2;
+	const static String LOGA;
+	const static String EL;
+	const static String EU;
+	const static String LINELIST;
+	const static String ISSPLAT;
 
-	const static casacore::String RECORD_VALUE;
-	const static casacore::String RECORD_UNIT;
-	const static casacore::String RECORD_SPECIES;
-	const static casacore::String RECORD_RECOMMENDED;
-	const static casacore::String RECORD_CHEMNAME;
-	const static casacore::String RECORD_FREQUENCY;
-	const static casacore::String RECORD_QNS;
-	const static casacore::String RECORD_INTENSITY;
-	const static casacore::String RECORD_SMU2;
-	const static casacore::String RECORD_LOGA;
-	const static casacore::String RECORD_EL;
-	const static casacore::String RECORD_EU;
-	const static casacore::String RECORD_LINE_LIST;
+	const static String RECORD_VALUE;
+	const static String RECORD_UNIT;
+	const static String RECORD_SPECIES;
+	const static String RECORD_RECOMMENDED;
+	const static String RECORD_CHEMNAME;
+	const static String RECORD_FREQUENCY;
+	const static String RECORD_QNS;
+	const static String RECORD_INTENSITY;
+	const static String RECORD_SMU2;
+	const static String RECORD_LOGA;
+	const static String RECORD_EL;
+	const static String RECORD_EU;
+	const static String RECORD_LINE_LIST;
 
 	SplatalogueTable(
-		casacore::SetupNewTable& snt, casacore::uInt nrow,
-		const casacore::String& freqUnit, const casacore::String& smu2Unit,
-		const casacore::String& elUnit, const casacore::String& euUnit  
+		SetupNewTable& snt, uInt nrow,
+		const String& freqUnit, const String& smu2Unit,
+		const String& elUnit, const String& euUnit  
 	);
 
 	// open an existing splatalogue table. Checks are done to ensure the table
 	// is indeed a SplatalogueTable and not just a generic table. If
 
-	SplatalogueTable(const casacore::String& tablename);
+	SplatalogueTable(const String& tablename);
 
 	// copy semantics. Tests are done to insure the input table is a splatalogue table.
-	SplatalogueTable(const casacore::Table& table);
+	SplatalogueTable(const Table& table);
 
-	casacore::String getFrequencyUnit() const;
+	String getFrequencyUnit() const;
 
 	// Pretty print table contents to a String.
-	casacore::String list() const;
+	String list() const;
 
-	casacore::Record toRecord() const;
+	Record toRecord() const;
 
 private:
-	casacore::String _freqUnit, _smu2Unit, _elUnit, _euUnit;
+	String _freqUnit, _smu2Unit, _elUnit, _euUnit;
 
 	SplatalogueTable();
-	//void _defineTable(const casacore::String& tablename, const casacore::uInt nrow);
-	void _construct(const casacore::Bool setup);
+	//void _defineTable(const String& tablename, const uInt nrow);
+	void _construct(const Bool setup);
 
 	void _addKeywords();
 

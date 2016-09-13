@@ -48,9 +48,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      maxXSupport(-1), maxYSupport(-1),
 	      pa(), mosPointingPos(0) {};
 
-    CFStore(CFType *dataPtr, casacore::CoordinateSystem& cs, casacore::Vector<casacore::Float>& samp,
-	    casacore::Vector<casacore::Int>& xsup, casacore::Vector<casacore::Int>& ysup, casacore::Int maxXSup, casacore::Int maxYSup,
-	    casacore::Quantity PA, casacore::Int mosPointing):
+    CFStore(CFType *dataPtr, CoordinateSystem& cs, Vector<Float>& samp,
+	    Vector<Int>& xsup, Vector<Int>& ysup, Int maxXSup, Int maxYSup,
+	    Quantity PA, Int mosPointing):
       data(),rdata(), coordSys(cs), sampling(samp),
       xSupport(xsup), ySupport(ysup), maxXSupport(maxXSup),
       maxYSupport(maxYSup), pa(PA), mosPointingPos(mosPointing)
@@ -59,8 +59,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     ~CFStore() {};
 
     CFStore& operator=(const CFStore& other);
-    void show(const char *Mesg=NULL,std::ostream &os=std::cerr);
-    casacore::Bool null() {return data.null();};
+    void show(const char *Mesg=NULL,ostream &os=cerr);
+    Bool null() {return data.null();};
     void set(const CFStore& other)
     {
       coordSys = other.coordSys; sampling.assign(other.sampling); 
@@ -68,9 +68,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       maxXSupport=other.maxXSupport;  maxYSupport=other.maxYSupport; pa=other.pa;
       mosPointingPos = other.mosPointingPos;
     }
-    void set(CFType *dataPtr, casacore::CoordinateSystem& cs, casacore::Vector<casacore::Float>& samp,
-	     casacore::Vector<casacore::Int>& xsup, casacore::Vector<casacore::Int>& ysup, casacore::Int maxXSup, casacore::Int maxYSup,
-	     casacore::Quantity PA, const casacore::Int mosPointing=0)
+    void set(CFType *dataPtr, CoordinateSystem& cs, Vector<Float>& samp,
+	     Vector<Int>& xsup, Vector<Int>& ysup, Int maxXSup, Int maxYSup,
+	     Quantity PA, const Int mosPointing=0)
     {
       data=dataPtr; coordSys=cs; sampling.assign(samp); 
       xSupport.assign(xsup); ySupport.assign(ysup);
@@ -79,18 +79,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       mosPointingPos = mosPointing;
     }
 
-    void resize(casacore::Int nw, casacore::Bool retainValues=false);
-    void resize(casacore::IPosition imShape, casacore::Bool retainValues=false);
+    void resize(Int nw, Bool retainValues=False);
+    void resize(IPosition imShape, Bool retainValues=False);
 
 
-    casacore::CountedPtr<CFType> data;
-    casacore::CountedPtr<CFTypeReal> rdata;
-    casacore::CoordinateSystem coordSys;
-    casacore::Vector<casacore::Float> sampling;
-    casacore::Vector<casacore::Int> xSupport,ySupport;
-    casacore::Int maxXSupport, maxYSupport;
-    casacore::Quantity pa;
-    casacore::Int mosPointingPos;
+    CountedPtr<CFType> data;
+    CountedPtr<CFTypeReal> rdata;
+    CoordinateSystem coordSys;
+    Vector<Float> sampling;
+    Vector<Int> xSupport,ySupport;
+    Int maxXSupport, maxYSupport;
+    Quantity pa;
+    Int mosPointingPos;
   };
 } //# NAMESPACE CASA - END
 }

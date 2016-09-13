@@ -47,7 +47,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </reviewed>
 
 // <prerequisite> 
-//    <li> <linkto class=RegularFilebufIO>casacore::FilebufIO</linkto> class
+//    <li> <linkto class=RegularFilebufIO>FilebufIO</linkto> class
 // </prerequisite>
 
 // <synopsis> 
@@ -76,7 +76,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <srcblock>
 //   FitterEstimatesFilebFileReader reader("myEstimates.txt", myImage);
 //   ComponentList cl = reader.getEstimates();
-//   casacore::Vector<casacore::String> fixed = reader.getFixed();
+//   Vector<String> fixed = reader.getFixed();
 // </srcblock>
 // </example>
 
@@ -87,8 +87,8 @@ class FitterEstimatesFileParser {
 		// <src>filename</src> Name of file containing estimates
 		// <src>image</src> Image for which the estimates apply
 		explicit FitterEstimatesFileParser(
-			const casacore::String& filename,
-			const casacore::ImageInterface<casacore::Float>& image
+			const String& filename,
+			const ImageInterface<Float>& image
 		);
 
 		~FitterEstimatesFileParser();
@@ -97,26 +97,26 @@ class FitterEstimatesFileParser {
 		ComponentList getEstimates() const;
 
 		// Get the fixed parameter masks specified in the file.
-		casacore::Vector<casacore::String> getFixed() const;
+		Vector<String> getFixed() const;
 
 		// Get the contents of the file
-		casacore::String getContents() const;
+		String getContents() const;
 
 	private:
 		ComponentList _componentList;
-		casacore::Vector<casacore::String> _fixedValues;
-		std::unique_ptr<casacore::LogIO> _log;
-		casacore::Vector<casacore::Double> _peakValues, _xposValues, _yposValues;
-		//casacore::Vector<casacore::Quantity> fluxValues, majValues, minValues, paValues;
-		casacore::Vector<casacore::Quantity> _majValues, _minValues, _paValues;
-		casacore::String _contents;
+		Vector<String> _fixedValues;
+		std::unique_ptr<LogIO> _log;
+		Vector<Double> _peakValues, _xposValues, _yposValues;
+		//Vector<Quantity> fluxValues, majValues, minValues, paValues;
+		Vector<Quantity> _majValues, _minValues, _paValues;
+		String _contents;
 
 		// default constructor cannot be called.
 		FitterEstimatesFileParser();
 
 		// parse the file
-		void _parseFile(const casacore::RegularFile& myFile);
-		void _createComponentList(const casacore::ImageInterface<casacore::Float>& image);
+		void _parseFile(const RegularFile& myFile);
+		void _createComponentList(const ImageInterface<Float>& image);
 };
 
 } //# NAMESPACE CASA - END

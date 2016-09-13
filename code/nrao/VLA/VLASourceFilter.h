@@ -83,14 +83,14 @@ class VLASourceFilter: public VLAFilter
 {
 public:
   // The default constructor creats a filter that does not filter
-  // anything. ie., the passThru() function always returns true;
+  // anything. ie., the passThru() function always returns True;
   VLASourceFilter();
 
   // Creates a filter that filters all records except those with a source name
   // that matches (case insensitive) the specified source name. If a qualifier
   // is specified (and is not the magic value of INT_MIN), then the qualifier
   // also has to match.
-  VLASourceFilter(const casacore::String& sourceName, const casacore::Int sourceQual=INT_MIN, const casacore::Bool keepblanks=false);
+  VLASourceFilter(const String& sourceName, const Int sourceQual=INT_MIN, const Bool keepblanks=False);
 
   // The copy constructor uses copy semantics.
   VLASourceFilter(const VLASourceFilter& other);
@@ -101,9 +101,9 @@ public:
   // The assignment operator uses copy semantics.
   VLASourceFilter& operator=(const VLASourceFilter& other);
 
-  // returns true if the supplied record has an observing id that matches (case
+  // returns True if the supplied record has an observing id that matches (case
   // insensitive) the source name specified in the constructor.
-  virtual casacore::Bool passThru(const VLALogicalRecord& record) const;
+  virtual Bool passThru(const VLALogicalRecord& record) const;
 
   // Return a pointer to a copy of the VLASourceFilter object upcast to a
   // VLAFilter object. The class that uses this function is responsible for
@@ -111,15 +111,15 @@ public:
   // constructor.
   virtual VLAFilter* clone() const;
 
-  // casacore::Function which checks the internal data of this class for correct
-  // dimensionality and consistant values. Returns true if everything is fine
-  // otherwise returns false.
-  virtual casacore::Bool ok() const;
+  // Function which checks the internal data of this class for correct
+  // dimensionality and consistant values. Returns True if everything is fine
+  // otherwise returns False.
+  virtual Bool ok() const;
 
 private:
-  casacore::String itsSource;
-  casacore::Int itsQual;
-  casacore::Bool itsKeepBlanks;
+  String itsSource;
+  Int itsQual;
+  Bool itsKeepBlanks;
 };
 #endif
 

@@ -52,22 +52,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   public:
     
     // Empty constructor
-    SDAlgorithmClarkClean(casacore::String clarktype);
+    SDAlgorithmClarkClean(String clarktype);
     virtual  ~SDAlgorithmClarkClean();
     
   protected:
     
     // Local functions to be overloaded by various algorithm deconvolvers.
-    virtual void takeOneStep( casacore::Float loopgain, casacore::Int cycleNiter, casacore::Float cycleThreshold, casacore::Float &peakresidual, casacore::Float &modelflux, casacore::Int &iterdone );
-    //    virtual void initializeDeconvolver( casacore::Float &peakresidual, casacore::Float &modelflux );
+    virtual void takeOneStep( Float loopgain, Int cycleNiter, Float cycleThreshold, Float &peakresidual, Float &modelflux, Int &iterdone );
+    //    virtual void initializeDeconvolver( Float &peakresidual, Float &modelflux );
     virtual void initializeDeconvolver();
     virtual void finalizeDeconvolver();
-    virtual void queryDesiredShape(casacore::Int &nchanchunks, casacore::Int& npolchunks, casacore::IPosition imshape);
+    virtual void queryDesiredShape(Int &nchanchunks, Int& npolchunks, IPosition imshape);
 
-    casacore::Array<casacore::Float> itsMatResidual, itsMatModel, itsMatPsf, itsMatMask;
-    casacore::Array<casacore::Float> itsMatDeltaModel;
+    Array<Float> itsMatResidual, itsMatModel, itsMatPsf, itsMatMask;
+    Array<Float> itsMatDeltaModel;
 
-    casacore::Int psfpatch_p;
+    Int psfpatch_p;
 
   };
 

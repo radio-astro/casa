@@ -23,7 +23,6 @@
 #include <msvis/MSVis/CalibratingVi2FactoryI.h>
 #include <casa/Exceptions.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 namespace vi { //# NAMESPACE VI - BEGIN
 
@@ -62,7 +61,7 @@ CalibratingVi2FactoryI::setGenerator(CalViFacGenerator cvfg) {
 
   generator_p=cvfg;
 
-  return true;
+  return True;
 
 }
 // -----------------------------------------------------------------------
@@ -71,7 +70,7 @@ CalibratingVi2FactoryI::set_byRec_Generator(CalViFac_byRec_Generator cvfg) {
 
   byRec_generator_p=cvfg;
 
-  return true;
+  return True;
 
 }
 

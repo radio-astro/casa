@@ -37,13 +37,13 @@ namespace casa {
   public:
 	  MSChecker() = delete;
 
-	  MSChecker(const casacore::MeasurementSet& ms);
+	  MSChecker(const MeasurementSet& ms);
 
 	  // throws exception if check fails.
 	  void checkReferentialIntegrity() const;
     
   private:
-	  const casacore::MeasurementSet& _ms;
+	  const MeasurementSet& _ms;
   };
 } //# NAMESPACE CASA - END
 #endif

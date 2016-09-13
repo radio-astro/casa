@@ -39,7 +39,6 @@
 #include <imageanalysis/ImageAnalysis/ProfileFitResults.h>
 #include <imageanalysis/IO/LogFile.h>
 
-using namespace casacore;
 namespace casa {
 
 const String ImageProfileFitterResults::_class = "ImageProfileFitterResults";
@@ -91,7 +90,7 @@ std::unique_ptr<vector<vector<Array<Double> > > > ImageProfileFitterResults::_cr
 	);
 	uInt nSubcomps = 0;
 	uInt compCount = 0;
-	Double fNAN = casacore::doubleNaN();
+	Double fNAN = casa::doubleNaN();
 
 	Array<Double> blank;
     IPosition fShape = _fitters->shape();
@@ -118,7 +117,7 @@ std::unique_ptr<vector<vector<Array<Double> > > > ImageProfileFitterResults::_cr
 		}
         IPosition blankSize(1, nSubcomps);
         blankSize.prepend(fShape);
-		blank.resize(blankSize, false);
+		blank.resize(blankSize, False);
 		blank = fNAN;
         for (uInt k=0; k<NGSOLMATRICES; k++) {
 			(*pcfArrays)[k][i] = blank.copy();
@@ -135,31 +134,31 @@ void ImageProfileFitterResults::logSummary(
 	oss << "Number of profiles       = " << nProfiles;
 	String str = oss.str();
 	*_log << LogIO::NORMAL << str << LogIO::POST;
-	_writeLogfile(str + "\n", true, false);
+	_writeLogfile(str + "\n", True, False);
 	oss.str("");
 	oss << "Number of fits attempted = " << nAttempted;
 	str = oss.str();
 	*_log << LogOrigin(_class, __func__);
 	*_log << LogIO::NORMAL << str << LogIO::POST;
-	_writeLogfile(str + "\n", false, false);
+	_writeLogfile(str + "\n", False, False);
 	oss.str("");
 	oss << "Number succeeded         = " << nSucceeded;
 	str = oss.str();
 	*_log << LogOrigin(_class, __func__);
 	*_log << LogIO::NORMAL << str << LogIO::POST;
-	_writeLogfile(str + "\n", false, false);
+	_writeLogfile(str + "\n", False, False);
 	oss.str("");
 	oss << "Number converged         = " << nConverged;
 	str = oss.str();
 	*_log << LogOrigin(_class, __func__);
 	*_log << LogIO::NORMAL << str << LogIO::POST;
-	_writeLogfile(str + "\n", false, false);
+	_writeLogfile(str + "\n", False, False);
 	oss.str("");
 	oss << "Number valid             = " << nValid << endl;
 	str = oss.str();
 	*_log << LogOrigin(_class, __func__);
 	*_log << LogIO::NORMAL << str << LogIO::POST;
-	_writeLogfile(str + "\n", false, false);
+	_writeLogfile(str + "\n", False, False);
 }
 
 Bool ImageProfileFitterResults::_setAxisTypes() {
@@ -176,8 +175,8 @@ Bool ImageProfileFitterResults::_setAxisTypes() {
 	for (uInt i=0; i<axisNames.size(); i++) {
 		axisNames[i].upcase();
 	}
-	Bool hasLat = false;
-	Bool hasLong = false;
+	Bool hasLat = False;
+	Bool hasLong = False;
 	_axisTypes = vector<axisType>(axisNames.size(), NAXISTYPES);
 	for (uInt i=0; i<axisNames.size(); i++) {
 		if ((Int)i != _fitAxis) {
@@ -186,14 +185,14 @@ Bool ImageProfileFitterResults::_setAxisTypes() {
 				&& (axisNames[i].startsWith("RIG") || axisNames[i].startsWith("LONG"))
 			) {
 				_axisTypes[i] = LONGITUDE;
-				hasLat = true;
+				hasLat = True;
 			}
 			else if (
 				dcoord
 				&& (axisNames[i].startsWith("DEC") || axisNames[i].startsWith("LAT"))
 			) {
 				_axisTypes[i] = LATITUDE;
-				hasLong = true;
+				hasLong = True;
 			}
 			else if (
 				spcoord
@@ -373,13 +372,13 @@ void ImageProfileFitterResults::_doWorldCoords(
 			String emptyUnit = "";
 			if ((Int)i != _fitAxis) {
 				if (_axisTypes[i] == LONGITUDE) {
-					longitude = dcoord->format(emptyUnit, Coordinate::DEFAULT, world[i], 0, true, true);
+					longitude = dcoord->format(emptyUnit, Coordinate::DEFAULT, world[i], 0, True, True);
 					IPosition x(1, LONGITUDE);
 					x.append(pixel);
 					_worldCoords(x) = longitude;
 				}
 				else if (_axisTypes[i] == LATITUDE) {
-					latitude = dcoord->format(emptyUnit, Coordinate::DEFAULT, world[i], 1, true, true);
+					latitude = dcoord->format(emptyUnit, Coordinate::DEFAULT, world[i], 1, True, True);
 					IPosition x(1, LATITUDE);
 					x.append(pixel);
 					_worldCoords(x) = latitude;
@@ -387,12 +386,12 @@ void ImageProfileFitterResults::_doWorldCoords(
 				else if (_axisTypes[i] == FREQUENCY) {
 					IPosition x(1, FREQUENCY);
 					x.append(pixel);
-					_worldCoords(x) = spcoord->format(emptyUnit, Coordinate::DEFAULT, world[i], 0, true, true);
+					_worldCoords(x) = spcoord->format(emptyUnit, Coordinate::DEFAULT, world[i], 0, True, True);
 				}
 				else if (_axisTypes[i] == POLARIZATION) {
 					IPosition x(1, POLARIZATION);
 					x.append(pixel);
-					_worldCoords(x) = polcoord->format(emptyUnit, Coordinate::DEFAULT, world[i], 0, true, true);
+					_worldCoords(x) = polcoord->format(emptyUnit, Coordinate::DEFAULT, world[i], 0, True, True);
 				}
 			}
 		}
@@ -417,7 +416,7 @@ void ImageProfileFitterResults::_writeLogfile(const String& str, Bool open, Bool
 
 void ImageProfileFitterResults::_setResults() {
     LogOrigin logOrigin(_class, __func__);
-    Double fNAN = casacore::doubleNaN();
+    Double fNAN = casa::doubleNaN();
     uInt nComps = _nGaussSinglets + _nGaussMultiplets + _nLorentzSinglets;
     if (_polyOrder >= 0) {
     	nComps++;
@@ -429,10 +428,10 @@ void ImageProfileFitterResults::_setResults() {
     	nComps++;
     }
     IPosition fitterShape = _fitters->shape();
-	Array<Bool> attemptedArr(fitterShape, false);
-	Array<Bool> successArr(fitterShape, false);
-	Array<Bool> convergedArr(fitterShape, false);
-	Array<Bool> validArr(fitterShape, false);
+	Array<Bool> attemptedArr(fitterShape, False);
+	Array<Bool> successArr(fitterShape, False);
+	Array<Bool> convergedArr(fitterShape, False);
+	Array<Bool> validArr(fitterShape, False);
     IPosition wcShape(1, (Int)NAXISTYPES);
     wcShape.append(fitterShape);
 	_worldCoords = Array<String>(wcShape, "");
@@ -599,7 +598,7 @@ void ImageProfileFitterResults::writeImages(Bool someConverged) const {
 			if (someConverged) {
 				IPosition axes(1, _fitAxis);
 				ImageCollapser<Float> collapser(
-					_subImage, axes, false, ImageCollapserData::ZERO, String(""), false
+					_subImage, axes, False, ImageCollapserData::ZERO, String(""), False
 				);
 				SHARED_PTR<TempImage<Float> > tmp = DYNAMIC_POINTER_CAST<TempImage<Float> >(
 					collapser.collapse()
@@ -607,7 +606,7 @@ void ImageProfileFitterResults::writeImages(Bool someConverged) const {
 				ThrowIf(! tmp, "Unable to perform dynamic cast");
 				SHARED_PTR<TempImage<Float> > myTemplate(tmp);
 				const String yUnit = _subImage->units().getName();
-				Array<Bool>	mask(_fitters->shape(), false);
+				Array<Bool>	mask(_fitters->shape(), False);
 				IPosition inTileShape = _subImage->niceCursorShape();
 				TiledLineStepper stepper (_subImage->shape(), inTileShape, _fitAxis);
 				RO_MaskedLatticeIterator<Float> inIter(*_subImage, stepper);
@@ -806,7 +805,7 @@ void ImageProfileFitterResults::_resultsToLog() {
 	if (_logResults) {
 		*_log << LogIO::NORMAL << summary.str() << LogIO::POST;
 	}
-	_writeLogfile(summary.str(), false, false);
+	_writeLogfile(summary.str(), False, False);
 	IPosition inTileShape = _subImage->niceCursorShape();
 	TiledLineStepper stepper (_subImage->shape(), inTileShape, _fitAxis);
 	RO_MaskedLatticeIterator<Float> inIter(*_subImage, stepper);
@@ -964,7 +963,7 @@ void ImageProfileFitterResults::_resultsToLog() {
     	if (_logResults) {
     		*_log << LogIO::NORMAL << summary.str() << endl << LogIO::POST;
     	}
-    	_writeLogfile(summary.str(), false, false);
+    	_writeLogfile(summary.str(), False, False);
 	}
 	if (_logfile.get() != 0) {
 		_logfile->close();
@@ -1075,8 +1074,8 @@ String ImageProfileFitterResults::_pcfToString(
 	Double pFWHM = 0;
 	Double pFWHMErr = 0;
 	Int specCoordIndex = csys.findCoordinate(Coordinate::SPECTRAL);
-	Bool convertedCenterToPix = true;
-	Bool convertedFWHMToPix = true;
+	Bool convertedCenterToPix = True;
+	Bool convertedFWHMToPix = True;
     if (_doVelocity) {
     	if (csys.spectralCoordinate(specCoordIndex).velocityToPixel(pCenter, center)) {
     		Double nextVel;
@@ -1087,8 +1086,8 @@ String ImageProfileFitterResults::_pcfToString(
     		pFWHMErr = abs(fwhmErr/velInc);
     	}
     	else {
-    		convertedCenterToPix = false;
-    		convertedFWHMToPix = false;
+    		convertedCenterToPix = False;
+    		convertedFWHMToPix = False;
     	}
     }
     else {
@@ -1100,7 +1099,7 @@ String ImageProfileFitterResults::_pcfToString(
     		pCenterErr = abs(centerErr/delta);
     	}
     	else {
-    		convertedCenterToPix = false;
+    		convertedCenterToPix = False;
     	}
     	pFWHM = abs(fwhm/delta);
     	pFWHMErr = abs(fwhmErr/delta);
@@ -1157,7 +1156,7 @@ String ImageProfileFitterResults::_gaussianMultipletToString(
 		summary << "        Results for subcomponent "
 			<< i << ":" << endl;
 		summary
-			<< _pcfToString(&g[i], csys, world, imPos, false, "    ")
+			<< _pcfToString(&g[i], csys, world, imPos, False, "    ")
 			<< endl;
 	}
 	return summary.str();
@@ -1184,7 +1183,7 @@ String ImageProfileFitterResults::_polynomialToString(
         	}
 		}
 		summary << "         c" << j << " : "
-            << _elementToString(parms[j], errs[j], unit, false) << endl;
+            << _elementToString(parms[j], errs[j], unit, False) << endl;
 	}
     // coefficients in pixel coordinates
     Double x0;
@@ -1206,8 +1205,8 @@ String ImageProfileFitterResults::_polynomialToString(
         Double sumsq = 0;
         for (uInt k=j; k<n; k++) {
             Double multiplier = Combinatorics::choose(k, k-j)
-				* casacore::pow(x0, Float(k - j))
-				* casacore::pow(1/deltaX, Float(k));
+				* casa::pow(x0, Float(k - j))
+				* casa::pow(1/deltaX, Float(k));
             if ((k-j) % 2 == 1) {
             	multiplier *= -1;
             }
@@ -1215,7 +1214,7 @@ String ImageProfileFitterResults::_polynomialToString(
             Double errCoeff = multiplier * errs[k];
             sumsq += errCoeff * errCoeff;
         }
-        pCoeffErr[j] = casacore::sqrt(sumsq);
+        pCoeffErr[j] = casa::sqrt(sumsq);
         summary << "         c" << j << " : ";
 		String unit = _subImage->units().getName();
 		if (j > 0 ) {
@@ -1226,7 +1225,7 @@ String ImageProfileFitterResults::_polynomialToString(
 				unit += "/((" + _xUnit + ")" + String::toString(j) + ")";
 			}
 		}
-        summary << _elementToString(pCoeff[j], pCoeffErr[j], unit, false) << endl;
+        summary << _elementToString(pCoeff[j], pCoeffErr[j], unit, False) << endl;
     }
 	return summary.str();
 }
@@ -1327,7 +1326,7 @@ void ImageProfileFitterResults::_makeSolutionImages(
 			String maskName = image.makeUniqueRegionName(
 				String("mask"), 0
 			);
-			image.makeMask(maskName, true, true, false);
+			image.makeMask(maskName, True, True, False);
 			if (hasPixMask) {
 				resMask = mask;
 				if (hasNanMask) {

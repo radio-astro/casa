@@ -45,7 +45,7 @@ class Plotter;
 
 // Superclass for all messages going through the PlotLogger.  This class has
 // been refactored to just be a thin layer on top of LogMessage.
-class PlotLogMessage : public casacore::LogMessage {
+class PlotLogMessage : public LogMessage {
 public:
     // Static //
     
@@ -59,13 +59,13 @@ public:
     PlotLogMessage(int eventType = DEFAULT_EVENT_TYPE);
     
     // Constructor which takes the origin(s) and an optional priority.
-    PlotLogMessage(const casacore::String& origin1, const casacore::String& origin2,
+    PlotLogMessage(const String& origin1, const String& origin2,
             int eventType = DEFAULT_EVENT_TYPE);
     
     // Constructor which takes the origin(s), the message, and an optional
     // priority.
-    PlotLogMessage(const casacore::String& origin1, const casacore::String& origin2,
-            const casacore::String& message, int eventType = DEFAULT_EVENT_TYPE);
+    PlotLogMessage(const String& origin1, const String& origin2,
+            const String& message, int eventType = DEFAULT_EVENT_TYPE);
     
     // Copy constructor.
     PlotLogMessage(const PlotLogMessage& copy);
@@ -87,7 +87,7 @@ protected:
 // Used to report time and memory measurements.  This functionality can be
 // accessed either directly with a PlotLogMeasurement object or indirectly
 // through the PlotLogger class.  Message is:
-// END.\tTime: [time] [timeUnits].  casacore::Memory: [memory] [memoryUnits].
+// END.\tTime: [time] [timeUnits].  Memory: [memory] [memoryUnits].
 // If the measurement has not been ended, calls stopMeasurement() first.
 class PlotLogMeasurement : public PlotLogMessage {
 public:
@@ -112,8 +112,8 @@ public:
     
     // Get a string representation of the given time/memory unit.
     // <group>
-    static casacore::String timeUnits(TimeUnit t);   
-    static casacore::String memoryUnits(MemoryUnit m);
+    static String timeUnits(TimeUnit t);   
+    static String memoryUnits(MemoryUnit m);
     // </group>
     
     
@@ -121,7 +121,7 @@ public:
     
     // Constructor which takes the origin(s), optional time and memory
     // units, and an optional priority.  Also calls startMeasurement().
-    PlotLogMeasurement(const casacore::String& origin1, const casacore::String& origin2,
+    PlotLogMeasurement(const String& origin1, const String& origin2,
                        TimeUnit timeUnit = DEFAULT_TIME_UNIT,
                        MemoryUnit memoryUnit = DEFAULT_MEMORY_UNIT,
                        int eventType = DEFAULT_EVENT_TYPE);
@@ -169,13 +169,13 @@ private:
     // Start memory
     unsigned int m_startMemory;
     
-    // casacore::Time and memory differences
+    // Time and memory differences
     double m_time, m_memory;
     
-    // casacore::Time unit
+    // Time unit
     TimeUnit m_timeUnit;
     
-    // casacore::Memory unit
+    // Memory unit
     MemoryUnit m_memoryUnit;
 };
 
@@ -200,7 +200,7 @@ public:
     // deleted when this message is destroyed.  This should be used with care
     // if multiple PlotLogLocates using the same located indices are being
     // used.
-    PlotLogLocate(const casacore::String& origin1, const casacore::String& origin2,
+    PlotLogLocate(const String& origin1, const String& origin2,
             const PlotRegion& locateRegion,
             std::vector<std::vector<std::pair<unsigned int,unsigned int> > >* locatedIndices,
             int eventType = DEFAULT_EVENT_TYPE,
@@ -254,8 +254,8 @@ public:
     // Constructor which takes the class and method names, a flag for whether
     // the method is entering or exiting, and an optional additional message
     // and priority.
-    PlotLogMethod(const casacore::String& className, const casacore::String& methodName,
-            bool entering, const casacore::String& message = casacore::String(),
+    PlotLogMethod(const String& className, const String& methodName,
+            bool entering, const String& message = String(),
             int eventType = DEFAULT_EVENT_TYPE);
     
     // Destructor.
@@ -269,8 +269,8 @@ public:
     // Constructor which takes the class name and object address, a flag for
     // whether the object is being created or destroyed, and an optional
     // additional message and priority.
-    PlotLogObject(const casacore::String& className, void* address, bool creation,
-            const casacore::String& message = casacore::String(),
+    PlotLogObject(const String& className, void* address, bool creation,
+            const String& message = String(),
             int eventType = DEFAULT_EVENT_TYPE);
     
     // Destructor.
@@ -278,21 +278,21 @@ public:
 };
 
 
-// Subclass of casacore::LogFilterInterface to filter on both event flags and minimum
+// Subclass of LogFilterInterface to filter on both event flags and minimum
 // priority.
-class PlotLoggerFilter : public casacore::LogFilterInterface {
+class PlotLoggerFilter : public LogFilterInterface {
 public:
     // Constructor which takes optional event flags and minimum priority.
-    PlotLoggerFilter(int eventFlags, casacore::LogMessage::Priority minPriority);
+    PlotLoggerFilter(int eventFlags, LogMessage::Priority minPriority);
     
     // Destructor.
     ~PlotLoggerFilter();
     
-    // Implements casacore::LogFilterInterface::clone().
-    casacore::LogFilterInterface* clone() const;
+    // Implements LogFilterInterface::clone().
+    LogFilterInterface* clone() const;
     
-    // Implements casacore::LogFilterInterface::pass().
-    casacore::Bool pass(const casacore::LogMessage& message) const;
+    // Implements LogFilterInterface::pass().
+    Bool pass(const LogMessage& message) const;
     
     // Gets/Sets the event flags.
     // <group>
@@ -302,8 +302,8 @@ public:
     
     // Gets/Sets the minimum priority.
     // <group>
-    casacore::LogMessage::Priority minimumPriority() const;
-    void setMinimumPriority(casacore::LogMessage::Priority minPriority);
+    LogMessage::Priority minimumPriority() const;
+    void setMinimumPriority(LogMessage::Priority minPriority);
     // </group>
     
 private:
@@ -311,7 +311,7 @@ private:
     int m_eventFlags;
     
     // Minimum priority.
-    casacore::LogMessage::Priority m_minPriority;
+    LogMessage::Priority m_minPriority;
 };
 
 
@@ -369,41 +369,41 @@ public:
     
     // Registers an extended event type with the given name and optional
     // priority and returns its value.
-    static int REGISTER_EVENT_TYPE(const casacore::String& name,
-            casacore::LogMessage::Priority priority = casacore::LogMessage::NORMAL);
+    static int REGISTER_EVENT_TYPE(const String& name,
+            LogMessage::Priority priority = LogMessage::NORMAL);
     
     // Unregisters the given extended event type.  If a priority has been set,
     // it is NOT removed.
     // <group>
     static void UNREGISTER_EVENT_TYPE(int event);
-    static void UNREGISTER_EVENT_TYPE(const casacore::String& name);
+    static void UNREGISTER_EVENT_TYPE(const String& name);
     // </group>
     
     // Returns all the event names.
-    static std::vector<casacore::String> EVENT_NAMES();
+    static std::vector<String> EVENT_NAMES();
     
     // Converts between an event type and its name.
     // <group>
-    static casacore::String EVENT(int type);
-    static int EVENT(const casacore::String& name);
+    static String EVENT(int type);
+    static int EVENT(const String& name);
     // </group>
     
     // Returns an event flag from the given vector.
     // <group>
     static int FLAG_FROM_EVENTS(const std::vector<int>& events);
-    static int FLAG_FROM_EVENTS(const std::vector<casacore::String>& names);
+    static int FLAG_FROM_EVENTS(const std::vector<String>& names);
     // </group>
     
     // Returns an event flag for all events that meet the given minimum
     // priority.
-    static int FLAG_FROM_PRIORITY(casacore::LogMessage::Priority minPriority);
+    static int FLAG_FROM_PRIORITY(LogMessage::Priority minPriority);
     
     
     // Gets/Sets the message priority for the given log event.  Uses a default
     // if the event has not been set.
     // <group>
-    static casacore::LogMessage::Priority EVENT_PRIORITY(int event);
-    static void SET_EVENT_PRIORITY(int event, casacore::LogMessage::Priority priority);
+    static LogMessage::Priority EVENT_PRIORITY(int event);
+    static void SET_EVENT_PRIORITY(int event, LogMessage::Priority priority);
     // </group>
     
     
@@ -420,7 +420,7 @@ public:
     // Constructor which takes the Plotter this logger is associated with.  The
     // global log sink is used, and the minimum priority filter is set.
     PlotLogger(Plotter* plotter, int filterEventFlags = NO_EVENTS,
-            casacore::LogMessage::Priority filterMinPriority = casacore::LogMessage::DEBUGGING);
+            LogMessage::Priority filterMinPriority = LogMessage::DEBUGGING);
     
     // Destructor.
     virtual ~PlotLogger();
@@ -430,18 +430,18 @@ public:
     
     // Gets the log sink interface.
     // <group>
-    casacore::CountedPtr<casacore::LogSinkInterface> sink();
-    const casacore::CountedPtr<casacore::LogSinkInterface> sink() const;
+    CountedPtr<LogSinkInterface> sink();
+    const CountedPtr<LogSinkInterface> sink() const;
     // </group>
     
     // Gets a copy of the log sink interface, IF it is not the global.
-    casacore::LogSinkInterface* localSinkCopy() const;
+    LogSinkInterface* localSinkCopy() const;
     
     // Gets/Sets the log sink file location.  If the filename is empty, it
     // means the global sink.
     // <group>
-    const casacore::String& sinkLocation() const;
-    void setSinkLocation(const casacore::String& logFile);
+    const String& sinkLocation() const;
+    void setSinkLocation(const String& logFile);
     // </group>
     
     // Returns true if the logger is currently using the global sink, false
@@ -453,7 +453,7 @@ public:
     
     // Gets/Sets the log filter priority level.
     // <group>
-    casacore::LogMessage::Priority filterMinPriority() const;
+    LogMessage::Priority filterMinPriority() const;
     void setFilterMinPriority(PlotLogMessage::Priority minPriority);
     // </group>
     
@@ -476,8 +476,8 @@ public:
     // Posts the given message to the underlying log sink.
     // <group>
     void postMessage(const PlotLogMessage& message);
-    void postMessage(const casacore::String& origin1, const casacore::String& origin2,
-                     const casacore::String& message,
+    void postMessage(const String& origin1, const String& origin2,
+                     const String& message,
                      int eventType = PlotLogMessage::DEFAULT_EVENT_TYPE);
     // </group>
     
@@ -487,7 +487,7 @@ public:
     // Marks the logger to begin a time/memory measurement.  Measurement marks
     // can be recursive.  Returns a generic message saying that measurement has
     // begun, which will be also posted to the log if postStartMessage is true.
-    PlotLogMessage markMeasurement(const casacore::String& origin1,const casacore::String& origin2,
+    PlotLogMessage markMeasurement(const String& origin1,const String& origin2,
             int eventType = PlotLogMessage::DEFAULT_EVENT_TYPE,
             bool postStartMessage = true);
     
@@ -508,13 +508,13 @@ private:
     Plotter* m_plotter;
     
     // Log sink.
-    casacore::CountedPtr<casacore::LogSinkInterface> m_logger;
+    CountedPtr<LogSinkInterface> m_logger;
     
     // Log filter.
     PlotLoggerFilter m_filter;
     
     // Log sink location.
-    casacore::String m_loggerLocation;
+    String m_loggerLocation;
     
     // Current measurement marks.
     std::vector<PlotLogMeasurement> m_measurements;
@@ -526,15 +526,15 @@ private:
     static std::vector<int> EXTENDED_TYPES;
     
     // Registered extended type names.
-    static std::vector<casacore::String> EXTENDED_NAMES;
+    static std::vector<String> EXTENDED_NAMES;
     
-    // casacore::Map from log event to priority.
-    static std::map<int, casacore::LogMessage::Priority> EVENT_PRIORITIES;
+    // Map from log event to priority.
+    static std::map<int, LogMessage::Priority> EVENT_PRIORITIES;
     
     // Disabled old global filter, or null.
-    static casacore::LogFilterInterface* DISABLED_GLOBAL_FILTER;
+    static LogFilterInterface* DISABLED_GLOBAL_FILTER;
 };
-typedef casacore::CountedPtr<PlotLogger> PlotLoggerPtr;
+typedef CountedPtr<PlotLogger> PlotLoggerPtr;
 
 }
 

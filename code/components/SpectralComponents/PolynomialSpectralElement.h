@@ -66,22 +66,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 class PolynomialSpectralElement: public SpectralElement {
 public:
 
-	// Useless constructor for anythong but allocating memory in a casacore::Vector etc
+	// Useless constructor for anythong but allocating memory in a Vector etc
 	PolynomialSpectralElement();
 
 
 	// Construct an n-degree polynomial
-	explicit PolynomialSpectralElement(const casacore::uInt n);
+	explicit PolynomialSpectralElement(const uInt n);
 
 	// Construct the given tp with the given param
 	// <thrown>
-	//   <li> casacore::AipsError if incorrect number of parameters (e.g. not 3 for GAUSSIAN)
-	//   <li> casacore::AipsError if sigma == 0.0
+	//   <li> AipsError if incorrect number of parameters (e.g. not 3 for GAUSSIAN)
+	//   <li> AipsError if sigma == 0.0
 	// </thrown>
-	PolynomialSpectralElement(const casacore::Vector<casacore::Double> &param);
+	PolynomialSpectralElement(const Vector<Double> &param);
 	// Copy constructor (deep copy)
 	// <thrown>
-	//   <li> casacore::AipsError if sigma == 0.0
+	//   <li> AipsError if sigma == 0.0
 	// </thrown>
 	PolynomialSpectralElement(const PolynomialSpectralElement &other);
 
@@ -90,7 +90,7 @@ public:
 	SpectralElement* clone() const;
 
 	// Get the degree of polynomial
-	casacore::uInt getDegree() const;
+	uInt getDegree() const;
 
 };
 
@@ -98,7 +98,7 @@ public:
 // <summary> Global functions </summary>
 // <group name=Output>
 // Output declaration
-std::ostream &operator<<(std::ostream &os, const PolynomialSpectralElement &elem);
+ostream &operator<<(ostream &os, const PolynomialSpectralElement &elem);
 // </group>
 
 

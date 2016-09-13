@@ -31,7 +31,6 @@
 #include <QDoubleValidator>
 #include <QSet>
 
-using namespace casacore;
 namespace casa {
 
 ///////////////////////////////////////

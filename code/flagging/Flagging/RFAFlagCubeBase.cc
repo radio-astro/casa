@@ -28,7 +28,6 @@
 #include <casa/iostream.h>
 #include <casa/stdio.h>
    
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 uInt RFABase::indexing_base = 0;
@@ -76,7 +75,7 @@ const RecordInterface & RFAFlagCubeBase::getDefaults ()
 // create record description on first entry
   if( !rec.nfields() )
   {
-    rec.define(RF_FIGNORE,false);
+    rec.define(RF_FIGNORE,False);
     rec.setComment(RF_FIGNORE,"Use T to ignore existing flags");
   }
   return rec;
@@ -125,7 +124,7 @@ uInt RFAFlagCubeBase::estimateMemoryUse ()
 Bool RFAFlagCubeBase::newChunk (Int &)
 {
   flag.init(corrmask, nAgent, only_selector, name());
-  return active=true;
+  return active=True;
 }
 
 // -----------------------------------------------------------------------
@@ -172,7 +171,7 @@ void RFAFlagCubeBase::startFlag (bool)
 // -----------------------------------------------------------------------
 RFA::IterMode RFAFlagCubeBase::iterTime (uInt it)
 {
-  flag.advance(it,true);
+  flag.advance(it,True);
   return RFA::CONT;
 }
 

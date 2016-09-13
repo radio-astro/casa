@@ -90,7 +90,7 @@ namespace casa {
 		QtCanvas(QWidget *parent = 0);
 
 		void setPlotSettings(const QtPlotSettings &settings);
-		void setTopAxisRange(const casacore::Vector<casacore::Float> &xValues, bool topAxisDescending );
+		void setTopAxisRange(const Vector<Float> &xValues, bool topAxisDescending );
 		void setFrameMarker( float framePositionX );
 		void setZoomRectColor( QColor color );
 		//Returns the spectrum as it is currently displayed in the canvas (with
@@ -123,20 +123,20 @@ namespace casa {
 
 		//Plotting curves
 		void plotPolyLines(QString);
-		template<class T> void plotPolyLine(const casacore::Vector<T>&, const casacore::Vector<T>&,
-				double beamAngle, double beamArea, casacore::SpectralCoordinate coord);
-		void plotPolyLine(const casacore::Vector<casacore::Float> &x, const casacore::Vector<casacore::Float> &y, const casacore::Vector<casacore::Float> &e,
-		                  double beamAngle, double beamArea, casacore::SpectralCoordinate coord, const QString& lb="");
+		template<class T> void plotPolyLine(const Vector<T>&, const Vector<T>&,
+				double beamAngle, double beamArea, SpectralCoordinate coord);
+		void plotPolyLine(const Vector<Float> &x, const Vector<Float> &y, const Vector<Float> &e,
+		                  double beamAngle, double beamArea, SpectralCoordinate coord, const QString& lb="");
 		enum ColorCategory { TITLE_COLOR, CURVE_COLOR, CURVE_COLOR_PRIMARY,
 		                     CURVE_COLOR_SECONDARY, WARNING_COLOR, CURVE_TRADITIONAL};
-		void addPolyLine(const casacore::Vector<casacore::Float> &x, const casacore::Vector<casacore::Float> &y,
-				double beamAngle, double beamArea, casacore::SpectralCoordinate coord,
+		void addPolyLine(const Vector<Float> &x, const Vector<Float> &y,
+				double beamAngle, double beamArea, SpectralCoordinate coord,
 		                 const QString& lb="", ColorCategory colorCategory=CURVE_COLOR );
 		void addMolecularLine(MolecularLine* molecularLine );
 		QList<QString> getMolecularLineNames() const;
 
-		template<class T> void plotPolyLine(const casacore::Matrix<T> &verts, double beamAngle,
-				double beamArea, casacore::SpectralCoordinate coord, double restValue );
+		template<class T> void plotPolyLine(const Matrix<T> &verts, double beamAngle,
+				double beamArea, SpectralCoordinate coord, double restValue );
 
 		QSize minimumSizeHint() const;
 		QSize sizeHint() const;
@@ -256,7 +256,7 @@ namespace casa {
 		void refreshPixmap();
 
 		//Used for conversion purposes.
-		void setSpectralCoordinate( const casacore::SpectralCoordinate& coord );
+		void setSpectralCoordinate( const SpectralCoordinate& coord );
 
 
 	public slots:
@@ -322,7 +322,7 @@ namespace casa {
 		 * 		secondary spectral fitting curve, etc).
 		 */
 		void setCurveData(int id, const CurveData &data, double beamAngle, double beamArea,
-				casacore::SpectralCoordinate coord, const ErrorData &error=ErrorData(),
+				SpectralCoordinate coord, const ErrorData &error=ErrorData(),
 		        const QString& lb="", ColorCategory colorCategory = CURVE_COLOR);
 
 
@@ -373,7 +373,7 @@ namespace casa {
 		 * is no close match.
 		 * @param x an world x-coordinate.
 		 * @param y a world y-coordinate.
-		 * @return a casacore::String containing the curve data point that is a close
+		 * @return a String containing the curve data point that is a close
 		 * 		match to the passed in coordinates or an empty string if there
 		 * 		is no good match.
 		 */
@@ -473,7 +473,7 @@ namespace casa {
 		QRect xRangeRect;
 		QPixmap pixmap;
 		QPixmap backBuffer;
-		casacore::Matrix<casacore::uInt> *pMask;
+		Matrix<uInt> *pMask;
 
 		QPoint currentCursorPosition;
 		QColor xcursor;
@@ -571,7 +571,7 @@ namespace casa {
 		Annotation* getActiveAnnotation() const;
 		CanvasMode* currentMode;
 		CanvasModeFactory* modeFactory;
-		casacore::SpectralCoordinate m_spectralCoordinate;
+		SpectralCoordinate m_spectralCoordinate;
 	};
 
 }

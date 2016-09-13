@@ -27,14 +27,14 @@
 
 namespace casa {
 
-template <class T> const casacore::String SepImageConvolverTask<T>::CLASS_NAME = "SepImageConvolverTask";
+template <class T> const String SepImageConvolverTask<T>::CLASS_NAME = "SepImageConvolverTask";
 
 template <class T> SepImageConvolverTask<T>::SepImageConvolverTask(
-	const SPCIIT image, const casacore::Record *const &region,
-	const casacore::String& mask, const casacore::String& outname, const casacore::Bool overwrite
+	const SPCIIT image, const Record *const &region,
+	const String& mask, const String& outname, const Bool overwrite
 ) : ImageTask<T>(image, "", region, "", "", "", mask, outname, overwrite),
 	_kernels(), _scale(0) {
-	this->_construct(true);
+	this->_construct(True);
 }
 
 template <class T> SPIIT SepImageConvolverTask<T>::convolve() {
@@ -48,27 +48,27 @@ template <class T> SPIIT SepImageConvolverTask<T>::convolve() {
 		"You must give the same number of axes, kernels and widths"
 	);
 
-	*this->_getLog() << casacore::LogOrigin(getClass(), __func__);
+	*this->_getLog() << LogOrigin(getClass(), __func__);
 	auto autoScale = _scale < 0;
 	auto myscale = autoScale ? 1 : _scale;
 
 	auto subImage = SubImageFactory<T>::createSubImageRO(
 		*this->_getImage(), *this->_getRegion(), this->_getMask(),
-		this->_getLog().get(), casacore::AxesSpecifier(), this->_getStretch()
+		this->_getLog().get(), AxesSpecifier(), this->_getStretch()
 	);
-	SepImageConvolver<T> sic(*subImage, *this->_getLog(), true);
+	SepImageConvolver<T> sic(*subImage, *this->_getLog(), True);
 
 	// Handle inputs.
-	casacore::Bool useImageShapeExactly = false;
-	for (casacore::uInt i = 0; i < _axes.size(); ++i) {
-		casacore::VectorKernel::KernelTypes type = casacore::VectorKernel::toKernelType(_kernels[i]);
+	Bool useImageShapeExactly = False;
+	for (uInt i = 0; i < _axes.size(); ++i) {
+		VectorKernel::KernelTypes type = VectorKernel::toKernelType(_kernels[i]);
 		sic.setKernel(
-			casacore::uInt(_axes[i]), type, _kernelWidths[i], autoScale,
+			uInt(_axes[i]), type, _kernelWidths[i], autoScale,
 			useImageShapeExactly, myscale
 		);
-		*this->_getLog() << casacore::LogIO::NORMAL << "Axis " << _axes[i]
+		*this->_getLog() << LogIO::NORMAL << "Axis " << _axes[i]
 			<< " : kernel shape = "
-			<< sic.getKernelShape(casacore::uInt(_axes[i])) << casacore::LogIO::POST;
+			<< sic.getKernelShape(uInt(_axes[i])) << LogIO::POST;
 	}
 	auto output = this->_prepareOutputImage(*subImage);
 	sic.convolve(*output);

@@ -31,7 +31,6 @@
 
 #include <QHeaderView>
 
-using namespace casacore;
 namespace casa {
 
 ////////////////////////////////

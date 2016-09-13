@@ -30,7 +30,6 @@
 #include <plotms/Plots/PlotMSPlotParameters.h>
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
 #include <plotms/Client/Client.h>
-using namespace casacore;
 namespace casa {
 
 ActionInformation::ActionInformation( Client* client )
@@ -115,5 +114,4 @@ bool ActionInformation::doActionWithResponse(PlotMSApp* plotms, Record &retval) 
 ActionInformation::~ActionInformation() {
 }
 
-using namespace casacore;
 } /* namespace casa */

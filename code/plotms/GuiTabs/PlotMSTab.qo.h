@@ -55,7 +55,7 @@ public:
     // to the given.
     // <group>
     static bool setChooser(QComboBox* chooser, const QString& value);
-    static bool setChooser(QComboBox* chooser, const casacore::String& value) {
+    static bool setChooser(QComboBox* chooser, const String& value) {
         QString str(value.c_str());
         return setChooser(chooser, str); }
     static bool setChooser(QComboBox* chooser, const char* value) {
@@ -119,7 +119,7 @@ protected:
     static QString highlightifyText(const QString& text, bool highlight);
     
     // Variation taking a casacore String.
-    static QString highlightifyText(const casacore::String& text, bool changed)  {
+    static QString highlightifyText(const String& text, bool changed)  {
         QString str(text.c_str());
         return highlightifyText(str, changed); }
         

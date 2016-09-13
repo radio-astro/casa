@@ -35,10 +35,9 @@
 
 #include <stdio.h>		// sprintf.
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-	Bool GLLogIO::postToStream_ = false;
+	Bool GLLogIO::postToStream_ = False;
 	String *GLLogIO::ostring_ = NULL;
 
 	GLLogIO::GLLogIO() {
@@ -49,7 +48,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 // Print name followed by any errors.
-// If errorsonly is true, don't print anything if there aren't any errors.
+// If errorsonly is True, don't print anything if there aren't any errors.
 	void GLLogIO::trace(const char *name, int nspaces, Bool errorsonly) {
 		append(name, nspaces);
 		int nerrs = glcheck(nspaces+2);
@@ -259,7 +258,7 @@ Called between glBegin/glEnd?";
 	void GLAttribToString(GLbitfield bits, String &str) {
 		GLuint mask = 1;
 		GLuint index = 0;
-		Bool haveEntry = false;
+		Bool haveEntry = False;
 
 		bits &= GL_ALL_ATTRIB_BITS;		// Ignore any invalid bits.
 		if(bits == GL_ALL_ATTRIB_BITS) {
@@ -274,7 +273,7 @@ Called between glBegin/glEnd?";
 				if(haveEntry)
 					str += " | ";
 				str += GL_ATTRIB_BITS[index].name;
-				haveEntry = true;
+				haveEntry = True;
 #if 0
 				if(mask != GL_ATTRIB_BITS[index].value) {
 					printf("Value is 0x%4x!!\n",

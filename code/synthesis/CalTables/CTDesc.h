@@ -53,8 +53,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <synopsis>
 // CTDesc defines the format of NewCalTable in terms
-// of table descriptors <linkto class="casacore::TableDesc">casacore::TableDesc</linkto>, as
-// defined in the casacore::Table system. This is a base class and defines the
+// of table descriptors <linkto class="TableDesc">TableDesc</linkto>, as
+// defined in the Table system. This is a base class and defines the
 // overall calibration table structure. Specializations for both
 // antenna-based (ViJones and SkyJones) and baseline-based (MJones)
 // calibration tables are provided through inheritance. At present this 
@@ -89,42 +89,42 @@ class CTDesc
    virtual ~CTDesc() {};
 
    // Alternative ctor that enables OBS_ID opt-out
-   CTDesc(casacore::Bool addObsId);
+   CTDesc(Bool addObsId);
 
    // Construct from some external info
-   CTDesc (const casacore::String& partype,
-	   const casacore::String& msname="none",
-	   const casacore::String& viscal="unknown",
-	   const casacore::String& polbasis="circ");
+   CTDesc (const String& partype,
+	   const String& msname="none",
+	   const String& viscal="unknown",
+	   const String& polbasis="circ");
 
    // Return the table descriptors for the main calibration table
    // and the cal_history and cal_desc sub-tables
-   virtual casacore::TableDesc calMainDesc();
-   //virtual casacore::TableDesc calMainDesc();
-   //virtual casacore::TableDesc calHistoryDesc();
+   virtual TableDesc calMainDesc();
+   //virtual TableDesc calMainDesc();
+   //virtual TableDesc calHistoryDesc();
 
  protected:
    // a specified column name.
-   casacore::TableDesc insertDesc (const casacore::TableDesc& tableDesc, const casacore::TableDesc& insert,
-			 const casacore::String& insertAfter);
+   TableDesc insertDesc (const TableDesc& tableDesc, const TableDesc& insert,
+			 const String& insertAfter);
 
  private:
    // Generate the default sub-table descriptors
-   casacore::TableDesc defaultCalMain (const casacore::String& partype="",
-			     const casacore::String& msname="none",
-			     const casacore::String& viscal="unknown",
-			     const casacore::String& polbasis="circ");
-   //casacore::TableDesc defaultCalHistory();
+   TableDesc defaultCalMain (const String& partype="",
+			     const String& msname="none",
+			     const String& viscal="unknown",
+			     const String& polbasis="circ");
+   //TableDesc defaultCalHistory();
 
 
    // Support (discouraged) ctor that can opt out of OBSERVATION_ID
-   casacore::Bool addObsId_;
+   Bool addObsId_;
 
-   // casacore::Table descriptors
-   casacore::TableDesc itsCalMainDesc;
-   //casacore::TableDesc itsCalHistoryDesc;
-   casacore::String MSName_p;
-   casacore::String PolBasis_p;
+   // Table descriptors
+   TableDesc itsCalMainDesc;
+   //TableDesc itsCalHistoryDesc;
+   String MSName_p;
+   String PolBasis_p;
 
 
  };

@@ -17,11 +17,11 @@ template<typename T>
 class SakuraAlignedArray {
 public:
   SakuraAlignedArray(size_t num_data);
-  SakuraAlignedArray(casacore::Vector<T> const &in_vector);
+  SakuraAlignedArray(Vector<T> const &in_vector);
   ~SakuraAlignedArray();
 
   T *data;               // pointer to aligned data
-  casacore::Vector<T> *casaVector; // pointer to aligned CASA Vector
+  Vector<T> *casaVector; // pointer to aligned CASA Vector
 private:
   void initialize();
   size_t num_data_;      // number of data to be stored

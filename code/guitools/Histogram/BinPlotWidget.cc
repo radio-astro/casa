@@ -60,8 +60,6 @@
 #include <qwt_double_interval.h>
 #endif
 
-using namespace casacore;
-
 namespace casa {
 
 
@@ -206,7 +204,7 @@ void BinPlotWidget::resetAxisTitles(){
 void BinPlotWidget::resetPlotTitle(){
 	QString imageNameStr;
 	if ( image && displayPlotTitle ){
-		String imageName = image->name(true );
+		String imageName = image->name(True );
 		imageNameStr = imageName.c_str();
 	}
 	QwtText titleText = binPlot.title();

@@ -60,15 +60,11 @@
 #include <unistd.h>
 using namespace std;
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
   namespace refim {
 
-using namespace casacore;
     using namespace casa;
-using namespace casacore;
     using namespace casa::refim;
-using namespace casacore;
     using namespace casa::vi;
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -95,7 +91,7 @@ using namespace casacore;
 
   Bool SIMapperCollection::releaseImageLocks() 
   {
-    Bool validflag=true;
+    Bool validflag=True;
     for(Int mapperid=0;mapperid<nMappers();mapperid++ )
       {
 	validflag &= itsMappers[mapperid]->releaseImageLocks();
@@ -135,7 +131,7 @@ using namespace casacore;
       }
 
     // If all is well, add to the list.
-    itsMappers.resize(nMappers+1, true);
+    itsMappers.resize(nMappers+1, True);
     itsMappers[nMappers] = localMapper;
 
   }
@@ -147,7 +143,7 @@ using namespace casacore;
   //////////////////////////////////////////////////////////////////////////////////////////////////////
   void SIMapperCollection::addMapper( CountedPtr<SIMapper> map){
     Int nMappers = itsMappers.nelements();
-    itsMappers.resize(nMappers+1, true);
+    itsMappers.resize(nMappers+1, True);
     itsMappers[nMappers]=map;
   } 
 
@@ -260,7 +256,7 @@ using namespace casacore;
 				  if(iscomp || itsMappers[k]->getFTMRecord(rec, modImage)){
 					 if((vb.getVi())->isWritable()){
 
-						 (const_cast<vi::VisibilityIterator2* >(vb.getVi()))->writeModel(rec, iscomp, true);
+						 (const_cast<vi::VisibilityIterator2* >(vb.getVi()))->writeModel(rec, iscomp, True);
 					 }
 				  }
 			  }
@@ -284,7 +280,7 @@ using namespace casacore;
 			  if(iscomp || itsMappers[k]->getFTMRecord(rec)){
 				  if((vb.getVi())->isWritable()){
 
-					  (const_cast<vi::VisibilityIterator2* >(vb.getVi()))->writeModel(rec, iscomp, true);
+					  (const_cast<vi::VisibilityIterator2* >(vb.getVi()))->writeModel(rec, iscomp, True);
 				  }
 			  }
 		  }
@@ -343,10 +339,10 @@ using namespace casacore;
     Int nmodels = nMappers();
 
     // If there is no model image (i.e. first major cycle with no starting model), don't check.
-    Bool hasmodel=true;
+    Bool hasmodel=True;
     for (Int model=0;model<(nmodels-1); ++model) 
       { hasmodel = hasmodel && ((itsMappers[model])->imageStore())->hasModel();  }
-    if( hasmodel==false ) { 
+    if( hasmodel==False ) { 
       //cout << "No model images to check overlap for." << endl; 
       return; 
     }
@@ -357,7 +353,7 @@ using namespace casacore;
     for (Int model=0;model<(nmodels-1); ++model) 
       {
 	// Connect to one image for aux info.
-	SubImage<Float> modelimage( *(((itsMappers[model])->imageStore())->model()), true );
+	SubImage<Float> modelimage( *(((itsMappers[model])->imageStore())->model()), True );
 
 	uInt nTaylor0 = ((itsMappers[model])->imageStore())->getNTaylorTerms();
 
@@ -370,7 +366,7 @@ using namespace casacore;
 
 	for (Int nextmodel=model+1; nextmodel < nmodels; ++nextmodel)
 	  {
-	    SubImage<Float> nextmodelimage( *(((itsMappers[nextmodel])->imageStore())->model()) , true);
+	    SubImage<Float> nextmodelimage( *(((itsMappers[nextmodel])->imageStore())->model()) , True);
 
 	    uInt nTaylor1 = ((itsMappers[nextmodel])->imageStore())->getNTaylorTerms();
 	    
@@ -389,8 +385,8 @@ using namespace casacore;
 
 		  for(uInt taylor=0;taylor<min(nTaylor0,nTaylor1);taylor++)
 		    { // loop for taylor term
-		      SubImage<Float> modelim( *(((itsMappers[model])->imageStore())->model(taylor)), true );
-		      SubImage<Float> partToMask(modelim, imagreg, true);
+		      SubImage<Float> modelim( *(((itsMappers[model])->imageStore())->model(taylor)), True );
+		      SubImage<Float> partToMask(modelim, imagreg, True);
 		      ArrayLattice<Bool> pixmask(latReg.get());
 		      LatticeExpr<Float> myexpr(iif(pixmask, 0.0, partToMask) );
 		      partToMask.copyData(myexpr);
@@ -407,11 +403,11 @@ using namespace casacore;
 		
 		for(uInt taylor=0;taylor<min(nTaylor0,nTaylor1);taylor++)
 		  {// loop for taylor term
-		    SubImage<Float> modelim( *(((itsMappers[model])->imageStore())->model(taylor)), true );
-		    SubImage<Float> nextmodelim( *(((itsMappers[nextmodel])->imageStore())->model(taylor)), true );
+		    SubImage<Float> modelim( *(((itsMappers[model])->imageStore())->model(taylor)), True );
+		    SubImage<Float> nextmodelim( *(((itsMappers[nextmodel])->imageStore())->model(taylor)), True );
 
-		    SubImage<Float> partToMerge(nextmodelim, imagreg0, true);
-		    SubImage<Float> partToUnmask(modelim, imagreg, true);
+		    SubImage<Float> partToMerge(nextmodelim, imagreg0, True);
+		    SubImage<Float> partToUnmask(modelim, imagreg, True);
 		    LatticeExpr<Float> myexpr0(iif(pixmask,partToMerge,partToUnmask));
 		    partToUnmask.copyData(myexpr0);
 		  }

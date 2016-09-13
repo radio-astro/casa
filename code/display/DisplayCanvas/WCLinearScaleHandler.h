@@ -77,23 +77,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Destructor
 		virtual ~WCLinearScaleHandler();
 
-		// apply returns true if the array in was converted to the
+		// apply returns True if the array in was converted to the
 		// array out successfully
 		// the last parameter sets the output range
 		// <group>
-		virtual casacore::Bool operator()(casacore::Array<casacore::uInt> & out, const casacore::Array<casacore::Bool> & in);
-		virtual casacore::Bool operator()(casacore::Array<casacore::uInt> & out, const casacore::Array<casacore::uChar> & in);
-		virtual casacore::Bool operator()(casacore::Array<casacore::uInt> & out, const casacore::Array<casacore::Char> & in);
-		virtual casacore::Bool operator()(casacore::Array<casacore::uInt> & out, const casacore::Array<casacore::uShort> & in);
-		virtual casacore::Bool operator()(casacore::Array<casacore::uInt> & out, const casacore::Array<casacore::Short> & in);
-		virtual casacore::Bool operator()(casacore::Array<casacore::uInt> & out, const casacore::Array<casacore::uInt> & in);
-		virtual casacore::Bool operator()(casacore::Array<casacore::uInt> & out, const casacore::Array<casacore::Int> & in);
-		virtual casacore::Bool operator()(casacore::Array<casacore::uInt> & out, const casacore::Array<casacore::uLong> & in);
-		virtual casacore::Bool operator()(casacore::Array<casacore::uInt> & out, const casacore::Array<casacore::Long> & in);
-		virtual casacore::Bool operator()(casacore::Array<casacore::uInt> & out, const casacore::Array<casacore::Float> & in);
-		virtual casacore::Bool operator()(casacore::Array<casacore::uInt> & out, const casacore::Array<casacore::Double> & in);
-		virtual casacore::Bool operator()(casacore::Array<casacore::uInt> & out, const casacore::Array<casacore::Complex> & in);
-		virtual casacore::Bool operator()(casacore::Array<casacore::uInt> & out, const casacore::Array<casacore::DComplex> & in);
+		virtual Bool operator()(Array<uInt> & out, const Array<Bool> & in);
+		virtual Bool operator()(Array<uInt> & out, const Array<uChar> & in);
+		virtual Bool operator()(Array<uInt> & out, const Array<Char> & in);
+		virtual Bool operator()(Array<uInt> & out, const Array<uShort> & in);
+		virtual Bool operator()(Array<uInt> & out, const Array<Short> & in);
+		virtual Bool operator()(Array<uInt> & out, const Array<uInt> & in);
+		virtual Bool operator()(Array<uInt> & out, const Array<Int> & in);
+		virtual Bool operator()(Array<uInt> & out, const Array<uLong> & in);
+		virtual Bool operator()(Array<uInt> & out, const Array<Long> & in);
+		virtual Bool operator()(Array<uInt> & out, const Array<Float> & in);
+		virtual Bool operator()(Array<uInt> & out, const Array<Double> & in);
+		virtual Bool operator()(Array<uInt> & out, const Array<Complex> & in);
+		virtual Bool operator()(Array<uInt> & out, const Array<DComplex> & in);
 		// </group>
 
 	};

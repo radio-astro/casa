@@ -30,7 +30,6 @@
 #include <synthesis/MeasurementComponents/SimACoh.h>
 #include <msvis/MSVis/VisBuffer.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Note: this simplistic implementation just generates a new random
@@ -46,12 +45,12 @@ noiseDist_p(&rndGen_p, 0.0, square(rms))
 }
 VisBuffer& SimACoh::apply(VisBuffer& vb)
 {
-  Bool zeroSpacing = false;
+  Bool zeroSpacing = False;
   Complex c[4];
   for (Int row=0; row<vb.nRow(); row++) {
-    zeroSpacing = false;
+    zeroSpacing = False;
     if (vb.uvw()(row)(0) == 0.0 && vb.uvw()(row)(1) == 0.0) {
-      zeroSpacing = true;
+      zeroSpacing = True;
     }
     for (Int chn=0; chn<vb.nChannel(); chn++) {
       if (zeroSpacing) {

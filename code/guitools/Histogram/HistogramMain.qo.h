@@ -35,16 +35,12 @@
 class QCloseEvent;
 
 
-namespace casacore{
-
-template <class T> class ImageInterface;
-class ImageRegion;
-}
-
 namespace casa {
 
 class BinPlotWidget;
 class ColorPreferences;
+template <class T> class ImageInterface;
+class ImageRegion;
 
 /**
  * Used when the histogram needs to come up as a main window.
@@ -58,15 +54,15 @@ public:
      * showFileLoader:  true, for allowing the user to load image files
      * 		(as opposed to just setting them programmatically).
      * fitControls:  true, to allow the user to fit various curves to the
-     *       histogram (Gaussian, casacore::Poisson, etc)
+     *       histogram (Gaussian, Poisson, etc)
      * rangeControls: true, allows the user to specify a min/max value
      * plotModeControls: true, allows the user to specify whether to histogram
      * 		images, a selected region, or multiple regions.
      */
     HistogramMain(bool showFileLoader, bool fitControls, bool rangeControls,
     		bool plotModeControls, QWidget *parent);
-    bool setImage(SHARED_PTR<const casacore::ImageInterface<casacore::Float> > img );
-    bool setImageRegion( casacore::ImageRegion* imageRegion, int id );
+    bool setImage(SHARED_PTR<const ImageInterface<Float> > img );
+    bool setImageRegion( ImageRegion* imageRegion, int id );
     std::pair<double,double> getRange() const;
     void deleteImageRegion( int id );
     void imageRegionSelected( int id );
@@ -96,13 +92,13 @@ private slots:
 private:
 	HistogramMain( const HistogramMain& histMain );
 	HistogramMain& operator=( const HistogramMain& histMain );
-	bool generateImage( const QString& imagePath, SHARED_PTR<const casacore::ImageInterface<casacore::Float> > image );
+	bool generateImage( const QString& imagePath, SHARED_PTR<const ImageInterface<Float> > image );
 
     ImageLoader fileLoader;
     SaveHistogramWidget histogramSaver;
     ColorPreferences* preferencesColor;
     BinPlotWidget* plotWidget;
-    casacore::LogIO logger;
+    LogIO logger;
 
     Ui::HistogramMainClass ui;
 

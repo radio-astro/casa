@@ -23,10 +23,8 @@
 using namespace std;
 
 #include "UtilJ.h"
-using namespace casacore;
 using namespace casa::utilj;
 
-using namespace casacore;
 using namespace casa::asyncio;
 
 #define Log(level, ...) \
@@ -43,7 +41,6 @@ using namespace casa::asyncio;
         ThrowIf (visBufferAsync_p == 0, "No VisBufferAsync attached to VI; try doing vi.origin() first.");
 
 
-using namespace casacore;
 namespace casa {
 
 
@@ -82,16 +79,16 @@ ViReadImplAsync::ViReadImplAsync (const PrefetchColumns & prefetchColumns,
     // Pass over to the VLAT some of the VI modifiers if they are
     // not at the default value.
 
-    Bool needViReset = false;
+    Bool needViReset = False;
 
     if (other.timeInterval_p != 0){
         setInterval (other.timeInterval_p);
-        needViReset = true;
+        needViReset = True;
     }
 
     if (other.nRowBlocking_p != 0){
         setRowBlocking (other.nRowBlocking_p);
-        needViReset = true;
+        needViReset = True;
     }
 
     if (other.msChannels_p.nGroups_p.nelements() != 0){
@@ -100,7 +97,7 @@ ViReadImplAsync::ViReadImplAsync (const PrefetchColumns & prefetchColumns,
                        other.msChannels_p.width_p,
                        other.msChannels_p.inc_p,
                        other.msChannels_p.spw_p);
-        needViReset = true;
+        needViReset = True;
     }
 
     if (needViReset){
@@ -394,7 +391,7 @@ int
 ViReadImplAsync::getDefaultNBuffers ()
 {
     int nBuffers;
-    casacore::AipsrcValue<Int>::find (nBuffers, ROVisibilityIterator::getAsyncRcBase () + ".nBuffers", 2);
+    casa::AipsrcValue<Int>::find (nBuffers, ROVisibilityIterator::getAsyncRcBase () + ".nBuffers", 2);
 
     return nBuffers;
 }
@@ -782,7 +779,7 @@ ViWriteImplAsync::putModel(const RecordInterface& rec, Bool iscomponentlist, Boo
 
   // Make sure  we have the right size
 
-  fields.resize(nfields, true);
+  fields.resize(nfields, True);
   Int msid = getReadImpl()->msId();
 
   Vector<Int> spws =  getReadImpl()->msChannels_p.spw_p[msid];
@@ -929,5 +926,4 @@ ViWriteImplAsync::setSigmaMat(const Matrix<Float>& sigmat)
                                          & VisibilityIterator::setSigmaMat));
 }
 
-using namespace casacore;
 } // end namespace casa

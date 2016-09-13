@@ -34,13 +34,6 @@ using namespace std;
 
 #define _ORIGIN LogOrigin("BLParameterParser", __func__, WHERE)
 
-using namespace casacore;
-using namespace casacore;
-using namespace casacore;
-using namespace casacore;
-using namespace casacore;
-using namespace casacore;
-using namespace casacore;
 namespace casa {
 
 BLParameterParser::BLParameterParser(string const file_name)

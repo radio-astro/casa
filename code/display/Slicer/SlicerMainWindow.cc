@@ -42,7 +42,6 @@
 
 #include <limits>
 
-using namespace casacore;
 namespace casa {
 
 	SlicerMainWindow::SlicerMainWindow(QWidget *parent)

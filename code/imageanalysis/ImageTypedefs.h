@@ -31,23 +31,19 @@
 #include <casa/BasicSL/Complexfwd.h>
 #include <casa/Utilities/CountedPtr.h>
 
-#define SPIIT SHARED_PTR<casacore::ImageInterface<T> >
-#define SPCIIT SHARED_PTR<const casacore::ImageInterface<T> >
+#define SPIIT SHARED_PTR<casa::ImageInterface<T> >
+#define SPCIIT SHARED_PTR<const casa::ImageInterface<T> >
 
-#define SPIIU SHARED_PTR<casacore::ImageInterface<U> >
-#define SPCIIU SHARED_PTR<const casacore::ImageInterface<U> >
-
-namespace casacore{
-
-	template<class T> class ImageInterface;
-}
+#define SPIIU SHARED_PTR<casa::ImageInterface<U> >
+#define SPCIIU SHARED_PTR<const casa::ImageInterface<U> >
 
 namespace casa {
+	template<class T> class ImageInterface;
 
-    using SPCIIF = SHARED_PTR<const casacore::ImageInterface<casacore::Float> >;
-	using SPIIF = SHARED_PTR<casacore::ImageInterface<casacore::Float> >;
-	using SPCIIC = SHARED_PTR<const casacore::ImageInterface<casacore::Complex> >;
-	using SPIIC = SHARED_PTR<casacore::ImageInterface<casacore::Complex> >;
+    using SPCIIF = SHARED_PTR<const ImageInterface<Float> >;
+	using SPIIF = SHARED_PTR<ImageInterface<Float> >;
+	using SPCIIC = SHARED_PTR<const ImageInterface<Complex> >;
+	using SPIIC = SHARED_PTR<ImageInterface<Complex> >;
 }
 
 #endif

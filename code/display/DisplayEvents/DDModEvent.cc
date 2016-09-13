@@ -28,7 +28,6 @@
 #include <display/DisplayDatas/DisplayData.h>
 #include <display/DisplayEvents/DDModEvent.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Constructor.

@@ -240,11 +240,11 @@ int main()
 	    Int cfKey = 0;
 
 	    try{
-	      apB.applySky(im1, vb, true, cfKey);
+	      apB.applySky(im1, vb, True, cfKey);
 	    } catch (AipsError x) {
 	      cout << "Caught expected error: " << x.getMesg() << endl;
 	    } 
-	    apB.applySky(im3, vb, true, cfKey);
+	    apB.applySky(im3, vb, True, cfKey);
 
 	  }
 	  count++;
@@ -267,19 +267,19 @@ int main()
 
 	      PagedImage<Complex> im5(ts2, coordsys3, "pb_squintEVLA");
 	      im5.set(Complex(1.0,1.0));
-	      apB.applySky(im5, vb, true, cfKey);
+	      apB.applySky(im5, vb, True, cfKey);
 	      
 	      PagedImage<Complex> im6(ts2, coordsys3, "pb_nosquintEVLA");
 	      im6.set(Complex(1.0,1.0));
-	      apB.applySky(im6, vb, false, cfKey);
+	      apB.applySky(im6, vb, False, cfKey);
 	      
 // 	      PagedImage<Complex> im13(ts2, coordsys3Big, "pb_squintEVLABig");
 // 	      im13.set(Complex(1.0,1.0));
-// 	      apB.applySky(im13, vb, true, cfKey);
+// 	      apB.applySky(im13, vb, True, cfKey);
 	      
 // 	      PagedImage<Complex> im14(ts2, coordsys3Small, "pb_squintEVLASmall");
 // 	      im14.set(Complex(1.0,1.0));
-// 	      apB.applySky(im14, vb, true, cfKey);
+// 	      apB.applySky(im14, vb, True, cfKey);
 	      
 	      count2++;
 	      
@@ -290,19 +290,19 @@ int main()
 	      
 	      PagedImage<Complex> im15(ts2, coordsys3, "pb2_squintEVLA");
 	      im15.set(Complex(1.0,1.0));
-	      apB.applySky(im15, vb, true, cfKey);
+	      apB.applySky(im15, vb, True, cfKey);
 	      
 // 	      PagedImage<Complex> im17(ts2, coordsys3Big, "pb2_squintEVLABig");
 // 	      im17.set(Complex(1.0,1.0));
-// 	      apB.applySky(im17, vb, true, cfKey);
+// 	      apB.applySky(im17, vb, True, cfKey);
 	      
 // 	      PagedImage<Complex> im18(ts2, coordsys3Small, "pb2_squintEVLASmall");
 // 	      im18.set(Complex(1.0,1.0));
-// 	      apB.applySky(im18, vb, true, cfKey);
+// 	      apB.applySky(im18, vb, True, cfKey);
 	      
 // 	      PagedImage<Float> im18b(ts2, coordsys3Small, "pb2_squintEVLASmall_float");
 // 	      im18b.set(1.0);
-// 	      apB.applySky(im18b, vb, true, cfKey);
+// 	      apB.applySky(im18b, vb, True, cfKey);
 	      
 	      count2++;		
 	      
@@ -361,11 +361,11 @@ int main()
 
 	      PagedImage<Complex> im5(ts2, coordsys4, "pb3_squintEVLA");
 	      im5.set(Complex(1.0,1.0));
-	      apB.applySky(im5, vb, true, cfKey);
+	      apB.applySky(im5, vb, True, cfKey);
 	      
 	      PagedImage<Complex> im6(ts2, coordsys4, "pb3_nosquintEVLA");
 	      im6.set(Complex(1.0,1.0));
-	      apB.applySky(im6, vb, false, cfKey);
+	      apB.applySky(im6, vb, False, cfKey);
 	      
 	      count2++;
 	      
@@ -376,7 +376,7 @@ int main()
 	      
 	      PagedImage<Complex> im15(ts2, coordsys4, "pb4_squintEVLA");
 	      im15.set(Complex(1.0,1.0));
-	      apB.applySky(im15, vb, true, cfKey);
+	      apB.applySky(im15, vb, True, cfKey);
 	      
 	      count2++;		
 	      

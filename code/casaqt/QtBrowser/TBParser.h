@@ -57,7 +57,7 @@ class TBData;
 //
 // <synopsis>
 // TBParser is an abstract superclass for any implementing subclass to parse
-// a casacore::String containing XML.  A TBParser keeps a reference to the table
+// a String containing XML.  A TBParser keeps a reference to the table
 // parameters so that the table data can be directly imported.  Note: the
 // TBParser is not used for the "Direct" table driver, which is the default.
 // Currently the user is unable to selected an "XML" table driver, which means
@@ -73,7 +73,7 @@ public:
     virtual ~TBParser();
 
     
-    std::vector<std::vector<casacore::String>*>* getData() { return &data; }
+    std::vector<std::vector<String>*>* getData() { return &data; }
     
     // Set whether the TBParser should print debug information or not.
     void setPrintDebug(bool pdb);
@@ -83,7 +83,7 @@ public:
     // into the table parameters and returns a Result indicating whether the
     // parsing succeeded or not.  If parsedata is true, the table data is
     // parsed, otherwise just table meta-data like keywords is parsed.
-    virtual Result parse(casacore::String* xml, bool parsedata = true) = 0;
+    virtual Result parse(String* xml, bool parsedata = true) = 0;
 
 protected:
     // Is true if this table allows for the insertion of rows, false otherwise.
@@ -93,7 +93,7 @@ protected:
     bool& removeRow;
 
     // Holds the table data.
-    std::vector<std::vector<casacore::String>*> data;
+    std::vector<std::vector<String>*> data;
 
     // Holds the "real" table data.
     std::vector<std::vector<TBData*>*>& data2;
@@ -123,7 +123,7 @@ protected:
 //
 // <synopsis>
 // TBHomeParser is a subclass of TBParser that implements all the parsing
-// methods itself using casacore::String methods.  It is somewhat slow and its use is
+// methods itself using String methods.  It is somewhat slow and its use is
 // not recommended.
 // </synopsis>
 
@@ -135,9 +135,9 @@ public:
     virtual ~TBHomeParser();
 
     
-    // Implements TBParser::parse().  Parses the casacore::String into XMLtokens and then
+    // Implements TBParser::parse().  Parses the String into XMLtokens and then
     // parses the table information from the XMLtokens.
-    Result parse(casacore::String* xml, bool parsedata = true);
+    Result parse(String* xml, bool parsedata = true);
 
 private:
     // All parsed XMLtokens that had a tag name of TBConstants::XML_FIELD.
@@ -147,21 +147,21 @@ private:
     std::vector<XMLtoken*> xkeywords;
 
     // All parsed XMLtokens that had a tag name of TBConstants::XML_COLUMNKW.
-    std::map<casacore::String, std::vector<XMLtoken*>*> xcolkeywords;
+    std::map<String, std::vector<XMLtoken*>*> xcolkeywords;
 
     
     // Recursively parses a XMLtoken from the given String.  The level
     // parameter is used to properly add tabs to the debug information.
-    XMLtoken* parseToken(casacore::String* xml, int level);
+    XMLtoken* parseToken(String* xml, int level);
 
-    // Parses XML attributes from the given casacore::String into the given token.  The
+    // Parses XML attributes from the given String into the given token.  The
     // level parameter is used to properly add tabs to the debug information.
-    void parseAttributes(XMLtoken* token, casacore::String* attrPtr, int level);
+    void parseAttributes(XMLtoken* token, String* attrPtr, int level);
 
-    // Parses XML content (<tag>content</tag>) from the given casacore::String into the
+    // Parses XML content (<tag>content</tag>) from the given String into the
     // given token.  The level parameter is used to properly add tabs to the
     // debug information.
-    void parseContent(XMLtoken* token, casacore::String* contentPtr, int level);
+    void parseContent(XMLtoken* token, String* contentPtr, int level);
 
     // Given an XMLtoken tree, parse the table information from it.  If
     // parsedata is true the table data is parsed, otherwise just the
@@ -188,9 +188,9 @@ public:
     virtual ~TBXercesDOMParser();
 
     
-    // Implements TBParser::parse().  The casacore::String is parsed into DOMElements and
+    // Implements TBParser::parse().  The String is parsed into DOMElements and
     // then the table information is parsed from the DOMElements.
-    Result parse(casacore::String* xml, bool parsedata = true);
+    Result parse(String* xml, bool parsedata = true);
 
 private:
     // First level parsing method that takes the top-level element and
@@ -226,9 +226,9 @@ public:
     virtual ~TBXercesSAXParser();
 
     
-    // Implements TBParser::parse().  Parses the casacore::String into the table data
+    // Implements TBParser::parse().  Parses the String into the table data
     // serially using event-driven SAX parsing.
-    Result parse(casacore::String* xml, bool parsedata = true);
+    Result parse(String* xml, bool parsedata = true);
 
     // Implements DefaultHandler::startDocument().
     void startDocument();
@@ -255,10 +255,10 @@ private:
     bool inTD;
 
     // The current row of table data being parsed.
-    std::vector<casacore::String>* row;
+    std::vector<String>* row;
 
     // Keeps all non-XML or extra text.
-    std::stringstream extraText;
+    stringstream extraText;
 
     // Indicates whether the parsing is valid or not.
     bool valid;

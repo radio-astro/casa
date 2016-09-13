@@ -25,7 +25,6 @@
 
 #include "ActionZoom.h"
 
-using namespace casacore;
 namespace casa {
 
 ActionZoom::ActionZoom( Client* client )
@@ -42,5 +41,4 @@ ToolCode ActionZoom::getToolCode() const {
 ActionZoom::~ActionZoom() {
 }
 
-using namespace casacore;
 } /* namespace casa */

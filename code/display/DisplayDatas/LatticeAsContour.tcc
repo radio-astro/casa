@@ -43,9 +43,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // >2d array-based ctor
 	template <class T>
-	LatticeAsContour<T>::LatticeAsContour(casacore::Array<T> *array, const casacore::uInt xAxis,
-	                                      const casacore::uInt yAxis, const casacore::uInt mAxis,
-	                                      const casacore::IPosition fixedPos) :
+	LatticeAsContour<T>::LatticeAsContour(Array<T> *array, const uInt xAxis,
+	                                      const uInt yAxis, const uInt mAxis,
+	                                      const IPosition fixedPos) :
 		LatticePADisplayData<T>(array, xAxis, yAxis, mAxis, fixedPos),
 		itsBaseContour(0), itsUnitContour(0) {
 		constructParameters_();
@@ -55,8 +55,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // 2d array-based ctor
 	template <class T>
-	LatticeAsContour<T>::LatticeAsContour(casacore::Array<T> *array, const casacore::uInt xAxis,
-	                                      const casacore::uInt yAxis) :
+	LatticeAsContour<T>::LatticeAsContour(Array<T> *array, const uInt xAxis,
+	                                      const uInt yAxis) :
 		LatticePADisplayData<T>(array, xAxis, yAxis),
 		itsBaseContour(0), itsUnitContour(0) {
 		constructParameters_();
@@ -67,8 +67,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // >2d image-based ctor
 	template <class T>
 	LatticeAsContour<T>::LatticeAsContour(
-		SHARED_PTR<casacore::ImageInterface<T> > image, const casacore::uInt xAxis,
-		const casacore::uInt yAxis, const casacore::uInt mAxis,const casacore::IPosition fixedPos, viewer::StatusSink * /*sink*/
+		SHARED_PTR<ImageInterface<T> > image, const uInt xAxis,
+		const uInt yAxis, const uInt mAxis,const IPosition fixedPos, viewer::StatusSink * /*sink*/
 	) :
 		LatticePADisplayData<T>(image, xAxis, yAxis, mAxis, fixedPos),
 		itsBaseContour(0), itsUnitContour(0) {
@@ -79,8 +79,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // 2d image-based ctor
 	template <class T>
-	LatticeAsContour<T>::LatticeAsContour(SHARED_PTR<casacore::ImageInterface<T> > image,
-	                                      const casacore::uInt xAxis, const casacore::uInt yAxis) :
+	LatticeAsContour<T>::LatticeAsContour(SHARED_PTR<ImageInterface<T> > image,
+	                                      const uInt xAxis, const uInt yAxis) :
 		LatticePADisplayData<T>(image, xAxis, yAxis),
 		itsBaseContour(0), itsUnitContour(0) {
 		constructParameters_();
@@ -90,7 +90,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	template <class T>
 	LatticeAsContour<T>::~LatticeAsContour() {
-		for (casacore::uInt i = 0; i < nelements(); i++) {
+		for (uInt i = 0; i < nelements(); i++) {
 			delete ((LatticePADMContour<T> *)DDelement[i]);
 		}
 		if(itsBaseContour!=0) {
@@ -107,18 +107,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	template <class T>
 	void LatticeAsContour<T>::setupElements() {
 
-		for (casacore::uInt i=0; i<nelements(); i++) if(DDelement[i]!=0) {
+		for (uInt i=0; i<nelements(); i++) if(DDelement[i]!=0) {
 				delete static_cast<LatticePADMContour<T>*>(DDelement[i]);
 				DDelement[i]=0;
 			}
 		// Delete old DMs, if any.
 
-		casacore::IPosition fixedPos = fixedPosition();
-		casacore::Vector<casacore::Int> dispAxes = displayAxes();
+		IPosition fixedPos = fixedPosition();
+		Vector<Int> dispAxes = displayAxes();
 		if (nPixelAxes > 2) {
 			setNumImages(dataShape()(dispAxes(2)));
 			DDelement.resize(nelements());
-			for (casacore::uInt index = 0; index < nelements(); index++) {
+			for (uInt index = 0; index < nelements(); index++) {
 				fixedPos(dispAxes(2)) = index;
 				DDelement[index] = (LatticePADisplayMethod<T> *)new
 				                   LatticePADMContour<T>(dispAxes(0), dispAxes(1), dispAxes(2),
@@ -136,17 +136,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	template <class T>
 	void LatticeAsContour<T>::setDefaultOptions() {
 		LatticePADisplayData<T>::setDefaultOptions();
-		casacore::Record rec, recOut;
+		Record rec, recOut;
 		rec.define("resample", "bilinear");
 		LatticePADisplayData<T>::setOptions(rec, recOut);
 		getMinAndMax();	// (actually, this _computes_ and sets min and max.)
 
 		setStdContourLimits_();
 
-		casacore::AipsrcValue<casacore::Float>::find(itsLine,"display.contour.linewidth",0.5f);
-		itsDashNeg = true;
-		itsDashPos = false;
-		casacore::Aipsrc::find(itsColor,"display.contour.color","foreground");
+		AipsrcValue<Float>::find(itsLine,"display.contour.linewidth",0.5f);
+		itsDashNeg = True;
+		itsDashPos = False;
+		Aipsrc::find(itsColor,"display.contour.color","foreground");
 	}
 
 	template <class T>
@@ -156,24 +156,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		if(itsBaseContour!=0) return;	// (already done).
 
-		itsBaseContour = new DParameterRange<casacore::Float>("basecontour",
+		itsBaseContour = new DParameterRange<Float>("basecontour",
 		        "Base Contour Level",
 		        "Actual contour level corresping to\n"
 		        "a '0' in the 'Relative Levels' textbox.",
 		        0., 1.,  .001,  0., 0.,	// (set for real below).
-		        "", true, true);
+		        "", True, True);
 
-		itsUnitContour = new DParameterRange<casacore::Float>("unitcontour",
-		        "casacore::Unit Contour Level",
+		itsUnitContour = new DParameterRange<Float>("unitcontour",
+		        "Unit Contour Level",
 		        "Actual contour level corresping to to a '1' in\n"
 		        "the 'Relative Levels' textbox.",
 		        0., 1.,  .001,  1., 1.,	// (set for real below).
-		        "", true, true);
+		        "", True, True);
 	}
 
 
 	template <class T>
-	void LatticeAsContour<T>::setStdContourLimits_(casacore::Record* recOut) {
+	void LatticeAsContour<T>::setStdContourLimits_(Record* recOut) {
 		// Set standard limits/values for contour sliders and relative levels.
 		// If recOut is provided, the defaults will be set onto it in the
 		// standard form used for updating the gui during/after setOptions().
@@ -181,16 +181,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// These heuristics could probably be improved.  This latest version
 		// is based on scientific input from Steve Myers.
 
-		casacore::Float dmin=getDataMin(), dmax=getDataMax();
-		casacore::Float absmax = max(abs(dmin), abs(dmax));
+		Float dmin=getDataMin(), dmax=getDataMax();
+		Float absmax = max(abs(dmin), abs(dmax));
 
 
 		// Compute default values, limits and resolution for sliders.
 
-		casacore::Float minLimit=dmin, maxLimit=dmax,
+		Float minLimit=dmin, maxLimit=dmax,
 		      baseVal=dmin,  unitVal=dmax;
 
-		casacore::Bool isIntensity = dataUnit() == casacore::Unit("Jy/beam");
+		Bool isIntensity = dataUnit() == Unit("Jy/beam");
 
 		if(isIntensity) {
 			minLimit=min(dmin, 0.);
@@ -199,8 +199,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			unitVal=absmax;
 		}
 
-		casacore::Float range = abs(maxLimit-minLimit);
-		casacore::Float res = range*.005;
+		Float range = abs(maxLimit-minLimit);
+		Float res = range*.005;
 		if(res<=0.) res = .001;
 		else res = pow(10., floor(log10(res)));
 		// slider resolution (will be a power of ten.)
@@ -220,23 +220,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Set standard relative levels:  [-.8 -.6 -.4 -.2  .2  .4 . 6 . 8]
 
-		casacore::Vector<casacore::Float> rellevels(8);
-		for(casacore::Int i=0; i<4; i++) {
+		Vector<Float> rellevels(8);
+		for(Int i=0; i<4; i++) {
 			rellevels[i]   = .2*(i-4);
 			rellevels[i+4] = .2*(i+1);
 		}
 
 		// Eliminate relative levels that will not be needed.
 
-		casacore::Int nlevels = rellevels.size();
+		Int nlevels = rellevels.size();
 		itsLevels.resize(nlevels);
-		casacore::Int j = 0;
-		casacore::Float delta = unitVal - baseVal;
-		for(casacore::Int i=0; i<nlevels; i++) {
-			casacore::Float abslevel = baseVal + rellevels[i]*delta;
+		Int j = 0;
+		Float delta = unitVal - baseVal;
+		for(Int i=0; i<nlevels; i++) {
+			Float abslevel = baseVal + rellevels[i]*delta;
 			if(abslevel>=dmin && abslevel<=dmax) itsLevels[j++] = rellevels[i];
 		}
-		itsLevels.resize(j, true);
+		itsLevels.resize(j, True);
 
 		// Post defaults to sliders
 
@@ -254,10 +254,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 		if(recOut!=0) {
-			casacore::Bool wholeRecord=true, overwrite=true;
+			Bool wholeRecord=True, overwrite=True;
 			itsBaseContour->toRecord(*recOut, wholeRecord, overwrite);
 			itsUnitContour->toRecord(*recOut, wholeRecord, overwrite);
-			casacore::Record levels;
+			Record levels;
 			levels.define("dlformat", "rellevels");
 			levels.define("value", itsLevels);
 			recOut->defineRecord("rellevels", levels);
@@ -267,43 +267,43 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	template <class T>
-	casacore::Vector<casacore::Float> LatticeAsContour<T>::levels() {
+	Vector<Float> LatticeAsContour<T>::levels() {
 		// Compute/return actual selected contour levels, from user's relative
 		// levels and the actual min and max contour values (from the sliders.)
 
-		casacore::Int nlevels = itsLevels.nelements();
-		casacore::Vector<casacore::Float> abslevels(nlevels);
-		casacore::Vector<casacore::Float> rellevels(itsLevels);	// Entered (relative) levels.
+		Int nlevels = itsLevels.nelements();
+		Vector<Float> abslevels(nlevels);
+		Vector<Float> rellevels(itsLevels);	// Entered (relative) levels.
 
 		if(nlevels>0) {
-			casacore::Float dmin=getDataMin(),
+			Float dmin=getDataMin(),
 			      dmax=getDataMax();
 
-			casacore::Float baseVal = itsBaseContour->value(),	// 'slider' values.
+			Float baseVal = itsBaseContour->value(),	// 'slider' values.
 			      unitVal = itsUnitContour->value();
 
-			casacore::Float delta = unitVal - baseVal;
+			Float delta = unitVal - baseVal;
 
 			// The linear scaling: from [0, 1] -> [baseVal, unitVal]
 			// Relative levels that will outside data bounds are eliminated,
 			// for contouring efficiency.  (Similar code in setStdContourLimits_()
 			// above is just for tidiness in the defaults...)
 
-			casacore::Int j=0;
-			for(casacore::Int i=0; i<nlevels; i++) {
-				casacore::Float abslevel = baseVal + rellevels[i]*delta;
+			Int j=0;
+			for(Int i=0; i<nlevels; i++) {
+				Float abslevel = baseVal + rellevels[i]*delta;
 				if(abslevel>=dmin && abslevel<=dmax) abslevels[j++] = abslevel;
 			}
 
-			abslevels.resize(j, true);
+			abslevels.resize(j, True);
 			nlevels = abslevels.nelements();
 
 			// Assure the levels are sorted, for good measure.
 
-			for(casacore::Int i=0; i<nlevels; i++) {
-				for(casacore::Int j=i+1; j<nlevels; j++) {
+			for(Int i=0; i<nlevels; i++) {
+				for(Int j=i+1; j<nlevels; j++) {
 					if(abslevels[j]<abslevels[i]) {
-						casacore::Float t=abslevels[i];
+						Float t=abslevels[i];
 						abslevels[i]=abslevels[j];
 						abslevels[j]=t;
 					}
@@ -317,19 +317,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	template <class T>
-	casacore::String LatticeAsContour<T>::levelString(casacore::Int prec) {
-		// Actual levels, in casacore::String format
+	String LatticeAsContour<T>::levelString(Int prec) {
+		// Actual levels, in String format
 
-		casacore::Vector<casacore::Float> lvls;
+		Vector<Float> lvls;
 		lvls = levels();
-		casacore::Int nlvls = lvls.size();
+		Int nlvls = lvls.size();
 
 		if(prec<=0) {
 			// Try to determine  a precision that is low enough not to
 			// clutter up tracking.
-			casacore::Float absmax = max(abs(itsBaseContour->minimum()),
+			Float absmax = max(abs(itsBaseContour->minimum()),
 			                   abs(itsUnitContour->maximum()));
-			casacore::Float res = itsUnitContour->resolution();
+			Float res = itsUnitContour->resolution();
 			if(absmax==0.) absmax = 1.;	// (safety)
 			if(res<=0.)    res = .001;	// (safety)
 			prec = max (2, ifloor(log10(absmax/res))+1);
@@ -338,21 +338,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		ostringstream os;
 		os<<setprecision(prec);
 		if(nlvls>0) os<<lvls[0];
-		for(casacore::Int i=1; i<nlvls; i++) os<<" "<<lvls[i];
+		for(Int i=1; i<nlvls; i++) os<<" "<<lvls[i];
 		os<<flush;
 
-		return casacore::String(os);
+		return String(os);
 	}
 
 
 
 	template <class T>
-	casacore::String LatticeAsContour<T>::showPosition(const casacore::Vector<casacore::Double> &wld,
-	        const casacore::Bool &abs, const casacore::Bool &dsp) {
+	String LatticeAsContour<T>::showPosition(const Vector<Double> &wld,
+	        const Bool &abs, const Bool &dsp) {
 		// Adds contour level information to the standard position tracking
 		// string from PADD.
-		casacore::String pos = PrincipalAxesDD::showPosition(wld, abs, dsp)+"\nContours: ";
-		casacore::String lvls = levelString();
+		String pos = PrincipalAxesDD::showPosition(wld, abs, dsp)+"\nContours: ";
+		String lvls = levelString();
 		pos += (lvls=="")? "[none]" : lvls;
 
 		return pos;
@@ -363,11 +363,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	template <class T>
-	casacore::Bool LatticeAsContour<T>::setOptions(casacore::Record &rec, casacore::Record &recOut) {
-		casacore::Bool ret = LatticePADisplayData<T>::setOptions(rec, recOut);
+	Bool LatticeAsContour<T>::setOptions(Record &rec, Record &recOut) {
+		Bool ret = LatticePADisplayData<T>::setOptions(rec, recOut);
 
-		casacore::Bool localchange = false;
-		casacore::Bool error;
+		Bool localchange = False;
+		Bool error;
 
 		localchange = (readOptionRecord(itsLine, error, rec, "line") ||
 		               localchange);
@@ -378,14 +378,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		localchange = (readOptionRecord(itsColor, error, rec, "color") ||
 		               localchange);
 
-		casacore::Bool lvlChg=false;
+		Bool lvlChg=False;
 
 		if (rec.isDefined("rellevels")) {
-			casacore::DataType dtype = rec.dataType("rellevels");
+			DataType dtype = rec.dataType("rellevels");
 
-			casacore::Record* valrec = &rec;
-			casacore::String fldnm = "rellevels";
-			casacore::Record subrec;
+			Record* valrec = &rec;
+			String fldnm = "rellevels";
+			Record subrec;
 
 			if(dtype==TpRecord) {
 				subrec = rec.subRecord("rellevels");
@@ -396,39 +396,39 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				}
 			}	// (All this is a bit of a pain....)
 
-			casacore::Vector<casacore::Float> newlevels;
+			Vector<Float> newlevels;
 
-			if ((dtype == casacore::TpArrayFloat) || (dtype == casacore::TpArrayDouble) ||
-			        (dtype == casacore::TpArrayInt) ||
-			        (dtype == casacore::TpFloat) || (dtype == casacore::TpDouble) || (dtype == casacore::TpInt)) {
+			if ((dtype == TpArrayFloat) || (dtype == TpArrayDouble) ||
+			        (dtype == TpArrayInt) ||
+			        (dtype == TpFloat) || (dtype == TpDouble) || (dtype == TpInt)) {
 
 				switch (dtype) {
-				case casacore::TpFloat:
-				case casacore::TpArrayFloat: {
-					casacore::Vector<casacore::Float> temp;
+				case TpFloat:
+				case TpArrayFloat: {
+					Vector<Float> temp;
 					valrec->get(fldnm, temp);
 					newlevels.resize(temp.nelements());
-					for (casacore::uInt i = 0; i < newlevels.nelements(); i++) {
+					for (uInt i = 0; i < newlevels.nelements(); i++) {
 						newlevels(i) = temp(i);
 					}
 					break;
 				}
-				case casacore::TpDouble:
-				case casacore::TpArrayDouble: {
-					casacore::Vector<casacore::Double> temp;
+				case TpDouble:
+				case TpArrayDouble: {
+					Vector<Double> temp;
 					valrec->get(fldnm, temp);
 					newlevels.resize(temp.nelements());
-					for (casacore::uInt i = 0; i < newlevels.nelements(); i++) {
+					for (uInt i = 0; i < newlevels.nelements(); i++) {
 						newlevels(i) = temp(i);
 					}
 					break;
 				}
-				case casacore::TpInt:
-				case casacore::TpArrayInt: {
-					casacore::Vector<casacore::Int> temp;
+				case TpInt:
+				case TpArrayInt: {
+					Vector<Int> temp;
 					valrec->get(fldnm, temp);
 					newlevels.resize(temp.nelements());
-					for (casacore::uInt i = 0; i < newlevels.nelements(); i++) {
+					for (uInt i = 0; i < newlevels.nelements(); i++) {
 						newlevels(i) = temp(i);
 					}
 					break;
@@ -438,19 +438,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					break;
 				}
 //
-				casacore::Bool diff = (newlevels.nelements() != itsLevels.nelements());
+				Bool diff = (newlevels.nelements() != itsLevels.nelements());
 				if (!diff) {
-					for (casacore::uInt i = 0; i < newlevels.nelements(); i++) {
+					for (uInt i = 0; i < newlevels.nelements(); i++) {
 						diff = (newlevels(i) != itsLevels(i));
 						if (diff) break;
 					}
 				}
 				if (diff) {
 					itsLevels.resize(newlevels.nelements());
-					for (casacore::uInt i = 0; i < newlevels.nelements(); i++) {
+					for (uInt i = 0; i < newlevels.nelements(); i++) {
 						itsLevels(i) = newlevels(i);
 					}
-					lvlChg = true;
+					lvlChg = True;
 				}
 			}
 		}
@@ -458,7 +458,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		lvlChg = itsBaseContour->fromRecord(rec) || lvlChg;
 		lvlChg = itsUnitContour->fromRecord(rec) || lvlChg;
 
-		if(lvlChg) recOut.define("trackingchange", true);
+		if(lvlChg) recOut.define("trackingchange", True);
 		// 'Signals' desire to update tracking info for this DD (where
 		// contour levels are also displayed).  (I wish we _could_ use true
 		// (Qt) signals on this level, and not have to wait for setOpts()
@@ -466,10 +466,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		localchange = localchange || lvlChg;
 
-		// must come last - this forces ret to be true or false:
+		// must come last - this forces ret to be True or False:
 		// (dk: no, this is probably obs. rubbish (and done wrong initially...))
-		if (rec.isDefined("refresh") && (rec.dataType("refresh") == casacore::TpBool)) {
-			casacore::Bool ref;
+		if (rec.isDefined("refresh") && (rec.dataType("refresh") == TpBool)) {
+			Bool ref;
 			rec.get("refresh", ref);
 			localchange = localchange || ref;
 		}
@@ -481,60 +481,60 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	template <class T>
-	casacore::Record LatticeAsContour<T>::getOptions( bool scrub ) const {
-		casacore::Record rec = LatticePADisplayData<T>::getOptions(scrub);
+	Record LatticeAsContour<T>::getOptions( bool scrub ) const {
+		Record rec = LatticePADisplayData<T>::getOptions(scrub);
 
-		casacore::Record levels;
+		Record levels;
 		levels.define("dlformat", "rellevels");
 		levels.define("listname", "Relative Contour Levels");
 		levels.define("ptype", "array");
 		levels.define("default", itsLevels);
 		levels.define("value", itsLevels);
-		levels.define("allowunset", false);
+		levels.define("allowunset", False);
 		levels.define("help", "These are relative contour levels, which will be\n"
 		              "scaled linearly: 0 and 1 map to the actual contour\n"
 		              "levels set on the 'Base Contour Level' and\n"
-		              "'casacore::Unit Contour Level' sliders, respectively.");
+		              "'Unit Contour Level' sliders, respectively.");
 		rec.defineRecord("rellevels", levels);
 
 		itsBaseContour->toRecord(rec);
 		itsUnitContour->toRecord(rec);
 
-		casacore::Record line;
+		Record line;
 		line.define("dlformat", "line");
 		line.define("listname", "Line width");
 		line.define("ptype", "floatrange");
-		line.define("pmin", casacore::Float(0.0));
-		line.define("pmax", casacore::Float(5.0));
-		line.define("presolution", casacore::Float(0.1));
-		line.define("default", casacore::Float(0.5));
+		line.define("pmin", Float(0.0));
+		line.define("pmax", Float(5.0));
+		line.define("presolution", Float(0.1));
+		line.define("default", Float(0.5));
 		line.define("value", itsLine);
-		line.define("allowunset", false);
+		line.define("allowunset", False);
 		rec.defineRecord("line", line);
 
-		casacore::Record dashNeg;
+		Record dashNeg;
 		dashNeg.define("dlformat", "dashneg");
 		dashNeg.define("listname", "Dash negative contours?");
 		dashNeg.define("ptype", "boolean");
-		dashNeg.define("default", true);
+		dashNeg.define("default", True);
 		dashNeg.define("value", itsDashNeg);
-		dashNeg.define("allowunset", false);
+		dashNeg.define("allowunset", False);
 		rec.defineRecord("dashneg", dashNeg);
 
-		casacore::Record dashPos;
+		Record dashPos;
 		dashPos.define("dlformat", "dashpos");
 		dashPos.define("listname", "Dash positive contours?");
 		dashPos.define("ptype", "boolean");
-		dashPos.define("default", false);
+		dashPos.define("default", False);
 		dashPos.define("value", itsDashPos);
-		dashPos.define("allowunset", false);
+		dashPos.define("allowunset", False);
 		rec.defineRecord("dashpos", dashPos);
 
-		casacore::Record color;
+		Record color;
 		color.define("dlformat", "color");
 		color.define("listname", "Line color");
 		color.define("ptype", "userchoice");
-		casacore::Vector<casacore::String> vcolor(11);
+		Vector<String> vcolor(11);
 		vcolor(0) = "foreground";
 		vcolor(1) = "background";
 		vcolor(2) = "black";
@@ -549,7 +549,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		color.define("popt", vcolor);
 		color.define("default", "foreground");
 		color.define("value", itsColor);
-		color.define("allowunset", false);
+		color.define("allowunset", False);
 		rec.defineRecord("color", color);
 
 		return rec;

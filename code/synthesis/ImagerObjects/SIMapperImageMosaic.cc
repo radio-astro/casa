@@ -61,7 +61,6 @@
 #include <unistd.h>
 using namespace std;
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
   
   SIMapperImageMosaic::SIMapperImageMosaic( CountedPtr<SIImageStore>& imagestore, 
@@ -84,7 +83,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     */
 
-    firstaccess_p = true;
+    firstaccess_p = True;
 
   }
   SIMapperImageMosaic::SIMapperImageMosaic( CountedPtr<SIImageStore>& imagestore, 
@@ -106,7 +105,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     */
 
-    firstaccess_p = true;
+    firstaccess_p = True;
 
   }
   SIMapperImageMosaic::SIMapperImageMosaic(const ComponentList& cl, 
@@ -127,7 +126,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     */
     clCorrupted_p=cl;
 
-    firstaccess_p = true;
+    firstaccess_p = True;
       
   }
   
@@ -154,10 +153,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     /*
     Bool dirDep= ift2_p->isSkyJonesSet(); //  (!ejgrid_p.null());
     dirDep= dirDep || ((ift2_p->name()) == "MosaicFT");
-    ovb_p.assign(vb, false);
+    ovb_p.assign(vb, False);
     ovb_p.updateCoordInfo(&vb, dirDep);
     */
-    vb_p->copy(vb, false);
+    vb_p->copy(vb, False);
     firstaccess_p = firstaccess;
     
   }
@@ -177,7 +176,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     Bool dirDep= ift_p->isSkyJonesSet(); //  (!ejgrid_p.null());
     dirDep= dirDep || ((ift_p->name()) == "MosaicFT");
-    ovb_p.assign(vb, false);
+    ovb_p.assign(vb, False);
     ovb_p.updateCoordInfo(&vb, dirDep);
     
     firstaccess_p = firstaccess;
@@ -195,8 +194,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        return;
      
       Int nRow=vb.nRows();
-      Bool internalChanges=false;  // Does this VB change inside itself?
-      Bool firstOneChanges=false;  // Has this VB changed from the previous one?
+      Bool internalChanges=False;  // Does this VB change inside itself?
+      Bool firstOneChanges=False;  // Has this VB changed from the previous one?
       if((ift2_p->name() != "MosaicFT")    && (ift2_p->name() != "PBWProjectFT") &&
 	 (ift2_p->name() != "AWProjectFT") && (ift2_p->name() != "AWProjectWBFT")) {
 	ift2_p->changedSkyJonesLogic(vb, firstOneChanges, internalChanges);
@@ -229,7 +228,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if( !firstaccess_p )
 	  {
 	    finalizeGrid( *vb_p, dopsf );
-	    firstaccess_p=false;
+	    firstaccess_p=False;
 	  }
 	initializeGrid( vb, dopsf );
 	ift2_p->put(vb, -1, dopsf, col);
@@ -251,8 +250,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        return;
      
       Int nRow=vb.nRow();
-      Bool internalChanges=false;  // Does this VB change inside itself?
-      Bool firstOneChanges=false;  // Has this VB changed from the previous one?
+      Bool internalChanges=False;  // Does this VB change inside itself?
+      Bool firstOneChanges=False;  // Has this VB changed from the previous one?
       if((ift_p->name() != "MosaicFT")    && (ift_p->name() != "PBWProjectFT") &&
 	 (ift_p->name() != "AWProjectFT") && (ift_p->name() != "AWProjectWBFT")) {
 	ift_p->changedSkyJonesLogic(vb, firstOneChanges, internalChanges);
@@ -285,7 +284,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if( !firstaccess_p )
 	  {
 	    finalizeGrid( ovb_p, dopsf );
-	    firstaccess_p=false;
+	    firstaccess_p=False;
 	  }
 	initializeGrid( vb, dopsf );
 	ift_p->put(vb, -1, dopsf, col);
@@ -350,7 +349,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    }
 	  }
 	  ////We might have to deal with the right row here if the visbuffer is has changed internally
-	  ejdegrid_p->apply(comp, comp, vb,row, true);
+	  ejdegrid_p->apply(comp, comp, vb,row, True);
 	  clCorrupted_p.add(comp);
 	}
       }
@@ -389,7 +388,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    }
 	  }
 	  ////We might have to deal with the right row here if the visbuffer is has changed internally
-	  ejdegrid_p->apply(comp, comp, vb,row, true);
+	  ejdegrid_p->apply(comp, comp, vb,row, True);
 	  clCorrupted_p.add(comp);
 	}
       }
@@ -410,8 +409,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       origCube.assign(vb.visCubeModel()); 
 
       Int nRow=vb.nRows();
-      Bool internalChanges=false;  // Does this VB change inside itself?
-      Bool firstOneChanges=false;  // Has this VB changed from the previous one?
+      Bool internalChanges=False;  // Does this VB change inside itself?
+      Bool firstOneChanges=False;  // Has this VB changed from the previous one?
       
       if((!ft2_p.null() && (ft2_p->name() != "MosaicFT")    && (ft2_p->name() != "PBWProjectFT") &&
 	  (ft2_p->name() != "AWProjectFT") && (ft2_p->name() != "AWProjectWBFT")) || (!cft2_p.null())) {
@@ -472,8 +471,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       origCube.assign(vb.modelVisCube()); 
 
       Int nRow=vb.nRow();
-      Bool internalChanges=false;  // Does this VB change inside itself?
-      Bool firstOneChanges=false;  // Has this VB changed from the previous one?
+      Bool internalChanges=False;  // Does this VB change inside itself?
+      Bool firstOneChanges=False;  // Has this VB changed from the previous one?
       
       if((!ft_p.null() && (ft_p->name() != "MosaicFT")    && (ft_p->name() != "PBWProjectFT") &&
 	  (ft_p->name() != "AWProjectFT") && (ft_p->name() != "AWProjectWBFT")) || (!cft_p.null())) {
@@ -522,31 +521,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   /*
   Bool SIMapperImageMosaic::changedSkyJonesLogic(const vi::VisBuffer2& vb, Bool& firstRow, Bool& internalRow, const Bool grid){
-      firstRow=false;
-      internalRow=false;
+      firstRow=False;
+      internalRow=False;
       CountedPtr<VPSkyJones> ej= grid ? ejgrid_p : ejdegrid_p;
       if(ej.null())
-    	  return false;
+    	  return False;
 	  if(ej->changed(vi::VisBuffer2Adapter(&vb),0))
-		  firstRow=true;
+		  firstRow=True;
 	  Int row2temp=0;
 	  if(ej->changedBuffer(vi::VisBuffer2Adapter(&vb),0,row2temp)) {
-	     internalRow=true;
+	     internalRow=True;
 	   }
 	   return (firstRow || internalRow) ;
   }
   ////////////Old VB version
   Bool SIMapperImageMosaic::changedSkyJonesLogic(const VisBuffer& vb, Bool& firstRow, Bool& internalRow, const Bool grid){
-        firstRow=false;
-        internalRow=false;
+        firstRow=False;
+        internalRow=False;
         CountedPtr<VPSkyJones> ej= grid ? ejgrid_p : ejdegrid_p;
         if(ej.null())
-      	  return false;
+      	  return False;
   	  if(ej->changed(vb,0))
-  		  firstRow=true;
+  		  firstRow=True;
   	  Int row2temp=0;
   	  if(ej->changedBuffer(vb,0,row2temp)) {
-  	     internalRow=true;
+  	     internalRow=True;
   	   }
   	   return (firstRow || internalRow) ;
     }

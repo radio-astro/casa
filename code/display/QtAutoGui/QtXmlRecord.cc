@@ -33,7 +33,6 @@
 #include "QtXmlRecord.h"
 #include <casa/IO/AipsIO.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	QtXmlRecord::QtXmlRecord() : rootName("casa-Record")
@@ -327,7 +326,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Translates the value attribute of ele to a field in rec of
 		// form  nm=value.  The type of value is determined by the element's
 		// ptype attribute.  (ele is intended to represent a single AutoGui
-		// option, such as yaxistext).  If useOptName is true (the default),
+		// option, such as yaxistext).  If useOptName is True (the default),
 		// nm will be the element tagName (option name), suitable for sending
 		// only an option's value (e.g. [xaxistext="mytext"]) to setOptions.
 		// If false, nm will be "value" so that rec can be used (possibly with
@@ -404,7 +403,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			} else if (ptype == "button") {
 				//#dk cout << " set " << name << endl;
 
-				rec.define(fldnm, true);
+				rec.define(fldnm, True);
 				//#dk rec.define(fldnm, "T");
 				//#dk AipsIO ios("temp", ByteIO::New);
 				//#dk ios << rec;
@@ -427,9 +426,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				// it's a pain to figure out what you have on the receiving end;
 				// also, you usually want to restrict to one or the other...).
 
-				Bool allInt=true;
+				Bool allInt=True;
 				for(Int i=0; i<vals.size(); i++) if(dVals[i]!=Int(dVals[i])) {
-						allInt=false;
+						allInt=False;
 						break;
 					}
 
@@ -493,8 +492,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				for (int i = 0; i < (int)(map.count()); i++) {
 					QDomNode attr = map.item (i);
 					if (attr.nodeName() == "value")
-						elementToRecord(&ele, rcd, false);
-					// ("false" because rcd will be a subrecord
+						elementToRecord(&ele, rcd, False);
+					// ("False" because rcd will be a subrecord
 					// to the option field name in rec, below).
 					else
 						rcd.define(String(attr.nodeName().toStdString()),

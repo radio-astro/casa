@@ -1,4 +1,4 @@
-//# PassiveTableDD.h: PassiveCachingDD class with casacore::Table-specific support
+//# PassiveTableDD.h: PassiveCachingDD class with Table-specific support
 //# Copyright (C) 2000
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -34,17 +34,13 @@
 #include <casa/Utilities/DataType.h>
 #include <display/DisplayDatas/PassiveCachingDD.h>
 
-namespace casacore{
+namespace casa { //# NAMESPACE CASA - BEGIN
 
 	class Table;
 	class Regex;
-}
-
-namespace casa { //# NAMESPACE CASA - BEGIN
-
 
 // <summary>
-// Class adding casacore::Table-specific support functions to PassiveCachingDD.
+// Class adding Table-specific support functions to PassiveCachingDD.
 // </summary>
 
 // <synopsis>
@@ -57,12 +53,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	public:
 
 		// Constructor taking a pointer to an already constructed Table.
-		// The casacore::Table will be deleted by this class.
-		PassiveTableDD(casacore::Table *table);
+		// The Table will be deleted by this class.
+		PassiveTableDD(Table *table);
 
-		// Constructor taking a casacore::String which describes the full pathname
-		// of a casacore::Table on disk.
-		PassiveTableDD(const casacore::String tablename);
+		// Constructor taking a String which describes the full pathname
+		// of a Table on disk.
+		PassiveTableDD(const String tablename);
 
 		// Destructor.
 		virtual ~PassiveTableDD();
@@ -71,13 +67,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void setDefaultOptions();
 
 		// Apply options stored in <src>rec</src> to the DisplayData.  A
-		// return value of <src>true</src> means a refresh is needed.
+		// return value of <src>True</src> means a refresh is needed.
 		// <src>recOut</src> contains any fields which were implicitly
 		// changed as a result of the call to this function.
-		virtual casacore::Bool setOptions(casacore::Record &rec, casacore::Record &recOut);
+		virtual Bool setOptions(Record &rec, Record &recOut);
 
 		// Retrieve the current and default options and parameter types.
-		virtual casacore::Record getOptions( bool scrub=false ) const;
+		virtual Record getOptions( bool scrub=false ) const;
 
 		// Return the current options of this DisplayData as an
 		// AttributeBuffer.
@@ -87,35 +83,35 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Get the value of the named keyword, or the first keyword matching
 		// <src>regex</src>, and return it in <src>value</src>.  The return
-		// value is <src>true</src> for success, and <src>false</src> for
+		// value is <src>True</src> for success, and <src>False</src> for
 		// failure, which is the result if the wrong type <src>T</src> is
 		// requested.
 		// <group>
-		template <class T> casacore::Bool getTableKeyword(T &value,
-		                                        const casacore::String keyword) const;
-		template <class T> casacore::Bool getTableKeyword(T &value, const casacore::Regex &regex) const;
+		template <class T> Bool getTableKeyword(T &value,
+		                                        const String keyword) const;
+		template <class T> Bool getTableKeyword(T &value, const Regex &regex) const;
 		// </group>
 
 		// Get the value of the named keyword, or the first keyword matching
 		// <src>regex</src> for the named column, and return it in
-		// <src>value</src>. The return value is <src>true</src> for
-		// success, and <src>false</src> for failure, which is the result if
+		// <src>value</src>. The return value is <src>True</src> for
+		// success, and <src>False</src> for failure, which is the result if
 		// the wrong type <src>T</src> is requested, or if the keyword
 		// doesn't exist.
 		// <group>
-		template <class T> casacore::Bool getColumnKeyword(T &value, const casacore::String column,
-		        const casacore::String keyword) const;
-		template <class T> casacore::Bool getColumnKeyword(T &value, const casacore::String column,
-		        const casacore::Regex &regex) const;
+		template <class T> Bool getColumnKeyword(T &value, const String column,
+		        const String keyword) const;
+		template <class T> Bool getColumnKeyword(T &value, const String column,
+		        const Regex &regex) const;
 		// </group>
 
 		// Get the names of the columns of the table having the given type.
-		casacore::Vector<casacore::String> getColumnNamesOfType(const casacore::DataType type);
+		Vector<String> getColumnNamesOfType(const DataType type);
 
-		// Return the casacore::Table pointer for use by derived classes.  If a query
+		// Return the Table pointer for use by derived classes.  If a query
 		// is active (via <src>setOptions</src>), then the result of the
-		// query is returned, otherwise the construction casacore::Table is returned.
-		casacore::Table *table();
+		// query is returned, otherwise the construction Table is returned.
+		Table *table();
 
 		// (Required) default constructor.
 		PassiveTableDD();
@@ -129,21 +125,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	private:
 
 		// Store the primary table here.
-		casacore::Table *itsTable;
+		Table *itsTable;
 
 		// Store the result of a query on the table here.
-		casacore::Table *itsQueryTable;
+		Table *itsQueryTable;
 
 		// Option: what is the query string, or is it unset?
-		casacore::String itsOptQueryString;
-		casacore::Bool itsOptQueryStringUnset;
+		String itsOptQueryString;
+		Bool itsOptQueryStringUnset;
 
 		// Install the default options for this DisplayData.
 		void installDefaultOptions();
 
 		// Arrange the query table (generally called after installing new
 		// options).
-		casacore::Bool arrangeQueryTable();
+		Bool arrangeQueryTable();
 
 	};
 

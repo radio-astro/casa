@@ -46,7 +46,7 @@
 // LUdecomp objects are a 2-D template matrix of numeric type which
 // contains (in packed form) a Lower Triangular (L) and Upper Triangular (U)
 // factorization of some numeric type matrix (A) and a block of integer type
-// which contains (in packed form) the Permutation casacore::Matrix (P), i.e. A=PLU.  
+// which contains (in packed form) the Permutation Matrix (P), i.e. A=PLU.  
 // The data members are filled by the LUdecomp constructors calling LAPACK's 
 // Fortran xGETRF subroutine.
 
@@ -54,20 +54,20 @@ template<class T> class LUdecomp
 {
 public:
   LUdecomp<T>();                      // 0-length Matrices
-  LUdecomp<T>(casacore::Matrix<T> &);
+  LUdecomp<T>(Matrix<T> &);
   LUdecomp<T>(const LUdecomp<T> &);
   // The copy constructor uses reference semantics.
  
-  casacore::Matrix<T> getUpper() const;
-  casacore::Matrix<T> getLower() const;
-  casacore::Matrix<T> getPerm() const;
+  Matrix<T> getUpper() const;
+  Matrix<T> getLower() const;
+  Matrix<T> getPerm() const;
 
-  casacore::Matrix<T> getLU() const {return LU.copy();}
-  casacore::Block<casacore::Int> getPivot() const {return thePivot;}
+  Matrix<T> getLU() const {return LU.copy();}
+  Block<Int> getPivot() const {return thePivot;}
 
 private:
-    casacore::Matrix<T> LU;
-    casacore::Block<casacore::Int> thePivot;
+    Matrix<T> LU;
+    Block<Int> thePivot;
 };
 
 #endif

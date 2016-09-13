@@ -28,7 +28,6 @@
 #include <casa/Exceptions/Error.h>
 #include <display/Display/DParameterMapKeyChoice.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	DParameterMapKeyChoice::DParameterMapKeyChoice(
@@ -39,7 +38,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    const String defaultvalue, const String value,
 	    const String context) :
 		DParameterChoice(name, description, help, options, defaultvalue,
-		                 value, context, false) {
+		                 value, context, False) {
 
 		if (keys.nelements() != options.nelements())
 			throw(AipsError("DParameterMapKeyChoice error - length of options must equal length of keys"));
@@ -88,7 +87,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	Bool DParameterMapKeyChoice::lookUpKey(const String& value) {
 		uInt numberSearched=0;
-		Bool found=false;
+		Bool found=False;
 
 		Vector<String> currentOptions(options());
 
@@ -97,18 +96,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		while(numberSearched < itsKeys.nelements() && !found) {
 			if (currentOptions[numberSearched] == value)
-				found = true;
+				found = True;
 			else
 				numberSearched++;
 		}
 
-		if (!found) return false;
+		if (!found) return False;
 		else {
 			itsKeyValue = itsKeys[numberSearched];
 			itsLastString = value;
 		}
 
-		return true;
+		return True;
 	}
 
 	Int DParameterMapKeyChoice::keyValue() {
@@ -132,23 +131,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	Bool DParameterMapKeyChoice::setKeyValue(const Int newValue) {
 		uInt numberSearched=0;
-		Bool found=false;
+		Bool found=False;
 
 		if (itsKeys.nelements() != options().nelements())
 			throw(AipsError("DParameterMapKeyChoice - The number of options does not match the number of keys."));
 
 		while(numberSearched < itsKeys.nelements() && !found) {
 			if (itsKeys[numberSearched] == newValue)
-				found = true;
+				found = True;
 			else
 				numberSearched++;
 		}
-		if (!found) return false;
+		if (!found) return False;
 
 		Vector<String> currentOptions(options());
 		setValue(currentOptions[numberSearched]);
 
-		return true;
+		return True;
 	}
 
 

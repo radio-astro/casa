@@ -59,9 +59,9 @@ public:
     // Non-Static //
     
     // Constructor, with default values for parameters.
-    PlotMSParameters(const casacore::String& logFilename = PMS::DEFAULT_LOG_FILENAME,
+    PlotMSParameters(const String& logFilename = PMS::DEFAULT_LOG_FILENAME,
             int logEvents = PMS::DEFAULT_LOG_EVENTS,
-            casacore::LogMessage::Priority logPriority = PMS::DEFAULT_LOG_PRIORITY,
+            LogMessage::Priority logPriority = PMS::DEFAULT_LOG_PRIORITY,
             bool clearSelections = PMS::DEFAULT_CLEAR_SELECTIONS,
             int cachedImageWidth = PMS::DEFAULT_CACHED_IMAGE_WIDTH,
             int cachedImageHeight = PMS::DEFAULT_CACHED_IMAGE_HEIGHT,
@@ -77,18 +77,18 @@ public:
     
     // Gets/Sets the log sink location/filename.
     // <group>
-    casacore::String logFilename() const;
-    void setLogFilename(const casacore::String& filename);
+    String logFilename() const;
+    void setLogFilename(const String& filename);
     // </group>
     
     // Returns the current log events.
     int logEvents() const;
     
     // Returns the current log minimum priority.
-    casacore::LogMessage::Priority logPriority() const;
+    LogMessage::Priority logPriority() const;
     
     // Sets the current log filter.
-    void setLogFilter(int logEvents, casacore::LogMessage::Priority priority);
+    void setLogFilter(int logEvents, LogMessage::Priority priority);
     
     // Gets/Sets whether any selections are cleared when plot axes are changed
     // or not.
@@ -127,13 +127,13 @@ public:
     
 private:
     // Log filename.
-    casacore::String itsLogFilename_;
+    String itsLogFilename_;
     
     // Log events flag.
     int itsLogEvents_;
     
     // Log minimum priority.
-    casacore::LogMessage::Priority itsLogPriority_;
+    LogMessage::Priority itsLogPriority_;
     
     // Clear selections on axes change flag.
     bool itsClearSelectionsOnAxesChange_;

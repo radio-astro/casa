@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //
-// casacore::Data description id column data provider
+// Data description id column data provider
 //
 #ifndef MSVIS_STATISTICS_VI2_CHUNK_DATA_DESCRIPTION_IDS_DATA_PROVIDER_H_
 #define MSVIS_STATISTICS_VI2_CHUNK_DATA_DESCRIPTION_IDS_DATA_PROVIDER_H_
@@ -43,9 +43,9 @@ class Vi2ChunkDataDescriptionIdsDataProvider final
 public:
 	Vi2ChunkDataDescriptionIdsDataProvider(
 		vi::VisibilityIterator2 *vi2,
-		casacore::Bool omit_flagged_data);
+		Bool omit_flagged_data);
 
-	const casacore::Vector<casacore::Int>& dataArray();
+	const Vector<Int>& dataArray();
 };
 
 } // namespace casa

@@ -48,16 +48,12 @@
 #include <graphics/X11/X_exit.h>
 
 
-namespace casacore{
-
-	template <class T> class ImageInterface;
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	class QtDisplayPanelGui;
 	class QtDisplayPanel;
 	class QtDisplayData;
+	template <class T> class ImageInterface;
 
 	class QtExportManager : public QWidget, private Ui::QtExportManager {
 
@@ -70,7 +66,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		~QtExportManager();
 
 	public slots:
-		void updateEM(QtDisplayData* qdd=0, casacore::Bool autoRegister=true);
+		void updateEM(QtDisplayData* qdd=0, Bool autoRegister=True);
 
 	protected:
 		void fillFormatBox(int type);
@@ -86,9 +82,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		                   NEWPANEL, OLDPANEL
 		                 };
 
-		QHash<int, casacore::String>  dataType_;
+		QHash<int, String>  dataType_;
 		QHash<QString, int> uiDataType_;
-		QHash<int, casacore::String>  displayType_;
+		QHash<int, String>  displayType_;
 		QHash<QString, int> uiDisplayType_;
 		QHash<int, QtDisplayData*> qddList_;
 		QVector<int>        exportTypes_;
@@ -101,15 +97,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void browseFileSelection();
 		void browseFileSelectionOLD();
 
-		void showDDCreateError_(casacore::String);
+		void showDDCreateError_(String);
 
 
 	private:
-		void expImageInterfaceToFITS(casacore::ImageInterface<casacore::Float>* img, casacore::String outFile);
-		void getSectralCoordFlags(const casacore::ImageInterface<casacore::Float>* img, casacore::Bool &preferVelocity, casacore::Bool &opticalVelocity,
-		                          casacore::Bool &preferWavelength, casacore::Bool &preferAirWavelength);
-		void expImageInterfaceToCASA(casacore::ImageInterface<casacore::Float>* img, casacore::String outFile);
-		//void expImageInterfaceToMIRIAD(casacore::ImageInterface<casacore::Float>* img, casacore::String outFile);
+		void expImageInterfaceToFITS(ImageInterface<Float>* img, String outFile);
+		void getSectralCoordFlags(const ImageInterface<Float>* img, Bool &preferVelocity, Bool &opticalVelocity,
+		                          Bool &preferWavelength, Bool &preferAirWavelength);
+		void expImageInterfaceToCASA(ImageInterface<Float>* img, String outFile);
+		//void expImageInterfaceToMIRIAD(ImageInterface<Float>* img, String outFile);
 		void messageFromEM(QString &msg);
 
 		QWidget *parent_;

@@ -70,10 +70,10 @@ Bool VLASubarrayFilter::passThru(const VLALogicalRecord& record) const {
   if (itsArray == 0 || 
       itsArray == record.SDA().subArray()) {
 //     cerr << " match" << endl;
-    return true;
+    return True;
   } else {
 //     cerr << " NO match" << endl;
-    return false;
+    return False;
   }
 }
 
@@ -88,15 +88,15 @@ Bool VLASubarrayFilter::ok() const {
   // The LogIO class is only constructed if an error is detected for
   // performance reasons. Both function static and file static variables
   // where considered and rejected for this purpose.
-  if (!VLAFilter::ok()) return false; 
+  if (!VLAFilter::ok()) return False; 
   if (itsArray > 5) {
     LogIO logErr(LogOrigin("VLASubarrayFilter", "ok()"));
     logErr << LogIO::SEVERE 
  	   << "The subarray id must be less than 5"
 	   << LogIO::POST;
-    return false;
+    return False;
   }
-  return true;
+  return True;
 }
 // Local Variables: 
 // compile-command: "gmake VLASubarrayFilter"

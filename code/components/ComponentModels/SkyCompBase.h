@@ -34,7 +34,7 @@
 #include <casa/Utilities/RecordTransformable.h>
 #include <casa/BasicSL/Complexfwd.h>
 
-namespace casacore{
+namespace casa { //# NAMESPACE CASA - BEGIN
 
 class MFrequency;
 class MVFrequency;
@@ -43,18 +43,14 @@ class MVDirection;
 class MVAngle;
 class RecordInterface;
 class String;
+class ComponentShape;
+class SpectralModel;
 class Unit;
+template <class T> class Flux;
 template <class T> class Vector;
 template <class T> class Matrix;
 template <class T> class Cube;
 template <class Ms> class MeasRef;
-}
-
-namespace casa { //# NAMESPACE CASA - BEGIN
-
-class ComponentShape;
-class SpectralModel;
-template <class T> class Flux;
 
 // <summary>Base class for model components of the sky brightness</summary>
 
@@ -113,7 +109,7 @@ template <class T> class Flux;
 //      specified direction at a specified frequency.
 // <dt><src>project</src>
 // <dd> This function will generate an image of the component, given a user
-//      specified casacore::ImageInterface object.
+//      specified ImageInterface object.
 // <dt><src>visibility</src>
 // <dd> This function will return the visibility (spatial coherence) that would
 //      be measured if the component was at the field centre of an
@@ -165,7 +161,7 @@ template <class T> class Flux;
 //   <li> Nothing I hope!
 // </todo>
 
-class SkyCompBase: public casacore::RecordTransformable
+class SkyCompBase: public RecordTransformable
 {
 public:
 
@@ -179,8 +175,8 @@ public:
   // frequency then the flux set using this function is the value at the
   // reference frequency.
   // <group>
-  virtual const Flux<casacore::Double>& flux() const = 0;
-  virtual Flux<casacore::Double>& flux() = 0;
+  virtual const Flux<Double>& flux() const = 0;
+  virtual Flux<Double>& flux() = 0;
   // </group>
 
   // return a reference to the shape of the component. Because this is a
@@ -208,42 +204,42 @@ public:
   // return a reference to the label associated with this component. The label
   // is a text string for general use.
   // <group>
-  virtual casacore::String& label() = 0;
-  virtual const casacore::String& label() const = 0;
+  virtual String& label() = 0;
+  virtual const String& label() const = 0;
   // </group>
 
   // return a reference to the label associated with this component. The label
   // is a text string for general use.
   // <group>
-  virtual casacore::Vector<casacore::Double>& optionalParameters() = 0;
-  virtual const casacore::Vector<casacore::Double>& optionalParameters() const = 0;
+  virtual Vector<Double>& optionalParameters() = 0;
+  virtual const Vector<Double>& optionalParameters() const = 0;
   // </group>
  
-  // Return true if the component parameters are physically plausable. This
+  // Return True if the component parameters are physically plausable. This
   // checks that I, Q, U, & V are all real numbers and if 
   // I^2 >= Q^2 + U^2 + U^2
-  virtual casacore::Bool isPhysical() const = 0;
+  virtual Bool isPhysical() const = 0;
   
   // Calculate the flux at the specified direction & frequency, in a pixel of
   // specified x & y size.
-  virtual Flux<casacore::Double> sample(const casacore::MDirection& direction, 
-			      const casacore::MVAngle& pixelLatSize, 
-			      const casacore::MVAngle& pixelLongSize, 
-			      const casacore::MFrequency& centerFrequency) const = 0;
+  virtual Flux<Double> sample(const MDirection& direction, 
+			      const MVAngle& pixelLatSize, 
+			      const MVAngle& pixelLongSize, 
+			      const MFrequency& centerFrequency) const = 0;
 
   // Same as the previous function except that many directions & frequencies
   // are done at once.  The flux is added into the values supplied in the
   // samples argument and this cube must have dimensions of [4, nDirs,
   // nFreqs]. The polarisations are always [I, Q, U, V] and units of the flux
   // added are specified with the reqUnits arguments.
-  virtual void sample(casacore::Cube<casacore::Double>& samples,
-		      const casacore::Unit& reqUnit,
-		      const casacore::Vector<casacore::MVDirection>& directions, 
-		      const casacore::MeasRef<casacore::MDirection>& dirRef, 
-		      const casacore::MVAngle& pixelLatSize, 
-		      const casacore::MVAngle& pixelLongSize, 
-		      const casacore::Vector<casacore::MVFrequency>& frequencies,
-		      const casacore::MeasRef<casacore::MFrequency>& freqRef) const = 0;
+  virtual void sample(Cube<Double>& samples,
+		      const Unit& reqUnit,
+		      const Vector<MVDirection>& directions, 
+		      const MeasRef<MDirection>& dirRef, 
+		      const MVAngle& pixelLatSize, 
+		      const MVAngle& pixelLongSize, 
+		      const Vector<MVFrequency>& frequencies,
+		      const MeasRef<MFrequency>& freqRef) const = 0;
 
   // Return the Fourier transform of the component at the specified point in
   // the spatial frequency domain. The point is specified by a 3-element vector
@@ -256,8 +252,8 @@ public:
   // component. This means, for symmetric components where the reference
   // direction is at the centre, that the Fourier transform will always be
   // real.
-  virtual Flux<casacore::Double> visibility(const casacore::Vector<casacore::Double>& uvw,
-				  const casacore::Double& frequency) const = 0;
+  virtual Flux<Double> visibility(const Vector<Double>& uvw,
+				  const Double& frequency) const = 0;
 
   // Same as the previous function except that many (u,v,w) points are done at
   // once. The visibilities are returned in the first argument which must have
@@ -267,26 +263,26 @@ public:
   // a length of nChan. The units and polarisation of the returned visibilities
   // are the same as the flux of this object, and can be queried using the
   // <src>flux().units()</src> & <src>flux().pol()</src> functions.
-  virtual void visibility(casacore::Cube<casacore::DComplex>& visibilities,
-			  const casacore::Matrix<casacore::Double>& uvws,
-			  const casacore::Vector<casacore::Double>& frequencies) const = 0;
+  virtual void visibility(Cube<DComplex>& visibilities,
+			  const Matrix<Double>& uvws,
+			  const Vector<Double>& frequencies) const = 0;
 
   // This functions convert between a record and a component.  Derived classes
   // can interpret fields in the record in a class specific way. These
   // functions define how a component is represented in glish.  They return
-  // false if the record is malformed and append an error message to the
+  // False if the record is malformed and append an error message to the
   // supplied string giving the reason.
   // <group>
-  virtual casacore::Bool fromRecord(casacore::String& errorMessage,
-			  const casacore::RecordInterface& record) = 0;
-  virtual casacore::Bool toRecord(casacore::String& errorMessage, 
-			casacore::RecordInterface& record) const = 0;
+  virtual Bool fromRecord(String& errorMessage,
+			  const RecordInterface& record) = 0;
+  virtual Bool toRecord(String& errorMessage, 
+			RecordInterface& record) const = 0;
   // </group>
 
-  // casacore::Function which checks the internal data of this class for correct
-  // dimensionality and consistant values. Returns true if everything is fine
-  // otherwise returns false.
-  virtual casacore::Bool ok() const = 0;
+  // Function which checks the internal data of this class for correct
+  // dimensionality and consistant values. Returns True if everything is fine
+  // otherwise returns False.
+  virtual Bool ok() const = 0;
 };
 
 } //# NAMESPACE CASA - END

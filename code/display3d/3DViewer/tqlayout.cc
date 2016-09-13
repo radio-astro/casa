@@ -5,7 +5,6 @@
 #include <graphics/X11/X_exit.h>
 
 
-using namespace casacore;
 namespace casa {
 
 

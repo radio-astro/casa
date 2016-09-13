@@ -29,7 +29,6 @@
 #include <msvis/MSVis/statistics/Vi2StatsAmplitudeIterator.h>
 #include <complex>
 
-using namespace casacore;
 namespace casa {
 
 Double
@@ -37,5 +36,4 @@ Vi2StatsAmplitudeIterator::operator*() {
 	return std::abs(*array_iter);
 }
 
-using namespace casacore;
 } // namespace casa

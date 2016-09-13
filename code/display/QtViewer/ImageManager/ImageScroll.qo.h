@@ -134,7 +134,7 @@ namespace casa {
 		ImageScroll( const ImageScroll& other );
 		ImageScroll operator=( const ImageScroll& other );
 
-		//casacore::Coordinate system master image
+		//Coordinate system master image
 		void resetMasterCoordinate( ImageView* newMaster );
 
 		//Adding/removing images from the layout.

@@ -40,75 +40,75 @@ template <class T> ImageMaskHandler<T>::ImageMaskHandler(SPIIT image)
 
 template <class T> ImageMaskHandler<T>::~ImageMaskHandler() {}
 
-template <class T> void ImageMaskHandler<T>::set(const casacore::String& name) {
+template <class T> void ImageMaskHandler<T>::set(const String& name) {
 	_image->setDefaultMask(name);
 }
 
-template <class T> casacore::String ImageMaskHandler<T>::defaultMask() const {
+template <class T> String ImageMaskHandler<T>::defaultMask() const {
 	return _image->getDefaultMask();
 }
 
 template <class T> void ImageMaskHandler<T>::deleteMasks(
-	const std::set<casacore::String>& masks
+	const std::set<String>& masks
 ) {
 	ThrowIf(masks.empty(), "You have not supplied any mask names");
 	for (const auto& mask: masks) {
-		_image->removeRegion(mask, casacore::RegionHandler::Masks, false);
+		_image->removeRegion(mask, RegionHandler::Masks, False);
 	}
 }
 
 template <class T> void ImageMaskHandler<T>::rename(
-	const casacore::String& oldName, const casacore::String& newName
+	const String& oldName, const String& newName
 ) {
-	_image->renameRegion(newName, oldName, casacore::RegionHandler::Masks, false);
+	_image->renameRegion(newName, oldName, RegionHandler::Masks, False);
 }
 
-template <class T> casacore::Vector<casacore::String> ImageMaskHandler<T>::get() const {
-	return _image->regionNames(casacore::RegionHandler::Masks);
+template <class T> Vector<String> ImageMaskHandler<T>::get() const {
+	return _image->regionNames(RegionHandler::Masks);
 }
 
 template <class T> void ImageMaskHandler<T>::copy(
-	const casacore::String& currentName, const casacore::String& newName
+	const String& currentName, const String& newName
 ) {
 	ThrowIf(_image->hasRegion(
-		newName, casacore::RegionHandler::Any),
+		newName, RegionHandler::Any),
 		"Mask " + newName + " already exists"
 	);
-	casacore::Vector<casacore::String> mask2 = stringToVector(currentName, ':');
+	Vector<String> mask2 = stringToVector(currentName, ':');
 	ThrowIf(mask2.size() > 2, "Illegal mask specification " + currentName);
 	auto external = mask2.size() == 2;
-	_image->makeMask(newName, true, false);
+	_image->makeMask(newName, True, False);
 
 	if (external) {
-		casacore::ImageProxy proxy(casacore::Vector<casacore::String>(1, mask2[0]), 0);
+		ImageProxy proxy(Vector<String>(1, mask2[0]), 0);
 		ThrowIf(
 			! proxy.shape().isEqual(_image->shape()),
 			"Images have different shapes"
 		);
 		auto imagePair = ImageFactory::fromFile(mask2[0]);
 		if (imagePair.first) {
-			casacore::ImageUtilities::copyMask(
+			ImageUtilities::copyMask(
 				*_image, *imagePair.first,
-				newName, mask2[1], casacore::AxesSpecifier()
+				newName, mask2[1], AxesSpecifier()
 			);
 		}
 		else {
-			casacore::ImageUtilities::copyMask(
+			ImageUtilities::copyMask(
 				*_image, *imagePair.second,
-				newName, mask2[1], casacore::AxesSpecifier()
+				newName, mask2[1], AxesSpecifier()
 			);
 		}
 	}
 	else {
-		casacore::ImageUtilities::copyMask(
+		ImageUtilities::copyMask(
 			*_image, *_image,
-			newName, mask2[0], casacore::AxesSpecifier()
+			newName, mask2[0], AxesSpecifier()
 		);
 	}
 }
 
 template <class T> template<class U> void ImageMaskHandler<T>::copy(
-    const casacore::MaskedLattice<U>& mask
+    const MaskedLattice<U>& mask
 ) {
     auto shape = _image->shape();
     ThrowIf (
@@ -116,20 +116,20 @@ template <class T> template<class U> void ImageMaskHandler<T>::copy(
         "Mask must be the same shape as the image"
     );
     auto cursorShape = _image->niceCursorShape(4096*4096);
-    casacore::LatticeStepper stepper(shape, cursorShape, casacore::LatticeStepper::RESIZE);
+    LatticeStepper stepper(shape, cursorShape, LatticeStepper::RESIZE);
     if (! _image->hasPixelMask()) {
         if (ImageMask::isAllMaskTrue(mask)) {
             // the current image has no pixel mask and the mask is all true, so
             // there is no point in copying anything.
             return;
         }
-        casacore::String maskname = "";
-        casacore::LogIO log;
-        ImageMaskAttacher::makeMask(*_image, maskname, false, true, log, false);
+        String maskname = "";
+        LogIO log;
+        ImageMaskAttacher::makeMask(*_image, maskname, False, True, log, False);
     }
-    casacore::Lattice<casacore::Bool>& pixelMask = _image->pixelMask();
-    casacore::LatticeIterator<casacore::Bool> iter(pixelMask, stepper);
-    casacore::RO_MaskedLatticeIterator<U> miter(mask, stepper);
+    Lattice<Bool>& pixelMask = _image->pixelMask();
+    LatticeIterator<Bool> iter(pixelMask, stepper);
+    RO_MaskedLatticeIterator<U> miter(mask, stepper);
     for (iter.reset(); ! iter.atEnd(); ++iter, ++miter) {
         auto mymask = miter.getMask();
         iter.rwCursor() = mymask;
@@ -137,8 +137,8 @@ template <class T> template<class U> void ImageMaskHandler<T>::copy(
 }
 
 template <class T> void ImageMaskHandler<T>::calcmask(
-	const casacore::String& mask, casacore::Record& regions,
-	const casacore::String& maskName, const casacore::Bool makeDefault
+	const String& mask, Record& regions,
+	const String& maskName, const Bool makeDefault
 ) {
 	ThrowIf(mask.empty(), "You must specify an expression");
 	ThrowIf (
@@ -146,13 +146,13 @@ template <class T> void ImageMaskHandler<T>::calcmask(
 		"Cannot make requested mask for this type of image"
 		"It is of type" + _image->imageType()
 	);
-	casacore::Block<casacore::LatticeExprNode> temps;
-	casacore::PtrBlock<const casacore::ImageRegion*> tempRegs;
+	Block<LatticeExprNode> temps;
+	PtrBlock<const ImageRegion*> tempRegs;
 	_makeRegionBlock(tempRegs, regions);
-	casacore::LatticeExprNode node = casacore::ImageExprParse::command(mask, temps, tempRegs);
+	LatticeExprNode node = ImageExprParse::command(mask, temps, tempRegs);
 
 	// Delete the ImageRegions
-	_makeRegionBlock(tempRegs, casacore::Record());
+	_makeRegionBlock(tempRegs, Record());
 
 	// Make sure the expression is Boolean
 	DataType type = node.dataType();
@@ -161,8 +161,8 @@ template <class T> void ImageMaskHandler<T>::calcmask(
 }
 
 template<class T> void ImageMaskHandler<T>::_calcmask(
-    const casacore::LatticeExprNode& node,
-    const casacore::String& maskName, const casacore::Bool makeDefault
+    const LatticeExprNode& node,
+    const String& maskName, const Bool makeDefault
 ) {
 	// Get the shape of the expression and check it matches that
 	// of the output image.  We don't check that the Coordinates
@@ -179,46 +179,46 @@ template<class T> void ImageMaskHandler<T>::_calcmask(
 		ThrowCc(os.str());
 	}
 	// Make mask and get hold of its name.   Currently new mask is forced to
-	// be default because of other problems.  Cannot use the usual ImageMaskAttacher<casacore::Float>::makeMask
+	// be default because of other problems.  Cannot use the usual ImageMaskAttacher<Float>::makeMask
 	// function because I cant attach/make it default until the expression
 	// has been evaluated
 	// Generate mask name if not given
-	casacore::String maskName2 = maskName.empty()
+	String maskName2 = maskName.empty()
 		? _image->makeUniqueRegionName(
-			casacore::String("mask"), 0
+			String("mask"), 0
 		) : maskName;
 
 	// Make the mask if it does not exist
-	if (! _image->hasRegion(maskName2, casacore::RegionHandler::Masks)) {
-		_image->makeMask(maskName2, true, false);
-		casacore::LogIO log;
-		log << casacore::LogOrigin("ImageMaskHandler", __func__);
-		log << casacore::LogIO::NORMAL << "Created mask `" << maskName2 << "'"
-			<< casacore::LogIO::POST;
-		casacore::ImageRegion iR = _image->getRegion(
-			maskName2, casacore::RegionHandler::Masks
+	if (! _image->hasRegion(maskName2, RegionHandler::Masks)) {
+		_image->makeMask(maskName2, True, False);
+		LogIO log;
+		log << LogOrigin("ImageMaskHandler", __func__);
+		log << LogIO::NORMAL << "Created mask `" << maskName2 << "'"
+			<< LogIO::POST;
+		ImageRegion iR = _image->getRegion(
+			maskName2, RegionHandler::Masks
 		);
-		casacore::LCRegion& mask = iR.asMask();
+		LCRegion& mask = iR.asMask();
 		if (node.isScalar()) {
-			casacore::Bool value = node.getBool();
+			Bool value = node.getBool();
 			mask.set(value);
 		}
 		else {
-			mask.copyData(casacore::LatticeExpr<casacore::Bool> (node));
+			mask.copyData(LatticeExpr<Bool> (node));
 		}
 	}
 	else {
 		// Access pre-existing mask.
-		casacore::ImageRegion iR = _image->getRegion(
-			maskName2, casacore::RegionHandler::Masks
+		ImageRegion iR = _image->getRegion(
+			maskName2, RegionHandler::Masks
 		);
-		casacore::LCRegion& mask2 = iR.asMask();
+		LCRegion& mask2 = iR.asMask();
 		if (node.isScalar()) {
-			casacore::Bool value = node.getBool();
+			Bool value = node.getBool();
 			mask2.set(value);
 		}
 		else {
-			mask2.copyData(casacore::LatticeExpr<casacore::Bool> (node));
+			mask2.copyData(LatticeExpr<Bool> (node));
 		}
 	}
 	if (makeDefault) {
@@ -227,20 +227,20 @@ template<class T> void ImageMaskHandler<T>::_calcmask(
 }
 
 template<class T> void ImageMaskHandler<T>::_makeRegionBlock(
-    casacore::PtrBlock<const casacore::ImageRegion*>& regions,
-    const casacore::Record& Regions
+    PtrBlock<const ImageRegion*>& regions,
+    const Record& Regions
 ) {
     auto n = regions.size();
-    for (casacore::uInt j=0; j<n; ++j) {
+    for (uInt j=0; j<n; ++j) {
         delete regions[j];
     }
-    regions.resize(0, true, true);
-    casacore::uInt nreg = Regions.nfields();
+    regions.resize(0, True, True);
+    uInt nreg = Regions.nfields();
     if (nreg > 0) {
         regions.resize(nreg);
-        regions.set(static_cast<casacore::ImageRegion*> (0));
-        for (casacore::uInt i=0; i<nreg; ++i) {
-            regions[i] = casacore::ImageRegion::fromRecord(Regions.asRecord(i), "");
+        regions.set(static_cast<ImageRegion*> (0));
+        for (uInt i=0; i<nreg; ++i) {
+            regions[i] = ImageRegion::fromRecord(Regions.asRecord(i), "");
         }
     }
 }

@@ -289,7 +289,6 @@ do {					\
 #define YYRECOVERING()  (!!yyerrstatus_)
 
 
-using namespace casacore;
 namespace casa {
 	namespace viewer {
 

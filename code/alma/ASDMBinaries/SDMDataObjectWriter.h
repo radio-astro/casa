@@ -106,7 +106,7 @@ namespace asdmbinaries {
    * ofstream osf("myCorrData.dat");
    *
    * // builds an SDMDataObjectWriter which will write the data in the file "myCorrData.dat".  
-   * SDMDataObjectWriter sdmdow(&osf, "uid://X1/X2/X3", "ALMA Binary casacore::Data");
+   * SDMDataObjectWriter sdmdow(&osf, "uid://X1/X2/X3", "ALMA Binary Data");
    * 
    * // Here produce the binary data by using one the sequences detailed below.
    * .
@@ -127,7 +127,7 @@ namespace asdmbinaries {
    * ostringstream oss;
    *
    * // builds an SDMDataObjectWriter which will write the data in the string attached to oss.  
-   * SDMDataObjectWriter sdmdow(&oss, "uid://X1/X2/X3", "ALMA Binary casacore::Data");
+   * SDMDataObjectWriter sdmdow(&oss, "uid://X1/X2/X3", "ALMA Binary Data");
    * 
    * // Here produce the binary data by using one the sequences detailed below.
    * .
@@ -282,7 +282,7 @@ namespace asdmbinaries {
      * @param uid a string containing the ALMA uid of the MIME message.
      * @param title a string defining the title for the binary data to be written. 
      */
-    SDMDataObjectWriter(const string& uid="uid://X0/X0/X0", const string& title="ALMA Binary casacore::Data");
+    SDMDataObjectWriter(const string& uid="uid://X0/X0/X0", const string& title="ALMA Binary Data");
 
 
     /**
@@ -292,7 +292,7 @@ namespace asdmbinaries {
      * @param uid a string containing the ALMA uid of the MIME message.
      * @param title a string defining the title for the binary data to be written. 
      */
-    SDMDataObjectWriter(ofstream* ofs, const string& uid="uid://X0/X0/X0", const string& title="ALMA Binary casacore::Data");
+    SDMDataObjectWriter(ofstream* ofs, const string& uid="uid://X0/X0/X0", const string& title="ALMA Binary Data");
 
     /**
      * A constructor to write in memory.
@@ -302,7 +302,7 @@ namespace asdmbinaries {
      * @param title a string defining the title for the binary data to be written. 
      * @note *oss will be systematically cleared before the first write operation.
      */
-    SDMDataObjectWriter(ostringstream* oss, const string& uid="uid://X0/X0/X0", const string& title="ALMA Binary casacore::Data");
+    SDMDataObjectWriter(ostringstream* oss, const string& uid="uid://X0/X0/X0", const string& title="ALMA Binary Data");
 
 
     /**
@@ -474,8 +474,8 @@ namespace asdmbinaries {
      * Writes water vapour radiometer (WVR) data in a  MIME message conform 
      * with the BDF V2 format.
      *
-     * @param execBlockUID the archive uid of the exec casacore::Block,
-     * @param execBlockNum the index of the exec casacore::Block,
+     * @param execBlockUID the archive uid of the exec Block,
+     * @param execBlockNum the index of the exec Block,
      * @param scanNum the number of the scan,
      * @param subscanNum the number of the subscan,
      * @param numTimes the number of time stamps (i.e. size along the TIM axis), 

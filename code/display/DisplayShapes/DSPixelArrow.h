@@ -50,16 +50,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	public:
 
 		DSPixelArrow();
-		DSPixelArrow(const casacore::Record& settings);
+		DSPixelArrow(const Record& settings);
 		DSPixelArrow(DSScreenArrow& other);
 		DSPixelArrow(DSWorldArrow& other);
 
 		virtual ~DSPixelArrow();
 
-		virtual casacore::Bool setOptions(const casacore::Record& settings);
-		virtual casacore::Record getOptions();
+		virtual Bool setOptions(const Record& settings);
+		virtual Record getOptions();
 
-		virtual casacore::Record getRawOptions() {
+		virtual Record getRawOptions() {
 			return DSArrow::getOptions();
 		}
 

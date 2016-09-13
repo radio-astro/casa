@@ -1,5 +1,5 @@
 //# QtViewerBase.qo.h: Qt implementation of main viewer supervisory object.
-//#                 -- casacore::Functional level.
+//#                 -- Functional level.
 //# Copyright (C) 2005
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -41,7 +41,7 @@
 
 
 // <summary>
-// Qt implementation of main viewer supervisory object -- casacore::Functional level.
+// Qt implementation of main viewer supervisory object -- Functional level.
 // </summary>
 
 // <synopsis>
@@ -51,13 +51,9 @@
 // the list of user-created DDs.
 // </synopsis>
 
-namespace casacore{
-
-	class String;
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+	class String;
 	class QtDisplayData;
 	class QtDisplayPanel;
 	class QtDisplayPanelGui;
@@ -91,7 +87,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// The number of open QtDisplayPanels.  (More efficient than the
 		// equivalent openDPs().len(), if the number is all that's needed).
-		virtual casacore::Int nOpenDPs();
+		virtual Int nOpenDPs();
 
 		// Only to be used by QtDisplayPanels, to inform this class of
 		// their creation.  (C++ should allow individual methods to be
@@ -101,52 +97,52 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// function to aid typing files of interest to the viewer.
 		// Moved from QtDataManager to be available for non-gui use.
 		// Returns user interface Strings like "Measurement Set".
-		static casacore::String fileType(const casacore::String pathname);
+		static String fileType(const String pathname);
 
 		// similar to above; returns internal DD datatype names like "ms"
 		// (or else 'nonexistent', 'unknown').
-		static casacore::String filetype(const casacore::String pathname);
+		static String filetype(const String pathname);
 
 		// Does the given file pathname hold a readable file with valid ID and
 		// form as a viewer restore xml document?  (If so, contents are set
 		// onto restoredoc).
-		static casacore::Bool isRestoreFile(casacore::String filename, QDomDocument& restoredoc);
+		static Bool isRestoreFile(String filename, QDomDocument& restoredoc);
 
-		// Does the given casacore::String have valid ID and form as viewer restore xml?
+		// Does the given String have valid ID and form as viewer restore xml?
 		// (If so, contents are set onto restoredoc).
-		static casacore::Bool isRestoreString(casacore::String xmlState, QDomDocument& restoredoc);
+		static Bool isRestoreString(String xmlState, QDomDocument& restoredoc);
 
-		static const casacore::String cvRestoreID;		//# internal identifier,
-		static const casacore::String cvRestoreFileExt;		//# default file extension,
+		static const String cvRestoreID;		//# internal identifier,
+		static const String cvRestoreFileExt;		//# default file extension,
 		//# for save-restore
 
-		// Utility routines to convert between casacore::Vector<casacore::Float> and String.
+		// Utility routines to convert between Vector<Float> and String.
 		//<group>
-		static casacore::String toString(casacore::Vector<casacore::Float> values);
-		static casacore::Vector<casacore::Float> toVectorF(casacore::String values, casacore::Bool* ok=0);
-		static casacore::String toString(casacore::Vector<casacore::Double> values);
-		static casacore::Vector<casacore::Double> toVectorD(casacore::String values, casacore::Bool* ok=0);
+		static String toString(Vector<Float> values);
+		static Vector<Float> toVectorF(String values, Bool* ok=0);
+		static String toString(Vector<Double> values);
+		static Vector<Double> toVectorD(String values, Bool* ok=0);
 		//</group>
 
 
-		// Returns true iff datatype is a vaild viewer datatype and
+		// Returns True iff datatype is a vaild viewer datatype and
 		// displaytype is valid for the datatype.  If the former is true
 		// but the latter isn't, displaytype is [re]set to the default
 		// displaytype for the datatype.
-		casacore::Bool dataDisplaysAs(casacore::String datatype, casacore::String& displaytype);
+		Bool dataDisplaysAs(String datatype, String& displaytype);
 
 		// public (const) data.
 
 		// viewer datatypess.
-		static const casacore::Int IMAGE=1, MEASUREMENT_SET=2, SKY_CATALOG=3,
+		static const Int IMAGE=1, MEASUREMENT_SET=2, SKY_CATALOG=3,
 		                 RESTORE=4, LEL=5,                           N_DT=5;
 
 		// viewer displaytypes.
-		static const casacore::Int RASTER=1, CONTOUR=2, VECTOR=3, MARKER=4,
+		static const Int RASTER=1, CONTOUR=2, VECTOR=3, MARKER=4,
 		                 SKY_CAT=5, OLDPANEL=6, NEWPANEL=7,          N_DS=7;
 
 		// (for invalid datatype or displaytype).
-		static const casacore::Int INVALID=0;
+		static const Int INVALID=0;
 
 
 		bool exiting( ) {
@@ -207,12 +203,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Translates IMAGE, RASTER, etc. into the names used internally
 		// (e.g. "image", "raster").
-		casacore::Vector<casacore::String> datatypeNames_, displaytypeNames_;
+		Vector<String> datatypeNames_, displaytypeNames_;
 
 		// e.g. dataDisplaysAs_[IMAGE] will be {RASTER, CONTOUR, VECTOR, MARKER}
 		// dataDisplaysAs_[datatype][0] will be the default displaytype for
 		// that datatype.
-		casacore::Vector<casacore::Vector<casacore::Int> > dataDisplaysAs_;
+		Vector<Vector<Int> > dataDisplaysAs_;
 
 	private:
 		static bool qtviewer_app_exit;

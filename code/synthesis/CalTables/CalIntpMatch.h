@@ -37,11 +37,6 @@
 #include <msvis/MSVis/VisBuffer.h>
 #include <synthesis/CalTables/CalMainBuffer.h>
 
-namespace casacore{
-
-// by class MSSelection). The CalIntpMatch class has a match methods,
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <summary> 
@@ -56,7 +51,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //   <li> <linkto class="MSCalEnums">MSCalEnums</linkto> module
 //   <li> <linkto class="VisBuffer">VisBuffer</linkto> module
 //   <li> <linkto class="CalMainBuffer">CalMainBuffer</linkto> module
-//   <li> <linkto class="casacore::MSSelection">casacore::MSSelection</linkto> module
+//   <li> <linkto class="MSSelection">MSSelection</linkto> module
 // </prerequisite>
 //
 // <etymology>
@@ -72,6 +67,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // possibilities, including for example, requiring an exact match between
 // the antenna and spectral window id.'s. The most general interpolation
 // map is defined by a matching set of synthesis selections (as defined
+// by class MSSelection). The CalIntpMatch class has a match methods,
 // matchIndex() and calRows() which determine, for associated calibration 
 // and visibility buffers, the calibration row mapping for a given visibility.
 // </synopsis>
@@ -106,7 +102,7 @@ class CalIntpMatch
   // index dimension is one for baseline-based calibration and two 
   // for antenna-based calibration.
   CalIntpMatch (const MatchType& matchType = MATCHING_ANT_SPW,
-		const casacore::uInt& indexDim = 2);
+		const uInt& indexDim = 2);
 
   // Destructor
   virtual ~CalIntpMatch();
@@ -116,10 +112,10 @@ class CalIntpMatch
   virtual CalIntpMatch& operator= (const CalIntpMatch& other);
 
   // Reset the mapping type
-  void setType (const MatchType& matchType, const casacore::uInt& indexDim);
+  void setType (const MatchType& matchType, const uInt& indexDim);
 
   // Add a selection mapping (NYI)
-  //  void add (const casacore::MSSelection& msIndex, const casacore::MSSelection& calIndex);
+  //  void add (const MSSelection& msIndex, const MSSelection& calIndex);
 
   // Set the current visibility buffer to be used in interpolation matches
   void setVisBuffer (VisBuffer& vb);
@@ -129,12 +125,12 @@ class CalIntpMatch
 
   // Return the match index for a given visibility buffer 
   // row and offset position (0,1)
-  casacore::Int matchIndex (const casacore::Int& row, const casacore::uInt& pos) 
+  Int matchIndex (const Int& row, const uInt& pos) 
     {return vbIndex_p(row,pos);};
 
   // Return the calibration buffer rows (and equivalent row mask) 
   // associated with a given match index
-  casacore::Vector<casacore::Int> calRows (const casacore::Int& matchIndex, casacore::LogicalArray& calRowMask);
+  Vector<Int> calRows (const Int& matchIndex, LogicalArray& calRowMask);
 
  protected:
 
@@ -149,23 +145,23 @@ class CalIntpMatch
   void resetCalIndex();
 
   // Match index keys
-  casacore::Int matchOrAddKey (const casacore::Record& key);
+  Int matchOrAddKey (const Record& key);
 
   // Index map type
   MatchType type_p;
 
   // Index dimension (one for baseline-based calibration and
   // two for antenna-based calibration).
-  casacore::Int indexDim_p;
+  Int indexDim_p;
 
-  // casacore::Map index assignment per visibility buffer row
-  casacore::Matrix<casacore::Int> vbIndex_p;
+  // Map index assignment per visibility buffer row
+  Matrix<Int> vbIndex_p;
 
-  // casacore::Map index assignment per calibration buffer row
-  casacore::Block<casacore::Vector<casacore::Int> > cbIndex_p;
+  // Map index assignment per calibration buffer row
+  Block<Vector<Int> > cbIndex_p;
 
-  // casacore::List of visibility and calibration match keys
-  casacore::PtrBlock<casacore::Record* > matchKeys_p;
+  // List of visibility and calibration match keys
+  PtrBlock<Record* > matchKeys_p;
 
   // Pointer to the current VisBuffer
   VisBuffer* vb_p;

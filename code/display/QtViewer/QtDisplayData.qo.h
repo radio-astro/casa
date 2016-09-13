@@ -48,19 +48,15 @@
 #include <graphics/X11/X_exit.h>
 
 
-namespace casacore{
+namespace casa { //# NAMESPACE CASA - BEGIN
 
 	class String;
 	class Record;
-	template <class T> class ImageInterface;
-	class ImageRegion;
-}
-
-namespace casa { //# NAMESPACE CASA - BEGIN
-
 	class DisplayData;
 	class WCMotionEvent;
+	template <class T> class ImageInterface;
 	class QtDisplayPanel;
+	class ImageRegion;
 	class WorldCanvasHolder;
 	class Colormap;
 	class QtDisplayPanelGui;
@@ -76,11 +72,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		static std::string path(const DisplayData *);
 
-		QtDisplayData( QtDisplayPanelGui *panel, casacore::String path, casacore::String dataType, casacore::String displayType,
+		QtDisplayData( QtDisplayPanelGui *panel, String path, String dataType, String displayType,
 		               const viewer::DisplayDataOptions &ddo = viewer::DisplayDataOptions( ),
 		               const viewer::ImageProperties &props = viewer::ImageProperties( ) );
 		~QtDisplayData();
-		casacore::String getPositionInformation( const casacore::Vector<double> world);
+		String getPositionInformation( const Vector<double> world);
 		virtual std::string name() {
 			return name_;
 		}
@@ -102,29 +98,29 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		//Display Type
-		casacore::Bool isRaster() const;
-		casacore::Bool isContour() const;
-		casacore::Bool isVector() const;
-		casacore::Bool isMarker() const;
-		casacore::Bool isImage() const;
+		Bool isRaster() const;
+		Bool isContour() const;
+		Bool isVector() const;
+		Bool isMarker() const;
+		Bool isImage() const;
 
-		//virtual casacore::Bool delTmpData() const;
+		//virtual Bool delTmpData() const;
 		virtual void delTmpData() const;
-		virtual void setDelTmpData(casacore::Bool delTmpData);
+		virtual void setDelTmpData(Bool delTmpData);
 
 		std::string description( ) const;
 		std::string path( ) const {
 			return path_;
 		}
 
-		virtual casacore::String errMsg() {
+		virtual String errMsg() {
 			return errMsg_;
 		}
 
-		// retrieve the casacore::Record of options.  This is similar to a 'Parameter Set',
+		// retrieve the Record of options.  This is similar to a 'Parameter Set',
 		// containing option types, default values, and meta-information,
 		// suitable for building a user interface for controlling the DD.
-		virtual casacore::Record getOptions();
+		virtual Record getOptions();
 
 		// retrieve wrapped DisplayData.
 		//# (should probably be private, and 'friend'ed only to QtDP, which
@@ -134,77 +130,77 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		// Did creation of wrapped DD fail?
-		virtual casacore::Bool isEmpty() {
+		virtual Bool isEmpty() {
 			return dd_==0;
 		}
 
 
 
-		// Possible valuse: Raster, casacore::Vector, Annotation, CanvasAnnotation
+		// Possible valuse: Raster, Vector, Annotation, CanvasAnnotation
 		virtual Display::DisplayDataType ddType();
 		bool isSkyCatalog() const;
 		bool isMS() const;
 
 
 		// Can the QDD display tracking information?
-		virtual casacore::Bool usesTracking() {
+		virtual Bool usesTracking() {
 			return !isEmpty() &&
 			       ddType()!=Display::Annotation &&
 			       ddType()!=Display::CanvasAnnotation;
 		}
 
-		// Returns a casacore::String with value and position information,
+		// Returns a String with value and position information,
 		// suitable for a cursor tracking display.
-		virtual pair<casacore::String,casacore::String> trackingInfo(const WCMotionEvent& ev);
+		virtual pair<String,String> trackingInfo(const WCMotionEvent& ev);
 
 
-		// Convert 2-D 'pseudoregion' (or 'mouse region' casacore::Record, from the region
+		// Convert 2-D 'pseudoregion' (or 'mouse region' Record, from the region
 		// mouse tools) to a full Image Region, with same number of axes as the
-		// DD's casacore::Lattice (and relative to its DisplayCoordinateSystem).
+		// DD's Lattice (and relative to its DisplayCoordinateSystem).
 		// Return value is 0 if the conversion can't be made or does not apply
-		// to this DD for any reason (ignored by non-casacore::Lattice DDs, e.g.).
+		// to this DD for any reason (ignored by non-Lattice DDs, e.g.).
 		//
-		// If allChannels==true, the region is extended along spectral axis, if
+		// If allChannels==True, the region is extended along spectral axis, if
 		// it exists (but ONLY if the spectral axis is not also on display; the
 		// visible mouse region always defines region shape on the display axes).
 		//
-		// If allAxes is true, the region is extended over all (non-display)
-		// axes (including any spectral axis; allAxes=true makes the allChannels
+		// If allAxes is True, the region is extended over all (non-display)
+		// axes (including any spectral axis; allAxes=True makes the allChannels
 		// setting irrelevant).
 		//
-		// If both allchannels and allAxes are false (the default), the region
+		// If both allchannels and allAxes are False (the default), the region
 		// will be confined to the currently-displayed plane.
 		//
-		// -->If the returned casacore::ImageRegion* is non-zero, the caller
+		// -->If the returned ImageRegion* is non-zero, the caller
 		// -->is responsible for deleting it.
-		virtual casacore::ImageRegion* mouseToImageRegion(casacore::Record mouseRegion,
+		virtual ImageRegion* mouseToImageRegion(Record mouseRegion,
 		                                        WorldCanvasHolder* wch,
-		                                        casacore::Bool allChannels=false,
-		                                        casacore::Bool allPols=false,
-		                                        casacore::Bool allRAs=false,
-		                                        casacore::Bool allDECs=false,
-		                                        casacore::Bool allAxes=false);
-		virtual casacore::ImageRegion* mouseToImageRegion(
-		    casacore::Record mouseRegion, WorldCanvasHolder* wch,
-		    casacore::String& extChan, casacore::String& extPol);
+		                                        Bool allChannels=False,
+		                                        Bool allPols=False,
+		                                        Bool allRAs=False,
+		                                        Bool allDECs=False,
+		                                        Bool allAxes=False);
+		virtual ImageRegion* mouseToImageRegion(
+		    Record mouseRegion, WorldCanvasHolder* wch,
+		    String& extChan, String& extPol);
 
 		// Print statistics on image for given region.
-		// Returns false if unable to do so.
-		virtual casacore::Bool printRegionStats(casacore::ImageRegion& imgReg);
-		virtual casacore::Bool printLayerStats(casacore::ImageRegion& imgReg);
+		// Returns False if unable to do so.
+		virtual Bool printRegionStats(ImageRegion& imgReg);
+		virtual Bool printLayerStats(ImageRegion& imgReg);
 
 
 		// Return the number of the spectral axis within the DD's original
 		// image lattice and coordinate system (-1 if none).
-		//virtual casacore::Int spectralAxis();
-		virtual casacore::Int getAxisIndex(casacore::String axtype=casacore::String("Spectral"));
+		//virtual Int spectralAxis();
+		virtual Int getAxisIndex(String axtype=String("Spectral"));
 
 		//#  colorbar methods
 
 
 		// Would this QDD want to display a color bar if registered and
 		// conformant for drawing?
-		virtual casacore::Bool wouldDisplayColorBar() {
+		virtual Bool wouldDisplayColorBar() {
 			bool displayColorBar = false;
 			bool wouldDisplayColorBar = false;
 			if ( colorBarDisplayOpt_ != NULL ) {
@@ -218,7 +214,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 		// Is a color bar WDD defined for this QDD?
-		virtual casacore::Bool hasColorBar() {
+		virtual Bool hasColorBar() {
 			bool colorBarExists = false;
 			if ( colorBar_!= 0 ) {
 				colorBarExists = true;
@@ -230,22 +226,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// User-requested adjustment to colorbar thickness (will probably
 		// remain at the default value of 1).  Used by QtDisplayPanel to
 		// aid in sizing colorbar panels.
-		virtual casacore::Float colorBarSizeAdj() {
+		virtual Float colorBarSizeAdj() {
 			if(!wouldDisplayColorBar()) return 0.;
-			return casacore::max(colorBarThicknessOpt_->minimum(),
-			                     casacore::min(colorBarThicknessOpt_->maximum(),
-			                                   colorBarThicknessOpt_->value()));
+			return max(colorBarThicknessOpt_->minimum(),
+			           min(colorBarThicknessOpt_->maximum(),
+			               colorBarThicknessOpt_->value()));
 		}
 
 
 		// Used (by QtDisplayPanel) to compute margin space for colorbar labels.
 		// It is the (pgplot) character size for colorbar labels (default 1.2)
 		// times a label space 'adjustment' user option (default 1.).
-		virtual casacore::Float colorBarLabelSpaceAdj();
+		virtual Float colorBarLabelSpaceAdj();
 
 
 		// Retrieve color bar ('wedge') DD.  (0 if none.  It will exist if
-		// hasColorBar() is true).  (Not for general use).
+		// hasColorBar() is True).  (Not for general use).
 		//# (should probably be private, and 'friend'ed only to QtDP, which
 		//# which manages its registration and other aspects).
 		virtual WedgeDD* colorBar() {
@@ -256,7 +252,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 		// Does this DD currently own a colormap?
-		virtual casacore::Bool hasColormap() const {
+		virtual Bool hasColormap() const {
 			return clrMap_!=0;
 		}
 		// Different DisplayDatas *could* have different colormap palettes
@@ -264,42 +260,42 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual bool isValidColormap( const QString &name ) const;
 		void setColorMap( Colormap* colorMap );
 		//Set the transparence of the color map for overlaying images.
-		casacore::Bool setColormapAlpha( casacore::uInt alpha );
-		void removeColorMap( const casacore::String& name );
+		Bool setColormapAlpha( uInt alpha );
+		void removeColorMap( const String& name );
 
 		// Get/set colormap shift/slope ('fiddle') and brightness/contrast
 		// settings.  (At present this is usually set for the PC's current
 		// colormap via mouse tools.  These may want to to into get/setOptions
-		// (thus into guis) eventually...).  Return value will be false if
+		// (thus into guis) eventually...).  Return value will be False if
 		// DD has no colormap [at present].
 		//<group>
-		virtual casacore::Bool getCMShiftSlope(casacore::Vector<casacore::Float>& params) const;
-		virtual casacore::Bool getCMBrtCont(casacore::Vector<casacore::Float>& params) const;
-		virtual casacore::Bool setCMShiftSlope(const casacore::Vector<casacore::Float>& params);
-		virtual casacore::Bool setCMBrtCont(const casacore::Vector<casacore::Float>& params);
+		virtual Bool getCMShiftSlope(Vector<Float>& params) const;
+		virtual Bool getCMBrtCont(Vector<Float>& params) const;
+		virtual Bool setCMShiftSlope(const Vector<Float>& params);
+		virtual Bool setCMBrtCont(const Vector<Float>& params);
 		//</group>
 
 		//Return the name of the z-axis.
-		casacore::String getZAxisName();
+		String getZAxisName();
 
 		//# (dk note: If you use this, you must assure you do not change it in ways
 		//# that will crash QDD.  Do not assume it is non-zero -- im_ may be zero if
 		//# the QDD's image is complex.  However, if it _is_ non-zero, you should
 		//# be able to assume it will exist for the life of the QDD).
-		SHARED_PTR<casacore::ImageInterface<casacore::Float> > imageInterface() {
+		SHARED_PTR<ImageInterface<Float> > imageInterface() {
 			return im_;
 		}
 		const viewer::ImageProperties &imageProperties( );
 
 		// force unlocking of paged images
 		void unlock( );
-		static const casacore::String WEDGE_LABEL_CHAR_SIZE;
-		static const casacore::String WEDGE_YES;
+		static const String WEDGE_LABEL_CHAR_SIZE;
+		static const String WEDGE_YES;
 
 
 		void init();
 		void initImage();
-		void setImage(SHARED_PTR< casacore::ImageInterface<casacore::Float> > img);
+		void setImage(SHARED_PTR< ImageInterface<Float> > img);
 		static void setGlobalColorOptions( bool global );
 		void setHistogramColorProperties( bool invert, int logScale );
 
@@ -315,13 +311,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Apply option values to the DisplayData.  Method will
 		// emit optionsChanged() if other option values, limits, etc.
 		// should also change as a result.
-		// Set emitAll = true if the call was not initiated by the options gui
+		// Set emitAll = True if the call was not initiated by the options gui
 		// itself (e.g. via scripting or save-restore); that will assure that
 		// the options gui does receive all option updates (via the optionsChanged
 		// signal) and updates its user interface accordingly.
 
-		virtual void setOptions(casacore::Record opts, casacore::Bool emitAll=false);
-		void emitOptionsChanged( casacore::Record changedOpts );
+		virtual void setOptions(Record opts, Bool emitAll=False);
+		void emitOptionsChanged( Record changedOpts );
 		void setPlotTitle();
 
 
@@ -330,10 +326,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void checkAxis( bool changeSpectrum = true);
 
 
-		const casacore::String &getColormap( ) {
+		const String &getColormap( ) {
 			return clrMapName_;
 		}
-		void setColormap(const casacore::String& clrMapName) {
+		void setColormap(const String& clrMapName) {
 			setColormap_(clrMapName);
 		}
 		void setHistogramColorMapping( float minValue, float maxValue, float powerScale );
@@ -347,10 +343,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// etc., that ui (if any) will want to reflect.  Calling setOptions()
 		// to change one option value may cause this to be emitted with any other
 		// options which have changed as a result.
-		void optionsChanged(casacore::Record changedOptions);
+		void optionsChanged(Record changedOptions);
 
 		// Emitted when problems encountered (in setOptions, e.g.)
-		void qddError(casacore::String errmsg);
+		void qddError(String errmsg);
 
 		// Emitted when options successfully set without error.
 		//# (same purpose as above -- clean this up).
@@ -386,15 +382,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// request from regions are accepted. For that reason there is the
 		// signal axisChangedProfile which connects to the profiler and is
 		// emitted prior to axisChanged (in QtDisplayData::checkAxis())
-		void axisChanged(casacore::String, casacore::String, casacore::String, std::vector<int> );
-		void axisChangedProfile(casacore::String, casacore::String, casacore::String, std::vector<int> );
+		void axisChanged(String, String, String, std::vector<int> );
+		void axisChangedProfile(String, String, String, std::vector<int> );
 
-		void spectrumChanged(casacore::String spcTypeUnit, casacore::String spcRval, casacore::String spcSys);
+		void spectrumChanged(String spcTypeUnit, String spcRval, String spcSys);
 
-		void statsReady(const casacore::String&);
+		void statsReady(const String&);
 		void showColorHistogram( QtDisplayData* );
 
-		void globalOptionsChanged( QtDisplayData*, casacore::Record);
+		void globalOptionsChanged( QtDisplayData*, Record);
 
 	protected slots:
 
@@ -408,25 +404,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	protected:
 
 		// Heuristic used internally to set initial axes to display on X, Y and Z,
-		// for PADDs.  shape should be that of Image/casacore::Array, and have same nelements
+		// for PADDs.  shape should be that of Image/Array, and have same nelements
 		// as axs.  On return, axs[0], axs[1] and (if it exists) axs[2] will be axes
 		// to display initially on X, Y, and animator, respectively.
 		// If you pass a CS for the image, it will give special consideration to
 		// Spectral [/ Direction] axes (users expect their spectral axes on Z, e.g.)
 		//# (Lifted bodily from GTkDD).
-		virtual void getInitialAxes_(casacore::Block<casacore::uInt>& axs, const casacore::IPosition& shape,
+		virtual void getInitialAxes_(Block<uInt>& axs, const IPosition& shape,
 		                             const DisplayCoordinateSystem &cs);
 
 		// Set named colormap onto underlying dd (called from public setOptions()).
 		// Pass "" to remove/delete any existing colormap for the QDD.
 		// In the case that no colormap is set on a dd that needs one (raster dds,
 		// mostly), the drawing canvas will provide a default.
-		// See ColormapDefinition.h, and the casacore::Table gui/colormaps/default.tbl (in the
+		// See ColormapDefinition.h, and the Table gui/colormaps/default.tbl (in the
 		// data repository) for the list of valid default colormap names (and
 		// information on creating/installing custom ones).  If an invalid name is
 		// passed, an (ignorable) error message is signalled, and the dd's colormap
 		// will remain unchanged.
-		virtual void setColormap_(const casacore::String& clrMapName, bool invertChanged = false);
+		virtual void setColormap_(const String& clrMapName, bool invertChanged = false);
 		virtual void removeColormap_() {
 			setColormap_("");
 		}
@@ -435,14 +431,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		//# (could be exposed publicly, if useful).
 		//  Does this DD use/need a public colormap?
-		virtual casacore::Bool usesClrMap_() {
+		virtual Bool usesClrMap_() {
 			return (isRaster() || displayType_=="pksmultibeam");
 		}
 		//# These are the only DD types currently needing a colormap and
 		//# supporting the selection option; add more if/when needed....
 
 		// Can this QDD use a color bar?
-		virtual casacore::Bool usesColorBar_() {
+		virtual Bool usesColorBar_() {
 			return isRaster();
 		}
 
@@ -453,14 +449,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Not intended for use.
 		QtDisplayData() : panel_(0), im_(), cim_(), dd_(0) {  }
 		static bool globalColorSettings;
-		bool setColorBarOptions( casacore::Record& opts, casacore::Record& chgdOpts );
-		void checkGlobalChange( casacore::Record& chgdOpts );
+		bool setColorBarOptions( Record& opts, Record& chgdOpts );
+		void checkGlobalChange( Record& chgdOpts );
 		void done();
 		//If global color settings is checked and a new QtDisplayData is added,
 		//it should pick up the global color settings already in place.
 		void initGlobalColorSettings();
 		void initColorSettings();
-		casacore::Record getGlobalColorChangeRecord( casacore::Record& opts ) const;
+		Record getGlobalColorChangeRecord( Record& opts ) const;
 		//# data
 
 		QtDisplayPanelGui *panel_;
@@ -469,8 +465,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		const std::string TYPE_IMAGE;
 		const std::string SKY_CATALOG;
 		const std::string MS;
-		SHARED_PTR<casacore::ImageInterface<casacore::Float> > im_;
-		SHARED_PTR<casacore::ImageInterface<casacore::Complex> > cim_;
+		SHARED_PTR<ImageInterface<Float> > im_;
+		SHARED_PTR<ImageInterface<Complex> > cim_;
 		DisplayData* dd_;
 
 		std::string name_;
@@ -479,11 +475,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		int logScaleColorMap;
 
 		// Name of colormap used by dd_  ("" if none)
-		casacore::String clrMapName_;
+		String clrMapName_;
 		// Color maps can be removed.  In such a case, the restoreColorMapName
 		//holds the previous one so we can reset to that in case the one we
 		//are using is removed.
-		casacore::String restoreColorMapName;
+		String restoreColorMapName;
 
 		// Will be set onto underlying dd_ if needed (0 if none)
 		Colormap* clrMap_;
@@ -501,15 +497,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		//# (A main reason for this is to remember the colormap's
 		//# 'transfer function' state (brightness/contrast/shift/slope) in case
 		//# it is reused -- see PCITFiddler.h (colormap mouse tools)).
-		typedef std::map<casacore::String, Colormap*> colormapmap;
+		typedef std::map<String, Colormap*> colormapmap;
 		colormapmap clrMaps_;
-		const static casacore::String COLOR_MAP;
+		const static String COLOR_MAP;
 
 
 		// Latest error message, retrievable via errMsg().  (Where possible, errors
 		// are indicated via the qddError signal rather than a throw, and the code
 		// attempts something sensible in case the caller chooses to ignore it).
-		casacore::String errMsg_;
+		String errMsg_;
 
 
 		// The DD that draws the color bar key for the main DD -- 0 if N/A.
@@ -530,19 +526,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Manual user adjustment factor for color bar thickness.  Hopefully
 		// the automatic choice (by QtDisplayPanel) will be adequate in most
 		// cases, and this can remain at the default value of 1.
-		DParameterRange<casacore::Float>* colorBarThicknessOpt_;
+		DParameterRange<Float>* colorBarThicknessOpt_;
 
 		// Manual user adjustment factor for color bar label space.  Hopefully
 		// the automatic choice (by QtDisplayPanel) will be adequate in most
 		// cases, and this can remain at the default value of 1.
-		DParameterRange<casacore::Float>* colorBarLabelSpaceOpt_;
+		DParameterRange<Float>* colorBarLabelSpaceOpt_;
 
 		// "horizontal" / "vertical"
 		DParameterChoice*       colorBarOrientationOpt_;
 
 		// Size of label characters on color bar (affects margins only).
 		//# (WedgeDD reacts to this option, but it is also monitored on this level).
-		DParameterRange<casacore::Float>* colorBarCharSizeOpt_;
+		DParameterRange<Float>* colorBarCharSizeOpt_;
 
 		viewer::ImageProperties image_properties;
 

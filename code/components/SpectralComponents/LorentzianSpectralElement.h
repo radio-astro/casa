@@ -67,14 +67,14 @@ public:
 
 	// Construct with given type and values
 	// <thrown>
-	//   <li> casacore::AipsError if fwhm == 0.0 or amp == 0.0
+	//   <li> AipsError if fwhm == 0.0 or amp == 0.0
 	// </thrown>
 	LorentzianSpectralElement(
-		const casacore::Double ampl, const casacore::Double center,
-		const casacore::Double fwhm
+		const Double ampl, const Double center,
+		const Double fwhm
 	);
 
-	LorentzianSpectralElement(const casacore::Vector<casacore::Double>& param);
+	LorentzianSpectralElement(const Vector<Double>& param);
 
 	// Copy constructor (deep copy)
 	LorentzianSpectralElement(const LorentzianSpectralElement& other);
@@ -86,14 +86,14 @@ public:
 	// Assignment (copy semantics)
 	LorentzianSpectralElement& operator=(const LorentzianSpectralElement& other);
 
-	void setFWHM(casacore::Double fwhm) { setWidth(fwhm); }
+	void setFWHM(Double fwhm) { setWidth(fwhm); }
 
-	casacore::Double getFWHM() const { return getWidth(); }
+	Double getFWHM() const { return getWidth(); }
 
-	casacore::Double getFWHMErr() const { return getWidthErr(); }
+	Double getFWHMErr() const { return getWidthErr(); }
 
 	// get the integral of the function
-	casacore::Double getIntegral() const;
+	Double getIntegral() const;
 
 private:
 	// has amp = 1, center = 0, and fwhm = 1
@@ -101,7 +101,7 @@ private:
 
 };
 
-std::ostream &operator<<(std::ostream& os, const LorentzianSpectralElement& elem);
+ostream &operator<<(ostream& os, const LorentzianSpectralElement& elem);
 
 } //# NAMESPACE CASA - END
 

@@ -30,7 +30,6 @@
 #include <msvis/MSVis/UtilJ.h>
 #include <QDebug>
 
-using namespace casacore;
 namespace casa {
 
 CacheThread::CacheThread() {
@@ -123,7 +122,7 @@ bool CacheThread::doWork(){
                     }
                     if ( itsCache ){
                         itsCache->clearRanges();
-                        bool globalRanges = false;
+                        bool globalRanges = False;
                         for ( int i = 0; i < dataCount; i++ ){
                             itsCache->setUpIndexer(PMS::NONE, globalRanges, globalRanges, i);
                         }
@@ -169,5 +168,4 @@ CacheThread::~CacheThread() {
 	// TODO Auto-generated destructor stub
 }
 
-using namespace casacore;
 } /* namespace casa */

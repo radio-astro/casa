@@ -70,7 +70,7 @@ private slots:
 
 private:
     // Location of the directory holding the help files.
-    casacore::String helpdir;
+    String helpdir;
 };
 
 }

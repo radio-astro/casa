@@ -52,7 +52,6 @@
 
 #include <casa/Quanta/MVAngle.h>
 
-using namespace casacore;
 namespace casa {
 	namespace viewer {
 
@@ -644,7 +643,7 @@ namespace casa {
 					IPosition pos = padd->fixedPosition( );
 					Vector<Int> dispAxes = padd->displayAxes( );
 
-					if ( nAxes == 2 ) dispAxes.resize(2,true);
+					if ( nAxes == 2 ) dispAxes.resize(2,True);
 
 					if ( nAxes < 2 || Int(shp.nelements()) != nAxes ||
 					        Int(pos.nelements()) != nAxes ||
@@ -654,7 +653,7 @@ namespace casa {
 					if ( dispAxes.nelements() > 2u )
 						pos[dispAxes[2]] = zIndex;
 
-					dispAxes.resize(2,true);
+					dispAxes.resize(2,True);
 
 					// WCBox dummy;
 					Quantum<Double> px0(0.,"pix");
@@ -697,7 +696,7 @@ namespace casa {
 					                           std::string( ), std::string( ))) );
 
 					delete imageregion;
-				} catch (const casacore::AipsError& err) {
+				} catch (const casa::AipsError& err) {
 					errMsg_ = err.getMesg();
 					continue;
 				} catch (...) {
@@ -734,7 +733,7 @@ namespace casa {
 			if ( ! image ) return 0;
 
 			Vector<Int> dispAxes = padd->displayAxes( );
-			dispAxes.resize(2,true);
+			dispAxes.resize(2,True);
 
 			const Vector<String> &units = wc_->worldAxisUnits( );
 			const DisplayCoordinateSystem &cs = image->coordinates( );
@@ -897,7 +896,7 @@ namespace casa {
 				dock_->panel( )->logIO( ) << LogIO::SEVERE << err.getMesg( ) << LogIO::POST;
 				// fallback to P/V failure, create dummy image...
 				// QtDisplayPanelGui *new_panel = dock_->panel( )->createNewPanel( );
-				// new_panel->addDD( "/Users/drs/develop/casa/testing/cas-4515/SPT041847_IMAGE.image", "image", "raster", true, false );
+				// new_panel->addDD( "/Users/drs/develop/casa/testing/cas-4515/SPT041847_IMAGE.image", "image", "raster", True, False );
 			} catch( ... ) {
 				dock_->panel( )->logIO( ) << LogIO::SEVERE << "unexpected error occurred while generating the P/V image" << LogIO::POST;
 			}
@@ -938,7 +937,7 @@ namespace casa {
 					}
 					sub_dpg->unregisterAllDDs( );
 					display_list.push_back(de);
-					sub_dpg->addDD( new_image->name(false), "image", "raster", true, true, new_image );
+					sub_dpg->addDD( new_image->name(false), "image", "raster", True, True, new_image );
 					sub_dpg->show( );
 					sub_dpg->raise( );
 					break;

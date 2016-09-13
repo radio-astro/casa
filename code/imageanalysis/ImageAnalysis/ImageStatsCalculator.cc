@@ -33,7 +33,6 @@
 
 #include <iomanip>
 
-using namespace casacore;
 namespace casa {
 
 const String ImageStatsCalculator::_class = "ImageStatsCalculator";
@@ -45,13 +44,13 @@ ImageStatsCalculator::ImageStatsCalculator(
 	Bool beVerboseDuringConstruction
 ) : ImageTask<Float>(
 		image, "", regionPtr, "", "",
-		"", maskInp, "", false
+		"", maskInp, "", False
 	), _statistics(), _oldStatsRegion(0), _oldStatsMask(0),
-	_axes(), _includepix(), _excludepix(), _list(false),
-	_disk(false), _robust(false), _verbose(false), _algConf(),
+	_axes(), _includepix(), _excludepix(), _list(False),
+	_disk(False), _robust(False), _verbose(False), _algConf(),
 	_subImage(), _prefClassStatsAlg(AUTO) {
 	_construct(beVerboseDuringConstruction);
-	//_setSupportsLogfile(true);
+	//_setSupportsLogfile(True);
 	_algConf.algorithm = StatisticsData::CLASSICAL;
 }
 
@@ -68,7 +67,7 @@ Record ImageStatsCalculator::calculate() {
 				vector<String>::const_iterator iter=messageStore->begin();
 				iter != messageStore->end(); ++iter
 			) {
-				_writeLogfile("# " + *iter, false, false);
+				_writeLogfile("# " + *iter, False, False);
 			}
 		}
 		IPosition shape = _axes.empty() ? IPosition(_subImage->ndim(), 1)
@@ -257,7 +256,7 @@ void ImageStatsCalculator::_reportDetailedStats(
 			    *_getLog() << LogIO::NORMAL << oss.str() << LogIO::POST;
 			}
 			if (_getLogFile()) {
-			    _writeLogfile("#" + oss.str(), false, false);
+			    _writeLogfile("#" + oss.str(), False, False);
 			}
 		    oss.str("");
 		}
@@ -279,7 +278,7 @@ void ImageStatsCalculator::_reportDetailedStats(
 	    oss << "#Std_dev column unit = " << bUnit << endl;
 	    oss << "#Minimum column unit = " << bUnit << endl;
 	    oss << "#Maximum column unit = " << bUnit << endl;
-	    _writeLogfile(oss.str(), false, false);
+	    _writeLogfile(oss.str(), False, False);
 	    oss.str("");
 	}
 	for (auto ax : reportAxes) {
@@ -310,7 +309,7 @@ void ImageStatsCalculator::_reportDetailedStats(
 	    *_getLog() << LogIO::NORMAL << oss.str() << LogIO::POST;
 	}
 	if (_getLogFile()) {
-	    _writeLogfile("#" + oss.str(), false, false);
+	    _writeLogfile("#" + oss.str(), False, False);
 	}
 	oss.str("");
 	for (uInt i=0; i<7; ++i) {
@@ -352,7 +351,7 @@ void ImageStatsCalculator::_reportDetailedStats(
 			ImageUtilities::pixToWorld(
 				coords[i], csys, axis, _axes,
 				IPosition(imShape.size(),0), imShape-1, indices, prec,
-				true
+				True
 			);
 		}
 		++i;
@@ -404,7 +403,7 @@ void ImageStatsCalculator::_reportDetailedStats(
 		}
 		// add a space at the beginning of the line to account for the
 		// "#" in the column header
-		_writeLogfile(" " + oss.str(), false, false);
+		_writeLogfile(" " + oss.str(), False, False);
 		oss.str("");
 	}
 	_closeLogfile();
@@ -461,8 +460,8 @@ Record ImageStatsCalculator::statistics(
     if (_statistics.get() == NULL) {
         _statistics.reset(
 		    _verbose
-			? new ImageStatistics<Float> (*_subImage, *_getLog(), true, _disk)
-			: new ImageStatistics<Float> (*_subImage, true, _disk)
+			? new ImageStatistics<Float> (*_subImage, *_getLog(), True, _disk)
+			: new ImageStatistics<Float> (*_subImage, True, _disk)
 		);
 	}
 	else {
@@ -477,7 +476,7 @@ Record ImageStatsCalculator::statistics(
 		}
 	}
     // prevent the table of stats we no longer use from being logged
-    _statistics->setListStats(false);
+    _statistics->setListStats(False);
     String myAlg = _configureAlgorithm();
 	if (_list) {
 		*_getLog() << myOrigin << LogIO::NORMAL;
@@ -510,7 +509,7 @@ Record ImageStatsCalculator::statistics(
 		}
 	}
 	if (messageStore != NULL) {
-		_statistics->recordMessages(true);
+		_statistics->recordMessages(True);
 	}
 	_statistics->setPrecision(precis);
 	_statistics->setBlc(blc);
@@ -525,7 +524,7 @@ Record ImageStatsCalculator::statistics(
 	*_getLog() << myOrigin;
 	ThrowIf(! _statistics->setAxes(_axes), _statistics->errorMessage());
 	ThrowIf(
-		!_statistics->setInExCludeRange(_includepix, _excludepix, false),
+		!_statistics->setInExCludeRange(_includepix, _excludepix, False),
 		_statistics->errorMessage()
 	);
 	// Tell what to list
@@ -536,8 +535,8 @@ Record ImageStatsCalculator::statistics(
 	// Recover statistics
 	Array<Double> npts, sum, sumsquared, min, max, mean, sigma;
 	Array<Double> rms, fluxDensity, med, medAbsDevMed, quartile, q1, q3;
-	Bool ok = true;
-	Bool doFlux = true;
+	Bool ok = True;
+	Bool doFlux = True;
 	if (_getImage()->imageInfo().hasMultipleBeams()) {
 		if (csys.hasSpectralAxis() || csys.hasPolarizationCoordinate()) {
 			Int spAxis = csys.spectralAxisNumber();
@@ -547,7 +546,7 @@ Record ImageStatsCalculator::statistics(
 					*_getLog() << LogIO::WARN << "At least one cursor axis contains multiple beams. "
 						<< "You should thus use care in interpreting these statistics. Flux densities "
 						<< "will not be computed." << LogIO::POST;
-					doFlux = false;
+					doFlux = False;
 					break;
 				}
 			}

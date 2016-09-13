@@ -59,15 +59,11 @@
 #include <unistd.h>
 using namespace std;
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
   namespace refim {//# NAMESPACE REFIM - BEGIN
 
-using namespace casacore;
     using namespace casa;
-using namespace casacore;
     using namespace casa::refim;
-using namespace casacore;
     using namespace casa::vi;
   
   SIMapper::SIMapper( CountedPtr<SIImageStore>& imagestore, 
@@ -181,16 +177,16 @@ using namespace casacore;
   {
     LogIO os( LogOrigin("SIMapper","getFTMRecord",WHERE) );
     if(ft_p.null())
-    	return false;
+    	return False;
     String err;
-    return ft_p->toRecord(err, rec, true, diskimage);
+    return ft_p->toRecord(err, rec, True, diskimage);
     // rec = itsFTM->toRecord();
 
   }
   Bool SIMapper::getCLRecord(Record& rec)
   {
 	  if(cft_p.null())
-	      	return false;
+	      	return False;
 	  String err;
 	  return cl_p.toRecord(err, rec);
 
@@ -222,7 +218,7 @@ using namespace casacore;
 
       // assertSkyJones(vb, -1);
       //vb_p is used to finalize things if vb has changed propoerties
-      //vb_p->assign(vb, false);
+      //vb_p->assign(vb, False);
       vb_p->copyCoordinateInfo(& vb, dirDep);
 
 
@@ -235,12 +231,12 @@ using namespace casacore;
     	return;
     Int nRow=vb.nRows();
     const vi::VisBuffer2Adapter vba(&vb);
-    Bool internalChanges=false;  // Does this VB change inside itself?
-    Bool firstOneChanges=false;  // Has this VB changed from the previous one?
+    Bool internalChanges=False;  // Does this VB change inside itself?
+    Bool firstOneChanges=False;  // Has this VB changed from the previous one?
     if((ift_p->name() != "MosaicFT")    && (ift_p->name() != "PBWProjectFT") &&
            (ift_p->name() != "AWProjectFT") && (ift_p->name() != "AWProjectWBFT"))
     {
-            changedSkyJonesLogic(vb, firstOneChanges, internalChanges, true);
+            changedSkyJonesLogic(vb, firstOneChanges, internalChanges, True);
     }
     //First ft machine change should be indicative
     //anyways right now we are allowing only 1 ftmachine for GridBoth
@@ -286,7 +282,7 @@ using namespace casacore;
 
     }
 
-    //isBeginingOfSkyJonesCache_p=false;
+    //isBeginingOfSkyJonesCache_p=False;
 
   }
 
@@ -306,24 +302,24 @@ using namespace casacore;
     // weight to the summed weight
     Matrix<Float> delta;
     //get the image in itsImage->backwardGrid() which ift is holding by reference
-    ift_p->getImage(delta, false);
+    ift_p->getImage(delta, False);
     //iftm_p[field]->finalizeToSky( imPutSliceVec , gSSliceVec , ggSSliceVec , fluxScaleVec, dopsf , weightSliceVec );
     //weightSlice_p[model]+=delta;
     if(dopsf)
-    	ift_p->correlationToStokes(*(itsImages->backwardGrid()), *(itsImages->psf()), true);
+    	ift_p->correlationToStokes(*(itsImages->backwardGrid()), *(itsImages->psf()), True);
     else{
     	if(ejgrid_p != NULL){
     		// Note we apply the state of the previously saved visbuffer vb_p
     		// We might have to carry over the row for internal changes
     		ejgrid_p->apply(*(itsImages->backwardGrid()),*(itsImages->backwardGrid()),
-    		                vi::VisBuffer2Adapter(vb_p), -1, false);
+    		                vi::VisBuffer2Adapter(vb_p), -1, False);
     		TempImage<Float> temp((itsImages->residual())->shape(), (itsImages->residual())->coordinates());
-    		ift_p->correlationToStokes(*(itsImages->backwardGrid()), temp, false);
+    		ift_p->correlationToStokes(*(itsImages->backwardGrid()), temp, False);
     		LatticeExpr<Float> addToRes( *(itsImages->residual()) + temp );
     		(itsImages->residual())->copyData(addToRes);
     	}
     	else
-    		ift_p->correlationToStokes(*(itsImages->backwardGrid()), *(itsImages->residual()), false);
+    		ift_p->correlationToStokes(*(itsImages->backwardGrid()), *(itsImages->residual()), False);
     }
     Matrix<Float> wgt;
 
@@ -351,7 +347,7 @@ using namespace casacore;
     if(!ft_p.null()) {
     	ft_p->stokesToCorrelation(*(itsImages->model()), *(itsImages->forwardGrid()));
     	if(ejdegrid_p != NULL)
-    		ejgrid_p->apply(*(itsImages->forwardGrid()),*(itsImages->forwardGrid()), vi::VisBuffer2Adapter(&vb), row, true);
+    		ejgrid_p->apply(*(itsImages->forwardGrid()),*(itsImages->forwardGrid()), vi::VisBuffer2Adapter(&vb), row, True);
     	// Change the model polarization frame
     	if(vb.polarizationFrame()==MSIter::Linear) {
     		StokesImageUtil::changeCStokesRep(*(itsImages->forwardGrid()),
@@ -379,7 +375,7 @@ using namespace casacore;
     			    }
     			  }
     			////We might have to deal with the right row here if the visbuffer is has changed internally
-    			ejdegrid_p->apply(comp, comp, vi::VisBuffer2Adapter(&vb),row, true);
+    			ejdegrid_p->apply(comp, comp, vi::VisBuffer2Adapter(&vb),row, True);
     			clCorrupted_p.add(comp);
     		}
     	}
@@ -399,12 +395,12 @@ using namespace casacore;
     Cube<Complex> origCube;
     origCube.assign(vb.visCubeModel());
     vi::VisBuffer2Adapter vba(&vb);
-    Bool internalChanges=false;  // Does this VB change inside itself?
-    Bool firstOneChanges=false;  // Has this VB changed from the previous one?
+    Bool internalChanges=False;  // Does this VB change inside itself?
+    Bool firstOneChanges=False;  // Has this VB changed from the previous one?
 
     	if((!ft_p.null() && (ft_p->name() != "MosaicFT")    && (ft_p->name() != "PBWProjectFT") &&
     		(ft_p->name() != "AWProjectFT") && (ft_p->name() != "AWProjectWBFT")) || (!cft_p.null())) {
-    		changedSkyJonesLogic(vb, firstOneChanges, internalChanges, false);
+    		changedSkyJonesLogic(vb, firstOneChanges, internalChanges, False);
     	}
     	//anyways right now we are allowing only 1 ftmachine for GridBoth
     	Bool FTChanged=ft_p->changed(vba);

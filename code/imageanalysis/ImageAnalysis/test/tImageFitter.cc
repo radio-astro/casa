@@ -61,7 +61,7 @@ void checkImage(
     ia.open(gotImage);
     String expr = "\"" + gotImage + "\" - \"" + expectedImage + "\"";
     cout << "*** before " << endl;
-    ia.imagecalc(differenceImage, expr, true);
+    ia.imagecalc(differenceImage, expr, True);
     cout << "*** after " << endl;
     cout << "** info " << Table::tableInfo(differenceImage).type();
     ia.open(differenceImage);
@@ -71,7 +71,7 @@ void checkImage(
     axes[1] = 1;
     Record region;
     Vector<String> plotstats(0);
-    ImageStatsCalculator statscalc(ia.getImage(), 0, "", false);
+    ImageStatsCalculator statscalc(ia.getImage(), 0, "", False);
     Record stats = statscalc.statistics();
     statscalc.statistics();
 
@@ -99,7 +99,7 @@ int main() {
     os << "tImageFitter_tmp_" << pid;
     String dirName = os.str();
 	Directory workdir(dirName);
-	workdir.create(true);
+	workdir.create(True);
   	const Double DEGREES_PER_RADIAN = 180/C::pi;
     Double arcsecsPerRadian = DEGREES_PER_RADIAN*3600;
     String test;
@@ -226,7 +226,7 @@ int main() {
         	trc[dirNums[0]] = 170;
         	trc[dirNums[1]] = 129;
         	RegionManager rm;
-        	Record *box = rm.box(blc, trc, inc, "abs", false);
+        	Record *box = rm.box(blc, trc, inc, "abs", False);
         	ImageFitter fitter(noisyImage, "", box);
         	ComponentList compList = fitter.fit().first;
             AlwaysAssert(fitter.converged(0), AipsError);
@@ -259,11 +259,11 @@ int main() {
             cout << "*** test fitter using an includepix (i=0) and excludepix (i=1) range with model with noise" << endl;
         	ImageAnalysis ia;
         	String outname = dirName + "/myout.im";
-        	SPIIF outIm(ia.newimagefromfits(outname, noisyImage->name(), 0, 0, false, true));
+        	SPIIF outIm(ia.newimagefromfits(outname, noisyImage->name(), 0, 0, False, True));
         	ImageAnalysis ia2(outIm);
         	String goodMask = "\"" + outname + "\">40";
         	Record r;
-        	ia2.calcmask(goodMask, r, "mymask", true);
+        	ia2.calcmask(goodMask, r, "mymask", True);
         	// it appears this call is explicitly needed even though the previous statement should have made
         	// the new mask the default mask
         	outIm->setDefaultMask("mymask");
@@ -290,7 +290,7 @@ int main() {
                         mask = "";
                         break;
                     case 2:
-                        mask = noisyImage->name(false) + ">40";
+                        mask = noisyImage->name(False) + ">40";
                         writeTestString("test using LEL mask " + mask);
                         break;
                     case 3:
@@ -697,7 +697,7 @@ int main() {
         		ImageFitter fitter(
         			scaled, "", 0, "130,89,170,129"
         		);
-        		fitter.setZeroLevelEstimate(0, false);
+        		fitter.setZeroLevelEstimate(0, False);
         		ComponentList compList = fitter.fit().first;
         		AlwaysAssert(fitter.converged(0), AipsError);
         		Vector<Quantity> flux;
@@ -737,7 +737,7 @@ int main() {
          	ImageFitter fitter(
          		scaled, "", 0, "130,89,170,129"
          	);
-         	fitter.setZeroLevelEstimate(-0.102277, true);
+         	fitter.setZeroLevelEstimate(-0.102277, True);
          	ComponentList compList = fitter.fit().first;
          	AlwaysAssert(fitter.converged(0), AipsError);
          	Vector<Quantity> flux;

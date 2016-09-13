@@ -39,7 +39,7 @@ class RFDataMapper;
 class VisBuffer;
 
 // a row mapper member function maps a row to a single value
-typedef casacore::Float (RFDataMapper::*RowMapperFunc)(casacore::uInt);
+typedef Float (RFDataMapper::*RowMapperFunc)(uInt);
 
 // <summary>
 // RFDataMapper: maps complex visibilities to a single real value
@@ -77,9 +77,9 @@ public:
   typedef enum { MAPROW,MAPCORR } MapperType;
     
   // construct from a column and a DDMapper
-  RFDataMapper( const casacore::String &col,DDMapper *map );
+  RFDataMapper( const String &col,DDMapper *map );
   // construct from a column and an expression
-  RFDataMapper( const casacore::Vector<casacore::String> &expr,const casacore::String &defcol = "" );
+  RFDataMapper( const Vector<String> &expr,const String &defcol = "" );
   // destructor
   ~RFDataMapper();
   
@@ -88,15 +88,15 @@ public:
   
   // If the value being mapped into is cyclic (i.e. an angle),
   // returns value of full cycle (e.g. 360); otherwise returns 0.
-  casacore::Double getValueCycle ();
+  Double getValueCycle ();
   // Returns base of a cyclic value (e.g. -180, if value is an angle -180..180)
   // If value is non-cyclic, the result is undefined.
-  casacore::Double getValueBase  ();
+  Double getValueBase  ();
 
   // gets a value from the DDMapper
-  casacore::Float mapValue ( casacore::uInt ich,casacore::uInt irow );
+  Float mapValue ( uInt ich,uInt irow );
   // gets a value from the row mapper
-  casacore::Float mapValue ( casacore::uInt irow );
+  Float mapValue ( uInt irow );
 
   // uses mapper to compute a correlations mask
   RFlagWord corrMask (const VisibilityIterator &vi);
@@ -105,66 +105,66 @@ public:
   void  setVisBuffer (VisBuffer &vb);
 
   // returns description
-  casacore::String description () const;
+  String description () const;
   // returns description of expression
-  casacore::String descExpression () const;
+  String descExpression () const;
 
   // a cube mapper function maps a visbuffer to a data cube. This
   // belongs in private or protected, but the SGI compiler wouldn't hear of it
-  typedef casacore::Cube<casacore::Complex> * (*CubeMapperFunc)(VisBuffer &);
+  typedef Cube<Complex> * (*CubeMapperFunc)(VisBuffer &);
   
 protected:
 
   // static helper function to interpret constructor parameters into a cube mapper
-  static CubeMapperFunc getCubeMapper( const casacore::String &col,casacore::Bool throw_excp = false );
+  static CubeMapperFunc getCubeMapper( const String &col,Bool throw_excp = False );
       
-  casacore::String expr_desc,desc;           // expression and description of data mapper
+  String expr_desc,desc;           // expression and description of data mapper
   DDMapper *ddm;                   // data mapper
   RowMapperFunc rowmapper;         // row mapper
-  casacore::Cube<casacore::Complex> *pviscube;         // pointer to visibilities cube 
-  casacore::Vector<casacore::RigidVector<casacore::Double,3> > *puvw; // pointer to UVW matrix
+  Cube<Complex> *pviscube;         // pointer to visibilities cube 
+  Vector<RigidVector<Double,3> > *puvw; // pointer to UVW matrix
   CubeMapperFunc cubemap; // function to map a chunk to a visibility cube
   MapperType mytype;
-  casacore::Double full_cycle,cycle_base;     // for cyclic values (i.e. angles)
+  Double full_cycle,cycle_base;     // for cyclic values (i.e. angles)
   
 // various row mappers
-  casacore::Float dummyRowMapper (casacore::uInt);
-  casacore::Float U_RowMapper (casacore::uInt);
-  casacore::Float V_RowMapper (casacore::uInt);
-  casacore::Float W_RowMapper (casacore::uInt);
-  casacore::Float AbsU_RowMapper (casacore::uInt);
-  casacore::Float AbsV_RowMapper (casacore::uInt);
-  casacore::Float AbsW_RowMapper (casacore::uInt);
-  casacore::Float UVD_RowMapper (casacore::uInt);
-  casacore::Float UVA_RowMapper (casacore::uInt);
-  casacore::Float HA_RowMapper (casacore::uInt);
+  Float dummyRowMapper (uInt);
+  Float U_RowMapper (uInt);
+  Float V_RowMapper (uInt);
+  Float W_RowMapper (uInt);
+  Float AbsU_RowMapper (uInt);
+  Float AbsV_RowMapper (uInt);
+  Float AbsW_RowMapper (uInt);
+  Float UVD_RowMapper (uInt);
+  Float UVA_RowMapper (uInt);
+  Float HA_RowMapper (uInt);
   
 // required by the HA mapper - sin(declination) of phase center; 
-  casacore::Double sin_dec;
+  Double sin_dec;
 };
 
 inline RFDataMapper::MapperType RFDataMapper::type ()
 { return mytype; }
 
-inline casacore::Float RFDataMapper::mapValue ( casacore::uInt ich,casacore::uInt irow )
+inline Float RFDataMapper::mapValue ( uInt ich,uInt irow )
 { 
   if (pviscube == NULL) {
-    throw(casacore::AipsError("Visibility buffer is unset, cannot get value!"));
+    throw(AipsError("Visibility buffer is unset, cannot get value!"));
   }
   return ddm->map(*pviscube,ich,irow); 
 }
 
-inline casacore::Float RFDataMapper::mapValue ( casacore::uInt irow )
+inline Float RFDataMapper::mapValue ( uInt irow )
 { return (this->*rowmapper)(irow); }
 
-inline casacore::String RFDataMapper::description () const
+inline String RFDataMapper::description () const
 { return desc; }
-inline casacore::String RFDataMapper::descExpression () const
+inline String RFDataMapper::descExpression () const
 { return expr_desc; }
 
-inline casacore::Double RFDataMapper::getValueCycle ()
+inline Double RFDataMapper::getValueCycle ()
 { return full_cycle; }
-inline casacore::Double RFDataMapper::getValueBase ()
+inline Double RFDataMapper::getValueBase ()
 { return cycle_base; }
 
 

@@ -29,7 +29,6 @@
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
 #include <plotms/Client/Client.h>
 
-using namespace casacore;
 namespace casa {
 
 ActionSelect::ActionSelect( Client* client )
@@ -175,5 +174,4 @@ void ActionSelect::redrawPlots(PlotMSPlot* plot, vector<PlotCanvasPtr>& visibleC
 ActionSelect::~ActionSelect() {
 }
 
-using namespace casacore;
 } /* namespace casa */

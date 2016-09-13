@@ -103,7 +103,7 @@ class TBXMLDriver {
 public:
     // Takes a command in pseudo-TaQL format and returns XML in pseduo-VOTable
     // format.  For command examples, see TBXMLDriver.h code comments.
-    static casacore::String dowork(const char* buff);
+    static String dowork(const char* buff);
 
 private:
     // Indicates whether debug information should be printed or not.
@@ -116,22 +116,22 @@ private:
     static const int PacketSize = 4096;
     
     // Creates the XML representation of a VOTable from the given parameters.
-    static casacore::String createVOTab(casacore::String tablename, int totalrows,
-                             casacore::Vector<casacore::String> colnames, casacore::Vector<casacore::String> datatype,
-                             casacore::String records, casacore::String keyword, casacore::Bool insRowOk,
-                             casacore::Bool delRowOk, casacore::String columnkeywords);
+    static String createVOTab(String tablename, int totalrows,
+                             Vector<String> colnames, Vector<String> datatype,
+                             String records, String keyword, Bool insRowOk,
+                             Bool delRowOk, String columnkeywords);
     
     // Creates the XML representation of a keyword from the given parameters.
-    static casacore::String createKeyword(casacore::TableRecord &trec, int a);
+    static String createKeyword(TableRecord &trec, int a);
     
     // Sends the given String.
-    static int SendData(int fd, const casacore::String &hits);
+    static int SendData(int fd, const String &hits);
     
     // Makes the return result from the given String.
-    static char* mkReturnResult(const casacore::String &hits);
+    static char* mkReturnResult(const String &hits);
     
     // Sets up communication.
-    static casacore::Bool setupComm(casacore::Int &fd);
+    static Bool setupComm(Int &fd);
     
     // Reads input into the given char*.
     static int readn(int fd, char *ptr, int nbytes);

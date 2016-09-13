@@ -33,13 +33,9 @@
 #include <display/DisplayShapes/DSPolyLine.h>
 #include <casa/Arrays/Matrix.h>
 
-namespace casacore{
-
-	template <class T> class Vector;
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+	template <class T> class Vector;
 
 // <summary>
 // Implementation of a line.
@@ -72,17 +68,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <example>
 // <srcblock>
-// casacore::Vector<casacore::Float> startPoint(2); startPoint[0] = 100; startPoint[1] = 100;
-// casacore::Vector<casacore::Float> endPoint(2);   endPoint[0] = 200;   endPoint[1] = 200;
+// Vector<Float> startPoint(2); startPoint[0] = 100; startPoint[1] = 100;
+// Vector<Float> endPoint(2);   endPoint[0] = 200;   endPoint[1] = 200;
 //
-// DSLine* myLine = new DSLine(startPoint, endPoint, true, true);
+// DSLine* myLine = new DSLine(startPoint, endPoint, True, True);
 //
 // myLine->move(10,10);
 //
-// casacore::Vector<casacore::Float> newStart(2); newStart[0] = 50; newStart[1] = 50;
+// Vector<Float> newStart(2); newStart[0] = 50; newStart[1] = 50;
 // myLine->setStartPoint(newStart);
 //
-// casacore::Record newLineOpt;
+// Record newLineOpt;
 // newLineOpt.define("linewidth", 3);
 //
 // myLine->setOptions(newLineOpt);
@@ -99,54 +95,54 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// <group>
 		DSLine();
 		DSLine(const DSLine &other);
-		DSLine(const casacore::Vector<casacore::Float>& startPos, const casacore::Vector<casacore::Float>& endPos,
-		       const casacore::Bool& handles = true, const casacore::Bool& drawHandles = true);
+		DSLine(const Vector<Float>& startPos, const Vector<Float>& endPos,
+		       const Bool& handles = True, const Bool& drawHandles = True);
 		virtual ~DSLine();
 		// </group>
 
 		// This does nothing, it's so arrow and other inheriting classes can
 		// take note of new centers
-		virtual void setCenter(const casacore::Float& xPos, const casacore::Float& yPos);
+		virtual void setCenter(const Float& xPos, const Float& yPos);
 
 		// Does this line have a valid start and a valid end?
-		virtual casacore::Bool isValid();
+		virtual Bool isValid();
 
 		// Line specific functions for ease of use
 		// <group>
-		virtual void setStartPoint(const casacore::Vector<casacore::Float>& start);
-		virtual void setEndPoint(const casacore::Vector<casacore::Float>& end);
+		virtual void setStartPoint(const Vector<Float>& start);
+		virtual void setEndPoint(const Vector<Float>& end);
 		// </group>
 
 		// Set and get options
 		// <group>
-		virtual casacore::Record getOptions();
-		virtual casacore::Bool setOptions(const casacore::Record& newSettings);
+		virtual Record getOptions();
+		virtual Bool setOptions(const Record& newSettings);
 		// </group>
 
 	private:
 
 
-		casacore::Bool itsValidStart, itsValidEnd;
+		Bool itsValidStart, itsValidEnd;
 
 		// These are to hold the points while line is being made (line is invalid).
-		casacore::Vector<casacore::Float> itsStart;
-		casacore::Vector<casacore::Float> itsEnd;
+		Vector<Float> itsStart;
+		Vector<Float> itsEnd;
 
 	protected:
 
-		virtual casacore::Bool validStart() {
+		virtual Bool validStart() {
 			return itsValidStart;
 		}
 
-		virtual casacore::Bool validEnd() {
+		virtual Bool validEnd() {
 			return itsValidEnd;
 		}
 
 		virtual void make();
 		// General utility functions.
 		// <group>
-		virtual casacore::Matrix<casacore::Float> getEnds();
-		virtual casacore::Matrix<casacore::Float> asPolyLine(const casacore::Vector<casacore::Float>& startPos, const casacore::Vector<casacore::Float>& endPos);
+		virtual Matrix<Float> getEnds();
+		virtual Matrix<Float> asPolyLine(const Vector<Float>& startPos, const Vector<Float>& endPos);
 		// </group>
 	};
 

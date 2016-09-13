@@ -36,7 +36,7 @@ public:
 
 	virtual ~ActionInformation();
 protected:
-	virtual bool doActionWithResponse(PlotMSApp* plotms, casacore::Record &retval);
+	virtual bool doActionWithResponse(PlotMSApp* plotms, Record &retval);
 	virtual bool doActionSpecific(PlotMSApp* plotms);
 };
 

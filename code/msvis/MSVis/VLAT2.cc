@@ -36,7 +36,6 @@
 #include <msvis/MSVis/VisBufferAsync.h>
 
 #include "AsynchronousTools2.h"
-using namespace casacore;
 using namespace casa::async;
 
 #include <algorithm>
@@ -45,17 +44,14 @@ using namespace casa::async;
 
 #include "UtilJ.h"
 
-using namespace casacore;
 using namespace casa::utilj;
 using namespace std;
-using namespace casacore;
 using namespace casa::asyncio;
 
 #define Log(level, ...) \
         {if (AsynchronousInterface::logThis (level)) \
     Logger::get()->log (__VA_ARGS__);};
 
-using namespace casacore;
 namespace casa {
 
 namespace vi {
@@ -84,7 +80,7 @@ VLAT::VLAT (AsynchronousInterface * asynchronousInterface)
     vlaData_p = interface_p->getVlaData();
     visibilityIterator_p = NULL;
     writeIterator_p = NULL;
-    threadTerminated_p = false;
+    threadTerminated_p = False;
 }
 
 VLAT::~VLAT ()
@@ -113,7 +109,7 @@ VLAT::alignWriteIterator (SubChunkPair subchunk)
 {
     Assert (subchunk <= readSubchunk_p);
 
-    Bool done = false;
+    Bool done = False;
 
     while (subchunk > writeSubchunk_p && ! done){
 
@@ -141,11 +137,11 @@ VLAT::alignWriteIterator (SubChunkPair subchunk)
                     writeSubchunk_p.incrementChunk();
                 }
                 else{
-                    done = true; // no more data
+                    done = True; // no more data
                 }
             }
             else{
-                done = true; // no more data
+                done = True; // no more data
             }
         }
     }
@@ -456,7 +452,7 @@ VLAT::handleWrite ()
 {
     // While there is data to write out, write it out.
 
-    Bool done = false;
+    Bool done = False;
 
     WriteQueue & writeQueue = interface_p->getWriteQueue ();
 
@@ -474,7 +470,7 @@ VLAT::handleWrite ()
             delete writeData;
         }
         else{
-            done = true;
+            done = True;
         }
 
     } while (! done);
@@ -488,7 +484,7 @@ VLAT::initialize (const ROVisibilityIterator & rovi)
 
     visibilityIterator_p = new ROVisibilityIterator (rovi);
 
-    visibilityIterator_p->originChunks (true);
+    visibilityIterator_p->originChunks (True);
     // force the MSIter, etc., to be rewound, reinitialized, etc.
 }
 
@@ -552,7 +548,7 @@ VLAT::run ()
                 break; // Not resetting so it's time to quit
             }
 
-        } while (true);
+        } while (True);
 
         handleWrite (); // service any pending writes
 
@@ -627,7 +623,7 @@ VLAT::sweepVi ()
     applyModifiers (visibilityIterator_p, writeIterator_p);
 
     if (writeIterator_p != NULL){
-        writeIterator_p->originChunks (true);
+        writeIterator_p->originChunks (True);
     }
 
     // Start sweeping the data with the read only iterator.  If there
@@ -637,7 +633,7 @@ VLAT::sweepVi ()
 
     try {
 
-        for (visibilityIterator_p->originChunks(true);
+        for (visibilityIterator_p->originChunks(True);
              visibilityIterator_p->moreChunks();
              visibilityIterator_p->nextChunk(), readSubchunk_p.incrementChunk ()){
 
@@ -725,7 +721,7 @@ VLAT::waitForViReset()
                     // we either quit or rewind the iterator.
 
     if (interface_p->isLookaheadTerminationRequested ()){
-        return false;
+        return False;
     }
     else{
 
@@ -735,7 +731,7 @@ VLAT::waitForViReset()
 
         interface_p->viResetComplete ();
 
-        return true;
+        return True;
     }
 }
 
@@ -762,11 +758,10 @@ VLAT::waitUntilFillCanStart ()
 void
 VlatFunctor::operator() (VisBuffer *)
 {
-    ThrowIf (true, "No filler is defined for this VisBuffer component: " + name_p);
+    ThrowIf (True, "No filler is defined for this VisBuffer component: " + name_p);
 }
 
 
 } // end namespace vi
 
-using namespace casacore;
 } // end namespace casa

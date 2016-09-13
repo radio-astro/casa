@@ -32,7 +32,6 @@
 #include <display/Display/PixelCanvas.h>
 #include <display/Display/WorldCanvasPGPlotDriver.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // upto 20 open devices at once
@@ -45,15 +44,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	static Int plotID_ = 0;
 	static Int selectID_ = 0;
 	static Int polygonFillCount_[PGPLOT_MAX_SELECTIONS];
-	static Bool initialized_ = false;
+	static Bool initialized_ = False;
 
 	void pgplot_init() {
 		for (uInt i = 1; i < PGPLOT_MAX_SELECTIONS; i++) {
 			wca_[i] = 0;
-			selectIDs_[i] = false;
+			selectIDs_[i] = False;
 			polygonFillCount_[i] = 0;
 		}
-		initialized_ = true;
+		initialized_ = True;
 	}
 
 // C++ public function, not used by driver
@@ -86,8 +85,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			pgplot_init();
 		}
 		for (uInt i = 1; i < PGPLOT_MAX_SELECTIONS; i++) {
-			if (selectIDs_[i] == false) {
-				selectIDs_[i] = true;
+			if (selectIDs_[i] == False) {
+				selectIDs_[i] = True;
 				return i;
 			}
 		}
@@ -96,7 +95,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // driver helper function
 	static void pgplot_freeID(Int id) {
-		selectIDs_[id] = false;
+		selectIDs_[id] = False;
 	}
 
 // helper function

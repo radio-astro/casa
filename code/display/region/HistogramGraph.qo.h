@@ -31,15 +31,11 @@
 #include <casa/Utilities/CountedPtr.h>
 #include <display/region/HistogramGraph.ui.h>
 
-namespace casacore{
-
-	template <class T> class ImageInterface;
-	class ImageRegion;
-}
-
 namespace casa {
 
+	template <class T> class ImageInterface;
 	class BinPlotWidget;
+	class ImageRegion;
 
 	/**
 	 * Displays a histogram specific to a region and an image; contains
@@ -57,8 +53,8 @@ namespace casa {
 		void initPlot();
 		void setIndex( int stackIndex );
 		void setNextEnabled( bool enabled );
-		void setImage( SHARED_PTR<casacore::ImageInterface<float> > image );
-		void setImageRegion( casacore::ImageRegion* region, int id );
+		void setImage( SHARED_PTR<ImageInterface<float> > image );
+		void setImageRegion( ImageRegion* region, int id );
 
 	signals:
 		void showGraph( int nextIndex );

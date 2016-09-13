@@ -30,7 +30,6 @@
 #include <casa/iostream.h>
 #include <casa/Exceptions.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	DSRectangle::DSRectangle() :
@@ -47,7 +46,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		buildHandles(makeAsPoly(xPos, yPos, width, height));
 		setPoints(makeAsPoly(xPos, yPos, width, height));
 		itsAngle = 0;
-		itsValid = true;
+		itsValid = True;
 	}
 
 	DSRectangle::DSRectangle(const DSRectangle& other) :
@@ -70,7 +69,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			// The center should be all we need to make a rectangle, so:
 			buildHandles(makeAsPoly(xPos, yPos, itsWidth, itsHeight));
 			setPoints(makeAsPoly(xPos, yPos, itsWidth, itsHeight));
-			itsValid = true;
+			itsValid = True;
 		}
 	}
 
@@ -256,14 +255,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	void DSRectangle::setDefaultOptions() {
-		itsValid = false;
+		itsValid = False;
 		itsHeight = 0;
 		itsWidth = 0;
 		itsAngle = 0;
 	}
 
 	Bool DSRectangle::setOptions(const Record& settings) {
-		Bool localChange = false;
+		Bool localChange = False;
 
 		if (settings.isDefined("height")) setHeight(settings.asFloat("height"));
 		if (settings.isDefined("width")) setWidth(settings.asFloat("width"));
@@ -277,7 +276,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			setAngle(itsAngle);
 		}
 
-		if (DSPoly::setOptions(settings)) localChange = true;
+		if (DSPoly::setOptions(settings)) localChange = True;
 		return localChange;
 	}
 

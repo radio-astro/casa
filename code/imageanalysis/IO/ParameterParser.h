@@ -30,14 +30,10 @@
 
 #include <vector>
 
-namespace casacore{
+namespace casa {
 
 class String;
 template <class T> class Vector;
-}
-
-namespace casa {
-
 
 
 // <summary>
@@ -65,21 +61,21 @@ public:
     // If you want to select just one pixel in the "range", you must specify that pixel
     // in both parts of the pair. So if you want to select pixels 0 through 5 and pixel 13,
     // you'd specify ranges[0] = 0; ranges[1] = 5; ranges[2] = 13; ranges[3] = 13
-    static std::vector<casacore::uInt> consolidateAndOrderRanges(
-        casacore::uInt& nSelected, const std::vector<casacore::uInt>& ranges
+    static std::vector<uInt> consolidateAndOrderRanges(
+        uInt& nSelected, const std::vector<uInt>& ranges
     );
 
 	// get spectral ranges from chans parameter,
 	// nSelectedChannels will have the total number of channels selected for the
 	// specification, for an image that has nChannels.
-	static std::vector<casacore::uInt> spectralRangesFromChans(
-		casacore::uInt& nSelectedChannels, const casacore::String& specification, const casacore::uInt nChannels
+	static std::vector<uInt> spectralRangesFromChans(
+		uInt& nSelectedChannels, const String& specification, const uInt nChannels
 	);
 
-	// get a vector of correlations, represented by casacore::String, from a stokes string specifcation,
+	// get a vector of correlations, represented by String, from a stokes string specifcation,
 	// eg, "LLRR", "IV", etc that is commonly used in the stokes parameter in
 	// casa image analysis tasks
-	static std::vector<casacore::String> stokesFromString(casacore::String& specification);
+	static std::vector<String> stokesFromString(String& specification);
 };
 
 };

@@ -33,13 +33,12 @@
 
 #include <iostream>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	MultiPolylineTool::MultiPolylineTool( viewer::RegionSourceFactory *rcs, PanelDisplay* pd,
 	                                      Display::KeySym keysym, const Bool persistent ) :
 		RegionTool(keysym),itsPolylinePersistent(persistent), itsMode(Off),
-		itsEmitted(false), itsNPoints(0), itsHandleSize(7),
+		itsEmitted(False), itsNPoints(0), itsHandleSize(7),
 		rfactory(rcs->newSource(this)), pd_(pd) {
 		reset();
 		itsX.resize(1024);
@@ -244,7 +243,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			updateRegion();
 		}
 
-		itsEmitted = false;  // changed polygon => not yet emitted.
+		itsEmitted = False;  // changed polygon => not yet emitted.
 		refresh();
 	}
 
@@ -261,10 +260,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			moving_regions.clear( );
 		}
 
-		Bool needsHandles=false;
+		Bool needsHandles=False;
 		if(itsMode==Move || itsMode==Resize) {
 			itsMode=Ready;
-			needsHandles=true;
+			needsHandles=True;
 		}
 
 		if ( itsMode==Ready && ev.worldCanvas()==itsCurrentWC &&
@@ -276,7 +275,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 				if (!itsPolylinePersistent) reset();
 				else {
-					itsEmitted = true;
+					itsEmitted = True;
 					if(needsHandles) refresh();
 				}
 				// vertices and WC still remain valid until next
@@ -405,7 +404,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	void MultiPolylineTool::reset(Bool skipRefresh) {
 		Bool existed = (itsMode!=Off);
 		itsMode = Off;
-		itsEmitted = false;
+		itsEmitted = False;
 		if(existed && !skipRefresh) refresh();
 	}	// erase old drawing if necessary.
 
@@ -466,7 +465,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	Bool MultiPolylineTool::inHandle(const Int &pt, const Int &x, const Int &y) const {
-		if (pt<0 || pt >= itsNPoints) return false;
+		if (pt<0 || pt >= itsNPoints) return False;
 
 		Int ptx,pty;
 		get(ptx,pty, pt);
@@ -493,7 +492,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			}
 		}
 
-		if ((nabove + nbelow) % 2) return true;
+		if ((nabove + nbelow) % 2) return True;
 		// not even - possibly on a line of the polygon.
 
 		return (nabove % 2);

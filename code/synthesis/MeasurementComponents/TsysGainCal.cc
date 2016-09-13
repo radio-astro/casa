@@ -48,7 +48,6 @@
 #include <casa/Logging/LogSink.h>
 // math.h ?
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
@@ -61,7 +60,7 @@ StandardTsys::StandardTsys(VisSet& vs) :
   VisMueller(vs),         // virtual base
   BJones(vs),              // immediate parent
   sysCalTabName_(vs.sysCalTableName()),
-  freqDepCalWt_(false)
+  freqDepCalWt_(False)
 {
   if (prtlev()>2) cout << "StandardTsys::StandardTsys(vs)" << endl;
 
@@ -76,7 +75,7 @@ StandardTsys::StandardTsys(String msname,Int MSnAnt,Int MSnSpw) :
   VisMueller(msname,MSnAnt,MSnSpw),         // virtual base
   BJones(msname,MSnAnt,MSnSpw),              // immediate parent
   sysCalTabName_(""),
-  freqDepCalWt_(false)
+  freqDepCalWt_(False)
 {
   if (prtlev()>2) cout << "StandardTsys::StandardTsys(msname,MSnAnt,MSnSpw)" << endl;
 
@@ -134,8 +133,8 @@ void StandardTsys::setSpecify(const Record& specify) {
     throw(AipsError("The SYSCAL subtable is not present in the specified MS."));
 
   // Not actually applying or solving
-  setSolved(false);
-  setApplied(false);
+  setSolved(False);
+  setApplied(False);
 
   // Collect Cal table parameters
   if (specify.isDefined("caltable")) {
@@ -234,7 +233,7 @@ void StandardTsys::specify(const Record&) {
 
     // Initialize solveAllRPar, etc.
     solveAllRPar()=0.0;
-    solveAllParOK()=true;  // Assume all ok
+    solveAllParOK()=True;  // Assume all ok
     solveAllParErr()=0.1;  // what should we use here?  ~1/bandwidth?
     solveAllParSNR()=1.0;
 
@@ -245,7 +244,7 @@ void StandardTsys::specify(const Record&) {
       blc(2)=trc(2)=thisant; // the MS antenna index (not loop index)
       Array<Float> currtsys(tsys.xyPlane(iant));
       solveAllRPar()(blc,trc).nonDegenerate(2)=currtsys;
-      solveAllParOK()(blc,trc)=true;
+      solveAllParOK()(blc,trc)=True;
 
       // Increment tsys counter
       ++tsyscount(ispw,thisant);
@@ -267,7 +266,7 @@ void StandardTsys::specify(const Record&) {
     
     LogicalArray mask((solveAllRPar()<FLT_MIN));
     MaskedArray<Bool> negs(solveAllParOK(),mask);
-    negs=false;
+    negs=False;
 
     keepNCT();
 
@@ -321,7 +320,7 @@ void StandardTsys::calcPar() {
   // Since some interpolation types may unwittingly yield
   //  negative Tsys, we'll trap that here by flagging and zeroing them
   Cube<Bool> mask(currRPar()<Float(0.0));
-  currParOK()(mask)=false;
+  currParOK()(mask)=False;
   currRPar()(mask)=0.0;  // avoids NaN generation in sqrt, even for flagged points
 }
 
@@ -355,7 +354,7 @@ void StandardTsys::syncWtScale() {
     default: {
       // Only diag and scalar versions can adjust weights
       //    cout<< "Turning off calWt()" << endl;
-      calWt()=false;
+      calWt()=False;
       return;
       break;
     }
@@ -390,9 +389,9 @@ void StandardTsys::calcWtScale() {
 
   // For each pol and antenna, form 1/mean(Tsys(f))
   IPosition it3(2,0,2);
-  ArrayIterator<Float> Tsys(currRPar(),it3,false);
-  ArrayIterator<Bool> Tok(currParOK(),it3,false);
-  ArrayIterator<Float> cWSi(cWS,it3,false);
+  ArrayIterator<Float> Tsys(currRPar(),it3,False);
+  ArrayIterator<Bool> Tok(currParOK(),it3,False);
+  ArrayIterator<Float> cWSi(cWS,it3,False);
 
   while (!Tsys.pastEnd()) {
 

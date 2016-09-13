@@ -32,13 +32,9 @@
 
 #include <QString>
 
-namespace casacore{
-
-	class Record;
-}
-
 namespace casa {
 
+	class Record;
 
 	/**
 	 * Computes the angle and distance for a single line segment in the
@@ -68,9 +64,9 @@ namespace casa {
 		virtual void adjustStart( QVector<double>& values, double start ) const=0;
 		QVector<double> convertArcUnits( QVector<double> arcseconds ) const;
 		double convertArcUnits( double value ) const;
-		virtual QVector<double> fromResults( casacore::Record* record  )const = 0;
+		virtual QVector<double> fromResults( Record* record  )const = 0;
 		virtual void storeIncrement( double* incr, QVector<double>& values, int index) const = 0;
-		static QVector<double> getFromArray( const casacore::Array<float>& source );
+		static QVector<double> getFromArray( const Array<float>& source );
 		virtual ~SliceStatistics();
 	protected:
 		QString getUnitText() const;
@@ -79,7 +75,5 @@ namespace casa {
 		SliceStatisticsFactory::AxisXUnits xUnits;
 	};
 
-} // end namespace casa
-
-
+} /* namespace casa */
 #endif /* SLICESTATISTICS_H_ */

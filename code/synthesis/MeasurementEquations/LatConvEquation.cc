@@ -38,16 +38,15 @@
 #include <casa/Arrays/IPosition.h>
 #include <casa/Exceptions/Error.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 LatConvEquation::LatConvEquation(Lattice<Float> & psf, 
 				 Lattice<Float> & dirtyImage)
   :itsMeas(&dirtyImage),
    itsPsf(&psf),
-   itsConv(psf, dirtyImage.shape(), true)
+   itsConv(psf, dirtyImage.shape(), True)
 {
-  itsVirgin = true;
+  itsVirgin = True;
   itsRealPsfSize = psf.shape();
   itsPsfOrigin = itsPsf->shape()/2;  
 }
@@ -64,7 +63,7 @@ Bool LatConvEquation::evaluate(Lattice<Float> & result,
   const Lattice<Float> & modelLattice = model.getModel();
   //  DebugAssert(modelLattice.shape().isEqual(result.shape()), AipsError);
   itsConv.linear(result, modelLattice); 
-  return true;
+  return True;
 }
 
 
@@ -90,8 +89,8 @@ LatConvEquation::evaluate(const IPosition & position,
   // psf when necessary it will after a few resizes be at the required size
   // for all the iterations.
   //
-  // If we resize the psf and itsVirgin == true, we need to create a new psf and
-  // make sure itsVirgin = false
+  // If we resize the psf and itsVirgin == True, we need to create a new psf and
+  // make sure itsVirgin = False
   //
   if ((min(blc.asVector()) < 0) || 
       (max((trc-psfSize).asVector()) >= 0))
@@ -114,13 +113,13 @@ LatConvEquation::evaluate(const IPosition & position,
 	newPsf = new TempLattice<Float>(newSize);
 	newPsf->set(0.0);
 	LCBox box(newblc,newtrc,newSize);
-	SubLattice<Float>  newPsfSub (*newPsf, box, true);
+	SubLattice<Float>  newPsfSub (*newPsf, box, True);
 	newPsfSub.copyData(*itsPsf);  // fill the old Psf into the larger new one
 
 	if (itsVirgin) {
 	  // just drop old itsPsf; someone else is responcible
 	  itsPsf = newPsf;
-	  itsVirgin = false;
+	  itsVirgin = False;
 	} else {
 	  // we must clean up old itsPsf
 	  delete itsPsf;
@@ -131,22 +130,22 @@ LatConvEquation::evaluate(const IPosition & position,
       LCBox box(blc+newblc, trc+newtrc, newSize);
       Lattice<Float> *result = 0;
       if (!nearAbs(Double(amplitude),1.0)) {
-	SubLattice<Float>  newPsfSub( *itsPsf, box, true);
+	SubLattice<Float>  newPsfSub( *itsPsf, box, True);
 	result = new TempLattice<Float>(newPsfSub.shape());
 	result->copyData((LatticeExpr<Float>)((amplitude) * newPsfSub ));	
       } else {
-	result = new  SubLattice<Float>( *itsPsf, box, true);
+	result = new  SubLattice<Float>( *itsPsf, box, True);
       }
       return result;
     }  else {
       LCBox box(blc,trc,itsPsf->shape());
       Lattice<Float> *result = 0;
       if (!nearAbs(Double(amplitude),1.0)) {
-	SubLattice<Float>  newPsfSub( *itsPsf, box, true);
+	SubLattice<Float>  newPsfSub( *itsPsf, box, True);
 	result = new TempLattice<Float>(newPsfSub.shape());
 	result->copyData((LatticeExpr<Float>)((amplitude) * newPsfSub ));	
       } else {
-	result = new  SubLattice<Float>( *itsPsf, box, true);
+	result = new  SubLattice<Float>( *itsPsf, box, True);
       }
       return result;
     }
@@ -163,9 +162,9 @@ Bool LatConvEquation::evaluate(Array<Float> & result,
   if (resultLattice != 0) {
     result = resultLattice->get();
     delete resultLattice; resultLattice=0;
-    return true;
+    return True;
   } else {
-    return false;
+    return False;
   }
 };
 
@@ -176,9 +175,9 @@ Bool LatConvEquation::residual(Lattice<Float> & result,
   if (evaluate(result, model)) {
     LatticeExpr<Float> expr = *itsMeas - result;
     result.copyData(expr);
-    return true;
+    return True;
   }
-  return false;
+  return False;
 }
 
 
@@ -188,9 +187,9 @@ Bool LatConvEquation::residual(Lattice<Float> & result,
   if (residual(result, model)) {
     LatticeExprNode myChisq = sum(result * result);
     chisq = myChisq.getFloat();
-    return true;
+    return True;
   }
-  return false;
+  return False;
 }
 
 
@@ -202,9 +201,9 @@ Bool LatConvEquation::residual(Lattice<Float> & result,
     result.copyData( (LatticeExpr<Float>) (result * mask) );
     LatticeExprNode myChisq = sum(result * result);
     chisq = myChisq.getFloat();
-    return true;
+    return True;
   }
-  return false;
+  return False;
 }
 
 IPosition LatConvEquation::psfSize() {

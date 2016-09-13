@@ -29,23 +29,22 @@
 #include <flagging/Flagging/RFChunkStats.h>
 #include <casa/Utilities/Regex.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 DDFunc::DDFunc( FuncSignature fsig,const String &corrstr )
   : DDMapper(),icorr(-1),func(fsig)
 {
   corrtype = Stokes::type( corrstr );
-  valid = false;
+  valid = False;
 }
 
 Bool DDFunc::reset ( const Vector<Int> &corr )
 { 
   icorr = findCorrType( corrtype,corr );
   if( icorr<0 )
-    return valid=false;
+    return valid=False;
   corrmask = (1<<icorr);
-  return valid=true;
+  return valid=True;
 }
 
 Float DDFunc::map ( const Cube<Complex> &vis,uInt ich,uInt irow ) const
@@ -67,7 +66,7 @@ DDSumFunc::DDSumFunc( FuncSignature fsig,const String &corr1,const String &corr2
   : DDFunc(fsig,corr1),icorr2(-1)
 {
   corrtype2 = Stokes::type( corr2 );
-  valid = false;
+  valid = False;
 }
 
 Bool DDSumFunc::reset ( const Vector<Int> &corr )
@@ -85,20 +84,20 @@ Bool DDSumFunc::reset ( const Vector<Int> &corr )
     }
     // give up if not found
     if( icorr<0 || icorr2<0 )
-      return valid=false;
+      return valid=False;
     corrmask = (1<<icorr)|(1<<icorr2);
-    return valid=true;
+    return valid=True;
   }
 // standard case - just look up correlations directly
   else
   {
     if( !DDFunc::reset(corr) )
-      return false;
+      return False;
     icorr2 = findCorrType( corrtype2,corr );
     if( icorr2<0 )
-      return valid=false;
+      return valid=False;
     corrmask |= (1<<icorr2);
-    return valid=true;
+    return valid=True;
   }
 }
 

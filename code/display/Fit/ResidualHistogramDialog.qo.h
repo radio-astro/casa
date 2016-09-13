@@ -31,13 +31,9 @@
 #include <casa/BasicSL/String.h>
 #include <casa/Utilities/CountedPtr.h>
 
-namespace casacore{
-
-	template <class T> class ImageInterface;
-}
-
 namespace casa {
 
+	template <class T> class ImageInterface;
 	class BinPlotWidget;
 
 	class ResidualHistogramDialog : public QDialog {
@@ -45,14 +41,14 @@ namespace casa {
 
 	public:
 		ResidualHistogramDialog(QWidget *parent = 0);
-		bool setImage( const casacore::String& path );
+		bool setImage( const String& path );
 		~ResidualHistogramDialog();
 
 	private:
 		ResidualHistogramDialog( const ResidualHistogramDialog& other );
 		ResidualHistogramDialog operator=( const ResidualHistogramDialog& other );
 		BinPlotWidget* plotWidget;
-        SHARED_PTR<const casacore::ImageInterface<casacore::Float> > residualImage;
+        SHARED_PTR<const ImageInterface<Float> > residualImage;
 		Ui::ResidualHistogramDialogClass ui;
 	};
 }

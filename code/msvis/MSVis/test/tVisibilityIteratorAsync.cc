@@ -42,18 +42,14 @@
 #include <tuple>
 
 using namespace std;
-using namespace casacore;
 using namespace casa::utilj;
-using namespace casacore;
 using namespace casa;
-using namespace casacore;
 using namespace casa::asyncio;
 
 #include <tables/DataMan/ForwardCol.h>
 
 #include <casa/namespace.h>
 
-using namespace casacore;
 namespace casa {
 
 class BufferInfo {
@@ -183,7 +179,7 @@ main(int argc, char **argv)
     ForwardColumnEngine::registerClass();
 
     uInt vid = Aipsrc::registerRC ("VisibilityIterator.disabled", "");
-    Aipsrc::set (vid, "true"); // force async enabled
+    Aipsrc::set (vid, "True"); // force async enabled
 
     if (argc<2) {
         cout <<"Usage: tVisibilityIterator ms-table-name"<<endl;
@@ -196,7 +192,7 @@ main(int argc, char **argv)
 
         mtrace();
 
-        Bool ok = true;
+        Bool ok = True;
         ok = Rovia_Test::checkScalars (argv[1], argv[2]) && ok;
         ok = Rovia_Test::compareComponents (argv[1], argv[2], "Imaging Weights", Rovia_Test::compareImagingWeights) && ok;
         ok = Rovia_Test::compareTimesAsyncToSync (argv[1]) && ok;
@@ -223,7 +219,6 @@ main(int argc, char **argv)
     return 0;
 }
 
-using namespace casacore;
 namespace casa {
 
 #define CheckScalar(x, y) \
@@ -237,14 +232,14 @@ Rovia_Test::checkScalars (const String & msNameSync,
 
     rtc.viAsync->origin();
 
-    Bool ok = true;
+    Bool ok = True;
 
     ok = CheckScalar (dataDescriptionId_p, -1) && ok;
     ok = CheckScalar (nAntennas_p, -1) && ok;
     ok = CheckScalar (nCoh_p, -1) && ok;
-    ok = CheckScalar (newArrayId_p, false) && ok;
-    ok = CheckScalar (newFieldId_p, false) && ok;
-    ok = CheckScalar (newSpectralWindow_p, false) && ok;
+    ok = CheckScalar (newArrayId_p, False) && ok;
+    ok = CheckScalar (newFieldId_p, False) && ok;
+    ok = CheckScalar (newSpectralWindow_p, False) && ok;
     ok = CheckScalar (nRowChunk_p, -1) && ok;
     ok = CheckScalar (nSpw_p, -1) && ok;
     ok = CheckScalar (polarizationId_p, -1) && ok;
@@ -391,7 +386,7 @@ Rovia_Test::compareWeightsAsyncToSync (const String & msNameSync, const String &
 
     // Now see if they match up.
 
-    Bool ok = true;
+    Bool ok = True;
 
     MeasurementSet msSync (msNameSync, Table::Update);
     Block<Int> bi(0); // create empty block with sortColumns
@@ -439,12 +434,12 @@ Rovia_Test::compareWeightsAsyncToSync (const String & msNameSync, const String &
     }
 
     cout << "... Comparison of written 'weight' data was successful!!!" << endl;
-    return true;
+    return True;
 
 done:
 
     cout << "*** Failed write test " << endl;
-    return false;
+    return False;
 
 }
 
@@ -507,14 +502,14 @@ Rovia_Test::compareTimesAsyncToSync (const String & msName)
             cout << "a=" << aText << "; b=" << sText << "; dt=" << dt << endl;
     }
 
-    Bool result = true;
+    Bool result = True;
 
     if (syncBuffers.size() != asyncBuffers.size()){
         cout << "Different number of buffers: nSync=" << syncBuffers.size()
              << "; nAsync=" << asyncBuffers.size() << endl;
         cout << "*** Failed Time Comparison test" << endl;
 
-        result = false;
+        result = False;
 
     }
     else {
@@ -574,7 +569,7 @@ Rovia_Test::compareComponents (const String & msNameSync, const String & msNameA
 
     cout << "... Passed " << componentName << " Test" << endl;
 
-    return true;
+    return True;
 
 done:
 
@@ -582,7 +577,7 @@ done:
     cout << "*** Failed " << componentName << " Test" << endl;
     cout << "***" << endl;
 
-    return false;
+    return False;
 }
 
 
@@ -700,11 +695,11 @@ Rovia_Test:: fillWeightsBoth (const String & msNameSync, const String & msNameAs
 String
 Rovia_Test::compareImagingWeights (int chunkNumber, int subchunkNumber, Rovia_Test_Configuration & rtc)
 {
-    static Bool initialized = false;
+    static Bool initialized = False;
 
 
     if (! initialized){
-        initialized = true;
+        initialized = True;
         rtc.viSync->useImagingWeight (VisImagingWeight ("natural"));
         rtc.viAsync->useImagingWeight (VisImagingWeight ("natural"));
     }

@@ -36,11 +36,10 @@
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <coordinates/Coordinates/StokesCoordinate.h>
 
-using namespace casacore;
 namespace casa{
 
   AntennaResponses* ALMAAperture::aR_p = 0;
-  Bool ALMAAperture::orderMattersInCFKey = false;
+  Bool ALMAAperture::orderMattersInCFKey = False;
 
   ALMAAperture::ALMAAperture(): 
     //    ATerm(),
@@ -50,7 +49,7 @@ namespace casa{
     respImage_p()
   {
 
-    haveCannedResponses_p = true;
+    haveCannedResponses_p = True;
     
     if(!aR_p){
       aR_p = new AntennaResponses();
@@ -68,7 +67,7 @@ namespace casa{
 		<< "We don't have any precalculated antenna responses for ALMA."
 		<< endl << "Will try to generate them using ray tracing instead."
 		<< LogIO::POST;
-	haveCannedResponses_p = false;
+	haveCannedResponses_p = False;
       }
       else if(!aR_p->init(antRespPath)){
 	// init failed
@@ -257,7 +256,7 @@ namespace casa{
 	  ostringstream oss;
 	  oss << "Error reading antenna response image from path \""
 	      << respImageName(i) << "\": " << x.what();
-	  respImage_p.resize(i,true);
+	  respImage_p.resize(i,True);
 	  throw(SynthesisError(oss.str()));
 	} 
       }
@@ -360,7 +359,7 @@ namespace casa{
 	SpectralCoordinate sC;
 	dCoordFinal.addCoordinate(sC);
 	rSIndex = dCoordFinal.findCoordinate(Coordinate::SPECTRAL);
-	dShapeFinal.resize(4,true);
+	dShapeFinal.resize(4,True);
 	dShapeFinal(3)=1;
 	rNDimFinal +=1;
       }
@@ -368,7 +367,7 @@ namespace casa{
 	dCoordFinal = CoordinateSystem();
 	dCoordFinal.addCoordinate(dCoord.directionCoordinate(dCoord.findCoordinate(Coordinate::DIRECTION))); 
 	dCoordFinal.addCoordinate(dCoord.stokesCoordinate(dCoord.findCoordinate(Coordinate::STOKES))); 
-	dShapeFinal.resize(3,true);
+	dShapeFinal.resize(3,True);
 	rNDimFinal -=1;
 	rSIndex = -1;
       }
@@ -414,7 +413,7 @@ namespace casa{
 	  // rotate factor 1
 	  SynthesisUtils::rotateComplexArray(os, respByPol(0)(fact1Index), dCoord, fact1, 
 					     pA1, "LINEAR", 
-					     false); // don't modify dCoord
+					     False); // don't modify dCoord
 	  // if necessary rotate factor 2 
 	  if((nAntTypes-1)==0 &&  fact2Index==fact1Index){ // also implies that pA1==PA2
 	    fact2.assign(fact1);
@@ -422,7 +421,7 @@ namespace casa{
 	  else{
 	    SynthesisUtils::rotateComplexArray(os, respByPol(nAntTypes-1)(fact2Index), dCoord, fact2, 
 					       pA2, "LINEAR", 
-					       false); // don't modify dCoord
+					       False); // don't modify dCoord
 	  }
 	}
 	else{ // rotate PB later
@@ -449,7 +448,7 @@ namespace casa{
 	  Array<Complex> pBrot( pB.shape() );
 	  SynthesisUtils::rotateComplexArray(os, pB, dCoord, pBrot, 
 					     pA1, "LINEAR", 
-					     false); // don't modify dCoord
+					     False); // don't modify dCoord
 	  nearFinal.putSlice(pBrot, pos);  
 
 	}
@@ -582,7 +581,7 @@ namespace casa{
     else{ // use canned antenna responses
       TempImage<Complex> tI(outImage.shape(), outImage.coordinates());
       tI.set(Complex(0.,0.));
-      applySky(tI, vb, doSquint, cfKey, false);
+      applySky(tI, vb, doSquint, cfKey, False);
       outImage.put(real(abs(tI.get())));
     }
   }
@@ -765,12 +764,12 @@ namespace casa{
 
   Vector<ALMAAntennaType> ALMAAperture::antTypeList(const VisBuffer& vb){
     Vector<ALMAAntennaType> aTypeMap = antTypeMap(vb);
-    Vector<Bool> encountered(ALMA_numAntTypes, false);
+    Vector<Bool> encountered(ALMA_numAntTypes, False);
     uInt typeCount = 0;
     for(uInt i=0; i<aTypeMap.nelements(); i++){
       uInt index = (uInt)aTypeMap(i);
       if(!encountered(index)){
-	encountered(index) = true;
+	encountered(index) = True;
 	typeCount++;
       }
     }

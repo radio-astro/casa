@@ -58,7 +58,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <synopsis>
 // This class finalises the functionality in WCRectTool to implement
-// event-based zooming on a WorldCanvas.  casacore::Double clicking inside the
+// event-based zooming on a WorldCanvas.  Double clicking inside the
 // constructed rectangle results in zooming in; double clicking outside
 // the rectangle gives zooming out.
 // </synopsis>
@@ -96,13 +96,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// with the linear coords of the new zoom box, and thus can be
 		// implemented to do further actions, or perhaps report the
 		// new zoom box to the application
-		virtual void zoomed(const casacore::Vector<casacore::Double> &linBlc,
-		                    const casacore::Vector<casacore::Double> &linTrc);
+		virtual void zoomed(const Vector<Double> &linBlc,
+		                    const Vector<Double> &linTrc);
 
 	private:
 
 		// get the linear coords of the current zoom box
-		void getLinearCoords(casacore::Vector<casacore::Double> &blc, casacore::Vector<casacore::Double> &trc);
+		void getLinearCoords(Vector<Double> &blc, Vector<Double> &trc);
 
 	};
 

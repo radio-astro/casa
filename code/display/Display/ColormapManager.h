@@ -104,20 +104,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Register a Colormap with this ColormapManager, and optionally
 		// pass a weight - colormaps are distributed proportionally
 		// according to their weight.
-		void registerColormap(Colormap * dcmap, casacore::Float weight = 1.0);
+		void registerColormap(Colormap * dcmap, Float weight = 1.0);
 
 		// Register the <src>cmap</src> Colormap with this manager,
 		// replacing the <src>cmapToReplace</src> Colormap if possible.
 		void registerColormap(Colormap *cmap, Colormap *cmapToReplace);
 
 		// Unregister a Colormap with this ColormapManager.
-		casacore::Bool unregisterColormap(Colormap * dcmap);
+		Bool unregisterColormap(Colormap * dcmap);
 
 		// Return the current size of the colormap.
-		casacore::uInt getColormapSize(const Colormap * map) const;
+		uInt getColormapSize(const Colormap * map) const;
 
 		// Return the current offset of the colormap.
-		casacore::uInt getColormapOffset(const Colormap * map) const;
+		uInt getColormapOffset(const Colormap * map) const;
 
 		// Redistribute the available colorcells to the registered
 		// colormaps.
@@ -128,26 +128,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Is the given Colormap registered on this
 		// ColormapManager/PixelCanvasColorTable combination?
-		casacore::Bool member(const Colormap * map) const;
+		Bool member(const Colormap * map) const;
 
 		// Return the number of registered Colormaps.
-		casacore::uInt nMaps() const {
+		uInt nMaps() const {
 			return itsInfoMap.ndefined();
 		}
 
 		// Return a pointer to a Colormap by number.
-		const Colormap *getMap(const casacore::uInt mapnum) const;
+		const Colormap *getMap(const uInt mapnum) const;
 
 		// Stream output operator.
-		friend std::ostream & operator << (std::ostream & os, const ColormapManager & cm);
+		friend ostream & operator << (ostream & os, const ColormapManager & cm);
 
 	private:
 
 		// Pointer to managed PixelCanvasColorTable.
 		PixelCanvasColorTable * itsPCColorTable;
 
-		// casacore::Map which associates Colormap pointers with ColormapInfo.
-		casacore::SimpleOrderedMap<const Colormap *, ColormapInfo *> itsInfoMap;
+		// Map which associates Colormap pointers with ColormapInfo.
+		SimpleOrderedMap<const Colormap *, ColormapInfo *> itsInfoMap;
 
 	};
 

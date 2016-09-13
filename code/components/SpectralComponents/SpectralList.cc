@@ -37,7 +37,6 @@
 
 #include <casa/iostream.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Constructors
@@ -98,19 +97,19 @@ SpectralElement* SpectralList::operator[](const uInt n) {
 
 Bool SpectralList::add(const SpectralElement &in) {
   uInt i = list_p.nelements();
-  if (nmax_p != 0 && i >= nmax_p) return false;
+  if (nmax_p != 0 && i >= nmax_p) return False;
   list_p.resize(i+1);
   list_p[i] = in.clone();
-  return true;
+  return True;
 }
 
 Bool SpectralList::add(const SpectralList &in) {
   for (uInt i=0; i<in.nelements(); i++) {
 	  if (! add(*in[i])) {
-		  return false;
+		  return False;
 	  }
   }
-  return true;
+  return True;
 }
 
 void SpectralList::insert(const SpectralElement &in) {
@@ -149,19 +148,19 @@ void SpectralList::insert(const SpectralList &in) {
 
 Bool SpectralList::set(const SpectralElement &in, const uInt which) {
   uInt i = list_p.nelements();
-  if (nmax_p != 0 && which >= nmax_p) return false;
-  if (which > i) return false;
+  if (nmax_p != 0 && which >= nmax_p) return False;
+  if (which > i) return False;
   if (which == i) add(in);
   delete list_p[which]; list_p[which] = 0;
   list_p[which] = in.clone();
-  return true;
+  return True;
 }
 
 void SpectralList::clear() {
   for (uInt i=0; i<list_p.nelements(); i++) {
     delete list_p[i]; list_p[i] = 0;
   }
-  list_p.resize(0, true);
+  list_p.resize(0, True);
 }
 
 void SpectralList::set(const uInt nmax) {
@@ -169,7 +168,7 @@ void SpectralList::set(const uInt nmax) {
     for (uInt i=nmax; i<list_p.nelements(); i++) {
       delete list_p[i]; list_p[i] = 0;
     }
-    list_p.resize(nmax, true);
+    list_p.resize(nmax, True);
   }
   nmax_p = nmax;
 }
@@ -184,10 +183,10 @@ Bool SpectralList::fromRecord (String& errMsg, const RecordInterface& container)
          add(*specEl);
       } else {
          errMsg = String("Illegal record structure");
-         return false;
+         return False;
       }
    }
-   return true;
+   return True;
 }
 
 Bool SpectralList::toRecord(RecordInterface& container) const {
@@ -197,7 +196,7 @@ Bool SpectralList::toRecord(RecordInterface& container) const {
       list_p[i]->toRecord(elRec);
       container.defineRecord(i, elRec);
    }
-   return true;
+   return True;
 }
   
 
@@ -257,7 +256,6 @@ ostream &operator<<(ostream &os, const SpectralList &lst) {
 #ifdef AIPS_NO_TEMPLATE_SRC
 #include <components/SpectralComponents/SpectralList2.tcc>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 template void SpectralList::residual<Double>(Vector<Double> &) const;
 template void SpectralList::residual<Float>(Vector<Float> &) const;

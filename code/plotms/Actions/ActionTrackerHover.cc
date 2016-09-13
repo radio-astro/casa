@@ -25,7 +25,6 @@
 
 #include "ActionTrackerHover.h"
 
-using namespace casacore;
 namespace casa {
 
 ActionTrackerHover::ActionTrackerHover( Client* client)
@@ -40,5 +39,4 @@ bool ActionTrackerHover::isHover() const {
 ActionTrackerHover::~ActionTrackerHover() {
 }
 
-using namespace casacore;
 } /* namespace casa */

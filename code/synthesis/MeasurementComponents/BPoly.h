@@ -83,24 +83,24 @@ public:
   virtual Type type() { return VisCal::B; };
 
   // Return type name as string
-  virtual casacore::String typeName()     { return "BPOLY"; };
-  virtual casacore::String longTypeName() { return "B Jones Poly (bandpass)"; };
+  virtual String typeName()     { return "BPOLY"; };
+  virtual String longTypeName() { return "B Jones Poly (bandpass)"; };
 
   // BPOLY gathers generically...
-  virtual casacore::Bool useGenericGatherForSolve() { return true; };
+  virtual Bool useGenericGatherForSolve() { return True; };
   // ...then solves for itself per solution:
-  virtual casacore::Bool useGenericSolveOne() { return false; };
+  virtual Bool useGenericSolveOne() { return False; };
 
   // Type of Jones matrix according to nPar()
   virtual Jones::JonesType jonesType() { return Jones::Diagonal; };
 
   // Set the solver parameters
   using BJones::setSolve;
-  virtual void setSolve(const casacore::Record& solvepar);
+  virtual void setSolve(const Record& solvepar);
 
   // Set the interpolation parameters
   using BJones::setApply;
-  virtual void setApply(const casacore::Record& applypar);
+  virtual void setApply(const Record& applypar);
 
   // Solve 
   //   (old self-directed gather and solve)
@@ -111,13 +111,13 @@ public:
 
 protected:
 
-  // BPOLY has two trivial casacore::Complex parameter (formed at fill)
-  virtual casacore::Int nPar() { return 2; };
+  // BPOLY has two trivial Complex parameter (formed at fill)
+  virtual Int nPar() { return 2; };
 
   // Calculate current parameters
   virtual void calcPar();
 
-  virtual void loadMemCalTable (casacore::String applyTable,casacore::String field);
+  virtual void loadMemCalTable (String applyTable,String field);
 
 private:
 
@@ -125,70 +125,70 @@ private:
   VisSet* vs_p;
 
   // Private variables containing the solver parameters
-  casacore::Int degamp_p, degphase_p;
-  casacore::Bool visnorm_p;
-  casacore::Int maskcenter_p;
-  casacore::Float maskedge_p;
+  Int degamp_p, degphase_p;
+  Bool visnorm_p;
+  Int maskcenter_p;
+  Float maskedge_p;
 
   // Derived solver parameters
   // Center mask half width (in channels)
-  casacore::Int maskcenterHalf_p;
+  Int maskcenterHalf_p;
   // Fractional edge mask
-  casacore::Float maskedgeFrac_p;
+  Float maskedgeFrac_p;
 
   // Some meta info
-  casacore::Double solTimeStamp;
-  casacore::Int solSpwId;
-  casacore::Int solFldId;
+  Double solTimeStamp;
+  Int solSpwId;
+  Int solFldId;
 
   // CalDescId per spw
-  casacore::Vector<casacore::Int> calDescId_p;
+  Vector<Int> calDescId_p;
 
   // Determine if a given channel is masked
-  casacore::Bool maskedChannel (const casacore::Int& chan, const casacore::Int& nChan);
+  Bool maskedChannel (const Int& chan, const Int& nChan);
 
   // Update the output calibration table to include the
   // current solution parameters
-  void updateCalTable (const casacore::String& freqGrpName, 
-		       const casacore::Vector<casacore::Int>& antennaId,
-		       const casacore::Vector<casacore::String>& polyType, 
-		       const casacore::Vector<casacore::Complex>& scaleFactor,
-		       const casacore::Matrix<casacore::Double>& validDomain,
-		       const casacore::Matrix<casacore::Double>& polyCoeffAmp,
-		       const casacore::Matrix<casacore::Double>& polyCoeffPhase,
-		       const casacore::Vector<casacore::String>& phaseUnits,
-		       const casacore::Vector<casacore::Complex>& sideBandRef,
-		       const casacore::Vector<casacore::MFrequency>& refFreq, 
-		       const casacore::Vector<casacore::Int>& refAnt);
+  void updateCalTable (const String& freqGrpName, 
+		       const Vector<Int>& antennaId,
+		       const Vector<String>& polyType, 
+		       const Vector<Complex>& scaleFactor,
+		       const Matrix<Double>& validDomain,
+		       const Matrix<Double>& polyCoeffAmp,
+		       const Matrix<Double>& polyCoeffPhase,
+		       const Vector<String>& phaseUnits,
+		       const Vector<Complex>& sideBandRef,
+		       const Vector<MFrequency>& refFreq, 
+		       const Vector<Int>& refAnt);
 
-  // Compute a casacore::Chebyshev polynomial using the CLIC library
-  casacore::Double getChebVal (const casacore::Vector<casacore::Double>& coeff, const casacore::Double& xinit,
-		     const casacore::Double& xfinal, const casacore::Double& x);
+  // Compute a Chebyshev polynomial using the CLIC library
+  Double getChebVal (const Vector<Double>& coeff, const Double& xinit,
+		     const Double& xfinal, const Double& x);
 
   // Load bandpass parameters from a calibration table and
   // pre-compute the corrections (and their inverse)
-  //  void load (const casacore::String& applyTable);
+  //  void load (const String& applyTable);
 
   // Utility function to return the bandwidth-weighted average 
   // frequency for a set of spectral window id.'s
-  casacore::Double meanFrequency (const casacore::Vector<casacore::Int>& spwids);
+  Double meanFrequency (const Vector<Int>& spwids);
 
   // Utility function to return the frequency group name for a given spw. id.
-  casacore::String freqGrpName (const casacore::Int& spwId);
+  String freqGrpName (const Int& spwId);
 
   // Utility function to return the spw id.'s in a given freq. group
-  casacore::Vector<casacore::Int> spwIdsInGroup (const casacore::String& freqGrpName);
+  Vector<Int> spwIdsInGroup (const String& freqGrpName);
 
   // Utility function to return the frequency axis for a given spw. id.
-  casacore::Vector<casacore::Double> freqAxis (const casacore::Int& spwId);
+  Vector<Double> freqAxis (const Int& spwId);
 
-  void plotsolve2(const casacore::Vector<casacore::Double>& x, 
-		  const casacore::Matrix<casacore::Double>& ampdata, 
-		  const casacore::Matrix<casacore::Double>& phadata, 
-		  const casacore::Matrix<casacore::Double>& wtdata, 
-		  const casacore::Vector<casacore::Int>& ant1idx, const casacore::Vector<casacore::Int>& ant2idx, 
-		  const casacore::Vector<casacore::Double>& amperr, casacore::Matrix<casacore::Double>& ampcoeff, 
-		  const casacore::Vector<casacore::Double>& phaerr, casacore::Matrix<casacore::Double>& phacoeff) ;
+  void plotsolve2(const Vector<Double>& x, 
+		  const Matrix<Double>& ampdata, 
+		  const Matrix<Double>& phadata, 
+		  const Matrix<Double>& wtdata, 
+		  const Vector<Int>& ant1idx, const Vector<Int>& ant2idx, 
+		  const Vector<Double>& amperr, Matrix<Double>& ampcoeff, 
+		  const Vector<Double>& phaerr, Matrix<Double>& phacoeff) ;
 
 };
 

@@ -45,97 +45,97 @@ namespace casa
 {
   using namespace vi;
   namespace refim {
-    casacore::Int getPhaseCenter(casacore::MeasurementSet& ms, casacore::MDirection& dir0, casacore::Int whichField=-1);
-    casacore::Bool findMaxAbsLattice(const casacore::ImageInterface<casacore::Float>& lattice,
-			   casacore::Float& maxAbs,casacore::IPosition& posMaxAbs);
-    casacore::Bool findMaxAbsLattice(const casacore::ImageInterface<casacore::Float>& masklat,
-			   const casacore::Lattice<casacore::Float>& lattice,
-			   casacore::Float& maxAbs,casacore::IPosition& posMaxAbs, 
-			   casacore::Bool flip=false);
-    casacore::Double getCurrentTimeStamp(const VisBuffer2& vb);
-    void makeStokesAxis(casacore::Int npol_p, casacore::Vector<casacore::String>& polType, casacore::Vector<casacore::Int>& whichStokes);
-    casacore::Double getPA(const vi::VisBuffer2& vb);
-    void storeImg(casacore::String fileName,casacore::ImageInterface<casacore::Complex>& theImg, casacore::Bool writeReIm=false);
-    void storeImg(casacore::String fileName,casacore::ImageInterface<casacore::Float>& theImg);
-    void storeArrayAsImage(casacore::String fileName, const casacore::CoordinateSystem& coords, const casacore::Array<casacore::Complex>& cf);
-    void storeArrayAsImage(casacore::String fileName, const casacore::CoordinateSystem& coords, const casacore::Array<casacore::DComplex>& cf);
-    void storeArrayAsImage(casacore::String fileName, const casacore::CoordinateSystem& coords, const casacore::Array<casacore::Float>& cf);
+    Int getPhaseCenter(MeasurementSet& ms, MDirection& dir0, Int whichField=-1);
+    Bool findMaxAbsLattice(const ImageInterface<Float>& lattice,
+			   Float& maxAbs,IPosition& posMaxAbs);
+    Bool findMaxAbsLattice(const ImageInterface<Float>& masklat,
+			   const Lattice<Float>& lattice,
+			   Float& maxAbs,IPosition& posMaxAbs, 
+			   Bool flip=False);
+    Double getCurrentTimeStamp(const VisBuffer2& vb);
+    void makeStokesAxis(Int npol_p, Vector<String>& polType, Vector<Int>& whichStokes);
+    Double getPA(const vi::VisBuffer2& vb);
+    void storeImg(String fileName,ImageInterface<Complex>& theImg, Bool writeReIm=False);
+    void storeImg(String fileName,ImageInterface<Float>& theImg);
+    void storeArrayAsImage(String fileName, const CoordinateSystem& coords, const Array<Complex>& cf);
+    void storeArrayAsImage(String fileName, const CoordinateSystem& coords, const Array<DComplex>& cf);
+    void storeArrayAsImage(String fileName, const CoordinateSystem& coords, const Array<Float>& cf);
     
-    casacore::Bool isVBNaN(const VisBuffer2& vb, casacore::String& mesg);
+    Bool isVBNaN(const VisBuffer2& vb, String& mesg);
     namespace SynthesisUtils
     {
       //using namespace vi;
-      void rotateComplexArray(casacore::LogIO& logIO, casacore::Array<casacore::Complex>& inArray, 
-			      casacore::CoordinateSystem& inCS,
-			      casacore::Array<casacore::Complex>& outArray, 
-			      casacore::Double dAngleRad, 
-			      casacore::String interpMathod=casacore::String("CUBIC"),
-			      casacore::Bool modifyInCS=true);
-      void findLatticeMax(const casacore::Array<casacore::Complex>& lattice,
-			  casacore::Vector<casacore::Float>& maxAbs,
-			  casacore::Vector<casacore::IPosition>& posMaxAbs) ;
-      void findLatticeMax(const casacore::ImageInterface<casacore::Complex>& lattice,
-			  casacore::Vector<casacore::Float>& maxAbs,
-			  casacore::Vector<casacore::IPosition>& posMaxAbs) ;
-      void findLatticeMax(const casacore::ImageInterface<casacore::Float>& lattice,
-			  casacore::Vector<casacore::Float>& maxAbs,
-			  casacore::Vector<casacore::IPosition>& posMaxAbs) ;
-      inline  casacore::Int nint(const casacore::Double& v) {return (casacore::Int)std::floor(v+0.5);}
-      inline  casacore::Int nint(const casacore::Float& v) {return (casacore::Int)std::floor(v+0.5);}
-      inline  casacore::Bool near(const casacore::Double& d1, const casacore::Double& d2, 
-			const casacore::Double EPS=1E-6) 
+      void rotateComplexArray(LogIO& logIO, Array<Complex>& inArray, 
+			      CoordinateSystem& inCS,
+			      Array<Complex>& outArray, 
+			      Double dAngleRad, 
+			      String interpMathod=String("CUBIC"),
+			      Bool modifyInCS=True);
+      void findLatticeMax(const Array<Complex>& lattice,
+			  Vector<Float>& maxAbs,
+			  Vector<IPosition>& posMaxAbs) ;
+      void findLatticeMax(const ImageInterface<Complex>& lattice,
+			  Vector<Float>& maxAbs,
+			  Vector<IPosition>& posMaxAbs) ;
+      void findLatticeMax(const ImageInterface<Float>& lattice,
+			  Vector<Float>& maxAbs,
+			  Vector<IPosition>& posMaxAbs) ;
+      inline  Int nint(const Double& v) {return (Int)std::floor(v+0.5);}
+      inline  Int nint(const Float& v) {return (Int)std::floor(v+0.5);}
+      inline  Bool near(const Double& d1, const Double& d2, 
+			const Double EPS=1E-6) 
       {
-	casacore::Bool b1=(fabs(d1-d2) < EPS)?true:false;
+	Bool b1=(fabs(d1-d2) < EPS)?True:False;
 	return b1;
       }
       template <class T>
-      inline void SETVEC(casacore::Vector<T>& lhs, const casacore::Vector<T>& rhs)
+      inline void SETVEC(Vector<T>& lhs, const Vector<T>& rhs)
       {lhs.resize(rhs.shape()); lhs = rhs;};
       template <class T>
-      inline void SETVEC(casacore::Array<T>& lhs, const casacore::Array<T>& rhs)
+      inline void SETVEC(Array<T>& lhs, const Array<T>& rhs)
       {lhs.resize(rhs.shape()); lhs = rhs;};
       
       template <class T>
       T getenv(const char *name, const T defaultVal);
-      casacore::Float libreSpheroidal(casacore::Float nu);
-      casacore::Double getRefFreq(const VisBuffer2& vb);
-      void makeFTCoordSys(const casacore::CoordinateSystem& coords,
-			  const casacore::Int& convSize,
-			  const casacore::Vector<casacore::Double>& ftRef,
-			  casacore::CoordinateSystem& ftCoords);
+      Float libreSpheroidal(Float nu);
+      Double getRefFreq(const VisBuffer2& vb);
+      void makeFTCoordSys(const CoordinateSystem& coords,
+			  const Int& convSize,
+			  const Vector<Double>& ftRef,
+			  CoordinateSystem& ftCoords);
       
-      void expandFreqSelection(const casacore::Matrix<casacore::Double>& freqSelection,
-			       casacore::Matrix<casacore::Double>& expandedFreqList,
-			       casacore::Matrix<casacore::Double>& expandedConjFreqList);
+      void expandFreqSelection(const Matrix<Double>& freqSelection,
+			       Matrix<Double>& expandedFreqList,
+			       Matrix<Double>& expandedConjFreqList);
       
       template <class T>
-      void libreConvolver(casacore::Array<T>& c1, const casacore::Array<T>& c2);
-      inline casacore::Double conjFreq(const casacore::Double& freq, const casacore::Double& refFreq) 
+      void libreConvolver(Array<T>& c1, const Array<T>& c2);
+      inline Double conjFreq(const Double& freq, const Double& refFreq) 
       {return sqrt(2*refFreq*refFreq - freq*freq);};
       
-      casacore::Double nearestValue(const casacore::Vector<casacore::Double>& list, const casacore::Double& val, casacore::Int& index);
+      Double nearestValue(const Vector<Double>& list, const Double& val, Int& index);
       
       template <class T>
-      T stdNearestValue(const vector<T>& list, const T& val, casacore::Int& index);
+      T stdNearestValue(const vector<T>& list, const T& val, Int& index);
       
-      casacore::CoordinateSystem makeUVCoords(casacore::CoordinateSystem& imageCoordSys,
-				    casacore::IPosition& shape);
+      CoordinateSystem makeUVCoords(CoordinateSystem& imageCoordSys,
+				    IPosition& shape);
       
-      casacore::Vector<casacore::Int> mapSpwIDToDDID(const VisBuffer2& vb, const casacore::Int& spwID);
-      casacore::Vector<casacore::Int> mapSpwIDToPolID(const VisBuffer2& vb, const casacore::Int& spwID);
-      void calcIntersection(const casacore::Int blc1[2], const casacore::Int trc1[2], const casacore::Float blc2[2], const casacore::Float trc2[2],
-			    casacore::Float blc[2], casacore::Float trc[2]);
-      casacore::Bool checkIntersection(const casacore::Int blc1[2], const casacore::Int trc1[2], const casacore::Float blc2[2], const casacore::Float trc2[2]);
+      Vector<Int> mapSpwIDToDDID(const VisBuffer2& vb, const Int& spwID);
+      Vector<Int> mapSpwIDToPolID(const VisBuffer2& vb, const Int& spwID);
+      void calcIntersection(const Int blc1[2], const Int trc1[2], const Float blc2[2], const Float trc2[2],
+			    Float blc[2], Float trc[2]);
+      Bool checkIntersection(const Int blc1[2], const Int trc1[2], const Float blc2[2], const Float trc2[2]);
       
-      casacore::String mjdToString(casacore::Time& mjd);
+      String mjdToString(casa::Time& mjd);
       
       template<class Iterator>
       Iterator Unique(Iterator first, Iterator last);
       
-      void showCS(const casacore::CoordinateSystem& cs, std::ostream& os, const casacore::String& msg=casacore::String());
+      void showCS(const CoordinateSystem& cs, ostream& os, const String& msg=String());
     }
     
-    void getHADec(casacore::MeasurementSet& ms, const VisBuffer2& vb, casacore::Double &HA, casacore::Double& RA, casacore::Double& Dec);
+    void getHADec(MeasurementSet& ms, const VisBuffer2& vb, Double &HA, Double& RA, Double& Dec);
 
     /////////////////////////////////////////////////////////////////////////////
     // 
@@ -143,22 +143,22 @@ namespace casa
     // Exact meaning of the "change" is defined in the derived classes
     //
     struct IChangeDetector {
-      // return true if a change occurs in the given row since the last call of update
-      virtual casacore::Bool changed(const VisBuffer2 &vb, casacore::Int row) const = 0;
+      // return True if a change occurs in the given row since the last call of update
+      virtual Bool changed(const VisBuffer2 &vb, Int row) const = 0;
       // start looking for a change from the given row of the VisBuffer
-      virtual void update(const VisBuffer2 &vb, casacore::Int row) = 0;
+      virtual void update(const VisBuffer2 &vb, Int row) = 0;
       
       // reset to the state which exists just after construction
       virtual void reset() = 0;
       
       // some derived methods, which use the abstract virtual function changed(vb,row)
       
-      // return true if a change occurs somewhere in the buffer
-      casacore::Bool changed(const VisBuffer2 &vb) const;
-      // return true if a change occurs somewhere in the buffer starting from row1
+      // return True if a change occurs somewhere in the buffer
+      Bool changed(const VisBuffer2 &vb) const;
+      // return True if a change occurs somewhere in the buffer starting from row1
       // up to row2 (row2=-1 means up to the end of the buffer). The row number, 
       // where the change occurs is returned in the row2 parameter
-      casacore::Bool changedBuffer(const VisBuffer2 &vb, casacore::Int row1, casacore::Int &row2) const;
+      Bool changedBuffer(const VisBuffer2 &vb, Int row1, Int &row2) const;
     protected:
       // a virtual destructor to make the compiler happy
       virtual ~IChangeDetector();
@@ -172,29 +172,29 @@ namespace casa
     //                          angle. 
     //
     class ParAngleChangeDetector : public IChangeDetector {
-      casacore::Double pa_tolerance_p;   // a parallactic angle tolerance. If exeeded, 
+      Double pa_tolerance_p;   // a parallactic angle tolerance. If exeeded, 
       // the angle is considered to be changed.
-      casacore::Double last_pa_p;        // last value of the parallactic angle
+      Double last_pa_p;        // last value of the parallactic angle
     public:
       // The default constructor
       ParAngleChangeDetector():pa_tolerance_p(0.0) {};
       // set up the tolerance, which determines how much the position angle should
       // change to report the change by this class
-      ParAngleChangeDetector(const casacore::Quantity &pa_tolerance);
+      ParAngleChangeDetector(const Quantity &pa_tolerance);
       
-      virtual void setTolerance(const casacore::Quantity &pa_tolerance);
+      virtual void setTolerance(const Quantity &pa_tolerance);
       // reset to the state which exists just after construction
       virtual void reset();
       
       // return parallactic angle tolerance
-      casacore::Quantity getParAngleTolerance() const;
+      Quantity getParAngleTolerance() const;
       
       // implementation of the base class' virtual functions
       
-      // return true if a change occurs in the given row since the last call of update
-      virtual casacore::Bool changed(const VisBuffer2 &vb, casacore::Int row) const;
+      // return True if a change occurs in the given row since the last call of update
+      virtual Bool changed(const VisBuffer2 &vb, Int row) const;
       // start looking for a change from the given row of the VisBuffer
-      virtual void update(const VisBuffer2 &vb, casacore::Int row);
+      virtual void update(const VisBuffer2 &vb, Int row);
     };
     
     //

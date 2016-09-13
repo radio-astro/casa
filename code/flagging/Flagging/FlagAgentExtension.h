@@ -31,27 +31,27 @@ class FlagAgentExtension : public FlagAgentBase {
 
 public:
 
-	FlagAgentExtension(FlagDataHandler *dh, casacore::Record config, casacore::Bool writePrivateFlagCube = false);
+	FlagAgentExtension(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube = false);
 	~FlagAgentExtension();
 
 protected:
 
 	// Compute flags for a given (time,freq) map
-	bool computeAntennaPairFlags(const vi::VisBuffer2 &visBuffer, FlagMapper &flags,casacore::Int antenna1,casacore::Int antenna2,vector<casacore::uInt> &rows);
+	bool computeAntennaPairFlags(const vi::VisBuffer2 &visBuffer, FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows);
 
 
 	// Parse configuration parameters
-	void setAgentParameters(casacore::Record config);
+	void setAgentParameters(Record config);
 
 private:
 
-	// casacore::Input parameters
-	casacore::Bool extendpols_p;
-	casacore::Bool growaround_p;
-	casacore::Bool flagneartime_p;
-	casacore::Bool flagnearfreq_p;
-	casacore::Double growtime_p;
-	casacore::Double growfreq_p;
+	// Input parameters
+	Bool extendpols_p;
+	Bool growaround_p;
+	Bool flagneartime_p;
+	Bool flagnearfreq_p;
+	Double growtime_p;
+	Double growfreq_p;
 };
 
 

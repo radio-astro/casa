@@ -32,7 +32,6 @@
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/iostream.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 ////////////////////////////////////////////////////////////////
@@ -65,7 +64,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	void PSPixelCanvas::pspcinit(PSDriver *psd, PSPixelCanvasColorTable *pcct) {
-		annotate(true);
+		annotate(True);
 		ps = psd;
 		if(ps == NULL)
 			throw(AipsError("PSPixelCanvas passed NULL PSDriver."));
@@ -95,9 +94,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		arcMode_ = Display::AMChord;
 		xt_ = yt_ = 0.0;
 		clipx0_ = clipy0_ = clipx1_ = clipy1_ = 0;
-		haveClipInfo_ = false;
-		clipEnabled_ = false;
-		smooth_ = false;
+		haveClipInfo_ = False;
+		clipEnabled_ = False;
+		smooth_ = False;
 		itsComponentWidth = itsComponentHeight = itsComponentBPC = 0;
 		itsComponents = 0;
 	}
@@ -151,24 +150,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	void PSPixelCanvas::deleteLists() {
 	}
 
-	// return true if the list exists
+	// return True if the list exists
 	Bool PSPixelCanvas::validList(uInt) {
-		return false;
+		return False;
 	}
 
 // (Cacheable) Set the font to the recognizable font name and size
-// Always returns true since we can't know if fontName exists.
+// Always returns True since we can't know if fontName exists.
 	Bool PSPixelCanvas::setFont(const String& fontName, const Int size) {
 		ps->findFont(fontName.chars(), (float)size);
 
-		return true;
+		return True;
 	}
 
 // (Cacheable) Set the font to the recognizable font name
-// Always returns true since we can't know if fontName exists.
+// Always returns True since we can't know if fontName exists.
 	Bool PSPixelCanvas::setFont(const String & fontName) {
 		ps->setFont(fontName.chars());
-		return true;
+		return True;
 	}
 
 	// (Cacheable) Draw text using that font aligned in some way to the
@@ -752,8 +751,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		float xscale, yscale;
 
 		// This isn't precisely correct, but seems close enough.
-		ps->pageSize(widthp, heightp, false);	// pagesize in points.
-		ps->pageSize(widthu, heightu, true);	// in user coords.
+		ps->pageSize(widthp, heightp, False);	// pagesize in points.
+		ps->pageSize(widthu, heightu, True);	// in user coords.
 		xscale = widthu/(xresp*widthp);
 		yscale = heightu/(yresp*heightp);
 		ps->scale( xscale, yscale);
@@ -784,8 +783,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		float widthp, heightp, widthu, heightu;
 		float cur_pntPerPixlx, cur_pntPerPixly;
 
-		ps->pageSize(widthp, heightp, false);	// pagesize in points.
-		ps->pageSize(widthu, heightu, true);	// in user coords.
+		ps->pageSize(widthp, heightp, False);	// pagesize in points.
+		ps->pageSize(widthu, heightu, True);	// in user coords.
 		// Current scale in points/pixel.
 		cur_pntPerPixlx = widthp/widthu;
 		cur_pntPerPixly = heightp/heightu;
@@ -928,16 +927,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		switch(option) {
 		case Display::ClipWindow:
 #if 1
-			clipEnabled_ = true;
+			clipEnabled_ = True;
 			ps->clipRect(	clipx0_, clipy0_,
 			                clipx1_-clipx0_, clipy1_-clipy0_);
-			ok = true;
+			ok = True;
 #else
-			ok = false;	// Disabled!!
+			ok = False;	// Disabled!!
 #endif
 			break;
 		default:
-			ok = false;
+			ok = False;
 		}
 		return ok;
 	}
@@ -947,11 +946,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		switch(option) {
 		case Display::ClipWindow:
-			clipEnabled_ = false;
+			clipEnabled_ = False;
 			// no mechanism for turning it off.
-			ok = true;
+			ok = True;
 		default:
-			ok = false;
+			ok = False;
 		}
 		return ok;
 	}
@@ -976,7 +975,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		clipy0_ = (Float)y1;
 		clipx1_ = (Float)x2;
 		clipy1_ = (Float)y2;
-		haveClipInfo_ = true;
+		haveClipInfo_ = True;
 	}
 
 	void PSPixelCanvas::getClipWindow(Int & x1, Int & y1, Int & x2, Int & y2) {
@@ -1095,7 +1094,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// Return the width of the PSPixelCanvas in pixels
 	uInt PSPixelCanvas::width() const {
 		float w, height;
-		ps->pageSize(w, height, true);	// Page size in user coords.
+		ps->pageSize(w, height, True);	// Page size in user coords.
 		return (uInt)w;
 	}
 
@@ -1178,19 +1177,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	Bool PSPixelCanvas::getColor(Int, Int, uInt & color) {
 		color = 0;
-		return false;
+		return False;
 	}
 
 // Not supported
 	Bool PSPixelCanvas::getRGBColor(Int, Int, float & r, float & g, float & b) {
 		r = g = b = 0.0;
-		return false;
+		return False;
 	}
 
 // Not supported
 	Bool PSPixelCanvas::getHSVColor(Int, Int, float & h, float & s, float & v) {
 		h = s = v = 0.0;
-		return false;
+		return False;
 	}
 
 	Bool PSPixelCanvas::getColorComponents( const String &colorname,
@@ -1229,7 +1228,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	// (Not Cacheable) resize request.  returns true if window was resized.
-	// Will refresh if doCallbacks is true.
+	// Will refresh if doCallbacks is True.
 	Bool PSPixelCanvas::resize(uInt reqXSize, uInt reqYSize, Bool doCallbacks) {
 		// Compute new conversion constants in pixels/point.
 #if 0
@@ -1240,7 +1239,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		setResolution((Float)reqXSize, (Float)reqYSize);
 #endif
 		if (doCallbacks) refresh();
-		return true;
+		return True;
 	}
 
 	// (Not Cacheable) resize the colortable by requesting a new number of cells

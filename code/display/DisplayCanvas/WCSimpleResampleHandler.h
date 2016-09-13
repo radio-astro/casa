@@ -65,7 +65,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		WCSimpleResampleHandler();
 
 		// Constructor
-		WCSimpleResampleHandler(casacore::Interpolate2D::Method type=casacore::Interpolate2D::NEAREST);
+		WCSimpleResampleHandler(Interpolate2D::Method type=Interpolate2D::NEAREST);
 
 		// Copy Constructor (copy semantics)
 		WCSimpleResampleHandler (const WCSimpleResampleHandler& other);
@@ -77,7 +77,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual ~WCSimpleResampleHandler();
 
 		// Reset interpolation method
-		void setInterpolationType (casacore::Interpolate2D::Method type);
+		void setInterpolationType (Interpolate2D::Method type);
 
 		// The output array is presized by the caller to the correct size.  It will
 		// be filled using information in the input array combined with other
@@ -85,19 +85,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// rather than templated because C++ doesn't yet handle templated member
 		// functions in a non-templated class.
 		// <group>
-		virtual void operator()(casacore::Matrix<casacore::Bool> & out, const casacore::Matrix<casacore::Bool> & in);
-		virtual void operator()(casacore::Matrix<casacore::uChar> & out, const casacore::Matrix<casacore::uChar> & in);
-		virtual void operator()(casacore::Matrix<casacore::Char> & out, const casacore::Matrix<casacore::Char> & in);
-		virtual void operator()(casacore::Matrix<casacore::uShort> & out, const casacore::Matrix<casacore::uShort> & in);
-		virtual void operator()(casacore::Matrix<casacore::Short> & out, const casacore::Matrix<casacore::Short> & in);
-		virtual void operator()(casacore::Matrix<casacore::uInt> & out, const casacore::Matrix<casacore::uInt> & in);
-		virtual void operator()(casacore::Matrix<casacore::Int> & out, const casacore::Matrix<casacore::Int> & in);
-		virtual void operator()(casacore::Matrix<casacore::uLong> & out, const casacore::Matrix<casacore::uLong> & in);
-		virtual void operator()(casacore::Matrix<casacore::Long> & out, const casacore::Matrix<casacore::Long> & in);
-		virtual void operator()(casacore::Matrix<casacore::Float> & out, const casacore::Matrix<casacore::Float> & in);
-		virtual void operator()(casacore::Matrix<casacore::Double> & out, const casacore::Matrix<casacore::Double> & in);
-		virtual void operator()(casacore::Matrix<casacore::Complex> & out, const casacore::Matrix<casacore::Complex> & in);
-		virtual void operator()(casacore::Matrix<casacore::DComplex> & out, const casacore::Matrix<casacore::DComplex> & in);
+		virtual void operator()(Matrix<Bool> & out, const Matrix<Bool> & in);
+		virtual void operator()(Matrix<uChar> & out, const Matrix<uChar> & in);
+		virtual void operator()(Matrix<Char> & out, const Matrix<Char> & in);
+		virtual void operator()(Matrix<uShort> & out, const Matrix<uShort> & in);
+		virtual void operator()(Matrix<Short> & out, const Matrix<Short> & in);
+		virtual void operator()(Matrix<uInt> & out, const Matrix<uInt> & in);
+		virtual void operator()(Matrix<Int> & out, const Matrix<Int> & in);
+		virtual void operator()(Matrix<uLong> & out, const Matrix<uLong> & in);
+		virtual void operator()(Matrix<Long> & out, const Matrix<Long> & in);
+		virtual void operator()(Matrix<Float> & out, const Matrix<Float> & in);
+		virtual void operator()(Matrix<Double> & out, const Matrix<Double> & in);
+		virtual void operator()(Matrix<Complex> & out, const Matrix<Complex> & in);
+		virtual void operator()(Matrix<DComplex> & out, const Matrix<DComplex> & in);
 		// </group>
 
 		// This function resamples the input matrix to the output.
@@ -106,24 +106,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// the output value where none of the input data is useful.
 		// The output matrix must be presized to the required size.
 		// <group>
-		virtual void operator()(casacore::Matrix<casacore::Float> &out, const casacore::Matrix<casacore::Float> &in,
-		                        const casacore::Vector<casacore::Float> &pixblc,
-		                        const casacore::Vector<casacore::Float> &pixtrc,
-		                        const casacore::Float blank = 0.0);
-		virtual void operator()(casacore::Matrix<casacore::Float> &out, casacore::Matrix<casacore::Bool>& outMask,
-		                        const casacore::Matrix<casacore::Float> &in, const casacore::Matrix<casacore::Bool> &inMask,
-		                        const casacore::Vector<casacore::Float> &inblc,
-		                        const casacore::Vector<casacore::Float> &intrc,
-		                        const casacore::Float blank = 0.0);
-		virtual void operator()(casacore::Matrix<casacore::Bool> &out, const casacore::Matrix<casacore::Bool> &in,
-		                        const casacore::Vector<casacore::Float> &pixblc,
-		                        const casacore::Vector<casacore::Float> &pixtrc,
-		                        const casacore::Bool blank = false);
+		virtual void operator()(Matrix<Float> &out, const Matrix<Float> &in,
+		                        const Vector<Float> &pixblc,
+		                        const Vector<Float> &pixtrc,
+		                        const Float blank = 0.0);
+		virtual void operator()(Matrix<Float> &out, Matrix<Bool>& outMask,
+		                        const Matrix<Float> &in, const Matrix<Bool> &inMask,
+		                        const Vector<Float> &inblc,
+		                        const Vector<Float> &intrc,
+		                        const Float blank = 0.0);
+		virtual void operator()(Matrix<Bool> &out, const Matrix<Bool> &in,
+		                        const Vector<Float> &pixblc,
+		                        const Vector<Float> &pixtrc,
+		                        const Bool blank = False);
 		// </group>
 
 
 	private:
-		casacore::Interpolate2D itsInterp;
+		Interpolate2D itsInterp;
 	};
 
 

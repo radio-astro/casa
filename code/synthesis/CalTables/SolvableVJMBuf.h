@@ -83,8 +83,8 @@ class SolvableVisJonesMBuf : public TimeVarVisJonesMBuf
   // their specified values. Non-index columns will be set 
   // to default values, and there is no connection to an 
   // underlying calibration table iterator in this case.
-  SolvableVisJonesMBuf (const casacore::Vector<casacore::Int>& calIndices, 
-			const casacore::Block<casacore::Vector<casacore::Int> >& indexValues);
+  SolvableVisJonesMBuf (const Vector<Int>& calIndices, 
+			const Block<Vector<Int> >& indexValues);
 
   // Construct from a calibration table iterator. The calibration
   // buffer will remain synchronized with the iterator.
@@ -92,20 +92,20 @@ class SolvableVisJonesMBuf : public TimeVarVisJonesMBuf
 
   // Write the current buffer at the end of a specified cal table;
   // returns the number of rows appended
-  virtual casacore::Int append (CalTable& calTable);
+  virtual Int append (CalTable& calTable);
 
   // Maximum number of rows in the calibration buffer
-  virtual casacore::Int nRow();
+  virtual Int nRow();
 
-  // casacore::Data field accessors
-  virtual casacore::Vector<casacore::Bool>& totalSolnOk();
-  virtual casacore::Vector<casacore::Float>& totalFit();
-  virtual casacore::Vector<casacore::Float>& totalFitWgt();
-  virtual casacore::Array<casacore::Bool>& solnOk();
-  virtual casacore::Array<casacore::Float>& fit();
-  virtual casacore::Array<casacore::Float>& fitWgt();
-  virtual casacore::Array<casacore::Bool>& flag();
-  virtual casacore::Array<casacore::Float>& snr();
+  // Data field accessors
+  virtual Vector<Bool>& totalSolnOk();
+  virtual Vector<Float>& totalFit();
+  virtual Vector<Float>& totalFitWgt();
+  virtual Array<Bool>& solnOk();
+  virtual Array<Float>& fit();
+  virtual Array<Float>& fitWgt();
+  virtual Array<Bool>& flag();
+  virtual Array<Float>& snr();
 
  protected:
   // Factory method to create a columns accessor object of the appropriate type
@@ -127,33 +127,33 @@ class SolvableVisJonesMBuf : public TimeVarVisJonesMBuf
   // as non-attribute columns
   //
   // Use a visibility buffer to define the attribute values (NYI)
-  virtual void fillAttributes(const casacore::Vector<casacore::Int>& /*calIndices*/,
+  virtual void fillAttributes(const Vector<Int>& /*calIndices*/,
 			      const VisBuffer& /*vb*/) {};
   //
   // Set default attribute values
-  virtual void fillAttributes(const casacore::Vector<casacore::Int>& calIndices);
+  virtual void fillAttributes(const Vector<Int>& calIndices);
   // </group>
 
  private:
   // Buffer fields
-  casacore::Vector<casacore::Bool> totalSolnOk_p;
-  casacore::Vector<casacore::Float> totalFit_p;
-  casacore::Vector<casacore::Float> totalFitWgt_p;
-  casacore::Array<casacore::Bool> solnOk_p;
-  casacore::Array<casacore::Float> fit_p;
-  casacore::Array<casacore::Float> fitWgt_p;
-  casacore::Array<casacore::Bool> flag_p;
-  casacore::Array<casacore::Float> snr_p;
+  Vector<Bool> totalSolnOk_p;
+  Vector<Float> totalFit_p;
+  Vector<Float> totalFitWgt_p;
+  Array<Bool> solnOk_p;
+  Array<Float> fit_p;
+  Array<Float> fitWgt_p;
+  Array<Bool> flag_p;
+  Array<Float> snr_p;
 
   // Buffer field status flags
-  casacore::Bool totalSolnOkOK_p;
-  casacore::Bool totalFitOK_p;
-  casacore::Bool totalFitWgtOK_p;
-  casacore::Bool solnOkOK_p;
-  casacore::Bool fitOK_p;
-  casacore::Bool fitWgtOK_p;
-  casacore::Bool flagOK_p;
-  casacore::Bool snrOK_p;
+  Bool totalSolnOkOK_p;
+  Bool totalFitOK_p;
+  Bool totalFitWgtOK_p;
+  Bool solnOkOK_p;
+  Bool fitOK_p;
+  Bool fitWgtOK_p;
+  Bool flagOK_p;
+  Bool snrOK_p;
 };
 
 // <summary> 
@@ -203,19 +203,19 @@ class GJonesMBuf : public SolvableVisJonesMBuf
   // their specified values. Non-index columns will be set 
   // to default values, and there is no connection to an 
   // underlying calibration table iterator in this case.
-  GJonesMBuf (const casacore::Vector<casacore::Int>& calIndices, 
-	      const casacore::Block<casacore::Vector<casacore::Int> >& indexValues);
+  GJonesMBuf (const Vector<Int>& calIndices, 
+	      const Block<Vector<Int> >& indexValues);
 
   // Construct from a calibration table iterator. The calibration
   // buffer will remain synchronized with the iterator.
   GJonesMBuf (CalIterBase& calIter);
 
   // Update the calibration solution in each of a set of buffer rows
-  virtual casacore::Bool fillMatchingRows (const casacore::Vector<casacore::Int>& matchingRows,
-				 const casacore::String& sFreqGrpName,
-				 const casacore::Complex& sGain,
-				 const casacore::MFrequency& sRefFreq,
-				 const casacore::Int& sRefAnt);
+  virtual Bool fillMatchingRows (const Vector<Int>& matchingRows,
+				 const String& sFreqGrpName,
+				 const Complex& sGain,
+				 const MFrequency& sRefFreq,
+				 const Int& sRefAnt);
  protected:
 
  private:
@@ -268,8 +268,8 @@ class DJonesMBuf : public SolvableVisJonesMBuf
   // their specified values. Non-index columns will be set 
   // to default values, and there is no connection to an 
   // underlying calibration table iterator in this case.
-  DJonesMBuf (const casacore::Vector<casacore::Int>& calIndices, 
-	      const casacore::Block<casacore::Vector<casacore::Int> >& indexValues);
+  DJonesMBuf (const Vector<Int>& calIndices, 
+	      const Block<Vector<Int> >& indexValues);
 
   // Construct from a calibration table iterator. The calibration
   // buffer will remain synchronized with the iterator.
@@ -327,8 +327,8 @@ class TJonesMBuf : public SolvableVisJonesMBuf
   // their specified values. Non-index columns will be set 
   // to default values, and there is no connection to an 
   // underlying calibration table iterator in this case.
-  TJonesMBuf (const casacore::Vector<casacore::Int>& calIndices, 
-	      const casacore::Block<casacore::Vector<casacore::Int> >& indexValues);
+  TJonesMBuf (const Vector<Int>& calIndices, 
+	      const Block<Vector<Int> >& indexValues);
 
   // Construct from a calibration table iterator. The calibration
   // buffer will remain synchronized with the iterator.

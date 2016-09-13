@@ -53,11 +53,11 @@ namespace casa {
 		// Static Members //
 
 		// Returns creation widgets.
-		static vector<pair<casacore::String, RegionShape*> >
+		static vector<pair<String, RegionShape*> >
 		creationShapes(bool includeComposite = true) {
-			vector<pair<casacore::String, RegionShape*> > v(includeComposite ? 9 : 8);
+			vector<pair<String, RegionShape*> > v(includeComposite ? 9 : 8);
 			for(unsigned int i = 0; i < v.size(); i++)
-				v[i] = pair<casacore::String,RegionShape*>(creationName(i),creationShape(i));
+				v[i] = pair<String,RegionShape*>(creationName(i),creationShape(i));
 			return v;
 		}
 
@@ -91,7 +91,7 @@ namespace casa {
 			else if(i == 0) return new RSEllipse(0,0,0,0);
 			else if(i == 1) return new RSCircle(0,0,0);
 			else if(i == 2) return new RSRectangle(0,0,0,0);
-			else if(i == 3)return new RSPolygon(casacore::Vector<double>(),casacore::Vector<double>());
+			else if(i == 3)return new RSPolygon(Vector<double>(),Vector<double>());
 			else if(i == 4) return new RSLine(0,0,0,0,7);
 			else if(i == 5) return new RSVector(0,0,0,0,7);
 			else if(i == 6) return new RSMarker(0,0,Display::X,10);
@@ -103,7 +103,7 @@ namespace casa {
 			return creationShape((int)i);
 		}
 
-		static casacore::String creationName(int i) {
+		static String creationName(int i) {
 			if(i < 0)       return "";
 			else if(i == 0) return "ellipse";
 			else if(i == 1) return "circle";
@@ -116,7 +116,7 @@ namespace casa {
 			else if(i == 8) return "composite";
 			else            return "";
 		}
-		static casacore::String creationName(unsigned int i) {
+		static String creationName(unsigned int i) {
 			return creationName((int)i);
 		}
 
@@ -138,7 +138,7 @@ namespace casa {
 		~QtNewRSPolygon();
 
 		// See QtEditRegionShape::enteredCoordinatesAreValid.
-		bool enteredCoordinatesAreValid(casacore::String& reason) const;
+		bool enteredCoordinatesAreValid(String& reason) const;
 
 	public slots:
 		// Applies the entered values to the RSPolygon.
@@ -147,10 +147,10 @@ namespace casa {
 	private:
 		RSPolygon* m_polygon; // Polygon.
 		QtEditRegionShape* m_editor; // Region shape editor.
-		QListWidget* m_coordList; // casacore::List widget for displaying entered coordinates
+		QListWidget* m_coordList; // List widget for displaying entered coordinates
 		QFrame* m_coordFrame;     // Frame that holds list widget and buttons.
 		vector<pair<QString, QString> > m_enteredCoords; // Entered coordinates
-		QLineEdit* m_coordXEdit, *m_coordYEdit; // casacore::Coordinate edits.
+		QLineEdit* m_coordXEdit, *m_coordYEdit; // Coordinate edits.
 
 	private slots:
 		// Add the values entered in the line edits to the coord list.
@@ -180,7 +180,7 @@ namespace casa {
 
 		// Returns whether the entered values are valid or not.  Returns true if
 		// at least one child is entered, and all children have valid coordinates.
-		bool enteredValuesAreValid(casacore::String& reason) const;
+		bool enteredValuesAreValid(String& reason) const;
 
 	public slots:
 		// Applies the entered values to the RSComposite.

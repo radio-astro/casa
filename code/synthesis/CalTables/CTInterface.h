@@ -1,4 +1,4 @@
-//# CTInterface.h: Class to present a CalTable with casacore::MS interface
+//# CTInterface.h: Class to present a CalTable with MS interface
 //# Copyright (C) 1996,1997,1998,1999,2001
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -41,36 +41,36 @@
 #include <tables/Tables/TableDesc.h>
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-  class CTInterface: public casacore::MSSelectableTable
+  class CTInterface: public MSSelectableTable
   {
   public:
     CTInterface():fakeDDSubTable(), ctMainCols_p(NULL) {};
-    CTInterface(const casacore::Table& table);
+    CTInterface(const Table& table);
 
     virtual ~CTInterface();
     virtual const CTObservation& observation()        {return asCT()->observation();}
     virtual const CTAntenna& antenna()                {return asCT()->antenna();}
     virtual const CTField& field()                    {return asCT()->field();}
     virtual const CTSpectralWindow& spectralWindow()  {return asCT()->spectralWindow();}
-    virtual casacore::Bool isMS()                               {return false;};
-    virtual casacore::MSSelectableTable::MSSDataType dataType();//                    {return casacore::MSSelectableTable::BASELINE_BASED;}
+    virtual Bool isMS()                               {return False;};
+    virtual MSSelectableTable::MSSDataType dataType();//                    {return MSSelectableTable::BASELINE_BASED;}
 
-    virtual const casacore::MSDataDescription& dataDescription();
-    virtual casacore::String columnName(casacore::MSMainEnums::PredefinedColumns nameEnum);
-    //    virtual const casacore::MSObservation& observation();
+    virtual const MSDataDescription& dataDescription();
+    virtual String columnName(MSMainEnums::PredefinedColumns nameEnum);
+    //    virtual const MSObservation& observation();
 
-    virtual const casacore::MeasurementSet* asMS() 
+    virtual const MeasurementSet* asMS() 
     {
-      //{throw(casacore::AipsError("asMS() called from CTInterface class"));}
+      //{throw(AipsError("asMS() called from CTInterface class"));}
       //cerr << "asMS() called from CTInterface class" << endl;
-      //return static_cast<const casacore::MeasurementSet *>(table());
+      //return static_cast<const MeasurementSet *>(table());
       return NULL;
     }
     virtual const NewCalTable* asCT();
-    virtual casacore::MSSelectableMainColumn* mainColumns()
+    virtual MSSelectableMainColumn* mainColumns()
     {ctMainCols_p = new CTMainColInterface(*table_p); return ctMainCols_p;};
   private:
-    casacore::MSDataDescription fakeDDSubTable;
+    MSDataDescription fakeDDSubTable;
     void makeDDSubTable();
     CTMainColInterface *ctMainCols_p;
   };

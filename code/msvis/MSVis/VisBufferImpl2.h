@@ -1,4 +1,4 @@
-//# VisBuffer.h: buffer for iterating through casacore::MS in large blocks
+//# VisBuffer.h: buffer for iterating through MS in large blocks
 //# Copyright (C) 1996,1997,1998,1999,2000,2002,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -139,55 +139,55 @@ public:
 
     virtual ~VisBufferImpl2();
 
-    void appendRow (ms::Vbi2MsRow * rowSrc, casacore::Int initialCapacity,
+    void appendRow (ms::Vbi2MsRow * rowSrc, Int initialCapacity,
                     const VisBufferComponents2 & optionalComponentsToCopy,
-                    bool doCopy = true);
+                    bool doCopy = True);
     void appendRowsComplete ();
-    casacore::Int appendSize () const;
+    Int appendSize () const;
 
     // Copies all of the components (or just the one in the cache) from
     // the specified VisBuffer into this one.
 
-    virtual void copy (const VisBuffer2 & other, casacore::Bool fetchIfNeeded = true);
+    virtual void copy (const VisBuffer2 & other, Bool fetchIfNeeded = True);
 
     // Copies the specified components (or just the one in the cache) from
     // the specified VisBuffer into this one.
 
     virtual void copyComponents (const VisBuffer2 & other,
 				                 const VisBufferComponents2 & components,
-                                 casacore::Bool allowShapeChange = false,
-				                 casacore::Bool fetchIfNeeded = true);
+                                 Bool allowShapeChange = False,
+				                 Bool fetchIfNeeded = True);
 
-    virtual void copyCoordinateInfo (const VisBuffer2 * vb, casacore::Bool dirDependent,
-                                     casacore::Bool allowShapeChange = false, casacore::Bool fetchIfNeeded = true);
+    virtual void copyCoordinateInfo (const VisBuffer2 * vb, Bool dirDependent,
+                                     Bool allowShapeChange = False, Bool fetchIfNeeded = True);
 
-    virtual casacore::Vector<casacore::Stokes::StokesTypes> getCorrelationTypesDefined () const;
-    virtual casacore::Vector<casacore::Stokes::StokesTypes> getCorrelationTypesSelected () const;
+    virtual Vector<Stokes::StokesTypes> getCorrelationTypesDefined () const;
+    virtual Vector<Stokes::StokesTypes> getCorrelationTypesSelected () const;
 
-    virtual casacore::Vector<casacore::Int> getCorrelationTypes () const;
-    virtual casacore::String getFillErrorMessage () const;
-    virtual casacore::Double getFrequency (casacore::Int rowInBuffer, casacore::Int frequencyIndex, casacore::Int frame = FrameNotSpecified) const;
-    virtual const casacore::Vector<casacore::Double> & getFrequencies (casacore::Int rowInBuffer,
-                                                   casacore::Int frame = FrameNotSpecified) const;
-    virtual casacore::Int getChannelNumber (casacore::Int rowInBuffer, casacore::Int frequencyIndex) const;
-    virtual const casacore::Vector<casacore::Int> & getChannelNumbers (casacore::Int rowInBuffer) const;
-    virtual casacore::Vector<casacore::Int> getChannelNumbersSelected (casacore::Int outputChannelIndex) const;
+    virtual Vector<Int> getCorrelationTypes () const;
+    virtual String getFillErrorMessage () const;
+    virtual Double getFrequency (Int rowInBuffer, Int frequencyIndex, Int frame = FrameNotSpecified) const;
+    virtual const Vector<Double> & getFrequencies (Int rowInBuffer,
+                                                   Int frame = FrameNotSpecified) const;
+    virtual Int getChannelNumber (Int rowInBuffer, Int frequencyIndex) const;
+    virtual const Vector<Int> & getChannelNumbers (Int rowInBuffer) const;
+    virtual Vector<Int> getChannelNumbersSelected (Int outputChannelIndex) const;
 
-    ms::MsRow * getRow (casacore::Int row) const;
-    ms::MsRow * getRowMutable (casacore::Int row);
+    ms::MsRow * getRow (Int row) const;
+    ms::MsRow * getRowMutable (Int row);
 
     virtual void invalidate();
 
-    virtual casacore::Bool isAttached () const;
-    virtual casacore::Bool isFillable () const;
-    virtual void setShape (casacore::Int nCorrelations, casacore::Int nChannels, casacore::Int nRows, casacore::Bool clearTheCache = true);
+    virtual Bool isAttached () const;
+    virtual Bool isFillable () const;
+    virtual void setShape (Int nCorrelations, Int nChannels, Int nRows, Bool clearTheCache = True);
     virtual void validateShapes () const;
 
     virtual void writeChangesBack ();
-    virtual void initWeightSpectrum (const casacore::Cube<casacore::Float>& wtspec);
-    virtual void initSigmaSpectrum (const casacore::Cube<casacore::Float>& sigspec);
+    virtual void initWeightSpectrum (const Cube<Float>& wtspec);
+    virtual void initSigmaSpectrum (const Cube<Float>& sigspec);
 
-    //--> This needs to be removed: virtual casacore::Bool fetch(const asyncio::PrefetchColumns *pfc);
+    //--> This needs to be removed: virtual Bool fetch(const asyncio::PrefetchColumns *pfc);
 
     // feed1_pa() and feed2_pa() return an array of parallactic angles
     // (each corresponds to the first receptor of the feed) one for each
@@ -196,19 +196,19 @@ public:
     // VisBufferImpl2 only to benefit from caching of the feed and antenna IDs.
 
     // Note that feed_pa is a function instead of a cached value
-    virtual const casacore::Vector<casacore::Float> & feedPa (casacore::Double time) const;
+    virtual const Vector<Float> & feedPa (Double time) const;
 
     // NOMINAL parallactic angle (feed p.a. offset NOT included)
-    virtual casacore::Float parang0(casacore::Double time) const;
-    virtual const casacore::Vector<casacore::Float> & parang(casacore::Double time) const;
+    virtual Float parang0(Double time) const;
+    virtual const Vector<Float> & parang(Double time) const;
 
-    virtual casacore::MDirection azel0(casacore::Double time) const; // function rather than cached value
-    virtual const casacore::Vector<casacore::MDirection> & azel(casacore::Double time) const;
+    virtual MDirection azel0(Double time) const; // function rather than cached value
+    virtual const Vector<MDirection> & azel(Double time) const;
 
     // Hour angle for specified time
-    virtual casacore::Double hourang(casacore::Double time) const;
+    virtual Double hourang(Double time) const;
 
-    // casacore::Sort/unsort the correlations, if necessary
+    // Sort/unsort the correlations, if necessary
     //  (Rudimentary handling of non-canonically sorted correlations--use with care!)
     virtual void sortCorr ();
     virtual void unSortCorr();
@@ -219,9 +219,9 @@ public:
     virtual void normalize ();
 
     // Rotate visibility phase for given vector (dim = nrow of vb) of phases (metres)
-    virtual void phaseCenterShift(const casacore::Vector<casacore::Double>& phase);
+    virtual void phaseCenterShift(const Vector<Double>& phase);
     // Rotate visibility phase for phase center offsets (arcsecs)
-    virtual void phaseCenterShift(casacore::Double dx, casacore::Double dy);
+    virtual void phaseCenterShift(Double dx, Double dy);
 
     // Fill weightMat according to sigma column
     virtual void resetWeightsUsingSigma ();//virtual void resetWeightMat();
@@ -232,29 +232,29 @@ public:
     // to retain some state for later reference.
     // Presently this fills antenna, array, field and spectralWindow ids, time,
     // frequency and number of rows.
-    // if dirDependent is set to false the expensive direction dependent calculation of parallactic or direction of
+    // if dirDependent is set to False the expensive direction dependent calculation of parallactic or direction of
     // antenna from pointing table is avoided
     //Add more as needed.
 
-    virtual casacore::Bool isNewArrayId () const;
-    virtual casacore::Bool isNewFieldId () const;
-    virtual casacore::Bool isNewMs() const;
-    virtual casacore::Bool isNewSpectralWindow () const;
-    virtual casacore::Bool isRekeyable () const;
-    virtual casacore::Bool isWritable () const;
-    virtual casacore::IPosition getShape () const;
-    virtual casacore::Int msId() const;
-    virtual casacore::String msName (casacore::Bool stripPath = false) const;
+    virtual Bool isNewArrayId () const;
+    virtual Bool isNewFieldId () const;
+    virtual Bool isNewMs() const;
+    virtual Bool isNewSpectralWindow () const;
+    virtual Bool isRekeyable () const;
+    virtual Bool isWritable () const;
+    virtual IPosition getShape () const;
+    virtual Int msId() const;
+    virtual String msName (Bool stripPath = False) const;
     virtual Subchunk getSubchunk () const;
 
-    virtual casacore::Bool areCorrelationsSorted() const;
-    virtual casacore::IPosition getValidShape (casacore::Int) const;
+    virtual Bool areCorrelationsSorted() const;
+    virtual IPosition getValidShape (Int) const;
     virtual VisModelDataI * getVisModelData() const;
 
 
     //////////////////////////////////////////////////////////////////////
     //
-    //  casacore::Data accessors and setters (where appropriate)
+    //  Data accessors and setters (where appropriate)
     //
     //  There are the methods that allows access to the items cached in the
     //  VisBuffer.  The straight accessors provide read-only access to the
@@ -264,93 +264,93 @@ public:
     //  a value (e.g., weight vs. weightMat) will not modify the cached value
     //  in a different representation.
 
-    virtual const casacore::Vector<casacore::Int> & antenna1 () const;
-    virtual void setAntenna1 (const casacore::Vector<casacore::Int> & value);
-    virtual const casacore::Vector<casacore::Int> & antenna2 () const;
-    virtual void setAntenna2 (const casacore::Vector<casacore::Int> & value);
-    virtual const casacore::Vector<casacore::Int> & arrayId () const;
-    virtual void setArrayId (const casacore::Vector<casacore::Int> &);
-    virtual const casacore::Vector<casacore::SquareMatrix<casacore::Complex, 2> > & cjones () const;
-    virtual const casacore::Vector<casacore::Int> & correlationTypes () const;
-//    virtual casacore::Int dataDescriptionId () const;
-//    virtual void setDataDescriptionId (casacore::Int value);
-    virtual const casacore::Vector<casacore::Int> & dataDescriptionIds () const;
-    virtual void setDataDescriptionIds (const casacore::Vector<casacore::Int> & ); // [nR]
-    virtual const casacore::Vector<casacore::MDirection> & direction1 () const;
-    virtual const casacore::Vector<casacore::MDirection> & direction2 () const;
-    virtual const casacore::Vector<casacore::Double> & exposure () const;
-    virtual void setExposure (const casacore::Vector<casacore::Double> & value);
-    virtual const casacore::Vector<casacore::Int> & feed1 () const;
-    virtual void setFeed1 (const casacore::Vector<casacore::Int> & value);
-    virtual const casacore::Vector<casacore::Float> & feedPa1 () const;
-    virtual const casacore::Vector<casacore::Int> & feed2 () const;
-    virtual void setFeed2 (const casacore::Vector<casacore::Int> & value);
-    virtual const casacore::Vector<casacore::Float> & feedPa2 () const;
-    virtual const casacore::Vector<casacore::Int> & fieldId () const;
-    virtual void setFieldId (const casacore::Vector<casacore::Int> &);
-//    virtual const casacore::Matrix<casacore::Bool> & flag () const;
-//    virtual void setFlag (const casacore::Matrix<casacore::Bool>&);
-    virtual const casacore::Array<casacore::Bool> & flagCategory () const;
-    virtual void setFlagCategory (const casacore::Array<casacore::Bool>&);
-    virtual const casacore::Cube<casacore::Bool> & flagCube () const;
-    virtual void setFlagCube (const casacore::Cube<casacore::Bool>&);
-    virtual const casacore::Vector<casacore::Bool> & flagRow () const;
-    virtual void setFlagRow (const casacore::Vector<casacore::Bool>&);
-    virtual const casacore::Matrix<casacore::Float> & imagingWeight () const;
-    void setImagingWeight (const casacore::Matrix<casacore::Float> & newImagingWeights);
-    virtual casacore::Int nAntennas () const;
-    virtual casacore::Int nChannels () const;
-    virtual casacore::Int nCorrelations () const;
-    virtual casacore::Int nRows () const;
-    virtual const casacore::Vector<casacore::Int> & observationId () const;
-    virtual void setObservationId (const casacore::Vector<casacore::Int> & value);
-    virtual const casacore::MDirection& phaseCenter () const;
-    virtual casacore::Int polarizationFrame () const;
-    virtual casacore::Int polarizationId () const;
-    virtual const casacore::Vector<casacore::Int> & processorId () const;
-    virtual void setProcessorId (const casacore::Vector<casacore::Int> & value);
-    virtual const casacore::Vector<casacore::uInt> & rowIds () const;
-    virtual const casacore::Vector<casacore::Int> & scan () const;
-    virtual void setScan (const casacore::Vector<casacore::Int> & value);
-    virtual const casacore::Matrix<casacore::Float> & sigma () const;
-    virtual void setSigma (const casacore::Matrix<casacore::Float> &);
-    //virtual const casacore::Matrix<casacore::Float> & sigmaMat () const;
-    //virtual casacore::Int spectralWindow () const;
-    virtual const casacore::Vector<casacore::Int> & spectralWindows () const;
-    virtual void setSpectralWindows (const casacore::Vector<casacore::Int> & spectralWindows);
-    virtual const casacore::Vector<casacore::Int> & stateId () const;
-    virtual void setStateId (const casacore::Vector<casacore::Int> & value);
-    virtual const casacore::Vector<casacore::Double> & time () const;
-    virtual void setTime (const casacore::Vector<casacore::Double> & value);
-    virtual const casacore::Vector<casacore::Double> & timeCentroid () const;
-    virtual void setTimeCentroid (const casacore::Vector<casacore::Double> & value);
-    virtual const casacore::Vector<casacore::Double> & timeInterval () const;
-    virtual void setTimeInterval (const casacore::Vector<casacore::Double> & value);
-    virtual const casacore::Matrix<casacore::Double> & uvw () const;
-    virtual void setUvw (const casacore::Matrix<casacore::Double> & value);
-    virtual const casacore::Cube<casacore::Complex> & visCubeCorrected () const;
-    virtual void setVisCubeCorrected (const casacore::Cube<casacore::Complex> &);
-//    virtual const casacore::Matrix<CStokesVector> & visCorrected () const;
-//    virtual void setVisCorrected (const casacore::Matrix<CStokesVector> &);
-    virtual const casacore::Cube<casacore::Float> & visCubeFloat () const;
-    virtual void setVisCubeFloat (const casacore::Cube<casacore::Float> &);
-    virtual const casacore::Cube<casacore::Complex> & visCubeModel () const;
-    virtual void setVisCubeModel (const casacore::Complex & c);
-    virtual void setVisCubeModel (const casacore::Cube<casacore::Complex>& vis);
-//    virtual void setVisCubeModel(const casacore::Vector<casacore::Float>& stokes);
-    virtual void setVisCubeModel(const casacore::Vector<casacore::Float>& stokes);  // by supplied Stokes vector
-//    virtual void setVisModel (casacore::Matrix<CStokesVector> &);
-    virtual const casacore::Cube<casacore::Complex> & visCube () const;
-    virtual void setVisCube(const casacore::Complex & c);
-    virtual void setVisCube (const casacore::Cube<casacore::Complex> &);
-//    virtual const casacore::Matrix<CStokesVector> & vis () const;
-//    virtual void setVis (casacore::Matrix<CStokesVector> &);
-    virtual const casacore::Matrix<casacore::Float> & weight () const;
-    virtual void setWeight (const casacore::Matrix<casacore::Float>&);
-    virtual const casacore::Cube<casacore::Float> & weightSpectrum () const;
-    virtual void setWeightSpectrum (const casacore::Cube<casacore::Float>&);
-    virtual const casacore::Cube<casacore::Float> & sigmaSpectrum () const;
-    virtual void setSigmaSpectrum (const casacore::Cube<casacore::Float>& value);
+    virtual const Vector<Int> & antenna1 () const;
+    virtual void setAntenna1 (const Vector<Int> & value);
+    virtual const Vector<Int> & antenna2 () const;
+    virtual void setAntenna2 (const Vector<Int> & value);
+    virtual const Vector<Int> & arrayId () const;
+    virtual void setArrayId (const Vector<Int> &);
+    virtual const Vector<SquareMatrix<Complex, 2> > & cjones () const;
+    virtual const Vector<Int> & correlationTypes () const;
+//    virtual Int dataDescriptionId () const;
+//    virtual void setDataDescriptionId (Int value);
+    virtual const Vector<Int> & dataDescriptionIds () const;
+    virtual void setDataDescriptionIds (const Vector<Int> & ); // [nR]
+    virtual const Vector<MDirection> & direction1 () const;
+    virtual const Vector<MDirection> & direction2 () const;
+    virtual const Vector<Double> & exposure () const;
+    virtual void setExposure (const Vector<Double> & value);
+    virtual const Vector<Int> & feed1 () const;
+    virtual void setFeed1 (const Vector<Int> & value);
+    virtual const Vector<Float> & feedPa1 () const;
+    virtual const Vector<Int> & feed2 () const;
+    virtual void setFeed2 (const Vector<Int> & value);
+    virtual const Vector<Float> & feedPa2 () const;
+    virtual const Vector<Int> & fieldId () const;
+    virtual void setFieldId (const Vector<Int> &);
+//    virtual const Matrix<Bool> & flag () const;
+//    virtual void setFlag (const Matrix<Bool>&);
+    virtual const Array<Bool> & flagCategory () const;
+    virtual void setFlagCategory (const Array<Bool>&);
+    virtual const Cube<Bool> & flagCube () const;
+    virtual void setFlagCube (const Cube<Bool>&);
+    virtual const Vector<Bool> & flagRow () const;
+    virtual void setFlagRow (const Vector<Bool>&);
+    virtual const Matrix<Float> & imagingWeight () const;
+    void setImagingWeight (const Matrix<Float> & newImagingWeights);
+    virtual Int nAntennas () const;
+    virtual Int nChannels () const;
+    virtual Int nCorrelations () const;
+    virtual Int nRows () const;
+    virtual const Vector<Int> & observationId () const;
+    virtual void setObservationId (const Vector<Int> & value);
+    virtual const MDirection& phaseCenter () const;
+    virtual Int polarizationFrame () const;
+    virtual Int polarizationId () const;
+    virtual const Vector<Int> & processorId () const;
+    virtual void setProcessorId (const Vector<Int> & value);
+    virtual const Vector<uInt> & rowIds () const;
+    virtual const Vector<Int> & scan () const;
+    virtual void setScan (const Vector<Int> & value);
+    virtual const Matrix<Float> & sigma () const;
+    virtual void setSigma (const Matrix<Float> &);
+    //virtual const Matrix<Float> & sigmaMat () const;
+    //virtual Int spectralWindow () const;
+    virtual const Vector<Int> & spectralWindows () const;
+    virtual void setSpectralWindows (const Vector<Int> & spectralWindows);
+    virtual const Vector<Int> & stateId () const;
+    virtual void setStateId (const Vector<Int> & value);
+    virtual const Vector<Double> & time () const;
+    virtual void setTime (const Vector<Double> & value);
+    virtual const Vector<Double> & timeCentroid () const;
+    virtual void setTimeCentroid (const Vector<Double> & value);
+    virtual const Vector<Double> & timeInterval () const;
+    virtual void setTimeInterval (const Vector<Double> & value);
+    virtual const Matrix<Double> & uvw () const;
+    virtual void setUvw (const Matrix<Double> & value);
+    virtual const Cube<Complex> & visCubeCorrected () const;
+    virtual void setVisCubeCorrected (const Cube<Complex> &);
+//    virtual const Matrix<CStokesVector> & visCorrected () const;
+//    virtual void setVisCorrected (const Matrix<CStokesVector> &);
+    virtual const Cube<Float> & visCubeFloat () const;
+    virtual void setVisCubeFloat (const Cube<Float> &);
+    virtual const Cube<Complex> & visCubeModel () const;
+    virtual void setVisCubeModel (const Complex & c);
+    virtual void setVisCubeModel (const Cube<Complex>& vis);
+    virtual void setVisCubeModel(const Vector<Float>& stokes);  // by supplied Stokes vector
+//    virtual const Matrix<CStokesVector> & visModel () const;
+//    virtual void setVisModel (Matrix<CStokesVector> &);
+    virtual const Cube<Complex> & visCube () const;
+    virtual void setVisCube(const Complex & c);
+    virtual void setVisCube (const Cube<Complex> &);
+//    virtual const Matrix<CStokesVector> & vis () const;
+//    virtual void setVis (Matrix<CStokesVector> &);
+    virtual const Matrix<Float> & weight () const;
+    virtual void setWeight (const Matrix<Float>&);
+    virtual const Cube<Float> & weightSpectrum () const;
+    virtual void setWeightSpectrum (const Cube<Float>&);
+    virtual const Cube<Float> & sigmaSpectrum () const;
+    virtual void setSigmaSpectrum (const Cube<Float>& value);
 
 protected:
 
@@ -364,95 +364,95 @@ protected:
     // Attach to a VisIter. Detaches itself first if already attached
     // to a VisIter. Will remain synchronized with iterator.
 
-    //virtual void cacheCopy (const VisBufferImpl2 & other, casacore::Bool markAsCached);
+    //virtual void cacheCopy (const VisBufferImpl2 & other, Bool markAsCached);
 
-    void adjustWeightFactorsAndFlags (casacore::Matrix <casacore::Float> & rowWeightFactors,
-                                      casacore::Bool useWeightSpectrum,
-                                      casacore::Int nRows,
-                                      casacore::Int nCorrelations,
-                                      casacore::Int nChannelsOut);
-    void adjustWeightAndSigmaMatrices (casacore::Int nChannelsAveraged, casacore::Int nChannelsOut, casacore::Int nRows,
-                                       casacore::Int nCorrelations, casacore::Int nChannelsSelected,
-                                       const casacore::Matrix <casacore::Float> & rowWeightFactors);
+    void adjustWeightFactorsAndFlags (Matrix <Float> & rowWeightFactors,
+                                      Bool useWeightSpectrum,
+                                      Int nRows,
+                                      Int nCorrelations,
+                                      Int nChannelsOut);
+    void adjustWeightAndSigmaMatrices (Int nChannelsAveraged, Int nChannelsOut, Int nRows,
+                                       Int nCorrelations, Int nChannelsSelected,
+                                       const Matrix <Float> & rowWeightFactors);
 
-    casacore::Int averageChannelFrequencies (casacore::Int nChannelsOut,
-                                   const casacore::Vector<casacore::Int> & channels,
-                                   const casacore::Matrix<casacore::Int> & averagingBounds);
+    Int averageChannelFrequencies (Int nChannelsOut,
+                                   const Vector<Int> & channels,
+                                   const Matrix<Int> & averagingBounds);
 
-    void averageFlagInfoChannels (const casacore::Matrix<casacore::Int> & averagingBounds,
-                                  casacore::Int nChannelsOut, casacore::Bool useWeightSpectrum);
+    void averageFlagInfoChannels (const Matrix<Int> & averagingBounds,
+                                  Int nChannelsOut, Bool useWeightSpectrum);
 
     template<typename T>
     void averageVisCubeChannels (T & dataCache,
-                                 casacore::Int nChanOut,
-                                 const casacore::Matrix<casacore::Int>& averagingbounds);
+                                 Int nChanOut,
+                                 const Matrix<Int>& averagingbounds);
 
-    virtual void cacheClear (casacore::Bool markAsCached = false);
+    virtual void cacheClear (Bool markAsCached = False);
     virtual void cacheResizeAndZero (const VisBufferComponents2 & exclusions = VisBufferComponents2());
 
     virtual void checkVisIter (const char * func, const char * file, int line, const char * extra = "") const;
-    void computeRowWeightFactors (casacore::Matrix <casacore::Float> & rowWeightFactors, casacore::Bool useWeightSpectrum);
-    virtual void configureNewSubchunk (casacore::Int msId, const casacore::String & msName, casacore::Bool isNewMs,
-                                       casacore::Bool isNewArrayId, casacore::Bool isNewFieldId,
-                                       casacore::Bool isNewSpectralWindow, const Subchunk & subchunk,
-                                       casacore::Int nRows, casacore::Int nChannels, casacore::Int nCorrelations,
-                                       const casacore::Vector<casacore::Int> & correlations,
-                                       const casacore::Vector<casacore::Stokes::StokesTypes> & correlationsDefined,
-                                       const casacore::Vector<casacore::Stokes::StokesTypes> & correlationsSelected,
-                                       casacore::CountedPtr<WeightScaling> weightScaling);
+    void computeRowWeightFactors (Matrix <Float> & rowWeightFactors, Bool useWeightSpectrum);
+    virtual void configureNewSubchunk (Int msId, const String & msName, Bool isNewMs,
+                                       Bool isNewArrayId, Bool isNewFieldId,
+                                       Bool isNewSpectralWindow, const Subchunk & subchunk,
+                                       Int nRows, Int nChannels, Int nCorrelations,
+                                       const Vector<Int> & correlations,
+                                       const Vector<Stokes::StokesTypes> & correlationsDefined,
+                                       const Vector<Stokes::StokesTypes> & correlationsSelected,
+                                       CountedPtr<WeightScaling> weightScaling);
 
-    virtual void copyRow (casacore::Int sourceRow, casacore::Int destinationRow);
-    virtual void deleteRows (const casacore::Vector<casacore::Int> & rowsToDelete);
+    virtual void copyRow (Int sourceRow, Int destinationRow);
+    virtual void deleteRows (const Vector<Int> & rowsToDelete);
     virtual void dirtyComponentsAdd (const VisBufferComponents2 & additionalDirtyComponents);
     virtual void dirtyComponentsAdd (VisBufferComponent2 component);
     virtual void dirtyComponentsClear ();
     virtual VisBufferComponents2 dirtyComponentsGet () const;
     virtual void dirtyComponentsSet (const VisBufferComponents2 & dirtyComponents);
     virtual void dirtyComponentsSet (VisBufferComponent2 component);
-    virtual casacore::Bool hasShape () const;
-    void normalizeRow (casacore::Int row, casacore::Int nCorrelations, const casacore::Cube<casacore::Bool> & flagged,
-                       casacore::Cube<casacore::Complex> & visCube, casacore::Cube<casacore::Complex> & modelCube,
-                        casacore::Matrix<casacore::Float> & weightMat);
+    virtual Bool hasShape () const;
+    void normalizeRow (Int row, Int nCorrelations, const Cube<Bool> & flagged,
+                       Cube<Complex> & visCube, Cube<Complex> & modelCube,
+                        Matrix<Float> & weightMat);
 
-    virtual void sortCorrelationsAux (casacore::Bool makeSorted);
+    virtual void sortCorrelationsAux (Bool makeSorted);
     virtual ViImplementation2 * getViiP () const; // protected, non-const access to VI
     void registerCacheItem (VbCacheItemBase *);
-    virtual void resizeRows (casacore::Int newNRows);
+    virtual void resizeRows (Int newNRows);
     virtual void stateCopy (const VisBufferImpl2 & other); // copy relevant noncached members
-    virtual void setFillable (casacore::Bool isFillable);
-    virtual void setRekeyable (casacore::Bool isRekeyable);
-    virtual bool setWritability (bool newWritability) override;
+    virtual void setFillable (Bool isFillable);
+    virtual void setRekeyable (Bool isRekeyable);
+    virtual bool setWritability (Bool newWritability) override;
     virtual void setupValidShapes ();
     template <typename Coord>
     void updateCoord (Coord & item, const Coord & otherItem);
 
-    virtual casacore::Vector<casacore::Bool> & flagRowRef ();  // [nR]
-    virtual casacore::Cube<casacore::Bool> & flagCubeRef ();  // [nC,nF,nR]
-    virtual casacore::Cube<casacore::Complex> & visCubeRef (); // [nC,nF,nR]
-    virtual casacore::Cube<casacore::Complex> & visCubeCorrectedRef (); // [nC,nF,nR]
-    virtual casacore::Cube<casacore::Complex> & visCubeModelRef (); // [nC,nF,nR]
-    virtual casacore::Cube<casacore::Float> & weightSpectrumRef (); // [nC,nF,nR]
-    virtual casacore::Cube<casacore::Float> & sigmaSpectrumRef (); // [nC,nF,nR]
+    virtual Vector<Bool> & flagRowRef ();  // [nR]
+    virtual Cube<Bool> & flagCubeRef ();  // [nC,nF,nR]
+    virtual Cube<Complex> & visCubeRef (); // [nC,nF,nR]
+    virtual Cube<Complex> & visCubeCorrectedRef (); // [nC,nF,nR]
+    virtual Cube<Complex> & visCubeModelRef (); // [nC,nF,nR]
+    virtual Cube<Float> & weightSpectrumRef (); // [nC,nF,nR]
+    virtual Cube<Float> & sigmaSpectrumRef (); // [nC,nF,nR]
 
-    casacore::Float getWeightScaled (casacore::Int row) const;
-    casacore::Float getWeightScaled (casacore::Int correlation, casacore::Int row) const;
-    casacore::Float getWeightScaled (casacore::Int correlation, casacore::Int channel, casacore::Int row) const;
-    casacore::Float getSigmaScaled (casacore::Int row) const;
-    casacore::Float getSigmaScaled (casacore::Int correlation, casacore::Int row) const;
-    casacore::Float getSigmaScaled (casacore::Int correlation, casacore::Int channel, casacore::Int row) const;
-    virtual casacore::CountedPtr<WeightScaling> getWeightScaling () const;
-    void setIterationInfo (casacore::Int msId, const casacore::String & msName, casacore::Bool isNewMs,
-                           casacore::Bool isNewArrayId, casacore::Bool isNewFieldId, casacore::Bool isNewSpectralWindow,
-                           const Subchunk & subchunk, const casacore::Vector<casacore::Int> & correlations,
-                           const casacore::Vector<casacore::Stokes::StokesTypes> & correlationsDefined,
-                           const casacore::Vector<casacore::Stokes::StokesTypes> & correlationsSelected,
-                           casacore::CountedPtr <WeightScaling> weightScaling);
-    casacore::Bool weightSpectrumPresent () const;
-    casacore::Bool sigmaSpectrumPresent () const;
+    Float getWeightScaled (Int row) const;
+    Float getWeightScaled (Int correlation, Int row) const;
+    Float getWeightScaled (Int correlation, Int channel, Int row) const;
+    Float getSigmaScaled (Int row) const;
+    Float getSigmaScaled (Int correlation, Int row) const;
+    Float getSigmaScaled (Int correlation, Int channel, Int row) const;
+    virtual CountedPtr<WeightScaling> getWeightScaling () const;
+    void setIterationInfo (Int msId, const String & msName, Bool isNewMs,
+                           Bool isNewArrayId, Bool isNewFieldId, Bool isNewSpectralWindow,
+                           const Subchunk & subchunk, const Vector<Int> & correlations,
+                           const Vector<Stokes::StokesTypes> & correlationsDefined,
+                           const Vector<Stokes::StokesTypes> & correlationsSelected,
+                           CountedPtr <WeightScaling> weightScaling);
+    Bool weightSpectrumPresent () const;
+    Bool sigmaSpectrumPresent () const;
 
 private:
 
-    virtual casacore::Bool areCorrelationsInCanonicalOrder () const;
+    virtual Bool areCorrelationsInCanonicalOrder () const;
     void checkVisIterBase (const char * func, const char * file, int line, const char * extra = "") const;
     void construct(ViImplementation2 * vi, VisBufferOptions options);
     void constructCache();
@@ -471,64 +471,64 @@ private:
     // VisBufferCache class in VisBuffer.cc).
 
 
-    virtual void fillAntenna1 (casacore::Vector<casacore::Int>& value) const;
-    virtual void fillAntenna2 (casacore::Vector<casacore::Int>& value) const;
-    virtual void fillArrayId (casacore::Vector<casacore::Int>& value) const;
-    virtual void fillCorrType (casacore::Vector<casacore::Int>& value) const;
-    virtual void fillCubeCorrected (casacore::Cube <casacore::Complex> & value) const;
-    virtual void fillCubeModel (casacore::Cube <casacore::Complex> & value) const;
-    virtual void fillCubeObserved (casacore::Cube <casacore::Complex> & value) const;
-    virtual void fillDataDescriptionId  (casacore::Int& value) const;
-    virtual void fillDataDescriptionIds  (casacore::Vector<casacore::Int>& value) const;
-    virtual void fillDirection1 (casacore::Vector<casacore::MDirection>& value) const;
-    virtual void fillDirection2 (casacore::Vector<casacore::MDirection>& value) const;
-    virtual void fillDirectionAux (casacore::Vector<casacore::MDirection>& value,
-                           const casacore::Vector<casacore::Int> & antenna,
-                           const casacore::Vector<casacore::Int> &feed,
-                           const casacore::Vector<casacore::Float> & feedPa) const;
-    virtual void fillExposure (casacore::Vector<casacore::Double>& value) const;
-    virtual void fillFeed1 (casacore::Vector<casacore::Int>& value) const;
-    virtual void fillFeed2 (casacore::Vector<casacore::Int>& value) const;
-    virtual void fillFeedPa1 (casacore::Vector <casacore::Float> & feedPa) const;
-    virtual void fillFeedPa2 (casacore::Vector <casacore::Float> & feedPa) const;
-    virtual void fillFeedPaAux (casacore::Vector <casacore::Float> & feedPa,
-                        const casacore::Vector <casacore::Int> & antenna,
-                        const casacore::Vector <casacore::Int> & feed) const;
-    virtual void fillFieldId (casacore::Vector<casacore::Int>& value) const;
-    virtual void fillFlag (casacore::Matrix<casacore::Bool>& value) const;
-    virtual void fillFlagCategory (casacore::Array<casacore::Bool>& value) const;
-    virtual void fillFlagCube (casacore::Cube<casacore::Bool>& value) const;
-    virtual void fillFlagRow (casacore::Vector<casacore::Bool>& value) const;
-    virtual void fillFloatData (casacore::Cube<casacore::Float>& value) const;
-    virtual void fillImagingWeight (casacore::Matrix<casacore::Float> & value) const;
-    virtual void fillJonesC (casacore::Vector<casacore::SquareMatrix<casacore::Complex, 2> >& value) const;
-    virtual void fillNAntennas (casacore::Int& value) const;
-    virtual void fillNChannel (casacore::Int& value) const;
-    virtual void fillNCorr (casacore::Int& value) const;
-    virtual void fillNRow (casacore::Int& value) const;
-    virtual void fillObservationId (casacore::Vector<casacore::Int>& value) const;
-    virtual void fillPhaseCenter (casacore::MDirection& value) const;
-    virtual void fillPolFrame (casacore::Int& value) const;
-    virtual void fillPolarizationId (casacore::Int& value) const;
-    virtual void fillProcessorId (casacore::Vector<casacore::Int>& value) const;
-    virtual void fillRowIds (casacore::Vector<casacore::uInt>& value) const;
-    virtual void fillScan (casacore::Vector<casacore::Int>& value) const;
-    virtual void fillSigma (casacore::Matrix<casacore::Float>& value) const;
-    //virtual void fillSigmaMat (casacore::Matrix<casacore::Float>& value) const;
-    //virtual void fillSpectralWindow (casacore::Int& value) const;
-    virtual void fillSpectralWindows  (casacore::Vector<casacore::Int>& value) const;
-    virtual void fillStateId (casacore::Vector<casacore::Int>& value) const;
-    virtual void fillTime (casacore::Vector<casacore::Double>& value) const;
-    virtual void fillTimeCentroid (casacore::Vector<casacore::Double>& value) const;
-    virtual void fillTimeInterval (casacore::Vector<casacore::Double>& value) const;
-    virtual void fillUvw (casacore::Matrix<casacore::Double>& value) const;
-//    virtual void fillVisibilityCorrected (casacore::Matrix<CStokesVector>& value) const;
-//    virtual void fillVisibilityModel (casacore::Matrix<CStokesVector>& value) const;
-//    virtual void fillVisibilityObserved (casacore::Matrix<CStokesVector>& value) const;
-    virtual void fillWeight (casacore::Matrix<casacore::Float>& value) const;
-    //virtual void fillWeightMat (casacore::Matrix<casacore::Float>& value) const;
-    virtual void fillWeightSpectrum (casacore::Cube<casacore::Float>& value) const;
-    virtual void fillSigmaSpectrum (casacore::Cube<casacore::Float>& value) const;
+    virtual void fillAntenna1 (Vector<Int>& value) const;
+    virtual void fillAntenna2 (Vector<Int>& value) const;
+    virtual void fillArrayId (Vector<Int>& value) const;
+    virtual void fillCorrType (Vector<Int>& value) const;
+    virtual void fillCubeCorrected (Cube <Complex> & value) const;
+    virtual void fillCubeModel (Cube <Complex> & value) const;
+    virtual void fillCubeObserved (Cube <Complex> & value) const;
+    virtual void fillDataDescriptionId  (Int& value) const;
+    virtual void fillDataDescriptionIds  (Vector<Int>& value) const;
+    virtual void fillDirection1 (Vector<MDirection>& value) const;
+    virtual void fillDirection2 (Vector<MDirection>& value) const;
+    virtual void fillDirectionAux (Vector<MDirection>& value,
+                           const Vector<Int> & antenna,
+                           const Vector<Int> &feed,
+                           const Vector<Float> & feedPa) const;
+    virtual void fillExposure (Vector<Double>& value) const;
+    virtual void fillFeed1 (Vector<Int>& value) const;
+    virtual void fillFeed2 (Vector<Int>& value) const;
+    virtual void fillFeedPa1 (Vector <Float> & feedPa) const;
+    virtual void fillFeedPa2 (Vector <Float> & feedPa) const;
+    virtual void fillFeedPaAux (Vector <Float> & feedPa,
+                        const Vector <Int> & antenna,
+                        const Vector <Int> & feed) const;
+    virtual void fillFieldId (Vector<Int>& value) const;
+    virtual void fillFlag (Matrix<Bool>& value) const;
+    virtual void fillFlagCategory (Array<Bool>& value) const;
+    virtual void fillFlagCube (Cube<Bool>& value) const;
+    virtual void fillFlagRow (Vector<Bool>& value) const;
+    virtual void fillFloatData (Cube<Float>& value) const;
+    virtual void fillImagingWeight (Matrix<Float> & value) const;
+    virtual void fillJonesC (Vector<SquareMatrix<Complex, 2> >& value) const;
+    virtual void fillNAntennas (Int& value) const;
+    virtual void fillNChannel (Int& value) const;
+    virtual void fillNCorr (Int& value) const;
+    virtual void fillNRow (Int& value) const;
+    virtual void fillObservationId (Vector<Int>& value) const;
+    virtual void fillPhaseCenter (MDirection& value) const;
+    virtual void fillPolFrame (Int& value) const;
+    virtual void fillPolarizationId (Int& value) const;
+    virtual void fillProcessorId (Vector<Int>& value) const;
+    virtual void fillRowIds (Vector<uInt>& value) const;
+    virtual void fillScan (Vector<Int>& value) const;
+    virtual void fillSigma (Matrix<Float>& value) const;
+    //virtual void fillSigmaMat (Matrix<Float>& value) const;
+    //virtual void fillSpectralWindow (Int& value) const;
+    virtual void fillSpectralWindows  (Vector<Int>& value) const;
+    virtual void fillStateId (Vector<Int>& value) const;
+    virtual void fillTime (Vector<Double>& value) const;
+    virtual void fillTimeCentroid (Vector<Double>& value) const;
+    virtual void fillTimeInterval (Vector<Double>& value) const;
+    virtual void fillUvw (Matrix<Double>& value) const;
+//    virtual void fillVisibilityCorrected (Matrix<CStokesVector>& value) const;
+//    virtual void fillVisibilityModel (Matrix<CStokesVector>& value) const;
+//    virtual void fillVisibilityObserved (Matrix<CStokesVector>& value) const;
+    virtual void fillWeight (Matrix<Float>& value) const;
+    //virtual void fillWeightMat (Matrix<Float>& value) const;
+    virtual void fillWeightSpectrum (Cube<Float>& value) const;
+    virtual void fillSigmaSpectrum (Cube<Float>& value) const;
 
     VisBufferCache * cache_p;
     casa::ms::Vbi2MsRow * msRow_p;

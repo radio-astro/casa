@@ -33,12 +33,8 @@
 #include <nrao/VLA/VLAFilter.h>
 
 #include <casa/namespace.h>
-namespace casacore{
-
-class MVFrequency;
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
+class MVFrequency;
 } //# NAMESPACE CASA - END
 
 class VLALogicalRecord;
@@ -91,14 +87,14 @@ class VLAFrequencyFilter: public VLAFilter
 {
 public:
   // The default constructor creates a filter that does not filter
-  // anything. ie., the passThru() function always returns true;
+  // anything. ie., the passThru() function always returns True;
   VLAFrequencyFilter();
 
   // Creates a filter that filters all records except those where any of the
   // observed data are within the specified band. The frequency frame is
   // assumed to be topocentric.
-  VLAFrequencyFilter(const casacore::MVFrequency& centreFrequency, 
-		     const casacore::MVFrequency& bandwidth);
+  VLAFrequencyFilter(const MVFrequency& centreFrequency, 
+		     const MVFrequency& bandwidth);
   
   // The copy constructor uses copy semantics.
   VLAFrequencyFilter(const VLAFrequencyFilter& other);
@@ -110,14 +106,14 @@ public:
   VLAFrequencyFilter& operator=(const VLAFrequencyFilter& other);
 
   // set the reference frequency.
-  void refFrequency(const casacore::MVFrequency& refFrequency);
+  void refFrequency(const MVFrequency& refFrequency);
 
   // set the bandwidth.
-  void bandwidth(const casacore::MVFrequency& bandwidth);
+  void bandwidth(const MVFrequency& bandwidth);
 
-  // returns true if the supplied record contains any data that is between the
+  // returns True if the supplied record contains any data that is between the
   // specified start and end frequencies.
-  virtual casacore::Bool passThru(const VLALogicalRecord& record) const;
+  virtual Bool passThru(const VLALogicalRecord& record) const;
 
   // Return a pointer to a copy of the VLAFrequencyFilter object upcast to a
   // VLAFilter object. The class that uses this function is responsible for
@@ -125,14 +121,14 @@ public:
   // constructor.
   virtual VLAFilter* clone() const;
 
-  // casacore::Function which checks the internal data of this class for correct
-  // dimensionality and consistant values. Returns true if everything is fine
-  // otherwise returns false.
-  virtual casacore::Bool ok() const;
+  // Function which checks the internal data of this class for correct
+  // dimensionality and consistant values. Returns True if everything is fine
+  // otherwise returns False.
+  virtual Bool ok() const;
 
 private:
-  casacore::Double itsTopEdge;
-  casacore::Double itsBottomEdge;
+  Double itsTopEdge;
+  Double itsBottomEdge;
 };
 #endif
 // Local Variables: 

@@ -36,17 +36,16 @@
 #include <measures/Measures/MCFrequency.h>
 #include <casa/typeinfo.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //----------------------------------------------------------------------------
 
 CalMainBuffer::CalMainBuffer() :
-  connectedToIter_p(false), calIter_p(NULL), calMainCol_p(NULL)
+  connectedToIter_p(False), calIter_p(NULL), calMainCol_p(NULL)
 {
 // Null constructor
 // Output to private data:
-//    connectedToIter_p  Bool                 true if connected to iterator
+//    connectedToIter_p  Bool                 True if connected to iterator
 //    calIter_p          CalIterBase*         Ptr to calibration table iterator
 //    calMainCol_p       CalMainColumns*      Ptr to cal main col accessor
 //    calDescBuf_p       CalDescBuffer*       Ptr to cal_desc buffer
@@ -126,7 +125,7 @@ CalMainBuffer::CalMainBuffer() :
 
 CalMainBuffer::CalMainBuffer (const Vector<Int>& calIndices, 
 			      const Block<Vector<Int> >& indexValues) :
-  connectedToIter_p(false), calIter_p(NULL), calMainCol_p(NULL)
+  connectedToIter_p(False), calIter_p(NULL), calMainCol_p(NULL)
 {
 // Construct from a set of cal buffer indices and specified index values
 // Input:
@@ -134,7 +133,7 @@ CalMainBuffer::CalMainBuffer (const Vector<Int>& calIndices,
 //                                           enums from class MSCalEnums)
 //    indexValues    const Block<Vec<Int>>&  Associated index values
 // Output to private data:
-//    connectedToIter_p  Bool                 true if connected to iterator
+//    connectedToIter_p  Bool                 True if connected to iterator
 //    calIter_p          CalIterBase*         Ptr to cal. table iterator
 //    calMainCol_p       CalMainColumns*      Ptr to cal main col accessor
 //    calDescBuf_p       CalDescBuffer*       Ptr to cal_desc buffer
@@ -157,13 +156,13 @@ CalMainBuffer::CalMainBuffer (const Vector<Int>& calIndices,
 //----------------------------------------------------------------------------
 
 CalMainBuffer::CalMainBuffer (CalIterBase& calIter) :
-  connectedToIter_p(true), calIter_p(&calIter), calMainCol_p(NULL)
+  connectedToIter_p(True), calIter_p(&calIter), calMainCol_p(NULL)
 {
 // Construct from a calibration table iterator
 // Input:
 //    calIter            CalIterBase&         Calibration table iterator
 // Output to private data:
-//    connectedToIter_p  Bool                 true if connected to iterator
+//    connectedToIter_p  Bool                 True if connected to iterator
 //    calIter_p          CalIterBase*         Ptr to cal. table iterator
 //    calMainCol_p       CalMainColumns*      Ptr to cal main col accessor
 //    calDescBuf_p       CalDescBuffer*       Ptr to cal_desc buffer
@@ -517,7 +516,7 @@ Vector<MEpoch>& CalMainBuffer::timeMeas()
 {
 // TIME data field accessor (as Measure)
 // Input from private data:
-//    connectedToIter_p  Bool                 true if connected to iterator
+//    connectedToIter_p  Bool                 True if connected to iterator
 //    timeMeas_p         Vector<MEpoch>&      Time as Measure
 //
   // Fill local cache for this column if cache not valid
@@ -528,7 +527,7 @@ Vector<MEpoch>& CalMainBuffer::timeMeas()
       for (Int row=0; row < nrow; row++) {
 	calMainCol()->timeMeas().get (row, timeMeas_p(row));
       };
-      timeMeasOK_p = true;
+      timeMeasOK_p = True;
     };
   };
   return timeMeas_p;
@@ -540,7 +539,7 @@ Vector<Quantity>& CalMainBuffer::timeEPQuant()
 {
 // TIME_EXTRA_PREC data field accessor (as Quantum)
 // Input from private data:
-//    connectedToIter_p  Bool                 true if connected to iterator
+//    connectedToIter_p  Bool                 True if connected to iterator
 //    timeEPQuant_p      Vector<Quantity>     Time EP as Quantum
 //
   // Fill local cache for this column if cache not valid
@@ -551,7 +550,7 @@ Vector<Quantity>& CalMainBuffer::timeEPQuant()
       for (uInt row=0; row < nrow; row++) {
 	calMainCol()->timeEPQuant().get (row, timeEPQuant_p(row));
       };
-      timeEPQuantOK_p = true;
+      timeEPQuantOK_p = True;
     };
   };
   return timeEPQuant_p;
@@ -563,7 +562,7 @@ Vector<Quantity>& CalMainBuffer::intervalQuant()
 {
 // INTERVAL data field accessor (as Quantum)
 // Input from private data:
-//    connectedToIter_p  Bool                 true if connected to iterator
+//    connectedToIter_p  Bool                 True if connected to iterator
 //    intervalQuant_p    Vector<Quantity>     Interval as Quantum
 //
   // Fill local cache for this column if cache not valid
@@ -574,7 +573,7 @@ Vector<Quantity>& CalMainBuffer::intervalQuant()
       for (uInt row = 0; row < nrow; row++) {
 	calMainCol()->intervalQuant().get (row, intervalQuant_p(row));
       };
-      intervalQuantOK_p = true;
+      intervalQuantOK_p = True;
     };
   };
   return intervalQuant_p;
@@ -586,14 +585,14 @@ Vector<Int>& CalMainBuffer::antenna1()
 {
 // ANTENNA1 data field accessor
 // Input from private data:
-//    connectedToIter_p  Bool                 true if connected to iterator
+//    connectedToIter_p  Bool                 True if connected to iterator
 //    antenna1_p         Vector<Int>          Antenna1
 //
   // Fill local cache for this column if cache not valid
   if (connectedToIter()) {
     if (!antenna1OK_p) {
       calMainCol()->antenna1().getColumn (antenna1_p);
-      antenna1OK_p = true;
+      antenna1OK_p = True;
     };
   };
   return antenna1_p;
@@ -605,14 +604,14 @@ Vector<Int>& CalMainBuffer::feed1()
 {
 // FEED1 data field accessor
 // Input from private data:
-//    connectedToIter_p  Bool                 true if connected to iterator
+//    connectedToIter_p  Bool                 True if connected to iterator
 //    feed1_p            Vector<Int>          Feed1
 //
   // Fill local cache for this column if cache not valid
   if (connectedToIter()) {
     if (!feed1OK_p) {
       calMainCol()->feed1().getColumn (feed1_p);
-      feed1OK_p = true;
+      feed1OK_p = True;
     };
   };
   return feed1_p;
@@ -624,14 +623,14 @@ Vector<Int>& CalMainBuffer::fieldId()
 {
 // FIELD_ID data field accessor
 // Input from private data:
-//    connectedToIter_p  Bool                 true if connected to iterator
+//    connectedToIter_p  Bool                 True if connected to iterator
 //    fieldId_p          Vector<Int>          Field id.
 //
   // Fill local cache for this column if cache not valid
   if (connectedToIter()) {
     if (!fieldIdOK_p) {
       calMainCol()->fieldId().getColumn (fieldId_p);
-      fieldIdOK_p = true;
+      fieldIdOK_p = True;
     };
   };
   return fieldId_p;
@@ -643,14 +642,14 @@ Vector<Int>& CalMainBuffer::arrayId()
 {
 // ARRAY_ID data field accessor
 // Input from private data:
-//    connectedToIter_p  Bool                 true if connected to iterator
+//    connectedToIter_p  Bool                 True if connected to iterator
 //    arrayId_p          Vector<Int>          Array id.
 //
   // Fill local cache for this column if cache not valid
   if (connectedToIter()) {
     if (!arrayIdOK_p) {
       calMainCol()->arrayId().getColumn (arrayId_p);
-      arrayIdOK_p = true;
+      arrayIdOK_p = True;
     };
   };
   return arrayId_p;
@@ -662,14 +661,14 @@ Vector<Int>& CalMainBuffer::obsId()
 {
 // OBSERVATION_ID data field accessor
 // Input from private data:
-//    connectedToIter_p  Bool                 true if connected to iterator
+//    connectedToIter_p  Bool                 True if connected to iterator
 //    obsId_p            Vector<Int>          Obs id.
 //
   // Fill local cache for this column if cache not valid
   if (connectedToIter()) {
     if (!obsIdOK_p) {
       calMainCol()->obsId().getColumn (obsId_p);
-      obsIdOK_p = true;
+      obsIdOK_p = True;
     };
   };
   return obsId_p;
@@ -681,14 +680,14 @@ Vector<Int>& CalMainBuffer::scanNo()
 {
 // SCAN_NUMBER data field accessor
 // Input from private data:
-//    connectedToIter_p  Bool                 true if connected to iterator
+//    connectedToIter_p  Bool                 True if connected to iterator
 //    scanNo_p           Vector<Int>          Scan no.
 //
   // Fill local cache for this column if cache not valid
   if (connectedToIter()) {
     if (!scanNoOK_p) {
       calMainCol()->scanNo().getColumn (scanNo_p);
-      scanNoOK_p = true;
+      scanNoOK_p = True;
     };
   };
   return scanNo_p;
@@ -700,14 +699,14 @@ Vector<Int>& CalMainBuffer::processorId()
 {
 // PROCESSOR_ID data field accessor
 // Input from private data:
-//    connectedToIter_p  Bool                 true if connected to iterator
+//    connectedToIter_p  Bool                 True if connected to iterator
 //    processorId_p      Vector<Int>          Processor id.
 //
   // Fill local cache for this column if cache not valid
   if (connectedToIter()) {
     if (!processorIdOK_p) {
       calMainCol()->processorId().getColumn (processorId_p);
-      processorIdOK_p = true;
+      processorIdOK_p = True;
     };
   };
   return processorId_p;
@@ -719,14 +718,14 @@ Vector<Int>& CalMainBuffer::stateId()
 {
 // STATE_ID data field accessor
 // Input from private data:
-//    connectedToIter_p  Bool                 true if connected to iterator
+//    connectedToIter_p  Bool                 True if connected to iterator
 //    stateId_p          Vector<Int>          State id.
 //
   // Fill local cache for this column if cache not valid
   if (connectedToIter()) {
     if (!stateIdOK_p) {
       calMainCol()->stateId().getColumn (stateId_p);
-      stateIdOK_p = true;
+      stateIdOK_p = True;
     };
   };
   return stateId_p;
@@ -738,14 +737,14 @@ Vector<Int>& CalMainBuffer::phaseId()
 {
 // PHASE_ID data field accessor
 // Input from private data:
-//    connectedToIter_p  Bool                 true if connected to iterator
+//    connectedToIter_p  Bool                 True if connected to iterator
 //    phaseId_p          Vector<Int>          Phase id.
 //
   // Fill local cache for this column if cache not valid
   if (connectedToIter()) {
     if (!phaseIdOK_p) {
       calMainCol()->phaseId().getColumn (phaseId_p);
-      phaseIdOK_p = true;
+      phaseIdOK_p = True;
     };
   };
   return phaseId_p;
@@ -757,14 +756,14 @@ Vector<Int>& CalMainBuffer::pulsarBin()
 {
 // PULSAR_BIN data field accessor
 // Input from private data:
-//    connectedToIter_p  Bool                 true if connected to iterator
+//    connectedToIter_p  Bool                 True if connected to iterator
 //    pulsarBin_p        Vector<Int>          Pulsar bin
 //
   // Fill local cache for this column if cache not valid
   if (connectedToIter()) {
     if (!pulsarBinOK_p) {
       calMainCol()->pulsarBin().getColumn (pulsarBin_p);
-      pulsarBinOK_p = true;
+      pulsarBinOK_p = True;
     };
   };
   return pulsarBin_p;
@@ -776,14 +775,14 @@ Vector<Int>& CalMainBuffer::pulsarGateId()
 {
 // PULSAR_GATE_ID data field accessor
 // Input from private data:
-//    connectedToIter_p  Bool                 true if connected to iterator
+//    connectedToIter_p  Bool                 True if connected to iterator
 //    pulsarGateId_p     Vector<Int>          Pulsar gate id.
 //
   // Fill local cache for this column if cache not valid
   if (connectedToIter()) {
     if (!pulsarGateIdOK_p) {
       calMainCol()->pulsarGateId().getColumn (pulsarGateId_p);
-      pulsarGateIdOK_p = true;
+      pulsarGateIdOK_p = True;
     };
   };
   return pulsarGateId_p;
@@ -795,14 +794,14 @@ Vector<Int>& CalMainBuffer::freqGrp()
 {
 // FREQ_GROUP data field accessor
 // Input from private data:
-//    connectedToIter_p  Bool                 true if connected to iterator
+//    connectedToIter_p  Bool                 True if connected to iterator
 //    freqGrp_p          Vector<Int>          Frequency group
 //
   // Fill local cache for this column if cache not valid
   if (connectedToIter()) {
     if (!freqGrpOK_p) {
       calMainCol()->freqGrp().getColumn (freqGrp_p);
-      freqGrpOK_p = true;
+      freqGrpOK_p = True;
     };
   };
   return freqGrp_p;
@@ -814,14 +813,14 @@ Vector<String>& CalMainBuffer::freqGrpName()
 {
 // FREQ_GROUP_NAME data field accessor
 // Input from private data:
-//    connectedToIter_p  Bool                 true if connected to iterator
+//    connectedToIter_p  Bool                 True if connected to iterator
 //    freqGrpName_p      Vector<String>       Frequency group name
 //
   // Fill local cache for this column if cache not valid
   if (connectedToIter()) {
     if (!freqGrpNameOK_p) {
       calMainCol()->freqGrpName().getColumn (freqGrpName_p);
-      freqGrpNameOK_p = true;
+      freqGrpNameOK_p = True;
     };
   };
   return freqGrpName_p;
@@ -833,14 +832,14 @@ Vector<String>& CalMainBuffer::fieldName()
 {
 // FIELD_NAME data field accessor
 // Input from private data:
-//    connectedToIter_p  Bool                 true if connected to iterator
+//    connectedToIter_p  Bool                 True if connected to iterator
 //    fieldName_p        Vector<String>       Field name
 //
   // Fill local cache for this column if cache not valid
   if (connectedToIter()) {
     if (!fieldNameOK_p) {
       calMainCol()->fieldName().getColumn (fieldName_p);
-      fieldNameOK_p = true;
+      fieldNameOK_p = True;
     };
   };
   return fieldName_p;
@@ -852,14 +851,14 @@ Vector<String>& CalMainBuffer::fieldCode()
 {
 // FIELD_CODE data field accessor
 // Input from private data:
-//    connectedToIter_p  Bool                 true if connected to iterator
+//    connectedToIter_p  Bool                 True if connected to iterator
 //    fieldCode_p        Vector<String>       Field code
 //
   // Fill local cache for this column if cache not valid
   if (connectedToIter()) {
     if (!fieldCodeOK_p) {
       calMainCol()->fieldCode().getColumn (fieldCode_p);
-      fieldCodeOK_p = true;
+      fieldCodeOK_p = True;
     };
   };
   return fieldCode_p;
@@ -871,14 +870,14 @@ Vector<String>& CalMainBuffer::sourceName()
 {
 // SOURCE_NAME data field accessor
 // Input from private data:
-//    connectedToIter_p  Bool                 true if connected to iterator
+//    connectedToIter_p  Bool                 True if connected to iterator
 //    sourceName_p       Vector<String>       Source name
 //
   // Fill local cache for this column if cache not valid
   if (connectedToIter()) {
     if (!sourceNameOK_p) {
       calMainCol()->sourceName().getColumn (sourceName_p);
-      sourceNameOK_p = true;
+      sourceNameOK_p = True;
     };
   };
   return sourceName_p;
@@ -890,14 +889,14 @@ Vector<String>& CalMainBuffer::sourceCode()
 {
 // SOURCE_CODE data field accessor
 // Input from private data:
-//    connectedToIter_p  Bool                 true if connected to iterator
+//    connectedToIter_p  Bool                 True if connected to iterator
 //    sourceCode_p       Vector<String>       Source code
 //
   // Fill local cache for this column if cache not valid
   if (connectedToIter()) {
     if (!sourceCodeOK_p) {
       calMainCol()->sourceCode().getColumn (sourceCode_p);
-      sourceCodeOK_p = true;
+      sourceCodeOK_p = True;
     };
   };
   return sourceCode_p;
@@ -909,14 +908,14 @@ Vector<Int>& CalMainBuffer::calGrp()
 {
 // CALIBRATION_GROUP data field accessor
 // Input from private data:
-//    connectedToIter_p  Bool                 true if connected to iterator
+//    connectedToIter_p  Bool                 True if connected to iterator
 //    calGrp_p          Vector<Int>           Calibration group
 //
   // Fill local cache for this column if cache not valid
   if (connectedToIter()) {
     if (!calGrpOK_p) {
       calMainCol()->calGrp().getColumn (calGrp_p);
-      calGrpOK_p = true;
+      calGrpOK_p = True;
     };
   };
   return calGrp_p;
@@ -928,14 +927,14 @@ Array<Complex>& CalMainBuffer::gain()
 {
 // GAIN data field accessor
 // Input from private data:
-//    connectedToIter_p  Bool                 true if connected to iterator
+//    connectedToIter_p  Bool                 True if connected to iterator
 //    gain_p             Array<Complex>       Calibration gain
 //
   // Fill local cache for this column if cache not valid
   if (connectedToIter()) {
     if (!gainOK_p) {
       calMainCol()->gain().getColumn (gain_p);
-      gainOK_p = true;
+      gainOK_p = True;
     };
   };
   return gain_p;
@@ -947,14 +946,14 @@ Array<Int>& CalMainBuffer::refAnt()
 {
 // REF_ANT data field accessor
 // Input from private data:
-//    connectedToIter_p  Bool                 true if connected to iterator
+//    connectedToIter_p  Bool                 True if connected to iterator
 //    refAnt_p           Array<Int>           Reference antenna
 //
   // Fill local cache for this column if cache not valid
   if (connectedToIter()) {
     if (!refAntOK_p) {
       calMainCol()->refAnt().getColumn (refAnt_p);
-      refAntOK_p = true;
+      refAntOK_p = True;
     };
   };
   return refAnt_p;
@@ -966,14 +965,14 @@ Array<Int>& CalMainBuffer::refFeed()
 {
 // REF_FEED data field accessor
 // Input from private data:
-//    connectedToIter_p  Bool                 true if connected to iterator
+//    connectedToIter_p  Bool                 True if connected to iterator
 //    refFeed_p          Array<Int>           Reference feed
 //
   // Fill local cache for this column if cache not valid
   if (connectedToIter()) {
     if (!refFeedOK_p) {
       calMainCol()->refFeed().getColumn (refFeed_p);
-      refFeedOK_p = true;
+      refFeedOK_p = True;
     };
   };
   return refFeed_p;
@@ -985,14 +984,14 @@ Array<Int>& CalMainBuffer::refReceptor()
 {
 // REF_FEED data field accessor
 // Input from private data:
-//    connectedToIter_p  Bool                 true if connected to iterator
+//    connectedToIter_p  Bool                 True if connected to iterator
 //    refReceptor_p      Array<Int>           Reference receptor
 //
   // Fill local cache for this column if cache not valid
   if (connectedToIter()) {
     if (!refReceptorOK_p) {
       calMainCol()->refReceptor().getColumn (refReceptor_p);
-      refReceptorOK_p = true;
+      refReceptorOK_p = True;
     };
   };
   return refReceptor_p;
@@ -1004,7 +1003,7 @@ Array<MFrequency>& CalMainBuffer::refFreqMeas()
 {
 // REF_FREQUENCY data field accessor (as Measure)
 // Input from private data:
-//    connectedToIter_p  Bool                 true if connected to iterator
+//    connectedToIter_p  Bool                 True if connected to iterator
 //    refFreqMeas_p      Array<MFrequency>    Reference frequency as Measure
 //
   // Fill local cache for this column if cache not valid
@@ -1028,7 +1027,7 @@ Array<MFrequency>& CalMainBuffer::refFreqMeas()
 	trc.setLast(IPosition(1,row));
 	refFreqMeas_p(blc,trc) = rowRefFreq.addDegenerate(1).copy();
       };
-      refFreqMeasOK_p = true;
+      refFreqMeasOK_p = True;
     };
   };
   return refFreqMeas_p;
@@ -1040,14 +1039,14 @@ Vector<Int>& CalMainBuffer::measFreqRef()
 {
 // REF_FEED data field accessor
 // Input from private data:
-//    connectedToIter_p  Bool                 true if connected to iterator
+//    connectedToIter_p  Bool                 True if connected to iterator
 //    measFreqRef_p      Vector<Int>          Reference frequency frame
 //
   // Fill local cache for this column if cache not valid
   if (connectedToIter()) {
     if (!measFreqRefOK_p) {
       calMainCol()->measFreqRef().getColumn (measFreqRef_p);
-      measFreqRefOK_p = true;
+      measFreqRefOK_p = True;
     };
   };
   return measFreqRef_p;
@@ -1059,7 +1058,7 @@ Array<MDirection>& CalMainBuffer::refDirMeas()
 {
 // REF_DIRECTION data field accessor (as Measure)
 // Input from private data:
-//    connectedToIter_p  Bool                 true if connected to iterator
+//    connectedToIter_p  Bool                 True if connected to iterator
 //    refDirMeas_p       Array<MDirection>    Reference direction as Measure
 //
   // Fill local cache for this column if cache not valid
@@ -1083,7 +1082,7 @@ Array<MDirection>& CalMainBuffer::refDirMeas()
 	trc.setLast(IPosition(1,row));
 	refDirMeas_p(blc,trc) = rowRefDir.addDegenerate(1).copy();
       };
-      refDirMeasOK_p = true;
+      refDirMeasOK_p = True;
     };
   };
   return refDirMeas_p;
@@ -1095,14 +1094,14 @@ Vector<Int>& CalMainBuffer::measDirRef()
 {
 // REF_DIRECTION data field accessor
 // Input from private data:
-//    connectedToIter_p  Bool                 true if connected to iterator
+//    connectedToIter_p  Bool                 True if connected to iterator
 //    measDirRef_p      Vector<Int>           Reference direction frame
 //
   // Fill local cache for this column if cache not valid
   if (connectedToIter()) {
     if (!measDirRefOK_p) {
       calMainCol()->measDirRef().getColumn (measDirRef_p);
-      measDirRefOK_p = true;
+      measDirRefOK_p = True;
     };
   };
   return measDirRef_p;
@@ -1114,14 +1113,14 @@ Vector<Int>& CalMainBuffer::calDescId()
 {
 // CAL_DESC_ID data field accessor
 // Input from private data:
-//    connectedToIter_p  Bool                 true if connected to iterator
+//    connectedToIter_p  Bool                 True if connected to iterator
 //    calDescId_p        Vector<Int>          Calibration format descriptor
 //
   // Fill local cache for this column if cache not valid
   if (connectedToIter()) {
     if (!calDescIdOK_p) {
       calMainCol()->calDescId().getColumn (calDescId_p);
-      calDescIdOK_p = true;
+      calDescIdOK_p = True;
     };
   };
   return calDescId_p;
@@ -1133,14 +1132,14 @@ Vector<Int>& CalMainBuffer::calHistoryId()
 {
 // CAL_HISTORY_ID data field accessor
 // Input from private data:
-//    connectedToIter_p  Bool                 true if connected to iterator
+//    connectedToIter_p  Bool                 True if connected to iterator
 //    calHistoryId_p     Vector<Int>          Calibration history identifier
 //
   // Fill local cache for this column if cache not valid
   if (connectedToIter()) {
     if (!calHistoryIdOK_p) {
       calMainCol()->calHistoryId().getColumn (calHistoryId_p);
-      calHistoryIdOK_p = true;
+      calHistoryIdOK_p = True;
     };
   };
   return calHistoryId_p;
@@ -1421,37 +1420,37 @@ void CalMainBuffer::invalidate()
 //    calHistoryIdOK_p   Bool                 CAL_HISTORY id. cache ok
 //
   // Set all cache flags to false
-  timeMeasOK_p = false;
-  timeEPQuantOK_p = false;
-  intervalQuantOK_p = false;
-  antenna1OK_p = false;
-  feed1OK_p = false;
-  fieldIdOK_p = false;
-  arrayIdOK_p = false;
-  obsIdOK_p = false;
-  scanNoOK_p = false;
-  processorIdOK_p = false;
-  stateIdOK_p = false;
-  phaseIdOK_p = false;
-  pulsarBinOK_p = false;
-  pulsarGateIdOK_p = false;
-  freqGrpOK_p = false;
-  freqGrpNameOK_p = false;
-  fieldNameOK_p = false;
-  fieldCodeOK_p = false;
-  sourceNameOK_p = false;
-  sourceCodeOK_p = false;
-  calGrpOK_p = false;
-  gainOK_p = false;
-  refAntOK_p = false;
-  refFeedOK_p = false;
-  refReceptorOK_p = false;
-  refFreqMeasOK_p = false;
-  measFreqRefOK_p = false;
-  refDirMeasOK_p = false;
-  measDirRefOK_p = false;
-  calDescIdOK_p = false;
-  calHistoryIdOK_p = false;
+  timeMeasOK_p = False;
+  timeEPQuantOK_p = False;
+  intervalQuantOK_p = False;
+  antenna1OK_p = False;
+  feed1OK_p = False;
+  fieldIdOK_p = False;
+  arrayIdOK_p = False;
+  obsIdOK_p = False;
+  scanNoOK_p = False;
+  processorIdOK_p = False;
+  stateIdOK_p = False;
+  phaseIdOK_p = False;
+  pulsarBinOK_p = False;
+  pulsarGateIdOK_p = False;
+  freqGrpOK_p = False;
+  freqGrpNameOK_p = False;
+  fieldNameOK_p = False;
+  fieldCodeOK_p = False;
+  sourceNameOK_p = False;
+  sourceCodeOK_p = False;
+  calGrpOK_p = False;
+  gainOK_p = False;
+  refAntOK_p = False;
+  refFeedOK_p = False;
+  refReceptorOK_p = False;
+  refFreqMeasOK_p = False;
+  measFreqRefOK_p = False;
+  refDirMeasOK_p = False;
+  measDirRefOK_p = False;
+  calDescIdOK_p = False;
+  calHistoryIdOK_p = False;
 };
 
 //----------------------------------------------------------------------------
@@ -1538,7 +1537,7 @@ void CalMainBuffer::fillIndices (const Vector<Int>& calIndices,
 	  static_cast<MSCalEnums::colDef> (calIndices(j));
 	Vector<Int>& ref = asVecInt(calEnum);
 	if (ref.nelements() < static_cast<uInt>(row+1)) {
-	  ref.resize (row+1, true);
+	  ref.resize (row+1, True);
 	};
 	asVecInt(calEnum)(row) = indexValues[j](index);
       };
@@ -1773,7 +1772,7 @@ Bool CalMainBuffer::excluded (const MSCalEnums::colDef& calEnum,
 //    calIndices  const Vector<Int>&         Vector of excluded calibration
 //                                           enums (from class MSCalEnums)
 // Output:
-//    excluded    Bool                       true if enum is present in the
+//    excluded    Bool                       True if enum is present in the
 //                                           list of excluded enums
 //
   // Check for membership

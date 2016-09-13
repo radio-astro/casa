@@ -78,15 +78,15 @@ public:
 
 private:
   uint32_t                      numberOfDataDescriptions;
-  casacore::Block<casacore::String>	bdfNames;
-  casacore::String			fname;
+  casa::Block<casa::String>	bdfNames;
+  casa::String			fname;
   std::map<std::string, int>	s2i_m;
   bool				asBigEndian;
   std::vector<std::vector<casa::AsdmIndex> >	autoIndexes_vv;
   std::vector<std::vector<casa::AsdmIndex> >	crossIndexes_vv;
   std::vector<casa::AsdmIndex>  allIndexes_v;
   bool fileAttached;
-  casacore::AipsIO			aio;
+  casa::AipsIO			aio;
   uint64_t			MSMainRowNumber;
 };
 #endif

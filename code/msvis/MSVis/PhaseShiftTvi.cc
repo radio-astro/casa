@@ -9,7 +9,6 @@
 #include <casa/Arrays/Cube.h>
 #include <casa/Arrays/Matrix.h>
 
-using namespace casacore;
 namespace casa {
 
 namespace vi {
@@ -134,7 +133,6 @@ PhaseShiftTvi::visibilityObserved (Cube<Complex> & vis) const
 
 } // end namespace vi
 
-using namespace casacore;
 } // end namespace casa
 
 

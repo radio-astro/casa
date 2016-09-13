@@ -40,7 +40,6 @@
 #include <iostream>
 #include <vector>
 
-using namespace casacore;
 namespace casa {
 
 const bool AgentFlagger::dbg = false;
@@ -145,7 +144,7 @@ AgentFlagger::open(String msname, Double ntime)
 	if (msname.empty()) {
 		os << LogIO::SEVERE << "No Measurement Set has been parsed"
 				<< LogIO::POST;
-		return false;
+		return False;
 	}
 
 	msname_p = msname;
@@ -166,7 +165,7 @@ AgentFlagger::open(String msname, Double ntime)
 	TableInfo& info = table.tableInfo();
 	String type = info.type();
 	table.flush();
-	table.relinquishAutoLocks(true);
+	table.relinquishAutoLocks(True);
 	table.unlock();
 	os << LogIO::NORMAL << "Table type is " << type << LogIO::POST;
 
@@ -396,8 +395,8 @@ AgentFlagger::parseAgentParameters(Record agent_params)
 			getMax(ntime);
 		}
 
-		// Get the combinescans parameter. If any of them is true,
-		// it will be true for the whole list
+		// Get the combinescans parameter. If any of them is True,
+		// it will be True for the whole list
 		Bool combine = false;
 		if (agentParams_p.isDefined("combinescans"))
 			agentParams_p.get("combinescans", combine);
@@ -500,7 +499,7 @@ AgentFlagger::parseAgentParameters(Record agent_params)
 			extendflags_p==true){
 
 		os << LogIO::NORMAL << "Will extend the flags after " << mode <<
-				"; extendflags=true" << LogIO::POST;
+				"; extendflags=True" << LogIO::POST;
 
 		extendflags_p = false;
 		parseExtendParameters(
@@ -584,17 +583,17 @@ AgentFlagger::initAgents()
 		String mode;
 		agent_rec.get("mode", mode);
 
-        // If clip agent is mixed with other agents and time average is true, skip it
+        // If clip agent is mixed with other agents and time average is True, skip it
         if ((mode.compare("clip") == 0 and list_size > 1) or
         		(mode.compare("rflag") == 0 and list_size > 2) or
         		(mode.compare("tfcrop") == 0 and list_size > 2))
         {
-            Bool tavg = false;
+            Bool tavg = False;
         	int exists = agent_rec.fieldNumber ("timeavg");
         	if (exists >= 0) agent_rec.get("timeavg", tavg);
 
             if (tavg){
-                os << LogIO::WARN << "Cannot have " << mode <<" mode with timeavg/channelavg=true in list mode" << LogIO::POST;
+                os << LogIO::WARN << "Cannot have " << mode <<" mode with timeavg/channelavg=True in list mode" << LogIO::POST;
                 continue;
             }
         }
@@ -755,7 +754,7 @@ AgentFlagger::run(Bool writeflags, Bool sequential)
 		{
 
 			// Apply or unapply the flags, in sequential or in parallel.
-			// By default it is set to true, which will preserve the order
+			// By default it is set to True, which will preserve the order
 			// in which the agents are added to the list.
 			agents_list_p.apply(sequential);
 
@@ -892,7 +891,7 @@ AgentFlagger::getFlagVersionList(Vector<String> &verlist)
 		Vector<String> vlist = fv.getVersionList();
 
 		num = verlist.nelements();
-		verlist.resize( num + vlist.nelements() + 1, true );
+		verlist.resize( num + vlist.nelements() + 1, True );
 		verlist[num] = String("\nMS : ") + fdh_p->getTableName() + String("\n");
 
 		for(Int j=0; j<(Int)vlist.nelements(); j++)
@@ -901,7 +900,7 @@ AgentFlagger::getFlagVersionList(Vector<String> &verlist)
 	catch (AipsError x)
 	{
 		os << LogIO::SEVERE << "Could not get Flag Version List : " << x.getMesg() << LogIO::POST;
-		return false;
+		return False;
 	}
 
 	return true;
@@ -990,9 +989,9 @@ AgentFlagger::restoreFlagVersion(Vector<String> versionname, String merge)
 	catch (AipsError x)
 	{
 		os << LogIO::SEVERE << "Could not restore Flag Version : " << x.getMesg() << LogIO::POST;
-		return false;
+		return False;
 	}
-	return true;
+	return True;
 }
 
 // ---------------------------------------------------------------------
@@ -1020,15 +1019,15 @@ AgentFlagger::deleteFlagVersion(Vector<String> versionname)
 	catch (AipsError x)
 	{
 		os << LogIO::SEVERE << "Could not delete Flag Version : " << x.getMesg() << LogIO::POST;
-		return false;
+		return False;
 	}
-	return true;
+	return True;
 }
 
 // ---------------------------------------------------------------------
 // AgentFlagger::isModeValid
 // Check if mode is valid.
-// Return false if not in the list
+// Return False if not in the list
 // ---------------------------------------------------------------------
 bool
 AgentFlagger::isModeValid(String mode)

@@ -34,7 +34,6 @@
 #include <lattices/Lattices/LatticeIterator.h>
 #include <casa/BasicMath/Math.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //----------------------------------------------------------------------
@@ -750,7 +749,7 @@ void EntropyI::infoPerIteration(uInt iteration){
     Float maxResid = (max(abs(resid))).getFloat();
     // Note:  posMaximumResidual is not valid! (  IPosition(4,0,0,0,0)  )
     cemem_ptr->itsProgressPtr->
-      info(false, iteration, cemem_ptr->itsNumberIterations, model, resid, 
+      info(False, iteration, cemem_ptr->itsNumberIterations, model, resid, 
 	   maxResid, IPosition(4,0,0,0,0),
 	   cemem_ptr->itsTotalFlux, cemem_ptr->itsFit, cemem_ptr->itsNormGrad,
 	   cemem_ptr->itsEntropy);
@@ -1271,7 +1270,7 @@ void EntropyEmptiness::infoPerIteration(uInt iteration){
     Float maxResid = (max(abs(resid))).getFloat();
     // Note:  posMaximumResidual is not valid! (  IPosition(4,0,0,0,0)  )
     cemem_ptr->itsProgressPtr->
-      info(false, iteration, cemem_ptr->itsNumberIterations, model, resid, 
+      info(False, iteration, cemem_ptr->itsNumberIterations, model, resid, 
 	   maxResid, IPosition(4,0,0,0,0),
 	   cemem_ptr->itsFlux, cemem_ptr->itsFit, cemem_ptr->itsNormGrad,
 	   cemem_ptr->itsEntropy);

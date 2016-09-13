@@ -29,7 +29,6 @@
 #include <msvis/MSVis/statistics/Vi2StatsImaginaryIterator.h>
 #include <complex>
 
-using namespace casacore;
 namespace casa {
 
 Double
@@ -37,5 +36,4 @@ Vi2StatsImaginaryIterator::operator*() {
 	return std::imag(*array_iter);
 }
 
-using namespace casacore;
 } // namespace casa

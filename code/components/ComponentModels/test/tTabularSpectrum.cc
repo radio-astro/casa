@@ -141,7 +141,7 @@ int main() {
       emptyRec.define(RecordFieldId("index"), "");
       AlwaysAssert(siModel.convertUnit(errMsg, emptyRec), AipsError);
       emptyRec.define(RecordFieldId("index"), "deg");
-      AlwaysAssert(siModel.convertUnit(errMsg, emptyRec) == false, AipsError);
+      AlwaysAssert(siModel.convertUnit(errMsg, emptyRec) == False, AipsError);
       cout << "Passed the record handling test" << endl;
     }
     */

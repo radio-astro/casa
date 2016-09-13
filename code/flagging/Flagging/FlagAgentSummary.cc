@@ -22,7 +22,6 @@
 
 #include <flagging/Flagging/FlagAgentSummary.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 FlagAgentSummary::FlagAgentSummary(FlagDataHandler *dh, Record config):
@@ -40,10 +39,10 @@ FlagAgentSummary::FlagAgentSummary(FlagDataHandler *dh, Record config):
     scan_str = String("");
     observationId_str = String("");
 
-    spwChannelCounts = false;
-    spwPolarizationCounts = false;
-    baselineCounts = false;
-    fieldCounts = false;
+    spwChannelCounts = False;
+    spwPolarizationCounts = False;
+    baselineCounts = False;
+    fieldCounts = False;
     display_p = String("none");
 
     setAgentParameters(config);
@@ -111,7 +110,7 @@ FlagAgentSummary::setAgentParameters(Record config)
     }
     else
     {
-        spwChannelCounts = false;
+        spwChannelCounts = False;
     }
 
     if (spwChannelCounts)
@@ -135,7 +134,7 @@ FlagAgentSummary::setAgentParameters(Record config)
     }
     else
     {
-        spwPolarizationCounts = false;
+        spwPolarizationCounts = False;
     }
 
     if (spwPolarizationCounts)
@@ -159,7 +158,7 @@ FlagAgentSummary::setAgentParameters(Record config)
     }
     else
     {
-        baselineCounts = false;
+        baselineCounts = False;
     }
 
     if (baselineCounts)
@@ -183,7 +182,7 @@ FlagAgentSummary::setAgentParameters(Record config)
     }
     else
     {
-    	fieldCounts = false;
+    	fieldCounts = False;
     }
 
     if (fieldCounts)
@@ -407,7 +406,7 @@ FlagAgentSummary::buildFlagCountPlots()
 
     FlagReport countRepList("list");
 
-    // (1) Plot of fraction flagged vs frequency (only if spwchan==true)
+    // (1) Plot of fraction flagged vs frequency (only if spwchan==True)
     if( spwChannelCounts )
     {
         pair<string, double> freqUnit("GHz",1e+9);
@@ -560,7 +559,7 @@ FlagAgentSummary::buildFlagCountPlots()
 
         // NOTE: We need to handle directly the storage array, because it seems that the dimension steps are switched
         Array<Float> antScanView( IPosition(2, currentSummary->accumflags["scan"].size(),totalNAnt) , (Float)0);
-        Bool deleteIt = false;
+        Bool deleteIt = False;
         Float* antScanViewPtr = antScanView.getStorage(deleteIt);
 
 

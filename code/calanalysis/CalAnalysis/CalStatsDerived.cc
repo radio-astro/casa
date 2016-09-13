@@ -43,7 +43,6 @@ Modification history:
 // Start of casa namespace
 // -----------------------------------------------------------------------------
 
-using namespace casacore;
 namespace casa {
 
 const uInt CalStatsPhase::NUM_ITER_UNWRAP = 50;
@@ -156,13 +155,13 @@ CalStatsReal::CalStatsReal( const Cube<Double>& oValue,
   poValueErr = new Cube<Double>( poCS->valueErr() );
   poFlag = new Cube<Bool>( poCS->flag() );
 
-  poValueIter = new ArrayIterator<Double>( *poValue, oAxisIterID, false );
+  poValueIter = new ArrayIterator<Double>( *poValue, oAxisIterID, False );
   poValueIter->reset();
 
-  poValueErrIter = new ArrayIterator<Double>( *poValueErr, oAxisIterID, false );
+  poValueErrIter = new ArrayIterator<Double>( *poValueErr, oAxisIterID, False );
   poValueErrIter->reset();
 
-  poFlagIter = new ArrayIterator<Bool>( *poFlag, oAxisIterID, false );
+  poFlagIter = new ArrayIterator<Bool>( *poFlag, oAxisIterID, False );
   poFlagIter->reset();
 
   delete poCS;
@@ -285,7 +284,7 @@ oTime           - This reference to a Vector<Double> instance is the time
 eAxisIterUserID - This reference to a CalStats::AXIS enum contains either the
                   FREQUENCY or TIME iteration axes (user defined).
 bNorm           - This reference to a Bool variable contains the normalization
-                  flag (true = normalize, false = don't normalize).
+                  flag (True = normalize, False = don't normalize).
 
 Outputs:
 --------
@@ -329,10 +328,10 @@ CalStatsAmp::CalStatsAmp( const Cube<DComplex>& oValue,
   IPosition oIterShape( 2, (ssize_t) CalStats::FEED, eAxisIterUserID );
 
   Cube<Bool> oFlagCopy( oFlag.copy() );
-  ArrayIterator<Bool> oFlagIter( oFlagCopy, oIterShape, false );
+  ArrayIterator<Bool> oFlagIter( oFlagCopy, oIterShape, False );
 
-  ArrayIterator<Double> oAmpIter( oAmp, oIterShape, false );
-  ArrayIterator<Double> oAmpErrIter( oAmpErr, oIterShape, false );
+  ArrayIterator<Double> oAmpIter( oAmp, oIterShape, False );
+  ArrayIterator<Double> oAmpErrIter( oAmpErr, oIterShape, False );
 
 
   // If selected, normalize the amplitudes and their errors
@@ -394,13 +393,13 @@ CalStatsAmp::CalStatsAmp( const Cube<DComplex>& oValue,
   poValueErr = new Cube<Double>( poCS->valueErr() );
   poFlag = new Cube<Bool>( poCS->flag() );
 
-  poValueIter = new ArrayIterator<Double>( *poValue, oAxisIterID, false );
+  poValueIter = new ArrayIterator<Double>( *poValue, oAxisIterID, False );
   poValueIter->reset();
 
-  poValueErrIter = new ArrayIterator<Double>( *poValueErr, oAxisIterID, false );
+  poValueErrIter = new ArrayIterator<Double>( *poValueErr, oAxisIterID, False );
   poValueErrIter->reset();
 
-  poFlagIter = new ArrayIterator<Bool>( *poFlag, oAxisIterID, false );
+  poFlagIter = new ArrayIterator<Bool>( *poFlag, oAxisIterID, False );
   poFlagIter->reset();
 
   delete poCS;
@@ -463,7 +462,7 @@ NB: The normalization is applied only when the number of unflagged frequencies
 is greater than 1.
 
 NB: All flags corresponding to amplitudes less then 1.0E-08 times the peak
-amplitude (along the FREQUENCY axis) are updated to true.
+amplitude (along the FREQUENCY axis) are updated to True.
 
 Inputs:
 -------
@@ -624,7 +623,7 @@ NB: The FEED axis is always included as an iteration axis by default because one
 cannot perform a fit along it.  The other iteration axis is defined by the user.
 
 NB: All flags corresponding to amplitudes less then 1.0E-08 times the peak
-amplitude are updated to true.
+amplitude are updated to True.
 
 NB: The default CalStats constructor is called first as the default, then the
 standard one is called at the end.
@@ -654,7 +653,7 @@ eAxisIterUserID - This reference to a CalStats::AXIS enum contains either the
                   CalStats::FREQUENCY or CalStats::TIME iteration axes (user
                   defined).
 bUnwrap         - This reference to a Bool variable contains the unwrapping flag
-                  (true = unwrap, false = don't unwrap).
+                  (True = unwrap, False = don't unwrap).
 dJumpMax        - This reference to a Double variable contains the maximum
                   deviation from +/- M_PI for adjacent points to be unwrapped
                   by +/- 2.0*M_PI (in radians).  This parameter is always used
@@ -707,14 +706,14 @@ CalStatsPhase::CalStatsPhase( const Cube<DComplex>& oValue,
 
   IPosition oIterShape( 2, (ssize_t) CalStats::FEED, eAxisIterUserID );
 
-  ReadOnlyArrayIterator<DComplex> oValueIter( oValue, oIterShape, false );
-  ReadOnlyArrayIterator<Double> oValueErrIter( oValueErr, oIterShape, false );
+  ReadOnlyArrayIterator<DComplex> oValueIter( oValue, oIterShape, False );
+  ReadOnlyArrayIterator<Double> oValueErrIter( oValueErr, oIterShape, False );
 
   Cube<Bool> oFlagCopy( oFlag.copy() );
-  ArrayIterator<Bool> oFlagIter( oFlagCopy, oIterShape, false );
+  ArrayIterator<Bool> oFlagIter( oFlagCopy, oIterShape, False );
 
-  ArrayIterator<Double> oPhaseIter( oPhase, oIterShape, false );
-  ArrayIterator<Double> oPhaseErrIter( oPhaseErr, oIterShape, false );
+  ArrayIterator<Double> oPhaseIter( oPhase, oIterShape, False );
+  ArrayIterator<Double> oPhaseErrIter( oPhaseErr, oIterShape, False );
 
 
   // If selected, unwrap the phases
@@ -826,13 +825,13 @@ CalStatsPhase::CalStatsPhase( const Cube<DComplex>& oValue,
   poValueErr = new Cube<Double>( poCS->valueErr() );
   poFlag = new Cube<Bool>( poCS->flag() );
 
-  poValueIter = new ArrayIterator<Double>( *poValue, oAxisIterID, false );
+  poValueIter = new ArrayIterator<Double>( *poValue, oAxisIterID, False );
   poValueIter->reset();
 
-  poValueErrIter = new ArrayIterator<Double>( *poValueErr, oAxisIterID, false );
+  poValueErrIter = new ArrayIterator<Double>( *poValueErr, oAxisIterID, False );
   poValueErrIter->reset();
 
-  poFlagIter = new ArrayIterator<Bool>( *poFlag, oAxisIterID, false );
+  poFlagIter = new ArrayIterator<Bool>( *poFlag, oAxisIterID, False );
   poFlagIter->reset();
 
   delete poCS;

@@ -48,18 +48,18 @@ class AnnPolygon: public AnnRegion {
 public:
 
 	AnnPolygon(
-		const casacore::Vector<casacore::Quantity>& xPositions,
-		const casacore::Vector<casacore::Quantity>& yPositions,
-		const casacore::String& dirRefFrameString,
-		const casacore::CoordinateSystem& csys,
-		const casacore::IPosition& imShape,
-		const casacore::Quantity& beginFreq,
-		const casacore::Quantity& endFreq,
-		const casacore::String& freqRefFrameString,
-		const casacore::String& dopplerString,
-		const casacore::Quantity& restfreq,
-		const casacore::Vector<casacore::Stokes::StokesTypes> stokes,
-		const casacore::Bool annotationOnly
+		const Vector<Quantity>& xPositions,
+		const Vector<Quantity>& yPositions,
+		const String& dirRefFrameString,
+		const CoordinateSystem& csys,
+		const IPosition& imShape,
+		const Quantity& beginFreq,
+		const Quantity& endFreq,
+		const String& freqRefFrameString,
+		const String& dopplerString,
+		const Quantity& restfreq,
+		const Vector<Stokes::StokesTypes> stokes,
+		const Bool annotationOnly
 	);
 
 	// Simplified constructor.
@@ -69,11 +69,11 @@ public:
 	// is a region (not just an annotation), although this value can be changed after
 	// construction.
 	AnnPolygon(
-		const casacore::Vector<casacore::Quantity>& xPositions,
-		const casacore::Vector<casacore::Quantity>& yPositions,
-		const casacore::CoordinateSystem& csys,
-		const casacore::IPosition& imShape,
-		const casacore::Vector<casacore::Stokes::StokesTypes>& stokes
+		const Vector<Quantity>& xPositions,
+		const Vector<Quantity>& yPositions,
+		const CoordinateSystem& csys,
+		const IPosition& imShape,
+		const Vector<Stokes::StokesTypes>& stokes
 	);
 
 	// implicit copy constructor and destructor are fine
@@ -81,35 +81,35 @@ public:
 	AnnPolygon& operator=(const AnnPolygon& other);
 
 	// get the vertices converted to the coordinate system used at construction.
-	casacore::Vector<casacore::MDirection> getCorners() const;
+	Vector<MDirection> getCorners() const;
 
 	// get the world coordinates of the polygon vertices
-	void worldVertices(vector<casacore::Quantity>& x, vector<casacore::Quantity>& y) const;
+	void worldVertices(vector<Quantity>& x, vector<Quantity>& y) const;
 
 	// get the pixel coordinates of the polygon vertices
-	void pixelVertices(vector<casacore::Double>& x, vector<casacore::Double>& y) const;
+	void pixelVertices(vector<Double>& x, vector<Double>& y) const;
 
 
-	virtual std::ostream& print(std::ostream &os) const;
+	virtual ostream& print(ostream &os) const;
 
 protected:
 	// for rectangle subclasses
 	AnnPolygon(
 		AnnotationBase::Type shape,
-		const casacore::Quantity& blcx,
-		const casacore::Quantity& blcy,
-		const casacore::Quantity& trcx,
-		const casacore::Quantity& trcy,
-		const casacore::String& dirRefFrameString,
-		const casacore::CoordinateSystem& csys,
-		const casacore::IPosition& imShape,
-		const casacore::Quantity& beginFreq,
-		const casacore::Quantity& endFreq,
-		const casacore::String& freqRefFrameString,
-		const casacore::String& dopplerString,
-		const casacore::Quantity& restfreq,
-		const casacore::Vector<casacore::Stokes::StokesTypes> stokes,
-		const casacore::Bool annotationOnly
+		const Quantity& blcx,
+		const Quantity& blcy,
+		const Quantity& trcx,
+		const Quantity& trcy,
+		const String& dirRefFrameString,
+		const CoordinateSystem& csys,
+		const IPosition& imShape,
+		const Quantity& beginFreq,
+		const Quantity& endFreq,
+		const String& freqRefFrameString,
+		const String& dopplerString,
+		const Quantity& restfreq,
+		const Vector<Stokes::StokesTypes> stokes,
+		const Bool annotationOnly
 	);
 
 	// Simplified constructor.
@@ -120,33 +120,33 @@ protected:
 	// construction.
 	AnnPolygon(
 		AnnotationBase::Type shape,
-		const casacore::Quantity& blcx,
-		const casacore::Quantity& blcy,
-		const casacore::Quantity& trcx,
-		const casacore::Quantity& trcy,
-		const casacore::CoordinateSystem& csys,
-		const casacore::IPosition& imShape,
-		const casacore::Vector<casacore::Stokes::StokesTypes>& stokes
+		const Quantity& blcx,
+		const Quantity& blcy,
+		const Quantity& trcx,
+		const Quantity& trcy,
+		const CoordinateSystem& csys,
+		const IPosition& imShape,
+		const Vector<Stokes::StokesTypes>& stokes
 	);
 
 	// For centered rectangles
 	AnnPolygon(
 		AnnotationBase::Type shape,
-		const casacore::Quantity& centerx,
-		const casacore::Quantity& centery,
-		const casacore::Quantity& widthx,
-		const casacore::Quantity& widthy,
-		const casacore::Quantity& positionAngle,
-		const casacore::String& dirRefFrameString,
-		const casacore::CoordinateSystem& csys,
-		const casacore::IPosition& imShape,
-		const casacore::Quantity& beginFreq,
-		const casacore::Quantity& endFreq,
-		const casacore::String& freqRefFrameString,
-		const casacore::String& dopplerString,
-		const casacore::Quantity& restfreq,
-		const casacore::Vector<casacore::Stokes::StokesTypes> stokes,
-		const casacore::Bool annotationOnly
+		const Quantity& centerx,
+		const Quantity& centery,
+		const Quantity& widthx,
+		const Quantity& widthy,
+		const Quantity& positionAngle,
+		const String& dirRefFrameString,
+		const CoordinateSystem& csys,
+		const IPosition& imShape,
+		const Quantity& beginFreq,
+		const Quantity& endFreq,
+		const String& freqRefFrameString,
+		const String& dopplerString,
+		const Quantity& restfreq,
+		const Vector<Stokes::StokesTypes> stokes,
+		const Bool annotationOnly
 	);
 
 		// Simplified constructor.
@@ -157,44 +157,44 @@ protected:
 		// construction.
 		AnnPolygon(
 			AnnotationBase::Type shape,
-			const casacore::Quantity& centerx,
-			const casacore::Quantity& centery,
-			const casacore::Quantity& widthx,
-			const casacore::Quantity& widthy,
-			const casacore::Quantity& positionAngle,
-			const casacore::CoordinateSystem& csys,
-			const casacore::IPosition& imShape,
-			const casacore::Vector<casacore::Stokes::StokesTypes>& stokes
+			const Quantity& centerx,
+			const Quantity& centery,
+			const Quantity& widthx,
+			const Quantity& widthy,
+			const Quantity& positionAngle,
+			const CoordinateSystem& csys,
+			const IPosition& imShape,
+			const Vector<Stokes::StokesTypes>& stokes
 		);
 
 private:
-	casacore::Vector<casacore::Quantity> _origXPos, _origYPos;
+	Vector<Quantity> _origXPos, _origYPos;
 
 	void _init();
 
 	void _initCorners(
-		const casacore::Quantity& blcx,
-		const casacore::Quantity& blcy,
-		const casacore::Quantity& trcx,
-		const casacore::Quantity& trcy
+		const Quantity& blcx,
+		const Quantity& blcy,
+		const Quantity& trcx,
+		const Quantity& trcy
 	);
 
 	void _initCorners(
-		const casacore::MDirection& blc,
-		const casacore::MDirection& corner2,
-		const casacore::MDirection& trc,
-		const casacore::MDirection& corner4
+		const MDirection& blc,
+		const MDirection& corner2,
+		const MDirection& trc,
+		const MDirection& corner4
 	);
 
 	void _initCenterRectCorners(
-		const casacore::Quantity& centerx,
-		const casacore::Quantity& centery,
-		const casacore::Quantity& widthx,
-		const casacore::Quantity& widthy,
-		const casacore::Quantity& positionAngle
+		const Quantity& centerx,
+		const Quantity& centery,
+		const Quantity& widthx,
+		const Quantity& widthy,
+		const Quantity& positionAngle
 	);
 
-	void _doCorners(const casacore::Quantity& widthx, const casacore::Quantity widthy);
+	void _doCorners(const Quantity& widthx, const Quantity widthy);
 
 };
 

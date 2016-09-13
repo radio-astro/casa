@@ -51,7 +51,6 @@
 #include <omp.h>
 #endif
 
-using namespace casacore;
 namespace casa {
 
 PBMath2DImage::PBMath2DImage(ImageInterface<Float>& reJonesImage):
@@ -323,7 +322,7 @@ PBMath2DImage::applyJonesFast(const Float*& reJones,
   Int nx=in.shape()(0);
   Int ny=in.shape()(1);
   Int npol=in.shape()(2);
-  Bool lala=false;
+  Bool lala=False;
   Float laloo=0.0;
   
   Bool delin, delout;
@@ -731,7 +730,7 @@ ImageInterface<Complex>& PBMath2DImage::apply(const ImageInterface<Complex>& in,
 {
   LogIO os(LogOrigin("PBMath2DImage", "apply"));
 
-  if(!in.shape().isEqual(out.shape(), true)) {
+  if(!in.shape().isEqual(out.shape(), True)) {
     os << "Input and output images have different shapes" 
        << LogIO::EXCEPTION;
     
@@ -844,7 +843,7 @@ ImageInterface<Float>& PBMath2DImage::apply(const ImageInterface<Float>& in,
   LogIO os(LogOrigin("PBMath2DImage", "apply"));
 
   const IPosition oshape(out.shape());
-  if(!in.shape().isEqual(out.shape(), true)) {
+  if(!in.shape().isEqual(out.shape(), True)) {
     os << "Input and output images have different shapes" 
        << LogIO::EXCEPTION;
     
@@ -984,7 +983,7 @@ SkyComponent& PBMath2DImage::apply(SkyComponent& in,
   // E Jones for this pixel
   mjJones4 j4;
 
-  Bool offImage=false;
+  Bool offImage=False;
   Matrix<Complex> cmat(2,2);
   Array<Float> reJones;
   Int nx=reJonesImage_p->shape()(0);
@@ -1011,7 +1010,7 @@ SkyComponent& PBMath2DImage::apply(SkyComponent& in,
     }
     else {
       //      cerr << freqScale << " " << px << " " << py << " " << world << " " << sep << " " << pa << endl;
-      offImage = true;
+      offImage = True;
     }
   }
   else {
@@ -1029,7 +1028,7 @@ SkyComponent& PBMath2DImage::apply(SkyComponent& in,
       cmat(1,1)=Complex(reJones(ip3), 0.0);
     }
     else {
-      offImage = true;
+      offImage = True;
     }
       
   }
@@ -1303,7 +1302,7 @@ void PBMath2DImage::checkJonesCongruent(ImageInterface<Float>& reJones,
 					ImageInterface<Float>& imJones) 
 {
   LogIO os(LogOrigin("PBMath2DImage", "checkJonesCongruent"));
-  if(!reJones.shape().isEqual(imJones.shape(), true)) {
+  if(!reJones.shape().isEqual(imJones.shape(), True)) {
     os << "Real and imaginary primary beam images have different shapes" 
        <<  reJones.shape().asVector()
        <<  imJones.shape().asVector()

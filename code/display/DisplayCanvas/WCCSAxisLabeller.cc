@@ -47,17 +47,16 @@
 //# this include:
 #include <display/DisplayCanvas/WCCSAxisLabeller.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 	const String WCCSAxisLabeller::FRAME_REST = "REST";
 
 	WCCSAxisLabeller::WCCSAxisLabeller() :
-		useWCCS(false),
-		itsAbsolute(true),
-		itsWorldAxisLabels(true),
+		useWCCS(False),
+		itsAbsolute(True),
+		itsWorldAxisLabels(True),
 		itsSpecAxisType(WCCSAxisLabeller::VELO),
 		itsZIndex(-1),
-		itsHasCoordinateSystem(false),
+		itsHasCoordinateSystem(False),
 		itsSpectralPrecision(-1),
 		itsSpectralUnit("km/s"),
 		itsSpectralQuantity("radio velocity"),
@@ -80,14 +79,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	void WCCSAxisLabeller::setCoordinateSystem(const DisplayCoordinateSystem& cSys) {
 		itsCoordinateSystem = cSys;
-		itsHasCoordinateSystem = true;
+		itsHasCoordinateSystem = True;
 	}
 
 
 	void WCCSAxisLabeller::setDefaultOptions() {
 		WCAxisLabeller::setDefaultOptions();
 //
-		itsAbsolute = true;
+		itsAbsolute = True;
 //
 		Int after = -1;
 		Int iS = itsCoordinateSystem.findCoordinate(Coordinate::SPECTRAL, after);
@@ -156,7 +155,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	Bool WCCSAxisLabeller::setOptions(const Record &rec, Record &updatedOptions) {
 		Bool ret = WCAxisLabeller::setOptions(rec, updatedOptions);
-		Bool localchange = false;
+		Bool localchange = False;
 		Bool error;
 
 		Bool sChg = readOptionRecord(itsSpectralTypeUnit, error, rec,
@@ -171,7 +170,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if(sChg) {
 			distributeTypeUnit();
 			setSpectralState();
-			localchange = true;
+			localchange = True;
 		}
 
 		Bool dChg = readOptionRecord(itsDirectionUnit, error, rec,
@@ -181,13 +180,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		MDirection::Types ds;
 		if(         readOptionRecord(itsDirectionSystem, error, rec,
 		                             "axislabeldirectionsystem") ) {
-			if(MDirection::getType(ds, itsDirectionSystem)) dChg = true;    // (valid)
+			if(MDirection::getType(ds, itsDirectionSystem)) dChg = True;    // (valid)
 			else itsDirectionSystem = dsSave;
 		}		// (invalid -- revert)
 
 		if(dChg) {
 			setDirectionState();
-			localchange = true;
+			localchange = True;
 		}
 
 
@@ -197,7 +196,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			if (abs != itsAbsolute) {
 				itsAbsolute = abs;
 				setAbsRelState();
-				localchange = true;
+				localchange = True;
 			}
 		}
 //
@@ -205,16 +204,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			Bool world = (value=="world");
 			if (world != itsWorldAxisLabels) {
 				itsWorldAxisLabels = world;
-				localchange = true;
+				localchange = True;
 			}
 		}
 //
 		if (readOptionRecord(itsZLabelType, error, rec, "axislabelzlabeltype")) {
-			localchange = true;
+			localchange = True;
 		}
 //
 		if (readOptionRecord(itsZLabelPos, error, rec, "axislabelzlabelpos")) {
-			localchange = true;
+			localchange = True;
 		}
 //
 		if (localchange) {
@@ -245,7 +244,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		} else {
 			pixworld.define("value", "pixel");
 		}
-		pixworld.define("allowunset", false);
+		pixworld.define("allowunset", False);
 		rec.defineRecord("axislabelpixelworld", pixworld);
 //
 		Record absrel;
@@ -263,7 +262,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		} else {
 			absrel.define("value", "relative");
 		}
-		absrel.define("allowunset", false);
+		absrel.define("allowunset", False);
 		rec.defineRecord("axislabelabsrel", absrel);
 //
 		Int after = -1;
@@ -285,20 +284,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				// There are other possibilities for Direction Reference than those
 				// above (unsure why they were not all included).  Assure at least
 				// that the CS's native reference is included....
-				Bool found=false;
+				Bool found=False;
 				for(Int i=0; i<5; i++) if(itsDirectionSystem==vunits(i)) {
-						found=true;
+						found=True;
 						break;
 					}
 				if(!found) {
-					vunits.resize(6, true);
+					vunits.resize(6, True);
 					vunits(5) = itsDirectionSystem;
 				}
 
 				directionSystem.define("popt", vunits);
 				directionSystem.define("default", itsDirectionSystem);
 				directionSystem.define("value", itsDirectionSystem);
-				directionSystem.define("allowunset", false);
+				directionSystem.define("allowunset", False);
 				rec.defineRecord("axislabeldirectionsystem", directionSystem);
 			}
 //
@@ -316,7 +315,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				directionunit.define("popt", vunits);
 				directionunit.define("default", "arcsec");
 				directionunit.define("value", itsDirectionUnit);
-				directionunit.define("allowunset", false);
+				directionunit.define("allowunset", False);
 				rec.defineRecord("axislabeldirectionunit", directionunit);
 			}
 		}
@@ -368,7 +367,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				frequencySystem.define("popt", vunits);
 				frequencySystem.define("default", defaultFreq);
 				frequencySystem.define("value", defaultFreq);
-				frequencySystem.define("allowunset", false);
+				frequencySystem.define("allowunset", False);
 				rec.defineRecord("axislabelfrequencysystem", frequencySystem);
 			}
 			{
@@ -404,7 +403,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				spectypeunit.define("popt", spctypeunits);
 				spectypeunit.define("default", itsSpectralTypeUnit);
 				spectypeunit.define("value", itsSpectralTypeUnit);
-				spectypeunit.define("allowunset", false);
+				spectypeunit.define("allowunset", False);
 				rec.defineRecord("axislabelspectypeunit", spectypeunit);
 
 // set spectral display precision (-1 implies default precision)
@@ -417,7 +416,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				specfixedprec.define("presolution", Int(1));
 				specfixedprec.define("default", Int(-1));
 				specfixedprec.define("value", Int(-1));
-				specfixedprec.define("allowunset", false);
+				specfixedprec.define("allowunset", False);
 				specfixedprec.define("context", "axis_label_properties");
 				rec.defineRecord("axislabelspecfixedprec", specfixedprec);
 
@@ -430,7 +429,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				restvalue.define("ptype", "string");
 				restvalue.define("default", itsRestValue);
 				restvalue.define("value", itsRestValue);
-				restvalue.define("allowunset", false);
+				restvalue.define("allowunset", False);
 				rec.defineRecord("axislabelrestvalue", restvalue);
 			}
 		}
@@ -448,7 +447,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			zlabeltype.define("popt", vztype);
 			zlabeltype.define("default", vztype(0));
 			zlabeltype.define("value", itsZLabelType);
-			zlabeltype.define("allowunset", false);
+			zlabeltype.define("allowunset", False);
 			rec.defineRecord("axislabelzlabeltype", zlabeltype);
 
 			Record zlabelpos;
@@ -470,7 +469,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			zlabelpos.define("popt", vzpos);
 			zlabelpos.define("default", vzpos(0));
 			zlabelpos.define("value", itsZLabelPos);
-			zlabelpos.define("allowunset", false);
+			zlabelpos.define("allowunset", False);
 			rec.defineRecord("axislabelzlabelpos", zlabelpos);
 
 		}
@@ -552,8 +551,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			MDirection::Types ctype;
 			dcoord.getReferenceConversion(ctype);
 //
-			Bool isLong = true;
-			if (worldAxes(1)==worldAxis) isLong = false;
+			Bool isLong = True;
+			if (worldAxes(1)==worldAxis) isLong = False;
 
 // Depending on the requested labelling type, we convert
 // the axis unit name to something sensible. This is

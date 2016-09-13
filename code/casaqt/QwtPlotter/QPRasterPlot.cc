@@ -35,7 +35,6 @@
 #include <qwt_legend_item.h>
 #endif
 
-using namespace casacore;
 namespace casa {
 
 /////////////////////////////

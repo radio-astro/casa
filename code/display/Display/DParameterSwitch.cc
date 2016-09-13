@@ -28,7 +28,6 @@
 #include <display/Utilities/DisplayOptions.h>
 #include <display/Display/DParameterSwitch.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Constructor.
@@ -38,7 +37,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	                                   const Bool defaultvalue,
 	                                   const Bool value,
 	                                   const String context) :
-		DisplayParameter(name, description, help, context, false, false),
+		DisplayParameter(name, description, help, context, False, False),
 		itsDefaultValue(defaultvalue),
 		itsValue(value) {
 	}
@@ -70,11 +69,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Bool previousval = itsValue;
 		result = displayOptions().readOptionRecord(itsValue, error, record, name());
 		if (result) {
-			return true;
+			return True;
 		} else {
 			itsValue = previousval;
 		}
-		return false;
+		return False;
 	}
 
 // Describe this parameter in a record.
@@ -98,8 +97,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Default constructor.
 	DParameterSwitch::DParameterSwitch() :
 		DisplayParameter(),
-		itsDefaultValue(false),
-		itsValue(false) {
+		itsDefaultValue(False),
+		itsValue(False) {
 	}
 
 } //# NAMESPACE CASA - END

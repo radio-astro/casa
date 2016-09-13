@@ -65,57 +65,57 @@ public:
   // Non virtual. Wrapper function implemented only in the base class. 
   void deconvolve( SIMinorCycleController& loopController,  
 		   SHARED_PTR<SIImageStore> &imagestore,
-		   casacore::Int deconvolverid);
+		   Int deconvolverid);
 
-  void setRestoringBeam( casacore::GaussianBeam restbeam, casacore::String usebeam );
-  //  void setMaskOptions( casacore::String maskstring );
+  void setRestoringBeam( GaussianBeam restbeam, String usebeam );
+  //  void setMaskOptions( String maskstring );
 
   // Base Class contains standard restoration. Overload for more complex behaviour.
   virtual void restore( SHARED_PTR<SIImageStore> imagestore );
   virtual void pbcor( SHARED_PTR<SIImageStore> imagestore );
 
-  virtual casacore::String getAlgorithmName(){return itsAlgorithmName;};
+  virtual String getAlgorithmName(){return itsAlgorithmName;};
 
-  virtual casacore::uInt getNTaylorTerms(){return 1;};
+  virtual uInt getNTaylorTerms(){return 1;};
 
 protected:
 
   // Pure virtual functions to be implemented by various algorithm deconvolvers.
-  virtual void takeOneStep( casacore::Float loopgain, casacore::Int cycleNiter, casacore::Float cycleThreshold, 
-			    casacore::Float &peakresidual, casacore::Float &modelflux, casacore::Int& iterdone )=0;
-  //  virtual void initializeDeconvolver( casacore::Float &peakresidual, casacore::Float &modelflux )=0;
+  virtual void takeOneStep( Float loopgain, Int cycleNiter, Float cycleThreshold, 
+			    Float &peakresidual, Float &modelflux, Int& iterdone )=0;
+  //  virtual void initializeDeconvolver( Float &peakresidual, Float &modelflux )=0;
   virtual void initializeDeconvolver()=0;
   virtual void finalizeDeconvolver()=0;
 
   // Base Class implements the option of single-plane images for the minor cycle.
-  virtual void queryDesiredShape(casacore::Int &nchanchunks, casacore::Int& npolchunks, casacore::IPosition imshape);
+  virtual void queryDesiredShape(Int &nchanchunks, Int& npolchunks, IPosition imshape);
 
 
   // Non virtual. Implemented only in the base class.
-  casacore::Int checkStop( SIMinorCycleController &loopcontrols, casacore::Float currentresidual );
-  casacore::Bool findMaxAbs(const casacore::Array<casacore::Float>& lattice,casacore::Float& maxAbs,casacore::IPosition& posMaxAbs);
-  casacore::Bool findMaxAbsMask(const casacore::Array<casacore::Float>& lattice,const casacore::Array<casacore::Float>& mask,
-		      casacore::Float& maxAbs,casacore::IPosition& posMaxAbs);
+  Int checkStop( SIMinorCycleController &loopcontrols, Float currentresidual );
+  Bool findMaxAbs(const Array<Float>& lattice,Float& maxAbs,IPosition& posMaxAbs);
+  Bool findMaxAbsMask(const Array<Float>& lattice,const Array<Float>& mask,
+		      Float& maxAbs,IPosition& posMaxAbs);
 
   // Algorithm name
-  casacore::String itsAlgorithmName;
+  String itsAlgorithmName;
 
   SHARED_PTR<SIImageStore> itsImages; //sOriginalImages;
 
-  //    casacore::Vector<casacore::Slicer> itsDecSlices;
-  //   casacore::SubImage<casacore::Float> itsResidual, itsPsf, itsModel, itsImage;
+  //    Vector<Slicer> itsDecSlices;
+  //   SubImage<Float> itsResidual, itsPsf, itsModel, itsImage;
   
-  casacore::IPosition itsMaxPos;
-  casacore::Float itsPeakResidual;
-  casacore::Float itsModelFlux;
+  IPosition itsMaxPos;
+  Float itsPeakResidual;
+  Float itsModelFlux;
 
   //  SDMaskHandler itsMaskHandler;
-  //casacore::Array<casacore::Float> itsMatMask;
+  //Array<Float> itsMatMask;
 
-  casacore::GaussianBeam itsRestoringBeam;
-  casacore::String itsUseBeam;
-  //  casacore::String itsMaskString;
-  //  casacore::Bool itsIsMaskLoaded; // Annoying state variable. Remove if possible. 
+  GaussianBeam itsRestoringBeam;
+  String itsUseBeam;
+  //  String itsMaskString;
+  //  Bool itsIsMaskLoaded; // Annoying state variable. Remove if possible. 
 
 };
 

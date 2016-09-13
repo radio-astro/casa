@@ -32,7 +32,7 @@
 namespace casa {
 
 /**
- * casacore::Data structure class to collect related feather data
+ * Data structure class to collect related feather data
  * in one location.
  */
 
@@ -40,18 +40,18 @@ class FeatheredData {
 public:
 	FeatheredData();
 	bool isEmpty() const;
-	void setU( const casacore::Vector<casacore::Float>& xVal, const casacore::Vector<casacore::Float>& yVal );
-	void setV( const casacore::Vector<casacore::Float>& xVal, const casacore::Vector<casacore::Float>& yVal );
-	casacore::Vector<casacore::Float> getUX() const;
-	casacore::Vector<casacore::Float> getUY() const;
-	casacore::Vector<casacore::Float> getVX() const;
-	casacore::Vector<casacore::Float> getVY() const;
+	void setU( const Vector<Float>& xVal, const Vector<Float>& yVal );
+	void setV( const Vector<Float>& xVal, const Vector<Float>& yVal );
+	Vector<Float> getUX() const;
+	Vector<Float> getUY() const;
+	Vector<Float> getVX() const;
+	Vector<Float> getVY() const;
 	virtual ~FeatheredData();
 private:
-	casacore::Vector<casacore::Float> ux;
-	casacore::Vector<casacore::Float> uy;
-	casacore::Vector<casacore::Float> vx;
-	casacore::Vector<casacore::Float> vy;
+	Vector<Float> ux;
+	Vector<Float> uy;
+	Vector<Float> vx;
+	Vector<Float> vy;
 };
 
 } /* namespace casa */

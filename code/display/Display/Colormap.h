@@ -35,19 +35,15 @@
 #include <casa/Containers/SimOrdMap.h>
 #include <casa/BasicSL/String.h>
 
-namespace casacore{
-
-	template <class T> class Vector;
-	template <class T, class U> class Function1D;
-	class LogIO;
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Forward declarations
 
+	template <class T> class Vector;
 	class ColormapDefinition;
 	class PixelCanvasColorTable;
+	template <class T, class U> class Function1D;
+	class LogIO;
 
 // <summary>
 // Describes a method of generating a table of colors.
@@ -60,7 +56,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <synopsis>
 // A Colormap is a class which is capable of generating a table
 // of colormaps for the ColormapManager.  The Colormap's duties
-// are to fill a casacore::Vector of colors of a specific size.
+// are to fill a Vector of colors of a specific size.
 //
 // A Colormap can operate in two modes:
 // <ul>
@@ -109,45 +105,45 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Colormap();
 
 		// User Constructor
-		explicit Colormap(const casacore::String& name);
+		explicit Colormap(const String& name);
 
 		// Destructor.
 		virtual ~Colormap();
 
-		// If rigid is true, the colormap must be installed at a
+		// If rigid is True, the colormap must be installed at a
 		// specific size.
 		// <group>
-		casacore::Bool rigid() const {
+		Bool rigid() const {
 			return itsIsRigid;
 		}
-		void setRigid(casacore::Bool b) {
+		void setRigid(Bool b) {
 			itsIsRigid = b;
 		}
 		// </group>
 
 		// What is the size enforced by the rigid requirement?
 		// <group>
-		casacore::uInt rigidSize()
+		uInt rigidSize()
 		const {
 			return itsRigidSize;
 		}
-		void setRigidSize(casacore::uInt s) {
+		void setRigidSize(uInt s) {
 			itsRigidSize = s;
 		}
 		// </group>
 
 		// Compute RGB values using the definition and shape function
-		virtual casacore::Bool calcRGBMaps(casacore::uInt reqSize,
-		                         casacore::Vector<casacore::Float> & redMap,
-		                         casacore::Vector<casacore::Float> & greenMap,
-		                         casacore::Vector<casacore::Float> & blueMap,
-		                         casacore::Vector<casacore::Float> & alphaMap) const;
+		virtual Bool calcRGBMaps(uInt reqSize,
+		                         Vector<Float> & redMap,
+		                         Vector<Float> & greenMap,
+		                         Vector<Float> & blueMap,
+		                         Vector<Float> & alphaMap) const;
 
 		// return the name of the map
-		const casacore::String & name() const {
+		const String & name() const {
 			return itsName;
 		}
-		void setName( const casacore::String& mapName ) {
+		void setName( const String& mapName ) {
 			itsName = mapName;
 		}
 
@@ -159,37 +155,37 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// set/get the colormap brightness level in range 0 to 1
 		// <group>
-		void setBrightness(const casacore::Float &brightness, const casacore::Bool &doReinstall = true);
-		casacore::Float getBrightness() const {
+		void setBrightness(const Float &brightness, const Bool &doReinstall = True);
+		Float getBrightness() const {
 			return itsBrightness;
 		};
 		// </group>
 
 		// set/get the colormap alpha level in range 0 to 1
 		// <group>
-		void setAlpha(const casacore::Float &brightness, const casacore::Bool &doReinstall = true);
-		casacore::Float getAlpha() const {
+		void setAlpha(const Float &brightness, const Bool &doReinstall = True);
+		Float getAlpha() const {
 			return itsAlpha;
 		};
 		// </group>
 
 		// set/get the colormap contrast level
 		// <group>
-		void setContrast(const casacore::Float &contrast, const casacore::Bool &doReinstall = true);
-		casacore::Float getContrast() const {
+		void setContrast(const Float &contrast, const Bool &doReinstall = True);
+		Float getContrast() const {
 			return itsContrast;
 		};
 		// </group>
 
 		// set/get the inverse flags
 		// <group>
-		void setInvertFlags(const casacore::Bool &red, const casacore::Bool &green, const casacore::Bool &blue,
-		                    const casacore::Bool &doReinstall = true);
-		void getInvertFlags(casacore::Bool &red, casacore::Bool &green, casacore::Bool &blue) const;
+		void setInvertFlags(const Bool &red, const Bool &green, const Bool &blue,
+		                    const Bool &doReinstall = True);
+		void getInvertFlags(Bool &red, Bool &green, Bool &blue) const;
 		// </group>
 
 		// Set whether or not the colormap should use a log scale.
-		void setLogScale( const casacore::Int & logScale, const casacore::Bool & doReinstall = true);
+		void setLogScale( const Int & logScale, const Bool & doReinstall = True);
 
 		// Do resizeCallbacks on the PixelCanvasColorTables that use this
 		// Colormap
@@ -198,28 +194,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Set the Colormap shaping function.  If the argument is 0, then
 		// resort to using the default shaping function, which happens to
 		// be a polynomial of order 1.
-		void setShapingFunction(casacore::Function1D<casacore::Float, casacore::Float> *shapingfunc = 0);
+		void setShapingFunction(Function1D<Float, Float> *shapingfunc = 0);
 
 		// Set and retrieve the coefficients of the shaping function.
 		// <group>
-		void setShapingCoefficients(const casacore::Vector<casacore::Float> &params,
-		                            const casacore::Bool &doReinstall = true);
-		const casacore::Vector<casacore::Float> getShapingCoefficients() const;
+		void setShapingCoefficients(const Vector<Float> &params,
+		                            const Bool &doReinstall = True);
+		const Vector<Float> getShapingCoefficients() const;
 		// </group>
 
 		// Write a Colormap to an ostream in a simple text form.
-		friend std::ostream & operator << (std::ostream & os, const Colormap & c);
+		friend ostream & operator << (ostream & os, const Colormap & c);
 
-		// Write a Colormap to an casacore::AipsIO stream in a binary format.
-		friend casacore::AipsIO &operator<<(casacore::AipsIO &aio, const Colormap & c);
+		// Write a Colormap to an AipsIO stream in a binary format.
+		friend AipsIO &operator<<(AipsIO &aio, const Colormap & c);
 
-		// Write a Colormap to a casacore::LogIO stream.
-		friend casacore::LogIO &operator<<(casacore::LogIO &lio, const Colormap & c);
+		// Write a Colormap to a LogIO stream.
+		friend LogIO &operator<<(LogIO &lio, const Colormap & c);
 
-		// Read a Colormap from an casacore::AipsIO stream in a binary format.
-		// Will throw an casacore::AipsError if the current Colormap Version does not match
+		// Read a Colormap from an AipsIO stream in a binary format.
+		// Will throw an AipsError if the current Colormap Version does not match
 		// that of the one on disk.
-		friend casacore::AipsIO &operator>>(casacore::AipsIO &aio, Colormap & c);
+		friend AipsIO &operator>>(AipsIO &aio, Colormap & c);
 
 		// Provide access to the colormap definition.
 		ColormapDefinition *definition() {
@@ -235,30 +231,30 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	private:
 
 		// name of this Colormap.
-		casacore::String itsName;
+		String itsName;
 
 		// is this Colormap rigid?
-		casacore::Bool itsIsRigid;
+		Bool itsIsRigid;
 
 		// what is its rigid size?
-		casacore::uInt itsRigidSize;
+		uInt itsRigidSize;
 		//Transparency
-		casacore::Float itsAlpha;
+		Float itsAlpha;
 
 		// levels
-		casacore::Float itsBrightness, itsBrightnessScale;
-		casacore::Float itsContrast, itsContrastScale;
+		Float itsBrightness, itsBrightnessScale;
+		Float itsContrast, itsContrastScale;
 		// invert flags
-		casacore::Bool itsInvertRed, itsInvertGreen, itsInvertBlue;
-		casacore::Int itsLogScale;
+		Bool itsInvertRed, itsInvertGreen, itsInvertBlue;
+		Int itsLogScale;
 
 		ColormapDefinition *itsColormapDefinition;
 
 		// function for shaping the colormap
-		casacore::Function1D<casacore::Float, casacore::Float> *itsShapingFunction;
-		casacore::Bool itsOwnShapingFunction;
+		Function1D<Float, Float> *itsShapingFunction;
+		Bool itsOwnShapingFunction;
 
-		casacore::SimpleOrderedMap<PixelCanvasColorTable *, casacore::uInt> itsPCColorTables;
+		SimpleOrderedMap<PixelCanvasColorTable *, uInt> itsPCColorTables;
 
 		enum { ColormapVersion = 1 };
 	};

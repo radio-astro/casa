@@ -50,7 +50,6 @@
 #include <casa/sstream.h>
 
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //----------------------------------------------------------------------
@@ -77,7 +76,7 @@ CEMemModel::CEMemModel(Entropy &ent,
   itsThresholdSpeedup(0.0),
   itsCycleFlux(0.0),
   itsFirstIteration(0),
-  itsChoose(false),
+  itsChoose(False),
   itsLog(LogOrigin("CEMemModel", 
 		   "CEMemModel(const Lattice<Float> & model)")),
   itsProgressPtr(0)
@@ -110,7 +109,7 @@ CEMemModel::CEMemModel(Entropy &ent,
   itsThresholdSpeedup(0.0),
   itsCycleFlux(0.0),
   itsFirstIteration(0),
-  itsChoose(false),
+  itsChoose(False),
   itsLog(LogOrigin("CEMemModel", 
 		   "CEMemModel(const Lattice<Float> & model)")),
    itsProgressPtr(0)
@@ -145,7 +144,7 @@ CEMemModel::CEMemModel(Entropy &ent,
   itsThresholdSpeedup(0.0),
   itsCycleFlux(0.0),
   itsFirstIteration(0),
-  itsChoose(false), 
+  itsChoose(False), 
   itsLog(LogOrigin("CEMemModel", 
 		   "CEMemModel(const Lattice<Float> & model)")),
   itsProgressPtr(0)
@@ -227,10 +226,10 @@ Bool CEMemModel::initStuff()
   itsGain = 0.3;
   itsMaxNormGrad = 100.0;
 
-  itsDoInit = true;
+  itsDoInit = True;
   itsAlpha = 0;
   itsBeta = 0;
-  Bool isOK = true;
+  Bool isOK = True;
 
   //Create temporary images
 
@@ -240,7 +239,7 @@ Bool CEMemModel::initStuff()
     itsStep_ptr->set(0.0);
     itsResidual_ptr->set(0.0);
   } else {
-    isOK = false;
+    isOK = False;
   }
 
   // We have been given an Entropy object, now we have to
@@ -354,7 +353,7 @@ void CEMemModel::changeAlphaBeta()
 Bool CEMemModel::checkImage(const Lattice<Float>* /*im*/)
 {
   // I guess we don't have anything to do
-  return true;
+  return True;
 };
 
 
@@ -362,7 +361,7 @@ Bool CEMemModel::checkImage(const Lattice<Float>* /*im*/)
 //----------------------------------------------------------------------
 Bool CEMemModel::checkImages(const Lattice<Float> *one, const Lattice<Float> *other)
 {
-  Bool isOK = true;
+  Bool isOK = True;
 
   for (uInt i = 0; i < one->ndim(); i++) {
     AlwaysAssert(one->shape()(i) == other->shape()(i), AipsError);
@@ -374,9 +373,9 @@ Bool CEMemModel::checkImages(const Lattice<Float> *one, const Lattice<Float> *ot
 //----------------------------------------------------------------------
 Bool CEMemModel::ok() 
 {
-  Bool isOK = true;
+  Bool isOK = True;
   if (!itsModel_ptr) {
-    isOK = false;
+    isOK = False;
   } else {
     isOK = checkImage(itsModel_ptr);
     if (itsPrior_ptr) {
@@ -392,7 +391,7 @@ Bool CEMemModel::ok()
       checkImages(itsModel_ptr, itsResidual_ptr);
     }
     if (! itsEntropy_ptr) {
-      isOK = false;
+      isOK = False;
     }
 
     // Also need to check state variables in the future!
@@ -424,8 +423,8 @@ void CEMemModel::state()
 Bool CEMemModel::solve(ResidualEquation<Lattice<Float> >  & eqn) 
 {
   itsResidualEquation_ptr = &eqn;
-  Bool converged = false;
-  Bool endNow = false;
+  Bool converged = False;
+  Bool endNow = False;
   state();
 
   itsEntropy_ptr->infoBanner();
@@ -452,12 +451,12 @@ Bool CEMemModel::solve(ResidualEquation<Lattice<Float> >  & eqn)
     }
 
     if (itsNormGrad > itsMaxNormGrad) {
-      endNow = true;
+      endNow = True;
       itsLog << " Excessive gradient: stopping now" << LogIO::EXCEPTION;
     }
 
     if (converged) {
-      endNow = true;;
+      endNow = True;;
       itsLog << "Converged at iteration " << itsIteration+1 << LogIO::POST;
     }
 
@@ -473,10 +472,10 @@ Bool CEMemModel::solve(ResidualEquation<Lattice<Float> >  & eqn)
 
 Bool CEMemModel::testConvergenceThreshold()
 { 
-  Bool less = false; 
+  Bool less = False; 
   if (getThreshold() > 0.0) {
    if (itsCurrentPeakResidual < getThreshold() ) {
-     less = true;
+     less = True;
    }
   }
   return less;
@@ -486,9 +485,9 @@ Bool CEMemModel::applyMask( Lattice<Float> & lat ) {
   if (itsMask_ptr) {
     LatticeExpr<Float> exp = ( (*itsMask_ptr) * (lat) );
     lat.copyData( exp );
-    return true;
+    return True;
   } else {
-    return false;
+    return False;
   }
 };
 
@@ -497,7 +496,7 @@ void  CEMemModel::oneIteration()
 {
   ok();
   if (itsDoInit) {
-    itsDoInit = false;
+    itsDoInit = False;
     // passing *this reverts to the LinearModel from which we are derived
     itsResidualEquation_ptr->residual( *itsResidual_ptr, 
 				       itsChisq,

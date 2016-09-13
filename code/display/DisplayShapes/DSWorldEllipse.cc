@@ -39,7 +39,6 @@
 #include <casa/Logging/LogOrigin.h>
 #include <casa/Logging/LogIO.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	DSWorldEllipse::DSWorldEllipse() :
@@ -142,7 +141,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	Bool DSWorldEllipse::setOptions(const Record& settings) {
 
-		Bool localChange = false;
+		Bool localChange = False;
 		Record toSet = settings;
 
 		if (settings.isDefined("coords")) {
@@ -156,26 +155,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		if (settings.isDefined("center")) {
 			toSet.removeField("center");
-			localChange = true;
+			localChange = True;
 		}
 		if (settings.isDefined("majoraxis")) {
 			toSet.removeField("majoraxis");
-			localChange = true;
+			localChange = True;
 		}
 		if (settings.isDefined("minoraxis")) {
 			toSet.removeField("minoraxis");
-			localChange = true;
+			localChange = True;
 		}
 		if (settings.isDefined("angle")) {
 			toSet.removeField("angle");
-			localChange = true;
+			localChange = True;
 		}
 
 
 		// TODO :: Must do a world to pix....
 
 		if (DSEllipse::setOptions(toSet)) {
-			localChange = true;
+			localChange = True;
 		}
 
 		return localChange;
@@ -201,7 +200,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Bool DSWorldEllipse::chooseWC(const Float& centerX, const Float& centerY,
 				 PanelDisplay* pd,
 				 WorldCanvas* wc) {
-	  Bool success = false;
+	  Bool success = False;
 
 	  // Look for ones where the point is in WC and in draw area
 	  ListIter<WorldCanvas* >* wcs = pd->wcs();
@@ -214,7 +213,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		wcs->getRight()->inDrawArea(Int(centerX), Int(centerY))) {
 
 	      itsWC = wcs->getRight();
-	      success = true;
+	      success = True;
 
 
 	    } else {
@@ -228,7 +227,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    while(!wcs->atEnd() && !success) {
 	      if (wcs->getRight()->inWC(centerX, centerY)) {
 		itsWC = wcs->getRight();
-		success = true;
+		success = True;
 	      } else {
 		wcs++;
 	      }

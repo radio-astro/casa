@@ -28,7 +28,6 @@
 #include <plotms/Plots/PlotMSPlot.h>
 #include <plotms/Client/Client.h>
 
-using namespace casacore;
 namespace casa {
 
 ActionIterLast::ActionIterLast( Client* client )
@@ -60,5 +59,4 @@ bool ActionIterLast::doActionSpecific(PlotMSApp* plotms){
 ActionIterLast::~ActionIterLast() {
 }
 
-using namespace casacore;
 } /* namespace casa */

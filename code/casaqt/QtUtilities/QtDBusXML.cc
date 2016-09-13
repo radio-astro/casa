@@ -28,7 +28,6 @@
 
 #include <QDateTime>
 
-using namespace casacore;
 namespace casa {
 
 ///////////////////////////

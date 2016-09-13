@@ -26,7 +26,6 @@
 //# $Id: $
 #include <casaqt/QtBrowser/QProgressPanel.qo.h>
 
-using namespace casacore;
 namespace casa {
 
 ////////////////////////////////

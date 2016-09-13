@@ -25,7 +25,6 @@
 
 #include "ConverterFrequencyWavelength.h"
 #include <QDebug>
-using namespace casacore;
 namespace casa {
 
 	ConverterFrequencyWavelength::ConverterFrequencyWavelength(const QString& oldUnits,
@@ -65,5 +64,4 @@ namespace casa {
 		// TODO Auto-generated destructor stub
 	}
 
-using namespace casacore;
 } /* namespace casa */

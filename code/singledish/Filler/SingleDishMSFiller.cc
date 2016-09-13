@@ -9,7 +9,6 @@
 
 #include <singledish/Filler/Scantable2MSReader.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 PCMContext *g_context_p = nullptr;

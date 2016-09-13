@@ -38,13 +38,6 @@
 #include <msvis/MSVis/VisBuffer.h>
 #include <ms/MeasurementSets/MSMainEnums.h>
 
-namespace casacore{
-
-class UVWMachine;
-template <class T> class ImageInterface;
-template <class T> class TempImage;
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <summary> Relate Sky brightness to the visibility </summary>
@@ -89,7 +82,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //      // Read the VisSet from disk
 //      VisSet vs("3c84.MS");
 //
-//      casacore::PagedImage<casacore::Float> im("3c84.modelImage");
+//      PagedImage<Float> im("3c84.modelImage");
 //
 //      // Create an ImageSkyModel from an image on disk
 //      ImageSkyModel ism(im);
@@ -102,7 +95,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //      // Make a Clean Image and write it out
 //      HogbomCleanImageSkyModel csm(ism);
 //      if (csm.solveSkyModel()) {
-//        casacore::PagedImage<casacore::Float> cleanImage=csm.getImage();
+//        PagedImage<Float> cleanImage=csm.getImage();
 //        cleanImage.setName("3c84.cleanImage");
 //      }
 //
@@ -131,9 +124,12 @@ class FTMachine;
 class SkyComponent;
 class ComponentList;
 class ComponentFTMachine;
+class UVWMachine;
 class ROVisibilityIterator;
 class VisibilityIterator;
 
+template <class T> class ImageInterface;
+template <class T> class TempImage;
 
 class SkyEquation {
 public:
@@ -146,12 +142,12 @@ public:
   // using an FTMachine ft for transforms in both directions and
   // a ComponentFTMachine for the component lists
   SkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft,
-	      ComponentFTMachine& cft,  casacore::Bool noModelcol=false);
+	      ComponentFTMachine& cft,  Bool noModelcol=False);
 
 
   //SkyEquation with ROVisIter
   SkyEquation(SkyModel& sm, ROVisibilityIterator& vi, FTMachine& ft,
-	      ComponentFTMachine& cft, casacore::Bool noModelCol);
+	      ComponentFTMachine& cft, Bool noModelCol);
 
   // Define a SkyEquation linking a VisSet vs with a SkyModel sm
   // using an FTMachine ft for Sky->Vis and ift for Vis->Sky
@@ -195,10 +191,10 @@ public:
 
   // Make an approximate PSF for each model. The PSF is approximate
   // in the sense that it is a shift-invariant approximation
-  virtual void makeApproxPSF(casacore::Int model, casacore::ImageInterface<casacore::Float>& PSF);
+  virtual void makeApproxPSF(Int model, ImageInterface<Float>& PSF);
 
   // make all the approx psfs in one go
-  virtual void makeApproxPSF(casacore::PtrBlock<casacore::ImageInterface<casacore::Float> *>& PSFs);
+  virtual void makeApproxPSF(PtrBlock<ImageInterface<Float> *>& PSFs);
 
   // Make complex XFRs needed for incrementGradientChiSquared
   virtual void makeComplexXFRs();
@@ -206,26 +202,26 @@ public:
   // Predict model coherence for the SkyModel. If this is
   // incremental then the model visibilities are not reset
   // but are simply added to
-  //virtual void predict(casacore::Bool incremental=false);
-  virtual void predict(casacore::Bool incremental=false, casacore::MS::PredefinedColumns Type=casacore::MS::MODEL_DATA);
+  //virtual void predict(Bool incremental=False);
+  virtual void predict(Bool incremental=False, MS::PredefinedColumns Type=MS::MODEL_DATA);
 
   // Find sum of weights, Chi-squared, and the first and second derivatives
   // by transforming to the measurements. 
   // <group>
-  virtual void gradientsChiSquared(const casacore::Matrix<casacore::Bool>& required, SkyJones& sj);
-  virtual void gradientsChiSquared(casacore::Bool incremental, casacore::Bool commitToMS=false);
+  virtual void gradientsChiSquared(const Matrix<Bool>& required, SkyJones& sj);
+  virtual void gradientsChiSquared(Bool incremental, Bool commitToMS=False);
   // </group>
 
   // Solve for variables. Both the SkyModel and the SkyJones can in
   // principle be solved for.
   // <group>
-  virtual casacore::Bool solveSkyModel();
-  virtual casacore::Bool solveSkyJones(SkyJones& sj);
+  virtual Bool solveSkyModel();
+  virtual Bool solveSkyJones(SkyJones& sj);
   // </group>
 
   // Set image plane weighting
-  void setImagePlaneWeighting(const casacore::String& type, const casacore::Float minPB, 
-			      const casacore::Float constPB)
+  void setImagePlaneWeighting(const String& type, const Float minPB, 
+			      const Float constPB)
     {scaleType_p = type; minPB_p = minPB; constPB_p = constPB;}
 
   // Lock and unlock the underlying MeasurementSet
@@ -233,19 +229,19 @@ public:
   virtual void unlock();
   
   // Return the name of the underlying MeasurementSet
-  virtual casacore::String associatedMSName();
+  virtual String associatedMSName();
 
 
   //assign  the flux scale that the ftmachines have if they have
-  virtual void getCoverageImage(casacore::Int model, casacore::ImageInterface<casacore::Float>& im);
+  virtual void getCoverageImage(Int model, ImageInterface<Float>& im);
   //Set this to true if the residual image for mosaic is to be in
   //pb^2 units (optimum mode for clean search for centimetric imaging)
-  virtual void doFlatNoise(casacore::Bool doFlat=false){doflat_p=doFlat;};
+  virtual void doFlatNoise(Bool doFlat=False){doflat_p=doFlat;};
   
   //get the weight image from the ftmachines
-  virtual void getWeightImage(const casacore::Int, casacore::ImageInterface<casacore::Float>&){};
+  virtual void getWeightImage(const Int, ImageInterface<Float>&){};
 
-  virtual casacore::Bool isNewFTM(){return false;}
+  virtual Bool isNewFTM(){return False;}
 
  protected:
 
@@ -258,26 +254,26 @@ public:
   // Do the full calculation - this must be called if the FTMachine 
   // cannot be represented by a Fourier transform
 
-  virtual void fullGradientsChiSquared(casacore::Bool incremental=false);
+  virtual void fullGradientsChiSquared(Bool incremental=False);
 
   SkyEquation() {};
   
   // Check for validity
-  casacore::Bool ok();
+  Bool ok();
   
   // Apply Sky Jones to an image, also adjoint operation
   // <group>
-  virtual void initializeGet(const VisBuffer& vb, casacore::Int row, casacore::Int model,
-			     casacore::Bool incremental);
+  virtual void initializeGet(const VisBuffer& vb, Int row, Int model,
+			     Bool incremental);
   
 
-  virtual VisBuffer& get(VisBuffer& vb, casacore::Int model, casacore::Bool incremental, casacore::MS::PredefinedColumns Type=casacore::MS::MODEL_DATA);
+  virtual VisBuffer& get(VisBuffer& vb, Int model, Bool incremental, MS::PredefinedColumns Type=MS::MODEL_DATA);
   virtual void finalizeGet();
-  virtual void initializePut(const VisBuffer &vb, casacore::Int model);
+  virtual void initializePut(const VisBuffer &vb, Int model);
   
-  virtual void put(const VisBuffer& vb, casacore::Int model, casacore::Bool dopsf=false, FTMachine::Type col=FTMachine::OBSERVED);
+  virtual void put(const VisBuffer& vb, Int model, Bool dopsf=False, FTMachine::Type col=FTMachine::OBSERVED);
   
-  virtual void finalizePut(const VisBuffer& vb, casacore::Int Model);
+  virtual void finalizePut(const VisBuffer& vb, Int Model);
  
   // This encapsulates all of the change logic we should have to deal
   // with (short of returning a range of rows that has the same
@@ -286,50 +282,50 @@ public:
   // internal SkyJones changes in the VB which require going
   // row by row in the get/put formalism.
   virtual void changedSkyJonesLogic(const VisBuffer& vb, 
-				    casacore::Bool& firstOneChanges,
-				    casacore::Bool& internalChanges);
+				    Bool& firstOneChanges,
+				    Bool& internalChanges);
 
   // Have the SkyJones changed since their last application?
-  virtual casacore::Bool changedSkyJones(const VisBuffer& vb, casacore::Int row);
+  virtual Bool changedSkyJones(const VisBuffer& vb, Int row);
 
   // Has the FTMachine changed since  last application?
   // <group>
-  virtual casacore::Bool changedFTMachine(const VisBuffer& vb);
-  virtual casacore::Bool changedIFTMachine(const VisBuffer& vb);
+  virtual Bool changedFTMachine(const VisBuffer& vb);
+  virtual Bool changedIFTMachine(const VisBuffer& vb);
   // </group>
 
   // Do the Sky Jones change in this Visbuffer, starting from row1?
   // Returns row2, the last row with the same skyJones
-  virtual casacore::Bool changedSkyJonesBuffer(const VisBuffer& vb, casacore::Int row1, casacore::Int& row2);
+  virtual Bool changedSkyJonesBuffer(const VisBuffer& vb, Int row1, Int& row2);
 
   virtual void resetSkyJones();
-  virtual void assertSkyJones(const VisBuffer& vb, casacore::Int row);
-  virtual casacore::ImageInterface<casacore::Complex>& applySkyJones(const VisBuffer& vb, casacore::Int row,
-						 casacore::ImageInterface<casacore::Float>& in,
-						 casacore::ImageInterface<casacore::Complex>& out);
-  virtual void applySkyJonesInv(const VisBuffer& vb, casacore::Int row,
-				casacore::ImageInterface<casacore::Complex>& in,
-				casacore::ImageInterface<casacore::Float>& work,
-				casacore::ImageInterface<casacore::Float>& out);
-  virtual void applySkyJonesSquare(const VisBuffer& vb, casacore::Int row,
-                                   casacore::Matrix<casacore::Float>& weights, 
-                                   casacore::ImageInterface<casacore::Float>& work,
-                                   casacore::ImageInterface<casacore::Float>& ggS);
+  virtual void assertSkyJones(const VisBuffer& vb, Int row);
+  virtual ImageInterface<Complex>& applySkyJones(const VisBuffer& vb, Int row,
+						 ImageInterface<Float>& in,
+						 ImageInterface<Complex>& out);
+  virtual void applySkyJonesInv(const VisBuffer& vb, Int row,
+				ImageInterface<Complex>& in,
+				ImageInterface<Float>& work,
+				ImageInterface<Float>& out);
+  virtual void applySkyJonesSquare(const VisBuffer& vb, Int row,
+                                   Matrix<Float>& weights, 
+                                   ImageInterface<Float>& work,
+                                   ImageInterface<Float>& ggS);
   // </group>
 
   // Puts for calculating the complex XFRs
   // <group>
-  virtual void initializePutXFR(const VisBuffer &vb, casacore::Int model, casacore::Int numXFR);
-  virtual void putXFR(const VisBuffer& vb, casacore::Int model, casacore::Int& numXFR);
-  virtual void finalizePutXFR(const VisBuffer& vb, casacore::Int Model, casacore::Int numXFR);
+  virtual void initializePutXFR(const VisBuffer &vb, Int model, Int numXFR);
+  virtual void putXFR(const VisBuffer& vb, Int model, Int& numXFR);
+  virtual void finalizePutXFR(const VisBuffer& vb, Int Model, Int numXFR);
   // </group>
 
   // Puts for calculating the complex convolutions
   // <group>
-  virtual void initializePutConvolve(const VisBuffer &vb, casacore::Int model,
-				     casacore::Int numXFR);
-  virtual void putConvolve(const VisBuffer& vb, casacore::Int model, casacore::Int& numXFR);
-  virtual void finalizePutConvolve(const VisBuffer& vb, casacore::Int Model, casacore::Int numXFR);
+  virtual void initializePutConvolve(const VisBuffer &vb, Int model,
+				     Int numXFR);
+  virtual void putConvolve(const VisBuffer& vb, Int model, Int& numXFR);
+  virtual void finalizePutConvolve(const VisBuffer& vb, Int Model, Int numXFR);
   // </group>
 
   // Get, etc. for a SkyComponent is much simpler
@@ -340,7 +336,7 @@ public:
   
   SkyComponent& applySkyJones(SkyComponent& corruptedComponent,
 			      const VisBuffer& vb,
-			      casacore::Int row);
+			      Int row);
   // </group>
 
   // Modify the ggS and Create the imageScale
@@ -348,12 +344,12 @@ public:
 
   // Deal with scaling or unscaling image or deltaImage
   // <group>
-  virtual void scaleImage(casacore::Int model, casacore::Bool incremental);
-  virtual void unScaleImage(casacore::Int model, casacore::Bool incremental);
-  virtual void scaleImage(casacore::Int model=0);
-  virtual void unScaleImage(casacore::Int model=0);
-  virtual void scaleDeltaImage(casacore::Int model=0);
-  virtual void unScaleDeltaImage(casacore::Int model=0);
+  virtual void scaleImage(Int model, Bool incremental);
+  virtual void unScaleImage(Int model, Bool incremental);
+  virtual void scaleImage(Int model=0);
+  virtual void unScaleImage(Int model=0);
+  virtual void scaleDeltaImage(Int model=0);
+  virtual void unScaleDeltaImage(Int model=0);
   // </group>
 
   // Check the VisIter chunck size...force a more reasonable chunk 
@@ -361,8 +357,8 @@ public:
 
   virtual void checkVisIterNumRows(ROVisibilityIterator& vi);
 
-  //virtual void predictComponents(casacore::Bool& incremental, casacore::Bool& initialized);
-  virtual void predictComponents(casacore::Bool& incremental, casacore::Bool& initialized,  casacore::MS::PredefinedColumns Type=casacore::MS::MODEL_DATA);
+  //virtual void predictComponents(Bool& incremental, Bool& initialized);
+  virtual void predictComponents(Bool& incremental, Bool& initialized,  MS::PredefinedColumns Type=MS::MODEL_DATA);
 
   
   // SkyModel
@@ -382,7 +378,7 @@ public:
   ComponentFTMachine* cft_;
   // </group>
 
-  // casacore::List of terms in left to right order
+  // List of terms in left to right order
   // <group>
   SkyJones* ej_;
   SkyJones* dj_;
@@ -392,14 +388,14 @@ public:
 
   // Workspace
   // <group>
-  casacore::Float chisq, sumwt;
-  casacore::Float ggSMax_p;
+  Float chisq, sumwt;
+  Float ggSMax_p;
   // </group>
 
-  casacore::LogSink logSink_p;
-  casacore::LogSink& logSink() {return logSink_p;};
+  LogSink logSink_p;
+  LogSink& logSink() {return logSink_p;};
 
-  casacore::Int iDebug_p;
+  Int iDebug_p;
   
   // Previous VisBuffer, used to determine how to apply
   // SkyJones;  
@@ -408,21 +404,21 @@ public:
 
   mutable VisBufferAutoPtr vb_p;
 
-  casacore::Float minPB_p;   // ignore model flux below this level in the generalized PB
-  casacore::Float constPB_p; // make the fluxscale constant for PB above this level
-  casacore::String scaleType_p;  // types:  NONE, or SAULT
+  Float minPB_p;   // ignore model flux below this level in the generalized PB
+  Float constPB_p; // make the fluxscale constant for PB above this level
+  String scaleType_p;  // types:  NONE, or SAULT
 
-  casacore::Bool isPSFWork_p; // working for PSF estimation
+  Bool isPSFWork_p; // working for PSF estimation
 
-  casacore::Bool noModelCol_p;
+  Bool noModelCol_p;
 
-  casacore::Vector<casacore::Bool> modelIsEmpty_p;
+  Vector<Bool> modelIsEmpty_p;
 
-  //SkyJones::changed returns a true the first time its called
+  //SkyJones::changed returns a True the first time its called
   //We have to ignore this at the very begining and first call to 'changed'
   //and not call finalizePut
-  casacore::Bool isBeginingOfSkyJonesCache_p;
-  casacore::Bool doflat_p;
+  Bool isBeginingOfSkyJonesCache_p;
+  Bool doflat_p;
 };
 
 } //# NAMESPACE CASA - END

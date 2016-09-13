@@ -49,10 +49,10 @@ namespace casa {
 
 template <class T> 
 MomentsBase<T>::MomentsBase(
-    casacore::LogIO &os, casacore::Bool overWriteOutput, casacore::Bool showProgressU
+    LogIO &os, Bool overWriteOutput, Bool showProgressU
 ) : os_p(os), showProgress_p(showProgressU),
     overWriteOutput_p(overWriteOutput) {
-    casacore::UnitMap::putUser("pix",casacore::UnitVal(1.0), "pixel units");
+    UnitMap::putUser("pix",UnitVal(1.0), "pixel units");
 }
 
 template <class T> 
@@ -62,14 +62,14 @@ MomentsBase<T>::~MomentsBase ()
 }
 
 template <class T>
-casacore::Bool MomentsBase<T>::setMoments(const casacore::Vector<casacore::Int>& momentsU)
+Bool MomentsBase<T>::setMoments(const Vector<Int>& momentsU)
 //
 // Assign the desired moments
 //
 {
    if (!goodParameterStatus_p) {
       error_p = "Internal class status is bad";
-      return false;
+      return False;
    }
 
    moments_p.resize(0);
@@ -78,29 +78,29 @@ casacore::Bool MomentsBase<T>::setMoments(const casacore::Vector<casacore::Int>&
 
 // Check number of moments
 
-   casacore::uInt nMom = moments_p.nelements();
+   uInt nMom = moments_p.nelements();
    if (nMom == 0) {
       error_p = "No moments requested";
-      goodParameterStatus_p = false;
-      return false;
+      goodParameterStatus_p = False;
+      return False;
    } else if (nMom > NMOMENTS) {
       error_p = "Too many moments specified";
-      goodParameterStatus_p = false;
-      return false;
+      goodParameterStatus_p = False;
+      return False;
    }
 
-   for (casacore::uInt i=0; i<nMom; i++) {
+   for (uInt i=0; i<nMom; i++) {
       if (moments_p(i) < 0 || moments_p(i) > NMOMENTS-1) {
          error_p = "Illegal moment requested";
-         goodParameterStatus_p = false;
-         return false;
+         goodParameterStatus_p = False;
+         return False;
       }
    }
-   return true;
+   return True;
 }
 
 template <class T>
-casacore::Bool MomentsBase<T>::setWinFitMethod(const casacore::Vector<casacore::Int>& methodU)
+Bool MomentsBase<T>::setWinFitMethod(const Vector<Int>& methodU)
 //
 // Assign the desired windowing and fitting methods
 //
@@ -108,48 +108,48 @@ casacore::Bool MomentsBase<T>::setWinFitMethod(const casacore::Vector<casacore::
 
    if (!goodParameterStatus_p) {
       error_p = "Internal class status is bad";
-      return false;
+      return False;
    }
 
 // No extra methods set
 
-   if (methodU.nelements() == 0) return true;
+   if (methodU.nelements() == 0) return True;
 
 
 // Check legality
 
-   for (casacore::uInt i = 0; i<casacore::uInt(methodU.nelements()); i++) {
+   for (uInt i = 0; i<uInt(methodU.nelements()); i++) {
       if (methodU(i) < 0 || methodU(i) > NMETHODS-1) {
          error_p = "Illegal method given";
-         goodParameterStatus_p = false;
-         return false;
+         goodParameterStatus_p = False;
+         return False;
       }
    }
 
 
 // Assign Boooools
 
-   linearSearch(doWindow_p, methodU, casacore::Int(WINDOW), methodU.nelements());
-   linearSearch(doFit_p, methodU, casacore::Int(FIT), methodU.nelements());
-   return true;
+   linearSearch(doWindow_p, methodU, Int(WINDOW), methodU.nelements());
+   linearSearch(doFit_p, methodU, Int(FIT), methodU.nelements());
+   return True;
 }
 
 template <class T>
-casacore::Bool MomentsBase<T>::setSmoothMethod(const casacore::Vector<casacore::Int>& smoothAxesU,
-                                      const casacore::Vector<casacore::Int>& kernelTypesU,
-                                      const casacore::Vector<casacore::Double>& kernelWidthsU)
+Bool MomentsBase<T>::setSmoothMethod(const Vector<Int>& smoothAxesU,
+                                      const Vector<Int>& kernelTypesU,
+                                      const Vector<Double>& kernelWidthsU)
 {
-   const casacore::uInt n = kernelWidthsU.nelements();
-   casacore::Vector<casacore::Quantum<casacore::Double> > t(n);
-   for (casacore::uInt i=0; i<n; i++) {
-      t(i) = casacore::Quantum<casacore::Double>(kernelWidthsU(i),casacore::String("pix"));
+   const uInt n = kernelWidthsU.nelements();
+   Vector<Quantum<Double> > t(n);
+   for (uInt i=0; i<n; i++) {
+      t(i) = Quantum<Double>(kernelWidthsU(i),String("pix"));
    }
    return setSmoothMethod(smoothAxesU, kernelTypesU, t);
 }
 
 template <class T>  
 void MomentsBase<T>::setInExCludeRange(
-    const casacore::Vector<T>& includeU, const casacore::Vector<T>& excludeU
+    const Vector<T>& includeU, const Vector<T>& excludeU
 ) {
    ThrowIf(
        ! goodParameterStatus_p,
@@ -180,30 +180,30 @@ template <class T> void MomentsBase<T>::setSnr(
 
 
 template <class T>
-casacore::Bool MomentsBase<T>::setSmoothOutName(const casacore::String& smoothOutU)
+Bool MomentsBase<T>::setSmoothOutName(const String& smoothOutU) 
 //
 // Assign the desired smoothed image output file name
 // 
 { 
    if (!goodParameterStatus_p) {
       error_p = "Internal class status is bad";
-      return false;
+      return False;
    }
 //
    if (!overWriteOutput_p) {
-      casacore::NewFile x;
-      casacore::String error;
+      NewFile x;
+      String error;
       if (!x.valueOK(smoothOutU, error)) {
-         return false;
+         return False;
       }
    }
 //
    smoothOut_p = smoothOutU;  
-   return true;
+   return True;
 }
 
 template <class T>
-void MomentsBase<T>::setVelocityType(casacore::MDoppler::Types velocityType)
+void MomentsBase<T>::setVelocityType(MDoppler::Types velocityType)
 {
    velocityType_p = velocityType;
 }
@@ -211,21 +211,21 @@ void MomentsBase<T>::setVelocityType(casacore::MDoppler::Types velocityType)
 
 
 template <class T>
-casacore::Vector<casacore::Int> MomentsBase<T>::toMethodTypes (const casacore::String& methods)
+Vector<Int> MomentsBase<T>::toMethodTypes (const String& methods)
 // 
 // Helper function to convert a string containing a list of desired smoothed kernel types
-// to the correct <src>casacore::Vector<casacore::Int></src> required for the <src>setSmooth</src> function.
+// to the correct <src>Vector<Int></src> required for the <src>setSmooth</src> function.
 // 
 // Inputs:
 //   methods     SHould contain some of "win", "fit", "inter"
 //
 {
-   casacore::Vector<casacore::Int> methodTypes(3);
+   Vector<Int> methodTypes(3);
    if (!methods.empty()) {
-      casacore::String tMethods = methods;
+      String tMethods = methods;
       tMethods.upcase();
 
-      casacore::Int i = 0;
+      Int i = 0;
       if (tMethods.contains("WIN")) {
          methodTypes(i) = WINDOW;
          i++;
@@ -234,7 +234,7 @@ casacore::Vector<casacore::Int> MomentsBase<T>::toMethodTypes (const casacore::S
          methodTypes(i) = FIT;
          i++;
       }
-      methodTypes.resize(i, true);
+      methodTypes.resize(i, True);
    } else {
       methodTypes.resize(0);
    }
@@ -243,26 +243,24 @@ casacore::Vector<casacore::Int> MomentsBase<T>::toMethodTypes (const casacore::S
 
 template <class T> void MomentsBase<T>::_checkMethod () {
 
-    using std::endl;
-
     // Only can have the median coordinate under certain conditions
-    casacore::Bool found;
+    Bool found;
     if(
         linearSearch(
-            found, moments_p, casacore::Int(MEDIAN_COORDINATE), moments_p.nelements()
+            found, moments_p, Int(MEDIAN_COORDINATE), moments_p.nelements()
         ) != -1
     ) {
-        casacore::Bool noGood = false;
+        Bool noGood = False;
         if (doWindow_p || doFit_p || doSmooth_p) {
-            noGood = true;
+            noGood = True;
         }
         else {
             if (noInclude_p && noExclude_p) {
-                noGood = true;
+                noGood = True;
             }
             else {
                 if (selectRange_p(0)*selectRange_p(1) < T(0)) {
-                    noGood = true;
+                    noGood = True;
                 }
             }
         }
@@ -303,14 +301,14 @@ template <class T> void MomentsBase<T>::_checkMethod () {
             )
         )
     ) {
-        std::ostringstream oss;
+        ostringstream oss;
         oss << "Invalid combination of methods requested." << endl;
         oss << "Valid combinations are: " << endl << endl;
-        oss <<  "casacore::Smooth    Window      Fit   in/exclude " << endl;
+        oss <<  "Smooth    Window      Fit   in/exclude " << endl;
         oss <<  "---------------------------------------" << endl;
         // Basic method. Just use all the data
         oss <<  "  N          N         N        N      " << endl;
-        // casacore::Smooth and clip, or just clip
+        // Smooth and clip, or just clip
         oss <<  "  Y/N        N         N        Y      " << endl << endl;
         // Automatic windowing via Bosma's algorithm with or without smoothing
         oss <<  "  Y/N        Y         N        N      " << endl;
@@ -335,7 +333,7 @@ template <class T> void MomentsBase<T>::_checkMethod () {
     // Tell them what they are getting
     os_p << endl << endl
         << "***********************************************************************" << endl;
-    os_p << casacore::LogIO::NORMAL << "You have selected the following methods" << endl;
+    os_p << LogIO::NORMAL << "You have selected the following methods" << endl;
     if (doWindow_p) {
         os_p << "The window method" << endl;
         if (doFit_p) {
@@ -369,17 +367,17 @@ template <class T> void MomentsBase<T>::_checkMethod () {
             os_p << "The basic clip method" << endl;
         }
     }
-    os_p << endl << endl << casacore::LogIO::POST;
+    os_p << endl << endl << LogIO::POST;
 }
 
-template <class T> casacore::Bool MomentsBase<T>::_setOutThings(
-    casacore::String& suffix, casacore::Unit& momentUnits,
-    const casacore::Unit& imageUnits, const casacore::String& momentAxisUnits,
-    const casacore::Int moment, casacore::Bool convertToVelocity
+template <class T> Bool MomentsBase<T>::_setOutThings(
+    String& suffix, Unit& momentUnits,
+    const Unit& imageUnits, const String& momentAxisUnits,
+    const Int moment, Bool convertToVelocity
 ) {
     // Set the output image suffixes and units
     //
-    // casacore::Input:
+    // Input:
     //   momentAxisUnits
     //                The units of the moment axis
     //   moment       The current selected moment
@@ -390,9 +388,9 @@ template <class T> casacore::Bool MomentsBase<T>::_setOutThings(
     // Outputs:
     //   momentUnits  The brightness units of the moment image. Depends upon moment type
     //   suffix       suffix for output file name
-    //   casacore::Bool         true if could set units for moment image, false otherwise
-    casacore::String temp;
-    auto goodUnits = true;
+    //   Bool         True if could set units for moment image, false otherwise
+    String temp;
+    auto goodUnits = True;
     auto goodImageUnits = ! imageUnits.getName().empty();
     auto goodAxisUnits = ! momentAxisUnits.empty();
 
@@ -405,7 +403,7 @@ template <class T> casacore::Bool MomentsBase<T>::_setOutThings(
         suffix = ".integrated";
         temp = imageUnits.getName() + "." + momentAxisUnits;
         if (convertToVelocity) {
-            temp = imageUnits.getName() + casacore::String(".km/s");
+            temp = imageUnits.getName() + String(".km/s");
         }
         goodUnits = (goodImageUnits && goodAxisUnits);
     }
@@ -413,7 +411,7 @@ template <class T> casacore::Bool MomentsBase<T>::_setOutThings(
         suffix = ".weighted_coord";
         temp = momentAxisUnits;
         if (convertToVelocity) {
-            temp = casacore::String("km/s");
+            temp = String("km/s");
         }
         goodUnits = goodAxisUnits;
     }
@@ -421,7 +419,7 @@ template <class T> casacore::Bool MomentsBase<T>::_setOutThings(
         suffix = ".weighted_dispersion_coord";
         temp = momentAxisUnits + "." + momentAxisUnits;
         if (convertToVelocity) {
-            temp = casacore::String("km/s");
+            temp = String("km/s");
         }
         goodUnits = goodAxisUnits;
     }
@@ -454,7 +452,7 @@ template <class T> casacore::Bool MomentsBase<T>::_setOutThings(
         suffix = ".maximum_coord";
         temp = momentAxisUnits;
         if (convertToVelocity) {
-            temp = casacore::String("km/s");
+            temp = String("km/s");
         }
         goodUnits = goodAxisUnits;
     }
@@ -467,7 +465,7 @@ template <class T> casacore::Bool MomentsBase<T>::_setOutThings(
         suffix = ".minimum_coord";
         temp = momentAxisUnits;
         if (convertToVelocity) {
-            temp = casacore::String("km/s");
+            temp = String("km/s");
         }
         goodUnits = goodAxisUnits;
     }
@@ -475,7 +473,7 @@ template <class T> casacore::Bool MomentsBase<T>::_setOutThings(
         suffix = ".median_coord";
         temp = momentAxisUnits;
         if (convertToVelocity) {
-            temp = casacore::String("km/s");
+            temp = String("km/s");
         }
         goodUnits = goodAxisUnits;
     }
@@ -486,8 +484,8 @@ template <class T> casacore::Bool MomentsBase<T>::_setOutThings(
 }
 
 template <class T> void MomentsBase<T>::_setIncludeExclude(
-    casacore::Vector<T>& range, casacore::Bool& noInclude, casacore::Bool& noExclude,
-    const casacore::Vector<T>& include, const casacore::Vector<T>& exclude
+    Vector<T>& range, Bool& noInclude, Bool& noExclude,
+    const Vector<T>& include, const Vector<T>& exclude
 ) {
     // Take the user's data inclusion and exclusion data ranges and
     // generate the range and Booleans to say what sort it is
@@ -498,15 +496,15 @@ template <class T> void MomentsBase<T>::_setIncludeExclude(
     //   exclude   Exclude range given by user. As above.
     //   os        Output stream for reporting
     // Outputs:
-    //   noInclude If true user did not give an include range
-    //   noExclude If true user did not give an exclude range
+    //   noInclude If True user did not give an include range
+    //   noExclude If True user did not give an exclude range
     //   range     A pixel value selection range.  Will be resized to
-    //             zero length if both noInclude and noExclude are true
-    //   casacore::Bool      true if successfull, will fail if user tries to give too
+    //             zero length if both noInclude and noExclude are True
+    //   Bool      True if successfull, will fail if user tries to give too
     //             many values for includeB or excludeB, or tries to give
     //             values for both
 
-    noInclude = true;
+    noInclude = True;
     range.resize(0);
     if (include.size() == 0) {
         // do nothing
@@ -515,18 +513,18 @@ template <class T> void MomentsBase<T>::_setIncludeExclude(
         range.resize(2);
         range(0) = -abs(include(0));
         range(1) =  abs(include(0));
-         noInclude = false;
+         noInclude = False;
     }
     else if (include.nelements() == 2) {
         range.resize(2);
-        range(0) = casacore::min(include(0),include(1));
-        range(1) = casacore::max(include(0),include(1));
-        noInclude = false;
+        range(0) = min(include(0),include(1));
+        range(1) = max(include(0),include(1));
+        noInclude = False;
     }
     else {
         ThrowCc("Too many elements for argument include");
     }
-    noExclude = true;
+    noExclude = True;
     if (exclude.size() == 0) {
         // do nothing
     }
@@ -534,13 +532,13 @@ template <class T> void MomentsBase<T>::_setIncludeExclude(
         range.resize(2);
         range(0) = -abs(exclude(0));
         range(1) =  abs(exclude(0));
-        noExclude = false;
+        noExclude = False;
     }
     else if (exclude.nelements() == 2) {
         range.resize(2);
-        range(0) = casacore::min(exclude(0),exclude(1));
-        range(1) = casacore::max(exclude(0),exclude(1));
-        noExclude = false;
+        range(0) = min(exclude(0),exclude(1));
+        range(1) = max(exclude(0),exclude(1));
+        noExclude = False;
     }
     else {
         ThrowCc("Too many elements for argument exclude");
@@ -550,36 +548,36 @@ template <class T> void MomentsBase<T>::_setIncludeExclude(
     }
 }
 
-template <class T> casacore::CoordinateSystem MomentsBase<T>::_makeOutputCoordinates (
-    casacore::IPosition& outShape, const casacore::CoordinateSystem& cSysIn,
-    const casacore::IPosition& inShape, casacore::Int momentAxis, casacore::Bool removeAxis
+template <class T> CoordinateSystem MomentsBase<T>::_makeOutputCoordinates (
+    IPosition& outShape, const CoordinateSystem& cSysIn,
+    const IPosition& inShape, Int momentAxis, Bool removeAxis
 ) {
-    casacore::CoordinateSystem cSysOut;
+    CoordinateSystem cSysOut;
     cSysOut.setObsInfo(cSysIn.obsInfo());
 
-    // Find the casacore::Coordinate corresponding to the moment axis
+    // Find the Coordinate corresponding to the moment axis
 
-    casacore::Int coord, axisInCoord;
+    Int coord, axisInCoord;
     cSysIn.findPixelAxis(coord, axisInCoord, momentAxis);
-    const casacore::Coordinate& c = cSysIn.coordinate(coord);
+    const Coordinate& c = cSysIn.coordinate(coord);
 
     // Find the number of axes
 
     if (removeAxis) {
         // Shape with moment axis removed
-        casacore::uInt dimIn = inShape.size();
-        casacore::uInt dimOut = dimIn - 1;
+        uInt dimIn = inShape.size();
+        uInt dimOut = dimIn - 1;
         outShape.resize(dimOut);
-        casacore::uInt k = 0;
-        for (casacore::uInt i=0; i<dimIn; ++i) {
-            if (casacore::Int(i) != momentAxis) {
+        uInt k = 0;
+        for (uInt i=0; i<dimIn; ++i) {
+            if (Int(i) != momentAxis) {
                 outShape(k) = inShape(i);
                 ++k;
             }
         }
         if (c.nPixelAxes()==1 && c.nWorldAxes()==1) {
             // We can physically remove the coordinate and axis
-            for (casacore::uInt i=0; i<cSysIn.nCoordinates(); ++i) {
+            for (uInt i=0; i<cSysIn.nCoordinates(); ++i) {
                 // If this coordinate is not the moment axis coordinate,
                 // and it has not been virtually removed in the input
                 // we add it to the output.  We don't cope with transposed
@@ -587,7 +585,7 @@ template <class T> casacore::CoordinateSystem MomentsBase<T>::_makeOutputCoordin
                 auto pixelAxes = cSysIn.pixelAxes(i);
                 auto worldAxes = cSysIn.worldAxes(i);
                 if (
-                    casacore::Int(i) != coord && pixelAxes[0] >= 0
+                    Int(i) != coord && pixelAxes[0] >= 0
                     && worldAxes[0] >= 0
                 ) {
                     cSysOut.addCoordinate(cSysIn.coordinate(i));
@@ -597,12 +595,12 @@ template <class T> casacore::CoordinateSystem MomentsBase<T>::_makeOutputCoordin
         else {
             // Remove just world and pixel axis but not the coordinate
             cSysOut = cSysIn;
-            casacore::Int worldAxis = cSysOut.pixelAxisToWorldAxis(momentAxis);
+            Int worldAxis = cSysOut.pixelAxisToWorldAxis(momentAxis);
             cSysOut.removeWorldAxis(worldAxis, cSysIn.referenceValue()(worldAxis));
         }
     }
     else {
-        // Retain the casacore::Coordinate and give the moment axis  shape 1.
+        // Retain the Coordinate and give the moment axis  shape 1.
         outShape.resize(0);
         outShape = inShape;
         outShape(momentAxis) = 1;

@@ -32,7 +32,6 @@
 #include <display/Display/WorldCanvas.h>
 #include <display/Display/WorldCanvasHolder.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
@@ -53,7 +52,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	                                WorldCanvasHolder*& wch) {
 		// Retrieve the current polygon mouse region record and WCH, if any.
 		// Retrieve the current rectangular mouse region record and WCH, if any.
-		// (If nothing is ready, returns false).
+		// (If nothing is ready, returns False).
 
 		// Here are fields of a typical mouseRegion record
 		// returned by this routine:
@@ -75,12 +74,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		mouseRegion = Record();	// Initialize to empty Record.
 
 
-		if(!rectangleDefined() || itsCurrentWC==0) return false;
+		if(!rectangleDefined() || itsCurrentWC==0) return False;
 		wch = pd_->wcHolder(itsCurrentWC);
 		// Only reason pd_ is 'needed' by this tool (it shouldn't need it):
 		// locating the important coordinate state 'zindex' on wch
 		// (inaccessible from WC), instead of on WC, was a blunder....
-		if(wch==0) return false;
+		if(wch==0) return False;
 
 
 		mouseRegion.define("type", "box");
@@ -103,7 +102,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		pix(0) = min(x1, x2);
 		pix(1) = min(y1, y2);
-		if(!itsCurrentWC->pixToLin(lin, pix)) return false;	// (unlikely)
+		if(!itsCurrentWC->pixToLin(lin, pix)) return False;	// (unlikely)
 		Bool wldOk = itsCurrentWC->linToWorld(wld, lin);
 
 		pixel.define("blc", pix);
@@ -112,7 +111,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		pix(0) = max(x1, x2);
 		pix(1) = max(y1, y2);
-		if(!itsCurrentWC->pixToLin(lin, pix)) return false;	// (unlikely)
+		if(!itsCurrentWC->pixToLin(lin, pix)) return False;	// (unlikely)
 		if(wldOk) wldOk = itsCurrentWC->linToWorld(wld, lin);
 
 		pixel.define("trc", pix);
@@ -129,7 +128,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// it is outside world coordinate boundaries (a modest
 		// handwave toward support of all-sky images).
 
-		return true;
+		return True;
 	}
 
 
@@ -210,7 +209,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	                                   WorldCanvasHolder*& wch) {
 		// Retrieve the current polygon mouse region record and WCH, if any.
 		// Retrieve the current rectangular mouse region record and WCH, if any.
-		// (If nothing is ready, returns false).
+		// (If nothing is ready, returns False).
 
 		// Here are fields of a typical mouseRegion record
 		// returned by this routine:
@@ -232,12 +231,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		mouseRegion = Record();	// Initialize to empty Record.
 
 
-		if(!rectangleDefined() || itsCurrentWC==0) return false;
+		if(!rectangleDefined() || itsCurrentWC==0) return False;
 		wch = pd_->wcHolder(itsCurrentWC);
 		// Only reason pd_ is 'needed' by this tool (it shouldn't need it):
 		// locating the important coordinate state 'zindex' on wch
 		// (inaccessible from WC), instead of on WC, was a blunder....
-		if(wch==0) return false;
+		if(wch==0) return False;
 
 
 		mouseRegion.define("type", "box");
@@ -260,7 +259,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		pix(0) = min(x1, x2);
 		pix(1) = min(y1, y2);
-		if(!itsCurrentWC->pixToLin(lin, pix)) return false;	// (unlikely)
+		if(!itsCurrentWC->pixToLin(lin, pix)) return False;	// (unlikely)
 		Bool wldOk = itsCurrentWC->linToWorld(wld, lin);
 
 		pixel.define("blc", pix);
@@ -269,7 +268,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		pix(0) = max(x1, x2);
 		pix(1) = max(y1, y2);
-		if(!itsCurrentWC->pixToLin(lin, pix)) return false;	// (unlikely)
+		if(!itsCurrentWC->pixToLin(lin, pix)) return False;	// (unlikely)
 		if(wldOk) wldOk = itsCurrentWC->linToWorld(wld, lin);
 
 		pixel.define("trc", pix);
@@ -286,7 +285,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// it is outside world coordinate boundaries (a modest
 		// handwave toward support of all-sky images).
 
-		return true;
+		return True;
 	}
 
 
@@ -366,7 +365,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	                                WorldCanvasHolder*& wch) {
 		// Retrieve the current rectangular region record and WCH, if any.
 		// Construct from the rectangular coordinates the ellipse therein
-		// (If nothing is ready, returns false).
+		// (If nothing is ready, returns False).
 
 		// Here are fields of a typical polygon mouseRegion record as emitted
 		// in the mouseRegionReady signal by this routine; the example polygon
@@ -390,12 +389,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		mouseRegion = Record();	// Initialize to empty Record.
 
 
-		if(!rectangleDefined() || itsCurrentWC==0) return false;
+		if(!rectangleDefined() || itsCurrentWC==0) return False;
 		wch = pd_->wcHolder(itsCurrentWC);
 		// Only reason pd_ is 'needed' by this tool (it shouldn't need it):
 		// locating the important coordinate state 'zindex' on wch
 		// (inaccessible from WC), instead of on WC, was a blunder....
-		if(wch==0) return false;
+		if(wch==0) return False;
 
 		mouseRegion.define("type", "polygon");
 
@@ -419,7 +418,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Double ycen   = ((Double)y1 + (Double)y2)/2.0;
 		Vector<Double> px, py, lx, ly, wx, wy,
 		       pix(2), lin(2), wld(2);
-		Bool wldOk=true;
+		Bool wldOk=True;
 
 		// determine the number of segments
 		uInt nsegments = uInt( min(5000., 2 * C::pi * max(abs(smajor), abs(sminor))+ 0.5));
@@ -450,7 +449,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			pix[1] = py[i] = y_tmp;
 
 			// compute the pixel coordinates
-			if(!itsCurrentWC->pixToLin(lin, pix)) return false;	  // (unlikely).
+			if(!itsCurrentWC->pixToLin(lin, pix)) return False;	  // (unlikely).
 
 			// compute the world coordinates
 			if(wldOk) wldOk = wldOk && itsCurrentWC->linToWorld(wld, lin);
@@ -487,7 +486,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		mouseRegion.defineRecord("linear", linear);
 		if(wldOk) mouseRegion.defineRecord("world", world);
 
-		return true;
+		return True;
 	}
 
 
@@ -559,7 +558,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Bool QtPTRegion::getMouseRegion(Record& mouseRegion,
 	                                WorldCanvasHolder*& wch) {
 		// Retrieve the current polygon mouse region record and WCH, if any.
-		// (If nothing is ready, returns false).
+		// (If nothing is ready, returns False).
 
 		// Here are fields of a typical mouseRegion record as emitted
 		// in the mouseRegionReady signal by this routine; this poly has 4 points:
@@ -582,17 +581,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		mouseRegion = Record();	// Initialize to empty Record.
 
 
-		if(!polygonDefined() || itsCurrentWC==0) return false;
+		if(!polygonDefined() || itsCurrentWC==0) return False;
 		wch = pd_->wcHolder(itsCurrentWC);
 		// Only reason pd_ is 'needed' by this tool (it shouldn't need it):
 		// locating the important coordinate state 'zindex' on wch
 		// (inaccessible from WC), instead of on WC, was a blunder....
-		if(wch==0) return false;
+		if(wch==0) return False;
 
 		Vector<Int> x, y;
 		get(x, y);
 		Int nPts = x.nelements();
-		if(nPts<3 || nPts!=Int(y.nelements())) return false;
+		if(nPts<3 || nPts!=Int(y.nelements())) return False;
 		// (no polygon ready).
 
 
@@ -609,14 +608,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		Vector<Double> px(nPts), py(nPts), lx(nPts), ly(nPts), wx(nPts), wy(nPts),
 		       pix(2), lin(2), wld(2);
-		Bool wldOk=true;
+		Bool wldOk=True;
 
 		for(Int i=0; i<nPts; i++) {
 
 			pix[0] = px[i] = x[i];	// (px, py are Double)
 			pix[1] = py[i] = y[i];
 
-			if(!itsCurrentWC->pixToLin(lin, pix)) return false;	  // (unlikely).
+			if(!itsCurrentWC->pixToLin(lin, pix)) return False;	  // (unlikely).
 
 			if(wldOk) wldOk = wldOk && itsCurrentWC->linToWorld(wld, lin);
 
@@ -650,7 +649,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// handwave toward support of all-sky images).
 
 		//cout << "mouseRegion=" << mouseRegion << endl;
-		return true;
+		return True;
 	}
 
 //void QtPTRegion::handleEvent(DisplayEvent& ev) {
@@ -729,7 +728,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Bool QtPolylineToolRegion::getMouseRegion(Record& mouseRegion,
 	        WorldCanvasHolder*& wch) {
 		// Retrieve the current polygon mouse region record and WCH, if any.
-		// (If nothing is ready, returns false).
+		// (If nothing is ready, returns False).
 
 		// Here are fields of a typical mouseRegion record as emitted
 		// in the mouseRegionReady signal by this routine; this poly has 4 points:
@@ -752,17 +751,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		mouseRegion = Record();	// Initialize to empty Record.
 
 
-		if(!polylineDefined() || itsCurrentWC==0) return false;
+		if(!polylineDefined() || itsCurrentWC==0) return False;
 		wch = pd_->wcHolder(itsCurrentWC);
 		// Only reason pd_ is 'needed' by this tool (it shouldn't need it):
 		// locating the important coordinate state 'zindex' on wch
 		// (inaccessible from WC), instead of on WC, was a blunder....
-		if(wch==0) return false;
+		if(wch==0) return False;
 
 		Vector<Int> x, y;
 		get(x, y);
 		Int nPts = x.nelements();
-		if(nPts<2 || nPts!=Int(y.nelements())) return false;
+		if(nPts<2 || nPts!=Int(y.nelements())) return False;
 		// (no polygon ready).
 
 
@@ -779,14 +778,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		Vector<Double> px(nPts), py(nPts), lx(nPts), ly(nPts), wx(nPts), wy(nPts),
 		       pix(2), lin(2), wld(2);
-		Bool wldOk=true;
+		Bool wldOk=True;
 
 		for(Int i=0; i<nPts; i++) {
 
 			pix[0] = px[i] = x[i];	// (px, py are Double)
 			pix[1] = py[i] = y[i];
 
-			if(!itsCurrentWC->pixToLin(lin, pix)) return false;	  // (unlikely).
+			if(!itsCurrentWC->pixToLin(lin, pix)) return False;	  // (unlikely).
 
 			if(wldOk) wldOk = wldOk && itsCurrentWC->linToWorld(wld, lin);
 
@@ -820,7 +819,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// handwave toward support of all-sky images).
 
 		//cout << "mouseRegion=" << mouseRegion << endl;
-		return true;
+		return True;
 	}
 
 
@@ -890,7 +889,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	                                    WorldCanvasHolder*& wch) {
 		// Retrieve the current polygon mouse region record and WCH, if any.
 		// Retrieve the current rectangular mouse region record and WCH, if any.
-		// (If nothing is ready, returns false).
+		// (If nothing is ready, returns False).
 
 		// Here are fields of a typical mouseRegion record
 		// returned by this routine:
@@ -912,12 +911,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		mouseRegion = Record();	// Initialize to empty Record.
 
 
-		if(!rectangleDefined() || itsCurrentWC==0) return false;
+		if(!rectangleDefined() || itsCurrentWC==0) return False;
 		wch = pd_->wcHolder(itsCurrentWC);
 		// Only reason pd_ is 'needed' by this tool (it shouldn't need it):
 		// locating the important coordinate state 'zindex' on wch
 		// (inaccessible from WC), instead of on WC, was a blunder....
-		if(wch==0) return false;
+		if(wch==0) return False;
 
 
 		mouseRegion.define("type", "box");
@@ -940,7 +939,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		pix(0) = min(x1, x2);
 		pix(1) = min(y1, y2);
-		if(!itsCurrentWC->pixToLin(lin, pix)) return false;	// (unlikely)
+		if(!itsCurrentWC->pixToLin(lin, pix)) return False;	// (unlikely)
 		Bool wldOk = itsCurrentWC->linToWorld(wld, lin);
 
 		pixel.define("blc", pix);
@@ -949,7 +948,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		pix(0) = max(x1, x2);
 		pix(1) = max(y1, y2);
-		if(!itsCurrentWC->pixToLin(lin, pix)) return false;	// (unlikely)
+		if(!itsCurrentWC->pixToLin(lin, pix)) return False;	// (unlikely)
 		if(wldOk) wldOk = itsCurrentWC->linToWorld(wld, lin);
 
 		pixel.define("trc", pix);
@@ -966,7 +965,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// it is outside world coordinate boundaries (a modest
 		// handwave toward support of all-sky images).
 
-		return true;
+		return True;
 	}
 
 //void QtPVToolRegion::handleEvent(DisplayEvent& ev) {

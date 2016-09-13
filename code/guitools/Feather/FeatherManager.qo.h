@@ -30,12 +30,6 @@
 #include <guitools/Feather/FeatheredData.h>
 #include <guitools/Feather/FeatherThread.h>
 #include <QObject>
-namespace casacore{
-
-template <class T> class ImageInterface;
-class LogIO;
-}
-
 namespace casa {
 
 //FeatherWorker1 (SD, INT)
@@ -48,7 +42,7 @@ namespace casa {
 // - DIRTY															//getFtCutIntImage
 // - DIRTY, weighted and scaled										//getFeatheredCutInt
 
-//FeatherWorker3 ( SD convolved with casacore::Int synthesized beam, INT )
+//FeatherWorker3 ( SD convolved with Int synthesized beam, INT )
 //- SD convolved with INT synthesized beam							//getFTCutSDImage
 //- SD convolved with INT synthesized beam; weighted and scaled		//getFeatheredCutSD
 
@@ -70,6 +64,8 @@ namespace casa {
 
 
 
+template <class T> class ImageInterface;
+class LogIO;
 
 /**
  * Does image/data manapulation and stores/provides
@@ -82,10 +78,10 @@ public:
 	FeatherManager();
 	bool isReady() const ;
 	bool isSuccess() const;
-	bool loadImages( const QString& lowImagePath, const QString& highImagePath, casacore::LogIO* logger );
+	bool loadImages( const QString& lowImagePath, const QString& highImagePath, LogIO* logger );
 	bool loadDirtyImage( const QString& dirtyImagePath);
 	void applyFeather( bool saveOutput, const QString& outputImagePath );
-	void getEffectiveDishDiameter( casacore::Float& xDiam, casacore::Float& yDiam );
+	void getEffectiveDishDiameter( Float& xDiam, Float& yDiam );
 	bool setEffectiveDishDiameter( float xDiam, float yDiam );
 	void setSDScale( float scale );
 	void setRadial( bool radialPlot );
@@ -127,29 +123,28 @@ private slots:
 private:
 	FeatherManager( const FeatherManager& other );
 	FeatherManager operator=( const FeatherManager& other );
-	FeatheredData getConvolvedOrig( casacore::ImageInterface<float>* image ) const;
+	FeatheredData getConvolvedOrig( ImageInterface<float>* image ) const;
 	bool generateInputImage( QString highResImagePath, QString lowResImagePath);
 	bool generateDirtyImage( QString dirtyImagePath);
-	int getPlaneCount( casacore::ImageInterface<float>* image ) const;
-	casacore::ImageInterface<casacore::Float>* getSinglePlaneImage( casacore::ImageInterface<float>* image ) const;
+	int getPlaneCount( ImageInterface<float>* image ) const;
+	ImageInterface<Float>* getSinglePlaneImage( ImageInterface<float>* image ) const;
 	void resetBasicFeedImages();
 	void resetDirtyFeedImage();
-	casacore::ImageInterface<casacore::Float>* lowResImage;
-	casacore::ImageInterface<casacore::Float>* highResImage;
-	casacore::ImageInterface<casacore::Float>* dirtyImage;
-	casacore::ImageInterface<casacore::Float>* highResFeedImage;
-	casacore::ImageInterface<casacore::Float>* dirtyFeedImage;
-	casacore::ImageInterface<casacore::Float>* lowResFeedImage;
+	ImageInterface<Float>* lowResImage;
+	ImageInterface<Float>* highResImage;
+	ImageInterface<Float>* dirtyImage;
+	ImageInterface<Float>* highResFeedImage;
+	ImageInterface<Float>* dirtyFeedImage;
+	ImageInterface<Float>* lowResFeedImage;
 	Feather* featherWorker;
 	FeatherThread* thread;
 	QString errorMessage;
-	casacore::LogIO* logger;
+	LogIO* logger;
 	bool radialAxis;
 	bool channelsAveraged;
 	bool success;
 	int channelIndex;
 };
 
-} // end namespace casa
-
+} /* namespace casa */
 #endif /* FEATHERMANAGER_H_ */

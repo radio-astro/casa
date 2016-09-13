@@ -76,10 +76,10 @@ namespace casa {
 
 	private:
 
-		bool _constructFitter( SHARED_PTR<const casacore::ImageInterface<float> >& image,
-					const casacore::String& region, const casacore::Record* const &regionPtr, const casacore::String& box,
-					const casacore::String& chans, const casacore::String& stokes, const casacore::String& mask, const casacore::Int axis,
-					const casacore::uInt ngauss, const SpectralList& spectralList );
+		bool _constructFitter( SHARED_PTR<const ImageInterface<float> >& image,
+					const String& region, const Record* const &regionPtr, const String& box,
+					const String& chans, const String& stokes, const String& mask, const Int axis,
+					const uInt ngauss, const SpectralList& spectralList );
 		/**
 		 * Places the passed in Gaussian estimate val into the indicated row and
 		 * column of the initial Gaussian estimate table.
@@ -87,13 +87,13 @@ namespace casa {
 		void setEstimateValue( int row, int col, double val );
 		bool isValidEstimate( QString& peakStr, QString& centerStr,
 		                      QString& fwhmStr, QString& fixedStr, int rowIndex );
-		SpectralList buildSpectralList( int nGauss, casacore::Bool& validList );
+		SpectralList buildSpectralList( int nGauss, Bool& validList );
 		bool isValidFitSpecification( int gaussCount, bool polyFit );
 		void setCanvas( QtCanvas* canvas );
 		void doFit( float startVal, float endVal, uint gaussCount, bool fitPoly, int polyN );
-		casacore::String getChannels( float startVal, float endVal, const casacore::Vector<casacore::Float>& specValues ) const;
-		void getFitBounds( casacore::Float& startVal, casacore::Float& endVal ) const;
-		int getFitCount(casacore::Int& startChannelIndex, casacore::Int& endChannelIndex );
+		String getChannels( float startVal, float endVal, const Vector<Float>& specValues ) const;
+		void getFitBounds( Float& startVal, Float& endVal ) const;
+		int getFitCount(Int& startChannelIndex, Int& endChannelIndex );
 		void setFitEstimate( int row, double xValue, double yValue, bool centerPeak );
 		void clearEstimates();
 		void clear();
@@ -102,16 +102,16 @@ namespace casa {
 		/**
 					 * Decides if the units represent velocity, wavelength, or frequency.
 					 */
-		void getConversion( const casacore::String& unitStr, casacore::Bool& velocity, casacore::Bool& wavelength ) const ;
-		bool processFitResults(casacore::Vector<float>& xValues, casacore::Vector<float>& xValuesPix, const casacore::String& yUnit);
+		void getConversion( const String& unitStr, Bool& velocity, Bool& wavelength ) const ;
+		bool processFitResults(Vector<float>& xValues, Vector<float>& xValuesPix, const String& yUnit);
 		void getEstimateStrings( int index, QString& peakStr, QString& centerStr, QString& fwhmStr ) const;
 		bool processFitResultGaussian( const SpectralElement* solution,
-		                               int index, QList<SpecFit*>& curves, const casacore::String& yUnit);
+		                               int index, QList<SpecFit*>& curves, const String& yUnit);
 		bool processFitResultPolynomial( const SpectralElement* solution,
 		                                 QList<SpecFit*>& curves);
 		bool isInRange( double xValue ) const;
 		QString settingsToString() const;
-		double toPixels( double val, casacore::String units, casacore::SpectralCoordinate& coord ) const;
+		double toPixels( double val, String units, SpectralCoordinate& coord ) const;
 		void drawCurves( int pixelX, int pixelY );
 
 		enum TableHeaders {PEAK,CENTER,FWHM,FIXED,END_COLUMN};
@@ -120,7 +120,7 @@ namespace casa {
 		SpecFitThread* specFitThread;
 		QProgressDialog progressDialog;
 		GaussianEstimateDialog gaussEstimateDialog;
-		casacore::Record regionRecord;
+		Record regionRecord;
 
 
 		QString outputLogPath;

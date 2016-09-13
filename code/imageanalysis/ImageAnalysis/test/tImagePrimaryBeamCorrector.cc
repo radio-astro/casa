@@ -98,7 +98,7 @@ void testException(
 		ImageCollapser collapser(
 			aggString, imagename, region, box,
 			chans, stokes, mask, compressionAxis,
-			outname(), false
+			outname(), False
 		);
 		// should not get here, fail if we do.
 		exceptionThrown = false;
@@ -134,7 +134,7 @@ int main() {
     		std::unique_ptr<ImagePrimaryBeamCorrector> pb(
     			new ImagePrimaryBeamCorrector(
     				im1.get(), pb1.get(), 0, "", "", "", "",
-    				"", dirName + "pbtest1.pbcor", false, 0, false,
+    				"", dirName + "pbtest1.pbcor", False, 0, False,
     				ImagePrimaryBeamCorrector::DIVIDE
     			)
     		);
@@ -143,12 +143,12 @@ int main() {
     				pb.reset(
     					new ImagePrimaryBeamCorrector(
     						im1.get(), pb1.get()->get(), 0, "", "", "", "",
-    						"", dirName + "pbtest1.pbcor", true, 0, false,
+    						"", dirName + "pbtest1.pbcor", True, 0, False,
     						ImagePrimaryBeamCorrector::DIVIDE
     					)
     				);
     			}
-    			ImageInterface<Float> *pbcor = pb->correct(true);
+    			ImageInterface<Float> *pbcor = pb->correct(True);
     			AlwaysAssert(near(max(pbcor->get()/(im1->get() / pb1->get())), 1.0), AipsError);
     			AlwaysAssert(near(min(pbcor->get()/(im1->get() / pb1->get())), 1.0), AipsError);
     			AlwaysAssert(pbcor->coordinates().near(im1->coordinates()), AipsError);
@@ -166,18 +166,18 @@ int main() {
 					(i == 0)
 					? new ImagePrimaryBeamCorrector(
 						im1.get(), pb1.get(), 0, "", "", "", "",
-						"", dirName + "pbtest2.pbcor", false, 0.001, true,
+						"", dirName + "pbtest2.pbcor", False, 0.001, True,
 						ImagePrimaryBeamCorrector::DIVIDE
 					)
 					: new ImagePrimaryBeamCorrector(
 						im1.get(), pb1.get()->get(), 0, "", "", "", "",
-						"", dirName + "pbtest2.pbcor", true, 0.001, true,
+						"", dirName + "pbtest2.pbcor", True, 0.001, True,
 						ImagePrimaryBeamCorrector::DIVIDE
 					)
 				);
 				cout << __LINE__ << endl;
 
-				ImageInterface<Float> *pbcor = pb->correct(true);
+				ImageInterface<Float> *pbcor = pb->correct(True);
 				AlwaysAssert(near(max(pbcor->get()/(im1->get() / pb1->get())), 1.0), AipsError);
 				AlwaysAssert(near(min(pbcor->get()/(im1->get() / pb1->get())), 1.0), AipsError);
 				AlwaysAssert(pbcor->coordinates().near(im1->coordinates()), AipsError);
@@ -194,16 +194,16 @@ int main() {
 					(i == 0)
 					? new ImagePrimaryBeamCorrector(
 						im2.get(), pb2.get(), 0, "", "", "", "",
-						"", dirName + "pbtest3.pbcor", false, 0.001, true,
+						"", dirName + "pbtest3.pbcor", False, 0.001, True,
 						ImagePrimaryBeamCorrector::DIVIDE
 					)
 					: new ImagePrimaryBeamCorrector(
 						im2.get(), pb2.get()->get(), 0, "", "", "", "",
-						"", dirName + "pbtest3.pbcor", true, 0.001, true,
+						"", dirName + "pbtest3.pbcor", True, 0.001, True,
 						ImagePrimaryBeamCorrector::DIVIDE
 					)
 				);
-				ImageInterface<Float> *pbcor = pb->correct(true);
+				ImageInterface<Float> *pbcor = pb->correct(True);
 				AlwaysAssert(pbcor->coordinates().near(im2->coordinates()), AipsError);
 				for (uInt i=0; i<im2->shape()[2]; i++) {
 					for (uInt j=0; j<im2->shape()[3]; j++) {
@@ -243,16 +243,16 @@ int main() {
 					(i == 0)
 					? new ImagePrimaryBeamCorrector(
 						im2.get(), pb2.get(), 0, "", "", "", "",
-						"", dirName + "pbtest4.pbcor", false, 0.001, true,
+						"", dirName + "pbtest4.pbcor", False, 0.001, True,
 						ImagePrimaryBeamCorrector::MULTIPLY
 					)
 					: new ImagePrimaryBeamCorrector(
 						im2.get(), pb2.get()->get(), 0, "", "", "", "",
-						"", dirName + "pbtest4.pbcor", true, 0.001, true,
+						"", dirName + "pbtest4.pbcor", True, 0.001, True,
 						ImagePrimaryBeamCorrector::MULTIPLY
 					)
 				);
-				ImageInterface<Float> *pbcor = pb->correct(true);
+				ImageInterface<Float> *pbcor = pb->correct(True);
 				AlwaysAssert(pbcor->coordinates().near(im2->coordinates()), AipsError);
 				for (uInt i=0; i<im2->shape()[2]; i++) {
 					for (uInt j=0; j<im2->shape()[3]; j++) {
@@ -315,34 +315,34 @@ int main() {
     		writeTestString("average full image collapse along axis 0");
     		ImageCollapser collapser(
     			"mean", goodImage, "", "", ALL,
-    			ALL, "", 0, outname(), false
+    			ALL, "", 0, outname(), False
     		);
-    		collapser.collapse(false);
+    		collapser.collapse(False);
     		checkImage(outname(), datadir + "collapse_avg_0.fits");
     	}
     	{
     		writeTestString("average full image collapse along axis 2");
     		ImageCollapser collapser(
     			"mean", goodImage, "", "", ALL,
-    			ALL, "", 2, outname(), false
+    			ALL, "", 2, outname(), False
     		);
-    		collapser.collapse(false);
+    		collapser.collapse(False);
     		checkImage(outname(), datadir + "collapse_avg_2.fits");
     	}
     	{
     		writeTestString("sum subimage collapse along axis 1");
     		ImageCollapser *collapser = new ImageCollapser(
     			"sum", goodImage, "", "1,1,2,2", "1~2",
-    			"qu", "", 2, outname(), false
+    			"qu", "", 2, outname(), False
     		);
-    		collapser->collapse(false);
+    		collapser->collapse(False);
     		delete collapser;
     		// and check that we can overwrite the previous output
     		collapser = new ImageCollapser(
         		"sum", goodImage, "", "1,1,2,2", "1~2",
-        		"qu", "", 1, outname(), true
+        		"qu", "", 1, outname(), True
         	);
-    		collapser->collapse(false);
+    		collapser->collapse(False);
     		delete collapser;
     		checkImage(outname(), datadir + "collapse_sum_1.fits");
     	}
@@ -350,9 +350,9 @@ int main() {
     		writeTestString("Check not specifying out file is ok");
     		ImageCollapser collapser(
     			"mean", goodImage, "", "", ALL,
-    			ALL, "", 2, "", false
+    			ALL, "", 2, "", False
     		);
-    		ImageInterface<Float> *collapsed = collapser.collapse(true);
+    		ImageInterface<Float> *collapsed = collapser.collapse(True);
     		checkImage(collapsed, datadir + "collapse_avg_2.fits");
     		delete collapsed;
     	}
@@ -360,9 +360,9 @@ int main() {
     		writeTestString("Check not wanting return pointer results in a NULL pointer being returned");
     		ImageCollapser collapser(
     			"mean", goodImage, "", "", ALL,
-    			ALL, "", 2, "", false
+    			ALL, "", 2, "", False
     		);
-    		ImageInterface<Float> *collapsed = collapser.collapse(false);
+    		ImageInterface<Float> *collapsed = collapser.collapse(False);
     		AlwaysAssert(collapsed == NULL, AipsError);
     	}
     	{
@@ -374,9 +374,9 @@ int main() {
 
     		ImageCollapser collapser(
     			"max", goodImage, "", "", ALL,
-    			ALL, "", axes, outname(), false
+    			ALL, "", axes, outname(), False
     		);
-    		collapser.collapse(false);
+    		collapser.collapse(False);
     		checkImage(outname(), datadir + "collapse_max_0_a.fits");
     	}
        	{
@@ -392,9 +392,9 @@ int main() {
         	tIm.put(vals);
         	ImageCollapser collapser(
         		"mean", &tIm, "", "", ALL,
-        		ALL, "", 0, outname(), false
+        		ALL, "", 0, outname(), False
         	);
-        	collapser.collapse(false);
+        	collapser.collapse(False);
         	checkImage(outname(), datadir + "collapse_avg_0.fits");
         }
        	{
@@ -403,9 +403,9 @@ int main() {
         	axes[1] = 1;
         	ImageCollapser collapser(
         		"mean", goodImage, "", "", ALL,
-        		ALL, "", axes, outname(), false
+        		ALL, "", axes, outname(), False
         	);
-        	collapser.collapse(false);
+        	collapser.collapse(False);
         	checkImage(outname(), datadir + "collapse_avg_0_1.fits");
         }
         */

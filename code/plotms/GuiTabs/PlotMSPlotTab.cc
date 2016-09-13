@@ -41,7 +41,6 @@
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
 #include <plotms/Plots/PlotMSPlot.h>
 #include <QDebug>
-using namespace casacore;
 namespace casa {
 
 //////////////////////////////////

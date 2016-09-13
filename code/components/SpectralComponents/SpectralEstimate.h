@@ -33,15 +33,11 @@
 #include <components/SpectralComponents/SpectralElement.h>
 #include <components/SpectralComponents/SpectralList.h>
 
-namespace casacore{
-
-template <class T> class Vector;
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Forward Declarations
 class GaussianSpectralElement;
+template <class T> class Vector;
 
 // <summary>
 // Get an initial estimate for spectral lines
@@ -100,7 +96,7 @@ class SpectralEstimate {
  public:
   //# Constants
   // Default maximum number of components to be found
-  static const casacore::uInt MAXPAR = 200;
+  static const uInt MAXPAR = 200;
   //# Enumerations
   //# Friends
 
@@ -109,15 +105,15 @@ class SpectralEstimate {
   // of components to be found is 200) with the given maximum number
   // of components that will be found. A value of zero will indicate
   // an unlimited number.
-  explicit SpectralEstimate(const casacore::uInt maxpar=MAXPAR);
+  explicit SpectralEstimate(const uInt maxpar=MAXPAR);
   // Create an estimator with the given maximum number of possible
   // elements. A value of zero will indicate an unlimited number.
   // Construct with a given rms in profiles, a cutoff for amplitudes
   // found, and a minimum width. Cutoff and minsigma default to 0.0, maximum
   // size of list produced to 200.
-  explicit SpectralEstimate(const casacore::Double rms,
-			    const casacore::Double cutoff=0.0, const casacore::Double minsigma=0.0,
-			    const casacore::uInt maxpar=MAXPAR);
+  explicit SpectralEstimate(const Double rms,
+			    const Double cutoff=0.0, const Double minsigma=0.0,
+			    const uInt maxpar=MAXPAR);
   // Copy constructor (deep copy)
   SpectralEstimate(const SpectralEstimate &other);
 
@@ -141,11 +137,11 @@ class SpectralEstimate {
   // if the vectors are not the same length.
   // <group>
   template <class MT>
-    const SpectralList& estimate(const casacore::Vector<MT>& ordinate,
-				 casacore::Vector<MT> *der = 0);
+    const SpectralList& estimate(const Vector<MT>& ordinate,
+				 Vector<MT> *der = 0);
   template <class MT>
-    const SpectralList& estimate(const casacore::Vector<MT>& abcissa,
-                                 const casacore::Vector<MT>& ordinate);
+    const SpectralList& estimate(const Vector<MT>& abcissa,
+                                 const Vector<MT>& ordinate);
   // </group>
 
   // Return the list found.
@@ -154,71 +150,71 @@ class SpectralEstimate {
   // Set estimation parameters
   // <group>
   // Set the profile's estimated rms (forced to abs(rms))
-  void setRMS(const casacore::Double rms=0.0);
+  void setRMS(const Double rms=0.0);
   // Set the amplitude cutoff for valid estimate (forced to max(0,cutoff))
-  void setCutoff(const casacore::Double cutoff=0.0);
+  void setCutoff(const Double cutoff=0.0);
   // Set the minimum width allowed (forced to max(0,minsigma))
-  void setMinSigma(const casacore::Double minsigma=0.0);
+  void setMinSigma(const Double minsigma=0.0);
   // Set the number of points consider at each side of test point (i.e. a
   // width of 2q+1 is taken). Default internally is 2; max(1,q) taken.
-  void setQ(const casacore::uInt q=2);
+  void setQ(const uInt q=2);
   // Set a region [lo,hi] over which to estimate. Lo and hi are given as
   // zero-based vector indices.
-  void setRegion(const casacore::Int lo, const casacore::Int hi);
+  void setRegion(const Int lo, const Int hi);
   // Do you want to look in an automatically determined window with signal?
-  // Default is false, meaning the full (possibly regioned) profile.
-  void setWindowing(const casacore::Bool win=false);
+  // Default is False, meaning the full (possibly regioned) profile.
+  void setWindowing(const Bool win=False);
   // Set the maximum number of estimates to find (forced to >=1; 200 default)
-  void setMaxN(const casacore::uInt maxpar=MAXPAR);
+  void setMaxN(const uInt maxpar=MAXPAR);
   // </group>
 
  private:
   //#Data
   // Use window search
-  casacore::Bool useWindow_p;
+  Bool useWindow_p;
   // rms estimate in profile
-  casacore::Double rms_p;
+  Double rms_p;
   // Source cutoff amplitude
-  casacore::Double cutoff_p;
+  Double cutoff_p;
   // Window low and end value
   // <group>
-  casacore::Int windowLow_p;
-  casacore::Int windowEnd_p;
+  Int windowLow_p;
+  Int windowEnd_p;
   // </group>
   // Region low and high value
   // <group>
-  casacore::Int regionLow_p;
-  casacore::Int regionEnd_p;
+  Int regionLow_p;
+  Int regionEnd_p;
   // </group>
   // Smoothing parameter. I.e. 2q+1 points are taken
-  casacore::Int q_p;
+  Int q_p;
   // Internal cashing of calculated values based on q
   // <group>
-  casacore::Double a_p;
-  casacore::Double b_p;
+  Double a_p;
+  Double b_p;
   // </group>
   // The minimum Gaussian width
-  casacore::Double sigmin_p;
+  Double sigmin_p;
   // The second derivatives
-  casacore::Double *deriv_p;
+  Double *deriv_p;
   // The list of components
   SpectralList slist_p;
   // The length of the current profile being estimated
-  casacore::uInt lprof_p;
+  uInt lprof_p;
 
   //# Member functions
   // Get the window or the total spectrum
   template <class MT>
-    casacore::uInt window(const casacore::Vector<MT> &prof);
+    uInt window(const Vector<MT> &prof);
   // Get the second derivatives
   template <class MT>
-    void findc2(const casacore::Vector<MT> &prof);
+    void findc2(const Vector<MT> &prof);
   // Find the Gaussians
   template <class MT>
-    void findga(const casacore::Vector<MT> &prof);
+    void findga(const Vector<MT> &prof);
   // Convert the parameters of the components in the list from 
   // pixel-based indices to the given abcissa-vector space.
-  template <class MT> GaussianSpectralElement convertElement (const casacore::Vector<MT>& abcissa,
+  template <class MT> GaussianSpectralElement convertElement (const Vector<MT>& abcissa,
                                                       const GaussianSpectralElement& el) const;
 };
 

@@ -28,7 +28,7 @@
  * | If you do, all changes will be lost when the file is re-generated. |
  *  --------------------------------------------------------------------
  *
- * casacore::File PointingRow.h
+ * File PointingRow.h
  */
  
 #ifndef PointingRow_CLASS
@@ -156,7 +156,7 @@ public:
 	bool isAdded() const;
 		
 	////////////////////////////////
-	// Intrinsic casacore::Table Attributes //
+	// Intrinsic Table Attributes //
 	////////////////////////////////
 	
 	
@@ -708,7 +708,7 @@ public:
 
 
 	////////////////////////////////
-	// Extrinsic casacore::Table Attributes //
+	// Extrinsic Table Attributes //
 	////////////////////////////////
 	
 	
@@ -781,7 +781,7 @@ public:
 
 	
 		
-	// ===> casacore::Slice link from a row of Pointing table to a collection of row of PointingModel table.
+	// ===> Slice link from a row of Pointing table to a collection of row of PointingModel table.
 	
 	/**
 	 * Get the collection of row in the PointingModel table having pointingModelId == this.pointingModelId
@@ -979,7 +979,7 @@ private:
 	 */
 	bool hasBeenAdded;
 
-	// This method is used by the casacore::Table class when this row is added to the table.
+	// This method is used by the Table class when this row is added to the table.
 	void isAdded(bool added);
 
 
@@ -1013,7 +1013,7 @@ private:
 	 PointingRow (PointingTable &table, PointingRow &row);
 	 	
 	////////////////////////////////
-	// Intrinsic casacore::Table Attributes //
+	// Intrinsic Table Attributes //
 	////////////////////////////////
 	
 	
@@ -1205,7 +1205,7 @@ private:
  	
 
 	////////////////////////////////
-	// Extrinsic casacore::Table Attributes //
+	// Extrinsic Table Attributes //
 	////////////////////////////////
 	
 	

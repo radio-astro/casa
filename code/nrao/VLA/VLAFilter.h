@@ -89,13 +89,13 @@ public:
   // constructor.
   virtual VLAFilter* clone() const = 0;
 
-  // returns true if the supplied record meets the filter criteria.
-  virtual casacore::Bool passThru(const VLALogicalRecord& record) const = 0;
+  // returns True if the supplied record meets the filter criteria.
+  virtual Bool passThru(const VLALogicalRecord& record) const = 0;
 
-  // casacore::Function which checks the internal data of this class for correct
-  // dimensionality and consistant values. Returns true if everything is fine
-  // otherwise returns false.
-  virtual casacore::Bool ok() const;
+  // Function which checks the internal data of this class for correct
+  // dimensionality and consistant values. Returns True if everything is fine
+  // otherwise returns False.
+  virtual Bool ok() const;
 
 private:
 

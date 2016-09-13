@@ -63,7 +63,6 @@
 //#include <synthesis/MeasurementComponents/AWProjectWBFT.h>
 //#include <synthesis/MeasurementComponents/rGridFT.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 //---------------------------------------------------------------------- 
 //-------------------- constructors and descructors ---------------------- 
@@ -72,8 +71,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     :FTMachine(), subftm_p(subftm), subFTMname_p(subFTMname), nterms_p(nterms), 
      thisterm_p(0), reffreq_p(reffreq), imweights_p(Matrix<Float>(0,0)), machineName_p("MultiTermFT")
   {
-    dbg_p=false;
-    dotime_p=false;
+    dbg_p=False;
+    dotime_p=False;
     this->setBasePrivates(*subftm_p);
     canComputeResiduals_p = subftm_p->canComputeResiduals();
     if(dbg_p) cout << "MTFT :: constructor with subftm : "<< subFTMname_p << endl;
@@ -199,7 +198,7 @@ MultiTermFT& MultiTermFT::operator=(const MultiTermFT& other)
 	    }
       }
     */
-    return true;
+    return True;
   }
 
 // Reset the imaging weights back to their original values
@@ -211,7 +210,7 @@ Bool MultiTermFT::restoreImagingWeights(VisBuffer &vb)
       AlwaysAssert( imweights_p.shape() == vb.imagingWeight().shape() ,AipsError);
       vb.imagingWeight() = imweights_p;
     }
-  return true;
+  return True;
 }
 
   
@@ -233,7 +232,7 @@ Bool MultiTermFT::restoreImagingWeights(VisBuffer &vb)
 	      }
       }
     
-    return true;
+    return True;
   }
   
   
@@ -351,11 +350,11 @@ void MultiTermFT::initMaps(const VisBuffer& vb){
 Bool MultiTermFT::toRecord(String& error, RecordInterface& outRec, Bool withImage, const String diskimage) 
   {
     if(dbg_p) cout << "MTFT :: toRecord for term " << thisterm_p << endl;
-    Bool retval = true;
+    Bool retval = True;
     //no image is held in this machine so no image need to be saved
     // the subftm holds the image
-    if(!FTMachine::toRecord(error, outRec, false))
-      return false;
+    if(!FTMachine::toRecord(error, outRec, False))
+      return False;
 
     Record subFTContainer;
     String elimage="";
@@ -384,15 +383,15 @@ Bool MultiTermFT::toRecord(String& error, RecordInterface& outRec, Bool withImag
   Bool MultiTermFT::fromRecord(String& error, const RecordInterface& inRec)
   {
     
-    Bool retval = true;
+    Bool retval = True;
     
     if(!FTMachine::fromRecord(error, inRec))
-      return false;
+      return False;
 
     Record subFTMRec=inRec.asRecord("subftm");
     subftm_p=VisModelData::NEW_FT(subFTMRec);
     if (subftm_p.null())
-      return false;
+      return False;
     
     
     inRec.get("subftname",subFTMname_p);

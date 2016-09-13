@@ -35,7 +35,6 @@
 #include <QHBoxLayout>
 #include <QDoubleValidator>
 
-using namespace casacore;
 namespace casa {
 
 
@@ -44,7 +43,7 @@ namespace casa {
 	SettingsWidget::SettingsWidget(QWidget *parent)
 		: QWidget(parent), pixelCanvas( NULL ), taskHelper( NULL),
 		  taskHelperOptical(NULL),taskHelperRadio( NULL),
-		  specLineFitting( true ), newCollapseVals( true ) {
+		  specLineFitting( true ), newCollapseVals( True ) {
 		ui.setupUi(this);
 	}
 
@@ -126,7 +125,7 @@ namespace casa {
 
 		if ( newCollapseVals ) {
 			taskHelper ->setCollapseVals( spcVals );
-			newCollapseVals = false;
+			newCollapseVals = False;
 		}
 	}
 

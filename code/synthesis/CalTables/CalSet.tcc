@@ -63,14 +63,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // ------------------------------------------------------------------
 
 // From shape only, this is the solve context
-template<class T> CalSet<T>::CalSet(const casacore::Int& nSpw) :
+template<class T> CalSet<T>::CalSet(const Int& nSpw) :
   calTableName_(""),
   nSpw_(nSpw),
   nPar_(0),
   nChan_(0),
   nElem_(0),
   nTime_(0),
-  spwOK_(nSpw_,false),
+  spwOK_(nSpw_,False),
   startChan_(nSpw_,0),  
   freq_(nSpw_,NULL),
   MJDStart_(nSpw_,NULL),
@@ -96,18 +96,18 @@ template<class T> CalSet<T>::CalSet(const casacore::Int& nSpw) :
 };
 
 // From shape only, this is the solve context
-template<class T> CalSet<T>::CalSet(const casacore::Int& nSpw,
-				    const casacore::Int& nPar,
-				    const casacore::Vector<casacore::Int>& nChan,
-				    const casacore::Int& nElem,
-				    const casacore::Vector<casacore::Int>& nTime) :
+template<class T> CalSet<T>::CalSet(const Int& nSpw,
+				    const Int& nPar,
+				    const Vector<Int>& nChan,
+				    const Int& nElem,
+				    const Vector<Int>& nTime) :
   calTableName_(""),
   nSpw_(nSpw),
   nPar_(nPar),
   nChan_(nChan),
   nElem_(nElem),
   nTime_(nTime),
-  spwOK_(nSpw_,false),
+  spwOK_(nSpw_,False),
   startChan_(nSpw_,0),  
   freq_(nSpw_,NULL),
   MJDStart_(nSpw_,NULL),
@@ -136,18 +136,18 @@ template<class T> CalSet<T>::CalSet(const casacore::Int& nSpw,
 
 
 // From existing CalTable name, this is apply context
-template<class T> CalSet<T>::CalSet(const casacore::String& calTableName,
-				    const casacore::String& select,
-				    const casacore::Int& nSpw,
-				    const casacore::Int& nPar,
-				    const casacore::Int& nElem) : 
+template<class T> CalSet<T>::CalSet(const String& calTableName,
+				    const String& select,
+				    const Int& nSpw,
+				    const Int& nPar,
+				    const Int& nElem) : 
   calTableName_(calTableName),
   nSpw_(nSpw),
   nPar_(nPar),
   nChan_(nSpw,0),
   nElem_(nElem),
   nTime_(nSpw,0),
-  spwOK_(nSpw_,false),
+  spwOK_(nSpw_,False),
   startChan_(nSpw_,0),  
   freq_(nSpw_,NULL),
   MJDStart_(nSpw_,NULL),
@@ -183,10 +183,10 @@ template<class T> CalSet<T>::~CalSet() {
   deflate();
 }
 
-template<class T> void CalSet<T>::resize(const casacore::Int& nPar,
-					 const casacore::Vector<casacore::Int>& nChan,
-					 const casacore::Int& nElem,
-					 const casacore::Vector<casacore::Int>& nTime) {
+template<class T> void CalSet<T>::resize(const Int& nPar,
+					 const Vector<Int>& nChan,
+					 const Int& nElem,
+					 const Vector<Int>& nTime) {
   nPar_=nPar;
   nChan_=nChan;
   nElem_=nElem;
@@ -209,31 +209,31 @@ template<class T> void CalSet<T>::inflate() {
   // Delete exiting cache
   deflate();
 
-  for (casacore::Int ispw=0; ispw<nSpw_; ispw++) {
-    casacore::uInt ntime=nTime_(ispw);
+  for (Int ispw=0; ispw<nSpw_; ispw++) {
+    uInt ntime=nTime_(ispw);
     if (ntime > 0) {
 
-      freq_[ispw]         = new casacore::Vector<casacore::Double>(nChan_(ispw),0.0);
+      freq_[ispw]         = new Vector<Double>(nChan_(ispw),0.0);
       
-      MJDStart_[ispw]     = new casacore::Vector<casacore::Double>(ntime,0.0);
-      MJDStop_[ispw]      = new casacore::Vector<casacore::Double>(ntime,0.0);
-      MJDTimeStamp_[ispw] = new casacore::Vector<casacore::Double>(ntime,0.0);
-      fieldName_[ispw]    = new casacore::Vector<casacore::String>(ntime,"");
-      sourceName_[ispw]   = new casacore::Vector<casacore::String>(ntime,"");
-      fieldId_[ispw]      = new casacore::Vector<casacore::Int>(ntime,-1);
+      MJDStart_[ispw]     = new Vector<Double>(ntime,0.0);
+      MJDStop_[ispw]      = new Vector<Double>(ntime,0.0);
+      MJDTimeStamp_[ispw] = new Vector<Double>(ntime,0.0);
+      fieldName_[ispw]    = new Vector<String>(ntime,"");
+      sourceName_[ispw]   = new Vector<String>(ntime,"");
+      fieldId_[ispw]      = new Vector<Int>(ntime,-1);
 
-      casacore::IPosition parshape(4,nPar_,nChan_(ispw),nElem_,ntime);
-      par_[ispw]     = new casacore::Array<T>(parshape,1.0);
-      parOK_[ispw]   = new casacore::Array<casacore::Bool>(parshape,false);
-      parErr_[ispw]  = new casacore::Array<casacore::Float>(parshape,0.0);
-      parSNR_[ispw]  = new casacore::Array<casacore::Float>(parshape,0.0);
+      IPosition parshape(4,nPar_,nChan_(ispw),nElem_,ntime);
+      par_[ispw]     = new Array<T>(parshape,1.0);
+      parOK_[ispw]   = new Array<Bool>(parshape,False);
+      parErr_[ispw]  = new Array<Float>(parshape,0.0);
+      parSNR_[ispw]  = new Array<Float>(parshape,0.0);
 
-      //      iSolutionOK_[ispw]  = new casacore::Matrix<casacore::Bool>(nElem_,ntime,false);
-      iFit_[ispw]         = new casacore::Matrix<casacore::Float>(nElem_,ntime,0.0);
-      iFitwt_[ispw]       = new casacore::Matrix<casacore::Float>(nElem_,ntime,0.0);
-      solutionOK_[ispw]   = new casacore::Vector<casacore::Bool>(ntime,false);
-      fit_[ispw]          = new casacore::Vector<casacore::Float>(ntime,0.0);
-      fitwt_[ispw]        = new casacore::Vector<casacore::Float>(ntime,0.0);
+      //      iSolutionOK_[ispw]  = new Matrix<Bool>(nElem_,ntime,False);
+      iFit_[ispw]         = new Matrix<Float>(nElem_,ntime,0.0);
+      iFitwt_[ispw]       = new Matrix<Float>(nElem_,ntime,0.0);
+      solutionOK_[ispw]   = new Vector<Bool>(ntime,False);
+      fit_[ispw]          = new Vector<Float>(ntime,0.0);
+      fitwt_[ispw]        = new Vector<Float>(ntime,0.0);
     }
   }
 
@@ -246,7 +246,7 @@ template<class T> void CalSet<T>::deflate() {
   
   // Delete parameter memory
 
-  for (casacore::Int ispw=0; ispw<nSpw_; ispw++) {
+  for (Int ispw=0; ispw<nSpw_; ispw++) {
     if (MJDStart_[ispw])     delete MJDStart_[ispw];
     if (MJDStop_[ispw])      delete MJDStop_[ispw];
     if (MJDTimeStamp_[ispw]) delete MJDTimeStamp_[ispw];
@@ -284,26 +284,26 @@ template<class T> void CalSet<T>::deflate() {
 
 
 
-template<class T> void CalSet<T>::load (const casacore::String& file, 
-					const casacore::String& select)
+template<class T> void CalSet<T>::load (const String& file, 
+					const String& select)
 {
   // Load data from a calibration table
-  // casacore::Input:
-  //    file         const casacore::String&       Cal table name
-  //    select       const casacore::String&       Selection string
+  // Input:
+  //    file         const String&       Cal table name
+  //    select       const String&       Selection string
   //
 
 
   //  cout << "CalSet::load...(nSpw_=" << nSpw_ << ")" << endl;
 
-  casacore::Timer timer;
+  Timer timer;
   timer.mark();
   
-  casacore::LogMessage message(casacore::LogOrigin("CalSet","load"));
+  LogMessage message(LogOrigin("CalSet","load"));
   
   // Decode the Jones matrix type
   /*
-  casacore::Int jonesType = 0;
+  Int jonesType = 0;
   if (nPar_ == 1) jonesType = 1;
   if (nPar_ == 2) jonesType = 2;
   if (nPar_ == 4) jonesType = 3;
@@ -314,52 +314,52 @@ template<class T> void CalSet<T>::load (const casacore::String& file,
   svjtab.select2(select);
 
   // Get no. of antennas and time slots
-  casacore::Int numberAnt = svjtab.maxAntenna() + 1;
+  Int numberAnt = svjtab.maxAntenna() + 1;
 
   //  cout << "Initial selection: " << timer.all_usec()/1.0e6 << endl;
   timer.mark();
 
-  AlwaysAssert(numberAnt==nElem_,casacore::AipsError)
+  AlwaysAssert(numberAnt==nElem_,AipsError)
 
-  casacore::Int nDesc=svjtab.nRowDesc();
-  casacore::Vector<casacore::Int> spwmap(nDesc,-1);
+  Int nDesc=svjtab.nRowDesc();
+  Vector<Int> spwmap(nDesc,-1);
 
-  casacore::Vector<casacore::Int> nRowPerCDI;
+  Vector<Int> nRowPerCDI;
   svjtab.rowsPerCalDescId(nRowPerCDI);
 
   //  cout << "Optimized CDI count: " << timer.all_usec()/1.0e6 << endl;
   timer.mark();
 
-  for (casacore::Int idesc=0;idesc<nDesc;idesc++) {
+  for (Int idesc=0;idesc<nDesc;idesc++) {
 
     // This cal desc
     CalDescRecord* calDescRec = new CalDescRecord (svjtab.getRowDesc(idesc));
 
     // Get this spw ID
-    casacore::Vector<casacore::Int> spwlist;
+    Vector<Int> spwlist;
     calDescRec->getSpwId(spwlist);
-    casacore::Int nSpw; spwlist.shape(nSpw);
+    Int nSpw; spwlist.shape(nSpw);
     if (nSpw > 1) {};  // ERROR!!!  Should only be one spw per cal desc!
     spwmap(idesc)=spwlist(0);
 
     // Trap spwids that do not occur in the MS
-    // (Since we rely on the casacore::MS meta info for the calibration solutions,
+    // (Since we rely on the MS meta info for the calibration solutions,
     //  we cannot identify spws that do not occur in the MS.)
     if (spwlist(0)>nSpw_-1)
-      throw(casacore::AipsError("Caltable '"+file+"' contains spw = "+
-		      casacore::String::toString(spwlist(0))+
+      throw(AipsError("Caltable '"+file+"' contains spw = "+
+		      String::toString(spwlist(0))+
 		      " which does not occur in the MS.  Cannot proceed."));
 
     // In next few steps, need to watch for repeat spws in new cal descs!!
 
     // Get number of channels this spw
-    casacore::Vector<casacore::Int> nchanlist;
+    Vector<Int> nchanlist;
 
     calDescRec->getNumChan(nchanlist);
     nChan_(spwmap(idesc))=nchanlist(0);
 
     // Get channel range / start channel
-    casacore::Cube<casacore::Int> chanRange;
+    Cube<Int> chanRange;
     calDescRec->getChanRange(chanRange);
     startChan_(spwmap(idesc))=chanRange(0,0,0);
 
@@ -379,20 +379,20 @@ template<class T> void CalSet<T>::load (const casacore::String& file,
   inflate();
 
   // Remember if we found and filled any solutions
-  casacore::Bool solfillok(false);
+  Bool solfillok(False);
 
   //  cout << "CalSet inflated: " << timer.all_usec()/1.0e6 << endl;
 
 
   // Fill per caldesc
-  casacore::Double ttime(0.0);
-  for (casacore::Int idesc=0;idesc<nDesc;idesc++) {
+  Double ttime(0.0);
+  for (Int idesc=0;idesc<nDesc;idesc++) {
 
     //    cout << "CDI = " << idesc << " "<< flush;
 
     timer.mark();
 
-    casacore::Int thisSpw=spwmap(idesc);
+    Int thisSpw=spwmap(idesc);
       
     // Reopen and globally select caltable
     //SolvableVisJonesTable svjtabspw(file);
@@ -402,30 +402,30 @@ template<class T> void CalSet<T>::load (const casacore::String& file,
     //    cout << " Sel: " << timer.all_usec()/1.0e6 << flush;
 
     // isolate this caldesc:
-    std::ostringstream selectstr;
+    ostringstream selectstr;
     selectstr << "CAL_DESC_ID == " << idesc;
-    casacore::String caldescsel; caldescsel = selectstr.str();
+    String caldescsel; caldescsel = selectstr.str();
     svjtabspw.select2(caldescsel);
 
     //    cout << " CDIsel: " << timer.all_usec()/1.0e6 << flush;
 
     //    cout << "Sorting..." << endl;
-    casacore::Block<casacore::String> scol(1);
+    Block<String> scol(1);
     scol[0]="TIME";
     svjtabspw.sort2(scol);
 
-    //    cout << " casacore::Sort: " << timer.all_usec()/1.0e6 << flush;
+    //    cout << " Sort: " << timer.all_usec()/1.0e6 << flush;
 
-    casacore::Int nrow = svjtabspw.nRowMain();
-    casacore::IPosition out(3,0,0,0);   // par, chan, row
-    casacore::IPosition in(4,0,0,0,0);  // par, chan, ant, slot
+    Int nrow = svjtabspw.nRowMain();
+    IPosition out(3,0,0,0);   // par, chan, row
+    IPosition in(4,0,0,0,0);  // par, chan, ant, slot
     if (nrow>0) {
 
       // Found some solutions to fill
-      solfillok=true;
+      solfillok=True;
 
       // Ensure sorted on time
-      casacore::Block <casacore::String> sortCol(1,"TIME");
+      Block <String> sortCol(1,"TIME");
       svjtabspw.sort2(sortCol);
       
       // Extract the gain table columns
@@ -433,31 +433,31 @@ template<class T> void CalSet<T>::load (const casacore::String& file,
       ROSolvableCalSetMCol<T> *svjmcol;
       svjmcol= new ROSolvableCalSetMCol<T>(svjtabspw);
 
-      casacore::Vector<casacore::Int>    calDescId;  (*svjmcol).calDescId().getColumn(calDescId);
-      casacore::Vector<casacore::Double> time;       (*svjmcol).time().getColumn(time);
-      casacore::Vector<casacore::Double> interval;   (*svjmcol).interval().getColumn(interval);
-      casacore::Vector<casacore::Int>    antenna1;   (*svjmcol).antenna1().getColumn(antenna1);
+      Vector<Int>    calDescId;  (*svjmcol).calDescId().getColumn(calDescId);
+      Vector<Double> time;       (*svjmcol).time().getColumn(time);
+      Vector<Double> interval;   (*svjmcol).interval().getColumn(interval);
+      Vector<Int>    antenna1;   (*svjmcol).antenna1().getColumn(antenna1);
       //      cout << "antennas = " << antenna1 << endl;
-      casacore::Vector<casacore::Int>    fieldId;    (*svjmcol).fieldId().getColumn(fieldId);
+      Vector<Int>    fieldId;    (*svjmcol).fieldId().getColumn(fieldId);
       //      cout << "fieldId = " << fieldId << endl;
-      casacore::Vector<casacore::String> fieldName;  (*svjmcol).fieldName().getColumn(fieldName);
-      casacore::Vector<casacore::String> sourceName; (*svjmcol).sourceName().getColumn(sourceName);
-      casacore::Vector<casacore::Bool>   totalSolOk; (*svjmcol).totalSolnOk().getColumn(totalSolOk);
-      casacore::Vector<casacore::Float>  totalFit;   (*svjmcol).totalFit().getColumn(totalFit);
-      casacore::Vector<casacore::Float>  totalFitWt; (*svjmcol).totalFitWgt().getColumn(totalFitWt);
-      casacore::Array<T> gain;       (*svjmcol).gain().getColumn(gain);
-      casacore::Cube<casacore::Bool>     solOk;      (*svjmcol).solnOk().getColumn(solOk);
-      casacore::Cube<casacore::Float>    fit;        (*svjmcol).fit().getColumn(fit);
-      casacore::Cube<casacore::Float>    fitWt;      (*svjmcol).fitWgt().getColumn(fitWt);
-      casacore::Cube<casacore::Bool>     flag;       (*svjmcol).flag().getColumn(flag);
-      casacore::Cube<casacore::Float>    snr;        (*svjmcol).snr().getColumn(snr);
+      Vector<String> fieldName;  (*svjmcol).fieldName().getColumn(fieldName);
+      Vector<String> sourceName; (*svjmcol).sourceName().getColumn(sourceName);
+      Vector<Bool>   totalSolOk; (*svjmcol).totalSolnOk().getColumn(totalSolOk);
+      Vector<Float>  totalFit;   (*svjmcol).totalFit().getColumn(totalFit);
+      Vector<Float>  totalFitWt; (*svjmcol).totalFitWgt().getColumn(totalFitWt);
+      Array<T> gain;       (*svjmcol).gain().getColumn(gain);
+      Cube<Bool>     solOk;      (*svjmcol).solnOk().getColumn(solOk);
+      Cube<Float>    fit;        (*svjmcol).fit().getColumn(fit);
+      Cube<Float>    fitWt;      (*svjmcol).fitWgt().getColumn(fitWt);
+      Cube<Bool>     flag;       (*svjmcol).flag().getColumn(flag);
+      Cube<Float>    snr;        (*svjmcol).snr().getColumn(snr);
 
       // Read the calibration information
-      casacore::Double /*lastTime(-1.0),*/ thisTime(0.0), thisInterval(0.0);
-      casacore::Int islot(-1);
-      casacore::Int iant;
+      Double /*lastTime(-1.0),*/ thisTime(0.0), thisInterval(0.0);
+      Int islot(-1);
+      Int iant;
 
-      for (casacore::Int irow=0; irow<nrow; irow++) {
+      for (Int irow=0; irow<nrow; irow++) {
 	out(2)=irow;
 
 	thisTime=time(irow);
@@ -490,12 +490,12 @@ template<class T> void CalSet<T>::load (const casacore::String& file,
 	(*iFit_[thisSpw])(iant,islot) = fit(0,0,irow);
 	(*iFitwt_[thisSpw])(iant,islot) = fitWt(0,0,irow);
 	
-	for (casacore::Int ichan=0; ichan<nChan_(thisSpw); ichan++) {
+	for (Int ichan=0; ichan<nChan_(thisSpw); ichan++) {
 
 
 	  out(1)=in(1)=ichan;
 
-	  for (casacore::Int ipar=0; ipar<nPar_; ipar++) {
+	  for (Int ipar=0; ipar<nPar_; ipar++) {
 	    in(0)=out(0)=ipar;
 	    (*par_[thisSpw])(in)=gain(out);
 	    (*parOK_[thisSpw])(in) = (solOk(out) && !flag(out));
@@ -508,7 +508,7 @@ template<class T> void CalSet<T>::load (const casacore::String& file,
 
     //    cout << "cs fields = " << *fieldId_[thisSpw] << endl;
 
-    casacore::Double itime=timer.all_usec()/1.0e6;
+    Double itime=timer.all_usec()/1.0e6;
     ttime+=itime;
 
     //    cout << " Totals: " << itime << " " << ttime << endl;
@@ -517,13 +517,13 @@ template<class T> void CalSet<T>::load (const casacore::String& file,
 
   // If we found no solutions in selected table, abort:
   if (!solfillok) {
-      throw(casacore::AipsError(" Specified cal table selection selects no solutions in this table.  Please review setapply settings."));
+      throw(AipsError(" Specified cal table selection selects no solutions in this table.  Please review setapply settings."));
   }
 
 
 };
 
-template<class T> void CalSet<T>::initCalTableDesc(const casacore::String& type, const casacore::Int& parType)
+template<class T> void CalSet<T>::initCalTableDesc(const String& type, const Int& parType)
 {
   if (calTabDesc_) {delete calTabDesc_;calTabDesc_=NULL;}
   calTabDesc_=new CalTableDesc2(type,parType);
@@ -534,41 +534,41 @@ template<class T> void CalSet<T>::attach()
 }
 
 
-template<class T> void CalSet<T>::store (const casacore::String& file, 
-					 const casacore::String& type,
-					 const casacore::Bool& append,
-					 const casacore::String& msname)
+template<class T> void CalSet<T>::store (const String& file, 
+					 const String& type,
+					 const Bool& append,
+					 const String& msname)
 {
   // Write the solutions to an output calibration table
-  // casacore::Input:
-  //    file           casacore::String        Cal table name
-  //    append         casacore::Bool          Append if true, else overwrite
+  // Input:
+  //    file           String        Cal table name
+  //    append         Bool          Append if true, else overwrite
   //
 
   // total rows to be written per Spw
-  casacore::Vector<casacore::Int> nRow(nSpw_,0);
-  for (casacore::Int iSpw=0;iSpw<nSpw_;iSpw++) 
+  Vector<Int> nRow(nSpw_,0);
+  for (Int iSpw=0;iSpw<nSpw_;iSpw++) 
     if (solutionOK_[iSpw])
       nRow(iSpw)=nElem_*ntrue(*(solutionOK_[iSpw]));
 
   // Escape if nothing to write
   if (sum(nRow)==0)
-    throw(casacore::AipsError("No valid calibration solutions; no table written."));
+    throw(AipsError("No valid calibration solutions; no table written."));
 
   // Initialization:
   // No. of rows in cal_main, cal_desc and cal_history
-  casacore::Int nMain = 0; 
-  casacore::Int nDesc = 0;
-  //casacore::Int nHist = 0;
+  Int nMain = 0; 
+  Int nDesc = 0;
+  //Int nHist = 0;
   
   if (calTabDesc_ == NULL)
     {
-      std::ostringstream str;
+      ostringstream str;
       str << "CalSet::store(): Perhaps CalSet.initCalTableDesc() was not called "
 	  << "before calling CalSet::store()?"
-	  << "  Jones = " << type << "   casacore::File = " << file;
+	  << "  Jones = " << type << "   File = " << file;
       
-      throw(casacore::AipsError(str.str()));
+      throw(AipsError(str.str()));
     }
 
   calTabDesc_->addDesc(calTabDesc_->defaultFitDesc(),calTabDesc_->calMainDesc());
@@ -579,34 +579,34 @@ template<class T> void CalSet<T>::store (const casacore::String& file,
   // Open the output file if it already exists and is being appended to.
   if (calTab_) delete calTab_; calTab_=NULL;
 
-  if (append && casacore::Table::isWritable (file)) {
-    //    tab  = new SolvableVisJonesTable (file, casacore::Table::Update);
-    calTab_  = new CalTable2 (file, *calTabDesc_, casacore::Table::Update);
+  if (append && Table::isWritable (file)) {
+    //    tab  = new SolvableVisJonesTable (file, Table::Update);
+    calTab_  = new CalTable2 (file, *calTabDesc_, Table::Update);
     nMain = calTab_->nRowMain();
     nDesc = calTab_->nRowDesc();
     //nHist = calTab_->nRowHistory();
   } else {
     // Create a new calibration table
-    casacore::Table::TableOption access = casacore::Table::New;
+    Table::TableOption access = Table::New;
     //    tab = new SolvableVisJonesTable (file, type, access);
     calTab_ = new CalTable2 (file, *calTabDesc_, access);
   };
   
   // Write every spw w/ max number of channels 
   //  (eventually, CalTable should permit variable-shape cols)
-  casacore::Int maxNumChan(1);
-  for (casacore::Int iSpw=0; iSpw<nSpw_; iSpw++) 
+  Int maxNumChan(1);
+  for (Int iSpw=0; iSpw<nSpw_; iSpw++) 
     if (par_[iSpw]!=NULL) 
       maxNumChan=max(maxNumChan,nChan_(iSpw));
 
   // Some default values
-  casacore::Double dzero = 0;
-  casacore::IPosition ip(2,1,maxNumChan);
+  Double dzero = 0;
+  IPosition ip(2,1,maxNumChan);
 
   // CalDesc Sub-table records
   CalDescRecord* descRec;
-  casacore::Vector<casacore::Int> calDescNum(nSpw_); calDescNum=-1;
-  for (casacore::Int iSpw=0; iSpw<nSpw_; iSpw++) {
+  Vector<Int> calDescNum(nSpw_); calDescNum=-1;
+  for (Int iSpw=0; iSpw<nSpw_; iSpw++) {
 
     // Write a CalDesc for each spw which has solutions
     // Note: CalDesc index != SpwId, in general
@@ -619,13 +619,13 @@ template<class T> void CalSet<T>::store (const casacore::String& file,
       // Check if this spw already in CAL_DESC 
       //      cout << "spwCol = " << cd.spwId().getColumn() << endl;
 
-      casacore::Bool newCD(true);
-      for (casacore::Int iCD=0;iCD<nDesc;iCD++) {
+      Bool newCD(True);
+      for (Int iCD=0;iCD<nDesc;iCD++) {
 
-	casacore::IPosition iCDip(1,0);
+	IPosition iCDip(1,0);
 	if ( iSpw==(cd.spwId()(iCD))(iCDip) ) {
 	  // Don't need new CAL_DESC entry
-	  newCD=false;
+	  newCD=False;
 	  calDescNum(iSpw)=iCD;
 	  break;
 	}
@@ -634,13 +634,13 @@ template<class T> void CalSet<T>::store (const casacore::String& file,
       if (newCD) {
 
 	// Cal_desc fields
-	casacore::Vector <casacore::Int> spwId(1,iSpw);
-	casacore::Matrix <casacore::Double> chanFreq(ip, dzero); 
-	casacore::Matrix <casacore::Double> chanWidth(ip, dzero);
-	casacore::Array <casacore::String> polznType(ip, "");
-	casacore::Cube <casacore::Int> chanRange(casacore::IPosition(3,2,1,maxNumChan), 0);
-	casacore::Vector <casacore::Int> numChan(1,nChan_(iSpw));
-	for (casacore::Int ichan=0; ichan<nChan_(iSpw); ichan++) {
+	Vector <Int> spwId(1,iSpw);
+	Matrix <Double> chanFreq(ip, dzero); 
+	Matrix <Double> chanWidth(ip, dzero);
+	Array <String> polznType(ip, "");
+	Cube <Int> chanRange(IPosition(3,2,1,maxNumChan), 0);
+	Vector <Int> numChan(1,nChan_(iSpw));
+	for (Int ichan=0; ichan<nChan_(iSpw); ichan++) {
 	  chanRange(0,0,ichan)=startChan_(iSpw);
 	  chanRange(1,0,ichan)=startChan_(iSpw) + nChan_(iSpw) -1;
 	}
@@ -657,7 +657,7 @@ template<class T> void CalSet<T>::store (const casacore::String& file,
 	descRec->defineChanRange (chanRange);
 	descRec->definePolznType (polznType);
 	descRec->defineJonesType ("full");
-	descRec->defineMSName (casacore::Path(msname).baseName());
+	descRec->defineMSName (Path(msname).baseName());
 	//	descRec->defineMSName ("");
 	
 	// Write the cal_desc record
@@ -679,80 +679,80 @@ template<class T> void CalSet<T>::store (const casacore::String& file,
   
   // Starting row in this slot
 
-  for (casacore::Int iSpw=0; iSpw<nSpw_; iSpw++) {
+  for (Int iSpw=0; iSpw<nSpw_; iSpw++) {
 
     // Write table for spws which have solutions
     if (par_[iSpw]!=NULL) {
 
       // Create references to cal data for this spw
-      casacore::Vector<casacore::Bool>    thisSolOK;        thisSolOK.reference(*(solutionOK_[iSpw]));
-      casacore::Vector<casacore::Double>  thisMJDTimeStamp; thisMJDTimeStamp.reference(*(MJDTimeStamp_[iSpw]));
-      casacore::Vector<casacore::Double>  thisMJDStart;     thisMJDStart.reference(*(MJDStart_[iSpw]));
-      casacore::Vector<casacore::Double>  thisMJDStop;      thisMJDStop.reference(*(MJDStop_[iSpw]));
-      casacore::Vector<casacore::Int>     thisFieldId;      thisFieldId.reference(*(fieldId_[iSpw]));
-      casacore::Vector<casacore::String>  thisFieldName;    thisFieldName.reference(*(fieldName_[iSpw]));
-      casacore::Vector<casacore::String>  thisSourceName;   thisSourceName.reference(*(sourceName_[iSpw]));
-      casacore::Vector<casacore::Float>   thisFit;          thisFit.reference(*(fit_[iSpw]));
-      casacore::Vector<casacore::Float>   thisFitwt;        thisFitwt.reference(*(fitwt_[iSpw]));
-      //      casacore::Array<casacore::Complex>  thisAntGain;      thisAntGain.reference(*(par_[iSpw]));
-      casacore::Array<T>  thisAntGain;      thisAntGain.reference(*(par_[iSpw]));
-      //      casacore::Matrix<casacore::Bool>    thisISolutionOK;  thisISolutionOK.reference(*(iSolutionOK_[iSpw]));
-      casacore::Matrix<casacore::Float>   thisIFit;         thisIFit.reference(*(iFit_[iSpw]));
-      casacore::Matrix<casacore::Float>   thisIFitwt;       thisIFitwt.reference(*(iFitwt_[iSpw]));
+      Vector<Bool>    thisSolOK;        thisSolOK.reference(*(solutionOK_[iSpw]));
+      Vector<Double>  thisMJDTimeStamp; thisMJDTimeStamp.reference(*(MJDTimeStamp_[iSpw]));
+      Vector<Double>  thisMJDStart;     thisMJDStart.reference(*(MJDStart_[iSpw]));
+      Vector<Double>  thisMJDStop;      thisMJDStop.reference(*(MJDStop_[iSpw]));
+      Vector<Int>     thisFieldId;      thisFieldId.reference(*(fieldId_[iSpw]));
+      Vector<String>  thisFieldName;    thisFieldName.reference(*(fieldName_[iSpw]));
+      Vector<String>  thisSourceName;   thisSourceName.reference(*(sourceName_[iSpw]));
+      Vector<Float>   thisFit;          thisFit.reference(*(fit_[iSpw]));
+      Vector<Float>   thisFitwt;        thisFitwt.reference(*(fitwt_[iSpw]));
+      //      Array<Complex>  thisAntGain;      thisAntGain.reference(*(par_[iSpw]));
+      Array<T>  thisAntGain;      thisAntGain.reference(*(par_[iSpw]));
+      //      Matrix<Bool>    thisISolutionOK;  thisISolutionOK.reference(*(iSolutionOK_[iSpw]));
+      Matrix<Float>   thisIFit;         thisIFit.reference(*(iFit_[iSpw]));
+      Matrix<Float>   thisIFitwt;       thisIFitwt.reference(*(iFitwt_[iSpw]));
 
-      casacore::Int thisnRow=nRow(iSpw);
+      Int thisnRow=nRow(iSpw);
       
       // Only if there are rows to add to table
       if (thisnRow > 0) {
 
 	// These are constant columns (with boring values, currently)
-	casacore::Vector<casacore::Double> timeEP(thisnRow,0.0);
-	casacore::Vector<casacore::Int> feed1(thisnRow,0);
-	casacore::Vector<casacore::Int> arrayId(thisnRow,0);
-	casacore::Vector<casacore::Int> obsId(thisnRow,0);
-	casacore::Vector<casacore::Int> scanNum(thisnRow,0);
-	casacore::Vector<casacore::Int> procId(thisnRow,0);
-	casacore::Vector<casacore::Int> stateId(thisnRow,0);
-	casacore::Vector<casacore::Int> phaseId(thisnRow,0);
-	casacore::Vector<casacore::Int> pulsarBin(thisnRow,0);
-	casacore::Vector<casacore::Int> pulsarGateId(thisnRow,0);
-	casacore::Vector<casacore::Int> freqGroup(thisnRow,0);
-	casacore::Vector<casacore::Int> calHistId(thisnRow,0);
+	Vector<Double> timeEP(thisnRow,0.0);
+	Vector<Int> feed1(thisnRow,0);
+	Vector<Int> arrayId(thisnRow,0);
+	Vector<Int> obsId(thisnRow,0);
+	Vector<Int> scanNum(thisnRow,0);
+	Vector<Int> procId(thisnRow,0);
+	Vector<Int> stateId(thisnRow,0);
+	Vector<Int> phaseId(thisnRow,0);
+	Vector<Int> pulsarBin(thisnRow,0);
+	Vector<Int> pulsarGateId(thisnRow,0);
+	Vector<Int> freqGroup(thisnRow,0);
+	Vector<Int> calHistId(thisnRow,0);
 	
 	// This is constant
-	casacore::Vector<casacore::Int> calDescId(thisnRow,calDescNum(iSpw));
+	Vector<Int> calDescId(thisnRow,calDescNum(iSpw));
 	
 	// These are constant per slot
 	//   (these cols should be incremental)
-	casacore::Vector<casacore::Double> time(thisnRow,0.0);
-	casacore::Vector<casacore::Double> interval(thisnRow,0.0);
-	casacore::Vector<casacore::Int>    fieldId(thisnRow,0);
-	casacore::Vector<casacore::String> fieldName(thisnRow,"");
-	casacore::Vector<casacore::String> sourceName(thisnRow,"");
-	casacore::Vector<casacore::Bool>   totalSolOk(thisnRow,false);
-	casacore::Vector<casacore::Float>  totalFit(thisnRow,0.0);
-	casacore::Vector<casacore::Float>  totalFitWt(thisnRow,0.0);
+	Vector<Double> time(thisnRow,0.0);
+	Vector<Double> interval(thisnRow,0.0);
+	Vector<Int>    fieldId(thisnRow,0);
+	Vector<String> fieldName(thisnRow,"");
+	Vector<String> sourceName(thisnRow,"");
+	Vector<Bool>   totalSolOk(thisnRow,False);
+	Vector<Float>  totalFit(thisnRow,0.0);
+	Vector<Float>  totalFitWt(thisnRow,0.0);
 	
 	// These vary
-	casacore::Vector<casacore::Int>    antenna1(thisnRow,0);
-	casacore::Cube<T>  gain(casacore::IPosition(3,nPar(),maxNumChan,thisnRow),T(0.0));
-	casacore::Cube<casacore::Bool>     solOk(nPar(),maxNumChan,thisnRow,false);
-	casacore::Cube<casacore::Float>    fit(1,maxNumChan,thisnRow,0.0);
-	casacore::Cube<casacore::Float>    fitWt(1,maxNumChan,thisnRow,0.0);
-	casacore::Cube<casacore::Bool>     flag(nPar(),maxNumChan,thisnRow,false);
-	casacore::Cube<casacore::Float>    snr(nPar(),maxNumChan,thisnRow,false);
+	Vector<Int>    antenna1(thisnRow,0);
+	Cube<T>  gain(IPosition(3,nPar(),maxNumChan,thisnRow),T(0.0));
+	Cube<Bool>     solOk(nPar(),maxNumChan,thisnRow,False);
+	Cube<Float>    fit(1,maxNumChan,thisnRow,0.0);
+	Cube<Float>    fitWt(1,maxNumChan,thisnRow,0.0);
+	Cube<Bool>     flag(nPar(),maxNumChan,thisnRow,False);
+	Cube<Float>    snr(nPar(),maxNumChan,thisnRow,False);
 
-	casacore::IPosition out(3,0,0,0);   // par, chan, row
-	casacore::IPosition in(4,0,0,0,0);  // par, chan, ant, slot
-	casacore::Int thisRow(0);
-	for (casacore::Int islot = 0; islot < nTime_(iSpw); islot++) {
+	IPosition out(3,0,0,0);   // par, chan, row
+	IPosition in(4,0,0,0,0);  // par, chan, ant, slot
+	Int thisRow(0);
+	for (Int islot = 0; islot < nTime_(iSpw); islot++) {
 	  in(3)=islot;
 	  if (thisSolOK(islot)) {
 	    
 	    // Fill slot-constant cols:
-	    casacore::Slice thisSlice(thisRow,nElem_);
+	    Slice thisSlice(thisRow,nElem_);
 	    time(thisSlice)=thisMJDTimeStamp(islot);
-	    casacore::Double dt=(thisMJDStop(islot) - thisMJDStart(islot));
+	    Double dt=(thisMJDStop(islot) - thisMJDStart(islot));
 	    if (dt<0.0) dt=1.0;
 	    interval(thisSlice)=dt;
 	    fieldId(thisSlice)=thisFieldId(islot);
@@ -763,28 +763,28 @@ template<class T> void CalSet<T>::store (const casacore::String& file,
 	    totalFitWt(thisSlice)=thisFitwt(islot);
 	    
 	    // Loop over the number of antennas
-	    for (casacore::Int iant = 0; iant < nElem_; iant++) {
+	    for (Int iant = 0; iant < nElem_; iant++) {
 	      out(2)=thisRow;
 	      in(2)=iant;
 	      // Antenna index
 	      antenna1(thisRow)=iant;
 	      
-	      gain.xyPlane(thisRow)(casacore::IPosition(2,0,0),casacore::IPosition(2,nPar()-1,nChan_(iSpw)-1))=
-		thisAntGain(casacore::IPosition(4,0,0,iant,islot),
-			    casacore::IPosition(4,nPar()-1,nChan_(iSpw)-1,iant,islot)).nonDegenerate(2);
+	      gain.xyPlane(thisRow)(IPosition(2,0,0),IPosition(2,nPar()-1,nChan_(iSpw)-1))=
+		thisAntGain(IPosition(4,0,0,iant,islot),
+			    IPosition(4,nPar()-1,nChan_(iSpw)-1,iant,islot)).nonDegenerate(2);
 
 	      // Per-chan fit pars
-	      for (casacore::Int ichan=0; ichan<nChan_(iSpw); ichan++) {
+	      for (Int ichan=0; ichan<nChan_(iSpw); ichan++) {
 		// Gain stats  (slot constant, per spw?)
 		//solOk(0,ichan,thisRow) = thisISolutionOK(iant,islot);
 		fit(0,ichan,thisRow) = thisIFit(iant,islot);
 		fitWt(0,ichan,thisRow) = thisIFitwt(iant,islot);
 
 
-		for (casacore::Int ipar=0; ipar<nPar(); ++ipar) {
-		  solOk(ipar,ichan,thisRow) = parOK(iSpw)(casacore::IPosition(4,ipar,ichan,iant,islot));
+		for (Int ipar=0; ipar<nPar(); ++ipar) {
+		  solOk(ipar,ichan,thisRow) = parOK(iSpw)(IPosition(4,ipar,ichan,iant,islot));
 		  flag(ipar,ichan,thisRow) = !solOk(ipar,ichan,thisRow);
-		  snr(ipar,ichan,thisRow) = parSNR(iSpw)(casacore::IPosition(4,ipar,ichan,iant,islot));
+		  snr(ipar,ichan,thisRow) = parSNR(iSpw)(IPosition(4,ipar,ichan,iant,islot));
 		} // ipar
 	      } // ichan
 	      
@@ -802,7 +802,7 @@ template<class T> void CalSet<T>::store (const casacore::String& file,
 	if (svjmcol_) {delete svjmcol_; svjmcol_=NULL;}
 	svjmcol_ = new SolvableCalSetMCol<T>(*calTab_);
 
-	casacore::RefRows refRows(nMain,nMain+thisnRow-1);
+	RefRows refRows(nMain,nMain+thisnRow-1);
 	svjmcol_->time().putColumnCells(refRows,time);
 	svjmcol_->timeEP().putColumnCells(refRows,timeEP);
 	svjmcol_->interval().putColumnCells(refRows,interval);
@@ -842,63 +842,63 @@ template<class T> void CalSet<T>::store (const casacore::String& file,
 
 };
 /*
-template<class T> void CalSet<T>::store (const casacore::String& file, 
-					 const casacore::String& type,
-					 const casacore::String& msname,
-					 const casacore::Bool& append)
+template<class T> void CalSet<T>::store (const String& file, 
+					 const String& type,
+					 const String& msname,
+					 const Bool& append)
 {
   // Write the solutions to an output calibration table
-  // casacore::Input:
-  //    file           casacore::String        Cal table name
-  //    append         casacore::Bool          Append if true, else overwrite
+  // Input:
+  //    file           String        Cal table name
+  //    append         Bool          Append if true, else overwrite
   //
 
   // total rows to be written per Spw
-  casacore::Vector<casacore::Int> nRow(nSpw_,0);
-  for (casacore::Int iSpw=0;iSpw<nSpw_;iSpw++) 
+  Vector<Int> nRow(nSpw_,0);
+  for (Int iSpw=0;iSpw<nSpw_;iSpw++) 
     if (solutionOK_[iSpw])
       nRow(iSpw)=nElem_*ntrue(*(solutionOK_[iSpw]));
 
   // Escape if nothing to write
   if (sum(nRow)==0)
-    throw(casacore::AipsError("No valid calibration solutions; no table written."));
+    throw(AipsError("No valid calibration solutions; no table written."));
 
   // Initialization:
   // No. of rows in cal_main, cal_desc and cal_history
-  casacore::Int nMain = 0; 
-  casacore::Int nDesc = 0;
-  //casacore::Int nHist = 0;
+  Int nMain = 0; 
+  Int nDesc = 0;
+  //Int nHist = 0;
   
   // Calibration table
   SolvableVisJonesTable *tab;
   
   // Open the output file if it already exists and is being appended to.
-  if (append && casacore::Table::isWritable (file)) {
-    tab  = new SolvableVisJonesTable (file, casacore::Table::Update);
+  if (append && Table::isWritable (file)) {
+    tab  = new SolvableVisJonesTable (file, Table::Update);
     nMain = tab->nRowMain();
     nDesc = tab->nRowDesc();
     //nHist = tab->nRowHistory();
   } else {
     // Create a new calibration table
-    casacore::Table::TableOption access = casacore::Table::New;
+    Table::TableOption access = Table::New;
     tab = new SolvableVisJonesTable (file, type, access);
   };
   
   // Write every spw w/ max number of channels 
   //  (eventually, CalTable should permit variable-shape cols)
-  casacore::Int maxNumChan(1);
-  for (casacore::Int iSpw=0; iSpw<nSpw_; iSpw++) 
+  Int maxNumChan(1);
+  for (Int iSpw=0; iSpw<nSpw_; iSpw++) 
     if (par_[iSpw]!=NULL) 
       maxNumChan=max(maxNumChan,nChan_(iSpw));
 
   // Some default values
-  casacore::Double dzero = 0;
-  casacore::IPosition ip(2,1,maxNumChan);
+  Double dzero = 0;
+  IPosition ip(2,1,maxNumChan);
 
   // CalDesc Sub-table records
   CalDescRecord* descRec;
-  casacore::Vector<casacore::Int> calDescNum(nSpw_); calDescNum=-1;
-  for (casacore::Int iSpw=0; iSpw<nSpw_; iSpw++) {
+  Vector<Int> calDescNum(nSpw_); calDescNum=-1;
+  for (Int iSpw=0; iSpw<nSpw_; iSpw++) {
 
     // Write a CalDesc for each spw which has solutions
     // Note: CalDesc index != SpwId, in general
@@ -911,13 +911,13 @@ template<class T> void CalSet<T>::store (const casacore::String& file,
       // Check if this spw already in CAL_DESC 
       //      cout << "spwCol = " << cd.spwId().getColumn() << endl;
 
-      casacore::Bool newCD(true);
-      for (casacore::Int iCD=0;iCD<nDesc;iCD++) {
+      Bool newCD(True);
+      for (Int iCD=0;iCD<nDesc;iCD++) {
 
-	casacore::IPosition iCDip(1,0);
+	IPosition iCDip(1,0);
 	if ( iSpw==(cd.spwId()(iCD))(iCDip) ) {
 	  // Don't need new CAL_DESC entry
-	  newCD=false;
+	  newCD=False;
 	  calDescNum(iSpw)=iCD;
 	  break;
 	}
@@ -926,13 +926,13 @@ template<class T> void CalSet<T>::store (const casacore::String& file,
       if (newCD) {
 
 	// Cal_desc fields
-	casacore::Vector <casacore::Int> spwId(1,iSpw);
-	casacore::Matrix <casacore::Double> chanFreq(ip, dzero); 
-	casacore::Matrix <casacore::Double> chanWidth(ip, dzero);
-	casacore::Array <casacore::String> polznType(ip, "");
-	casacore::Cube <casacore::Int> chanRange(casacore::IPosition(3,2,1,maxNumChan), 0);
-	casacore::Vector <casacore::Int> numChan(1,nChan_(iSpw));
-	for (casacore::Int ichan=0; ichan<nChan_(iSpw); ichan++) {
+	Vector <Int> spwId(1,iSpw);
+	Matrix <Double> chanFreq(ip, dzero); 
+	Matrix <Double> chanWidth(ip, dzero);
+	Array <String> polznType(ip, "");
+	Cube <Int> chanRange(IPosition(3,2,1,maxNumChan), 0);
+	Vector <Int> numChan(1,nChan_(iSpw));
+	for (Int ichan=0; ichan<nChan_(iSpw); ichan++) {
 	  chanRange(0,0,ichan)=startChan_(iSpw);
 	  chanRange(1,0,ichan)=startChan_(iSpw) + nChan_(iSpw) -1;
 	}
@@ -949,7 +949,7 @@ template<class T> void CalSet<T>::store (const casacore::String& file,
 	descRec->defineChanRange (chanRange);
 	descRec->definePolznType (polznType);
 	descRec->defineJonesType ("full");
-	descRec->defineMSName (casacore::Path(msname).baseName());
+	descRec->defineMSName (Path(msname).baseName());
 	
 	// Write the cal_desc record
 
@@ -970,79 +970,79 @@ template<class T> void CalSet<T>::store (const casacore::String& file,
   
   // Starting row in this slot
 
-  for (casacore::Int iSpw=0; iSpw<nSpw_; iSpw++) {
+  for (Int iSpw=0; iSpw<nSpw_; iSpw++) {
 
     // Write table for spws which have solutions
     if (par_[iSpw]!=NULL) {
 
       // Create references to cal data for this spw
-      casacore::Vector<casacore::Bool>    thisSolOK;        thisSolOK.reference(*(solutionOK_[iSpw]));
-      casacore::Vector<casacore::Double>  thisMJDTimeStamp; thisMJDTimeStamp.reference(*(MJDTimeStamp_[iSpw]));
-      casacore::Vector<casacore::Double>  thisMJDStart;     thisMJDStart.reference(*(MJDStart_[iSpw]));
-      casacore::Vector<casacore::Double>  thisMJDStop;      thisMJDStop.reference(*(MJDStop_[iSpw]));
-      casacore::Vector<casacore::Int>     thisFieldId;      thisFieldId.reference(*(fieldId_[iSpw]));
-      casacore::Vector<casacore::String>  thisFieldName;    thisFieldName.reference(*(fieldName_[iSpw]));
-      casacore::Vector<casacore::String>  thisSourceName;   thisSourceName.reference(*(sourceName_[iSpw]));
-      casacore::Vector<casacore::Float>   thisFit;          thisFit.reference(*(fit_[iSpw]));
-      casacore::Vector<casacore::Float>   thisFitwt;        thisFitwt.reference(*(fitwt_[iSpw]));
-      casacore::Array<casacore::Complex>  thisAntGain;      thisAntGain.reference(*(par_[iSpw]));
-      //      casacore::Matrix<casacore::Bool>    thisISolutionOK;  thisISolutionOK.reference(*(iSolutionOK_[iSpw]));
-      casacore::Matrix<casacore::Float>   thisIFit;         thisIFit.reference(*(iFit_[iSpw]));
-      casacore::Matrix<casacore::Float>   thisIFitwt;       thisIFitwt.reference(*(iFitwt_[iSpw]));
+      Vector<Bool>    thisSolOK;        thisSolOK.reference(*(solutionOK_[iSpw]));
+      Vector<Double>  thisMJDTimeStamp; thisMJDTimeStamp.reference(*(MJDTimeStamp_[iSpw]));
+      Vector<Double>  thisMJDStart;     thisMJDStart.reference(*(MJDStart_[iSpw]));
+      Vector<Double>  thisMJDStop;      thisMJDStop.reference(*(MJDStop_[iSpw]));
+      Vector<Int>     thisFieldId;      thisFieldId.reference(*(fieldId_[iSpw]));
+      Vector<String>  thisFieldName;    thisFieldName.reference(*(fieldName_[iSpw]));
+      Vector<String>  thisSourceName;   thisSourceName.reference(*(sourceName_[iSpw]));
+      Vector<Float>   thisFit;          thisFit.reference(*(fit_[iSpw]));
+      Vector<Float>   thisFitwt;        thisFitwt.reference(*(fitwt_[iSpw]));
+      Array<Complex>  thisAntGain;      thisAntGain.reference(*(par_[iSpw]));
+      //      Matrix<Bool>    thisISolutionOK;  thisISolutionOK.reference(*(iSolutionOK_[iSpw]));
+      Matrix<Float>   thisIFit;         thisIFit.reference(*(iFit_[iSpw]));
+      Matrix<Float>   thisIFitwt;       thisIFitwt.reference(*(iFitwt_[iSpw]));
 
-      casacore::Int thisnRow=nRow(iSpw);
+      Int thisnRow=nRow(iSpw);
       
       // Only if there are rows to add to table
       if (thisnRow > 0) {
 
 	// These are constant columns (with boring values, currently)
-	casacore::Vector<casacore::Double> timeEP(thisnRow,0.0);
-	casacore::Vector<casacore::Int> feed1(thisnRow,0);
-	casacore::Vector<casacore::Int> arrayId(thisnRow,0);
-	casacore::Vector<casacore::Int> obsId(thisnRow,0);
-	casacore::Vector<casacore::Int> scanNum(thisnRow,0);
-	casacore::Vector<casacore::Int> procId(thisnRow,0);
-	casacore::Vector<casacore::Int> stateId(thisnRow,0);
-	casacore::Vector<casacore::Int> phaseId(thisnRow,0);
-	casacore::Vector<casacore::Int> pulsarBin(thisnRow,0);
-	casacore::Vector<casacore::Int> pulsarGateId(thisnRow,0);
-	casacore::Vector<casacore::Int> freqGroup(thisnRow,0);
-	casacore::Vector<casacore::Int> calHistId(thisnRow,0);
+	Vector<Double> timeEP(thisnRow,0.0);
+	Vector<Int> feed1(thisnRow,0);
+	Vector<Int> arrayId(thisnRow,0);
+	Vector<Int> obsId(thisnRow,0);
+	Vector<Int> scanNum(thisnRow,0);
+	Vector<Int> procId(thisnRow,0);
+	Vector<Int> stateId(thisnRow,0);
+	Vector<Int> phaseId(thisnRow,0);
+	Vector<Int> pulsarBin(thisnRow,0);
+	Vector<Int> pulsarGateId(thisnRow,0);
+	Vector<Int> freqGroup(thisnRow,0);
+	Vector<Int> calHistId(thisnRow,0);
 	
 	// This is constant
-	casacore::Vector<casacore::Int> calDescId(thisnRow,calDescNum(iSpw));
+	Vector<Int> calDescId(thisnRow,calDescNum(iSpw));
 	
 	// These are constant per slot
 	//   (these cols should be incremental)
-	casacore::Vector<casacore::Double> time(thisnRow,0.0);
-	casacore::Vector<casacore::Double> interval(thisnRow,0.0);
-	casacore::Vector<casacore::Int>    fieldId(thisnRow,0);
-	casacore::Vector<casacore::String> fieldName(thisnRow,"");
-	casacore::Vector<casacore::String> sourceName(thisnRow,"");
-	casacore::Vector<casacore::Bool>   totalSolOk(thisnRow,false);
-	casacore::Vector<casacore::Float>  totalFit(thisnRow,0.0);
-	casacore::Vector<casacore::Float>  totalFitWt(thisnRow,0.0);
+	Vector<Double> time(thisnRow,0.0);
+	Vector<Double> interval(thisnRow,0.0);
+	Vector<Int>    fieldId(thisnRow,0);
+	Vector<String> fieldName(thisnRow,"");
+	Vector<String> sourceName(thisnRow,"");
+	Vector<Bool>   totalSolOk(thisnRow,False);
+	Vector<Float>  totalFit(thisnRow,0.0);
+	Vector<Float>  totalFitWt(thisnRow,0.0);
 	
 	// These vary
-	casacore::Vector<casacore::Int>    antenna1(thisnRow,0);
-	casacore::Cube<casacore::Complex>  gain(casacore::IPosition(3,nPar(),maxNumChan,thisnRow),casacore::Complex(0.0,0.0));
-	casacore::Cube<casacore::Bool>     solOk(nPar(),maxNumChan,thisnRow,false);
-	casacore::Cube<casacore::Float>    fit(1,maxNumChan,thisnRow,0.0);
-	casacore::Cube<casacore::Float>    fitWt(1,maxNumChan,thisnRow,0.0);
-	casacore::Cube<casacore::Bool>     flag(nPar(),maxNumChan,thisnRow,false);
-	casacore::Cube<casacore::Float>    snr(nPar(),maxNumChan,thisnRow,false);
+	Vector<Int>    antenna1(thisnRow,0);
+	Cube<Complex>  gain(IPosition(3,nPar(),maxNumChan,thisnRow),Complex(0.0,0.0));
+	Cube<Bool>     solOk(nPar(),maxNumChan,thisnRow,False);
+	Cube<Float>    fit(1,maxNumChan,thisnRow,0.0);
+	Cube<Float>    fitWt(1,maxNumChan,thisnRow,0.0);
+	Cube<Bool>     flag(nPar(),maxNumChan,thisnRow,False);
+	Cube<Float>    snr(nPar(),maxNumChan,thisnRow,False);
 
-	casacore::IPosition out(3,0,0,0);   // par, chan, row
-	casacore::IPosition in(4,0,0,0,0);  // par, chan, ant, slot
-	casacore::Int thisRow(0);
-	for (casacore::Int islot = 0; islot < nTime_(iSpw); islot++) {
+	IPosition out(3,0,0,0);   // par, chan, row
+	IPosition in(4,0,0,0,0);  // par, chan, ant, slot
+	Int thisRow(0);
+	for (Int islot = 0; islot < nTime_(iSpw); islot++) {
 	  in(3)=islot;
 	  if (thisSolOK(islot)) {
 	    
 	    // Fill slot-constant cols:
-	    casacore::Slice thisSlice(thisRow,nElem_);
+	    Slice thisSlice(thisRow,nElem_);
 	    time(thisSlice)=thisMJDTimeStamp(islot);
-	    casacore::Double dt=(thisMJDStop(islot) - thisMJDStart(islot));
+	    Double dt=(thisMJDStop(islot) - thisMJDStart(islot));
 	    if (dt<0.0) dt=1.0;
 	    interval(thisSlice)=dt;
 	    fieldId(thisSlice)=thisFieldId(islot);
@@ -1053,29 +1053,29 @@ template<class T> void CalSet<T>::store (const casacore::String& file,
 	    totalFitWt(thisSlice)=thisFitwt(islot);
 	    
 	    // Loop over the number of antennas
-	    for (casacore::Int iant = 0; iant < nElem_; iant++) {
+	    for (Int iant = 0; iant < nElem_; iant++) {
 	      out(2)=thisRow;
 	      in(2)=iant;
 	      // Antenna index
 	      antenna1(thisRow)=iant;
 	      
 
-	      gain.xyPlane(thisRow)(casacore::IPosition(2,0,0),casacore::IPosition(2,nPar()-1,nChan_(iSpw)-1))=
-		thisAntGain(casacore::IPosition(4,0,0,iant,islot),casacore::IPosition(4,nPar()-1,nChan_(iSpw)-1,iant,islot)).nonDegenerate(2);
+	      gain.xyPlane(thisRow)(IPosition(2,0,0),IPosition(2,nPar()-1,nChan_(iSpw)-1))=
+		thisAntGain(IPosition(4,0,0,iant,islot),IPosition(4,nPar()-1,nChan_(iSpw)-1,iant,islot)).nonDegenerate(2);
 
 	      
 	      // Per-chan fit pars
-	      for (casacore::Int ichan=0; ichan<nChan_(iSpw); ichan++) {
+	      for (Int ichan=0; ichan<nChan_(iSpw); ichan++) {
 		// Gain stats  (slot constant, per spw?)
 		//solOk(0,ichan,thisRow) = thisISolutionOK(iant,islot);
 		fit(0,ichan,thisRow) = thisIFit(iant,islot);
 		fitWt(0,ichan,thisRow) = thisIFitwt(iant,islot);
 
 
-		for (casacore::Int ipar=0; ipar<nPar(); ++ipar) {
-		  solOk(ipar,ichan,thisRow) = parOK(iSpw)(casacore::IPosition(4,ipar,ichan,iant,islot));
+		for (Int ipar=0; ipar<nPar(); ++ipar) {
+		  solOk(ipar,ichan,thisRow) = parOK(iSpw)(IPosition(4,ipar,ichan,iant,islot));
 		  flag(ipar,ichan,thisRow) = !solOk(ipar,ichan,thisRow);
-		  snr(ipar,ichan,thisRow) = parSNR(iSpw)(casacore::IPosition(4,ipar,ichan,iant,islot));
+		  snr(ipar,ichan,thisRow) = parSNR(iSpw)(IPosition(4,ipar,ichan,iant,islot));
 		}
 	      }
 	      
@@ -1090,7 +1090,7 @@ template<class T> void CalSet<T>::store (const casacore::String& file,
 	tab->addRowMain(thisnRow);
 	SolvableVisJonesMCol svjmcol(*tab);
 	
-	casacore::RefRows refRows(nMain,nMain+thisnRow-1);
+	RefRows refRows(nMain,nMain+thisnRow-1);
 	svjmcol.time().putColumnCells(refRows,time);
 	svjmcol.timeEP().putColumnCells(refRows,timeEP);
 	svjmcol.interval().putColumnCells(refRows,interval);

@@ -32,9 +32,9 @@ public:
 
 	ImageDecimator(
 		const SPCIIT image,
-		const casacore::Record *const region,
-		const casacore::String& maskInp,
-		const casacore::String& outname, casacore::Bool overwrite
+		const Record *const region,
+		const String& maskInp,
+		const String& outname, Bool overwrite
 	);
 
 	// destructor
@@ -42,13 +42,13 @@ public:
 
 	SPIIT decimate() const;
 
-	casacore::String getClass() const { const static casacore::String s = "ImageDecimator"; return s; }
+	String getClass() const { const static String s = "ImageDecimator"; return s; }
 
 	// every nth plane will be kept
-	void setFactor(casacore::uInt n);
+	void setFactor(uInt n);
 
 	// Set the pixel axis number along which the decimation will occur
-	void setAxis(casacore::uInt n);
+	void setAxis(uInt n);
 
 	// set the decimation function
 	void setFunction(ImageDecimatorData::Function f);
@@ -58,16 +58,16 @@ protected:
 		return CasacRegionManager::USE_ALL_STOKES;
 	}
 
-	inline std::vector<casacore::Coordinate::Type> _getNecessaryCoordinates() const {
-		return std::vector<casacore::Coordinate::Type>();
+	inline std::vector<Coordinate::Type> _getNecessaryCoordinates() const {
+		return std::vector<Coordinate::Type>();
 	}
 
-    inline casacore::Bool _supportsMultipleBeams() const {return false;}
+    inline Bool _supportsMultipleBeams() const {return False;}
 
-    inline casacore::Bool _supportsMultipleRegions() const {return true;}
+    inline Bool _supportsMultipleRegions() const {return True;}
 
 private:
-	casacore::uInt _axis, _factor;
+	uInt _axis, _factor;
 	ImageDecimatorData::Function _function;
 
 	// disallow default constructor

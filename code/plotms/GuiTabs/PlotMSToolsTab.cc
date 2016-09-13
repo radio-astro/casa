@@ -29,7 +29,6 @@
 #include <plotms/Actions/PlotMSAction.h>
 #include <plotms/Gui/PlotMSPlotter.qo.h>
 
-using namespace casacore;
 namespace casa {
 
 

@@ -30,7 +30,6 @@
 
 #include <display/Utilities/DisplayOptions.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	DisplayOptions::DisplayOptions() {
@@ -39,13 +38,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	Bool DisplayOptions::compatible(const DataType &compareme,
 	                                const DataType &tome) const {
-		if(compareme>=TpRecord) return false;
-		if(compareme==tome) return true;
+		if(compareme>=TpRecord) return False;
+		if(compareme==tome) return True;
 		if (compareme==TpFloat || compareme==TpDouble)
 			return (tome == TpDouble || tome == TpInt || tome ==TpFloat);
 		if (compareme==TpArrayFloat || compareme==TpArrayDouble)
 			return (tome==TpArrayFloat || tome == TpArrayInt || tome==TpArrayDouble);
-		return false;
+		return False;
 	}
 
 	Bool DisplayOptions::readOptionRecord(String &target, Bool &unsetTarget,
@@ -55,18 +54,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Bool result = readOptionRecord(target, error, rec, fieldname);
 		if (!error) {
 			result = (result || unsetTarget);
-			unsetTarget = false;
+			unsetTarget = False;
 			return result;
 		}
 		static String i_am_unset("i_am_unset");
 		// if we are here, we ought to look for an unset now...
 		if (!rec.isDefined(fieldname)) {
-			error = true;
-			return false;
+			error = True;
+			return False;
 		}
 		if (rec.dataType(fieldname) != TpRecord) {
-			error = true;
-			return false;
+			error = True;
+			return False;
 		}
 		Record subrec = rec.subRecord(fieldname);
 		String subfield("");
@@ -80,23 +79,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			}
 		}
 		if (subfield != i_am_unset) {
-			error = true;
-			return false;
+			error = True;
+			return False;
 		}
 		if (subrec.dataType(subfield) != TpString) {
-			error = true;
-			return false;
+			error = True;
+			return False;
 		}
 		String temp;
 		subrec.get(subfield, temp);
 		if (temp != i_am_unset) {
-			error = true;
-			return false;
+			error = True;
+			return False;
 		}
 
 		Bool ret = (!unsetTarget);
-		unsetTarget = true;
-		error = false;
+		unsetTarget = True;
+		error = False;
 		return ret;
 	}
 
@@ -107,11 +106,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				String temp;
 				rec.get(i_am_unset, temp);
 				if (temp == i_am_unset) {
-					return true;
+					return True;
 				}
 			}
 		}
-		return false;
+		return False;
 	}
 
 	DisplayOptions::DisplayOptions(const DisplayOptions &) {

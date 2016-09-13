@@ -76,7 +76,6 @@
 #include <QMessageBox>
 #include <limits>
 
-using namespace casacore;
 namespace casa {
 
 	const QString QtProfile::PLOT_TYPE_FLUX = "Flux Density";
@@ -411,7 +410,7 @@ namespace casa {
 			MPosition tposition;
 			MDirection tdirection;
 			specCoor.getReferenceConversion(tfreqtype, tepoch, tposition, tdirection);
-			freqtype = specCoor.frequencySystem(false); // false means: get the native type
+			freqtype = specCoor.frequencySystem(False); // false means: get the native type
 
 			if( check_native_frame && tfreqtype != freqtype ) { // there is an active conversion layer
 				// ask user if he/she wants to change to native frame
@@ -1429,7 +1428,7 @@ namespace casa {
 	}
 
 	bool QtProfile::generateProfile( Vector<Float>& resultXValues, Vector<Float>& resultYValues,
-			SHARED_PTR<casacore::ImageInterface<Float> > img,
+			SHARED_PTR<casa::ImageInterface<Float> > img,
 			const Vector<Double>& regionX, const Vector<Double>& regionY, String shape,
 			QtProfile::ExtrType combineType, String& unit, const String& coordinateType,
 			int qualityAxis, String restFreq, const String& frame){
@@ -1485,7 +1484,7 @@ namespace casa {
 
 
 	bool QtProfile::_generateProfile( Vector<Float>& resultXValues, Vector<Float>& resultYValues,
-			SHARED_PTR<const casacore::ImageInterface<Float> > imagePtr,
+			SHARED_PTR<const casa::ImageInterface<Float> > imagePtr,
 			const Vector<Double>& regionX, const Vector<Double>& regionY, String shape,
 			QtProfile::ExtrType combineType, String& unit, const String& coordinateType,
 			String restFreq, const String& frame){
@@ -1897,7 +1896,7 @@ namespace casa {
 
 		if (wCoord <0) {
 			// well, it REALLY should not get to here
-			QString msg="No spectral coordinate in image:\n" + QString((image->name(true)).c_str());
+			QString msg="No spectral coordinate in image:\n" + QString((image->name(True)).c_str());
 			messageFromProfile(msg);
 			return false;
 		}
@@ -1990,13 +1989,13 @@ namespace casa {
 		}
 
 		// attach a mask to the temp-image
-		Array<Bool> maskArray(profDim, true);
+		Array<Bool> maskArray(profDim, True);
 		ArrayLattice<Bool> maskLattice=ArrayLattice<Bool>(maskArray);
 		profile.attachMask(maskLattice);
 
 		// compile and set the miscInfo
 		TableRecord miscInfo;
-		miscInfo.define("inimage", image->name(true));
+		miscInfo.define("inimage", image->name(True));
 		miscInfo.setComment("inimage", "name input image");
 		miscInfo.define("position", position.toStdString());
 		miscInfo.setComment("position", "extraction position");
@@ -2013,65 +2012,65 @@ namespace casa {
 		// thats the default values for the call "ImageFITSConverter::ImageToFITS"
 		String error;
 		uInt memoryInMB(64);
-		Bool preferVelocity(true);
-		Bool opticalVelocity(true);
+		Bool preferVelocity(True);
+		Bool opticalVelocity(True);
 		Int BITPIX(-32);
 		Float minPix(1.0);
 		Float maxPix(-1.0);
-		Bool allowOverwrite(false);
-		Bool degenerateLast(false);
-		Bool verbose(true);
-		Bool stokesLast(false);
-		Bool preferWavelength(false);
-		Bool preferAirWavelength(false);
+		Bool allowOverwrite(False);
+		Bool degenerateLast(False);
+		Bool verbose(True);
+		Bool stokesLast(False);
+		Bool preferWavelength(False);
+		Bool preferAirWavelength(False);
 		String origin("CASA Viewer / Spectral Profiler");
-		allowOverwrite=true;
+		allowOverwrite=True;
 		String outFile(fn.toStdString());
 
 		// find the "natural" flags for the spectral axis
 		SpectralCoordinate::SpecType spcType = (cSys.spectralCoordinate(wCoord)).nativeType();
 		switch (spcType) {
 		case SpectralCoordinate::FREQ:
-			preferVelocity      = false;
-			opticalVelocity     = false;
-			preferWavelength    = false;
-			preferAirWavelength = false;
+			preferVelocity      = False;
+			opticalVelocity     = False;
+			preferWavelength    = False;
+			preferAirWavelength = False;
 			break;
 		case SpectralCoordinate::VRAD:
-			preferVelocity      = true;
-			opticalVelocity     = false;
-			preferWavelength    = false;
-			preferAirWavelength = false;
+			preferVelocity      = True;
+			opticalVelocity     = False;
+			preferWavelength    = False;
+			preferAirWavelength = False;
 			break;
 		case SpectralCoordinate::VOPT:
-			preferVelocity      = true;
-			opticalVelocity     = true;
-			preferWavelength    = false;
-			preferAirWavelength = false;
+			preferVelocity      = True;
+			opticalVelocity     = True;
+			preferWavelength    = False;
+			preferAirWavelength = False;
 			break;
 		case SpectralCoordinate::BETA:
-			preferVelocity      = false;
-			opticalVelocity     = false;
-			preferWavelength    = false;
-			preferAirWavelength = false;
+			preferVelocity      = False;
+			opticalVelocity     = False;
+			preferWavelength    = False;
+			preferAirWavelength = False;
 			break;
 		case SpectralCoordinate::WAVE:
-			preferVelocity      = false;
-			opticalVelocity     = false;
-			preferWavelength    = true;
-			preferAirWavelength = false;
+			preferVelocity      = False;
+			opticalVelocity     = False;
+			preferWavelength    = True;
+			preferAirWavelength = False;
 			break;
 		case SpectralCoordinate::AWAV:
-			preferVelocity      = false;
-			opticalVelocity     = false;
-			preferWavelength    = true;
-			preferAirWavelength = true;
+			preferVelocity      = False;
+			opticalVelocity     = False;
+			preferWavelength    = True;
+			preferAirWavelength = True;
 			break;
 		default:
-			preferVelocity      = false;
-			opticalVelocity     = false;
-			preferWavelength    = false;
-			preferAirWavelength = false;
+			preferVelocity      = False;
+			opticalVelocity     = False;
+			preferWavelength    = False;
+			preferAirWavelength = False;
 		}
 
 		try {
@@ -2973,8 +2972,8 @@ namespace casa {
 								}
 							}
 						}
-						xRel.resize(count, true);
-						yRel.resize(count, true);
+						xRel.resize(count, True);
+						yRel.resize(count, True);
 						addOverplotToCanvas( ana, xRel, yRel, ky );
 					}
 					else {

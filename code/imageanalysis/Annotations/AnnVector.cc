@@ -25,7 +25,6 @@
 
 #include <imageanalysis/Annotations/AnnVector.h>
 
-using namespace casacore;
 namespace casa {
 
 AnnVector::AnnVector(

@@ -30,17 +30,13 @@
 #define SYNTHESIS_CLARKCLEANIMAGESKYMODEL_H
 
 #include <synthesis/MeasurementComponents/CleanImageSkyModel.h>
-namespace casacore{
-
-template <class T> class SubLattice;
-template <class T> class RO_LatticeIterator;
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //forward
 class SkyEquation;
 class ClarkCleanProgress;
+template <class T> class SubLattice;
+template <class T> class RO_LatticeIterator;
 // <summary> 
 // Clark Image Sky Model: Image Sky Model implementing the Clark Clean algorithm
 // </summary>
@@ -97,21 +93,21 @@ public:
   ~ClarkCleanImageSkyModel();
 
   // Solve for this SkyModel
-  virtual casacore::Bool solve (SkyEquation& me);
+  virtual Bool solve (SkyEquation& me);
 
   //Do the image-based clean
   //iterused and maxresidual are return values
-  static casacore::Bool clean(casacore::ImageInterface<casacore::Float>& image, casacore::ImageInterface<casacore::Float> & residual, casacore::ImageInterface<casacore::Float>& psf, 
-		    casacore::ImageInterface<casacore::Float>& mask, casacore::Float& maxresidual, casacore::Int& iterused, casacore::Float gain, casacore::Int numIter,  casacore::Float thresh, casacore::Float cycleFactor, casacore::Bool useMask=false, casacore::Bool doPolJoint=true);
+  static Bool clean(ImageInterface<Float>& image, ImageInterface<Float> & residual, ImageInterface<Float>& psf, 
+		    ImageInterface<Float>& mask, Float& maxresidual, Int& iterused, Float gain, Int numIter,  Float thresh, Float cycleFactor, Bool useMask=False, Bool doPolJoint=True);
  
 private:
    //make a mask sub-lattice
 
-  static casacore::Lattice<casacore::Float>* makeMaskSubLat(const casacore::Int& nx, 
-				 const casacore::Int& ny, casacore::Int& newNx, casacore::Int& newNy,
-				    casacore::RO_LatticeIterator<casacore::Float>& maskIter,
-				    casacore::Int& xbeg, casacore::Int& xend, 
-				    casacore::Int& ybeg, casacore::Int& yend);
+  static Lattice<Float>* makeMaskSubLat(const Int& nx, 
+				 const Int& ny, Int& newNx, Int& newNy,
+				    RO_LatticeIterator<Float>& maskIter,
+				    Int& xbeg, Int& xend, 
+				    Int& ybeg, Int& yend);
 
   ClarkCleanProgress *itsProgress;
 

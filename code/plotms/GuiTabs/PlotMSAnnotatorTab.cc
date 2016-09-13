@@ -31,7 +31,6 @@
 #include <plotms/Gui/PlotMSAnnotator.h>
 #include <plotms/Gui/PlotMSPlotter.qo.h>
 
-using namespace casacore;
 namespace casa {
 
 ////////////////////////////////////

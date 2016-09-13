@@ -35,7 +35,6 @@
 #include "UtilJ.h"
 
 using namespace std;
-using namespace casacore;
 using namespace casa::utilj;
 
 namespace casa {
@@ -221,7 +220,7 @@ LockGuardInverse::~LockGuardInverse ()
 Logger* Logger::singleton_p = NULL;
 
 Logger::Logger ()
-: loggingStarted_p (false),
+: loggingStarted_p (False),
   nameMutex_p (new Mutex ())
 {}
 
@@ -312,7 +311,7 @@ Logger::start (const char * filename)
 
         loggerThread_p ->startThread();
 
-        loggingStarted_p = true;
+        loggingStarted_p = True;
     }
 }
 
@@ -357,15 +356,15 @@ Logger::LoggerThread::run ()
 
         if (logFilename_p.empty () || logFilename_p == "cerr" || logFilename_p == "stderr"){
             logStream_p = & cerr;
-            deleteStream_p = false;
+            deleteStream_p = False;
         }
         else if (logFilename_p == "cout" || logFilename_p == "stdout"){
             logStream_p = & cout;
-            deleteStream_p = false;
+            deleteStream_p = False;
         }
         else{
             logStream_p = new ofstream (logFilename_p.c_str(), ios::out);
-            deleteStream_p = true;
+            deleteStream_p = True;
         }
 
         * logStream_p << utilj::getTimestamp() << ": Logging started, tid=" << gettid() << endl;
@@ -373,7 +372,7 @@ Logger::LoggerThread::run ()
         // Loop waiting on the drain semaphore.  This should be incremented once
         // every time users add a block of text to the queue.
 
-        while (true){
+        while (True){
 
             string text;
 
@@ -457,7 +456,7 @@ Logger::LoggerThread::terminate ()
 Mutex::Mutex ()
 {
     impl_p = new MutexImpl ();
-    isLocked_p = false;
+    isLocked_p = False;
 }
 
 Mutex::~Mutex ()
@@ -486,7 +485,7 @@ Mutex::lock ()
 {
     impl_p->mutex_p.lock();
     impl_p->lockingThreadId_p = std::this_thread::get_id ();
-    isLocked_p = true;
+    isLocked_p = True;
 }
 
 /*
@@ -526,7 +525,7 @@ Mutex::trylock ()
 void
 Mutex::unlock ()
 {
-    isLocked_p = false;
+    isLocked_p = False;
     impl_p->mutex_p.unlock ();
 }
 
@@ -662,12 +661,12 @@ Semaphore::wait (int milliseconds)
     } while (code != 0 && errorCode == EINTR);
 
 
-    Bool gotSemaphore = true;
+    Bool gotSemaphore = True;
 
     if (code == 0){
-        gotSemaphore = true;
+        gotSemaphore = True;
     } else if (errno == ETIMEDOUT){
-        gotSemaphore = false;
+        gotSemaphore = False;
     } else {
         ThrowIfError (errno, String::format ("Mutex::lock (%d)", milliseconds));
     }

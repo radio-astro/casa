@@ -52,7 +52,7 @@ class MirDataBufferIter;
 //
 // <motivation>
 // MSes filled from Miriad data feature multiple windows of differing shapes.  
-// Performance during casacore::MS reads can be aided by collecting together casacore::MS table 
+// Performance during MS reads can be aided by collecting together MS table 
 // records of the same shape (e.g. of the same window).  MirFiller accoplishes
 // this by reading all baselines from a single timestamp at once, so that 
 // they written out in order of spectral window.  This class provides a 
@@ -79,11 +79,11 @@ private:
     Boolean upd;
     Boolean hasmore;
     
-    casacore::Block<int> pol;
-    casacore::Block<double *> preamble;
-    casacore::Block<float *> narrow;
-    casacore::Block<float *> wide;
-    casacore::Int nrec, nnar, nwide;
+    Block<int> pol;
+    Block<double *> preamble;
+    Block<float *> narrow;
+    Block<float *> wide;
+    Int nrec, nnar, nwide;
 
     MirDataBuffer(MirDataBuffer&);
 public:
@@ -93,38 +93,38 @@ public:
     // return true if there is still data to be read from the dataset
     Boolean hasMore() { return hasmore; }
 
-    // set the variable update state.  A value of true means that some
-    // variables have changed and should be checked for new values.  false
+    // set the variable update state.  A value of True means that some
+    // variables have changed and should be checked for new values.  False
     // means that the variables have not changed since the last time 
     // they were checked.
     void varUpdated(Boolean val) { upd = val; }
 
-    // return the variable update state.  A value of true means that some
-    // variables have changed and should be checked for new values.  false
+    // return the variable update state.  A value of True means that some
+    // variables have changed and should be checked for new values.  False
     // means that the variables have not changed since the last time 
     // they were checked.
     Boolean isVarUpdated() { return upd; }
 
     // return a pointer to the i-th record in this buffer
-    float *operator[](casacore::Int i) { return recs[i]; }
+    float *operator[](Int i) { return recs[i]; }
 
     // return the preamble for the i-th record
-    double *getPreamble(casacore::Int i) { return preamble[i]; }
+    double *getPreamble(Int i) { return preamble[i]; }
 
     // return the current Miriad timestamp
     double getTime() { return preamble[0][3]; }
 
     // return the baseline number for the i-th record
-    casacore::Int getBaselineNum(casacore::Int i) { return casacore::Int(preamble[i][4]); }
+    Int getBaselineNum(Int i) { return Int(preamble[i][4]); }
 
     // return the baseline vector as a 3-element array holding u, v, & w
-    double *getBaselineVec(casacore::Int i) { return preamble[i]; }
+    double *getBaselineVec(Int i) { return preamble[i]; }
 
     // return the Miriad polarization code for the i-th record
-    casacore::Int getPol(casacore::Int i) { return pol[i]; }
+    Int getPol(Int i) { return pol[i]; }
 
     // return the number of records held in this buffer
-    casacore::Int size() { nrec; }
+    Int size() { nrec; }
 
     // update the number of records held by the buffer
     
@@ -144,7 +144,7 @@ public:
             narrow[n] = tmpnar;
             wide[n] = tmpwid;
 
-            hasmore = false;
+            hasmore = False;
             n=1;
         } else {
             n=0;

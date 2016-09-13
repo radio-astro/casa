@@ -37,7 +37,6 @@
 #include <qwt_plot_renderer.h>
 #endif
 
-using namespace casacore;
 namespace casa {
 
 /////////////////////////

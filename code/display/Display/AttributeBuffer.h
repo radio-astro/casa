@@ -33,13 +33,9 @@
 #include <casa/Arrays/Vector.h>
 #include <display/Display/AttValBase.h>
 
-namespace casacore{
-
-	class String;
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+	class String;
 	class AttValBase;
 	class Attribute;
 
@@ -146,11 +142,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // information is passed and eg. what type it is. The code there looks like:
 //
 // <srcblock>
-// casacore::Bool WorldCanvasHolder::sizeControlEH(WorldCanvas *wCanvas)
+// Bool WorldCanvasHolder::sizeControlEH(WorldCanvas *wCanvas)
 //
 //   AttributeBuffer sizeControlAtts;
 //
-//    // rewind the casacore::List of DisplayDatas registered withe this WorldCanvasHolder
+//    // rewind the List of DisplayDatas registered withe this WorldCanvasHolder
 //    displayListIter->toStart();
 //
 //    // temp
@@ -158,11 +154,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 //    // loop over DisplayDatas that are registered
 //    while ( !displayListIter->atEnd() ) {
-//      // get DisplayData from casacore::List and let this displaydata do its sizeControl
+//      // get DisplayData from List and let this displaydata do its sizeControl
 //      dData = (DisplayData *) displayListIter->getRight();
 //      if ( !dData->sizeControl(*this, sizeControlAtts)) {
 //        // something is very wrong so abort refresh
-//        return false;
+//        return False;
 //      }
 //      // next DisplayData
 //      displayListIter++;
@@ -173,7 +169,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //    wCanvas->setAttributes(sizeControlAtts);
 //
 //    // things went ok
-//    return true;
+//    return True;
 //  }
 // </srcblock>
 // </synopsis>
@@ -210,70 +206,70 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		~AttributeBuffer();
 
 		// Return number of Attributes in the buffer
-		casacore::Int  nelements() const;
+		Int  nelements() const;
 
 		// Define  new Attributes. If an Attribute of the same name exists, nothing
-		// happens. If <src>permanent == true</src>, the Attribute cannot be deleted
+		// happens. If <src>permanent == True</src>, the Attribute cannot be deleted
 		// from the Buffer.
 		// <group>
 		void add(const AttributeBuffer& otherBuf);
-		void add(const Attribute& newAttribute, const casacore::Bool permanent = false);
+		void add(const Attribute& newAttribute, const Bool permanent = False);
 		//</group>
 
-		// Add new Attributes. For type casacore::uInt, casacore::Int, casacore::Float and casacore::Double, the Attribute
-		// has tolerance (see AttributeValueTol), for casacore::Bool and casacore::String it has not
+		// Add new Attributes. For type uInt, Int, Float and Double, the Attribute
+		// has tolerance (see AttributeValueTol), for Bool and String it has not
 		// (obviously). <src>strict</src> defines how Attribute match. See
 		// AttributeValue for the explanation of <src>strict</src> <group>
-		void add(const casacore::String& name, const casacore::uInt newValue,
-		         const casacore::uInt tolerance = 0, const casacore::Bool strict = false,
-		         const casacore::Bool permanent = false);
+		void add(const String& name, const uInt newValue,
+		         const uInt tolerance = 0, const Bool strict = False,
+		         const Bool permanent = False);
 
-		void add(const casacore::String& name, const casacore::Int newValue,
-		         const casacore::Int tolerance = 0, const casacore::Bool strict = false,
-		         const casacore::Bool permanent = false);
+		void add(const String& name, const Int newValue,
+		         const Int tolerance = 0, const Bool strict = False,
+		         const Bool permanent = False);
 
-		void add(const casacore::String& name, const casacore::Float newValue,
-		         const casacore::Float tolerance = 0.0, const casacore::Bool strict = false,
-		         const casacore::Bool permanent = false);
+		void add(const String& name, const Float newValue,
+		         const Float tolerance = 0.0, const Bool strict = False,
+		         const Bool permanent = False);
 
-		void add(const casacore::String& name, const casacore::Double newValue,
-		         const casacore::Double tolerance = 0.0, const casacore::Bool strict = false,
-		         const casacore::Bool permanent = false);
+		void add(const String& name, const Double newValue,
+		         const Double tolerance = 0.0, const Bool strict = False,
+		         const Bool permanent = False);
 
-		void add(const casacore::String& name, const casacore::Bool newValue,
-		         const casacore::Bool strict = false, const casacore::Bool permanent = false);
+		void add(const String& name, const Bool newValue,
+		         const Bool strict = False, const Bool permanent = False);
 
-		void add(const casacore::String& name, const casacore::String& newValue,
-		         const casacore::Bool strict = false, const casacore::Bool permanent = false);
+		void add(const String& name, const String& newValue,
+		         const Bool strict = False, const Bool permanent = False);
 
-		void add(const casacore::String& name, const casacore::Quantity newValue,
-		         const casacore::Bool strict = false, const casacore::Bool permanent = false);
+		void add(const String& name, const Quantity newValue,
+		         const Bool strict = False, const Bool permanent = False);
 
 
-		void add(const casacore::String& name, const casacore::Vector<casacore::uInt>& newValue,
-		         const casacore::uInt tolerance = 0, const casacore::Bool strict = false,
-		         const casacore::Bool permanent = false);
+		void add(const String& name, const Vector<uInt>& newValue,
+		         const uInt tolerance = 0, const Bool strict = False,
+		         const Bool permanent = False);
 
-		void add(const casacore::String& name, const casacore::Vector<casacore::Int>& newValue,
-		         const casacore::Int tolerance = 0, const casacore::Bool strict = false,
-		         const casacore::Bool permanent = false);
+		void add(const String& name, const Vector<Int>& newValue,
+		         const Int tolerance = 0, const Bool strict = False,
+		         const Bool permanent = False);
 
-		void add(const casacore::String& name, const casacore::Vector<casacore::Float>& newValue,
-		         const casacore::Float tolerance = 0.0, const casacore::Bool strict = false,
-		         const casacore::Bool permanent = false);
+		void add(const String& name, const Vector<Float>& newValue,
+		         const Float tolerance = 0.0, const Bool strict = False,
+		         const Bool permanent = False);
 
-		void add(const casacore::String& name, const casacore::Vector<casacore::Double>& newValue,
-		         const casacore::Double tolerance = 0.0, const casacore::Bool strict = false,
-		         const casacore::Bool permanent = false);
+		void add(const String& name, const Vector<Double>& newValue,
+		         const Double tolerance = 0.0, const Bool strict = False,
+		         const Bool permanent = False);
 
-		void add(const casacore::String& name, const casacore::Vector<casacore::Bool>& newValue,
-		         const casacore::Bool strict = false, const casacore::Bool permanent = false);
+		void add(const String& name, const Vector<Bool>& newValue,
+		         const Bool strict = False, const Bool permanent = False);
 
-		void add(const casacore::String& name, const casacore::Vector<casacore::String>& newValue,
-		         const casacore::Bool strict = false, const casacore::Bool permanent = false);
+		void add(const String& name, const Vector<String>& newValue,
+		         const Bool strict = False, const Bool permanent = False);
 
-		void add(const casacore::String& name, const casacore::Vector<casacore::Quantity>& newValue,
-		         const casacore::Bool strict = false, const casacore::Bool permanent = false);
+		void add(const String& name, const Vector<Quantity>& newValue,
+		         const Bool strict = False, const Bool permanent = False);
 
 		// </group>
 
@@ -282,63 +278,63 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// AttributeValuePoiTol. This means that if the Attribute is modified, the
 		// variable used to define the Attribute also changes and vice versa.
 		// <group>
-		void add(const casacore::String& name,  casacore::uInt *newValue,
-		         const casacore::uInt tolerance = 0, const casacore::Bool strict = false,
-		         const casacore::Bool permanent = false);
+		void add(const String& name,  uInt *newValue,
+		         const uInt tolerance = 0, const Bool strict = False,
+		         const Bool permanent = False);
 
-		void add(const casacore::String& name,  casacore::Int *newValue,
-		         const casacore::Int tolerance = 0, const casacore::Bool strict = false,
-		         const casacore::Bool permanent = false);
+		void add(const String& name,  Int *newValue,
+		         const Int tolerance = 0, const Bool strict = False,
+		         const Bool permanent = False);
 
-		void add(const casacore::String& name, casacore::Float *newValue,
-		         const casacore::Float tolerance = 0.0, const casacore::Bool strict = false,
-		         const casacore::Bool permanent = false);
+		void add(const String& name, Float *newValue,
+		         const Float tolerance = 0.0, const Bool strict = False,
+		         const Bool permanent = False);
 
-		void add(const casacore::String& name, casacore::Double  *newValue,
-		         const casacore::Double tolerance = 0.0, const casacore::Bool strict = false,
-		         const casacore::Bool permanent = false);
+		void add(const String& name, Double  *newValue,
+		         const Double tolerance = 0.0, const Bool strict = False,
+		         const Bool permanent = False);
 
-		void add(const casacore::String& name, casacore::Bool *newValue,
-		         const casacore::Bool strict = false, const casacore::Bool permanent = false);
+		void add(const String& name, Bool *newValue,
+		         const Bool strict = False, const Bool permanent = False);
 
-		void add(const casacore::String& name, casacore::String *newValue,
-		         const casacore::Bool strict = false, const casacore::Bool permanent = false);
+		void add(const String& name, String *newValue,
+		         const Bool strict = False, const Bool permanent = False);
 
-		void add(const casacore::String& name, casacore::Quantity *newValue,
-		         const casacore::Bool strict = false, const casacore::Bool permanent = false);
+		void add(const String& name, Quantity *newValue,
+		         const Bool strict = False, const Bool permanent = False);
 
 
-		void add(const casacore::String& name, casacore::Vector<casacore::uInt> *newValue,
-		         const casacore::uInt tolerance = 0, const casacore::Bool strict = false,
-		         const casacore::Bool permanent = false);
+		void add(const String& name, Vector<uInt> *newValue,
+		         const uInt tolerance = 0, const Bool strict = False,
+		         const Bool permanent = False);
 
-		void add(const casacore::String& name, casacore::Vector<casacore::Int> *newValue,
-		         const casacore::Int tolerance = 0, const casacore::Bool strict = false,
-		         const casacore::Bool permanent = false);
+		void add(const String& name, Vector<Int> *newValue,
+		         const Int tolerance = 0, const Bool strict = False,
+		         const Bool permanent = False);
 
-		void add(const casacore::String& name,  casacore::Vector<casacore::Float> *newValue,
-		         const casacore::Float tolerance = 0.0, const casacore::Bool strict = false,
-		         const casacore::Bool permanent = false);
+		void add(const String& name,  Vector<Float> *newValue,
+		         const Float tolerance = 0.0, const Bool strict = False,
+		         const Bool permanent = False);
 
-		void add(const casacore::String& name,  casacore::Vector<casacore::Double> *newValue,
-		         const casacore::Double tolerance = 0.0, const casacore::Bool strict = false,
-		         const casacore::Bool permanent = false);
+		void add(const String& name,  Vector<Double> *newValue,
+		         const Double tolerance = 0.0, const Bool strict = False,
+		         const Bool permanent = False);
 
-		void add(const casacore::String& name,  casacore::Vector<casacore::Bool> *newValue,
-		         const casacore::Bool strict = false, const casacore::Bool permanent = false);
+		void add(const String& name,  Vector<Bool> *newValue,
+		         const Bool strict = False, const Bool permanent = False);
 
-		void add(const casacore::String& name, casacore::Vector<casacore::String> *newValue,
-		         const casacore::Bool strict = false, const casacore::Bool permanent = false);
+		void add(const String& name, Vector<String> *newValue,
+		         const Bool strict = False, const Bool permanent = False);
 
-		void add(const casacore::String& name, casacore::Vector<casacore::Quantity> *newValue,
-		         const casacore::Bool strict = false, const casacore::Bool permanent = false);
+		void add(const String& name, Vector<Quantity> *newValue,
+		         const Bool strict = False, const Bool permanent = False);
 
 		// </group>
 
 
 		// Set the value of an Attribute. If the Attribute does not exist, it is
 		// created (using the corresponding add function with permanent set to
-		// false), otherwise the value of the existing Attribute, if it is of the
+		// False), otherwise the value of the existing Attribute, if it is of the
 		// correct type) will be changed. If the Attribute has a different type than
 		// the variable used in the set function, nothing happens (but I may change
 		// my mind and  throw an exception).
@@ -346,75 +342,75 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void set(const AttributeBuffer& otherBuf);
 		void set(const Attribute& newAttribute);
 
-		void set(const casacore::String& name, const casacore::uInt newValue,
-		         const casacore::uInt tolerance = 0, const casacore::Bool strict = false);
+		void set(const String& name, const uInt newValue,
+		         const uInt tolerance = 0, const Bool strict = False);
 
-		void set(const casacore::String& name, const casacore::Int newValue,
-		         const casacore::Int tolerance = 0, const casacore::Bool strict = false);
+		void set(const String& name, const Int newValue,
+		         const Int tolerance = 0, const Bool strict = False);
 
-		void set(const casacore::String& name, const casacore::Float newValue,
-		         const casacore::Float tolerance = 0.0, const casacore::Bool strict = false);
+		void set(const String& name, const Float newValue,
+		         const Float tolerance = 0.0, const Bool strict = False);
 
-		void set(const casacore::String& name, const casacore::Double newValue,
-		         const casacore::Double tolerance = 0.0, const casacore::Bool strict = false);
+		void set(const String& name, const Double newValue,
+		         const Double tolerance = 0.0, const Bool strict = False);
 
-		void set(const casacore::String& name, const casacore::Bool newValue,
-		         const casacore::Bool strict = false);
+		void set(const String& name, const Bool newValue,
+		         const Bool strict = False);
 
-		void set(const casacore::String& name, const casacore::String& newValue,
-		         const casacore::Bool strict = false);
+		void set(const String& name, const String& newValue,
+		         const Bool strict = False);
 
-		void set(const casacore::String& name, const casacore::Quantity newValue,
-		         const casacore::Bool strict = false);
+		void set(const String& name, const Quantity newValue,
+		         const Bool strict = False);
 
 
-		void set(const casacore::String& name, const casacore::Vector<casacore::uInt>& newValue,
-		         const casacore::uInt tolerance = 0, const casacore::Bool strict = false);
+		void set(const String& name, const Vector<uInt>& newValue,
+		         const uInt tolerance = 0, const Bool strict = False);
 
-		void set(const casacore::String& name, const casacore::Vector<casacore::Int>& newValue,
-		         const casacore::Int tolerance = 0, const casacore::Bool strict = false);
+		void set(const String& name, const Vector<Int>& newValue,
+		         const Int tolerance = 0, const Bool strict = False);
 
-		void set(const casacore::String& name, const casacore::Vector<casacore::Float>& newValue,
-		         const casacore::Float tolerance = 0.0, const casacore::Bool strict = false);
+		void set(const String& name, const Vector<Float>& newValue,
+		         const Float tolerance = 0.0, const Bool strict = False);
 
-		void set(const casacore::String& name, const casacore::Vector<casacore::Double>& newValue,
-		         const casacore::Double tolerance = 0.0, const casacore::Bool strict = false);
+		void set(const String& name, const Vector<Double>& newValue,
+		         const Double tolerance = 0.0, const Bool strict = False);
 
-		void set(const casacore::String& name, const casacore::Vector<casacore::Bool>& newValue,
-		         const casacore::Bool strict = false);
+		void set(const String& name, const Vector<Bool>& newValue,
+		         const Bool strict = False);
 
-		void set(const casacore::String& name, const casacore::Vector<casacore::String>& newValue,
-		         const casacore::Bool strict = false);
+		void set(const String& name, const Vector<String>& newValue,
+		         const Bool strict = False);
 
-		void set(const casacore::String& name, const casacore::Vector<casacore::Quantity>& newValue,
-		         const casacore::Bool strict = false);
+		void set(const String& name, const Vector<Quantity>& newValue,
+		         const Bool strict = False);
 
 		// </group>
 
-		// Get tha value of the named Attribute.  Returns <src>true</src> for
-		// success, and <src>false</src> for failure.  This can happen if the
+		// Get tha value of the named Attribute.  Returns <src>True</src> for
+		// success, and <src>False</src> for failure.  This can happen if the
 		// caller asked for the wrong type.
-		template <class T> casacore::Bool getValue(const casacore::String &name, casacore::Vector<T> &value) const;
-		template <class T> casacore::Bool getValue(const casacore::String &name, T &value) const;
+		template <class T> Bool getValue(const String &name, Vector<T> &value) const;
+		template <class T> Bool getValue(const String &name, T &value) const;
 
 		// Get the pointer to the Attribute if it exists, else get 0
-		Attribute *getAttribute(const casacore::String& name) const;
+		Attribute *getAttribute(const String& name) const;
 
 		// Get pointer to the AttributeValue if it exists, else get 0
-		AttributeValueBase *getAttributeValue(const casacore::String& name) const;
+		AttributeValueBase *getAttributeValue(const String& name) const;
 
 		// Get the data type of the Attribute
-		AttValue::ValueType getDataType(const casacore::String& name) const;
+		AttValue::ValueType getDataType(const String& name) const;
 
-		// casacore::Function to see if Attribute res matches any Attribute in the
+		// Function to see if Attribute res matches any Attribute in the
 		// AttributeBuffer *this.
-		casacore::Bool matches(const Attribute& res) const;
+		Bool matches(const Attribute& res) const;
 
-		// casacore::Function to see if  every Attribute in the AttributeBuffer resBuf
+		// Function to see if  every Attribute in the AttributeBuffer resBuf
 		// matches every Attribute in the AttributeBuffer *this. Returns
-		// true if this is the case, returns false if for at least one Attribute
+		// True if this is the case, returns False if for at least one Attribute
 		// in resBuf there is a mismatch.
-		casacore::Bool matches(const AttributeBuffer& resBuf) const;
+		Bool matches(const AttributeBuffer& resBuf) const;
 
 		// AttributeBuffer addition arithmetic.  Go through <src>*this</src>
 		// buffer, and for those Attributes who have equivalents in
@@ -424,12 +420,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Remove Attributes from the AttributeBuffer. Only works on Attributes that
 		// are not permanent
 		// <group>
-		void remove(const casacore::String& name);
+		void remove(const String& name);
 		void clear();
 		// </group>
 
 		// Check if an Attribute with name name exists
-		casacore::Bool exists(const casacore::String& name) const;
+		Bool exists(const String& name) const;
 
 		// Add the Attributes of *this to other
 		void addBuff(AttributeBuffer& other) const;
@@ -439,19 +435,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	private:
 
-		friend std::ostream &operator<<(std::ostream &, AttributeBuffer &);
+		friend ostream &operator<<(ostream &, AttributeBuffer &);
 
-		// casacore::PtrBlock for the Attributes. Should change this to a list
-		casacore::PtrBlock<Attribute *> attributes;
+		// PtrBlock for the Attributes. Should change this to a list
+		PtrBlock<Attribute *> attributes;
 
 		// Store if an Attribute is permamnent or not
-		casacore::Block<casacore::Bool> nonDeletable;
+		Block<Bool> nonDeletable;
 
 		// Internal routine to add an Attribute to the Buffer
-		void addAttributeToBuffer(Attribute *newAttribute, const casacore::Bool permanent);
+		void addAttributeToBuffer(Attribute *newAttribute, const Bool permanent);
 
 		// Check if an Attribute exists and return the index in the PtrBlock
-		casacore::Bool exists(const casacore::String& name, casacore::Int& found) const;
+		Bool exists(const String& name, Int& found) const;
 
 		// Remove Attributes from the AttributeBuffer. Also erases  Attributes that
 		// are permanent. Only used in operator=.
@@ -459,7 +455,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	};
 
-	std::ostream &operator<<(std::ostream &os, AttributeBuffer &ab);
+	ostream &operator<<(ostream &os, AttributeBuffer &ab);
 
 
 } //# NAMESPACE CASA - END

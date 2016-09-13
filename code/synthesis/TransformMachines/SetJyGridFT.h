@@ -82,14 +82,14 @@ public:
   // that location iso the image center.
   // <group>
 
-  SetJyGridFT(casacore::Long cachesize, casacore::Int tilesize, casacore::String convType,
-	 casacore::MPosition mLocation, casacore::MDirection mTangent, casacore::Float passing=1.0,
-	 casacore::Bool usezero=true, casacore::Bool useDoublePrec=false,
-	      const casacore::Vector<casacore::Double>& freqscale=casacore::Vector<casacore::Double>(1, 0.0), const casacore::Vector<casacore::Double>& scale=casacore::Vector<casacore::Double>(1, 1.0));
+  SetJyGridFT(Long cachesize, Int tilesize, String convType,
+	 MPosition mLocation, MDirection mTangent, Float passing=1.0,
+	 Bool usezero=True, Bool useDoublePrec=False,
+	      const Vector<Double>& freqscale=Vector<Double>(1, 0.0), const Vector<Double>& scale=Vector<Double>(1, 1.0));
   // </group>
 
-  // Construct from a casacore::Record containing the GridFT state
-  SetJyGridFT(const casacore::RecordInterface& stateRec);
+  // Construct from a Record containing the GridFT state
+  SetJyGridFT(const RecordInterface& stateRec);
 
   // Copy constructor
   SetJyGridFT(const SetJyGridFT &other);
@@ -103,7 +103,7 @@ public:
   virtual FTMachine* cloneFTM();
   // Initialize transform to Visibility plane using the image
   // as a template. The image is loaded and Fourier transformed.
-  virtual void initializeToVis(casacore::ImageInterface<casacore::Complex>& image,
+  virtual void initializeToVis(ImageInterface<Complex>& image,
 		       const VisBuffer& vb);
   
   // Finalize transform to Visibility plane: flushes the image
@@ -111,17 +111,17 @@ public:
   //void finalizeToVis();
 
   // Get actual coherence from grid by degridding
-  void get(VisBuffer& vb, casacore::Int row=-1);
+  void get(VisBuffer& vb, Int row=-1);
 
   
   // Save and restore the GridFT to and from a record
-  virtual casacore::Bool toRecord(casacore::String& error, casacore::RecordInterface& outRec, 
-			casacore::Bool withImage=false, const casacore::String diskimage="");
-  virtual casacore::Bool fromRecord(casacore::String& error, const casacore::RecordInterface& inRec);
+  virtual Bool toRecord(String& error, RecordInterface& outRec, 
+			Bool withImage=False, const String diskimage="");
+  virtual Bool fromRecord(String& error, const RecordInterface& inRec);
 
-  virtual void setScale(const casacore::Vector<casacore::Double>& freq, const casacore::Vector<casacore::Double>& scale);
+  virtual void setScale(const Vector<Double>& freq, const Vector<Double>& scale);
 
-  virtual casacore::String name() const;
+  virtual String name() const;
 
 
 protected:
@@ -132,9 +132,9 @@ protected:
   //Prepare the grid for degridding
   //void prepGridForDegrid();
 
-  casacore::Vector<casacore::Double> freqscale_p;
-  casacore::Vector<casacore::Double> scale_p;
-  casacore::Vector<casacore::Double> interpscale_p;
+  Vector<Double> freqscale_p;
+  Vector<Double> scale_p;
+  Vector<Double> interpscale_p;
 
 
 

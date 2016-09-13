@@ -22,7 +22,6 @@
 
 #include <flagging/Flagging/FlagAgentExtension.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 FlagAgentExtension::FlagAgentExtension(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube):
@@ -56,7 +55,7 @@ void FlagAgentExtension::setAgentParameters(Record config)
 	}
 	else
 	{
-		extendpols_p = true;
+		extendpols_p = True;
 	}
 
 	*logger_p << logLevel_p << " extendpols is " << extendpols_p << LogIO::POST;
@@ -120,7 +119,7 @@ void FlagAgentExtension::setAgentParameters(Record config)
 	}
 	else
 	{
-		growaround_p = false;
+		growaround_p = False;
 	}
 
 	*logger_p << logLevel_p << " growaround is " << growaround_p << LogIO::POST;
@@ -138,7 +137,7 @@ void FlagAgentExtension::setAgentParameters(Record config)
 	}
 	else
 	{
-		flagneartime_p = false;
+		flagneartime_p = False;
 	}
 
 	*logger_p << logLevel_p << " flagneartime is " << flagneartime_p << LogIO::POST;
@@ -156,7 +155,7 @@ void FlagAgentExtension::setAgentParameters(Record config)
 	}
 	else
 	{
-		flagnearfreq_p = false;
+		flagnearfreq_p = False;
 	}
 
 	*logger_p << logLevel_p << " flagnearfreq is " << flagnearfreq_p << LogIO::POST;

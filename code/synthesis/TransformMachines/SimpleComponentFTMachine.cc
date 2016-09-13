@@ -49,7 +49,6 @@
 #endif
 
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 void SimpleComponentFTMachine::get(VisBuffer& vb, SkyComponent& component,

@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //
-// casacore::Data provider for scan column
+// Data provider for scan column
 //
 #ifndef MSVIS_STATISTICS_VI2_CHUNK_SCAN_DATA_PROVIDER_H_
 #define MSVIS_STATISTICS_VI2_CHUNK_SCAN_DATA_PROVIDER_H_
@@ -45,9 +45,9 @@ class Vi2ChunkScanDataProvider final
 public:
 	Vi2ChunkScanDataProvider(
 		vi::VisibilityIterator2 *vi2,
-		casacore::Bool omit_flagged_data);
+		Bool omit_flagged_data);
 
-	const casacore::Vector<casacore::Int>& dataArray();
+	const Vector<Int>& dataArray();
 };
 
 } // namespace casa

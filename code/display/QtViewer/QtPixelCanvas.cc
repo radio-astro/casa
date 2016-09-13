@@ -47,7 +47,6 @@
 #  include <QDebug>
 #include <graphics/X11/X_exit.h>
 
-using namespace casacore;
 namespace casa {
 
 	class q_draw {
@@ -189,7 +188,7 @@ namespace casa {
     QtPixelCanvas::QtPixelCanvas( const QtPixelCanvas *other, QWidget *parent )  :
 		QWidget(parent),
 		PixelCanvas(other),
-		cache_label_and_axis(false),
+		cache_label_and_axis(False),
 		frontBuffer_(0),
 		backBuffer_(0),
 		p_(), pw_(),
@@ -200,10 +199,10 @@ namespace casa {
 		itsDeviceBackgroundColor("black"),
 		itsPen(QColor("white")),
 		clipRect_(0,0,1,1),
-		clipEnabled_(false),
+		clipEnabled_(False),
 		holdcount_(0),
-		needsRefresh_(false),
-		allowBackToFront_(true),
+		needsRefresh_(False),
+		allowBackToFront_(True),
 		saveBuf_(0) {
 
 		// This still does not match up the colormaps from what is displayed with "other"...
@@ -219,7 +218,7 @@ namespace casa {
 	QtPixelCanvas::QtPixelCanvas(QWidget *parent) :
 		QWidget(parent),
 		PixelCanvas(),
-		cache_label_and_axis(false),
+		cache_label_and_axis(False),
 		frontBuffer_(0),
 		backBuffer_(0),
 		p_(), pw_(),
@@ -230,10 +229,10 @@ namespace casa {
 		itsDeviceBackgroundColor("black"),
 		itsPen(QColor("white")),
 		clipRect_(0,0,1,1),
-		clipEnabled_(false),
+		clipEnabled_(False),
 		holdcount_(0),
-		needsRefresh_(false),
-		allowBackToFront_(true),
+		needsRefresh_(False),
+		allowBackToFront_(True),
 		saveBuf_(0) {
 
 		itspcctbl = new QtPCColorTable();
@@ -247,7 +246,7 @@ namespace casa {
 //        // (see paintEvent() comments...).
 
 		setCursor(QCursor(Qt::CrossCursor));
-		setMouseTracking(true);
+		setMouseTracking(True);
 		setFocusPolicy(Qt::WheelFocus);	// allows kbd events.
 		setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
@@ -326,7 +325,7 @@ namespace casa {
 
 
 		//#dk (disabled until interaction with allowBackToFront_ determined....)
-		//  if(holdcount_>0) { needsRefresh_ = true; return;  }
+		//  if(holdcount_>0) { needsRefresh_ = True; return;  }
 
 		if (reason == Display::ClearPriorToColorChange) return;
 		// obsolete, no-op now...
@@ -640,7 +639,7 @@ namespace casa {
 
 
 	void QtPixelCanvas::drawLine(Int x1, Int y1, Int x2, Int y2) {
-		if ( cache_label_and_axis == false ) {
+		if ( cache_label_and_axis == False ) {
 			p_.setPen(itsPen);
 			p_.drawLine(x1, q_(y1),  x2, q_(y2));
 			update();
@@ -670,7 +669,7 @@ namespace casa {
 			                 Int(verts(2*i+1,0)+0.5), q_(Int(verts(2*i+1,1)+0.5)));
 		}
 
-		if ( cache_label_and_axis == false ) {
+		if ( cache_label_and_axis == False ) {
 			p_.setPen(itsPen);
 			p_.drawLines(lines);
 			update();
@@ -738,7 +737,7 @@ namespace casa {
 	void QtPixelCanvas::drawRectangle(Int x1, Int y1, Int x2, Int y2) {
 		//cout << "draw: " << x1 << " " << y1 << " "
 		//     << x2 << " " << y2 << endl;
-		if ( cache_label_and_axis == false ) {
+		if ( cache_label_and_axis == False ) {
 			p_.setPen(itsPen);
 			p_.drawRect(qrect_(x1,y1,x2,y2));
 			update();
@@ -762,7 +761,7 @@ namespace casa {
 
 	void QtPixelCanvas::drawFilledRectangle(Int x1, Int y1, Int x2, Int y2) {
 
-		if ( cache_label_and_axis == false ) {
+		if ( cache_label_and_axis == False ) {
 			p_.setPen(itsPen);
 			p_.setBrush(itsPen.color());
 
@@ -833,7 +832,7 @@ namespace casa {
     QPointF *pts = new QPointF[np];                                                        \
     for(Int i=0; i<np; i++) { pts[i].setX(x[i]); pts[i].setY(q_(y[i]));  }  \
                                                                             \
-    if ( cache_label_and_axis == false ) {                                  \
+    if ( cache_label_and_axis == False ) {                                  \
             p_.setPen(itsPen);                                              \
             if(FILLED)  p_.setBrush(itsPen.color());                        \
             if(POLYGON) p_.drawPolygon(pts, np);                            \
@@ -990,23 +989,23 @@ namespace casa {
 
 
 	Bool QtPixelCanvas::enable(Display::Option option) {
-		if(option!=Display::ClipWindow) return false;
-		if(clipEnabled_) return true;	//Already there.
+		if(option!=Display::ClipWindow) return False;
+		if(clipEnabled_) return True;	//Already there.
 
-		clipEnabled_ = true;
+		clipEnabled_ = True;
 		p_.setClipRect(clipRect_);
 
-		return true;
+		return True;
 	}
 
 
 	Bool QtPixelCanvas::disable(Display::Option option) {
-		if(option!=Display::ClipWindow) return false;
+		if(option!=Display::ClipWindow) return False;
 
-		clipEnabled_ = false;
-		p_.setClipping(false);
+		clipEnabled_ = False;
+		p_.setClipping(False);
 
-		return true;
+		return True;
 	}
 
 
@@ -1033,13 +1032,13 @@ namespace casa {
 			r=0.;
 			g=1.;
 			b=0.;		// Kludge to keep "green" consistent with X11
-			return true;
+			return True;
 		}		// rgb.txt database.  Qt 4.0 no longer uses
 		// rgb.txt, but the W3C standard for color
 		// names ( www.w3.org/TR/SVG/types.html ).
 
 		QColor col(color.chars());
-		if(!col.isValid()) return false;
+		if(!col.isValid()) return False;
 
 		r = (col.red()  +.5)/256.;
 		g = (col.green()+.5)/256.;
@@ -1051,7 +1050,7 @@ namespace casa {
 		// actually....  They also invert back to the correct/original
 		// bytes, including 0 and 255 -- see clrByte_()).
 
-		return true;
+		return True;
 	}
 
 
@@ -1063,7 +1062,7 @@ namespace casa {
 // Drawlists are implemented with QPictures.
 
 	Bool QtPixelCanvas::supportsLists()  {
-		return true;
+		return True;
 	}
 
 	Bool QtPixelCanvas::validList(uInt list) {
@@ -1292,7 +1291,7 @@ namespace casa {
 			kmods |= Display::KM_Pointer_Button_3;
 		}
 
-		callPositionEventHandlers(ksym, false, x,y, kmods);
+		callPositionEventHandlers(ksym, False, x,y, kmods);
 	}
 
 
@@ -1324,7 +1323,7 @@ namespace casa {
 			kmods &= ~Display::KM_Pointer_Button_3;
 		}
 
-		callPositionEventHandlers(ksym, true, x,y, kmods);
+		callPositionEventHandlers(ksym, True, x,y, kmods);
 	}
 
 
@@ -1416,7 +1415,7 @@ namespace casa {
 		//cerr<<"         ksym:"<<ksym<<" kmods:"<<kmods<<
 		//" x,y:"<<x<<" "<<y<<endl;	//#dg
 
-		callPositionEventHandlers(ksym, true, x,y, kmods);
+		callPositionEventHandlers(ksym, True, x,y, kmods);
 	}
 
 
@@ -1464,11 +1463,11 @@ namespace casa {
 	}
 
 	Bool QtPixelCanvas::refreshActive() const {
-		return false;
+		return False;
 	}
 
 	Bool QtPixelCanvas::refreshAllowed() const {
-		return true;
+		return True;
 	}
 
 	void QtPixelCanvas::drawText(QPainter& painter, const QPoint& point,
@@ -1535,7 +1534,7 @@ namespace casa {
 	void QtPixelCanvas::drawText(Int x, Int y, const String &text,
 	                             const Float& angle, Display::TextAlign alignment) {
 		QPoint point(x, q_(y));
-		if( cache_label_and_axis == false ) {
+		if( cache_label_and_axis == False ) {
 			drawText(p_, point, itsFont, itsPen, text, angle, alignment);
 			update();
 		} else {
@@ -1759,23 +1758,23 @@ namespace casa {
 	}
 
 	Bool QtPixelCanvas::getColor(Int /*x*/, Int /*y*/, uInt &/*color*/) {
-		return false;
+		return False;
 	}
 
 	Bool QtPixelCanvas::getRGBColor(Int /*x*/, Int /*y*/, float &/*r*/, float &/*g*/, float &/*b*/) {
-		return false;
+		return False;
 	}
 
 	Bool QtPixelCanvas::getHSVColor(Int /*x*/, Int /*y*/, float &/*h*/, float &/*s*/, float &/*v*/) {
-		return false;
+		return False;
 	}
 
 	Bool QtPixelCanvas::resizeColorTable(uInt /*newSize*/) {
-		return false;
+		return False;
 	}
 
 	Bool QtPixelCanvas::resizeColorTable(uInt /*nReds*/, uInt /*nGreens*/, uInt /*nBlues*/) {
-		return false;
+		return False;
 	}
 
 }

@@ -1,4 +1,4 @@
-//# TBData.h: casacore::Data types used for loaded data.
+//# TBData.h: Data types used for loaded data.
 //# Copyright (C) 2005
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -39,7 +39,7 @@ namespace casa {
 class TBArray;
 
 // <summary>
-// casacore::Data types used for loaded data.
+// Data types used for loaded data.
 // </summary>
 //
 // <synopsis>
@@ -57,13 +57,13 @@ public:
     
     
     // See TBData::asString().
-    casacore::String displayValue();
+    String displayValue();
     
     
     // asString() must be implemented by any subclass.  Returns this data
-    // value in casacore::String form.  This method is especially important because
-    // the browser uses this casacore::String to display in the GUI widgets.
-    virtual casacore::String asString() = 0;
+    // value in String form.  This method is especially important because
+    // the browser uses this String to display in the GUI widgets.
+    virtual String asString() = 0;
     
     // asDouble() must be implemented by any subclass, although the returned
     // value does not have to be valid for classes for which the value cannot
@@ -118,7 +118,7 @@ public:
     // asRecord() must be implemented by any subclass, although the returned
     // value does not have to be valid for classes for which the value cannot
     // be represented as a record.
-    virtual casacore::Record* asRecord() = 0;
+    virtual Record* asRecord() = 0;
     
     
     // setValue() must be implemented by any subclass.  Sets this data's value
@@ -128,7 +128,7 @@ public:
     
     // getType() must be implemented by any subclass.  Returns this TBData
     // object's type.  Must be one of TBConstants::TYPE_* definitions.
-    virtual casacore::String getType() = 0;
+    virtual String getType() = 0;
     
     // equals() must be implemented by any subclass.  Returns true if the
     // given TBData is equal to this TBData object, false otherwise.  Note:
@@ -139,15 +139,15 @@ public:
     
     // Creates and returns a TBData object representing the given value and
     // type.  May return NULL if the value/type combination is invalid.
-    // NOTE: this method currently does not work for Records in casacore::String form.
-    static TBData* create(casacore::String value, casacore::String type);
+    // NOTE: this method currently does not work for Records in String form.
+    static TBData* create(String value, String type);
     
     // Creates a TBArrayData object containing the data in the given TBArray
     // object with the given type.  NOTE: with the restructuring of the
     // browser to use TBDatas rather than Strings to store data, this method
     // should NOT be used.  It is currently being used as a helper method
-    // for create(casacore::String, casacore::String), but its use is NOT encouraged.
-    static TBData* create(TBArray* array, casacore::String type);
+    // for create(String, String), but its use is NOT encouraged.
+    static TBData* create(TBArray* array, String type);
     
     // Creates and returns a copy of the given TBData.
     static TBData* create(TBData& data);
@@ -155,13 +155,13 @@ public:
 
 
 // <summary>
-// Implementation of TBData for casacore::String data.
+// Implementation of TBData for String data.
 // </summary>
 
 class TBDataString : public TBData {
 public:
-    // Constructor that takes the casacore::String data.
-    TBDataString(casacore::String value);
+    // Constructor that takes the String data.
+    TBDataString(String value);
     
     // Constructor that calls setValue().
     TBDataString(TBData& data);
@@ -169,8 +169,8 @@ public:
     virtual ~TBDataString();
     
     
-    // Returns the casacore::String value.
-    casacore::String asString();
+    // Returns the String value.
+    String asString();
     
     // Invalid operations.
     // <group>
@@ -184,23 +184,23 @@ public:
     short int asShort() { return 0; }   
     std::pair<float, float> asComplex() { return std::pair<float, float>(0, 0); } 
     std::pair<double, double> asDComplex() { return std::pair<double, double>(0, 0); }    
-    casacore::Record* asRecord() { return 0; }
+    Record* asRecord() { return 0; }
     // </group>
     
     
     // Sets the value to the result of calling asString() on the given TBData.
     void setValue(TBData& value);
     
-    // Returns the casacore::String type.
-    casacore::String getType() { return TBConstants::TYPE_STRING; }
+    // Returns the String type.
+    String getType() { return TBConstants::TYPE_STRING; }
     
-    // Returns true if the given data is a casacore::String type and the values are
+    // Returns true if the given data is a String type and the values are
     // equals, false otherwise.
     bool equals(TBData* data);
     
 private:
     // Value.
-    casacore::String value;
+    String value;
 };
 
 
@@ -211,7 +211,7 @@ private:
 class TBDataDouble : public TBData {
 public:
     // Constructor that parses a double from the given String.
-    TBDataDouble(casacore::String value);
+    TBDataDouble(String value);
     
     // Constructor that takes the double data.
     TBDataDouble(double value);
@@ -222,8 +222,8 @@ public:
     virtual ~TBDataDouble();
     
     
-    // Returns the value in casacore::String form.
-    casacore::String asString();
+    // Returns the value in String form.
+    String asString();
     
     // Returns the double value.
     double asDouble();
@@ -240,15 +240,15 @@ public:
     short int asShort() { return 0; }   
     std::pair<float, float> asComplex() { return std::pair<float, float>(0, 0); } 
     std::pair<double, double> asDComplex() { return std::pair<double, double>(0, 0); }    
-    casacore::Record* asRecord() { return 0; }
+    Record* asRecord() { return 0; }
     // </group>
     
-    // If the given TBData is a casacore::String, parses a double from the String.
+    // If the given TBData is a String, parses a double from the String.
     // Otherwise sets the value to the result of the asDouble() call.
     void setValue(TBData& value);
     
     // Returns the double type.
-    casacore::String getType() { return TBConstants::TYPE_DOUBLE; }
+    String getType() { return TBConstants::TYPE_DOUBLE; }
     
     // Returns true if the given data is a double type and their values are
     // equal, false otherwise.
@@ -267,7 +267,7 @@ private:
 class TBDataFloat : public TBData {
 public:
     // Constructor that parses a float from the given String.
-    TBDataFloat(casacore::String value);
+    TBDataFloat(String value);
     
     // Constructor that takes the float data.
     TBDataFloat(float value);
@@ -278,8 +278,8 @@ public:
     virtual ~TBDataFloat();
     
     
-    // Returns the value in casacore::String form.
-    casacore::String asString();
+    // Returns the value in String form.
+    String asString();
     
     // Returns the value in double form.
     double asDouble();
@@ -298,16 +298,16 @@ public:
     short int asShort() { return 0; }   
     std::pair<float, float> asComplex() { return std::pair<float, float>(0, 0); } 
     std::pair<double, double> asDComplex() { return std::pair<double, double>(0, 0); }    
-    casacore::Record* asRecord() { return 0; }
+    Record* asRecord() { return 0; }
     // </group>
     
     
-    // If the given TBData is a casacore::String, parses a float from the String.
+    // If the given TBData is a String, parses a float from the String.
     // Otherwise, if the given TBData is a float, sets the float value.
     void setValue(TBData& value);
     
     // Returns the float type.
-    casacore::String getType() { return TBConstants::TYPE_FLOAT; }
+    String getType() { return TBConstants::TYPE_FLOAT; }
     
     // Returns true if the given data is a float type and their values are
     // equal, false otherwise.
@@ -326,7 +326,7 @@ private:
 class TBDataInt : public TBData {
 public:
     // Constructor that parses an int from the given String.
-    TBDataInt(casacore::String value);
+    TBDataInt(String value);
     
     // Constructor that takes the int data.
     TBDataInt(int value);
@@ -337,8 +337,8 @@ public:
     virtual ~TBDataInt();
     
     
-    // Returns the value in casacore::String form.
-    casacore::String asString();
+    // Returns the value in String form.
+    String asString();
     
     // Returns the value in double form.
     double asDouble();
@@ -357,16 +357,16 @@ public:
     short int asShort() { return 0; }   
     std::pair<float, float> asComplex() { return std::pair<float, float>(0, 0); } 
     std::pair<double, double> asDComplex() { return std::pair<double, double>(0, 0); }    
-    casacore::Record* asRecord() { return 0; }
+    Record* asRecord() { return 0; }
     // </group>
     
     
-    // If the given TBData is a casacore::String, parses an int from the casacore::String value.
+    // If the given TBData is a String, parses an int from the String value.
     // Otherwise, if the given TBData is an int, sets the int value.
     void setValue(TBData& value);
     
     // Returns the int type.
-    casacore::String getType() { return TBConstants::TYPE_INT; }
+    String getType() { return TBConstants::TYPE_INT; }
     
     // Returns true if the given data is an int type and their values are
     // equal, false otherwise
@@ -385,7 +385,7 @@ private:
 class TBDataUInt : public TBData {
 public:
     // Constructor that parses an unsigned int from the given String.
-    TBDataUInt(casacore::String value);
+    TBDataUInt(String value);
     
     // Constructor that takes the unsigned int data.
     TBDataUInt(unsigned int value);
@@ -396,8 +396,8 @@ public:
     virtual ~TBDataUInt();
     
     
-    // Returns the value in casacore::String form.
-    casacore::String asString();
+    // Returns the value in String form.
+    String asString();
     
     // Returns the value in double form.
     double asDouble();
@@ -416,17 +416,17 @@ public:
     short int asShort() { return 0; }   
     std::pair<float, float> asComplex() { return std::pair<float, float>(0, 0); } 
     std::pair<double, double> asDComplex() { return std::pair<double, double>(0, 0); }    
-    casacore::Record* asRecord() { return 0; }
+    Record* asRecord() { return 0; }
     // </group>
     
     
-    // If the given TBData is a casacore::String, parses an unsigned int from the String
+    // If the given TBData is a String, parses an unsigned int from the String
     // value.  Otherwise, if the given TBData is an unsigned int, sets the
     // unsigned int value.
     void setValue(TBData& value);
     
     // Returns the unsigned int type.
-    casacore::String getType() { return TBConstants::TYPE_UINT; }
+    String getType() { return TBConstants::TYPE_UINT; }
     
     // Returns true if the given data is an unsigned int type and their values
     // are equal, false otherwise
@@ -445,7 +445,7 @@ private:
 class TBDataBool : public TBData {
 public:
     // Constructor that parses a boolean from the given String.
-    TBDataBool(casacore::String value);
+    TBDataBool(String value);
     
     // Constructor that takes the boolean data.
     TBDataBool(bool value);
@@ -456,8 +456,8 @@ public:
     virtual ~TBDataBool();
     
     
-    // Returns the value in casacore::String form.
-    casacore::String asString();
+    // Returns the value in String form.
+    String asString();
     
     // Returns the value in double form.
     double asDouble();
@@ -482,16 +482,16 @@ public:
     short int asShort() { return 0; }   
     std::pair<float, float> asComplex() { return std::pair<float, float>(0, 0); } 
     std::pair<double, double> asDComplex() { return std::pair<double, double>(0, 0); }    
-    casacore::Record* asRecord() { return 0; }
+    Record* asRecord() { return 0; }
     // </group>
     
     
-    // If the given TBData is a casacore::String, parses a boolean from the casacore::String value.
+    // If the given TBData is a String, parses a boolean from the String value.
     // Otherwise, if the given TBData is a boolean, sets the boolean value.
     void setValue(TBData& value);
     
     // Returns the boolean type.
-    casacore::String getType() { return TBConstants::TYPE_BOOL; }
+    String getType() { return TBConstants::TYPE_BOOL; }
     
     // Returns true if the given data is a boolean type and their values are
     // equal, false otherwise
@@ -510,7 +510,7 @@ private:
 class TBDataChar : public TBData {
 public:
     // Constructor that takes the first character of the given String.
-    TBDataChar(casacore::String value);
+    TBDataChar(String value);
     
     // Constructor that takes the character data.
     TBDataChar(char value);
@@ -521,8 +521,8 @@ public:
     virtual ~TBDataChar();
     
     
-    // Returns the value in casacore::String form.
-    casacore::String asString();
+    // Returns the value in String form.
+    String asString();
     
     // Returns the value in int form.
     int asInt();
@@ -543,17 +543,17 @@ public:
     short int asShort() { return 0; }   
     std::pair<float, float> asComplex() { return std::pair<float, float>(0, 0); } 
     std::pair<double, double> asDComplex() { return std::pair<double, double>(0, 0); }    
-    casacore::Record* asRecord() { return 0; }
+    Record* asRecord() { return 0; }
     // </group>
     
     
-    // If the given TBData is a casacore::String, takes the first character of the
-    // casacore::String value.  Otherwise, if the given TBData is a character, sets
+    // If the given TBData is a String, takes the first character of the
+    // String value.  Otherwise, if the given TBData is a character, sets
     // the character value.
     void setValue(TBData& value);
     
     // Returns the character type.
-    casacore::String getType() { return TBConstants::TYPE_CHAR; }
+    String getType() { return TBConstants::TYPE_CHAR; }
     
     // Returns true if the given data is a character type and their values are
     // equal, false otherwise
@@ -572,7 +572,7 @@ private:
 class TBDataUChar : public TBData {
 public:
     // Constructor that takes the first character from the given String.
-    TBDataUChar(casacore::String value);
+    TBDataUChar(String value);
     
     // Constructor that takes the unsigned character value.
     TBDataUChar(unsigned char value);
@@ -583,8 +583,8 @@ public:
     virtual ~TBDataUChar();
     
     
-    // Returns the value in casacore::String form.
-    casacore::String asString();
+    // Returns the value in String form.
+    String asString();
     
     // Returns the value in int form.
     int asInt();
@@ -605,17 +605,17 @@ public:
     short int asShort() { return 0; }   
     std::pair<float, float> asComplex() { return std::pair<float, float>(0, 0); } 
     std::pair<double, double> asDComplex() { return std::pair<double, double>(0, 0); }    
-    casacore::Record* asRecord() { return 0; }
+    Record* asRecord() { return 0; }
     // </group>
     
     
-    // If the given TBData is a casacore::String, takes the first character of the
-    // casacore::String value.  Otherwise, if the given TBData is an unsigned character,
+    // If the given TBData is a String, takes the first character of the
+    // String value.  Otherwise, if the given TBData is an unsigned character,
     // sets the unsigned character value.
     void setValue(TBData& value);
     
     // Returns the unsigned character type.
-    casacore::String getType() { return TBConstants::TYPE_UCHAR; }
+    String getType() { return TBConstants::TYPE_UCHAR; }
     
     // Returns true if the given data is an unsigned character type and their
     // values are equal, false otherwise
@@ -634,7 +634,7 @@ private:
 class TBDataShort : public TBData {
 public:
     // Constructor that parses a short from the given String.
-    TBDataShort(casacore::String value);
+    TBDataShort(String value);
     
     // Constructor that takes the short data.
     TBDataShort(short int value);
@@ -645,8 +645,8 @@ public:
     virtual ~TBDataShort();
     
     
-    // Returns the value in casacore::String form.
-    casacore::String asString();
+    // Returns the value in String form.
+    String asString();
     
     // Returns the value in double form.
     double asDouble();
@@ -671,16 +671,16 @@ public:
     unsigned char asUChar() { return 0; }   
     std::pair<float, float> asComplex() { return std::pair<float, float>(0, 0); } 
     std::pair<double, double> asDComplex() { return std::pair<double, double>(0, 0); }    
-    casacore::Record* asRecord() { return 0; }
+    Record* asRecord() { return 0; }
     // </group>
     
     
-    // If the given TBData is a casacore::String, parses a short from the casacore::String value.
+    // If the given TBData is a String, parses a short from the String value.
     // Otherwise, if the given TBData is a short, sets the short value.
     void setValue(TBData& value);
     
     // Returns the short type.
-    casacore::String getType() { return TBConstants::TYPE_SHORT; }
+    String getType() { return TBConstants::TYPE_SHORT; }
     
     // Returns true if the given data is a short type and their values are
     // equal, false otherwise
@@ -699,7 +699,7 @@ private:
 class TBDataComplex : public TBData {
 public:
     // Constructor that parses a complex from the given String.
-    TBDataComplex(casacore::String value);
+    TBDataComplex(String value);
     
     // Constructor that takes the complex data.
     TBDataComplex(std::pair<float, float> value);
@@ -713,8 +713,8 @@ public:
     virtual ~TBDataComplex();
     
     
-    // Returns the value in casacore::String form.
-    casacore::String asString();
+    // Returns the value in String form.
+    String asString();
     
     // Returns the value in double complex form.
     std::pair<double, double> asDComplex();
@@ -733,16 +733,16 @@ public:
     bool asBool() { return 0; }
     char asChar() { return 0; } 
     unsigned char asUChar() { return 0; }   
-    casacore::Record* asRecord() { return 0; }
+    Record* asRecord() { return 0; }
     // </group>
     
     
-    // If the given TBData is a casacore::String, parses a complex from the casacore::String value.
+    // If the given TBData is a String, parses a complex from the String value.
     // Otherwise, if the given TBData is a complex, sets the complex value.
     void setValue(TBData& value);
     
     // Returns the complex type.
-    casacore::String getType() { return TBConstants::TYPE_COMPLEX; }
+    String getType() { return TBConstants::TYPE_COMPLEX; }
     
     // Returns true if the given data is a complex type and their values are
     // equal, false otherwise
@@ -761,7 +761,7 @@ private:
 class TBDataDComplex : public TBData {
 public:
     // Constructor that parses a double complex from the given String.
-    TBDataDComplex(casacore::String value);
+    TBDataDComplex(String value);
     
     // Constructor that takes the double complex data.
     TBDataDComplex(std::pair<double, double> value);
@@ -775,8 +775,8 @@ public:
     virtual ~TBDataDComplex();
     
     
-    // Returns the value in casacore::String form.
-    casacore::String asString();
+    // Returns the value in String form.
+    String asString();
     
     // Returns the value.
     std::pair<double, double> asDComplex();
@@ -793,17 +793,17 @@ public:
     char asChar() { return 0; } 
     unsigned char asUChar() { return 0; }   
     std::pair<float, float> asComplex() { return std::pair<float, float>(0, 0); }
-    casacore::Record* asRecord() { return 0; }
+    Record* asRecord() { return 0; }
     // </group>
     
     
-    // If the given TBData is a casacore::String, parses a double complex from the
-    // casacore::String value.  Otherwise, if the given TBData is a double complex,
+    // If the given TBData is a String, parses a double complex from the
+    // String value.  Otherwise, if the given TBData is a double complex,
     // sets the double complex value.
     void setValue(TBData& value);
     
     // Returns the double complex type.
-    casacore::String getType() { return TBConstants::TYPE_DCOMPLEX; }
+    String getType() { return TBConstants::TYPE_DCOMPLEX; }
     
     // Returns true if the given data is a double complex type and their
     // values are equal, false otherwise
@@ -816,20 +816,20 @@ private:
 
 
 // <summary>
-// Implementation of TBData for casacore::Table data.
+// Implementation of TBData for Table data.
 // </summary>
 //
 // <synopsis>
-// Although casacore::Table types are stored differently on disk, for the browser all
+// Although Table types are stored differently on disk, for the browser all
 // we really care about is the location.  Therefore TBDataTable is really just
 // a TBDataString.
 // </synopsis>
 
 class TBDataTable : public TBDataString {
 public:
-    // Constructor that takes the casacore::String value.  See
+    // Constructor that takes the String value.  See
     // TBDataString::TBDataString().
-    TBDataTable(casacore::String value) : TBDataString(value) { }
+    TBDataTable(String value) : TBDataString(value) { }
     
     // Constructor that calls setValue().  See TBDataString::setValue().
     TBDataTable(TBData& data) : TBDataString(data) { }
@@ -837,21 +837,21 @@ public:
     ~TBDataTable() { }
     
     // Returns the table type.
-    casacore::String getType() { return TBConstants::TYPE_TABLE; }
+    String getType() { return TBConstants::TYPE_TABLE; }
 };
 
 
 // <summary>
-// Implementation of TBData for casacore::Record data.
+// Implementation of TBData for Record data.
 // </summary>
 
 class TBDataRecord : public TBData {
 public:
-    // Constructor that takes the casacore::Record data.
-    TBDataRecord(const casacore::RecordInterface& value);
+    // Constructor that takes the Record data.
+    TBDataRecord(const RecordInterface& value);
     
-    // Constructor that takes the casacore::Record data.
-    TBDataRecord(casacore::RecordInterface* value);
+    // Constructor that takes the Record data.
+    TBDataRecord(RecordInterface* value);
     
     // Constructor that calls setValue().
     TBDataRecord(TBData& data);
@@ -859,11 +859,11 @@ public:
     virtual ~TBDataRecord();
     
     
-    // Returns the value in casacore::String form.
-    casacore::String asString();
+    // Returns the value in String form.
+    String asString();
     
     // Returns the value.
-    casacore::Record* asRecord();
+    Record* asRecord();
     
     
     // Invalid operations.
@@ -881,19 +881,19 @@ public:
     // </group>
     
     
-    // Iff the given TBData is a casacore::Record, sets the casacore::Record value.
+    // Iff the given TBData is a Record, sets the Record value.
     void setValue(TBData& value);
     
-    // Returns the casacore::Record type.
-    casacore::String getType() { return TBConstants::TYPE_RECORD; }
+    // Returns the Record type.
+    String getType() { return TBConstants::TYPE_RECORD; }
     
-    // Returns true if the given data is a casacore::Record type and their values are
+    // Returns true if the given data is a Record type and their values are
     // equal, false otherwise
     bool equals(TBData* data);
     
 private:
     // Value.
-    casacore::Record value;
+    Record value;
 };
 
 
@@ -905,14 +905,14 @@ private:
 // A date is somewhat special in that the data is stored as a double that
 // represents Modified Julian Seconds, but when we view the data we want it
 // in a human-readable form.  For this reason, a TBDataDate stores two
-// values: the double representation and the casacore::String representation.
+// values: the double representation and the String representation.
 // </synopsis>
 
 class TBDataDate : public TBData {
 public:
-    // Constructor that parses a date from the given casacore::String and then stores
+    // Constructor that parses a date from the given String and then stores
     // the human-readable value with the given number of decimals.
-    TBDataDate(casacore::String value, int decimals= TBConstants::DEFAULT_DATE_DECIMALS);
+    TBDataDate(String value, int decimals= TBConstants::DEFAULT_DATE_DECIMALS);
     
     // Constructor that stores the date from the given double and then stores
     // the human-readable value with the given number of decimals.
@@ -925,7 +925,7 @@ public:
     
     
     // Returns the human-readable value.
-    casacore::String asString();
+    String asString();
     
     // Returns the value.
     double asDouble();
@@ -942,16 +942,16 @@ public:
     short int asShort() { return 0; }   
     std::pair<float, float> asComplex() { return std::pair<float, float>(0, 0); } 
     std::pair<double, double> asDComplex() { return std::pair<double, double>(0, 0); }    
-    casacore::Record* asRecord() { return 0; }
+    Record* asRecord() { return 0; }
     // </group>
     
     
-    // If the given TBData is a casacore::String, parses a date from the casacore::String value.
+    // If the given TBData is a String, parses a date from the String value.
     // Otherwise, if the given TBData is a double or date, sets the date value.
     void setValue(TBData& value);
     
     // Returns the date type.
-    casacore::String getType() { return TBConstants::TYPE_DATE; }
+    String getType() { return TBConstants::TYPE_DATE; }
     
     // Returns true if the given data is a date type and their values are
     // equal, false otherwise
@@ -962,12 +962,12 @@ private:
     double value;
     
     // Human-readable representation of value.
-    casacore::String valueStr;
+    String valueStr;
 };
 
 
 // <summary>
-// casacore::Data type that holds an array.
+// Data type that holds an array.
 // </summary>
 //
 // <synopsis>
@@ -1019,7 +1019,7 @@ public:
     // asString() must be implemented by any subclass.  Generally speaking,
     // should return the array data for one-dimensional arrays or the shape
     // and type otherwise.
-    virtual casacore::String asString() = 0;
+    virtual String asString() = 0;
     
     // release() must be implemented by any subclass.  If data is loaded,
     // release it and free the memory.
@@ -1044,7 +1044,7 @@ public:
     short int asShort() { return 0; }   
     std::pair<float, float> asComplex() { return std::pair<float, float>(0, 0); } 
     std::pair<double, double> asDComplex() { return std::pair<double, double>(0, 0); }    
-    casacore::Record* asRecord() { return 0; }
+    Record* asRecord() { return 0; }
     void setValue(TBData& value) { (void)value; }
     
     bool equals(TBData* data) { return false; (void)data; }
@@ -1075,10 +1075,10 @@ public:
     
     // to1DString() must be implemented by any subclass.  Returns a "flattened"
     // version of the array.
-    virtual casacore::String to1DString() = 0;
+    virtual String to1DString() = 0;
     
 protected:
-    // casacore::Array shape.
+    // Array shape.
     std::vector<int> shape;
     
     // Whether data is loaded.
@@ -1090,7 +1090,7 @@ protected:
 
 
 // <summary>
-// Implementation of TBArrayData for casacore::String array data.
+// Implementation of TBArrayData for String array data.
 // </summary>
 
 class TBArrayDataString : public TBArrayData {
@@ -1101,7 +1101,7 @@ public:
     // Constructor that takes the value and whether or not to load (copy) the
     // given data or not.  Note: data is always loaded for one-dimensional
     // arrays.
-    TBArrayDataString(const casacore::Array<casacore::String>& value, bool full = false);
+    TBArrayDataString(const Array<String>& value, bool full = false);
     
     // Constructor that copies the given data if it is the correct type.
     TBArrayDataString(TBData& data);
@@ -1113,14 +1113,14 @@ public:
     TBData* dataAt(std::vector<int> d);
     
     // Returns the value.
-    casacore::Array<casacore::String>& data() { return value; }
+    Array<String>& data() { return value; }
     
-    // Returns the casacore::String representation of this array.  For one-dimensional,
+    // Returns the String representation of this array.  For one-dimensional,
     // loaded arrays returns the values; otherwise returns the shape and type.
-    casacore::String asString();
+    String asString();
     
     // Loads the given data into the array.
-    void load(const casacore::Array<casacore::String>& value);
+    void load(const Array<String>& value);
     
     // Releases the loaded data, if any.  Returns whether the release was
     // successful or not.
@@ -1132,8 +1132,8 @@ public:
     void setDataAt(std::vector<int> d, TBData& value);
     
     
-    // Returns the casacore::String array type.
-    casacore::String getType() { return TBConstants::TYPE_ARRAY_STRING; }
+    // Returns the String array type.
+    String getType() { return TBConstants::TYPE_ARRAY_STRING; }
     
     // See TBArrayData::contains().  Returns false if the given data is not
     // of type String.
@@ -1152,11 +1152,11 @@ public:
     bool containsGreaterThan(TBData* data)  { (void)data;   return false; }
     
     // See TBArrayData::to1DString().
-    casacore::String to1DString();
+    String to1DString();
     
 private:
     // Value.
-    casacore::Array<casacore::String> value;
+    Array<String> value;
 };
 
 
@@ -1172,7 +1172,7 @@ public:
     // Constructor that takes the value and whether or not to load (copy) the
     // given data or not.  Note: data is always loaded for one-dimensional
     // arrays.
-    TBArrayDataDouble(const casacore::Array<casacore::Double>& value, bool full = false);
+    TBArrayDataDouble(const Array<Double>& value, bool full = false);
     
     // Constructor that copies the given data if it is the correct type.
     TBArrayDataDouble(TBData& data);
@@ -1184,14 +1184,14 @@ public:
     TBData* dataAt(std::vector<int> d);
     
     // Returns the value.
-    casacore::Array<casacore::Double>& data() { return value; }
+    Array<Double>& data() { return value; }
     
-    // Returns the casacore::String representation of this array.  For one-dimensional,
+    // Returns the String representation of this array.  For one-dimensional,
     // loaded arrays returns the values; otherwise returns the shape and type.
-    casacore::String asString();
+    String asString();
     
     // Loads the given data into the array.
-    void load(const casacore::Array<casacore::Double>& value);
+    void load(const Array<Double>& value);
     
     // Releases the loaded data, if any.  Returns whether the release was
     // successful or not.
@@ -1204,7 +1204,7 @@ public:
     
     
     // Returns the double array type.
-    casacore::String getType() { return TBConstants::TYPE_ARRAY_DOUBLE; }
+    String getType() { return TBConstants::TYPE_ARRAY_DOUBLE; }
     
     // See TBArrayData::contains().  Returns false if the given data is not
     // of type double.
@@ -1223,11 +1223,11 @@ public:
     bool containsGreaterThan(TBData* data);
     
     // See TBArrayData::to1DString().
-    casacore::String to1DString();
+    String to1DString();
     
 private:
     // Value.
-    casacore::Array<casacore::Double> value;
+    Array<Double> value;
 };
 
 
@@ -1243,7 +1243,7 @@ public:
     // Constructor that takes the value and whether or not to load (copy) the
     // given data or not.  Note: data is always loaded for one-dimensional
     // arrays.
-    TBArrayDataFloat(const casacore::Array<casacore::Float>& value, bool full = false);
+    TBArrayDataFloat(const Array<Float>& value, bool full = false);
     
     // Constructor that copies the given data if it is the correct type.
     TBArrayDataFloat(TBData& data);
@@ -1255,14 +1255,14 @@ public:
     TBData* dataAt(std::vector<int> d);
     
     // Returns the value.
-    casacore::Array<casacore::Float>& data() { return value; }
+    Array<Float>& data() { return value; }
     
-    // Returns the casacore::String representation of this array.  For one-dimensional,
+    // Returns the String representation of this array.  For one-dimensional,
     // loaded arrays returns the values; otherwise returns the shape and type.
-    casacore::String asString();
+    String asString();
     
     // Loads the given data into the array.
-    void load(const casacore::Array<casacore::Float>& value);
+    void load(const Array<Float>& value);
     
     // Releases the loaded data, if any.  Returns whether the release was
     // successful or not.
@@ -1275,7 +1275,7 @@ public:
     
     
     // Returns the float array type.
-    casacore::String getType() { return TBConstants::TYPE_ARRAY_FLOAT; }
+    String getType() { return TBConstants::TYPE_ARRAY_FLOAT; }
     
     // See TBArrayData::contains().  Returns false if the given data is not
     // of type float.
@@ -1294,11 +1294,11 @@ public:
     bool containsGreaterThan(TBData* data);
     
     // See TBArrayData::to1DString().
-    casacore::String to1DString();
+    String to1DString();
     
 private:
     // Value.
-    casacore::Array<casacore::Float> value;
+    Array<Float> value;
 };
 
 
@@ -1314,7 +1314,7 @@ public:
     // Constructor that takes the value and whether or not to load (copy) the
     // given data or not.  Note: data is always loaded for one-dimensional
     // arrays.
-    TBArrayDataInt(const casacore::Array<casacore::Int>& value, bool full = false);
+    TBArrayDataInt(const Array<Int>& value, bool full = false);
     
     // Constructor that copies the given data if it is the correct type.
     TBArrayDataInt(TBData& data);
@@ -1326,14 +1326,14 @@ public:
     TBData* dataAt(std::vector<int> d);
     
     // Returns the value.
-    casacore::Array<casacore::Int>& data() { return value; }
+    Array<Int>& data() { return value; }
     
-    // Returns the casacore::String representation of this array.  For one-dimensional,
+    // Returns the String representation of this array.  For one-dimensional,
     // loaded arrays returns the values; otherwise returns the shape and type.
-    casacore::String asString();
+    String asString();
     
     // Loads the given data into the array.
-    void load(const casacore::Array<casacore::Int>& value);
+    void load(const Array<Int>& value);
     
     // Releases the loaded data, if any.  Returns whether the release was
     // successful or not.
@@ -1346,7 +1346,7 @@ public:
     
     
     // Returns the int array type.
-    casacore::String getType() { return TBConstants::TYPE_ARRAY_INT; }
+    String getType() { return TBConstants::TYPE_ARRAY_INT; }
     
     // See TBArrayData::contains().  Returns false if the given data is not
     // of type int.
@@ -1365,11 +1365,11 @@ public:
     bool containsGreaterThan(TBData* data);
     
     // See TBArrayData::to1DString().
-    casacore::String to1DString();
+    String to1DString();
     
 private:
     // Value.
-    casacore::Array<casacore::Int> value;
+    Array<Int> value;
 };
 
 
@@ -1385,7 +1385,7 @@ public:
     // Constructor that takes the value and whether or not to load (copy) the
     // given data or not.  Note: data is always loaded for one-dimensional
     // arrays.
-    TBArrayDataUInt(const casacore::Array<casacore::uInt>& value, bool full = false);
+    TBArrayDataUInt(const Array<uInt>& value, bool full = false);
     
     // Constructor that copies the given data if it is the correct type.
     TBArrayDataUInt(TBData& data);
@@ -1397,14 +1397,14 @@ public:
     TBData* dataAt(std::vector<int> d);
     
     // Returns the value.
-    casacore::Array<casacore::uInt>& data() { return value; }
+    Array<uInt>& data() { return value; }
     
-    // Returns the casacore::String representation of this array.  For one-dimensional,
+    // Returns the String representation of this array.  For one-dimensional,
     // loaded arrays returns the values; otherwise returns the shape and type.
-    casacore::String asString();
+    String asString();
     
     // Loads the given data into the array.
-    void load(const casacore::Array<casacore::uInt>& value);
+    void load(const Array<uInt>& value);
     
     // Releases the loaded data, if any.  Returns whether the release was
     // successful or not.
@@ -1417,7 +1417,7 @@ public:
     
     
     // Returns the unsigned int array type.
-    casacore::String getType() { return TBConstants::TYPE_ARRAY_UINT; }
+    String getType() { return TBConstants::TYPE_ARRAY_UINT; }
     
     // See TBArrayData::contains().  Returns false if the given data is not
     // of type unsigned int.
@@ -1436,11 +1436,11 @@ public:
     bool containsGreaterThan(TBData* data);
     
     // See TBArrayData::to1DString().
-    casacore::String to1DString();
+    String to1DString();
     
 private:
     // Value.
-    casacore::Array<casacore::uInt> value;
+    Array<uInt> value;
 };
 
 
@@ -1456,7 +1456,7 @@ public:
     // Constructor that takes the value and whether or not to load (copy) the
     // given data or not.  Note: data is always loaded for one-dimensional
     // arrays.
-    TBArrayDataBool(const casacore::Array<casacore::Bool>& value, bool full = false);
+    TBArrayDataBool(const Array<Bool>& value, bool full = false);
     
     // Constructor that copies the given data if it is the correct type.
     TBArrayDataBool(TBData& data);
@@ -1468,14 +1468,14 @@ public:
     TBData* dataAt(std::vector<int> d);
     
     // Returns the value.
-    casacore::Array<casacore::Bool>& data() { return value; }
+    Array<Bool>& data() { return value; }
     
-    // Returns the casacore::String representation of this array.  For one-dimensional,
+    // Returns the String representation of this array.  For one-dimensional,
     // loaded arrays returns the values; otherwise returns the shape and type.
-    casacore::String asString();
+    String asString();
     
     // Loads the given data into the array.
-    void load(const casacore::Array<casacore::Bool>& value);
+    void load(const Array<Bool>& value);
     
     // Releases the loaded data, if any.  Returns whether the release was
     // successful or not.
@@ -1488,7 +1488,7 @@ public:
     
     
     // Returns the boolean array type.
-    casacore::String getType() { return TBConstants::TYPE_ARRAY_BOOL; }
+    String getType() { return TBConstants::TYPE_ARRAY_BOOL; }
     
     // See TBArrayData::contains().  Returns false if the given data is not
     // of type boolean.
@@ -1507,11 +1507,11 @@ public:
     bool containsGreaterThan(TBData* data);
     
     // See TBArrayData::to1DString().
-    casacore::String to1DString();
+    String to1DString();
     
 private:
     // Value.
-    casacore::Array<casacore::Bool> value;
+    Array<Bool> value;
 };
 
 
@@ -1527,7 +1527,7 @@ public:
     // Constructor that takes the value and whether or not to load (copy) the
     // given data or not.  Note: data is always loaded for one-dimensional
     // arrays.
-    TBArrayDataChar(const casacore::Array<casacore::Char>& value, bool full = false);
+    TBArrayDataChar(const Array<Char>& value, bool full = false);
     
     // Constructor that copies the given data if it is the correct type.
     TBArrayDataChar(TBData& data);
@@ -1539,14 +1539,14 @@ public:
     TBData* dataAt(std::vector<int> d);
     
     // Returns the value.
-    casacore::Array<casacore::Char>& data() { return value; }
+    Array<Char>& data() { return value; }
     
-    // Returns the casacore::String representation of this array.  For one-dimensional,
+    // Returns the String representation of this array.  For one-dimensional,
     // loaded arrays returns the values; otherwise returns the shape and type.
-    casacore::String asString();
+    String asString();
     
     // Loads the given data into the array.
-    void load(const casacore::Array<casacore::Char>& value);
+    void load(const Array<Char>& value);
     
     // Releases the loaded data, if any.  Returns whether the release was
     // successful or not.
@@ -1559,7 +1559,7 @@ public:
     
     
     // Returns the character array type.
-    casacore::String getType() { return TBConstants::TYPE_ARRAY_CHAR; }
+    String getType() { return TBConstants::TYPE_ARRAY_CHAR; }
     
     // See TBArrayData::contains().  Returns false if the given data is not
     // of type character.
@@ -1578,11 +1578,11 @@ public:
     bool containsGreaterThan(TBData* data);
     
     // See TBArrayData::to1DString().
-    casacore::String to1DString();
+    String to1DString();
     
 private:
     // Value.
-    casacore::Array<casacore::Char> value;
+    Array<Char> value;
 };
 
 
@@ -1598,7 +1598,7 @@ public:
     // Constructor that takes the value and whether or not to load (copy) the
     // given data or not.  Note: data is always loaded for one-dimensional
     // arrays.
-    TBArrayDataUChar(const casacore::Array<casacore::uChar>& value, bool full = false);
+    TBArrayDataUChar(const Array<uChar>& value, bool full = false);
     
     // Constructor that copies the given data if it is the correct type.
     TBArrayDataUChar(TBData& data);
@@ -1610,14 +1610,14 @@ public:
     TBData* dataAt(std::vector<int> d);
     
     // Returns the value.
-    casacore::Array<casacore::uChar>& data() { return value; }
+    Array<uChar>& data() { return value; }
     
-    // Returns the casacore::String representation of this array.  For one-dimensional,
+    // Returns the String representation of this array.  For one-dimensional,
     // loaded arrays returns the values; otherwise returns the shape and type.
-    casacore::String asString();
+    String asString();
     
     // Loads the given data into the array.
-    void load(const casacore::Array<casacore::uChar>& value);
+    void load(const Array<uChar>& value);
     
     // Releases the loaded data, if any.  Returns whether the release was
     // successful or not.
@@ -1630,7 +1630,7 @@ public:
     
     
     // Returns the unsigned character array type.
-    casacore::String getType() { return TBConstants::TYPE_ARRAY_UCHAR; }
+    String getType() { return TBConstants::TYPE_ARRAY_UCHAR; }
     
     // See TBArrayData::contains().  Returns false if the given data is not
     // of type unsigned char.
@@ -1649,11 +1649,11 @@ public:
     bool containsGreaterThan(TBData* data);
     
     // See TBArrayData::to1DString().
-    casacore::String to1DString();
+    String to1DString();
     
 private:
     // Value.
-    casacore::Array<casacore::uChar> value;
+    Array<uChar> value;
 };
 
 
@@ -1669,7 +1669,7 @@ public:
     // Constructor that takes the value and whether or not to load (copy) the
     // given data or not.  Note: data is always loaded for one-dimensional
     // arrays.
-    TBArrayDataShort(const casacore::Array<casacore::Short>& value, bool full = false);
+    TBArrayDataShort(const Array<Short>& value, bool full = false);
     
     // Constructor that copies the given data if it is the correct type.
     TBArrayDataShort(TBData& data);
@@ -1681,14 +1681,14 @@ public:
     TBData* dataAt(std::vector<int> d);
     
     // Returns the value.
-    casacore::Array<casacore::Short>& data() { return value; }
+    Array<Short>& data() { return value; }
     
-    // Returns the casacore::String representation of this array.  For one-dimensional,
+    // Returns the String representation of this array.  For one-dimensional,
     // loaded arrays returns the values; otherwise returns the shape and type.
-    casacore::String asString();
+    String asString();
     
     // Loads the given data into the array.
-    void load(const casacore::Array<casacore::Short>& value);
+    void load(const Array<Short>& value);
     
     // Releases the loaded data, if any.  Returns whether the release was
     // successful or not.
@@ -1701,7 +1701,7 @@ public:
     
     
     // Returns the short array type.
-    casacore::String getType() { return TBConstants::TYPE_ARRAY_SHORT; }
+    String getType() { return TBConstants::TYPE_ARRAY_SHORT; }
     
     // See TBArrayData::contains().  Returns false if the given data is not
     // of type short.
@@ -1720,11 +1720,11 @@ public:
     bool containsGreaterThan(TBData* data);
     
     // See TBArrayData::to1DString().
-    casacore::String to1DString();
+    String to1DString();
     
 private:
     // Value.
-    casacore::Array<casacore::Short> value;
+    Array<Short> value;
 };
 
 
@@ -1740,7 +1740,7 @@ public:
     // Constructor that takes the value and whether or not to load (copy) the
     // given data or not.  Note: data is always loaded for one-dimensional
     // arrays.
-    TBArrayDataComplex(const casacore::Array<casacore::Complex>& value, bool full = false);
+    TBArrayDataComplex(const Array<Complex>& value, bool full = false);
     
     // Constructor that copies the given data if it is the correct type.
     TBArrayDataComplex(TBData& data);
@@ -1752,14 +1752,14 @@ public:
     TBData* dataAt(std::vector<int> d);
     
     // Returns the value.
-    casacore::Array<casacore::Complex>& data() { return value; }
+    Array<Complex>& data() { return value; }
     
-    // Returns the casacore::String representation of this array.  For one-dimensional,
+    // Returns the String representation of this array.  For one-dimensional,
     // loaded arrays returns the values; otherwise returns the shape and type.
-    casacore::String asString();
+    String asString();
     
     // Loads the given data into the array.
-    void load(const casacore::Array<casacore::Complex>& value);
+    void load(const Array<Complex>& value);
     
     // Releases the loaded data, if any.  Returns whether the release was
     // successful or not.
@@ -1772,7 +1772,7 @@ public:
     
     
     // Returns the complex array type.
-    casacore::String getType() { return TBConstants::TYPE_ARRAY_COMPLEX; }
+    String getType() { return TBConstants::TYPE_ARRAY_COMPLEX; }
     
     // See TBArrayData::contains().  Returns false if the given data is not
     // of type complex.
@@ -1791,11 +1791,11 @@ public:
     bool containsGreaterThan(TBData* data);
     
     // See TBArrayData::to1DString().
-    casacore::String to1DString();
+    String to1DString();
     
 private:
     // Value.
-    casacore::Array<casacore::Complex> value;
+    Array<Complex> value;
 };
 
 
@@ -1811,7 +1811,7 @@ public:
     // Constructor that takes the value and whether or not to load (copy) the
     // given data or not.  Note: data is always loaded for one-dimensional
     // arrays.
-    TBArrayDataDComplex(const casacore::Array<casacore::DComplex>& value, bool full = false);
+    TBArrayDataDComplex(const Array<DComplex>& value, bool full = false);
     
     // Constructor that copies the given data if it is the correct type.
     TBArrayDataDComplex(TBData& data);
@@ -1823,14 +1823,14 @@ public:
     TBData* dataAt(std::vector<int> d);
     
     // Returns the value.
-    casacore::Array<casacore::DComplex>& data() { return value; }
+    Array<DComplex>& data() { return value; }
     
-    // Returns the casacore::String representation of this array.  For one-dimensional,
+    // Returns the String representation of this array.  For one-dimensional,
     // loaded arrays returns the values; otherwise returns the shape and type.
-    casacore::String asString();
+    String asString();
     
     // Loads the given data into the array.
-    void load(const casacore::Array<casacore::DComplex>& value);
+    void load(const Array<DComplex>& value);
     
     // Releases the loaded data, if any.  Returns whether the release was
     // successful or not.
@@ -1843,7 +1843,7 @@ public:
     
     
     // Returns the double complex array type.
-    casacore::String getType() { return TBConstants::TYPE_ARRAY_DCOMPLEX; }
+    String getType() { return TBConstants::TYPE_ARRAY_DCOMPLEX; }
     
     // See TBArrayData::contains().  Returns false if the given data is not
     // of type double complex.
@@ -1862,11 +1862,11 @@ public:
     bool containsGreaterThan(TBData* data);
     
     // See TBArrayData::to1DString().
-    casacore::String to1DString();
+    String to1DString();
     
 private:
     // Value.
-    casacore::Array<casacore::DComplex> value;
+    Array<DComplex> value;
 };
 
 }

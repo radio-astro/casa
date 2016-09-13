@@ -82,7 +82,7 @@ public:
         if(!line.null()) setLine(*line);
         else             setLinesShown(false);
     }
-    virtual void setLine(const casacore::String& color,
+    virtual void setLine(const String& color,
                          PlotLine::Style style = PlotLine::SOLID,
                          double width = 1.0) {
         PlotLinePtr l = line();
@@ -91,7 +91,7 @@ public:
         l->setWidth(width);
         setLine(*l);
     }
-    virtual void setLineColor(const casacore::String& color) {
+    virtual void setLineColor(const String& color) {
         PlotLinePtr l = line();
         l->setColor(color);
         setLine(*l);
@@ -189,7 +189,7 @@ public:
     }
     virtual void setSymbolLine(const PlotLinePtr line) {
         if(!line.null()) setSymbolLine(*line); }
-    virtual void setSymbolLine(const casacore::String& color,
+    virtual void setSymbolLine(const String& color,
             PlotLine::Style style = PlotLine::SOLID, double width = 1.0) {
         PlotSymbolPtr sym = symbol();
         sym->setLine(color, style, width);
@@ -202,7 +202,7 @@ public:
     }
     virtual void setSymbolAreaFill(const PlotAreaFillPtr fill) {
         if(!fill.null()) setSymbolAreaFill(*fill); }
-    virtual void setSymbolAreaFill(const casacore::String& color,
+    virtual void setSymbolAreaFill(const String& color,
             PlotAreaFill::Pattern pattern = PlotAreaFill::FILL) {
         PlotSymbolPtr sym = symbol();
         sym->setAreaFill(color, pattern);
@@ -265,7 +265,7 @@ public:
         if(!line.null()) setMaskedLine(*line);
         else             setMaskedLinesShown(false);
     }
-    virtual void setMaskedLine(const casacore::String& color,
+    virtual void setMaskedLine(const String& color,
                          PlotLine::Style style = PlotLine::SOLID,
                          double width = 1.0) {
         PlotLinePtr l = maskedLine();
@@ -274,7 +274,7 @@ public:
         l->setWidth(width);
         setMaskedLine(*l);
     }
-    virtual void setMaskedLineColor(const casacore::String& color) {
+    virtual void setMaskedLineColor(const String& color) {
         PlotLinePtr l = maskedLine();
         l->setColor(color);
         setMaskedLine(*l);
@@ -337,7 +337,7 @@ public:
     }
     virtual void setMaskedSymbolLine(const PlotLinePtr line) {
         if(!line.null()) setMaskedSymbolLine(*line); }
-    virtual void setMaskedSymbolLine(const casacore::String& color,
+    virtual void setMaskedSymbolLine(const String& color,
             PlotLine::Style style = PlotLine::SOLID, double width = 1.0) {
         PlotSymbolPtr sym = maskedSymbol();
         sym->setLine(color, style, width);
@@ -350,7 +350,7 @@ public:
     }
     virtual void setMaskedSymbolAreaFill(const PlotAreaFillPtr fill) {
         if(!fill.null()) setMaskedSymbolAreaFill(*fill); }
-    virtual void setMaskedSymbolAreaFill(const casacore::String& color,
+    virtual void setMaskedSymbolAreaFill(const String& color,
             PlotAreaFill::Pattern pattern = PlotAreaFill::FILL) {
         PlotSymbolPtr sym = maskedSymbol();
         sym->setAreaFill(color, pattern);
@@ -398,7 +398,7 @@ public:
         if(!line.null()) setErrorLine(*line);
         else             setErrorLineShown(false);
     }
-    virtual void setErrorLine(const casacore::String& color,
+    virtual void setErrorLine(const String& color,
                               PlotLine::Style style = PlotLine::SOLID,
                               double width = 1.0) {
         PlotLinePtr line = errorLine();
@@ -407,7 +407,7 @@ public:
         line->setWidth(width);
         setErrorLine(*line);
     }
-    virtual void setErrorLineColor(const casacore::String& color) {
+    virtual void setErrorLineColor(const String& color) {
         PlotLinePtr line = errorLine();
         line->setColor(color);
         setErrorLine(*line);
@@ -517,7 +517,7 @@ public:
         if(!areaFill.null()) setAreaFill(*areaFill);
         else                 setAreaFilled(false);
     }
-    virtual void setAreaFill(const casacore::String& color,
+    virtual void setAreaFill(const String& color,
                           PlotAreaFill::Pattern pattern = PlotAreaFill::FILL) {
         PlotAreaFillPtr fill = areaFill();
         fill->setColor(color);

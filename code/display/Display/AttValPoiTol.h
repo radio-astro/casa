@@ -75,12 +75,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	public:
 
 		// Constructor for a pointer to a scalar, and a tolerance.
-		AttributeValuePoiTol(T* value, const T &tolerance, const casacore::Bool strict);
+		AttributeValuePoiTol(T* value, const T &tolerance, const Bool strict);
 
-		// Constructor for a pointer to a <src>casacore::Vector</src>, and a scalar
+		// Constructor for a pointer to a <src>Vector</src>, and a scalar
 		// tolerance.
-		AttributeValuePoiTol(casacore::Vector<T>* value, const T &tolerance,
-		                     const casacore::Bool strict);
+		AttributeValuePoiTol(Vector<T>* value, const T &tolerance,
+		                     const Bool strict);
 
 		// Copy constructor.
 		AttributeValuePoiTol(const AttributeValuePoiTol<T> &other);
@@ -103,15 +103,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Change the value of the AttributeValue.
 		// <group>
 		virtual void setValue(const T& value);
-		virtual void setValue(const casacore::Vector<T>& value);
+		virtual void setValue(const Vector<T>& value);
 		// </group>
 
 		// Get the DataType of the aliased variable.
-		virtual casacore::DataType getPointerType() const;
+		virtual DataType getPointerType() const;
 
 		// Return class name
-		virtual casacore::String className() const {
-			return casacore::String("AttributeValuePoiTol");
+		virtual String className() const {
+			return String("AttributeValuePoiTol");
 		};
 
 	private:
@@ -123,12 +123,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// upon how the object was constructed.  The memory allocated to these pointers
 		// does not belong to this object.
 		// <group>
-		casacore::Vector<T>* itsVectorPointerPtr;
+		Vector<T>* itsVectorPointerPtr;
 		T* itsScalarPointerPtr;
 		// </group>
 
 		// The pointer DataType
-		casacore::DataType itsPointerType;
+		DataType itsPointerType;
 
 		// Cast from Base class
 		const AttributeValuePoiTol<T>& myCast (const AttributeValueBase& other) const;

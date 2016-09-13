@@ -34,7 +34,6 @@
 #include <QDir>
 #include <limits>
 
-using namespace casacore;
 namespace casa {
 
 	Fit2DTool::Fit2DTool(QWidget *parent)

@@ -32,7 +32,6 @@
 
 #include <casa/iostream.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 PolynomialSpectralElement::PolynomialSpectralElement()
@@ -61,7 +60,7 @@ PolynomialSpectralElement::PolynomialSpectralElement(const Vector<Double>& param
 		)
 	);
 	_set(param);
-	fix(Vector<Bool>(param.size(), false));
+	fix(Vector<Bool>(param.size(), False));
 }
 
 PolynomialSpectralElement::PolynomialSpectralElement(

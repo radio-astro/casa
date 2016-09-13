@@ -46,27 +46,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 class SDPosInterpolator {
 public:
   SDPosInterpolator(const VisBuffer& vb,
-		    const casacore::String& pointingDirCol_p);
-  SDPosInterpolator(const casacore::Vector<casacore::Vector<casacore::Double> >& time,
-		    const casacore::Vector<casacore::Vector<casacore::Vector<casacore::Double> > >& dir);
+		    const String& pointingDirCol_p);
+  SDPosInterpolator(const Vector<Vector<Double> >& time,
+		    const Vector<Vector<Vector<Double> > >& dir);
   ~SDPosInterpolator();
-  casacore::Vector<casacore::Bool> doSplineInterpolation;   //(antid)
-  casacore::MDirection interpolateDirectionMeasSpline(const casacore::ROMSPointingColumns& mspc,
-					    const casacore::Double& time,
-					    const casacore::Int& index,
-					    const casacore::Int& antid);
-  casacore::Vector<casacore::Vector<casacore::Vector<casacore::Vector<casacore::Double> > > > getSplineCoeff();
+  Vector<Bool> doSplineInterpolation;   //(antid)
+  MDirection interpolateDirectionMeasSpline(const ROMSPointingColumns& mspc,
+					    const Double& time,
+					    const Int& index,
+					    const Int& antid);
+  Vector<Vector<Vector<Vector<Double> > > > getSplineCoeff();
 private:
-  casacore::Vector<casacore::Vector<casacore::Double> > timePointing; //(antid)(index)
-  casacore::Vector<casacore::Vector<casacore::Vector<casacore::Double> > > dirPointing; //(antid)(index)(xy)
-  casacore::Vector<casacore::Vector<casacore::Vector<casacore::Vector<casacore::Double> > > > splineCoeff; //(antid)(index)(xy)(order)
+  Vector<Vector<Double> > timePointing; //(antid)(index)
+  Vector<Vector<Vector<Double> > > dirPointing; //(antid)(index)(xy)
+  Vector<Vector<Vector<Vector<Double> > > > splineCoeff; //(antid)(index)(xy)(order)
   void setup(const VisBuffer& vb,
-	     const casacore::String& pointingDirCol_p);
-  void setup(const casacore::Vector<casacore::Vector<casacore::Double> >& time,
-	     const casacore::Vector<casacore::Vector<casacore::Vector<casacore::Double> > >& dir);
-  void calcSplineCoeff(const casacore::Vector<casacore::Double>& time,
-		       const casacore::Vector<casacore::Vector<casacore::Double> >& dir,
-		       casacore::Vector<casacore::Vector<casacore::Vector<casacore::Double> > >& coeff);
+	     const String& pointingDirCol_p);
+  void setup(const Vector<Vector<Double> >& time,
+	     const Vector<Vector<Vector<Double> > >& dir);
+  void calcSplineCoeff(const Vector<Double>& time,
+		       const Vector<Vector<Double> >& dir,
+		       Vector<Vector<Vector<Double> > >& coeff);
 };
 
 } //# NAMESPACE CASA - END

@@ -66,7 +66,7 @@ public:
 	~ComponentListDeconvolver();
 
 	ComponentList deconvolve(
-		const ComponentList& compList, casacore::Int channel, casacore::Int polarization
+		const ComponentList& compList, Int channel, Int polarization
 	) const;
 
 private:

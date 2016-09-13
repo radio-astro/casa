@@ -34,7 +34,6 @@
 //
 //---------------------------------------------------------------------
 //
-using namespace casacore;
 namespace casa{
   using namespace refim;
   ATerm::ATerm(): CFTerms()

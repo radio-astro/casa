@@ -30,7 +30,6 @@
 #include <QDBusInterface>
 #include <QDebug>
 
-using namespace casacore;
 namespace casa {
 
 //////////////////////////////
@@ -84,14 +83,14 @@ bool QtDBusXmlApp::dbusXmlCall(const String& from, const String& to,
 
         QDBusInterface iface(to.c_str(),serviceOwner(to),CASA_DBUS_XML_INTERFACE,connection());
 
-        Bool timeoutSet = false;
-        Bool qtTripped = false;
+        Bool timeoutSet = False;
+        Bool qtTripped = False;
 #if QT_VERSION >= 0x040805
     if ( !methodIsAsync ){
     	iface.setTimeout (12000000); //Time out in milliseconds (Essentially infinite)
-    	timeoutSet = true;
+    	timeoutSet = True;
     }
-    qtTripped = true;
+    qtTripped = True;
 #endif
 
         if(methodIsAsync) {

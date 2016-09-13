@@ -34,7 +34,6 @@
 #include <QFile>
 #include <QDebug>
 
-using namespace casacore;
 namespace casa {
 
 	const QString SlicePlot::DISTANCE_AXIS = "Distance";
@@ -591,5 +590,4 @@ namespace casa {
 		delete factory;
 	}
 
-using namespace casacore;
 } /* namespace casa */

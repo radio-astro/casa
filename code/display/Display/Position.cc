@@ -26,7 +26,6 @@
 //# $Id$
 #include <display/Display/Position.h>
 
-using namespace casacore;
 namespace casa {
 	namespace viewer {
 

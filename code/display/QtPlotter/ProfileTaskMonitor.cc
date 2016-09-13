@@ -24,7 +24,6 @@
 //#
 #include "ProfileTaskMonitor.h"
 
-using namespace casacore;
 namespace casa {
 
 	ProfileTaskMonitor::ProfileTaskMonitor() {
@@ -36,5 +35,4 @@ namespace casa {
 		// TODO Auto-generated destructor stub
 	}
 
-using namespace casacore;
 } /* namespace casa */

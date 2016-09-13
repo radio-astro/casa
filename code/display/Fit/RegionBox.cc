@@ -27,7 +27,6 @@
 #include <assert.h>
 #include <QDebug>
 
-using namespace casacore;
 namespace casa {
 
 	RegionBox::RegionBox(const QList<int> &pixel_x, const QList<int> &pixel_y) {
@@ -144,5 +143,4 @@ namespace casa {
 		// TODO Auto-generated destructor stub
 	}
 
-using namespace casacore;
 } /* namespace casa */

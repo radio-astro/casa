@@ -25,7 +25,6 @@
 
 #include "ActionMarkRegions.h"
 
-using namespace casacore;
 namespace casa {
 
 ActionMarkRegions::ActionMarkRegions( Client* client )
@@ -42,5 +41,4 @@ ToolCode ActionMarkRegions::getToolCode() const {
 ActionMarkRegions::~ActionMarkRegions() {
 }
 
-using namespace casacore;
 } /* namespace casa */

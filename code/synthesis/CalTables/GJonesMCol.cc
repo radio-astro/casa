@@ -28,7 +28,6 @@
 
 #include <synthesis/CalTables/GJonesMCol.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //----------------------------------------------------------------------------
@@ -56,11 +55,11 @@ ROGJonesPolyMCol::ROGJonesPolyMCol (const GJonesPolyTable& gjpTable) :
   attach (gjpTable, polyType_p, MSC::POLY_TYPE);
   attach (gjpTable, polyMode_p, MSC::POLY_MODE);
   attach (gjpTable, scaleFactor_p, MSC::SCALE_FACTOR);
-  attach (gjpTable, nPolyAmp_p, MSC::N_POLY_AMP, true);
-  attach (gjpTable, nPolyPhase_p, MSC::N_POLY_PHASE, true);
-  attach (gjpTable, polyCoeffAmp_p, MSC::POLY_COEFF_AMP, true);
-  attach (gjpTable, polyCoeffPhase_p, MSC::POLY_COEFF_PHASE, true);
-  attach (gjpTable, phaseUnits_p, MSC::PHASE_UNITS, true);
+  attach (gjpTable, nPolyAmp_p, MSC::N_POLY_AMP, True);
+  attach (gjpTable, nPolyPhase_p, MSC::N_POLY_PHASE, True);
+  attach (gjpTable, polyCoeffAmp_p, MSC::POLY_COEFF_AMP, True);
+  attach (gjpTable, polyCoeffPhase_p, MSC::POLY_COEFF_PHASE, True);
+  attach (gjpTable, phaseUnits_p, MSC::PHASE_UNITS, True);
 };
 
 //----------------------------------------------------------------------------
@@ -88,11 +87,11 @@ GJonesPolyMCol::GJonesPolyMCol (GJonesPolyTable& gjpTable) :
   attach (gjpTable, polyType_p, MSC::POLY_TYPE);
   attach (gjpTable, polyMode_p, MSC::POLY_MODE);
   attach (gjpTable, scaleFactor_p, MSC::SCALE_FACTOR);
-  attach (gjpTable, nPolyAmp_p, MSC::N_POLY_AMP, true);
-  attach (gjpTable, nPolyPhase_p, MSC::N_POLY_PHASE, true);
-  attach (gjpTable, polyCoeffAmp_p, MSC::POLY_COEFF_AMP, true);
-  attach (gjpTable, polyCoeffPhase_p, MSC::POLY_COEFF_PHASE, true);
-  attach (gjpTable, phaseUnits_p, MSC::PHASE_UNITS, true);
+  attach (gjpTable, nPolyAmp_p, MSC::N_POLY_AMP, True);
+  attach (gjpTable, nPolyPhase_p, MSC::N_POLY_PHASE, True);
+  attach (gjpTable, polyCoeffAmp_p, MSC::POLY_COEFF_AMP, True);
+  attach (gjpTable, polyCoeffPhase_p, MSC::POLY_COEFF_PHASE, True);
+  attach (gjpTable, phaseUnits_p, MSC::PHASE_UNITS, True);
 };
 
 //----------------------------------------------------------------------------
@@ -113,10 +112,10 @@ ROGJonesSplineMCol::ROGJonesSplineMCol (const GJonesSplineTable& gjsTable) :
 //
   // Attach all column accessors for additional GJonesSpline columns
   // (all are optional, dependent on polynomial mode)
-  attach (gjsTable, nKnotsAmp_p, MSC::N_KNOTS_AMP, true);
-  attach (gjsTable, nKnotsPhase_p, MSC::N_KNOTS_PHASE, true);
-  attach (gjsTable, splineKnotsAmp_p, MSC::SPLINE_KNOTS_AMP, true);
-  attach (gjsTable, splineKnotsPhase_p, MSC::SPLINE_KNOTS_PHASE, true);
+  attach (gjsTable, nKnotsAmp_p, MSC::N_KNOTS_AMP, True);
+  attach (gjsTable, nKnotsPhase_p, MSC::N_KNOTS_PHASE, True);
+  attach (gjsTable, splineKnotsAmp_p, MSC::SPLINE_KNOTS_AMP, True);
+  attach (gjsTable, splineKnotsPhase_p, MSC::SPLINE_KNOTS_PHASE, True);
 };
 
 //----------------------------------------------------------------------------
@@ -137,10 +136,10 @@ GJonesSplineMCol::GJonesSplineMCol (GJonesSplineTable& gjsTable) :
 //
   // Attach all column accessors for additional GJonesSpline columns
   // (all are optional, dependent on polynomial mode)
-  attach (gjsTable, nKnotsAmp_p, MSC::N_KNOTS_AMP, true);
-  attach (gjsTable, nKnotsPhase_p, MSC::N_KNOTS_PHASE, true);
-  attach (gjsTable, splineKnotsAmp_p, MSC::SPLINE_KNOTS_AMP, true);
-  attach (gjsTable, splineKnotsPhase_p, MSC::SPLINE_KNOTS_PHASE, true);
+  attach (gjsTable, nKnotsAmp_p, MSC::N_KNOTS_AMP, True);
+  attach (gjsTable, nKnotsPhase_p, MSC::N_KNOTS_PHASE, True);
+  attach (gjsTable, splineKnotsAmp_p, MSC::SPLINE_KNOTS_AMP, True);
+  attach (gjsTable, splineKnotsPhase_p, MSC::SPLINE_KNOTS_PHASE, True);
 };
 
 //----------------------------------------------------------------------------

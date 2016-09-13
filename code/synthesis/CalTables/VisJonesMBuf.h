@@ -80,8 +80,8 @@ class VisJonesMBuf : public CalMainBuffer
   // their specified values. Non-index columns will be set 
   // to default values, and there is no connection to an 
   // underlying calibration table iterator in this case.
-  VisJonesMBuf (const casacore::Vector<casacore::Int>& calIndices, 
-		const casacore::Block<casacore::Vector<casacore::Int> >& indexValues);
+  VisJonesMBuf (const Vector<Int>& calIndices, 
+		const Block<Vector<Int> >& indexValues);
 
   // Construct from a calibration table iterator. The calibration
   // buffer will remain synchronized with the iterator.

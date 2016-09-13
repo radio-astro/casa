@@ -36,7 +36,6 @@
 #include <unistd.h>
 
 
-using namespace casacore;
 namespace casa {
 
 ///////////////////////////////
@@ -700,9 +699,9 @@ void PlotMSDBusApp::dbusRunXmlMethod(
 				parameters.dataType(PARAM_COLORAXIS) == TpString)   {
 			a = PMS::axis(parameters.asString(PARAM_COLORAXIS), &ok);
 			if (ok)
-				ppdisp->setColorize(true,a);
+				ppdisp->setColorize(True,a);
 			else
-				ppdisp->setColorize(false);
+				ppdisp->setColorize(False);
 		}
 
 

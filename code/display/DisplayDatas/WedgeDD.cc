@@ -37,7 +37,6 @@
 #include <display/Display/Attribute.h>
 
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	const String WedgeDD::WEDGE_PREFIX = "wedge";
@@ -58,14 +57,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	void WedgeDD::setup() {
 
-		// The default for restorePCColormap_ is false.  Derived DDs such as
-		// this one can set it true so that the colormap on the PixelCanvas
+		// The default for restorePCColormap_ is False.  Derived DDs such as
+		// this one can set it True so that the colormap on the PixelCanvas
 		// before the DD draws is restored to it afterward.  The 'colormap
 		// fiddling' mouse tools can (unfortunately) only operate on the PC's
 		// current colormap; this kludge is an attempt to assure that the 'right'
 		// one is left there (the one used by the last "main" DD to draw).
 
-		CachingDisplayData::restorePCColormap_ = true;
+		CachingDisplayData::restorePCColormap_ = True;
 
 
 		for (uInt l=0; l<itsLength; l++) {
@@ -115,7 +114,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		rec.define("ticklength",40.0);
 		itsAxisLabeller.setOptions(rec, recOut);
-		itsAxisLabeller.setAxisLabelSwitch(true);
+		itsAxisLabeller.setAxisLabelSwitch(True);
 	}
 
 	void WedgeDD::updateCsys() {
@@ -225,9 +224,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	Bool WedgeDD::setOptions(Record &rec, Record &recOut) {
 		Bool ret = ActiveCaching2dDD::setOptions(rec, recOut);
-		Bool error = false;
-		Bool localchange = false;
-		Bool localchange1 = false;
+		Bool error = False;
+		Bool localchange = False;
+		Bool localchange1 = False;
 
 		if ( rec.isDefined(  WCPowerScaleHandler::POWER_CYCLES) ) {
 			Record powerCycleFloat;
@@ -283,7 +282,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if (localchange1) {
 			updateCsys();
 			String attString("resetCoordinates");
-			Attribute resetCoordinatesAtt(attString, true);
+			Attribute resetCoordinatesAtt(attString, True);
 			setAttributeOnPrimaryWCHs(resetCoordinatesAtt);
 		}
 		localchange = (localchange|| localchange1);

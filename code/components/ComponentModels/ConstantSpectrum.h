@@ -32,16 +32,12 @@
 #include <components/ComponentModels/ComponentType.h>
 #include <components/ComponentModels/SpectralModel.h>
 
-namespace casacore{
+namespace casa { //# NAMESPACE CASA - BEGIN
 
 class MFrequency;
 class RecordInterface;
 class String;
 template <class T> class Vector;
-}
-
-namespace casa { //# NAMESPACE CASA - BEGIN
-
 
 // <summary>Model the spectral variation with a constant</summary>
 
@@ -148,23 +144,23 @@ public:
   // Return the scaling factor that indicates the flux is at the specified
   // frequency assuming the flux at the reference frequency is one. This
   // function always returns one, as the spectrum is constant.
-  virtual casacore::Double sample(const casacore::MFrequency& centerFrequency) const;
+  virtual Double sample(const MFrequency& centerFrequency) const;
 
   //Original values returned
-  virtual void sampleStokes(const casacore::MFrequency& centerFrequency, 
-			    casacore::Vector<casacore::Double>& iquv) const;
+  virtual void sampleStokes(const MFrequency& centerFrequency, 
+			    Vector<Double>& iquv) const;
   
   // Same as the previous function except that many frequencies can be sampled
   // at once. The reference frame must be the same for all the specified
   // frequencies. Uses a customised implementation.
-  virtual void sample(casacore::Vector<casacore::Double>& scale, 
-                      const casacore::Vector<casacore::MFrequency::MVType>& frequencies, 
-                      const casacore::MFrequency::Ref& refFrame) const;
+  virtual void sample(Vector<Double>& scale, 
+                      const Vector<MFrequency::MVType>& frequencies, 
+                      const MFrequency::Ref& refFrame) const;
  
   //original values are returned
-  virtual void sampleStokes(casacore::Vector<casacore::Vector<casacore::Double> >& scale,
-                      const casacore::Vector<casacore::MFrequency::MVType>& frequencies, 
-			    const casacore::MFrequency::Ref& refFrame) const;
+  virtual void sampleStokes(Vector<Vector<Double> >& scale, 
+                      const Vector<MFrequency::MVType>& frequencies, 
+			    const MFrequency::Ref& refFrame) const;
   // Return a pointer to a copy of this object upcast to a SpectralModel
   // object. The class that uses this function is responsible for deleting the
   // pointer. This is used to implement a virtual copy constructor.
@@ -172,36 +168,36 @@ public:
 
   // return the number of parameters. There are no parameters for this spectral
   // model. So calling <src>setParameters</src> or <src>parameters</src> with
-  // anything other than a zero length casacore::Vector will throw an exception (when
+  // anything other than a zero length Vector will throw an exception (when
   // compiled in debug mode).
   // <group>
-  virtual casacore::uInt nParameters() const;
-  virtual void setParameters(const casacore::Vector<casacore::Double>& newSpectralParms);
-  virtual casacore::Vector<casacore::Double> parameters() const;
-  virtual void setErrors(const casacore::Vector<casacore::Double>& newSpectralErrs);
-  virtual casacore::Vector<casacore::Double> errors() const;
+  virtual uInt nParameters() const;
+  virtual void setParameters(const Vector<Double>& newSpectralParms);
+  virtual Vector<Double> parameters() const;
+  virtual void setErrors(const Vector<Double>& newSpectralErrs);
+  virtual Vector<Double> errors() const;
   // </group>
 
-  // These functions convert between a casacore::Record and a ConstantSpectrum. These
+  // These functions convert between a Record and a ConstantSpectrum. These
   // functions define how a ConstantSpectrum object is represented in glish and
-  // this is detailed in the synopsis above. These functions return false if
+  // this is detailed in the synopsis above. These functions return False if
   // the record is malformed and append an error message to the supplied string
   // giving the reason.
   // <group>
-  virtual casacore::Bool fromRecord(casacore::String& errorMessage,
-			  const casacore::RecordInterface& record);
-  virtual casacore::Bool toRecord(casacore::String& errorMessage, casacore::RecordInterface& record) const;
+  virtual Bool fromRecord(String& errorMessage,
+			  const RecordInterface& record);
+  virtual Bool toRecord(String& errorMessage, RecordInterface& record) const;
   // </group>
 
   // Convert the parameters of the spectrum to the specified units. As a
   // constant spectrum has no parameters this function does nothing and always
-  // returns true.
-  virtual casacore::Bool convertUnit(casacore::String& errorMessage,
-                           const casacore::RecordInterface& record);
+  // returns True.
+  virtual Bool convertUnit(String& errorMessage,
+                           const RecordInterface& record);
  
-  // casacore::Function which checks the internal data of this class for consistant
-  // values. Returns true if everything is fine otherwise returns false.
-  virtual casacore::Bool ok() const;
+  // Function which checks the internal data of this class for consistant
+  // values. Returns True if everything is fine otherwise returns False.
+  virtual Bool ok() const;
 };
 
 } //# NAMESPACE CASA - END

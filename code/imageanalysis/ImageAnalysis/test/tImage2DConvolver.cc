@@ -58,11 +58,11 @@ int main() {
 			gauss[0] = Quantity(10, "arcmin");
 			gauss[1] = Quantity(8, "arcmin");
 			gauss[2] = Quantity(80, "deg");
-			Image2DConvolver<Float> c(in, nullptr, "", "", false);
+			Image2DConvolver<Float> c(in, nullptr, "", "", False);
 			c.setKernel("gauss", gauss[0], gauss[1], gauss[2]);
 			c.setAxes(make_pair(0, 1));
 			c.setScale(-1);
-			c.setTargetRes(false);
+			c.setTargetRes(False);
 			auto got = c.convolve();
 			FITSImage exp(datadir + "test_image2dconvolver_convolved.fits");
             cout << "max diff " << max(abs(got->get() - exp.get())) << endl;
@@ -81,11 +81,11 @@ int main() {
 			gauss[0] = Quantity(10, "arcmin");
 			gauss[1] = Quantity(8, "arcmin");
 			gauss[2] = Quantity(80, "deg");
-			Image2DConvolver<Float> c(in, nullptr, "", "", false);
+			Image2DConvolver<Float> c(in, nullptr, "", "", False);
 			c.setKernel("gauss", gauss[0], gauss[1], gauss[2]);
 			c.setAxes(make_pair(0, 1));
 			c.setScale(-1);
-			c.setTargetRes(false);
+			c.setTargetRes(False);
 			auto got = c.convolve();
 			IPosition shape = in->shape();
 			IPosition start(in->ndim(), 0);
@@ -95,11 +95,11 @@ int main() {
 				end[2] = i;
 				Slicer slice(start, end, Slicer::endIsLast);
 				SPCIIF expIn(new SubImage<Float>(*in, slice));
-				Image2DConvolver<Float> c2(expIn, nullptr, "", "", false);
+				Image2DConvolver<Float> c2(expIn, nullptr, "", "", False);
 				c2.setKernel("gauss", gauss[0], gauss[1], gauss[2]);
 				c2.setAxes(make_pair(0, 1));
 				c2.setScale(-1);
-				c2.setTargetRes(false);
+				c2.setTargetRes(False);
 				auto exp = c2.convolve();
 				GaussianBeam gotBeam = got->imageInfo().restoringBeam(i, -1);
 				GaussianBeam expBeam = exp->imageInfo().restoringBeam();
@@ -143,9 +143,9 @@ int main() {
 			gauss[0] = Quantity(8, "arcsec");
 			gauss[1] = Quantity(4, "arcsec");
 			gauss[2] = Quantity(0, "deg");
-			Bool targetres = false;
+			Bool targetres = False;
 
-			Image2DConvolver<Float> c(tim, nullptr, "", "", false);
+			Image2DConvolver<Float> c(tim, nullptr, "", "", False);
 			c.setKernel("gauss", gauss[0], gauss[1], gauss[2]);
 			c.setAxes(make_pair(0, 1));
 			c.setScale(-1);
@@ -167,7 +167,7 @@ int main() {
 			gauss[1] = Quantity(5, "arcsec");
 			gauss[2] = Quantity(0, "deg");
 			c.setKernel("gauss", gauss[0], gauss[1], gauss[2]);
-			targetres = true;
+			targetres = True;
 			c.setTargetRes(targetres);
 			got = c.convolve();
 			cout << "got " << got->imageInfo().restoringBeam() << endl;
@@ -216,7 +216,7 @@ int main() {
 				}
 			}
 			tim->put(values);
-			targetres = false;
+			targetres = False;
 			Vector<GaussianBeam> eBeam(2);
 			for (uInt trial=0; trial<2; trial++) {
 				targetres = trial == 1;
@@ -236,7 +236,7 @@ int main() {
 
 					IPosition inPos = testPos;
 					inPos[2] = 0;
-					Image2DConvolver<Float> c3(inChannelIm, nullptr, "", "", false);
+					Image2DConvolver<Float> c3(inChannelIm, nullptr, "", "", False);
 					c3.setKernel("gauss", gauss[0], gauss[1], gauss[2]);
 					c3.setAxes(make_pair(0, 1));
 					c3.setScale(-1);
@@ -254,7 +254,7 @@ int main() {
 						);
 					}
 				}
-				Image2DConvolver<Float> c4(tim, nullptr, "", "", false);
+				Image2DConvolver<Float> c4(tim, nullptr, "", "", False);
 				c4.setKernel("gauss", gauss[0], gauss[1], gauss[2]);
 				c4.setAxes(make_pair(0, 1));
 				c4.setScale(-1);

@@ -70,7 +70,7 @@ int main(int argc, char* argv[]) {
 //       AlwaysAssert(name.isValid(), AipsError);
 //       input = File(name);
 //       AlwaysAssert(input.exists(), AipsError);
-//       AlwaysAssert(input.isSymLink() == false, AipsError);
+//       AlwaysAssert(input.isSymLink() == False, AipsError);
 //     }      
 //     int fd;
 //     ByteIO* ioPtr = 0;

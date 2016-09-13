@@ -43,7 +43,6 @@
 #include <display/DisplayDatas/TblAsContourDD.h>
 #include <display/DisplayDatas/TblAsContourDM.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // constructors
@@ -60,7 +59,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsLevels(0),
 		itsScale(0),
 		itsLine(0),
-		itsDash(true),
+		itsDash(True),
 		itsColor("foreground"),
 		itsType("frac") {
 		// get the names of the columns from the table
@@ -86,7 +85,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsLevels(0),
 		itsScale(0),
 		itsLine(0),
-		itsDash(true),
+		itsDash(True),
 		itsColor("foreground"),
 		itsType("frac") {
 		// open the table file - throw and error if there is a problem
@@ -145,13 +144,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // set a record
 	Bool TblAsContourDD::setOptions(Record &rec, Record &recOut) {
 		Bool ret = ActiveCaching2dDD::setOptions(rec,recOut);
-		Bool localchange = false, coordchange = false, error;
+		Bool localchange = False, coordchange = False, error;
 
 		if (readOptionRecord(itsOptQueryString, itsOptQueryStringUnset,
 		                     error, rec, "querystring")) {
 
 			arrangeQueryTable();
-			localchange = true;
+			localchange = True;
 		}
 
 		// set options for apperance of contours
@@ -182,7 +181,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				for (uInt i = 0; i < newLevels.nelements(); i++) {
 					itsLevels(i) = newLevels(i);
 				}
-				ret = true;
+				ret = True;
 			}
 		} else {
 			// throw(AipsError("no levels option set in TblAsContourDD"));
@@ -219,7 +218,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		} else {
 			querystring.define("value", itsOptQueryString);
 		}
-		querystring.define("allowunset", true);
+		querystring.define("allowunset", True);
 		rec.defineRecord("querystring", querystring);
 
 		// record for contour levels
@@ -241,7 +240,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		vlevels(10) = 10.0;
 		levels.define("default", vlevels);
 		levels.define("value", itsLevels);
-		levels.define("allowunset", false);
+		levels.define("allowunset", False);
 		rec.defineRecord("levels", levels);
 
 		// record for the scaling of the contour levels
@@ -252,7 +251,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		scale.define("ptype", "scalar");
 		scale.define("default", vscale);
 		scale.define("value", itsScale);
-		scale.define("allowunset", false);
+		scale.define("allowunset", False);
 		rec.defineRecord("scale", scale);
 
 		// record for the contour level type: absolute or (fractal?)
@@ -266,7 +265,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		type.define("popt", vtype);
 		type.define("default", "frac");
 		type.define("value", itsType);
-		type.define("allowunset", false);
+		type.define("allowunset", False);
 		rec.defineRecord("type", type);
 
 		// record for contour line parameters
@@ -279,7 +278,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		line.define("presolution", Float(0.1));
 		line.define("default", Float(0.5));
 		line.define("value", itsLine);
-		line.define("allowunset", false);
+		line.define("allowunset", False);
 		rec.defineRecord("line", line);
 
 		// record for type of contour line for negative values: dash or solid
@@ -287,9 +286,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		dash.define("dlformat", "dash");
 		dash.define("listname", "Dash negative contours?");
 		dash.define("ptype", "boolean");
-		dash.define("default", Bool(true));
+		dash.define("default", Bool(True));
 		dash.define("value", itsDash);
-		dash.define("allowunset", false);
+		dash.define("allowunset", False);
 		rec.defineRecord("dash", dash);
 
 		// record for color of contour lines
@@ -309,7 +308,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		color.define("popt", vcolor);
 		color.define("default", "foreground");
 		color.define("value", itsColor);
-		color.define("allowunset", false);
+		color.define("allowunset", False);
 		rec.defineRecord("color", color);
 
 		// get DParameter values which have information on the axis (columns) used
@@ -376,7 +375,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// setup values for query options
 		itsOptQueryString = "";
-		itsOptQueryStringUnset = true;
+		itsOptQueryStringUnset = True;
 		arrangeQueryTable();
 
 		// set contour level and apperance options
@@ -395,7 +394,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsScale = 0.1;
 		itsType = "frac";
 		itsLine = 0.5;
-		itsDash = true;
+		itsDash = True;
 		itsColor = "foreground";
 
 
@@ -416,11 +415,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			String whereStr = "WHERE " + itsOptQueryString;
 			itsQueryTable = new Table(tableCommand(selectStr + fromStr + whereStr));
 			if (itsQueryTable) {
-				return true;
+				return True;
 			}
 		}
 		// query table was not set
-		return false;
+		return False;
 	}
 
 	void TblAsContourDD::getCoordinateSystem() {
@@ -551,7 +550,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		// now resize the selected column names vector
-		retval.resize(n, true);
+		retval.resize(n, True);
 
 		return retval;
 	}
@@ -560,7 +559,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // construct the parameters list
 	void TblAsContourDD::constructParameters() {
 
-		Bool isarray = true, notarray = false;
+		Bool isarray = true, notarray = False;
 
 		// get a list of column names with numerical data in arrays
 		Vector<String> xstring = getColumnNamesOfType(isarray);
@@ -575,11 +574,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Vector<String> ystring = getColumnNamesOfType(notarray);
 
 		// increase the size of the x column string and add the "none" option
-		xstring.resize(xstring.nelements() + 1, true);
+		xstring.resize(xstring.nelements() + 1, True);
 		xstring(xstring.nelements() - 1) = "<none>";
 
 		// increase the size of the y column string and add the "rows" option
-		ystring.resize(ystring.nelements() + 1, true);
+		ystring.resize(ystring.nelements() + 1, True);
 		ystring(ystring.nelements() - 1) = "<row>";
 
 		// now set up the X column choice parameters
@@ -681,7 +680,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			Array<double> typedata;
 			// read the column into an array
 			ROArrayColumn<double> dataCol(*table(),columnName);
-			dataCol.getColumn(typedata,true);
+			dataCol.getColumn(typedata,True);
 			// let the maximum value be the number of elements in the array
 			// typedata is ndim+row so we need to look at its shape the get
 			// the number of pixels in a column row (nx)
@@ -694,7 +693,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if (type == TpArrayFloat) {
 			Array<float> typedata;
 			ROArrayColumn<float> dataCol(*table(),columnName);
-			dataCol.getColumn(typedata,true);
+			dataCol.getColumn(typedata,True);
 			// let the maximum value be the number of elements - assume 1-D array
 			IPosition length = typedata.shape();
 			extrema(1) = length(0); // get the length of the first axis which is nx
@@ -709,28 +708,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if (type == TpArrayShort) {
 			Array<short> typedata;
 			ROArrayColumn<short> dataCol(*table(),columnName);
-			dataCol.getColumn(typedata,true);
+			dataCol.getColumn(typedata,True);
 			IPosition length = typedata.shape();
 			extrema(1) = length(0); // get the length of the first axis which is nx
 		}
 		if (type == TpArrayUShort) {
 			Array<uShort> typedata;
 			ROArrayColumn<uShort> dataCol(*table(),columnName);
-			dataCol.getColumn(typedata,true);
+			dataCol.getColumn(typedata,True);
 			IPosition length = typedata.shape();
 			extrema(1) = length(0); // get the length of the first axis which is nx
 		}
 		if (type == TpArrayInt) {
 			Array<int> typedata;
 			ROArrayColumn<int> dataCol(*table(),columnName);
-			dataCol.getColumn(typedata,true);
+			dataCol.getColumn(typedata,True);
 			IPosition length = typedata.shape();
 			extrema(1) = length(0); // get the length of the first axis which is nx
 		}
 		if (type == TpArrayUInt) {
 			Array<uInt> typedata;
 			ROArrayColumn<uInt> dataCol(*table(),columnName);
-			dataCol.getColumn(typedata,true);
+			dataCol.getColumn(typedata,True);
 			IPosition length = typedata.shape();
 			extrema(1) = length(0); // get the length of the first axis which is nx
 		}
@@ -742,14 +741,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			Vector<double> typedata;
 			// read the scalar column into an array
 			ROScalarColumn<double> dataCol(*table(),columnName);
-			dataCol.getColumn(typedata,true);
+			dataCol.getColumn(typedata,True);
 			// minima and maxima of data are world coordinate min and max
 			minMax(extrema(0),extrema(1),typedata);
 		}
 		if (type == TpFloat) {
 			Vector<float> typedata;
 			ROScalarColumn<float> dataCol(*table(),columnName);
-			dataCol.getColumn(typedata,true);
+			dataCol.getColumn(typedata,True);
 			Array<double> data;
 			data.resize(typedata.shape());
 			convertArray(data,typedata);
@@ -759,7 +758,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if (type == TpShort) {
 			Vector<short> typedata;
 			ROScalarColumn<short> dataCol(*table(),columnName);
-			dataCol.getColumn(typedata,true);
+			dataCol.getColumn(typedata,True);
 			Array<double> data;
 			data.resize(typedata.shape());
 			convertArray(data,typedata);
@@ -769,7 +768,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if (type == TpUShort) {
 			Vector<uShort> typedata;
 			ROScalarColumn<uShort> dataCol(*table(),columnName);
-			dataCol.getColumn(typedata,true);
+			dataCol.getColumn(typedata,True);
 			Array<double> data;
 			data.resize(typedata.shape());
 			convertArray(data,typedata);
@@ -779,7 +778,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if (type == TpInt) {
 			Vector<int> typedata;
 			ROScalarColumn<int> dataCol(*table(),columnName);
-			dataCol.getColumn(typedata,true);
+			dataCol.getColumn(typedata,True);
 			Array<double> data;
 			data.resize(typedata.shape());
 			convertArray(data,typedata);
@@ -789,7 +788,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if (type == TpUInt) {
 			Vector<uInt> typedata;
 			ROScalarColumn<uInt> dataCol(*table(),columnName);
-			dataCol.getColumn(typedata,true);
+			dataCol.getColumn(typedata,True);
 			Array<double> data;
 			data.resize(typedata.shape());
 			// have to change template file

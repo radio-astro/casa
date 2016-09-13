@@ -62,7 +62,6 @@
 #include <unistd.h>
 using namespace std;
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -93,14 +92,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsNPolChunks = 1;
     itsPolId = 0;
 
-    itsUseWeight=false;
+    itsUseWeight=False;
 
     itsImageShape=IPosition(4,0,0,0,0);
     itsImageName=String("");
     itsCoordSys=CoordinateSystem();
     itsMiscInfo=Record();
 
-    //    itsValidity = false;
+    //    itsValidity = False;
 
     init();
 
@@ -193,8 +192,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsNPolChunks = 1;
     itsPolId = 0;
 
-    Bool exists=true;
-    Bool sumwtexists=true;
+    Bool exists=True;
+    Bool sumwtexists=True;
     for(uInt tix=0;tix<2*itsNTerms-1;tix++) 
       {
 	if( tix<itsNTerms ) {
@@ -238,7 +237,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	itsUseWeight = getUseWeightImage( *imptr );
 	if( itsUseWeight && ! doesImageExist(itsImageName+String(".weight.tt0")) )
 	  {
-	    throw(AipsError("Internal error : MultiTerm Sumwt has a useweightimage=true but the weight image does not exist."));
+	    throw(AipsError("Internal error : MultiTerm Sumwt has a useweightimage=True but the weight image does not exist."));
 	  }
       }
     else
@@ -247,7 +246,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
       }// if psf0 or res0 exist
 
-    if( ignorefacets==true ) itsNFacets=1;
+    if( ignorefacets==True ) itsNFacets=1;
 
     init();
     validate();
@@ -408,19 +407,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     //    cout << "In MT::checkValidity imask is " << imask << endl;
 
-    Bool valid = true;
+    Bool valid = True;
 
     for(uInt tix=0; tix<2*itsNTerms-1; tix++)
       {
 	
-	if(ipsf==true)
+	if(ipsf==True)
 	  { psf(tix); 
 	    valid = valid & ( itsPsfs[tix] && itsPsfs[tix]->shape()==itsImageShape ); }
-	if(iweight==true)
+	if(iweight==True)
 	  { weight(tix);  
 	    valid = valid & ( itsWeights[tix] && itsWeights[tix]->shape()==itsImageShape ); }
 
-	if(isumwt==true) {
+	if(isumwt==True) {
 	    IPosition useShape(itsImageShape);
 	    useShape[0]=itsNFacets; useShape[1]=itsNFacets;
 	    sumwt(tix);  
@@ -429,25 +428,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	
 	if( tix< itsNTerms )
 	  {
-	    if(iresidual==true)
+	    if(iresidual==True)
 	      { residual(tix);  
 		valid = valid & ( itsResiduals[tix] && itsResiduals[tix]->shape()==itsImageShape ); }
-	    if(imodel==true)
+	    if(imodel==True)
 	      { model(tix);
 		valid = valid & ( itsModels[tix] && itsModels[tix]->shape()==itsImageShape); }
-	    if(irestored==true)
+	    if(irestored==True)
 	      { image(tix);
 		valid = valid & ( itsImages[tix] && itsImages[tix]->shape()==itsImageShape); }
 	  }
       }
     
-    if(imask==true)
+    if(imask==True)
       { mask(); valid = valid & ( itsMask && itsMask->shape()==itsImageShape); 
 	//	cout << " Mask null ? " << (bool) itsMask << endl;
       }
-    if(ialpha==true)
+    if(ialpha==True)
       { alpha();  valid = valid & ( itsAlpha && itsAlpha->shape()==itsImageShape ); }
-    if(ibeta==true)
+    if(ibeta==True)
       { beta();  valid = valid & ( itsBeta && itsBeta->shape()==itsImageShape ); }
 
     return valid;
@@ -493,7 +492,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if( itsBetaPBcor ) releaseImage( itsBetaPBcor );
     if( itsGridWt ) releaseImage( itsGridWt );
     
-    return true; // do something more intelligent here.
+    return True; // do something more intelligent here.
   }
 
   Bool SIImageStoreMultiTerm::releaseComplexGrids() 
@@ -689,7 +688,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     if( itsAlpha && itsAlpha->shape() == itsImageShape ) { return itsAlpha; }
     //    checkRef( itsAlpha , "alpha" );
-    itsAlpha = openImage( itsImageName+String(".alpha"), false );
+    itsAlpha = openImage( itsImageName+String(".alpha"), False );
     //    itsAlpha->setUnits("Alpha");
     return itsAlpha;
   }
@@ -698,7 +697,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     if( itsBeta && itsBeta->shape() == itsImageShape ) { return itsBeta; }
     //    checkRef( itsBeta , "beta" );
-    itsBeta = openImage( itsImageName+String(".beta"), false );
+    itsBeta = openImage( itsImageName+String(".beta"), False );
     //    itsBeta->setUnits("Beta");
     return itsBeta;
   }
@@ -707,7 +706,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     if( itsAlphaError && itsAlphaError->shape() == itsImageShape ) { return itsAlphaError; }
     //    checkRef( itsAlpha , "alpha" );
-    itsAlphaError = openImage( itsImageName+String(".alpha.error"), false );
+    itsAlphaError = openImage( itsImageName+String(".alpha.error"), False );
     //    itsAlpha->setUnits("Alpha");
     return itsAlphaError;
   }
@@ -888,7 +887,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	if( normtype=="flatsky") {
 	  Array<Float> arrmod;
-	  model(0)->get( arrmod, true );
+	  model(0)->get( arrmod, True );
 
 	  os << "Model is already flat sky with peak flux : " << max(arrmod);
 	  os << ". No need to divide before prediction" << LogIO::POST;
@@ -1129,7 +1128,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  AlwaysAssert( ind < 2*itsNTerms-1, AipsError );
 
 	  Array<Float> lsumwt;
-	  sumwt( ind )->get( lsumwt, false );
+	  sumwt( ind )->get( lsumwt, False );
 	  //	  cout << "lsumwt shape : " << lsumwt.shape() << endl;
 	  AlwaysAssert( lsumwt.shape().nelements()==4, AipsError );
 	  AlwaysAssert( lsumwt.shape()[0]>0, AipsError );
@@ -1166,7 +1165,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  {
 	    Array<Float> lsumwt;
 	    AlwaysAssert( 2*tix < 2*itsNTerms-1, AipsError );
-	    sumwt(2*tix)->get( lsumwt , false ); 
+	    sumwt(2*tix)->get( lsumwt , False ); 
 	    
 	    IPosition shp( lsumwt.shape() );
 	    //cout << "Sumwt shape : " << shp << " : " << lsumwt << endl;
@@ -1231,12 +1230,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     /// There MUST be a more efficient way to do this !!!!!  I hope. 
     /// Maybe save this info and change it anytime model() is accessed.... 
-    Bool emptymodel=true;
+    Bool emptymodel=True;
     for(uInt tix=0;tix<itsNTerms;tix++)
       {
-	//if( fabs( getModelFlux(tix) ) > 1e-08  ) emptymodel=false;
+	//if( fabs( getModelFlux(tix) ) > 1e-08  ) emptymodel=False;
 	if( doesImageExist(itsImageName+String(".model.tt")+String::toString(tix)) && 
-	    fabs( getModelFlux(tix) ) > 1e-08  ) emptymodel=false;
+	    fabs( getModelFlux(tix) ) > 1e-08  ) emptymodel=False;
       } 
     return  emptymodel;
   }
@@ -1325,7 +1324,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   /*
   Bool SIImageStoreMultiTerm::getUseWeightImage()
   {  if( itsParentSumWts.nelements()==0 || ! itsParentSumWts[0] ) 
-      {return false;} 
+      {return False;} 
     else
       {
 	Bool ret = SIImageStore::getUseWeightImage( *(itsParentSumWts[0]) );

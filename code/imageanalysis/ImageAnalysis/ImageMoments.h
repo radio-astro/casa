@@ -32,14 +32,10 @@
 
 #include <imageanalysis/ImageTypedefs.h>
 
-namespace casacore{
-
-template <class T> class MaskedLattice;
-}
-
 namespace casa {
 
 class ImageMomentsProgressMonitor;
+template <class T> class MaskedLattice;
 
 // <summary>
 // This class generates moments from an image.
@@ -51,9 +47,9 @@ class ImageMomentsProgressMonitor;
 // </reviewed>
 
 // <prerequisite>
-//   <li> <linkto class="casacore::ImageInterface">casacore::ImageInterface</linkto>
+//   <li> <linkto class="ImageInterface">ImageInterface</linkto>
 //   <li> <linkto class="MomentsBase">MomentsBase</linkto>
-//   <li> <linkto class="casacore::LatticeApply">casacore::LatticeApply</linkto>   
+//   <li> <linkto class="LatticeApply">LatticeApply</linkto>   
 //   <li> <linkto class="MomentCalcBase">MomentCalcBase</linkto>
 // </prerequisite>
 
@@ -72,7 +68,7 @@ class ImageMomentsProgressMonitor;
 //  pixel.  This class offers many different moments and a variety of
 //  interactive and automatic ways to compute them.
 //
-//  This class only accepts images of type <src>casacore::Float</src> and <src>casacore::Double</src>.
+//  This class only accepts images of type <src>Float</src> and <src>Double</src>.
 //  This restriction is because of the plotting capabilities which are a
 //  bit awkward for other types.
 //
@@ -124,7 +120,7 @@ class ImageMomentsProgressMonitor;
 //  RA-VELOCITY with the coordinate information retained for the DEC axis so that 
 //  the coupled nature of RA/DEC coordinates is preserved.    
 //
-//  Output images are created with an all true (good) mask.  If, for a given
+//  Output images are created with an all True (good) mask.  If, for a given
 //  pixel, the moment calculation fails, then the mask is set to F.
 //
 //  When making plots, the order in which the spectra are  displayed is determined
@@ -135,7 +131,7 @@ class ImageMomentsProgressMonitor;
 //                   Allowed Methods
 //                   ---------------
 //
-//   casacore::Smooth    Window      Fit   in/exclude   Interactive 
+//   Smooth    Window      Fit   in/exclude   Interactive 
 //   -----------------------------------------------------
 //     N          N         N        N            N       
 //     Y/N        N         N        Y            N       
@@ -178,25 +174,25 @@ class ImageMomentsProgressMonitor;
 // <srcBlock>
 //// Set state function argument values
 //
-//      casacore::Vector<casacore::Int> moments(2);
-//      moments(0) = ImageMoments<casacore::Float>::AVERAGE;
-//      moments(1) = ImageMoments<casacore::Float>::WEIGHTED_MEAN_COORDINATE;
-//      casacore::Vector<int> methods(2);
-//      methods(0) = ImageMoments<casacore::Float>::WINDOW;
-//      methods(1) = ImageMoments<casacore::Float>::INTERACTIVE;
-//      casacore::Vector<casacore::Int> nxy(2);
+//      Vector<Int> moments(2);
+//      moments(0) = ImageMoments<Float>::AVERAGE;
+//      moments(1) = ImageMoments<Float>::WEIGHTED_MEAN_COORDINATE;
+//      Vector<int> methods(2);
+//      methods(0) = ImageMoments<Float>::WINDOW;
+//      methods(1) = ImageMoments<Float>::INTERACTIVE;
+//      Vector<Int> nxy(2);
 //      nxy(0) = 3;
 //      nxy(1) = 3;
 //
 //// Open paged image
 //     
-//      casacore::PagedImage<casacore::Float> inImage(inName);  
+//      PagedImage<Float> inImage(inName);  
 //
 //// Construct moment helper object
 //
-//      casacore::LogOrigin or("myClass", "myFunction(...)", WHERE);
-//      casacore::LogIO os(or);
-//      ImageMoments<casacore::Float> moment(casacore::SubImage<casacore::Float>(inName), os);
+//      LogOrigin or("myClass", "myFunction(...)", WHERE);
+//      LogIO os(or);
+//      ImageMoments<Float> moment(SubImage<Float>(inName), os);
 //
 //// Specify state via control functions
 //
@@ -241,15 +237,15 @@ public:
 
     ImageMoments() = delete;
 
-    // Constructor takes an image and a <src>casacore::LogIO</src> object for logging purposes.
+    // Constructor takes an image and a <src>LogIO</src> object for logging purposes.
     // You specify whether output images are  automatically overwritten if pre-existing,
     // or whether an intercative choice dialog widget appears (overWriteOutput=F)
     // You may also determine whether a progress meter is displayed or not.
     ImageMoments (
-        const casacore::ImageInterface<T>& image,
-        casacore::LogIO &os,
-        casacore::Bool overWriteOutput=false,
-        casacore::Bool showProgress=true
+        const ImageInterface<T>& image,
+        LogIO &os,
+        Bool overWriteOutput=False,
+        Bool showProgress=True
     );
 
     ImageMoments(const ImageMoments<T> &other) = delete;
@@ -259,47 +255,47 @@ public:
 
     ImageMoments<T> &operator=(const ImageMoments<T> &other) = delete;
 
-    // Set the moment axis (0 relative).  A return value of <src>false</src>
+    // Set the moment axis (0 relative).  A return value of <src>False</src>
     // indicates that the axis was not contained in the image. If you don't
     // call this function, the default state of the class is to set the
     // moment axis to the spectral axis if it can find one.  Otherwise
     // an error will result.
-    casacore::Bool setMomentAxis (casacore::Int momentAxis);
+    Bool setMomentAxis (Int momentAxis);
 
-    // This function invokes smoothing of the input image.  Give <src>casacore::Int</src>
+    // This function invokes smoothing of the input image.  Give <src>Int</src>
     // arrays for the axes (0 relative) to be smoothed and the smoothing kernel
     // types (use the <src>enum KernelTypes</src>) for each axis.  Give a
-    // <src>casacore::Double</src> array for the widths (full width for BOXCAR and full
+    // <src>Double</src> array for the widths (full width for BOXCAR and full
     // width at half maximum for GAUSSIAN) in pixels of the smoothing kernels for
     // each axis.  For HANNING smoothing, you always get the quarter-half-quarter
-    // kernel (no matter what you might ask for).  A return value of <src>false</src>
+    // kernel (no matter what you might ask for).  A return value of <src>False</src>
     // indicates that you have given an inconsistent or invalid set of smoothing
     // parameters.  If you don't call this function the default state of the
     // class is to do no smoothing.  The kernel types are specified with
-    // the casacore::VectorKernel::KernelTypes enum
-    casacore::Bool setSmoothMethod(
-        const casacore::Vector<casacore::Int>& smoothAxes,
-        const casacore::Vector<casacore::Int>& kernelTypes,
-        const casacore::Vector<casacore::Quantum<casacore::Double> >& kernelWidths
+    // the VectorKernel::KernelTypes enum
+    Bool setSmoothMethod(
+        const Vector<Int>& smoothAxes,
+        const Vector<Int>& kernelTypes,
+        const Vector<Quantum<Double> >& kernelWidths
    );
 
-   casacore::Bool setSmoothMethod(
-       const casacore::Vector<casacore::Int>& smoothAxes,
-       const casacore::Vector<casacore::Int>& kernelTypes,
-       const casacore::Vector<casacore::Double>& kernelWidths
+   Bool setSmoothMethod(
+       const Vector<Int>& smoothAxes,
+       const Vector<Int>& kernelTypes,
+       const Vector<Double>& kernelWidths
    );
 
    // This is the function that does all the computational work.  It should be called
    // after the <src>set</src> functions.
    // If the axis being collapsed comes from a coordinate with one axis only,
    // the axis and its coordinate are physically removed from the output image.  Otherwise,
-   // if <src>removeAxes=true</src> then the output axis is logically removed from the
-   // the output CoordinateSystem.  If <src>removeAxes=false</src> then the axis
+   // if <src>removeAxes=True</src> then the output axis is logically removed from the
+   // the output CoordinateSystem.  If <src>removeAxes=False</src> then the axis
    // is retained with shape=1 and with its original coordinate information (which
    // is probably meaningless).
    //
-   // The output vector will hold PagedImages or TempImages (doTemp=true).
-   // If doTemp is true, the outFileName is not used.
+   // The output vector will hold PagedImages or TempImages (doTemp=True).
+   // If doTemp is True, the outFileName is not used.
    //
    // If you create PagedImages, outFileName is the root name for
    // the output files.  Suffixes will be made up internally to append
@@ -307,20 +303,20 @@ public:
    // this will be the actual name of the output file.  If you don't set this
    // variable, the default state of the class is to set the output name root to
    // the name of the input file.
-   vector<SHARED_PTR<casacore::MaskedLattice<T> > >  createMoments(
-       casacore::Bool doTemp, const casacore::String& outFileName,
-       casacore::Bool removeAxes=true
+   vector<SHARED_PTR<MaskedLattice<T> > >  createMoments(
+       Bool doTemp, const String& outFileName,
+       Bool removeAxes=True
    );
 
-   // Set a new image.  A return value of <src>false</src> indicates the
-   // image had an invalid type (this class only accepts casacore::Float or casacore::Double images).
-   casacore::Bool setNewImage (const casacore::ImageInterface<T>& image);
+   // Set a new image.  A return value of <src>False</src> indicates the
+   // image had an invalid type (this class only accepts Float or Double images).
+   Bool setNewImage (const ImageInterface<T>& image);
 
    // Get CoordinateSystem
-   const casacore::CoordinateSystem& coordinates() {return _image->coordinates();};
+   const CoordinateSystem& coordinates() {return _image->coordinates();};
 
    // Get shape
-   casacore::IPosition getShape() const { return _image->shape(); }
+   IPosition getShape() const { return _image->shape(); }
 
    //Set an ImageMomentsProgressMonitor interested in getting updates on the
    //progress of the collapse process.
@@ -331,13 +327,13 @@ private:
    SPCIIT _image = SPCIIT(nullptr);
    ImageMomentsProgressMonitor* _progressMonitor = nullptr;
 
-   // casacore::Smooth an image
+   // Smooth an image
    SPIIT _smoothImage();
 
    // Determine the noise by fitting a Gaussian to a histogram
    // of the entire image above the 25% levels.  If a plotting
    // device is set, the user can interact with this process.
-   void _whatIsTheNoise (T& noise, const casacore::ImageInterface<T>& image);
+   void _whatIsTheNoise (T& noise, const ImageInterface<T>& image);
 
 protected:
    using MomentsBase<T>::os_p;

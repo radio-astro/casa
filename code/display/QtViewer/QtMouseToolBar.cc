@@ -30,7 +30,6 @@
 #include <display/QtViewer/QtMouseToolBar.qo.h>
 #include <display/QtViewer/QtDisplayPanel.qo.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
@@ -155,7 +154,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			// This will change via calls to chgMouseBtn_(), even in initialization.
 
 			mtb->setIcon(QIcon( (":/icons/" + iconName(tool) + "0.png").c_str( ) ));
-			mtb->setCheckable(true);
+			mtb->setCheckable(True);
 
 			// Pressing a button will order a button assignment change from the
 			// central registry.

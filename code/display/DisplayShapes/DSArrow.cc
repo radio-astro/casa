@@ -36,7 +36,6 @@
 #include <display/Display/PixelCanvas.h>
 #include <casa/iostream.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	DSArrow::DSArrow() :
@@ -118,7 +117,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				maxX = 1 + Float(3 * itsHeadSize->value());
 				itsUnrotatedHead = newHead;
 
-				itsArrowHead = new DSPoly(newHead, false, false);
+				itsArrowHead = new DSPoly(newHead, False, False);
 				if (itsArrowHeadStyle == DSArrow::Filled_Triangle)
 					itsArrowHead->setFillStyle(DSClosed::Full_Fill);
 				else itsArrowHead->setFillStyle(DSClosed::No_Fill);
@@ -138,7 +137,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				itsUnrotatedHead.resize(newHead.nrow(), newHead.ncolumn());
 				itsUnrotatedHead = newHead;
 
-				itsArrowHead = new DSPoly(newHead, false, false);
+				itsArrowHead = new DSPoly(newHead, False, False);
 				itsArrowHead->setFillStyle(DSClosed::Full_Fill);
 
 			} else {
@@ -172,14 +171,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	Bool DSArrow::setOptions(const Record& newSettings) {
 		// Update required?
-		Bool localChange = false;
+		Bool localChange = False;
 
 		// Do we need a new arrow head?
-		Bool arrowHead = false;
+		Bool arrowHead = False;
 
 		if (itsHeadSize->fromRecord(newSettings)) {
-			localChange = true;
-			arrowHead = true;
+			localChange = True;
+			arrowHead = True;
 		}
 
 		if (newSettings.isDefined("arrowheadstyle")) {
@@ -198,15 +197,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			}
 
 			if (cast !=itsArrowHeadStyle) {
-				arrowHead = true;
-				localChange = true;
+				arrowHead = True;
+				localChange = True;
 				itsArrowHeadStyle = cast;
 			}
 
 		}
 
 		if (DSLine::setOptions(newSettings)) {
-			localChange = true;
+			localChange = True;
 		}
 
 		if (arrowHead) buildArrowHead();

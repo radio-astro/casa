@@ -48,7 +48,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </prerequisite>
 //
 // <etymology>
-// Samples casacore::Data as needed for various estimation algorithms
+// Samples Data as needed for various estimation algorithms
 // </etymology>
 //
 // <synopsis> 
@@ -60,12 +60,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // THe calculated quantities are
 // <ul>
-// <li> The casacore::Data Sampling casacore::Function: the coordinates of the sampled
+// <li> The Data Sampling Function: the coordinates of the sampled
 // points in some space
-// <li> The casacore::Data: the actual data points corresponding to the 
-// casacore::Data Sampling Function
+// <li> The Data: the actual data points corresponding to the 
+// Data Sampling Function
 // <li> The Error: the error per data point.
-// <li> The Point Response casacore::Function in that space
+// <li> The Point Response Function in that space
 //
 // The DataSampling object is constructed with the data sources
 // as arguments, and then the calculate method is used to find the
@@ -78,10 +78,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // PixonProcessor pp;
 // 
 // // Get the model image
-// casacore::PagedImage<casacore::Float> modelImage(modelName);
+// PagedImage<Float> modelImage(modelName);
 //
 // // Set up the data sampling
-// VPSkyJones vp(ms, true, parAngleInc, squintType);
+// VPSkyJones vp(ms, True, parAngleInc, squintType);
 // SDDataSampling ds(ms, vp);
 //
 // // Calculating data sampling, etc.
@@ -114,26 +114,26 @@ public:
 
   virtual ~DataSampling();
 
-  const casacore::Array<casacore::Float>& getDX() const;
+  const Array<Float>& getDX() const;
 
-  const casacore::Array<casacore::Float>& getData() const;
+  const Array<Float>& getData() const;
 
-  const casacore::Array<casacore::Float>& getSigma() const;
+  const Array<Float>& getSigma() const;
 
-  const casacore::Array<casacore::Float>& getPRF() const;
+  const Array<Float>& getPRF() const;
 
-  casacore::String getIDLScript() const {return IDLScript_p;};
+  String getIDLScript() const {return IDLScript_p;};
 
 protected:
 
-  casacore::Array<casacore::Float> dx_p;
-  casacore::Array<casacore::Float> data_p;
-  casacore::Array<casacore::Float> sigma_p;
-  casacore::Array<casacore::Float> prf_p;
+  Array<Float> dx_p;
+  Array<Float> data_p;
+  Array<Float> sigma_p;
+  Array<Float> prf_p;
 
-  casacore::Int lastRow;
+  Int lastRow;
 
-  casacore::String IDLScript_p;
+  String IDLScript_p;
 
   void ok();
 

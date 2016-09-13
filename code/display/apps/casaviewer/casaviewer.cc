@@ -61,7 +61,6 @@
 #include <display/DisplayErrors.h>
 
 #include <casa/namespace.h>
-using namespace casa;
 
 static pid_t manager_root_pid = 0;
 static bool sigterm_received = false;
@@ -190,8 +189,8 @@ int main( int argc, const char *argv[] ) {
 		FILE *file = fopen(logfile_path,"a");
 		if ( file ) {
 			fclose(file);
-			casacore::LogSinkInterface *sink = new casacore::StreamLogSink(new ofstream(logfile_path,std::ios_base::app));
-			casacore::LogSink::globalSink(sink);
+			casa::LogSinkInterface *sink = new casa::StreamLogSink(new ofstream(logfile_path,std::ios_base::app));
+			casa::LogSink::globalSink(sink);
 		}
 	}
 
@@ -287,7 +286,7 @@ int main( int argc, const char *argv[] ) {
 
 			if(filename!="") {
 
-				Bool tryDDcreate = true;
+				Bool tryDDcreate = True;
 
 				if(arg3=="lel" || arg2=="lel") {
 
@@ -307,7 +306,7 @@ int main( int argc, const char *argv[] ) {
 
 						// filename is a restore file.
 
-						tryDDcreate = false;
+						tryDDcreate = False;
 
 						dpg->restorePanelState(filename);
 					}
@@ -316,12 +315,12 @@ int main( int argc, const char *argv[] ) {
 
 						if(datatype=="nonexistent") {
 							cerr << "***Can't find  " << filename << "***" << endl;
-							tryDDcreate = false;
+							tryDDcreate = False;
 						}
 
 						if(datatype=="unknown") {
 							cerr << "***Unknown file type for  " << filename << "***" << endl;
-							tryDDcreate = false;
+							tryDDcreate = False;
 						}
 
 						// filename names a normal data file.  If user has passed a valid
@@ -366,7 +365,7 @@ int main( int argc, const char *argv[] ) {
 		return stat;
 	}
 
-	catch (const casacore::AipsError& err) {
+	catch (const casa::AipsError& err) {
 		cerr<<"**"<<err.getMesg()<<endl;
 	} catch (...) {
 		cerr<<"**non-AipsError exception**"<<endl;

@@ -164,7 +164,7 @@ try {
         AlwaysAssert(allNear(ie2.get(), vVal, 1e-6), AipsError);
      }
      {
-        ImageExpr<Float> ie = pol.linPolInt(false, 0.0);
+        ImageExpr<Float> ie = pol.linPolInt(False, 0.0);
         Float val = sqrt(qVal*qVal + uVal*uVal);
         AlwaysAssert(allNear(ie.get(), val, 1e-6), AipsError);
      }
@@ -179,27 +179,27 @@ try {
         AlwaysAssert(allNear(ie.get(), val, 1e-6), AipsError);
      }
      {
-        ImageExpr<Float> ie = pol.totPolInt(false, 0.0);
+        ImageExpr<Float> ie = pol.totPolInt(False, 0.0);
         Float val = sqrt(qVal*qVal + uVal*uVal + vVal*vVal);
         AlwaysAssert(allNear(ie.get(), val, 1e-6), AipsError);
      }
      {
-        ImageExpr<Float> ie = pol.linPolPosAng(true);
+        ImageExpr<Float> ie = pol.linPolPosAng(True);
         Float val =  0.5 * atan2(uVal,qVal);
         AlwaysAssert(allNear(ie.get(), val, 1e-6), AipsError);
      }
      {
-        ImageExpr<Float> ie = pol.fracLinPol(false, 0.0);
+        ImageExpr<Float> ie = pol.fracLinPol(False, 0.0);
         Float val = sqrt(qVal*qVal + uVal*uVal) / iVal;
         AlwaysAssert(allNear(ie.get(), val, 1e-6), AipsError);
      }
      {
-        ImageExpr<Float> ie = pol.fracTotPol(false, 0.0);
+        ImageExpr<Float> ie = pol.fracTotPol(False, 0.0);
         Float val = sqrt(qVal*qVal + uVal*uVal +vVal*vVal) / iVal;
         AlwaysAssert(allNear(ie.get(), val, 1e-6), AipsError);
      }
      {
-        ImageExpr<Float> ie = ImagePolarimetry::depolarizationRatio(*pIm, *pIm2, false, 0.0);
+        ImageExpr<Float> ie = ImagePolarimetry::depolarizationRatio(*pIm, *pIm2, False, 0.0);
         Float val1 = sqrt(qVal*qVal + uVal*uVal) / iVal;
         Float val2 = sqrt(qVal2*qVal2 + uVal2*uVal2) / iVal2;
         Float val = val1/val2;
@@ -264,7 +264,7 @@ try {
         AlwaysAssert(near(sig, sigma, 1e-2), AipsError);
      }
      {
-        ImageExpr<Float> ie = pol.linPolInt(true, 10.0, -1.0);
+        ImageExpr<Float> ie = pol.linPolInt(True, 10.0, -1.0);
         Float mean2 = mean(ie.get());
         Float p = sqrt(qVal*qVal + uVal*uVal - sigma*sigma);
         AlwaysAssert(near(mean2, p, 1e-2), AipsError);
@@ -274,7 +274,7 @@ try {
         AlwaysAssert(near(err, sigma, 1e-2), AipsError);
      }
      {
-        ImageExpr<Float> ie = pol.totPolInt(true, 10.0, -1.0);
+        ImageExpr<Float> ie = pol.totPolInt(True, 10.0, -1.0);
         Float mean2 = mean(ie.get());
         Float p = sqrt(qVal*qVal + uVal*uVal +vVal*vVal - sigma*sigma);
         AlwaysAssert(near(mean2, p, 1e-2), AipsError);
@@ -286,7 +286,7 @@ try {
      {
         Float p = sqrt(qVal*qVal + uVal*uVal);
         Float m = p / iVal;
-        ImageExpr<Float> ie = pol.fracLinPol(true, 10.0, -1.0);
+        ImageExpr<Float> ie = pol.fracLinPol(True, 10.0, -1.0);
         Float mean2 = mean(ie.get());
         AlwaysAssert(near(mean2, m, 1e-2), AipsError);
 //
@@ -300,7 +300,7 @@ try {
      {
         Float p = sqrt(qVal*qVal + uVal*uVal + vVal*vVal);
         Float m = p / iVal;
-        ImageExpr<Float> ie = pol.fracTotPol(true, 10.0, -1.0);
+        ImageExpr<Float> ie = pol.fracTotPol(True, 10.0, -1.0);
         Float mean2 = mean(ie.get());
         AlwaysAssert(near(mean2, m, 1e-2), AipsError);
 //
@@ -312,7 +312,7 @@ try {
         AlwaysAssert(allNear(mean2, ee, 1e-2), AipsError);
      }
      {
-        ImageExpr<Float> ie = ImagePolarimetry::depolarizationRatio(*pIm, *pIm2, false, 10.0, -1.0);
+        ImageExpr<Float> ie = ImagePolarimetry::depolarizationRatio(*pIm, *pIm2, False, 10.0, -1.0);
         Float p1 = sqrt(qVal*qVal + uVal*uVal);
         Float p2 = sqrt(qVal2*qVal2 + uVal2*uVal2);
         Float m1 = p1 / iVal;
@@ -321,7 +321,7 @@ try {
         Float mean2 = mean(ie.get());
         AlwaysAssert(near(mean2, d, 1e-2), AipsError);
 //
-        ImageExpr<Float> ee = ImagePolarimetry::sigmaDepolarizationRatio(*pIm, *pIm2, false, 10.0, -1.0);
+        ImageExpr<Float> ee = ImagePolarimetry::sigmaDepolarizationRatio(*pIm, *pIm2, False, 10.0, -1.0);
         Float sigp = sigma;
         Float sigi = sigma;
 //
@@ -416,99 +416,99 @@ try {
 	   ImagePolarimetry up(u);
 
 	   tp.complexFractionalLinearPolarization();
-	   Bool except = false;
+	   Bool except = False;
 	   try {
 		   up.complexFractionalLinearPolarization();
 	   }
 	   catch (AipsError) {
-		   except = true;
+		   except = True;
 	   }
 	   AlwaysAssert(except, AipsError);
 
 	   tp.complexLinearPolarization();
-	   except = false;
+	   except = False;
 	   try {
 		   up.complexLinearPolarization();
 	   }
 	   catch (AipsError) {
-		   except = true;
+		   except = True;
 	   }
 	   AlwaysAssert(except, AipsError);
 
-	   ImagePolarimetry::depolarizationRatio(t, t, true);
-	   except = false;
+	   ImagePolarimetry::depolarizationRatio(t, t, True);
+	   except = False;
 	   try {
-		   ImagePolarimetry::depolarizationRatio(u, u, true);
+		   ImagePolarimetry::depolarizationRatio(u, u, True);
 	   }
 	   catch (AipsError) {
-		   except = true;
+		   except = True;
 	   }
 	   AlwaysAssert(except, AipsError);
-	   except = false;
+	   except = False;
 	   try {
-		   ImagePolarimetry::depolarizationRatio(t, u, true);
+		   ImagePolarimetry::depolarizationRatio(t, u, True);
 	   }
 	   catch (AipsError) {
-		   except = true;
+		   except = True;
 	   }
 	   AlwaysAssert(except, AipsError);
 
 	   IPosition shape1 = tp.singleStokesShape(csys, Stokes::Plinear);
 	   TempImage<Complex> polFFT(shape1, t.coordinates());
-	   except = false;
+	   except = False;
 	  	   try {
-	  		   tp.fourierRotationMeasure(polFFT, false);
+	  		   tp.fourierRotationMeasure(polFFT, False);
 	  	   }
 	  	   catch (AipsError) {
-	  		   except = true;
+	  		   except = True;
 	  	   }
 	  	   AlwaysAssert(except, AipsError);
-	   except = false;
+	   except = False;
 	   try {
-		   up.fourierRotationMeasure(polFFT, false);
+		   up.fourierRotationMeasure(polFFT, False);
 	   }
 	   catch (AipsError) {
-		   except = true;
+		   except = True;
 	   }
 	   AlwaysAssert(except, AipsError);
 
-	   tp.fracLinPol(true);
-	   except = false;
+	   tp.fracLinPol(True);
+	   except = False;
 	   try {
-		   up.fracLinPol(true);
+		   up.fracLinPol(True);
 	   }
 	   catch (AipsError) {
-		   except = true;
+		   except = True;
 	   }
 	   AlwaysAssert(except, AipsError);
 
-	   tp.fracTotPol(true);
-	   except = false;
+	   tp.fracTotPol(True);
+	   except = False;
 	   try {
-		   up.fracTotPol(true);
+		   up.fracTotPol(True);
 	   }
 	   catch (AipsError) {
-		   except = true;
+		   except = True;
 	   }
 	   AlwaysAssert(except, AipsError);
 
-	   tp.linPolInt(true);
-	   except = false;
+	   tp.linPolInt(True);
+	   except = False;
 	   try {
-		   up.linPolInt(true);
+		   up.linPolInt(True);
 	   }
 	   catch (AipsError) {
-		   except = true;
+		   except = True;
 	   }
 	   AlwaysAssert(except, AipsError);
 
-	   tp.linPolPosAng(true);
-	   except = false;
+	   tp.linPolPosAng(True);
+	   except = False;
 	   try {
-		   up.linPolPosAng(true);
+		   up.linPolPosAng(True);
 	   }
 	   catch (AipsError) {
-		   except = true;
+		   except = True;
 	   }
 	   AlwaysAssert(except, AipsError);
 
@@ -523,77 +523,77 @@ try {
 			   xx, dummy, dummy, dummy, dummy, dummy, plotter,
 			   specAxis, min
 	   );
-	   except = false;
+	   except = False;
 	   try {
 		   up.rotationMeasure(
 				   xx, dummy, dummy, dummy, dummy, dummy, plotter, specAxis, min
 		   );
 	   }
 	   catch (AipsError) {
-		   except = true;
+		   except = True;
 	   }
 	   AlwaysAssert(except, AipsError);
 
 	   tp.sigma();
 	   up.sigma();
 
-	   ImagePolarimetry::sigmaDepolarizationRatio (t, t, true);
-	   except = false;
+	   ImagePolarimetry::sigmaDepolarizationRatio (t, t, True);
+	   except = False;
 	   try {
-		   ImagePolarimetry::sigmaDepolarizationRatio (t, u, true);
+		   ImagePolarimetry::sigmaDepolarizationRatio (t, u, True);
 	   }
 	   catch (AipsError) {
-		   except = true;
+		   except = True;
 	   }
 	   AlwaysAssert(except, AipsError);
 
 	   tp.sigmaFracLinPol();
-	   except = false;
+	   except = False;
 	   try {
 		   up.sigmaFracLinPol();
 	   }
 	   catch (AipsError) {
-		   except = true;
+		   except = True;
 	   }
 	   AlwaysAssert(except, AipsError);
 
 	   tp.sigmaFracTotPol();
-	   except = false;
+	   except = False;
 	   try {
 		   up.sigmaFracTotPol();
 	   }
 	   catch (AipsError) {
-		   except = true;
+		   except = True;
 	   }
 	   AlwaysAssert(except, AipsError);
 
 	   tp.sigmaLinPolInt();
-	   except = false;
+	   except = False;
 	   try {
 		   up.sigmaLinPolInt();
 	   }
 	   catch (AipsError) {
-		   except = true;
+		   except = True;
 	   }
 	   AlwaysAssert(except, AipsError);
 
-	   tp.sigmaLinPolPosAng(true);
-	   except = false;
+	   tp.sigmaLinPolPosAng(True);
+	   except = False;
 	   try {
-		   up.sigmaLinPolPosAng(true);
+		   up.sigmaLinPolPosAng(True);
 	   }
 	   catch (AipsError) {
-		   except = true;
+		   except = True;
 	   }
 	   AlwaysAssert(except, AipsError);
 
-	   tp.totPolInt(true);
-	   except = false;
+	   tp.totPolInt(True);
+	   except = False;
 	   try {
-		   up.totPolInt(true);
+		   up.totPolInt(True);
 	   }
 	   catch (AipsError) {
-		   except = true;
+		   except = True;
 	   }
 	   AlwaysAssert(except, AipsError);
    }
@@ -679,14 +679,14 @@ void setStokes (ImageInterface<Float>*& pIm, uInt stokesAxis,
         blc(stokesAxis) = 0;                // Q       
         trc(stokesAxis) = 0;                
         Slicer sl(blc, trc, Slicer::endIsLast);
-        SubImage<Float> subImage(*pIm, sl, true);
+        SubImage<Float> subImage(*pIm, sl, True);
         subImage.set(q);
       }
       {
         blc(stokesAxis) = 1;                // U
         trc(stokesAxis) = 1;                
         Slicer sl(blc, trc, Slicer::endIsLast);
-        SubImage<Float> subImage(*pIm, sl, true);
+        SubImage<Float> subImage(*pIm, sl, True);
         subImage.set(u);
       }
    }
@@ -769,12 +769,12 @@ void traditionalRotationMeasure (Double rm, Double rmFg, Double rmMax,
 // Make plot of P.A.
 
    if (!plotter.empty()) {
-      ImageExpr<Float> ie = pol.linPolPosAng(false);
+      ImageExpr<Float> ie = pol.linPolPosAng(False);
       uInt nchan = ie.shape()(3);
       IPosition blc(ie.ndim(),0);
       IPosition trc(ie.ndim(),0);
       trc(3) = nchan - 1;
-      Array<Float> y = ie.getSlice(blc, trc-blc+1, true);
+      Array<Float> y = ie.getSlice(blc, trc-blc+1, True);
       Vector<Float> yy(y);
       Vector<Float> xx(nchan);
       for (uInt i=0; i<nchan; i++) xx(i) = i;
@@ -866,7 +866,7 @@ void fourierRotationMeasure (Double rm, const String& plotter, LogIO& os)
      CoordinateSystem cSys;
      IPosition shape1 = pol.singleStokesShape(cSys, Stokes::Plinear);
      TempImage<Complex> polFFT(shape1, cSys);
-     pol.fourierRotationMeasure(polFFT, false);       
+     pol.fourierRotationMeasure(polFFT, False);       
 
 // Where do we expect peak ?
 

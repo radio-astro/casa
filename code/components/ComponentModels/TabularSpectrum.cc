@@ -45,7 +45,6 @@
 #include <casa/BasicSL/String.h>
 #include <scimath/Mathematics/InterpolateArray1D.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 TabularSpectrum::TabularSpectrum()
@@ -344,28 +343,28 @@ Vector<Double> TabularSpectrum::errors() const {
 
 Bool TabularSpectrum::fromRecord(String& errorMessage, 
  			       const RecordInterface& record) {
-  if (!SpectralModel::fromRecord(errorMessage, record)) return false;
+  if (!SpectralModel::fromRecord(errorMessage, record)) return False;
   //freqRef
   if (!record.isDefined(String("freqRef"))) {
     errorMessage += "The 'TabularSpectrum' record must have an 'freqRef' field\n";
-    return false;
+    return False;
   }
   else{
     Record theTmpMF(record.asRecord("freqRef"));
     MeasureHolder mh;
     if(!mh.fromRecord(errorMessage, theTmpMF))
-      return false;
+      return False;
     if(mh.isMFrequency())
       freqRef_p=(mh.asMFrequency().getRef());
     else
-      return false;
+      return False;
   }
 
 
 //tabFreqVal
 if (!record.isDefined(String("tabFreqVal"))) {
     errorMessage += "The 'TabularSpectrum' record must have an 'tabFreqVal' field\n";
-    return false;
+    return False;
   }
   else{
     tabFreqVal_p.resize();
@@ -374,7 +373,7 @@ if (!record.isDefined(String("tabFreqVal"))) {
 ////ival
  if (!record.isDefined(String("ival"))) {
    errorMessage += "The 'TabularSpectrum' record must have an 'ival' field\n";
-    return false;
+    return False;
  }
  else{
     ival_p.resize();
@@ -388,7 +387,7 @@ if (!record.isDefined(String("tabFreqVal"))) {
 //referenceFreq
  if (!record.isDefined(String("referenceFreq"))) {
    errorMessage += "The 'TabularSpectrum' record must have an 'referenceFreq' field\n";
-    return false;
+    return False;
  }
  else{
    referenceFreq_p=record.asDouble("referenceFreq");
@@ -397,26 +396,26 @@ if (!record.isDefined(String("tabFreqVal"))) {
 //maxFreq and minFreq
  if (!record.isDefined(String("maxFreq")) || !record.isDefined(String("minFreq")) ) {
    errorMessage += "The 'TabularSpectrum' record must have a 'maxFreq' and a 'minFreq' field\n";
-   return false;
+   return False;
  }
  else{
    maxFreq_p=record.asDouble("maxFreq");
    minFreq_p=record.asDouble("minFreq");
  }
 
-  return true;
+  return True;
 }
 
 Bool TabularSpectrum::toRecord(String& errorMessage,
  			     RecordInterface& record) const {
   DebugAssert(ok(), AipsError);
-  if (!SpectralModel::toRecord(errorMessage, record)) return false;
+  if (!SpectralModel::toRecord(errorMessage, record)) return False;
   //save frame in a temporary MFrequency object
   MFrequency tmpMF(Quantity(0, "Hz"), freqRef_p);
   MeasureHolder mh(tmpMF);
   Record outRec;
   if(!mh.toRecord(errorMessage, outRec))
-    return false;
+    return False;
   record.defineRecord("freqRef",outRec);
   record.define("tabFreqVal", tabFreqVal_p);
   record.define("ival", ival_p);
@@ -426,27 +425,27 @@ Bool TabularSpectrum::toRecord(String& errorMessage,
   record.define("referenceFreq", referenceFreq_p);
   record.define("maxFreq", maxFreq_p);
   record.define("minFreq", minFreq_p);
-  return true;
+  return True;
 }
 
 Bool TabularSpectrum::convertUnit(String& errorMessage,
 				const RecordInterface& record) {
   if (!record.isDefined("freqRef")){
     errorMessage+="Not a tabularSpectrum object";
-    return false;
+    return False;
   }
-  return true;
+  return True;
 }
 
 Bool TabularSpectrum::ok() const {
-  if (!SpectralModel::ok()) return false;
+  if (!SpectralModel::ok()) return False;
   if (refFrequency().getValue().getValue() <= 0.0) {
     LogIO logErr(LogOrigin("TabularSpectrum", "ok()"));
     logErr << LogIO::SEVERE << "The reference frequency is zero or negative!" 
            << LogIO::POST;
-    return false;
+    return False;
   }
-  return true;
+  return True;
 }
 
 // Local Variables: 

@@ -59,7 +59,6 @@
 #ifdef _OPENMP
 #include <omp.h>
 #endif
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
  
@@ -77,7 +76,7 @@ Bool MatrixCleaner::validatePsf(const Matrix<Float> & psf)
   findPSFMaxAbs(psf, maxPsf, itsPositionPeakPsf, psfSupport);
   os << "Peak of PSF = " << maxPsf << " at " << itsPositionPeakPsf
      << LogIO::POST;
-  return true;
+  return True;
 }
   
  
@@ -91,15 +90,15 @@ MatrixCleaner::MatrixCleaner():
   itsMaximumResidual(0.0),
   itsStrengthOptimum(0.0),
   itsTotalFlux(0.0),
-  itsChoose(true),
-  itsDoSpeedup(false),
-  itsIgnoreCenterBox(false),
-  itsStopAtLargeScaleNegative(false),
+  itsChoose(True),
+  itsDoSpeedup(False),
+  itsIgnoreCenterBox(False),
+  itsStopAtLargeScaleNegative(False),
   itsStopPointMode(-1),
-  itsDidStopPointMode(false),
-  itsJustStarting(true),
+  itsDidStopPointMode(False),
+  itsJustStarting(True),
   psfShape_p(0),
-  noClean_p(false)
+  noClean_p(False)
 {
   itsMemoryMB=Double(HostInfo::memoryTotal()/1024)/16.0;
   itsScales.resize(0);
@@ -107,7 +106,7 @@ MatrixCleaner::MatrixCleaner():
   itsDirtyConvScales.resize(0);
   itsPsfConvScales.resize(0);
   itsScaleMasks.resize(0);
-  itsScalesValid = false;
+  itsScalesValid = False;
   itsStartingIter = 0;
   itsFracThreshold=Quantity(0.0, "%");
 }
@@ -122,17 +121,17 @@ MatrixCleaner::MatrixCleaner(const Matrix<Float> & psf,
   itsMaximumResidual(0.0),
   itsStrengthOptimum(0.),
   itsTotalFlux(0.0),
-  itsChoose(true),
-  itsDoSpeedup(false),
-  itsIgnoreCenterBox(false),
-  itsStopAtLargeScaleNegative(false),
+  itsChoose(True),
+  itsDoSpeedup(False),
+  itsIgnoreCenterBox(False),
+  itsStopAtLargeScaleNegative(False),
   itsStopPointMode(-1),
-  itsDidStopPointMode(false),
-  itsJustStarting(true),
-  noClean_p(false)
+  itsDidStopPointMode(False),
+  itsJustStarting(True),
+  noClean_p(False)
 {
   AlwaysAssert(validatePsf(psf), AipsError);
-  psfShape_p.resize(0, false);
+  psfShape_p.resize(0, False);
   psfShape_p=psf.shape();
   // Check that everything is the same dimension and that none of the
   // dimensions is zero length.
@@ -157,7 +156,7 @@ MatrixCleaner::MatrixCleaner(const Matrix<Float> & psf,
   itsDirtyConvScales.resize(0);
   itsPsfConvScales.resize(0);
   itsScaleMasks.resize(0);
-  itsScalesValid = false;
+  itsScalesValid = False;
   itsStartingIter = 0;
   itsFracThreshold=Quantity(0.0, "%");
 }
@@ -166,7 +165,7 @@ MatrixCleaner::MatrixCleaner(const Matrix<Float> & psf,
 void MatrixCleaner::setPsf(const Matrix<Float>& psf){
   itsXfr=new Matrix<Complex>();
   AlwaysAssert(validatePsf(psf), AipsError);
-  psfShape_p.resize(0, false);
+  psfShape_p.resize(0, False);
   psfShape_p=psf.shape();
   FFTServer<Float,Complex> fft(psf.shape()); 
   fft.fft0(*itsXfr, psf);
@@ -201,7 +200,7 @@ MatrixCleaner & MatrixCleaner::operator=(const MatrixCleaner & other) {
     itsStrengthOptimum = other.itsStrengthOptimum;
     itsTotalFlux=other.itsTotalFlux;
     itsMaskThreshold = other.itsMaskThreshold;
-    psfShape_p.resize(0, false);
+    psfShape_p.resize(0, False);
     psfShape_p=other.psfShape_p;
     noClean_p=other.noClean_p;
   }
@@ -224,7 +223,7 @@ void MatrixCleaner::makeDirtyScales(){
     throw(AipsError("PSF and Dirty array are not of the same shape"));
   //No need of convolving for hogbom
   if(itsCleanType==CleanEnums::HOGBOM){
-    itsDirtyConvScales.resize(1, true);
+    itsDirtyConvScales.resize(1, True);
     itsDirtyConvScales[0]=Matrix<Float>(itsDirty->shape());
     itsDirtyConvScales[0]=*itsDirty;
     return;
@@ -232,7 +231,7 @@ void MatrixCleaner::makeDirtyScales(){
   Matrix<Complex> dirtyFT;
   FFTServer<Float,Complex> fft(itsDirty->shape());
   fft.fft0(dirtyFT, *itsDirty);
-  itsDirtyConvScales.resize(itsNscales, true);
+  itsDirtyConvScales.resize(itsNscales, True);
   Int scale=0;
   //Having problem with fftw and omp
   // #pragma omp parallel default(shared) private(scale) firstprivate(fft)
@@ -246,8 +245,8 @@ void MatrixCleaner::makeDirtyScales(){
       
       itsDirtyConvScales[scale]=Matrix<Float>(itsDirty->shape());
       cWork=((dirtyFT)*(itsScaleXfrs[scale]));
-      fft.fft0((itsDirtyConvScales[scale]), cWork, false);
-      fft.flip((itsDirtyConvScales[scale]), false, false);
+      fft.fft0((itsDirtyConvScales[scale]), cWork, False);
+      fft.flip((itsDirtyConvScales[scale]), False, False);
     }
   }
   
@@ -276,7 +275,7 @@ void MatrixCleaner::setMask(Matrix<Float> & mask, const Float& maskThreshold)
   // This is not needed after the first steps
   itsMask = new Matrix<Float>(mask.shape());
   itsMask->assign(mask);
-  noClean_p=(max(*itsMask) < itsMaskThreshold) ? true : false;
+  noClean_p=(max(*itsMask) < itsMaskThreshold) ? True : False;
 
 
 
@@ -306,13 +305,13 @@ Bool MatrixCleaner::setcontrol(CleanEnums::CleanType cleanType,
   itsGain=gain;
   itsThreshold=aThreshold;
   itsFracThreshold=fThreshold;
-  return true;
+  return True;
 }
 
 // Set up speedup parameters
 void MatrixCleaner::speedup(const Float nDouble)
 {
-  itsDoSpeedup=true;
+  itsDoSpeedup=True;
   itsNDouble = nDouble;
 };
 
@@ -573,7 +572,7 @@ Int MatrixCleaner::clean(Matrix<Float>& model,
 	os << "Cleaned " << stopPointModeCounter << 
 	  " consecutive components from the smallest scale, stopping prematurely"
 	   << LogIO::POST;
-	itsDidStopPointMode = true;
+	itsDidStopPointMode = True;
 	converged = -1;
 	break;
       }
@@ -599,12 +598,12 @@ Int MatrixCleaner::clean(Matrix<Float>& model,
 
     /*
     if(progress) {
-      progress->info(false, itsIteration, itsMaxNiter, maxima,
+      progress->info(False, itsIteration, itsMaxNiter, maxima,
 		     posMaximum, itsStrengthOptimum,
 		     optimumScale, positionOptimum,
 		     totalFlux, totalFluxScale,
 		     itsJustStarting );
-      itsJustStarting = false;
+      itsJustStarting = False;
       } else*/ {
       if (itsIteration == itsStartingIter + 1) {
           os << "iteration    MaximumResidual   CleanedFlux" << LogIO::POST;
@@ -682,7 +681,7 @@ Int MatrixCleaner::clean(Matrix<Float>& model,
   // Finish off the plot, etc.
   /*
   if(progress) {
-    progress->info(true, itsIteration, itsMaxNiter, maxima, posMaximum,
+    progress->info(True, itsIteration, itsMaxNiter, maxima, posMaximum,
 		   itsStrengthOptimum,
 		   optimumScale, positionOptimum,
 		   totalFlux, totalFluxScale);
@@ -725,7 +724,7 @@ Int MatrixCleaner::clean(Matrix<Float>& model,
 	  }
     maxAbs=maxVal;
     //cerr << "######## " << posMaxAbs << " " << maxVal << endl;
-    return true;
+    return True;
   }
 
 Bool MatrixCleaner::findMaxAbs(const Matrix<Float>& lattice,
@@ -744,7 +743,7 @@ Bool MatrixCleaner::findMaxAbs(const Matrix<Float>& lattice,
     maxAbs=minVal;
     posMaxAbs=posmin;
   }
-  return true;
+  return True;
 }
 
 
@@ -767,7 +766,7 @@ Bool MatrixCleaner::findMaxAbsMask(const Matrix<Float>& lattice,
     posMaxAbs=posmin;
   }
  
-  return true;
+  return True;
 }
 
 
@@ -823,7 +822,7 @@ void MatrixCleaner::defineScales(const Vector<Float>& scaleSizes){
   itsScaleSizes.resize(itsNscales);
   itsScaleSizes=scaleSizes;  // make a copy that we can call our own
   GenSort<Float>::sort(itsScaleSizes);
-  itsScalesValid=false;
+  itsScalesValid=False;
 }
 
 void MatrixCleaner::makePsfScales(){
@@ -833,9 +832,9 @@ void MatrixCleaner::makePsfScales(){
   if(itsXfr.null())
     throw(AipsError("Psf is not defined"));
   destroyScales();
-  itsScales.resize(itsNscales, true);
-  itsScaleXfrs.resize(itsNscales, true);
-  itsPsfConvScales.resize((itsNscales+1)*(itsNscales+1), true);
+  itsScales.resize(itsNscales, True);
+  itsScaleXfrs.resize(itsNscales, True);
+  itsPsfConvScales.resize((itsNscales+1)*(itsNscales+1), True);
   FFTServer<Float,Complex> fft(psfShape_p);
   Int scale=0;
   for(scale=0; scale<itsNscales;scale++) {
@@ -853,8 +852,8 @@ void MatrixCleaner::makePsfScales(){
     cWork=((*itsXfr)*(itsScaleXfrs[scale]));
     //cout << "shape "  << cWork.shape() << "   " << itsPsfConvScales[scale].shape() << endl;
 
-    fft.fft0((itsPsfConvScales[scale]), cWork, false);
-    fft.flip(itsPsfConvScales[scale], false, false);
+    fft.fft0((itsPsfConvScales[scale]), cWork, False);
+    fft.flip(itsPsfConvScales[scale], False, False);
     
     //cout << "psf scale " << scale << " " << max(itsPsfConvScales[scale]) << " " << min(itsPsfConvScales[scale]) << endl;
 
@@ -866,13 +865,13 @@ void MatrixCleaner::makePsfScales(){
       // PSF *  scale * otherscale
       itsPsfConvScales[index(scale,otherscale)] =Matrix<Float>(psfShape_p);
       cWork=((*itsXfr)*conj(itsScaleXfrs[scale])*(itsScaleXfrs[otherscale]));
-      fft.fft0(itsPsfConvScales[index(scale,otherscale)], cWork, false);
+      fft.fft0(itsPsfConvScales[index(scale,otherscale)], cWork, False);
       //For some reason this complex->real fft  does not need a flip ...may be because conj(a)*a is real
-      //fft.flip(*itsPsfConvScales[index(scale,otherscale)], false, false);
+      //fft.flip(*itsPsfConvScales[index(scale,otherscale)], False, False);
     }
   }
   
-  itsScalesValid=true;
+  itsScalesValid=True;
 
 }
 
@@ -942,13 +941,13 @@ Bool MatrixCleaner::setscales(const Vector<Float>& scaleSizes)
 
     cWork=((*itsXfr)*(itsScaleXfrs[scale]));
 
-    fft.fft0((itsPsfConvScales[scale]), cWork, false);
-    fft.flip(itsPsfConvScales[scale], false, false);
+    fft.fft0((itsPsfConvScales[scale]), cWork, False);
+    fft.flip(itsPsfConvScales[scale], False, False);
     
     itsDirtyConvScales[scale] = Matrix<Float>(itsDirty->shape());
     cWork=((dirtyFT)*(itsScaleXfrs[scale]));
-    fft.fft0(itsDirtyConvScales[scale], cWork, false);
-    fft.flip(itsDirtyConvScales[scale], false, false);
+    fft.fft0(itsDirtyConvScales[scale], cWork, False);
+    fft.flip(itsDirtyConvScales[scale], False, False);
     ///////////
     /*
     {
@@ -976,18 +975,18 @@ Bool MatrixCleaner::setscales(const Vector<Float>& scaleSizes)
       // PSF *  scale * otherscale
        itsPsfConvScales[index(scale,otherscale)] =Matrix<Float>(itsDirty->shape());
       cWork=((*itsXfr)*conj(itsScaleXfrs[scale])*(itsScaleXfrs[otherscale]));
-      fft.fft0(itsPsfConvScales[index(scale,otherscale)], cWork, false);
-      //fft.flip(*itsPsfConvScales[index(scale,otherscale)], false, false);
+      fft.fft0(itsPsfConvScales[index(scale,otherscale)], cWork, False);
+      //fft.flip(*itsPsfConvScales[index(scale,otherscale)], False, False);
     }
   }
 
-  itsScalesValid=true;
+  itsScalesValid=True;
 
   if (!itsMask.null()) {
     makeScaleMasks();
   }
 
-  return true;
+  return True;
 }
   
 // Make a single scale size image
@@ -1111,7 +1110,7 @@ Int MatrixCleaner::index(const Int scale, const Int otherscale) {
 
 Bool MatrixCleaner::destroyScales()
 {
-  if(!itsScalesValid) return true;
+  if(!itsScalesValid) return True;
   for(uInt scale=0; scale<itsScales.nelements();scale++) {
     //if(itsScales[scale]) delete itsScales[scale];
     itsScales[scale].resize();
@@ -1129,11 +1128,11 @@ Bool MatrixCleaner::destroyScales()
     itsPsfConvScales[scale].resize();
   }
   destroyMasks();
-  itsScales.resize(0, true);
-  itsDirtyConvScales.resize(0,true);
-  itsPsfConvScales.resize(0, true);
-  itsScalesValid=false;
-  return true;
+  itsScales.resize(0, True);
+  itsDirtyConvScales.resize(0,True);
+  itsPsfConvScales.resize(0, True);
+  itsScalesValid=False;
+  return True;
 }
 
 
@@ -1145,7 +1144,7 @@ Bool MatrixCleaner::destroyMasks()
     itsScaleMasks[scale].resize();
   }
   itsScaleMasks.resize(0);
-  return true;
+  return True;
 };
 
 void MatrixCleaner::unsetMask()
@@ -1153,7 +1152,7 @@ void MatrixCleaner::unsetMask()
   destroyMasks();
   if(!itsMask.null())
     itsMask=0;
-  noClean_p=false;
+  noClean_p=False;
 }
 
 
@@ -1178,7 +1177,7 @@ Bool MatrixCleaner::makeScaleMasks()
   destroyMasks();
 
   if(itsMask.null() || noClean_p)
-    return false;
+    return False;
 
   AlwaysAssert((itsMask->shape() == psfShape_p), AipsError);
   //cout << "itsmask " << itsMask->shape() << endl;
@@ -1186,7 +1185,7 @@ Bool MatrixCleaner::makeScaleMasks()
 
   Matrix<Complex> maskFT;
   fft.fft0(maskFT, *itsMask);
-  itsScaleMasks.resize(itsNscales, true);
+  itsScaleMasks.resize(itsNscales, True);
   // Now we can do all the convolutions
   Matrix<Complex> cWork;
   for (scale=0; scale<itsNscales;scale++) {
@@ -1198,8 +1197,8 @@ Bool MatrixCleaner::makeScaleMasks()
     // if thresholding is not used, just extract the real part of the complex mask
     itsScaleMasks[scale] = Matrix<Float>(itsMask->shape());
     cWork=((maskFT)*(itsScaleXfrs[scale]));
-    fft.fft0(itsScaleMasks[scale], cWork, false);
-    fft.flip(itsScaleMasks[scale], false, false);
+    fft.fft0(itsScaleMasks[scale], cWork, False);
+    fft.flip(itsScaleMasks[scale], False, False);
     for (Int j=0 ; j < (itsMask->shape())(1); ++j){
       for (Int k =0 ; k < (itsMask->shape())(0); ++k){
 	if(itsMaskThreshold > 0){
@@ -1215,7 +1214,7 @@ Bool MatrixCleaner::makeScaleMasks()
     
   }
 
-  return true;
+  return True;
 }
 
 

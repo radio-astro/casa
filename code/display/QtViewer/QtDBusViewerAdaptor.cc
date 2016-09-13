@@ -44,7 +44,6 @@
 #include <QtDBus>
 
 
-using namespace casacore;
 namespace casa {
 
 	static void launch_ghostview( const char *printer_file );
@@ -525,10 +524,10 @@ namespace casa {
 						iter->second->data( ) = 0;
 					}
 
-					panel->autoDDOptionsShow = false;
+					panel->autoDDOptionsShow = False;
 					dp = panel->createDD(to_string(path), datatype, to_string(displaytype), false);
 					panel->displayPanel()->registerDD(dp);
-					panel->autoDDOptionsShow = true;
+					panel->autoDDOptionsShow = True;
 				} else {
 					fprintf( stderr, "we can no longer support null panels" );
 					return;
@@ -1036,12 +1035,12 @@ namespace casa {
 		    dh = oldSize.height() - scaledSize.height();
 		scaledSize.scale(width, height, Qt::KeepAspectRatio);
 
-		panel->setUpdateAllowed(false);
+		panel->setUpdateAllowed(False);
 		// (Prevent display widget flashing during temporary resize.)
 		panel->resize(scaledSize.width() + dw, scaledSize.height() + dh);
 		QPixmap* mp = panel->contents();
 		display::state::instance().endFileOutputMode( );
-		panel->setUpdateAllowed(true);
+		panel->setUpdateAllowed(True);
 		panel->resize(oldSize);
 		QCoreApplication::processEvents();
 

@@ -12,7 +12,6 @@
 
 #include <iomanip>
 
-using namespace casacore;
 namespace casa {
 
 const String AnnRegion::_class = "AnnRegion";
@@ -32,11 +31,11 @@ AnnRegion::AnnRegion(
 		shape, dirRefFrameString, csys, beginFreq, endFreq,
 		freqRefFrame, dopplerString, restfreq, stokes
 	), _isAnnotationOnly(annotationOnly),
-	_isDifference(false), _constructing(true), _imShape(imShape),
+	_isDifference(False), _constructing(True), _imShape(imShape),
 	_spectralPixelRange(vector<Double>(0)) {
 	_init();
 	// just before returning
-	_constructing = false;
+	_constructing = False;
 }
 
 AnnRegion::AnnRegion(
@@ -45,11 +44,11 @@ AnnRegion::AnnRegion(
 	const IPosition& imShape,
 	const Vector<Stokes::StokesTypes>& stokes
 ) :	AnnotationBase(shape, csys, stokes),
-	_isDifference(false), _constructing(true), _imShape(imShape),
+	_isDifference(False), _constructing(True), _imShape(imShape),
 	_spectralPixelRange(vector<Double>(0)) {
 	_init();
 	// just before returning
-	_constructing = false;
+	_constructing = False;
 }
 
 AnnRegion::AnnRegion(const AnnRegion& other)
@@ -124,7 +123,7 @@ SHARED_PTR<const WCRegion>  AnnRegion::getRegion2() const {
 }
 
 Bool AnnRegion::isRegion() const {
-	return true;
+	return True;
 }
 
 void AnnRegion::_init() {
@@ -155,10 +154,10 @@ Bool AnnRegion::setFrequencyLimits(
 			// but not during object construction
 			_extend();
 		}
-		return true;
+		return True;
 	}
 	else {
-		return false;
+		return False;
 	}
 }
 
@@ -260,7 +259,7 @@ void AnnRegion::_extend() {
 				WCBox wbox = _makeExtensionBox(freqRange, stokesRange, pixelAxes);
 				regions[i] = new WCExtension(_directionRegion, wbox);
 			}
-			_imageRegion = ImageRegion(WCUnion(true, regions));
+			_imageRegion = ImageRegion(WCUnion(True, regions));
 		}
 	}
 	try {

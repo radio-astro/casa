@@ -79,8 +79,8 @@ class TimeVarVisJonesTable : public VisJonesTable
 
    // Construct from a specified table name and table access option. 
    // Used for creating new tables or opening existing tables.
-   TimeVarVisJonesTable (const casacore::String& tableName, 
-			 casacore::Table::TableOption access = casacore::Table::Old);
+   TimeVarVisJonesTable (const String& tableName, 
+			 Table::TableOption access = Table::Old);
 
  private:
    TimeVarVisJonesDesc itsTimeVarVisJonesDesc;
@@ -132,8 +132,8 @@ class PJonesTable : public TimeVarVisJonesTable
 
    // Construct from a specified table name and table access option. 
    // Used for creating new tables or opening existing tables.
-   PJonesTable (const casacore::String& tableName, 
-		casacore::Table::TableOption access = casacore::Table::Old);
+   PJonesTable (const String& tableName, 
+		Table::TableOption access = Table::Old);
 
  private:
    PJonesDesc itsPJonesDesc;
@@ -185,8 +185,8 @@ class CJonesTable : public TimeVarVisJonesTable
 
    // Construct from a specified table name and table access option. 
    // Used for creating new tables or opening existing tables.
-   CJonesTable (const casacore::String& tableName, 
-		casacore::Table::TableOption access = casacore::Table::Old);
+   CJonesTable (const String& tableName, 
+		Table::TableOption access = Table::Old);
 
  private:
    CJonesDesc itsCJonesDesc;

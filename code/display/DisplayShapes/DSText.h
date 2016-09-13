@@ -87,8 +87,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// <group>
 		DSText();
 		DSText(const DSText& other);
-		DSText(const casacore::Float& xPos, const casacore::Float& yPos, const casacore::String& text = "Label",
-		       const casacore::Bool& hasHandles = true, const casacore::Bool& drawHandles = true);
+		DSText(const Float& xPos, const Float& yPos, const String& text = "Label",
+		       const Bool& hasHandles = True, const Bool& drawHandles = True);
 
 		virtual ~DSText();
 		// </group>
@@ -96,20 +96,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Functions to ensure consistancy with the "DisplayShape" interface.
 		// <group>
 		virtual void draw(PixelCanvas* pix);
-		virtual void move(const casacore::Float& dX, const casacore::Float& dY);
-		virtual void rotate(const casacore::Float& angle);
-		virtual casacore::Bool inObject(const casacore::Float& xPos, const casacore::Float& yPos);
-		virtual void changePoint(const casacore::Vector<casacore::Float>& newPos);
-		virtual void changePoint(const casacore::Vector<casacore::Float>& newPos, const casacore::Int nPoint);
-		virtual void scale(const casacore::Float& scaleFactor);
-		virtual void setCenter(const casacore::Float& xPos, const casacore::Float& yPos);
-		virtual casacore::Vector<casacore::Float> getCenter();
+		virtual void move(const Float& dX, const Float& dY);
+		virtual void rotate(const Float& angle);
+		virtual Bool inObject(const Float& xPos, const Float& yPos);
+		virtual void changePoint(const Vector<Float>& newPos);
+		virtual void changePoint(const Vector<Float>& newPos, const Int nPoint);
+		virtual void scale(const Float& scaleFactor);
+		virtual void setCenter(const Float& xPos, const Float& yPos);
+		virtual Vector<Float> getCenter();
 		// </group>
 
 		// Get and set options
 		// <group>
-		virtual casacore::Record getOptions();
-		virtual casacore::Bool setOptions(const casacore::Record& settings);
+		virtual Record getOptions();
+		virtual Bool setOptions(const Record& settings);
 		// </group>
 
 
@@ -121,25 +121,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void calculateHandlePositions();
 
 		// Cast from int to enum
-		Display::TextAlign toEnum(const casacore::Int fromInt);
+		Display::TextAlign toEnum(const Int fromInt);
 
 		// Text Parameter
 		DParameterString* itsString;
 
 		// Angle Param
-		DParameterRange<casacore::Float>* itsAngle;
+		DParameterRange<Float>* itsAngle;
 		DParameterMapKeyChoice* itsAlignment;
 		DParameterFontChoice* itsFont;
-		DParameterRange<casacore::Int>* itsFontSize;
+		DParameterRange<Int>* itsFontSize;
 
 		// Rotate about a point.. overloaded but not used
-		casacore::Vector<casacore::Float> itsCenter;
-		casacore::Int itsPixHeight, itsPixWidth;
-		casacore::Bool itsValid;
-		casacore::Bool itsHandlesMade, itsValidPositions;
-		casacore::Float itsStringLength;
-		casacore::Float itsStringHeight;
-		casacore::Matrix<casacore::Float> itsHandleLocation;
+		Vector<Float> itsCenter;
+		Int itsPixHeight, itsPixWidth;
+		Bool itsValid;
+		Bool itsHandlesMade, itsValidPositions;
+		Float itsStringLength;
+		Float itsStringHeight;
+		Matrix<Float> itsHandleLocation;
 		Display::TextAlign itsAlign;
 		virtual void setDefaultOptions();
 

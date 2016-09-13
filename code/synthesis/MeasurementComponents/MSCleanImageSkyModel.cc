@@ -47,14 +47,13 @@
 #include <casa/Logging/LogSink.h>
 
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 MSCleanImageSkyModel::MSCleanImageSkyModel(const Int nscales,  const Int stoplargenegatives, const Int stoppointmode, const Float smallScaleBias)
   : method_p(NSCALES), nscales_p(nscales), userScaleSizes_p(0), stopLargeNegatives_p(stoplargenegatives), stopPointMode_p(stoppointmode), smallScaleBias_p(smallScaleBias)
 {
-  modified_p=true;
-  donePSF_p=false;
+  modified_p=True;
+  donePSF_p=False;
 
 };
 
@@ -63,8 +62,8 @@ MSCleanImageSkyModel::MSCleanImageSkyModel(const Int nscales,  const Int stoplar
   stopLargeNegatives_p(stoplarge), stopPointMode_p(stoppoint),
   smallScaleBias_p(smallScaleBias)
 {
-  modified_p=true;
-  donePSF_p=false;
+  modified_p=True;
+  donePSF_p=False;
 
 };
 
@@ -89,7 +88,7 @@ Bool MSCleanImageSkyModel::solve(SkyEquation& se) {
   */
   // Make the residual image
   if(modified_p)
-    makeNewtonRaphsonStep(se, false, (numberIterations()<1)?true:False);
+    makeNewtonRaphsonStep(se, False, (numberIterations()<1)?True:False);
   
   //Make the PSF
   if(!donePSF_p)
@@ -97,7 +96,7 @@ Bool MSCleanImageSkyModel::solve(SkyEquation& se) {
 
 
   if(numberIterations() <1){
-    return true;
+    return True;
   }
   
   
@@ -196,11 +195,11 @@ Bool MSCleanImageSkyModel::solve(SkyEquation& se) {
 
 
 	LCBox onePlane(blcDirty, trcDirty, image(0).shape());
-	SubImage<Float> subDirty(residual(0), onePlane, true);
+	SubImage<Float> subDirty(residual(0), onePlane, True);
 	ImageMSCleaner cleaner(subPsf, subDirty);
 	
 
-	Bool doClean=true;
+	Bool doClean=True;
 	String algorithm="msclean";
 	if(hasMask(0)) {
 	  IPosition blcMask(mask(0).shape().nelements(), 0);
@@ -226,17 +225,17 @@ Bool MSCleanImageSkyModel::solve(SkyEquation& se) {
 	    trcMask(3)=0;
 	  }
 	  LCBox maskPlane(blcMask, trcMask, mask(0).shape());
-	  subMask=SubImage<Float>( mask(0), maskPlane, false); 
+	  subMask=SubImage<Float>( mask(0), maskPlane, False); 
 	  // Check for empty mask
 	  LatticeExprNode sumMask = sum(subMask);
 	  if(sumMask.getFloat()==0.0) {
 	    os << LogIO::WARN << "Mask is specified but empty - no cleaning performed" << LogIO::POST;
-	    doClean=false;
+	    doClean=False;
 	  }
 	  else {
 	    cleaner.setMask(subMask);
 	    //Using mask so the user knows best.
-	    cleaner.ignoreCenterBox(true);
+	    cleaner.ignoreCenterBox(True);
 	    algorithm="fullmsclean";
 	  }
 	}
@@ -244,7 +243,7 @@ Bool MSCleanImageSkyModel::solve(SkyEquation& se) {
 	
 
 	if(doClean) {
-	  SubImage<Float> subImage(image(0), onePlane, true);
+	  SubImage<Float> subImage(image(0), onePlane, True);
 	  
 	  if (method_p == USERVECTOR) {
 	    cleaner.setscales(userScaleSizes_p);   
@@ -254,16 +253,16 @@ Bool MSCleanImageSkyModel::solve(SkyEquation& se) {
           cleaner.setSmallScaleBias(smallScaleBias_p);
 	  cleaner.stopPointMode(stopPointMode_p);
 	  //cleaner.setcontrol(CleanEnums::MULTISCALE, numberIterations(), gain(), 
-	  //		     Quantity(threshold(), "Jy"), true);
+	  //		     Quantity(threshold(), "Jy"), True);
 	  if(stopLargeNegatives_p >0)
 	    cleaner.stopAtLargeScaleNegative();
 	  
-	  converged=cleaner.clean(subImage, algorithm, numberIterations(),gain(),  Quantity(threshold(), "Jy"), Quantity(0.0, "%"), true);
+	  converged=cleaner.clean(subImage, algorithm, numberIterations(),gain(),  Quantity(threshold(), "Jy"), Quantity(0.0, "%"), True);
 	  Int stoplarge=stopLargeNegatives_p;
 	  while( (converged==-2) && stoplarge > 0){
 	    --stoplarge;
 	    converged=cleaner.clean(subImage, algorithm, numberIterations(),gain(),  
-				    Quantity(threshold(), "Jy"), Quantity(0, "%"),true);
+				    Quantity(threshold(), "Jy"), Quantity(0, "%"),True);
 	  }
 	  // calculate residuals 
 	  
@@ -282,7 +281,7 @@ Bool MSCleanImageSkyModel::solve(SkyEquation& se) {
   maxRes=maxField(maxres, minres);
   setThreshold(maxRes);
 
- modified_p=true;
+ modified_p=True;
   
 
   return(converged);

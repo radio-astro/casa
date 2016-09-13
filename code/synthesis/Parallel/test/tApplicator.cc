@@ -68,7 +68,7 @@ void TestAlgorithm::get(){
 }
 
 void TestAlgorithm::put(){
-      casa::applicator.put(true);
+      casa::applicator.put(True);
       return;
 }
 
@@ -94,7 +94,7 @@ int main(Int argc, Char *argv[]){
       Complex  four(4.0,4.0);
       DComplex five(5.0,5.0);
       String   six("Six");
-      Bool     seven(true);
+      Bool     seven(True);
       cout << "one " << one << endl;
       cout << "two " << two << endl;
       cout << "three " << three << endl;

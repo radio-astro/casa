@@ -38,7 +38,7 @@ int main( int argc, char ** argv )
 {
     Q_INIT_RESOURCE(QtFileCatalog);
     QApplication a( argc, argv );
-    casa::FileCatalog mw(argv[1]);
+    FileCatalog mw(argv[1]);
     mw.show();
     return a.exec();
 }

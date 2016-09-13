@@ -29,7 +29,6 @@
 #include <casa/Arrays/Vector.h>
 
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 CCList::CCList()
@@ -38,7 +37,7 @@ CCList::CCList()
    itsComp(0),
    itsFlux(),
    itsPos(),
-   itsSuspendOKCheck(false)
+   itsSuspendOKCheck(False)
 {
   DebugAssert(ok(), AipsError);
 };
@@ -49,7 +48,7 @@ CCList::CCList(const uInt nPol, const uInt nDim, const uInt nComp)
    itsComp(0),
    itsFlux(nPol*nComp),
    itsPos(nDim*nComp),
-   itsSuspendOKCheck(false)
+   itsSuspendOKCheck(False)
 {
   DebugAssert(ok(), AipsError);
 };
@@ -60,7 +59,7 @@ CCList::CCList(const CCList & other)
    itsComp(other.itsComp),
    itsFlux(other.itsFlux),
    itsPos(other.itsPos),
-   itsSuspendOKCheck(false)
+   itsSuspendOKCheck(False)
 {
   DebugAssert(ok(), AipsError);
 };
@@ -168,25 +167,25 @@ void CCList::addComp(const Block<Float> & flux, const Block<Int> & position) {
 
 Bool CCList::ok() const {
   if (itsSuspendOKCheck) {
-    return true;
+    return True;
   }
   // Be arbitary: disallow more than 4-D Clean Components
   if ((itsDim < 1) || (itsDim > 4)) {  
-    return false;
+    return False;
   }
   if ((itsPol != 1) && (itsPol != 2) && (itsPol != 4)) {
-    return false;
+    return False;
   }
   if (itsComp*itsDim > itsPos.nelements()) {
-    return false;
+    return False;
   }
   if (itsComp*itsPol > itsFlux.nelements()) {
-    return false;
+    return False;
   }
   if (itsPos.nelements()/itsDim != itsFlux.nelements()/itsPol) {
-    return false;
+    return False;
   }
-  return true;
+  return True;
 };
 
 Int * CCList::pixelPosition(const uInt whichPixel) {
@@ -251,11 +250,11 @@ void  CCList::tiledSort(const IPosition & tileShape) {
 };
 
 void CCList::suspendOKCheck() {
-  itsSuspendOKCheck = true;
+  itsSuspendOKCheck = True;
 };
 
 void CCList::reactivateOKCheck() {
-  itsSuspendOKCheck = false;
+  itsSuspendOKCheck = False;
 };
 
 

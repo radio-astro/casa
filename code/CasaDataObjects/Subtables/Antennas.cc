@@ -15,7 +15,6 @@
 #include <casa/BasicSL/String.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 
-using namespace casacore;
 namespace casa { namespace cdo {
 
 

@@ -29,7 +29,6 @@
 #include <QtCore/qmath.h>
 #include <QDebug>
 
-using namespace casacore;
 namespace casa {
 
 	SliceStatisticsDistance::SliceStatisticsDistance(SliceStatisticsFactory::AxisXUnits units):
@@ -131,5 +130,4 @@ namespace casa {
 	SliceStatisticsDistance::~SliceStatisticsDistance() {
 	}
 
-using namespace casacore;
 } /* namespace casa */

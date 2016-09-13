@@ -33,16 +33,12 @@
 #include <display/DisplayDatas/DisplayMethod.h>
 #include <display/DisplayDatas/PrincipalAxesDD.h>
 
-namespace casacore{
-
-	class IPosition;
-	template <class T> class Vector;
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	class WorldCanvasHolder;
+	class IPosition;
 	class WorldCanvas;
+	template <class T> class Vector;
 
 // <summary>
 // Interface for DisplayMethods which have data arranged in "axes."
@@ -59,7 +55,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	public:
 
 		// User constructor.
-		PrincipalAxesDM(casacore::uInt xAxis, casacore::uInt yAxis, casacore::uInt mAxis,
+		PrincipalAxesDM(uInt xAxis, uInt yAxis, uInt mAxis,
 		                PrincipalAxesDD *padd);
 
 		// Destructor.
@@ -80,58 +76,58 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// This method does setup stuff that is common to all elements
 		// of an axis-bound display data element.
-		virtual void setup(casacore::IPosition fixedPos);
+		virtual void setup(IPosition fixedPos);
 
 		virtual void setup2d();
 
 		// This method should be defined in derived classes to simply
 		// return the shape of the data object, eg. Array.shape() or
 		// Image.shape(), etc.
-		virtual casacore::IPosition dataShape() = 0;
+		virtual IPosition dataShape() = 0;
 
 		// This method should be defined in derived classes to actually
 		// draw the data contained in datMatrix, however it likes, starting
-		// at the point blc, on *wCanvas.  It *must* return a casacore::uInt which
+		// at the point blc, on *wCanvas.  It *must* return a uInt which
 		// indicates the drawListNumber it allocated for this drawing.
-		// If <src>usePixelEdges</src> is true, then the given blc and
+		// If <src>usePixelEdges</src> is True, then the given blc and
 		// trc correspond to the world blc and trc of the first and last
 		// pixels in the given data, otherwise they correspond to the world
 		// centres of the blc and trc pixels.
-		virtual casacore::uInt dataDrawSelf(WorldCanvas *wCanvas,
-		                          const casacore::Vector<casacore::Double> &blc,
-		                          const casacore::Vector<casacore::Double> &trc,
-		                          const casacore::IPosition &start,
-		                          const casacore::IPosition &sliceShape,
-		                          const casacore::IPosition &stride,
-		                          const casacore::Bool usePixelEdges = false) = 0;
+		virtual uInt dataDrawSelf(WorldCanvas *wCanvas,
+		                          const Vector<Double> &blc,
+		                          const Vector<Double> &trc,
+		                          const IPosition &start,
+		                          const IPosition &sliceShape,
+		                          const IPosition &stride,
+		                          const Bool usePixelEdges = False) = 0;
 
 		// Called by draw(): an optimization for ColormapChange in 24bit mode.
 		// Redraws the last image using only mapToColor on the WorldCanvas,
-		// if possible.  If it returns true, the new method
+		// if possible.  If it returns True, the new method
 		// WC::redrawIndexedImage() was used successfully (otherwise, draw()
 		// continues in the normal way).  Override to enable, if necessary
 		// (see LatticePADMRaster for an example).
-		virtual casacore::Bool dataRedrawSelf(WorldCanvas*, Display::RefreshReason) {
-			return false;
+		virtual Bool dataRedrawSelf(WorldCanvas*, Display::RefreshReason) {
+			return False;
 		};
 
 		// Some data members which all display elements along principal
 		// axes will play around with:
-		casacore::IPosition start;
-		casacore::IPosition sliceShape;
-		casacore::IPosition stride;
+		IPosition start;
+		IPosition sliceShape;
+		IPosition stride;
 
 		// Is a transpose necessary?
-		virtual casacore::Bool needToTranspose() {
+		virtual Bool needToTranspose() {
 			return sliceShape(itsYAxisNum) >1 &&
 			       (sliceShape(itsXAxisNum)==1 || itsXAxisNum>itsYAxisNum);
 		}
 		// The logic behind this cryptic code (see LatticePADM::dataGetSlice):
 		// If a either a 1xN or Nx1 slice (including 1x1) is requested,
-		// LatticePADM's latt.getSlice() casacore::Array will be 1-dimensional, which
-		// the casacore::Matrix = casacore::Array operator will turn into an Nx1 matrix.
+		// LatticePADM's latt.getSlice() Array will be 1-dimensional, which
+		// the Matrix = Array operator will turn into an Nx1 matrix.
 		// If, on the other hand, there is no degeneracy in the desired
-		// slice casacore::Matrix, it is returned in lattice (not X,Y) order.  (dk)
+		// slice Matrix, it is returned in lattice (not X,Y) order.  (dk)
 
 		// (Required) default constructor.
 		PrincipalAxesDM();
@@ -145,16 +141,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	private:
 
 		// Axis numbers for internal book-keeping.
-		casacore::uInt itsXAxisNum, itsYAxisNum, itsZAxisNum;
+		uInt itsXAxisNum, itsYAxisNum, itsZAxisNum;
 
 		// Drawlist state.  Moved here, where it's used, from DisplayMethod,
 		// and made private.  11/03  dk.  The Caching side uses different
 		// state (and purgeCache(), rather than cleanup()).
 
-		casacore::Bool               notUsed;
+		Bool               notUsed;
 		WorldCanvasHolder *holder;
 		AttributeBuffer    drawState;
-		casacore::uInt               drawListNumber;
+		uInt               drawListNumber;
 
 	};
 

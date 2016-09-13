@@ -36,15 +36,11 @@
 #include <casa/BasicSL/String.h>
 
 
-namespace casacore{
-
-template <class T> class ImageInterface;
-class IPosition;
-}
-
 namespace casa {
 
 //# Forward Declarations
+template <class T> class ImageInterface;
+class IPosition;
 
 
 // <summary>
@@ -57,8 +53,8 @@ namespace casa {
 // </reviewed>
 
 // <prerequisite>
-//   <li> <linkto class=casacore::ImageInterface>ImageInterface</linkto>
-//   <li> <linkto class=casacore::LatticeHistograms>LatticeHistograms</linkto>
+//   <li> <linkto class=ImageInterface>ImageInterface</linkto>
+//   <li> <linkto class=LatticeHistograms>LatticeHistograms</linkto>
 // </prerequisite>
 
 // <etymology>
@@ -78,16 +74,16 @@ namespace casa {
 // axes [2]).   Or  you could retrieve histograms from the z axis (cursor axes [2])
 // for each [x,y] location (display axes [0,1]).
 //
-// The hard work is done by casacore::LatticeHistograms which this class (clumsily) inherits.
+// The hard work is done by LatticeHistograms which this class (clumsily) inherits.
 // It generates a "storage lattice" into which it writes the histograms.
 // It is from this storage image that the plotting and retrieval
 // arrays are drawn.  The storage image is either in core or on disk
 // depending upon its size (if > 10% of memory given by .aipsrc system.resources.memory
-// then it goes into a disk-based casacore::PagedArray).  If on disk,  the
+// then it goes into a disk-based PagedArray).  If on disk,  the
 // storage image is deleted when the <src>ImageHistograms</src> 
 // object destructs.    
 //
-// See casacore::LatticeHistograms for most of the useful public interface.  ImageHistograms
+// See LatticeHistograms for most of the useful public interface.  ImageHistograms
 // exists only so that it can write some world coordinate information to the plots
 // and logger.
 //
@@ -108,28 +104,28 @@ namespace casa {
 
 // <example>
 // <srcBlock>
-//// Construct casacore::PagedImage from file name
+//// Construct PagedImage from file name
 //
-//      casacore::PagedImage<casacore::Float> inImage(inName);
+//      PagedImage<Float> inImage(inName);
 //   
 //// Construct histogram object
 //      
-//      casacore::LogOrigin or("myClass", "myFunction(...)", WHERE);
-//      casacore::LogIO os(or);
-//      ImageHistograms<casacore::Float> histo(inImage, os);
+//      LogOrigin or("myClass", "myFunction(...)", WHERE);
+//      LogIO os(or);
+//      ImageHistograms<Float> histo(inImage, os);
 //      
 //// Set cursor axes to see statistics of yz planes (0 relative)
 //
-//      casacore::Vector<casacore::Int> cursorAxes(2)
+//      Vector<Int> cursorAxes(2)
 //      cursorAxes(0) = 1;
 //      cursorAxes(1) = 2;
 //      if (!histo.setAxes(cursorAxes)) return 1;
 //
 //// Set to list and plot mean, sigma and rms
 //
-//      if (!histo.setList(true)) return 1;
-//      casacore::String device = "/xs";
-//      casacore::Vector<casacore::Int> nxy(2);
+//      if (!histo.setList(True)) return 1;
+//      String device = "/xs";
+//      Vector<Int> nxy(2);
 //      nxy(0) = 3;
 //      nxy(1) = 3;
 //      if (!histo.setPlotting(device, nxy)) return 1;
@@ -140,11 +136,11 @@ namespace casa {
 //
 //// Retrieve histograms into array
 //
-//      casacore::Array<casacore::Float> values, counts;
+//      Array<Float> values, counts;
 //      if (!histo.getHistograms(values, counts)) return 1;
 //
 // </srcBlock>
-// In this example, a <src>casacore::PagedImage</src> is constructed.  We set the cursor axes 
+// In this example, a <src>PagedImage</src> is constructed.  We set the cursor axes 
 // to be the y and z axes so we make a histogram of each yz plane as a function 
 // of x location on the  device "/xs" (no longer supported) with 9 subplots per page.
 // After the plotting we also retrieve the histograms into an array.
@@ -160,26 +156,26 @@ namespace casa {
 //
 
 
-template <class T> class ImageHistograms : public casacore::LatticeHistograms<T> {
+template <class T> class ImageHistograms : public LatticeHistograms<T> {
 public:
 
-// Constructor takes the image and a <src>casacore::LogIO</src> object for logging.
+// Constructor takes the image and a <src>LogIO</src> object for logging.
 // You can also specify whether you want to see progress meters or not.
 // You can force the storage image to be disk based, otherwise
 // the decision for core or disk is taken for you.
-   ImageHistograms(const casacore::ImageInterface<T>& image, 
-                   casacore::LogIO& os,
-                   casacore::Bool showProgress=true,
-                   casacore::Bool forceDisk=false);
+   ImageHistograms(const ImageInterface<T>& image, 
+                   LogIO& os,
+                   Bool showProgress=True,
+                   Bool forceDisk=False);
 
 // Constructor takes the image only. In the absence of a logger you get no messages.
 // This includes error messages and potential listing of statistics.
 // You can specify whether you want to see progress meters or not.
 // You can force the storage image to be disk based, otherwise
 // the decision for core or disk is taken for you.
-   ImageHistograms(const casacore::ImageInterface<T>& image, 
-                   casacore::Bool showProgress=true,
-                   casacore::Bool forceDisk=false);
+   ImageHistograms(const ImageInterface<T>& image, 
+                   Bool showProgress=True,
+                   Bool forceDisk=False);
 
 // Copy constructor (copy semantics)
    ImageHistograms(const ImageHistograms<T> &other);
@@ -190,24 +186,24 @@ public:
 // Assignment operator (copy semantics)
    ImageHistograms<T> &operator=(const ImageHistograms<T> &other);
 
-// Set a new image.  A return value of <src>false</src> indicates the 
+// Set a new image.  A return value of <src>False</src> indicates the 
 // image had an invalid type or that the internal status of the class is bad.
-   casacore::Bool setNewImage (const casacore::ImageInterface<T>& image);
+   Bool setNewImage (const ImageInterface<T>& image);
 
 private:
-   casacore::LogIO os_p;
-   const casacore::ImageInterface<T>* pInImage_p;
+   LogIO os_p;
+   const ImageInterface<T>* pInImage_p;
 
    // Make a string with pixel and world coordinates of display axes
-   virtual casacore::String writeCoordinates(const casacore::IPosition& histPos) const;
+   virtual String writeCoordinates(const IPosition& histPos) const;
 
   //# Make members of parent class known.
 protected:
-  using casacore::LatticeHistograms<T>::locHistInLattice;
-  using casacore::LatticeHistograms<T>::error_p;
-  using casacore::LatticeHistograms<T>::goodParameterStatus_p;
-  using casacore::LatticeHistograms<T>::displayAxes_p;
-  using casacore::LatticeHistograms<T>::cursorAxes_p;
+  using LatticeHistograms<T>::locHistInLattice;
+  using LatticeHistograms<T>::error_p;
+  using LatticeHistograms<T>::goodParameterStatus_p;
+  using LatticeHistograms<T>::displayAxes_p;
+  using LatticeHistograms<T>::cursorAxes_p;
 };
 
 }

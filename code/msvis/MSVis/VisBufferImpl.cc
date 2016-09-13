@@ -30,7 +30,6 @@
 #define CheckVisIter1(s) checkVisIter (__func__, __FILE__, __LINE__,s)
 #define CheckVisIterBase() checkVisIterBase (__func__, __FILE__, __LINE__)
 
-using namespace casacore;
 namespace casa {
 
 namespace vi {
@@ -62,7 +61,7 @@ public:
 
 protected:
 
-    virtual void copy (const VbCacheItemBase * other, Bool markAsCached = false) = 0;
+    virtual void copy (const VbCacheItemBase * other, Bool markAsCached = False) = 0;
 
     VisBufferImpl * getVb () const
     {
@@ -97,14 +96,14 @@ public:
     typedef void (VisBufferImpl::* Filler) (T &) const;
 
     VbCacheItem ()
-    : isPresent_p (false)
+    : isPresent_p (False)
     {}
 
     virtual void
     clear ()
     {
         item_p = T ();
-        isPresent_p = false;
+        isPresent_p = False;
     }
 
 
@@ -119,7 +118,7 @@ public:
     {
         if (! isPresent_p){
             fill ();
-            isPresent_p = true;
+            isPresent_p = True;
         }
 
         return item_p;
@@ -130,7 +129,7 @@ public:
     {
         if (! isPresent_p){
             fill ();
-            isPresent_p = true;
+            isPresent_p = True;
         }
 
         return item_p;
@@ -156,7 +155,7 @@ public:
         ThrowIf (! getVb()->isWritable (), "This VisBuffer is readonly");
 
         item_p = newItem;
-        isPresent_p = true;
+        isPresent_p = True;
     }
 
     template <typename U>
@@ -166,7 +165,7 @@ public:
         ThrowIf (! getVb()->isWritable (), "This VisBuffer is readonly");
 
         item_p = newItem;
-        isPresent_p = true;
+        isPresent_p = True;
     }
 
 
@@ -195,7 +194,7 @@ protected:
             item_p = T ();
 
             if (markAsCached){
-                isPresent_p = true;
+                isPresent_p = True;
             }
         }
     }
@@ -203,7 +202,7 @@ protected:
     void
     setAsPresent ()
     {
-        isPresent_p = true;
+        isPresent_p = True;
     }
 
 private:
@@ -381,14 +380,14 @@ class VisBufferState {
 public:
 
     VisBufferState ()
-    : corrSorted_p (false),
+    : corrSorted_p (False),
       dirtyComponents_p (),
-      isAttached_p (false),
-      isNewMs_p (false),
-      isNewArrayId_p (false),
-      isNewFieldId_p (false),
-      isNewSpectralWindow_p (false),
-      isWritable_p (false),
+      isAttached_p (False),
+      isNewMs_p (False),
+      isNewArrayId_p (False),
+      isNewFieldId_p (False),
+      isNewSpectralWindow_p (False),
+      isWritable_p (False),
       lastPointTableRow_p (-1),
       vi_p (0),
       visModelData_p (0)
@@ -489,10 +488,10 @@ VisBufferImpl::assign (const VisBufferImpl & other, Bool copy)
             // that is not present will be marked as present and given
             // values with zero length
 
-            cacheCopy (other, true);
+            cacheCopy (other, True);
         }
         else if (copy){
-            cacheCopy (other, false); // Copy anything that is cached
+            cacheCopy (other, False); // Copy anything that is cached
         }
         else{
             cacheClear ();
@@ -505,7 +504,7 @@ VisBufferImpl::attachToVisibilityIterator2 (ROVisibilityIterator2 & vi)
 {
     ThrowIf (state_p->isAttached_p, "VisBuffer already attached to VisibilityIterator2");
 
-    state_p->isAttached_p = true;
+    state_p->isAttached_p = True;
     state_p->vi_p = & vi;
 }
 
@@ -535,8 +534,8 @@ VisBufferImpl::averageFlagInfoChannels (const Matrix<Int> & averagingBounds,
     if(nChannelsIn == nChannelsOut && channels.nelements() > 0 && channels [0] == 0)
         return;    // No-op.
 
-    Array<Bool> newFlagCategories (categoriesShape, true);
-    Cube<Bool> newFlagCube (cubeShape, false);
+    Array<Bool> newFlagCategories (categoriesShape, True);
+    Cube<Bool> newFlagCube (cubeShape, False);
 
     Cube<Float> weightSpectrum = cache_p->weightSpectrum_p.get ();
     Matrix<Float> weightMatrix = cache_p->weightMat_p.get();
@@ -562,7 +561,7 @@ VisBufferImpl::averageFlagInfoChannels (const Matrix<Int> & averagingBounds,
                                                   : weightMatrix (correlation, row);
 
                     if( ! flagCube (correlation, channelIn, row) && wt > 0.0){
-                        newFlagCube (correlation, channelOut, row) = false;
+                        newFlagCube (correlation, channelOut, row) = False;
                     }
 
                     if (processCategories){ // only if they exist
@@ -570,7 +569,7 @@ VisBufferImpl::averageFlagInfoChannels (const Matrix<Int> & averagingBounds,
                         for(Int category = 0; category < nCategories; ++ category){
 
                             if(!flagCategories (IPosition(4, correlation, channelIn, category, row))){
-                                newFlagCategories (IPosition(4, correlation, channelOut, category, row)) = false;
+                                newFlagCategories (IPosition(4, correlation, channelOut, category, row)) = False;
                             }
                         }
                     }
@@ -829,7 +828,7 @@ VisBufferImpl::adjustWeightFactorsAndFlags (Matrix <Float> & rowWeightFactors,
                     if(oswt > 0.0)
                         rowWeightFactors(correlation, row) += oswt;
                     else
-                        flagCube (correlation, channelOut, row) = true;
+                        flagCube (correlation, channelOut, row) = True;
                 }
 
                 if(originalFactor > 0.0)
@@ -935,10 +934,10 @@ VisBufferImpl::construct ()
 
     // Initialize all non-object member variables
 
-    state_p->corrSorted_p = false; // Have correlations been sorted by sortCorr?
-    state_p->isAttached_p = false;
+    state_p->corrSorted_p = False; // Have correlations been sorted by sortCorr?
+    state_p->isAttached_p = False;
     state_p->lastPointTableRow_p = -1;
-    state_p->newMs_p = true;
+    state_p->newMs_p = True;
     state_p->vi_p = 0;
 
     cache_p = new VisBufferCache (this);
@@ -953,7 +952,7 @@ VisBufferImpl::detachFromVisibilityIterator2 ()
 #warning "Uncomment next line after cutover"
     //// getViP()->detachVisBuffer (* this);
 
-    state_p->isAttached_p = false;
+    state_p->isAttached_p = False;
     state_p->vi_p = 0;
 }
 
@@ -1033,7 +1032,7 @@ VisBufferImpl::getViP () const
 void
 VisBufferImpl::invalidate ()
 {
-    cacheClear (false); // empty cached values
+    cacheClear (False); // empty cached values
 }
 
 Bool
@@ -1268,7 +1267,7 @@ VisBufferImpl::sortCorrelationsAux (bool makeSorted)
 void
 VisBufferImpl::sortCorr()
 {
-    sortCorrelationsAux (false);
+    sortCorrelationsAux (False);
 }
 
 
@@ -1279,7 +1278,7 @@ VisBufferImpl::stateCopy (const VisBufferImpl & other)
 
     state_p->corrSorted_p = other.state_p->corrSorted_p;
     state_p->dirtyComponents_p = other.state_p->dirtyComponents_p;
-    state_p->isAttached_p = false;  // attachment isn't copyabled
+    state_p->isAttached_p = False;  // attachment isn't copyabled
     state_p->isNewArrayId_p = other.state_p->isNewArrayId_p;
     state_p->isNewFieldId_p = other.state_p->isNewFieldId_p;
     state_p->isNewMs_p = other.state_p->isNewMs_p;
@@ -1295,7 +1294,7 @@ VisBufferImpl::stateCopy (const VisBufferImpl & other)
 void
 VisBufferImpl::unSortCorr()
 {
-    sortCorrelationsAux (false);
+    sortCorrelationsAux (False);
 }
 
 template <typename Coord>
@@ -1343,7 +1342,7 @@ VisBufferImpl::updateCoordInfo (const VisBufferImpl * vb, const  Bool dirDepende
 void
 VisBufferImpl::validate ()
 {
-    cacheClear (true); // empty values but mark as cached.
+    cacheClear (True); // empty values but mark as cached.
 }
 
 
@@ -2059,7 +2058,7 @@ VisBufferImpl::fillDirectionAux (Vector<MDirection>& value,
       }
 
       // x direction is flipped to convert az-el type frame to ra-dec
-      value(row).shift(-beamOffset(0), beamOffset(1), true);
+      value(row).shift(-beamOffset(0), beamOffset(1), True);
     }
   }
 }
@@ -2445,5 +2444,4 @@ VisBufferImpl::fillWeightSpectrum (Cube<Float>& value) const
 
 } // end namespace vb
 
-using namespace casacore;
 } // end namespace casa

@@ -29,7 +29,6 @@
 #include <plotms/Client/Client.h>
 #include <QDebug>
 
-using namespace casacore;
 namespace casa {
 
 //////////////////////////////

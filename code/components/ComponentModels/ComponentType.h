@@ -32,19 +32,14 @@
 #include <casa/aips.h>
 
 //# Forward Declaration
-namespace casacore{
-
-class String;
-}
-
 namespace casac {
       class componentlist;
 }
 
-namespace casa {
-
+namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Forward Declaration
+class String;
 class SkyCompRep;
 class ComponentShape;
 class SpectralModel;
@@ -114,7 +109,7 @@ public:
   };
   // The ways the Flux polarisation can be represented
   enum Polarisation {
-    // The four casacore::Stokes parameters, ie I,Q,U,V 
+    // The four Stokes parameters, ie I,Q,U,V 
     STOKES = 0,
     // Linear polarisation feeds ie., XX,XY,YX,YY with zero parrallactic angle
     LINEAR,
@@ -139,19 +134,19 @@ public:
     NUMBER_SPECTRAL_SHAPES
   };
   // Convert the Shape enumerator to a string
-  static casacore::String name(ComponentType::Shape shapeEnum);
-  // Convert a given casacore::String to a Shape enumerator (min match active)
-  static ComponentType::Shape shape(const casacore::String& shapeName);
+  static String name(ComponentType::Shape shapeEnum);
+  // Convert a given String to a Shape enumerator (min match active)
+  static ComponentType::Shape shape(const String& shapeName);
 
   // Convert the Polarisation enumerator to a string
-  static casacore::String name(ComponentType::Polarisation fluxEnum);
-  // Convert a given casacore::String to a Polarisation enumerator
-  static ComponentType::Polarisation polarisation(const casacore::String& 
+  static String name(ComponentType::Polarisation fluxEnum);
+  // Convert a given String to a Polarisation enumerator
+  static ComponentType::Polarisation polarisation(const String& 
 						  polarisationName);
   // Convert the SpectralShape enumerator to a string
-  static casacore::String name(ComponentType::SpectralShape spectralEnum);
-  // Convert a given casacore::String to a SpectralShape enumerator
-  static ComponentType::SpectralShape spectralShape(const casacore::String&
+  static String name(ComponentType::SpectralShape spectralEnum);
+  // Convert a given String to a SpectralShape enumerator
+  static ComponentType::SpectralShape spectralShape(const String&
 						    spectralName);
 private:
 

@@ -62,8 +62,6 @@
 #include <unistd.h>
 using namespace std;
 
-using namespace casacore;
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
   //

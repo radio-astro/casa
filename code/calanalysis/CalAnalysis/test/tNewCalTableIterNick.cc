@@ -149,7 +149,7 @@ void createNCT( void ) {
 
       Cube<Bool> oFlag = Cube<Bool>( numParameter, oNumChannel(iThisSPW),
           numAntenna );
-      oFlag = false;
+      oFlag = False;
       oNCMC.flag().putColumnCells( oRow, oFlag );
 
       Cube<Float> oSNR = Cube<Float>( numParameter, oNumChannel(iThisSPW),

@@ -39,27 +39,23 @@
 #include <display/Display/AttValBase.h>
 #include <display/DisplayEvents/DisplayEH.h>
 
-namespace casacore{
-
-	class Unit;
-	class String;
-	class Record;
-	template <class T> class ImageInterface;
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	class Attribute;
 	class AttributeBuffer;
+	class Unit;
 	class WorldCanvas;
 	class Colormap;
+	class String;
 	class WCPositionEH;
 	class WCMotionEH;
 	class WCRefreshEH;
 	class WCPositionEvent;
 	class WCMotionEvent;
 	class WCRefreshEvent;
+	class Record;
 	class ImageAnalysis;
+	template <class T> class ImageInterface;
 
 // <summary>
 // Base class for display objects.
@@ -161,7 +157,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // WC::drawImage() that its draw area be given in world coordinates;
 // this is high on the list of bugfix priorities...).
 //
-// The final transformation makes use of the casacore::Coordinate classes (which
+// The final transformation makes use of the Coordinate classes (which
 // ultimately use wcslib for any needed sky projection).  It defines the
 // current 2D surface on display within some nD world space, as parameterized
 // by the X and Y linear coordinates.  State for this purpose includes the
@@ -188,14 +184,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // the sizeControl routine, DDs should test isCSMaster(wch) to determine
 // whether they have permission to become the CS master.  If so, and if they
 // are willing and able to become CS master, they must set all of the WC
-// state above and return true; in all other cases they should return false.
+// state above and return True; in all other cases they should return False.
 // Only the CSmaster should set the WC CS or axis codes, and it will be
 // responsible for performing the WC's linToWorld, etc. transformation chores.
 // In other words, it is entirely in charge of the final transformation to
 // world coordinates.  In principle, other DDs may perform certain 'slave
 // sizeControl' tweaks (such as aligning the zoom window on data pixel
 // boundaries or redefining maximum zoom extents).  No current implementations
-// do anything but return false if they are not the master, however.
+// do anything but return False if they are not the master, however.
 //
 // Major implementation examples for sizeControl() can be found in the
 // ActiveCaching2dDD and PrincipalAxesDD classes.  They should be consulted
@@ -244,7 +240,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // does not matter how you compute it. The most important thing is that the
 // DisplayData are responsible for this. At the moment, only the Vector
 // version should be implemented, since efficient transformation of a series
-// of positions is not available in AIPS++. The casacore::Matrix versions are handled at
+// of positions is not available in AIPS++. The Matrix versions are handled at
 // the WorldCanvas level at the moment.  Most DisplayData will assume that the
 // linear coordinate system of the WorldCanvas corresponds to some underlying
 // pixel array. The way the linear coordinate system is used is that it is the
@@ -307,7 +303,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <todo>
 //
-//   <li> When efficient implementations of the casacore::Matrix versions of the
+//   <li> When efficient implementations of the Matrix versions of the
 //   coordinate transformations become available in AIPS++, these should be
 //   implemented in DisplayData
 //
@@ -326,23 +322,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// required destructor
 		virtual ~DisplayData();
 
-		// casacore::Coordinate transformations, called by WorldCanvasHolder (casacore::Matrix versions
+		// Coordinate transformations, called by WorldCanvasHolder (Matrix versions
 		// not implemented)
-		virtual casacore::Bool linToWorld(casacore::Vector<casacore::Double>& world,
-		                        const casacore::Vector<casacore::Double>& lin) = 0;
-		virtual casacore::Bool worldToLin(casacore::Vector<casacore::Double>& lin,
-		                        const casacore::Vector<casacore::Double>& world) = 0;
+		virtual Bool linToWorld(Vector<Double>& world,
+		                        const Vector<Double>& lin) = 0;
+		virtual Bool worldToLin(Vector<Double>& lin,
+		                        const Vector<Double>& world) = 0;
 
 		virtual std::string errorMessage( ) const = 0;
 
-		// casacore::Format a string containing coordinate information at
+		// Format a string containing coordinate information at
 		// the given world coordinate
-		virtual casacore::String showPosition(const casacore::Vector<casacore::Double> &world,
-		                            const casacore::Bool &displayAxesOnly = false) = 0;
+		virtual String showPosition(const Vector<Double> &world,
+		                            const Bool &displayAxesOnly = False) = 0;
 
-		// casacore::Format a string containing value information at the
+		// Format a string containing value information at the
 		// given world coordinate
-		virtual casacore::String showValue(const casacore::Vector<casacore::Double> &world) = 0;
+		virtual String showValue(const Vector<Double> &world) = 0;
 
 
 		virtual void setDisplayState( DisplayState s ) {
@@ -359,15 +355,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Some routines that give info on the axes names, units etc. I am not sure
 		// this is the right way of doing it.
 		// <group>
-		virtual casacore::Vector<casacore::String> worldAxisNames() const = 0;
-		virtual casacore::Vector<casacore::String> worldAxisUnits() const = 0;
+		virtual Vector<String> worldAxisNames() const = 0;
+		virtual Vector<String> worldAxisUnits() const = 0;
 		// </group>
 
 		// Returns the number of elements in this DisplayData (mainly for movie
 		// purposes).  First one is no. of elements for specific WCanvas.
-		virtual casacore::uInt nelements(const WorldCanvasHolder &wcHolder) const = 0;
+		virtual uInt nelements(const WorldCanvasHolder &wcHolder) const = 0;
 		// and non-specific
-		virtual casacore::uInt nelements() const = 0;
+		virtual uInt nelements() const = 0;
 
 		// Add general restrictions or a restriction for item <src>itemNum</src> of
 		// this DisplayData. Note that the item versions of the restriction
@@ -375,12 +371,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// DisplayData and instead they should only appear in some derived classes.
 		// <group>
 		virtual void addRestrictions(AttributeBuffer& otherBuf);
-		virtual void addRestriction(Attribute& newRestriction, casacore::Bool permanent);
-		virtual void addElementRestrictions(const casacore::uInt itemNum,
+		virtual void addRestriction(Attribute& newRestriction, Bool permanent);
+		virtual void addElementRestrictions(const uInt itemNum,
 		                                    AttributeBuffer& other);
-		virtual void addElementRestriction(const casacore::uInt itemNum,
+		virtual void addElementRestriction(const uInt itemNum,
 		                                   Attribute& newRestriction,
-		                                   casacore::Bool permanent);
+		                                   Bool permanent);
 		// </group>
 
 		// Set general restrictions or a restriction for item <src>itemNum</src> of
@@ -389,39 +385,39 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// <group>
 		virtual void setRestrictions(AttributeBuffer& otherBuf);
 		virtual void setRestriction(Attribute& newRestriction);
-		virtual void setElementRestrictions(const casacore::uInt itemNum,
+		virtual void setElementRestrictions(const uInt itemNum,
 		                                    AttributeBuffer& other);
-		virtual void setElementRestriction(const casacore::uInt itemNum,
+		virtual void setElementRestriction(const uInt itemNum,
 		                                   Attribute& newRestriction);
 		// </group>
 
 		// Remove a general restriction or a restriction from item <src>itemNum</src>
 		// <group>
-		virtual void removeRestriction(const casacore::String& name);
-		virtual void removeElementRestriction(const casacore::uInt itemNum,
-		                                      const casacore::String& name);
+		virtual void removeRestriction(const String& name);
+		virtual void removeElementRestriction(const uInt itemNum,
+		                                      const String& name);
 		// </group>
 
 		// Clear all general restrictions or all restrictions of item
 		// <src>itemNum</src> (except the ones that are permanent of course...)
 		// <group>
 		virtual void clearRestrictions();
-		virtual void clearElementRestrictions(const casacore::uInt itemNum);
+		virtual void clearElementRestrictions(const uInt itemNum);
 		// </group>
 
 		// Check if a general restriction or a restriction for item
 		// <src>itemNum</src> with name <src>name</src> exists.
 		// <group>
-		virtual casacore::Bool existRestriction(const casacore::String& name);
-		virtual casacore::Bool existElementRestriction(const casacore::uInt itemNum,
-		                                     const casacore::String& name);
+		virtual Bool existRestriction(const String& name);
+		virtual Bool existElementRestriction(const uInt itemNum,
+		                                     const String& name);
 		// </group>
 
 		// Get a handle to the buffer of general restrictions or of the buffer of
 		// restrictions for item <src>itemNum</src>
 		// <group>
 		virtual AttributeBuffer *restrictionBuffer();
-		virtual AttributeBuffer *elementRestrictionBuffer(const casacore::uInt itemNum);
+		virtual AttributeBuffer *elementRestrictionBuffer(const uInt itemNum);
 		// </group>
 
 
@@ -430,12 +426,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// It also assures that the DD is 'focused' on this WC[H] and its zindex
 		// for purposes of drawing or event handling.
 		// <group>
-		virtual casacore::Bool conformsTo(const WorldCanvas *wCanvas) {
-			rstrsConformed_ = csConformed_ = zIndexConformed_ = false;
+		virtual Bool conformsTo(const WorldCanvas *wCanvas) {
+			rstrsConformed_ = csConformed_ = zIndexConformed_ = False;
 			return (wCanvas!=0 && conformsTo(*wCanvas));
 		}
 
-		virtual casacore::Bool conformsTo(const WorldCanvas& wc) {
+		virtual Bool conformsTo(const WorldCanvas& wc) {
 			conformsToRstrs(wc);
 			conformsToCS(wc);
 			conformsToZIndex(wc);
@@ -447,14 +443,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// on the given WCH.  (Note: this will include blink index, if any,
 		// but _not_ zIndex.  zIndex is an individual DM restriction, not an
 		// overall DD restriction).
-		virtual casacore::Bool conformsToRstrs(const WorldCanvas& wc) ;
+		virtual Bool conformsToRstrs(const WorldCanvas& wc) ;
 
 		// Determine whether DD is compatible with the WC[H]'s current
 		// world coordinates.  Derived DDs can override according to their
 		// individual capabilities (PADD and ACDD match axis codes).
 		// Overriding DDs should set csConformed_ to the value returned.
-		virtual casacore::Bool conformsToCS(const WorldCanvas& /*wc*/) {
-			csConformed_ = true;
+		virtual Bool conformsToCS(const WorldCanvas& /*wc*/) {
+			csConformed_ = True;
 			return csConformed_;
 		}
 
@@ -463,8 +459,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// within the current number of DD animation frames).
 		// (Generally, DDs should probably override setActiveZIndex_()
 		// rather than this method).
-		virtual casacore::Bool conformsToZIndex(const WorldCanvas& wc) {
-			casacore::Int zindex = 0;	// (default in case no zIndex exists).
+		virtual Bool conformsToZIndex(const WorldCanvas& wc) {
+			Int zindex = 0;	// (default in case no zIndex exists).
 			const AttributeBuffer *rstrs = wc.restrictionBuffer();
 			if (rstrs->exists("zIndex")) rstrs->getValue("zIndex",zindex);
 			return setActiveZIndex_(zindex);
@@ -472,10 +468,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Retrieve 'Active' zIndex.  Not likely to be meaningful/useful
 		// unless conformsTo(wch) (or conformsToZIndex(wch)) has been called
-		// just prior (and has returned a true result).  Those calls make
+		// just prior (and has returned a True result).  Those calls make
 		// wch the 'active' one; zIndex varies from one wch to another.
 		// You can pass a wch, which will force a call to conformsToZIndex(wch).
-		virtual casacore::Int activeZIndex(const WorldCanvas* wc=0) {
+		virtual Int activeZIndex(const WorldCanvas* wc=0) {
 			if(wc!=0) conformsToZIndex(*wc);
 			return activeZIndex_;
 		}
@@ -492,18 +488,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// (Note: to get the zindex from the 'currently active' wch instead,
 		// a DD should check activeZIndex_.  Or, if the desired wch is known,
 		// it can retrieve the zIndex itself from wch.restrictionBuffer()).
-		virtual casacore::Bool getFirstZIndex(int& firstZIndex, casacore::Int axZrng=-1) const {
-			casacore::Block<casacore::Int> zInds = allZIndices(axZrng);
-			if(zInds.nelements()==0) return false;
+		virtual Bool getFirstZIndex(int& firstZIndex, Int axZrng=-1) const {
+			Block<Int> zInds = allZIndices(axZrng);
+			if(zInds.nelements()==0) return False;
 			firstZIndex=zInds[0];
-			return true;
+			return True;
 		}
 
 
 
 		// Add event handlers on the DisplayData. I am not sure there is also a need
 		// for a refresh handler on a DisplayData, but allowing for it  makes
-		// things 'symmetric'. These member functions throw an casacore::AipsError if a null
+		// things 'symmetric'. These member functions throw an AipsError if a null
 		// pointer is passed.
 		// <group>
 		virtual void addPositionEventHandler(WCPositionEH *positionHandler);
@@ -521,10 +517,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// </group>
 
 		// Set/remove/get a ColourMap (sorry, ColorMap) for this DisplayData
-		// setColormap() throw an casacore::AipsError is a null pointer is passed. colormap()
+		// setColormap() throw an AipsError is a null pointer is passed. colormap()
 		// returns 0 if no Colormap is registered.
 		// <group>
-		virtual void setColormap(Colormap *cmap, casacore::Float weight);
+		virtual void setColormap(Colormap *cmap, Float weight);
 		virtual void removeColormap();
 		virtual Colormap *colormap() const {
 			return itsColormap;
@@ -541,28 +537,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// User interface to get value from the attribute buffer
 		// <group>
 
-		casacore::Bool getAttributeValue(const casacore::String& name, casacore::uInt& newValue) ;
-		casacore::Bool getAttributeValue(const casacore::String& name, casacore::Int& newValue) ;
-		casacore::Bool getAttributeValue(const casacore::String& name, casacore::Float& newValue) ;
-		casacore::Bool getAttributeValue(const casacore::String& name, casacore::Double& newValue) ;
-		casacore::Bool getAttributeValue(const casacore::String& name, casacore::Bool& newValue) ;
-		casacore::Bool getAttributeValue(const casacore::String& name, casacore::String& newValue) ;
-		casacore::Bool getAttributeValue(const casacore::String& name, casacore::Vector<casacore::uInt>& newValue) ;
-		casacore::Bool getAttributeValue(const casacore::String& name, casacore::Vector<casacore::Int>& newValue) ;
-		casacore::Bool getAttributeValue(const casacore::String& name, casacore::Vector<casacore::Float>& newValue) ;
-		casacore::Bool getAttributeValue(const casacore::String& name, casacore::Vector<casacore::Double>& newValue) ;
-		casacore::Bool getAttributeValue(const casacore::String& name, casacore::Vector<casacore::Bool>& newValue) ;
-		casacore::Bool getAttributeValue(const casacore::String& name, casacore::Vector<casacore::String>& newValue) ;
+		Bool getAttributeValue(const String& name, uInt& newValue) ;
+		Bool getAttributeValue(const String& name, Int& newValue) ;
+		Bool getAttributeValue(const String& name, Float& newValue) ;
+		Bool getAttributeValue(const String& name, Double& newValue) ;
+		Bool getAttributeValue(const String& name, Bool& newValue) ;
+		Bool getAttributeValue(const String& name, String& newValue) ;
+		Bool getAttributeValue(const String& name, Vector<uInt>& newValue) ;
+		Bool getAttributeValue(const String& name, Vector<Int>& newValue) ;
+		Bool getAttributeValue(const String& name, Vector<Float>& newValue) ;
+		Bool getAttributeValue(const String& name, Vector<Double>& newValue) ;
+		Bool getAttributeValue(const String& name, Vector<Bool>& newValue) ;
+		Bool getAttributeValue(const String& name, Vector<String>& newValue) ;
 		// </group>
 
 		// Check if a certain Attribute exists
-		casacore::Bool existsAttribute(casacore::String& name) ;
+		Bool existsAttribute(String& name) ;
 
 		// Remove an  Attribute
-		void removeAttribute(casacore::String& name);
+		void removeAttribute(String& name);
 
 		// Get the type of the Attribute
-		AttValue::ValueType attributeType(casacore::String& name) ;
+		AttValue::ValueType attributeType(String& name) ;
 
 		// Set an attribute on any WorldCanvas for which this DD is CS master
 		void setAttributeOnPrimaryWCHs(Attribute &at);
@@ -572,7 +568,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// <src>ignoreRefresh</src> tells the DD not to refresh just to clean
 		// up DMs
 		virtual void notifyUnregister(WorldCanvasHolder& wcHolder,
-		                              casacore::Bool ignoreRefresh = false) ;
+		                              Bool ignoreRefresh = False) ;
 		// </group>
 
 		// remove this DD everywhere--will stop any more refresh handling by
@@ -584,34 +580,34 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void setDefaultOptions();
 
 		// apply options stored in val to the DisplayData; return value
-		// true means a refresh is needed...
-		virtual casacore::Bool setOptions(casacore::Record &rec, casacore::Record &recOut);
+		// True means a refresh is needed...
+		virtual Bool setOptions(Record &rec, Record &recOut);
 
 		// retrieve the current and default options and parameter types.
-		virtual casacore::Record getOptions( bool scrub=false ) const;
+		virtual Record getOptions( bool scrub=false ) const;
 
 		// an explicit refresh: should be called if the DisplayData is
-		// changed such that drawing is required.  If clean is true,
+		// changed such that drawing is required.  If clean is True,
 		// the DD is totally rebuilt, in practice.  This is provided
 		// for higher level control, even explicit control of refresh
 		// where necessary.
-		// ..."refresh(true)"... does not seem to work <drs:Mar 21 2013>
-		virtual void refresh(casacore::Bool clean = false);
+		// ..."refresh(True)"... does not seem to work <drs:Mar 21 2013>
+		virtual void refresh(Bool clean = False);
 
 		// an explicit request to draw the axes and/or labels.  Returns
-		// true if axes were drawn, otherwise false;
-		virtual casacore::Bool labelAxes(const WCRefreshEvent &ev);
-		virtual casacore::Bool canLabelAxes() const{
+		// True if axes were drawn, otherwise False;
+		virtual Bool labelAxes(const WCRefreshEvent &ev);
+		virtual Bool canLabelAxes() const{
 			return false;
 		}
 
 		// Return the class name of this DisplayData; useful mostly for
 		// debugging purposes, and perhaps future use in the glish widget
 		// interface.
-		virtual casacore::String className() const {
-			return casacore::String("DisplayData");
+		virtual String className() const {
+			return String("DisplayData");
 		}
-		virtual casacore::String description( ) const {
+		virtual String description( ) const {
 			return "not available";
 		}
 
@@ -619,10 +615,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// determine the order of drawing.
 		virtual Display::DisplayDataType classType() = 0;
 
-		virtual casacore::String dataType( ) const = 0;
-		virtual const casacore::IPosition dataShape( ) const = 0;
-		virtual casacore::uInt dataDim( ) const = 0;
-		virtual const casacore::Unit dataUnit( ) const = 0;
+		virtual String dataType( ) const = 0;
+		virtual const IPosition dataShape( ) const = 0;
+		virtual uInt dataDim( ) const = 0;
+		virtual const Unit dataUnit( ) const = 0;
 		virtual std::vector<int> displayAxes( ) const = 0;
 
 		// Get image analyis about images... for non-image
@@ -633,11 +629,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			return 0;
 		}
 		// Returns a pointer that should *not* be deleted...
-		virtual SHARED_PTR<casacore::ImageInterface<casacore::Float> > imageinterface( ) {
-			return SHARED_PTR<casacore::ImageInterface<casacore::Float> >();
+		virtual SHARED_PTR<ImageInterface<Float> > imageinterface( ) {
+			return SHARED_PTR<ImageInterface<Float> >();
 		}
 
-		virtual void setSubstituteTitleText( const casacore::String /*title*/ ){
+		virtual void setSubstituteTitleText( const String /*title*/ ){
 
 		}
 
@@ -647,19 +643,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		const WorldCanvasHolder *findHolder(const WorldCanvas *wCanvas) const;
 		WorldCanvasHolder *findHolder(const WorldCanvas *wCanvas);
 
-		// Return a sorted casacore::Block of all animation frame numbers currently set
+		// Return a sorted Block of all animation frame numbers currently set
 		// onto all WCHs where this DD is registered.
 		// The frame numbers returned are guaranteed to be in the range
 		// 0 <= zIndex < axZrng, where axZrng is the total number of frames
 		// on the Z axis.  axZrng can be supplied; the default is nelements().
-		virtual casacore::Block<casacore::Int> allZIndices(casacore::Int axZrng=-1) const;
+		virtual Block<Int> allZIndices(Int axZrng=-1) const;
 
 		// Will be called just before registering the [GTk]DD on a [GTk]PanelDisplay
 		// which has none registered on it yet.  The DD can set the initial
 		// animator position in this case by overriding this method to set
-		// preferredZIndex and return true.
-		virtual casacore::Bool zIndexHint(casacore::Int& /*preferredZIndex*/) const {
-			return false;
+		// preferredZIndex and return True.
+		virtual Bool zIndexHint(Int& /*preferredZIndex*/) const {
+			return False;
 		}
 
 		// Overide DisplayEH::handleEvent. This base class on forwards the
@@ -670,7 +666,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Defaulting wch to 0 asks whether this DD is CS master of _some_ WCH
 		// on which it is registered.  (That option is mostly a kludge, since the
 		// DD may be CS master of some WCHs and not others).
-		virtual casacore::Bool isCSmaster(const WorldCanvasHolder* wch=0) const;
+		virtual Bool isCSmaster(const WorldCanvasHolder* wch=0) const;
 
 		// DD 'Absolute Pixel Coordinates', e.g. channel numbers, are internally
 		// 0-based (they begin numbering at 0), but certain external user-interface
@@ -685,21 +681,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// setUIBase(0) right after constructing this DD, before other
 		// user interface operations such as getOptions().
 		// <group>
-		virtual casacore::Int uiBase() const {
+		virtual Int uiBase() const {
 			return uiBase_;
 		}
 
-		virtual void setUIBase(casacore::Int uibase) {
+		virtual void setUIBase(Int uibase) {
 			if(uibase==0 || uibase==1) uiBase_ = uibase;
 		}
 		// </group>
 
 		// Get and set method for the flag
 		// <group>
-		virtual casacore::Bool getDelTmpData( ) {
+		virtual Bool getDelTmpData( ) {
 			return delTmpData_;
 		}
-		virtual void setDelTmpData(casacore::Bool delTmpData) {
+		virtual void setDelTmpData(Bool delTmpData) {
 			delTmpData_ = delTmpData;
 		}
 		// </group>
@@ -708,19 +704,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void setDisplayDataBlue( DisplayData* /*dd*/ ){}
 		virtual void setDisplayDataGreen( DisplayData* /*dd*/ ){}
 
-		const static casacore::String DATA_MIN;
-		const static casacore::String DATA_MAX;
+		const static String DATA_MIN;
+		const static String DATA_MAX;
 
 	protected:
 
 		// DDs may override to adjust the internal stored current animation
-		// index (activeZIndex_) if necessary, and to set return value false
+		// index (activeZIndex_) if necessary, and to set return value False
 		// iff the passed zindex won't work for the DD.  zIndexConformed_
 		// should be set to the value returned; activeZIndex_ should also
 		// be set appropriately.
-		virtual casacore::Bool setActiveZIndex_(casacore::Int zindex) {
+		virtual Bool setActiveZIndex_(Int zindex) {
 			activeZIndex_ = zindex;
-			zIndexConformed_ = true;
+			zIndexConformed_ = True;
 			return zIndexConformed_;
 		}
 
@@ -737,7 +733,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		AttributeBuffer attributes;
 
 		// list of DisplayDataElements, which are of type DisplayMethod or derived
-		casacore::PtrBlock<void *> DDelement;
+		PtrBlock<void *> DDelement;
 
 		// Protected interface for WorldCanvasHolder, can be called by the friends
 		// of DisplayData, but are nobody else's business. I decided to do this in
@@ -752,56 +748,56 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Indicates the 'current' animation frame, i.e. the zIndex on the canvas
 		// for which confromsTo(wch) was last called.  Intended to be set only
 		// by setActiveZIndex_() in this class or derived classes.
-		casacore::Int activeZIndex_;
+		Int activeZIndex_;
 
 		// Flag indicating that temporary data should be removed when deleting
 		// the object.
-		casacore::Bool delTmpData_;
+		Bool delTmpData_;
 
 		// Somewhat limited-use state, saved here for 'efficiency'.  Indicates
 		// that the last call to conformsToRstrs(), conformsToCS(), or
 		// conformsToZIndex(), passed the respective compatibility tests.
 		// (See conformed(), below).  Intended to be set only in the methods
 		// conformsToRstrs(), conformsToCS() and setActiveZIndex_(), respectively.
-		casacore::Bool rstrsConformed_, csConformed_, zIndexConformed_;
+		Bool rstrsConformed_, csConformed_, zIndexConformed_;
 
 		// Returns result of last call to conformsTo(WCH&).  Methods like showValue()
 		// which don't have access to the wch can use it instead, but that
 		// shifts the burden elsewhere of being sure that conformsTo() was called
 		// for the current WCH.  When possible, it is generally better and safer
 		// to call conformsTo(wch) directly when needed, rather than querying this.
-		casacore::Bool conformed() {
+		Bool conformed() {
 			return rstrsConformed_ && csConformed_ && zIndexConformed_;
 		}
 		//Added so that when two images are loaded with no velocity
 		//alignment, they can still show their position coordinates without
 		//having to be rstrsConformed.
-		casacore::Bool isCsAndZIndexConformed() {
+		Bool isCsAndZIndexConformed() {
 			return csConformed_ && zIndexConformed_;
 		}
 		// Set (coordinate) state of WCH's WC.  Called by WCH::executeSizeControl().
 		// (See important notes on interface and implementation of this function
 		// in the class synopsis above).
-		virtual casacore::Bool sizeControl(WorldCanvasHolder& wcHolder,
+		virtual Bool sizeControl(WorldCanvasHolder& wcHolder,
 		                         AttributeBuffer& holderBuf) = 0;
 
 		// Delete temporary data. To be called by sub-classe
 		// that now the filenames.
-		virtual void delTmpData(casacore::String &tmpData);
+		virtual void delTmpData(String &tmpData);
 
 
 		// Retrieve position, motion, refresh and display event handler lists.
 		// <group>
-		virtual const casacore::List<WCPositionEH*> *positionEventHandlerList() {
+		virtual const List<WCPositionEH*> *positionEventHandlerList() {
 			return &itsPositionEHList;
 		}
-		virtual const casacore::List<WCMotionEH*> *motionEventHandlerList() {
+		virtual const List<WCMotionEH*> *motionEventHandlerList() {
 			return &itsMotionEHList;
 		}
-		virtual const casacore::List<WCRefreshEH*> *refreshEventHandlerList() {
+		virtual const List<WCRefreshEH*> *refreshEventHandlerList() {
 			return &itsRefreshEHList;
 		}
-		virtual const casacore::List<DisplayEH*> *displayEventHandlerList() {
+		virtual const List<DisplayEH*> *displayEventHandlerList() {
 			return &itsDisplayEHList;
 		}
 		// </group>
@@ -833,20 +829,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Colormap for this DisplayData, and its weight.
 		Colormap *itsColormap;
-		casacore::Float itsColormapWeight;
+		Float itsColormapWeight;
 
 		// A list of WorldCanvasHolders for which this DisplayData works.
 		// The list is maintained by the DisplayData itself based on the
 		// notify routines used by the WorldCanvasHolder.  This can be used,
 		// for example, to find which WorldCanvas belongs to which
 		// WorldCanvasHolder.
-		casacore::List<WorldCanvasHolder*> itsWCHList;
+		List<WorldCanvasHolder*> itsWCHList;
 
 		// Lists of position, motion, refresh and display event handlers.
-		casacore::List<WCPositionEH*> itsPositionEHList;
-		casacore::List<WCMotionEH*> itsMotionEHList;
-		casacore::List<WCRefreshEH*> itsRefreshEHList;
-		casacore::List<DisplayEH*> itsDisplayEHList;
+		List<WCPositionEH*> itsPositionEHList;
+		List<WCMotionEH*> itsMotionEHList;
+		List<WCRefreshEH*> itsRefreshEHList;
+		List<DisplayEH*> itsDisplayEHList;
 
 		// DD 'Absolute Pixel Coordinates', e.g. channel numbers, are internally
 		// 0-based (begin numbering at 0), but certain external user-interface
@@ -857,7 +853,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// report 0-based values instead.  Unless setUIBase(0) is called, the
 		// traditional 1-based reporting behavior is retained by default.
 
-		casacore::Int uiBase_;		// (initialized to 1).
+		Int uiBase_;		// (initialized to 1).
 	};
 
 

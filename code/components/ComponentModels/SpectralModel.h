@@ -35,15 +35,11 @@
 #include <casa/Quanta/Unit.h>
 #include <casa/Quanta/Quantum.h>
 
-namespace casacore{
+namespace casa { //# NAMESPACE CASA - BEGIN
 
 class RecordInterface;
 class String;
 template <class T> class Vector;
-}
-
-namespace casa { //# NAMESPACE CASA - BEGIN
-
 
 // <summary>Base class for spectral models</summary>
 
@@ -53,7 +49,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </reviewed>
 
 // <prerequisite>
-//   <li> <linkto class=casacore::MFrequency>MFrequency</linkto>
+//   <li> <linkto class=MFrequency>MFrequency</linkto>
 // </prerequisite>
 //
 // <synopsis>
@@ -75,11 +71,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // This class parameterises spectral models with two quantities.
 // <dl>
 // <dt><em> A reference frequency.</em>
-// <dd> This is specified using an <linkto class=casacore::MFrequency>MFrequency</linkto>
+// <dd> This is specified using an <linkto class=MFrequency>MFrequency</linkto>
 //      object and defines a frequency where the model
 //      is interesting. See the description of derived classes for the
 //      specific interpretation of the reference frequency.
-// <dt> <em>A casacore::Vector of parameters.</em>
+// <dt> <em>A Vector of parameters.</em>
 // <dd> This contains other parameters that the are defined differently for
 //      different spectral models. The length of the vector may vary for
 //      different spectral models.
@@ -95,7 +91,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Any allowed frequency reference frame can be used. However the reference
 // frame must be adequately specified in order to allow conversions to other
 // reference frames. For example if the reference frame code for the frequency
-// is casacore::MFrequency::TOPO then the reference frame must also contain the time,
+// is MFrequency::TOPO then the reference frame must also contain the time,
 // position on the earth, and direction of the observation that corresponds to
 // the specified frequency. This way the sample functions can convert the
 // frequency to a value in the LSR reference frame (if you specify the sample
@@ -122,21 +118,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //        << setprecision(4) << modelSpectrum.refFrequency().get("GHz") << " ("
 //        << modelSpectrum.refFrequency().getRefString() << ")"
 //        << endl;
-//   const casacore::MVFrequency step(casacore::Quantity(100.0, "MHz"));
-//   casacore::MVFrequency sampleFreq(casacore::Quantity(1, "GHz"));
-//   casacore::MeasFrame obsFrame;
+//   const MVFrequency step(Quantity(100.0, "MHz"));
+//   MVFrequency sampleFreq(Quantity(1, "GHz"));
+//   MeasFrame obsFrame;
 //   {
-//     casacore::Quantity obsRa; casacore::MVAngle::read(obsRa, "19:39:");
-//     casacore::Quantity obsDec; casacore::MVAngle::read(obsDec, "-63.43.");
-//     casacore::Quantity obsDay; casacore::MVTime::read(obsDay, "1996/11/20/5:20");
-//     obsFrame.set(casacore::MEpoch(obsDay, casacore::MEpoch::UTC),
-// 		    casacore::MDirection(obsRa, obsDec, casacore::MDirection::J2000));
+//     Quantity obsRa; MVAngle::read(obsRa, "19:39:");
+//     Quantity obsDec; MVAngle::read(obsDec, "-63.43.");
+//     Quantity obsDay; MVTime::read(obsDay, "1996/11/20/5:20");
+//     obsFrame.set(MEpoch(obsDay, MEpoch::UTC),
+// 		    MDirection(obsRa, obsDec, MDirection::J2000));
 //   }
-//   casacore::MFrequency::Ref obsRef(casacore::MFrequency::GEO, obsFrame);
+//   MFrequency::Ref obsRef(MFrequency::GEO, obsFrame);
 //   cout << "Frequency\t scale\n";
-//   for (casacore::uInt i = 0; i < 11; i++) {
+//   for (uInt i = 0; i < 11; i++) {
 //      cout << setprecision(7) << sampleFreq.get("GHz")
-// 	  << "\t\t " << modelSpectrum.sample(casacore::MFrequency(sampleFreq, obsRef))
+// 	  << "\t\t " << modelSpectrum.sample(MFrequency(sampleFreq, obsRef))
 // 	  << endl;
 //      sampleFreq += step;
 //   }
@@ -156,7 +152,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //        when classes modelling spectral lines are written.
 // </todo>
 
-class SpectralModel: public casacore::RecordTransformable
+class SpectralModel: public RecordTransformable
 {
 public:
   // a virtual destructor is needed so that the actual destructor in the
@@ -167,62 +163,62 @@ public:
   // String. 
   // <group>
   virtual ComponentType::SpectralShape type() const = 0;
-  virtual const casacore::String& ident() const;
+  virtual const String& ident() const;
   // </group>
 
   // set/get the reference frequency
   // <group>
-  virtual void setRefFrequency(const casacore::MFrequency& newRefFreq);
-  const casacore::MFrequency& refFrequency() const;
+  virtual void setRefFrequency(const MFrequency& newRefFreq);
+  const MFrequency& refFrequency() const;
   // </group>
 
   // get the frequency unit, and change the default frequency unit to the
-  // specified one. This will only affect the units used in the casacore::Record returned
+  // specified one. This will only affect the units used in the Record returned
   // by the toRecord function.
   // <group>
-  const casacore::Unit& frequencyUnit() const;
-  void convertFrequencyUnit(const casacore::Unit& freqUnit);
+  const Unit& frequencyUnit() const;
+  void convertFrequencyUnit(const Unit& freqUnit);
   // </group>
 
   // set/get the error in the reference frequency. Values must be positive
-  // angular quantities otherwise an casacore::AipsError exception is thrown. The errors
+  // angular quantities otherwise an AipsError exception is thrown. The errors
   // are usually interpreted as the 1-sigma bounds in latitude/longitude and
   // implicitly assume a Gaussian distribution. They must have units with the
   // same dimensions as the Hz.
   // <group>
-  void setRefFrequencyError(const casacore::Quantum<casacore::Double>& newRefFreqErr);
-  const casacore::Quantum<casacore::Double>& refFrequencyError() const;
+  void setRefFrequencyError(const Quantum<Double>& newRefFreqErr);
+  const Quantum<Double>& refFrequencyError() const;
   // </group>
 
   // Return the scaling factor that indicates what proportion of the flux is at
   // the specified frequency. ie. if the centreFrequency argument is the
   // reference frequency then this function will always return one. At other
   // frequencies it will return a non-negative number.
-  virtual casacore::Double sample(const casacore::MFrequency& centerFrequency) const = 0;
+  virtual Double sample(const MFrequency& centerFrequency) const = 0;
 
-  // return full casacore::Stokes version especially for models which have different 
-  // frequency dependence for the casacore::Stokes param (1 or 4 elements)
+  // return full Stokes version especially for models which have different 
+  // frequency dependence for the Stokes param (1 or 4 elements)
   // So as allow for fractional pol change and angle change of linear pol w.r.t frequency
-  // A a four casacore::Vector of original IQUV should be passed in and it will hold the return values 
+  // A a four Vector of original IQUV should be passed in and it will hold the return values 
 
-  virtual void sampleStokes(const casacore::MFrequency& centerFrequency, casacore::Vector<casacore::Double>& stokesval ) const = 0;
+  virtual void sampleStokes(const MFrequency& centerFrequency, Vector<Double>& stokesval ) const = 0;
   // Same as the previous function except that many frequencies can be sampled
   // at once. The reference frame must be the same for all the specified
   // frequencies. A default implementation of this function is available that
   // uses the sample function described above.  However customised versions of
   // this function will be more efficient as intermediate values only need to
   // be computed once.
-  virtual void sample(casacore::Vector<casacore::Double>& scale, 
-                      const casacore::Vector<casacore::MFrequency::MVType>& frequencies, 
-                      const casacore::MFrequency::Ref& refFrame) const = 0;
+  virtual void sample(Vector<Double>& scale, 
+                      const Vector<MFrequency::MVType>& frequencies, 
+                      const MFrequency::Ref& refFrame) const = 0;
 
 // So as allow for fractional pol change and angle change of linear pol w.r.t frequency
-// casacore::Vector of   four Vectors of original IQUV should be passed in and it will hold the return values
+// Vector of   four Vectors of original IQUV should be passed in and it will hold the return values
 // Uitimately this math should really go in Flux and FluxRep to where a rotation of linear pol is allowed
    
-  virtual void sampleStokes(casacore::Vector<casacore::Vector<casacore::Double> >& stokesval,
-                      const casacore::Vector<casacore::MFrequency::MVType>& frequencies, 
-                      const casacore::MFrequency::Ref& refFrame) const = 0;
+  virtual void sampleStokes(Vector<Vector<Double> >& stokesval, 
+                      const Vector<MFrequency::MVType>& frequencies, 
+                      const MFrequency::Ref& refFrame) const = 0;
   // Return a pointer to a copy of the derived object upcast to a SpectralModel
   // object. The class that uses this function is responsible for deleting the
   // pointer. This is used to implement a virtual copy constructor.
@@ -230,16 +226,16 @@ public:
 
   // return the number of parameters in this spectral shape and set/get them.
   // <group>
-  virtual casacore::uInt nParameters() const = 0;
-  virtual void setParameters(const casacore::Vector<casacore::Double>& newParms) = 0;
-  virtual casacore::Vector<casacore::Double> parameters() const = 0;
-  virtual void setErrors(const casacore::Vector<casacore::Double>& newErrors) = 0;
-  virtual casacore::Vector<casacore::Double> errors() const = 0;
+  virtual uInt nParameters() const = 0;
+  virtual void setParameters(const Vector<Double>& newParms) = 0;
+  virtual Vector<Double> parameters() const = 0;
+  virtual void setErrors(const Vector<Double>& newErrors) = 0;
+  virtual Vector<Double> errors() const = 0;
   // </group>
 
   // These functions convert between a record and a SpectralModel. This way
   // derived classes can interpret fields in the record in a class specific
-  // way. They return false if the record is malformed and append an error
+  // way. They return False if the record is malformed and append an error
   // message to the supplied string giving the reason.  These functions define
   // how a spectral model is represented in glish. All records should have
   // 'type' & 'frequency' fields which contain respectively; a string
@@ -247,21 +243,21 @@ public:
   // representation of a frequency measure.  The interpretation of all other
   // fields depends on the specific spectral model used.
   // <group>
-  virtual casacore::Bool fromRecord(casacore::String& errorMessage, 
-			  const casacore::RecordInterface& record) = 0;
-  virtual casacore::Bool toRecord(casacore::String& errorMessage,
-			casacore::RecordInterface& record) const = 0;
+  virtual Bool fromRecord(String& errorMessage, 
+			  const RecordInterface& record) = 0;
+  virtual Bool toRecord(String& errorMessage,
+			RecordInterface& record) const = 0;
   // </group>
 
   // Convert the parameters of the spectral model to the specified units. The
-  // casacore::Record must contain the same fields that the to/from casacore::Record functions have
+  // Record must contain the same fields that the to/from Record functions have
   // (with the exception of the frequency & type fields). These fields will
   // contain strings (and not Quantums) that specify the new units for these
   // parameters. The new units must have the same dimensions as the existing
   // ones. If there is any problem parsing the record then an error message is
-  // appended to the supplied string and the function returns false. 
-  virtual casacore::Bool convertUnit(casacore::String& errorMessage,
-			   const casacore::RecordInterface& record) = 0;
+  // appended to the supplied string and the function returns False. 
+  virtual Bool convertUnit(String& errorMessage,
+			   const RecordInterface& record) = 0;
 
   // Return the spectral shape that the supplied record represents. The
   // spectral shape is determined by parsing a 'type' field in the supplied
@@ -269,13 +265,13 @@ public:
   // (which contains a string) could not be translated into a known spectral
   // shape. It then appends an appropriate error message to the errorMessage
   // String.
-  static ComponentType::SpectralShape getType(casacore::String& errorMessage,
-					      const casacore::RecordInterface& record);
+  static ComponentType::SpectralShape getType(String& errorMessage,
+					      const RecordInterface& record);
 
-  // casacore::Function which checks the internal data of this class for correct
-  // dimensionality and consistant values. Returns true if everything is fine
-  // otherwise returns false.
-  virtual casacore::Bool ok() const;
+  // Function which checks the internal data of this class for correct
+  // dimensionality and consistant values. Returns True if everything is fine
+  // otherwise returns False.
+  virtual Bool ok() const;
 
 protected:
   // The constructors and assignment operator are protected as only derived
@@ -285,7 +281,7 @@ protected:
   SpectralModel();
 
   //# Construct a SpectralModel at the specified reference frequency.
-  SpectralModel(const casacore::MFrequency& refFreq, const casacore::Unit& = casacore::Unit("GHz"));
+  SpectralModel(const MFrequency& refFreq, const Unit& = Unit("GHz"));
 
   //# The copy constructor uses copy semantics.
   SpectralModel(const SpectralModel& other);
@@ -298,18 +294,18 @@ protected:
   //exception is thrown if convert does not work.
   //No direction or epoch is available..so better ask for  a frame 
   // that works or better convert to the frame of the refFrequency .
-  casacore::Double refFreqInFrame(const casacore::MFrequency::Ref& frame) const;
-  // returns true if the quantum is not a non-negative quantity with units
+  Double refFreqInFrame(const MFrequency::Ref& frame) const;
+  // returns True if the quantum is not a non-negative quantity with units
   // dimensionally identical to the Hz
-  static casacore::Bool badError(const casacore::Quantum<casacore::Double>& quantum);
+  static Bool badError(const Quantum<Double>& quantum);
 
 private:
   //# The reference frequency of the spectral model
-  casacore::MFrequency itsRefFreq;
+  MFrequency itsRefFreq;
   //# the units (Hz, GHz etc.) that the record functions should use for the
   //# reference frequency. 
-  casacore::Unit itsFreqUnit;
-  casacore::Quantity itsFreqErr;
+  Unit itsFreqUnit;
+  Quantity itsFreqErr;
 };
 
 } //# NAMESPACE CASA - END

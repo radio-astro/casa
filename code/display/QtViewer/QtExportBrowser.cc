@@ -35,7 +35,6 @@
 #include <QPushButton>
 #include <graphics/X11/X_exit.h>
 
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	QtExportBrowser::QtExportBrowser(QWidget *parent, QString filePath) :

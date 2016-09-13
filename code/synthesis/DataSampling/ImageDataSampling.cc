@@ -41,7 +41,6 @@
 #include <casa/Exceptions/Error.h>
 #include <casa/sstream.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 ImageDataSampling::ImageDataSampling(const ImageInterface<Float>& dirty,
@@ -101,10 +100,10 @@ void ImageDataSampling::init(const ImageInterface<Float>& dirty,
   IPosition onePlane(dirty.shape().nelements(), 1);
   onePlane(0)=nx;
   onePlane(1)=ny;
-  data_p=dirty.getSlice(zero, onePlane, true);
-  prf_p=psf.getSlice(zero, onePlane, true);
+  data_p=dirty.getSlice(zero, onePlane, True);
+  prf_p=psf.getSlice(zero, onePlane, True);
   if(sigmaImagePtr) {
-    sigma_p=sigmaImagePtr->getSlice(zero, onePlane, true);
+    sigma_p=sigmaImagePtr->getSlice(zero, onePlane, True);
   }
 
   Int row=0;

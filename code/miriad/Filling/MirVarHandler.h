@@ -44,31 +44,31 @@ protected:
 
 public:
     // handle an update to the integration time
-    virtual void updateIntTime(FillMetadata &fm, casacore::Double time) = 0;
+    virtual void updateIntTime(FillMetadata &fm, Double time) = 0;
 
     // handle an update to the observatory
-    virtual void updateObservatory(FillMetadata &fm, casacore::Double time) = 0;
+    virtual void updateObservatory(FillMetadata &fm, Double time) = 0;
 
     // handle an update to the array configuration
-    virtual void updateArray(FillMetadata &fm, casacore::Double time) = 0;
+    virtual void updateArray(FillMetadata &fm, Double time) = 0;
 
     // handle an update to the array configuration
-    virtual void updatePolSetup(FillMetadata &fm, casacore::Double time) = 0;
+    virtual void updatePolSetup(FillMetadata &fm, Double time) = 0;
 
     // handle an update to the source
-    virtual void updateSource(FillMetadata &fm, casacore::Double time) = 0;
+    virtual void updateSource(FillMetadata &fm, Double time) = 0;
 
 	// handle an update to the source model -- dgoscha
-	virtual void updateSourceModel(FillMetadata &fm, casacore::Double time) = 0;
+	virtual void updateSourceModel(FillMetadata &fm, Double time) = 0;
 
     // handle an update to the observing field
-    virtual void updateField(FillMetadata &fm, casacore::Double time) = 0;
+    virtual void updateField(FillMetadata &fm, Double time) = 0;
 
     // handle an update to the frequency setup
-    virtual void updateFreqSetup(FillMetadata &fm, casacore::Double time) = 0;
+    virtual void updateFreqSetup(FillMetadata &fm, Double time) = 0;
 
     // handle an update to system temperatures
-    virtual void updateTsys(FillMetadata &fm, casacore::Double time) = 0;
+    virtual void updateTsys(FillMetadata &fm, Double time) = 0;
 };
 
 #endif

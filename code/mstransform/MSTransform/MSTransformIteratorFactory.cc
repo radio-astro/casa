@@ -22,7 +22,6 @@
 #include <ctime>
 #include <mstransform/MSTransform/MSTransformIteratorFactory.h>
 #include <casa/Utilities/CountedPtr.h>
-using namespace casacore;
 namespace casa
 {
 
@@ -84,7 +83,7 @@ MSTransformIteratorFactory::~MSTransformIteratorFactory()
 		// ~MSTransformManager => MSTransformManager.close()
 		manager_p.reset();
 
-		Table::relinquishAutoLocks(true);
+		Table::relinquishAutoLocks(True);
 	}
 
 	return;
@@ -190,7 +189,7 @@ std::vector<IPosition> MSTransformIteratorFactory::getVisBufferStructure()
 void MSTransformIteratorFactory::setConfiguration(Record &configuration)
 {
 	configuration_p = configuration;
-	configuration_p.define("buffermode",true);
+	configuration_p.define("buffermode",True);
 	configuration_p.define("outputms",File::newUniqueName("").absoluteName());
 	return;
 }

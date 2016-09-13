@@ -47,7 +47,6 @@ using namespace std;
 #define CheckImplementationPointerR() Assert (impl_p != NULL);
 #define CheckImplementationPointerW() Assert (impl_p != NULL);
 
-using namespace casacore;
 namespace casa {
 
 namespace vi {
@@ -241,7 +240,7 @@ VisibilityIterator2::isAsynchronous () const
 //
 //    return isAsync;
 
-    return false; // for now
+    return False; // for now
 }
 
 
@@ -252,7 +251,7 @@ VisibilityIterator2::isAsynchronousIoEnabled()
     // expected AipsRc value.  If not found then async i/o is disabled.
 
     Bool isEnabled;
-    AipsrcValue<Bool>::find (isEnabled, getAipsRcBase () + "async.enabled", false);
+    AipsrcValue<Bool>::find (isEnabled, getAipsRcBase () + "async.enabled", False);
 
     return isEnabled;
 }
@@ -311,7 +310,7 @@ void
 VisibilityIterator2::originChunks ()
 {
     CheckImplementationPointerR ();
-    originChunks (false);
+    originChunks (False);
 }
 
 void
@@ -533,5 +532,4 @@ SubtableColumns::weather() const
 } // end namespace vi
 
 
-using namespace casacore;
 } // end namespace casa

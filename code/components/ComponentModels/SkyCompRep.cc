@@ -62,7 +62,6 @@
 #include <components/ComponentModels/SpectralModel.h>
 #include <casa/iostream.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 SkyCompRep::SkyCompRep() 
@@ -196,13 +195,13 @@ Bool SkyCompRep::isPhysical() const {
       !nearAbs(q.imag(), 0.0) || 
       !nearAbs(u.imag(), 0.0) || 
       !nearAbs(v.imag(), 0.0) ) {
-    return false;
+    return False;
   }
   if (square(i.real()) < 
       square(q.real()) + square(u.real()) + square(v.real()) ) {
-    return false;
+    return False;
   }
-  return true;
+  return True;
 }
 
 Flux<Double> SkyCompRep::sample(const MDirection& direction, 
@@ -364,12 +363,12 @@ Bool SkyCompRep::fromRecord(String& errorMessage,
       const RecordFieldId flux(fluxString);
       if (record.dataType(flux) != TpRecord) {
 	errorMessage += "The 'flux' field must be a record\n";
-	return false;
+	return False;
       }
       const Record& fluxRec = record.asRecord(flux);
       if (!itsFlux.fromRecord(errorMessage, fluxRec)) {
 	errorMessage += "Problem parsing the 'flux' field\n";
-	return false;
+	return False;
       }
     } else {
       LogIO logErr(LogOrigin("SkyCompRep", "fromRecord()"));
@@ -386,7 +385,7 @@ Bool SkyCompRep::fromRecord(String& errorMessage,
       const RecordFieldId shape(shapeString);
       if (record.dataType(shape) != TpRecord) {
 	errorMessage += "\nThe 'shape' field must be a record";
-	return false;
+	return False;
       }      
       const Record& shapeRec = record.asRecord(shape);
       const ComponentType::Shape recType = 
@@ -394,7 +393,7 @@ Bool SkyCompRep::fromRecord(String& errorMessage,
       if (recType >= ComponentType::UNKNOWN_SHAPE) {
 	errorMessage += String("Cannot create a component with a '" +
 			       ComponentType::name(recType) + "' shape\n");
-	return false;
+	return False;
       }
       if (recType != itsShapePtr->type()) {
 	ComponentShape* newShape = ComponentType::construct(recType);
@@ -404,7 +403,7 @@ Bool SkyCompRep::fromRecord(String& errorMessage,
       }
       if (!itsShapePtr->fromRecord(errorMessage, shapeRec)) {
 	errorMessage += "Problem parsing the 'shape' field\n";
-	return false;
+	return False;
       }
     } else {
       LogIO logErr(LogOrigin("SkyCompRep", "fromRecord()"));
@@ -424,7 +423,7 @@ Bool SkyCompRep::fromRecord(String& errorMessage,
       const RecordFieldId spectrum(spectrumString);
       if (record.dataType(spectrum) != TpRecord) {
 	errorMessage += "\nThe 'spectrum' field must be a record";
-	return false;
+	return False;
       }      
       const Record& spectrumRec = record.asRecord(spectrum);
       const ComponentType::SpectralShape recType = 
@@ -432,7 +431,7 @@ Bool SkyCompRep::fromRecord(String& errorMessage,
       if (recType >= ComponentType::UNKNOWN_SPECTRAL_SHAPE) {
 	errorMessage += String("Cannot create a component with a '" +
 			       ComponentType::name(recType) + "' spectrum\n");
-	return false;
+	return False;
       }
       if (recType != itsSpectrumPtr->type()) {
 	SpectralModel* newSpectrum = ComponentType::construct(recType);
@@ -441,7 +440,7 @@ Bool SkyCompRep::fromRecord(String& errorMessage,
 	delete newSpectrum;
       }
       if (!itsSpectrumPtr->fromRecord(errorMessage, spectrumRec)) {
-	return false;
+	return False;
       }
     } else {
       LogIO logErr(LogOrigin("SkyCompRep", "fromRecord()"));
@@ -458,11 +457,11 @@ Bool SkyCompRep::fromRecord(String& errorMessage,
       const RecordFieldId label(labelString);
       if (record.dataType(label) != TpString) {
 	errorMessage += "\nThe 'label' field must be a string";
-	return false;
+	return False;
       }      
       if (record.shape(label) != IPosition(1,1)) {
 	errorMessage += "\nThe 'label' field must have only 1 element";
-	return false;
+	return False;
       } 
       itsLabel = record.asString(label);
     }
@@ -473,12 +472,12 @@ Bool SkyCompRep::fromRecord(String& errorMessage,
       const RecordFieldId optionalParameters(optParmString);
       if (record.dataType(optionalParameters) != TpArrayDouble) {
         errorMessage += "\nThe 'optionalParameters' field must be a Double Array";
-        return false;
+        return False;
       } 
       itsOptParms = record.asArrayDouble(optionalParameters);
     }
   }
-  return true;
+  return True;
 }
 
 Bool SkyCompRep::toRecord(String& errorMessage, 
@@ -486,21 +485,21 @@ Bool SkyCompRep::toRecord(String& errorMessage,
   {
     Record fluxRec;
     if (!itsFlux.toRecord(errorMessage, fluxRec)) {
-      return false;
+      return False;
     }
     record.defineRecord(RecordFieldId("flux"), fluxRec);
   }
   {
     Record shapeRec;
     if (!itsShapePtr->toRecord(errorMessage, shapeRec)) {
-      return false;
+      return False;
     }
     record.defineRecord(RecordFieldId("shape"), shapeRec);
   }
   {
     Record spectrumRec;
     if (!itsSpectrumPtr->toRecord(errorMessage, spectrumRec)) {
-      return false;
+      return False;
     }
     record.defineRecord(RecordFieldId("spectrum"), spectrumRec);
   }
@@ -511,7 +510,7 @@ Bool SkyCompRep::toRecord(String& errorMessage,
     }
   }
   record.define(RecordFieldId("label"), itsLabel);
-  return true;
+  return True;
 }
 
 Bool SkyCompRep::ok() const {
@@ -519,27 +518,27 @@ Bool SkyCompRep::ok() const {
     LogIO logErr(LogOrigin("SkyCompRep", "ok()"));
     logErr << LogIO::SEVERE << "Shape pointer is null"
            << LogIO::POST;
-    return false;
+    return False;
   }
-  if (itsShapePtr->ok() == false) {
+  if (itsShapePtr->ok() == False) {
     LogIO logErr(LogOrigin("SkyCompRep", "ok()"));
     logErr << LogIO::SEVERE << "The component shape is not ok"
            << LogIO::POST;
-    return false;
+    return False;
   }
   if (itsSpectrumPtr.null()) {
     LogIO logErr(LogOrigin("SkyCompRep", "ok()"));
     logErr << LogIO::SEVERE << "Spectrum pointer is null"
            << LogIO::POST;
-    return false;
+    return False;
   }
-  if (itsSpectrumPtr->ok() == false) {
+  if (itsSpectrumPtr->ok() == False) {
     LogIO logErr(LogOrigin("SkyCompRep", "ok()"));
     logErr << LogIO::SEVERE << "The component spectrum is not ok"
            << LogIO::POST;
-    return false;
+    return False;
   }
-  return true;
+  return True;
 }
 
 
@@ -677,20 +676,20 @@ Vector<Double> SkyCompRep::toPixel (const Unit& brightnessUnitOut,
    ComponentType::Shape type = componentShape.type();
    if (type==ComponentType::POINT) {
       Flux<Double> f = flux();
-      Quantum<Double> fluxPeak = f.value (stokes, true);
+      Quantum<Double> fluxPeak = f.value (stokes, True);
       parameters(0) = fluxPeak.getValue();                    // Jy
    } else if (type==ComponentType::GAUSSIAN || type==ComponentType::DISK) {
       
 // Define /beam and /pixel units.
 
-      Bool integralInJy = true;
+      Bool integralInJy = True;
       Unit brightnessUnits = defineBrightnessUnits(os, brightnessUnitOut, dirCoord,
                                                                restoringBeam, integralInJy);
                                               
 // Get Flux (integral) for particular Stokes. 
 
       Flux<Double> f = flux();
-      Quantum<Double> fluxIntegral = f.value (stokes, true);
+      Quantum<Double> fluxIntegral = f.value (stokes, True);
    
 // Find peak value. Because we have defined /beam and /pixel units
 // above we can use Quanta mathematics to get the answer we want

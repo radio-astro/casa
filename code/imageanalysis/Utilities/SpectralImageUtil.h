@@ -1,4 +1,4 @@
-//# SpectralImageUtil.h: Definitions for casacore::Stokes Image utilities
+//# SpectralImageUtil.h: Definitions for Stokes Image utilities
 //# Copyright (C) 2013
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -38,10 +38,10 @@ class SpectralImageUtil {
  public:
   //Returns a pointer to a subimage of the requested plane
   //Note caller is responsible for deleting the subimage object
-  // If writeaccess is true ...modification on the subimage will get recorded on the original image if it is writeable
-  static casacore::SubImage<casacore::Float>* getChannel(casacore::ImageInterface<casacore::Float>& theIm, casacore::Int begchannel=0,  casacore::Int endchannel=-1, casacore::Bool writeAccess=false);
+  // If writeaccess is True ...modification on the subimage will get recorded on the original image if it is writeable
+  static SubImage<Float>* getChannel(ImageInterface<Float>& theIm, Int begchannel=0,  Int endchannel=-1, Bool writeAccess=False);
   //Frequency at a given pixel along the spectral axis (value returned is in Hz)
-  static casacore::Double worldFreq(const casacore::CoordinateSystem& cs, casacore::Double spectralpix=0.0);
+  static Double worldFreq(const CoordinateSystem& cs, Double spectralpix=0.0);
 
 };//end of class
 

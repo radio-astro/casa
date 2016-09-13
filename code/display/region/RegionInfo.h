@@ -46,10 +46,10 @@ namespace casa {
 
 			enum InfoTypes { MsInfoType, ImageInfoType, SliceInfoType, PVLineInfoType, InvalidInfoType };
 
-			typedef casacore::ImageStatistics<casacore::Float>::stat_list stats_t;
-			//typedef std::pair<casacore::String,String> center_element;
+			typedef ImageStatistics<Float>::stat_list stats_t;
+			//typedef std::pair<String,String> center_element;
 			//typedef std::list<center_element> center_t;
-			//typedef std::list<std::pair<casacore::String,String> > center_t;
+			//typedef std::list<std::pair<String,String> > center_t;
 			typedef stats_t center_t;
 
 			RegionInfo( ) : stat_list_( ), type_(InvalidInfoType) { }

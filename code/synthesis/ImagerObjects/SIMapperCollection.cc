@@ -59,7 +59,6 @@
 #include <unistd.h>
 using namespace std;
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -71,7 +70,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     itsMappers.resize(0);
     oldMsId_p=-1;
-    itsIsNonZeroModel=false;
+    itsIsNonZeroModel=False;
 
   }
   
@@ -87,7 +86,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   Bool SIMapperCollection::releaseImageLocks() 
   {
-    Bool validflag=true;
+    Bool validflag=True;
     for(Int mapperid=0;mapperid<nMappers();mapperid++ )
       {
 	validflag &= itsMappers[mapperid]->releaseImageLocks();
@@ -127,7 +126,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
 
     // If all is well, add to the list.
-    itsMappers.resize(nMappers+1, true);
+    itsMappers.resize(nMappers+1, True);
     itsMappers[nMappers] = localMapper;
 
   }
@@ -139,7 +138,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //////////////////////////////////////////////////////////////////////////////////////////////////////
   void SIMapperCollection::addMapper( CountedPtr<SIMapper> map){
     Int nMappers = itsMappers.nelements();
-    itsMappers.resize(nMappers+1, true);
+    itsMappers.resize(nMappers+1, True);
     itsMappers[nMappers]=map;
   } 
 
@@ -171,14 +170,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	for (uInt k=0; k < itsMappers.nelements(); ++k)
 	  {
-	    (itsMappers[k])->initializeGrid(vb,dopsf,true);
+	    (itsMappers[k])->initializeGrid(vb,dopsf,True);
   	  }
       }
     else 
       {
 	if (mapperid > (Int)itsMappers.nelements())
 	  throw ( AipsError("Internal Error : SIMapperCollection::initializeGrid(): mapperid out of range") );
-	else itsMappers[mapperid]->initializeGrid(vb, dopsf, true);
+	else itsMappers[mapperid]->initializeGrid(vb, dopsf, True);
       }
   }
 
@@ -192,14 +191,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	for (uInt k=0; k < itsMappers.nelements(); ++k)
 	  {
-	    (itsMappers[k])->initializeGrid(vb,dopsf,true);
+	    (itsMappers[k])->initializeGrid(vb,dopsf,True);
   	  }
       }
     else 
       {
 	if (mapperid > (Int)itsMappers.nelements())
 	  throw ( AipsError("Internal Error : SIMapperCollection::initializeGrid(): mapperid out of range") );
-	else itsMappers[mapperid]->initializeGrid(vb, dopsf, true);
+	else itsMappers[mapperid]->initializeGrid(vb, dopsf, True);
       }
   }
 
@@ -208,7 +207,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SIMapperCollection::grid(vi::VisBuffer2& vb, Bool dopsf, refim::FTMachine::Type col,
 				Int mapperid)
   {
-    if( itsIsNonZeroModel == true ) // Try to subtract model visibilities only if a model exists.
+    if( itsIsNonZeroModel == True ) // Try to subtract model visibilities only if a model exists.
 	{
 	  if(col==refim::FTMachine::CORRECTED){
 	//Dang i thought the new vb will return Data or FloatData if correctedData was
@@ -249,7 +248,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SIMapperCollection::grid(VisBuffer& vb, Bool dopsf, FTMachine::Type col,
 				Int mapperid)
   {
-    if( itsIsNonZeroModel == true ) // Try to subtract model visibilities only if a model exists.
+    if( itsIsNonZeroModel == True ) // Try to subtract model visibilities only if a model exists.
 	{
 	  if(col==FTMachine::CORRECTED){
 		  if(vb.msColumns().correctedData().isNull()){
@@ -327,7 +326,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
       itsIsNonZeroModel = anyNonZeroModels();
 
-      if( itsIsNonZeroModel == true )
+      if( itsIsNonZeroModel == True )
 	{
 	  //	  vb.setModelVisCube( Complex(0.0,0.0) );
 	  
@@ -356,7 +355,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
       itsIsNonZeroModel = anyNonZeroModels();
 
-      if( itsIsNonZeroModel == true )
+      if( itsIsNonZeroModel == True )
 	{
 	  //	  vb.setModelVisCube( Complex(0.0,0.0) );
 	  
@@ -380,7 +379,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   ////////////////////////////////////////////////////////////////////////////////////////////////
   void SIMapperCollection::degrid(vi::VisBuffer2& vb, Bool saveVirtualMod, const Int mapperid)
     {
-      if( itsIsNonZeroModel == true )
+      if( itsIsNonZeroModel == True )
 	{
 	  if(mapperid<0)
 	    {
@@ -415,7 +414,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   /////////////////////////////////////OLD VI/VB ////////////////////////////////////////////////////
   void SIMapperCollection::degrid(VisBuffer& vb, Bool saveVirtualMod, const Int mapperid)
     {
-      if( itsIsNonZeroModel == true )
+      if( itsIsNonZeroModel == True )
 	{
 	  if(mapperid<0)
 	    {
@@ -459,7 +458,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     				// Make sure  we have the right size
 
-    				fields.resize(nfields, true);
+    				fields.resize(nfields, True);
 		   */
 		  //Int msid = vb.msId();
 		  ROVisibilityIterator *viloc=vb.getVisibilityIterator();
@@ -474,10 +473,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 				  //VisModelData::putModel(vb.getVisibilityIterator()->ms(), rec, fields, blockSpw[msid], blockStart[msid],
 				  //		blockWidth[msid], blockIncr[msid],
-				  //                         iscomp, true);
+				  //                         iscomp, True);
 				  VisibilityIterator * elvi=(dynamic_cast<VisibilityIterator* >(vb.getVisibilityIterator()));
 				  if(elvi)
-					  elvi->putModel(rec, iscomp, true);
+					  elvi->putModel(rec, iscomp, True);
 				  //				  VisModelData::listModel(vb.getVisibilityIterator()->ms());
 			  }
 
@@ -509,7 +508,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      if(iscomp || itsMappers[k]->getFTMRecord(rec, modImage)){
 
 		////Darn not implemented  
-		static_cast<VisibilityIteratorImpl2 *>(viloc->getImpl())->writeModel(rec, iscomp, true);
+		static_cast<VisibilityIteratorImpl2 *>(viloc->getImpl())->writeModel(rec, iscomp, True);
 				  //				  VisModelData::listModel(vb.getVisibilityIterator()->ms());
 			  }
 
@@ -527,7 +526,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   /////////////////////////////////////////////////////////
   void SIMapperCollection::finalizeDegrid(vi::VisBuffer2& /*vb*/, const Int mapperid)
     {
-      if( itsIsNonZeroModel == true )
+      if( itsIsNonZeroModel == True )
 	{
 	  if(mapperid<0)
 	    {
@@ -549,7 +548,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
  ////////////////////////////////////////////////////////
   void SIMapperCollection::finalizeDegrid(VisBuffer& /*vb*/, const Int mapperid)
     {
-      if( itsIsNonZeroModel == true )
+      if( itsIsNonZeroModel == True )
 	{
 	  if(mapperid<0)
 	    {
@@ -623,10 +622,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int nmodels = nMappers();
 
     // If there is no model image (i.e. first major cycle with no starting model), don't check.
-    Bool hasmodel=true;
+    Bool hasmodel=True;
     for (Int model=0;model<(nmodels-1); ++model) 
       { hasmodel = hasmodel && ((itsMappers[model])->imageStore())->hasModel();  }
-    if( hasmodel==false ) { 
+    if( hasmodel==False ) { 
       //cout << "No model images to check overlap for." << endl; 
       return; 
     }
@@ -637,7 +636,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     for (Int model=0;model<(nmodels-1); ++model) 
       {
 	// Connect to one image for aux info.
-	SubImage<Float> modelimage( *(((itsMappers[model])->imageStore())->model()), true );
+	SubImage<Float> modelimage( *(((itsMappers[model])->imageStore())->model()), True );
 
 	uInt nTaylor0 = ((itsMappers[model])->imageStore())->getNTaylorTerms();
 
@@ -650,7 +649,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	for (Int nextmodel=model+1; nextmodel < nmodels; ++nextmodel)
 	  {
-	    SubImage<Float> nextmodelimage( *(((itsMappers[nextmodel])->imageStore())->model()) , true);
+	    SubImage<Float> nextmodelimage( *(((itsMappers[nextmodel])->imageStore())->model()) , True);
 
 	    uInt nTaylor1 = ((itsMappers[nextmodel])->imageStore())->getNTaylorTerms();
 	    
@@ -669,8 +668,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		  for(uInt taylor=0;taylor<min(nTaylor0,nTaylor1);taylor++)
 		    { // loop for taylor term
-		      SubImage<Float> modelim( *(((itsMappers[model])->imageStore())->model(taylor)), true );
-		      SubImage<Float> partToMask(modelim, imagreg, true);
+		      SubImage<Float> modelim( *(((itsMappers[model])->imageStore())->model(taylor)), True );
+		      SubImage<Float> partToMask(modelim, imagreg, True);
 		      ArrayLattice<Bool> pixmask(latReg.get());
 		      LatticeExpr<Float> myexpr(iif(pixmask, 0.0, partToMask) );
 		      partToMask.copyData(myexpr);
@@ -687,11 +686,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		
 		for(uInt taylor=0;taylor<min(nTaylor0,nTaylor1);taylor++)
 		  {// loop for taylor term
-		    SubImage<Float> modelim( *(((itsMappers[model])->imageStore())->model(taylor)), true );
-		    SubImage<Float> nextmodelim( *(((itsMappers[nextmodel])->imageStore())->model(taylor)), true );
+		    SubImage<Float> modelim( *(((itsMappers[model])->imageStore())->model(taylor)), True );
+		    SubImage<Float> nextmodelim( *(((itsMappers[nextmodel])->imageStore())->model(taylor)), True );
 
-		    SubImage<Float> partToMerge(nextmodelim, imagreg0, true);
-		    SubImage<Float> partToUnmask(modelim, imagreg, true);
+		    SubImage<Float> partToMerge(nextmodelim, imagreg0, True);
+		    SubImage<Float> partToUnmask(modelim, imagreg, True);
 		    LatticeExpr<Float> myexpr0(iif(pixmask,partToMerge,partToUnmask));
 		    partToUnmask.copyData(myexpr0);
 		  }
@@ -718,8 +717,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   Bool SIMapperCollection::anyNonZeroModels()
   {
-    Bool validmodel=false;
-    // If any one Mapper has a valid and nonzero model, return true.
+    Bool validmodel=False;
+    // If any one Mapper has a valid and nonzero model, return True.
     for (Int model=0;model<nMappers(); ++model) 
       { 
 	//	validmodel = ((itsMappers[model])->imageStore())->hasModel() && 

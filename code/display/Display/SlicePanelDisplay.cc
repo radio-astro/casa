@@ -32,7 +32,6 @@
 #include <display/Display/PanelDisplay.h>
 #include <display/Display/SlicePanelDisplay.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	SliceEH::SliceEH(PanelDisplay* mwch, uInt axis, uInt daxis)
@@ -109,18 +108,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			}
 		}
 		wc->copyBackBufferToFrontBuffer();
-		wc->drawLine(linA,linB,true);
+		wc->drawLine(linA,linB,True);
 		//clear
 		linA(0) = ev.linX();
 		linA(1) = ev.worldCanvas()->linYMin();
 		linB(0) = ev.linX();
 		linB(1) = ev.worldCanvas()->linYMax();
-		ev.worldCanvas()->drawLine(linA,linB,true);
+		ev.worldCanvas()->drawLine(linA,linB,True);
 		linA(0) = ev.worldCanvas()->linXMin();
 		linA(1) = ev.linY();
 		linB(0) = ev.worldCanvas()->linXMax();
 		linB(1) = ev.linY();
-		ev.worldCanvas()->drawLine(linA,linB,true);
+		ev.worldCanvas()->drawLine(linA,linB,True);
 	}
 
 	void SliceEH::operator()(const WCPositionEvent &ev) {
@@ -352,7 +351,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	Bool SlicePanelDisplay::setOptions(const Record& rec, Record& out) {
 		// distribute
-		Bool needRefresh = false;
+		Bool needRefresh = False;
 		PanelDisplay* pdisp = 0;
 		for (uInt i=0; i < itsPanelDisplays.ndefined(); i++) {
 			pdisp = itsPanelDisplays.getVal(i);

@@ -37,7 +37,6 @@
 #include <display/DisplayDatas/Galaxy.h>
 
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	Star::Star(Vector<Double>& position, Vector<Double>& velocity,
@@ -54,7 +53,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsDrawList(0),
 		itsPixelCanvas(0),
 		plotMode(Galaxy::POSITION),
-		changedPlotMode(true) {
+		changedPlotMode(True) {
 #if 0
 		itsPosition.resize(0);
 		itsPosition = position;
@@ -114,7 +113,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			// and execute draw
 			pCanvas->drawList(itsDrawList);
 		}
-		changedPlotMode = false;
+		changedPlotMode = False;
 
 	}
 
@@ -217,7 +216,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	void Star::setScale(Int xSize, Int ySize) {
 		itsXSize = xSize;
 		itsYSize = ySize;
-		changedPlotMode = true;
+		changedPlotMode = True;
 	}
 
 
@@ -230,7 +229,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Set the plot mode
 	void Star::setPlotMode(Galaxy::PLOT_MODE newPlotMode) {
 		plotMode = newPlotMode;
-		changedPlotMode = true;
+		changedPlotMode = True;
 	}
 
 
@@ -243,7 +242,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsDrawList(0),
 		itsPixelCanvas(0),
 		plotMode(Galaxy::POSITION),
-		changedPlotMode(true) {
+		changedPlotMode(True) {
 		itsPosition.resize(0);
 		itsPosition = position;
 
@@ -462,7 +461,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Set the plot mode
 	void Galaxy::setPlotMode(Galaxy::PLOT_MODE newPlotMode) {
 		plotMode = newPlotMode;
-		changedPlotMode = true;
+		changedPlotMode = True;
 
 		Star *star;
 
@@ -516,7 +515,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			// and execute draw
 			pCanvas->drawList(itsDrawList);
 		}
-		changedPlotMode = false;
+		changedPlotMode = False;
 
 		Star *star;
 
@@ -551,7 +550,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	void Galaxy::setScale(Int xSize, Int ySize) {
 		itsXSize = xSize;
 		itsYSize = ySize;
-		changedPlotMode = true;
+		changedPlotMode = True;
 
 		Star *star;
 

@@ -30,26 +30,22 @@
 
 #include <components/ComponentModels/SkyComponent.h>
 
-namespace casacore{
+namespace casa {
 
 class GaussianBeam;
 class ImageInfo;
+
 template <class T> class ImageInterface;
 template <class T> class Vector;
-}
-
-namespace casa {
-
-
 
 class SkyComponentFactory {
 public:
 
-    typedef casacore::GaussianBeam Angular2DGaussian;
+    typedef GaussianBeam Angular2DGaussian;
 	// These functions convert between a vector of doubles holding SkyComponent values
 	// (the output from SkyComponent::toPixel) and a SkyComponent.   The coordinate
 	// values are in the 'x' and 'y' frames.  It is possible that the x and y axes of
-	// the pixel array are lat/long (xIsLong=false)  rather than  long/lat.
+	// the pixel array are lat/long (xIsLong=False)  rather than  long/lat.
 	// facToJy converts the brightness units from whatevers per whatever
 	// to Jy per whatever (e.g. mJy/beam to Jy/beam).  It is unity if it
 	// can't be done and you get a warning.  In the SkyComponent the flux
@@ -66,13 +62,13 @@ public:
 	//
 	// <group>
 	static SkyComponent encodeSkyComponent(
-		casacore::LogIO& os, casacore::Double& facToJy,
-		const casacore::CoordinateSystem& cSys,
-		const casacore::Unit& brightnessUnit,
+		LogIO& os, Double& facToJy,
+		const CoordinateSystem& cSys,
+		const Unit& brightnessUnit,
 		ComponentType::Shape type,
-		const casacore::Vector<casacore::Double>& parameters,
-		casacore::Stokes::StokesTypes stokes,
-		casacore::Bool xIsLong, const casacore::GaussianBeam& beam
+		const Vector<Double>& parameters,
+		Stokes::StokesTypes stokes,
+		Bool xIsLong, const GaussianBeam& beam
 	);
 
 	// for some reason, this method was in ImageAnalysis but also belongs here.
@@ -83,32 +79,32 @@ public:
 	// called the ImageAnalysis method will now call this method). I couldn't
 	// tell you which of the two implementations is the better one to use
 	// for new code, but this version does call the version that already existed
-	// in casacore::ImageUtilities, so this version seems to do a bit more.
+	// in ImageUtilities, so this version seems to do a bit more.
 	// I also hate having a class with anything like Utilities in the name,
 	// but I needed to move this somewhere and can only tackle one issue
 	// at a time.
 	static SkyComponent encodeSkyComponent(
-		casacore::LogIO& os, casacore::Double& fluxRatio,
-		const casacore::ImageInterface<casacore::Float>& im,
+		LogIO& os, Double& fluxRatio,
+		const ImageInterface<Float>& im,
 		casa::ComponentType::Shape modelType,
-		const casacore::Vector<casacore::Double>& parameters,
-		casacore::Stokes::StokesTypes stokes,
-		casacore::Bool xIsLong, casacore::Bool deconvolveIt,
-		const casacore::GaussianBeam& beam
+		const Vector<Double>& parameters,
+		Stokes::StokesTypes stokes,
+		Bool xIsLong, Bool deconvolveIt,
+		const GaussianBeam& beam
 	);
 
 	// Deconvolve SkyComponent from beam
 	// moved from ImageAnalysis. this needs to be moved to a more appropriate class at some point
 	static SkyComponent deconvolveSkyComponent(
-		casacore::LogIO& os, const SkyComponent& skyIn,
-		const casacore::GaussianBeam& beam
+		LogIO& os, const SkyComponent& skyIn,
+		const GaussianBeam& beam
 	);
 
 	// moved from ImageAnalysis. this needs to be moved to a more appropriate class at some point
-	static casacore::Vector<casacore::Double> decodeSkyComponent (
-		const SkyComponent& sky, const casacore::ImageInfo& ii,
-		const casacore::CoordinateSystem& cSys, const casacore::Unit& brightnessUnit,
-		casacore::Stokes::StokesTypes stokes, casacore::Bool xIsLong
+	static Vector<Double> decodeSkyComponent (
+		const SkyComponent& sky, const ImageInfo& ii,
+		const CoordinateSystem& cSys, const Unit& brightnessUnit,
+		Stokes::StokesTypes stokes, Bool xIsLong
 	);
 	// </group>
 
@@ -118,35 +114,35 @@ public:
 	// in pixel units both must be in pixel units.  pixelAxes describes which
 	// 2 pixel axes of the coordinate system our 2D shape is in.
 	// If axes are not from the same coordinate type units must be pixels.
-	// If doRef is true, then x and y are taken from the reference
+	// If doRef is True, then x and y are taken from the reference
 	// value rather than the parameters vector.
 
 	// On input, pa is N->E (at ref pix) for celestial planes.
 	// Otherwise pa is in pixel coordinate system +x -> +y
 	// On output, pa (radians) is positive +x -> +y in pixel frame
 	static void worldWidthsToPixel(
-		casacore::Vector<casacore::Double>& dParameters,
-		const casacore::Vector<casacore::Quantum<casacore::Double> >& parameters,
-		const casacore::CoordinateSystem& cSys,
-		const casacore::IPosition& pixelAxes, casacore::Bool doRef=false
+		Vector<Double>& dParameters,
+		const Vector<Quantum<Double> >& parameters,
+		const CoordinateSystem& cSys,
+		const IPosition& pixelAxes, Bool doRef=False
 	);
 
 	// Convert 2d shape  from pixels (parameters=x,y, major axis,
 	// minor axis, position angle) to world (major, minor, pa)
 	// at specified location. pixelAxes describes which
 	// 2 pixel axes of the coordinate system our 2D shape is in.
-	// If doRef is true, then x and y are taken from the reference
+	// If doRef is True, then x and y are taken from the reference
 	// pixel rather than the paraneters vector.
 	//
 	// On input pa is positive for +x -> +y in pixel frame
 	// On output pa is positive N->E
-	// Returns true if major/minor exchanged themselves on conversion to world.
-	static casacore::Bool pixelWidthsToWorld(
-		casacore::GaussianBeam& wParameters,
-		const casacore::Vector<casacore::Double>& pParameters,
-		const casacore::CoordinateSystem& cSys,
-		const casacore::IPosition& pixelAxes,
-		casacore::Bool doRef=false
+	// Returns True if major/minor exchanged themselves on conversion to world.
+	static Bool pixelWidthsToWorld(
+		GaussianBeam& wParameters,
+		const Vector<Double>& pParameters,
+		const CoordinateSystem& cSys,
+		const IPosition& pixelAxes,
+		Bool doRef=False
 	);
 
 private:
@@ -155,32 +151,31 @@ private:
 	// 2 pixel axes of the coordinate system our 2D shape is in.
 	// On input pa is positive for +x -> +y in pixel frame
 	// On output pa is positive N->E
-	// Returns true if major/minor exchanged themselves on conversion to world.
-	static casacore::Bool _skyPixelWidthsToWorld(
+	// Returns True if major/minor exchanged themselves on conversion to world.
+	static Bool _skyPixelWidthsToWorld(
 		Angular2DGaussian& gauss2d,
-		const casacore::CoordinateSystem& cSys,
-		const casacore::Vector<casacore::Double>& pParameters,
-		const casacore::IPosition& pixelAxes, casacore::Bool doRef
+		const CoordinateSystem& cSys,
+		const Vector<Double>& pParameters,
+		const IPosition& pixelAxes, Bool doRef
 	);
 
 	// Convert a length and position angle in world units (for a non-coupled
 	// coordinate) to pixels. The length is in some 2D plane in the
-	// casacore::CoordinateSystem specified  by pixelAxes.
-    static casacore::Double _worldWidthToPixel (
-    	casacore::Double positionAngle,
-    	const casacore::Quantum<casacore::Double>& length,
-    	const casacore::CoordinateSystem& cSys,
-    	const casacore::IPosition& pixelAxes
+	// CoordinateSystem specified  by pixelAxes.
+    static Double _worldWidthToPixel (
+    	Double positionAngle,
+    	const Quantum<Double>& length,
+    	const CoordinateSystem& cSys,
+    	const IPosition& pixelAxes
     );
 
-    static casacore::Quantum<casacore::Double> _pixelWidthToWorld (
-    	casacore::Double positionAngle, casacore::Double length,
-    	const casacore::CoordinateSystem& cSys,
-    	const casacore::IPosition& pixelAxes
+    static Quantum<Double> _pixelWidthToWorld (
+    	Double positionAngle, Double length,
+    	const CoordinateSystem& cSys,
+    	const IPosition& pixelAxes
     );
 
 };
 
 } // end namespace casa
-
 #endif

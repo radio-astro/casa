@@ -28,7 +28,6 @@
 #include <components/ComponentModels/FluxStdsQS.h>
 //#include <casa/Logging/LogIO.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Each of these c'tors defines the polynomial coefficients for the

@@ -40,7 +40,7 @@
         
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-template<class T> casacore::LogicalArray  maskBits  ( const casacore::Array<T> &arr,const T &val)
+template<class T> LogicalArray  maskBits  ( const Array<T> &arr,const T &val)
 {
   return (arr&val) != (T)0;
 }

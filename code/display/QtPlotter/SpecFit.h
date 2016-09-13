@@ -36,10 +36,10 @@ namespace casa {
 		SpecFit( const SpecFit& other );
 		QString getSuffix();
 		virtual bool isXPixels();
-		virtual void evaluate( casacore::Vector<casacore::Float>& xValues ) = 0;
-		casacore::Vector<casacore::Float> getXValues() const;
-		void setXValues( casacore::Vector<casacore::Float>& xVals );
-		casacore::Vector<casacore::Float> getYValues() const;
+		virtual void evaluate( Vector<Float>& xValues ) = 0;
+		Vector<Float> getXValues() const;
+		void setXValues( Vector<Float>& xVals );
+		Vector<Float> getYValues() const;
 		void setCurveName( QString curveName );
 		QString getCurveName() const;
 		bool isSpecFitFor( int pixelX, int pixelY, int minX, int minY ) const;
@@ -49,8 +49,8 @@ namespace casa {
 
 	protected:
 		void initialize( const SpecFit& other );
-		casacore::Vector<casacore::Float> xValues;
-		casacore::Vector<casacore::Float> yValues;
+		Vector<Float> xValues;
+		Vector<Float> yValues;
 
 	private:
 

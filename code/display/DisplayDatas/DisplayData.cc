@@ -55,15 +55,14 @@
 // this include:
 #include <display/DisplayDatas/DisplayData.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	const String DisplayData::DATA_MIN = "datamin";
 	const String DisplayData::DATA_MAX = "datamax";
 
 	DisplayData::DisplayData() :
-		activeZIndex_(0), delTmpData_(false),
-		rstrsConformed_(false), csConformed_(false), zIndexConformed_(false),
+		activeZIndex_(0), delTmpData_(False),
+		rstrsConformed_(False), csConformed_(False), zIndexConformed_(False),
 		displaystate(LIMBO),itsColormap(0), itsColormapWeight(-1.0),
 		uiBase_(1) {
 		oldWCHolder = NULL;
@@ -178,7 +177,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Bool DisplayData::existElementRestriction(const uInt itemNum,
 	        const String &name) {
 		if (itemNum >= nelements()) {
-			return false;
+			return False;
 		}
 		return ((DisplayMethod *)DDelement[itemNum])->existRestriction(name);
 	}
@@ -464,7 +463,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	Bool DisplayData::labelAxes(const WCRefreshEvent &) {
-		return false;
+		return False;
 	}
 
 
@@ -473,7 +472,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// the DD.  It is a good idea for top-level DDs to call this first
 		// in their destructor.
 
-		while (true) {
+		while (True) {
 			// The ListIter is recreated each time, because the WCH it points at
 			// is deleted out from under it elsewhere (in notifyUnregister(), below).
 			// (If someone knows it is safe to use a single ListIter here anyway,
@@ -484,7 +483,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			if (wch==0)  {
 				return;		// (shouldn't happen).
 			}
-			wch->removeDisplayData(*this, true);
+			wch->removeDisplayData(*this, True);
 		}
 	}
 
@@ -517,7 +516,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					i++;
 				}
 				if (i==size || zIndex<zInds[i]) {			  // new unique zindex
-					zInds.resize(++size, true, true);		  // to insert at i:
+					zInds.resize(++size, True, True);		  // to insert at i:
 					for (Int j=size-1; j>i; j--) {
 						zInds[j]=zInds[j-1];  // make room and
 					}
@@ -533,7 +532,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// create iterator
 		ListIter<WorldCanvasHolder*> it(&itsWCHList);
 		it.toStart();
-		Bool removed = false;
+		Bool removed = False;
 		// loop
 		while (!it.atEnd() && !removed) {
 			WorldCanvasHolder* holder = it.getRight();
@@ -552,7 +551,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				oldWCHolder = holder;
 				it.removeRight();
 
-				removed = true;
+				removed = True;
 			} else {
 				it++;
 			}
@@ -563,7 +562,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// support multiple WCH.
 		if (removed) {
 			if (!ignoreRefresh) {
-				refresh(true);
+				refresh(True);
 			} else {
 				// ignoreRefresh indicates that we just want to clean up and not
 				// refresh, otherwise we get unneccessary refreshs on multiple
@@ -587,10 +586,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		ConstListIter<WorldCanvasHolder*> wchs(&itsWCHList);
 		for (wchs.toStart(); !wchs.atEnd(); wchs++) {
-			if(wchs.getRight()->isCSmaster(this)) return true;
+			if(wchs.getRight()->isCSmaster(this)) return True;
 		}
 
-		return false;
+		return False;
 	}
 
 
@@ -600,7 +599,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	Bool DisplayData::setOptions(Record &, Record &) {
 		// nothing yet
-		return false;
+		return False;
 	}
 
 	Record DisplayData::getOptions( bool ) const {
@@ -748,7 +747,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				tmpRegFile.remove();
 			} else {
 				Directory tmpDir(tmpData);
-				tmpDir.removeRecursive(false);
+				tmpDir.removeRecursive(False);
 			}
 		}
 	}

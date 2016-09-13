@@ -44,8 +44,8 @@ namespace casa {
 // </reviewed>
 
 // <prerequisite>
-//   <li> <linkto class="casacore::ImageInterface">casacore::ImageInterface</linkto>
-//   <li> <linkto class="casacore::Convolver">casacore::Convolver</linkto>
+//   <li> <linkto class="ImageInterface">ImageInterface</linkto>
+//   <li> <linkto class="Convolver">Convolver</linkto>
 // </prerequisite>
 
 // <etymology>
@@ -72,13 +72,13 @@ namespace casa {
 template <class T> class ImageConvolverTask : public ImageTask<T> {
 public:
 
-	const static casacore::String CLASS_NAME;
+	const static String CLASS_NAME;
 
 	ImageConvolverTask() = delete;
 
 	ImageConvolverTask(
-		const SPCIIT image, const casacore::Record *const &regionPtr,
-	    const casacore::String& mask, const casacore::String& outname, const casacore::Bool overwrite
+		const SPCIIT image, const Record *const &regionPtr,
+	    const String& mask, const String& outname, const Bool overwrite
 	);
 	
     ImageConvolverTask(const ImageConvolverTask<T> &other) = delete;
@@ -89,13 +89,13 @@ public:
 
 	SPIIT convolve();
 
-	void setKernel(const casacore::Array<T>& kernel);
+	void setKernel(const Array<T>& kernel);
 
 	void setKernel(SPIIT image) { setKernel(image->get()); }
 
-	void setScale(casacore::Double d) { _scale = d; }
+	void setScale(Double d) { _scale = d; }
 
-	casacore::String getClass() const { return CLASS_NAME; }
+	String getClass() const { return CLASS_NAME; }
 
 protected:
 
@@ -103,15 +103,15 @@ protected:
    		return CasacRegionManager::USE_ALL_STOKES;
    	}
 
-    vector<casacore::Coordinate::Type> _getNecessaryCoordinates() const {
-    	return vector<casacore::Coordinate::Type>();
+    vector<Coordinate::Type> _getNecessaryCoordinates() const {
+    	return vector<Coordinate::Type>();
     }
 
-    inline casacore::Bool _supportsMultipleRegions() const {return true;}
+    inline Bool _supportsMultipleRegions() const {return True;}
 
 private:
-    casacore::Array<T> _kernel;
-    casacore::Double _scale;
+    Array<T> _kernel;
+    Double _scale;
 
 };
 

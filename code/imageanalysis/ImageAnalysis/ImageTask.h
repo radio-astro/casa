@@ -11,18 +11,13 @@
 
 #include <components/ComponentModels/C11Timer.h>
 
-namespace casacore{
-
-template <class T> class ArrayLattice;
-}
-
 namespace casac {
 class variant;
 }
 
 namespace casa {
-
 class LogFile;
+template <class T> class ArrayLattice;
 
 template <class T> class ImageTask {
 
@@ -59,18 +54,18 @@ public:
 
     virtual ~ImageTask();
 
-    virtual casacore::String getClass() const = 0;
+    virtual String getClass() const = 0;
 
-    inline void setStretch(const casacore::Bool stretch) { _stretch = stretch;}
+    inline void setStretch(const Bool stretch) { _stretch = stretch;}
 
     // tacitly does nothing if <src>lf</src> is the empty string.
-    void setLogfile(const casacore::String& lf);
+    void setLogfile(const String& lf);
 
-    void setLogfileAppend(const casacore::Bool a);
+    void setLogfileAppend(const Bool a);
 
-    void setRegion(const casacore::Record& region);
+    void setRegion(const Record& region);
 
-    void setMask(const casacore::String& mask) { _mask = mask; }
+    void setMask(const String& mask) { _mask = mask; }
 
     void setVerbosity(Verbosity verbosity) { _verbosity = verbosity; }
 
@@ -80,28 +75,28 @@ public:
     // The second is the associated message. If this method is called more than once
     // on the same object, messages from subsequent calls are appended to the
     // end of messages set in prior calls.
-    void addHistory(const vector<std::pair<casacore::String, casacore::String> >& msgs) const;
+    void addHistory(const vector<std::pair<String, String> >& msgs) const;
 
-    void addHistory(const casacore::LogOrigin& origin, const casacore::String& msg) const;
+    void addHistory(const LogOrigin& origin, const String& msg) const;
 
-    void addHistory(const casacore::LogOrigin& origin, const vector<casacore::String>& msgs) const;
+    void addHistory(const LogOrigin& origin, const vector<String>& msgs) const;
 
     // This adds standard history messages regarding the task that was run and
     // input parameters used. The vectors must have the same length
     void addHistory(
-    	const casacore::LogOrigin& origin, const casacore::String& taskname,
-    	const vector<casacore::String>& paramNames, const vector<casac::variant>& paramValues
+        const LogOrigin& origin, const String& taskname,
+        const vector<String>& paramNames, const vector<casac::variant>& paramValues
     ) const;
 
     // suppress writing the history on _prepareOutputImage() call. Useful for
     // not writing history to intermediate image products.
-    void suppressHistoryWriting(casacore::Bool b) { _suppressHistory = b; }
+    void suppressHistoryWriting(Bool b) { _suppressHistory = b; }
 
     // get the history associated with the task. Does not include the
     // history of the input image.
-    vector<std::pair<casacore::String, casacore::String> > getHistory() {return _newHistory;}
+    vector<std::pair<String, String> > getHistory() {return _newHistory;}
 
-    void setDropDegen(casacore::Bool d) { _dropDegen = d; }
+    void setDropDegen(Bool d) { _dropDegen = d; }
 
 protected:
 
@@ -111,16 +106,16 @@ protected:
 
        ImageTask(
            const SPCIIT image,
-    	const casacore::String& region, const casacore::Record *const &regionPtr,
-    	const casacore::String& box, const casacore::String& chanInp,
-    	const casacore::String& stokes, const casacore::String& maskInp,
-        const casacore::String& outname, casacore::Bool overwrite
+        const String& region, const Record *const &regionPtr,
+        const String& box, const String& chanInp,
+        const String& stokes, const String& maskInp,
+        const String& outname, Bool overwrite
     );
 
        ImageTask(
-   		const SPCIIT image, const casacore::Record *const &regionPtr,
-    	const casacore::String& mask,
-        const casacore::String& outname, casacore::Bool overwrite
+           const SPCIIT image, const Record *const &regionPtr,
+        const String& mask,
+        const String& outname, Bool overwrite
     );
 
        virtual CasacRegionManager::StokesControl _getStokesControl() const = 0;
@@ -130,129 +125,129 @@ protected:
     // does the lion's share of constructing the object, ie checks validity of
     // inputs, etc.
 
-    virtual void _construct(casacore::Bool verbose=true);
+    virtual void _construct(Bool verbose=True);
 
     inline const SPCIIT _getImage() const {return _image;}
 
-    inline const casacore::String& _getMask() const {return _mask;}
+    inline const String& _getMask() const {return _mask;}
 
-    inline const casacore::Record* _getRegion() const {return &_regionRecord;}
+    inline const Record* _getRegion() const {return &_regionRecord;}
 
-    inline void _setStokes(const casacore::String& stokes) { _stokesString = stokes; }
+    inline void _setStokes(const String& stokes) { _stokesString = stokes; }
 
-    inline const casacore::String& _getStokes() const {return _stokesString;}
+    inline const String& _getStokes() const {return _stokesString;}
 
-    inline const casacore::String& _getChans() const {return _chan;}
+    inline const String& _getChans() const {return _chan;}
 
-    inline const casacore::String& _getOutname() const {return _outname; }
+    inline const String& _getOutname() const {return _outname; }
 
     // Represents the minimum set of coordinates necessary for the
     // task to function.
-    virtual std::vector<casacore::Coordinate::Type> _getNecessaryCoordinates() const = 0;
+    virtual std::vector<Coordinate::Type> _getNecessaryCoordinates() const = 0;
 
     void _removeExistingOutfileIfNecessary() const;
 
-    // if warnOnly is true, log a warning message if file exists and
-    // overwrite is true, else throw an exception.
+    // if warnOnly is True, log a warning message if file exists and
+    // overwrite is True, else throw an exception.
     void _removeExistingFileIfNecessary(
-    	const casacore::String& filename, const casacore::Bool overwrite, casacore::Bool warnOnly=false
+        const String& filename, const Bool overwrite, Bool warnOnly=False
     ) const;
 
-    casacore::String _summaryHeader() const;
+    String _summaryHeader() const;
 
-    inline const SHARED_PTR<casacore::LogIO> _getLog() const {return _log;}
+    inline const SHARED_PTR<LogIO> _getLog() const {return _log;}
 
     // by default, derived classes are configured to have no log file
     // support.
-    virtual casacore::Bool _hasLogfileSupport() const {return false;}
+    virtual Bool _hasLogfileSupport() const {return False;}
 
-    inline casacore::Bool _getStretch() const {return _stretch;}
+    inline Bool _getStretch() const {return _stretch;}
 
     const SHARED_PTR<LogFile> _getLogFile() const;
 
-    casacore::Bool _writeLogfile(
-    	const casacore::String& output, const casacore::Bool open=true,
-    	const casacore::Bool close=true
+    Bool _writeLogfile(
+        const String& output, const Bool open=True,
+        const Bool close=True
     );
 
-    casacore::Bool _openLogfile();
+    Bool _openLogfile();
 
     void _closeLogfile() const;
 
-    virtual inline casacore::Bool _supportsMultipleRegions() const {return false;}
+    virtual inline Bool _supportsMultipleRegions() const {return False;}
 
-    // does this task support images with multiple beams? false means it never does.
-    // true means it does, but not necessarily in all cases (in which case, the
+    // does this task support images with multiple beams? False means it never does.
+    // True means it does, but not necessarily in all cases (in which case, the
     // derived class is responsible for checking for and throwing exceptions in those cases).
-    virtual inline casacore::Bool _supportsMultipleBeams() const {return true;}
+    virtual inline Bool _supportsMultipleBeams() const {return True;}
 
     // If outname != NULL, use the value supplied. If is NULL, use the value of _outname.
-    // Create a casacore::TempImage or casacore::PagedImage depending if outname/_outname is empty or not. Generally meant
+    // Create a TempImage or PagedImage depending if outname/_outname is empty or not. Generally meant
     // for the image to be returned to the UI or the final image product that the user will want.
     // values=0 => the pixel values from the image will be used
     // mask=0 => the mask attached to the image, if any will be used, outShape=0 => use image shape, coordsys=0 => use image coordinate
     // system. overwrite is only used if outname != NULL.
 
-    //SPIIT _prepareOutputImage(const casacore::ImageInterface<T>& image) const;
+    //SPIIT _prepareOutputImage(const ImageInterface<T>& image) const;
 
     SPIIT _prepareOutputImage(
-    	const casacore::ImageInterface<T>& image, const casacore::Array<T> *const values,
-    	const casacore::ArrayLattice<casacore::Bool> *const mask=nullptr,
-    	const casacore::IPosition *const outShape=nullptr, const casacore::CoordinateSystem *const coordsys=nullptr,
-    	const casacore::String *const outname=nullptr, casacore::Bool overwrite=false, casacore::Bool dropDegen=false
+        const ImageInterface<T>& image, const Array<T> *const values,
+        const ArrayLattice<Bool> *const mask=nullptr,
+        const IPosition *const outShape=nullptr, const CoordinateSystem *const coordsys=nullptr,
+        const String *const outname=nullptr, Bool overwrite=False, Bool dropDegen=False
     ) const;
 
     SPIIT _prepareOutputImage(
-    	const casacore::ImageInterface<T>& image, casacore::Bool dropDegen=false
+        const ImageInterface<T>& image, Bool dropDegen=False
     ) const;
 
-    // if warnOnly is true, only log a warning message if the file exists and
-    // overwrite is true, else throw an excepction
+    // if warnOnly is True, only log a warning message if the file exists and
+    // overwrite is True, else throw an excepction
     SPIIT _prepareOutputImage(
-        const casacore::ImageInterface<T>& image, const casacore::String& outname,
-        casacore::Bool overwrite, casacore::Bool warnOnly
+        const ImageInterface<T>& image, const String& outname,
+        Bool overwrite, Bool warnOnly
     ) const;
 
     // data are copied to the output image from the <src>data</src>
     // lattice. The mask is copied from the input image.
     SPIIT _prepareOutputImage(
-        const casacore::ImageInterface<T>& image, const casacore::Lattice<T>& data
+        const ImageInterface<T>& image, const Lattice<T>& data
     ) const;
 
     Verbosity _getVerbosity() const { return _verbosity; }
 
-    casacore::Bool _getOverwrite() const { return _overwrite; }
+    Bool _getOverwrite() const { return _overwrite; }
 
-    virtual casacore::Bool _mustHaveSquareDirectionPixels() const {return false;}
+    virtual Bool _mustHaveSquareDirectionPixels() const {return False;}
 
-    casacore::Bool _getDropDegen() const { return _dropDegen; }
+    Bool _getDropDegen() const { return _dropDegen; }
 
-    static void _copyMask(casacore::Lattice<casacore::Bool>& mask, const casacore::ImageInterface<T>& image);
+    static void _copyMask(Lattice<Bool>& mask, const ImageInterface<T>& image);
 
-    static void _copyData(casacore::Lattice<T>& data, const casacore::ImageInterface<T>& image);
+    static void _copyData(Lattice<T>& data, const ImageInterface<T>& image);
 
-    template <class U> void _doHistory(SHARED_PTR<casacore::ImageInterface<U>>& image) const;
+    template <class U> void _doHistory(SHARED_PTR<ImageInterface<U>>& image) const;
 
 private:
     const SPCIIT _image;
-    mutable SHARED_PTR<casacore::LogIO> _log = SHARED_PTR<casacore::LogIO>(new casacore::LogIO());
-    const casacore::Record *const _regionPtr;
-    casacore::Record _regionRecord;
-    casacore::String _region = "";
-    casacore::String _box = "";
-    casacore::String _chan = "";
-    casacore::String _stokesString = "";
-    casacore::String _mask = "";
-    casacore::String _outname = "";
-    casacore::Bool _overwrite = false;
-    casacore::Bool _stretch = false;
-    casacore::Bool _logfileAppend = false;
-    casacore::Bool _suppressHistory = false;
-    casacore::Bool _dropDegen = false;
-	std::unique_ptr<casacore::FiledesIO> _logFileIO;
+    mutable SHARED_PTR<LogIO> _log = SHARED_PTR<LogIO>(new LogIO());
+    const Record *const _regionPtr;
+    Record _regionRecord;
+    String _region = "";
+    String _box = "";
+    String _chan = "";
+    String _stokesString = "";
+    String _mask = "";
+    String _outname = "";
+    Bool _overwrite = False;
+    Bool _stretch = False;
+    Bool _logfileAppend = False;
+    Bool _suppressHistory = False;
+    Bool _dropDegen = False;
+    std::unique_ptr<FiledesIO> _logFileIO;
     Verbosity _verbosity = NORMAL;
     SHARED_PTR<LogFile> _logfile;
-	mutable vector<std::pair<casacore::String, casacore::String> > _newHistory;
+    mutable vector<std::pair<String, String> > _newHistory;
 
     mutable C11Timer _timer;
 };

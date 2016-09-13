@@ -63,13 +63,13 @@ public:
 
   // activate smoothing and set smoothing size
   void setSmoothing(casacore::Int size) {
-    do_smooth_ = true;
+    do_smooth_ = True;
     smooth_size_ = size;
   }
 
   // deactivate smoothing
   void unsetSmoothing() {
-    do_smooth_ = false;
+    do_smooth_ = False;
     smooth_size_ = -1;
   }
 
@@ -90,7 +90,7 @@ public:
   casacore::Matrix<casacore::Double> const &direction,
   casacore::Vector<casacore::Double> &gain_time,
   casacore::Cube<casacore::Float> &gain);
-  // subspecies that take into account flag (false: valid, true: invalid)
+  // subspecies that take into account flag (False: valid, True: invalid)
   void calibrate(casacore::Cube<casacore::Float> const &data,
   casacore::Cube<casacore::Bool> const &flag,
   casacore::Vector<casacore::Double> const &time,

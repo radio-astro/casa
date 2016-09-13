@@ -30,22 +30,16 @@
 
 #include <synthesis/TransformMachines/SimplePBConvFunc.h>
 
-namespace casacore{
-
-  template<class T> class ImageInterface;
-  template<class T> class Matrix;
-}
-
 namespace casa{
 
-  // <summary>  A class to support FTMachines get their convolution casacore::Function </summary>
+  // <summary>  A class to support FTMachines get their convolution Function </summary>
   
   // <use visibility=export>
   // <prerequisite>
   //   <li> <linkto class=VisBuffer>VisBuffer</linkto> module
   // </prerequisite>
   // <etymology>
-  // "HetArray" for Heterogeneous casacore::Array => different dish sizes
+  // "HetArray" for Heterogeneous Array => different dish sizes
   // "ConvFunc" for Convolution Functions 
   //  appropriate convfunctions for each pair of antenna generated and cached
   // </etymology>
@@ -56,6 +50,8 @@ namespace casa{
   // this class and related ones provide and cache  such functions for re-use 
   //</synopsis>
   //Forward declarations
+  template<class T> class ImageInterface;
+  template<class T> class Matrix;
   class VisBuffer;
   class MosaicFT;
   class HetArrayConvFunc : public SimplePBConvFunc
@@ -64,73 +60,73 @@ namespace casa{
   public:
     HetArrayConvFunc();
     HetArrayConvFunc(const PBMathInterface::PBClass 
-		     typeToUse, const casacore::String vpTable="");
+		     typeToUse, const String vpTable="");
     //Constructor from record
     //if for prediction only no need to recover fluxscale
-    HetArrayConvFunc(const casacore::RecordInterface& rec, casacore::Bool calcFluxscale);
+    HetArrayConvFunc(const RecordInterface& rec, Bool calcFluxscale);
     virtual ~HetArrayConvFunc();
 
     //Returns the convfunctions in the Arrays...the rowMap maps the vb.row 
     //to the  plane of the convfunc appropriate...chanMap and polMap similarly 
 
-    virtual void findConvFunction(const casacore::ImageInterface<casacore::Complex>& iimage, 
+    virtual void findConvFunction(const ImageInterface<Complex>& iimage, 
 				    const VisBuffer& vb,
-				    const casacore::Int& convSampling,
-				  const casacore::Vector<casacore::Double>& visFreq,
-				    casacore::Array<casacore::Complex>& convFunc,
-				    casacore::Array<casacore::Complex>& weightConvFunc,
-				    casacore::Vector<casacore::Int>& convsize,
-				    casacore::Vector<casacore::Int>& convSupport,
-				    casacore::Vector<casacore::Int>& polMap, casacore::Vector<casacore::Int>& chanMap, casacore::Vector<casacore::Int>& rowMap);
+				    const Int& convSampling,
+				  const Vector<Double>& visFreq,
+				    Array<Complex>& convFunc,
+				    Array<Complex>& weightConvFunc,
+				    Vector<Int>& convsize,
+				    Vector<Int>& convSupport,
+				    Vector<Int>& polMap, Vector<Int>& chanMap, Vector<Int>& rowMap);
 
-    virtual casacore::ImageInterface<casacore::Float>&  getFluxScaleImage();
+    virtual ImageInterface<Float>&  getFluxScaleImage();
     // slice flux scale images 
-    virtual void sliceFluxScale(const casacore::Int npol);
+    virtual void sliceFluxScale(const Int npol);
     //Serialization
-   virtual casacore::Bool toRecord(casacore::RecordInterface& rec);
-   virtual casacore::Bool fromRecord(casacore::String& err, const casacore::RecordInterface& rec, casacore::Bool calcFluxscale=false);
+   virtual Bool toRecord(RecordInterface& rec);
+   virtual Bool fromRecord(String& err, const RecordInterface& rec, Bool calcFluxscale=False);
    virtual void reset();
 
     //----------------------------------------------
 
     private:
-   void applyGradientToYLine(const casacore::Int iy, casacore::Complex*& convFunctions, 
-			     casacore::Complex*& convWeights, const casacore::Double pixXdir, const casacore::Double pixYdir, 
-			     casacore::Int convSize, const casacore::Int ndishpair, const casacore::Int nchan, const casacore::Int nPol);
-      casacore::Int factorial(casacore::Int n);
-      // the return value are -1 or false for not in cache yet but pointing direction 
+   void applyGradientToYLine(const Int iy, Complex*& convFunctions, 
+			     Complex*& convWeights, const Double pixXdir, const Double pixYdir, 
+			     Int convSize, const Int ndishpair, const Int nchan, const Int nPol);
+      Int factorial(Int n);
+      // the return value are -1 or False for not in cache yet but pointing direction 
       //seems to be inside image
       // 1 if value is cached..we have stopped caching..so it should not return this value
       // 2 pointing is off image ...thus valid but not useful
-      casacore::Int checkPBOfField(const VisBuffer& vb, casacore::Vector<casacore::Int>& rowMap);
+      Int checkPBOfField(const VisBuffer& vb, Vector<Int>& rowMap);
       void findAntennaSizes(const VisBuffer& vb);
-      void supportAndNormalize(casacore::Int plane, casacore::Int convSampling);
-      void supportAndNormalizeLatt(casacore::Int plane, casacore::Int convSampling, casacore::TempLattice<casacore::Complex>& convFuncLat,
-				   casacore::TempLattice<casacore::Complex>& weightConvFuncLat);
+      void supportAndNormalize(Int plane, Int convSampling);
+      void supportAndNormalizeLatt(Int plane, Int convSampling, TempLattice<Complex>& convFuncLat,
+				   TempLattice<Complex>& weightConvFuncLat);
       void init(const PBMathInterface::PBClass typeToUse);
-      void makerowmap(const VisBuffer& vb, casacore::Vector<casacore::Int>& rowMap);
+      void makerowmap(const VisBuffer& vb, Vector<Int>& rowMap);
       PBMathInterface::PBClass pbClass_p;
-      //casacore::SimpleOrderedMap <casacore::String, casacore::Int> convFunctionMap_p;
-      casacore::Vector<casacore::Int64> convFunctionMap_p;
-      casacore::Int64 nDefined_p;
-      casacore::SimpleOrderedMap <casacore::String, casacore::Int> antDiam2IndexMap_p;
-      casacore::Vector<casacore::Int> antIndexToDiamIndex_p;
-      casacore::Block<casacore::CountedPtr<PBMathInterface> > antMath_p;
-      casacore::Int msId_p;
-      casacore::Int actualConvIndex_p;
-      casacore::Array<casacore::Complex> convFunc_p;
-      casacore::Array<casacore::Complex> weightConvFunc_p;
-      casacore::Array<casacore::Complex> convSave_p;
-      casacore::Array<casacore::Complex> weightSave_p;
-      casacore::Int convSize_p; 
-      casacore::String vpTable_p;
-      casacore::Vector<casacore::Int> convSupport_p;
-      casacore::Block <casacore::CountedPtr<casacore::Array<casacore::Complex> > > convFunctions_p;
-      casacore::Block <casacore::CountedPtr<casacore::Array<casacore::Complex> > > convWeights_p;
-      casacore::Block<casacore::CountedPtr<casacore::Vector<casacore::Int> > > convSizes_p;
-      casacore::Block <casacore::CountedPtr<casacore::Vector<casacore::Int> > > convSupportBlock_p;
+      //SimpleOrderedMap <String, Int> convFunctionMap_p;
+      Vector<Int64> convFunctionMap_p;
+      Int64 nDefined_p;
+      SimpleOrderedMap <String, Int> antDiam2IndexMap_p;
+      Vector<Int> antIndexToDiamIndex_p;
+      Block<CountedPtr<PBMathInterface> > antMath_p;
+      Int msId_p;
+      Int actualConvIndex_p;
+      Array<Complex> convFunc_p;
+      Array<Complex> weightConvFunc_p;
+      Array<Complex> convSave_p;
+      Array<Complex> weightSave_p;
+      Int convSize_p; 
+      String vpTable_p;
+      Vector<Int> convSupport_p;
+      Block <CountedPtr<Array<Complex> > > convFunctions_p;
+      Block <CountedPtr<Array<Complex> > > convWeights_p;
+      Block<CountedPtr<Vector<Int> > > convSizes_p;
+      Block <CountedPtr<Vector<Int> > > convSupportBlock_p;
 
     };
+}; // end of namespace casa
 
-} // end namespace casa
 #endif

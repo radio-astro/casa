@@ -48,7 +48,6 @@
 
 
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
@@ -215,8 +214,8 @@ void EVLASwPow::setSpecify(const Record& specify) {
     throw(AipsError("The CALDEVICE subtable is not present in the specified MS."));
 
   // Not actually applying or solving
-  setSolved(false);
-  setApplied(false);
+  setSolved(False);
+  setApplied(False);
 
   // Collect Cal table parameters
   if (specify.isDefined("caltable")) {
@@ -291,7 +290,7 @@ void EVLASwPow::specify(const Record& specify) {
 
   // Emit progress meter reports (at least until we improve performance)
   cerr << "Switched-Power ("+sptype(swptype)+") calculation: 0";
-  ProgressMeter pm(0.,niter , "", "", "", "", true, niter/100);
+  ProgressMeter pm(0.,niter , "", "", "", "", True, niter/100);
 
   Int iter(0);
   while (!sysPowIter.pastEnd()) {
@@ -337,7 +336,7 @@ void EVLASwPow::specify(const Record& specify) {
 
     // Initialize solveAllRPar, etc.
     solveAllRPar()=1.0;
-    solveAllParOK()=false;  
+    solveAllParOK()=False;  
     solveAllParErr()=0.0;  // what should we use here?  ~1/bandwidth?
     solveAllParSNR()=1.0;
 
@@ -387,7 +386,7 @@ void EVLASwPow::specify(const Record& specify) {
 	// ensure transparent values
         gain=1.0;  
 	tsys=1.0;
-	solveAllParOK().xyPlane(thisant)=false;
+	solveAllParOK().xyPlane(thisant)=False;
 	
 	// Increment bad counter
 	++badcount(ispw,thisant);
@@ -418,7 +417,7 @@ void EVLASwPow::specify(const Record& specify) {
 	  break;
 	}
 	}
-	solveAllParOK().xyPlane(thisant)=true;
+	solveAllParOK().xyPlane(thisant)=True;
       
 	// Increment good counter
 	++goodcount(ispw,thisant);

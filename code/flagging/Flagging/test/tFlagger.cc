@@ -8,7 +8,6 @@
 
 #include <msvis/MSVis/VisSet.h>
 
-using namespace casacore;
 using namespace casa;
 
 
@@ -29,7 +28,7 @@ void loop_visiter(MeasurementSet &ms)
 
     Double timeInterval = 7.0e9; //a few thousand years
     
-    Bool addScratch = false;
+    Bool addScratch = False;
     
     VisSet *vs_p = new VisSet(ms, sort, noselection, 
                               addScratch, timeInterval);

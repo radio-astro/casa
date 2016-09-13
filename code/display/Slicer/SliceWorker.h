@@ -30,14 +30,10 @@
 #include <QVector>
 #include <QTextStream>
 
-namespace casacore{
-
-	class Record;
-}
-
 namespace casa {
 
 	class ImageAnalysis;
+	class Record;
 	class SliceStatistics;
 
 	/**
@@ -52,11 +48,11 @@ namespace casa {
 		void setImageAnalysis( ImageAnalysis* analysis );
 		void setVertices( const QList<int>& xValues, const QList<int>& yValues,
 		                  const QList<double>& xValuesWorld, const QList<double>& yValuesWorld);
-		void setAxes( const casacore::Vector<casacore::Int>& axes );
-		void setCoords( const casacore::Vector<casacore::Int>& coords );
+		void setAxes( const Vector<Int>& axes );
+		void setCoords( const Vector<Int>& coords );
 		void setSampleCount( int count );
 
-		void setMethod( const casacore::String& method );
+		void setMethod( const String& method );
 
 		void toAscii( QTextStream& stream, SliceStatistics* statistics ) const;
 		void compute();
@@ -75,23 +71,22 @@ namespace casa {
 		void clearResults();
 
 		QVector<double> getValues( int index, const QVector<double>& pixels, SliceStatistics* statistic ) const;
-		void computeSlice( const casacore::Vector<double>& xValues,
-		                   const casacore::Vector<double>& yValues );
+		void computeSlice( const Vector<double>& xValues,
+		                   const Vector<double>& yValues );
 		ImageAnalysis* imageAnalysis;
-		QList<casacore::Record*> sliceResults;
-		casacore::Vector<casacore::Double> verticesX;
-		casacore::Vector<casacore::Double> verticesY;
-		casacore::Vector<casacore::Double> verticesXWorld;
-		casacore::Vector<casacore::Double> verticesYWorld;
+		QList<Record*> sliceResults;
+		Vector<Double> verticesX;
+		Vector<Double> verticesY;
+		Vector<Double> verticesXWorld;
+		Vector<Double> verticesYWorld;
 
-		casacore::Vector<casacore::Int> axes;
-		casacore::Vector<casacore::Int> coords;
+		Vector<Int> axes;
+		Vector<Int> coords;
 
 		int sampleCount;
 		int id;
-		casacore::String method;
+		String method;
 	};
 
-} // end namespace casa
-
+} /* namespace casa */
 #endif /* SLICER_H_ */

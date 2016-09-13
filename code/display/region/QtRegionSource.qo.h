@@ -115,11 +115,11 @@ namespace casa {
 		private:
 
 			void load_crtf_regions( WorldCanvas *, const QString &path );
-			void load_crtf_rectangle( WorldCanvas *wc, casacore::MDirection::Types cstype, const AnnRectBox *box );
-			void load_crtf_ellipse( WorldCanvas *wc, casacore::MDirection::Types cstype, const AnnEllipse *ellipse );
-			void load_crtf_point( WorldCanvas *wc, casacore::MDirection::Types cstype, const AnnSymbol *symbol );
-			void load_crtf_polygon( WorldCanvas *wc, casacore::MDirection::Types cstype, const AnnPolygon *polygon );
-			void load_crtf_polyline( WorldCanvas *wc, casacore::MDirection::Types cstype, const AnnPolyline *polyline );
+			void load_crtf_rectangle( WorldCanvas *wc, MDirection::Types cstype, const AnnRectBox *box );
+			void load_crtf_ellipse( WorldCanvas *wc, MDirection::Types cstype, const AnnEllipse *ellipse );
+			void load_crtf_point( WorldCanvas *wc, MDirection::Types cstype, const AnnSymbol *symbol );
+			void load_crtf_polygon( WorldCanvas *wc, MDirection::Types cstype, const AnnPolygon *polygon );
+			void load_crtf_polyline( WorldCanvas *wc, MDirection::Types cstype, const AnnPolyline *polyline );
 
 			QtDisplayPanelGui *panel_;
 

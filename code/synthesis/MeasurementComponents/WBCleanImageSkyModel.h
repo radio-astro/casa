@@ -51,7 +51,7 @@ class SkyEquation;
 // <reviewed reviewer="" date="" tests="" demos="">
 
 // <prerequisite>
-//   <li> <linkto class=casacore::LatticeCleaner>LatticeCleaner</linkto> module
+//   <li> <linkto class=LatticeCleaner>LatticeCleaner</linkto> module
 //   <li> <linkto class=ImageSkyModel>ImageSkyModel</linkto> module
 //   <li> <linkto class=LinearModel>LinearModel</linkto> module
 // </prerequisite>
@@ -93,99 +93,99 @@ public:
 
   // Create a WBCleanImageSkyModel - default scale size = 1 pixel
   WBCleanImageSkyModel();
-  WBCleanImageSkyModel(const casacore::Int ntaylor,const casacore::Int nscales,const casacore::Double reffreq);
-  WBCleanImageSkyModel(const casacore::Int ntaylor,const casacore::Vector<casacore::Float>& userScaleSizes, const casacore::Double reffreq);
+  WBCleanImageSkyModel(const Int ntaylor,const Int nscales,const Double reffreq);
+  WBCleanImageSkyModel(const Int ntaylor,const Vector<Float>& userScaleSizes, const Double reffreq);
 
   // destructor
   ~WBCleanImageSkyModel();
 
   // Solve for this SkyModel
-  casacore::Bool solve (SkyEquation& se);
-  //  casacore::Bool copyLatToImInt(casacore::TempLattice<casacore::Float>& lat, casacore::ImageInterface<casacore::Float>& im);
-  // casacore::Bool copyImIntToLat(casacore::TempLattice<casacore::Float>& lat, casacore::ImageInterface<casacore::Float>& im);
+  Bool solve (SkyEquation& se);
+  //  Bool copyLatToImInt(TempLattice<Float>& lat, ImageInterface<Float>& im);
+  // Bool copyImIntToLat(TempLattice<Float>& lat, ImageInterface<Float>& im);
   
-//  casacore::Int nmodels_p; // Number of image models = nfields * ntaylor
-  casacore::Int ntaylor_p; // Number of terms in the Taylor expansion to use.
-//  casacore::Int nfields_p; // Number of image fields/pointings.
-  casacore::Int nscales_p; // Number of scales to use for the multiscale part.
+//  Int nmodels_p; // Number of image models = nfields * ntaylor
+  Int ntaylor_p; // Number of terms in the Taylor expansion to use.
+//  Int nfields_p; // Number of image fields/pointings.
+  Int nscales_p; // Number of scales to use for the multiscale part.
   
-  casacore::Double refFrequency_p;
+  Double refFrequency_p;
 
-//   casacore::Int add(casacore::ImageInterface<casacore::Float>& iimage, const casacore::Int maxNumXfr=100);
-//   casacore::Bool addResidual(casacore::Int thismodel, casacore::ImageInterface<casacore::Float>& iresidual);
+//   Int add(ImageInterface<Float>& iimage, const Int maxNumXfr=100);
+//   Bool addResidual(Int thismodel, ImageInterface<Float>& iresidual);
 //   void initializeGradients();
-   casacore::Bool solveResiduals(SkyEquation& se, casacore::Bool modelToMS=false);
-   casacore::Bool makeNewtonRaphsonStep(SkyEquation& se, casacore::Bool incremental=false, casacore::Bool modelToMS=false);
+   Bool solveResiduals(SkyEquation& se, Bool modelToMS=False);
+   Bool makeNewtonRaphsonStep(SkyEquation& se, Bool incremental=False, Bool modelToMS=False);
 
-   casacore::Int numberOfTaylorTerms(){return ntaylor_p;};
-   casacore::Double getReferenceFrequency(){return refFrequency_p;};
+   Int numberOfTaylorTerms(){return ntaylor_p;};
+   Double getReferenceFrequency(){return refFrequency_p;};
 
    // Major axis for ordering : Taylor
-   casacore::Int getModelIndex(casacore::uInt model, casacore::uInt taylor){return taylor * (nfields_p) + (model);};
-   casacore::Int getTaylorIndex(casacore::uInt index){return casacore::Int(index/nfields_p);};
-   casacore::Int getFieldIndex(casacore::uInt index){return index%nfields_p;};
+   Int getModelIndex(uInt model, uInt taylor){return taylor * (nfields_p) + (model);};
+   Int getTaylorIndex(uInt index){return Int(index/nfields_p);};
+   Int getFieldIndex(uInt index){return index%nfields_p;};
 
-  casacore::Bool calculateCoeffResiduals();
-  casacore::Bool calculateAlphaBeta(const casacore::Vector<casacore::String> &restoredNames, 
-			               const casacore::Vector<casacore::String> &residualNames);
+  Bool calculateCoeffResiduals();
+  Bool calculateAlphaBeta(const Vector<String> &restoredNames, 
+			               const Vector<String> &residualNames);
 
    // Major axis for ordering : Models
-   //inline casacore::Int getModelIndex(casacore::uInt model, casacore::uInt taylor){return model * (ntaylor_p) + (taylor);};
-   //inline casacore::Int getPSFModelIndex(casacore::uInt model, casacore::uInt taylor){return model * (2*ntaylor_p-1) + (taylor);};
-   //inline casacore::Int getTaylorIndex(casacore::uInt index){return index%ntaylor_p;};
-   //inline casacore::Int getFieldIndex(casacore::uInt index){return index/ntaylor_p;};
+   //inline Int getModelIndex(uInt model, uInt taylor){return model * (ntaylor_p) + (taylor);};
+   //inline Int getPSFModelIndex(uInt model, uInt taylor){return model * (2*ntaylor_p-1) + (taylor);};
+   //inline Int getTaylorIndex(uInt index){return index%ntaylor_p;};
+   //inline Int getFieldIndex(uInt index){return index/ntaylor_p;};
  
-   casacore::Vector<casacore::String> imageNames;
+   Vector<String> imageNames;
    
 private:
 
-  //  casacore::PtrBlock<casacore::MultiTermLatticeCleaner<casacore::Float>* > lc_p;
-  casacore::Block<MultiTermMatrixCleaner> lc_p;
+  //  PtrBlock<MultiTermLatticeCleaner<Float>* > lc_p;
+  Block<MultiTermMatrixCleaner> lc_p;
    
-  casacore::Vector<casacore::Float> scaleSizes_p; // casacore::Vector of scale sizes in pixels.
-  casacore::Vector<casacore::Float> scaleBias_p; // casacore::Vector of scale biases !!
-  casacore::Float maxPsf_p;
+  Vector<Float> scaleSizes_p; // Vector of scale sizes in pixels.
+  Vector<Float> scaleBias_p; // Vector of scale biases !!
+  Float maxPsf_p;
 
-  casacore::IPosition gip,imshape;
-  casacore::Bool donePSF_p;
-  casacore::Bool doneMTMCinit_p;
-  casacore::Int nx,ny;
+  IPosition gip,imshape;
+  Bool donePSF_p;
+  Bool doneMTMCinit_p;
+  Int nx,ny;
 
-  casacore::Int numbermajorcycles_p;
-  casacore::Float previous_maxresidual_p;
+  Int numbermajorcycles_p;
+  Float previous_maxresidual_p;
   
-  // casacore::Memory to be allocated per TempLattice
-  casacore::Double memoryMB_p;
+  // Memory to be allocated per TempLattice
+  Double memoryMB_p;
   
-  casacore::LogIO os;
+  LogIO os;
   
   void initVars();
-  casacore::Bool checkParameters();
+  Bool checkParameters();
 
-  casacore::Int storeAsImg(casacore::String fileName, casacore::ImageInterface<casacore::Float>& theImg);
-  //casacore::Int storeTLAsImg(casacore::String fileName, casacore::TempLattice<casacore::Float> &TL, casacore::ImageInterface<casacore::Float>& theImg);
-  //casacore::Int storeTLAsImg(casacore::String fileName, casacore::TempLattice<casacore::Complex> &TL, casacore::ImageInterface<casacore::Float>& theImg);
+  Int storeAsImg(String fileName, ImageInterface<Float>& theImg);
+  //Int storeTLAsImg(String fileName, TempLattice<Float> &TL, ImageInterface<Float>& theImg);
+  //Int storeTLAsImg(String fileName, TempLattice<Complex> &TL, ImageInterface<Float>& theImg);
 
-  casacore::Bool mergeDataError(casacore::ImageInterface<casacore::Float> &data, casacore::ImageInterface<casacore::Float> &error, const casacore::String &outImg);
+  Bool mergeDataError(ImageInterface<Float> &data, ImageInterface<Float> &error, const String &outImg);
 
-  casacore::Bool createMask(casacore::LatticeExpr<casacore::Bool> &lemask, casacore::ImageInterface<casacore::Float> &outimage);
+  Bool createMask(LatticeExpr<Bool> &lemask, ImageInterface<Float> &outimage);
 
-  casacore::Bool resizeWorkArrays(casacore::Int length);
+  Bool resizeWorkArrays(Int length);
   
-  casacore::Int makeSpectralPSFs(SkyEquation& se, casacore::Bool writeToDisk);
-   //casacore::Int addTo(casacore::Lattice<casacore::Float>& to, const casacore::Lattice<casacore::Float>& add, casacore::Float multiplier);
-  casacore::Int writeResultsToDisk();
-  casacore::Float computeFluxLimit(casacore::Float &fractionOfPsf);
+  Int makeSpectralPSFs(SkyEquation& se, Bool writeToDisk);
+   //Int addTo(Lattice<Float>& to, const Lattice<Float>& add, Float multiplier);
+  Int writeResultsToDisk();
+  Float computeFluxLimit(Float &fractionOfPsf);
 
   void blankOverlappingModels();
   void restoreOverlappingModels();
 
   void saveCurrentModels();
   
-  casacore::Timer tmr1,tmr2;
-  casacore::Int adbg;
-  casacore::Int tdbg;
-  casacore::Int ddbg;
+  Timer tmr1,tmr2;
+  Int adbg;
+  Int tdbg;
+  Int ddbg;
   // Put in some progress metre here...
   
   

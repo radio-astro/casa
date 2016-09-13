@@ -35,12 +35,11 @@
 #ifdef _OPENMP
 #include <omp.h>
 #endif
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
   FFT2D::FFT2D(Bool useFFTW): useFFTW_p(useFFTW), wsave_p(0), lsav_p(0){
     if(useFFTW_p){
-      Int numThreads=HostInfo::numCPUs(true);
+      Int numThreads=HostInfo::numCPUs(True);
 #ifdef _OPENMP
       numThreads=omp_get_max_threads();
 #endif      
@@ -121,15 +120,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
       //Now calculate next plane
        
-      Bool addNextAx=true;
+      Bool addNextAx=True;
       for (uInt ax=2; ax < shp.nelements(); ++ax){
 	if(addNextAx){
 	  blc(ax) +=1;
-	  addNextAx=false;
+	  addNextAx=False;
 	}
 	if(blc(ax)> shp(ax)-1){
 	  blc(ax)=0;
-	  addNextAx=true;
+	  addNextAx=True;
 	}
        
       }
@@ -187,15 +186,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       if(!isRef)
 	inout.putSlice(arr, blc);
       //Now calculate next plane 
-      Bool addNextAx=true;
+      Bool addNextAx=True;
       for (uInt ax=2; ax < shp.nelements(); ++ax){
 	if(addNextAx){
 	  blc(ax) +=1;
-	  addNextAx=false;
+	  addNextAx=False;
 	}
 	if(blc(ax)> shp(ax)-1){
 	  blc(ax)=0;
-	  addNextAx=true;
+	  addNextAx=True;
 	}
        
       }
@@ -226,15 +225,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       if(!isRef)
 	inout.putSlice(arr, blc);
       //Now calculate next plane 
-      Bool addNextAx=true;
+      Bool addNextAx=True;
       for (uInt ax=2; ax < shp.nelements(); ++ax){
 	if(addNextAx){
 	  blc(ax) +=1;
-	  addNextAx=false;
+	  addNextAx=False;
 	}
 	if(blc(ax)> shp(ax)-1){
 	  blc(ax)=0;
-	  addNextAx=true;
+	  addNextAx=True;
 	}
        
       }
@@ -244,7 +243,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void FFT2D::c2cFFT(Complex*& out, Long x, Long y, Bool toFreq){
     if(x%2 != 0 || y%2 !=0)
       throw(AipsError("Programmer error: FFT2D does not deal with odd numbers on x-y plane"));
-    fftShift(out, x, y, true);
+    fftShift(out, x, y, True);
     doFFT(out, x, y, toFreq);
     /*Int dim[2]={Int(x), Int(y)};
     if(toFreq){
@@ -265,7 +264,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
  void FFT2D::c2cFFT(DComplex*& out, Long x, Long y, Bool toFreq){
     if(x%2 != 0 || y%2 !=0)
       throw(AipsError("Programmer error: FFT2D does not deal with odd numbers on x-y plane"));
-    fftShift(out, x, y, true);
+    fftShift(out, x, y, True);
     doFFT(out, x, y, toFreq); 
     fftShift(out, x, y, toFreq);
 

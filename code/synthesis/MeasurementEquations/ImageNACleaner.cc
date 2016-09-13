@@ -31,7 +31,6 @@
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
 using namespace std;
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
   ImageNACleaner::ImageNACleaner(): psf_p(nullptr), dirty_p(nullptr), mask_p(nullptr), nPsfChan_p(0), 
@@ -44,8 +43,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   ImageNACleaner::ImageNACleaner(ImageInterface<Float>& psf, 
 				 ImageInterface<Float>& dirty):  mask_p(nullptr), 
 								      nMaskChan_p(0), nMaskPol_p(0),maxResidual_p(0.0){
-    psf_p=CountedPtr<ImageInterface<Float> >(&psf, false); 
-    dirty_p=CountedPtr<ImageInterface<Float> >(&dirty, false); 
+    psf_p=CountedPtr<ImageInterface<Float> >(&psf, False); 
+    dirty_p=CountedPtr<ImageInterface<Float> >(&dirty, False); 
     chanAxis_p=CoordinateUtil::findSpectralAxis(dirty_p->coordinates());
     Vector<Stokes::StokesTypes> whichPols;
     polAxis_p=CoordinateUtil::findStokesAxis(whichPols, dirty_p->coordinates());
@@ -87,7 +86,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return *this;
   }
   void ImageNACleaner::setDirty(ImageInterface<Float>& dirty){
-    dirty_p=CountedPtr<ImageInterface<Float> >(&dirty, false);
+    dirty_p=CountedPtr<ImageInterface<Float> >(&dirty, False);
     chanAxis_p=CoordinateUtil::findSpectralAxis(dirty_p->coordinates());
     Vector<Stokes::StokesTypes> whichPols;
     polAxis_p=CoordinateUtil::findStokesAxis(whichPols, dirty_p->coordinates());
@@ -104,7 +103,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   void ImageNACleaner::setPsf(ImageInterface<Float> & psf){
-    psf_p=CountedPtr<ImageInterface<Float> >(&psf,false);
+    psf_p=CountedPtr<ImageInterface<Float> >(&psf,False);
     Int chanAxis=CoordinateUtil::findSpectralAxis(psf_p->coordinates());
     Vector<Stokes::StokesTypes> whichPols;
     Int polAxis=CoordinateUtil::findStokesAxis(whichPols, psf_p->coordinates());
@@ -138,7 +137,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void ImageNACleaner::setMask(ImageInterface<Float> & mask){
   
    
-    mask_p=CountedPtr<ImageInterface<Float> >(&mask, false);
+    mask_p=CountedPtr<ImageInterface<Float> >(&mask, False);
     Int chanAxis=CoordinateUtil::findSpectralAxis(mask_p->coordinates());
     Vector<Stokes::StokesTypes> whichPols;
     Int polAxis=CoordinateUtil::findStokesAxis(whichPols, mask_p->coordinates());
@@ -166,7 +165,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     matClean_p.setcontrol(niter, gain, threshold, masksupp, memType, numsigma);
     
    
-    return true;
+    return True;
   }
 
   Int ImageNACleaner::clean(ImageInterface<Float> & modelimage, 
@@ -181,7 +180,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     ///case of single plane mask
     //now may be a time to set stuff  scales will be done later
     if(!setupMatCleaner(niter, gain, threshold, masksupp, memType, numSigma))
-      return false;
+      return False;
     //cerr << "nPol " << nMaskPol_p << " " << nPsfPol_p << " " << nImPol_p << endl;
     //cerr << "nChan " << nMaskChan_p << " " << nPsfChan_p << " " << nImChan_p << endl;
     if( (nMaskPol_p >1) && (nMaskPol_p != nImPol_p))
@@ -208,10 +207,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	IPosition trc=(dirty_p->shape()) -1;
 	trc(polAxis_p)=0;
 	Slicer sl(blc, trc, Slicer::endIsLast);
-	psf_p->getSlice(mbuf, sl, true);
+	psf_p->getSlice(mbuf, sl, True);
       }
       else{
-	psf_p->get(mbuf, true);
+	psf_p->get(mbuf, True);
       }
       psfMat.reference(mbuf);
       matClean_p.setPsf(psfMat);
@@ -227,8 +226,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	npol=nImPol_p;
       }
       Matrix<Float> subModel;
-      Bool getModel=false;
-      Bool getMask=false;
+      Bool getModel=False;
+      Bool getMask=False;
       IPosition blc(dirty_p->ndim(), 0);
       IPosition trc=dirty_p->shape() -1;
       for (Int k=0; k < nImChan_p ; ++k){
@@ -244,24 +243,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  Slicer sl(blc, trc, Slicer::endIsLast);
 	  Matrix<Float> dirtySub ;
 	  Array<Float> buf;
-	  dirty_p->getSlice(buf, sl, true);
+	  dirty_p->getSlice(buf, sl, True);
 	  if(dirty_p->isMasked()){
 	    cerr << "zeroing masked dirty" << endl;
 	    Array<Bool> bitmask;
-	    dirty_p->pixelMask().getSlice(bitmask, sl, true);
+	    dirty_p->pixelMask().getSlice(bitmask, sl, True);
 	    buf(!bitmask)=0.0;
 	    matClean_p.setPixFlag(bitmask);
 	  }
 	  dirtySub.reference(buf);
 	  matClean_p.setDirty(dirtySub);
 	  Array<Float> bufMod;
-	  getModel=modelimage.getSlice(bufMod, sl, true);
+	  getModel=modelimage.getSlice(bufMod, sl, True);
 	  subModel.reference(bufMod);
 	  
 	  if((nPsfChan_p>1) && (k<(nPsfChan_p-1))){
 	    Matrix<Float> psfSub;
 	    Array<Float> buf1;
-	    psf_p->getSlice(buf1, sl, true);
+	    psf_p->getSlice(buf1, sl, True);
 	    psfSub.reference(buf1);
 	    matClean_p.setPsf(psfSub);
 	  }
@@ -269,7 +268,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  if(mask_p){
 	    // if((nMaskChan_p >1) && (k<(nMaskChan_p))){
 	      Matrix<Float> maskSub;
-	      getMask=mask_p->getSlice(buf2, sl, true);
+	      getMask=mask_p->getSlice(buf2, sl, True);
 	      //cerr << "getmask " << getMask << " buf2 " << buf2.shape() << endl;
 	      maskSub.reference(buf2);
 	      matClean_p.setMask(maskSub);
@@ -303,8 +302,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //The psf should have been set above before the if loop
       //for this case
       Matrix<Float> subModel;
-      Bool getModel=false;
-      Bool getMask=false;
+      Bool getModel=False;
+      Bool getMask=False;
       Array<Float> buf2;
       IPosition blc(dirty_p->ndim(), 0);
       IPosition trc=dirty_p->shape() -1;
@@ -314,17 +313,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Slicer sl(blc, trc, Slicer::endIsLast);
 	Matrix<Float> dirtySub ;
 	Array<Float> buf;
-	dirty_p->getSlice(buf, sl, true);
+	dirty_p->getSlice(buf, sl, True);
 	dirtySub.reference(buf);
 	matClean_p.setDirty(dirtySub);
 	Array<Float> bufMod;
-	getModel=modelimage.getSlice(bufMod, sl, true);
+	getModel=modelimage.getSlice(bufMod, sl, True);
 	subModel.reference(bufMod);
 	if(!mask_p){
 	  if((nMaskPol_p >1)){
 	    Matrix<Float> maskSub;
 	   
-	    getMask=mask_p->getSlice(buf2, sl, true);
+	    getMask=mask_p->getSlice(buf2, sl, True);
 	    maskSub.reference(buf2);
 	    matClean_p.setMask(maskSub);
 	  }
@@ -345,7 +344,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //psf and mask should have been set above if 
       Matrix<Float> dirtySub ;
       Array<Float> buf;
-      dirty_p->get(buf, true);
+      dirty_p->get(buf, True);
       if(buf.shape().nelements() != 2){
 	throw(AipsError("Non-expected axes in this image"));
       } 
@@ -353,8 +352,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       matClean_p.setDirty(dirtySub);
       Matrix<Float> subModel;
       Array<Float> buf0;
-      Bool getModel=false;
-      getModel=modelimage.get(buf0, true);
+      Bool getModel=False;
+      getModel=modelimage.get(buf0, True);
       subModel.reference(buf0);
       result=matClean_p.clean(subModel);
       //Update the private flux and residuals here

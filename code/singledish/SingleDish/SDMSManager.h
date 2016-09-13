@@ -1,4 +1,4 @@
-//# SDMSManager.h: this defines single dish casacore::MS transform manager 
+//# SDMSManager.h: this defines single dish MS transform manager 
 //#                inheriting MSTransformManager.
 //#
 //# Copyright (C) 2015
@@ -50,13 +50,13 @@ class SDMSManager : public MSTransformManager {
 public:
   // Default constructor
   SDMSManager();
-  // Construct from casacore::MS name string
+  // Construct from MS name string
   explicit SDMSManager(string const& ms_name);
 
-  // Set user defined casacore::Sort columns
-  void setSortColumns(casacore::Block<casacore::Int> sortColumns,
+  // Set user defined Sort columns
+  void setSortColumns(Block<Int> sortColumns,
 		      bool addDefaultSortCols=false,
-		      casacore::Double timebin=0.0);
+		      Double timebin=0.0);
 
   // Set/unset smoothing parameter
   void setSmoothing(string const &kernelType, float const &kernelWidth);
@@ -65,39 +65,39 @@ public:
   // Initialize smoothing operation
   void initializeSmoothing();
 
-  casacore::Record getSelRec(string const &spw);
-  //casacore::MeasurementSet getMS();
+  Record getSelRec(string const &spw);
+  //MeasurementSet getMS();
 
   //SDMSManager &operator=(SDMSManager const &other);
   // Destructor
   ~SDMSManager();
 
   void fillCubeToOutputMs(vi::VisBuffer2 *vb,
-			  casacore::Cube<casacore::Float> const &data_cube);
+			  Cube<Float> const &data_cube);
 
   void fillCubeToOutputMs(vi::VisBuffer2 *vb,
-			  casacore::Cube<casacore::Float> const &data_cube,
-			  casacore::Cube<casacore::Bool> const *flag_cube);
+			  Cube<Float> const &data_cube,
+			  Cube<Bool> const *flag_cube);
 
 protected:
 
-  void fillCubeToDataCols(vi::VisBuffer2 *vb,casacore::RefRows &rowRef,
-			  casacore::Cube<casacore::Float> const &data_cube,
-			  casacore::Cube<casacore::Bool> const *flag_cube);
+  void fillCubeToDataCols(vi::VisBuffer2 *vb,RefRows &rowRef,
+			  Cube<Float> const &data_cube,
+			  Cube<Bool> const *flag_cube);
 
   void setIterationApproach();
 
-  int getBlockId(casacore::Block<casacore::Int> const &data, casacore::Int const value);
+  int getBlockId(Block<Int> const &data, Int const value);
 
   // Inspection for smoothing operation
-  casacore::Vector<casacore::Int> inspectNumChan();
+  Vector<Int> inspectNumChan();
 
 private:
-  casacore::Block<casacore::Int> userSortCols_;
+  Block<Int> userSortCols_;
 
   // for Gaussian smoothing
-  casacore::Bool doSmoothing_;
-  casacore::VectorKernel::KernelTypes kernelType_;
+  Bool doSmoothing_;
+  VectorKernel::KernelTypes kernelType_;
   // FWHM of Gaussian
   float kernelWidth_;
 

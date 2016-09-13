@@ -53,7 +53,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <synopsis>
 // FluxStdSrcs encapsulates an enum of the source names and lists of the directions and 
 // alternate names for the flux standards. The utility methods to translate between the enum
-// and casacore::String name are also defined.
+// and String name are also defined.
 // </synopsis>
 //
 // <example>
@@ -70,7 +70,7 @@ class FluxStdSrcs
 public:
 
   typedef FluxStdSrcs FSS;
-  typedef casacore::RigidVector<casacore::String, 6> RVS6;
+  typedef RigidVector<String, 6> RVS6;
 
   // Source identifiers.
   enum Source {
@@ -89,13 +89,13 @@ public:
   };
 
   // Returns an enum of srcName
-  FSS::Source srcNameToEnum(const casacore::String& srcName, const casacore::MDirection& dir) const;
+  FSS::Source srcNameToEnum(const String& srcName, const MDirection& dir) const;
 
   // Returns srcName string of the srcEnum
-  casacore::String EnumToSrcName(const FSS::Source srcEnum) const;
+  String EnumToSrcName(const FSS::Source srcEnum) const;
 
   // Get source direction of srcEnum
-  casacore::MDirection getDirection(const FSS::Source srcEnum) const;
+  MDirection getDirection(const FSS::Source srcEnum) const;
 
   ~FluxStdSrcs();
 
@@ -104,9 +104,9 @@ protected:
 
 private:
   // A map form an FSS::Source enum to known names
-  std::map<FSS::Source, casacore::Vector<casacore::String> > names_p;
+  std::map<FSS::Source, Vector<String> > names_p;
   // A map from an FSS::Source enum to its J2000 direction.
-  std::map<FSS::Source, casacore::MDirection> directions_p;
+  std::map<FSS::Source, MDirection> directions_p;
 };
 
 } //# NAMESPACE CASA - END

@@ -497,12 +497,12 @@ namespace sdmbin {
     vector<unsigned long>       v_crossSize_;             //!< Size, in nb PDT values, for every dataDesc (size numDataDesc_) 
 
 
-    vector<Tag>                 v_crossDataDescriptionId_;//!< casacore::Vector of dataDecsritionId for the cross-correlations (size numDataDesc_)
-    vector<Tag>                 v_autoDataDescriptionId_; //!< casacore::Vector of dataDecsritionId for the auto-correlations (size <= numDataDesc_)
+    vector<Tag>                 v_crossDataDescriptionId_;//!< Vector of dataDecsritionId for the cross-correlations (size numDataDesc_)
+    vector<Tag>                 v_autoDataDescriptionId_; //!< Vector of dataDecsritionId for the auto-correlations (size <= numDataDesc_)
     vector<bool>                v_pairDataDescriptionId_; //!< true if crossDataDecsritionId assoc to autoDataDecsritionId (size numDataDesc_)
 
 
-    vector<BasebandName>        v_basebandSet_;           //!< casacore::Sequence of baseband names
+    vector<BasebandName>        v_basebandSet_;           //!< Sequence of baseband names
     EnumSet<BasebandName>       e_basebandSet_;           //!< Set of baseband names
 
     vector<unsigned int>        v_numSpwPerBb_;           //!< Number of spectral windows in every baseband

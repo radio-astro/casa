@@ -27,9 +27,9 @@ public:
     QSize sizeHint() const;
 
     void setDD(char*, int& pol);
-    void getCubeSize(casacore::Int&, casacore::Int&, casacore::Int&);
-    void getMinMax(casacore::Float&, casacore::Float&);
-    casacore::Float getBound();
+    void getCubeSize(Int&, Int&, Int&);
+    void getMinMax(Float&, Float&);
+    Float getBound();
 
 public slots:
     void setXRotation(int angle);
@@ -81,13 +81,13 @@ protected:
 private:
 
     DisplayData3* dd3;
-    casacore::Cube<casacore::Float> data;
+    Cube<Float> data;
     QVector<DisplayPoint3> pList;
     //Colormap* cmap;
 
-    casacore::Vector<casacore::Float> rMap;
-    casacore::Vector<casacore::Float> gMap;
-    casacore::Vector<casacore::Float> bMap;
+    Vector<Float> rMap;
+    Vector<Float> gMap;
+    Vector<Float> bMap;
     int numColors;
     QString cmapname;
 
@@ -99,13 +99,13 @@ private:
     GLuint object;
     GLuint box;
 
-    void calcLinearMaps(casacore::uInt numColors, casacore::Vector<casacore::Float>& r, 
-                        casacore::Vector<casacore::Float>& g, casacore::Vector<casacore::Float>& b);
+    void calcLinearMaps(uInt numColors, Vector<Float>& r, 
+                        Vector<Float>& g, Vector<Float>& b);
 
-    void getLinearColor(casacore::Float& r, casacore::Float& g, casacore::Float& b, casacore::Float v,
-                        casacore::Float min = 0., casacore::Float max = 1.);
-    void getTableColor(casacore::Float& r, casacore::Float& g, casacore::Float& b, casacore::Float v, 
-                       casacore::Float min = 0., casacore::Float max = 1.);
+    void getLinearColor(Float& r, Float& g, Float& b, Float v,
+                        Float min = 0., Float max = 1.);
+    void getTableColor(Float& r, Float& g, Float& b, Float v, 
+                       Float min = 0., Float max = 1.);
     GLfloat cx;
     GLfloat cy;
     GLfloat cz;

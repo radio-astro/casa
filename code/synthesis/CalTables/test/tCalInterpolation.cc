@@ -35,7 +35,7 @@
 // Test program for CalInterpolation class.
 // </summary>
 
-Bool foundError = false;
+Bool foundError = False;
 
 int main (int argc, char** argv)
 {
@@ -52,21 +52,21 @@ int main (int argc, char** argv)
     calIntp.setAxes(axes);
     if (calIntp.axes()(0) != MSC::TIME ||
 	calIntp.axes()(1) != MSC::SPECTRAL_WINDOW_ID) {
-      foundError = true;
+      foundError = True;
       cout << "CalInterpolation::setAxes()/axes() failed" << endl;
     };
 
     // Test setNpoly(), nPoly()
     calIntp.setNpoly(3);
     if (calIntp.nPoly() != 3) {
-      foundError = true;
+      foundError = True;
       cout << "CalInterpolation::setNpoly()/nPoly() failed" << endl;
     };
 
     // Test setWeighting(), weighting()
     calIntp.setWeighting(CalInterpolation::WEIGHTED);
     if (calIntp.weighting() != CalInterpolation::WEIGHTED) {
-      foundError = true;
+      foundError = True;
       cout << "CalInterpolation::setWeighting()/weighting() failed" << endl;
     };
 
@@ -77,7 +77,7 @@ int main (int argc, char** argv)
     calIntp.setWindows(windows);
     if (!near(calIntp.windows()(0).getValue("ms"), 10000.0) ||
 	!near(calIntp.windows()(1).getValue("kHz"), 0.001)) {
-      foundError = true;
+      foundError = True;
       cout << "CalInterpolation::setWindows()/windows() failed" << endl;
     };
 

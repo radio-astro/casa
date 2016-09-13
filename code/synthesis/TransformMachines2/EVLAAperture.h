@@ -37,14 +37,10 @@
 //
 //---------------------------------------------------------------------
 //
-namespace casacore{
-
-  template<class T> class ImageInterface;
-  template<class T> class Matrix;
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
   
+  template<class T> class ImageInterface;
+  template<class T> class Matrix;
   class VisBuffer;
   //  class EVLAAperture : public ATerm
   namespace refim{
@@ -58,60 +54,60 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     // Overload these functions.  They are pure virtual in the base class (ATerm).
     //
-    virtual casacore::String name() {return casacore::String("EVLA Aperture");};
+    virtual String name() {return String("EVLA Aperture");};
 
-    virtual void makeFullJones(casacore::ImageInterface<casacore::Complex>& pbImage,
+    virtual void makeFullJones(ImageInterface<Complex>& pbImage,
 			       const VisBuffer2& vb,
-			       casacore::Bool doSquint, casacore::Int& bandID, casacore::Double freqVal);
+			       Bool doSquint, Int& bandID, Double freqVal);
 
-    virtual void applySky(casacore::ImageInterface<casacore::Float>& outputImages,
+    virtual void applySky(ImageInterface<Float>& outputImages,
 			  const VisBuffer2& vb, 
-			  const casacore::Bool doSquint=true,
-			  const casacore::Int& cfKey=0,
-			  const casacore::Int& muellerTerm=0,
-			  const casacore::Double freqVal=-1.0);
-    virtual void applySky(casacore::ImageInterface<casacore::Complex>& outputImages,
+			  const Bool doSquint=True,
+			  const Int& cfKey=0,
+			  const Int& muellerTerm=0,
+			  const Double freqVal=-1.0);
+    virtual void applySky(ImageInterface<Complex>& outputImages,
 			  const VisBuffer2& vb, 
-			  const casacore::Bool doSquint=true,
-			  const casacore::Int& cfKey=0,
-			  const casacore::Int& muellerTerm=0,
-			  const casacore::Double freqVal=-1.0);
-    virtual void applySky(casacore::ImageInterface<casacore::Complex>& outImages,
-			  const casacore::Double& pa,
-			  const casacore::Bool doSquint,
-			  const casacore::Int& cfKey,
-			  const casacore::Int& muellerTerm,
-			  const casacore::Double freqVal=-1.0);
+			  const Bool doSquint=True,
+			  const Int& cfKey=0,
+			  const Int& muellerTerm=0,
+			  const Double freqVal=-1.0);
+    virtual void applySky(ImageInterface<Complex>& outImages,
+			  const Double& pa,
+			  const Bool doSquint,
+			  const Int& cfKey,
+			  const Int& muellerTerm,
+			  const Double freqVal=-1.0);
 
-    void cacheVBInfo(const casacore::String& telescopeName, const casacore::Float& diameter);
+    void cacheVBInfo(const String& telescopeName, const Float& diameter);
     void cacheVBInfo(const VisBuffer2& vb);
-    casacore::Int getBandID(const casacore::Double& freq, const casacore::String& telescopeName);
+    Int getBandID(const Double& freq, const String& telescopeName);
 
-    virtual casacore::Vector<casacore::Int> vbRow2CFKeyMap(const VisBuffer2& vb, casacore::Int& nUnique)
-    {casacore::Vector<casacore::Int> tmp; tmp.resize(vb.nRows()); tmp=0; nUnique=1; return tmp;}
+    virtual Vector<Int> vbRow2CFKeyMap(const VisBuffer2& vb, Int& nUnique)
+    {Vector<Int> tmp; tmp.resize(vb.nRows()); tmp=0; nUnique=1; return tmp;}
 
-    virtual void getPolMap(casacore::Vector<casacore::Int>& polMap) {polMap.resize(0);polMap=polMap_p;};
+    virtual void getPolMap(Vector<Int>& polMap) {polMap.resize(0);polMap=polMap_p;};
 
     // For this class, these will be served from the base classs (ATerm.h)
-    // virtual casacore::Int getConvSize() {return CONVSIZE;};
-    // virtual casacore::Int getOversampling() {return OVERSAMPLING;}
-    // virtual casacore::Float getConvWeightSizeFactor() {return CONVWTSIZEFACTOR;};
-    // virtual casacore::Float getSupportThreshold() {return THRESHOLD;};
+    // virtual Int getConvSize() {return CONVSIZE;};
+    // virtual Int getOversampling() {return OVERSAMPLING;}
+    // virtual Float getConvWeightSizeFactor() {return CONVWTSIZEFACTOR;};
+    // virtual Float getSupportThreshold() {return THRESHOLD;};
 
   protected:
-    int getVisParams(const VisBuffer2& vb,const casacore::CoordinateSystem& skyCoord=casacore::CoordinateSystem());
-    casacore::Bool findSupport(casacore::Array<casacore::Complex>& func, casacore::Float& threshold,casacore::Int& origin, casacore::Int& R);
-    casacore::Int getVLABandID(casacore::Double& freq,casacore::String&telescopeName, const casacore::CoordinateSystem& skyCoord=casacore::CoordinateSystem());
-    casacore::Int makePBPolnCoords(const VisBuffer2&vb,
-			 const casacore::Int& convSize,
-			 const casacore::Int& convSampling,
-			 const casacore::CoordinateSystem& skyCoord,
-			 const casacore::Int& skyNx, const casacore::Int& skyNy,
-			 casacore::CoordinateSystem& feedCoord);
+    int getVisParams(const VisBuffer2& vb,const CoordinateSystem& skyCoord=CoordinateSystem());
+    Bool findSupport(Array<Complex>& func, Float& threshold,Int& origin, Int& R);
+    Int getVLABandID(Double& freq,String&telescopeName, const CoordinateSystem& skyCoord=CoordinateSystem());
+    Int makePBPolnCoords(const VisBuffer2&vb,
+			 const Int& convSize,
+			 const Int& convSampling,
+			 const CoordinateSystem& skyCoord,
+			 const Int& skyNx, const Int& skyNy,
+			 CoordinateSystem& feedCoord);
 
   private:
-    casacore::Vector<casacore::Int> polMap_p;
-    casacore::Vector<casacore::Int> feedStokes_p;
+    Vector<Int> polMap_p;
+    Vector<Int> feedStokes_p;
   };
 };
 };

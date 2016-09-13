@@ -38,10 +38,10 @@ namespace casa {
 
 class CacheFactory {
 public:
-    static PlotMSCacheBase* getCache(const casacore::String &filename,
+    static PlotMSCacheBase* getCache(const String &filename,
                                      PlotMSApp *parent) {
-        if(casacore::Table::isReadable(filename)) {
-            casacore::Table tab(filename);
+        if(Table::isReadable(filename)) {
+            Table tab(filename);
             // Construct proper empty cache if necessary
             if(tab.tableInfo().type() == "Calibration")
                 return new CalCache(parent);
@@ -52,8 +52,8 @@ public:
     }
 
     static bool needNewCache(const PlotMSCacheBase *cache,
-                             const casacore::String &filename) {
-        casacore::Table tab(filename);
+                             const String &filename) {
+        Table tab(filename);
         if(!cache) return true;
         if((cache->cacheType() == PlotMSCacheBase::CAL &&
             tab.tableInfo().type() != "Calibration") ||

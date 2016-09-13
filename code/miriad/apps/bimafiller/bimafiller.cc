@@ -195,9 +195,9 @@ class BimaFiller
 public:
   // Create from a bima dataset (directory)
   BimaFiller(String& infile, Int debug=0, 
-	     Bool Qtsys=false,
-	     Bool Qsplit=true,
-	     Bool Qarrays=false);
+	     Bool Qtsys=False,
+	     Bool Qsplit=True,
+	     Bool Qarrays=False);
 
   // Standard destructor
   ~BimaFiller();
@@ -209,9 +209,9 @@ public:
   Bool Debug(int level);
 
   // Set up the MeasurementSet, including StorageManagers and fixed columns.
-  // If useTSM is true, the Tiled Storage Manager will be used to store
+  // If useTSM is True, the Tiled Storage Manager will be used to store
   // DATA, FLAG and WEIGHT_SPECTRUM
-  void setupMeasurementSet(const String& MSFileName, Bool useTSM=true);
+  void setupMeasurementSet(const String& MSFileName, Bool useTSM=True);
 
   // Fill the Observation and History (formerly ObsLog) tables
   void fillObsTables();
@@ -362,14 +362,14 @@ void BimaFiller::Warning(char *msg)
 
 Bool BimaFiller::Debug(int level)
 {
-  Bool ok=false;
-  if (level <= debug_p) ok=true;
+  Bool ok=False;
+  if (level <= debug_p) ok=True;
   return ok;
 }
 
 void BimaFiller::checkInput(Block<Int>& narrow, Block<Int>& wide, Block<Int>& window)
 {
-  Bool ok=true;
+  Bool ok=True;
   Int i, nread, nwread, vlen, vupd;
   char vtype[10], vdata[64];
   Float epoch;
@@ -385,7 +385,7 @@ void BimaFiller::checkInput(Block<Int>& narrow, Block<Int>& wide, Block<Int>& wi
     uvread_c(uv_handle_p, preamble, data, flags, MAXCHAN, &nread);    
     if (nread <= 0) {
       throw(AipsError("BimaFiller: Bad first uvread: no narrow or wide band data present"));
-      ok = false;
+      ok = False;
       break;
     }
     uvwread_c(uv_handle_p, wdata, wflags, MAXCHAN, &nwread);
@@ -534,7 +534,7 @@ void BimaFiller::checkInput(Block<Int>& narrow, Block<Int>& wide, Block<Int>& wi
       for (i=1; i<npol_p; i++) {
         uvread_c(uv_handle_p, preamble, data, flags, MAXCHAN, &nread);
         if (nread <= 0) {
-          ok = false;
+          ok = False;
           break;
         }
         if (i==1) cout << "POL(" << i << ") = " << pol_p << endl;
@@ -650,7 +650,7 @@ void BimaFiller::setupMeasurementSet(const String& MSFileName, Bool useTSM)
   
   // Set the default Storage Manager to be the Incr one
   IncrementalStMan incrStMan ("ISMData");;
-  newtab.bindAll(incrStMan, true);
+  newtab.bindAll(incrStMan, True);
   // StManAipsIO aipsStMan;  // don't use this anymore
   StandardStMan aipsStMan;  // these are more efficient now
 
@@ -836,7 +836,7 @@ void BimaFiller::fillMSMainTable()
   cat(1)="ORIGINAL";
   cat(2)="USER";
   msc.flagCategory().rwKeywordSet().define("CATEGORY",cat);
-  Cube<Bool> flagCat(nCorr,nChan,nCat,false);  
+  Cube<Bool> flagCat(nCorr,nChan,nCat,False);  
   Matrix<Bool> flag = flagCat.xyPlane(0); // references flagCat's storage
   Vector<Float> w1(nCorr), w2(nCorr);
   
@@ -846,7 +846,7 @@ void BimaFiller::fillMSMainTable()
   receptorAngle_p.resize(1);
   Int group, i, j, row=-1;
   Double interval;
-  Bool lastRowFlag = false;
+  Bool lastRowFlag = False;
 
   if (Debug(1)) cout << "Writing " << nIF_p << " spectral windows" << endl;
 
@@ -977,7 +977,7 @@ void BimaFiller::fillMSMainTable()
 	for (Int pol=0; pol<nCorr; pol++) {
 
           // miriad uses bl=ant1-ant2, FITS/AIPS use bl=ant2-ant1
-          Bool  visFlag =  (flags[count/2] == 0) ? false : true;
+          Bool  visFlag =  (flags[count/2] == 0) ? False : True;
 	  Float visReal = +data[count]; count++; 
 	  Float visImag = -data[count]; count++;
 	  Float wt = 1.0;
@@ -1002,8 +1002,8 @@ void BimaFiller::fillMSMainTable()
       if (row==0) {
 	msc.feed1().put(row,0);
 	msc.feed2().put(row,0);
-	msc.flagRow().put(row,false);
-	lastRowFlag = false;
+	msc.flagRow().put(row,False);
+	lastRowFlag = False;
 	msc.scanNumber().put(row,0);
 	msc.processorId().put(row,-1);
 	msc.observationId().put(row,0);
@@ -1020,7 +1020,7 @@ void BimaFiller::fillMSMainTable()
 #if 1
 	// the dumb way: e.g. 3" -> 20" for 3c273
 	Matrix<Complex> tvis(nCorr,win.nschan[ifno]);
-	Cube<Bool> tflagCat(nCorr,win.nschan[ifno],nCat,false);  
+	Cube<Bool> tflagCat(nCorr,win.nschan[ifno],nCat,False);  
 	Matrix<Bool> tflag = tflagCat.xyPlane(0); // references flagCat's storage
 
 	Int woffset = win.ischan[ifno]-1;
@@ -1035,7 +1035,7 @@ void BimaFiller::fillMSMainTable()
 	IPosition trc(2,nCorr-1,win.nschan[ifno]-1);
 	IPosition offset(2,0,win.ischan[ifno]-1);
 	Matrix<Complex> tvis(nCorr,win.nschan[ifno]);
-	Cube<Bool> tflagCat(nCorr,win.nschan[ifno],nCat,false);  
+	Cube<Bool> tflagCat(nCorr,win.nschan[ifno],nCat,False);  
 	Matrix<Bool> tflag = tflagCat.xyPlane(0); // references flagCat's storage
 
 	tvis(blc,trc) = vis(blc+offset,trc+offset);
@@ -1050,7 +1050,7 @@ void BimaFiller::fillMSMainTable()
 	msc.flagCategory().put(row,flagCat);
       }
 
-      Bool rowFlag = allEQ(flag,true);
+      Bool rowFlag = allEQ(flag,True);
       if (rowFlag != lastRowFlag) {
 	msc.flagRow().put(row,rowFlag);
 	lastRowFlag = rowFlag;
@@ -1205,7 +1205,7 @@ void BimaFiller::fillAntennaTable()
       default: mount="UNKNOWN";     break;
     }
     ant.mount().put(row,mount);
-    ant.flagRow().put(row,false);
+    ant.flagRow().put(row,False);
     ant.name().put(row,"ANT" + String::toString(i+1));
     ant.station().put(row,"UNKNOWN");	// station names unknown at HatCreek (miriad really)
     ant.type().put(row,"GROUND-BASED");
@@ -1324,7 +1324,7 @@ void BimaFiller::fillSpectralWindowTable()
   msPol.numCorr().put(0,nCorr);
   msPol.corrType().put(0,corrType_p);
   msPol.corrProduct().put(0,corrProduct_p);
-  msPol.flagRow().put(0,false);
+  msPol.flagRow().put(0,False);
 
   // fill out doppler table (only 1 entry needed, BIMA data only identify 1 line :-(
   cout << "BimaFiller:: now writing Doppler table " << endl;
@@ -1343,7 +1343,7 @@ void BimaFiller::fillSpectralWindowTable()
 
     msDD.spectralWindowId().put(spw,spw);
     msDD.polarizationId().put(spw,0);
-    msDD.flagRow().put(spw,false);
+    msDD.flagRow().put(spw,False);
 
     msSpW.name().put(spw,"none");
     msSpW.freqGroupName().put(spw,"ALL-OF-THEM");
@@ -1411,7 +1411,7 @@ void BimaFiller::fillSpectralWindowTable()
 
       msDD.spectralWindowId().put(i,i);
       msDD.polarizationId().put(i,0);
-      msDD.flagRow().put(i,false);
+      msDD.flagRow().put(i,False);
 
       msSpW.numChan().put(i,win.nschan[i]);
       BW = 0.0;
@@ -2000,14 +2000,14 @@ int main(int argc, char **argv)
 
     inp.create("vis",     "vis0",    "Name of BIMA dataset name",          "string");    
     inp.create("ms",      "ms0",     "Name of MeasurementSet",             "string");    
-    inp.create("useTSM",  "true",    "Use the TiledStorageManager",        "bool");        
-    inp.create("scratch", "true",    "Use a scratch file, or scan twice?", "bool");   // ignored
+    inp.create("useTSM",  "True",    "Use the TiledStorageManager",        "bool");        
+    inp.create("scratch", "True",    "Use a scratch file, or scan twice?", "bool");   // ignored
     inp.create("narrow",  "all",     "Which of the narrow band windows",   "string");
     inp.create("win",     "all",     "Which of the window averages",       "string");
     inp.create("wide",    "all",     "Which of the (two) wide bands",      "string");
-    inp.create("tsys",    "false",   "Fill WEIGHT from Tsys in data?",     "bool");
-    inp.create("split",   "true",    "DEBUG: Split spectral windows?",     "bool");
-    inp.create("arrays",  "false",   "DEBUG: Split multiple arrays?",      "bool");
+    inp.create("tsys",    "False",   "Fill WEIGHT from Tsys in data?",     "bool");
+    inp.create("split",   "True",    "DEBUG: Split spectral windows?",     "bool");
+    inp.create("arrays",  "False",   "DEBUG: Split multiple arrays?",      "bool");
 
     inp.readArguments(argc, argv);
 

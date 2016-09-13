@@ -52,7 +52,6 @@
 #define IfLog2(x) /*x*/
 #endif
 
-using namespace casacore;
 namespace casa { 
 
 const String MsAverager::clname = "MsAverager";
@@ -61,7 +60,7 @@ const String MsAverager::DataColumn[] = {"DATA", "CORRECTEDDATA",
                                          "MODELDATA", "RESIDUAL"};
 
 MsAverager::MsAverager(MS* ms, OutputMode mode) {
-   aveOK = false;
+   aveOK = False;
 
    //log = SLog::slog();
    reset(ms, mode);
@@ -69,14 +68,14 @@ MsAverager::MsAverager(MS* ms, OutputMode mode) {
 
 void MsAverager::reset(MS* ms, OutputMode mode) {
    //cout << "MS=" << *ms << endl;
-   aveOK = false;
+   aveOK = False;
    outputMode = mode;
 
    if (!ms) {
 	   LogIO os(LogOrigin("MsAverager", "reset"));
 	   os << LogIO::WARN << "Could not reset MsAverager: input MS is NULL" << LogIO::POST;
       //SLog::slog()->out("Could not reset MsAverager: input MS is NULL",
-                //"MsAverager", clname, LogMessage::WARN, true);    
+                //"MsAverager", clname, LogMessage::WARN, True);    
       return;
    }
 
@@ -113,7 +112,7 @@ void MsAverager::reset(MS* ms, OutputMode mode) {
       //aMS=*mspointer;
 
    aMS = MS();
-      aMS = MS(aveSetup, 0, false);
+      aMS = MS(aveSetup, 0, False);
       msc = new MSColumns(aMS);
       //cout << "---aMS=" << aMS << endl;
    }
@@ -204,15 +203,15 @@ void MsAverager::setAverager(
        column = "RESIDUAL";
     }
 
-    crossSpws = false;
+    crossSpws = False;
     if (aveC==1234567) {
-        crossSpws = true;
+        crossSpws = True;
     }
 
     Matrix<Int> allChannels;
     Double intrvl = 2;
     if (crossSpws) {
-       //cout << "crossSpws=true sort by time" << endl;
+       //cout << "crossSpws=True sort by time" << endl;
        Block<int> sort(2);
        sort[0] = MS::TIME;
        //sort[1] = MS::FIELD_ID;
@@ -221,7 +220,7 @@ void MsAverager::setAverager(
        vs = new VisSet(*pMS, sort, allChannels, intrvl);
     }
     else {    
-       //cout << "crossSpws=false sort by spw" << endl;
+       //cout << "crossSpws=False sort by spw" << endl;
        Block<int> sort(4);
        sort[0] = MS::DATA_DESC_ID;
        sort[1] = MS::FIELD_ID;
@@ -238,7 +237,7 @@ void MsAverager::setAverager(
     crossBlines = crossbline;
     crossArrays = crossarray;
     aveVel = aveVelo;
-    sorryVel = true;
+    sorryVel = True;
 
     baselines.resize(bls.shape()[0], bls.shape()[1]);
     baselines = bls;
@@ -286,7 +285,7 @@ void MsAverager::setAverager(
     if (aveTime == 0 && aveChan == 1) {
         //SLog::slog()->out("No averaging", 
                           //fnname, clname, LogMessage::NORMAL5); 
-        aveOK = false;
+        aveOK = False;
         return;
     }
 
@@ -327,7 +326,7 @@ void MsAverager::setAverager(
 	  os << LogIO::WARN << "Average over variable shape of "
              << "channel/polarization is not supported" 
 	     << LogIO::POST;
-          aveOK = false;
+          aveOK = False;
           return;
        }
 
@@ -367,23 +366,23 @@ void MsAverager::setAverager(
        //Vector<Int> ant2;
 
        Double bufTime = -1;
-       Bool newTime = true;
+       Bool newTime = True;
 
        Double sumTime = 0.;
        Double nextTime = -1;
        Int nTotalTime = 0;
       
        Int bufField = -1;
-       Bool newField = true;
+       Bool newField = True;
 
        Int bufScan = -1;
-       Bool newScan = true;
+       Bool newScan = True;
  
        Int bufArray = -1;
-       Bool newArray = true;
+       Bool newArray = True;
 
        Int bufDesc = -1;
-       Bool newDesc = true;
+       Bool newDesc = True;
 
        //timer for profile - cumulate time for patAveTable 
        //double usr = 0.;
@@ -817,7 +816,7 @@ void MsAverager::setAverager(
 
       //cout << "iRow=" << iRow << endl;
       //cout << "pMS->nrow()=" << pMS->nrow() << endl;
-      aveRowMap.resize(iRow, 3, true);
+      aveRowMap.resize(iRow, 3, True);
       //showAveMap(aveRowMap, aveChanMap); 
 
       {
@@ -838,11 +837,11 @@ void MsAverager::setAverager(
       os << LogIO::WARN << "Error: "
 		   << x.getMesg()
 		   << LogIO::POST;
-      aveOK = false;
+      aveOK = False;
       return ;
    }
    //catch (...) {cout << "problem------" << endl;}
-   aveOK = true;
+   aveOK = True;
    return;
 }
 
@@ -913,7 +912,7 @@ void MsAverager::putAveTable(Double bufTime, Int bufField, Int bufScan,
 
 
    if (crossBlines) { 
-      //cout << " crossBlines=true" << endl; 
+      //cout << " crossBlines=True" << endl; 
       aMS.addRow();
 
       Int tRow = msRow;
@@ -1028,7 +1027,7 @@ void MsAverager::putAveTable(Double bufTime, Int bufField, Int bufScan,
    }
    else {
    
-      //cout << " crossBlines=false" << endl; 
+      //cout << " crossBlines=False" << endl; 
    
       for (Int row = 0; row < nAveRow; row++) {
          for (Int pol = 0; pol < nAvePol; pol++) {
@@ -1246,20 +1245,20 @@ void MsAverager::showAveMap(Matrix<Int> &/*rMap*/, Matrix<Int> &/*cMap*/) {
    //cout << "aveChanMap=" << std::setprecision(12) << cMap;
 }
 
-Bool MsAverager::hasColumn(casacore::String const& col) {
+Bool MsAverager::hasColumn(casa::String const& col) {
     Vector<String> cols = pMS->tableDesc().columnNames();
     for (uInt i = 0; i < cols.nelements(); i++) {
        if (cols(i) == col)
-          return true;
+          return True;
     } 
     LogIO os(LogOrigin("MsAverager", "hasColumn"));
     os << LogIO::WARN << String("No column '") + col + "' in the MS"
        << LogIO::POST;
 
-    return false;
+    return False;
 }
 
-Bool MsAverager::isDataColumn(casacore::String const& col) {
+Bool MsAverager::isDataColumn(casa::String const& col) {
     return col == "DATA" 
         || col == "CORRECTEDDATA"
         || col == "MODELDATA"
@@ -1288,7 +1287,7 @@ void MsAverager::getMS(MS& ms) {
     ms = MS(aMS);
 } 
 
-void MsAverager::getXY(Vector<Double>& x, casacore::Vector<Double>& y,
+void MsAverager::getXY(Vector<Double>& x, casa::Vector<Double>& y, 
                        Vector<Int>& f, Int pol) {
 
   if (outputMode != MsAverager::ListBuffer) {
@@ -1399,7 +1398,7 @@ void MsAverager::initAveBuffer(Double bufTime,
     //aveBuff.feed2()(row) = 0;
     //for (Int chn = 0; chn < nChan; chn++) {
     //  aveBuff.visibility()(chn, row) = CStokesVector();
-    //  aveBuff.flag()(chn, row) = true;
+    //  aveBuff.flag()(chn, row) = True;
     //};
     for (Int pol = 0; pol < nAvePol; pol++) {
        for (Int chn = 0; chn < nChan; chn++) {

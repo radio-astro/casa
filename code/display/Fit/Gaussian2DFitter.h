@@ -32,13 +32,9 @@
 #include <QString>
 #include <QThread>
 
-namespace casacore{
-
-	template <class T> class ImageInterface;
-}
-
 namespace casa {
 
+	template <class T> class ImageInterface;
 
 	/**
 	 * Performs a 2DGaussian fit of an image in a background thread.
@@ -49,16 +45,16 @@ namespace casa {
 		Gaussian2DFitter();
 		void run();
 		bool isFitSuccessful() const;
-		void setFitParameters( SHARED_PTR<const casacore::ImageInterface<casacore::Float> > image, const casacore::String& box,
-		                       int channelNum, const casacore::String& estimatesFileName, const casacore::String& residualImageFile,
-		                       const casacore::Vector<casacore::Float>& includeVector, const casacore::Vector<casacore::Float>& excludeVector);
+		void setFitParameters( SHARED_PTR<const ImageInterface<Float> > image, const String& box,
+		                       int channelNum, const String& estimatesFileName, const String& residualImageFile,
+		                       const Vector<Float>& includeVector, const Vector<Float>& excludeVector);
 		QString getErrorMessage() const;
 		QString getLogFilePath() const;
 		void setWriteLogFile( bool write );
 		QString getResidualImagePath() const;
-		void setFilePath( casacore::String path );
+		void setFilePath( String path );
 		bool writeRegionFile() const;
-		QList<RegionShape*> toDrawingDisplay( const SHARED_PTR<const casacore::ImageInterface<casacore::Float> > image, const QString& colorName) const;
+		QList<RegionShape*> toDrawingDisplay( const SHARED_PTR<const ImageInterface<Float> > image, const QString& colorName) const;
 		virtual ~Gaussian2DFitter();
 
 	private:
@@ -68,18 +64,17 @@ namespace casa {
 		bool successfulFit;
 		bool logFile;
 		ComponentListWrapper fitResultList;
-        SHARED_PTR<const casacore::ImageInterface<casacore::Float> > image;
-		SHARED_PTR<std::pair<casacore::Float, casacore::Float> > includePixs;
-		SHARED_PTR<std::pair<casacore::Float, casacore::Float> > excludePixs;
-		casacore::String pixelBox;
-		casacore::String filePath;
+        SHARED_PTR<const ImageInterface<Float> > image;
+		SHARED_PTR<std::pair<Float, Float> > includePixs;
+		SHARED_PTR<std::pair<Float, Float> > excludePixs;
+		String pixelBox;
+		String filePath;
 		int channelNumber;
-		casacore::String estimateFile;
-		casacore::String residualImageFile;
+		String estimateFile;
+		String residualImageFile;
 		const QString LOG_SUFFIX;
 		const QString REGION_SUFFIX;
 	};
 
-} // end namespace casa
-
+} /* namespace casa */
 #endif /* GAUSSIAN2DFITTER_H_ */

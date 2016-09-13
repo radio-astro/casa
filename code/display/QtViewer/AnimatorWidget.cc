@@ -24,7 +24,6 @@
 //#
 #include "AnimatorWidget.qo.h"
 #include <QDebug>
-
 namespace casa {
 
      AnimatorWidget::AnimatorWidget(QWidget *parent)

@@ -28,7 +28,6 @@
 #include <display/DisplayEvents/DisplayEvent.h>
 #include <casa/OS/Time.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Constructor.

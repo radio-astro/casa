@@ -32,7 +32,6 @@
 #endif
 
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
   
   void WTerm::applySky(Matrix<Complex>& screen, 

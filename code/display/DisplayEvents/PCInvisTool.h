@@ -61,22 +61,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void moved(const PCMotionEvent &ev);
 		// </group>
 
-		// casacore::Function called when a position is ready.
+		// Function called when a position is ready.
 		virtual void positionReady() { };
 
 		// Retrieve the position in PixelCanvas pixel coordinates.
-		virtual void get(casacore::Int &x, casacore::Int &y) const;
+		virtual void get(Int &x, Int &y) const;
 
 		// Retrieve the position in fractional PixelCanvas coordinates.
-		virtual void getFractional(casacore::Float &x, casacore::Float &y) const;
+		virtual void getFractional(Float &x, Float &y) const;
 
 	private:
 
 		// Have we moved?
-		casacore::Bool itsMoved;
+		Bool itsMoved;
 
 		// Pixel coordinates of the position.
-		casacore::Int itsX, itsY;
+		Int itsX, itsY;
 
 	};
 

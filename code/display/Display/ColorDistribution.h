@@ -52,12 +52,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Given nCells cells, return the dimensions of an RGB or HSV color cube
 // that maximally uses those cells by finding the best fit dimensions.
-// If pow2 is true, then returned dimensions are limited to powers of two.
+// If pow2 is True, then returned dimensions are limited to powers of two.
 // <group>
-	casacore::Bool getRGBDistribution(casacore::uInt nCells, casacore::Bool pow2,
-	                        casacore::uInt & nRed, casacore::uInt & nGreen, casacore::uInt & nBlue);
-	casacore::Bool getHSVDistribution(casacore::uInt nCells, casacore::Bool pow2,
-	                        casacore::uInt & nHue, casacore::uInt & nSat, casacore::uInt & nVal);
+	Bool getRGBDistribution(uInt nCells, Bool pow2,
+	                        uInt & nRed, uInt & nGreen, uInt & nBlue);
+	Bool getHSVDistribution(uInt nCells, Bool pow2,
+	                        uInt & nHue, uInt & nSat, uInt & nVal);
 // </group>
 // </group>
 

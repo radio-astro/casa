@@ -46,7 +46,6 @@
 #include <fstream>
 #include <casa/sstream.h>
 
-using namespace casacore;
 namespace casa{
 
   //
@@ -79,7 +78,7 @@ namespace casa{
 
     Int dirIndex=FTCoords.findCoordinate(Coordinate::DIRECTION);
     DirectionCoordinate dc=imageCoordSys.directionCoordinate(dirIndex);
-    Vector<Bool> axes(2); axes=true;
+    Vector<Bool> axes(2); axes=True;
     Vector<Int> dirShape(2); dirShape(0)=shape(0);dirShape(1)=shape(1);
     Coordinate* FTdc=dc.makeFourierCoordinate(axes,dirShape);
 
@@ -345,7 +344,7 @@ namespace casa{
     uvCoords.replaceCoordinate(spectralCoord,index);
 
     ap.aperture->setCoordinateInfo(uvCoords);
-    // if (doSquint==false)
+    // if (doSquint==False)
     //   {
     // 	String name("apperture.im");
     // 	storeImg(name,*(ap.aperture));
@@ -482,7 +481,7 @@ namespace casa{
     //
     cout << "**Writing ALMA Apertures for Pol " << inStokes << " to disk" << endl;
     String rname("aperture_pol"+String::toString(inStokes)+".im");
-    storeImg(rname, *(ap.aperture) , true);
+    storeImg(rname, *(ap.aperture) , True);
     cout << "Done writing apertures to disk" << endl;
 
     ftAperture(*(ap.aperture));
@@ -511,10 +510,10 @@ namespace casa{
 
     ndx(3)=0;
     for(ndx(2)=0;ndx(2)<imsize(2);ndx(2)++){ // The poln axes
-      Bool found = false;
+      Bool found = False;
       for(s=0;s<inShape(2);s++){
 	if (inStokes(s) == outStokes(ndx(2))){
-	  found = true;
+	  found = True;
 	  break;
 	}
       }

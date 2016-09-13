@@ -81,10 +81,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	private:
 
-		casacore::Bool itsFirstTime;
-		casacore::uInt itsWidth, itsHeight;
-		casacore::uInt itsListLength;
-		casacore::uInt *itsImList;
+		Bool itsFirstTime;
+		uInt itsWidth, itsHeight;
+		uInt itsListLength;
+		uInt *itsImList;
 
 	};
 

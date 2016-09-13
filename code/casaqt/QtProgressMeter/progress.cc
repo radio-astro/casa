@@ -36,7 +36,6 @@
 #include <QDateTime>
 #include <graphics/X11/X_enter.h>
 
-using namespace casacore;
 namespace casa {
 
 ProgressBar::ProgressBar(const QStringList& str, QWidget *parent) 

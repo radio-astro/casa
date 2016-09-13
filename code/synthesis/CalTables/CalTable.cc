@@ -35,7 +35,6 @@
 #include <casa/Arrays/ArrayMath.h>
 #include <msvis/MSVis/MSCalEnums.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //----------------------------------------------------------------------------
@@ -453,11 +452,11 @@ Int CalTable::numberTimeSlots (const Double& fracError)
 
   // Loop through all time stamps
   for (i = 0; i < (n-1); i++) {
-    found = false;
+    found = False;
     for (j = i+1; j < n; j++) {
       if (abs (timeVal(i) - timeVal(j)) < fracError * intervalVal(i) &&
 	  abs (intervalVal(i) - intervalVal(j)) < fracError * intervalVal(i)) {
-	found = true;
+	found = True;
       };
     };
     if (!found) {

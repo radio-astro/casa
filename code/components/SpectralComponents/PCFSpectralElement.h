@@ -80,58 +80,58 @@ public:
 //	PCFSpectralElement& operator=(const PCFSpectralElement &other);
 
 	// Get amplitude
-	casacore::Double getAmpl() const;
+	Double getAmpl() const;
 	// Get center value
-	casacore::Double getCenter() const;
+	Double getCenter() const;
 	// Get the width
 	// <group>
-	virtual casacore::Double getWidth() const;
+	virtual Double getWidth() const;
 
-	virtual casacore::Double getFWHM() const = 0;
+	virtual Double getFWHM() const = 0;
 
 	// get the integral from -inf to inf
-	virtual casacore::Double getIntegral() const = 0;
+	virtual Double getIntegral() const = 0;
 	// </group>
 	// Get amplitude error estimate
-	casacore::Double getAmplErr() const;
+	Double getAmplErr() const;
 	// Get center value error estimate
-	casacore::Double getCenterErr() const;
+	Double getCenterErr() const;
 	// Get the width error estimate
 	// <group>
-	virtual casacore::Double getWidthErr() const;
-	virtual casacore::Double getFWHMErr() const = 0;
+	virtual Double getWidthErr() const;
+	virtual Double getFWHMErr() const = 0;
 
 
-	virtual casacore::Double getIntegralErr() const;
+	virtual Double getIntegralErr() const;
 	// </group>
 	// Get error estimates of parameters
 
 
-	void set(const casacore::Vector<casacore::Double>& param);
+	void set(const Vector<Double>& param);
 
-	void setAmpl(const casacore::Double ampl);
+	void setAmpl(const Double ampl);
 
-	void setCenter(const casacore::Double center);
+	void setCenter(const Double center);
 
-	virtual void setWidth(const casacore::Double width);
+	virtual void setWidth(const Double width);
 
 
-	void fixAmpl(const casacore::Bool fix=true);
-	void fixCenter(const casacore::Bool fix=true);
-	void fixWidth(const casacore::Bool fix=true);
-	void fixFWHM(const casacore::Bool fix=true) { fixWidth(fix); }
+	void fixAmpl(const Bool fix=True);
+	void fixCenter(const Bool fix=True);
+	void fixWidth(const Bool fix=True);
+	void fixFWHM(const Bool fix=True) { fixWidth(fix); }
 
 	// fix parameters via encoded string. If s contains a, fix amplitude. If s contains f, fix width.
 	// If s contains c, fix center.
-	void fixByString(const casacore::String& s);
+	void fixByString(const String& s);
 	// </group>
 
 
-	casacore::Bool fixedAmpl() const;
-	casacore::Bool fixedCenter() const;
-	casacore::Bool fixedWidth() const;
+	Bool fixedAmpl() const;
+	Bool fixedCenter() const;
+	Bool fixedWidth() const;
 
-	casacore::Bool fixedFWHM() const { return fixedWidth(); }
+	Bool fixedFWHM() const { return fixedWidth(); }
 
 protected:
 	PCFSpectralElement(
@@ -140,12 +140,12 @@ protected:
 
 	// param should have three elements: amplitude, center, and width
 	PCFSpectralElement(
-		SpectralElement::Types type, const casacore::Vector<casacore::Double>& param
+		SpectralElement::Types type, const Vector<Double>& param
 	);
 
 	PCFSpectralElement(
-		SpectralElement::Types type, casacore::Double amp,
-		casacore::Double center, casacore::Double width
+		SpectralElement::Types type, Double amp,
+		Double center, Double width
 	);
 
 	PCFSpectralElement(const PCFSpectralElement& other);

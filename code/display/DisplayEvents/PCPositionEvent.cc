@@ -27,7 +27,6 @@
 
 #include <display/DisplayEvents/PCPositionEvent.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Constructor.

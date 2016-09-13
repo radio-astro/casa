@@ -28,7 +28,6 @@
 #include <msvis/MSVis/statistics/Vi2ChunkArrayIdDataProvider.h>
 #include <msvis/MSVis/VisBufferComponents2.h>
 
-using namespace casacore;
 namespace casa {
 
 Vi2ChunkArrayIdDataProvider::Vi2ChunkArrayIdDataProvider(
@@ -43,5 +42,4 @@ const Vector<Int>& Vi2ChunkArrayIdDataProvider::dataArray() {
 	return vi2->getVisBuffer()->arrayId();
 }
 
-using namespace casacore;
 } // namespace casa

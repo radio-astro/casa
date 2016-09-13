@@ -356,14 +356,14 @@ int main() {
      }
     {
       // Check that the Table has been renamed and not copied
-      AlwaysAssert(Table::isWritable(String("tComponentList_tmp.model")) == false,
+      AlwaysAssert(Table::isWritable(String("tComponentList_tmp.model")) == False,
   		   AipsError);
-      AlwaysAssert(Table::isReadable(String("tComponentList_tmp.model")) == false,
+      AlwaysAssert(Table::isReadable(String("tComponentList_tmp.model")) == False,
   		   AipsError);
 
       // Open (readonly) the renamed model and copy it so we can mess with.
       Path path0(String("tComponentList_tmp_renamed.model"));
-      const ComponentList model0(path0,true);
+      const ComponentList model0(path0,True);
       AlwaysAssert(model0.nelements() == 6, AipsError);
       AlwaysAssert(model0.component(2).shape().type() == ComponentType::POINT,
   		   AipsError);
@@ -373,7 +373,7 @@ int main() {
       try {
   	RO_Model.remove(0);
       } catch (AipsError x) {
- 	if (!x.getMesg().contains("ROFlag == false")) {
+ 	if (!x.getMesg().contains("ROFlag == False")) {
  	  cout << x.getMesg() << endl << "FAIL" << endl;
  	  return 1;
   	}
@@ -411,7 +411,7 @@ int main() {
       ComponentList original(path0);
 //
       Path path1(String("tComponentList_tmp_copied.model"));
-      ComponentList modified(path1, false);
+      ComponentList modified(path1, False);
 //
       AlwaysAssert(original.nelements() == 6, AipsError);
       AlwaysAssert(original.component(2).shape().type() == 

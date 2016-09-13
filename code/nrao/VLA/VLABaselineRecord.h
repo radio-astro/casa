@@ -31,20 +31,16 @@
 
 #include <casa/aips.h>
 #include <casa/IO/ByteSource.h>
-//# The following should be a forward declaration. But our casacore::Complex & DComplex
+//# The following should be a forward declaration. But our Complex & DComplex
 //# classes are a typedef hence this does not work. Replace the following with
-//# forward declarations when casacore::Complex and casacore::DComplex are no longer typedefs.
+//# forward declarations when Complex and DComplex are no longer typedefs.
 #include <casa/BasicSL/Complex.h>
 
 #include <casa/namespace.h>
-namespace casacore{
-
+namespace casa { //# NAMESPACE CASA - BEGIN
 class String;
 template <class T> class Vector;
 template <class T> class Array;
-}
-
-namespace casa { //# NAMESPACE CASA - BEGIN
 } //# NAMESPACE CASA - END
 
 
@@ -108,39 +104,39 @@ public:
   // classes is actually used.
   virtual ~VLABaselineRecord();
 
-  // returns the correlations for this baseline. The returned casacore::Vector contains
+  // returns the correlations for this baseline. The returned Vector contains
   // all the data for this baseline and has been scaled.
-  virtual casacore::Vector<casacore::Complex> data() const;
+  virtual Vector<Complex> data() const;
 
   // Returns the correlations for this baseline in the supplied Array. The
-  // supplied casacore::Array may have any number of dimensions, but all except one must
+  // supplied Array may have any number of dimensions, but all except one must
   // have a length on 1. The axis that is not of length one must be the right
   // length to hold all the data contained in the record.  Alternatively the
-  // casacore::Array may contain no elements in which case it will be resized to a Vector
+  // Array may contain no elements in which case it will be resized to a Vector
   // of the correct length. The returned values have been scaled.
-  virtual void data(casacore::Array<casacore::Complex>& values) const = 0;
+  virtual void data(Array<Complex>& values) const = 0;
 
   // returns the flags for the correlations for this baseline.
-  virtual casacore::Vector<casacore::Bool> flags() const = 0;
+  virtual Vector<Bool> flags() const = 0;
 
   // returns the scaling factor used to convert the internal data to the actual
   // values.
-  virtual casacore::uInt scale() const = 0;
+  virtual uInt scale() const = 0;
 
   // returns the antenna 1 index for this baseline.
-  virtual casacore::uInt ant1() const = 0;
+  virtual uInt ant1() const = 0;
 
   // returns the antenna 2 index for this baseline.
-  virtual casacore::uInt ant2() const = 0;
+  virtual uInt ant2() const = 0;
   
   // return the type of this class
   virtual VLABaselineRecord::Type type() const = 0;
 
   // Convert a Type enum into a String
-  static casacore::String name(VLABaselineRecord::Type typeEnum);
+  static String name(VLABaselineRecord::Type typeEnum);
 
-  // Convert a given casacore::String to a Type enumerator
-  static VLABaselineRecord::Type type(const casacore::String& typeName);
+  // Convert a given String to a Type enumerator
+  static VLABaselineRecord::Type type(const String& typeName);
 
 protected:
   //# The default constructor creates a unusable object. Use the attach
@@ -149,28 +145,28 @@ protected:
 
   //# Initialise this VLABaselineRecord from the given record with the
   //# specified offset.
-  VLABaselineRecord(casacore::ByteSource& record, casacore::uInt offset);
+  VLABaselineRecord(ByteSource& record, uInt offset);
   
   //# Initialise this VLABaselineRecord from the given record with the
   //# specified offset.
-  void attach(casacore::ByteSource& record, casacore::uInt offset);
+  void attach(ByteSource& record, uInt offset);
 
   //# reads the scaling factor given the offset from the start of the record
-  casacore::uInt scale(casacore::uInt headerOffset) const;
+  uInt scale(uInt headerOffset) const;
 
   //# returns the antenna 1 index for this baseline given the offset in bytes
   //# from the start of the record.
-  casacore::uInt ant1(casacore::uInt headerOffset) const;
+  uInt ant1(uInt headerOffset) const;
 
   //# returns the antenna 2 index for this baseline given the offset in bytes
   //# from the start of the record.
-  casacore::uInt ant2(casacore::uInt headerOffset) const;
+  uInt ant2(uInt headerOffset) const;
   
   //# Contains a VLA record
-  mutable casacore::ByteSource itsRecord;
+  mutable ByteSource itsRecord;
 
   //# the offset to the start of the data for this object in the VLA record.
-  casacore::uInt itsOffset;
+  uInt itsOffset;
 private:
   //# The copy constructor is private and undefined
   VLABaselineRecord(const VLABaselineRecord& other);

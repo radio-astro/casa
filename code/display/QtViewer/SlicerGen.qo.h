@@ -1,4 +1,4 @@
-//# SlicerGen.qo.h: GUI which provides a casacore::Slicer object
+//# SlicerGen.qo.h: GUI which provides a Slicer object
 //# Copyright (C) 2013
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -49,7 +49,7 @@ namespace casa {
             void stateChange(bool);
 
 		private:
-			casacore::Vector<int> shape;
+			Vector<int> shape;
 			std::vector<QSpinBox*> startgui;
 			void load_startgui( );
 			std::vector<QSpinBox*> sizegui;

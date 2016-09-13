@@ -121,10 +121,10 @@ int main(int, char **) {
 		att2 = new Attribute(att1name, uIntVecVal1); // ditto
 		AlwaysAssert(*att1 == *att2, AipsError);
 		delete att2;
-		att2 = new Attribute(att1name, uIntVecVal1, uInt(0), true); // notol, strict
+		att2 = new Attribute(att1name, uIntVecVal1, uInt(0), True); // notol, strict
 		AlwaysAssert(*att1 != *att2, AipsError);
 		delete att1;
-		att1 = new Attribute(att1name, uIntVal1, uInt(0), true); // no tol, strict
+		att1 = new Attribute(att1name, uIntVal1, uInt(0), True); // no tol, strict
 		AlwaysAssert(*att1 != *att2, AipsError);
 		delete att2;
 		att2 = new Attribute(att1name, uIntVecVal1); // no tol, non-strict again
@@ -211,10 +211,10 @@ int main(int, char **) {
 		AlwaysAssert(*att1 == *att2, AipsError);
 		delete att2;
 		att2 = new Attribute(att1name, &uIntVecVal1, uInt(0),
-		                     true); // notol, strict
+		                     True); // notol, strict
 		AlwaysAssert(*att1 != *att2, AipsError);
 		delete att1;
-		att1 = new Attribute(att1name, &uIntVal1, uInt(0), true); // no tol, strict
+		att1 = new Attribute(att1name, &uIntVal1, uInt(0), True); // no tol, strict
 		AlwaysAssert(*att1 != *att2, AipsError);
 		delete att2;
 		att2 = new Attribute(att1name, &uIntVecVal1); // no tol, non-strict again
@@ -303,10 +303,10 @@ int main(int, char **) {
 		att2 = new Attribute(att1name, IntVecVal); // ditto
 		AlwaysAssert(*att1 == *att2, AipsError);
 		delete att2;
-		att2 = new Attribute(att1name, IntVecVal, Int(0), true); // notol, strict
+		att2 = new Attribute(att1name, IntVecVal, Int(0), True); // notol, strict
 		AlwaysAssert(*att1 != *att2, AipsError);
 		delete att1;
-		att1 = new Attribute(att1name, IntVal1, Int(0), true); // no tol, strict
+		att1 = new Attribute(att1name, IntVal1, Int(0), True); // no tol, strict
 		AlwaysAssert(*att1 != *att2, AipsError);
 		delete att2;
 		att2 = new Attribute(att1name, IntVecVal); // no tol, non-strict again
@@ -384,10 +384,10 @@ int main(int, char **) {
 		AlwaysAssert(*att1 == *att2, AipsError);
 		delete att2;
 		att2 = new Attribute(att1name, &IntVecVal, Int(0),
-		                     true); // notol, strict
+		                     True); // notol, strict
 		AlwaysAssert(*att1 != *att2, AipsError);
 		delete att1;
-		att1 = new Attribute(att1name, &IntVal1, Int(0), true); // no tol, strict
+		att1 = new Attribute(att1name, &IntVal1, Int(0), True); // no tol, strict
 		AlwaysAssert(*att1 != *att2, AipsError);
 		delete att2;
 		att2 = new Attribute(att1name, &IntVecVal); // no tol, non-strict again
@@ -454,11 +454,11 @@ int main(int, char **) {
 		att2 = new Attribute(att1name, FloatVecVal); // ditto
 		AlwaysAssert(*att1 == *att2, AipsError);
 		delete att2;
-		att2 = new Attribute(att1name, FloatVecVal, Float(0), true);
+		att2 = new Attribute(att1name, FloatVecVal, Float(0), True);
 		// notol, strict
 		AlwaysAssert(*att1 != *att2, AipsError);
 		delete att1;
-		att1 = new Attribute(att1name, FloatVal1, Float(0), true);
+		att1 = new Attribute(att1name, FloatVal1, Float(0), True);
 		// no tol, strict
 		AlwaysAssert(*att1 != *att2, AipsError);
 		delete att2;
@@ -524,10 +524,10 @@ int main(int, char **) {
 		AlwaysAssert(*att1 == *att2, AipsError);
 		delete att2;
 		att2 = new Attribute(att1name, &FloatVecVal, Float(0),
-		                     true); // notol, strict
+		                     True); // notol, strict
 		AlwaysAssert(*att1 != *att2, AipsError);
 		delete att1;
-		att1 = new Attribute(att1name, &FloatVal1, Float(0), true);
+		att1 = new Attribute(att1name, &FloatVal1, Float(0), True);
 		// no tol, strict
 		AlwaysAssert(*att1 != *att2, AipsError);
 		delete att2;
@@ -595,11 +595,11 @@ int main(int, char **) {
 		att2 = new Attribute(att1name, DoubleVecVal); // ditto
 		AlwaysAssert(*att1 == *att2, AipsError);
 		delete att2;
-		att2 = new Attribute(att1name, DoubleVecVal, Double(0), true);
+		att2 = new Attribute(att1name, DoubleVecVal, Double(0), True);
 		// notol, strict
 		AlwaysAssert(*att1 != *att2, AipsError);
 		delete att1;
-		att1 = new Attribute(att1name, DoubleVal1, Double(0), true);
+		att1 = new Attribute(att1name, DoubleVal1, Double(0), True);
 		// no tol, strict
 		AlwaysAssert(*att1 != *att2, AipsError);
 		delete att2;
@@ -665,10 +665,10 @@ int main(int, char **) {
 		AlwaysAssert(*att1 == *att2, AipsError);
 		delete att2;
 		att2 = new Attribute(att1name, &DoubleVecVal, Double(0),
-		                     true); // notol, strict
+		                     True); // notol, strict
 		AlwaysAssert(*att1 != *att2, AipsError);
 		delete att1;
-		att1 = new Attribute(att1name, &DoubleVal1, Double(0), true);
+		att1 = new Attribute(att1name, &DoubleVal1, Double(0), True);
 		// no tol, strict
 		AlwaysAssert(*att1 != *att2, AipsError);
 		delete att2;
@@ -681,12 +681,12 @@ int main(int, char **) {
 		// ------------------------------------------------------------
 		// Test Bool Attributes
 
-		Bool BoolVal1(true), BoolVal2(false);
+		Bool BoolVal1(True), BoolVal2(False);
 		Bool BoolVal2original(BoolVal2);
 		Vector<Bool> BoolVecVal(3);
-		BoolVecVal(0) = false;
-		BoolVecVal(1) = true;
-		BoolVecVal(2) = false;
+		BoolVecVal(0) = False;
+		BoolVecVal(1) = True;
+		BoolVecVal(2) = False;
 
 		// test basic construction and Attribute validity
 		att1 = new Attribute(att1name, BoolVal1);
@@ -725,10 +725,10 @@ int main(int, char **) {
 		att2 = new Attribute(att1name, BoolVecVal); // ditto
 		AlwaysAssert(*att1 == *att2, AipsError);
 		delete att2;
-		att2 = new Attribute(att1name, BoolVecVal, true); // strict
+		att2 = new Attribute(att1name, BoolVecVal, True); // strict
 		AlwaysAssert(*att1 != *att2, AipsError);
 		delete att1;
-		att1 = new Attribute(att1name, BoolVal1, true); // strict
+		att1 = new Attribute(att1name, BoolVal1, True); // strict
 		AlwaysAssert(*att1 != *att2, AipsError);
 		delete att2;
 		att2 = new Attribute(att1name, BoolVecVal); // non-strict again
@@ -779,10 +779,10 @@ int main(int, char **) {
 		att2 = new Attribute(att1name, &BoolVecVal); // ditto
 		AlwaysAssert(*att1 == *att2, AipsError);
 		delete att2;
-		att2 = new Attribute(att1name, &BoolVecVal, true); // strict
+		att2 = new Attribute(att1name, &BoolVecVal, True); // strict
 		AlwaysAssert(*att1 != *att2, AipsError);
 		delete att1;
-		att1 = new Attribute(att1name, &BoolVal1, true); // strict
+		att1 = new Attribute(att1name, &BoolVal1, True); // strict
 		AlwaysAssert(*att1 != *att2, AipsError);
 		delete att2;
 		att2 = new Attribute(att1name, &BoolVecVal); // non-strict again
@@ -794,12 +794,12 @@ int main(int, char **) {
 		// ------------------------------------------------------------
 		// Test String Attributes
 
-		String StringVal1("true"), StringVal2("false");
+		String StringVal1("True"), StringVal2("False");
 		String StringVal2original(StringVal2);
 		Vector<String> StringVecVal(3);
 		StringVecVal(0) = "Maybe";
-		StringVecVal(1) = "true";
-		StringVecVal(2) = "false";
+		StringVecVal(1) = "True";
+		StringVecVal(2) = "False";
 
 		// test basic construction and Attribute validity
 		att1 = new Attribute(att1name, StringVal1);
@@ -838,10 +838,10 @@ int main(int, char **) {
 		att2 = new Attribute(att1name, StringVecVal); // ditto
 		AlwaysAssert(*att1 == *att2, AipsError);
 		delete att2;
-		att2 = new Attribute(att1name, StringVecVal, true); // strict
+		att2 = new Attribute(att1name, StringVecVal, True); // strict
 		AlwaysAssert(*att1 != *att2, AipsError);
 		delete att1;
-		att1 = new Attribute(att1name, StringVal1, true); // strict
+		att1 = new Attribute(att1name, StringVal1, True); // strict
 		AlwaysAssert(*att1 != *att2, AipsError);
 		delete att2;
 		att2 = new Attribute(att1name, StringVecVal); // non-strict again
@@ -892,10 +892,10 @@ int main(int, char **) {
 		att2 = new Attribute(att1name, &StringVecVal); // ditto
 		AlwaysAssert(*att1 == *att2, AipsError);
 		delete att2;
-		att2 = new Attribute(att1name, &StringVecVal, true); // strict
+		att2 = new Attribute(att1name, &StringVecVal, True); // strict
 		AlwaysAssert(*att1 != *att2, AipsError);
 		delete att1;
-		att1 = new Attribute(att1name, &StringVal1, true); // strict
+		att1 = new Attribute(att1name, &StringVal1, True); // strict
 		AlwaysAssert(*att1 != *att2, AipsError);
 		delete att2;
 		att2 = new Attribute(att1name, &StringVecVal); // non-strict again
@@ -954,10 +954,10 @@ int main(int, char **) {
 		att2 = new Attribute(att1name, QuantityVecVal); // ditto
 		AlwaysAssert(*att1 == *att2, AipsError);
 		delete att2;
-		att2 = new Attribute(att1name, QuantityVecVal, true); // strict
+		att2 = new Attribute(att1name, QuantityVecVal, True); // strict
 		AlwaysAssert(*att1 != *att2, AipsError);
 		delete att1;
-		att1 = new Attribute(att1name, QuantityVal1, true); // strict
+		att1 = new Attribute(att1name, QuantityVal1, True); // strict
 		AlwaysAssert(*att1 != *att2, AipsError);
 		delete att2;
 		att2 = new Attribute(att1name, QuantityVecVal); // non-strict again
@@ -1024,10 +1024,10 @@ int main(int, char **) {
 		att2 = new Attribute(att1name, &QuantityVecVal); // ditto
 		AlwaysAssert(*att1 == *att2, AipsError);
 		delete att2;
-		att2 = new Attribute(att1name, &QuantityVecVal, true); // strict
+		att2 = new Attribute(att1name, &QuantityVecVal, True); // strict
 		AlwaysAssert(*att1 != *att2, AipsError);
 		delete att1;
-		att1 = new Attribute(att1name, &QuantityVal1, true); // strict
+		att1 = new Attribute(att1name, &QuantityVal1, True); // strict
 		AlwaysAssert(*att1 != *att2, AipsError);
 		delete att2;
 		att2 = new Attribute(att1name, &QuantityVecVal); // non-strict again

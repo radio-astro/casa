@@ -36,7 +36,7 @@
 #include <casadbus/session/DBusSession.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
-  casacore::Bool clone(const casacore::String& imageName, const casacore::String& newImageName);
+  Bool clone(const String& imageName, const String& newImageName);
   class ViewerProxy;
   
   class new_interactive_clean_callback 
@@ -67,13 +67,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
     };
     /*
-    casacore::Int interactivemask(const casacore::String& image, const casacore::String& mask, 
-			casacore::Int& niter, casacore::Int& ncycles, casacore::String& thresh, 
-			const casacore::Bool forceReload=false);
+    Int interactivemask(const String& image, const String& mask, 
+			Int& niter, Int& ncycles, String& thresh, 
+			const Bool forceReload=False);
     */
-    casacore::Int interactivemask(const casacore::String& image, const casacore::String& mask, 
-			casacore::Int& niter, casacore::Int& cycleniter, casacore::String& thresh, casacore::String& cyclethresh, 
-			const casacore::Bool forceReload=false);
+    Int interactivemask(const String& image, const String& mask, 
+			Int& niter, Int& cycleniter, String& thresh, String& cyclethresh, 
+			const Bool forceReload=False);
   private:
     ViewerProxy *viewer_p;
     int clean_panel_p;

@@ -42,7 +42,6 @@
 
 #define VISEQPRTLEV 0
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // ***************************************************************************
@@ -55,11 +54,11 @@ VisEquation::VisEquation() :
   napp_(0),
   lfd_(-1),
   rfd_(9999),
-  freqAveOK_(false),
+  freqAveOK_(False),
   svc_(NULL),
   pivot_(VisCal::ALL),  // at the sky
   //  spwOK_(),
-  useInternalModel_(false),
+  useInternalModel_(False),
   prtlev_(VISEQPRTLEV)
 {
   if (prtlev()>0) cout << "VE::VE()" << endl;
@@ -105,7 +104,7 @@ void VisEquation::setapply(PtrBlock<VisCal*>& vcin) {
       
       // A temporary local copy for sorting:
       PtrBlock<VisCal*> lvc;
-      lvc.resize(napp_,true,true);
+      lvc.resize(napp_,True,True);
       lvc=vc();
       
       // Sorted index will go here
@@ -174,7 +173,7 @@ void VisEquation::setModel(const Vector<Float>& stokes) {
   if (prtlev()>0) cout << "VE::setModel()" << endl;
 
   // Set the internal point source model
-  useInternalModel_=true;
+  useInternalModel_=True;
   stokesModel_.resize(4);
   stokesModel_.set(0.0);
   stokesModel_(Slice(0,stokes.nelements(),1))=stokes;
@@ -197,7 +196,7 @@ Vector<VisCal::Type> VisEquation::listTypes() const {
 //----------------------------------------------------------------------
 // Get spwOK for a single spw by aggregating from the vc's
 Bool VisEquation::spwOK(const Int& spw) {
-  if (napp_<1) return true;  // if there are none, all is ok
+  if (napp_<1) return True;  // if there are none, all is ok
   // otherwise, accumulate from the VisCals
   Bool spwok=vc()[0]->spwOK(spw);
   for (Int i=1;i<napp_;++i) 
@@ -811,7 +810,7 @@ void VisEquation::setFreqDep() {
 
   // Nominally averaging in frequency before normalization is NOT OK
   //  (we will revise this when we can assert constant MODEL_DATA)
-  freqAveOK_=false;
+  freqAveOK_=False;
 
   // Only if there are both apply-able and solve-able terms
   if (svc_ && napp_>0) {
@@ -826,7 +825,7 @@ void VisEquation::setFreqDep() {
 	rfd_=idx;
 	// If we will corrupt the model with something freqdep, we can't
 	//  frequency average in collapse
-	freqAveOK_=false;
+	freqAveOK_=False;
       }
 
   }
@@ -837,9 +836,9 @@ void VisEquation::setFreqDep() {
 Bool VisEquation::ok() {
 
   if (napp_ != Int(vc().nelements()))
-    return false;
+    return False;
 
-  return(true);
+  return(True);
 }
 
 

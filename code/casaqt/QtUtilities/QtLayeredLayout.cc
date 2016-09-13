@@ -28,7 +28,6 @@
 
 #include <QWidget>
 
-using namespace casacore;
 namespace casa {
 
 /////////////////////////////////

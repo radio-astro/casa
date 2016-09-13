@@ -84,7 +84,6 @@ per component to 12.
 #define ILLUSTRATOR_HACK 1
 #endif
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 ////////////////////////////////////////////////////////////////
@@ -253,8 +252,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		statestackindex_ = 0;
 
 		colorSpace_ = cs;	// Will be xfred to PS in emitSetup().
-		portrait_ = ((lo & ~EPS) == PORTRAIT) ? true : false;
-		eps_ = (lo & EPS) ? true : false;
+		portrait_ = ((lo & ~EPS) == PORTRAIT) ? True : False;
+		eps_ = (lo & EPS) ? True : False;
 		// Copy info from page description.
 		dimension_ = pinfo->dimension;
 		if(pinfo->media == USERPAGE) {	// User specified page size.
@@ -263,17 +262,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			yll_ = toPoints(pinfo->height, dimension_);
 			xur_ = toPoints(pinfo->lrmargin, dimension_);
 			yur_ = toPoints(pinfo->tbmargin, dimension_);
-			eps_ = true;
+			eps_ = True;
 			bbx0_ = xll_;
 			bby0_ = yll_;
 			bbx1_ = xur_;
 			bby1_ = yur_;
-			haveBoundingBox_ = true;
-			boxCheck0_ = true;
-			checkBoundingBox_ = false;
+			haveBoundingBox_ = True;
+			boxCheck0_ = True;
+			checkBoundingBox_ = False;
 		} else {
 			float lm, rm, tm, bm;
-			Bool haveMargins = false;
+			Bool haveMargins = False;
 			Dimension dim = pinfo->dimension;
 
 			// If user has supplied margins, use them, else defaults.
@@ -301,9 +300,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			bby0_ = yur_;
 			bbx1_ = xll_;
 			bby1_ = yll_;
-			haveBoundingBox_ = false;
-			checkBoundingBox_ = true;
-			boxCheck0_ = false;
+			haveBoundingBox_ = False;
+			checkBoundingBox_ = True;
+			boxCheck0_ = False;
 		}
 
 		info_ = info;
@@ -332,7 +331,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// 'predistort' it so the transform will 'undistort' it.
 		{
 			float a, b;
-			fromPoints(defaultFontSize_, defaultFontSize_, a, b, false);
+			fromPoints(defaultFontSize_, defaultFontSize_, a, b, False);
 			defaultFontSize_ = (a+b)/2.0;
 		}
 
@@ -552,8 +551,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 #endif
 			bpcUsed = bpcNeeded;
 
-		bbCheck(x0, y0, true);
-		bbCheck(x0+xsize, y0 + ysize, true);
+		bbCheck(x0, y0, True);
+		bbCheck(x0+xsize, y0 + ysize, True);
 
 		float sclx = (float)width/xsize;
 		float scly = (float)height/ysize;
@@ -619,7 +618,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Since PostScript will scale the line width by the CTM,
 		// do the inverse.
-		fromPoints(widthInPoints, widthInPoints, a, b, false);
+		fromPoints(widthInPoints, widthInPoints, a, b, False);
 		if(a < 0.0)
 			a = -a;
 		if(b < 0.0)
@@ -877,7 +876,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 // Returns logical page size (drawable area - margins).
-// If userCoords is true, values are in current user coordinates.
+// If userCoords is True, values are in current user coordinates.
 // Otherwise, they are in points.
 // (If in landscape, width & height are exchanged from physical page).
 	void PSDriver::pageSize(float &width, float &height, const Bool userCoords) {
@@ -934,7 +933,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 // Check X & Y to see if bounding box needs changing. X & Y are in user
-//coords unless userCoords is true in which case they have already
+//coords unless userCoords is True in which case they have already
 // been transformed.
 	void PSDriver::bbCheck(const float X, const float Y, const Bool userCoords) {
 		float x, y;
@@ -952,7 +951,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if(boxCheck0_) {		// First time.
 			bbx0_ = bbx1_ = x;
 			bby0_ = bby1_ = y;
-			boxCheck0_ = false;
+			boxCheck0_ = False;
 		} else {
 			if( x < bbx0_)
 				bbx0_ = x;
@@ -969,8 +968,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Do a bbcheck with the current position.
 	void PSDriver::bbCheck() {
 		float x, y;
-		state_.getXY(x, y, true);
-		bbCheck(x, y, false);
+		state_.getXY(x, y, True);
+		bbCheck(x, y, False);
 	}
 
 // Put a, possibly multiline, comment in the output file.
@@ -1733,7 +1732,7 @@ image\n"
 	void PSDriver::emitDashLength(const float length) {
 		float a, b, l;
 
-		fromPoints(length, length, a, b, false);
+		fromPoints(length, length, a, b, False);
 		l = (a+b)/2.0;
 		*out << "/dashlength [" << l << "] def" << endl;
 	}
@@ -2369,7 +2368,7 @@ image\n"
 		sprintf(buf, "%s (%s)", pw->pw_gecos, pw->pw_name);
 		for_ = buf;
 		lm_ = rm_ = tm_ = bm_ = 0.0;
-		haveMargins_ = false;
+		haveMargins_ = False;
 	}
 
 	PSDriver::PSInfo::~PSInfo() {
@@ -2414,7 +2413,7 @@ image\n"
 		rm_ = PSDriver::toPoints(rm, dim);
 		tm_ = PSDriver::toPoints(tm, dim);
 		bm_ = PSDriver::toPoints(bm, dim);
-		haveMargins_ = true;
+		haveMargins_ = True;
 	}
 
 	Bool PSDriver::PSInfo::getMargins(float &lm, float &rm,

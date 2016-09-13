@@ -94,7 +94,6 @@
 #define MAXPOINTINGERROR 250.0 // Max. pointing error in arcsec used to
 // determine the resolution of the
 // tabulated exp() function.
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
   //
   //---------------------------------------------------------------
@@ -121,7 +120,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     epJ=NULL;  // We do not yet support antenna pointing error
 	       // handling in this FTMachine.
     convSize=0;
-    tangentSpecified_p=false;
+    tangentSpecified_p=False;
     lastIndex_p=0;
     paChangeDetector.reset();
     pbLimit_p=pbLimit;
@@ -131,7 +130,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //bandID_p = getVisParams();
     if (applyPointingOffset) doPointing=1; else doPointing=0;
 
-    convFuncCacheReady=false;
+    convFuncCacheReady=False;
     PAIndex = -1;
     maxConvSupport=-1;  
     //
@@ -322,7 +321,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     // We accumulated normalized PBs.  So don't normalize the average
     // PB.
-    pbNormalized = false;
+    pbNormalized = False;
     
   }
   //
@@ -333,7 +332,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				  Int& /*polInUse*/,
 				  TempImage<Float>& theavgPB)
   {
-    Bool pbMade=false;
+    Bool pbMade=False;
     if (!resetPBs) return pbMade;
     //
     // If this is the first time, resize the average PB
@@ -346,8 +345,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	noOfPASteps = 1;
 	pbPeaks.resize(theavgPB.shape()(2));
 	pbPeaks.set(0.0);
-	resetPBs=false;
-	pbNormalized=false;
+	resetPBs=False;
+	pbNormalized=False;
       }
     return pbMade;
   }
@@ -407,18 +406,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	//     image->put(griddedData);
 	//     storeImg(name,*image);
 	//   }
-	LatticeFFT::cfft2d(*lattice,false);
+	LatticeFFT::cfft2d(*lattice,False);
 	if (!avgPBReady)
 	  {
-	    avgPBReady=true;
+	    avgPBReady=True;
 	    avgPB.resize(griddedWeights.shape()); 
 	    avgPB.setCoordinateInfo(griddedWeights.coordinates());
-	    //	    pbNormalized=true;
+	    //	    pbNormalized=True;
 	    // {
 	    //   String name("cpb.im");
 	    //   storeImg(name,griddedWeights);
 	    // }
-	    makeSensitivityImage(griddedWeights, avgPB, weights, true);
+	    makeSensitivityImage(griddedWeights, avgPB, weights, True);
 	    //
 	    // For effeciency reasons, weight functions are
 	    // accumulated only once per channel and polarization per
@@ -431,9 +430,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    // incorrect.  For now, normalize the peak of the average
 	    // weight function (wavgPB) to 1.0.
 	    //
-	    pbNormalized=false;
+	    pbNormalized=False;
 	    nPBWProjectFT::normalizeAvgPB();
-	    resetPBs=false;
+	    resetPBs=False;
 	    cfCache.finalize(avgPB);
 	  }
 	
@@ -1080,10 +1079,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     Int npa=convSupport.shape()(2),actualConvSize, actualConvWtSize;
     Int paIndex_Fortran = paIndex; 
-    Int doAvgPB=((avgPBReady==false) && 
+    Int doAvgPB=((avgPBReady==False) && 
 		 ((fabs(lastPAUsedForWtImg-actualPA)*57.2956 >= DELTAPA) || 
 		  (lastPAUsedForWtImg == MAGICPAVALUE)));
-    doAvgPB=(avgPBReady==false);
+    doAvgPB=(avgPBReady==False);
     actualConvSize = convFunc.shape()(0);
     actualConvWtSize = convWeights.shape()(0);
 
@@ -1171,7 +1170,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	nApertures+=Complex(1.0,0.0);
 	// Get the griddedWeigths as a referenced array
-	Array<Complex> gwts; Bool removeDegenerateAxis=false;
+	Array<Complex> gwts; Bool removeDegenerateAxis=False;
 	griddedWeights.get(gwts, removeDegenerateAxis);
 	//	griddedWeights.put(griddedWeights.get()+avgPB_p);
 	gwts = gwts + avgPB_p;
@@ -1198,8 +1197,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     npol  = image->shape()(2);
     nchan = image->shape()(3);
     
-    if(image->shape().product()>cachesize) isTiled=true;
-    else                                   isTiled=false;
+    if(image->shape().product()>cachesize) isTiled=True;
+    else                                   isTiled=False;
     
     
     sumWeight=0.0;
@@ -1211,7 +1210,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	imageCache->flush();
 	image->set(Complex(0.0));
 	//lattice=image;
-	lattice=CountedPtr<Lattice<Complex> > (image, false);
+	lattice=CountedPtr<Lattice<Complex> > (image, False);
       }
     else 
       {
@@ -1232,7 +1231,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	noOfPASteps = 1;
 	pbPeaks.resize(griddedWeights.shape()(2));
 	pbPeaks.set(0.0);
-	resetPBs=false;
+	resetPBs=False;
       }
   }
   //
@@ -1257,7 +1256,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     paChangeDetector.reset();
     cfCache.finalize();
-    convFuncCacheReady=true;
+    convFuncCacheReady=True;
   }
 
 } //# NAMESPACE CASA - END

@@ -56,32 +56,32 @@ public:
   // From NewCalTable only 
   CTPatchedInterp(NewCalTable& ct,
 		  VisCalEnum::MatrixType mtype,
-		  casacore::Int nPar,
-		  const casacore::String& timetype,
-		  const casacore::String& freqtype,
-		  const casacore::String& fieldtype,
-		  casacore::Vector<casacore::Int> spwmap=casacore::Vector<casacore::Int>(),
-		  casacore::Vector<casacore::Int> fldmap=casacore::Vector<casacore::Int>());
+		  Int nPar,
+		  const String& timetype,
+		  const String& freqtype,
+		  const String& fieldtype,
+		  Vector<Int> spwmap=Vector<Int>(),
+		  Vector<Int> fldmap=Vector<Int>());
 
-  // From NewCalTable and casacore::MS 
+  // From NewCalTable and MS 
   CTPatchedInterp(NewCalTable& ct,
 		  VisCalEnum::MatrixType mtype,
-		  casacore::Int nPar,
-		  const casacore::String& timetype,
-		  const casacore::String& freqtype,
-		  const casacore::String& fieldtype,
-		  const casacore::MeasurementSet& ms,
-		  casacore::Vector<casacore::Int> spwmap=casacore::Vector<casacore::Int>());
+		  Int nPar,
+		  const String& timetype,
+		  const String& freqtype,
+		  const String& fieldtype,
+		  const MeasurementSet& ms,
+		  Vector<Int> spwmap=Vector<Int>());
 
-  // From NewCalTable and casacore::MSColumns 
+  // From NewCalTable and MSColumns 
   CTPatchedInterp(NewCalTable& ct,
 		  VisCalEnum::MatrixType mtype,
-		  casacore::Int nPar,
-		  const casacore::String& timetype,
-		  const casacore::String& freqtype,
-		  const casacore::String& fieldtype,
-		  const casacore::ROMSColumns& mscol,
-		  casacore::Vector<casacore::Int> spwmap=casacore::Vector<casacore::Int>());
+		  Int nPar,
+		  const String& timetype,
+		  const String& freqtype,
+		  const String& fieldtype,
+		  const ROMSColumns& mscol,
+		  Vector<Int> spwmap=Vector<Int>());
 
 
   // Destructor
@@ -89,21 +89,21 @@ public:
 
   // Interpolate, given input field, spw, timestamp, & (optionally) freq list
   //    returns T if new result (anywhere)
-  casacore::Bool interpolate(casacore::Int obs, casacore::Int fld, casacore::Int spw, casacore::Double time, casacore::Double freq=-1.0);
-  casacore::Bool interpolate(casacore::Int obs, casacore::Int fld, casacore::Int spw, casacore::Double time, const casacore::Vector<casacore::Double>& freq);
+  Bool interpolate(Int obs, Int fld, Int spw, Double time, Double freq=-1.0);
+  Bool interpolate(Int obs, Int fld, Int spw, Double time, const Vector<Double>& freq);
 
   // Access to the result
-  casacore::Array<casacore::Float>& resultF(casacore::Int obs, casacore::Int fld, casacore::Int spw) { return result_(spw,fld,thisobs(obs)); };
-  casacore::Array<casacore::Complex> resultC(casacore::Int obs, casacore::Int fld, casacore::Int spw) { return RIorAPArray(result_(spw,fld,thisobs(obs))).c(); };
-  casacore::Array<casacore::Bool>& rflag(casacore::Int obs, casacore::Int fld, casacore::Int spw) { return resFlag_(spw,fld,thisobs(obs)); };
+  Array<Float>& resultF(Int obs, Int fld, Int spw) { return result_(spw,fld,thisobs(obs)); };
+  Array<Complex> resultC(Int obs, Int fld, Int spw) { return RIorAPArray(result_(spw,fld,thisobs(obs))).c(); };
+  Array<Bool>& rflag(Int obs, Int fld, Int spw) { return resFlag_(spw,fld,thisobs(obs)); };
 
   // Temporary public function for testing
-  casacore::Array<casacore::Float>& tresultF(casacore::Int obs, casacore::Int fld, casacore::Int spw) { return timeResult_(spw,fld,thisobs(obs)); };
-  casacore::Array<casacore::Bool>& tresultFlag(casacore::Int obs, casacore::Int fld, casacore::Int spw) { return timeResFlag_(spw,fld,thisobs(obs)); };
+  Array<Float>& tresultF(Int obs, Int fld, Int spw) { return timeResult_(spw,fld,thisobs(obs)); };
+  Array<Bool>& tresultFlag(Int obs, Int fld, Int spw) { return timeResFlag_(spw,fld,thisobs(obs)); };
 
   // spwOK info for users
-  casacore::Bool spwOK(casacore::Int spw) const;
-  casacore::Bool spwInOK(casacore::Int spw) const;
+  Bool spwOK(Int spw) const;
+  Bool spwInOK(Int spw) const;
 
   // Const access to various state
   // TBD
@@ -120,18 +120,18 @@ private:
   void sliceTable();
   void makeInterpolators();
 
-  casacore::Int thisobs(casacore::Int obs) { return (byObs_?obs:0); };
+  Int thisobs(Int obs) { return (byObs_?obs:0); };
 
   // Methods to set up 1:1 patch-panel maps
   //  Private for now as not yet ready to control from outside
   // Field
   // default: all 0 (no field-dep yet)
   void setDefFldMap() {fldMap_.resize(nMSFld_); fldMap_.set(0);};
-  void setFldMap(const casacore::MSField& msfld);           // via nearest on-sky
-  void setFldMap(const casacore::ROMSFieldColumns& fcol);  // via nearest on-sky
-  void setFldMap(casacore::Vector<casacore::Int>& fldmap);        // via ordered index list
-  //void setFldMap(casacore::Vector<casacore::String>& field);     // via name matching
-  //void setFldMap(casacore::uInt to, casacore::uInt from);        // via single to/from 
+  void setFldMap(const MSField& msfld);           // via nearest on-sky
+  void setFldMap(const ROMSFieldColumns& fcol);  // via nearest on-sky
+  void setFldMap(Vector<Int>& fldmap);        // via ordered index list
+  //void setFldMap(Vector<String>& field);     // via name matching
+  //void setFldMap(uInt to, uInt from);        // via single to/from 
 
   // Calculate fldmap redundancy, enabling reuse
   void calcAltFld();
@@ -139,31 +139,31 @@ private:
   // Spw
   // default: indgen (index identity)
   void setDefSpwMap() {spwMap_.resize(nMSSpw_); indgen(spwMap_);};
-  void setSpwMap(casacore::Vector<casacore::Int>& spwmap);
-  //void setSpwMap(casacore::Vector<casacore::Double>& refFreqs);  // via refFreq matching
-  //void setSpwMap(casacore::uInt to, casacore::uInt from);        // via single to/from
+  void setSpwMap(Vector<Int>& spwmap);
+  //void setSpwMap(Vector<Double>& refFreqs);  // via refFreq matching
+  //void setSpwMap(uInt to, uInt from);        // via single to/from
 
   // Antenna
   // default: indgen (index identity) 
   void setDefAntMap() {antMap_.resize(nMSAnt_); indgen(antMap_);};
-  //void setAntMap(casacore::Vector<casacore::Int>& ant);          // via ordered index list
-  //void setAntMap(casacore::Vector<casacore::String>& ant);       // via name/station matching
-  //void setAntMap(casacore::uInt to, casacore::uInt from);        // via single to/from
+  //void setAntMap(Vector<Int>& ant);          // via ordered index list
+  //void setAntMap(Vector<String>& ant);       // via name/station matching
+  //void setAntMap(uInt to, uInt from);        // via single to/from
 
   // Set generic antenna/baseline map
   void setElemMap();
 
   // Resample in frequency
-  void resampleInFreq(casacore::Matrix<casacore::Float>& fres,casacore::Matrix<casacore::Bool>& fflg,const casacore::Vector<casacore::Double>& fout,
-		      casacore::Matrix<casacore::Float>& tres,casacore::Matrix<casacore::Bool>& tflg,const casacore::Vector<casacore::Double>& fin);
-  void resampleFlagsInFreq(casacore::Vector<casacore::Bool>& flgout,const casacore::Vector<casacore::Double>& fout,
-			   casacore::Vector<casacore::Bool>& flgin,const casacore::Vector<casacore::Double>& fin);
+  void resampleInFreq(Matrix<Float>& fres,Matrix<Bool>& fflg,const Vector<Double>& fout,
+		      Matrix<Float>& tres,Matrix<Bool>& tflg,const Vector<Double>& fin);
+  void resampleFlagsInFreq(Vector<Bool>& flgout,const Vector<Double>& fout,
+			   Vector<Bool>& flgin,const Vector<Double>& fin);
 
   // Baseline index from antenna indices: (assumes a1<=a2 !!)
-  inline casacore::Int blnidx(const casacore::Int& a1, const casacore::Int& a2, const casacore::Int& nAnt) { return  a1*nAnt-a1*(a1+1)/2+a2; };
+  inline Int blnidx(const Int& a1, const Int& a2, const Int& nAnt) { return  a1*nAnt-a1*(a1+1)/2+a2; };
 
   // Translate freq axis interpolation string
-  casacore::InterpolateArray1D<casacore::Double,casacore::Float>::InterpolationMethod ftype(casacore::String& strtype);
+  InterpolateArray1D<Double,Float>::InterpolationMethod ftype(String& strtype);
 
 
   // PRIVATE DATA:
@@ -171,68 +171,68 @@ private:
   // The Caltable
   NewCalTable ct_;
 
-  // casacore::Matrix type
+  // Matrix type
   VisCalEnum::MatrixType mtype_;
 
   // Are parameters fundamentally complex?
-  casacore::Bool isCmplx_;
+  Bool isCmplx_;
 
-  // The number of (casacore::Float) parameters (per-chan, per-element)
-  casacore::Int nPar_, nFPar_;
+  // The number of (Float) parameters (per-chan, per-element)
+  Int nPar_, nFPar_;
 
   // Interpolation modes
-  casacore::String timeType_, freqType_;
+  String timeType_, freqType_;
 
-  casacore::InterpolateArray1D<casacore::Double,casacore::Float>::InterpolationMethod ia1dmethod_;
+  InterpolateArray1D<Double,Float>::InterpolationMethod ia1dmethod_;
 
   // Are we slicing caltable by field?
-  casacore::Bool byObs_,byField_;
+  Bool byObs_,byField_;
 
   // CalTable freq axis info
-  casacore::Vector<casacore::Int> nChanIn_;
-  casacore::Vector<casacore::Vector<casacore::Double> > freqIn_;
+  Vector<Int> nChanIn_;
+  Vector<Vector<Double> > freqIn_;
 
 
-  // Obs, Field, Spw, Ant _output_ (casacore::MS) sizes 
+  // Obs, Field, Spw, Ant _output_ (MS) sizes 
   //   calibration required for up to this many
-  casacore::Int nMSObs_, nMSFld_, nMSSpw_, nMSAnt_, nMSElem_;
+  Int nMSObs_, nMSFld_, nMSSpw_, nMSAnt_, nMSElem_;
 
   // Alternate field indices
-  casacore::Vector<casacore::Int> altFld_;
+  Vector<Int> altFld_;
 
   // Obs, Field, Spw, Ant _input_ (CalTable) sizes
   //  patch panels should not violate these (point to larger indices)
-  casacore::Int nCTObs_, nCTFld_, nCTSpw_, nCTAnt_, nCTElem_;
+  Int nCTObs_, nCTFld_, nCTSpw_, nCTAnt_, nCTElem_;
 
   // OK flag
-  casacore::Vector<casacore::Bool> spwInOK_;
+  Vector<Bool> spwInOK_;
 
   // The patch panels
-  //   Each has length from casacore::MS, values refer to CT
-  casacore::Vector<casacore::Int> fldMap_, spwMap_, antMap_, elemMap_;
+  //   Each has length from MS, values refer to CT
+  Vector<Int> fldMap_, spwMap_, antMap_, elemMap_;
 
   // Control conjugation of baseline-based solutions when mapping requires
-  casacore::Vector<casacore::Bool> conjTab_;
+  Vector<Bool> conjTab_;
 
   // Internal result Arrays
-  casacore::Cube<casacore::Cube<casacore::Float> > timeResult_,freqResult_;   // [nMSSpw_,nMSFld_,nMSObs_][nFpar,nChan,nAnt]
-  casacore::Cube<casacore::Cube<casacore::Bool> >  timeResFlag_,freqResFlag_; // [nMSSpw_,nMSFld_,nMSObs_][nFpar,nChan,nAnt]
+  Cube<Cube<Float> > timeResult_,freqResult_;   // [nMSSpw_,nMSFld_,nMSObs_][nFpar,nChan,nAnt]
+  Cube<Cube<Bool> >  timeResFlag_,freqResFlag_; // [nMSSpw_,nMSFld_,nMSObs_][nFpar,nChan,nAnt]
 
   // Current interpolation result Arrays
   //  These will reference time or freq result, depending on context,
   //  and may be referenced by external code
-  casacore::Cube<casacore::Cube<casacore::Float> > result_;     // [nMSSpw_,nMSFld_,nMSObs_][nFpar,nChan,nAnt]
-  casacore::Cube<casacore::Cube<casacore::Bool> >  resFlag_;    // [nMSSpw_,nMSFld_,nMSObs_][nFpar,nChan,nAnt]
+  Cube<Cube<Float> > result_;     // [nMSSpw_,nMSFld_,nMSObs_][nFpar,nChan,nAnt]
+  Cube<Cube<Bool> >  resFlag_;    // [nMSSpw_,nMSFld_,nMSObs_][nFpar,nChan,nAnt]
 
   // The CalTable slices
-  casacore::Array<NewCalTable*> ctSlices_;  // [nCTElem_,nCTSpw_,nCTFld_,nCTObs_]
+  Array<NewCalTable*> ctSlices_;  // [nCTElem_,nCTSpw_,nCTFld_,nCTObs_]
 
-  // The pre-patched casacore::Time interpolation engines
+  // The pre-patched Time interpolation engines
   //   These are populated by the available caltables slices
-  casacore::Array<CTTimeInterp1*> tI_;  // [nMSElem_,nMSSpw_,nMSFld_,nMSObs_]
-  casacore::Array<casacore::Bool> tIdel_;         // [nMSElem_,nMSSpw_,nMSFld_,mMSObs_]
+  Array<CTTimeInterp1*> tI_;  // [nMSElem_,nMSSpw_,nMSFld_,nMSObs_]
+  Array<Bool> tIdel_;         // [nMSElem_,nMSSpw_,nMSFld_,mMSObs_]
 
-  casacore::Vector<casacore::Int> lastFld_,lastObs_;
+  Vector<Int> lastFld_,lastObs_;
 
 
 };

@@ -41,9 +41,9 @@
 #include <gtest/gtest.h>
 
 #define SHOWSTATE False
-using namespace casacore;
-using namespace casa;
+
 using namespace casa::vi;
+using namespace casa;
 
 class VisCalTest : public ::testing::Test {
 
@@ -86,12 +86,12 @@ TEST_F(VisCalTest, PJones) {
   ASSERT_EQ(VisCal::P,P->type());
   ASSERT_EQ(String("P Jones"),P->typeName());
   ASSERT_EQ(1,P->nPar());
-  ASSERT_EQ(false,P->freqDepPar());
-  ASSERT_EQ(false,P->freqDepMat());
-  ASSERT_EQ(false,P->freqDepCalWt());
-  ASSERT_EQ(false,P->timeDepMat());
-  ASSERT_EQ(true,P->isApplied());
-  ASSERT_EQ(false,P->isSolvable());
+  ASSERT_EQ(False,P->freqDepPar());
+  ASSERT_EQ(False,P->freqDepMat());
+  ASSERT_EQ(False,P->freqDepCalWt());
+  ASSERT_EQ(False,P->timeDepMat());
+  ASSERT_EQ(True,P->isApplied());
+  ASSERT_EQ(False,P->isSolvable());
 
   delete P;
 }
@@ -196,12 +196,12 @@ TEST_F(VisCalTest, BJonesApplyState) {
   ASSERT_EQ(VisCal::B,B->type());
   ASSERT_EQ(String("B Jones"),B->typeName());
   ASSERT_EQ(2,B->nPar());
-  ASSERT_EQ(true,B->freqDepPar());
-  ASSERT_EQ(true,B->freqDepMat());
-  ASSERT_EQ(false,B->freqDepCalWt());
-  ASSERT_EQ(false,B->timeDepMat());
-  ASSERT_EQ(true,B->isApplied());
-  ASSERT_EQ(true,B->isSolvable());
+  ASSERT_EQ(True,B->freqDepPar());
+  ASSERT_EQ(True,B->freqDepMat());
+  ASSERT_EQ(False,B->freqDepCalWt());
+  ASSERT_EQ(False,B->timeDepMat());
+  ASSERT_EQ(True,B->isApplied());
+  ASSERT_EQ(True,B->isSolvable());
 
   delete B;
 }
@@ -268,12 +268,12 @@ TEST_F(VisCalTest, TJonesApplyState) {
   ASSERT_EQ(VisCal::T,T->type());
   ASSERT_EQ(String("T Jones"),T->typeName());
   ASSERT_EQ(1,T->nPar());
-  ASSERT_EQ(false,T->freqDepPar());
-  ASSERT_EQ(false,T->freqDepMat());
-  ASSERT_EQ(false,T->freqDepCalWt());
-  ASSERT_EQ(false,T->timeDepMat());
-  ASSERT_EQ(true,T->isApplied());
-  ASSERT_EQ(true,T->isSolvable());
+  ASSERT_EQ(False,T->freqDepPar());
+  ASSERT_EQ(False,T->freqDepMat());
+  ASSERT_EQ(False,T->freqDepCalWt());
+  ASSERT_EQ(False,T->timeDepMat());
+  ASSERT_EQ(True,T->isApplied());
+  ASSERT_EQ(True,T->isSolvable());
 
   delete T;
 }
@@ -328,12 +328,12 @@ TEST_F(VisCalTest, DJones) {
   ASSERT_EQ(VisCal::D,D->type());
   ASSERT_EQ(String("Dgen Jones"),D->typeName());
   ASSERT_EQ(2,D->nPar());
-  ASSERT_EQ(false,D->freqDepPar());
-  ASSERT_EQ(false,D->freqDepMat());
-  ASSERT_EQ(false,D->freqDepCalWt());
-  ASSERT_EQ(false,D->timeDepMat());
-  ASSERT_EQ(true,D->isApplied());
-  ASSERT_EQ(true,D->isSolvable());
+  ASSERT_EQ(False,D->freqDepPar());
+  ASSERT_EQ(False,D->freqDepMat());
+  ASSERT_EQ(False,D->freqDepCalWt());
+  ASSERT_EQ(False,D->timeDepMat());
+  ASSERT_EQ(True,D->isApplied());
+  ASSERT_EQ(True,D->isSolvable());
 
   delete D;
 }
@@ -347,12 +347,12 @@ TEST_F(VisCalTest, KJones) {
   ASSERT_EQ(VisCal::K,K->type());
   ASSERT_EQ(String("K Jones"),K->typeName());
   ASSERT_EQ(2,K->nPar());
-  ASSERT_EQ(false,K->freqDepPar());
-  ASSERT_EQ(true,K->freqDepMat());
-  ASSERT_EQ(false,K->freqDepCalWt());
-  ASSERT_EQ(false,K->timeDepMat());
-  ASSERT_EQ(true,K->isApplied());
-  ASSERT_EQ(true,K->isSolvable());
+  ASSERT_EQ(False,K->freqDepPar());
+  ASSERT_EQ(True,K->freqDepMat());
+  ASSERT_EQ(False,K->freqDepCalWt());
+  ASSERT_EQ(False,K->timeDepMat());
+  ASSERT_EQ(True,K->isApplied());
+  ASSERT_EQ(True,K->isSolvable());
 
   delete K;
 }
@@ -385,8 +385,8 @@ TEST_F(VisCalTest, KJones) {
   vb0->setAntenna2(a2);
   
   // Data, etc.
-  vb0->setFlagRow(Vector<Bool>(nRow,false));  // unflagged
-  vb0->setFlagCube(Cube<Bool>(nCorr,nChan,nRow,false));  // unflagged
+  vb0->setFlagRow(Vector<Bool>(nRow,False));  // unflagged
+  vb0->setFlagCube(Cube<Bool>(nCorr,nChan,nRow,False));  // unflagged
   vb0->setWeightSpectrum(Cube<Float>(nCorr,nChan,nRow,1.0));  // all wt=1
   vb0->setVisCubeModel(Cube<Complex>(nCorr,nChan,nRow,Complex(1.0)));
   

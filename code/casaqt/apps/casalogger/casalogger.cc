@@ -58,9 +58,9 @@ int main( int argc, char ** argv )
     if(argc > 1){
 	  mylog = argv[1];
     } else {
-	casacore::String logfileKey="user.logfile";
-	casacore::String logname2;
-	if(!casacore::Aipsrc::find(logname2, logfileKey)){
+	casa::String logfileKey="user.logfile";
+	casa::String logname2;
+	if(!casa::Aipsrc::find(logname2, logfileKey)){
 	   mylog = const_cast<char *>("casa.log");
 	} else {
 	   mylog = const_cast<char *>(logname2.c_str());
@@ -68,7 +68,7 @@ int main( int argc, char ** argv )
     }
 
     // std::cerr << "Logviewer wants: " << mylog << std::endl;
-    casa::LogViewer mw(mylog);
+    LogViewer mw(mylog);
     mw.setAttribute(Qt::WA_ShowWithoutActivating);
     mw.show();
 

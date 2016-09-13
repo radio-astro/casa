@@ -82,7 +82,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 class PabloIO
 {
 public:
-   static void init(casacore::Int, casacore::Char **, casacore::Int tracenode = 0);
+   static void init(Int, Char **, Int tracenode = 0);
    static void terminate();
 
 };

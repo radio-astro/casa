@@ -22,7 +22,6 @@
 
 #include <flagging/Flagging/FlagDataHandler.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 /////////////////////////////////////
@@ -1677,7 +1676,7 @@ FlagDataHandler::setTimeAverageIter(bool activated)
 void
 FlagDataHandler::setChanAverageIter(Vector<Int> chanbin)
 {
-    enableChanAvg_p = true;
+    enableChanAvg_p = True;
 
     // Store spw selection
     if (spwSelection_p.size() > 0)
@@ -1721,7 +1720,7 @@ FlagDataHandler::weightVisCube()
 		}
 	}
 
-	weight_spectrum_p.resize(tmpTrans.shape(),false);
+	weight_spectrum_p.resize(tmpTrans.shape(),False);
 	weight_spectrum_p = tmpTrans;
 
 	return weight_spectrum_p;
@@ -2335,7 +2334,6 @@ Complex
 VisMapper::stokes_v_from_linear(uInt chan, uInt row)
 {
 	// V = (XY-YX)/2i
-    using casacore::operator*;
 	return ((*this.*getVis_p)((*polMap_p)[Stokes::XY],chan,row) - (*this.*getVis_p)((*polMap_p)[Stokes::YX],chan,row))/(2*ImaginaryUnit);
 }
 
@@ -2359,8 +2357,6 @@ VisMapper::stokes_q_from_circular(uInt chan, uInt row)
 Complex
 VisMapper::stokes_u_from_circular(uInt chan, uInt row)
 {
-    using casacore::operator*;
-
 	// U = (RL-LR)/2i
 	return ((*this.*getVis_p)((*polMap_p)[Stokes::RL],chan,row) - (*this.*getVis_p)((*polMap_p)[Stokes::LR],chan,row))/(2*ImaginaryUnit);
 }
@@ -2369,8 +2365,6 @@ VisMapper::stokes_u_from_circular(uInt chan, uInt row)
 Complex
 VisMapper::stokes_v_from_circular(uInt chan, uInt row)
 {
-    using casacore::operator*;
-
 	// V = (RR-LL)/2
 	return ((*this.*getVis_p)((*polMap_p)[Stokes::RR],chan,row) - (*this.*getVis_p)((*polMap_p)[Stokes::LL],chan,row))/(2*ImaginaryUnit);
 }
@@ -2527,7 +2521,7 @@ FlagMapper::~FlagMapper()
 Bool
 FlagMapper::getOriginalFlags(uInt channel, uInt row)
 {
-	Bool combinedFlag = false;
+	Bool combinedFlag = False;
 	for (vector<uInt>::iterator iter=selectedCorrelations_p[0].begin();iter!=selectedCorrelations_p[0].end();iter++)
 	{
 		combinedFlag = combinedFlag | originalFlagsView_p->operator ()(*iter,channel,row);
@@ -2540,7 +2534,7 @@ FlagMapper::getOriginalFlags(uInt channel, uInt row)
 Bool
 FlagMapper::getModifiedFlags(uInt channel, uInt row)
 {
-	Bool combinedFlag = false;
+	Bool combinedFlag = False;
 	for (vector<uInt>::iterator iter=selectedCorrelations_p[0].begin();iter!=selectedCorrelations_p[0].end();iter++)
 	{
 		combinedFlag = combinedFlag | commonFlagsView_p->operator ()(*iter,channel,row);
@@ -2553,7 +2547,7 @@ FlagMapper::getModifiedFlags(uInt channel, uInt row)
 Bool
 FlagMapper::getPrivateFlags(uInt channel, uInt row)
 {
-	Bool combinedFlag = false;
+	Bool combinedFlag = False;
 	for (vector<uInt>::iterator iter=selectedCorrelations_p[0].begin();iter!=selectedCorrelations_p[0].end();iter++)
 	{
 		combinedFlag = combinedFlag | privateFlagsView_p->operator ()(*iter,channel,row);
@@ -2566,7 +2560,7 @@ FlagMapper::getPrivateFlags(uInt channel, uInt row)
 Bool
 FlagMapper::getOriginalFlags(uInt pol, uInt channel, uInt row)
 {
-	Bool combinedFlag = false;
+	Bool combinedFlag = False;
 	for (vector<uInt>::iterator iter=selectedCorrelations_p[pol].begin();iter!=selectedCorrelations_p[pol].end();iter++)
 	{
 		combinedFlag = combinedFlag | originalFlagsView_p->operator ()(*iter,channel,row);
@@ -2579,7 +2573,7 @@ FlagMapper::getOriginalFlags(uInt pol, uInt channel, uInt row)
 Bool
 FlagMapper::getModifiedFlags(uInt pol, uInt channel, uInt row)
 {
-	Bool combinedFlag = false;
+	Bool combinedFlag = False;
 	for (vector<uInt>::iterator iter=selectedCorrelations_p[pol].begin();iter!=selectedCorrelations_p[pol].end();iter++)
 	{
 		combinedFlag = combinedFlag | commonFlagsView_p->operator ()(*iter,channel,row);
@@ -2592,7 +2586,7 @@ FlagMapper::getModifiedFlags(uInt pol, uInt channel, uInt row)
 Bool
 FlagMapper::getPrivateFlags(uInt pol, uInt channel, uInt row)
 {
-	Bool combinedFlag = false;
+	Bool combinedFlag = False;
 	for (vector<uInt>::iterator iter=selectedCorrelations_p[pol].begin();iter!=selectedCorrelations_p[pol].end();iter++)
 	{
 		combinedFlag = combinedFlag | privateFlagsView_p->operator ()(*iter,channel,row);

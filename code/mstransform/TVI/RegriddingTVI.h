@@ -29,7 +29,7 @@
 // To handle variant parameters
 #include <stdcasa/StdCasa/CasacSupport.h>
 
-// casacore::MS Access
+// MS Access
 #include <ms/MeasurementSets.h>
 
 // To get observatory position from observatory name
@@ -62,7 +62,7 @@ enum RegriddingMethod {
     fftshift
   };
 
-const casacore::Unit Hz(casacore::String("Hz"));
+const Unit Hz(String("Hz"));
 
 //////////////////////////////////////////////////////////////////////////
 // RegriddingTVI class
@@ -74,74 +74,74 @@ class RegriddingTVI : public FreqAxisTVI
 public:
 
 	RegriddingTVI(	ViImplementation2 * inputVii,
-					const casacore::Record &configuration);
+					const Record &configuration);
 
 	// Report the the ViImplementation type
-	virtual casacore::String ViiType() const { return casacore::String("Regridding( ")+getVii()->ViiType()+" )"; };
+	virtual String ViiType() const { return String("Regridding( ")+getVii()->ViiType()+" )"; };
 
 	// Navigation methods
 	void origin ();
 
 	// Frequency specification methods
-    casacore::Int getReportingFrameOfReference () const; // Used by VisBufferImpl2 to determine default ref. frame
-    casacore::Vector<casacore::Double> getFrequencies (	casacore::Double time, casacore::Int frameOfReference,
-    								casacore::Int spectralWindowId, casacore::Int msId) const;
-    // casacore::Data accessors
-    void flag(casacore::Cube<casacore::Bool>& flagCube) const;
-    void floatData (casacore::Cube<casacore::Float> & vis) const;
-    void visibilityObserved (casacore::Cube<casacore::Complex> & vis) const;
-    void visibilityCorrected (casacore::Cube<casacore::Complex> & vis) const;
-    void visibilityModel (casacore::Cube<casacore::Complex> & vis) const;
-    void weightSpectrum(casacore::Cube<casacore::Float> &weightSp) const;
-    void sigmaSpectrum (casacore::Cube<casacore::Float> &sigmaSp) const;
+    Int getReportingFrameOfReference () const; // Used by VisBufferImpl2 to determine default ref. frame
+    Vector<Double> getFrequencies (	Double time, Int frameOfReference,
+    								Int spectralWindowId, Int msId) const;
+    // Data accessors
+    void flag(Cube<Bool>& flagCube) const;
+    void floatData (Cube<Float> & vis) const;
+    void visibilityObserved (Cube<Complex> & vis) const;
+    void visibilityCorrected (Cube<Complex> & vis) const;
+    void visibilityModel (Cube<Complex> & vis) const;
+    void weightSpectrum(Cube<Float> &weightSp) const;
+    void sigmaSpectrum (Cube<Float> &sigmaSp) const;
 
-    bool weightSpectrumExists () const {return true;}
-    bool sigmaSpectrumExists () const {return true;}
+    Bool weightSpectrumExists () const {return True;}
+    Bool sigmaSpectrumExists () const {return True;}
 
 protected:
 
-    casacore::Bool parseConfiguration(const casacore::Record &configuration);
+    Bool parseConfiguration(const Record &configuration);
     void initialize();
 
     void initFrequencyGrid();
     void initFrequencyTransformationEngine() const;
 
-    template<class T> void transformDataCube(	const casacore::Cube<T> &inputVis,
-    											casacore::Cube<T> &outputVis) const;
+    template<class T> void transformDataCube(	const Cube<T> &inputVis,
+    											Cube<T> &outputVis) const;
 
 	int nChan_p;
-	casacore::String mode_p;
-	casacore::String start_p;
-	casacore::String width_p;
-	casacore::String velocityType_p;
-	casacore::String restFrequency_p;
-	casacore::String interpolationMethodPar_p;
-	casacore::String outputReferenceFramePar_p;
+	String mode_p;
+	String start_p;
+	String width_p;
+	String velocityType_p;
+	String restFrequency_p;
+	String interpolationMethodPar_p;
+	String outputReferenceFramePar_p;
 	casac::variant *phaseCenterPar_p;
-	casacore::uInt regriddingMethod_p;
+	uInt regriddingMethod_p;
 
-	casacore::Bool refFrameTransformation_p;
-	casacore::Bool radialVelocityCorrection_p;
-	casacore::Bool radialVelocityCorrectionSignificant_p;
+	Bool refFrameTransformation_p;
+	Bool radialVelocityCorrection_p;
+	Bool radialVelocityCorrectionSignificant_p;
 
-	casacore::MEpoch referenceTime_p;
-	casacore::MDirection phaseCenter_p;
-	casacore::MPosition observatoryPosition_p;
-	casacore::MRadialVelocity radialVelocity_p;
-	casacore::MFrequency::Types outputReferenceFrame_p;
-	casacore::MFrequency::Types inputReferenceFrame_p;
+	MEpoch referenceTime_p;
+	MDirection phaseCenter_p;
+	MPosition observatoryPosition_p;
+	MRadialVelocity radialVelocity_p;
+	MFrequency::Types outputReferenceFrame_p;
+	MFrequency::Types inputReferenceFrame_p;
 
-	mutable casacore::MFrequency::Convert freqTransEngine_p;
-	mutable casacore::uInt freqTransEngineRowId_p;
+	mutable MFrequency::Convert freqTransEngine_p;
+	mutable uInt freqTransEngineRowId_p;
 
-	mutable casacore::Double fftShift_p;
-    casacore::FFTServer<casacore::Float, casacore::Complex> fFFTServer_p;
+	mutable Double fftShift_p;
+    FFTServer<Float, Complex> fFFTServer_p;
 
-	casacore::ROMSColumns *selectedInputMsCols_p;
-	casacore::MSFieldColumns *inputMSFieldCols_p;
+	ROMSColumns *selectedInputMsCols_p;
+	MSFieldColumns *inputMSFieldCols_p;
 
-	mutable map<casacore::Int,casacore::Float> weightFactorMap_p;
-	mutable map<casacore::Int,casacore::Float> sigmaFactorMap_p;
+	mutable map<Int,Float> weightFactorMap_p;
+	mutable map<Int,Float> sigmaFactorMap_p;
 	mutable inputOutputSpwMap inputOutputSpwMap_p;
 };
 
@@ -155,14 +155,14 @@ class RegriddingTVIFactory : public ViFactory
 
 public:
 
-	RegriddingTVIFactory(casacore::Record &configuration,ViImplementation2 *inputVII);
+	RegriddingTVIFactory(Record &configuration,ViImplementation2 *inputVII);
 
 protected:
 
 	vi::ViImplementation2 * createVi (VisibilityIterator2 *) const;
 	vi::ViImplementation2 * createVi () const;
 
-	casacore::Record configuration_p;
+	Record configuration_p;
 	ViImplementation2 *inputVii_p;
 };
 
@@ -209,20 +209,20 @@ public:
 
 protected:
 
-	casacore::Vector<casacore::Bool> & getInputFlagVector(DataCubeMap *inputData);
-	casacore::Vector<casacore::Bool> & getOutputFlagVector(DataCubeMap *outputData);
-	casacore::Vector<T> & getInputDataVector(DataCubeMap *inputData);
-	casacore::Vector<T> & getOutputDataVector(DataCubeMap *outputData);
+	Vector<Bool> & getInputFlagVector(DataCubeMap *inputData);
+	Vector<Bool> & getOutputFlagVector(DataCubeMap *outputData);
+	Vector<T> & getInputDataVector(DataCubeMap *inputData);
+	Vector<T> & getOutputDataVector(DataCubeMap *outputData);
 
-	casacore::Vector<casacore::Bool> inputDummyFlagVector_p;
-	casacore::Vector<casacore::Bool> outputDummyFlagVector_p;
-	casacore::Vector<T> inputDummyDataVector_p;
-	casacore::Vector<T> outputDummyDataVector_p;
+	Vector<Bool> inputDummyFlagVector_p;
+	Vector<Bool> outputDummyFlagVector_p;
+	Vector<T> inputDummyDataVector_p;
+	Vector<T> outputDummyDataVector_p;
 
-	casacore::Bool inputDummyFlagVectorInitialized_p;
-	casacore::Bool outputDummyFlagVectorInitialized_p;
-	casacore::Bool inputDummyDataVectorInitialized_p;
-	casacore::Bool outputDummyDataVectorInitialized_p;
+	Bool inputDummyFlagVectorInitialized_p;
+	Bool outputDummyFlagVectorInitialized_p;
+	Bool inputDummyDataVectorInitialized_p;
+	Bool outputDummyDataVectorInitialized_p;
 
 };
 
@@ -239,9 +239,9 @@ template<class T> class DataInterpolationKernel : public RegriddingKernel<T>
 
 public:
 
-	DataInterpolationKernel(	casacore::uInt interpolationMethod,
-								casacore::Vector<casacore::Double> *inputFreq,
-								casacore::Vector<casacore::Double> *outputFreq);
+	DataInterpolationKernel(	uInt interpolationMethod,
+								Vector<Double> *inputFreq,
+								Vector<Double> *outputFreq);
 
 	~DataInterpolationKernel() {}
 
@@ -249,9 +249,9 @@ public:
 
 protected:
 
-	casacore::uInt interpolationMethod_p;
-	casacore::Vector<casacore::Double> *inputFreq_p;
-	casacore::Vector<casacore::Double> *outputFreq_p;
+	uInt interpolationMethod_p;
+	Vector<Double> *inputFreq_p;
+	Vector<Double> *outputFreq_p;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -267,7 +267,7 @@ template<class T> class DataFFTKernel : public RegriddingKernel<T>
 
 public:
 
-	DataFFTKernel(casacore::Double fftShift);
+	DataFFTKernel(Double fftShift);
 
 	~DataFFTKernel() {}
 
@@ -275,19 +275,19 @@ public:
 
 protected:
 
-	void fftshift(	casacore::Vector<casacore::Complex> &inputDataVector,
-					casacore::Vector<casacore::Bool> &inputFlagVector,
-					casacore::Vector<casacore::Complex> &outputDataVector,
-					casacore::Vector<casacore::Bool> &outputFlagVector);
+	void fftshift(	Vector<Complex> &inputDataVector,
+					Vector<Bool> &inputFlagVector,
+					Vector<Complex> &outputDataVector,
+					Vector<Bool> &outputFlagVector);
 
-	void fftshift(	casacore::Vector<casacore::Float> &inputDataVector,
-					casacore::Vector<casacore::Bool> &inputFlagVector,
-					casacore::Vector<casacore::Float> &outputDataVector,
-					casacore::Vector<casacore::Bool> &outputFlagVector);
+	void fftshift(	Vector<Float> &inputDataVector,
+					Vector<Bool> &inputFlagVector,
+					Vector<Float> &outputDataVector,
+					Vector<Bool> &outputFlagVector);
 
 
-	casacore::Double fftShift_p;
-	casacore::FFTServer<casacore::Float, casacore::Complex> fFFTServer_p;
+	Double fftShift_p;
+	FFTServer<Float, Complex> fFFTServer_p;
 };
 
 } //# NAMESPACE VI - END

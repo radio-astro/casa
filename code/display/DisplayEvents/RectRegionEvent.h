@@ -90,24 +90,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Constructor taking a pointer to the WorldCanvas where the
 		// event occured, and the pixel coordinates of the rectangle.
 		RectRegionEvent(WorldCanvas *wc,
-		                const casacore::Int pixX1, const casacore::Int pixY1,
-		                const casacore::Int pixX2, const casacore::Int pixY2) :
+		                const Int pixX1, const Int pixY1,
+		                const Int pixX2, const Int pixY2) :
 
 			WorldCanvasEvent(wc),
 			itsPixBlc(2), itsPixTrc(2) {
 
-			itsPixBlc(0) = std::min(pixX1, pixX2);
-			itsPixTrc(0) = std::max(pixX1, pixX2);	// sort into top-right
-			itsPixBlc(1) = std::min(pixY1, pixY2);	// and and bottom-left corners.
-			itsPixTrc(1) = std::max(pixY1, pixY2);
+			itsPixBlc(0) = min(pixX1, pixX2);
+			itsPixTrc(0) = max(pixX1, pixX2);	// sort into top-right
+			itsPixBlc(1) = min(pixY1, pixY2);	// and and bottom-left corners.
+			itsPixTrc(1) = max(pixY1, pixY2);
 		}
 
 		// The corners of the selected rectangle, in screen pixel coordinates.
 		// <group>
-		virtual const casacore::Vector<casacore::Int> pixBlc() const {
+		virtual const Vector<Int> pixBlc() const {
 			return itsPixBlc;
 		}
-		virtual const casacore::Vector<casacore::Int> pixTrc() const {
+		virtual const Vector<Int> pixTrc() const {
 			return itsPixTrc;
 		}
 		// </group>
@@ -115,7 +115,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	private:
 
 		// pixel position of the rectangle
-		casacore::Vector<casacore::Int> itsPixBlc, itsPixTrc;
+		Vector<Int> itsPixBlc, itsPixTrc;
 
 	};
 

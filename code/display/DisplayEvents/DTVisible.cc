@@ -29,7 +29,6 @@
 #include <casa/System/AipsrcValue.h>
 #include <display/DisplayEvents/DTVisible.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Constructor.

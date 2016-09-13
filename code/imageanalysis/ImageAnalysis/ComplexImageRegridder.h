@@ -33,7 +33,7 @@
 
 namespace casa {
 
-class ComplexImageRegridder : public ImageRegridderBase<casacore::Complex> {
+class ComplexImageRegridder : public ImageRegridderBase<Complex> {
 	// <summary>
 	// Top level interface which regrids an image with complex-valued pixels to a specified coordinate system
 	// </summary>
@@ -58,24 +58,24 @@ class ComplexImageRegridder : public ImageRegridderBase<casacore::Complex> {
 public:
 
 	// if <src>outname</src> is empty, no image will be written
-	// if <src>overwrite</src> is true, if image already exists it will be removed
-	// if <src>overwrite</src> is false, if image already exists exception will be thrown
+	// if <src>overwrite</src> is True, if image already exists it will be removed
+	// if <src>overwrite</src> is False, if image already exists exception will be thrown
 	// <group>
 
 	ComplexImageRegridder(
 		const SPCIIC image,
-		const casacore::Record *const regionRec,
-		const casacore::String& maskInp, const casacore::String& outname, casacore::Bool overwrite,
-		const casacore::CoordinateSystem& csysTo, const casacore::IPosition& axes,
-		const casacore::IPosition& shape
+		const Record *const regionRec,
+		const String& maskInp, const String& outname, Bool overwrite,
+		const CoordinateSystem& csysTo, const IPosition& axes,
+		const IPosition& shape
 	);
 
 	template <class T> ComplexImageRegridder(
-		const SPCIIC image, const casacore::String& outname,
-		const SPCIIT templateIm, const casacore::IPosition& axes=casacore::IPosition(),
-		const casacore::Record *const regionRec=0,
-		const casacore::String& maskInp="", casacore::Bool overwrite=false,
-		const casacore::IPosition& shape=casacore::IPosition()
+		const SPCIIC image, const String& outname,
+		const SPCIIT templateIm, const IPosition& axes=IPosition(),
+		const Record *const regionRec=0,
+		const String& maskInp="", Bool overwrite=False,
+		const IPosition& shape=IPosition()
 	);
 	// </group>
 
@@ -87,11 +87,11 @@ public:
 
 protected:
 
-	casacore::String getClass() const { return _class; }
+	String getClass() const { return _class; }
 
 private:
 
-	static const casacore::String _class;
+	static const String _class;
 
 	// disallow default constructor
 	ComplexImageRegridder();

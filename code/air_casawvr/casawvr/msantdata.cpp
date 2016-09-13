@@ -17,32 +17,32 @@
 
 namespace LibAIR2 {
 
-  void getAntPos(const casacore::MeasurementSet &ms,
+  void getAntPos(const casa::MeasurementSet &ms,
 		 antpos_t &res)
   {
-    const casacore::MSAntenna & antTable(ms.antenna());
+    const casa::MSAntenna & antTable(ms.antenna());
     const size_t nant=antTable.nrow();
     res.resize(nant, 3);
-    casacore::ROMSAntennaColumns acols(antTable);
-    const casacore::ROArrayColumn<casacore::Double> &pos (acols.position());
+    casa::ROMSAntennaColumns acols(antTable);
+    const casa::ROArrayColumn<casa::Double> &pos (acols.position());
     for(size_t i=0; i<nant; ++i)
     {
-      casacore::Array<casacore::Double> a;
+      casa::Array<casa::Double> a;
       pos.get(i, a,
-	      casacore::True);
+	      casa::True);
       for(size_t j=0; j<3; ++j)
-	res(i,j)=a(casacore::IPosition(1,j));
+	res(i,j)=a(casa::IPosition(1,j));
     }
   }
 
-  aname_t getAName(const casacore::MeasurementSet &ms)
+  aname_t getAName(const casa::MeasurementSet &ms)
   {
     aname_t res;
-    const casacore::MSAntenna & antTable(ms.antenna());
+    const casa::MSAntenna & antTable(ms.antenna());
     const size_t nant=antTable.nrow();
 
-    casacore::ROMSAntennaColumns acols(antTable);
-    const casacore::ROScalarColumn<casacore::String> &names (acols.name());
+    casa::ROMSAntennaColumns acols(antTable);
+    const casa::ROScalarColumn<casa::String> &names (acols.name());
     for(size_t i=0; i<nant; ++i)
     {
       res.insert(aname_t::value_type(i, std::string(names(i))));

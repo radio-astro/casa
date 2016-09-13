@@ -50,7 +50,6 @@ using namespace boost;
 
 string appName;
 bool verbose = true;
-using namespace casacore;
 using namespace casa;
 
 void info(const string& message) {  
@@ -88,11 +87,11 @@ int main(int argc, char *argv[]) {
   String datacolumn = "DATA";
   String archiveid = "S0";
   String rangeid = "X1"; 
-  bool verbose = false;
-  bool showversion = false;
+  bool verbose = False;
+  bool showversion = False;
   double subscanduration = 24.*3600.; // default is one day
   double schedblockduration = 2700.; // default is 45 minutes
-  bool apcorrected = true;
+  bool apcorrected = True;
 
   boost::filesystem::path msPath;
 
@@ -145,7 +144,7 @@ int main(int argc, char *argv[]) {
   if (vm.count("logfile")) {
     //LogSinkInterface *theSink;
     ofs.open(vm["logfile"].as<string>().c_str(), ios_base::app);
-    LogSinkInterface *theSink = new casacore::StreamLogSink(&ofs);
+    LogSinkInterface *theSink = new casa::StreamLogSink(&ofs);
     LogSink::globalSink(theSink);
   }
   

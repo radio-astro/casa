@@ -22,8 +22,6 @@
 
 #include <mstransform/TVI/UVContSubTVI.h>
 
-using namespace casacore;
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 namespace vi { //# NAMESPACE VI - BEGIN

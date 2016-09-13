@@ -31,15 +31,11 @@
 #include <casacore/images/Images/ImageOpener.h>
 
 
-namespace casacore{
-
-class LatticeBase;
-class LatticeExprNode;
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Forward Declarations
+class LatticeBase;
+class LatticeExprNode;
 
 // <summary>
 // Definition of image types and handlers
@@ -55,19 +51,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </synopsis>
 //
 
-class CasaImageOpener : public casacore::ImageOpener {
+class CasaImageOpener : public ImageOpener {
 public:
 
 	// Return the type of an image with the given name.  Will throw an
 	// exception if file does not exist.
-	static ImageTypes imageType (const casacore::String& fileName);
-	static casacore::LatticeBase* openImage (
-		const casacore::String& fileName, const casacore::MaskSpecifier& spec=casacore::MaskSpecifier()
+	static ImageTypes imageType (const String& fileName);
+	static LatticeBase* openImage (
+		const String& fileName, const MaskSpecifier& spec=MaskSpecifier()
 	);
 
 private:
 
-	static casacore::Bool _openFuncsRegistered;
+	static Bool _openFuncsRegistered;
 
 	static void _registerOpenFuncs();
 };

@@ -38,16 +38,12 @@
 //# display library includes:
 #include <display/DisplayDatas/LatticePADD.h>
 
-namespace casacore{
-
-	template <class T> class Array;
-	class IPosition;
-	class Record;
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# forwards:
+	template <class T> class Array;
+	class IPosition;
+	class Record;
 	template <class T> class LatticePADMMarker;
 
 // <summary>Class to manage the drawing of vector maps of slices from AIPS++ Lattices</summary>
@@ -63,7 +59,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </prerequisite>
 //
 // <etymology>
-// From casacore::Lattice and Marker (shape)
+// From Lattice and Marker (shape)
 // </etymology>
 //
 // <synopsis>
@@ -88,17 +84,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <example>
 // A LatticeAsMarker object could be constructed and used as follows:
 // <srcblock>
-// casacore::PagedImage<casacore::Complex> *pimage = new casacore::PagedImage<casacore::Complex>(casacore::String("test.im"));
+// PagedImage<Complex> *pimage = new PagedImage<Complex>(String("test.im"));
 // DisplayData *dd;
-// casacore::uInt ndim = pimage->ndim();
+// uInt ndim = pimage->ndim();
 // if (ndim < 2) {
-//   throw(casacore::AipsError(casacore::String("Image has less than two dimensions")));
+//   throw(AipsError(String("Image has less than two dimensions")));
 // } else if (ndim == 2) {
-//   dd = (DisplayData *)(new LatticeAsMarker<casacore::Complex>(pimage, 0, 1));
+//   dd = (DisplayData *)(new LatticeAsMarker<Complex>(pimage, 0, 1));
 // } else {
-//   casacore::IPosition fixedPos(ndim);
+//   IPosition fixedPos(ndim);
 //   fixedPos = 0;
-//   dd = (DisplayData *)(new LatticeAsMarker<casacore::Complex>(pimage, 0, 1, 2,fixedPos));
+//   dd = (DisplayData *)(new LatticeAsMarker<Complex>(pimage, 0, 1, 2,fixedPos));
 // }
 // // wcHolder is an existing WorldCanvasHolder *...
 // wcHolder->addDisplayData(ddata);
@@ -127,7 +123,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	template <class T> class LatticeAsMarker : public LatticePADisplayData<T> {
 
 	public:
-		// casacore::Array-based constructors: >2d and 2d.  xAxis and yAxis specify
+		// Array-based constructors: >2d and 2d.  xAxis and yAxis specify
 		// which axis in the array (0-based) should be mapped to X and Y
 		// on the display device: ie. 2-d slices of the data to be displayed
 		// have these axes.  mAxis specifies the "movie" axis, which is the axis
@@ -136,11 +132,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// and indicate the fixed axis values for axes in the data that are
 		// not specified as xAxis, yAxis or mAxis.
 		// <group>
-		LatticeAsMarker(casacore::Array<T>* array, const casacore::uInt xAxis,
-		                const casacore::uInt yAxis, const casacore::uInt mAxis,
-		                const casacore::IPosition fixedPos);
-		LatticeAsMarker(casacore::Array<T>* array, const casacore::uInt xAxis,
-		                const casacore::uInt yAxis);
+		LatticeAsMarker(Array<T>* array, const uInt xAxis,
+		                const uInt yAxis, const uInt mAxis,
+		                const IPosition fixedPos);
+		LatticeAsMarker(Array<T>* array, const uInt xAxis,
+		                const uInt yAxis);
 		// </group>
 
 		// Image-based constructors: >2d and 2d.  xAxis and yAxis specify
@@ -152,11 +148,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// and indicate the fixed axis values for axes in the data that are
 		// not specified as xAxis, yAxis or mAxis.
 		// <group>
-		LatticeAsMarker(SHARED_PTR<casacore::ImageInterface<T> > image, const casacore::uInt xAxis,
-		                const casacore::uInt yAxis, const casacore::uInt mAxis,
-		                const casacore::IPosition fixedPos);
-		LatticeAsMarker(SHARED_PTR<casacore::ImageInterface<T> > image, const casacore::uInt xAxis,
-		                const casacore::uInt yAxis);
+		LatticeAsMarker(SHARED_PTR<ImageInterface<T> > image, const uInt xAxis,
+		                const uInt yAxis, const uInt mAxis,
+		                const IPosition fixedPos);
+		LatticeAsMarker(SHARED_PTR<ImageInterface<T> > image, const uInt xAxis,
+		                const uInt yAxis);
 		// </group>
 
 		// Destructor
@@ -166,24 +162,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// maps.  This is called upon construction as well as whenever
 		// the display and/or movie axes are changed via a call to
 		// PrincipalAxesDD::setAxes.
-		//virtual void setupElements(casacore::IPosition fixedPos = casacore::IPosition(2));
+		//virtual void setupElements(IPosition fixedPos = IPosition(2));
 		virtual void setupElements();
 
 		// install the default options for display
 		virtual void setDefaultOptions();
 
-		// Apply the options stored in the provided casacore::Record to the
-		// LatticeAsMarker object.  If the return value is true, then
+		// Apply the options stored in the provided Record to the
+		// LatticeAsMarker object.  If the return value is True, then
 		// some options have changed, and a refresh is needed to update
 		// the display.
-		virtual casacore::Bool setOptions(casacore::Record& rec, casacore::Record& recOut);
+		virtual Bool setOptions(Record& rec, Record& recOut);
 
 		// Retrieve the currently set options, and their types, default
 		// values, and any help text associated with each parameter.  This
 		// information can be used to generate form-type graphical user
 		// interfaces or command-line interfaces to set the options with
 		// prompts.
-		virtual casacore::Record getOptions( bool scrub=false ) const;
+		virtual Record getOptions( bool scrub=false ) const;
 
 		// Return the DisplayData type; used by the WorldCanvasHolder to
 		// determine the order of drawing.
@@ -192,18 +188,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		// class name
-		virtual casacore::String className() const {
-			return casacore::String("LatticeAsMarker");
+		virtual String className() const {
+			return String("LatticeAsMarker");
 		}
 
 
 	private:
-		casacore::Float itsScale;          // Amplitude scale factor
-		casacore::Float itsLineWidth;      // Line width of vectors
-		casacore::Int itsIncX;             // Increment in X (pixels)
-		casacore::Int itsIncY;             // Increment in Y (pixels)
-		casacore::String itsColor;         // Color of vectors
-		casacore::String itsMarker;        // Marker shape (should use an enum when we have some more)
+		Float itsScale;          // Amplitude scale factor
+		Float itsLineWidth;      // Line width of vectors
+		Int itsIncX;             // Increment in X (pixels)
+		Int itsIncY;             // Increment in Y (pixels)
+		String itsColor;         // Color of vectors
+		String itsMarker;        // Marker shape (should use an enum when we have some more)
 //
 		friend class LatticePADMMarker<T>;
 

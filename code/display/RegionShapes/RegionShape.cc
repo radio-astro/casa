@@ -31,7 +31,6 @@
 #include <display/Display/PixelCanvas.h>
 #include <display/RegionShapes/RegionShapes.h>
 
-using namespace casacore;
 namespace casa {
 
 // REGIONSHAPELABEL DEFINITIONS //

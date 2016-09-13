@@ -34,7 +34,6 @@
 #include <ms/MeasurementSets/MSSpWindowColumns.h>
 #include <measures/Measures.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Note: this simplistic implementation just generates a new random
@@ -96,7 +95,7 @@ VisBuffer& SimACohCalc::apply(VisBuffer& vb)
     Double trx_k = trx_p.getValue("K");
     Double tatmos_k = tatmos_p.getValue("K");
     Double tcmb_k = tcmb_p.getValue("K");
-    Bool zeroSpacing = false;
+    Bool zeroSpacing = False;
 
     LogIO os(LogOrigin("SimACohCalc", "apply()", WHERE));
 
@@ -142,9 +141,9 @@ VisBuffer& SimACohCalc::apply(VisBuffer& vb)
 	vb.weight()(row) *= 1.0/ pow(sigma, 2.0);
 
 	
-	zeroSpacing = false;
+	zeroSpacing = False;
 	if (vb.uvw()(row)(0) == 0.0 && vb.uvw()(row)(1) == 0.0) {
-	  zeroSpacing = true;
+	  zeroSpacing = True;
 	}
 
 	for (Int chn=0; chn<vb.nChannel(); chn++) {

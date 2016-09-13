@@ -47,28 +47,28 @@
 namespace casa {
 
 template <class T>
-ImageDecomposer<T>::ImageDecomposer(const casacore::ImageInterface<T>& image)
+ImageDecomposer<T>::ImageDecomposer(const ImageInterface<T>& image)
  : itsImagePtr(image.cloneII()),
    itsMapPtr(0),
    itsShape(itsImagePtr->shape()),
    itsDim(itsShape.nelements()),
    itsNRegions(0),
    itsNComponents(0),
-   itsDeblendIt(true),
+   itsDeblendIt(True),
    itsThresholdVal(0.1),
    itsNContour(11),
    itsMinRange(2),
    itsNAxis(2),
-   itsFitIt(true),
+   itsFitIt(True),
    itsMaximumRMS(0.1),
    itsMaxRetries(-1),
    itsMaxIter(256),
    itsConvCriteria(0.001)
 {
-  itsMapPtr = new casacore::TempLattice<casacore::Int>(casacore::TiledShape(itsShape), 1); 
+  itsMapPtr = new TempLattice<Int>(TiledShape(itsShape), 1); 
   if (!itsMapPtr) {
      delete itsImagePtr;
-     throw(casacore::AipsError("Failed to create internal casacore::TempLattice"));
+     throw(AipsError("Failed to create internal TempLattice"));
   }
 //
   itsMapPtr->set(0);
@@ -85,10 +85,10 @@ ImageDecomposer<T>::ImageDecomposer(const ImageDecomposer<T>& other)
    itsNRegions(0),
    itsNComponents(0)
 {
-  itsMapPtr = new casacore::TempLattice<casacore::Int>(casacore::TiledShape(itsShape), 1);  
+  itsMapPtr = new TempLattice<Int>(TiledShape(itsShape), 1);  
   if (!itsMapPtr) {
      delete itsImagePtr;
-     throw(casacore::AipsError("Failed to create internal casacore::TempLattice"));
+     throw(AipsError("Failed to create internal TempLattice"));
   }
 //
   itsNRegions = other.itsNRegions;
@@ -115,7 +115,7 @@ ImageDecomposer<T> &ImageDecomposer<T>::operator=(const ImageDecomposer<T> &othe
       itsNRegions = 0;
       itsNComponents = 0;
 
-      itsMapPtr = new casacore::TempLattice<casacore::Int>(casacore::TiledShape(itsShape), 1);  
+      itsMapPtr = new TempLattice<Int>(TiledShape(itsShape), 1);  
       itsMapPtr->copyData(*(other.itsMapPtr));
       itsList = other.itsList.copy();
 
@@ -143,7 +143,7 @@ ImageDecomposer<T>::~ImageDecomposer()
 
 /*
 template <class T>
-void ImageDecomposer<T>::setImage(casacore::ImageInterface<T>& image)
+void ImageDecomposer<T>::setImage(ImageInterface<T>& image)
 {
    if (itsImagePtr) {
       delete itsImagePtr;
@@ -161,25 +161,25 @@ void ImageDecomposer<T>::setImage(casacore::ImageInterface<T>& image)
    itsNRegions = 0;
    itsNComponents = 0;
 //
-   itsMapPtr = new casacore::TempLattice<casacore::Int>(casacore::TiledShape(itsShape), 1); 
+   itsMapPtr = new TempLattice<Int>(TiledShape(itsShape), 1); 
    if (!itsMapPtr) {
      delete itsImagePtr;
-     throw(casacore::AipsError("Failed to create internal casacore::TempLattice"));
+     throw(AipsError("Failed to create internal TempLattice"));
    }
    itsMapPtr->set(0);
 }
 */
 
 template <class T>
-void ImageDecomposer<T>::setDeblend(casacore::Bool deblendIt)
+void ImageDecomposer<T>::setDeblend(Bool deblendIt)
 {
   itsDeblendIt = deblendIt;
   return;
 }
 
 template <class T>
-void ImageDecomposer<T>::setDeblendOptions(T thresholdVal,casacore::uInt nContour,
-                                           casacore::Int minRange, casacore::Int nAxis)
+void ImageDecomposer<T>::setDeblendOptions(T thresholdVal,uInt nContour,
+                                           Int minRange, Int nAxis)
 {
   itsThresholdVal = thresholdVal;
   itsNContour = nContour;
@@ -189,15 +189,15 @@ void ImageDecomposer<T>::setDeblendOptions(T thresholdVal,casacore::uInt nContou
 }
 
 template <class T>
-void ImageDecomposer<T>::setFit(casacore::Bool fitIt)
+void ImageDecomposer<T>::setFit(Bool fitIt)
 {
   itsFitIt = fitIt;
   return;
 }   
 
 template <class T>
-void ImageDecomposer<T>::setFitOptions(T maximumRMS, casacore::Int maxRetries, 
-                                       casacore::uInt maxIter, T convCriteria)
+void ImageDecomposer<T>::setFitOptions(T maximumRMS, Int maxRetries, 
+                                       uInt maxIter, T convCriteria)
 {
   itsMaximumRMS = maximumRMS;
   itsMaxRetries = maxRetries;
@@ -225,50 +225,50 @@ void ImageDecomposer<T>::copyOptions(const ImageDecomposer<T> &other)
 
 
 template <class T>
-int ImageDecomposer<T>::getCell(casacore::Int x, casacore::Int y) const
+Int ImageDecomposer<T>::getCell(Int x, Int y) const
 {
-  return itsMapPtr->getAt(casacore::IPosition(2,x,y));
+  return itsMapPtr->getAt(IPosition(2,x,y));
 }
 
 template <class T>
-int ImageDecomposer<T>::getCell(casacore::Int x, casacore::Int y, casacore::Int z) const
+Int ImageDecomposer<T>::getCell(Int x, Int y, Int z) const
 {
-  return itsMapPtr->getAt(casacore::IPosition(3,x,y,z));
+  return itsMapPtr->getAt(IPosition(3,x,y,z));
 }
 template <class T>
-int ImageDecomposer<T>::getCell(const casacore::IPosition& coord) const
+Int ImageDecomposer<T>::getCell(const IPosition& coord) const
 {
-  return itsMapPtr->getAt(coord);  //note: 3D casacore::IPosition works on 2D image
+  return itsMapPtr->getAt(coord);  //note: 3D IPosition works on 2D image
 }
 
 
 template <class T>
-void ImageDecomposer<T>::setCell(casacore::Int x, casacore::Int y, casacore::Int sval)
+void ImageDecomposer<T>::setCell(Int x, Int y, Int sval)
 {
-  itsMapPtr->putAt(sval, casacore::IPosition(2,x,y));
+  itsMapPtr->putAt(sval, IPosition(2,x,y));
   return;
 }
 template <class T>
-void ImageDecomposer<T>::setCell(casacore::Int x, casacore::Int y, casacore::Int z, casacore::Int sval)
+void ImageDecomposer<T>::setCell(Int x, Int y, Int z, Int sval)
 {
-  itsMapPtr->putAt(sval, casacore::IPosition(3,x,y,z));
+  itsMapPtr->putAt(sval, IPosition(3,x,y,z));
   return;
 }
 template <class T>
-void ImageDecomposer<T>::setCell(const casacore::IPosition& coord, casacore::Int sval)
+void ImageDecomposer<T>::setCell(const IPosition& coord, Int sval)
 {
   itsMapPtr->putAt(sval, coord);
   return;
 }
 
 template <class T>
-casacore::IPosition ImageDecomposer<T>::shape() const
+IPosition ImageDecomposer<T>::shape() const                    
 {
   return itsShape;
 }
 
 template <class T>
-int ImageDecomposer<T>::shape(casacore::uInt axis) const
+Int ImageDecomposer<T>::shape(uInt axis) const                 
 {
   if (itsDim > axis) return itsShape(axis);
   return 1;
@@ -279,94 +279,94 @@ int ImageDecomposer<T>::shape(casacore::uInt axis) const
 //and/or decomposed.
 
 template <class T>
-casacore::uInt ImageDecomposer<T>::numRegions() const
+uInt ImageDecomposer<T>::numRegions() const
 {
   return itsNRegions;
 }
 
 template <class T>
-casacore::uInt ImageDecomposer<T>::numComponents() const
+uInt ImageDecomposer<T>::numComponents() const
 {
   return itsNComponents;
 }
 
 template <class T>
-bool ImageDecomposer<T>::isDerived() const
+Bool ImageDecomposer<T>::isDerived() const
 {
   return itsNRegions>0;
 }
 
 template <class T>
-bool ImageDecomposer<T>::isDecomposed() const
+Bool ImageDecomposer<T>::isDecomposed() const
 {
   return itsNComponents>0;
 }
 
 template <class T>
-T ImageDecomposer<T>::getImageVal(casacore::Int x, casacore::Int y) const
+T ImageDecomposer<T>::getImageVal(Int x, Int y) const
 {
-  return getImageVal(casacore::IPosition(2,x,y));
+  return getImageVal(IPosition(2,x,y));
 }
 
 template <class T>
-T ImageDecomposer<T>::getImageVal(casacore::Int x, casacore::Int y, casacore::Int z) const
+T ImageDecomposer<T>::getImageVal(Int x, Int y, Int z) const
 {
-  return getImageVal(casacore::IPosition(3,x,y,z));
+  return getImageVal(IPosition(3,x,y,z));
 }
 
 template <class T>
-T ImageDecomposer<T>::getImageVal(casacore::IPosition coord) const
+T ImageDecomposer<T>::getImageVal(IPosition coord) const
 {
   return itsImagePtr->getAt(coord);
 }
 
   
 template <class T>
-int ImageDecomposer<T>::getContourVal(casacore::Int x, casacore::Int y, const casacore::Vector<T>& clevels) const
+Int ImageDecomposer<T>::getContourVal(Int x, Int y, const Vector<T>& clevels) const
 {
-  return getContourVal(casacore::IPosition(2,x,y), clevels);
+  return getContourVal(IPosition(2,x,y), clevels);
 }
 
 template <class T>
-int ImageDecomposer<T>::getContourVal(casacore::Int x, casacore::Int y, casacore::Int z,
-                                      const casacore::Vector<T>& clevels) const
+Int ImageDecomposer<T>::getContourVal(Int x, Int y, Int z, 
+                                      const Vector<T>& clevels) const
 {
-  return getContourVal(casacore::IPosition(3,x,y,z), clevels); 
+  return getContourVal(IPosition(3,x,y,z), clevels); 
 }
 
 template <class T>
-int ImageDecomposer<T>::getContourVal(casacore::IPosition coord,
-                                      const casacore::Vector<T>& clevels) const
+Int ImageDecomposer<T>::getContourVal(IPosition coord, 
+                                      const Vector<T>& clevels) const
 {
   T val = itsImagePtr->getAt(coord);
-  for (casacore::uInt c = 0; c < clevels.nelements(); c++) {
+  for (uInt c = 0; c < clevels.nelements(); c++) {
     if (val < clevels(c)) return c - 1;
   }
   return clevels.nelements()-1;
 }
 
 template <class T>
-int ImageDecomposer<T>::getContourVal(T val, const casacore::Vector<T>& clevels) const
+Int ImageDecomposer<T>::getContourVal(T val, const Vector<T>& clevels) const
 {
-  for (casacore::uInt c = 0; c < clevels.nelements(); c++) {
+  for (uInt c = 0; c < clevels.nelements(); c++) {
     if (val < clevels(c)) return c - 1;
   }
   return clevels.nelements()-1;
 }
 
 template <class T>
-casacore::Vector<T> ImageDecomposer<T>::autoContour(T mincon, T maxcon, T inc) const
+Vector<T> ImageDecomposer<T>::autoContour(T mincon, T maxcon, T inc) const
 {
   if (inc == T(0)) {
-    throw(casacore::AipsError("casacore::Vector<T> ImageDecomposer<T>::autocontour"
+    throw(AipsError("Vector<T> ImageDecomposer<T>::autocontour"
                     "T mincon, T maxcon, T inc) - inc cannot be zero"));
   }
   if ((maxcon - mincon) * inc < 0) inc = -inc;
 
-  casacore::Int c = 0;
+  Int c = 0;
   for (T cl = mincon; cl <= maxcon; cl += inc) c++;
 
-  casacore::Vector<T> contours(c);
+  Vector<T> contours(c);
   c = 0;
   for (T cl = mincon; cl <= maxcon; cl += inc) {
     contours(c++) = cl;
@@ -375,21 +375,21 @@ casacore::Vector<T> ImageDecomposer<T>::autoContour(T mincon, T maxcon, T inc) c
 }
 
 template <class T>
-casacore::Vector<T> ImageDecomposer<T>::autoContour(casacore::Int nContours, T minValue) const
+Vector<T> ImageDecomposer<T>::autoContour(Int nContours, T minValue) const
 {
 // IMPR: a noise estimate to determine default value of lowest contour
 // would be useful.
  
-  casacore::Vector<T> contours(nContours);
+  Vector<T> contours(nContours);
   T maxValue;
 //
-  maxValue = findAreaGlobalMax(casacore::IPosition(itsDim,0), shape());
+  maxValue = findAreaGlobalMax(IPosition(itsDim,0), shape());
   maxValue -= (maxValue-minValue)/((nContours-1)*3);
   //cerr << "Autocontour: minvalue, maxvalue = " << minValue << ", " << maxValue << endl;
 
 // Make maximum contour ~1/3 contour increment less than max value of image
 
-  for (casacore::Int i=0; i<nContours; i++) {
+  for (Int i=0; i<nContours; i++) {
     contours(i) =  minValue + (maxValue-minValue)*i/(nContours-1);
   }
 //
@@ -397,28 +397,28 @@ casacore::Vector<T> ImageDecomposer<T>::autoContour(casacore::Int nContours, T m
 }
 
 template <class T>
-casacore::Vector<T> ImageDecomposer<T>::autoContour(const casacore::Function1D<T>& fn,
-                                          casacore::Int ncontours, T minvalue) const
+Vector<T> ImageDecomposer<T>::autoContour(const Function1D<T>& fn,
+                                          Int ncontours, T minvalue) const
 {
 // NOTE: This function has not been recently tested.
 
-  casacore::Vector<T> contours(ncontours); 
+  Vector<T> contours(ncontours); 
   T maxvalue;
   T calibzero, calibmax;
 // 
-  for (casacore::Int i=1; i<ncontours; i++) {
+  for (Int i=1; i<ncontours; i++) {
     if (fn(T(i-1))>fn(T(i))) {
-       throw(casacore::AipsError("ImageDecomposer<T>::autoContour-"
+       throw(AipsError("ImageDecomposer<T>::autoContour-"
                        " fn must be nondecreasing in domain"));
     }
   }
 //  
-  maxvalue = findAreaGlobalMax(casacore::IPosition(itsDim,0), shape());
+  maxvalue = findAreaGlobalMax(IPosition(itsDim,0), shape());
   maxvalue -= (maxvalue-minvalue)/((ncontours-1)*10);  //much closer to top
   calibzero = minvalue - fn(T(0));
   calibmax = (maxvalue - calibzero) / fn(ncontours - 1);
 //
-  for (casacore::Int i=0; i<ncontours; i++) {
+  for (Int i=0; i<ncontours; i++) {
     contours(i) = calibzero + calibmax*fn(i);
   }
 //
@@ -426,22 +426,22 @@ casacore::Vector<T> ImageDecomposer<T>::autoContour(const casacore::Function1D<T
 }
 
 template <class T>
-casacore::Matrix<T> ImageDecomposer<T>::componentList() const
+Matrix<T> ImageDecomposer<T>::componentList() const
 {
   //IMPR: the pixel->world conversion shouldn't have to be done every time.
 
-  casacore::Matrix<T> worldList;
+  Matrix<T> worldList;
   worldList = itsList;
 
-  for (casacore::uInt g = 0; g < itsNComponents; g++)
+  for (uInt g = 0; g < itsNComponents; g++)
   {
-    casacore::Vector<casacore::Double> centercoords(itsDim);  //casacore::CoordinateSystem uses casacore::Double only
-    casacore::Vector<casacore::Double> compwidth(itsDim);
-    for (casacore::uInt d = 0; d < itsDim; d++)
+    Vector<Double> centercoords(itsDim);  //CoordinateSystem uses Double only
+    Vector<Double> compwidth(itsDim);
+    for (uInt d = 0; d < itsDim; d++)
     {
       centercoords(d) = itsList(g,1+d);
     }
-    for (casacore::uInt d = 0; d < itsDim; d++)
+    for (uInt d = 0; d < itsDim; d++)
     {
       compwidth(d) = itsList(g,1+itsDim+d);
     }
@@ -450,11 +450,11 @@ casacore::Matrix<T> ImageDecomposer<T>::componentList() const
     itsImagePtr->coordinates().toWorld(compwidth, compwidth);
     itsImagePtr->coordinates().makeWorldRelative(compwidth);
 
-    for (casacore::uInt d = 0; d < itsDim; d++)
+    for (uInt d = 0; d < itsDim; d++)
     {
       worldList(g,1+d) = centercoords(d);
     }
-    for (casacore::uInt d = 0; d < itsDim; d++)
+    for (uInt d = 0; d < itsDim; d++)
     {
       if (itsDim == 2 && d == 1) continue; // 2d: axis ratio, not x-width
       worldList(g,1+itsDim+d) = compwidth(d);
@@ -479,14 +479,14 @@ void ImageDecomposer<T>::componentMap() const
 // ----------------
 
 template <class T>
-T ImageDecomposer<T>::findAreaGlobalMax(casacore::IPosition blc, casacore::IPosition trc) const
+T ImageDecomposer<T>::findAreaGlobalMax(IPosition blc, IPosition trc) const
 {
   T val;  
   T maxval = 0.0;
   correctBlcTrc(blc,trc);
 //
   {      
-    casacore::IPosition pos(blc);  
+    IPosition pos(blc);  
     decrement(pos);
     while (increment(pos,trc))  {
       val = getImageVal(pos);
@@ -499,17 +499,17 @@ T ImageDecomposer<T>::findAreaGlobalMax(casacore::IPosition blc, casacore::IPosi
 
 
 template <class T>
-void ImageDecomposer<T>::findAreaGlobalMax(T& maxval, casacore::IPosition& maxvalpos,
-                                           casacore::IPosition blc, casacore::IPosition trc) const
+void ImageDecomposer<T>::findAreaGlobalMax(T& maxval, IPosition& maxvalpos,
+                                           IPosition blc, IPosition trc) const
 {  
   T val; 
 
-  maxvalpos = casacore::IPosition(itsDim,0);
+  maxvalpos = IPosition(itsDim,0);
   maxval = 0.0;
   correctBlcTrc (blc,trc);
 //
   {
-    casacore::IPosition pos(blc); decrement(pos);
+    IPosition pos(blc); decrement(pos);
     while (increment(pos,trc))  {     
       val = getImageVal(pos);
       if (val > maxval) {maxval = val; maxvalpos = pos;} 
@@ -519,52 +519,52 @@ void ImageDecomposer<T>::findAreaGlobalMax(T& maxval, casacore::IPosition& maxva
 }
 
 template <class T>
-casacore::Vector<T> ImageDecomposer<T>::findAreaLocalMax(casacore::IPosition blc, casacore::IPosition trc,
-                                               casacore::Int naxis) const
+Vector<T> ImageDecomposer<T>::findAreaLocalMax(IPosition blc, IPosition trc,
+                                               Int naxis) const
 {
-  casacore::uInt const blocksize = 10;
-  casacore::uInt maxn = 0;
-  casacore::Vector<T> maxvals;
+  uInt const blocksize = 10;
+  uInt maxn = 0;
+  Vector<T> maxvals;
   correctBlcTrc (blc, trc);
 //
   {
-    casacore::IPosition pos(blc); 
+    IPosition pos(blc); 
     decrement(pos);
     while (increment(pos,trc))  {     
       if (isLocalMax(pos,naxis)) {
         if (maxn % blocksize == 0) {
-          maxvals.resize(maxn+blocksize, true);
+          maxvals.resize(maxn+blocksize, True);
         }     
         maxvals(maxn) = getImageVal(pos);
         maxn++;
       }
     }
   }
-  maxvals.resize(maxn, true);
+  maxvals.resize(maxn, True);
   return maxvals;
 }
 
 
 template <class T>
-void ImageDecomposer<T>::findAreaLocalMax(casacore::Vector<T>& maxvals, 
-                                          casacore::Block<casacore::IPosition>& maxvalpos,
-                                          casacore::IPosition blc, casacore::IPosition trc,
-                                          casacore::Int naxis) const
+void ImageDecomposer<T>::findAreaLocalMax(Vector<T>& maxvals, 
+                                          Block<IPosition>& maxvalpos,
+                                          IPosition blc, IPosition trc,
+                                          Int naxis) const
 {
-  casacore::uInt const blocksize = 10;
-  casacore::uInt maxn = 0;
+  uInt const blocksize = 10;
+  uInt maxn = 0;
   maxvals.resize();
   maxvalpos.resize(0);
   correctBlcTrc(blc, trc);
 //
   {
-    casacore::IPosition pos(blc); 
+    IPosition pos(blc); 
     decrement(pos);
     while (increment(pos,trc))  {     
       if (isLocalMax(pos,naxis))  {
         if (maxn % blocksize == 0) {
-          maxvals.resize(maxn+blocksize, true);
-          maxvalpos.resize(maxn+blocksize, false, true);
+          maxvals.resize(maxn+blocksize, True);
+          maxvalpos.resize(maxn+blocksize, False, True);
         }     
         maxvals(maxn) = getImageVal(pos);
         maxvalpos[maxn] = pos;
@@ -572,56 +572,56 @@ void ImageDecomposer<T>::findAreaLocalMax(casacore::Vector<T>& maxvals,
       }
     }
   }
-  maxvals.resize(maxn, true);
-  maxvalpos.resize(maxn, true, true);
+  maxvals.resize(maxn, True);
+  maxvalpos.resize(maxn, True, True);
   return;
 }
 
 
 
 template <class T>
-casacore::Vector<T> ImageDecomposer<T>::findRegionLocalMax(casacore::Int regionID, casacore::Int naxis) const
+Vector<T> ImageDecomposer<T>::findRegionLocalMax(Int regionID, Int naxis) const
 {
-  casacore::uInt const blocksize = 10;
-  casacore::uInt maxn = 0;
-  casacore::Vector<T> maxvals;
+  uInt const blocksize = 10;
+  uInt maxn = 0;
+  Vector<T> maxvals;
   {
-    casacore::IPosition pos(itsDim,0); 
+    IPosition pos(itsDim,0); 
     decrement(pos);
     while (increment(pos,shape())) {     
       if ((getCell(pos) == regionID) && isLocalMax(pos,naxis)) {
         if (maxn % blocksize == 0) {
-          maxvals.resize(maxn+blocksize, true);
+          maxvals.resize(maxn+blocksize, True);
         }     
         maxvals(maxn) = getImageVal(pos);
         maxn++;
       }
     }
   }
-  maxvals.resize(maxn, true);
+  maxvals.resize(maxn, True);
   return maxvals;
 }
 
 
 template <class T>
-void ImageDecomposer<T>::findRegionLocalMax(casacore::Vector<T>& maxvals, 
-                                            casacore::Block<casacore::IPosition>& maxvalpos,
-                                            casacore::Int regionID, casacore::Int naxis) const
+void ImageDecomposer<T>::findRegionLocalMax(Vector<T>& maxvals, 
+                                            Block<IPosition>& maxvalpos,
+                                            Int regionID, Int naxis) const
 {
-  casacore::uInt const blocksize = 10;
-  casacore::uInt maxn = 0;
+  uInt const blocksize = 10;
+  uInt maxn = 0;
   maxvals.resize();
   maxvalpos.resize(0);
 //
   {
-    casacore::IPosition pos(itsDim,0); 
+    IPosition pos(itsDim,0); 
     decrement(pos);
     while (increment(pos,shape())) {     
       if ((getCell(pos) == regionID) && isLocalMax(pos,naxis)) {
         cout << "Local max at " << pos << endl;
         if (maxn % blocksize == 0)  {
-          maxvals.resize(maxn+blocksize, true);
-          maxvalpos.resize(maxn+blocksize, false, true);
+          maxvals.resize(maxn+blocksize, True);
+          maxvalpos.resize(maxn+blocksize, False, True);
 	}     
         maxvals(maxn) = getImageVal(pos);
         maxvalpos[maxn] = pos;
@@ -630,26 +630,26 @@ void ImageDecomposer<T>::findRegionLocalMax(casacore::Vector<T>& maxvals,
     }
   }
 //	     
-  maxvals.resize(maxn, true);
-  maxvalpos.resize(maxn, true, true);
+  maxvals.resize(maxn, True);
+  maxvalpos.resize(maxn, True, True);
 //
   return;
 }
 
 template <class T>
-casacore::Vector<T> ImageDecomposer<T>::findAllRegionGlobalMax() const
+Vector<T> ImageDecomposer<T>::findAllRegionGlobalMax() const
 {
   //NOTE: while the regions are identified in the itsMapPtr with #s starting at
   //one, the array returned by this function begin with zero, so there is
   //an offset of one between itsMapPtr IDs and those used by this function.
 
-  casacore::Int r;
+  Int r;
   T val; 
-  casacore::Vector<T> maxval(itsNRegions);
+  Vector<T> maxval(itsNRegions);
   maxval = 0.0; 
 //  
   {
-    casacore::IPosition pos(itsDim,0); 
+    IPosition pos(itsDim,0); 
     decrement(pos);
     while (increment(pos,shape())) {     
       r = getCell(pos);
@@ -663,14 +663,14 @@ casacore::Vector<T> ImageDecomposer<T>::findAllRegionGlobalMax() const
 }
 
 template <class T>
-void ImageDecomposer<T>::findAllRegionGlobalMax(casacore::Vector<T>& maxvals, 
-                                                casacore::Block<casacore::IPosition>& maxvalpos) const
+void ImageDecomposer<T>::findAllRegionGlobalMax(Vector<T>& maxvals, 
+                                                Block<IPosition>& maxvalpos) const
 {
   //NOTE: while the regions are identified in the itsMapPtr with #s starting at
   //one, the arrays returned by this function begin with zero, so there is
   //an offset of one between itsMapPtr IDs and those used by this function.
 
-  casacore::Int r;
+  Int r;
   T val; 
 
   maxvals.resize(itsNRegions);
@@ -678,7 +678,7 @@ void ImageDecomposer<T>::findAllRegionGlobalMax(casacore::Vector<T>& maxvals,
   maxvals = 0;  //note: wholly negative images still return 0
 
   {
-    casacore::IPosition pos(itsDim,0); 
+    IPosition pos(itsDim,0); 
     decrement(pos);
     while (increment(pos,shape())) {     
       r = getCell(pos);
@@ -697,64 +697,64 @@ void ImageDecomposer<T>::findAllRegionGlobalMax(casacore::Vector<T>& maxvals,
 
 
 template <class T>
-bool ImageDecomposer<T>::isLocalMax(const casacore::IPosition& pos, casacore::Int naxis) const
+Bool ImageDecomposer<T>::isLocalMax(const IPosition& pos, Int naxis) const
 {
   if (pos.nelements()==2) {
      return isLocalMax(pos(0), pos(1), naxis);
   } else if (pos.nelements()==3) {
      return isLocalMax(pos(0), pos(1), pos(2),naxis);
   } else {
-     throw(casacore::AipsError("ImageDecomposer<T>::localmax(casacore::IPosition pos, casacore::Int naxis)"
+     throw(AipsError("ImageDecomposer<T>::localmax(IPosition pos, Int naxis)"
                        " - pos has wrong number of dimensions"));
   }
-  return false;
+  return False;
 }
 
 template <class T>
-bool ImageDecomposer<T>::isLocalMax(casacore::Int x, casacore::Int y, casacore::Int naxis) const
+Bool ImageDecomposer<T>::isLocalMax(Int x, Int y, Int naxis) const
 {
   T val = getImageVal(x,y);
-  casacore::Int ximin = (x>0)? -1:0;
-  casacore::Int yimin = (y>0)? -1:0;
-  casacore::Int ximax = (x+1<shape(0))? 1:0;
-  casacore::Int yimax = (y+1<shape(1))? 1:0;
-  for (casacore::Int xi=ximin; xi<=ximax; xi++) {
-    for (casacore::Int yi=yimin; yi<=yimax; yi++) {
+  Int ximin = (x>0)? -1:0;
+  Int yimin = (y>0)? -1:0;
+  Int ximax = (x+1<shape(0))? 1:0;
+  Int yimax = (y+1<shape(1))? 1:0;
+  for (Int xi=ximin; xi<=ximax; xi++) {
+    for (Int yi=yimin; yi<=yimax; yi++) {
       if   ( ((naxis > 0) || !(xi || yi))
           && ((naxis > 1) || !(xi && yi))
 	  && (getImageVal(x+xi,y+yi) > val))  {
-        return false;
+        return False;
       }
     }
   }
 //
-  return true;
+  return True;
 }
 
 template <class T>
-bool ImageDecomposer<T>::isLocalMax(casacore::Int x, casacore::Int y, casacore::Int z, casacore::Int naxis) const
+Bool ImageDecomposer<T>::isLocalMax(Int x, Int y, Int z, Int naxis) const
 {
   T maxval = getImageVal(x,y,z);
-  casacore::Int ximin = (x>0)? -1:0;
-  casacore::Int yimin = (y>0)? -1:0;
-  casacore::Int zimin = (z>0)? -1:0;
-  casacore::Int ximax = (x+1<shape(0))? 1:0;
-  casacore::Int yimax = (y+1<shape(1))? 1:0;
-  casacore::Int zimax = (z+1<shape(2))? 1:0;
-  for (casacore::Int xi=ximin; xi<=ximax; xi++) {
-    for (casacore::Int yi=yimin; yi<=yimax; yi++) {
-      for (casacore::Int zi=zimin; zi<=zimax; zi++) {
+  Int ximin = (x>0)? -1:0;
+  Int yimin = (y>0)? -1:0;
+  Int zimin = (z>0)? -1:0;
+  Int ximax = (x+1<shape(0))? 1:0;
+  Int yimax = (y+1<shape(1))? 1:0;
+  Int zimax = (z+1<shape(2))? 1:0;
+  for (Int xi=ximin; xi<=ximax; xi++) {
+    for (Int yi=yimin; yi<=yimax; yi++) {
+      for (Int zi=zimin; zi<=zimax; zi++) {
         if ( ((naxis > 0) || !(xi || yi || zi))
           && ((naxis > 1) || !((xi && yi) || (xi && zi) || (yi && zi) ))      
           && ((naxis > 2) || !(xi && yi && zi))
           && (getImageVal(x+xi,y+yi,z+zi) > maxval)) {
-           return false;
+           return False;
         }
       }
     }
   }
 //  
-  return true;
+  return True;
 }
 
 
@@ -763,8 +763,8 @@ bool ImageDecomposer<T>::isLocalMax(casacore::Int x, casacore::Int y, casacore::
 
 
 template <class T>
-void ImageDecomposer<T>::estimateComponentWidths(casacore::Matrix<T>& width,
-                                          const casacore::Block<casacore::IPosition>& maxvalpos) 
+void ImageDecomposer<T>::estimateComponentWidths(Matrix<T>& width,
+                                          const Block<IPosition>& maxvalpos) 
                                           const
 {
 // Finds a rough estimate of the width of each component.  
@@ -774,17 +774,17 @@ void ImageDecomposer<T>::estimateComponentWidths(casacore::Matrix<T>& width,
 // calculateMoments() except on non-deblended images.
 
   width.resize(maxvalpos.nelements(), itsDim);
-  casacore::Bool dblflag; 
+  Bool dblflag; 
 //
-  for (casacore::uInt r = 0; r < maxvalpos.nelements(); r++) {
-    casacore::IPosition lpos(itsDim);
-    casacore::IPosition rpos(itsDim);
-    casacore::IPosition maxpos(itsDim); 
+  for (uInt r = 0; r < maxvalpos.nelements(); r++) {
+    IPosition lpos(itsDim);
+    IPosition rpos(itsDim);
+    IPosition maxpos(itsDim); 
     maxpos = maxvalpos[r];
     T maxvalr = getImageVal(maxpos);
     T thrval = maxvalr*0.25;
     T val, prevval;
-    for (casacore::uInt a = 0; a < itsDim; a++) {
+    for (uInt a = 0; a < itsDim; a++) {
       dblflag = 0;
       lpos = maxpos;
       val = maxvalr;
@@ -826,7 +826,7 @@ void ImageDecomposer<T>::estimateComponentWidths(casacore::Matrix<T>& width,
 //
       if (width(r,a) <= 0.0) width(r,a) = shape(a);//gaussian bigger than image
       if (!dblflag) width(r,a) /= 2.0;
-      if (casacore::isNaN(width(r,a)))
+      if (isNaN(width(r,a)))
       {
         width(r,a) = 1.0;
         cerr << "WARNING: Nonphysical estimate, setting width to 1.0" << endl;
@@ -839,23 +839,23 @@ void ImageDecomposer<T>::estimateComponentWidths(casacore::Matrix<T>& width,
 }
 
 template <class T>
-casacore::Array<T> ImageDecomposer<T>::calculateMoments(casacore::Int region) const
+Array<T> ImageDecomposer<T>::calculateMoments(Int region) const
 {
   // Calculates the moments of an image region up to second order.  
 
   // The current implementation is inefficient because it must scan the entire
   // image for each region.  It would be better to return an array of Arrays,
-  // or a casacore::Matrix with the M array collapsed to 1D and the region # along the
+  // or a Matrix with the M array collapsed to 1D and the region # along the
   // other axis.
 
-  casacore::IPosition pos(itsDim);
-  casacore::IPosition start(itsDim,0);
+  IPosition pos(itsDim);
+  IPosition start(itsDim,0);
   decrement(start);
   T I;
 
   if (itsDim == 2)
   {
-    casacore::Matrix<T> M(3,3, 0.0);
+    Matrix<T> M(3,3, 0.0);
     pos = start;
     while (increment(pos,shape())) {
       if (getCell(pos) == region)
@@ -890,7 +890,7 @@ casacore::Array<T> ImageDecomposer<T>::calculateMoments(casacore::Int region) co
 
   if (itsDim == 3)
   {
-    casacore::Cube<T> M(3,3,3, 0.0);
+    Cube<T> M(3,3,3, 0.0);
 
     pos = start;
     while (increment(pos,shape())) {
@@ -928,7 +928,7 @@ casacore::Array<T> ImageDecomposer<T>::calculateMoments(casacore::Int region) co
     return M;
   }
 
-  return casacore::Array<T>();
+  return Array<T>();
 }
 
 
@@ -936,29 +936,29 @@ casacore::Array<T> ImageDecomposer<T>::calculateMoments(casacore::Int region) co
 // ------------------------
 
 template <class T>
-void ImageDecomposer<T>::boundRegions(casacore::Block<casacore::IPosition>& blc,
-                                      casacore::Block<casacore::IPosition>& trc)
+void ImageDecomposer<T>::boundRegions(Block<IPosition>& blc,
+                                      Block<IPosition>& trc)
 {
 // Boxes each region in the componentmap:
 // blc is set to the lowest coordinate value in each region; 
 // trc is set to one above the highest coordinate value in each region.
             
-  DebugAssert(blc.nelements() == itsNRegions, casacore::AipsError);
-  DebugAssert(trc.nelements() == itsNRegions, casacore::AipsError);
+  DebugAssert(blc.nelements() == itsNRegions, AipsError);
+  DebugAssert(trc.nelements() == itsNRegions, AipsError);
    
-  for (casacore::uInt r=0; r<itsNRegions; r++) {
+  for (uInt r=0; r<itsNRegions; r++) {
     blc[r] = itsShape;
-    trc[r] = casacore::IPosition(itsDim,0);
+    trc[r] = IPosition(itsDim,0);
   }
 
   {
-    casacore::IPosition pos(itsDim,0); 
+    IPosition pos(itsDim,0); 
     decrement(pos);
-    casacore::Int r;
+    Int r;
     while (increment(pos,shape())) {
         r = getCell(pos);
         if (r > 0) {
-          for (casacore::uInt i = 0; i < itsDim; i++) {
+          for (uInt i = 0; i < itsDim; i++) {
             if (blc[r-1](i) > pos(i)) blc[r-1](i) = pos(i);
             if (trc[r-1](i) <= pos(i)) trc[r-1](i) = pos(i)+1;
           }
@@ -985,13 +985,13 @@ template <class T>
 void ImageDecomposer<T>::clear()
 {
   //Clear the component map
-  casacore::LatticeIterator<casacore::Int> iter(*itsMapPtr);
-  casacore::Bool deleteIt;
-  casacore::Int* p = 0;
+  LatticeIterator<Int> iter(*itsMapPtr);
+  Bool deleteIt;
+  Int* p = 0;
   for (iter.reset(); !iter.atEnd(); iter++) {
-     casacore::Array<casacore::Int>& tmp = iter.rwCursor();
+     Array<Int>& tmp = iter.rwCursor();
      p = tmp.getStorage(deleteIt);
-     for (casacore::uInt i=0; i<tmp.nelements(); i++) if (p[i] != MASKED) p[i] = 0;
+     for (uInt i=0; i<tmp.nelements(); i++) if (p[i] != MASKED) p[i] = 0;
      tmp.putStorage(p, deleteIt);
   }
   itsNRegions = 0;
@@ -1004,18 +1004,18 @@ void ImageDecomposer<T>::clear()
 
 
 template <class T>
-void ImageDecomposer<T>::destroyRegions(const casacore::Vector<casacore::Bool>& killRegion)
+void ImageDecomposer<T>::destroyRegions(const Vector<Bool>& killRegion)
 {
-  //Wipes out any regions whose corresponding values in killRegion are true
+  //Wipes out any regions whose corresponding values in killRegion are True
   // by setting all pixel values in the componentmap set to that region to
   // zero.  Zero-oriented; there is an offset of one between the index in
   // killRegion and the actual region in the componentmap.
 
   {
-    casacore::IPosition pos(itsDim,0); decrement(pos);
+    IPosition pos(itsDim,0); decrement(pos);
     while (increment(pos,shape()))
     {     
-      casacore::Int reg = getCell(pos);
+      Int reg = getCell(pos);
       if (reg > 0 && killRegion(reg-1)) setCell(pos,0);
     } 
   }
@@ -1035,24 +1035,24 @@ void ImageDecomposer<T>::renumberRegions()
   // 113  becomes 112
   // 113          112
 
-  casacore::Vector<casacore::Bool> regpresent(itsNRegions+1, 0);
-  casacore::Vector<casacore::Int> renumregs(itsNRegions+1);
-  casacore::uInt const ngpar = itsDim * 3;
+  Vector<Bool> regpresent(itsNRegions+1, 0);
+  Vector<Int> renumregs(itsNRegions+1);
+  uInt const ngpar = itsDim * 3;
 
   //any region that has any pixel members is flagged as 1, others left 0
 
   {
-    casacore::IPosition pos(itsDim,0); decrement(pos);
+    IPosition pos(itsDim,0); decrement(pos);
     while (increment(pos,shape()))
     {     
-      casacore::Int reg = getCell(pos);
+      Int reg = getCell(pos);
       if (reg >= 0) regpresent(reg) = 1;
     } 
   }
 
   //determine new # of regions and which regions will be renumbered to what
-  casacore::uInt newnr = 0;
-  for (casacore::uInt r = 1; r <= itsNRegions; r++)
+  uInt newnr = 0;
+  for (uInt r = 1; r <= itsNRegions; r++)
     if (regpresent(r)) renumregs(r) = ++newnr;
 
   if (newnr < itsNRegions)
@@ -1061,10 +1061,10 @@ void ImageDecomposer<T>::renumberRegions()
 
     //actually renumber the regions in the pmap
     {
-      casacore::IPosition pos(itsDim,0); decrement(pos);
+      IPosition pos(itsDim,0); decrement(pos);
       while (increment(pos,shape()))
       {     
-        casacore::Int reg = getCell(pos);
+        Int reg = getCell(pos);
         if (reg >= 0) setCell(pos, renumregs(reg));
       }
     }
@@ -1072,12 +1072,12 @@ void ImageDecomposer<T>::renumberRegions()
     if (isDecomposed())
     {
       //eliminate componentlist entries of lost components
-      casacore::Matrix<T> oldcomponentlist(itsList);
+      Matrix<T> oldcomponentlist(itsList);
 
       itsList.resize(newnr, ngpar);   
-      for (casacore::Int c = 0; c < casacore::Int(itsNComponents); c++)
+      for (Int c = 0; c < Int(itsNComponents); c++)
         if (regpresent(c+1) && (c+1 != renumregs(c+1)))
-          for (casacore::uInt p = 0; p < 9; p++)
+          for (uInt p = 0; p < 9; p++)
             itsList(renumregs(c+1)-1,p) = oldcomponentlist(c+1,p);
 
       itsNComponents = newnr;
@@ -1089,7 +1089,7 @@ void ImageDecomposer<T>::renumberRegions()
 
 template <class T>                                   
 void ImageDecomposer<T>::synthesize(const ImageDecomposer<T>& subdecomposer,
-                                    casacore::IPosition blc)
+                                    IPosition blc)
 {
 // Overlays a smaller map onto an empty region of a larger map,
 // and adds submap component list to main component list.
@@ -1099,15 +1099,15 @@ void ImageDecomposer<T>::synthesize(const ImageDecomposer<T>& subdecomposer,
 // program does not perform any blending between components.  
 // Otherwise, false detections are likely.
 
-  casacore::uInt ngpar = 0;
+  uInt ngpar = 0;
   if (itsDim == 2) ngpar = 6; 
   if (itsDim == 3) ngpar = 9;
 
 // Scan to the edge of the boundary of the host map or the submap, whichever
 // is closer.
 
-  casacore::IPosition scanlimit(itsDim);  //submap-indexed
-  for (casacore::uInt i=0; i<itsDim; i++)  {
+  IPosition scanlimit(itsDim);  //submap-indexed
+  for (uInt i=0; i<itsDim; i++)  {
     if (subdecomposer.shape(i) > shape(i) - blc(i)) {
       scanlimit(i) = shape(i) - blc(i);
     } else {
@@ -1118,7 +1118,7 @@ void ImageDecomposer<T>::synthesize(const ImageDecomposer<T>& subdecomposer,
 // Write pixels in sub- component map to main component map.
 
   {
-    casacore::IPosition pos(itsDim,0);  //submap-indexed
+    IPosition pos(itsDim,0);  //submap-indexed
     decrement(pos);
     while (increment(pos,scanlimit)) {     
         if (subdecomposer.getCell(pos) > 0) {
@@ -1132,17 +1132,17 @@ void ImageDecomposer<T>::synthesize(const ImageDecomposer<T>& subdecomposer,
 
   if (subdecomposer.isDecomposed())  { 
 
-    casacore::Matrix<T> oldList;   
+    Matrix<T> oldList;   
     oldList = itsList;
     itsList.resize(itsNComponents+subdecomposer.numComponents(),ngpar);
-    for (casacore::uInt c = 0; c < itsNComponents; c++) {
-      for (casacore::uInt p = 0; p < ngpar; p++) {
+    for (uInt c = 0; c < itsNComponents; c++) {
+      for (uInt p = 0; p < ngpar; p++) {
         itsList(c,p) = oldList(c,p);  //copy after resize
       }
     }
 
-    for (casacore::uInt subc = 0; subc < subdecomposer.numComponents(); subc++) {
-      for (casacore::uInt p = 0; p < ngpar; p++) {
+    for (uInt subc = 0; subc < subdecomposer.numComponents(); subc++) {
+      for (uInt p = 0; p < ngpar; p++) {
         itsList(itsNComponents+subc,p)=subdecomposer.itsList(subc,p);     
       }
       // make adjustments to center values due to offset
@@ -1171,7 +1171,7 @@ void ImageDecomposer<T>::synthesize(const ImageDecomposer<T>& subdecomposer,
 
 
 template <class T>
-casacore::uInt ImageDecomposer<T>::identifyRegions(T thrval, casacore::Int naxis)
+uInt ImageDecomposer<T>::identifyRegions(T thrval, Int naxis)
 {
 // Performs a single threshold scan on the image.  In other words,
 // identifies all contigous blocks of pixels in the target image above the
@@ -1183,10 +1183,10 @@ casacore::uInt ImageDecomposer<T>::identifyRegions(T thrval, casacore::Int naxis
 // more efficient.  However, it complicated the code excessively (this
 // program is already far too long.)  It could be resurrected if necessary.
 
-  casacore::Int const blocksize = 1024;  //increment to grow size of anchor array
-  casacore::Int const pageexpsize = 128;
-  casacore::Int cnum = 0;  //region number
-  if (naxis > casacore::Int(itsDim)) naxis = itsDim;  
+  Int const blocksize = 1024;  //increment to grow size of anchor array
+  Int const pageexpsize = 128;
+  Int cnum = 0;  //region number
+  if (naxis > Int(itsDim)) naxis = itsDim;  
 
 // The program first scans through the image until it finds any pixel in
 // any region.  Once there, it immediately scans all 6 adjacent pixels, 
@@ -1205,7 +1205,7 @@ casacore::uInt ImageDecomposer<T>::identifyRegions(T thrval, casacore::Int naxis
 // of roughly two, so in instances where objects are clearly defined and
 // not closely blended and the image is very large naxis=1 may be better. 
 
-  casacore::IPosition scanpos(itsDim,0); //decrement(scanpos);
+  IPosition scanpos(itsDim,0); //decrement(scanpos);
   while (true) {    
     //First find any pixel in next region.
     //Stop scanning when an unassigned, unmasked pixel is found exceeding
@@ -1218,7 +1218,7 @@ casacore::uInt ImageDecomposer<T>::identifyRegions(T thrval, casacore::Int naxis
         //scanned w/out finding new region
     }
 //   
-    casacore::IPosition pos(scanpos);
+    IPosition pos(scanpos);
     cnum++;
  
 // As many anchors will be required as pixels in the region (the volume) - 
@@ -1226,12 +1226,12 @@ casacore::uInt ImageDecomposer<T>::identifyRegions(T thrval, casacore::Int naxis
 // So the program allocates 'pages' of anchors as they become necessary,
 // but continually deletes pages of anchors that have already been used.
 
-    casacore::Int seta = -1;   //index of highest established anchor
-    casacore::Int geta = -1;   //index of highest analyzed anchor
+    Int seta = -1;   //index of highest established anchor
+    Int geta = -1;   //index of highest analyzed anchor
                      //the active surface is all anchors geta < a < seta
-    casacore::PtrBlock<casacore::Matrix<casacore::Int> *> aindex(pageexpsize);  //anchor structure
-    casacore::Int setblock = -1;  //index of page containing highest established anchor
-    casacore::Int getblock = -1;  //index of page containing highest analyzed anchor
+    PtrBlock<Matrix<Int> *> aindex(pageexpsize);  //anchor structure
+    Int setblock = -1;  //index of page containing highest established anchor
+    Int getblock = -1;  //index of page containing highest analyzed anchor
     setCell(pos,cnum);
 
     do  { //(geta < seta)  
@@ -1244,20 +1244,20 @@ casacore::uInt ImageDecomposer<T>::identifyRegions(T thrval, casacore::Int naxis
       //naxis = 2: scan 18 adjacent cells (axes and 2-axis diagonals)
       //naxis = 3: scan 26 adjacent cells (axes and 2/3-axis diagonals)
 
-      casacore::Int ximin = (pos(0)>0)? -1:0;
-      casacore::Int yimin = (pos(1)>0)? -1:0;
-      casacore::Int zimin = ((itsDim>=3)&&(pos(2)>0))? -1:0;
-      casacore::Int ximax = (pos(0)+1<shape(0))? 1:0;
-      casacore::Int yimax = (pos(1)+1<shape(1))? 1:0;
-      casacore::Int zimax = ((itsDim>=3)&&(pos(2)+1<shape(2)))? 1:0;  //safe for 2D
+      Int ximin = (pos(0)>0)? -1:0;
+      Int yimin = (pos(1)>0)? -1:0;
+      Int zimin = ((itsDim>=3)&&(pos(2)>0))? -1:0;
+      Int ximax = (pos(0)+1<shape(0))? 1:0;
+      Int yimax = (pos(1)+1<shape(1))? 1:0;
+      Int zimax = ((itsDim>=3)&&(pos(2)+1<shape(2)))? 1:0;  //safe for 2D
 //
-      for (casacore::Int xi=ximin; xi<=ximax; xi++) {
-        for (casacore::Int yi=yimin; yi<=yimax; yi++) {
-          for (casacore::Int zi=zimin; zi<=zimax; zi++) {
+      for (Int xi=ximin; xi<=ximax; xi++) {
+        for (Int yi=yimin; yi<=yimax; yi++) {
+          for (Int zi=zimin; zi<=zimax; zi++) {
             if ( (xi || yi || zi) &&
                 ((naxis > 1) || !((xi && yi) || (xi && zi) || (yi && zi) )) &&
 	        ((naxis > 2) || !(xi && yi && zi))) {
-              casacore::IPosition ipos(pos);
+              IPosition ipos(pos);
               ipos(0) += xi; ipos(1) += yi; if (itsDim == 3) ipos(2) += zi;
 
 	                                         //if any contiguous pixel is
@@ -1274,11 +1274,11 @@ casacore::uInt ImageDecomposer<T>::identifyRegions(T thrval, casacore::Int naxis
                   if ((setblock % pageexpsize == 0) && setblock) {
                     aindex.resize(((setblock/pageexpsize)+1)*pageexpsize);
 	          }
-                  aindex[setblock] = new casacore::Matrix<casacore::Int>(blocksize,itsDim);
+                  aindex[setblock] = new Matrix<Int>(blocksize,itsDim);
                 }
 
                 //set new anchor
-                for (casacore::uInt axis = 0; axis < itsDim; axis ++) {
+                for (uInt axis = 0; axis < itsDim; axis ++) {
                   (*(aindex[setblock]))(seta%blocksize,axis) = ipos(axis);
 		}
 
@@ -1303,7 +1303,7 @@ casacore::uInt ImageDecomposer<T>::identifyRegions(T thrval, casacore::Int naxis
 
       if (geta <= seta) {
         //go to lowest anchor
-        for (casacore::uInt axis = 0; axis < itsDim; axis++) {
+        for (uInt axis = 0; axis < itsDim; axis++) {
           pos(axis) = (*(aindex[getblock]))(geta%blocksize,axis);
 	}
         //cout << ">>A" << geta << "  " << endl;
@@ -1314,8 +1314,8 @@ casacore::uInt ImageDecomposer<T>::identifyRegions(T thrval, casacore::Int naxis
 }
 
 template <class T>
-void ImageDecomposer<T>::deblendRegions(const casacore::Vector<T>& contours, 
-                                        casacore::Int minRange, casacore::Int naxis)
+void ImageDecomposer<T>::deblendRegions(const Vector<T>& contours, 
+                                        Int minRange, Int naxis)
 {
 
 // Performs the contour decomposition on a blended image to generate a 
@@ -1323,16 +1323,16 @@ void ImageDecomposer<T>::deblendRegions(const casacore::Vector<T>& contours,
 // by performing threshold scans at each contour level and recognizing
 // as individual any components that are distinct above any such level.
 
-  casacore::Int const printIntermediates = 0;
-  casacore::Int const blocksize = 3;
-  casacore::Int ncontours = contours.nelements(); 
+  Int const printIntermediates = 0;
+  Int const blocksize = 3;
+  Int ncontours = contours.nelements(); 
 
   ImageDecomposer<T> contourMap(*this);//Component map thresholded at current
                                        //contour level; "lower" contour
-  casacore::Block<casacore::IPosition> regcenter; //Coordinates of first pixel found in each 
+  Block<IPosition> regcenter; //Coordinates of first pixel found in each 
                               //component (a rough estimate of the center)
                               //Indexing for this array is offset by one.
-  casacore::Vector<casacore::Int> originlevel;    //first contour in which region was detected
+  Vector<Int> originlevel;    //first contour in which region was detected
                               //Indexing for this array is offset by one.
                               //If set to -1 the region is defunct.
   
@@ -1348,10 +1348,10 @@ void ImageDecomposer<T>::deblendRegions(const casacore::Vector<T>& contours,
 // regions, correspondent regions, and blending regions, and assigns the
 // pixels in the main itsMapPtr based on this information.
 
-  for (casacore::Int c = ncontours-1; c >= 0; c--) {
+  for (Int c = ncontours-1; c >= 0; c--) {
     if (printIntermediates == 2) cout << endl << "CONTOUR " << c << endl;
 
-    casacore::Int lowreg, highreg;   //number of regions in lower contour, current pmap
+    Int lowreg, highreg;   //number of regions in lower contour, current pmap
     contourMap.clear();    //only necessary if region grows between contours
 
     lowreg = contourMap.identifyRegions(contours(c),naxis);
@@ -1363,11 +1363,11 @@ void ImageDecomposer<T>::deblendRegions(const casacore::Vector<T>& contours,
       contourMap.display();
     }
 
-    casacore::Vector<casacore::Int> root(highreg+1, 0);      //Indicates corresponding object 
+    Vector<Int> root(highreg+1, 0);      //Indicates corresponding object 
                                          // in lower contour
-    casacore::Vector<casacore::Int> nOffspring(lowreg+1, 0); //Total number of different objects
+    Vector<Int> nOffspring(lowreg+1, 0); //Total number of different objects
                                          // above this region
-    casacore::Block<casacore::Vector<casacore::Int>*> offspring(lowreg+1); //Region IDs of objects above 
+    Block<Vector<Int>*> offspring(lowreg+1); //Region IDs of objects above 
                                              // this region
 
     // Can't finish allocation until nOffspring is known.
@@ -1376,8 +1376,8 @@ void ImageDecomposer<T>::deblendRegions(const casacore::Vector<T>& contours,
 // regions as defined in the lower contour.  Simultaneously mark all
 // regions in the lower contour that have "offspring" above.
 
-    for (casacore::Int r = 1; r <= highreg; r++)    {
-      casacore::IPosition pos(itsDim,0); decrement(pos);
+    for (Int r = 1; r <= highreg; r++)    {
+      IPosition pos(itsDim,0); decrement(pos);
       while (increment(pos,shape()) && !root(r)){
         if (getCell(pos) == r) {
           root(r) = contourMap.getCell(pos);
@@ -1388,13 +1388,13 @@ void ImageDecomposer<T>::deblendRegions(const casacore::Vector<T>& contours,
 
 // Set up offspring array
 
-    for (casacore::Int r = 1; r <= lowreg; r++) {
-      offspring[r] = new casacore::Vector<casacore::Int>(nOffspring(r));
+    for (Int r = 1; r <= lowreg; r++) {
+      offspring[r] = new Vector<Int>(nOffspring(r));
     }
 
-    for (casacore::Int lr = 1; lr <= lowreg; lr++) {
-      casacore::Int f = 0;
-      for (casacore::Int hr = 1; hr <= highreg; hr++) {
+    for (Int lr = 1; lr <= lowreg; lr++) {
+      Int f = 0;
+      for (Int hr = 1; hr <= highreg; hr++) {
         if (root(hr) == lr) (*offspring[lr])(f++) = hr;
       }
     }
@@ -1403,12 +1403,12 @@ void ImageDecomposer<T>::deblendRegions(const casacore::Vector<T>& contours,
       cout << "Contour Level " << c << endl;
       cout << highreg << ' ' << lowreg << endl;
 
-      for (casacore::Int hr = 1; hr <= highreg; hr++) {
+      for (Int hr = 1; hr <= highreg; hr++) {
         cout << "root of " << hr << ':' << root(hr) << endl;
       }
 
-      for (casacore::Int lr = 1; lr <= lowreg; lr++) {
-        for (casacore::Int f = 0; f < nOffspring(lr); f++) {
+      for (Int lr = 1; lr <= lowreg; lr++) {
+        for (Int f = 0; f < nOffspring(lr); f++) {
           cout << "offspring of " << lr << ':' << (*offspring[lr])(f) << endl;
         }
       }
@@ -1423,23 +1423,23 @@ void ImageDecomposer<T>::deblendRegions(const casacore::Vector<T>& contours,
     // region number in the pmap
 
     if (minRange > 1) {
-      for (casacore::Int lr = 1; lr <= lowreg; lr++) {
+      for (Int lr = 1; lr <= lowreg; lr++) {
         if (nOffspring(lr) > 1) {
-          for (casacore::Int f = 0; f < nOffspring(lr); f++) {
-            casacore::Int fr = (*offspring[lr])(f);
+          for (Int f = 0; f < nOffspring(lr); f++) {
+            Int fr = (*offspring[lr])(f);
 
             if (originlevel(fr-1) - c < minRange)
 	    {
               //Find the closest offspring
-              casacore::Int mindistsq = 1073741823;  //maximum casacore::Int value
-              casacore::Int frabs = 0;               //closest region
-              for (casacore::Int f2 = 0; f2 < nOffspring(lr); f2++) {
+              Int mindistsq = 1073741823;  //maximum Int value
+              Int frabs = 0;               //closest region
+              for (Int f2 = 0; f2 < nOffspring(lr); f2++) {
                 if (f2 == f) continue;
-                casacore::Int fr2 = (*offspring[lr])(f2);
-                casacore::Int distsq = 0;
+                Int fr2 = (*offspring[lr])(f2);
+                Int distsq = 0;
                 if (originlevel(fr2-1) == -1) continue;
-                for (casacore::uInt a = 0; a < itsDim; a++) {
-                  distsq += casacore::square(casacore::Int(regcenter[fr2-1](a)-regcenter[fr-1](a)));
+                for (uInt a = 0; a < itsDim; a++) {
+                  distsq += square(Int(regcenter[fr2-1](a)-regcenter[fr-1](a)));
 	        }
                 if (distsq < mindistsq) {
                   frabs = fr2;
@@ -1449,10 +1449,10 @@ void ImageDecomposer<T>::deblendRegions(const casacore::Vector<T>& contours,
               if (frabs == 0)
 	      {
                 //No valid closest offspring - find biggest offspring
-                for (casacore::Int f2 = 0; f2 < nOffspring(lr); f2++) {
+                for (Int f2 = 0; f2 < nOffspring(lr); f2++) {
                   if (f2 == f) continue;
-                  casacore::Int fr2 = (*offspring[lr])(f2);
-                  casacore::Int maxlevel = 0;
+                  Int fr2 = (*offspring[lr])(f2);
+                  Int maxlevel = 0;
                   if (originlevel(fr2-1) == -1) continue;
                   if (originlevel(fr2-1) > maxlevel) {
                     frabs = fr2;
@@ -1471,7 +1471,7 @@ void ImageDecomposer<T>::deblendRegions(const casacore::Vector<T>& contours,
                 cout << "Absorbing region " << fr << " (origin at "
                      << originlevel(fr-1) << ") into region " << frabs << endl;
 	      }
-              casacore::IPosition pos(itsDim,0); decrement(pos);
+              IPosition pos(itsDim,0); decrement(pos);
               while (increment(pos,shape())){
                 if (getCell(pos) == fr) setCell(pos,frabs);
 	      }
@@ -1497,20 +1497,20 @@ void ImageDecomposer<T>::deblendRegions(const casacore::Vector<T>& contours,
 // in the current pmap until it finds a pixel belonging to a region there,
 // to which the new pixel is assigned. 
 
-    casacore::Int cgindex = 1;  //component index base, global for this contour
+    Int cgindex = 1;  //component index base, global for this contour
     ImageDecomposer<T> copyMap(*this); //The original data must be temporarily
                                        //preserved while the componentmap is 
                                        //overwritten for comparisons between 
                                        //nearby pixels
 
-    for (casacore::Int lr = 1; lr <= lowreg; lr++) {
+    for (Int lr = 1; lr <= lowreg; lr++) {
       if (nOffspring(lr) >= 2) {
-        casacore::IPosition pos(itsDim,0); decrement(pos);
+        IPosition pos(itsDim,0); decrement(pos);
         while (increment(pos,shape())) {
 
           // Renumber pixels that already exist in the pmap
           if ((contourMap.getCell(pos)==lr)&&(copyMap.getCell(pos))) {  
-            for (casacore::Int f = 0; f < nOffspring(lr); f++) {
+            for (Int f = 0; f < nOffspring(lr); f++) {
 
               // Translate old pmap id to new pmap id
               if ((*offspring[lr])(f) == copyMap.getCell(pos)) 
@@ -1521,20 +1521,20 @@ void ImageDecomposer<T>::deblendRegions(const casacore::Vector<T>& contours,
           // Number new pixels.
 
           if ((contourMap.getCell(pos)==lr)&&(!copyMap.getCell(pos))) {
-            casacore::Int pinh = 0;  //region as defined in pmap pixel is set to
-            casacore::Int srad = 1;  //search radius
-            casacore::uInt naxis = 1;
+            Int pinh = 0;  //region as defined in pmap pixel is set to
+            Int srad = 1;  //search radius
+            uInt naxis = 1;
 
             // cout << "Searching for nearest cell to " << pos << endl;
 
             while(!pinh && srad < 250) {    //search increasing naxis, srad
               // IMPR: an N-dimensional structure would be better here. 
-	      casacore::Int xi, yi, zi;
-	      casacore::Int ximin = (pos(0)-srad < 0)?                   -pos(0) : -srad;
-              casacore::Int ximax = (pos(0)+srad >= shape(0))? shape(0)-pos(0)-1 :  srad;
-              casacore::Int yimin = (pos(1)-srad < 0)?                   -pos(1) : -srad;
-              casacore::Int yimax = (pos(1)+srad >= shape(1))? shape(1)-pos(1)-1 :  srad;
-              casacore::Int zimin = 0, zimax = 0;
+	      Int xi, yi, zi;
+	      Int ximin = (pos(0)-srad < 0)?                   -pos(0) : -srad;
+              Int ximax = (pos(0)+srad >= shape(0))? shape(0)-pos(0)-1 :  srad;
+              Int yimin = (pos(1)-srad < 0)?                   -pos(1) : -srad;
+              Int yimax = (pos(1)+srad >= shape(1))? shape(1)-pos(1)-1 :  srad;
+              Int zimin = 0, zimax = 0;
               if (itsDim == 2) {
                  zimin = 0; zimax = 0;
               }
@@ -1546,7 +1546,7 @@ void ImageDecomposer<T>::deblendRegions(const casacore::Vector<T>& contours,
                 for (xi = ximin; xi <= ximax; xi++) {
                   for (yi = yimin; yi <= yimax; yi++) {
                     for (zi = zimin; zi <= zimax; zi++) {
-                      casacore::IPosition ipos(pos);
+                      IPosition ipos(pos);
                       ipos(0) += xi; ipos(1) += yi; 
                       if (itsDim==3) ipos(2) += zi;
 
@@ -1559,11 +1559,11 @@ void ImageDecomposer<T>::deblendRegions(const casacore::Vector<T>& contours,
 		        continue;
                       }
                           
-                      casacore::Int inh = copyMap.getCell(ipos);
+                      Int inh = copyMap.getCell(ipos);
                       if (inh<=0) continue;
                       if (!pinh) {
                         pinh = inh;
-                        for (casacore::Int f = 0; f < nOffspring(lr); f++) {
+                        for (Int f = 0; f < nOffspring(lr); f++) {
 
                          // Translate old pmap id to new pmap id
 
@@ -1593,9 +1593,9 @@ void ImageDecomposer<T>::deblendRegions(const casacore::Vector<T>& contours,
 // Now scan nonforked regions that exist in both contours.
 // This is as simple as just renumbering the region.
 
-    for (casacore::Int lr = 1; lr <= lowreg; lr++) {
+    for (Int lr = 1; lr <= lowreg; lr++) {
       if (nOffspring(lr) == 1) {
-        casacore::IPosition pos(itsDim,0); 
+        IPosition pos(itsDim,0); 
         decrement(pos);
         while (increment(pos,shape()))	{
           if (contourMap.getCell(pos) == lr) setCell(pos, cgindex);
@@ -1609,13 +1609,13 @@ void ImageDecomposer<T>::deblendRegions(const casacore::Vector<T>& contours,
 // but since these are new regions, add their initial positions to the seed
 // arrays and increment the region count.
 
-    for (casacore::Int lr = 1; lr <= lowreg; lr++)  { 
+    for (Int lr = 1; lr <= lowreg; lr++)  { 
       if (nOffspring(lr) == 0) {
 
-        casacore::IPosition newregioncenter(itsDim,0);
-        casacore::uInt topcells = 0;
+        IPosition newregioncenter(itsDim,0);
+        uInt topcells = 0;
         {
-          casacore::IPosition pos(itsDim,0); 
+          IPosition pos(itsDim,0); 
           decrement(pos);
           while (increment(pos,shape())) {
             //cout << pos << endl;
@@ -1632,8 +1632,8 @@ void ImageDecomposer<T>::deblendRegions(const casacore::Vector<T>& contours,
 	cgindex++;
 
         if ((itsNRegions % blocksize) == 0) {
-          regcenter.resize(itsNRegions+blocksize, true);
-          originlevel.resize(itsNRegions+blocksize, true);
+          regcenter.resize(itsNRegions+blocksize, True);
+          originlevel.resize(itsNRegions+blocksize, True);
 	}
 
         // Add to region center array
@@ -1650,21 +1650,21 @@ void ImageDecomposer<T>::deblendRegions(const casacore::Vector<T>& contours,
 
   if (printIntermediates == 2) {
     cout << "Located the following seeds:" << endl;
-    for (casacore::uInt s = 0; s < itsNRegions; s++)
+    for (uInt s = 0; s < itsNRegions; s++)
       cout << s << " at "  << regcenter[s]
            << " in component #" << getCell(regcenter[s]) << endl;
   }
 
   {
-    casacore::IPosition pos(itsDim,0); 
+    IPosition pos(itsDim,0); 
     decrement(pos);
     while (increment(pos,shape())) {
       if (getCell(pos) == INDETERMINATE) {
-	casacore::Int mindistsq = 1073741823;  //maximum casacore::Int value
-        for (casacore::uInt s = 0; s < itsNRegions; s++) {
-          casacore::Int distsq = 0;
+	Int mindistsq = 1073741823;  //maximum Int value
+        for (uInt s = 0; s < itsNRegions; s++) {
+          Int distsq = 0;
           if (originlevel(s) == -1) continue; //defunct region
-          for (casacore::uInt a = 0; a < itsDim; a++) {
+          for (uInt a = 0; a < itsDim; a++) {
             distsq += (pos(a) - regcenter[s](a)) * (pos(a) - regcenter[s](a));
 	  }
           if (distsq < mindistsq) {
@@ -1690,7 +1690,7 @@ void ImageDecomposer<T>::decomposeImage()
   {
   // Find contiguous regions via thresholding
 
-    casacore::uInt nRegions = identifyRegions(itsThresholdVal,itsNAxis);
+    uInt nRegions = identifyRegions(itsThresholdVal,itsNAxis);
     cout << "Found " << nRegions << " regions" << endl;
 
   // Fit each region.  A further pass is done through each region
@@ -1702,8 +1702,8 @@ void ImageDecomposer<T>::decomposeImage()
   }
   else
   {
-    const casacore::Bool showProcess = false;
-    casacore::Bool varyContours = false; //this is always false now...
+    const Bool showProcess = False;
+    Bool varyContours = False; //this is always false now...
 
   // Make a local decomposer
 
@@ -1712,7 +1712,7 @@ void ImageDecomposer<T>::decomposeImage()
 
   // Generate global contours
 
-    casacore::Vector<T> mainContours(itsNContour);
+    Vector<T> mainContours(itsNContour);
     if (!varyContours) {
        mainContours = autoContour(itsNContour, itsThresholdVal);
        //cerr << "Main contours = " << mainContours << endl;
@@ -1721,15 +1721,15 @@ void ImageDecomposer<T>::decomposeImage()
 
   // Find contiguous regions via thresholding
 
-    casacore::uInt nRegions = thresholdMap.identifyRegions(itsThresholdVal, itsNAxis);
-    casacore::uInt nBadRegions = 0;
+    uInt nRegions = thresholdMap.identifyRegions(itsThresholdVal, itsNAxis);
+    uInt nBadRegions = 0;
     if (itsMinRange > 1)
     {
       // Eliminate weak regions
-      casacore::Vector<T> maxvals;
+      Vector<T> maxvals;
       maxvals = thresholdMap.findAllRegionGlobalMax();
-      casacore::Vector<casacore::Bool> killRegion(nRegions,0);
-      for (casacore::uInt r = 0; r < nRegions; r++) {
+      Vector<Bool> killRegion(nRegions,0);
+      for (uInt r = 0; r < nRegions; r++) {
         if (thresholdMap.getContourVal(maxvals(r),mainContours)+1 <itsMinRange)
         {
           killRegion(r) = 1;
@@ -1750,15 +1750,15 @@ void ImageDecomposer<T>::decomposeImage()
 
   // Find a blc and a trc for each region
 
-    casacore::Block<casacore::IPosition> blc(nRegions);
-    casacore::Block<casacore::IPosition> trc(nRegions);
+    Block<IPosition> blc(nRegions);
+    Block<IPosition> trc(nRegions);
     thresholdMap.boundRegions(blc, trc);
     if (isDerived()) zero();
 
     if (showProcess) {
       cout << "Bounded " << nRegions<<" regions for decomposition and fitting:"
            << endl;
-      for (casacore::uInt r = 0; r < nRegions; r++) {
+      for (uInt r = 0; r < nRegions; r++) {
         cout << r+1 <<": " << blc[r] << trc[r] << endl;
       }
     }
@@ -1769,12 +1769,12 @@ void ImageDecomposer<T>::decomposeImage()
   // very high-sigma component that may extend into another region, this
   // is not taken into account by the other region
 
-    for (casacore::uInt r=0; r<nRegions; r++) {
+    for (uInt r=0; r<nRegions; r++) {
 
       // Make a decomposer for this region
 
-      casacore::Slicer sl(blc[r], trc[r]-blc[r], casacore::Slicer::endIsLength);
-      casacore::SubImage<T> subIm(*itsImagePtr, sl);
+      Slicer sl(blc[r], trc[r]-blc[r], Slicer::endIsLength);
+      SubImage<T> subIm(*itsImagePtr, sl);
       ImageDecomposer<T> subpmap(subIm);
       subpmap.copyOptions(*this);
 
@@ -1783,16 +1783,16 @@ void ImageDecomposer<T>::decomposeImage()
       // rectangle are not counted twice, and that only the target region 
       // pixels are used in fitting.)
       {
-        casacore::IPosition pos(subpmap.itsDim,0); decrement(pos);
+        IPosition pos(subpmap.itsDim,0); decrement(pos);
         while (increment(pos,subpmap.shape())) {     
-          if (thresholdMap.getCell(blc[r] + pos) != casacore::Int(r+1)) {
+          if (thresholdMap.getCell(blc[r] + pos) != Int(r+1)) {
             subpmap.setCell(pos, MASKED);
 	  }
         }
       }
     
-      casacore::Vector<T> subContours(itsNContour);
-      casacore::Vector<T> *contourPtr;
+      Vector<T> subContours(itsNContour);
+      Vector<T> *contourPtr;
  
     // Generate contours for this region or use global 
     // ones for entire image
@@ -1807,7 +1807,7 @@ void ImageDecomposer<T>::decomposeImage()
       if (showProcess)  {    
         cout << "-----------------------------------------" << endl;
         cout << "Subimage " << r << endl;
-        cout << "Contour casacore::Map:" << endl;
+        cout << "Contour Map:" << endl;
         subpmap.displayContourMap(*contourPtr);
       }
 
@@ -1815,7 +1815,7 @@ void ImageDecomposer<T>::decomposeImage()
 
       subpmap.deblendRegions(*contourPtr, itsMinRange, itsNAxis);   
       if (showProcess) {
-        cout << "Component casacore::Map:" << endl;
+        cout << "Component Map:" << endl;
         subpmap.display();
       }
 
@@ -1850,16 +1850,16 @@ void ImageDecomposer<T>::decomposeImage()
 // -----------------
 
 template <class T>
-casacore::Matrix<T> ImageDecomposer<T>::fitRegion(casacore::Int nregion)
+Matrix<T> ImageDecomposer<T>::fitRegion(Int nregion)
 {
   cout << "Fit Region " << nregion << endl;
 
 // Fits multiple gaussians to a single region.  First performs  a local 
 // maximum scan to estimate the number of components in the region.
 
-  casacore::uInt nGaussians = 0;
-  casacore::uInt npoints = 0;
-  casacore::uInt ngpar = 0;
+  uInt nGaussians = 0;
+  uInt npoints = 0;
+  uInt ngpar = 0;
   if (itsDim == 2) ngpar = 6; 
   if (itsDim == 3) ngpar = 9;
   if (!isDerived()) nregion = 0;  //fit to all data.
@@ -1867,7 +1867,7 @@ casacore::Matrix<T> ImageDecomposer<T>::fitRegion(casacore::Int nregion)
 // Determine number of data points in the region
 
   {
-    casacore::IPosition pos(itsDim,0); 
+    IPosition pos(itsDim,0); 
     decrement(pos);
     while (increment(pos,shape())) {
       if (getCell(pos) == nregion) npoints++;
@@ -1876,17 +1876,17 @@ casacore::Matrix<T> ImageDecomposer<T>::fitRegion(casacore::Int nregion)
 
 // Fill data and positions arrays
 
-  casacore::Matrix<T> positions(npoints,itsDim);
-  casacore::Vector<T> dataValues(npoints);
-  casacore::Vector<T> sigma(npoints);  
+  Matrix<T> positions(npoints,itsDim);
+  Vector<T> dataValues(npoints);
+  Vector<T> sigma(npoints);  
   sigma = 1.0;
-  casacore::uInt k = 0;
+  uInt k = 0;
   {
-    casacore::IPosition pos(itsDim,0); 
+    IPosition pos(itsDim,0); 
     decrement(pos);
     while (increment(pos,shape())) {
       if (getCell(pos) == nregion) {
-        for (casacore::uInt i = 0; i<itsDim; i++) {
+        for (uInt i = 0; i<itsDim; i++) {
           positions(k,i) = T(pos(i));
 	}
         dataValues(k) = getImageVal(pos);    
@@ -1897,9 +1897,9 @@ casacore::Matrix<T> ImageDecomposer<T>::fitRegion(casacore::Int nregion)
 
 // Estimate the initial parameters.
 
-  casacore::Matrix<T> width;
-  casacore::Vector<T> maxval;
-  casacore::Block<casacore::IPosition> maxvalpos;
+  Matrix<T> width;
+  Vector<T> maxval;
+  Block<IPosition> maxvalpos;
 
 // This estimates whether there are multiple components
 // in the current region or not.
@@ -1909,11 +1909,11 @@ casacore::Matrix<T> ImageDecomposer<T>::fitRegion(casacore::Int nregion)
   nGaussians = maxval.nelements();
   cout << "Found " << nGaussians << " components" << endl;
 
-  casacore::Matrix<T> initestimate(nGaussians, ngpar);
-  casacore::Matrix<T> solution(nGaussians, ngpar);
+  Matrix<T> initestimate(nGaussians, ngpar);
+  Matrix<T> solution(nGaussians, ngpar);
 
   if (itsDim == 2) {
-    for (casacore::uInt r = 0; r < nGaussians; r++) {
+    for (uInt r = 0; r < nGaussians; r++) {
       initestimate(r,0) = maxval(r);
       initestimate(r,1) = maxvalpos[r](0);
       initestimate(r,2) = maxvalpos[r](1);
@@ -1923,7 +1923,7 @@ casacore::Matrix<T> ImageDecomposer<T>::fitRegion(casacore::Int nregion)
     }
   }
   if (itsDim == 3) {
-    for (casacore::uInt r = 0; r < nGaussians; r++)  {
+    for (uInt r = 0; r < nGaussians; r++)  {
       initestimate(r,0) = maxval(r);
       initestimate(r,1) = maxvalpos[r](0);
       initestimate(r,2) = maxvalpos[r](1); 
@@ -1952,7 +1952,7 @@ void ImageDecomposer<T>::fitRegions()
 // If the map is not yet thresholded, will fit to the entire image as if it
 // were a single composite object, which will be very slow.
 
-  casacore::uInt ngpar = 0;
+  uInt ngpar = 0;
   if (itsDim == 2) ngpar = 6; 
   if (itsDim == 3) ngpar = 9;
 
@@ -1961,21 +1961,21 @@ void ImageDecomposer<T>::fitRegions()
     return;
   }
 //
-  for (casacore::uInt r = 1; r <= itsNRegions; r++) {
-    casacore::Matrix<T> subitsList;
-    casacore::Matrix<T> olditsList;
+  for (uInt r = 1; r <= itsNRegions; r++) {
+    Matrix<T> subitsList;
+    Matrix<T> olditsList;
     subitsList = fitRegion(r);
     olditsList = itsList;
     itsList.resize(itsNComponents + subitsList.nrow(), ngpar);
 //
-    for (casacore::uInt c = 0; c < itsNComponents; c++) {
-      for (casacore::uInt p = 0; p < ngpar; p++) {
+    for (uInt c = 0; c < itsNComponents; c++) {
+      for (uInt p = 0; p < ngpar; p++) {
         itsList(c,p) = olditsList(c,p);
       }
     }
 
-    for (casacore::uInt subc = 0; subc < subitsList.nrow(); subc++) {
-      for (casacore::uInt p = 0; p < ngpar; p++) {
+    for (uInt subc = 0; subc < subitsList.nrow(); subc++) {
+      for (uInt p = 0; p < ngpar; p++) {
         itsList(itsNComponents+subc, p) = subitsList(subc, p);
       }
     }
@@ -1995,14 +1995,14 @@ void ImageDecomposer<T>::fitComponents()
 // gaussian fit on the main image and will be extremely slow. Every 
 // nonflagged object pixel in the image is used in fitting.
 
-// If the deblended flag is true, the function will treat each region as
+// If the deblended flag is True, the function will treat each region as
 // an individual component and will fit that many gaussians to the image
 
-  casacore::uInt ngpar = itsDim * 3;
-  casacore::uInt npoints = 0;
+  uInt ngpar = itsDim * 3;
+  uInt npoints = 0;
 
   if (!isDerived()) {
-    throw(casacore::AipsError("Cannot fit until components are deblended"
+    throw(AipsError("Cannot fit until components are deblended"
                     " - use identifyRegions() or deblendRegions()"));
   }
 
@@ -2011,23 +2011,23 @@ void ImageDecomposer<T>::fitComponents()
 // and get data and position vectors
 
   {
-    casacore::IPosition pos(itsDim,0); 
+    IPosition pos(itsDim,0); 
     decrement(pos);
     while (increment(pos,shape())) {
       if (getCell(pos) > 0) npoints++;
     }
   }
 
-  casacore::Matrix<T> positions(npoints,itsDim);
-  casacore::Vector<T> dataValues(npoints);
+  Matrix<T> positions(npoints,itsDim);
+  Vector<T> dataValues(npoints);
 
   {
-    casacore::IPosition pos(itsDim,0); 
+    IPosition pos(itsDim,0); 
     decrement(pos);
-    casacore::uInt p = 0;
+    uInt p = 0;
     while (increment(pos,shape())) {
       if (getCell(pos) > 0) {
-        for (casacore::uInt i=0; i<itsDim; i++) {
+        for (uInt i=0; i<itsDim; i++) {
           positions(p,i) = T(pos(i));
 	}
         dataValues(p) = getImageVal(pos);
@@ -2038,8 +2038,8 @@ void ImageDecomposer<T>::fitComponents()
 
 // Estimate the initial parameters.
 
-  casacore::Matrix<T> initestimate(itsNRegions, ngpar);
-  casacore::Matrix<T> solution(itsNRegions, ngpar);
+  Matrix<T> initestimate(itsNRegions, ngpar);
+  Matrix<T> solution(itsNRegions, ngpar);
 
   initestimate = estimateComponents();
 
@@ -2054,22 +2054,22 @@ void ImageDecomposer<T>::fitComponents()
 
 
 template <class T>
-casacore::Matrix<T> ImageDecomposer<T>::estimateComponents()
+Matrix<T> ImageDecomposer<T>::estimateComponents()  
 {
-  casacore::uInt ngaussians = itsNRegions;
-  casacore::uInt ngpar = 0;
+  uInt ngaussians = itsNRegions;
+  uInt ngpar = 0;
   if (itsDim == 2) ngpar = 6; 
   if (itsDim == 3) ngpar = 9;
   if (!isDerived()) {
-    throw(casacore::AipsError("Cannot estimate until components are deblended"
+    throw(AipsError("Cannot estimate until components are deblended"
                     " - use identifyRegions() or deblendRegions()"));
   }
 
 
-  casacore::Matrix<T> estimate(ngaussians, ngpar);
-  casacore::Matrix<T> width;
-  casacore::Vector<T> maxval;
-  casacore::Block<casacore::IPosition> maxvalpos;
+  Matrix<T> estimate(ngaussians, ngpar);
+  Matrix<T> width;
+  Vector<T> maxval;
+  Block<IPosition> maxvalpos;
 
   ngaussians = itsNRegions;
   findAllRegionGlobalMax(maxval, maxvalpos);
@@ -2079,10 +2079,10 @@ casacore::Matrix<T> ImageDecomposer<T>::estimateComponents()
 // (3D parameter 8) was not derived rigorously and may not be correct, though
 // it works very well overall.
 
-  for (casacore::uInt r = 0; r < ngaussians; r++)
+  for (uInt r = 0; r < ngaussians; r++)
   {
     if (itsDim == 2) {
-      casacore::Matrix<T> M;
+      Matrix<T> M;
       M = calculateMoments(r+1);
       estimate(r,0) = maxval[r];
       estimate(r,1) = M(1,0) / M(0,0);
@@ -2092,10 +2092,10 @@ casacore::Matrix<T> ImageDecomposer<T>::estimateComponents()
       estimate(r,5) = 0.5 * atan(2 * M(1,1) / (M(2,0) - M(0,2)));
       if (estimate(r,3) < 1.0) estimate(r,3) = 1.0;
       if (estimate(r,4)*estimate(r,3) < 1.0) estimate(r,4) = 1.0/estimate(r,3);
-      if (casacore::isNaN(estimate(r,4))) estimate(r,4) = 1.0/estimate(r,3);
-      if (casacore::isNaN(estimate(r,5))) estimate(r,5) = 0;
+      if (isNaN(estimate(r,4))) estimate(r,4) = 1.0/estimate(r,3);
+      if (isNaN(estimate(r,5))) estimate(r,5) = 0;
     } else if (itsDim == 3) {
-      casacore::Cube<T> M;
+      Cube<T> M;
       M = calculateMoments(r+1);
       estimate(r,0) = maxval[r];
       estimate(r,1) = M(1,0,0) / M(0,0,0);
@@ -2111,7 +2111,7 @@ casacore::Matrix<T> ImageDecomposer<T>::estimateComponents()
       if (estimate(r,4) < 1.0) estimate(r,4) = 1.0;
       if (estimate(r,5) < 1.0) estimate(r,5) = 1.0;
       if (estimate(r,6) < 1.0) estimate(r,6) = 1.0;
-      if (casacore::isNaN(estimate(r,8))) estimate(r,8) = 0;
+      if (isNaN(estimate(r,8))) estimate(r,8) = 0;      
     }
   }
 
@@ -2125,27 +2125,27 @@ casacore::Matrix<T> ImageDecomposer<T>::estimateComponents()
 
 
 template <class T>
-casacore::Matrix<T> ImageDecomposer<T>::fitGauss(const casacore::Matrix<T>& positions,
-                                       const casacore::Vector<T>& dataValues, 
-                                       const casacore::Matrix<T>& initestimate) const
+Matrix<T> ImageDecomposer<T>::fitGauss(const Matrix<T>& positions, 
+                                       const Vector<T>& dataValues, 
+                                       const Matrix<T>& initestimate) const
 {
 // Fits the specified number of 3D gaussians to the data, and returns 
 // solution in image (world) coordinates.
   
-  //casacore::uInt ngpar = 0;
-  casacore::uInt ngaussians = initestimate.nrow();
+  //uInt ngpar = 0;
+  uInt ngaussians = initestimate.nrow();
   //if (itsDim == 2) ngpar = 6; 
   //if (itsDim == 3) ngpar = 9;
 
-  casacore::Matrix<T> solution;
+  Matrix<T> solution;
   //T chisquare;
 
 // Might be useful to send to screen in AIPS++
   //cout << "Primary estimation matrix:" << endl;
-  //for (casacore::uInt r = 0; r < ngaussians; r++)
+  //for (uInt r = 0; r < ngaussians; r++)
   //   cout << initestimate.row(r) << endl;
   
-  casacore::FitGaussian<T> fitter(itsDim,ngaussians);
+  FitGaussian<T> fitter(itsDim,ngaussians);
   fitter.setFirstEstimate(initestimate);
   if (itsMaxRetries < 0) {
     fitter.setMaxRetries(itsDim * ngaussians);
@@ -2157,7 +2157,7 @@ casacore::Matrix<T> ImageDecomposer<T>::fitGauss(const casacore::Matrix<T>& posi
   try{ 
     solution = fitter.fit(positions, dataValues, itsMaximumRMS, itsMaxIter,
                           itsConvCriteria);
-  } catch (casacore::AipsError fiterr) {
+  } catch (AipsError fiterr) {
     cout << fiterr.getMesg() << endl;
     cout << "Fitting failed." << endl;
     solution = 0;
@@ -2188,21 +2188,21 @@ void ImageDecomposer<T>::display() const
 // Displays the componentmap in a terminal environment as an array of 
 // characters on screen.  
 
-  casacore::Int windowwidth = 80;
-  casacore::Int const spacing = 4;
-  casacore::Int const cposinc = shape(0) * 2 + spacing;
+  Int windowwidth = 80;
+  Int const spacing = 4;
+  Int const cposinc = shape(0) * 2 + spacing;
   if (cposinc > windowwidth) windowwidth = cposinc;
-  casacore::Int cpos = 0;
+  Int cpos = 0;
 //
-  casacore::Int z = 0;
-  casacore::Int benchz = 0;
+  Int z = 0;
+  Int benchz = 0;
 //
   //cerr << "shape = " << shape() << endl;
   while (z < shape(2)) {
-    for (casacore::Int y = 0; y < shape(1); y++) {
+    for (Int y = 0; y < shape(1); y++) {
       z = benchz;
       while ((cpos += cposinc) < windowwidth && z < shape(2)) {
-        for (casacore::Int x = 0; x < itsShape(0); x++) {
+        for (Int x = 0; x < itsShape(0); x++) {
           if (getCell(x,y,z) >= 0) {
              cout << getCell(x,y,z);
           } else if (getCell(x,y,z) == INDETERMINATE) {
@@ -2232,24 +2232,24 @@ void ImageDecomposer<T>::display() const
 
 
 template <class T>
-void ImageDecomposer<T>::displayContourMap(const casacore::Vector<T>& clevels) const
+void ImageDecomposer<T>::displayContourMap(const Vector<T>& clevels) const
 {
 // Displays the target image as a contourmap in a terminal environment as 
 // an array of characters on screen.  
 
-  casacore::Int windowwidth = 80;
-  casacore::Int const spacing = 4;
-  casacore::Int const cposinc = shape(0) * 2 + spacing;
+  Int windowwidth = 80;
+  Int const spacing = 4;
+  Int const cposinc = shape(0) * 2 + spacing;
   if (cposinc > windowwidth) windowwidth = cposinc;
-  casacore::Int cpos = 0;
+  Int cpos = 0;
 
-  casacore::Int z = 0;
-  casacore::Int benchz = 0;
+  Int z = 0;
+  Int benchz = 0;
   cout << "Contour levels:" << clevels << endl;
 
   if (itsDim == 2) {
-    for (casacore::Int y = 0; y < shape(1); y++) {
-      for (casacore::Int x = 0; x < shape(0); x++) {
+    for (Int y = 0; y < shape(1); y++) {
+      for (Int x = 0; x < shape(0); x++) {
         if (getContourVal(x,y,clevels) >= 0) {
           cout << getContourVal(x,y,clevels); 
         }
@@ -2266,16 +2266,16 @@ void ImageDecomposer<T>::displayContourMap(const casacore::Vector<T>& clevels) c
   }
 
   if (itsDim == 3){
-    //this actually works in 2 dimensions on a casacore::TempImage, but not on a 
-    //casacore::SubImage, where there is a failure inside the getImageVal command
-    //on a failed assertion involving a casacore::LatticeRegion object.  As a result
+    //this actually works in 2 dimensions on a TempImage, but not on a 
+    //SubImage, where there is a failure inside the getImageVal command
+    //on a failed assertion involving a LatticeRegion object.  As a result
     //the above specialization was written, but it would be nice if 3-D
-    //IPositions worked on 2-D images in casacore::SubImage as well as TempImage.
+    //IPositions worked on 2-D images in SubImage as well as TempImage.
   while (z < shape(2)) {
-    for (casacore::Int y = 0; y < shape(1); y++) {
+    for (Int y = 0; y < shape(1); y++) {
       z = benchz;
       while ((cpos += cposinc) < windowwidth && (z < shape(2))) {
-        for (casacore::Int x = 0; x < shape(0); x++) {
+        for (Int x = 0; x < shape(0); x++) {
           if (getContourVal(x,y,z,clevels) >= 0) {
             cout << getContourVal(x,y,z,clevels); 
           }
@@ -2308,10 +2308,10 @@ void ImageDecomposer<T>::printComponents() const
   //Prints the components as formatted output on screen.
   //IMPR: Probably could be modified as an ostream output function.
 
-  casacore::Matrix<T> clist;
+  Matrix<T> clist;
   clist = componentList();
 
-  for (casacore::uInt g = 0; g < clist.nrow(); g++)
+  for (uInt g = 0; g < clist.nrow(); g++)
   {
     cout << g+1 << ": ";
     if (itsList(g,0) == T(0)) {
@@ -2348,12 +2348,12 @@ void ImageDecomposer<T>::printComponents() const
 // --------------------------------------------
 
 template <class T>
-void ImageDecomposer<T>::correctBlcTrc(casacore::IPosition& blc, casacore::IPosition& trc) const
+void ImageDecomposer<T>::correctBlcTrc(IPosition& blc, IPosition& trc) const
 {
   //Ensures blc and trc correctly describe the limits of a rectangular block.
 
-  casacore::Int t;
-  for (casacore::uInt i = 0; i<itsDim; i++)  {
+  Int t;
+  for (uInt i = 0; i<itsDim; i++)  {
     if (blc(i)<0) blc(i) = 0;     
     if (trc(i)>shape(i)) trc(i) = shape(i);
     if (trc(i)<0) trc(i) = 0;     
@@ -2369,34 +2369,34 @@ void ImageDecomposer<T>::correctBlcTrc(casacore::IPosition& blc, casacore::IPosi
 }
 
 template <class T>
-inline casacore::Bool ImageDecomposer<T>::increment(casacore::IPosition& pos,
-                                          const casacore::IPosition& limit) const
+inline Bool ImageDecomposer<T>::increment(IPosition& pos,
+                                          const IPosition& limit) const
 {
 // N-Dimensional looping function: use in place of nested for loops
-// Returns false when pos reaches limit.
+// Returns False when pos reaches limit.
 // Use as follows:    while(increment(pos,limit))
 // IMPR: this function probably should be global or in IPosition.  Or even
 // better, omitted completely by using LatticeIterators.
 
   pos(itsDim-1)++;
-  for (casacore::uInt i = itsDim-1; i>0; i--) { 
+  for (uInt i = itsDim-1; i>0; i--) { 
     if (pos(i) == limit(i)) {
        pos(i) = 0; 
        pos(i-1)++;
     } else {
-       return true;
+       return True;
     }
   }
 //
   if (pos(0) == limit(0)) {
-     return false;
+     return False;
   } else {
-     return true;
+     return True;
   }
 }
 
 template <class T>
-inline void ImageDecomposer<T>::decrement(casacore::IPosition& pos) const
+inline void ImageDecomposer<T>::decrement(IPosition& pos) const
 {
   //To ensure while loop starts at 0,0,0..., decrement before first increment
   pos(itsDim-1)--;
@@ -2405,18 +2405,18 @@ inline void ImageDecomposer<T>::decrement(casacore::IPosition& pos) const
 
 
 /*
-     casacore::RO_LatticeIterator<casacore::Int> otherIter(*(other.itsMapPtr));
-     casacore::Bool deleteOther, deleteThis;
-     const casacore::Int* pOther = 0;
-     casacore::Int* pThis = 0;
+     RO_LatticeIterator<Int> otherIter(*(other.itsMapPtr));
+     Bool deleteOther, deleteThis;
+     const Int* pOther = 0;
+     Int* pThis = 0;
      for (otherIter.reset(); !otherIter.atEnd(); otherIter++) {
-        const casacore::Array<casacore::Int>& otherArray = otherIter.cursor();
-        casacore::Array<casacore::Int> thisArray = itsMapPtr->getSlice(otherIter.position(), otherIter.cursorShape());
+        const Array<Int>& otherArray = otherIter.cursor();
+        Array<Int> thisArray = itsMapPtr->getSlice(otherIter.position(), otherIter.cursorShape());
 //
         pOther = otherArray.getStorage(deleteOther);
         pThis = thisArray.getStorage(deleteThis);
 //
-        for (casacore::uInt i=0; i<otherIter.cursor().nelements(); i++) {
+        for (uInt i=0; i<otherIter.cursor().nelements(); i++) {
            if (pOther[i] != regionID) pThis[i] = MASKED;
         }
 //

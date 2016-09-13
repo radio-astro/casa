@@ -39,9 +39,7 @@
 #include <gtest/gtest.h>
 
 using namespace std;
-using namespace casacore;
 using namespace casa;
-using namespace casacore;
 using namespace casa::vi;
 
 #define NFLD 2
@@ -59,9 +57,9 @@ using namespace casa::vi;
 #define GAIN 1.0
 #define TSYS 1.0
 #define POLBASIS "circ"
-#define DONOISE true
-#define DONORM true
-#define DOAC false
+#define DONOISE True
+#define DONORM True
+#define DOAC False
 
 
 class SimpleSimVi2Test : public ::testing::Test {

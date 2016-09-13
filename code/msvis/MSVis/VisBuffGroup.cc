@@ -29,7 +29,6 @@
 #include <casa/Exceptions/Error.h>
 #include <casa/Logging/LogIO.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 VisBuffGroup::VisBuffGroup() :
@@ -59,18 +58,18 @@ Bool VisBuffGroup::store(const VisBuffer& vb)
 
   LogIO os(LogOrigin("VisBuffGroup", "store"));
   uInt ibuf = nBuf_p;
-  Bool retval = false;
+  Bool retval = False;
 
   // realize channel shape inside vb
   vb.nChannel();
   
   try{
-    VB_p.resize(nBuf_p + 1, false, true); // n, forceSmaller, copyElements
-    endChunk_p.resize(nBuf_p + 1, true);   // n, copyElements
+    VB_p.resize(nBuf_p + 1, False, True); // n, forceSmaller, copyElements
+    endChunk_p.resize(nBuf_p + 1, True);   // n, copyElements
     VB_p[ibuf] = new VisBuffer(vb);  // The copy is detached from the VisIter.
-    endChunk_p[ibuf] = false;           // until notified otherwise.
+    endChunk_p[ibuf] = False;           // until notified otherwise.
     ++nBuf_p;
-    retval = true;
+    retval = True;
   }
   catch(AipsError x){
     os << LogIO::SEVERE
@@ -87,7 +86,7 @@ Bool VisBuffGroup::store(const VisBuffer& vb)
 
 void VisBuffGroup::endChunk()
 {
-  endChunk_p[nBuf_p - 1] = true;
+  endChunk_p[nBuf_p - 1] = True;
 }
 
 VisBuffer& VisBuffGroup::operator()(const Int buf) 
@@ -102,12 +101,12 @@ Bool VisBuffGroup::applyChanMask(Cube<Bool>& chanmaskedflags,
                                  const Vector<Bool> *chanmask,
                                  const VisBuffer& vb)
 {
-  Bool retval = true;
+  Bool retval = True;
   Int chan0 = vb.channel()(0);
   Int nchan = vb.nChannel();
   //initialize
   chanmaskedflags.resize(vb.flagCube().shape());
-  chanmaskedflags.set(false);
+  chanmaskedflags.set(False);
   if(sum((*chanmask)(Slice(chan0, nchan))) > 0){
     // There are some channels to mask...
     Vector<Bool> fr(vb.flagRow());

@@ -36,13 +36,13 @@
 namespace casa {
 class tUtil {
 public:
-	static casacore::String getFullPath( casacore::String fileName ){
-		//casacore::Path for data
-		casacore::String aipsPath = casacore::EnvironmentVariable::get("CASAPATH");
+	static String getFullPath( String fileName ){
+		//Path for data
+		String aipsPath = EnvironmentVariable::get("CASAPATH");
 		if (aipsPath.empty()) {
-			aipsPath = casacore::EnvironmentVariable::get("AIPSPATH");
+			aipsPath = EnvironmentVariable::get("AIPSPATH");
 		}
-		casacore::String dataPath;
+		String dataPath;
 		qDebug() << "Aips path="<<aipsPath.c_str();
 		if ( !aipsPath.empty() ){
 			//Last part of path returned appears to be a space rather
@@ -61,9 +61,9 @@ public:
 		return dataPath;
 	}
 
-    static casacore::String getExportPath() {
+    static String getExportPath() {
         // create unique path in /tmp using pid
-        casacore::String path = "/tmp/" + casacore::String::toString(getpid()) + "/";
+        String path = "/tmp/" + String::toString(getpid()) + "/";
         clearFile(path);
         mkdir(path.c_str(), 0775);
         return path;
@@ -79,7 +79,7 @@ public:
 		}
 	}
 
-	static int clearFile( const casacore::String& fileName ){
+	static int clearFile( const String& fileName ){
         // remove works on files and directories
 		int result = remove( fileName.c_str());
 		if ( result == 0 ){
@@ -97,7 +97,7 @@ public:
 		return exitCode;
 	}
 
-	static bool checkFile( casacore::String fileName, int minBytes, int maxBytes, int digest ){
+	static bool checkFile( String fileName, int minBytes, int maxBytes, int digest ){
 		bool fileOK = true;
 		ifstream ifile( fileName.c_str() );
 		if ( ! ifile ){

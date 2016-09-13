@@ -29,7 +29,6 @@
 #include <QVector>
 #include <QDebug>
 
-using namespace casacore;
 namespace casa {
 
 	SliceStatisticsPosition::SliceStatisticsPosition(SliceStatisticsFactory::AxisXUnits units):
@@ -160,5 +159,4 @@ namespace casa {
 	SliceStatisticsPosition::~SliceStatisticsPosition() {
 	}
 
-using namespace casacore;
 } /* namespace casa */

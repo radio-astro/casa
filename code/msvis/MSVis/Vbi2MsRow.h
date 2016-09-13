@@ -31,19 +31,19 @@ class CachedArrayBase {
 
 public:
 
-    CachedArrayBase () : cached_p (false) {}
+    CachedArrayBase () : cached_p (False) {}
     virtual ~CachedArrayBase () {}
 
-    void clearCache () { cached_p = false;}
+    void clearCache () { cached_p = False;}
 
 protected:
 
-    casacore::Bool isCached () const { return cached_p;}
+    Bool isCached () const { return cached_p;}
     void setCached () { cached_p = true;}
 
 private:
 
-    casacore::Bool cached_p;
+    Bool cached_p;
 };
 
 template <typename T>
@@ -51,12 +51,12 @@ class CachedPlane : public CachedArrayBase {
 
 public:
 
-typedef const casacore::Cube<T> & (casa::vi::VisBufferImpl2::* Accessor) () const;
+typedef const Cube<T> & (casa::vi::VisBufferImpl2::* Accessor) () const;
 
 CachedPlane (Accessor accessor) : accessor_p (accessor) {}
 
-casacore::Matrix<T> &
-getCachedPlane (casa::vi::VisBufferImpl2 * vb, casacore::Int row)
+Matrix<T> &
+getCachedPlane (casa::vi::VisBufferImpl2 * vb, Int row)
 {
     if (! isCached()){
 
@@ -71,21 +71,21 @@ getCachedPlane (casa::vi::VisBufferImpl2 * vb, casacore::Int row)
 private:
 
     static void
-    referenceMatrix (casacore::Matrix<T> & cache, const casacore::Cube<T> & src, casacore::Int row)
+    referenceMatrix (Matrix<T> & cache, const Cube<T> & src, Int row)
     {
-        casacore::IPosition shape = src.shape ();
+        IPosition shape = src.shape ();
         shape.resize (2);
 
         // This is a bit sleazy but it seems to be helpful to performance.
         // Assumes contiguously stored cube.
 
-        T * storage = const_cast <T *> (& src (casacore::IPosition (3, 0, 0, row)));
+        T * storage = const_cast <T *> (& src (IPosition (3, 0, 0, row)));
 
-        cache.takeStorage (shape, storage, casacore::SHARE);
+        cache.takeStorage (shape, storage, casa::SHARE);
     }
 
     Accessor accessor_p;
-    casacore::Matrix<T> cache_p;
+    Matrix<T> cache_p;
 };
 
 template <typename T>
@@ -93,12 +93,12 @@ class CachedColumn : public CachedArrayBase {
 
 public:
 
-typedef const casacore::Matrix<T> & (casa::vi::VisBufferImpl2::* Accessor) () const;
+typedef const Matrix<T> & (casa::vi::VisBufferImpl2::* Accessor) () const;
 
 CachedColumn (Accessor accessor) : accessor_p (accessor) {}
 
-casacore::Vector<T> &
-getCachedColumn (casa::vi::VisBufferImpl2 * vb, casacore::Int row)
+Vector<T> &
+getCachedColumn (casa::vi::VisBufferImpl2 * vb, Int row)
 {
     if (! isCached()){
 
@@ -112,21 +112,21 @@ getCachedColumn (casa::vi::VisBufferImpl2 * vb, casacore::Int row)
 private:
 
     static void
-    referenceVector (casacore::Vector<T> & cache, const casacore::Matrix<T> & src, casacore::Int row)
+    referenceVector (Vector<T> & cache, const Matrix<T> & src, Int row)
     {
-        casacore::IPosition shape = src.shape ();
+        IPosition shape = src.shape ();
         shape.resize (1);
 
         // This is a bit sleazy but it seems to be helpful to performance.
         // Assumes contiguously stored cube.
 
-        T * storage = const_cast <T *> (& src (casacore::IPosition (2, 0, row)));
+        T * storage = const_cast <T *> (& src (IPosition (2, 0, row)));
 
-        cache.takeStorage (shape, storage, casacore::SHARE);
+        cache.takeStorage (shape, storage, casa::SHARE);
     }
 
     Accessor accessor_p;
-    casacore::Vector<T> cache_p;
+    Vector<T> cache_p;
 };
 
 
@@ -139,113 +139,113 @@ public:
     // Constructor for read-only access.
     // Attempt to write will throw exception.
 
-    Vbi2MsRow (casacore::Int row, const vi::VisBufferImpl2 * vb);
+    Vbi2MsRow (Int row, const vi::VisBufferImpl2 * vb);
 
     // Constructor for read/write access
 
-    Vbi2MsRow (casacore::Int row, vi::VisBufferImpl2 * vb);
+    Vbi2MsRow (Int row, vi::VisBufferImpl2 * vb);
 
     virtual ~Vbi2MsRow () {}
 
-    void changeRow (casacore::Int row);
+    void changeRow (Int row);
     void copy (Vbi2MsRow * other,
                const VisBufferComponents2 & componentsToCopy);
 
-    casacore::Int antenna1 () const;
-    casacore::Int antenna2 () const;
-    casacore::Int arrayId () const;
-    casacore::Int correlationType () const;
-    casacore::Int dataDescriptionId () const;
-    casacore::Int feed1 () const;
-    casacore::Int feed2 () const;
-    casacore::Int fieldId () const;
-    casacore::Int observationId () const;
-    casacore::Int rowId () const;
-    casacore::Int processorId () const;
-    casacore::Int scanNumber () const;
-    casacore::Int stateId () const;
-    casacore::Double exposure () const;
-    casacore::Double interval () const;
-    casacore::Int spectralWindow () const;
-    casacore::Double time () const;
-    casacore::Double timeCentroid () const;
+    Int antenna1 () const;
+    Int antenna2 () const;
+    Int arrayId () const;
+    Int correlationType () const;
+    Int dataDescriptionId () const;
+    Int feed1 () const;
+    Int feed2 () const;
+    Int fieldId () const;
+    Int observationId () const;
+    Int rowId () const;
+    Int processorId () const;
+    Int scanNumber () const;
+    Int stateId () const;
+    Double exposure () const;
+    Double interval () const;
+    Int spectralWindow () const;
+    Double time () const;
+    Double timeCentroid () const;
 
-    void setAntenna1 (casacore::Int);
-    void setAntenna2 (casacore::Int);
-    void setArrayId (casacore::Int);
-    void setCorrelationType (casacore::Int);
-    void setDataDescriptionId (casacore::Int);
-    void setFeed1 (casacore::Int);
-    void setFeed2 (casacore::Int);
-    void setFieldId (casacore::Int);
-    void setObservationId (casacore::Int);
-    void setProcessorId (casacore::Int);
-    void setRowId (casacore::Int);
-    void setScanNumber (casacore::Int);
-    void setStateId (casacore::Int);
-    void setExposure (casacore::Double);
-    void setInterval (casacore::Double);
-    void setSpectralWindow (casacore::Int);
-    void setTime (casacore::Double);
-    void setTimeCentroid (casacore::Double);
+    void setAntenna1 (Int);
+    void setAntenna2 (Int);
+    void setArrayId (Int);
+    void setCorrelationType (Int);
+    void setDataDescriptionId (Int);
+    void setFeed1 (Int);
+    void setFeed2 (Int);
+    void setFieldId (Int);
+    void setObservationId (Int);
+    void setProcessorId (Int);
+    void setRowId (Int);
+    void setScanNumber (Int);
+    void setStateId (Int);
+    void setExposure (Double);
+    void setInterval (Double);
+    void setSpectralWindow (Int);
+    void setTime (Double);
+    void setTimeCentroid (Double);
 
-    const casacore::Vector<casacore::Double> uvw () const;
-    const casacore::Double & uvw (casacore::Int i) const;
-    void setUvw (const casacore::Vector<casacore::Double> &);
-    void setUvw (casacore::Int i, const casacore::Vector<casacore::Double> &);
+    const Vector<Double> uvw () const;
+    const Double & uvw (Int i) const;
+    void setUvw (const Vector<Double> &);
+    void setUvw (Int i, const Vector<Double> &);
 
-    const casacore::Complex & corrected (casacore::Int correlation, casacore::Int channel) const;
-    const casacore::Matrix<casacore::Complex> & corrected () const;
-    casacore::Matrix<casacore::Complex> & correctedMutable ();
-    void setCorrected (casacore::Int correlation, casacore::Int channel, const casacore::Complex & value);
-    void setCorrected (const casacore::Matrix<casacore::Complex> & value);
+    const Complex & corrected (Int correlation, Int channel) const;
+    const Matrix<Complex> & corrected () const;
+    Matrix<Complex> & correctedMutable ();
+    void setCorrected (Int correlation, Int channel, const Complex & value);
+    void setCorrected (const Matrix<Complex> & value);
 
-    const casacore::Complex & model (casacore::Int correlation, casacore::Int channel) const;
-    const casacore::Matrix<casacore::Complex> & model () const;
-    casacore::Matrix<casacore::Complex> & modelMutable ();
-    void setModel(casacore::Int correlation, casacore::Int channel, const casacore::Complex & value);
-    void setModel (const casacore::Matrix<casacore::Complex> & value);
+    const Complex & model (Int correlation, Int channel) const;
+    const Matrix<Complex> & model () const;
+    Matrix<Complex> & modelMutable ();
+    void setModel(Int correlation, Int channel, const Complex & value);
+    void setModel (const Matrix<Complex> & value);
 
-    const casacore::Complex & observed (casacore::Int correlation, casacore::Int channel) const;
-    const casacore::Matrix<casacore::Complex> & observed () const;
-    casacore::Matrix<casacore::Complex> & observedMutable ();
-    void setObserved (casacore::Int correlation, casacore::Int channel, const casacore::Complex & value);
-    void setObserved (const casacore::Matrix<casacore::Complex> & value);
+    const Complex & observed (Int correlation, Int channel) const;
+    const Matrix<Complex> & observed () const;
+    Matrix<Complex> & observedMutable ();
+    void setObserved (Int correlation, Int channel, const Complex & value);
+    void setObserved (const Matrix<Complex> & value);
 
-    const casacore::Float & singleDishData (casacore::Int correlation, casacore::Int channel) const;
-    const casacore::Matrix<casacore::Float> singleDishData () const;
-    casacore::Matrix<casacore::Float> singleDishDataMutable ();
-    void setSingleDishData (casacore::Int correlation, casacore::Int channel, const casacore::Float & value);
-    void setSingleDishData (const casacore::Matrix<casacore::Float> & value);
+    const Float & singleDishData (Int correlation, Int channel) const;
+    const Matrix<Float> singleDishData () const;
+    Matrix<Float> singleDishDataMutable ();
+    void setSingleDishData (Int correlation, Int channel, const Float & value);
+    void setSingleDishData (const Matrix<Float> & value);
 
-    casacore::Float sigma (casacore::Int correlation) const;
-    const casacore::Vector<casacore::Float> & sigma () const;
-    casacore::Vector<casacore::Float> & sigmaMutable () const;
-    void setSigma (casacore::Int correlation, casacore::Float value);
-    void setSigma (const casacore::Vector<casacore::Float> & value);
-    casacore::Float weight (casacore::Int correlation) const;
-    const casacore::Vector<casacore::Float> & weight () const;
-    casacore::Vector<casacore::Float> & weightMutable () const;
-    void setWeight (casacore::Int correlation, casacore::Float value);
-    void setWeight (const casacore::Vector<casacore::Float> & value);
-    casacore::Float weightSpectrum (casacore::Int correlation, casacore::Int channel) const;
-    void setWeightSpectrum (casacore::Int correlation, casacore::Int channel, casacore::Float value);
-    void setWeightSpectrum (const casacore::Matrix<casacore::Float> & value);
-    const casacore::Matrix<casacore::Float> & weightSpectrum () const;
-    casacore::Matrix<casacore::Float> & weightSpectrumMutable () const;
-    casacore::Float sigmaSpectrum (casacore::Int correlation, casacore::Int channel) const;
-    const casacore::Matrix<casacore::Float> & sigmaSpectrum () const;
-    casacore::Matrix<casacore::Float> & sigmaSpectrumMutable () const;
-    void setSigmaSpectrum (casacore::Int correlation, casacore::Int channel, casacore::Float value);
-    void setSigmaSpectrum (const casacore::Matrix<casacore::Float> & value);
+    Float sigma (Int correlation) const;
+    const Vector<Float> & sigma () const;
+    Vector<Float> & sigmaMutable () const;
+    void setSigma (Int correlation, Float value);
+    void setSigma (const Vector<Float> & value);
+    Float weight (Int correlation) const;
+    const Vector<Float> & weight () const;
+    Vector<Float> & weightMutable () const;
+    void setWeight (Int correlation, Float value);
+    void setWeight (const Vector<Float> & value);
+    Float weightSpectrum (Int correlation, Int channel) const;
+    void setWeightSpectrum (Int correlation, Int channel, Float value);
+    void setWeightSpectrum (const Matrix<Float> & value);
+    const Matrix<Float> & weightSpectrum () const;
+    Matrix<Float> & weightSpectrumMutable () const;
+    Float sigmaSpectrum (Int correlation, Int channel) const;
+    const Matrix<Float> & sigmaSpectrum () const;
+    Matrix<Float> & sigmaSpectrumMutable () const;
+    void setSigmaSpectrum (Int correlation, Int channel, Float value);
+    void setSigmaSpectrum (const Matrix<Float> & value);
 
-    casacore::Bool isRowFlagged () const;
-    const casacore::Matrix<casacore::Bool> & flags () const;
-    void setFlags (const casacore::Matrix<casacore::Bool> & flags);
-    casacore::Bool isFlagged (casacore::Int correlation, casacore::Int channel) const;
+    Bool isRowFlagged () const;
+    const Matrix<Bool> & flags () const;
+    void setFlags (const Matrix<Bool> & flags);
+    Bool isFlagged (Int correlation, Int channel) const;
 
-    void setRowFlag (casacore::Bool isFlagged);
-    void setFlags (casacore::Bool isFlagged, casacore::Int correlation, casacore::Int channel);
+    void setRowFlag (Bool isFlagged);
+    void setFlags (Bool isFlagged, Int correlation, Int channel);
 
 protected:
 
@@ -256,27 +256,27 @@ protected:
     }
 
     void clearArrayCaches();
-    casacore::Matrix<casacore::Bool> & flagsMutable ();
+    Matrix<Bool> & flagsMutable ();
     vi::VisBufferImpl2 * getVbi () const;
 
 private:
 
     void configureArrayCaches(); // called in ctor so do not override
 
-    mutable CachedPlane<casacore::Complex> correctedCache_p;
-    mutable CachedPlane<casacore::Bool> flagCache_p;
-    mutable CachedPlane<casacore::Complex> modelCache_p;
-    mutable CachedPlane<casacore::Complex> observedCache_p;
-    mutable CachedColumn<casacore::Float> sigmaCache_p;
-    mutable CachedPlane<casacore::Float> sigmaSpectrumCache_p;
-    mutable CachedColumn<casacore::Float> weightCache_p;
-    mutable CachedPlane<casacore::Float> weightSpectrumCache_p;
+    mutable CachedPlane<Complex> correctedCache_p;
+    mutable CachedPlane<Bool> flagCache_p;
+    mutable CachedPlane<Complex> modelCache_p;
+    mutable CachedPlane<Complex> observedCache_p;
+    mutable CachedColumn<Float> sigmaCache_p;
+    mutable CachedPlane<Float> sigmaSpectrumCache_p;
+    mutable CachedColumn<Float> weightCache_p;
+    mutable CachedPlane<Float> weightSpectrumCache_p;
 
     std::vector<CachedArrayBase *> arrayCaches_p;
 
 template <typename T, typename U>
 void
-copyIf (casacore::Bool copyThis, Vbi2MsRow * other,
+copyIf (Bool copyThis, Vbi2MsRow * other,
                    void (Vbi2MsRow::* setter) (T),
                    U (Vbi2MsRow::* getter) () const);
 

@@ -51,8 +51,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <synopsis>
 // SkyJonesDesc defines the format of SkyJones calibration tables in terms
-// of table descriptors <linkto class="casacore::TableDesc">casacore::TableDesc</linkto>, as
-// used in the casacore::Table system. Specializations for sub-types are provided
+// of table descriptors <linkto class="TableDesc">TableDesc</linkto>, as
+// used in the Table system. Specializations for sub-types are provided
 // through inheritance.
 // </etymology>
 //

@@ -27,7 +27,6 @@
 #include <display/QtPlotter/ProfileTaskMonitor.h>
 #include <QDir>
 
-using namespace casacore;
 namespace casa {
 
 	MomentSettingsWidgetOptical::MomentSettingsWidgetOptical(QWidget *parent)
@@ -140,7 +139,7 @@ namespace casa {
 			postStatus( msg, true );
 			return;
 		}
-		taskMonitor->imageCollapsed(outname, "image", "raster", true, true);
+		taskMonitor->imageCollapsed(outname, "image", "raster", True, True);
 
 		return;
 	}

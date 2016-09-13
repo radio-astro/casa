@@ -33,7 +33,6 @@ Modification history:
 // Start of casa namespace
 // -----------------------------------------------------------------------------
 
-using namespace casacore;
 namespace casa {
 
 // -----------------------------------------------------------------------------
@@ -492,7 +491,7 @@ CalStatsFitter::FIT& CalStatsFitter::lsqFit( const Vector<Double>& oAbs,
 
   LinearFitSVD<Double> oFitter;
 
-  oFitter.asSVD( true );
+  oFitter.asSVD( True );
 
 
   // Initialize the basis functions and feed them to the SVD linear fit object
@@ -606,9 +605,9 @@ Algorithm:
       # The number of test slopes within an iteration is set to 20.
       # The number of iterations is set to 30.
 * The robust model and residuals are calculated.
-* A new flag vector is formed.  false elements correspond to absolute residuals
+* A new flag vector is formed.  False elements correspond to absolute residuals
   less than fTrim (an input parameter of this member function) times the mean
-  absolute deviation (avdev() function in ArrayMath.h) of the residuals.  true
+  absolute deviation (avdev() function in ArrayMath.h) of the residuals.  True
   elements, of course, correspond to the opposite case.
 * Calculate a "trimmed" least-squares fit using the original absicssae, value,
   and value errors (but with the new flag vector) to get the final estimate of
@@ -827,7 +826,7 @@ Double& CalStatsFitter::slope( const Vector<Double>& oAbs,
 
   for ( uInt i=0; i<uiNumIter; i++ ) {
 
-    Bool bFlag = false;
+    Bool bFlag = False;
 
     Double dSlopeInt = (dSlopeMax-dSlopeMin) / ((Double) uiNumSlope);
 
@@ -840,7 +839,7 @@ Double& CalStatsFitter::slope( const Vector<Double>& oAbs,
       Double dValue = brackFunc( oAbs, oValue, oSlopes[s] );
       if ( dValue == 0.0 ) return( oSlopes[s] );
       if ( signum( dValue ) != signum( dValueMin ) ) {
-        bFlag = true;
+        bFlag = True;
 	dSlopeMin = oSlopes[s] - dSlopeInt;
 	dSlopeMax = oSlopes[s];
 	break;
@@ -1054,7 +1053,7 @@ void CalStatsFitter::theil( const Vector<Double>& oAbs,
   for ( uInt e1=0,s=0; e1<oAbs.nelements(); e1++ ) {
     for ( uInt e2=e1+1; e2<oAbs.nelements(); e2++ ) {
       if ( oValue[e2] == oValue[e1] && oAbs[e2] == oAbs[e1] ) continue;
-      oSlope.resize( ++s, true );
+      oSlope.resize( ++s, True );
       oSlope[s-1] = (oValue[e2]-oValue[e1]) / (oAbs[e2]-oAbs[e1]);
     }
   }

@@ -114,7 +114,7 @@ main(int argc, char **argv) {
 		levels(9) = 9.;
 		levels(10) = 10.;
 		Record rec, recOut;
-		rec.define("axislabelswitch", true);
+		rec.define("axislabelswitch", True);
 		rec.define("xgridtype", "Full grid");
 		rec.define("ygridtype", "Full grid");
 		tardd1->setOptions(rec, recOut);

@@ -79,15 +79,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // a contiguous color method.
 Bool X11TestColormapAlloc(::XDisplay * display,
 			  XColormap colormap,
-			  casacore::Bool contig,
-			  casacore::uInt nColors);
+			  Bool contig,
+			  uInt nColors);
 
 // returns the number of colors presently
 // available on the passed colormap, and display,
 // possibly using contiguous mapping.
 uInt X11QueryColorsAvailable(::XDisplay * display,
 			     XColormap colormap,
-			     casacore::Bool contig);
+			     Bool contig);
 
 // returns a default display name
 // First, search for the DISPLAY environment
@@ -102,14 +102,14 @@ Screen * X11DefaultScreen();
 
 // function returns best visual in given class.  Best is determined
 // by largest depth
-Visual * X11BestVisual(Screen * screen, casacore::uInt c_class);
+Visual * X11BestVisual(Screen * screen, uInt c_class);
 
 // returns depth of given visual.  The safest way to get the right
 // depth is to match it with XGetVisualInfo and return its depth
 uInt X11DepthOfVisual(::XDisplay * display, Visual * visual);
 
 // maps a visualId to a visual
-Visual * X11VisualIdToVisual(::XDisplay * display, casacore::uInt visualId);
+Visual * X11VisualIdToVisual(::XDisplay * display, uInt visualId);
 
 // gets XVisualInfo for the given Visual
 XVisualInfo X11VisualInfoFromVisual(::XDisplay *display, Visual *visual);

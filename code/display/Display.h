@@ -50,8 +50,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <summary>A module providing graphical display classes for use with AIPS++ </summary>
 //
 // <prerequisite>
-// <li> <linkto class="casacore::Vector">casacore::Vector</linkto>
-// <li> <linkto class="casacore::Matrix">casacore::Matrix</linkto>
+// <li> <linkto class="Vector">Vector</linkto>
+// <li> <linkto class="Matrix">Matrix</linkto>
 // </prerequisite>
 //
 // <reviewed reviewer="None yet" date="yyyy/mm/dd" demos="">
@@ -154,7 +154,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // back is not stored in the WorldCnvas but is also defined through an event
 // handler (a CoordinateHandler). If the WorldCanvas has to do a coordinate
 // transformation, it asks the CoordinateHandler to do this. In many cases,
-// this CoordinateHandler will use a standard Aips++ casacore::CoordinateSystem to do
+// this CoordinateHandler will use a standard Aips++ CoordinateSystem to do
 // the transformation, but this is not a requirement, and the programmer can
 // implement any tranformation required, as long as it satisfies the interface
 // of the CoordinateHandler.
@@ -361,9 +361,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <h3><a name="PCDrawingCommands">PixelCanvas Drawing Commands</a></h3>
 //
 // PixelCanvas drawing commands accept simple AIPS++ objects.  Presently the
-// drawing commands accept points as casacore::Vector<t>'s, where t can be
-// any scalar type but Bool.   casacore::Bool images are not supported because a Bool
-// cannot represent a color index.  casacore::Complex values are not supported because
+// drawing commands accept points as Vector<t>'s, where t can be
+// any scalar type but Bool.   Bool images are not supported because a Bool
+// cannot represent a color index.  Complex values are not supported because
 // there are many ways of creating a single scalar value from complex
 // values.
 //
@@ -403,7 +403,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // The cache system improves drawing speed by storing drawing data
 // in native library formats.
 //
-// casacore::Data stored in native formats means that, for the X11PixelCanvas,
+// Data stored in native formats means that, for the X11PixelCanvas,
 //
 // <ul>
 // <li> images are stored in terms of pixels as XImages,
@@ -497,7 +497,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <li> call <linkto class="PixelCanvas">PixelCanvas</linkto>::mapToColor().
 // to convert to color values.
 // <li> call <linkto class="PixelCanvas">PixelCanvas</linkto>drawImage()
-// with the casacore::Matrix of color values
+// with the Matrix of color values
 // </ol>
 //
 // The color image can be reused as long as the distribution of colors
@@ -573,9 +573,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // Other handlers can be registered with the WorldCanvas to customize:
 // <ul>
-// <li> World casacore::Coordinate transformations
+// <li> World Coordinate transformations
 // <li> Linear resampling algorithm
-// <li> casacore::Data scaling methods
+// <li> Data scaling methods
 // <li> Size control function
 // </ul>
 //
@@ -664,7 +664,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <li> Correct bug related to clipwindow location when XCS (X coordinate syste) y
 //      value is less than zero.
 // <li> Check function visibility for X11PixelCanvasColorTable
-// <li> WorldCanvas casacore::Coordinate routines.
+// <li> WorldCanvas Coordinate routines.
 // <li> Check all HTML docs for problems.
 // </todo>
 //

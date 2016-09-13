@@ -64,7 +64,6 @@
 #include <synthesis/MeasurementEquations/ClarkCleanModel.h>
 #include <synthesis/MeasurementEquations/ConvolutionEquation.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
   SDAlgorithmClarkClean::SDAlgorithmClarkClean(String clarktype):
@@ -84,10 +83,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SDAlgorithmClarkClean","initializeDeconvolver",WHERE) );
 
-    itsImages->residual()->get( itsMatResidual, true );
-    itsImages->model()->get( itsMatModel, true );
-    itsImages->psf()->get( itsMatPsf, true );
-    itsImages->mask()->get( itsMatMask, true );
+    itsImages->residual()->get( itsMatResidual, True );
+    itsImages->model()->get( itsMatModel, True );
+    itsImages->psf()->get( itsMatPsf, True );
+    itsImages->mask()->get( itsMatMask, True );
 
     /*
     cout << "Clark : initDecon : " << itsImages->residual()->shape() << " : " << itsMatResidual.shape() 
@@ -159,7 +158,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
 
     //// Store current model in this matrix.
-    itsImages->model()->get( itsMatDeltaModel, true );
+    itsImages->model()->get( itsMatDeltaModel, True );
     itsMatModel.assign( itsMatDeltaModel ); // This should make an explicit copy
 
     //// Set model to zero
@@ -185,7 +184,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     cleaner.setMaxNumberMajorCycles(10);
     cleaner.setHistLength(1024);
     cleaner.setMaxNumPix(32*1024);
-    cleaner.setChoose(false);
+    cleaner.setChoose(False);
     cleaner.setCycleSpeedup(-1.0);
     cleaner.setSpeedup(0.0);
 
@@ -214,7 +213,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     //// Make the convolution equation with a single plane PSF and possibly multiplane residual
     Array<Float> psfplane;
-    oneplane2.get( psfplane, true );
+    oneplane2.get( psfplane, True );
     ConvolutionEquation eqn( psfplane , itsMatResidual );
    
     //Bool result = 
@@ -231,7 +230,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     // Add delta model to old model
     //Bool ret2 = 
-      //    itsImages->model()->get( itsMatDeltaModel, true );
+      //    itsImages->model()->get( itsMatDeltaModel, True );
     //    itsMatModel += itsMatDeltaModel;
 
     itsMatModel = itsMatDeltaModel;
@@ -240,8 +239,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     //////  Find Peak Residual across the whole image
     
-    //itsImages->residual()->get( itsMatResidual, true );
-    //    itsImages->mask()->get( itsMatMask, true );
+    //itsImages->residual()->get( itsMatResidual, True );
+    //    itsImages->mask()->get( itsMatMask, True );
     //   findMaxAbsMask( itsMatResidual, itsMatMask, itsPeakResidual, itsMaxPos );
     
 

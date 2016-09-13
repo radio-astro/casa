@@ -32,7 +32,6 @@
 #include <display/DisplayEvents/CrosshairEvent.h>
 #include <display/DisplayEvents/MWCEvents.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	MWCCrosshairTool::MWCCrosshairTool(Display::KeySym keysym,
@@ -41,10 +40,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsPos(2),
 		itsPersist(persistent),
 		itsRadius(9),
-		itsShowing(false),
-		itsShow(false),
-		itsCross(false),
-		itsBtnDn(false) {
+		itsShowing(False),
+		itsShow(False),
+		itsCross(False),
+		itsBtnDn(False) {
 	}
 
 	MWCCrosshairTool::~MWCCrosshairTool() {
@@ -65,7 +64,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Record that button is pressed.  This means the crosshair will draw
 		// if the mouse moves into the draw area, even if it is outside it now.
-		itsBtnDn = true;
+		itsBtnDn = True;
 		itsCurrentWC = wc;
 		Int x = ev.pixX(), y = ev.pixY();
 		set(x, y);
@@ -115,7 +114,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			reset();
 			return;
 		}
-		itsBtnDn = false;
+		itsBtnDn = False;
 		Int x = ev.pixX(), y = ev.pixY();
 		set(x, y);
 		Bool inDA = wc->inDrawArea(x, y);
@@ -175,13 +174,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	void MWCCrosshairTool::draw(const WCRefreshEvent&/*ev*/, const viewer::region::region_list_type & /*selected_regions*/) {
 		if(!itsShow) {
-			itsShowing = false;
+			itsShowing = False;
 			return;
 		}
 		Int x, y;
 		get(x, y);
 		if(!itsCurrentWC->inDrawArea(x, y)) {
-			itsShowing = false;
+			itsShowing = False;
 			return;
 		}
 
@@ -210,7 +209,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			pCanvas->drawLine(x, y - itsRadius/2,  x, y - 3*itsRadius);
 		}
 		resetClip();
-		itsShowing = true;
+		itsShowing = True;
 	}
 
 	void MWCCrosshairTool::handleEvent(DisplayEvent& ev) {
@@ -221,11 +220,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}	// Let base class handle too.
 
 	void MWCCrosshairTool::reset(Bool skipRefresh) {
-		itsBtnDn = false;
-		itsShow = false;
+		itsBtnDn = False;
+		itsShow = False;
 		if(itsShowing && !skipRefresh) {
 			refresh();
-			itsShowing = false;
+			itsShowing = False;
 		}
 	}
 

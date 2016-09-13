@@ -37,8 +37,9 @@
 #include <casa/BasicSL/String.h>
 #include <measures/Measures/Stokes.h>
 
-namespace casacore{
+namespace casa { //# NAMESPACE CASA - BEGIN
 
+class ComponentShape;
 class CoordinateSystem;
 class DirectionCoordinate;
 class LogIO;
@@ -48,19 +49,14 @@ class MVAngle;
 class MVDirection;
 class MVFrequency;
 class RecordInterface;
+class SpectralModel;
+class TwoSidedShape;
 class Unit;
 class GaussianBeam;
 template <class Ms> class MeasRef;
 template <class T> class Cube;
 template <class T> class Vector;
 template <class T> class Quantum;
-}
-
-namespace casa { //# NAMESPACE CASA - BEGIN
-
-class ComponentShape;
-class SpectralModel;
-class TwoSidedShape;
 
 
 
@@ -117,7 +113,7 @@ class TwoSidedShape;
 // </motivation>
 
 // <thrown>
-// <li> casacore::AipsError - If an internal inconsistancy is detected, when compiled in 
+// <li> AipsError - If an internal inconsistancy is detected, when compiled in 
 // debug mode only.
 // </thrown>
 //
@@ -142,7 +138,7 @@ public:
   // has a constant spectrum and a shape given by the default constructor of
   // the specified ComponentShape class.
   // <thrown>
-  // <li> casacore::AipsError - if the shape is UNKNOWN_SHAPE or NUMBER_SHAPES
+  // <li> AipsError - if the shape is UNKNOWN_SHAPE or NUMBER_SHAPES
   // </thrown>
   SkyCompRep(const ComponentType::Shape& shape);
   
@@ -151,8 +147,8 @@ public:
   // constructor of the specified ComponentShape class and a spectrum given by
   // the default constructor of the specified SpectralModel class
   // <thrown>
-  // <li> casacore::AipsError - if the shape is UNKNOWN_SHAPE or NUMBER_SHAPES
-  // <li> casacore::AipsError - if the spectrum is UNKNOWN_SPECTRAL_SHAPE or
+  // <li> AipsError - if the shape is UNKNOWN_SHAPE or NUMBER_SHAPES
+  // <li> AipsError - if the spectrum is UNKNOWN_SPECTRAL_SHAPE or
   //                  NUMBER_SPECTRAL_SHAPES
   // </thrown>
   SkyCompRep(const ComponentType::Shape& shape,
@@ -160,7 +156,7 @@ public:
 
   // Construct a SkyCompRep with a fully specified model for the shape, 
   // spectrum and flux.
-  SkyCompRep(const Flux<casacore::Double>& flux,
+  SkyCompRep(const Flux<Double>& flux,
  	     const ComponentShape& shape, 
  	     const SpectralModel& spectrum);
   
@@ -177,8 +173,8 @@ public:
   // <linkto class="SkyCompBase">SkyCompBase</linkto>
   // class for a description of these functions.
   // <group>
-  virtual const Flux<casacore::Double>& flux() const;
-  virtual Flux<casacore::Double>& flux();
+  virtual const Flux<Double>& flux() const;
+  virtual Flux<Double>& flux();
   // </group>
 
   // See the corresponding functions in the
@@ -203,89 +199,89 @@ public:
   // <linkto class="SkyCompBase">SkyCompBase</linkto>
   // class for a description of these functions.
   // <group>
-  virtual casacore::String& label();
-  virtual const casacore::String& label() const;
+  virtual String& label();
+  virtual const String& label() const;
   // </group>
 
   // See the corresponding functions in the
   // <linkto class="SkyCompBase">SkyCompBase</linkto>
   // class for a description of these functions.
   // <group>
-  virtual casacore::Vector<casacore::Double>& optionalParameters();
-  virtual const casacore::Vector<casacore::Double>& optionalParameters() const;
+  virtual Vector<Double>& optionalParameters();
+  virtual const Vector<Double>& optionalParameters() const;
   // </group>
 
   // See the corresponding function in the
   // <linkto class="SkyCompBase">SkyCompBase</linkto>
   // class for a description of this function.
-  virtual casacore::Bool isPhysical() const;
+  virtual Bool isPhysical() const;
   
   // See the corresponding function in the
   // <linkto class="SkyCompBase">SkyCompBase</linkto>
   // class for a description of this function.
-  virtual Flux<casacore::Double> sample(const casacore::MDirection& direction, 
-			      const casacore::MVAngle& pixelLatSize,
-			      const casacore::MVAngle& pixelLongSize,
-			      const casacore::MFrequency& centerFrequency) const;
+  virtual Flux<Double> sample(const MDirection& direction, 
+			      const MVAngle& pixelLatSize,
+			      const MVAngle& pixelLongSize,
+			      const MFrequency& centerFrequency) const;
 
   // See the corresponding function in the
   // <linkto class="SkyCompBase">SkyCompBase</linkto>
   // class for a description of this function.
-  virtual void sample(casacore::Cube<casacore::Double>& samples,
-		      const casacore::Unit& reqUnit,
-		      const casacore::Vector<casacore::MVDirection>& directions, 
-		      const casacore::MeasRef<casacore::MDirection>& dirRef, 
-		      const casacore::MVAngle& pixelLatSize, 
-		      const casacore::MVAngle& pixelLongSize, 
-		      const casacore::Vector<casacore::MVFrequency>& frequencies,
-		      const casacore::MeasRef<casacore::MFrequency>& freqRef) const;
+  virtual void sample(Cube<Double>& samples,
+		      const Unit& reqUnit,
+		      const Vector<MVDirection>& directions, 
+		      const MeasRef<MDirection>& dirRef, 
+		      const MVAngle& pixelLatSize, 
+		      const MVAngle& pixelLongSize, 
+		      const Vector<MVFrequency>& frequencies,
+		      const MeasRef<MFrequency>& freqRef) const;
 
   // See the corresponding function in the
   // <linkto class="SkyCompBase">SkyCompBase</linkto>
   // class for a description of this function.
-  virtual Flux<casacore::Double> visibility(const casacore::Vector<casacore::Double>& uvw,
-				  const casacore::Double& frequency) const;
+  virtual Flux<Double> visibility(const Vector<Double>& uvw,
+				  const Double& frequency) const;
 
   // See the corresponding function in the
   // <linkto class="SkyCompBase">SkyCompBase</linkto>
   // class for a description of this function.
-  virtual void visibility(casacore::Cube<casacore::DComplex>& visibilities,
-			  const casacore::Matrix<casacore::Double>& uvws,
-			  const casacore::Vector<casacore::Double>& frequencies) const;
+  virtual void visibility(Cube<DComplex>& visibilities,
+			  const Matrix<Double>& uvws,
+			  const Vector<Double>& frequencies) const;
 
   // See the corresponding functions in the
   // <linkto class="SkyCompBase">SkyCompBase</linkto>
   // class for a description of these functions.
   // <group>
-  virtual casacore::Bool fromRecord(casacore::String& errorMessage, 
-			  const casacore::RecordInterface& record);
-  virtual casacore::Bool toRecord(casacore::String& errorMessage, 
-			casacore::RecordInterface& record) const;
+  virtual Bool fromRecord(String& errorMessage, 
+			  const RecordInterface& record);
+  virtual Bool toRecord(String& errorMessage, 
+			RecordInterface& record) const;
   // </group>
 
   // Convert the SkyComponent to a vector of Doubles 
-  // for the specified casacore::Stokes type (others are lost).
+  // for the specified Stokes type (others are lost).
   // The first three elements of the returned vector are : flux for given 
-  // casacore::Stokes (in the units you specify), longitude location (absolute pixels), and
+  // Stokes (in the units you specify), longitude location (absolute pixels), and
   // latitude location (absolute pixels).  For DISK and GAUSSIAN shapes,
   // the next three elements are major axis (absolute pixels)
   // minor axis (absolute pixels), and position angle (N->E; radians).
   // You must specify the brightness units to which the integral flux stored
   // in the SkyComponent should be converted.  So as to be able to handle
   // /beam units, the restoring beam must also be suppluied.  It can be obtained 
-  // from the casacore::ImageInfo class.  It should be of length 3 or 0 (no beam).  
+  // from the ImageInfo class.  It should be of length 3 or 0 (no beam).  
   //  A constant spectrum is used so any spectral index information in
   // the component is lost.
-  casacore::Vector<casacore::Double> toPixel (
-		  const casacore::Unit& brightnessUnitOut,
-          const casacore::GaussianBeam& restoringBeam,
-          const casacore::CoordinateSystem& cSys,
-          casacore::Stokes::StokesTypes stokes
+  Vector<Double> toPixel (
+		  const Unit& brightnessUnitOut,
+          const GaussianBeam& restoringBeam,
+          const CoordinateSystem& cSys,
+          Stokes::StokesTypes stokes
   ) const;
 
   // Take a vector Doubles and fill the SkyComponent from the values.
   // The first three elements of the given vector are : flux for given 
-  // casacore::Stokes (in the units you specify), longitude location (absolute pixels), and
+  // Stokes (in the units you specify), longitude location (absolute pixels), and
   // latitude location (absolute pixels).  For DISK and GAUSSIAN shapes,
   // the next three elements are major axis (absolute pixels)
   // minor axis (absolute pixels), and position angle (N->E; radians).
@@ -293,66 +289,66 @@ public:
   // in the vector.  It will be converted to an integral reprentation
   // internally for the SkyComponent.  So as to be able to handle
   // /beam units, the restoring beam must also be supplied.  It can be obtained 
-  // from the casacore::ImageInfo class.  It should be of length 3 or 0 (no beam).  
+  // from the ImageInfo class.  It should be of length 3 or 0 (no beam).  
   // Multiplying by fluxRatio converts the brightness units to Jy/whatever (e.g. mJy/beam
   // to Jy/beam). You must specify the type of shape to convert to.
   // The SkyComponent is given a  constant spectrum.
-  void fromPixel (casacore::Double& fluxRatio, const casacore::Vector<casacore::Double>& parameters,
-                  const casacore::Unit& brightnessUnitIn,
-                  const casacore::GaussianBeam& restoringBeam,
-                  const casacore::CoordinateSystem& cSys,
+  void fromPixel (Double& fluxRatio, const Vector<Double>& parameters,
+                  const Unit& brightnessUnitIn,
+                  const GaussianBeam& restoringBeam,
+                  const CoordinateSystem& cSys,
                   ComponentType::Shape componentShape,
-                  casacore::Stokes::StokesTypes stokes);
+                  Stokes::StokesTypes stokes);
 
   // See the corresponding function in the
   // <linkto class="SkyCompBase">SkyCompBase</linkto>
   // class for a description of this function.
-  virtual casacore::Bool ok() const;
+  virtual Bool ok() const;
 
 
 // Find the factor that converts whatever per whatevers (e.g. mJy per beam)
 // to Jy per whatevers (e.g. Jy per beam)
-   static casacore::Double convertToJy (const casacore::Unit& brightnessUnit);
+   static Double convertToJy (const Unit& brightnessUnit);
 
    // Convert a peak flux density to integral flux density
-	static casacore::Quantity peakToIntegralFlux (
-		const casacore::DirectionCoordinate& dirCoord,
+	static Quantity peakToIntegralFlux (
+		const DirectionCoordinate& dirCoord,
 		const ComponentType::Shape componentShape,
-		const casacore::Quantum<casacore::Double>& peakFlux,
-		const casacore::Quantum<casacore::Double>& majorAxis,
-		const casacore::Quantum<casacore::Double>& minorAxis,
-		const casacore::GaussianBeam& restoringBeam
+		const Quantum<Double>& peakFlux,
+		const Quantum<Double>& majorAxis,
+		const Quantum<Double>& minorAxis,
+		const GaussianBeam& restoringBeam
 	);
 
 	// Convert an integral flux density to peak flux density.  The brightness unit
 	// of the output quantum (e.g. mJy/beam) is specified by <src>brightnessUnit</src>
 	// Throws an exception if the units of <src>integralFlux</src> do not conform to Jy.
-	static casacore::Quantity integralToPeakFlux (
-		const casacore::DirectionCoordinate& dirCoord,
+	static Quantity integralToPeakFlux (
+		const DirectionCoordinate& dirCoord,
 		const ComponentType::Shape componentShape,
-		const casacore::Quantity& integralFlux,
-		const casacore::Unit& brightnessUnit,
-		const casacore::Quantity& majorAxis,
-		const casacore::Quantity& minorAxis,
-		const casacore::GaussianBeam& restoringBeam
+		const Quantity& integralFlux,
+		const Unit& brightnessUnit,
+		const Quantity& majorAxis,
+		const Quantity& minorAxis,
+		const GaussianBeam& restoringBeam
 	);
 
 private:
-  casacore::CountedPtr<ComponentShape> itsShapePtr;
-  casacore::CountedPtr<SpectralModel> itsSpectrumPtr;
-  Flux<casacore::Double> itsFlux;
-  casacore::String itsLabel;
-  casacore::Vector<casacore::Double> itsOptParms;
+  CountedPtr<ComponentShape> itsShapePtr;
+  CountedPtr<SpectralModel> itsSpectrumPtr;
+  Flux<Double> itsFlux;
+  String itsLabel;
+  Vector<Double> itsOptParms;
 
 
   // Make definitions to handle "/beam" and "/pixel" units.   The restoring beam
   // is provided in a vector of quanta (major, minor, position angle).  Should
   // be length 0 or 3. It can be obtained from class ImageInfo
-  static casacore::Unit defineBrightnessUnits (
-		  casacore::LogIO& os, const casacore::Unit& brightnessUnitIn,
-		  const casacore::DirectionCoordinate& dirCoord,
-		  const casacore::GaussianBeam& restoringBeam,
-		  const casacore::Bool integralIsJy
+  static Unit defineBrightnessUnits (
+		  LogIO& os, const Unit& brightnessUnitIn,
+		  const DirectionCoordinate& dirCoord,
+		  const GaussianBeam& restoringBeam,
+		  const Bool integralIsJy
   );
 
   // Remove the user defined "/beam" and "/pixel" definitions

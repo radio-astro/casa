@@ -72,8 +72,8 @@ int main() {
 				0, 0, "0.00000000e+00Hz");
 		{
 			// define some variables for the fit
-			Bool fitGauss(true);
-			Bool fitPoly(true);
+			Bool fitGauss(True);
+			Bool fitPoly(True);
 			uInt nPoly(1);
 			String msg;
 
@@ -82,7 +82,7 @@ int main() {
 			ok = specFit->fit(z_xval, z_yval, z_eval, Float(556.0), Float(568.0),
 					fitGauss, fitPoly, nPoly, msg);
 
-			// ok is always true
+			// ok is always True
 			AlwaysAssert(ok, AipsError);
 
 			// the fit needs to be a success
@@ -138,8 +138,8 @@ int main() {
 				0, 1, "0.00000000e+00Hz");
 		{
 			// define some variables for the fit
-			Bool fitGauss(true);
-			Bool fitPoly(true);
+			Bool fitGauss(True);
+			Bool fitPoly(True);
 			uInt nPoly(1);
 			String msg;
 
@@ -148,7 +148,7 @@ int main() {
 			ok = specFit->fit(z_xval, z_yval, z_eval, Float(556.0), Float(568.0),
 					fitGauss, fitPoly, nPoly, msg);
 
-			// ok is always true
+			// ok is always True
 			AlwaysAssert(ok, AipsError);
 
 			// the fit needs to be a success
@@ -204,8 +204,8 @@ int main() {
 				0, 0, "0.00000000e+00Hz");
 		{
 			// define some variables for the fit
-			Bool fitGauss(true);
-			Bool fitPoly(true);
+			Bool fitGauss(True);
+			Bool fitPoly(True);
 			uInt nPoly(1);
 			String msg;
 
@@ -215,7 +215,7 @@ int main() {
 					fitGauss, fitPoly, nPoly, msg);
 
 
-			// ok is always true
+			// ok is always True
 			AlwaysAssert(ok, AipsError);
 
 			// the fit needs to be a success
@@ -281,9 +281,9 @@ Bool allNear (const Vector<Double>& data, const Vector<Double>& templ, Double to
    	if (!near(data(i), templ(i), tol)) {
    		cerr << "data differ, tol = " << tol << endl;
    		cerr << data(i) << ", " << templ(i)<< endl;
-   		return false;
+   		return False;
    	}
    }
-   return true;
+   return True;
 }
 

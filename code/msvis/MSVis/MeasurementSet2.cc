@@ -2,8 +2,6 @@
 #include <ms/MSSel/MSSelection.h>
 #include <tables/Tables.h>
 
-using namespace casacore;
-
 namespace casa {
 
 

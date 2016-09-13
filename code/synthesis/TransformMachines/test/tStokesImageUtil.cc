@@ -64,7 +64,7 @@ int main() {
 		);
 		t.put(gaussianModel.get());
 
-		Bool b = true;
+		Bool b = True;
 		Quantity bmaj(5, "arcsec");
 		Quantity bmin(2.5, "arcsec");
 		Quantity bpa(20, "deg");

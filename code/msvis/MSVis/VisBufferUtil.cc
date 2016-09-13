@@ -50,7 +50,6 @@
 #include <iomanip>
 using namespace std;
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <summary> 
@@ -170,10 +169,10 @@ VisBufferUtil::VisBufferUtil(const MeasFrame& mframe): oldMSId_p(-1) {
 Bool VisBufferUtil::rotateUVW(const vi::VisBuffer2&vb, const MDirection& desiredDir,
 				Matrix<Double>& uvw, Vector<Double>& dphase){
 
-    Bool retval=true;
+    Bool retval=True;
     mframe_.resetEpoch(vb.time()(0));
     UVWMachine uvwMachine(desiredDir, vb.phaseCenter(), mframe_,
-			false, false);
+			False, False);
     retval = !uvwMachine.isNOP();
     dphase.resize(vb.nRows());
     dphase.set(0.0);
@@ -242,7 +241,7 @@ Bool VisBufferUtil::interpolateFrequency(Cube<Complex>& data,
   flag.resize();     
   flag.reference(flipflag);
 
-  return true;
+  return True;
 
 }
   void VisBufferUtil::getFreqRange(Double& freqMin, Double& freqMax, vi::VisibilityIterator2& vi, MFrequency::Types freqFrame){
@@ -553,8 +552,8 @@ void VisBufferUtil::convertFrequency(Vector<Double>& outFreq,
 		 tim.mark();
 		 oldMSId_p=vb.msId();
 		 if(timeAntIndex_p.shape()(0) < (oldMSId_p+1)){
-			 timeAntIndex_p.resize(oldMSId_p+1, true);
-		 	 cachedPointingDir_p.resize(oldMSId_p+1, true);
+			 timeAntIndex_p.resize(oldMSId_p+1, True);
+		 	 cachedPointingDir_p.resize(oldMSId_p+1, True);
 		 }
 		 if(  timeAntIndex_p[oldMSId_p].empty()){
 			 Vector<Double> tOrig;
@@ -578,7 +577,7 @@ void VisBufferUtil::convertFrequency(Vector<Double>& outFreq,
 					 timeAntIndex_p[oldMSId_p][key]=row > -1 ? cachedPointingDir_p[oldMSId_p].shape()[0] : -1;
 					 guessIndex=row;
 					 if(row >-1){
-						 cachedPointingDir_p[oldMSId_p].resize(cachedPointingDir_p[oldMSId_p].nelements()+1, true);
+						 cachedPointingDir_p[oldMSId_p].resize(cachedPointingDir_p[oldMSId_p].nelements()+1, True);
 						 cachedPointingDir_p[oldMSId_p][cachedPointingDir_p[oldMSId_p].nelements()-1]=mspc.directionMeas(row);
 					 }
 
@@ -623,7 +622,7 @@ void VisBufferUtil::convertFrequency(Vector<Double>& outFreq,
     	   retval[prev]=t[k];
        }
      }
-     retval.resize(prev+1, true);
+     retval.resize(prev+1, True);
 
    }
 // helper function to swap the y and z axes of a Cube

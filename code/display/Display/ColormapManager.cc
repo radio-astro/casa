@@ -30,7 +30,6 @@
 #include <display/Display/PixelCanvasColorTable.h>
 #include <casa/iostream.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	ColormapManager::ColormapManager(PixelCanvasColorTable * pcctbl) :
@@ -125,12 +124,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			// now tell the cmap that it is no longer used by the
 			// PixelCanvasColorTable for which this is a ColormapManager ...
 			cmap->unregisterPCColorTable(itsPCColorTable);
-			return true;
+			return True;
 		} else {
 			cerr << "Colormap: " << *cmap << endl;
 			throw(AipsError("unregisterColormap passed unknown colormap"));
 		}
-		return false;
+		return False;
 	}
 
 	uInt ColormapManager::getColormapSize(const Colormap *cmap) const {
@@ -159,7 +158,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	Bool ColormapManager::member(const Colormap *cmap) const {
 		// needs to return base_pixel plus dcmap's offset
-		return (itsInfoMap.isDefined(cmap)) ? true : false;
+		return (itsInfoMap.isDefined(cmap)) ? True : False;
 	}
 
 	const Colormap *ColormapManager::getMap(const uInt mapnum) const {

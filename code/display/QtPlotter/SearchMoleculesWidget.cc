@@ -43,7 +43,6 @@
 #include <cmath>
 using namespace std;
 
-using namespace casacore;
 namespace casa {
 
 	const QString SearchMoleculesWidget::SPLATALOGUE_UNITS="MHz";

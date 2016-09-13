@@ -57,7 +57,7 @@ public:
     static QStringList GLOBAL_COLORS;
     
     // Convenient access to class name (QPPlotter).
-    static const casacore::String CLASS_NAME;
+    static const String CLASS_NAME;
 
     
     // Non-Static //
@@ -97,10 +97,10 @@ public:
     void setSize(int width, int height);
     
     // Implements Plotter::windowTitle().
-    casacore::String windowTitle() const;
+    String windowTitle() const;
     
     // Implements Plotter::setWindowTitle().
-    void setWindowTitle(const casacore::String& newTitle);
+    void setWindowTitle(const String& newTitle);
     
     // Implements Plotter::canvasAreaSize().
     std::pair<int, int> canvasAreaSize() const;
@@ -138,16 +138,16 @@ public:
     void canvasLayoutChanged(PlotCanvasLayout& layout);
     
     // Implements Plotter::dateFormat().
-    const casacore::String& dateFormat() const;
+    const String& dateFormat() const;
     
     // Implements Plotter::setDateFormat().
-    void setDateFormat(const casacore::String& dateFormat);
+    void setDateFormat(const String& dateFormat);
     
     // Implements Plotter::relativeDateFormat().
-    const casacore::String& relativeDateFormat() const;
+    const String& relativeDateFormat() const;
     
     // Implements Plotter::setRelativeDateFormat().
-    void setRelativeDateFormat(const casacore::String& dateFormat);
+    void setRelativeDateFormat(const String& dateFormat);
     
     
     // Implements Plotter::defaultPanelShown().
@@ -194,8 +194,8 @@ public:
     bool exportToFile(const PlotExportFormat& format);
     
     // Implements Plotter::fileChooserDialog().
-    casacore::String fileChooserDialog(const casacore::String& title = "casacore::File Chooser",
-                             const casacore::String& directory = "");
+    String fileChooserDialog(const String& title = "File Chooser",
+                             const String& directory = "");
 
     
     // Implements Plotter::registerResizeHandler().
@@ -230,12 +230,12 @@ protected:
     void resizeEvent(QResizeEvent* event);
     
     // Logs the given object creation/destruction event, if needed.
-    void logObject(const casacore::String& className, void* address, bool creation,
-            const casacore::String& message = casacore::String());
+    void logObject(const String& className, void* address, bool creation,
+            const String& message = String());
     
     // Logs the given method enter/exit event, if needed.
-    void logMethod(const casacore::String& className, const casacore::String& methodName,
-            bool entering, const casacore::String& message = casacore::String());
+    void logMethod(const String& className, const String& methodName,
+            bool entering, const String& message = String());
     
 private:
     // Canvas layout.
@@ -256,8 +256,8 @@ private:
     
     // Date formats.
     // <group>
-    casacore::String m_dateFormat;
-    casacore::String m_relativeDateFormat;
+    String m_dateFormat;
+    String m_relativeDateFormat;
     // </group>
     
     QList<QPAxis*> externalAxes;

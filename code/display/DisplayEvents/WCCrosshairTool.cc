@@ -29,7 +29,6 @@
 #include <display/Display/PixelCanvas.h>
 #include <display/DisplayEvents/WCCrosshairTool.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	WCCrosshairTool::WCCrosshairTool(WorldCanvas *wcanvas,
@@ -38,9 +37,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		WCTool(wcanvas, keysym),
 		itsCrosshairPersistent(persistent),
 		itsCrosshairRadius(8),
-		itsOnScreen(false),
-		itsActive(false),
-		itsCrosshairExists(false) {
+		itsOnScreen(False),
+		itsActive(False),
+		itsCrosshairExists(False) {
 		reset();
 	}
 
@@ -75,8 +74,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				itsAdjustMode = WCCrosshairTool::Move;
 				itsBaseMoveX = x;
 				itsBaseMoveY = y;
-				itsActive = true;
-				itsMoved = false;
+				itsActive = True;
+				itsMoved = False;
 				crosshairNotReady();
 			} else {
 			}
@@ -91,8 +90,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				itsAdjustMode = WCCrosshairTool::Move;
 				itsBaseMoveX = x;
 				itsBaseMoveY = y;
-				itsActive = true;
-				itsCrosshairExists = true;
+				itsActive = True;
+				itsCrosshairExists = True;
 				crosshairNotReady();
 			}
 		}
@@ -102,11 +101,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Int x = ev.pixX();
 		Int y = ev.pixY();
 		if (itsActive && (itsAdjustMode == WCCrosshairTool::Off)) {
-			itsActive = false;
+			itsActive = False;
 			itsLastPressX = itsLastPressY = -99999;
 			itsLastReleaseX = itsLastReleaseY = -99999;
 			itsLastPressTime = its2ndLastPressTime = -1.0;
-			itsCrosshairExists = true;
+			itsCrosshairExists = True;
 			preserve();
 			crosshairReady();
 			itsLastPressX = itsLastPressY = -99999;
@@ -114,7 +113,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			itsLastPressTime = its2ndLastPressTime = -1.0;
 		} else if (itsActive && (itsAdjustMode == WCCrosshairTool::Move)) {
 			itsAdjustMode = WCCrosshairTool::Off;
-			itsActive = false;
+			itsActive = False;
 			preserve();
 			crosshairReady();
 		}
@@ -126,9 +125,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				draw();
 				reset();
 			} else {
-				itsActive = false;
+				itsActive = False;
 				crosshairReady();
-				itsMoved = false;
+				itsMoved = False;
 				itsAdjustMode = WCCrosshairTool::Off;
 			}
 			// emit either inside or outside dbl click
@@ -158,7 +157,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	void WCCrosshairTool::moved(const WCMotionEvent &ev, const viewer::region::region_list_type & /*selected_regions*/) {
-		itsMoved = true;
+		itsMoved = True;
 		if (!itsActive) {
 			return;
 		}
@@ -179,11 +178,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	void WCCrosshairTool::refresh(const WCRefreshEvent &ev) {
 		if (ev.reason() == Display::BackCopiedToFront) {
-			itsOnScreen = false;
+			itsOnScreen = False;
 		}
 		if (!itsActive && itsCrosshairExists) {
 			restore();
-			draw(true);
+			draw(True);
 		} else {
 			reset();
 		}
@@ -217,10 +216,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		PixelCanvas *pCanvas = pixelCanvas();
 		if (itsOnScreen) {
 			pCanvas->copyBackBufferToFrontBuffer();
-			itsOnScreen = false;
+			itsOnScreen = False;
 			return;
 		}
-		itsOnScreen = true;
+		itsOnScreen = True;
 		Display::DrawBuffer oldBuffer = pCanvas->drawBuffer();
 		pCanvas->setDrawBuffer(Display::FrontBuffer);
 		pCanvas->setCapStyle(Display::CSRound);
@@ -249,9 +248,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if (!itsActive && itsCrosshairExists) {
 			crosshairNotReady();
 		}
-		itsActive = false;
-		itsMoved = false;
-		itsCrosshairExists = false;
+		itsActive = False;
+		itsMoved = False;
+		itsCrosshairExists = False;
 		itsAdjustMode = WCCrosshairTool::Off;
 		itsLastPressX = itsLastPressY = -99999;
 		its2ndLastPressX = its2ndLastPressY = -99999;

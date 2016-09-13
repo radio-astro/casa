@@ -1,4 +1,4 @@
-//# MPIError.h: casacore::Data manager error classes
+//# MPIError.h: Data manager error classes
 //# Copyright (C) 1994,1995,1996,1999,2000
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -47,15 +47,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <synopsis>
 // This is the generic MPI exception; catching this one means
 // catching all MPI* exceptions.
-// Note that you have to catch casacore::AipsError to catch all possible exceptions.
+// Note that you have to catch AipsError to catch all possible exceptions.
 // </synopsis>
 
-class MPIError : public casacore::AipsError {
+class MPIError : public AipsError {
 public:
     // The default constructor generates the message "MPI error".
     MPIError (Category c=GENERAL);
     // Construct with given message.
-    MPIError (const casacore::String& message,Category c=GENERAL);
+    MPIError (const String& message,Category c=GENERAL);
     ~MPIError () throw();
 };
 

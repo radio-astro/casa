@@ -53,7 +53,7 @@ class VisBuffer;
 // </etymology>
 //
 // <synopsis>
-// When selected parts of an casacore::MS are written to a new casacore::MS, it may be necessary to
+// When selected parts of an MS are written to a new MS, it may be necessary to
 // remap metadata indices like Field ID, DDID, ObservationID, etc..
 // </synopsis>
 //
@@ -71,7 +71,7 @@ public:
   VBRemapper();
 
   VBRemapper(const std::map<VisBufferComponents::EnumType,
-             std::map<casacore::Int, casacore::Int> >& inToOutMaps);
+             std::map<Int, Int> >& inToOutMaps);
 
   //// Copy construct
   //VBRemapper(const VBRemapper& gw) {}
@@ -82,28 +82,28 @@ public:
   //// Assignment
   //virtual VBRemapper& operator=(const VBRemapper& gw) {}
 
-  const std::map<VisBufferComponents::EnumType, std::map<casacore::Int, casacore::Int> >& getMaps() const
+  const std::map<VisBufferComponents::EnumType, std::map<Int, Int> >& getMaps() const
   {
     return inToOutMaps_p;
   }
 
-  void setMaps(const std::map<VisBufferComponents::EnumType, std::map<casacore::Int, casacore::Int> >& maps)
+  void setMaps(const std::map<VisBufferComponents::EnumType, std::map<Int, Int> >& maps)
   {
     inToOutMaps_p = maps;
   }
 
   // Remaps vb and returns its success value.
-  casacore::Bool remap(VisBuffer& vb, const casacore::Bool squawk=true) const;
+  Bool remap(VisBuffer& vb, const Bool squawk=True) const;
 
 protected:
   // Remaps col using mapper.
-  // Returns false if col has a value that is not in mapper's keys (those
-  // values are left unchanged), true otherwise.
-  casacore::Bool remapScalar(casacore::Int& colref, const std::map<casacore::Int, casacore::Int>& mapper) const;
-  casacore::Bool remapVector(casacore::Vector<casacore::Int>& col, const std::map<casacore::Int, casacore::Int>& mapper) const;
+  // Returns False if col has a value that is not in mapper's keys (those
+  // values are left unchanged), True otherwise.
+  Bool remapScalar(Int& colref, const std::map<Int, Int>& mapper) const;
+  Bool remapVector(Vector<Int>& col, const std::map<Int, Int>& mapper) const;
 
   // Set of maps from input ID to output ID, keyed by VisBufferComponent.
-  std::map<VisBufferComponents::EnumType, std::map<casacore::Int, casacore::Int> > inToOutMaps_p;
+  std::map<VisBufferComponents::EnumType, std::map<Int, Int> > inToOutMaps_p;
 };
 
 } //# NAMESPACE CASA - END

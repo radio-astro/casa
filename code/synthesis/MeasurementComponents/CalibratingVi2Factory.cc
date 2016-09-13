@@ -30,8 +30,8 @@ namespace {
   casa::vi::CalibratingVi2FactoryI* generateCViFac() {
     return new casa::vi::CalibratingVi2Factory();  // A concrete one from the synthesis side
   }
-  casa::vi::CalibratingVi2FactoryI* generateCViFac_byRec(casacore::MeasurementSet* ms,
-							 const casacore::Record& calrec,
+  casa::vi::CalibratingVi2FactoryI* generateCViFac_byRec(casa::MeasurementSet* ms, 
+							 const casa::Record& calrec,
 							 const casa::vi::IteratingParameters& iterpar) {
     return new casa::vi::CalibratingVi2Factory(ms,calrec,iterpar);  // A concrete one from the synthesis side
   }
@@ -40,7 +40,6 @@ namespace {
   bool initCViFac_byRec_Generator = casa::vi::CalibratingVi2FactoryI::set_byRec_Generator(generateCViFac_byRec);
 }
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 namespace vi { //# NAMESPACE VI - BEGIN
 
@@ -49,7 +48,7 @@ namespace vi { //# NAMESPACE VI - BEGIN
 CalibratingVi2Factory::CalibratingVi2Factory(MeasurementSet* ms,
 					     const CalibratingParameters& calpar, 
 					     const IteratingParameters& iterpar) :
-  valid_p(true),
+  valid_p(True),
   ms_p(ms),
   calpar_p(calpar),
   iterpar_p(iterpar)
@@ -58,7 +57,7 @@ CalibratingVi2Factory::CalibratingVi2Factory(MeasurementSet* ms,
 
 // -----------------------------------------------------------------------
 CalibratingVi2Factory::CalibratingVi2Factory() :
-  valid_p(false),
+  valid_p(False),
   ms_p(0),
   calpar_p(),
   iterpar_p(IteratingParameters())
@@ -68,7 +67,7 @@ CalibratingVi2Factory::CalibratingVi2Factory() :
 CalibratingVi2Factory::CalibratingVi2Factory(MeasurementSet* ms,
 					     const Record& calrec,
 					     const IteratingParameters& iterpar) :
-  valid_p(true),
+  valid_p(True),
   ms_p(ms),
   calpar_p(calrec),
   iterpar_p(iterpar)
@@ -78,7 +77,7 @@ CalibratingVi2Factory::CalibratingVi2Factory(MeasurementSet* ms,
 CalibratingVi2Factory::CalibratingVi2Factory(MeasurementSet* ms,
 					     const String& callib,
 					     const IteratingParameters& iterpar) :
-  valid_p(true),
+  valid_p(True),
   ms_p(ms),
   calpar_p(callib),
   iterpar_p(iterpar)
@@ -100,7 +99,7 @@ void CalibratingVi2Factory::initialize(MeasurementSet* ms,
   ms_p=ms;
   calpar_p=CalibratingParameters(callibrec);
   iterpar_p=iterpar;
-  valid_p=true;
+  valid_p=True;
 }
 
 // -----------------------------------------------------------------------
@@ -114,7 +113,7 @@ void CalibratingVi2Factory::initialize(MeasurementSet* ms,
   ms_p=ms;
   calpar_p=CalibratingParameters(callib);
   iterpar_p=iterpar;
-  valid_p=true;
+  valid_p=True;
 }
 
 
@@ -132,7 +131,7 @@ vi::ViImplementation2 * CalibratingVi2Factory::createVi () const
                                               iterpar_p.getSortColumns(),
                                               iterpar_p.getChunkInterval(),
                                               vi::VbPlain,
-                                              true); // writable!
+                                              True); // writable!
   
   return this->createVi(plainViI);
 
@@ -160,7 +159,7 @@ vi::ViImplementation2 * CalibratingVi2Factory::createVi (vi::ViImplementation2 *
                                             iterpar_p.getSortColumns(),
                                             iterpar_p.getChunkInterval(),
                                             vi::VbPlain,
-                                            true); // writable!
+                                            True); // writable!
     
   // Create output VisibilityIterator
   //   (Get base MS name cleverly, because ms_p might be a reference table)

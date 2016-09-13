@@ -25,7 +25,6 @@
 #include <flagging/Flagging/FlagAgentManual.h>
 #include <iostream>
 
-using namespace casacore;
 using namespace casa;
 
 void deleteFlags(string inputFile,Record dataSelection)
@@ -246,7 +245,7 @@ void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParame
 	{
 		Record diplayAgentConfig;
 		diplayAgentConfig.define("name","FlagAgentDisplay");
-		diplayAgentConfig.define("datadisplay",true);
+		diplayAgentConfig.define("datadisplay",True);
 
 		if (agentParameters[0].fieldNumber ("correlation") >= 0) diplayAgentConfig.define("correlation",agentParameters[0].asString("correlation"));
 		if (agentParameters[0].fieldNumber ("spw") >= 0) diplayAgentConfig.define("spw",agentParameters[0].asString("spw"));
@@ -344,7 +343,7 @@ void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParame
 			agentList.apply();
 
 			// Flush flags to MS
-			// dh->flushFlags_p = true;
+			// dh->flushFlags_p = True;
 			dh->flushFlags();
 		}
 
@@ -554,7 +553,7 @@ int main(int argc, char **argv)
 		}
 		else if (parameter == string("-unflag"))
 		{
-			if (value.compare("true") == 0)
+			if (value.compare("True") == 0)
 			{
 				deleteFlagsActivated = true;
 				cout << "Clean flags step activated" << endl;
@@ -695,7 +694,7 @@ int main(int argc, char **argv)
 		}
 		else if (parameter == string("-display"))
 		{
-			if (value.compare("true") == 0)
+			if (value.compare("True") == 0)
 			{
 				display = true;
 			}
@@ -703,8 +702,8 @@ int main(int argc, char **argv)
 		/*
 		else if (parameter == string("-usepreflags"))
 		{
-		  Bool usepreflags=true;
-		  if (value.compare("false") == 0)   usepreflags=false;
+		  Bool usepreflags=True;
+		  if (value.compare("False") == 0)   usepreflags=False;
 		  agentParameters.define ("usepreflags", usepreflags);
 		  cout << "usepreflags is: " << usepreflags << endl;
 		}

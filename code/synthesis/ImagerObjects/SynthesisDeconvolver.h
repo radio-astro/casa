@@ -49,15 +49,11 @@
 
 #include<synthesis/ImagerObjects/SynthesisUtilMethods.h>
 
-namespace casacore{
-
-class MeasurementSet;
-template<class T> class ImageInterface;
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Forward declarations
+class MeasurementSet;
+template<class T> class ImageInterface;
 
 // <summary> Class that contains functions needed for imager </summary>
 
@@ -75,26 +71,26 @@ class SynthesisDeconvolver
 
   void setupDeconvolution(const SynthesisParamsDeconv& decpars);
 
-  //  void setupDeconvolution(casacore::Record recpars);
+  //  void setupDeconvolution(Record recpars);
 
-  casacore::Record initMinorCycle();
-  casacore::Record executeMinorCycle(casacore::Record& subIterBot);
+  Record initMinorCycle();
+  Record executeMinorCycle(Record& subIterBot);
 
-  casacore::Record interactiveGUI(casacore::Record& iterRec);
+  Record interactiveGUI(Record& iterRec);
 
   // Helpers
   /*
-  casacore::Float getPeakResidual();
-  casacore::Float getModelFlux();
-  casacore::Float getPSFSidelobeLevel();
+  Float getPeakResidual();
+  Float getModelFlux();
+  Float getPSFSidelobeLevel();
   */
   // Restoration (and post-restoration PB-correction)
   void restore();
   void pbcor();// maybe add a way to take in arbitrary PBs here.
 
   // For interaction
-  void getCopyOfResidualAndMask( casacore::TempImage<casacore::Float> &/*residual*/, casacore::TempImage<casacore::Float>& /*mask*/ );
-  void setMask( casacore::TempImage<casacore::Float> &/*mask*/ );
+  void getCopyOfResidualAndMask( TempImage<Float> &/*residual*/, TempImage<Float>& /*mask*/ );
+  void setMask( TempImage<Float> &/*mask*/ );
 
   void setStartingModel();
   void setupMask();
@@ -102,12 +98,12 @@ class SynthesisDeconvolver
 
 protected:
 
-  SHARED_PTR<SIImageStore> makeImageStore( casacore::String imagename );
+  SHARED_PTR<SIImageStore> makeImageStore( String imagename );
   /*
-  void findMinMax(const casacore::Array<casacore::Float>& lattice,
-					const casacore::Array<casacore::Float>& mask,
-					casacore::Float& minVal, casacore::Float& maxVal,
-					casacore::Float& minValMask, casacore::Float& maxValMask);
+  void findMinMax(const Array<Float>& lattice,
+					const Array<Float>& mask,
+					Float& minVal, Float& maxVal,
+					Float& minValMask, Float& maxValMask);
 
   void printImageStats();
   */
@@ -118,11 +114,11 @@ protected:
 
 
   // For the deconvolver, decide how many sliced deconvolution calls to make
-  //  casacore::Vector<casacore::Slicer> partitionImages();
+  //  Vector<Slicer> partitionImages();
 
   // Check if images exist on disk and are all the same shape
-  //casacore::Bool setupImagesOnDisk();
-  // casacore::Bool doImagesExist( casacore::String imagename );
+  //Bool setupImagesOnDisk();
+  // Bool doImagesExist( String imagename );
 
   /////////////// Member Objects
 
@@ -131,35 +127,35 @@ protected:
 
   SHARED_PTR<SIImageStore> itsImages;
 
-  casacore::IPosition itsImageShape;
+  IPosition itsImageShape;
   
-  casacore::String itsImageName;
-  casacore::Vector<casacore::String> itsStartingModelNames;
-  casacore::Bool itsAddedModel;
+  String itsImageName;
+  Vector<String> itsStartingModelNames;
+  Bool itsAddedModel;
 
 
-  casacore::Float itsBeam;
+  Float itsBeam;
 
   SIMinorCycleController itsLoopController;
 
   /////////////// All input parameters
 
-  casacore::uInt itsDeconvolverId;
-  casacore::Vector<casacore::Float> itsScales;
+  uInt itsDeconvolverId;
+  Vector<Float> itsScales;
 
-  casacore::String itsMaskType;
-  casacore::Vector<casacore::String> itsMaskList;
-  casacore::String itsMaskString;
-  casacore::Float itsPBMask;
-  casacore::String itsAutoMaskAlgorithm;
-  casacore::String itsMaskThreshold;
-  casacore::Float itsFracOfPeak;
-  casacore::String itsMaskResolution;
-  casacore::Float itsMaskResByBeam;
-  casacore::Int itsNMask;
-  casacore::Bool itsAutoAdjust;
-  casacore::Bool itsIsMaskLoaded; // Try to get rid of this state variable ! 
-  casacore::Bool itsIsInteractive;
+  String itsMaskType;
+  Vector<String> itsMaskList;
+  String itsMaskString;
+  Float itsPBMask;
+  String itsAutoMaskAlgorithm;
+  String itsMaskThreshold;
+  Float itsFracOfPeak;
+  String itsMaskResolution;
+  Float itsMaskResByBeam;
+  Int itsNMask;
+  Bool itsAutoAdjust;
+  Bool itsIsMaskLoaded; // Try to get rid of this state variable ! 
+  Bool itsIsInteractive;
  
 };
 

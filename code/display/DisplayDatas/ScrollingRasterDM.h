@@ -41,28 +41,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	public:
 
-		ScrollingRasterDM(casacore::uInt xAxis, casacore::uInt yAxis, casacore::Int mAxis,
-		                  casacore::IPosition fixedPos, PrincipalAxesDD *padd);
+		ScrollingRasterDM(uInt xAxis, uInt yAxis, Int mAxis,
+		                  IPosition fixedPos, PrincipalAxesDD *padd);
 
 	protected:
 
-		virtual void setup(casacore::IPosition fixedPos);
-		virtual casacore::IPosition dataShape();
+		virtual void setup(IPosition fixedPos);
+		virtual IPosition dataShape();
 
-		virtual casacore::uInt dataDrawSelf(WorldCanvas *wCanvas,
-		                          const casacore::Vector<casacore::Double> &blc,
-		                          const casacore::Vector<casacore::Double> &trc,
-		                          const casacore::IPosition &start,
-		                          const casacore::IPosition &sliceShape,
-		                          const casacore::IPosition &stride,
-		                          const casacore::Bool usePixelEdges = false);
+		virtual uInt dataDrawSelf(WorldCanvas *wCanvas,
+		                          const Vector<Double> &blc,
+		                          const Vector<Double> &trc,
+		                          const IPosition &start,
+		                          const IPosition &sliceShape,
+		                          const IPosition &stride,
+		                          const Bool usePixelEdges = False);
 
 
-		virtual casacore::Bool dataGetSlice(casacore::Matrix<casacore::Float>& data,
-		                          casacore::Matrix<casacore::Bool> &mask,
-		                          const casacore::IPosition& start,
-		                          const casacore::IPosition& sliceShape,
-		                          const casacore::IPosition& stride);
+		virtual Bool dataGetSlice(Matrix<Float>& data,
+		                          Matrix<Bool> &mask,
+		                          const IPosition& start,
+		                          const IPosition& sliceShape,
+		                          const IPosition& stride);
 
 	private:
 

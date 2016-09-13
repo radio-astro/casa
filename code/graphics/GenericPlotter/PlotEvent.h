@@ -239,13 +239,13 @@ public:
     // Returns the key modifiers.
     vector<Modifier> modifiers() const;
     
-    // Returns a casacore::String representation of this key event.
-    casacore::String toString() const;
+    // Returns a String representation of this key event.
+    String toString() const;
     
     
-    // Converts between KeyModifier and its casacore::String representation.
+    // Converts between KeyModifier and its String representation.
     // <group>
-    static casacore::String modifier(Modifier f) {
+    static String modifier(Modifier f) {
         switch(f) {
         case CONTROL: return "Ctrl";
         case ALT: return "Alt";
@@ -255,7 +255,7 @@ public:
         default: return "?";
         }
     }    
-    static Modifier modifier(casacore::String f) {
+    static Modifier modifier(String f) {
         f.downcase();
         
         if(f == "ctrl" || f == "control") return CONTROL;

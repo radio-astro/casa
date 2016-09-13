@@ -102,7 +102,7 @@ public:
     ACoh() {};
     virtual ~ACoh() {};
     
-    virtual casacore::Bool solve(VisEquation& ve) = 0;
+    virtual Bool solve(VisEquation& ve) = 0;
 
     // Apply additive error (Inverse is minus)
     // <group>

@@ -36,7 +36,6 @@
 #include <casa/IO/MemoryIO.h>
 #include <mpi.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 MPITransport::MPITransport() : PTransport()
@@ -405,9 +404,9 @@ Int MPITransport::get(Bool &b){
    Int i;
    MPI_Recv(&i, 1, MPI_INT, getFrom, myOp, MPI_COMM_WORLD, &status);
    if(i == 0)
-      b = false;
+      b = False;
    else
-      b = true;
+      b = True;
    return(status.MPI_SOURCE);
 }
 

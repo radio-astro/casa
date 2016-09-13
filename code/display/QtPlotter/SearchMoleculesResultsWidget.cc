@@ -29,7 +29,6 @@
 #include <QDebug>
 #include <QtCore/qmath.h>
 
-using namespace casacore;
 namespace casa {
 
 

@@ -90,7 +90,7 @@ private:
 	void clearPlots();
 	bool isInputImagesChanged();
 	//bool generateInputImage();
-	pair<float,float> populateDishDiameters(casacore::Bool& validDiameters);
+	pair<float,float> populateDishDiameters(Bool& validDiameters);
 	float populateSDFactor() const;
 
 	void updatePlaneInformation();
@@ -119,7 +119,7 @@ private:
     QProgressDialog progressMeter;
     OverWriteFileDialog overWriteFileDialog;
     AboutDialog aboutDialog;
-    casacore::LogIO logger;
+    LogIO logger;
 
 };
 }

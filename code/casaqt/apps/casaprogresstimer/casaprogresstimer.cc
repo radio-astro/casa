@@ -38,7 +38,7 @@ int main( int argc, char ** argv )
 {
     QApplication a(argc, argv );
 
-    casa::ProgressTimer mw;
+    ProgressTimer mw;
     mw.show();
 
     return a.exec();

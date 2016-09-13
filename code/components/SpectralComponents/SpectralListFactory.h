@@ -44,11 +44,11 @@ public:
 	// <src>pfwhmest</src> initial FWHM estimates for pfc functions
 	// <src>pfix</src> fixed parameters for pfc functions. Any combination of "p", "f", and "c"
 	// <src>plpest</src> initial estimates for power log polynomial coefficients
-	// <src>plpfix</src> fixed parameters for power log polynomial coefficients (true means fix the
+	// <src>plpfix</src> fixed parameters for power log polynomial coefficients (True means fix the
 	// coefficient during fitting).
 
 	static SpectralList create(
-		casacore::LogIO& log, const casac::variant& pampest,
+		LogIO& log, const casac::variant& pampest,
 		const casac::variant& pcenterest, const casac::variant& pfwhmest,
 		const casac::variant& pfix=casac::initialize_variant(""),
 		const casac::variant& gmncomps=casac::initialize_variant(""),
@@ -70,7 +70,7 @@ public:
 private:
 	static void _addGaussianMultiplets(
 		SpectralList& spectralList,
-		casacore::LogIO& log,
+		LogIO& log,
 		const vector<int>& mygmncomps,
 		vector<double>& mygmampcon,
 		vector<double>& mygmcentercon,
@@ -82,7 +82,7 @@ private:
 
 	static void _addPowerLogPolynomial(
 		SpectralList& spectralList,
-		casacore::LogIO& log,	vector<double>& myplpest,
+		LogIO& log,	vector<double>& myplpest,
 		vector<bool>& myplpfix
 	);
 

@@ -32,7 +32,6 @@
 #include <display/RegionShapes/QtSingleRegionShape.qo.h>
 #include <display/RegionShapes/RSUtils.qo.h>
 
-using namespace casacore;
 namespace casa {
 
 // QTNEWREGIONSHAPE DEFINITIONS //

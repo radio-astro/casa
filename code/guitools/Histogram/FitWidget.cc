@@ -30,8 +30,6 @@
 #include <QDebug>
 #include <limits>
 
-using namespace casacore;
-
 namespace casa {
 
 FitWidget::FitWidget(QWidget *parent)

@@ -40,7 +40,6 @@
 //# this include:
 #include <display/DisplayCanvas/WCAxisLabeller.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	const String WCAxisLabeller::LABEL_CHAR_SIZE = "labelcharsize";
@@ -69,12 +68,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsOptionsTitleText = String("");
 		itsOptionsTitleTextColor = String("foreground");
 		itsOptionsXAxisText = String("X axis");
-		//itsOptionsXAxisTextUnset = false;
-		itsOptionsXAxisTextUnset = true;
+		//itsOptionsXAxisTextUnset = False;
+		itsOptionsXAxisTextUnset = True;
 		itsOptionsXAxisTextColor = String("foreground");
 		itsOptionsYAxisText = String("Y axis");
-		//itsOptionsYAxisTextUnset = false;
-		itsOptionsYAxisTextUnset = true;
+		//itsOptionsYAxisTextUnset = False;
+		itsOptionsYAxisTextUnset = True;
 		itsOptionsYAxisTextColor = String("foreground");
 		itsOptionsXGridType = String("Tick marks");
 		itsOptionsXGridColor = String("foreground");
@@ -82,7 +81,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsOptionsYGridColor = String("foreground");
 		itsOptionsTickLength = Float(4.0);
 		itsOptionsLabelPos = String("Auto");
-		itsOptionsPlotOutline = true;
+		itsOptionsPlotOutline = True;
 		itsOptionsPlotOutlineColor = String("foreground");
 		itsOptionsCharFont = String("normal");
 		AipsrcValue<Float>::find(itsOptionsLineWidth,"display.axislabels.linewidth",
@@ -90,8 +89,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	Bool WCAxisLabeller::setOptions(const Record &rec, Record &) {
-		Bool ret = false;
-		Bool localchange = false;
+		Bool ret = False;
+		Bool localchange = False;
 
 		Bool error;
 		localchange = (readOptionRecord(itsOptionsAxisLabelSwitch, error,
@@ -155,7 +154,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		axislabelswitch.define("ptype", "boolean");
 		axislabelswitch.define("default", itsDefaultSwitch);
 		axislabelswitch.define("value", itsOptionsAxisLabelSwitch);
-		axislabelswitch.define("allowunset", false);
+		axislabelswitch.define("allowunset", False);
 		axislabelswitch.define("context", "axis_labels");
 		rec.defineRecord("axislabelswitch", axislabelswitch);
 
@@ -165,7 +164,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		titletext.define("ptype", "string");
 		titletext.define("default", String(""));
 		titletext.define("value", itsOptionsTitleText);
-		titletext.define("allowunset", false);
+		titletext.define("allowunset", False);
 		titletext.define("context", "axis_labels");
 		rec.defineRecord(PLOT_TITLE, titletext);
 
@@ -188,7 +187,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		titletextcolor.define("popt", vcolor);
 		titletextcolor.define("default", "foreground");
 		titletextcolor.define("value", itsOptionsTitleTextColor);
-		titletextcolor.define("allowunset", false);
+		titletextcolor.define("allowunset", False);
 		titletextcolor.define("context", "axis_label_properties");
 		rec.defineRecord("titletextcolor", titletextcolor);
 
@@ -205,7 +204,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		} else {
 			xaxistext.define("value", itsOptionsXAxisText);
 		}
-		xaxistext.define("allowunset", true);
+		xaxistext.define("allowunset", True);
 		xaxistext.define("context", "axis_labels");
 		rec.defineRecord("xaxistext", xaxistext);
 
@@ -216,7 +215,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		xaxistextcolor.define("popt", vcolor);
 		xaxistextcolor.define("default", "foreground");
 		xaxistextcolor.define("value", itsOptionsXAxisTextColor);
-		xaxistextcolor.define("allowunset", false);
+		xaxistextcolor.define("allowunset", False);
 		xaxistextcolor.define("context", "axis_label_properties");
 		rec.defineRecord("xaxistextcolor", xaxistextcolor);
 
@@ -231,7 +230,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		} else {
 			yaxistext.define("value", itsOptionsYAxisText);
 		}
-		yaxistext.define("allowunset", true);
+		yaxistext.define("allowunset", True);
 		yaxistext.define("context", "axis_labels");
 		rec.defineRecord("yaxistext", yaxistext);
 
@@ -242,7 +241,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		yaxistextcolor.define("popt", vcolor);
 		yaxistextcolor.define("default", "foreground");
 		yaxistextcolor.define("value", itsOptionsYAxisTextColor);
-		yaxistextcolor.define("allowunset", false);
+		yaxistextcolor.define("allowunset", False);
 		yaxistextcolor.define("context", "axis_label_properties");
 		rec.defineRecord("yaxistextcolor", yaxistextcolor);
 
@@ -257,7 +256,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		xgridtype.define("popt", vgridtype);
 		xgridtype.define("default", "Tick marks");
 		xgridtype.define("value", itsOptionsXGridType);
-		xgridtype.define("allowunset", false);
+		xgridtype.define("allowunset", False);
 		xgridtype.define("context", "axis_labels");
 		rec.defineRecord("xgridtype", xgridtype);
 
@@ -268,7 +267,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		xgridcolor.define("popt", vcolor);
 		xgridcolor.define("default", "foreground");
 		xgridcolor.define("value", itsOptionsXGridColor);
-		xgridcolor.define("allowunset", false);
+		xgridcolor.define("allowunset", False);
 		xgridcolor.define("context", "axis_label_properties");
 		rec.defineRecord("xgridcolor", xgridcolor);
 
@@ -279,7 +278,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		ygridtype.define("popt", vgridtype);
 		ygridtype.define("default", "Tick marks");
 		ygridtype.define("value", itsOptionsYGridType);
-		ygridtype.define("allowunset", false);
+		ygridtype.define("allowunset", False);
 		ygridtype.define("context", "axis_labels");
 		rec.defineRecord("ygridtype", ygridtype);
 
@@ -290,7 +289,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		ygridcolor.define("popt", vcolor);
 		ygridcolor.define("default", "foreground");
 		ygridcolor.define("value", itsOptionsYGridColor);
-		ygridcolor.define("allowunset", false);
+		ygridcolor.define("allowunset", False);
 		ygridcolor.define("context", "axis_label_properties");
 		rec.defineRecord("ygridcolor", ygridcolor);
 
@@ -303,7 +302,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		ticklength.define("presolution", Float(0.1));
 		ticklength.define("default", Float(4.0));
 		ticklength.define("value", itsOptionsTickLength);
-		ticklength.define("allowunset", false);
+		ticklength.define("allowunset", False);
 		ticklength.define("context", "axis_labels");
 		rec.defineRecord("ticklength", ticklength);
 
@@ -311,9 +310,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		plotoutline.define("dlformat", "plotoutline");
 		plotoutline.define("listname", "plot border?");
 		plotoutline.define("ptype", "boolean");
-		plotoutline.define("default", Bool(true));
+		plotoutline.define("default", Bool(True));
 		plotoutline.define("value", itsOptionsPlotOutline);
-		plotoutline.define("allowunset", false);
+		plotoutline.define("allowunset", False);
 		plotoutline.define("context", "axis_labels");
 		rec.defineRecord("plotoutline", plotoutline);
 
@@ -324,7 +323,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		plotoutlinecolor.define("popt", vcolor);
 		plotoutlinecolor.define("default", "foreground");
 		plotoutlinecolor.define("value", itsOptionsPlotOutlineColor);
-		plotoutlinecolor.define("allowunset", false);
+		plotoutlinecolor.define("allowunset", False);
 		plotoutlinecolor.define("context", "axis_label_properties");
 		rec.defineRecord("plotoutlinecolor", plotoutlinecolor);
 
@@ -341,7 +340,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		labelposition.define("popt", lblencod);
 		labelposition.define("default", "Auto");
 		labelposition.define("value", itsOptionsLabelPos);
-		labelposition.define("allowunset", false);
+		labelposition.define("allowunset", False);
 		labelposition.define("context", "axis_label_properties");
 		rec.defineRecord("labelposition", labelposition);
 
@@ -354,7 +353,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		labelcharsize.define("presolution", Float(0.05));
 		labelcharsize.define("default", itsDefaultCharSize);
 		labelcharsize.define("value", itsOptionsCharSize);
-		labelcharsize.define("allowunset", false);
+		labelcharsize.define("allowunset", False);
 		labelcharsize.define("context", "axis_label_properties");
 		rec.defineRecord(LABEL_CHAR_SIZE, labelcharsize);
 
@@ -370,7 +369,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		labelcharfont.define("popt", vlabelcharfont);
 		labelcharfont.define("default", String("normal"));
 		labelcharfont.define("value", itsOptionsCharFont);
-		labelcharfont.define("allowunset", false);
+		labelcharfont.define("allowunset", False);
 		labelcharfont.define("context", "axis_label_properties");
 		rec.defineRecord("labelcharfont", labelcharfont);
 
@@ -383,7 +382,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		labellinewidth.define("presolution", Float(0.1));
 		labellinewidth.define("default", Float(0.5));
 		labellinewidth.define("value", itsOptionsLineWidth);
-		labellinewidth.define("allowunset", false);
+		labellinewidth.define("allowunset", False);
 		labellinewidth.define("context", "axis_label_properties");
 		rec.defineRecord("labellinewidth", labellinewidth);
 
@@ -417,26 +416,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Bool WCAxisLabeller::setXAxisText(const String text) {
 		Bool ret = (itsOptionsXAxisText != text);
 		itsOptionsXAxisText = text;
-		itsOptionsXAxisTextUnset = false;
+		itsOptionsXAxisTextUnset = False;
 		return ret;
 	}
 
 	Bool WCAxisLabeller::setYAxisText(const String text) {
 		Bool ret = (itsOptionsYAxisText != text);
 		itsOptionsYAxisText = text;
-		itsOptionsYAxisTextUnset = false;
+		itsOptionsYAxisTextUnset = False;
 		return ret;
 	}
 
 	Bool WCAxisLabeller::unsetXAxisText() {
 		Bool ret = (!itsOptionsXAxisTextUnset);
-		itsOptionsXAxisTextUnset = true;
+		itsOptionsXAxisTextUnset = True;
 		return ret;
 	}
 
 	Bool WCAxisLabeller::unsetYAxisText() {
 		Bool ret = (!itsOptionsYAxisTextUnset);
-		itsOptionsYAxisTextUnset = true;
+		itsOptionsYAxisTextUnset = True;
 		return ret;
 	}
 

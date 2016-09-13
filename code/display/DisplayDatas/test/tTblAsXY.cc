@@ -101,7 +101,7 @@ main(int argc, char **argv) {
 		}
 
 		Record rec, recOut;
-		rec.define("axislabelswitch", true);
+		rec.define("axislabelswitch", True);
 		rec.define("xgridtype", "Full grid");
 		rec.define("ygridtype", "Full grid");
 		tardd1->setOptions(rec, recOut);

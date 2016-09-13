@@ -32,7 +32,6 @@
 #include <display/Display/PixelCanvas.h>
 #include <display/DisplayEvents/MWCPolylineTool.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	MWCPolylineTool::MWCPolylineTool(Display::KeySym keysym,
@@ -40,7 +39,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		MultiWCTool(keysym),
 		itsPolylinePersistent(persistent),
 		itsMode(Off),
-		itsEmitted(false),
+		itsEmitted(False),
 		itsNPoints(0),
 		itsHandleSize(5) {
 		reset();
@@ -163,16 +162,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		} else if (itsMode == Resize) {
 			set(x,y, itsSelectedHandle);  	// move selected vertex.
 		}
-		itsEmitted = false;  // changed polygon => not yet emitted.
+		itsEmitted = False;  // changed polygon => not yet emitted.
 		refresh();
 	}
 
 
 	void MWCPolylineTool::keyReleased(const WCPositionEvent &/*ev*/) {
-		Bool needsHandles=false;
+		Bool needsHandles=False;
 		if ( itsMode==Move || itsMode==Resize ) {
 			itsMode=Ready;
-			needsHandles=true;
+			needsHandles=True;
 		}
 
 		if (needsHandles) {
@@ -228,7 +227,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	void MWCPolylineTool::reset(Bool skipRefresh) {
 		Bool existed = (itsMode!=Off);
 		itsMode = Off;
-		itsEmitted = false;
+		itsEmitted = False;
 		itsLastPressTime = its2ndLastPressTime = -1.0;
 		if (existed && !skipRefresh) refresh();	// erase old drawing if necessary.
 	}
@@ -298,7 +297,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	Bool MWCPolylineTool::inHandle(const Int &pt,
 	                               const Int &x, const Int &y) const {
-		if (pt<0 || pt >= itsNPoints) return false;
+		if (pt<0 || pt >= itsNPoints) return False;
 
 		Int ptx,pty;
 		get(ptx,pty, pt);
@@ -309,7 +308,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	Bool MWCPolylineTool::inPolyline(const Int &xPos, const Int &yPos) const {
-		Bool onLine = false;
+		Bool onLine = False;
 
 		Vector<Int> pX, pY;
 		get(pX, pY);
@@ -340,7 +339,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				// x,y is the point on the line where the tanget from the point meets it
 				if (Int(distance+0.5) <= 3) {
 					// This should be itsThreshold or something I guess
-					onLine = true;
+					onLine = True;
 					break;
 				}
 			}

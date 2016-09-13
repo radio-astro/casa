@@ -28,7 +28,6 @@
 #include <display/Display/WorldCanvas.h>
 #include <display/DisplayEvents/WCTool.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	WCToolPosEH::WCToolPosEH(WCTool *tool) :
@@ -52,7 +51,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		DisplayTool(keysym),
 		itsWorldCanvas(wcanvas),
 		itsPixelCanvas(itsWorldCanvas->pixelCanvas()),
-		itsEventHandlersRegistered(false) {
+		itsEventHandlersRegistered(False) {
 		itsPositionEH = new WCToolPosEH(this);
 		itsMotionEH = new WCToolMotEH(this);
 		itsRefreshEH = new WCToolRefEH(this);
@@ -68,7 +67,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	void WCTool::enable() {
 		if (!itsEventHandlersRegistered) {
-			itsEventHandlersRegistered = true;
+			itsEventHandlersRegistered = True;
 			itsWorldCanvas->addPositionEventHandler(*itsPositionEH);
 			itsWorldCanvas->addMotionEventHandler(*itsMotionEH);
 			itsWorldCanvas->addRefreshEventHandler(*itsRefreshEH);
@@ -77,7 +76,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	void WCTool::disable() {
 		if (itsEventHandlersRegistered) {
-			itsEventHandlersRegistered = false;
+			itsEventHandlersRegistered = False;
 			itsWorldCanvas->removePositionEventHandler(*itsPositionEH);
 			itsWorldCanvas->removeMotionEventHandler(*itsMotionEH);
 			itsWorldCanvas->removeRefreshEventHandler(*itsRefreshEH);
@@ -132,7 +131,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		DisplayTool(),
 		itsWorldCanvas(0),
 		itsPixelCanvas(0),
-		itsEventHandlersRegistered(false),
+		itsEventHandlersRegistered(False),
 		itsPositionEH(0),
 		itsMotionEH(0),
 		itsRefreshEH(0) {

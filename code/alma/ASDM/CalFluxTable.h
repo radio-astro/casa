@@ -28,7 +28,7 @@
  * | If you do, all changes will be lost when the file is re-generated. |
  *  --------------------------------------------------------------------
  *
- * casacore::File CalFluxTable.h
+ * File CalFluxTable.h
  */
  
 #ifndef CalFluxTable_CLASS
@@ -199,7 +199,7 @@ class CalFluxRow;
  * <TD> numStokes </TD> 
  * <TD> int </TD>
  * <TD>  &nbsp;  </TD> 
- * <TD> &nbsp;the number of casacore::Stokes parameters. </TD>
+ * <TD> &nbsp;the number of Stokes parameters. </TD>
  * </TR>
 	
  * <TR>
@@ -220,21 +220,21 @@ class CalFluxRow;
  * <TD> flux </TD> 
  * <TD> vector<vector<double > > </TD>
  * <TD>  numStokes, numFrequencyRanges </TD> 
- * <TD> &nbsp;the flux densities (one value par casacore::Stokes parameter per frequency range). </TD>
+ * <TD> &nbsp;the flux densities (one value par Stokes parameter per frequency range). </TD>
  * </TR>
 	
  * <TR>
  * <TD> fluxError </TD> 
  * <TD> vector<vector<double > > </TD>
  * <TD>  numStokes, numFrequencyRanges </TD> 
- * <TD> &nbsp;the uncertainties on the flux densities (one value per casacore::Stokes parameter per frequency range). </TD>
+ * <TD> &nbsp;the uncertainties on the flux densities (one value per Stokes parameter per frequency range). </TD>
  * </TR>
 	
  * <TR>
  * <TD> stokes </TD> 
  * <TD> vector<StokesParameterMod::StokesParameter > </TD>
  * <TD>  numStokes </TD> 
- * <TD> &nbsp;the casacore::Stokes parameter. </TD>
+ * <TD> &nbsp;the Stokes parameter. </TD>
  * </TR>
 	
 
@@ -266,28 +266,28 @@ class CalFluxRow;
  * <TD> PA </TD> 
  * <TD> vector<vector<Angle > > </TD>
  * <TD>  numStokes, numFrequencyRanges  </TD>
- * <TD>&nbsp; the position's angles for the source model (one value per casacore::Stokes parameter per frequency range). </TD>
+ * <TD>&nbsp; the position's angles for the source model (one value per Stokes parameter per frequency range). </TD>
  * </TR>
 	
  * <TR>
  * <TD> PAError </TD> 
  * <TD> vector<vector<Angle > > </TD>
  * <TD>  numStokes, numFrequencyRanges  </TD>
- * <TD>&nbsp; the uncertainties on the position's angles (one value per casacore::Stokes parameter per frequency range). </TD>
+ * <TD>&nbsp; the uncertainties on the position's angles (one value per Stokes parameter per frequency range). </TD>
  * </TR>
 	
  * <TR>
  * <TD> size </TD> 
  * <TD> vector<vector<vector<Angle > > > </TD>
  * <TD>  numStokes, numFrequencyRanges, 2  </TD>
- * <TD>&nbsp; the sizes of the source (one pair of angles per casacore::Stokes parameter per frequency range). </TD>
+ * <TD>&nbsp; the sizes of the source (one pair of angles per Stokes parameter per frequency range). </TD>
  * </TR>
 	
  * <TR>
  * <TD> sizeError </TD> 
  * <TD> vector<vector<vector<Angle > > > </TD>
  * <TD>  numStokes, numFrequencyRanges, 2  </TD>
- * <TD>&nbsp; the uncertainties of the sizes of the source (one pair of angles per casacore::Stokes parameter per frequency range). </TD>
+ * <TD>&nbsp; the uncertainties of the sizes of the source (one pair of angles per Stokes parameter per frequency range). </TD>
  * </TR>
 	
  * <TR>
@@ -389,7 +389,7 @@ public:
 	std::string toXML()  ;
 
 #ifndef WITHOUT_ACS
-	// casacore::Conversion Methods
+	// Conversion Methods
 	/**
 	 * Convert this table into a CalFluxTableIDL CORBA structure.
 	 *

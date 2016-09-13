@@ -53,11 +53,11 @@ namespace casa {
 			struct cs {
 				typedef void (*from_linear_2_type)(WorldCanvas*wc,double,double,double&,double&);
 				typedef void (*from_linear_4_type)(WorldCanvas*wc,double,double,double,double,double&,double&,double&,double&);
-				cs( const char *ds9_type, casacore::MDirection::Types t,
+				cs( const char *ds9_type, MDirection::Types t,
 				    from_linear_2_type func2, from_linear_4_type func4 ) : ds9(ds9_type), type(t), cvt2(func2), cvt4(func4) { }
 				~cs( ) { }
 				const std::string ds9;
-				const casacore::MDirection::Types type;
+				const MDirection::Types type;
 				from_linear_2_type cvt2;
 				from_linear_4_type cvt4;
 			};

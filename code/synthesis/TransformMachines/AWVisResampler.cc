@@ -45,7 +45,6 @@ extern "C" {
   void clLoopsToGrid();
 };
 //#include <casa/BasicMath/Functors.h>
-using namespace casacore;
 namespace casa{
 
   //
@@ -314,7 +313,7 @@ namespace casa{
 	//     // operations: (1) rotate the co-ord. sys. using
 	//     // sin/cosDPA, (2) add convOrigin to iloc and return the
 	//     // result in tiloc and add convOrigin to tiloc, and (3)
-	//     // return true if tiloc lines with in the cfShape.
+	//     // return True if tiloc lines with in the cfShape.
 	//     //
 	//     //	    if (reindex(iloc,tiloc,sinDPA, cosDPA, convOrigin, cfShape))
 	//       {
@@ -491,7 +490,7 @@ namespace casa{
              {
                for (Int ichan=0;ichan<nDataChan;ichan++)
                  //for (Int irow=rbeg;irow<rend;irow++)
-                   allPolNChanDone_l(ipol,ichan,0)=true;
+                   allPolNChanDone_l(ipol,ichan,0)=True;
              }
          }
 
@@ -534,9 +533,9 @@ namespace casa{
 		      // Int fndx = cfb.nearestFreqNdx(freq[ichan]),
 		      // 	conjFNdx =cfb.nearestFreqNdx(conjFreq);
 
-		      // Int fndx=cfb.nearestFreqNdx(vbSpw,ichan), conjFNdx=cfb.nearestFreqNdx(vbSpw,ichan,true);
+		      // Int fndx=cfb.nearestFreqNdx(vbSpw,ichan), conjFNdx=cfb.nearestFreqNdx(vbSpw,ichan,True);
 		      // Int cfFreqNdx;
-		      // if (vbs.conjBeams_p) cfFreqNdx = cfb.nearestFreqNdx(vbSpw,ichan,true);// Get the conj. freq. index
+		      // if (vbs.conjBeams_p) cfFreqNdx = cfb.nearestFreqNdx(vbSpw,ichan,True);// Get the conj. freq. index
 		      // else  cfFreqNdx = cfb.nearestFreqNdx(vbSpw,ichan);
 		      Int cfFreqNdx = cfb.nearestFreqNdx(vbSpw,ichan,vbs.conjBeams_p);
 
@@ -589,7 +588,7 @@ namespace casa{
 				    {
 				      igrdpos[2]=targetIMPol; igrdpos[3]=targetIMChan;
 				      
-				      if(accumCFs)     allPolNChanDone_l(ipol,ichan,0)=true;
+				      if(accumCFs)     allPolNChanDone_l(ipol,ichan,0)=True;
 				      
 				      // ConjPlane = cfMap_p[ipol];
 				      // PolnPlane = conjCFMap_p[ipol];
@@ -618,7 +617,7 @@ namespace casa{
 					  // sampling.assign(scaledSampling);
 					  
 					  convOrigin=cfShape/2;
-					  Bool psfOnly=((dopsf==true) && (accumCFs==false));
+					  Bool psfOnly=((dopsf==True) && (accumCFs==False));
 					  if (finitePointingOffsets )
 					    cachePhaseGrad_p(pointingOffset, cfShape, convOrigin, cfRefFreq, vbs.imRefFreq(),
 							     ((const Int)(vbs.vb_p)->spectralWindow()),((const Int)((vbs.vb_p)->fieldId())));
@@ -930,7 +929,7 @@ Bool AWVisResampler::reindex(const Vector<Int>& in, Vector<Int>& out,
 			     const Vector<Int>& Origin, const Vector<Int>& size)
 {
   
-  Bool onGrid=false;
+  Bool onGrid=False;
   Int ix=in[0], iy=in[1];
   if (sinDPA != 0.0)
     {
@@ -1023,5 +1022,4 @@ Complex AWVisResampler::getCFArea(Complex* __restrict__& convFuncV,
   //    cerr << "cfArea: " << scaledSupport << " " << scaledSampling << " " << cfShape << " " << convOrigin << " " << cfArea << endl;
   return cfArea;
 }
-using namespace casacore;
 };// end namespace casa

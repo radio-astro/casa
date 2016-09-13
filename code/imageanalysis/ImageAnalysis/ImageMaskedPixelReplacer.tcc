@@ -32,15 +32,15 @@
 namespace casa {
 
 template <class T>
-const casacore::String ImageMaskedPixelReplacer<T>::_class = "ImageMaskedPixelReplacer";
+const String ImageMaskedPixelReplacer<T>::_class = "ImageMaskedPixelReplacer";
 
 template <class T>
 ImageMaskedPixelReplacer<T>::ImageMaskedPixelReplacer(
 	const SPIIT image,
-	const casacore::Record *const &region,
-	const casacore::String& mask
+	const Record *const &region,
+	const String& mask
 ) : ImageTask<T>(
-		image, "", region, "", "", "", mask, "", false
+		image, "", region, "", "", "", mask, "", False
 	),
 	_image(image) {
 	this->_construct();
@@ -48,9 +48,9 @@ ImageMaskedPixelReplacer<T>::ImageMaskedPixelReplacer(
 
 template <class T>
 void ImageMaskedPixelReplacer<T>::replace(
-	const casacore::String& expr, casacore::Bool updateMask, casacore::Bool verbose
+	const String& expr, Bool updateMask, Bool verbose
 ) {
-	casacore::LogOrigin lor(_class, __func__);
+	LogOrigin lor(_class, __func__);
 	*this->_getLog() << lor;
 	ThrowIf(
 		expr.empty(),
@@ -58,10 +58,10 @@ void ImageMaskedPixelReplacer<T>::replace(
 	);
 
 	// Modify in place by writing to the image passed to the constructor.
-	SHARED_PTR<casacore::SubImage<T> > subImage = SubImageFactory<T>::createSubImageRW(
+	SHARED_PTR<SubImage<T> > subImage = SubImageFactory<T>::createSubImageRW(
 		*_image, *this->_getRegion(), this->_getMask(),
 		(verbose ? this->_getLog().get() : 0),
-		casacore::AxesSpecifier(), this->_getStretch(), true
+		AxesSpecifier(), this->_getStretch(), True
 	);
 	ThrowIf(
 		! subImage->isWritable(),
@@ -72,7 +72,7 @@ void ImageMaskedPixelReplacer<T>::replace(
 		! subImage->isMasked() && ! subImage->hasPixelMask(),
 		"Selected region of image has no mask"
 	);
-	casacore::Array<casacore::Bool> mymask(subImage->shape(), true);
+	Array<Bool> mymask(subImage->shape(), True);
 	if (subImage->isMasked()) {
 		mymask = mymask && subImage->getMask();
 	}
@@ -83,43 +83,43 @@ void ImageMaskedPixelReplacer<T>::replace(
 		allTrue(mymask),
 		"Mask for selected region has no bad pixels"
 	);
-	casacore::Block<casacore::LatticeExprNode> temps;
-	casacore::Record tempRegions;
-	casacore::PtrBlock<const casacore::ImageRegion*> tempRegs;
+	Block<LatticeExprNode> temps;
+	Record tempRegions;
+	PtrBlock<const ImageRegion*> tempRegs;
 	_makeRegionBlock(tempRegs, tempRegions);
-	casacore::LatticeExprNode node = casacore::ImageExprParse::command(expr, temps, tempRegs);
-	// Delete the ImageRegions (by using an empty casacore::Record).
-	_makeRegionBlock(tempRegs, casacore::Record());
+	LatticeExprNode node = ImageExprParse::command(expr, temps, tempRegs);
+	// Delete the ImageRegions (by using an empty Record).
+	_makeRegionBlock(tempRegs, Record());
 	// Create the LEL expression we need.  It's like  replace(lattice, pixels)
 	// where pixels is an expression itself.
-	casacore::LatticeExprNode node2 = casa::replace(*subImage, node);
+	LatticeExprNode node2 = casa::replace(*subImage, node);
 	// Do it
-	subImage->copyData(casacore::LatticeExpr<T> (node2));
+	subImage->copyData(LatticeExpr<T> (node2));
 
 	// Update the mask if desired
 	if (updateMask) {
-		casacore::Lattice<casacore::Bool>& mask = subImage->pixelMask();
-		casacore::LatticeExprNode node(iif(!mask, true, mask));
-		casacore::LatticeExpr<casacore::Bool> expr(node);
+		Lattice<Bool>& mask = subImage->pixelMask();
+		LatticeExprNode node(iif(!mask, True, mask));
+		LatticeExpr<Bool> expr(node);
 		mask.copyData(expr);
 	}
 	this->addHistory(lor, "Replaced values of masked pixels by " + expr);
 }
 
 template <class T>void ImageMaskedPixelReplacer<T>::_makeRegionBlock(
-	casacore::PtrBlock<const casacore::ImageRegion*>& imageRegions,
-	const casacore::Record& regions
+	PtrBlock<const ImageRegion*>& imageRegions,
+	const Record& regions
 ) {
-	for (casacore::uInt j = 0; j < imageRegions.nelements(); j++) {
+	for (uInt j = 0; j < imageRegions.nelements(); j++) {
 		delete imageRegions[j];
 	}
-	imageRegions.resize(0, true, true);
-	casacore::uInt nreg = regions.nfields();
+	imageRegions.resize(0, True, True);
+	uInt nreg = regions.nfields();
 	if (nreg > 0) {
 		imageRegions.resize(nreg);
-		imageRegions.set(static_cast<casacore::ImageRegion*> (0));
-		for (casacore::uInt i = 0; i < nreg; i++) {
-			imageRegions[i] = casacore::ImageRegion::fromRecord(regions.asRecord(i), "");
+		imageRegions.set(static_cast<ImageRegion*> (0));
+		for (uInt i = 0; i < nreg; i++) {
+			imageRegions[i] = ImageRegion::fromRecord(regions.asRecord(i), "");
 		}
 	}
 }

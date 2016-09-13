@@ -67,13 +67,10 @@
 using std::vector;
 #include <msvis/MSVis/UtilJ.h>
 
-using namespace casacore;
 using namespace casa::utilj;
 
-using namespace casacore;
 using namespace casa::vpf;
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 Calibrater::Calibrater(): 
@@ -217,7 +214,7 @@ Bool Calibrater::initialize(MeasurementSet& inputMS,
 
     // Add/init scr cols, if requested (init is hard-wired)
     if (addScratch || addModel) {
-      Bool alsoinit=true;
+      Bool alsoinit=True;
       VisSetUtil::addScrCols(*ms_p,addModel,addScratch,alsoinit,compress);
     }
 
@@ -241,7 +238,7 @@ Bool Calibrater::initialize(MeasurementSet& inputMS,
     Matrix<Int> noselection;
     Double timeInterval=0;
     // gmoellen 2012/02/06    vs_p=new VisSet(*ms_p,nosort,noselection,addScratch,timeInterval,compress, addModel);
-    vs_p=new VisSet(*ms_p,nosort,noselection,false,timeInterval,false,false);
+    vs_p=new VisSet(*ms_p,nosort,noselection,False,timeInterval,False,False);
 
     // Size-up the chanmask PB
     initChanMask();
@@ -255,9 +252,9 @@ Bool Calibrater::initialize(MeasurementSet& inputMS,
     ve_p=new VisEquation();
 
     // Reset the apply/solve VisCals
-    reset(true,true);
+    reset(True,True);
 
-    return true;
+    return True;
 
   } catch (AipsError x) {
     logSink() << LogOrigin("Calibrater","initialize",WHERE) 
@@ -268,9 +265,9 @@ Bool Calibrater::initialize(MeasurementSet& inputMS,
     if (hist_p) delete hist_p; hist_p=NULL;
 
     throw(AipsError("Error in Calibrater::initialize()"));
-    return false;
+    return False;
   } 
-  return false;
+  return False;
 }
 
 
@@ -292,11 +289,11 @@ Bool Calibrater::initCalSet(const Int& calSet)
     vs_p->resetVisIter(columns,0.0);
 
     vs_p->initCalSet(calSet);
-    return true;
+    return True;
   }
   else {
     throw(AipsError("Calibrater cannot initCalSet"));
-    return false;
+    return False;
   }
 }
 
@@ -389,7 +386,7 @@ void Calibrater::selectvis(const String& time,
     mssel_p = new MeasurementSet(*ms_p);
 
     // Apply user-supplied selection
-    Bool nontrivsel=false;
+    Bool nontrivsel=False;
     // gmoellen 2012/01/30    nontrivsel= mssSetData(MeasurementSet(sorted, ms_p),
 
     // Ensure use of a fresh MSSelection object
@@ -427,7 +424,7 @@ void Calibrater::selectvis(const String& time,
     Block<int> sort(0);
     Matrix<Int> noselection;
     // gmoellen 2012/01/30    vs_p = new VisSet(*mssel_p,sort,noselection);
-    vs_p = new VisSet(*mssel_p,sort,noselection,false,0.0,false,false);
+    vs_p = new VisSet(*mssel_p,sort,noselection,False,0.0,False,False);
     AlwaysAssert(vs_p, AipsError);
 
     // Attempt to use MSSelection for channel selection
@@ -453,7 +450,7 @@ void Calibrater::selectvis(const String& time,
 	      << LogIO::SEVERE << "Caught exception: " << x.getMesg()
 	      << LogIO::POST;
     // jagonzal (CAS-4110): I guess it is not necessary to create these columns when the selection is empty
-    initialize(*ms_p,false,false,false);
+    initialize(*ms_p,False,False,False);
     throw(AipsError("Error in data selection specification: " + x.getMesg()));
   } 
   catch (AipsError x) {
@@ -462,7 +459,7 @@ void Calibrater::selectvis(const String& time,
 	      << LogIO::SEVERE << "Caught exception: " << x.getMesg()
 	      << LogIO::POST;
     // jagonzal (CAS-4110): I guess it is not necessary to create these columns when the selection is empty.
-    initialize(*ms_p,false,false,false);
+    initialize(*ms_p,False,False,False);
     throw(AipsError("Error in Calibrater::selectvis(): " + x.getMesg()));
   } 
 };
@@ -562,7 +559,7 @@ Bool Calibrater::setapply (const String& type,
 	      << LogIO::POST;
     if (vc) delete vc;
     throw(AipsError("Error in Calibrater::setapply."));
-    return false;
+    return False;
   }
 
   // Creation apparently successful, so add to the apply list
@@ -570,23 +567,23 @@ Bool Calibrater::setapply (const String& type,
   try {
 
     uInt napp=vc_p.nelements();
-    vc_p.resize(napp+1,false,true);      
+    vc_p.resize(napp+1,False,True);      
     vc_p[napp] = vc;
     vc=NULL;
    
     // Maintain sort of apply list
     ve_p->setapply(vc_p);
     
-    return true;
+    return True;
 
   } catch (AipsError x) {
     logSink() << LogIO::SEVERE << "Caught exception: " << x.getMesg() 
 	      << LogIO::POST;
     if (vc) delete vc;
     throw(AipsError("Error in Calibrater::setapply."));
-    return false;
+    return False;
   } 
-  return false;
+  return False;
 }
 
 
@@ -619,7 +616,7 @@ Bool Calibrater::validatecallib(Record callib) {
 
     }
   }
-  return true;
+  return True;
 }
 // Set up apply-able calibration via a Cal Library
 Bool Calibrater::setcallib(Record callib) {
@@ -682,7 +679,7 @@ Bool Calibrater::setcallib(Record callib) {
 		<< LogIO::POST;
       if (vc) delete vc;
       throw(AipsError("Error in Calibrater::setapply."));
-      return false;
+      return False;
     }
 
     // Creation apparently successful, so add to the apply list
@@ -690,7 +687,7 @@ Bool Calibrater::setcallib(Record callib) {
     try {
       
       uInt napp=vc_p.nelements();
-      vc_p.resize(napp+1,false,true);      
+      vc_p.resize(napp+1,False,True);      
       vc_p[napp] = vc;
       vc=NULL;
    
@@ -702,12 +699,12 @@ Bool Calibrater::setcallib(Record callib) {
 		<< LogIO::POST;
       if (vc) delete vc;
       throw(AipsError("Error in Calibrater::setapply."));
-      return false;
+      return False;
     } 
   }
 
   // All ok, if we get this far!
-  return true;
+  return True;
 
 }
 
@@ -783,7 +780,7 @@ Bool Calibrater::setcallib2(Record callib) {
 		<< LogIO::POST;
       if (vc) delete vc;
       throw(AipsError("Error in Calibrater::callib2."));
-      return false;
+      return False;
     }
 
     // Creation apparently successful, so add to the apply list
@@ -791,7 +788,7 @@ Bool Calibrater::setcallib2(Record callib) {
     try {
       
       uInt napp=vc_p.nelements();
-      vc_p.resize(napp+1,false,true);      
+      vc_p.resize(napp+1,False,True);      
       vc_p[napp] = vc;
       vc=NULL;
    
@@ -803,11 +800,11 @@ Bool Calibrater::setcallib2(Record callib) {
 		<< LogIO::POST;
       if (vc) delete vc;
       throw(AipsError("Error in Calibrater::setapply."));
-      return false;
+      return False;
     } 
   }
   // All ok, if we get this far!
-  return true;
+  return True;
 
 }
 
@@ -816,7 +813,7 @@ Bool Calibrater::setmodel(const String& modelImage)
   if (!svc_p)
     throw(AipsError("Calibrater::setmodel() called before Calibrater::setsolve()"));
   svc_p->setModel(modelImage);
-  return true;
+  return True;
 }
 
 Bool Calibrater::setModel(const Vector<Double>& stokes) {
@@ -829,7 +826,7 @@ Bool Calibrater::setModel(const Vector<Double>& stokes) {
   else
     throw(AipsError("Error in Calibrater::setModel: no VisEquation."));
 
-  return true;
+  return True;
 
 }
 
@@ -1041,7 +1038,7 @@ Bool Calibrater::setsolve (const String& type,
     svc_p=svc;
     svc=NULL;
 
-    return true;
+    return True;
 
   } catch (AipsError x) {
     logSink() << LogIO::SEVERE << "Caught exception: " << x.getMesg() 
@@ -1049,9 +1046,9 @@ Bool Calibrater::setsolve (const String& type,
     unsetsolve();
     if (svc) delete svc;
     throw(AipsError("Error in Calibrater::setsolve."));
-    return false;
+    return False;
   } 
-  return false;
+  return False;
 }
 
 Bool Calibrater::state() {
@@ -1061,7 +1058,7 @@ Bool Calibrater::state() {
   applystate();
   solvestate();
 
-  return true;
+  return True;
 
 }
 
@@ -1085,7 +1082,7 @@ Bool Calibrater::applystate() {
 	      << "(None)"
 	      << LogIO::POST;
 
-  return true;
+  return True;
 
 }
 
@@ -1107,7 +1104,7 @@ Bool Calibrater::solvestate() {
 	      << "(None)"
 	      << LogIO::POST;
 
-  return true;
+  return True;
 }
 
 
@@ -1130,7 +1127,7 @@ Bool Calibrater::cleanup() {
   // Delete the current VisEquation
   if(ve_p) delete ve_p; ve_p=0;
 
-  return true;
+  return True;
 
 }
 
@@ -1146,7 +1143,7 @@ Bool Calibrater::reset(const Bool& apply, const Bool& solve) {
   if (solve)
     unsetsolve();
         
-  return true;
+  return True;
 }
 
 // Delete all (default) or one VisCal in apply list
@@ -1158,7 +1155,7 @@ Bool Calibrater::unsetapply(const Int& which) {
     if (which<0) {
       for (uInt i=0;i<vc_p.nelements();i++)
 	if (vc_p[i]) delete vc_p[i];
-      vc_p.resize(0,true);
+      vc_p.resize(0,True);
     } else {
       if (vc_p[which]) delete vc_p[which];
       vc_p.remove(which);
@@ -1167,15 +1164,15 @@ Bool Calibrater::unsetapply(const Int& which) {
     // Maintain size/sort of apply list
     if(ve_p) ve_p->setapply(vc_p);
 
-    return true;
+    return True;
   } catch (AipsError x) {
     logSink() << LogIO::SEVERE << "Caught exception: " << x.getMesg() 
 	      << LogIO::POST;
     throw(AipsError("Error in Calibrater::unsetapply."));
 
-    return false;
+    return False;
   }
-  return false;
+  return False;
 }
 
   // Delete solve VisCal
@@ -1189,15 +1186,15 @@ Bool Calibrater::unsetsolve() {
     
     if(ve_p) ve_p->setsolve(*svc_p);
 
-    return true;
+    return True;
 
   } catch (AipsError x) {
     logSink() << LogIO::SEVERE << "Caught exception: " << x.getMesg() 
 	      << LogIO::POST;
     throw(AipsError("Error in Calibrater::unsetsolve."));
-    return false;
+    return False;
   }
-  return false;
+  return False;
 }
 
 
@@ -1230,7 +1227,6 @@ Calibrater::correct(String mode)
         // Pass each timestamp (VisBuffer) to VisEquation for correction
 
         Vector<Bool> uncalspw(vi.numberSpw());	// Used to accumulate error messages
-        uncalspw.set(false);		        // instead of bombing the user
         uncalspw.set(False);		        // instead of bombing the user
                                         // in a loop.
 
@@ -1259,7 +1255,7 @@ Calibrater::correct(String mode)
 		  if (upmode.contains("STRICT"))
 		    // set the flags
 		    // (don't touch the data/weights, which are initialized)
-		    vb->flag().set(true);
+		    vb->flag().set(True);
                 }
 
 		// Only if not a trial run, trigger write to disk
@@ -1298,7 +1294,7 @@ Calibrater::correct(String mode)
         unsetapply();
 
         throw(AipsError("Error in Calibrater::correct."));
-        retval = false;         // Not that it ever gets here...
+        retval = False;         // Not that it ever gets here...
     }
     return retval;
  }
@@ -1351,7 +1347,7 @@ Calibrater::correct2(String mode)
       columns[4]=MS::TIME;
 
       vi::SortColumns sc(columns);
-      vi::VisibilityIterator2 vi(*mssel_p,sc,true);
+      vi::VisibilityIterator2 vi(*mssel_p,sc,True);
 
       // Apply channel selection (see selectChannel(spw))
       if (frequencySelections_p)
@@ -1370,7 +1366,7 @@ Calibrater::correct2(String mode)
       // Pass each timestamp (VisBuffer) to VisEquation for correction
       
       Vector<Bool> uncalspw(vi.nSpectralWindows());  // Used to accumulate error messages
-      uncalspw.set(false);		             // instead of bombing the user
+      uncalspw.set(False);		             // instead of bombing the user
 
       uInt nvb(0);
 
@@ -1437,7 +1433,7 @@ Calibrater::correct2(String mode)
 	      if (upmode.contains("STRICT")) {
 		// reference (to avoid copy) and set the flags
 		Cube<Bool> fC(vb->flagCube());   // reference
-		fC.set(true);  
+		fC.set(True);  
 
 		// make dirty for writeChangesBack  (does this do an actual copy?)
 		vb->setFlagCube(vb->flagCube());
@@ -1485,7 +1481,7 @@ Calibrater::correct2(String mode)
         unsetapply();
 
         throw(AipsError("Error in Calibrater::correct."));
-        retval = false;         // Not that it ever gets here...
+        retval = False;         // Not that it ever gets here...
     }
     return retval;
  }
@@ -1563,7 +1559,7 @@ Bool Calibrater::corrupt() {
     
     // Pass each timestamp (VisBuffer) to VisEquation for corruption.
     Vector<Bool> uncalspw(vi.numberSpw());	// Used to accumulate error messages
-    uncalspw.set(false);		        // instead of bombing the user
+    uncalspw.set(False);		        // instead of bombing the user
 						// in a loop.
     for (vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
       Int spw = vi.spectralWindow();
@@ -1597,7 +1593,7 @@ Bool Calibrater::corrupt() {
     unsetapply();
 
     throw(AipsError("Error in Calibrater::corrupt."));
-    retval = false;  // Not that it ever gets here...
+    retval = False;  // Not that it ever gets here...
   } 
   return retval;
 }
@@ -1644,7 +1640,7 @@ Bool Calibrater::initWeights(String wtmode, Bool dowtsp) {
     switch (initmode) {
     case DELWTSP: {
       if (wtspexists) {
-	if (true || ms_p->canRemoveColumn(colWtSp)) {
+	if (True || ms_p->canRemoveColumn(colWtSp)) {
 	  logSink() << "Removing WEIGHT_SPECTRUM." << LogIO::POST;
 	  ms_p->removeColumn(colWtSp);
 	}
@@ -1655,12 +1651,12 @@ Bool Calibrater::initWeights(String wtmode, Bool dowtsp) {
 	logSink() << "WEIGHT_SPECTRUM already absent." << LogIO::POST;
 
       // Nothing more to do here
-      return true;
+      return True;
       break;
     }
     case DELSIGSP: {
       if (sigspexists) {
-	if (true || ms_p->canRemoveColumn(colSigSp)) {
+	if (True || ms_p->canRemoveColumn(colSigSp)) {
 	  logSink() << "Removing SIGMA_SPECTRUM." << LogIO::POST;
 	  ms_p->removeColumn(colSigSp);
 	}
@@ -1671,7 +1667,7 @@ Bool Calibrater::initWeights(String wtmode, Bool dowtsp) {
 	logSink() << "SIGMA_SPECTRUM already absent." << LogIO::POST;
 
       // Nothing more to do here
-      return true;
+      return True;
       break;
     }
     case NONE: {
@@ -1702,12 +1698,12 @@ Bool Calibrater::initWeights(String wtmode, Bool dowtsp) {
     // Force dowtsp if the column already exists
     if (wtspexists && !dowtsp) {
       logSink() << "Found WEIGHT_SPECTRUM; will force its initialization." << LogIO::POST;
-      dowtsp=true;
+      dowtsp=True;
     }
     // remove SIGMA_SPECTRUM column for non-channelized weight
     if (sigspexists) {
       logSink() << "Removing SIGMA_SPECTRUM for non-channelized weight." << LogIO::POST;
-      if (true || ms_p->canRemoveColumn(colSigSp)) {
+      if (True || ms_p->canRemoveColumn(colSigSp)) {
 	ms_p->removeColumn(colSigSp);
       }
       else
@@ -1764,7 +1760,7 @@ Bool Calibrater::initWeights(String wtmode, Bool dowtsp) {
     columns[4]=MS::TIME;
 
     vi::SortColumns sc(columns);
-    vi::VisibilityIterator2 vi2(*ms_p,sc,true);
+    vi::VisibilityIterator2 vi2(*ms_p,sc,True);
     vi::VisBuffer2 *vb = vi2.getVisBuffer();
 
     ROMSColumns mscol(*ms_p);
@@ -1919,7 +1915,7 @@ Bool Calibrater::initWeights(String wtmode, Bool dowtsp) {
     unsetapply();
 
     throw(AipsError("Error in Calibrater::initWeights."));
-    retval = false;  // Not that it ever gets here...
+    retval = False;  // Not that it ever gets here...
   }
   return retval;
 }
@@ -2004,7 +2000,7 @@ Bool Calibrater::initWeightsWithTsys(String wtmode, Bool dowtsp,
 		if (wtspexists && !dowtsp) {
 			logSink() << "Found WEIGHT_SPECTRUM; will force its initialization."
 					<< LogIO::POST;
-			dowtsp = true;
+			dowtsp = True;
 		}
 
 		// Report that we are initializing the WEIGHT_SPECTRUM, and prepare to do so.
@@ -2080,7 +2076,7 @@ Bool Calibrater::initWeightsWithTsys(String wtmode, Bool dowtsp,
 		else {
     if (sigspexists) {
       logSink() << "Removing SIGMA_SPECTRUM for non-channelized weight." << LogIO::POST;
-      if (true || ms_p->canRemoveColumn(colSigSp)) {
+      if (True || ms_p->canRemoveColumn(colSigSp)) {
 	ms_p->removeColumn(colSigSp);
       }
       else
@@ -2100,7 +2096,7 @@ Bool Calibrater::initWeightsWithTsys(String wtmode, Bool dowtsp,
 		columns[4] = MS::TIME;
 
 		vi::SortColumns sc(columns);
-		vi::VisibilityIterator2 vi2(*ms_p, sc, true);
+		vi::VisibilityIterator2 vi2(*ms_p, sc, True);
 		vi::VisBuffer2 *vb = vi2.getVisBuffer();
 
 		ROMSColumns mscol(*ms_p);
@@ -2208,7 +2204,7 @@ Bool Calibrater::initWeightsWithTsys(String wtmode, Bool dowtsp,
 					vb->dirtyComponentsClear();
 
 					// throws exception if nothing to apply
-					ve_p->correct2(*vb, false, dowtsp);
+					ve_p->correct2(*vb, False, dowtsp);
 
 					if (dowtsp) {
 						vb->setWeightSpectrum(vb->weightSpectrum());
@@ -2250,7 +2246,7 @@ Bool Calibrater::initWeightsWithTsys(String wtmode, Bool dowtsp,
 		unsetapply();
 
 		throw(AipsError("Error in Calibrater::initWeights."));
-		retval = false;  // Not that it ever gets here...
+		retval = False;  // Not that it ever gets here...
 	}
 	return retval;
 }
@@ -2315,7 +2311,7 @@ Bool Calibrater::initWeights(Bool doBT, Bool dowtsp) {
     columns[4]=MS::TIME;
 
     vi::SortColumns sc(columns);
-    vi::VisibilityIterator2 vi2(*ms_p,sc,true);
+    vi::VisibilityIterator2 vi2(*ms_p,sc,True);
     vi::VisBuffer2 *vb = vi2.getVisBuffer();
 
     ROMSColumns mscol(*ms_p);
@@ -2416,7 +2412,7 @@ Bool Calibrater::initWeights(Bool doBT, Bool dowtsp) {
     unsetapply();
 
     throw(AipsError("Error in Calibrater::initWeightsOLD."));
-    retval = false;  // Not that it ever gets here...
+    retval = False;  // Not that it ever gets here...
   }
   return retval;
 }
@@ -2469,7 +2465,7 @@ Bool Calibrater::solve() {
       throw(AipsError("Please run setsolve before attempting to solve."));
 
     // Handle specified caltable
-    if (true && svc_p) {
+    if (True && svc_p) {
 
       /*      
       cout << "name: " << svc_p->calTableName() << endl;
@@ -2478,7 +2474,7 @@ Bool Calibrater::solve() {
       cout << "opened?   " << Table::isOpened(svc_p->calTableName()) << endl;
       cout << "readable? " << Table::isReadable(svc_p->calTableName()) << endl;
       //      cout << "writable? " << Table::isWritable(svc_p->calTableName()) << endl;
-      cout << "canDelete? " << Table::canDeleteTable(svc_p->calTableName(),true) << endl;
+      cout << "canDelete? " << Table::canDeleteTable(svc_p->calTableName(),True) << endl;
       */
 
       // If table exists (readable) and not deletable
@@ -2524,10 +2520,10 @@ Bool Calibrater::solve() {
     reset();
 
     throw(AipsError("Error in Calibrater::solve."));
-    return false;
+    return False;
   } 
 
-  return true;
+  return True;
 
 }
 
@@ -2558,10 +2554,10 @@ Bool Calibrater::genericGatherAndSolve() {
 
   // We will remember which spws couldn't be processed
   Vector<Bool> unsolspw(vi.numberSpw());	
-  unsolspw.set(false);		       
+  unsolspw.set(False);		       
 
   // Manage verbosity of partial channel averaging
-  Vector<Bool> verb(vi.numberSpw(),true);
+  Vector<Bool> verb(vi.numberSpw(),True);
 
   Vector<Int64> nexp(vi.numberSpw(),0), natt(vi.numberSpw(),0),nsuc(vi.numberSpw(),0);
 
@@ -2577,7 +2573,7 @@ Bool Calibrater::genericGatherAndSolve() {
     Int solscan=vi.scan(scv)(0),solobs=vi.observationId(obsv)(0);
 
     // Arrange to accumulate 
-    //    VisBuffAccumulator vba(vs_p->numberAnt(),svc_p->preavg(),false); 
+    //    VisBuffAccumulator vba(vs_p->numberAnt(),svc_p->preavg(),False); 
     VisBuffGroupAcc vbga(vs_p->numberAnt(),vs_p->numberSpw(),vs_p->numberFld(),svc_p->preavg()); 
     
     for (Int ichunk=0;ichunk<nChunkPerSol(isol);++ichunk) {
@@ -2627,7 +2623,7 @@ Bool Calibrater::genericGatherAndSolve() {
 	    if (verb(spw)) {
 	      logSink() << " to " 
 			<< vb.nChannel() << LogIO::POST;
-	      verb(spw)=false;  // suppress future verbosity in this spw
+	      verb(spw)=False;  // suppress future verbosity in this spw
 	    }
 	  }
 	  
@@ -2640,7 +2636,7 @@ Bool Calibrater::genericGatherAndSolve() {
       }
       else
 	// This spw not accumulated for solve
-	unsolspw(spw)=true;
+	unsolspw(spw)=True;
 
       // Advance the VisIter, if possible
       if (vi.moreChunks()) vi.nextChunk();
@@ -2685,7 +2681,7 @@ Bool Calibrater::genericGatherAndSolve() {
 	
 	// (NB: force const version of nChanPar()  [why?])
 	//	for (Int ich=0;ich<((const SolvableVisCal*)svc_p)->nChanPar();++ich) {
-	Bool totalGoodSol(false);
+	Bool totalGoodSol(False);
 	for (Int ich=((const SolvableVisCal*)svc_p)->nChanPar()-1;ich>-1;--ich) {
 	  // for (Int ich=0;ich<((const SolvableVisCal*)svc_p)->nChanPar();++ich) {
 	  
@@ -2704,7 +2700,7 @@ Bool Calibrater::genericGatherAndSolve() {
 
 	  // If good... 
 	  if (goodSoln) {
-	    totalGoodSol=true;
+	    totalGoodSol=True;
 	    
 	    svc_p->formSolveSNR();
 	    svc_p->applySNRThreshold();
@@ -2785,7 +2781,7 @@ Bool Calibrater::genericGatherAndSolve() {
     }
   }
 
-  return true;
+  return True;
 
 }
 
@@ -2952,7 +2948,7 @@ void Calibrater::fluxscale(const String& infile,
       applypar.define ("select", select);
       fsvj_->setApply(applypar);
 
-      //Bool incremental=false;
+      //Bool incremental=False;
       // Make fluxscale calculation
       Vector<String> fldnames(ROMSFieldColumns(ms_p->field()).name().getColumn());
       //fsvj_->fluxscale(refField,tranField,refSpwMap,fldnames,oFluxScaleFactor,
@@ -3352,7 +3348,7 @@ Bool Calibrater::smooth(const String& infile,
       if (svc) delete svc; svc=NULL;
       
       // Apparently, it worked
-      return true;
+      return True;
 
     }
     else
@@ -3369,9 +3365,9 @@ Bool Calibrater::smooth(const String& infile,
 
     throw(AipsError("Error in Calibrater::smooth."));
 
-    return false;
+    return False;
   }
-  return false;
+  return False;
 }
 
 
@@ -3398,9 +3394,9 @@ Bool Calibrater::listCal(const String& infile,
         Vector<Int> uantids=getAntIdx(antenna);
         
         String newSpw = spw;
-        Bool defaultSelect = false;
+        Bool defaultSelect = False;
         if (spw.empty()) { // list all channels (default)
-            defaultSelect = true;
+            defaultSelect = True;
             newSpw = "*"; 
             logSink() << LogIO::NORMAL1 << "Spws selected: ALL" << endl
                       << "Channels selected: ALL" << LogIO::POST;
@@ -3441,7 +3437,7 @@ Bool Calibrater::listCal(const String& infile,
         
         if (svc) delete svc; svc=NULL;
         
-        return true;
+        return True;
         
     } catch (AipsError x) {
         
@@ -3454,9 +3450,9 @@ Bool Calibrater::listCal(const String& infile,
         
         throw(AipsError("Error in Calibrater::listCal."));
         
-        return false;
+        return False;
     }
-    return false;
+    return False;
     
 }
 
@@ -3528,7 +3524,7 @@ void Calibrater::selectChannel(const String& spw) {
 
       // Initialize this spw mask, if necessary (def = masked)
       if (!chanmask_[spw])
-      	chanmask_[spw]=new Vector<Bool>(nChan0(spw),true);
+      	chanmask_[spw]=new Vector<Bool>(nChan0(spw),True);
 
       // revise net start/end/nchan
       start(spw)=min(start(spw),ustart(i));
@@ -3539,8 +3535,8 @@ void Calibrater::selectChannel(const String& spw) {
       Int step=chansel(i,3);
       Int unchan=uend(i)-ustart(i)+1;
       
-      // Update the mask (false = valid)
-      (*chanmask_[spw])(Slice(ustart(i),unchan))=false;
+      // Update the mask (False = valid)
+      (*chanmask_[spw])(Slice(ustart(i),unchan))=False;
 
 
       logSink() << ".  Spw " << spw << ":"
@@ -3559,7 +3555,7 @@ void Calibrater::selectChannel(const String& spw) {
   */
 	
       // Call via VisSet (avoid call to VisIter::origin)
-      vs_p->selectChannel(1,start(spw),nchan,step,spw,false);
+      vs_p->selectChannel(1,start(spw),nchan,step,spw,False);
 	
     } // i
     logSink() << LogIO::POST;
@@ -3567,7 +3563,7 @@ void Calibrater::selectChannel(const String& spw) {
   } // non-triv spw selection
 
   // For testing:
-  if (false) {
+  if (False) {
 
     VisIter& vi(vs_p->iter());
     VisBuffer vb(vi);
@@ -3592,13 +3588,13 @@ void Calibrater::initChanMask() {
     if (chanmask_[i])
       delete chanmask_[i];
   if (vs_p) {
-    chanmask_.resize(vs_p->numberSpw(),true);
+    chanmask_.resize(vs_p->numberSpw(),True);
     chanmask_=NULL;
   }
   else {
     //    throw(AipsError("Trouble sizing chanmask!"));
     // just don't support channel masking:
-    chanmask_.resize(0,true);
+    chanmask_.resize(0,True);
   }
 
 }
@@ -3784,24 +3780,24 @@ Matrix<Int> Calibrater::getChanIdx(const String& spw) {
 Bool Calibrater::calWt() {
 
   Int napp(vc_p.nelements());
-  // Return true as soon as we find a type which is cal'ing wts
+  // Return True as soon as we find a type which is cal'ing wts
   for (Int iapp=0;iapp<napp;++iapp)
     if (vc_p[iapp] && vc_p[iapp]->calWt())
-      return true;
+      return True;
 
-  // None cal'd weights, so return false
-  return false;
+  // None cal'd weights, so return False
+  return False;
 
 }
 
 Bool Calibrater::ok() {
 
   if(vs_p && ms_p && mssel_p && ve_p) {
-    return true;
+    return True;
   }
   else {
     logSink() << "Calibrater is not yet initialized" << LogIO::POST;
-    return false;
+    return False;
   }
 }
 
@@ -3814,7 +3810,7 @@ void Calibrater::writeHistory(LogIO& /*os*/, Bool /*cliCommand*/)
   /*
   if (!historytab_p.isNull()) {
     if (histLockCounter_p == 0) {
-      historytab_p.lock(false);
+      historytab_p.lock(False);
     }
     ++histLockCounter_p;
 

@@ -29,7 +29,6 @@
 #include <casa/OS/File.h>
 
 
-using namespace casacore;
 namespace casa {
 
 OutputDestinationChecker::OutputDestinationChecker() {}

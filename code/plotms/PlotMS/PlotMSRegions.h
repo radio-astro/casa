@@ -116,20 +116,20 @@ public:
     
     
     // Returns all axis pairs that have regions.
-    casacore::Vector<std::pair<PMS::Axis, PMS::Axis> > allAxisPairs() const;
+    Vector<std::pair<PMS::Axis, PMS::Axis> > allAxisPairs() const;
     
     // Returns whether or not there are regions for the given (x, y) axis pair.
     bool hasRegionsFor(PMS::Axis x, PMS::Axis y) const;
     
     // Returns a copy of the regions for the given (x, y) axis pair.
-    casacore::Vector<PlotMSRegion> regionsFor(PMS::Axis x, PMS::Axis y) const;
+    Vector<PlotMSRegion> regionsFor(PMS::Axis x, PMS::Axis y) const;
     
     // Adds the given regions for the given (x, y) axis pair.  Will not remove
     // any existing regions for that pair.  Only adds unique regions.
     // <group>
     void addRegions(PMS::Axis x, PMS::Axis y, const vector<PlotMSRegion>& r) {
-        addRegions(x, y, casacore::Vector<PlotMSRegion>(r)); }
-    void addRegions(PMS::Axis x, PMS::Axis y, const casacore::Vector<PlotMSRegion>& r);
+        addRegions(x, y, Vector<PlotMSRegion>(r)); }
+    void addRegions(PMS::Axis x, PMS::Axis y, const Vector<PlotMSRegion>& r);
     // </group>
     
     // Convenience method for adding all selected regions using the standard
@@ -140,8 +140,8 @@ public:
     // any existing regions for that pair.  Only adds unique regions.
     // <group>
     void setRegions(PMS::Axis x, PMS::Axis y, const vector<PlotMSRegion>& r) {
-        setRegions(x, y, casacore::Vector<PlotMSRegion>(r)); }
-    void setRegions(PMS::Axis x, PMS::Axis y, const casacore::Vector<PlotMSRegion>& r);
+        setRegions(x, y, Vector<PlotMSRegion>(r)); }
+    void setRegions(PMS::Axis x, PMS::Axis y, const Vector<PlotMSRegion>& r);
     // </group>
     
     // Convenience method for setting the regions for the given (x, y) axis
@@ -153,9 +153,9 @@ public:
     
 private:
     // Convenience macro for map type.
-    typedef std::map<std::pair<PMS::Axis, PMS::Axis>, casacore::Vector<PlotMSRegion> > PMSRMap;
+    typedef std::map<std::pair<PMS::Axis, PMS::Axis>, Vector<PlotMSRegion> > PMSRMap;
     
-    // casacore::Map from (x, y) to selected regions.
+    // Map from (x, y) to selected regions.
     PMSRMap itsRegions_;
 };
 

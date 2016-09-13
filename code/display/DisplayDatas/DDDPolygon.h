@@ -41,13 +41,9 @@
 #include <display/DisplayDatas/DDDObject.h>
 #include <display/DisplayDatas/DDDHandle.h>
 
-namespace casacore{
-
-	class LogIO;
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+	class LogIO;
 
 // <summary>
 // Implementation of aan ellipse object for DrawingDisplayData class.
@@ -67,16 +63,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	public:
 
-		// Constructor taking a casacore::Record description.  Fields in the record,
+		// Constructor taking a Record description.  Fields in the record,
 		// on top of what is consumed by the DDDObject constructor, are:
 		// Required : <src>x</src> (quantum of vector double) and
 		// <src>y</src> (quantum of vector double).
 		// Other, not required fields are <src>outline & editable</src>
-		// which default to <src>true</src>.  When <src>editable=false</src>
-		// the object can be moved but not reshaped, when <src>true</src>
-		// it can be moved and reshaped.   When   <src>outline=false</src>
+		// which default to <src>True</src>.  When <src>editable=False</src>
+		// the object can be moved but not reshaped, when <src>True</src>
+		// it can be moved and reshaped.   When   <src>outline=False</src>
 		// the ellipse is filled.
-		DDDPolygon(const casacore::Record &description, DrawingDisplayData *owner);
+		DDDPolygon(const Record &description, DrawingDisplayData *owner);
 
 		// Destructor.
 		virtual ~DDDPolygon();
@@ -88,11 +84,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Return a record describing this object.  Presently returns
 		// only construction description.
-		virtual casacore::Record description();
+		virtual Record description();
 
 		// Update this object based on the information in the provided
 		// Record.
-		virtual void setDescription(const casacore::Record &rec);
+		virtual void setDescription(const Record &rec);
 
 		// Event handlers.  The parent DrawingDisplayData will distribute
 		// events as necessary to the various DDDObjects which comprise it.
@@ -121,19 +117,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	private:
 
 // Fill style
-		casacore::Bool itsOutline;
+		Bool itsOutline;
 
 // Define x and y
-		casacore::Quantum<casacore::Vector<casacore::Double> > itsWorldX, itsWorldY;
-		casacore::Vector<casacore::Double> itsPixelX, itsPixelY;
-		casacore::uInt itsNPoints;
+		Quantum<Vector<Double> > itsWorldX, itsWorldY;
+		Vector<Double> itsPixelX, itsPixelY;
+		uInt itsNPoints;
 
 // Rotated Rectangle Corners to draw in screen pixel
-		casacore::Matrix<casacore::Double> itsCorners;
+		Matrix<Double> itsCorners;
 
-// casacore::List of handles
+// List of handles
 
-		casacore::Block<DDDHandle> itsHandles;
+		Block<DDDHandle> itsHandles;
 
 // Mode.
 
@@ -141,16 +137,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Store for movement bases.
 
-		casacore::Double itsBaseMoveX, itsBaseMoveY;
+		Double itsBaseMoveX, itsBaseMoveY;
 
 // In function draw(), recompute all pixel coordinates when true
 // else use what is currently set
 
-		casacore::Bool itsRecompute;
+		Bool itsRecompute;
 
 // LOgger
 
-		casacore::LogIO itsLogger;
+		LogIO itsLogger;
 
 // DisplayCoordinateSystem in screen pixel coordinates
 		DisplayCoordinateSystem itsCoordinateSystem;
@@ -159,7 +155,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		WorldCanvas* itsWorldCanvasPtr;
 
 // Fractional indicators
-		casacore::Bool itsFracX, itsFracY;
+		Bool itsFracX, itsFracY;
 
 // COnvert parameters from world to pixel
 		void convertToPixel ();
@@ -168,10 +164,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void updateWorldValues ();
 
 // Decode record into private data
-		void decode(const casacore::RecordInterface& description, casacore::Bool required);
+		void decode(const RecordInterface& description, Bool required);
 
 // Encode private data into record
-		void encode(casacore::RecordInterface& description) const;
+		void encode(RecordInterface& description) const;
 
 // compute corners of rectangle of bounding box of polygon
 		void createCorners();

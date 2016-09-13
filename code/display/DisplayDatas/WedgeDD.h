@@ -32,14 +32,10 @@
 #include <display/Display/DisplayCoordinateSystem.h>
 #include <display/DisplayCanvas/WCCSNLAxisLabeller.h>
 
-namespace casacore{
-
-	template <class T> class Matrix;
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	class WCPowerScaleHandler;
+	template <class T> class Matrix;
 
 	class WedgeDM;
 
@@ -98,43 +94,43 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void updateCsys();
 
 		// Axis labeller, 5th step in the WCHolder refresh cycle
-		virtual casacore::Bool labelAxes(const WCRefreshEvent &ev);
-		virtual casacore::Bool canLabelAxes() const;
+		virtual Bool labelAxes(const WCRefreshEvent &ev);
+		virtual Bool canLabelAxes() const;
 		bool isDisplayable( ) const;
 
 		// Return the data unit.
-		virtual const casacore::Unit dataUnit() const;
-		const casacore::IPosition dataShape() const {
-			return casacore::IPosition( );
+		virtual const Unit dataUnit() const;
+		const IPosition dataShape() const {
+			return IPosition( );
 		}
-		casacore::uInt dataDim() const {
+		uInt dataDim() const {
 			return 0;
 		}
 		std::vector<int> displayAxes( ) const {
 			return std::vector<int>( );
 		}
 
-		// casacore::Format the wedge value at the given world position.
-		virtual casacore::String showValue(const casacore::Vector<casacore::Double> &world);
+		// Format the wedge value at the given world position.
+		virtual String showValue(const Vector<Double> &world);
 
 		// Install the default options for this DisplayData.
 		virtual void setDefaultOptions();
 
 		// Apply options stored in <src>rec</src> to the DisplayData.  A
-		// return value of <src>true</src> means a refresh is needed.
+		// return value of <src>True</src> means a refresh is needed.
 		// <src>recOut</src> contains any fields which were implicitly
 		// changed as a result of the call to this function.
-		virtual casacore::Bool setOptions(casacore::Record &rec, casacore::Record &recOut);
+		virtual Bool setOptions(Record &rec, Record &recOut);
 
 		// Retrieve the current and default options and parameter types.
-		virtual casacore::Record getOptions( bool scrub=false ) const;
+		virtual Record getOptions( bool scrub=false ) const;
 
 		// Return the type of this DisplayData.
 		virtual Display::DisplayDataType classType() {
 			return Display::Raster;
 		}
 		// Pure virtual function from DisplayData...
-		casacore::String dataType() const {
+		String dataType() const {
 			return "wedge";
 		}
 
@@ -154,9 +150,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Take actions on removal from WC[H] (notably, deletion of drawlists).
 		virtual void notifyUnregister(WorldCanvasHolder& wcHolder,
-		                              casacore::Bool ignoreRefresh = false);
+		                              Bool ignoreRefresh = False);
 
-		const static casacore::String WEDGE_PREFIX;
+		const static String WEDGE_PREFIX;
 
 		std::string errorMessage( ) const { return ""; }
 
@@ -171,23 +167,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// (Required) copy assignment.
 		void operator=(const WedgeDD &other);
 		friend class WedgeDM;
-		// casacore::Data minimum and maximum to set up the coordinate system
-		casacore::Float itsMin, itsMax;
+		// Data minimum and maximum to set up the coordinate system
+		Float itsMin, itsMax;
 		// the length of the Vector
-		casacore::uInt itsLength;
+		uInt itsLength;
 		// the unit of the input data
-		casacore::String itsDataUnit;
+		String itsDataUnit;
 		//<group>
 		// the power law adjustment for for the scle handler
-		casacore::Float itsPowerCycles;
+		Float itsPowerCycles;
 		WCPowerScaleHandler* itsPowerScaleHandler;
 
-		casacore::String itsOptionsMode;
+		String itsOptionsMode;
 		//</group>
 		// the axis labeller
 		WCCSNLAxisLabeller itsAxisLabeller;
 		// The actual colorbar data
-		casacore::Matrix<casacore::Float> itsColorbar;
+		Matrix<Float> itsColorbar;
 		// the local coordinate system - gets exported to the parent DD
 		DisplayCoordinateSystem itsCoordinateSystem;
 

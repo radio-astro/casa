@@ -35,14 +35,10 @@
 #include <lattices/Lattices/LatticeIterator.h> 
 #include <flagging/Flagging/RFCommon.h>
 
-namespace casacore{
-
-class MeasurementSet;
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 class Flagger;
+class MeasurementSet;
 class VisibilityIterator;
 class VisBuffer;
 
@@ -75,8 +71,8 @@ typedef RFABase RFA;
 // </synopsis>
 //
 // <motivation>
-// Vital information about an casacore::MS or a visibility chunk is spread all over 
-// three classes (casacore::MS, VisIter, VisBuffer). RFChunkStats provides a central
+// Vital information about an MS or a visibility chunk is spread all over 
+// three classes (MS, VisIter, VisBuffer). RFChunkStats provides a central
 // point for flagging agents to look this info up. 
 // </motivation>
 //
@@ -93,21 +89,21 @@ protected:
   VisBuffer          &visbuf;
   Flagger            &flagger;
   
-  casacore::IPosition visshape;  
-  casacore::uInt counts[Num_StatEnums];
-  casacore::Matrix<casacore::uInt> nf_ifr_time,nf_chan_ifr;
-  casacore::Vector<casacore::uInt> rows_per_ifr;
-  casacore::Vector<casacore::uInt> nrf_ifr,nrf_time;
-  casacore::Vector<casacore::Int>  ifr_nums;
-  casacore::Vector<casacore::Int>  feed_nums;
-  casacore::Vector<casacore::Int>  corrtypes;
-  casacore::Vector<casacore::Double> freq;
-  casacore::String       corr_string;
-  casacore::Double       start_time,end_time,current_time;
-  casacore::uInt chunk_no,pass_no;
-  casacore::Int itime;
+  IPosition visshape;  
+  uInt counts[Num_StatEnums];
+  Matrix<uInt> nf_ifr_time,nf_chan_ifr;
+  Vector<uInt> rows_per_ifr;
+  Vector<uInt> nrf_ifr,nrf_time;
+  Vector<Int>  ifr_nums;
+  Vector<Int>  feed_nums;
+  Vector<Int>  corrtypes;
+  Vector<Double> freq;
+  String       corr_string;
+  Double       start_time,end_time,current_time;
+  uInt chunk_no,pass_no;
+  Int itime;
 
-//  casacore::Matrix<casacore::uInt> nf_corr_ifr, nf_chan_corr, nf_chan_time, nf_corr_time;
+//  Matrix<uInt> nf_corr_ifr, nf_chan_corr, nf_chan_time, nf_corr_time;
   
   std::vector<double> scan_start;      /* first time stamp in scan */
   std::vector<double> scan_start_flag; /* first time stamp with any 
@@ -126,11 +122,11 @@ public:
 // accessor to VisBuffer
   VisBuffer &visBuf () { return visbuf; }
 // accessor to MS
-  const casacore::MeasurementSet & measSet () const;
+  const MeasurementSet & measSet () const;
 // accessor to MS
-  const casacore::String msName () const;
+  const String msName () const;
 // returns antenna names
-  const casacore::Vector<casacore::String>  & antNames () const;
+  const Vector<String>  & antNames () const;
 
   // scan start/end times
   double get_scan_start(unsigned scan) const
@@ -153,91 +149,91 @@ public:
 // loads data for new chunk, resets all flag stat counters
   void newChunk (bool init_quack);
 // loads data for new pass
-  void newPass (casacore::uInt npass);
+  void newPass (uInt npass);
 // loads data for new iteration
   void newTime ();
 
 // returns current chunk number
-  casacore::uInt nchunk() const { return chunk_no; };
+  uInt nchunk() const { return chunk_no; };
 // returns current pass number
-  casacore::uInt npass()  const { return pass_no; };
+  uInt npass()  const { return pass_no; };
 // returns current time slot
-  casacore::Int  iTime()  const { return itime; };
+  Int  iTime()  const { return itime; };
 
 // returns a data dimension (POL, CHAN, IFR, etc.)
-  casacore::uInt num ( StatEnums which ) const { return counts[which]; }
+  uInt num ( StatEnums which ) const { return counts[which]; }
 // returns vector of frequencies (one per channel)
-  const casacore::Vector<casacore::Double> & frequency ();
+  const Vector<Double> & frequency ();
   
 // returns time of currently iterated time slot
-  casacore::Double currentMJD () const     
+  Double currentMJD () const     
     { return current_time; }
 // return first time slot in chunk
-  casacore::Double startMJD () const     
+  Double startMJD () const     
     { return start_time; }
 // return last time slot in chunk
-  casacore::Double endMJD () const       
+  Double endMJD () const       
     { return end_time; }
 
-// returns corr mask corresponding to specified casacore::Stokes types
-// (templated, but only casacore::String and casacore::Int will actually work)
-  template<class T> RFlagWord getCorrMask ( const casacore::Vector<T> &corrspec );
+// returns corr mask corresponding to specified Stokes types
+// (templated, but only String and Int will actually work)
+  template<class T> RFlagWord getCorrMask ( const Vector<T> &corrspec );
   
 // returns mask with all correlations
   RFlagWord fullCorrMask () { return (1<<num(CORR))-1; };
 // returns string of correlations
-  const casacore::String & getCorrString () { return corr_string; }
+  const String & getCorrString () { return corr_string; }
 
 // returns IFR index corresponding to current VisBuffer rows
-  casacore::uInt ifrNum( casacore::uInt nr )  { return ifr_nums(nr); };
+  uInt ifrNum( uInt nr )  { return ifr_nums(nr); };
 // returns IFR index corresponding to current VisBuffer rows
-  const casacore::Vector<casacore::Int> & ifrNums ()  { return ifr_nums; };
+  const Vector<Int> & ifrNums ()  { return ifr_nums; };
 
 // returns FEED index corresponding to current VisBuffer rows
-  casacore::uInt feedNum( casacore::uInt nr )  { return feed_nums(nr); };
+  uInt feedNum( uInt nr )  { return feed_nums(nr); };
 // returns FEED index corresponding to current VisBuffer rows
-  const casacore::Vector<casacore::Int> & feedNums ()  { return feed_nums; };
+  const Vector<Int> & feedNums ()  { return feed_nums; };
 
 // converts antenna indices into IFR index
-  casacore::uInt antToIfr ( casacore::uInt ant1,casacore::uInt ant2 );
+  uInt antToIfr ( uInt ant1,uInt ant2 );
 // converts IFR index back to antenna numbers
-  void ifrToAnt ( casacore::uInt &ant1,casacore::uInt &ant2,casacore::uInt ifr );
+  void ifrToAnt ( uInt &ant1,uInt &ant2,uInt ifr );
 // converts IFR index to standard ID string 
-  casacore::String ifrString ( casacore::uInt ifr ); 
+  String ifrString ( uInt ifr ); 
   
 // data availability stats, per IFR
-  casacore::uInt nrowPerIfr ( casacore::uInt ifr )            { return rows_per_ifr(ifr); }
-  const casacore::Vector<casacore::uInt> & nrowPerIfr () const { return rows_per_ifr; }
+  uInt nrowPerIfr ( uInt ifr )            { return rows_per_ifr(ifr); }
+  const Vector<uInt> & nrowPerIfr () const { return rows_per_ifr; }
 
 // accessors to various flagging stats
-  casacore::uInt & nfIfrTime ( casacore::uInt ifr,casacore::uInt itime )  
+  uInt & nfIfrTime ( uInt ifr,uInt itime )  
                                           { return nf_ifr_time(ifr,itime); }
-  const casacore::Matrix<casacore::uInt> & nfIfrTime () const    
+  const Matrix<uInt> & nfIfrTime () const    
                                           { return nf_ifr_time; }
-  casacore::uInt & nfChanIfr ( casacore::uInt ich,casacore::uInt ifr   )  // flags per channel and ifr
+  uInt & nfChanIfr ( uInt ich,uInt ifr   )  // flags per channel and ifr
                                           { return nf_chan_ifr(ich,ifr); }
-  const casacore::Matrix<casacore::uInt> & nfChanIfr () const   
+  const Matrix<uInt> & nfChanIfr () const   
                                           { return nf_chan_ifr; }        
-  casacore::Matrix<casacore::uInt> & nfChanIfr ()
+  Matrix<uInt> & nfChanIfr ()
                                           { return nf_chan_ifr; }        
-  casacore::uInt & nrfIfr  (casacore::uInt i)                  
+  uInt & nrfIfr  (uInt i)                  
                                           { return nrf_ifr(i); }
-  casacore::uInt & nrfTime (casacore::uInt i)                  
+  uInt & nrfTime (uInt i)                  
                                           { return nrf_time(i); }
-  const casacore::Vector<casacore::uInt> & nrfIfr  () const     
+  const Vector<uInt> & nrfIfr  () const     
                                           { return nrf_ifr; };
-  const casacore::Vector<casacore::uInt> & nrfTime () const     
+  const Vector<uInt> & nrfTime () const     
                                           { return nrf_time; };
 
-  //casacore::Matrix<casacore::uInt> nf_corr_ifr, nf_chan_corr, nf_chan_time, nf_corr_time;
-  //casacore::uInt & nfCorrIfr( casacore::uInt icorr, casacore::uInt ifr ) { return nf_corr_ifr(icorr,ifr); }
-  //const casacore::Matrix<casacore::uInt> & nfCorrIfr () const { return nf_corr_ifr; }
-  //casacore::uInt & nfChanCorr( casacore::uInt ich, casacore::uInt icorr ) { return nf_chan_corr(ich,icorr); }
-  //const casacore::Matrix<casacore::uInt> & nfChanCorr () const { return nf_chan_corr; }
-  //casacore::uInt & nfChanTime( casacore::uInt ich, casacore::uInt itime ) { return nf_chan_time(ich,itime); }
-  //const casacore::Matrix<casacore::uInt> & nfChanTime () const { return nf_chan_time; }
-  //casacore::uInt & nfCorrTime( casacore::uInt icorr, casacore::uInt itime ) { return nf_corr_time(icorr,itime); }
-  //const casacore::Matrix<casacore::uInt> & nfCorrTime () const { return nf_corr_time; }
+  //Matrix<uInt> nf_corr_ifr, nf_chan_corr, nf_chan_time, nf_corr_time;
+  //uInt & nfCorrIfr( uInt icorr, uInt ifr ) { return nf_corr_ifr(icorr,ifr); }
+  //const Matrix<uInt> & nfCorrIfr () const { return nf_corr_ifr; }
+  //uInt & nfChanCorr( uInt ich, uInt icorr ) { return nf_chan_corr(ich,icorr); }
+  //const Matrix<uInt> & nfChanCorr () const { return nf_chan_corr; }
+  //uInt & nfChanTime( uInt ich, uInt itime ) { return nf_chan_time(ich,itime); }
+  //const Matrix<uInt> & nfChanTime () const { return nf_chan_time; }
+  //uInt & nfCorrTime( uInt icorr, uInt itime ) { return nf_corr_time(icorr,itime); }
+  //const Matrix<uInt> & nfCorrTime () const { return nf_corr_time; }
   
 // prints stats to stderr
   void printStats ();
@@ -245,10 +241,10 @@ public:
 
 // enums for which stats are actually collected
 const RFChunkStats::StatEnums active_stats[] = { RFChunkStats::CHAN,RFChunkStats::IFR,RFChunkStats::TIME };
-const casacore::uInt num_active_stats = 3;
+const uInt num_active_stats = 3;
 
 // global function for finding polarization by index
-casacore::Int findCorrType( casacore::Stokes::StokesTypes type,const casacore::Vector<casacore::Int> &corr );
+Int findCorrType( Stokes::StokesTypes type,const Vector<Int> &corr );
 
 
 } //# NAMESPACE CASA - END

@@ -35,7 +35,7 @@
 // Test program for NewCalTable class.
 // </summary>
 
-Bool foundError = false;
+Bool foundError = False;
 
 void doTest1 () 
 {
@@ -46,7 +46,7 @@ void doTest1 ()
   String msname=datapath+msdata;
 
   String tableName("tCTGenericFill");
-  NewCalTable ct(tableName,VisCalEnum::COMPLEX,"T Jones",msname,true);
+  NewCalTable ct(tableName,VisCalEnum::COMPLEX,"T Jones",msname,True);
 
   Int nAnt(5);  // from the above ms
   Int nSpw(1);
@@ -54,7 +54,7 @@ void doTest1 ()
   Double interval(60.0);
 
   Cube<Complex> cpar(1,1,nAnt);
-  Cube<Bool>    flag(1,1,nAnt); flag.set(false);
+  Cube<Bool>    flag(1,1,nAnt); flag.set(False);
   Cube<Float>   err(1,1,nAnt);  err.set(0.0);
   Cube<Float>   snr(1,1,nAnt);  snr.set(3.0);
 

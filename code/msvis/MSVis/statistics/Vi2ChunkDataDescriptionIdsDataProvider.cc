@@ -28,7 +28,6 @@
 #include <msvis/MSVis/statistics/Vi2ChunkDataDescriptionIdsDataProvider.h>
 #include <msvis/MSVis/VisBufferComponents2.h>
 
-using namespace casacore;
 namespace casa {
 
 Vi2ChunkDataDescriptionIdsDataProvider::Vi2ChunkDataDescriptionIdsDataProvider(
@@ -44,5 +43,4 @@ Vi2ChunkDataDescriptionIdsDataProvider::dataArray() {
 	return vi2->getVisBuffer()->dataDescriptionIds();
 }
 
-using namespace casacore;
 } // namespace casa

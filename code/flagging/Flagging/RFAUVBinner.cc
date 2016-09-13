@@ -37,7 +37,6 @@
 #include <casa/stdio.h>
 #include <casa/stdlib.h>
     
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 RFAUVBinner::RFAUVBinner  ( RFChunkStats &ch,const RecordInterface &parm ) : 
@@ -79,12 +78,12 @@ uInt RFAUVBinner::estimateMemoryUse ()
 
 Bool RFAUVBinner::newChunk (Int &maxmem)
 {
-// compute correlations mask, return false if fails
+// compute correlations mask, return False if fails
   corrmask = RFDataMapper::corrMask(chunk.visIter());
   if( !corrmask )
   {
     os<<LogIO::WARN<<"missing selected correlations, ignoring this chunk\n"<<LogIO::POST;
-    return active=false;
+    return active=False;
   }
 // memory management. 
 // bin counts are always in memory
@@ -116,11 +115,11 @@ Bool RFAUVBinner::newChunk (Int &maxmem)
   uvmax.resize(num(CHAN));
   uvmin.set(C::flt_max);
   uvmax.set(0);
-  binned = false;
+  binned = False;
 // finish with init  
   RFAFlagCubeBase::newChunk(maxmem-=1);
   
-  return active=true;
+  return active=True;
 }
 
 void RFAUVBinner::endChunk ()
@@ -142,7 +141,7 @@ void RFAUVBinner::endChunk ()
 void RFAUVBinner::startData (bool verbose)
 {
 // reset lattices to write-only
-  yvalue.reset(false,true);
+  yvalue.reset(False,True);
   RFAFlagCubeBase::startData(verbose);
 //  rowclipper.reset();
 }
@@ -207,7 +206,7 @@ void RFAUVBinner::startDry (bool verbose)
 {
   RFAFlagCubeBase::startDry(verbose);
 // reset lattices to read-only
-  yvalue.reset(true,false);
+  yvalue.reset(True,False);
 // create bincounts cube, if necessary
   if( !binned )
   {
@@ -285,7 +284,7 @@ RFA::IterMode RFAUVBinner::endDry ()
     return RFA::STOP;
   }
 // else compute bad bins
-  binned = true;
+  binned = True;
   for( uInt ich=0; ich<num(CHAN); ich++ )
   {
     // bins for this channel

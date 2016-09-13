@@ -35,7 +35,6 @@
 #include <QMessageBox>
 #include <limits>
 
-using namespace casacore;
 namespace casa {
 
 const int FeatherMain::DISH_DIAMETER_DEFAULT = -1;

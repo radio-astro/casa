@@ -38,7 +38,6 @@
 
 #include <scimath/Mathematics.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	DSScreenMarker::DSScreenMarker() :
@@ -85,7 +84,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	Bool DSScreenMarker::setOptions(const Record& settings) {
-		Bool localChange = false;
+		Bool localChange = False;
 		Record toSet = settings;
 
 		if (settings.isDefined("coords")) {
@@ -162,7 +161,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		if (DSMarker::setOptions(toSet)) {
-			localChange = true;
+			localChange = True;
 		}
 
 		return localChange;

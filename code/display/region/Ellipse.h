@@ -70,10 +70,10 @@ namespace casa {
 
 		protected:
 			std::list<SHARED_PTR<RegionInfo> > *generate_dds_centers(  );
-			casacore::ImageRegion *get_image_region( DisplayData* ) const;
+			ImageRegion *get_image_region( DisplayData* ) const;
 			// Ellipse is derived from Rectangle, but we have no way to generate ellipse
 			// statistics for a measurement set (our only non-image display data)... so
-			// we have to define this to prevent casacore::MS info being reported for the bounding
+			// we have to define this to prevent MS info being reported for the bounding
 			// rectangle of an Ellipse...
 			void generate_nonimage_statistics( DisplayData*, std::list<RegionInfo> * ) { }
 
@@ -84,7 +84,7 @@ namespace casa {
 			/* void drawHandles( ); */
 
 		private:
-			std::pair<casacore::Vector<casacore::Quantity>,casacore::Vector<casacore::Quantity> > posAndRadii( ) const;
+			std::pair<Vector<Quantity>,Vector<Quantity> > posAndRadii( ) const;
 			bool output_region( ds9writer &out, WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts ) const;
 
 		};

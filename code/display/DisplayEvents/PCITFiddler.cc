@@ -30,7 +30,6 @@
 #include <display/Display/Colormap.h>
 #include <display/DisplayEvents/PCITFiddler.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Constructor.
@@ -75,7 +74,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			break;
 		}
 		case PCITFiddler::BrightnessAndContrast: {
-			cmap->setBrightness(xfrac, false); // suppress reinstall with false
+			cmap->setBrightness(xfrac, False); // suppress reinstall with False
 			cmap->setContrast(yfrac);
 			break;
 		}

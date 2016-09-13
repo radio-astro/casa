@@ -81,18 +81,18 @@ class EPointVisJonesMRec : public SolvableVisJonesMRec
   ~EPointVisJonesMRec() {};
 
   // Construct from an existing record
-  EPointVisJonesMRec (const casacore::Record& inpRec);
+  EPointVisJonesMRec (const Record& inpRec);
 
   // Field accessors
   // Note: uses protected functions defined in CalMainRecord,
   // as fit parameters are used elsewhere in the inheritance
   // tree for baseline-based and image plane calibration tables.
   // a) define
-  void definePointingOffset(const casacore::Array<casacore::Float>& pointingOffset);
+  void definePointingOffset(const Array<Float>& pointingOffset);
   //  {dPointingOffset(pointingOffset);}
 
   // b) get
-  void getPointingOffset (casacore::Array<casacore::Float>& pointingOffset);
+  void getPointingOffset (Array<Float>& pointingOffset);
   //  {gPointingOffset (pointingOffset);};
 };
 

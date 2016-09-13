@@ -34,7 +34,6 @@
 #include <images/Images/ImageStatistics.h>
 
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 const String ProfileFitterEstimatesFileParser::_class = "FitterEstimatesFileParser";
@@ -84,7 +83,7 @@ void ProfileFitterEstimatesFileParser::_parseFile(
 	char *buffer = new char[bufSize];
 	int nRead;
 
-	while ((nRead = fileIO.read(bufSize, buffer, false)) == bufSize) {
+	while ((nRead = fileIO.read(bufSize, buffer, False)) == bufSize) {
 		_log << LogIO::NORMAL << "read: " << nRead << LogIO::POST;
 		String chunk(buffer, bufSize);
 

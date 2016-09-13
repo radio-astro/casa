@@ -50,19 +50,15 @@
 #include <nrao/VLA/VLALogicalRecord.h>
     
 #include <casa/namespace.h>
-namespace casacore{
-
+namespace casa { //# NAMESPACE CASA - BEGIN
 class Path;
 class MPosition;
 template <class T> class Vector;
-}
-
-namespace casa { //# NAMESPACE CASA - BEGIN
 } //# NAMESPACE CASA - END
 
 struct IterationStatus;
 
-// <summary>Functions to convert from VLA archive format to a casacore::MeasurementSet</summary>
+// <summary>Functions to convert from VLA archive format to a MeasurementSet</summary>
 
 // <use visibility=export>
 
@@ -114,7 +110,7 @@ public:
   // works for dataset G192. But for dataset NGC7538, one has to give a tolerance
   // as larger as 60 times its channel width ( 60000000Hz ). For other dataset, the
   // user has to try out the proper tolerance.
-  VLAFiller(casacore::MeasurementSet& output, VLALogicalRecord& input, casacore::Double freqTolerance=0.0, casacore::Bool autocorr=false, const casacore::String& antnamescheme="new", const casacore::Bool& applyTsys=true);
+  VLAFiller(MeasurementSet& output, VLALogicalRecord& input, Double freqTolerance=0.0, Bool autocorr=False, const String& antnamescheme="new", const Bool& applyTsys=True);
 
   // Does nothing special
   ~VLAFiller();
@@ -123,42 +119,42 @@ public:
   // copied to the output MS.
   void setFilter(const VLAFilterSet& filter);
 
-  // fill the supplied casacore::MeasurementSet from the the supplied VLABuffer. The
+  // fill the supplied MeasurementSet from the the supplied VLABuffer. The
   // number/type of messages describing the progress sent to the logger are
   // controlled using the verbose argument. If verbose is -1 or less then no
   // messages are sent to the logger. If verbose is zero then a summary is sent
   // to the logger just before this function completes. If verbose is one then
   // a message is sent for every record copied to the output MS. If verbose is
   // two a message is sent every second record and so on.
-  void fill(casacore::Int verbose=1);
+  void fill(Int verbose=1);
 
-  // Construct an empty casacore::MeasurementSet with the supplied table name. Throw
-  // an exception (casacore::AipsError) if the specified casacore::Table already exists unless the
-  // overwrite argument is set to true.
-  static casacore::MeasurementSet emptyMS(const casacore::Path& tableName, 
- 				const casacore::Bool overwrite=false);
+  // Construct an empty MeasurementSet with the supplied table name. Throw
+  // an exception (AipsError) if the specified Table already exists unless the
+  // overwrite argument is set to True.
+  static MeasurementSet emptyMS(const Path& tableName, 
+ 				const Bool overwrite=False);
   
-  // Open the casacore::MeasurementSet with the supplied name. Throw an exception
-  // (casacore::AipsError) if the specified casacore::Table does not exist. By default the casacore::Table is
+  // Open the MeasurementSet with the supplied name. Throw an exception
+  // (AipsError) if the specified Table does not exist. By default the Table is
   // opened for read/write access. The Type/SubType MUST be "Measurement
-  // Set/VLA" ie., the casacore::MS must have been created with this class. Otherwise an
+  // Set/VLA" ie., the MS must have been created with this class. Otherwise an
   // exception is thrown.
-  static casacore::MeasurementSet openMS(const casacore::Path& tableName, 
- 			       const casacore::Bool readonly=false);
+  static MeasurementSet openMS(const Path& tableName, 
+ 			       const Bool readonly=False);
   
-  // Return an empty casacore::MeasurementSet with the supplied table name. Creates a
+  // Return an empty MeasurementSet with the supplied table name. Creates a
   // empty measurement set unless one with the specified name already exists
-  // and overwrite is false. Then it opens the existing measurement set for
+  // and overwrite is False. Then it opens the existing measurement set for
   // read/write access.
-  static casacore::MeasurementSet getMS(const casacore::Path& tableName, 
-			      const casacore::Bool overwrite=false);
+  static MeasurementSet getMS(const Path& tableName, 
+			      const Bool overwrite=False);
   
   // Set the stop Parameters for filling
-   void setStopParams(casacore::String &, casacore::String &);
+   void setStopParams(String &, String &);
 private:
-  // Read one record from the input and copies it to the casacore::MS if it is not
-  // filtered out. Returns false if a record could not be read.
-  casacore::Bool fillOne();
+  // Read one record from the input and copies it to the MS if it is not
+  // filtered out. Returns False if a record could not be read.
+  Bool fillOne();
 
   // Send to the logger info about how the filler is going
   void logCurrentRecord(IterationStatus& counts);
@@ -168,52 +164,52 @@ private:
   void summarise();
 
   //# Add an entry to the antenna subtable
-  casacore::uInt addAntenna(const casacore::MPosition& antennaPos, casacore::uInt whichAnt);
+  uInt addAntenna(const MPosition& antennaPos, uInt whichAnt);
 
   //# Add an entry to the feed subtable
-  void addFeed(casacore::uInt whichAnt);
+  void addFeed(uInt whichAnt);
 
   //# Add an entry to the field subtable
-  casacore::uInt addField(const casacore::MDirection& refDir);
+  uInt addField(const MDirection& refDir);
 
   //# Add an entry to the pointing subtable
-  casacore::uInt addPointing(const casacore::MDirection& antennaDir,
-		   const casacore::MDirection& fieldDir, casacore::uInt whichAnt);
+  uInt addPointing(const MDirection& antennaDir,
+		   const MDirection& fieldDir, uInt whichAnt);
   // # Add an entry to the doppler dubtable
-  casacore::uInt addDoppler( const VLAEnum::CDA cda ); 
+  uInt addDoppler( const VLAEnum::CDA cda ); 
   //# Add an entry to the spectral-window subtable
-  casacore::uInt addSpectralWindow(const VLAEnum::CDA cda, const casacore::MFrequency& refFreq,
-			 const casacore::uInt nChan,
-			 const casacore::Double bandwidth,
-			 const casacore::uInt ifChain);
+  uInt addSpectralWindow(const VLAEnum::CDA cda, const MFrequency& refFreq,
+			 const uInt nChan,
+			 const Double bandwidth,
+			 const uInt ifChain);
 
   //# Add an entry to the polarization subtable
-  casacore::uInt addPolarization(const casacore::Vector<casacore::Stokes::StokesTypes>& pol);
+  uInt addPolarization(const Vector<Stokes::StokesTypes>& pol);
 
   //# Add an entry to the data description subtable
-  casacore::uInt addDataDescription(casacore::uInt spwId, casacore::uInt polId);
+  uInt addDataDescription(uInt spwId, uInt polId);
 
   //# Add an entry in the source subtable
-  casacore::uInt addSource(const casacore::MDirection& dir );
+  uInt addSource(const MDirection& dir );
 
-  //# Add a hypercube to the columns that use the Tiled casacore::Data Storage manager.
-  void addHypercubes(casacore::uInt nPol, casacore::uInt nChan);
+  //# Add a hypercube to the columns that use the Tiled Data Storage manager.
+  void addHypercubes(uInt nPol, uInt nChan);
 
   //# Add the specified number of rows tp the specified hypercubes
-  void extendHypercubes(const casacore::Block<casacore::uInt>& nPol, const casacore::Block<casacore::uInt>& nChan, 
-			casacore::uInt rows);
+  void extendHypercubes(const Block<uInt>& nPol, const Block<uInt>& nChan, 
+			uInt rows);
   
   //# Reconcile duplicate field names
-  void fixFieldDuplicates(casacore::MSField& msFld);
+  void fixFieldDuplicates(MSField& msFld);
 
   //# Determine whether to stop the fill for on-line filling
-  casacore::String projectCode;
-  casacore::MVEpoch stopTime;
-  casacore::Bool checkStop;
-  casacore::Bool fillStarted;
-  casacore::Bool stopFilling(VLALogicalRecord &);
+  String projectCode;
+  MVEpoch stopTime;
+  Bool checkStop;
+  Bool fillStarted;
+  Bool stopFilling(VLALogicalRecord &);
   //# pol index RR=0, RL=1, LR=2, LL needed just for index data
-  casacore::Int polIndexer(casacore::Stokes::StokesTypes& stokes);
+  Int polIndexer(Stokes::StokesTypes& stokes);
   //# Contains a logical record
   VLALogicalRecord itsRecord;
 
@@ -221,99 +217,99 @@ private:
   VLAFilterSet itsInputFilters;
 
   //# The output MS
-  casacore::MeasurementSet itsMS;
+  MeasurementSet itsMS;
   
   //# The reference frame of the observation is cached here and used when
   //# conversions from the observed frame to the one used in the MS.
-  casacore::MeasFrame itsFrame;
+  MeasFrame itsFrame;
   //# The reference frame of the observation whose spw is identified different 
   //# from what in the SPECTRAL_WINDOWS table and been added in. So the current
-  //# length of casacore::Vector equal the number of row in table SPECTRAL WINDOW( no use).
-  //# casacore::Vector<casacore::MeasFrame> theirFrames;
+  //# length of Vector equal the number of row in table SPECTRAL WINDOW( no use).
+  //# Vector<MeasFrame> theirFrames;
   //# This is the direction reference for the Measurement set. It is cached
   //# here.
-  casacore::MDirection::Types itsMSDirType;
+  MDirection::Types itsMSDirType;
   //# This is the reference frame of the last record copied. Initially it is
   //# set to a meaningless value.
-  casacore::MDirection::Types itsDirType;
+  MDirection::Types itsDirType;
   //# This converter is used to convert from the direction types on the archive
   //# to the one in the Measurement set. Its is cached to prevent it
   //# continually having to be recreated. It is never used if all the data on
-  //# the archive and all the data in the casacore::MS have the same direction type.
-  casacore::MDirection::Convert itsDirCtr;
+  //# the archive and all the data in the MS have the same direction type.
+  MDirection::Convert itsDirCtr;
 
   //# This converter is used to convert from the direction types on the archive
   //# to Az, El. It is only needed for holography data.
-  casacore::MDirection::Convert itsAzElCtr;
+  MDirection::Convert itsAzElCtr;
 
   //# This converter is used to convert the UVW coordinates from the type on
   //# the archive to the one in the Measurement set. It is cached to
   //# prevent it continually having to be recreated. It is never used if all
-  //# the data on the archive and all the data in the casacore::MS have the same
+  //# the data on the archive and all the data in the MS have the same
   //# direction type.
-  casacore::Muvw::Convert itsUvwCtr;
+  Muvw::Convert itsUvwCtr;
 
   //# This converter is used to convert from the channel frequency types on the
   //# archive to the one in the Measurement set. Its is cached hear to prevent
   //# it continually having to be recreated. It is only used if
   //# data in the archive was observed with online Doppler tracking.
-  casacore::MFrequency::Convert itsFreqCtr;
+  MFrequency::Convert itsFreqCtr;
 
   //# This converter is used to the VLA baselines which are in the HADEC frame
   //#to the ITRF frame so that they can be properly added with the VLA reference
   //# position, which is also in the ITRF frame.
-  casacore::MBaseline::Convert itsBlCtr;
+  MBaseline::Convert itsBlCtr;
 
   //# The field Id for the most recently copied record. Negative if no record
   //# has been copied.
-  casacore::Block<casacore::Int> itsFldId;
+  Block<Int> itsFldId;
 
   //# The antenna Id's for all the antennas in the most recently copied
   //# record. Zero length if no record has been copied.
-  casacore::Block<casacore::Int> itsAntId;
+  Block<Int> itsAntId;
 
   //# The spectral window Id's for all the CDA's in the most recently copied
   //# record. Always of length 4. Contains -1 is the CDA is unused.
-  casacore::Block<casacore::Int> itsSpId;
+  Block<Int> itsSpId;
 
   //# The polarization Id for the most recently copied record. Negative if no
   //# record has been copied. There is one for each Spectral Id.
-  casacore::Block<casacore::Int> itsPolId;
+  Block<Int> itsPolId;
 
   //# The data description Id's for the most recently copied record. Negative
   //# if no record has been copied.
-  casacore::Block<Block<casacore::Int> > itsDataId;
+  Block<Block<Int> > itsDataId;
 
   //# The length of these blocks is set to the maximum number of
   //# subarrays(4). The itsNewScan block is true if the field, spectral window
-  //# etc. has changed and the itsScan casacore::Block indicates the scan number.
-  casacore::Bool itsNewScan;
-  casacore::Block<casacore::Int> itsScan;
+  //# etc. has changed and the itsScan Block indicates the scan number.
+  Bool itsNewScan;
+  Block<Int> itsScan;
   //# A string, containing projkect names, that is accumulated when filling and
   //# written to the OBSERVATION subtable.
-  casacore::String itsProject;
+  String itsProject;
   //# The place to log messages
-  casacore::LogIO itsLog;
+  LogIO itsLog;
 
   //# These data members needed because of the use of the TiledData Storage
-  //# Manager. It may be possible to remove these when the casacore::TiledShape storage
+  //# Manager. It may be possible to remove these when the TiledShape storage
   //# manager can be used (the holdup is currently in VisSet).
-  casacore::TiledDataStManAccessor itsDataAcc;
-  casacore::Record itsTileId;
-  casacore::TiledDataStManAccessor itsSigmaAcc;
-  casacore::TiledDataStManAccessor itsFlagAcc;
-  casacore::TiledDataStManAccessor itsImagingWeightAcc;
-  casacore::TiledDataStManAccessor itsModDataAcc;
-  casacore::TiledDataStManAccessor itsCorrDataAcc;
-  casacore::TiledDataStManAccessor itsChanFlagAcc;
-  casacore::Block<casacore::IPosition> itsDataShapes;
-  casacore::Double itsFreqTolerance;
-  casacore::Bool itsApplyTsys;
-  casacore::Bool itsNewAntName;
-  casacore::Bool itsKeepAutoCorr;
-  casacore::Bool itsEVLAisOn;
-  casacore::Bool itsInitEpoch;
-  casacore::Bool itsRevBeenWarned;
+  TiledDataStManAccessor itsDataAcc;
+  Record itsTileId;
+  TiledDataStManAccessor itsSigmaAcc;
+  TiledDataStManAccessor itsFlagAcc;
+  TiledDataStManAccessor itsImagingWeightAcc;
+  TiledDataStManAccessor itsModDataAcc;
+  TiledDataStManAccessor itsCorrDataAcc;
+  TiledDataStManAccessor itsChanFlagAcc;
+  Block<IPosition> itsDataShapes;
+  Double itsFreqTolerance;
+  Bool itsApplyTsys;
+  Bool itsNewAntName;
+  Bool itsKeepAutoCorr;
+  Bool itsEVLAisOn;
+  Bool itsInitEpoch;
+  Bool itsRevBeenWarned;
   
 };
 #endif

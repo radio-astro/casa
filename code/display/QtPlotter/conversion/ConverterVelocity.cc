@@ -26,7 +26,6 @@
 #include "ConverterVelocity.h"
 #include <QDebug>
 
-using namespace casacore;
 namespace casa {
 
 	ConverterVelocity::ConverterVelocity(const QString& oldUnits, const QString& newUnits) :
@@ -60,5 +59,4 @@ namespace casa {
 		// TODO Auto-generated destructor stub
 	}
 
-using namespace casacore;
 } /* namespace casa */

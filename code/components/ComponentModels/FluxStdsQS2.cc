@@ -32,7 +32,6 @@
 
 //#include <casa/Logging/LogIO.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 namespace NSTDS { //# NAMESPACE NSTDS - BEGIN
 // Each of these c'tors defines the polynomial coefficients for the

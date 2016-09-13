@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //
-// casacore::Data provider data iterator to provide boolean values as true -> 1, false ->
+// Data provider data iterator to provide boolean values as true -> 1, false ->
 // 0.
 //
 #ifndef MSVIS_STATISTICS_VI2_STATS_BOOL_ITERATOR_H_
@@ -36,12 +36,12 @@
 namespace casa {
 
 class Vi2StatsBoolIterator final
-	: public Vi2StatsDataIterator<casacore::Int,casacore::Bool> {
+	: public Vi2StatsDataIterator<Int,Bool> {
 
 public:
-	using Vi2StatsDataIterator<casacore::Int,casacore::Bool>::Vi2StatsDataIterator;
+	using Vi2StatsDataIterator<Int,Bool>::Vi2StatsDataIterator;
 
-	casacore::Int operator*();
+	Int operator*();
 };
 
 } // namespace casa

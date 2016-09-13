@@ -46,14 +46,10 @@ class QwtPlotCurve;
 class QwtLinearColorMap;
 class QWidgetAction;
 
-namespace casacore{
+namespace casa {
 
 template <class T> class ImageInterface;
 template <class T> class Vector;
-}
-
-namespace casa {
-
 class FitWidget;
 class RangePicker;
 class ToolTipPicker;
@@ -93,8 +89,8 @@ public:
     BinPlotWidget( bool fitControls, bool rangeControls, bool plotModeControls,
     	QWidget* parent);
 
-    bool setImage( const SHARED_PTR<const casacore::ImageInterface<casacore::Float> > img, bool waitOnHistogram = false );
-    bool setImageRegion( casacore::ImageRegion* imageRegion, int id );
+    bool setImage( const SHARED_PTR<const ImageInterface<Float> > img, bool waitOnHistogram = false );
+    bool setImageRegion( ImageRegion* imageRegion, int id );
     void deleteImageRegion( int id );
     void imageRegionSelected( int id );
     virtual void postMessage( const QString& msg );
@@ -105,7 +101,7 @@ public:
 
     //Customizing the display
     void hideMaximumRange();
-    void setColorLookups( const casacore::Vector<casacore::uInt> & lookups );
+    void setColorLookups( const Vector<uInt> & lookups );
     void setColorMap( QwtLinearColorMap* colorMap );
     void setColorScaleMax( int max );
     void setMultiColored( bool multipleColors );
@@ -243,13 +239,13 @@ private:
     QColor fitCurveColor;
     QList<QColor> multipleHistogramColors;
     QwtLinearColorMap* colorMap;
-    casacore::Vector<casacore::uInt> colorLookups;
+    Vector<uInt> colorLookups;
     int colorScaleMax;
 
     //Histogram & data
     QList<QwtPlotCurve*> curves;
     QMap<int,Histogram*> histogramMap;
-    SHARED_PTR<const casacore::ImageInterface<casacore::Float> > image;
+    SHARED_PTR<const ImageInterface<Float> > image;
     QwtPlot binPlot;
     const QString NO_DATA;
     const QString NO_DATA_MESSAGE;

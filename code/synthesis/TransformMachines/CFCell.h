@@ -72,17 +72,17 @@
 //
 
 namespace casa { //# NAMESPACE CASA - BEGIN
-  typedef casacore::Complex TT;
+  typedef Complex TT;
 
   struct  CFCStruct{
-    casacore::CoordinateSystem coordSys;
+    CoordinateSystem coordSys;
     TT * CFCStorage;
-    casacore::Int shape[2];
-    casacore::Float sampling,diameter;
-    casacore::Int xSupport, ySupport;
-    casacore::Double wValue, wIncr, freqValue,freqIncr, conjFreq;    
-    casacore::Int muellerElement, conjPoln;
-    casacore::String fileName, telescopeName;
+    Int shape[2];
+    Float sampling,diameter;
+    Int xSupport, ySupport;
+    Double wValue, wIncr, freqValue,freqIncr, conjFreq;    
+    Int muellerElement, conjPoln;
+    String fileName, telescopeName;
   };
 
   using namespace CFDefs;
@@ -105,9 +105,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     CFCell():cfShape_p(){};
 
-    CFCell(casacore::Array<TT> &dataPtr, casacore::CoordinateSystem& cs, casacore::Float& /*samp*/)
+    CFCell(Array<TT> &dataPtr, CoordinateSystem& cs, Float& /*samp*/)
     {
-      if (storage_p.null()) storage_p = new casacore::Array<TT>(dataPtr);
+      if (storage_p.null()) storage_p = new Array<TT>(dataPtr);
       coordSys_p = cs;
       cfShape_p.assign(storage_p->shape().asVector());
     };
@@ -123,7 +123,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     void getAsStruct(CFCStruct& cfst) 
     {
-      casacore::Bool dummy;
+      Bool dummy;
       cfst.CFCStorage = getStorage()->getStorage(dummy);
       cfst.coordSys = coordSys_p;
       cfst.shape[0]=cfShape_p[0];
@@ -142,29 +142,29 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       cfst.fileName = fileName_p;
       cfst.telescopeName=telescopeName_p;
     }
-    casacore::CountedPtr<casacore::Array<TT> >& getStorage() {return storage_p;}
+    CountedPtr<Array<TT> >& getStorage() {return storage_p;}
     void makePersistent(const char *dir, const char *cfName="");
-    casacore::CountedPtr<CFCell> clone();
+    CountedPtr<CFCell> clone();
     void setParams(const CFCell& other);
-    void initCache(const casacore::Bool& releaseSpace=false) {shape_p=getShape(); cfShape_p.assign(shape_p.asVector());casacore::IPosition tt=shape_p;tt=0;tt[0]=tt[1]=0;if (releaseSpace) storage_p->resize(tt);};
-    casacore::IPosition getShape() {return storage_p->shape();}
+    void initCache(const Bool& releaseSpace=False) {shape_p=getShape(); cfShape_p.assign(shape_p.asVector());IPosition tt=shape_p;tt=0;tt[0]=tt[1]=0;if (releaseSpace) storage_p->resize(tt);};
+    IPosition getShape() {return storage_p->shape();}
     //
-    //============================= casacore::Functional Parts ============================
+    //============================= Functional Parts ============================
     //------------------------------------------------------------------
     //
     void show(const char *Mesg,ostream &os);
 
-    casacore::IPosition shape_p;
-    casacore::CountedPtr<casacore::Array<TT> > storage_p; // Nx x Ny
-    casacore::CoordinateSystem coordSys_p;
-    casacore::Float sampling_p, diameter_p;
-    casacore::Int xSupport_p,ySupport_p, conjPoln_p;
-    casacore::Double wValue_p, wIncr_p, freqValue_p,freqIncr_p, conjFreq_p;
+    IPosition shape_p;
+    CountedPtr<Array<TT> > storage_p; // Nx x Ny
+    CoordinateSystem coordSys_p;
+    Float sampling_p, diameter_p;
+    Int xSupport_p,ySupport_p, conjPoln_p;
+    Double wValue_p, wIncr_p, freqValue_p,freqIncr_p, conjFreq_p;
     //    MuellerElementType muellerElement_p;
-    casacore::Int muellerElement_p;
-    casacore::Quantity pa_p;
-    casacore::Vector<casacore::Int> cfShape_p;
-    casacore::String fileName_p,telescopeName_p;
+    Int muellerElement_p;
+    Quantity pa_p;
+    Vector<Int> cfShape_p;
+    String fileName_p,telescopeName_p;
   };
 } //# NAMESPACE CASA - END
 #endif

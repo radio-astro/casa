@@ -58,7 +58,7 @@ int main() {
       const LimbDarkenedDiskShape defDisk;
       AlwaysAssert(defDisk.ok(), AipsError);
       AlwaysAssert(defDisk.type() == ComponentType::LDISK, AipsError);
-      AlwaysAssert(defDisk.isSymmetric() == true, AipsError);
+      AlwaysAssert(defDisk.isSymmetric() == True, AipsError);
       const MVAngle pixelSize(Quantity(1.0,"''"));
       // Sample the Disk at the Maximum and a bit more ands a bit less than
       // half an arc-min on either side.
@@ -207,7 +207,7 @@ int main() {
 	AlwaysAssert(shapePtr->positionAngle().getFullUnit().getName() =="deg",
 		     AipsError);
 	AlwaysAssert(shapePtr->type() == ComponentType::LDISK, AipsError);
-	AlwaysAssert(shapePtr->isSymmetric() == true, AipsError);
+	AlwaysAssert(shapePtr->isSymmetric() == True, AipsError);
       }
       cout << "Passed the copy semantics test" << endl;
     }

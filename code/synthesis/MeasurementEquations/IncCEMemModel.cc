@@ -51,7 +51,6 @@
 #include <casa/sstream.h>
 
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //----------------------------------------------------------------------
@@ -87,7 +86,7 @@ IncCEMemModel::IncCEMemModel(IncEntropy &ent,
   itsModelFlux(0.0),
   itsDeltaFlux(0.0),
   itsFirstIteration(0),
-  itsChoose(false),
+  itsChoose(False),
   itsLog(LogOrigin("IncCEMemModel", 
 		   "IncCEMemModel(const Lattice<Float> & model)")),
   itsProgressPtr(0)
@@ -129,7 +128,7 @@ IncCEMemModel::IncCEMemModel(IncEntropy &ent,
   itsModelFlux(0.0),
   itsDeltaFlux(0.0),
   itsFirstIteration(0),
-  itsChoose(false),
+  itsChoose(False),
   itsLog(LogOrigin("IncCEMemModel", 
 		   "IncCEMemModel(const Lattice<Float> & model)")),
    itsProgressPtr(0)
@@ -173,7 +172,7 @@ IncCEMemModel::IncCEMemModel(IncEntropy &ent,
   itsModelFlux(0.0),
   itsDeltaFlux(0.0),
   itsFirstIteration(0),
-  itsChoose(false), 
+  itsChoose(False), 
   itsLog(LogOrigin("IncCEMemModel", 
 		   "IncCEMemModel(const Lattice<Float> & model)")),
   itsProgressPtr(0)
@@ -217,7 +216,7 @@ IncCEMemModel::IncCEMemModel(IncEntropy &ent,
   itsModelFlux(0.0),
   itsDeltaFlux(0.0),
   itsFirstIteration(0),
-  itsChoose(false), 
+  itsChoose(False), 
   itsLog(LogOrigin("IncCEMemModel", 
 		   "IncCEMemModel(const Lattice<Float> & model)")),
   itsProgressPtr(0)
@@ -313,8 +312,8 @@ Bool IncCEMemModel::initStuff()
   itsGain = 0.3;
   itsMaxNormGrad = 100.0;
 
-  itsDoInit = true;
-  Bool isOK = true;
+  itsDoInit = True;
+  Bool isOK = True;
 
   //Create temporary images
 
@@ -327,7 +326,7 @@ Bool IncCEMemModel::initStuff()
     itsStep_ptr->set(0.0);
     itsResidual_ptr->set(0.0);
   } else {
-    isOK = false;
+    isOK = False;
   }
 
   // We have been given an Entropy object, now we have to
@@ -438,7 +437,7 @@ void IncCEMemModel::changeAlphaBeta()
 Bool IncCEMemModel::checkImage(const Lattice<Float> * /*im*/)
 {
   // I guess we don't have anything to do
-  return true;
+  return True;
 };
 
 
@@ -446,7 +445,7 @@ Bool IncCEMemModel::checkImage(const Lattice<Float> * /*im*/)
 //----------------------------------------------------------------------
 Bool IncCEMemModel::checkImages(const Lattice<Float> *one, const Lattice<Float> *other)
 {
-  Bool isOK = true;
+  Bool isOK = True;
 
   for (uInt i = 0; i < one->ndim(); i++) {
     AlwaysAssert(one->shape()(i) == other->shape()(i), AipsError);
@@ -458,11 +457,11 @@ Bool IncCEMemModel::checkImages(const Lattice<Float> *one, const Lattice<Float> 
 //----------------------------------------------------------------------
 Bool IncCEMemModel::ok() 
 {
-  Bool isOK = true;
+  Bool isOK = True;
   if (!itsModel_ptr) {
-    isOK = false;
+    isOK = False;
   } else if (!itsDeltaModel_ptr) {
-    isOK = false;
+    isOK = False;
   } else {
     isOK = (checkImage(itsModel_ptr) && checkImage(itsDeltaModel_ptr));
     checkImages(itsModel_ptr, itsDeltaModel_ptr);
@@ -479,7 +478,7 @@ Bool IncCEMemModel::ok()
       checkImages(itsModel_ptr, itsResidual_ptr);
     }
     if (! itsEntropy_ptr) {
-      isOK = false;
+      isOK = False;
     }
 
     // Also need to check state variables in the future!
@@ -512,8 +511,8 @@ Bool IncCEMemModel::solve(ResidualEquation<Lattice<Float> >  & eqn)
 {
 
   itsResidualEquation_ptr = &eqn;
-  Bool converged = false;
-  Bool endNow = false;
+  Bool converged = False;
+  Bool endNow = False;
   state();
 
   itsEntropy_ptr->infoBanner();
@@ -540,12 +539,12 @@ Bool IncCEMemModel::solve(ResidualEquation<Lattice<Float> >  & eqn)
     }
 
     if (itsNormGrad > itsMaxNormGrad) {
-      endNow = true;
+      endNow = True;
       itsLog << " Excessive gradient: stopping now" << LogIO::EXCEPTION;
     }
 
     if (converged) {
-      endNow = true;;
+      endNow = True;;
       itsLog << "Converged at iteration " << itsIteration+1 << LogIO::POST;
     }
   }
@@ -560,10 +559,10 @@ Bool IncCEMemModel::solve(ResidualEquation<Lattice<Float> >  & eqn)
 
 Bool IncCEMemModel::testConvergenceThreshold()
 { 
-  Bool less = false; 
+  Bool less = False; 
   if (getThreshold() > 0.0) {
    if (itsCurrentPeakResidual < getThreshold() ) {
-     less = true;
+     less = True;
    }
   }
   return less;
@@ -573,9 +572,9 @@ Bool IncCEMemModel::applyMask( Lattice<Float> & lat ) {
   if (itsMask_ptr) {
     LatticeExpr<Float> exp = ( (*itsMask_ptr) * (lat) );
     lat.copyData( exp );
-    return true;
+    return True;
   } else {
-    return false;
+    return False;
   }
 };
 
@@ -585,7 +584,7 @@ void  IncCEMemModel::oneIteration()
   ok();
 
   if (itsDoInit) {
-    itsDoInit = false;
+    itsDoInit = False;
     // passing *this reverts to the LinearModel from which we are derived
     if (itsMask_ptr) {
       itsResidualEquation_ptr->residual( *itsResidual_ptr, 

@@ -61,7 +61,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //         times a day. (every exhale).
 //    <li> <src>patch()</src>: Patch number of this release. Changes when a
 //         bug-fix patch is created.
-//    <li> <src>date()</src>: casacore::String representation of the date when this
+//    <li> <src>date()</src>: String representation of the date when this
 //         release was created (when "exhale" was run).
 //    <li> <src>info()</src>: Extra information about this release, e.g.
 //         "beta release."
@@ -134,7 +134,7 @@ public:
         return aips_patch_version;
     }
 
-    // casacore::String representation of the date when this release was created
+    // String representation of the date when this release was created
     // (when "exhale" was run).
 
     static const char * date()
@@ -151,7 +151,7 @@ public:
 
     // Summarize the above into an ostream. Note that an 
     // <src>ostringstream</src> can be converted to a 
-    // <linkto class="casacore::String">casacore::String</linkto> via a constructor.
+    // <linkto class="String">String</linkto> via a constructor.
     // This information is NOT prepended with "AIPS++ version:" or anything
     // like that. You may wish to add this yourself. The date is also not
     // included.

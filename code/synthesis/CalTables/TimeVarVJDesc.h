@@ -52,8 +52,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <synopsis>
 // TimeVarVisJonesDesc defines the format of TimeVarVisJones calibration 
-// tables in terms of table descriptors <linkto class="casacore::TableDesc">TableDesc
-// </linkto>, as used in the casacore::Table system. Specializations for 
+// tables in terms of table descriptors <linkto class="TableDesc">TableDesc
+// </linkto>, as used in the Table system. Specializations for 
 // time-variable and solvable VisJones calibration tables are provided 
 // through inheritance. At present, this set of classes returns only the 
 // default table formats.
@@ -80,7 +80,7 @@ class TimeVarVisJonesDesc : public VisJonesDesc
    virtual ~TimeVarVisJonesDesc() {};
 
    // Construct from the Jones table type
-   TimeVarVisJonesDesc (const casacore::String& type);
+   TimeVarVisJonesDesc (const String& type);
 
 };
 
@@ -104,8 +104,8 @@ class TimeVarVisJonesDesc : public VisJonesDesc
 //
 // <synopsis>
 // PJonesDesc defines the format of PJones calibration tables in terms 
-// of table descriptors <linkto class="casacore::TableDesc">casacore::TableDesc</linkto>, 
-// as used in the casacore::Table system. PJones matrices define the parallactic
+// of table descriptors <linkto class="TableDesc">TableDesc</linkto>, 
+// as used in the Table system. PJones matrices define the parallactic
 // angle corrections in the Measurement Equation formalism. At present, 
 // this class returns only the default table formats.
 // </etymology>
@@ -152,8 +152,8 @@ class PJonesDesc : public TimeVarVisJonesDesc
 //
 // <synopsis>
 // CJonesDesc defines the format of CJones calibration tables in terms 
-// of table descriptors <linkto class="casacore::TableDesc">casacore::TableDesc</linkto>, 
-// as used in the casacore::Table system. CJones matrices define the polarization
+// of table descriptors <linkto class="TableDesc">TableDesc</linkto>, 
+// as used in the Table system. CJones matrices define the polarization
 // configuration in the Measurement Equation formalism. At present, 
 // this class returns only the default table formats.
 // </etymology>

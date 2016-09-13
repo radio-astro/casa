@@ -60,7 +60,6 @@
 #include <casa/Logging/LogSink.h>
 // math.h ?
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
@@ -116,8 +115,8 @@ void DJones::setApply(const Record& apply) {
 
   SolvableVisJones::setApply(apply);
 
-  // Force calwt to false for now
-  calWt()=false;
+  // Force calwt to False for now
+  calWt()=False;
 
 }
 
@@ -164,7 +163,7 @@ void DJones::calcOneJones(Vector<Complex>& mat, Vector<Bool>& mOk,
   if (prtlev()>10) cout << "   D::calcOneJones(vb)" << endl;
 
   // Only if both pars are good, form matrix
-  if (allEQ(pOk,true)) {
+  if (allEQ(pOk,True)) {
 
     // On-diag = 1
     mat(0)=mat(3)=Complex(1.0);
@@ -172,12 +171,12 @@ void DJones::calcOneJones(Vector<Complex>& mat, Vector<Bool>& mOk,
     mat(1)=par(0);
     mat(2)=par(1);
 
-    mOk=true;
+    mOk=True;
 
   }
   else {
     mat=Complex(0.0);
-    mOk=false;
+    mOk=False;
   }
 }
 
@@ -189,7 +188,7 @@ void DJones::guessPar(VisBuffer& vb) {
 
   // First guess is zero D-terms
   solveCPar()=0.0;
-  solveParOK()=true;
+  solveParOK()=True;
 
   if (jonesType()==Jones::GenLinear) {
     vb.weightMat().row(0)=0.0;
@@ -284,7 +283,7 @@ void DJones::formSolveSNR() {
       }
       else
 	// Ensure F if Err<=0  (OK?)
-	solveParOK()(ipar,0,iant)=false;
+	solveParOK()(ipar,0,iant)=False;
     }
 }
 
@@ -613,7 +612,7 @@ void DllsJones::solveOneVB(const VisBuffer& vb) {
   Int nChan=vb.nChannel();
 
   solveAllCPar()=Complex(0.0);
-  solveAllParOK()=false;
+  solveAllParOK()=False;
 
   // Solve per chan
   Vector<Complex> cEq(2);
@@ -626,7 +625,7 @@ void DllsJones::solveOneVB(const VisBuffer& vb) {
 
     solveCPar().reference(solveAllCPar()(Slice(),Slice(ich,1,1),Slice()));
     solveParOK().reference(solveAllParOK()(Slice(),Slice(ich,1,1),Slice()));
-    solveParOK().set(false);
+    solveParOK().set(False);
 
     LSQFit lsq(2*nAnt(),LSQComplex(),0);
 
@@ -644,8 +643,8 @@ void DllsJones::solveOneVB(const VisBuffer& vb) {
 	    ++ng;
 
 	    // simple-minded OK-setting, for now
-	    solveParOK().xyPlane(a1).set(true);
-	    solveParOK().xyPlane(a2).set(true);
+	    solveParOK().xyPlane(a1).set(True);
+	    solveParOK().xyPlane(a2).set(True);
 
 	    // Discern D indices for this baseline
 	    Int xi=2*a1;
@@ -684,7 +683,7 @@ void DllsJones::solveOneVB(const VisBuffer& vb) {
 
       // Turn the crank on the solver
       uInt rank;
-      lsq.invert(rank,false);  // true);  // SVD?
+      lsq.invert(rank,False);  // True);  // SVD?
       Cube<Complex> Dest(2,1,nAnt());
 
       lsq.solve(Dest.data());
@@ -697,7 +696,7 @@ void DllsJones::solveOneVB(const VisBuffer& vb) {
       
       // Store the result
       solveCPar()=Dest;
-      //solveParOK().set(true);  // we set this more 'carefully' above
+      //solveParOK().set(True);  // we set this more 'carefully' above
     }
     //cout << endl;
 
@@ -793,8 +792,8 @@ void XMueller::setApply(const Record& apply) {
 
   SolvableVisCal::setApply(apply);
 
-  // Force calwt to false 
-  calWt()=false;
+  // Force calwt to False 
+  calWt()=False;
 
 }
 
@@ -805,8 +804,8 @@ void XMueller::setSolve(const Record& solvepar) {
 
   SolvableVisCal::setSolve(solvepar);
 
-  // Force calwt to false 
-  calWt()=false;
+  // Force calwt to False 
+  calWt()=False;
 
   // For X insist preavg is meaningful (5 minutes or user-supplied)
   if (preavg()<0.0)
@@ -848,7 +847,7 @@ void XMueller::newselfSolve(VisSet& vs, VisEquation& ve) {
   for (Int isol=0;isol<nSol && vi.moreChunks();++isol) {
 
     // Arrange to accumulate
-    VisBuffAccumulator vba(nAnt(),preavg(),false);
+    VisBuffAccumulator vba(nAnt(),preavg(),False);
     
     for (Int ichunk=0;ichunk<nChunkPerSol(isol);++ichunk) {
 
@@ -909,7 +908,7 @@ void XMueller::newselfSolve(VisSet& vs, VisEquation& ve) {
 
     // Fill solveCPar() with 1, nominally, and flagged
     solveCPar()=Complex(1.0);
-    solveParOK()=false;
+    solveParOK()=False;
     
     if (vbOk && svb.nRow()>0) {
 
@@ -977,7 +976,7 @@ void XMueller::calcAllMueller() {
   blc(0)=trc(0)=3;
   currMElem()(blc,trc)=Complex(1.0);
 
-  currMElemOK()=true;
+  currMElemOK()=True;
 
 }
 
@@ -1047,7 +1046,7 @@ void XMueller::solveOneVB(const VisBuffer& vb) {
     rl/=DComplex(amp);
     
     solveCPar()=Complex(rl);
-    solveParOK()=true;
+    solveParOK()=True;
   }
   
 }
@@ -1098,8 +1097,8 @@ void XJones::setApply(const Record& apply) {
 
   SolvableVisCal::setApply(apply);
 
-  // Force calwt to false 
-  calWt()=false;
+  // Force calwt to False 
+  calWt()=False;
 
 }
 
@@ -1108,8 +1107,8 @@ void XJones::setSolve(const Record& solvepar) {
 
   SolvableVisCal::setSolve(solvepar);
 
-  // Force calwt to false 
-  calWt()=false;
+  // Force calwt to False 
+  calWt()=False;
 
   // For X insist preavg is meaningful (5 minutes or user-supplied)
   if (preavg()<0.0)
@@ -1157,7 +1156,7 @@ void XJones::newselfSolve(VisSet& vs, VisEquation& ve) {
   for (Int isol=0;isol<nSol && vi.moreChunks();++isol) {
 
     // Arrange to accumulate
-    VisBuffAccumulator vba(nAnt(),preavg(),false);
+    VisBuffAccumulator vba(nAnt(),preavg(),False);
     
     for (Int ichunk=0;ichunk<nChunkPerSol(isol);++ichunk) {
 
@@ -1218,7 +1217,7 @@ void XJones::newselfSolve(VisSet& vs, VisEquation& ve) {
 
     // Fill solveCPar() with 1, nominally, and flagged
     solveCPar()=Complex(1.0);
-    solveParOK()=false;
+    solveParOK()=False;
     
     if (vbOk && svb.nRow()>0) {
 
@@ -1308,7 +1307,7 @@ void XJones::solveOneVB(const VisBuffer& vb) {
   
   // Fill solveCPar() with 1, nominally, and flagged
   solveCPar()=Complex(1.0);
-  solveParOK()=false;
+  solveParOK()=False;
 
   Int nChan=vb.nChannel();
 
@@ -1365,7 +1364,7 @@ void XJones::solveOneVB(const VisBuffer& vb) {
 
   // Record results
   solveCPar()=Complex(1.0);
-  solveParOK()=false;
+  solveParOK()=False;
   for (Int ich=0;ich<nChan;++ich) {
     // combine lr with rl
     rl(ich)+=conj(lr(ich));
@@ -1380,7 +1379,7 @@ void XJones::solveOneVB(const VisBuffer& vb) {
       rl(ich)/=DComplex(amp);
       blc(1)=trc(1)=ich;
       solveCPar()(blc,trc)=Complex(rl(ich));
-      solveParOK()(blc,trc)=true;
+      solveParOK()(blc,trc)=True;
     }
   }
 
@@ -1503,8 +1502,8 @@ void GlinXphJones::setApply(const Record& apply) {
 
   GJones::setApply(apply);
 
-  // Force calwt to false 
-  calWt()=false;
+  // Force calwt to False 
+  calWt()=False;
 
 }
 
@@ -1538,7 +1537,7 @@ void GlinXphJones::selfGatherAndSolve(VisSet& vs, VisEquation& ve) {
   for (Int isol=0;isol<nSol && vi.moreChunks();++isol) {
 
     // Arrange to accumulate
-    VisBuffAccumulator vba(nAnt(),preavg(),false);
+    VisBuffAccumulator vba(nAnt(),preavg(),False);
     
     for (Int ichunk=0;ichunk<nChunkPerSol(isol);++ichunk) {
 
@@ -1651,7 +1650,7 @@ void GlinXphJones::solveOneVB(const VisBuffer& vb) {
   
   // Fill solveCPar() with 1, nominally, and flagged
   solveCPar()=Complex(1.0);
-  solveParOK()=false;
+  solveParOK()=False;
 
   Int nChan=vb.nChannel();
   //  if (nChan>1)
@@ -1662,9 +1661,9 @@ void GlinXphJones::solveOneVB(const VisBuffer& vb) {
   Int nTime=genSort(ord,vb.time(),Sort::Ascending,Sort::NoDuplicates);
 
   Matrix<Double> x(nTime,nChan,0.0),y(nTime,nChan,0.0),wt(nTime,nChan,0.0),sig(nTime,nChan,0.0);
-  Matrix<Bool> mask(nTime,nChan,false);
+  Matrix<Bool> mask(nTime,nChan,False);
 
-  mask.set(false);
+  mask.set(False);
   Complex v(0.0);
   Float wt0(0.0);
   Int iTime(-1);
@@ -1702,7 +1701,7 @@ void GlinXphJones::solveOneVB(const VisBuffer& vb) {
 	x(itime,ich)/=wt(itime,ich);
 	y(itime,ich)/=wt(itime,ich);
 	sig(itime,ich)=sqrt(1.0/wt(itime,ich));
-	mask(itime,ich)=true;
+	mask(itime,ich)=True;
       }
       else
 	sig(itime,ich)=DBL_MAX;    // ~zero weight
@@ -1713,11 +1712,11 @@ void GlinXphJones::solveOneVB(const VisBuffer& vb) {
   Vector<Complex> Cph(nChan);
   Cph.set(Complex(1.0,0.0));
   Float currAmb(1.0);
-  Bool report(false);
+  Bool report(False);
   for (Int ich=0;ich<nChan;++ich) {
 
     if (sum(wt.column(ich))>0.0) {
-      report=true;
+      report=True;
       LinearFit<Double> phfitter;
       Polynomial<AutoDiff<Double> > line(1);
       phfitter.setFunction(line);
@@ -1763,11 +1762,11 @@ void GlinXphJones::solveOneVB(const VisBuffer& vb) {
 
       // Set all antennas with this X-Y phase (as a complex number)
       solveCPar()(Slice(0,1,1),Slice(ich,1,1),Slice())=Cph(ich);
-      solveParOK()(Slice(),Slice(ich,1,1),Slice())=true;
+      solveParOK()(Slice(),Slice(ich,1,1),Slice())=True;
     }
     else {
       solveCPar()(Slice(0,1,1),Slice(ich,1,1),Slice())=Complex(1.0);
-      solveParOK()(Slice(),Slice(ich,1,1),Slice())=false;
+      solveParOK()(Slice(),Slice(ich,1,1),Slice())=False;
     }
   }
 
@@ -1782,7 +1781,7 @@ void GlinXphJones::solveOneVB(const VisBuffer& vb) {
   {
 
     Vector<Double> wtf(nTime,0.0),sigf(nTime,0.0),xf(nTime,0.0),yf(nTime,0.0);
-    Vector<Bool> maskf(nTime,false);
+    Vector<Bool> maskf(nTime,False);
     Float wt0;
     Complex v;
     Double currtime(-1.0);
@@ -1820,7 +1819,7 @@ void GlinXphJones::solveOneVB(const VisBuffer& vb) {
 	xf(itime)/=wtf(itime);
 	yf(itime)/=wtf(itime);
 	sigf(itime)=sqrt(1.0/wtf(itime));
-	maskf(itime)=true;
+	maskf(itime)=True;
       }
       else
 	sigf(itime)=DBL_MAX;    // ~zero weight

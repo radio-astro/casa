@@ -1,4 +1,4 @@
-// ASDM2MSFiller.h: implementation of a casacore::MeasurementSet's filler
+// ASDM2MSFiller.h: implementation of a MeasurementSet's filler
 // for Francois Viallefond & Frederic Badia ALMA Simulator
 //
 //  Copyright (C) 2001
@@ -81,17 +81,16 @@
 #include <vector>
 
 
-namespace casacore{
-
-class MPosition;
-class MeasFrame;
-class MeasurementSet;
-class MSMainColumns;
-}
+using namespace casa;
+using namespace std;
 
 //# Forward Declarations
 
 class TimeRange;
+class MPosition;
+class MeasFrame;
+class MeasurementSet;
+class MSMainColumns;
 
 //
 // A structure to define a range of rows in the Pointing table where the attribute overTheTop is defined and with which value.
@@ -161,31 +160,31 @@ class ASDM2MSFiller
   int            itsNumAntenna;
   int            itsNumChan;
   int            itsNumCorr;
-  casacore::MeasurementSet *itsMS;
-  casacore::MSMainColumns  *itsMSCol;
+  casa::MeasurementSet *itsMS;
+  casa::MSMainColumns  *itsMSCol;
   /*
-    casacore::Block<timeMgr> itsFeedTimeMgr;
-    casacore::Block<timeMgr> itsPointingTimeMgr;
-    casacore::Block<timeMgr> itsSyscalTimeMgr;
-    casacore::Block<timeMgr> itsWeatherTimeMgr;
-    casacore::Block<timeMgr> itsObservationTimeMgr;
+    Block<timeMgr> itsFeedTimeMgr;
+    Block<timeMgr> itsPointingTimeMgr;
+    Block<timeMgr> itsSyscalTimeMgr;
+    Block<timeMgr> itsWeatherTimeMgr;
+    Block<timeMgr> itsObservationTimeMgr;
   */
     
-  casacore::String     itsMSPath;
+  String     itsMSPath;
   timeMgr* itsFeedTimeMgr;
   timeMgr* itsFieldTimeMgr;
   timeMgr* itsObservationTimeMgr;
   timeMgr* itsPointingTimeMgr;
-  //casacore::OrderedMap<int, timeMgr> itsSourceTimeMgr;
+  //OrderedMap<int, timeMgr> itsSourceTimeMgr;
   timeMgr* itsSourceTimeMgr;
   timeMgr* itsSyscalTimeMgr;
   timeMgr* itsWeatherTimeMgr;
     
-  casacore::Bool     itsWithRadioMeters;     /* Are we building an ALMA casacore::MS ?*/
-  casacore::Bool     itsFirstScan;
-  casacore::uInt     itsMSMainRow;
-  /*casacore::TiledDataStManAccessor itsImWgtAcc;*/
-  casacore::Block<casacore::IPosition> itsDataShapes;
+  Bool     itsWithRadioMeters;     /* Are we building an ALMA MS ?*/
+  Bool     itsFirstScan;
+  uInt     itsMSMainRow;
+  /*TiledDataStManAccessor itsImWgtAcc;*/
+  Block<IPosition> itsDataShapes;
 
   int itsScanNumber;
   int itsNCat;
@@ -193,7 +192,7 @@ class ASDM2MSFiller
   ddMgr    itsDDMgr;
 
   int itsCalDeviceNumberOfRows;
-  casacore::Table itsMSCalDeviceTable;
+  Table itsMSCalDeviceTable;
 
   int createMS(const string& msName, 
                bool complexData, 
@@ -206,8 +205,8 @@ class ASDM2MSFiller
 
   const char** getPolCombinations(int numCorr);
     
-  static map<string, casacore::MDirection::Types> string2MDirection;
-  static map<string, casacore::MDirection::Types> string2MDirectionInit();
+  static map<string, MDirection::Types> string2MDirection;
+  static map<string, MDirection::Types> string2MDirectionInit();
    
  public:  
   ASDM2MSFiller (const string&	name_,
@@ -224,7 +223,7 @@ class ASDM2MSFiller
   // Destructor
   ~ASDM2MSFiller();
 
-  const casacore::MeasurementSet* ms();
+  const casa::MeasurementSet* ms();
 
   int addAntenna(const string&	 name_,
 		 const string&	 station_,
@@ -312,7 +311,7 @@ class ASDM2MSFiller
 				int polarizarion_id_);
 
   int  exists(char *path);
-  casacore::String msPath();
+  String msPath();
 
 
   void addFeed(int      antenna_id_,
@@ -387,7 +386,7 @@ class ASDM2MSFiller
 		       vector<int>& corr_product_);
 
   int addUniquePolarization(int num_corr_,
-			    //			    const vector<casacore::Stokes::StokesTypes>& corr_type_,
+			    //			    const vector<Stokes::StokesTypes>& corr_type_,
 			    const vector<int>& corr_type_,
 			    const vector<int>& corr_product_);
 
@@ -479,7 +478,7 @@ class ASDM2MSFiller
 		  vector<double>&		wx_station_position_);
 
   /**
-   * Add one row in the casacore::MS CALDEVICE table.
+   * Add one row in the MS CALDEVICE table.
    *
    * @param antennaId the index in the ANTENNA table of the antenna for which this row is defined.
    * @param feedId the index in the FEED table of the feeds for which this row is defined.
@@ -502,7 +501,7 @@ class ASDM2MSFiller
 		    vector<double >&		temperatureLoad);
 
   /**
-   * Adds one row in the casacore::MS SYSPOWER table.
+   * Adds one row in the MS SYSPOWER table.
    *
    *
    * @param antennaId the index in the ANTENNA table of the antenna for which this row is defined.
@@ -513,7 +512,7 @@ class ASDM2MSFiller
    * @param numReceptor a null value will be interpreted as "all the optional attributes" are absent, otherwise it will be considered as
    * as the number of useful values to read in the next three vectors. More precisely, for any of the parameters switchedPowerDifference, 
    * switchedPowerSum and requantizedGain, if its size is null then the parameter is considered as "absent" and ignored otherwise
-   * its first numReceptor values will be copied into the casacore::MS CalDevice table corresponding field. If the size of one the parameters is not null
+   * its first numReceptor values will be copied into the MS CalDevice table corresponding field. If the size of one the parameters is not null
    * but smaller than numReceptor then the code will crash miserably.
    *
    * @param switchedPowerDifference a vector of float numbers containing the switched power differences in its numReceptor first elements on

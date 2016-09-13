@@ -40,7 +40,7 @@ namespace LibAIR2 {
   /** Load the information about the spectral setup from the
       measuremnt set
    */
-  void loadSpec(const casacore::MeasurementSet &ms,
+  void loadSpec(const casa::MeasurementSet &ms,
 		const std::vector<int> &spws,
 		MSSpec &s);
 
@@ -54,23 +54,23 @@ namespace LibAIR2 {
       \note This mapping may not be unique! 
    */
   std::map<size_t, size_t>
-  SPWDataDescMap(const casacore::MeasurementSet &ms);
+  SPWDataDescMap(const casa::MeasurementSet &ms);
 
   /** \brief Create a map from data description ID to spectral window
       number
    */
   std::map<size_t, size_t>
-  DataDescSPWMap(const casacore::MeasurementSet &ms);
+  DataDescSPWMap(const casa::MeasurementSet &ms);
 
   /** \brief Return the SPW of each row in main table
    */
-  void dataSPWs(const casacore::MeasurementSet &ms,
+  void dataSPWs(const casa::MeasurementSet &ms,
 		std::vector<size_t> &spw,
 		const std::vector<size_t> &sortedI);
 
   /** \brief Total number of SPWs in the MS
    */
-  size_t numSPWs(const casacore::MeasurementSet &ms);
+  size_t numSPWs(const casa::MeasurementSet &ms);
 
 }
 

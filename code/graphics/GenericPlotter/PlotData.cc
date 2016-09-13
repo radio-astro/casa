@@ -26,7 +26,6 @@
 //# $Id: $
 #include <graphics/GenericPlotter/PlotData.h>
 
-using namespace casacore;
 namespace casa {
 
 ///////////////////////////////

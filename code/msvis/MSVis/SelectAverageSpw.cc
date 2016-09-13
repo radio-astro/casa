@@ -45,7 +45,6 @@
 
 #define LOG2 0
 
-using namespace casacore;
 namespace casa { 
 
 const Int SelectAverageSpw::maxChan = 100000; 
@@ -125,10 +124,10 @@ Int SelectAverageSpw::selectAverageChan(MS* pMS, const Matrix<Int>& cList,
    spwids(0) = chanList(0, 0);
    Int sCnt = 1;
    for (Int w = 0; w < nWin; w++) {
-      Bool listed = false;
+      Bool listed = False;
       for (Int i = 0; i < sCnt; i++) {
          if (spwids(i) == chanList(w, 0)) {
-            listed = true; 
+            listed = True; 
             break;
          } 
       }
@@ -136,7 +135,7 @@ Int SelectAverageSpw::selectAverageChan(MS* pMS, const Matrix<Int>& cList,
          spwids(sCnt++) = chanList(w, 0);
       }
    }
-   spwids.resize(sCnt, true);
+   spwids.resize(sCnt, True);
    //cout << "actual spws=" << spwids << endl;
 
    Vector<Int> spwDesc = descColumn.spectralWindowId().getColumn();
@@ -166,7 +165,7 @@ Int SelectAverageSpw::selectAverageChan(MS* pMS, const Matrix<Int>& cList,
             && cCnt < SelectAverageSpw::maxChan){
          chids(cCnt++) = ch;
       }
-      chids.resize(cCnt, true);
+      chids.resize(cCnt, True);
       //cout << "chids=" << chids << endl;
       spw(s).chans.resize(cCnt);
       spw(s).chans.assign(chids);
@@ -429,7 +428,7 @@ void SelectAverageSpw::averageVelocity(Bool &sorryVel,
    else {
     
        msdv.setFieldCenter(field);
-       Bool hasRestFreq = false;
+       Bool hasRestFreq = False;
        Int cCnt = spw(spwidx).aveFreqs.size();
        //cout << "spwidx=" << spwidx << " cCnt=" << cCnt << endl;
        velo = 0.;
@@ -452,8 +451,8 @@ void SelectAverageSpw::averageVelocity(Bool &sorryVel,
              //SLog::slog()->out(String("No rest frequency found in the MS,")
                      //+ String(" use LSRK 1.420 Ghz for velocity calculation"),
                      //+ String(" Can't calculate velocity properly."),
-                      //"", "SAS", LogMessage::NORMAL, false);
-             sorryVel = false;
+                      //"", "SAS", LogMessage::NORMAL, False);
+             sorryVel = False;
           }
        }
     

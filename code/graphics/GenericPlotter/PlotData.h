@@ -69,7 +69,7 @@ public:
     // deconstruction or not.
     virtual void setDeleteData(bool del = true) = 0;
 };
-typedef casacore::CountedPtr<PlotData> PlotDataPtr;
+typedef CountedPtr<PlotData> PlotDataPtr;
 
 
 // A single source of data that basically provides indexing of its values.
@@ -131,7 +131,7 @@ public:
 INHERITANCE_POINTER2(PlotPointData, PlotPointDataPtr, PlotData, PlotDataPtr)
 
 
-// casacore::Data that adds masking functionality on top of normal point data.
+// Data that adds masking functionality on top of normal point data.
 class PlotMaskedPointData : public virtual PlotPointData {
 public:
     PlotMaskedPointData() { }
@@ -170,7 +170,7 @@ INHERITANCE_POINTER(PlotMaskedPointData, PlotMaskedPointDataPtr, PlotPointData,
                     PlotPointDataPtr, PlotData, PlotDataPtr)
 
 
-// casacore::Data that adds error functionality on top of normal plot data.
+// Data that adds error functionality on top of normal plot data.
 class PlotErrorData : public virtual PlotPointData {
 public:
     PlotErrorData() { }
@@ -209,7 +209,7 @@ INHERITANCE_POINTER(PlotErrorData, PlotErrorDataPtr, PlotPointData,
                     PlotDataPtr, PlotData, PlotDataPtr)
 
 
-// casacore::Data that differentiates different points into different "bins" on top of
+// Data that differentiates different points into different "bins" on top of
 // normal point data functionality.
 class PlotBinnedData : public virtual PlotPointData {
 public:
@@ -239,11 +239,11 @@ INHERITANCE_POINTER(PlotBinnedData, PlotBinnedDataPtr, PlotPointData,
                     PlotDataPtr, PlotData, PlotDataPtr)
 
 
-// casacore::Data for raster plots, which can be thought of as three-dimensional.  Used
+// Data for raster plots, which can be thought of as three-dimensional.  Used
 // for images, with the values being in one of the givne formats.
 class PlotRasterData : public virtual PlotData {
 public:
-    // casacore::Format that the data is in
+    // Format that the data is in
     enum Format {
         RGB32,       // data is an RBG integer, like 0x60A0C0
         ARGB32,      // data is an ARGB integer, like 0xFF60A0C0
@@ -309,13 +309,13 @@ public:
     PlotSingleDataImpl(): m_vector(NULL), m_cvector(NULL), m_array(NULL),
             m_arraySize(0), m_shouldDelete(false) { }
     
-    // casacore::Data using different standard containers.
+    // Data using different standard containers.
     // <group>
     PlotSingleDataImpl(vector<T>& value, bool shouldDelete = false):
             m_vector(&value), m_cvector(NULL), m_array(NULL), m_arraySize(0),
             m_shouldDelete(shouldDelete) {
         recalculateMinMax(); }
-    PlotSingleDataImpl(casacore::Vector<T>& value, bool shouldDelete = false):
+    PlotSingleDataImpl(Vector<T>& value, bool shouldDelete = false):
             m_vector(NULL), m_cvector(&value), m_array(NULL), m_arraySize(0),
             m_shouldDelete(shouldDelete) {
         recalculateMinMax(); }
@@ -399,7 +399,7 @@ public:
     
 private:
     vector<T>* m_vector;
-    casacore::Vector<T>* m_cvector;
+    Vector<T>* m_cvector;
     T* m_array;
     unsigned int m_arraySize;
     bool m_shouldDelete;
@@ -424,7 +424,7 @@ public:
     // <group>
     PlotPointDataImpl(vector<T>& x, vector<T>& y, bool shouldDelete = false) :
             m_xData(x, shouldDelete), m_yData(y, shouldDelete) { }
-    PlotPointDataImpl(casacore::Vector<T>& x, casacore::Vector<T>& y, bool shouldDelete = false) :
+    PlotPointDataImpl(Vector<T>& x, Vector<T>& y, bool shouldDelete = false) :
             m_xData(x, shouldDelete), m_yData(y, shouldDelete) { }
     PlotPointDataImpl(T*& x, T*& y, unsigned int size, bool shouldDel = false):
             m_xData(x, size, shouldDel), m_yData(y, size, shouldDel) { }
@@ -434,7 +434,7 @@ public:
     // <group>
     PlotPointDataImpl(vector<T>& y, bool shouldDelete = false) :
             m_yData(y, shouldDelete) { }
-    PlotPointDataImpl(casacore::Vector<T>& y, bool shouldDelete = false) :
+    PlotPointDataImpl(Vector<T>& y, bool shouldDelete = false) :
             m_yData(y, shouldDelete) { }
     PlotPointDataImpl(T*& y, unsigned int size, bool shouldDel = false):
             m_yData(y, size, shouldDel) { }
@@ -461,7 +461,7 @@ public:
     // Implements PlotPointData::size().
     unsigned int size() const {
         if(!m_xData.isValid()) return m_yData.size();
-        else return casacore::min(m_xData.size(), m_yData.size());
+        else return min(m_xData.size(), m_yData.size());
     }
 
     // Implements PlotPointData::xAt().  If no x data is given, the index is
@@ -563,7 +563,7 @@ public:
             PlotPointDataImpl<T>(x, y, shouldDelete), m_maskVector(&mask),
             m_maskCVector(NULL), m_maskArray(NULL), m_maskArraySize(0),
             m_shouldDeleteMask(shouldDelete) { }
-    PlotMaskedPointDataImpl(casacore::Vector<T>& x, casacore::Vector<T>& y, casacore::Vector<bool>& mask,
+    PlotMaskedPointDataImpl(Vector<T>& x, Vector<T>& y, Vector<bool>& mask,
             bool shouldDelete = false) :
             PlotPointDataImpl<T>(x, y, shouldDelete), m_maskVector(NULL),
             m_maskCVector(&mask), m_maskArray(NULL), m_maskArraySize(0),
@@ -582,7 +582,7 @@ public:
             PlotPointDataImpl<T>(y, shouldDelete), m_maskVector(&mask),
             m_maskCVector(NULL), m_maskArray(NULL), m_maskArraySize(0),
             m_shouldDeleteMask(shouldDelete) { }
-    PlotMaskedPointDataImpl(casacore::Vector<T>& y, casacore::Vector<bool>& mask,
+    PlotMaskedPointDataImpl(Vector<T>& y, Vector<bool>& mask,
             bool shouldDelete = false) :
             PlotPointDataImpl<T>(y, shouldDelete), m_maskVector(NULL),
             m_maskCVector(&mask), m_maskArray(NULL), m_maskArraySize(0),
@@ -639,7 +639,7 @@ public:
     
 private:
     vector<bool>* m_maskVector;
-    casacore::Vector<bool>* m_maskCVector;
+    Vector<bool>* m_maskCVector;
     bool* m_maskArray;
     unsigned int m_maskArraySize;
     bool m_shouldDeleteMask;
@@ -658,8 +658,8 @@ private:
             for(unsigned int i = 0; i < m_maskCVector->size(); i++)
                 if((*m_maskCVector)[i]) count++;
         } else return n;
-        if(masked) return casacore::min(count, n);
-        else       return casacore::min(n - count, n);
+        if(masked) return min(count, n);
+        else       return min(n - count, n);
     }
     
     // Helper for mins/maxes.
@@ -717,7 +717,7 @@ public:
             bool shouldDelete=false): PlotPointDataImpl<T>(x, y, shouldDelete),
             m_xLeftError(xLeftError), m_xRightError(xRightError),
             m_yBottomError(yBottomError), m_yTopError(yTopError) { }
-    PlotScalarErrorDataImpl(casacore::Vector<T>& x, casacore::Vector<T>& y, T xLeftError,
+    PlotScalarErrorDataImpl(Vector<T>& x, Vector<T>& y, T xLeftError,
             T xRightError, T yBottomError, T yTopError,
             bool shouldDelete=false): PlotPointDataImpl<T>(x, y, shouldDelete),
             m_xLeftError(xLeftError), m_xRightError(xRightError),
@@ -736,7 +736,7 @@ public:
             bool shouldDelete=false): PlotPointDataImpl<T>(x, y, shouldDelete),
             m_xLeftError(xError), m_xRightError(xError),
             m_yBottomError(yError), m_yTopError(yError) { }
-    PlotScalarErrorDataImpl(casacore::Vector<T>& x, casacore::Vector<T>& y, T xError, T yError,
+    PlotScalarErrorDataImpl(Vector<T>& x, Vector<T>& y, T xError, T yError,
             bool shouldDelete=false): PlotPointDataImpl<T>(x, y, shouldDelete),
             m_xLeftError(xError), m_xRightError(xError),
             m_yBottomError(yError), m_yTopError(yError) { }
@@ -753,7 +753,7 @@ public:
             bool shouldDelete=false): PlotPointDataImpl<T>(x, y, shouldDelete),
             m_xLeftError(error), m_xRightError(error), m_yBottomError(error),
             m_yTopError(error) { }
-    PlotScalarErrorDataImpl(casacore::Vector<T>& x, casacore::Vector<T>& y, T error,
+    PlotScalarErrorDataImpl(Vector<T>& x, Vector<T>& y, T error,
             bool shouldDelete=false): PlotPointDataImpl<T>(x, y, shouldDelete),
             m_xLeftError(error), m_xRightError(error), m_yBottomError(error),
             m_yTopError(error) { }
@@ -813,8 +813,8 @@ public:
             PlotPointDataImpl<T>(x, y, shouldDelete),
             m_xError(xError, xError, shouldDelete),
             m_yError(yError, yError, shouldDelete) { }
-    PlotErrorDataImpl(casacore::Vector<T>& x, casacore::Vector<T>& y, casacore::Vector<T>& xError,
-            casacore::Vector<T>& yError, bool shouldDelete = false) :
+    PlotErrorDataImpl(Vector<T>& x, Vector<T>& y, Vector<T>& xError,
+            Vector<T>& yError, bool shouldDelete = false) :
             PlotPointDataImpl<T>(x, y, shouldDelete),
             m_xError(xError, xError, shouldDelete),
             m_yError(yError, yError, shouldDelete) { }
@@ -834,9 +834,9 @@ public:
             PlotPointDataImpl<T>(x, y, shouldDelete),
             m_xError(xLeftError, xRightError, shouldDelete),
             m_yError(yBottomError, yTopError, shouldDelete) { }
-    PlotErrorDataImpl(casacore::Vector<T>& x, casacore::Vector<T>& y, casacore::Vector<T>& xLeftError,
-            casacore::Vector<T>& xRightError, casacore::Vector<T>& yBottomError,
-            casacore::Vector<T>& yTopError, bool shouldDelete = false) :
+    PlotErrorDataImpl(Vector<T>& x, Vector<T>& y, Vector<T>& xLeftError,
+            Vector<T>& xRightError, Vector<T>& yBottomError,
+            Vector<T>& yTopError, bool shouldDelete = false) :
             PlotPointDataImpl<T>(x, y, shouldDelete),
             m_xError(xLeftError, xRightError, shouldDelete),
             m_yError(yBottomError, yTopError, shouldDelete) { }
@@ -892,10 +892,10 @@ public:
         ROW_COL, X_Y
     };
     
-    PlotRasterMatrixData(casacore::Matrix<T>& data, bool shouldDelete = false) :
+    PlotRasterMatrixData(Matrix<T>& data, bool shouldDelete = false) :
             m_data(&data), m_origin(LLEFT), m_indexing(ROW_COL),
             m_shouldDelete(shouldDelete) {
-        casacore::IPosition shape = data.shape();
+        IPosition shape = data.shape();
         unsigned int n0 = shape[0] - 1, n1 = shape[1] - 1;
 
         m_0From = 0;
@@ -907,8 +907,8 @@ public:
 
         double val = static_cast<double>(data(0, 0));
         m_valFrom = m_valTo = val;
-        for(casacore::uInt i = 0; i < data.nrow(); i++) {
-            for(casacore::uInt j = 0; j < data.ncolumn(); j++) {
+        for(uInt i = 0; i < data.nrow(); i++) {
+            for(uInt j = 0; j < data.ncolumn(); j++) {
                 val = static_cast<double>(data(i, j));
                 if(val < m_valFrom) m_valFrom = val;
                 if(val > m_valTo) m_valTo = val;
@@ -1044,8 +1044,8 @@ public:
     
     // Gets/sets the matrix.
     // <group>
-    casacore::Matrix<T>* matrix() { return m_data; }
-    void setMatrix(casacore::Matrix<T>* m, bool shouldDelete = true) {
+    Matrix<T>* matrix() { return m_data; }
+    void setMatrix(Matrix<T>* m, bool shouldDelete = true) {
         if(m_shouldDelete) delete m_data;
         m_data = m;
         m_shouldDelete = shouldDelete;
@@ -1053,7 +1053,7 @@ public:
     // </group>
     
 private:
-    casacore::Matrix<T>* m_data;
+    Matrix<T>* m_data;
     double m_0From, m_0To;
     double m_1From, m_1To;
     double m_0Pieces, m_1Pieces;

@@ -83,7 +83,6 @@
 #ifdef _OPENMP
 #include <omp.h>
 #endif
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
   MosaicFT::MosaicFT(SkyJones* sj, MPosition mloc, String stokes,
@@ -91,14 +90,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		     Bool usezero, Bool useDoublePrec)
   : FTMachine(), sj_p(sj),
     imageCache(0),  cachesize(icachesize), tilesize(itilesize), gridder(0),
-    isTiled(false),
+    isTiled(False),
     maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
     mspc(0), msac(0), pointingToImage(0), usezero_p(usezero), convSampling(1),
     skyCoverage_p( ), machineName_p("MosaicFT"), stokes_p(stokes)
 {
   convSize=0;
   lastIndex_p=0;
-  doneWeightImage_p=false;
+  doneWeightImage_p=False;
   convWeightImage_p=0;
   pbConvFunc_p=new SimplePBConvFunc();
     
@@ -183,14 +182,14 @@ MosaicFT& MosaicFT::operator=(const MosaicFT& other)
 void MosaicFT::init() {
   
   /* if((image->shape().product())>cachesize) {
-    isTiled=true;
+    isTiled=True;
   }
   else {
-    isTiled=false;
+    isTiled=False;
   }
   */
-  //For now only isTiled false works.
-  isTiled=false;
+  //For now only isTiled False works.
+  isTiled=False;
   nx    = image->shape()(0);
   ny    = image->shape()(1);
   npol  = image->shape()(2);
@@ -294,7 +293,7 @@ void MosaicFT::initializeToVis(ImageInterface<Complex>& iimage,
 			       const VisBuffer& vb)
 {
   image=&iimage;
-  toVis_p=true;
+  toVis_p=True;
   ok();
   
   //  if(convSize==0) {
@@ -316,8 +315,8 @@ void MosaicFT::initializeToVis(ImageInterface<Complex>& iimage,
 
 void MosaicFT::prepGridForDegrid(){
 
-  //For now isTiled=false
-  isTiled=false;
+  //For now isTiled=False
+  isTiled=False;
   nx    = image->shape()(0);
   ny    = image->shape()(1);
   npol  = image->shape()(2);
@@ -398,7 +397,7 @@ void MosaicFT::prepGridForDegrid(){
     CoordinateSystem ftCoords(image->coordinates());
     Int directionIndex=ftCoords.findCoordinate(Coordinate::DIRECTION);
     DirectionCoordinate dc=ftCoords.directionCoordinate(directionIndex);
-    Vector<Bool> axes(2); axes(0)=true;axes(1)=true;
+    Vector<Bool> axes(2); axes(0)=True;axes(1)=True;
     Vector<Int> shape(2); shape(0)=griddedData.shape()(0) ;shape(1)=griddedData.shape()(1);
     Coordinate* ftdc=dc.makeFourierCoordinate(axes,shape);
     ftCoords.replaceCoordinate(*ftdc, directionIndex);
@@ -464,14 +463,14 @@ void MosaicFT::initializeToSky(ImageInterface<Complex>& iimage,
   phaseShifter_p=new UVWMachine(*uvwMachine_p);
   //findConvFunction(*image, vb);
   /*if((image->shape().product())>cachesize) {
-    isTiled=true;
+    isTiled=True;
   }
   else {
-    isTiled=false;
+    isTiled=False;
   }
   */
   //For now isTiled has to be false
-  isTiled=false;
+  isTiled=False;
   nx    = image->shape()(0);
   ny    = image->shape()(1);
   npol  = image->shape()(2);
@@ -488,7 +487,7 @@ void MosaicFT::initializeToSky(ImageInterface<Complex>& iimage,
   /*if(isTiled) {
     imageCache->flush();
     image->set(Complex(0.0));
-    lattice=CountedPtr<Lattice<Complex> >(image, false);
+    lattice=CountedPtr<Lattice<Complex> >(image, False);
     if( !doneWeightImage_p && (convWeightImage_p==0)){
       
       convWeightImage_p=new  TempImage<Complex> (iimage.shape(), 
@@ -552,7 +551,7 @@ void MosaicFT::initializeToSky(ImageInterface<Complex>& iimage,
 
 void MosaicFT::reset(){
 
-  doneWeightImage_p=false;
+  doneWeightImage_p=False;
   
   pbConvFunc_p->reset();
 }
@@ -581,7 +580,7 @@ void MosaicFT::finalizeToSky()
       //Don't need the double-prec grid anymore...
       griddedWeight2.resize();
     }
-    LatticeFFT::cfft2d(*weightLattice, false);
+    LatticeFFT::cfft2d(*weightLattice, False);
     //Get the stokes right
     CoordinateSystem coords=convWeightImage_p->coordinates();
     Int stokesIndex=coords.findCoordinate(Coordinate::STOKES);
@@ -660,7 +659,7 @@ void MosaicFT::finalizeToSky()
       SubImage<Float> isubim(*skyCoverage_p, Slicer(blc, trc, Slicer::endIsLast));
       for (Int k=1; k < npol; ++k){
 	blc(2)=k; trc(2)=k;
-	SubImage<Float> quvsubim(*skyCoverage_p, Slicer(blc, trc, Slicer::endIsLast), true);
+	SubImage<Float> quvsubim(*skyCoverage_p, Slicer(blc, trc, Slicer::endIsLast), True);
 	quvsubim.copyData(isubim);
       }
 
@@ -671,7 +670,7 @@ void MosaicFT::finalizeToSky()
     pbConvFunc_p->setWeightImage(skyCoverage_p);
     delete convWeightImage_p;
     convWeightImage_p=0;
-    doneWeightImage_p=true;
+    doneWeightImage_p=True;
 
     /*
     if(0){
@@ -1032,7 +1031,7 @@ void MosaicFT::put(const VisBuffer& vb, Int row, Bool dopsf,
     uvw(2,i)=vb.uvw()(i)(2);
   }
   
-  doUVWRotation_p=true;
+  doUVWRotation_p=True;
   girarUVW(uvw, dphase, vb);
   refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
 
@@ -1049,7 +1048,7 @@ void MosaicFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   
   Vector<Int> rowFlags(vb.nRow());
   rowFlags=0;
-  rowFlags(vb.flagRow())=true;
+  rowFlags(vb.flagRow())=True;
   if(!usezero_p) {
     for (Int rownr=startRow; rownr<=endRow; rownr++) {
       if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) rowFlags(rownr)=1;
@@ -1117,7 +1116,7 @@ void MosaicFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   for (irow=startRow; irow<=endRow;irow++){
     /*locateuvw(uvwstor,dpstor, visfreqstor, nvc, scalestor, offsetstor, csamp, 
 	      locstor, 
-	      offstor, phasorstor, irow, false);*/
+	      offstor, phasorstor, irow, False);*/
     locuvw(uvwstor, dpstor, visfreqstor, &nvc, scalestor, offsetstor, &csamp, locstor, offstor, phasorstor, &irow, &dow, &cinv);
   }  
 
@@ -1351,7 +1350,7 @@ void MosaicFT::get(VisBuffer& vb, Int row)
     uvw(2,i)=vb.uvw()(i)(2);
   }
   
-  doUVWRotation_p=true;
+  doUVWRotation_p=True;
   girarUVW(uvw, dphase, vb);
   refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
   
@@ -1389,7 +1388,7 @@ void MosaicFT::get(VisBuffer& vb, Int row)
 
   Vector<Int> rowFlags(vb.nRow());
   rowFlags=0;
-  rowFlags(vb.flagRow())=true;
+  rowFlags(vb.flagRow())=True;
   if(!usezero_p) {
     for (Int rownr=startRow; rownr<=endRow; rownr++) {
       if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) rowFlags(rownr)=1;
@@ -1452,7 +1451,7 @@ void MosaicFT::get(VisBuffer& vb, Int row)
   for (irow=startRow; irow<=endRow;irow++){
     /////////////////*locateuvw(uvwstor,dpstor, visfreqstor, nvc, scalestor, offsetstor, csamp, 
     //    locstor, 
-		///////////	      offstor, phasorstor, irow, false);
+		///////////	      offstor, phasorstor, irow, False);
     //using the fortran version which is significantly faster ...this can account for 10% less overall degridding time
     locuvw(uvwstor, dpstor, visfreqstor, &nvc, scalestor, offsetstor, &csamp, locstor, 
 	   offstor, phasorstor, &irow, &dow, &cinv);
@@ -1557,7 +1556,7 @@ void MosaicFT::get(VisBuffer& vb, Int row)
     uvw(2,i)=vb.uvw()(i)(2);
   }
   
-  doUVWRotation_p=true;
+  doUVWRotation_p=True;
   girarUVW(uvw, dphase, vb);
   refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
   
@@ -1595,7 +1594,7 @@ void MosaicFT::get(VisBuffer& vb, Int row)
 
   Vector<Int> rowFlags(vb.nRow());
   rowFlags=0;
-  rowFlags(vb.flagRow())=true;
+  rowFlags(vb.flagRow())=True;
   if(!usezero_p) {
     for (Int rownr=startRow; rownr<=endRow; rownr++) {
       if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) rowFlags(rownr)=1;
@@ -1697,7 +1696,7 @@ ImageInterface<Complex>& MosaicFT::getImage(Matrix<Float>& weights,
 	    << "Starting FFT and scaling of image" << LogIO::POST;
     if(useDoubleGrid_p){
       ArrayLattice<DComplex> darrayLattice(griddedData2);
-      LatticeFFT::cfft2d(darrayLattice,false);
+      LatticeFFT::cfft2d(darrayLattice,False);
       griddedData.resize(griddedData2.shape());
       convertArray(griddedData, griddedData2);
       
@@ -1712,7 +1711,7 @@ ImageInterface<Complex>& MosaicFT::getImage(Matrix<Float>& weights,
     else{
       arrayLattice = new ArrayLattice<Complex>(griddedData);
       lattice=arrayLattice;
-      LatticeFFT::cfft2d(*lattice,false);
+      LatticeFFT::cfft2d(*lattice,False);
     }
     {////Do the grid correction
       Int inx = lattice->shape()(0);
@@ -1860,9 +1859,9 @@ Bool MosaicFT::toRecord(String&  error,
 			RecordInterface& outRec, Bool withImage, const String diskimage)
 {  
   // Save the current MosaicFT object to an output state record
-  Bool retval = true;
+  Bool retval = True;
   if(!FTMachine::toRecord(error, outRec, withImage, diskimage))
-    return false;
+    return False;
   
   if(sj_p){
     outRec.define("telescope", sj_p->telescope());
@@ -1904,12 +1903,12 @@ Bool MosaicFT::toRecord(String&  error,
 Bool MosaicFT::fromRecord(String& error,
 			  const RecordInterface& inRec)
 {
-  Bool retval = true;
+  Bool retval = True;
   pointingToImage=0;
-  doneWeightImage_p=false;
+  doneWeightImage_p=False;
   machineName_p="MosaicFT";
   if(!FTMachine::fromRecord(error, inRec))
-    return false;
+    return False;
   sj_p=0;
   if(inRec.isDefined("telescope")){
     String tel=inRec.asString("telescope");
@@ -2014,30 +2013,30 @@ void MosaicFT::makeImage(FTMachine::Type type,
       case FTMachine::RESIDUAL:
 	vb.visCube()=vb.correctedVisCube();
 	vb.visCube()-=vb.modelVisCube();
-        put(vb, -1, false);
+        put(vb, -1, False);
         break;
       case FTMachine::MODEL:
 	vb.visCube()=vb.modelVisCube();
-        put(vb, -1, false);
+        put(vb, -1, False);
         break;
       case FTMachine::CORRECTED:
 	vb.visCube()=vb.correctedVisCube();
-        put(vb, -1, false);
+        put(vb, -1, False);
         break;
       case FTMachine::PSF:
 	vb.visCube()=Complex(1.0,0.0);
-        put(vb, -1, true);
+        put(vb, -1, True);
         break;
       case FTMachine::OBSERVED:
       default:
-        put(vb, -1, false);
+        put(vb, -1, False);
         break;
       }
     }
   }
   finalizeToSky();
   // Normalize by dividing out weights, etc.
-  getImage(weight, true);
+  getImage(weight, True);
 }
 
 Bool MosaicFT::getXYPos(const VisBuffer& vb, Int row) {
@@ -2087,7 +2086,7 @@ Bool MosaicFT::getXYPos(const VisBuffer& vb, Int row) {
   if(!result) {
     logIO_p << "Failed to find pixel location for " 
 	    << worldPosMeas.getAngle().getValue() << LogIO::EXCEPTION;
-    return false;
+    return False;
   }
   return result;
   
@@ -2160,7 +2159,7 @@ void MosaicFT::addBeamCoverage(ImageInterface<Complex>& pbImage){
   // trc(2)=0;
   //  trc(3)=0;
   WCBox *wbox= new WCBox(LCBox(pbImage.shape()), cs);
-  SubImage<Float> toAddTo(*skyCoverage_p, ImageRegion(wbox), true);
+  SubImage<Float> toAddTo(*skyCoverage_p, ImageRegion(wbox), True);
   TempImage<Float> beamStokes(pbImage.shape(), cs);
   StokesImageUtil::To(beamStokes, pbImage);
   //  toAddTo.copyData((LatticeExpr<Float>)(toAddTo + beamStokes ));
@@ -2178,11 +2177,11 @@ void  MosaicFT::girarUVW(Matrix<Double>& uvw, Vector<Double>& dphase,
     
     //the uvw rotation is done for common tangent reprojection or if the 
     //image center is different from the phasecenter
-    // UVrotation is false only if field never changes
+    // UVrotation is False only if field never changes
   
 
    if((vb.fieldId()!=lastFieldId_p) || (vb.msId()!=lastMSId_p))
-      doUVWRotation_p=true;
+      doUVWRotation_p=True;
     if(doUVWRotation_p ||  fixMovingSource_p){
       
       mFrame_p.epoch() != 0 ? 
@@ -2217,15 +2216,15 @@ void  MosaicFT::girarUVW(Matrix<Double>& uvw, Vector<Double>& dphase,
 		//Tangent specified is being wrongly used...it should be for a
 	    	//Use the safest way  for now.
 	    uvwMachine_p=new UVWMachine(phasecenter, vb.phaseCenter(), mFrame_p,
-					true, false);
+					True, False);
 	    phaseShifter_p=new UVWMachine(mImage_p, phasecenter, mFrame_p,
-					true, false);
+					True, False);
 	}
 	else{
 	  uvwMachine_p=new UVWMachine(phasecenter, vb.phaseCenter(),  mFrame_p,
-				      false, false);
+				      False, False);
 	  phaseShifter_p=new UVWMachine(mImage_p, phasecenter,  mFrame_p,
-				      false, false);
+				      False, False);
 	}
       }
 

@@ -33,7 +33,6 @@
 #include <casa/aips.h>
 #include <casa/iostream.h>
 
-using namespace casacore;
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -59,7 +58,7 @@ CalSolVi2Organizer::~CalSolVi2Organizer()
 
 vi::VisibilityIterator2& CalSolVi2Organizer::makeFullVI() {
 
-  AlwaysAssert(factories_.nelements()>0, casacore::AipsError);
+  AlwaysAssert(factories_.nelements()>0, AipsError);
 
   if (vi_) delete vi_;
   vi_=new VisibilityIterator2(factories_);
@@ -67,7 +66,7 @@ vi::VisibilityIterator2& CalSolVi2Organizer::makeFullVI() {
   return *vi_;
 }
 
-int CalSolVi2Organizer::countSolutions(casacore::Vector<int>& nChunkPerSolve) {
+Int CalSolVi2Organizer::countSolutions(Vector<Int>& nChunkPerSolve) {
 
   // TBD:  Make this smart w.r.t. combine options...
 

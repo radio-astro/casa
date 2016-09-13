@@ -61,7 +61,7 @@ class TBNewKeyword : public QDialog, Ui::NewKeyword {
 public:
     // Constructor that takes an optional vector of fields for entering a new
 	// field keyword.  If this vector is null, a table keyword is entered.
-    TBNewKeyword(std::vector<casacore::String>* fields = NULL, QWidget* parent = NULL);
+    TBNewKeyword(std::vector<String>* fields = NULL, QWidget* parent = NULL);
 
     ~TBNewKeyword();
 
@@ -69,11 +69,11 @@ signals:
     // newKeyword is emitted when the user has entered a new keyword.  The
 	// field index is -1 for a table keyword; otherwise it holds the index of
 	// the field to which the keyword should be added.
-    void newKeyword(int field, casacore::String name, casacore::String type, void* value);
+    void newKeyword(int field, String name, String type, void* value);
 
 private:
     // Displayed data types.
-    std::vector<casacore::String>* types;
+    std::vector<String>* types;
 
     // Widget to enter the value based on the type.
     TBTypes* typesWidget;
@@ -89,8 +89,8 @@ private slots:
 // <summary>
 //
 // <synopsis>
-// casacore::Table keywords are displayed in a QTableWidget which cannot be edited.
-// casacore::Double-clicking certain types of keywords has certain effects:
+// Table keywords are displayed in a QTableWidget which cannot be edited.
+// Double-clicking certain types of keywords has certain effects:
 // double-clicking a table keyword will open that subtable while
 // double-clicking an array will open the array in a side panel.
 // </synopsis>
@@ -138,7 +138,7 @@ private:
     // Side panel.
     QCloseableWidget* rightWidget;
     
-    // casacore::Array panel.
+    // Array panel.
     TBArrayPanel* arrayPanel;
 
 private slots:
@@ -164,7 +164,7 @@ private slots:
 //
 // <synopsis>
 // Field keywords are displayed in a QTreeWidget which cannot be edited.
-// casacore::Double-clicking certain types of keywords has certain effects:
+// Double-clicking certain types of keywords has certain effects:
 // double-clicking a table keyword will open that subtable while
 // double-clicking an array will open the array in a side panel.
 // </synopsis>
@@ -212,7 +212,7 @@ private:
     // Side panel.
     QCloseableWidget* rightWidget;
     
-    // casacore::Array panel.
+    // Array panel.
     TBArrayPanel* arrayPanel;
     
 private slots:

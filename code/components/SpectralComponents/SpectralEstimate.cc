@@ -30,12 +30,11 @@
 #include <casa/Arrays/Vector.h>
 #include <casa/BasicMath/Math.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Constructors
 SpectralEstimate::SpectralEstimate(const uInt maxpar) :
-  useWindow_p(false), rms_p(0), cutoff_p(0),
+  useWindow_p(False), rms_p(0), cutoff_p(0),
   windowLow_p(0), windowEnd_p(0),
   regionLow_p(0), regionEnd_p(0),
   q_p(2), sigmin_p(0),
@@ -46,7 +45,7 @@ SpectralEstimate::SpectralEstimate(const uInt maxpar) :
 SpectralEstimate::SpectralEstimate(const Double rms,
 				   const Double cutoff, const Double minsigma,
 				   const uInt maxpar) :
-  useWindow_p(false), rms_p(rms), cutoff_p(cutoff),
+  useWindow_p(False), rms_p(rms), cutoff_p(cutoff),
   windowLow_p(0), windowEnd_p(0),
   regionLow_p(0), regionEnd_p(0),
   q_p(2), sigmin_p(minsigma),
@@ -132,7 +131,6 @@ void SpectralEstimate::setMaxN(const uInt maxpar) {
 #ifdef AIPS_NO_TEMPLATE_SRC
 #include <components/SpectralComponents/Spectral2Estimate.tcc>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 template SpectralList const & SpectralEstimate::estimate<Float>(Vector<Float> const &, Vector<Float> *);
 template SpectralList const & SpectralEstimate::estimate<Float>(Vector<Float> const &, Vector<Float> const &);

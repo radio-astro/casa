@@ -25,7 +25,6 @@
 #include "SpecFitGaussian.h"
 #include <scimath/Functionals/Gaussian1D.h>
 
-using namespace casacore;
 namespace casa {
 
 	SpecFitGaussian::SpecFitGaussian( float peakVal, float centerVal, float fwhmVal, int index) :
@@ -121,5 +120,4 @@ namespace casa {
 		// TODO Auto-generated destructor stub
 	}
 
-using namespace casacore;
 } /* namespace casa */

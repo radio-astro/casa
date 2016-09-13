@@ -37,7 +37,7 @@ namespace casa {
 class PlotMSTransformationsWidget;
 
 
-// Subclass of PlotMSTab that handles picking casacore::MS filename, selection, and
+// Subclass of PlotMSTab that handles picking MS filename, selection, and
 // averaging parameters.
 class PlotMSTransformationsTab : public PlotMSPlotSubtab, Ui::TransTab {
     Q_OBJECT
@@ -63,7 +63,7 @@ public:
     
 private:
 
-    // Widget for casacore::MS selection.
+    // Widget for MS selection.
     PlotMSTransformationsWidget* itsTransformationsWidget_;
 };
 

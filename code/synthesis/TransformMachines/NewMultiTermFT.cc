@@ -58,22 +58,21 @@
 #include <synthesis/TransformMachines/AWProjectFT.h>
 #include <synthesis/TransformMachines/AWProjectWBFT.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
   
-#define PSOURCE false
+#define PSOURCE False
 #define psource (IPosition(4,1536,1536,0,0))
   
   //---------------------------------------------------------------------- 
   //-------------------- constructors and descructors ---------------------- 
   //---------------------------------------------------------------------- 
   NewMultiTermFT::NewMultiTermFT(FTMachine *subftm,  Int nterms, Double reffreq)
-    :FTMachine(), nterms_p(nterms), donePSF_p(false),doingPSF_p(false),
+    :FTMachine(), nterms_p(nterms), donePSF_p(False),doingPSF_p(False),
      reffreq_p(reffreq), imweights_p(Matrix<Float>(0,0)), machineName_p("NewMultiTermFT"),
-     pblimit_p((Float)1e-04), doWideBandPBCorrection_p(false), cacheDir_p("."), 
-     donePBTaylor_p(false), useConjBeams_p(true)
+     pblimit_p((Float)1e-04), doWideBandPBCorrection_p(False), cacheDir_p("."), 
+     donePBTaylor_p(False), useConjBeams_p(True)
   {
-    dbg_p=false;
+    dbg_p=False;
     
     this->setBasePrivates(*subftm);
     canComputeResiduals_p = subftm->canComputeResiduals();
@@ -250,7 +249,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        }
        }
     */
-    return true;
+    return True;
   }
   
   // Reset the imaging weights back to their original values
@@ -284,7 +283,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // 	 << vb.spectralWindow() << "  --- predicted model before taylor wt mult :" 
     // 	 << thisterm << "  sumvis : " << modcount << endl;
 
-    return true;
+    return True;
   }
   
   
@@ -306,7 +305,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
     // This is to make sure weight images and avgPBs are ready.
-    //AlwaysAssert( donePSF_p == true && donePBTaylor_p == true, AipsError )
+    //AlwaysAssert( donePSF_p == True && donePBTaylor_p == True, AipsError )
 
     if(PSOURCE) cout << "------ model, before de-gridding norm : " << modelImageVec[0]->getAt(psource) << "," << modelImageVec[1]->getAt(psource) << endl;
 
@@ -325,7 +324,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     // Pre-prediction correction of the model, to rid it of the Primary Beam.
     if(PSOURCE) cout << "Divide the models by the PB before prediction" << endl;
-    if( useConjBeams_p == true )
+    if( useConjBeams_p == True )
       {
 	// Model contains only avgPB scaling, but no PB frequency dependence
 	// Divide all terms of the model image by the sensitivity image only (from Taylor0)
@@ -333,9 +332,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  for(uInt taylor=0;taylor<nterms_p;taylor++)
 	    {
 	      // Divide by PB  ////// PBWeight
-	      //normalizeImage( *(modelImageVec[taylor]) , weightsVec[0], *(weightImageVec[0]) , false, (Float)pblimit_p, (Int)1);// normtype 1 divides by weightImageVec and ignores wegithsVec
+	      //normalizeImage( *(modelImageVec[taylor]) , weightsVec[0], *(weightImageVec[0]) , False, (Float)pblimit_p, (Int)1);// normtype 1 divides by weightImageVec and ignores wegithsVec
 	      // Divide by sqrt(PB)  ////// PBSQWeight
-	      normalizeImage( *(modelImageVec[taylor]) , weightsVec[0], *(weightImageVec[0]) , false, (Float)pblimit_p, (Int)4);
+	      normalizeImage( *(modelImageVec[taylor]) , weightsVec[0], *(weightImageVec[0]) , False, (Float)pblimit_p, (Int)4);
 	    }
       }
     else 
@@ -345,7 +344,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// Multiply all terms of the model by pbcoeffs_0. Divide TWICE by the wideband PB.
 	for(uInt taylor=0;taylor<nterms_p;taylor++)
 	  {
-	    normalizeImage( *(modelImageVec[taylor]) , weightsVec[0], *(weightImageVec[0]) , false, (Float)pblimit_p, (Int)3); // normtype 3 multiplies the model image with the pb
+	    normalizeImage( *(modelImageVec[taylor]) , weightsVec[0], *(weightImageVec[0]) , False, (Float)pblimit_p, (Int)3); // normtype 3 multiplies the model image with the pb
 	  }
 	// Connect pbcoeffs_p to fluxScaleVec. This is where PB Taylor coefficients were put in by the 'iftm'.
 	if(pbcoeffs_p.nelements() != nterms_p) pbcoeffs_p.resize(nterms_p);
@@ -381,15 +380,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     /// Multiply the model with the avgPB again, so that it's ready for the minor cycle incremental accumulation
     if(PSOURCE) cout << "Multiplying the models by the weightimage to reset it to flat-noise for the minor cycle" << endl;
 
-    if( useConjBeams_p == true )
+    if( useConjBeams_p == True )
       {
 	
 	for(uInt taylor=0;taylor<nterms_p;taylor++)
 	  {
 	    //Mulitply by PB  ///// PBWeight
-	    //normalizeImage( *(modelImageVec[taylor]) , weightsVec[0], *(weightImageVec[0]) , false, (Float)pblimit_p, (Int)3); // normtype 3 multiplies the model image with the pb
+	    //normalizeImage( *(modelImageVec[taylor]) , weightsVec[0], *(weightImageVec[0]) , False, (Float)pblimit_p, (Int)3); // normtype 3 multiplies the model image with the pb
 	    //Mulitply by sqrt(PB) //// PBSQWeight
-	    normalizeImage( *(modelImageVec[taylor]) , weightsVec[0], *(weightImageVec[0]) , false, (Float)pblimit_p, (Int)5); 
+	    normalizeImage( *(modelImageVec[taylor]) , weightsVec[0], *(weightImageVec[0]) , False, (Float)pblimit_p, (Int)5); 
 	    
 	  }
       }
@@ -402,7 +401,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// Divide by the avg PB 0
 	for(uInt taylor=0;taylor<nterms_p;taylor++)
 	  {
-	    normalizeImage( *(modelImageVec[taylor]) , weightsVec[0], *(weightImageVec[0]) , false, (Float)pblimit_p, (Int)1);
+	    normalizeImage( *(modelImageVec[taylor]) , weightsVec[0], *(weightImageVec[0]) , False, (Float)pblimit_p, (Int)1);
 	  }
 
 
@@ -469,14 +468,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     AlwaysAssert( !(donePSF_p && dopsf) , AipsError ); 
     
     // The PSF needs to be the first thing made (because of weight images)
-    AlwaysAssert( !(dopsf==false && donePSF_p==false) , AipsError); 
+    AlwaysAssert( !(dopsf==False && donePSF_p==False) , AipsError); 
     
-    doingPSF_p=false;
-    if(donePSF_p==true) // TODO : Check if we can clean up the extra ftmachines, or if the weightImageVecs from extra ones are still used later
+    doingPSF_p=False;
+    if(donePSF_p==True) // TODO : Check if we can clean up the extra ftmachines, or if the weightImageVecs from extra ones are still used later
       {
 	if( subftms_p.nelements() != nterms_p )  
 	  { 
-	    subftms_p.resize( nterms_p ,true);
+	    subftms_p.resize( nterms_p ,True);
 	    if(dbg_p) cout << "MTFT::initializeToSky : resizing to " << nterms_p << " terms" << endl;
 	  }
       }
@@ -504,10 +503,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     subftms_p[0]->put(vb,row,dopsf,type);
     
     Int gridnterms=nterms_p;
-    if(dopsf==true && donePSF_p==false) 
+    if(dopsf==True && donePSF_p==False) 
       {
 	gridnterms=2*nterms_p-1;
-	doingPSF_p=true;
+	doingPSF_p=True;
       }
     
     //cout << "  Calling put for " << gridnterms << " terms, nelements :  " << subftms_p.nelements() << "  and dopsf " << dopsf << endl;
@@ -526,7 +525,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void NewMultiTermFT::finalizeToSky(Block<CountedPtr<ImageInterface<Complex> > > & compImageVec, PtrBlock<SubImage<Float> *> & resImageVec, PtrBlock<SubImage<Float> *>& weightImageVec, PtrBlock<SubImage<Float> *>& fluxScaleVec, Bool dopsf, Block<Matrix<Float> >& weightsVec, const VisBuffer& /*vb*/)
   {
     uInt gridnterms=nterms_p;
-    if(dopsf==true) { gridnterms=2*nterms_p-1; }
+    if(dopsf==True) { gridnterms=2*nterms_p-1; }
     
     if(dbg_p) cout << "MTFT : finalizeToSky for " << gridnterms << " terms  and dopsf : " << dopsf << endl;
     
@@ -543,7 +542,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// Call finalizeToSky for subftm
 	subftms_p[taylor]->finalizeToSky();
 	// Get the gridded image
-	(*(compImageVec[taylor])).copyData(subftms_p[taylor]->getImage(weightsVec[taylor],false));
+	(*(compImageVec[taylor])).copyData(subftms_p[taylor]->getImage(weightsVec[taylor],False));
 	// Convert to Stokes planes
 	correlationToStokes((*(compImageVec[taylor])) , (*(resImageVec[taylor])) , dopsf );
 	// Get the weight image.
@@ -566,10 +565,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     // Use sumwts to make Hessian, invert, apply to weight images to fill in pbcoeffs
     // TODO : Clean up this list of state variables !
-    if(dopsf==true && doingPSF_p==true &&  donePSF_p==false)
+    if(dopsf==True && doingPSF_p==True &&  donePSF_p==False)
       {
 	
-	if( donePBTaylor_p == false )
+	if( donePBTaylor_p == False )
 	  {
 
 	    cout << "MTFT::finalizeToSky for PSF and Weights : Calculating PB coefficients" << endl;
@@ -595,7 +594,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    //
 	    //calculateTaylorPBs(weightImageVec);
 	  
-	donePBTaylor_p = true;
+	donePBTaylor_p = True;
 	
 	
 	  }
@@ -620,8 +619,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     
     
-    if(doingPSF_p==true)
-      {doingPSF_p=false; donePSF_p=true; if(dbg_p) cout << "Setting donePSF to true" << endl;}
+    if(doingPSF_p==True)
+      {doingPSF_p=False; donePSF_p=True; if(dbg_p) cout << "Setting donePSF to True" << endl;}
     
     
   }//end of finalizeToSky
@@ -643,7 +642,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     AlwaysAssert( weightImageVec.nelements() >= nterms_p , AipsError );
     Matrix<Float> tempMat;
     Array<Float> tempArr;
-    ( *(weightImageVec[0]) ).get(tempArr,true);
+    ( *(weightImageVec[0]) ).get(tempArr,True);
     tempMat.reference(tempArr);
     Float maxval = max(tempMat);
     
@@ -678,7 +677,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   Bool NewMultiTermFT::toRecord(String& error, RecordInterface& outRec, Bool withImage, const String diskimage) 
   {
     if(dbg_p) cout << "MTFT :: toRecord for " << nterms_p << endl;
-    Bool retval = true;
+    Bool retval = True;
     
     for(uInt tix=0;tix<nterms_p;tix++)
       {
@@ -705,7 +704,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   Bool NewMultiTermFT::fromRecord(String& error, const RecordInterface& inRec)
   {
     if(dbg_p) cout << "MTFT :: fromRecord "<< endl;
-    Bool retval = true;
+    Bool retval = True;
     
     //    Record subFTMRec=inRec.asRecord("subftm");
     //  retval = (retval || subftm_p->fromRecord(error, subFTMRec));    
@@ -730,7 +729,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     PagedImage<Float> tmp(theImg.shape(), theImg.coordinates(), fileName);
     LatticeExpr<Float> le(theImg);
     tmp.copyData(le);
-    return true;
+    return True;
   }
   
   

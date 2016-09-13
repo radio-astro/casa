@@ -6,11 +6,11 @@ namespace casa {
 
 template<class T> ImageFFTer<T>::ImageFFTer(
 	const SPCIIT image,
-	const casacore::Record *const region,
-	const casacore::String& maskInp, const casacore::Vector<casacore::uInt>& axes
+	const Record *const region,
+	const String& maskInp, const Vector<uInt>& axes
 ) : ImageTask<T>(
 		image, "", region, "", "", "",
-		maskInp, "", false
+		maskInp, "", False
 	),
 	_axes(axes), _real(), _imag(), _amp(),
 	_phase(), _complex() {
@@ -18,7 +18,7 @@ template<class T> ImageFFTer<T>::ImageFFTer(
 }
 
 template<class T> void ImageFFTer<T>::fft() const {
-	*this->_getLog() << casacore::LogOrigin(getClass(), __FUNCTION__);
+	*this->_getLog() << LogOrigin(getClass(), __FUNCTION__);
 	ThrowIf(
 		_real.empty() && _imag.empty() && _amp.empty()
 		&& _phase.empty() && _complex.empty(),
@@ -29,26 +29,26 @@ template<class T> void ImageFFTer<T>::fft() const {
 	_checkExists(_amp);
 	_checkExists(_phase);
 	_checkExists(_complex);
-	SHARED_PTR<const casacore::SubImage<T> > subImage = SubImageFactory<T>::createSubImageRO(
+	SHARED_PTR<const SubImage<T> > subImage = SubImageFactory<T>::createSubImageRO(
 		*this->_getImage(), *this->_getRegion(), this->_getMask(), this->_getLog().get(),
-		casacore::AxesSpecifier(), this->_getStretch()
+		AxesSpecifier(), this->_getStretch()
 	);
 	ImageFFT fft;
 	if (_axes.size() == 0) {
-		*this->_getLog() << casacore::LogIO::NORMAL << "FFT the direction coordinate" << casacore::LogIO::POST;
+		*this->_getLog() << LogIO::NORMAL << "FFT the direction coordinate" << LogIO::POST;
 		fft.fftsky(*subImage);
 	}
 	else {
 		// Set vector of bools specifying axes
-		casacore::Vector<casacore::Bool> which(subImage->ndim(), false);
-		for(casacore::uInt i: _axes) {
-			which(_axes(i)) = true;
+		Vector<Bool> which(subImage->ndim(), False);
+		for(uInt i: _axes) {
+			which(_axes(i)) = True;
 		}
-		*this->_getLog() << casacore::LogIO::NORMAL << "FFT zero-based axes " << _axes << casacore::LogIO::POST;
+		*this->_getLog() << LogIO::NORMAL << "FFT zero-based axes " << _axes << LogIO::POST;
 		fft.fft(*subImage, which);
 	}
 
-	casacore::String maskName("");
+	String maskName("");
 	if (! _real.empty()) {
 		auto x = _createFloatImage(_real, *subImage);
 		fft.getReal(*x);
@@ -77,52 +77,52 @@ template<class T> void ImageFFTer<T>::fft() const {
 }
 
 template<class T> SPIIF ImageFFTer<T>::_createFloatImage(
-	const casacore::String& name, const casacore::SubImage<T>& subImage
+	const String& name, const SubImage<T>& subImage
 ) const {
-	*this->_getLog() << casacore::LogIO::NORMAL << "Creating image '"
-		<< name << "'" << casacore::LogIO::POST;
+	*this->_getLog() << LogIO::NORMAL << "Creating image '"
+		<< name << "'" << LogIO::POST;
 	SPIIF image(
-	    new casacore::PagedImage<casacore::Float>(
+	    new PagedImage<Float>(
 	        subImage.shape(), subImage.coordinates(),
 	        name
 	    )
 	);
 	if (subImage.isMasked()) {
-		casacore::String x;
+		String x;
 		ImageMaskAttacher::makeMask(
-			*image, x, false, true, *this->_getLog(), true
+			*image, x, False, True, *this->_getLog(), True
 		);
 	}
 	return image;
 }
 
 template<class T> SPIIC ImageFFTer<T>::_createComplexImage(
-	const casacore::String& name, const casacore::SubImage<T>& subImage
+	const String& name, const SubImage<T>& subImage
 ) const {
-	*this->_getLog() << casacore::LogIO::NORMAL << "Creating image '"
-		<< name << "'" << casacore::LogIO::POST;
+	*this->_getLog() << LogIO::NORMAL << "Creating image '"
+		<< name << "'" << LogIO::POST;
 	SPIIC image(
-	    new casacore::PagedImage<casacore::Complex>(
+	    new PagedImage<Complex>(
 	        subImage.shape(), subImage.coordinates(),
 	        name
 	    )
 	);
 	if (subImage.isMasked()) {
-		casacore::String x;
+		String x;
 		ImageMaskAttacher::makeMask(
-			*image, x, false, true, *this->_getLog(), true
+			*image, x, False, True, *this->_getLog(), True
 		);
 	}
 	return image;
 }
 
 template<class T> void ImageFFTer<T>::_checkExists(
-	const casacore::String& name
+	const String& name
 ) {
 	if (! name.empty()) {
-		casacore::File f(name);
+		File f(name);
 		ThrowIf (
-			f.exists(), "casacore::File " + name + " already exists"
+			f.exists(), "File " + name + " already exists"
 		);
 	}
 }

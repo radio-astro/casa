@@ -108,14 +108,14 @@ namespace casa {
 			void setShowMarkerPosition( int regionId, bool show );
 
 		protected:
-			virtual RegionInfo *newInfoObject(casacore::ImageInterface<casacore::Float>* image, PrincipalAxesDD * );
+			virtual RegionInfo *newInfoObject(ImageInterface<Float>* image, PrincipalAxesDD * );
 			unsigned int check_handle( double x, double y ) const;
 
 			enum YScaleTo { ScaleTop, ScaleBottom };
 			enum XScaleTo { ScaleLeft, ScaleRight };
 			enum Tranformations { FLIP_X = 1 << 0, FLIP_Y = 1 << 1 };
 			std::list<SHARED_PTR<RegionInfo> > *generate_dds_centers( );
-			casacore::ImageRegion *get_image_region( DisplayData* ) const;
+			ImageRegion *get_image_region( DisplayData* ) const;
 
 			void drawRegion( bool );
 			void drawText( );
@@ -172,7 +172,7 @@ namespace casa {
 			XScaleTo _x_origin_;
 			YScaleTo _y_origin_;
 
-			//casacore::Slice functionality
+			//Slice functionality
 			void drawPositionMarker();
 			QMap<QString,SlicePlot*> slicePlots;
 			int markerSegmentIndex;

@@ -40,7 +40,6 @@
 #include <casa/Utilities/GenSort.h>
 #include <casa/OS/Timer.h>
 #include <ms/MeasurementSets/MSColumns.h>
-#include <ms/MeasurementSets/MSIter.h>
 
 #define CheckVisIter() checkVisIter (__func__, __FILE__, __LINE__)
 #define CheckVisIter1(s) checkVisIter (__func__, __FILE__, __LINE__,s)
@@ -53,17 +52,13 @@
 //    {if (VlaData::loggingInitialized_p && level <= VlaData::logLevel_p) \
 //         Logger::log (__VA_ARGS__);};
 
-using namespace casacore;
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-MSIter msi;
-
 VisBuffer::VisBuffer()
-    : corrSorted_p(false),
+    : corrSorted_p(False),
       lastPointTableRow_p(0),
       This(this),
-      twoWayConnection_p(false),
+      twoWayConnection_p(False),
       visIter_p(static_cast<ROVisibilityIterator *>(0))
 {
     validate();
@@ -77,9 +72,9 @@ VisBuffer::VisBuffer(ROVisibilityIterator & iter)
       visIter_p(&iter)
 {
     iter.attachVisBuffer(*this);
-    twoWayConnection_p = true;
+    twoWayConnection_p = True;
     oldMSId_p = -1;
-    corrSorted_p = false;
+    corrSorted_p = False;
 
     if (VisModelDataI::create() != NULL) visModelData_p = VisModelDataI::create();
 }
@@ -88,7 +83,7 @@ VisBuffer::VisBuffer(const VisBuffer & vb)
     : This(this),
       visIter_p(static_cast<ROVisibilityIterator *>(0))
 {
-    corrSorted_p = false;
+    corrSorted_p = False;
     operator=(vb);
 }
 
@@ -125,13 +120,13 @@ VisBuffer::assign(const VisBuffer & other, Bool copy)
         visIter_p = other.getVisibilityIterator ();
         other.copyMsInfo(oldMSId_p, msOK_p, newMS_p);
 
-        twoWayConnection_p = false;
+        twoWayConnection_p = False;
 
         if (visIter_p == static_cast<ROVisibilityIterator *>(0)) {
             validate();
-            copyCache (other, true);  // force copying
+            copyCache (other, True);  // force copying
         } else if (copy) {
-            copyCache (other, false); // copy only if there's something there
+            copyCache (other, False); // copy only if there's something there
         } else {
             invalidate();
         }
@@ -247,12 +242,12 @@ VisBuffer::operator-=(const VisBuffer & vb)
     Int nChannels = nChannel ();
     for (Int row = 0; row < nRows; row++) {
         if (vb.flagRow()(row)) {
-            flagRow_p(row) = true;
+            flagRow_p(row) = True;
         }
         if (!flagRow_p(row)) {
             for (Int chn = 0; chn < nChannels; chn++) {
                 if (vb.flag()(chn, row)) {
-                    flag_p(chn, row) = true;
+                    flag_p(chn, row) = True;
                 }
                 if (!flag_p(chn, row)) {
                     visibility_p(chn, row) -= vb.visibility()(chn, row);
@@ -271,7 +266,7 @@ VisBuffer::attachToVisIter(ROVisibilityIterator & iter)
     }
     visIter_p = &iter;
     iter.attachVisBuffer(*this);
-    twoWayConnection_p = true;
+    twoWayConnection_p = True;
 }
 
 void
@@ -287,13 +282,13 @@ VisBuffer::detachFromVisIter ()
 void VisBuffer::invalidate()
 {
 
-    setAllCacheStatuses (false);
+    setAllCacheStatuses (False);
     lastPointTableRow_p = 0;
 }
 
 void VisBuffer::validate()
 {
-    setAllCacheStatuses (true);
+    setAllCacheStatuses (True);
 }
 
 Int
@@ -388,7 +383,7 @@ VisBuffer::imagingWeight (const VisImagingWeight & weightGenerator) const
         weightGenerator.filter (imagingWeight_p, flagmat, uvwmat, fvec, wtm);
     }
 
-    This->imagingWeightOK_p = true;
+    This->imagingWeightOK_p = True;
 
     return imagingWeight_p;
 }
@@ -515,7 +510,7 @@ void VisBuffer::freqAverage()
 {
     Matrix<CStokesVector> newVisibility(1, nRow());
     Matrix<Bool> newFlag(1, nRow());
-    newFlag = true;
+    newFlag = True;
     Double newFrequency;
     newFrequency = 0;
     Int nfreq = 0;
@@ -526,14 +521,14 @@ void VisBuffer::freqAverage()
             for (Int chn = 0; chn < nChan; chn++) {
                 if (!flag()(chn, row)) {
                     newVisibility(0, row) += visibility()(chn, row);
-                    newFlag(0, row) = false;
+                    newFlag(0, row) = False;
                     newFrequency += frequency()(chn);
                     n++;
                     nfreq++;
                 }
             }
             if (n == 0) {
-                flagRow()(row) = true;
+                flagRow()(row) = True;
             }
             if (n > 0) {
                 newVisibility(0, row) *= 1.0f / n;
@@ -566,7 +561,7 @@ void VisBuffer::freqAveCubes()
     Cube<Complex> newVisCube(csh);
     newVisCube = Complex(0.0);
     Matrix<Bool> newFlag(1, nRow());
-    newFlag = true;
+    newFlag = True;
     Double newFrequency;
     newFrequency = 0;
     Int nfreq = 0;
@@ -577,7 +572,7 @@ void VisBuffer::freqAveCubes()
             Int n = 0;
             for (Int chn = 0; chn < nChan; chn++) {
                 if (!flag()(chn, row)) {
-                    newFlag(0, row) = false;
+                    newFlag(0, row) = False;
                     newFrequency += frequency()(chn);
                     for (Int cor = 0; cor < nCor; cor++) {
                         newVisCube(cor, 0, row) += visCube()(cor, chn, row);
@@ -596,7 +591,7 @@ void VisBuffer::freqAveCubes()
                 }
             }
             if (n == 0) {
-                flagRow()(row) = true;
+                flagRow()(row) = True;
             }
             if (n > 0) {
                 Matrix<Complex> nVC;
@@ -639,7 +634,7 @@ void VisBuffer::freqAveCubes()
                     }
                 }
                 if (n == 0) {
-                    flagRow()(row) = true;
+                    flagRow()(row) = True;
                 }
                 if (n > 0) {
                     Matrix<Complex> nMVC;
@@ -1008,7 +1003,7 @@ void VisBuffer::channelAve(const Matrix<Int>& chanavebounds,Bool calmode)
                         if(oswt > 0.0)
                             rowWtFac(icor, row) += oswt;
                         else
-                            flagCube()(icor, ochan, row) = true;
+                            flagCube()(icor, ochan, row) = True;
                     }
                     if(totwtsp > 0.0)
                         rowWtFac(icor, row) /= totwtsp;
@@ -1094,7 +1089,7 @@ void VisBuffer::chanAveFlagCube(Cube<Bool>& flagcube, Int nChanOut,
     return;    // No-op.
 
   Cube<Bool> newFlag(csh);
-  newFlag = true;
+  newFlag = True;
 
   const Bool doWtSp(visIter_p->existsWeightSpectrum());
 
@@ -1113,7 +1108,7 @@ void VisBuffer::chanAveFlagCube(Cube<Bool>& flagcube, Int nChanOut,
 	       ichan < nChan0) {
 	  for(Int icor = 0; icor < nCor; ++icor){
 	    if(!flagcube(icor, ichan, row)) 
-	      newFlag(icor, ochan, row) = false;
+	      newFlag(icor, ochan, row) = False;
           }
 	  ++ichan;
 	}
@@ -1148,7 +1143,7 @@ void VisBuffer::chanAveFlagCategory(Array<Bool>& flagcat, const Int nChanOut)
     return;    // No-op.
 
   Array<Bool> newFC(csh);
-  newFC = true;
+  newFC = True;
 
   Int nCor = nCorr();
   Int nCat = csh(2);
@@ -1162,7 +1157,7 @@ void VisBuffer::chanAveFlagCategory(Array<Bool>& flagcat, const Int nChanOut)
         for(Int icor = 0; icor < nCor; ++icor){
           for(Int icat = 0; icat < nCat; ++icat){
             if(!flagcat(IPosition(4, icor, ichan, icat, row))) 
-              newFC(IPosition(4, icor, ochan, icat, row)) = false;
+              newFC(IPosition(4, icor, ochan, icat, row)) = False;
           }
         }
         ++ichan;
@@ -1279,7 +1274,7 @@ void VisBuffer::sortCorr()
     }
 
     // Data is now sorted into canonical order
-    corrSorted_p = true;
+    corrSorted_p = True;
   }
 
 }
@@ -1382,7 +1377,7 @@ void VisBuffer::unSortCorr()
     }
 
     // Data is now back to corrType order
-    corrSorted_p = false;
+    corrSorted_p = False;
   }
 
 }
@@ -1398,7 +1393,7 @@ Bool VisBuffer::nonCanonCorr()
     } else
     // Assumed OK (fewer than 4 elements, or in canonical order already)
     {
-      return false;
+      return False;
     }
 }
 
@@ -1432,7 +1427,7 @@ void VisBuffer::resetWeightMat()
   //  weightMat_p *= Float(nchan);
 
   // weightMat_p now OK
-  weightMatOK_p = true;
+  weightMatOK_p = True;
 
 }
 
@@ -1703,10 +1698,10 @@ Bool VisBuffer::timeRange(MEpoch & rTime, MVEpoch & rTimeEP,
   // interval information for now)
 
   // Initialization
-  Bool retval = false;
+  Bool retval = False;
 
   if (nRow() > 0) {
-    retval = true;
+    retval = True;
     LogicalArray mask(!flagRow());
     MaskedArray<Double> maskTime(time(), mask);
     Double minTime = min(maskTime);
@@ -1726,7 +1721,7 @@ Vector<uInt>& VisBuffer::rowIds()
 {
   if (!rowIdsOK_p) {
 
-    rowIdsOK_p = true;
+    rowIdsOK_p = True;
     visIter_p->rowIds(rowIds_p);
   }
   return rowIds_p;
@@ -1764,31 +1759,31 @@ void VisBuffer::setVisCube(Complex c)
 {
   visCube_p.resize(visIter_p->visibilityShape());
   visCube_p.set(c);
-  visCubeOK_p = true;
+  visCubeOK_p = True;
 }
 void VisBuffer::setModelVisCube(Complex c)
 {
   modelVisCube_p.resize(visIter_p->visibilityShape());
   modelVisCube_p.set(c);
-  modelVisCubeOK_p = true;
+  modelVisCubeOK_p = True;
 }
 void VisBuffer::setCorrectedVisCube(Complex c)
 {
   correctedVisCube_p.resize(visIter_p->visibilityShape());
   correctedVisCube_p.set(c);
-  correctedVisCubeOK_p = true;
+  correctedVisCubeOK_p = True;
 }
 void VisBuffer::setVisCube(const Cube<Complex>& vis)
 {
   visCube_p.resize(vis.shape());
   visCube_p = vis;
-  visCubeOK_p = true;
+  visCubeOK_p = True;
 }
 void VisBuffer::setModelVisCube(const Cube<Complex>& vis)
 {
   modelVisCube_p.resize(vis.shape());
   modelVisCube_p = vis;
-  modelVisCubeOK_p = true;
+  modelVisCubeOK_p = True;
 }
 
 void VisBuffer::setModelVisCube(const Vector<Float>& stokes)
@@ -1869,7 +1864,7 @@ void VisBuffer::setModelVisCube(const Vector<Float>& stokes)
     if (abs(stkvis(corrmap(icorr))) > 0.0) {
       modelVisCube_p(Slice(icorr, 1, 1), Slice(), Slice()).set(stkvis(corrmap(icorr)));
     }
-  modelVisCubeOK_p = true;
+  modelVisCubeOK_p = True;
 
   // Lookup flux density calibrator scaling, and apply it per channel...
   //  TBD
@@ -1913,36 +1908,36 @@ void VisBuffer::setCorrectedVisCube(const Cube<Complex>& vis)
 {
   correctedVisCube_p.resize(vis.shape());
   correctedVisCube_p = vis;
-  correctedVisCubeOK_p = true;
+  correctedVisCubeOK_p = True;
 }
 
 void VisBuffer::setFloatDataCube(const Cube<Float>& fcube)
 {
   floatDataCube_p.resize(fcube.shape());
   floatDataCube_p = fcube;
-  floatDataCubeOK_p = true;
+  floatDataCubeOK_p = True;
 }
 
 void VisBuffer::refModelVis(const Matrix<CStokesVector>& mvis)
 {
   modelVisibility_p.resize();
   modelVisibility_p.reference(mvis);
-  modelVisibilityOK_p = true;
+  modelVisibilityOK_p = True;
 }
 
 void VisBuffer::removeScratchCols()
 {
   // removes scratch data from the vb
   modelVisibility_p.resize();
-  modelVisibilityOK_p = false;
+  modelVisibilityOK_p = False;
   correctedVisibility_p.resize();
-  correctedVisibilityOK_p = false;
+  correctedVisibilityOK_p = False;
 }
 
 Int& VisBuffer::fillnCorr()
 {
   CheckVisIter ();
-  nCorrOK_p = true;
+  nCorrOK_p = True;
   nCorr_p = corrType().nelements();
   return nCorr_p;
 }
@@ -1950,35 +1945,35 @@ Int& VisBuffer::fillnCorr()
 Vector<Int>& VisBuffer::fillObservationId()
 {
   CheckVisIter();
-  observationIdOK_p = true;
+  observationIdOK_p = True;
   return visIter_p->observationId(observationId_p);
 }
 
 Vector<Int>& VisBuffer::fillProcessorId()
 {
   CheckVisIter();
-  processorIdOK_p = true;
+  processorIdOK_p = True;
   return visIter_p->processorId(processorId_p);
 }
 
 Vector<Int>& VisBuffer::fillStateId()
 {
   CheckVisIter();
-  stateIdOK_p = true;
+  stateIdOK_p = True;
   return visIter_p->stateId(stateId_p);
 }
 
 Array<Bool>& VisBuffer::fillFlagCategory()
 {
   CheckVisIter();
-  flagCategoryOK_p = true;
+  flagCategoryOK_p = True;
   return visIter_p->flagCategory(flagCategory_p);
 }
 
 Int& VisBuffer::fillnChannel()
 {
   CheckVisIter ();
-  nChannelOK_p = true;
+  nChannelOK_p = True;
   //  nChannel_p=visIter_p->channelGroupSize();
   nChannel_p = channel().nelements();
   return nChannel_p;
@@ -1987,14 +1982,14 @@ Int& VisBuffer::fillnChannel()
 Vector<Int>& VisBuffer::fillChannel()
 {
   CheckVisIter ();
-  channelOK_p = true;
+  channelOK_p = True;
   return visIter_p->channel(channel_p);
 }
 
 Int& VisBuffer::fillnRow()
 {
   CheckVisIter ();
-  nRowOK_p = true;
+  nRowOK_p = True;
   nRow_p = visIter_p->nRow();
   return nRow_p;
 }
@@ -2002,42 +1997,42 @@ Int& VisBuffer::fillnRow()
 Vector<Int>& VisBuffer::fillAnt1()
 {
   CheckVisIter ();
-  antenna1OK_p = true;
+  antenna1OK_p = True;
   return visIter_p->antenna1(antenna1_p);
 }
 
 Vector<Int>& VisBuffer::fillAnt2()
 {
   CheckVisIter ();
-  antenna2OK_p = true;
+  antenna2OK_p = True;
   return visIter_p->antenna2(antenna2_p);
 }
 
 Vector<Int>& VisBuffer::fillFeed1()
 {
   CheckVisIter ();
-  feed1OK_p = true;
+  feed1OK_p = True;
   return visIter_p->feed1(feed1_p);
 }
 
 Vector<Int>& VisBuffer::fillFeed2()
 {
   CheckVisIter ();
-  feed2OK_p = true;
+  feed2OK_p = True;
   return visIter_p->feed2(feed2_p);
 }
 
 Vector<SquareMatrix<Complex, 2> >& VisBuffer::fillCjones()
 {
   CheckVisIter ();
-  cjonesOK_p = true;
+  cjonesOK_p = True;
   return visIter_p->CJones(cjones_p);
 }
 
 Vector<Int>& VisBuffer::fillCorrType()
 {
   CheckVisIter ();
-  corrTypeOK_p = true;
+  corrTypeOK_p = True;
   return visIter_p->corrType(corrType_p);
 }
 
@@ -2051,7 +2046,7 @@ Vector<Float>& VisBuffer::fillFeed1_pa()
   feed1();
   antenna1();
   time();
-  feed1_paOK_p = true;
+  feed1_paOK_p = True;
   feed1_pa_p.resize(antenna1_p.nelements()); // could also use nRow()
 
   // now actual calculations
@@ -2085,7 +2080,7 @@ Vector<Float>& VisBuffer::fillFeed2_pa()
   feed2();
   antenna2();
   time();
-  feed2_paOK_p = true;
+  feed2_paOK_p = True;
   feed2_pa_p.resize(antenna2_p.nelements()); // could also use nRow()
 
   // now actual calculations
@@ -2122,8 +2117,8 @@ Vector<MDirection>& VisBuffer::fillDirection1()
   antenna1();
   feed1();
   time();
-  direction1OK_p = true;
-  firstDirection1OK_p=true;
+  direction1OK_p = True;
+  firstDirection1OK_p=True;
   direction1_p.resize(antenna1_p.nelements()); // could also use nRow()
   const ROMSPointingColumns & mspc = msColumns().pointing();
   lastPointTableRow_p = mspc.pointingIndex(antenna1()(0),
@@ -2168,7 +2163,7 @@ Vector<MDirection>& VisBuffer::fillDirection1()
         beamOffset *= xform; // parallactic angle rotation
       }
       // x direction is flipped to convert az-el type frame to ra-dec
-      direction1_p(row).shift(-beamOffset(0), beamOffset(1), true);
+      direction1_p(row).shift(-beamOffset(0), beamOffset(1), True);
     }
   }
   //tim.show("fill dir1");
@@ -2188,7 +2183,7 @@ MDirection& VisBuffer::fillFirstDirection1()
   antenna1();
   
   //feed1_pa();
-  firstDirection1OK_p=true;
+  firstDirection1OK_p=True;
   const ROMSPointingColumns & mspc = msColumns().pointing();
   lastPointTableRow_p = mspc.pointingIndex(antenna1()(0),
                                            time()(0), lastPointTableRow_p);
@@ -2229,7 +2224,7 @@ MDirection& VisBuffer::fillFirstDirection1()
       beamOffset *= xform; // parallactic angle rotation
     }
     // x direction is flipped to convert az-el type frame to ra-dec
-    firstDirection1_p.shift(-beamOffset(0), beamOffset(1), true);
+    firstDirection1_p.shift(-beamOffset(0), beamOffset(1), True);
     }
     
   return firstDirection1_p;
@@ -2239,7 +2234,7 @@ Vector<MDirection>& VisBuffer::fillDirection2()
   CheckVisIterBase ();
   // fill feed2_pa cache, antenna, feed and time will be filled automatically
   feed2_pa();
-  direction2OK_p = true;
+  direction2OK_p = True;
   direction2_p.resize(antenna2_p.nelements()); // could also use nRow()
   const ROMSPointingColumns & mspc = msColumns().pointing();
   lastPointTableRow_p = mspc.pointingIndex(antenna2()(0), time()(0), lastPointTableRow_p);
@@ -2279,7 +2274,7 @@ Vector<MDirection>& VisBuffer::fillDirection2()
         beamOffset *= xform; // parallactic angle rotation
       }
       // x direction is flipped to convert az-el type frame to ra-dec
-      direction2_p(row).shift(-beamOffset(0), beamOffset(1), true);
+      direction2_p(row).shift(-beamOffset(0), beamOffset(1), True);
     }
   }
   return direction2_p;
@@ -2288,7 +2283,7 @@ Vector<MDirection>& VisBuffer::fillDirection2()
 Int& VisBuffer::fillFieldId()
 {
   CheckVisIter ();
-  fieldIdOK_p = true;
+  fieldIdOK_p = True;
   fieldId_p = visIter_p->fieldId();
   return fieldId_p;
 }
@@ -2296,7 +2291,7 @@ Int& VisBuffer::fillFieldId()
 Int& VisBuffer::fillArrayId()
 {
   CheckVisIter ();
-  arrayIdOK_p = true;
+  arrayIdOK_p = True;
   arrayId_p = visIter_p->arrayId();
   return arrayId_p;
 }
@@ -2304,7 +2299,7 @@ Int& VisBuffer::fillArrayId()
 Int& VisBuffer::fillDataDescriptionId ()
 {
   CheckVisIter ();
-  dataDescriptionIdOK_p = true;
+  dataDescriptionIdOK_p = True;
   dataDescriptionId_p = visIter_p->dataDescriptionId();
   return dataDescriptionId_p;
 }
@@ -2312,56 +2307,56 @@ Int& VisBuffer::fillDataDescriptionId ()
 Matrix<Bool>& VisBuffer::fillFlag()
 {
   CheckVisIter ();
-  flagOK_p = true;
+  flagOK_p = True;
   return visIter_p->flag(flag_p);
 }
 
 Cube<Bool>& VisBuffer::fillFlagCube()
 {
   CheckVisIter ();
-  flagCubeOK_p = true;
+  flagCubeOK_p = True;
   return visIter_p->flag(flagCube_p);
 }
 
 Vector<Bool>& VisBuffer::fillFlagRow()
 {
   CheckVisIter ();
-  flagRowOK_p = true;
+  flagRowOK_p = True;
   return visIter_p->flagRow(flagRow_p);
 }
 
 Vector<Int>& VisBuffer::fillScan()
 {
   CheckVisIter ();
-  scanOK_p = true;
+  scanOK_p = True;
   return visIter_p->scan(scan_p);
 }
 
 Vector<Double>& VisBuffer::fillFreq()
 {
   CheckVisIter ();
-  frequencyOK_p = true;
+  frequencyOK_p = True;
   return visIter_p->frequency(frequency_p);
 }
 
 //Vector<Double>& VisBuffer::fillLSRFreq()
 //{
 //  CheckVisIter ();
-//  lsrFrequencyOK_p = true;
+//  lsrFrequencyOK_p = True;
 //  return visIter_p->lsrFrequency(lsrFrequency_p);
 //}
 
 MDirection& VisBuffer::fillPhaseCenter()
 {
   CheckVisIter ();
-  phaseCenterOK_p = true;
+  phaseCenterOK_p = True;
   return phaseCenter_p = visIter_p->phaseCenter();
 }
 
 Int& VisBuffer::fillPolFrame()
 {
   CheckVisIter ();
-  polFrameOK_p = true;
+  polFrameOK_p = True;
   polFrame_p = visIter_p->polFrame();
   return polFrame_p;
 }
@@ -2369,21 +2364,21 @@ Int& VisBuffer::fillPolFrame()
 Vector<Float>& VisBuffer::fillSigma()
 {
   CheckVisIter ();
-  sigmaOK_p = true;
+  sigmaOK_p = True;
   return visIter_p->sigma(sigma_p);
 }
 
 Matrix<Float>& VisBuffer::fillSigmaMat()
 {
   CheckVisIter ();
-  sigmaMatOK_p = true;
+  sigmaMatOK_p = True;
   return visIter_p->sigmaMat(sigmaMat_p);
 }
 
 Int& VisBuffer::fillSpW()
 {
   CheckVisIter ();
-  spectralWindowOK_p = true;
+  spectralWindowOK_p = True;
   spectralWindow_p = visIter_p->spectralWindow();
   return spectralWindow_p;
 }
@@ -2391,28 +2386,28 @@ Int& VisBuffer::fillSpW()
 Vector<Double>& VisBuffer::fillTime()
 {
   CheckVisIter ();
-  timeOK_p = true;
+  timeOK_p = True;
   return visIter_p->time(time_p);
 }
 
 Vector<Double>& VisBuffer::fillTimeCentroid()
 {
   CheckVisIter ();
-  timeCentroidOK_p = true;
+  timeCentroidOK_p = True;
   return visIter_p->timeCentroid(timeCentroid_p);
 }
 
 Vector<Double>& VisBuffer::fillTimeInterval()
 {
   CheckVisIter ();
-  timeIntervalOK_p = true;
+  timeIntervalOK_p = True;
   return visIter_p->timeInterval(timeInterval_p);
 }
 
 Vector<Double>& VisBuffer::fillExposure()
 {
   CheckVisIter ();
-  exposureOK_p = true;
+  exposureOK_p = True;
   return visIter_p->exposure(exposure_p);
 }
 
@@ -2420,14 +2415,14 @@ Vector<Double>& VisBuffer::fillExposure()
 Vector<RigidVector<Double, 3> >& VisBuffer::filluvw()
 {
   CheckVisIter ();
-  uvwOK_p = true;
+  uvwOK_p = True;
   return visIter_p->uvw(uvw_p);
 }
 
 Matrix<Double>& VisBuffer::filluvwMat()
 {
   CheckVisIter ();
-  uvwMatOK_p = true;
+  uvwMatOK_p = True;
   return visIter_p->uvwMat(uvwMat_p);
 }
 
@@ -2436,18 +2431,18 @@ Matrix<CStokesVector>& VisBuffer::fillVis(VisibilityIterator::DataColumn whichOn
   switch (whichOne) {
   case VisibilityIterator::Model:
     CheckVisIter1 (" (Model)");
-    modelVisibilityOK_p = true;
+    modelVisibilityOK_p = True;
     return visIter_p->visibility(modelVisibility_p, whichOne);
     break;
   case VisibilityIterator::Corrected:
     CheckVisIter1 (" (Corrected)");
-    correctedVisibilityOK_p = true;
+    correctedVisibilityOK_p = True;
     return visIter_p->visibility(correctedVisibility_p, whichOne);
     break;
   case VisibilityIterator::Observed:
   default:
     CheckVisIter1 (" (Observed)");
-    visibilityOK_p = true;
+    visibilityOK_p = True;
     return visIter_p->visibility(visibility_p, whichOne);
     break;
   }
@@ -2459,7 +2454,7 @@ Cube<Complex>& VisBuffer::fillVisCube(VisibilityIterator::DataColumn whichOne)
   case VisibilityIterator::Model:
   {
 	  CheckVisIter1 (" (Model)");
-      modelVisCubeOK_p = true;
+	  modelVisCubeOK_p = True;
 	  String modelkey; //=String("definedmodel_field_")+String::toString(fieldId());
 	  Int snum;
 	  Bool hasmodkey = False;
@@ -2487,13 +2482,13 @@ Cube<Complex>& VisBuffer::fillVisCube(VisibilityIterator::DataColumn whichOne)
     break;
   case VisibilityIterator::Corrected:
     CheckVisIter1 (" (Corrected)");
-    correctedVisCubeOK_p = true;
+    correctedVisCubeOK_p = True;
     return visIter_p->visibility(correctedVisCube_p, whichOne);
     break;
   case VisibilityIterator::Observed:
   default:
     CheckVisIter1 (" (Observed)");
-    visCubeOK_p = true;
+    visCubeOK_p = True;
     return visIter_p->visibility(visCube_p, whichOne);
     break;
   }
@@ -2502,35 +2497,35 @@ Cube<Complex>& VisBuffer::fillVisCube(VisibilityIterator::DataColumn whichOne)
 Cube<Float>& VisBuffer::fillFloatDataCube()
 {
   CheckVisIter ();
-  floatDataCubeOK_p = true;
+  floatDataCubeOK_p = True;
   return visIter_p->floatData(floatDataCube_p);
 }
 
 Vector<Float>& VisBuffer::fillWeight()
 {
   CheckVisIter ();
-  weightOK_p = true;
+  weightOK_p = True;
   return visIter_p->weight(weight_p);
 }
 
 Matrix<Float>& VisBuffer::fillWeightMat()
 {
   CheckVisIter ();
-  weightMatOK_p = true;
+  weightMatOK_p = True;
   return visIter_p->weightMat(weightMat_p);
 }
 
 Cube<Float>& VisBuffer::fillWeightSpectrum()
 {
   CheckVisIter ();
-  weightSpectrumOK_p = true;
+  weightSpectrumOK_p = True;
   return visIter_p->weightSpectrum(weightSpectrum_p);
 }
 
 //Matrix<Float>& VisBuffer::fillImagingWeight()
 //{
 //  CheckVisIter ();
-//  imagingWeightOK_p = true;
+//  imagingWeightOK_p = True;
 //  return visIter_p->imagingWeight(imagingWeight_p);
 //}
 
@@ -2607,7 +2602,7 @@ Vector<Int> VisBuffer::unique(const Vector<Int>& indices) const
         uniqIndices(nUniq++) = sortedIndices(i);
       };
     };
-    uniqIndices.resize(nUniq, true);
+    uniqIndices.resize(nUniq, True);
   };
   return uniqIndices;
 }
@@ -2626,7 +2621,7 @@ Bool VisBuffer::checkMSId()
   //if this is not a new iteration then don't even check;
   //Let the state be
   if (msOK_p) {
-    return false;
+    return False;
   }
 
   if (visIter_p != static_cast<ROVisibilityIterator *> (0)) {
@@ -2634,19 +2629,19 @@ Bool VisBuffer::checkMSId()
     if (oldMSId_p != visIter_p->msId()) {
 
       oldMSId_p = visIter_p->msId();
-      newMS_p = true;
+      newMS_p = True;
     } else {
-      newMS_p = false;
+      newMS_p = False;
     }
 
-    msOK_p = true;
+    msOK_p = True;
     return newMS_p;
 
   } else {
     return newMS_p;
   }
 
-  return false;
+  return False;
 }
 
 VisBuffer *
@@ -2695,7 +2690,7 @@ VisBuffer::dirtyComponentsSet (VisBufferComponents::EnumType component)
 
 Bool VisBuffer::fetch(const asyncio::PrefetchColumns *pfc)
 {
-  Bool success = true;
+  Bool success = True;
 
   for(asyncio::PrefetchColumns::const_iterator c = pfc->begin();
       c != pfc->end(); ++c){
@@ -2870,13 +2865,13 @@ VisBufferAutoPtr::VisBufferAutoPtr (VisBuffer * vb)
 
 VisBufferAutoPtr::VisBufferAutoPtr (ROVisibilityIterator & rovi)
 {
-    construct (& rovi, true);
+    construct (& rovi, True);
 }
 
 
 VisBufferAutoPtr::VisBufferAutoPtr (ROVisibilityIterator * rovi)
 {
-    construct (rovi, true);
+    construct (rovi, True);
 }
 
 VisBufferAutoPtr::~VisBufferAutoPtr ()

@@ -32,7 +32,6 @@
 #include <omp.h>
 #endif
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
   //
   //-------------------------------------------------------------------------
@@ -60,7 +59,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //	       
   Matrix<Complex>& PSTerm::operator*=(Matrix<Complex>& buf)
   {
-    applySky(buf,true);
+    applySky(buf,True);
     return buf;
   }
   //
@@ -68,7 +67,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //	       
   void PSTerm::applySky(Matrix<Complex>& screen, Bool multiply)
   {
-    //    AlwaysAssert(psCtor_p.null()==false, SynthesisFTMachineError);
+    //    AlwaysAssert(psCtor_p.null()==False, SynthesisFTMachineError);
     Int nx=screen.shape()(0), ny=screen.shape()(1);
     Int convOrig=nx/2;
     Float xpart, psScale_local=psScale_p;
@@ -117,7 +116,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // 						  "SF");
 
 
-    AlwaysAssert(psCtor_p.null()==false, SynthesisFTMachineError);
+    AlwaysAssert(psCtor_p.null()==False, SynthesisFTMachineError);
 
     Int convSize = screen.shape()[0];
     //    Vector<Complex> correction(inner);

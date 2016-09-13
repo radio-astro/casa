@@ -18,8 +18,9 @@
 #include <queue>
 
 using std::map;
-using std::mutex;
 using std::queue;
+
+//using namespace casa;
 
 namespace casa {
 
@@ -37,12 +38,12 @@ public:
     Mutex ();
     virtual ~Mutex ();
 
-    ///casacore::Bool isLockedByThisThread () const; // for debug purposes only !!!
+    ///Bool isLockedByThisThread () const; // for debug purposes only !!!
 
     void lock ();
-    //casacore::Bool lock (casacore::Int milliseconds);
+    //Bool lock (Int milliseconds);
     void unlock ();
-    bool trylock ();
+    Bool trylock ();
     
     // jagonzal: Useful when mandatory is locking
     void acquirelock();
@@ -53,7 +54,7 @@ protected:
 
 private:
 
-    bool        isLocked_p;
+    Bool        isLocked_p;
     MutexImpl * impl_p;
 
     Mutex (const Mutex & other); // illegal operation: do not define
@@ -129,7 +130,7 @@ public:
     void notify_all ();
     void notify_one ();
     void wait (UniqueLock & uniqueLock);
-    // casacore::Bool wait (Mutex & mutex, int milliseconds);
+    // Bool wait (Mutex & mutex, int milliseconds);
 
 private:
 
@@ -145,16 +146,16 @@ public:
     Semaphore (int initialValue = 0);
     ~Semaphore ();
 
-    casacore::Int getValue ();
+    Int getValue ();
     void post ();
-    casacore::Bool trywait ();
+    Bool trywait ();
     void wait ();
-    casacore::Bool wait (int milliseconds);
+    Bool wait (int milliseconds);
 
 private:
 
     SemaphoreImpl * impl_p;
-    casacore::String name_p;
+    String name_p;
 
     Semaphore (const Semaphore & other); // illegal operation: do not define
     Semaphore operator= (const Semaphore & other); // illegal operation: do not define
@@ -217,7 +218,7 @@ public:
     Logger& operator=( const Logger& ) = delete;
 
     void log (const char * format, ...);
-    void registerName (const casacore::String & threadName);
+    void registerName (const String & threadName);
     void start (const char * logFilename);
 
     static Logger * get ();
@@ -231,7 +232,7 @@ protected:
         ~LoggerThread ();
 
         void log (const string & text);
-        void setLogFilename (const casacore::String & filename);
+        void setLogFilename (const String & filename);
         void terminate ();
 
     protected:
@@ -240,12 +241,12 @@ protected:
 
     private:
 
-        bool      deleteStream_p;
-        casacore::String    logFilename_p;
+        Bool      deleteStream_p;
+        String    logFilename_p;
         Condition loggerChanged_p;
-        std::ostream * logStream_p;
+        ostream * logStream_p;
         Mutex mutex_p;
-        queue<std::string> outputQueue_p;
+        queue<string> outputQueue_p;
     };
 
 
@@ -255,7 +256,7 @@ protected:
 
 private:
 
-    typedef map <pthread_t, casacore::String>  ThreadNames;
+    typedef map <pthread_t, String>  ThreadNames;
 
     LoggerThread * loggerThread_p;
     bool loggingStarted_p;

@@ -22,7 +22,6 @@
 
 #include <flagging/Flagging/FlagCalTableHandler.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //////////////////////////////////////////
@@ -115,7 +114,7 @@ FlagCalTableHandler::close()
 	if (selectedCalTable_p)
 	{
 		selectedCalTable_p->flush();
-		selectedCalTable_p->relinquishAutoLocks(true);
+		selectedCalTable_p->relinquishAutoLocks(True);
 		selectedCalTable_p->unlock();
 	}
 
@@ -160,7 +159,7 @@ FlagCalTableHandler::selectData()
 		selectedCalTable_p = new NewCalTable();
 		Bool madeSelection = getSelectedTable(*selectedCalTable_p,*originalCalTable_p,ten,String(""));
 
-		if (madeSelection == false)
+		if (madeSelection == False)
 		{
 			*logger_p << LogIO::NORMAL << "Selection not applicable, using entire MS" << LogIO::POST;
 			delete selectedCalTable_p;
@@ -458,7 +457,7 @@ FlagCalTableHandler::generateScanStartStopMap()
 		nrows = shape[2];
 
 		// Look for effective scan start
-		stopSearch = false;
+		stopSearch = False;
 		for (uInt row_i=0;row_i<nrows;row_i++)
 		{
 			if (stopSearch) break;
@@ -474,7 +473,7 @@ FlagCalTableHandler::generateScanStartStopMap()
 					if (!flags(corr_i,channel_i,row_i))
 					{
 						scanStartRow = row_i;
-						stopSearch = true;
+						stopSearch = True;
 					}
 				}
 			}
@@ -486,7 +485,7 @@ FlagCalTableHandler::generateScanStartStopMap()
 		if (!stopSearch) return;
 
 		// Look for effective scan stop
-		stopSearch = false;
+		stopSearch = False;
 		for (uInt row_i=0;row_i<nrows;row_i++)
 		{
 			if (stopSearch) break;
@@ -502,7 +501,7 @@ FlagCalTableHandler::generateScanStartStopMap()
 					if (!flags(corr_i,channel_i,nrows-1-row_i))
 					{
 						scanStopRow = nrows-1-row_i;
-						stopSearch = true;
+						stopSearch = True;
 					}
 				}
 			}
@@ -616,7 +615,7 @@ Int CTCache::fieldId()
 	if (!CTfieldIdOK_p)
 	{
 		field0_p = calIter_p->field()[0];
-		CTfieldIdOK_p = false;
+		CTfieldIdOK_p = False;
 	}
 
 	return field0_p;
@@ -627,10 +626,10 @@ Int CTCache::spectralWindow()
 	if (!CTspectralWindowOK_p)
 	{
 		Vector<Int> tmp = calIter_p->spw();
-		spw_p.resize(tmp.size(),false);
+		spw_p.resize(tmp.size(),False);
 		spw_p = tmp;
 		spw0_p = spw_p[0];
-		CTspectralWindowOK_p = true;
+		CTspectralWindowOK_p = True;
 	}
 
 	return spw0_p;
@@ -641,9 +640,9 @@ Vector<Int>& CTCache::scan()
 	if (!CTscanOK_p)
 	{
 		Vector<Int> tmp = calIter_p->scan();
-		scan_p.resize(tmp.size(),false);
+		scan_p.resize(tmp.size(),False);
 		scan_p = tmp;
-		CTscanOK_p = true;
+		CTscanOK_p = True;
 	}
 
 	return scan_p;
@@ -654,9 +653,9 @@ Vector<Double>& CTCache::time()
 	if (!CTtimeOK_p)
 	{
 		Vector<Double> tmp = calIter_p->time();
-		time_p.resize(tmp.size(),false);
+		time_p.resize(tmp.size(),False);
 		time_p = tmp;
-		CTtimeOK_p = true;
+		CTtimeOK_p = True;
 	}
 
 	return time_p;
@@ -667,9 +666,9 @@ Vector<Int>& CTCache::antenna1()
 	if (!CTantenna1OK_p)
 	{
 		Vector<Int> tmp = calIter_p->antenna1();
-		antenna1_p.resize(tmp.size(),false);
+		antenna1_p.resize(tmp.size(),False);
 		antenna1_p = tmp;
-		CTantenna1OK_p = true;
+		CTantenna1OK_p = True;
 	}
 
 	return antenna1_p;
@@ -681,9 +680,9 @@ Vector<Int>& CTCache::antenna2()
 	{
 		Vector<Int> tmp = calIter_p->antenna2();
 		if (tmp[0] < 0) tmp = calIter_p->antenna1();
-		antenna2_p.resize(tmp.size(),false);
+		antenna2_p.resize(tmp.size(),False);
 		antenna2_p = tmp;
-		CTantenna2OK_p = true;
+		CTantenna2OK_p = True;
 	}
 
 	return antenna2_p;
@@ -694,9 +693,9 @@ Cube<Bool>& CTCache::flagCube()
 	if (!CTflagCubeOk_p)
 	{
 		Cube<Bool> tmp = calIter_p->flag();
-		flagCube_p.resize(tmp.shape(),false);
+		flagCube_p.resize(tmp.shape(),False);
 		flagCube_p = tmp;
-		CTflagCubeOk_p = true;
+		CTflagCubeOk_p = True;
 
 		// Also fill shapes
 		nRow_p = flagCube_p.shape()[2];
@@ -704,10 +703,10 @@ Cube<Bool>& CTCache::flagCube()
 		nChannel_p = flagCube_p.shape()[1];
 		nCorr_p = flagCube_p.shape()[0];
 
-		CTnRowOK_p = true;
-		CTnRowChunkOK_p = true;
-		CTnChannelOK_p = true;
-		CTnCorrOK_p = true;
+		CTnRowOK_p = True;
+		CTnRowChunkOK_p = True;
+		CTnChannelOK_p = True;
+		CTnCorrOK_p = True;
 	}
 
 	return flagCube_p;
@@ -718,9 +717,9 @@ Vector<Int>& CTCache::observationId()
 	if (!CTobservationIdOK_p)
 	{
 		Vector<Int> tmp = calIter_p->obs();
-		observationId_p.resize(tmp.size(),false);
+		observationId_p.resize(tmp.size(),False);
 		observationId_p = tmp;
-		CTobservationIdOK_p = true;
+		CTobservationIdOK_p = True;
 	}
 
 	return observationId_p;
@@ -731,12 +730,12 @@ Vector<Int>& CTCache::correlationTypes()
 	if (!CTcorrTypeOK_p)
 	{
 		if (!CTnRowOK_p) nCorrelations();
-		corrType_p.resize(nCorr_p,false);
+		corrType_p.resize(nCorr_p,False);
 		for (uInt corr_i=0;corr_i<(uInt) nCorr_p;corr_i++)
 		{
 			corrType_p[corr_i] =  Stokes::NumberOfTypes+corr_i;
 		}
-		CTcorrTypeOK_p = true;
+		CTcorrTypeOK_p = True;
 	}
 
 	return corrType_p;
@@ -747,9 +746,9 @@ Vector<Int>& CTCache::getChannelNumbers(Int /*rowInBuffer*/)
 	if (!CTchannelOK_p)
 	{
 		Vector<Int> tmp = calIter_p->chan();
-		channel_p.resize(tmp.size(),false);
+		channel_p.resize(tmp.size(),False);
 		channel_p = tmp;
-		CTchannelOK_p = true;
+		CTchannelOK_p = True;
 	}
 
 	return channel_p;
@@ -760,9 +759,9 @@ Vector<Double>& CTCache::getFrequencies(Int /*rowInBuffer*/, Int /*frame*/)
 	if (!CTfrequencyOK_p)
 	{
 		Vector<Double> tmp = calIter_p->freq();
-		frequency_p.resize(tmp.size(),false);
+		frequency_p.resize(tmp.size(),False);
 		frequency_p = tmp;
-		CTfrequencyOK_p = true;
+		CTfrequencyOK_p = True;
 	}
 
 	return frequency_p;
@@ -787,9 +786,9 @@ Cube<Complex>& CTCache::visCube()
 			}
 		}
 
-		fparam_p.resize(tmpTrans.shape(),false);
+		fparam_p.resize(tmpTrans.shape(),False);
 		fparam_p = tmpTrans;
-		CTVisCubeOK_p = true;
+		CTVisCubeOK_p = True;
 	}
 
 	return fparam_p;
@@ -800,9 +799,9 @@ Cube<Complex>& CTCache::visCubeCorrected()
 	if (!CTcorrectedVisCubeOK_p)
 	{
 		Cube<Complex> tmp = calIter_p->cparam();
-		cparam_p.resize(tmp.shape(),false);
+		cparam_p.resize(tmp.shape(),False);
 		cparam_p = tmp;
-		CTcorrectedVisCubeOK_p = true;
+		CTcorrectedVisCubeOK_p = True;
 	}
 
 	return cparam_p;
@@ -827,9 +826,9 @@ Cube<Complex>& CTCache::visCubeModel()
 			}
 		}
 
-		snr_p.resize(tmpTrans.shape(),false);
+		snr_p.resize(tmpTrans.shape(),False);
 		snr_p = tmpTrans;
-		CTmodelVisCubeOK_p = true;
+		CTmodelVisCubeOK_p = True;
 	}
 
 	return snr_p;
@@ -841,7 +840,7 @@ Int CTCache::nRowChunk()
 	{
 		if (!CTflagCubeOk_p) flagCube();
 		nRowChunk_p = flagCube_p.shape()[2];
-		CTnRowChunkOK_p = true;
+		CTnRowChunkOK_p = True;
 	}
 
 	return nRowChunk_p;
@@ -853,7 +852,7 @@ Int CTCache::nRows()
 	{
 		if (!CTflagCubeOk_p) flagCube();
 		nRow_p = flagCube_p.shape()[2];
-		CTnRowOK_p = true;
+		CTnRowOK_p = True;
 	}
 
 	return nRow_p;
@@ -865,7 +864,7 @@ Int CTCache::nChannels()
 	{
 		if (!CTflagCubeOk_p) flagCube();
 		nChannel_p = flagCube_p.shape()[1];
-		CTnChannelOK_p = true;
+		CTnChannelOK_p = True;
 	}
 
 	return nChannel_p;
@@ -877,7 +876,7 @@ Int CTCache::nCorrelations()
 	{
 		if (!CTflagCubeOk_p) flagCube();
 		nCorr_p = flagCube_p.shape()[0];
-		CTnCorrOK_p = true;
+		CTnCorrOK_p = True;
 	}
 
 	return nCorr_p;
@@ -885,24 +884,24 @@ Int CTCache::nCorrelations()
 
 void CTCache::invalidate()
 {
-	CTfieldIdOK_p = false;
-	CTspectralWindowOK_p = false;
-	CTscanOK_p = false;
-	CTtimeOK_p = false;
-	CTantenna1OK_p = false;
-	CTantenna2OK_p = false;
-	CTflagCubeOk_p = false;
-	CTobservationIdOK_p = false;
-	CTcorrTypeOK_p = false;
-	CTchannelOK_p = false;
-	CTfrequencyOK_p = false;
-	CTVisCubeOK_p = false;
-	CTcorrectedVisCubeOK_p = false;
-	CTmodelVisCubeOK_p = false;
-	CTnRowChunkOK_p = false;
-	CTnRowOK_p = false;
-	CTnChannelOK_p = false;
-	CTnCorrOK_p = false;
+	CTfieldIdOK_p = False;
+	CTspectralWindowOK_p = False;
+	CTscanOK_p = False;
+	CTtimeOK_p = False;
+	CTantenna1OK_p = False;
+	CTantenna2OK_p = False;
+	CTflagCubeOk_p = False;
+	CTobservationIdOK_p = False;
+	CTcorrTypeOK_p = False;
+	CTchannelOK_p = False;
+	CTfrequencyOK_p = False;
+	CTVisCubeOK_p = False;
+	CTcorrectedVisCubeOK_p = False;
+	CTmodelVisCubeOK_p = False;
+	CTnRowChunkOK_p = False;
+	CTnRowOK_p = False;
+	CTnChannelOK_p = False;
+	CTnCorrOK_p = False;
 
 	return;
 }

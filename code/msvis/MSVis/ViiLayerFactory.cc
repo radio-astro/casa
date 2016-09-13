@@ -32,7 +32,6 @@
 
 #include <casa/Arrays/Vector.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 namespace vi {

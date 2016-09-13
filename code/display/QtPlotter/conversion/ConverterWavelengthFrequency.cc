@@ -27,7 +27,6 @@
 #include <display/QtPlotter/conversion/ConverterFrequency.h>
 #include <QDebug>
 #include <assert.h>
-using namespace casacore;
 namespace casa {
 
 	ConverterWavelengthFrequency::ConverterWavelengthFrequency(const QString& oldUnits,const QString& newUnits) :
@@ -60,5 +59,4 @@ namespace casa {
 		// TODO Auto-generated destructor stub
 	}
 
-using namespace casacore;
 } /* namespace casa */

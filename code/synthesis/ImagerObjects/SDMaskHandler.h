@@ -53,8 +53,8 @@ public:
 
   void resetMask(SHARED_PTR<SIImageStore> imstore);
 
-  void fillMask(SHARED_PTR<SIImageStore> imstore, casacore::Vector<casacore::String> maskStrings);
-  void fillMask(SHARED_PTR<SIImageStore> imstore, casacore::String maskString);
+  void fillMask(SHARED_PTR<SIImageStore> imstore, Vector<String> maskStrings);
+  void fillMask(SHARED_PTR<SIImageStore> imstore, String maskString);
 
   // Collection of methods translate mask description (text, record, threshold, etc) to
   // mask image where the region(s) of interest are represented by the value (default = 1.0)
@@ -62,119 +62,119 @@ public:
   //
   //void makeMask();
   // Create a mask image with maskName from tempim with a threshold applied to the pixel intensity
-  SHARED_PTR<casacore::ImageInterface<casacore::Float> > makeMask(const casacore::String& maskName, const casacore::Quantity threshold, casacore::ImageInterface<casacore::Float>& tempim);
+  SHARED_PTR<ImageInterface<Float> > makeMask(const String& maskName, const Quantity threshold, ImageInterface<Float>& tempim);
   
-  // Make a mask image from casacore::Record, casacore::Matrix of (nboxes,4) where each row contains [blc_x,blc_y, trc_x,trc_y], 
-  // and casacore::Matrix of (ncircles, 3) with the specified 'value'. Each row of circles are radius, x_center, y_center in pixels.
+  // Make a mask image from Record, Matrix of (nboxes,4) where each row contains [blc_x,blc_y, trc_x,trc_y], 
+  // and Matrix of (ncircles, 3) with the specified 'value'. Each row of circles are radius, x_center, y_center in pixels.
   // blctrcs and circles are applied to all the spectral and stokes while regions specified in record can specify selections 
   // in spectral and stokes axes.
-  //static casacore::Bool regionToImageMask(const casacore::String& maskimage, casacore::Record* regionRec, casacore::Matrix<casacore::Quantity> & blctrcs,
-  static casacore::Bool regionToImageMask(casacore::ImageInterface<casacore::Float>&  maskImage, casacore::Record* regionRec, casacore::Matrix<casacore::Quantity> & blctrcs,
-                    casacore::Matrix<casacore::Float>& circles, const casacore::Float& value=1.0);
+  //static Bool regionToImageMask(const String& maskimage, Record* regionRec, Matrix<Quantity> & blctrcs,
+  static Bool regionToImageMask(ImageInterface<Float>&  maskImage, Record* regionRec, Matrix<Quantity> & blctrcs,
+                    Matrix<Float>& circles, const Float& value=1.0);
   
   // Convert boxes defined with blcs and trcs to ImageRegion
-  static void boxRegionToImageRegion(const casacore::ImageInterface<casacore::Float>& maskImage, const casacore::Matrix<casacore::Quantity>& blctrcs, casacore::ImageRegion*& boxImageRegions);
+  static void boxRegionToImageRegion(const ImageInterface<Float>& maskImage, const Matrix<Quantity>& blctrcs, ImageRegion*& boxImageRegions);
   // Convert circles (in pixels)  to ImageRegion
-  static void circleRegionToImageRegion(const casacore::ImageInterface<casacore::Float>& maskImage, const casacore::Matrix<casacore::Float>& circles, casacore::ImageRegion*& circleImageRegions);
+  static void circleRegionToImageRegion(const ImageInterface<Float>& maskImage, const Matrix<Float>& circles, ImageRegion*& circleImageRegions);
   // Convert region defined by record to Imageregion
-  static void recordRegionToImageRegion(casacore::Record* imageRegRec, casacore::ImageRegion*& imageRegion );
-  // Convert casacore::ImageRegion to a mask image with the value
-  static casacore::Bool regionToMask(casacore::ImageInterface<casacore::Float>& maskImage, casacore::ImageRegion& imageregion, const casacore::Float& value);
+  static void recordRegionToImageRegion(Record* imageRegRec, ImageRegion*& imageRegion );
+  // Convert ImageRegion to a mask image with the value
+  static Bool regionToMask(ImageInterface<Float>& maskImage, ImageRegion& imageregion, const Float& value);
   // Read CRTF format text or the text file contains CRTF definitions and convert it to a ImageRegion
-  static void regionTextToImageRegion(const casacore::String& text, const casacore::ImageInterface<casacore::Float>& regionImage, casacore::ImageRegion*& imageRegion);
+  static void regionTextToImageRegion(const String& text, const ImageInterface<Float>& regionImage, ImageRegion*& imageRegion);
 
   // merge mask images to outimage
-  void copyAllMasks(const casacore::Vector< SHARED_PTR<casacore::ImageInterface<casacore::Float> > > inImageMasks, casacore::ImageInterface<casacore::Float>& outImageMask);
+  void copyAllMasks(const Vector< SHARED_PTR<ImageInterface<Float> > > inImageMasks, ImageInterface<Float>& outImageMask);
   // copy and regrid a mask image to outimage
-  void copyMask(const casacore::ImageInterface<casacore::Float>& inimage, casacore::ImageInterface<casacore::Float>& outimage);
+  void copyMask(const ImageInterface<Float>& inimage, ImageInterface<Float>& outimage);
   // expand smaller chan mask image to larger one. - currently only works for a single channel (continuum) input mask 
-  void expandMask(const casacore::ImageInterface<casacore::Float>& inImageMask, casacore::ImageInterface<casacore::Float>& outImageMask);
+  void expandMask(const ImageInterface<Float>& inImageMask, ImageInterface<Float>& outImageMask);
   // convert internal mask to imageRegion
-  void InMaskToImageRegion(const casacore::ImageInterface<casacore::Float>& inimage );
+  void InMaskToImageRegion(const ImageInterface<Float>& inimage );
 
   int makeInteractiveMask(SHARED_PTR<SIImageStore>& imstore,
-			  casacore::Int& niter, casacore::Int& cycleniter,
-			  casacore::String& threshold, casacore::String& cyclethreshold);
+			  Int& niter, Int& cycleniter,
+			  String& threshold, String& cyclethreshold);
 
   // Return a reference to an imageinterface for the mask.
   void makeAutoMask(SHARED_PTR<SIImageStore> imstore);
   // Top level autoMask interface...
   void autoMask(SHARED_PTR<SIImageStore> imstore, 
-                const casacore::String& alg="",
-                const casacore::String& threshold="",
-                const casacore::Float& fracpeak=0.0,
-                const casacore::String& resolution="",
-                const casacore::Float& resbybeam=0.0,
-                const casacore::Int nmask=0, 
-                const casacore::Bool autoadjust=false,
-                casacore::Float pblimit=0.0);
+                const String& alg="",
+                const String& threshold="",
+                const Float& fracpeak=0.0,
+                const String& resolution="",
+                const Float& resbybeam=0.0,
+                const Int nmask=0, 
+                const Bool autoadjust=False,
+                Float pblimit=0.0);
   // automask algorithms...  
-  void autoMaskByThreshold (casacore::ImageInterface<casacore::Float>& mask,
-                           const casacore::ImageInterface<casacore::Float>& res, 
-                           const casacore::ImageInterface<casacore::Float>& psf, 
-                           const casacore::Quantity& resolution, 
-                           const casacore::Float& resbybeam, 
-                           const casacore::Quantity& qthreshold, 
-                           const casacore::Float& fracofpeak, 
-                           const casacore::Record& theStatsffff,
-                           const casacore::Float& sigma=3.0,
-                           const casacore::Int nmask=0, 
-                           const casacore::Bool autoadjust=casacore::False);
+  void autoMaskByThreshold (ImageInterface<Float>& mask,
+                           const ImageInterface<Float>& res, 
+                           const ImageInterface<Float>& psf, 
+                           const Quantity& resolution, 
+                           const Float& resbybeam, 
+                           const Quantity& qthreshold, 
+                           const Float& fracofpeak, 
+                           const Record& theStats,
+                           const Float& sigma=3.0,
+                           const Int nmask=0, 
+                           const Bool autoadjust=False);
 
   // no binning version
-  void autoMaskByThreshold2 (casacore::ImageInterface<float>& mask,
-                           const casacore::ImageInterface<float>& res,
-                           const casacore::ImageInterface<float>& psf,
-                           const casacore::Quantity& resolution,
-                           const casacore::Float& resbybeam,
-                           const casacore::Quantity& qthreshold,
-                           const casacore::Float& fracofpeak,
-                           const casacore::Record& theStats,
-                           const casacore::Float& sigma=3.0,
-                           const casacore::Int nmask=0);
+  void autoMaskByThreshold2 (ImageInterface<Float>& mask,
+                           const ImageInterface<Float>& res, 
+                           const ImageInterface<Float>& psf, 
+                           const Quantity& resolution, 
+                           const Float& resbybeam, 
+                           const Quantity& qthreshold, 
+                           const Float& fracofpeak, 
+                           const Record& theStats,
+                           const Float& sigma=3.0,
+                           const Int nmask=0);
                            
-  SHARED_PTR<casacore::ImageInterface<float> > makeMaskFromBinnedImage (
-                               const casacore::ImageInterface<float>& image,
-                               const casacore::Int nx,
-                               const casacore::Int ny,
-                               const casacore::Float& fracofpeak,
-                               const casacore::Float& sigma,
-                               const casacore::Int nmask,
-                               const casacore::Bool autoadjust,
-                               casacore::Double thresh=0.0);
+  SHARED_PTR<ImageInterface<Float> > makeMaskFromBinnedImage (
+                               const ImageInterface<Float>& image, 
+                               const Int nx, 
+                               const Int ny,
+                               const Float& fracofpeak,
+                               const Float& sigma, 
+                               const Int nmask,
+                               const Bool autoadjust,
+                               Double thresh=0.0);
 
-  SHARED_PTR<casacore::ImageInterface<float> > convolveMask(const casacore::ImageInterface<float>& inmask,
-                                                  int nxpix, int nypix);
+  SHARED_PTR<ImageInterface<Float> > convolveMask(const ImageInterface<Float>& inmask, 
+                                                  Int nxpix, Int nypix);
 
-  SHARED_PTR<casacore::ImageInterface<float> >  pruneRegions(const casacore::ImageInterface<float>& image,
-                                                   double& thresh,
-                                                   int nmask=0,
-                                                   int npix=0);
+  SHARED_PTR<ImageInterface<Float> >  pruneRegions(const ImageInterface<Float>& image, 
+                                                   Double& thresh, 
+                                                   Int nmask=0, 
+                                                   Int npix=0);
 
-  void makePBMask(SHARED_PTR<SIImageStore> imstore, casacore::Float pblimit=0.1);
+  void makePBMask(SHARED_PTR<SIImageStore> imstore, Float pblimit=0.1);
   void autoMaskWithinPB(SHARED_PTR<SIImageStore> imstore, 
-                        const casacore::String& alg="",
-                        const casacore::String& threshold="",
-                        const casacore::Float& fracpeak=0.0,
-                        const casacore::String& resolution="",
-                        const casacore::Float& resbybeam=0.0,
-                        const casacore::Int nmask=0,
-                        const casacore::Bool autoadjust=false,
-                        casacore::Float pblimit=0.1);
+                        const String& alg="",
+                        const String& threshold="",
+                        const Float& fracpeak=0.0,
+                        const String& resolution="",
+                        const Float& resbybeam=0.0,
+                        const Int nmask=0,
+                        const Bool autoadjust=False,
+                        Float pblimit=0.1);
 
   // check if input image is a mask image with 0 or a value (if normalize=true, 1)
-  casacore::Bool checkMaskImage(casacore::ImageInterface<casacore::Float>& maskiamge, casacore::Bool normalize=true);
+  Bool checkMaskImage(ImageInterface<Float>& maskiamge, Bool normalize=True);
 
 // 
-  static casacore::Bool cloneImShape(const casacore::ImageInterface<casacore::Float>& inImage, const casacore::String& outImageName);
+  static Bool cloneImShape(const ImageInterface<Float>& inImage, const String& outImageName);
 
 protected:
   InteractiveMasking *interactiveMasker_p;
 
 private:
-  double itsRms;
-  double itsMax;
-  float itsSidelobeLevel;
+  Double itsRms;
+  Double itsMax;
+  Float itsSidelobeLevel;
 };
 
 

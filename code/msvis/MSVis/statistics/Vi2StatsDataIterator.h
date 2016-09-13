@@ -33,7 +33,6 @@
 #include <casacore/casa/Arrays/Array.h>
 #include <iterator>
 
-
 namespace casa {
 
 //
@@ -50,7 +49,7 @@ public:
 	typedef Transformed AccumType;
 	typedef Data DataType;
 
-	Vi2StatsDataIterator(const casacore::Array<Data>& a)
+	Vi2StatsDataIterator(const Array<Data>& a)
 		: array(&a)
 		, array_iter(array->begin())
 		, end_iter(array->end()) {}
@@ -83,25 +82,25 @@ public:
 		return array_iter == end_iter;
 	}
 
-	casacore::uInt64 getCount() {
+	uInt64 getCount() {
 		return array->size();
-	}
+	};
 
 protected:
 
-	const casacore::Array<Data>* array;
+	const Array<Data>* array;
 
-	typename casacore::Array<Data>::const_iterator array_iter;
+	typename Array<Data>::const_iterator array_iter;
 
-	typename casacore::Array<Data>::const_iterator end_iter;
+	typename Array<Data>::const_iterator end_iter;
 
-	static const casacore::Array<Data> empty_array;
+	static const Array<Data> empty_array;
 
 };
 
 
 template<class Transformed, class Data>
-const casacore::Array<Data> Vi2StatsDataIterator<Transformed,Data>::empty_array;
+const Array<Data> Vi2StatsDataIterator<Transformed,Data>::empty_array;
 
 // Simple non-transforming (widening excepted) data iterator types.
 //
@@ -116,16 +115,15 @@ public:
 	}
 };
 
-typedef DataIteratorMixin< Vi2StatsDataIterator<casacore::Double,casacore::Float> >
+typedef DataIteratorMixin< Vi2StatsDataIterator<Double,Float> >
 Vi2StatsFloatIterator;
 
-typedef DataIteratorMixin< Vi2StatsDataIterator<casacore::Double,casacore::Double> >
+typedef DataIteratorMixin< Vi2StatsDataIterator<Double,Double> >
 Vi2StatsDoubleIterator;
 
-typedef DataIteratorMixin< Vi2StatsDataIterator<casacore::Double,casacore::Int> >
+typedef DataIteratorMixin< Vi2StatsDataIterator<Double,Int> >
 Vi2StatsIntIterator;
 
-}
-
+} // namespace casa
 
 #endif // MSVIS_STATISTICS_VI2_STATS_DATA_ITERATOR_H_

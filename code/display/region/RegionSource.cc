@@ -28,7 +28,6 @@
 #include <display/region/Region.qo.h>
 #include <algorithm>
 
-using namespace casacore;
 namespace casa {
 	namespace viewer {
 		RegionSourceKernel::~RegionSourceKernel( ) {

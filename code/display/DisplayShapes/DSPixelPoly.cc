@@ -35,7 +35,6 @@
 #include <casa/Quanta/QuantumHolder.h>
 #include <casa/Quanta/UnitMap.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	DSPixelPoly::DSPixelPoly() :
@@ -107,7 +106,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	Bool DSPixelPoly::setOptions(const Record& settings) {
 
-		Bool localChange = false;
+		Bool localChange = False;
 		Record toSet = settings;
 
 		if (settings.isDefined("coords")) {
@@ -122,7 +121,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		matrixFloatFromQuant(toSet, "polygonpoints", "pix");
 
 		if (DSPoly::setOptions(toSet)) {
-			localChange = true;
+			localChange = True;
 		}
 
 		return localChange;

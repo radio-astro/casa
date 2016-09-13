@@ -84,14 +84,14 @@ public:
   // sort columns and whether or not WEIGHT_SPECTRUM and/or FLAG_CATEGORY are
   // present.
   //
-  VBGContinuumSubtractor(casacore::MeasurementSet& outms,
-                         casacore::MSColumns *msc,
+  VBGContinuumSubtractor(MeasurementSet& outms,
+                         MSColumns *msc,
                          const VBRemapper& remapper,
                          const ROVisibilityIterator& invi,
-                         const casacore::uInt fitorder=1,
-                         const casacore::MS::PredefinedColumns datacols=casacore::MS::DATA,
-                         const casacore::String& fitspw="*",
-                         const casacore::String& outspw="*");
+                         const uInt fitorder=1,
+                         const MS::PredefinedColumns datacols=MS::DATA,
+                         const String& fitspw="*",
+                         const String& outspw="*");
 
   //// Copy construct
   //VBGContinuumSubtractor(const VBGContinuumSubtractor& other) {}
@@ -106,10 +106,10 @@ public:
   // virtual asyncio::PrefetchColumns *prefetchColumns() const;
 
   // This is where all the work gets done!
-  virtual casacore::Bool process(VisBuffGroup& vbg);
+  virtual Bool process(VisBuffGroup& vbg);
 
-  void setTVIDebug(bool debug) {tvi_debug = debug;}
-  void setWantCont(bool want_cont) {want_cont_p = want_cont;}
+  void setTVIDebug(Bool debug) {tvi_debug = debug;}
+  void setWantCont(Bool want_cont) {want_cont_p = want_cont;}
 
 private:
   // Disable null c'tor.
@@ -118,37 +118,37 @@ private:
   // Initialized by c'tor:
 
   // Order of the fit polynomials.
-  casacore::uInt fitorder_p;
+  uInt fitorder_p;
   
   // Which of DATA, MODEL_DATA, or CORRECTED_DATA to fit.
   // It will always _write_ to DATA if datacols_p.nelements() == 1, and write
   // to all 3 otherwise.  Thus datacols_p.nelements() should be either 1 or 3.
   // 4 and 2 are right out, and FLOAT_DATA isn't handled by this yet.
-  casacore::MS::PredefinedColumns datacol_p;
+  MS::PredefinedColumns datacol_p;
 
-  casacore::String fitspw_p;      // Line-free channels used for the fit.  Can include ;
-  casacore::String outspw_p;      // Channels to write out.  Does not yet support ;.
-  casacore::uInt   rowsdone_p;    // How many rows have been written so far.
-  std::set<casacore::Int> outspws_p;  // Spws to write out.
+  String fitspw_p;      // Line-free channels used for the fit.  Can include ;
+  String outspw_p;      // Channels to write out.  Does not yet support ;.
+  uInt   rowsdone_p;    // How many rows have been written so far.
+  std::set<Int> outspws_p;  // Spws to write out.
   
-  casacore::Bool doWS_p;                               // Is WEIGHT_SPECTRUM present?
-  casacore::Bool doFC_p;                               // Is FLAG_CATEGORY present?
+  Bool doWS_p;                               // Is WEIGHT_SPECTRUM present?
+  Bool doFC_p;                               // Is FLAG_CATEGORY present?
 
   // Not initialized by c'tor:
 
   // These cubes could be made local to process(), but I want to avoid repeated
   // c'ting and d'ting.
-  casacore::Cube<casacore::Complex> coeffs_p; // casacore::Polynomial coefficients for the continuum, indexed by (corr,
+  Cube<Complex> coeffs_p; // Polynomial coefficients for the continuum, indexed by (corr,
                           // order, hash(ant1, ant2).
-  casacore::Cube<casacore::Bool> coeffsOK_p;  // Flags on the sol'ns, indexed by (corr,
+  Cube<Bool> coeffsOK_p;  // Flags on the sol'ns, indexed by (corr,
                           // order, hash(ant1, ant2).
 
-  std::set<casacore::Int> appliedSpWs_p;
+  std::set<Int> appliedSpWs_p;
 
-  std::map<casacore::Int, casacore::Vector<casacore::Bool>*> fitmask_p;      // spw -> a list of flags by chan
+  std::map<Int, Vector<Bool>*> fitmask_p;      // spw -> a list of flags by chan
 
-  bool tvi_debug;
-  bool want_cont_p;
+  Bool tvi_debug;
+  Bool want_cont_p;
 };
 
 } //# NAMESPACE CASA - END

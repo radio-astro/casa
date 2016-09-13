@@ -52,14 +52,13 @@
 #include <casa/iostream.h>
 #include <casa/sstream.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	QtWCBox::QtWCBox()
 //
 //Default constructor
 //
-		: itsNull(true) {
+		: itsNull(True) {
 		unitInit();
 	}
 
@@ -77,7 +76,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  itsTrc(trc.copy()),
 		  itsCSys(cSys),
 		  itsAbsRel(absRel.copy()),
-		  itsNull(false) {
+		  itsNull(False) {
 		AlwaysAssert (itsCSys.nWorldAxes() > 0, AipsError);
 		AlwaysAssert (itsCSys.nPixelAxes() > 0, AipsError);
 //
@@ -147,7 +146,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  itsPixelAxes(pixelAxes),
 		  itsCSys(cSys),
 		  itsAbsRel(absRel.copy()),
-		  itsNull(false) {
+		  itsNull(False) {
 		AlwaysAssert (itsCSys.nWorldAxes() > 0, AipsError);
 		AlwaysAssert (itsCSys.nPixelAxes() > 0, AipsError);
 //
@@ -201,7 +200,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Constructor from the bounding box of an LCRegion
 //
 		: itsCSys(cSys),
-		  itsNull(false) {
+		  itsNull(False) {
 		AlwaysAssert (itsCSys.nWorldAxes() > 0, AipsError);
 		AlwaysAssert (itsCSys.nPixelAxes() > 0, AipsError);
 		String msg;
@@ -314,11 +313,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Bool QtWCBox::operator== (const WCRegion& other) const {
 // Type check
 
-		if (type() != other.type()) return false;
+		if (type() != other.type()) return False;
 
 // Base class
 
-		if (!WCRegion::operator== (other)) return false;
+		if (!WCRegion::operator== (other)) return False;
 
 // Caste
 
@@ -326,27 +325,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Check private data
 
-		if (itsNull != that.itsNull) return false;
-		if (itsBlc.nelements() != that.itsBlc.nelements()) return false;
-		if (itsTrc.nelements() != that.itsTrc.nelements()) return false;
-		if (itsPixelAxes.nelements() != that.itsPixelAxes.nelements()) return false;
+		if (itsNull != that.itsNull) return False;
+		if (itsBlc.nelements() != that.itsBlc.nelements()) return False;
+		if (itsTrc.nelements() != that.itsTrc.nelements()) return False;
+		if (itsPixelAxes.nelements() != that.itsPixelAxes.nelements()) return False;
 
 // Exact match for units and values is required.  That is,
 // the check is not done in intrinsic values.
 
 		for (uInt i=0; i<itsBlc.nelements(); i++) {
-			if (itsBlc(i).getValue() != that.itsBlc(i).getValue()) return false;
-			if (itsBlc(i).getUnit() != that.itsBlc(i).getUnit()) return false;
+			if (itsBlc(i).getValue() != that.itsBlc(i).getValue()) return False;
+			if (itsBlc(i).getUnit() != that.itsBlc(i).getUnit()) return False;
 //
-			if (itsTrc(i).getValue() != that.itsTrc(i).getValue()) return false;
-			if (itsTrc(i).getUnit() != that.itsTrc(i).getUnit()) return false;
+			if (itsTrc(i).getValue() != that.itsTrc(i).getValue()) return False;
+			if (itsTrc(i).getUnit() != that.itsTrc(i).getUnit()) return False;
 //
-			if (itsPixelAxes(i) != that.itsPixelAxes(i)) return false;
-			if (itsAbsRel(i) != that.itsAbsRel(i)) return false;
+			if (itsPixelAxes(i) != that.itsPixelAxes(i)) return False;
+			if (itsAbsRel(i) != that.itsAbsRel(i)) return False;
 		}
-		if (!itsCSys.near(that.itsCSys)) return false;
+		if (!itsCSys.near(that.itsCSys)) return False;
 
-		return true;
+		return True;
 	}
 
 
@@ -556,7 +555,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		TableRecord rec;
 		defineRecordFields(rec, className());
 		rec.define ("absrel", itsAbsRel);
-		rec.define("oneRel", true);
+		rec.define("oneRel", True);
 //
 		const uInt nAxes = itsPixelAxes.nelements();
 		Vector<Int> pixelAxes(nAxes);
@@ -704,7 +703,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	Bool QtWCBox::canExtend() const {
-		return true;
+		return True;
 	}
 
 	void QtWCBox::setChanExt (const Double chanStart, const Double chanEnd) {
@@ -776,11 +775,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				if (!spCoord.toPixel(chanEnd, itsTrc(wSp).getValue()))
 					chanEnd=0;   // or should return false?
 			}
-			return true;
+			return True;
 		}
 
 
-		return false;
+		return False;
 	}
 
 	void QtWCBox::setPolExt (const Double polStart, const Double polEnd) {
@@ -816,9 +815,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if (wSt >= 0 && wSt <= (int) nAxes) {
 			polStart = Int(itsBlc(wSt).getValue());
 			polEnd = Int(itsTrc(wSt).getValue());
-			return true;
+			return True;
 		}
-		return false;
+		return False;
 
 	}
 
@@ -907,12 +906,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 			Double pixel = pBlc(latticePixelAxis);
 			convertPixel(pixel, itsBlc(i), itsAbsRel(i), refPix(i),
-			             latticeShape(latticePixelAxis), true);
+			             latticeShape(latticePixelAxis), True);
 			outBlc(outOrder(i)) = pixel;
 //
 			pixel = pTrc(latticePixelAxis);
 			convertPixel(pixel, itsTrc(i), itsAbsRel(i), refPix(i),
-			             latticeShape(latticePixelAxis), false);
+			             latticeShape(latticePixelAxis), False);
 			outTrc(outOrder(i)) = pixel;
 //
 			outShape(outOrder(i)) = latticeShape(latticePixelAxis);
@@ -983,13 +982,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	void QtWCBox::unitInit() {
-		static Bool doneUnitInit = false;
+		static Bool doneUnitInit = False;
 		if (!doneUnitInit) {
 			UnitMap::putUser("pix",UnitVal(1.0), "pixel units");
 			UnitMap::putUser("frac",UnitVal(1.0), "fractional units");
 			UnitMap::putUser("def",UnitVal(1.0), "default value");
 			UnitMap::putUser("default",UnitVal(1.0), "default value");
-			doneUnitInit = true;
+			doneUnitInit = True;
 		}
 	}
 
@@ -1012,16 +1011,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Deal with pixel or fractional coordinates
 
-			Bool world = true;
+			Bool world = True;
 			if (value.getUnit() == "pix") {
 				pixel = value.getValue();
-				world = false;
+				world = False;
 			} else if (value.getUnit() == "frac") {
 				pixel = value.getValue() * shape;
 				if (!isBlc) {
 					pixel -= 1;
 				}
-				world = false;
+				world = False;
 			}
 
 // Convert to absolute pixel; rel = abs - ref

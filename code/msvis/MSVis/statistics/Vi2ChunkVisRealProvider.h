@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //
-// casacore::Data providers for real part of visibilities.
+// Data providers for real part of visibilities.
 //
 #ifndef MSVIS_STATISTICS_VI2_CHUNK_VIS_REAL_PROVIDER_H_
 #define MSVIS_STATISTICS_VI2_CHUNK_VIS_REAL_PROVIDER_H_

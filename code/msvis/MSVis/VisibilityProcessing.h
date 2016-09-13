@@ -73,27 +73,27 @@ public:
 
     enum {Invalid = -1};
 
-    SubchunkIndex (casacore::Int chunkNumber = Invalid, casacore::Int subChunkNumber = Invalid, casacore::Int iteration = Invalid);
+    SubchunkIndex (Int chunkNumber = Invalid, Int subChunkNumber = Invalid, Int iteration = Invalid);
 
     // Comparison Operators
     //
     // Comparison is in lexicographic order by chunk, subchunk and iteration.
 
-    casacore::Bool operator< (const SubchunkIndex & other) const;
-    casacore::Bool operator== (const SubchunkIndex & other) const { return ! (* this < other || other < * this);}
-    casacore::Bool operator!= (const SubchunkIndex & other) const { return ! (* this == other);}
+    Bool operator< (const SubchunkIndex & other) const;
+    Bool operator== (const SubchunkIndex & other) const { return ! (* this < other || other < * this);}
+    Bool operator!= (const SubchunkIndex & other) const { return ! (* this == other);}
 
-    casacore::Int getChunkNumber () const;
-    casacore::Int getIteration () const;
-    casacore::Int getSubchunkNumber () const;
+    Int getChunkNumber () const;
+    Int getIteration () const;
+    Int getSubchunkNumber () const;
 
-    casacore::String toString () const;
+    String toString () const;
 
 private:
 
-    casacore::Int chunkNumber_p;        // -1 for invalid
-    casacore::Int iteration_p;          // -1 for invalid
-    casacore::Int subChunkNumber_p;
+    Int chunkNumber_p;        // -1 for invalid
+    Int iteration_p;          // -1 for invalid
+    Int subChunkNumber_p;
 };
 
 class VbPtr : public std::shared_ptr<casa::VisBuffer> {
@@ -127,25 +127,25 @@ public:
     typedef enum {Unknown, Input = 1, Output = 2, InOut = Input | Output} Type;
 
     VpPort ();
-    VpPort (VisibilityProcessor * vp, const casacore::String & name, Type type);
+    VpPort (VisibilityProcessor * vp, const String & name, Type type);
     ~VpPort () {}
 
-    casacore::Bool operator< (const VpPort & other) const;
-    casacore::Bool operator== (const VpPort & other) const;
+    Bool operator< (const VpPort & other) const;
+    Bool operator== (const VpPort & other) const;
 
-    casacore::Bool empty () const;
-    casacore::String getFullName () const; // returns Vp0.Vp1...VpN.portName
-    casacore::String getName () const; // returns portName
+    Bool empty () const;
+    String getFullName () const; // returns Vp0.Vp1...VpN.portName
+    String getName () const; // returns portName
     Type getType () const; // Returns the port's type as something from the Type enum
-    casacore::Bool isConnectedInput () const; // true if port has been connected up as an input
-    casacore::Bool isConnectedOutput () const; // true if port has been connected up as an output
+    Bool isConnectedInput () const; // True if port has been connected up as an input
+    Bool isConnectedOutput () const; // True if port has been connected up as an output
 
     // Used to check the type of the port as defined in the Type enum.  InOut ports
-    // return true for both casacore::Input and Output types.
+    // return true for both Input and Output types.
 
     bool isType (Type t) const;
 
-    //casacore::String toString() const;
+    //String toString() const;
 
 protected:
 
@@ -156,9 +156,9 @@ protected:
 
 private:
 
-    casacore::Bool connectedInput_p;
-    casacore::Bool connectedOutput_p;
-    casacore::String name_p;
+    Bool connectedInput_p;
+    Bool connectedOutput_p;
+    String name_p;
     VisibilityProcessor * visibilityProcessor_p; // [use]
     Type type_p;
 
@@ -171,19 +171,19 @@ class VpPorts : public std::vector<VpPort> {
 
 public:
 
-    casacore::Bool contains (const casacore::String & name) const;
-    casacore::Bool contains (const VpPort & port) const;
-    VpPort get (const casacore::String & name) const;
-    casacore::String toString () const;
+    Bool contains (const String & name) const;
+    Bool contains (const VpPort & port) const;
+    VpPort get (const String & name) const;
+    String toString () const;
 
 protected:
 
-    VpPort & getRef (const casacore::String & name);
+    VpPort & getRef (const String & name);
 
     template <typename Itr>
     static
     Itr
-    find(const casacore::String & name, Itr begin, Itr end)
+    find(const String & name, Itr begin, Itr end)
     {
         Itr i;
 
@@ -215,10 +215,10 @@ public:
     void add (const VpPort & port, VbPtr); // Adds a (port,VbPtr) to the collection
 
     // Returns the (port,VbPtr) pairs for the requested set of ports.  An execption
-    // is thrown if a requested port is not present unless missingIsOk is set to true.
+    // is thrown if a requested port is not present unless missingIsOk is set to True.
 
-    VpData getSelection (const VpPorts &, bool missingIsOk = false) const;
-    casacore::String getNames () const; // Returns a comma-separated list of the port names.
+    VpData getSelection (const VpPorts &, bool missingIsOk = False) const;
+    String getNames () const; // Returns a comma-separated list of the port names.
 };
 
 
@@ -238,7 +238,7 @@ public:
     } ChunkCode;
 
     typedef enum {
-        Subchunk,    // casacore::Normal processing of a subchunk
+        Subchunk,    // Normal processing of a subchunk
         EndOfChunk,  // Called after all subchunks of a chunk have been processed
         EndOfData    // Called after all chunks have been processed
     } ProcessingType;
@@ -246,10 +246,10 @@ public:
     typedef std::tuple <ChunkCode, VpData> ProcessingResult;
 
     VisibilityProcessor ();
-    VisibilityProcessor (const casacore::String & name,
-                         const vector<casacore::String> & inputNames,
-                         const vector<casacore::String> & outputNames = vector<casacore::String>(),
-                         casacore::Bool makeIoPorts = false);
+    VisibilityProcessor (const String & name,
+                         const vector<String> & inputNames,
+                         const vector<String> & outputNames = vector<String>(),
+                         Bool makeIoPorts = False);
     virtual ~VisibilityProcessor () {}
 
     // chunkStart is called to inform the VP that a new chunk is starting.
@@ -271,38 +271,38 @@ public:
     // The full name of a VP is a dotted list of the names of all the containing
     // VPs ending with the name of this VP (e.g., vp0.vp1...vpN.thisVp).
 
-    casacore::String getFullName () const;
+    String getFullName () const;
 
     // Returns the input port having the specified name.  Exception if port is undefined.
 
-    VpPort getInput (const casacore::String & name) const;
+    VpPort getInput (const String & name) const;
 
     // Returns a collection of the input ports for this VP; optionally only the
     // connected ports are returned.
 
-    VpPorts getInputs (casacore::Bool connectedOnly = false) const;
+    VpPorts getInputs (Bool connectedOnly = False) const;
 
     // Returns the name of this VP
 
-    casacore::String getName () const;
+    String getName () const;
 
     // Returns the number of Subchunks processed (mainly for testing)
 
-    casacore::Int getNSubchunksProcessed () const;
+    Int getNSubchunksProcessed () const;
 
     // Returns the number of unique Subchunks (i.e., iteration ignored) processed.
     // (mainly for testing)
 
-    casacore::Int getNSubchunksUniqueProcessed () const;
+    Int getNSubchunksUniqueProcessed () const;
 
     // Returns the output port having the specified name.  Exception if port is undefined.
 
-    VpPort getOutput (const casacore::String & name) const;
+    VpPort getOutput (const String & name) const;
 
     // Returns a collection of the output ports for this VP; optionally only the
     // connected ports are returned.
 
-    VpPorts getOutputs (casacore::Bool connectedOnly = false) const;
+    VpPorts getOutputs (Bool connectedOnly = False) const;
 
     // Returns the collection of columns that need to be prefetched if this node
     // is used with async I/O.
@@ -333,7 +333,7 @@ protected:
 
     // Defines the set of possible input ports for this VP
 
-    VpPorts definePorts (const vector<casacore::String> & portNames, VpPort::Type type, const casacore::String & typeName);
+    VpPorts definePorts (const vector<String> & portNames, VpPort::Type type, const String & typeName);
 
     // Requests processing of the provided (possibly empty) input data.  This is called on each
     // subchunk (then inputData will be nonempty) and at the end of a chunk and the end of the
@@ -347,8 +347,8 @@ protected:
     // Returns a collection of the ports that are not connected using the provided connection
     // method; some ports may also be excluded from this list by name.
 
-    VpPorts portsUnconnected (const VpPorts & ports, casacore::Bool (VpPort::* isConnected) () const,
-                              const vector<casacore::String> & except = vector<casacore::String> ()) const;
+    VpPorts portsUnconnected (const VpPorts & ports, Bool (VpPort::* isConnected) () const,
+                              const vector<String> & except = vector<String> ()) const;
 
     // Called when data processing is about to beging; this allows the VP to perform any
     // initialization that it desires now that it is completely connected into the graph.
@@ -357,37 +357,37 @@ protected:
 
     // Methods to ease the validation process.
 
-    void throwIfAnyInputsUnconnected (const vector<casacore::String> & exceptThese = vector<casacore::String> ()) const;
-    void throwIfAnyInputsUnconnectedExcept (const casacore::String & exceptThisOne) const;
-    void throwIfAnyOutputsUnconnected (const vector<casacore::String> & exceptThese = vector<casacore::String> ()) const;
-    void throwIfAnyOutputsUnconnectedExcept (const casacore::String & exceptThisOne) const;
+    void throwIfAnyInputsUnconnected (const vector<String> & exceptThese = vector<String> ()) const;
+    void throwIfAnyInputsUnconnectedExcept (const String & exceptThisOne) const;
+    void throwIfAnyOutputsUnconnected (const vector<String> & exceptThese = vector<String> ()) const;
+    void throwIfAnyOutputsUnconnectedExcept (const String & exceptThisOne) const;
     void throwIfAnyPortsUnconnected () const;
 
-    // Called to allow the node to validate its initial state.  An casacore::AipsError should be thrown if
+    // Called to allow the node to validate its initial state.  An AipsError should be thrown if
     // this node decides that it is invalid.
 
     virtual void validateImpl () = 0;
 
 private:
 
-    VpPort & getInputRef (const casacore::String & name);
-    VpPort & getOutputRef (const casacore::String & name);
+    VpPort & getInputRef (const String & name);
+    VpPort & getOutputRef (const String & name);
     void setContainer (const VpContainer *);
 
     ROVisibilityIterator * getVi (); // returns the VI used for this data set
     VpEngine * getVpEngine(); // returns the engine executing this VP
 
     const VpContainer * container_p; // [use]
-    casacore::String name_p; // name of this VP
-    casacore::Int nSubchunks_p; // number of subchunks processed
-    casacore::Int nSubchunksUnique_p; // number of unique subchunks processed
+    String name_p; // name of this VP
+    Int nSubchunks_p; // number of subchunks processed
+    Int nSubchunksUnique_p; // number of unique subchunks processed
     VpEngine * vpEngine_p; // pointer to VpEngine processing this VP (can be null)
     VpPorts vpInputs_p; // collection of input ports
     VpPorts vpOutputs_p; // collection of output ports
 };
 
-std::ostream & operator<< (std::ostream & os, const VisibilityProcessor::ProcessingType & processingType);
-casacore::String toString (VisibilityProcessor::ProcessingType p);
+ostream & operator<< (ostream & os, const VisibilityProcessor::ProcessingType & processingType);
+String toString (VisibilityProcessor::ProcessingType p);
 
 class VisibilityProcessorStub : public VisibilityProcessor {
 
@@ -396,7 +396,7 @@ class VisibilityProcessorStub : public VisibilityProcessor {
 
 public:
 
-    VisibilityProcessorStub (const casacore::String & name)
+    VisibilityProcessorStub (const String & name)
     : VisibilityProcessor (name, utilj::Strings(), utilj::Strings())
     {}
 
@@ -413,7 +413,7 @@ public:
 //
 //public:
 //
-//    SimpleVp (const casacore::String & name, const casacore::String & input = "In", const casacore::String & output = "");
+//    SimpleVp (const String & name, const String & input = "In", const String & output = "");
 //    virtual ~SimpleVp ();
 //
 //protected:
@@ -433,9 +433,9 @@ class SplitterVp : public VisibilityProcessor {
 
 public:
 
-    SplitterVp (const casacore::String & name,
-                const casacore::String & inputName,
-                const vector<casacore::String> & outputNames);
+    SplitterVp (const String & name,
+                const String & inputName,
+                const vector<String> & outputNames);
 
     ~SplitterVp () {}
 
@@ -458,17 +458,17 @@ public:
     // a vi++ operation); advancing the flow graph's VI will cause a
     // run time exception.
 
-    WriterVp (const casacore::String & name,
+    WriterVp (const String & name,
               VisibilityIterator * vi = NULL,
-              casacore::Bool advanceVi = false,
-              const casacore::String & input = "In",
-              const casacore::String & output = "Out");
+              Bool advanceVi = False,
+              const String & input = "In",
+              const String & output = "Out");
 
     // This paradoxical method allows the user to create a single data flow graph
     // and then programmatically decide at run time whether data should be actually
     // output on this particular run.
 
-    casacore::Bool setDisableOutput (casacore::Bool disableIt);
+    Bool setDisableOutput (Bool disableIt);
 
 protected:
 
@@ -480,9 +480,9 @@ protected:
 
 private:
 
-    casacore::Bool advanceVi_p; // true is VI is to be advanced after each write.
+    Bool advanceVi_p; // true is VI is to be advanced after each write.
                       // N.B., advancing the flow graphs VI is prohibited
-    casacore::Bool disableOutput_p; // true if output is disabled.
+    Bool disableOutput_p; // true if output is disabled.
     VisibilityIterator * vi_p; // VI to use for output.
 };
 
@@ -496,9 +496,9 @@ public:
     // These inputs and outputs will potentially be connected to the inputs and
     // outputs of the VPs that are contained in the container.
 
-    VpContainer (const casacore::String & name,
-                 const vector<casacore::String> & inputs = vector<casacore::String> (1, "In"),
-                 const vector<casacore::String> & outputs = vector<casacore::String> ());
+    VpContainer (const String & name,
+                 const vector<String> & inputs = vector<String> (1, "In"),
+                 const vector<String> & outputs = vector<String> ());
 
     virtual ~VpContainer () {}
 
@@ -509,12 +509,12 @@ public:
     // Connects the specified output to the specified input.  The VP pointer may be
     // omitted if the port belongs to the container.
 
-    virtual void connect (VisibilityProcessor * sourceVp, const casacore::String &  sourcePortName,
-                          VisibilityProcessor * sinkVp, const casacore::String &  sinkPortName);
-    virtual void connect (const casacore::String &  sourcePortName,
-                          VisibilityProcessor * sinkVp, const casacore::String &  sinkPortName);
-    virtual void connect (VisibilityProcessor * sourceVp, const casacore::String &  sourcePortName,
-                          const casacore::String &  sinkPortName);
+    virtual void connect (VisibilityProcessor * sourceVp, const String &  sourcePortName,
+                          VisibilityProcessor * sinkVp, const String &  sinkPortName);
+    virtual void connect (const String &  sourcePortName,
+                          VisibilityProcessor * sinkVp, const String &  sinkPortName);
+    virtual void connect (VisibilityProcessor * sourceVp, const String &  sourcePortName,
+                          const String &  sinkPortName);
 
     virtual void chunkStart (const SubchunkIndex & sci);
 
@@ -536,11 +536,11 @@ protected:
     iterator begin();
     const_iterator begin() const;
 
-    casacore::Bool contains (const VisibilityProcessor *) const;
+    Bool contains (const VisibilityProcessor *) const;
     virtual ProcessingResult doProcessingImpl (ProcessingType processingType,
                                                VpData & inputData,
                                                const SubchunkIndex & subChunkIndex);
-    casacore::Bool empty () const;
+    Bool empty () const;
     iterator end();
     const_iterator end() const;
     virtual void processingStartImpl ();
@@ -558,7 +558,7 @@ private:
 
         template <typename In>
         VpSet (In begin, In end) : std::set<VisibilityProcessor *> (begin, end) {}
-        casacore::String getNames () const;
+        String getNames () const;
     };
 
     Network network_p; // connections between the ports of the connected nodes
@@ -574,9 +574,9 @@ private:
     void orderContents ();
     void remapPorts (VpData & data, const VisibilityProcessor *);
     pair<VpPort,VpPort> validateConnectionPorts (VisibilityProcessor * sourceVp,
-                                                 const casacore::String &  sourcePortName,
+                                                 const String &  sourcePortName,
                                                  VisibilityProcessor * sinkVp,
-                                                 const casacore::String &  sinkPortName);
+                                                 const String &  sinkPortName);
 };
 
 class VpEngine {
@@ -593,26 +593,26 @@ public:
 
     void process (VisibilityProcessor & processor,
                   ROVisibilityIterator & vi,
-                  const casacore::String & inputPortName);
+                  const String & inputPortName);
 
     void process (VisibilityProcessor & processor,
                   ROVisibilityIterator & vi,
                   const VpPort & inputPort = VpPort ());
 
-    static casacore::Int getLogLevel ();
-    static void log (const casacore::String & format, ...);
-    static casacore::String getAipsRcBase ();
+    static Int getLogLevel ();
+    static void log (const String & format, ...);
+    static String getAipsRcBase ();
 
 private:
 
     ROVisibilityIterator * vi_p; // [use]
 
-    static casacore::Int logLevel_p;
-    static casacore::LogIO * logIo_p;
-    static casacore::Bool loggingInitialized_p;
-    static casacore::LogSink * logSink_p;
+    static Int logLevel_p;
+    static LogIO * logIo_p;
+    static Bool loggingInitialized_p;
+    static LogSink * logSink_p;
 
-    static casacore::Bool initializeLogging ();
+    static Bool initializeLogging ();
 
     ROVisibilityIterator * getVi ();
 

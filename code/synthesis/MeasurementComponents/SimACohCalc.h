@@ -80,14 +80,14 @@ public:
   // appropriate given tau, tatmos, trx (ie, all NON-atmospheric noise
   // contributions), and airmass= 1/sin(ELEVATION).
   // If tau = 0.0, this defaults to the SimACoh case.
-  SimACohCalc(const casacore::Int seed=1, 
-	      const casacore::Float antefficiency=0.80, 
-	      const casacore::Float correfficiency=0.85,  
-	      const casacore::Float spillefficiency=0.85,
-	      const casacore::Float tau=0.0, 
-	      const casacore::Quantity& trx=50,
-	      const casacore::Quantity& tatmos=250,
-	      const casacore::Quantity& tcmb=2.7);
+  SimACohCalc(const Int seed=1, 
+	      const Float antefficiency=0.80, 
+	      const Float correfficiency=0.85,  
+	      const Float spillefficiency=0.85,
+	      const Float tau=0.0, 
+	      const Quantity& trx=50,
+	      const Quantity& tatmos=250,
+	      const Quantity& tcmb=2.7);
  
   // virtual destructor
   virtual ~SimACohCalc();
@@ -98,18 +98,18 @@ public:
   virtual VisBuffer& applyInv(VisBuffer& vb);
   // </group>
 private:
-  casacore::Bool solve(VisEquation& /*ve*/) {return true;}
+  Bool solve(VisEquation& /*ve*/) {return True;}
   SimACohCalc();
 
-  casacore::MLCG rndGen_p;
-  casacore::Normal noiseDist_p;  
-  casacore::Float antefficiency_p;
-  casacore::Float correfficiency_p;
-  casacore::Float spillefficiency_p;
-  casacore::Float tau_p;
-  casacore::Quantity trx_p;
-  casacore::Quantity tatmos_p;
-  casacore::Quantity tcmb_p;
+  MLCG rndGen_p;
+  Normal noiseDist_p;  
+  Float antefficiency_p;
+  Float correfficiency_p;
+  Float spillefficiency_p;
+  Float tau_p;
+  Quantity trx_p;
+  Quantity tatmos_p;
+  Quantity tcmb_p;
 
 
 

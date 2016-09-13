@@ -52,34 +52,34 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Default constructor
 		DDDHandle();
 		// Constructor taking the position where to place the handle and it's size
-		DDDHandle(casacore::Double posx, casacore::Double posy, DDDHandle::Size size=DDDHandle::MEDIUM);
+		DDDHandle(Double posx, Double posy, DDDHandle::Size size=DDDHandle::MEDIUM);
 
 		// Destructor.
 		virtual ~DDDHandle();
 
 		// This function returns true when the input poistion is within the handle
-		virtual casacore::Bool underCursor(casacore::Double posx, casacore::Double posy) const;
+		virtual Bool underCursor(Double posx, Double posy) const;
 
 		// give the handle a new size
 		virtual void resize(const DDDHandle::Size& size);
 		// move the handle to a new position
-		virtual void move(casacore::Double dx, casacore::Double dy);
+		virtual void move(Double dx, Double dy);
 
 		// <group>
 		// utility funtions to retrieve blc/trc of the handle or the handle corners
-		virtual casacore::Double blcX() const;
-		virtual casacore::Double blcY() const;
-		virtual casacore::Double trcX() const;
-		virtual casacore::Double trcY() const;
-		casacore::Matrix<casacore::Double> getHandle() const {
+		virtual Double blcX() const;
+		virtual Double blcY() const;
+		virtual Double trcX() const;
+		virtual Double trcY() const;
+		Matrix<Double> getHandle() const {
 			return itsCorners;
 		};
 		// </group>
 
 		// set up the handle
 		// <group>
-		void createHandle(casacore::Double x, casacore::Double y);
-		void createHandle(const casacore::Vector<casacore::Double>& point);
+		void createHandle(Double x, Double y);
+		void createHandle(const Vector<Double>& point);
 		// </group>
 
 		DDDHandle(const DDDHandle &);
@@ -87,7 +87,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	private:
 		// the corners
-		casacore::Matrix<casacore::Double> itsCorners;
+		Matrix<Double> itsCorners;
 		// the size
 		DDDHandle::Size itsSize;
 

@@ -28,7 +28,6 @@
 
 #include <casaqt/QtUtilities/QtFileDialog.qo.h>
 
-using namespace casacore;
 namespace casa {
 
 ////////////////////////

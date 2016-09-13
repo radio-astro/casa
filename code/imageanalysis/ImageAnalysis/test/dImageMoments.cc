@@ -213,7 +213,7 @@ try {
    inputs.create("smout", "", "Output smoothed image name");
    inputs.create("plotter", "none", "PGPLOT device");
    inputs.create("nxy", "-1", "Number of subplots in x and y");
-   inputs.create("yind","false","Y scale independent ?");
+   inputs.create("yind","False","Y scale independent ?");
    inputs.readArguments(argc, argv);
 
    const String in = inputs.getString("in");
@@ -238,7 +238,7 @@ try {
 // Create defaults array
 
    Vector<Bool> validInputs(NDEFAULTS);
-   validInputs = false;
+   validInputs = False;
    
 
 // Check image name and get image data type. 
@@ -248,7 +248,7 @@ try {
       cout << "You must specify the image file name" << endl;
       return 1;
    }
-   validInputs(IN) = true;
+   validInputs(IN) = True;
    
 
 // Convert moments array to a vector. Add one because in the class
@@ -256,14 +256,14 @@ try {
 
    Vector<Int> moments(momentsB);
    for (uInt i=0; i<moments.nelements(); i++) moments(i)++;
-   validInputs(MOMENTS) = true;
+   validInputs(MOMENTS) = True;
 
    
 // Make moment axis 0 relative if not defaulted
 
    if (momentAxis != -100) {
       momentAxis--;
-      validInputs(AXIS) = true;
+      validInputs(AXIS) = True;
    } 
 
 // Convert region things to IPositions (0 relative)
@@ -276,21 +276,21 @@ try {
    } else {
       blc.resize(blcB.nelements());
       for (uInt i=0; i<blcB.nelements(); i++) blc(i) = blcB[i] - 1;
-      validInputs(REGION) = true;
+      validInputs(REGION) = True;
    }
    if (trcB.nelements() == 1 && trcB[0] == -10) {
       trc.resize(0);
    } else {
       trc.resize(trcB.nelements());
       for (uInt i=0; i<trcB.nelements(); i++) trc(i) = trcB[i] - 1;
-      validInputs(REGION) = true;
+      validInputs(REGION) = True;
    }
    if (incB.nelements() == 1 && incB[0] == -10) {
       inc.resize(0);
    } else {
       inc.resize(incB.nelements());
       for (uInt i=0; i<incB.nelements(); i++) inc(i) = incB[i];
-      validInputs(REGION) = true;
+      validInputs(REGION) = True;
    }
 
 
@@ -298,7 +298,7 @@ try {
 
    Vector<Int> winFitMethods;  
    winFitMethods = ImageMoments<Float>::toMethodTypes(method);
-   if (winFitMethods.nelements() != 0) validInputs(METHOD) = true;
+   if (winFitMethods.nelements() != 0) validInputs(METHOD) = True;
 
 
 // Convert kernel types to an Int vector
@@ -306,7 +306,7 @@ try {
    Regex re("[ \n\t\r\v\f,]+", 1);
    Vector<Int> kernelTypes;
    kernelTypes = VectorKernel::toKernelTypes(kernels, re);
-   if (kernelTypes.nelements() != 0) validInputs(SMOOTH) = true;
+   if (kernelTypes.nelements() != 0) validInputs(SMOOTH) = True;
 
 
 // Convert smoothing axes to a vector.  
@@ -316,7 +316,7 @@ try {
       smoothAxes.resize(0);
    } else {
       for (uInt i=0; i<smoothAxes.nelements(); i++) smoothAxes(i)--;
-      validInputs(SMOOTH) = true;
+      validInputs(SMOOTH) = True;
    }
 
 
@@ -326,7 +326,7 @@ try {
    if (kernelWidths.nelements() == 1 && kernelWidths(0) == -100.0) {
       kernelWidths.resize(0);
    } else {
-      validInputs(SMOOTH) = true;
+      validInputs(SMOOTH) = True;
    }
 
 
@@ -339,7 +339,7 @@ try {
    if (include.nelements() == 1 && include(0)==0) {
       include.resize(0);
    } else {
-      validInputs(RANGE) = true;
+      validInputs(RANGE) = True;
    }
    Vector<Float> exclude(excludeB.nelements());
    for (uInt i=0;i<exclude.nelements(); i++) {
@@ -348,7 +348,7 @@ try {
    if (exclude.nelements() == 1 && exclude(0)==0) {
       exclude.resize(0);
    } else {
-      validInputs(RANGE) = true;
+      validInputs(RANGE) = True;
    }
 
 
@@ -356,13 +356,13 @@ try {
 
    Float peakSNR = snrB[0];
    Float stdDeviation = snrB[1];
-   validInputs(SNR) = true;
+   validInputs(SNR) = True;
 
 
 // Output file names
 
-   if (!out.empty()) validInputs(OUT) = true;
-   if (!smOut.empty()) validInputs(SMOUT) = true;
+   if (!out.empty()) validInputs(OUT) = True;
+   if (!smOut.empty()) validInputs(SMOUT) = True;
 
 
 // Plotting things
@@ -370,7 +370,7 @@ try {
    Vector<Int> nxy(nxyB);
    if (device == "none") device = "";
    if (nxy.nelements() == 1 && nxy(0) == -1) nxy.resize(0);
-   if (!device.empty() || nxy.nelements()!=0) validInputs(PLOTTING) = true;
+   if (!device.empty() || nxy.nelements()!=0) validInputs(PLOTTING) = True;
 
 
 // Construct moment object and do the work   
@@ -412,7 +412,7 @@ try {
 
       LogOrigin lor("imoment", "main()", WHERE);
       LogIO os(lor);
-      ImageMoments<Float> moment(*pSubImage2, os, true, true);
+      ImageMoments<Float> moment(*pSubImage2, os, True, True);
       delete pSubImage2;
 
 // Set inputs.  
@@ -464,7 +464,7 @@ try {
 // Do work
 
       PtrBlock<MaskedLattice<Float>* > images;
-      Bool doTemp = false;
+      Bool doTemp = False;
       moment.createMoments(images, doTemp, out);
       if (doTemp) {
          for (uInt i=0; i<images.nelements(); i++) {

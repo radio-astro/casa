@@ -42,9 +42,9 @@
 // </summary>
 
 // Control verbosity
-#define CTSELECTION_VERBOSE true
+#define CTSELECTION_VERBOSE True
 
-void doTest1 (Bool verbose=false) {
+void doTest1 (Bool verbose=False) {
 
   cout << "****----doTest1()----****" << endl;
   
@@ -59,7 +59,7 @@ void doTest1 (Bool verbose=false) {
 		   nObs,nScan,nTime,
 		   nAnt,nSpw,nChan,
 		   nFld,
-		   refTime,tint,disk,false);
+		   refTime,tint,disk,False);
 
 
   if (verbose)
@@ -166,34 +166,34 @@ void doTest1 (Bool verbose=false) {
     cout << "ctmc.antenna1().getColumn() = " << selantcol << endl;
   }
 
-  Vector<Bool> fldok(selfieldcol.nelements(),false);
+  Vector<Bool> fldok(selfieldcol.nelements(),False);
   for (uInt i=0;i<fldids.nelements();++i) {
     fldok|=(selfieldcol==fldids(i));
   }
-  Vector<Bool> spwok(selspwcol.nelements(),false);
+  Vector<Bool> spwok(selspwcol.nelements(),False);
   for (uInt i=0;i<spwids.nelements();++i) {
     spwok|=(selspwcol==spwids(i));
   }
-  Vector<Bool> antok(selantcol.nelements(),false);
+  Vector<Bool> antok(selantcol.nelements(),False);
   for (uInt i=0;i<antids.nelements();++i) {
     antok|=(selantcol==antids(i));
   }
 
-  Bool allfldok=allEQ(fldok,true);
-  Bool allspwok=allEQ(spwok,true);
-  Bool allantok=allEQ(antok,true);
+  Bool allfldok=allEQ(fldok,True);
+  Bool allspwok=allEQ(spwok,True);
+  Bool allantok=allEQ(antok,True);
   if (verbose) {
     cout << boolalpha;
     //    cout << "fldok = " << fldok << endl;
-    cout << "allEQ(fldok,true) = " << allfldok  << endl;
-    cout << "allEQ(spwok,true) = " << allspwok  << endl;
-    cout << "allEQ(antok,true) = " << allantok  << endl;
+    cout << "allEQ(fldok,True) = " << allfldok  << endl;
+    cout << "allEQ(spwok,True) = " << allspwok  << endl;
+    cout << "allEQ(antok,True) = " << allantok  << endl;
   }
-  AlwaysAssert( allEQ(fldok,true) , AipsError );
+  AlwaysAssert( allEQ(fldok,True) , AipsError );
 
 }
 
-void doTest2 (Bool verbose=false) {
+void doTest2 (Bool verbose=False) {
 
   cout << "****----doTest2()----****" << endl;
   
@@ -208,7 +208,7 @@ void doTest2 (Bool verbose=false) {
 		   nObs,nScan,nTime,
 		   nAnt,nSpw,nChan,
 		   nFld,
-		   refTime,tint,disk,false);
+		   refTime,tint,disk,False);
 
   if (verbose) 
     cout << "Wrote test NewCalTable out to tCTSelection2.ct" << endl;
@@ -352,49 +352,49 @@ void doTest2 (Bool verbose=false) {
     cout << "ctmc.antenna1().getColumn() = " << selantcol << endl;
   }
 
-  Vector<Bool> obsok(selobscol.nelements(),false);
+  Vector<Bool> obsok(selobscol.nelements(),False);
   for (uInt i=0;i<obsids.nelements();++i) {
     obsok|=(selobscol==obsids(i));
   }
 
-  Vector<Bool> scanok(selscancol.nelements(),false);
+  Vector<Bool> scanok(selscancol.nelements(),False);
   for (uInt i=0;i<scans.nelements();++i) {
     scanok|=(selscancol==scans(i));
   }
 
-  Vector<Bool> timeok(seltimecol.nelements(),false);
+  Vector<Bool> timeok(seltimecol.nelements(),False);
   timeok|=(seltimecol>timebounds(0));
   timeok|=(seltimecol<timebounds(1));
 
-  Vector<Bool> spwok(selspwcol.nelements(),false);
+  Vector<Bool> spwok(selspwcol.nelements(),False);
   for (uInt i=0;i<spwids.nelements();++i) {
     spwok|=(selspwcol==spwids(i));
   }
-  Vector<Bool> antok(selantcol.nelements(),false);
+  Vector<Bool> antok(selantcol.nelements(),False);
   for (uInt i=0;i<antids.nelements();++i) {
     antok|=(selantcol==antids(i));
   }
   
 
 
-  Bool allobsok=allEQ(obsok,true);
-  Bool allscanok=allEQ(scanok,true);
-  Bool alltimeok=allEQ(timeok,true);
-  Bool allspwok=allEQ(spwok,true);
-  Bool allantok=allEQ(antok,true);
+  Bool allobsok=allEQ(obsok,True);
+  Bool allscanok=allEQ(scanok,True);
+  Bool alltimeok=allEQ(timeok,True);
+  Bool allspwok=allEQ(spwok,True);
+  Bool allantok=allEQ(antok,True);
   if (verbose) {
     cout << boolalpha;
-    cout << "allEQ(obsok,true) = " << allobsok  << endl;
-    cout << "allEQ(scanok,true) = " << allscanok  << endl;
-    cout << "allEQ(timeok,true) = " << alltimeok  << endl;
-    cout << "allEQ(spwok,true) = " << allspwok  << endl;
-    cout << "allEQ(antok,true) = " << allantok  << endl;
+    cout << "allEQ(obsok,True) = " << allobsok  << endl;
+    cout << "allEQ(scanok,True) = " << allscanok  << endl;
+    cout << "allEQ(timeok,True) = " << alltimeok  << endl;
+    cout << "allEQ(spwok,True) = " << allspwok  << endl;
+    cout << "allEQ(antok,True) = " << allantok  << endl;
   }
-  AlwaysAssert( allEQ(obsok,true) , AipsError );
-  AlwaysAssert( allEQ(scanok,true) , AipsError );
-  AlwaysAssert( allEQ(timeok,true) , AipsError );
-  AlwaysAssert( allEQ(spwok,true) , AipsError );
-  AlwaysAssert( allEQ(antok,true) , AipsError );
+  AlwaysAssert( allEQ(obsok,True) , AipsError );
+  AlwaysAssert( allEQ(scanok,True) , AipsError );
+  AlwaysAssert( allEQ(timeok,True) , AipsError );
+  AlwaysAssert( allEQ(spwok,True) , AipsError );
+  AlwaysAssert( allEQ(antok,True) , AipsError );
 
 }
 

@@ -29,7 +29,6 @@
 #include <QDebug>
 #include <QKeyEvent>
 
-using namespace casacore;
 namespace casa {
 
 	ThresholdingBinPlotDialog::ThresholdingBinPlotDialog(QString /*yAxisUnits*/, QWidget *parent)

@@ -42,7 +42,6 @@
 #include <casa/Utilities/DataType.h>
 #include <casa/BasicSL/String.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 SpectralIndex::SpectralIndex()
@@ -310,10 +309,10 @@ Vector<Double> SpectralIndex::errors() const {
 
 Bool SpectralIndex::fromRecord(String& errorMessage, 
  			       const RecordInterface& record) {
-  if (!SpectralModel::fromRecord(errorMessage, record)) return false;
+  if (!SpectralModel::fromRecord(errorMessage, record)) return False;
   if (!record.isDefined(String("index"))) {
     errorMessage += "The 'spectrum' record must have an 'index' field\n";
-    return false;
+    return False;
   }
 //
   {
@@ -321,7 +320,7 @@ Bool SpectralIndex::fromRecord(String& errorMessage,
      const IPosition shape(1,1);
      if (record.shape(index) != shape) {
        errorMessage += "The 'index' field must be a scalar\n";
-       return false;
+       return False;
      }
      Double indexVal;
      switch (record.dataType(index)) {
@@ -332,7 +331,7 @@ Bool SpectralIndex::fromRecord(String& errorMessage,
        break;
      default:
        errorMessage += "The 'index' field must be a real number\n";
-       return false;
+       return False;
      }
      setIndex(indexVal);
   }
@@ -340,7 +339,7 @@ Bool SpectralIndex::fromRecord(String& errorMessage,
     Vector<Double> tempstokes=record.asArrayDouble("stokesindex");
     if((tempstokes.nelements() != 4) && (tempstokes.nelements() != 1) ){
       errorMessage += "Stokes indices is not of length 1 or 4\n";
-      return false;
+      return False;
     }
     itsStokesIndex.resize();
     itsStokesIndex=tempstokes;
@@ -353,7 +352,7 @@ Bool SpectralIndex::fromRecord(String& errorMessage,
         const IPosition shape(1,1);
         if (record.shape(error) != shape) {
           errorMessage += "The 'error' field must be a scalar\n";
-          return false;
+          return False;
         }
         switch (record.dataType(error)) {
         case TpDouble:
@@ -363,7 +362,7 @@ Bool SpectralIndex::fromRecord(String& errorMessage,
           break;
         default:
           errorMessage += "The 'error' field must be a real number\n";
-          return false;
+          return False;
         }
      }
 //
@@ -371,25 +370,25 @@ Bool SpectralIndex::fromRecord(String& errorMessage,
   }
 //
   DebugAssert(ok(), AipsError);
-  return true;
+  return True;
 }
 
 Bool SpectralIndex::toRecord(String& errorMessage,
  			     RecordInterface& record) const {
   DebugAssert(ok(), AipsError);
-  if (!SpectralModel::toRecord(errorMessage, record)) return false;
+  if (!SpectralModel::toRecord(errorMessage, record)) return False;
   record.define("index", index());
   if(itsStokesIndex.nelements() != 0)
     record.define("stokesindex", itsStokesIndex);
   record.define("error", errors()(0));
-  return true;
+  return True;
 }
 
 Bool SpectralIndex::convertUnit(String& errorMessage,
 				const RecordInterface& record) {
   const String fieldString("index");
   if (!record.isDefined(fieldString)) {
-    return true;
+    return True;
   }
   const RecordFieldId field(fieldString);
   if (!((record.dataType(field) == TpString) && 
@@ -397,26 +396,26 @@ Bool SpectralIndex::convertUnit(String& errorMessage,
  	(record.asString(field) == ""))) {
     errorMessage += "The 'index' field must be an empty string\n";
     errorMessage += "(and not a vector of strings)\n";
-    return false;
+    return False;
   }
-  return true;
+  return True;
 }
 
 Bool SpectralIndex::ok() const {
-  if (!SpectralModel::ok()) return false;
+  if (!SpectralModel::ok()) return False;
   if (refFrequency().getValue().getValue() <= 0.0) {
     LogIO logErr(LogOrigin("SpectralIndex", "ok()"));
     logErr << LogIO::SEVERE << "The reference frequency is zero or negative!" 
            << LogIO::POST;
-    return false;
+    return False;
   }
   if (abs(itsIndex) > 100) {
     LogIO logErr(LogOrigin("SpectralIndex", "ok()"));
     logErr << LogIO::SEVERE << "The spectral index is greater than 100!" 
            << LogIO::POST;
-    return false;
+    return False;
   }
-  return true;
+  return True;
 }
 
 // Local Variables: 

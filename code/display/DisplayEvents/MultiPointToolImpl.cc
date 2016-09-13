@@ -38,10 +38,9 @@
 // this include:
 #include <display/DisplayEvents/MultiPointToolImpl.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-	MultiPointToolImpl::MultiPointToolImpl(viewer::RegionSourceFactory *rf, PanelDisplay* pd, Display::KeySym keysym) : MultiPointTool(rf, pd, keysym, true) {  }
+	MultiPointToolImpl::MultiPointToolImpl(viewer::RegionSourceFactory *rf, PanelDisplay* pd, Display::KeySym keysym) : MultiPointTool(rf, pd, keysym, True) {  }
 
 	MultiPointToolImpl::~MultiPointToolImpl() {  }
 

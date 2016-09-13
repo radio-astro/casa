@@ -87,16 +87,16 @@ public:
 
     // See PlotMSPlotter::showError().
     // <group>
-    void showError(const casacore::String& message, const casacore::String& title = "PlotMS Error",
+    void showError(const String& message, const String& title = "PlotMS Error",
             bool isWarning = false);
-    void showWarning(const casacore::String& message,
-            const casacore::String& title = "PlotMS Warning");
+    void showWarning(const String& message,
+            const String& title = "PlotMS Warning");
     void clearMessage();
     // </group>
     
     // See PlotMSPlotter::showMessage().
-    void showMessage(const casacore::String& message,
-            const casacore::String& title = "PlotMS Message");
+    void showMessage(const String& message,
+            const String& title = "PlotMS Message");
     
     // Enable/disable annotations in the client
     void setAnnotationModeActive( PlotMSAction::Type type, bool active );
@@ -124,9 +124,9 @@ public:
     // Implements PlotMSParametersWatcher::parametersHaveChanged().
     void parametersHaveChanged(const PlotMSWatchedParameters& params,
                 int updateFlag);
-    virtual PlotSymbolPtr createSymbol (const casacore::String& descriptor,
-    		casacore::Int size, const casacore::String& color,
-        	const casacore::String& fillPattern, bool outline );
+    virtual PlotSymbolPtr createSymbol (const String& descriptor,
+    		Int size, const String& color,
+        	const String& fillPattern, bool outline );
     PlotSymbolPtr createSymbol( const PlotSymbolPtr& copy );
     // Logger Methods //
     
@@ -163,7 +163,7 @@ public:
     void canvasAdded( PlotCanvasPtr canvas );
     bool isVisible(PlotCanvasPtr& canvas );
     bool exportToFormat(const PlotExportFormat& format);
-    virtual casacore::Record locateInfo( casacore::Bool& success, casacore::String& errorMessage );
+    virtual Record locateInfo( Bool& success, String& errorMessage );
     //Returns whether or not the latest plot update completed successfully.
     //For example, if an invalid selection was made, the return value may be false.
     bool isOperationCompleted() const;
@@ -181,7 +181,7 @@ public:
 	void setAxisLocation( PlotAxis locationX, PlotAxis locationY );
 	PlotAxis getAxisLocationX() const;
 	PlotAxis getAxisLocationY() const;
-	vector<casacore::String> getFiles() const;
+	vector<String> getFiles() const;
 
 
 private:
@@ -225,23 +225,23 @@ private:
 // (Not currently used.)
 class PlotMSPolSelection {
 public:
-    PlotMSPolSelection(const casacore::String& polselstr = DEFAULT_POLSELSTR);
+    PlotMSPolSelection(const String& polselstr = DEFAULT_POLSELSTR);
     
     ~PlotMSPolSelection();
     
-    void setPolSelection(const casacore::String& polselstr);
+    void setPolSelection(const String& polselstr);
     
-    const casacore::String& polselstr() const;    
+    const String& polselstr() const;    
     unsigned int npols() const;    
     int pol_selection(unsigned int index) const;
     
     int operator()(unsigned int index) const { return pol_selection(index); }
     
 private:
-    casacore::String itsPolSelStr_;
+    String itsPolSelStr_;
     vector<int> itsPolSel_;
     
-    static const casacore::String DEFAULT_POLSELSTR;
+    static const String DEFAULT_POLSELSTR;
 };
  */
 

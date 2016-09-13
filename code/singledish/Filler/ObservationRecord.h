@@ -16,20 +16,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 namespace sdfiller { //# NAMESPACE SDFILLER - BEGIN
 
 struct ObservationRecord {
-  typedef casacore::MSObservation AssociatingTable;
-  typedef casacore::MSObservationColumns AssociatingColumns;
+  typedef MSObservation AssociatingTable;
+  typedef MSObservationColumns AssociatingColumns;
 
   // mandatory
-  casacore::String telescope_name;
-  casacore::Vector<casacore::Double> time_range;
-  casacore::String observer;
-  casacore::String project;
+  String telescope_name;
+  Vector<Double> time_range;
+  String observer;
+  String project;
 
   // optional
-  casacore::String schedule_type;
-  casacore::Double release_date;
-  casacore::Vector<casacore::String> schedule;
-  casacore::Vector<casacore::String> log;
+  String schedule_type;
+  Double release_date;
+  Vector<String> schedule;
+  Vector<String> log;
 
   // method
   void clear() {
@@ -56,12 +56,12 @@ struct ObservationRecord {
   }
 
   void add(AssociatingTable &table, AssociatingColumns &/*columns*/) {
-    table.addRow(1, true);
+    table.addRow(1, True);
   }
 
-  casacore::Bool fill(casacore::uInt irow, AssociatingColumns &columns) {
+  Bool fill(uInt irow, AssociatingColumns &columns) {
     if (columns.nrow() <= irow) {
-      return false;
+      return False;
     }
 
     columns.telescopeName().put(irow, telescope_name);
@@ -80,7 +80,7 @@ struct ObservationRecord {
     if (log.size() > 0) {
       columns.log().put(irow, log);
     }
-    return true;
+    return True;
   }
 };
 

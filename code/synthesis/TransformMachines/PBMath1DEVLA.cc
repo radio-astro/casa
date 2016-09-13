@@ -30,15 +30,12 @@
 #include <measures/Measures.h>
 #include <measures/Measures/MeasConvert.h>
 #include <measures/Measures/MDirection.h>
-
-using namespace casacore;
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
   PBMath1DEVLA::PBMath1DEVLA(): pbMathPoly_p(0)  {
-    wideFit_p = true;
+    wideFit_p = True;
     init();
-    maxRad_p=casacore::Quantity(1.0, "deg");
+    maxRad_p=Quantity(1.0, "deg");
   }
 
   PBMath1DEVLA::PBMath1DEVLA(Quantity maxRad, Bool useSymmetricBeam, Double freqToUse): pbMathPoly_p(0), maxRad_p(maxRad), useSymmetric_p(useSymmetricBeam){

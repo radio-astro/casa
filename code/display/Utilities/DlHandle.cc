@@ -36,7 +36,6 @@
 #define EXCEPTION std::runtime_error
 #endif
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	void DlHandleBase::throw_exception( const char *message ) const {

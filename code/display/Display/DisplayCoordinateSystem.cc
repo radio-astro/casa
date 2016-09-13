@@ -28,7 +28,6 @@
 
 #include <display/Display/DisplayCoordinateSystem.h>
 
-using namespace casacore;
 namespace casa {
 
     Vector<String> DisplayCoordinateSystem::worldAxisUnits() const {

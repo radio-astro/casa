@@ -23,41 +23,41 @@ namespace LibAIR2 {
 
   /** Channel frequencies for spectral window spw     
    */
-  void spwChannelFreq(const casacore::MeasurementSet &ms,
+  void spwChannelFreq(const casa::MeasurementSet &ms,
 		      size_t spw,
 		      std::vector<double> &fres)
   {
-    casacore::MSSpectralWindow specTable(ms.spectralWindow());
+    casa::MSSpectralWindow specTable(ms.spectralWindow());
 
     // Number of channels 
-    casacore::ROScalarColumn<casacore::Int> nc
+    casa::ROScalarColumn<casa::Int> nc
       (specTable,
-       casacore::MSSpectralWindow::columnName(casacore::MSSpectralWindow::NUM_CHAN));
+       casa::MSSpectralWindow::columnName(casa::MSSpectralWindow::NUM_CHAN));
 
     // Frequencies of the channels
-    casacore::ROArrayColumn<casacore::Double>
+    casa::ROArrayColumn<casa::Double> 
       chfreq(specTable,
-	     casacore::MSSpectralWindow::columnName(casacore::MSSpectralWindow::CHAN_FREQ));
+	     casa::MSSpectralWindow::columnName(casa::MSSpectralWindow::CHAN_FREQ));
 
     fres.resize(nc(spw));
-    casacore::Array<casacore::Double> freq;
-    chfreq.get(spw, freq, casacore::True);
+    casa::Array<casa::Double> freq;
+    chfreq.get(spw, freq, casa::True);
     
     for(size_t i=0; i< static_cast<size_t>(nc(spw)); ++i)
     {
-      fres[i]=freq(casacore::IPosition(1,i));
+      fres[i]=freq(casa::IPosition(1,i));
     }
   }
 
-  void fieldIDs(const casacore::MeasurementSet &ms,
+  void fieldIDs(const casa::MeasurementSet &ms,
 		std::vector<double> &time,
 		std::vector<int> &fieldID,
 		std::vector<int> &sourceID,
 		const std::vector<size_t> &sortedI)
   {
-    const casacore::ROMSMainColumns cols(ms);
-    const casacore::ROScalarColumn<casacore::Int> &f= cols.fieldId();
-    const casacore::ROScalarColumn<casacore::Double> &t= cols.time();
+    const casa::ROMSMainColumns cols(ms);
+    const casa::ROScalarColumn<casa::Int> &f= cols.fieldId();
+    const casa::ROScalarColumn<casa::Double> &t= cols.time();
 
     std::map<size_t, size_t> srcmap=getFieldSrcMap(ms);
 
@@ -107,22 +107,22 @@ namespace LibAIR2 {
   }
 
 
-  void scanIntents(const casacore::MeasurementSet &ms,
+  void scanIntents(const casa::MeasurementSet &ms,
 		   StateIntentMap &mi)
   {
     mi.clear();
-    casacore::MSState state(ms.state());
-    const casacore::ROScalarColumn<casacore::String> modes(state,
-						   casacore::MSState::columnName(casacore::MSState::OBS_MODE));
+    casa::MSState state(ms.state());
+    const casa::ROScalarColumn<casa::String> modes(state,
+						   casa::MSState::columnName(casa::MSState::OBS_MODE));
     for(size_t i=0; i<state.nrow(); ++i)
     {
-      casacore::String t;
+      casa::String t;
       modes.get(i,t);
       mi.insert(std::pair<size_t, std::string>(i, t));
     }
   }
 
-  std::set<size_t> skyStateIDs(const casacore::MeasurementSet &ms)
+  std::set<size_t> skyStateIDs(const casa::MeasurementSet &ms)
   {
     std::set<size_t> res;
     StateIntentMap mi;
@@ -138,14 +138,14 @@ namespace LibAIR2 {
     return res;
   }
 
-  field_t getFieldNames(const casacore::MeasurementSet &ms)
+  field_t getFieldNames(const casa::MeasurementSet &ms)
   {
     field_t res;
-    const casacore::MSField & fieldT(ms.field());
+    const casa::MSField & fieldT(ms.field());
     const size_t nfields=fieldT.nrow();
 
-    casacore::ROMSFieldColumns fcols(fieldT);
-    const casacore::ROScalarColumn<casacore::String> &names (fcols.name());
+    casa::ROMSFieldColumns fcols(fieldT);
+    const casa::ROScalarColumn<casa::String> &names (fcols.name());
     for(size_t i=0; i<nfields; ++i)
     {
       res.insert(field_t::value_type(i, std::string(names(i))));
@@ -153,15 +153,15 @@ namespace LibAIR2 {
     return res;
   }
 
-  field_t getSourceNames(const casacore::MeasurementSet &ms)
+  field_t getSourceNames(const casa::MeasurementSet &ms)
   {
     field_t res;
-    const casacore::MSSource & srcTab(ms.source());
+    const casa::MSSource & srcTab(ms.source());
     const size_t nsource=srcTab.nrow();
 
-    casacore::ROMSSourceColumns scols(srcTab);
-    const casacore::ROScalarColumn<casacore::String> &names (scols.name());
-    const casacore::ROScalarColumn<casacore::Int> & ids (scols.sourceId());
+    casa::ROMSSourceColumns scols(srcTab);
+    const casa::ROScalarColumn<casa::String> &names (scols.name());
+    const casa::ROScalarColumn<casa::Int> & ids (scols.sourceId());
     for(size_t i=0; i<nsource; ++i)
     {
       res.insert(field_t::value_type(ids(i), std::string(names(i))));
@@ -170,17 +170,17 @@ namespace LibAIR2 {
     
   }
 
-  std::set<size_t> getSrcFields(const casacore::MeasurementSet &ms,
+  std::set<size_t> getSrcFields(const casa::MeasurementSet &ms,
 				const std::string &source)
   {
     std::set<size_t> res;
-    const casacore::MSField & fieldT(ms.field());
+    const casa::MSField & fieldT(ms.field());
     const size_t nfields=fieldT.nrow();
 
     field_t sources=getSourceNames(ms);
 
-    casacore::ROMSFieldColumns fcols(fieldT);
-    const casacore::ROScalarColumn<casacore::Int> &fieldsrc (fcols.sourceId());
+    casa::ROMSFieldColumns fcols(fieldT);
+    const casa::ROScalarColumn<casa::Int> &fieldsrc (fcols.sourceId());
     for(size_t i=0; i<nfields; ++i)
     {
       try {
@@ -198,13 +198,13 @@ namespace LibAIR2 {
     return res;
   }
 
-  std::map<size_t, size_t> getFieldSrcMap(const casacore::MeasurementSet &ms)
+  std::map<size_t, size_t> getFieldSrcMap(const casa::MeasurementSet &ms)
   {
     std::map<size_t, size_t> res;
-    const casacore::MSField & fieldT(ms.field());
+    const casa::MSField & fieldT(ms.field());
     const size_t nfields=fieldT.nrow();
-    casacore::ROMSFieldColumns fcols(fieldT);
-    const casacore::ROScalarColumn<casacore::Int> &fieldsrc (fcols.sourceId());
+    casa::ROMSFieldColumns fcols(fieldT);
+    const casa::ROScalarColumn<casa::Int> &fieldsrc (fcols.sourceId());
     for(size_t i=0; i<nfields; ++i)
     {
       res.insert(std::pair<size_t, size_t>(i, fieldsrc(i)));

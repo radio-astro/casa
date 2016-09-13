@@ -43,8 +43,8 @@ public:
 	// threads.  They shouldn't need to be used by other classes, even
 	// children.
 	// <group>
-	virtual void initializeProgress(const casacore::String& operationName) = 0;
-	virtual void setProgress(unsigned int progress, const casacore::String& status) = 0;
+	virtual void initializeProgress(const String& operationName) = 0;
+	virtual void setProgress(unsigned int progress, const String& status) = 0;
 	virtual void finishProgress() = 0;
 	// </group>
 
@@ -53,8 +53,8 @@ public:
 
 
 	// Allows the cache to set the status.
-	virtual void setStatus(const casacore::String& status) = 0;
-	virtual void setError( const casacore::String& errorMessage ) = 0;
+	virtual void setStatus(const String& status) = 0;
+	virtual void setError( const String& errorMessage ) = 0;
 	virtual void setAllowedOperations(bool background, bool pauseResume, bool cancel) = 0;
 
 	//Thread signals it is done.

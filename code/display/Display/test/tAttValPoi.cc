@@ -39,7 +39,7 @@ int main(int, char **) {
 // Int
 
 		{
-			Bool strict = true;
+			Bool strict = True;
 			Int val0 = 10;
 			AttributeValuePoi<Int> av0(&val0, strict);
 			AlwaysAssert(av0.getStrictness()==strict, AipsError);
@@ -117,7 +117,7 @@ int main(int, char **) {
 // Float
 
 		{
-			Bool strict = true;
+			Bool strict = True;
 			Float val0 = 10;
 			AttributeValuePoi<Float> av0(&val0, strict);
 			AlwaysAssert(av0.getStrictness()==strict, AipsError);

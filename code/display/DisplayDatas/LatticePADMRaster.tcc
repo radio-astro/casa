@@ -41,17 +41,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Constructor for the case of multiple slices
 	template <class T>
-	LatticePADMRaster<T>::LatticePADMRaster(const casacore::uInt xAxis,
-	                                        const casacore::uInt yAxis, const casacore::uInt mAxis,
-	                                        const casacore::IPosition fixedPos,
+	LatticePADMRaster<T>::LatticePADMRaster(const uInt xAxis,
+	                                        const uInt yAxis, const uInt mAxis,
+	                                        const IPosition fixedPos,
 	                                        LatticePADisplayData<T> *arDat) :
 		LatticePADisplayMethod<T>(xAxis, yAxis, mAxis, fixedPos, arDat) {
 	}
 
 // Constructor for a single slice
 	template <class T>
-	LatticePADMRaster<T>::LatticePADMRaster(const casacore::uInt xAxis,
-	                                        const casacore::uInt yAxis,
+	LatticePADMRaster<T>::LatticePADMRaster(const uInt xAxis,
+	                                        const uInt yAxis,
 	                                        LatticePADisplayData<T> *arDat) :
 		LatticePADisplayMethod<T>(xAxis, yAxis, arDat) {
 	}
@@ -62,10 +62,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	template <class T>
-	casacore::Bool LatticePADMRaster<T>::dataRedrawSelf(WorldCanvas *wc,
+	Bool LatticePADMRaster<T>::dataRedrawSelf(WorldCanvas *wc,
 	        Display::RefreshReason reason) {
 
-		casacore::Bool opaqueMask = true;
+		Bool opaqueMask = True;
 		return  wc->redrawIndexedImage(parentDisplayData(), reason, opaqueMask);
 		// (Parent DD passed as key: we cache only one image of this
 		// type per LatticeAsRaster DD (for each registered WC...)).
@@ -74,21 +74,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	template <class T>
 	bool LatticePADMRaster<T>::initializeColorMatrix( LatticeAsRaster<T>* lar,
-			const casacore::IPosition &start,
-            const casacore::IPosition &shape,
-            const casacore::IPosition &stride,
-            casacore::Matrix<T>& datMatrix,
-			casacore::Matrix<casacore::Bool>& maskMatrix) const {
+			const IPosition &start,
+            const IPosition &shape,
+            const IPosition &stride,
+            Matrix<T>& datMatrix,
+			Matrix<Bool>& maskMatrix) const {
 		bool initialized = false;
 		if ( lar != NULL ){
 			try {
 				lar->initializeDataMatrix(0, datMatrix, maskMatrix, start, shape, stride);
 				initialized = true;
 			}
-			catch( casacore::AipsError& error ){
-				casacore::LogIO os;
-				os << casacore::LogIO::WARN << casacore::LogOrigin("LatticePADMRaster","dataDrawSelf", WHERE)
-					<< "Could not initialize RGB image:"<<error.getMesg().c_str()<< casacore::LogIO::POST;
+			catch( AipsError& error ){
+				LogIO os;
+				os << LogIO::WARN << LogOrigin("LatticePADMRaster","dataDrawSelf", WHERE)
+					<< "Could not initialize RGB image:"<<error.getMesg().c_str()<< LogIO::POST;
 			}
 		}
 		return initialized;
@@ -97,27 +97,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Actually draw the slice as a raster image
 	template <class T>
-	casacore::uInt LatticePADMRaster<T>::dataDrawSelf(WorldCanvas *wCanvas,
-	                                        const casacore::Vector<casacore::Double> &blc,
-	                                        const casacore::Vector<casacore::Double> &trc,
-	                                        const casacore::IPosition &start,
-	                                        const casacore::IPosition &shape,
-	                                        const casacore::IPosition &stride,
-	                                        const casacore::Bool usePixelEdges) {
-		casacore::uInt drawListNumber = wCanvas->newList();
+	uInt LatticePADMRaster<T>::dataDrawSelf(WorldCanvas *wCanvas,
+	                                        const Vector<Double> &blc,
+	                                        const Vector<Double> &trc,
+	                                        const IPosition &start,
+	                                        const IPosition &shape,
+	                                        const IPosition &stride,
+	                                        const Bool usePixelEdges) {
+		uInt drawListNumber = wCanvas->newList();
 
 		LatticeAsRaster<T> *lar = (LatticeAsRaster<T> *)parentDisplayData();
 
 		// set min and max datavalues to help out scalehandler on WC.
-		Attribute dmin("dataMin", casacore::Double(lar->itsOptionsDataRange(0)));
-		Attribute dmax("dataMax", casacore::Double(lar->itsOptionsDataRange(1)));
+		Attribute dmin("dataMin", Double(lar->itsOptionsDataRange(0)));
+		Attribute dmax("dataMax", Double(lar->itsOptionsDataRange(1)));
 		wCanvas->setAttribute(dmin);
 		wCanvas->setAttribute(dmax);
 
 		// Set the complex-to-real mode on the WorldCanvas if necessary:
 		T t;
-		casacore::DataType dtype = casacore::whatType(&t);
-		if ((dtype == casacore::TpComplex) || (dtype == casacore::TpDComplex)) {
+		DataType dtype = whatType(&t);
+		if ((dtype == TpComplex) || (dtype == TpDComplex)) {
 			wCanvas->setComplexToRealMethod
 			(lar->complexMode());
 		}
@@ -125,10 +125,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		try {
 			wCanvas->setResampleHandler(lar->resampleHandler());
 			wCanvas->setDataScaleHandler(lar->itsPowerScaleHandler);
-			casacore::Matrix<T> datMatrix;
-			casacore::Matrix<casacore::Bool> maskMatrix;
+			Matrix<T> datMatrix;
+			Matrix<Bool> maskMatrix;
 			this->dataGetSlice(datMatrix, maskMatrix, start, shape, stride);
-			casacore::Bool useMask = (maskMatrix.nelements() == datMatrix.nelements());
+			Bool useMask = (maskMatrix.nelements() == datMatrix.nelements());
 			switch (wCanvas->pixelCanvas()->pcctbl()->colorModel()) {
 			case Display::Index: {
 				if (lar->itsOptionsColorMode == "colormap") {
@@ -137,7 +137,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					LatticeAsRaster<T>*  larGreen = lar->getRasterGreen();
 					LatticeAsRaster<T>*  larBlue = lar->getRasterBlue();
 					if ( larRed == NULL && larGreen == NULL && larBlue == NULL ){
-						casacore::Bool opaqueMask = true;
+						Bool opaqueMask = True;
 						// (per CB/cabal request CAS-531 (1), 7/08.  They don't
 						// want to see lower Raster layers 'shine through' the
 						// top layer's masked regions (and don't want to have to
@@ -151,35 +151,35 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 					}
 					else {
-						casacore::Matrix<T> datMatrixRed;
-						casacore::Matrix<casacore::Bool> maskMatrixRed;
+						Matrix<T> datMatrixRed;
+						Matrix<Bool> maskMatrixRed;
 						bool redOK = initializeColorMatrix(larRed,start,shape,stride,datMatrixRed,maskMatrixRed );
 
 
-						casacore::Matrix<T> datMatrixGreen;
-						casacore::Matrix<casacore::Bool> maskMatrixGreen;
+						Matrix<T> datMatrixGreen;
+						Matrix<Bool> maskMatrixGreen;
 						bool greenOK = initializeColorMatrix(larGreen,start,shape,stride,datMatrixGreen,maskMatrixGreen );
 
-						casacore::Matrix<T> datMatrixBlue;
-						casacore::Matrix<casacore::Bool> maskMatrixBlue;
+						Matrix<T> datMatrixBlue;
+						Matrix<Bool> maskMatrixBlue;
 						bool blueOK = initializeColorMatrix(larBlue,start,shape,stride,datMatrixBlue,maskMatrixBlue );
 						if ( redOK || blueOK || greenOK ){
 							wCanvas->drawImage(blc, trc, datMatrix, datMatrixRed,
 									datMatrixGreen, datMatrixBlue, usePixelEdges, lar );
 						}
 						else {
-							casacore::LogIO os;
-							os << casacore::LogIO::WARN << casacore::LogOrigin("LatticePADMRaster","dataDrawSelf", WHERE)
-								<< "RGB Combination Image was not drawn."<< casacore::LogIO::POST;
+							LogIO os;
+							os << LogIO::WARN << LogOrigin("LatticePADMRaster","dataDrawSelf", WHERE)
+								<< "RGB Combination Image was not drawn."<< LogIO::POST;
 						}
 					}
 
 				} else {
-					casacore::LogIO os;
-					os << casacore::LogIO::WARN << casacore::LogOrigin("LatticePADMRaster",
+					LogIO os;
+					os << LogIO::WARN << LogOrigin("LatticePADMRaster",
 					                               "dataDrawSelf", WHERE)
 					   << "Invalid colormap mode for an Indexed PixelCanvas"
-					   << casacore::LogIO::POST;
+					   << LogIO::POST;
 				}
 			}
 			break;
@@ -195,11 +195,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				} else if (lar->itsOptionsColorMode == "blue") {
 					wCanvas->drawImage(blc, trc, datMatrix, Display::Blue, usePixelEdges);
 				} else {
-					casacore::LogIO os;
-					os << casacore::LogIO::WARN << casacore::LogOrigin("LatticePADMRaster",
+					LogIO os;
+					os << LogIO::WARN << LogOrigin("LatticePADMRaster",
 					                               "dataDrawSelf", WHERE)
 					   << "Invalid colormap mode for an RGB PixelCanvas"
-					   << casacore::LogIO::POST;
+					   << LogIO::POST;
 				}
 				break;
 			case Display::HSV:
@@ -216,26 +216,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					wCanvas->drawImage(blc, trc, datMatrix, Display::Value,
 					                   usePixelEdges);
 				} else {
-					casacore::LogIO os;
-					os << casacore::LogIO::WARN << casacore::LogOrigin("LatticePADMRaster",
+					LogIO os;
+					os << LogIO::WARN << LogOrigin("LatticePADMRaster",
 					                               "dataDrawSelf", WHERE)
 					   << "Invalid colormap mode for an HSV PixelCanvas"
-					   << casacore::LogIO::POST;
+					   << LogIO::POST;
 				}
 				break;
 			default:
-				throw(casacore::AipsError("Unknown PixelCanvas ColorModel in "
+				throw(AipsError("Unknown PixelCanvas ColorModel in "
 				                "LatticePADMRaster::dataDrawSelf"));
 				break;
 			}
 			wCanvas->setDataScaleHandler(0);
 			wCanvas->setResampleHandler(0);
-		} catch (const casacore::AipsError &x) {
+		} catch (const AipsError &x) {
 			wCanvas->endList();
 			if (wCanvas->validList(drawListNumber)) {
 				wCanvas->deleteList(drawListNumber);
 			}
-			throw(casacore::AipsError(x));
+			throw(AipsError(x));
 		}
 
 

@@ -210,7 +210,7 @@ class QPLayeredCanvas : public QwtPlot {
     
 public:
     // Convenient access to class name.
-    static const casacore::String CLASS_NAME;
+    static const String CLASS_NAME;
     
     
     // Constructor which takes parent canvas (optional) parent widget.
@@ -256,7 +256,7 @@ public:
 #endif
     
     // Is drawing in progress?
-    virtual casacore::Bool isDrawing();
+    virtual Bool isDrawing();
     
     // Event Methods //
     

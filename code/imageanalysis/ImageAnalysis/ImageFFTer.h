@@ -30,8 +30,8 @@ public:
 
 	ImageFFTer(
 		const SPCIIT image,
-		const casacore::Record *const region,
-		const casacore::String& maskInp, const casacore::Vector<casacore::uInt>& axes
+		const Record *const region,
+		const String& maskInp, const Vector<uInt>& axes
 	);
 
 	// destructor
@@ -39,39 +39,39 @@ public:
 
 	void fft() const;
 
-	void setReal(const casacore::String& name) { _real = name; }
-	void setImag(const casacore::String& name) { _imag = name; }
-	void setAmp(const casacore::String& name) { _amp = name; }
-	void setPhase(const casacore::String& name) { _phase = name; }
-	void setComplex(const casacore::String& name) { _complex = name; }
+	void setReal(const String& name) { _real = name; }
+	void setImag(const String& name) { _imag = name; }
+	void setAmp(const String& name) { _amp = name; }
+	void setPhase(const String& name) { _phase = name; }
+	void setComplex(const String& name) { _complex = name; }
 
-	casacore::String getClass() const { const static casacore::String s = "ImageFFTer"; return s; }
+	String getClass() const { const static String s = "ImageFFTer"; return s; }
 
 protected:
 	inline  CasacRegionManager::StokesControl _getStokesControl() const {
 		return CasacRegionManager::USE_ALL_STOKES;
 	}
 
-	inline std::vector<casacore::Coordinate::Type> _getNecessaryCoordinates() const {
-		return std::vector<casacore::Coordinate::Type>();
+	inline std::vector<Coordinate::Type> _getNecessaryCoordinates() const {
+		return std::vector<Coordinate::Type>();
 	}
 
 private:
-	casacore::Vector<casacore::uInt> _axes;
-	casacore::String _real, _imag, _amp, _phase, _complex;
+	Vector<uInt> _axes;
+	String _real, _imag, _amp, _phase, _complex;
 
 	// disallow default constructor
 	ImageFFTer();
 
 	SPIIF _createFloatImage(
-		const casacore::String& name, const casacore::SubImage<T>& subimage
+		const String& name, const SubImage<T>& subimage
 	) const;
 
 	SPIIC _createComplexImage(
-		const casacore::String& name, const casacore::SubImage<T>& subimage
+		const String& name, const SubImage<T>& subimage
 	) const;
 
-	static void _checkExists(const casacore::String& name);
+	static void _checkExists(const String& name);
 };
 }
 

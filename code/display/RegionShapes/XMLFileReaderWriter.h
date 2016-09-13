@@ -38,11 +38,11 @@ namespace casa {
 // Constants and methods for reading/writing RS XML files.
 	class RSXML {
 	public:
-		// Converts a casacore::Record to/from a QDomElement.
+		// Converts a Record to/from a QDomElement.
 		// <group>
-		static QDomElement recordToXML(const casacore::RecordInterface& record,
-		                               casacore::String elementName = "casa-record");
-		static casacore::Record XMLToRecord(const QDomElement& element);
+		static QDomElement recordToXML(const RecordInterface& record,
+		                               String elementName = "casa-record");
+		static Record XMLToRecord(const QDomElement& element);
 		// </group>
 
 	private:
@@ -59,10 +59,10 @@ namespace casa {
 		static const QString VAL;
 		// </group>
 
-		// Converts an casacore::IPosition to/from a QString.
+		// Converts an IPosition to/from a QString.
 		// <group>
-		static QString shapeToString(const casacore::IPosition& shape);
-		static casacore::IPosition stringToShape(const QString& shape);
+		static QString shapeToString(const IPosition& shape);
+		static IPosition stringToShape(const QString& shape);
 		// </group>
 	};
 

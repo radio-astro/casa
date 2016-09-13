@@ -28,7 +28,7 @@
  * | If you do, all changes will be lost when the file is re-generated. |
  *  --------------------------------------------------------------------
  *
- * casacore::File FlagTable.h
+ * File FlagTable.h
  */
  
 #ifndef FlagTable_CLASS
@@ -100,7 +100,7 @@ class FlagRow;
  * <BR>
  * 
  * \par Role
- * This table is used for flagging visibility data and is used in addition to the Binary casacore::Data casacore::Format flags produced by the correlator software.
+ * This table is used for flagging visibility data and is used in addition to the Binary Data Format flags produced by the correlator software.
  * <BR>
  
  * Generated from model's revision "1.64", branch "HEAD"
@@ -297,7 +297,7 @@ public:
 	std::string toXML()  ;
 
 #ifndef WITHOUT_ACS
-	// casacore::Conversion Methods
+	// Conversion Methods
 	/**
 	 * Convert this table into a FlagTableIDL CORBA structure.
 	 *

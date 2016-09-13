@@ -34,7 +34,6 @@
 #include <casa/OS/Directory.h>
 #include <fstream>
 
-using namespace casacore;
 namespace casa{
   //
   //-------------------------------------------------------------------------
@@ -67,10 +66,10 @@ namespace casa{
 	File file(name);
 	Int Npa=0,Nw=0;
 	ifstream aux;
-	Bool readFromFile=false;
+	Bool readFromFile=False;
 	if (file.exists() && file.isRegular()) 
 	  {
-	    readFromFile=true;
+	    readFromFile=True;
 	    aux.open(name.str().c_str());
 	    if (readFromFile && aux.good()) aux >> Npa >> Nw;
 	    else
@@ -79,12 +78,12 @@ namespace casa{
 
 	if (Npa > 0)
 	  {
-	    paList.resize(Npa,true);
+	    paList.resize(Npa,True);
 
 	    IPosition s(3,Nw,1,Npa);
-	    XSup.resize(s,true);
-	    YSup.resize(s,true);
-	    Sampling.resize(Npa,true);
+	    XSup.resize(s,True);
+	    YSup.resize(s,True);
+	    Sampling.resize(Npa,True);
 	    for(Int i=0;i<Npa;i++)
 	      {
 		Float pa, S;
@@ -154,7 +153,7 @@ namespace casa{
 	    DirectionCoordinate dc=coords.directionCoordinate(directionIndex);
 	    //	AlwaysAssert(directionIndex>=0, AipsError);
 	    dc=coords.directionCoordinate(directionIndex);
-	    Vector<Bool> axes(2); axes(0)=axes(1)=true;//axes(2)=true;
+	    Vector<Bool> axes(2); axes(0)=axes(1)=True;//axes(2)=True;
 	    Vector<Int> shape(2); shape(0)=newConvShape(0);shape(1)=newConvShape(1);
 	    shape=convSize;
 	    Vector<Double>ref(4);
@@ -189,12 +188,12 @@ namespace casa{
 	if (savePA)
 	  {
 	    IPosition s(3,wConvSize,1,N+1);
-	    paList.resize(N+1,true);
-	    // 	XSup.resize(N+1,true); 
-	    // 	YSup.resize(N+1,true); 
-	    XSup.resize(s,true);
-	    YSup.resize(s,true);
-	    Sampling.resize(N+1,true);
+	    paList.resize(N+1,True);
+	    // 	XSup.resize(N+1,True); 
+	    // 	YSup.resize(N+1,True); 
+	    XSup.resize(s,True);
+	    YSup.resize(s,True);
+	    Sampling.resize(N+1,True);
 	    paList[N] = pa;
 	    for(Int iw=0;iw<wConvSize;iw++)
 	      {
@@ -239,7 +238,7 @@ namespace casa{
 	    DirectionCoordinate dc=coords.directionCoordinate(directionIndex);
 	    //	AlwaysAssert(directionIndex>=0, AipsError);
 	    dc=coords.directionCoordinate(directionIndex);
-	    Vector<Bool> axes(2); axes(0)=axes(1)=true;//axes(2)=true;
+	    Vector<Bool> axes(2); axes(0)=axes(1)=True;//axes(2)=True;
 	    Vector<Int> shape(2); shape(0)=newConvShape(0);shape(1)=newConvShape(1);
 	    shape=convSize;
 	    Vector<Double>ref(4);
@@ -273,12 +272,12 @@ namespace casa{
 	    }
 	  }
 	IPosition s(3,wConvSize,1,N+1);
-	paList.resize(N+1,true);
-// 	XSup.resize(N+1,true); 
-// 	YSup.resize(N+1,true); 
-	XSup.resize(s,true);
-	YSup.resize(s,true);
-	Sampling.resize(N+1,true);
+	paList.resize(N+1,True);
+// 	XSup.resize(N+1,True); 
+// 	YSup.resize(N+1,True); 
+	XSup.resize(s,True);
+	YSup.resize(s,True);
+	Sampling.resize(N+1,True);
 	paList[N] = pa;
 	for(Int iw=0;iw<wConvSize;iw++)
 	  {
@@ -302,7 +301,7 @@ namespace casa{
 					    Int& which,
 					    Float &pa)
   {
-    Int i,NPA=paList.nelements(); Bool paFound=false;
+    Int i,NPA=paList.nelements(); Bool paFound=False;
     Float iPA, dPA;
     dPA = vpSJ.getPAIncrement().getValue("rad");
     /*
@@ -320,7 +319,7 @@ namespace casa{
 	iPA = paList[i];
 	if (fabs(iPA - pa) <= dPA)
 	  {
-	    paFound = true;
+	    paFound = True;
 	    break;
 	  }
       }
@@ -336,7 +335,7 @@ namespace casa{
 					     Float &pa)
   {
     if (paList.nelements()==0) initCache();
-    Int i,NPA=paList.nelements(); Bool paFound=false;
+    Int i,NPA=paList.nelements(); Bool paFound=False;
     Float iPA, dPA;
     dPA = vpSJ.getParAngleTolerance().getValue("rad");
     /*
@@ -367,7 +366,7 @@ namespace casa{
 	if (fabs(iPA - pa) <= dPA)
 	  {
 	    i = saveNdx;
-	    paFound=true;
+	    paFound=True;
 	  }
       }
     /*      
@@ -376,7 +375,7 @@ namespace casa{
 	iPA = paList[i];
 	if (fabs(iPA - pa) <= dPA)
 	  {
-	    paFound = true;
+	    paFound = True;
 	    break;
 	  }
       }
@@ -487,8 +486,8 @@ namespace casa{
 					   Double& cfRefFreq, CoordinateSystem& coordSys,
 					   String prefix)
   {
-    if (Dir.length() == 0) return false;
-    if (where < (Int)convFuncCache.nelements() && (convFuncCache[where] != NULL)) return false;
+    if (Dir.length() == 0) return False;
+    if (where < (Int)convFuncCache.nelements() && (convFuncCache[where] != NULL)) return False;
 
     Int wConvSize, polInUse=2;
     Int N=convFuncCache.nelements();
@@ -499,7 +498,7 @@ namespace casa{
     // loop below to make a decision about allocating new memory or
     // not.
     //
-    convFuncCache.resize(max(where+1,N), true);
+    convFuncCache.resize(max(where+1,N), True);
     for(Int i=N;i<=where;i++) convFuncCache[i]=NULL;
     //
     // Each w-plan is in a separate disk file.  Each file contains all
@@ -549,12 +548,12 @@ namespace casa{
 	  }
 	
       }
-    convSupport.resize(wConvSize,polInUse,where+1,true);
+    convSupport.resize(wConvSize,polInUse,where+1,True);
     for(Int i=0;i<wConvSize;i++)
       for(Int j=0;j<polInUse;j++)
 	convSupport(i,j,where) = XSup(i,0,where);
     //    cout << "##### " << convFuncCache.nelements() << endl;
     convSampling = Sampling;
-    return true;
+    return True;
   }
 }

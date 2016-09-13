@@ -41,7 +41,6 @@
 #include <display/DisplayDatas/TblAsContourDD.h>
 #include <display/DisplayDatas/TblAsContourDM.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // constructor
@@ -88,7 +87,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			// read the column into an array
 			ROArrayColumn<double>
 			dataCol(*theTable,parent->itsXColumnName->value());
-			dataCol.getColumn(typedata,true);
+			dataCol.getColumn(typedata,True);
 			// now convert array to type double
 			data.resize(typedata.shape());
 			convertArray(data,typedata);
@@ -96,13 +95,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if (type == TpArrayFloat) {
 			ROArrayColumn<float>
 			dataCol(*theTable,parent->itsXColumnName->value());
-			dataCol.getColumn(data,true);
+			dataCol.getColumn(data,True);
 		}
 		if (type == TpArrayUShort) {
 			Array<ushort> typedata;
 			ROArrayColumn<ushort>
 			dataCol(*theTable,parent->itsXColumnName->value());
-			dataCol.getColumn(typedata,true);
+			dataCol.getColumn(typedata,True);
 			data.resize(typedata.shape());
 			convertArray(data,typedata);
 		}
@@ -110,7 +109,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			Array<int> typedata;
 			ROArrayColumn<int>
 			dataCol(*theTable,parent->itsXColumnName->value());
-			dataCol.getColumn(typedata,true);
+			dataCol.getColumn(typedata,True);
 			data.resize(typedata.shape());
 			convertArray(data,typedata);
 		}
@@ -118,7 +117,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			Array<uInt> typedata;
 			ROArrayColumn<uInt>
 			dataCol(*theTable,parent->itsXColumnName->value());
-			dataCol.getColumn(typedata,true);
+			dataCol.getColumn(typedata,True);
 			data.resize(typedata.shape());
 			convertArray(data,typedata);
 		}
@@ -126,7 +125,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		const Matrix<float> theData = data;
 
 		// define several things for drawing
-		Bool usePixelEdges = true;  // Better than center (should be user choice) dk
+		Bool usePixelEdges = True;  // Better than center (should be user choice) dk
 
 		// find data min and max
 		float dmin=0.,dmax=0.;

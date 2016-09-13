@@ -27,7 +27,6 @@
 #include <plotms/Plots/PlotMSPlot.h>
 //#include <plotms/Data/PlotMSIndexer.h>
 
-using namespace casacore;
 namespace casa {
 
 ActionLocate::ActionLocate( Client* client )
@@ -60,5 +59,4 @@ string ActionLocate::getOperationLabel() const {
 ActionLocate::~ActionLocate() {
 }
 
-using namespace casacore;
 } /* namespace casa */

@@ -4,9 +4,9 @@ namespace casa {
 
 template<class T> ImageBoxcarSmoother<T>::ImageBoxcarSmoother(
 	const SPCIIT image,
-	const casacore::Record *const region,
-	const casacore::String& mask,
-	const casacore::String& outname, casacore::Bool overwrite
+	const Record *const region,
+	const String& mask,
+	const String& outname, Bool overwrite
 ) : Image1DSmoother<T>(
 		image, region, mask, outname, overwrite
 	), _width(2) {
@@ -15,10 +15,10 @@ template<class T> ImageBoxcarSmoother<T>::ImageBoxcarSmoother(
 }
 
 template<class T> SPIIT ImageBoxcarSmoother<T>::_smooth(
-	const casacore::ImageInterface<T>& image
+	const ImageInterface<T>& image
 ) const {
-    casacore::IPosition shape = image.shape();
-	casacore::uInt axis = this->_getAxis();
+    IPosition shape = image.shape();
+	uInt axis = this->_getAxis();
 	ThrowIf(
 		this->_getDecimate()
 		&& this->_getDecimationFunction() == ImageDecimatorData::MEAN
@@ -26,31 +26,31 @@ template<class T> SPIIT ImageBoxcarSmoother<T>::_smooth(
 		"The convolution axis of selected image region must have length "
 		"of at least 2*width when using the mean decimation function"
 	);
-	casacore::IPosition inTileShape = image.niceCursorShape();
-	casacore::TiledLineStepper inNav(image.shape(), inTileShape, axis);
-	casacore::RO_MaskedLatticeIterator<T> inIter(image, inNav);
-	casacore::IPosition sliceShape(image.ndim(), 1);
+	IPosition inTileShape = image.niceCursorShape();
+	TiledLineStepper inNav(image.shape(), inTileShape, axis);
+	RO_MaskedLatticeIterator<T> inIter(image, inNav);
+	IPosition sliceShape(image.ndim(), 1);
 	sliceShape[axis] = shape[axis];
-	casacore::String empty;
-	casacore::Record emptyRecord;
-    casacore::IPosition blc(image.ndim(), 0);
-    casacore::IPosition trc = shape - 1;
+	String empty;
+	Record emptyRecord;
+    IPosition blc(image.ndim(), 0);
+    IPosition trc = shape - 1;
     // integer division
     trc[axis] = this->_getDecimate()
 		&& this->_getDecimationFunction() == ImageDecimatorData::COPY
 		? shape[axis]/_width*_width - _width
 		: shape[axis] - _width;
-    casacore::LCBox lcbox(blc, trc, shape);
-    casacore::Record region = lcbox.toRecord("");
+    LCBox lcbox(blc, trc, shape);
+    Record region = lcbox.toRecord("");
 	SPIIT out(
 		SubImageFactory<T>::createImage(
 			image, empty, region, empty,
-            false, false, false, false
+            False, False, False, False
 		)
 	);
 	out->set(T(0));
 	sliceShape[axis] = out->shape()[axis];
-	casacore::Array<T> slice(sliceShape);
+	Array<T> slice(sliceShape);
 	while (!inIter.atEnd()) {
 		_boxcarSmooth(slice, inIter.cursor());
 		out->putSlice(slice, inIter.position());
@@ -59,61 +59,61 @@ template<class T> SPIIT ImageBoxcarSmoother<T>::_smooth(
 	if (this->_getDecimate() && out->shape()[axis] > 1) {
 		ImageDecimator<T> decimator(
 			SPIIT(out->cloneII()), 0,
-			casacore::String(""), casacore::String(""), false
+			String(""), String(""), False
 		);
 		decimator.setFunction(this->_getDecimationFunction());
 		decimator.setAxis(axis);
 		decimator.setFactor(_width);
-		decimator.suppressHistoryWriting(true);
+		decimator.suppressHistoryWriting(True);
 		out = decimator.decimate();
 		this->addHistory(decimator.getHistory());
 	}
 	return out;
 }
 
-template<class T> void ImageBoxcarSmoother<T>::setWidth(casacore::uInt w) {
+template<class T> void ImageBoxcarSmoother<T>::setWidth(uInt w) {
 	ThrowIf(w == 0, "Boxcar width must be positive");
 	_width = w;
 	this->_setNMinPixels(_width);
 }
 
 template<class T> void ImageBoxcarSmoother<T>::_boxcarSmooth(
-	casacore::Array<T>& out, const casacore::Array<T>& in
+	Array<T>& out, const Array<T>& in
 ) const {
 	// although the passed in array may have more than one
 	// dimension, only one of those will have length > 1
 
 	out.set(T(0.0));
-	typename casacore::Array<T>::const_iterator cur = in.begin();
-	typename casacore::Array<T>::const_iterator end = in.end();
-	casacore::Bool skip = this->_getDecimate()
+	typename Array<T>::const_iterator cur = in.begin();
+	typename Array<T>::const_iterator end = in.end();
+	Bool skip = this->_getDecimate()
 		&& this->_getDecimationFunction() == ImageDecimatorData::COPY;
-	typename casacore::Array<T>::iterator outIter = out.begin();
+	typename Array<T>::iterator outIter = out.begin();
 	if (skip) {
-		casacore::uInt count = 0;
-		casacore::uInt nelem = in.size();
+		uInt count = 0;
+		uInt nelem = in.size();
 		while (count < nelem - _width + 1) {
-			casacore::uInt intraCount = 0;
+			uInt intraCount = 0;
 			while (intraCount < _width) {
 				*outIter += *cur;
 				cur++;
 				intraCount++;
 			}
 			*outIter /= _width;
-			for (casacore::uInt i=0; i<_width; i++) {
+			for (uInt i=0; i<_width; i++) {
 				outIter++;
 			}
 			count += _width;
 		}
 	}
 	else {
-		typename casacore::Array<T>::const_iterator windowEnd = cur;
+		typename Array<T>::const_iterator windowEnd = cur;
 		T windowSum(0.0);
-		for (casacore::uInt i=0; i<_width; i++) {
+		for (uInt i=0; i<_width; i++) {
 			windowSum += *windowEnd;
 			windowEnd++;
 		}
-		casacore::Float width = _width;
+		Float width = _width;
 		*outIter = windowSum/width;
 		*outIter++;
 		while (windowEnd != end) {

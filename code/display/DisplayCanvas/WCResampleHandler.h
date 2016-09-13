@@ -31,13 +31,9 @@
 #include <casa/aips.h>
 #include <casa/Arrays/Vector.h>
 
-namespace casacore{
-
-	template <class T> class Matrix;
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+	template <class T> class Matrix;
 
 // <summary>
 // Base class for resampling data pixels to World/PixelCanvas pixels.
@@ -97,19 +93,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// rather than templated because C++ doesn't yet handle templated member
 		// functions in a non-templated class.
 		// <group>
-		virtual void operator()(casacore::Matrix<casacore::Bool> &out, const casacore::Matrix<casacore::Bool> &in) = 0;
-		virtual void operator()(casacore::Matrix<casacore::uChar> &out, const casacore::Matrix<casacore::uChar> &in) = 0;
-		virtual void operator()(casacore::Matrix<casacore::Char> &out, const casacore::Matrix<casacore::Char> &in) = 0;
-		virtual void operator()(casacore::Matrix<casacore::uShort> &out, const casacore::Matrix<casacore::uShort> &in) = 0;
-		virtual void operator()(casacore::Matrix<casacore::Short> &out, const casacore::Matrix<casacore::Short> &in) = 0;
-		virtual void operator()(casacore::Matrix<casacore::uInt> &out, const casacore::Matrix<casacore::uInt> &in) = 0;
-		virtual void operator()(casacore::Matrix<casacore::Int> &out, const casacore::Matrix<casacore::Int> &in) = 0;
-		virtual void operator()(casacore::Matrix<casacore::uLong> &out, const casacore::Matrix<casacore::uLong> &in) = 0;
-		virtual void operator()(casacore::Matrix<casacore::Long> &out, const casacore::Matrix<casacore::Long> &in) = 0;
-		virtual void operator()(casacore::Matrix<casacore::Float> &out, const casacore::Matrix<casacore::Float> &in) = 0;
-		virtual void operator()(casacore::Matrix<casacore::Double> &out, const casacore::Matrix<casacore::Double> &in) = 0;
-		virtual void operator()(casacore::Matrix<casacore::Complex> &out, const casacore::Matrix<casacore::Complex> &in) = 0;
-		virtual void operator()(casacore::Matrix<casacore::DComplex> &out, const casacore::Matrix<casacore::DComplex> &in) = 0;
+		virtual void operator()(Matrix<Bool> &out, const Matrix<Bool> &in) = 0;
+		virtual void operator()(Matrix<uChar> &out, const Matrix<uChar> &in) = 0;
+		virtual void operator()(Matrix<Char> &out, const Matrix<Char> &in) = 0;
+		virtual void operator()(Matrix<uShort> &out, const Matrix<uShort> &in) = 0;
+		virtual void operator()(Matrix<Short> &out, const Matrix<Short> &in) = 0;
+		virtual void operator()(Matrix<uInt> &out, const Matrix<uInt> &in) = 0;
+		virtual void operator()(Matrix<Int> &out, const Matrix<Int> &in) = 0;
+		virtual void operator()(Matrix<uLong> &out, const Matrix<uLong> &in) = 0;
+		virtual void operator()(Matrix<Long> &out, const Matrix<Long> &in) = 0;
+		virtual void operator()(Matrix<Float> &out, const Matrix<Float> &in) = 0;
+		virtual void operator()(Matrix<Double> &out, const Matrix<Double> &in) = 0;
+		virtual void operator()(Matrix<Complex> &out, const Matrix<Complex> &in) = 0;
+		virtual void operator()(Matrix<DComplex> &out, const Matrix<DComplex> &in) = 0;
 		// </group>
 
 		// These functions resample the input matrix to the output.
@@ -118,19 +114,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// the output value where none of the input data is useful.
 		// The output matrix must be presized to the required size.
 		// <group>
-		virtual void operator()(casacore::Matrix<casacore::Float> &out, const casacore::Matrix<casacore::Float> &in,
-		                        const casacore::Vector<casacore::Float> &inblc,
-		                        const casacore::Vector<casacore::Float> &intrc,
-		                        const casacore::Float blank = 0.0) = 0;
-		virtual void operator()(casacore::Matrix<casacore::Float> &out, casacore::Matrix<casacore::Bool>& outMask,
-		                        const casacore::Matrix<casacore::Float> &in, const casacore::Matrix<casacore::Bool> &inMask,
-		                        const casacore::Vector<casacore::Float> &inblc,
-		                        const casacore::Vector<casacore::Float> &intrc,
-		                        const casacore::Float blank = 0.0) = 0;
-		virtual void operator()(casacore::Matrix<casacore::Bool> &out, const casacore::Matrix<casacore::Bool> &in,
-		                        const casacore::Vector<casacore::Float> &inblc,
-		                        const casacore::Vector<casacore::Float> &intrc,
-		                        const casacore::Bool blank = false) = 0;
+		virtual void operator()(Matrix<Float> &out, const Matrix<Float> &in,
+		                        const Vector<Float> &inblc,
+		                        const Vector<Float> &intrc,
+		                        const Float blank = 0.0) = 0;
+		virtual void operator()(Matrix<Float> &out, Matrix<Bool>& outMask,
+		                        const Matrix<Float> &in, const Matrix<Bool> &inMask,
+		                        const Vector<Float> &inblc,
+		                        const Vector<Float> &intrc,
+		                        const Float blank = 0.0) = 0;
+		virtual void operator()(Matrix<Bool> &out, const Matrix<Bool> &in,
+		                        const Vector<Float> &inblc,
+		                        const Vector<Float> &intrc,
+		                        const Bool blank = False) = 0;
 		// </group>
 
 		// These functions manipulate which subregion in "in" gets expanded
@@ -140,13 +136,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// pixel.  These parameters are interpreted according to the derived
 		// class.
 		// <group>
-		void setSubregion(const casacore::Vector<casacore::Double> &blc,
-		                  const casacore::Vector<casacore::Double> &trc) {
+		void setSubregion(const Vector<Double> &blc,
+		                  const Vector<Double> &trc) {
 			itsBlc = blc;
 			itsTrc = trc;
 		}
-		void getSubregion(casacore::Vector<casacore::Double> &blc,
-		                  casacore::Vector<casacore::Double> &trc) const {
+		void getSubregion(Vector<Double> &blc,
+		                  Vector<Double> &trc) const {
 			blc = itsBlc;
 			trc = itsTrc;
 		}
@@ -156,20 +152,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	protected:
 
 		// Get the bottom left corner (range <0-1,0-1>) of the subregion
-		const casacore::Vector<casacore::Double> &blc() const {
+		const Vector<Double> &blc() const {
 			return itsBlc;
 		}
 
 		// Get the top right corner (range <0-1,0-1>) of the subregion
-		const casacore::Vector<casacore::Double> &trc() const {
+		const Vector<Double> &trc() const {
 			return itsTrc;
 		}
 
 	private:
 
 		// Current subregion
-		casacore::Vector<casacore::Double> itsBlc;
-		casacore::Vector<casacore::Double> itsTrc;
+		Vector<Double> itsBlc;
+		Vector<Double> itsTrc;
 
 	};
 

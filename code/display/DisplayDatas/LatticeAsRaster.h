@@ -33,15 +33,11 @@
 #include <casa/Arrays/Array.h>
 #include <display/DisplayDatas/LatticePADD.h>
 
-namespace casacore{
+namespace casa { //# NAMESPACE CASA - BEGIN
 
 	template <class T> class Array;
 	class IPosition;
 	class Record;
-}
-
-namespace casa { //# NAMESPACE CASA - BEGIN
-
 	template <class T> class LatticePADMRaster;
 	class WCPowerScaleHandler;
 
@@ -85,13 +81,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // The LatticeAsRaster object supports a number of options which can
 // be set or retrieved using the setOptions and getOptions functions.
-// These functions simply accept a casacore::Record, which can be converted from
+// These functions simply accept a Record, which can be converted from
 // a GlishRecord: this is done in the <linkto
 // class="GTkDisplayData">GTkDisplayData</linkto> class.  The options
 // for the LatticeAsRaster class are:
-// <li> range: a casacore::Vector<casacore::Double> of two elements, being the minimum and
+// <li> range: a Vector<Double> of two elements, being the minimum and
 // maximum data values to map to the minimum and maximum color values.
-// <li> power: a casacore::Float which specifies the deviation from linear of
+// <li> power: a Float which specifies the deviation from linear of
 // the scaling of the data onto the colormap.  Increasingly negative
 // values give increasingly severe logarithmic scaling: this scaling
 // effectively allocates more color cells to the lowest data values
@@ -100,17 +96,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // values give increasingly severe exponential scaling, thereby
 // allocating more and more color cells to the highest data values
 // (ie. signal and interference)in the image.
-// <li> resample: a casacore::String which is either "nearest" for nearest
+// <li> resample: a String which is either "nearest" for nearest
 // neighbour pixel resampling, or "bilinear" for bilinear
 // interpolation between adjacent groups of four pixels.
-// <li> complexmode: this is a casacore::String, and is only relevant for
-// LatticeAsRaster<casacore::Complex> or LatticeAsRaster<casacore::DComplex>
+// <li> complexmode: this is a String, and is only relevant for
+// LatticeAsRaster<Complex> or LatticeAsRaster<DComplex>
 // instantantiations.  One of "phase", "real", "imaginary" or
 // "magnitude" is appropriate for this option, and indicates how
 // complex data values should be translated to real pixel values.
 //
-// LatticeAsRaster is templated, and can be used to draw casacore::Complex or Real
-// Images or Arrays.  For casacore::Complex data, the default complexmode is
+// LatticeAsRaster is templated, and can be used to draw Complex or Real
+// Images or Arrays.  For Complex data, the default complexmode is
 // "magnitude."  LatticeAsRaster objects can be registered on any
 // WorldCanvasHolder, but will only draw on WorldCanvases having an
 // attribute value of Display::Index for "colormodel."
@@ -119,17 +115,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <example>
 // A LatticeAsRaster object could be constructed and used as follows:
 // <srcblock>
-// casacore::PagedImage<casacore::Float> *pimage = new casacore::PagedImage<casacore::Float>(casacore::String("test.im"));
+// PagedImage<Float> *pimage = new PagedImage<Float>(String("test.im"));
 // DisplayData *dd;
-// casacore::uInt ndim = pimage->ndim();
+// uInt ndim = pimage->ndim();
 // if (ndim < 2) {
-//   throw(casacore::AipsError(casacore::String("Image has less than two dimensions")));
+//   throw(AipsError(String("Image has less than two dimensions")));
 // } else if (ndim == 2) {
-//   dd = (DisplayData *)(new LatticeAsRaster<casacore::Float>(pimage, 0, 1));
+//   dd = (DisplayData *)(new LatticeAsRaster<Float>(pimage, 0, 1));
 // } else {
-//   casacore::IPosition fixedPos(ndim);
+//   IPosition fixedPos(ndim);
 //   fixedPos = 0;
-//   dd = (DisplayData *)(new LatticeAsRaster<casacore::Float>(pimage, 0, 1, 2,
+//   dd = (DisplayData *)(new LatticeAsRaster<Float>(pimage, 0, 1, 2,
 //                                                   fixedPos));
 // }
 // // wcHolder is an existing WorldCanvasHolder *...
@@ -157,7 +153,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	public:
 
-		// casacore::Array-based constructors: >2d and 2d.  xAxis and yAxis specify
+		// Array-based constructors: >2d and 2d.  xAxis and yAxis specify
 		// which axis in the array (0-based) should be mapped to X and Y
 		// on the display device: ie. 2-d slices of the data to be displayed
 		// have these axes.  mAxis specifies the "movie" axis, which is the axis
@@ -166,11 +162,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// and indicate the fixed axis values for axes in the data that are
 		// not specified as xAxis, yAxis or mAxis.
 		// <group>
-		LatticeAsRaster(casacore::Array<T> *array, const casacore::uInt xAxis,
-		                const casacore::uInt yAxis, const casacore::uInt mAxis,
-		                const casacore::IPosition fixedPos);
-		LatticeAsRaster(casacore::Array<T> *array, const casacore::uInt xAxis,
-		                const casacore::uInt yAxis);
+		LatticeAsRaster(Array<T> *array, const uInt xAxis,
+		                const uInt yAxis, const uInt mAxis,
+		                const IPosition fixedPos);
+		LatticeAsRaster(Array<T> *array, const uInt xAxis,
+		                const uInt yAxis);
 		// </group>
 
 		// Image-based constructors: >2d and 2d.  xAxis and yAxis specify
@@ -182,9 +178,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// and indicate the fixed axis values for axes in the data that are
 		// not specified as xAxis, yAxis or mAxis.
 		// <group>
-		LatticeAsRaster( SHARED_PTR<casacore::ImageInterface<T> > image, const casacore::uInt xAxis, const casacore::uInt yAxis, const casacore::uInt mAxis, const casacore::IPosition fixedPos, viewer::StatusSink *sink=0 );
-		LatticeAsRaster(SHARED_PTR<casacore::ImageInterface<T> > image, const casacore::uInt xAxis,
-		                const casacore::uInt yAxis);
+		LatticeAsRaster( SHARED_PTR<ImageInterface<T> > image, const uInt xAxis, const uInt yAxis, const uInt mAxis, const IPosition fixedPos, viewer::StatusSink *sink=0 );
+		LatticeAsRaster(SHARED_PTR<ImageInterface<T> > image, const uInt xAxis,
+		                const uInt yAxis);
 		// </group>
 
 		// Destructor
@@ -194,25 +190,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// images.  This is called upon construction as well as whenever
 		// the display and/or movie axes are changed via a call to
 		// PrincipalAxesDD::setAxes.
-		//virtual void setupElements(casacore::IPosition fixedPos = casacore::IPosition(casacore::uInt(2)));
+		//virtual void setupElements(IPosition fixedPos = IPosition(uInt(2)));
 		virtual void setupElements();
 
 		// Install the default options for display.
 		virtual void setDefaultOptions();
 
-		// Apply the options stored in the provided casacore::Record to the
-		// LatticeAsRaster object.  If the return value is true, then
+		// Apply the options stored in the provided Record to the
+		// LatticeAsRaster object.  If the return value is True, then
 		// some options have changed, and a refresh is needed to update
 		// the display.
-		virtual casacore::Bool setOptions(casacore::Record &rec, casacore::Record &recOut);
+		virtual Bool setOptions(Record &rec, Record &recOut);
 
 		// Retrieve the currently set options, and their types, default
 		// values, and any help text associated with each parameter.  This
 		// information can be used to generate form-type graphical user
 		// interfaces or command-line interfaces to set the options with
 		// prompts.
-		virtual casacore::Record getOptions( bool scrub=false ) const;
-		//static casacore::Record getGlobalOption();
+		virtual Record getOptions( bool scrub=false ) const;
+		//static Record getGlobalOption();
 
 		// Return the DisplayData type; used by the WorldCanvasHolder to
 		// determine the order of drawing.
@@ -221,29 +217,29 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		// class name
-		virtual casacore::String className() const {
-			return casacore::String("LatticeAsRaster");
+		virtual String className() const {
+			return String("LatticeAsRaster");
 		}
-		const static casacore::String HISTOGRAM_RANGE;
-		const static casacore::String COLOR_MODE;
+		const static String HISTOGRAM_RANGE;
+		const static String COLOR_MODE;
 
 	private:
 
 		// Storage for the data range parameters
-		casacore::Vector<casacore::Float> itsOptionsDataRange;
-		casacore::Vector<casacore::Float> itsOptionsDataDefault;
+		Vector<Float> itsOptionsDataRange;
+		Vector<Float> itsOptionsDataDefault;
 
 		LatticeAsRaster<T>* rasterRed;
 		LatticeAsRaster<T>* rasterGreen;
 		LatticeAsRaster<T>* rasterBlue;
 
-		//casacore::Float itsOptionsPower;
+		//Float itsOptionsPower;
 
 		// what colormode the raster should be drawn in, options are
 		// "colormap" for normal pseudo-color rasters, and "red", "green"
 		// and "blue" for RGB canvases, and "hue", "saturation" and "value"
 		// for HSV canvases.
-		casacore::String itsOptionsColorMode;
+		String itsOptionsColorMode;
 
 		// pointers to scale and resampling handlers
 		WCPowerScaleHandler *itsPowerScaleHandler;
@@ -257,8 +253,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void setDisplayDataBlue( DisplayData* dd );
 		virtual void setDisplayDataGreen( DisplayData* dd );
 		void initializeDataMatrix( int index,
-					casacore::Matrix<T>& datMatrix, casacore::Matrix<casacore::Bool>& mask, const casacore::IPosition& start,
-					const casacore::IPosition& sliceShape, const casacore::IPosition& stride );
+					Matrix<T>& datMatrix, Matrix<Bool>& mask, const IPosition& start,
+					const IPosition& sliceShape, const IPosition& stride );
 
 		//static bool globalColors;
 

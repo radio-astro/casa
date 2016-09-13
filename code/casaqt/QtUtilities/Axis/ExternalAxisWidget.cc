@@ -31,7 +31,6 @@
 #include <qwt_scale_div.h>
 #include <casaqt/QwtPlotter/QPCanvasHelpers.qo.h>
 
-using namespace casacore;
 namespace casa {
 
 ExternalAxisWidget::ExternalAxisWidget(QWidget* parent, QwtPlot* managedPlot,
@@ -275,5 +274,4 @@ ExternalAxisWidget::~ExternalAxisWidget() {
 
 }
 
-using namespace casacore;
 } /* namespace casa */

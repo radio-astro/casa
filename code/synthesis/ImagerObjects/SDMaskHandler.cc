@@ -70,7 +70,6 @@
 #include <synthesis/ImagerObjects/SDMaskHandler.h>
 
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
@@ -254,7 +253,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	LCBox::verify(blc, trc, inc, imshp);
 	Slicer imslice(blc, trc, inc, Slicer::endIsLast);
 	
-	SHARED_PTR<ImageInterface<Float> >  referenceImage( new SubImage<Float>(*(imstore->mask()), imslice, true) );
+	SHARED_PTR<ImageInterface<Float> >  referenceImage( new SubImage<Float>(*(imstore->mask()), imslice, True) );
 	referenceImage->set(1.0);
       }
 
@@ -352,17 +351,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     catch (AipsError& x) {
       os << "Error in regionToMaskImage() : " << x.getMesg() << LogIO::EXCEPTION;
     }
-    return true;
+    return True;
   }
 
   Bool SDMaskHandler::regionToMask(ImageInterface<Float>& maskImage, ImageRegion& imageregion, const Float& value) 
   {
-    SubImage<Float> partToMask(maskImage, imageregion, true);
+    SubImage<Float> partToMask(maskImage, imageregion, True);
     LatticeRegion latReg=imageregion.toLatticeRegion(maskImage.coordinates(), maskImage.shape());
     ArrayLattice<Bool> pixmask(latReg.get());
     LatticeExpr<Float> myexpr(iif(pixmask, value, partToMask) );
     partToMask.copyData(myexpr);
-    return true;
+    return True;
   }
 
   void SDMaskHandler::boxRegionToImageRegion(const ImageInterface<Float>& maskImage, const Matrix<Quantity>& blctrcs, ImageRegion*& boxImageRegions)
@@ -409,13 +408,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     IPosition xyshape(2,maskImage.shape()(0),maskImage.shape()(1));
     LCEllipsoid *circ= new LCEllipsoid(cent, radius, xyshape);
     //Tell LCUnion to delete the pointers
-    LCUnion *elunion= new LCUnion(true, circ);
+    LCUnion *elunion= new LCUnion(True, circ);
     //now lets do the remainder
     for (Int k=1; k < nrow; ++k){
       cent(0)=circles(k,1); cent(1)=circles(k,2);
       radius=circles(k,0);
       circ= new LCEllipsoid(cent, radius, xyshape);
-      elunion=new LCUnion(true, elunion, circ);
+      elunion=new LCUnion(True, elunion, circ);
     }
     //now lets extend that to the whole image
     IPosition trc(2);
@@ -532,8 +531,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       SPCIIF tempim(inImageMaskptr);
       SPCIIF templateim(new TempImage<Float>(outshape,outcsys));
       Record* dummyrec = 0;
-      //ImageRegridder regridder(tempim, outfilename, templateim, axes, dummyrec, "", true, outshape);
-      ImageRegridder regridder(tempim, "", templateim, axes, dummyrec, "", true, outshape);
+      //ImageRegridder regridder(tempim, outfilename, templateim, axes, dummyrec, "", True, outshape);
+      ImageRegridder regridder(tempim, "", templateim, axes, dummyrec, "", True, outshape);
       regridder.setMethod(Interpolate2D::LINEAR);
       SPIIF retim = regridder.regrid();
       //outImageMask.copyData( (LatticeExpr<Float>) iif(*retim > 0.1, 1.0, 0.0)  );
@@ -595,7 +594,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       Slicer sl(start, length); 
 
       // make a subImage for regridding output       
-      SubImage<Float> chanMask(outImageMask, sl, true);
+      SubImage<Float> chanMask(outImageMask, sl, True);
       
       ImageRegrid<Float> imregrid;
       try {
@@ -630,12 +629,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //                           outImage.name());
                                outImageName);
       newImage.set(0.0);
-      newImage.table().flush(true, true);
+      newImage.table().flush(True, True);
     } catch (AipsError& x) {
       os << LogIO::SEVERE << "Exception: " << x.getMesg() << LogIO::POST;
-      return false;
+      return False;
     }
-    return true;
+    return True;
   }
 
 
@@ -664,11 +663,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     Array<Float> localres;
     // Modification to be able to work with a cube (TT 2014-12-09)
-    //imstore->residual()->get( localres , true );
+    //imstore->residual()->get( localres , True );
     imstore->residual()->get( localres );
 
     Array<Float> localmask;
-    //imstore->mask()->get( localmask , true );
+    //imstore->mask()->get( localmask , True );
     imstore->mask()->get( localmask );
    
     Int specAxis = CoordinateUtil::findSpectralAxis(imstore->mask()->coordinates());
@@ -714,7 +713,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     imstore->mask()->put( localmask );
 
-    //    imstore->mask()->get( localmask , true );
+    //    imstore->mask()->get( localmask , True );
     //    cout << "Sum of imstore mask : " << sum( localmask ) << endl;
 
   }
@@ -834,7 +833,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
        
     //do statistics
-    SHARED_PTR<casacore::ImageInterface<float> > tempres_ptr(tempres);
+    SHARED_PTR<casa::ImageInterface<float> > tempres_ptr(tempres);
     //cerr<<" tempres->hasPixelMask? "<<tempres->hasPixelMask()<<endl;
     ImageStatsCalculator imcalc( tempres_ptr, 0, "", False); 
     Vector<Int> axes(2);
@@ -1200,7 +1199,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     IPosition minRmsPos, maxRmsPos, minMaxPos, maxMaxPos, minMinPos, maxMinPos;
     TempImage<Float>* tempImForStat = new TempImage<Float>(tempRebinnedIm.shape(), tempRebinnedIm.coordinates() );
     tempImForStat->copyData(tempRebinnedIm);
-    SHARED_PTR<casacore::ImageInterface<float> > temprebin_ptr(tempImForStat);
+    SHARED_PTR<casa::ImageInterface<float> > temprebin_ptr(tempImForStat);
     //os<<" temprebin_ptr.get()->hasPixelMask()="<<temprebin_ptr.get()->hasPixelMask()<<LogIO::POST;
     ImageStatsCalculator imcalc( temprebin_ptr, 0, "", False);
     Vector<Int> stataxes(2);
@@ -1340,7 +1339,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os( LogOrigin("SDMaskHandler","convolveMask",WHERE) );
     TempImage<Float>* tempIm = new TempImage<Float>(inmask.shape(), inmask.coordinates() );
     tempIm->copyData(inmask);
-    SHARED_PTR<casacore::ImageInterface<float> > tempIm2_ptr(tempIm);
+    SHARED_PTR<casa::ImageInterface<float> > tempIm2_ptr(tempIm);
     //DEBUG will be removed 
     os << LogIO::DEBUG1<<"convolve with "<<nxpix<<" pix x "<<nypix<<" pix gaussian"<<LogIO::POST;
 
@@ -1359,7 +1358,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return outmask;
   } 
 
-  SHARED_PTR<casacore::ImageInterface<Float> >  SDMaskHandler::pruneRegions(const ImageInterface<Float>& image, Double& thresh, Int nmask, Int npix)
+  SHARED_PTR<casa::ImageInterface<Float> >  SDMaskHandler::pruneRegions(const ImageInterface<Float>& image, Double& thresh, Int nmask, Int npix)
   {
     LogIO os( LogOrigin("SDMaskHnadler", "pruneRegions",WHERE) );
     Bool debug(False);
@@ -1392,12 +1391,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //cerr<<"strReg="<<strReg<<endl;
     //RegionTextList CRTFList(cSys, strReg, shp);
     //Record regRec = CRTFList.regionAsRecord();
-    //SHARED_PTR<casacore::SubImage<Float> > subIm = SubImageFactory<Float>::createSubImageRW(image, regRec, "", &os, aspec, False, False);
+    //SHARED_PTR<casa::SubImage<Float> > subIm = SubImageFactory<Float>::createSubImageRW(image, regRec, "", &os, aspec, False, False);
 
     //cerr <<" subIm.shape="<<subIm->shape()<<endl;
     IPosition subimShape=subIm->shape();
     uInt ndim = subimShape.nelements();
-    //SHARED_PTR<casacore::ImageInterface<float> > tempIm_ptr(subIm);
+    //SHARED_PTR<casa::ImageInterface<float> > tempIm_ptr(subIm);
     TempImage<Float>* tempIm = new TempImage<Float> (TiledShape(subIm->shape(), subIm->niceCursorShape()), subIm->coordinates() );
     // to search for both positive and negative components
     tempIm->copyData(LatticeExpr<Float> (abs(*subIm)));

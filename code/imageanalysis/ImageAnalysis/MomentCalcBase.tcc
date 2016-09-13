@@ -46,13 +46,13 @@ namespace casa {
 template <class T> MomentCalcBase<T>::~MomentCalcBase() {}
 
 template <class T> void MomentCalcBase<T>::init(
-    casacore::uInt nOutPixelsPerCollapse
+    uInt nOutPixelsPerCollapse
 ) {
-   AlwaysAssert (nOutPixelsPerCollapse == 1, casacore::AipsError);
+   AlwaysAssert (nOutPixelsPerCollapse == 1, AipsError);
 }
 
-template <class T> casacore::uInt MomentCalcBase<T>::allNoise (
-    T& dMean,  const casacore::Vector<T>& data, const casacore::Vector<casacore::Bool>& mask,
+template <class T> uInt MomentCalcBase<T>::allNoise (
+    T& dMean,  const Vector<T>& data, const Vector<Bool>& mask,
     const T peakSNR, const T stdDeviation
 ) const {
     // Try and work out whether this spectrum is all noise
@@ -61,7 +61,7 @@ template <class T> casacore::uInt MomentCalcBase<T>::allNoise (
     // Returns 1 if all noise
     // Returns 2 if all masked
     // Returns 0 otherwise
-    casacore::ClassicalStatistics<AccumType, DataIterator, MaskIterator> statsCalculator;
+    ClassicalStatistics<AccumType, DataIterator, MaskIterator> statsCalculator;
     statsCalculator.addData(data.begin(), mask.begin(), data.size());
     StatsData<AccumType> stats = statsCalculator.getStatistics();
     if (stats.npts == 0) {
@@ -72,26 +72,26 @@ template <class T> casacore::uInt MomentCalcBase<T>::allNoise (
     dMean = stats.mean;
     // Assume we are continuum subtracted so outside of line mean=0
     const T rat = max(abs(dMin),abs(dMax)) / stdDeviation;
-    casacore::uInt ret = rat < peakSNR ? 1 : 0;
+    uInt ret = rat < peakSNR ? 1 : 0;
     return ret;
 }
 
 template <class T>
-void MomentCalcBase<T>::constructorCheck(casacore::Vector<T>& calcMoments, 
-                                         casacore::Vector<casacore::Bool>& calcMomentsMask,
-                                         const casacore::Vector<casacore::Int>& selectMoments,
-                                         const casacore::uInt nLatticeOut) const
+void MomentCalcBase<T>::constructorCheck(Vector<T>& calcMoments, 
+                                         Vector<Bool>& calcMomentsMask,
+                                         const Vector<Int>& selectMoments,
+                                         const uInt nLatticeOut) const
  {
 // Number of output lattices must equal the number of moments
 // the user asked to calculate
 
-   AlwaysAssert(nLatticeOut == selectMoments.nelements(), casacore::AipsError);
+   AlwaysAssert(nLatticeOut == selectMoments.nelements(), AipsError);
 
 // Number of requested moments must be in allowed range
 
    auto nMaxMoments = MomentsBase<T>::NMOMENTS;
-   AlwaysAssert(selectMoments.nelements() <= nMaxMoments, casacore::AipsError);
-   AlwaysAssert(selectMoments.nelements() > 0, casacore::AipsError);
+   AlwaysAssert(selectMoments.nelements() <= nMaxMoments, AipsError);
+   AlwaysAssert(selectMoments.nelements() > 0, AipsError);
 
 // Resize the vector that will hold ALL possible moments
    
@@ -105,19 +105,19 @@ void MomentCalcBase<T>::constructorCheck(casacore::Vector<T>& calcMoments,
 
 template <class T>
 void MomentCalcBase<T>::costlyMoments(MomentsBase<T>& iMom,
-                                      casacore::Bool& doMedianI,
-                                      casacore::Bool& doMedianV,
-                                      casacore::Bool& doAbsDev) const
+                                      Bool& doMedianI,
+                                      Bool& doMedianV,
+                                      Bool& doAbsDev) const
 {
-   doMedianI = false;
-   doMedianV = false;
-   doAbsDev = false;
-   using IM = MomentsBase<casacore::Float>;
+   doMedianI = False;
+   doMedianV = False;
+   doAbsDev = False;
+   using IM = MomentsBase<Float>;
 //
-   for (casacore::uInt i=0; i<iMom.moments_p.nelements(); i++) {
-      if (iMom.moments_p(i) == IM::MEDIAN) doMedianI = true;
-      if (iMom.moments_p(i) == IM::MEDIAN_COORDINATE) doMedianV = true;
-      if (iMom.moments_p(i) == IM::ABS_MEAN_DEVIATION) doAbsDev = true;
+   for (uInt i=0; i<iMom.moments_p.nelements(); i++) {
+      if (iMom.moments_p(i) == IM::MEDIAN) doMedianI = True;
+      if (iMom.moments_p(i) == IM::MEDIAN_COORDINATE) doMedianV = True;
+      if (iMom.moments_p(i) == IM::ABS_MEAN_DEVIATION) doAbsDev = True;
    }      
 }
 
@@ -130,8 +130,8 @@ Bool MomentCalcBase<T>::doFit(const MomentsBase<T>& iMom) const
 }
 
 template <class T>
-void MomentCalcBase<T>::doCoordCalc(casacore::Bool& doCoordProfile,
-                                    casacore::Bool& doCoordRandom,
+void MomentCalcBase<T>::doCoordCalc(Bool& doCoordProfile,
+                                    Bool& doCoordRandom,
                                     const MomentsBase<T>& iMom) const
 //
 // doCoordProfile - we need the coordinate for each pixel of the profile
@@ -141,57 +141,57 @@ void MomentCalcBase<T>::doCoordCalc(casacore::Bool& doCoordProfile,
 // Figure out if we need to compute the coordinate of each profile pixel index
 // for each profile.  This is very expensive for non-separable axes.
 
-   doCoordProfile = false;
-   doCoordRandom  = false;
-   using IM = MomentsBase<casacore::Float>;
+   doCoordProfile = False;
+   doCoordRandom  = False;
+   using IM = MomentsBase<Float>;
 //
-   for (casacore::uInt i=0; i<iMom.moments_p.nelements(); i++) {
+   for (uInt i=0; i<iMom.moments_p.nelements(); i++) {
       if (iMom.moments_p(i) == IM::WEIGHTED_MEAN_COORDINATE ||
           iMom.moments_p(i) == IM::WEIGHTED_DISPERSION_COORDINATE) {
-         doCoordProfile = true;
+         doCoordProfile = True;
       }
       if (iMom.moments_p(i) == IM::MAXIMUM_COORDINATE ||
           iMom.moments_p(i) == IM::MINIMUM_COORDINATE ||
           iMom.moments_p(i) == IM::MEDIAN_COORDINATE) {
-         doCoordRandom = true;
+         doCoordRandom = True;
       }
    }
 }
 
 template <class T>
-Bool MomentCalcBase<T>::findNextDatum (casacore::uInt& iFound,
-                                       const casacore::uInt& n,
-                                       const casacore::Vector<casacore::Bool>& mask,
-                                       const casacore::uInt& iStart,
-                                       const casacore::Bool& findGood) const
+Bool MomentCalcBase<T>::findNextDatum (uInt& iFound,
+                                       const uInt& n,
+                                       const Vector<Bool>& mask,
+                                       const uInt& iStart,
+                                       const Bool& findGood) const
 //
 // Find the next good (or bad) point in an array.
 // A good point in the array has a non-zero value.
 //
 // Inputs:
 //  n        Number of points in array
-//  mask     casacore::Vector containing counts.  
+//  mask     Vector containing counts.  
 //  iStart   The index of the first point to consider
-//  findGood If true look for next good point.
-//           If false look for next bad point
+//  findGood If True look for next good point.
+//           If False look for next bad point
 // Outputs:
 //  iFound   Index of found point
-//  casacore::Bool     false if didn't find another valid datum
+//  Bool     False if didn't find another valid datum
 {
-   for (casacore::uInt i=iStart; i<n; i++) {
+   for (uInt i=iStart; i<n; i++) {
       if ( (findGood && mask(i)) ||
            (!findGood && !mask(i)) ) {
         iFound = i;
-        return true;
+        return True;
       }
    }
-   return false;
+   return False;
 }
 
-template <class T> casacore::Bool MomentCalcBase<T>::fitGaussian(
-    casacore::uInt& nFailed, T& peak, T& pos, T& width,
-    T& level, const casacore::Vector<T>& x, const casacore::Vector<T>& y,
-    const casacore::Vector<casacore::Bool>& mask, const T peakGuess,
+template <class T> Bool MomentCalcBase<T>::fitGaussian(
+    uInt& nFailed, T& peak, T& pos, T& width,
+    T& level, const Vector<T>& x, const Vector<T>& y,
+    const Vector<Bool>& mask, const T peakGuess,
     const T posGuess, const T widthGuess,
     const T levelGuess
 ) const {
@@ -199,11 +199,11 @@ template <class T> casacore::Bool MomentCalcBase<T>::fitGaussian(
     // width = fwhm
     // Returns false if fit fails or all masked
     // Select unmasked pixels
-    casacore::uInt j = 0;
+    uInt j = 0;
     auto nAll = y.size();
-    casacore::Vector<T> xSel(nAll);
-    casacore::Vector<T> ySel(nAll);
-    for (casacore::uInt i=0; i<nAll; ++i) {
+    Vector<T> xSel(nAll);
+    Vector<T> ySel(nAll);
+    for (uInt i=0; i<nAll; ++i) {
         if (mask[i]) {
             xSel[j] = x[i];
             ySel[j] = y[i];
@@ -212,20 +212,20 @@ template <class T> casacore::Bool MomentCalcBase<T>::fitGaussian(
     }
     auto nPts = j;
     if (nPts == 0) {
-        return false;
+        return False;
     }
-    xSel.resize(nPts, true);
-    ySel.resize(nPts, true);
+    xSel.resize(nPts, True);
+    ySel.resize(nPts, True);
     // Create fitter as gaussian + constant offset
-    casacore::NonLinearFitLM<T> fitter;
-    casacore::Gaussian1D<casacore::AutoDiff<T> > gauss;
-    casacore::Polynomial<casacore::AutoDiff<T> > poly;
-    casacore::CompoundFunction<casacore::AutoDiff<T> > func;
+    NonLinearFitLM<T> fitter;
+    Gaussian1D<AutoDiff<T> > gauss;
+    Polynomial<AutoDiff<T> > poly;
+    CompoundFunction<AutoDiff<T> > func;
     func.addFunction(gauss);
     func.addFunction(poly);
     fitter.setFunction(func);
     // Initial guess
-    casacore::Vector<T> v(4);
+    Vector<T> v(4);
     v[0] = peakGuess;
     v[1] = posGuess;
     v[2] = widthGuess;
@@ -236,14 +236,14 @@ template <class T> casacore::Bool MomentCalcBase<T>::fitGaussian(
     // Set converge criteria.
     fitter.setCriteria(0.001);
     // Perform fit on unmasked data
-    casacore::Vector<T> resultSigma(nPts, 1);
-    casacore::Vector<T> solution;
+    Vector<T> resultSigma(nPts, 1);
+    Vector<T> solution;
     try {
         solution = fitter.fit(xSel, ySel, resultSigma);
     }
-    catch (const casacore::AipsError& x1) {
+    catch (const AipsError& x1) {
         ++nFailed;
-        return false;
+        return False;
     }
     // Return values of fit
     // FIXME shouldn't these only be set if the fit converged?
@@ -260,11 +260,11 @@ template <class T> casacore::Bool MomentCalcBase<T>::fitGaussian(
 }
 
 template <class T>
-Bool MomentCalcBase<T>::getAutoGaussianFit (casacore::uInt& nFailed,
-                                            casacore::Vector<T>& gaussPars,
-                                            const casacore::Vector<T>& x,
-                                            const casacore::Vector<T>& y,
-                                            const casacore::Vector<casacore::Bool>& mask,
+Bool MomentCalcBase<T>::getAutoGaussianFit (uInt& nFailed,
+                                            Vector<T>& gaussPars,
+                                            const Vector<T>& x,
+                                            const Vector<T>& y,
+                                            const Vector<Bool>& mask,
                                             const T peakSNR,
                                             const T stdDeviation
                                             ) const
@@ -273,16 +273,16 @@ Bool MomentCalcBase<T>::getAutoGaussianFit (casacore::uInt& nFailed,
 // If a plotting device is active, we also plot the spectra and fits
 //
 // Inputs:
-//   x,y        casacore::Vector containing the data
-//   mask       true is good
+//   x,y        Vector containing the data
+//   mask       True is good
 //   plotter    Plot spectrum and optionally the  window
 //   x,yLabel   Labels
 //   title
-// casacore::Input/output
+// Input/output
 //   nFailed    Cumulative number of failed fits
 // Output:
 //   gaussPars  The gaussian parameters, peak, pos, fwhm
-//   casacore::Bool       If false then this spectrum has been rejected (all
+//   Bool       If False then this spectrum has been rejected (all
 //              masked, all noise, failed fit)
 //
 {
@@ -291,12 +291,12 @@ Bool MomentCalcBase<T>::getAutoGaussianFit (casacore::uInt& nFailed,
 // Return straight away if all masked
    
    T dMean;
-   casacore::uInt iNoise = this->allNoise(dMean, y, mask, peakSNR, stdDeviation);
-   if (iNoise == 2) return false;
+   uInt iNoise = this->allNoise(dMean, y, mask, peakSNR, stdDeviation);
+   if (iNoise == 2) return False;
  
    if (iNoise==1) {
       gaussPars = 0;  
-      return false;
+      return False;
    }
 
 // Work out guesses for Gaussian
@@ -304,7 +304,7 @@ Bool MomentCalcBase<T>::getAutoGaussianFit (casacore::uInt& nFailed,
    T peakGuess, posGuess, widthGuess, levelGuess;
    T pos, width, peak, level;
    if (!getAutoGaussianGuess(peakGuess, posGuess, widthGuess, 
-                             levelGuess, x, y, mask)) return false;
+                             levelGuess, x, y, mask)) return False;
    peakGuess = peakGuess - levelGuess;
 
 
@@ -313,29 +313,29 @@ Bool MomentCalcBase<T>::getAutoGaussianFit (casacore::uInt& nFailed,
    if (!fitGaussian (nFailed, peak, pos, width, level, x, y, mask, peakGuess, 
                      posGuess, widthGuess, levelGuess)) {
       gaussPars = 0;
-      return false;
+      return False;
    }  
    gaussPars(0) = peak;
    gaussPars(1) = pos;
    gaussPars(2) = width;
    gaussPars(3) = level;
 
-   return true;
+   return True;
 }
 
-template <class T> casacore::Bool MomentCalcBase<T>::getAutoGaussianGuess (
+template <class T> Bool MomentCalcBase<T>::getAutoGaussianGuess (
     T& peakGuess, T& posGuess, T& widthGuess, T& levelGuess,
-    const casacore::Vector<T>& x, const casacore::Vector<T>& y, const casacore::Vector<casacore::Bool>& mask
+    const Vector<T>& x, const Vector<T>& y, const Vector<Bool>& mask
 ) const {
     // Make a wild stab in the dark as to what the Gaussian
     // parameters of this spectrum might be
 
-    casacore::ClassicalStatistics<AccumType, DataIterator, MaskIterator> statsCalculator;
+    ClassicalStatistics<AccumType, DataIterator, MaskIterator> statsCalculator;
     statsCalculator.addData(y.begin(), mask.begin(), y.size());
     StatsData<AccumType> stats = statsCalculator.getStatistics();
     if (stats.npts == 0) {
         // all masked
-        return false;
+        return False;
     }
     // Find peak and position of peak
     posGuess = x[stats.maxpos.second];
@@ -344,52 +344,52 @@ template <class T> casacore::Bool MomentCalcBase<T>::getAutoGaussianGuess (
     // Nothing much is very robust.  Assume the line is reasonably
     // sampled and set its width to a few pixels.  Totally ridiculous.
     widthGuess = 5;
-    return true;
+    return True;
 }
 
 template <class T>
-void MomentCalcBase<T>::lineSegments (casacore::uInt& nSeg,
-                                      casacore::Vector<casacore::uInt>& start, 
-                                      casacore::Vector<casacore::uInt>& nPts,
-                                      const casacore::Vector<casacore::Bool>& mask) const
+void MomentCalcBase<T>::lineSegments (uInt& nSeg,
+                                      Vector<uInt>& start, 
+                                      Vector<uInt>& nPts,
+                                      const Vector<Bool>& mask) const
 //
 // Examine an array and determine how many segments
 // of good points it consists of.    A good point
 // occurs if the array value is greater than zero.
 //
 // Inputs:
-//   mask  The array mask. true is good.
+//   mask  The array mask. True is good.
 // Outputs:
 //   nSeg  Number of segments  
 //   start Indices of start of each segment
 //   nPts  Number of points in segment
 //
 { 
-   casacore::Bool finish = false;
+   Bool finish = False;
    nSeg = 0;
-   casacore::uInt iGood, iBad;
-   const casacore::uInt n = mask.nelements();
+   uInt iGood, iBad;
+   const uInt n = mask.nelements();
    start.resize(n);
    nPts.resize(n);
  
-   for (casacore::uInt i=0; !finish;) {
-      if (!findNextDatum (iGood, n, mask, i, true)) {
-         finish = true;
+   for (uInt i=0; !finish;) {
+      if (!findNextDatum (iGood, n, mask, i, True)) {
+         finish = True;
       } else {
          nSeg++;
          start(nSeg-1) = iGood;        
    
-         if (!findNextDatum (iBad, n, mask, iGood, false)) {
+         if (!findNextDatum (iBad, n, mask, iGood, False)) {
             nPts(nSeg-1) = n - start(nSeg-1);
-            finish = true;
+            finish = True;
          } else {
             nPts(nSeg-1) = iBad - start(nSeg-1);
             i = iBad + 1;
          }
       }
    }
-   start.resize(nSeg,true);
-   nPts.resize(nSeg,true);
+   start.resize(nSeg,True);
+   nPts.resize(nSeg,True);
 }
 
 template <class T>
@@ -399,12 +399,12 @@ Int& MomentCalcBase<T>::momentAxis(MomentsBase<T>& iMom) const
 }
 
 template <class T>
-String MomentCalcBase<T>::momentAxisName(const casacore::CoordinateSystem& cSys,
+String MomentCalcBase<T>::momentAxisName(const CoordinateSystem& cSys,
                                          const MomentsBase<T>& iMom) const 
 {
 // Return the name of the moment/profile axis
 
-   casacore::Int worldMomentAxis = cSys.pixelAxisToWorldAxis(iMom.momentAxis_p);
+   Int worldMomentAxis = cSys.pixelAxisToWorldAxis(iMom.momentAxis_p);
    return cSys.worldAxisNames()(worldMomentAxis);
 }
 
@@ -418,9 +418,9 @@ T& MomentCalcBase<T>::peakSNR(MomentsBase<T>& iMom) const
 
 
 template <class T>
-void MomentCalcBase<T>::selectRange(casacore::Vector<T>& pixelRange,
-                                    casacore::Bool& doInclude,
-                                    casacore::Bool& doExclude, 
+void MomentCalcBase<T>::selectRange(Vector<T>& pixelRange,
+                                    Bool& doInclude,
+                                    Bool& doExclude, 
                                     MomentsBase<T>& iMom) const
 {
 // Get it from ImageMoments private data
@@ -432,16 +432,16 @@ void MomentCalcBase<T>::selectRange(casacore::Vector<T>& pixelRange,
 
 
 template <class T>
-Vector<casacore::Int> MomentCalcBase<T>::selectMoments(MomentsBase<T>& iMom) const
+Vector<Int> MomentCalcBase<T>::selectMoments(MomentsBase<T>& iMom) const
 //
 // Fill the moment selection vector according to what the user requests
 //
 {
-   using IM = MomentsBase<casacore::Float>;
-   casacore::Vector<casacore::Int> sel(IM::NMOMENTS);
+   using IM = MomentsBase<Float>;
+   Vector<Int> sel(IM::NMOMENTS);
 
-   casacore::uInt j = 0;
-   for (casacore::uInt i=0; i<iMom.moments_p.nelements(); i++) {
+   uInt j = 0;
+   for (uInt i=0; i<iMom.moments_p.nelements(); i++) {
       if (iMom.moments_p(i) == IM::AVERAGE) {
          sel(j++) = IM::AVERAGE;
       } else if (iMom.moments_p(i) == IM::INTEGRATED) {
@@ -470,25 +470,25 @@ Vector<casacore::Int> MomentCalcBase<T>::selectMoments(MomentsBase<T>& iMom) con
          sel(j++) = IM::MEDIAN_COORDINATE;
       }
    }
-   sel.resize(j,true);
+   sel.resize(j,True);
    return sel;
 }
 
 
 template <class T> 
-void MomentCalcBase<T>::setPosLabel (casacore::String& title,
-                                     const casacore::IPosition& pos) const
+void MomentCalcBase<T>::setPosLabel (String& title,
+                                     const IPosition& pos) const
 {  
    ostringstream oss;
 
    oss << "Position = " << pos+1;
-   casacore::String temp(oss);
+   String temp(oss);
    title = temp;
 }
 
 
 template <class T>
-void MomentCalcBase<T>::setCoordinateSystem (casacore::CoordinateSystem& cSys, 
+void MomentCalcBase<T>::setCoordinateSystem (CoordinateSystem& cSys, 
                                              MomentsBase<T>& iMom) 
 {
   cSys = iMom.coordinates() ;
@@ -496,16 +496,16 @@ void MomentCalcBase<T>::setCoordinateSystem (casacore::CoordinateSystem& cSys,
 
 template <class T>
 void MomentCalcBase<T>::setUpCoords (const MomentsBase<T>& iMom,
-                                     casacore::Vector<casacore::Double>& pixelIn,
-                                     casacore::Vector<casacore::Double>& worldOut,
-                                     casacore::Vector<casacore::Double>& sepWorldCoord,
-                                     casacore::LogIO& os, 
-                                     casacore::Double& integratedScaleFactor,
-                                     const casacore::CoordinateSystem& cSys,
-                                     casacore::Bool doCoordProfile, 
-                                     casacore::Bool doCoordRandom) const
+                                     Vector<Double>& pixelIn,
+                                     Vector<Double>& worldOut,
+                                     Vector<Double>& sepWorldCoord,
+                                     LogIO& os, 
+                                     Double& integratedScaleFactor,
+                                     const CoordinateSystem& cSys,
+                                     Bool doCoordProfile, 
+                                     Bool doCoordRandom) const
 // 
-// casacore::Input:
+// Input:
 // doCoordProfile - we need the coordinate for each pixel of the profile
 //                  and we precompute it if we can
 // doCoordRandom  - we need the coordinate for occaisional use
@@ -519,12 +519,12 @@ void MomentCalcBase<T>::setUpCoords (const MomentsBase<T>& iMom,
 
 // Do we need the scale factor for the integrated moment
 
-   casacore::Int axis =  iMom.momentAxis_p;
-   casacore::Bool doIntScaleFactor = false;
+   Int axis =  iMom.momentAxis_p;
+   Bool doIntScaleFactor = False;
    integratedScaleFactor = 1.0;
-   for (casacore::uInt i=0; i<iMom.moments_p.nelements(); i++) {
-      if (iMom.moments_p(i) == MomentsBase<casacore::Float>::INTEGRATED) {
-         doIntScaleFactor = true;
+   for (uInt i=0; i<iMom.moments_p.nelements(); i++) {
+      if (iMom.moments_p(i) == MomentsBase<Float>::INTEGRATED) {
+         doIntScaleFactor = True;
          break;
       }
    }
@@ -540,26 +540,26 @@ void MomentCalcBase<T>::setUpCoords (const MomentsBase<T>& iMom,
 
 // Find the coordinate for the moment axis
    
-   casacore::Int coordinate, axisInCoordinate;
+   Int coordinate, axisInCoordinate;
    cSys.findPixelAxis(coordinate, axisInCoordinate, axis);  
   
 // Find out whether this coordinate is separable or not
   
-   casacore::Int nPixelAxes = cSys.coordinate(coordinate).nPixelAxes();
-   casacore::Int nWorldAxes = cSys.coordinate(coordinate).nWorldAxes();
+   Int nPixelAxes = cSys.coordinate(coordinate).nPixelAxes();
+   Int nWorldAxes = cSys.coordinate(coordinate).nWorldAxes();
 
 // Precompute the profile coordinates if it is separable and needed
 // The Integrated moment scale factor is worked out here as well so the 
 // logic is a bit contorted
 
-   casacore::Bool doneIntScale = false;      
+   Bool doneIntScale = False;      
    if (nPixelAxes == 1 && nWorldAxes == 1) {
       pixelIn = cSys_p.referencePixel();
 //
-      casacore::Vector<casacore::Double> frequency(iMom.getShape()(axis));
+      Vector<Double> frequency(iMom.getShape()(axis));
       if (doCoordProfile) {
-         for (casacore::uInt i=0; i<frequency.nelements(); i++) {
-            frequency(i) = getMomentCoord(iMom, pixelIn, worldOut, casacore::Double(i));
+         for (uInt i=0; i<frequency.nelements(); i++) {
+            frequency(i) = getMomentCoord(iMom, pixelIn, worldOut, Double(i));
          }
       }
 
@@ -569,14 +569,14 @@ void MomentCalcBase<T>::setUpCoords (const MomentsBase<T>& iMom,
 // So to ensure coupling, i pass in this switch via the IM object
 
       if (iMom.convertToVelocity_p) {
-         AlwaysAssert(cSys.type(coordinate)==casacore::Coordinate::SPECTRAL, casacore::AipsError);  // Should never fail !
+         AlwaysAssert(cSys.type(coordinate)==Coordinate::SPECTRAL, AipsError);  // Should never fail !
 //
-         const casacore::SpectralCoordinate& sc = cSys.spectralCoordinate(coordinate);
-         casacore::SpectralCoordinate sc0(sc);
+         const SpectralCoordinate& sc = cSys.spectralCoordinate(coordinate);
+         SpectralCoordinate sc0(sc);
 
 // Convert
 
-         sc0.setVelocity (casacore::String("km/s"), iMom.velocityType_p);
+         sc0.setVelocity (String("km/s"), iMom.velocityType_p);
          if (doCoordProfile) {
             sc0.frequencyToVelocity (sepWorldCoord, frequency);
          }
@@ -584,20 +584,20 @@ void MomentCalcBase<T>::setUpCoords (const MomentsBase<T>& iMom,
 // Find increment in world units at reference pixel if needed
 
          if (doIntScaleFactor) {
-            casacore::Quantum<casacore::Double> vel0, vel1;
-            casacore::Double pix0 = sc0.referencePixel()(0) - 0.5;
-            casacore::Double pix1 = sc0.referencePixel()(0) + 0.5;
+            Quantum<Double> vel0, vel1;
+            Double pix0 = sc0.referencePixel()(0) - 0.5;
+            Double pix1 = sc0.referencePixel()(0) + 0.5;
             sc0.pixelToVelocity (vel0, pix0);
             sc0.pixelToVelocity (vel1, pix1);
             integratedScaleFactor = abs(vel1.getValue() - vel0.getValue());
-            doneIntScale = true;
+            doneIntScale = True;
          }
       } 
    } else {
-      os << casacore::LogIO::NORMAL
+      os << LogIO::NORMAL
            << "You have asked for a coordinate moment from a non-separable " << endl;
       os << "axis.  This means a coordinate must be computed for each pixel " << endl;
-      os << "of each profile which will cause performance degradation" << casacore::LogIO::POST;
+      os << "of each profile which will cause performance degradation" << LogIO::POST;
    }
 //
    if (doIntScaleFactor && !doneIntScale) {
@@ -605,10 +605,10 @@ void MomentCalcBase<T>::setUpCoords (const MomentsBase<T>& iMom,
 // We need the Integrated moment scale factor but the moment
 // axis is non-separable
 
-      const casacore::Coordinate& c = cSys.coordinate(coordinate);
-      casacore::Double inc = c.increment()(axisInCoordinate);
+      const Coordinate& c = cSys.coordinate(coordinate);
+      Double inc = c.increment()(axisInCoordinate);
       integratedScaleFactor = abs(inc*inc);
-      doneIntScale = true;
+      doneIntScale = True;
    }
 }
 
@@ -622,24 +622,24 @@ T& MomentCalcBase<T>::stdDeviation(MomentsBase<T>& iMom) const
 template<class T>
 void MomentCalcBase<T>::setCalcMoments
                        (const MomentsBase<T>& iMom,
-                        casacore::Vector<T>& calcMoments,
-                        casacore::Vector<casacore::Bool>& calcMomentsMask,
-                        casacore::Vector<casacore::Double>& pixelIn,
-                        casacore::Vector<casacore::Double>& worldOut,
-                        casacore::Bool doCoord,
-                        casacore::Double integratedScaleFactor,
+                        Vector<T>& calcMoments,
+                        Vector<Bool>& calcMomentsMask,
+                        Vector<Double>& pixelIn,
+                        Vector<Double>& worldOut,
+                        Bool doCoord,
+                        Double integratedScaleFactor,
                         T dMedian,
                         T vMedian,
-                        casacore::Int nPts,
-                        typename casacore::NumericTraits<T>::PrecisionType s0,
-                        typename casacore::NumericTraits<T>::PrecisionType s1,
-                        typename casacore::NumericTraits<T>::PrecisionType s2,
-                        typename casacore::NumericTraits<T>::PrecisionType s0Sq,
-                        typename casacore::NumericTraits<T>::PrecisionType sumAbsDev,
+                        Int nPts,
+                        typename NumericTraits<T>::PrecisionType s0,
+                        typename NumericTraits<T>::PrecisionType s1,
+                        typename NumericTraits<T>::PrecisionType s2,
+                        typename NumericTraits<T>::PrecisionType s0Sq,
+                        typename NumericTraits<T>::PrecisionType sumAbsDev,
                         T dMin,
                         T dMax,
-                        casacore::Int iMin,
-                        casacore::Int iMax) const
+                        Int iMin,
+                        Int iMax) const
 //
 // Fill the moments vector
 //
@@ -649,15 +649,15 @@ void MomentCalcBase<T>::setCalcMoments
 //   calcMoments The moments
 //
 {
-// casacore::Short hand to fish ImageMoments enum values out   
+// Short hand to fish ImageMoments enum values out   
 // Despite being our friend, we cannot refer to the
 // enum values as just, say, "AVERAGE"
      
-   using IM = MomentsBase<casacore::Float>;
+   using IM = MomentsBase<Float>;
            
 // Normalize and fill moments
 
-   calcMomentsMask = true;
+   calcMomentsMask = True;
    calcMoments(IM::AVERAGE) = s0 / nPts;
    calcMoments(IM::INTEGRATED) = s0 * integratedScaleFactor; 
    if (abs(s0) > 0.0) {
@@ -673,20 +673,20 @@ void MomentCalcBase<T>::setCalcMoments
             sqrt(calcMoments(IM::WEIGHTED_DISPERSION_COORDINATE));
       } else {
          calcMoments(IM::WEIGHTED_DISPERSION_COORDINATE) = 0.0;
-         calcMomentsMask(IM::WEIGHTED_DISPERSION_COORDINATE) = false;
+         calcMomentsMask(IM::WEIGHTED_DISPERSION_COORDINATE) = False;
       }
    } else {
-      calcMomentsMask(IM::WEIGHTED_MEAN_COORDINATE) = false;
-      calcMomentsMask(IM::WEIGHTED_DISPERSION_COORDINATE) = false;
+      calcMomentsMask(IM::WEIGHTED_MEAN_COORDINATE) = False;
+      calcMomentsMask(IM::WEIGHTED_DISPERSION_COORDINATE) = False;
    }
 
 // Standard deviation about mean of I
                  
-   if (nPts>1 && casacore::Float((s0Sq - s0*s0/nPts)/(nPts-1)) > 0) {
+   if (nPts>1 && Float((s0Sq - s0*s0/nPts)/(nPts-1)) > 0) {
       calcMoments(IM::STANDARD_DEVIATION) = sqrt((s0Sq - s0*s0/nPts)/(nPts-1));
    } else {
       calcMoments(IM::STANDARD_DEVIATION) = 0;
-      calcMomentsMask(IM::STANDARD_DEVIATION) = false;
+      calcMomentsMask(IM::STANDARD_DEVIATION) = False;
    }
 
 // Rms of I
@@ -701,22 +701,22 @@ void MomentCalcBase<T>::setCalcMoments
 
    calcMoments(IM::MAXIMUM) = dMax;
                                       
-// casacore::Coordinate of min/max value
+// Coordinate of min/max value
 
    if (doCoord) {
       calcMoments(IM::MAXIMUM_COORDINATE) = getMomentCoord(
-    		  iMom, pixelIn, worldOut, casacore::Double(iMax),
+    		  iMom, pixelIn, worldOut, Double(iMax),
     		  iMom.convertToVelocity_p
       );
       calcMoments(IM::MINIMUM_COORDINATE) = getMomentCoord(
-    		  iMom, pixelIn, worldOut, casacore::Double(iMin),
+    		  iMom, pixelIn, worldOut, Double(iMin),
     		  iMom.convertToVelocity_p
       );
    } else {
       calcMoments(IM::MAXIMUM_COORDINATE) = 0.0;
       calcMoments(IM::MINIMUM_COORDINATE) = 0.0;
-      calcMomentsMask(IM::MAXIMUM_COORDINATE) = false;
-      calcMomentsMask(IM::MINIMUM_COORDINATE) = false;
+      calcMomentsMask(IM::MAXIMUM_COORDINATE) = False;
+      calcMomentsMask(IM::MINIMUM_COORDINATE) = False;
    }
 
 // Minimum value

@@ -36,7 +36,6 @@
 #include <casa/Logging/LogIO.h>
 #include <ms/MSSel/MSSelection.h>
 
-using namespace casacore;
 namespace casa {
 
 VBGContinuumSubtractor::VBGContinuumSubtractor(MeasurementSet& outms,
@@ -214,7 +213,7 @@ Bool VBGContinuumSubtractor::process(VisBuffGroup& vbg)
       rowsdone_p = GroupWriteToNewMS::write(outms_p, msc_p, vbg(bufnum),
                                             rowsdone_p, remapper_p,
                                             doFC_p,
-                                            false,      // for now
+                                            False,      // for now
                                             doWS_p);
       //cerr << "Wrote out row IDs " << oldrowsdone << " - " << rowsdone_p - 1 << ",";
     }
@@ -227,5 +226,4 @@ Bool VBGContinuumSubtractor::process(VisBuffGroup& vbg)
   return worked;
 }
 
-using namespace casacore;
 } // end namespace casa

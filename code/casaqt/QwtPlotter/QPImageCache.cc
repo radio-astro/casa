@@ -33,7 +33,6 @@
 
 uint qHash(const casa::QPAxesCache::Key& key) { return key.hash(); }
 
-using namespace casacore;
 namespace casa {
 
 //////////////////////////////

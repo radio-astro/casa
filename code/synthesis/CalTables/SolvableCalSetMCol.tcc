@@ -38,7 +38,7 @@ ROSolvableCalSetMCol<T>::ROSolvableCalSetMCol (const CalTable2&
   ROCalMainColumns2<T>(svjTable)
 {
 // Construct from a calibration table
-// casacore::Input:
+// Input:
 //    svjTable              const SolvableCalSetTable&  SVJ calibration table
 // Output to private data:
 //    ROTimeVarVisJonesMCol ROTimeVarVisJonesMCol         Read-only TVVJ 
@@ -62,7 +62,7 @@ SolvableCalSetMCol<T>::SolvableCalSetMCol (CalTable2& svjTable) :
   CalMainColumns2<T> (svjTable)
 {
 // Construct from a calibration table
-// casacore::Input:
+// Input:
 //    svjTable             SolvableCalSetTable&      SVJ calibration table
 // Output to private data:
 //    TimeVarVisJonesMCol  TimeVarVisJonesMCol         Read-write TVVJ 

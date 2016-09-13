@@ -71,9 +71,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		    Rotate
 		};
 
-		// Constructor taking a casacore::Record description.  Fields in the record
+		// Constructor taking a Record description.  Fields in the record
 		// are: <src>color</src> and <src>label</src>.
-		DDDObject(const casacore::Record &description, DrawingDisplayData *owner);
+		DDDObject(const Record &description, DrawingDisplayData *owner);
 
 		// Destructor.
 		virtual ~DDDObject();
@@ -89,31 +89,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// option.  This actually controls the state of whether this
 		// DDDObject is editable, so the parent DrawingDisplayData could
 		// also allow editing of only one DDDObject at a time.
-		virtual void showHandles(const casacore::Bool show, const casacore::Bool tellOwner = true);
+		virtual void showHandles(const Bool show, const Bool tellOwner = True);
 
 		// Query whether the object is showing its handles.
-		virtual casacore::Bool showingHandles() {
+		virtual Bool showingHandles() {
 			return itsShowHandles;
 		}
 
 		// Return a record describing this object.
-		virtual casacore::Record description();
+		virtual Record description();
 
 		// Update this object based on the information in the provided
 		// Record.
-		virtual void setDescription(const casacore::Record &rec);
+		virtual void setDescription(const Record &rec);
 
 		// Store a click in the buffer and look for a double-click event.
 		// If one is found, then call the doubleClick function in the
-		// owning DisplayData.  Returns <src>true</src> if a double click
+		// owning DisplayData.  Returns <src>True</src> if a double click
 		// was detected.
-		virtual casacore::Bool storeClick(const DisplayEvent &ev);
+		virtual Bool storeClick(const DisplayEvent &ev);
 
 		// Clear the click buffer.
 		virtual void clearClickBuffer();
 
 		// Return the unique id of this object.
-		casacore::Int objectID() const {
+		Int objectID() const {
 			return itsObjectID;
 		}
 
@@ -133,29 +133,29 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		// Return the color to use to draw this object.
-		casacore::String color() const {
+		String color() const {
 			return itsColor;
 		}
 
 		// Return the label of this object.
-		casacore::String label() const {
+		String label() const {
 			return itsLabel;
 		}
 
 		// Return the line width of this object.
-		casacore::Int lineWidth() const {
+		Int lineWidth() const {
 			return itsLineWidth;
 		}
 
-		casacore::Bool isEditable() const {
+		Bool isEditable() const {
 			return itsEditable;
 		}
 
-		casacore::Bool isMovable() const {
+		Bool isMovable() const {
 			return itsMovable;
 		}
 
-		casacore::Bool isFixed() const {
+		Bool isFixed() const {
 			return !itsMovable && !itsEditable;
 		}
 
@@ -169,24 +169,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void operator=(const DDDObject &other);
 
 		// Translate Matrix
-		void translateMatrix(casacore::Matrix<casacore::Double>& points, casacore::Double dx, casacore::Double dy);
+		void translateMatrix(Matrix<Double>& points, Double dx, Double dy);
 
 		// Rotate Matrix
-		casacore::Matrix<casacore::Double> rotateMatrix(const casacore::Matrix<casacore::Double>& points, casacore::Double angle);
+		Matrix<Double> rotateMatrix(const Matrix<Double>& points, Double angle);
 
 		// Is point inside the polygon
 		// <group>
-		casacore::Bool inPolygon(const casacore::Matrix<casacore::Double>& points, casacore::Double x, casacore::Double y);
-		casacore::Bool inPolygon(const casacore::Vector<casacore::Double>& xP, const casacore::Vector<casacore::Double>& yP,
-		               casacore::Double x, casacore::Double y);
+		Bool inPolygon(const Matrix<Double>& points, Double x, Double y);
+		Bool inPolygon(const Vector<Double>& xP, const Vector<Double>& yP,
+		               Double x, Double y);
 		// </group>
 
 		// Convert DisplayCoordinateSystem to screen pixels
 		void convertCoordinateSystem (DisplayCoordinateSystem& cSys, WorldCanvas* wcPtr) const;
 
 		// Is the point on a handle
-		casacore::Bool onHandle(const casacore::Block<DDDHandle>& handles,
-		              casacore::Double x, casacore::Double y);
+		Bool onHandle(const Block<DDDHandle>& handles,
+		              Double x, Double y);
 
 	private:
 
@@ -195,27 +195,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Whether the handles are showing, and therefore whether this
 		// DDDObject is presently editable.
-		casacore::Bool itsShowHandles;
+		Bool itsShowHandles;
 
 		// Is this object editable
-		casacore::Bool itsEditable;
+		Bool itsEditable;
 		// Is it movable
-		casacore::Bool itsMovable;
+		Bool itsMovable;
 
 		// Timing for double clicks.
-		casacore::Double itsLastClickTime, its2ndLastClickTime;
+		Double itsLastClickTime, its2ndLastClickTime;
 
 		// Color of this object.
-		casacore::String itsColor;
+		String itsColor;
 
 		// Line width of the lines drawn
-		casacore::Int itsLineWidth;
+		Int itsLineWidth;
 
 		// Label for this object.
-		casacore::String itsLabel;
+		String itsLabel;
 
 		// Unique identification for this object.
-		casacore::Int itsObjectID;
+		Int itsObjectID;
 
 	};
 

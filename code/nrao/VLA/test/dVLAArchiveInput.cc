@@ -71,7 +71,7 @@ int main(int /*argc*/, char* /*argv*/[]) {
       AlwaysAssert(name.isValid(), AipsError);
       input = File(name);
       AlwaysAssert(input.exists(), AipsError);
-      AlwaysAssert(input.isSymLink() == false, AipsError);
+      AlwaysAssert(input.isSymLink() == False, AipsError);
        myrecord = new VLADiskInput(name);
     }      
     int fd = -1;
@@ -113,7 +113,7 @@ int main(int /*argc*/, char* /*argv*/[]) {
     if (myrecord->lost()) cout << "Stopped because we are lost" << endl;
     if (myrecord->badData()) cout << "Stopped as we detected bad data" <<endl;
     if (myrecord->noData()) cout << "Stopped as we detected no data" << endl;
-    AlwaysAssert(myrecord->eof() == true, AipsError);
+    AlwaysAssert(myrecord->eof() == True, AipsError);
 */
   }
   catch (AipsError x) {

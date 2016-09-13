@@ -44,7 +44,6 @@
 
 // #define DEBUG cout << __FILE__ << " " << __LINE__ << endl;
 
-using namespace casacore;
 namespace casa {
 
 const String ImageFitter::_class = "ImageFitter";
@@ -58,7 +57,7 @@ ImageFitter::ImageFitter(
 ) : ImageTask<Float>(
         image, region, regionRec, box,
         chanInp, stokes,
-        maskInp, "", false
+        maskInp, "", False
     ), _regionString(region),
     _newEstimatesFileName(newEstimatesInp),
     _compListName(compListName), _bUnit(image->units().getName()),
@@ -97,9 +96,9 @@ std::pair<ComponentList, ComponentList> ImageFitter::fit() {
     uInt ngauss = _estimates.nelements() > 0 ? _estimates.nelements() : 1;
     Vector<String> models(ngauss, "gaussian");
     if (_doZeroLevel) {
-        models.resize(ngauss+1, true);
+        models.resize(ngauss+1, True);
         models[ngauss] = "level";
-        _fixed.resize(ngauss+1, true);
+        _fixed.resize(ngauss+1, True);
         _fixed[ngauss] = _zeroLevelIsFixed ? "l" : "";
     }
     _useBeamForNoise = _correlatedNoise && ! _noiseFWHM.get()
@@ -130,10 +129,10 @@ std::pair<ComponentList, ComponentList> ImageFitter::fit() {
     }
     String errmsg;
     ImageStatsCalculator myStats(
-        _getImage(), _getRegion(), "", false
+        _getImage(), _getRegion(), "", False
     );
-    myStats.setList(false);
-    myStats.setVerbose(false);
+    myStats.setList(False);
+    myStats.setVerbose(False);
     myStats.setAxes(_getImage()->coordinates().directionAxesNumbers());
     inputStats = myStats.statistics();
     Vector<String> allowFluxUnits(2, "Jy.km/s");
@@ -148,7 +147,7 @@ std::pair<ComponentList, ComponentList> ImageFitter::fit() {
     *_getLog() << origin;
     *_getLog() << LogIO::NORMAL << resultsString << LogIO::POST;
     ComponentList convolvedList, deconvolvedList;
-    Bool anyConverged = false;
+    Bool anyConverged = False;
     Array<Float> residPixels, modelPixels;
     _fitLoop(
         anyConverged, convolvedList, deconvolvedList,
@@ -171,7 +170,7 @@ std::pair<ComponentList, ComponentList> ImageFitter::fit() {
             try {
                 _prepareOutputImage(
                     *residualImage, 0, 0,
-                    0, 0, &_residual, true
+                    0, 0, &_residual, True
                 );
             }
             catch (const AipsError& x) {
@@ -184,7 +183,7 @@ std::pair<ComponentList, ComponentList> ImageFitter::fit() {
             try {
                 _prepareOutputImage(
                     *modelImage, 0, 0,
-                    0, 0, &_model, true
+                    0, 0, &_model, True
                 );
             }
             catch (const AipsError& x) {
@@ -315,9 +314,9 @@ void ImageFitter::_fitLoop(
     SPIIF residualImage, SPIIF modelImage,
     String& resultsString
 ) {
-    Bool converged = false;
-    Bool deconvolve = false;
-    Bool fit = true;
+    Bool converged = False;
+    Bool deconvolve = False;
+    Bool fit = True;
     Double zeroLevelOffsetSolution, zeroLevelOffsetError;
     Double zeroLevelOffsetEstimate = _doZeroLevel ? _zeroLevelOffsetEstimate : 0;
     uInt ngauss = _estimates.nelements() > 0 ? _estimates.nelements() : 1;
@@ -329,9 +328,9 @@ void ImageFitter::_fitLoop(
     planeShape[dirAxisNumbers[0]] = dirShape[0];
     planeShape[dirAxisNumbers[1]] = dirShape[1];
     if (_doZeroLevel) {
-        models.resize(ngauss+1, true);
+        models.resize(ngauss+1, True);
         models[ngauss] = "level";
-        _fixed.resize(ngauss+1, true);
+        _fixed.resize(ngauss+1, True);
         _fixed[ngauss] = _zeroLevelIsFixed ? "l" : "";
     }
     String errmsg;
@@ -365,7 +364,7 @@ void ImageFitter::_fitLoop(
         catch (const AipsError& x) {
             *_getLog() << origin << LogIO::WARN << "Fit failed to converge "
                 << "because of exception: " << x.getMesg() << LogIO::POST;
-            converged = false;
+            converged = False;
         }
         *_getLog() << origin;
         anyConverged |= converged;
@@ -400,7 +399,7 @@ void ImageFitter::_fitLoop(
                 }
             }
         }
-        _fitDone = true;
+        _fitDone = True;
         _fitConverged[_curChan - _chanVec[0]] = converged;
         if(converged) {
             Record estimatesRecord;
@@ -452,7 +451,7 @@ void ImageFitter::_doConverged(
         location[spectralAxisNumber] = _curChan;
     }
     Array<Float> data = outputImages
-        ? _getImage()->getSlice(location, planeShape, true)
+        ? _getImage()->getSlice(location, planeShape, True)
         : pixels;
     if (! outputImages) {
         pixelOffsets.first = 0;
@@ -465,7 +464,7 @@ void ImageFitter::_doConverged(
     );
     SHARED_PTR<TempImage<Float> > fittedResid;
     if (outputImages) {
-        Array<Bool> myMask(templateImage->shape(), true);
+        Array<Bool> myMask(templateImage->shape(), True);
         residualImage->putSlice(curResidPixels, location);
         if (modelImage) {
             modelImage->putSlice(curModelPixels, location);
@@ -473,14 +472,14 @@ void ImageFitter::_doConverged(
         fittedResid = DYNAMIC_POINTER_CAST<TempImage<Float> >(
             SubImageFactory<Float>::createImage(
                 *residualImage, "", *_getRegion(), _getMask(),
-                false, false, false, false
+                False, False, False, False
             )
         );
         ThrowIf(! fittedResid, "Dynamic cast failed");
         if (! fittedResid->hasPixelMask()) {
             fittedResid->attachMask(
                 ArrayLattice<Bool>(
-                    Array<Bool>(fittedResid->shape(), true)
+                    Array<Bool>(fittedResid->shape(), True)
                 )
             );
         }
@@ -495,7 +494,7 @@ void ImageFitter::_doConverged(
             );
             initMask.reset(
                 new ArrayLattice<Bool>(
-                    Array<Bool>(curResidPixels.shape(), true)
+                    Array<Bool>(curResidPixels.shape(), True)
                 )
             );
             tImage->attachMask(*initMask);
@@ -507,27 +506,27 @@ void ImageFitter::_doConverged(
     LCPixelSet lcResidMask(pixelMask, LCBox(pixelMask.shape()));
     //fittedResidPixelMask = &lcResidMask;
     std::unique_ptr<MaskedLattice<Float> > maskedLattice(fittedResid->cloneML());
-    LatticeStatistics<Float> lStats(*maskedLattice, false);
+    LatticeStatistics<Float> lStats(*maskedLattice, False);
     Array<Double> stat;
-    lStats.getStatistic(stat, LatticeStatistics<Float>::RMS, true);
+    lStats.getStatistic(stat, LatticeStatistics<Float>::RMS, True);
     _residStats.define("rms", stat[0]);
-    lStats.getStatistic(stat, LatticeStatistics<Float>::SIGMA, true);
+    lStats.getStatistic(stat, LatticeStatistics<Float>::SIGMA, True);
     _residStats.define("sigma", stat[0]);
-    lStats.getStatistic(stat, LatticeStatistics<Float>::NPTS, true);
+    lStats.getStatistic(stat, LatticeStatistics<Float>::NPTS, True);
 }
 
 void ImageFitter::setZeroLevelEstimate(
     Double estimate, Bool isFixed
 ) {
-    _doZeroLevel = true;
+    _doZeroLevel = True;
     _zeroLevelOffsetEstimate = estimate;
     _zeroLevelIsFixed = isFixed;
 }
 
 void ImageFitter::unsetZeroLevelEstimate() {
-    _doZeroLevel = false;
+    _doZeroLevel = False;
     _zeroLevelOffsetEstimate = 0;
-    _zeroLevelIsFixed = false;
+    _zeroLevelIsFixed = False;
 }
 
 void ImageFitter::getZeroLevelSolution(
@@ -832,8 +831,8 @@ void ImageFitter::_calculateErrors() {
 void ImageFitter::_setIncludeExclude(Fit2D& fitter) const {
     *_getLog() << LogOrigin(_class, __func__);
     ThrowIf(
-            _includePixelRange && _excludePixelRange,
-            "You cannot give both an include and an exclude pixel range"
+        _includePixelRange && _excludePixelRange,
+        "You cannot give both an include and an exclude pixel range"
     );
     if (! _includePixelRange && ! _excludePixelRange) {
         return;
@@ -846,11 +845,11 @@ void ImageFitter::_setIncludeExclude(Fit2D& fitter) const {
             *second = -(*first);
         }
         fitter.setIncludeRange(
-                *first, *second
+            *first, *second
         );
         *_getLog() << LogIO::NORMAL << "Selecting pixels from "
-                << *first << " to " << *second
-                << LogIO::POST;
+            << *first << " to " << *second
+            << LogIO::POST;
     }
     else {
         Float *first = &_excludePixelRange->first;
@@ -860,14 +859,14 @@ void ImageFitter::_setIncludeExclude(Fit2D& fitter) const {
             *second = -(*first);
         }
         fitter.setExcludeRange(
-                *first, *second
+            *first, *second
         );
         *_getLog() << LogIO::NORMAL << "Excluding pixels from "
-                << *first << " to " << *second
-                << LogIO::POST;
+            << *first << " to " << *second
+            << LogIO::POST;
+        }
     }
 }
-
 
 Bool ImageFitter::converged(uInt plane) const {
     ThrowIf(! _fitDone, "fit has not yet been performed");
@@ -898,8 +897,8 @@ vector<OutputDestinationChecker::OutputStruct> ImageFitter::_getOutputStruct() {
     OutputDestinationChecker::OutputStruct newEstFile;
     newEstFile.label = "new estimates file";
     newEstFile.outputFile = &_newEstimatesFileName;
-    newEstFile.required = false;
-    newEstFile.replaceable = true;
+    newEstFile.required = False;
+    newEstFile.replaceable = True;
     vector<OutputDestinationChecker::OutputStruct> outputs(1);
     outputs[0] = newEstFile;
     return outputs;
@@ -917,7 +916,7 @@ CasacRegionManager::StokesControl ImageFitter::_getStokesControl() const {
 
 void ImageFitter::_finishConstruction(const String& estimatesFilename) {
     *_getLog() << LogOrigin(_class, __func__);
-    //_setSupportsLogfile(true);
+    //_setSupportsLogfile(True);
     // <todo> kludge because Flux class is really only made for I, Q, U, and V stokes
 
     _stokesPixNumber = _getImage()->coordinates().hasPolarizationCoordinate()
@@ -983,7 +982,7 @@ void ImageFitter::_finishConstruction(const String& estimatesFilename) {
                     || Quantity(1, _bUnit).isConform("Jy*m/s/rad2")
                     || Quantity(1, _bUnit).isConform("K")
                 ) {
-                    unitOK = true;
+                    unitOK = True;
                 }
                 UnitMap::removeUser(angUnits[i]);
                 UnitMap::clearCache();
@@ -1023,9 +1022,9 @@ String ImageFitter::_resultsToString(uInt nPixels) const {
         }
         uInt n = _curConvolvedList.nelements();
         for (uInt i = 0; i < n; i++) {
-            summary << "Fit on " << _getImage()->name(true) << " component " << i << endl;
+            summary << "Fit on " << _getImage()->name(True) << " component " << i << endl;
             summary << _curConvolvedList.component(i).positionToString(
-                &(_getImage()->coordinates().directionCoordinate()), true
+                &(_getImage()->coordinates().directionCoordinate()), True
             ) << endl;
             summary << _sizeToString(i) << endl;
             summary << _results.fluxToString(i, ! _noBeam) << endl;
@@ -1091,17 +1090,17 @@ void ImageFitter::_setDeconvolvedSizes() {
         Quantity emaj = _majorAxisErrors[i];
         Quantity emin = _minorAxisErrors[i];
         Quantity epa  = _positionAngleErrors[i];
-        Bool fitSuccess = false;
+        Bool fitSuccess = False;
         Angular2DGaussian bestSol(maj, minor, pa);
         Angular2DGaussian bestDecon;
-        Bool isPointSource = true;
+        Bool isPointSource = True;
         try {
             isPointSource = GaussianDeconvolver::deconvolve(bestDecon, bestSol, beam);
-            fitSuccess = true;
+            fitSuccess = True;
         }
         catch (const AipsError& x) {
-            fitSuccess = false;
-            isPointSource = true;
+            fitSuccess = False;
+            isPointSource = True;
         }
         _isPoint.push_back(isPointSource);
         ostringstream size;
@@ -1115,33 +1114,33 @@ void ImageFitter::_setDeconvolvedSizes() {
                     minor + emin,
                     pa - epa
                 );
-                Bool isPointSource1 = true;
-                //Bool fitSuccess1 = false;
+                Bool isPointSource1 = True;
+                //Bool fitSuccess1 = False;
                 try {
                     isPointSource1 = GaussianDeconvolver::deconvolve(decon, largest, beam);
-                    fitSuccess = true;
+                    fitSuccess = True;
                 }
                 catch (const AipsError& x) {
-                    //fitSuccess1 = false;
-                    isPointSource1 = true;
+                    //fitSuccess1 = False;
+                    isPointSource1 = True;
                 }
                 // note that the code is purposefully written in such a way that
-                // fitSuccess* = false => isPointSource* = true and the conditionals
+                // fitSuccess* = False => isPointSource* = True and the conditionals
                 // following rely on that fact to make the code a bit clearer
                 Angular2DGaussian lsize;
                 if (! isPointSource1) {
                     lsize = decon;
                 }
                 largest.setPA(pa + epa);
-                Bool isPointSource2 = true;
-                //Bool fitSuccess2 = false;
+                Bool isPointSource2 = True;
+                //Bool fitSuccess2 = False;
                 try {
                     isPointSource2 = GaussianDeconvolver::deconvolve(decon, largest, beam);
-                    //fitSuccess2 = true;
+                    //fitSuccess2 = True;
                 }
                 catch (const AipsError& x) {
-                    //fitSuccess2 = false;
-                    isPointSource2 = true;
+                    //fitSuccess2 = False;
+                    isPointSource2 = True;
                 }
                 if (isPointSource2) {
                     if (isPointSource1) {
@@ -1194,14 +1193,14 @@ void ImageFitter::_setDeconvolvedSizes() {
                                     isPoint = GaussianDeconvolver::deconvolve(decon, sourceIn, beam);
                                 }
                                 catch (const AipsError& x) {
-                                    isPoint = true;
+                                    isPoint = True;
                                 }
                                 if (! isPoint) {
                                     Quantity errMaj = abs(bestDecon.getMajor() - decon.getMajor());
                                     errMaj.convert(emaj.getUnit());
                                     Quantity errMin = abs(bestDecon.getMinor() - decon.getMinor());
                                     errMin.convert(emin.getUnit());
-                                    Quantity errPA = abs(bestDecon.getPA(true) - decon.getPA(true));
+                                    Quantity errPA = abs(bestDecon.getPA(True) - decon.getPA(True));
                                     errPA = min(errPA, abs(errPA-QC::hTurn));
                                     errPA.convert(epa.getUnit());
                                     emaj = max(emaj, errMaj);
@@ -1214,11 +1213,11 @@ void ImageFitter::_setDeconvolvedSizes() {
                 }
                 size << TwoSidedShape::sizeToString(
                     bestDecon.getMajor(), bestDecon.getMinor(),
-                    bestDecon.getPA(false), true, emaj, emin, epa
+                    bestDecon.getPA(False), True, emaj, emin, epa
                 );
                 gaussShape->setWidth(
                     bestDecon.getMajor(), bestDecon.getMinor(),
-                    bestDecon.getPA(false)
+                    bestDecon.getPA(False)
                 );
                 gaussShape->setErrors(emaj, emin, epa);
             }
@@ -1259,7 +1258,7 @@ String ImageFitter::_sizeToString(const uInt compNumber) const {
         // TwoSidedShape::sizeToString
         size << std::fixed << std::setprecision(2) << "       --- major axis FWHM: " << beam.getMajor() << endl;
         size << "       --- minor axis FWHM: " << beam.getMinor() << endl;
-        size << "       --- position angle: " << beam.getPA(true) << endl;
+        size << "       --- position angle: " << beam.getPA(True) << endl;
         size << "Image component size (deconvolved from beam) ---" << endl;
         size << _deconvolvedMessages[compNumber];
     }
@@ -1267,7 +1266,7 @@ String ImageFitter::_sizeToString(const uInt compNumber) const {
 }
 
 String ImageFitter::_spectrumToString(uInt compNumber) const {
-    vector<String> unitPrefix = ImageFitterResults::unitPrefixes(true);
+    vector<String> unitPrefix = ImageFitterResults::unitPrefixes(True);
     ostringstream spec;
     const SpectralModel& spectrum = _curConvolvedList.component(compNumber).spectrum();
     Quantity frequency = spectrum.refFrequency().get("MHz");
@@ -1298,7 +1297,7 @@ SPIIF ImageFitter::_createImageTemplate() const {
     SPIIF x(
         SubImageFactory<Float>::createImage(
             *_getImage(), "", Record(), "",
-            false, false, false, false
+            False, False, False, False
         )
     );
     x->set(0.0);
@@ -1324,7 +1323,7 @@ void ImageFitter::_fitsky(
     for (uInt i = 0; i < n; i++) {
         estimate(i) = _estimates.component(i);
     }
-    converged = false;
+    converged = False;
     const uInt nModels = models.nelements();
     const uInt nGauss = _doZeroLevel ? nModels - 1 : nModels;
     const uInt nMasks = _fixed.nelements();
@@ -1344,7 +1343,7 @@ void ImageFitter::_fitsky(
     SPIIF subImageTmp(
         SubImageFactory<Float>::createImage(
             *_getImage(), "", *_getRegion(), _getMask(),
-            false, false, false, _getStretch()
+            False, False, False, _getStretch()
         )
     );
     ImageMetaData md(subImageTmp);
@@ -1379,23 +1378,23 @@ void ImageFitter::_fitsky(
         Slicer slice(startPos, endPos, stride, Slicer::endIsLast);
         // CAS-1966, CAS-2633 keep degenerate axes
         allAxesSubImage = SubImage<Float>(
-            *subImageTmp, slice, false, AxesSpecifier(true)
+            *subImageTmp, slice, False, AxesSpecifier(True)
         );
     }
     // for some things we don't want the degenerate axes,
     // so make a subimage without them as well
     SubImage<Float> subImage = SubImage<Float>(
-        allAxesSubImage, AxesSpecifier(false)
+        allAxesSubImage, AxesSpecifier(False)
     );
     // Make sure the region is 2D and that it holds the sky.  Exception if not.
     const CoordinateSystem& cSys = subImage.coordinates();
     Bool xIsLong = cSys.isDirectionAbscissaLongitude();
-    pixels = subImage.get(true);
-    pixelMask = subImage.getMask(true).copy();
+    pixels = subImage.get(True);
+    pixelMask = subImage.getMask(True).copy();
     // What Stokes type does this plane hold ?
     Stokes::StokesTypes stokes = Stokes::type(_kludgedStokes);
     // Form masked array and find min/max
-    MaskedArray<Float> maskedPixels(pixels, pixelMask, true);
+    MaskedArray<Float> maskedPixels(pixels, pixelMask, True);
     Float minVal, maxVal;
     IPosition minPos(2), maxPos(2);
     minMax(minVal, maxVal, minPos, maxPos, pixels);
@@ -1422,7 +1421,7 @@ void ImageFitter::_fitsky(
     }
     // For ease of use, make each model have a mask string
     Vector<String> fixedParameters(_fixed.copy());
-    fixedParameters.resize(nModels, true);
+    fixedParameters.resize(nModels, True);
     for (uInt j=0; j<nModels; j++) {
         if (j >= nMasks) {
             fixedParameters(j) = String("");
@@ -1492,10 +1491,10 @@ void ImageFitter::_fitsky(
     if (status == Fit2D::OK) {
         *_getLog() << LogIO::NORMAL << "Fitter was able to find a solution in "
             << fitter.numberIterations() << " iterations." << LogIO::POST;
-        converged = true;
+        converged = True;
     }
     else {
-        converged = false;
+        converged = False;
         *_getLog() << LogIO::WARN << fitter.errorMessage() << LogIO::POST;
         return;
     }
@@ -1584,11 +1583,11 @@ void ImageFitter::_setSum(
     );
     Record r = x.getRegion()->toRecord("");
     SPCIIF tmp = SubImageFactory<Float>::createImage(
-        im, "", r, "", true, false, true, false
+        im, "", r, "", True, False, True, False
     );
-    ImageStatsCalculator statsCalc(tmp, 0,    String(""), false);
-    statsCalc.setList(false);
-    statsCalc.setVerbose(false);
+    ImageStatsCalculator statsCalc(tmp, 0,    String(""), False);
+    statsCalc.setList(False);
+    statsCalc.setVerbose(False);
     Array<Double> mySums = statsCalc.statistics().asArrayDouble("sum");
     Double mysum = 0;
     if (mySums.empty()) {
@@ -1691,15 +1690,13 @@ void ImageFitter::_fitskyExtractBeam(
         pixelAxes(1) = 0;
         pixelAxes(0) = 1;
     }
-    Bool doRef = true;
+    Bool doRef = True;
     Vector<Double> dParameters;
     SkyComponentFactory::worldWidthsToPixel(
         dParameters, wParameters, cSys, pixelAxes, doRef
     );
-    parameters.resize(6, true);
+    parameters.resize(6, True);
     parameters(3) = dParameters(0);
     parameters(4) = dParameters(1);
     parameters(5) = dParameters(2);
 }
-
-} // end namespace casa

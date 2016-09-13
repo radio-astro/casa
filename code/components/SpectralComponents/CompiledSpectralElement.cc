@@ -31,7 +31,6 @@
 
 #include <casa/iostream.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 CompiledSpectralElement::CompiledSpectralElement() {}
@@ -138,7 +137,7 @@ void CompiledSpectralElement::_setFunction(const String& function) {
 Bool CompiledSpectralElement::toRecord(RecordInterface& out) const {
 	SpectralElement::toRecord(out);
 	out.define(RecordFieldId("compiled"), getFunction());
-	return true;
+	return True;
 }
 
 ostream &operator<<(ostream& os, const CompiledSpectralElement& elem) {

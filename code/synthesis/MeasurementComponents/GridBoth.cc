@@ -51,7 +51,6 @@
 #include <casa/OS/Timer.h>
 #include <casa/sstream.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 GridBoth::GridBoth(SkyJones& sj, Long icachesize,
@@ -65,7 +64,7 @@ GridBoth::GridBoth(SkyJones& sj, Long icachesize,
     sdImage_p(0), synImage_p(0), sdScale_p(sdScale), sdWeight_p(sdWeight)
 {
   synMachine_p = new GridFT(icachesize, itilesize, synConvType,
-			    padding, false);
+			    padding, False);
   sdMachine_p  = new SDGrid(sj, icachesize, itilesize, sdConvType, -1);
   ok();
 }
@@ -82,7 +81,7 @@ GridBoth::GridBoth(SkyJones& sj, Long icachesize,
     sdImage_p(0), synImage_p(0), sdScale_p(sdScale), sdWeight_p(sdWeight)
 {
   synMachine_p = new GridFT(icachesize, itilesize, synConvType, mLocation,
-			    padding, false);
+			    padding, False);
   sdMachine_p  = new SDGrid(mLocation, sj, icachesize, itilesize, sdConvType, -1);
   ok();
 }
@@ -101,7 +100,7 @@ GridBoth::GridBoth(SkyJones& sj, Long icachesize,
     sdImage_p(0), synImage_p(0), sdScale_p(sdScale), sdWeight_p(sdWeight)
 {
   synMachine_p = new GridFT(icachesize, itilesize, synConvType, mLocation,
-			    mDirection, padding, false);
+			    mDirection, padding, False);
   sdMachine_p  = new SDGrid(mLocation, sj, icachesize, itilesize, 
 			    sdConvType, -1);
   ok();
@@ -258,8 +257,8 @@ ImageInterface<Complex>& GridBoth::getImage(Matrix<Float>& weights,
   
   Matrix<Float> synWeights, sdWeights;
 
-  sdImage_p->copyData(sdMachine_p->getImage(sdWeights, false));
-  synImage_p->copyData(synMachine_p->getImage(synWeights, false));
+  sdImage_p->copyData(sdMachine_p->getImage(sdWeights, False));
+  synImage_p->copyData(synMachine_p->getImage(synWeights, False));
   Complex scale(sdScale_p*sdWeight_p);
   LatticeExpr<Complex> le(*synImage_p+scale*(*sdImage_p));
   image->copyData(le);

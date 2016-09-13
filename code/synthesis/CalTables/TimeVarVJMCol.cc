@@ -28,7 +28,6 @@
 
 #include <synthesis/CalTables/TimeVarVJMCol.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //----------------------------------------------------------------------------

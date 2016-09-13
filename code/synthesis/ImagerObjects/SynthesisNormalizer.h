@@ -43,15 +43,11 @@
 #include <synthesis/ImagerObjects/SIImageStore.h>
 #include <synthesis/ImagerObjects/SIImageStoreMultiTerm.h>
 
-namespace casacore{
-
-class MeasurementSet;
-template<class T> class ImageInterface;
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Forward declarations
+class MeasurementSet;
+template<class T> class ImageInterface;
 
 // <summary> Class that contains functions needed for imager </summary>
 
@@ -66,10 +62,10 @@ class SynthesisNormalizer
   // Copy constructor and assignment operator
 
   // make all pure-inputs const
-  void setupNormalizer(casacore::Record normpars);
+  void setupNormalizer(Record normpars);
 
   // Gather all part images to the 'full' one
-  void gatherImages(casacore::Bool dopsf, casacore::Bool doresidual, casacore::Bool dodensity);
+  void gatherImages(Bool dopsf, Bool doresidual, Bool dodensity);
 
   // 'Gather' the pb ( just one node makes it.. )
   void gatherPB();
@@ -96,31 +92,31 @@ protected:
 
  // Normalize. This can later change to be more general, i.e. used for PB-correction too...
   // Check if images exist on disk and are all the same shape
-  casacore::Bool setupImagesOnDisk();
-  casacore::Bool doImagesExist( casacore::String imagename );
+  Bool setupImagesOnDisk();
+  Bool doImagesExist( String imagename );
 
-  SHARED_PTR<SIImageStore> makeImageStore( casacore::String imagename );
-  SHARED_PTR<SIImageStore> makeImageStore( casacore::String imagename, casacore::CoordinateSystem& csys, casacore::IPosition shp, casacore::Bool useweightimage );
+  SHARED_PTR<SIImageStore> makeImageStore( String imagename );
+  SHARED_PTR<SIImageStore> makeImageStore( String imagename, CoordinateSystem& csys, IPosition shp, Bool useweightimage );
 
   void setPsfFromOneFacet();
 
   /////////////// Member Objects
 
   SHARED_PTR<SIImageStore> itsImages;
-  casacore::Vector<SHARED_PTR<SIImageStore> > itsPartImages;
-  casacore::Block<SHARED_PTR<SIImageStore> > itsFacetImageStores;
+  Vector<SHARED_PTR<SIImageStore> > itsPartImages;
+  Block<SHARED_PTR<SIImageStore> > itsFacetImageStores;
 
-  casacore::IPosition itsImageShape;
+  IPosition itsImageShape;
   
-  casacore::String itsImageName;
-  casacore::Vector<casacore::String> itsPartImageNames;
-  casacore::String itsStartingModelName;
-  casacore::Float itsPBLimit;
+  String itsImageName;
+  Vector<String> itsPartImageNames;
+  String itsStartingModelName;
+  Float itsPBLimit;
 
-  casacore::String itsMapperType;
-  casacore::uInt itsNTaylorTerms, itsNFacets;
+  String itsMapperType;
+  uInt itsNTaylorTerms, itsNFacets;
 
-  casacore::String itsNormType;
+  String itsNormType;
 
 };
 

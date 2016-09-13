@@ -33,7 +33,6 @@
 #include <casa/Exceptions/Error.h>
 
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // The following sqrt functions are required for Image to

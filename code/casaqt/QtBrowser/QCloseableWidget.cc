@@ -26,7 +26,6 @@
 //# $Id: $
 #include <casaqt/QtBrowser/QCloseableWidget.qo.h>
 
-using namespace casacore;
 namespace casa {
 
 //////////////////////////////////

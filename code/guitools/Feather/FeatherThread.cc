@@ -33,7 +33,6 @@
 #include <QDebug>
 #include <synthesis/MeasurementEquations/Imager.h>
 
-using namespace casacore;
 namespace casa {
 
 LogIO* FeatherThread::logger = NULL;
@@ -326,16 +325,16 @@ ImageInterface<float>* FeatherThread::addMissingAxes( ImageInterface<float>* fir
 		if(CoordinateUtil::findStokesAxis(stokesvec, cSys) <0){
 			CoordinateUtil::addIAxis(cSys);
 			ImageUtilities::addDegenerateAxes (*logger, copyPtr, *firstCopy, "",
-					false, false,"I", false, false, true);
-			firstCopy=CountedPtr<ImageInterface<Float> >(copyPtr.ptr(), false);
+					False, False,"I", False, False, True);
+			firstCopy=CountedPtr<ImageInterface<Float> >(copyPtr.ptr(), False);
 		}
 		if(CoordinateUtil::findSpectralAxis(cSys) <0){
 			CoordinateUtil::addFreqAxis(cSys);
 			ImageUtilities::addDegenerateAxes (*logger, copyPtr2, *firstCopy, "",
-					false, true,
-					"", false, false,
-					true);
-			firstCopy=CountedPtr<ImageInterface<Float> >(copyPtr2.ptr(), false);
+					False, True,
+					"", False, False,
+					True);
+			firstCopy=CountedPtr<ImageInterface<Float> >(copyPtr2.ptr(), False);
 		}
 
 
@@ -359,7 +358,7 @@ ImageInterface<float>* FeatherThread::makeConvolvedImage(ImageInterface<float>* 
 			ImageInfo lowInfo= secondImage->imageInfo();
 			GaussianBeam beam=lowInfo.restoringBeam();
 			convolvedImage = addMissingAxes( firstImage );
-			StokesImageUtil::Convolve(*convolvedImage, beam, true);
+			StokesImageUtil::Convolve(*convolvedImage, beam, True);
 		}
 		catch( AipsError& error ){
 			if ( logger != NULL ){
@@ -372,5 +371,4 @@ ImageInterface<float>* FeatherThread::makeConvolvedImage(ImageInterface<float>* 
 
 
 
-using namespace casacore;
 } /* namespace casa */

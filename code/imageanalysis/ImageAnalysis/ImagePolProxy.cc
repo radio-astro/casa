@@ -60,7 +60,6 @@
 
 #include <memory>
 
-using namespace casacore;
 namespace casa { //# name space casa begins
 
 
@@ -90,7 +89,7 @@ namespace casa { //# name space casa begins
       delete itsImPol;
     itsImPol= new ImagePolarimetry(im);
     
-    return true;
+    return True;
 
   }
 
@@ -196,7 +195,7 @@ namespace casa { //# name space casa begins
 			    const String& infile, Bool debias, 
 			    Double clip, Double sigma, 
 			    const String& outfile){
-    Bool rstat(false);
+    Bool rstat(False);
     *itsLog << LogOrigin("imagepol", __FUNCTION__);
     if(itsImPol==0){
       *itsLog <<"No attached image, please use open "
@@ -212,18 +211,18 @@ namespace casa { //# name space casa begins
 							 Float(sigma));
 
     String err;
-    if(!copyImage(returnim, tmpim, outfile, true)){
+    if(!copyImage(returnim, tmpim, outfile, True)){
       *itsLog <<"Could not convert ratio image "
 	      << LogIO::EXCEPTION;
     }
-    rstat = true;
+    rstat = True;
     return rstat;
     
   }
 
   
   Bool ImagePol::complexlinpol(const String& outfile){
-    Bool rstat(false);
+    Bool rstat(False);
     *itsLog << LogOrigin("imagepol", __FUNCTION__);
     if(itsImPol==0){
       *itsLog << LogIO::SEVERE <<"No attached image, please use open " 
@@ -240,7 +239,7 @@ namespace casa { //# name space casa begins
     IPosition shapePol = itsImPol->singleStokesShape(cSysPol, Stokes::Plinear);
     Bool isMasked=itsImPol->isMasked();
     makeImage (pOutComplex, outfile, cSysPol, shapePol,
-	       isMasked, false);
+	       isMasked, False);
     ImageExpr<Complex> expr = itsImPol->complexLinearPolarization();
     fiddleStokesCoordinate(*pOutComplex, Stokes::Plinear);
 
@@ -252,7 +251,7 @@ namespace casa { //# name space casa begins
     copyMiscellaneous (*pOutComplex, *p);
     delete pOutComplex;
 
-    rstat = true;
+    rstat = True;
     return rstat;
   }
   
@@ -280,7 +279,7 @@ namespace casa { //# name space casa begins
 
   // Stokes I
   Bool ImagePol::stokesI(ImageInterface<Float>*& rtnim, const String& outfile){
-    Bool rstat(false);
+    Bool rstat(False);
     *itsLog << LogOrigin("imagepol", "stokesI(...)");
     if(itsImPol==0){
       *itsLog << LogIO::SEVERE <<"No attached image, please use open " 
@@ -289,7 +288,7 @@ namespace casa { //# name space casa begins
     }
     ImageExpr<Float> expr = itsImPol->stokesI();
     // Create output image
-    rstat = copyImage (rtnim, expr, outfile, true);
+    rstat = copyImage (rtnim, expr, outfile, True);
     return rstat;
   }
 
@@ -305,7 +304,7 @@ namespace casa { //# name space casa begins
 
   // Stokes Q
   Bool ImagePol::stokesQ(ImageInterface<Float>*& rtnim, const String& outfile){
-    Bool rstat(false);
+    Bool rstat(False);
     *itsLog << LogOrigin("imagepol", "stokesQ(...)");
     if(itsImPol==0){
       *itsLog << LogIO::SEVERE <<"No attached image, please use open " 
@@ -315,7 +314,7 @@ namespace casa { //# name space casa begins
     ImageExpr<Float> expr = itsImPol->stokesQ();
 
     // Create output image if needed
-    rstat = copyImage (rtnim, expr, outfile, true);
+    rstat = copyImage (rtnim, expr, outfile, True);
     return rstat;
   }
 
@@ -331,7 +330,7 @@ namespace casa { //# name space casa begins
 
   // Stokes U
   Bool ImagePol::stokesU(ImageInterface<Float>*& rtnim, const String& outfile){
-    Bool rstat(false);
+    Bool rstat(False);
     *itsLog << LogOrigin("imagepol", "stokesU(...)");
     if(itsImPol==0){
       *itsLog << LogIO::SEVERE <<"No attached image, please use open " 
@@ -341,7 +340,7 @@ namespace casa { //# name space casa begins
     ImageExpr<Float> expr = itsImPol->stokesU();
 
     // Create output image if needed
-    rstat = copyImage (rtnim, expr, outfile, true);
+    rstat = copyImage (rtnim, expr, outfile, True);
     return rstat;
   }
 
@@ -357,7 +356,7 @@ namespace casa { //# name space casa begins
 
   // Stokes V
   Bool ImagePol::stokesV(ImageInterface<Float>*& rtnim, const String& outfile){
-    Bool rstat(false);
+    Bool rstat(False);
     *itsLog << LogOrigin("imagepol", "stokesV(...)");
     if(itsImPol==0){
       *itsLog << LogIO::SEVERE <<"No attached image, please use open " 
@@ -367,7 +366,7 @@ namespace casa { //# name space casa begins
     ImageExpr<Float> expr = itsImPol->stokesV();
 
     // Create output image if needed
-    rstat = copyImage (rtnim, expr, outfile, true);
+    rstat = copyImage (rtnim, expr, outfile, True);
     return rstat;
   }
 
@@ -385,7 +384,7 @@ namespace casa { //# name space casa begins
   // Linearly polarized intensity
   Bool ImagePol::linPolInt(ImageInterface<Float>*& rtnim, Bool debias,
 			   Float clip, Float sigma, const String& outfile) {
-    Bool rstat(false);
+    Bool rstat(False);
     *itsLog << LogOrigin("imagepol", __FUNCTION__);
     if(itsImPol==0){
       *itsLog << LogIO::SEVERE <<"No attached image, please use open " 
@@ -396,7 +395,7 @@ namespace casa { //# name space casa begins
     ImageExpr<Float> expr = itsImPol->linPolInt(debias, clip, sigma);
 
     // Create output image if needed
-    rstat =  copyImage (rtnim, expr, outfile, true);
+    rstat =  copyImage (rtnim, expr, outfile, True);
     return rstat;
   }
 
@@ -415,7 +414,7 @@ namespace casa { //# name space casa begins
   // Total polarized intensity.
   Bool ImagePol::totPolInt(ImageInterface<Float>*& rtnim, Bool debias,
 			   Float clip, Float sigma, const String& outfile){
-    Bool rstat(false);
+    Bool rstat(False);
     *itsLog << LogOrigin("imagepol", __FUNCTION__);
     if(itsImPol==0){
       *itsLog << LogIO::SEVERE <<"No attached image, please use open " 
@@ -425,7 +424,7 @@ namespace casa { //# name space casa begins
     ImageExpr<Float> expr = itsImPol->totPolInt(debias, clip, sigma);
 
     // Create output image if needed
-    rstat = copyImage (rtnim, expr, outfile, true);
+    rstat = copyImage (rtnim, expr, outfile, True);
     return rstat;
   }
 
@@ -456,7 +455,7 @@ namespace casa { //# name space casa begins
     CoordinateSystem cSysPol;
     IPosition shapePol = itsImPol->singleStokesShape(cSysPol, Stokes::Plinear);
     makeImage (pOutComplex, outfile, cSysPol, shapePol,
-	       itsImPol->isMasked(), false);
+	       itsImPol->isMasked(), False);
 
     // Make Expr
     ImageExpr<Complex> expr = itsImPol->complexLinearPolarization();
@@ -486,7 +485,7 @@ namespace casa { //# name space casa begins
     CoordinateSystem cSysPol;
     IPosition shapePol = itsImPol->singleStokesShape(cSysPol, Stokes::PFlinear);
     makeImage (pOutComplex, outfile, cSysPol, shapePol,
-	       itsImPol->isMasked(), false);
+	       itsImPol->isMasked(), False);
 
     std::unique_ptr<ImageInterface<Complex> > x(pOutComplex);
 
@@ -503,7 +502,7 @@ namespace casa { //# name space casa begins
   // Linearly polarized position angle
   Bool ImagePol::linPolPosAng(ImageInterface<Float>*& rtnim,
 			      const String& outfile) {
-    Bool rstat(false);
+    Bool rstat(False);
     *itsLog << LogOrigin("imagepol", __FUNCTION__);
     if(itsImPol==0){
       *itsLog << LogIO::SEVERE <<"No attached image, please use open " 
@@ -511,18 +510,18 @@ namespace casa { //# name space casa begins
       return rstat;
     }
 
-    Bool radians = false;
+    Bool radians = False;
     ImageExpr<Float> expr = itsImPol->linPolPosAng(radians);
 
     // Create output image if needed
-    rstat = copyImage (rtnim, expr, outfile, true);
+    rstat = copyImage (rtnim, expr, outfile, True);
     return rstat;
   }
 
 
   Bool ImagePol::sigmaLinPolPosAng(ImageInterface<Float>*& rtnim, Float clip,
 				   Float sigma, const String& outfile) {
-    Bool rstat(false);
+    Bool rstat(False);
     *itsLog << LogOrigin("imagepol", __FUNCTION__);
     if(itsImPol==0){
       *itsLog << LogIO::SEVERE <<"No attached image, please use open " 
@@ -530,11 +529,11 @@ namespace casa { //# name space casa begins
       return rstat;
     }
 
-    Bool radians = false;
+    Bool radians = False;
     ImageExpr<Float> expr = itsImPol->sigmaLinPolPosAng(radians, clip, sigma);
 
     // Create output image if needed
-    rstat = copyImage (rtnim, expr, outfile, true);
+    rstat = copyImage (rtnim, expr, outfile, True);
     return rstat;
   }
 
@@ -542,7 +541,7 @@ namespace casa { //# name space casa begins
   // Fractional linearly polarized intensity
   Bool ImagePol::fracLinPol(ImageInterface<Float>*& rtnim, Bool debias,
 			    Float clip, Float sigma, const String& outfile) {
-    Bool rstat(false);
+    Bool rstat(False);
     *itsLog << LogOrigin("imagepol", "fracLinPol(...)");
     if(itsImPol==0){
       *itsLog << LogIO::SEVERE <<"No attached image, please use open " 
@@ -553,14 +552,14 @@ namespace casa { //# name space casa begins
     ImageExpr<Float> expr = itsImPol->fracLinPol(debias, clip, sigma);
 
     // Create output image
-    rstat = copyImage (rtnim, expr, outfile, true);
+    rstat = copyImage (rtnim, expr, outfile, True);
     return rstat;
   }
 
 
   Bool ImagePol::sigmaFracLinPol(ImageInterface<Float>*& rtnim, Float clip,
 				 Float sigma, const String& outfile){
-    Bool rstat(false);
+    Bool rstat(False);
     *itsLog << LogOrigin("imagepol", __FUNCTION__);
     if(itsImPol==0){
       *itsLog << LogIO::SEVERE <<"No attached image, please use open " 
@@ -571,7 +570,7 @@ namespace casa { //# name space casa begins
     ImageExpr<Float> expr = itsImPol->sigmaFracLinPol(clip, sigma);
 
     // Create output image if needed
-    rstat = copyImage (rtnim, expr, outfile, true);
+    rstat = copyImage (rtnim, expr, outfile, True);
     return rstat;
   }
 
@@ -579,7 +578,7 @@ namespace casa { //# name space casa begins
   // Fractional total polarized intensity
   Bool ImagePol::fracTotPol(ImageInterface<Float>*& rtnim, Bool debias,
 			    Float clip, Float sigma, const String& outfile) {
-    Bool rstat(false);
+    Bool rstat(False);
     *itsLog << LogOrigin("imagepol", "fracTotPol(...)");
     if(itsImPol==0){
       *itsLog << LogIO::SEVERE <<"No attached image, please use open " 
@@ -590,14 +589,14 @@ namespace casa { //# name space casa begins
     ImageExpr<Float> expr = itsImPol->fracTotPol(debias, clip, sigma);
 
     // Create output image if needed
-    rstat = copyImage (rtnim, expr, outfile, true);
+    rstat = copyImage (rtnim, expr, outfile, True);
     return rstat;
   }
 
 
   Bool ImagePol::sigmaFracTotPol(ImageInterface<Float>*& rtnim, Float clip,
 		       Float sigma, const String& outfile){
-    Bool rstat(false);
+    Bool rstat(False);
     *itsLog << LogOrigin("imagepol", __FUNCTION__);
     if(itsImPol==0){
       *itsLog << LogIO::SEVERE <<"No attached image, please use open " 
@@ -608,7 +607,7 @@ namespace casa { //# name space casa begins
     ImageExpr<Float> expr = itsImPol->sigmaFracTotPol(clip, sigma);
 
     // Create output image if needed
-    rstat = copyImage (rtnim, expr, outfile, true);
+    rstat = copyImage (rtnim, expr, outfile, True);
     return rstat;
   }
 
@@ -638,7 +637,7 @@ namespace casa { //# name space casa begins
     imagePointer2 = 0;
     
     // Create output image
-    rstat = copyImage (rtnim, expr, outfile, true);
+    rstat = copyImage (rtnim, expr, outfile, True);
 
     return rstat;
   }
@@ -670,7 +669,7 @@ namespace casa { //# name space casa begins
     imagePointer2 = 0;
 
     // Create output image
-    rstat = copyImage (rtnim, expr, outfile, true);
+    rstat = copyImage (rtnim, expr, outfile, True);
     return rstat;
   }
 
@@ -701,23 +700,23 @@ namespace casa { //# name space casa begins
     CoordinateSystem cSysPol;
     IPosition shapePol = itsImPol->singleStokesShape(cSysPol, Stokes::Plinear);
     makeImage (pOutComplex, outfile, cSysPol, shapePol,
-	       itsImPol->isMasked(), true);
+	       itsImPol->isMasked(), True);
 
     // Make output amplitude and position angle images
     ImageInterface<Float>* pOutAmp = 0;
     ImageInterface<Float>* pOutPA = 0;
     makeImage (pOutAmp, outfileAmp, cSysPol, shapePol,
-	       itsImPol->isMasked(), false);
+	       itsImPol->isMasked(), False);
     makeImage (pOutPA, outfilePA, cSysPol, shapePol,
-	       itsImPol->isMasked(), false);
+	       itsImPol->isMasked(), False);
 
     // Make output real and imaginary images
     ImageInterface<Float>* pOutReal = 0;
     ImageInterface<Float>* pOutImag = 0;
     makeImage (pOutReal, outfileReal, cSysPol, shapePol,
-	       itsImPol->isMasked(), false);
+	       itsImPol->isMasked(), False);
     makeImage (pOutImag, outfileImag, cSysPol, shapePol,
-	       itsImPol->isMasked(), false);
+	       itsImPol->isMasked(), False);
 
     // The output complex image will have correct Coordinates, mask, and
     // miscellaneous things copied to it
@@ -795,11 +794,11 @@ namespace casa { //# name space casa begins
     //
     ImageInterface<Float>* pRMOut = 0;
     ImageInterface<Float>* pRMOutErr = 0;
-    makeImage (pRMOut, outRM, cSysRM, shapeRM, true, false);
+    makeImage (pRMOut, outRM, cSysRM, shapeRM, True, False);
     // manage naked pointers so exception throwing doesn't leave open images
     std::unique_ptr<ImageInterface<Float> > managed5(pRMOut);
 
-    makeImage (pRMOutErr, outRMErr, cSysRM, shapeRM, true, false);
+    makeImage (pRMOutErr, outRMErr, cSysRM, shapeRM, True, False);
     std::unique_ptr<ImageInterface<Float> > managed6(pRMOutErr);
 
     CoordinateSystem cSysPA;
@@ -807,23 +806,23 @@ namespace casa { //# name space casa begins
       itsImPol->positionAngleShape(cSysPA, fAxis, sAxis, *itsLog, axis);
     ImageInterface<Float>* pPA0Out = 0;
     ImageInterface<Float>* pPA0OutErr = 0;
-    makeImage (pPA0Out, outPA0, cSysPA, shapePA, true, false);
+    makeImage (pPA0Out, outPA0, cSysPA, shapePA, True, False);
     std::unique_ptr<ImageInterface<Float> > managed1(pPA0Out);
-    makeImage (pPA0OutErr, outPA0Err, cSysPA, shapePA, true, false);
+    makeImage (pPA0OutErr, outPA0Err, cSysPA, shapePA, True, False);
     std::unique_ptr<ImageInterface<Float> > managed2(pPA0OutErr);
 
     ImageInterface<Float>* pNTurnsOut = 0;
-    makeImage (pNTurnsOut, outNTurns, cSysRM, shapeRM, true, false);
+    makeImage (pNTurnsOut, outNTurns, cSysRM, shapeRM, True, False);
     std::unique_ptr<ImageInterface<Float> > managed3(pNTurnsOut);
     ImageInterface<Float>* pChiSqOut = 0;
-    makeImage (pChiSqOut, outChiSq, cSysRM, shapeRM, true, false);
+    makeImage (pChiSqOut, outChiSq, cSysRM, shapeRM, True, False);
     std::unique_ptr<ImageInterface<Float> > managed4(pChiSqOut);
 
     itsImPol->rotationMeasure(
     	pRMOut, pRMOutErr, pPA0Out, pPA0OutErr,
     	pNTurnsOut, pChiSqOut, 
     	axis, rmMax, maxPaErr,
-    	sigmaQU, rmFg, true
+    	sigmaQU, rmFg, True
     );
     const ImageInterface<Float>* p = itsImPol->imageInterface();
     if (pRMOut) {
@@ -877,7 +876,7 @@ namespace casa { //# name space casa begins
     CoordinateSystem cSysPol;
     IPosition shapePol = itsImPol->singleStokesShape(cSysPol, Stokes::I);
     makeImage (pOutComplex, outfile, cSysPol, shapePol,
-	       itsImPol->isMasked(), false);
+	       itsImPol->isMasked(), False);
 
     // Make Expression. Only limited Stokes types that make sense are allowed.
     ImageExpr<Complex>* pExpr = 0;
@@ -969,7 +968,7 @@ namespace casa { //# name space casa begins
     // if no outfile, just make out image from the input image
     if (outfile.empty()){
       out = in.cloneII();
-      return true;
+      return True;
     }
 
     // The user wants to write the image out; verify file
@@ -991,13 +990,13 @@ namespace casa { //# name space casa begins
     }
 
     // Make mask
-    if (in.isMasked()) makeMask(*out, false);
+    if (in.isMasked()) makeMask(*out, False);
 
     // Copy stuff
     LatticeUtilities::copyDataAndMask (*itsLog, *out, in);
     ImageUtilities::copyMiscellaneous (*out, in);
     
-    return true;
+    return True;
 
   }
 
@@ -1010,18 +1009,18 @@ namespace casa { //# name space casa begins
       
       // Make the mask if it does not exist
       if (!out.hasRegion (maskName, RegionHandler::Masks)) {
-         out.makeMask (maskName, true, true, init, true);
+         out.makeMask (maskName, True, True, init, True);
 	 /* if (init) {
             *itsLog << LogIO::NORMAL << "Created and initialized mask `" << maskName << "'" << LogIO::POST;
          } else {
             *itsLog << LogIO::NORMAL << "Created mask `" << maskName << "'" << LogIO::POST;
 	    }*/
       }
-      return true;
+      return True;
     } else {
       *itsLog << LogIO::WARN
 	      << "Cannot make requested mask for this type of image" << endl;
-      return false;
+      return False;
     }
     
   }
@@ -1034,18 +1033,18 @@ namespace casa { //# name space casa begins
       
       // Make the mask if it does not exist
       if (!out.hasRegion (maskName, RegionHandler::Masks)) {
-	out.makeMask (maskName, true, true, init, true);
+	out.makeMask (maskName, True, True, init, True);
 	/* if (init) {
 	 *itsLog << LogIO::NORMAL << "Created and initialized mask `" << maskName << "'" << LogIO::POST;
          } else {
 	 *itsLog << LogIO::NORMAL << "Created mask `" << maskName << "'" << LogIO::POST;
 	 }*/
       }
-      return true;
+      return True;
     } else {
       *itsLog << LogIO::WARN
 	      << "Cannot make requested mask for this type of image" << endl;
-      return false;
+      return False;
     }
     
   }
@@ -1057,7 +1056,7 @@ namespace casa { //# name space casa begins
 			   Bool tempAllowed) {
     // Verify outfile
     if (outfile.empty()) {
-      if (!tempAllowed) return false;
+      if (!tempAllowed) return False;
     }
     // else {
     //  NewFile validfile;
@@ -1090,10 +1089,10 @@ namespace casa { //# name space casa begins
     }
     //
     if (isMasked) {
-       makeMask(*out, true);
+       makeMask(*out, True);
     }
 
-    return true;
+    return True;
   }
   Bool ImagePol::makeImage(ImageInterface<Complex>*& out, 
 			   const String& outfile, const CoordinateSystem& cSys,
@@ -1102,7 +1101,7 @@ namespace casa { //# name space casa begins
 
     // Verify outfile
     if (outfile.empty()) {
-      if (!tempAllowed) return false;
+      if (!tempAllowed) return False;
     }
     //  else {
     //  NewFile validfile;
@@ -1134,10 +1133,10 @@ namespace casa { //# name space casa begins
     }
     //
     if (isMasked) {
-      makeMask(*out, true);
+      makeMask(*out, True);
     }
 
-    return true;
+    return True;
   }
 
   void ImagePol::copyMiscellaneous (ImageInterface<Complex>& out,
@@ -1220,7 +1219,7 @@ namespace casa { //# name space casa begins
     centreRefPix (cSys, shape);
    
     // Make image 
-    makeImage (pImOut, outfile, cSys, shape, false, true);
+    makeImage (pImOut, outfile, cSys, shape, False, True);
     //
     uInt stokesAxis = 2;
     uInt spectralAxis = 3;
@@ -1238,7 +1237,7 @@ namespace casa { //# name space casa begins
     Normal noiseGen(&gen, 0.0, t*t);
     addNoise(slice, noiseGen);
     pImOut->put(slice);
-    return true;
+    return True;
   }
 
 Bool  ImagePol::fillIQUV (ImageInterface<Float>& im, uInt stokesAxis, 
@@ -1293,14 +1292,14 @@ Bool  ImagePol::fillIQUV (ImageInterface<Float>& im, uInt stokesAxis,
       blc(stokesAxis) = 1;                // Q       
       trc(stokesAxis) = 1;                
       Slicer sl(blc, trc, Slicer::endIsLast);
-      SubImage<Float> subImage(im, sl, true);
+      SubImage<Float> subImage(im, sl, True);
       subImage.set(q);
     }
     {
       blc(stokesAxis) = 2;                // U
       trc(stokesAxis) = 2;                
       Slicer sl(blc, trc, Slicer::endIsLast);
-      SubImage<Float> subImage(im, sl, true);
+      SubImage<Float> subImage(im, sl, True);
       subImage.set(u);
     }
   }
@@ -1311,17 +1310,17 @@ Bool  ImagePol::fillIQUV (ImageInterface<Float>& im, uInt stokesAxis,
     blc(stokesAxis) = 0;                // I
     trc(stokesAxis) = 0;                
     Slicer sl(blc, trc, Slicer::endIsLast);
-    SubImage<Float> subImage(im, sl, true);
+    SubImage<Float> subImage(im, sl, True);
     subImage.set(ii);
   }
   {
     blc(stokesAxis) = 3;                // V
     trc(stokesAxis) = 3;                
     Slicer sl(blc, trc, Slicer::endIsLast);
-    SubImage<Float> subImage(im, sl, true);
+    SubImage<Float> subImage(im, sl, True);
     subImage.set(vv);
   }
-  return true;
+  return True;
   
 }
 

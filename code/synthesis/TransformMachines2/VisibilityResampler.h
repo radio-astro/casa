@@ -63,10 +63,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual VisibilityResamplerBase* clone() 
     {return new VisibilityResampler(*this);}
 
-    virtual void getParams(casacore::Vector<casacore::Double>& uvwScale, casacore::Vector<casacore::Double>& offset, casacore::Vector<casacore::Double>& dphase)
+    virtual void getParams(Vector<Double>& uvwScale, Vector<Double>& offset, Vector<Double>& dphase)
     {uvwScale.assign(uvwScale_p); offset.assign(offset_p); dphase.assign(dphase_p);};
-    virtual void setParams(const casacore::Vector<casacore::Double>& uvwScale, const casacore::Vector<casacore::Double>& offset,
-			   const casacore::Vector<casacore::Double>& dphase)
+    virtual void setParams(const Vector<Double>& uvwScale, const Vector<Double>& offset,
+			   const Vector<Double>& dphase)
     {
       // SynthesisUtils::SETVEC(uvwScale_p, uvwScale); 
       // SynthesisUtils::SETVEC(offset_p, offset);
@@ -76,7 +76,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       dphase_p.reference(dphase);
     };
 
-    virtual void setMaps(const casacore::Vector<casacore::Int>& chanMap, const casacore::Vector<casacore::Int>& polMap)
+    virtual void setMaps(const Vector<Int>& chanMap, const Vector<Int>& polMap)
     {
       // SynthesisUtils::SETVEC(chanMap_p,chanMap);
       // SynthesisUtils::SETVEC(polMap_p,polMap);
@@ -84,7 +84,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       polMap_p.reference(polMap);
     }
 
-    virtual void setFreqMaps(const casacore::Matrix<casacore::Double>& spwChanFreqs, const casacore::Matrix<casacore::Double>& spwChanConjFreqs)
+    virtual void setFreqMaps(const Matrix<Double>& spwChanFreqs, const Matrix<Double>& spwChanConjFreqs)
     {
       spwChanFreq_p.assign(spwChanFreqs);
       spwChanConjFreq_p.assign(spwChanConjFreqs);
@@ -94,7 +94,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     {
       convFuncStore_p = cfs;
     };
-    virtual void setCFMaps(const casacore::Vector<casacore::Int>& cfMap, const casacore::Vector<casacore::Int>& conjCFMap) {(void)cfMap;(void)conjCFMap;};
+    virtual void setCFMaps(const Vector<Int>& cfMap, const Vector<Int>& conjCFMap) {(void)cfMap;(void)conjCFMap;};
     //
     //------------------------------------------------------------------------------
     //
@@ -104,14 +104,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // The first variant grids onto a double precision grid while the
     // second one does it on a single precision grid.
     //
-    virtual void DataToGrid(casacore::Array<casacore::DComplex>& griddedData, VBStore& vbs, 
-			    casacore::Matrix<casacore::Double>& sumwt, const casacore::Bool& dopsf,
-			    casacore::Bool /*useConjFreqCF*/=false)
+    virtual void DataToGrid(Array<DComplex>& griddedData, VBStore& vbs, 
+			    Matrix<Double>& sumwt, const Bool& dopsf,
+			    Bool /*useConjFreqCF*/=False)
     {DataToGridImpl_p(griddedData, vbs, dopsf, sumwt);}
 
-    virtual void DataToGrid(casacore::Array<casacore::Complex>& griddedData, VBStore& vbs, 
-    			    casacore::Matrix<casacore::Double>& sumwt, const casacore::Bool& dopsf,
-			    casacore::Bool /*useConjFreqCF*/=false)
+    virtual void DataToGrid(Array<Complex>& griddedData, VBStore& vbs, 
+    			    Matrix<Double>& sumwt, const Bool& dopsf,
+			    Bool /*useConjFreqCF*/=False)
     {DataToGridImpl_p(griddedData, vbs, dopsf, sumwt);}
 
     //
@@ -119,8 +119,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     // Re-sample VisBuffer to a regular grid (griddedData) (a.k.a. de-gridding)
     //
-    virtual void GridToData(VBStore& vbs,const casacore::Array<casacore::Complex>& griddedData); 
-    //    virtual void GridToData(VBStore& vbs, casacore::Array<casacore::Complex>& griddedData); 
+    virtual void GridToData(VBStore& vbs,const Array<Complex>& griddedData); 
+    //    virtual void GridToData(VBStore& vbs, Array<Complex>& griddedData); 
 
     virtual void ComputeResiduals(VBStore& vbs);
     virtual void setMutex(async::Mutex *mu) {myMutex_p = mu;};
@@ -131,13 +131,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     // These are no-ops for unithreaded samplers.
     //
-    virtual void init(const casacore::Bool& doublePrecision) {(void)doublePrecision;};
-    virtual void GatherGrids(casacore::Array<casacore::DComplex>& griddedData, casacore::Matrix<casacore::Double>& sumwt) {(void)griddedData;(void)sumwt;};
-    virtual void GatherGrids(casacore::Array<casacore::Complex>& griddedData, casacore::Matrix<casacore::Double>& sumwt) {(void)griddedData;(void)sumwt;};
-    virtual void initializePutBuffers(const casacore::Array<casacore::DComplex>& griddedData,
-				      const casacore::Matrix<casacore::Double>& sumwt) {(void)griddedData;(void)sumwt;};
-    virtual void initializePutBuffers(const casacore::Array<casacore::Complex>& griddedData,
-				      const casacore::Matrix<casacore::Double>& sumwt) {(void)griddedData;(void)sumwt;};
+    virtual void init(const Bool& doublePrecision) {(void)doublePrecision;};
+    virtual void GatherGrids(Array<DComplex>& griddedData, Matrix<Double>& sumwt) {(void)griddedData;(void)sumwt;};
+    virtual void GatherGrids(Array<Complex>& griddedData, Matrix<Double>& sumwt) {(void)griddedData;(void)sumwt;};
+    virtual void initializePutBuffers(const Array<DComplex>& griddedData,
+				      const Matrix<Double>& sumwt) {(void)griddedData;(void)sumwt;};
+    virtual void initializePutBuffers(const Array<Complex>& griddedData,
+				      const Matrix<Double>& sumwt) {(void)griddedData;(void)sumwt;};
     virtual void initializeDataBuffers(VBStore& vbs) {(void)vbs;};
 
 
@@ -149,49 +149,49 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
   protected:
     async::Mutex *myMutex_p;
-    // casacore::Vector<casacore::Double> uvwScale_p, offset_p, dphase_p;
-    // casacore::Vector<casacore::Int> chanMap_p, polMap_p;
+    // Vector<Double> uvwScale_p, offset_p, dphase_p;
+    // Vector<Int> chanMap_p, polMap_p;
     // CFStore convFuncStore_p;
-    //    casacore::Int inc0_p, inc1_p, inc2_p, inc3_p;
+    //    Int inc0_p, inc1_p, inc2_p, inc3_p;
     //
     // Re-sample the griddedData on the VisBuffer (a.k.a de-gridding).
     //
     template <class T>
-    void DataToGridImpl_p(casacore::Array<T>& griddedData, VBStore& vb,  
-			  const casacore::Bool& dopsf, casacore::Matrix<casacore::Double>& sumwt,casacore::Bool useConjFreqCF=false);
+    void DataToGridImpl_p(Array<T>& griddedData, VBStore& vb,  
+			  const Bool& dopsf, Matrix<Double>& sumwt,Bool useConjFreqCF=False);
 
-    // void sgrid(casacore::Vector<casacore::Double>& pos, casacore::Vector<casacore::Int>& loc, casacore::Vector<casacore::Int>& off, 
-    // 	       casacore::Complex& phasor, const casacore::Int& irow, const casacore::Matrix<casacore::Double>& uvw, 
-    // 	       const casacore::Double& dphase, const casacore::Double& freq, 
-    // 	       const casacore::Vector<casacore::Double>& scale, const casacore::Vector<casacore::Double>& offset,
-    // 	       const casacore::Vector<casacore::Float>& sampling);
+    // void sgrid(Vector<Double>& pos, Vector<Int>& loc, Vector<Int>& off, 
+    // 	       Complex& phasor, const Int& irow, const Matrix<Double>& uvw, 
+    // 	       const Double& dphase, const Double& freq, 
+    // 	       const Vector<Double>& scale, const Vector<Double>& offset,
+    // 	       const Vector<Float>& sampling);
 
     /*
-    void sgrid(casacore::Int& ndim, casacore::Double* pos, casacore::Int* loc, casacore::Int* off, 
-    	       casacore::Complex& phasor, const casacore::Int& irow, const casacore::Double* uvw, 
-    	       const casacore::Double& dphase, const casacore::Double& freq, 
-    	       const casacore::Double* scale, const casacore::Double* offset,
-    	       const casacore::Float* sampling);
+    void sgrid(Int& ndim, Double* pos, Int* loc, Int* off, 
+    	       Complex& phasor, const Int& irow, const Double* uvw, 
+    	       const Double& dphase, const Double& freq, 
+    	       const Double* scale, const Double* offset,
+    	       const Float* sampling);
 
-    inline casacore::Bool onGrid (const casacore::Int& nx, const casacore::Int& ny, 
-			const casacore::Vector<casacore::Int>& __restrict__ loc, 
-			const casacore::Vector<casacore::Int>& __restrict__ support) __restrict__ 
+    inline Bool onGrid (const Int& nx, const Int& ny, 
+			const Vector<Int>& __restrict__ loc, 
+			const Vector<Int>& __restrict__ support) __restrict__ 
     {
       return (((loc(0)-support[0]) >= 0 ) && ((loc(0)+support[0]) < nx) &&
 	      ((loc(1)-support[1]) >= 0 ) && ((loc(1)+support[1]) < ny));
     };
-    inline casacore::Bool onGrid (const casacore::Int& nx, const casacore::Int& ny, 
-			const casacore::Int& loc0, const casacore::Int& loc1, 
-			const casacore::Int& support) __restrict__ 
+    inline Bool onGrid (const Int& nx, const Int& ny, 
+			const Int& loc0, const Int& loc1, 
+			const Int& support) __restrict__ 
     {
       return (((loc0-support) >= 0 ) && ((loc0+support) < nx) &&
 	      ((loc1-support) >= 0 ) && ((loc1+support) < ny));
     };
 
-    // casacore::Array assignment operator in CASACore requires lhs.nelements()
+    // Array assignment operator in CASACore requires lhs.nelements()
     // == 0 or lhs.nelements()=rhs.nelements()
     // template <class T>
-    // inline void SETVEC(casacore::Vector<T>& lhs, const casacore::Vector<T>& rhs)
+    // inline void SETVEC(Vector<T>& lhs, const Vector<T>& rhs)
     // {lhs.resize(rhs.shape()); lhs = rhs;};
 
 
@@ -201,19 +201,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
 
     // This is called less frequently.  Currently once per VisBuffer
-    inline void cacheAxisIncrements(casacore::Int& n0, casacore::Int& n1, casacore::Int& n2, casacore::Int& n3)
+    inline void cacheAxisIncrements(Int& n0, Int& n1, Int& n2, Int& n3)
     {inc0_p=1, inc1_p=inc0_p*n0, inc2_p=inc1_p*n1, inc3_p=inc2_p*n2;(void)n3;}
 
 
     // The following two methods are called in the innermost loop.
-    inline casacore::Complex getFrom4DArray(const casacore::Complex* __restrict__ store,
-				  const casacore::Int* __restrict__ iPos) __restrict__ 
+    inline Complex getFrom4DArray(const Complex* __restrict__ store,
+				  const Int* __restrict__ iPos) __restrict__ 
     {return store[iPos[0] + iPos[1]*inc1_p + iPos[2]*inc2_p +iPos[3]*inc3_p];};
 
     template <class T>
     void addTo4DArray(T* __restrict__ store,
-		      const casacore::Int* __restrict__ iPos, 
-		      casacore::Complex& nvalue, casacore::Double& wt) __restrict__ 
+		      const Int* __restrict__ iPos, 
+		      Complex& nvalue, Double& wt) __restrict__ 
     {store[iPos[0] + iPos[1]*inc1_p + iPos[2]*inc2_p +iPos[3]*inc3_p] += (nvalue*wt);}
     */
   };

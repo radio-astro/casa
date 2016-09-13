@@ -56,17 +56,17 @@ namespace casa {
 		QtMWCTool(): coordType("world") {}
 		virtual ~QtMWCTool() {}
 	protected:
-		casacore::String coordType;
+		String coordType;
 
 	public:
-		virtual void setCoordType(const casacore::String& t) {
+		virtual void setCoordType(const String& t) {
 			if (t == "world") coordType = t;
 			else coordType = "pixel";
 			// cout << "Object=" << objectName().toStdString()
 			//      << " setCoordType: coordType=" << coordType
 			//      << " t=" << t << endl;
 		}
-		//casacore::String getCoordType() {return coordType;}
+		//String getCoordType() {return coordType;}
 
 	};
 
@@ -78,12 +78,12 @@ namespace casa {
 		virtual ~QtPolyTool() {}
 
 	public slots:
-		void setCoordType(const casacore::String& t);
+		void setCoordType(const String& t);
 
 	signals:
-		void wcNotify( const casacore::String c,
-		               const casacore::Vector<casacore::Double> px, const casacore::Vector<casacore::Double> py,
-		               const casacore::Vector<casacore::Double> wx, const casacore::Vector<casacore::Double> wy,
+		void wcNotify( const String c,
+		               const Vector<Double> px, const Vector<Double> py,
+		               const Vector<Double> wx, const Vector<Double> wy,
 		               const ProfileType ptype);
 
 	protected:
@@ -99,12 +99,12 @@ namespace casa {
 		virtual ~QtPolylineTool() {}
 
 	public slots:
-		void setCoordType(const casacore::String& t);
+		void setCoordType(const String& t);
 
 	signals:
-		void wcNotify( const casacore::String c,
-		               const casacore::Vector<casacore::Double> px, const casacore::Vector<casacore::Double> py,
-		               const casacore::Vector<casacore::Double> wx, const casacore::Vector<casacore::Double> wy,
+		void wcNotify( const String c,
+		               const Vector<Double> px, const Vector<Double> py,
+		               const Vector<Double> wx, const Vector<Double> wy,
 		               const ProfileType ptype);
 
 	protected:
@@ -120,12 +120,12 @@ namespace casa {
 		virtual ~QtEllipseTool() {}
 
 	public slots:
-		void setCoordType(const casacore::String& t);
+		void setCoordType(const String& t);
 
 	signals:
-		void wcNotify( const casacore::String c,
-		               const casacore::Vector<casacore::Double> px, const casacore::Vector<casacore::Double> py,
-		               const casacore::Vector<casacore::Double> wx, const casacore::Vector<casacore::Double> wy,
+		void wcNotify( const String c,
+		               const Vector<Double> px, const Vector<Double> py,
+		               const Vector<Double> wx, const Vector<Double> wy,
 		               const ProfileType ptype);
 
 	protected:
@@ -141,12 +141,12 @@ namespace casa {
 		virtual ~QtRectTool() {}
 
 	public slots:
-		void setCoordType(const casacore::String& t);
+		void setCoordType(const String& t);
 
 	signals:
-		void wcNotify( const casacore::String c,
-		               const casacore::Vector<casacore::Double> px, const casacore::Vector<casacore::Double> py,
-		               const casacore::Vector<casacore::Double> wx, const casacore::Vector<casacore::Double> wy,
+		void wcNotify( const String c,
+		               const Vector<Double> px, const Vector<Double> py,
+		               const Vector<Double> wx, const Vector<Double> wy,
 		               const ProfileType ptype);
 
 	protected:
@@ -159,15 +159,15 @@ namespace casa {
 	public:
 		QtCrossTool(viewer::RegionSourceFactory *rf, PanelDisplay* pd);
 		virtual ~QtCrossTool() {}
-		/* virtual void crosshairReady(const casacore::String& evtype); */
+		/* virtual void crosshairReady(const String& evtype); */
 
 	public slots:
-		void setCoordType(const casacore::String& t);
+		void setCoordType(const String& t);
 
 	signals:
-		void wcNotify( const casacore::String c,
-		               const casacore::Vector<casacore::Double> px, const casacore::Vector<casacore::Double> py,
-		               const casacore::Vector<casacore::Double> wx, const casacore::Vector<casacore::Double> wy,
+		void wcNotify( const String c,
+		               const Vector<Double> px, const Vector<Double> py,
+		               const Vector<Double> wx, const Vector<Double> wy,
 		               const ProfileType ptype);
 
 	protected:
@@ -182,12 +182,12 @@ namespace casa {
 		virtual ~QtPVTool() {}
 
 	public slots:
-		void setCoordType(const casacore::String& t);
+		void setCoordType(const String& t);
 
 	signals:
-		void wcNotify( const casacore::String c,
-		               const casacore::Vector<casacore::Double> px, const casacore::Vector<casacore::Double> py,
-		               const casacore::Vector<casacore::Double> wx, const casacore::Vector<casacore::Double> wy,
+		void wcNotify( const String c,
+		               const Vector<Double> px, const Vector<Double> py,
+		               const Vector<Double> wx, const Vector<Double> wy,
 		               const ProfileType ptype);
 
 	protected:

@@ -50,12 +50,6 @@
 #include <display/Utilities/ImageProperties.h>
 #include <display/Utilities/StatusSink.h>
 
-namespace casacore{
-
-	class String;
-	template <class T> class ImageInterface;
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	namespace viewer {
@@ -63,6 +57,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		class CleanGui;
 	}
 
+	class String;
 	class QtViewer;
 	class QtViewerPrintGui;
 	class QtMouseToolBar;
@@ -90,6 +85,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     class CursorTrackingHolder;
     class AboutDialogViewer;
 
+	template <class T> class ImageInterface;
 
 	class LinkedCursorEH : public QObject, public WCRefreshEH {
 		Q_OBJECT
@@ -143,7 +139,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		int buttonToolState(const std::string &tool) const;
 
 		// access our logger...
-		casacore::LogIO &logIO( ) {
+		LogIO &logIO( ) {
 			return logger;
 		}
 
@@ -169,11 +165,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		QToolBar* customToolBar;	//# limited room
 		QToolBar* customToolBar2;	//# wider -- in its own row.
 
-		virtual void setStatsPrint(casacore::Bool printStats=true) {
+		virtual void setStatsPrint(Bool printStats=True) {
 			qdp_->printStats = printStats;
 		}
 
-		virtual void setUseRegion(casacore::Bool useRegion=true) {
+		virtual void setUseRegion(Bool useRegion=True) {
 			qdp_->useRegion = useRegion;
 		}
 
@@ -184,7 +180,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// At least for now, colorbars can only be placed horizontally or
 		// vertically, identically for all display panels.
 		// This returns the current value.
-		casacore::Bool colorBarsVertical() {
+		Bool colorBarsVertical() {
 			return colorBarsVertical_;
 		}
 
@@ -194,12 +190,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Create a new QtDD from given parameters, and add to internal DD list.
 		// (For now) QtViewerBase retains 'ownership' of the QtDisplayData; call
 		// removeDD(qdd) to delete it.
-		// Unless autoregister is set false, all open DisplayPanels will
+		// Unless autoregister is set False, all open DisplayPanels will
 		// register the DD for display.
 		// Check return value for 0, or connect to the createDDFailed()
 		// signal, to handle failure.
-		QtDisplayData* createDD( casacore::String path, casacore::String dataType, casacore::String displayType,
-				casacore::Bool autoRegister=true, int insertPosition = -1,
+		QtDisplayData* createDD( String path, String dataType, String displayType,
+				Bool autoRegister=True, int insertPosition = -1,
 				bool masterCoordinate = false, bool masterSaturation = false,
 				bool masterHue = false,
 		        const viewer::DisplayDataOptions &ddo=viewer::DisplayDataOptions(),
@@ -207,21 +203,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Removes the QDD from the list and deletes it (if it existed --
 		// Return value: whether qdd was in the list in the first place).
-		virtual casacore::Bool removeDD(QtDisplayData*& qdd);
+		virtual Bool removeDD(QtDisplayData*& qdd);
 
 		// retrieve a copy of the current DD list.
-		//casacore::List<QtDisplayData*> dds() { return qdds_;  }
+		//List<QtDisplayData*> dds() { return qdds_;  }
 		DisplayDataHolder::DisplayDataIterator beginDD() const;
 		DisplayDataHolder::DisplayDataIterator endDD() const;
-		casacore::Bool isEmptyDD() const;
+		Bool isEmptyDD() const;
 		// return the number of user DDs.
-		//casacore::Int nDDs() { return qdds_.len();  }
+		//Int nDDs() { return qdds_.len();  }
 
 		// return a list of DDs that are registered on some panel.
-		//casacore::List<QtDisplayData*> registeredDDs();
+		//List<QtDisplayData*> registeredDDs();
 
 		// return a list of DDs that exist but are not registered on any panel.
-		casacore::List<QtDisplayData*> unregisteredDDs();
+		List<QtDisplayData*> unregisteredDDs();
 
 		// retrieve a DD with given name (0 if none).
 		QtDisplayData* dd(const std::string& name);
@@ -230,12 +226,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Check that a given DD is on the list.  Use qdd pointer or its name.
 		//<group>
-		casacore::Bool ddExists(QtDisplayData* qdd);
-		//casacore::Bool ddExists(const casacore::String& name) { return dd(name)!=0;  }
+		Bool ddExists(QtDisplayData* qdd);
+		//Bool ddExists(const String& name) { return dd(name)!=0;  }
 		//</group>
 
 		// Latest error (in createDD, etc.)
-		virtual casacore::String errMsg() {
+		virtual String errMsg() {
 			return errMsg_;
 		}
 
@@ -277,15 +273,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void activate( bool );
 
 		// display cursor information for the specified point (in world coordinates)
-		void updateCursorInfo( WorldCanvas *wc, casacore::Quantity x, casacore::Quantity y );
-		typedef std::pair<QString, SHARED_PTR<casacore::ImageInterface<float> > > OverplotInterface;
+		void updateCursorInfo( WorldCanvas *wc, Quantity x, Quantity y );
+		typedef std::pair<QString, SHARED_PTR<ImageInterface<float> > > OverplotInterface;
 
 	public slots:
 
 		// At least for now, colorbars can only be placed horizontally or vertically,
 		// identically for all display panels.  This sets that state for everyone.
 		// Sends out colorBarOrientationChange signal when the state changes.
-		virtual void setColorBarOrientation(casacore::Bool vertical);
+		virtual void setColorBarOrientation(Bool vertical);
 
 		virtual QtDisplayPanelGui *createNewPanel( );
 
@@ -340,17 +336,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void movieStop();
 		void registerAllDDs();
 		void unregisterAllDDs();
-		virtual void showStats(const casacore::String&);
+		virtual void showStats(const String&);
 		virtual void hideStats();
 		//</group>
 
 		// add a new DD
-		virtual QtDisplayData* addDD(casacore::String path, casacore::String dataType, casacore::String displayType, casacore::Bool autoRegister=true, casacore::Bool tmpDtata=false, SHARED_PTR<casacore::ImageInterface<casacore::Float> > img = SHARED_PTR<casacore::ImageInterface<casacore::Float> >());
+		virtual QtDisplayData* addDD(String path, String dataType, String displayType, Bool autoRegister=True, Bool tmpDtata=False, SHARED_PTR<ImageInterface<Float> > img = SHARED_PTR<ImageInterface<Float> >());
 		// go to a specifc channel
 		virtual void doSelectChannel(int channelIndex);
 
 		// (Attempts to) restore panel state from named file.
-		virtual casacore::Bool restorePanelState(casacore::String filename);
+		virtual Bool restorePanelState(String filename);
 
 		virtual void trackingMoved(Qt::DockWidgetArea);
 		virtual void animatorMoved(Qt::DockWidgetArea);
@@ -365,8 +361,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void showSpecFitImageProfile();
 		void disconnectHistogram();
 		void ddClose( QtDisplayData*& removeDD);
-		void ddOpen( const casacore::String& path, const casacore::String& dataType,
-				const casacore::String& displayType, int insertPosition = -1,
+		void ddOpen( const String& path, const String& dataType,
+				const String& displayType, int insertPosition = -1,
 				bool register = true, bool masterCoordinate = false,
 				bool masterSaturation = false, bool masterHue = false);
 
@@ -392,14 +388,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		//Profile Overplots
 		void overlay(QList<OverplotInterface>);
 
-		void createDDFailed(casacore::String errMsg, casacore::String path, casacore::String dataType,
-		                    casacore::String displayType);
+		void createDDFailed(String errMsg, String path, String dataType,
+		                    String displayType);
 
 		// The DD now exists, and is on QtViewerBase's list.
 		// autoregister tells DPs whether they are to register the DD.
 		// ***** dd is added to the world canvas holder during *****
 		// ***** the processing of this event...               *****
-		void ddCreated(QtDisplayData*, casacore::Bool autoRegister, int insertPosition, casacore::Bool csMaster);
+		void ddCreated(QtDisplayData*, Bool autoRegister, int insertPosition, Bool csMaster);
 
 		// The DD is no longer on QtViewerBase's list, but is not
 		// destroyed until after the signal.
@@ -478,7 +474,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 		// Display tracking data gathered by underlying panel.
-		virtual void displayTrackingData_(casacore::Record trackingRec);
+		virtual void displayTrackingData_(Record trackingRec);
 
 		// Reacts to QDP registration change signal.  If necessary, changes
 		// the set of cursor position tracking boxes being displayed in
@@ -514,13 +510,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	protected:
 
-		casacore::LogIO logger;
+		LogIO logger;
 		static bool logger_did_region_warning;
 
 		// Existing user-visible QDDs
-		//casacore::List<QtDisplayData*> qdds_;
+		//List<QtDisplayData*> qdds_;
 		DisplayDataHolder* displayDataHolder;
-		casacore::String errMsg_;
+		String errMsg_;
 
 
 		QtDataManager* qdm_;		//# The window for loading data.
@@ -528,10 +524,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		QtDataOptionsPanel* qdo_;	//# The window for controlling data display.
 
 		// Keeps current data directory in sync between
-		// casacore::DataManager window and save-restore dialogs.
-		virtual casacore::Bool syncDataDir_(casacore::String filename);
+		// DataManager window and save-restore dialogs.
+		virtual Bool syncDataDir_(String filename);
 
-		virtual void updateDDMenus_(casacore::Bool doCloseMenu = true);
+		virtual void updateDDMenus_(Bool doCloseMenu = True);
 
 
 		// scripted (via dbus) panels should override the closeEvent( ) and hide the gui
@@ -543,7 +539,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// At least for now, colorbars can only be placed horizontally or vertically,
 		// identically for all display panels.  Here is where that state is kept for
 		// everyone.
-		casacore::Bool colorBarsVertical_;
+		Bool colorBarsVertical_;
 
 		QtViewer* v_;		 	//# (Same viewer as qdp_'s)
 		QtDisplayPanel* qdp_;  	//# Central Widget this window operates.
@@ -559,7 +555,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 		QtProfile* profile_;		//# Profile window
-		casacore::String savedTool_;		//# (for restoring left button)
+		String savedTool_;		//# (for restoring left button)
 		QtDisplayData* profileDD_;    //# QDD currently being profiled
 		//# (0 if profiler is not showing).
 
@@ -580,7 +576,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		QtMouseToolBar* mouseToolBar_;
 
 		// connection to rc file
-		casacore::Casarc &rc;
+		Casarc &rc;
 		// rc id for this panel type
 		std::string rcid_;
 
@@ -612,8 +608,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void clearTools();
 		unsigned int showdataoptionspanel_enter_count;
 		QtDisplayPanelGui() : rc(viewer::getrc()), linkedCursorHandler(0) {  }		// (not intended for use)
-		QtDisplayData* processDD( casacore::String path, casacore::String dataType,
-				casacore::String displayType, casacore::Bool autoRegister, int insertPosition,
+		QtDisplayData* processDD( String path, String dataType,
+				String displayType, Bool autoRegister, int insertPosition,
 				bool masterCoordinate, bool masterSaturation, bool masterHue,
 		        QtDisplayData* qdd, const viewer::DisplayDataOptions &ddo=viewer::DisplayDataOptions() );
 		void connectRegionSignals(PanelDisplay* ppd);
@@ -682,7 +678,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void incrementMovieChannel();
 		void clear_status_bar( );
 		void reset_status_bar( );
-		void controlling_dd_axis_change(casacore::String, casacore::String, casacore::String, std::vector<int> );
+		void controlling_dd_axis_change(String, String, String, std::vector<int> );
 		void initializeProfile( );
 		void showHistogram();
 		void showAboutDialog();
@@ -691,14 +687,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void histogramRegionChange( int, viewer::region::RegionChanges change = viewer::region::RegionChangeLabel );
 		void showFitInteractive();
 		void showCleanTool( );
-		void addSkyComponentOverlay(casacore::String path, const QString& colorName);
-		void removeSkyComponentOverlay( casacore::String path );
+		void addSkyComponentOverlay(String path, const QString& colorName);
+		void removeSkyComponentOverlay( String path );
 		void add2DFitOverlay( QList<RegionShape*> fitMarkers );
 		void remove2DFitOverlay( QList<RegionShape*> fitMarkers );
-		void addResidualFitImage( casacore::String path );
-		virtual void addDDSlot(casacore::String path, casacore::String dataType, casacore::String displayType,
-				casacore::Bool autoRegister=true, casacore::Bool tmpData=false,
-				SHARED_PTR<casacore::ImageInterface<casacore::Float> > img = SHARED_PTR<casacore::ImageInterface<casacore::Float> >());
+		void addResidualFitImage( String path );
+		virtual void addDDSlot(String path, String dataType, String displayType,
+				Bool autoRegister=True, Bool tmpData=False,
+				SHARED_PTR<ImageInterface<Float> > img = SHARED_PTR<ImageInterface<Float> >());
 		void sliceChanged( int regionId, viewer::region::RegionChanges change,
 		                   const QList<double> & worldX, const QList<double> & worldY,
 		                   const QList<int> &pixelX, const QList<int> & pixelY );
@@ -707,12 +703,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		               const QString&, const QString&, const QString&, int, int);
 		void showColorHistogram(QtDisplayData* displayData);
 		void globalColorSettingsChanged( bool global );
-		void globalOptionsChanged( QtDisplayData* originator, casacore::Record opts );
+		void globalOptionsChanged( QtDisplayData* originator, Record opts );
 		void updateColorHistogram( const QString& ddName );
 		void showImageManager();
 		void sliceMarkerVisibilityChanged(int regionId, bool visible);
 		void sliceMarkerPositionChanged(int regionId, int segmentIndex, float percentage);
-		void updateMultiSpectralFitLocation( casacore::Record trackingRec);
+		void updateMultiSpectralFitLocation( Record trackingRec);
 		/**
 		 * Written in response to CAS-5101. When multiple images are loaded,
 		 * some with many channels and one with only one channel, the available
@@ -741,17 +737,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	public:
 
-		// true by default.  Set false to disable auto-raise of the Data
+		// True by default.  Set False to disable auto-raise of the Data
 		// Options panel whenever the first DD is created.
 		//# Users want to see this panel automatically when there are DDs
 		//# to tweak.  (Apps like clean can turn v_->autoOptionsRaise off,
 		//# if desired (yes, is is (gasp!) public data)).
-		casacore::Bool autoDDOptionsShow;
+		Bool autoDDOptionsShow;
 
 		// Intended for use only by QtDataManager (or other data dialogs such as for
 		// save-restore), to inform QtDisplayPanel of the directory currently
 		// selected for data retrieval, if any ("" if none).
-		casacore::String selectedDMDir;
+		String selectedDMDir;
 
 	};
 

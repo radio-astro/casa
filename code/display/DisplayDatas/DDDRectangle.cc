@@ -34,7 +34,6 @@
 #include <display/DisplayDatas/DDDRectangle.h>
 #include <cpgplot.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	DDDRectangle::DDDRectangle(const Record &description,
@@ -128,7 +127,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if ((ev.key() != owner()->key()) ||
 		        // new phrase in expression on next line...
 		        //!(ev.modifiers() & owner()->keyModifier())) {
-		        false) {
+		        False) {
 			return;
 		}
 		Int x = ev.pixX();
@@ -142,11 +141,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Int y2 = Int(max(pblc(1), ptrc(1)) + 0.5);
 		if (showingHandles()) {
 			// put back in when cursor control on X11PixelCanvas
-			//Bool overhandle = false;
+			//Bool overhandle = False;
 			if (((x < x1) || (x > x2) || (y < y1) || (y > y2)) && ev.keystate()) {
 				// press button outside rectangle, switch to handles invisible
 				clearClickBuffer();
-				showHandles(false);
+				showHandles(False);
 			} else if (ev.keystate()) {
 				// first update handle locations since this might be
 				// on another canvas!
@@ -182,7 +181,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					if (isEditable()) itsMode = DDDObject::Handle;
 					itsLeftHandle = left;
 					itsBottomHandle = top;
-					//overhandle = true;
+					//overhandle = True;
 				} else {
 					// clicked inside rectangle, and not on handles.
 					if (!storeClick(ev)) {
@@ -207,7 +206,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 			if ((((x>=x1-1 && x<=x1+1) || (x>=x2-1 && x<=x2+1)) && (y1 <= y) && (y <= y2)) ||
 			        (((y>=y1-1 && y<=y1+1) || (y>=y2-1 && y<=y2+1)) && (x1 <= x) && (x <= x2))) {
-				showHandles(true);
+				showHandles(True);
 				clearClickBuffer();
 				itsMode = DDDObject::None;
 			}

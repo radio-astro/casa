@@ -31,15 +31,15 @@ class FlagAgentManual : public FlagAgentBase {
 
 public:
 
-	FlagAgentManual(FlagDataHandler *dh, casacore::Record config, casacore::Bool writePrivateFlagCube = false, casacore::Bool flag = true);
+	FlagAgentManual(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube = false, Bool flag = true);
 	~FlagAgentManual();
 
 protected:
 
-	void initialize(casacore::Record config);
+	void initialize(Record config);
 
 	// Flag entire row
-	bool computeRowFlags(const vi::VisBuffer2 &visBuffer, FlagMapper &flags, casacore::uInt row);
+	bool computeRowFlags(const vi::VisBuffer2 &visBuffer, FlagMapper &flags, uInt row);
 
 private:
 

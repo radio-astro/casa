@@ -26,7 +26,6 @@
 #include <imageanalysis/ImageAnalysis/test/ImageMaskHandlerTest.h>
 
 using namespace casacore;
-using namespace casacore;
 
 using namespace std;
 

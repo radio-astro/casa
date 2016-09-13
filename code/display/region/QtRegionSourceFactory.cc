@@ -28,7 +28,6 @@
 #include <display/region/QtRegionSource.qo.h>
 #include <display/QtViewer/QtDisplayPanelGui.qo.h>
 
-using namespace casacore;
 namespace casa {
 	namespace viewer {
 		RegionSource *QtRegionSourceFactory::newSource( RegionCreator *rc ) {

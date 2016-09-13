@@ -65,7 +65,6 @@
 
 #include <scimath/Mathematics/MathFunc.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 PBMath::PBMath()
@@ -428,13 +427,13 @@ PBMath& PBMath::operator=(const PBMath& other)
 
 Bool PBMath::operator==(const PBMath& other) const
 {
-  return (pb_pointer_p == other.pb_pointer_p ? true : false);
+  return (pb_pointer_p == other.pb_pointer_p ? True : False);
 };
 
 
 Bool PBMath::operator!=(const PBMath& other) const
 {
-  return (pb_pointer_p != other.pb_pointer_p ? true : false);
+  return (pb_pointer_p != other.pb_pointer_p ? True : False);
 };
 
 
@@ -615,7 +614,7 @@ PBMath::apply(SkyComponent& in,
 Bool PBMath::ok() const
 {
   if (pb_pointer_p.null()) {
-    return false;
+    return False;
   } else {
     return pb_pointer_p->ok();
   }
@@ -1033,7 +1032,7 @@ PBMath::getQuantity(const RecordInterface& rec, const String& item,
 		      " because it isnt a Quantity"));
   }
   returnedQuantity = h.asQuantumDouble();
-  return true;
+  return True;
 };
 
 Bool 
@@ -1052,7 +1051,7 @@ PBMath::getMDirection(const RecordInterface& rec, const String& item,
 		      " because it isnt a MDirection"));
   }
   returnedMDirection = h.asMDirection();
-  return true;
+  return True;
 };
 
 
@@ -1084,7 +1083,7 @@ void PBMath::initByDiameter(Double diameter, Bool /*useSymmetricBeam*/,
   if(diameter>0.){
     Double scalesize = 1.1998662 * 25.0/diameter;
     pb_pointer_p = new PBMath1DNumeric(vlanum, Quantity(scalesize,"'"), 
-				       Quantity(43.0,"GHz"), false);
+				       Quantity(43.0,"GHz"), False);
   }
   else if(diameter==0.){
     throw(AipsError("Attempt to initialize PBMath with zero dish diameter."));
@@ -1306,7 +1305,7 @@ PBMathInterface* PBMath::pbMathInterfaceForCommonPB(const PBMath::CommonPB ipb, 
     {
       Double scalesize = 1.1998662 * 25.0/10.4;
       thepbMath = new PBMath1DNumeric(vlanum, Quantity(scalesize,"'"), 
-					 Quantity(43.0,"GHz"), false);
+					 Quantity(43.0,"GHz"), False);
     }
     break;
   case GBT:
@@ -1340,28 +1339,28 @@ PBMathInterface* PBMath::pbMathInterfaceForCommonPB(const PBMath::CommonPB ipb, 
       
          
       thepbMath = new PBMath1DPoly( coeff, Quantity(scalesize,"'"), 
-				       Quantity(1.0e9,"Hz"),false);
+				       Quantity(1.0e9,"Hz"),False);
     }
     break;
   case GMRT:
     {
       Double scalesize = 1.1998662 * 25.0/45.0;
       thepbMath = new PBMath1DNumeric(vlanum, Quantity(scalesize,"'"), 
-					 Quantity(43.0,"GHz"), false);
+					 Quantity(43.0,"GHz"), False);
     }
     break;
   case NRAO12M:
     {
       Double scalesize = 1.1998662 * 25.0/12.0;
       thepbMath = new PBMath1DNumeric(vlanum, Quantity(scalesize,"'"), 
-					 Quantity(43.0,"GHz"), false);
+					 Quantity(43.0,"GHz"), False);
     }
     break;
   case NRAO140FT:
     {
       Double scalesize = 1.1998662 * 25.0/43.0;
       thepbMath = new PBMath1DNumeric(vlanum, Quantity(scalesize,"'"), 
-					 Quantity(43.0,"GHz"), false);
+					 Quantity(43.0,"GHz"), False);
     }
     break;
 
@@ -1370,7 +1369,7 @@ PBMathInterface* PBMath::pbMathInterfaceForCommonPB(const PBMath::CommonPB ipb, 
   case WSRT:
     {
       // WSRT for freq > 800 MHz
-      Bool thisIsVP = true;
+      Bool thisIsVP = True;
       Vector<Double> coef(4);
       Vector<Double> cosScale(4);
       coef(0)= 0.0;
@@ -1391,7 +1390,7 @@ PBMathInterface* PBMath::pbMathInterfaceForCommonPB(const PBMath::CommonPB ipb, 
   case WSRT_LOW:
     {
       // WSRT for freq < 800 MHz
-      Bool thisIsVP = true;
+      Bool thisIsVP = True;
       Vector<Double> coef(4);
       Vector<Double> cosScale(4);
       coef(0)= 0.0;
@@ -1505,12 +1504,12 @@ PBMathInterface* PBMath::pbMathInterfaceForCommonPB(const PBMath::CommonPB ipb, 
       coef(4)= 4.88e-13;
 
       thepbMath = new PBMath1DIPoly( coef, Quantity(53.0,"'"), Quantity(1.0,"GHz"),
-					false,
+					False,
 					BeamSquint(MDirection(Quantity(0.0, "'"),
 							      Quantity(0.0, "'"),
 							      MDirection::Ref(MDirection::AZEL)),
 						   Quantity(1.0, "GHz")),
-					false);
+					False);
     }
     break;
   case ATCA_C:
@@ -1531,24 +1530,24 @@ PBMathInterface* PBMath::pbMathInterfaceForCommonPB(const PBMath::CommonPB ipb, 
       freqs(0)=4.8e9;
       freqs(1)=8.64e9;
       thepbMath = new PBMath1DIPoly( coef, freqs, Quantity(53.0,"'"), Quantity(1.0,"GHz"),
-					false,
+					False,
 					BeamSquint(MDirection(Quantity(0.0, "'"),
 							      Quantity(0.0, "'"),
 							      MDirection::Ref(MDirection::AZEL)),
 						   Quantity(1.0, "GHz")),
-					false);
+					False);
     }
     break;
     {
       Vector<Double> coef(5);
 
       thepbMath = new PBMath1DIPoly( coef, Quantity(53.0,"'"), Quantity(1.0,"GHz"),
-					false,
+					False,
 					BeamSquint(MDirection(Quantity(0.0, "'"),
 							      Quantity(0.0, "'"),
 							      MDirection::Ref(MDirection::AZEL)),
 						   Quantity(1.0, "GHz")),
-				        false);
+				        False);
      }
     break;
   case ATCA_C_RI:
@@ -1581,12 +1580,12 @@ PBMathInterface* PBMath::pbMathInterfaceForCommonPB(const PBMath::CommonPB ipb, 
 
       thepbMath = new PBMath1DNumeric( coef, Quantity(21.07,"'"), 
 					  Quantity(5.5,"GHz"),
-					  true,
+					  True,
 					  BeamSquint(MDirection(Quantity(0.0, "'"),
 								Quantity(0.0, "'"),
 								MDirection::Ref(MDirection::AZEL)),
 						     Quantity(5.5, "GHz")),
-					  true);
+					  True);
     }
     break;
   case ATCA_K:
@@ -1600,12 +1599,12 @@ PBMathInterface* PBMath::pbMathInterfaceForCommonPB(const PBMath::CommonPB ipb, 
       coef(4)= 6.650e-13;
 
       thepbMath = new PBMath1DIPoly( coef, Quantity(53.0,"'"), Quantity(1.0,"GHz"),
-					false,
+					False,
 					BeamSquint(MDirection(Quantity(0.0, "'"),
 							      Quantity(0.0, "'"),
 							      MDirection::Ref(MDirection::AZEL)),
 						   Quantity(1.0, "GHz")),
-				        false);
+				        False);
      }
     break;
   case ATCA_W:
@@ -1618,24 +1617,24 @@ PBMathInterface* PBMath::pbMathInterfaceForCommonPB(const PBMath::CommonPB ipb, 
       coef(4)= 0;
 
       thepbMath = new PBMath1DIPoly( coef, Quantity(53.0,"'"), Quantity(1.0,"GHz"),
-					false,
+					False,
 					BeamSquint(MDirection(Quantity(0.0, "'"),
 							      Quantity(0.0, "'"),
 							      MDirection::Ref(MDirection::AZEL)),
 						   Quantity(1.0, "GHz")),
-				        false);
+				        False);
      }
     break;
   case HATCREEK:
     thepbMath = new PBMath1DGauss( Quantity((191.67/2.0),"'"),  // half width==> /2
 				      Quantity(215.0, "'"),
 				      Quantity(1.0, "GHz"),
-				      false,
+				      False,
 				      BeamSquint(MDirection(Quantity(0.0, "'"),
 							    Quantity(0.0, "'"),
 							    MDirection::Ref(MDirection::AZEL)),
 						 Quantity(1.0, "GHz")),
-				      false );
+				      False );
     break;
   case IRAMPDB:
       thepbMath = new PBMath1DAiry( Quantity(15.0,"m"), Quantity(1.0,"m"),
@@ -1668,12 +1667,12 @@ PBMathInterface* PBMath::pbMathInterfaceForCommonPB(const PBMath::CommonPB ipb, 
     pb_pointer_p = new PBMath1DGauss( Quantity((52.3/2.0),"arcsec"),  // half width==> /2
 				      Quantity(35.0, "arcsec"),
 				      Quantity(224.0, "GHz"),
-				      false,
+				      False,
 				      BeamSquint(MDirection(Quantity(0.0, "'"),
 							    Quantity(0.0, "'"),
 							    MDirection::Ref(MDirection::AZEL)),
 						 Quantity(224.0, "GHz")),
-				      false);
+				      False);
 
      //Crap beam no finite support in FFT
    
@@ -1704,12 +1703,12 @@ PBMathInterface* PBMath::pbMathInterfaceForCommonPB(const PBMath::CommonPB ipb, 
       coef(0)= 1.0;
 
       thepbMath = new PBMath1DIPoly( coef, Quantity(180,"deg"), Quantity(1.0,"GHz"),
-					false,
+					False,
 					BeamSquint(MDirection(Quantity(0.0, "'"),
 							      Quantity(0.0, "'"),
 							      MDirection::Ref(MDirection::AZEL)),
 						   Quantity(1.0, "GHz")),
-				        false);
+				        False);
      }
     break;
   default:

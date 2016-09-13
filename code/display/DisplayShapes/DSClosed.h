@@ -80,8 +80,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// <group>
 		virtual void setFillStyle(DSClosed::FillStyle fill);
 		virtual DSClosed::FillStyle getFillStyle();
-		virtual void setFillColor(casacore::String color);
-		virtual casacore::String getFillColor();
+		virtual void setFillColor(String color);
+		virtual String getFillColor();
 		// </group>
 
 
@@ -89,15 +89,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// simply pass on calls up the class tree.
 		// <group>
 		virtual void draw(PixelCanvas *pc);
-		virtual void rotateAbout(const casacore::Float& angle, const casacore::Float& aboutX,
-		                         const casacore::Float& aboutY);
-		virtual void move(const casacore::Float& dX, const casacore::Float& dY);
+		virtual void rotateAbout(const Float& angle, const Float& aboutX,
+		                         const Float& aboutY);
+		virtual void move(const Float& dX, const Float& dY);
 		// </group>
 
 		// Get and set options
 		// <group>
-		virtual casacore::Record getOptions();
-		virtual casacore::Bool setOptions(const casacore::Record& settings);
+		virtual Record getOptions();
+		virtual Bool setOptions(const Record& settings);
 		// </group>
 
 	private:
@@ -105,7 +105,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Used to set up the class when default constructor called
 		virtual void setDefaultOptions();
 		DSClosed::FillStyle itsFillStyle;
-		casacore::String itsFillColor;
+		String itsFillColor;
 
 	};
 

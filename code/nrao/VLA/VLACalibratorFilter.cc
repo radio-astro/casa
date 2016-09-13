@@ -72,18 +72,18 @@ Bool VLACalibratorFilter::passThru(const VLALogicalRecord& record) const {
 //         << ": required code: " << itsCode;
   if (itsCode == '#') {
 //     cerr << " all match" << endl;
-    return true;
+    return True;
   }
   if (itsCode == thisCode) {
 //     cerr << " exact match" << endl;
-    return true;
+    return True;
   }
   if (itsCode == '*' && thisCode != ' ') {
 //     cerr << " cal match" << endl;
-    return true;
+    return True;
   }
 //   cerr << " NO match" << endl;
-  return false;
+  return False;
 }
 
 VLAFilter* VLACalibratorFilter::clone() const {
@@ -97,7 +97,7 @@ Bool VLACalibratorFilter::ok() const {
   // The LogIO class is only constructed if an error is detected for
   // performance reasons. Both function static and file static variables
   // where considered and rejected for this purpose.
-  if (!VLAFilter::ok()) return false; 
+  if (!VLAFilter::ok()) return False; 
   Regex allowedCodes("[[:upper:][:digit:] *#]");
   if (!String(itsCode).matches(allowedCodes)) {
     LogIO logErr(LogOrigin("VLACalibratorFilter", "ok()"));
@@ -105,9 +105,9 @@ Bool VLACalibratorFilter::ok() const {
 	   << "The calibrator code is not one of the allowed values"
 	   << "It is:" << String(itsCode) << ":"
 	   << LogIO::POST;
-    return false;
+    return False;
   }
-  return true;
+  return True;
 }
 
 // Local Variables: 

@@ -36,14 +36,10 @@
 #include <casa/vector.h>
 #include <ostream>
 
-namespace casacore{
-
-class AipsIO;
-}
-
 namespace casa {
 
 //# Forward declaration.
+class AipsIO;
 
 
 // <summary>
@@ -70,31 +66,31 @@ namespace casa {
 struct AsdmIndex
 {
   // Get nr of complex values in cross-correlation data block.
-  casacore::uInt dataSize() const;
+  uInt dataSize() const;
 
   // Get number of rows spanned by the data blocks.
-  casacore::uInt nrow() const
+  uInt nrow() const
   { return nBl; } 
 
-  //# casacore::Data members.
-  casacore::uInt  fileNr;  // The file index in the list of BDFs files containing the binary data.
-  casacore::uInt  nBl, nSpw, nChan, nPol;
-  casacore::uInt  stepBl; // The number of values between two consecutive baselines for the same data description.
-  casacore::uInt  iSpw;   // The data description index in the sequence of basebands/spectral windows in the BDF.
-  casacore::Int64 row;    // The index (0-based) in the casacore::MS Main table of the first of the rows associated to this index.
+  //# Data members.
+  uInt  fileNr;  // The file index in the list of BDFs files containing the binary data.
+  uInt  nBl, nSpw, nChan, nPol;
+  uInt  stepBl; // The number of values between two consecutive baselines for the same data description.
+  uInt  iSpw;   // The data description index in the sequence of basebands/spectral windows in the BDF.
+  Int64 row;    // The index (0-based) in the MS Main table of the first of the rows associated to this index.
   vector<double> scaleFactors;    //# crossdata scale factor per spw
-  casacore::Int64 fileOffset;     // The offset from the beginning of the file to the beginning of the block of data
+  Int64 fileOffset;     // The offset from the beginning of the file to the beginning of the block of data
                         // to be read.
-  casacore::uInt  blockOffset;    // The offset from the beginning of the block of data read in the BDF
+  uInt  blockOffset;    // The offset from the beginning of the block of data read in the BDF
                         // to the first value of the 1st baseline of data with data description of index spw
-  casacore::Short dataType;       //# data type: 0=short 1=int32 3=float cross data
+  Short dataType;       //# data type: 0=short 1=int32 3=float cross data
   //                                   10=auto 11=wvr? 12=zerolags
 };
 
   // Read/write object into AipsIO.
   // <group>
-  casacore::AipsIO& operator<< (casacore::AipsIO&, const AsdmIndex&);
-  casacore::AipsIO& operator>> (casacore::AipsIO&, AsdmIndex&);
+  AipsIO& operator<< (AipsIO&, const AsdmIndex&);
+  AipsIO& operator>> (AipsIO&, AsdmIndex&);
 
   std::ostream& operator<<(std::ostream& os, const AsdmIndex& ix);
 

@@ -66,7 +66,7 @@ class RFFloatLatticeIterator
     // vector<bool>: is a space-efficient specialization of std::vector for the type bool
     std::vector<std::vector<bool> > *lattice;
 
-    casacore::Matrix<casacore::Float> curs;
+    Matrix<Float> curs;
 
     unsigned int iter_pos;
 
@@ -87,20 +87,20 @@ class RFFloatLatticeIterator
     ~RFFloatLatticeIterator();
 
     // resets the lattice iterator to beginning, returns cursor
-    casacore::Matrix<casacore::Float> * reset();
+    Matrix<Float> * reset();
     
     // advances internal iterator to specified slot along the Z axis, returns cursor
-    casacore::Matrix<casacore::Float> * advance( casacore::uInt iz );
+    Matrix<Float> * advance( uInt iz );
     
     // returns position of internal iterator
-    casacore::uInt position ()                 
+    uInt position ()                 
       { return iter_pos; }
     
     //  returns internal cursor
-    casacore::Matrix<casacore::Float> * cursor();
+    Matrix<Float> * cursor();
     
     // returns element at i,j of cursor
-    casacore::Float & operator () ( casacore::uInt i,casacore::uInt j );
+    Float & operator () ( uInt i,uInt j );
 
     void flush_curs();
 };
@@ -128,12 +128,12 @@ class RFFloatLatticeIterator
 // single giant block.
 // Each element of the matrices is a few bits, therefore (in order to
 // save memory), the full matrix is represented as a bitsequence, which
-// is converted to casacore::Matrix<casacore::Float> on the fly.
+// is converted to Matrix<Float> on the fly.
 //
-// The buffer is no longer implemented using a casacore::TempLattice because the
-// template parameter to casacore::TempLattice is restricted to certain types, and
-// cannot be dynamic_bitset<>. Besides, casacore::TempLattice is currently(?)
-// *not* well implemented: it creates casacore::TempLattice disk files although most
+// The buffer is no longer implemented using a TempLattice because the
+// template parameter to TempLattice is restricted to certain types, and
+// cannot be dynamic_bitset<>. Besides, TempLattice is currently(?)
+// *not* well implemented: it creates TempLattice disk files although most
 // of the RAM is free.
 //
 // If more memory than avilable RAM is requested, swapping will occur.
@@ -160,7 +160,7 @@ class RFFloatLatticeIterator
 class RFFloatLattice
 {
 protected:
-  casacore::IPosition                              lat_shape;
+  IPosition                              lat_shape;
   std::vector<std::vector<bool> >        lat;
   RFFloatLatticeIterator                 iter;
   unsigned n_chan, n_ifr, n_time, n_bit, n_corr;
@@ -169,42 +169,42 @@ public:
 // default constructor creates empty cube
   RFFloatLattice();
 // creates NX x NY x NZ cube
-  RFFloatLattice( casacore::uInt nx,casacore::uInt ny,casacore::uInt nz, casacore::uInt ncorr, casacore::uInt nAgent, casacore::Int maxmem=-1 );
+  RFFloatLattice( uInt nx,uInt ny,uInt nz, uInt ncorr, uInt nAgent, Int maxmem=-1 );
 // creates NX x NY x NZ cube and fills with initial value
-  RFFloatLattice( casacore::uInt nx,casacore::uInt ny,casacore::uInt nz, casacore::uInt ncorr, casacore::uInt nAgent, const casacore::Float &init_val,casacore::Int maxmem=-1 );
+  RFFloatLattice( uInt nx,uInt ny,uInt nz, uInt ncorr, uInt nAgent, const Float &init_val,Int maxmem=-1 );
 // destructor
   ~RFFloatLattice();
 
 // creates NX x NY x NZ cube
 // tile_mb is the tile size, in MB (when using paging)
-  void init ( casacore::uInt nx,casacore::uInt ny,casacore::uInt nz, casacore::uInt ncorr, casacore::uInt nAgent, casacore::Int maxmem=-1,casacore::Int tile_mb=2 );
+  void init ( uInt nx,uInt ny,uInt nz, uInt ncorr, uInt nAgent, Int maxmem=-1,Int tile_mb=2 );
 // creates NX x NY x NZ cube and fills with initial value
 // tile_mb is the tile size, in MB (when using paging)
-  void init ( casacore::uInt nx,casacore::uInt ny,casacore::uInt nz, casacore::uInt ncorr, casacore::uInt nAgent, const casacore::Float &init_val,casacore::Int maxmem=-1,casacore::Int tile_mb=2 );
+  void init ( uInt nx,uInt ny,uInt nz, uInt ncorr, uInt nAgent, const Float &init_val,Int maxmem=-1,Int tile_mb=2 );
 // destroys cube
   void cleanup ();
 // returns size of cube
-  static casacore::uInt estimateMemoryUse ( casacore::uInt nx,casacore::uInt ny,casacore::uInt nz )
-        { return nx*ny*nz*sizeof(casacore::Float)/(1024*1024) + 1; }
+  static uInt estimateMemoryUse ( uInt nx,uInt ny,uInt nz )
+        { return nx*ny*nz*sizeof(Float)/(1024*1024) + 1; }
 
 // resets the lattice iterator to beginning. 
-  casacore::Matrix<casacore::Float> * reset( casacore::Bool will_read=true,
-                     casacore::Bool will_write=true );  
+  Matrix<Float> * reset( Bool will_read=True,
+                     Bool will_write=True );  
   
 // advances internal iterator to specified slot along the Z axis, returns cursor
-  casacore::Matrix<casacore::Float> * advance( casacore::Int iz )   { return iter.advance(iz); };
+  Matrix<Float> * advance( Int iz )   { return iter.advance(iz); };
   
 // returns position of internal iterator
-  casacore::Int position ()                 { return iter.position(); }
+  Int position ()                 { return iter.position(); }
   
 // returns shape
-  const casacore::IPosition & shape ()      { return lat_shape; }
+  const IPosition & shape ()      { return lat_shape; }
 
 //  returns internal cursor
-  casacore::Matrix<casacore::Float> * cursor()              { return iter.cursor(); }
+  Matrix<Float> * cursor()              { return iter.cursor(); }
   
 // returns element at i,j of cursor
-  casacore::Float & operator () ( casacore::uInt i,casacore::uInt j )  { return (*iter.cursor())(i,j); }
+  Float & operator () ( uInt i,uInt j )  { return (*iter.cursor())(i,j); }
   
 // provides access to lattice itself  
 //  std::vector<std::vector<bool> > & lattice()    { return lat; }

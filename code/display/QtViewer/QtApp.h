@@ -69,9 +69,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Note: use QtApp::destroy() to delete the QApplication.
 		static QApplication* app( ) {
 
-			static casacore::Int argc = 1;
-			static casacore::Char *argv[1];
-			static casacore::Char name[] = "casa.qtapp";
+			static Int argc = 1;
+			static Char *argv[1];
+			static Char name[] = "casa.qtapp";
 			argv[0] = name;
 
 			QCoreApplication* qcapp = QApplication::instance();
@@ -102,13 +102,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 		// Enter the QApp's event loop.
-		static casacore::Int exec() {
+		static Int exec() {
 			return app()->exec();
 		}
 
 
 		// Exit the QApp's event loop.
-		static void exit(casacore::Int returnCode=0) {
+		static void exit(Int returnCode=0) {
 			app()->exit(returnCode);
 		}
 
@@ -119,9 +119,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 
-		// If true, a full-fledged QApplication has been created (though it
+		// If True, a full-fledged QApplication has been created (though it
 		// may not necessarily be executing its event loop).
-		static casacore::Bool exists() {
+		static Bool exists() {
 			return !QApplication::startingUp() &&
 			       dynamic_cast<QApplication*>(QApplication::instance())!=0;
 		}
@@ -129,7 +129,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Is the QApp executing its event loop?
 		// (In many cases, caller probably ought to know this already...).
-		static casacore::Bool isInLoop() {
+		static Bool isInLoop() {
 			return exists() && app()->thread()->isRunning();
 		}
 		//# (Gleaned from QCoreApplication::exec() in qtapplication.cpp)

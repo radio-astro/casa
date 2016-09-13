@@ -36,16 +36,12 @@
 #include <casa/Arrays/Vector.h>
 #include <casa/iosfwd.h>
 
-namespace casacore{
-
-class IPosition;
-class String;
-class Unit;
-}
-
 namespace casa {
 
 template <class T> class MomentCalcBase;
+class IPosition;
+class String;
+class Unit;
 
 // <summary>
 // This class is a base class for generating moments from an image or a spectral data.
@@ -59,7 +55,7 @@ template <class T> class MomentCalcBase;
 // <prerequisite>
 //   <li> <linkto class="ImageMoments">ImageMoments</linkto>   
 //   <li> <linkto class="MSMoments">MSMoments</linkto>   
-//   <li> <linkto class="casacore::LatticeApply">casacore::LatticeApply</linkto>   
+//   <li> <linkto class="LatticeApply">LatticeApply</linkto>   
 //   <li> <linkto class="MomentCalcBase">MomentCalcBase</linkto>
 // </prerequisite>
 
@@ -70,9 +66,9 @@ template <class T> class MomentCalcBase;
 // <synopsis>
 //  The primary goal of MSMoments, ImageMoments, and MSMoments are to help 
 //  spectral-line astronomers analyze their multi-dimensional images or 
-//  spectral data (in the form of casacore::MeasurementSet) by generating moments of 
+//  spectral data (in the form of MeasurementSet) by generating moments of 
 //  a specified axis.  ImageMoments is a specialized class to generate moments 
-//  from images, while MSMoments is designed properly for casacore::MeasurementSet input.
+//  from images, while MSMoments is designed properly for MeasurementSet input.
 //  MSMoments class is an abstract class that is inherited by the above two 
 //  concrete classes.
 //  MomentsBase provides interface layer to the MomentCalculators so that 
@@ -89,7 +85,7 @@ template <class T> class MomentCalcBase;
 
 // <motivation>
 //  MSMoments is defined so that moments can be generated from both images 
-//  and spectral data (in the form of casacore::MeasurementSet).  
+//  and spectral data (in the form of MeasurementSet).  
 // </motivation>
 
 
@@ -158,20 +154,20 @@ public:
     // Destructor
     virtual ~MomentsBase();
 
-    // Set the desired moments via an <src>casacore::Int</src> array.  Each <src>casacore::Int</src>
+    // Set the desired moments via an <src>Int</src> array.  Each <src>Int</src>
     // specifies a different moment; the allowed values and their meanings
     // are given by the <src>enum MomentTypes</src>.   A return value
-    // of <src>false</src> indicates you asked for an out of range
+    // of <src>False</src> indicates you asked for an out of range
     // moment.  If you don't call this function, the default state of the
     // class is to request the integrated intensity.
-    casacore::Bool setMoments (const casacore::Vector<casacore::Int>& moments);
+    Bool setMoments (const Vector<Int>& moments);
 
-    // Set the moment axis (0 relative).  A return value of <src>false</src>
+    // Set the moment axis (0 relative).  A return value of <src>False</src>
     // indicates that the axis was not contained in the image. If you don't
     // call this function, the default state of the class is to set the
     // moment axis to the spectral axis if it can find one.  Otherwise
     // an error will result.
-    virtual casacore::Bool setMomentAxis (casacore::Int) = 0;
+    virtual Bool setMomentAxis (Int) = 0;
 
     // The method by which you compute the moments is specified by calling
     // (or not calling) the <src>setWinFitMethod</src> and
@@ -180,8 +176,8 @@ public:
     // of the pixels in the spectrum.  Calling these functions modifies the
     // computational state to something more complicated.
     //
-    // The <src>setWinMethod</src> function requires an <src>casacore::Int</src> array
-    // as its argument.  Each <src>casacore::Int</src> specifies a different method
+    // The <src>setWinMethod</src> function requires an <src>Int</src> array
+    // as its argument.  Each <src>Int</src> specifies a different method
     // that you can invoke (either separately or in combination).  The
     // allowed values and their meanings are given by the
     // <src>enum MethodTypes</src>.
@@ -193,31 +189,31 @@ public:
     // automatically (as MomentsBase::INTERACTIVE) was not given.
     //
     // If you don't call this function, then neither the windowing nor fitting
-    // methods are invoked.  A return value of <src>false</src> indicates
+    // methods are invoked.  A return value of <src>False</src> indicates
     // that you asked for an illegal method.
-    casacore::Bool setWinFitMethod(const casacore::Vector<casacore::Int>& method);
+    Bool setWinFitMethod(const Vector<Int>& method);
 
-    // This function invokes smoothing of the input image.  Give <src>casacore::Int</src>
+    // This function invokes smoothing of the input image.  Give <src>Int</src>
     // arrays for the axes (0 relative) to be smoothed and the smoothing kernel
     // types (use the <src>enum KernelTypes</src>) for each axis.  Give a
-    // <src>casacore::Double</src> array for the widths (full width for BOXCAR and full
+    // <src>Double</src> array for the widths (full width for BOXCAR and full
     // width at half maximum for GAUSSIAN) in pixels of the smoothing kernels for
     // each axis.  For HANNING smoothing, you always get the quarter-half-quarter
-    // kernel (no matter what you might ask for).  A return value of <src>false</src>
+    // kernel (no matter what you might ask for).  A return value of <src>False</src>
     // indicates that you have given an inconsistent or invalid set of smoothing
     // parameters.  If you don't call this function the default state of the
     // class is to do no smoothing.  The kernel types are specified with
-    // the casacore::VectorKernel::KernelTypes enum
+    // the VectorKernel::KernelTypes enum
     // <group>
-    virtual casacore::Bool setSmoothMethod(
-            const casacore::Vector<casacore::Int>&, const casacore::Vector<casacore::Int>&,
-            const casacore::Vector<casacore::Quantum<casacore::Double> >&
+    virtual Bool setSmoothMethod(
+            const Vector<Int>&, const Vector<Int>&,
+            const Vector<Quantum<Double> >&
     ) = 0;
 
-    casacore::Bool setSmoothMethod(
-        const casacore::Vector<casacore::Int>& smoothAxes,
-        const casacore::Vector<casacore::Int>& kernelTypes,
-        const casacore::Vector<casacore::Double>& kernelWidths
+    Bool setSmoothMethod(
+        const Vector<Int>& smoothAxes,
+        const Vector<Int>& kernelTypes,
+        const Vector<Double>& kernelWidths
     );
     // </group>
 
@@ -226,11 +222,11 @@ public:
     // or one for which all pixels in that range are excluded from the moment
     // calculations.  One or the other of <src>include</src> and <src>exclude</src>
     // must therefore be a zero length vector if you call this function.
-    // A return value of <src>false</src> indicates that you have given both
+    // A return value of <src>False</src> indicates that you have given both
     // an <src>include</src> and an <src>exclude</src> range.  If you don't call
     // this function, the default state of the class is to include all pixels.
     void setInExCludeRange(
-        const casacore::Vector<T>& include, const casacore::Vector<T>& exclude
+        const Vector<T>& include, const Vector<T>& exclude
     );
 
     // This function is used to help assess whether a spectrum along the moment
@@ -253,13 +249,13 @@ public:
     // to have access this to this image when trying to get the pixel
     // <src>include</src> or <src>exclude</src> range correct for the smooth-clip
     // method.  The default state of the class is to not output the smoothed image.
-    casacore::Bool setSmoothOutName(const casacore::String& smOut);
+    Bool setSmoothOutName(const String& smOut);
 
     // Set Velocity type.  This is used for moments for which the moment axis is
     // a spectral axis for which the coordinate is traditionally presented in
     // km/s   You can select the velocity definition. The default state of the
     // class is to use the radio definition.
-    void setVelocityType (casacore::MDoppler::Types type);
+    void setVelocityType (MDoppler::Types type);
 
     // Reset argument error condition.  If you specify invalid arguments to
     // one of the above functions, an internal flag will be set which will
@@ -267,90 +263,90 @@ public:
     // from doing anything
     // (should you have chosen to igmore the Boolean return values of the functions).
     // This function allows you to reset that internal state to good.
-    void resetError () {goodParameterStatus_p = true; error_p = "";};
+    void resetError () {goodParameterStatus_p = True; error_p = "";};
 
     // Recover last error message
-    casacore::String errorMessage() const {return error_p;};
+    String errorMessage() const {return error_p;};
 
     // Get CoordinateSystem
-    virtual const casacore::CoordinateSystem& coordinates() = 0;
+    virtual const CoordinateSystem& coordinates() = 0;
 
     // Helper function to convert a string containing a list of desired methods to
-    // the correct <src>casacore::Vector<casacore::Int></src> required for the <src>setWinFitMethod</src> function.
+    // the correct <src>Vector<Int></src> required for the <src>setWinFitMethod</src> function.
     // This may be usful if your user interface involves strings rather than integers.
     // A new value is added to the output vector (which is resized appropriately) if any of the
     // substrings "window", "fit" or "interactive" (actually "win", "box" and
     // "inter" will do) is present.
-    static casacore::Vector<casacore::Int> toMethodTypes (const casacore::String& methods);
+    static Vector<Int> toMethodTypes (const String& methods);
 
-    virtual casacore::IPosition getShape() const = 0;
+    virtual IPosition getShape() const = 0;
 
-    casacore::Bool shouldConvertToVelocity() const { return convertToVelocity_p; }
+    Bool shouldConvertToVelocity() const { return convertToVelocity_p; }
 
 protected:
 
-    // Constructor takes an image and a <src>casacore::LogIO</src> object for logging purposes.
+    // Constructor takes an image and a <src>LogIO</src> object for logging purposes.
     // You specify whether output images are  automatically overwritten if pre-existing,
     // or whether an intercative choice dialog widget appears (overWriteOutput=F)
     // You may also determine whether a progress meter is displayed or not.
     MomentsBase(
-        casacore::LogIO &os, casacore::Bool overWriteOutput=false,
-        casacore::Bool showProgress=true
+        LogIO &os, Bool overWriteOutput=False,
+        Bool showProgress=True
     );
 
-    casacore::LogIO os_p;
-    casacore::Bool showProgress_p;
-    casacore::Int momentAxisDefault_p {-10};
+    LogIO os_p;
+    Bool showProgress_p;
+    Int momentAxisDefault_p {-10};
     T peakSNR_p {T(3)};
     T stdDeviation_p {T(0)};
     T yMin_p {T(0)};
     T yMax_p {T(0)};
-    casacore::String out_p;
-    casacore::String smoothOut_p {};
-    casacore::Bool goodParameterStatus_p {true};
-    casacore::Bool doWindow_p {false};
-    casacore::Bool doFit_p {false};
-    casacore::Bool doSmooth_p {false};
-    casacore::Bool noInclude_p {true};
-    casacore::Bool noExclude_p {true};
-    casacore::Bool fixedYLimits_p {false};
+    String out_p;
+    String smoothOut_p {};
+    Bool goodParameterStatus_p {True};
+    Bool doWindow_p {False};
+    Bool doFit_p {False};
+    Bool doSmooth_p {False};
+    Bool noInclude_p {True};
+    Bool noExclude_p {True};
+    Bool fixedYLimits_p {False};
 
-    casacore::Int momentAxis_p {momentAxisDefault_p};
-    casacore::Int worldMomentAxis_p;
-    casacore::Vector<casacore::Int> kernelTypes_p {};
-    casacore::Vector<casacore::Quantity> kernelWidths_p {};
-    casacore::Vector<casacore::Int> moments_p {1, INTEGRATED};
-    casacore::Vector<T> selectRange_p {};
-    casacore::Vector<casacore::Int> smoothAxes_p {};
-    casacore::Bool overWriteOutput_p;
-    casacore::String error_p {};
-    casacore::Bool convertToVelocity_p {false};
-    casacore::MDoppler::Types velocityType_p {casacore::MDoppler::RADIO};
+    Int momentAxis_p {momentAxisDefault_p};
+    Int worldMomentAxis_p;
+    Vector<Int> kernelTypes_p {};
+    Vector<Quantity> kernelWidths_p {};
+    Vector<Int> moments_p {1, INTEGRATED};
+    Vector<T> selectRange_p {};
+    Vector<Int> smoothAxes_p {};
+    Bool overWriteOutput_p;
+    String error_p {};
+    Bool convertToVelocity_p {False};
+    MDoppler::Types velocityType_p {MDoppler::RADIO};
 
     // Check that the combination of methods that the user has requested is valid
-    // casacore::List a handy dandy table if not.
+    // List a handy dandy table if not.
     void _checkMethod();
 
     // Take the user's data inclusion and exclusion data ranges and
     // generate the range and Booleans to say what sort it is
     void _setIncludeExclude (
-        casacore::Vector<T>& range, casacore::Bool& noInclude,
-        casacore::Bool& noExclude, const casacore::Vector<T>& include,
-        const casacore::Vector<T>& exclude
+        Vector<T>& range, Bool& noInclude,
+        Bool& noExclude, const Vector<T>& include,
+        const Vector<T>& exclude
     );
 
     // Set the output image suffixes and units
-    casacore::Bool _setOutThings(
-        casacore::String& suffix, casacore::Unit& momentUnits,
-        const casacore::Unit& imageUnits, const casacore::String& momentAxisUnits,
-        const casacore::Int moment, casacore::Bool convertToVelocity
+    Bool _setOutThings(
+        String& suffix, Unit& momentUnits,
+        const Unit& imageUnits, const String& momentAxisUnits,
+        const Int moment, Bool convertToVelocity
     );
 
     // Make output Coordinates
-    casacore::CoordinateSystem _makeOutputCoordinates(
-        casacore::IPosition& outShape, const casacore::CoordinateSystem& cSysIn,
-        const casacore::IPosition& inShape, casacore::Int momentAxis,
-        casacore::Bool removeAxis
+    CoordinateSystem _makeOutputCoordinates(
+        IPosition& outShape, const CoordinateSystem& cSysIn,
+        const IPosition& inShape, Int momentAxis,
+        Bool removeAxis
     );
 };
 

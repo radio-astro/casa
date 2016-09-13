@@ -104,7 +104,7 @@ VLADiskInput::VLADiskInput(const String& onlineFlag)
       visDir = String(dataDir);
       Path nrtFile = Path(getTodaysFile());
       itsFile = new RegularFileIO(RegularFile(nrtFile));
-      onlineFill = true;
+      onlineFill = True;
       itsFile->seek(0, ByteIO::End);
    } else {
       throw(AipsError("Invalid online specifier " + onlineFlag));
@@ -113,7 +113,7 @@ VLADiskInput::VLADiskInput(const String& onlineFlag)
 
 VLADiskInput::VLADiskInput(const Path& fileName) 
   :VLAArchiveInput(),
-   itsFile(new RegularFileIO(fileName)), onlineFill(false)
+   itsFile(new RegularFileIO(fileName)), onlineFill(False)
 {
 	attachFile(fileName.absoluteName().c_str());
 }
@@ -135,7 +135,7 @@ Bool VLADiskInput::read() {
   Int bytesToRead(0);
   Int thisReadSize(0);
   uChar *recordPtr(0);
-  if (findFirstRecord(m) == false) if(!onlineFill)return false;
+  if (findFirstRecord(m) == False) if(!onlineFill)return False;
   // We have the first physical record in Memory. Now decode how long this
   // logical record is.
   itsRecord.seek(0);
@@ -150,7 +150,7 @@ Bool VLADiskInput::read() {
   // VLAArchiveInput::BlockSize - 1 extra bytes (to pad out the block).
 	// cerr << "Uno Setting buffer size: " << logicalRecordSize << " " << VLAArchiveInput::BlockSize << endl;
 	if(logicalRecordSize > MAX_LOGICAL_RECORD_SIZE)
-		return false;
+		return False;
         recordPtr = itsMemIO.setBuffer(logicalRecordSize + 
 				     VLAArchiveInput::BlockSize-1);
      } catch (AipsError x) {
@@ -165,7 +165,7 @@ Bool VLADiskInput::read() {
     if(!onlineFill){
         cerr << "VLADiskInput::read end of file encountered." << endl;
         itsMemIO.clear();
-        return false;
+        return False;
     }
         // I'm online so check to see if the day changed and we need
         // to move to the next day's file otherwise sleep and see if
@@ -189,7 +189,7 @@ Bool VLADiskInput::read() {
           bytesToRead = logicalRecordSize - curRecSize;
 	// cerr << "Dos Setting buffer size: " << logicalRecordSize << " " << VLAArchiveInput::BlockSize << endl;
 	if(logicalRecordSize > MAX_LOGICAL_RECORD_SIZE)
-		return false;
+		return False;
           recordPtr = itsMemIO.setBuffer(logicalRecordSize + 
 				  VLAArchiveInput::BlockSize-1);
        }
@@ -202,10 +202,10 @@ Bool VLADiskInput::read() {
     DebugAssert(static_cast<Int64>(curRecSize + VLAArchiveInput::HeaderSize) <=
                 itsMemIO.length(), AipsError);
     Int bytesRead =
-      itsFile->read(VLAArchiveInput::HeaderSize, recordPtr+curRecSize, false);
+      itsFile->read(VLAArchiveInput::HeaderSize, recordPtr+curRecSize, False);
     if (bytesRead < static_cast<Int>(VLAArchiveInput::HeaderSize)) {
       itsMemIO.clear();
-      return false;
+      return False;
     }
     // Check the sequence numbers
     {
@@ -215,7 +215,7 @@ Bool VLADiskInput::read() {
       itsRecord >> newm;
       if (newm != m || ++n != newn) {
  	itsMemIO.clear();
- 	return false;
+ 	return False;
       }
     }
     // The sequence numbers are OK so read the rest of the data
@@ -231,10 +231,10 @@ Bool VLADiskInput::read() {
     thisReadSize -= VLAArchiveInput::HeaderSize;
     DebugAssert(static_cast<Int64>(curRecSize+thisReadSize)<=itsMemIO.length(),
 		AipsError);
-    bytesRead = itsFile->read(thisReadSize, recordPtr+curRecSize, false);
+    bytesRead = itsFile->read(thisReadSize, recordPtr+curRecSize, False);
     if (bytesRead < thisReadSize) {
       itsMemIO.clear();
-      return false;
+      return False;
     }
     curRecSize += thisReadSize;
     bytesToRead -= thisReadSize;
@@ -243,13 +243,13 @@ Bool VLADiskInput::read() {
   cerr << "C File position is " << itsFile->seek(0, ByteIO::Current) << " " << endl;
   itsMemIO.setUsed(logicalRecordSize);
   itsRecord.seek(0);
-  return true;
+  return True;
 }
 */
 
 
 Bool VLADiskInput::read() {
-   Bool rstatus(true);
+   Bool rstatus(True);
    itsMemIO.clear();
    Long logicalRecordSize(MAX_LOGICAL_RECORD_SIZE);
    Char* recordPtr = (Char *)itsMemIO.setBuffer(logicalRecordSize);
@@ -257,7 +257,7 @@ Bool VLADiskInput::read() {
    itsMemIO.setUsed(logicalRecordSize);
    itsRecord.seek(0);
    if(!logicalRecordSize)
-      rstatus = false;
+      rstatus = False;
    return rstatus;
 }
 
@@ -288,18 +288,18 @@ Bool VLADiskInput::findFirstRecord(Short& m) {
 	if(itsFile->seek(Int64(VLAArchiveInput::BlockSize -
 			   VLAArchiveInput::HeaderSize),
 		     ByteIO::Current) <= 0)
-		return false;
+		return False;
       }
       bytesSearched += VLAArchiveInput::BlockSize;
       // std::cerr << bytesSearched << std::endl;
 
       // std::cerr << this->bytesRead() << " " << this->totalBytes() << std::endl;
       Int bytesRead = 
-	itsFile->read(VLAArchiveInput::HeaderSize, recordPtr, false);
+	itsFile->read(VLAArchiveInput::HeaderSize, recordPtr, False);
       cerr << "BB File position is " << itsFile->seek(0, ByteIO::Current) << " " << endl;
       if (bytesRead < static_cast<Int>(VLAArchiveInput::HeaderSize)) {
 	itsMemIO.clear();
-	return false;
+	return False;
       }
       // Find out what the sequence numbers are.
       itsRecord.seek(0);
@@ -307,22 +307,22 @@ Bool VLADiskInput::findFirstRecord(Short& m) {
       itsRecord >> m;
       // OK we need to make sure that Logical record size is OK too before accepting n and m.
        if(n == 1 && m > 0 && m < 40){
-	itsFile->read(4, recordPtr, false);
+	itsFile->read(4, recordPtr, False);
 	itsRecord.seek(0);
 	itsRecord >> logicalRecordSize;
 	itsFile->seek(Int64(-4), ByteIO::Current);
 	// itsRecord.seek(-4);
 	//`cerr << "Logical Record Size is: " << logicalRecordSize << endl;
 	if(logicalRecordSize > MAX_LOGICAL_RECORD_SIZE)
-		maybe = false;
+		maybe = False;
 	else
-		maybe = true;
+		maybe = True;
        }
     }
     //cerr << n << " " << m << endl;
     if (bytesSearched > maxBytesToSearch) {
       itsMemIO.clear();
-      return false;
+      return False;
     }
   }
   // OK so we have found the beginning of the first physical record. Now read
@@ -339,11 +339,11 @@ Bool VLADiskInput::findFirstRecord(Short& m) {
       VLAArchiveInput::BlockSize - VLAArchiveInput::HeaderSize;
     uChar* recordPtr = itsMemIO.setBuffer(bytesToRead);
     // cerr << "Bytes to read " << bytesToRead << endl;
-    const Int bytesRead = itsFile->read(bytesToRead, recordPtr, false);
+    const Int bytesRead = itsFile->read(bytesToRead, recordPtr, False);
     cerr << "CC File position is " << itsFile->seek(0, ByteIO::Current) << " " << endl;
     if (bytesRead < bytesToRead) {
       itsMemIO.clear();
-      return false;
+      return False;
     }
     itsRecord.seek(0);
     Int logicalRecordSize;
@@ -357,16 +357,16 @@ Bool VLADiskInput::findFirstRecord(Short& m) {
   if (bytesToCopy > 0) {
     uChar* recordPtr = itsMemIO.setBuffer(bytesToCopy+offset);
     // cerr << "Bytes to copy " << bytesToCopy << endl;
-    Int bytesRead = itsFile->read(bytesToCopy, recordPtr+offset, false);
+    Int bytesRead = itsFile->read(bytesToCopy, recordPtr+offset, False);
     cerr << "DD File position is " << itsFile->seek(0, ByteIO::Current) << " " << endl;
     if (bytesRead < bytesToCopy) {
       itsMemIO.clear();
-      return false;
+      return False;
     }
   }
   DebugAssert(n == 1, AipsError);
   DebugAssert(m > 0, AipsError);
-  return true;
+  return True;
 }
 
 uInt VLADiskInput::bytesRead() {

@@ -85,7 +85,7 @@ protected:
 			((worker_rank >= 0)
 			 ? util.continuumDataPartition(initial.selection, num_workers).
 			 rwSubRecord(std::to_string(worker_rank))
-			 : casacore::Record());
+			 : Record());
 
 		// image params
 		if (worker_rank >= 0) {
@@ -112,16 +112,16 @@ protected:
 		// normalization params
 		if (worker_rank == 0 && num_workers > 1) {
 			auto accumulate_part_names =
-				[&] (std::array<casacore::Record *,2> im_norm_par) {
-				vector<casacore::String> part_names;
+				[&] (std::array<Record *,2> im_norm_par) {
+				vector<String> part_names;
 				std::string image_path =
 				cwd + "/" + im_norm_par[0]->asString("imagename").c_str();
 				for (auto s : all_worker_suffixes) {
-					part_names.push_back(casacore::String(image_path + s));
+					part_names.push_back(String(image_path + s));
 				}
-				im_norm_par[1]->define("partimagenames", casacore::Vector<casacore::String>(part_names));
+				im_norm_par[1]->define("partimagenames", Vector<String>(part_names));
 			};
-			std::array<casacore::Record *,2> im_norm_params =
+			std::array<Record *,2> im_norm_params =
 				{ &initial.image, &initial.normalization };
 			std::for_each(MultiParamFieldIterator<2>::begin(im_norm_params),
 			              MultiParamFieldIterator<2>::end(im_norm_params),
@@ -134,10 +134,10 @@ protected:
 
 		// deconvolution params
 		result.deconvolution =
-			((worker_rank == 0) ? initial.deconvolution : casacore::Record());
+			((worker_rank == 0) ? initial.deconvolution : Record());
 
 		// weight params
-		result.weight = ((worker_rank >= 0) ? initial.weight : casacore::Record());
+		result.weight = ((worker_rank >= 0) ? initial.weight : Record());
 
 		// iteration params
 		result.iteration = initial.iteration;
@@ -148,12 +148,12 @@ protected:
 private:
 
 	// Convenience method to transform certain record fields
-	casacore::Record convert_fields(casacore::Record &rec, const char *field,
+	Record convert_fields(Record &rec, const char *field,
 	                      std::function<std::string(const char *)> fn) {
-		auto modify_field_val = [&](casacore::Record &msRec) {
+		auto modify_field_val = [&](Record &msRec) {
 			msRec.define(field, fn(msRec.asString(field).c_str()));
 		};
-		casacore::Record result(rec);
+		Record result(rec);
 		std::for_each(ParamFieldIterator::begin(&result),
 		              ParamFieldIterator::end(&result),
 		              modify_field_val);
@@ -161,11 +161,11 @@ private:
 	}
 
 	// Convenience method to clear certain record fields
-	casacore::Record empty_fields(casacore::Record &rec, const char *field) {
-		auto modify_field_val = [&](casacore::Record &msRec) {
-			msRec.defineRecord(field, casacore::Record());
+	Record empty_fields(Record &rec, const char *field) {
+		auto modify_field_val = [&](Record &msRec) {
+			msRec.defineRecord(field, Record());
 		};
-		casacore::Record result(rec);
+		Record result(rec);
 		std::for_each(ParamFieldIterator::begin(&result),
 		              ParamFieldIterator::end(&result),
 		              modify_field_val);

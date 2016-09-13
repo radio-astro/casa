@@ -52,7 +52,6 @@ using namespace asdm;
 
 #include "measures/Measures/Stokes.h"
 #include "measures/Measures/MFrequency.h"
-using namespace casacore;
 using namespace casa;
 #include <tables/Tables/Table.h>
 #include <tables/Tables/PlainTable.h>
@@ -140,7 +139,6 @@ void	myTimer( double *cpu_time ,		/* cpu timer */
 }
 
 
-using namespace casacore;
 //using namespace casa;
 
 ASDM2MSFiller* msFiller;

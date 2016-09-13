@@ -35,7 +35,6 @@
 #include <casacore/casa/stdio.h>
 #include <casacore/casa/math.h>
 
-using namespace casacore;
 namespace casa {
 
 
@@ -106,7 +105,7 @@ MSTransform::configure(Record config)
 	if (config.empty()){
 		log_p << LogIO::SEVERE << "There is no configuration for the tool"
 				<< LogIO::POST;
-		return false;
+		return False;
 	}
 
 	// First time configuration
@@ -118,7 +117,7 @@ MSTransform::configure(Record config)
 		else{
 			log_p << LogIO::SEVERE << "There is no \"inputms\" in configuration Record"
 				<< LogIO::POST;
-			return false;
+			return False;
 		}
 
 		if (config.isDefined("outputms"))
@@ -126,7 +125,7 @@ MSTransform::configure(Record config)
 		else{
 			log_p << LogIO::SEVERE << "There is no \"outputms\" in configuration Record"
 				<< LogIO::POST;
-			return false;
+			return False;
 		}
 
 		if(mdh_p) delete mdh_p;
@@ -179,7 +178,7 @@ MSTransform::open()
 	if (! isconfigured_p){
 		log_p << LogIO::SEVERE << "There is no configuration for the tool"
 				<< LogIO::POST;
-		return false;
+		return False;
 	}
 
 	if(!mdh_p){

@@ -50,14 +50,13 @@
 #include <iostream>
 using namespace std;
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Default construtor
 	Profile2dDD::Profile2dDD() :
 		itsDD(0),
-		itsIsRegionProfile(false),
-		itsTrackingState(true),
+		itsIsRegionProfile(False),
+		itsTrackingState(True),
 		itsDependentAxis(-1),
 		itsYAxisInc(1),
 		itsData(),
@@ -70,7 +69,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsParamRegionStatType(0),
 		itsParamRegionXRadius(0),
 		itsParamRegionYRadius(0) {
-		setCaching(false);
+		setCaching(False);
 		itsCurrentBlc.resize(2);
 		itsCurrentTrc.resize(2);
 		itsPixelPosition.resize(3);
@@ -81,8 +80,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	Profile2dDD::Profile2dDD(LatticePADisplayData<Float>* pDD) :
 		itsDD(0),
-		itsIsRegionProfile(false),
-		itsTrackingState(true),
+		itsIsRegionProfile(False),
+		itsTrackingState(True),
 		itsDependentAxis(-1),
 		itsYAxisInc(1),
 		itsData(),
@@ -95,7 +94,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsParamRegionStatType(0),
 		itsParamRegionXRadius(0),
 		itsParamRegionYRadius(0) {
-		setCaching(false);
+		setCaching(False);
 		itsCurrentBlc.resize(2);
 		itsCurrentTrc.resize(2);
 		itsPixelPosition.resize(3);
@@ -116,17 +115,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Attach a Display Data to this Profile2dDD
 		if (itsDD) {
 			throw(AipsError("Profile2dDD::attachDD - A Display Data is already attached"));
-			return false;
+			return False;
 		}
 
 		// check data shape
 		if (pDD->coordinateSystem().nWorldAxes() < 3) {
 			throw(AipsError("Profile2dDD::attachDD - data has less then three axes"));
-			return false;
+			return False;
 		}
 		if (pDD->nelements() < 2) {
 			throw(AipsError("Profile2dDD::attachDD - data has less than 2 pixels on profile axis"));
-			return false;
+			return False;
 		}
 		// check for unsupported coordinate types
 		Int coordNum, axisInCoordinate;
@@ -137,7 +136,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			//      pDD->coordinateSystem().type(coordNum) != Coordinate::LINEAR &&
 			//      pDD->coordinateSystem().type(coordNum) != Coordinate::TABULAR) {
 			throw(AipsError("Profile2dDD::attachDD - Coordinate type of profile axis not supported"));
-			return false;
+			return False;
 		}
 		// Integrity checks complete
 		itsDD = pDD;
@@ -175,7 +174,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// listen to DisplayEvents (eg, RectRegionEvent)
 		itsDD->addDisplayEventHandler(static_cast<DisplayEH*>(this));
 
-		return true;
+		return True;
 	}
 
 	void Profile2dDD::detachDD() {
@@ -250,10 +249,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Locate rest frequency
 
-			itsParamShowRestFrequency->setEditable(true);
+			itsParamShowRestFrequency->setEditable(True);
 			itsRestFrequency = cSysDD.spectralCoordinate(profileCoordNum).restFrequency();
 		} else {
-			itsParamShowRestFrequency->setEditable(false);
+			itsParamShowRestFrequency->setEditable(False);
 			itsRestFrequency = 0;
 		}
 
@@ -280,7 +279,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Remove pixel and world axes other than the profile axis.  Use the
 // reference value for replacement for now.
 
-			cSysOut.removeAxes(worldReplacement, axes, true);
+			cSysOut.removeAxes(worldReplacement, axes, True);
 		}
 
 
@@ -290,7 +289,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if (cSysOut.nCoordinates()==3) {
 			axes.resize();
 			axes = cSysOut.worldAxes(2);
-			cSysOut.removeAxes(worldReplacement, axes, true);
+			cSysOut.removeAxes(worldReplacement, axes, True);
 		}
 
 // Set the coordinate system of this DD (which will live in ActiveCaching2D) and the
@@ -303,7 +302,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsDefaultAxisLabels[0] = itsAxisLabeller.xAxisText();
 		itsDefaultAxisLabels[1] = itsAxisLabeller.yAxisText();
 //
-		return true;
+		return True;
 	}
 
 	void Profile2dDD::constructParameters() {
@@ -311,10 +310,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Profile color
 
 		itsParamColor = new DParameterColorChoice("profilecolor", "Profile Color",
-		        "Color of Profile","", true);
+		        "Color of Profile","", True);
 
 		itsParamLineWidth = new DParameterRange<Float>("profilelinewidth", "Profile Line Width", "Line Width",
-		        0, 5, 0.1, 0.5,0.5, "", true, false);
+		        0, 5, 0.1, 0.5,0.5, "", True, False);
 
 		Vector<String> choices(3);
 		Vector<Int> values(3);
@@ -331,10 +330,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Autoscale switch (on or off)
 
 		itsParamAutoscale = new DParameterSwitch("profileautoscale", "Auto Scale Y values",
-		        "Auto Scale Y Axis vales to min and max", false, false, "");
+		        "Auto Scale Y Axis vales to min and max", False, False, "");
 
 		itsParamShowRestFrequency = new DParameterSwitch("profileshowrestfrequency", "Show Rest Frequency",
-		        "Show Rest Frequency", false, false, "");
+		        "Show Rest Frequency", False, False, "");
 
 // Statistic type for region calculations
 
@@ -383,11 +382,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		itsParamRegionXRadius = new DParameterRange<Int>("profileregionxradius", "+- Width",
 		        "Create region of +- X around point of profile",
-		        0, 5, 0, 0,0, "Region_options", false, true);
+		        0, 5, 0, 0,0, "Region_options", False, True);
 
 		itsParamRegionYRadius = new DParameterRange<Int>("profileregionyradius", "+- Height",
 		        "Create region of +- Y around point of profile",
-		        0, 5, 0, 0,0, "Region_options", false, true);
+		        0, 5, 0, 0,0, "Region_options", False, True);
 	}
 
 	void Profile2dDD::destructParameters() {
@@ -411,7 +410,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	Bool Profile2dDD::labelAxes(const WCRefreshEvent &ev) {
 		if (!itsAxisLabeller.axisLabelSwitch()) {
-			return false;
+			return False;
 		}
 //
 		try {
@@ -419,10 +418,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		} catch (const AipsError &x) {
 			if (&x) { // use x to avoid compiler warning
 				throw(AipsError(x.getMesg()));
-				return false;
+				return False;
 			}
 		}
-		return true;
+		return True;
 	}
 
 	void Profile2dDD::operator()(const WCMotionEvent &ev) {
@@ -549,7 +548,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	Bool Profile2dDD::sizeControl(WorldCanvasHolder& wch, AttributeBuffer& buf) {
 
-		if(!wch.isCSmaster(this)) return false;
+		if(!wch.isCSmaster(this)) return False;
 		// Return if another DD has already done size control.
 
 		WorldCanvas *wc = wch.worldCanvas();
@@ -631,7 +630,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			data(i, 1) = itsData(i+Int(profileXMin()+0.5), 1);
 		}
 
-// convert to world coordinates if world variable is true
+// convert to world coordinates if world variable is True
 
 		if (world) {
 			Vector<Double> pixelCoord(2), worldCoord(2);
@@ -663,7 +662,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Matrix<Double> worldData, pixelData;
 		Vector<Double> fworld, fpixel;
 		Vector<Bool> maskData;
-		getDrawData(worldData, true); // get data in world coords
+		getDrawData(worldData, True); // get data in world coords
 		getDrawData(pixelData); // get data in pixel coords
 		getMaskData(maskData);
 		itsDD->getFullCoord(fworld, fpixel, itsWorldPosition);
@@ -689,7 +688,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Record posPixelRec(posPixelRecDesc);
 		posPixelRec.define("numeric", fpixel);
 		String tmpPixPos;
-		String pPos = itsDD->showPosition(itsWorldPosition, false, true);
+		String pPos = itsDD->showPosition(itsWorldPosition, False, True);
 		pPos.gsub("\n"," ");		// replace newlines with spaces.
 		posPixelRec.define("string", pPos);
 
@@ -699,7 +698,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		posWorldRecDesc.addField("string", TpString);
 		Record posWorldRec(posWorldRecDesc);
 		posWorldRec.define("numeric", fworld);
-		String wPos = itsDD->showPosition(itsWorldPosition, true, true);
+		String wPos = itsDD->showPosition(itsWorldPosition, True, True);
 		wPos.gsub("\n"," ");		// replace newlines with spaces.
 		posWorldRec.define("string", wPos);
 
@@ -809,7 +808,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Cannot perform region calcs if profiling an axis from a
 // Direction Coordinate
 
-			return false;
+			return False;
 		}
 
 // integrity checks
@@ -837,9 +836,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			itsRegionBlc = fpixelBlc;
 			itsRegionTrc = fpixelTrc;
 		} else {
-			return false;
+			return False;
 		}
-		itsIsRegionProfile = true;
+		itsIsRegionProfile = True;
 
 // get the required slice from the data
 
@@ -860,8 +859,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Get the statistic
 
 		Slicer slice(start, end, Slicer::endIsLast);
-		SubLattice<Float> subLat (*itsDD->maskedLattice(), slice, false);
-		LatticeStatistics<Float> latticeStats(subLat, false);
+		SubLattice<Float> subLat (*itsDD->maskedLattice(), slice, False);
+		LatticeStatistics<Float> latticeStats(subLat, False);
 		Vector<Int> cursorAxes(2, 0);
 		cursorAxes[1] = 1;
 		if (!latticeStats.setAxes(cursorAxes)) {
@@ -874,7 +873,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		latticeStats.getConvertedStatistic(array, regionStatType());
 		if (array.nelements()==0) {
 			throw(AipsError("Profile2dDD::getRegionProfile - No elements in statistics array"));
-			return false;
+			return False;
 		}
 
 // Insert the statistics into the data array itsData
@@ -889,14 +888,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		itsMask.resize();
 
-		return true;
+		return True;
 	}
 
 	Bool Profile2dDD::getPointProfile(const Vector<Double> &world) {
-		Bool ret = true;
+		Bool ret = True;
 		Vector<Double> fworld,fpixel;
 		if (!itsDD->getFullCoord(fworld, fpixel, world)) {
-			return false;
+			return False;
 		}
 
 // check if Region Mode is active
@@ -919,7 +918,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				itsAxisLabeller.invalidate();
 			}
 		}
-		itsIsRegionProfile = false;
+		itsIsRegionProfile = False;
 
 		// obtain current pixel position
 		itsWorldPosition.resize();
@@ -952,11 +951,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		dataSlice.resize();
 		maskSlice.resize();
 		try {
-			itsDD->maskedLattice()->getSlice(dataSlice,start,shape,true);
-			itsDD->maskedLattice()->getMaskSlice(maskSlice, start, shape, true);
+			itsDD->maskedLattice()->getSlice(dataSlice,start,shape,True);
+			itsDD->maskedLattice()->getMaskSlice(maskSlice, start, shape, True);
 		} catch (const AipsError &x) {
 			if (&x) { // use x to avoid compiler warning
-				return false;
+				return False;
 			}
 		}
 		// copy data from dataSlice to itsData
@@ -1000,9 +999,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if (fpixelBlc(itsDD->displayAxes()[0]) == fpixelTrc(itsDD->displayAxes()[0]) ||
 		        fpixelBlc(itsDD->displayAxes()[1]) == fpixelTrc(itsDD->displayAxes()[1])) {
 			// the entire region is outside the image area.
-			return false;
+			return False;
 		}
-		return true;
+		return True;
 	}
 
 
@@ -1011,7 +1010,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // update cs of axis labeller
 
 		itsAxisLabeller.setCoordinateSystem(cs);
-		itsAxisLabeller.setAxisLabelSwitch(true);
+		itsAxisLabeller.setAxisLabelSwitch(True);
 
 // setup scales for plot
 
@@ -1028,7 +1027,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		setCoordinateSystem(cs, linblc, lintrc);
 //
-		return true;
+		return True;
 	}
 
 	const Unit Profile2dDD::dataUnit() {
@@ -1058,7 +1057,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Bool ret = ActiveCaching2dDD::setOptions(rec, recOut);
 
 		// Make local changes
-		Bool localchange = false;
+		Bool localchange = False;
 
 		if (rec.isDefined("axislabelpixelworld")) {
 			// if the axis labels are to change from world -> pixel we don't
@@ -1106,7 +1105,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				itsAxisLabeller.invalidate();
 			}
 
-			localchange = true;
+			localchange = True;
 
 		} else {
 			ret = itsAxisLabeller.setOptions(rec, recOut) || ret;

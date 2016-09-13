@@ -42,16 +42,12 @@
 #include <msvis/MSVis/VisibilityIterator2.h>
 #include <synthesis/TransformMachines2/FTMachine.h>
 
-namespace casacore{
-
-template<class T> class ImageInterface;
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Forward declarations
   class ComponentFTMachine;
   class SkyJones;
+template<class T> class ImageInterface;
 
 // <summary> Class that contains functions needed for imager </summary>
 
@@ -62,40 +58,40 @@ namespace casa { //# NAMESPACE CASA - BEGIN
  public:
   // Default constructor
 
-  SIMapper( casacore::CountedPtr<SIImageStore>& imagestore,
-            casacore::CountedPtr<FTMachine>& ftm, 
-	    casacore::CountedPtr<FTMachine>& iftm);
+  SIMapper( CountedPtr<SIImageStore>& imagestore,
+            CountedPtr<FTMachine>& ftm, 
+	    CountedPtr<FTMachine>& iftm);
   SIMapper(const ComponentList& cl, 
-	   casacore::String& whichMachine);
+	   String& whichMachine);
   virtual ~SIMapper();
 
   ///// Major Cycle Functions
 
   /////////////////////// NEW VI/VB versions
-  virtual void initializeGrid(const vi::VisBuffer2& vb, casacore::Bool dopsf);
-  virtual void grid(const vi::VisBuffer2& vb, casacore::Bool dopsf, FTMachine::Type col);
-  virtual void finalizeGrid(const vi::VisBuffer2& vb, const casacore::Bool dopsf);
-  virtual void initializeDegrid(const vi::VisBuffer2& vb, const casacore::Int row=-1);
+  virtual void initializeGrid(const vi::VisBuffer2& vb, Bool dopsf);
+  virtual void grid(const vi::VisBuffer2& vb, Bool dopsf, FTMachine::Type col);
+  virtual void finalizeGrid(const vi::VisBuffer2& vb, const Bool dopsf);
+  virtual void initializeDegrid(const vi::VisBuffer2& vb, const Int row=-1);
   virtual void degrid(vi::VisBuffer2& vb);
 
   virtual void finalizeDegrid();
 
-  //////////////the return value is false if no valid record is being returned
-  casacore::Bool getCLRecord(casacore::Record& rec);
-  casacore::Bool getFTMRecord(casacore::Record& rec, const casacore::String diskimage="");
+  //////////////the return value is False if no valid record is being returned
+  Bool getCLRecord(Record& rec);
+  Bool getFTMRecord(Record& rec, const String diskimage="");
 
-  virtual casacore::String getImageName(){return itsImages->getName();};
-  virtual casacore::CountedPtr<SIImageStore> imageStore(){return itsImages;};
-  virtual casacore::Bool releaseImageLocks(){return itsImages->releaseLocks();};
+  virtual String getImageName(){return itsImages->getName();};
+  virtual CountedPtr<SIImageStore> imageStore(){return itsImages;};
+  virtual Bool releaseImageLocks(){return itsImages->releaseLocks();};
 
 protected:
 
-  casacore::CountedPtr<FTMachine> ft_p, ift_p; 
+  CountedPtr<FTMachine> ft_p, ift_p; 
 
-  casacore::CountedPtr<ComponentFTMachine> cft_p;
+  CountedPtr<ComponentFTMachine> cft_p;
   ComponentList cl_p;
 
-  casacore::CountedPtr<SIImageStore> itsImages;
+  CountedPtr<SIImageStore> itsImages;
 
 };
 

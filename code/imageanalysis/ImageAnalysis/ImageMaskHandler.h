@@ -10,15 +10,11 @@
 
 #include <set>
 
-namespace casacore{
+namespace casa {
 
 class ImageRegion;
 class LatticeExprNode;
 template <class T> class  MaskedLattice;
-}
-
-namespace casa {
-
 
 template <class T> class ImageMaskHandler {
 
@@ -44,44 +40,44 @@ public:
     ~ImageMaskHandler();
 
     // set default mask. Empty string means unset default mask.
-    void set(const casacore::String& name);
+    void set(const String& name);
 
     // return the default mask name
-    casacore::String defaultMask() const;
+    String defaultMask() const;
 
     // delete specified masks
-    void deleteMasks(const std::set<casacore::String>& masks);
+    void deleteMasks(const std::set<String>& masks);
 
     // rename a mask
-    void rename(const casacore::String& oldName, const casacore::String& newName);
+    void rename(const String& oldName, const String& newName);
 
     // get all mask names
-    casacore::Vector<casacore::String> get() const;
+    Vector<String> get() const;
 
     // copy mask
-    void copy(const casacore::String& currentName, const casacore::String& newName);
+    void copy(const String& currentName, const String& newName);
 
     void calcmask(
-    	const casacore::String& mask, casacore::Record& regions,
-		const casacore::String& name, casacore::Bool asdefault=true
+    	const String& mask, Record& regions,
+		const String& name, Bool asdefault=True
     );
 
     // copy the mask from the specified lattice to the image's (default) mask. The mask
     // and the image must have the same shape.
-    template <class U> void copy(const casacore::MaskedLattice<U>& mask);
+    template <class U> void copy(const MaskedLattice<U>& mask);
 
 private:
     const SPIIT _image;
 
     void _calcmask(
-    	const casacore::LatticeExprNode& node,
-		const casacore::String& name, const casacore::Bool makedefault
+    	const LatticeExprNode& node,
+		const String& name, const Bool makedefault
     );
 
     // Make a block of regions from a Record
     static void _makeRegionBlock(
-        casacore::PtrBlock<const casacore::ImageRegion*>& regions,
-        const casacore::Record& Regions
+        PtrBlock<const ImageRegion*>& regions,
+        const Record& Regions
     );
 };
 

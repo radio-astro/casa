@@ -286,7 +286,7 @@ int main() {
    	   << endl;
       String errorMessage("");
       GlishRecord compRec;
-      AlwaysAssert(B1934.toRecord(errorMessage, compRec) == true, AipsError);
+      AlwaysAssert(B1934.toRecord(errorMessage, compRec) == True, AipsError);
       AlwaysAssert(errorMessage == "", AipsError);
       {
  	AlwaysAssert(compRec.exists("flux"), AipsError);
@@ -487,7 +487,7 @@ int main() {
 	}
       }
       GaussianShape newComp;
-      AlwaysAssert(newComp.fromRecord(errorMessage, compRec) == true,
+      AlwaysAssert(newComp.fromRecord(errorMessage, compRec) == True,
 		   AipsError);
       AlwaysAssert(errorMessage == "", AipsError);
       AlwaysAssert(near(flux1934.value(0), newComp.flux().value(0),

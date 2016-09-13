@@ -27,7 +27,6 @@
 
 #include <synthesis/MeasurementEquations/LatticeModel.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 LatticeModel::LatticeModel(Lattice<Float>& mod) :

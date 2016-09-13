@@ -78,7 +78,7 @@ class TimeVarMJonesMRec : public MJonesMRec
    ~TimeVarMJonesMRec() {};
 
    // Construct from an existing record
-   TimeVarMJonesMRec (const casacore::Record& inpRec);
+   TimeVarMJonesMRec (const Record& inpRec);
 
  };
 

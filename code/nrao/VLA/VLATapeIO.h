@@ -119,33 +119,33 @@
 // kludge for tapes until we do something specific.
 //  It''s pretty much a thin vaneer that sits on top of rmt.
 
-Int rmtopen(casacore::Char *, casacore::Int, casacore::Int);
-Int rmtread(casacore::Int, casacore::Char *, casacore::uInt);
-Int rmtwrite(casacore::Int, casacore::Char *, casacore::uInt);
-Int rmtaccess(casacore::Char *, casacore::uInt);
-Int rmtclose(casacore::Int);
+Int rmtopen(Char *, Int, Int);
+Int rmtread(Int, Char *, uInt);
+Int rmtwrite(Int, Char *, uInt);
+Int rmtaccess(Char *, uInt);
+Int rmtclose(Int);
 
 class VLATapeIO {
    public :
       VLATapeIO() : tapeId(-1){}
-      VLATapeIO(const casacore::String &a) : inOut(O_RDONLY), tPosition(0){
-                                tapeId = open((casacore::Char *)(a.chars()), inOut, tPosition);
+      VLATapeIO(const String &a) : inOut(O_RDONLY), tPosition(0){
+                                tapeId = open((Char *)(a.chars()), inOut, tPosition);
                                 }
-      VLATapeIO(const casacore::String &a, casacore::Int rwFlag, casacore::Int tpos) : inOut(rwFlag),
+      VLATapeIO(const String &a, Int rwFlag, Int tpos) : inOut(rwFlag),
                                                       tPosition(tpos){
-                              tapeId = open((casacore::Char *)(a.chars()), inOut, tPosition);
+                              tapeId = open((Char *)(a.chars()), inOut, tPosition);
                               }
      ~VLATapeIO(){if(tapeId != -1)rmtclose(tapeId);}
-      casacore::Int  open(const casacore::String &a, casacore::Int b, casacore::Int c){
-                tapeId = rmtopen((casacore::Char *)(a.chars()), b, c);
+      Int  open(const String &a, Int b, Int c){
+                tapeId = rmtopen((Char *)(a.chars()), b, c);
                 return tapeId;}
-      casacore::Int  read(casacore::Char *buf, casacore::uInt nsize){return rmtread(tapeId, buf, nsize);}
-      //casacore::Int  write(casacore::Char *buf, casacore::uInt nsize){return rmtwrite(tapeId, buf, nsize);}
-      casacore::Int  access(const casacore::Char *a, casacore::uInt b){return rmtaccess((casacore::Char *)a, b);}
-      casacore::Int close(){return rmtclose(tapeId);}
+      Int  read(Char *buf, uInt nsize){return rmtread(tapeId, buf, nsize);}
+      //Int  write(Char *buf, uInt nsize){return rmtwrite(tapeId, buf, nsize);}
+      Int  access(const Char *a, uInt b){return rmtaccess((Char *)a, b);}
+      Int close(){return rmtclose(tapeId);}
    private :
-      casacore::Int inOut;
-      casacore::Int tapeId;
-      casacore::Int tPosition;
+      Int inOut;
+      Int tapeId;
+      Int tPosition;
 };
 #endif

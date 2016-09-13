@@ -29,7 +29,6 @@
 #include <casadbus/utilities/BusAccess.h>
 #include <casadbus/utilities/Conversion.h>
 
-using namespace casacore;
 namespace casa {
 
 

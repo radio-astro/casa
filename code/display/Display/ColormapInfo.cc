@@ -27,7 +27,6 @@
 
 #include <display/Display/ColormapInfo.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	ColormapInfo::ColormapInfo() :

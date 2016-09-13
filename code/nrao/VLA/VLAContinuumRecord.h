@@ -32,18 +32,14 @@
 #include <casa/aips.h>
 #include <nrao/VLA/VLABaselineRecord.h>
 #include <casa/IO/ByteSource.h>
-//# The following should be a forward declaration. But our casacore::Complex & DComplex
+//# The following should be a forward declaration. But our Complex & DComplex
 //# classes are a typedef hence this does not work. Replace the following with
-//# forward declarations when casacore::Complex and casacore::DComplex are no longer typedefs.
+//# forward declarations when Complex and DComplex are no longer typedefs.
 #include <casa/BasicSL/Complex.h>
 
 #include <casa/namespace.h>
-namespace casacore{
-
-template <class T> class Vector;
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
+template <class T> class Vector;
 } //# NAMESPACE CASA - END
 
 
@@ -97,7 +93,7 @@ public:
 
   // Initialise this ContinuumRecord from the given record with the
   // specified offset.
-  VLAContinuumRecord(casacore::ByteSource& record, casacore::uInt offset);
+  VLAContinuumRecord(ByteSource& record, uInt offset);
 
   // The destructor is trivial
   virtual ~VLAContinuumRecord();
@@ -105,42 +101,42 @@ public:
   // Initialise this VLAContinuumRecord from the given BytesSource (which
   // must contain a VLA logical record), and must be readable & seekable. The
   // offset specifies where the record starts.
-  void attach(casacore::ByteSource& record, casacore::uInt offset);
+  void attach(ByteSource& record, uInt offset);
 
-  // returns the correlations for this baseline. This will be a casacore::Vector with
+  // returns the correlations for this baseline. This will be a Vector with
   // four elements containing the AA, CC, AC & CA (or BB, DD, BD, DB)
-  // correlations (ie all four polarisations). The returned casacore::Vector has been
+  // correlations (ie all four polarisations). The returned Vector has been
   // scaled.
-  virtual casacore::Vector<casacore::Complex> data() const;
+  virtual Vector<Complex> data() const;
 
   // Returns the correlations for this baseline in the supplied Array. The
-  // supplied casacore::Array may have any number of dimensions, but all except one must
+  // supplied Array may have any number of dimensions, but all except one must
   // have a length on 1. The axis that is not of length one must be the right
   // length to hold all the data contained in the record.  Alternatively the
-  // casacore::Array may contain no elements in which case it will be resized to a Vector
+  // Array may contain no elements in which case it will be resized to a Vector
   // of the correct length. The returned values have been scaled. 
 
-  // The returned casacore::Array has four elements containing the AA, CC, AC & CA (or
+  // The returned Array has four elements containing the AA, CC, AC & CA (or
   // BB, DD, BD, DB) correlations (ie all four polarisations).
-  virtual void data(casacore::Array<casacore::Complex>& values) const;
+  virtual void data(Array<Complex>& values) const;
 
   // returns the flags for the correlations for this baseline. The returned
-  // casacore::Vector will always have a length of four.
-  virtual casacore::Vector<casacore::Bool> flags() const;
+  // Vector will always have a length of four.
+  virtual Vector<Bool> flags() const;
 
   // returns the variance of the correlations for this baseline. The returned
-  // casacore::Vector will always have a length of four.
-  casacore::Vector<casacore::Float> variance() const;
+  // Vector will always have a length of four.
+  Vector<Float> variance() const;
 
   // returns the scaling factor used to convert the internal data to the actual
   // values.
-  virtual casacore::uInt scale() const;
+  virtual uInt scale() const;
 
   // returns the antenna 1 index for this baseline.
-  virtual casacore::uInt ant1() const;
+  virtual uInt ant1() const;
 
   // returns the antenna 2 index for this baseline.
-  virtual casacore::uInt ant2() const;
+  virtual uInt ant2() const;
   
   // Return the type of this record (ie., CONTINUUM).
   virtual VLABaselineRecord::Type type() const;

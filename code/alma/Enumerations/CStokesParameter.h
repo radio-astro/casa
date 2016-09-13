@@ -3,7 +3,7 @@
 #define CStokesParameter_H
 
 /*
- * ALMA - Atacama Large Millimeter casacore::Array
+ * ALMA - Atacama Large Millimeter Array
  * (c) European Southern Observatory, 2002
  * (c) Associated Universities Inc., 2002
  * Copyright by ESO (in the framework of the ALMA collaboration),
@@ -33,7 +33,7 @@
  * //  ---------------------------------------------------------  //
  * /////////////////////////////////////////////////////////////////
  *
- * casacore::File CStokesParameter.h
+ * File CStokesParameter.h
  */
 
 #ifndef __cplusplus
@@ -54,7 +54,7 @@
 namespace StokesParameterMod
 {
   //! StokesParameter.
-  //!  casacore::Stokes parameters (CASA definition)
+  //!  Stokes parameters (CASA definition)
   
   const char *const revision = "-1";
   const int version = 1;

@@ -5,7 +5,6 @@
 #include <measures/Measures/MBaseline.h>
 #include <measures/Measures/MCBaseline.h>
 
-using namespace casacore;
 using namespace casa;
 
 int main()

@@ -115,7 +115,6 @@
 // The LatticeCleaner, which performs Hogbom and MultiScale Cleans,
 // has no knowledge of the LatticeConvolutionEqaution (LatConvEquation), 
 // but carries the PSF and DIRTY around inside itself.
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 Deconvolver::Deconvolver() 
@@ -125,7 +124,7 @@ Deconvolver::Deconvolver()
     cleaner_p( ), 
     mt_nterms_p(-1), 
     mt_cleaner_p(), 
-    mt_valid_p(false)
+    mt_valid_p(False)
 {
 
   defaults();
@@ -134,8 +133,8 @@ Deconvolver::Deconvolver()
 void Deconvolver::defaults() 
 {
   mode_p="none";
-  beamValid_p=false;
-  scalesValid_p=false;
+  beamValid_p=False;
+  scalesValid_p=False;
   beam_p = GaussianBeam();
   residEqn_p = 0;
   latConvEqn_p = 0;
@@ -143,12 +142,12 @@ void Deconvolver::defaults()
   dirtyName_p = "";
   psfName_p = "";
   nx_p=0; ny_p=0; npol_p=0; nchan_p=0;
-  fullPlane_p=false;
+  fullPlane_p=False;
 }
 
 Deconvolver::Deconvolver(const String& dirty, const String& psf)
   : dirty_p(0), psf_p(0), convolver_p(0), cleaner_p( ), naCleaner_p(nullptr),
-     mt_nterms_p(-1), mt_cleaner_p(), mt_valid_p(false)
+     mt_nterms_p(-1), mt_cleaner_p(), mt_valid_p(False)
 {
   LogIO os(LogOrigin("Deconvolver", "Deconvolver(String& dirty, Strong& psf)", WHERE));
   defaults();
@@ -157,7 +156,7 @@ Deconvolver::Deconvolver(const String& dirty, const String& psf)
 
 Deconvolver::Deconvolver(const Deconvolver &other)
   : dirty_p(0), psf_p(0), convolver_p(0), cleaner_p( ), naCleaner_p(nullptr),
-    mt_nterms_p(-1), mt_cleaner_p(), mt_valid_p(false)
+    mt_nterms_p(-1), mt_cleaner_p(), mt_valid_p(False)
 {
   defaults();
   open(other.dirty_p->table().tableName(), other.psf_p->table().tableName());
@@ -241,7 +240,7 @@ Bool Deconvolver::open(const String& dirty, const String& psf, Bool warn)
     		os << LogIO::WARN
     			<< "Use the function open with the psf" << LogIO::POST;
     	}
-    	return true;
+    	return True;
     }
     else{
       psf_p = new PagedImage<Float>(psf);
@@ -260,7 +259,7 @@ Bool Deconvolver::open(const String& dirty, const String& psf, Bool warn)
 	  os << LogIO::WARN << "Fitted beam is invalid: please set using setbeam"
 	     << LogIO::POST;
 	}
-	beamValid_p=true;
+	beamValid_p=True;
 	
       } catch (AipsError x) {
 	os << LogIO::WARN << "Fitted beam is invalid: please set using setbeam"
@@ -274,7 +273,7 @@ Bool Deconvolver::open(const String& dirty, const String& psf, Bool warn)
 	os << LogIO::SEVERE
 	   << "You may wish to regrid the PSF to the same shape as the dirty image" 
 	   << LogIO::POST;
-      return false;
+      return False;
 
       } 
       
@@ -310,7 +309,7 @@ Bool Deconvolver::open(const String& dirty, const String& psf, Bool warn)
 	    IPosition trc(4, nx_p-1, ny_p-1, 0, 0);
 	    trc(polAxis_p)=npol_p-1;
 	    Slicer sl(blc, trc, Slicer::endIsLast);
-	    SubImage<Float> psfSub(*psf_p, sl, true);  
+	    SubImage<Float> psfSub(*psf_p, sl, True);  
 	    convolver_p = new LatticeConvolver<Float>(psfSub);
 	    AlwaysAssert(convolver_p, AipsError);
 	  }
@@ -318,8 +317,8 @@ Bool Deconvolver::open(const String& dirty, const String& psf, Bool warn)
 	    IPosition blc(3, 0, 0, 0);
 	    IPosition trc(3, nx_p-1, ny_p-1, 0);
 	    Slicer sl(blc, trc, Slicer::endIsLast);
-	    //SubImage<Float> dirtySub(*dirty_p, sl, true);
-	    SubImage<Float> psfSub(*psf_p, sl, true);
+	    //SubImage<Float> dirtySub(*dirty_p, sl, True);
+	    SubImage<Float> psfSub(*psf_p, sl, True);
 	    convolver_p = new LatticeConvolver<Float>(psfSub);
 	    AlwaysAssert(convolver_p, AipsError);
 	  }
@@ -327,11 +326,11 @@ Bool Deconvolver::open(const String& dirty, const String& psf, Bool warn)
 	}
 	AlwaysAssert(!cleaner_p.null(), AipsError);
 	
-	return true;
+	return True;
 
       } catch (AipsError x) {
 	os << LogIO::SEVERE << "Caught Exception: "<< x.getMesg() << LogIO::POST;
-	return false;
+	return False;
       } 
     }
   }
@@ -347,21 +346,21 @@ Bool Deconvolver::reopen()
     if (dirtyName_p != "" && psfName_p != "") {
       return (open(dirtyName_p, psfName_p));
     } else {
-      return false;
+      return False;
     }
   }  catch (AipsError x) {
     dirty_p->table().unlock();
     psf_p->table().unlock();
     os << LogIO::SEVERE << "Caught Exception: "<< x.getMesg() << LogIO::POST;
-    return false;
+    return False;
   } 
-  return false;
+  return False;
 }
 
 // Fit the psf. If psf is blank then make the psf first.
 Bool Deconvolver::fitpsf(const String& psf, GaussianBeam& beam)
 {
-  if(!valid()) return false;
+  if(!valid()) return False;
   
   LogIO os(LogOrigin("Deconvolver", "fitpsf()", WHERE));
   
@@ -371,28 +370,28 @@ Bool Deconvolver::fitpsf(const String& psf, GaussianBeam& beam)
 
     if(psf=="") {
       os << LogIO::SEVERE << "Need a psf name" << LogIO::POST;
-      return false;
+      return False;
     }
     
     PagedImage<Float> psfImage(psf);
     StokesImageUtil::FitGaussianPSF(psfImage, beam);
     beam_p = beam;
-    beamValid_p=true;
+    beamValid_p=True;
     
     os << "  Beam fit: " << beam_p.getMajor("arcsec") << " by "
        << beam_p.getMinor("arcsec") << " (arcsec) at pa "
        << beam_p.getPA(Unit("deg")) << " (deg) " << endl;
-    return true;
+    return True;
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Exception: " << x.getMesg() << LogIO::POST;
   } 
-  return true;
+  return True;
 }
 
 Bool Deconvolver::close()
 {
-  if(!valid()) return false;
-  if (detached()) return true;
+  if(!valid()) return False;
+  if (detached()) return True;
   LogIO os(LogOrigin("Deconvolver", "close()", WHERE));
   
   os << "Closing images and detaching from Deconvolver" << LogIO::POST;
@@ -402,7 +401,7 @@ Bool Deconvolver::close()
   if (residEqn_p) delete  residEqn_p;  residEqn_p = 0;
   if (latConvEqn_p) delete latConvEqn_p; latConvEqn_p = 0;
 
-  return true;
+  return True;
 }
 
 String Deconvolver::dirtyname() const
@@ -423,7 +422,7 @@ String Deconvolver::psfname() const
 
 Bool Deconvolver::summary() const
 {
-  if(!valid()) return false;
+  if(!valid()) return False;
   LogOrigin OR("Deconvolver", "Deconvolver::summary()",  WHERE);
   
   LogIO los(OR);
@@ -457,16 +456,16 @@ Bool Deconvolver::summary() const
 
     los << endl << state() << LogIO::POST;
     psf_p->table().unlock();
-    return true;
+    return True;
   } catch (AipsError x) {
     los << LogIO::SEVERE << "Caught Exception: " << x.getMesg()
 	<< LogIO::POST;
     dirty_p->table().unlock();
     psf_p->table().unlock();
-    return false;
+    return False;
   } 
   
-  return true;
+  return True;
 }
 
 String Deconvolver::state() const
@@ -508,7 +507,7 @@ Bool Deconvolver::restore(const String& model, const String& image,
 			  GaussianBeam& mbeam)
 {
   
-  if(!valid()) return false;
+  if(!valid()) return False;
   LogIO os(LogOrigin("Deconvolver", "restore()", WHERE));
   
   dirty_p->table().lock();
@@ -519,13 +518,13 @@ Bool Deconvolver::restore(const String& model, const String& image,
     if(model=="") {
       os << LogIO::SEVERE << "Need a model"
 	 << LogIO::POST;
-      return false;
+      return False;
     }
     
     String imagename(image);
     if(imagename=="") imagename=model+".restored";
     removeTable(imagename);
-    if(!clone(model, imagename)) return false;
+    if(!clone(model, imagename)) return False;
     
     // Smooth all the images and add residuals
     PagedImage<Float> modelImage0(model);
@@ -552,19 +551,19 @@ Bool Deconvolver::restore(const String& model, const String& image,
       os << "  Using specified beam: " << mbeam.getMajor("arcsec") << " by "
 	 << mbeam.getMinor("arcsec") << " (arcsec) at pa "
 	 << mbeam.getPA(Unit("deg")) << " (deg) " << LogIO::POST;
-      //StokesImageUtil::Convolve(imageImage, mbeam, false);
+      //StokesImageUtil::Convolve(imageImage, mbeam, False);
     }
     else {
       if(! beam_p.isNull()) {
 	os << "  Using fitted beam: " << beam_p.getMajor("arcsec") << " by "
 	   << beam_p.getMinor("arcsec") << " (arcsec) at pa "
 	   << beam_p.getPA(Unit("deg")) << " (deg) " << LogIO::POST;
-	//StokesImageUtil::Convolve(imageImage, beam_p, false);
+	//StokesImageUtil::Convolve(imageImage, beam_p, False);
 	mbeam = beam_p;
       }
       else {
 	os << LogIO::SEVERE << "Restoring beam not specified" << LogIO::POST;
-	return false;
+	return False;
       }
     }
     //Model * restoring beam 
@@ -603,21 +602,21 @@ Bool Deconvolver::restore(const String& model, const String& image,
     if (modelImage_p != & modelImage0) {
       delete modelImage_p;
     }
-    return true;
+    return True;
   } catch (AipsError x) {
     dirty_p->table().unlock();
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg()
        << LogIO::POST;
   } 
   dirty_p->table().unlock();
-  return true;
+  return True;
 }
 
 // Residual
 Bool Deconvolver::residual(const String& model, const String& image)
 {
   
-  if(!valid()) return false;
+  if(!valid()) return False;
   LogIO os(LogOrigin("Deconvolver", "residual()", WHERE));
   
   dirty_p->table().lock();
@@ -633,7 +632,7 @@ Bool Deconvolver::residual(const String& model, const String& image)
     String imagename(image);
     if(imagename=="") imagename=model+".residual";
     removeTable(imagename);
-    if(!clone(dirty_p->table().tableName(), imagename)) return false;
+    if(!clone(dirty_p->table().tableName(), imagename)) return False;
     
     // Smooth all the images and add residuals
     
@@ -666,7 +665,7 @@ Bool Deconvolver::residual(const String& model, const String& image)
     if (modelImage_p != & modelImage0) {
       delete modelImage_p;
     }
-    return true;
+    return True;
   } catch (AipsError x) {
     dirty_p->table().unlock();
     psf_p->table().unlock();
@@ -675,14 +674,14 @@ Bool Deconvolver::residual(const String& model, const String& image)
   } 
   dirty_p->table().unlock();
   psf_p->table().unlock();
-  return true;
+  return True;
 }
 
 // Make an empty image
 Bool Deconvolver::make(const String& model)
 {
   
-  if(!valid()) return false;
+  if(!valid()) return False;
   LogIO os(LogOrigin("Deconvolver", "make()", WHERE));
   
   dirty_p->table().lock();
@@ -701,13 +700,13 @@ Bool Deconvolver::make(const String& model)
     modelImage.table().tableInfo().setSubType("GENERIC");
     modelImage.setUnits(Unit("Jy/pixel"));
     dirty_p->table().unlock();
-    return true;
+    return True;
   } catch (AipsError x) {
     dirty_p->table().unlock();
     os << LogIO::SEVERE << "Exception: " << x.getMesg() << LogIO::POST;
   } 
   dirty_p->table().unlock();
-  return true;
+  return True;
 };
 
 
@@ -715,7 +714,7 @@ Bool Deconvolver::make(const String& model)
 Bool Deconvolver::make1(const String& model)
 {
   
-  if(!valid()) return false;
+  if(!valid()) return False;
   LogIO os(LogOrigin("Deconvolver", "make1()", WHERE));
   
   dirty_p->table().lock();
@@ -736,13 +735,13 @@ Bool Deconvolver::make1(const String& model)
     modelImage.table().tableInfo().setSubType("GENERIC");
     modelImage.setUnits(Unit("Jy/pixel"));
     dirty_p->table().unlock();
-    return true;
+    return True;
   } catch (AipsError x) {
     dirty_p->table().unlock();
     os << LogIO::SEVERE << "Exception: " << x.getMesg() << LogIO::POST;
   } 
   dirty_p->table().unlock();
-  return true;
+  return True;
 };
 
 
@@ -750,7 +749,7 @@ Bool Deconvolver::make1(const String& model)
 Bool Deconvolver::make(const String& model, ImageInterface<Float>& templateImage)
 {
   
-  if(!valid()) return false;
+  if(!valid()) return False;
   LogIO os(LogOrigin("Deconvolver", "make()", WHERE));
   
   try {
@@ -766,11 +765,11 @@ Bool Deconvolver::make(const String& model, ImageInterface<Float>& templateImage
     
     modelImage.table().tableInfo().setSubType("GENERIC");
     modelImage.setUnits(Unit("Jy/pixel"));
-    return true;
+    return True;
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Exception: " << x.getMesg() << LogIO::POST;
   } 
-  return true;
+  return True;
 };
 
 
@@ -786,7 +785,7 @@ Deconvolver::innerQuarter(PagedImage<Float>& in)
     if(trc(i)<0) trc(i)=1;
   }
   LCSlicer quarter(blc, trc);
-  SubImage<Float>* si = new SubImage<Float>(in, quarter, true);
+  SubImage<Float>* si = new SubImage<Float>(in, quarter, True);
   return si;
 };
 
@@ -794,7 +793,7 @@ Deconvolver::innerQuarter(PagedImage<Float>& in)
 SubImage<Float>* 
 Deconvolver::allQuarters(PagedImage<Float>& in)
 {
-  SubImage<Float>* si = new SubImage<Float>(in, true);
+  SubImage<Float>* si = new SubImage<Float>(in, True);
   return si;
 };
 
@@ -803,7 +802,7 @@ Bool Deconvolver::smooth(const String& model,
 			 GaussianBeam& mbeam,
 			 Bool normalizeVolume)
 {
-  if(!valid()) return false;
+  if(!valid()) return False;
   LogIO os(LogOrigin("Deconvolver", "smooth()", WHERE));
   
   dirty_p->table().lock();
@@ -813,7 +812,7 @@ Bool Deconvolver::smooth(const String& model,
     
     if(model=="") {
       os << LogIO::SEVERE << "Need a name for model " << LogIO::POST;
-      return false;
+      return False;
     }
     
     if(mbeam.getMajor().getValue()==0.0) {
@@ -844,7 +843,7 @@ Bool Deconvolver::smooth(const String& model,
 
     dirty_p->table().unlock();
     psf_p->table().unlock();
-    return true;
+    return True;
   } catch (AipsError x) {
     dirty_p->table().unlock();
     psf_p->table().unlock();
@@ -852,7 +851,7 @@ Bool Deconvolver::smooth(const String& model,
   } 
   dirty_p->table().unlock();
   psf_p->table().unlock();
-  return true;
+  return True;
 }
 //will clean casa axes order images 
 Bool Deconvolver::clarkclean(const Int niter, 
@@ -861,7 +860,7 @@ Bool Deconvolver::clarkclean(const Int niter,
 			     Float& maxresidual, Int& iterused,
 			     Float cycleFactor){
 
-  Bool retval=false;
+  Bool retval=False;
   Double thresh=threshold.get("Jy").getValue();
   String imagename(model);
   // Make first image with the required shape and coordinates only if
@@ -871,16 +870,16 @@ Bool Deconvolver::clarkclean(const Int niter,
     make(imagename);
   }
   PagedImage<Float> modelImage(imagename);
-  Bool hasMask=false;
+  Bool hasMask=False;
   if(maskName !="")
     hasMask=Table::isReadable(maskName);
   if(hasMask){
     PagedImage<Float> mask(maskName);
-    retval=ClarkCleanImageSkyModel::clean(modelImage, *dirty_p, *psf_p, mask, maxresidual, iterused, gain, niter, thresh, cycleFactor, true, true); 
+    retval=ClarkCleanImageSkyModel::clean(modelImage, *dirty_p, *psf_p, mask, maxresidual, iterused, gain, niter, thresh, cycleFactor, True, True); 
   }
   else{
     ImageInterface<Float> *tmpMask=0;
-    retval=ClarkCleanImageSkyModel::clean(modelImage, *dirty_p, *psf_p, *tmpMask, maxresidual, iterused, gain, niter, thresh, cycleFactor, false, true); 
+    retval=ClarkCleanImageSkyModel::clean(modelImage, *dirty_p, *psf_p, *tmpMask, maxresidual, iterused, gain, niter, thresh, cycleFactor, False, True); 
   }
     
   return retval;
@@ -896,7 +895,7 @@ Bool Deconvolver::clarkclean(const Int niter,
 			     const Int maxNumMajorCycles,
 			     const Int maxNumMinorIterations)
 {
-  if(!valid()) return false;
+  if(!valid()) return False;
   LogIO os(LogOrigin("Deconvolver", "clarkclean()", WHERE));
   
   IPosition psfPatchSize(vi_psfPatchSize);
@@ -944,10 +943,10 @@ Bool Deconvolver::clarkclean(const Int niter,
   try {    
     if(model=="") {
       os << LogIO::SEVERE << "Need a name for model " << LogIO::POST;
-      return false;
+      return False;
     }
     PagedImage<Float> *mask = 0;
-    Bool isCubeMask=false;
+    Bool isCubeMask=False;
  
     Int xbeg, xend, ybeg, yend;
     //default clean box
@@ -962,7 +961,7 @@ Bool Deconvolver::clarkclean(const Int niter,
 	mask= new PagedImage<Float>(maskName);
 	if (chanAxis_p < Int(mask->shape().nelements())){
 	  if (mask->shape()(chanAxis_p) > 1) 
-	    isCubeMask=true;
+	    isCubeMask=True;
 	}
 	checkMask(*mask, xbeg, xend, ybeg, yend);
 	AlwaysAssert(mask, AipsError);
@@ -974,7 +973,7 @@ Bool Deconvolver::clarkclean(const Int niter,
     SubImage<Float> *maskSub=0;
     IPosition blc(2,xbeg,ybeg);
     IPosition trc(2,xend,yend);
-    Bool result=false;
+    Bool result=False;
     if(nchan_p >=1){
       for (Int k=0; k<nchan_p; ++k){
 	os<< "Cleaning channel " << k+1 << LogIO::POST;
@@ -1006,19 +1005,19 @@ Bool Deconvolver::clarkclean(const Int niter,
 	    blc(0)=0; blc(1)=0;
 	    trc(0)=nx_p-1; trc(1)=ny_p-1;
 	    sl=Slicer(blc, trc, Slicer::endIsLast);
-	    maskSub=new SubImage<Float> (*mask,sl,false);
+	    maskSub=new SubImage<Float> (*mask,sl,False);
 	    checkMask(*maskSub, xbeg, xend, ybeg, yend);
 	    blc(0)=xbeg; blc(1)=ybeg;
 	    trc(0)=xend; trc(1)=yend;
 	    sl =Slicer(blc, trc, Slicer::endIsLast);
 	    delete maskSub;
-	    maskSub=new SubImage<Float> (*mask,sl,false);
+	    maskSub=new SubImage<Float> (*mask,sl,False);
 	  }
 	}
 
    
-	SubImage<Float> dirtySub(*dirty_p, sl, true);
-	SubImage<Float> modelSub(modelImage,sl,true);
+	SubImage<Float> dirtySub(*dirty_p, sl, True);
+	SubImage<Float> modelSub(modelImage,sl,True);
 	IPosition blc_psf=blc; IPosition trc_psf=trc;
 	if(psf_p->shape().nelements() != dirty_p->shape().nelements()){
 	  blc_psf.resize(psf_p->shape().nelements());
@@ -1027,7 +1026,7 @@ Bool Deconvolver::clarkclean(const Int niter,
 	blc_psf(0)=0; blc_psf(1)=0;
 	trc_psf(0)=nx_p-1; trc_psf(1)=ny_p-1;
 	sl=Slicer(blc_psf, trc_psf, Slicer::endIsLast);
-	psfSub=SubImage<Float>(*psf_p, sl, true);
+	psfSub=SubImage<Float>(*psf_p, sl, True);
 	
 	ClarkCleanLatModel myClarkCleaner(modelSub);
 	if(mask !=0 )
@@ -1071,8 +1070,8 @@ Bool Deconvolver::clarkclean(const Int niter,
       trc(0)=xend; trc(1)=yend;
       Slicer sl(blc, trc, Slicer::endIsLast);
       SubImage<Float> maskSub;
-      SubImage<Float> dirtySub(*dirty_p, sl, true);
-      SubImage<Float> modelSub(modelImage,sl,true);
+      SubImage<Float> dirtySub(*dirty_p, sl, True);
+      SubImage<Float> modelSub(modelImage,sl,True);
       if(psf_p->shape().nelements() != dirty_p->shape().nelements()){
 	blc.resize(psf_p->shape().nelements());
 	trc.resize(psf_p->shape().nelements());
@@ -1080,11 +1079,11 @@ Bool Deconvolver::clarkclean(const Int niter,
       blc(0)=0; blc(1)=0;
       trc(0)=nx_p-1; trc(1)=ny_p-1;
       sl=Slicer(blc, trc, Slicer::endIsLast);
-      SubImage<Float> psfSub(*psf_p, sl, true);
+      SubImage<Float> psfSub(*psf_p, sl, True);
       
       ClarkCleanLatModel myClarkCleaner(modelSub);
       if(mask !=0 ){
-	maskSub= SubImage<Float>(*mask, sl, false);
+	maskSub= SubImage<Float>(*mask, sl, False);
 	myClarkCleaner.setMask(maskSub);
       }
 
@@ -1131,7 +1130,7 @@ Bool Deconvolver::clarkclean(const Int niter,
   delete latConvEqn_p;  latConvEqn_p = 0;
 
   
-  return true;
+  return True;
 };
 
 
@@ -1147,7 +1146,7 @@ Bool Deconvolver::setupLatCleaner(const String& /*algorithm*/, const Int /*niter
     os << "Cleaning image using multi-scale algorithm" << LogIO::POST;
     if(!scalesValid_p) {
       os << LogIO::SEVERE << "Scales not yet set" << LogIO::POST;
-      return false;
+      return False;
     }
     cleaner_p->setscales(scaleSizes_p);
     cleaner_p->setcontrol(CleanEnums::MULTISCALE, niter, gain, threshold);
@@ -1161,7 +1160,7 @@ Bool Deconvolver::setupLatCleaner(const String& /*algorithm*/, const Int /*niter
     cleaner_p->setcontrol(CleanEnums::HOGBOM, niter, gain, threshold);
   } else {
     os << LogIO::SEVERE << "Unknown algorithm: " << algorithm << LogIO::POST;
-    return false;
+    return False;
   }
 
   
@@ -1169,10 +1168,10 @@ Bool Deconvolver::setupLatCleaner(const String& /*algorithm*/, const Int /*niter
 
   if(algorithm=="fullmsclean" || algorithm=="fullmultiscale") {
     os << "Cleaning full image using multi-scale algorithm" << LogIO::POST;
-    cleaner_p->ignoreCenterBox(true);
+    cleaner_p->ignoreCenterBox(True);
   }
   */
-  return true;
+  return True;
 
 }
 // Clean algorithm
@@ -1182,7 +1181,7 @@ Bool Deconvolver::clean(const String& algorithm, const Int niter,
 			const String& model, const String& mask, Float& maxResidual, Int& iterationsDone)
 {
   
-  if(!valid()) return false;
+  if(!valid()) return False;
   LogIO os(LogOrigin("Deconvolver", "clean()", WHERE));
   
   dirty_p->table().lock();
@@ -1191,7 +1190,7 @@ Bool Deconvolver::clean(const String& algorithm, const Int niter,
     
     if(model=="") {
       os << LogIO::SEVERE << "Need a name for model " << LogIO::POST;
-      return false;
+      return False;
     }
     //Int psfnchan=psf_p->shape()(chanAxis_p);
     //Int masknchan=0;
@@ -1228,14 +1227,14 @@ Bool Deconvolver::clean(const String& algorithm, const Int niter,
     }
 
     
-    Bool result=false;
+    Bool result=False;
 
     result=cleaner_p->clean(modelImage, algorithm, niter, gain, threshold, displayProgress);
     maxResidual=cleaner_p->maxResidual();
     iterationsDone=cleaner_p->numberIterations();
-    dirty_p->table().relinquishAutoLocks(true);
+    dirty_p->table().relinquishAutoLocks(True);
     dirty_p->table().unlock();
-    psf_p->table().relinquishAutoLocks(true);
+    psf_p->table().relinquishAutoLocks(True);
     psf_p->table().unlock();
     if (maskim) delete maskim;    
 
@@ -1246,7 +1245,7 @@ Bool Deconvolver::clean(const String& algorithm, const Int niter,
     os << LogIO::SEVERE << "Exception: " << x.getMesg() << LogIO::POST;
   } 
   
-  return true;
+  return True;
 }
 
 Bool Deconvolver::naclean(const Int niter,
@@ -1254,7 +1253,7 @@ Bool Deconvolver::naclean(const Int niter,
 			  const String& model, const String& maskname, const Int masksupp, const Int memType, const Float numSigma, Float& maxResidual, Int& iterationsDone)
 {
   
-  if(!valid()) return false;
+  if(!valid()) return False;
   LogIO os(LogOrigin("Deconvolver", "clean()", WHERE));
   
   dirty_p->table().lock();
@@ -1263,7 +1262,7 @@ Bool Deconvolver::naclean(const Int niter,
     
     if(model=="") {
       os << LogIO::SEVERE << "Need a name for model " << LogIO::POST;
-      return false;
+      return False;
     }
     //Int psfnchan=psf_p->shape()(chanAxis_p);
     //Int masknchan=0;
@@ -1304,14 +1303,14 @@ Bool Deconvolver::naclean(const Int niter,
     
 
     
-    Bool result=false;
+    Bool result=False;
 
     result=naCleaner_p->clean(modelImage, niter, gain, threshold, masksupp, memType, numSigma);
     maxResidual=cleaner_p->maxResidual();
     iterationsDone=cleaner_p->iteration();
-    dirty_p->table().relinquishAutoLocks(true);
+    dirty_p->table().relinquishAutoLocks(True);
     dirty_p->table().unlock();
-    psf_p->table().relinquishAutoLocks(true);
+    psf_p->table().relinquishAutoLocks(True);
     psf_p->table().unlock();
     if (maskim) delete maskim;    
 
@@ -1322,7 +1321,7 @@ Bool Deconvolver::naclean(const Int niter,
     os << LogIO::SEVERE << "Exception: " << x.getMesg() << LogIO::POST;
   } 
   
-  return true;
+  return True;
 }
 
 
@@ -1336,7 +1335,7 @@ Bool Deconvolver::mem(const String& entropy, const Int niter,
 		      const Bool imagePlane)
 {
   
-  if(!valid()) return false;
+  if(!valid()) return False;
   LogIO os(LogOrigin("Deconvolver", "mem()", WHERE));
   
   //  SubImage<Float>* dirtyQ_p =0; 
@@ -1352,17 +1351,17 @@ Bool Deconvolver::mem(const String& entropy, const Int niter,
 
     //    if(model=="") {
     //     os << LogIO::SEVERE << "Need a name for model " << LogIO::POST;
-    //      return false;
+    //      return False;
     //   }
 
-    Bool initializeModel = false;
+    Bool initializeModel = False;
     Int xbeg, xend, ybeg, yend;
     if (imagePlane) {
       xbeg=0;
       xend=nx_p-1;
       ybeg=0;
       yend=ny_p-1;
-      fullPlane_p=true;
+      fullPlane_p=True;
     } else {
       xbeg=nx_p/4; 
       xend=3*nx_p/4-1;
@@ -1379,7 +1378,7 @@ Bool Deconvolver::mem(const String& entropy, const Int niter,
 	 << imagename  << LogIO::POST;
     }
     if(!Table::isWritable(imagename)) {
-      initializeModel = true;
+      initializeModel = True;
       make(imagename);
       dirty_p->table().lock();
       psf_p->table().lock();
@@ -1412,12 +1411,12 @@ Bool Deconvolver::mem(const String& entropy, const Int niter,
     else {
       os << " Known MEM entropies: entropy | emptiness " << LogIO::POST;
       os << LogIO::SEVERE << "Unknown MEM entropy: " << entropy << LogIO::POST;
-      return false;
+      return False;
     }
 
 
     PagedImage<Float> *mask = 0;
-    Bool isCubeMask=false;
+    Bool isCubeMask=False;
     PagedImage<Float> *prior =0;
     
     // Deal with mask
@@ -1426,7 +1425,7 @@ Bool Deconvolver::mem(const String& entropy, const Int niter,
 	mask= new PagedImage<Float>(maskImage);
 	if (chanAxis_p < Int(mask->shape().nelements())){
 	  if (mask->shape()(chanAxis_p) > 1) 
-	    isCubeMask=true;
+	    isCubeMask=True;
 	}
 	checkMask(*mask, xbeg, xend, ybeg, yend);
 	AlwaysAssert(mask, AipsError);
@@ -1444,7 +1443,7 @@ Bool Deconvolver::mem(const String& entropy, const Int niter,
       }
     }
 
-    Bool result=false;
+    Bool result=False;
     SubImage<Float> *maskSub=0;
     IPosition blc(2,xbeg,ybeg);
     IPosition trc(2,xend,yend);
@@ -1478,23 +1477,23 @@ Bool Deconvolver::mem(const String& entropy, const Int niter,
 	    blc(0)=0; blc(1)=0;
 	    trc(0)=nx_p-1; trc(1)=ny_p-1;
 	    sl=Slicer(blc, trc, Slicer::endIsLast);
-	    maskSub=new SubImage<Float> (*mask,sl,false);
+	    maskSub=new SubImage<Float> (*mask,sl,False);
 	    checkMask(*maskSub, xbeg, xend, ybeg, yend);
 	    blc(0)=xbeg; blc(1)=ybeg;
 	    trc(0)=xend; trc(1)=yend;
 	    sl =Slicer(blc, trc, Slicer::endIsLast);
 	    delete maskSub;
-	    maskSub=new SubImage<Float> (*mask,sl,false);
+	    maskSub=new SubImage<Float> (*mask,sl,False);
 	  }
 	}
 
 
 	if(prior !=0 ){	  
-	  priorSub= SubImage<Float>(*prior, false);
+	  priorSub= SubImage<Float>(*prior, False);
 	}
 
-	SubImage<Float> dirtySub(*dirty_p, sl, true);
-	SubImage<Float> modelSub(modelImage,sl,true);
+	SubImage<Float> dirtySub(*dirty_p, sl, True);
+	SubImage<Float> modelSub(modelImage,sl,True);
 	IPosition blc_psf=blc; IPosition trc_psf=trc;
 	if(psf_p->shape().nelements() != dirty_p->shape().nelements()){
 	  blc_psf.resize(psf_p->shape().nelements());
@@ -1503,7 +1502,7 @@ Bool Deconvolver::mem(const String& entropy, const Int niter,
 	blc_psf(0)=0; blc_psf(1)=0;
 	trc_psf(0)=nx_p-1; trc_psf(1)=ny_p-1;
 	sl=Slicer(blc_psf, trc_psf, Slicer::endIsLast);
-	psfSub=SubImage<Float>(*psf_p, sl, true);
+	psfSub=SubImage<Float>(*psf_p, sl, True);
 
 
 
@@ -1564,7 +1563,7 @@ Bool Deconvolver::mem(const String& entropy, const Int niter,
     else{
       SubImage<Float>* dirtyQ =0; 
       SubImage<Float>* modelQ =0; 
-      Bool initializeModel = false;
+      Bool initializeModel = False;
 
       if (imagePlane) {
 	dirtyQ = allQuarters(*dirty_p);
@@ -1663,7 +1662,7 @@ Bool Deconvolver::mem(const String& entropy, const Int niter,
   if (residEqn_p != 0) {delete residEqn_p;    residEqn_p = 0;}
   if (memProgress_p!=0) {delete memProgress_p;  memProgress_p = 0; }    
   
-  return true;
+  return True;
 }
 
 // makeprior, for MEM
@@ -1673,7 +1672,7 @@ Bool Deconvolver::makeprior(const String& prior, const String& templatename,
 			    const Vector<Int>& blc, const Vector<Int>& trc)
 {
   
-  if(!valid()) return false;
+  if(!valid()) return False;
   LogIO os(LogOrigin("Deconvolver", "makeprior()", WHERE));
   
   try {
@@ -1681,11 +1680,11 @@ Bool Deconvolver::makeprior(const String& prior, const String& templatename,
       os << LogIO::SEVERE << "Need a name for template image " << endl
 	 << "May I suggest you make a clean or mem image and " << endl
 	 << "smooth it for the template?" << LogIO::POST;
-      return false;
+      return False;
     }
     if(prior=="") {
       os << LogIO::SEVERE << "Need a name for output prior image " << LogIO::POST;
-      return false;
+      return False;
     }
 
     PagedImage<Float> templateImage(templatename);
@@ -1735,8 +1734,8 @@ Bool Deconvolver::makeprior(const String& prior, const String& templatename,
     LCBox::verify(iblc, itrc, iinc, imshape);
     LCSlicer box(iblc, itrc);
 
-    SubImage<Float> templateBox(*templateImage2_p, ImageRegion(box), false);
-    SubImage<Float> priorBox(priorImage, ImageRegion(box), true);
+    SubImage<Float> templateBox(*templateImage2_p, ImageRegion(box), False);
+    SubImage<Float> priorBox(priorImage, ImageRegion(box), True);
 
     // do Low clipping
     priorBox.copyData( (LatticeExpr<Float>) 
@@ -1748,29 +1747,29 @@ Bool Deconvolver::makeprior(const String& prior, const String& templatename,
 			    highClipTo.getValue("Jy"), priorBox)) );  
 
 
-    return true;
+    return True;
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Exception: " << x.getMesg() << LogIO::POST;
   } 
   
-  return true;
+  return True;
 }
 
 // clipimage
 Bool Deconvolver::clipimage(const String& clippedImageName, const String& inputImageName, 
 			    const Quantity& threshold)
 {
-  if(!valid()) return false;
+  if(!valid()) return False;
   LogIO os(LogOrigin("Deconvolver", "clipimage()", WHERE));
   
   try {
     if(inputImageName=="") {
       os << LogIO::SEVERE << "Need a name for the image to clip" <<  LogIO::POST;
-      return false;
+      return False;
     }
     if(clippedImageName=="") {
       os << LogIO::SEVERE << "Need a name for output clipped image " << LogIO::POST;
-      return false;
+      return False;
     }
 
     PagedImage<Float> inputImage(inputImageName);
@@ -1782,7 +1781,7 @@ Bool Deconvolver::clipimage(const String& clippedImageName, const String& inputI
     PagedImage<Float> clippedImage(clippedImageName2);
     if  (clippedImage.shape() != inputImage.shape() ) {
       os << LogIO::SEVERE << "Input and clipped image sizes disagree " << LogIO::POST;
-      return false;
+      return False;
     }
     {
       ostringstream oos;
@@ -1797,28 +1796,28 @@ Bool Deconvolver::clipimage(const String& clippedImageName, const String& inputI
     trc(2) = 0;
     blc(2) = 0;
     LCSlicer boxI(blc, trc);
-    SubImage<Float> stokesISub(inputImage, ImageRegion(boxI), false);
+    SubImage<Float> stokesISub(inputImage, ImageRegion(boxI), False);
     Int iStokes;
     for (iStokes=0; iStokes < inputImage.shape()(2); iStokes++) {
       trc(2) = iStokes;
       blc(2) = iStokes;
       LCSlicer box(blc, trc);
-      SubImage<Float> stokesClippedSub(clippedImage, ImageRegion(box), true);
-      SubImage<Float>   stokesInputSub(inputImage, ImageRegion(box), false);
+      SubImage<Float> stokesClippedSub(clippedImage, ImageRegion(box), True);
+      SubImage<Float>   stokesInputSub(inputImage, ImageRegion(box), False);
       if (stokesISub.shape() != stokesClippedSub.shape() ) {
 	os << LogIO::SEVERE << "Input and clipped image sizes disagree " << LogIO::POST;
-	return false;
+	return False;
       }
       stokesClippedSub.copyData( (LatticeExpr<Float>) 
 				 (iif(stokesISub < threshold.getValue("Jy"), 
 				      0.0, stokesInputSub)) );  
     }
-    return true;
+    return True;
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Exception: " << x.getMesg() << LogIO::POST;
   } 
   
-  return true;
+  return True;
 }
 
 // boxmask
@@ -1826,13 +1825,13 @@ Bool Deconvolver::boxmask(const String& boxmask,
 			  const Vector<Int> blc, const Vector<Int> trc,
 			  const Quantity& fillValue, const Quantity& externalValue)
 {
-  if(!valid()) return false;
+  if(!valid()) return False;
   LogIO os(LogOrigin("Deconvolver", "boxmask()", WHERE));
   
   try {
     if(boxmask=="") {
       os << LogIO::SEVERE << "Need a name for output boxmask image " << LogIO::POST;
-      return false;
+      return False;
     }
     String boxname(boxmask);
     if(boxname=="") boxname="boxmask";
@@ -1864,13 +1863,13 @@ Bool Deconvolver::boxmask(const String& boxmask,
     trc0(0) = min(trc(0), pshape(0)-1);
     trc0(1) = min(trc(1), pshape(1)-1);
     LCSlicer box(blc0, trc0);
-    SubImage<Float> innerSub(boxImage, ImageRegion(box), true);
+    SubImage<Float> innerSub(boxImage, ImageRegion(box), True);
     innerSub.set(fillValue.getValue("Jy"));
-    return true;
+    return True;
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Exception: " << x.getMesg() << LogIO::POST;
   }   
-  return true;
+  return True;
 }
 
 //regionmask
@@ -1880,10 +1879,10 @@ Bool Deconvolver::regionmask(const String& maskimage, Record* imageRegRec, Matri
   if(!dirty_p) {
     os << LogIO::SEVERE << "Program logic error: Dirty image pointer dirty_p not yet set"
        << LogIO::POST;
-    return false;
+    return False;
   }
   if(!Table::isWritable(maskimage)) {
-    if (!clone(dirty_p->name(),maskimage)) return false;
+    if (!clone(dirty_p->name(),maskimage)) return False;
     PagedImage<Float> mim(maskimage);
     mim.set(0.0);
     mim.table().relinquishAutoLocks();
@@ -1896,7 +1895,7 @@ Bool Deconvolver::regionmask(const String& maskimage, Record* imageRegRec, Matri
 // Fourier transform the model
 Bool Deconvolver::ft(const String& model, const String& transform)
 {
-  if(!valid()) return false;
+  if(!valid()) return False;
   
   LogIO os(LogOrigin("Deconvolver", "ft()", WHERE));
   
@@ -1904,7 +1903,7 @@ Bool Deconvolver::ft(const String& model, const String& transform)
     
     if(model=="") {
       os << LogIO::SEVERE << "Need a name for model " << LogIO::POST;
-      return false;
+      return False;
     }
     
     os << "Fourier transforming model" << LogIO::POST;
@@ -1921,11 +1920,11 @@ Bool Deconvolver::ft(const String& model, const String& transform)
 
     LatticeFFT::cfft2d(transformImage);
 
-    return true;
+    return True;
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Exception: " << x.getMesg() << LogIO::POST;
   } 
-  return true;
+  return True;
 }
 
 Bool Deconvolver::setscales(const String& scaleMethod,
@@ -1964,7 +1963,7 @@ Bool Deconvolver::setscales(const String& scaleMethod,
     }  
     scaleSizes_p=scaleSizes;
     cleaner_p->setscales(scaleSizes);   
-    scalesValid_p=true;
+    scalesValid_p=True;
 
   } else if (scaleMethod == "uservector") {
     if (userScaleSizes.nelements() <= 0) {
@@ -1979,20 +1978,20 @@ Bool Deconvolver::setscales(const String& scaleMethod,
     }
     scaleSizes_p=userScaleSizes;
     cleaner_p->setscales(userScaleSizes);   
-    scalesValid_p=true;
+    scalesValid_p=True;
 
   } else {
     os << LogIO::SEVERE << "Unknown scale setting algorithm: " 
        << scaleMethod << LogIO::POST;
-    return false;
+    return False;
   }
 
-  return true;
+  return True;
 }
   
 Bool Deconvolver::clone(const String& imageName, const String& newImageName)
 {
-  if(!valid()) return false;
+  if(!valid()) return False;
   LogIO os(LogOrigin("Deconvolver", "clone()", WHERE));
   try {
     PagedImage<Float> oldImage(imageName);
@@ -2000,9 +1999,9 @@ Bool Deconvolver::clone(const String& imageName, const String& newImageName)
 			       newImageName);
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Exception: " << x.getMesg() << LogIO::POST;
-    return false;
+    return False;
   } 
-  return true;
+  return True;
 }
 
 
@@ -2015,7 +2014,7 @@ Bool Deconvolver::convolve(const String& convolvedName,
 			     model.coordinates(),
 			     convolvedName);
    convolver_p->linear( convolved, model );
-   return true;
+   return True;
 };
 
 Bool Deconvolver::makegaussian(const String& gaussianName, GaussianBeam& mbeam, Bool normalizeVolume)
@@ -2024,7 +2023,7 @@ Bool Deconvolver::makegaussian(const String& gaussianName, GaussianBeam& mbeam, 
   if(!dirty_p) {
     os << LogIO::SEVERE << "Program logic error: Dirty image pointer dirty_p not yet set"
        << LogIO::POST;
-    return false;
+    return False;
   }
   PagedImage<Float> gaussian(dirty_p->shape(),
 			     dirty_p->coordinates(),
@@ -2054,7 +2053,7 @@ Bool Deconvolver::makegaussian(const String& gaussianName, GaussianBeam& mbeam, 
   /*  if(naxis<4){
     os << LogIO::SEVERE << "Input dirty image: naxis=" <<naxis
        << ". Four axes are required."<< LogIO::POST;
-    return false;
+    return False;
 
   }
   else if(naxis==4){
@@ -2072,7 +2071,7 @@ Bool Deconvolver::makegaussian(const String& gaussianName, GaussianBeam& mbeam, 
   }
   StokesImageUtil::Convolve(gaussian, mbeam, normalizeVolume);
   */
-  return true;
+  return True;
 };
 
 Bool Deconvolver::putGaussian(ImageInterface<Float>& im, const GaussianBeam& beam){
@@ -2093,7 +2092,7 @@ Bool Deconvolver::putGaussian(ImageInterface<Float>& im, const GaussianBeam& bea
   ComponentList cl;
   cl.add(gcomp);
   ComponentImager::project(im, cl);
-  return true;
+  return True;
   
 
 
@@ -2107,9 +2106,9 @@ Bool Deconvolver::detached() const
     os << LogIO::SEVERE << 
       "Deconvolver is detached - cannot perform operation." << endl <<
       "Call Deconvolver.open('dirtyname', 'psfname') to reattach." << LogIO::POST;
-    return true;
+    return True;
   }
-  return false;
+  return False;
 }
 
 Bool Deconvolver::removeTable(const String& tablename) {
@@ -2120,43 +2119,43 @@ Bool Deconvolver::removeTable(const String& tablename) {
     if (! Table::isWritable(tablename)) {
       os << LogIO::SEVERE << "Table " << tablename
 	 << " is not writable!: cannot alter it" << LogIO::POST;
-      return false;
+      return False;
     }
     else {
       if (Table::isOpened(tablename)) {
 	os << LogIO::SEVERE << "Table " << tablename
 	   << " is already open in the process. It needs to be closed first"
 	   << LogIO::POST;
-	  return false;
+	  return False;
       } else {
 	Table table(tablename, Table::Update);
 	if (table.isMultiUsed()) {
 	  os << LogIO::SEVERE << "Table " << tablename
 	     << " is already open in another process. It needs to be closed first"
 	     << LogIO::POST;
-	    return false;
+	    return False;
 	} else {
 	  Table table(tablename, Table::Delete);
 	}
       }
     }
   }
-  return true;
+  return True;
 }
 
 Bool Deconvolver::valid() const {
-  LogIO os(LogOrigin("Deconvolver", "if(!valid()) return false", WHERE));
+  LogIO os(LogOrigin("Deconvolver", "if(!valid()) return False", WHERE));
   if(!dirty_p) {
     os << LogIO::SEVERE << "Program logic error: Dirty image pointer dirty_p not yet set"
        << LogIO::POST;
-    return false;
+    return False;
   }
   if(!psf_p) {
     os << LogIO::SEVERE << "Program logic error: PSF  pointer psf_p not yet set"
        << LogIO::POST;
-    return false;
+    return False;
   }
-  return true;
+  return True;
 }
 
 void Deconvolver::findAxes(){
@@ -2213,7 +2212,7 @@ void Deconvolver::checkMask(ImageInterface<Float>& maskImage, Int& xbeg, Int& xe
   }
 
 
-  Matrix<Float> mask= maskImage.getSlice(sl, true);
+  Matrix<Float> mask= maskImage.getSlice(sl, True);
   // ignore mask if none exists
   if(max(mask) < 0.000001) {
     os << "Mask seems to be empty; will CLEAN inner quarter" 
@@ -2272,7 +2271,7 @@ Bool Deconvolver::mtopen(const Int nTaylor,
 			 const Vector<String>& psfs)
 {
   
-  //  if(!valid()) return false; //make MT version
+  //  if(!valid()) return False; //make MT version
   LogIO os(LogOrigin("Deconvolver", "mtopen()", WHERE));
 
   // Check for already-open mt-deconvolver
@@ -2280,14 +2279,14 @@ Bool Deconvolver::mtopen(const Int nTaylor,
   if(mt_nterms_p != -1)
     {
       os << LogIO::WARN << "Multi-term Deconvolver is already open, and set-up for " << mt_nterms_p << " Taylor-terms. Please close the deconvolver and reopen, or continue with cleaning." << LogIO::POST;
-      return false;
+      return False;
     }
 
   // Check for valid ntaylor
   if( nTaylor <=0 ) 
     {
       os << LogIO::SEVERE << "nTaylor must be at-least 1" << LogIO::POST; 
-      return false;
+      return False;
     }
 
   mt_nterms_p = nTaylor;
@@ -2297,7 +2296,7 @@ Bool Deconvolver::mtopen(const Int nTaylor,
   if( psfs.nelements() != mt_npsftaylor )
     {
       os << LogIO::SEVERE << "For " << mt_nterms_p << " Taylor terms, " << mt_npsftaylor << " PSFs are needed to populate the Hessian matrix. " << LogIO::POST;
-      return false;
+      return False;
     }
 
   os << "Initializing MT-Clean with " << mt_nterms_p << " Taylor terms, " << userScaleSizes.nelements() << " scales and " << psfs.nelements() << " unique Hessian elements (psfs)" << LogIO::POST;
@@ -2322,7 +2321,7 @@ Bool Deconvolver::mtopen(const Int nTaylor,
 	{
 	  os << LogIO::SEVERE << "Supplied PSFs are of different shapes. Please try again." << LogIO::POST;
 	  mt_psfs.resize(0); // Not sure if this is safe, with CountedPtrs. WARN.
-	  return false;
+	  return False;
 	}
     }
 
@@ -2337,7 +2336,7 @@ Bool Deconvolver::mtopen(const Int nTaylor,
     {
       os << LogIO::WARN << "Cannot allocate required memory for Multi-Term minor cycle" 
        << LogIO::POST;
-      return false;
+      return False;
     } 
 
   // Send the PSFs into the Multi-Term Matrix Cleaner
@@ -2345,7 +2344,7 @@ Bool Deconvolver::mtopen(const Int nTaylor,
     {
       Matrix<Float> tempMat;
       Array<Float> tempArr;
-      (mt_psfs[order])->get(tempArr,true); // by reference.
+      (mt_psfs[order])->get(tempArr,True); // by reference.
       tempMat.reference(tempArr);
 
       mt_cleaner_p.setpsf( order , tempMat ); 
@@ -2356,14 +2355,14 @@ Bool Deconvolver::mtopen(const Int nTaylor,
   if (ret != 0)
     {
       os << LogIO::SEVERE << "Cannot Invert Hessian matrix. Please close the deconvolver and supply different PSFs." << LogIO::POST; 
-      return false;
+      return False;
     }
 
   // mt_psfs goes out of scope and CountedPtrs delete themselves automatically.
 
-  mt_valid_p=true;
+  mt_valid_p=True;
   
-  return true;
+  return True;
 }
 
 Bool Deconvolver::mtclean(const Vector<String>& residuals,
@@ -2378,10 +2377,10 @@ Bool Deconvolver::mtclean(const Vector<String>& residuals,
   
   LogIO os(LogOrigin("Deconvolver", "mtclean()", WHERE));
 
-  if(mt_valid_p==false)
+  if(mt_valid_p==False)
     {
       os << LogIO::WARN << "Multi-Term Deconvolver is not initialized yet. Please call 'mtopen()' first" << LogIO::POST;
-      return false;
+      return False;
     }
 
   os << "Running MT-Clean with " << mt_nterms_p << " Taylor terms " << LogIO::POST;
@@ -2392,7 +2391,7 @@ Bool Deconvolver::mtclean(const Vector<String>& residuals,
       PagedImage<Float> mt_mask(mask);
       Matrix<Float> tempMat;
       Array<Float> tempArr;
-      (mt_mask).get(tempArr,true);
+      (mt_mask).get(tempArr,True);
       tempMat.reference(tempArr);
       
       mt_cleaner_p.setmask( tempMat );
@@ -2409,7 +2408,7 @@ Bool Deconvolver::mtclean(const Vector<String>& residuals,
 	{
 	  os << LogIO::SEVERE << "Supplied Residual images don't match PSF shapes." << LogIO::POST;
 	  mt_residuals.resize(0); // Not sure if this is safe, with CountedPtrs. WARN.
-	  return false;
+	  return False;
 	}
 
       mt_models[i] = new PagedImage<Float>(models[i]);
@@ -2418,18 +2417,18 @@ Bool Deconvolver::mtclean(const Vector<String>& residuals,
 	{
 	  os << LogIO::SEVERE << "Supplied Model images don't match PSF shapes." << LogIO::POST;
 	  mt_models.resize(0); // Not sure if this is safe, with CountedPtrs. WARN.
-	  return false;
+	  return False;
 	}
 
 
       Matrix<Float> tempMat;
       Array<Float> tempArr;
 
-      (mt_residuals[i])->get(tempArr,true); // by reference.
+      (mt_residuals[i])->get(tempArr,True); // by reference.
       tempMat.reference(tempArr);
       mt_cleaner_p.setresidual( i , tempMat ); 
 
-      (mt_models[i])->get(tempArr,true); // by reference.
+      (mt_models[i])->get(tempArr,True); // by reference.
       tempMat.reference(tempArr);
       mt_cleaner_p.setmodel( i , tempMat ); 
 
@@ -2471,10 +2470,10 @@ Bool Deconvolver::mtrestore(const Vector<String>& models,
   LogIO os(LogOrigin("Deconvolver", "mtrestore()", WHERE));
 
   // check that the mt_cleaner_p is alive..
-  if(mt_valid_p==false)
+  if(mt_valid_p==False)
     {
       os << LogIO::WARN << "Multi-Term Deconvolver is not initialized yet. Please call 'mtopen()' first" << LogIO::POST;
-      return false;
+      return False;
     }
   
   os << "Restoring Taylor-coefficient images" << LogIO::POST;
@@ -2488,7 +2487,7 @@ Bool Deconvolver::mtrestore(const Vector<String>& models,
 	{
 	  os << LogIO::SEVERE << "Supplied Residual images don't match PSF shapes." << LogIO::POST;
 	  mt_residuals.resize(0); // Not sure if this is safe, with CountedPtrs. WARN.
-	  return false;
+	  return False;
 	}
     }
 
@@ -2498,7 +2497,7 @@ Bool Deconvolver::mtrestore(const Vector<String>& models,
     {
       Matrix<Float> tempMat;
       Array<Float> tempArr;
-      (mt_residuals[order])->get(tempArr,true); // by reference.
+      (mt_residuals[order])->get(tempArr,True); // by reference.
       tempMat.reference(tempArr);
       mt_cleaner_p.setresidual( order , tempMat ); 
     }           
@@ -2537,7 +2536,7 @@ Bool Deconvolver::mtrestore(const Vector<String>& models,
 
     }
 
-  return true;
+  return True;
 }
 
 // This code duplicates WBCleanImageSkyModel::calculateAlphaBeta
@@ -2558,7 +2557,7 @@ Bool Deconvolver::mtcalcpowerlaw(const Vector<String>& images,
   if(ntaylor<2)
     {
       os << LogIO::SEVERE << "Please enter at-least two Taylor-coefficient images" << LogIO::POST;
-      return false;
+      return False;
     }
   else
     {
@@ -2578,7 +2577,7 @@ Bool Deconvolver::mtcalcpowerlaw(const Vector<String>& images,
   if( imtaylor0.shape() != imtaylor1.shape() )
     {
       os << LogIO::SEVERE << "Taylor-coefficient image shapes must match." << LogIO::POST;
-      return false;
+      return False;
     }
 
   // Create empty alpha image
@@ -2603,7 +2602,7 @@ Bool Deconvolver::mtcalcpowerlaw(const Vector<String>& images,
   imalpha.table().unmarkForDelete();
 
   // Make a mask for the alpha image
-  LatticeExpr<Bool> lemask(iif((imtaylor0 > specthreshold) , true, false));
+  LatticeExpr<Bool> lemask(iif((imtaylor0 > specthreshold) , True, False));
 
   createMask(lemask, imalpha);
   os << "Written Spectral Index Image : " << alphaname << LogIO::POST;
@@ -2668,19 +2667,19 @@ Bool Deconvolver::mtcalcpowerlaw(const Vector<String>& images,
 	}
     }
   
-  return true;
+  return True;
 }
 
 // This is also a copy of WBCleanImageSkyModel::createMask
 // Eventually, WBCleanImageSkyModel must use this Deconvolver version.
 Bool Deconvolver::createMask(LatticeExpr<Bool> &lemask, ImageInterface<Float> &outimage)
 {
-      ImageRegion outreg = outimage.makeMask("mask0",false,true);
+      ImageRegion outreg = outimage.makeMask("mask0",False,True);
       LCRegion& outmask=outreg.asMask();
       outmask.copyData(lemask);
-      outimage.defineRegion("mask0",outreg, RegionHandler::Masks, true);
+      outimage.defineRegion("mask0",outreg, RegionHandler::Masks, True);
       outimage.setDefaultMask("mask0");
-      return true;
+      return True;
 }
 
 

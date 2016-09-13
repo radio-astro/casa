@@ -30,7 +30,6 @@
 #include <msvis/MSVis/VisibilityIterator.h>
 #include <msvis/MSVis/SimpleSubMS.h>
 
-using namespace casacore;
 namespace casa {
 
   SimpleSubMS::SimpleSubMS(MeasurementSet& ms) : SubMS(ms){

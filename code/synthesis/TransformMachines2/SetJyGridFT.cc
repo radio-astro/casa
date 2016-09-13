@@ -77,15 +77,11 @@
 #include <omp.h>
 #endif
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
-using namespace casacore;
   //  using namespace casa::async;
 namespace refim {//# namespace for imaging refactor
 
-using namespace casacore;
 using namespace casa;
-using namespace casacore;
 using namespace casa::refim;
 
 #define NEED_UNDERSCORES
@@ -186,23 +182,23 @@ Bool SetJyGridFT::toRecord(String& error,
 			   RecordInterface& outRec, Bool withImage, const String diskimage)
 {
   if(!GridFT::toRecord(error, outRec, withImage, diskimage))
-    return false;
+    return False;
   outRec.define("freqscale", freqscale_p);
   outRec.define("scaleamp", scale_p);
-  return true;
+  return True;
 }
 Bool SetJyGridFT::fromRecord(String& error,
 			const RecordInterface& inRec)
 {
   
   if(!GridFT::fromRecord(error, inRec))
-    return false;
+    return False;
   freqscale_p.resize();
   inRec.get("freqscale", freqscale_p);
   scale_p.resize();
   inRec.get("scaleamp", scale_p);
   machineName_p="SetJyGridFT";
-  return true;
+  return True;
 }
   void SetJyGridFT::get(vi::VisBuffer2& vb, Int row){
   //Did somebody really want this version.
@@ -320,7 +316,7 @@ Bool SetJyGridFT::fromRecord(String& error,
 
   Vector<Int> rowFlags(vb.nRows());
   rowFlags=0;
-  rowFlags(vb.flagRow())=true;
+  rowFlags(vb.flagRow())=True;
   if(!usezero_p) {
     for (Int rownr=startRow; rownr<=endRow; rownr++) {
       if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) rowFlags(rownr)=1;

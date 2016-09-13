@@ -180,9 +180,9 @@ int main() {
 
 //   virtual Bool ok() const;
     {
-      AlwaysAssert(constComp.ok() == true, AipsError);
-      AlwaysAssert(gComp.ok() == true, AipsError);
-      AlwaysAssert(siComp.ok() == true, AipsError);
+      AlwaysAssert(constComp.ok() == True, AipsError);
+      AlwaysAssert(gComp.ok() == True, AipsError);
+      AlwaysAssert(siComp.ok() == True, AipsError);
     }
 //   virtual ~SkyCompRep();
 
@@ -303,7 +303,7 @@ Bool pixelReflection (const SkyCompRep& sky, const CoordinateSystem& cSys,
 */
    AlwaysAssert(allNear(pars1, pars2, tol), AipsError);
    AlwaysAssert(near(ratio,1.0), AipsError);
-   return true;
+   return True;
 }
 // Local Variables: 
 // compile-command: "gmake OPTLIB=1 tSkyCompRep"

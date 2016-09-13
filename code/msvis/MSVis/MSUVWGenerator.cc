@@ -9,7 +9,6 @@
 #include <ms/MeasurementSets/MSAntennaColumns.h>
 #include <measures/Measures/MCBaseline.h>
 
-using namespace casacore;
 namespace casa {
 
 // The UvwCoords ctor has lines for the antennas, antenna offsets, and station
@@ -283,5 +282,4 @@ Bool MSUVWGenerator::make_uvws(const Vector<Int> flds)
 //   return ignore_offsets;
 // }
 
-using namespace casacore;
 } // Ends namespace casa.

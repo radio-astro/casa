@@ -3,7 +3,6 @@
 
 #include <calanalysis/CalAnalysis/CalAnalysis.h>
 
-using namespace casacore;
 using namespace casa;
 
 // -----------------------------------------------------------------------------
@@ -32,7 +31,7 @@ int main( void ) {
 
   Vector<Int>* aoChannel = new Vector<Int> [3];
   for ( uInt s=0; s<3; s++ ) {
-    aoChannel[s].resize( 20-s-s, false );
+    aoChannel[s].resize( 20-s-s, False );
     for ( uInt c=s; c<20-s; c++ ) {
       aoChannel[s][c-s] = c;
     }

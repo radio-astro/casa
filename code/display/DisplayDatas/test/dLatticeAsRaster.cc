@@ -110,7 +110,7 @@ int main(int argc, char **argv) {
 //  Add axis labels
 
 		Record rec0, recOut;
-		rec0.define("axislabelswitch", true);
+		rec0.define("axislabelswitch", True);
 		if (isAbs) {
 			rec0.define("axislabelabsrel", "absolute");
 		} else {

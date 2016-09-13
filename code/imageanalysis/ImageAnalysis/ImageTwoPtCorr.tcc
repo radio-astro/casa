@@ -62,26 +62,26 @@ ImageTwoPtCorr<T>& ImageTwoPtCorr<T>::operator=(const ImageTwoPtCorr& other)
 
 
 template <class T> 
-void ImageTwoPtCorr<T>::autoCorrelation (casacore::ImageInterface<T>& imOut,
-                                         const casacore::ImageInterface<T>& imIn,
-                                         const casacore::IPosition& axes, 
-                                         typename casacore::LatticeTwoPtCorr<T>::Method method,
-                                         casacore::Bool progress) const
+void ImageTwoPtCorr<T>::autoCorrelation (ImageInterface<T>& imOut,
+                                         const ImageInterface<T>& imIn,
+                                         const IPosition& axes, 
+                                         typename LatticeTwoPtCorr<T>::Method method,
+                                         Bool progress) const
 {
-   AlwaysAssert(imIn.shape().nelements()==imOut.shape().nelements(), casacore::AipsError);
-   casacore::LogIO os(casacore::LogOrigin("ImageTwoPtCorr", "structureFunction(...)", WHERE));
+   AlwaysAssert(imIn.shape().nelements()==imOut.shape().nelements(), AipsError);
+   LogIO os(LogOrigin("ImageTwoPtCorr", "structureFunction(...)", WHERE));
 
 // Deal with axes
 
-   casacore::CoordinateSystem cSysIn = imIn.coordinates();
-   casacore::IPosition axes2 = setUpAxes (axes, cSysIn);
+   CoordinateSystem cSysIn = imIn.coordinates();
+   IPosition axes2 = setUpAxes (axes, cSysIn);
 
 // Compute
 
-   casacore::LatticeTwoPtCorr<T> twoPt;
+   LatticeTwoPtCorr<T> twoPt;
    twoPt.autoCorrelation (imOut, imIn, axes2, method, progress);
 
-// Overwrite output casacore::Coordinate System
+// Overwrite output Coordinate System
 
    setCoordinateSystem (imOut, imIn, axes2);
 
@@ -95,12 +95,12 @@ void ImageTwoPtCorr<T>::autoCorrelation (casacore::ImageInterface<T>& imOut,
 }
 
 template <class T> 
-void ImageTwoPtCorr<T>::autoCorrelation (casacore::ImageInterface<T>& imOut,
-                                         const casacore::ImageInterface<T>& imIn, 
-                                         typename casacore::LatticeTwoPtCorr<T>::Method method,
-                                         casacore::Bool progress) const
+void ImageTwoPtCorr<T>::autoCorrelation (ImageInterface<T>& imOut,
+                                         const ImageInterface<T>& imIn, 
+                                         typename LatticeTwoPtCorr<T>::Method method,
+                                         Bool progress) const
 {
-   casacore::IPosition axes;
+   IPosition axes;
    autoCorrelation (imOut, imIn, axes, method, progress);
 }
 
@@ -108,8 +108,8 @@ void ImageTwoPtCorr<T>::autoCorrelation (casacore::ImageInterface<T>& imOut,
 
 
 template <class T> 
-void ImageTwoPtCorr<T>::copyMiscellaneous (casacore::ImageInterface<T>& out,
-                                        const casacore::ImageInterface<T>& in) const
+void ImageTwoPtCorr<T>::copyMiscellaneous (ImageInterface<T>& out,
+                                        const ImageInterface<T>& in) const
 {
    out.setMiscInfo(in.miscInfo());
    out.setImageInfo(in.imageInfo());
@@ -117,68 +117,68 @@ void ImageTwoPtCorr<T>::copyMiscellaneous (casacore::ImageInterface<T>& out,
 }
 
 template <class T> 
-void ImageTwoPtCorr<T>::setUnit (casacore::ImageInterface<T>& im) const
+void ImageTwoPtCorr<T>::setUnit (ImageInterface<T>& im) const
 {
 
 // Set image type to undefined
 
-   casacore::ImageInfo info = im.imageInfo();
-   info.setImageType (casacore::ImageInfo::Undefined);
+   ImageInfo info = im.imageInfo();
+   info.setImageType (ImageInfo::Undefined);
    im.setImageInfo(info);
 
 // Set unit to 'count'
 
-   im.setUnits (casacore::Unit("count"));
+   im.setUnits (Unit("count"));
 }
 
 template <class T> 
-void ImageTwoPtCorr<T>::setCoordinateSystem (casacore::ImageInterface<T>& out,
-                                          const casacore::ImageInterface<T>& in,
-                                          const casacore::IPosition& axes) const
+void ImageTwoPtCorr<T>::setCoordinateSystem (ImageInterface<T>& out,
+                                          const ImageInterface<T>& in,
+                                          const IPosition& axes) const
 //
 // Set the centre of the image to be refval=0 and the reference pixel
 // 
 {
-   casacore::CoordinateSystem cSys = in.coordinates();
-   casacore::IPosition shape = out.shape();
+   CoordinateSystem cSys = in.coordinates();
+   IPosition shape = out.shape();
 //
-   casacore::Bool holdsOne;
-   if (casacore::CoordinateUtil::holdsSky (holdsOne, cSys, axes.asVector())) {
+   Bool holdsOne;
+   if (CoordinateUtil::holdsSky (holdsOne, cSys, axes.asVector())) {
 
 // Replace DC by a LC
 
-      casacore::String error;
-      casacore::Int dC;
-      casacore::Vector<casacore::Int> pixelAxes, worldAxes;
-      casacore::CoordinateUtil::findSky (error, dC, pixelAxes, worldAxes, cSys);
-      casacore::DirectionCoordinate dCoord = cSys.directionCoordinate(dC);
+      String error;
+      Int dC;
+      Vector<Int> pixelAxes, worldAxes;
+      CoordinateUtil::findSky (error, dC, pixelAxes, worldAxes, cSys);
+      DirectionCoordinate dCoord = cSys.directionCoordinate(dC);
 //
-      casacore::Vector<casacore::String> names(2);
-      names(0) = casacore::String("Lag-") + dCoord.worldAxisNames()(0);
-      names(1) = casacore::String("Lag-") + dCoord.worldAxisNames()(1);
+      Vector<String> names(2);
+      names(0) = String("Lag-") + dCoord.worldAxisNames()(0);
+      names(1) = String("Lag-") + dCoord.worldAxisNames()(1);
 //
-      casacore::Vector<casacore::String> units(dCoord.worldAxisUnits().copy());
+      Vector<String> units(dCoord.worldAxisUnits().copy());
 //
-      casacore::Vector<casacore::Double> refVal(2);
+      Vector<Double> refVal(2);
       refVal = 0.0;
 //
-      casacore::Vector<casacore::Double> inc(dCoord.increment().copy());
-      casacore::Matrix<casacore::Double> pc(2,2); 
+      Vector<Double> inc(dCoord.increment().copy());
+      Matrix<Double> pc(2,2); 
       pc= 0.0; 
       pc.diagonal() = 1.0;
 //
-      casacore::Vector<casacore::Double> refPix(2);
+      Vector<Double> refPix(2);
       refPix(0) = (shape(pixelAxes(0))-1) / 2;       // shape is odd (n = 2*lmax+1)
       refPix(1) = (shape(pixelAxes(1))-1) / 2;
 //
-      casacore::LinearCoordinate lCoord (names, units, refVal, inc, pc, refPix);
+      LinearCoordinate lCoord (names, units, refVal, inc, pc, refPix);
       cSys.replaceCoordinate (lCoord, dC);
    } else {
-      casacore::Vector<casacore::Double> refVal(cSys.referenceValue());    // Refererence 
+      Vector<Double> refVal(cSys.referenceValue());    // Refererence 
       refVal(axes(0)) = 0.0;
       refVal(axes(1)) = 0.0;
 //
-      casacore::Vector<casacore::Double> refPix(cSys.referencePixel());      
+      Vector<Double> refPix(cSys.referencePixel());      
       refPix(axes(0)) = (shape(axes(0))-1) / 2;       // shape is odd (n = 2*lmax+1)
       refPix(axes(1)) = (shape(axes(1))-1) / 2;
   }
@@ -190,21 +190,21 @@ void ImageTwoPtCorr<T>::setCoordinateSystem (casacore::ImageInterface<T>& out,
 
 
 template <class T> 
-IPosition ImageTwoPtCorr<T>::setUpAxes (const casacore::IPosition& axes, 
-                                  const casacore::CoordinateSystem& cSys) 
+IPosition ImageTwoPtCorr<T>::setUpAxes (const IPosition& axes, 
+                                  const CoordinateSystem& cSys) 
 {
-   casacore::LogIO os(casacore::LogOrigin("ImageTwoPtCorr", "setUpAxes(...)", WHERE));
-   casacore::IPosition axes2(2);
+   LogIO os(LogOrigin("ImageTwoPtCorr", "setUpAxes(...)", WHERE));
+   IPosition axes2(2);
 
 // Find the Sky
 
-   casacore::String error;
-   casacore::Int dC;
-   casacore::Vector<casacore::Int> pixelAxes, worldAxes;
-   casacore::Bool foundSky = casacore::CoordinateUtil::findSky(error, dC, pixelAxes, worldAxes, cSys);
+   String error;
+   Int dC;
+   Vector<Int> pixelAxes, worldAxes;
+   Bool foundSky = CoordinateUtil::findSky(error, dC, pixelAxes, worldAxes, cSys);
 //
    if (axes.nelements()==0) {
-      os << casacore::LogIO::NORMAL << "Selected Sky axes" << casacore::LogIO::POST;
+      os << LogIO::NORMAL << "Selected Sky axes" << LogIO::POST;
       if (foundSky) {
          axes2(0) = pixelAxes(0);
          axes2(1) = pixelAxes(1);
@@ -213,11 +213,11 @@ IPosition ImageTwoPtCorr<T>::setUpAxes (const casacore::IPosition& axes,
          axes2(1) = 1;
       }
    } else if (axes.nelements()==2) {
-      os << casacore::LogIO::NORMAL << "Selected first two axes" << casacore::LogIO::POST;
+      os << LogIO::NORMAL << "Selected first two axes" << LogIO::POST;
       axes2(0) = axes(0);
       axes2(1) = axes(1);
    } else {
-      os << "The axes argument must be of length 0 or 2" << casacore::LogIO::EXCEPTION;
+      os << "The axes argument must be of length 0 or 2" << LogIO::EXCEPTION;
    }
 
 // Make sure we have all of the sky.  We do this because it makes it
@@ -226,10 +226,10 @@ IPosition ImageTwoPtCorr<T>::setUpAxes (const casacore::IPosition& axes,
 
    if (axes.nelements()==2) {
      if (foundSky) {
-       casacore::Bool bad = (axes2(0)==pixelAxes(0) && axes2(1)!=pixelAxes(1)) ||
+       Bool bad = (axes2(0)==pixelAxes(0) && axes2(1)!=pixelAxes(1)) ||
                   (axes2(0)==pixelAxes(1) && axes2(1)!=pixelAxes(0));
        if (bad) {
-          os << "You cannot specify just one of the casacore::DirectionCoordinate (sky) axes" << casacore::LogIO::EXCEPTION;
+          os << "You cannot specify just one of the DirectionCoordinate (sky) axes" << LogIO::EXCEPTION;
        }
      }
    }
@@ -238,9 +238,9 @@ IPosition ImageTwoPtCorr<T>::setUpAxes (const casacore::IPosition& axes,
 }
 
 template <class T> 
-IPosition ImageTwoPtCorr<T>::setUpShape (const casacore::IPosition& inShape, const casacore::IPosition& axes)
+IPosition ImageTwoPtCorr<T>::setUpShape (const IPosition& inShape, const IPosition& axes)
 {
-   return casacore::LatticeTwoPtCorr<T>::setUpShape (inShape, axes);
+   return LatticeTwoPtCorr<T>::setUpShape (inShape, axes);
 }
 
 

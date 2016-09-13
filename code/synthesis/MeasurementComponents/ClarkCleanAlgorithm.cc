@@ -51,7 +51,6 @@
 
 #include <synthesis/MeasurementComponents/ClarkCleanAlgorithm.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 ClarkCleanAlgorithm::ClarkCleanAlgorithm() : model_sl_p(0), 
@@ -141,7 +140,7 @@ void ClarkCleanAlgorithm::task()
     cleaner.setHistLength(1024);
     cleaner.setMaxNumPix(32*1024);
     cleaner.solve(eqn);
-    cleaner.setChoose(false);
+    cleaner.setChoose(False);
     os << LogIO::NORMAL    // Loglevel INFO
        << "Clean used " << cleaner.numberIterations() << " iterations" 
        << " to get to a max residual of " << cleaner.threshold() 

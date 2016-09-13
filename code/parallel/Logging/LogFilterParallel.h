@@ -29,23 +29,23 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class LogFilterParallel: public casacore::LogFilter
+class LogFilterParallel: public LogFilter
 {
 
 public:
 
-	LogFilterParallel (casacore::LogMessage::Priority lowest=casacore::LogMessage::NORMAL);
+	LogFilterParallel (LogMessage::Priority lowest=LogMessage::NORMAL);
 	LogFilterParallel (const LogFilterParallel& other);
 	LogFilterParallel& operator= (const LogFilterParallel& other);
 	~LogFilterParallel();
 	LogFilterParallel* clone() const;
 
-	casacore::Bool pass(const casacore::LogMessage& message) const;
-	void filterOut(const casacore::Char *text);
+	Bool pass(const LogMessage& message) const;
+	void filterOut(const Char *text);
 
 private:
 
-	std::vector<casacore::String> filterOutVector_p;
+	std::vector<String> filterOutVector_p;
 
 };
 

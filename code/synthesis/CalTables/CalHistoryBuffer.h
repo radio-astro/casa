@@ -93,11 +93,11 @@ class CalHistoryBuffer
   // cal_history table (NYI)
   virtual void append (CalTable& /*calTable*/) {};
 
-  // casacore::Data field accessors
-  casacore::Vector<casacore::String>& calParms();
-  casacore::Vector<casacore::String>& calTables();
-  casacore::Vector<casacore::String>& calSelect();
-  casacore::Vector<casacore::String>& calNotes();
+  // Data field accessors
+  Vector<String>& calParms();
+  Vector<String>& calTables();
+  Vector<String>& calSelect();
+  Vector<String>& calNotes();
 
  protected:
   // Factory method to create a columns accessor object of the appropriate type
@@ -108,26 +108,26 @@ class CalHistoryBuffer
   virtual CalHistoryColumns* calHistCol() {return calHistCol_p;};
 
   // Is the buffer connected to an underlying iterator ?
-  casacore::Bool connectedToIter() {return connectedToIter_p;};
+  Bool connectedToIter() {return connectedToIter_p;};
 
  private:
-  // true if connected to underlying iterator
-  casacore::Bool connectedToIter_p;
+  // True if connected to underlying iterator
+  Bool connectedToIter_p;
 
   // Ptr to cal_history columns accessor
   CalHistoryColumns* calHistCol_p;
 
   // Buffer fields
-  casacore::Vector<casacore::String> calParms_p;
-  casacore::Vector<casacore::String> calTables_p;
-  casacore::Vector<casacore::String> calSelect_p;
-  casacore::Vector<casacore::String> calNotes_p;
+  Vector<String> calParms_p;
+  Vector<String> calTables_p;
+  Vector<String> calSelect_p;
+  Vector<String> calNotes_p;
 
   // Buffer field status flags
-  casacore::Bool calParmsOK_p;
-  casacore::Bool calTablesOK_p;
-  casacore::Bool calSelectOK_p;
-  casacore::Bool calNotesOK_p;
+  Bool calParmsOK_p;
+  Bool calTablesOK_p;
+  Bool calSelectOK_p;
+  Bool calNotesOK_p;
 };
 
 

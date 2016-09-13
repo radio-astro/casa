@@ -31,7 +31,6 @@
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
 #include <plotms/Data/MSCache.h>
 
-using namespace casacore;
 namespace casa {
 
 ActionCacheRelease::ActionCacheRelease( Client* client )
@@ -100,5 +99,4 @@ bool ActionCacheRelease::loadAxes() {
 ActionCacheRelease::~ActionCacheRelease() {
 }
 
-using namespace casacore;
 } /* namespace casa */

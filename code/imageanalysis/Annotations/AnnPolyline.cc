@@ -19,7 +19,6 @@
 
 #include <images/Regions/WCPolygon.h>
 
-using namespace casacore;
 namespace casa {
 
 AnnPolyline::AnnPolyline(

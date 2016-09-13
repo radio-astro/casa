@@ -88,7 +88,7 @@ public:
     bool pageGridChanged( int rows, int cols, bool override );
     
     //Return the current size of a multi-plot page grid.
-    void getGridSize( casacore::Int& rows, casacore::Int& cols );
+    void getGridSize( Int& rows, Int& cols );
 
     // Returns all or one of the plot parameters.
     // <group>
@@ -108,11 +108,11 @@ public:
     // Clears out all plots and canvases.
     void clearPlotsAndCanvases( bool clearCanvases = true );
     void clearCanvas(int row, int col );
-    bool findEmptySpot( casacore::Int& row, casacore::Int& col );
+    bool findEmptySpot( Int& row, Int& col );
 
     void unassignPlots();
 
-    vector<casacore::String> getFiles() const;
+    vector<String> getFiles() const;
 
     //Returns the parameters that control the page display (grid rows & cols).
     PlotMSParameters getPageParameters();

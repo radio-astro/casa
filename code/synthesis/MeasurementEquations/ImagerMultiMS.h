@@ -41,97 +41,97 @@ namespace casa {
       ImagerMultiMS();
       //Copy the sub ms to memory useful when imaging only 
       //a few channels 
-      virtual casacore::Bool setDataToMemory(const casacore::String& msname, const casacore::String& mode, 
-				   const casacore::Vector<casacore::Int>& nchan, 
-				   const casacore::Vector<casacore::Int>& start,
-				   const casacore::Vector<casacore::Int>& step,
-				   const casacore::Vector<casacore::Int>& spectralwindowids,
-				   const casacore::Vector<casacore::Int>& fieldids,
-				   const casacore::String& msSelect,
-				   const casacore::String& timerng,
-				   const casacore::String& fieldnames,
-				   const casacore::Vector<casacore::Int>& antIndex,
-				   const casacore::String& antnames,
-				   const casacore::String& spwstring,
-				   const casacore::String& uvdist,
-				   const casacore::String& scan,
-                                   const casacore::String& intent="", 
-                                   const casacore::String& obs="");  // select by obs ID
+      virtual Bool setDataToMemory(const String& msname, const String& mode, 
+				   const Vector<Int>& nchan, 
+				   const Vector<Int>& start,
+				   const Vector<Int>& step,
+				   const Vector<Int>& spectralwindowids,
+				   const Vector<Int>& fieldids,
+				   const String& msSelect,
+				   const String& timerng,
+				   const String& fieldnames,
+				   const Vector<Int>& antIndex,
+				   const String& antnames,
+				   const String& spwstring,
+				   const String& uvdist,
+				   const String& scan,
+                                   const String& intent="", 
+                                   const String& obs="");  // select by obs ID
       // Set the data selection on for each ms seperately
-      virtual  casacore::Bool setDataPerMS(const casacore::String& msname, const casacore::String& mode, 
-				 const casacore::Vector<casacore::Int>& nchan, 
-				 const casacore::Vector<casacore::Int>& start,
-				 const casacore::Vector<casacore::Int>& step,
-				 const casacore::Vector<casacore::Int>& spectralwindowids,
-				 const casacore::Vector<casacore::Int>& fieldids,
-				 const casacore::String& msSelect="",
-				 const casacore::String& timerng="",
-				 const casacore::String& fieldnames="",
-				 const casacore::Vector<casacore::Int>& antIndex=casacore::Vector<casacore::Int>(),
-				 const casacore::String& antnames="",
-				 const casacore::String& spwstring="",
-				 const casacore::String& uvdist="",
-                                 const casacore::String& scan="",
-                                 const casacore::String& intent="",
-                                 const casacore::String& obs="",
-                                 const casacore::Bool useModel=false,
-				 const casacore::Bool msreadonly=false);
+      virtual  Bool setDataPerMS(const String& msname, const String& mode, 
+				 const Vector<Int>& nchan, 
+				 const Vector<Int>& start,
+				 const Vector<Int>& step,
+				 const Vector<Int>& spectralwindowids,
+				 const Vector<Int>& fieldids,
+				 const String& msSelect="",
+				 const String& timerng="",
+				 const String& fieldnames="",
+				 const Vector<Int>& antIndex=Vector<Int>(),
+				 const String& antnames="",
+				 const String& spwstring="",
+				 const String& uvdist="",
+                                 const String& scan="",
+                                 const String& intent="",
+                                 const String& obs="",
+                                 const Bool useModel=False,
+				 const Bool msreadonly=False);
 
 
        // Set image construction parameters
-      virtual casacore::Bool setimage(const casacore::Int nx, const casacore::Int ny,
-		const casacore::Quantity& cellx, const casacore::Quantity& celly,
-		const casacore::String& stokes,
-                casacore::Bool doShift,
-		const casacore::MDirection& phaseCenter, 
-                const casacore::Quantity& shiftx, const casacore::Quantity& shifty,
-		const casacore::String& mode, const casacore::Int nchan,
-                const casacore::Int start, const casacore::Int step,
-		const casacore::MRadialVelocity& mStart, const casacore::MRadialVelocity& mStep,
-		const casacore::Vector<casacore::Int>& spectralwindowids, const casacore::Int fieldid,
-		const casacore::Int facets, const casacore::Quantity& distance);
+      virtual Bool setimage(const Int nx, const Int ny,
+		const Quantity& cellx, const Quantity& celly,
+		const String& stokes,
+                Bool doShift,
+		const MDirection& phaseCenter, 
+                const Quantity& shiftx, const Quantity& shifty,
+		const String& mode, const Int nchan,
+                const Int start, const Int step,
+		const MRadialVelocity& mStart, const MRadialVelocity& mStep,
+		const Vector<Int>& spectralwindowids, const Int fieldid,
+		const Int facets, const Quantity& distance);
   
 
-      casacore::Bool selectDataChannel();
+      Bool selectDataChannel();
       
       // Lock the ms and its subtables
-      virtual casacore::Bool lock();
+      virtual Bool lock();
       
       // Unlock the ms and its subtables
-      virtual casacore::Bool unlock();
+      virtual Bool unlock();
 
       //open sub tables
-      virtual casacore::Bool openSubTables();
+      virtual Bool openSubTables();
       
       // @copydoc Imager::mapExtent()
-      virtual casacore::Bool mapExtent(const casacore::String &referenceFrame, const casacore::String &movingSource,
-              const casacore::String &pointingColumn, casacore::Vector<casacore::Double> &center, casacore::Vector<casacore::Double> &blc,
-              casacore::Vector<casacore::Double> &trc, casacore::Vector<casacore::Double> &extent);
+      virtual Bool mapExtent(const String &referenceFrame, const String &movingSource,
+              const String &pointingColumn, Vector<Double> &center, Vector<Double> &blc,
+              Vector<Double> &trc, Vector<Double> &extent);
 
     protected:
       
-      casacore::Block<casacore::Vector<casacore::Int> > blockNChan_p;
-      casacore::Block<casacore::Vector<casacore::Int> > blockStart_p;
-      casacore::Block<casacore::Vector<casacore::Int> > blockStep_p;
-      casacore::Block<casacore::Vector<casacore::Int> > blockSpw_p;
-      casacore::Block<casacore::MeasurementSet> blockMSSel_p;
-      casacore::Bool setDataOnThisMS(casacore::MeasurementSet& ms, const casacore::String& mode="none", 
-			   const casacore::Vector<casacore::Int>& nchan=casacore::Vector<casacore::Int>(0), 
-			   const casacore::Vector<casacore::Int>& start=casacore::Vector<casacore::Int>(1,0),
-			   const casacore::Vector<casacore::Int>& step=casacore::Vector<casacore::Int>(1,1),
-			   const casacore::Vector<casacore::Int>& spectralwindowids=casacore::Vector<casacore::Int>(0),
-			   const casacore::Vector<casacore::Int>& fieldids=casacore::Vector<casacore::Int>(0),
-			   const casacore::String& msSelect="",
-			   const casacore::String& timerng="",
-			   const casacore::String& fieldnames="",
-			   const casacore::Vector<casacore::Int>& antIndex=casacore::Vector<casacore::Int>(),
-			   const casacore::String& antnames="",
-			   const casacore::String& spwstring="",
-			   const casacore::String& uvdist="",
-			   const casacore::String& scan="",
-                           const casacore::String& intent="",
-                           const casacore::String& obs="");
-      casacore::Bool dataSet_p;
+      Block<Vector<Int> > blockNChan_p;
+      Block<Vector<Int> > blockStart_p;
+      Block<Vector<Int> > blockStep_p;
+      Block<Vector<Int> > blockSpw_p;
+      Block<MeasurementSet> blockMSSel_p;
+      Bool setDataOnThisMS(MeasurementSet& ms, const String& mode="none", 
+			   const Vector<Int>& nchan=Vector<Int>(0), 
+			   const Vector<Int>& start=Vector<Int>(1,0),
+			   const Vector<Int>& step=Vector<Int>(1,1),
+			   const Vector<Int>& spectralwindowids=Vector<Int>(0),
+			   const Vector<Int>& fieldids=Vector<Int>(0),
+			   const String& msSelect="",
+			   const String& timerng="",
+			   const String& fieldnames="",
+			   const Vector<Int>& antIndex=Vector<Int>(),
+			   const String& antnames="",
+			   const String& spwstring="",
+			   const String& uvdist="",
+			   const String& scan="",
+                           const String& intent="",
+                           const String& obs="");
+      Bool dataSet_p;
 
       
     };

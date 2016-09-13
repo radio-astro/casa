@@ -67,7 +67,7 @@ private:
 class VpTestListener : public TextTestProgressListener {
 public:
 
-    VpTestListener (bool verbose = false);
+    VpTestListener (bool verbose = False);
     void addFailure (const TestFailure & failure);
     void endTest (Test * test);
     void endTestRun (Test * test, TestResult * eventManager);
@@ -154,7 +154,7 @@ public:
 
 protected:
 
-    void testSweep (casacore::Int nChunkSweeps);
+    void testSweep (Int nChunkSweeps);
 };
 
 class VpData_Test : public CppUnit::TestFixture {
@@ -177,10 +177,10 @@ class VpNoop : public VisibilityProcessor {
 
 public:
 
-    VpNoop (const casacore::String & name,
-            const vector<casacore::String> & inputNames,
-            const vector<casacore::String> & outputNames,
-            casacore::Int nChunkSweeps)
+    VpNoop (const String & name,
+            const vector<String> & inputNames,
+            const vector<String> & outputNames,
+            Int nChunkSweeps)
     : VisibilityProcessor (name, inputNames, outputNames),
       nChunkSweeps_p (nChunkSweeps)
     {}
@@ -207,7 +207,7 @@ public:
 
 private:
 
-    casacore::Int nChunkSweeps_p;
+    Int nChunkSweeps_p;
 };
 
 

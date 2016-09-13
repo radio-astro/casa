@@ -69,8 +69,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <example>
 // <srcblock>
-//    PBMath1DAiry airyPB( casacore::Quantity(24.5,"m"), casacore::Quantity(2.5,"m"),
-//                         casacore::Quantity(2*0.8564,"deg"), casacore::Quantity(1.0,"GHz") );
+//    PBMath1DAiry airyPB( Quantity(24.5,"m"), Quantity(2.5,"m"),
+//                         Quantity(2*0.8564,"deg"), Quantity(1.0,"GHz") );
 //    airyPB.applyPB( inImage, outImage, pointingDir);
 // </srcblock>
 // </example>
@@ -83,8 +83,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </motivation>
 //
 // <todo asof="98/10/21">
-// <li> constructor from a casacore::MS beam subtable
-// <li> flush to casacore::MS beam subtable
+// <li> constructor from a MS beam subtable
+// <li> flush to MS beam subtable
 // </todo>
 
  
@@ -96,19 +96,19 @@ public:
   // Instantiation from arguments; 
   // referenceFreq is used to scale maximumradius.
   // default = no squint
-  // squint is the offset from pointing center if the casacore::Stokes R beam
+  // squint is the offset from pointing center if the Stokes R beam
   // useSymmetricBeam forces a fit to the squinted beam
-  PBMath1DAiry(casacore::Quantity dishDiam, casacore::Quantity blockedDiam,
-	       casacore::Quantity maxRad, casacore::Quantity refFreq, 
-	       BeamSquint squint=BeamSquint(casacore::MDirection(casacore::Quantity(0.0, "deg"),
-						       casacore::Quantity(0.0, "deg"),
-						       casacore::MDirection::Ref(casacore::MDirection::AZEL)),
-					    casacore::Quantity(1.0, "GHz")),
-	       casacore::Bool useSymmetricBeam=false);
+  PBMath1DAiry(Quantity dishDiam, Quantity blockedDiam,
+	       Quantity maxRad, Quantity refFreq, 
+	       BeamSquint squint=BeamSquint(MDirection(Quantity(0.0, "deg"),
+						       Quantity(0.0, "deg"),
+						       MDirection::Ref(MDirection::AZEL)),
+					    Quantity(1.0, "GHz")),
+	       Bool useSymmetricBeam=False);
 
   // Instantiation from a row in the Beam subTable
-  //PBMath1DAiry(const casacore::Table& BeamSubTable, casacore::Int row, 
-  //	       casacore::Bool useSymmetricBeam=false);
+  //PBMath1DAiry(const Table& BeamSubTable, Int row, 
+  //	       Bool useSymmetricBeam=False);
 
   // Copy constructor
   // PBMath1DAiry(const PBMath1DAiry& other);
@@ -117,7 +117,7 @@ public:
   PBMath1DAiry& operator=(const PBMath1DAiry& other);
 
   // Clone the object
-  //  casacore::CountedPtr<PBMathInterface> clone();
+  //  CountedPtr<PBMathInterface> clone();
 
   //destructor
   ~PBMath1DAiry();  
@@ -126,10 +126,10 @@ public:
   PBMathInterface::PBClass whichPBClass() { return PBMathInterface::AIRY; }  
   
   // Flush the construction parameters to disk
-  // casacore::Bool flushToTable(casacore::Table& beamSubTable, casacore::Int iRow);
+  // Bool flushToTable(Table& beamSubTable, Int iRow);
 
   // Summarize the construction data for this primary beam
-  void summary(casacore::Int nValues=0);
+  void summary(Int nValues=0);
 
 protected:
 
@@ -138,8 +138,8 @@ protected:
 
 private:    
 
-  casacore::Quantity dishDiam_p;
-  casacore::Quantity blockedDiam_p;
+  Quantity dishDiam_p;
+  Quantity blockedDiam_p;
 
 };
 

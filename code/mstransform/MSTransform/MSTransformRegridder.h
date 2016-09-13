@@ -26,10 +26,10 @@
 // Logging
 #include <casa/Logging/LogIO.h>
 
-// casacore::Coordinate systems
+// Coordinate systems
 #include <measures/Measures/MeasTable.h>
 
-// casacore::MS handling
+// MS handling
 #include <ms/MeasurementSets.h>
 
 // To use ostringstream
@@ -51,104 +51,104 @@ public:
 	~MSTransformRegridder();
 
 	// Make one spectral window from all SPWs given by the SPW Ids vector
-	static casacore::Bool combineSpws(	casacore::LogIO& os,
-								casacore::String msName,
-								const casacore::Vector<casacore::Int>& spwids, // casacore::Vector<casacore::Int>(1,-1) means: use all SPWs
-								casacore::Vector<casacore::Double>& newCHAN_FREQ, // Will return the grid of the resulting SPW
-								casacore::Vector<casacore::Double>& newCHAN_WIDTH,
-								std::vector<std::vector<casacore::Int> >& averageWhichChan,
-								std::vector<std::vector<casacore::Int> >& averageWhichSPW,
-								std::vector<std::vector<casacore::Double> >& averageChanFrac,
-								casacore::Bool verbose = false);
+	static Bool combineSpws(	LogIO& os,
+								String msName,
+								const Vector<Int>& spwids, // Vector<Int>(1,-1) means: use all SPWs
+								Vector<Double>& newCHAN_FREQ, // Will return the grid of the resulting SPW
+								Vector<Double>& newCHAN_WIDTH,
+								std::vector<std::vector<Int> >& averageWhichChan,
+								std::vector<std::vector<Int> >& averageWhichSPW,
+								std::vector<std::vector<Double> >& averageChanFrac,
+								Bool verbose = False);
 
 	// Make one spectral window from all SPWs given by the SPW Ids vector
-	static casacore::Bool combineSpwsCore(	casacore::LogIO& os,
-									casacore::MeasurementSet& ms_p,
-									const casacore::Vector<casacore::Int>& spwids, // casacore::Vector<casacore::Int>(1,-1) means: use all SPWs
-									casacore::Vector<casacore::Double>& newCHAN_FREQ, // Will return the grid of the resulting SPW
-									casacore::Vector<casacore::Double>& newCHAN_WIDTH,
-									std::vector<std::vector<casacore::Int> >& averageWhichChan,
-									std::vector<std::vector<casacore::Int> >& averageWhichSPW,
-									std::vector<std::vector<casacore::Double> >& averageChanFrac,
-									casacore::Bool verbose = false);
+	static Bool combineSpwsCore(	LogIO& os,
+									MeasurementSet& ms_p,
+									const Vector<Int>& spwids, // Vector<Int>(1,-1) means: use all SPWs
+									Vector<Double>& newCHAN_FREQ, // Will return the grid of the resulting SPW
+									Vector<Double>& newCHAN_WIDTH,
+									std::vector<std::vector<Int> >& averageWhichChan,
+									std::vector<std::vector<Int> >& averageWhichSPW,
+									std::vector<std::vector<Double> >& averageChanFrac,
+									Bool verbose = False);
 
 	// A wrapper for regridChanBounds() which takes the user interface type re-gridding parameters
 	// The ready-made grid is returned in newCHAN_FREQ and newCHAN_WIDTH
-	static casacore::Bool calcChanFreqs(	casacore::LogIO& os,
+	static Bool calcChanFreqs(	LogIO& os,
 								// Output
-								casacore::Vector<casacore::Double>& newCHAN_FREQ,
-								casacore::Vector<casacore::Double>& newCHAN_WIDTH,
-								casacore::Double& weightScale,
-								// casacore::Input (original grid)
-								const casacore::Vector<casacore::Double>& oldCHAN_FREQ,
-								const casacore::Vector<casacore::Double>& oldCHAN_WIDTH,
+								Vector<Double>& newCHAN_FREQ,
+								Vector<Double>& newCHAN_WIDTH,
+								Double& weightScale,
+								// Input (original grid)
+								const Vector<Double>& oldCHAN_FREQ,
+								const Vector<Double>& oldCHAN_WIDTH,
 								// Re-gridding parameters
-								const casacore::MDirection  phaseCenter,
-								const casacore::MFrequency::Types theOldRefFrame,
-								const casacore::MEpoch theObsTime,
-								const casacore::MPosition mObsPos,
-								const casacore::String& mode,
+								const MDirection  phaseCenter,
+								const MFrequency::Types theOldRefFrame,
+								const MEpoch theObsTime,
+								const MPosition mObsPos,
+								const String& mode,
 								const int nchan,
-								const casacore::String& start,
-								const casacore::String& width,
-								const casacore::String& restfreq,
-								const casacore::String& outframe,
-								const casacore::String& veltype,
-								const casacore::Bool verbose=false,
+								const String& start,
+								const String& width,
+								const String& restfreq,
+								const String& outframe,
+								const String& veltype,
+								const Bool verbose=False,
 								// Additional radial velocity shift to apply, used e.g. when outframe=="SOURCE"
-								const casacore::MRadialVelocity mRV=casacore::MRadialVelocity() );
+								const MRadialVelocity mRV=MRadialVelocity() );
 
 	  // Helper function for handling the re-gridding parameter user input
-	  static casacore::Bool convertGridPars(casacore::LogIO& os,
-				      	  	  	  const casacore::String& mode,
+	  static Bool convertGridPars(LogIO& os,
+				      	  	  	  const String& mode,
 				      	  	  	  const int nchan,
-				      	  	  	  const casacore::String& start,
-				      	  	  	  const casacore::String& width,
-				      	  	  	  const casacore::String& interp,
-				      	  	  	  const casacore::String& restfreq,
-				      	  	  	  const casacore::String& outframe,
-				      	  	  	  const casacore::String& veltype,
-				      	  	  	  casacore::String& t_mode,
-				      	  	  	  casacore::String& t_outframe,
-				      	  	  	  casacore::String& t_regridQuantity,
-				      	  	  	  casacore::Double& t_restfreq,
-				      	  	  	  casacore::String& t_regridInterpMeth,
-				      	  	  	  casacore::Double& t_cstart,
-				      	  	  	  casacore::Double& t_bandwidth,
-				      	  	  	  casacore::Double& t_cwidth,
-				      	  	  	  casacore::Bool& t_centerIsStart,
-				      	  	  	  casacore::Bool& t_startIsEnd,
-				      	  	  	  casacore::Int& t_nchan,
-				      	  	  	  casacore::Int& t_width,
-				      	  	  	  casacore::Int& t_start);
+				      	  	  	  const String& start,
+				      	  	  	  const String& width,
+				      	  	  	  const String& interp,
+				      	  	  	  const String& restfreq,
+				      	  	  	  const String& outframe,
+				      	  	  	  const String& veltype,
+				      	  	  	  String& t_mode,
+				      	  	  	  String& t_outframe,
+				      	  	  	  String& t_regridQuantity,
+				      	  	  	  Double& t_restfreq,
+				      	  	  	  String& t_regridInterpMeth,
+				      	  	  	  Double& t_cstart,
+				      	  	  	  Double& t_bandwidth,
+				      	  	  	  Double& t_cwidth,
+				      	  	  	  Bool& t_centerIsStart,
+				      	  	  	  Bool& t_startIsEnd,
+				      	  	  	  Int& t_nchan,
+				      	  	  	  Int& t_width,
+				      	  	  	  Int& t_start);
 
 	  // Calculate the final new channel boundaries from the re-regridding parameters and
 	  // the old channel boundaries (already transformed to the desired reference frame).
-	  // Returns false if input parameters were invalid and no useful boundaries could be created
-	  static casacore::Bool regridChanBounds(casacore::Vector<casacore::Double>& newChanLoBound,
-				       	   	   	   casacore::Vector<casacore::Double>& newChanHiBound,
-				       	   	   	   const casacore::Double regridCenter,
-				       	   	   	   const casacore::Double regridBandwidth,
-				       	   	   	   const casacore::Double regridChanWidth,
-				       	   	   	   const casacore::Double regridVeloRestfrq,
-				       	   	   	   const casacore::String regridQuant,
-				       	   	   	   const casacore::Vector<casacore::Double>& transNewXin,
-				       	   	   	   const casacore::Vector<casacore::Double>& transCHAN_WIDTH,
-				       	   	   	   casacore::String& message, // message to the user, especially in case of error
-				       	   	   	   const casacore::Bool centerIsStart=false, // if true, the parameter regridCenter specifies the start
-				       	   	   	   const casacore::Bool startIsEnd=false, // if true, and centerIsStart is true, regridCenter specifies the upper end in frequency
-				       	   	   	   const casacore::Int nchan=0, // if != 0 : used instead of regridBandwidth, -1 means use all channels
-				       	   	   	   const casacore::Int width=0, // if >0 and regridQuant=="freq": used instead of regridChanWidth
-				       	   	   	   const casacore::Int start=-1); // if >=0 and regridQuant=="freq": used instead of regridCenter
+	  // Returns False if input parameters were invalid and no useful boundaries could be created
+	  static Bool regridChanBounds(Vector<Double>& newChanLoBound,
+				       	   	   	   Vector<Double>& newChanHiBound,
+				       	   	   	   const Double regridCenter,
+				       	   	   	   const Double regridBandwidth,
+				       	   	   	   const Double regridChanWidth,
+				       	   	   	   const Double regridVeloRestfrq,
+				       	   	   	   const String regridQuant,
+				       	   	   	   const Vector<Double>& transNewXin,
+				       	   	   	   const Vector<Double>& transCHAN_WIDTH,
+				       	   	   	   String& message, // message to the user, especially in case of error
+				       	   	   	   const Bool centerIsStart=False, // if true, the parameter regridCenter specifies the start
+				       	   	   	   const Bool startIsEnd=False, // if true, and centerIsStart is true, regridCenter specifies the upper end in frequency
+				       	   	   	   const Int nchan=0, // if != 0 : used instead of regridBandwidth, -1 means use all channels
+				       	   	   	   const Int width=0, // if >0 and regridQuant=="freq": used instead of regridChanWidth
+				       	   	   	   const Int start=-1); // if >=0 and regridQuant=="freq": used instead of regridCenter
 
 	  // The following inline convenience methods for regridSpw bypass the whole CASA measure system
 	  // because when they are used, they can assume that the frame stays the same and the units are OK
-	  static casacore::lDouble vrad(const casacore::lDouble freq, const casacore::lDouble rest){ return (casacore::C::c * (1. - freq/rest)); };
-	  static casacore::lDouble vopt(const casacore::lDouble freq, const casacore::lDouble rest){ return (casacore::C::c *(rest/freq - 1.)); };
-	  static casacore::lDouble lambda(const casacore::lDouble freq){ return (casacore::C::c/freq); };
-	  static casacore::lDouble freq_from_vrad(const casacore::lDouble vrad, const casacore::lDouble rest){ return (rest * (1. - vrad/casacore::C::c)); };
-	  static casacore::lDouble freq_from_vopt(const casacore::lDouble vopt, const casacore::lDouble rest){ return (rest / (1. + vopt/casacore::C::c)); };
-	  static casacore::lDouble freq_from_lambda(const casacore::lDouble lambda){ return (casacore::C::c/lambda); };
+	  static lDouble vrad(const lDouble freq, const lDouble rest){ return (C::c * (1. - freq/rest)); };
+	  static lDouble vopt(const lDouble freq, const lDouble rest){ return (C::c *(rest/freq - 1.)); };
+	  static lDouble lambda(const lDouble freq){ return (C::c/freq); };
+	  static lDouble freq_from_vrad(const lDouble vrad, const lDouble rest){ return (rest * (1. - vrad/C::c)); };
+	  static lDouble freq_from_vopt(const lDouble vopt, const lDouble rest){ return (rest / (1. + vopt/C::c)); };
+	  static lDouble freq_from_lambda(const lDouble lambda){ return (C::c/lambda); };
 };
 
 } //# NAMESPACE CASA - END

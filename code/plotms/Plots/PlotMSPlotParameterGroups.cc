@@ -28,7 +28,6 @@
 
 #include <plotms/PlotMS/PlotMSLabelFormat.h>
 
-using namespace casacore;
 namespace casa
 {
 

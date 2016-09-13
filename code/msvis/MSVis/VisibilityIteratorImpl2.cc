@@ -65,11 +65,9 @@
 #include <vector>
 
 using std::make_pair;
-using namespace casacore;
 using namespace casa::vi;
 using namespace std;
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 namespace vi {
@@ -118,17 +116,17 @@ public:
     operator== (const ChannelSubslicer & other) const
     {
         if (other.nelements() != nelements()){
-            return false;
+            return False;
         }
 
         for (uInt i = 0; i < nelements(); i++){
 
             if (! slicesEqual (subslicer_p [i], other.subslicer_p [i])){
-                return false;
+                return False;
             }
         }
 
-        return true;
+        return True;
     }
 
     Bool
@@ -833,7 +831,7 @@ VisibilityIteratorImpl2::getColumnRows (const ROArrayColumn<T> & column,
     column.getColumnCells (rowBounds_p.subchunkRows_p,
                            columnSlicer,
                            array,
-                           true);
+                           True);
 }
 
 
@@ -877,11 +875,11 @@ VisibilityIteratorImpl2::getColumnRowsMatrix (const ROArrayColumn<T> & column,
 
         ColumnSlicer columnSlicer (shape, dataSlicers, destinationSlicers);
 
-        column.getColumnCells (rowBounds_p.subchunkRows_p, columnSlicer, array, true);
+        column.getColumnCells (rowBounds_p.subchunkRows_p, columnSlicer, array, True);
     }
     else{
 
-        column.getColumnCells (rowBounds_p.subchunkRows_p, array, true);
+        column.getColumnCells (rowBounds_p.subchunkRows_p, array, True);
     }
 }
 
@@ -890,7 +888,7 @@ void
 VisibilityIteratorImpl2::getColumnRows (const ROScalarColumn<T> & column,
                                             Vector<T> & array) const
 {
-    column.getColumnCells (rowBounds_p.subchunkRows_p, array, true);
+    column.getColumnCells (rowBounds_p.subchunkRows_p, array, True);
 }
 
 template <typename T>
@@ -938,13 +936,13 @@ VisibilityIteratorImpl2::VisibilityIteratorImpl2 (const Block<const MeasurementS
   channelSelector_p (0),
   channelSelectorCache_p (new ChannelSelectorCache ()),
   columns_p (),
-  floatDataFound_p (false),
+  floatDataFound_p (False),
   frequencySelections_p (0),
   measurementFrame_p (VisBuffer2::FrameNotSpecified),
   modelDataGenerator_p (VisModelDataI::create2()),
-  more_p (false),
+  more_p (False),
   msIndex_p (0),
-  msIterAtOrigin_p (false),
+  msIterAtOrigin_p (False),
   msIter_p ( ),
   nCorrelations_p (-1),
   nRowBlocking_p (0),
@@ -1044,7 +1042,7 @@ VisibilityIteratorImpl2::initialize (const Block<const MeasurementSet *> &mss)
                           sortColumns_p.getColumnIds(),
                           timeInterval_p,
                           sortColumns_p.shouldAddDefaultColumns(),
-                          false);
+                          False);
 
    subtableColumns_p = new SubtableColumns (msIter_p);
 
@@ -1053,7 +1051,7 @@ VisibilityIteratorImpl2::initialize (const Block<const MeasurementSet *> &mss)
     // channels in all windows.
 
     casacore::AipsrcValue<Bool>::find (autoTileCacheSizing_p,
-                                       VisibilityIterator2::getAipsRcBase () + ".AutoTileCacheSizing", false);
+                                       VisibilityIterator2::getAipsRcBase () + ".AutoTileCacheSizing", False);
 }
 
 VisibilityIteratorImpl2::~VisibilityIteratorImpl2 ()
@@ -1073,9 +1071,9 @@ VisibilityIteratorImpl2::Cache::Cache()
   feedpaTime_p (-1),
   hourang_p (0),
   hourangTime_p (-1),
-  msHasFlagCategory_p(false),
-  msHasWeightSpectrum_p (false),
-  msHasSigmaSpectrum_p (false),
+  msHasFlagCategory_p(False),
+  msHasWeightSpectrum_p (False),
+  msHasSigmaSpectrum_p (False),
   parang0_p (0),
   parang0Time_p (-1),
   parangTime_p (-1)
@@ -1136,7 +1134,7 @@ VisibilityIteratorImpl2::getFrequencies (Double time, Int frameOfReference,
 
     MFrequency::Convert fromObserved =
         makeFrequencyConverter (time, spectralWindowId, frameOfReference,
-                                false, Unit(String("Hz")));
+                                False, Unit(String("Hz")));
 
     // For each selected channel, get its observed frequency and convert it into
     // the frequency in the requested frame.  Put the result into the
@@ -1183,7 +1181,7 @@ VisibilityIteratorImpl2::getCorrelationTypesDefined () const
 
     Vector<Int> typesAsInt;
     Int polarizationId = channelSelector_p->getPolarizationId();
-    subtableColumns_p->polarization ().corrType ().get (polarizationId, typesAsInt, true);
+    subtableColumns_p->polarization ().corrType ().get (polarizationId, typesAsInt, True);
     Vector<Stokes::StokesTypes> correlationTypesDefined (typesAsInt.size());
 
     for (uInt i = 0; i < typesAsInt.size(); i ++){
@@ -1464,7 +1462,7 @@ VisibilityIteratorImpl2::existsColumn (VisBufferComponent2 id) const
         break;
 
     default:
-        result = true; // required columns
+        result = True; // required columns
         break;
     }
 
@@ -1486,7 +1484,7 @@ VisibilityIteratorImpl2::allSpectralWindowsSelected (Vector<Int> & selectedWindo
   Vector<Int> channelIncrement; // ignored
 
   std::tie (selectedWindows, nChannels, firstChannels, channelIncrement) =
-      getChannelInformation (false); // info generation should not use time as input
+      getChannelInformation (False); // info generation should not use time as input
 }
 
 void
@@ -1504,7 +1502,7 @@ VisibilityIteratorImpl2::origin ()
     throwIfPendingChanges ();
 
     rowBounds_p.subchunkBegin_p = 0; // begin at the beginning
-    more_p = true;
+    more_p = True;
     subchunk_p.resetSubChunk ();
 
     configureNewSubchunk ();
@@ -1513,7 +1511,7 @@ VisibilityIteratorImpl2::origin ()
 void
 VisibilityIteratorImpl2::originChunks ()
 {
-    originChunks (false);
+    originChunks (False);
 }
 
 void
@@ -1557,7 +1555,7 @@ VisibilityIteratorImpl2::applyPendingChanges ()
 
         }
 
-        msIterAtOrigin_p = false; // force rewind since window selections may have changed
+        msIterAtOrigin_p = False; // force rewind since window selections may have changed
     }
 }
 
@@ -1571,7 +1569,7 @@ VisibilityIteratorImpl2::originChunks (Bool forceRewind)
     if (! msIterAtOrigin_p || forceRewind) {
 
         msIter_p->origin ();
-        msIterAtOrigin_p = true;
+        msIterAtOrigin_p = True;
 
         positionMsIterToASelectedSpectralWindow ();
 
@@ -1668,7 +1666,7 @@ VisibilityIteratorImpl2::nextChunk ()
 
     positionMsIterToASelectedSpectralWindow ();
 
-    msIterAtOrigin_p = false;
+    msIterAtOrigin_p = False;
 
     // If the MS Iterator was successfully advanced then
     // set up for a new chunk
@@ -1857,7 +1855,7 @@ VisibilityIteratorImpl2::getPolarizationId (Int spectralWindowId, Int msId) cons
         }
     }
 
-    ThrowIf (true, String::format ("Could not find entry for spectral window id"
+    ThrowIf (True, String::format ("Could not find entry for spectral window id"
             "%d in data_description in MS #%d", spectralWindowId, msId));
 
     return -1; // Can't get here so make the compiler happy
@@ -1945,7 +1943,7 @@ VisibilityIteratorImpl2::makeChannelSelectorF (const FrequencySelection & select
 
     MFrequency::Convert convertToObservedFrame =
         makeFrequencyConverter (time, spectralWindowId, selection.getFrameOfReference(),
-                                true, Unit("Hz"));
+                                True, Unit("Hz"));
 
     // Convert each frequency selection into a Slice (interval) of channels.
 
@@ -2145,11 +2143,11 @@ VisibilityIteratorImpl2::getSpectralWindowChannels (Int msId, Int spectralWindow
 
     const ROArrayColumn<Double>& frequenciesColumn = spectralWindow.chanFreq();
     Vector<Double> frequencies;
-    frequenciesColumn.get (spectralWindowId, frequencies, true);
+    frequenciesColumn.get (spectralWindowId, frequencies, True);
 
     const ROArrayColumn<Double>& widthsColumn = spectralWindow.chanWidth();
     Vector<Double> widths;
-    widthsColumn.get (spectralWindowId, widths, true);
+    widthsColumn.get (spectralWindowId, widths, True);
 
     Assert (! frequencies.empty());
     Assert (frequencies.size() == widths.size());
@@ -2326,7 +2324,7 @@ VisibilityIteratorImpl2::setMsColumnCacheSizes (const MeasurementSet & partMs,
     // For the column in the provided MS, loop over the hypercubes and
     // set the cache size appropriately.
 
-    ROTiledStManAccessor accessor (partMs, column, true);
+    ROTiledStManAccessor accessor (partMs, column, True);
     uInt nHypercubes = accessor.nhypercubes();
 
     for (uInt cube = 0; cube != nHypercubes; cube ++){
@@ -2372,7 +2370,7 @@ Bool
 VisibilityIteratorImpl2::usesTiledDataManager (const String & columnName,
                                                   const MeasurementSet & theMs) const
 {
-    Bool noData = false;
+    Bool noData = False;
 
     // Have to do something special about weight_spectrum as it tend to exist but
     // has no valid data.
@@ -2413,10 +2411,10 @@ VisibilityIteratorImpl2::usesTiledDataManager (const String & columnName,
              (columnName == MS::columnName (MS::UVW) &&
               (columns_p.uvw_p.isNull () || ! columns_p.uvw_p.isDefined (0)));
 
-    Bool usesTiles = false;
+    Bool usesTiles = False;
 
     if (! noData){
-        String dataManType = RODataManAccessor (theMs, columnName, true).dataManagerType ();
+        String dataManType = RODataManAccessor (theMs, columnName, True).dataManagerType ();
 
         usesTiles = dataManType.contains ("Tiled");
     }
@@ -2513,7 +2511,7 @@ VisibilityIteratorImpl2::corrType (Vector<Int> & corrTypes) const
 {
     Int polId = msIter_p->polarizationId ();
 
-    subtableColumns_p->polarization ().corrType ().get (polId, corrTypes, true);
+    subtableColumns_p->polarization ().corrType ().get (polId, corrTypes, True);
 }
 
 void
@@ -2565,7 +2563,7 @@ VisibilityIteratorImpl2::flagCategoryExists() const
 void
 VisibilityIteratorImpl2::flagCategory (Array<Bool> & /*flagCategories*/) const
 {
-    ThrowIf (true, "The flag_category column is not supported.");
+    ThrowIf (True, "The flag_category column is not supported.");
 //    if (columns_p.flagCategory_p.isNull () ||
 //        ! columns_p.flagCategory_p.isDefined (0)) { // It often is.
 //
@@ -2690,7 +2688,7 @@ VisibilityIteratorImpl2::floatData (Cube<Float> & fcube) const
 void
 VisibilityIteratorImpl2::uvw (Matrix<Double> & uvwmat) const
 {
-    getColumnRowsMatrix (columns_p.uvw_p, uvwmat, false);
+    getColumnRowsMatrix (columns_p.uvw_p, uvwmat, False);
 }
 
 // Fill in parallactic angle.
@@ -2829,13 +2827,13 @@ VisibilityIteratorImpl2::hourang (Double time) const
 void
 VisibilityIteratorImpl2::sigma (Matrix<Float> & sigma) const
 {
-    getColumnRowsMatrix (columns_p.sigma_p, sigma, true);
+    getColumnRowsMatrix (columns_p.sigma_p, sigma, True);
 }
 
 void
 VisibilityIteratorImpl2::weight (Matrix<Float> & wt) const
 {
-    getColumnRowsMatrix (columns_p.weight_p, wt, true);
+    getColumnRowsMatrix (columns_p.weight_p, wt, True);
 }
 
 Bool
@@ -3065,7 +3063,7 @@ VisibilityIteratorImpl2::slurp () const
                     String dm_type;
                     dmInfo.subRecord (i).get ("TYPE", dm_type);
 
-                    Bool can_exceed_nr_buckets = false;
+                    Bool can_exceed_nr_buckets = False;
                     uInt num_buckets = msIter_p->ms ().nrow ();
                         // One bucket is at least one row, so this is enough
 
@@ -3271,7 +3269,7 @@ VisibilityIteratorImpl2::writeModel(const RecordInterface& rec, Bool iscomponent
 
   // Make sure  we have the right size
 
-  fields.resize(nFields, true);
+  fields.resize(nFields, True);
 
   Vector<Int> selectedWindows;
   Vector<Int> nChannels;
@@ -3279,7 +3277,7 @@ VisibilityIteratorImpl2::writeModel(const RecordInterface& rec, Bool iscomponent
   Vector<Int> channelIncrement;
 
   std::tie (selectedWindows, nChannels, firstChannels, channelIncrement) =
-      getChannelInformation (true);
+      getChannelInformation (True);
 
   CountedPtr<VisModelDataI> visModelData = VisModelDataI::create();
 
@@ -3481,7 +3479,7 @@ VisibilityIteratorImpl2::initializeBackWriters ()
 
 VisibilityIteratorImpl2::PendingChanges::PendingChanges ()
 : frequencySelections_p (0),
-  frequencySelectionsPending_p (false),
+  frequencySelectionsPending_p (False),
   interval_p (Empty),
   nRowBlocking_p (Empty)
 {}
@@ -3523,7 +3521,7 @@ VisibilityIteratorImpl2::PendingChanges::popFrequencySelections () // yields own
     Bool wasPending = frequencySelectionsPending_p;
 
     frequencySelections_p = 0;
-    frequencySelectionsPending_p = false;
+    frequencySelectionsPending_p = False;
 
     return make_pair (wasPending, result);
 }
@@ -3554,7 +3552,7 @@ VisibilityIteratorImpl2::PendingChanges::setFrequencySelections (FrequencySelect
     Assert (! frequencySelectionsPending_p);
 
     frequencySelections_p = fs;
-    frequencySelectionsPending_p = true;
+    frequencySelectionsPending_p = True;
 }
 
 void

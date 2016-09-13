@@ -72,9 +72,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// parameter, and whether it is editable, can also be
 		// given.  The default and initial color is always the
 		// foreground color.
-		DParameterColorChoice(const casacore::String name, const casacore::String description,
-		                      const casacore::String help, const casacore::String context = "",
-		                      const casacore::Bool editable = true);
+		DParameterColorChoice(const String name, const String description,
+		                      const String help, const String context = "",
+		                      const Bool editable = True);
 
 		// Copy constructor using copy semantics.
 		DParameterColorChoice(const DParameterColorChoice &other);

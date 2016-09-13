@@ -92,7 +92,7 @@ ATM_NAMESPACE_BEGIN
  *  #include <sstream>
  * @endcode
  *
- * casacore::Format the message like the following example where x is a variable of
+ * Format the message like the following example where x is a variable of
  * miscellaneous type. See following web links:
  * @li ostringstream class: http://www.cplusplus.com/reference/iostream/ostringstream
  * @li ostream::operator<< operator: http://www.cplusplus.com/reference/iostream/ostream/operator%3C%3C.html

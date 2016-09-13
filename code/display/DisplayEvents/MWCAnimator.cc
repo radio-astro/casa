@@ -36,7 +36,6 @@
 #include <display/Display/Attribute.h>
 #include <display/DisplayEvents/MWCAnimator.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Constructor which makes an isolated MWCAnimator.
@@ -171,11 +170,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		localMWCHLI.toStart();
 		while (!localMWCHLI.atEnd()) {
 			if (&mholder == localMWCHLI.getRight()) {
-				return true;
+				return True;
 			}
 			localMWCHLI++;
 		}
-		return false;
+		return False;
 	}
 
 } //# NAMESPACE CASA - END

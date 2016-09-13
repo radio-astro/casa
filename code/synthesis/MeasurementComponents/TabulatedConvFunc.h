@@ -37,15 +37,15 @@ namespace casa{
   {
   public:
     TabulatedConvFunc(): ConvolutionFunction(),cacheSizeInPixels_p(-1)   {};
-    TabulatedConvFunc(casacore::Int n): ConvolutionFunction(n),cacheSizeInPixels_p(-1) {};
+    TabulatedConvFunc(Int n): ConvolutionFunction(n),cacheSizeInPixels_p(-1) {};
     ~TabulatedConvFunc() {};
 
-    virtual void setMaximumCacheSize(const casacore::Long howManyRealPixels=-1) {cacheSizeInPixels_p=howManyRealPixels;}
-    virtual casacore::Long maximumCacheSize() {return cacheSizeInPixels_p;}
-    virtual void initTables(casacore::Int ){};
+    virtual void setMaximumCacheSize(const Long howManyRealPixels=-1) {cacheSizeInPixels_p=howManyRealPixels;}
+    virtual Long maximumCacheSize() {return cacheSizeInPixels_p;}
+    virtual void initTables(Int ){};
     virtual void prepareConvFunction(const VisBuffer& /*vb*/, CFStore& /*cfs*/){};
   private:
-    casacore::Long cacheSizeInPixels_p;
+    Long cacheSizeInPixels_p;
   };
 
 };

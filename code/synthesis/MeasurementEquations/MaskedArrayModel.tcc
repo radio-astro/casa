@@ -35,40 +35,40 @@ template<class T> MaskedArrayModel<T>::
 MaskedArrayModel(){};
 
 template<class T> MaskedArrayModel<T>::
-MaskedArrayModel(const casacore::MaskedArray<T> & model):
+MaskedArrayModel(const MaskedArray<T> & model):
   theModel(model.copy()) {}; 
 
 template<class T> MaskedArrayModel<T>::
-MaskedArrayModel(const casacore::Array<T> & model){
-  casacore::LogicalArray mask(model.shape());
-  mask = false;
+MaskedArrayModel(const Array<T> & model){
+  LogicalArray mask(model.shape());
+  mask = False;
   theModel.setData(model,mask);
 }; 
 
 template<class T> void MaskedArrayModel<T>::
-getModel(casacore::Array<T> & model) const {
+getModel(Array<T> & model) const {
   model = theModel.getArray().copy();
 };
 
 template<class T> void MaskedArrayModel<T>::
-getModel(casacore::MaskedArray<T> & model) const {
-  model.setData(theModel.getArray(), theModel.getMask(), true);
+getModel(MaskedArray<T> & model) const {
+  model.setData(theModel.getArray(), theModel.getMask(), True);
 };
 
-template<class T>  casacore::MaskedArray<T> MaskedArrayModel<T>::
+template<class T>  MaskedArray<T> MaskedArrayModel<T>::
 getModel() const {
-  return casacore::MaskedArray<T>(theModel, true);
+  return MaskedArray<T>(theModel, True);
 };
 
 template<class T> void MaskedArrayModel<T>::
-setModel(const casacore::MaskedArray<T> & model){
+setModel(const MaskedArray<T> & model){
   theModel.setData(model);
 };
 
 template<class T> void MaskedArrayModel<T>::
-setModel(const casacore::Array<T> & model){
-  casacore::LogicalArray mask(model.shape());
-  mask = false;
+setModel(const Array<T> & model){
+  LogicalArray mask(model.shape());
+  mask = False;
   theModel.setData(model, mask);
 };
 

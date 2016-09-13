@@ -26,7 +26,6 @@
 #include "CanvasModeContextMenu.h"
 #include <display/QtPlotter/QtCanvas.qo.h>
 #include <QMouseEvent>
-using namespace casacore;
 namespace casa {
 
 	CanvasModeContextMenu::CanvasModeContextMenu():
@@ -62,5 +61,4 @@ namespace casa {
 		// TODO Auto-generated destructor stub
 	}
 
-using namespace casacore;
 } /* namespace casa */

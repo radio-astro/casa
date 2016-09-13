@@ -28,7 +28,6 @@
 #include <msvis/MSVis/statistics/Vi2ChunkUVRangeDataProvider.h>
 #include <msvis/MSVis/VisBufferComponents2.h>
 
-using namespace casacore;
 namespace casa {
 
 Vi2ChunkUVRangeDataProvider::Vi2ChunkUVRangeDataProvider(
@@ -45,5 +44,4 @@ Vi2ChunkUVRangeDataProvider::dataArray() {
 	return vi2->getVisBuffer()->uvw();
 }
 
-using namespace casacore;
 } // namespace casa

@@ -22,16 +22,16 @@ public:
     PhaseShiftTvi (ViImplementation2 * inputVi, double dXArcseconds,
                    double dYArcseconds);
 
-    virtual void visibilityCorrected (casacore::Cube<casacore::Complex> & vis) const;
-    virtual void visibilityModel (casacore::Cube<casacore::Complex> & vis) const;
-    virtual void visibilityObserved (casacore::Cube<casacore::Complex> & vis) const;
+    virtual void visibilityCorrected (Cube<Complex> & vis) const;
+    virtual void visibilityModel (Cube<Complex> & vis) const;
+    virtual void visibilityObserved (Cube<Complex> & vis) const;
 
 
 protected:
 
     // Rotate visibility phase for phase center offsets (arcsecs)
 
-    void phaseCenterShift (casacore::Cube<casacore::Complex> & cube) const;
+    void phaseCenterShift (Cube<Complex> & cube) const;
 
 private:
 

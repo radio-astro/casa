@@ -76,30 +76,30 @@ class PlotMSVBAverager
 public:
   // Construct from the number of antennas, the averaging interval and
   // the pre-normalization flag
-  PlotMSVBAverager(casacore::Int nAnt);
+  PlotMSVBAverager(Int nAnt);
 
   // Null destructor
   ~PlotMSVBAverager();
 
   // Set up baseline averaging
-  inline void setBlnAveraging(casacore::Bool doBln) { 
-    blnAve_p = doBln; if (doBln) setAntAveraging(false); };
+  inline void setBlnAveraging(Bool doBln) { 
+    blnAve_p = doBln; if (doBln) setAntAveraging(False); };
   // Set up antenna averaging
-  inline void setAntAveraging(casacore::Bool doAnt) { 
-    antAve_p = doAnt; if (doAnt) setBlnAveraging(false); };
+  inline void setAntAveraging(Bool doAnt) { 
+    antAve_p = doAnt; if (doAnt) setBlnAveraging(False); };
   // Set scalar averaging flag 
-  inline void setScalarAve(casacore::Bool doScalar) { 
+  inline void setScalarAve(Bool doScalar) { 
     //    cout << "Using " << (doScalar ? "SCALAR" : "VECTOR") << " averaging." << endl;
     inCoh_p = doScalar; };
   
   // Control which data column to average
   inline void setNoData() {doVC_p = doMVC_p = doCVC_p = doFC_p = doWC_p = 
-				doUVW_p = false;};
-  inline void setDoVC()  {doVC_p  = doWC_p = true;};
-  inline void setDoMVC() {doMVC_p = doWC_p = true;};
-  inline void setDoCVC() {doCVC_p = doWC_p = true;};
-  inline void setDoFC()  {doFC_p  = doWC_p = true;};
-  inline void setDoUVW() {doUVW_p = true;};
+				doUVW_p = False;};
+  inline void setDoVC()  {doVC_p  = doWC_p = True;};
+  inline void setDoMVC() {doMVC_p = doWC_p = True;};
+  inline void setDoCVC() {doCVC_p = doWC_p = True;};
+  inline void setDoFC()  {doFC_p  = doWC_p = True;};
+  inline void setDoUVW() {doUVW_p = True;};
 
   // Accumulate a VisBuffer
   inline void accumulate (vi::VisBuffer2& vb) { antAve_p ? antAccumulate(vb) : simpAccumulate(vb); };
@@ -117,7 +117,7 @@ private:
   PlotMSVBAverager (const PlotMSVBAverager&);
 
   // Diagnostic printing level
-  casacore::Int& prtlev() { return prtlev_; };
+  Int& prtlev() { return prtlev_; };
 
   // Initialize the next accumulation interval
   void initialize(vi::VisBuffer2& vb);
@@ -130,76 +130,76 @@ private:
   void verifyCrosshands(vi::VisBuffer2& vb);
 
   // Hash function to return the row offset for an interferometer (ant1, ant2)
-  casacore::Int baseline(const casacore::Int& ant1, const casacore::Int& ant2);
+  Int baseline(const Int& ant1, const Int& ant2);
 
   // Convert r/i to a/p
-  void convertToAP(casacore::Cube<casacore::Complex>& d);
+  void convertToAP(Cube<Complex>& d);
 
   // fill vector that is resized larger
-  void fillIds(casacore::Int nrows);
+  void fillIds(Int nrows);
 
   // Number of antennas, correlations, and channels
-  casacore::Int nAnt_p, nCorr_p, nChan_p, nBlnMax_p;
+  Int nAnt_p, nCorr_p, nChan_p, nBlnMax_p;
 
   // Weights in input VBs are chan-independent
-  casacore::Bool chanIndepWt_p;
+  Bool chanIndepWt_p;
 
-  // Validation by baseline (if false, no attempt to accumulate this baseline)
-  casacore::Vector<casacore::Bool> blnOK_p;
+  // Validation by baseline (if False, no attempt to accumulate this baseline)
+  Vector<Bool> blnOK_p;
 
   // Are we averaging baselines together?
-  casacore::Bool blnAve_p;
+  Bool blnAve_p;
 
   // Are we averaging antennas together?
-  casacore::Bool antAve_p;
+  Bool antAve_p;
 
   // Are we incoherently (scalar) averaging?
-  casacore::Bool inCoh_p;
+  Bool inCoh_p;
 
   // Accumulation helpers...
-  casacore::Double timeRef_p;
-  casacore::Double minTime_p;
-  casacore::Double maxTime_p;
-  casacore::Double aveTime_p;
-  casacore::Double aveInterval_p;
-  casacore::Vector<casacore::Double> blnWtSum_p;
-  casacore::Double vbWtSum_p;
-  casacore::Int aveScan_p;
+  Double timeRef_p;
+  Double minTime_p;
+  Double maxTime_p;
+  Double aveTime_p;
+  Double aveInterval_p;
+  Vector<Double> blnWtSum_p;
+  Double vbWtSum_p;
+  Int aveScan_p;
 
   // Optional averaging triggers
-  casacore::Bool doVC_p, doMVC_p, doCVC_p, doFC_p, doUVW_p, doWC_p;
+  Bool doVC_p, doMVC_p, doCVC_p, doFC_p, doUVW_p, doWC_p;
 
   // Accumulation buffer
   vi::VisBuffer2* avBuf_p;
 
   // Keep track of initialization state
-  casacore::Bool initialized_p;
+  Bool initialized_p;
 
   // Correlation list for cross-hand swapping
-  casacore::Vector<casacore::Int> jcor_p;
+  Vector<Int> jcor_p;
   
   // Diagnostic print level
-  casacore::Int prtlev_;
+  Int prtlev_;
 
     // Mutable arrays, set in avBuf_p when finalized
-    casacore::Cube<casacore::Complex> avgVisCube_;
-    casacore::Cube<casacore::Complex> avgModelCube_;
-    casacore::Cube<casacore::Complex> avgCorrectedCube_;
-    casacore::Cube<casacore::Float> avgFloatCube_;
-    casacore::Cube<casacore::Bool> avgFlagCube_;
-    casacore::Vector<casacore::Bool> avgFlagRow_;
-    casacore::Cube<casacore::Float> avgWeight_;
-    casacore::Matrix<casacore::Double> avgUvw_;
-    casacore::Vector<casacore::Int> avgAntenna1_;
-    casacore::Vector<casacore::Int> avgAntenna2_;
-    casacore::Vector<casacore::Double> avgTime_;
-    casacore::Vector<casacore::Double> avgTimeInterval_;
-    casacore::Vector<casacore::Int> avgScan_;
+    Cube<Complex> avgVisCube_;
+    Cube<Complex> avgModelCube_;
+    Cube<Complex> avgCorrectedCube_;
+    Cube<Float> avgFloatCube_;
+    Cube<Bool> avgFlagCube_;
+    Vector<Bool> avgFlagRow_;
+    Cube<Float> avgWeight_;
+    Matrix<Double> avgUvw_;
+    Vector<Int> avgAntenna1_;
+    Vector<Int> avgAntenna2_;
+    Vector<Double> avgTime_;
+    Vector<Double> avgTimeInterval_;
+    Vector<Int> avgScan_;
     // Need to resize these in final avBuf
-    casacore::Vector<casacore::Int> fieldid_;
-    casacore::Vector<casacore::Int> spw_;
-    casacore::Vector<casacore::Int> obsid_;
-    casacore::Vector<casacore::Int> stateid_;
+    Vector<Int> fieldid_;
+    Vector<Int> spw_;
+    Vector<Int> obsid_;
+    Vector<Int> stateid_;
 };
 
 

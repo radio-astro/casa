@@ -30,18 +30,14 @@
 #include <casa/BasicSL/Complex.h>
 #include <components/ComponentModels/TwoSidedShape.h>
 
-namespace casacore{
+namespace casa { //# NAMESPACE CASA - BEGIN
 
+//# Forward Declarations
 class MDirection;
 class MVAngle;
 template <class Qtype> class Quantum;
 template <class T> class Matrix;
 template <class T> class Vector;
-}
-
-namespace casa { //# NAMESPACE CASA - BEGIN
-
-//# Forward Declarations
 
 // <summary>A limb-darkened disk model for the spatial distribution of emission</summary>
 
@@ -55,8 +51,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </prerequisite>
 //
 // <etymology>
-//#! Except when it is obvious (e.g., "casacore::Array") explain how the class name
-//#! expresses the role of this class.  Example: casacore::IPosition is short for
+//#! Except when it is obvious (e.g., "Array") explain how the class name
+//#! expresses the role of this class.  Example: IPosition is short for
 //#! "Integral Position" - a specialized integer vector for specifying
 //#! array dimensions and indices.
 // </etymology>
@@ -91,7 +87,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </motivation>
 //
 // <todo asof="yyyy/mm/dd">
-//#! A casacore::List of bugs, limitations, extensions or planned refinements.
+//#! A List of bugs, limitations, extensions or planned refinements.
 //#! The programmer should fill in a date in the "asof" field, which
 //#! will usually be the date at which the class is submitted for review.
 //#! If, during the review, new "todo" items come up, then the "asof"
@@ -119,15 +115,15 @@ public:
   LimbDarkenedDiskShape();
 
   //<group>
-  LimbDarkenedDiskShape(const casacore::MDirection& direction,
-            const casacore::Quantum<casacore::Double>& majorAxis,
-            const casacore::Quantum<casacore::Double>& minorAxis,
-            const casacore::Quantum<casacore::Double>& positionAngle,
-            const casacore::Float& n);
-  LimbDarkenedDiskShape(const casacore::MDirection& direction, const casacore::Quantum<casacore::Double>& width,
-            const casacore::Double axialRatio,
-            const casacore::Quantum<casacore::Double>& positionAngle,
-            const casacore::Float& n);
+  LimbDarkenedDiskShape(const MDirection& direction,
+            const Quantum<Double>& majorAxis,
+            const Quantum<Double>& minorAxis,
+            const Quantum<Double>& positionAngle,
+            const Float& n);
+  LimbDarkenedDiskShape(const MDirection& direction, const Quantum<Double>& width,
+            const Double axialRatio,
+            const Quantum<Double>& positionAngle,
+            const Float& n);
   // </group>
 
   // The copy constructor 
@@ -146,35 +142,35 @@ public:
 
   // use diskshape ones?
   //<group>
-  virtual void setWidthInRad(const casacore::Double majorAxis,
-                             const casacore::Double minorAxis,
-                             const casacore::Double positionAngle);
-  virtual casacore::Double majorAxisInRad() const;
-  virtual casacore::Double minorAxisInRad() const;
-  virtual casacore::Double positionAngleInRad() const;
-  virtual casacore::Float getAttnFactor() const;
+  virtual void setWidthInRad(const Double majorAxis,
+                             const Double minorAxis,
+                             const Double positionAngle);
+  virtual Double majorAxisInRad() const;
+  virtual Double minorAxisInRad() const;
+  virtual Double positionAngleInRad() const;
+  virtual Float getAttnFactor() const;
   //set n factor in darkening equation, \f$I=I_{0}(1-(\frac{r}{R})^{2})^{\frac{n}{2}}\f$
-  virtual void setAttnFactor(const casacore::Float attnFactor);  
-  virtual casacore::Vector<casacore::Double> optParameters() const;
-  virtual void setOptParameters(const casacore::Vector<casacore::Double>& newOptParms);
+  virtual void setAttnFactor(const Float attnFactor);  
+  virtual Vector<Double> optParameters() const;
+  virtual void setOptParameters(const Vector<Double>& newOptParms);
   //</group>
 
   // Calculate the proportion of the flux that is in a pixel of specified size
   // centered in the specified direction. The returned value will always be
   // between zero and one (inclusive).
-  virtual casacore::Double sample(const casacore::MDirection& direction,
-                        const casacore::MVAngle& pixelLatSize,
-                        const casacore::MVAngle& pixelLongSize) const;
+  virtual Double sample(const MDirection& direction,
+                        const MVAngle& pixelLatSize,
+                        const MVAngle& pixelLongSize) const;
 
 
   // Same as the previous function except that many directions can be sampled
   // at once. The reference frame and pixel size must be the same for all the
   // specified directions.
-  virtual void sample(casacore::Vector<casacore::Double>& scale,
-                      const casacore::Vector<casacore::MDirection::MVType>& directions,
-                      const casacore::MDirection::Ref& refFrame,
-                      const casacore::MVAngle& pixelLatSize,
-                      const casacore::MVAngle& pixelLongSize) const;
+  virtual void sample(Vector<Double>& scale,
+                      const Vector<MDirection::MVType>& directions,
+                      const MDirection::Ref& refFrame,
+                      const MVAngle& pixelLatSize,
+                      const MVAngle& pixelLongSize) const;
 
   // Return the Fourier transform of the component at the specified point in
   // the spatial frequency domain. The point is specified by a 3 element vector
@@ -186,53 +182,53 @@ public:
   // The reference position for the transform is the direction of the
   // component. As this component is symmetric about this point the transform
   // is always a real value.
-  virtual casacore::DComplex visibility(const casacore::Vector<casacore::Double>& uvw,
-                              const casacore::Double& frequency) const;
+  virtual DComplex visibility(const Vector<Double>& uvw,
+                              const Double& frequency) const;
 
 
   // Same as the previous function except that many (u,v,w) points can be
-  // sampled at once. The uvw casacore::Matrix must have a first dimension of three, and
+  // sampled at once. The uvw Matrix must have a first dimension of three, and
   // a second dimension that is the same as the length of the scale
   // Vector. Otherwise and exception is thrown (when compiled in debug mode).
-  virtual void visibility(casacore::Vector<casacore::DComplex>& scale, const casacore::Matrix<casacore::Double>& uvw,
-                          const casacore::Double& frequency) const;
+  virtual void visibility(Vector<DComplex>& scale, const Matrix<Double>& uvw,
+                          const Double& frequency) const;
 
   //same as above except with many frequencies
-  virtual void visibility(casacore::Matrix<casacore::DComplex>& scale, const casacore::Matrix<casacore::Double>& uvw,
-                          const casacore::Vector<casacore::Double>& frequency) const;
+  virtual void visibility(Matrix<DComplex>& scale, const Matrix<Double>& uvw,
+                          const Vector<Double>& frequency) const;
 
   // Return a pointer to a copy of this object upcast to a ComponentShape
   // object. The class that uses this function is responsible for deleting the
   // pointer. This is used to implement a virtual copy constructor.
   virtual ComponentShape* clone() const;
 
-  // casacore::Function which checks the internal data of this class for correct
-  // dimensionality and consistent values. Returns true if everything is fine
-  // otherwise returns false.
-  virtual casacore::Bool ok() const;
+  // Function which checks the internal data of this class for correct
+  // dimensionality and consistent values. Returns True if everything is fine
+  // otherwise returns False.
+  virtual Bool ok() const;
 
   // return a pointer to this object.
   virtual const ComponentShape* getPtr() const;
 
-  virtual casacore::String sizeToString() const;
+  virtual String sizeToString() const;
 
 private:
-  casacore::Double calcSample(const casacore::MDirection::MVType& compDirValue,
-                    const casacore::MDirection::MVType& dirVal,
-                    const casacore::Double majRad, const casacore::Double minRad,
-                    const casacore::Double pixValue) const;
+  Double calcSample(const MDirection::MVType& compDirValue,
+                    const MDirection::MVType& dirVal,
+                    const Double majRad, const Double minRad,
+                    const Double pixValue) const;
 
-  casacore::Double calcVis(casacore::Double u, casacore::Double v, const casacore::Double factor) const;
-  static void rotateVis(casacore::Double& u, casacore::Double& v,
-                        const casacore::Double cpa, const casacore::Double spa);
+  Double calcVis(Double u, Double v, const Double factor) const;
+  static void rotateVis(Double& u, Double& v,
+                        const Double cpa, const Double spa);
 
   //# The parameters of the limb-darkened disk
   // <group>
-  casacore::Double itsMajValue;
-  casacore::Double itsMinValue;
-  casacore::Double itsPaValue;
-  casacore::Double itsHeight;
-  casacore::Float  itsAttnFactor;  
+  Double itsMajValue;
+  Double itsMinValue;
+  Double itsPaValue;
+  Double itsHeight;
+  Float  itsAttnFactor;  
   // </group>
 };
 

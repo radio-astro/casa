@@ -79,16 +79,16 @@ class MJonesMRec : public CalMainRecord
    ~MJonesMRec() {};
 
    // Construct from an existing record
-   MJonesMRec (const casacore::Record& inpRec);
+   MJonesMRec (const Record& inpRec);
 
    // Field accessors
    // a) define
-   void defineAntenna2 (const casacore::Int& antenna2);
-   void defineFeed2 (const casacore::Int& feed2);
+   void defineAntenna2 (const Int& antenna2);
+   void defineFeed2 (const Int& feed2);
 
    // b) get
-   void getAntenna2 (casacore::Int& antenna2);
-   void getFeed2 (casacore::Int& feed2);
+   void getAntenna2 (Int& antenna2);
+   void getFeed2 (Int& feed2);
 
  };
 

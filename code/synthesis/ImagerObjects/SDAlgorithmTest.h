@@ -59,34 +59,34 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   protected:
     
     // Local functions to be overloaded by various algorithm deconvolvers.
-    virtual void takeOneStep( casacore::Float loopgain, casacore::Int cycleNiter, casacore::Float cycleThreshold, casacore::Float &peakresidual, casacore::Float &modelflux, casacore::Int& iterdone );
-    virtual void initializeDeconvolver( casacore::Float &peakresidual, casacore::Float &modelflux );
+    virtual void takeOneStep( Float loopgain, Int cycleNiter, Float cycleThreshold, Float &peakresidual, Float &modelflux, Int& iterdone );
+    virtual void initializeDeconvolver( Float &peakresidual, Float &modelflux );
     virtual void finalizeDeconvolver();
-    virtual void queryDesiredShape(casacore::Bool &onechan, casacore::Bool &onepol); // , nImageFacets.
+    virtual void queryDesiredShape(Bool &onechan, Bool &onepol); // , nImageFacets.
     //virtual void restorePlane();
     
     // ....
 
-    //    casacore::Bool findMaxAbs(const casacore::Matrix<casacore::Float>& lattice,casacore::Float& maxAbs,casacore::IPosition& posMaxAbs);
+    //    Bool findMaxAbs(const Matrix<Float>& lattice,Float& maxAbs,IPosition& posMaxAbs);
 
     void calculatePatchBoundaries();
-    void makeBoxesSameSize(casacore::IPosition& blc1, casacore::IPosition& trc1, casacore::IPosition &blc2, casacore::IPosition& trc2);
+    void makeBoxesSameSize(IPosition& blc1, IPosition& trc1, IPosition &blc2, IPosition& trc2);
 
 
     /*
-    void findNextComponent( casacore::Float loopgain );
+    void findNextComponent( Float loopgain );
     void updateModel();
     void updateResidual();
     */
 
-    casacore::Array<casacore::Float> itsMatResidual, itsMatModel, itsMatPsf;
+    Array<Float> itsMatResidual, itsMatModel, itsMatPsf;
 
-    casacore::IPosition itsMaxPos;
-    casacore::Float itsPeakResidual;
-    casacore::Float itsModelFlux;
+    IPosition itsMaxPos;
+    Float itsPeakResidual;
+    Float itsModelFlux;
 
     //    IPositions for patch boundaries.
-    casacore::IPosition itsBlc, itsTrc, itsBlcPsf, itsTrcPsf;
+    IPosition itsBlc, itsTrc, itsBlcPsf, itsTrcPsf;
     
   };
 

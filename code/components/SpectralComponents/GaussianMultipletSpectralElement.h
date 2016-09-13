@@ -64,12 +64,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // center offsets, line amplitude ratios, and/or line width ratios can
 // be specified between a single reference line in the multiplet and
 // other (non-reference) lines in the multiplet. The constructor
-// takes a casacore::Vector of GaussianSpectralElements which describes the estimates
+// takes a Vector of GaussianSpectralElements which describes the estimates
 // of the n Gaussians in the multiplet. These objects themselves are not
 // used in the fitting, but are used only to create the function that describes
-// the multiplet. The first element in this casacore::Vector represents the reference line
+// the multiplet. The first element in this Vector represents the reference line
 // to which parameters of the other lines are constrained. In addition, the
-// constructor takes an n-1 x 3 casacore::Matrix<casacore::Double> describing the fixed relationships
+// constructor takes an n-1 x 3 Matrix<Double> describing the fixed relationships
 // between the reference line and the other lines in the multiplet. Each ith row
 // describes the fixed relationship(s) between the (i+1)th and the zeroth
 // (reference) Gaussian. The first element of each row describes the ratio of
@@ -101,11 +101,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // // reference, but it still must be specified in the constructor and must be
 // // non-zero or an exception will be thrown.
 // GaussianSpectralElement first(1, 40, 17);
-// casacore::Vector<GaussianSpectralElement> pair(2);
+// Vector<GaussianSpectralElement> pair(2);
 // pair[0] = reference;
 // pair[1] = first;
 // // initialize constraints matrix to have nothing constrained (all values 0)
-// casacore::Matrix<casacore::Double> fixedRel(1, 3, 0);
+// Matrix<Double> fixedRel(1, 3, 0);
 // // Set the ratio of amplitudes between the first and reference (zeroth) line
 // // to be 0.6.
 // fixedRel[0][0] = 0.6
@@ -126,7 +126,7 @@ public:
 	// Gaussian parameter.
 	GaussianMultipletSpectralElement(
 		const vector<GaussianSpectralElement>& estimates,
-		const casacore::Matrix<casacore::Double>& fixedRelationships
+		const Matrix<Double>& fixedRelationships
 	);
 
 	// copy semantics
@@ -143,7 +143,7 @@ public:
 		const GaussianMultipletSpectralElement& other
 	);
 
-	casacore::Bool operator==(
+	Bool operator==(
 		const GaussianMultipletSpectralElement& other
 	) const;
 
@@ -151,7 +151,7 @@ public:
 	const vector<GaussianSpectralElement>& getGaussians() const;
 
 	// get the constraints matrix
-	const casacore::Matrix<casacore::Double>& getConstraints() const;
+	const Matrix<Double>& getConstraints() const;
 
 	//<group>
 	// These methods must be public because the architecture of
@@ -159,24 +159,24 @@ public:
 	// must be accessible by fitters. However, it is strongly
 	// recommended that other classes not call these methods for
 	// object configuration but rather set them implicitly at
-	// construction via the casacore::Vector<GaussianSpectralElement>
+	// construction via the Vector<GaussianSpectralElement>
 	// passed to the constructor.
-	void set(const casacore::Vector<casacore::Double>& param);
+	void set(const Vector<Double>& param);
 
-	void setError(const casacore::Vector<casacore::Double> &err);
+	void setError(const Vector<Double> &err);
 
-	void fix(const casacore::Vector<casacore::Bool>& fix);
+	void fix(const Vector<Bool>& fix);
 	// </group>
 	// Save to a record.
-	casacore::Bool toRecord(casacore::RecordInterface& out) const;
+	Bool toRecord(RecordInterface& out) const;
 
 private:
 	vector<GaussianSpectralElement> _gaussians;
-	casacore::Matrix<casacore::Double> _constraints;
-	casacore::Matrix<casacore::uInt> _paramIndices;
+	Matrix<Double> _constraints;
+	Matrix<uInt> _paramIndices;
 };
 
-std::ostream &operator<<(std::ostream &os, const GaussianMultipletSpectralElement &elem);
+ostream &operator<<(ostream &os, const GaussianMultipletSpectralElement &elem);
 
 } //# NAMESPACE CASA - END
 

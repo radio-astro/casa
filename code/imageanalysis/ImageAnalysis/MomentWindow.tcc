@@ -47,10 +47,10 @@ namespace casa {
 // Derived class MomentWindow
 
 template <class T>
-MomentWindow<T>::MomentWindow(shared_ptr<casacore::Lattice<T>> pAncilliaryLattice,
+MomentWindow<T>::MomentWindow(shared_ptr<Lattice<T>> pAncilliaryLattice,
                               MomentsBase<T>& iMom,
-                              casacore::LogIO& os,
-                              const casacore::uInt nLatticeOut)
+                              LogIO& os,
+                              const uInt nLatticeOut)
 : _ancilliaryLattice(pAncilliaryLattice),
   iMom_p(iMom),
   os_p(os)
@@ -65,7 +65,7 @@ MomentWindow<T>::MomentWindow(shared_ptr<casacore::Lattice<T>> pAncilliaryLattic
 
 // Fish out moment axis
 
-   casacore::Int momAxis = this->momentAxis(iMom_p);
+   Int momAxis = this->momentAxis(iMom_p);
 
 // Set up slice shape for extraction from masking lattice
 
@@ -116,21 +116,21 @@ MomentWindow<T>::~MomentWindow()
 
 template <class T>
 void MomentWindow<T>::process(T&,
-                              casacore::Bool&,
-                              const casacore::Vector<T>&,
-                              const casacore::Vector<casacore::Bool>&,
-                              const casacore::IPosition&)
+                              Bool&,
+                              const Vector<T>&,
+                              const Vector<Bool>&,
+                              const IPosition&)
 {
-   throw(casacore::AipsError("MomentWindow<T>::process not implemented"));
+   throw(AipsError("MomentWindow<T>::process not implemented"));
 }
 
 
 template <class T> 
-void MomentWindow<T>::multiProcess(casacore::Vector<T>& moments,
-                                   casacore::Vector<casacore::Bool>& momentsMask,
-                                   const casacore::Vector<T>& profileIn,
-                                   const casacore::Vector<casacore::Bool>& profileInMask,
-                                   const casacore::IPosition& inPos)
+void MomentWindow<T>::multiProcess(Vector<T>& moments,
+                                   Vector<Bool>& momentsMask,
+                                   const Vector<T>& profileIn,
+                                   const Vector<Bool>& profileInMask,
+                                   const IPosition& inPos)
 //
 // Generate windowed moments of this profile.
 // The profile comes with its own mask (or a null mask
@@ -147,12 +147,12 @@ void MomentWindow<T>::multiProcess(casacore::Vector<T>& moments,
 // ancilliary vector object  that we can use for fast access 
 
    const T* pProfileSelect = 0;      
-   casacore::Bool deleteIt;
+   Bool deleteIt;
    if (_ancilliaryLattice) {
-      casacore::Array<T> ancilliarySlice;
-      casacore::IPosition stride(_ancilliaryLattice->ndim(),1);
+      Array<T> ancilliarySlice;
+      IPosition stride(_ancilliaryLattice->ndim(),1);
       _ancilliaryLattice->getSlice(ancilliarySlice, inPos,
-                               sliceShape_p, stride, true);
+                               sliceShape_p, stride, True);
       ancilliarySliceRef_p.reference(ancilliarySlice);
 
       pProfileSelect_p = &ancilliarySliceRef_p;
@@ -165,27 +165,27 @@ void MomentWindow<T>::multiProcess(casacore::Vector<T>& moments,
 
 // Make abcissa and labels
    
-   static casacore::Vector<casacore::Int> window(2);  
-   static casacore::Int nPts = 0;
+   static Vector<Int> window(2);  
+   static Int nPts = 0;
       
    abcissa_p.resize(pProfileSelect_p->size());
    indgen(abcissa_p);
    //this->makeAbcissa (abcissa_p, pProfileSelect_p->nelements());
-   casacore::String xLabel;
+   String xLabel;
    if (momAxisType_p.empty()) {
       xLabel = "x (pixels)";
    } else {
       xLabel = momAxisType_p + " (pixels)";
    }
-   const casacore::String yLabel("Intensity");
-   casacore::String title;
+   const String yLabel("Intensity");
+   String title;
    setPosLabel(title, inPos);
 
 
    // Do the window selection
    
    // Define the window automatically
-   casacore::Vector<T> gaussPars;
+   Vector<T> gaussPars;
    if (getAutoWindow(nFailed_p, window,  abcissa_p, *pProfileSelect_p, profileInMask,
            peakSNR_p, stdDeviation_p, doFit_p)) {
        nPts = window(1) - window(0) + 1;
@@ -200,7 +200,7 @@ void MomentWindow<T>::multiProcess(casacore::Vector<T>& moments,
                
    if (nPts==0) {
       moments = 0.0;
-      momentsMask = false;
+      momentsMask = False;
 
       if (_ancilliaryLattice) {
          ancilliarySliceRef_p.freeStorage(pProfileSelect, deleteIt);
@@ -218,7 +218,7 @@ void MomentWindow<T>::multiProcess(casacore::Vector<T>& moments,
 
 // Were the profile coordinates precomputed ?
       
-   casacore::Bool preComp = (sepWorldCoord_p.nelements() > 0);
+   Bool preComp = (sepWorldCoord_p.nelements() > 0);
 
 // 
 // We must fill in the input pixel coordinate if we need
@@ -226,8 +226,8 @@ void MomentWindow<T>::multiProcess(casacore::Vector<T>& moments,
 //
    if (!preComp) {
       if (doCoordRandom_p || doCoordProfile_p) {
-         for (casacore::uInt i=0; i<inPos.nelements(); i++) {
-            pixelIn_p(i) = casacore::Double(inPos(i));
+         for (uInt i=0; i<inPos.nelements(); i++) {
+            pixelIn_p(i) = Double(inPos(i));
          }
       }
    }
@@ -236,30 +236,30 @@ void MomentWindow<T>::multiProcess(casacore::Vector<T>& moments,
 // Set up a pointer for fast access to the profile mask
 // if it exists.
 
-   casacore::Bool deleteIt2;
-   const casacore::Bool* pProfileInMask = profileInMask.getStorage(deleteIt2);
+   Bool deleteIt2;
+   const Bool* pProfileInMask = profileInMask.getStorage(deleteIt2);
 
 
 // Accumulate sums and acquire selected data from primary lattice 
             
-   typename casacore::NumericTraits<T>::PrecisionType s0  = 0.0;
-   typename casacore::NumericTraits<T>::PrecisionType s0Sq = 0.0;
-   typename casacore::NumericTraits<T>::PrecisionType s1  = 0.0;
-   typename casacore::NumericTraits<T>::PrecisionType s2  = 0.0;
-   casacore::Int iMin = -1;
-   casacore::Int iMax = -1;
+   typename NumericTraits<T>::PrecisionType s0  = 0.0;
+   typename NumericTraits<T>::PrecisionType s0Sq = 0.0;
+   typename NumericTraits<T>::PrecisionType s1  = 0.0;
+   typename NumericTraits<T>::PrecisionType s2  = 0.0;
+   Int iMin = -1;
+   Int iMax = -1;
    T dMin =  1.0e30;
    T dMax = -1.0e30;
-   casacore::Double coord = 0.0;
+   Double coord = 0.0;
 
-   casacore::Int i,j;
+   Int i,j;
    for (i=window(0),j=0; i<=window(1); i++) {
       if (pProfileInMask[i]) {
          if (preComp) {
             coord = sepWorldCoord_p(i);
          } else if (doCoordProfile_p) {
             coord = this->getMomentCoord(iMom_p, pixelIn_p,
-                                   worldOut_p, casacore::Double(i));
+                                   worldOut_p, Double(i));
          }
          this->accumSums(s0, s0Sq, s1, s2, iMin, iMax,
                    dMin, dMax, i, profileIn(i), coord);
@@ -272,7 +272,7 @@ void MomentWindow<T>::multiProcess(casacore::Vector<T>& moments,
          
 // Absolute deviations of I from mean needs an extra pass.
    
-   typename casacore::NumericTraits<T>::PrecisionType sumAbsDev = 0.0;
+   typename NumericTraits<T>::PrecisionType sumAbsDev = 0.0;
    if (doAbsDev_p) {
       T iMean = s0 / nPts;
       for (i=0; i<nPts; i++) sumAbsDev += abs(selectedData_p(i) - iMean);
@@ -294,7 +294,7 @@ void MomentWindow<T>::multiProcess(casacore::Vector<T>& moments,
          
    T dMedian = 0.0;
    if (doMedianI_p) {
-      selectedData_p.resize(nPts,true);
+      selectedData_p.resize(nPts,True);
       dMedian = median(selectedData_p);
    }
        
@@ -309,22 +309,22 @@ void MomentWindow<T>::multiProcess(casacore::Vector<T>& moments,
 
 // Fill selected moments 
 
-   for (i=0; i<casacore::Int(selectMoments_p.nelements()); i++) {
+   for (i=0; i<Int(selectMoments_p.nelements()); i++) {
       moments(i) = calcMoments_p(selectMoments_p(i));
-      momentsMask(i) = true;
+      momentsMask(i) = True;
       momentsMask(i) = calcMomentsMask_p(selectMoments_p(i));
    }
 }
 
 template <class T>
-Bool MomentWindow<T>::getAutoWindow (casacore::uInt& nFailed,
-                                     casacore::Vector<casacore::Int>& window,
-                                     const casacore::Vector<T>& x,
-                                     const casacore::Vector<T>& y,
-                                     const casacore::Vector<casacore::Bool>& mask,
+Bool MomentWindow<T>::getAutoWindow (uInt& nFailed,
+                                     Vector<Int>& window,
+                                     const Vector<T>& x,
+                                     const Vector<T>& y,
+                                     const Vector<Bool>& mask,
                                      const T peakSNR,
                                      const T stdDeviation,
-                                     const casacore::Bool doFit) const
+                                     const Bool doFit) const
 //
 // Automatically fit a Gaussian and return the +/- 3-sigma window or
 // invoke Bosma's method to set a window.  If a plotting device is
@@ -332,11 +332,11 @@ Bool MomentWindow<T>::getAutoWindow (casacore::uInt& nFailed,
 //
 // Inputs:
 //   x,y        Spectrum
-//   mask       Mask associated with spectrum. true is good.
+//   mask       Mask associated with spectrum. True is good.
 //   plotter    Plot spectrum and optionally the  window
 //   x,yLabel   x label for plots
 //   title 
-// casacore::Input/output
+// Input/output
 //   nFailed    Cumulative number of failed fits
 // Output:
 //   window     The window (pixels).  If both 0,  then discard this spectrum
@@ -344,10 +344,10 @@ Bool MomentWindow<T>::getAutoWindow (casacore::uInt& nFailed,
 //
 {
    if (doFit) {
-      casacore::Vector<T> gaussPars(4);
+      Vector<T> gaussPars(4);
       if (!this->getAutoGaussianFit (nFailed, gaussPars, x, y, mask, peakSNR, stdDeviation)) {
          window = 0;
-         return false;
+         return False;
       } else {
    
 // Set 3-sigma limits.  This assumes that there are some unmasked
@@ -356,7 +356,7 @@ Bool MomentWindow<T>::getAutoWindow (casacore::uInt& nFailed,
          if (!setNSigmaWindow (window, gaussPars(1), gaussPars(2),
                                y.nelements(), 3)) {
             window = 0;
-            return false;
+            return False;
          }
       }
    } else {
@@ -364,14 +364,14 @@ Bool MomentWindow<T>::getAutoWindow (casacore::uInt& nFailed,
 
       if (! _getBosmaWindow (window, y, mask, peakSNR, stdDeviation)) {
          window = 0;
-         return false;
+         return False;
       }
    }
-   return true;
+   return True;
 }
 
-template <class T> casacore::Bool MomentWindow<T>::_getBosmaWindow(
-    casacore::Vector<casacore::Int>& window, const casacore::Vector<T>& y, const casacore::Vector<casacore::Bool>& mask,
+template <class T> Bool MomentWindow<T>::_getBosmaWindow(
+    Vector<Int>& window, const Vector<T>& y, const Vector<Bool>& mask,
     const T peakSNR, const T stdDeviation
 ) const {
     // Automatically work out the spectral window
@@ -380,43 +380,43 @@ template <class T> casacore::Bool MomentWindow<T>::_getBosmaWindow(
     //   x,y       Spectrum
     // Output:
     //   window    The window
-    //   casacore::Bool      false if we reject this spectrum.  This may
+    //   Bool      False if we reject this spectrum.  This may
     //             be because it is all noise, or all masked
 
     // See if this spectrum is all noise first.  If so, forget it.
     // Return straight away if all maske
     T dMean;
-    casacore::uInt iNoise = this->allNoise(dMean, y, mask, peakSNR, stdDeviation);
+    uInt iNoise = this->allNoise(dMean, y, mask, peakSNR, stdDeviation);
     if (iNoise == 2) {
         // all masked
-        return false;
+        return False;
     }
 
     if (iNoise==1) {
         // all noise
         window = 0;
-        return false;
+        return False;
     }
     // Find peak
 
-    casacore::ClassicalStatistics<AccumType, DataIterator, MaskIterator> statsCalculator;
+    ClassicalStatistics<AccumType, DataIterator, MaskIterator> statsCalculator;
     statsCalculator.addData(y.begin(), mask.begin(), y.size());
     StatsData<AccumType> stats = statsCalculator.getStatistics();
-    const casacore::Int nPts = y.size();
+    const Int nPts = y.size();
     auto maxPos = stats.maxpos.second;
-    casacore::Int iMin = max(0, casacore::Int(maxPos)-2);
-    casacore::Int iMax = min(nPts-1, casacore::Int(maxPos)+2);
+    Int iMin = max(0, Int(maxPos)-2);
+    Int iMax = min(nPts-1, Int(maxPos)+2);
     T tol = stdDeviation / (nPts - (iMax-iMin-1));
     // Iterate to convergence
-    auto first = true;
-    auto converged = false;
-    auto more = true;
+    auto first = True;
+    auto converged = False;
+    auto more = True;
     T yMean = 0;
     T oldYMean = 0;
     while (more) {
         // Find mean outside of peak region
         AccumType sum = 0;
-        casacore::Int i,j;
+        Int i,j;
         for (i=0,j=0; i<nPts; ++i) {
             if (mask[i] && (i < iMin || i > iMax)) {
                 sum += y[i];
@@ -428,11 +428,11 @@ template <class T> casacore::Bool MomentWindow<T>::_getBosmaWindow(
         }
         // Interpret result
         if (!first && j>0 && abs(yMean-oldYMean) < tol) {
-            converged = true;
-            more = false;
+            converged = True;
+            more = False;
         }
         else if (iMin==0 && iMax==nPts-1) {
-            more = false;
+            more = False;
         }
         else {
             // Widen window and redetermine tolerance
@@ -441,7 +441,7 @@ template <class T> casacore::Bool MomentWindow<T>::_getBosmaWindow(
             iMax = min(nPts-1,iMax+2);
             tol = stdDeviation / (nPts - (iMax-iMin-1));
         }
-        first = false;
+        first = False;
     }
       
     // Return window
@@ -449,20 +449,20 @@ template <class T> casacore::Bool MomentWindow<T>::_getBosmaWindow(
     if (converged) {
         window[0] = iMin;
         window[1] = iMax;
-        return true;
+        return True;
     }
     else {
         window = 0;
-        return false;
+        return False;
     }
 }  
 
 template <class T> 
-Bool MomentWindow<T>::setNSigmaWindow (casacore::Vector<casacore::Int>& window,
+Bool MomentWindow<T>::setNSigmaWindow (Vector<Int>& window,
                                        const T pos,
                                        const T width,
-                                       const casacore::Int nPts,
-                                       const casacore::Int N) const
+                                       const Int nPts,
+                                       const Int N) const
 // 
 // Take the fitted Gaussian position and width and
 // set an N-sigma window.  If the window is too small
@@ -474,17 +474,17 @@ Bool MomentWindow<T>::setNSigmaWindow (casacore::Vector<casacore::Int>& window,
 //   N           The N-sigma
 // Outputs:
 //   window      The window in pixels
-//   casacore::Bool        false if window too small to be sensible
+//   Bool        False if window too small to be sensible
 //
 {
-   window(0) = casacore::Int((pos-N*width)+0.5);
+   window(0) = Int((pos-N*width)+0.5);
    window(0) = min(nPts-1,max(0,window(0)));
-   window(1) = casacore::Int((pos+N*width)+0.5);
+   window(1) = Int((pos+N*width)+0.5);
    window(1) = min(nPts-1,max(0,window(1)));
    // FIXME this was
-   // if ( abs(window(1)-window(0)) < 3) return false;
-   // return true;
-   // but because window(1) - window(0) could be negative and true could be
+   // if ( abs(window(1)-window(0)) < 3) return False;
+   // return True;
+   // but because window(1) - window(0) could be negative and True could be
    // returned, an allocation error was occuring because in another function a
    // vector was being resized to (window(1) - window(0)). It is possible that
    // in that case the absolute value should be calculated but I don't have time

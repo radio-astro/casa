@@ -31,12 +31,8 @@
 
 #include <casa/aips.h>
 #include <casa/namespace.h>
-namespace casacore{
-
-class String;
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
+class String;
 } //# NAMESPACE CASA - END
 
 
@@ -151,9 +147,9 @@ public:
   };
 
   // Convert the CorrMode enumerator to a string
-  static casacore::String name(VLAEnum::CorrMode modeEnum);
+  static String name(VLAEnum::CorrMode modeEnum);
 
-  // Convert a given casacore::String to a CorrMode enumerator
-  static VLAEnum::CorrMode corrMode(const casacore::String& modeString);
+  // Convert a given String to a CorrMode enumerator
+  static VLAEnum::CorrMode corrMode(const String& modeString);
 };
 #endif

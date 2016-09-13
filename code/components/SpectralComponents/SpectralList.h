@@ -33,17 +33,13 @@
 #include <casa/aips.h>
 #include <casa/Containers/Block.h>
 
-namespace casacore{
-
-class RecordInterface;
-class String;
-template <class T> class Vector;
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Forward Declarations
 class SpectralElement;
+class RecordInterface;
+class String;
+template <class T> class Vector;
 
 // <summary>
 // A set of SpectralElements
@@ -89,7 +85,7 @@ class SpectralList {
   // Default constructor creates an empty list
   SpectralList();
   // Construct a list with a maximum length of n (0: unlimited length)
-  explicit SpectralList(casacore::uInt nmax);
+  explicit SpectralList(uInt nmax);
   // Construct with an initial element
   explicit SpectralList(const SpectralElement &in);
   // Copy constructor (deep copy)
@@ -103,81 +99,81 @@ class SpectralList {
   // Assignment (copy semantics)
   SpectralList &operator=(const SpectralList &other);
   // Evaluate the value of the sum of the elements at x
-  casacore::Double operator()(const casacore::Double x) const;
+  Double operator()(const Double x) const;
   // Get element n
   // <thrown>
-  //  <li> casacore::AipsError if illegal n
+  //  <li> AipsError if illegal n
   // </thrown>
   // <group>
-  const SpectralElement* operator[](const casacore::uInt n) const;
-  SpectralElement* operator[](const casacore::uInt n);
+  const SpectralElement* operator[](const uInt n) const;
+  SpectralElement* operator[](const uInt n);
   // </group>
 
   //# Member functions
   // Get the number of elements in list
-  casacore::uInt nelements() const { return list_p.nelements(); };
+  uInt nelements() const { return list_p.nelements(); };
 
   // Get the profile values for all elements in list. The evaluation
   // is for the length of the given <src>prof</src>, assuming x values of
   // 0,1,... if no x given.
   // <group>
   template <class MT>
-    void evaluate(casacore::Vector<MT> &y) const;
+    void evaluate(Vector<MT> &y) const;
   template <class MT>
-    void evaluate(casacore::Vector<MT> &y, const casacore::Vector<MT> &x) const;
+    void evaluate(Vector<MT> &y, const Vector<MT> &x) const;
    // </group>
 
   // Calculate the residuals at the points x; by subtracting the model from y.
   // x=0,1,2,.. if not given.
   // <thrown>
-  //  <li> casacore::AipsError if y and x have different lengths
+  //  <li> AipsError if y and x have different lengths
   // </thrown>
   // <group>
   template <class MT>
-    void residual(casacore::Vector<MT> &y) const;
+    void residual(Vector<MT> &y) const;
   template <class MT>
-    void residual(casacore::Vector<MT> &y, const casacore::Vector<MT> &x) const;
+    void residual(Vector<MT> &y, const Vector<MT> &x) const;
   // </group>
 
-  // Add elements to list (false if list has max length and full)
+  // Add elements to list (False if list has max length and full)
   // <group>
-  casacore::Bool add(const SpectralElement &in);
-  casacore::Bool add(const SpectralList &in);
+  Bool add(const SpectralElement &in);
+  Bool add(const SpectralList &in);
   // </group>
   // Insert in sort order in the list
   // <group>
   void insert(const SpectralElement &in);
   void insert(const SpectralList &in);
   // </group>
-  // Set an element in the list. Return false if more than one place beyond
+  // Set an element in the list. Return False if more than one place beyond
   // end of list; or if beyond max size.
-  casacore::Bool set(const SpectralElement &in, const casacore::uInt which);
+  Bool set(const SpectralElement &in, const uInt which);
 
   // Clear the list
   void clear();
 
   // Set a maximum size of the list
-  void set(const casacore::uInt nmax);
+  void set(const uInt nmax);
 
-  // casacore::Sort the list on the first parameter (i.e. peak value for Gaussian)
+  // Sort the list on the first parameter (i.e. peak value for Gaussian)
   void sort();
 
-  // Convert to and from a casacore::Record (see details in SpectralElement)
+  // Convert to and from a Record (see details in SpectralElement)
   // <group>
-  casacore::Bool fromRecord (casacore::String& errMsg, const casacore::RecordInterface& container);
-  casacore::Bool toRecord(casacore::RecordInterface& container) const;
+  Bool fromRecord (String& errMsg, const RecordInterface& container);
+  Bool toRecord(RecordInterface& container) const;
   //</group>
 
  private:
   //#Data
   // Max length allowed of list
-  casacore::uInt nmax_p;
-  // casacore::List of elements
-  casacore::PtrBlock<SpectralElement *> list_p;
+  uInt nmax_p;
+  // List of elements
+  PtrBlock<SpectralElement *> list_p;
 
   //# Member functions
   // Compare two elements
-  casacore::Int compar(const SpectralElement &p1, const SpectralElement &p2) const;
+  Int compar(const SpectralElement &p1, const SpectralElement &p2) const;
 
 };
 

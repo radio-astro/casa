@@ -30,14 +30,10 @@
 #include <casa/Utilities/CountedPtr.h>
 #include <display/region/HistogramTab.ui.h>
 
-namespace casacore{
+namespace casa {
 
 	template <class T> class ImageInterface;
 	class ImageRegion;
-}
-
-namespace casa {
-
 	class HistogramGraph;
 
 	/**
@@ -50,8 +46,8 @@ namespace casa {
 
 	public:
 		HistogramTab(QWidget *parent = 0);
-		void addImage( SHARED_PTR<casacore::ImageInterface<float> > image );
-		void setImageRegion( const std::string& imageName, casacore::ImageRegion* region, int regionId);
+		void addImage( SHARED_PTR<ImageInterface<float> > image );
+		void setImageRegion( const std::string& imageName, ImageRegion* region, int regionId);
 		void clear();
 		/**
 		 * This method was written so that the image showing on the histogram

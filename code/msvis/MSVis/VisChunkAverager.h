@@ -64,8 +64,8 @@ class VisBuffer;
 //
 // <motivation>
 // VisBuffAccumulator also time averages VisBuffers, but only for a few
-// columns, as needed by calibration and plotms.  casacore::Time averaging in split
-// requires (in principle) that all of the columns in the input casacore::MS be written
+// columns, as needed by calibration and plotms.  Time averaging in split
+// requires (in principle) that all of the columns in the input MS be written
 // to the output MS.  This is more work than required by calibration and
 // plotms, and split also has some differences in the details of the averaging.
 // </motivation>
@@ -84,16 +84,16 @@ class VisBuffer;
 //   <li> averaging over other indices.
 // </todo>
 
-typedef std::map<casacore::uInt, std::vector<casacore::Int> > mapuIvIType;
+typedef std::map<uInt, std::vector<Int> > mapuIvIType;
 
 class VisChunkAverager //: public VisBuffAccumulator
 {
 public:
   // Construct from which *DATA column(s) to read and whether or not to use
   // WEIGHT_SPECTRUM.
-  VisChunkAverager(const casacore::Vector<casacore::MS::PredefinedColumns>& dataCols,
-                   const casacore::Bool doSpWeight,
-                   const casacore::Vector<casacore::Matrix<casacore::Int> >& chBounds=casacore::Vector<casacore::Matrix<casacore::Int> >());
+  VisChunkAverager(const Vector<MS::PredefinedColumns>& dataCols,
+                   const Bool doSpWeight,
+                   const Vector<Matrix<Int> >& chBounds=Vector<Matrix<Int> >());
 
   // Null destructor
   ~VisChunkAverager();
@@ -101,8 +101,8 @@ public:
   // Reset the averager
   void reset();
 
-  // casacore::Time average vi's current chunk, AND advance vi to the end of that chunk.
-  // casacore::Input:
+  // Time average vi's current chunk, AND advance vi to the end of that chunk.
+  // Input:
   //    vi              ROVisibilityIterator  vi.setRowBlocking(0) will be
   //                                          called to ensure that ++vi
   //                                          advances by 1 integration at a
@@ -113,21 +113,21 @@ public:
   VisBuffer& average(ROVisibilityIterator& vi);
 
   // Checks whether the interval of vi needs to be truncated in order to
-  // prevent collisions where two rows have the same casacore::MS key (ignoring TIME) but
+  // prevent collisions where two rows have the same MS key (ignoring TIME) but
   // different SCAN_NUMBER, STATE_ID, and/or OBSERVATION_ID.  ARRAY_ID is
   // already separated by the chunking.
   //
   // time_to_break is set to the TIME of the earliest collision, or the end of
   // the buffer if none are found.
   //
-  static casacore::Bool check_chunk(ROVisibilityIterator& vi, casacore::Double& time_to_break,
-                          const casacore::Bool watch_obs, const casacore::Bool watch_scan,
-                          const casacore::Bool watch_state);
+  static Bool check_chunk(ROVisibilityIterator& vi, Double& time_to_break,
+                          const Bool watch_obs, const Bool watch_scan,
+                          const Bool watch_state);
 
 
-  // max(a, b) in Math.h is so overloaded, and (u)casacore::Int is so promotable, that
+  // max(a, b) in Math.h is so overloaded, and (u)Int is so promotable, that
   // they're unusable together.
-  casacore::uInt uIntMax(const casacore::uInt a, const casacore::uInt b) const { return a > b ? a : b; }
+  uInt uIntMax(const uInt a, const uInt b) const { return a > b ? a : b; }
 
 private:
   // Prohibit null constructor, copy constructor and assignment for now
@@ -139,8 +139,8 @@ private:
   void initialize(VisBuffer& vb);
 
   // Normalize the accumulation (finish the average).
-  void normalize(const casacore::Double minTime, const casacore::Double maxTime,
-                 const casacore::Double firstinterval, const casacore::Double lastinterval);
+  void normalize(const Double minTime, const Double maxTime,
+                 const Double firstinterval, const Double lastinterval);
 
   // Force vb to read all the columns (modified by colEnums_p and
   // doSpWeight_p).
@@ -150,67 +150,67 @@ private:
   void fill_vb(VisBuffer& vb);
 
   // Hash function to return a unique (within the VisBuffer) key (as defined by
-  // the casacore::MS def'n) for an interferometer (ant1, ant2, feed1, feed2,
+  // the MS def'n) for an interferometer (ant1, ant2, feed1, feed2,
   // processor_id).  Note that a VisBuffer only contains one ddid and fieldid,
   // and TIME is deliberately excluded this that is what will be averaged over.
   //
   // Sorting a set of the returned keys is equivalent to sorting by
   // (procid, ant1, ant2, feed1, feed2).
   //
-  casacore::uInt hashFunction(const casacore::Int ant1, const casacore::Int ant2,
-                    const casacore::Int feed1, const casacore::Int feed2,
-                    const casacore::Int procid) const;
+  uInt hashFunction(const Int ant1, const Int ant2,
+                    const Int feed1, const Int feed2,
+                    const Int procid) const;
 
   // These return their success values.  (They could fail if any of ant1, ant2,
   // feed1, feed2, or procid are < 0, but that shouldn't happen and isn't
   // checked for.)
-  casacore::Bool setupHashFunction(ROVisibilityIterator& vi);
-  casacore::Bool makeHashMap(ROVisibilityIterator& vi);
+  Bool setupHashFunction(ROVisibilityIterator& vi);
+  Bool makeHashMap(ROVisibilityIterator& vi);
 
   // Check whether any of the unflagged rows in vi's current chunk have the
-  // same casacore::MS key (not counting TIME) but different values for the columns in
+  // same MS key (not counting TIME) but different values for the columns in
   // colsToWatch.
   //
   // time_to_break will be set to the time of the earliest collision if any are
   // found, or the last TIME in vi's current chunk otherwise (assumes vi's
   // current chunk is ascendingly sorted in TIME).
   //
-  // colsToWatch should contain casacore::MS::SCAN_NUMBER, casacore::MS::STATE_ID,
-  // casacore::MS::OBSERVATION_ID, and/or nothing.  Otherwise an casacore::AipsError will be
-  // thrown.  casacore::MS::ARRAY_ID is already separated by the chunking.
+  // colsToWatch should contain MS::SCAN_NUMBER, MS::STATE_ID,
+  // MS::OBSERVATION_ID, and/or nothing.  Otherwise an AipsError will be
+  // thrown.  MS::ARRAY_ID is already separated by the chunking.
   //
-  casacore::Bool findCollision(ROVisibilityIterator& vi, casacore::Double& time_to_break,
-                     const casacore::Bool watchObs, const casacore::Bool watchScan,
-                     const casacore::Bool watchState);
+  Bool findCollision(ROVisibilityIterator& vi, Double& time_to_break,
+                     const Bool watchObs, const Bool watchScan,
+                     const Bool watchState);
 
   // Helper function for findCollision().
-  casacore::Bool checkForBreak(casacore::Vector<casacore::Int>& firstVals, const casacore::Int i, const casacore::uInt slotnum,
-                     const casacore::uInt chunkletNum,
-                     const std::vector<casacore::Int>& inrows_for_slot) const;
+  Bool checkForBreak(Vector<Int>& firstVals, const Int i, const uInt slotnum,
+                     const uInt chunkletNum,
+                     const std::vector<Int>& inrows_for_slot) const;
 
   // Start of initialization list.
   // Which of DATA, MODEL_DATA, and/or CORRECTED_DATA to use.
-  casacore::Vector<casacore::MS::PredefinedColumns> colEnums_p;
+  Vector<MS::PredefinedColumns> colEnums_p;
 
   // Use WEIGHT_SPECTRUM?
-  casacore::Bool doSpWeight_p;
+  Bool doSpWeight_p;
 
   // Used for both selecting and averaging channels.
-  casacore::Vector<casacore::Matrix<casacore::Int> > chanAveBounds_p;
+  Vector<Matrix<Int> > chanAveBounds_p;
   // End of initialization list.
 
   // Is everything setup for hashFunction()?
-  casacore::Bool readyToHash_p;
+  Bool readyToHash_p;
 
   // Is sphash_to_inprows_p OK?
-  casacore::Bool haveHashMap_p;
+  Bool haveHashMap_p;
 
   // Maxima for hashFunction().
-  casacore::uInt maxant1p1_p;
-  casacore::uInt maxant2p1_p;
-  casacore::uInt maxfeed1p1_p;
-  casacore::uInt maxfeed2p1_p;
-  // casacore::uInt maxprocp1_p; Not needed
+  uInt maxant1p1_p;
+  uInt maxant2p1_p;
+  uInt maxfeed1p1_p;
+  uInt maxfeed2p1_p;
+  // uInt maxprocp1_p; Not needed
 
   // A map from a sparse hash of "baseline" to a vector of input row numbers
   // matching that hash.
@@ -224,10 +224,10 @@ private:
   mapuIvIType sphash_to_inprows_p;
 
   // Number of correlations and channels
-  casacore::Int nCorr_p, nChan_p;
+  Int nCorr_p, nChan_p;
 
   // The number of flag categories.  0 if flagCategory() is invalid.
-  casacore::Int nCat_p;
+  Int nCat_p;
 
   // Averaging buffer
   CalVisBuffer avBuf_p;

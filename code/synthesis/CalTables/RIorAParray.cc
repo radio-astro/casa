@@ -37,26 +37,25 @@
 #include <casa/Logging/LogMessage.h>
 #include <casa/Logging/LogSink.h>
 
-#define RIORAPVERB false
+#define RIORAPVERB False
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN                                                   
 
 
 // Construct empty
 RIorAPArray::RIorAPArray() :
-  c_ok_(false),
-  f_ok_(false),
-  phaseTracked_(false),
+  c_ok_(False),
+  f_ok_(False),
+  phaseTracked_(False),
   c_(),
   f_()
 {}
 
 // Construct from external Complex Array
 RIorAPArray::RIorAPArray(const Array<Complex>& c) :
-  c_ok_(false),
-  f_ok_(false),
-  phaseTracked_(false),
+  c_ok_(False),
+  f_ok_(False),
+  phaseTracked_(False),
   c_(),
   f_()
 {
@@ -68,9 +67,9 @@ RIorAPArray::RIorAPArray(const Array<Complex>& c) :
 
 // Construct from external Float Array
 RIorAPArray::RIorAPArray(const Array<Float>& f) :
-  c_ok_(false),
-  f_ok_(false),
-  phaseTracked_(false),
+  c_ok_(False),
+  f_ok_(False),
+  phaseTracked_(False),
   c_(),
   f_()
 {
@@ -88,7 +87,7 @@ void RIorAPArray::setData(const Array<Complex>& c) {
 
   // Discard any existing float part; will be created on-demand, if nec.
   f_.resize();
-  f_ok_=false;
+  f_ok_=False;
   // Reference incoming data array
   if (c.ndim()==1) {
     IPosition ip=c.shape();
@@ -98,14 +97,14 @@ void RIorAPArray::setData(const Array<Complex>& c) {
   else
     c_.reference(c);
   // Complex version now ok
-  c_ok_=true;
+  c_ok_=True;
 }
 
 void RIorAPArray::setData(const Array<Float>& f) {
 
   // Discard any existing complex part; will be created on-demand, if nec.
   c_.resize();
-  c_ok_=false;
+  c_ok_=False;
 
   // Insist that incoming Float Array has ndim>1
   if (f.ndim()<2)
@@ -113,7 +112,7 @@ void RIorAPArray::setData(const Array<Float>& f) {
 
   // Reference incoming data array
   f_.reference(f);
-  f_ok_=true;
+  f_ok_=True;
 }
 
 // State
@@ -200,7 +199,7 @@ void RIorAPArray::calc_c() {
   // Convert Float R/I array to Complex array
   //  c_=RealToComplex(ftmp);
   RealToComplex(c_,ftmp);
-  c_ok_=true;
+  c_ok_=True;
 
 }
 
@@ -222,9 +221,9 @@ void RIorAPArray::calc_f(Bool trackphase) {
 
   amp=amplitude(c_).reform(amp.shape());
   ph=phase(c_).reform(amp.shape());
-  f_ok_=true;
+  f_ok_=True;
 
-  phaseTracked_=false;
+  phaseTracked_=False;
 
   if (trackphase) 
     trackPhase(ph);
@@ -250,7 +249,7 @@ void RIorAPArray::trackPhase(Array<Float>& ph) {
     phiter.next();
   }
 
-  phaseTracked_=true;
+  phaseTracked_=True;
 
 }
 

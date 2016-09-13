@@ -47,7 +47,6 @@
 // #define OVERSAMPLING 20
 // #define THRESHOLD 1E-4
 
-using namespace casacore;
 namespace casa{
   
   EVLAAperture& EVLAAperture::operator=(const EVLAAperture& other)
@@ -247,7 +246,7 @@ namespace casa{
     Int PixInc=1;
     Vector<Complex> vals;
     IPosition ndx(4,origin,0,0,0);
-    Bool found=false;
+    Bool found=False;
     IPosition cfShape=func.shape();
     Int convSize = cfShape(0);
     for(R=convSize/4;R>1;R--)
@@ -265,7 +264,7 @@ namespace casa{
 	      vals(th)=func(ndx);
 	  }
 	if (max(abs(vals)) > threshold)
-	  {found=true;break;}
+	  {found=True;break;}
       }
     return found;
   }

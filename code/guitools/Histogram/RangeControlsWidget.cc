@@ -32,7 +32,6 @@
 #include <QDebug>
 #include <limits>
 
-using namespace casacore;
 namespace casa {
 
 RangeControlsWidget::RangeControlsWidget(QWidget *parent)

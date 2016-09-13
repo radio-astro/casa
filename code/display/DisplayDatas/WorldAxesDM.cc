@@ -56,7 +56,6 @@
 #include <measures/Measures/MFrequency.h>
 #include <measures/Measures/MDirection.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //#define CDEBUG
@@ -118,8 +117,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		SpectralCoordinate WADMAxisLabellerSpecCoord;
 
 		Int WADMAxisLabellerVelAxis = -1;
-		Bool WADMAxisLabellerAbsolute = true;
-		Bool WADMAxisLabellerWorldLabels = true;
+		Bool WADMAxisLabellerAbsolute = True;
+		Bool WADMAxisLabellerWorldLabels = True;
 		Double WADMAxisLabellerVelRef = 0.0;
 		Double WADMAxisLabellerFreqRef = 0.0;
 
@@ -374,7 +373,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			pCS = new DisplayCoordinateSystem(wc->coordinateSystem());
 		} else {
 			// do nothing!
-			return false;
+			return False;
 		}
 
 // None of the specAxis stuff, used in WCCSNLAxisLabeller is actually
@@ -421,7 +420,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					Double velRef;
 					if (!WADMAxisLabellerSpecCoord.frequencyToVelocity(velRef,
 					        WADMAxisLabellerSpecCoord.referenceValue()[0])) {
-						return false;
+						return False;
 					}
 					WADMAxisLabellerVelRef = velRef;
 					WADMAxisLabellerVelAxis = specAxis;
@@ -557,10 +556,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		wc->pixelCanvas()->setJoinStyle(Display::JSMiter);
 
 		WADMAxisLabellerWorldAxes.resize(pCS->nWorldAxes());
-		WADMAxisLabellerWorldAxes = false;
-		WADMAxisLabellerWorldAxes(0) = WADMAxisLabellerWorldAxes(1) = true;
+		WADMAxisLabellerWorldAxes = False;
+		WADMAxisLabellerWorldAxes(0) = WADMAxisLabellerWorldAxes(1) = True;
 		WADMAxisLabellerPixelAxes.resize(2);
-		WADMAxisLabellerPixelAxes = false;
+		WADMAxisLabellerPixelAxes = False;
 
 		WADMAxisLabellerWorldMin.resize(pCS->nWorldAxes());
 		WADMAxisLabellerWorldMax.resize(pCS->nWorldAxes());
@@ -659,7 +658,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		        nc, ic, cache, ierr);
 
 		//if (plotOutline()) {
-		if (true) {
+		if (True) {
 			cpgsci(23);
 			cpgbox("BC", 0.0, 0, "BC", 0.0, 0);
 		}
@@ -668,7 +667,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			delete pCS;
 			pCS = 0;
 		}
-		return true;
+		return True;
 	}
 
 	void WorldAxesDM::cleanup() {

@@ -55,7 +55,7 @@ namespace po = boost::program_options;
 
 #include <casa/Logging/StreamLogSink.h>
 #include <casa/Logging/LogSink.h>
-using namespace casacore;
+using namespace casa;
 
 using namespace std;
 string appName;
@@ -405,7 +405,7 @@ int main (int argC, char* argV[]) {
     if (vm.count("logfile")) {
       //LogSinkInterface *theSink;
       ofs.open(vm["logfile"].as<string>().c_str(), ios_base::app);
-      LogSinkInterface *theSink = new casacore::StreamLogSink(&ofs);
+      LogSinkInterface *theSink = new casa::StreamLogSink(&ofs);
       LogSink::globalSink(theSink);
     }
 

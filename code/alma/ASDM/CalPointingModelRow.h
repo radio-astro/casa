@@ -28,7 +28,7 @@
  * | If you do, all changes will be lost when the file is re-generated. |
  *  --------------------------------------------------------------------
  *
- * casacore::File CalPointingModelRow.h
+ * File CalPointingModelRow.h
  */
  
 #ifndef CalPointingModelRow_CLASS
@@ -162,7 +162,7 @@ public:
 	bool isAdded() const;
 		
 	////////////////////////////////
-	// Intrinsic casacore::Table Attributes //
+	// Intrinsic Table Attributes //
 	////////////////////////////////
 	
 	
@@ -732,7 +732,7 @@ public:
 
 
 	////////////////////////////////
-	// Extrinsic casacore::Table Attributes //
+	// Extrinsic Table Attributes //
 	////////////////////////////////
 	
 	
@@ -1025,7 +1025,7 @@ private:
 	 */
 	bool hasBeenAdded;
 
-	// This method is used by the casacore::Table class when this row is added to the table.
+	// This method is used by the Table class when this row is added to the table.
 	void isAdded(bool added);
 
 
@@ -1059,7 +1059,7 @@ private:
 	 CalPointingModelRow (CalPointingModelTable &table, CalPointingModelRow &row);
 	 	
 	////////////////////////////////
-	// Intrinsic casacore::Table Attributes //
+	// Intrinsic Table Attributes //
 	////////////////////////////////
 	
 	
@@ -1265,7 +1265,7 @@ private:
  	
 
 	////////////////////////////////
-	// Extrinsic casacore::Table Attributes //
+	// Extrinsic Table Attributes //
 	////////////////////////////////
 	
 	

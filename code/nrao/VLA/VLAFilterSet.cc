@@ -61,7 +61,7 @@ VLAFilterSet& VLAFilterSet::operator=(const VLAFilterSet& other) {
   DebugAssert(ok(), AipsError);
   if (this != &other) {
     deleteAllFilters();
-    itsFilters.resize(other.nelements(), true, false);
+    itsFilters.resize(other.nelements(), True, False);
     itsFilters = 0;
     copyFilters(other);
     DebugAssert(ok(), AipsError);
@@ -72,14 +72,14 @@ VLAFilterSet& VLAFilterSet::operator=(const VLAFilterSet& other) {
 
 void VLAFilterSet::addFilter(const VLAFilter& filter) {
   const uInt n = nelements();
-  itsFilters.resize(n+1, true, true);
+  itsFilters.resize(n+1, True, True);
   itsFilters[n] = filter.clone();
   DebugAssert(ok(), AipsError);
 }
 
 void VLAFilterSet::removeFilter(const uInt which) {
   AlwaysAssert(which < nelements(), AipsError);
-  itsFilters.remove(which, true);
+  itsFilters.remove(which, True);
   DebugAssert(ok(), AipsError);
 }
 
@@ -97,9 +97,9 @@ Bool VLAFilterSet::passThru(const VLALogicalRecord& record) const {
     i++;
   }
   if (i != n) {
-    return false;
+    return False;
   } else {
-    return true;
+    return True;
   }
 }
 
@@ -115,7 +115,7 @@ Bool VLAFilterSet::ok() const {
       logErr << LogIO::SEVERE 
 	     << "Cannot have a null filter in the set"
 	     << LogIO::POST;
-      return false;
+      return False;
     }
   }
   for (uInt i = 0; i < n; i++) {
@@ -124,10 +124,10 @@ Bool VLAFilterSet::ok() const {
       logErr << LogIO::SEVERE 
 	     << "Filter " << i << "is not ok"
 	     << LogIO::POST;
-      return false;
+      return False;
     }
   }
-  return true;
+  return True;
 }
 
 void VLAFilterSet::deleteAllFilters() {

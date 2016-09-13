@@ -43,7 +43,6 @@
 #include <synthesis/MeasurementComponents/SingleDishSkyCal.h>
 #include <synthesis/MeasurementComponents/SDDoubleCircleGainCal.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 

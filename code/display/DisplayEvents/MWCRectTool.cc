@@ -30,15 +30,14 @@
 #include <display/DisplayEvents/MWCRectTool.h>
 #include <casa/BasicMath/Math.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	MWCRectTool::MWCRectTool(Display::KeySym keysym,
 	                         const Bool persistent) :
 		MultiWCTool(keysym),
 		itsRectanglePersistent(persistent),
-		itsRectangleExists(false),
-		itsActive(false),
+		itsRectangleExists(False),
+		itsActive(False),
 		itsP1(2), itsP2(2),
 		itsHX(4), itsHY(4),
 		itsLastPressTime(-1.),	// 'long ago..'
@@ -95,8 +94,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				}
 				set(x1, y1, x2, y2);
 
-				itsActive = true;
-				itsMoving = false;	// enter resizing state
+				itsActive = True;
+				itsMoving = False;	// enter resizing state
 				return;
 			}
 
@@ -105,8 +104,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 				// user has pressed inside the rectangle
 
-				itsActive = true;
-				itsMoving = true;		// enter moving state
+				itsActive = True;
+				itsMoving = True;		// enter moving state
 				itsBaseMoveX = x;
 				itsBaseMoveY = y;
 				return;
@@ -125,8 +124,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// or the press was on a different WC).
 		itsCurrentWC = ev.worldCanvas();
 		set(x,y, x,y);
-		itsActive = true;
-		itsMoving = false;	// enter resizing state
+		itsActive = True;
+		itsMoving = False;	// enter resizing state
 		rectangleReady();
 		return;
 	}
@@ -152,17 +151,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			Int x1, y1;
 			get(x1, y1);
 			set(x1, y1, x, y);
-			itsRectangleExists = true;
+			itsRectangleExists = True;
 		}
 
-		itsEmitted = false;	// (changed) rectangle has never been emitted.
+		itsEmitted = False;	// (changed) rectangle has never been emitted.
 		refresh();		// draw over in new state
 		updateRegion();
 	}
 
 	void MWCRectTool::keyReleased(const WCPositionEvent &ev) {
 		Bool wasActive = itsActive;
-		itsActive = false;
+		itsActive = False;
 		if (!itsRectangleExists) {
 			if (ev.timeOfEvent() - its2ndLastPressTime < doubleClickInterval()) {
 				Int x = ev.pixX();
@@ -190,7 +189,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 			// double click--invoke callbacks
 
-			itsEmitted = true;
+			itsEmitted = True;
 			itsLastPressTime = its2ndLastPressTime = -1.0;
 			if (!itsRectanglePersistent) reset();	// NB: rect. coordinates &
 			else refresh();	// current WC still valid, until new rect. started.
@@ -302,9 +301,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	void MWCRectTool::reset(Bool skipRefresh) {
-		itsActive = false;
+		itsActive = False;
 		Bool wasShowing = itsRectangleExists;
-		itsRectangleExists = false;
+		itsRectangleExists = False;
 		if(wasShowing && !skipRefresh) refresh();
 		itsLastPressTime = its2ndLastPressTime = -1.;
 	}

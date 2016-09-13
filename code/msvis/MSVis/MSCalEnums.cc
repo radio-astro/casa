@@ -28,7 +28,6 @@
 
 #include <msvis/MSVis/MSCalEnums.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //----------------------------------------------------------------------------

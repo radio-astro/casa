@@ -51,7 +51,6 @@
 
 #include <iomanip>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 SkyComponent::SkyComponent()
@@ -214,15 +213,15 @@ Bool SkyComponent::ok() const {
     LogIO logErr(LogOrigin("SkyComponent", "ok()"));
     logErr << LogIO::SEVERE << "Internal pointer is not pointing to anything"
            << LogIO::POST;
-    return false;
+    return False;
   }
   if (!itsCompPtr->ok()) {
     LogIO logErr(LogOrigin("SkyComponent", "ok()"));
     logErr << LogIO::SEVERE << "Component representation is not ok"
            << LogIO::POST;
-    return false;
+    return False;
   }
-  return true;
+  return True;
 }
 
 String SkyComponent::summarize(

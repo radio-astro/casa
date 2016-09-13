@@ -28,7 +28,6 @@
 #include <synthesis/CalTables/CTColumns.h>
 #include <synthesis/CalTables/NewCalTable.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 ROCTColumns::ROCTColumns(const NewCalTable& caltable):

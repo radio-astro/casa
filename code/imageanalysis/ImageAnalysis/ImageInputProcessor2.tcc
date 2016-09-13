@@ -41,13 +41,13 @@
 namespace casa {
 
 template<class T> void ImageInputProcessor::process(
-	casacore::Record& regionRecord, casacore::String& diagnostics,
-	std::vector<OutputDestinationChecker::OutputStruct> * const outputStruct, casacore::String& stokes,
+	Record& regionRecord, String& diagnostics,
+	std::vector<OutputDestinationChecker::OutputStruct> * const outputStruct, String& stokes,
 	SPCIIT image,
-	const casacore::Record* regionPtr, const casacore::String& regionName,
-	const casacore::String& box, const casacore::String& chans,
-	const CasacRegionManager::StokesControl& stokesControl, const casacore::Bool& allowMultipleBoxes,
-	const std::vector<casacore::Coordinate::Type> *const &requiredCoordinateTypes, casacore::Bool verbose
+	const Record* regionPtr, const String& regionName,
+	const String& box, const String& chans,
+	const CasacRegionManager::StokesControl& stokesControl, const Bool& allowMultipleBoxes,
+	const std::vector<Coordinate::Type> *const &requiredCoordinateTypes, Bool verbose
 ) {
 	_process(
 		regionRecord, diagnostics, outputStruct, stokes,
@@ -57,18 +57,18 @@ template<class T> void ImageInputProcessor::process(
 }
 
 template<class T> void ImageInputProcessor::_process(
-    casacore::Record& regionRecord,
-    casacore::String& diagnostics,
+    Record& regionRecord,
+    String& diagnostics,
     std::vector<OutputDestinationChecker::OutputStruct> * const outputStruct,
-    casacore::String& stokes, SPCIIT image,
-    const casacore::Record *const &regionPtr,
-    const casacore::String& regionName, const casacore::String& box,
-    const casacore::String& chans, const CasacRegionManager::StokesControl& stokesControl,
-    const casacore::Bool& allowMultipleBoxes,
-    const std::vector<casacore::Coordinate::Type> *const &requiredCoordinateTypes,
-    casacore::Bool verbose
+    String& stokes, SPCIIT image,
+    const Record *const &regionPtr,
+    const String& regionName, const String& box,
+    const String& chans, const CasacRegionManager::StokesControl& stokesControl,
+    const Bool& allowMultipleBoxes,
+    const std::vector<Coordinate::Type> *const &requiredCoordinateTypes,
+    Bool verbose
 ) {
-	casacore::LogOrigin origin("ImageInputProcessor", __func__);
+	LogOrigin origin("ImageInputProcessor", __func__);
     *_log << origin;
     if (outputStruct != 0) {
         OutputDestinationChecker::checkOutputs(outputStruct, *_log);
@@ -77,13 +77,13 @@ template<class T> void ImageInputProcessor::_process(
     *_log << origin;
     if (requiredCoordinateTypes) {
     	for (
-    		vector<casacore::Coordinate::Type>::const_iterator iter = requiredCoordinateTypes->begin();
+    		vector<Coordinate::Type>::const_iterator iter = requiredCoordinateTypes->begin();
     		iter != requiredCoordinateTypes->end(); iter++
     	) {
     		ThrowIf(
     			image->coordinates().findCoordinate(*iter) < 0,
     			"Image " + image->name() + " does not have required coordinate "
-				+ casacore::Coordinate::typeToString(*iter)
+				+ Coordinate::typeToString(*iter)
     		);
     	}
     }
@@ -104,43 +104,43 @@ template<class T> void ImageInputProcessor::_process(
     	! allowMultipleBoxes && regionRecord.isDefined("regions"),
     	"Only a single n-dimensional rectangular region is supported"
     );
-    _processHasRun = true;
+    _processHasRun = True;
 }
 
 template<class T> void ImageInputProcessor::_setRegion(
-	casacore::Record& regionRecord, casacore::String& diagnostics,
-	const casacore::ImageInterface<T> *image, const casacore::String& regionName
+	Record& regionRecord, String& diagnostics,
+	const ImageInterface<T> *image, const String& regionName
 ) const {
 	// region name provided
-	casacore::File myFile(regionName);
+	File myFile(regionName);
 	if (myFile.exists()) {
-		casacore::Record *rec = casacore::RegionManager::readImageFile(regionName, "");
+		Record *rec = RegionManager::readImageFile(regionName, "");
 		regionRecord = *rec;
 		delete rec;
 		diagnostics = "Region read from file " + regionName;
 	}
 	else {
 
-		casacore::ImageRegion imRegion;
-		casacore::Regex otherImage("(.*)+:(.*)+");
+		ImageRegion imRegion;
+		Regex otherImage("(.*)+:(.*)+");
 		try {
-			casacore::String imagename;
+			String imagename;
 			if (regionName.matches(otherImage)) {
-				casacore::String res[2];
-				casacore::split(regionName, res, 2, ":");
+				String res[2];
+				casa::split(regionName, res, 2, ":");
 				imagename = res[0];
-				casacore::PagedImage<casacore::Float> other(imagename);
+				PagedImage<Float> other(imagename);
 				imRegion = other.getRegion(res[1]);
 			}
 			else {
 				imRegion = image->getRegion(regionName);
 				imagename = image->name();
 			}
-		    regionRecord = casacore::Record(imRegion.toRecord(""));
+		    regionRecord = Record(imRegion.toRecord(""));
 		    diagnostics = "Used region " + regionName + " from image "
 		    		+ imagename + " table description";
 		}
-		catch (const casacore::AipsError& x) {
+		catch (const AipsError& x) {
 			ThrowCc(
 				"Unable to open region file or region table description "
 				+ regionName

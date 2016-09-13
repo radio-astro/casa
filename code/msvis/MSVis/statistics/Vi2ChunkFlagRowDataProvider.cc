@@ -28,7 +28,6 @@
 #include <msvis/MSVis/statistics/Vi2ChunkFlagRowDataProvider.h>
 #include <msvis/MSVis/VisBufferComponents2.h>
 
-using namespace casacore;
 namespace casa {
 
 Vi2ChunkFlagRowDataProvider::Vi2ChunkFlagRowDataProvider(
@@ -43,5 +42,4 @@ const Vector<Bool>& Vi2ChunkFlagRowDataProvider::dataArray() {
 	return vi2->getVisBuffer()->flagRow();
 }
 
-using namespace casacore;
 } // namespace casa

@@ -3,7 +3,7 @@
 #define CSourceModel_H
 
 /*
- * ALMA - Atacama Large Millimeter casacore::Array
+ * ALMA - Atacama Large Millimeter Array
  * (c) European Southern Observatory, 2002
  * (c) Associated Universities Inc., 2002
  * Copyright by ESO (in the framework of the ALMA collaboration),
@@ -33,7 +33,7 @@
  * //  ---------------------------------------------------------  //
  * /////////////////////////////////////////////////////////////////
  *
- * casacore::File CSourceModel.h
+ * File CSourceModel.h
  */
 
 #ifndef __cplusplus
@@ -65,7 +65,7 @@ namespace SourceModelMod
      ,
     POINT /*!< Point Source */
      ,
-    DISK /*!< casacore::Uniform Disk */
+    DISK /*!< Uniform Disk */
      
   };
   typedef SourceModel &SourceModel_out;

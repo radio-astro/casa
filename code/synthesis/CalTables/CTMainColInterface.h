@@ -46,28 +46,28 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
-  class CTMainColInterface: public casacore::MSSelectableMainColumn
+  class CTMainColInterface: public MSSelectableMainColumn
   {
   public: 
     CTMainColInterface():MSSelectableMainColumn(), ctCols_p(NULL) {};
-    CTMainColInterface(const casacore::Table& ctAsTable): casacore::MSSelectableMainColumn(ctAsTable)
+    CTMainColInterface(const Table& ctAsTable): MSSelectableMainColumn(ctAsTable)
     {init(ctAsTable);}
 
     virtual ~CTMainColInterface() {if (ctCols_p) delete ctCols_p;};
 
-    virtual void init(const casacore::Table& ctAsTable)
-    {casacore::MSSelectableMainColumn::init(ctAsTable);ct_p = NewCalTable(ctAsTable); ctCols_p=new ROCTMainColumns(ct_p);}
+    virtual void init(const Table& ctAsTable)
+    {MSSelectableMainColumn::init(ctAsTable);ct_p = NewCalTable(ctAsTable); ctCols_p=new ROCTMainColumns(ct_p);}
 
-    virtual const casacore::ROArrayColumn<casacore::Bool>& flag() {return ctCols_p->flag();}
+    virtual const ROArrayColumn<Bool>& flag() {return ctCols_p->flag();}
 
-    virtual casacore::Bool flagRow(const casacore::Int& i) {return allTrue(ctCols_p->flag()(i));}
+    virtual Bool flagRow(const Int& i) {return allTrue(ctCols_p->flag()(i));}
     
     // For now, return timeEPQuant() even for exposureQuant.
-    virtual const casacore::ROScalarQuantColumn<casacore::Double>& exposureQuant() {return ctCols_p->timeEPQuant();};
-    virtual const casacore::ROScalarQuantColumn<casacore::Double>& timeQuant()     {return ctCols_p->timeQuant();}
+    virtual const ROScalarQuantColumn<Double>& exposureQuant() {return ctCols_p->timeEPQuant();};
+    virtual const ROScalarQuantColumn<Double>& timeQuant()     {return ctCols_p->timeQuant();}
 
     // This is not an MS
-    virtual const casacore::MeasurementSet *asMS(){return NULL;};
+    virtual const MeasurementSet *asMS(){return NULL;};
   private:
     NewCalTable ct_p;
     ROCTMainColumns *ctCols_p;

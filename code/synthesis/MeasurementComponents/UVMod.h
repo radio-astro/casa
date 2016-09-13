@@ -76,7 +76,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <ul>
 // <li> Simulation: random multiplicative gains of a certain scaling
 // can be applied: <linkto class="SimVisCal">SimVisCal</linkto>
-// <li> casacore::Time variable multiplicative errors: <linkto class="TimeVarVisCal">TimeVarVisCal</linkto>
+// <li> Time variable multiplicative errors: <linkto class="TimeVarVisCal">TimeVarVisCal</linkto>
 // <li> Solvable time variable multiplicatiove errors: <linkto class="SolvableVisCal">SolvableVisCal</linkto>
 // </ul>
 // </synopsis> 
@@ -115,15 +115,15 @@ public:
   
   virtual ~UVMod();
 
-  inline casacore::Int& nPar() { return nPar_; };
+  inline Int& nPar() { return nPar_; };
 
   void setModel(const ComponentType::Shape type, 
-		const casacore::Vector<casacore::Double> inpar,
-		const casacore::Vector<casacore::Bool> invary);
+		const Vector<Double> inpar,
+		const Vector<Bool> invary);
   
-  casacore::Bool modelfit(const casacore::Int& maxiter, const casacore::String file);
+  Bool modelfit(const Int& maxiter, const String file);
 
-  inline casacore::Vector<casacore::Double>& par()  { return par_; };
+  inline Vector<Double>& par()  { return par_; };
 
 protected:
 
@@ -136,10 +136,10 @@ protected:
 
   // Internal solving methods
   void accGradHess();
-  void solveGradHess(const casacore::Bool& doCovar=false);
-  casacore::Bool updPar();
-  casacore::Bool setCompPar();
-  void printPar(const casacore::Int& iter);
+  void solveGradHess(const Bool& doCovar=False);
+  Bool updPar();
+  Bool setCompPar();
+  void printPar(const Int& iter);
 
   // Access to VisSet
   inline VisSet& vs() { return *vs_; };
@@ -148,36 +148,36 @@ protected:
   inline ComponentList& cl() { return *cl_; };
 
   // Access to SkyComponents by id
-  inline SkyComponent& skycomp(const casacore::uInt id) { return cl_->component(id); };
+  inline SkyComponent& skycomp(const uInt id) { return cl_->component(id); };
 
   // Access to current VisBuffer
   inline VisBuffer& svb() { return *svb_; };
 
   // Access to fieldId we are fitting for
-  inline casacore::Int& fitfld() { return fitfld_; };
-  inline casacore::MDirection& pc() { return pc_; };
+  inline Int& fitfld() { return fitfld_; };
+  inline MDirection& pc() { return pc_; };
 
   // Accessors to current svb's (differentiated) Residuals
-  inline casacore::Cube<casacore::DComplex>&    R()  { return R_; };
-  inline casacore::Array<casacore::DComplex>&   dR() { return dR_; };
+  inline Cube<DComplex>&    R()  { return R_; };
+  inline Array<DComplex>&   dR() { return dR_; };
 
   // Access to chi2
-  inline casacore::Double& chiSq()     { return chiSq_; };
-  inline casacore::Double& lastChiSq() { return lastChiSq_; };
-  inline casacore::Double& sumWt()     { return sumWt_; };
-  inline casacore::Int&    nWt()       { return nWt_; };
-  inline casacore::Vector<casacore::Bool>& polWt()  { return polWt_; };
+  inline Double& chiSq()     { return chiSq_; };
+  inline Double& lastChiSq() { return lastChiSq_; };
+  inline Double& sumWt()     { return sumWt_; };
+  inline Int&    nWt()       { return nWt_; };
+  inline Vector<Bool>& polWt()  { return polWt_; };
 
   // Access to parameters, & grad,hess,dp
-  inline casacore::Double&         lamb() { return lamb_; };
-  inline casacore::Vector<casacore::Double>& lastPar()  { return lastPar_; };
-  inline casacore::Vector<casacore::Double>& grad() { return grad_; };
-  inline casacore::Vector<casacore::Double>& lastGrad() { return lastGrad_; };
-  inline casacore::Matrix<casacore::Double>& hess() { return hess_; };
-  inline casacore::Matrix<casacore::Double>& lastHess() { return lastHess_; };
-  inline casacore::Vector<casacore::Double>& dpar() { return dpar_; };
-  inline casacore::Vector<casacore::Bool>&   vary() { return vary_; };
-  inline casacore::Int&            nVary() { return nVary_; };
+  inline Double&         lamb() { return lamb_; };
+  inline Vector<Double>& lastPar()  { return lastPar_; };
+  inline Vector<Double>& grad() { return grad_; };
+  inline Vector<Double>& lastGrad() { return lastGrad_; };
+  inline Matrix<Double>& hess() { return hess_; };
+  inline Matrix<Double>& lastHess() { return lastHess_; };
+  inline Vector<Double>& dpar() { return dpar_; };
+  inline Vector<Bool>&   vary() { return vary_; };
+  inline Int&            nVary() { return nVary_; };
 
 
 private:
@@ -192,39 +192,39 @@ private:
   VisBuffer* svb_;
 
   // FieldId in fit
-  casacore::Int fitfld_;
+  Int fitfld_;
 
   // Phase center w.r.t. which modelfitting is done
-  casacore::MDirection pc_;
+  MDirection pc_;
 
   // Total Number of parameters
-  casacore::Int nPar_;
+  Int nPar_;
 
   // Residual/Differentiation caches
-  casacore::Cube<casacore::DComplex>  R_;
-  casacore::Array<casacore::DComplex> dR_;
+  Cube<DComplex>  R_;
+  Array<DComplex> dR_;
 
   // Chi2, sum wts
-  casacore::Double chiSq_;
-  casacore::Double lastChiSq_;
-  casacore::Double sumWt_;
-  casacore::Int    nWt_;
+  Double chiSq_;
+  Double lastChiSq_;
+  Double sumWt_;
+  Int    nWt_;
 
-  casacore::Vector<casacore::Bool> polWt_;
+  Vector<Bool> polWt_;
 
   // Parameter storage
-  casacore::Vector<casacore::Double> par_;
-  casacore::Vector<casacore::Double> lastPar_;
+  Vector<Double> par_;
+  Vector<Double> lastPar_;
 
   // Gradient, Hessian, par update
-  casacore::Double         lamb_;
-  casacore::Vector<casacore::Double> grad_;
-  casacore::Vector<casacore::Double> lastGrad_;
-  casacore::Matrix<casacore::Double> hess_;
-  casacore::Matrix<casacore::Double> lastHess_;
-  casacore::Vector<casacore::Double> dpar_;
-  casacore::Vector<casacore::Bool>   vary_;
-  casacore::Int            nVary_;
+  Double         lamb_;
+  Vector<Double> grad_;
+  Vector<Double> lastGrad_;
+  Matrix<Double> hess_;
+  Matrix<Double> lastHess_;
+  Vector<Double> dpar_;
+  Vector<Bool>   vary_;
+  Int            nVary_;
 
 };
 

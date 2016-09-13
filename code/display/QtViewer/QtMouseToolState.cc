@@ -31,7 +31,6 @@
 #include <stdio.h>		/***for sprintf( )***/
 #include <vector>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	namespace QtMouseToolNames {

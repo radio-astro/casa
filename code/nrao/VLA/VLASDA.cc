@@ -150,8 +150,8 @@ Bool VLASDA::dopplerTracking(VLAEnum::CDA cda) const {
   itsRecord.seek(where);
   Char code;
   itsRecord >> code;
-  if (code == 'F' || code == ' ') return false;
-  return true;
+  if (code == 'F' || code == ' ') return False;
+  return True;
 }
 
 Double VLASDA::restFrequency(VLAEnum::CDA cda) const {
@@ -692,10 +692,10 @@ Bool VLASDA::smoothed() const {
   itsRecord.seek(where);
   Char c;
   itsRecord >> c;
-  if (c == 'H') return true;
+  if (c == 'H') return True;
   itsRecord >> c;
-  if (c == 'H') return true;
-  return false;
+  if (c == 'H') return True;
+  return False;
 }
 
 // Local Variables: 

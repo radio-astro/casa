@@ -66,13 +66,13 @@ namespace casa {
 		// applied to the widget.  If a frame is given, the widget is inserted into
 		// the frame.
 		static QtColorWidget* colorWidget(bool showButton = false,
-		                                  casacore::String setColor = "",
+		                                  String setColor = "",
 		                                  QWidget* parent = NULL);
 
 
 		// Pixel coordinate system.  Used for converting between different
 		// systems, etc.
-		static const casacore::String PIXEL;
+		static const String PIXEL;
 
 
 		// Returns whether or not the given coordinate system has a direction
@@ -88,141 +88,141 @@ namespace casa {
 		// </group>
 
 		// Returns the world system type for the given coordinate system.
-		static casacore::MDirection::Types worldSystem(const DisplayCoordinateSystem& cs);
+		static MDirection::Types worldSystem(const DisplayCoordinateSystem& cs);
 
 		// Returns the world system type for the given WorldCanvas.
-		static casacore::MDirection::Types worldSystem(const WorldCanvas* wc) {
+		static MDirection::Types worldSystem(const WorldCanvas* wc) {
 			return worldSystem(wc->coordinateSystem());
 		}
 
 		// Returns the world system type for the given WorldCanvasHolder.
-		static casacore::MDirection::Types worldSystem(const WorldCanvasHolder& wch) {
+		static MDirection::Types worldSystem(const WorldCanvasHolder& wch) {
 			return worldSystem(wch.worldCanvas()->coordinateSystem());
 		}
 
 		// Converts between coordinate systems.  The result has unit
 		// RegionShape::UNIT.
-		static bool convertWCS(const casacore::Quantum<casacore::Vector<casacore::Double> >& from,
-		                       casacore::MDirection::Types fromSys,
-		                       casacore::Quantum<casacore::Vector<casacore::Double> >& to,
-		                       casacore::MDirection::Types toSys);
+		static bool convertWCS(const Quantum<Vector<Double> >& from,
+		                       MDirection::Types fromSys,
+		                       Quantum<Vector<Double> >& to,
+		                       MDirection::Types toSys);
 
 		// Converts the given coordinates between different systems, using the
-		// given WorldCanvas and world system (if applicable).  casacore::Input world values
+		// given WorldCanvas and world system (if applicable).  Input world values
 		// are expected to have unit RegionShape::UNIT; output world values always
 		// have unit RegionShape::UNIT.  Methods that have a "wrap" flag will check
 		// the sign of the values when converting between different world
 		// coordinate systems, and wrap the values to have the same sign.  If
-		// a casacore::String is given, it will be used to record errors when the method
+		// a String is given, it will be used to record errors when the method
 		// returns false.
 		// <group>
-		static bool worldToPixel(const casacore::Quantum<casacore::Vector<double> >& worldX,
-		                         const casacore::Quantum<casacore::Vector<double> >& worldY,
-		                         casacore::Vector<double>& pixelX, casacore::Vector<double>& pixelY,
-		                         WorldCanvasHolder& wch, casacore::MDirection::Types fromSys,
-		                         bool wrap = true, casacore::String* error = NULL);
+		static bool worldToPixel(const Quantum<Vector<double> >& worldX,
+		                         const Quantum<Vector<double> >& worldY,
+		                         Vector<double>& pixelX, Vector<double>& pixelY,
+		                         WorldCanvasHolder& wch, MDirection::Types fromSys,
+		                         bool wrap = true, String* error = NULL);
 
-		static bool pixelToWorld(const casacore::Vector<double>& pixelX,
-		                         const casacore::Vector<double>& pixelY,
-		                         casacore::Quantum<casacore::Vector<double> >& worldX,
-		                         casacore::Quantum<casacore::Vector<double> >& worldY,
-		                         WorldCanvasHolder& wch, casacore::MDirection::Types toSys,
-		                         bool wrap = true, casacore::String* error = NULL);
+		static bool pixelToWorld(const Vector<double>& pixelX,
+		                         const Vector<double>& pixelY,
+		                         Quantum<Vector<double> >& worldX,
+		                         Quantum<Vector<double> >& worldY,
+		                         WorldCanvasHolder& wch, MDirection::Types toSys,
+		                         bool wrap = true, String* error = NULL);
 
-		static bool worldToLinear(const casacore::Quantum<casacore::Vector<double> >& worldX,
-		                          const casacore::Quantum<casacore::Vector<double> >& worldY,
-		                          casacore::Vector<double>& linearX, casacore::Vector<double>& linearY,
-		                          WorldCanvasHolder& wch, casacore::MDirection::Types fromSys,
-		                          bool wrap = true, casacore::String* error = NULL);
+		static bool worldToLinear(const Quantum<Vector<double> >& worldX,
+		                          const Quantum<Vector<double> >& worldY,
+		                          Vector<double>& linearX, Vector<double>& linearY,
+		                          WorldCanvasHolder& wch, MDirection::Types fromSys,
+		                          bool wrap = true, String* error = NULL);
 
-		static bool pixelToLinear(const casacore::Vector<double>& pixelX,
-		                          const casacore::Vector<double>& pixelY,
-		                          casacore::Vector<double>& linearX, casacore::Vector<double>& linearY,
-		                          WorldCanvasHolder& wch, casacore::String* error = NULL);
+		static bool pixelToLinear(const Vector<double>& pixelX,
+		                          const Vector<double>& pixelY,
+		                          Vector<double>& linearX, Vector<double>& linearY,
+		                          WorldCanvasHolder& wch, String* error = NULL);
 
-		static bool linearToScreen(const casacore::Vector<double>& linearX,
-		                           const casacore::Vector<double>& linearY,
-		                           casacore::Vector<double>& screenX, casacore::Vector<double>& screenY,
-		                           WorldCanvasHolder& wch, casacore::String* error = NULL);
+		static bool linearToScreen(const Vector<double>& linearX,
+		                           const Vector<double>& linearY,
+		                           Vector<double>& screenX, Vector<double>& screenY,
+		                           WorldCanvasHolder& wch, String* error = NULL);
 
-		static bool worldToScreen(const casacore::Quantum<casacore::Vector<double> >& worldX,
-		                          const casacore::Quantum<casacore::Vector<double> >& worldY,
-		                          casacore::Vector<double>& screenX, casacore::Vector<double>& screenY,
-		                          WorldCanvasHolder& wch, casacore::MDirection::Types fromSys,
-		                          bool wrap = true, casacore::String* error = NULL) {
-			casacore::Vector<double> linX(worldX.getValue().size()),
+		static bool worldToScreen(const Quantum<Vector<double> >& worldX,
+		                          const Quantum<Vector<double> >& worldY,
+		                          Vector<double>& screenX, Vector<double>& screenY,
+		                          WorldCanvasHolder& wch, MDirection::Types fromSys,
+		                          bool wrap = true, String* error = NULL) {
+			Vector<double> linX(worldX.getValue().size()),
 			       linY(worldY.getValue().size());
 			return worldToLinear(worldX, worldY, linX, linY, wch, fromSys, wrap,
 			                     error) && linearToScreen(linX,linY,screenX,screenY,wch,error);
 		}
 
-		static bool pixelToScreen(const casacore::Vector<double>& pixelX,
-		                          const casacore::Vector<double>& pixelY,
-		                          casacore::Vector<double>& screenX, casacore::Vector<double>& screenY,
-		                          WorldCanvasHolder& wch, casacore::String* error = NULL) {
-			casacore::Vector<double> linX(pixelX.size()), linY(pixelY.size());
+		static bool pixelToScreen(const Vector<double>& pixelX,
+		                          const Vector<double>& pixelY,
+		                          Vector<double>& screenX, Vector<double>& screenY,
+		                          WorldCanvasHolder& wch, String* error = NULL) {
+			Vector<double> linX(pixelX.size()), linY(pixelY.size());
 			return pixelToLinear(pixelX, pixelY, linX, linY, wch, error) &&
 			       linearToScreen(linX, linY, screenX, screenY, wch, error);
 		}
 
-		static bool screenToLinear(const casacore::Vector<double>& screenX,
-		                           const casacore::Vector<double>& screenY,
-		                           casacore::Vector<double>& linearX, casacore::Vector<double>& linearY,
-		                           WorldCanvasHolder& wch, casacore::String* error = NULL);
+		static bool screenToLinear(const Vector<double>& screenX,
+		                           const Vector<double>& screenY,
+		                           Vector<double>& linearX, Vector<double>& linearY,
+		                           WorldCanvasHolder& wch, String* error = NULL);
 
-		static bool linearToWorld(const casacore::Vector<double>& linearX,
-		                          const casacore::Vector<double>& linearY,
-		                          casacore::Quantum<casacore::Vector<double> >& worldX,
-		                          casacore::Quantum<casacore::Vector<double> >& worldY,
-		                          WorldCanvasHolder& wch, casacore::MDirection::Types toSys,
+		static bool linearToWorld(const Vector<double>& linearX,
+		                          const Vector<double>& linearY,
+		                          Quantum<Vector<double> >& worldX,
+		                          Quantum<Vector<double> >& worldY,
+		                          WorldCanvasHolder& wch, MDirection::Types toSys,
 		                          const vector<int>& xSign,const vector<int>& ySign,
-		                          bool wrap = true, casacore::String* error = NULL);
+		                          bool wrap = true, String* error = NULL);
 
-		static bool linearToWorld(const casacore::Vector<double>& linearX,
-		                          const casacore::Vector<double>& linearY,
-		                          casacore::Quantum<casacore::Vector<double> >& worldX,
-		                          casacore::Quantum<casacore::Vector<double> >& worldY,
-		                          WorldCanvasHolder& wch, casacore::MDirection::Types toSys,
-		                          casacore::String* error = NULL) {
+		static bool linearToWorld(const Vector<double>& linearX,
+		                          const Vector<double>& linearY,
+		                          Quantum<Vector<double> >& worldX,
+		                          Quantum<Vector<double> >& worldY,
+		                          WorldCanvasHolder& wch, MDirection::Types toSys,
+		                          String* error = NULL) {
 			return linearToWorld(linearX, linearY, worldX, worldY, wch, toSys,
 			                     vector<int>(), vector<int>(), false, error);
 		}
 
-		static bool linearToPixel(const casacore::Vector<double>& linearX,
-		                          const casacore::Vector<double>& linearY,
-		                          casacore::Vector<double>& pixelX, casacore::Vector<double>& pixelY,
-		                          WorldCanvasHolder& wch, casacore::String* error = NULL);
+		static bool linearToPixel(const Vector<double>& linearX,
+		                          const Vector<double>& linearY,
+		                          Vector<double>& pixelX, Vector<double>& pixelY,
+		                          WorldCanvasHolder& wch, String* error = NULL);
 
-		static bool screenToWorld(const casacore::Vector<double>& screenX,
-		                          const casacore::Vector<double>& screenY,
-		                          casacore::Quantum<casacore::Vector<double> >& worldX,
-		                          casacore::Quantum<casacore::Vector<double> >& worldY,
-		                          WorldCanvasHolder& wch, casacore::MDirection::Types toSys,
-		                          casacore::String* error = NULL) {
-			casacore::Vector<double> linX(screenX.size()), linY(screenY.size());
+		static bool screenToWorld(const Vector<double>& screenX,
+		                          const Vector<double>& screenY,
+		                          Quantum<Vector<double> >& worldX,
+		                          Quantum<Vector<double> >& worldY,
+		                          WorldCanvasHolder& wch, MDirection::Types toSys,
+		                          String* error = NULL) {
+			Vector<double> linX(screenX.size()), linY(screenY.size());
 			return screenToLinear(screenX, screenY, linX, linY, wch) &&
 			       linearToWorld(linX, linY, worldX, worldY, wch, toSys,
 			                     vector<int>(), vector<int>(), false, error);
 		}
 
-		static bool screenToWorld(const casacore::Vector<double>& screenX,
-		                          const casacore::Vector<double>& screenY,
-		                          casacore::Quantum<casacore::Vector<double> >& worldX,
-		                          casacore::Quantum<casacore::Vector<double> >& worldY,
-		                          WorldCanvasHolder& wch, casacore::MDirection::Types toSys,
+		static bool screenToWorld(const Vector<double>& screenX,
+		                          const Vector<double>& screenY,
+		                          Quantum<Vector<double> >& worldX,
+		                          Quantum<Vector<double> >& worldY,
+		                          WorldCanvasHolder& wch, MDirection::Types toSys,
 		                          const vector<int>& xSign, const vector<int>& ySign,
-		                          casacore::String* error = NULL) {
-			casacore::Vector<double> linX(screenX.size()), linY(screenY.size());
+		                          String* error = NULL) {
+			Vector<double> linX(screenX.size()), linY(screenY.size());
 			return screenToLinear(screenX, screenY, linX, linY, wch) &&
 			       linearToWorld(linX, linY, worldX, worldY, wch, toSys,
 			                     xSign, ySign, true, error);
 		}
 
-		static bool screenToPixel(const casacore::Vector<double>& screenX,
-		                          const casacore::Vector<double>& screenY,
-		                          casacore::Vector<double>& pixelX, casacore::Vector<double>& pixelY,
-		                          WorldCanvasHolder& wch, casacore::String* error = NULL) {
-			casacore::Vector<double> linX(screenX.size()), linY(screenY.size());
+		static bool screenToPixel(const Vector<double>& screenX,
+		                          const Vector<double>& screenY,
+		                          Vector<double>& pixelX, Vector<double>& pixelY,
+		                          WorldCanvasHolder& wch, String* error = NULL) {
+			Vector<double> linX(screenX.size()), linY(screenY.size());
 			return screenToLinear(screenX, screenY, linX, linY, wch, error) &&
 			       linearToPixel(linX, linY, pixelX, pixelY, wch, error);
 		}
@@ -232,12 +232,12 @@ namespace casa {
 		// Appends the given message to the given stream, if the stream does not
 		// already contain an identical message.  Messages are newline-separated.
 		// <group>
-		static void appendUniqueMessage(stringstream& ss, const casacore::String& message);
-		static void appendUniqueMessage(stringstream* ss, const casacore::String& message) {
+		static void appendUniqueMessage(stringstream& ss, const String& message);
+		static void appendUniqueMessage(stringstream* ss, const String& message) {
 			if(ss != NULL) appendUniqueMessage(*ss, message);
 		}
-		static void appendUniqueMessage(casacore::String& ss, const casacore::String& message);
-		static void appendUniqueMessage(casacore::String* ss, const casacore::String& message) {
+		static void appendUniqueMessage(String& ss, const String& message);
+		static void appendUniqueMessage(String* ss, const String& message) {
 			if(ss != NULL) appendUniqueMessage(*ss, message);
 		}
 		// </group>
@@ -253,31 +253,31 @@ namespace casa {
 		// Constructor that uses default colors.  If setText is nonempty, the
 		// chooser is set to the given.  If showButton is true, a "pick" button
 		// is shown for picking colors.
-		QtColorWidget(bool showButton = false, casacore::String setText = "",
+		QtColorWidget(bool showButton = false, String setText = "",
 		              QWidget* parent = NULL);
 
 		// Constructor that uses the given colors.  If setText is nonempty, the
 		// chooser is set to the given.  If showButton is true, a "pick" button
 		// is shown for picking colors.
-		QtColorWidget(const vector<casacore::String>& colors, bool showButton = false,
-		              casacore::String setText = "", QWidget* parent = NULL);
+		QtColorWidget(const vector<String>& colors, bool showButton = false,
+		              String setText = "", QWidget* parent = NULL);
 
 		// Destructor.
 		~QtColorWidget();
 
 		// Returns the color that the user has chosen.  This will either be from
 		// the initial list, or in "#000000" form (see QColor::name()).
-		casacore::String getColor() const;
+		String getColor() const;
 
 		// Sets the displayed color to the given.  If the color is in the colors
 		// list, that index will be selected -- otherwise it will be entered in
 		// the custom color box.
-		void setColor(const casacore::String& color);
+		void setColor(const String& color);
 
 
 		// Returns default colors.
-		static vector<casacore::String> defaultColors() {
-			static vector<casacore::String> v(9);
+		static vector<String> defaultColors() {
+			static vector<String> v(9);
 			v[0] = "white";
 			v[1] = "black";
 			v[2] = "red";
@@ -301,7 +301,7 @@ namespace casa {
 		QPushButton* m_button;
 
 		// Initializes GUI members.
-		void init(const vector<casacore::String>& colors, const casacore::String& setText,
+		void init(const vector<String>& colors, const String& setText,
 		          bool showButton);
 
 	private slots:
@@ -315,7 +315,7 @@ namespace casa {
 
 // Convenience class for the different units available for coordinates/sizes.
 // Two modes: quantum and HMS/DMS (distinguished by the "isQuantum" flag).
-// <ol><li>casacore::Quantum: consists of a value and a unit, stored in "val".</li>
+// <ol><li>Quantum: consists of a value and a unit, stored in "val".</li>
 //     <li>HMS/DMS: consists of three values and two flags.  Hours/degrees
 //         are stored in "hOrD", minutes are stored in "min", and seconds are
 //         stored in "sec".  The "isHMS" flag distinguishes between HMS and
@@ -326,7 +326,7 @@ namespace casa {
 		RSValue(double d = 0) : isQuantum(true), isHMS(false), isMinusZero(false),
 			val(d, DEG), hOrD(0), min(0), sec(0) { }
 
-		RSValue(double d, casacore::Unit u) : isQuantum(true), isHMS(false),
+		RSValue(double d, Unit u) : isQuantum(true), isHMS(false),
 			isMinusZero(false), val(d, u), hOrD(0), min(0), sec(0) { }
 
 		RSValue(bool hms, long hd, long m, double s, bool minus = false) :
@@ -339,29 +339,29 @@ namespace casa {
 		bool isHMS;
 		bool isMinusZero;
 
-		casacore::Quantum<double> val;
+		Quantum<double> val;
 		long hOrD;
 		long min;
 		double sec;
 
 
-		// casacore::Conversion methods/constants //
+		// Conversion methods/constants //
 
 		// Units constants.
 		// <group>
-		static const casacore::String DEG;
-		static const casacore::String RAD;
-		static const casacore::String ARCSEC;
-		static const casacore::String ARCMIN;
-		static const casacore::String HMS;
-		static const casacore::String DMS;
+		static const String DEG;
+		static const String RAD;
+		static const String ARCSEC;
+		static const String ARCMIN;
+		static const String HMS;
+		static const String DMS;
 		// </group>
 
 		// Converts the value in the given QString in the given units to the given
 		// RSValue.  The output RSValue is in degrees.  fromUnits should either be:
 		// 1) HMS or DMS constants,
 		// 2) a relevant Unit.
-		static bool convertBetween(const QString& from, const casacore::String& fromUnits,
+		static bool convertBetween(const QString& from, const String& fromUnits,
 		                           RSValue& to);
 
 		// Converts the value in the given RSValue to the given QString, using the
@@ -374,24 +374,24 @@ namespace casa {
 		// 1) HMS or DMS constants,
 		// 2) a relevant Unit.
 		static bool convertBetween(const RSValue& from, RSValue& to,
-		                           const casacore::String& toUnits);
+		                           const String& toUnits);
 	};
 
 
-// Convenience class for a casacore::String, bool, or double.
+// Convenience class for a String, bool, or double.
 	class RSOption {
 	public:
-		// casacore::String constructor.
-		RSOption(const casacore::String& str);
+		// String constructor.
+		RSOption(const String& str);
 
-		// casacore::Bool constructor.
+		// Bool constructor.
 		RSOption(bool b = false);
 
-		// casacore::Double constructor.
+		// Double constructor.
 		RSOption(double d);
 
-		// casacore::String vector constructor.
-		RSOption(const vector<casacore::String>& v);
+		// String vector constructor.
+		RSOption(const vector<String>& v);
 
 		// Destructor.
 		~RSOption();
@@ -406,31 +406,31 @@ namespace casa {
 
 		// Value methods.
 		// <group>
-		const casacore::String& asString() const;
+		const String& asString() const;
 		bool asBool() const;
 		double asDouble() const;
-		const vector<casacore::String>& asStringArray() const;
+		const vector<String>& asStringArray() const;
 		// </group>
 
 		// Operators.
 		// <group>
 		bool operator==(const RSOption& other);
 		bool operator!=(const RSOption& other);
-		RSOption& operator=(const casacore::String& str);
+		RSOption& operator=(const String& str);
 		RSOption& operator=(bool b);
 		RSOption& operator=(double d);
-		RSOption& operator=(const vector<casacore::String>& v);
+		RSOption& operator=(const vector<String>& v);
 		// </group>
 
 	private:
 		bool m_isString;
-		casacore::String m_string;
+		String m_string;
 		bool m_isBool;
 		bool m_bool;
 		bool m_isDouble;
 		double m_double;
 		bool m_isStringArray;
-		vector<casacore::String> m_stringArray;
+		vector<String> m_stringArray;
 	};
 
 
@@ -443,7 +443,7 @@ namespace casa {
 		// Defaults.
 		// <group>
 		static const int DEFAULT_MARKER_HEIGHT;
-		static const casacore::String DEFAULT_MARKER_COLOR;
+		static const String DEFAULT_MARKER_COLOR;
 		static const Display::Marker DEFAULT_MARKER_TYPE;
 		// </group>
 
@@ -454,14 +454,14 @@ namespace casa {
 		// the handle is invalid.
 		RSHandle(const vector<double>& x, const vector<double>& y,
 		         int markerHeight = DEFAULT_MARKER_HEIGHT,
-		         const casacore::String& markerColor = DEFAULT_MARKER_COLOR,
+		         const String& markerColor = DEFAULT_MARKER_COLOR,
 		         Display::Marker markerType = DEFAULT_MARKER_TYPE);
 
 		// Constructor which takes x and y Vectors.  x and y MUST be length 4 or
 		// the handle is invalid.
-		RSHandle(const casacore::Vector<double>& x, const casacore::Vector<double>& y,
+		RSHandle(const Vector<double>& x, const Vector<double>& y,
 		         int markerHeight = DEFAULT_MARKER_HEIGHT,
-		         const casacore::String& markerColor = DEFAULT_MARKER_COLOR,
+		         const String& markerColor = DEFAULT_MARKER_COLOR,
 		         Display::Marker markerType = DEFAULT_MARKER_TYPE);
 
 		// Destructor.
@@ -473,10 +473,10 @@ namespace casa {
 			return m_markerHeight;
 		}
 		void setMarkerHeight(int height);
-		casacore::String getMarkerColor() const {
+		String getMarkerColor() const {
 			return m_markerColor;
 		}
-		void setMarkerColor(const casacore::String& color);
+		void setMarkerColor(const String& color);
 		Display::Marker getMarkerType() const {
 			return m_markerType;
 		}
@@ -505,7 +505,7 @@ namespace casa {
 		bool m_isValid;
 		vector<double> m_x, m_y;
 		int m_markerHeight;
-		casacore::String m_markerColor;
+		String m_markerColor;
 		Display::Marker m_markerType;
 	};
 

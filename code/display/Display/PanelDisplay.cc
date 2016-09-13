@@ -36,7 +36,6 @@
 #include <display/Display/PanelDisplay.h>
 #include <display/DisplayEvents/MultiWCTool.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	const String PanelDisplay::X_ORIGIN="xorigin";
@@ -54,7 +53,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		MultiWCHolder(),
 		myWCLI(0),
 		itsPixelCanvas(pixelcanvas),
-		itsGeometrySet(false),
+		itsGeometrySet(False),
 		//itsWCLI(0),
 		//itsWCHLI(0),
 		itsMWCTools( SHARED_PTR<MultiWCTool>( ), uInt(10) ) {
@@ -140,7 +139,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		attString = "leftMarginSpacePG";
 		getAttributeValue(attString, temp);
 		leftmarginspacepg.define("value", temp);
-		leftmarginspacepg.define("allowunset", false);
+		leftmarginspacepg.define("allowunset", False);
 		leftmarginspacepg.define("context", "Margins");
 		rec.defineRecord(WorldCanvas::LEFT_MARGIN_SPACE_PG, leftmarginspacepg);
 
@@ -154,7 +153,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		attString = "bottomMarginSpacePG";
 		getAttributeValue(attString, temp);
 		bottommarginspacepg.define("value", temp);
-		bottommarginspacepg.define("allowunset", false);
+		bottommarginspacepg.define("allowunset", False);
 		bottommarginspacepg.define("context", "Margins");
 		rec.defineRecord(WorldCanvas::BOTTOM_MARGIN_SPACE_PG, bottommarginspacepg);
 
@@ -168,7 +167,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		attString = "rightMarginSpacePG";
 		getAttributeValue(attString, temp);
 		rightmarginspacepg.define("value", temp);
-		rightmarginspacepg.define("allowunset", false);
+		rightmarginspacepg.define("allowunset", False);
 		rightmarginspacepg.define("context", "Margins");
 		rec.defineRecord(WorldCanvas::RIGHT_MARGIN_SPACE_PG, rightmarginspacepg);
 
@@ -182,7 +181,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		attString = "topMarginSpacePG";
 		getAttributeValue(attString, temp);
 		topmarginspacepg.define("value", temp);
-		topmarginspacepg.define("allowunset", false);
+		topmarginspacepg.define("allowunset", False);
 		topmarginspacepg.define("context", "Margins");
 		rec.defineRecord(WorldCanvas::TOP_MARGIN_SPACE_PG, topmarginspacepg);
 
@@ -194,7 +193,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		nxpanels.define("pmax", Int(5));
 		nxpanels.define("default", Int(1));
 		nxpanels.define("value", itsNX);
-		nxpanels.define("allowunset", false);
+		nxpanels.define("allowunset", False);
 		nxpanels.define("context", "Number_of_panels");
 		rec.defineRecord("nxpanels", nxpanels);
 
@@ -206,7 +205,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		nypanels.define("pmax", Int(5));
 		nypanels.define("default", Int(1));
 		nypanels.define("value", itsNY);
-		nypanels.define("allowunset", false);
+		nypanels.define("allowunset", False);
 		nypanels.define("context", "Number_of_panels");
 		rec.defineRecord("nypanels", nypanels);
 
@@ -218,7 +217,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		xspacing.define("pmax", 0.49);
 		xspacing.define("default", Float(0.0));
 		xspacing.define("value", itsDX);
-		xspacing.define("allowunset", false);
+		xspacing.define("allowunset", False);
 		xspacing.define("context", "Number_of_panels");
 		rec.defineRecord("xspacing", xspacing);
 
@@ -230,7 +229,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		yspacing.define("pmax", 0.49);
 		yspacing.define("default", Float(0.0));
 		yspacing.define("value", itsDY);
-		yspacing.define("allowunset", false);
+		yspacing.define("allowunset", False);
 		yspacing.define("context", "Number_of_panels");
 		rec.defineRecord("yspacing", yspacing);
 
@@ -239,13 +238,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	Bool PanelDisplay::setOptions(const Record& rec, Record& ) {
-		Bool ret = false, localchange = false;
+		Bool ret = False, localchange = False;
 		Bool error;
 
 		String attString;
 		AttributeBuffer attBuffer;
 
-		Bool geometrychange = false;
+		Bool geometrychange = False;
 		geometrychange = readOptionRecord(itsNX, error, rec,  "nxpanels")
 		                 || geometrychange;
 		geometrychange = readOptionRecord(itsNY, error, rec,  "nypanels")
@@ -258,7 +257,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if (geometrychange) {
 			setGeometry(itsNX,itsNY,itsXOrigin,itsYOrigin,
 			            itsXSize,itsYSize,itsDX,itsDY,itsOrder);
-			localchange = true;
+			localchange = True;
 		}
 
 		// set distributed options
@@ -395,7 +394,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsOrder = order;
 
 
-		updateTools(true,false);	// (remove them temporarily).
+		updateTools(True,False);	// (remove them temporarily).
 
 
 		Float xPanelSize = (itsXSize - static_cast<Float>(itsNX - 1) * itsDX) /
@@ -496,9 +495,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			wc=0;
 		}
 
-		updateTools(false,true);	// (restore mouse tools).
+		updateTools(False,True);	// (restore mouse tools).
 		setDefaultOptions();
-		itsGeometrySet = true;
+		itsGeometrySet = True;
 
 		// can't refresh before realize is called, this would be called in
 		// the 'initialize' process of X -> commented out.
@@ -511,7 +510,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if (!itsGeometrySet) {
 			return;
 		}
-		updateTools(true,false);
+		updateTools(True,False);
 		// 1. remove the WorldCanvasHolders
 		ListIter<WorldCanvasHolder* >itsWCHLI( itsWCHList );
 		itsWCHLI.toStart();
@@ -533,7 +532,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			wc=0;
 			// don't increment iterator - removeRight() has that effect!
 		}
-		itsGeometrySet = false;
+		itsGeometrySet = False;
 		// we have remove WorldCanvases from the PixelCanvas, so we should
 		// refresh the entire PixelCanvas.
 
@@ -574,9 +573,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	Bool PanelDisplay::hasTools() {
 		if (itsMWCTools.ndefined() > 0) {
-			return true;
+			return True;
 		} else {
-			return false;
+			return False;
 		}
 	}
 

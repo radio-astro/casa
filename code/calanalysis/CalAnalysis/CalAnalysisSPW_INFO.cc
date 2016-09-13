@@ -31,7 +31,6 @@ Modification history:
 // Start of casa namespace
 // -----------------------------------------------------------------------------
 
-using namespace casacore;
 namespace casa {
 
 // -----------------------------------------------------------------------------
@@ -114,7 +113,7 @@ CalAnalysis::SPW_INFO::SPW_INFO( const String& oTableName ) {
 
   // Initialize this instance
 
-  bValid = true;
+  bValid = True;
 
   uiNumSPW = oFreqACD.nrow();
 
@@ -216,7 +215,7 @@ CalAnalysis::SPW_INFO::SPW_INFO( void ) {
 
   // Initialize all instances to their default values
 
-  bValid = false;
+  bValid = False;
 
   uiNumSPW = 0;
   oSPW = Vector<uInt>();
@@ -336,7 +335,7 @@ window and channel numbers.
 NB: Before using this function, the spectral window and channel numbers should
 be checked by CalAnalysis::SPW_INFO::spwInfoCheck().
 
-NB: This function now always returns true.  It could return false previously
+NB: This function now always returns True.  It could return False previously
 because it did some checking.  I have not changed the output of this function
 just in case I want to add checking again.
 
@@ -368,13 +367,13 @@ Bool& CalAnalysis::SPW_INFO::freq( const Vector<uInt>& oSPWIn,
 
   // Declare the success boolean
 
-  Bool* poSuccess = new Bool( false );
+  Bool* poSuccess = new Bool( False );
 
 
   // Check the inputs
 
   if ( oSPWIn.nelements() != oChannelIn.nelements() ) {
-    *poSuccess = false;
+    *poSuccess = False;
     return( *poSuccess );
   }
 
@@ -391,15 +390,15 @@ Bool& CalAnalysis::SPW_INFO::freq( const Vector<uInt>& oSPWIn,
 
   for ( uInt s=0; s<oSPWIn.nelements(); s++ ) {
     for ( uInt c=0; c<oChannelIn[s].nelements(); c++ ) {
-      oFreqOut.resize( ++uiNumFreqOut, true );
+      oFreqOut.resize( ++uiNumFreqOut, True );
       oFreqOut[uiNumFreqOut-1] = oFrequency[oSPWIn[s]][oChannelIn[s][c]];
     }
   }
 
 
-  // Return true
+  // Return True
 
-  *poSuccess = true;
+  *poSuccess = True;
 
   return( *poSuccess );
 
@@ -450,13 +449,13 @@ Bool& CalAnalysis::SPW_INFO::spwInfoCheck( const Vector<uInt>& oSPWIn,
 
   // Declare the success boolean
 
-  Bool* poSuccess = new Bool( false );
+  Bool* poSuccess = new Bool( False );
 
 
   // Does this instance contain valid spectral window and channel numbers?
 
   if ( !bValid ) {
-    *poSuccess = false;
+    *poSuccess = False;
     return( *poSuccess );
   }
 
@@ -472,13 +471,13 @@ Bool& CalAnalysis::SPW_INFO::spwInfoCheck( const Vector<uInt>& oSPWIn,
   // Check the output spectral window numbers
 
   if ( uiNumSPWOut == 0 ) {
-    *poSuccess = false;
+    *poSuccess = False;
     return( *poSuccess );
   }
 
   for ( uInt s=0; s<uiNumSPWOut; s++ ) {
     if ( !exists<uInt>( oSPWOut[s], oSPW ) ) {
-      *poSuccess = false;
+      *poSuccess = False;
       return( *poSuccess );
     }
   }
@@ -490,7 +489,7 @@ Bool& CalAnalysis::SPW_INFO::spwInfoCheck( const Vector<uInt>& oSPWIn,
 
   uInt uiNumSPWIn = oSPWIn.nelements();
 
-  oChannelOut.resize( uiNumSPWOut, false );
+  oChannelOut.resize( uiNumSPWOut, False );
 
   for ( uInt so=0; so<uiNumSPWOut; so++ ) {
     oChannelOut[so].resize();
@@ -499,7 +498,7 @@ Bool& CalAnalysis::SPW_INFO::spwInfoCheck( const Vector<uInt>& oSPWIn,
       uInt uiNumChannelOut = oChannelOut[so].nelements();
       uInt uiNumChannelIn = oChannelIn[si].nelements();
       for ( uInt c=0; c<uiNumChannelIn; c++ ) {
-	oChannelOut[so].resize( ++uiNumChannelOut, true );
+	oChannelOut[so].resize( ++uiNumChannelOut, True );
         oChannelOut[so][uiNumChannelOut-1] = oChannelIn[si][c];
       }
     }
@@ -521,16 +520,16 @@ Bool& CalAnalysis::SPW_INFO::spwInfoCheck( const Vector<uInt>& oSPWIn,
     uInt uiNumChannelOut = oChannelOut[s].nelements();
     for ( uInt c=0; c<uiNumChannelOut; c++ ) {
       if ( oChannelOut[s][c] >= oNumChannel[oSPWOut[s]] ) {
-        *poSuccess = false;
+        *poSuccess = False;
         return( *poSuccess );
       }
     }
   }
 
 
-  // Return true
+  // Return True
 
-  *poSuccess = true;
+  *poSuccess = True;
 
   return( *poSuccess );
 

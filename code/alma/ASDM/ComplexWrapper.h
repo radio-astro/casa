@@ -21,7 +21,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
  * MA 02111-1307  USA
  *
- * casacore::File ComplexWrapper.h
+ * File ComplexWrapper.h
  */
 
 #ifndef Complex_CLASS
@@ -53,7 +53,7 @@ using asdm::EndianIStream;
 namespace asdm {
 
 /**
- * The casacore::Complex class extends the casacore::Complex class in the C++ standard library.
+ * The Complex class extends the Complex class in the C++ standard library.
  * 
  * @version 1.00 Jan. 7, 2005
  * @author Allen Farris
@@ -61,8 +61,7 @@ namespace asdm {
  * @author Michel Caillat 
  * added toBin/fromBin methods.
  */
-
-    class Complex : public std::complex<double> {
+class Complex : public std::complex<double> {
 
 public:
 	static Complex fromString(const string&) throw(NumberFormatException);
@@ -146,7 +145,7 @@ public:
 	 * @param eis the EndianIStream to be read
 	 * @return a vector of vector of vector of Complex
 	 */	 
-	 static vector<vector<vector<Complex> > > from3DBin(EndianIStream & eis);
+	 static vector<vector<vector<Complex> > > from3DBin(EndianIStream & eis);	 
 
 };
 

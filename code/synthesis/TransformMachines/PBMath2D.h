@@ -32,17 +32,13 @@
 #include <casa/aips.h>
 #include <synthesis/TransformMachines/PBMathInterface.h>
 
-namespace casacore{
-
-class Table;
-class ImageRegion;
-class CoordinateSystem;
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //#forward
+class Table;
 class SkyComponent;
+class ImageRegion;
+class CoordinateSystem;
 
 // <summary> base class for 1D PBMath objects </summary>
 
@@ -88,14 +84,14 @@ class SkyComponent;
 // (Nice defaults can reduce the arguments in most cases.)
 // <example>
 // <srcblock>
-//  PBMath2DGauss myPB  (casacore::Quantity(1.0, "'"), casacore::Quantity(3.0, "'"), casacore::Quantity(1.0, "GHz"),
-//                       false,   // these are PB parameters, not VP
-//                       BeamSquint(casacore::MDirection(casacore::Quantity(2.0, "\""),
-//                                                      casacore::Quantity(0.0, "\""),
-//                                                      casacore::MDirection::Ref(casacore::MDirection::AZEL)),
-//                                  casacore::Quantity(2.0, "GHz")),
-//                       false);
-//  PBMath2DGauss myPB2  (casacore::Quantity(1.0, "'"), casacore::Quantity(3.0, "'"), casacore::Quantity(1.0, "GHz"));
+//  PBMath2DGauss myPB  (Quantity(1.0, "'"), Quantity(3.0, "'"), Quantity(1.0, "GHz"),
+//                       False,   // these are PB parameters, not VP
+//                       BeamSquint(MDirection(Quantity(2.0, "\""),
+//                                                      Quantity(0.0, "\""),
+//                                                      MDirection::Ref(MDirection::AZEL)),
+//                                  Quantity(2.0, "GHz")),
+//                       False);
+//  PBMath2DGauss myPB2  (Quantity(1.0, "'"), Quantity(3.0, "'"), Quantity(1.0, "GHz"));
 // 
 // </srcblock>
 // </example>
@@ -117,15 +113,15 @@ class SkyComponent;
 // <example>
 // <srcblock>
 //
-//    casacore::PagedImage<casacore::Float> in;
-//    casacore::PagedImage<casacore::Complex> out;
-//    casacore::MDirection pointingDir(casacore::Quantity(135.0, "deg"), casacore::Quantity(60.0, "deg"), 
-//                           casacore::MDirection::Ref(casacore::MDirection::J2000));
-//    casacore::Quantity parallacticAngle(26.5, "deg");
+//    PagedImage<Float> in;
+//    PagedImage<Complex> out;
+//    MDirection pointingDir(Quantity(135.0, "deg"), Quantity(60.0, "deg"), 
+//                           MDirection::Ref(MDirection::J2000));
+//    Quantity parallacticAngle(26.5, "deg");
 //    PBMath wsrtPB(PBMath::WSRT_LOW);
 //    wsrtPB.applyPB(in, out, pointingDir);   // multiply by primary beam
 //    wsrtPB.applyPB(in, out, pointingDir, parallacticAngle, BeamSquint::GOFIGURE, 
-//                   true, 0.02); // divide by primary beam
+//                   True, 0.02); // divide by primary beam
 //    wsrtPB.applyVP(in, out, pointingDir);   // multiply by voltage pattern
 //
 // </srcblock>
@@ -139,9 +135,9 @@ class SkyComponent;
 //
 // lower level helping apply methods: reduce code by this bundling
 // <thrown>
-// <li> casacore::AipsError - in apply(Image...), if in and out images are 
+// <li> AipsError - in apply(Image...), if in and out images are 
 //      inconsistent in shape or coordinates
-// <li> casacore::AipsError - in  apply(SkyComponent...), if doSqiont==RR or LL
+// <li> AipsError - in  apply(SkyComponent...), if doSqiont==RR or LL
 // </thrown>
 // <todo asof="98/010/21">
 // <li> SymmetrizeBeam doesn't do anything yet.  (It should calculate
@@ -165,34 +161,34 @@ public:
 
   // Summarize the Voltage Pattern;
   // For PBMath2D, list nValues worth of the VP array
-  virtual void summary(casacore::Int nValues=0);
+  virtual void summary(Int nValues=0);
 
   // Is state of PBMath OK?
-  virtual casacore::Bool ok();
+  virtual Bool ok();
 
-  // Get the casacore::ImageRegion of the primary beam on an Image for a given pointing
-  // Note: casacore::ImageRegion is not necesarily constrained to lie within the
+  // Get the ImageRegion of the primary beam on an Image for a given pointing
+  // Note: ImageRegion is not necesarily constrained to lie within the
   // image region (for example, if the pointing center is near the edge of the
   // image).  fPad: extra fractional padding, beyond Primary Beam support
   // (note: we do not properly treat squint yet, this will cover it for now)
   // iChan: frequency channel to take: lowest frequency channel is safe for all
   //
-  // Potential problem: this casacore::ImageRegion includes all casacore::Stokes and Frequency Channels
+  // Potential problem: this ImageRegion includes all Stokes and Frequency Channels
   // present in the input image.
-  casacore::ImageRegion* extent (const casacore::ImageInterface<casacore::Complex>& in, 
-		       const casacore::MDirection& pointing,
-		       const casacore::Int irow,	
-		       const casacore::Float fPad,  
-		       const casacore::Int iChan,  
+  ImageRegion* extent (const ImageInterface<Complex>& in, 
+		       const MDirection& pointing,
+		       const Int irow,	
+		       const Float fPad,  
+		       const Int iChan,  
 		       const SkyJones::SizeType sizeType);
-  casacore::ImageRegion* extent (const casacore::ImageInterface<casacore::Float>& in, 
-		       const casacore::MDirection& pointing,
-		       const casacore::Int irow,	
-		       const casacore::Float fPad,  
-		       const casacore::Int iChan,  
+  ImageRegion* extent (const ImageInterface<Float>& in, 
+		       const MDirection& pointing,
+		       const Int irow,	
+		       const Float fPad,  
+		       const Int iChan,  
 		       const SkyJones::SizeType sizeType);
 
-  virtual casacore::Int support(const casacore::CoordinateSystem& cs);
+  virtual Int support(const CoordinateSystem& cs);
 
 protected:
 

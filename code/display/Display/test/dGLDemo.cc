@@ -32,7 +32,7 @@
 //	Tracing with user supplied notations.
 
 
-// The program will work with either PseudoColor or trueColor visuals.
+// The program will work with either PseudoColor or TrueColor visuals.
 //
 // This was derived from dMultichannelRaster's skeleton.
 #if defined(OGL)
@@ -102,7 +102,7 @@ static const uInt GRAY = 7;
 static const uInt nROColors_ = 7;	// Number of RO colors.
 static uInt nColors_=0;
 static uInt nColorsAvailable_=0;
-static Bool doSmall_ = false;
+static Bool doSmall_ = False;
 
 // Set current color to the given color 'index'.
 static void setColor(const uInt ROColor, GLPixelCanvas *pc) {
@@ -127,10 +127,10 @@ public:
 
 
 int main(int argc, char **argv) {
-	Boolean trace = false;		// Whether to show trace info.
-	Boolean delay = true;		// Whether to delay trace output.
-	Boolean useLogIO = true;	// Whether to trace to LogIO (or cout).
-	Boolean refresh = true;
+	Boolean trace = False;		// Whether to show trace info.
+	Boolean delay = True;		// Whether to delay trace output.
+	Boolean useLogIO = True;	// Whether to trace to LogIO (or cout).
+	Boolean refresh = True;
 	String traceString;
 	Display::ColorModel g_colormodel;
 
@@ -182,7 +182,7 @@ int main(int argc, char **argv) {
 		useLogIO = inputs.getBool("uselogio");
 		// If either delay or useLogIO isn't its default, turn on tracing.
 		if(!(delay && useLogIO))
-			trace = true;
+			trace = True;
 
 		refresh = inputs.getBool("refresh");
 		doSmall_ = inputs.getBool("small");
@@ -422,14 +422,14 @@ static void drawObj( Float x, Float y, Float w, Float h,
 	// Draw filled polygon
 	setColor(color, pc);
 
-	poly(true, x + w/2.0, y + h/2.0, 0.8*w, 0.8*h, pc);
+	poly(True, x + w/2.0, y + h/2.0, 0.8*w, 0.8*h, pc);
 
 	// Then an overlaying line.
 	setColor(WHITE, pc);
 	pc->drawLine(x, y+h, x+w, y);
 	// Finally an unfilled polygon inside first.
 	setColor(GRAY, pc);
-	poly(false, x +w/2.0, y + h*0.5, 0.5*w, 0.5*h, pc);
+	poly(False, x +w/2.0, y + h*0.5, 0.5*w, 0.5*h, pc);
 	pc->popAttrib();
 }
 

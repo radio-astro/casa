@@ -28,7 +28,6 @@
 #include <display/QtViewer/QtAnnotatorGui.qo.h>
 
 #include <iostream>
-using namespace casacore;
 namespace casa {
 
 	QtAnnotatorGui::QtAnnotatorGui(QtDisplayPanel *parent)

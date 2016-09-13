@@ -38,16 +38,12 @@
 //# display library includes:
 #include <display/DisplayDatas/LatticePADD.h>
 
-namespace casacore{
-
-	template <class T> class Array;
-	class IPosition;
-	class Record;
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# forwards:
+	template <class T> class Array;
+	class IPosition;
+	class Record;
 	template <class T> class LatticePADMVector;
 
 // <summary>Class to manage the drawing of vector maps of slices from AIPS++ Lattices</summary>
@@ -72,8 +68,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // lines with an amplitude and position angle
 // for two-dimensional slices of data extracted from AIPS++ Lattices or
 // Arrays having two or more dimensions.  The data source can be Complex
-// or Float.  If casacore::Complex, then both the amplitude and position angle
-// can be extracted.  If casacore::Float, the data represents the position angle
+// or Float.  If Complex, then both the amplitude and position angle
+// can be extracted.  If Float, the data represents the position angle
 // (degrees) and an amplitude of unity is assumed.
 // I
 //
@@ -93,17 +89,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <example>
 // A LatticeAsVector object could be constructed and used as follows:
 // <srcblock>
-// casacore::PagedImage<casacore::Complex> *pimage = new casacore::PagedImage<casacore::Complex>(casacore::String("test.im"));
+// PagedImage<Complex> *pimage = new PagedImage<Complex>(String("test.im"));
 // DisplayData *dd;
-// casacore::uInt ndim = pimage->ndim();
+// uInt ndim = pimage->ndim();
 // if (ndim < 2) {
-//   throw(casacore::AipsError(casacore::String("Image has less than two dimensions")));
+//   throw(AipsError(String("Image has less than two dimensions")));
 // } else if (ndim == 2) {
-//   dd = (DisplayData *)(new LatticeAsVector<casacore::Complex>(pimage, 0, 1));
+//   dd = (DisplayData *)(new LatticeAsVector<Complex>(pimage, 0, 1));
 // } else {
-//   casacore::IPosition fixedPos(ndim);
+//   IPosition fixedPos(ndim);
 //   fixedPos = 0;
-//   dd = (DisplayData *)(new LatticeAsVector<casacore::Complex>(pimage, 0, 1, 2,fixedPos));
+//   dd = (DisplayData *)(new LatticeAsVector<Complex>(pimage, 0, 1, 2,fixedPos));
 // }
 // // wcHolder is an existing WorldCanvasHolder *...
 // wcHolder->addDisplayData(ddata);
@@ -129,7 +125,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	template <class T> class LatticeAsVector : public LatticePADisplayData<T> {
 
 	public:
-		// casacore::Array-based constructors: >2d and 2d.  xAxis and yAxis specify
+		// Array-based constructors: >2d and 2d.  xAxis and yAxis specify
 		// which axis in the array (0-based) should be mapped to X and Y
 		// on the display device: ie. 2-d slices of the data to be displayed
 		// have these axes.  mAxis specifies the "movie" axis, which is the axis
@@ -138,11 +134,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// and indicate the fixed axis values for axes in the data that are
 		// not specified as xAxis, yAxis or mAxis.
 		// <group>
-		LatticeAsVector(casacore::Array<T>* array, const casacore::uInt xAxis,
-		                const casacore::uInt yAxis, const casacore::uInt mAxis,
-		                const casacore::IPosition fixedPos);
-		LatticeAsVector(casacore::Array<T>* array, const casacore::uInt xAxis,
-		                const casacore::uInt yAxis);
+		LatticeAsVector(Array<T>* array, const uInt xAxis,
+		                const uInt yAxis, const uInt mAxis,
+		                const IPosition fixedPos);
+		LatticeAsVector(Array<T>* array, const uInt xAxis,
+		                const uInt yAxis);
 		// </group>
 
 		// Image-based constructors: >2d and 2d.  xAxis and yAxis specify
@@ -154,11 +150,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// and indicate the fixed axis values for axes in the data that are
 		// not specified as xAxis, yAxis or mAxis.
 		// <group>
-		LatticeAsVector(SHARED_PTR<casacore::ImageInterface<T> > image, const casacore::uInt xAxis,
-		                const casacore::uInt yAxis, const casacore::uInt mAxis,
-		                const casacore::IPosition fixedPos);
-		LatticeAsVector(SHARED_PTR<casacore::ImageInterface<T> > image, const casacore::uInt xAxis,
-		                const casacore::uInt yAxis);
+		LatticeAsVector(SHARED_PTR<ImageInterface<T> > image, const uInt xAxis,
+		                const uInt yAxis, const uInt mAxis,
+		                const IPosition fixedPos);
+		LatticeAsVector(SHARED_PTR<ImageInterface<T> > image, const uInt xAxis,
+		                const uInt yAxis);
 		// </group>
 
 		// Destructor
@@ -168,24 +164,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// maps.  This is called upon construction as well as whenever
 		// the display and/or movie axes are changed via a call to
 		// PrincipalAxesDD::setAxes.
-		//virtual void setupElements(casacore::IPosition fixedPos = casacore::IPosition(2));
+		//virtual void setupElements(IPosition fixedPos = IPosition(2));
 		virtual void setupElements();
 
 		// install the default options for display
 		virtual void setDefaultOptions();
 
-		// Apply the options stored in the provided casacore::Record to the
-		// LatticeAsVector object.  If the return value is true, then
+		// Apply the options stored in the provided Record to the
+		// LatticeAsVector object.  If the return value is True, then
 		// some options have changed, and a refresh is needed to update
 		// the display.
-		virtual casacore::Bool setOptions(casacore::Record& rec, casacore::Record& recOut);
+		virtual Bool setOptions(Record& rec, Record& recOut);
 
 		// Retrieve the currently set options, and their types, default
 		// values, and any help text associated with each parameter.  This
 		// information can be used to generate form-type graphical user
 		// interfaces or command-line interfaces to set the options with
 		// prompts.
-		virtual casacore::Record getOptions( bool scrub=false ) const;
+		virtual Record getOptions( bool scrub=false ) const;
 
 		// Return the DisplayData type; used by the WorldCanvasHolder to
 		// determine the order of drawing.
@@ -194,31 +190,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		// class name
-		virtual casacore::String className() const {
-			return casacore::String("LatticeAsVector");
+		virtual String className() const {
+			return String("LatticeAsVector");
 		}
 
-		// Value of the casacore::Lattice at a position--used by showValue().  Overrides
+		// Value of the Lattice at a position--used by showValue().  Overrides
 		// base version to take user-controlled addition to phase angle into account.
-		virtual /*const*/ T dataValue(casacore::IPosition pos);
+		virtual /*const*/ T dataValue(IPosition pos);
 
 	private:
 
-		casacore::Float getVariance();
+		Float getVariance();
 //
-		casacore::Float itsScale;          // Amplitude scale factor
-		casacore::Float itsLineWidth;      // Line width of vectors
-		casacore::Int itsIncX;             // Increment in X (pixels)
-		casacore::Int itsIncY;             // Increment in Y (pixels)
-		casacore::Bool itsArrow;           // Do vectors have arrow head ?
-		casacore::Float itsBarb;           // Arrow head shape
-		casacore::String itsColor;         // Color of vectors
-		casacore::Float itsRotation;       // Add extra rotation
-		casacore::String itsPhaseType;     // phase handling type (normal/polarimetric)
-		casacore::Bool itsDebias;          // Debias amplitude ?
-		casacore::Float itsVar;            // Variance of noise for debiasing
-		casacore::Unit itsUnits;           // Image brightness units
-		casacore::Bool itsConstAmp;        // SHow as constant amplitude
+		Float itsScale;          // Amplitude scale factor
+		Float itsLineWidth;      // Line width of vectors
+		Int itsIncX;             // Increment in X (pixels)
+		Int itsIncY;             // Increment in Y (pixels)
+		Bool itsArrow;           // Do vectors have arrow head ?
+		Float itsBarb;           // Arrow head shape
+		String itsColor;         // Color of vectors
+		Float itsRotation;       // Add extra rotation
+		String itsPhaseType;     // phase handling type (normal/polarimetric)
+		Bool itsDebias;          // Debias amplitude ?
+		Float itsVar;            // Variance of noise for debiasing
+		Unit itsUnits;           // Image brightness units
+		Bool itsConstAmp;        // SHow as constant amplitude
 //
 		friend class LatticePADMVector<T>;
 
@@ -239,8 +235,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 //# Define template specializations.
-	template <> casacore::Float LatticeAsVector<casacore::Complex>::getVariance();
-	template <> casacore::Float LatticeAsVector<casacore::Float>::getVariance();
+	template <> Float LatticeAsVector<Complex>::getVariance();
+	template <> Float LatticeAsVector<Float>::getVariance();
 
 
 

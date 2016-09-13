@@ -26,7 +26,6 @@
 #include "ActionQuit.h"
 #include <plotms/PlotMS/PlotMS.h>
 
-using namespace casacore;
 namespace casa {
 
 ActionQuit::ActionQuit( Client* client )
@@ -43,5 +42,4 @@ bool ActionQuit::doActionSpecific(PlotMSApp* plotms){
 ActionQuit::~ActionQuit() {
 }
 
-using namespace casacore;
 } /* namespace casa */

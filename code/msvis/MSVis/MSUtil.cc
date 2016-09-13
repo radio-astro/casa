@@ -33,7 +33,6 @@
 #include <msvis/MSVis/MSUtil.h>
 #include <casa/Arrays/ArrayMath.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
   MSUtil::MSUtil(){};
@@ -141,7 +140,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	  Int nfields = GenSort<Int>::sort (fldId, order, option);
 
-	  fldId.resize(nfields, true);
+	  fldId.resize(nfields, True);
 	  outspw.resize();
 	  outstart.resize();
 	  outnchan.resize();
@@ -149,10 +148,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  Vector<Int> locspw, locstart, locnchan;
 		  MSUtil::getSpwInFreqRange(locspw, locstart, locnchan, ms, freqStart, freqEnd, freqStep, freqframe, fldId[k]);
 		  for (Int j=0; j< locspw.shape()(0); ++j ){
-			  Bool hasthisspw=false;
+			  Bool hasthisspw=False;
 			  for (Int i=0; i< outspw.shape()(0); ++i){
 				  if(outspw[i]==locspw[j]){
-					  hasthisspw=true;
+					  hasthisspw=True;
 					  if(locstart[j] < outstart[i]){
 						  Int endchan=outstart[i]+outnchan[i]-1;
 						  outstart[i]=locstart[j];
@@ -164,9 +163,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			  }
 			  if(!hasthisspw){
 			    uInt nout=outspw.nelements();
-				  outspw.resize(nout+1, true);
-				  outnchan.resize(nout+1, true);
-				  outstart.resize(nout+1, true);
+				  outspw.resize(nout+1, True);
+				  outnchan.resize(nout+1, True);
+				  outstart.resize(nout+1, True);
 				  outspw[nout]=locspw[j];
 				  outstart[nout]=locstart[j];
 				  outnchan[nout]=locnchan[j];
@@ -284,14 +283,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     for (uInt k=1; k < n; ++k){ 
       if(t[k] != retval(prev)){
 	++prev;
-	//retval.resize(prev+1, true);
+	//retval.resize(prev+1, True);
 	retval[prev]=t[k];
-	//indx.resize(prev+1, true);
+	//indx.resize(prev+1, True);
 	indx[prev]=k;
       }
     }
-    retval.resize(prev+1, true);
-    indx.resize(prev+1, true);
+    retval.resize(prev+1, True);
+    indx.resize(prev+1, True);
     
   }
 
@@ -309,14 +308,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  ROScalarColumn<Int> (ms,MS::columnName(MS::DATA_DESC_ID)).getColumn(ddId);
 		  Vector<uInt>  uniqIndx;
 		  uInt nTimes=GenSort<Int>::sort (ddId, Sort::Ascending, Sort::QuickSort|Sort::NoDuplicates);
-		  ddId.resize(nTimes, true);
+		  ddId.resize(nTimes, True);
 		  Vector<Int> spwids(nTimes);
 		  Vector<Int> spwInDD=ROMSDataDescColumns(ms.dataDescription()).spectralWindowId().getColumn();
 		  for (uInt k=0; k < nTimes; ++k)
 			  spwids[k]=spwInDD[ddId[k]];
 
 		  nTimes=GenSort<Int>::sort (spwids, Sort::Ascending, Sort::QuickSort|Sort::NoDuplicates);
-		  spwids.resize(nTimes, true);
+		  spwids.resize(nTimes, True);
 		  types.resize(nTimes);
 		  for(uInt k=0; k <nTimes; ++k)
 			  types[k]=MFrequency::castType(typesAsInt[spwids[k]]);

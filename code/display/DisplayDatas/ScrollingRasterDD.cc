@@ -45,7 +45,6 @@
 #include <display/Display/DisplayCoordinateSystem.h>
 #include <coordinates/Coordinates/LinearCoordinate.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //#define CDEBUG 1
@@ -56,17 +55,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	                                     const Vector<String> aAxisUnits,
 	                                     uInt mAxis, uInt scanNo):
 
-		PrincipalAxesDD (0, 1, mAxis, false), // mAxis = 3 for PKSMultiBeam
-		// false - don't use built-in AxesLabellers
+		PrincipalAxesDD (0, 1, mAxis, False), // mAxis = 3 for PKSMultiBeam
+		// False - don't use built-in AxesLabellers
 		itsLatticeConcatPtr(0),
 		itsLatticeStatisticsPtr(0),
 		itsFilledDisplayedLatticePtr(0),
 
 		itsFixedPos(IPosition(nDim, 0, 0, 0, 0)),
 		itsFilledCount(0),
-		itsNeedResize(true),
+		itsNeedResize(True),
 		itsShiftAxis(1),
-		itsHeaderReceived(false),
+		itsHeaderReceived(False),
 		itsHeaderMin(0.),
 		itsHeaderMax(1.),
 		itsScanNumber(scanNo),
@@ -196,7 +195,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		IPosition baseShape = itsLattices[0]->shape();
 
-		setNeedResize(false);
+		setNeedResize(False);
 
 		uInt i = 0;
 		while ((i < arr.ndim()) && (!needResize())) {
@@ -333,7 +332,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			cerr << "ScrDD::setupElements: setNumImages("
 			     << dataShape()(dispAxes(2)) << ") called." << endl;
 #endif
-			DDelement.resize(nelements(), true);
+			DDelement.resize(nelements(), True);
 			for (uInt index = 0; index < nelements(); index++) {
 				fixedPos(dispAxes(2)) = index;
 				DDelement[index] = (ScrollingRasterDM *)new
@@ -346,7 +345,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 		PrincipalAxesDD::setupElements();
 
-		iAmRubbish = false;
+		iAmRubbish = False;
 	}
 
 	void ScrollingRasterDD::getMinAndMax() {
@@ -418,7 +417,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		itsLatticeStatisticsPtr =
-		    new LatticeStatistics<Float>(*itsFilledDisplayedLatticePtr, false);
+		    new LatticeStatistics<Float>(*itsFilledDisplayedLatticePtr, False);
 
 		if (!itsLatticeStatisticsPtr) {
 			throw AipsError("Cannot allocate itsLatticeStatisticsPtr");
@@ -475,7 +474,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	Bool ScrollingRasterDD::setOptions(Record &rec, Record &recOut) {
-		Bool ret = false;
+		Bool ret = False;
 
 		const String updateStr("update");
 		const String valueStr("value");
@@ -489,7 +488,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				cerr << "DD update" << endl;
 #endif
 				updateLattice(subrec.subRecord(valueStr));
-				ret = true;
+				ret = True;
 			}
 		}
 
@@ -508,7 +507,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				cerr << "OK, got 'init' Record, calling initLattice(Record)..." << endl;
 #endif
 				initLattice(subrec.subRecord(valueStr));
-				ret = true;
+				ret = True;
 			} else {
 				throw AipsError("cannot find 'value' subrecord in 'init' record !");
 			}
@@ -546,12 +545,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		if (PrincipalAxesDD::setOptions(rec, recOut)) {
-			ret = true;
+			ret = True;
 		}
 
 		Bool error;
 		if(readOptionRecord(itsResample, error, rec, "resample")) {
-			ret = true;
+			ret = True;
 
 			delete itsResampleHandler;
 
@@ -582,7 +581,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		resample.define("popt", vresample);
 		resample.define("default", "nearest");
 		resample.define("value", itsResample);
-		resample.define("allowunset", false);
+		resample.define("allowunset", False);
 		rec.defineRecord("resample", resample);
 
 		return rec;
@@ -601,24 +600,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		setOptions(rec, recout);
 		//itsOptionsAspect = "flexible";
 
-		rec.define("axislabelswitch", false); // don't want old labellers... :(
+		rec.define("axislabelswitch", False); // don't want old labellers... :(
 		setOptions(rec, recout);
 	}
 
 	Bool ScrollingRasterDD::labelAxes(const WCRefreshEvent &/*ev*/) {
-		return false;
+		return False;
 	}
 
 	ScrollingRasterDD::ScrollingRasterDD(uInt mAxis, uInt scanNo):
-		PrincipalAxesDD (0, 1, mAxis, false),   // false - don't use built-in AxesLabellers
+		PrincipalAxesDD (0, 1, mAxis, False),   // False - don't use built-in AxesLabellers
 		itsLatticeConcatPtr(0),
 		itsLatticeStatisticsPtr(0),
 		itsFilledDisplayedLatticePtr(0),
 		itsFixedPos(IPosition(3, 0, 0, 0)),
 		itsFilledCount(0),
-		itsNeedResize(true),
+		itsNeedResize(True),
 		itsShiftAxis(1),
-		itsHeaderReceived(false),
+		itsHeaderReceived(False),
 		itsHeaderMin(0.),
 		itsHeaderMax(1.),
 		itsScanNumber(scanNo),

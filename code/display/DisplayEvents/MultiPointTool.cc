@@ -27,7 +27,6 @@
 
 #include <display/DisplayEvents/MultiPointTool.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	SHARED_PTR<viewer::Rectangle> MultiPointTool::allocate_region( WorldCanvas *wc, double x, double y, double, double,

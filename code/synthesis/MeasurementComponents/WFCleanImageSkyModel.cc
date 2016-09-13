@@ -49,12 +49,11 @@
 #include <casa/Logging/LogIO.h>
 
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 WFCleanImageSkyModel::WFCleanImageSkyModel():
   MFCleanImageSkyModel(),  nfacets_p(1), facets_p(1),
-  largeMem_p(false) {
+  largeMem_p(False) {
 
   imageImage_p=0;
   residualImage_p=0;
@@ -78,7 +77,7 @@ Int WFCleanImageSkyModel::add(ImageInterface<Float>& image,
   if(imageImage_p.null()) {
     // Create the facet images and copy the relevant region from the 
     // original image
-    imageImage_p=CountedPtr<ImageInterface<Float> >(&image, false);
+    imageImage_p=CountedPtr<ImageInterface<Float> >(&image, False);
     facetImages_p.resize(nfacets_p);
     for (Int facet=0;facet<nfacets_p;facet++) {
       facetImages_p[facet] = makeFacet(facet, image);
@@ -101,7 +100,7 @@ Bool WFCleanImageSkyModel::addMask(Int image, ImageInterface<Float>& mask)
   // original image
   AlwaysAssert(image>-1, AipsError);
   if(maskImage_p.null()) {
-    maskImage_p=CountedPtr<ImageInterface<Float> >(&mask, false);
+    maskImage_p=CountedPtr<ImageInterface<Float> >(&mask, False);
     facetMaskImages_p.resize(nfacets_p);
     for (Int facet=0;facet<nfacets_p;facet++) {
       facetMaskImages_p[facet] = makeFacet(facet, mask);
@@ -109,7 +108,7 @@ Bool WFCleanImageSkyModel::addMask(Int image, ImageInterface<Float>& mask)
       AlwaysAssert(MFCleanImageSkyModel::addMask(facet, *facetMaskImages_p[facet]),
 		   AipsError);
     }
-    return true;
+    return True;
   }
   else {
     // All other images are added as is
@@ -124,7 +123,7 @@ Bool WFCleanImageSkyModel::addResidual(Int image,
   // original image
   AlwaysAssert(image>-1, AipsError);
   if(residualImage_p.null()) {
-    residualImage_p=CountedPtr<ImageInterface<Float> >(&residual, false);
+    residualImage_p=CountedPtr<ImageInterface<Float> >(&residual, False);
     facetResidualImages_p.resize(nfacets_p);
     for (Int facet=0;facet<nfacets_p;facet++) {
       facetResidualImages_p[facet] = makeFacet(facet, residual);
@@ -132,7 +131,7 @@ Bool WFCleanImageSkyModel::addResidual(Int image,
       AlwaysAssert(MFCleanImageSkyModel::addResidual(facet, *facetResidualImages_p[facet]),
 		   AipsError);
     }
-    return true;
+    return True;
   }
   else {
     // All other images are added as is
@@ -173,10 +172,10 @@ Bool WFCleanImageSkyModel::solve(SkyEquation& se) {
   // parallel.
   if(!MFCleanImageSkyModel::solve(se)) {
     os << "Wide-field clean apparently failed to reach threshold" << LogIO::POST;
-    return false;
+    return False;
   }
   
-  return(true);
+  return(True);
 };
   
 ImageInterface<Float>& WFCleanImageSkyModel::getResidual(Int trueMod){
@@ -228,7 +227,7 @@ WFCleanImageSkyModel::makeFacet(Int facet, ImageInterface<Float>& image)
     os << LogIO::SEVERE << "Cannot create facet image" << LogIO::EXCEPTION;
   }
   // Now we have all the information and we can create the facet image
-  SubImage<Float>*  facetImage = new SubImage<Float>(image, imageSlicer, true);
+  SubImage<Float>*  facetImage = new SubImage<Float>(image, imageSlicer, True);
   facetImage->setMiscInfo(image.miscInfo());
   facetImage->setUnits(image.units());
   
@@ -244,7 +243,7 @@ WFCleanImageSkyModel::makeSlicers(const Int facet, const IPosition& imageShape,
                     
   if((facet>(nfacets_p-1))||(facet<0)) {
     os << LogIO::SEVERE << "Illegal facet " << facet << LogIO::POST;
-    return false;
+    return False;
   }
 
   IPosition imageBlc(imageShape.nelements(), 0);
@@ -293,7 +292,7 @@ WFCleanImageSkyModel::makeSlicers(const Int facet, const IPosition& imageShape,
   os << LogIO::DEBUGGING << "Facet " << facet+1 
      << " : from " << imageBlc+1<< " to " << imageTrc+1 << LogIO::POST;
   
-  return true;
+  return True;
 }
 
 

@@ -89,10 +89,10 @@ Bool VLATimeFilter::passThru(const VLALogicalRecord& record) const {
 //        << " - " << MVTime(itsStop.get()).string();
   if (recordTime > itsStart.get() && recordTime < itsStop.get()) {
 //     cerr << " match" << endl;
-    return true;
+    return True;
   } else {
 //     cerr << " NO match" << endl;
-    return false;
+    return False;
   }
 }
 
@@ -107,15 +107,15 @@ Bool VLATimeFilter::ok() const {
   // The LogIO class is only constructed if an error is detected for
   // performance reasons. Both function static and file static variables
   // where considered and rejected for this purpose.
-  if (!VLAFilter::ok()) return false; 
+  if (!VLAFilter::ok()) return False; 
   if (itsStart.get() > itsStop.get()) {
     LogIO logErr(LogOrigin("VLATimeFilter", "ok()"));
     logErr << LogIO::SEVERE 
 	   << "The start time cannot be after the stop time"
            << LogIO::POST;
-    return false;
+    return False;
   }
-  return true;
+  return True;
 }
 
 // Local Variables: 

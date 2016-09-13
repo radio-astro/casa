@@ -34,7 +34,6 @@
 
 extern int qInitResources_QtViewer();
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 

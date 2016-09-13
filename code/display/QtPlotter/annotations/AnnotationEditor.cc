@@ -1,7 +1,6 @@
 #include "AnnotationEditor.qo.h"
 #include <display/QtPlotter/annotations/PropertyListener.h>
 #include <QColorDialog>
-
 namespace casa {
 	AnnotationEditor::AnnotationEditor(PropertyListener* propertyListener, QWidget *parent)
 		: QDialog(parent),DEFAULT_COLOR(Qt::black) {

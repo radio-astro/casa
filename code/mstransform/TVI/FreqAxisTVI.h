@@ -56,7 +56,7 @@ class FreqAxisTVI : public TransformingVi2
 public:
 
 	// Lifecycle
-	FreqAxisTVI(ViImplementation2 * inputVii,const casacore::Record &configuration);
+	FreqAxisTVI(ViImplementation2 * inputVii,const Record &configuration);
 	~FreqAxisTVI();
 
 	// Navigation methods
@@ -64,59 +64,59 @@ public:
 	virtual void next ();
 
 	// General TVI info (common for all sub-classes)
-    casacore::Bool existsColumn (VisBufferComponent2 id) const;
-    casacore::Bool flagCategoryExists () const {return false;}
+    Bool existsColumn (VisBufferComponent2 id) const;
+    Bool flagCategoryExists () const {return False;}
 
-	// casacore::List of methods that should be implemented by derived classes
-    // virtual void flag(casacore::Cube<casacore::Bool>& flagCube) const = 0;
-    // virtual void floatData (casacore::Cube<casacore::Float> & vis) const = 0;
-    // virtual void visibilityObserved (casacore::Cube<casacore::Complex> & vis) const = 0;
-    // virtual void visibilityCorrected (casacore::Cube<casacore::Complex> & vis) const = 0;
-    // virtual void visibilityModel (casacore::Cube<casacore::Complex> & vis) const = 0;
-    // virtual void weightSpectrum(casacore::Cube<casacore::Float> &weightSp) const = 0;
-    // virtual void sigmaSpectrum (casacore::Cube<casacore::Float> &sigmaSp) const = 0;
-    // virtual casacore::Vector<casacore::Double> getFrequencies (	casacore::Double time, casacore::Int frameOfReference,casacore::Int spectralWindowId, casacore::Int msId) const = 0;
-    // virtual void writeFlag (const casacore::Cube<casacore::Bool> & flagCube) = 0;
+	// List of methods that should be implemented by derived classes
+    // virtual void flag(Cube<Bool>& flagCube) const = 0;
+    // virtual void floatData (Cube<Float> & vis) const = 0;
+    // virtual void visibilityObserved (Cube<Complex> & vis) const = 0;
+    // virtual void visibilityCorrected (Cube<Complex> & vis) const = 0;
+    // virtual void visibilityModel (Cube<Complex> & vis) const = 0;
+    // virtual void weightSpectrum(Cube<Float> &weightSp) const = 0;
+    // virtual void sigmaSpectrum (Cube<Float> &sigmaSp) const = 0;
+    // virtual Vector<Double> getFrequencies (	Double time, Int frameOfReference,Int spectralWindowId, Int msId) const = 0;
+    // virtual void writeFlag (const Cube<Bool> & flagCube) = 0;
 
     // Common transformation for all sub-classes
-    void writeFlagRow (const casacore::Vector<casacore::Bool> & flag);
-    casacore::Vector<casacore::Int> getChannels (	casacore::Double time, casacore::Int frameOfReference,
-    							casacore::Int spectralWindowId, casacore::Int msId) const;
-    void flagRow (casacore::Vector<casacore::Bool> & flagRow) const;
-    void weight (casacore::Matrix<casacore::Float> & weight) const;
-    void sigma (casacore::Matrix<casacore::Float> & sigma) const;
+    void writeFlagRow (const Vector<Bool> & flag);
+    Vector<Int> getChannels (	Double time, Int frameOfReference,
+    							Int spectralWindowId, Int msId) const;
+    void flagRow (Vector<Bool> & flagRow) const;
+    void weight (Matrix<Float> & weight) const;
+    void sigma (Matrix<Float> & sigma) const;
 
 protected:
 
     // Method implementing main loop  (with auxiliary data)
-	template <class T> void transformFreqAxis(	casacore::Cube<T> const &inputDataCube,
-												casacore::Cube<T> &outputDataCube,
+	template <class T> void transformFreqAxis(	Cube<T> const &inputDataCube,
+												Cube<T> &outputDataCube,
 												FreqAxisTransformEngine<T> &transformer) const
 	{
 		// Re-shape output data cube
-		outputDataCube.resize(getVisBufferConst()->getShape(),false);
+		outputDataCube.resize(getVisBufferConst()->getShape(),False);
 
 		// Get data shape for iteration
-		const casacore::IPosition &inputShape = inputDataCube.shape();
-		casacore::uInt nRows = inputShape(2);
-		casacore::uInt nCorrs = inputShape(0);
+		const IPosition &inputShape = inputDataCube.shape();
+		uInt nRows = inputShape(2);
+		uInt nCorrs = inputShape(0);
 
 		// Initialize input-output planes
-		casacore::Matrix<T> inputDataPlane;
-		casacore::Matrix<T> outputDataPlane;
+		Matrix<T> inputDataPlane;
+		Matrix<T> outputDataPlane;
 
 		// Initialize input-output vectors
-		casacore::Vector<T> inputDataVector;
-		casacore::Vector<T> outputDataVector;
+		Vector<T> inputDataVector;
+		Vector<T> outputDataVector;
 
-		for (casacore::uInt row=0; row < nRows; row++)
+		for (uInt row=0; row < nRows; row++)
 		{
 			// Assign input-output planes by reference
 			transformer.setRowIndex(row);
 			inputDataPlane.reference(inputDataCube.xyPlane(row));
 			outputDataPlane.reference(outputDataCube.xyPlane(row));
 
-			for (casacore::uInt corr=0; corr < nCorrs; corr++)
+			for (uInt corr=0; corr < nCorrs; corr++)
 			{
 				// Assign input-output vectors by reference
 				transformer.setCorrIndex(corr);
@@ -132,14 +132,14 @@ protected:
 	}
 
     // Method implementing main loop  (with auxiliary data)
-	template <class T> void transformFreqAxis2(	const casacore::IPosition &inputShape,
+	template <class T> void transformFreqAxis2(	const IPosition &inputShape,
 												FreqAxisTransformEngine2<T> &transformer,
-												casacore::Int parallelCorrAxis=-1) const
-        {
-		casacore::uInt nRows = inputShape(2);
+												Int parallelCorrAxis=-1) const
+	{
+		uInt nRows = inputShape(2);
 		if (parallelCorrAxis >= 0)
 		{
-			for (casacore::uInt row=0; row < nRows; row++)
+			for (uInt row=0; row < nRows; row++)
 			{
 				transformer.setRowIndex(row);
 				transformer.setCorrIndex(parallelCorrAxis);
@@ -148,12 +148,12 @@ protected:
 		}
 		else
 		{
-			casacore::uInt nCorrs = inputShape(0);
-			for (casacore::uInt row=0; row < nRows; row++)
+			uInt nCorrs = inputShape(0);
+			for (uInt row=0; row < nRows; row++)
 			{
 				transformer.setRowIndex(row);
 
-				for (casacore::uInt corr=0; corr < nCorrs; corr++)
+				for (uInt corr=0; corr < nCorrs; corr++)
 				{
 					transformer.setCorrIndex(corr);
 
@@ -177,16 +177,16 @@ protected:
 		return;
 	}
 
-	casacore::Bool parseConfiguration(const casacore::Record &configuration);
+	Bool parseConfiguration(const Record &configuration);
 	void initialize();
 
 	// Form spwInpChanIdxMap_p via calls to underlying Vii
 	void formSelectedChanMap();
 
-	casacore::String spwSelection_p;
-	mutable casacore::LogIO logger_p;
-	mutable map<casacore::Int,casacore::uInt > spwOutChanNumMap_p; // Must be accessed from const methods
-	mutable map<casacore::Int,vector<casacore::Int> > spwInpChanIdxMap_p; // Must be accessed from const methods
+	String spwSelection_p;
+	mutable LogIO logger_p;
+	mutable map<Int,uInt > spwOutChanNumMap_p; // Must be accessed from const methods
+	mutable map<Int,vector<Int> > spwInpChanIdxMap_p; // Must be accessed from const methods
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -198,14 +198,14 @@ template<class T> class FreqAxisTransformEngine
 
 public:
 
-	virtual void transform(	casacore::Vector<T> &,casacore::Vector<T> &) {};
-	virtual void setRowIndex(casacore::uInt row) {row_p = row;}
-	virtual void setCorrIndex(casacore::uInt corr) {corr_p = corr;}
+	virtual void transform(	Vector<T> &,Vector<T> &) {};
+	virtual void setRowIndex(uInt row) {row_p = row;}
+	virtual void setCorrIndex(uInt corr) {corr_p = corr;}
 
 protected:
 
-	casacore::uInt row_p;
-	casacore::uInt corr_p;
+	uInt row_p;
+	uInt corr_p;
 
 };
 
@@ -220,12 +220,12 @@ public:
 
 	FreqAxisTransformEngine2(DataCubeMap *inputData,DataCubeMap *outputData)
 	{
-		debug_p = false;
+		debug_p = False;
 		inputData_p = inputData;
 		outputData_p = outputData;
 	}
 
-	void setRowIndex(casacore::uInt row)
+	void setRowIndex(uInt row)
 	{
 		rowIndex_p = row;
 		inputData_p->setMatrixIndex(row);
@@ -234,7 +234,7 @@ public:
 		return;
 	}
 
-	void setCorrIndex(casacore::uInt corr)
+	void setCorrIndex(uInt corr)
 	{
 		corrIndex_p = corr;
 		inputData_p->setVectorIndex(corr);
@@ -243,15 +243,15 @@ public:
 		return;
 	}
 
-	void setDebug(bool debug) { debug_p = debug;}
+	void setDebug(Bool debug) { debug_p = debug;}
 
 	virtual void transform() {}
 
 protected:
 
-	casacore::Bool debug_p;
-	casacore::uInt rowIndex_p;
-	casacore::uInt corrIndex_p;
+	Bool debug_p;
+	uInt rowIndex_p;
+	uInt corrIndex_p;
 	DataCubeMap *inputData_p;
 	DataCubeMap *outputData_p;
 

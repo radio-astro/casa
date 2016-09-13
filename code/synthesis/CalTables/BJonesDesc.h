@@ -55,8 +55,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <synopsis>
 // BJonesDesc defines the format of BJones calibration tables in terms 
-// of table descriptors <linkto class="casacore::TableDesc">casacore::TableDesc</linkto>, 
-// as used in the casacore::Table system. BJones matrices represent bandpass
+// of table descriptors <linkto class="TableDesc">TableDesc</linkto>, 
+// as used in the Table system. BJones matrices represent bandpass
 // corrections in the Measurement Equation formalism. At present, 
 // this set of classes returns only the default table formats.
 // </etymology>
@@ -106,10 +106,10 @@ class BJonesDesc : public SolvableVisJonesDesc
 //
 // <synopsis>
 // BJonesPolyDesc defines the format of BJonesPoly calibration tables 
-// in terms of table descriptors <linkto class="casacore::TableDesc">casacore::TableDesc</linkto>, 
-// as used in the casacore::Table system. BJonesPoly matrices represent bandpass
+// in terms of table descriptors <linkto class="TableDesc">TableDesc</linkto>, 
+// as used in the Table system. BJonesPoly matrices represent bandpass
 // corrections in the Measurement Equation formalism in polynomial form. 
-// At present, these include b-spline and casacore::Chebyshev polynomial representations,
+// At present, these include b-spline and Chebyshev polynomial representations,
 // using the solver developed for Plateau de Bure interferometer data by
 // Anterrieu et al.
 // </etymology>
@@ -135,7 +135,7 @@ class BJonesPolyDesc : public BJonesDesc
    virtual ~BJonesPolyDesc() {};
 
    // Return the table descriptor for the main calibration table
-   virtual casacore::TableDesc calMainDesc();
+   virtual TableDesc calMainDesc();
 };
 
 

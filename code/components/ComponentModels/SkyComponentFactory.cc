@@ -31,7 +31,6 @@
 #include <components/ComponentModels/ComponentType.h>
 #include <images/Images/ImageUtilities.h>
 
-using namespace casacore;
 namespace casa { 
 
 SkyComponent SkyComponentFactory::encodeSkyComponent(
@@ -152,7 +151,7 @@ SkyComponent SkyComponentFactory::deconvolveSkyComponent(
         GaussianShape shapeOut(
         	dirRefIn, deconvolvedSize.getMajor(),
         	deconvolvedSize.getMinor(),
-        	deconvolvedSize.getPA(true)
+        	deconvolvedSize.getPA(True)
         );
         skyOut.setShape(shapeOut);
     }
@@ -377,7 +376,7 @@ Bool SkyComponentFactory::pixelWidthsToWorld(
 	Int c0, axis0, c1, axis1;
 	cSys.findPixelAxis(c0, axis0, pixelAxes(0));
 	cSys.findPixelAxis(c1, axis1, pixelAxes(1));
-	Bool flipped = false;
+	Bool flipped = False;
 	if (
 		cSys.type(c1) == Coordinate::DIRECTION
 		&& cSys.type(c0) == Coordinate::DIRECTION
@@ -401,7 +400,7 @@ Bool SkyComponentFactory::pixelWidthsToWorld(
 		);
 		// Position angle; radians; +x -> +y
 		if (q0.getValue() < q1.getValue(q0.getFullUnit())) {
-			flipped = true;
+			flipped = True;
 			wParameters = GaussianBeam(q1, q0, Quantity(pParameters(4), "rad"));
 
 		}
@@ -577,5 +576,4 @@ Quantum<Double> SkyComponentFactory::_pixelWidthToWorld (
 
 
 
-using namespace casacore;
 } // end namespace casa

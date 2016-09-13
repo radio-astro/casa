@@ -35,13 +35,13 @@ public:
 
 	SPIIT smooth() const;
 
-	virtual casacore::String getClass() const { const static casacore::String s = "Image1DSmoother"; return s; }
+	virtual String getClass() const { const static String s = "Image1DSmoother"; return s; }
 
 	// Keep only every nth plane
-	void setDecimate(casacore::Bool b) {_decimate = b; }
+	void setDecimate(Bool b) {_decimate = b; }
 
 	// Set the pixel axis number along which the smoothing will occur
-	void setAxis(casacore::uInt n);
+	void setAxis(uInt n);
 
 	// Set the decimation function.
 	inline void setDecimationFunction(ImageDecimatorData::Function f) {
@@ -52,35 +52,35 @@ protected:
 
 	Image1DSmoother(
 		const SPCIIT image,
-		const casacore::Record *const region,
-		const casacore::String& maskInp,
-		const casacore::String& outname, casacore::Bool overwrite
+		const Record *const region,
+		const String& maskInp,
+		const String& outname, Bool overwrite
 	);
 
-	virtual SPIIT _smooth(const casacore::ImageInterface<T>& image) const = 0;
+	virtual SPIIT _smooth(const ImageInterface<T>& image) const = 0;
 
 	inline  CasacRegionManager::StokesControl _getStokesControl() const {
 		return CasacRegionManager::USE_ALL_STOKES;
 	}
 
-	inline std::vector<casacore::Coordinate::Type> _getNecessaryCoordinates() const {
-		return std::vector<casacore::Coordinate::Type>();
+	inline std::vector<Coordinate::Type> _getNecessaryCoordinates() const {
+		return std::vector<Coordinate::Type>();
 	}
 
-    inline casacore::Bool _supportsMultipleBeams() const {return false;}
+    inline Bool _supportsMultipleBeams() const {return False;}
 
-    inline casacore::Bool _getDecimate() const { return _decimate; }
+    inline Bool _getDecimate() const { return _decimate; }
 
     inline ImageDecimatorData::Function _getDecimationFunction() const {
     	return _decimationFunction;
     }
 
-    inline casacore::uInt _getAxis() const { return _axis; }
+    inline uInt _getAxis() const { return _axis; }
 
-    inline void _setNMinPixels(casacore::uInt n) { _nMinPixels = n; }
+    inline void _setNMinPixels(uInt n) { _nMinPixels = n; }
 private:
-	casacore::uInt _axis, _nMinPixels;
-	casacore::Bool _decimate;
+	uInt _axis, _nMinPixels;
+	Bool _decimate;
 	ImageDecimatorData::Function _decimationFunction;
 
 	// disallow default constructor

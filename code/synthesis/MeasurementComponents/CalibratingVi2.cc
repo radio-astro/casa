@@ -26,7 +26,6 @@
 #include <casa/Arrays/ArrayPartMath.h>
 #include <casa/Arrays/MaskArrMath.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 namespace vi { //# NAMESPACE VI - BEGIN
@@ -38,13 +37,13 @@ namespace vi { //# NAMESPACE VI - BEGIN
 //
 
 CalibratingParameters::CalibratingParameters() :
-  byCalLib_p(false),
+  byCalLib_p(False),
   calLibRecord_p(Record()),
   corrFactor_p(1.0)  // temporary, for initial testing  (default is a non-trivial factor)
 {}
 
 CalibratingParameters::CalibratingParameters(const Record& calLibRecord) :
-  byCalLib_p(false),
+  byCalLib_p(False),
   calLibRecord_p(calLibRecord),
   corrFactor_p(1.0)  
 {
@@ -53,12 +52,12 @@ CalibratingParameters::CalibratingParameters(const Record& calLibRecord) :
     //cout << "CalibratingParameters::ctor:  found calfactor." << endl;
     // Detect calfactor in the specified Record
     corrFactor_p=calLibRecord_p.asFloat("calfactor");
-    byCalLib_p = false;  // signal not using a real callib
+    byCalLib_p = False;  // signal not using a real callib
   }
   else if (calLibRecord_p.nfields()>0) {
     //cout << "CalibratingParameters::ctor:  found non-trivial callib." << endl;
     // Apparently this will be a real callib
-    byCalLib_p = true;   // signal using a real callib
+    byCalLib_p = True;   // signal using a real callib
   }
   else
     throw(AipsError("Invalid use of callib Record"));
@@ -67,7 +66,7 @@ CalibratingParameters::CalibratingParameters(const Record& calLibRecord) :
 
 // Construct using callib parser
 CalibratingParameters::CalibratingParameters(const String& callib) :
-  byCalLib_p(true),
+  byCalLib_p(True),
   calLibRecord_p(callibSetParams(callib)),
   corrFactor_p(1.0)  
 {
@@ -75,7 +74,7 @@ CalibratingParameters::CalibratingParameters(const String& callib) :
 }
 
 CalibratingParameters::CalibratingParameters(Float corrFactor) :
-  byCalLib_p(false),
+  byCalLib_p(False),
   calLibRecord_p(Record()),
   corrFactor_p(corrFactor)  // temporary, for initial testing
 {
@@ -349,7 +348,7 @@ Bool CalibratingVi2::existsColumn(VisBufferComponent2 id) const
     case VisBufferComponent2::VisibilityCorrected:
     case VisBufferComponent2::VisibilityCubeCorrected:
 
-        result = true;
+        result = True;
         break;
 
     default:

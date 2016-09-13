@@ -5,13 +5,9 @@
 
 #include <map>
 
-namespace casacore{
-
-class String;
-}
-
 namespace casa {
 
+class String;
 
 class ImageCollapserData {
 	// <summary>
@@ -25,7 +21,7 @@ class ImageCollapserData {
 	// </prerequisite>
 
 	// <etymology>
-	// casacore::Data for ImageCollapser.
+	// Data for ImageCollapser.
 	// </etymology>
 
 	// <synopsis>
@@ -70,14 +66,14 @@ public:
 	// destructor
 	~ImageCollapserData() {}
 
-	static AggregateType aggregateType(const casacore::String& aggString);
+	static AggregateType aggregateType(const String& aggString);
 
-	static const std::map<casacore::uInt, casacore::String>* funcNameMap();
-	static const std::map<casacore::uInt, casacore::String>* minMatchMap();
+	static const std::map<uInt, String>* funcNameMap();
+	static const std::map<uInt, String>* minMatchMap();
 
 private:
 
-	static std::map<casacore::uInt, casacore::String> *_funcNameMap, *_minMatchMap;
+	static std::map<uInt, String> *_funcNameMap, *_minMatchMap;
 
 	// disallow default constructor
 	ImageCollapserData();

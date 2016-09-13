@@ -112,10 +112,10 @@ public:
     VisBufferComponents2 & operator+= (VisBufferComponent2 componentToAdd);
 
     const_iterator begin () const;
-    casacore::Bool contains (VisBufferComponent2 component) const;
-    casacore::Bool empty () const;
+    Bool contains (VisBufferComponent2 component) const;
+    Bool empty () const;
     const_iterator end () const;
-    casacore::String toString () const;
+    String toString () const;
 
     static VisBufferComponents2 all ();
 
@@ -124,7 +124,7 @@ public:
 
     static VisBufferComponents2 exceptThese (std::initializer_list <VisBufferComponent2> components);
 
-    static casacore::String name (VisBufferComponent2 id);
+    static String name (VisBufferComponent2 id);
     static VisBufferComponents2 none ();
     static VisBufferComponents2 singleton (VisBufferComponent2 component);
 

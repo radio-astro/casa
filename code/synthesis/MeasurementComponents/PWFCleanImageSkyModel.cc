@@ -49,7 +49,6 @@
 #include <synthesis/MeasurementComponents/MakeApproxPSFAlgorithm.h>
 #include <synthesis/Parallel/Applicator.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 extern Applicator applicator;
@@ -76,9 +75,9 @@ Bool PWFCleanImageSkyModel::solve(SkyEquation& se) {
   // mosaicing however.
     if(!MFCleanImageSkyModel::solve(se)) {
       os << "Wide-field clean failed" << LogIO::POST;
-      return false;
+      return False;
     }
-    return(true);
+    return(True);
 }; 
 
 void PWFCleanImageSkyModel::makeApproxPSFs(SkyEquation& se){

@@ -24,7 +24,7 @@
  * MA 02111-1307  USA
  *
  *
- * casacore::File Misc.h
+ * File Misc.h
  */
 
 #include <iostream>

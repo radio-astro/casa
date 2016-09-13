@@ -31,7 +31,6 @@
 #include <qwt_scale_div.h>
 #include <casaqt/QwtPlotter/QPCanvasHelpers.qo.h>
 
-using namespace casacore;
 namespace casa {
 
 ExternalAxisWidgetTop::ExternalAxisWidgetTop( QWidget* parent, QwtPlot* plot,
@@ -88,5 +87,4 @@ ExternalAxisWidgetTop::~ExternalAxisWidgetTop() {
     delete scaleDraw;
 }
 
-using namespace casacore;
 } /* namespace casa */

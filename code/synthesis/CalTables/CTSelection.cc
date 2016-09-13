@@ -40,7 +40,6 @@
 #include <tables/TaQL/RecordGram.h>
 #include <ms/MSSel/MSAntennaParse.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
   //
@@ -121,11 +120,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     // Interpret all expressions and produce a consolidated TEN.  
     //
-    if (fullTEN_p.isNull()==false) return fullTEN_p;
+    if (fullTEN_p.isNull()==False) return fullTEN_p;
 
     const MeasurementSet *ms=getMS(msLike);
     resetMS(*ms);
-    toTENCalled_p=true;
+    toTENCalled_p=True;
     //    ms_p = msLike->asMS();
 
     TableExprNode condition;

@@ -77,12 +77,12 @@ public:
 	//Display an error in a client dependent way.  For a GUI, this may
 	//mean popping up a dialog; for a script, this may mean writing the
 	//error to a log file or web log.
-	virtual void showError(const casacore::String& message, const casacore::String& title, bool warning );
+	virtual void showError(const String& message, const String& title, bool warning );
 
 	//Display a message.  For a GUI client, this may mean popping up a dialog;
 	//for a script client, this may mean writing the message to a log file or
 	//a web log.
-	virtual void showMessage(const casacore::String& message, const casacore::String& title, bool warning = false);
+	virtual void showMessage(const String& message, const String& title, bool warning = false);
 
 	// only for GUI client
 	virtual void clearMessage() {};
@@ -131,7 +131,7 @@ public:
 	}
 	virtual void gridSizeChanged( int /*rowCount*/, int /*colCount*/ );
 
-	virtual vector<casacore::String> getFiles() const;
+	virtual vector<String> getFiles() const;
 
 private:
 	void initializeCurrentPlot();
@@ -140,7 +140,7 @@ private:
 	PlotMSFlagging flagging;
 	vector<PlotMSPlot*> currentPlots;
 
-	const casacore::String SCRIPT_CLIENT;
+	const String SCRIPT_CLIENT;
 };
 
 } /* namespace casa */

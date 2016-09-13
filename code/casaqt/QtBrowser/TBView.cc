@@ -43,11 +43,9 @@
 
 #include <sstream>
 
-using namespace casacore;
 using namespace casa::xerces;
 using namespace std;
 
-using namespace casacore;
 namespace casa {
 
 /////////////////////////////

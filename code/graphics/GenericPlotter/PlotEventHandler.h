@@ -155,18 +155,18 @@ public:
 
 // Smart Pointer Definitions //
 
-typedef casacore::CountedPtr<PlotSelectEventHandler> PlotSelectEventHandlerPtr;
-typedef casacore::CountedPtr<PlotClickEventHandler> PlotClickEventHandlerPtr;
-typedef casacore::CountedPtr<PlotMousePressEventHandler> PlotMousePressEventHandlerPtr;
-typedef casacore::CountedPtr<PlotMouseReleaseEventHandler>
+typedef CountedPtr<PlotSelectEventHandler> PlotSelectEventHandlerPtr;
+typedef CountedPtr<PlotClickEventHandler> PlotClickEventHandlerPtr;
+typedef CountedPtr<PlotMousePressEventHandler> PlotMousePressEventHandlerPtr;
+typedef CountedPtr<PlotMouseReleaseEventHandler>
         PlotMouseReleaseEventHandlerPtr;
-typedef casacore::CountedPtr<PlotMouseDragEventHandler> PlotMouseDragEventHandlerPtr;
-typedef casacore::CountedPtr<PlotMouseMoveEventHandler> PlotMouseMoveEventHandlerPtr;
-typedef casacore::CountedPtr<PlotWheelEventHandler> PlotWheelEventHandlerPtr;
-typedef casacore::CountedPtr<PlotKeyEventHandler> PlotKeyEventHandlerPtr;
-typedef casacore::CountedPtr<PlotResizeEventHandler> PlotResizeEventHandlerPtr;
-typedef casacore::CountedPtr<PlotButtonEventHandler> PlotButtonEventHandlerPtr;
-typedef casacore::CountedPtr<PlotCheckboxEventHandler> PlotCheckboxEventHandlerPtr;
+typedef CountedPtr<PlotMouseDragEventHandler> PlotMouseDragEventHandlerPtr;
+typedef CountedPtr<PlotMouseMoveEventHandler> PlotMouseMoveEventHandlerPtr;
+typedef CountedPtr<PlotWheelEventHandler> PlotWheelEventHandlerPtr;
+typedef CountedPtr<PlotKeyEventHandler> PlotKeyEventHandlerPtr;
+typedef CountedPtr<PlotResizeEventHandler> PlotResizeEventHandlerPtr;
+typedef CountedPtr<PlotButtonEventHandler> PlotButtonEventHandlerPtr;
+typedef CountedPtr<PlotCheckboxEventHandler> PlotCheckboxEventHandlerPtr;
 
 }
 

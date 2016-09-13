@@ -36,7 +36,6 @@
 #include <msvis/MSVis/VisibilityIterator.h>
 #include <measures/Measures/MDirection.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 /*
@@ -139,7 +138,7 @@ RFDataMapper::RFDataMapper ( const String &colmn,DDMapper *map )
   : desc(""),
     ddm(map),
 //    rowmapper(NULL),
-    cubemap(getCubeMapper(colmn,true)),
+    cubemap(getCubeMapper(colmn,True)),
     mytype(MAPCORR)
 { 
   sin_dec = -10;    // need not be computed by default, so set to <-1
@@ -164,18 +163,18 @@ RFDataMapper::RFDataMapper ( const Vector<String> &expr0,const String &defcol )
   Vector<String> expr( splitExpression(expr0) );
 // first, check for per-row expressions (i.e., UVW, etc.)
 // at this point, assume we have a per-row expression (i.e. UVW, etc.)
-  Bool absof=false;
+  Bool absof=False;
   String el = upcase(expr(0));
   if( el == "ABS" ) 
   {
-    absof=true;
+    absof=True;
     if( expr.nelements()<2 )
       throw(AipsError("DataMapper: illegal expression "+expr(0)));
     el = upcase( expr(1) );
   } 
   else if( el.matches("ABS",0) )
   {
-    absof = true;
+    absof = True;
     el = el.after(3);
   }
 
@@ -230,7 +229,7 @@ RFDataMapper::RFDataMapper ( const Vector<String> &expr0,const String &defcol )
   if( ddm )
   {
     if( !cm ) // set column from defcol if not set above
-      cm = getCubeMapper(defcol,true);
+      cm = getCubeMapper(defcol,True);
     cubemap = cm;
     desc = (column.length() ? "("+upcase(column)+")" : String("") )+expr_desc;
     mytype = MAPCORR;

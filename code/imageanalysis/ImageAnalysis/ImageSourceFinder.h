@@ -34,18 +34,14 @@
 #include <components/ComponentModels/ComponentType.h>
 #include <imageanalysis/ImageAnalysis/ImageTask.h>
 
-namespace casacore{
-
-template <class T> class ImageInterface;
-template <class T> class Vector;
-class LogIO;
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Forward Declarations
+template <class T> class ImageInterface;
+template <class T> class Vector;
 class ComponentList;
 class SkyComponent;
+class LogIO;
 
 
 // <summary>
@@ -58,7 +54,7 @@ class SkyComponent;
 // </reviewed>
 
 // <prerequisite>
-//   <li> <linkto class=casacore::ImageInterface>ImageInterface</linkto>
+//   <li> <linkto class=ImageInterface>ImageInterface</linkto>
 //   <li> <linkto module=Coordinates>Coordinates</linkto> 
 // </prerequisite>
 
@@ -95,7 +91,7 @@ public:
 
 	ImageSourceFinder() = delete;
 
-	ImageSourceFinder(SPCIIT image, const casacore::Record *const region, const casacore::String& mask);
+	ImageSourceFinder(SPCIIT image, const Record *const region, const String& mask);
 
 	ImageSourceFinder (const ImageSourceFinder<T> &other) = delete;
 
@@ -105,31 +101,31 @@ public:
 
 	// Find strong sources.  nMax specifies the maximum number of sources to find.
 	// cutoff is the fractional cutoff (of peak) and soiurces below this limit
-	// will not be found. If absFind is true, only positive sources are found, else
-	// positive and negative are found. If doPoint=true, the returned components
-	// are of type POINT.  If doPoint=false, the position and shape information is
+	// will not be found. If absFind is True, only positive sources are found, else
+	// positive and negative are found. If doPoint=True, the returned components
+	// are of type POINT.  If doPoint=False, the position and shape information is
 	// returned via a Gaussian fit (and components will be of
 	// type GAUSSIAN) to the point sources initially found.    The parameter width
 	// specifies the half-width of a square grid of pixels centered on the initial
-	// point source location to be used in the fit.  If you set doPoint=false and width=0,
+	// point source location to be used in the fit.  If you set doPoint=False and width=0,
 	// a default width of 3 and position angle 0 is returned in the GAUSSIAN component.
 	// Because  the flux of the component is integrated, this rough shape influences the
 	// flux values as well.
-	ComponentList findSources (casacore::Int nMax);
+	ComponentList findSources (Int nMax);
 
 	// Find one source in sky plane.  Exception if no sky
-	SkyComponent findSourceInSky(casacore::Vector<casacore::Double>& absPixel);
+	SkyComponent findSourceInSky(Vector<Double>& absPixel);
 
-	void setCutoff(casacore::Double cutoff) { _cutoff = cutoff; }
+	void setCutoff(Double cutoff) { _cutoff = cutoff; }
 
-	void setAbsFind(casacore::Bool af) { _absFind = af; }
+	void setAbsFind(Bool af) { _absFind = af; }
 
-	void setDoPoint(casacore::Bool dp) { _doPoint = dp; }
+	void setDoPoint(Bool dp) { _doPoint = dp; }
 
-	void setWidth(casacore::Int w) { _width = w; }
+	void setWidth(Int w) { _width = w; }
 
-	casacore::String getClass() const {
-		const static casacore::String x = "ImageSourceFinder";
+	String getClass() const {
+		const static String x = "ImageSourceFinder";
 		return x;
 	}
 
@@ -141,23 +137,23 @@ protected:
 
     // Represents the minimum set of coordinates necessary for the
     // task to function.
-    std::vector<casacore::Coordinate::Type> _getNecessaryCoordinates() const {
-    	return std::vector<casacore::Coordinate::Type>(1, casacore::Coordinate::DIRECTION);
+    std::vector<Coordinate::Type> _getNecessaryCoordinates() const {
+    	return std::vector<Coordinate::Type>(1, Coordinate::DIRECTION);
     }
 
-    inline casacore::Bool _supportsMultipleRegions() const {return true;}
+    inline Bool _supportsMultipleRegions() const {return True;}
 
-    inline casacore::Bool _supportsMultipleBeams() const {return false;}
+    inline Bool _supportsMultipleBeams() const {return False;}
 
 
 private:
-	casacore::Double _cutoff = 0.1;
-	casacore::Bool _absFind = true;
-	casacore::Bool _doPoint = true;
-	casacore::Int _width = 4;
+	Double _cutoff = 0.1;
+	Bool _absFind = True;
+	Bool _doPoint = True;
+	Int _width = 4;
 
 	// Find strong (point) sources
-	ComponentList _findSources(casacore::Int nMax);
+	ComponentList _findSources(Int nMax);
 };
 
 

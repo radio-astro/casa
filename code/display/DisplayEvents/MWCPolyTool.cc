@@ -31,7 +31,6 @@
 #include <display/Display/PixelCanvas.h>
 #include <display/DisplayEvents/MWCPolyTool.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	MWCPolyTool::MWCPolyTool(Display::KeySym keysym,
@@ -39,7 +38,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		MultiWCTool(keysym),
 		itsPolygonPersistent(persistent),
 		itsMode(Off),
-		itsEmitted(false),
+		itsEmitted(False),
 		itsNPoints(0),
 		itsHandleSize(7) {
 		reset();
@@ -194,16 +193,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			updateRegion();
 		}
 
-		itsEmitted = false;  // changed polygon => not yet emitted.
+		itsEmitted = False;  // changed polygon => not yet emitted.
 		refresh();
 	}
 
 
 	void MWCPolyTool::keyReleased(const WCPositionEvent &ev) {
-		Bool needsHandles=false;
+		Bool needsHandles=False;
 		if(itsMode==Move || itsMode==Resize) {
 			itsMode=Ready;
-			needsHandles=true;
+			needsHandles=True;
 		}
 
 		if (itsMode==Ready && ev.worldCanvas()==itsCurrentWC &&
@@ -220,7 +219,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 				if (!itsPolygonPersistent) reset();
 				else {
-					itsEmitted = true;
+					itsEmitted = True;
 					if(needsHandles) refresh();
 				}
 				// vertices and WC still remain valid until next
@@ -286,7 +285,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	void MWCPolyTool::reset(Bool skipRefresh) {
 		Bool existed = (itsMode!=Off);
 		itsMode = Off;
-		itsEmitted = false;
+		itsEmitted = False;
 		itsLastPressTime = its2ndLastPressTime = -1.0;
 		if(existed && !skipRefresh) refresh();
 	}	// erase old drawing if necessary.
@@ -349,7 +348,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	Bool MWCPolyTool::inHandle(const Int &pt, const Int &x,
 	                           const Int &y) const {
-		if (pt<0 || pt >= itsNPoints) return false;
+		if (pt<0 || pt >= itsNPoints) return False;
 
 		Int ptx,pty;
 		get(ptx,pty, pt);
@@ -376,7 +375,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			}
 		}
 
-		if ((nabove + nbelow) % 2) return true;
+		if ((nabove + nbelow) % 2) return True;
 		// not even - possibly on a line of the polygon.
 
 		return (nabove % 2);

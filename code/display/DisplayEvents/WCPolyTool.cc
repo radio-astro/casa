@@ -31,7 +31,6 @@
 #include <display/Display/PixelCanvas.h>
 #include <display/DisplayEvents/WCPolyTool.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	WCPolyTool::WCPolyTool(WorldCanvas *wcanvas,
@@ -39,9 +38,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	                       const Bool persistent) :
 		WCTool(wcanvas, keysym),
 		itsPolygonPersistent(persistent),
-		itsOnScreen(false),
-		itsActive(false),
-		itsPolygonExists(false),
+		itsOnScreen(False),
+		itsActive(False),
+		itsPolygonExists(False),
 		itsHandleSize(7) {
 		reset();
 		itsX.resize(1024);
@@ -74,10 +73,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					// user has pressed on a handle
 					itsSelectedHandle = i;
 					itsAdjustMode = WCPolyTool::Handle;
-					itsActive = true;
-					itsMoved = false;
+					itsActive = True;
+					itsMoved = False;
 					polygonNotReady();
-					draw(true);
+					draw(True);
 					draw();
 					return;
 				}
@@ -87,10 +86,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				itsAdjustMode = WCPolyTool::Move;
 				itsBaseMoveX = x;
 				itsBaseMoveY = y;
-				itsActive = true;
-				itsMoved = false;
+				itsActive = True;
+				itsMoved = False;
 				polygonNotReady();
-				draw(true);
+				draw(True);
 				draw();
 				return;
 			}
@@ -99,15 +98,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				// key pressed down first time, start polygon
 				pushPoint(x, y);
 				pushPoint(x, y);
-				itsActive = true;
+				itsActive = True;
 				draw();
 			} else if (itsAdjustMode == WCPolyTool::Off) {
 				if (inHandle(0, x, y) || inHandle(itsNPoints - 2, x, y)) {
 					draw();
 					popPoint();
-					draw(true);
-					itsActive = false;
-					itsPolygonExists = true;
+					draw(True);
+					itsActive = False;
+					itsPolygonExists = True;
 					polygonReady();
 					preserve();
 				} else {
@@ -128,20 +127,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if (itsPolygonExists) {
 			if (itsActive && (itsAdjustMode == WCPolyTool::Handle)) {
 				itsAdjustMode = WCPolyTool::Off;
-				itsActive = false;
+				itsActive = False;
 				draw(); // erase
 				itsLastPressX = itsLastPressY = -99999;
 				itsLastReleaseX = itsLastReleaseY = -99999;
 				itsLastPressTime = its2ndLastPressTime = -1.0;
-				draw(true); // redraw with handles
+				draw(True); // redraw with handles
 				preserve();
 				polygonReady();
 
 			} else if (itsActive && (itsAdjustMode == WCPolyTool::Move)) {
 				itsAdjustMode = WCPolyTool::Off;
-				itsActive = false;
+				itsActive = False;
 				draw();
-				draw(true);
+				draw(True);
 				preserve();
 				polygonReady();
 			}
@@ -154,12 +153,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			itsLastReleaseX = itsLastReleaseY = -99999;
 			// "double click" & polygon exists
 			if (!itsPolygonPersistent) {
-				draw(true); // - erase the polygon with handles
+				draw(True); // - erase the polygon with handles
 				reset();
 			} else {
-				itsActive = false;
+				itsActive = False;
 				polygonReady();
-				itsMoved = false;
+				itsMoved = False;
 				itsAdjustMode = WCPolyTool::Off;
 			}
 			// now only proceed if we are not in a handle
@@ -192,7 +191,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	void WCPolyTool::moved(const WCMotionEvent &ev, const viewer::region::region_list_type & /*selected_regions*/) {
-		itsMoved = true;
+		itsMoved = True;
 		if (!itsActive) {
 			return;
 		}
@@ -223,11 +222,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	void WCPolyTool::refresh(const WCRefreshEvent &ev) {
 		if (ev.reason() == Display::BackCopiedToFront) {
-			itsOnScreen = false;
+			itsOnScreen = False;
 		}
 		if (!itsActive && itsPolygonExists) {
 			restore();
-			draw(true);
+			draw(True);
 		} else {
 			reset();
 		}
@@ -284,10 +283,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		PixelCanvas *pCanvas = pixelCanvas();
 		if (itsOnScreen) {
 			pCanvas->copyBackBufferToFrontBuffer();
-			itsOnScreen = false;
+			itsOnScreen = False;
 			return;
 		}
-		itsOnScreen = true;
+		itsOnScreen = True;
 		Display::DrawBuffer oldBuffer = pCanvas->drawBuffer();
 		pCanvas->setDrawBuffer(Display::FrontBuffer);
 		pCanvas->setLineWidth(1);
@@ -322,9 +321,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if (!itsActive && itsPolygonExists) {
 			polygonNotReady();
 		}
-		itsActive = false;
-		itsMoved = false;
-		itsPolygonExists = false;
+		itsActive = False;
+		itsMoved = False;
+		itsPolygonExists = False;
 		itsAdjustMode = WCPolyTool::Off;
 		itsNPoints = 0;
 		itsLastPressX = itsLastPressY = -99999;
@@ -336,7 +335,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Bool WCPolyTool::inHandle(const uInt &pt, const uInt &x,
 	                          const uInt &y) const {
 		if (pt >= itsNPoints) {
-			return false;
+			return False;
 		}
 		uInt ptx = itsX(pt);
 		uInt pty = itsY(pt);
@@ -368,15 +367,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		if ((nabove + nbelow) % 2) {
 			// not even - possibly on a line of the polygon.
-			return true;
+			return True;
 		} else {
 			if (nabove % 2) {
-				return true;
+				return True;
 			} else {
-				return false;
+				return False;
 			}
 		}
-		return false; // should never get here
+		return False; // should never get here
 	}
 
 

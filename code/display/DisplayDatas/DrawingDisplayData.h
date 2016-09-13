@@ -67,13 +67,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void setDefaultOptions();
 
 		// Apply options stored in <src>rec</src> to the DisplayData.  A
-		// return value of <src>true</src> means a refresh is needed.
+		// return value of <src>True</src> means a refresh is needed.
 		// <src>recOut</src> contains any fields which were implicitly
 		// changed as a result of the call to this function.
-		virtual casacore::Bool setOptions(casacore::Record &rec, casacore::Record &recOut);
+		virtual Bool setOptions(Record &rec, Record &recOut);
 
 		// Retrieve the current and default options and parameter types.
-		virtual casacore::Record getOptions( bool scrub=false ) const;
+		virtual Record getOptions( bool scrub=false ) const;
 
 		// Return the type of this DisplayData.
 		virtual Display::DisplayDataType classType() {
@@ -97,22 +97,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void refreshEH(const WCRefreshEvent &ev);
 
 		// Add an object to the drawing as described in the given Record.
-		virtual void addObject(const casacore::Record &description);
+		virtual void addObject(const Record &description);
 
 		// Get the description of the object with the given id.
-		virtual casacore::Record description(const casacore::Int objectID);
+		virtual Record description(const Int objectID);
 
 		// Set the description of the object with the given id.
-		virtual void setDescription(const casacore::Int objectID, const casacore::Record &rec);
+		virtual void setDescription(const Int objectID, const Record &rec);
 
 		// Remove the object with the given id.
-		virtual void removeObject(const casacore::Int objectID);
+		virtual void removeObject(const Int objectID);
 
 		// Set the handle state of the particular item.
-		virtual void setHandleState(DDDObject *item, const casacore::Bool state);
+		virtual void setHandleState(DDDObject *item, const Bool state);
 
 		// Return the current setting of the labelposition option.
-		virtual casacore::String labelPosition() {
+		virtual String labelPosition() {
 			return itsOptionsLabelPosition;
 		}
 
@@ -127,14 +127,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 		// </group>
 
-		// casacore::Double click interval.
-		virtual casacore::Double doubleClickInterval() const {
+		// Double click interval.
+		virtual Double doubleClickInterval() const {
 			return itsDoubleClickInterval;
 		}
 
 		// Called when a double click occurred for the identified object.
 		// Null implementation in this class, derived classes can over-ride.
-		virtual void doubleClick(const casacore::Int objectID);
+		virtual void doubleClick(const Int objectID);
 
 	protected:
 
@@ -154,14 +154,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// The modifier mask for the key.
 		Display::KeyModifier itsKeyModifier;
 
-		// casacore::Double click interval (seconds)
-		casacore::Double itsDoubleClickInterval;
+		// Double click interval (seconds)
+		Double itsDoubleClickInterval;
 
-		// casacore::List containing the DDDObjects for this DrawingDisplayData.
-		casacore::List<void *> itsDDDOList;
+		// List containing the DDDObjects for this DrawingDisplayData.
+		List<void *> itsDDDOList;
 
 		// Iterator for itsDDDOList
-		casacore::ListIter<void *> *itsDDDOListIter;
+		ListIter<void *> *itsDDDOListIter;
 
 		// Obvious!
 		DDDObject *itsObjectWhichIsShowingHandles;
@@ -170,7 +170,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void installDefaultOptions();
 
 		// Option: position for labels
-		casacore::String itsOptionsLabelPosition;
+		String itsOptionsLabelPosition;
 
 	};
 

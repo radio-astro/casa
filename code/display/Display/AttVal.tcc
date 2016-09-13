@@ -36,7 +36,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	template <class T>
-	AttributeValue<T>::AttributeValue(const T &value, const casacore::Bool strict)
+	AttributeValue<T>::AttributeValue(const T &value, const Bool strict)
 		: AttributeValueBase(AttValue::AtInvalid, strict),
 		  itsValue(0) {
 		setValue(value);
@@ -44,7 +44,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	template <class T>
-	AttributeValue<T>::AttributeValue(const casacore::Vector<T> &value, const casacore::Bool strict)
+	AttributeValue<T>::AttributeValue(const Vector<T> &value, const Bool strict)
 		: AttributeValueBase(AttValue::AtInvalid, strict),
 		  itsValue(0) {
 		itsValue = value;
@@ -78,7 +78,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	template <class T>
-	void AttributeValue<T>::setValue(const casacore::Vector<T> &value) {
+	void AttributeValue<T>::setValue(const Vector<T> &value) {
 		itsValue.resize(0);
 		itsValue = value;
 	}
@@ -90,7 +90,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	template <class T>
-	casacore::Bool AttributeValue<T>::matches(const AttributeValueBase& other) const {
+	Bool AttributeValue<T>::matches(const AttributeValueBase& other) const {
 		return myMatch(myCast(other));
 	}
 
@@ -98,8 +98,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	void AttributeValue<T>::operator+=(const AttributeValueBase& other) {
 		if (!AttributeValueBase::myMatch(other)) return;
 //
-		casacore::Vector<T>& thisValue = itsValue;
-		const casacore::Vector<T>& otherValue = myCast(other).itsValue;
+		Vector<T>& thisValue = itsValue;
+		const Vector<T>& otherValue = myCast(other).itsValue;
 //
 		if (thisValue.nelements() != otherValue.nelements()) return;
 //
@@ -114,24 +114,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	template <class T>
-	casacore::Bool AttributeValue<T>::myMatch(const AttributeValue<T>& other) const {
-		const casacore::Vector<T>& thisValue = itsValue;
-		const casacore::Vector<T>& otherValue = other.itsValue;
+	Bool AttributeValue<T>::myMatch(const AttributeValue<T>& other) const {
+		const Vector<T>& thisValue = itsValue;
+		const Vector<T>& otherValue = other.itsValue;
 //
 		if (getStrictness()) {
-			if (thisValue.nelements() != otherValue.nelements()) return false;
-			for (casacore::uInt i = 0; i < thisValue.nelements(); i++) {
-				if (thisValue(i) != otherValue(i)) return false;
+			if (thisValue.nelements() != otherValue.nelements()) return False;
+			for (uInt i = 0; i < thisValue.nelements(); i++) {
+				if (thisValue(i) != otherValue(i)) return False;
 			}
-			return true;
+			return True;
 		} else {
-			for (casacore::uInt i = 0; i < thisValue.nelements(); i++) {
-				for (casacore::uInt j = 0; j < otherValue.nelements(); j++) {
-					if (thisValue(i) == otherValue(j)) return true;
+			for (uInt i = 0; i < thisValue.nelements(); i++) {
+				for (uInt j = 0; j < otherValue.nelements(); j++) {
+					if (thisValue(i) == otherValue(j)) return True;
 				}
 			}
 		}
-		return false;
+		return False;
 	}
 
 

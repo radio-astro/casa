@@ -8,14 +8,13 @@
 #ifndef SUBTABLEFILLER_H_
 #define SUBTABLEFILLER_H_
 
-namespace casacore{
+namespace casa {
 
 class Table;
 
 }
 
-namespace casa {
-
+namespace casa { namespace cdo {
 
 template <typename SubtableType>
 class SubtableColumnPicklerBase {
@@ -24,8 +23,8 @@ public:
 
     virtual ~SubtableColumnPicklerBase () {}
 
-    virtual void readFromTable (SubtableType &, casacore::Table &) = 0;
-    virtual void writeToTable (SubtableType &, casacore::Table &) = 0;
+    virtual void readFromTable (SubtableType &, Table &) = 0;
+    virtual void writeToTable (SubtableType &, Table &) = 0;
 
 };
 
@@ -37,11 +36,11 @@ public:
     SubtableColumnPickler (ColumnId columnId, Getter & getter, Setter & setter);
 
     void
-    readFromTable (SubtableType & subtable, casacore::Table & table)
+    readFromTable (SubtableType & subtable, Table & table)
     {
         ColumnType column;
         column.attach (table, columnId_p);
-        casacore::Int i;
+        Int i;
 
         try {
 
@@ -52,13 +51,13 @@ public:
 
             }
         }
-        catch (casacore::AipsError & e){
+        catch (AipsError & e){
 
-            Rethrow (e, casacore::String::format ("While filling from row %d of column %s in table %s",
+            Rethrow (e, String::format ("While filling from row %d of column %s in table %s",
                                         i, getColumnName (columnId), table.tableName().c_str()));
         }
     }
-    void writeToTable (casacore::Table & table, SubtableType & subtable);
+    void writeToTable (Table & table, SubtableType & subtable);
 
 private:
 
@@ -86,8 +85,8 @@ public:
                                                          (columnId, getter, setter));
     }
 
-    void readFromTable (S & subtableObject, casacore::Table & table);
-    void writeToTable (S & subtableObject, casacore::Table & table);
+    void readFromTable (S & subtableObject, Table & table);
+    void writeToTable (S & subtableObject, Table & table);
 
 
 protected:
@@ -110,7 +109,7 @@ SubtableFiller::SubtableFiller ()
 
 template <typename S>
 void
-SubtableFiller::readFromTable (S & subtableObject, casacore::Table & table)
+SubtableFiller::readFromTable (S & subtableObject, Table & table)
 {
     for (Picklers::iterator pickler = picklers_p.begin();
          pickler != picklers_p.end();
@@ -123,7 +122,7 @@ SubtableFiller::readFromTable (S & subtableObject, casacore::Table & table)
 
 template <typename S>
 void
-SubtableFiller::writeToTable (S & subtableObject, casacore::Table & table)
+SubtableFiller::writeToTable (S & subtableObject, Table & table)
 {
     for (Picklers::iterator pickler = picklers_p.begin();
          pickler != picklers_p.end();
@@ -135,6 +134,7 @@ SubtableFiller::writeToTable (S & subtableObject, casacore::Table & table)
 }
 
 
-} // end namespace casa
+}}
+
 
 #endif /* SUBTABLEFILLER_H_ */

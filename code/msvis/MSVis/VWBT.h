@@ -44,7 +44,7 @@ public:
 	bool isWriting() { return writing_p;}
 
 	// We just want a de-referenced copy
-	void setFlag(casacore::Cube<casacore::Bool> flagCube);
+	void setFlag(Cube<Bool> flagCube);
 
 protected:
 
@@ -57,17 +57,17 @@ protected:
 private:
 	
 	// State parameters
-	volatile casacore::Bool terminationRequested_p;
-	casacore::Bool threadTerminated_p;
-	casacore::Bool writing_p;
+	volatile Bool terminationRequested_p;
+	Bool threadTerminated_p;
+	Bool writing_p;
 
 	// Writing members
 	VisibilityIterator * visibilityIterator_p;
 	casa::async::Mutex * msAccessMutex_p;
-	casacore::Cube<casacore::Bool> * flagCube_p;
+	Cube<Bool> * flagCube_p;
 
 	// Configuration parameters
-	casacore::Bool groupRows_p;
+	Bool groupRows_p;
 };
 
 } //# NAMESPACE CASA - END

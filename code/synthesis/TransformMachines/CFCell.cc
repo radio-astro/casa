@@ -29,7 +29,6 @@
 #include <synthesis/TransformMachines/Utils.h>
 #include <casacore/casa/Utilities/BinarySearch.h>
 #include <images/Images/PagedImage.h>
-using namespace casacore;
 namespace casa{
 
   

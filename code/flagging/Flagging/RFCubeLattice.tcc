@@ -34,7 +34,7 @@ template<class T> RFCubeLatticeIterator<T>::RFCubeLatticeIterator ()
   : n_chan(0), n_ifr(0), n_time(0), n_bit(0), n_corr(0)
 {
   iter_pos = 0;
-  //curs = casacore::Matrix<T>();
+  //curs = Matrix<T>();
   lattice = NULL;
 }
 
@@ -73,14 +73,14 @@ template<class T> void RFCubeLatticeIterator<T>::reset()
   return;
 }
 
-template<class T> void RFCubeLatticeIterator<T>::advance(casacore::uInt t1)
+template<class T> void RFCubeLatticeIterator<T>::advance(uInt t1)
 {
   iter_pos = t1;
   return;
 }
 
 template<class T> T
-RFCubeLatticeIterator<T>::operator()(casacore::uInt chan, casacore::uInt ifr) const
+RFCubeLatticeIterator<T>::operator()(uInt chan, uInt ifr) const
 { 
     T val = 0;
     
@@ -118,7 +118,7 @@ RFCubeLatticeIterator<T>::operator()(casacore::uInt chan, casacore::uInt ifr) co
 }
 
 template<class T> void 
-RFCubeLatticeIterator<T>::set( casacore::uInt chan, casacore::uInt ifr, const T &val )
+RFCubeLatticeIterator<T>::set( uInt chan, uInt ifr, const T &val )
 {
     std::vector<bool> &l = (*lattice)[iter_pos];
 
@@ -148,9 +148,9 @@ RFCubeLatticeIterator<T>::set( casacore::uInt chan, casacore::uInt ifr, const T 
 
 
 template<class T> void
-RFCubeLatticeIterator<T>::set( casacore::uInt ichan, 
-                               casacore::uInt ifr, 
-                               casacore::uInt icorr, 
+RFCubeLatticeIterator<T>::set( uInt ichan, 
+                               uInt ifr, 
+                               uInt icorr, 
                                bool val)
 {
   std::vector<bool> &l = (*lattice)[iter_pos];
@@ -168,19 +168,19 @@ template<class T> RFCubeLattice<T>::RFCubeLattice ()
 {
 }
 
-template<class T> RFCubeLattice<T>::RFCubeLattice ( casacore::uInt nchan,
-                                                    casacore::uInt nifr,
-                                                    casacore::uInt ntime,
-                                                    casacore::uInt ncorr,
-                                                    casacore::uInt nAgent)
+template<class T> RFCubeLattice<T>::RFCubeLattice ( uInt nchan,
+                                                    uInt nifr,
+                                                    uInt ntime,
+                                                    uInt ncorr,
+                                                    uInt nAgent)
 {
   init(nchan, nifr, ntime, ncorr, nAgent);
 }
-template<class T> RFCubeLattice<T>::RFCubeLattice ( casacore::uInt nchan,
-                                                    casacore::uInt nifr,
-                                                    casacore::uInt ntime,
-                                                    casacore::uInt ncorr,
-                                                    casacore::uInt nAgent,
+template<class T> RFCubeLattice<T>::RFCubeLattice ( uInt nchan,
+                                                    uInt nifr,
+                                                    uInt ntime,
+                                                    uInt ncorr,
+                                                    uInt nAgent,
                                                     const T &init_val)
 {
   init(nchan, nifr, ntime, ncorr, nAgent, init_val);
@@ -192,24 +192,24 @@ template<class T> RFCubeLattice<T>::~RFCubeLattice ()
 }
 
 template<class T> void
-RFCubeLattice<T>::init(casacore::uInt nchan,
-                       casacore::uInt nifr,
-                       casacore::uInt ntime,
-		       casacore::uInt ncorr,
-		       casacore::uInt nAgent)
+RFCubeLattice<T>::init(uInt nchan,
+                       uInt nifr,
+                       uInt ntime,
+		       uInt ncorr,
+		       uInt nAgent)
 {
   n_bit = ncorr + nAgent;
 
   if (n_bit > 32) {
-    std::ostringstream ss;
+    stringstream ss;
     ss << 
       "Sorry, too many polarizations (" << ncorr <<
       ") and agents (" << nAgent << "). Max supported number is 32 in total.";
-    std::cerr << ss.str();
-    throw casacore::AipsError(ss.str());
+    cerr << ss.str();
+    throw AipsError(ss.str());
   }
 
-  lat_shape = casacore::IPosition(3, nchan, nifr, ntime);
+  lat_shape = IPosition(3, nchan, nifr, ntime);
 
   lat = std::vector<std::vector<bool> >(ntime);
   for (unsigned i = 0; i < ntime; i++) {
@@ -224,11 +224,11 @@ template<class T> RFCubeLatticeIterator<T> RFCubeLattice<T>::newIter()
   return RFCubeLatticeIterator<T>(&lat, n_chan, n_ifr, n_time, n_bit, n_corr);
 }
 
-template<class T> void RFCubeLattice<T>::init(casacore::uInt nchan,
-                                              casacore::uInt nifr,
-                                              casacore::uInt ntime,
-					      casacore::uInt ncorr,
-					      casacore::uInt nAgent,
+template<class T> void RFCubeLattice<T>::init(uInt nchan,
+                                              uInt nifr,
+                                              uInt ntime,
+					      uInt ncorr,
+					      uInt nAgent,
                                               const T &init_val)
 {
   n_chan = nchan;
@@ -238,7 +238,7 @@ template<class T> void RFCubeLattice<T>::init(casacore::uInt nchan,
   n_corr = ncorr;
   init(nchan, nifr, ntime, ncorr, nAgent);
 
-  casacore::uInt nbits = ncorr + nAgent;
+  uInt nbits = ncorr + nAgent;
 
   /* Write init_val to every matrix element.
      See above for description of format */
@@ -278,7 +278,7 @@ template<class T> void RFCubeLattice<T>::init(casacore::uInt nchan,
 }
 
 template<class T> void
-RFCubeLattice<T>::set_column( casacore::uInt ifr, const T &val )
+RFCubeLattice<T>::set_column( uInt ifr, const T &val )
 {
   for (unsigned chan = 0; chan < n_chan; chan++) {
     set(chan, ifr, val);

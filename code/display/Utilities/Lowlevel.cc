@@ -38,7 +38,6 @@
 #include <QApplication>
 #include <errno.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 	namespace viewer { //# NAMESPACE VIEWER - BEGIN
 		//

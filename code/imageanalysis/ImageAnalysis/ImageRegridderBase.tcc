@@ -29,49 +29,49 @@
 namespace casa {
 
 template <class T> ImageRegridderBase<T>::ImageRegridderBase(
-	const SPCIIT image, const casacore::Record *const regionRec,
-	const casacore::String& maskInp, const casacore::String& outname, casacore::Bool overwrite,
-	const casacore::CoordinateSystem& csys, const casacore::IPosition& axes,
-	const casacore::IPosition& shape
+	const SPCIIT image, const Record *const regionRec,
+	const String& maskInp, const String& outname, Bool overwrite,
+	const CoordinateSystem& csys, const IPosition& axes,
+	const IPosition& shape
 ) : ImageTask<T>(
 		image, "", regionRec, "", "", "", maskInp, outname, overwrite
 	), _csysTo(csys), _axes(axes), _shape(shape),
-	_specAsVelocity(false), _doRefChange(false),
-	_replicate(false), _forceRegrid(false), _decimate(10),
-	_method(casacore::Interpolate2D::LINEAR), _outputStokes(), _nReplicatedChans(0) {
+	_specAsVelocity(False), _doRefChange(False),
+	_replicate(False), _forceRegrid(False), _decimate(10),
+	_method(Interpolate2D::LINEAR), _outputStokes(), _nReplicatedChans(0) {
 	this->_construct();
 	_finishConstruction();
 }
 
 template <class T> ImageRegridderBase<T>::~ImageRegridderBase() {}
 
-template <class T> casacore::Bool ImageRegridderBase<T>::_regriddingDirectionAxes() const {
-	casacore::Vector<casacore::Int> dirAxesNumbers = _csysTo.directionAxesNumbers();
+template <class T> Bool ImageRegridderBase<T>::_regriddingDirectionAxes() const {
+	Vector<Int> dirAxesNumbers = _csysTo.directionAxesNumbers();
 	if (! dirAxesNumbers.empty()) {
-		vector<casacore::Int> v = dirAxesNumbers.tovector();
-		for (casacore::Int i=0; i<(casacore::Int)_axes.size(); i++) {
+		vector<Int> v = dirAxesNumbers.tovector();
+		for (Int i=0; i<(Int)_axes.size(); i++) {
 			if (std::find(v.begin(), v.end(), _axes[i]) != v.end()) {
-				return true;
+				return True;
 			}
 		}
 	}
-	return false;
+	return False;
 }
 
-template <class T> void ImageRegridderBase<T>::setDecimate(casacore::Int d) {
+template <class T> void ImageRegridderBase<T>::setDecimate(Int d) {
 	if (d > 1 && _regriddingDirectionAxes()) {
-		casacore::Vector<casacore::Int> dirAxesNumbers = _csysTo.directionAxesNumbers();
-		vector<casacore::Int> v = dirAxesNumbers.tovector();
-		for (casacore::Int i=0; i<(casacore::Int)_axes.size(); i++) {
-			casacore::Int axis = _axes[i];
+		Vector<Int> dirAxesNumbers = _csysTo.directionAxesNumbers();
+		vector<Int> v = dirAxesNumbers.tovector();
+		for (Int i=0; i<(Int)_axes.size(); i++) {
+			Int axis = _axes[i];
 			ThrowIf(
-				(casacore::Int)_shape[axis] < 3*d
+				(Int)_shape[axis] < 3*d
 				&& std::find(v.begin(), v.end(), axis) != v.end(),
 				"The output image has only "
-				+ casacore::String::toString(_shape[axis])
-				+ " pixels along axis " + casacore::String::toString(axis)
+				+ String::toString(_shape[axis])
+				+ " pixels along axis " + String::toString(axis)
 				+ ", so the maximum value of decimate should "
-				"be " + casacore::String::toString(_shape[axis]/3)
+				"be " + String::toString(_shape[axis]/3)
 			);
 		}
 	}
@@ -79,28 +79,28 @@ template <class T> void ImageRegridderBase<T>::setDecimate(casacore::Int d) {
 }
 
 template <class T> void ImageRegridderBase<T>::_finishConstruction() {
-	casacore::Bool shapeSpecified = ! _shape.empty() && _shape[0] >= 0;
+	Bool shapeSpecified = ! _shape.empty() && _shape[0] >= 0;
 	if (! shapeSpecified) {
-		casacore::IPosition imShape = this->_getImage()->shape();
+		IPosition imShape = this->_getImage()->shape();
 		_shape.resize(imShape.size());
 		_shape = imShape;
 		if (this->_getDropDegen()) {
-			casacore::IPosition tmp = _shape.nonDegenerate();
+			IPosition tmp = _shape.nonDegenerate();
 			_shape.resize(tmp.size());
 			_shape = tmp;
 		}
 	}
 	_kludgedShape = _shape;
-	const casacore::CoordinateSystem csysFrom = this->_getImage()->coordinates();
+	const CoordinateSystem csysFrom = this->_getImage()->coordinates();
 	// enforce stokes rules CAS-4960
 	if (csysFrom.hasPolarizationCoordinate() && _csysTo.hasPolarizationCoordinate()) {
-		casacore::Vector<casacore::Int> templateStokes = _csysTo.stokesCoordinate().stokes();
-		casacore::Vector<casacore::Int> inputStokes = csysFrom.stokesCoordinate().stokes();
-		casacore::Int inputPolAxisNumber = csysFrom.polarizationAxisNumber();
+		Vector<Int> templateStokes = _csysTo.stokesCoordinate().stokes();
+		Vector<Int> inputStokes = csysFrom.stokesCoordinate().stokes();
+		Int inputPolAxisNumber = csysFrom.polarizationAxisNumber();
 		if (
 			(
 				_axes.empty()
-				|| inputPolAxisNumber < (casacore::Int)_axes.size()
+				|| inputPolAxisNumber < (Int)_axes.size()
 			) && templateStokes.size() > 1
 		) {
 			if (
@@ -109,55 +109,55 @@ template <class T> void ImageRegridderBase<T>::_finishConstruction() {
 				)
 				|| _axes[inputPolAxisNumber] > 0
 			) {
-				casacore::StokesCoordinate stokesFrom = csysFrom.stokesCoordinate();
-				casacore::StokesCoordinate stokesTo = _csysTo.stokesCoordinate();
-				casacore::Stokes::StokesTypes valFrom, valTo;
-				for (casacore::uInt i=0; i<inputStokes.size(); i++) {
+				StokesCoordinate stokesFrom = csysFrom.stokesCoordinate();
+				StokesCoordinate stokesTo = _csysTo.stokesCoordinate();
+				Stokes::StokesTypes valFrom, valTo;
+				for (uInt i=0; i<inputStokes.size(); i++) {
 					stokesFrom.toWorld(valFrom, i);
-					for (casacore::uInt j=0; j<templateStokes.size(); j++) {
+					for (uInt j=0; j<templateStokes.size(); j++) {
 						stokesTo.toWorld(valTo, j);
 						if (valFrom == valTo) {
-							_outputStokes.push_back(casacore::Stokes::name(valFrom));
+							_outputStokes.push_back(Stokes::name(valFrom));
 							break;
 						}
 					}
 				}
 				ThrowIf(
 					_outputStokes.empty(),
-					"casacore::Input image and template coordinate system have no common stokes."
+					"Input image and template coordinate system have no common stokes."
 				);
 				ThrowIf(
-					shapeSpecified && ((casacore::Int)_outputStokes.size() != _shape[inputPolAxisNumber]),
-					"Specified output stokes axis length (" + casacore::String::toString(_shape[inputPolAxisNumber])
+					shapeSpecified && ((Int)_outputStokes.size() != _shape[inputPolAxisNumber]),
+					"Specified output stokes axis length (" + String::toString(_shape[inputPolAxisNumber])
 					+ ") does not match the number of common stokes ("
-					+ casacore::String::toString(_outputStokes.size())
+					+ String::toString(_outputStokes.size())
 					+ ") in the input image and template coordinate system."
 				);
-				// This is a kludge to fool the underlying casacore::ImageRegrid constructor that the shape
+				// This is a kludge to fool the underlying ImageRegrid constructor that the shape
 				// is acceptable to it. We copy just the stokes we from the output of ImageRegrid.
 				ImageMetaData md(this->_getImage());
-				_kludgedShape[csysFrom.polarizationAxisNumber(false)] = md.nStokes();
+				_kludgedShape[csysFrom.polarizationAxisNumber(False)] = md.nStokes();
 			}
 		}
 	}
-	casacore::Int spectralAxisNumber = csysFrom.spectralAxisNumber(false);
+	Int spectralAxisNumber = csysFrom.spectralAxisNumber(False);
 	if (
 		csysFrom.hasSpectralAxis() && _csysTo.hasSpectralAxis()
 		&& this->_getImage()->shape()[spectralAxisNumber] == 1
 		&& ! _axes.empty()
 	) {
-		casacore::uInt count = 0;
-		for( casacore::Int axis: _axes ) {
+		uInt count = 0;
+		for( Int axis: _axes ) {
 			if (axis == spectralAxisNumber) {
-				*this->_getLog() << casacore::LogIO::NORMAL << "You've specified "
+				*this->_getLog() << LogIO::NORMAL << "You've specified "
 					<< "explicitly that the spectral axis should be "
 					<< "regridded. However, the input image has a "
 					<< "degenerate spectral axis and so it cannot be "
 					<< "regridded. Instead, the resulting single output "
 					<< "channel will be replicated " << _shape[axis]
-					<< " times in the output image." << casacore::LogIO::POST;
-				casacore::IPosition newAxes(_axes.size() - 1, 0);
-				casacore::IPosition toRemove(1, count);
+					<< " times in the output image." << LogIO::POST;
+				IPosition newAxes(_axes.size() - 1, 0);
+				IPosition toRemove(1, count);
 				newAxes = _axes.removeAxes(toRemove);
 				_axes.resize(newAxes.size());
 				_axes = newAxes;

@@ -81,7 +81,7 @@ private:
     // Operations.
     std::vector<PlotOperationPtr> itsOperations_;
 
-    // casacore::Mutex for accessing operations.
+    // Mutex for accessing operations.
     QMutex itsOperationsMutex_;
 
     // Flag for if thread is currently running or not.

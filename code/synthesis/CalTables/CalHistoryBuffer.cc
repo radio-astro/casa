@@ -28,17 +28,16 @@
 
 #include <synthesis/CalTables/CalHistoryBuffer.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //----------------------------------------------------------------------------
 
 CalHistoryBuffer::CalHistoryBuffer() :
-  connectedToIter_p(false), calHistCol_p(NULL)
+  connectedToIter_p(False), calHistCol_p(NULL)
 {
 // Null constructor
 // Output to private data:
-//    connectedToIter_p  Bool                 true if connected to iterator
+//    connectedToIter_p  Bool                 True if connected to iterator
 //    calHistCol_p       CalHistoryColumns*   Ptr to cal_history col accessor
 //    calParms_p         Vector<String>       Solver parameters
 //    calTables_p        Vector<String>       Associated cal. tables
@@ -56,13 +55,13 @@ CalHistoryBuffer::CalHistoryBuffer() :
 //----------------------------------------------------------------------------
 
 CalHistoryBuffer::CalHistoryBuffer (CalIterBase& calIter) :
-  connectedToIter_p(true), calHistCol_p(NULL)
+  connectedToIter_p(True), calHistCol_p(NULL)
 {
 // Construct from a calibration table iterator
 // Input:
 //    calIter            CalIterBase&         Calibration table iterator
 // Output to private data:
-//    connectedToIter_p  Bool                 true if connected to iterator
+//    connectedToIter_p  Bool                 True if connected to iterator
 //    calHistCol_p       CalHistoryColumns*   Ptr to cal_history col accessor
 //    calParms_p         Vector<String>       Solver parameters
 //    calTables_p        Vector<String>       Associated cal. tables
@@ -103,10 +102,10 @@ void CalHistoryBuffer::invalidate()
 //    calNotesOK_p       Bool                 Cal. notes cache ok
 //
   // Set all cache flags to false
-  calParmsOK_p = false;
-  calTablesOK_p = false;
-  calSelectOK_p = false;
-  calNotesOK_p = false;
+  calParmsOK_p = False;
+  calTablesOK_p = False;
+  calSelectOK_p = False;
+  calNotesOK_p = False;
 };
 
 //----------------------------------------------------------------------------
@@ -115,14 +114,14 @@ Vector<String>& CalHistoryBuffer::calParms()
 {
 // CAL_PARMS data field accessor
 // Input from private data:
-//    connectedToIter_p  Bool                 true if connected to iterator
+//    connectedToIter_p  Bool                 True if connected to iterator
 //    calParms_p         Vector<String>&      Solver parms
 //
   // Fill local cache for this column if cache not valid
   if (connectedToIter()) {
     if (!calParmsOK_p) {
       calHistCol()->calParms().getColumn (calParms_p);
-      calParmsOK_p = true;
+      calParmsOK_p = True;
     };
   };
   return calParms_p;
@@ -134,14 +133,14 @@ Vector<String>& CalHistoryBuffer::calTables()
 {
 // CAL_TABLES data field accessor
 // Input from private data:
-//    connectedToIter_p  Bool                 true if connected to iterator
+//    connectedToIter_p  Bool                 True if connected to iterator
 //    calTables_p        Vector<String>&      Associated cal. tables
 //
   // Fill local cache for this column if cache not valid
   if (connectedToIter()) {
     if (!calTablesOK_p) {
       calHistCol()->calTables().getColumn (calTables_p);
-      calTablesOK_p = true;
+      calTablesOK_p = True;
     };
   };
   return calTables_p;
@@ -153,14 +152,14 @@ Vector<String>& CalHistoryBuffer::calSelect()
 {
 // CAL_SELECT data field accessor
 // Input from private data:
-//    connectedToIter_p  Bool                 true if connected to iterator
+//    connectedToIter_p  Bool                 True if connected to iterator
 //    calSelect_p        Vector<String>&      Cal. selection
 //
   // Fill local cache for this column if cache not valid
   if (connectedToIter()) {
     if (!calSelectOK_p) {
       calHistCol()->calSelect().getColumn (calSelect_p);
-      calSelectOK_p = true;
+      calSelectOK_p = True;
     };
   };
   return calSelect_p;
@@ -172,14 +171,14 @@ Vector<String>& CalHistoryBuffer::calNotes()
 {
 // CAL_PARMS data field accessor
 // Input from private data:
-//    connectedToIter_p  Bool                 true if connected to iterator
+//    connectedToIter_p  Bool                 True if connected to iterator
 //    calNotes_p         Vector<String>&      Cal. notes
 //
   // Fill local cache for this column if cache not valid
   if (connectedToIter()) {
     if (!calNotesOK_p) {
       calHistCol()->calNotes().getColumn (calNotes_p);
-      calNotesOK_p = true;
+      calNotesOK_p = True;
     };
   };
   return calNotes_p;

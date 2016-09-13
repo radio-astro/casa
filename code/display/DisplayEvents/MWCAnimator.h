@@ -31,15 +31,11 @@
 #include <casa/aips.h>
 #include <casa/Containers/List.h>
 
-namespace casacore{
-
-	class RecordInterface;
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	class MultiWCHolder;
 	class AttributeBuffer;
+	class RecordInterface;
 
 // <summary>
 // Animator for MultiWCHolder class.
@@ -99,31 +95,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// templates are valid for any type which can be added to an
 		// AttributeBuffer.  This function simply sets up a single-element
 		// AttributeBuffer and calls <src>setLinearRestrictions</src>.
-		template <class T> void setLinearRestriction(const casacore::String &name,
+		template <class T> void setLinearRestriction(const String &name,
 		        const T &value,
 		        const T &increment,
 		        const T& tol);
 
-		// Install a restriction described by the given casacore::RecordInterface,
+		// Install a restriction described by the given RecordInterface,
 		// on all MultiWCHolders.  This method simply extracts the fields
 		// <src>name</src>, <src>value</src>, and <src>increment</src>
 		// from <src>rec</src>, and calls the explicit version of
 		// <src>setLinearRestriction</src>.  The <src>value</src> and
-		// <src>increment</src> fields can contain either casacore::Int, Float
-		// or casacore::Double data at the moment.
-		virtual void setLinearRestriction(const casacore::RecordInterface &rec);
+		// <src>increment</src> fields can contain either Int, Float
+		// or Double data at the moment.
+		virtual void setLinearRestriction(const RecordInterface &rec);
 
 		// Remove a restriction (including a 'linear' (ramped) one).
 		// (Can be (and is) used to remove 'bindex' restriction).
-		virtual void removeRestriction(const casacore::String& name);
+		virtual void removeRestriction(const String& name);
 
 	private:
 
 		// The list of MultiWCHolders that are connected to this MWCAnimator.
-		casacore::List<MultiWCHolder *> itsMWCHList;
+		List<MultiWCHolder *> itsMWCHList;
 
 		// Do we already have this MultiWCHolder registered?
-		casacore::Bool isAlreadyRegistered(const MultiWCHolder &holder);
+		Bool isAlreadyRegistered(const MultiWCHolder &holder);
 
 	};
 

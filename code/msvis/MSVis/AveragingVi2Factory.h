@@ -55,7 +55,7 @@ public:
     };
 
     AveragingOptions () : options_p (AverageObserved) {}
-    AveragingOptions (casacore::Int options) : options_p ((Options) options) {}
+    AveragingOptions (Int options) : options_p ((Options) options) {}
     explicit AveragingOptions (Options o) : options_p (o) {}
 
     AveragingOptions operator& (const AveragingOptions & other) const
@@ -87,15 +87,15 @@ public:
         return AveragingOptions (~ options_p);
     }
 
-    casacore::Bool contains (Options o) const { return (o & options_p) != 0; }
+    Bool contains (Options o) const { return (o & options_p) != 0; }
 
-    casacore::Int
-    nSet (casacore::Int o) const
+    Int
+    nSet (Int o) const
     {
-        casacore::Int result = o & options_p;
-        casacore::Int nSet = 0;
+        Int result = o & options_p;
+        Int nSet = 0;
 
-        for (casacore::Int mask = 1; mask < MarksLast; mask = mask << 1){
+        for (Int mask = 1; mask < MarksLast; mask = mask << 1){
 
             nSet += (result & mask) != 0 ? 1 : 0;
 
@@ -116,53 +116,53 @@ public:
 
     AveragingParameters ();
 
-    AveragingParameters (casacore::Double averagingInterval,
-                         casacore::Double chunkInterval,
+    AveragingParameters (Double averagingInterval,
+                         Double chunkInterval,
                          const SortColumns & sortColumns = SortColumns (),
                          const AveragingOptions & options = AveragingOptions (),
-                         casacore::Double maxUvwDistance = 0,
+                         Double maxUvwDistance = 0,
                          WeightScaling * weightScalingForAveraging = 0,
-                         casacore::Bool isWriteable = false,
-                         casacore::Double dx = 0,
-                         casacore::Double dy = 0);
+                         Bool isWriteable = False,
+                         Double dx = 0,
+                         Double dy = 0);
 
     AveragingParameters (const AveragingParameters & other);
 
     AveragingParameters & operator= (const AveragingParameters & other);
 
-    casacore::Double getAveragingInterval () const;
-    casacore::Double getChunkInterval () const;
-    casacore::Double getMaxUvwDistance () const;
+    Double getAveragingInterval () const;
+    Double getChunkInterval () const;
+    Double getMaxUvwDistance () const;
     const AveragingOptions & getOptions() const;
     const SortColumns & getSortColumns () const;
     WeightScaling * getWeightScaling () const;
-    casacore::Double getXpcOffset () const;
-    casacore::Double getYpcOffset () const;
-    casacore::Bool isWriteable () const;
+    Double getXpcOffset () const;
+    Double getYpcOffset () const;
+    Bool isWriteable () const;
 
-    void setAveragingInterval (casacore::Double);
-    void setChunkInterval (casacore::Double);
+    void setAveragingInterval (Double);
+    void setChunkInterval (Double);
     void setSortColumns (const SortColumns &);
     void setOptions (const AveragingOptions &);
-    void setMaxUvwDistance (casacore::Double);
+    void setMaxUvwDistance (Double);
     void setWeightScaling (WeightScaling *);
-    void setWritable (casacore::Bool isWritable);
-    void setPhaseShift (casacore::Double dx, casacore::Double dy);
+    void setWritable (Bool isWritable);
+    void setPhaseShift (Double dx, Double dy);
 
 private:
 
     void validate ();
     void validateOptions ();
 
-    casacore::Double averagingInterval_p;
+    Double averagingInterval_p;
     AveragingOptions averagingOptions_p;
-    casacore::Double chunkInterval_p;
-    casacore::Double maxUvwDistance_p;
+    Double chunkInterval_p;
+    Double maxUvwDistance_p;
     SortColumns sortColumns_p;
     WeightScaling * weightScaling_p;
-    casacore::Bool isWritable_p;
-    casacore::Double XpcOffset_p;
-    casacore::Double YpcOffset_p;
+    Bool isWritable_p;
+    Double XpcOffset_p;
+    Double YpcOffset_p;
 
     VisBufferComponents2 allDataColumns () const;
 
@@ -187,16 +187,16 @@ class AveragingVi2Factory : public ViFactory {
 public:
 
     AveragingVi2Factory (const AveragingParameters & parameters,
-                         casacore::MeasurementSet * ms);
+                         MeasurementSet * ms);
 
     AveragingVi2Factory (const AveragingParameters & parameters,
-                         casacore::MeasurementSet * ms1,
-                         casacore::MeasurementSet * ms2,
+                         MeasurementSet * ms1,
+                         MeasurementSet * ms2,
                          ...);
     // use 0 to mark end of MSs
 
     AveragingVi2Factory (const AveragingParameters & parameters,
-                         const casacore::Block<const casacore::MeasurementSet *> & mss);
+                         const Block<const MeasurementSet *> & mss);
 
     ~AveragingVi2Factory ();
 
@@ -207,9 +207,9 @@ protected:
 private:
 
     void initialize (const AveragingParameters & parameters,
-                     const casacore::Block<const casacore::MeasurementSet *> & mss);
+                     const Block<const MeasurementSet *> & mss);
 
-    casacore::Block<const casacore::MeasurementSet *> mss_p;
+    Block<const MeasurementSet *> mss_p;
     AveragingParameters parameters_p;
 };
 

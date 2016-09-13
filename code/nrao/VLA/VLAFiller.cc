@@ -166,7 +166,7 @@ VLAFiller::VLAFiller(MeasurementSet& output, VLALogicalRecord& input, Double fre
   itsSpId(maxCDA, -1),
   itsPolId(0),
   itsDataId(maxSubarrays),
-  itsNewScan(true),
+  itsNewScan(True),
   itsScan(maxSubarrays, 0),
   itsProject(),
   itsLog(),
@@ -180,18 +180,18 @@ VLAFiller::VLAFiller(MeasurementSet& output, VLALogicalRecord& input, Double fre
   itsDataShapes(0),
   itsFreqTolerance(freqTolerance),
   itsApplyTsys(applyTsys),
-  itsEVLAisOn(false),
-  itsInitEpoch(false),
-  itsRevBeenWarned(false)
+  itsEVLAisOn(False),
+  itsInitEpoch(False),
+  itsRevBeenWarned(False)
 {
   String antscheme=antnamescheme;
   antscheme.downcase();
-  itsNewAntName=false;
+  itsNewAntName=False;
   if(antscheme.contains("new"))
-    itsNewAntName=true;
+    itsNewAntName=True;
   itsKeepAutoCorr=autocorr;
-  checkStop = false;
-  fillStarted = false;
+  checkStop = False;
+  fillStarted = False;
   AlwaysAssert(itsMS.tableInfo().subType() == "VLA", AipsError);
 /*
   itsDataAcc = TiledDataStManAccessor(itsMS, dataCol);
@@ -210,11 +210,11 @@ VLAFiller::VLAFiller(MeasurementSet& output, VLALogicalRecord& input, Double fre
   // avoid unecessary conversions
   if(nrow()==0){
 
-    itsInitEpoch=false;
+    itsInitEpoch=False;
 
   }
   else{
-    itsInitEpoch=true;
+    itsInitEpoch=True;
   }
 
   // Deduce what the last scan was from the LAST_SCAN keyword in the SCAN
@@ -275,8 +275,8 @@ void VLAFiller::setStopParams(String &pCode, String &sTime){
             MVTime::read(t, sTime);
             stopTime = MVEpoch(t);
         }
-        fillStarted = false;
-        checkStop = true;
+        fillStarted = False;
+        checkStop = True;
     }
     return;
 }
@@ -287,7 +287,7 @@ void VLAFiller::setStopParams(String &pCode, String &sTime){
 
 Bool VLAFiller::stopFilling(VLALogicalRecord &record)
 {
-   Bool rstat(false);
+   Bool rstat(False);
    if(checkStop){
 	   /*
 	if(fillStarted){
@@ -295,7 +295,7 @@ Bool VLAFiller::stopFilling(VLALogicalRecord &record)
            //std::cerr << upcase(record.SDA().obsId()) << std::endl;
            String itsCode(upcase(record.SDA().obsId()));
 	   if(!projectCode.empty() && !projectCode.matches(itsCode)){
-	      rstat = true;
+	      rstat = True;
             }
 	}
 	*/
@@ -304,9 +304,9 @@ Bool VLAFiller::stopFilling(VLALogicalRecord &record)
            //std::cerr << stopTime.get() << std::endl;
            //std::cerr << recordTime << std::endl;
 	if(recordTime > stopTime.get())
-	   rstat = true;
+	   rstat = True;
         else 
-           rstat = false;
+           rstat = False;
    }
    return rstat;
 }
@@ -328,7 +328,7 @@ void VLAFiller::fill(Int verbose){
   counts.lastProject = "";
   counts.lastObsMode = "";
   const uInt initialRow = nrow();
-  itsRevBeenWarned = false;
+  itsRevBeenWarned = False;
 #if defined(AIPS_DEBUG)
   const LogFilter saved(LogMessage::DEBUGGING);
   if (verbose > 0) LogSink::globalSink().filter(saved);
@@ -384,7 +384,7 @@ void VLAFiller::fill(Int verbose){
     obsCols.scheduleType().put(newRow, unknown);
     obsCols.schedule().put(newRow, unavailableVec);
     obsCols.project().put(newRow, itsProject);
-    obsCols.flagRow().put(newRow, false);
+    obsCols.flagRow().put(newRow, False);
     Vector<MEpoch> obsTimeRange(2);
     obsTimeRange(0) = timeMeas()(initialRow);
     const uInt finalRow = nrow() - 1;
@@ -440,15 +440,15 @@ void VLAFiller::fill(Int verbose){
 }
 
 Bool VLAFiller::fillOne() { 
-  if (!itsRecord.read()) return false;
-  if (stopFilling(itsRecord)) return false;
+  if (!itsRecord.read()) return False;
+  if (stopFilling(itsRecord)) return False;
   if (!itsInputFilters.passThru(itsRecord)){
 	  // OK here we mark a new scan if we skip anything.
-	  itsNewScan=true;
-	  return true;
+	  itsNewScan=True;
+	  return True;
   }
 
-  fillStarted = true;
+  fillStarted = True;
   const VLARCA& rca = itsRecord.RCA();
   const VLASDA& sda = itsRecord.SDA();
   //For new ms and first go...make sure to init this to B1950 if data is so
@@ -463,12 +463,12 @@ Bool VLAFiller::fillOne() {
     itsUvwCtr.setOut(MeasRef<Muvw>(Muvw::fromDirType(itsMSDirType), itsFrame));
     itsMS.initRefs();
 
-    itsInitEpoch=true;
+    itsInitEpoch=True;
     itsMS.flush();
   }
   // Check if the revision number is supported.
   if (rca.revision() < 23 && !itsRevBeenWarned) { 
-    itsRevBeenWarned = true;
+    itsRevBeenWarned = True;
     itsLog << LogIO::WARN
  	   << "This function has not been tested on VLA archive data "
  	   << "with revisions less " << endl
@@ -496,9 +496,9 @@ Bool VLAFiller::fillOne() {
     //NEED to use the exact date the EVLA antenna got in
     // If after 2005 EVLA can be in
     if(obsTime.getDay() > 53371.0)
-      itsEVLAisOn=true;
+      itsEVLAisOn=True;
     else
-      itsEVLAisOn=false;
+      itsEVLAisOn=False;
   }
 
   { // Workout the field ID.
@@ -521,7 +521,7 @@ Bool VLAFiller::fillOne() {
     }
 
     // Determine if field already exists in FIELD subtable
-    Bool fldMatch=false;
+    Bool fldMatch=False;
 
     // First match on name (maybe multiple name matches with diff directions?):
     //   (this is a clumsy way--and inefficient for large FIELD tables--to 
@@ -559,7 +559,7 @@ Bool VLAFiller::fillOne() {
 
     if (thisfldId != itsFldId[subArray]) {
       itsFrame.resetDirection(fieldDir.getValue());
-      itsNewScan = true;
+      itsNewScan = True;
       itsFldId[subArray] = thisfldId;
     }
   }
@@ -572,7 +572,7 @@ Bool VLAFiller::fillOne() {
     uInt elem = 0;
     Vector<Double> convertedUvw(3);
     Double u, v, w;
-    const Bool doConversion = (itsMSDirType == sda.epoch()) ? false : true;
+    const Bool doConversion = (itsMSDirType == sda.epoch()) ? False : True;
     for (uInt a = 0; a < nAnt; a++) {
       const VLAADA& ada = itsRecord.ADA(a);
       u = ada.u();
@@ -590,8 +590,8 @@ Bool VLAFiller::fillOne() {
     }
   }
 
-  Block<Bool> shadowed(nAnt, false);
-  Bool badData = false;
+  Block<Bool> shadowed(nAnt, False);
+  Bool badData = False;
   { // find out if any antennae are shadowed
     uInt a1Idx = 0;
     for (uInt a1 = 0; a1 < nAnt; a1++) {
@@ -600,12 +600,12 @@ Bool VLAFiller::fillOne() {
 	Double u = antUvw[a1Idx] - antUvw[a2Idx]; a2Idx++;
 	Double v = antUvw[a1Idx+1] - antUvw[a2Idx]; a2Idx++;
 	if (u*u + v*v < 625) {
-	  badData = true;
+	  badData = True;
 	  Double w = antUvw[a1Idx+2] - antUvw[a2Idx];
 	  if (w > 0) {
-	    shadowed[a2] = true;
+	    shadowed[a2] = True;
 	  } else {
-	    shadowed[a1] = true;
+	    shadowed[a1] = True;
 	  }
  	}
 	a2Idx++;
@@ -649,7 +649,7 @@ Bool VLAFiller::fillOne() {
 
       if(!itsEVLAisOn){
 	// ignore the frontend temperature naming
-	leAntName=ada.antName(false);
+	leAntName=ada.antName(False);
 	if(itsNewAntName){
 	  leAntName=String("VA")+leAntName;
 	}	
@@ -682,7 +682,7 @@ Bool VLAFiller::fillOne() {
 	  if (itsAntId[ao] < 0) {
 	    itsAntId[ao] = addAntenna(thisPos(ao), ao);
 	    addFeed(itsAntId[ao]);
-	    itsNewScan = true;
+	    itsNewScan = True;
 	  }
 	}
       }
@@ -718,7 +718,7 @@ Bool VLAFiller::fillOne() {
       if(itsAntId[a]>-1) {
 	const VLAADA& ada = itsRecord.ADA(a);
 	MDirection thisDir(MVDirection(0.0, 0.0), MDirection::AZEL);
-	thisDir.shift(-ada.u()/ns2m, ada.v()/ns2m, true);
+	thisDir.shift(-ada.u()/ns2m, ada.v()/ns2m, True);
 	addPointing(thisDir, fieldDir, itsAntId[a]);
       }
     }
@@ -889,7 +889,7 @@ Bool VLAFiller::fillOne() {
     // auto-correlation cannot be calculated. In this case all the CDA's are
     // invalid and there is no data to add to the main table of the MS.
     DebugAssert(nAnt == 1, AipsError);
-    return true; 
+    return True; 
   }
 
   // Check if the transfer switch is only set on some antennas. If so warn
@@ -912,13 +912,13 @@ Bool VLAFiller::fillOne() {
 
   // Now sort out the polarisation subtable
   if (nSpId != itsPolId.nelements()) {
-    itsPolId.resize(nSpId, true);
+    itsPolId.resize(nSpId, True);
     itsPolId = -1;
   }
   polTypes.resize(nSpId);
   polNewOrder.resize(nSpId);
   rotStokesOrder.resize(nSpId);
-  rotStokesOrder.set(false);
+  rotStokesOrder.set(False);
   for (uInt s = 0; s < nSpId; s++) {
     const Block<VLAEnum::CDA>& usedCDAs = CDAId[s];
     const uInt nCda = usedCDAs.nelements();
@@ -938,30 +938,30 @@ Bool VLAFiller::fillOne() {
     polTypes[s].resize(allPols.nelements());
     polNewOrder[s].resize(allPols.nelements());
     
-    Bool standard=true;
+    Bool standard=True;
     for (uInt i=0; i < allPols.nelements(); ++i){
       polTypes[s][i]=static_cast<uInt> (allPols[i]);
       polNewOrder[s][i]=i;
       if( (allPols[i] > Stokes::LL) || (allPols[i] < Stokes::RR)){
-	standard=false;
+	standard=False;
       }
     }
     //Now if the 4-stokes are not in RR RL LR LL order....make sure it is
     if((allPols.nelements() == 4) && standard ){
       if(allPols[0] != Stokes::RR){
-	rotStokesOrder[s]=true;
+	rotStokesOrder[s]=True;
 	polNewOrder[s][0]=polIndexer(allPols[0]);
       }
       if(allPols[1] != Stokes::RL){
-	rotStokesOrder[s]=true;
+	rotStokesOrder[s]=True;
 	polNewOrder[s][1]=polIndexer(allPols[1]);
       }	
       if(allPols[2] != Stokes::LR){
-	rotStokesOrder[s]=true;
+	rotStokesOrder[s]=True;
 	polNewOrder[s][2]=polIndexer(allPols[2]);
       }
       if(allPols[3] != Stokes::LL){
-	rotStokesOrder[s]=true;
+	rotStokesOrder[s]=True;
 	polNewOrder[s][3]=polIndexer(allPols[3]);
       }
 
@@ -987,7 +987,7 @@ Bool VLAFiller::fillOne() {
   Block<Int>& thisDataId = itsDataId[subArray];
   // Now sort out the data description subtable
   if (nSpId != thisDataId.nelements()) {
-    thisDataId.resize(nSpId, true);
+    thisDataId.resize(nSpId, True);
     thisDataId = -1;
   }
   for (uInt s = 0; s < nSpId; s++) {
@@ -1001,7 +1001,7 @@ Bool VLAFiller::fillOne() {
     }
     if (newId != thisDataId[s]) {
       thisDataId[s] = newId;
-      itsNewScan = true;
+      itsNewScan = True;
     }
   }
 
@@ -1037,7 +1037,7 @@ Bool VLAFiller::fillOne() {
 #endif
   // decide if this is a new scan
   if (itsNewScan) {
-    itsNewScan = false;
+    itsNewScan = False;
     Int nextScan = itsScan[0];
     for (uInt i = 1; i < maxSubarrays; i++) {
       nextScan = max(nextScan, itsScan[i]);
@@ -1118,25 +1118,25 @@ Bool VLAFiller::fillOne() {
     // cache the online IF flags and nominal sensitivity of each antenna. It
     // simplifies having to do it for each baseline later on.
     Block<Matrix<VLAEnum::IF> > whichIF(nCDA);
-    Cube<Bool> antFlagLevels(maxIF, nAnt, 4, false);
-    Matrix<Bool> antFlag(maxIF, nAnt, false);
+    Cube<Bool> antFlagLevels(maxIF, nAnt, 4, False);
+    Matrix<Bool> antFlag(maxIF, nAnt, False);
     Matrix<Float> sens(maxIF, nAnt,0.333);
-    Bool isScaledByNS(false);
+    Bool isScaledByNS(False);
     { // First work ouk out which IF's are used by this spectral id.
-      Block<Bool> usedIFs(maxIF, false);
+      Block<Bool> usedIFs(maxIF, False);
       for (uInt c = 0; c < nCDA; c++) {
 	const Matrix<VLAEnum::IF>& curIF = 
 	  whichIF[c] = sda.ifUsage(usedCDAs[c]);
 	const uInt nCorr = curIF.ncolumn();
 	for (uInt p = 0; p < nCorr; p++) {
-	  usedIFs[curIF(0, p)] = usedIFs[curIF(1, p)] = true;
+	  usedIFs[curIF(0, p)] = usedIFs[curIF(1, p)] = True;
 	}
       }
 
       // For each antenna find the IF flags and sensitivity
       Int nAntIF(0);
       Int nAppAntIF(0);
-      for (uInt a = 0; a < nAnt; a++) { // set the flag to true if data is Bad
+      for (uInt a = 0; a < nAnt; a++) { // set the flag to True if data is Bad
 	const VLAADA& ada = itsRecord.ADA(a);
 	for (uInt i = 0; i < maxIF; i++) {
 	  if (usedIFs[i]) {
@@ -1148,11 +1148,11 @@ Bool VLAFiller::fillOne() {
 	    ++nAntIF;
 	    if (ada.nomSensApplied(thisIF,rca.revision())) ++nAppAntIF;
 	    const uInt status = ada.ifStatus(thisIF);
-	    if (status > 0) badData = true;
-	    if ((status&0x01) != 0) antFlagLevels(i, a, 0) = true;
-	    if ((status&0x02) != 0) antFlagLevels(i, a, 1) = true;
-	    if ((status&0x04) != 0) antFlag(i, a)=antFlagLevels(i, a, 2)=true;
-	    if ((status&0x08) != 0) antFlag(i, a)=antFlagLevels(i, a, 3)=true;
+	    if (status > 0) badData = True;
+	    if ((status&0x01) != 0) antFlagLevels(i, a, 0) = True;
+	    if ((status&0x02) != 0) antFlagLevels(i, a, 1) = True;
+	    if ((status&0x04) != 0) antFlag(i, a)=antFlagLevels(i, a, 2)=True;
+	    if ((status&0x08) != 0) antFlag(i, a)=antFlagLevels(i, a, 3)=True;
 	    if(!isHolo) {
 	      antFlag(i, a) |= shadowed[a];
 	    }
@@ -1161,13 +1161,13 @@ Bool VLAFiller::fillOne() {
       }
       // determine global state of nom sens application
       if (nAppAntIF==0) {
-	isScaledByNS=false;
+	isScaledByNS=False;
 	//	cout << "****DATA has NOT been scaled by NOMINAL SENSITIVITY*****************" << endl;
       }
       else {
 	// one or more ant/if combos indicate that NOM SENS has been applied
 	//  in this case it is true for all even if not indicated for all.
-	isScaledByNS=true;
+	isScaledByNS=True;
 	//	cout << "****DATA has been scaled by NOMINAL SENSITIVITY*****************" << endl;
       }
     }
@@ -1188,8 +1188,8 @@ Bool VLAFiller::fillOne() {
     flags.resize(nPol, nChan); 
     flagLevels.resize(nPol, nChan, nCat); 
     if (!badData) {
-      flags = false;
-      flagLevels = false;
+      flags = False;
+      flagLevels = False;
     }
     if (nChan != 1 && nPol != 1 ) onePol.resize(1, nChan);
     const Slice allChan(0, nChan);
@@ -1198,7 +1198,7 @@ Bool VLAFiller::fillOne() {
     uInt b = 0;
     for (uInt a1 = 0; a1 < nAnt; a1++) {
       for (uInt a2 = a1; a2 < nAnt; a2++) {
- 	const Bool crossCorr = (a1 == a2) ? false : true;
+ 	const Bool crossCorr = (a1 == a2) ? False : True;
 	if(crossCorr || (!crossCorr && itsKeepAutoCorr)){
 	  for (uInt c = 0; c < nCDA; c++) {
 	    cda = usedCDAs[c];
@@ -1278,12 +1278,12 @@ Bool VLAFiller::fillOne() {
 		  // since we don't actually know if the data is
 		  // shadowed
 		  if(isHolo) {
-		    flagLevels(p, 0, 4) = false;
+		    flagLevels(p, 0, 4) = False;
 		  }
 		  else {
 		    flagLevels(p, 0, 4) = shadowed[a1] || shadowed[a2];
 		  }
-		  flagLevels(p, 0, 5) = false;
+		  flagLevels(p, 0, 5) = False;
 		}
 	      }
 	    } else {// spectral line
@@ -1332,12 +1332,12 @@ Bool VLAFiller::fillOne() {
 		    antFlagLevels(if0, a1, l) || antFlagLevels(if1, a2, l);
 		}
 		if(isHolo) {
-		  flagLevels(curPol, allChan, 4) = false;
+		  flagLevels(curPol, allChan, 4) = False;
 		}
 		else {
 		  flagLevels(curPol, allChan, 4) = shadowed[a1] || shadowed[a2];
 		}
-		flagLevels(curPol, allChan, 5) = false;
+		flagLevels(curPol, allChan, 5) = False;
 	      }
 	    }
 	  }
@@ -1377,9 +1377,9 @@ Bool VLAFiller::fillOne() {
 	  flag().put(row, flags);
 	  flagCategory().put(row, flagLevels);
 	  if (badData) {
-	    flagRow().put(row, allEQ(flags, true));
+	    flagRow().put(row, allEQ(flags, True));
 	  } else {
-	    flagRow().put(row, false);
+	    flagRow().put(row, False);
 	  }
 
 
@@ -1403,12 +1403,12 @@ Bool VLAFiller::fillOne() {
       }
     }
   }
-  return true;
+  return True;
 }
 
 MeasurementSet VLAFiller::
 getMS(const Path& tableName, const Bool overwrite) {
-  if (overwrite == false && File(tableName).exists()) {
+  if (overwrite == False && File(tableName).exists()) {
     return openMS(tableName);
   } else {
     return emptyMS(tableName, overwrite);
@@ -1788,7 +1788,7 @@ void VLAFiller::logChanges(IterationStatus& counts) {
       //     << MVTime(obsTime.getValue().getTime()).string(MVTime::YMD)
       //     << " (" << obsTime.getRefString() << ")"
       //     << LogIO::POST;
-      counts.lastAnt[subArray].resize(nAnt, true);
+      counts.lastAnt[subArray].resize(nAnt, True);
       for (uInt i = 0; i < nAnt; i++) {
 	const uInt a = static_cast<uInt>(itsAntId[i]);
 	itsLog << "Station: " << ant.station()(a)
@@ -1877,7 +1877,7 @@ void VLAFiller::logChanges(IterationStatus& counts) {
 	} else {
 	  Array<MDirection> amd;
 	  const Unit rad("rad");
-	  fld.referenceDirMeasCol().get(thisFld, amd, true);
+	  fld.referenceDirMeasCol().get(thisFld, amd, True);
 	  const MDirection& md = amd(IPosition(amd.ndim(), 0));
 	  const MVDirection& mdv = md.getValue();
 	  const MVTime ra(mdv.getLong(rad));
@@ -1931,7 +1931,7 @@ uInt VLAFiller::addAntenna(const MPosition& antPos, uInt whichAnt) {
   String leAntName;
   if(!itsEVLAisOn){
     // ignore the frontend temperature naming
-    leAntName=itsRecord.ADA(whichAnt).antName(false);
+    leAntName=itsRecord.ADA(whichAnt).antName(False);
     if(itsNewAntName){
       leAntName=String("VA")+leAntName;
     }	
@@ -1948,7 +1948,7 @@ uInt VLAFiller::addAntenna(const MPosition& antPos, uInt whichAnt) {
   ant.positionMeas().put(newRow, antPos);
   ant.offset().put(newRow, Vector<Double>(3, 0.0));
   ant.dishDiameter().put(newRow, 25.0);
-  ant.flagRow().put(newRow, false);
+  ant.flagRow().put(newRow, False);
   return newRow;
 }
 
@@ -1973,7 +1973,7 @@ uInt VLAFiller::addPointing(const MDirection& antDir,
   pointingCol.directionMeasCol().put(newRow, bDir);
   bDir(IPosition(1,0))=fieldDir;
   pointingCol.targetMeasCol().put(newRow, bDir);
-  pointingCol.tracking().put(newRow, true);
+  pointingCol.tracking().put(newRow, True);
   return newRow;
 }
 
@@ -2024,7 +2024,7 @@ uInt VLAFiller::addField(const MDirection& dir) {
   if (!fld.ephemerisId().isNull()) {
     fld.ephemerisId().put(newRow, -1);
   }
-  fld.flagRow().put(newRow, false);
+  fld.flagRow().put(newRow, False);
   return newRow;
 }
 
@@ -2096,7 +2096,7 @@ uInt VLAFiller::addSpectralWindow(const VLAEnum::CDA cda,
   spw.chanWidth().put(newRow, chanWidths);
   spw.effectiveBW().put(newRow, chanWidths);
 
-  spw.flagRow().put(newRow, false);
+  spw.flagRow().put(newRow, False);
   {
     Quantum<Double> qChanWidth(chanWidth, "Hz");
     if (chanWidth < 1E6) {
@@ -2181,7 +2181,7 @@ uInt VLAFiller::addPolarization(const Vector<Stokes::StokesTypes>& polTypes) {
   }
   pol.corrType().put(newRow, polInt);
   pol.corrProduct().put(newRow, polProd);
-  pol.flagRow().put(newRow, false);
+  pol.flagRow().put(newRow, False);
   return newRow;
 }
 
@@ -2248,10 +2248,10 @@ uInt VLAFiller::addSource(const MDirection& dir ){
       // Who said bad documentation is better than none ...aargh !
       if(sda.restFrame(thisCDA) < MFrequency::N_Types){
 	++validRest;
-	restFreq.resize(validRest, true);
+	restFreq.resize(validRest, True);
 	restFreq(validRest-1)=sda.restFrequency(thisCDA);
 
-	sysvel.resize(validRest,true);
+	sysvel.resize(validRest,True);
 	sysvel(validRest-1) = sda.radialVelocity(thisCDA);
 
       }
@@ -2308,18 +2308,18 @@ void  VLAFiller::extendHypercubes(const Block<uInt>& nPol,
 void  VLAFiller::addHypercubes(uInt nPol, uInt nChan) {
   DebugAssert(nChan > 0 && nChan <= 4096, AipsError);
   DebugAssert(nPol > 0 && nPol <= 4, AipsError);
-  Bool addDataCube = true;
-  Bool addSigmaCube = true;
+  Bool addDataCube = True;
+  Bool addSigmaCube = True;
   uInt s = itsDataShapes.nelements();
   while (addDataCube && s > 0) {
     s--;
     const IPosition& curShape = itsDataShapes[s];
     if (curShape(0) == static_cast<Int>(nPol)) {
-      addSigmaCube = false;
+      addSigmaCube = False;
     }
     if (curShape(0) == static_cast<Int>(nPol) && 
 	curShape(1) == static_cast<Int>(nChan)) {
-      addDataCube = false;
+      addDataCube = False;
     }
     
     DebugAssert(addDataCube || !addSigmaCube, AipsError);

@@ -30,7 +30,6 @@
 #include <casa/aips.h>
 #include <synthesis/TransformMachines/SkyJones.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
   SkyJones::SkyJones():threshold_p(0.0) {

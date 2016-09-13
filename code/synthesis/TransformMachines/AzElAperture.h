@@ -46,24 +46,20 @@
 // #define THRESHOLD 1E-3
 
 
-namespace casacore{
-
+namespace casa { //# NAMESPACE CASA - BEGIN
   template<class T> class ImageInterface;
   template<class T> class Matrix;
-}
-
-namespace casa { //# NAMESPACE CASA - BEGIN
   class VisBuffer;
   class AzElAperture : public ATerm
   {
   public:
     AzElAperture(): ATerm(), cachedCFC_p(), cachedCFCPA_p(400.0){};
     ~AzElAperture() {};
-    virtual void rotate(const VisBuffer& vb, CFCell& cfc, const casacore::Double& rotAngleIncrement=5.0);
-    virtual void rotate2(const VisBuffer& vb, CFCell& baseCFC, CFCell& cfc, const casacore::Double& rotAngleIncrement=5.0);
+    virtual void rotate(const VisBuffer& vb, CFCell& cfc, const Double& rotAngleIncrement=5.0);
+    virtual void rotate2(const VisBuffer& vb, CFCell& baseCFC, CFCell& cfc, const Double& rotAngleIncrement=5.0);
   private:
-    casacore::Array<TT> cachedCFC_p;
-    casacore::Float cachedCFCPA_p;
+    Array<TT> cachedCFC_p;
+    Float cachedCFCPA_p;
   };
 };
 #endif

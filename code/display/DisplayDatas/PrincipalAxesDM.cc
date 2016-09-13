@@ -43,7 +43,6 @@
 
 
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	PrincipalAxesDM::PrincipalAxesDM(const uInt xAxis,
@@ -54,7 +53,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsXAxisNum(xAxis),
 		itsYAxisNum(yAxis),
 		itsZAxisNum(mAxis),
-		notUsed(true) {
+		notUsed(True) {
 	}
 
 	PrincipalAxesDM::~PrincipalAxesDM() {
@@ -259,7 +258,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		drawListNumber = dataDrawSelf(wCanvas, blc, trc, start, sliceShape,
-		                              stride, true);
+		                              stride, True);
 
 		if ( !blcsuccess ) {
 			((PrincipalAxesDD *)parentDisplayData())->removeFakeCoordinateSystem();
@@ -268,7 +267,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			wCanvas->drawList(drawListNumber);
 			drawState = worldCanvasState;
 			holder = &wcHolder;
-			notUsed = false;
+			notUsed = False;
 		}
 
 	}
@@ -291,10 +290,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		coordinateSystem().toWorld(worldPos, pixPos);
 		if ((((PrincipalAxesDD *)parentDisplayData())->
 		        dataShape())(itsZAxisNum) > 1) {
-			restrictions.add("zIndex", fixedPos(itsZAxisNum), 0, false, true);
+			restrictions.add("zIndex", fixedPos(itsZAxisNum), 0, False, True);
 			Double tol = ((PrincipalAxesDD *)parentDisplayData())->
 			             coordinateSystem().increment()(itsZAxisNum) / 2.0;
-			restrictions.add("zValue", worldPos(itsZAxisNum), tol, false, true);
+			restrictions.add("zValue", worldPos(itsZAxisNum), tol, False, True);
 		}
 	}
 
@@ -321,7 +320,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		parentDisplayData()->setDisplayState( DisplayData::UNDISPLAYED );
 		drawState.clear();
 		if (!notUsed) {
-			notUsed = true;
+			notUsed = True;
 			if (holder->worldCanvas()->validList(drawListNumber)) {
 				holder->worldCanvas()->deleteList(drawListNumber);
 			}

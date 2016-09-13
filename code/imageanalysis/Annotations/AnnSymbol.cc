@@ -26,7 +26,6 @@
 
 #include <imageanalysis/Annotations/AnnSymbol.h>
 
-using namespace casacore;
 namespace casa {
 
 map<Char, AnnSymbol::Symbol> AnnSymbol::_symbolMap;

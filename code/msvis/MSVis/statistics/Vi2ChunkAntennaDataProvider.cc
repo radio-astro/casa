@@ -28,7 +28,6 @@
 #include <msvis/MSVis/statistics/Vi2ChunkAntennaDataProvider.h>
 #include <msvis/MSVis/VisBufferComponents2.h>
 
-using namespace casacore;
 namespace casa {
 
 Vi2ChunkAntenna1DataProvider::Vi2ChunkAntenna1DataProvider(
@@ -57,8 +56,4 @@ Vi2ChunkAntenna2DataProvider::dataArray() {
 	return vi2->getVisBuffer()->antenna2();
 }
 
-
 } // namespace casa
-
-
-

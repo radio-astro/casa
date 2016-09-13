@@ -40,7 +40,6 @@
 
 #include <scimath/Mathematics.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	DSScreenText::DSScreenText() :
@@ -88,7 +87,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	Bool DSScreenText::setOptions(const Record& settings) {
-		Bool localChange = false;
+		Bool localChange = False;
 		Record toSet = settings;
 
 		if (settings.isDefined("coords")) {
@@ -166,7 +165,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		if (DSText::setOptions(toSet)) {
-			localChange = true;
+			localChange = True;
 		}
 
 		return localChange;

@@ -52,7 +52,6 @@
 #include <lattices/Lattices/SubLattice.h>
 #include <lattices/LRegions/LCBox.h>
 
-using namespace casacore;
 namespace casa {
 
 Int CSCleanImageSkyModel::add(ImageInterface<Float>& image,
@@ -77,13 +76,13 @@ Bool CSCleanImageSkyModel::addResidual(Int image,
 Bool CSCleanImageSkyModel::solve(SkyEquation& se) {
 
   LogIO os(LogOrigin("CSCleanImageSkyModel","solve"));
-  Bool converged=true;
+  Bool converged=True;
   if(modified_p) {
-    makeNewtonRaphsonStep(se, false, (numberIterations()<1)?true:False);
+    makeNewtonRaphsonStep(se, False, (numberIterations()<1)?True:False);
   }
 
   if( numberIterations() < 1)
-    return true;
+    return True;
   //Make the PSFs, one per field
 
   os << LogIO::NORMAL    // Loglevel PROGRESS
@@ -131,7 +130,7 @@ Bool CSCleanImageSkyModel::solve(SkyEquation& se) {
         blc(3)= k;
 	trc(3)=k;
 	LCBox onePlane(blc, trc, PSF(model).shape());
-	subPSF=SubLattice<Float> ( PSF(model), onePlane, true);
+	subPSF=SubLattice<Float> ( PSF(model), onePlane, True);
 	{
 	  LatticeExprNode node = max(subPSF);
 	  psfmax(model) = node.getFloat();
@@ -183,14 +182,14 @@ Bool CSCleanImageSkyModel::solve(SkyEquation& se) {
     
   // Loop over major cycles
   Int cycle=0;
-  Bool stop=false;
+  Bool stop=False;
 
   if (displayProgress_p) {
     progress_p = new ClarkCleanProgress( pgplotter_p );
   } else {
     progress_p = 0;
   }
-  Bool lastCycleWriteModel=false;
+  Bool lastCycleWriteModel=False;
   while((absmax>=threshold())&& (maxIterations<numberIterations()) &&!stop) {
 
     os << LogIO::NORMAL << "*** Starting major cycle " << cycle + 1 
@@ -209,13 +208,13 @@ Bool CSCleanImageSkyModel::solve(SkyEquation& se) {
 	os << LogIO::NORMAL1         // Loglevel INFO
            << "Using XFR-based shortcut for residual calculation"
 	   << LogIO::POST;
-	makeNewtonRaphsonStep(se, false);
+	makeNewtonRaphsonStep(se, False);
       }
       else {
 	os << LogIO::NORMAL1         // Loglevel INFO
            << "Using visibility-subtraction for residual calculation"
 	   << LogIO::POST;
-	makeNewtonRaphsonStep(se, false);
+	makeNewtonRaphsonStep(se, False);
       }
       os << LogIO::NORMAL2         // Loglevel PROGRESS
          << "Finished update of residuals"
@@ -237,9 +236,9 @@ Bool CSCleanImageSkyModel::solve(SkyEquation& se) {
     if(absmax<threshold()) {
       os << LogIO::NORMAL         // Loglevel INFO
          << "Reached stopping peak residual = " << absmax << LogIO::POST;
-      stop=true;
+      stop=True;
       if(cycle >1)
-	lastCycleWriteModel=true;
+	lastCycleWriteModel=True;
     }
     else {
       if(oldmax < absmax){
@@ -302,16 +301,16 @@ Bool CSCleanImageSkyModel::solve(SkyEquation& se) {
 		LCBox psfbox(IPosition(4, 0, 0, 0, chan), 
 			     IPosition(4, nx-1, ny-1, 0, chan),
 			     PSF(model).shape());
-		SubLattice<Float>  psf_sl (PSF(model), psfbox, false);
+		SubLattice<Float>  psf_sl (PSF(model), psfbox, False);
 		
 		LCBox imagebox(IPosition(4, 0, 0, 0, chan), 
 			       IPosition(4, nx-1, ny-1, npol-1, chan), 
 			       residual(model).shape());
 		
 		
-		SubLattice<Float>  residual_sl (residual(model), imagebox, true);
-		SubLattice<Float>  image_sl (image(model), imagebox, true);
-		SubLattice<Float>  deltaimage_sl (deltaImage(model), imagebox, true);
+		SubLattice<Float>  residual_sl (residual(model), imagebox, True);
+		SubLattice<Float>  image_sl (image(model), imagebox, True);
+		SubLattice<Float>  deltaimage_sl (deltaImage(model), imagebox, True);
 		// Now make a convolution equation for this
 		// residual image and psf and then clean it
 		{
@@ -328,7 +327,7 @@ Bool CSCleanImageSkyModel::solve(SkyEquation& se) {
 		  cleaner.setHistLength(1024);
 		  cleaner.setCycleFactor(cycleFactor_p);
 		  cleaner.setMaxNumPix(32*1024);
-		  cleaner.setChoose(false);
+		  cleaner.setChoose(False);
 		  if(cycleSpeedup_p >1)
 		    cleaner.setSpeedup(cycleSpeedup_p);
 		  else
@@ -347,7 +346,7 @@ Bool CSCleanImageSkyModel::solve(SkyEquation& se) {
                      << "Starting minor cycle of Clean" << LogIO::POST;
 		  SubLattice<Float> mask_sl;
 		  if(hasMask(model)) {
-		    mask_sl=SubLattice<Float>  (mask(model), psfbox, true);
+		    mask_sl=SubLattice<Float>  (mask(model), psfbox, True);
 		    cleaner.setMask(mask_sl);
 		  }
 		
@@ -387,10 +386,10 @@ Bool CSCleanImageSkyModel::solve(SkyEquation& se) {
 	    }
 
 	    if(maxIterations==0) {
-	      stop=true;
+	      stop=True;
 	    }
 	    else{
-	      stop=false;
+	      stop=False;
 	    }
 	    os << LogIO::NORMAL    // Loglevel INFO
                << "Model " << model << " has "
@@ -410,8 +409,8 @@ Bool CSCleanImageSkyModel::solve(SkyEquation& se) {
       else {
 	os << LogIO::NORMAL    // Loglevel INFO
            << "No more cleaning occured in this major cycle - stopping now" << LogIO::POST;
-	stop=true;
-	converged=true;
+	stop=True;
+	converged=True;
       }
     }
   }
@@ -424,7 +423,7 @@ Bool CSCleanImageSkyModel::solve(SkyEquation& se) {
        << " Jy is the sum of the clean components " << LogIO::POST;
     os << LogIO::NORMAL    // Loglevel PROGRESS
        << "Finalizing residual images for all fields" << LogIO::POST;
-    makeNewtonRaphsonStep(se, false, true);
+    makeNewtonRaphsonStep(se, False, True);
     Float finalabsmax=maxField(resmax, resmin);
 
     os << LogIO::NORMAL    // Loglevel INFO

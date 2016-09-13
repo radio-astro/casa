@@ -50,7 +50,7 @@ namespace casa {
 		virtual void adjustStart( QVector<double>& values, double newStart ) const;
 		virtual void storeIncrement( double* incr, QVector<double>& values, int index) const;
 		virtual ~SliceStatisticsDistance();
-		virtual QVector<double> fromResults( casacore::Record* record  )const;
+		virtual QVector<double> fromResults( Record* record  )const;
 	private:
 		double getHypotenuse( double side1, double side2 ) const ;
 		double getHypotenuse( double x1, double x2, double y1, double y2 ) const;

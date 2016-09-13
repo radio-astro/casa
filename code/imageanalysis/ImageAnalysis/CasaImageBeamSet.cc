@@ -26,7 +26,6 @@
 #include <components/ComponentModels/GaussianDeconvolver.h>
 #include <imageanalysis/ImageAnalysis/CasaImageBeamSet.h>
 
-using namespace casacore;
 namespace casa {
 
 CasaImageBeamSet::CasaImageBeamSet() : ImageBeamSet() {}
@@ -72,7 +71,7 @@ GaussianBeam CasaImageBeamSet::getCommonBeam() const {
 		return beams(IPosition(2, 0));
 	}
 	BeamIter end = beams.end();
-	Bool largestBeamWorks = true;
+	Bool largestBeamWorks = True;
 	GaussianBeam junk;
 	GaussianBeam problemBeam;
 	GaussianBeam maxBeam = getMaxAreaBeam();
@@ -88,12 +87,12 @@ GaussianBeam CasaImageBeamSet::getCommonBeam() const {
 			//myMinor = max(myMinor, iBeam->getMinor("arcsec"));
 			try {
 				if (GaussianDeconvolver::deconvolve(junk, maxBeam, *iBeam)) {
-					largestBeamWorks = false;
+					largestBeamWorks = False;
 					problemBeam = *iBeam;
 				}
 			}
 			catch (const AipsError& x) {
-				largestBeamWorks = false;
+				largestBeamWorks = False;
 				problemBeam = *iBeam;
 			}
 		}
@@ -106,7 +105,7 @@ GaussianBeam CasaImageBeamSet::getCommonBeam() const {
 	// along the x axis. Ellipse A is _maxBeam, ellipse B is problemBeam,
 	// ellipse C is our wanted ellipse
 
-	Double tB1 = problemBeam.getPA("rad", true) - maxBeam.getPA("rad", true);
+	Double tB1 = problemBeam.getPA("rad", True) - maxBeam.getPA("rad", True);
 
 	if (abs(tB1) == C::pi / 2) {
 		Bool maxHasMajor = maxBeam.getMajor("arcsec")
@@ -117,7 +116,7 @@ GaussianBeam CasaImageBeamSet::getCommonBeam() const {
 		Quantity minor =
 				maxHasMajor ? problemBeam.getMajor() : maxBeam.getMajor();
 		Quantity pa =
-				maxHasMajor ? maxBeam.getPA(true) : problemBeam.getPA(true);
+				maxHasMajor ? maxBeam.getPA(True) : problemBeam.getPA(True);
 		return GaussianBeam(major, minor, pa);
 	}
 
@@ -154,14 +153,14 @@ GaussianBeam CasaImageBeamSet::getCommonBeam() const {
 
 	Double aC = aC1;
 	Double bC = bC1;
-	Double tC = tC1 + maxBeam.getPA("rad", true);
+	Double tC = tC1 + maxBeam.getPA("rad", True);
 
 	// confirm that we can indeed convolve both beams with the enclosing ellipse
 	GaussianBeam newMaxBeam = GaussianBeam(Quantity(aC, "arcsec"),
 			Quantity(bC, "arcsec"), Quantity(tC, "rad"));
 	// Sometimes (due to precision issues I suspect), the found beam has to be increased slightly
 	// so our deconvolving method doesn't fail
-	Bool ok = false;
+	Bool ok = False;
 	while (!ok) {
 		try {
 			if (GaussianDeconvolver::deconvolve(junk, newMaxBeam, maxBeam)) {
@@ -170,7 +169,7 @@ GaussianBeam CasaImageBeamSet::getCommonBeam() const {
 			if (GaussianDeconvolver::deconvolve(junk, newMaxBeam, problemBeam)) {
 				throw AipsError();
 			}
-			ok = true;
+			ok = True;
 		}
 		catch (const AipsError& x) {
 			// deconvolution issues, increase the enclosing beam size slightly

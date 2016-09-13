@@ -31,7 +31,6 @@
 #include <QWidget>
 #include <QtGlobal>
 
-using namespace casacore;
 namespace casa {
 
 	SpecFitSettingsWidgetOptical::SpecFitSettingsWidgetOptical(QWidget *parent)
@@ -118,17 +117,17 @@ namespace casa {
 		Float endVal  =(Float)endStr.toFloat();
 
 		// set the fitting modes
-		Bool doFitGauss(false);
-		Bool doFitPoly(false);
+		Bool doFitGauss(False);
+		Bool doFitPoly(False);
 		if (ui.fitGauss->currentText()==QString("gauss"))
-			doFitGauss=true;
+			doFitGauss=True;
 
 		Int polyN = 0;
 		if (ui.fitPolyN->currentText()==QString("poly 0")) {
-			doFitPoly=true;
+			doFitPoly=True;
 			polyN=0;
 		} else if (ui.fitPolyN->currentText()==QString("poly 1")) {
-			doFitPoly=true;
+			doFitPoly=True;
 			polyN=1;
 		}
 

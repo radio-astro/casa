@@ -81,20 +81,20 @@ struct BLParameterSet {
   }
 
   void PrintSummary() {
-    casacore::LogIO os(casacore::LogOrigin("BLParameterSet","PrintSummary"));
-    os << "- mask: " << baseline_mask << casacore::LogIO::POST;
+    LogIO os(LogOrigin("BLParameterSet","PrintSummary"));
+    os << "- mask: " << baseline_mask << LogIO::POST;
     os << "- clip: iteration=" << num_fitting_max
-       << ", threshold=" << clip_threshold_sigma << casacore::LogIO::POST;
+       << ", threshold=" << clip_threshold_sigma << LogIO::POST;
     os 
       << "- line finder: "
       << (line_finder.use_line_finder==1 ? "true" : "false")
       << ", threshold=" << line_finder.threshold
       << ", edge=[" << line_finder.edge[0] << ","
       << line_finder.edge[1] << "], chan_average="
-      << line_finder.chan_avg_limit << casacore::LogIO::POST;
+      << line_finder.chan_avg_limit << LogIO::POST;
     os << "- baseline: type=" << baseline_type
        << ", order=" << order << ", npiece=" << npiece
-       << casacore::LogIO::POST;
+       << LogIO::POST;
   }
 
   string baseline_mask;
@@ -195,10 +195,10 @@ class BLTableParser : public BLParameterParser {
   void parse();
   //Returns order or npiece in BLParameterSet structure depending on datatype.
   uint16_t GetTypeOrder(size_t const &baseline_type, 
-			casacore::uInt const irow, casacore::uInt const ipol);
+			uInt const irow, uInt const ipol);
   BaselineTable *bt_;
   std::map<string, std::vector<double> > sortedTimes_;
-  std::map<string, std::vector<casacore::uInt> > timeSortedIdx_;
+  std::map<string, std::vector<uInt> > timeSortedIdx_;
   std::map<string, size_t> numRows_;
 };
 

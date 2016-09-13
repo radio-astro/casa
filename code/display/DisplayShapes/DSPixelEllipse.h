@@ -36,17 +36,13 @@
 
 #include <display/DisplayShapes/DSEllipse.h>
 
-namespace casacore{
-
-	class Record;
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <summary>
 // Implementation of an absolute pixel DSEllipse
 // </summary>
 
+	class Record;
 	class DSWorldEllipse;
 	class DSScreenEllipse;
 
@@ -55,16 +51,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	public :
 
 		DSPixelEllipse();
-		DSPixelEllipse(const casacore::Record& settings);
+		DSPixelEllipse(const Record& settings);
 		DSPixelEllipse(DSScreenEllipse& other);
 		DSPixelEllipse(DSWorldEllipse& other);
 
 		virtual ~DSPixelEllipse();
 
-		virtual casacore::Bool setOptions(const casacore::Record& settings);
-		virtual casacore::Record getOptions();
+		virtual Bool setOptions(const Record& settings);
+		virtual Record getOptions();
 
-		virtual casacore::Record getRawOptions() {
+		virtual Record getRawOptions() {
 			return DSEllipse::getOptions();
 		}
 

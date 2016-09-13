@@ -142,14 +142,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Derived class should call this within its constructor, after it
 		// has a valid QSlider, name QLabel and menu QToolButton (usually,
 		// after calling setUi()), passing them down in the parameters below.
-		// ele is the QDomElement (an xml version of an option casacore::Record) used to
+		// ele is the QDomElement (an xml version of an option Record) used to
 		// construct the derived class.
 		void constructBase(QDomElement &ele,  QSlider* slider,
 		                   QLabel* nameLabel, QToolButton* menuBtn);
 
 		// Fetch numeric value of attribute of ele named attnm, into val.
 		// Does nothing if attr doesn't exist or is not valid numerically.
-		void getAttr(const QDomElement& ele, QString attnm, casacore::Double& val);
+		void getAttr(const QDomElement& ele, QString attnm, Double& val);
 
 	protected slots:
 
@@ -173,7 +173,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void itemValueChanged(QString name, QString value, int action, bool apply);
 
 		// class user may wish to connect to and display these.
-		void errMsg(casacore::String errmsg);
+		void errMsg(String errmsg);
 
 
 	protected:
@@ -183,28 +183,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void updateText() = 0;
 
 
-		casacore::Int round(casacore::Double val) {
-			return casacore::ifloor(val + .5);
+		Int round(Double val) {
+			return ifloor(val + .5);
 		}
 
 		// Integer values with in [0, slMax_] on the internal slider are scaled
 		// to external values within [dMin_, dMax_].
 		// These two routines convert between the two scalings.
 		// <group>
-		casacore::Double externalVal(casacore::Int sldVal) {
-			return casacore::min(dMax_, (dMin_ + casacore::max(0., dIncr_*sldVal)));
+		Double externalVal(Int sldVal) {
+			return min(dMax_, (dMin_ + max(0., dIncr_*sldVal)));
 		}
 
-		casacore::Int sliderVal(casacore::Double extVal) {
-			return round(casacore::max(0., casacore::min(slMax_, (extVal-dMin_)/dIncr_)));
+		Int sliderVal(Double extVal) {
+			return round(max(0., min(slMax_, (extVal-dMin_)/dIncr_)));
 		}
 		// </group>
 
-		// These two routines convert 'external' values between casacore::Double and
+		// These two routines convert 'external' values between Double and
 		// text.
 		// <group>
-		QString toText(casacore::Double val);
-		casacore::Double toNumber(QString text, bool* ok=0);
+		QString toText(Double val);
+		Double toNumber(QString text, bool* ok=0);
 		// </group>
 
 		// Current external value, as text.
@@ -227,7 +227,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Accepts new value (if any), updates interface (without
 		// retriggering any internal slots).
 		// New value should already have been validated.
-		void update(casacore::Double dval);
+		void update(Double dval);
 
 
 		// main state.  Determines the float scaling for the (necessarily int)
@@ -240,17 +240,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// will be a non-negative integer value.  Both of the QSlider's
 		// internal increments (singleStep, pageStep) will be 1.
 
-		casacore::Double dVal_,  dMin_, dMax_,  dIncr_, dIncr0_,  slMax_;
+		Double dVal_,  dMin_, dMax_,  dIncr_, dIncr0_,  slMax_;
 
 		// Whether this element emits float values (ptype 'floatrange')
 		// vs. ints (ptype 'intrange').
-		casacore::Bool floatrng_;
+		Bool floatrng_;
 
 		// Should the event be generated only upon releasing the slider?
 		bool onrelease_;
 
 		// For restoring 'original' value.
-		casacore::Double origVal_;
+		Double origVal_;
 
 		// Relevant user interface elements.  Must be created by
 		// derived class and passed in via constructBase().
@@ -386,7 +386,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		QtLineEditor(QWidget *parent=0);
 		QtLineEditor(QDomElement &ele, QWidget *parent=0);
 		~QtLineEditor();
-		casacore::Bool validate(QString value);
+		Bool validate(QString value);
 		void setLabelText(QString txt) {
 			nameLabel->setText(txt);
 		}

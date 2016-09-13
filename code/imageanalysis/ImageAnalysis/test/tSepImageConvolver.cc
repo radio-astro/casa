@@ -73,7 +73,7 @@ try {
    Double fwhm = inputs.getDouble("width");
    Bool autoScale = inputs.getBool("autoscale");
    Bool show = inputs.getBool("show");
-   Bool useShapeExactly = false;
+   Bool useShapeExactly = False;
 
 //
    if (in.empty()) {
@@ -130,7 +130,7 @@ try {
 
 // Make convolver
 
-        SepImageConvolver<Float> sic(inImage, os, true);
+        SepImageConvolver<Float> sic(inImage, os, True);
 //
 // Set the state of the convolver
 
@@ -160,7 +160,7 @@ try {
 
 // Make convolver
 
-        SepImageConvolver<Float> sic(inImage, os, true);
+        SepImageConvolver<Float> sic(inImage, os, True);
 //
 // Set the state of the convolver
 
@@ -178,7 +178,7 @@ try {
 // Test some other things
 
      {
-        SepImageConvolver<Float> sic(inImage, os, true);
+        SepImageConvolver<Float> sic(inImage, os, True);
 
 // Copy constructor
         cout << "Copy constructor" << endl;
@@ -201,8 +201,8 @@ try {
 
 // Clean up
 
-  Table::deleteTable(out1, true);
-  Table::deleteTable(out2, true);
+  Table::deleteTable(out1, True);
+  Table::deleteTable(out2, True);
 }
 
   catch (AipsError x) {

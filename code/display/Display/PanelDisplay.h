@@ -93,10 +93,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// extent of the PixelCanvas to cover with panels, and the
 		// fractional spacing between the panels.
 		PanelDisplay(PixelCanvas* pixelcanvas,
-		             const casacore::Int nx = 3, const casacore::Int ny = 2,
-		             const casacore::Float xOrigin = 0.0, const casacore::Float yOrigin = 0.0,
-		             const casacore::Float xSize = 1.0, const casacore::Float ySize = 1.0,
-		             const casacore::Float dx = 0.0, const casacore::Float dy = 0.0,
+		             const Int nx = 3, const Int ny = 2,
+		             const Float xOrigin = 0.0, const Float yOrigin = 0.0,
+		             const Float xSize = 1.0, const Float ySize = 1.0,
+		             const Float dx = 0.0, const Float dy = 0.0,
 		             const PanelDisplay::FillOrder order = LEFT_TOP);
 
 		// Destructor.
@@ -107,27 +107,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Apply options stored in rec to the PanelDisplay; these get
 		// forwarded to all underlying WorldCanvases
-		virtual casacore::Bool setOptions(const casacore::Record& rec, casacore::Record& updatedOptions);
-		virtual casacore::Record getOptions() const;
+		virtual Bool setOptions(const Record& rec, Record& updatedOptions);
+		virtual Record getOptions() const;
 		// Set attributes on all WolrdCanvases
 		virtual void setAttributes(AttributeBuffer& at);
-		virtual void getAttributeValue(const casacore::String& name, casacore::Int& newValue) const;
+		virtual void getAttributeValue(const String& name, Int& newValue) const;
 
 		// Describe or set the geometry of the panels, either explicitly
-		// or in casacore::RecordInterface form.
+		// or in RecordInterface form.
 		// (Note: setGeometry() does not automatically refresh;
 		//  when called within setOptions it does, though.)
 		// <group>
-		virtual void getGeometry(casacore::Int& nx, casacore::Int& ny, casacore::Float& xOrigin,
-		                         casacore::Float& yOrigin, casacore::Float& xSize, casacore::Float& ySize,
-		                         casacore::Float& dx, casacore::Float& dy,
+		virtual void getGeometry(Int& nx, Int& ny, Float& xOrigin,
+		                         Float& yOrigin, Float& xSize, Float& ySize,
+		                         Float& dx, Float& dy,
 		                         PanelDisplay::FillOrder& order) const;
-		virtual void getGeometry(casacore::RecordInterface& rec) const;
-		virtual void setGeometry(const casacore::Int nx, const casacore::Int ny, const casacore::Float xOrigin,
-		                         const casacore::Float yOrigin, const casacore::Float xSize,
-		                         const casacore::Float ySize, const casacore::Float dx, const casacore::Float dy,
+		virtual void getGeometry(RecordInterface& rec) const;
+		virtual void setGeometry(const Int nx, const Int ny, const Float xOrigin,
+		                         const Float yOrigin, const Float xSize,
+		                         const Float ySize, const Float dx, const Float dy,
 		                         const PanelDisplay::FillOrder order);
-		virtual void setGeometry(const casacore::RecordInterface& rec);
+		virtual void setGeometry(const RecordInterface& rec);
 		// </group>
 
 		// Clear our part of the PC.  (Clears both front and back buffers.)
@@ -140,29 +140,29 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			return itsPixelCanvas;
 		}
 
-		casacore::ConstListIter<WorldCanvas* >* myWCLI;
+		ConstListIter<WorldCanvas* >* myWCLI;
 
-		virtual void addTool(const casacore::String& key, const SHARED_PTR<MultiWCTool> & );
-		/* virtual void addTool(const casacore::String& key, MultiWCTool* value); */
-		virtual void removeTool(const casacore::String& key);
-		virtual void setToolKey(const casacore::String& toolname,
+		virtual void addTool(const String& key, const SHARED_PTR<MultiWCTool> & );
+		/* virtual void addTool(const String& key, MultiWCTool* value); */
+		virtual void removeTool(const String& key);
+		virtual void setToolKey(const String& toolname,
 		                        const Display::KeySym& keysym);
-		virtual casacore::Bool hasTools();
-		virtual void updateTools(casacore::Bool remove = true, casacore::Bool add = true);
+		virtual Bool hasTools();
+		virtual void updateTools(Bool remove = True, Bool add = True);
 		virtual void disableTools();
 		virtual void enableTools();
-		virtual void enableTool(const casacore::String& toolname);
-		virtual void disableTool(const casacore::String& toolname);
-		virtual const SHARED_PTR<MultiWCTool> getTool(const casacore::String& key);
+		virtual void enableTool(const String& toolname);
+		virtual void disableTool(const String& toolname);
+		virtual const SHARED_PTR<MultiWCTool> getTool(const String& key);
 
-		virtual casacore::ListIter<WorldCanvas* > wcs() {
+		virtual ListIter<WorldCanvas* > wcs() {
 			//return itsWCLI;
-			return casacore::ListIter<WorldCanvas* >(itsWCList);
+			return ListIter<WorldCanvas* >(itsWCList);
 		}
 
 		// Is the specified DisplayData the one in charge of coordinate
 		// state of the Panel's WCs?
-		virtual casacore::Bool isCSmaster(const DisplayData *dd) const;
+		virtual Bool isCSmaster(const DisplayData *dd) const;
 		void setCSmaster( DisplayData* dd );
 
 		/**
@@ -184,10 +184,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		int getRowCount() const;
 
 
-		static const casacore::String X_ORIGIN;
-		static const casacore::String Y_ORIGIN;
-		static const casacore::String X_SIZE;
-		static const casacore::String Y_SIZE;
+		static const String X_ORIGIN;
+		static const String Y_ORIGIN;
+		static const String X_SIZE;
+		static const String Y_SIZE;
 
 
 
@@ -198,26 +198,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		PixelCanvas* itsPixelCanvas;
 
 		// The number of panels in x and y.
-		casacore::Int itsNX, itsNY;
+		Int itsNX, itsNY;
 
 		// The origin and size of the used area of the PixelCanvas.
-		casacore::Float itsXOrigin, itsYOrigin, itsXSize, itsYSize;
+		Float itsXOrigin, itsYOrigin, itsXSize, itsYSize;
 
 		// The offset between each panel.
-		casacore::Float itsDX, itsDY;
+		Float itsDX, itsDY;
 
 		//The pgmargins
-		casacore::Int itslpgm, itsrpgm, itstpgm, itsbpgm;
+		Int itslpgm, itsrpgm, itstpgm, itsbpgm;
 
 		// What order do we fill the canvases in?
 		FillOrder itsOrder;
 
 		// Whether the geometry is currently setup?
-		casacore::Bool itsGeometrySet;
+		Bool itsGeometrySet;
 
 		// The WorldCanvases which we made, and a convenient iterator.
-		casacore::List<WorldCanvas* > itsWCList;
-		//casacore::ListIter<WorldCanvas* >* itsWCLI;
+		List<WorldCanvas* > itsWCList;
+		//ListIter<WorldCanvas* >* itsWCLI;
 
 
 		// The WorldCanvasHolders which we made, and a convenient iterator.
@@ -230,11 +230,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Also note: _exactly the same list_ (with the same _name_, even)
 		// is maintained on MWCH level (to be fixed).
 
-		casacore::List<WorldCanvasHolder* > itsWCHList;
+		List<WorldCanvasHolder* > itsWCHList;
 
-		//casacore::ListIter<WorldCanvasHolder* >* itsWCHLI;
+		//ListIter<WorldCanvasHolder* >* itsWCHLI;
 
-		casacore::SimpleOrderedMap<casacore::String, SHARED_PTR<MultiWCTool> > itsMWCTools;
+		SimpleOrderedMap<String, SHARED_PTR<MultiWCTool> > itsMWCTools;
 
 		// unSetup the Geometry.
 		void unSetupGeometry();

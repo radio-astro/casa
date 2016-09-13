@@ -66,46 +66,46 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 class RFAUVBinner : public RFAFlagCubeBase, public RFDataMapper
 {
 public:
-  RFAUVBinner  ( RFChunkStats &ch,const casacore::RecordInterface &parm ); 
+  RFAUVBinner  ( RFChunkStats &ch,const RecordInterface &parm ); 
   virtual ~RFAUVBinner () {};
   
-  virtual casacore::uInt estimateMemoryUse ();
-  virtual casacore::Bool newChunk (casacore::Int &maxmem);
+  virtual uInt estimateMemoryUse ();
+  virtual Bool newChunk (Int &maxmem);
   virtual void endChunk ();
   virtual void startData (bool verbose);
   virtual void startDry (bool verbose);
-  virtual IterMode iterTime (casacore::uInt it);
-  virtual IterMode iterRow  (casacore::uInt ir);
-  virtual IterMode iterDry  (casacore::uInt it);
+  virtual IterMode iterTime (uInt it);
+  virtual IterMode iterRow  (uInt ir);
+  virtual IterMode iterDry  (uInt it);
   virtual IterMode endData  ();
   virtual IterMode endDry  ();
 
-  virtual casacore::String getDesc ();
-  static const casacore::RecordInterface & getDefaults ();
+  virtual String getDesc ();
+  static const RecordInterface & getDefaults ();
   
 protected:
-  casacore::IPosition computeBin( casacore::Float uv,casacore::Float y,casacore::uInt ich );
+  IPosition computeBin( Float uv,Float y,uInt ich );
 
-  casacore::Double  threshold;
-  casacore::uInt    min_population;
-  casacore::uInt    nbin_y,nbin_uv;
-  casacore::Bool    binned;
+  Double  threshold;
+  uInt    min_population;
+  uInt    nbin_y,nbin_uv;
+  Bool    binned;
   
 // current UVW column
-  casacore::Vector< casacore::RigidVector<casacore::Double,3> > *puvw;
+  Vector< RigidVector<Double,3> > *puvw;
 
 // lattice of yvalues [NCH,NIFR,NTIME]
   RFFloatLattice yvalue;
 // matrix of UV distances [NIFR,NTIME]
-  casacore::Matrix<casacore::Float> uvdist;
+  Matrix<Float> uvdist;
 
 // ranges and bin sizes
-  casacore::Vector<casacore::Float> ymin,ymax,ybinsize,
+  Vector<Float> ymin,ymax,ybinsize,
 // for UV, we have individual ranges/bins per each channel
                uvmin,uvmax,uvbinsize;
 // bin counts
-  casacore::Cube<casacore::Int> bincounts;
-  casacore::Vector<casacore::Int> totcounts;
+  Cube<Int> bincounts;
+  Vector<Int> totcounts;
 };
 
 

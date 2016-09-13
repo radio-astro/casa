@@ -32,7 +32,6 @@
 
 
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 BeamSquint::BeamSquint()
@@ -84,9 +83,9 @@ Bool BeamSquint::isNonNull()
   Double x = 0.0; x = squint_p.getAngle().getValue("'")(0);
   Double y = 0.0; y = squint_p.getAngle().getValue("'")(1);
   if (abs(x) > 1e-9 || abs(y) > 1e-9) {
-    return true;
+    return True;
   } else {
-    return false;
+    return False;
   }
 };
 
@@ -145,7 +144,7 @@ BeamSquint::getPointingDirection (const MDirection& pointDir,
     // but this is in an AZ-EL type frame; flip it for combining with RA/DEC
     dx = -dx;
 
-    newPointing.shift(dx, dy, true);
+    newPointing.shift(dx, dy, True);
     //    cout << "BeamSquint: " << RRorLL << "  sx: " << sx << " sy: " << sy 
     //    << " pa: " << pa << " dx: " << dx << " dy: " << dy << endl;
   }    

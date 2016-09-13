@@ -70,7 +70,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <example>
 // <srcblock>
-//    casacore::Vector<casacore::Float> vp(10);
+//    Vector<Float> vp(10);
 //    vp(0) = 1.0f;
 //    vp(1) = 0.932f;
 //    vp(2) = 0.7462f;
@@ -81,8 +81,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //    vp(7) = -0.1318f;
 //    vp(8) = -0.09458f;
 //    vp(9) = -0.0269f;
-//    casacore::Quantity maxRad(1.032,"deg");  
-//    casacore::Quantity refFreq(1.414, "GHz");
+//    Quantity maxRad(1.032,"deg");  
+//    Quantity refFreq(1.414, "GHz");
 //    PBMath1DNumeric numPB (vp, maxRad, refFreq);
 //    numPB.applyPB( im1, im2, pointingDir);
 // </srcblock>
@@ -99,8 +99,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </motivation>
 //
 // <todo asof="98/10/21">
-// <li> constructor from a casacore::MS beam subtable
-// <li> flush to casacore::MS beam subtable
+// <li> constructor from a MS beam subtable
+// <li> flush to MS beam subtable
 // </todo>
 
  
@@ -110,19 +110,19 @@ public:
   PBMath1DNumeric();
 
   // Instantiation from arguments; default = no squint
-  // squint is the offset from pointing center if the casacore::Stokes R beam
+  // squint is the offset from pointing center if the Stokes R beam
   // useSymmetricBeam forces a fit to the squinted beam
-  PBMath1DNumeric(const casacore::Vector<casacore::Float>& numericArray, casacore::Quantity maxRad, casacore::Quantity refFreq, 
-		  casacore::Bool isThisVP=false,
-		  BeamSquint squint=BeamSquint(casacore::MDirection(casacore::Quantity(0.0, "deg"),
-							  casacore::Quantity(0.0, "deg"),
-							  casacore::MDirection::Ref(casacore::MDirection::AZEL)),
-					       casacore::Quantity(1.0, "GHz")),
-		  casacore::Bool useSymmetricBeam=false);
+  PBMath1DNumeric(const Vector<Float>& numericArray, Quantity maxRad, Quantity refFreq, 
+		  Bool isThisVP=False,
+		  BeamSquint squint=BeamSquint(MDirection(Quantity(0.0, "deg"),
+							  Quantity(0.0, "deg"),
+							  MDirection::Ref(MDirection::AZEL)),
+					       Quantity(1.0, "GHz")),
+		  Bool useSymmetricBeam=False);
 
   // Instantiation from a row in the Beam subTable
-  // PBMath1DNumeric(const casacore::Table& BeamSubTable, casacore::Int row, 
-  //	casacore::Bool useSymmetricBeam=false);
+  // PBMath1DNumeric(const Table& BeamSubTable, Int row, 
+  //	Bool useSymmetricBeam=False);
 
   // Copy constructor
   // PBMath1DGNumeric(const PBMath1DNumeric& other);
@@ -137,10 +137,10 @@ public:
   PBMathInterface::PBClass whichPBClass() { return PBMathInterface::NUMERIC; }  
   
   // Flush the construction parameters to disk
-  // casacore::Bool flushToTable(casacore::Table& beamSubTable, casacore::Int iRow);
+  // Bool flushToTable(Table& beamSubTable, Int iRow);
 
   // Summarize the construction data for this primary beam
-  void summary(casacore::Int nValues=0);
+  void summary(Int nValues=0);
 
 protected:
 
@@ -149,7 +149,7 @@ protected:
 
 private:    
 
- casacore::Vector<casacore::Float> numericArray_p;
+ Vector<Float> numericArray_p;
 
 };
 

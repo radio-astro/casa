@@ -43,7 +43,7 @@ int main( int argc, char ** argv )
     QString fn;
     if (argc > 1)
        fn = argv[1];
-    casa::PictureViewer mw(fn);
+    PictureViewer mw(fn);
     mw.show();
 
     return a.exec();

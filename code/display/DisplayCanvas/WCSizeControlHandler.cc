@@ -27,7 +27,6 @@
 
 #include <display/DisplayCanvas/WCSizeControlHandler.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Default Constructor Required

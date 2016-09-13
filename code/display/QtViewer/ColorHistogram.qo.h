@@ -67,7 +67,7 @@ namespace casa {
 		void updateColorMap( bool invertChanged = false);
 		void resetColorLookups();
 		void resetPowerCycles( float powerCycles);
-		casacore::Vector<casacore::uInt> computeScaledIntensities(const std::vector<float>& intensities );
+		Vector<uInt> computeScaledIntensities(const std::vector<float>& intensities );
 		ColorHistogram( const ColorHistogram& other );
 		ColorHistogram operator=( const ColorHistogram& other );
 

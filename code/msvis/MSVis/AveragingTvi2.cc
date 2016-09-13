@@ -15,7 +15,6 @@
 
 using std::set;
 
-using namespace casacore;
 namespace casa {
 
 namespace vi {
@@ -320,7 +319,7 @@ private:
 
         T * storage = const_cast <T *> (& src (IPosition (3, 0, 0, row)));
 
-        cache.takeStorage (shape, storage, casacore::SHARE);
+        cache.takeStorage (shape, storage, casa::SHARE);
     }
 
     Accessor accessor_p;
@@ -401,15 +400,15 @@ protected:
     public:
 
         Doing ()
-        : correctedData_p (false),
-          modelData_p (false),
-          observedData_p (false),
-          floatData_p(false),
-          onlymetadata_p(true),
-          weightSpectrumIn_p (false),
-          sigmaSpectrumIn_p (false),
-          weightSpectrumOut_p (false),
-          sigmaSpectrumOut_p (false)
+        : correctedData_p (False),
+          modelData_p (False),
+          observedData_p (False),
+          floatData_p(False),
+          onlymetadata_p(True),
+          weightSpectrumIn_p (False),
+          sigmaSpectrumIn_p (False),
+          weightSpectrumOut_p (False),
+          sigmaSpectrumOut_p (False)
         {}
 
         Bool correctedData_p;
@@ -742,7 +741,7 @@ private:
 ////    void finalizeAverage (Int ddId);
 //    void finalizeAverages ();
 //    void finalizeRowIfNeeded (ms::MsRow * rowInput, avg::MsRowAvg * rowAveraged, const Subchunk & subchunk);
-//    void flush (Bool okIfNonempty = false, ViImplementation2 * vi = 0); // delete all averagers
+//    void flush (Bool okIfNonempty = False, ViImplementation2 * vi = 0); // delete all averagers
 //    Int getFirstReadyDdid () const;
 //    void transferAverage (Int ddId, VisBuffer2 * vb);
 //    Bool vbPastAveragingInterval (const VisBuffer2 * vb) const;
@@ -904,13 +903,13 @@ VbAvg::VbAvg (const AveragingParameters & averagingParameters, const ViImplement
   averagingOptions_p (averagingParameters.getOptions()),
   averagingVii_p (vii),
   bufferToFill_p (0),
-  complete_p (false),
+  complete_p (False),
   doing_p (), // all false until determined later on
-  empty_p (true),
+  empty_p (True),
   maxTimeDistance_p (averagingParameters.getAveragingInterval() * (0.999)),
         // Shrink it just a bit for roundoff
   maxUvwDistanceSquared_p (pow(averagingParameters.getMaxUvwDistance(),2)),
-  needIterationInfo_p (true),
+  needIterationInfo_p (True),
   rowIdGenerator_p (0),
   sampleInterval_p (0),
   startTime_p (0),
@@ -926,7 +925,7 @@ VbAvg::accumulate (const VisBuffer2 * vb, const Subchunk & subchunk)
 
     if (needIterationInfo_p){
         captureIterationInfo (bufferToFill_p, vb, subchunk);
-        needIterationInfo_p = false;
+        needIterationInfo_p = False;
     }
 
     assert (bufferToFill_p != 0);
@@ -966,7 +965,7 @@ VbAvg::accumulateOneRow (MsRow * rowInput, MsRowAvg * rowAveraged, const Subchun
     // and the difference is the adjusted weight for this row.
 
     Vector<Double> adjustedWeights;
-    Bool rowFlagged = false;
+    Bool rowFlagged = False;
 
     std::tie (rowFlagged, adjustedWeights) = accumulateCubeData (rowInput, rowAveraged);
 
@@ -992,7 +991,7 @@ VbAvg::accumulateOneRow (MsRow * rowInput, MsRowAvg * rowAveraged, const Subchun
 //
 //        prepareForFirstData (vb, subchunk);
 //
-//        empty_p = false;
+//        empty_p = False;
 //    }
 //
 //    // Averaging can be computed as flagged or unflagged.  If all the inputs to a
@@ -1065,7 +1064,7 @@ VbAvg::accumulateCubeData (MsRow * rowInput, MsRowAvg * rowAveraged)
     const Int nChannels = shape (1);
     const Int nCorrelations = shape (0);
 
-    Bool rowFlagged = true;  // true if all correlations and all channels flagged
+    Bool rowFlagged = True;  // True if all correlations and all channels flagged
 
     for (Int channel = 0; channel < nChannels; channel ++){
 
@@ -1078,7 +1077,7 @@ VbAvg::accumulateCubeData (MsRow * rowInput, MsRowAvg * rowAveraged)
 
             Bool inputFlagged = inputFlags (correlation, channel);
             if (rowFlagged && ! inputFlagged){
-                rowFlagged = false;
+                rowFlagged = False;
             }
             //rowFlagged = rowFlagged && inputFlagged;
             Bool accumulatorFlagged = averagedFlags (correlation, channel);
@@ -1095,7 +1094,7 @@ VbAvg::accumulateCubeData (MsRow * rowInput, MsRowAvg * rowAveraged)
             Bool zeroAccumulation = flagChange || counts (correlation, channel) == 0;
 
             if (flagChange){
-                averagedFlags (correlation, channel) = false;
+                averagedFlags (correlation, channel) = False;
             }
 
             if (zeroAccumulation){
@@ -1115,7 +1114,7 @@ VbAvg::accumulateCubeData (MsRow * rowInput, MsRowAvg * rowAveraged)
             // Update correlation Flag
 
             if (correlationFlagged (correlation) && ! inputFlagged){
-                correlationFlagged (correlation) = false;
+                correlationFlagged (correlation) = False;
             }
         }
     }
@@ -1450,7 +1449,7 @@ VbAvg::finalizeAverages ()
 
     delete msRowAvg;
 
-    empty_p = true;
+    empty_p = True;
 }
 
 void
@@ -1460,7 +1459,7 @@ VbAvg::finalizeBaseline (MsRowAvg * msRowAvg)
     // Setting it to false insures that legacy software will
     // have to look at the flag cubes.
 
-    msRowAvg->setRowFlag(false);
+    msRowAvg->setRowFlag(False);
 
     finalizeCubeData (msRowAvg);
 
@@ -1545,7 +1544,7 @@ VbAvg::finalizeRowData (MsRowAvg * msRow)
     Int n = msRow->countsBaseline ();
 
     // Obtain row-level WEIGHT by calculating the mean of WEIGHT_SPECTRUM
-    // msRow->setWeight(partialMedians(msRow->weightSpectrum(),IPosition(1,1),true));
+    // msRow->setWeight(partialMedians(msRow->weightSpectrum(),IPosition(1,1),True));
     msRow->setWeight(AveragingTvi2::average(msRow->weightSpectrum(),msRow->flags()));
 
     // If doing both DATA and CORRECTED_DATA then SIGMA_SPECTRUM contains the weight
@@ -1554,7 +1553,7 @@ VbAvg::finalizeRowData (MsRowAvg * msRow)
     {
     	// jagonzal: SIGMA is not derived from the mean of SIGMA_SPECTRUM but from the mean
     	// of the WEIGHT format of SIGMA_SPECTRUM turned into SIGMA by using 1/pow(weight,2)
-    	// Vector<Float> weight = partialMedians(msRow->sigmaSpectrum(),IPosition(1,1),true);
+    	// Vector<Float> weight = partialMedians(msRow->sigmaSpectrum(),IPosition(1,1),True);
     	Vector<Float> weight = AveragingTvi2::average(msRow->sigmaSpectrum(),msRow->flags());
     	arrayTransformInPlace (weight, AveragingTvi2::weightToSigma);
     	msRow->setSigma (weight);
@@ -1704,11 +1703,11 @@ VbAvg::initializeBaseline (MsRow * rowInput, MsRowAvg * rowAveraged,
 
     // Flag everything to start with
 
-    rowAveraged->setRowFlag (true); // only for use during row-value accumulation
-    rowAveraged->setFlags(trueBool_p.getMatrix (nCorrelations, nChannels, true));
-    rowAveraged->correlationFlagsMutable() = Vector<Bool> (nCorrelations, true);
+    rowAveraged->setRowFlag (True); // only for use during row-value accumulation
+    rowAveraged->setFlags(trueBool_p.getMatrix (nCorrelations, nChannels, True));
+    rowAveraged->correlationFlagsMutable() = Vector<Bool> (nCorrelations, True);
 
-    rowAveraged->setBaselinePresent(true);
+    rowAveraged->setBaselinePresent(True);
 
     rowAveraged->setNormalizationFactor(0.0);
 }
@@ -1730,8 +1729,8 @@ VbAvg::isUsingUvwDistance () const
 //void
 //VbAvg::markEmpty ()
 //{
-//    empty_p = true;
-//    complete_p = false;
+//    empty_p = True;
+//    complete_p = False;
 //}
 
 Int
@@ -1774,8 +1773,8 @@ VbAvg::captureIterationInfo (VisBufferImpl2 * dstVb, const VisBuffer2 * srcVb,
     // Request info from the VB which will cause it to be filled
     // into cache from the input VII at its current position.
 
-    dstVb->setRekeyable(true);
-    dstVb->setShape(srcVb->nCorrelations(), srcVb->nChannels(), nBaselines(), false);
+    dstVb->setRekeyable(True);
+    dstVb->setShape(srcVb->nCorrelations(), srcVb->nChannels(), nBaselines(), False);
         // Do not clear the cache since we're resuing the storage
 
     dstVb->phaseCenter();
@@ -1814,7 +1813,7 @@ VbAvg::captureIterationInfo (VisBufferImpl2 * dstVb, const VisBuffer2 * srcVb,
 //
 //    captureIterationInfo (vb, subchunk);
 //
-//    setShape (vb->nCorrelations(), vb->nChannels(), nBaselines, false);
+//    setShape (vb->nCorrelations(), vb->nChannels(), nBaselines, False);
 //
 //    VisBufferComponents2 exclusions =
 //        VisBufferComponents2::these(VisibilityObserved, VisibilityCorrected,
@@ -1825,10 +1824,10 @@ VbAvg::captureIterationInfo (VisBufferImpl2 * dstVb, const VisBuffer2 * srcVb,
 //
 //    // Flag everything to start with
 //
-//    setFlagCube (Cube<Bool> (vb->nCorrelations(), vb->nChannels(), nBaselines, true));
-//    setFlagRow (Vector<Bool> (nBaselines, true));
+//    setFlagCube (Cube<Bool> (vb->nCorrelations(), vb->nChannels(), nBaselines, True));
+//    setFlagRow (Vector<Bool> (nBaselines, True));
 //
-//    complete_p = false;
+//    complete_p = False;
 //}
 
 void
@@ -1884,7 +1883,7 @@ VbAvg::prepareIds (const VisBuffer2 * vb)
 //        }
 //    }
 //
-//    rowsToDelete.resize (nBaselinesDeleted, true);
+//    rowsToDelete.resize (nBaselinesDeleted, True);
 //
 //    deleteRows (rowsToDelete);
 //}
@@ -1897,7 +1896,7 @@ VbAvg::setBufferToFill(VisBufferImpl2 * vb)
     // Set flag so that iteration information will be captured into
     // this VB from the first input VB.
 
-    needIterationInfo_p = true;
+    needIterationInfo_p = True;
 }
 
 void
@@ -1934,7 +1933,7 @@ VbAvg::setupVbAvg (const VisBuffer2 * vb)
     normalizationFactor_p.resize(nBaselines);
     normalizationFactor_p = 0.0;
 
-    empty_p = false;
+    empty_p = False;
 }
 
 void
@@ -1998,7 +1997,7 @@ VbAvg::setupArrays (Int nCorrelations, Int nChannels, Int nBaselines)
 
     cacheResizeAndZero (including);
 
-    correlationFlags_p.reference (Matrix<Bool> (IPosition (2, nCorrelations, nBaselines), true));
+    correlationFlags_p.reference (Matrix<Bool> (IPosition (2, nCorrelations, nBaselines), True));
     counts_p.reference (Cube<Int> (IPosition (3, nCorrelations, nChannels, nBaselines), 0));
     countsBaseline_p.reference (Vector<Int> (nBaselines, 0)); // number of items summed together for each baseline.
     intervalLast_p.reference (Vector<Double> (nBaselines, 0));
@@ -2010,7 +2009,7 @@ VbAvg::setupArrays (Int nCorrelations, Int nChannels, Int nBaselines)
 void
 VbAvg::startChunk (ViImplementation2 * vi)
 {
-    empty_p = true;
+    empty_p = True;
 
     // See if the new MS has corrected and/or model data columns
 
@@ -2023,12 +2022,12 @@ VbAvg::startChunk (ViImplementation2 * vi)
 
     doing_p.weightSpectrumIn_p = doing_p.correctedData_p;
     doing_p.sigmaSpectrumIn_p = doing_p.observedData_p || doing_p.floatData_p;
-    doing_p.weightSpectrumOut_p = true; // We always use the output WeightSpectrum
-    doing_p.sigmaSpectrumOut_p = true; // We always use the output SigmaSpectrum
+    doing_p.weightSpectrumOut_p = True; // We always use the output WeightSpectrum
+    doing_p.sigmaSpectrumOut_p = True; // We always use the output SigmaSpectrum
 
     if (doing_p.observedData_p or doing_p.correctedData_p or doing_p.modelData_p or doing_p.floatData_p)
     {
-    	doing_p.onlymetadata_p = false;
+    	doing_p.onlymetadata_p = False;
     }
 
     // Set up the flags for row copying
@@ -2066,7 +2065,7 @@ VbAvg::transferBaseline (MsRowAvg * rowAveraged)
     rowAveraged->setRowId (rowIdGenerator_p ++);
     bufferToFill_p->appendRow (rowAveraged, nBaselines (), optionalComponentsToCopy_p);
 
-    rowAveraged->setBaselinePresent(false);
+    rowAveraged->setBaselinePresent(False);
 }
 
 
@@ -2074,17 +2073,17 @@ VbAvg::transferBaseline (MsRowAvg * rowAveraged)
 //: averagingInterval_p (averagingParameters.getAveragingInterval ()),
 //  averagingOptions_p (averagingParameters.getOptions()),
 //  averagingParameters_p (averagingParameters),
-//  doingCorrectedData_p (false),
-//  doingModelData_p (false),
-//  doingObservedData_p (false),
-//  doingWeightSpectrum_p (false),
-//  doingsigmaSpectrum_p (false),
+//  doingCorrectedData_p (False),
+//  doingModelData_p (False),
+//  doingObservedData_p (False),
+//  doingWeightSpectrum_p (False),
+//  doingsigmaSpectrum_p (False),
 //  vbAveragers_p ()
 //{}
 
 //VbSet::~VbSet ()
 //{
-//    flush (true); // allow killing nonempty buffers
+//    flush (True); // allow killing nonempty buffers
 //}
 //
 //void
@@ -2122,7 +2121,7 @@ VbAvg::transferBaseline (MsRowAvg * rowAveraged)
 //Bool
 //VbSet::anyAveragesReady(Int ddid) const
 //{
-//    Bool any = false;
+//    Bool any = False;
 //
 //    for (Averagers::const_iterator a = vbAveragers_p.begin();
 //         a != vbAveragers_p.end();
@@ -2131,7 +2130,7 @@ VbAvg::transferBaseline (MsRowAvg * rowAveraged)
 //        if (a->second->isComplete() &&
 //            (ddid < 0 || ddid == a->second->dataDescriptionIds()(0))){
 //
-//            any = true;
+//            any = True;
 //            break;
 //        }
 //    }
@@ -2227,7 +2226,7 @@ VbAvg::transferBaseline (MsRowAvg * rowAveraged)
 //        }
 //    }
 //
-//    Assert (false); // ought to have been one that's ready
+//    Assert (False); // ought to have been one that's ready
 //
 //    return -1; // shouldn't be called
 //}
@@ -2276,7 +2275,7 @@ AveragingTvi2::AveragingTvi2 (ViImplementation2 * inputVi,
   averagingOptions_p (averagingParameters.getOptions()),
   averagingParameters_p (averagingParameters),
   ddidLastUsed_p (-1),
-  inputViiAdvanced_p (false),
+  inputViiAdvanced_p (False),
   vbAvg_p (new VbAvg (averagingParameters, this))
 {
     validateInputVi (inputVi);
@@ -2297,7 +2296,7 @@ AveragingTvi2::~AveragingTvi2 ()
 //void
 //AveragingTvi2::advanceInputVii ()
 //{
-//    Assert (false);
+//    Assert (False);
 //
 //    // Attempt to advance to the next subchunk
 //
@@ -2344,7 +2343,7 @@ AveragingTvi2::moreChunks () const
 void
 AveragingTvi2::next ()
 {
-    subchunkExists_p = false;
+    subchunkExists_p = False;
 
     if (getVii()->more()){
         getVii()->next();
@@ -2368,7 +2367,7 @@ AveragingTvi2::nextChunk ()
 
     subchunk_p.incrementChunk();
 
-    more_p = false;
+    more_p = False;
 }
 
 void
@@ -2394,7 +2393,7 @@ AveragingTvi2::originChunks (Bool forceRewind)
     vbAvg_p->startChunk (getVii());
 
     getVii()->originChunks(forceRewind);
-    more_p = false;
+    more_p = False;
 
     subchunk_p.resetToOrigin();
 }
@@ -2405,7 +2404,7 @@ AveragingTvi2::produceSubchunk ()
     VisBufferImpl2 * vbToFill = dynamic_cast<VisBufferImpl2 *> (getVisBuffer());
     assert (vbToFill != 0);
 
-    vbToFill->setFillable (true); // New subchunk, so it's fillable
+    vbToFill->setFillable (True); // New subchunk, so it's fillable
 
     vbAvg_p->setBufferToFill (vbToFill);
 
@@ -2485,15 +2484,15 @@ AveragingTvi2::reachedAveragingBoundary()
     // o no more input data
     // o other (e.g, change of scan, etc.)
 
-    Bool reachedIt = false;
+    Bool reachedIt = False;
     VisBuffer2 * vb = getVii()->getVisBuffer();
 
     if (! getVii()->more()  && ! getVii ()->moreChunks()){
 
-        reachedIt = true; // no more input data
+        reachedIt = True; // no more input data
     }
     else if (vb->isNewMs()){
-        reachedIt = true; // new MS
+        reachedIt = True; // new MS
     }
 
     return reachedIt;
@@ -2533,21 +2532,21 @@ AveragingTvi2::average (const Matrix<Float> &data, const Matrix<Bool> &flags)
     {
         int nSamples = 0;
         float sum = 0;
-        bool accumulatorFlag = true;
+        bool accumulatorFlag = True;
 
         for (uInt channel=0; channel< nChannels; channel++)
         {
             Bool inputFlag = flags(correlation,channel);
-            // true/true or false/false
+            // True/True or False/False
             if (accumulatorFlag == inputFlag)
             {
                 nSamples ++;
                 sum += data (correlation, channel);
             }
-            // true/false: Reset accumulation when accumulator switches from flagged to unflagged
+            // True/False: Reset accumulation when accumulator switches from flagged to unflagged
             else if ( accumulatorFlag and ! inputFlag )
             {
-                accumulatorFlag = false;
+                accumulatorFlag = False;
                 nSamples = 1;
                 sum = data (correlation, channel);
             }
@@ -2608,7 +2607,7 @@ void AveragingTvi2::writeFlag (const Cube<Bool> & flag)
 		{
 			// Allocated propagated flag vector/cube
 			uInt nOriginalRows = getVii()->getVisBuffer()->nRows();
-			Vector<Bool> flagMapped(nOriginalRows,false);
+			Vector<Bool> flagMapped(nOriginalRows,False);
 			Cube<Bool> flagCubeMapped;
 			flagCubeMapped = getVii()->getVisBuffer()->flagCube();
 
@@ -2627,7 +2626,7 @@ void AveragingTvi2::writeFlag (const Cube<Bool> & flag)
 				{
 					for (uInt corr_i=0;corr_i<flagCubeMapped.shape()(0);corr_i++)
 					{
-						if (flag(corr_i,chan_i,index)) flagCubeMapped(corr_i,chan_i,row) = true;
+						if (flag(corr_i,chan_i,index)) flagCubeMapped(corr_i,chan_i,row) = True;
 					}
 				}
 			}
@@ -2672,7 +2671,7 @@ void AveragingTvi2::writeFlagRow (const Vector<Bool> & flagRow)
 		{
 			// Allocated propagated flag vector/cube
 			uInt nOriginalRows = getVii()->getVisBuffer()->nRows();
-			Vector<Bool> flagMapped(nOriginalRows,false);
+			Vector<Bool> flagMapped(nOriginalRows,False);
 
 			// Get original ant1/ant2/spw cols. to determine the mapped index
 			Vector<Int> orgAnt1 = getVii()->getVisBuffer()->antenna1();
@@ -2701,5 +2700,4 @@ void AveragingTvi2::writeFlagRow (const Vector<Bool> & flagRow)
 
 } // end namespace vi
 
-using namespace casacore;
 } // end namespace casa

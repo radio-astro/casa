@@ -41,9 +41,9 @@
 #include <casa/namespace.h>
 int main()
 {
-  Bool anyFailures = false;
+  Bool anyFailures = False;
   {
-    Bool failed = false;
+    Bool failed = False;
     const uInt moddims = 1, modSize = 6; 
     const uInt dirtydims = moddims, dirtySize = modSize;
     const uInt psfdims = 1, psfSize = 4;
@@ -91,9 +91,9 @@ int main()
     Array<Float> result;
     ConvEqn.evaluate(result, myModel);
     // cout << "Evaluate:" << result << endl;
-    if (allNearAbs(result, dirty, Double(1E-5)) == false){
+    if (allNearAbs(result, dirty, Double(1E-5)) == False){
       cout << "Failed";
-      failed = true;
+      failed = True;
     }
     else
       cout << "Passed";
@@ -105,9 +105,9 @@ int main()
       //      cout << "Residual:" << residual << endl;
       Array<Float> zero(residual.shape());
       zero = 0;
-      if (allNearAbs(residual, zero, Double(1E-5)) == false){
+      if (allNearAbs(residual, zero, Double(1E-5)) == False){
 	cout << "Failed";
-	failed = true;
+	failed = True;
       }
       else
 	cout << "Passed";
@@ -123,21 +123,21 @@ int main()
       zero = 0;
       if (abs(chisq) > 1e-5){
 	cout << "Failed on residual chisq";
-	failed = true;
+	failed = True;
       }
-      if (allNearAbs(residual, zero, Double(1E-5)) == false){
+      if (allNearAbs(residual, zero, Double(1E-5)) == False){
 	cout << "Failed";
-	failed = true;
+	failed = True;
       }
       if (!failed) {
 	cout << "Passed";
 	cout << " the 1D test (residual with chis2)" << endl;
       }
     }
-    if (failed) anyFailures = true;
+    if (failed) anyFailures = True;
   }
-  if (anyFailures == false) {
-    Bool failed = false;
+  if (anyFailures == False) {
+    Bool failed = False;
     const uInt moddims = 2, modSize = 6; 
     const uInt dirtydims = moddims, dirtySize = modSize;
     const uInt psfdims = 1, psfSize = 12;
@@ -185,9 +185,9 @@ int main()
     Array<Float> result;
     ConvEqn.evaluate(result, myModel);
     //    cout << "Evaluate:" << result << endl;
-    if (allNearAbs(result, dirty, Double(1E-5)) == false){
+    if (allNearAbs(result, dirty, Double(1E-5)) == False){
       cout << "Failed";
-      failed = true;
+      failed = True;
     }
     else
       cout << "Passed";
@@ -199,18 +199,18 @@ int main()
       //      cout << "Residual:" << residual << endl;
       Array<Float> zero(residual.shape());
       zero = 0;
-      if (allNearAbs(residual, zero, Double(1E-5)) == false){
+      if (allNearAbs(residual, zero, Double(1E-5)) == False){
 	cout << "Failed";
-	failed = true;
+	failed = True;
       }
       else
 	cout << "Passed";
       cout << " the multiple 1D test (residual)" << endl;
     }
-    if (failed) anyFailures = true;
+    if (failed) anyFailures = True;
   }
-  if (anyFailures == false) {
-    Bool failed = false;
+  if (anyFailures == False) {
+    Bool failed = False;
     const uInt moddims = 2, modSize = 6; 
     const uInt dirtydims = moddims, dirtySize = modSize;
     const uInt psfdims = 2, psfSize = 6;
@@ -258,9 +258,9 @@ int main()
     Array<Float> result;
     ConvEqn.evaluate( result, myModel);
     //    cout << "Evaluate:" << result << endl;
-    if (allNearAbs(result, dirty, Double(1E-5)) == false){
+    if (allNearAbs(result, dirty, Double(1E-5)) == False){
       cout << "Failed";
-      failed = true;
+      failed = True;
     }
     else
       cout << "Passed";
@@ -272,15 +272,15 @@ int main()
       //      cout << "Residual:" << residual << endl;
       Array<Float> zero(residual.shape());
       zero = 0;
-      if (allNearAbs(residual, zero, Double(1E-5)) == false){
+      if (allNearAbs(residual, zero, Double(1E-5)) == False){
 	cout << "Failed";
-	failed = true;
+	failed = True;
       }
       else
 	cout << "Passed";
       cout << " the 2D test (residual)" << endl;
     }
-    if (failed) anyFailures = true;
+    if (failed) anyFailures = True;
   }
   if (anyFailures) 
     return 1;

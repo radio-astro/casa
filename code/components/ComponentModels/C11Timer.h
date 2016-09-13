@@ -9,7 +9,7 @@ namespace casa {
 
 class C11Timer {
 	// <summary>
-	// casacore::Timer based on C++11 chrono library
+	// Timer based on C++11 chrono library
 	// </summary>
 
 	// <reviewed reviewer="" date="" tests="" demos="">
@@ -19,11 +19,11 @@ class C11Timer {
 	// </prerequisite>
 
 	// <etymology>
-	// casacore::Timer based on C++11 chrono library
+	// Timer based on C++11 chrono library
 	// </etymology>
 
 	// <synopsis>
-	// casacore::Timer based on C++11 chrono library
+	// Timer based on C++11 chrono library
 	// </synopsis>
 
 public:
@@ -33,13 +33,13 @@ public:
 	~C11Timer();
 
 	// return mean duration, in seconds, of all start/stop cycles
-	casacore::Double meanDuration() const;
+	Double meanDuration() const;
 
 	// duration in seconds of most recent start/stop cycle
-	casacore::Double duration() const;
+	Double duration() const;
 
 	// number of start/stop cycles
-	casacore::uInt nCycles() const;
+	uInt nCycles() const;
 
 	// (re)start the timer
 	void start();
@@ -50,12 +50,12 @@ public:
 	// total duration in seconds, sum of all start/stop cycles
 	// doesn't include the duration of the current cycle if the
 	// timer is currently running
-	casacore::Double totalDuration() const;
+	Double totalDuration() const;
 
 private:
     std::chrono::steady_clock::time_point _start;
 	std::chrono::duration<double> _duration, _totalDuration;
-	casacore::uInt _nCycles;
+	uInt _nCycles;
 
 
 };

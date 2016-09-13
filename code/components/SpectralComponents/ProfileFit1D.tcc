@@ -63,28 +63,28 @@ ProfileFit1D<T>::~ProfileFit1D()
 {;}
 
 template <class T> 
-bool ProfileFit1D<T>::setData (const casacore::Vector<casacore::Double>& x, const casacore::Vector<T>& y,
-                               const casacore::Vector<casacore::Bool>& mask, const casacore::Vector<casacore::Double>& weight)
+Bool ProfileFit1D<T>::setData (const Vector<Double>& x, const Vector<T>& y, 
+                               const Vector<Bool>& mask, const Vector<Double>& weight)
 {
    if (x.nelements()==0) {
       itsError = "The X vector must have some elements";
-      return false;
+      return False;
    }
-   const casacore::uInt n = x.nelements();
+   const uInt n = x.nelements();
 //
    if (y.nelements() != n) {
       itsError = "The Y vector must have the same number of elements as the X vector";
-      return false;
+      return False;
    }
 //
    if (weight.nelements() != n && weight.nelements()!=0) {
       itsError = "The weights vector must have the same number of elements as the X vector";
-      return false;
+      return False;
    }
 //
    if (mask.nelements() != n && mask.nelements() != 0) {
       itsError = "The mask vector must have the same number of elements (or zero) as the data";
-      return false;
+      return False;
    }
 //
    itsX.resize(n);
@@ -102,26 +102,26 @@ bool ProfileFit1D<T>::setData (const casacore::Vector<casacore::Double>& x, cons
    }
 //
    if (mask.nelements()==0) {
-      itsDataMask = true;
+      itsDataMask = True;
    } else {
       itsDataMask = mask;
    }
-   return true;
+   return True;
 }
 
 
 template <class T> 
-bool ProfileFit1D<T>::setData (const casacore::Vector<casacore::Double>& x, const casacore::Vector<T>& y,
-                               const casacore::Vector<casacore::Bool>& mask)
+Bool ProfileFit1D<T>::setData (const Vector<Double>& x, const Vector<T>& y, 
+                               const Vector<Bool>& mask)
 {
-   casacore::Vector<casacore::Double> weight;
+   Vector<Double> weight;
    return setData (x, y, mask, weight);
 }
 
 template <class T> 
-bool ProfileFit1D<T>::setData (const casacore::Vector<casacore::Double>& x, const casacore::Vector<T>& y)
+Bool ProfileFit1D<T>::setData (const Vector<Double>& x, const Vector<T>& y)
 {
-   casacore::Vector<casacore::Bool> mask(x.nelements(), true);
+   Vector<Bool> mask(x.nelements(), True);
    return setData (x, y, mask);
 }
 
@@ -133,16 +133,16 @@ void ProfileFit1D<T>::setElements (const SpectralList& list)
 }
 
 template <class T> 
-bool ProfileFit1D<T>::setGaussianElements (casacore::uInt nGauss)
+Bool ProfileFit1D<T>::setGaussianElements (uInt nGauss)
 {
    if (nGauss==0) {
       itsError = "You must specify some Gaussian components";
-      return false;
+      return False;
    }
 //
    if (itsY.nelements()==0) {
       itsError = "You must call function setData to set some data first";
-      return false;
+      return False;
    }
 
 // Clear list
@@ -155,7 +155,7 @@ bool ProfileFit1D<T>::setGaussianElements (casacore::uInt nGauss)
    estimator.setQ(5);
    SpectralList listGauss = estimator.estimate (itsX, itsY);    // Ignores masked data
    itsList.add (listGauss);
-   return true;
+   return True;
 }
 
 template <class T> 
@@ -179,92 +179,92 @@ void ProfileFit1D<T>::clearList ()
 
 
 template <class T> 
-bool ProfileFit1D<T>::setXRangeMask (const casacore::Vector<casacore::uInt>& start,
-                                    const casacore::Vector<casacore::uInt>& end,
-                                    casacore::Bool insideIsGood)
+Bool ProfileFit1D<T>::setXRangeMask (const Vector<uInt>& start,
+                                    const Vector<uInt>& end,
+                                    Bool insideIsGood)
 {
-   AlwaysAssert(start.nelements()==end.nelements(), casacore::AipsError);
+   AlwaysAssert(start.nelements()==end.nelements(), AipsError);
    if (itsX.nelements()==0) {
       itsError = "You must call function setData to set some data first";
-      return false;
+      return False;
    }
 //
-   const casacore::uInt n = itsX.nelements();
+   const uInt n = itsX.nelements();
    itsRangeMask.resize(n);
-   casacore::Bool value = !insideIsGood;
+   Bool value = !insideIsGood;
    itsRangeMask = value;
 //
-   for (casacore::uInt i=0; i<start.nelements(); i++) {
+   for (uInt i=0; i<start.nelements(); i++) {
       if (start[i] > end[i]) {
          itsError = "The start index must be < the end index";
-         return false;
+         return False;
       }
       if (start[i]>=n) {
          itsError = "The start index must be in the range 0->nElements-1";
-         return false;
+         return False;
       }
       if (end[i]>=n) {
          itsError = "The end index must be in the range 0->nElements-1";
-         return false;
+         return False;
       }
 //
-      for (casacore::uInt j=start[i]; j<end[i]+1; j++) {
+      for (uInt j=start[i]; j<end[i]+1; j++) {
          itsRangeMask[j] = !value;
       }
    }
-   return true;
+   return True;
 }
 
 
 
 template <class T> 
-bool ProfileFit1D<T>::setXRangeMask (const casacore::Vector<T>& start,
-                                    const casacore::Vector<T>& end,
-                                    casacore::Bool insideIsGood)
+Bool ProfileFit1D<T>::setXRangeMask (const Vector<T>& start,
+                                    const Vector<T>& end,
+                                    Bool insideIsGood)
 {
    if (start.nelements()!=end.nelements()) {
       itsError = "Start and end vectors must be the same length";
-      return false;
+      return False;
    }
    if (itsX.nelements()==0) {
       itsError = "You must call function setData to set some data first";
-      return false;
+      return False;
    }
 //
-   const casacore::uInt n = itsX.nelements();
+   const uInt n = itsX.nelements();
    itsRangeMask.resize(n);
-   casacore::Bool value = !insideIsGood;
+   Bool value = !insideIsGood;
    itsRangeMask = value;
 //
-   casacore::Vector<casacore::uInt> startIndex(start.nelements());
-   casacore::Vector<casacore::uInt> endIndex(end.nelements());
+   Vector<uInt> startIndex(start.nelements());
+   Vector<uInt> endIndex(end.nelements());
    
-   for (casacore::uInt i=0; i<start.nelements(); i++) {
+   for (uInt i=0; i<start.nelements(); i++) {
       if (start[i] > end[i]) {
          itsError = "The start range must be < the end range";
-         return false;
+         return False;
       }
       if (start[i]<itsX[0] || start[i]>itsX[n-1]) {
          itsError = "The start range must be in the X-range of the data";
-         return false;
+         return False;
       }
       if (end[i]<itsX[0] || end[i]>itsX[n-1]) {
          itsError = "The end range must be in the X-range of the data";
-         return false;
+         return False;
       }
 
 // Find the indices for this range
 
-      casacore::Bool doneStart = false;
-      casacore::Bool doneEnd = false;
-      for (casacore::uInt j=0; j<n; j++) {
+      Bool doneStart = False;
+      Bool doneEnd = False;
+      for (uInt j=0; j<n; j++) {
          if (!doneStart && itsX[j] >= start[i]) {
             startIndex[i] = j;
-            doneStart = true;
+            doneStart = True;
          }
          if (!doneEnd && itsX[j] >= end[i]) {
             endIndex[i] = j;
-            doneEnd = true;
+            doneEnd = True;
          }
          if (!doneEnd) endIndex[i] = n-1;
       }
@@ -274,36 +274,36 @@ bool ProfileFit1D<T>::setXRangeMask (const casacore::Vector<T>& start,
 }
 
 template <class T>
-bool ProfileFit1D<T>::setXMask(const std::set<casacore::uInt>& indices, casacore::Bool specifiedPixelsAreGood) {
-	const casacore::uInt n = itsX.nelements();
+Bool ProfileFit1D<T>::setXMask(const std::set<uInt>& indices, Bool specifiedPixelsAreGood) {
+	const uInt n = itsX.nelements();
 	ThrowIf(n == 0, "Logic Error: setData() must be called prior to setRangeMask()");
 	itsRangeMask.resize(n);
 	itsRangeMask = ! specifiedPixelsAreGood;
 	if (indices.empty()) {
-		return true;
+		return True;
 	}
-	std::set<casacore::uInt>::const_iterator iter = indices.begin();
-	std::set<casacore::uInt>::const_iterator end = indices.end();
+	std::set<uInt>::const_iterator iter = indices.begin();
+	std::set<uInt>::const_iterator end = indices.end();
 
 	while (iter != end && *iter < n) {
 		itsRangeMask[*iter] = specifiedPixelsAreGood;
 		++iter;
 	}
-	return true;
+	return True;
 }
 
 
 template <class T> 
-bool ProfileFit1D<T>::fit ()
+Bool ProfileFit1D<T>::fit ()
 {
 	/*
    if (itsX.nelements()==0) {
       itsError = "You must call function setData to set some data first";
-      return false;
+      return False;
    }
    if (itsList.nelements()==0) {
       itsError = "You must call function setElements to set some fit components first";
-      return false;
+      return False;
    }
 	*/
 
@@ -312,14 +312,14 @@ bool ProfileFit1D<T>::fit ()
    itsFitter.addFitElement (itsList);
 // Do the fit with the total mask
 
-   casacore::Bool converged = itsWeight.empty()
+   Bool converged = itsWeight.empty()
 			? itsFitter.fit (itsY, itsX, makeTotalMask())
 			: itsFitter.fit (itsWeight, itsY, itsX, makeTotalMask());
    return converged;
 }
 
 template <class T> 
-const SpectralList& ProfileFit1D<T>::getList (casacore::Bool fit) const
+const SpectralList& ProfileFit1D<T>::getList (Bool fit) const
 {
    if (fit) {
       return itsFitter.list();
@@ -330,9 +330,9 @@ const SpectralList& ProfileFit1D<T>::getList (casacore::Bool fit) const
 
 
 template <class T>   
-casacore::Vector<T> ProfileFit1D<T>::getEstimate (casacore::Int which) const
+Vector<T> ProfileFit1D<T>::getEstimate (Int which) const
 {
-   casacore::Vector<T> tmp;
+   Vector<T> tmp;
    if (itsX.nelements()==0) {
       itsError = "You must call function setData to set some data first";
       return tmp;
@@ -349,9 +349,9 @@ casacore::Vector<T> ProfileFit1D<T>::getEstimate (casacore::Int which) const
 }
 
 template <class T> 
-casacore::Vector<T> ProfileFit1D<T>::getFit (casacore::Int which) const
+Vector<T> ProfileFit1D<T>::getFit (Int which) const
 {
-   casacore::Vector<T> tmp;
+   Vector<T> tmp;
    if (itsX.nelements()==0) {
       itsError = "You must call function setData to set some data first";
       return tmp;
@@ -375,9 +375,9 @@ casacore::Vector<T> ProfileFit1D<T>::getFit (casacore::Int which) const
 }
 
 template <class T> 
-casacore::Vector<T> ProfileFit1D<T>::getResidual (casacore::Int which, casacore::Bool fit)  const
+Vector<T> ProfileFit1D<T>::getResidual (Int which, Bool fit)  const
 {
-   casacore::Vector<T> tmp;
+   Vector<T> tmp;
    if (itsX.nelements()==0) {
       itsError = "You must call function setData to set some data first";
       return tmp;
@@ -387,7 +387,7 @@ casacore::Vector<T> ProfileFit1D<T>::getResidual (casacore::Int which, casacore:
    if (fit) {
       list = itsFitter.list();
       if (list.nelements()==0) {
-         throw (casacore::AipsError("You must call function fit first"));
+         throw (AipsError("You must call function fit first"));
       }
    } else {
       list = itsList;
@@ -409,11 +409,11 @@ casacore::Vector<T> ProfileFit1D<T>::getResidual (casacore::Int which, casacore:
 
 
 template <class T> 
-SpectralList ProfileFit1D<T>::getSubsetList (const SpectralList& list, casacore::Int which)  const
+SpectralList ProfileFit1D<T>::getSubsetList (const SpectralList& list, Int which)  const
 {
-	const casacore::Int n = list.nelements();
+	const Int n = list.nelements();
 	if (which+1 > n) {
-		throw casacore::AipsError("Illegal spectral element index");
+		throw AipsError("Illegal spectral element index");
 	}
 	SpectralList listOut;
 	listOut.add(*list[which]);
@@ -421,9 +421,9 @@ SpectralList ProfileFit1D<T>::getSubsetList (const SpectralList& list, casacore:
 }
 
 template <class T> 
-casacore::Vector<casacore::Bool> ProfileFit1D<T>::makeTotalMask () const
+Vector<Bool> ProfileFit1D<T>::makeTotalMask () const
 {
-   casacore::Vector<casacore::Bool> mask;
+   Vector<Bool> mask;
    if (itsRangeMask.nelements()==0) {
       mask = itsDataMask;
    } else {
@@ -461,7 +461,7 @@ template <class T>
 void ProfileFit1D<T>::checkType() const
 {
    T* p=0;
-   AlwaysAssert(casacore::whatType(p)==casacore::TpDouble,casacore::AipsError);
+   AlwaysAssert(whatType(p)==TpDouble,AipsError);
 }
 
 } //#End casa namespace

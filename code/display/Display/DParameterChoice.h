@@ -1,4 +1,4 @@
-//# DParameterChoice.h: class to store and retrieve casacore::Choice parameters
+//# DParameterChoice.h: class to store and retrieve Choice parameters
 //# Copyright (C) 2000,2001
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -56,8 +56,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <synopsis>
 // This class is derived from <linkto
 // class=DisplayParameter>DisplayParameter</linkto> and provides a
-// choice-type parameter.  casacore::Choice parameters simply have a vector
-// of possible casacore::String selections, and a default selection.  They
+// choice-type parameter.  Choice parameters simply have a vector
+// of possible String selections, and a default selection.  They
 // cannot be unset.
 // </synopsis>
 
@@ -69,7 +69,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // constructed to provide the name of the font to use in axis
 // labelling:
 // <srcblock>
-// casacore::Vector<casacore::String> fonts(4);
+// Vector<String> fonts(4);
 // fonts(0) = "roman";
 // // ...
 // DParameterChoice pchoice("font", "Label font",
@@ -112,14 +112,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// <src>defaultvalue</src> and <src>value</src> parameters must
 		// exist in the list of allowed options, otherwise an exception
 		// is thrown.
-		DParameterChoice(const casacore::String name, const casacore::String description,
-		                 const casacore::String help, const casacore::Vector<casacore::String> &options,
-		                 const casacore::String defaultvalue, const casacore::String value,
-		                 const casacore::String context = "", const casacore::Bool editable = false);
-		DParameterChoice(const casacore::String name, const casacore::String description,
-		                 const casacore::String help, const ColormapDefinition::colormapnamemap &options,
-		                 const casacore::String defaultvalue, const casacore::String value,
-		                 const casacore::String context = "", const casacore::Bool editable = false);
+		DParameterChoice(const String name, const String description,
+		                 const String help, const Vector<String> &options,
+		                 const String defaultvalue, const String value,
+		                 const String context = "", const Bool editable = False);
+		DParameterChoice(const String name, const String description,
+		                 const String help, const ColormapDefinition::colormapnamemap &options,
+		                 const String defaultvalue, const String value,
+		                 const String context = "", const Bool editable = False);
 
 		// (Required) copy constructor.
 		DParameterChoice(const DParameterChoice &other);
@@ -132,64 +132,64 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Parse <src>record</src>, and update this parameter if a field
 		// exists whose name matches that of this parameter.  Return
-		// <src>true</src> if the parameter is changed, otherwise return
-		// <src>false</src>.
-		virtual casacore::Bool fromRecord(const casacore::RecordInterface &record);
+		// <src>True</src> if the parameter is changed, otherwise return
+		// <src>False</src>.
+		virtual Bool fromRecord(const RecordInterface &record);
 
 		// Place a record describing this parameter in a sub-field of
 		// <src>record</src> with name matching that of this parameter.  If
-		// <src>overwrite</src> is <src>true</src>, then any existing field
+		// <src>overwrite</src> is <src>True</src>, then any existing field
 		// with matching name will be overwritten.  If <src>fullrecord</src>
-		// is <src>true</src>, then a complete description of the parameter
+		// is <src>True</src>, then a complete description of the parameter
 		// is given, otherwise just its current value is stored in
 		// <src>record</src>.  Presently <src>fullrecord</src> is ignored.
-		virtual void toRecord(casacore::RecordInterface &record, const casacore::Bool fullrecord = true,
-		                      const casacore::Bool overwrite = false);
+		virtual void toRecord(RecordInterface &record, const Bool fullrecord = True,
+		                      const Bool overwrite = False);
 
 		// Return the list of allowed options for this parameter.
-		casacore::Vector<casacore::String> options() const {
+		Vector<String> options() const {
 			return itsOptions;
 		}
 
 		// Return the default for this parameter.
-		casacore::String defaultValue() {
+		String defaultValue() {
 			return itsDefaultValue;
 		}
 
 		// Return the current value of this parameter.
-		casacore::String value() {
+		String value() {
 			return itsValue;
 		}
 
 		// Set or change if this parameter is editable (determines wether
 		// choice or userchoice is returned in the record
-		void setEditable(const casacore::Bool editable) {
+		void setEditable(const Bool editable) {
 			itsEditable = editable;
 		}
 
 		// Set or change the list of allowed options for this parameter.
-		void setOptions(const casacore::Vector<casacore::String> &options) {
+		void setOptions(const Vector<String> &options) {
 			itsOptions = options;
 		}
 
 		// Set or change the default value for this parameter.
-		void setDefaultValue(const casacore::String defaultvalue) {
+		void setDefaultValue(const String defaultvalue) {
 			itsDefaultValue = defaultvalue;
 		}
 
 		// Set or change the current value.
-		void setValue(const casacore::String value) {
+		void setValue(const String value) {
 			itsValue = value;
 		}
 
 		// Convenient syntax to set (only) the value.
-		const casacore::String& operator=(const casacore::String &value) {
+		const String& operator=(const String &value) {
 			itsValue = value;
 			return value;
 		}
 
 		// Determine whether this value exists in the list of options.
-		casacore::Bool existsOption(const casacore::String value);
+		Bool existsOption(const String value);
 
 	protected:
 
@@ -198,15 +198,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	private:
 
-		casacore::Bool itsEditable;
+		Bool itsEditable;
 		// Store for the allowed options for this parameter.
-		casacore::Vector<casacore::String> itsOptions;
+		Vector<String> itsOptions;
 
 		// Store for the default of this parameter.
-		casacore::String itsDefaultValue;
+		String itsDefaultValue;
 
 		// Store for the value of this parameter.
-		casacore::String itsValue;
+		String itsValue;
 
 	};
 

@@ -44,13 +44,6 @@
 #include <casacore/ms/MeasurementSets/MeasurementSet.h>
 #include <singledish/SingleDish/test/SingleDishTestUtil.h>
 
-using namespace casacore;
-using namespace casacore;
-using namespace casacore;
-using namespace casacore;
-using namespace casacore;
-using namespace casacore;
-using namespace casacore;
 using namespace casa;
 using namespace std;
 using namespace test_utility;

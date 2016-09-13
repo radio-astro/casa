@@ -75,17 +75,16 @@
 
 typedef unsigned long long ooLong;
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-  MSUVBin::MSUVBin():nx_p(0), ny_p(0), nchan_p(0), npol_p(0),existOut_p(false),numVis_p(), sumWeight_p(){
+  MSUVBin::MSUVBin():nx_p(0), ny_p(0), nchan_p(0), npol_p(0),existOut_p(False),numVis_p(), sumWeight_p(){
 	outMsPtr_p=NULL;
 	outMSName_p="OutMS.ms";
 	memFraction_p=0.5;
 }
 MSUVBin::MSUVBin(const MDirection& phaseCenter,
 		 const Int nx, const Int ny, const Int nchan, const Int npol, Quantity cellx, Quantity celly, Quantity freqStart, Quantity freqStep, Float memFraction, Bool dow, Bool doflag):
-		existOut_p(false)
+		existOut_p(False)
 
 {
 	phaseCenter_p=phaseCenter;
@@ -133,10 +132,10 @@ Bool MSUVBin::selectData(const String& msname, const String& spw, const String& 
 		mss_p[mss_p.nelements()-1]=new MeasurementSet(*mshandler.getSelectedInputMS());
 	}
 	else
-		return false;
+		return False;
 
 	//	cerr << "num of ms" << mss_p.nelements() << " ms0 " << (mss_p[0])->tableName() << " nrows " << (mss_p[0])->nrow() << endl;
-	return true;
+	return True;
 }
 
 void MSUVBin::setOutputMS(const String& msname){
@@ -148,7 +147,7 @@ void MSUVBin::createOutputMS(const Int nrrow){
 		Int oldnrows=recoverGridInfo(outMSName_p);
 		if(oldnrows != nrrow)
 			throw(AipsError("Number of grid points requested "+ String::toString(nrrow)+ " does not match "+String::toString(oldnrows)+ " in outputms"));
-		existOut_p=true;
+		existOut_p=True;
 		return;
 	}
 	if(mss_p.nelements()==0)
@@ -158,7 +157,7 @@ void MSUVBin::createOutputMS(const Int nrrow){
 	outMsPtr_p=MSTransformDataHandler::setupMS(outMSName_p, nchan_p, npol_p,
 				Vector<MS::PredefinedColumns>(1, MS::DATA),
 				tileShape);
-	outMsPtr_p->addRow(nrrow, true);
+	outMsPtr_p->addRow(nrrow, True);
 	//cerr << "mss Info " << mss_p[0]->tableName() << "  " << mss_p[0]->nrow() <<endl;
 	MSTransformDataHandler::addOptionalColumns(mss_p[0]->spectralWindow(),
 					outMsPtr_p->spectralWindow());
@@ -169,7 +168,7 @@ void MSUVBin::createOutputMS(const Int nrrow){
 	  // POINTING can be large, set some sensible defaults for storageMgrs
 	  IncrementalStMan ismPointing ("ISMPointing");
 	  StandardStMan ssmPointing("SSMPointing", 32768);
-	  pointingSetup.bindAll(ismPointing, true);
+	  pointingSetup.bindAll(ismPointing, True);
 	  pointingSetup.bindColumn(MSPointing::columnName(MSPointing::DIRECTION),
 		                           ssmPointing);
 	  pointingSetup.bindColumn(MSPointing::columnName(MSPointing::TARGET),
@@ -189,8 +188,8 @@ void MSUVBin::createOutputMS(const Int nrrow){
 	}
 	MSColumns msc(*outMsPtr_p);
 	msc.data().fillColumn(Matrix<Complex>(npol_p, nchan_p, Complex(0.0)));
-	msc.flagRow().fillColumn(true);
-	msc.flag().fillColumn(Matrix<Bool>(npol_p, nchan_p, true));
+	msc.flagRow().fillColumn(True);
+	msc.flag().fillColumn(Matrix<Bool>(npol_p, nchan_p, True));
 	msc.weight().fillColumn(Vector<Float>(npol_p, 0.0));
 	msc.sigma().fillColumn(Vector<Float>(npol_p, 0.0));
 	msc.weightSpectrum().fillColumn(Matrix<Float>(npol_p, nchan_p, 0.0));
@@ -209,9 +208,9 @@ void MSUVBin::createOutputMS(const Int nrrow){
 	}
 	//cerr << "MINMAX array ID " << min(arrayID) << "  " << max(arrayID) << endl;
 	msc.arrayId().putColumn(arrayID);
-	outMsPtr_p->flush(true);
+	outMsPtr_p->flush(True);
 
-	existOut_p=false;
+	existOut_p=False;
 
 }
 Int MSUVBin::recoverGridInfo(const String& msname){
@@ -295,12 +294,12 @@ void MSUVBin::setTileCache()
 			///accessed.
 
 			{
-				Bool usesTiles=false;
-				String dataManType = RODataManAccessor (*outMsPtr_p, columns[k], true).dataManagerType ();
+				Bool usesTiles=False;
+				String dataManType = RODataManAccessor (*outMsPtr_p, columns[k], True).dataManagerType ();
 				//cerr << "column " << columns[k] << " dataman "<< dataManType << endl;
 				usesTiles = dataManType.contains ("Tiled");
 				if(usesTiles){
-					ROTiledStManAccessor tacc (*outMsPtr_p, columns[k], true);
+					ROTiledStManAccessor tacc (*outMsPtr_p, columns[k], True);
 					tacc.clearCaches (); //One tile only for now ...seems to work faster
 
 
@@ -369,7 +368,7 @@ Bool MSUVBin::fillNewBigOutputMS(){
 	}
 	else{
 		wght.set(0.0);
-		rowFlag.set(true);
+		rowFlag.set(True);
 		timeCen.set(vb->time()(0));
 	}
 	////////////////////////////////////////////////
@@ -446,15 +445,15 @@ Bool MSUVBin::fillNewBigOutputMS(){
 			  realWghtSpec.resize();
 			}
 			realWghtSpec.set(0);
-			flag.set(true);
+			flag.set(True);
 		       
 			//cerr << "Zeroing  grid " << grid.shape() << endl;
-			//outMsPtr_p->addRow(nrrows, true);
+			//outMsPtr_p->addRow(nrrows, True);
 		}
 		if(npass > 1)
 		  cerr <<"Pass " << pass ;
 		ProgressMeter pm(1.0, Double(nrrows),"Gridding data",
-                         "", "", "", true);
+                         "", "", "", True);
 		Double rowsDone=0.0;
 		//cerr << "Before: Num of flagged model " << ntrue(uvw.row(2) ==(-666.0)) << endl;
      for (iter.originChunks(); iter.moreChunks(); iter.nextChunk()){
@@ -544,7 +543,7 @@ Bool MSUVBin::fillNewBigOutputMS(){
        saveData(grid, flag, rowFlag, realWghtSpec, uvw, ant1, ant2, timeCen, startchan, endchan, imagWghtSpec);
 	}
 	storeGridInfo();
-	return true;
+	return True;
 }
 
 Bool MSUVBin::fillSmallOutputMS(){
@@ -567,7 +566,7 @@ Bool MSUVBin::fillSmallOutputMS(){
 	Vector<Double> timeCen(nrrows);
 	createOutputMS(nrrows);
 	Matrix<Int> locuv;
-	vi::VisibilityIterator2 iter(mss_p, vi::SortColumns(), false);
+	vi::VisibilityIterator2 iter(mss_p, vi::SortColumns(), False);
 	vi::VisBuffer2* vb=iter.getVisBuffer();
 	
 	iter.originChunks();
@@ -591,14 +590,14 @@ Bool MSUVBin::fillSmallOutputMS(){
 		grid.set(Complex(0));
 		wght.set(0);
 		wghtSpec.set(0);
-		flag.set(true);
-		rowFlag.set(true);
+		flag.set(True);
+		rowFlag.set(True);
 		//cerr << "SETTING time to val" << vb->time()(0) << endl;
 		timeCen.set(vb->time()(0));
-		//outMsPtr_p->addRow(nrrows, true);
+		//outMsPtr_p->addRow(nrrows, True);
 	}
 	ProgressMeter pm(1.0, Double(nrrows),"Gridding data",
-                         "", "", "", true);
+                         "", "", "", True);
 	Double rowsDone=0.0;
 	for (iter.originChunks(); iter.moreChunks(); iter.nextChunk()){
 	  for(iter.origin(); iter.more(); iter.next()){
@@ -613,7 +612,7 @@ Bool MSUVBin::fillSmallOutputMS(){
 
 	saveData(grid, flag, rowFlag, wghtSpec, wght, uvw, ant1, ant2, timeCen);
 	storeGridInfo();
-	return true;
+	return True;
 }
 
 Bool MSUVBin::fillBigOutputMS(){
@@ -634,7 +633,7 @@ Bool MSUVBin::fillBigOutputMS(){
 	for (uInt k=0; k < mss_p.nelements() ; ++k)
 	  nrrows+=(mss_p[k])->nrow();
 	
-	vi::VisibilityIterator2 iter(mss_p, vi::SortColumns(), false);
+	vi::VisibilityIterator2 iter(mss_p, vi::SortColumns(), False);
 	vi::VisBuffer2* vb=iter.getVisBuffer();
 	iter.originChunks();
 	iter.origin();
@@ -642,7 +641,7 @@ Bool MSUVBin::fillBigOutputMS(){
 	Matrix<Int> locuv;
 	
 	ProgressMeter pm(1.0, Double(nrrows),"Gridding data",
-                         "", "", "", true);
+                         "", "", "", True);
 	Double rowsDone=0.0;
 	for (iter.originChunks(); iter.moreChunks(); iter.nextChunk()){
 				for(iter.origin(); iter.more(); iter.next()){
@@ -663,7 +662,7 @@ Bool MSUVBin::fillBigOutputMS(){
 	////Need to do the weight calculation here from spectral weight.
 	weightSync();
 	storeGridInfo();
-	return true;
+	return True;
 }
 
 Int MSUVBin::makeUVW(const Double reffreq, Vector<Double>& increment,
@@ -672,7 +671,7 @@ Int MSUVBin::makeUVW(const Double reffreq, Vector<Double>& increment,
 		shp(0)=nx_p; shp(1)=ny_p;
 		Int directionIndex=csys_p.findCoordinate(Coordinate::DIRECTION);
 		DirectionCoordinate thedir=csys_p.directionCoordinate(directionIndex);
-		Coordinate *ftcoord=thedir.makeFourierCoordinate(Vector<Bool>(2, true), shp);
+		Coordinate *ftcoord=thedir.makeFourierCoordinate(Vector<Bool>(2, True), shp);
 		increment=ftcoord->increment();
 		increment *= C::c/reffreq;
 		//Vector<Float> scale(2);
@@ -743,9 +742,9 @@ void MSUVBin::makeCoordsys(){
 	Int ddId=msc.dataDescId()(0);
 	Int firstPolId=msc.dataDescription().polarizationId()(ddId);
 	Int polType = Vector<Int>(msc.polarization().corrType()(firstPolId))(0);
-	Bool isCircular=true;
+	Bool isCircular=True;
 	if (polType>=Stokes::XX && polType<=Stokes::YY)
-		isCircular=false;
+		isCircular=False;
 
 	if(isCircular){
 		if(npol_p==4){
@@ -856,7 +855,7 @@ void MSUVBin::locateuvw(Matrix<Int>& locuv, const Vector<Double>& increment,
 		  //cout << " pixel " << pixel << " " << c  << " f " << f << " chan " << chan << endl;
 			if(pixel > -1 && pixel< nchan_p){
 				chanMap_p(chan)=pixel;
-				chanMapRev_p[pixel].resize(chanMapRev_p[pixel].nelements()+1, true);
+				chanMapRev_p[pixel].resize(chanMapRev_p[pixel].nelements()+1, True);
 				chanMapRev_p[pixel][chanMapRev_p[pixel].nelements()-1]=chan;
 				c[0]=pixel;
 				spec.toWorld(f, c);
@@ -883,9 +882,9 @@ void MSUVBin::locateuvw(Matrix<Int>& locuv, const Vector<Double>& increment,
 	////////////////////////////////////
 	//cerr << "spw " << vb.spectralWindows() << " fracbw " << fracbw << endl;
 	if(allLT(chanMap_p ,0)  ||  allLT(polMap_p , 0))
-	  return false;
+	  return False;
 
-	return true;
+	return True;
 }
 
   void MSUVBin::weightSync(){
@@ -983,7 +982,7 @@ void MSUVBin::inplaceGridData(const vi::VisBuffer2& vb){
 	Vector<Int> ant2(numUniq);
 	Vector<Double> timeCen(numUniq);
 	Vector<uInt> rowids(numUniq);
-	Vector<Bool> rowvisited(numUniq, false);
+	Vector<Bool> rowvisited(numUniq, False);
 	
 	Vector<Double> invLambda=visFreq/C::c;
 	Vector<Double> phasmult(vb.nChannels(),0.0);
@@ -999,7 +998,7 @@ void MSUVBin::inplaceGridData(const vi::VisBuffer2& vb){
 		Int actrow=rowToIndex[newrow];
 		rowids[actrow]=uInt(newrow);
 		if(!rowvisited[actrow]){
-		  rowvisited[actrow]=true;
+		  rowvisited[actrow]=True;
 		  rowFlag[actrow]=msc.flagRow()(newrow);
 		  wghtSpec[actrow]=msc.weightSpectrum().get(newrow);
 		  flag[actrow]=msc.flag().get(newrow);
@@ -1011,7 +1010,7 @@ void MSUVBin::inplaceGridData(const vi::VisBuffer2& vb){
 		}
 		if(rowFlag[actrow] && !(vb.flagRow()(k))){
 		  //	  cerr << newrow << " rowFlag " << rowFlag[actrow] <<" rowids " << vb.rowIds()[k]  << " uvw2 " << uvw(2 ,actrow) << endl;
-		  rowFlag[actrow]=false;
+		  rowFlag[actrow]=False;
 		  uvw(2,actrow)=eluvw(2,k);
 		  //	  cerr << newrow << " rowFlag " << rowFlag[actrow] <<" rowids " << vb.rowIds()[k]  << " uvw2 " << uvw(2 ,actrow) << endl;
 		  ant1[actrow]=vb.antenna1()(k);
@@ -1031,7 +1030,7 @@ void MSUVBin::inplaceGridData(const vi::VisBuffer2& vb){
 			grid(polMap_p(pol),chanMap_p(chan),actrow)
 			  = (grid(polMap_p(pol),chanMap_p(chan),actrow)*wghtSpec(polMap_p(pol),chanMap_p(chan),actrow)
 			     + toB)/(vb.weight()(pol,k)+wghtSpec(polMap_p(pol),chanMap_p(chan),actrow));
-			flag(polMap_p(pol),chanMap_p(chan),actrow)=false;
+			flag(polMap_p(pol),chanMap_p(chan),actrow)=False;
 			//cerr << "weights " << max(vb.weight()) << "  spec " << max(vb.weightSpectrum()) << endl;
 			//wghtSpec(polMap_p(pol),chanMap_p(chan), newrow)+=vb.weightSpectrum()(pol, chan, k);
 			wghtSpec(polMap_p(pol),chanMap_p(chan),actrow) += vb.weight()(pol,k);
@@ -1064,7 +1063,7 @@ void MSUVBin::inplaceGridData(const vi::VisBuffer2& vb){
 	msc.antenna1().putColumnCells(elrow, ant1);
 	msc.antenna2().putColumnCells(elrow, ant2);
 	msc.time().putColumnCells(elrow, timeCen);
-	//outMsPtr_p->flush(true);
+	//outMsPtr_p->flush(True);
 	///////
 
 
@@ -1119,7 +1118,7 @@ void MSUVBin::inplaceGridData(const vi::VisBuffer2& vb){
 	Vector<Int> ant2(numUniq);
 	Vector<Double> timeCen(numUniq);
 	Vector<uInt> rowids(numUniq);
-	Vector<Bool> rowvisited(numUniq, false);
+	Vector<Bool> rowvisited(numUniq, False);
 	
 	Vector<Double> invLambda=visFreq/C::c;
 	for (Int k=0; k < nrows; ++k){
@@ -1129,7 +1128,7 @@ void MSUVBin::inplaceGridData(const vi::VisBuffer2& vb){
 	    Int actrow=rowToIndex[newrow];
 	    rowids[actrow]=uInt(newrow);
 	    if(!rowvisited[actrow]){
-	      rowvisited[actrow]=true;
+	      rowvisited[actrow]=True;
 	      rowFlag[actrow]=msc.flagRow()(newrow);
 	      wghtSpec[actrow]=msc.weightSpectrum().get(newrow);
 	      flag[actrow]=msc.flag().get(newrow);
@@ -1141,7 +1140,7 @@ void MSUVBin::inplaceGridData(const vi::VisBuffer2& vb){
 	    }
 	    if(rowFlag[actrow] && !(vb.flagRow()(k))){
 		  //	  cerr << newrow << " rowFlag " << rowFlag[actrow] <<" rowids " << vb.rowIds()[k]  << " uvw2 " << uvw(2 ,actrow) << endl;
-	      rowFlag[actrow]=false;
+	      rowFlag[actrow]=False;
 	      uvw(2,actrow)=eluvw(2,k);
 	      //	  cerr << newrow << " rowFlag " << rowFlag[actrow] <<" rowids " << vb.rowIds()[k]  << " uvw2 " << uvw(2 ,actrow) << endl;
 	      ant1[actrow]=vb.antenna1()(k);
@@ -1168,7 +1167,7 @@ void MSUVBin::inplaceGridData(const vi::VisBuffer2& vb){
 		    grid(polMap_p(pol),chanMap_p(chan),actrow)
 			  = (grid(polMap_p(pol),chanMap_p(chan),actrow)*wghtSpec(polMap_p(pol),chanMap_p(chan),actrow)
 			     + toB)/(vb.weight()(pol,k)+wghtSpec(polMap_p(pol),chanMap_p(chan),actrow));
-		    flag(polMap_p(pol),chanMap_p(chan),actrow)=false;
+		    flag(polMap_p(pol),chanMap_p(chan),actrow)=False;
 			//cerr << "weights " << max(vb.weight()) << "  spec " << max(vb.weightSpectrum()) << endl;
 			//wghtSpec(polMap_p(pol),chanMap_p(chan), newrow)+=vb.weightSpectrum()(pol, chan, k);
 		    wghtSpec(polMap_p(pol),chanMap_p(chan),actrow) += vb.weight()(pol,k);
@@ -1201,7 +1200,7 @@ void MSUVBin::inplaceGridData(const vi::VisBuffer2& vb){
 	msc.antenna1().putColumnCells(elrow, ant1);
 	msc.antenna2().putColumnCells(elrow, ant2);
 	msc.time().putColumnCells(elrow, timeCen);
-	//outMsPtr_p->flush(true);
+	//outMsPtr_p->flush(True);
 	///////
 
 
@@ -1260,7 +1259,7 @@ void MSUVBin::gridData(const vi::VisBuffer2& vb, Cube<Complex>& grid,
 		      if(locv < ny_p && locu < nx_p){ 
 				  Int newrow=locv*nx_p+locu;
 				  if(rowFlag(newrow) && !(vb.flagRow()(k))){
-				    rowFlag(newrow)=false;
+				    rowFlag(newrow)=False;
 				    /////TEST
 				    //uvw(0,newrow)=vb.uvw()(0,k);
 				    //uvw(1,newrow)=vb.uvw()(1,k);
@@ -1285,7 +1284,7 @@ void MSUVBin::gridData(const vi::VisBuffer2& vb, Cube<Complex>& grid,
 				      grid(polMap_p(pol),chanMap_p(chan), newrow)
 					= (grid(polMap_p(pol),chanMap_p(chan), newrow)*wghtSpec(polMap_p(pol),chanMap_p(chan),newrow)
 					   + toB)/(vb.weight()(pol,k)+wghtSpec(polMap_p(pol),chanMap_p(chan),newrow));
-				      flag(polMap_p(pol),chanMap_p(chan), newrow)=false;
+				      flag(polMap_p(pol),chanMap_p(chan), newrow)=False;
 				      //cerr << "weights " << max(vb.weight()) << "  spec " << max(vb.weightSpectrum()) << endl;
 				      //wghtSpec(polMap_p(pol),chanMap_p(chan), newrow)+=vb.weightSpectrum()(pol, chan, k);
 				      wghtSpec(polMap_p(pol),chanMap_p(chan), newrow) += vb.weight()(pol,k);
@@ -1366,7 +1365,7 @@ void MSUVBin::gridData(const vi::VisBuffer2& vb, Cube<Complex>& grid,
 		      if(locv < ny_p && locu < nx_p && locv >=0 && locu >=0){
 				  Int newrow=locv*nx_p+locu;
 				  if(rowFlag(newrow) && !(vb.flagRow()(k))){
-				    rowFlag(newrow)=false;
+				    rowFlag(newrow)=False;
 				    /////TEST
 				    //uvw(0,newrow)=vb.uvw()(0,k);
 				    //uvw(1,newrow)=vb.uvw()(1,k);
@@ -1391,7 +1390,7 @@ void MSUVBin::gridData(const vi::VisBuffer2& vb, Cube<Complex>& grid,
 				      grid(polMap_p(pol),chanMap_p(chan)-startchan, newrow)
 					= (grid(polMap_p(pol),chanMap_p(chan)-startchan, newrow)
 					   + toB); ///(vb.weight()(pol,k)+wghtSpec(polMap_p(pol),chanMap_p(chan)-startchan,newrow));
-				      flag(polMap_p(pol),chanMap_p(chan)-startchan, newrow)=false;
+				      flag(polMap_p(pol),chanMap_p(chan)-startchan, newrow)=False;
 				      //cerr << "weights " << max(vb.weight()) << "  spec " << max(vb.weightSpectrum()) << endl;
 				      //wghtSpec(polMap_p(pol),chanMap_p(chan), newrow)+=vb.weightSpectrum()(pol, chan, k);
 				      wghtSpec(polMap_p(pol),chanMap_p(chan)-startchan, newrow) += vb.weight()(pol,k);
@@ -1514,7 +1513,7 @@ void MSUVBin::gridDataConv(const vi::VisBuffer2& vb, Cube<Complex>& grid,
 			      if(vb.uvw()(2,k) > 0.0)
 				      cwt=conj(cwt);
 			      if(rowFlag(newrow[jj]) && !(vb.flagRow()(k))){
-				rowFlag(newrow[jj])=false;
+				rowFlag(newrow[jj])=False;
 				/////TEST
 				//uvw(0,newrow)=vb.uvw()(0,k);
 				//uvw(1,newrow)=vb.uvw()(1,k);
@@ -1550,7 +1549,7 @@ void MSUVBin::gridDataConv(const vi::VisBuffer2& vb, Cube<Complex>& grid,
 				  grid(polMap_p(pol),lechan, newrow[jj])
 				    = (grid(polMap_p(pol),lechan, newrow[jj])/*wghtSpec(polMap_p(pol),lechan,newrow[jj])*/
 				       + toB);///(elwgt+wghtSpec(polMap_p(pol),lechan,newrow[jj]));
-				      flag(polMap_p(pol), lechan, newrow[jj])=false;
+				      flag(polMap_p(pol), lechan, newrow[jj])=False;
 				      //cerr << "weights " << max(vb.weight()) << "  spec " << max(vb.weightSpectrum()) << endl;
 				      //wghtSpec(polMap_p(pol),chanMap_p(chan), newrow)+=vb.weightSpectrum()(pol, chan, k);
 				      //  if(  wghtSpec(polMap_p(pol),lechan, newrow[jj])  > 10)
@@ -1702,7 +1701,7 @@ void MSUVBin::gridDataConvThr(const vi::VisBuffer2& vb, Cube<Complex>& grid,
 			    if(vb.uvw()(2,k) > 0.0)
 			      cwt=conj(cwt);
 			    if(rowFlag(newrow[jj]) && !(vb.flagRow()(k))){
-			      rowFlag(newrow[jj])=false;
+			      rowFlag(newrow[jj])=False;
 			      uvw(2,newrow[jj])=0;
 			      ant1(newrow[jj])=vb.antenna1()(k);
 			      ant2(newrow[jj])=vb.antenna2()(k);
@@ -1729,7 +1728,7 @@ void MSUVBin::gridDataConvThr(const vi::VisBuffer2& vb, Cube<Complex>& grid,
 				grid(polMap_p(pol),lechan, newrow[jj])
 				  = (grid(polMap_p(pol),lechan, newrow[jj])// *wghtSpec(polMap_p(pol),lechan,newrow[jj])
 				     + toB); ///(elwgt+wghtSpec(polMap_p(pol),lechan,newrow[jj]));
-				flag(polMap_p(pol), lechan, newrow[jj])=false;
+				flag(polMap_p(pol), lechan, newrow[jj])=False;
 				//cerr << "weights " << max(vb.weight()) << "  spec " << max(vb.weightSpectrum()) << endl;
 				//wghtSpec(polMap_p(pol),chanMap_p(chan), newrow)+=vb.weightSpectrum()(pol, chan, k);
 				wghtSpec(polMap_p(pol),lechan, newrow[jj]) += elwgt;
@@ -1836,7 +1835,7 @@ void MSUVBin::multiThrLoop(const Int outchan, const vi::VisBuffer2& vb, Double r
 		      cwt=conj(cwt);
 		    //if(rowFlag[newrow[jj]] && !(vb.flagRow()(k))){
 		    if(!(vb.flagRow()(k))){
-		      rowFlag[newrow[jj]]=false;
+		      rowFlag[newrow[jj]]=False;
 		      if(yy==supp and xx==supp){
 			uvw[2+newrow[jj]*3]=0;
 			for(Int pol=0; pol < vb.nCorrelations(); ++pol){
@@ -1880,7 +1879,7 @@ void MSUVBin::multiThrLoop(const Int outchan, const vi::VisBuffer2& vb, Double r
 				grid[cubindx]
 				  = (grid[cubindx]// *wghtSpec(polMap_p(pol),lechan,newrow[jj])
 				     + toB); ///(elwgt+wghtSpec(polMap_p(pol),lechan,newrow[jj]));
-				flag[cubindx]=false;
+				flag[cubindx]=False;
 				//cerr << "weights " << max(vb.weight()) << "  spec " << max(vb.weightSpectrum()) << endl;
 				//wghtSpec(polMap_p(pol),chanMap_p(chan), newrow)+=vb.weightSpectrum()(pol, chan, k);
 				wghtSpec[cubindx] += elwgt;
@@ -1952,7 +1951,7 @@ void MSUVBin::multiThrLoop(const Int outchan, const vi::VisBuffer2& vb, Double r
 		      if(locv < ny_p && locu < nx_p && locv >=0 && locu >=0){
 				  Int newrow=locv*nx_p+locu;
 				  if(rowFlag(newrow) && !(vb.flagRow()(k))){
-				    rowFlag(newrow)=false;
+				    rowFlag(newrow)=False;
 				    /////TEST
 				    //uvw(0,newrow)=vb.uvw()(0,k);
 				    //uvw(1,newrow)=vb.uvw()(1,k);
@@ -1978,7 +1977,7 @@ void MSUVBin::multiThrLoop(const Int outchan, const vi::VisBuffer2& vb, Double r
 				      //	= (grid(polMap_p(pol),chanMap_p(chan)-startchan, newrow)
 				      //   + toB); ///(vb.weight()(pol,k)+wghtSpec(polMap_p(pol),chanMap_p(chan)-startchan,newrow));
 				      if(flag(polMap_p(pol),chanMap_p(chan)-startchan, newrow) || wghtSpec(polMap_p(pol),chanMap_p(chan)-startchan, newrow)==0.0) {
-					datFlag(pol,chan,k)=true;
+					datFlag(pol,chan,k)=True;
 
 				      }
 				      //cerr << "weights " << max(vb.weight()) << "  spec " << max(vb.weightSpectrum()) << endl;
@@ -2009,7 +2008,7 @@ Bool MSUVBin::saveData(const Cube<Complex>& grid, const Cube<Bool>&flag, const V
 				const Cube<Float>&wghtSpec,
 				const Matrix<Double>& uvw, const Vector<Int>& ant1,
 		       const Vector<Int>& ant2, const Vector<Double>& timeCen, const Int startchan, const Int endchan, const Cube<Float>& imagWghtSpec){
-	Bool retval=true;
+	Bool retval=True;
 	MSColumns msc(*outMsPtr_p);
 	if(!existOut_p && startchan==0){
 		fillSubTables();
@@ -2075,7 +2074,7 @@ Bool MSUVBin::saveData(const Cube<Complex>& grid, const Cube<Bool>&flag, const V
 				const Cube<Float>&wghtSpec, const Matrix<Float>& /*wght*/,
 				const Matrix<Double>& uvw, const Vector<Int>& ant1,
 				const Vector<Int>& ant2, const Vector<Double>& timeCen){
-	Bool retval=true;
+	Bool retval=True;
 	MSColumns msc(*outMsPtr_p);
 	if(!existOut_p){
 		fillSubTables();
@@ -2115,12 +2114,12 @@ Bool MSUVBin::saveData(const Cube<Complex>& grid, const Cube<Bool>&flag, const V
 }
 void MSUVBin::fillSubTables(){
 	fillFieldTable();
-	copySubtable("SPECTRAL_WINDOW", mss_p[0]->spectralWindow(), true);
-	copySubtable("POLARIZATION", mss_p[0]->polarization(), true);
-	copySubtable("DATA_DESCRIPTION", mss_p[0]->dataDescription(), true);
-	copySubtable("FEED", mss_p[0]->feed(), false);
-	copySubtable("OBSERVATION", mss_p[0]->observation(), false);
-	copySubtable("ANTENNA", mss_p[0]->antenna(), false);
+	copySubtable("SPECTRAL_WINDOW", mss_p[0]->spectralWindow(), True);
+	copySubtable("POLARIZATION", mss_p[0]->polarization(), True);
+	copySubtable("DATA_DESCRIPTION", mss_p[0]->dataDescription(), True);
+	copySubtable("FEED", mss_p[0]->feed(), False);
+	copySubtable("OBSERVATION", mss_p[0]->observation(), False);
+	copySubtable("ANTENNA", mss_p[0]->antenna(), False);
 	fillDDTables();
 
 }
@@ -2147,7 +2146,7 @@ void MSUVBin::fillDDTables(){
 			corrProd(1,3)=1;
 		}
 		mspol.corrProduct().put(0,corrProd);
-		mspol.flagRow().put(0,false);
+		mspol.flagRow().put(0,False);
 	}
 	///Now with Spectral window
 	{
@@ -2178,7 +2177,7 @@ void MSUVBin::fillDDTables(){
 		msSpW.netSideband().put(0,1);
 		msSpW.freqGroup().put(0,0);
 		msSpW.freqGroupName().put(0,"none");
-		msSpW.flagRow().put(0,false);
+		msSpW.flagRow().put(0,False);
 		msSpW.measFreqRef().put(0,MFrequency::LSRK);
 	}
 	//Now the DD
@@ -2188,7 +2187,7 @@ void MSUVBin::fillDDTables(){
 			outMsPtr_p->dataDescription().addRow();
 		msDD.spectralWindowId().put(0,0);
 		msDD.polarizationId().put(0,0);
-		msDD.flagRow().put(0,false);
+		msDD.flagRow().put(0,False);
 	}
 	MSColumns(*outMsPtr_p).dataDescId().fillColumn(0);
 
@@ -2218,7 +2217,7 @@ void MSUVBin::copySubtable(const String& tabName, const Table& inTab,const Bool 
 		}
 	}
 	else{
-		inTab.deepCopy(outName, Table::New, false, Table::AipsrcEndian, norows);
+		inTab.deepCopy(outName, Table::New, False, Table::AipsrcEndian, norows);
 	}
 	Table outTab(outName, Table::Update);
 	outMsPtr_p->rwKeywordSet().defineTable(tabName, outTab);
@@ -2252,7 +2251,7 @@ void MSUVBin::fillFieldTable() {
     msField.delayDirMeasCol().put(0, radecMeas);
     msField.phaseDirMeasCol().put(0, radecMeas);
     msField.referenceDirMeasCol().put(0, radecMeas);
-    msField.flagRow().put(0, false);
+    msField.flagRow().put(0, False);
     MSColumns(*outMsPtr_p).fieldId().fillColumn(0);
 }
 
@@ -2266,7 +2265,7 @@ Bool MSUVBin::String2MDirection(const String& theString,
 	  //We'll interprete string as a field id of ms
 	  MeasurementSet thems(msname);
 	  theMeas=ROMSFieldColumns(thems.field()).phaseDirMeas(fieldid);
-	  return true;
+	  return True;
   }
 
 
@@ -2279,9 +2278,9 @@ Bool MSUVBin::String2MDirection(const String& theString,
 
   if(str.nelements()==3){
 	  qh.fromString(error, str[1]);
-	  casacore::Quantity val1=qh.asQuantity();
+	  casa::Quantity val1=qh.asQuantity();
       qh.fromString(error, str[2]);
-      casacore::Quantity val2=qh.asQuantity();
+      casa::Quantity val2=qh.asQuantity();
       MDirection::Types tp;
       if(!MDirection::getType(tp, str[0])){
     	  ostringstream oss;
@@ -2290,20 +2289,20 @@ Bool MSUVBin::String2MDirection(const String& theString,
     	  tp=MDirection::J2000;
       }
       theMeas=MDirection(val1,val2,  tp);
-      return true;
+      return True;
   }
   else if(str.nelements()==2){
 	  qh.fromString(error, str[0]);
-      casacore::Quantity val1=qh.asQuantity();
+      casa::Quantity val1=qh.asQuantity();
       qh.fromString(error, str[1]);
-      casacore::Quantity val2=qh.asQuantity();
+      casa::Quantity val2=qh.asQuantity();
       theMeas=MDirection(val1, val2);
-      return true;
+      return True;
  }
   else if(str.nelements()==1){
       //Must be a string like sun, moon, jupiter
-	  casacore::Quantity val1(0.0, "deg");
-      casacore::Quantity val2(90.0, "deg");
+	  casa::Quantity val1(0.0, "deg");
+      casa::Quantity val2(90.0, "deg");
       theMeas=MDirection(val1, val2);
       MDirection::Types ref;
       Int numAll;
@@ -2314,10 +2313,10 @@ Bool MSUVBin::String2MDirection(const String& theString,
       if(MDirection::getType(ref,str[0])){
 
     	  theMeas=MDirection(val1, val2, ref);
-    	  return true;
+    	  return True;
       }
       if(MeasTable::Source(theMeas, str[0])){
-    	  return true;
+    	  return True;
       }
       if(!MDirection::getType(ref, str[0])){
     	  Vector<String> all(numExtra);
@@ -2329,7 +2328,7 @@ Bool MSUVBin::String2MDirection(const String& theString,
     	  oss << "Valid ones are " << all;
     	  cerr << oss.str() <<  " or one of the valid known sources in the data repos" << endl;
     	  theMeas=MDirection(val1, val2);
-    	  return false;
+    	  return False;
       }
 
   }
@@ -2340,7 +2339,7 @@ Bool MSUVBin::String2MDirection(const String& theString,
   ///If i am here i don't know how to interprete this
 
 
-  return false;
+  return False;
 }
 
 
@@ -2443,7 +2442,7 @@ void MSUVBin::makeWConv(vi::VisibilityIterator2& iter, Cube<Complex>& convFunc, 
   convFunc.resize(); // break any reference 
   convFunc.resize(convSize/2-1, convSize/2-1, wConvSize);
   convFunc.set(0.0);
-  Bool convFuncStor=false;
+  Bool convFuncStor=False;
   Complex *convFuncPtr=convFunc.getStorage(convFuncStor);
   IPosition start(4, 0, 0, 0, 0);
   IPosition pbSlice(4, convSize, convSize, 1, 1);
@@ -2577,14 +2576,14 @@ void MSUVBin::makeWConv(vi::VisibilityIterator2& iter, Cube<Complex>& convFunc, 
 	convFuncPtr[offset+ooLong(y*(cpConvSize/2-1))+ooLong(x)] = screen(x,y);
       }
     } 
-    /*    Bool found=false; 
+    /*    Bool found=False; 
     Int trial=0;
      for (trial=0; trial<cpConvSize/2-2;++trial) {
       // if((abs(convFunc(trial,0,iw))>1e-3)||(abs(convFunc(0,trial,iw))>1e-3) ) {
        if((abs(screen(trial,0))<1e-3)||(abs(screen(0,trial))<1e-3) ) {
 	//cout <<"iw " << iw << " x " << abs(convFunc(trial,0,iw)) << " y " 
 	//   <<abs(convFunc(0,trial,iw)) << endl; 
-	found=true;
+	found=True;
 	break;
       }
       }
@@ -2611,7 +2610,7 @@ void MSUVBin::makeWConv(vi::VisibilityIterator2& iter, Cube<Complex>& convFunc, 
   
 #pragma omp parallel for default(none) firstprivate(suppstor, cpConvSize, cpWConvSize, cpConvSamp, convFuncPtr, maxConvSize, maxes)  
   for (Int iw=0;iw<cpWConvSize;iw++) {
-    Bool found=false;
+    Bool found=False;
     Int trial=0;
     ooLong ploffset=ooLong(cpConvSize/2-1)*ooLong(cpConvSize/2-1)*ooLong(iw);
     ////////////////  
@@ -2620,7 +2619,7 @@ void MSUVBin::makeWConv(vi::VisibilityIterator2& iter, Cube<Complex>& convFunc, 
 //	     if((abs(convFuncPtr[trial+ploffset])>1e-2)||(abs(convFuncPtr[trial*(cpConvSize/2-1)+ploffset])>1e-2) ) {
 //	//cout <<"iw " << iw << " x " << abs(convFunc(trial,0,iw)) << " y " 
 //	//   <<abs(convFunc(0,trial,iw)) << endl; 
-//	found=true;
+//	found=True;
 //	break;
  //     }
  //     }
@@ -2636,7 +2635,7 @@ void MSUVBin::makeWConv(vi::VisibilityIterator2& iter, Cube<Complex>& convFunc, 
       //if(abs(convFuncPtr[ooLong((Double(trial)/sqrt(2.0))*(cpConvSize/2-1))+ploffset+ooLong((Double(trial)/sqrt(2.0)))]) < 1e-4){
 	//cout <<"iw " << iw << " x " << abs(convFunc(trial,0,iw)) << " y " 
 	//   <<abs(convFunc(0,trial,iw)) << endl; 
-	found=true;
+	found=True;
 	break;
       }
       }
@@ -2780,7 +2779,7 @@ void MSUVBin::makeWConv(vi::VisibilityIterator2& iter, Cube<Complex>& convFunc, 
       Int directionIndex=ftCoords.findCoordinate(Coordinate::DIRECTION);
       AlwaysAssert(directionIndex>=0, AipsError);
       dc=coords.directionCoordinate(directionIndex);
-      Vector<Bool> axes(2); axes(0)=true;axes(1)=true;
+      Vector<Bool> axes(2); axes(0)=True;axes(1)=True;
       Vector<Int> shape(2); shape(0)=convSize;shape(1)=convSize;
       Coordinate* ftdc=dc.makeFourierCoordinate(axes,shape);
       ftCoords.replaceCoordinate(*ftdc, directionIndex);
@@ -2809,7 +2808,7 @@ Int MSUVBin::sepCommaEmptyToVectorStrings(Vector<String>& lesStrings,
     String oneStr=str;
     Int nsep=0;
     // decide if its comma seperated or empty space seperated
-    casacore::String sep;
+    casa::String sep;
     if((nsep=oneStr.freq(",")) > 0){
       sep=",";
     }
@@ -2830,7 +2829,7 @@ Int MSUVBin::sepCommaEmptyToVectorStrings(Vector<String>& lesStrings,
       for (Int k=0; k < nsep; ++k){
 	if((String(splitstrings[k]) == String(""))
 	   || (String(splitstrings[k]) == String(" "))){
-	  lesStrings.resize(lesStrings.nelements()-1, true);
+	  lesStrings.resize(lesStrings.nelements()-1, True);
 	}
 	else{
 	  lesStrings[index]=splitstrings[k];

@@ -28,7 +28,6 @@
 #include <msvis/MSVis/statistics/Vi2ChunkTimeDataProvider.h>
 #include <msvis/MSVis/VisBufferComponents2.h>
 
-using namespace casacore;
 namespace casa {
 
 Vi2ChunkTimeDataProvider::Vi2ChunkTimeDataProvider(
@@ -44,5 +43,4 @@ Vi2ChunkTimeDataProvider::dataArray() {
 	return vi2->getVisBuffer()->time();
 }
 
-using namespace casacore;
 } // namespace casa

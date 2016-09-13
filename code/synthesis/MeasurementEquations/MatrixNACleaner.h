@@ -36,14 +36,10 @@
 #include <casa/Arrays/Vector.h>
 #include <casa/Containers/Block.h>
 
-namespace casacore{
-
-template <class T> class Matrix;
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Forward Declarations
+template <class T> class Matrix;
 
 // <summary>A simple deconvolver that masks by memory of previous peaks</summary>
 // <synopsis> Evolution of a simple cleaner 
@@ -83,7 +79,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </motivation>
 //
 // <thrown>
-// <li> casacore::AipsError: if psf has more dimensions than the model. 
+// <li> AipsError: if psf has more dimensions than the model. 
 // </thrown>
 //
 // <todo asof="yyyy/mm/dd">
@@ -97,7 +93,7 @@ public:
   MatrixNACleaner();
 
   // Create a cleaner for a specific dirty image and PSF
-  MatrixNACleaner(const casacore::Matrix<casacore::Float> & psf, const casacore::Matrix<casacore::Float> & dirty, const casacore::Int memtype=2, const casacore::Float numSigma=5.0);
+  MatrixNACleaner(const Matrix<Float> & psf, const Matrix<Float> & dirty, const Int memtype=2, const Float numSigma=5.0);
 
   // The copy constructor uses reference semantics
   MatrixNACleaner(const MatrixNACleaner& other);
@@ -113,14 +109,14 @@ public:
   //Set the dirty image without calculating convolutions..
   //can be done by calling  makeDirtyScales or setscales if one want to redo the 
   //psfscales too.
-  void setDirty(const casacore::Matrix<casacore::Float>& dirty);
+  void setDirty(const Matrix<Float>& dirty);
   
   
 
   //change the psf
   //don't forget to redo the setscales or run makePsfScales, 
   //followed by makeDirtyScales 
-  void setPsf(const casacore::Matrix<casacore::Float>& psf);
+  void setPsf(const Matrix<Float>& psf);
  
  
  
@@ -129,70 +125,70 @@ public:
   //        subtracted at every iteration)
   // aThreshold - absolute threshold to stop iterations
  
-  void setcontrol(const casacore::Int niter,
-		  const casacore::Float gain, const casacore::Quantity& aThresho, const casacore::Int masksupport=3 , const casacore::Int memType=2, const casacore::Float numsigma=5.0);
+  void setcontrol(const Int niter,
+		  const Float gain, const Quantity& aThresho, const Int masksupport=3 , const Int memType=2, const Float numsigma=5.0);
 
  
 
   // return how many iterations we did do
-  casacore::Int iteration() const { return itsIteration; }
+  Int iteration() const { return itsIteration; }
  
 
  
  //Total flux accumulated so far
-  casacore::Float totalFlux() const {return itsTotalFlux;}
+  Float totalFlux() const {return itsTotalFlux;}
 
 
   // Clean an image.
  
-  casacore::Int clean(casacore::Matrix<casacore::Float> & model);
+  Int clean(Matrix<Float> & model);
 
   // Set the mask
   // mask - input mask lattice
   
-  void setMask(casacore::Matrix<casacore::Float> & mask);
+  void setMask(Matrix<Float> & mask);
  
 
-  void setPixFlag(const casacore::Matrix<casacore::Bool>& bitpix);
+  void setPixFlag(const Matrix<Bool>& bitpix);
 
   // remove the mask;
   // useful when keeping object and sending a new dirty image to clean 
   // one can set another mask then 
   void unsetMask();
 
-  void getMask(casacore::Matrix<casacore::Float>& mask);
+  void getMask(Matrix<Float>& mask);
 
   
 
   // Look at what WE think the residuals look like
-  casacore::Matrix<casacore::Float>  getResidual() { return *itsResidual; }
+  Matrix<Float>  getResidual() { return *itsResidual; }
 
   // Method to return threshold
-  casacore::Float threshold() const;
+  Float threshold() const;
 
   
-  casacore::Float maxResidual() {return itsMaximumResidual;};
+  Float maxResidual() {return itsMaximumResidual;};
   // Helper function to optimize adding
-  //static void addTo(casacore::Matrix<casacore::Float>& to, const casacore::Matrix<casacore::Float> & add);
+  //static void addTo(Matrix<Float>& to, const Matrix<Float> & add);
 
 protected:
   // Make sure that the peak of the Psf is within the image
-  casacore::Bool validatePsf(const casacore::Matrix<casacore::Float> & psf);
+  Bool validatePsf(const Matrix<Float> & psf);
 
  
   // Find the Peak of the lattice, applying a mask
-  casacore::Bool findMaxAbsMask(const casacore::Matrix<casacore::Float>& lattice,  casacore::Matrix<casacore::Float>& mask,
-		      casacore::Float& maxAbs, casacore::IPosition& posMax, const casacore::Int support=5);
+  Bool findMaxAbsMask(const Matrix<Float>& lattice,  Matrix<Float>& mask,
+		      Float& maxAbs, IPosition& posMax, const Int support=5);
 
   // Helper function to reduce the box sizes until the have the same   
   // size keeping the centers intact  
-  static void makeBoxesSameSize(casacore::IPosition& blc1, casacore::IPosition& trc1,                               
-     casacore::IPosition &blc2, casacore::IPosition& trc2);
+  static void makeBoxesSameSize(IPosition& blc1, IPosition& trc1,                               
+     IPosition &blc2, IPosition& trc2);
 
 
-  casacore::Float itsGain;
-  casacore::Int itsMaxNiter;      // maximum possible number of iterations
-  casacore::Quantum<casacore::Double> itsThreshold;
+  Float itsGain;
+  Int itsMaxNiter;      // maximum possible number of iterations
+  Quantum<Double> itsThreshold;
   
 
 private:
@@ -203,28 +199,28 @@ private:
   //# about the current state and implicit side-effects are not possible
   //# because all information must be supplied in the input arguments
 
-  std::shared_ptr<casacore::Matrix<casacore::Float> > itsMask;
-  std::shared_ptr<casacore::Matrix<casacore::Float> > itsDirty;
-  std::shared_ptr<casacore::Matrix<casacore::Float> > itsPsf;
-  std::shared_ptr<casacore::Matrix<casacore::Float> >itsResidual;
-  std::shared_ptr<casacore::Matrix<casacore::Bool> > itsBitPix;
+  std::shared_ptr<Matrix<Float> > itsMask;
+  std::shared_ptr<Matrix<Float> > itsDirty;
+  std::shared_ptr<Matrix<Float> > itsPsf;
+  std::shared_ptr<Matrix<Float> >itsResidual;
+  std::shared_ptr<Matrix<Bool> > itsBitPix;
 
-  casacore::Float amnesiac(const casacore::Float& val);
-  casacore::Float weak(const casacore::Float& v);
-  casacore::Float medium(const casacore::Float& v);
-  casacore::Float strong(const casacore::Float& v);
+  Float amnesiac(const Float& val);
+  Float weak(const Float& v);
+  Float medium(const Float& v);
+  Float strong(const Float& v);
 
-  casacore::Float itsMaximumResidual;
-  casacore::Int itsIteration;	// what iteration did we get to?
-  casacore::Int itsStartingIter;	// what iteration did we get to?
-  casacore::Float itsTotalFlux;
-  casacore::Int itsSupport;
-  casacore::IPosition psfShape_p;
-  casacore::IPosition itsPositionPeakPsf;
-  casacore::Float itsRms;
-  casacore::Int typeOfMemory_p;  //0 nomemory, 1 weak, 2 medium, 3 strong
-  casacore::Float numSigma_p;
-  std::function<casacore::Float(const casacore::Float&)> f_p;
+  Float itsMaximumResidual;
+  Int itsIteration;	// what iteration did we get to?
+  Int itsStartingIter;	// what iteration did we get to?
+  Float itsTotalFlux;
+  Int itsSupport;
+  IPosition psfShape_p;
+  IPosition itsPositionPeakPsf;
+  Float itsRms;
+  Int typeOfMemory_p;  //0 nomemory, 1 weak, 2 medium, 3 strong
+  Float numSigma_p;
+  std::function<Float(const Float&)> f_p;
 };
 
 } //# NAMESPACE CASA - END

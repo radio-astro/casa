@@ -48,13 +48,9 @@
 #include <casadbus/interfaces/SynthImager.adaptor.h>
 #endif
 
-namespace casacore{
-
-	class Record;
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+	class Record;
 
 	class SIIterBot_adaptor;
 
@@ -94,34 +90,34 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			virtual bool interactiveInputRequired();
 			virtual void waitForInteractiveInput(); 
 
-			// virtual bool majorCycleRequired(casacore::Float currentPeakResidual);
+			// virtual bool majorCycleRequired(Float currentPeakResidual);
 
 			virtual int cleanComplete();
     
 			/* --- Functions for interacting with Minor Cycle Control --- */
-			virtual casacore::Record getMinorCycleControls();
-			virtual void   mergeCycleInitializationRecord(casacore::Record&);
-			virtual void   mergeCycleExecutionRecord(casacore::Record&);
+			virtual Record getMinorCycleControls();
+			virtual void   mergeCycleInitializationRecord(Record&);
+			virtual void   mergeCycleExecutionRecord(Record&);
     
 
 			//void mergeSubIterBot(SISubIterBot& subIterBot);
 
 			/* ------ Begin functions for runtime parameter modification ------ */
 			/* These are the control variables.  We can set them either through these
-			   method or through the casacore::Record interface */
-			void changeNiter( casacore::Int niter );
-			void changeCycleNiter( casacore::Int cycleniter );
-			void changeInteractiveNiter(casacore::Int interactiveniter );
+			   method or through the Record interface */
+			void changeNiter( Int niter );
+			void changeCycleNiter( Int cycleniter );
+			void changeInteractiveNiter(Int interactiveniter );
 
-			void changeThreshold( casacore::Float threshold );
-			void changeCycleThreshold( casacore::Float cyclethreshold );
-			void changeInteractiveThreshold( casacore::Float cyclethreshold );
+			void changeThreshold( Float threshold );
+			void changeCycleThreshold( Float cyclethreshold );
+			void changeInteractiveThreshold( Float cyclethreshold );
 			
-			void changeLoopGain(casacore::Float loopgain );
-			void changeCycleFactor( casacore::Float cyclefactor);
+			void changeLoopGain(Float loopgain );
+			void changeCycleFactor( Float cyclefactor);
 
-	                void changeMinPsfFraction(casacore::Float minpsffraction);
-	                void changeMaxPsfFraction(casacore::Float maxpsffraction);
+	                void changeMinPsfFraction(Float minpsffraction);
+	                void changeMaxPsfFraction(Float maxpsffraction);
 
 			void changeInteractiveMode(const bool& interactiveEnabled);
 			void changePauseFlag(const bool& pauseEnabled);
@@ -138,11 +134,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			   - loopgain
 			   - cyclefactor
 			*/
-			void setControlsFromRecord(casacore::Record &recordIn);
-         	        casacore::Float readThreshold( casacore::Record recordIn, casacore::String id );
+			void setControlsFromRecord(Record &recordIn);
+         	        Float readThreshold( Record recordIn, String id );
 
-			virtual casacore::Record getDetailsRecord();
-			//casacore::Record getSubIterBotRecord();
+			virtual Record getDetailsRecord();
+			//Record getSubIterBotRecord();
 
 			/* ------ END Functions for runtime parameter modification -------*/
 
@@ -151,7 +147,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			/* Note:  Incrementing the Major cycle will reset the cycleIterDone */
 			void incrementMajorCycleCount();
 
-			casacore::Int getMajorCycleCount();
+			Int getMajorCycleCount();
 
 
 
@@ -160,16 +156,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			void updateCycleThreshold();
     
 			/* Values for the control of the cycle threshold */
-			/*     void setMaxPsfSidelobe( casacore::Float maxpsfsidelobe ); */
-			/*     casacore::Float getMaxPsfSidelobe(); */
+			/*     void setMaxPsfSidelobe( Float maxpsfsidelobe ); */
+			/*     Float getMaxPsfSidelobe(); */
 
-			/*     void setMaxPsfFraction(casacore::Float maxpsffraction ); */
-			/*     casacore::Float getMaxPsfFraction(); */
+			/*     void setMaxPsfFraction(Float maxpsffraction ); */
+			/*     Float getMaxPsfFraction(); */
 
-			/*     void setMinPsfFraction(casacore::Float minpsffraction ); */
-			/*     casacore::Float getMinPsfFraction(); */
-			//casacore::Int getRemainingNiter();
-			//casacore::Int getCompletedNiter();
+			/*     void setMinPsfFraction(Float minpsffraction ); */
+			/*     Float getMinPsfFraction(); */
+			//Int getRemainingNiter();
+			//Int getCompletedNiter();
 
 			void addSummaryMajor();
 
@@ -201,29 +197,29 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 #endif
 			//// START /// Functions for runtime parameter modification
 
-			/* Methods to get the state of the iterbot as a casacore::Record*/
+			/* Methods to get the state of the iterbot as a Record*/
 
 			/* This record has all of the fields associated with the detail record 
 			   but adds
 			   - summaryminor
 			   - summarymajor
 			*/
-			virtual casacore::Record getSummaryRecord();
+			virtual Record getSummaryRecord();
 
 		protected:
 
-			virtual void mergeMinorCycleSummary(const casacore::Array<casacore::Double>& summary);
+			virtual void mergeMinorCycleSummary(const Array<Double>& summary);
 
 			/* For testing/debugging. Print out the contents of the iterbot */
-			void printOut(casacore::String prefix, casacore::Bool verbose); 
+			void printOut(String prefix, Bool verbose); 
 
 			std::string itsDescription;
 
-			casacore::Float itsMinPsfFraction;
-			casacore::Float itsMaxPsfFraction;
-			casacore::Float itsMaxPsfSidelobe;
-			casacore::Float itsPeakResidual;
-	                casacore::Float itsPrevPeakResidual;
+			Float itsMinPsfFraction;
+			Float itsMaxPsfFraction;
+			Float itsMaxPsfSidelobe;
+			Float itsPeakResidual;
+	                Float itsPrevPeakResidual;
 
 			/* The number of Controllers Currently Connected */
 			int    itsControllerCount;
@@ -236,29 +232,29 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			std::recursive_mutex descriptionMutex; /** protects itsDescription **/
 
 			/* Control Variables */
-			casacore::Int    itsNiter;
-			casacore::Int    itsCycleNiter;
-			casacore::Int    itsInteractiveNiter;
+			Int    itsNiter;
+			Int    itsCycleNiter;
+			Int    itsInteractiveNiter;
 
-			casacore::Float itsThreshold;
-			casacore::Float itsCycleThreshold;
-			casacore::Float itsInteractiveThreshold;
+			Float itsThreshold;
+			Float itsCycleThreshold;
+			Float itsInteractiveThreshold;
 	  
-	                casacore::Bool itsIsCycleThresholdAuto;
+	                Bool itsIsCycleThresholdAuto;
 
-			casacore::Float itsCycleFactor;
-			casacore::Float itsLoopGain;
+			Float itsCycleFactor;
+			Float itsLoopGain;
     
-			casacore::Bool  itsStopFlag;
-			casacore::Bool  itsPauseFlag;
-			casacore::Bool  itsInteractiveMode;
-			casacore::Bool  itsUpdatedModelFlag;
+			Bool  itsStopFlag;
+			Bool  itsPauseFlag;
+			Bool  itsInteractiveMode;
+			Bool  itsUpdatedModelFlag;
 
-			casacore::Int   itsIterDone;
-			casacore::Int   itsInteractiveIterDone;
-			casacore::Int   itsMaxCycleIterDone;
-			casacore::Int   itsMajorDone;
-	                casacore::Int   itsStopCode;
+			Int   itsIterDone;
+			Int   itsInteractiveIterDone;
+			Int   itsMaxCycleIterDone;
+			Int   itsMajorDone;
+	                Int   itsStopCode;
 
 			/*
 			  A condition variable used when we're waiting for interaction to 
@@ -271,9 +267,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 			/* Summary variables */
-			casacore::Int itsNSummaryFields;
-			casacore::Array<casacore::Double> itsSummaryMinor;
-			casacore::Array<casacore::Int>    itsSummaryMajor;
+			Int itsNSummaryFields;
+			Array<Double> itsSummaryMinor;
+			Array<Int>    itsSummaryMajor;
 
 			SHARED_PTR<SIIterBot_callback> callback;
 	};

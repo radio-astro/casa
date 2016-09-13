@@ -23,7 +23,6 @@
 #include <flagging/Flagging/FlagAgentSummary.h>
 #include <iostream>
 
-using namespace casacore;
 using namespace casa;
 
 void summarizeFlags(string inputFile,Record dataSelection,vector<Record> agentParameters)

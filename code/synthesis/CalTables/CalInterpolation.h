@@ -48,7 +48,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <prerequisite>
 //   <li> <linkto class="MSCalEnums">MSCalEnums</linkto> module
 //   <li> <linkto class="CalBuffer">CalBuffer</linkto> module
-//   <li> <linkto class="casacore::MSSelection">casacore::MSSelection</linkto> module
+//   <li> <linkto class="MSSelection">MSSelection</linkto> module
 // </prerequisite>
 //
 // <etymology>
@@ -111,7 +111,7 @@ class CalInterpolation
   virtual CalInterpolation& operator= (const CalInterpolation& other);
 
   // Set interpolation axes
-  virtual void setAxes (const casacore::Vector<casacore::Int>& axes) {axes_p = axes;}
+  virtual void setAxes (const Vector<Int>& axes) {axes_p = axes;}
 
   // Set interpolation type
   virtual void setType (const Type& type) {type_p = type;};
@@ -121,20 +121,20 @@ class CalInterpolation
     {weighting_p = weighting;};
 
   // Set interpolation window (per axis)
-  virtual void setWindows (const casacore::Vector<casacore::Quantity>& windows) 
+  virtual void setWindows (const Vector<Quantity>& windows) 
     {windows_p = windows;};
 
   // Set polynomial order
-  virtual void setNpoly (const casacore::Int& npoly) {npoly_p = npoly;};
+  virtual void setNpoly (const Int& npoly) {npoly_p = npoly;};
 
   // Set interpolation index mapping
-  virtual void setIndexMap (const casacore::Vector<casacore::MSSelection>& msIndex,
-			    const casacore::Vector<casacore::MSSelection>& calIndex)
+  virtual void setIndexMap (const Vector<MSSelection>& msIndex,
+			    const Vector<MSSelection>& calIndex)
     {msIndex_p = msIndex; calIndex_p = calIndex;};   
 
   // Get number and type of interpolation axes
-  virtual casacore::Vector<casacore::Int> axes() {return axes_p;};
-  virtual casacore::Int nAxes() {return axes_p.nelements();};
+  virtual Vector<Int> axes() {return axes_p;};
+  virtual Int nAxes() {return axes_p.nelements();};
 
   // Get interpolation type
   virtual Type type() {return type_p;};
@@ -143,20 +143,20 @@ class CalInterpolation
   virtual Weighting weighting() {return weighting_p;};
 
   // Get interpolation windows for each axis
-  virtual casacore::Vector<casacore::Quantity> windows() {return windows_p;};
+  virtual Vector<Quantity> windows() {return windows_p;};
 
   // Get polynomial order
-  virtual casacore::Int nPoly() {return npoly_p;};
+  virtual Int nPoly() {return npoly_p;};
 
   // Get interpolation index mapping
-  virtual casacore::Vector<casacore::MSSelection> msIndex() {return msIndex_p;};
-  virtual casacore::Vector<casacore::MSSelection> calIndex() {return calIndex_p;};
+  virtual Vector<MSSelection> msIndex() {return msIndex_p;};
+  virtual Vector<MSSelection> calIndex() {return calIndex_p;};
 
  protected:
 
  private:
   // Interpolation axes
-  casacore::Vector<casacore::Int> axes_p;
+  Vector<Int> axes_p;
 
   // Interpolation type
   Type type_p;
@@ -165,13 +165,13 @@ class CalInterpolation
   Weighting weighting_p;
 
   // Interpolation windows
-  casacore::Vector<casacore::Quantity> windows_p;
+  Vector<Quantity> windows_p;
 
-  // casacore::Polynomial order
-  casacore::Int npoly_p;
+  // Polynomial order
+  Int npoly_p;
 
   // Interpolation index mapping
-  casacore::Vector<casacore::MSSelection> msIndex_p, calIndex_p;
+  Vector<MSSelection> msIndex_p, calIndex_p;
  };
 
 

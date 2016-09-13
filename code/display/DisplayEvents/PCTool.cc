@@ -29,7 +29,6 @@
 #include <display/Display/PixelCanvas.h>
 #include <display/DisplayEvents/PCTool.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	PCToolPosEH::PCToolPosEH(PCTool *tool) :
@@ -52,7 +51,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	PCTool::PCTool(PixelCanvas *pcanvas, Display::KeySym keysym) :
 		itsPixelCanvas(pcanvas),
 		itsKeySym(keysym),
-		itsEventHandlersRegistered(false) {
+		itsEventHandlersRegistered(False) {
 		try {
 			itsKeyModifier = Display::keyModifierFromKeySym(itsKeySym);
 		} catch (AipsError& x) {
@@ -83,7 +82,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Switch the tool on/off.
 	void PCTool::enable() {
 		if (!itsEventHandlersRegistered) {
-			itsEventHandlersRegistered = true;
+			itsEventHandlersRegistered = True;
 			itsPixelCanvas->addPositionEventHandler(*itsPositionEH);
 			itsPixelCanvas->addMotionEventHandler(*itsMotionEH);
 			itsPixelCanvas->addRefreshEventHandler(*itsRefreshEH);
@@ -91,7 +90,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 	void PCTool::disable() {
 		if (itsEventHandlersRegistered) {
-			itsEventHandlersRegistered = false;
+			itsEventHandlersRegistered = False;
 			itsPixelCanvas->removePositionEventHandler(*itsPositionEH);
 			itsPixelCanvas->removeMotionEventHandler(*itsMotionEH);
 			itsPixelCanvas->removeRefreshEventHandler(*itsRefreshEH);

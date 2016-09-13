@@ -33,7 +33,6 @@
 
 #include <casa/namespace.h>
 
-using namespace casacore;
 namespace casa {
 
 // Set up a simple event handler to:
@@ -80,9 +79,6 @@ private:
 };
 
 }
-
-using namespace casa;
-using namespace casacore;
 
 int main(int argc, char** argv) {
     String flag;

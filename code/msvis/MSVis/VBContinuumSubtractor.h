@@ -34,15 +34,11 @@
 #include <ms/MeasurementSets/MeasurementSet.h>
 //#include <msvis/MSVis/VisBuffer.h>
 
-namespace casacore{
-
-class LogIO;
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 class VisBuffer;
 class VisBuffGroupAcc;
+class LogIO;
 
 // <summary>Fits and optionally subtracts the continuum in visibility spectra</summary>
 // <use visibility=export>
@@ -51,7 +47,7 @@ class VisBuffGroupAcc;
 // </reviewed>
 // 
 // <prerequisite>
-//   <li> <linkto class=casacore::MeasurementSet>MeasurementSet</linkto>
+//   <li> <linkto class=MeasurementSet>MeasurementSet</linkto>
 // </prerequisite>
 //
 // <etymology>
@@ -67,10 +63,10 @@ class VisBuffGroupAcc;
 //
 // <example>
 // <srcBlock>
-//   const casacore::Int fitorder = 4;                 // Careful!  High orders might
+//   const Int fitorder = 4;                 // Careful!  High orders might
 //                                           // absorb power from the lines.
-//   casacore::MS inMS(fileName);
-//   casacore::Block<casacore::Int> sortcolumns;
+//   MS inMS(fileName);
+//   Block<Int> sortcolumns;
 //   ROVisIter vi(inMS, sortcolumns, 0.0);
 //   VisBuffer cvb(vi);                         // Continuum estimate
 //   VisBuffer lvb(vi);                         // Line estimate
@@ -103,63 +99,63 @@ public:
 
   // Construct it with the low and high frequencies used for scaling the
   // frequencies in the polynomial.
-  VBContinuumSubtractor(const casacore::Double lofreq, const casacore::Double hifreq);
+  VBContinuumSubtractor(const Double lofreq, const Double hifreq);
 
   ~VBContinuumSubtractor();
 
   // Set the # of correlations and fitorder from shp, the total number of input
   // channels to look at (including masked ones!), and the low and high scaling
   // frequencies.
-  void init(const casacore::IPosition& shp, const casacore::uInt maxAnt, const casacore::uInt totnumchan,
-            const casacore::Double lof, const casacore::Double hif);
+  void init(const IPosition& shp, const uInt maxAnt, const uInt totnumchan,
+            const Double lof, const Double hif);
 
   // Set the low and high frequencies, and #s of correlations, antennas, and
-  // channels from vbga.  Returns false if vbga is empty.
-  casacore::Bool initFromVBGA(VisBuffGroupAcc& vbga);
+  // channels from vbga.  Returns False if vbga is empty.
+  Bool initFromVBGA(VisBuffGroupAcc& vbga);
 
   // Makes the continuum estimate by fitting a frequency polynomial of order
   // fitorder to the data in vbga.  It sets the low and high frequencies used
   // for scaling the frequencies in the polynomial to the min and max
   // frequencies in vbga.
-  // casacore::Input: vbga,         The data
+  // Input: vbga,         The data
   //        fitorder,     e.g. 2 for a + bf + cf**2
   //        doInit,       if true call initFromVBGA(vbga)
   //        doResize      if true set coeffs and coeffsOK to the right shape.
   // Output (these will be resized):
-  //   coeffs:   casacore::Polynomial coefficients for the continuum, indexed by (corr,
+  //   coeffs:   Polynomial coefficients for the continuum, indexed by (corr,
   //             order, hash(ant1, ant2).
   //   coeffsOK: and whether or not they're usable.
-  void fit(VisBuffGroupAcc& vbga, const casacore::Int fitorder,
-           casacore::MS::PredefinedColumns whichcol,
-           casacore::Cube<casacore::Complex>& coeffs, casacore::Cube<casacore::Bool>& coeffsOK,
-           const casacore::Bool doInit=false, const casacore::Bool doResize=false,
-           const casacore::Bool squawk=true);
+  void fit(VisBuffGroupAcc& vbga, const Int fitorder,
+           MS::PredefinedColumns whichcol,
+           Cube<Complex>& coeffs, Cube<Bool>& coeffsOK,
+           const Bool doInit=False, const Bool doResize=False,
+           const Bool squawk=True);
 
   // Apply the continuum estimate in coeffs (from fit) to vb.  The affected
-  // column of vb is chosen by whichcol, which must be exactly one of casacore::MS::DATA,
-  // casacore::MS::MODEL_DATA, or casacore::MS::CORRECTED_DATA lest an exception will be thrown.
-  // If doSubtraction is true, vb becomes the line estimate.  Otherwise it is
-  // replaced with the continuum estimate.  Returns false if it detects an
-  // error, true otherwise.  squawk=true increases the potential number of
+  // column of vb is chosen by whichcol, which must be exactly one of MS::DATA,
+  // MS::MODEL_DATA, or MS::CORRECTED_DATA lest an exception will be thrown.
+  // If doSubtraction is True, vb becomes the line estimate.  Otherwise it is
+  // replaced with the continuum estimate.  Returns False if it detects an
+  // error, True otherwise.  squawk=True increases the potential number of
   // warnings sent to the logger.
-  casacore::Bool apply(VisBuffer& vb,
-             const casacore::MS::PredefinedColumns whichcol,
-             const casacore::Cube<casacore::Complex>& coeffs,
-             const casacore::Cube<casacore::Bool>& coeffsOK, const casacore::Bool doSubtraction=true,
-             const casacore::Bool squawk=true);
+  Bool apply(VisBuffer& vb,
+             const MS::PredefinedColumns whichcol,
+             const Cube<Complex>& coeffs,
+             const Cube<Bool>& coeffsOK, const Bool doSubtraction=True,
+             const Bool squawk=True);
 
   // Returns whether or not vb's frequencies are within the bounds used for the
-  // continuum fit.  If not, and squawk is true, a warning will be sent to the
+  // continuum fit.  If not, and squawk is True, a warning will be sent to the
   // logger.  (Extrapolation is allowed, just not recommended.)
-  casacore::Bool areFreqsInBounds(VisBuffer& vb, const casacore::Bool squawk) const;
+  Bool areFreqsInBounds(VisBuffer& vb, const Bool squawk) const;
 
   // Fills minfreq and maxfreq with the minimum and maximum frequencies (in Hz,
-  // acc. to the casacore::MS def'n v.2) of vb (not the continuum fit!).  If you want to
+  // acc. to the MS def'n v.2) of vb (not the continuum fit!).  If you want to
   // get the extreme frequencies over a set of VisBuffers, set initialize to
-  // false and initialize minfreq and maxfreq yourself to DBL_MAX and -1.0,
+  // False and initialize minfreq and maxfreq yourself to DBL_MAX and -1.0,
   // respectively.
-  static void getMinMaxFreq(VisBuffer& vb, casacore::Double& minfreq, casacore::Double& maxfreq,
-                            const casacore::Bool initialize=true);
+  static void getMinMaxFreq(VisBuffer& vb, Double& minfreq, Double& maxfreq,
+                            const Bool initialize=True);
 
   // These are provided for the calibration framework so that a
   // VBContinuumSubtractor can be c'ted from a VisBuffGroupAcc, make a
@@ -168,20 +164,20 @@ public:
   // VisBuffer.  Obviously it'd be safer and faster to use the same
   // VBContinuumSubtractor for fitting and application, but the rest of CASA
   // isn't ready for that yet (3/7/2011).
-  casacore::Int getOrder() const {return fitorder_p;}
+  Int getOrder() const {return fitorder_p;}
 
-  casacore::Double getLowFreq() const {return lofreq_p;}  // Lowest frequency used in the fit,
-  casacore::Double getHighFreq() const {return hifreq_p;} // and highest, in Hz, acc. to
-                                                // the casacore::MS def'n v.2.
-  casacore::Int getMaxAntNum() const {return maxAnt_p;}   // -1 if unready.
+  Double getLowFreq() const {return lofreq_p;}  // Lowest frequency used in the fit,
+  Double getHighFreq() const {return hifreq_p;} // and highest, in Hz, acc. to
+                                                // the MS def'n v.2.
+  Int getMaxAntNum() const {return maxAnt_p;}   // -1 if unready.
 
   // The total number of input channels that will be looked at (including
   // masked ones!)
-  casacore::uInt getTotNumChan() const {return totnumchan_p;}
+  uInt getTotNumChan() const {return totnumchan_p;}
 
   // Low (lof) and high (hif) frequencies, in Hz, used for renormalizing
   // frequencies in the polynomials.
-  void setScalingFreqs(casacore::Double lof, casacore::Double hif){
+  void setScalingFreqs(Double lof, Double hif){
     lofreq_p = lof;
     hifreq_p = hif;
     midfreq_p = 0.5 * (lof + hif);
@@ -190,34 +186,34 @@ public:
 
   // Set the maximum number of antennas (actually, 1 + the maximum antenna
   // number).
-  void setNAnt(const casacore::uInt nAnt){
+  void setNAnt(const uInt nAnt){
     maxAnt_p = nAnt - 1;
     nHashes_p = (nAnt * (nAnt + 1)) / 2;  // Allows for autocorrs.  
   }
 
   // Set the total number of input channels that will be looked at (including
   // masked ones!)
-  void setTotNumChan(const casacore::uInt tnc) {totnumchan_p = tnc;}
+  void setTotNumChan(const uInt tnc) {totnumchan_p = tnc;}
 
   // A convenience function for prepping coeffs and coeffsOK to hold the
   // polynomial coefficients and their validities.
-  void resize(casacore::Cube<casacore::Complex>& coeffs, casacore::Cube<casacore::Bool>& coeffsOK) const;
+  void resize(Cube<Complex>& coeffs, Cube<Bool>& coeffsOK) const;
 
-  casacore::Bool checkSize(casacore::Cube<casacore::Complex>& coeffs, casacore::Cube<casacore::Bool>& coeffsOK) const
+  Bool checkSize(Cube<Complex>& coeffs, Cube<Bool>& coeffsOK) const
   {
-    return coeffs.shape()[0] == static_cast<casacore::Int>(ncorr_p) &&
+    return coeffs.shape()[0] == static_cast<Int>(ncorr_p) &&
       coeffs.shape()[1] == fitorder_p + 1 &&
-      coeffs.shape()[2] == static_cast<casacore::Int>(nHashes_p) &&
-      coeffsOK.shape()[0] == static_cast<casacore::Int>(ncorr_p) &&
+      coeffs.shape()[2] == static_cast<Int>(nHashes_p) &&
+      coeffsOK.shape()[0] == static_cast<Int>(ncorr_p) &&
       coeffsOK.shape()[1] == fitorder_p + 1 &&
-      coeffsOK.shape()[2] == static_cast<casacore::Int>(nHashes_p);
+      coeffsOK.shape()[2] == static_cast<Int>(nHashes_p);
   }
 
-  casacore::Double calcFreqScale() const {
+  Double calcFreqScale() const {
     return hifreq_p > midfreq_p ? 1.0 / (hifreq_p - midfreq_p) : 1.0;
   }
 
-  void setTVIDebug(bool debug) {tvi_debug = debug;}
+  void setTVIDebug(Bool debug) {tvi_debug = debug;}
 
 private:
   // Disable default copying, and assignment.
@@ -225,31 +221,31 @@ private:
 
   // Can the fit be _applied_ to vb?
   // If not and squawk is true, send a severe message to os.
-  casacore::Bool doShapesMatch(VisBuffer& vb, casacore::LogIO& os, const casacore::Bool squawk=true) const;
+  Bool doShapesMatch(VisBuffer& vb, LogIO& os, const Bool squawk=true) const;
 
   // Compute baseline (row) index in coeffs_p for (ant1, ant2).
   // It ASSUMES that ant1 and ant2 are both <= maxAnt_p.
-  casacore::uInt hashFunction(const casacore::Int ant1, const casacore::Int ant2)
+  uInt hashFunction(const Int ant1, const Int ant2)
   {
     return (maxAnt_p + 1) * ant1 - (ant1 * (ant1 - 1)) / 2 + ant2 - ant1;
   }
 
   //VisBuffGroupAcc& vbga_p;      // Holds the VisBuffers
-  casacore::Int       fitorder_p;  // Order of the fitting polynomial.
+  Int       fitorder_p;  // Order of the fitting polynomial.
 
-  casacore::Double    lofreq_p;    // Lowest frequency used in the continuum fit,
-  casacore::Double    hifreq_p;    // and highest, in Hz, acc. to the casacore::MS def'n v.2.
-  casacore::Double    midfreq_p;   // 0.5 * (lofreq_p + hifreq_p)
-  casacore::Double    freqscale_p;
-  casacore::Int       maxAnt_p;         // Highest 0 based antenna number that can be
+  Double    lofreq_p;    // Lowest frequency used in the continuum fit,
+  Double    hifreq_p;    // and highest, in Hz, acc. to the MS def'n v.2.
+  Double    midfreq_p;   // 0.5 * (lofreq_p + hifreq_p)
+  Double    freqscale_p;
+  Int       maxAnt_p;         // Highest 0 based antenna number that can be
                               // used with the fits.  -1 if not ready.
-  casacore::uInt      nHashes_p;        // Calculated and cached from maxAnt_p.
-  casacore::uInt      ncorr_p;
-  casacore::uInt      totnumchan_p;
+  uInt      nHashes_p;        // Calculated and cached from maxAnt_p.
+  uInt      ncorr_p;
+  uInt      totnumchan_p;
 
-  casacore::PtrBlock<casacore::Vector<casacore::Bool> * > chanmask_p;
+  PtrBlock<Vector<Bool> * > chanmask_p;
 
-  bool tvi_debug;
+  Bool tvi_debug;
 };
 
 } //# NAMESPACE CASA - END

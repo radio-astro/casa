@@ -29,7 +29,6 @@
 #include <casacore/casa/aips.h>
 #include <msvis/MSVis/statistics/Vi2StatsBoolIterator.h>
 
-using namespace casacore;
 namespace casa {
 
 Int
@@ -37,5 +36,4 @@ Vi2StatsBoolIterator::operator*() {
 	return (*array_iter ? 1 : 0);
 }
 
-using namespace casacore;
 } // namespace casa

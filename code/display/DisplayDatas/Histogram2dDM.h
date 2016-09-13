@@ -72,7 +72,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void cleanup();
 
 		// Draw into a cached drawing list, called by draw function.
-		virtual casacore::Bool drawIntoList(Display::RefreshReason reason,
+		virtual Bool drawIntoList(Display::RefreshReason reason,
 		                          WorldCanvasHolder &wcHolder);
 
 	protected:

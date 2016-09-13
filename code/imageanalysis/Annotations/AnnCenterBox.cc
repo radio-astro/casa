@@ -17,7 +17,6 @@
 
 #include <imageanalysis/Annotations/AnnCenterBox.h>
 
-using namespace casacore;
 namespace casa {
 
 AnnCenterBox::AnnCenterBox(

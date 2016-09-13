@@ -34,16 +34,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Constructor.
 	template <class T>
-	DParameterRange<T>::DParameterRange(const casacore::String name,
-	                                    const casacore::String description,
-	                                    const casacore::String help, const T minimum,
+	DParameterRange<T>::DParameterRange(const String name,
+	                                    const String description,
+	                                    const String help, const T minimum,
 	                                    const T maximum, const T resolution,
 	                                    const T defaultvalue, const T value,
-	                                    const casacore::String context,
-	                                    const casacore::Bool editable,
-	                                    const casacore::Bool provideentry,
-	                                    const casacore::Bool onrelease) :
-		DisplayParameter(name, description, help, context, false, editable),
+	                                    const String context,
+	                                    const Bool editable,
+	                                    const Bool provideentry,
+	                                    const Bool onrelease) :
+		DisplayParameter(name, description, help, context, False, editable),
 		itsMinimum(minimum),
 		itsMaximum(maximum),
 		itsResolution(resolution),
@@ -63,8 +63,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsResolution(1),
 		itsDefault(0),
 		itsValue(0),
-		itsProvideEntry(false),
-		itsOnRelease(false) {
+		itsProvideEntry(False),
+		itsOnRelease(False) {
 	}
 
 // Copy constructor.
@@ -102,15 +102,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Update the value of this parameter from a record.
 	template <class T>
-	casacore::Bool DParameterRange<T>::fromRecord(const casacore::RecordInterface &record) {
-		static casacore::Bool error;
+	Bool DParameterRange<T>::fromRecord(const RecordInterface &record) {
+		static Bool error;
 		return displayOptions().readOptionRecord(itsValue, error, record, name());
 	}
 
 // Describe this parameter in a record.
 	template <class T>
-	void DParameterRange<T>::toRecord(casacore::RecordInterface &record,
-	                                  const casacore::Bool, const casacore::Bool overwrite) {
+	void DParameterRange<T>::toRecord(RecordInterface &record,
+	                                  const Bool, const Bool overwrite) {
 		if (record.isDefined(name())) {
 			if (overwrite) {
 				record.removeField(name());
@@ -119,18 +119,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			}
 		}
 
-		casacore::Record rec = baseDescription();
+		Record rec = baseDescription();
 		T tmp;
-		casacore::DataType dtype = casacore::whatType(&tmp);
+		DataType dtype = whatType(&tmp);
 		switch(dtype) {
-		case casacore::TpInt:
+		case TpInt:
 			rec.define("ptype", "intrange");
 			break;
-		case casacore::TpFloat:
+		case TpFloat:
 			rec.define("ptype", "floatrange");
 			break;
 		default:
-			throw(casacore::AipsError("Invalid template for DParameterRange"));
+			throw(AipsError("Invalid template for DParameterRange"));
 			break;
 		}
 		rec.define("pmin", itsMinimum);

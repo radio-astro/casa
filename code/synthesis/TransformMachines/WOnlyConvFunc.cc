@@ -39,7 +39,6 @@
 #include <coordinates/Coordinates/StokesCoordinate.h>
 #include <lattices/LatticeMath/LatticeFFT.h>
 #include <casa/ostream.h>
-using namespace casacore;
 namespace casa{
   void WOnlyConvFunc::makeConvFunction(const ImageInterface<Complex>& image,
 				       const VisBuffer& vb,
@@ -156,7 +155,7 @@ namespace casa{
 	    sliceLength(4,convFunc_l.shape()[0]-1,convFunc_l.shape()[1]-1,1,polInUse);
 	  
 	  convFunc_l(Slicer(sliceStart,sliceLength)).nonDegenerate()
-	    =(twoDPB.getSlice(start, pbSlice, true));
+	    =(twoDPB.getSlice(start, pbSlice, True));
 	}
       }
     //
@@ -185,7 +184,7 @@ namespace casa{
     //UNUSED: Int maxConvWtSupport=0, supportBuffer;
     for (Int iw=0;iw<cfShape[2];iw++)
       {
-	Bool found=false;
+	Bool found=False;
 	Float threshold;
 	Int R;
 	ndx(2) = iw;
@@ -230,7 +229,7 @@ namespace casa{
     Int PixInc=1;
     Vector<Complex> vals;
     IPosition ndx(4,origin,0,0,0);
-    Bool found=false;
+    Bool found=False;
     IPosition cfShape=func.shape();
     Int convSize = cfShape(0);
     for(R=convSize/4;R>1;R--)
@@ -248,7 +247,7 @@ namespace casa{
 	      vals(th)=func(ndx);
 	  }
 	if (max(abs(vals)) > threshold)
-	  {found=true;break;}
+	  {found=True;break;}
       }
     return found;
   };

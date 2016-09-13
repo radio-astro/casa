@@ -66,7 +66,6 @@ void printDirection(std::ostream &os,const casa::MDirection &dir) throw (casa::A
 //
 */
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 BeamSkyJones::BeamSkyJones( 
@@ -77,7 +76,7 @@ BeamSkyJones::BeamSkyJones(
      parallacticAngleIncrement_p(parallacticAngleIncrement.getValue("rad")),
      skyPositionThreshold_p(skyPositionThreshold.getValue("rad")),
      lastUpdateVisBuffer_p(NULL), lastUpdateRow_p(-1),
-     lastUpdateIndex1_p(-1), lastUpdateIndex2_p(-1), hasBeenApplied(false)
+     lastUpdateIndex1_p(-1), lastUpdateIndex2_p(-1), hasBeenApplied(False)
      
 {  
   reset();
@@ -161,19 +160,19 @@ Bool BeamSkyJones::changed(const VisBuffer& vb, Int row)
   if(vb.msId() != lastMSId_p || vb.arrayId()!=lastArrayId_p ||
      vb.fieldId()!=lastFieldId_p)  {
         lastUpdateVisBuffer_p=NULL; // invalidate index cache
-        return true;
+        return True;
   }
   
-  //if (lastUpdateIndex1_p<0 || lastUpdateIndex2_p<0) return true;
+  //if (lastUpdateIndex1_p<0 || lastUpdateIndex2_p<0) return True;
   
   updatePBMathIndices(vb,row); // lastUpdateIndex?_p are now valid
 
   //Unnecessary ...i believe and causes issues with PSF making
-  //if (!hasBeenApplied) return true; // we shouldn't have such a flag in
+  //if (!hasBeenApplied) return True; // we shouldn't have such a flag in
                  // a well designed code
 
   if (!lastParallacticAngles_p.nelements() && myPBMaths_p.nelements())
-       return true; // it's a first call of this method and setPBMath has
+       return True; // it's a first call of this method and setPBMath has
                     // definitely been called before
 
  
@@ -184,16 +183,16 @@ Bool BeamSkyJones::changed(const VisBuffer& vb, Int row)
   Float feed2_pa=vb.feed2_pa()[row];  
 
   // it may be good to check here whether an indexed beam model
-  // depend on parallactic angle before returning true
+  // depend on parallactic angle before returning True
   // An additional interface function may be required for PBMath classes
 
   if (lastUpdateIndex1_p!=-1)
       if (abs(feed1_pa-lastParallacticAngles_p[lastUpdateIndex1_p]) >
-              parallacticAngleIncrement_p) return true;
+              parallacticAngleIncrement_p) return True;
 
   if (lastUpdateIndex2_p!=-1)
       if (abs(feed2_pa-lastParallacticAngles_p[lastUpdateIndex2_p]) >
-              parallacticAngleIncrement_p) return true;
+              parallacticAngleIncrement_p) return True;
 
   /*
    These direction test are not used right now  and are terrible calculations to do on 
@@ -202,18 +201,18 @@ Bool BeamSkyJones::changed(const VisBuffer& vb, Int row)
 ////	      
   if (lastUpdateIndex1_p!=-1)
       if (!directionsCloseEnough(lastDirections_p[lastUpdateIndex1_p],
-                     vb.direction1()[row])) return true;
+                     vb.direction1()[row])) return True;
 
   if (lastUpdateIndex2_p!=-1)
       if (!directionsCloseEnough(lastDirections_p[lastUpdateIndex2_p],
-                     vb.direction2()[row])) return true;    
+                     vb.direction2()[row])) return True;    
   */
 
-  return false;
+  return False;
 };
 
-// return true if two directions are close enough to consider the
-// operator unchanged, false otherwise
+// return True if two directions are close enough to consider the
+// operator unchanged, False otherwise
 Bool BeamSkyJones::directionsCloseEnough(const MDirection &dir1,
                            const MDirection &dir2) const
 {
@@ -247,9 +246,9 @@ Bool BeamSkyJones::changedBuffer(const VisBuffer& vb, Int row1, Int& row2)
   for (Int ii=irow+1;ii<=jrow;++ii)
        if (changed(vb,ii)) {
            row2 = ii-1;
-	   return true;
+	   return True;
        }
-  return false;
+  return False;
 };
 
 // as it is stated in BeamSkyJones.h this method may not be useful
@@ -259,8 +258,8 @@ Bool BeamSkyJones::changedBuffer(const VisBuffer& vb, Int row1, Int& row2)
 Bool BeamSkyJones::change(const VisBuffer& vb)
 {
   for (Int i=0;i<vb.nRow();++i)
-       if (changed(vb,i)) return true;
-  return false;
+       if (changed(vb,i)) return True;
+  return False;
 };
 
 void BeamSkyJones::update(const VisBuffer& vb, Int row)
@@ -355,7 +354,7 @@ BeamSkyJones::apply(const ImageInterface<Complex>& in,
 		    Bool forward)
 {
   if(changed(vb, row)) update(vb, row);
-  hasBeenApplied=true;
+  hasBeenApplied=True;
   // now lastUpdateIndex?_p are valid
   
   
@@ -374,7 +373,7 @@ BeamSkyJones::apply(const ImageInterface<Complex>& in,
     if (getPBMath(lastUpdateIndex1_p, myPBMath)) 
       return myPBMath.applyPB(in, out, convertDir(vb, lastDirections_p[lastUpdateIndex1_p], dirType), 
 	      Quantity(lastParallacticAngles_p[lastUpdateIndex1_p],"rad"),
-              doSquint_p, false, threshold(), forward);
+              doSquint_p, False, threshold(), forward);
     else 
       throw(AipsError("BeamSkyJones::apply(Image...)!!! - PBMath not found"));
   }
@@ -386,7 +385,7 @@ BeamSkyJones::apply(const ImageInterface<Float>& in,
 			  ImageInterface<Float>& out,
 			  const VisBuffer& vb, Int row){
   if(changed(vb, row)) update(vb, row);
-  hasBeenApplied=true;
+  hasBeenApplied=True;
   // now lastUpdateIndex?_p are valid
   
   if (lastUpdateIndex1_p!=lastUpdateIndex2_p) 
@@ -411,7 +410,7 @@ BeamSkyJones::applySquare(const ImageInterface<Float>& in,
 			  const VisBuffer& vb, Int row)
 {
   if(changed(vb, row)) update(vb, row);
-  hasBeenApplied=true;
+  hasBeenApplied=True;
   // now lastUpdateIndex?_p are valid
   
   if (lastUpdateIndex1_p!=lastUpdateIndex2_p)   
@@ -440,7 +439,7 @@ BeamSkyJones::apply(SkyComponent& in,
 		    Bool forward)
 {
   if(changed(vb, row)) update(vb, row);
-  hasBeenApplied=true;
+  hasBeenApplied=True;
   // now lastUpdateIndex?_p are valid
   
   if (lastUpdateIndex1_p!=lastUpdateIndex2_p)
@@ -457,7 +456,7 @@ BeamSkyJones::apply(SkyComponent& in,
       return myPBMath.applyPB(in, out, convertDir(vb, lastDirections_p[lastUpdateIndex1_p], dirType),
 			      Quantity(vb.frequency()(0), "Hz"), 
 			      lastParallacticAngles_p[lastUpdateIndex1_p],
-			      doSquint_p, false, threshold(), forward);
+			      doSquint_p, False, threshold(), forward);
       else 
       throw(AipsError("BeamSkyJones::apply(SkyComponent,...) - PBMath not found"));    
   }
@@ -470,7 +469,7 @@ BeamSkyJones::applySquare(SkyComponent& in,
 		    const VisBuffer& vb, Int row)
 {
   if(changed(vb, row)) update(vb, row);
-  hasBeenApplied=true;
+  hasBeenApplied=True;
   // now lastUpdateIndex?_p are valid
   
   if (lastUpdateIndex1_p!=lastUpdateIndex2_p)   
@@ -535,7 +534,7 @@ Bool BeamSkyJones::solve (SkyEquation& se)
 {
   // Keep compiler quiet
   if(&se) {};
-  return false;
+  return False;
 };
 
 // return index of compareTelescope, compareAntenna and compareFeed in
@@ -586,8 +585,8 @@ Int BeamSkyJones::indexTelescope(const String &compareTelescope,
   return -1;
 };
 
-// get the PBMath object; returns false if that one doesn't exist,
-// true if it does exist and is OK
+// get the PBMath object; returns False if that one doesn't exist,
+// True if it does exist and is OK
 // antennaID and feedID default to -1 to preserve the old interface
 // TODO: change the interface and make antennaID and feedID the
 // second and third parameter respectively to have a better looking code
@@ -599,7 +598,7 @@ Bool BeamSkyJones::getPBMath(const String &telescope, PBMath &myPBMath,
   if (indTel >= 0) 
     return getPBMath((uInt)indTel, myPBMath);
    else 
-    return false;  // PBMath not found for this telescope/antenna/feed combination
+    return False;  // PBMath not found for this telescope/antenna/feed combination
   
 };
 
@@ -608,11 +607,11 @@ Bool BeamSkyJones::getPBMath(uInt whichAnt, PBMath &myPBMath) const
   if (whichAnt <  myPBMaths_p.nelements() && Int(whichAnt)>=0) {
     if (myPBMaths_p[whichAnt].ok()) {
       myPBMath = myPBMaths_p[whichAnt];
-      return true;
+      return True;
     } else 
-      return false;  // whichAnt's PBMath found but not valid    
+      return False;  // whichAnt's PBMath found but not valid    
   } else 
-    return false;  // whichAnt's PBMath not found
+    return False;  // whichAnt's PBMath not found
   
 };
 
@@ -637,7 +636,7 @@ void BeamSkyJones::setPBMath(const String &telescope, PBMath &myPBMath,
    DebugAssert(myTelescopes_p.nelements()==myPBMaths_p.nelements(),
                AipsError);
 
-   Bool doRemove=false;
+   Bool doRemove=False;
    if (antennaID==-1 || feedID==-1) 
      // we have to remove PBMaths for individual antennae/feeds, if they     
      // were assigned earlier
@@ -646,7 +645,7 @@ void BeamSkyJones::setPBMath(const String &telescope, PBMath &myPBMath,
 	      // we have to step back because the previous element
 	      // has been removed
 	      --i;
-	      doRemove=false;
+	      doRemove=False;
 	      DebugAssert(i<myTelescopes_p.nelements(), AipsError);
 	  }
           if (myTelescopes_p[i] == telescope) {	      
@@ -658,24 +657,24 @@ void BeamSkyJones::setPBMath(const String &telescope, PBMath &myPBMath,
 	          if (myFeedIDs_p[i]!=-1) myAntennaIDs_p[i]=-1;
 		      // now it's valid for all antennae and a given feed
 		      // and will be replaced later
-		  else doRemove=true;
+		  else doRemove=True;
 		}
               if ((myFeedIDs_p[i]!=-1) && (feedID==-1))
 		{
 	          if (myAntennaIDs_p[i]!=-1) myFeedIDs_p[i]=-1;
 		      // now it's valid for all feeds at a given antenna
 		      // and will be replaced later
-                  else doRemove=true;
+                  else doRemove=True;
 		}
               if (doRemove) {
-	          myTelescopes_p.remove(i,false);
-	          myAntennaIDs_p.remove(i,false);
-		  myFeedIDs_p.remove(i,false);
-		  myPBMaths_p.remove(i,false);
+	          myTelescopes_p.remove(i,False);
+	          myAntennaIDs_p.remove(i,False);
+		  myFeedIDs_p.remove(i,False);
+		  myPBMaths_p.remove(i,False);
 		  if (lastParallacticAngles_p.nelements())
-		      lastParallacticAngles_p.remove(i,false);
+		      lastParallacticAngles_p.remove(i,False);
                   if (lastDirections_p.nelements())
-		      lastDirections_p.remove(i,false);
+		      lastDirections_p.remove(i,False);
 	      }
 	  }
      }
@@ -733,7 +732,7 @@ Bool BeamSkyJones::isHomogeneous() const
   // Hogwash!  our "myPBMath_p/myTelescope_p scheme only deals
   // with homogeneous pointings.  Need to fix this!
   // Wait for MS-II
-  return true;
+  return True;
 };
 
 

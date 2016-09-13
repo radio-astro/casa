@@ -55,19 +55,19 @@ public:
     // order to display, and an optional parent.  If parent is NULL, the
     // widget is displayed as a dialog; otherwise it is displayed in the
     // parent.
-    TBSorter(std::vector<casacore::String>& cols, std::vector<std::pair<casacore::String, bool> >* sort = NULL,
+    TBSorter(std::vector<String>& cols, std::vector<std::pair<String, bool> >* sort = NULL,
              QWidget* parent = NULL);
 
     ~TBSorter();
 
 signals:
-    // sortEntered is emitted when the "casacore::Sort" button is clicked.  The sort
+    // sortEntered is emitted when the "Sort" button is clicked.  The sort
     // parameter contains the ordered list of fields and ascending bools.
-    void sortEntered(std::vector<std::pair<casacore::String, bool> >& sort);
+    void sortEntered(std::vector<std::pair<String, bool> >& sort);
 
 private:
     // The sortable fields.
-    std::vector<casacore::String> cols;
+    std::vector<String> cols;
 
     
     // Adds the specified field from the field list to the sort list.

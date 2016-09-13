@@ -33,7 +33,6 @@
 #include <qwt_symbol.h>
 //#include <qwt_legend_item.h>
 
-using namespace casacore;
 namespace casa {
 
 FeatherCurve::FeatherCurve(FeatherPlot* plot, QwtPlot::Axis xAxis,
@@ -367,5 +366,4 @@ FeatherCurve::~FeatherCurve() {
 	delete plotCurve;
 }
 
-using namespace casacore;
 } /* namespace casa */

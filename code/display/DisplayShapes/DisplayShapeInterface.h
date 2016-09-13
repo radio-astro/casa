@@ -57,7 +57,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // DisplayShapeInterface simply contains a pointer to a DisplayShape object.
 // It allows all DisplayShapes to be constructed via a single constructor. i.e.
 // the DisplayShapeInterface constructor actually decides which shape to
-// create based on the information in the casacore::Record passed to it. It makes
+// create based on the information in the Record passed to it. It makes
 // creating new shapes look a little nice, since:
 // <srcblock>
 // record1.define("type", "square");
@@ -90,17 +90,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Constructor for a standard shape. The shape will be totally based on
 		// pixel sizes, both for it's position and sizes.
-		DisplayShapeInterface(const casacore::Record& shapeInfo);
+		DisplayShapeInterface(const Record& shapeInfo);
 
 		// Constructor for shape based on relative screen positions. if
 		// scaled is true, relative screen positions will be used for
 		// height etc also. If not, positions only will be based on relative
 		// screen pos, heights will be based on an absolute pixel value.
-		DisplayShapeInterface(const casacore::Record& shapeInfo, const PixelCanvas* pc,
-		                      const casacore::Bool scale = true);
+		DisplayShapeInterface(const Record& shapeInfo, const PixelCanvas* pc,
+		                      const Bool scale = True);
 
 		// Constructor for shape based on world co-ordinates (NYI)
-		DisplayShapeInterface(const casacore::Record shapeInfo, const WorldCanvas* wc);
+		DisplayShapeInterface(const Record shapeInfo, const WorldCanvas* wc);
 
 		// Copy cons
 		DisplayShapeInterface(const DisplayShapeInterface& other);
@@ -113,36 +113,36 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Please see <linkto class="DisplayShape">DisplayShape</linkto>
 		// for a full description of these functions.
 		// <group>
-		virtual casacore::Bool inObject(const casacore::Float xPos, const casacore::Float yPos);
-		virtual casacore::Bool onHandles(const casacore::Float xPos, const casacore::Float yPos);
-		virtual casacore::Vector<casacore::Float> getCenter() const;
-		virtual void setCenter(const casacore::Float xPos, const casacore::Float yPos);
-		virtual casacore::Bool whichHandle(const casacore::Float xPos, const casacore::Float yPos, casacore::Int& out);
-		virtual void changePoint(const casacore::Vector<casacore::Float>& newPos);
-		virtual void changePoint(const casacore::Vector<casacore::Float>& newPoint, const casacore::Int nPoint);
-		virtual void addPoint(const casacore::Vector<casacore::Float>& newPoint);
-		virtual void rotate(const casacore::Float angle);
-		virtual void scale(const casacore::Float angle);
+		virtual Bool inObject(const Float xPos, const Float yPos);
+		virtual Bool onHandles(const Float xPos, const Float yPos);
+		virtual Vector<Float> getCenter() const;
+		virtual void setCenter(const Float xPos, const Float yPos);
+		virtual Bool whichHandle(const Float xPos, const Float yPos, Int& out);
+		virtual void changePoint(const Vector<Float>& newPos);
+		virtual void changePoint(const Vector<Float>& newPoint, const Int nPoint);
+		virtual void addPoint(const Vector<Float>& newPoint);
+		virtual void rotate(const Float angle);
+		virtual void scale(const Float angle);
 		virtual void draw(PixelCanvas* toDrawTo);
-		virtual void move(const casacore::Float dX, const casacore::Float dY);
+		virtual void move(const Float dX, const Float dY);
 		virtual void addLocked(DisplayShapeInterface* toLock);
 		virtual void removeLocked(DisplayShapeInterface* removeLock);
-		virtual void setDrawHandles(const casacore::Bool& draw);
-		virtual casacore::Bool setOptions(const casacore::Record& newOptions);
-		virtual casacore::Record getOptions() ;
+		virtual void setDrawHandles(const Bool& draw);
+		virtual Bool setOptions(const Record& newOptions);
+		virtual Record getOptions() ;
 		// </group>
 
 		// Update the pixel location of this shape, based on the stored information
 		// on its location. If the shape is being used in pixel mode this will do
 		// nothing. If being used in relative screen mode or WC mode, this will
 		// update its location. Returns false if a conversion to pixels fail.
-		virtual casacore::Bool updatePixelPosition();
+		virtual Bool updatePixelPosition();
 
 		// If the shape is being used in absolute pixel co-ordinates, this will do
 		// nothing. If being used in relative screen or WC mode, this will update
 		// the position based on its current pixel location. Returns false if the
 		// conversion to the other co-ord type fails.
-		virtual casacore::Bool updateNonPixelPosition();
+		virtual Bool updateNonPixelPosition();
 
 		// Returns the pointer to the underlying object
 		virtual DisplayShape* getObject();
@@ -154,36 +154,36 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	private:
-		casacore::Record toPixOpts(const casacore::Record& notPix);
+		Record toPixOpts(const Record& notPix);
 
 		// Will return an option set with whatever the current
 		// coords method is.
-		casacore::Record fromPixOpts(const casacore::Record& pix) ;
+		Record fromPixOpts(const Record& pix) ;
 
-		casacore::Record pixToRelOpts(const casacore::Record& pixel);
-		casacore::Record relToPixOpts(const casacore::Record& relative);
-		casacore::Record pixToWorldOpts(const casacore::Record& pix);
-		casacore::Record worldToPixOpts(const casacore::Record& world);
+		Record pixToRelOpts(const Record& pixel);
+		Record relToPixOpts(const Record& relative);
+		Record pixToWorldOpts(const Record& pix);
+		Record worldToPixOpts(const Record& world);
 
-		casacore::Vector<casacore::Float> pixToRel(const casacore::Vector<casacore::Float>& pix);
-		casacore::Vector<casacore::Float> relToPix(const casacore::Vector<casacore::Float>& rel);
-		casacore::Float relToPixWidth(const casacore::Float rel);
-		casacore::Float relToPixHeight(const casacore::Float rel);
-		casacore::Float pixToRelWidth(const casacore::Float pix);
-		casacore::Float pixToRelHeight(const casacore::Float pix);
+		Vector<Float> pixToRel(const Vector<Float>& pix);
+		Vector<Float> relToPix(const Vector<Float>& rel);
+		Float relToPixWidth(const Float rel);
+		Float relToPixHeight(const Float rel);
+		Float pixToRelWidth(const Float pix);
+		Float pixToRelHeight(const Float pix);
 
 		DisplayShape* itsShape;
 		DisplayShapeInterface::Coord itsCoords;
 		const PixelCanvas* itsPc;
 		const WorldCanvas* itsWc;
 
-		void makeShape(const casacore::Record& shapeInfo);
+		void makeShape(const Record& shapeInfo);
 
 		// Scale widths and heights in relative mode?
-		casacore::Bool itsScale;
+		Bool itsScale;
 
 		// Copy of shape, however in its alternate coord form
-		casacore::Record altCoords;
+		Record altCoords;
 	};
 
 

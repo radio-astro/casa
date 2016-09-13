@@ -45,12 +45,12 @@ namespace casa {
 		SearchRedshiftDialog(QWidget *parent = 0);
 		void setCenter( double centerVal );
 		void setUnits( QString unitStr );
-		void setDatabasePath( casacore::String path );
+		void setDatabasePath( String path );
 		void setLocalSearch( bool local );
-		void setFrequencyType( casacore::MRadialVelocity::Types mType );
-		void setDopplerType( casacore::MDoppler::Types type );
+		void setFrequencyType( MRadialVelocity::Types mType );
+		void setDopplerType( MDoppler::Types type );
 		void setIdentifiedLines( const QList<QString>& lineNames );
-		void setSpectralCoordinate( casacore::SpectralCoordinate coord );
+		void setSpectralCoordinate( SpectralCoordinate coord );
 		~SearchRedshiftDialog();
 
 	public slots:
@@ -63,15 +63,15 @@ namespace casa {
 		void setResultsVisible( bool visible );
 		double getTargetFrequency() const;
 		Ui::SearchRedshiftDialogClass ui;
-		casacore::String databasePath;
+		String databasePath;
 		bool localSearch;
 		bool searchInterrupted;
 		SearchThread* searchThread;
 		QProgressDialog progressBar;
-		casacore::MFrequency::Types frequencyType;
-		casacore::MRadialVelocity::Types radialVelocityType;
-		casacore::SpectralCoordinate spectralCoordinate;
-		casacore::MDoppler::Types dopplerType;
+		MFrequency::Types frequencyType;
+		MRadialVelocity::Types radialVelocityType;
+		SpectralCoordinate spectralCoordinate;
+		MDoppler::Types dopplerType;
 	};
 }
 #endif // SEARCHREDSHIFTDIALOG_QO_H

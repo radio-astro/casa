@@ -55,40 +55,40 @@ namespace casa {
 // This class will create AnnotationBase pointers via new(). It is assumed the caller will
 // make use of these pointers so they are not deleted upon deletion of the object. It is
 // the caller's responsibility to delete them. To do so, call getLines() and loop through
-// the returned casacore::Vector of AsciiRegionLines. For objects of type AsciiRegionLines::ANNOTATION,
+// the returned Vector of AsciiRegionLines. For objects of type AsciiRegionLines::ANNOTATION,
 // get the pointer and delete it.
 
 class RegionTextParser {
 
 public:
 
-	static const casacore::Int CURRENT_VERSION;
-	static const casacore::Regex MAGIC;
+	static const Int CURRENT_VERSION;
+	static const Regex MAGIC;
 
 	// because of nonstandard access patterns, be careful when using ParamValue and ParamSet
 	// outside this class. These should probably be made into full fledged classes at some
 	// point.
 	struct ParamValue {
-		casacore::Double doubleVal;
-		casacore::Int intVal;
-		casacore::String stringVal;
-		casacore::Bool boolVal;
+		Double doubleVal;
+		Int intVal;
+		String stringVal;
+		Bool boolVal;
 		AnnotationBase::LineStyle lineStyleVal;
 		AnnotationBase::FontStyle fontStyleVal;
-		// casacore::Vector<casacore::MFrequency> freqRange;
-		SHARED_PTR<std::pair<casacore::MFrequency, casacore::MFrequency> > freqRange;
-		casacore::Vector<casacore::Stokes::StokesTypes> stokes;
+		// Vector<MFrequency> freqRange;
+		SHARED_PTR<std::pair<MFrequency, MFrequency> > freqRange;
+		Vector<Stokes::StokesTypes> stokes;
 		AnnotationBase::RGB color;
-		vector<casacore::Int> intVec;
+		vector<Int> intVec;
 	};
 	/*
 	struct GlobalOverrideChans {
 		// the "classic" channel specification
-		casacore::String chanSpec;
+		String chanSpec;
 		// the number of spectral planes in the image
-		casacore::uInt nChannels;
+		uInt nChannels;
 		// the image's spectral coordinate
-		casacore::SpectralCoordinate specCoord;
+		SpectralCoordinate specCoord;
 	};
 	*/
 
@@ -108,16 +108,16 @@ public:
 	// <src>prependRegion</src> allows one to specify region(s) that will be prepended to
 	// any text in <src>filename</src> or <src>text</src>
 	RegionTextParser(
-		const casacore::String& filename, const casacore::CoordinateSystem& csys,
-		const casacore::IPosition& imShape, const casacore::Int requireAtLeastThisVersion,
-		const casacore::String& prependRegion="",
-		const casacore::String& globalOverrideChans="", const casacore::String& globalOverrrideStokes=""
+		const String& filename, const CoordinateSystem& csys,
+		const IPosition& imShape, const Int requireAtLeastThisVersion,
+		const String& prependRegion="",
+		const String& globalOverrideChans="", const String& globalOverrrideStokes=""
 	);
 
 	RegionTextParser(
-		const casacore::CoordinateSystem& csys, const casacore::IPosition& imShape, const casacore::String& text,
-		const casacore::String& prependRegion="",
-		const casacore::String& globalOverrideChans="", const casacore::String& globalOverrrideStokes=""
+		const CoordinateSystem& csys, const IPosition& imShape, const String& text,
+		const String& prependRegion="",
+		const String& globalOverrideChans="", const String& globalOverrrideStokes=""
 	);
 	//</group>
 
@@ -125,38 +125,38 @@ public:
 
 	RegionTextParser& operator=(const RegionTextParser&) = delete;
 
-	casacore::Int getFileVersion() const;
+	Int getFileVersion() const;
 
 	vector<AsciiAnnotationFileLine> getLines() const;
 
 	// get the parameter set from a line of <src>text</src>. <src>preamble</src> is prepended to exception messages.
 	static ParamSet getParamSet(
-		casacore::Bool& spectralParmsUpdated,
-		casacore::LogIO& log, const casacore::String& text, const casacore::String& preamble,
-		const casacore::CoordinateSystem& csys,
-		SHARED_PTR<std::pair<casacore::MFrequency, casacore::MFrequency> > overridingFreqRange,
-		SHARED_PTR<casacore::Vector<casacore::Stokes::StokesTypes> > overridingCorrRange
+		Bool& spectralParmsUpdated,
+		LogIO& log, const String& text, const String& preamble,
+		const CoordinateSystem& csys,
+		SHARED_PTR<std::pair<MFrequency, MFrequency> > overridingFreqRange,
+		SHARED_PTR<Vector<Stokes::StokesTypes> > overridingCorrRange
 	);
 
 private:
 
-	const static casacore::String sOnePair;
-	const static casacore::String bTwoPair;
-	const static casacore::String sNPair;
-	const static casacore::Regex startOnePair;
-	const static casacore::Regex startNPair;
+	const static String sOnePair;
+	const static String bTwoPair;
+	const static String sNPair;
+	const static Regex startOnePair;
+	const static Regex startNPair;
 
-	casacore::CoordinateSystem _csys;
-	std::unique_ptr<casacore::LogIO> _log;
+	CoordinateSystem _csys;
+	std::unique_ptr<LogIO> _log;
 	ParamSet _currentGlobals;
 	vector<AsciiAnnotationFileLine> _lines;
-	casacore::Vector<AnnotationBase::Keyword> _globalKeysToApply;
-	casacore::Int _fileVersion;
-	casacore::IPosition _imShape;
-	casacore::uInt _regions;
+	Vector<AnnotationBase::Keyword> _globalKeysToApply;
+	Int _fileVersion;
+	IPosition _imShape;
+	uInt _regions;
 
-	SHARED_PTR<std::pair<casacore::MFrequency, casacore::MFrequency> > _overridingFreqRange;
-	SHARED_PTR<casacore::Vector<casacore::Stokes::StokesTypes> > _overridingCorrRange;
+	SHARED_PTR<std::pair<MFrequency, MFrequency> > _overridingFreqRange;
+	SHARED_PTR<Vector<Stokes::StokesTypes> > _overridingCorrRange;
 
 	/*
 	RegionTextParser() {}
@@ -164,95 +164,95 @@ private:
 	RegionTextParser& operator=(const RegionTextParser&);
 	*/
 
-	void _parse(const casacore::String& contents, const casacore::String& fileDesc);
+	void _parse(const String& contents, const String& fileDesc);
 
-	casacore::Array<casacore::String> _extractTwoPairs(casacore::uInt& end, const casacore::String& string) const;
+	Array<String> _extractTwoPairs(uInt& end, const String& string) const;
 
 	// extract s1 and s2 from a string of the form "[s1, s2]"
-	static casacore::Vector<casacore::String> _extractSinglePair(const casacore::String& string);
+	static Vector<String> _extractSinglePair(const String& string);
 
 	void _addLine(const AsciiAnnotationFileLine& line);
 
 	AnnotationBase::Type _getAnnotationType(
-		casacore::Vector<casacore::Quantity>& qDirs,
-		vector<casacore::Quantity>& qunatities,
-		casacore::String& textString,
-		casacore::String& consumeMe, const casacore::String& preamble
+		Vector<Quantity>& qDirs,
+		vector<Quantity>& qunatities,
+		String& textString,
+		String& consumeMe, const String& preamble
 	) const;
 
 	ParamSet _getCurrentParamSet(
-		casacore::Bool& spectralParmsUpdated, ParamSet& newParams,
-		casacore::String& consumeMe, const casacore::String& preamble
+		Bool& spectralParmsUpdated, ParamSet& newParams,
+		String& consumeMe, const String& preamble
 	) const;
 
 	void _createAnnotation(
 		const AnnotationBase::Type annType,
-		//const casacore::Vector<casacore::MDirection> dirs,
-		const casacore::Vector<casacore::Quantity>& qDirs,
-		const std::pair<casacore::Quantity, casacore::Quantity>& qFreqs,
-		const vector<casacore::Quantity>& quantities,
-		const casacore::String& textString,
+		//const Vector<MDirection> dirs,
+		const Vector<Quantity>& qDirs,
+		const std::pair<Quantity, Quantity>& qFreqs,
+		const vector<Quantity>& quantities,
+		const String& textString,
 		const ParamSet& currentParamSet,
-		const casacore::Bool annOnly, const casacore::Bool isDifference,
-		const casacore::String& preamble
+		const Bool annOnly, const Bool isDifference,
+		const String& preamble
 	);
 
-	std::pair<casacore::Quantity, casacore::Quantity> _quantitiesFromFrequencyString(
-		const casacore::String& freqString, const casacore::String& preamble
+	std::pair<Quantity, Quantity> _quantitiesFromFrequencyString(
+		const String& freqString, const String& preamble
 	) const;
 
-	static casacore::String _doLabel(casacore::String& consumeMe, const casacore::String& logPreamble);
+	static String _doLabel(String& consumeMe, const String& logPreamble);
 
-	static casacore::String _getKeyValue(casacore::String& consumeMe, const casacore::String& preamble);
+	static String _getKeyValue(String& consumeMe, const String& preamble);
 
-	casacore::Vector<casacore::Quantity> _extractQuantityPairAndSingleQuantity(
-		casacore::String& consumeMe, const casacore::String& preamble
+	Vector<Quantity> _extractQuantityPairAndSingleQuantity(
+		String& consumeMe, const String& preamble
 	) const;
 
-	casacore::Vector<casacore::Quantity> _extractNQuantityPairs(
-			casacore::String& consumeMe, const casacore::String& preamble
+	Vector<Quantity> _extractNQuantityPairs(
+			String& consumeMe, const String& preamble
 	) const;
 
-	casacore::Vector<casacore::Quantity> _extractTwoQuantityPairs(
-		casacore::String& consumeMe, const casacore::String& preamble
+	Vector<Quantity> _extractTwoQuantityPairs(
+		String& consumeMe, const String& preamble
 	) const;
 
-	std::pair<casacore::Quantity, casacore::Quantity> _extractSingleQuantityPair(
-		const casacore::String& pair, const casacore::String& preamble
+	std::pair<Quantity, Quantity> _extractSingleQuantityPair(
+		const String& pair, const String& preamble
 	) const;
 
 	void _setInitialGlobals();
 
-	static casacore::Vector<casacore::Stokes::StokesTypes> _stokesFromString(
-		const casacore::String& stokes, const casacore::String& preamble
+	static Vector<Stokes::StokesTypes> _stokesFromString(
+		const String& stokes, const String& preamble
 	);
 
-	casacore::Vector<casacore::Quantity> _extractTwoQuantityPairsAndSingleQuantity(
-		casacore::String& consumeMe, const casacore::String& preamble
+	Vector<Quantity> _extractTwoQuantityPairsAndSingleQuantity(
+		String& consumeMe, const String& preamble
 	) const;
 
 	void _extractQuantityPairAndString(
-		std::pair<casacore::Quantity, casacore::Quantity>& quantities, casacore::String& string,
-		casacore::String& consumeMe, const casacore::String& preamble,
-		const casacore::Bool requireQuotesAroundString
+		std::pair<Quantity, Quantity>& quantities, String& string,
+		String& consumeMe, const String& preamble,
+		const Bool requireQuotesAroundString
 	) const;
 
-	casacore::Vector<casacore::Quantity> _extractQuantitiesFromPair(
-		const casacore::String& pair, const casacore::String& preamble
+	Vector<Quantity> _extractQuantitiesFromPair(
+		const String& pair, const String& preamble
 	) const;
 
 	void _determineVersion(
-		const casacore::String& chunk, const casacore::String& filename,
-		const casacore::Int requireAtLeastThisVersion
+		const String& chunk, const String& filename,
+		const Int requireAtLeastThisVersion
 	);
 
-	// set the casacore::Stokes/polarizations/correlations that will override all global and per line correlation
+	// set the Stokes/polarizations/correlations that will override all global and per line correlation
 	// specifications. If multiple ranges are specified, an exception will be thrown.
-	void _setOverridingCorrelations(const casacore::String& globalOverrideStokes);
+	void _setOverridingCorrelations(const String& globalOverrideStokes);
 
 	// set the (single) channel range that will override all global and per line frequency
 	// specifications. If multiple ranges are specified, an exception will be thrown.
-	void _setOverridingChannelRange(const casacore::String& globalOverrideChans);
+	void _setOverridingChannelRange(const String& globalOverrideChans);
 
 };
 }

@@ -28,7 +28,6 @@
 
 #include <display/RegionShapes/XMLFileReaderWriter.h>
 
-using namespace casacore;
 namespace casa {
 
 // RSXMLRECORD DEFINITIONS //

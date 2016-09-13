@@ -67,10 +67,9 @@
 #define MAXPOINTINGERROR 250.0 // Max. pointing error in arcsec used to
 // determine the resolution of the
 // tabulated exp() function.
-#define DORES true
+#define DORES True
 
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
   
 #define NEED_UNDERSCORES
@@ -146,8 +145,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     // Selectively switch off CFTerms.
     //
-    if (aTermOn == false) {apertureFunction->setOpCode(CFTerms::NOOP);}
-    if (psTermOn == false) psTerm->setOpCode(CFTerms::NOOP);
+    if (aTermOn == False) {apertureFunction->setOpCode(CFTerms::NOOP);}
+    if (psTermOn == False) psTerm->setOpCode(CFTerms::NOOP);
     if (wTermOn == False) wTerm->setOpCode(CFTerms::NOOP);
     //
     // Construct the CF object with appropriate CFTerms.
@@ -167,20 +166,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   AWProjectFT::AWProjectFT()
     : FTMachine(), padding_p(1.0), nWPlanes_p(1),
       imageCache(0), cachesize(0), tilesize(16),
-      gridder(0), isTiled(false), arrayLattice( ), lattice( ), 
+      gridder(0), isTiled(False), arrayLattice( ), lattice( ), 
       maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
-      pointingToImage(0), usezero_p(false),
+      pointingToImage(0), usezero_p(False),
       // convFunc_p(), convWeights_p(),
       epJ_p(),
-      doPBCorrection(true), conjBeams_p(true),/*cfCache_p(cfcache),*/ paChangeDetector(),
+      doPBCorrection(True), conjBeams_p(True),/*cfCache_p(cfcache),*/ paChangeDetector(),
       rotateOTFPAIncr_p(0.1),
-      Second("s"),Radian("rad"),Day("d"), pbNormalized_p(false), paNdxProcessed_p(),
+      Second("s"),Radian("rad"),Day("d"), pbNormalized_p(False), paNdxProcessed_p(),
       visResampler_p(), sensitivityPatternQualifier_p(-1),sensitivityPatternQualifierStr_p(""),
       rotatedConvFunc_p(),//cfs2_p(), cfwts2_p(), 
       runTime1_p(0.0)
   {
     //    convSize=0;
-    tangentSpecified_p=false;
+    tangentSpecified_p=False;
     lastIndex_p=0;
     paChangeDetector.reset();
     pbLimit_p=5e-2;
@@ -225,7 +224,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			   PolOuterProduct::MuellerType muellerType)
     : FTMachine(cfcache,cf), padding_p(1.0), nWPlanes_p(nWPlanes),
       imageCache(0), cachesize(icachesize), tilesize(itilesize),
-      gridder(0), isTiled(false), arrayLattice( ), lattice( ), 
+      gridder(0), isTiled(False), arrayLattice( ), lattice( ), 
       maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
       pointingToImage(0), usezero_p(usezero),
       // convFunc_p(), convWeights_p(),
@@ -233,12 +232,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       doPBCorrection(doPBCorr), conjBeams_p(conjBeams), 
       /*cfCache_p(cfcache),*/ paChangeDetector(),
       rotateOTFPAIncr_p(0.1),
-      Second("s"),Radian("rad"),Day("d"), pbNormalized_p(false),
+      Second("s"),Radian("rad"),Day("d"), pbNormalized_p(False),
       visResampler_p(visResampler), sensitivityPatternQualifier_p(-1),sensitivityPatternQualifierStr_p(""),
       rotatedConvFunc_p(), runTime1_p(0.0)
   {
     //convSize=0;
-    tangentSpecified_p=false;
+    tangentSpecified_p=False;
     lastIndex_p=0;
     paChangeDetector.reset();
     pbLimit_p=pbLimit;
@@ -262,8 +261,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     canComputeResiduals_p=DORES;
     if (!cfCache_p.null())
       {
-	cfs2_p = CountedPtr<CFStore2>(&(cfCache_p->memCache2_p)[0],false);//new CFStore2;
-	cfwts2_p =  CountedPtr<CFStore2>(&cfCache_p->memCacheWt2_p[0],false);//new CFStore2;
+	cfs2_p = CountedPtr<CFStore2>(&(cfCache_p->memCache2_p)[0],False);//new CFStore2;
+	cfwts2_p =  CountedPtr<CFStore2>(&cfCache_p->memCacheWt2_p[0],False);//new CFStore2;
       }
     pop_p->init();
     useDoubleGrid_p=doublePrecGrid;
@@ -293,8 +292,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     canComputeResiduals_p=DORES;
     if (!cfCache_p.null())
       {
-	cfs2_p = CountedPtr<CFStore2>(&cfCache_p->memCache2_p[0],false);//new CFStore2;
-	cfwts2_p =  CountedPtr<CFStore2>(&cfCache_p->memCacheWt2_p[0],false);//new CFStore2;
+	cfs2_p = CountedPtr<CFStore2>(&cfCache_p->memCache2_p[0],False);//new CFStore2;
+	cfwts2_p =  CountedPtr<CFStore2>(&cfCache_p->memCacheWt2_p[0],False);//new CFStore2;
       }
     pop_p->init();
   }
@@ -426,9 +425,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     nchan = image->shape()(3);
     
     if(image->shape().product()>cachesize) 
-      isTiled=true;
+      isTiled=True;
     else 
-      isTiled=false;
+      isTiled=False;
     
     sumWeight.resize(npol, nchan);
     sumCFWeight.resize(npol, nchan);
@@ -514,7 +513,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 #endif
     //    vpSJ->reset();
     paChangeDetector.reset();
-    makingPSF = false;
+    makingPSF = False;
     
     //cerr << "Current runTime = " << runTime << endl;
   }
@@ -878,7 +877,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  outBuf(plane1) = real(outBuf(ndx));
 	}
 
-    pbNormalized_p = true;
+    pbNormalized_p = True;
   }
   //
   //---------------------------------------------------------------
@@ -892,7 +891,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     isRefF=avgPB_p->get(avgPBBuf);
     //    Float pbMax = max(avgPBBuf);
       {
-	pbPeaks.resize(avgPB_p->shape()(2),true);
+	pbPeaks.resize(avgPB_p->shape()(2),True);
 	// if (makingPSF) pbPeaks = 1.0;
 	// else pbPeaks /= (Float)noOfPASteps;
 	pbPeaks = 1.0;
@@ -943,7 +942,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      avgPBBuf(plane1) = avgPBBuf(ndx);
 	    }
       }
-      pbNormalized_p = true;
+      pbNormalized_p = True;
   }
   //
   //---------------------------------------------------------------
@@ -1062,17 +1061,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     ant2List = cfs.getAnt2List();
     paList   = cfs.getPAList();
 
-    if (paNdxProcessed_p.nelements() == 0) {paNdxProcessed_p.resize(1); paNdxProcessed_p[0]=false;}
+    if (paNdxProcessed_p.nelements() == 0) {paNdxProcessed_p.resize(1); paNdxProcessed_p[0]=False;}
     CountedPtr<CFBuffer> cfb_l, cfb_clone;
     Quantity dPA(360.0,"deg");
     for (uInt pa=0;pa<paList.nelements();pa++)
       for (uint a1=0;a1<ant1List.nelements(); a1++)
 	for (uint a2=0;a2<ant2List.nelements(); a2++)
 	  {
-	    if (paNdxProcessed_p.nelements() < pa) {paNdxProcessed_p.resize(pa+1,true); paNdxProcessed_p[pa]=false;}
+	    if (paNdxProcessed_p.nelements() < pa) {paNdxProcessed_p.resize(pa+1,True); paNdxProcessed_p[pa]=False;}
 	    if (!paNdxProcessed_p[pa])
 	      {
-		paNdxProcessed_p[pa]=true;
+		paNdxProcessed_p[pa]=True;
 		Vector<Double> wVals, fVals; PolMapType mVals, mNdx, conjMVals, conjMNdx;
 		Double fIncr, wIncr;
 		cfb_l = cfs.getCFBuffer(paList[pa], dPA, ant1List(a1), ant2List(a2));
@@ -1187,7 +1186,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	//cerr << "Freq. selection: " << expandedSpwFreqSel_p << endl << expandedSpwConjFreqSel_p << endl;
 
 
-	// isDryRun = true;
+	// isDryRun = True;
 	Bool pleaseDoAlsoFillTheCF=!dryRun();
 	convFuncCtor_p->makeConvFunction(image,vb,wConvSize, 
 					 pop_p, pa, dPA, uvScale, uvOffset,spwFreqSel_p,
@@ -1278,7 +1277,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   // The functional goals here are:
   //
-  //  1. If doPBCorrection==true (i.e. the input sky-image is flat-sky
+  //  1. If doPBCorrection==True (i.e. the input sky-image is flat-sky
   //  image), divide the image by the PB
   //
   //  2. Convert from Stokes to Feed (correlation) frame
@@ -1336,13 +1335,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// Divide by avgPB ///// PBWeight
 	//
 	//normalizeImage( *(modelImageVec[0]) , weightsVec[0],  *(weightImageVec[0]), 
-	//		false, (Float)pbLimit_p, (Int)1);
+	//		False, (Float)pbLimit_p, (Int)1);
 
 	//
 	// Divide by sqrt(avgPB) ////// PBSQWeight
 	//
 	 normalizeImage( *(modelImageVec[0]) , weightsVec[0],  *(weightImageVec[0]), 
-	 		false, (Float)pbLimit_p, (Int)4);
+	 		False, (Float)pbLimit_p, (Int)4);
       }
     log_p << "Total flux in model image (after avgPB normalization): " 
 	  << sum((*(modelImageVec[0])).get()) << LogIO::POST;
@@ -1358,10 +1357,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // No local implementation -- call FTMachine version
     if(doPBCorrection)
       // Multiply by avgPB ///////  PBWeight
-      //normalizeImage( *(modelImageVec[0]) , weightsVec[0], *(weightImageVec[0]) , false, (Float)pbLimit_p, (Int)3);
+      //normalizeImage( *(modelImageVec[0]) , weightsVec[0], *(weightImageVec[0]) , False, (Float)pbLimit_p, (Int)3);
       
       // Multiply by sqrt(avgPB) ///// PBSQWeight
-      normalizeImage( *(modelImageVec[0]) , weightsVec[0], *(weightImageVec[0]) , false, (Float)pbLimit_p, (Int)5);
+      normalizeImage( *(modelImageVec[0]) , weightsVec[0], *(weightImageVec[0]) , False, (Float)pbLimit_p, (Int)5);
   }
   //
   //------------------------------------------------------------------------------
@@ -1375,7 +1374,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     ok();
     
     init();
-    makingPSF = false;
+    makingPSF = False;
     initMaps(vb);
     //visResampler_p->setMaps(chanMap, polMap);
     
@@ -1396,17 +1395,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     npol  = image->shape()(2);
     nchan = image->shape()(3);
     
-    if(image->shape().product()>cachesize) isTiled=true;
-    else isTiled=false;
+    if(image->shape().product()>cachesize) isTiled=True;
+    else isTiled=False;
     //
     // If we are memory-based then read the image in and create an
     // ArrayLattice otherwise just use the PagedImage
     //
 
-    isTiled=false;
+    isTiled=False;
 
     if(isTiled){
-    	lattice=CountedPtr<Lattice<Complex> > (image, false);
+    	lattice=CountedPtr<Lattice<Complex> > (image, False);
     }
     else 
       {
@@ -1569,8 +1568,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     npol  = image->shape()(2);
     nchan = image->shape()(3);
     
-    if(image->shape().product()>cachesize) isTiled=true;
-    else                                   isTiled=false;
+    if(image->shape().product()>cachesize) isTiled=True;
+    else                                   isTiled=False;
     
     sumWeight=0.0;
     sumCFWeight = 0.0;
@@ -1585,7 +1584,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	imageCache->flush();
 	image->set(Complex(0.0));
-	lattice=CountedPtr<Lattice<Complex> > (image, false);
+	lattice=CountedPtr<Lattice<Complex> > (image, False);
       }
     else 
       {
@@ -1689,7 +1688,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     interpolateFrequencyTogrid(vb, *imagingweight,data, flags, elWeight, type);
 
     Int NAnt;
-    if (doPointing) NAnt = findPointingOffsets(vb,l_offsets,m_offsets,true);
+    if (doPointing) NAnt = findPointingOffsets(vb,l_offsets,m_offsets,True);
     NAnt=NAnt;  // Dummy statement to supress complier warnings and will be used when pointing offsets are used.
     //
     // If row is -1 then we pass through all rows
@@ -1725,7 +1724,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	uvw(2,i)=vb.uvw()(i)(2);
       }
     
-    doUVWRotation_p=true;
+    doUVWRotation_p=True;
     rotateUVW(uvw, dphase, vb);
     refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
     
@@ -1813,7 +1812,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     Nant_p     = vb.msColumns().antenna().nrow();
     Int NAnt=0;
-    if (doPointing)   NAnt = findPointingOffsets(vb,l_offsets,m_offsets,true);
+    if (doPointing)   NAnt = findPointingOffsets(vb,l_offsets,m_offsets,True);
     NAnt=NAnt;  // Dummy statement to supress complier warnings and will be used when pointing offsets are used.
     
     // Get the uvws in a form that Fortran can use
@@ -1828,7 +1827,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	uvw(2,i)=vb.uvw()(i)(2);
       }
 
-    doUVWRotation_p=true;
+    doUVWRotation_p=True;
     rotateUVW(uvw, dphase, vb);
     refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
     
@@ -1856,7 +1855,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     // Cube<Int> flags(vb.flagCube().shape());
     // flags=0;
-    // flags(vb.flagCube())=true;
+    // flags(vb.flagCube())=True;
 
     Cube<Complex> data;
     Cube<Int> flags;
@@ -1864,7 +1863,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     VBStore vbs;
     //    setupVBStore(vbs,vb, vb.imagingWeight(),vb.modelVisCube(),uvw,flags, dphase, dopsf);
-    Bool tmpDoPSF=false;
+    Bool tmpDoPSF=False;
 
     setupVBStore(vbs,vb, vb.imagingWeight(),data,uvw,flags, dphase,tmpDoPSF,griddedData.shape().asVector());
 
@@ -1937,7 +1936,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if (useDoubleGrid_p)
 	  {
 	    ArrayLattice<DComplex> darrayLattice(griddedData2);
-	    LatticeFFT::cfft2d(darrayLattice,false);
+	    LatticeFFT::cfft2d(darrayLattice,False);
 	    griddedData.resize(griddedData2.shape());
 	    convertArray(griddedData, griddedData2);
 	    SynthesisUtilMethods::getResource("mem peak in getImage");
@@ -1953,7 +1952,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    //cerr << "##### " << griddedData2.shape() << endl;
 	    //if (!makingPSF) storeArrayAsImage(String("cgrid_awp.im"), image->coordinates(), griddedData);
 	    lattice=arrayLattice;
-	    LatticeFFT::cfft2d(*lattice,false);
+	    LatticeFFT::cfft2d(*lattice,False);
 	  }
 	const IPosition latticeShape = lattice->shape();
 	//
@@ -2073,7 +2072,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO log_l(LogOrigin("AWProjectFT", "toRecord[R&D]"));
     
     // Save the current AWProjectFT object to an output state record
-    Bool retval = true;
+    Bool retval = True;
     Double cacheVal=(Double) cachesize;
     outRec.define("cache", cacheVal);
     outRec.define("tile", tilesize);
@@ -2122,7 +2121,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO log_l(LogOrigin("AWProjectFT", "fromRecord[R&D]"));
 
-    Bool retval = true;
+    Bool retval = True;
     imageCache=0; lattice=0; arrayLattice=0;
     Double cacheVal;
     inRec.get("cache", cacheVal);
@@ -2140,7 +2139,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     mTangent_p=phasecenter;
     // This should be passed down too but the tangent plane is 
     // expected to be specified in all meaningful cases.
-    tangentSpecified_p=true;  
+    tangentSpecified_p=True;  
     Vector<Double> dirValue(3);
     String dirUnit;
     inRec.get("dirvalue", dirValue);
@@ -2174,7 +2173,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	init(); 
 	
 	if(isTiled) 
-    	  lattice=CountedPtr<Lattice<Complex> > (image, false);
+    	  lattice=CountedPtr<Lattice<Complex> > (image, False);
 	else 
 	  {
 	    //
@@ -2251,7 +2250,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	for (vi.origin(); vi.more(); vi++) 
 	  {
-	    if (type==FTMachine::PSF) makingPSF=true;
+	    if (type==FTMachine::PSF) makingPSF=True;
 	    findConvFunction(theImage,vb);
 	    
 	    switch(type) 
@@ -2259,31 +2258,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      case FTMachine::RESIDUAL:
 		vb.visCube()=vb.correctedVisCube();
 		vb.visCube()-=vb.modelVisCube();
-		put(vb, -1, false);
+		put(vb, -1, False);
 		break;
 	      case FTMachine::MODEL:
 		vb.visCube()=vb.modelVisCube();
-		put(vb, -1, false);
+		put(vb, -1, False);
 		break;
 	      case FTMachine::CORRECTED:
 		vb.visCube()=vb.correctedVisCube();
-		put(vb, -1, false);
+		put(vb, -1, False);
 		break;
 	      case FTMachine::PSF:
 		vb.visCube()=Complex(1.0,0.0);
-		makingPSF = true;
-		put(vb, -1, true);
+		makingPSF = True;
+		put(vb, -1, True);
 		break;
 	      case FTMachine::OBSERVED:
 	      default:
-		put(vb, -1, false);
+		put(vb, -1, False);
 		break;
 	      }
 	  }
       }
     finalizeToSky();
     // Normalize by dividing out weights, etc.
-    getImage(weight, true);
+    getImage(weight, True);
   }
   //
   //-------------------------------------------------------------------------
@@ -2296,12 +2295,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Quantity tmp(abs(paIncrement.getValue("deg")), "deg");
     // if (paIncrement.getValue("rad") < 0)
     //   {
-    // 	rotateApertureOTF_p = false;
+    // 	rotateApertureOTF_p = False;
     // 	convFuncCtor_p->setRotateCF(tmp.getValue("rad"), rotateApertureOTF_p);
     //   }
     // else
     //   {
-    // 	rotateApertureOTF_p = true;
+    // 	rotateApertureOTF_p = True;
     // 	convFuncCtor_p->setRotateCF(360.0*M_PI/180.0, rotateApertureOTF_p);
     //   }
 	
@@ -2328,9 +2327,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	log_l << "Sky and/or polarization shape of the avgPB and the sky model do not match."
 	      << LogIO::EXCEPTION;
-	return false;
+	return False;
       }
-    return true;
+    return True;
     
   }
   //
@@ -2409,13 +2408,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     vbs.rowFlag_p.reference(vb.flagRow());
     if(!usezero_p) 
       for (Int rownr=0; rownr<vbs.nRow_p; rownr++) 
-	if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) vbs.rowFlag_p(rownr)=true;
+	if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) vbs.rowFlag_p(rownr)=True;
 
     // Really nice way of converting a Cube<Int> to Cube<Bool>.
     // However the VBS objects should ultimately be references
     // directly to bool cubes.
-    //  vbs.rowFlag.resize(rowFlags.shape());  vbs.rowFlag  = false; vbs.rowFlag(rowFlags) = true;
-    vbs.flagCube_p.resize(flagCube.shape());  vbs.flagCube_p = false; vbs.flagCube_p(flagCube!=0) = true;
+    //  vbs.rowFlag.resize(rowFlags.shape());  vbs.rowFlag  = False; vbs.rowFlag(rowFlags) = True;
+    vbs.flagCube_p.resize(flagCube.shape());  vbs.flagCube_p = False; vbs.flagCube_p(flagCube!=0) = True;
     vbs.conjBeams_p=conjBeams_p;
 
     timer_p.mark();
@@ -2494,7 +2493,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int NAnt=0;
     Nant_p     = vb.msColumns().antenna().nrow();
     if (doPointing)   
-      NAnt = findPointingOffsets(vb,l_offsets,m_offsets,false);
+      NAnt = findPointingOffsets(vb,l_offsets,m_offsets,False);
 
     l_offsets=l_off;
     m_offsets=m_off;
@@ -2509,7 +2508,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	uvw(2,i)=vb.uvw()(i)(2);
       }
     
-    doUVWRotation_p=true;
+    doUVWRotation_p=True;
     rotateUVW(uvw, dphase, vb);
     refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
     
@@ -2518,7 +2517,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     Cube<Int> flags(vb.flagCube().shape());
     flags=0;
-    flags(vb.flagCube())=true;
+    flags(vb.flagCube())=True;
     
     //Check if ms has changed then cache new spw and chan selection
     if(vb.newMS())
@@ -2538,7 +2537,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     Vector<Int> rowFlags(vb.nRow());
     rowFlags=0;
-    rowFlags(vb.flagRow())=true;
+    rowFlags(vb.flagRow())=True;
     if(!usezero_p) 
       for (Int rownr=startRow; rownr<=endRow; rownr++) 
 	if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) rowFlags(rownr)=1;
@@ -2588,7 +2587,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      {
 		
 		// Get the tile
-		Array<Complex>* dataPtr=getDataPointer(centerLoc2D, true);
+		Array<Complex>* dataPtr=getDataPointer(centerLoc2D, True);
 		gridder->setOffset(IPosition(2, offsetLoc(0), offsetLoc(1)));
 		Int aNx=dataPtr->shape()(0);
 		Int aNy=dataPtr->shape()(1);
@@ -2670,7 +2669,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Nant_p     = vb.msColumns().antenna().nrow();
     Int NAnt=0;
     if (doPointing)   
-      NAnt = findPointingOffsets(vb,pointingOffsets,l_offsets,m_offsets,false);
+      NAnt = findPointingOffsets(vb,pointingOffsets,l_offsets,m_offsets,False);
 
     Matrix<Double> uvw(3, vb.uvw().nelements());
     uvw=0.0;
@@ -2683,7 +2682,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	uvw(2,i)=vb.uvw()(i)(2);
       }
     
-    doUVWRotation_p=true;
+    doUVWRotation_p=True;
     rotateUVW(uvw, dphase, vb);
     refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
     
@@ -2693,7 +2692,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     Cube<Int> flags(vb.flagCube().shape());
     flags=0;
-    flags(vb.flagCube())=true;
+    flags(vb.flagCube())=True;
     //    
     //Check if ms has changed then cache new spw and chan selection
     //
@@ -2713,14 +2712,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     Vector<Int> rowFlags(vb.nRow());
     rowFlags=0;
-    rowFlags(vb.flagRow())=true;
+    rowFlags(vb.flagRow())=True;
     if(!usezero_p) 
       for (Int rownr=startRow; rownr<=endRow; rownr++) 
 	if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) rowFlags(rownr)=1;
 	
     for (Int rownr=startRow; rownr<=endRow; rownr++) 
       if (vb.antenna1()(rownr) != vb.antenna2()(rownr)) 
-	rowFlags(rownr) = (vb.flagRow()(rownr)==true);
+	rowFlags(rownr) = (vb.flagRow()(rownr)==True);
     
     IPosition s,gradS;
     Cube<Complex> visdata,gradVisAzData,gradVisElData;
@@ -2779,7 +2778,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      {
 		
 		// Get the tile
-		Array<Complex>* dataPtr=getDataPointer(centerLoc2D, true);
+		Array<Complex>* dataPtr=getDataPointer(centerLoc2D, True);
 		gridder->setOffset(IPosition(2, offsetLoc(0), offsetLoc(1)));
 		Int aNx=dataPtr->shape()(0);
 		Int aNy=dataPtr->shape()(1);
@@ -2860,7 +2859,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int NAnt=0;
     
     if (doPointing) 
-      NAnt = findPointingOffsets(vb,l_offsets, m_offsets,true);
+      NAnt = findPointingOffsets(vb,l_offsets, m_offsets,True);
     
     
     //  
@@ -2879,7 +2878,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	uvw(2,i)=vb.uvw()(i)(2);
       }
     
-    doUVWRotation_p=true;
+    doUVWRotation_p=True;
     rotateUVW(uvw, dphase, vb);
     refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
     
@@ -2888,7 +2887,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     Cube<Int> flags(vb.flagCube().shape());
     flags=0;
-    flags(vb.flagCube())=true;
+    flags(vb.flagCube())=True;
     
     //Check if ms has changed then cache new spw and chan selection
     if(vb.newMS())
@@ -2905,7 +2904,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     Vector<Int> rowFlags(vb.nRow());
     rowFlags=0;
-    rowFlags(vb.flagRow())=true;
+    rowFlags(vb.flagRow())=True;
     if(!usezero_p) 
       for (Int rownr=startRow; rownr<=endRow; rownr++) 
 	if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) rowFlags(rownr)=1;
@@ -3083,8 +3082,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //   LatticeIterator<Complex> lix(skyImage, lsx);
     
   //   LatticeStepper lavgpb(sensitivityImage.shape(),cursorShape,axisPath);
-  //   // Array<Float> senArray;sensitivityImage.get(senArray,true);
-  //   // ArrayLattice<Float> senLat(senArray,true);
+  //   // Array<Float> senArray;sensitivityImage.get(senArray,True);
+  //   // ArrayLattice<Float> senLat(senArray,True);
   //   //    LatticeIterator<Float> liavgpb(senLat, lavgpb);
   //   LatticeIterator<Float> liavgpb(sensitivityImage, lavgpb);
 

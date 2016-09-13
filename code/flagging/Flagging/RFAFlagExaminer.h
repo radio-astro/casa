@@ -53,7 +53,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <synopsis>
 // RFAFlagExaminer accepts a whole bunch of options to select a subset of the
-// casacore::MS (by time, antenna, baseline, channel/frequency, etc.), and to flag/unflag 
+// MS (by time, antenna, baseline, channel/frequency, etc.), and to flag/unflag 
 // the whole selection, or specific parts of it (autocorrelations, specific 
 // time slots, VLA quacks, etc.)
 // </synopsis>
@@ -68,12 +68,12 @@ class RFAFlagExaminer : public RFASelector
 {
 public:
 // constructor. 
-  RFAFlagExaminer ( RFChunkStats &ch,const casacore::RecordInterface &parm ); 
+  RFAFlagExaminer ( RFChunkStats &ch,const RecordInterface &parm ); 
   virtual ~RFAFlagExaminer ();
   
-  virtual void iterFlag( casacore::uInt it );
-  virtual IterMode iterRow( casacore::uInt irow );
-  virtual casacore::Bool newChunk(casacore::Int &maxmem);
+  virtual void iterFlag( uInt it );
+  virtual IterMode iterRow( uInt irow );
+  virtual Bool newChunk(Int &maxmem);
   virtual void endChunk();
 
 
@@ -82,28 +82,28 @@ public:
   virtual void endFlag();
   virtual void finalize();
   virtual void initialize();
-  virtual void initializeIter(casacore::uInt it);
-  virtual void finalizeIter(casacore::uInt it);
-  virtual casacore::String getID() {return casacore::String("FlagExaminer");};
+  virtual void initializeIter(uInt it);
+  virtual void finalizeIter(uInt it);
+  virtual String getID() {return String("FlagExaminer");};
 
-  virtual casacore::Record getResult();
+  virtual Record getResult();
 
-//  virtual casacore::String getDesc ();
-//  static const casacore::RecordInterface & getDefaults ();
+//  virtual String getDesc ();
+//  static const RecordInterface & getDefaults ();
 
 private:
-    void processRow  ( casacore::uInt ifr,casacore::uInt it ) ;
-    casacore::uInt64 totalflags,totalcount;
-    casacore::uInt64 totalrowflags,totalrowcount;
+    void processRow  ( uInt ifr,uInt it ) ;
+    uInt64 totalflags,totalcount;
+    uInt64 totalrowflags,totalrowcount;
 
     // accumulated over all chunks
-    casacore::uInt64 
+    uInt64 
       accumTotalFlags, accumTotalCount, accumRowFlags, 
       accumTotalRowCount, accumTotalRowFlags;
 
     // per chunk
-    casacore::uInt64 inTotalFlags, inTotalCount, inTotalRowFlags, inTotalRowCount;
-    casacore::uInt64 outTotalFlags, outTotalCount, outTotalRowFlags, outTotalRowCount;
+    uInt64 inTotalFlags, inTotalCount, inTotalRowFlags, inTotalRowCount;
+    uInt64 outTotalFlags, outTotalCount, outTotalRowFlags, outTotalRowCount;
     
     // Statistics per antenna, baseline, spw, etc.
     // These maps of maps is used e.g. like:
@@ -112,13 +112,13 @@ private:
     //        accumflags["spw"     ]["0"   ] == 17
     //
     // which means that there were 42 flags on baseline 2 - 7, etc.
-    std::map<std::string, std::map<std::string, casacore::uInt64> > accumflags;
-    std::map<std::string, std::map<std::string, casacore::uInt64> > accumtotal;
+    std::map<std::string, std::map<std::string, uInt64> > accumflags;
+    std::map<std::string, std::map<std::string, uInt64> > accumtotal;
     
-    std::vector<casacore::uInt64> accumflags_channel;
-    std::vector<casacore::uInt64> accumtotal_channel;
-    std::vector<casacore::uInt64> accumflags_correlation;
-    std::vector<casacore::uInt64> accumtotal_correlation;
+    std::vector<uInt64> accumflags_channel;
+    std::vector<uInt64> accumtotal_channel;
+    std::vector<uInt64> accumflags_correlation;
+    std::vector<uInt64> accumtotal_correlation;
 
 };
 

@@ -87,84 +87,84 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     // Construct from a specified table name, calibration table descriptor 
     // and table access option. Used for creating new tables.
-    CalTable2(const casacore::String& tableName, CalTableDesc2& ctableDesc,
-	      casacore::Table::TableOption access = casacore::Table::New);
+    CalTable2(const String& tableName, CalTableDesc2& ctableDesc,
+	      Table::TableOption access = Table::New);
     
     // Construct from a specified table name, and access option. Used
     // for accessing existing tables.
-    CalTable2(const casacore::String& tableName, casacore::Table::TableOption access = casacore::Table::Old);
+    CalTable2(const String& tableName, Table::TableOption access = Table::Old);
     
     // Construct from an existing table object
-    CalTable2(const casacore::Table& table);
+    CalTable2(const Table& table);
     
     // Copy constructor
     CalTable2(const CalTable2& other);
     
     //
-    casacore::Int parType() {return parType_;};
+    Int parType() {return parType_;};
     // Assignment operator
     CalTable2& operator= (const CalTable2& other);
     
-    // casacore::Sort (cal_main)
-    CalTable2 sort (const casacore::Block <casacore::String>& columnNames, 
-		    casacore::Sort::Order order = casacore::Sort::Ascending,
-		    casacore::Sort::Option option = casacore::Sort::HeapSort); 
+    // Sort (cal_main)
+    CalTable2 sort (const Block <String>& columnNames, 
+		    Sort::Order order = Sort::Ascending,
+		    Sort::Option option = Sort::HeapSort); 
     
-    // casacore::Sort (cal_main) IN PLACE
-    void sort2 (const casacore::Block <casacore::String>& columnNames, 
-		casacore::Sort::Order order = casacore::Sort::Ascending,
-		casacore::Sort::Option option = casacore::Sort::HeapSort); 
+    // Sort (cal_main) IN PLACE
+    void sort2 (const Block <String>& columnNames, 
+		Sort::Order order = Sort::Ascending,
+		Sort::Option option = Sort::HeapSort); 
     
     // Apply selection to the calibration table 
-    CalTable2 select (const casacore::String& calSelect);
+    CalTable2 select (const String& calSelect);
     
     // Apply selection to the calibration table  IN PLACE
-    void select2 (const casacore::String& calSelect);
+    void select2 (const String& calSelect);
     
     // Return number of rows in cal_main, cal_desc or cal_history
-    casacore::Int nRowMain() const;
-    casacore::Int nRowDesc() const;
-    casacore::Int nRowHistory() const;
+    Int nRowMain() const;
+    Int nRowDesc() const;
+    Int nRowHistory() const;
     
     // Add rows to cal_main, cal_desc or cal_history
-    void addRowMain (casacore::uInt nrrow = 1, casacore::Bool initialize = false) 
+    void addRowMain (uInt nrrow = 1, Bool initialize = False) 
     {itsMainTable->addRow(nrrow, initialize);};
-    void addRowDesc (casacore::uInt nrrow = 1, casacore::Bool initialize = false)
+    void addRowDesc (uInt nrrow = 1, Bool initialize = False)
     {itsDescTable->addRow(nrrow, initialize);};
-    void addRowHistory (casacore::uInt nrrow = 1, casacore::Bool initialize = false)
+    void addRowHistory (uInt nrrow = 1, Bool initialize = False)
     {itsHistoryTable->addRow(nrrow, initialize);};
     
     // Get a row from cal_main, cal_desc or cal_history
-    casacore::Record getRowMain (const casacore::Int& jrow);
-    casacore::Record getRowDesc (const casacore::Int& jrow);
-    casacore::Record getRowHistory (const casacore::Int& jrow);
+    Record getRowMain (const Int& jrow);
+    Record getRowDesc (const Int& jrow);
+    Record getRowHistory (const Int& jrow);
     
     // Put a row to cal_main, cal_desc or cal_history
-    void putRowMain (const casacore::Int& jrow, CalMainRecord& tableRec);
-    void putRowDesc (const casacore::Int& jrow, CalDescRecord& tableRec);
-    void putRowHistory (const casacore::Int& jrow, CalHistoryRecord& tableRec);
+    void putRowMain (const Int& jrow, CalMainRecord& tableRec);
+    void putRowDesc (const Int& jrow, CalDescRecord& tableRec);
+    void putRowHistory (const Int& jrow, CalHistoryRecord& tableRec);
     
     // Return the maximum antenna number in the table
-    virtual casacore::Int maxAntenna();
+    virtual Int maxAntenna();
     
     // Return the number of unique time slots in the table
-    casacore::Int numberTimeSlots (const casacore::Double& fracError);
+    Int numberTimeSlots (const Double& fracError);
     
     // Create a new table
-    void createCalTable(const casacore::String& tableName, CalTableDesc2& ctableDesc,
-			casacore::Table::TableOption access = casacore::Table::New);
+    void createCalTable(const String& tableName, CalTableDesc2& ctableDesc,
+			Table::TableOption access = Table::New);
     
     // Open an existing table
-    void openCalTable(const casacore::String& tableName, 
-		      casacore::Table::TableOption access = casacore::Table::Old);
+    void openCalTable(const String& tableName, 
+		      Table::TableOption access = Table::Old);
     
-    // Return cal_main and sub-tables as casacore::Table references
-    casacore::Table& calMainAsTable() {return *itsMainTable;};
-    casacore::Table& calDescAsTable() {return *itsDescTable;};
-    casacore::Table& calHistoryAsTable() {return *itsHistoryTable;};
-    const casacore::Table& calMainAsTable() const {return *itsMainTable;};
-    const casacore::Table& calDescAsTable() const {return *itsDescTable;};
-    const casacore::Table& calHistoryAsTable() const {return *itsHistoryTable;};
+    // Return cal_main and sub-tables as Table references
+    Table& calMainAsTable() {return *itsMainTable;};
+    Table& calDescAsTable() {return *itsDescTable;};
+    Table& calHistoryAsTable() {return *itsHistoryTable;};
+    const Table& calMainAsTable() const {return *itsMainTable;};
+    const Table& calDescAsTable() const {return *itsDescTable;};
+    const Table& calHistoryAsTable() const {return *itsHistoryTable;};
   protected:
     
     // Friend class access from the ROCalMainColumns, ROCalDescColumns
@@ -177,13 +177,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     friend class CalHistoryColumns;
     
   private:
-    // Pointer to underlying cal_main casacore::Table object
-    casacore::Table* itsMainTable;
+    // Pointer to underlying cal_main Table object
+    Table* itsMainTable;
     
     // Pointers to the cal_desc and cal_history sub-tables
-    casacore::Table* itsDescTable;
-    casacore::Table* itsHistoryTable;
-    casacore::Int parType_;
+    Table* itsDescTable;
+    Table* itsHistoryTable;
+    Int parType_;
   };
 
 } //# NAMESPACE CASA - END

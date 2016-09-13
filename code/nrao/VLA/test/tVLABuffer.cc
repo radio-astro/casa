@@ -69,7 +69,7 @@ int main(int argc, char* argv[]) {
 	AlwaysAssert(fileName.isValid(), AipsError);
 	file = File(fileName);
 	AlwaysAssert(file.exists(), AipsError);
-	DebugAssert(file.isSymLink() == false, AipsError);
+	DebugAssert(file.isSymLink() == False, AipsError);
       }      
       if (file.isRegular()) {
  	buffer = VLABuffer(new VLADiskInput(fileName), projectName);

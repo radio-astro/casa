@@ -44,7 +44,6 @@
 
 
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
@@ -83,7 +82,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		dataDisplaysAs_[LEL] = dstypes;		// lel displaytypes
 
-		dstypes.resize(1, true);
+		dstypes.resize(1, True);
 		dataDisplaysAs_[MEASUREMENT_SET] = dstypes;	// ms displaytypes
 
 		dstypes[0] = SKY_CAT;
@@ -133,18 +132,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		//
 		// If the dp's window (i.e. the QDPGui) is iconified or the user changes
 		// 'virtual desktops', the qdp _does_ receive a QHideEvent, triggering
-		// this routine, but qdp->isVisible() _will remain true_ (see isVisible()
+		// this routine, but qdp->isVisible() _will remain True_ (see isVisible()
 		// doc).  This is somewhat counterintuitive, but useful.  In this context,
 		// dpHidden_ (hideEvent received) with !qdp->isVisible() indicates that a
 		// qdp's window has been _closed_ (not just minimized, or otherwise
 		// obscured).
 		//
 		// NB:  There is no closeEvent per se.  A hideEvent where isVisible()
-		// is false is probably the closest thing there is to a 'closeEvent',
+		// is False is probably the closest thing there is to a 'closeEvent',
 		// although it can also occur if the widget or parent is hidden
 		// programmatically (i.e., this will probably all break the minute
 		// someone wants to explicitly hide() a QDP, without 'closing' it....
-		// Also note: qdp->isVisible() is false just after construction,
+		// Also note: qdp->isVisible() is False just after construction,
 		// until qdp (or its parent window) is 'shown'.).
 		//
 		// Also note that we test !qdp->isVisible(), not dp->isHidden(); they
@@ -374,16 +373,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		QFile fl(filename.chars());
 		QFileInfo fi(filename.chars());
-		if(!fl.exists() || !fi.isFile()) return false;
+		if(!fl.exists() || !fi.isFile()) return False;
 
-		if(!fl.open(QIODevice::ReadOnly | QIODevice::Text)) return false;
+		if(!fl.open(QIODevice::ReadOnly | QIODevice::Text)) return False;
 
-		if(!restoredoc.setContent(&fl)) return false;
+		if(!restoredoc.setContent(&fl)) return False;
 
 		QDomElement restoreElem = restoredoc.firstChildElement(cvRestoreID.chars());
-		if(restoreElem.isNull()) return false;
+		if(restoreElem.isNull()) return False;
 
-		return true;
+		return True;
 	}
 
 
@@ -394,12 +393,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// (If so, contents are set onto restoredoc).
 
 		QtXmlRecord xr;
-		if(!restoredoc.setContent(QString(xmlState.chars()))) return false;
+		if(!restoredoc.setContent(QString(xmlState.chars()))) return False;
 
 		QDomElement restoreElem = restoredoc.firstChildElement(cvRestoreID.chars());
-		if(restoreElem.isNull()) return false;
+		if(restoreElem.isNull()) return False;
 
-		return true;
+		return True;
 	}
 
 
@@ -430,10 +429,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	Vector<Float> QtViewerBase::toVectorF(String values, Bool* ok) {
-		// (If supplied, ok will return true iff values is a set of numeric values
+		// (If supplied, ok will return True iff values is a set of numeric values
 		// (only), separated by (arbitrary) strings of the characters ", []").
 
-		Bool oK = true;
+		Bool oK = True;
 		Vector<Float> vs;
 
 		QRegExp rx("[,\\s\\[\\]]");
@@ -443,7 +442,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Int sz = vals.size();
 		vs.resize(sz);
 		for(Int i=0; i<sz; i++) {
-			Bool valid = true;
+			Bool valid = True;
 			vs[i] = vals.at(i).toFloat(&valid);
 			oK = oK && valid;
 		}	// Check that each value is numeric.
@@ -457,7 +456,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	Vector<Double> QtViewerBase::toVectorD(String values, Bool* ok) {
 
-		Bool oK = true;
+		Bool oK = True;
 		Vector<Double> vs;
 
 		QRegExp rx("[,\\s\\[\\]]");
@@ -467,7 +466,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Int sz = vals.size();
 		vs.resize(sz);
 		for(Int i=0; i<sz; i++) {
-			Bool valid = true;
+			Bool valid = True;
 			vs[i] = vals.at(i).toDouble(&valid);
 			oK = oK && valid;
 		}
@@ -482,7 +481,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	Bool QtViewerBase::dataDisplaysAs(String datatype, String& displaytype) {
-		// Returns true iff datatype is a vaild viewer datatype and
+		// Returns True iff datatype is a vaild viewer datatype and
 		// displaytype is valid for the datatype.  If the former is true
 		// but the latter isn't, displaytype is [re]set to the default
 		// displaytype for the datatype.  (You can pass "" in for displaytype
@@ -495,16 +494,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 				for(Int dst=0; dst<ndst; dst++) {
 
-					if(displaytypeNames_[dstypes[dst]]==displaytype)  return true;
+					if(displaytypeNames_[dstypes[dst]]==displaytype)  return True;
 				}
 
 				displaytype = displaytypeNames_[dstypes[0]];
 				// displaytype was not valid for the datatype.
 				// insert default display type into displaytype.
-				return false;
+				return False;
 			}
 
-		return false;
+		return False;
 	}
 
 

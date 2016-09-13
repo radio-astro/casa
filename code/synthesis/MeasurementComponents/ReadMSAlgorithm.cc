@@ -23,7 +23,6 @@
 #include <synthesis/MeasurementComponents/ReadMSAlgorithm.h>
 #include <casa/OS/Time.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 ReadMSAlgorithm::ReadMSAlgorithm() : msid(0), myName("Test Parallel Read")

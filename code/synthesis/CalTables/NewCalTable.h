@@ -90,23 +90,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 // Typedefs for subtable objects
-typedef casacore::MSField CTField;
-typedef casacore::MSObservation CTObservation;
-typedef casacore::MSAntenna CTAntenna;
-typedef casacore::MSSpectralWindow CTSpectralWindow;
-typedef casacore::MSHistory CTHistory;
-typedef casacore::MSFieldColumns CTFieldColumns;
-typedef casacore::MSObservationColumns CTObservationColumns;
-typedef casacore::MSAntennaColumns CTAntennaColumns;
-typedef casacore::MSSpWindowColumns CTSpWindowColumns;
-typedef casacore::MSHistoryColumns CTHistoryColumns;
-typedef casacore::ROMSFieldColumns ROCTFieldColumns;
-typedef casacore::ROMSObservationColumns ROCTObservationColumns;
-typedef casacore::ROMSAntennaColumns ROCTAntennaColumns;
-typedef casacore::ROMSSpWindowColumns ROCTSpWindowColumns;
-typedef casacore::ROMSHistoryColumns ROCTHistoryColumns;
+typedef MSField CTField;
+typedef MSObservation CTObservation;
+typedef MSAntenna CTAntenna;
+typedef MSSpectralWindow CTSpectralWindow;
+typedef MSHistory CTHistory;
+typedef MSFieldColumns CTFieldColumns;
+typedef MSObservationColumns CTObservationColumns;
+typedef MSAntennaColumns CTAntennaColumns;
+typedef MSSpWindowColumns CTSpWindowColumns;
+typedef MSHistoryColumns CTHistoryColumns;
+typedef ROMSFieldColumns ROCTFieldColumns;
+typedef ROMSObservationColumns ROCTObservationColumns;
+typedef ROMSAntennaColumns ROCTAntennaColumns;
+typedef ROMSSpWindowColumns ROCTSpWindowColumns;
+typedef ROMSHistoryColumns ROCTHistoryColumns;
 
-class NewCalTable : public casacore::Table
+class NewCalTable : public Table
 {
 
   friend class SolvableVisCal;
@@ -118,57 +118,57 @@ class NewCalTable : public casacore::Table
 
    // Construct from a specified table name, calibration table descriptor 
    // and table access option. Used for creating new tables.
-   NewCalTable (const casacore::String& tableName, CTDesc& ctableDesc,
-		casacore::Table::TableOption access = casacore::Table::New, 
-		casacore::Table::TableType ttype = casacore::Table::Plain);
+   NewCalTable (const String& tableName, CTDesc& ctableDesc,
+		Table::TableOption access = Table::New, 
+		Table::TableType ttype = Table::Plain);
 
    // Construct from setupNewTable 
-   NewCalTable (casacore::SetupNewTable& newTab, casacore::uInt nrow = 0, casacore::Bool initialize = false);
+   NewCalTable (SetupNewTable& newTab, uInt nrow = 0, Bool initialize = False);
    
    // Create an empty NewCalTable conveniently
-   NewCalTable(casacore::String tableName,VisCalEnum::VCParType parType,
-	       casacore::String typeName,casacore::String msName,casacore::Bool doSingleChan);
+   NewCalTable(String tableName,VisCalEnum::VCParType parType,
+	       String typeName,String msName,Bool doSingleChan);
 
    // Construct from a specified table name, and access option. Used
    // for accessing existing tables.
-   NewCalTable (const casacore::String& tableName, 
-		casacore::Table::TableOption access = casacore::Table::Old, 
-		casacore::Table::TableType ttype = casacore::Table::Memory);
+   NewCalTable (const String& tableName, 
+		Table::TableOption access = Table::Old, 
+		Table::TableType ttype = Table::Memory);
 
-   static NewCalTable createCT(const casacore::String& tableName, 
-			       casacore::Table::TableOption access, 
-			       casacore::Table::TableType ttype, 
-			       casacore::Bool doBackCompat=true);
+   static NewCalTable createCT(const String& tableName, 
+			       Table::TableOption access, 
+			       Table::TableType ttype, 
+			       Bool doBackCompat=True);
 
-   static NewCalTable* createCTptr(const casacore::String& tableName, 
-				   casacore::Table::TableOption access, 
-				   casacore::Table::TableType ttype, 
-				   casacore::Bool doBackCompat=true);
+   static NewCalTable* createCTptr(const String& tableName, 
+				   Table::TableOption access, 
+				   Table::TableType ttype, 
+				   Bool doBackCompat=True);
 
 
 
    // Construct from an existing table object
-   NewCalTable (const casacore::Table& table);
+   NewCalTable (const Table& table);
 
    // Copy constructor
    NewCalTable (const NewCalTable& other);
 
    // Create a vanilla NewCalTable from shapes (for testing purposes)
    //  Default rTime is 2012/01/06/12:00:00
-   NewCalTable(casacore::String tableName,casacore::String CorF,
-	       casacore::Int nObs=1, casacore::Int nScanPerObs=1,casacore::Int nTimePerScan=1,
-	       casacore::Int nAnt=1, casacore::Int nSpw=1, casacore::Vector<casacore::Int> nChan=casacore::Vector<casacore::Int>(1,1), 
-	       casacore::Int nFld=1, 
-	       casacore::Double rTime=0.0, casacore::Double tint=0.0,
-	       casacore::Bool disk=false, casacore::Bool verbose=false);
+   NewCalTable(String tableName,String CorF,
+	       Int nObs=1, Int nScanPerObs=1,Int nTimePerScan=1,
+	       Int nAnt=1, Int nSpw=1, Vector<Int> nChan=Vector<Int>(1,1), 
+	       Int nFld=1, 
+	       Double rTime=0.0, Double tint=0.0,
+	       Bool disk=False, Bool verbose=False);
 
    // Assignment operator
    NewCalTable& operator= (const NewCalTable& other);
 
    // Handle backward compatibility
-   static casacore::Bool CTBackCompat(const casacore::String& caltable);
+   static Bool CTBackCompat(const String& caltable);
 
-   // Set the casacore::TableInfo record
+   // Set the TableInfo record
    void setTableInfo();
 
    // initialize reference to subtables
@@ -177,31 +177,31 @@ class NewCalTable : public casacore::Table
    void clearSubtables();
 
    void copyMemCalSubtables(const NewCalTable& other);
-   void copyMemCalSubtable(const casacore::Table& otherSubtable, casacore::Table& subTable);
+   void copyMemCalSubtable(const Table& otherSubtable, Table& subTable);
 
-   // casacore::Complex parameters?  (else casacore::Float)
-   casacore::Bool isComplex();
+   // Complex parameters?  (else Float)
+   Bool isComplex();
 
    // Report the polarization basis (from header record)
-   casacore::String polBasis();
+   String polBasis();
 
    // Get a row from cal_main
-   casacore::Record getRowMain (const casacore::Int& jrow);
+   Record getRowMain (const Int& jrow);
     
    // Put a row to cal_main
-   void putRowMain (const casacore::Int& jrow, CTMainRecord& tableRec);
+   void putRowMain (const Int& jrow, CTMainRecord& tableRec);
 
    // Get rows of the data from the main table
    //   void fillRowsMain ();
 
-   // Set Meta data info from a parent casacore::MS 
-   void setMetaInfo (const casacore::String& msName);
+   // Set Meta data info from a parent MS 
+   void setMetaInfo (const String& msName);
 
    //validate input table desc. over required caltable desc
-   static casacore::Bool conformant(const casacore::TableDesc& tabDesc);
+   static Bool conformant(const TableDesc& tabDesc);
 
    // save to disk
-   void writeToDisk(const casacore::String& tableName); 
+   void writeToDisk(const String& tableName); 
 
    CTObservation& observation() {return observation_p;}
    CTAntenna& antenna() {return antenna_p;}
@@ -217,31 +217,31 @@ class NewCalTable : public casacore::Table
    // Provide RO access to 
    //   inline ROCTMainColumns mcols() const {return ROCTMainColumns(*this);};
 
-   static casacore::Complex NCTtestvalueC(casacore::Int iant,casacore::Int ispw,casacore::Double ich,casacore::Double time,casacore::Double refTime,casacore::Double tint);
-   static casacore::Float NCTtestvalueF(casacore::Int iant,casacore::Int ispw,casacore::Double ich,casacore::Double time,casacore::Double refTime,casacore::Double tint);
+   static Complex NCTtestvalueC(Int iant,Int ispw,Double ich,Double time,Double refTime,Double tint);
+   static Float NCTtestvalueF(Int iant,Int ispw,Double ich,Double time,Double refTime,Double tint);
 
    // Fill in antenna-based solutions
    //  (obsId-less version calls obsId-capable version w/ obsId=0)
-   void fillAntBasedMainRows(casacore::uInt nrows, 
-			     casacore::Double time,casacore::Double interval,
-			     casacore::Int fieldId,casacore::uInt spwId,casacore::Int scanNo,
-			     const casacore::Vector<casacore::Int>& ant1list, casacore::Int refant,
-			     const casacore::Cube<casacore::Complex>& cparam,
-			     const casacore::Cube<casacore::Bool>& flag,
-			     const casacore::Cube<casacore::Float>& paramErr,
-			     const casacore::Cube<casacore::Float>& snr);
-   void fillAntBasedMainRows(casacore::uInt nrows, 
-			     casacore::Double time,casacore::Double interval,
-			     casacore::Int fieldId,casacore::uInt spwId,casacore::Int obsId,casacore::Int scanNo,
-			     const casacore::Vector<casacore::Int>& ant1list, casacore::Int refant,
-			     const casacore::Cube<casacore::Complex>& cparam,
-			     const casacore::Cube<casacore::Bool>& flag,
-			     const casacore::Cube<casacore::Float>& paramErr,
-			     const casacore::Cube<casacore::Float>& snr);
+   void fillAntBasedMainRows(uInt nrows, 
+			     Double time,Double interval,
+			     Int fieldId,uInt spwId,Int scanNo,
+			     const Vector<Int>& ant1list, Int refant,
+			     const Cube<Complex>& cparam,
+			     const Cube<Bool>& flag,
+			     const Cube<Float>& paramErr,
+			     const Cube<Float>& snr);
+   void fillAntBasedMainRows(uInt nrows, 
+			     Double time,Double interval,
+			     Int fieldId,uInt spwId,Int obsId,Int scanNo,
+			     const Vector<Int>& ant1list, Int refant,
+			     const Cube<Complex>& cparam,
+			     const Cube<Bool>& flag,
+			     const Cube<Float>& paramErr,
+			     const Cube<Float>& snr);
 
    // Reset spw freq info
-   void setSpwFreqs(casacore::Int spw, const casacore::Vector<casacore::Double>& freq, 
-		    const casacore::Vector<casacore::Double>& chanwidth=casacore::Vector<casacore::Double>());
+   void setSpwFreqs(Int spw, const Vector<Double>& freq, 
+		    const Vector<Double>& chanwidth=Vector<Double>());
 
    // Set FLAG_ROW in SPECTRAL_WINDOW subtable for spws absent in MAIN
    void flagAbsentSpws();
@@ -250,21 +250,21 @@ class NewCalTable : public casacore::Table
    void mergeSpwMetaInfo(const NewCalTable& other);
 
    // Add a line to the HISTORY table
-   void addHistoryMessage(casacore::String app="",casacore::String message="none");
+   void addHistoryMessage(String app="",String message="none");
 
  private:
 
    // Services for generic test table ctor
    //  Default rTime is 2012/01/06/12:00:00
-   void fillGenericContents(casacore::Int nObs=1, casacore::Int nScanPerObs=1, casacore::Int nTimePerScan=1,
-			    casacore::Int nAnt=1, casacore::Int nSpw=1, casacore::Vector<casacore::Int> nChan=casacore::Vector<casacore::Int>(1,1), 
-			    casacore::Int nFld=1, 
-			    casacore::Double rTime=0.0, casacore::Double tint=0.0,
-			    casacore::Bool verbose=false);
-   void fillGenericObs(casacore::Int nObs);
-   void fillGenericField(casacore::Int nFld);
-   void fillGenericAntenna(casacore::Int nAnt);
-   void fillGenericSpw(casacore::Int nSpw,casacore::Vector<casacore::Int>& nChan);
+   void fillGenericContents(Int nObs=1, Int nScanPerObs=1, Int nTimePerScan=1,
+			    Int nAnt=1, Int nSpw=1, Vector<Int> nChan=Vector<Int>(1,1), 
+			    Int nFld=1, 
+			    Double rTime=0.0, Double tint=0.0,
+			    Bool verbose=False);
+   void fillGenericObs(Int nObs);
+   void fillGenericField(Int nFld);
+   void fillGenericAntenna(Int nAnt);
+   void fillGenericSpw(Int nSpw,Vector<Int>& nChan);
      
    // Force Spw subtable to be all nchan=1
    //  (very basic; uses chan n/2 freq)
@@ -275,7 +275,7 @@ class NewCalTable : public casacore::Table
    void addPhoneyObs();
 
    // Handle Eph objects...
-   void handleEphObj(const casacore::MSField& msfldtab,const casacore::String& msName);
+   void handleEphObj(const MSField& msfldtab,const String& msName);
 
 
    // The subtables

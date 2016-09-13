@@ -3,7 +3,7 @@
 
 ASDMVerbatimFiller::ASDMVerbatimFiller() {;}
 //ASDMVerbatimFiller::ASDMVerbatimFiller(MS* ms_p, const set<const ASDM_TABLE_BASE*>& table) {
-ASDMVerbatimFiller::ASDMVerbatimFiller(casacore::MS* ms_p, const set<ASDM_TABLE_BASE*>& table) {
+ASDMVerbatimFiller::ASDMVerbatimFiller(MS* ms_p, const set<ASDM_TABLE_BASE*>& table) {
   table_ = table;
   for(set<ASDM_TABLE_BASE*>::iterator iter = table_.begin();
       iter != table_.end();

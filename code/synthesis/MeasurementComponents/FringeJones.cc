@@ -53,7 +53,6 @@
 
 
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // **********************************************************
@@ -102,17 +101,17 @@ void FringeJones::setApply(const Record& apply) {
   SolvableVisJones::setApply(apply);
 
   if (calWt()) 
-    logSink() << " (" << this->typeName() << ": Enforcing calWt()=false for phase/delay-like terms)" << LogIO::POST;
+    logSink() << " (" << this->typeName() << ": Enforcing calWt()=False for phase/delay-like terms)" << LogIO::POST;
 
-  // Enforce calWt() = false for delays
-  calWt()=false;
+  // Enforce calWt() = False for delays
+  calWt()=False;
 
   // Extract per-spw ref Freq for phase(delay) calculation
   //  from the CalTable
   // TBD:  revise as per refFreq decisions
   MSSpectralWindow msSpw(ct_->spectralWindow());
   ROMSSpWindowColumns msCol(msSpw);
-  msCol.refFrequency().getColumn(KrefFreqs_,true);
+  msCol.refFrequency().getColumn(KrefFreqs_,True);
   KrefFreqs_/=1.0e9;  // in GHz
 
   /// Re-assign KrefFreq_ according spwmap (if any)
@@ -134,10 +133,10 @@ void FringeJones::setCallib(const Record& callib,
   SolvableVisCal::setCallib(callib,selms);
 
   if (calWt()) 
-    logSink() << " (" << this->typeName() << ": Enforcing calWt()=false for phase/delay-like terms)" << LogIO::POST;
+    logSink() << " (" << this->typeName() << ": Enforcing calWt()=False for phase/delay-like terms)" << LogIO::POST;
 
-  // Enforce calWt() = false for delays
-  calWt()=false;
+  // Enforce calWt() = False for delays
+  calWt()=False;
 
   // Extract per-spw ref Freq for phase(delay) calculation
   //  from the CalTable

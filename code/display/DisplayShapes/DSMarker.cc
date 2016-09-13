@@ -33,7 +33,6 @@
 
 #include <display/Display/DParameterRange.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	DSMarker::DSMarker() :
@@ -50,8 +49,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	                   const Display::Marker& marker, const uInt pixelSize) :
 		DSBasic() {
 
-		DisplayShape::setHasHandles(true);
-		DisplayShape::setDrawHandles(true);
+		DisplayShape::setHasHandles(True);
+		DisplayShape::setDrawHandles(True);
 
 
 		itsSize = new DParameterRange<Int> ("size", "Marker Size",
@@ -62,8 +61,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsCenter[1] = yPos;
 
 		itsMarkerStyle = marker;
-		itsValid = true;
-		itsBuiltHandle = false;
+		itsValid = True;
+		itsBuiltHandle = False;
 		updateHandle();
 	}
 
@@ -100,7 +99,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	void DSMarker::setCenter(const Float& xPos, const Float& yPos) {
 		itsCenter[0] = xPos;
 		itsCenter[1] = yPos;
-		itsValid = true;
+		itsValid = True;
 		updateHandle();
 	}
 
@@ -142,30 +141,30 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			        (yPos > itsCenter[1] - (itsSize->value()/2)) &&
 			        (yPos < itsCenter[1] + (itsSize->value()/2)));
 
-		return false;
+		return False;
 	}
 
 	Bool DSMarker::setOptions(const Record& settings) {
-		Bool localChange = false;
+		Bool localChange = False;
 
 		if (settings.isDefined("center")) {
-			if (!itsValid) itsValid = true;
+			if (!itsValid) itsValid = True;
 			itsCenter = settings.asArrayFloat("center");
 		}
 
-		if (itsSize->fromRecord(settings)) localChange = true;
+		if (itsSize->fromRecord(settings)) localChange = True;
 
 		if (settings.isDefined("markerstyle")) {
 			Int temp = settings.asInt("markerstyle");
 			Display::Marker newStyle = static_cast<Display::Marker>(temp);
 
 			if (newStyle != itsMarkerStyle) {
-				localChange = true;
+				localChange = True;
 				itsMarkerStyle = newStyle;
 			}
 		}
 
-		if (DSBasic::setOptions(settings)) localChange = true;
+		if (DSBasic::setOptions(settings)) localChange = True;
 		if (localChange) updateHandle();
 		return localChange;
 	}
@@ -187,8 +186,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsCenter.resize(2);
 
 		itsMarkerStyle = Display::Square;
-		itsValid = false;
-		itsBuiltHandle = false;
+		itsValid = False;
+		itsBuiltHandle = False;
 	}
 
 	void DSMarker::updateHandle() {
@@ -202,7 +201,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				setHandlePositions(itsHandle);
 			} else {
 				buildHandles(itsHandle);
-				itsBuiltHandle = true;
+				itsBuiltHandle = True;
 			}
 		}
 

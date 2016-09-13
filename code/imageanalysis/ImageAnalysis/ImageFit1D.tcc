@@ -51,7 +51,7 @@ ImageFit1D<T>::ImageFit1D()
  : _image(0),
    _weights(0),
    _axis(0),
-   _converged(false), _success(false), _isValid(true), _x(0)
+   _converged(False), _success(False), _isValid(True), _x(0)
 {
    checkType();
 }
@@ -59,9 +59,9 @@ ImageFit1D<T>::ImageFit1D()
 
 template <class T> 
 ImageFit1D<T>::ImageFit1D(
-	SHARED_PTR<const casacore::ImageInterface<T> > image, casacore::uInt pixelAxis
+	SHARED_PTR<const ImageInterface<T> > image, uInt pixelAxis
 ) : _image(image), _weights(), _axis(pixelAxis),
-	_converged(false), _success(false), _isValid(true)
+	_converged(False), _success(False), _isValid(True)
 {
    //checkType();
    //setImage(image, pixelAxis);
@@ -70,11 +70,11 @@ ImageFit1D<T>::ImageFit1D(
 
 template <class T> 
 ImageFit1D<T>::ImageFit1D(
-	SHARED_PTR<const casacore::ImageInterface<T> > image,
-	SHARED_PTR<const casacore::ImageInterface<T> > weights,
-	casacore::uInt pixelAxis
+	SHARED_PTR<const ImageInterface<T> > image,
+	SHARED_PTR<const ImageInterface<T> > weights,
+	uInt pixelAxis
 ) : _image(image), _weights(weights),
-   _axis(pixelAxis), _converged(false), _success(false), _isValid(true)
+   _axis(pixelAxis), _converged(False), _success(False), _isValid(True)
 {
    //checkType();
    //setImage(image, pixelAxis);
@@ -86,7 +86,7 @@ ImageFit1D<T>::ImageFit1D(
 template <class T> 
 ImageFit1D<T>::ImageFit1D(const ImageFit1D<T>& other)
  : _image(other._image), _weights(other._weights),
-   _axis(other._axis), _converged(false), _success(false), _isValid(true)
+   _axis(other._axis), _converged(False), _success(False), _isValid(True)
 {
    //checkType();
    copy(other);
@@ -107,25 +107,25 @@ template <class T>
 void ImageFit1D<T>::_construct() {
 	checkType();
 	_resetFitter();
-   AlwaysAssert(_axis < _image->ndim(), casacore::AipsError);
+   AlwaysAssert(_axis < _image->ndim(), AipsError);
 
    if (_weights) {
-	   AlwaysAssert (_image->shape().isEqual(_weights->shape()), casacore::AipsError);
+	   AlwaysAssert (_image->shape().isEqual(_weights->shape()), AipsError);
    }
    else {
-	   _unityWeights.resize(_image->shape()[_axis], false);
+	   _unityWeights.resize(_image->shape()[_axis], False);
 	   _unityWeights = 1.0;
    }
-   _weightSlice.resize(_image->shape()[_axis], false);
-   _sliceShape = casacore::IPosition(_image->ndim(), 1);
+   _weightSlice.resize(_image->shape()[_axis], False);
+   _sliceShape = IPosition(_image->ndim(), 1);
    _sliceShape[_axis] = _image->shape()[_axis];
 }
 
 /*
 template <class T> 
-void ImageFit1D<T>::setImage (const casacore::ImageInterface<T>& image,
-                              const casacore::ImageInterface<T>& weights,
-                              casacore::uInt pixelAxis)
+void ImageFit1D<T>::setImage (const ImageInterface<T>& image,
+                              const ImageInterface<T>& weights,
+                              uInt pixelAxis)
 {
 	_resetFitter();
    setImage(image, pixelAxis);
@@ -134,45 +134,45 @@ void ImageFit1D<T>::setImage (const casacore::ImageInterface<T>& image,
 */
 
 template <class T>  void ImageFit1D<T>::setData (
-	const casacore::IPosition& pos,
+	const IPosition& pos,
 	/*const ImageFit1D<T>::AbcissaType abcissaType,
-	const casacore::Bool doAbs, const casacore::Double* const &abscissaDivisor,
-    casacore::Array<casacore::Double> (*xfunc)(const casacore::Array<casacore::Double>&), */
-    casacore::Array<FitterType> (*yfunc)(const casacore::Array<FitterType>&)
+	const Bool doAbs, const Double* const &abscissaDivisor,
+    Array<Double> (*xfunc)(const Array<Double>&), */
+    Array<FitterType> (*yfunc)(const Array<FitterType>&)
 ) {
 	_resetFitter();
 	/*
-	const casacore::uInt nDim = _image->ndim();
-	casacore::IPosition start(nDim);
+	const uInt nDim = _image->ndim();
+	IPosition start(nDim);
 	start(_axis) = 0;
-	for (casacore::uInt i=0; i<nDim; i++) {
+	for (uInt i=0; i<nDim; i++) {
 		if (i!=_axis) {
 			start(i) = pos(i);
 		}
 	}
 	*/
-	casacore::IPosition start = pos;
+	IPosition start = pos;
 	start[_axis] = 0;
 	// Get ordinate data
 
-	casacore::Vector<T> y;
-	y = _image->getSlice(start, _sliceShape, true);
+	Vector<T> y;
+	y = _image->getSlice(start, _sliceShape, True);
 
 	// Mask
 
-	casacore::Vector<casacore::Bool> mask;
-	mask = _image->getMaskSlice(start, _sliceShape, true);
+	Vector<Bool> mask;
+	mask = _image->getMaskSlice(start, _sliceShape, True);
 
 	// Weights
 
 	if (_weights.get()) {
-		convertArray(_weightSlice, _weights->getSlice(start, _sliceShape, true));
+		convertArray(_weightSlice, _weights->getSlice(start, _sliceShape, True));
 	}
 	else {
 		_weightSlice = _unityWeights;
 	}
-	// Set data in fitter; we need to use a casacore::Double fitter at present
-	casacore::Vector<FitterType> y2(y.shape());
+	// Set data in fitter; we need to use a Double fitter at present
+	Vector<FitterType> y2(y.shape());
 	convertArray(y2, y);
 	if (yfunc) {
 		y2 = (*yfunc)(y2);
@@ -187,41 +187,41 @@ template <class T>  void ImageFit1D<T>::setData (
 }
 
 template <class T>  void ImageFit1D<T>::setData (
-	const casacore::IPosition& pos,
+	const IPosition& pos,
 	const ImageFit1D<T>::AbcissaType abcissaType,
-	const casacore::Bool doAbs, const casacore::Double* const &abscissaDivisor,
-    casacore::Array<casacore::Double> (*xfunc)(const casacore::Array<casacore::Double>&),
-    casacore::Array<FitterType> (*yfunc)(const casacore::Array<FitterType>&)
+	const Bool doAbs, const Double* const &abscissaDivisor,
+    Array<Double> (*xfunc)(const Array<Double>&),
+    Array<FitterType> (*yfunc)(const Array<FitterType>&)
 ) {
 	_resetFitter();
 	/*
-	const casacore::uInt nDim = _image->ndim();
-	casacore::IPosition start(nDim);
+	const uInt nDim = _image->ndim();
+	IPosition start(nDim);
 	start(_axis) = 0;
-	for (casacore::uInt i=0; i<nDim; i++) {
+	for (uInt i=0; i<nDim; i++) {
 		if (i!=_axis) {
 			start(i) = pos(i);
 		}
 	}
 	*/
 
-	casacore::IPosition start = pos;
+	IPosition start = pos;
 	start[_axis] = 0;
 
 	// Get ordinate data
 
-	casacore::Vector<T> y;
-	y = _image->getSlice(start, _sliceShape, true);
+	Vector<T> y;
+	y = _image->getSlice(start, _sliceShape, True);
 
 	// Mask
 
-	casacore::Vector<casacore::Bool> mask;
-	mask = _image->getMaskSlice(start, _sliceShape, true);
+	Vector<Bool> mask;
+	mask = _image->getMaskSlice(start, _sliceShape, True);
 
 	// Weights
 
 	if (_weights.get()) {
-		convertArray(_weightSlice, _weights->getSlice(start, _sliceShape, true));
+		convertArray(_weightSlice, _weights->getSlice(start, _sliceShape, True));
 	}
 	else {
 		_weightSlice = _unityWeights;
@@ -229,16 +229,16 @@ template <class T>  void ImageFit1D<T>::setData (
 
 	// Generate Abscissa
 
-	casacore::Vector<casacore::Double> x = _x.copy();
+	Vector<Double> x = _x.copy();
 	if (x.size() == 0) {
 		x = makeAbscissa(abcissaType, doAbs, abscissaDivisor);
 		if (xfunc) {
 			x = (*xfunc)(x);
 		}
 	}
-	// Set data in fitter; we need to use a casacore::Double fitter at present
+	// Set data in fitter; we need to use a Double fitter at present
 
-	casacore::Vector<FitterType> y2(y.shape());
+	Vector<FitterType> y2(y.shape());
 	convertArray(y2, y);
 	if (yfunc) {
 		y2 = (*yfunc)(y2);
@@ -253,56 +253,56 @@ template <class T>  void ImageFit1D<T>::setData (
 }
 
 /*
-template <class T> casacore::Bool ImageFit1D<T>::setData (
-		const casacore::ImageRegion& region,
+template <class T> Bool ImageFit1D<T>::setData (
+		const ImageRegion& region,
 		const ImageFit1D<T>::AbcissaType abcissaType,
-		const casacore::Bool doAbs)
+		const Bool doAbs)
 		{
 	_resetFitter();
 	// Make SubImage
 
-	const casacore::SubImage<T> subImage(*_image, region, false);
+	const SubImage<T> subImage(*_image, region, False);
 
 	// Average over non-profile axes
 
-	const casacore::uInt nDim = subImage.ndim();
-	casacore::IPosition axes = casacore::IPosition::otherAxes(nDim, casacore::IPosition(1,_axis));
-	casacore::Bool dropDeg = true;
-	casacore::Vector<T> y;
-	casacore::Vector<casacore::Bool> mask;
-	casacore::LatticeMathUtil::collapse (y, mask, axes, subImage, dropDeg);
+	const uInt nDim = subImage.ndim();
+	IPosition axes = IPosition::otherAxes(nDim, IPosition(1,_axis));
+	Bool dropDeg = True;
+	Vector<T> y;
+	Vector<Bool> mask;
+	LatticeMathUtil::collapse (y, mask, axes, subImage, dropDeg);
 
 	// Weights
 
-	casacore::Vector<T> weights(y.nelements());
+	Vector<T> weights(y.nelements());
 	weights = 1.0;
 	if (_weights.get()) {
-		casacore::LatticeMathUtil::collapse (weights, axes, *_weights, dropDeg);
+		LatticeMathUtil::collapse (weights, axes, *_weights, dropDeg);
 	}
 
 	// Generate Abcissa
 
-	casacore::Vector<casacore::Double> x = _x;
+	Vector<Double> x = _x;
 	if (x.size() == 0) {
 		x = makeAbscissa(abcissaType, doAbs, 0);
 	}
 
-	// Set data in fitter; we need to use a casacore::Double fitter at present
+	// Set data in fitter; we need to use a Double fitter at present
 
-	casacore::Vector<FitterType> y2(y.shape());
+	Vector<FitterType> y2(y.shape());
 	convertArray(y2, y);
-	casacore::Vector<casacore::Double> w2(weights.shape());
+	Vector<Double> w2(weights.shape());
 	convertArray(w2, weights);
 	if (!_fitter.setData (x, y2, mask, w2)) {
 		_error = _fitter.errorMessage();
-		return false;
+		return False;
 	}
-	return true;
+	return True;
 }
 */
 
 template <class T> 
-void ImageFit1D<T>::setGaussianElements (casacore::uInt nGauss) {
+void ImageFit1D<T>::setGaussianElements (uInt nGauss) {
 	if (nGauss > 0) {
 		check();
 		ThrowIf(
@@ -313,50 +313,50 @@ void ImageFit1D<T>::setGaussianElements (casacore::uInt nGauss) {
 }
 
 template <class T> 
-bool ImageFit1D<T>::fit () {
+Bool ImageFit1D<T>::fit () {
    // check();
    _converged = _fitter.fit();
-   _success = true;
+   _success = True;
    return _converged;
 }
 
 template <class T> 
-bool ImageFit1D<T>::succeeded() const {
+Bool ImageFit1D<T>::succeeded() const {
 	return _success;
 }
 
 template <class T>
-bool ImageFit1D<T>::converged() const {
+Bool ImageFit1D<T>::converged() const {
 	return _converged;
 }
 
 template <class T>
-bool ImageFit1D<T>::setAbcissaState (
-	casacore::String& errMsg, ImageFit1D<T>::AbcissaType& type,
-    casacore::CoordinateSystem& cSys, const casacore::String& xUnit,
-    const casacore::String& doppler, casacore::uInt pixelAxis
+Bool ImageFit1D<T>::setAbcissaState (
+	String& errMsg, ImageFit1D<T>::AbcissaType& type,
+    CoordinateSystem& cSys, const String& xUnit,
+    const String& doppler, uInt pixelAxis
 ) {
 	if (xUnit == "native") {
 		type = ImageFit1D<T>::IM_NATIVE;
-		return true;
+		return True;
 	}
-   if (xUnit.contains(casacore::String("pix"))) {
+   if (xUnit.contains(String("pix"))) {
       type = ImageFit1D<T>::PIXEL;
-      return true;
+      return True;
    }
-   casacore::Unit unitKMS(casacore::String("km/s"));
+   Unit unitKMS(String("km/s"));
 
-   auto isSpectral = cSys.spectralAxisNumber(false) == (casacore::Int)pixelAxis;
+   auto isSpectral = cSys.spectralAxisNumber(False) == (Int)pixelAxis;
 
 // Defer unit making until now as 'pix' not a valid unit
 
-   casacore::Bool ok(false);
-   casacore::Unit unit(xUnit);
+   Bool ok(False);
+   Unit unit(xUnit);
    if (unit==unitKMS && isSpectral) {
-      ok = casacore::CoordinateUtil::setSpectralState (errMsg, cSys, xUnit, doppler);
+      ok = CoordinateUtil::setSpectralState (errMsg, cSys, xUnit, doppler);
       type = ImageFit1D<T>::VELOCITY;
    } else {
-      casacore::Vector<casacore::String> units = cSys.worldAxisUnits().copy();
+      Vector<String> units = cSys.worldAxisUnits().copy();
       units(pixelAxis) = xUnit;
       ok = cSys.setWorldAxisUnits(units);
       if (!ok) errMsg = cSys.errorMessage();
@@ -367,15 +367,15 @@ bool ImageFit1D<T>::setAbcissaState (
 }
 
 template <class T> 
-casacore::Vector<casacore::Double> ImageFit1D<T>::makeAbscissa (
+Vector<Double> ImageFit1D<T>::makeAbscissa (
 	ImageFit1D<T>::AbcissaType type,
-	casacore::Bool doAbs, const casacore::Double* const &abscissaDivisor
+	Bool doAbs, const Double* const &abscissaDivisor
 ) {
-   const casacore::uInt n = _image->shape()(_axis);
-   casacore::Vector<casacore::Double> x(n);
+   const uInt n = _image->shape()(_axis);
+   Vector<Double> x(n);
 
-   const casacore::CoordinateSystem& csys = _image->coordinates();
-   casacore::Double refPix = csys.referencePixel()(_axis);
+   const CoordinateSystem& csys = _image->coordinates();
+   Double refPix = csys.referencePixel()(_axis);
    if (type==PIXEL) {
       indgen(x);
       if (!doAbs) {
@@ -386,20 +386,20 @@ casacore::Vector<casacore::Double> ImageFit1D<T>::makeAbscissa (
 
 // Find the pixel axis
 
-   casacore::Int coord, axisInCoord;
+   Int coord, axisInCoord;
    csys.findPixelAxis (coord, axisInCoord, _axis);
    if (type==VELOCITY) {
-      AlwaysAssert(csys.type(coord)==casacore::Coordinate::SPECTRAL, casacore::AipsError);
-      const casacore::SpectralCoordinate& sCoord = csys.spectralCoordinate(coord);
-      casacore::Double world;
-      for (casacore::uInt i=0; i<n; i++) {
-         if (!sCoord.pixelToVelocity (world, casacore::Double(i))) {
-            throw casacore::AipsError(sCoord.errorMessage());
+      AlwaysAssert(csys.type(coord)==Coordinate::SPECTRAL, AipsError);
+      const SpectralCoordinate& sCoord = csys.spectralCoordinate(coord);
+      Double world;
+      for (uInt i=0; i<n; i++) {
+         if (!sCoord.pixelToVelocity (world, Double(i))) {
+            throw AipsError(sCoord.errorMessage());
          } else {
             if (doAbs) {
                x[i] = world;
             } else {
-               casacore::Double worldRefVal;
+               Double worldRefVal;
                sCoord.pixelToVelocity (worldRefVal, refPix);
                x -= worldRefVal;
             }
@@ -407,14 +407,14 @@ casacore::Vector<casacore::Double> ImageFit1D<T>::makeAbscissa (
       }
    }
    else if (type==IM_NATIVE) {
-      const casacore::Coordinate& gCoord = csys.coordinate(coord);
-      casacore::Vector<casacore::Double> pixel(gCoord.referencePixel().copy());
-      casacore::Vector<casacore::Double> world;
+      const Coordinate& gCoord = csys.coordinate(coord);
+      Vector<Double> pixel(gCoord.referencePixel().copy());
+      Vector<Double> world;
 
-      for (casacore::uInt i=0; i<n; i++) {
+      for (uInt i=0; i<n; i++) {
          pixel(axisInCoord) = i;
          if (!gCoord.toWorld(world, pixel)) {
-            throw casacore::AipsError(gCoord.errorMessage());
+            throw AipsError(gCoord.errorMessage());
          }
 //
          if (!doAbs) {
@@ -426,7 +426,7 @@ casacore::Vector<casacore::Double> ImageFit1D<T>::makeAbscissa (
     	  x /= *abscissaDivisor;
       }
    } else {
-      throw casacore::AipsError("Unrecognized abscissa type");
+      throw AipsError("Unrecognized abscissa type");
    }
    return x;
 
@@ -437,15 +437,15 @@ template <class T>
 void ImageFit1D<T>::check() const
 {
    if (!_image.get()) {
-      throw(casacore::AipsError("Image has not been set"));
+      throw(AipsError("Image has not been set"));
    }
 }
 
 /*
 template <class T> 
-void ImageFit1D<T>::setWeightsImage (const casacore::ImageInterface<T>& image)
+void ImageFit1D<T>::setWeightsImage (const ImageInterface<T>& image)
 {
-   AlwaysAssert (_image->shape().isEqual(image.shape()), casacore::AipsError);
+   AlwaysAssert (_image->shape().isEqual(image.shape()), AipsError);
    _weights.reset(image.cloneII());
 }
 */
@@ -487,55 +487,55 @@ void ImageFit1D<T>::checkType() const
  //
 {
    FitterType* p=0;
-   casacore::DataType tp = whatType(p);
-   AlwaysAssert(tp==casacore::TpDouble, casacore::AipsError);
+   DataType tp = whatType(p);
+   AlwaysAssert(tp==TpDouble, AipsError);
 }
 
 
 template <class T> 
-casacore::Vector<T> ImageFit1D<T>::getEstimate (casacore::Int which) const
+Vector<T> ImageFit1D<T>::getEstimate (Int which) const 
 {
-   casacore::Vector<FitterType> e = _fitter.getEstimate(which);
-   casacore::Vector<T> t(e.shape());
+   Vector<FitterType> e = _fitter.getEstimate(which);
+   Vector<T> t(e.shape());
    convertArray (t, e);
    return t;
 }
 
 
 template <class T> 
-casacore::Vector<T> ImageFit1D<T>::getFit (casacore::Int which) const
+Vector<T> ImageFit1D<T>::getFit (Int which) const 
 {
-   casacore::Vector<FitterType> f = _fitter.getFit(which);
-   casacore::Vector<T> t(f.shape());
+   Vector<FitterType> f = _fitter.getFit(which);
+   Vector<T> t(f.shape());
    convertArray (t, f);
    return t;
 }
 
 template <class T> 
-casacore::Vector<T> ImageFit1D<T>::getResidual(casacore::Int which, casacore::Bool fit) const
+Vector<T> ImageFit1D<T>::getResidual(Int which, Bool fit) const 
 {
-   casacore::Vector<FitterType> r = _fitter.getResidual(which, fit);
-   casacore::Vector<T> t(r.shape());
+   Vector<FitterType> r = _fitter.getResidual(which, fit);
+   Vector<T> t(r.shape());
    convertArray (t, r);
    return t;
 }
 
 template <class T>  void ImageFit1D<T>::invalidate() {
-	_isValid = false;
+	_isValid = False;
 }
 
 template <class T>
-bool ImageFit1D<T>::isValid() const {
+Bool ImageFit1D<T>::isValid() const {
 	return _isValid;
 }
 
 template <class T>
 void ImageFit1D<T>::_resetFitter() {
 	_fitter = ProfileFit1D<FitterType>();
-	_fitter.setElements(_fitter.getList(false));
-	_isValid = true;
-	_converged = false;
-	_success = false;
+	_fitter.setElements(_fitter.getList(False));
+	_isValid = True;
+	_converged = False;
+	_success = False;
 }
 
 

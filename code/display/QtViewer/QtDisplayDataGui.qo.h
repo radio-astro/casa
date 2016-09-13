@@ -79,19 +79,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			/*
 			    QtAutoGui* thisAutoGui = this;
 
-			    connect( thisAutoGui, SIGNAL(setOptions(casacore::Record)),
-			             qdd_,        SLOT(setOptions(casacore::Record)) );
-			    connect( qdd_,         SIGNAL(optionsChanged(casacore::Record)),
-			             thisAutoGui,  SLOT(changeOptions(casacore::Record)) );  }
+			    connect( thisAutoGui, SIGNAL(setOptions(Record)),
+			             qdd_,        SLOT(setOptions(Record)) );
+			    connect( qdd_,         SIGNAL(optionsChanged(Record)),
+			             thisAutoGui,  SLOT(changeOptions(Record)) );  }
 			*/
 
 
-			connect( this, SIGNAL(setOptions(casacore::Record)),
-			         qdd_,   SLOT(setOptions(casacore::Record)) );
+			connect( this, SIGNAL(setOptions(Record)),
+			         qdd_,   SLOT(setOptions(Record)) );
 			//cerr<<" QDDG cn: this:"<<this<<" qdd:"<<qdd_<<endl;	//#diag
 
-			connect( qdd_, SIGNAL(optionsChanged(casacore::Record)),
-			         SLOT(changeOptions(casacore::Record)) );
+			connect( qdd_, SIGNAL(optionsChanged(Record)),
+			         SLOT(changeOptions(Record)) );
 		}
 
 

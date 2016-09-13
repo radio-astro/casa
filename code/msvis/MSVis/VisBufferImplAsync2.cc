@@ -6,7 +6,6 @@
  */
 
 #include "UtilJ.h"
-using namespace casacore;
 using namespace casa::utilj;
 
 #include <casa/Containers/Record.h>
@@ -28,7 +27,6 @@ using std::transform;
     {if (casa::asyncio::AsynchronousInterface::logThis (level)) \
          casa::async::Logger::get()->log (__VA_ARGS__);};
 
-using namespace casacore;
 namespace casa {
 
 namespace vi {
@@ -144,7 +142,6 @@ VisBufferImplAsync2::construct ()
 
 
 } // end namespace vi
-using namespace casacore;
 } // end namespace casa
 
 

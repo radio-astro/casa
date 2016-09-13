@@ -36,7 +36,7 @@ namespace casa {
   extern "C" 
   {
     //
-    // The Gridding Convolution casacore::Function (GCF) used by the underlying
+    // The Gridding Convolution Function (GCF) used by the underlying
     // gridder written in FORTRAN.
     //
     // The arguments must all be pointers and the value of the GCF at
@@ -49,46 +49,46 @@ namespace casa {
 #define gcppeij gcppeij_
 #define globalGCFPtr globalgcfptr_
 #endif
-    typedef void (*GCFPtr)(casacore::Double *griduvw, casacore::Double *area,
-			   casacore::Double *raoff1, casacore::Double *decoff1,
-			   casacore::Double *raoff2, casacore::Double *decoff2, 
-			   casacore::Int *doGrad,
-			   casacore::Complex *weight,
-			   casacore::Complex *dweight1,
-			   casacore::Complex *dweight2,
-			   casacore::Double *currentCFPA);
+    typedef void (*GCFPtr)(Double *griduvw, Double *area,
+			   Double *raoff1, Double *decoff1,
+			   Double *raoff2, Double *decoff2, 
+			   Int *doGrad,
+			   Complex *weight,
+			   Complex *dweight1,
+			   Complex *dweight2,
+			   Double *currentCFPA);
     
-    extern void gcppeij(casacore::Double *griduvw, casacore::Double *area,
-		   casacore::Double *raoff1, casacore::Double *decoff1,
-		   casacore::Double *raoff2, casacore::Double *decoff2, 
-		   casacore::Int *doGrad,
-		   casacore::Complex *weight,
-		   casacore::Complex *dweight1,
-		   casacore::Complex *dweight2,
-		   casacore::Double *currentCFPA);
+    extern void gcppeij(Double *griduvw, Double *area,
+		   Double *raoff1, Double *decoff1,
+		   Double *raoff2, Double *decoff2, 
+		   Int *doGrad,
+		   Complex *weight,
+		   Complex *dweight1,
+		   Complex *dweight2,
+		   Double *currentCFPA);
     extern IlluminationConvFunc gwEij;
     //
     //---------------------------------------------------------------
     //
     //  IlluminationConvFunc gwEij;
-    void gcppeij(casacore::Double *griduvw, casacore::Double *area,
-		 casacore::Double *raoff1, casacore::Double *decoff1,
-		 casacore::Double *raoff2, casacore::Double *decoff2, 
-		 casacore::Int *doGrad,
-		 casacore::Complex *weight,
-		 casacore::Complex *dweight1,
-		 casacore::Complex *dweight2,
-		 casacore::Double *currentCFPA);
+    void gcppeij(Double *griduvw, Double *area,
+		 Double *raoff1, Double *decoff1,
+		 Double *raoff2, Double *decoff2, 
+		 Int *doGrad,
+		 Complex *weight,
+		 Complex *dweight1,
+		 Complex *dweight2,
+		 Double *currentCFPA);
 
     /*
-    void (*globalGCFPtr)(casacore::Double*griduvw, casacore::Double *area,
-			 casacore::Double *raoff1, casacore::Double *decoff1,
-			 casacore::Double *raoff2, casacore::Double *decoff2, 
-			 casacore::Int *doGrad,
-			 casacore::Complex *weight,
-			 casacore::Complex *dweight1,
-			 casacore::Complex *dweight2,
-			 casacore::Double *currentCFPA) = NULL;
+    void (*globalGCFPtr)(Double*griduvw, Double *area,
+			 Double *raoff1, Double *decoff1,
+			 Double *raoff2, Double *decoff2, 
+			 Int *doGrad,
+			 Complex *weight,
+			 Complex *dweight1,
+			 Complex *dweight2,
+			 Double *currentCFPA) = NULL;
     */
   };
 };

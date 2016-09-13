@@ -72,15 +72,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // If we have
 //
 // <srcBlock>
-// AttributeValueTol<casacore::Float> Att1(3.0, 1.2, false);
-// AttributeValueTol<casacore::Float> Att2(2.0, 1.1, false);
-// AttributeValueTol<casacore::Float> Att3(2.1, 0.5, false);
+// AttributeValueTol<Float> Att1(3.0, 1.2, False);
+// AttributeValueTol<Float> Att2(2.0, 1.1, False);
+// AttributeValueTol<Float> Att3(2.1, 0.5, False);
 // </srcBlock>
 //
 // then:
-// <li> <src>Att1==Att2</src> returns <src>true</src>,
-// <li> <src>Att2==Att3</src> returns <src>true</src>,
-// <li> but <src>Att3==Att1</src> returns <src>false</src>.
+// <li> <src>Att1==Att2</src> returns <src>True</src>,
+// <li> <src>Att2==Att3</src> returns <src>True</src>,
+// <li> but <src>Att3==Att1</src> returns <src>False</src>.
 // </example>
 //
 // <motivation>
@@ -98,11 +98,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	public:
 		// Constructor for a scalar, with specified scalar tolerance and
 		// strictness.
-		AttributeValueTol(const T &value, const T &tolerance, const casacore::Bool strict);
+		AttributeValueTol(const T &value, const T &tolerance, const Bool strict);
 
-		// Constructor for a <src>casacore::Vector</src> value, with specified scalar
+		// Constructor for a <src>Vector</src> value, with specified scalar
 		// tolerance and strictness.
-		AttributeValueTol(const casacore::Vector<T> &value, const T &tolerance, const casacore::Bool strict);
+		AttributeValueTol(const Vector<T> &value, const T &tolerance, const Bool strict);
 
 		// Copy contructor.
 		AttributeValueTol(const AttributeValueTol<T> &other);
@@ -127,15 +127,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// </group>
 
 		// Return class name
-		virtual casacore::String className() const {
-			return casacore::String("AttributeValueTol");
+		virtual String className() const {
+			return String("AttributeValueTol");
 		};
 
 	protected:
 
 		// Implements when the values of two Attributes match, taking note
 		// of tolerance in this particular implementation.
-		virtual casacore::Bool matches(const AttributeValueBase& other) const;
+		virtual Bool matches(const AttributeValueBase& other) const;
 
 	private:
 
@@ -143,7 +143,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		T itsValueTolerance;
 
 		// Does the actual matching
-		casacore::Bool myMatch(const AttributeValue<T>& other) const;
+		Bool myMatch(const AttributeValue<T>& other) const;
 
 		// Default constructor
 		AttributeValueTol();

@@ -86,75 +86,75 @@ class CalCorruptor {
   
  public:
   
-  CalCorruptor(const casacore::Int nSim);
+  CalCorruptor(const Int nSim);
   virtual ~CalCorruptor();
-  inline casacore::uInt& nSim() { return nSim_; };
-  inline casacore::Bool& times_initialized() { return times_initialized_; };
-  inline casacore::Int& curr_slot() { return curr_slot_; };
-  inline casacore::Double& curr_time() { return curr_time_; };
-  inline casacore::Double& startTime() { return starttime_; };
-  inline casacore::Double& stopTime() { return stoptime_; };
-  inline casacore::Double& slot_time(const casacore::Int i) { return slot_times_(i); };
-  inline casacore::Double& slot_time() { return slot_times_(curr_slot()); };
-  inline casacore::Vector<casacore::Double>& slot_times() { return slot_times_; };
-  inline casacore::Float& amp() { return amp_;};
+  inline uInt& nSim() { return nSim_; };
+  inline Bool& times_initialized() { return times_initialized_; };
+  inline Int& curr_slot() { return curr_slot_; };
+  inline Double& curr_time() { return curr_time_; };
+  inline Double& startTime() { return starttime_; };
+  inline Double& stopTime() { return stoptime_; };
+  inline Double& slot_time(const Int i) { return slot_times_(i); };
+  inline Double& slot_time() { return slot_times_(curr_slot()); };
+  inline Vector<Double>& slot_times() { return slot_times_; };
+  inline Float& amp() { return amp_;};
   virtual void initialize() {};
 
   // a generic initializer that just takes amplitude and simpar
-  void initialize(const casacore::Float amp, const casacore::Record& simpar) {
+  void initialize(const Float amp, const Record& simpar) {
     amp_=amp;
     simpar_=simpar;   
   };
-  inline casacore::Record& simpar() {return simpar_;}
-  inline casacore::String& mode() { return mode_; };
+  inline Record& simpar() {return simpar_;}
+  inline String& mode() { return mode_; };
 
-  void setEvenSlots(const casacore::Double& dt);
-  virtual casacore::Complex simPar(const VisIter& vi, VisCal::Type type,casacore::Int ipar);
+  void setEvenSlots(const Double& dt);
+  virtual Complex simPar(const VisIter& vi, VisCal::Type type,Int ipar);
 
-  inline casacore::uInt& nPar() { return nPar_; };
-  inline casacore::uInt& nChan() { return fnChan_[currSpw()]; };  
-  inline const casacore::uInt& focusChan() {return curr_chan_[currSpw()];};
-  inline const casacore::Double& focusFreq() {return curr_freq_;};
-  virtual void setFocusChan(casacore::Int chan) {
+  inline uInt& nPar() { return nPar_; };
+  inline uInt& nChan() { return fnChan_[currSpw()]; };  
+  inline const uInt& focusChan() {return curr_chan_[currSpw()];};
+  inline const Double& focusFreq() {return curr_freq_;};
+  virtual void setFocusChan(Int chan) {
     curr_chan_[currSpw()]=chan;
     // WARN:  this assumes constant channel width - more detailed 
     // channel freq may be inaccurate
-    casacore::Double fRes(fWidth()[currSpw()]/casacore::Double(fnChan()[currSpw()]));
+    Double fRes(fWidth()[currSpw()]/Double(fnChan()[currSpw()]));
     curr_freq_=fRefFreq()[currSpw()]+chan*fRes;
   };
 
-  virtual void setCurrTime(const casacore::Double& time);
+  virtual void setCurrTime(const Double& time);
   
   // inherited from VC
-  inline casacore::uInt& prtlev() { return prtlev_; };
-  inline casacore::uInt& nAnt() { return nAnt_; };
-  inline casacore::uInt& nSpw() { return nSpw_; };  
-  inline casacore::uInt& currAnt() { return curr_ant_; };
-  inline casacore::uInt& currAnt2() { return curr_ant2_; };
-  inline casacore::uInt& currSpw() { return curr_spw_; };
-  inline casacore::Vector<casacore::Float>& fRefFreq() { return fRefFreq_; };
-  inline casacore::Vector<casacore::Float>& fWidth() { return fWidth_; };
-  inline casacore::Vector<casacore::uInt>& fnChan() { return fnChan_; };
-  inline casacore::Vector<casacore::uInt>& currChans() { return curr_chan_; };
+  inline uInt& prtlev() { return prtlev_; };
+  inline uInt& nAnt() { return nAnt_; };
+  inline uInt& nSpw() { return nSpw_; };  
+  inline uInt& currAnt() { return curr_ant_; };
+  inline uInt& currAnt2() { return curr_ant2_; };
+  inline uInt& currSpw() { return curr_spw_; };
+  inline Vector<Float>& fRefFreq() { return fRefFreq_; };
+  inline Vector<Float>& fWidth() { return fWidth_; };
+  inline Vector<uInt>& fnChan() { return fnChan_; };
+  inline Vector<uInt>& currChans() { return curr_chan_; };
 
-  inline casacore::Bool& freqDepPar() { return freqdep_; };
+  inline Bool& freqDepPar() { return freqdep_; };
 
  protected:
    
-   casacore::uInt nSim_;
-   casacore::Int curr_slot_;
-   casacore::Bool times_initialized_,freqdep_;
-   casacore::uInt nPar_;
-   casacore::Double curr_time_,starttime_,stoptime_,curr_freq_;
-   casacore::Float amp_;
-   casacore::Vector<casacore::Double> slot_times_;   
-   casacore::Record simpar_;
-   casacore::String mode_; // general parameter for different kinds of corruptions
+   uInt nSim_;
+   Int curr_slot_;
+   Bool times_initialized_,freqdep_;
+   uInt nPar_;
+   Double curr_time_,starttime_,stoptime_,curr_freq_;
+   Float amp_;
+   Vector<Double> slot_times_;   
+   Record simpar_;
+   String mode_; // general parameter for different kinds of corruptions
 
-   casacore::uInt prtlev_;   
-   casacore::uInt nAnt_,curr_ant_,nSpw_,curr_spw_,curr_ant2_;
-   casacore::Vector<casacore::Float> fRefFreq_,fWidth_; // for each spw
-   casacore::Vector<casacore::uInt> fnChan_,curr_chan_;
+   uInt prtlev_;   
+   uInt nAnt_,curr_ant_,nSpw_,curr_spw_,curr_ant2_;
+   Vector<Float> fRefFreq_,fWidth_; // for each spw
+   Vector<uInt> fnChan_,curr_chan_;
 
  private:
 
@@ -174,17 +174,17 @@ class ANoiseCorruptor : public CalCorruptor {
     virtual void initialize() {
       initialize(1234,1.0);
     }
-    void initialize(const casacore::Int seed, const casacore::Float amp) {
-      rndGen_p = new casacore::MLCG(seed);
-      nDist_p = new casacore::Normal(rndGen_p, 0.0, 1.0); // sigma=1.
+    void initialize(const Int seed, const Float amp) {
+      rndGen_p = new MLCG(seed);
+      nDist_p = new Normal(rndGen_p, 0.0, 1.0); // sigma=1.
       amp_=amp;
     };
-    virtual casacore::Complex simPar(const VisIter& vi,VisCal::Type type,casacore::Int ipar);
-    virtual casacore::Complex simPar();
+    virtual Complex simPar(const VisIter& vi,VisCal::Type type,Int ipar);
+    virtual Complex simPar();
 
   private:
-    casacore::MLCG *rndGen_p;
-    casacore::Normal *nDist_p;
+    MLCG *rndGen_p;
+    Normal *nDist_p;
   };
 
 
@@ -199,22 +199,22 @@ class DJonesCorruptor : public CalCorruptor {
     DJonesCorruptor(): CalCorruptor(1) {};
     virtual ~DJonesCorruptor();
     virtual void initialize() {
-      initialize(1234,casacore::Complex(1.0,1.0),casacore::Complex(0.0));
+      initialize(1234,Complex(1.0,1.0),Complex(0.0));
     }
-    void initialize(const casacore::Int seed, const casacore::Complex camp, const casacore::Complex offset) {
-      rndGen_p = new casacore::MLCG(seed);
-      nDist_p = new casacore::Normal(rndGen_p, 0.0, 1.0); // sigma=1.
+    void initialize(const Int seed, const Complex camp, const Complex offset) {
+      rndGen_p = new MLCG(seed);
+      nDist_p = new Normal(rndGen_p, 0.0, 1.0); // sigma=1.
       camp_=camp;
       offset_=offset;
     };
-    virtual casacore::Complex simPar(const VisIter& vi,VisCal::Type type,casacore::Int ipar);
-    inline casacore::Complex& camp() { return camp_; };
-    inline casacore::Complex& offset() { return offset_; };
+    virtual Complex simPar(const VisIter& vi,VisCal::Type type,Int ipar);
+    inline Complex& camp() { return camp_; };
+    inline Complex& offset() { return offset_; };
 
   private:
-    casacore::MLCG *rndGen_p;
-    casacore::Normal *nDist_p;
-    casacore::Complex camp_,offset_;
+    MLCG *rndGen_p;
+    Normal *nDist_p;
+    Complex camp_,offset_;
   };
 
 
@@ -224,27 +224,27 @@ class DJonesCorruptor : public CalCorruptor {
 
 
 // this generates fractional brownian motion aka generalized 1/f noise
-// class fBM : public casacore::Array<casacore::Double> {
+// class fBM : public Array<Double> {
 class fBM {
 
  public:
 
-  fBM(casacore::uInt i1);
-  fBM(casacore::uInt i1, casacore::uInt i2);
-  fBM(casacore::uInt i1, casacore::uInt i2, casacore::uInt i3);
+  fBM(uInt i1);
+  fBM(uInt i1, uInt i2);
+  fBM(uInt i1, uInt i2, uInt i3);
   // virtual ~fBM(); // not ness if we don't derive from this
-  inline casacore::Bool& initialized() { return initialized_; };
-  void initialize(const casacore::Int seed, const casacore::Float beta);
+  inline Bool& initialized() { return initialized_; };
+  void initialize(const Int seed, const Float beta);
 
-  inline casacore::Array<casacore::Float> data() { return *data_; };
-  inline casacore::Float data(casacore::uInt i1) { return data_->operator()(casacore::IPosition(1,i1)); };
-  inline casacore::Float data(casacore::uInt i1, casacore::uInt i2) { return data_->operator()(casacore::IPosition(2,i1,i2)); };
-  inline casacore::Float data(casacore::uInt i1, casacore::uInt i2, casacore::uInt i3) { return data_->operator()(casacore::IPosition(3,i1,i2,i3)); };
+  inline Array<Float> data() { return *data_; };
+  inline Float data(uInt i1) { return data_->operator()(IPosition(1,i1)); };
+  inline Float data(uInt i1, uInt i2) { return data_->operator()(IPosition(2,i1,i2)); };
+  inline Float data(uInt i1, uInt i2, uInt i3) { return data_->operator()(IPosition(3,i1,i2,i3)); };
 
 
  private:
-  casacore::Bool initialized_;
-  casacore::Array<casacore::Float>* data_;
+  Bool initialized_;
+  Array<Float>* data_;
 
 };
 
@@ -257,62 +257,61 @@ class AtmosCorruptor : public CalCorruptor {
 
  public:
    AtmosCorruptor();
-   AtmosCorruptor(const casacore::Int nSim);
+   AtmosCorruptor(const Int nSim);
    virtual ~AtmosCorruptor();
 
-   casacore::Float& pwv(const casacore::Int i); 
-   casacore::Vector<casacore::Float>* pwv();
+   Float& pwv(const Int i); 
+   Vector<Float>* pwv();
    void initAtm();
-   inline casacore::Float& mean_pwv() { return mean_pwv_; };
+   inline Float& mean_pwv() { return mean_pwv_; };
    // pwv screen e.g. for a T
-   inline casacore::Matrix<casacore::Float>& screen() { return *screen_p; };
-   inline casacore::Float screen(const casacore::Int i, const casacore::Int j) { 
+   inline Matrix<Float>& screen() { return *screen_p; };
+   inline Float screen(const Int i, const Int j) { 
      return screen_p->operator()(i,j); };
    using CalCorruptor::initialize;
-   virtual void initialize(const casacore::Int rxType);
-
+   virtual void initialize(const Int rxType);
    // use ATM but no time dependence - e.g. for B[Tsys]
-   void initialize(const VisIter& vi, const casacore::Record& simpar, VisCal::Type type, const casacore::Int rxType);
-   casacore::Vector<casacore::Double> antDiams;
+   void initialize(const VisIter& vi, const Record& simpar, VisCal::Type type, const Int rxType);
+   Vector<Double> antDiams;
 
-   void initialize(const casacore::Int Seed, const casacore::Float Beta, const casacore::Float scale, const casacore::Int rxType);
-   void initialize(const casacore::Int Seed, const casacore::Float Beta, const casacore::Float scale, const casacore::Int rxType, 
-		   const casacore::ROMSAntennaColumns& antcols);
+   void initialize(const Int Seed, const Float Beta, const Float scale, const Int rxType);
+   void initialize(const Int Seed, const Float Beta, const Float scale, const Int rxType, 
+		   const ROMSAntennaColumns& antcols);
    // phase corruption gain for a T
-   casacore::Complex cphase(const casacore::Int islot);
-   casacore::Complex cphase(const casacore::Int ix, const casacore::Int iy, const casacore::Int islot);
-   inline casacore::Vector<casacore::Float>& antx() { return antx_; };
-   inline casacore::Vector<casacore::Float>& anty() { return anty_; };
-   inline casacore::Float& windspeed() { return windspeed_; };
-   inline casacore::Float& pixsize() { return pixsize_; };
+   Complex cphase(const Int islot);
+   Complex cphase(const Int ix, const Int iy, const Int islot);
+   inline Vector<Float>& antx() { return antx_; };
+   inline Vector<Float>& anty() { return anty_; };
+   inline Float& windspeed() { return windspeed_; };
+   inline Float& pixsize() { return pixsize_; };
 
-   inline casacore::Float& tauscale() { return tauscale_; };
-   casacore::Float tsys(const casacore::Float& airmass);
-   casacore::Float opac(const casacore::Int ichan);
-   inline casacore::Float& spilleff() { return spilleff_; };
+   inline Float& tauscale() { return tauscale_; };
+   Float tsys(const Float& airmass);
+   Float opac(const Int ichan);
+   inline Float& spilleff() { return spilleff_; };
 
-   inline casacore::Float& tground() { return tground_; };
-   inline casacore::Float& tatmos() { return tatmos_; };
-   inline casacore::Float& trx() { return trx_; };
-   inline casacore::Float& tcmb() { return tcmb_; };
-   inline casacore::Int& rxType() { return rxtype_; };  // 0=2SB, 1=DSB
+   inline Float& tground() { return tground_; };
+   inline Float& tatmos() { return tatmos_; };
+   inline Float& trx() { return trx_; };
+   inline Float& tcmb() { return tcmb_; };
+   inline Int& rxType() { return rxtype_; };  // 0=2SB, 1=DSB
    // gets slow to calculate 1/exp(hv/kt)-1 all the time so 
-   inline casacore::Double& Rtground() { return Rtground_; };
-   inline casacore::Double& Rtatmos() { return Rtatmos_; };
-   //inline casacore::Double& Rtrx() { return Rtrx_; };
-   inline casacore::Double& Rtcmb() { return Rtcmb_; };
-   inline casacore::Float& senscoeff() { return sensitivityCoeff_; };
+   inline Double& Rtground() { return Rtground_; };
+   inline Double& Rtatmos() { return Rtatmos_; };
+   //inline Double& Rtrx() { return Rtrx_; };
+   inline Double& Rtcmb() { return Rtcmb_; };
+   inline Float& senscoeff() { return sensitivityCoeff_; };
 
-   virtual casacore::Complex simPar(const VisIter& vi, VisCal::Type type,casacore::Int ipar);
+   virtual Complex simPar(const VisIter& vi, VisCal::Type type,Int ipar);
    
-   inline casacore::Vector<casacore::uInt>& ATMnChan() { return ATMnChan_; };
-   inline casacore::Vector<casacore::uInt>& ATMchanMap(casacore::uInt ispw) { return ATMchanMap_[ispw]; };
+   inline Vector<uInt>& ATMnChan() { return ATMnChan_; };
+   inline Vector<uInt>& ATMchanMap(uInt ispw) { return ATMchanMap_[ispw]; };
   
-   virtual void setFocusChan(casacore::Int chan) {
+   virtual void setFocusChan(Int chan) {
      curr_chan_[currSpw()]=chan;
      // WARN:  this assumes constant channel width - more detailed 
      // channel freq may be inaccurate
-     casacore::Double fRes(fWidth()[currSpw()]/casacore::Double(fnChan()[currSpw()]));
+     Double fRes(fWidth()[currSpw()]/Double(fnChan()[currSpw()]));
      curr_freq_=fRefFreq()[currSpw()]+chan*fRes;
      // for temp calculations, recalculate the radiances 1/exp(hn/kt)-1
      double hn_k = 0.04799274551*1e-9*focusFreq(); 
@@ -322,32 +321,32 @@ class AtmosCorruptor : public CalCorruptor {
      Rtatmos() = 1./(exp(hn_k/tatmos())-1.);
   };
 
-  virtual void setCurrTime(const casacore::Double& time);
+  virtual void setCurrTime(const Double& time);
   
  protected:
 
  private:   
-   casacore::Int rxtype_;
-   casacore::Float mean_pwv_,windspeed_,pixsize_,tauscale_,
+   Int rxtype_;
+   Float mean_pwv_,windspeed_,pixsize_,tauscale_,
      tground_,spilleff_,trx_,tatmos_,tcmb_;
-   casacore::Double Rtatmos_,Rtcmb_,Rtground_;//,Rtrx_
-   casacore::Matrix<casacore::Float>* screen_p; 
+   Double Rtatmos_,Rtcmb_,Rtground_;//,Rtrx_
+   Matrix<Float>* screen_p; 
 
    atm::AtmProfile *itsatm;
    atm::RefractiveIndexProfile *itsRIP;
    atm::SkyStatus *itsSkyStatus;
    atm::SpectralGrid *itsSpecGrid;
 
-   casacore::Vector<casacore::uInt> ATMnChan_;
-   casacore::Vector<casacore::Vector<casacore::uInt> > ATMchanMap_;
+   Vector<uInt> ATMnChan_;
+   Vector<Vector<uInt> > ATMchanMap_;
 
-   casacore::PtrBlock<casacore::Vector<casacore::Float>*> pwv_p;
-   casacore::Vector<casacore::Float> antx_,anty_;  // antenna positions in units of screen resl
+   PtrBlock<Vector<Float>*> pwv_p;
+   Vector<Float> antx_,anty_;  // antenna positions in units of screen resl
 
-   casacore::Vector<casacore::Float> airMass_; // length= nAnt, recalculated if ness
-   casacore::Bool airMassValid_;
-   casacore::Double airMassTime_;
-   casacore::Float sensitivityCoeff_;
+   Vector<Float> airMass_; // length= nAnt, recalculated if ness
+   Bool airMassValid_;
+   Double airMassTime_;
+   Float sensitivityCoeff_;
 };
 
 
@@ -357,34 +356,34 @@ class AtmosCorruptor : public CalCorruptor {
 class GJonesCorruptor : public CalCorruptor {
 
  public:
-   GJonesCorruptor(const casacore::Int nSim);
+   GJonesCorruptor(const Int nSim);
    virtual ~GJonesCorruptor();
 
-   //casacore::Complex& drift(const casacore::Int i);  // drift as fBM
-   casacore::Matrix<casacore::Complex>* drift();   
-   inline casacore::Float& tsys() { return tsys_; };
+   //Complex& drift(const Int i);  // drift as fBM
+   Matrix<Complex>* drift();   
+   inline Float& tsys() { return tsys_; };
    virtual void initialize();
-   void initialize(const casacore::Int Seed, const casacore::Float Beta, const casacore::Float scale);
-   casacore::Complex gain(const casacore::Int icorr, const casacore::Int islot);  // tsys scale and time-dep drift   
-   virtual casacore::Complex simPar(const VisIter& vi, VisCal::Type type,casacore::Int ipar);
+   void initialize(const Int Seed, const Float Beta, const Float scale);
+   Complex gain(const Int icorr, const Int islot);  // tsys scale and time-dep drift   
+   virtual Complex simPar(const VisIter& vi, VisCal::Type type,Int ipar);
 
    // for the residual/gaussian noise
-   void initialize(const casacore::Int seed, const casacore::Complex camp) {
-     rndGen_p = new casacore::MLCG(seed);
-     nDist_p = new casacore::Normal(rndGen_p, 0.0, 1.0); // sigma=1.
+   void initialize(const Int seed, const Complex camp) {
+     rndGen_p = new MLCG(seed);
+     nDist_p = new Normal(rndGen_p, 0.0, 1.0); // sigma=1.
      camp_=camp;
     };
-    inline casacore::Complex& camp() { return camp_; };
+    inline Complex& camp() { return camp_; };
 
  protected:
 
  private:   
-   casacore::Float tsys_;
-   casacore::PtrBlock<casacore::Matrix<casacore::Complex>*> drift_p;
+   Float tsys_;
+   PtrBlock<Matrix<Complex>*> drift_p;
    // RI todo rearrange so there's a Gauss corruptor for AN,D,G, a fBMcorrupt,etc
-   casacore::MLCG *rndGen_p;
-   casacore::Normal *nDist_p;
-   casacore::Complex camp_;
+   MLCG *rndGen_p;
+   Normal *nDist_p;
+   Complex camp_;
 };
 
 

@@ -34,7 +34,6 @@
 #define _ORIGIN  String("PowerLogPolynomialSpectralElement::") + __FUNCTION__ + ":" + String::toString(__LINE__) + ": "
 
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 /*

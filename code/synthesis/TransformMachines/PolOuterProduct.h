@@ -38,7 +38,7 @@
 #include <synthesis/TransformMachines/CFDefs.h>
 namespace casa{
   // <summary>  
-  //  Class to encapsulate the A-Term outer product (the Mueller casacore::Matrix in feed-polarization basis)
+  //  Class to encapsulate the A-Term outer product (the Mueller Matrix in feed-polarization basis)
   // </summary>
   
   // <use visibility=export>
@@ -84,9 +84,9 @@ namespace casa{
     //
     //------------------------------------------------------------------
     //
-    PolOuterProduct (const casacore::Matrix<casacore::Int>& polMap) 
+    PolOuterProduct (const Matrix<Int>& polMap) 
     {
-      //      assert(polMap.shape() == casacore::IPosition(2,4,4));
+      //      assert(polMap.shape() == IPosition(2,4,4));
 
       polMap_p.assign(polMap); 
       init();
@@ -96,7 +96,7 @@ namespace casa{
     //
     virtual ~PolOuterProduct () {};
     //
-    //============================= casacore::Functional Parts ============================
+    //============================= Functional Parts ============================
     //------------------------------------------------------------------
     //
     void init(MuellerType type=DIAGONAL)
@@ -108,65 +108,65 @@ namespace casa{
     //
     //------------------------------------------------------------------
     //
-    void makePolMap(const casacore::Vector<CrossPolCircular>& pols);
+    void makePolMap(const Vector<CrossPolCircular>& pols);
     //
     //------------------------------------------------------------------
     //
-    inline void setElement(const casacore::RigidVector<casacore::Int,2>& element,const casacore::Int& pos)   
+    inline void setElement(const RigidVector<Int,2>& element,const Int& pos)   
     {polMap_p(element(0),element(1)) = pos;}
     //
     //------------------------------------------------------------------
     //
-    inline void setElement(const CrossPolCircular& element, const casacore::Int& pos)             
-    {casacore::RigidVector<casacore::Int,2> loc=getMuellerElement(element); setElement(loc,pos);}
+    inline void setElement(const CrossPolCircular& element, const Int& pos)             
+    {RigidVector<Int,2> loc=getMuellerElement(element); setElement(loc,pos);}
     //
     //------------------------------------------------------------------
     //
-    inline casacore::Int getPolEnum(const casacore::RigidVector<casacore::Int, 2>& element)   
+    inline Int getPolEnum(const RigidVector<Int, 2>& element)   
     {return invIndexMap_p(element(0), element(1));};
     //
     //------------------------------------------------------------------
     //
-    inline casacore::RigidVector<casacore::Int,2> getMuellerElement(const CrossPolCircular& element) 
+    inline RigidVector<Int,2> getMuellerElement(const CrossPolCircular& element) 
     {return indexMap_p(element);}
     //
     //------------------------------------------------------------------
     //
-    inline casacore::Bool isSet(const casacore::RigidVector<casacore::Int,2> element)
+    inline Bool isSet(const RigidVector<Int,2> element)
     {return (polMap_p(element(0), element(1)) >= 0);};
     //
     //------------------------------------------------------------------
     //
-    inline casacore::Bool isSet(const CrossPolCircular& element) 
+    inline Bool isSet(const CrossPolCircular& element) 
     {return isSet(getMuellerElement(element));}
     //
     //------------------------------------------------------------------
     //
-    inline casacore::Int countNElements() 
+    inline Int countNElements() 
     {
-      casacore::Int n=0;
-      for (casacore::Int i=0;i<4;i++)
-	for (casacore::Int j=0;j<4;j++)
+      Int n=0;
+      for (Int i=0;i<4;i++)
+	for (Int j=0;j<4;j++)
 	  if (polMap_p(i,j) >= 0) n++;
       return n;
     }
     //
     //------------------------------------------------------------------
     //
-    inline casacore::Int nelements() {return nelement_p;};
+    inline Int nelements() {return nelement_p;};
     //
     //------------------------------------------------------------------
     //
-    const casacore::Vector<casacore::RigidVector<casacore::Int,2> >& getIndexMap() {return indexMap_p;};
+    const Vector<RigidVector<Int,2> >& getIndexMap() {return indexMap_p;};
     //
     //------------------------------------------------------------------
     //
-    const casacore::Matrix<casacore::Int>& getPolMap() {return polMap_p;}
-    PolMapType& makePolMat(const casacore::Vector<casacore::Int>& vbPol, const casacore::Vector<casacore::Int>& vbPol2ImMap);
-    PolMapType& makePol2CFMat(const casacore::Vector<casacore::Int>& vbPol, const casacore::Vector<casacore::Int>& vbPol2ImMap);
-    PolMapType& makeConjPolMat(const casacore::Vector<casacore::Int>& vbPol, const casacore::Vector<casacore::Int>& vbPol2ImMap);
-    PolMapType& makeConjPol2CFMat(const casacore::Vector<casacore::Int>& vbPol, const casacore::Vector<casacore::Int>& vbPol2ImMap);
-    void initCFMaps(const casacore::Vector<casacore::Int>& visPol, const casacore::Vector<casacore::Int>& visPolsUsed);
+    const Matrix<Int>& getPolMap() {return polMap_p;}
+    PolMapType& makePolMat(const Vector<Int>& vbPol, const Vector<Int>& vbPol2ImMap);
+    PolMapType& makePol2CFMat(const Vector<Int>& vbPol, const Vector<Int>& vbPol2ImMap);
+    PolMapType& makeConjPolMat(const Vector<Int>& vbPol, const Vector<Int>& vbPol2ImMap);
+    PolMapType& makeConjPol2CFMat(const Vector<Int>& vbPol, const Vector<Int>& vbPol2ImMap);
+    void initCFMaps(const Vector<Int>& visPol, const Vector<Int>& visPolsUsed);
 
     inline PolMapType& getPolMat() {return outerProduct2VBPolMap_p;};
     inline PolMapType& getConjPolMat() {return conjOuterProduct2VBPolMap_p;};
@@ -176,23 +176,23 @@ namespace casa{
     //============================= Protected Parts ============================
     //
   protected:
-    // casacore::LogIO& logIO() {return logIO_p;}
-    // casacore::LogIO logIO_p;
-    casacore::RigidVector<casacore::RigidVector<casacore::Int, 4>, 4> muellerRows_p, conjMuellerRows_p;
-    casacore::Matrix<casacore::Int> polMap_p, invIndexMap_p;
-    casacore::Vector<casacore::RigidVector<casacore::Int,2> > indexMap_p;
+    // LogIO& logIO() {return logIO_p;}
+    // LogIO logIO_p;
+    RigidVector<RigidVector<Int, 4>, 4> muellerRows_p, conjMuellerRows_p;
+    Matrix<Int> polMap_p, invIndexMap_p;
+    Vector<RigidVector<Int,2> > indexMap_p;
     PolMapType outerProduct2VBPolMap_p, outerProductIndex2VBPolMap_p, 
       conjOuterProduct2VBPolMap_p, conjOuterProductIndex2VBPolMap_p, cfIndices_p;
     MuellerType muellerType_p;
-    casacore::Int nelement_p;
+    Int nelement_p;
 
-    PolMapType& makePol2CFMat_p(const casacore::Vector<casacore::Int>& vbPol, 
-				const casacore::Vector<casacore::Int>& vbPol2ImMap,
+    PolMapType& makePol2CFMat_p(const Vector<Int>& vbPol, 
+				const Vector<Int>& vbPol2ImMap,
 				PolMapType& outerProdNdx2VBPolMap);
-    PolMapType& makePolMat_p(const casacore::Vector<casacore::Int>& vbPol, 
-			     const casacore::Vector<casacore::Int>& vbPol2ImMap,
+    PolMapType& makePolMat_p(const Vector<Int>& vbPol, 
+			     const Vector<Int>& vbPol2ImMap,
 			     PolMapType& outerProd2VBPolMap,
-			     casacore::RigidVector<casacore::RigidVector<casacore::Int, 4>, 4>& mRows);
+			     RigidVector<RigidVector<Int, 4>, 4>& mRows);
 
     virtual void makeMap()
     {
@@ -200,7 +200,7 @@ namespace casa{
       // Make the (damn) mappings!  Phew.
       //
 
-      casacore::RigidVector<casacore::Int,4> el;
+      RigidVector<Int,4> el;
       el(0)=PP;     el(1)=PP2Q;   el(2)=P2QP;    el(3)=P2QP2Q;  muellerRows_p(GPP) = el;
       el(0)=PQ2P;   el(1)=PQ;     el(2)=P2QQ2P;  el(3)=P2QQ;    muellerRows_p(GPQ) = el;
       el(0)=Q2PP;   el(1)=Q2PP2Q; el(2)=QP;      el(3)=QP2Q;    muellerRows_p(GQP) = el;
@@ -216,25 +216,25 @@ namespace casa{
       // Pol-enum to 2-index
       indexMap_p.resize(16);
 
-      indexMap_p(RR)     = casacore::RigidVector<casacore::Int,2>(0,0);      
-      indexMap_p(RR2L)   = casacore::RigidVector<casacore::Int,2>(0,1);    
-      indexMap_p(R2LR)   = casacore::RigidVector<casacore::Int,2>(0,2);    
-      indexMap_p(R2LR2L) = casacore::RigidVector<casacore::Int,2>(0,3);
+      indexMap_p(RR)     = RigidVector<Int,2>(0,0);      
+      indexMap_p(RR2L)   = RigidVector<Int,2>(0,1);    
+      indexMap_p(R2LR)   = RigidVector<Int,2>(0,2);    
+      indexMap_p(R2LR2L) = RigidVector<Int,2>(0,3);
 
-      indexMap_p(RL2R)   = casacore::RigidVector<casacore::Int,2>(1,0);      
-      indexMap_p(RL)     = casacore::RigidVector<casacore::Int,2>(1,1);      
-      indexMap_p(R2LL2R) = casacore::RigidVector<casacore::Int,2>(1,2);      
-      indexMap_p(R2LL)   = casacore::RigidVector<casacore::Int,2>(1,3);      
+      indexMap_p(RL2R)   = RigidVector<Int,2>(1,0);      
+      indexMap_p(RL)     = RigidVector<Int,2>(1,1);      
+      indexMap_p(R2LL2R) = RigidVector<Int,2>(1,2);      
+      indexMap_p(R2LL)   = RigidVector<Int,2>(1,3);      
 
-      indexMap_p(L2RR)   = casacore::RigidVector<casacore::Int,2>(2,0);     
-      indexMap_p(L2RR2L) = casacore::RigidVector<casacore::Int,2>(2,1);     
-      indexMap_p(LR)     = casacore::RigidVector<casacore::Int,2>(2,2);     
-      indexMap_p(LR2L)   = casacore::RigidVector<casacore::Int,2>(2,3);     
+      indexMap_p(L2RR)   = RigidVector<Int,2>(2,0);     
+      indexMap_p(L2RR2L) = RigidVector<Int,2>(2,1);     
+      indexMap_p(LR)     = RigidVector<Int,2>(2,2);     
+      indexMap_p(LR2L)   = RigidVector<Int,2>(2,3);     
 
-      indexMap_p(L2RL2R) = casacore::RigidVector<casacore::Int,2>(3,0); 
-      indexMap_p(L2RL)   = casacore::RigidVector<casacore::Int,2>(3,1);
-      indexMap_p(LL2R)   = casacore::RigidVector<casacore::Int,2>(3,2);
-      indexMap_p(LL)     = casacore::RigidVector<casacore::Int,2>(3,3);
+      indexMap_p(L2RL2R) = RigidVector<Int,2>(3,0); 
+      indexMap_p(L2RL)   = RigidVector<Int,2>(3,1);
+      indexMap_p(LL2R)   = RigidVector<Int,2>(3,2);
+      indexMap_p(LL)     = RigidVector<Int,2>(3,3);
 
 
       // 2-Index to Pol-enum
@@ -250,9 +250,9 @@ namespace casa{
   //
   //------------------------------------------------------------------
   //
-  PolOuterProduct::GenericVBPol translateStokesToGeneric(const casacore::Int& stokes) ;
-  casacore::Int translateGenericToStokes(const PolOuterProduct::GenericVBPol& gPol, 
-			       const casacore::MSIter::PolFrame& polFrame=casacore::MSIter::Circular);
+  PolOuterProduct::GenericVBPol translateStokesToGeneric(const Int& stokes) ;
+  Int translateGenericToStokes(const PolOuterProduct::GenericVBPol& gPol, 
+			       const MSIter::PolFrame& polFrame=MSIter::Circular);
 };
 
 #endif

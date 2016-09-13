@@ -28,7 +28,6 @@
 #include <casa/aips.h>
 #include <display/DisplayDatas/PassiveCachingDD.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	PassiveCachingDD::PassiveCachingDD() :
@@ -39,11 +38,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	Bool PassiveCachingDD::linToWorld(Vector<Double> &, const Vector<Double> &) {
-		return false;
+		return False;
 	}
 
 	Bool PassiveCachingDD::worldToLin(Vector<Double> &, const Vector<Double> &) {
-		return false;
+		return False;
 	}
 
 	String PassiveCachingDD::showPosition(const Vector<Double> &, const Bool &) {

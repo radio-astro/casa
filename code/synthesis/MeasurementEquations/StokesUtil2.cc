@@ -31,7 +31,6 @@
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/ArrayLogical.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 Array<StokesVector> operator* (const Array<Float> &farray, 
@@ -61,9 +60,9 @@ Bool near(const StokesVector& val1, const StokesVector& val2,
 // length in 4-space
 Bool operator>(const StokesVector& left,const StokesVector& right){
   if (innerProduct(left,left) > innerProduct(right, right))
-    return true;
+    return True;
   else
-    return false;
+    return False;
 }
 
 

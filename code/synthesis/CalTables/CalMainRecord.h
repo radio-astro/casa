@@ -44,7 +44,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <reviewed reviewer="" date="" tests="" demos="">
 
 // <prerequisite>
-//   <li> <linkto class="casacore::Record">casacore::Record</linkto> module
+//   <li> <linkto class="Record">Record</linkto> module
 // </prerequisite>
 //
 // <etymology>
@@ -79,107 +79,107 @@ class CalMainRecord
    ~CalMainRecord() {};
 
    // Construct from an existing record
-   CalMainRecord (const casacore::Record& inpRec);
+   CalMainRecord (const Record& inpRec);
 
    // Return as record
-   const casacore::Record& record();
+   const Record& record();
 
    // Field accessors
    // a) define
-   void defineTime (const casacore::Double& time);
-   void defineTime (const casacore::MEpoch& time);
-   void defineTimeEP (const casacore::Double& timeEP);
-   void defineInterval (const casacore::Double& interval);
-   void defineAntenna1 (const casacore::Int& antenna1);
-   void defineFeed1 (const casacore::Int& feed1);
-   void defineFieldId (const casacore::Int& fieldId);
-   void defineArrayId (const casacore::Int& arrayId);
-   void defineObsId (const casacore::Int& obsId);
-   void defineScanNo (const casacore::Int& scanNo);
-   void defineProcessorId (const casacore::Int& processorId);
-   void defineStateId (const casacore::Int& stateId);
-   void definePhaseId (const casacore::Int& phaseId);
-   void definePulsarBin (const casacore::Int& pulsarBin);
-   void definePulsarGateId (const casacore::Int& pulsarGateId);
-   void defineFreqGrp (const casacore::Int& freqGrp);
-   void defineFreqGrpName (const casacore::String& freqGrpName);
-   void defineFieldName (const casacore::String& fieldName);
-   void defineFieldCode (const casacore::String& fieldCode);
-   void defineSourceName (const casacore::String& sourceName);
-   void defineSourceCode (const casacore::String& sourceCode);
-   void defineCalGrp (const casacore::Int& calGrp);
-   void defineGain (const casacore::Array<casacore::Complex>& gain);
-   void defineRefAnt (const casacore::Array<casacore::Int>& refAnt);
-   void defineRefFeed (const casacore::Array<casacore::Int>& refFeed);
-   void defineRefReceptor (const casacore::Array<casacore::Int>& refReceptor);
-   void defineRefFreq (const casacore::Array<casacore::Double>& refFreq);
-   void defineMeasFreqRef (const casacore::Int& measFreqRef);
-   void defineRefDir (const casacore::Array<casacore::Double>& refDir);
-   void defineMeasDirRef (const casacore::Int& measDirRef);
-   void defineCalDescId (const casacore::Int& calDescId);
-   void defineCalHistoryId (const casacore::Int& calHistoryId);
+   void defineTime (const Double& time);
+   void defineTime (const MEpoch& time);
+   void defineTimeEP (const Double& timeEP);
+   void defineInterval (const Double& interval);
+   void defineAntenna1 (const Int& antenna1);
+   void defineFeed1 (const Int& feed1);
+   void defineFieldId (const Int& fieldId);
+   void defineArrayId (const Int& arrayId);
+   void defineObsId (const Int& obsId);
+   void defineScanNo (const Int& scanNo);
+   void defineProcessorId (const Int& processorId);
+   void defineStateId (const Int& stateId);
+   void definePhaseId (const Int& phaseId);
+   void definePulsarBin (const Int& pulsarBin);
+   void definePulsarGateId (const Int& pulsarGateId);
+   void defineFreqGrp (const Int& freqGrp);
+   void defineFreqGrpName (const String& freqGrpName);
+   void defineFieldName (const String& fieldName);
+   void defineFieldCode (const String& fieldCode);
+   void defineSourceName (const String& sourceName);
+   void defineSourceCode (const String& sourceCode);
+   void defineCalGrp (const Int& calGrp);
+   void defineGain (const Array<Complex>& gain);
+   void defineRefAnt (const Array<Int>& refAnt);
+   void defineRefFeed (const Array<Int>& refFeed);
+   void defineRefReceptor (const Array<Int>& refReceptor);
+   void defineRefFreq (const Array<Double>& refFreq);
+   void defineMeasFreqRef (const Int& measFreqRef);
+   void defineRefDir (const Array<Double>& refDir);
+   void defineMeasDirRef (const Int& measDirRef);
+   void defineCalDescId (const Int& calDescId);
+   void defineCalHistoryId (const Int& calHistoryId);
 
    // b) get
-   void getTime (casacore::Double& time);
-   void getTimeEP (casacore::Double& timeEP);
-   void getInterval (casacore::Double& interval);
-   void getAntenna1 (casacore::Int& antenna1);
-   void getFeed1 (casacore::Int& feed1);
-   void getFieldId (casacore::Int& fieldId);
-   void getArrayId (casacore::Int& arrayId);
-   void getObsId (casacore::Int& obsId);
-   void getScanNo (casacore::Int& scanNo);
-   void getProcessorId (casacore::Int& processorId);
-   void getStateId (casacore::Int& stateId);
-   void getPhaseId (casacore::Int& phaseId);
-   void getPulsarBin (casacore::Int& pulsarBin);
-   void getPulsarGateId (casacore::Int& pulsarGateId);
-   void getFreqGrp (casacore::Int& freqGrp);
-   void getFreqGrpName (casacore::String& freqGrpName);
-   void getFieldName (casacore::String& fieldName);
-   void getFieldCode (casacore::String& fieldCode);
-   void getSourceName (casacore::String& sourceName);
-   void getSourceCode (casacore::String& sourceCode);
-   void getCalGrp (casacore::Int& calGrp);
-   void getGain (casacore::Array<casacore::Complex>& gain);
-   void getRefAnt (casacore::Array<casacore::Int>& refAnt);
-   void getRefFeed (casacore::Array<casacore::Int>& refFeed);
-   void getRefReceptor (casacore::Array<casacore::Int>& refReceptor);
-   void getRefFreq (casacore::Array<casacore::Double>& refFreq);
-   void getMeasFreqRef (casacore::Int& measFreqRef);
-   void getRefDir (casacore::Array<casacore::Double>& refDir);
-   void getMeasDirRef (casacore::Int& measDirRef);
-   void getCalDescId (casacore::Int& calDescId);
-   void getCalHistoryId (casacore::Int& calHistoryId);
+   void getTime (Double& time);
+   void getTimeEP (Double& timeEP);
+   void getInterval (Double& interval);
+   void getAntenna1 (Int& antenna1);
+   void getFeed1 (Int& feed1);
+   void getFieldId (Int& fieldId);
+   void getArrayId (Int& arrayId);
+   void getObsId (Int& obsId);
+   void getScanNo (Int& scanNo);
+   void getProcessorId (Int& processorId);
+   void getStateId (Int& stateId);
+   void getPhaseId (Int& phaseId);
+   void getPulsarBin (Int& pulsarBin);
+   void getPulsarGateId (Int& pulsarGateId);
+   void getFreqGrp (Int& freqGrp);
+   void getFreqGrpName (String& freqGrpName);
+   void getFieldName (String& fieldName);
+   void getFieldCode (String& fieldCode);
+   void getSourceName (String& sourceName);
+   void getSourceCode (String& sourceCode);
+   void getCalGrp (Int& calGrp);
+   void getGain (Array<Complex>& gain);
+   void getRefAnt (Array<Int>& refAnt);
+   void getRefFeed (Array<Int>& refFeed);
+   void getRefReceptor (Array<Int>& refReceptor);
+   void getRefFreq (Array<Double>& refFreq);
+   void getMeasFreqRef (Int& measFreqRef);
+   void getRefDir (Array<Double>& refDir);
+   void getMeasDirRef (Int& measDirRef);
+   void getCalDescId (Int& calDescId);
+   void getCalHistoryId (Int& calHistoryId);
 
  protected:
    // Add to itsRecord
-   void addRec (const casacore::Record& newRec);
+   void addRec (const Record& newRec);
 
    // Field accessors for fit parameters.
    // Used in separate parts of the inheritance tree.
    // a) define
-   void dTotalSolnOk (const casacore::Bool& totalSolnOk);
-   void dTotalFit (const casacore::Float& totalFit);
-   void dTotalFitWgt (const casacore::Float& totalFitWgt);
-   void dSolnOk (const casacore::Array <casacore::Bool>& solnOk);
-   void dFit (const casacore::Array <casacore::Float>& fit);
-   void dFitWgt (const casacore::Array <casacore::Float>& fitWgt);
-   void dFlag (const casacore::Array <casacore::Bool>& flag);
-   void dSnr (const casacore::Array <casacore::Float>& snr);
+   void dTotalSolnOk (const Bool& totalSolnOk);
+   void dTotalFit (const Float& totalFit);
+   void dTotalFitWgt (const Float& totalFitWgt);
+   void dSolnOk (const Array <Bool>& solnOk);
+   void dFit (const Array <Float>& fit);
+   void dFitWgt (const Array <Float>& fitWgt);
+   void dFlag (const Array <Bool>& flag);
+   void dSnr (const Array <Float>& snr);
 
    // b) get
-   void gTotalSolnOk (casacore::Bool& totalSolnOk);
-   void gTotalFit (casacore::Float& totalFit);
-   void gTotalFitWgt (casacore::Float& totalFitWgt);
-   void gSolnOk (casacore::Array <casacore::Bool>& solnOk);
-   void gFit (casacore::Array <casacore::Float>& fit);
-   void gFitWgt (casacore::Array <casacore::Float>& fitWgt);
-   void gFlag (casacore::Array <casacore::Bool>& flag);
-   void gSnr (casacore::Array <casacore::Float>& snr);
+   void gTotalSolnOk (Bool& totalSolnOk);
+   void gTotalFit (Float& totalFit);
+   void gTotalFitWgt (Float& totalFitWgt);
+   void gSolnOk (Array <Bool>& solnOk);
+   void gFit (Array <Float>& fit);
+   void gFitWgt (Array <Float>& fitWgt);
+   void gFlag (Array <Bool>& flag);
+   void gSnr (Array <Float>& snr);
 
  private:
-   casacore::Record itsRecord;
+   Record itsRecord;
 
  };
 

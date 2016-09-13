@@ -16,7 +16,6 @@
 
 using namespace std;
 
-using namespace casacore;
 namespace casa {
 
 namespace vi {
@@ -371,7 +370,7 @@ public:
         expected (1) = base * 10 + 1;
         expected (2) = base * 10 + 2;
 
-        Bool equal = true;
+        Bool equal = True;
 
         for (Int i = 0; i < 3; i++){
             equal = equal && abs (actual (i) - expected(i)) < 1e5;
@@ -442,7 +441,7 @@ public:
 
     SigmaWeightChecker (Int averagingFactor, Accessor accessor, const String & name,
                         Int lastRow, Int nRowsInPartialAverage, double channelFraction,
-                        Bool isSigma = false)
+                        Bool isSigma = False)
     : accessor_p (accessor), averagingFactor_p (averagingFactor),
       channelFraction_p (channelFraction),
       endBoundaryConditions_p (EndBoundaryConditions (1, make_pair (lastRow, nRowsInPartialAverage))),
@@ -452,7 +451,7 @@ public:
 
     SigmaWeightChecker (Int averagingFactor, Accessor accessor, const String & name,
                         const EndBoundaryConditions & endBoundaryConditions,
-                        double channelFraction, Bool isSigma = false)
+                        double channelFraction, Bool isSigma = False)
     : accessor_p (accessor), averagingFactor_p (averagingFactor),
       channelFraction_p (channelFraction),
       endBoundaryConditions_p (endBoundaryConditions),
@@ -921,7 +920,7 @@ protected:
     checkRows (VisBuffer2 * vb, VisibilityIterator2 * vi, Int subchunk,
                Int firstRow);
 
-    void clearCheckers(Bool deleteIt = true);
+    void clearCheckers(Bool deleteIt = True);
 
     void doSimpleTest (MeasurementSet * ms, Int interval, Int chunkInterval, Int averagingFactor);
     void doSimpleTests (MeasurementSet * ms);
@@ -1191,7 +1190,7 @@ protected:
         msFactory->addSpectralWindows(1); // only one spw for now
         msFactory->addAntennas(nAntennas_p);
         msFactory->addFeeds (10); // needs antennas and spws to be setup first
-        msFactory->addWeightSpectrum (false);
+        msFactory->addWeightSpectrum (False);
 
         for (Int i = 0; i < 10; i++){
             msFactory->addField (String::format ("field%d", i), MDirection());
@@ -1237,8 +1236,8 @@ protected:
 
         // Set all of the data to be unflagged.
 
-        msFactory->setDataGenerator(MSMainEnums::FLAG, new GenerateConstant<Bool> (false));
-        msFactory->setDataGenerator(MSMainEnums::FLAG_ROW, new GenerateConstant<Bool> (false));
+        msFactory->setDataGenerator(MSMainEnums::FLAG, new GenerateConstant<Bool> (False));
+        msFactory->setDataGenerator(MSMainEnums::FLAG_ROW, new GenerateConstant<Bool> (False));
 
         // Set the time centroid to be the middle of the sample interval.
 
@@ -1296,7 +1295,7 @@ protected:
         addRowChecker (new SigmaWeightChecker (averagingFactor, & VisBuffer2::weight, "Weight",
                                                lastRow, nRowsInPartialAverage, channelFraction));
         addRowChecker (new SigmaWeightChecker (averagingFactor, & VisBuffer2::sigma, "Sigma",
-                                               lastRow, nRowsInPartialAverage, channelFraction, true));
+                                               lastRow, nRowsInPartialAverage, channelFraction, True));
 
         AveragingParameters parameters (interval * averagingFactor,
                                         chunkInterval,
@@ -1395,7 +1394,7 @@ protected:
         msFactory->addSpectralWindows(N_Windows); // only on spw for now
         msFactory->addAntennas(nAntennas_p);
         msFactory->addFeeds (10); // needs antennas and spws to be setup first
-        msFactory->addWeightSpectrum (false);
+        msFactory->addWeightSpectrum (False);
 
         for (Int i = 0; i < 10; i++){
             msFactory->addField (String::format ("field%d", i), MDirection());
@@ -1441,8 +1440,8 @@ protected:
 
         // Set all of the data to be unflagged.
 
-        msFactory->setDataGenerator(MSMainEnums::FLAG, new GenerateConstant<Bool> (false));
-        msFactory->setDataGenerator(MSMainEnums::FLAG_ROW, new GenerateConstant<Bool> (false));
+        msFactory->setDataGenerator(MSMainEnums::FLAG, new GenerateConstant<Bool> (False));
+        msFactory->setDataGenerator(MSMainEnums::FLAG_ROW, new GenerateConstant<Bool> (False));
 
         // Set the time centroid to be the middle of the sample interval.
 
@@ -1507,7 +1506,7 @@ protected:
         addRowChecker (new SigmaWeightChecker (averagingFactor, & VisBuffer2::weight, "Weight",
                                                endBoundaryConditions, 1.0));
         addRowChecker (new SigmaWeightChecker (averagingFactor, & VisBuffer2::sigma, "Sigma",
-                                               endBoundaryConditions, 1.0, true));
+                                               endBoundaryConditions, 1.0, True));
 
         Block<Int> columns (3, 0);
         columns [0] = MS::ARRAY_ID;
@@ -1516,7 +1515,7 @@ protected:
 
         AveragingParameters parameters (interval * averagingFactor,
                                         chunkInterval,
-                                        SortColumns (columns, false),
+                                        SortColumns (columns, False),
                                         AveragingOptions (AveragingOptions::AverageObserved |
                                                           AveragingOptions::AverageModel |
                                                           AveragingOptions::AverageCorrected |
@@ -1593,7 +1592,7 @@ protected:
         msFactory->setDataGenerator(MSMainEnums::WEIGHT_SPECTRUM,
                                     new GenerateConstant<Float> (1.0));
 
-        auto_ptr<GenerateConstant<Bool> > generateFalse (new GenerateConstant<Bool> (false));
+        auto_ptr<GenerateConstant<Bool> > generateFalse (new GenerateConstant<Bool> (False));
         msFactory->setDataGenerator(MSMainEnums::FLAG, generateFalse.get());
 
         auto_ptr<GenerateAlternatingFlagRows> generateAlternatingFlagRows (new GenerateAlternatingFlagRows());
@@ -1700,7 +1699,7 @@ protected:
         msFactory->setDataGenerator(MSMainEnums::WEIGHT_SPECTRUM,
                                     new GenerateConstant<Float> (1.0));
 
-        auto_ptr<GenerateConstant<Bool> > generateFalse (new GenerateConstant<Bool> (false));
+        auto_ptr<GenerateConstant<Bool> > generateFalse (new GenerateConstant<Bool> (False));
         msFactory->setDataGenerator(MSMainEnums::FLAG_ROW, generateFalse.get());
 
         msFactory->setDataGenerator(MSMainEnums::TIME_CENTROID, new GenerateTime());
@@ -1734,7 +1733,7 @@ protected:
         addCubeChecker (new CheckerboardFlagCubeChecker ());
 
 
-        addRowChecker (generateConstantRowChecker (false, & VisBuffer2::flagRow, String ("FlagRow")));
+        addRowChecker (generateConstantRowChecker (False, & VisBuffer2::flagRow, String ("FlagRow")));
 
         addRowChecker (new SimpleTimeCentroidChecker());
 
@@ -1786,7 +1785,7 @@ public:
 
         doSimpleTest (ms.get(), 1, 12, 3);
 
-        doSimpleTest (ms.get(), 1, 12, 3, true);
+        doSimpleTest (ms.get(), 1, 12, 3, True);
 
         printf ("--- ... completed WeightingTests\n");
     }
@@ -1822,7 +1821,7 @@ protected:
         auto_ptr<GenerateRamp> rampGenerator (new GenerateRamp());
         msFactory->setDataGenerator(MSMainEnums::DATA, rampGenerator.get());
 
-        auto_ptr<GenerateConstant<Bool> > generateFalse (new GenerateConstant<Bool> (false));
+        auto_ptr<GenerateConstant<Bool> > generateFalse (new GenerateConstant<Bool> (False));
         msFactory->setDataGenerator(MSMainEnums::FLAG, generateFalse.get());
         msFactory->setDataGenerator(MSMainEnums::FLAG_ROW, generateFalse.get());
 
@@ -1836,7 +1835,7 @@ protected:
 
     void
     doSimpleTest (MeasurementSet * ms, Int interval, Int chunkInterval, Int averagingFactor,
-                  Bool useDoubler = false)
+                  Bool useDoubler = False)
     {
         printf ("\nStarting averaging of %d samples ...\n", averagingFactor);
 
@@ -1852,7 +1851,7 @@ protected:
         addRowChecker (new SigmaWeightChecker (averagingFactor, & VisBuffer2::weight, "Weight",
                                                lastRow, nRowsInPartialAverage, 1.0));
         addRowChecker (new SigmaWeightChecker (averagingFactor, & VisBuffer2::sigma, "Sigma",
-                                               lastRow, nRowsInPartialAverage, 1.0, true));
+                                               lastRow, nRowsInPartialAverage, 1.0, True));
 
         CountedPtr <WeightScaling> weightScaling = useDoubler ? generateWeightScaling (doubler)
                                                               : WeightScaling::generateIdentityWeightScaling();
@@ -2008,8 +2007,8 @@ protected:
 
         // Set all of the data to be unflagged.
 
-        msFactory->setDataGenerator(MSMainEnums::FLAG, new GenerateConstant<Bool> (false));
-        msFactory->setDataGenerator(MSMainEnums::FLAG_ROW, new GenerateConstant<Bool> (false));
+        msFactory->setDataGenerator(MSMainEnums::FLAG, new GenerateConstant<Bool> (False));
+        msFactory->setDataGenerator(MSMainEnums::FLAG_ROW, new GenerateConstant<Bool> (False));
 
         // Set the time centroid to be the middle of the sample interval.
 
@@ -2281,7 +2280,7 @@ protected:
         msFactory->addSpectralWindows(1); // only one spw for now
         msFactory->addAntennas(nAntennas_p);
         msFactory->addFeeds (10); // needs antennas and spws to be setup first
-        msFactory->addWeightSpectrum (false);
+        msFactory->addWeightSpectrum (False);
 
         for (Int i = 0; i < 10; i++){
             msFactory->addField (String::format ("field%d", i), MDirection());
@@ -2330,8 +2329,8 @@ protected:
 
         // Set all of the data to be unflagged.
 
-        msFactory->setDataGenerator(MSMainEnums::FLAG, new GenerateConstant<Bool> (false));
-        msFactory->setDataGenerator(MSMainEnums::FLAG_ROW, new GenerateConstant<Bool> (false));
+        msFactory->setDataGenerator(MSMainEnums::FLAG, new GenerateConstant<Bool> (False));
+        msFactory->setDataGenerator(MSMainEnums::FLAG_ROW, new GenerateConstant<Bool> (False));
 
         // Set the time centroid to be the middle of the sample interval.
 
@@ -2388,7 +2387,7 @@ protected:
         addRowChecker (new SigmaWeightChecker (averagingFactor, & VisBuffer2::weight, "Weight",
                                                lastRow, nRowsInPartialAverage, channelFraction));
         addRowChecker (new SigmaWeightChecker (averagingFactor, & VisBuffer2::sigma, "Sigma",
-                                               lastRow, nRowsInPartialAverage, channelFraction, true));
+                                               lastRow, nRowsInPartialAverage, channelFraction, True));
 
 
         AveragingParameters parameters (interval * averagingFactor,
@@ -2488,7 +2487,7 @@ Tester::Tester (Int nRowsExpected)
   nTestsAttempted_p (0),
   nTestsPassed_p (0)
 {
-    clearCheckers(false);
+    clearCheckers(False);
 }
 
 void
@@ -2535,18 +2534,18 @@ Tester::isTestSelected (const Arguments & arguments, const String & testName) co
 {
     if (! utilj::containsKey ("--test", arguments))
     {
-        return true;
+        return True;
     }
 
     String selectedTest = arguments.find ("--test")->second;
 
     if (downcase (selectedTest) == "all"){
-        return true;
+        return True;
     }
 
     if (selectedTest.size () > testName.size()){
 
-        return false;
+        return False;
     }
 
     String testNameTruncated = testName.substr (0, selectedTest.size());
@@ -2566,7 +2565,7 @@ Tester::doTest (const Environment & environment, const Arguments & arguments)
     }
 
     nTestsAttempted_p ++;
-    Bool failed = true;
+    Bool failed = True;
 
     try {
 
@@ -2581,7 +2580,7 @@ Tester::doTest (const Environment & environment, const Arguments & arguments)
         fflush (stdout);
 
         nTestsPassed_p ++;
-        failed = false;
+        failed = False;
     }
     catch (TestError & e){
 
@@ -2609,7 +2608,7 @@ Tester::doTest (const Environment & environment, const Arguments & arguments)
 Bool
 Tester::doTests (Int nArgs, char * args [])
 {
-    Bool ok = false;
+    Bool ok = False;
 
     try {
 
@@ -2634,7 +2633,7 @@ Tester::doTests (Int nArgs, char * args [])
         if (nTestsAttempted_p == nTestsPassed_p){
 
             printf ("\n...\n... Passed all %d tests attempted ;-)\n...\n", nTestsAttempted_p);
-            ok = true;
+            ok = True;
         }
         else{
             printf ("\n???\n??? FAILED %d of %d tests attempted ;-(\n...\n",
@@ -2838,10 +2837,8 @@ Tester::checkRows (VisBuffer2 * vb, VisibilityIterator2 * vi, Int subchunk,
 
 } // end namespace test
 } // end namespace vi
-using namespace casacore;
 } // end namespace casa
 
-using namespace casacore;
 using namespace casa;
 
 int

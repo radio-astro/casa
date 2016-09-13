@@ -35,7 +35,7 @@
 
 namespace casa {
 
-class ImagePrimaryBeamCorrector : public ImageTask<casacore::Float> {
+class ImagePrimaryBeamCorrector : public ImageTask<Float> {
 	// <summary>
 	// Top level interface for primary beam correction.
 	// </summary>
@@ -71,31 +71,31 @@ public:
 	ImagePrimaryBeamCorrector() = delete;
 
 	// if <src>outname</src> is empty, no image will be written
-	// if <src>overwrite</src> is true, if image already exists it will be removed
-	// if <src>overwrite</src> is false, if image already exists exception will be thrown
+	// if <src>overwrite</src> is True, if image already exists it will be removed
+	// if <src>overwrite</src> is False, if image already exists exception will be thrown
 	// Only one of <src>regionPtr</src> or <src>region<src> should be specified.
 	// <group>
 
 	ImagePrimaryBeamCorrector(
 		const SPCIIF image,
 		const SPCIIF pbImage,
-		const casacore::Record * const &regionPtr,
-		const casacore::String& region, const casacore::String& box,
-		const casacore::String& chanInp, const casacore::String& stokes,
-		const casacore::String& maskInp,
-		const casacore::String& outname, const casacore::Bool overwrite,
-		const casacore::Float cutoff, const casacore::Bool useCutoff, const Mode mode
+		const Record * const &regionPtr,
+		const String& region, const String& box,
+		const String& chanInp, const String& stokes,
+		const String& maskInp,
+		const String& outname, const Bool overwrite,
+		const Float cutoff, const Bool useCutoff, const Mode mode
 	);
 
 	ImagePrimaryBeamCorrector(
 		const SPCIIF image,
-		const casacore::Array<casacore::Float>& pbArray,
-		const casacore::Record * const &regionPtr,
-		const casacore::String& region, const casacore::String& box,
-		const casacore::String& chanInp, const casacore::String& stokes,
-		const casacore::String& maskInp,
-		const casacore::String& outname, const casacore::Bool overwrite,
-		const casacore::Float cutoff, const casacore::Bool useCutoff, const Mode mode
+		const Array<Float>& pbArray,
+		const Record * const &regionPtr,
+		const String& region, const String& box,
+		const String& chanInp, const String& stokes,
+		const String& maskInp,
+		const String& outname, const Bool overwrite,
+		const Float cutoff, const Bool useCutoff, const Mode mode
 	);
 
 	// </group>
@@ -103,25 +103,25 @@ public:
 	// destructor
 	~ImagePrimaryBeamCorrector();
 
-	// perform the correction. If <src>wantReturn</src> is true, return a pointer to the
+	// perform the correction. If <src>wantReturn</src> is True, return a pointer to the
 	// collapsed image.
-	SPIIF correct(const casacore::Bool wantReturn) const;
+	SPIIF correct(const Bool wantReturn) const;
 
-	casacore::String getClass() const;
+	String getClass() const;
 
 protected:
 
-	vector<casacore::Coordinate::Type> _getNecessaryCoordinates() const;
+	vector<Coordinate::Type> _getNecessaryCoordinates() const;
 
 	CasacRegionManager::StokesControl _getStokesControl() const;
 
 private:
 	SPIIF _pbImage;
 
-	casacore::Float _cutoff;
+	Float _cutoff;
 	Mode _mode;
-	casacore::Bool _useCutoff;
-	const static casacore::String _class;
+	Bool _useCutoff;
+	const static String _class;
 
 	void _checkPBSanity();
 };

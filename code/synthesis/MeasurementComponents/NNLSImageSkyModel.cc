@@ -46,7 +46,6 @@
 #include <casa/Logging/LogMessage.h>
 #include <casa/Logging/LogSink.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // NNLS solver: This could be a whole lot smarter about memory use!
@@ -57,7 +56,7 @@ Bool NNLSImageSkyModel::solve(SkyEquation& se) {
   if(numberOfModels()>1) {
     message.message("Cannot process more than one field");
     logSink().post(message);
-    return false;
+    return False;
   }
   
   // Zero Stokes I for the masked region
@@ -174,7 +173,7 @@ Bool NNLSImageSkyModel::solve(SkyEquation& se) {
       o << "Insufficient memory for PSF matrix: reduce the size of the masks";
       message.message(o);
       logSink().post(message);
-      return false;
+      return False;
     }
     Matrix<Float> AMatrix(lMask, lFluxMask);
     Vector<Float> XVector(lFluxMask); // Unknown X vector
@@ -286,7 +285,7 @@ Bool NNLSImageSkyModel::solve(SkyEquation& se) {
       }
     }
   }
-  return(true);
+  return(True);
 };
 
 // Zero Stokes I for masked region
@@ -340,7 +339,7 @@ Bool NNLSImageSkyModel::maskedZeroI() {
     }
   }
   
-  return(true);
+  return(True);
 };
   
 

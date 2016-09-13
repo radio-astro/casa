@@ -37,36 +37,36 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Everything going into the FlagReport is by value
 // Everything going out of it is by reference
-class FlagReport : public casacore::Record
+class FlagReport : public Record
 {
 	public:
-                FlagReport(casacore::String type=casacore::String("none"),casacore::String name=casacore::String(""), 
-                                 casacore::String title=casacore::String(""), 
-			         casacore::String xlabel=casacore::String(""), casacore::String ylabel=casacore::String("") );
+                FlagReport(String type=String("none"),String name=String(""), 
+                                 String title=String(""), 
+			         String xlabel=String(""), String ylabel=String("") );
                  // TODO : By value. Change to by-reference
-                FlagReport(casacore::String type, casacore::String name, const casacore::Record &other); 
-                FlagReport(const casacore::Record &other);
+                FlagReport(String type, String name, const Record &other); 
+                FlagReport(const Record &other);
 		~FlagReport();
 
                 // Add, query and access reports from a "list" type FlagReport
-                casacore::Bool addReport(FlagReport inpReport); 
-                casacore::Int nReport();
-                casacore::Bool accessReport(casacore::Int index, FlagReport &outReport);
+                Bool addReport(FlagReport inpReport); 
+                Int nReport();
+                Bool accessReport(Int index, FlagReport &outReport);
 
                 // Add and query data to plot, for FlagReports of type "plotraster","plotline","plotscatter"
-                casacore::Bool addData(casacore::Array<casacore::Float> data);
-                //casacore::Bool addData(casacore::Vector<casacore::Float> xdata,casacore::Vector<casacore::Float> ydata, casacore::String label);
-                casacore::Bool addData(casacore::String plottype, casacore::Vector<casacore::Float> xdata,casacore::Vector<casacore::Float> ydata, casacore::String errortype, casacore::Vector<casacore::Float> error, casacore::String label);
-                casacore::Int nData();
+                Bool addData(Array<Float> data);
+                //Bool addData(Vector<Float> xdata,Vector<Float> ydata, String label);
+                Bool addData(String plottype, Vector<Float> xdata,Vector<Float> ydata, String errortype, Vector<Float> error, String label);
+                Int nData();
 
-                casacore::String reportType();
+                String reportType();
                 // Check validity of FlagReport.
-                casacore::Bool verifyFields();
+                Bool verifyFields();
 
 	protected:
 
 	private:
-                casacore::LogIO logger_p;
+                casa::LogIO logger_p;
 };
 
 

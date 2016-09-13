@@ -75,12 +75,7 @@ using asdm::TagType;
 using namespace asdm;
 using namespace asdmbinaries;
 
-using namespace casacore;
 namespace casa {
-
-  using casacore::Double;
-  using casacore::Complex;
-  using casacore::Float;
   
   MS2ASDM::MS2ASDM(MeasurementSet& ms) :
     ROMSColumns(ms),
@@ -157,17 +152,17 @@ namespace casa {
     runningId_p++;
     if(sprintf(cstr,"%x", runningId_p) > 0){
       currentUid_p = baseUid_p + String(cstr);
-      return true;
+      return True;
     }
     else{
       runningId_p--;
-      return false;
+      return False;
     }
   }
 
   Bool MS2ASDM::writeASDM(const String& asdmfile, const String& datacolumn, 
 			  const String& archiveid, const String& rangeid, Bool verbose,
-			  const casacore::Double subscanDuration, const casacore::Double schedBlockDuration,
+			  const Double subscanDuration, const Double schedBlockDuration, 
 			  const Bool msDataIsAPCorrected)
   {
 
@@ -178,7 +173,7 @@ namespace casa {
     if(!incrementUid()){// need to increment before first use
       os << LogIO::SEVERE << "Error generating UID"
 	 << LogIO::POST;      
-      return false;
+      return False;
     }
 
     // set the container UID of all tables == the UID of the ASDM
@@ -196,7 +191,7 @@ namespace casa {
     // initialize observatory name
     if(observation().nrow()==0){
       os << LogIO::SEVERE << "MS Observation table is empty." << LogIO::POST;
-      return false;
+      return False;
     }
 
     setObservatoryName(observation().telescopeName()(0)); // get name of observatory from first row of observation table
@@ -204,13 +199,13 @@ namespace casa {
     if(subscanDuration<1.){
       os << LogIO::SEVERE << "Input error: Unreasonably short sub scan duration limit: " << subscanDuration  
 	 << " seconds." << LogIO::POST;
-      return false;
+      return False;
     }
      
     if(schedBlockDuration<60.){
       os << LogIO::SEVERE << "Input error: Unreasonably short scheduling block duration limit: " << schedBlockDuration  
 	 << " seconds. (Should be >= 60 s)" << LogIO::POST;
-      return false;
+      return False;
     }
      
     setSubScanDuration(subscanDuration);
@@ -235,80 +230,80 @@ namespace casa {
     // write the ASDM tables
 
     if(!writeStation()){
-      return false;
+      return False;
     }
 
     if(!writeAntenna()){
-      return false;
+      return False;
     }
 
     if(!writeSpectralWindow()){
-      return false;
+      return False;
     }
 
     if(!writeSource()){
-      return false;
+      return False;
     }
 
     if(!writePolarization()){
-      return false;
+      return False;
     }
 
     if(!writeProcessor()){
-      return false;
+      return False;
     }
 
     if(!writeField()){
-      return false;
+      return False;
     }
 
     if(!writeReceiver()){
-      return false;
+      return False;
     }
 
     if(!writeFeed()){
-      return false;
+      return False;
     }
 
     if(!writeDataDescription()){
-      return false;
+      return False;
     }
 
     if(!writeSwitchCycle()){
-      return false;
+      return False;
     }
 
     if(!writeState()){
-      return false;
+      return False;
     }
 
     if(!writeSysCal()){
-      return false;
+      return False;
     }
 
     if(!writeConfigDescription()){
-      return false;
+      return False;
     }
 
     if(!writeSBSummaryAndExecBlockStubs()){ 
-      return false;
+      return False;
     }
 
     // prepare the writing of binary data
     if(!setDirectory(asdmfile)){
-       return false;
+       return False;
     }
 
     if(!writeMainAndScanAndSubScan(datacolumn)){ 
-      return false;
+      return False;
     }
 
     if(!writePointingModel()){
-      return false;
+      return False;
     }
 
     if(!writePointing()){
-      return false;
+      return False;
     }
 
     // finish writing the ASDM non-binary data
@@ -318,10 +313,10 @@ namespace casa {
     catch(ConversionException x){
       os << LogIO::SEVERE << "Error writing ASDM non-binary data:" << x.getMessage()
 	 << LogIO::POST;      
-      return false;
+      return False;
     }     
 
-    return true;
+    return True;
 
   }
 
@@ -337,26 +332,26 @@ namespace casa {
     }
     catch(AipsError x){
       try{
-	asdmDir.create(false); // do not overwrite
+	asdmDir.create(False); // do not overwrite
       }
       catch(AipsError y){
 	os << LogIO::SEVERE << "Error creating ASDM top directory: " << y.getMesg()
 	   << LogIO::POST;      
-	return false;
+	return False;
       }
     }
     // create ASDM binary output directory
     Directory asdmDir2(asdmfile+"/ASDMBinary");
     try{
-      asdmDir2.create(false); // do not overwrite
+      asdmDir2.create(False); // do not overwrite
     }
     catch(AipsError x){
       os << LogIO::SEVERE << "Error creating ASDMBinary directory: " << x.getMesg()
 	 << LogIO::POST;      
-      return false;
+      return False;
     }
     asdmDir_p = asdmfile;
-    return true;
+    return True;
   }
 
 
@@ -380,8 +375,8 @@ namespace casa {
     string eBlockUID = eBlockRow->getExecBlockUID().getEntityId ().toString();
     int eBlockNum = eBlockRow->getExecBlockNum();
 
-    Bool warned=false; // use later to avoid repetitive warnings
-    Bool warned2=false; // use later to avoid repetitive warnings
+    Bool warned=False; // use later to avoid repetitive warnings
+    Bool warned2=False; // use later to avoid repetitive warnings
 
     try{
 
@@ -488,7 +483,7 @@ namespace casa {
       unsigned int scanNum = theScan; // ASDM scan numbering starts at 1
       if(scanNum == 0 && !warned){
 	os << LogIO::WARN << "Scan Number is 0. Note that by convention scan numbers in ASDMs should start at 1." << LogIO::POST;
-	warned = true;
+	warned = True;
       }
 
       // find the first occurence of the timestamp which has the most baselines
@@ -565,10 +560,10 @@ namespace casa {
 	    numBaselines++;
 	  }
 	  
-	  Bool found = false;
+	  Bool found = False;
 	  for(uInt j=0;j<ant.size();j++){
 	    if(antenna1()(i) == ant[j]){
-	      found = true;
+	      found = True;
 	      break;
 	    }
 	  }
@@ -576,10 +571,10 @@ namespace casa {
 	    ant.push_back(antenna1()(i));
 	    stateIdV.push_back( asdmStateId_p(stateId()(i)) );
 	  }
-	  found = false;
+	  found = False;
 	  for(uInt j=0;j<ant.size();j++){
 	    if(antenna2()(i) == ant[j]){
-	      found = true;
+	      found = True;
 	      break;
 	    }
 	  }
@@ -640,7 +635,7 @@ namespace casa {
 	  //	}
 	  os << LogIO::NORMAL << " DDId " << theDDId << ": Less than 5 channels. Probably should use spectral resolution type \"CHANNEL_AVERAGE\"." 
 	     << endl << "    But this is not yet implemented. Assuming FULL_RESOLUTION." << LogIO::POST;      
-	  warned2 = true;
+	  warned2 = True;
 	}
       } 
 
@@ -717,7 +712,7 @@ namespace casa {
       bpAutoAxes.push_back(AxisNameMod::ANT);
       bpAutoAxes.push_back(AxisNameMod::SPP); 
       bpAutoAxes.push_back(AxisNameMod::POL);
-      SDMDataObject::AutoDataBinaryPart bpAutoData(bpAutoSize, bpAutoAxes, false); // not normalised
+      SDMDataObject::AutoDataBinaryPart bpAutoData(bpAutoSize, bpAutoAxes, False); // not normalised
       //      cout << "AutoSize " << bpAutoSize << endl;
       
       SDMDataObject::DataStruct dataStruct( apc, basebands, bpFlags, bpActualTimes, bpActualDurations, 
@@ -822,9 +817,9 @@ namespace casa {
 	  rowsSorted.resize(nRows);
 	  uInt expNRows = maxAnt*(maxAnt+1)/2; // (zero-based counting)
 	  uInt expNRowsWAuto = maxAnt*(maxAnt+1)/2 + maxAnt+1; // (zero-based counting)
-	  Bool haveAuto = false;
+	  Bool haveAuto = False;
 	  if(nRows==expNRowsWAuto){
-	    haveAuto=true;
+	    haveAuto=True;
 	  }
 	  else if(nRows!=expNRows){ 
 	    ostringstream oss;
@@ -859,7 +854,7 @@ namespace casa {
 	  DDId = dataDescId()(iRow);
 	  FId = fieldId()(iRow);
 	  
-	  Matrix<casacore::Complex> dat;
+	  Matrix<Complex> dat;
 	  Matrix<Bool> flagsm;
 	  String dataColumn(datacolumn);
 	  dataColumn.upcase();
@@ -895,7 +890,7 @@ namespace casa {
 	    }
 	  }
 	  else{
-	    casacore::Complex x;
+	    Complex x;  
 	    float a,b;
 	    // int a,b;
 	    for(uInt i=0; i<numSpectralPoint; i++){
@@ -1071,7 +1066,7 @@ namespace casa {
   //   Bool MS2ASDM::writeAntenna(){ // create asdm antenna table and fill antenna id map
   //     LogIO os(LogOrigin("MS2ASDM", "writeAntenna()"));
   
-  //     Bool rstat = true;
+  //     Bool rstat = True;
   
   //     asdm::AntennaTable& tT = ASDM_p->getAntenna();
   
@@ -1096,7 +1091,7 @@ namespace casa {
   Bool MS2ASDM::writeStation(){ // create asdm station table and fill station id map
     LogIO os(LogOrigin("MS2ASDM", "writeStation()"));
 
-    Bool rstat = true;
+    Bool rstat = True;
 
     asdm::StationTable& tT = ASDM_p->getStation();
 
@@ -1133,7 +1128,7 @@ namespace casa {
       }
       else{
 	os << LogIO::SEVERE << "Duplicate station in MS Antenna table: " << irow << LogIO::POST;
-	return false;
+	return False;
       }
 
     } // end for irow
@@ -1153,7 +1148,7 @@ namespace casa {
   Bool MS2ASDM::writeAntenna(){ // create asdm antenna table and fill antenna id map
     LogIO os(LogOrigin("MS2ASDM", "writeAntenna()"));
 
-    Bool rstat = true;
+    Bool rstat = True;
 
     asdm::AntennaTable& tT = ASDM_p->getAntenna();
 
@@ -1188,7 +1183,7 @@ namespace casa {
       }
       else{
 	os << LogIO::SEVERE << "Internal error: No station ID defined for station name " << sId << LogIO::POST;
-	return false;
+	return False;
       }
       
       tR = tT.newRow(name, antennaMake, antennaType, dishDiameter, position, offset, atime, stationId);
@@ -1220,7 +1215,7 @@ namespace casa {
   Bool MS2ASDM::writeSpectralWindow(){
     LogIO os(LogOrigin("MS2ASDM", "writeSpectralWindow()"));
 
-    Bool rstat = true;
+    Bool rstat = True;
 
     asdm::SpectralWindowTable& tT = ASDM_p->getSpectralWindow();
 
@@ -1312,7 +1307,7 @@ namespace casa {
   Bool MS2ASDM::writeSource(){ // create asdm source table and fill source id map
     LogIO os(LogOrigin("MS2ASDM", "writeSource()"));
     
-    Bool rstat = true;
+    Bool rstat = True;
     
     asdm::SourceTable& tT = ASDM_p->getSource();
     
@@ -1321,7 +1316,7 @@ namespace casa {
     if(source().isNull()){// the source table doesn't exist (it is optional)
       os << LogIO::WARN << "MS Source table doesn't exist (it is optional). Cannot create ASDM Source table."
 	 << LogIO::POST;
-      rstat = true; // not an error
+      rstat = True; // not an error
     }
     else {
       for(uInt irow=0; irow<source().nrow(); irow++){
@@ -1338,7 +1333,7 @@ namespace casa {
 	Tag spectralWindowId;
 	if(!asdmSpectralWindowId_p.isDefined(spwId)){
 	  os << LogIO::SEVERE << "Undefined SPW id " << spwId << " in MS Source table row "<< irow << LogIO::POST;
-	  return false;
+	  return False;
 	}
 	else{
 	  spectralWindowId = asdmSpectralWindowId_p(spwId);
@@ -1419,7 +1414,7 @@ namespace casa {
   Bool MS2ASDM::writePolarization(){
     LogIO os(LogOrigin("MS2ASDM", "writePolarization()"));
 
-    Bool rstat = true;
+    Bool rstat = True;
     asdm::PolarizationTable& tT = ASDM_p->getPolarization();
 
     asdm::PolarizationRow* tR = 0;
@@ -1442,20 +1437,20 @@ namespace casa {
       Vector< Int > v; // aux. vector
       v.reference( polarization().corrType()(irow) );
       for(uInt i=0; i<v.nelements(); i++){
-	Bool skip = true;
+	Bool skip = True;
 	Stokes::StokesTypes st = static_cast<Stokes::StokesTypes>(v[i]);
 	if(st == Stokes::LR){ // only add if RL is not also present
 	  if(!stokesTypePresent(v, Stokes::RL)){
-	    skip = false;
+	    skip = False;
 	  }
 	}
 	else if(st == Stokes::YX){ // only add if XY is not also present
 	  if(!stokesTypePresent(v, Stokes::XY)){
-	    skip = false;
+	    skip = False;
 	  }
 	}
 	else{
-	  skip = false;
+	  skip = False;
 	}
 	corrTypeV.push_back( ASDMStokesParameter( st ) );
 	skipCorr.push_back(skip);
@@ -1538,7 +1533,7 @@ namespace casa {
 	  break;
 	default:
 	  os << LogIO::SEVERE << "Cannot store correlation product for stokes parameter " << CStokesParameter::name(corrTypeV[i]) << LogIO::POST;
-	  rstat = false;
+	  rstat = False;
 	  break;
 	}	  
 	corrProduct.push_back(w);
@@ -1579,7 +1574,7 @@ namespace casa {
   Bool MS2ASDM::writeCorrelatorMode(){
     LogIO os(LogOrigin("MS2ASDM", "writeCorrelatorMode()"));
 
-    Bool rstat = true;
+    Bool rstat = True;
     asdm::CorrelatorModeTable& tT = ASDM_p->getCorrelatorMode();
 
     asdm::CorrelatorModeRow* tR = 0;
@@ -1641,7 +1636,7 @@ namespace casa {
   Bool MS2ASDM::writeAlmaRadiometer(){
     LogIO os(LogOrigin("MS2ASDM", "writeAlmaRadiometer()"));
 
-    Bool rstat = true;
+    Bool rstat = True;
     asdm::AlmaRadiometerTable& tT = ASDM_p->getAlmaRadiometer();
 
     asdm::AlmaRadiometerRow* tR = 0;
@@ -1665,7 +1660,7 @@ namespace casa {
   Bool MS2ASDM::writeHolography(){
     LogIO os(LogOrigin("MS2ASDM", "writeHolography()"));
 
-    Bool rstat = true;
+    Bool rstat = True;
     asdm::HolographyTable& tT = ASDM_p->getHolography();
 
     asdm::HolographyRow* tR = 0;
@@ -1689,7 +1684,7 @@ namespace casa {
   Bool MS2ASDM::writeProcessor(){
     LogIO os(LogOrigin("MS2ASDM", "writeProcessor()"));
 
-    Bool rstat = true;
+    Bool rstat = True;
     asdm::ProcessorTable& tT = ASDM_p->getProcessor();
 
     asdm::ProcessorRow* tR = 0;
@@ -1751,41 +1746,41 @@ namespace casa {
 	switch(processorSubType){
 	case ProcessorSubTypeMod::ALMA_CORRELATOR_MODE:
 	  if(!writeCorrelatorMode()){ // create the optional CorrelatorMode table
-	    return false;
+	    return False;
 	  }
 	  corrModeRows = (ASDM_p->getCorrelatorMode()).get();
 	  if(corrModeRows.size()==0){
 	    os << LogIO::SEVERE << "Internal error: ASDM CorrelatorMode table is empty." << LogIO::POST;
-	    return false;
+	    return False;
 	  }
 	  modeId = corrModeRows[0]->getCorrelatorModeId(); // get tag from first row of CorrelatorMode table (there is only one) ??? 
 	  break;
 	case ProcessorSubTypeMod::HOLOGRAPHY:
 	  if(!writeHolography()){ // create the optional Holography table
-	    return false;
+	    return False;
 	  }
 	  holographyRows = (ASDM_p->getHolography()).get();
 	  if(holographyRows.size()==0){
 	    os << LogIO::SEVERE << "Internal error: ASDM Holography table is empty." << LogIO::POST;
-	    return false;
+	    return False;
 	  }
 	  modeId = holographyRows[0]->getHolographyId(); // get tag from first row of Holography table (there is only one) ??? 
 	  break;
 	case ProcessorSubTypeMod::ALMA_RADIOMETER:
 	  if(!writeAlmaRadiometer()){ // create the optional AlmaRadiometer table
-	    return false;
+	    return False;
 	  }
 	  almaRadiometerRows = (ASDM_p->getAlmaRadiometer()).get();
 	  if(almaRadiometerRows.size()==0){
 	    os << LogIO::SEVERE << "Internal error: ASDM AlmaRadiometer table is empty." << LogIO::POST;
-	    return false;
+	    return False;
 	  }
 	  modeId = almaRadiometerRows[0]->getAlmaRadiometerId(); // get tag from first row of AlmaRadiometer table (there is only one) ??? 
 	  break;
 	default:
 	  os << LogIO::SEVERE << "Internal error: unsupported processor sub type." 
 	     << CProcessorSubType::name(processorSubType) << LogIO::POST;
-	  return false;
+	  return False;
 	}
 	  
 	tR = tT.newRow(modeId, processorType, processorSubType);
@@ -1807,12 +1802,12 @@ namespace casa {
       ProcessorTypeMod::ProcessorType processorType = ProcessorTypeMod::CORRELATOR;
       ProcessorSubTypeMod::ProcessorSubType processorSubType = ProcessorSubTypeMod::ALMA_CORRELATOR_MODE;
       if(!writeCorrelatorMode()){ // create the optional CorrelatorMode table
-	return false;
+	return False;
       }
       vector< asdm::CorrelatorModeRow* > corrModeRows = ASDM_p->getCorrelatorMode().get();
       if(corrModeRows.size()==0){
 	os << LogIO::SEVERE << "Internal error: ASDM CorrelatorMode table is empty." << LogIO::POST;
-	return false;
+	return False;
       }
       Tag modeId = corrModeRows[0]->getCorrelatorModeId(); // get tag from first row of CorrelatorMode table (there is only one) ??? 
       tR = tT.newRow(modeId, processorType, processorSubType);
@@ -1837,7 +1832,7 @@ namespace casa {
   Bool MS2ASDM::writeField(){
     LogIO os(LogOrigin("MS2ASDM", "writeField()"));
 
-    Bool rstat = true;
+    Bool rstat = True;
     asdm::FieldTable& tT = ASDM_p->getField();
 
     asdm::FieldRow* tR = 0;
@@ -1853,7 +1848,7 @@ namespace casa {
       int numPoly = field().numPoly()(irow) + 1; // MS give poly order, ASDM needs number of coefficients
       if(numPoly>1){
 	os << LogIO::SEVERE << "Internal error: MS Field table with NUM_POLY > 0 not yet supported." << LogIO::POST;
-	return false;
+	return False;
       }
       Int numpol = 0;
 
@@ -1871,7 +1866,7 @@ namespace casa {
 	os << LogIO::SEVERE << "Internal error: the reference frames for phase, delay, and reference direction are not identical" 
 	   << "in the MS Field table row " << irow << "." << endl
 	   << "Not yet supported case." << LogIO::POST;
-	return false;
+	return False;
       }
 	
       DirectionReferenceCodeMod::DirectionReferenceCode directionCode
@@ -1946,7 +1941,7 @@ namespace casa {
       else{
 	if(sId == tR2->getSourceId()){ // if also the Source ID agrees, we really have a duplication
 	  os << LogIO::SEVERE << "Duplicate row in MS Field table :" << irow << LogIO::POST;
-	  return false;
+	  return False;
 	}
 	fieldName = fieldName+"_B";
 	tR->setFieldName(fieldName);
@@ -1958,7 +1953,7 @@ namespace casa {
 	}
 	else{
 	  os << LogIO::SEVERE << "Duplicate row in MS Field table :" << irow << LogIO::POST;
-	  return false;
+	  return False;
 	} 
       }
     } // end loop over MS field table
@@ -1979,7 +1974,7 @@ namespace casa {
   Bool MS2ASDM::writeReceiver(){
     LogIO os(LogOrigin("MS2ASDM", "writeReceiver()"));
 
-    Bool rstat = true;
+    Bool rstat = True;
     asdm::ReceiverTable& tT = ASDM_p->getReceiver();
 
     asdm::ReceiverRow* tR = 0;
@@ -1989,7 +1984,7 @@ namespace casa {
     // loop over ASDM SPW table
     vector< asdm::SpectralWindowRow* > SPWRows = (ASDM_p->getSpectralWindow()).get();
 
-    Bool informed = false;
+    Bool informed = False;
 
     for(uInt irow=0; irow<SPWRows.size(); irow++){
    
@@ -2000,7 +1995,7 @@ namespace casa {
 	  os << LogIO::NORMAL << "Taking validity time interval for all ASDM Receiver table entries from row 0 of MS Feed table." 
 	     << LogIO::POST;
 	}
-	informed = true;
+	informed = True;
       }
       asdm::ArrayTimeInterval timeInterval( ASDMTimeInterval(feed().timeQuant()(0), feed().intervalQuant()(0)) ); 
       string name = "unspec. frontend";
@@ -2035,14 +2030,14 @@ namespace casa {
   Bool MS2ASDM::writeFeed(){
     LogIO os(LogOrigin("MS2ASDM", "writeFeed()"));
 
-    Bool rstat = true;
+    Bool rstat = True;
     asdm::FeedTable& tT = ASDM_p->getFeed();
 
     asdm::FeedRow* tR = 0;
 
-    Bool warned = false;
-    Bool warned2 = false;
-    Bool warned3 = false;
+    Bool warned = False;
+    Bool warned2 = False;
+    Bool warned3 = False;
 
     for(uInt irow=0; irow<feed().nrow(); irow++){
 
@@ -2054,7 +2049,7 @@ namespace casa {
       }
       else{
 	os << LogIO::SEVERE << "Undefined antenna id " << aid << " in MS feed table row "<< irow << LogIO::POST;
-	return false;
+	return False;
       }
       ArrayTimeInterval timeInterval( ASDMTimeInterval(feed().timeQuant()(irow), feed().intervalQuant()(irow)) );
       
@@ -2103,7 +2098,7 @@ namespace casa {
 	  os << LogIO::SEVERE << "Polarization type " << polT[rnum].c_str() << " for receptor " 
 	     << rnum << " in MS Feed table row  " << irow << " not defined in ASDM: " 
 	     << z << LogIO::POST;      
-	  return false;
+	  return False;
 	}      	
 	
 	vector< asdm::Complex > apr;
@@ -2121,7 +2116,7 @@ namespace casa {
 	  receiverIdV.push_back(0);
 	  if(!warned){
 	    os << LogIO::WARN << "Setting receiver ID to zero (ALMA convention)." << LogIO::POST;
-	    warned = true;
+	    warned = True;
 	  }
 	}
       } // end loop over receptors
@@ -2145,7 +2140,7 @@ namespace casa {
       }
       else{
 	os << LogIO::SEVERE << "Undefined SPW id " << spwid << " in MS feed table row "<< irow << LogIO::POST;
-	return false;
+	return False;
       }
 
       // create the row for the first of the SPW Ids
@@ -2159,7 +2154,7 @@ namespace casa {
 	tR->setFeedNum(1); 
 	if(!warned2){
 	  os << LogIO::WARN << "Assuming single-feed receivers. Setting FeedNum to 1 (as for ALMA)." << LogIO::POST;
-	  warned2 = true;
+	  warned2 = True;
 	}
       }
 
@@ -2218,7 +2213,7 @@ namespace casa {
   Bool MS2ASDM::writeDataDescription(){
     LogIO os(LogOrigin("MS2ASDM", "writeDataDescription()"));
 
-    Bool rstat = true;
+    Bool rstat = True;
     asdm::DataDescriptionTable& tT = ASDM_p->getDataDescription();
 
     asdm::DataDescriptionRow* tR = 0;
@@ -2236,7 +2231,7 @@ namespace casa {
       else{
 	os << LogIO::SEVERE << "Inconsistent MS: undefined polarization id " << polId 
 	   << " in row " << irow << " of the DataDesc table." << LogIO::POST;
-	return false;
+	return False;
       }
       if(asdmSpectralWindowId_p.isDefined(spwId)){
 	spectralWindowId = asdmSpectralWindowId_p(spwId);
@@ -2244,7 +2239,7 @@ namespace casa {
       else{
 	os << LogIO::SEVERE << "Inconsistent MS: undefined SPW id " << spwId 
 	   << " in row " << irow << " of the DataDesc table." << LogIO::POST;
-	return false;
+	return False;
       }
 
       tR = tT.newRow(polOrHoloId, spectralWindowId);
@@ -2276,7 +2271,7 @@ namespace casa {
   Bool MS2ASDM::writeSwitchCycle(){ 
     LogIO os(LogOrigin("MS2ASDM", "writeSwitchCycle()"));
     
-    Bool rstat = true;
+    Bool rstat = True;
     
     asdm::SwitchCycleTable& tT = ASDM_p->getSwitchCycle();
     
@@ -2321,7 +2316,7 @@ namespace casa {
       os << LogIO::SEVERE 
 	 << "PHASE_ID column exists in MS Main table but proper creation of ASDM SwitchCycle table not yet implemented." 
 	 << LogIO::POST;
-      rstat = false;
+      rstat = False;
     }      
 
     return rstat;
@@ -2330,7 +2325,7 @@ namespace casa {
   Bool MS2ASDM::writeState(){ 
     LogIO os(LogOrigin("MS2ASDM", "writeState()"));
 
-    Bool rstat = true;
+    Bool rstat = True;
 
     asdm::StateTable& tT = ASDM_p->getState();
 
@@ -2342,9 +2337,9 @@ namespace casa {
 	 << LogIO::POST;
      
       // parameters of the new row
-      bool bSig = true;
-      bool bRef = false;
-      bool bOnSky = true; 
+      bool bSig = True;
+      bool bRef = False;
+      bool bOnSky = True; 
       CalibrationDeviceMod::CalibrationDevice calDeviceName = CalibrationDeviceMod::NONE;
 
       tR = tT.newRow(calDeviceName, bSig, bRef, bOnSky);
@@ -2416,7 +2411,7 @@ namespace casa {
   Bool MS2ASDM::writeSysCal(){ 
     LogIO os(LogOrigin("MS2ASDM", "writeSysCal()"));
 
-    Bool rstat = true;
+    Bool rstat = True;
 
     asdm::SysCalTable& tT = ASDM_p->getSysCal();
 
@@ -2528,12 +2523,12 @@ namespace casa {
 	  if(sM.shape()(0) != (Int)numReceptor){
 	    os << LogIO::SEVERE << "Inconsistent MS: TANT spectrum in syscal table row " << irow
 	       << " should have number of receptors as in Feed table: " << numReceptor << LogIO::POST;
-	    return false;
+	    return False;
 	  } 
 	  if(sM.shape()(1) != (Int)nChan){
 	    os << LogIO::SEVERE << "Inconsistent MS: TANT spectrum in syscal table row " << irow
 	       << " should have second dimension as referenced SPW." << LogIO::POST;
-	    return false;
+	    return False;
 	  } 
 	  vector< vector< float > > fVV; // presently a float but should be a Temperature ???
 	  for(uInt i=0; i<numReceptor; i++){
@@ -2552,7 +2547,7 @@ namespace casa {
 	  if(sV.size() != numReceptor){
 	    os << LogIO::SEVERE << "Inconsistent MS: TANT in syscal table row " << irow
 	       << " should have number of receptors as in Feed table: " << numReceptor << LogIO::POST;
-	    return false;
+	    return False;
 	  } 
 	  for(uInt i=0; i<numReceptor; i++){
 	    vector< float > fV;
@@ -2574,12 +2569,12 @@ namespace casa {
 	  if(sM.shape()(0) != (Int)numReceptor){
 	    os << LogIO::SEVERE << "Inconsistent MS: TANT_TSYS spectrum in syscal table row " << irow
 	       << " should have number of receptors as in Feed table: " << numReceptor << LogIO::POST;
-	    return false;
+	    return False;
 	  } 
 	  if(sM.shape()(1) != (Int)nChan){
 	    os << LogIO::SEVERE << "Inconsistent MS: TANT_TSYS spectrum in syscal table row " << irow
 	       << " should have second dimension as referenced SPW." << LogIO::POST;
-	    return false;
+	    return False;
 	  } 
 	  vector< vector< float > > fVV; 
 	  for(uInt i=0; i<numReceptor; i++){
@@ -2598,7 +2593,7 @@ namespace casa {
 	  if(sV.size() != numReceptor){
 	    os << LogIO::SEVERE << "Inconsistent MS: TANT_TSYS in syscal table row " << irow
 	       << " should have number of receptors as in Feed table: " << numReceptor << LogIO::POST;
-	    return false;
+	    return False;
 	  } 
 	  for(uInt i=0; i<numReceptor; i++){
 	    vector< float > fV;
@@ -2620,12 +2615,12 @@ namespace casa {
 	  if(sM.shape()(0) != (Int)numReceptor){
 	    os << LogIO::SEVERE << "Inconsistent MS: TCAL spectrum in syscal table row " << irow
 	       << " should have number of receptors as in Feed table: " << numReceptor << LogIO::POST;
-	    return false;
+	    return False;
 	  } 
 	  if(sM.shape()(1) != (Int)nChan){
 	    os << LogIO::SEVERE << "Inconsistent MS: TCAL spectrum in syscal table row " << irow
 	       << " should have second dimension as referenced SPW." << LogIO::POST;
-	    return false;
+	    return False;
 	  } 
 	  vector< vector< Temperature > > fVV; 
 	  for(uInt i=0; i<numReceptor; i++){
@@ -2644,7 +2639,7 @@ namespace casa {
 	  if(sV.size() != numReceptor){
 	    os << LogIO::SEVERE << "Inconsistent MS: TCAL in syscal table row " << irow
 	       << " should have number of receptors as in Feed table: " << numReceptor << LogIO::POST;
-	    return false;
+	    return False;
 	  } 
 	  for(uInt i=0; i<numReceptor; i++){
 	    vector< Temperature > fV;
@@ -2666,12 +2661,12 @@ namespace casa {
 	  if(sM.shape()(0) != (Int)numReceptor){
 	    os << LogIO::SEVERE << "Inconsistent MS: TRX spectrum in syscal table row " << irow
 	       << " should have number of receptors as in Feed table: " << numReceptor << LogIO::POST;
-	    return false;
+	    return False;
 	  } 
 	  if(sM.shape()(1) != (Int)nChan){
 	    os << LogIO::SEVERE << "Inconsistent MS: TRX spectrum in syscal table row " << irow
 	       << " should have second dimension as referenced SPW." << LogIO::POST;
-	    return false;
+	    return False;
 	  } 
 	  vector< vector< Temperature > > fVV; 
 	  for(uInt i=0; i<numReceptor; i++){
@@ -2690,7 +2685,7 @@ namespace casa {
 	  if(sV.size() != numReceptor){
 	    os << LogIO::SEVERE << "Inconsistent MS: TRX in syscal table row " << irow
 	       << " should have number of receptors as in Feed table: " << numReceptor << LogIO::POST;
-	    return false;
+	    return False;
 	  } 
 	  for(uInt i=0; i<numReceptor; i++){
 	    vector< Temperature > fV;
@@ -2712,12 +2707,12 @@ namespace casa {
 	  if(sM.shape()(0) != (Int)numReceptor){
 	    os << LogIO::SEVERE << "Inconsistent MS: TSKY spectrum in syscal table row " << irow
 	       << " should have number of receptors as in Feed table: " << numReceptor << LogIO::POST;
-	    return false;
+	    return False;
 	  } 
 	  if(sM.shape()(1) != (Int)nChan){
 	    os << LogIO::SEVERE << "Inconsistent MS: TSKY spectrum in syscal table row " << irow
 	       << " should have second dimension as referenced SPW." << LogIO::POST;
-	    return false;
+	    return False;
 	  } 
 	  vector< vector< Temperature > > fVV; 
 	  for(uInt i=0; i<numReceptor; i++){
@@ -2736,7 +2731,7 @@ namespace casa {
 	  if(sV.size() != numReceptor){
 	    os << LogIO::SEVERE << "Inconsistent MS: TSKY in syscal table row " << irow
 	       << " should have number of receptors as in Feed table: " << numReceptor << LogIO::POST;
-	    return false;
+	    return False;
 	  } 
 	  for(uInt i=0; i<numReceptor; i++){
 	    vector< Temperature > fV;
@@ -2758,12 +2753,12 @@ namespace casa {
 	  if(sM.shape()(0) != (Int)numReceptor){
 	    os << LogIO::SEVERE << "Inconsistent MS: TSYS spectrum in syscal table row " << irow
 	       << " should have number of receptors as in Feed table: " << numReceptor << LogIO::POST;
-	    return false;
+	    return False;
 	  } 
 	  if(sM.shape()(1) != (Int)nChan){
 	    os << LogIO::SEVERE << "Inconsistent MS: TSYS spectrum in syscal table row " << irow
 	       << " should have second dimension as referenced SPW." << LogIO::POST;
-	    return false;
+	    return False;
 	  } 
 	  vector< vector< Temperature > > fVV; 
 	  for(uInt i=0; i<numReceptor; i++){
@@ -2782,7 +2777,7 @@ namespace casa {
 	  if(sV.size() != numReceptor){
 	    os << LogIO::SEVERE << "Inconsistent MS: TSYS in syscal table row " << irow
 	       << " should have number of receptors as in Feed table: " << numReceptor << LogIO::POST;
-	    return false;
+	    return False;
 	  } 
 	  for(uInt i=0; i<numReceptor; i++){
 	    vector< Temperature > fV;
@@ -2838,7 +2833,7 @@ namespace casa {
 
    LogIO os(LogOrigin("MS2ASDM", "writeConfigDesc()"));
 
-    Bool rstat = true;
+    Bool rstat = True;
 
     asdm::ConfigDescriptionTable& tT = ASDM_p->getConfigDescription();
 
@@ -2890,7 +2885,7 @@ namespace casa {
 	}
 	else{
 	  os << LogIO::SEVERE << "Internal error: undefined mapping for processor id " << procId << LogIO::POST;
-	  return false;
+	  return False;
 	}
       }
       
@@ -2926,7 +2921,7 @@ namespace casa {
 	if(!asdmDataDescriptionId_p.isDefined(iDDId)){
 	  os << LogIO::SEVERE << "Internal error: undefined mapping for data desc. id " << iDDId
 	     << " in main table row " << jrow << LogIO::POST;
-	  return false;
+	  return False;
 	}
 	
 	uInt spwId = dataDescription().spectralWindowId()(iDDId);
@@ -2998,7 +2993,7 @@ namespace casa {
 	    Bool found = false;
 	    for(uInt j=0; j<msAntennaIdV.size(); j++){
 	      if(aId == msAntennaIdV[j]){
-		found = true;
+		found = True;
 		break;
 	      }
 	    }
@@ -3007,14 +3002,14 @@ namespace casa {
 	      if(!asdmAntennaId_p.isDefined(aId)){
 		os << LogIO::SEVERE << "Internal error: undefined mapping for antenna1 id " << aId 
 		   << " in main table row " << irow << LogIO::POST;
-		return false;
+		return False;
 	      }
 	    }
 	    aId = antenna2()(irow); 
 	    found = false;
 	    for(uInt j=0; j<msAntennaIdV.size(); j++){
 	      if(aId == msAntennaIdV[j]){
-		found = true;
+		found = True;
 		break;
 	      }
 	    }
@@ -3023,7 +3018,7 @@ namespace casa {
 	      if(!asdmAntennaId_p.isDefined(aId)){
 		os << LogIO::SEVERE << "Internal error: undefined mapping for antenna2 id " << aId 
 		   << " in main table row " << irow << LogIO::POST;
-		return false;
+		return False;
 	      }
 	    }
 	    
@@ -3031,10 +3026,10 @@ namespace casa {
 	    // feed ids
 	    Int fIdi = feed1()(irow);
 	    Int fKeyi = fIdi + 10000*antenna1()(irow);
-	    found = false;	      
+	    found = False;	      
 	    for(uInt j=0;j<msFeedKeyV.size();j++){
 	      if(fKeyi == msFeedKeyV[j]){
-		found = true;
+		found = True;
 		break;
 	      }
 	    }
@@ -3044,15 +3039,15 @@ namespace casa {
 	      if(!asdmFeedId_p.isDefined(fIdi)){
 		os << LogIO::SEVERE << "Internal error: undefined mapping for feed1 id " << fIdi
 		   << " in main table row " << irow << LogIO::POST;
-		return false;
+		return False;
 	      }
 	    }
 	    fIdi = feed2()(irow);
 	    fKeyi = fIdi + 10000*antenna2()(irow);
-	    found = false;	      
+	    found = False;	      
 	    for(uInt j=0;j<msFeedKeyV.size();j++){
 	      if(fKeyi == msFeedKeyV[j]){
-		found = true;
+		found = True;
 		break;
 	      }
 	    }
@@ -3062,7 +3057,7 @@ namespace casa {
 	      if(!asdmFeedId_p.isDefined(fIdi)){
 		os << LogIO::SEVERE << "Internal error: undefined mapping for feed2 id " << fIdi
 		   << " in main table row " << irow << LogIO::POST;
-		return false;
+		return False;
 	      }
 	    }
 	    
@@ -3169,7 +3164,7 @@ namespace casa {
 	os <<  LogIO::SEVERE <<  "    " << goodSpwV[ii] << "  " << LogIO::POST;
       }
       os <<  LogIO::SEVERE << "using task \"split\"." << LogIO::POST;
-      return false;
+      return False;
     }
 
     EntityId theUid(getCurrentUid());
@@ -3188,7 +3183,7 @@ namespace casa {
   Bool MS2ASDM::writeSBSummaryAndExecBlockStubs(){
     LogIO os(LogOrigin("MS2ASDM", "writeSBSummaryAndExecBlockStubs()"));
     
-    Bool rstat = true;
+    Bool rstat = True;
     
     asdm::SBSummaryTable& tT = ASDM_p->getSBSummary();
     
@@ -3245,7 +3240,7 @@ namespace casa {
     ////Angle siteLatitude = Angle(hlonlat(2));
 
     // loop over main table
-    Bool warned = false; // aux. var. to avoid warning repetition  
+    Bool warned = False; // aux. var. to avoid warning repetition  
     uInt nMainTabRows = ms_p.nrow();
 
     Int prevSBKey = -1;
@@ -3266,11 +3261,11 @@ namespace casa {
       Int spwId = dataDescription().spectralWindowId()(ddId);
       Int procId = processorId()(mainTabRow);
 
-      Bool isWVR = false;
+      Bool isWVR = False;
       if(procId>=0 && nProcTabRows>0 && procId < nProcTabRows){
 	if(processor().type()(procId) == "RADIOMETER"){
 	  //cout << "Found WVR data" << endl;
-	  isWVR = true;
+	  isWVR = True;
 	}
       }
 
@@ -3294,7 +3289,7 @@ namespace casa {
 	    rSB = prevRSB;
 	  }
 	  else{ // we need to peek forward until non-WVR data is found
-	    Bool foundNonWVR = false;
+	    Bool foundNonWVR = False;
 	    uInt mainTabRowB = 0;
 	    for(mainTabRowB=mainTabRow+1; mainTabRowB<nMainTabRows; mainTabRowB++){
 	      Int procIdB = processorId()(mainTabRowB);
@@ -3303,11 +3298,11 @@ namespace casa {
 		  //cout << "Found WVR data again" << endl;
 		  continue;
 		}
-		foundNonWVR=true;
+		foundNonWVR=True;
 		break;
 		
 	      }
-	      foundNonWVR=true;
+	      foundNonWVR=True;
 	      break;
 	    }// end for
 	    if(foundNonWVR){
@@ -3358,7 +3353,7 @@ namespace casa {
 	  os << LogIO::WARN << "Observation time range is zero length for obs ID "
 	     << obsId << " in MS Observation table.\n Will try to proceed ..."
 	     <<LogIO::POST;
-	  warned = true;
+	  warned = True;
 	}
 	durationSecs = timestampEndSecs(nMainTabRows-1) - timestampStartSecs(0);
       } 
@@ -3459,7 +3454,7 @@ namespace casa {
 	    os << LogIO::SEVERE << "Error creating ASDM:  UID \"" << getCurrentUid() 
 	       << "\" (intended for the ASDM) is not a valid Entity reference: " <<  x.getMessage()
 	       << LogIO::POST;      
-	    return false;
+	    return False;
 	  }
 	  incrementUid();
 	  EntityRef projectId = projectUID;
@@ -3491,7 +3486,7 @@ namespace casa {
 	  Length baseRmsMinor = Length(0); // ???
 	  Length baseRmsMajor = Length(0); // ???
 	  Angle basePa = Angle(0); // ???
-	  bool aborted = false;
+	  bool aborted = False;
 	  asdm::ConfigDescriptionRow* cDR = correspConfigDescRow(sBSummaryTag);
 	  int numAntenna = cDR->getNumAntenna();
 	  vector< Tag > antennaId = cDR->getAntennaId();
@@ -3509,7 +3504,7 @@ namespace casa {
 	  tER2 = tET.add(tER);
 	  if(tER2 != tER){
 	    os << LogIO::SEVERE << "Internal error: attempt to store duplicate exec block row." << LogIO::POST;
-	    return false;
+	    return False;
 	  }
 	  asdmExecBlockId_p.define(execBlockStartTime(sBSummaryTag), tER->getExecBlockId());
 
@@ -3537,7 +3532,7 @@ namespace casa {
 	  if(execBlockStartTime.getVal(i) == timestampStartSecs(mainTabRow)){
 	    os << LogIO::SEVERE << "Observation of different frequency bands at the same time and under the same observation ID is not supported by the ASDM."
 	     << "\n  Please split out the different spectral bands into individual MSs and process separately." << LogIO::POST;
-	    return false;
+	    return False;
 	  }
 	}
 
@@ -3561,13 +3556,13 @@ namespace casa {
 	if(!asdmConfigDescriptionId_p.isDefined(mainTabRow)){
 	  os << LogIO::SEVERE << "Internal error: undefined config description id for MS main table row "
 	     << mainTabRow << LogIO::POST;
-	  return false;
+	  return False;
 	}  
 	asdm::ConfigDescriptionRow* cDR = (ASDM_p->getConfigDescription()).getRowByKey(asdmConfigDescriptionId_p(mainTabRow));
 	if(cDR ==0){
 	  os << LogIO::SEVERE << "Internal error: no row in ASDM ConfigDesc Table for ConfigDescriptionId stored for main table row "
 	     << mainTabRow << LogIO::POST;
-	  return false;
+	  return False;
 	}
 	correspConfigDescRow.define(sBSummaryTag, cDR); // remember the config description row for this exec block
 
@@ -3605,7 +3600,7 @@ namespace casa {
 	os << LogIO::SEVERE << "Error creating ASDM:  UID \"" << getCurrentUid() 
 	   << "\" (intended for an exec block) not a valid Entity reference: " <<  x.getMessage()
 	   << LogIO::POST;      
-	return false;
+	return False;
       }
       incrementUid();
       EntityRef projectId = tR->getProjectUID();
@@ -3639,7 +3634,7 @@ namespace casa {
       Length baseRmsMinor = Length(0); // ???
       Length baseRmsMajor = Length(0); // ???
       Angle basePa = Angle(0); // ???
-      bool aborted = false;
+      bool aborted = False;
       asdm::ConfigDescriptionRow* cDR = correspConfigDescRow(sBSummaryTag);
       int numAntenna = cDR->getNumAntenna();
       vector< Tag > antennaId = cDR->getAntennaId();
@@ -3657,7 +3652,7 @@ namespace casa {
       tER2 = tET.add(tER);
       if(tER2 != tER){
 	os << LogIO::SEVERE << "Internal error: attempt to store duplicate exec block row." << LogIO::POST;
-	return false;
+	return False;
       }
       asdmExecBlockId_p.define(execBlockStartTime(sBSummaryTag), tER->getExecBlockId());
 
@@ -3699,7 +3694,7 @@ namespace casa {
   Bool MS2ASDM::writeMainAndScanAndSubScan(const String& datacolumn){
     LogIO os(LogOrigin("MS2ASDM", "writeMainAndScanAndSubScan()"));
     
-    Bool rstat = true;
+    Bool rstat = True;
     
     // check if datacolumn exists
     
@@ -3712,7 +3707,7 @@ namespace casa {
 	){
       os << LogIO::SEVERE << "Error: column " << dataColumn << " does not exist in "
 	 << ms_p.tableName() << LogIO::POST;      
-      return false;
+      return False;
     }
     else{
       if(verbosity_p>0){
@@ -3776,7 +3771,7 @@ namespace casa {
     vector< ScanIntentMod::ScanIntent > scanIntent;
     vector< CalDataOriginMod::CalDataOrigin > scanCalDataType;
     vector< bool > scanCalibrationOnLine;
-    ////bool scanFlagRow = false; // always false ???
+    ////bool scanFlagRow = False; // always false ???
     
     uInt nMainTabRows = ms_p.nrow();
     for(uInt mainTabRow=0; mainTabRow<nMainTabRows; mainTabRow++){
@@ -3803,7 +3798,7 @@ namespace casa {
 	scanIntent.resize(0);
 	scanCalDataType.resize(0);
 	scanCalibrationOnLine.resize(0);
-	////scanFlagRow = false;
+	////scanFlagRow = False;
       } // end if a new exec block has started
       else if(execBlockId == Tag()){
 	os << LogIO::WARN << "Encountered main tab row " << mainTabRow << " which is not part of an execblock." << LogIO::POST;
@@ -3817,12 +3812,12 @@ namespace casa {
 	Double searchIntervalSecs = 60.;
 
 	uInt mainTabRowB = mainTabRow;
-	Bool foundEBStart = false;
+	Bool foundEBStart = False;
 	Double rowTimeB = rowTime;
 	while(rowTime - rowTimeB < searchIntervalSecs && mainTabRowB>0){
 	  rowTimeB = timestampStartSecs(--mainTabRowB);
 	  if(asdmExecBlockId_p.isDefined(rowTimeB)){
-	    foundEBStart = true;
+	    foundEBStart = True;
 	    execBlockId = asdmExecBlockId_p(rowTimeB);
 	    asdm::ExecBlockRow* EBR = (ASDM_p->getExecBlock()).getRowByKey(execBlockId);
 	    scanNumber = 1; // ASDM scan numbering starts at 1
@@ -3835,7 +3830,7 @@ namespace casa {
 	    scanIntent.resize(0);
 	    scanCalDataType.resize(0);
 	    scanCalibrationOnLine.resize(0);
-	    ////scanFlagRow = false;
+	    ////scanFlagRow = False;
 	    break;
 	  }
 	}
@@ -3845,7 +3840,7 @@ namespace casa {
 	else{
 	  os << LogIO::SEVERE << "Searched back for " << searchIntervalSecs 
 	     << " s. Could not resolve misalignment." << LogIO::POST;
-	  return false;
+	  return False;
 	}
       }
       
@@ -3907,7 +3902,7 @@ namespace casa {
 	    string fieldName = field().name()(fieldId()(startRow)).c_str(); 
 	    SubscanIntentMod::SubscanIntent subscanIntent = SubscanIntentMod::ON_SOURCE;
 	    vector< int > numberSubintegration;
-	    ////bool flagRow = false;
+	    ////bool flagRow = False;
 
 	    // parameters for the corresponding new Main table row
 	    ArrayTime mainTime = ASDMArrayTime((timestampStartSecs(startRow) + timestampEndSecs(endRow))/2.); // midpoint!
@@ -3915,14 +3910,14 @@ namespace casa {
 	    if(!asdmConfigDescriptionId_p.isDefined(startRow)){
 	      os << LogIO::SEVERE << "Internal error: undefined config description id for MS main table row "
 		 << startRow << LogIO::POST;
-	      return false;
+	      return False;
 	    }  
 	    Tag configDescriptionId = asdmConfigDescriptionId_p(startRow);
 	    asdm::ConfigDescriptionRow* CDR = (ASDM_p->getConfigDescription()).getRowByKey(configDescriptionId);
 	    if(CDR ==0){
 	      os << LogIO::SEVERE << "Internal error: no row in ASDM ConfigDesc Table for ConfigDescriptionId stored for main table row "
 		 << startRow << LogIO::POST;
-	      return false;
+	      return False;
 	    }
 
 	    Tag fieldIdTag = asdmFieldId_p(theFId);
@@ -3947,7 +3942,7 @@ namespace casa {
 	    if(numIntegration<0){ // error!
 	      os << LogIO::SEVERE << "Error writing Subscan starting at main table row " 
 		 << startRow << LogIO::POST;
-	      return false;
+	      return False;
 	    }
 
 	    for(uInt i=0; i<(uInt)numIntegration; i++){
@@ -3986,7 +3981,7 @@ namespace casa {
       for(uInt i=0; i<(uInt)scanNumIntent; i++){
 	scanIntent.push_back(ScanIntentMod::OBSERVE_TARGET); // hardwired for the moment (???)
 	scanCalDataType.push_back(CalDataOriginMod::FULL_RESOLUTION_CROSS); // hardwired for the moment (???)
-	scanCalibrationOnLine.push_back(false); // hardwired for the moment (???)
+	scanCalibrationOnLine.push_back(False); // hardwired for the moment (???)
       }
 
       tSR = tST.newRow(execBlockId, scanNumber, scanStartTime, scanEndTime, scanNumIntent, numSubScan, scanIntent, 
@@ -4032,7 +4027,7 @@ namespace casa {
   Bool MS2ASDM::writePointingModel(){ // create asdm PointingModel table 
     LogIO os(LogOrigin("MS2ASDM", "writePointingModel()"));
     
-    Bool rstat = true;
+    Bool rstat = True;
     
     asdm::PointingModelTable& tT = ASDM_p->getPointingModel();
     
@@ -4073,7 +4068,7 @@ namespace casa {
 	catch(std::string z){
 	  os << LogIO::SEVERE << "Internal error: invalid polarization type in Feed table row  " << z
 	     << LogIO::POST;      
-	  return false;
+	  return False;
 	}      
 	  
 	ReceiverBandMod::ReceiverBand receiverBand = recRowV[0]->getFrequencyBand(); // take from the first receiver 
@@ -4109,7 +4104,7 @@ namespace casa {
   Bool MS2ASDM::writePointing(){ // create asdm pointing table
     LogIO os(LogOrigin("MS2ASDM", "writePointing()"));
     
-    Bool rstat = true;
+    Bool rstat = True;
     
     asdm::PointingTable& tT = ASDM_p->getPointing();
     
@@ -4119,10 +4114,10 @@ namespace casa {
    
     if(nPointingRows==0){
       os << LogIO::WARN << "MS Pointing table doesn't exist or is empty." << LogIO::POST;	
-      return true; // not an error
+      return True; // not an error
     }
 
-    Bool warned = false; // aux. var. to avoid repetition of warnings
+    Bool warned = False; // aux. var. to avoid repetition of warnings
 
     // loop over MS antenna table
     for(Int aId=0; aId<(Int)antenna().nrow(); aId++){
@@ -4130,7 +4125,7 @@ namespace casa {
       if(!asdmAntennaId_p.isDefined(aId)){
 	os << LogIO::SEVERE << "Internal error: no tag defined for antenna id " 
 	   << aId << LogIO::POST;
-	return false;
+	return False;
       }
 
       uInt irow=0;
@@ -4160,11 +4155,11 @@ namespace casa {
 
 	bool pointingTracking = pointing().tracking()(firstRow);
 
-	bool usePolynomials = false;
+	bool usePolynomials = False;
 	int numTerm = 0; // to be updated later
 
 	if(pointing().numPoly()(firstRow)>0){
-	  usePolynomials = true;
+	  usePolynomials = True;
 	  numTerm = pointing().numPoly()(irow)+1;
 	}
 
@@ -4180,7 +4175,7 @@ namespace casa {
 	  if(numTerm != (Int)dirV.size()){
 	    os << LogIO::SEVERE << "Inconsistent MS: in pointing table row " << firstRow
 	       << ": numpoly + 1 should be == dimension of array DIRECTION." << LogIO::POST;	
-	    return false;
+	    return False;
 	  }	    
 	  for(uInt i=0; i<(uInt)numTerm; i++){
 	    pointingDirection.push_back(ASDMAngleV(dirV[i]));
@@ -4194,7 +4189,7 @@ namespace casa {
 	    if(!warned){
 	      os << LogIO::WARN << "No ENCODER column in MS Pointing table. Will use DIRECTION instead." 
 		 << LogIO::POST;	
-	      warned = true;
+	      warned = True;
 	    }
 	    dirV.reference(pointing().directionMeasCol()(firstRow));
 	    encoder.push_back(ASDMAngleV(dirV[0]));
@@ -4206,7 +4201,7 @@ namespace casa {
 	    if(!warned){
 	      os << LogIO::WARN << "No ENCODER column in MS Pointing table. Will fill with zeros." 
 		 << LogIO::POST;	
-	      warned = true;
+	      warned = True;
 	    }
 	    encoder.push_back(angV);
 	  }
@@ -4224,7 +4219,7 @@ namespace casa {
 	  if(numTerm != (Int)dirV.size()){
 	    os << LogIO::SEVERE << "Inconsistent MS: in pointing table row " << firstRow
 	       << ": numpoly + 1 should be == dimension of array TARGET." << LogIO::POST;	
-	    return false;
+	    return False;
 	  }	    
 	  for(uInt i=0; i<(uInt)numTerm; i++){
 	    target.push_back(ASDMAngleV(dirV[i]));
@@ -4253,7 +4248,7 @@ namespace casa {
 	    if(numTerm != (Int)dirV.size()){
 	      os << LogIO::SEVERE << "Inconsistent MS: in pointing table row " << firstRow
 		 << ": numpoly + 1 should be == dimension of array POINTING_OFFSET." << LogIO::POST;	
-	      return false;
+	      return False;
 	    }	    
 	    for(uInt i=0; i<(uInt)numTerm; i++){
 	      offset.push_back(ASDMAngleV(dirV[i]));
@@ -4271,7 +4266,7 @@ namespace casa {
 	    if(numTerm != (Int)dirV.size()){
 	      os << LogIO::SEVERE << "Inconsistent MS: in pointing table row " << firstRow
 		 << ": numpoly + 1 should be == dimension of array SOURCE_OFFSET." << LogIO::POST;	
-	      return false;
+	      return False;
 	    }	    
 	    for(uInt i=0; i<(uInt)numTerm; i++){
 	      sourceOffset.push_back(ASDMAngleV(dirV[i]));
@@ -4296,7 +4291,7 @@ namespace casa {
 
 	  if( (endTime != pointing().time()(irow) - pointing().interval()(irow)/2.) // row irow is adjacent in time to previous row
 	      || pointingTracking != pointing().tracking()(irow) 
-	      || (usePolynomials == false && pointing().numPoly()(irow)>0)
+	      || (usePolynomials == False && pointing().numPoly()(irow)>0)
 	      ){
 	    break; // there will be no further samples for this ASDM pointing table row
 	  }
@@ -4564,10 +4559,10 @@ namespace casa {
 
   Bool MS2ASDM::stokesTypePresent( const Vector< Int > corrT, 
 				   const Stokes::StokesTypes st ){
-    Bool rval = false;
+    Bool rval = False;
     for(uInt j=0; j<corrT.size(); j++){
       if(corrT[j]==static_cast<Int>(st)){
-	 rval = true;
+	 rval = True;
 	 break;
       }
     }

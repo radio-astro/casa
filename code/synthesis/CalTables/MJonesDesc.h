@@ -51,8 +51,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <synopsis>
 // MJonesDesc defines the format of MJones calibration tables in terms
-// of table descriptors <linkto class="casacore::TableDesc">casacore::TableDesc</linkto>, as
-// used in the casacore::Table system. Specializations for time-variable and
+// of table descriptors <linkto class="TableDesc">TableDesc</linkto>, as
+// used in the Table system. Specializations for time-variable and
 // solvable MJones calibration tables are provided through inheritance.
 // At present, this set of classes returns only the default table formats.
 // </etymology>
@@ -78,14 +78,14 @@ class MJonesDesc : public CalTableDesc
    virtual ~MJonesDesc() {};
 
    // Return the cal_main table descriptor
-   virtual casacore::TableDesc calMainDesc();
+   virtual TableDesc calMainDesc();
 
  private:
-   // casacore::Table descriptor for second antenna/feed index
-   casacore::TableDesc itsAnt2Desc;
+   // Table descriptor for second antenna/feed index
+   TableDesc itsAnt2Desc;
 
    // Generate the default table descriptor for second antenna/feed index
-   casacore::TableDesc defaultAnt2Desc();
+   TableDesc defaultAnt2Desc();
 
 }; 
 

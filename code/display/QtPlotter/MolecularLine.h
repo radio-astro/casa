@@ -56,7 +56,7 @@ namespace casa {
 		                    const QwtScaleMap & yMap, const QRect & canvasRect) const;
 		void draw (QPainter * painter, int centerPixel,
 		           int peakPixel, int zeroPixel, int width, int height ) const;
-		void getMinMax( casacore::Double& xmin, casacore::Double& xmax, casacore::Double& ymin, casacore::Double& ymax ) const;
+		void getMinMax( Double& xmin, Double& xmax, Double& ymin, Double& ymax ) const;
 		bool equalTo( const MolecularLine* const other ) const;
 		void toStream( QTextStream* stream ) const;
 		virtual ~MolecularLine();

@@ -100,7 +100,7 @@ public:
   ~VisCalSolver2();
 
   // Do the solve
-  bool solve(VisEquation& viseq, SolvableVisCal& svc, SDBList& sdbs);
+  Bool solve(VisEquation& viseq, SolvableVisCal& svc, SDBList& sdbs);
 
 protected:
 
@@ -110,28 +110,28 @@ protected:
   inline SolvableVisCal&  svc()  { return *svc_; };
 
   // Access to maxIter_
-  inline int&    maxIter() { return maxIter_; };
+  inline Int&    maxIter() { return maxIter_; };
 
   // Access to chi2
-  inline double& chiSq()     { return chiSq_; };
-  inline casacore::Vector<double>& chiSqV()     { return chiSqV_; };
-  inline double& lastChiSq() { return lastChiSq_; };
-  inline double& dChiSq()    { return dChiSq_; };
-  inline double& sumWt()     { return sumWt_; };
-  inline casacore::Vector<double>& sumWtV()     { return sumWtV_; };
-  inline int&    nWt()       { return nWt_; };
+  inline Double& chiSq()     { return chiSq_; };
+  inline Vector<Double>& chiSqV()     { return chiSqV_; };
+  inline Double& lastChiSq() { return lastChiSq_; };
+  inline Double& dChiSq()    { return dChiSq_; };
+  inline Double& sumWt()     { return sumWt_; };
+  inline Vector<Double>& sumWtV()     { return sumWtV_; };
+  inline Int&    nWt()       { return nWt_; };
 
   // Access to parameters, & grad,hess,dp
-  inline int&              nPar() { return nPar_; };
-  inline casacore::Vector<casacore::Complex>&  par()       { return par_; };
-  inline casacore::Vector<bool>&     parOK()     { return parOK_; };
-  inline casacore::Vector<float>&    parErr()    { return parErr_; };
-  inline casacore::Vector<casacore::DComplex>& grad()      { return grad_; };
-  inline casacore::Vector<double>&   hess()      { return hess_; };
-  inline casacore::Vector<casacore::Complex>&  dpar()      { return dpar_; };
-  inline casacore::Vector<casacore::Complex>&  lastPar()   { return lastPar_; };
+  inline Int&              nPar() { return nPar_; };
+  inline Vector<Complex>&  par()       { return par_; };
+  inline Vector<Bool>&     parOK()     { return parOK_; };
+  inline Vector<Float>&    parErr()    { return parErr_; };
+  inline Vector<DComplex>& grad()      { return grad_; };
+  inline Vector<Double>&   hess()      { return hess_; };
+  inline Vector<Complex>&  dpar()      { return dpar_; };
+  inline Vector<Complex>&  lastPar()   { return lastPar_; };
 
-  inline double&           lambda()    { return lambda_; };
+  inline Double&           lambda()    { return lambda_; };
 
   // Initialize solving data
   void initSolve();
@@ -146,7 +146,7 @@ protected:
   void chiSquare2();
 
   // Check for convergence
-  bool converged();
+  Bool converged();
 
   // Internal solving methods
   void accGradHess2();
@@ -160,12 +160,12 @@ protected:
   // Get and print par errors
   void getErrors();
 
-  void printPar(const int& iter);
+  void printPar(const Int& iter);
 
 private:
   
   // Diagnostic print level
-  inline int& prtlev() { return prtlev_; };
+  inline Int& prtlev() { return prtlev_; };
 
   // VisBuffer (from outside)
   SDBList* SDBs_;
@@ -177,44 +177,44 @@ private:
   SolvableVisCal* svc_;
 
   // Total Number of parameters
-  int nPar_;
+  Int nPar_;
 
   // Maximum number of solve iterations to attempt
-  int maxIter_;
+  Int maxIter_;
 
   // Chi2, sum wts
-  double chiSq_;
-  casacore::Vector<double> chiSqV_;
-  double lastChiSq_;
-  double dChiSq_;
-  double sumWt_;
-  casacore::Vector<double> sumWtV_;
-  int    nWt_;
-  int    cvrgcount_;
+  Double chiSq_;
+  Vector<Double> chiSqV_;
+  Double lastChiSq_;
+  Double dChiSq_;
+  Double sumWt_;
+  Vector<Double> sumWtV_;
+  Int    nWt_;
+  Int    cvrgcount_;
 
   // Parameter storage
-  // (these are casacore::Complex to match the VisCal solvePar)
-  casacore::Vector<casacore::Complex> par_;
-  casacore::Vector<bool>    parOK_;
-  casacore::Vector<float>   parErr_;
-  casacore::Vector<casacore::Complex> lastPar_;
+  // (these are Complex to match the VisCal solvePar)
+  Vector<Complex> par_;
+  Vector<Bool>    parOK_;
+  Vector<Float>   parErr_;
+  Vector<Complex> lastPar_;
 
   // Parameter update
-  casacore::Vector<casacore::Complex> dpar_;
+  Vector<Complex> dpar_;
 
   // Gradient, Hessian
-  //  (these are double for precision in accumulation
-  casacore::Vector<casacore::DComplex> grad_;
-  casacore::Vector<double> hess_;
+  //  (these are Double for precision in accumulation
+  Vector<DComplex> grad_;
+  Vector<Double> hess_;
 
   // LM factor
-  double lambda_;
+  Double lambda_;
 
   // Step optimization toggle
-  bool optstep_;
+  Bool optstep_;
 
   // Diagnostic print level
-  int prtlev_;
+  Int prtlev_;
 
 };
 

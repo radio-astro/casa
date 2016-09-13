@@ -35,7 +35,7 @@
 #include <casa/Utilities/RecordTransformable.h>
 #include <components/ComponentModels/ComponentType.h>
 
-namespace casacore{
+namespace casa { //# NAMESPACE CASA - BEGIN
 
 class DirectionCoordinate;
 class MVAngle;
@@ -44,10 +44,6 @@ class String;
 template <class T> class Matrix;
 template <class T> class MeasRef;
 template <class T> class Vector;
-}
-
-namespace casa { //# NAMESPACE CASA - BEGIN
-
 
 // <summary>Base class for component shapes</summary>
 
@@ -57,7 +53,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </reviewed>
 
 // <prerequisite>
-//   <li> <linkto class=casacore::MDirection>MDirection</linkto>
+//   <li> <linkto class=MDirection>MDirection</linkto>
 // </prerequisite>
 //
 // <synopsis>
@@ -82,11 +78,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // This base class parameterises shapes with two quantities.
 // <dl>
 // <dt><em> A reference direction.</em>
-// <dd> This is specified using an <linkto class=casacore::MDirection>MDirection</linkto>
+// <dd> This is specified using an <linkto class=MDirection>MDirection</linkto>
 //      object and indicates the direction on a defined reference point
 //      within the shape. Usually this reference point is the centre of the
 //      shape. 
-// <dt> <em>A casacore::Vector of parameters.</em>
+// <dt> <em>A Vector of parameters.</em>
 // <dd> This contains other parameters that the are defined differently for
 //      different shapes. The length of the vector may vary for different
 //      component shapes. 
@@ -101,7 +97,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Any allowed direction reference frame can be used. However the reference
 // frame must be adequately specified in order to allow conversions to other
 // reference frames. For example if the reference frame code for a component is
-// casacore::MDirection::AZEL then the reference frame must also contain the time and
+// MDirection::AZEL then the reference frame must also contain the time and
 // position, on the earth, that the specified azimuth and elevation to refer
 // to. This way the sample functions can convert the direction to a value in
 // the J2000 reference frame (if you specify the sample direction in the J2000
@@ -140,7 +136,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //   <li> Use Measures & Quanta in the interface to the visibility functions.
 // </todo>
 
-class ComponentShape: public casacore::RecordTransformable
+class ComponentShape: public RecordTransformable
 {
 public:
   // a virtual destructor is needed so that the actual destructor in the
@@ -150,24 +146,24 @@ public:
   // return the actual shape. The ident function returns it as a String.
   // <group>
   virtual ComponentType::Shape type() const = 0;
-  virtual const casacore::String& ident() const;
+  virtual const String& ident() const;
   // </group>
 
   // set/get the reference direction
   // <group>
-  void setRefDirection(const casacore::MDirection& newRefDir);
-  const casacore::MDirection& refDirection() const;
+  void setRefDirection(const MDirection& newRefDir);
+  const MDirection& refDirection() const;
   // </group>
 
   // set/get the error in the reference direction. Values must be positive
-  // angular quantities otherwise an casacore::AipsError exception is thrown. The errors
+  // angular quantities otherwise an AipsError exception is thrown. The errors
   // are usually interpreted as the 1-sigma bounds in latitude/longitude and
   // implicitly assume a Gaussian distribution.
   // <group>
-  void setRefDirectionError(const casacore::Quantum<casacore::Double>& newRefDirErrLat, 
-			    const casacore::Quantum<casacore::Double>& newRefDirErrLong);
-  const casacore::Quantum<casacore::Double>& refDirectionErrorLat() const;
-  const casacore::Quantum<casacore::Double>& refDirectionErrorLong() const;
+  void setRefDirectionError(const Quantum<Double>& newRefDirErrLat, 
+			    const Quantum<Double>& newRefDirErrLong);
+  const Quantum<Double>& refDirectionErrorLat() const;
+  const Quantum<Double>& refDirectionErrorLong() const;
   // </group>
 
   // copy direction info from that object to this object
@@ -176,9 +172,9 @@ public:
   // Calculate the proportion of the flux that is in a pixel of specified size
   // centered in the specified direction. The returned value will always be
   // between zero and one (inclusive).
-  virtual casacore::Double sample(const casacore::MDirection& direction,
-			const casacore::MVAngle& pixelLatSize, 
-			const casacore::MVAngle& pixelLongSize) const = 0;
+  virtual Double sample(const MDirection& direction,
+			const MVAngle& pixelLatSize, 
+			const MVAngle& pixelLongSize) const = 0;
 
   // Same as the previous function except that many directions can be sampled
   // at once. The reference frame and pixel size must be the same for all the
@@ -186,11 +182,11 @@ public:
   // available that uses the single pixel sample function described above.
   // However customised versions of this function will be more efficient as
   // intermediate values only need to be computed once.
-  virtual void sample(casacore::Vector<casacore::Double>& scale, 
-		      const casacore::Vector<casacore::MDirection::MVType>& directions, 
-		      const casacore::MDirection::Ref& refFrame,
-		      const casacore::MVAngle& pixelLatSize,
-		      const casacore::MVAngle& pixelLongSize) const = 0;
+  virtual void sample(Vector<Double>& scale, 
+		      const Vector<MDirection::MVType>& directions, 
+		      const MDirection::Ref& refFrame,
+		      const MVAngle& pixelLatSize,
+		      const MVAngle& pixelLongSize) const = 0;
 
   // Return the Fourier transform of the component at the specified point in
   // the spatial frequency domain. The point is specified by a 3-element vector
@@ -205,28 +201,28 @@ public:
   // component. This means for symmetric components, where the reference
   // direction is at the centre, that the Fourier transform will always be
   // real.
-  virtual casacore::DComplex visibility(const casacore::Vector<casacore::Double>& uvw,
-			      const casacore::Double& frequency) const = 0;
+  virtual DComplex visibility(const Vector<Double>& uvw,
+			      const Double& frequency) const = 0;
 
   // Same as the previous function except that many (u,v,w) points can be
   // sampled at once. The observation frequency is the same for all the
-  // specified points. The uvw casacore::Matrix must have first dimension of three and
+  // specified points. The uvw Matrix must have first dimension of three and
   // the second dimension must match the length of the scale vector. A default
   // implementation of this function is available that uses the single point
   // visibility function described above.  However customised versions of this
   // function may be more efficient as intermediate values only need to be
   // computed once.
-  virtual void visibility(casacore::Vector<casacore::DComplex>& scale, const casacore::Matrix<casacore::Double>& uvw,
-			  const casacore::Double& frequency) const = 0;
+  virtual void visibility(Vector<DComplex>& scale, const Matrix<Double>& uvw,
+			  const Double& frequency) const = 0;
 
   //Same as above except for lots of frequencies too...scale rows is uvw points, columns
   // is frequency values
-  virtual void visibility(casacore::Matrix<casacore::DComplex>& scale, const casacore::Matrix<casacore::Double>& uvw,
-			  const casacore::Vector<casacore::Double>& frequency) const = 0;
+  virtual void visibility(Matrix<DComplex>& scale, const Matrix<Double>& uvw,
+			  const Vector<Double>& frequency) const = 0;
 
   // determine whether the shape is symmetric or not. If it is then all the
   // scale factors returned by the visibility functions will be real numbers.
-  virtual casacore::Bool isSymmetric() const = 0;
+  virtual Bool isSymmetric() const = 0;
 
   // Return a pointer to a copy of the derived object upcast to a
   // ComponentShape object. The class that uses this function is responsible
@@ -238,18 +234,18 @@ public:
   // functions provide a way to set/get the error (nominally 1-sigma in an
   // implicit Gaussian distribution) in the corresponding parameter.
   // <group>
-  virtual casacore::uInt nParameters() const = 0;
-  virtual void setParameters(const casacore::Vector<casacore::Double>& newParms) = 0;
-  virtual casacore::Vector<casacore::Double> parameters() const = 0;
-  virtual void setErrors(const casacore::Vector<casacore::Double>& newErrs) = 0;
-  virtual casacore::Vector<casacore::Double> errors() const = 0;
-  virtual casacore::Vector<casacore::Double> optParameters() const = 0;
-  virtual void setOptParameters(const casacore::Vector<casacore::Double>& newOptParms) = 0;
+  virtual uInt nParameters() const = 0;
+  virtual void setParameters(const Vector<Double>& newParms) = 0;
+  virtual Vector<Double> parameters() const = 0;
+  virtual void setErrors(const Vector<Double>& newErrs) = 0;
+  virtual Vector<Double> errors() const = 0;
+  virtual Vector<Double> optParameters() const = 0;
+  virtual void setOptParameters(const Vector<Double>& newOptParms) = 0;
   // </group>
 
   // These functions convert between a record and a ComponentShape. This way
   // derived classes can interpret fields in the record in a class specific
-  // way. They return false if the record is malformed and append an error
+  // way. They return False if the record is malformed and append an error
   // message to the supplied string giving the reason.  These functions define
   // how the shape is represented in glish. All records should have 'type' &
   // 'direction' fields which contain respectively; a string indicating which
@@ -257,22 +253,22 @@ public:
   // measure.  The interpretation of all other fields depends on the specific
   // component shape used.
   // <group>
-  virtual casacore::Bool fromRecord(casacore::String& errorMessage, 
-			  const casacore::RecordInterface& record) = 0;
-  virtual casacore::Bool toRecord(casacore::String& errorMessage,
-			casacore::RecordInterface& record) const = 0;
+  virtual Bool fromRecord(String& errorMessage, 
+			  const RecordInterface& record) = 0;
+  virtual Bool toRecord(String& errorMessage,
+			RecordInterface& record) const = 0;
   // </group>
 
   // Convert the parameters of the shape to the specified units. The Record
-  // must contain the same fields that the to/from casacore::Record functions have (with
+  // must contain the same fields that the to/from Record functions have (with
   // the exception of the direction & type fields). These fields will contain
   // strings (and not record representations of Quantums) that specify the new
   // units for these parameters. The new units must have the same dimensions as
   // the existing ones. If there is any problem parsing the record then an
   // error message is appended to the supplied string and the function returns
-  // false.
-  virtual casacore::Bool convertUnit(casacore::String& errorMessage,
-			   const casacore::RecordInterface& record) = 0;
+  // False.
+  virtual Bool convertUnit(String& errorMessage,
+			   const RecordInterface& record) = 0;
   
   // Return the shape that the supplied record represents. The
   // shape is determined by parsing a 'type' field in the supplied
@@ -280,29 +276,29 @@ public:
   // (which contains a string) could not be translated into a known
   // shape. It then appends an appropriate error message to the errorMessage
   // String.
-  static ComponentType::Shape getType(casacore::String& errorMessage,
-				      const casacore::RecordInterface& record);
+  static ComponentType::Shape getType(String& errorMessage,
+				      const RecordInterface& record);
 
   // Convert component shape to absolute pixels.  The returned
   // vector is the longitude and latitude location in absolute pixels.
-  virtual casacore::Vector<casacore::Double> toPixel (const casacore::DirectionCoordinate& dirCoord) const;
+  virtual Vector<Double> toPixel (const DirectionCoordinate& dirCoord) const;
 
   // Fill the shape direction from the vector (longitude and latitude
-  // in absolute pixels).  The return value is always true.
-  virtual casacore::Bool fromPixel (const casacore::Vector<casacore::Double>& parameters,
-                          const casacore::DirectionCoordinate& dirCoord);
+  // in absolute pixels).  The return value is always True.
+  virtual Bool fromPixel (const Vector<Double>& parameters,
+                          const DirectionCoordinate& dirCoord);
 
-  // casacore::Function which checks the internal data of this class for correct
-  // dimensionality and consistant values. Returns true if everything is fine
-  // otherwise returns false.
-  virtual casacore::Bool ok() const;
+  // Function which checks the internal data of this class for correct
+  // dimensionality and consistant values. Returns True if everything is fine
+  // otherwise returns False.
+  virtual Bool ok() const;
 
   // Return a pointer to the object. All subclasses must implement. 
   virtual const ComponentShape* getPtr() const = 0;
 
   // Return a nicely formatted string describing the component's size.
   // All subclasses must implement.
-  virtual casacore::String sizeToString() const = 0;
+  virtual String sizeToString() const = 0;
 
 protected:
   // The constructors and assignment operator are protected as only derived
@@ -312,7 +308,7 @@ protected:
   ComponentShape();
 
   //# Construct a ComponentShape at the specified direction.
-  ComponentShape(const casacore::MDirection& direction);
+  ComponentShape(const MDirection& direction);
 
   //# The copy constructor uses copy semantics.
   ComponentShape(const ComponentShape& other);
@@ -322,26 +318,26 @@ protected:
   // </group>
 
   //# Try and decide if the two reference directions are different, as the
-  //# casacore::MeasRef<T>::operator== function is too restrictive.
-  static casacore::Bool differentRefs(const casacore::MeasRef<casacore::MDirection>& ref1,
-			    const casacore::MeasRef<casacore::MDirection>& ref2);
+  //# MeasRef<T>::operator== function is too restrictive.
+  static Bool differentRefs(const MeasRef<MDirection>& ref1,
+			    const MeasRef<MDirection>& ref2);
 
-  // returns true if the quantum is not a non-negative angular quantity
-  static casacore::Bool badError(const casacore::Quantum<casacore::Double>& quantum);
+  // returns True if the quantum is not a non-negative angular quantity
+  static Bool badError(const Quantum<Double>& quantum);
 
-  // Turns the specified field in the specified record into an casacore::Quantum 
+  // Turns the specified field in the specified record into an Quantum 
   // with angular units
-  static casacore::Bool fromAngQRecord(casacore::Quantum<casacore::Double>& returnValue, 
-			     casacore::String& errorMessage,
-			     const casacore::String& fieldString, 
-			     const casacore::RecordInterface& record);
+  static Bool fromAngQRecord(Quantum<Double>& returnValue, 
+			     String& errorMessage,
+			     const String& fieldString, 
+			     const RecordInterface& record);
 
 private:
   //# The reference direction of the component
-  casacore::MDirection itsDir;
+  MDirection itsDir;
   //# The errors in the reference direction of the component in radians
-  casacore::Quantum<casacore::Double> itsDirErrLat;
-  casacore::Quantum<casacore::Double> itsDirErrLong;
+  Quantum<Double> itsDirErrLat;
+  Quantum<Double> itsDirErrLong;
 };
 
 } //# NAMESPACE CASA - END

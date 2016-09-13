@@ -37,25 +37,24 @@
 #include <QtCore/qmath.h>
 #include <casa/iostream.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Default Constructor Required
 	Colormap::Colormap() :
 		itsName("mono"),
-		itsIsRigid(false),
+		itsIsRigid(False),
 		itsRigidSize(0),
 		itsAlpha(1),
 		itsBrightness(0.5),
 		itsBrightnessScale(0.0),
 		itsContrast(0.5),
 		itsContrastScale(1.0),
-		itsInvertRed(false),
-		itsInvertGreen(false),
-		itsInvertBlue(false),
+		itsInvertRed(False),
+		itsInvertGreen(False),
+		itsInvertBlue(False),
 		itsPCColorTables(0, 4) {
 		itsColormapDefinition = new ColormapDefinition(itsName);
-		itsOwnShapingFunction = false;
+		itsOwnShapingFunction = False;
 		itsLogScale = 0;
 		setShapingFunction(0);
 	}
@@ -63,19 +62,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // User Constructor
 	Colormap::Colormap(const String& name) :
 		itsName(name),
-		itsIsRigid(false),
+		itsIsRigid(False),
 		itsRigidSize(0),
 		itsAlpha(1),
 		itsBrightness(0.5),
 		itsBrightnessScale(0.0),
 		itsContrast(0.5),
 		itsContrastScale(1.0),
-		itsInvertRed(false),
-		itsInvertGreen(false),
-		itsInvertBlue(false),
+		itsInvertRed(False),
+		itsInvertGreen(False),
+		itsInvertBlue(False),
 		itsPCColorTables(0, 4) {
 		itsColormapDefinition = new ColormapDefinition(itsName);
-		itsOwnShapingFunction = false;
+		itsOwnShapingFunction = False;
 		setShapingFunction(0);
 		itsLogScale = 0;
 	}
@@ -87,7 +86,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	                           Vector<Float> & blueMap,
 	                           Vector<Float> & alphaMap) const {
 		if (rigid() && itsRigidSize != reqSize)
-			return false;
+			return False;
 
 		redMap.resize(reqSize);
 		greenMap.resize(reqSize);
@@ -138,7 +137,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		}
 
-		return true;
+		return True;
 	}
 
 // register a PixelCanvasColorTable
@@ -248,12 +247,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				params(0) = 0.0;
 				params(1) = 1.0;
 				setShapingCoefficients(params);
-				itsOwnShapingFunction = true;
+				itsOwnShapingFunction = True;
 			}
 		} else {
 			if (itsOwnShapingFunction) {
 				delete itsShapingFunction;
-				itsOwnShapingFunction = false;
+				itsOwnShapingFunction = False;
 			}
 			itsShapingFunction = shapingfunc;
 		}

@@ -52,22 +52,22 @@ namespace casa {
 
 	public:
 		FindSourcesDialog(QWidget *parent = 0, bool displayModeFunctionality = true);
-		void setImage( SHARED_PTR<const casacore::ImageInterface<casacore::Float> > image );
+		void setImage( SHARED_PTR<const ImageInterface<Float> > image );
 		void setChannel( int channel );
 
 		void clearImage();
 
 		QString getRegionString() const;
-		casacore::String getPixelBox() const;
+		String getPixelBox() const;
 		QString getImagePixelBox() const;
-		casacore::String getScreenedEstimatesFile( const casacore::String& estimatesFileName,
+		String getScreenedEstimatesFile( const String& estimatesFileName,
 		                                 bool* errorWritingFile );
 		const static QStringList colorNames;
 		~FindSourcesDialog();
 
 	signals:
-		void showOverlay(casacore::String, const QString& );
-		void removeOverlay(casacore::String path );
+		void showOverlay(String, const QString& );
+		void removeOverlay(String path );
 		void estimateFileSpecified( const QString& fullPath );
 
 	public slots:
@@ -107,9 +107,9 @@ namespace casa {
 		void setSourceResultsVisible( bool visible );
 		void createTable();
 		void initializeFileManagement();
-		void setTableValue(int row, int col, const casacore::String& val );
+		void setTableValue(int row, int col, const String& val );
 		double populateCutOff(bool* valid) const;
-		casacore::Record makeRegion( bool * valid );
+		Record makeRegion( bool * valid );
 		void resetSkyOverlay();
 		void clearSkyOverlay();
 		void clearRegions();
@@ -121,8 +121,8 @@ namespace casa {
 		enum SourceColumns { ID_COL, RA_COL, DEC_COL, FLUX_COL,
 		                     MAJOR_AXIS_COL, MINOR_AXIS_COL, ANGLE_COL/*, FIXED_COL*/
 		                   };
-        SHARED_PTR<const casacore::ImageInterface<casacore::Float> > image;
-		casacore::String pixelBox;
+        SHARED_PTR<const ImageInterface<Float> > image;
+		String pixelBox;
 		QString skyPath;
 		QString overlayColorName;
 		bool imageMode;
@@ -135,8 +135,8 @@ namespace casa {
 		const QString SKY_CATALOG;
 		ColorComboDelegate* colorDelegate;
 		PixelRangeDialog pixelRangeDialog;
-		casacore::Vector<int> blcVector;
-		casacore::Vector<int> trcVector;
+		Vector<int> blcVector;
+		Vector<int> trcVector;
 		Ui::FindSourcesDialogClass ui;
 	};
 }

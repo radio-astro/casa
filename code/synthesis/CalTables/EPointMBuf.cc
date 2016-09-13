@@ -29,7 +29,6 @@
 #include <synthesis/CalTables/EPointMBuf.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <tables/Tables/RefRows.h>
-using namespace casacore;
 namespace casa {
 //----------------------------------------------------------------------------
 
@@ -168,7 +167,7 @@ Array<Float>& EPointMBuf::pointingOffset()
   if (connectedToIter()) {
     if (!pointingOffsetOK_p) {
       calMainCol()->pointingOffset().getColumn (pointingOffset_p);
-      pointingOffsetOK_p = true;
+      pointingOffsetOK_p = True;
     };
   };
   return pointingOffset_p;
@@ -192,7 +191,7 @@ void EPointMBuf::invalidate()
   CalMainBuffer::invalidate();
 
   // Set all cache flags to false
-  pointingOffsetOK_p = false;
+  pointingOffsetOK_p = False;
 };
 
 //----------------------------------------------------------------------------

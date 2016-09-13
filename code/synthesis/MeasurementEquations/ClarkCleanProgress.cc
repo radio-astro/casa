@@ -36,7 +36,6 @@
 #include <casa/sstream.h>
 
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 ClarkCleanProgress::ClarkCleanProgress(PGPlotter* pgplotter, Int inc)
@@ -96,11 +95,11 @@ Bool ClarkCleanProgress::info(const Bool lastcall,
   // resize if required
   if (currentIndex >= totalFluxes.nelements() ) {
     uInt nn = totalFluxes.nelements(); 
-    totalFluxes.resize(2*nn+1, true);
-    maxResiduals.resize(2*nn+1, true);
-    negResiduals.resize(2*nn+1, true);
-    posResiduals.resize(2*nn+1, true);
-    iterationNumber.resize(2*nn+1, true);
+    totalFluxes.resize(2*nn+1, True);
+    maxResiduals.resize(2*nn+1, True);
+    negResiduals.resize(2*nn+1, True);
+    posResiduals.resize(2*nn+1, True);
+    iterationNumber.resize(2*nn+1, True);
     // Do this so trailing (ie, unfilled) elements don't get plotted
     for (uInt i=nn; i < 2*nn+1; i++) {
       iterationNumber(i) = 9999999;
@@ -126,27 +125,27 @@ Bool ClarkCleanProgress::info(const Bool lastcall,
     if ( lastcall || ( (iteration) % plottingIncrement) == 0) {
       // Then we get to do a plot
 
-      Bool redrawBox = false;
+      Bool redrawBox = False;
 
       if ( totalFlux > (0.9*currentFluxScale)) {
 	currentFluxScale = abs(3.0 * currentFluxScale);
-	redrawBox = true;
+	redrawBox = True;
       }
       if (myMinFlux < currentMinFluxScale) {
         currentMinFluxScale = -abs( 3.0 * myMinFlux);
-        redrawBox = true;
+        redrawBox = True;
       }
       if (abs(maxResid) < (1.2*currentMinResidual)) {
 	currentMinResidual /= 3.0;
-	redrawBox = true;
+	redrawBox = True;
       }
       if ( numberIterations > (Int)currentTotalIterations) {
 	currentTotalIterations = numberIterations;
-	redrawBox = true;
+	redrawBox = True;
       }
 
       if (redrawBox || lastcall || resetBaseFlux) {
-	basicSetUp(true);      
+	basicSetUp(True);      
 	plotVectors();
       } else {
 	plotOne(iteration+1, maxResid, totalFlux);
@@ -161,7 +160,7 @@ Bool ClarkCleanProgress::info(const Bool lastcall,
       "   flux [Jy] = " << totalFlux << endl;
   }
 
-  return true;
+  return True;
 };
 
 // Call back function
@@ -170,14 +169,14 @@ Bool ClarkCleanProgress::finalize()
 {
   LogIO os(LogOrigin("ClarkCleanProgress", "info()", WHERE));
 
-  basicSetUp(true);      
+  basicSetUp(True);      
   plotVectors();
 
   os << "Max Resid = " << maxResiduals(currentIndex-1)<<  endl;
   os << "Iteration " <<  iterationNumber(currentIndex-1) << 
     "   flux [Jy] = " << totalFluxes(currentIndex-1) << endl;
 
-  return true;
+  return True;
 };
 
 // checks to see if the pointer is non null;
@@ -186,19 +185,19 @@ Bool ClarkCleanProgress::finalize()
 Bool ClarkCleanProgress::hasPGPlotter() 
 {
   if (itsPgplotter == 0) {
-    return false;
+    return False;
   } else {
     try {
       if (itsPgplotter->isAttached()) {
-	return true;
+	return True;
       } else {
-	return false;
+	return False;
       }
     } catch (AipsError x) {
-      return false;
+      return False;
     } 
   }
-  return false;
+  return False;
 };
 
 

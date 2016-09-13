@@ -47,12 +47,12 @@ public:
 
 	// check the mask piecemeal because loading it all into memory will crash
 	// for very large images
-	template <class T> static casacore::Bool isAllMaskFalse(const casacore::ImageInterface<T>& image);
+	template <class T> static Bool isAllMaskFalse(const ImageInterface<T>& image);
 
     // is the image's mask all true valued?
-	template <class T> static casacore::Bool isAllMaskTrue(const casacore::MaskedLattice<T>& image);
+	template <class T> static Bool isAllMaskTrue(const MaskedLattice<T>& image);
 
-    static casacore::Bool isAllMaskTrue(const casacore::Lattice<casacore::Bool>& mask);
+    static Bool isAllMaskTrue(const Lattice<Bool>& mask);
 
 };
 

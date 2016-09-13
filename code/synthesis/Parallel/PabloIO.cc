@@ -37,7 +37,6 @@
 #include "PabloTrace.h"
 #include <casa/sstream.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Extern C programs from the Pablo library.

@@ -44,10 +44,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	template <class T>
-	LatticePADisplayMethod<T>::LatticePADisplayMethod(const casacore::uInt xAxis,
-	        const casacore::uInt yAxis,
-	        const casacore::uInt mAxis,
-	        const casacore::IPosition fixedPos,
+	LatticePADisplayMethod<T>::LatticePADisplayMethod(const uInt xAxis,
+	        const uInt yAxis,
+	        const uInt mAxis,
+	        const IPosition fixedPos,
 	        LatticePADisplayData<T> *arDat) :
 		PrincipalAxesDM(xAxis, yAxis, mAxis, (PrincipalAxesDD *)arDat) {
 
@@ -56,8 +56,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	template <class T>
-	LatticePADisplayMethod<T>::LatticePADisplayMethod(const casacore::uInt xAxis,
-	        const casacore::uInt yAxis,
+	LatticePADisplayMethod<T>::LatticePADisplayMethod(const uInt xAxis,
+	        const uInt yAxis,
 	        LatticePADisplayData<T> *arDat) :
 		PrincipalAxesDM(xAxis, yAxis, 0, (PrincipalAxesDD *)arDat) {
 
@@ -72,38 +72,38 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Query the shape of the lattice
 	template <class T>
-	casacore::IPosition LatticePADisplayMethod<T>::dataShape() {
-		casacore::Lattice<T> *latt = ((LatticePADisplayData<T> *)parentDisplayData())->
+	IPosition LatticePADisplayMethod<T>::dataShape() {
+		Lattice<T> *latt = ((LatticePADisplayData<T> *)parentDisplayData())->
 		                   maskedLattice().get();
 		if (!latt) {
-			throw(casacore::AipsError("LatticePADisplayMethod<T>::dataShape - "
+			throw(AipsError("LatticePADisplayMethod<T>::dataShape - "
 			                "no lattice is available"));
 		}
 		return latt->shape();
 	}
 
 	template <class T>
-	casacore::Bool LatticePADisplayMethod<T>::dataGetSlice(casacore::Matrix<T>& data,
-	        casacore::Matrix<casacore::Bool> &mask,
-	        const casacore::IPosition& start,
-	        const casacore::IPosition& sliceShape,
-	        const casacore::IPosition& stride) {
-		casacore::MaskedLattice<T>* latt =
+	Bool LatticePADisplayMethod<T>::dataGetSlice(Matrix<T>& data,
+	        Matrix<Bool> &mask,
+	        const IPosition& start,
+	        const IPosition& sliceShape,
+	        const IPosition& stride) {
+		MaskedLattice<T>* latt =
 		    ((LatticePADisplayData<T> *)parentDisplayData())->maskedLattice().get();
 		if (!latt) {
-			throw(casacore::AipsError("LatticePADisplayMethod<T>::dataGetSlice - "
+			throw(AipsError("LatticePADisplayMethod<T>::dataGetSlice - "
 			                "no lattice is available"));
 		}
 		return dataGetSlice (data, mask, start, sliceShape, stride, *latt);
 	}
 
 	template <class T>
-	casacore::Bool LatticePADisplayMethod<T>::dataGetSlice(casacore::Matrix<T>& data,
-	        casacore::Matrix<casacore::Bool> &mask,
-	        const casacore::IPosition& start,
-	        const casacore::IPosition& sliceShape,
-	        const casacore::IPosition& stride,
-	        casacore::MaskedLattice<T>& latt) {
+	Bool LatticePADisplayMethod<T>::dataGetSlice(Matrix<T>& data,
+	        Matrix<Bool> &mask,
+	        const IPosition& start,
+	        const IPosition& sliceShape,
+	        const IPosition& stride,
+	        MaskedLattice<T>& latt) {
 
 		// It is assumed that sliceShape has already been trimmed so
 		// that it doesn't dangle over the edge of the lattice
@@ -113,27 +113,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		if (needToTranspose()) {
 
-			casacore::Matrix<T>    tmpData(latt.getSlice(start, sliceShape, stride, true));
-			casacore::Matrix<casacore::Bool> tmpMask(latt.getMaskSlice(start, sliceShape, stride, true));
+			Matrix<T>    tmpData(latt.getSlice(start, sliceShape, stride, True));
+			Matrix<Bool> tmpMask(latt.getMaskSlice(start, sliceShape, stride, True));
 			// These will be Nx1 in a degenerate axis case.
-			// (When 1xN is needed, needToTranspose() will also have been true).
+			// (When 1xN is needed, needToTranspose() will also have been True).
 
 			data = transpose(tmpData);
-			if (anyEQ(tmpMask, false)) mask = transpose(tmpMask);
+			if (anyEQ(tmpMask, False)) mask = transpose(tmpMask);
 			// (otherwise, 0-length mask indicates 'all good').
 
 		} else {
 
-			data = latt.getSlice(start, sliceShape, stride, true);
-			mask = latt.getMaskSlice(start, sliceShape, stride, true);
+			data = latt.getSlice(start, sliceShape, stride, True);
+			mask = latt.getMaskSlice(start, sliceShape, stride, True);
 			// These will be Nx1 in any degenerate axis case.
 			// (If 1xN had been needed, needToTranspose() would
-			// also have been true).
-			if (!anyEQ(mask, false)) mask.resize(0,0);
+			// also have been True).
+			if (!anyEQ(mask, False)) mask.resize(0,0);
 			// (indicates 'all good').
 		}
 
-		return true;
+		return True;
 	}
 
 } //# NAMESPACE CASA - END

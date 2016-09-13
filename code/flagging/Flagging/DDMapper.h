@@ -35,7 +35,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <summary>
-// Abstract Derived casacore::Data Mapper class
+// Abstract Derived Data Mapper class
 // </summary>
 
 // <use visibility=local>
@@ -45,7 +45,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <synopsis>
 // The DDMapper class defines an interface for mapping complex visibilities
-// into casacore::Float derived values. DDMappers are used by several flagging
+// into Float derived values. DDMappers are used by several flagging
 // agents.
 // </synopsis>
 //
@@ -62,30 +62,30 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 class DDMapper
 {
 protected:
-  casacore::Bool valid;
-  casacore::uShort corrmask; // mask of affected correlations
+  Bool valid;
+  uShort corrmask; // mask of affected correlations
   
 public:
-  DDMapper ()         { valid=false; }
+  DDMapper ()         { valid=False; }
   virtual ~DDMapper () {};
   
   // Given a vector of correlation types, recomputes internal indices.
-  // returns true if all indices were found successfully.
-  virtual casacore::Bool reset ( const casacore::Vector<casacore::Int> &corr ) =0;
+  // returns True if all indices were found successfully.
+  virtual Bool reset ( const Vector<Int> &corr ) =0;
   
   // Maps a slice of visibilities at (*,ich,irow) from the given 
   // viscube into a the derived value. 
-  virtual casacore::Float map  ( const casacore::Cube<casacore::Complex> &vis,casacore::uInt ich,casacore::uInt irow ) const =0;
+  virtual Float map  ( const Cube<Complex> &vis,uInt ich,uInt irow ) const =0;
   
   // Returns the "mask" of correlations which are used by this mapper.
   // by this mapper. Bit "i" is set if corr. "i" is used.
-  casacore::uShort  corrMask () const         { return corrmask; }
+  uShort  corrMask () const         { return corrmask; }
 
-  // Returns true if given correlations is masked
-  casacore::Bool    masked (casacore::uInt icorr) const  { return (corrmask&(1<<icorr)) != 0; }
+  // Returns True if given correlations is masked
+  Bool    masked (uInt icorr) const  { return (corrmask&(1<<icorr)) != 0; }
   
   // Tells if mapper is valid
-  casacore::Bool    isValid () { return valid; }
+  Bool    isValid () { return valid; }
 };
 
 // <summary>
@@ -99,11 +99,11 @@ public:
   ~DDDummy ();
   
   virtual void puke () const
-              { throw(casacore::AipsError("Uninitialized DDMapper used")); }
+              { throw(AipsError("Uninitialized DDMapper used")); }
   
-  virtual casacore::Bool  reset ( const casacore::Vector<casacore::Int> & )
-              { puke(); return false; }
-  virtual casacore::Float map   ( const casacore::Cube<casacore::Complex> &,casacore::uInt,casacore::uInt ) const
+  virtual Bool  reset ( const Vector<Int> & )
+              { puke(); return False; }
+  virtual Float map   ( const Cube<Complex> &,uInt,uInt ) const
               { puke(); return 0.; }
 
 };
@@ -115,22 +115,22 @@ public:
 class DDFunc : public DDMapper
 {
 public:
-  typedef casacore::Float (*FuncSignature)(const casacore::Complex &);
+  typedef Float (*FuncSignature)(const Complex &);
   
-  DDFunc ( FuncSignature fsig,const casacore::String &corr );
+  DDFunc ( FuncSignature fsig,const String &corr );
   ~DDFunc() {};
   
-  virtual casacore::Bool  reset ( const casacore::Vector<casacore::Int> &corr );
-  virtual casacore::Float map   ( const casacore::Cube<casacore::Complex> &vis,casacore::uInt ich,casacore::uInt irow ) const;
+  virtual Bool  reset ( const Vector<Int> &corr );
+  virtual Float map   ( const Cube<Complex> &vis,uInt ich,uInt irow ) const;
 
 // Define these functions, because using std::real/imag in getFunction
 // matches multiple functions.
-  static casacore::Float real (const casacore::Complex&);
-  static casacore::Float imag (const casacore::Complex&);
+  static Float real (const Complex&);
+  static Float imag (const Complex&);
 
 // Static function to map a function name into a function pointer
 // Functions currently recognized: ABS ARG NORM RE IM 
-  static FuncSignature getFunction( const casacore::String &name );
+  static FuncSignature getFunction( const String &name );
 
 // Static function to map string expression into a DDMapper
 // Possible syntax is:
@@ -139,11 +139,11 @@ public:
 //   DIFF <FUNC> <CC> <CC>
 //   <FUNC> SUM <CC> <CC>
 //   <FUNC> DIFF <CC> <CC>
-  static DDMapper * getMapper ( casacore::String &desc,const casacore::Vector<casacore::String> &expr,casacore::Bool throw_excp=false );
+  static DDMapper * getMapper ( String &desc,const Vector<String> &expr,Bool throw_excp=False );
   
 protected:
-  casacore::Int icorr;
-  casacore::Stokes::StokesTypes corrtype;
+  Int icorr;
+  Stokes::StokesTypes corrtype;
   FuncSignature func;
 };
 
@@ -154,15 +154,15 @@ protected:
 class DDSumFunc : public DDFunc
 {
 public:
-  DDSumFunc ( FuncSignature fsig,const casacore::String &corr1,const casacore::String &corr2 );
+  DDSumFunc ( FuncSignature fsig,const String &corr1,const String &corr2 );
   virtual ~DDSumFunc() {};
   
-  virtual casacore::Bool  reset ( const casacore::Vector<casacore::Int> &corr );
-  virtual casacore::Float map   ( const casacore::Cube<casacore::Complex> &vis,casacore::uInt ich,casacore::uInt irow ) const;
+  virtual Bool  reset ( const Vector<Int> &corr );
+  virtual Float map   ( const Cube<Complex> &vis,uInt ich,uInt irow ) const;
 
 protected:
-  casacore::Int icorr2;
-  casacore::Stokes::StokesTypes corrtype2;
+  Int icorr2;
+  Stokes::StokesTypes corrtype2;
 };
 
 // <summary>
@@ -172,10 +172,10 @@ protected:
 class DDFuncSum : public DDSumFunc
 {
 public:
-  DDFuncSum ( FuncSignature fsig,const casacore::String &corr1,const casacore::String &corr2 );
+  DDFuncSum ( FuncSignature fsig,const String &corr1,const String &corr2 );
   virtual ~DDFuncSum() {};
   
-  virtual casacore::Float map   ( const casacore::Cube<casacore::Complex> &vis,casacore::uInt ich,casacore::uInt irow ) const;
+  virtual Float map   ( const Cube<Complex> &vis,uInt ich,uInt irow ) const;
 };
 
 // <summary>
@@ -185,10 +185,10 @@ public:
 class DDFuncDiff : public DDSumFunc
 {
 public:
-  DDFuncDiff ( FuncSignature fsig,const casacore::String &corr1,const casacore::String &corr2 );
+  DDFuncDiff ( FuncSignature fsig,const String &corr1,const String &corr2 );
   virtual ~DDFuncDiff() {};
   
-  virtual casacore::Float map   ( const casacore::Cube<casacore::Complex> &vis,casacore::uInt ich,casacore::uInt irow ) const;
+  virtual Float map   ( const Cube<Complex> &vis,uInt ich,uInt irow ) const;
 };
 
 // <summary>
@@ -198,14 +198,14 @@ public:
 class DDDiffFunc : public DDSumFunc
 {
 public:
-  DDDiffFunc ( FuncSignature fsig,const casacore::String &corr1,const casacore::String &corr2 );
+  DDDiffFunc ( FuncSignature fsig,const String &corr1,const String &corr2 );
   virtual ~DDDiffFunc() {};
   
-  virtual casacore::Float map   ( const casacore::Cube<casacore::Complex> &vis,casacore::uInt ich,casacore::uInt irow ) const;
+  virtual Float map   ( const Cube<Complex> &vis,uInt ich,uInt irow ) const;
 };
 
 // helper function to split an expression into elements
-casacore::Vector<casacore::String> splitExpression( const casacore::Vector<casacore::String> &expr0 );
+Vector<String> splitExpression( const Vector<String> &expr0 );
 
 
 } //# NAMESPACE CASA - END

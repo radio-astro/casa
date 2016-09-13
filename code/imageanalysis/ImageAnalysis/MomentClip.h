@@ -44,9 +44,9 @@ namespace casa {
 //   <li> <linkto class="MomentsBase">MomentsBase</linkto>
 //   <li> <linkto class="ImageMoments">ImageMoments</linkto>
 //   <li> <linkto class="MSMoments">MSMoments</linkto>
-//   <li> <linkto class="casacore::LatticeApply">casacore::LatticeApply</linkto>
+//   <li> <linkto class="LatticeApply">LatticeApply</linkto>
 //   <li> <linkto class="MomentCalcBase">MomentCalcBase</linkto>
-//   <li> <linkto class="casacore::LineCollapser">casacore::LineCollapser</linkto>
+//   <li> <linkto class="LineCollapser">LineCollapser</linkto>
 // </prerequisite>
 //
 // <synopsis>
@@ -57,7 +57,7 @@ namespace casa {
 //  and invokes the <src>multiProcess</src> member function of MomentClip on each vector
 //  of pixels that it extracts from the input lattice.  The <src>multiProcess</src>
 //  function returns a vector of moments which are inserted into the output
-//  lattices also supplied to the casacore::LatticeApply function.
+//  lattices also supplied to the LatticeApply function.
 //
 //  MomentClip computes moments directly from a vector of pixel intensities
 //  extracted from the primary lattice.  An optional pixel intensity inclusion
@@ -92,7 +92,7 @@ namespace casa {
 // <srcBlock>
 //
 //// Construct desired moment calculator object.  Use it polymorphically
-//// via a pointer to the base class.  os_P is a casacore::LogIO object.
+//// via a pointer to the base class.  os_P is a LogIO object.
 //
 //   MomentCalcBase<T>* pMomentCalculator = 0;
 //   if (clipMethod || smoothClipMethod) {
@@ -105,7 +105,7 @@ namespace casa {
 //
 //// Iterate optimally through the image, compute the moments, fill the output lattices
 //
-//   casacore::LatticeApply<T>::lineMultiApply(outPt, *pInImage_p, *pMomentCalculator,
+//   LatticeApply<T>::lineMultiApply(outPt, *pInImage_p, *pMomentCalculator,
 //                                   momentAxis_p, pProgressMeter);
 //   delete pMomentCalculator;
 //
@@ -127,48 +127,48 @@ public:
     // If no masking lattice is desired, the pointer value must be zero.  We also
     // need the ImageMoments or MSMoments object which is calling us, its
     // logger, and the number of output lattices it has created.
-    MomentClip(shared_ptr<casacore::Lattice<T>> pAncilliaryLattice,
+    MomentClip(shared_ptr<Lattice<T>> pAncilliaryLattice,
             MomentsBase<T>& iMom,
-            casacore::LogIO& os,
-            const casacore::uInt nLatticeOut);
+            LogIO& os,
+            const uInt nLatticeOut);
 
     // Destructor (does nothing).
     virtual ~MomentClip();
 
     // This function is not implemented and throws an exception.
     virtual void process(
-        T& out, casacore::Bool& outMask,
-        const casacore::Vector<T>& in,
-        const casacore::Vector<casacore::Bool>& inMask,
-        const casacore::IPosition& pos
+        T& out, Bool& outMask,
+        const Vector<T>& in,
+        const Vector<Bool>& inMask,
+        const IPosition& pos
     );
 
     // This function returns a vector of numbers from each input vector.
     // the output vector contains the moments known to the ImageMoments
     // or MSMoments object passed into the constructor.
     virtual void multiProcess(
-        casacore::Vector<T>& out, casacore::Vector<casacore::Bool>& outMask,
-        const casacore::Vector<T>& in,
-        const casacore::Vector<casacore::Bool>& inMask,
-        const casacore::IPosition& pos
+        Vector<T>& out, Vector<Bool>& outMask,
+        const Vector<T>& in,
+        const Vector<Bool>& inMask,
+        const IPosition& pos
     );
 
     // Can handle null mask
-    virtual casacore::Bool canHandleNullMask() const {return true;};
+    virtual Bool canHandleNullMask() const {return True;};
 
 private:
 
-    shared_ptr<casacore::Lattice<T>> _ancilliaryLattice;
+    shared_ptr<Lattice<T>> _ancilliaryLattice;
     MomentsBase<T>& iMom_p;
-    casacore::LogIO os_p;
+    LogIO os_p;
 
-    const casacore::Vector<T>* pProfileSelect_p = nullptr;
-    casacore::Vector<T> ancilliarySliceRef_p;
-    casacore::Vector<T> selectedData_p;
-    casacore::Vector<casacore::Int> selectedDataIndex_p;
-    casacore::Bool doInclude_p, doExclude_p;
-    casacore::Vector<T> range_p;
-    casacore::IPosition sliceShape_p;
+    const Vector<T>* pProfileSelect_p = nullptr;
+    Vector<T> ancilliarySliceRef_p;
+    Vector<T> selectedData_p;
+    Vector<Int> selectedDataIndex_p;
+    Bool doInclude_p, doExclude_p;
+    Vector<T> range_p;
+    IPosition sliceShape_p;
 
 protected:
     using MomentCalcBase<T>::constructorCheck;

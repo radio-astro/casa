@@ -44,14 +44,14 @@ protected:
     int numColors;
     QString cmapname;
 
-    casacore::Vector<casacore::Float> rMap;
-    casacore::Vector<casacore::Float> gMap;
-    casacore::Vector<casacore::Float> bMap;
+    Vector<Float> rMap;
+    Vector<Float> gMap;
+    Vector<Float> bMap;
 
     void setColorTable();
     void calcLinearMaps();
-    void getLinearColor(casacore::Float& r, casacore::Float& g, casacore::Float& b, casacore::Float v);
-    void getTableColor(casacore::Float& r, casacore::Float& g, casacore::Float& b, casacore::Float v);
+    void getLinearColor(Float& r, Float& g, Float& b, Float v);
+    void getTableColor(Float& r, Float& g, Float& b, Float v);
    
     float min;
     float max;

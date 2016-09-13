@@ -67,13 +67,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		QString printFileName() const;
 		QString printerName() const;
 		bool load(QDomDocument &doc);
-		void loadRecord(casacore::Record rec);
+		void loadRecord(Record rec);
 		static const QString printRecord;
 		void adjustEpsBoundingBox( const char *from, const char *to,
 		                           const QSize &wcmax, const QRect &viewport );
 		void printPS(QPrinter *printer, const QString printerType);
-		friend std::ostream& operator <<(std::ostream &os,const QtViewerPrintGui &obj);
-		friend std::ostream& operator <<(std::ostream &os,const QPrinter &printer);
+		friend ostream& operator <<(ostream &os,const QtViewerPrintGui &obj);
+		friend ostream& operator <<(ostream &os,const QPrinter &printer);
 	signals:
 
 	private slots:

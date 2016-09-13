@@ -45,7 +45,7 @@ class ParallelImagerAdaptor
 public:
 	using T::T;
 
-	virtual casacore::Record clean() {
+	virtual Record clean() {
 		return T::clean();
 	};
 };

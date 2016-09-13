@@ -33,15 +33,11 @@
 #include <casa/aips.h>
 #include <casa/Arrays/Array.h>
 
-namespace casacore{
-
-class Record;
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Forward Declarations
 class Algorithm;
+class Record;
 
 // <summary>
 // Base class for parallel data transport models
@@ -85,71 +81,71 @@ class PTransport {
   virtual ~PTransport() {}
 
   // Return the number of processes
-  casacore::Int numThreads() {return numprocs;};
+  Int numThreads() {return numprocs;};
 
   // Return the current process rank
-  casacore::Int cpu() {return myCpu;}
+  Int cpu() {return myCpu;}
 
   // Set the properties of the current connection including
   // source/destination and message tag.
-  casacore::Int connect(casacore::Int i) {aWorker=i; return i;}
+  Int connect(Int i) {aWorker=i; return i;}
   void connectAnySource() {aWorker=anySource(); return;};
   void connectToController() {aWorker=controllerRank(); return;};
-  void setTag(casacore::Int tag) {aTag=tag; return;};
+  void setTag(Int tag) {aTag=tag; return;};
   void setAnyTag() {aTag=anyTag(); return;};
   
   // Status functions for worker/controller designation
-  casacore::Bool isController() {return (cpu()==controllerRank());};
-  casacore::Bool isWorker() {return (cpu()!=controllerRank());};
+  Bool isController() {return (cpu()==controllerRank());};
+  Bool isWorker() {return (cpu()!=controllerRank());};
   
   // Default source and message tag values
-  virtual casacore::Int anyTag() = 0;
-  virtual casacore::Int anySource() = 0;
+  virtual Int anyTag() = 0;
+  virtual Int anySource() = 0;
   
   // Define the rank of the controller process
-  virtual casacore::Int controllerRank() = 0;
+  virtual Int controllerRank() = 0;
   
   // Get and put functions on the parallel data transport layer
-  virtual casacore::Int put(const casacore::Array<casacore::Float> &) = 0;
-  virtual casacore::Int put(const casacore::Array<casacore::Double> &) = 0;
-  virtual casacore::Int put(const casacore::Array<casacore::Complex> &) = 0;
-  virtual casacore::Int put(const casacore::Array<casacore::DComplex> &) = 0;
-  virtual casacore::Int put(const casacore::Array<casacore::Int> &) = 0;
-  virtual casacore::Int put(const casacore::Float &) = 0;
-  virtual casacore::Int put(const casacore::Double &) = 0;
-  virtual casacore::Int put(const casacore::Complex &) = 0;
-  virtual casacore::Int put(const casacore::DComplex &) = 0;
-  virtual casacore::Int put(const casacore::Int &) = 0;
-  virtual casacore::Int put(const casacore::String &) = 0;
-  virtual casacore::Int put(const casacore::Bool &) = 0;
-  virtual casacore::Int put(const casacore::Record &) = 0;
+  virtual Int put(const Array<Float> &) = 0;
+  virtual Int put(const Array<Double> &) = 0;
+  virtual Int put(const Array<Complex> &) = 0;
+  virtual Int put(const Array<DComplex> &) = 0;
+  virtual Int put(const Array<Int> &) = 0;
+  virtual Int put(const Float &) = 0;
+  virtual Int put(const Double &) = 0;
+  virtual Int put(const Complex &) = 0;
+  virtual Int put(const DComplex &) = 0;
+  virtual Int put(const Int &) = 0;
+  virtual Int put(const String &) = 0;
+  virtual Int put(const Bool &) = 0;
+  virtual Int put(const Record &) = 0;
 
-  virtual casacore::Int get(casacore::Array<casacore::Float> &) = 0;
-  virtual casacore::Int get(casacore::Array<casacore::Double> &) = 0;
-  virtual casacore::Int get(casacore::Array<casacore::Complex> &) = 0;
-  virtual casacore::Int get(casacore::Array<casacore::DComplex> &) = 0;
-  virtual casacore::Int get(casacore::Array<casacore::Int> &) = 0;
-  virtual casacore::Int get(casacore::Float &) = 0;
-  virtual casacore::Int get(casacore::Double &) = 0;
-  virtual casacore::Int get(casacore::Complex &) = 0;
-  virtual casacore::Int get(casacore::DComplex &) = 0;
-  virtual casacore::Int get(casacore::Int &) = 0;
-  virtual casacore::Int get(casacore::String &) = 0;
-  virtual casacore::Int get(casacore::Bool &) = 0;
-  virtual casacore::Int get(casacore::Record &) = 0;
+  virtual Int get(Array<Float> &) = 0;
+  virtual Int get(Array<Double> &) = 0;
+  virtual Int get(Array<Complex> &) = 0;
+  virtual Int get(Array<DComplex> &) = 0;
+  virtual Int get(Array<Int> &) = 0;
+  virtual Int get(Float &) = 0;
+  virtual Int get(Double &) = 0;
+  virtual Int get(Complex &) = 0;
+  virtual Int get(DComplex &) = 0;
+  virtual Int get(Int &) = 0;
+  virtual Int get(String &) = 0;
+  virtual Int get(Bool &) = 0;
+  virtual Int get(Record &) = 0;
   
  protected: 
   // Number of processes
-  casacore::Int numprocs;
+  Int numprocs;
   
   // Rank of current process
-  casacore::Int myCpu;
+  Int myCpu;
    
   // Current source or destination process
-  casacore::Int aWorker;
+  Int aWorker;
 
   // Current message tag
-  casacore::Int aTag;
+  Int aTag;
 };
 
 // Putting in the MPI Transport stuff only makes sense if we have MPI
@@ -196,56 +192,56 @@ class MPITransport : public PTransport {
   virtual ~MPITransport();
 
   // Construct from argv
-  MPITransport(casacore::Int, casacore::Char *argv[]);
+  MPITransport(Int, Char *argv[]);
 
   // Default source and message tag values
-  virtual casacore::Int anyTag();
-  virtual casacore::Int anySource();
+  virtual Int anyTag();
+  virtual Int anySource();
   
   // Define the rank of the controller process
-  virtual casacore::Int controllerRank() {return 0;};
+  virtual Int controllerRank() {return 0;};
   
   // Get and put functions on the parallel data transport layer
-  virtual casacore::Int put(const casacore::Array<casacore::Float> &);
-  virtual casacore::Int put(const casacore::Array<casacore::Double> &);
-  virtual casacore::Int put(const casacore::Array<casacore::Complex> &);
-  virtual casacore::Int put(const casacore::Array<casacore::DComplex> &);
-  virtual casacore::Int put(const casacore::Array<casacore::Int> &);
-  virtual casacore::Int put(const casacore::Float &);
-  virtual casacore::Int put(const casacore::Double &);
-  virtual casacore::Int put(const casacore::Complex &);
-  virtual casacore::Int put(const casacore::DComplex &);
-  virtual casacore::Int put(const casacore::Int &);
-  virtual casacore::Int put(const casacore::String &);
-  virtual casacore::Int put(const casacore::Bool &);
-  virtual casacore::Int put(const casacore::Record &);
+  virtual Int put(const Array<Float> &);
+  virtual Int put(const Array<Double> &);
+  virtual Int put(const Array<Complex> &);
+  virtual Int put(const Array<DComplex> &);
+  virtual Int put(const Array<Int> &);
+  virtual Int put(const Float &);
+  virtual Int put(const Double &);
+  virtual Int put(const Complex &);
+  virtual Int put(const DComplex &);
+  virtual Int put(const Int &);
+  virtual Int put(const String &);
+  virtual Int put(const Bool &);
+  virtual Int put(const Record &);
 
-  virtual casacore::Int get(casacore::Array<casacore::Float> &);
-  virtual casacore::Int get(casacore::Array<casacore::Double> &);
-  virtual casacore::Int get(casacore::Array<casacore::Complex> &);
-  virtual casacore::Int get(casacore::Array<casacore::DComplex> &);
-  virtual casacore::Int get(casacore::Array<casacore::Int> &);
-  virtual casacore::Int get(casacore::Float &);
-  virtual casacore::Int get(casacore::Double &);
-  virtual casacore::Int get(casacore::Complex &);
-  virtual casacore::Int get(casacore::DComplex &);
-  virtual casacore::Int get(casacore::Int &);
-  virtual casacore::Int get(casacore::String &);
-  virtual casacore::Int get(casacore::Bool &);
-  virtual casacore::Int get(casacore::Record &);
+  virtual Int get(Array<Float> &);
+  virtual Int get(Array<Double> &);
+  virtual Int get(Array<Complex> &);
+  virtual Int get(Array<DComplex> &);
+  virtual Int get(Array<Int> &);
+  virtual Int get(Float &);
+  virtual Int get(Double &);
+  virtual Int get(Complex &);
+  virtual Int get(DComplex &);
+  virtual Int get(Int &);
+  virtual Int get(String &);
+  virtual Int get(Bool &);
+  virtual Int get(Record &);
 
  private:
   // Local work variables
-  casacore::Int sendTo, myOp, getFrom;
+  Int sendTo, myOp, getFrom;
 
   // Utility functions to set default source/destination and tag values
-  void setSourceAndTag (casacore::Int &source, casacore::Int &tag);
-  void setDestAndTag (casacore::Int &dest, casacore::Int &tag);
+  void setSourceAndTag (Int &source, Int &tag);
+  void setDestAndTag (Int &dest, Int &tag);
 };
 #endif
 
 // <summary>
-// Serial casacore::Data Transport Model
+// Serial Data Transport Model
 // </summary>
 
 // <use visibility=local>
@@ -289,48 +285,48 @@ class SerialTransport : public PTransport {
   virtual ~SerialTransport(){}
 
   // Default source and message tag values
-  virtual casacore::Int anyTag() {return -1;};
-  virtual casacore::Int anySource() {return -1;};
+  virtual Int anyTag() {return -1;};
+  virtual Int anySource() {return -1;};
   
   // Define the rank of the controller process
-  virtual casacore::Int controllerRank() {return 0;};
+  virtual Int controllerRank() {return 0;};
 
   // Get and put functions on the data transport layer
-  virtual casacore::Int put(const casacore::Array<casacore::Float> &);
-  virtual casacore::Int put(const casacore::Array<casacore::Double> &);
-  virtual casacore::Int put(const casacore::Array<casacore::Complex> &);
-  virtual casacore::Int put(const casacore::Array<casacore::DComplex> &);
-  virtual casacore::Int put(const casacore::Array<casacore::Int> &);
-  virtual casacore::Int put(const casacore::Float &);
-  virtual casacore::Int put(const casacore::Double &);
-  virtual casacore::Int put(const casacore::Complex &);
-  virtual casacore::Int put(const casacore::DComplex &);
-  virtual casacore::Int put(const casacore::Int &);
-  virtual casacore::Int put(const casacore::String &);
-  virtual casacore::Int put(const casacore::Bool &);
-  virtual casacore::Int put(const casacore::Record &);
+  virtual Int put(const Array<Float> &);
+  virtual Int put(const Array<Double> &);
+  virtual Int put(const Array<Complex> &);
+  virtual Int put(const Array<DComplex> &);
+  virtual Int put(const Array<Int> &);
+  virtual Int put(const Float &);
+  virtual Int put(const Double &);
+  virtual Int put(const Complex &);
+  virtual Int put(const DComplex &);
+  virtual Int put(const Int &);
+  virtual Int put(const String &);
+  virtual Int put(const Bool &);
+  virtual Int put(const Record &);
 
-  virtual casacore::Int get(casacore::Array<casacore::Float> &);
-  virtual casacore::Int get(casacore::Array<casacore::Double> &);
-  virtual casacore::Int get(casacore::Array<casacore::Complex> &);
-  virtual casacore::Int get(casacore::Array<casacore::DComplex> &);
-  virtual casacore::Int get(casacore::Array<casacore::Int> &);
-  virtual casacore::Int get(casacore::Float &);
-  virtual casacore::Int get(casacore::Double &);
-  virtual casacore::Int get(casacore::Complex &);
-  virtual casacore::Int get(casacore::DComplex &);
-  virtual casacore::Int get(casacore::Int &);
-  virtual casacore::Int get(casacore::String &);
-  virtual casacore::Int get(casacore::Bool &);
-  virtual casacore::Int get(casacore::Record &);
+  virtual Int get(Array<Float> &);
+  virtual Int get(Array<Double> &);
+  virtual Int get(Array<Complex> &);
+  virtual Int get(Array<DComplex> &);
+  virtual Int get(Array<Int> &);
+  virtual Int get(Float &);
+  virtual Int get(Double &);
+  virtual Int get(Complex &);
+  virtual Int get(DComplex &);
+  virtual Int get(Int &);
+  virtual Int get(String &);
+  virtual Int get(Bool &);
+  virtual Int get(Record &);
 
  private:
-  casacore::uInt inQue;
-  casacore::uInt outQue;
-  casacore::uInt lastInQue;
-  casacore::PtrBlock<void *> _data;
+  uInt inQue;
+  uInt outQue;
+  uInt lastInQue;
+  PtrBlock<void *> _data;
   
-  casacore::Int add2Queue(void *);
+  Int add2Queue(void *);
   void *getFromQueue();
 };
 

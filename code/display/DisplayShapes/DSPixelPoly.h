@@ -51,17 +51,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	public:
 
 		DSPixelPoly();
-		DSPixelPoly(const casacore::Record& settings);
+		DSPixelPoly(const Record& settings);
 		DSPixelPoly(DSScreenPoly& other);
 		DSPixelPoly(DSWorldPoly& other);
 		DSPixelPoly(DSPixelPolyLine& other);
 
 		virtual ~DSPixelPoly();
 
-		virtual casacore::Bool setOptions(const casacore::Record& settings);
-		virtual casacore::Record getOptions();
+		virtual Bool setOptions(const Record& settings);
+		virtual Record getOptions();
 
-		virtual casacore::Record getRawOptions() {
+		virtual Record getRawOptions() {
 			return DSPoly::getOptions();
 		}
 

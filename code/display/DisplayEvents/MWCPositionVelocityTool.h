@@ -68,15 +68,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	public:
 		// Constructor
-		MWCPositionVelocityTool( Display::KeySym keysym = Display::K_Pointer_Button1, casacore::Bool scrollingAllowed = true );
+		MWCPositionVelocityTool( Display::KeySym keysym = Display::K_Pointer_Button1, Bool scrollingAllowed = True );
 
 		// Destructor
 		virtual ~MWCPositionVelocityTool();
 
 		// Reset to non-showing, non-active.  Refreshes if necessary to erase
-		// (unless skipRefresh==true).
+		// (unless skipRefresh==True).
 		// (Does not unregister from WCs or disable future event handling).
-		virtual void reset(casacore::Bool skipRefresh=false);
+		virtual void reset(Bool skipRefresh=False);
 
 	protected:
 		// Functions called by the base class mouse event handling operators -
@@ -95,16 +95,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	private:
 		// Should we respond to mouse movement and button release?  Should
 		// we draw?  Set when the button is pushed in one of the tool's WCs.
-		casacore::Bool itsActive;
+		Bool itsActive;
 
 		// are the units in x and y identical?
-		casacore::Bool itsEqualUnits;
+		Bool itsEqualUnits;
 
 		// pixel coordinates of the pan vector.  1 = anchor, 2 = new position.
-		casacore::Int itsX1, itsY1, itsX2, itsY2, itsX3, itsY3;
+		Int itsX1, itsY1, itsX2, itsY2, itsX3, itsY3;
 
 		// axis index for RA and DEC
-		casacore::Int itsRaIndex, itsDecIndex;
+		Int itsRaIndex, itsDecIndex;
 	};
 
 

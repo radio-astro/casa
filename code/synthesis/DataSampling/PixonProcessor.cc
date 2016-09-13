@@ -32,7 +32,6 @@
 #include <casa/Exceptions/Error.h>
 #include <casa/sstream.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 PixonProcessor::PixonProcessor() 
@@ -104,7 +103,7 @@ Bool PixonProcessor::calculate(const DataSampling& ds, Array<Float>& result) {
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Exception: " << x.getMesg() << LogIO::POST;
   } 
-  return false;
+  return False;
 }
 
 Bool PixonProcessor::save(const DataSampling& ds, const String& saveName) {
@@ -127,7 +126,7 @@ Bool PixonProcessor::save(const DataSampling& ds, const String& saveName) {
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Exception: " << x.getMesg() << LogIO::POST;
   } 
-  return false;
+  return False;
 }
 
 Bool PixonProcessor::standardTest() {
@@ -142,7 +141,7 @@ Bool PixonProcessor::standardTest() {
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Exception: " << x.getMesg() << LogIO::POST;
   } 
-  return false;
+  return False;
 }
 
 } //# NAMESPACE CASA - END

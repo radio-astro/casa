@@ -68,10 +68,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // parameter which can be expressed as a selection from two or more
 // options.
 // <srcblock>
-// casacore::Vector<casacore::String> myStrings(2);
+// Vector<String> myStrings(2);
 //   myStrings(0) = "Ten";
 //   myStrings(1) = "Twenty";
-// casacore::Vector<casacore::Int> myInts(2);
+// Vector<Int> myInts(2);
 //   myInts(0) = 10;
 //   myInts(1) = 20;
 //
@@ -83,7 +83,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // // ...
 //
-// // update the parameter from some casacore::Record (casacore::String representation);
+// // update the parameter from some Record (String representation);
 // mchoice.fromRecord(rec);
 //
 // // examine the value of the parameter
@@ -107,7 +107,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </thrown>
 
 // <todo asof="2002/05/08">
-// <li> casacore::Template the class so a "key" can be anything.
+// <li> Template the class so a "key" can be anything.
 // </todo>
 
 	class DParameterMapKeyChoice : public DParameterChoice {
@@ -123,11 +123,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// <src>defaultvalue</src> and <src>value</src> parameters must
 		// exist in the list of allowed options, otherwise an exception
 		// is thrown.
-		DParameterMapKeyChoice(const casacore::String name, const casacore::String description,
-		                       const casacore::String help, const casacore::Vector<casacore::String>& options,
-		                       const casacore::Vector<casacore::Int>& keys,
-		                       const casacore::String defaultvalue, const casacore::String value,
-		                       const casacore::String context = "");
+		DParameterMapKeyChoice(const String name, const String description,
+		                       const String help, const Vector<String>& options,
+		                       const Vector<Int>& keys,
+		                       const String defaultvalue, const String value,
+		                       const String context = "");
 
 
 		// (Required) copy constructor.
@@ -140,26 +140,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		DParameterMapKeyChoice &operator=(const DParameterMapKeyChoice &other);
 
 		// Return the list of all keys for this parameter.
-		casacore::Vector<casacore::Int> keys() const {
+		Vector<Int> keys() const {
 			return itsKeys;
 		}
 
 		// Return the current value of this parameter.
-		casacore::Int keyValue();
+		Int keyValue();
 
 		// Thise function has very little implementation, it is here so if
 		// a user changes the list of options, we can ensure we do not make a
 		// mistake when looking up its corresponding key
-		void setOptions(const casacore::Vector<casacore::String>& newOptions) {
+		void setOptions(const Vector<String>& newOptions) {
 			itsLastString = "";
 			DParameterChoice::setOptions(newOptions);
 		}
 
 		// Set the current value, based on a key.
-		casacore::Bool setKeyValue(const casacore::Int newValue);
+		Bool setKeyValue(const Int newValue);
 
 		// Set or change the list of allowed options for this parameter.
-		void setKeys (const casacore::Vector<casacore::Int>& newKeys);
+		void setKeys (const Vector<Int>& newKeys);
 
 	protected:
 
@@ -168,12 +168,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	private:
 		// Lookup the key based on the string provided
-		casacore::Bool lookUpKey(const casacore::String& value);
+		Bool lookUpKey(const String& value);
 
 		// Store for the allowed options for this parameter.
-		casacore::Vector<casacore::Int> itsKeys;
-		casacore::Int itsKeyValue;
-		casacore::String itsLastString;
+		Vector<Int> itsKeys;
+		Int itsKeyValue;
+		String itsLastString;
 	};
 
 

@@ -1,4 +1,4 @@
-//# SubImage.h: A (masked) subset of an casacore::ImageInterface object
+//# SubImage.h: A (masked) subset of an ImageInterface object
 //# Copyright (C) 1998,1999,2000,2001,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -44,7 +44,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </reviewed>
 //
 // <prerequisite>
-//   <li> <linkto class=casacore::ImageInterface>casacore::SubImage</linkto>
+//   <li> <linkto class=ImageInterface>SubImage</linkto>
 // </prerequisite>
 //
 // <synopsis> 
@@ -65,98 +65,98 @@ public:
 
 	SubImageFactory() = delete;
 
-	// Factory method to create a casacore::SubImage from a region and a casacore::WCLELMask string.
+	// Factory method to create a SubImage from a region and a WCLELMask string.
 	// Moved from ImageAnalysis
 	// <src>outRegion</src> Pointer to the corresponding region. Pointer is
 	// created internally by new(); it is the caller's responsibility to delete it.
 	// <src>outMask</src> Pointer to corresponding mask. Pointer is created
 	// internally via new(); it is the caller's responsibility to delete it.
 	// <src>inImage</src> input image for which a subimage is desired.
-	// <src>region</src> casacore::Input region record from which to make the subimage.
+	// <src>region</src> Input region record from which to make the subimage.
 	// <src>mask</src> LEL mask description.
 	// <src>os</src> Pointer to logger to which to log messages. If null, no logging (except exceptions).
 	// <src>writableIfPossible</src> make the subimage writable. If input image is not writable, this
-	// will always be false.
+	// will always be False.
 	// <src>axesSpecifier</src> Specifier for output axes.
 	// <src>extendMask</src> If the mask has one
 	// or more of degenerate axes whereas the corresponding axes of <src>inImage</src> are
 	// not, extend the mask to match the shape of the input image.
 	// <src>preserveAxesOrder</src>. Only used when dropping degenerate axes and coordinate order
-	// and axes order are not the same. In that case, if false, the pixel/world axes order of the
-	// returned image will be different from the input, if true it will be the same. If not
+	// and axes order are not the same. In that case, if False, the pixel/world axes order of the
+	// returned image will be different from the input, if True it will be the same. If not
 	// dropping degenerate axes or if coordinate order and axes order are the same in the input
 	// image's coordinate system, the output axex order will always be preserved.
 
-	static SHARED_PTR<casacore::SubImage<T> > createSubImageRW(
-		casacore::CountedPtr<casacore::ImageRegion>& outRegion, casacore::CountedPtr<casacore::ImageRegion>& outMask,
-		casacore::ImageInterface<T>& inImage, const casacore::Record& region,
-		const casacore::String& mask, casacore::LogIO *const &os,
-		const casacore::AxesSpecifier& axesSpecifier=casacore::AxesSpecifier(),
-		casacore::Bool extendMask=false, casacore::Bool preserveAxesOrder=false
+	static SHARED_PTR<SubImage<T> > createSubImageRW(
+		CountedPtr<ImageRegion>& outRegion, CountedPtr<ImageRegion>& outMask,
+		ImageInterface<T>& inImage, const Record& region,
+		const String& mask, LogIO *const &os,
+		const AxesSpecifier& axesSpecifier=AxesSpecifier(),
+		Bool extendMask=False, Bool preserveAxesOrder=False
 	);
 
 	// variant on previous method where caller doesn't have to worry
 	// about creating pointers it does not need returned.
-	static SHARED_PTR<casacore::SubImage<T> > createSubImageRW(
-		casacore::ImageInterface<T>& inImage, const casacore::Record& region,
-		const casacore::String& mask, casacore::LogIO *const &os,
-		const casacore::AxesSpecifier& axesSpecifier=casacore::AxesSpecifier(),
-		casacore::Bool extendMask=false, casacore::Bool preserveAxesOrder=false
+	static SHARED_PTR<SubImage<T> > createSubImageRW(
+		ImageInterface<T>& inImage, const Record& region,
+		const String& mask, LogIO *const &os,
+		const AxesSpecifier& axesSpecifier=AxesSpecifier(),
+		Bool extendMask=False, Bool preserveAxesOrder=False
 	);
 
-	// The const casacore::ImageInterface versions where the resulting casacore::SubImage is not
+	// The const ImageInterface versions where the resulting SubImage is not
 	// writable.
-	static SHARED_PTR<const casacore::SubImage<T> > createSubImageRO(
-		casacore::CountedPtr<casacore::ImageRegion>& outRegion, casacore::CountedPtr<casacore::ImageRegion>& outMask,
-		const casacore::ImageInterface<T>& inImage, const casacore::Record& region,
-		const casacore::String& mask, casacore::LogIO *const &os,
-		const casacore::AxesSpecifier& axesSpecifier=casacore::AxesSpecifier(),
-		casacore::Bool extendMask=false, casacore::Bool preserveAxesOrder=false
+	static SHARED_PTR<const SubImage<T> > createSubImageRO(
+		CountedPtr<ImageRegion>& outRegion, CountedPtr<ImageRegion>& outMask,
+		const ImageInterface<T>& inImage, const Record& region,
+		const String& mask, LogIO *const &os,
+		const AxesSpecifier& axesSpecifier=AxesSpecifier(),
+		Bool extendMask=False, Bool preserveAxesOrder=False
 	);
 
 	// variant on previous method where caller doesn't have to worry
 	// about creating pointers it does not need returned.
-	static SHARED_PTR<const casacore::SubImage<T> > createSubImageRO(
-		const casacore::ImageInterface<T>& inImage, const casacore::Record& region,
-		const casacore::String& mask, casacore::LogIO *const &os,
-		const casacore::AxesSpecifier& axesSpecifier=casacore::AxesSpecifier(),
-		casacore::Bool extendMask=false, casacore::Bool preserveAxesOrder=false
+	static SHARED_PTR<const SubImage<T> > createSubImageRO(
+		const ImageInterface<T>& inImage, const Record& region,
+		const String& mask, LogIO *const &os,
+		const AxesSpecifier& axesSpecifier=AxesSpecifier(),
+		Bool extendMask=False, Bool preserveAxesOrder=False
 	);
 
 	// <group>
 	// return a true copy (ie underlying data is a copy of the original, not
 	// a reference) of the subimage selected in the given region.
-	// A casacore::PagedImage is returned if outfile is not blank or a TempImage
+	// A PagedImage is returned if outfile is not blank or a TempImage
 	// is returned if it is.
-	// If <src>attachMask</src> is true, attach a pixel mask to the newly created image
+	// If <src>attachMask</src> is True, attach a pixel mask to the newly created image
 	// if it otherwise wouldn't have a pixel mask. All the values in this mask will be
-	// true. If specified, data values will be copied from the <src>data</src> lattice.
+	// True. If specified, data values will be copied from the <src>data</src> lattice.
 	// Note that data values only are copied from this lattice if it is specified;
 	// the mask values are still copied from the input image. The data lattice must
 	// be the same shape as the output image.
 	static SPIIT createImage(
-		const casacore::ImageInterface<T>& image,
-		const casacore::String& outfile, const casacore::Record& region,
-		const casacore::String& mask, casacore::Bool dropDegenerateAxes,
-		casacore::Bool overwrite, casacore::Bool list, casacore::Bool extendMask,
-		casacore::Bool attachMask=false, const casacore::Lattice<T> *const data=nullptr
+		const ImageInterface<T>& image,
+		const String& outfile, const Record& region,
+		const String& mask, Bool dropDegenerateAxes,
+		Bool overwrite, Bool list, Bool extendMask,
+		Bool attachMask=False, const Lattice<T> *const data=nullptr
 	);
 
 	static SPIIT createImage(
-		const casacore::ImageInterface<T>& image,
-		const casacore::String& outfile, const casacore::Record& region,
-		const casacore::String& mask, const casacore::AxesSpecifier& axesSpec,
-		casacore::Bool overwrite, casacore::Bool list, casacore::Bool extendMask,
-		casacore::Bool attachMask=false, const casacore::Lattice<T> *const data=nullptr
+		const ImageInterface<T>& image,
+		const String& outfile, const Record& region,
+		const String& mask, const AxesSpecifier& axesSpec,
+		Bool overwrite, Bool list, Bool extendMask,
+		Bool attachMask=False, const Lattice<T> *const data=nullptr
 	);
 	// </group>
 
 private:
 
 	static void _getMask(
-		casacore::CountedPtr<casacore::ImageRegion>& outMask, const casacore::String& mask,
-		casacore::Bool extendMask, const casacore::IPosition& imageShape,
-		const casacore::CoordinateSystem& csys
+		CountedPtr<ImageRegion>& outMask, const String& mask,
+		Bool extendMask, const IPosition& imageShape,
+		const CoordinateSystem& csys
 	);
 };
 

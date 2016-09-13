@@ -40,7 +40,6 @@ extern int qInitResources_QtAutoGui();
 
 
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	const QString QtAutoGui::HISTOGRAM_SHOW_KEY = "Show histogram plot";
@@ -52,7 +51,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	QtAutoGui::QtAutoGui(Record rec, String dataName, String dataType, QWidget
 	                     *parent)
-		: QWidget(parent), auto_apply_(true), recordLoaded_(false), mutex() {
+		: QWidget(parent), auto_apply_(true), recordLoaded_(False), mutex() {
 		initialize();
 		loadRecord(rec);
 		setFileName(dataName.chars());
@@ -63,7 +62,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	QtAutoGui::QtAutoGui(QWidget *parent)
 		: QWidget(parent),auto_apply_(true),
 		  m_file_name("casa.opts"),m_data_type("Unknown"),
-		  recordLoaded_(false), m_lockItem("") {
+		  recordLoaded_(False), m_lockItem("") {
 		initialize();
 	}
 
@@ -137,7 +136,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		//#dk resize(width(),  line->pos().y());
 		update();
-		recordLoaded_ = true;
+		recordLoaded_ = True;
 	}
 
 

@@ -41,9 +41,9 @@
 // </summary>
 
 // Control verbosity
-#define CTPATCHEDINTERPTEST_VERBOSE false
+#define CTPATCHEDINTERPTEST_VERBOSE False
 
-void doTest1 (Bool verbose=false) {
+void doTest1 (Bool verbose=False) {
 
   cout << "****----doTest1()----****" << endl;
   
@@ -58,7 +58,7 @@ void doTest1 (Bool verbose=false) {
 		   nObs,nScan,nTime,
 		   nAnt,nSpw,nChan,
 		   nFld,
-		   refTime,tint,disk,false);
+		   refTime,tint,disk,False);
 
   // some sanity checks on the test NewCalTable
   if (verbose) cout << "Table::Type: " << tnct.tableType() 
@@ -102,7 +102,7 @@ void doTest1 (Bool verbose=false) {
 
 }
 
-void doTest2 (Bool verbose=false) {
+void doTest2 (Bool verbose=False) {
 
   cout << "****----doTest2()----****" << endl;
 
@@ -116,7 +116,7 @@ void doTest2 (Bool verbose=false) {
 		   nObs,nScan,nTime,
 		   nAnt,nSpw,nChan,
 		   nFld,
-		   refTime,tint,disk,false);
+		   refTime,tint,disk,False);
 
   // some sanity checks on the test NewCalTable
   if (verbose) cout << "Table::Type: " << tnct.tableType() 
@@ -173,7 +173,7 @@ void doTest2 (Bool verbose=false) {
 
 }
 
-void doTest3 (Bool verbose=false) {
+void doTest3 (Bool verbose=False) {
 
   cout << "****----doTest3()----****" << endl;
 
@@ -189,7 +189,7 @@ void doTest3 (Bool verbose=false) {
 		   nObs,nScan,nTime,
 		   nAnt,nSpw,nChan,
 		   nFld,
-		   refTime,tint,disk,false); 
+		   refTime,tint,disk,False); 
 		   
   // some sanity checks on the test NewCalTable
   if (verbose) cout << "Table::Type: " << tnct.tableType() 
@@ -201,7 +201,7 @@ void doTest3 (Bool verbose=false) {
 		    << endl;
   AlwaysAssert( (tnct.nrow()==nObs*nScan*nTime*nSpw*nAnt), AipsError);
   if (verbose) cout << "Complex = " << tnct.isComplex() 
-		    << " (should be true)"
+		    << " (should be True)"
 		    << endl;
   AlwaysAssert( (tnct.isComplex()), AipsError);
   
@@ -285,7 +285,7 @@ void doTest3 (Bool verbose=false) {
 
 }
 
-void doTest4 (Bool verbose=false) {
+void doTest4 (Bool verbose=False) {
 
   cout << "****----doTest4()----****" << endl;
 
@@ -300,7 +300,7 @@ void doTest4 (Bool verbose=false) {
 		   nObs,nScan,nTime,
 		   nAnt,nSpw,nChan,
 		   nFld,
-		   refTime,tint,disk,false); 
+		   refTime,tint,disk,False); 
 		   
   // some sanity checks on the test NewCalTable
   if (verbose) cout << "Table::Type: " << tnct.tableType() 
@@ -312,7 +312,7 @@ void doTest4 (Bool verbose=false) {
 		    << endl;
   AlwaysAssert( (tnct.nrow()==nObs*nScan*nTime*nSpw*nAnt), AipsError);
   if (verbose) cout << "Complex = " << tnct.isComplex() 
-		    << " (should be false)"
+		    << " (should be False)"
 		    << endl;
   AlwaysAssert( (!tnct.isComplex()), AipsError);
   
@@ -396,7 +396,7 @@ void doTest4 (Bool verbose=false) {
 
 }
 
-void doTest5 (Bool verbose=false) {
+void doTest5 (Bool verbose=False) {
 
   cout << "****----doTest5()----**** (performance)" << endl;
 
@@ -416,7 +416,7 @@ void doTest5 (Bool verbose=false) {
 		   nObs,nScan,nTime,
 		   nAnt,nSpw,nChan,
 		   nFld,
-		   refTime,tint,disk,false); 
+		   refTime,tint,disk,False); 
 		
   if (verbose)
     cout << "Made NewCalTable in " << timer.real() << endl;
@@ -467,7 +467,7 @@ Complex NCTtestvalueC2(Int iant,Int ispw,
 }
 
 
-void doTest6 (Bool verbose=false) {
+void doTest6 (Bool verbose=False) {
 
   cout << "****----doTest6()----****" << endl;
 
@@ -481,7 +481,7 @@ void doTest6 (Bool verbose=false) {
 		   nObs,nScan,nTime,
 		   nAnt,nSpw,nChan,
 		   nFld,
-		   refTime,tint,disk,false);
+		   refTime,tint,disk,False);
 
   // Remove all but 0 and 5
   tnct.removeRow(7);

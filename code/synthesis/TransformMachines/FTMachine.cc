@@ -76,22 +76,21 @@
 #include <casa/sstream.h>
 #include <casa/iostream.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
   
-  FTMachine::FTMachine() : isDryRun(false), image(0), uvwMachine_p(0), 
-			   tangentSpecified_p(false), fixMovingSource_p(false),
+  FTMachine::FTMachine() : isDryRun(False), image(0), uvwMachine_p(0), 
+			   tangentSpecified_p(False), fixMovingSource_p(False),
 			   distance_p(0.0), lastFieldId_p(-1),lastMSId_p(-1), 
-			   useDoubleGrid_p(false), 
-			   freqFrameValid_p(false), 
+			   useDoubleGrid_p(False), 
+			   freqFrameValid_p(False), 
 			   freqInterpMethod_p(InterpolateArray1D<Double,Complex>::nearestNeighbour), 
 			   pointingDirCol_p("DIRECTION"),
 			   cfStokes_p(), cfCache_p(), cfs_p(), cfwts_p(), cfs2_p(), cfwts2_p(),
-			   canComputeResiduals_p(false), numthreads_p(-1),pbLimit_p(0.05), 
+			   canComputeResiduals_p(False), numthreads_p(-1),pbLimit_p(0.05), 
 			   sj_p(0),cmplxImage_p()
   {
     spectralCoord_p=SpectralCoordinate();
-    isIOnly=false;
+    isIOnly=False;
     spwChanSelFlag_p=0;
     polInUse_p=0;
     pop_p = new PolOuterProduct;
@@ -99,19 +98,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   
   FTMachine::FTMachine(CountedPtr<CFCache>& cfcache,CountedPtr<ConvolutionFunction>& cf):
-    isDryRun(false), image(0), uvwMachine_p(0), 
-    tangentSpecified_p(false), fixMovingSource_p(false),
+    isDryRun(False), image(0), uvwMachine_p(0), 
+    tangentSpecified_p(False), fixMovingSource_p(False),
     distance_p(0.0), lastFieldId_p(-1),lastMSId_p(-1), 
-    useDoubleGrid_p(false), 
-    freqFrameValid_p(false), 
+    useDoubleGrid_p(False), 
+    freqFrameValid_p(False), 
     freqInterpMethod_p(InterpolateArray1D<Double,Complex>::nearestNeighbour), 
     pointingDirCol_p("DIRECTION"),
     cfStokes_p(), cfCache_p(cfcache), cfs_p(), cfwts_p(), cfs2_p(), cfwts2_p(),
-    convFuncCtor_p(cf),canComputeResiduals_p(false), toVis_p(true), numthreads_p(-1), 
+    convFuncCtor_p(cf),canComputeResiduals_p(False), toVis_p(True), numthreads_p(-1), 
     pbLimit_p(0.05),sj_p(0),cmplxImage_p( )
   {
     spectralCoord_p=SpectralCoordinate();
-    isIOnly=false;
+    isIOnly=False;
     spwChanSelFlag_p=0;
     polInUse_p=0;
     pop_p = new PolOuterProduct;
@@ -229,7 +228,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
   //----------------------------------------------------------------------
   Bool FTMachine::changed(const VisBuffer&) {
-    return false;
+    return False;
   }
   
   //----------------------------------------------------------------------
@@ -311,10 +310,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			     vb.phaseCenter().getAngle()).getValue();
       if((abs(equal(0)) < abs(directionCoord.increment()(0))) 
 	 && (abs(equal(1)) < abs(directionCoord.increment()(1)))){
-	doUVWRotation_p=false;
+	doUVWRotation_p=False;
       }
       else{
-	doUVWRotation_p=true;
+	doUVWRotation_p=True;
       }
     }
     // Get the object distance in meters
@@ -335,11 +334,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if(observatory.contains("ATCA") || observatory.contains("DRAO")
        || observatory.contains("WSRT")){
       uvwMachine_p=new UVWMachine(mImage_p, vb.phaseCenter(), mFrame_p, 
-				  true, false);
+				  True, False);
     }
     else{
       uvwMachine_p=new UVWMachine(mImage_p, vb.phaseCenter(), mFrame_p, 
-				  false, tangentSpecified_p);
+				  False, tangentSpecified_p);
     }
     AlwaysAssert(uvwMachine_p, AipsError);
     
@@ -418,9 +417,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     AlwaysAssert(nvispol>0, AipsError);
     polMap.resize(nvispol);
     polMap=-1;
-    isIOnly=false;
+    isIOnly=False;
     Int pol=0;
-    Bool found=false;
+    Bool found=False;
     // First we try matching Stokes in the visibilities to 
     // Stokes in the image that we are gridding into.
     for (pol=0;pol<nvispol;pol++) {
@@ -428,7 +427,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       if(stokesCoord.toPixel(p, Stokes::type(visPolMap(pol)))) {
 	AlwaysAssert(p<npol, AipsError);
 	polMap(pol)=p;
-	found=true;
+	found=True;
       }
     }
     // If this fails then perhaps we were looking to grid I
@@ -442,18 +441,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  p=0;
 	  for (pol=0;pol<nvispol;pol++) {
 	    if(Stokes::type(visPolMap(pol))==Stokes::XX)
-	      {polMap(pol)=0;p++;found=true;};
+	      {polMap(pol)=0;p++;found=True;};
 	    if(Stokes::type(visPolMap(pol))==Stokes::YY)
-	      {polMap(pol)=0;p++;found=true;};
+	      {polMap(pol)=0;p++;found=True;};
 	  }
 	}
 	else {
 	  p=0;
 	  for (pol=0;pol<nvispol;pol++) {
 	    if(Stokes::type(visPolMap(pol))==Stokes::LL)
-	      {polMap(pol)=0;p++;found=true;};
+	      {polMap(pol)=0;p++;found=True;};
 	    if(Stokes::type(visPolMap(pol))==Stokes::RR)
-	      {polMap(pol)=0;p++;found=true;};
+	      {polMap(pol)=0;p++;found=True;};
 	  }
 	}
 	if(!found) {
@@ -461,7 +460,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  << visPolMap << LogIO::EXCEPTION;
 	}
 	else {
-	  isIOnly=true;
+	  isIOnly=True;
 	  //logIO() << LogIO::DEBUGGING << "Transforming I only" << LogIO::POST;
 	}
       }; 
@@ -523,13 +522,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //flags.resize(vb.flagCube().shape());
       flags.resize(modflagCube.shape());
       flags=0;
-      //flags(vb.flagCube())=true;
-      flags(modflagCube)=true;
+      //flags(vb.flagCube())=True;
+      flags(modflagCube)=True;
       weight.reference(wt);
       interpVisFreq_p.resize();
       interpVisFreq_p=lsrFreq_p;
 
-      return false;
+      return False;
     }
     
     Cube<Bool>flag;
@@ -636,7 +635,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       { // get the flag array to the correct shape.
 	// This will get filled at the end of weight-interpolation.
          flag.resize(vb.nCorr(), interpVisFreq_p.nelements(), vb.nRow());
-         flag.set(false);
+         flag.set(False);
     }
       // Now, interpolate the weights also.
       //   (1) Read in the flags from the vb ( setSpectralFlags -> modflagCube )
@@ -644,7 +643,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        Matrix<Bool> chanflag(wt.shape());
        AlwaysAssert( chanflag.shape()[0]==modflagCube.shape()[1], AipsError);
        AlwaysAssert( chanflag.shape()[1]==modflagCube.shape()[2], AipsError);
-       chanflag=false;
+       chanflag=False;
        for(uInt pol=0;pol<modflagCube.shape()[0];pol++)
 	 chanflag = chanflag | modflagCube.yzPlane(pol);
 
@@ -685,9 +684,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        // Fill the output array of image-channel flags.
        flags.resize(flag.shape());
        flags=0;
-       flags(flag)=true;
+       flags(flag)=True;
 
-    return true;
+    return True;
   }
   
   void FTMachine::getInterpolateArrays(const VisBuffer& vb,
@@ -701,8 +700,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //flags.resize(vb.flagCube().shape());
       flags.resize(modflagCube.shape());
       flags=0;
-      //flags(vb.flagCube())=true;
-      flags(modflagCube)=true;
+      //flags(vb.flagCube())=True;
+      flags(modflagCube)=True;
       interpVisFreq_p.resize();
       interpVisFreq_p=vb.frequency();
       return;
@@ -768,7 +767,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        (vb.nChannel()==1) || 
        (freqInterpMethod_p== InterpolateArray1D<Double, Complex>::nearestNeighbour)){
       origdata->reference(data);
-      return false;
+      return False;
     }
     
     //Need to get  new interpolate functions that interpolate explicitly on the 2nd axis
@@ -791,12 +790,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     copyOfFlag.assign(vb.flagCube());
     for (uInt k=0; k< mychanmap.nelements(); ++ k)
       if(mychanmap(k) < 0)
-	copyOfFlag.xzPlane(k).set(true);
+	copyOfFlag.xzPlane(k).set(True);
     
     swapyz(vb.modelVisCube(), copyOfFlag, flipdata);
     //swapyz(vb.modelVisCube(), flipdata);
     
-    return true;
+    return True;
   }
   void FTMachine::rotateUVW(Matrix<Double>& uvw, Vector<Double>& dphase,
 			    const VisBuffer& vb)
@@ -806,9 +805,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     //the uvw rotation is done for common tangent reprojection or if the 
     //image center is different from the phasecenter
-    // UVrotation is false only if field never changes
+    // UVrotation is False only if field never changes
     if((vb.fieldId()!=lastFieldId_p) || (vb.msId()!=lastMSId_p))
-      doUVWRotation_p=true;
+      doUVWRotation_p=True;
     if(doUVWRotation_p || tangentSpecified_p || fixMovingSource_p){
       ok();
       
@@ -841,11 +840,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		//Tangent specified is being wrongly used...it should be for a
 	    	//Use the safest way  for now.
 	    uvwMachine_p=new UVWMachine(phasecenter, vb.phaseCenter(), mFrame_p,
-					true, false);
+					True, False);
 	}
 	else{
 		uvwMachine_p=new UVWMachine(phasecenter, vb.phaseCenter(), mFrame_p,
-					false,tangentSpecified_p);
+					False,tangentSpecified_p);
 	    }
      }
 
@@ -1087,7 +1086,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     outRecord.define("sumweight", sumWeight);
     outRecord.define("numthreads", numthreads_p);
     //Need to serialized sj_p...the user has to set the sj_p after recovering from record
-    return true;
+    return True;
   };
   
   Bool FTMachine::saveMeasure(RecordInterface& rec, const String& name, String& err, const Measure& meas){
@@ -1095,9 +1094,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     MeasureHolder mh(meas);
     if(mh.toRecord(err, tmprec)){
       rec.defineRecord(name, tmprec);
-      return true;
+      return True;
     }
-    return false;
+    return False;
   }
 
   Bool FTMachine::fromRecord(String& error,
@@ -1121,7 +1120,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       
       const Record rec=inRecord.asRecord("image");
       if(!cmplxImage_p->fromRecord(error, rec))
-	return false;   
+	return False;   
       
     }
     else if(inRecord.isDefined("diskimage")){
@@ -1142,7 +1141,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      theposs=subPathname[i]+"/"+theposs;
 	      File newEldir(theposs);
 	      if(newEldir.exists()){
-		isExistant=true;
+		isExistant=True;
 		theDiskImage=theposs;
 	      }
 	    }
@@ -1174,13 +1173,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     { const Record rec=inRecord.asRecord("mtangent_rec");
       MeasureHolder mh;
       if(!mh.fromRecord(error, rec))
-	return false;
+	return False;
       mTangent_p=mh.asMDirection();
     }
     { const Record rec=inRecord.asRecord("mimage_rec");
       MeasureHolder mh;
       if(!mh.fromRecord(error, rec))
-	return false;
+	return False;
       mImage_p=mh.asMDirection();
     }
     
@@ -1188,7 +1187,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     { const Record rec=inRecord.asRecord("mlocation_rec");
       MeasureHolder mh;
       if(!mh.fromRecord(error, rec))
-	return false;
+	return False;
       mLocation_p=mh.asMPosition();
     }
     inRecord.get("douvwrotation", doUVWRotation_p);
@@ -1202,7 +1201,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     inRecord.get("lsrfreq", lsrFreq_p);
     inRecord.get("interpvisfreq", interpVisFreq_p);
     const Record multichmaprec=inRecord.asRecord("multichanmaprec");
-    multiChanMap_p.resize(multichmaprec.nfields(), true, false);
+    multiChanMap_p.resize(multichmaprec.nfields(), True, False);
     for (uInt k=0; k < multichmaprec.nfields(); ++k)
       multichmaprec.get(k, multiChanMap_p[k]);
     inRecord.get("chanmap", chanMap);
@@ -1218,14 +1217,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     { const Record rec=inRecord.asRecord("movingdir_rec");
       MeasureHolder mh;
       if(!mh.fromRecord(error, rec))
-	return false;
+	return False;
       movingDir_p=mh.asMDirection();
     }
     inRecord.get("fixmovingsource", fixMovingSource_p);
     { const Record rec=inRecord.asRecord("firstmovingdir_rec");
       MeasureHolder mh;
       if(!mh.fromRecord(error, rec))
-	return false;
+	return False;
       firstMovingDir_p=mh.asMDirection();
     }
     inRecord.get("usedoublegrid", useDoubleGrid_p);
@@ -1243,7 +1242,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       freqInterpMethod_p=static_cast<InterpolateArray1D<Double, Complex >::InterpolationMethod>(tmpInt);
     }
     inRecord.get("numthreads", numthreads_p);
-    return true;
+    return True;
   };
   
   // Make a plain straightforward honest-to-FSM image. This returns
@@ -1275,9 +1274,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool useCorrected= !(vi.msColumns().correctedData().isNull());
     if((type==FTMachine::CORRECTED) && (!useCorrected))
       type=FTMachine::OBSERVED;
-    Bool normalize=true;
+    Bool normalize=True;
     if(type==FTMachine::COVERAGE)
-      normalize=false;
+      normalize=False;
 
     // Loop over the visibilities, putting VisBuffers
     for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
@@ -1287,25 +1286,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	case FTMachine::RESIDUAL:
 	  vb.visCube()=vb.correctedVisCube();
 	  vb.visCube()-=vb.modelVisCube();
-	  put(vb, -1, false);
+	  put(vb, -1, False);
 	  break;
 	case FTMachine::MODEL:
-	  put(vb, -1, false, FTMachine::MODEL);
+	  put(vb, -1, False, FTMachine::MODEL);
 	  break;
 	case FTMachine::CORRECTED:
-	  put(vb, -1, false, FTMachine::CORRECTED);
+	  put(vb, -1, False, FTMachine::CORRECTED);
 	  break;
 	case FTMachine::PSF:
 	  vb.visCube()=Complex(1.0,0.0);
-	  put(vb, -1, true, FTMachine::PSF);
+	  put(vb, -1, True, FTMachine::PSF);
 	  break;
 	case FTMachine::COVERAGE:
 	  vb.visCube()=Complex(1.0);
-	  put(vb, -1, true, FTMachine::COVERAGE);
+	  put(vb, -1, True, FTMachine::COVERAGE);
 	  break;
 	case FTMachine::OBSERVED:
 	default:
-	  put(vb, -1, false, FTMachine::OBSERVED);
+	  put(vb, -1, False, FTMachine::OBSERVED);
 	  break;
 	}
       }
@@ -1399,31 +1398,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	case FTMachine::RESIDUAL:
 	  vb.visCube()=vb.correctedVisCube();
 	  vb.visCube()-=vb.modelVisCube();
-	  put(vb, -1, false);
+	  put(vb, -1, False);
 	  break;
 	case FTMachine::PSF:
 	case FTMachine::MODEL:
 	  //vb.visCube()=vb.modelVisCube();
-	  put(vb, -1, false, FTMachine::MODEL);
+	  put(vb, -1, False, FTMachine::MODEL);
 	  break;
 	case FTMachine::CORRECTED:
 	  //vb.visCube()=vb.correctedVisCube();
-	  put(vb, -1, false, FTMachine::CORRECTED);
+	  put(vb, -1, False, FTMachine::CORRECTED);
 	  break;
 	case FTMachine::COVERAGE:
 	  vb.visCube()=Complex(1.0);
-	  put(vb, -1, true);
+	  put(vb, -1, True);
 	  break;
 	case FTMachine::OBSERVED:
 	default:
-	  put(vb, -1, false);
+	  put(vb, -1, False);
 	  break;
 	}
       }
     }
     finalizeToSky();
     // Normalize by dividing out weights, etc.
-    getImage(weight, true);
+    getImage(weight, True);
     
   }
   
@@ -1435,10 +1434,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       selectedSpw_p.resize();
       selectedSpw_p=spws;
       multiChanMap_p.resize(max(spws)+1);
-      return true;
+      return True;
     }
     
-    return false;
+    return False;
   }
   
   Bool FTMachine::matchAllSpwChans(const VisBuffer& vb){
@@ -1447,12 +1446,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
  
     
     doConversion_p.resize(max(selectedSpw_p)+1);
-    doConversion_p.set(false);
+    doConversion_p.set(False);
     
-    multiChanMap_p.resize(max(selectedSpw_p)+1, true);
+    multiChanMap_p.resize(max(selectedSpw_p)+1, True);
     
-    Bool anymatchChan=false;
-    Bool anyTopo=false;
+    Bool anymatchChan=False;
+    Bool anyTopo=False;
     for (uInt k=0; k < selectedSpw_p.nelements(); ++k){ 
       Bool matchthis=matchChannel(selectedSpw_p[k], vb);
       anymatchChan= (anymatchChan || matchthis);
@@ -1469,7 +1468,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       
     }
     
-    return true;
+    return True;
     
   }
   
@@ -1483,7 +1482,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     chanMap.resize(nvischan);
     chanMap.set(-1);
     Vector<Double> lsrFreq(0);
-    Bool condoo=false;
+    Bool condoo=False;
     
     //cerr << "doConve " << spw << "   " << doConversion_p[spw] << " freqframeval " << freqFrameValid_p << endl;
     
@@ -1491,7 +1490,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     doConversion_p[spw]=condoo;
 
     if(lsrFreq.nelements() ==0){
-      return false;
+      return False;
     }
     lsrFreq_p.resize(lsrFreq.nelements());
     lsrFreq_p=lsrFreq;
@@ -1536,13 +1535,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	<<      " of ms " << vb.msId() << " is not being used " 
 	<< LogIO::WARN << LogIO::POST;
       */
-      return false;
+      return False;
     }
     
     
     
     
-    return true;
+    return True;
     
   }
   
@@ -1584,7 +1583,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
   void FTMachine::setMovingSource(const String& sourcename){
     
-    fixMovingSource_p=true;
+    fixMovingSource_p=True;
     movingDir_p=MDirection(Quantity(0.0,"deg"), Quantity(90.0, "deg"));
     movingDir_p.setRefString(sourcename);
     
@@ -1592,7 +1591,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   void FTMachine::setMovingSource(const MDirection& mdir){
     
-    fixMovingSource_p=true;
+    fixMovingSource_p=True;
     movingDir_p=mdir;
     
   }
@@ -1735,7 +1734,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //respect the flags from vb  if selected  or 
       //if spwChanSelFlag is wrong shape
       if ((spwFlagIsSet) && (spwChanSelFlag_p(msid,selspw,i)!=1)) {
-	modflagcube.xzPlane(i).set(true);
+	modflagcube.xzPlane(i).set(True);
       }
     }
   }
@@ -1765,7 +1764,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     stokesToCorrelation(*(modelImageVec[0]), *(compImageVec[0]));
     if(sj_p.nelements() >0 ){
       for (uInt k=0; k < sj_p.nelements(); ++k){
-	(sj_p(k))->apply(*(compImageVec[0]), *(compImageVec[0]), vb, 0, true);
+	(sj_p(k))->apply(*(compImageVec[0]), *(compImageVec[0]), vb, 0, True);
       }
     }
     // Call initializeToVis
@@ -1807,7 +1806,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     AlwaysAssert(weightsVec.nelements()==1, AipsError);
 
     // Get the gridded image
-    (*(compImageVec[0])).copyData(getImage(weightsVec[0],false)); // getImage is Pure virtual
+    (*(compImageVec[0])).copyData(getImage(weightsVec[0],False)); // getImage is Pure virtual
     Bool doSky=(sj_p.nelements()>0) && (!dopsf);
     TempImage<Float> work;
     // Convert from correlation (complex) to Stokes (float)
@@ -1815,7 +1814,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       work=TempImage<Float>((compImageVec[0])->shape(), (compImageVec[0])->coordinates());
       work.set(0);
       for (uInt k=0; k < sj_p.nelements(); ++k){
-	(sj_p(k))->apply(*(compImageVec[0]), *(compImageVec[0]), vb, 0, false);
+	(sj_p(k))->apply(*(compImageVec[0]), *(compImageVec[0]), vb, 0, False);
       }
       correlationToStokes(*(compImageVec[0]), work , dopsf);
       LatticeExpr<Float> le((*(resImageVec[0]))+work);
@@ -1946,9 +1945,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	blc(2)=pol; trc(2)=pol;
 	blc(3)=chan; trc(3)=chan;
 	Slicer sl(blc, trc, Slicer::endIsLast);
-	SubImage<Float> subSkyImage(skyImage, sl, false);
-	SubImage<Float> subSensitivityImage(sensitivityImage, sl, false);
-	SubImage<Float> subOutput(skyImage, sl, true);
+	SubImage<Float> subSkyImage(skyImage, sl, False);
+	SubImage<Float> subSensitivityImage(sensitivityImage, sl, False);
+	SubImage<Float> subOutput(skyImage, sl, True);
 	Float sumWt = sumOfWts(pol,chan);
 	if(sumWt > 0.0){
 	  switch(normtype)
@@ -2031,7 +2030,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void FTMachine::initializeToVisNew(const VisBuffer& vb,
 				     CountedPtr<SIImageStore> imstore)
   {
-    AlwaysAssert(imstore->getNTaylorTerms(false)==1, AipsError);
+    AlwaysAssert(imstore->getNTaylorTerms(False)==1, AipsError);
 
     Matrix<Float> tempWts;
 
@@ -2051,7 +2050,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Image Mosaic only :  Multiply the input model with the Primary Beam
     if(sj_p.nelements() >0 ){
       for (uInt k=0; k < sj_p.nelements(); ++k){
-	(sj_p(k))->apply(*(imstore->forwardGrid()), *(imstore->forwardGrid()), vb, 0, true);
+	(sj_p(k))->apply(*(imstore->forwardGrid()), *(imstore->forwardGrid()), vb, 0, True);
       }
     }
     //------------------------------------------------------------------------------------
@@ -2069,7 +2068,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				     CountedPtr<SIImageStore> imstore)
     
   {
-    AlwaysAssert(imstore->getNTaylorTerms(false)==1, AipsError);
+    AlwaysAssert(imstore->getNTaylorTerms(False)==1, AipsError);
     
     // Make the relevant float grid. 
     // This is needed mainly for facetting (to set facet shapes), but is harmless for non-facetting.
@@ -2087,7 +2086,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				   CountedPtr<SIImageStore> imstore  )				   
   {
     // Check vector lengths. 
-    AlwaysAssert( imstore->getNTaylorTerms(false)==1, AipsError);
+    AlwaysAssert( imstore->getNTaylorTerms(False)==1, AipsError);
 
     Matrix<Float> sumWeights;
     finalizeToSky(); 
@@ -2096,7 +2095,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Straightforward case. No extra primary beams. No image mosaic
     if(sj_p.nelements() == 0 ) 
       {
-	correlationToStokes( getImage(sumWeights, false) , ( dopsf ? *(imstore->psf()) : *(imstore->residual()) ), dopsf);
+	correlationToStokes( getImage(sumWeights, False) , ( dopsf ? *(imstore->psf()) : *(imstore->residual()) ), dopsf);
 
 	if( useWeightImage() && dopsf ) { 
 	  getWeightImage( *(imstore->weight())  , sumWeights); 
@@ -2121,20 +2120,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
       
       // Take the FT of the gridded values. Writes into backwardGrid(). 
-      getImage(sumWeights, false);
+      getImage(sumWeights, False);
 
       // Multiply complex image grid by PB.
       if( !dopsf )
 	{
 	  for (uInt k=0; k < sj_p.nelements(); ++k){
-	    (sj_p(k))->apply(*(imstore->backwardGrid()), *(imstore->backwardGrid()), vb, 0, true);
+	    (sj_p(k))->apply(*(imstore->backwardGrid()), *(imstore->backwardGrid()), vb, 0, True);
 	  }
 	}
 
       // Convert from correlation to Stokes onto a new temporary grid.
-      SubImage<Float>  targetImage( ( dopsf ? *(imstore->psf()) : *(imstore->residual()) ) , true);
+      SubImage<Float>  targetImage( ( dopsf ? *(imstore->psf()) : *(imstore->residual()) ) , True);
       TempImage<Float> temp( targetImage.shape(), targetImage.coordinates() );
-      correlationToStokes( *(imstore->backwardGrid()), temp, false);
+      correlationToStokes( *(imstore->backwardGrid()), temp, False);
 
       // Add the temporary Stokes image to the residual or PSF, whichever is being made.
       LatticeExpr<Float> addToRes( targetImage + temp );
@@ -2143,7 +2142,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       // Now, do the same with the weight image and sumwt ( only on the first pass )
       if( dopsf )
 	{
-	  SubImage<Float>  weightImage(  *(imstore->weight()) , true);
+	  SubImage<Float>  weightImage(  *(imstore->weight()) , True);
 	  TempImage<Float> temp(weightImage.shape(), weightImage.coordinates());
 	  getWeightImage(temp, sumWeights);
 
@@ -2158,7 +2157,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  AlwaysAssert( ( (imstore->sumwt())->shape()[2] == sumWeights.shape()[0] ) && 
 			((imstore->sumwt())->shape()[3] == sumWeights.shape()[1] ) , AipsError );
 
-	  SubImage<Float>  sumwtImage(  *(imstore->sumwt()) , true);
+	  SubImage<Float>  sumwtImage(  *(imstore->sumwt()) , True);
 	  TempImage<Float> temp2(sumwtImage.shape(), sumwtImage.coordinates());
 	  temp2.put( sumWeights.reform(sumwtImage.shape()) );
 	  LatticeExpr<Float> addToWgt2( sumwtImage + temp2 );
@@ -2179,20 +2178,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   Bool FTMachine::changedSkyJonesLogic(const VisBuffer& vb, Bool& firstRow, Bool& internalRow)
   {
-    firstRow=false;
-    internalRow=false;
+    firstRow=False;
+    internalRow=False;
 
     if( sj_p.nelements()==0 ) 
       {throw(AipsError("Internal Error : Checking changedSkyJones, but it is not yet set."));}
 
     CountedPtr<SkyJones> ej = sj_p[0];
     if(ej.null())
-      return false;
+      return False;
     if(ej->changed(vb,0))
-      firstRow=true;
+      firstRow=True;
     Int row2temp=0;
     if(ej->changedBuffer(vb,0,row2temp)) {
-      internalRow=true;
+      internalRow=True;
     }
     return (firstRow || internalRow) ;
   }
@@ -2207,9 +2206,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   Bool FTMachine::useWeightImage()
   {
     if( name() == "GridFT" || name() == "WProjectFT" )  
-      { return false; }
+      { return False; }
     else
-      { return true; }
+      { return True; }
   }
   */
 

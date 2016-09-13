@@ -87,7 +87,7 @@ public:
 
   // Creates a filter that filters all records except those with 
   // user-specified observing modes
-  VLAObsModeFilter(const casacore::Vector<casacore::String>& obsModes);
+  VLAObsModeFilter(const Vector<String>& obsModes);
 
   // The copy constructor uses copy semantics.
   VLAObsModeFilter(const VLAObsModeFilter& other);
@@ -98,9 +98,9 @@ public:
   // The assignment operator uses copy semantics.
   VLAObsModeFilter& operator=(const VLAObsModeFilter& other);
 
-  // returns true if the supplied record has an obs mode that matches 
+  // returns True if the supplied record has an obs mode that matches 
   // one of the obs modes specified (or implicit) in the constructor.
-  virtual casacore::Bool passThru(const VLALogicalRecord& record) const;
+  virtual Bool passThru(const VLALogicalRecord& record) const;
 
   // Return a pointer to a copy of the VLAObsModeFilter object upcast to a
   // VLAFilter object. The class that uses this function is responsible for
@@ -108,13 +108,13 @@ public:
   // constructor.
   virtual VLAFilter* clone() const;
 
-  // casacore::Function which checks the internal data of this class for correct
-  // dimensionality and consistant values. Returns true if everything is fine
-  // otherwise returns false.
-  virtual casacore::Bool ok() const;
+  // Function which checks the internal data of this class for correct
+  // dimensionality and consistant values. Returns True if everything is fine
+  // otherwise returns False.
+  virtual Bool ok() const;
 
 private:
-  casacore::Vector<casacore::String> itsObsModes;
+  Vector<String> itsObsModes;
 };
 #endif
 

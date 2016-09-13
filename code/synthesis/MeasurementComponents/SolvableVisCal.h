@@ -74,178 +74,178 @@ class SolvableVisCal : virtual public VisCal {
 public:
 
   typedef struct fluxScaleStruct {
-    casacore::Matrix<casacore::Double> fd;
-    casacore::Matrix<casacore::Double> fderr;
-    casacore::Matrix<casacore::Int> numSol;
-    casacore::Vector<casacore::Double> freq;
-    casacore::Matrix<casacore::Double> spidx;
-    casacore::Matrix<casacore::Double> spidxerr;
-    casacore::Vector<casacore::Double> fitfd;
-    casacore::Vector<casacore::Double> fitfderr;
-    casacore::Vector<casacore::Double> fitreffreq;
+    Matrix<Double> fd;
+    Matrix<Double> fderr;
+    Matrix<Int> numSol;
+    Vector<Double> freq;
+    Matrix<Double> spidx;
+    Matrix<Double> spidxerr;
+    Vector<Double> fitfd;
+    Vector<Double> fitfderr;
+    Vector<Double> fitreffreq;
   } fluxScaleStruct;
 
 
   SolvableVisCal(VisSet& vs);
   
-  SolvableVisCal(casacore::String msname,casacore::Int MSnAnt,casacore::Int MSnSpw);
+  SolvableVisCal(String msname,Int MSnAnt,Int MSnSpw);
 
   SolvableVisCal(const MSMetaInfoForCal& msmc);
 
-  SolvableVisCal(const casacore::Int& nAnt);
+  SolvableVisCal(const Int& nAnt);
 
   virtual ~SolvableVisCal();
 
   // Access to user-supplied parameters
-  inline casacore::String&      calTableName()   { return calTableName_; };
-  inline casacore::String&      calTableSelect() { return calTableSelect_; };
-  inline casacore::Bool&        append()         { return append_; };
-  inline casacore::String&      tInterpType()    { return tInterpType_; };
-  inline casacore::String&      fInterpType()    { return fInterpType_; };
-  inline casacore::Vector<casacore::Int>& spwMap()         { return spwMap_; };
-  inline casacore::Int&         refant()         { return refantlist()(0); };
-  inline casacore::Vector<casacore::Int>& refantlist()     { return urefantlist_; };
-  inline casacore::Int&         minblperant()    { return minblperant_; };
-  inline casacore::String&      apmode()         { return apmode_; };
-  inline casacore::String&      solint()         { return solint_; };
-  inline casacore::String&      fsolint()        { return fsolint_; };
-  inline casacore::Double&      preavg()         { return preavg_; };
-  inline casacore::Bool&        solnorm()        { return solnorm_;};
-  inline casacore::Float&       minSNR()         { return minSNR_; };
+  inline String&      calTableName()   { return calTableName_; };
+  inline String&      calTableSelect() { return calTableSelect_; };
+  inline Bool&        append()         { return append_; };
+  inline String&      tInterpType()    { return tInterpType_; };
+  inline String&      fInterpType()    { return fInterpType_; };
+  inline Vector<Int>& spwMap()         { return spwMap_; };
+  inline Int&         refant()         { return refantlist()(0); };
+  inline Vector<Int>& refantlist()     { return urefantlist_; };
+  inline Int&         minblperant()    { return minblperant_; };
+  inline String&      apmode()         { return apmode_; };
+  inline String&      solint()         { return solint_; };
+  inline String&      fsolint()        { return fsolint_; };
+  inline Double&      preavg()         { return preavg_; };
+  inline Bool&        solnorm()        { return solnorm_;};
+  inline Float&       minSNR()         { return minSNR_; };
 
-  inline casacore::String&      combine()        { return combine_; };
-  inline casacore::Bool         combspw()        { return upcase(combine_).contains("SPW"); };
-  inline casacore::Bool         combfld()        { return upcase(combine_).contains("FIELD"); };
-  inline casacore::Bool         combscan()       { return upcase(combine_).contains("SCAN"); };
-  inline casacore::Bool         combobs()        { return upcase(combine_).contains("OBS"); };
+  inline String&      combine()        { return combine_; };
+  inline Bool         combspw()        { return upcase(combine_).contains("SPW"); };
+  inline Bool         combfld()        { return upcase(combine_).contains("FIELD"); };
+  inline Bool         combscan()       { return upcase(combine_).contains("SCAN"); };
+  inline Bool         combobs()        { return upcase(combine_).contains("OBS"); };
 
   // Total number of (complex) parameters per solve
   //  (specialize to jive with ant- or bln-basedness, etc.)
-  virtual casacore::Int nTotalPar()=0;
+  virtual Int nTotalPar()=0;
 
   // Report if calibration available for specified spw
-  //  (if no CalInterp available, assume true)
+  //  (if no CalInterp available, assume True)
 
   // Use generic data gathering mechanism for solve
-  virtual casacore::Bool useGenericGatherForSolve() { return true; };
+  virtual Bool useGenericGatherForSolve() { return True; };
 
   // Use generic solution engine for a single solve
   //  (usually inside the generic gathering mechanism)
-  virtual casacore::Bool useGenericSolveOne() { return useGenericGatherForSolve(); };
+  virtual Bool useGenericSolveOne() { return useGenericGatherForSolve(); };
 
   // Solve for point-source X or Q,U?
   //  nominally no (0)
-  virtual casacore::Int solvePol() { return 0; };
+  virtual Int solvePol() { return 0; };
 
   // Does normalization by MODEL_DATA commute with this VisCal?
   //   (if so, permits pre-solve time-averaging)
-  virtual casacore::Bool normalizable()=0;
+  virtual Bool normalizable()=0;
 
   // Is this type capable of accumulation?  (nominally no)
-  virtual casacore::Bool accumulatable() { return false; };
+  virtual Bool accumulatable() { return False; };
 
   // Is this type capable of smoothing?  (nominally no)
-  virtual casacore::Bool smoothable() { return false; };
+  virtual Bool smoothable() { return False; };
 
   // Should only parallel-hands be used in solving?
-  //  (generally no (default=false), but GJones and related
+  //  (generally no (default=False), but GJones and related
   //   will override, and eventually this will be a user-set-able
   //   parameter)
-  virtual casacore::Bool phandonly() { return false; }
+  virtual Bool phandonly() { return False; }
 
   // Access to focus channel
-  inline casacore::Int&         focusChan()      { return focusChan_; };
+  inline Int&         focusChan()      { return focusChan_; };
 
   // Is this ready to solve?
-  inline casacore::Bool isSolved() {return solved_;};
+  inline Bool isSolved() {return solved_;};
 
   // Is this solveable? (via this interface, nominally yes)
-  virtual casacore::Bool isSolvable() {return true;};
+  virtual Bool isSolvable() {return True;};
 
   // Set the application parameters 
   virtual void setApply();
-  virtual void setApply(const casacore::Record& apply);
-  virtual void setCallib(const casacore::Record& callib,const casacore::MeasurementSet& selms);
+  virtual void setApply(const Record& apply);
+  virtual void setCallib(const Record& callib,const MeasurementSet& selms);
 
-  virtual void setModel(const casacore::String& )
+  virtual void setModel(const String& )
   {throw(SynthesisError("Internal error: setModel() not yet supported for non EPJones type."));};
 
   // Report apply info/params, e.g. for logging
-  virtual casacore::String applyinfo();
+  virtual String applyinfo();
 
   // Set the solving parameters
   virtual void setSolve();
-  virtual void setSolve(const casacore::Record& solve);
+  virtual void setSolve(const Record& solve);
 
   // Report solve info/params, e.g., for logging
-  virtual casacore::String solveinfo();
+  virtual String solveinfo();
 
   // Arrange for accumulation
   virtual void setAccumulate(VisSet& vs,
-			     const casacore::String& table,
-			     const casacore::String& select,
-			     const casacore::Double& t,
-			     const casacore::Int& refAnt=-1);
+			     const String& table,
+			     const String& select,
+			     const Double& t,
+			     const Int& refAnt=-1);
 
   // Default value for parameters
-  virtual casacore::Complex defaultPar() { return casacore::Complex(1.0); };
-  virtual casacore::Float defaultRPar() { return casacore::Float(0.0); };
-  virtual casacore::Complex defaultCPar() { return casacore::Complex(1.0); };
+  virtual Complex defaultPar() { return Complex(1.0); };
+  virtual Float defaultRPar() { return Float(0.0); };
+  virtual Complex defaultCPar() { return Complex(1.0); };
 
   // Arrange to build a cal table from specified values
-  virtual void setSpecify(const casacore::Record& specify);
+  virtual void setSpecify(const Record& specify);
 
   // Fill a caltable with specified values
-  virtual void specify(const casacore::Record& specify);
+  virtual void specify(const Record& specify);
 
   // Size up the solving arrays, etc.  (supports combine)
-  virtual casacore::Int sizeUpSolve(VisSet& vs, casacore::Vector<casacore::Int>& nChunkPerSol);
+  virtual Int sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol);
 
   // These inflate methods soon to deprecate (gmoellen, 20121212)
   // Inflate the pristine CalSet (from VisSet info)
-  void inflate(VisSet& vs, const casacore::Bool& fillMeta=false);
+  void inflate(VisSet& vs, const Bool& fillMeta=False);
   // Inflate the pristine CalSet (generically)
-  virtual void inflate(const casacore::Vector<casacore::Int>& nChanDat,
-		       const casacore::Vector<casacore::Int>& startChanDat,
-		       const casacore::Vector<casacore::Int>& nSlot);
+  virtual void inflate(const Vector<Int>& nChanDat,
+		       const Vector<Int>& startChanDat,
+		       const Vector<Int>& nSlot);
 
 
   // Hazard a guess at the parameters (solveCPar) given the data
   virtual void guessPar(VisBuffer& vb)=0;
-  virtual void guessPar(SDBList&) { throw(casacore::AipsError("SVC::guessPar(SDBList&) NYI!!")); };  // VI2
+  virtual void guessPar(SDBList&) { throw(AipsError("SVC::guessPar(SDBList&) NYI!!")); };  // VI2
 
   // Time-dep solution interval  (VI2)
-  inline double solTimeInterval() const { return solTimeInterval_; };
+  inline Double solTimeInterval() const { return solTimeInterval_; };
 
   // Freq-dep solint values 
-  inline casacore::Double& fintervalHz() { return fintervalHz_; };
-  inline casacore::Double& fintervalCh() { return fintervalCh_(currSpw()); };  // for current Spw
-  casacore::Matrix<casacore::Int> chanAveBounds()  { return chanAveBounds_(currSpw()); }; // for current Spw
-  casacore::Matrix<casacore::Int> chanAveBounds(casacore::Int spw)  { return chanAveBounds_(spw); }; 
+  inline Double& fintervalHz() { return fintervalHz_; };
+  inline Double& fintervalCh() { return fintervalCh_(currSpw()); };  // for current Spw
+  Matrix<Int> chanAveBounds()  { return chanAveBounds_(currSpw()); }; // for current Spw
+  Matrix<Int> chanAveBounds(Int spw)  { return chanAveBounds_(spw); }; 
 
   // Access to current solution parameters and matrices
-  inline virtual casacore::Cube<casacore::Complex>& solveCPar()   {return (*solveCPar_[currSpw()]);};
-  inline virtual casacore::Cube<casacore::Float>&   solveRPar()   {return (*solveRPar_[currSpw()]);};
-  inline virtual casacore::Cube<casacore::Bool>&    solveParOK()  {return (*solveParOK_[currSpw()]);};
-  inline virtual casacore::Cube<casacore::Float> &  solveParErr() {return (*solveParErr_[currSpw()]);};
-  inline virtual casacore::Cube<casacore::Float> &  solveParSNR() {return (*solveParSNR_[currSpw()]);};
-  inline virtual casacore::Cube<casacore::Complex>& solveAllCPar()   {return (*solveAllCPar_[currSpw()]);};
-  inline virtual casacore::Cube<casacore::Float>&   solveAllRPar()   {return (*solveAllRPar_[currSpw()]);};
-  inline virtual casacore::Cube<casacore::Bool>&    solveAllParOK()  {return (*solveAllParOK_[currSpw()]);};
-  inline virtual casacore::Cube<casacore::Float> &  solveAllParErr() {return (*solveAllParErr_[currSpw()]);};
-  inline virtual casacore::Cube<casacore::Float> &  solveAllParSNR() {return (*solveAllParSNR_[currSpw()]);};
+  inline virtual Cube<Complex>& solveCPar()   {return (*solveCPar_[currSpw()]);};
+  inline virtual Cube<Float>&   solveRPar()   {return (*solveRPar_[currSpw()]);};
+  inline virtual Cube<Bool>&    solveParOK()  {return (*solveParOK_[currSpw()]);};
+  inline virtual Cube<Float> &  solveParErr() {return (*solveParErr_[currSpw()]);};
+  inline virtual Cube<Float> &  solveParSNR() {return (*solveParSNR_[currSpw()]);};
+  inline virtual Cube<Complex>& solveAllCPar()   {return (*solveAllCPar_[currSpw()]);};
+  inline virtual Cube<Float>&   solveAllRPar()   {return (*solveAllRPar_[currSpw()]);};
+  inline virtual Cube<Bool>&    solveAllParOK()  {return (*solveAllParOK_[currSpw()]);};
+  inline virtual Cube<Float> &  solveAllParErr() {return (*solveAllParErr_[currSpw()]);};
+  inline virtual Cube<Float> &  solveAllParSNR() {return (*solveAllParSNR_[currSpw()]);};
 
   // Access to source pol parameters
-  inline casacore::Vector<casacore::Complex>& srcPolPar() { return srcPolPar_; };
+  inline Vector<Complex>& srcPolPar() { return srcPolPar_; };
 
   // Synchronize the meta data with a solvable VisBuffer
-  //   (returns false if VisBuffer has no valid data)
-  casacore::Bool syncSolveMeta(VisBuffer& vb, const casacore::Int& fieldId);
-  casacore::Bool syncSolveMeta(VisBuffGroupAcc& vbga);
+  //   (returns False if VisBuffer has no valid data)
+  Bool syncSolveMeta(VisBuffer& vb, const Int& fieldId);
+  Bool syncSolveMeta(VisBuffGroupAcc& vbga);
   void syncSolveMeta(SDBList& sdbs);  // VI2   (valid data now checked elsewhere)
 
   // Provide for override of currScan and currObs
-  void overrideObsScan(casacore::Int obs, casacore::Int scan);
+  void overrideObsScan(Int obs, Int scan);
 
   // If apmode() is "A", convert vb's visibilities to amp + 0i.
   // If it is "P", convert them to phase + 0i.
@@ -253,40 +253,40 @@ public:
   virtual void enforceAPonData(VisBuffer& vb);
 
   // Verify VisBuffer data sufficient for solving (wts, etc.)
-  virtual casacore::Bool verifyConstraints(VisBuffGroupAcc& vbag);
-  virtual casacore::Bool verifyConstraints(SDBList& sdbs);  // VI2 
-  virtual casacore::Bool verifyForSolve(VisBuffer& vb);
+  virtual Bool verifyConstraints(VisBuffGroupAcc& vbag);
+  virtual Bool verifyConstraints(SDBList& sdbs);  // VI2 
+  virtual Bool verifyForSolve(VisBuffer& vb);
   
   // Self- gather and/or solve prototypes
   //  (triggered by useGenericGatherForSolve=F or useGenericSolveOne=F; 
   //   must be overridden in derived specializations)
   virtual void selfGatherAndSolve(VisSet& vs, VisEquation& ve);
   virtual void selfSolveOne(VisBuffGroupAcc& vs);
-  virtual void selfSolveOne(SDBList&) { throw(casacore::AipsError("selfSolveOne for VI2/SDB usage NYI for "+typeName())); };
+  virtual void selfSolveOne(SDBList&) { throw(AipsError("selfSolveOne for VI2/SDB usage NYI for "+typeName())); };
 
   // Set up data and model for pol solve
   void setUpForPolSolve(VisBuffer& vb);
 
   // Differentiate VB model w.r.t. Cal  parameters (no 2nd derivative yet)
   virtual void differentiate(CalVisBuffer& cvb)=0;
-  virtual void differentiate(SolveDataBuffer&) { throw(casacore::AipsError("SVC::differentiate(SDB)  NYI!")); };  // VI2
+  virtual void differentiate(SolveDataBuffer&) { throw(AipsError("SVC::differentiate(SDB)  NYI!")); };  // VI2
   virtual void differentiate(VisBuffer& vb,        
-			     casacore::Cube<casacore::Complex>& V,     
-			     casacore::Array<casacore::Complex>& dV,
-			     casacore::Matrix<casacore::Bool>& Vflg)=0;
+			     Cube<Complex>& V,     
+			     Array<Complex>& dV,
+			     Matrix<Bool>& Vflg)=0;
   virtual void differentiate(VisBuffer& ,          // vb.visCube() has the obs. data.  vb.modelVisCube() will receive the residuals
                              VisBuffer&   ,       // 1st. Derivative w.r.t. first parameter
                              VisBuffer& ,         // 1st. Derivative w.r.t. second parameter
-                             casacore::Matrix<casacore::Bool>& ){ throw(casacore::AipsError("Invalid use of differentiate(vb,dV0,dv1)")); };
+                             Matrix<Bool>& ){ throw(AipsError("Invalid use of differentiate(vb,dV0,dv1)")); };
 
 
   // Differentiate VB model w.r.t. Source parameters
   virtual void diffSrc(VisBuffer& vb,        
-		       casacore::Array<casacore::Complex>& dV)=0;
+		       Array<Complex>& dV)=0;
 
   // Update solve parameters incrementally (additive)
-  virtual void updatePar(const casacore::Vector<casacore::Complex> dCalPar,const casacore::Vector<casacore::Complex> dSrcPar);
-  virtual void updatePar(const casacore::Vector<casacore::Complex> dCalPar);  //  (VI2)
+  virtual void updatePar(const Vector<Complex> dCalPar,const Vector<Complex> dSrcPar);
+  virtual void updatePar(const Vector<Complex> dCalPar);  //  (VI2)
 
   // Form solution SNR
   virtual void formSolveSNR();
@@ -298,15 +298,15 @@ public:
   virtual void reReference()=0;
 
   // Retrieve the cal flag info as a record
-  virtual casacore::Record actionRec();
+  virtual Record actionRec();
 
   // Accumulate another VisCal onto this one
   virtual void accumulate(SolvableVisCal* incr,
-			  const casacore::Vector<casacore::Int>& fields)=0;
+			  const Vector<Int>& fields)=0;
 
-  virtual void smooth(casacore::Vector<casacore::Int>& fields,
-		      const casacore::String& smtype,
-		      const casacore::Double& smtime);
+  virtual void smooth(Vector<Int>& fields,
+		      const String& smtype,
+		      const Double& smtime);
 
   // Report solved-for QU
   virtual void reportSolvedQU();
@@ -314,15 +314,15 @@ public:
 
   // New CalTable handling
   virtual void createMemCalTable();
-  virtual void keep1(casacore::Int ichan);
+  virtual void keep1(Int ichan);
   virtual void keepNCT();
   virtual void storeNCT();
-  void storeNCT(const casacore::String& tableName,const casacore::Bool& append);
+  void storeNCT(const String& tableName,const Bool& append);
 
-  virtual void loadMemCalTable(casacore::String ctname,casacore::String field="");
+  virtual void loadMemCalTable(String ctname,String field="");
 
   // New spwOK
-  virtual casacore::Bool spwOK(casacore::Int ispw);
+  virtual Bool spwOK(Int ispw);
 
   // Post solve tinkering (generic version)
   virtual void globalPostSolveTinker();
@@ -334,64 +334,64 @@ public:
   virtual void normalize();
 
   // Determine and apply flux density scaling
-  virtual void fluxscale(const casacore::String& outfile,
-                         const casacore::Vector<casacore::Int>& refFieldIn,
-			 const casacore::Vector<casacore::Int>& tranFieldIn,
-			 const casacore::Vector<casacore::Int>& inRefSpwMap,
-			 const casacore::Vector<casacore::String>& fldNames,
-                         const casacore::Float& inGainThres,
-                         const casacore::String& antSel,
-                         const casacore::String& timerangeSel,
-                         const casacore::String& scanSel,
+  virtual void fluxscale(const String& outfile,
+                         const Vector<Int>& refFieldIn,
+			 const Vector<Int>& tranFieldIn,
+			 const Vector<Int>& inRefSpwMap,
+			 const Vector<String>& fldNames,
+                         const Float& inGainThres,
+                         const String& antSel,
+                         const String& timerangeSel,
+                         const String& scanSel,
 			 fluxScaleStruct& oFluxScaleStruct,
-			 const casacore::String& oListFile,
-                         const casacore::Bool& incremental,
-                         const casacore::Int& fitorder,
-                         const casacore::Bool& display)=0;
+			 const String& oListFile,
+                         const Bool& incremental,
+                         const Int& fitorder,
+                         const Bool& display)=0;
 
   // Report state:
-  inline virtual void state() { stateSVC(true); };
+  inline virtual void state() { stateSVC(True); };
 
   virtual VisCalEnum::VCParType setParType(VisCalEnum::VCParType type) 
   {parType_ = type;return (VisCalEnum::VCParType)parType_;};
   virtual void currMetaNote();
 
-  virtual void listCal(const casacore::Vector<casacore::Int> ufldids, const casacore::Vector<casacore::Int> uantids,
-		       const casacore::Matrix<casacore::Int> uchanids,  //const casacore::Int& spw, const casacore::Int& chan,
-		       const casacore::String& listfile="",const casacore::Int& pagerows=50)=0;
+  virtual void listCal(const Vector<Int> ufldids, const Vector<Int> uantids,
+		       const Matrix<Int> uchanids,  //const Int& spw, const Int& chan,
+		       const String& listfile="",const Int& pagerows=50)=0;
 
   // Handle external channel mask
-  inline void setChanMask(casacore::PtrBlock<casacore::Vector<casacore::Bool>*>& chanmask) { chanmask_=&chanmask; };
+  inline void setChanMask(PtrBlock<Vector<Bool>*>& chanmask) { chanmask_=&chanmask; };
   inline void clearChanMask() { chanmask_=NULL; };
   void applyChanMask(VisBuffer& vb);
   // Log periodic solver activity
-  virtual void printActivity(const casacore::Int nSlots, const casacore::Int slotNo, 
-			     const casacore::Int fieldId, const casacore::Int spw, 
-			     const casacore::Int nSolutions);
+  virtual void printActivity(const Int nSlots, const Int slotNo, 
+			     const Int fieldId, const Int spw, 
+			     const Int nSolutions);
   virtual void markTimer() {timer_p.mark();};
 
 
   // -------------
   // Set the simulation parameters
-  virtual void setSimulate(VisSet& vs, casacore::Record& simpar, casacore::Vector<casacore::Double>& solTimes);
+  virtual void setSimulate(VisSet& vs, Record& simpar, Vector<Double>& solTimes);
 
   // make a corruptor in a VC-specific way
-  virtual void createCorruptor(const VisIter& vi,const casacore::Record& simpar, const int nSim);
+  virtual void createCorruptor(const VisIter& vi,const Record& simpar, const int nSim);
 
   // access to simulation variables that are general to all VisCals
-  inline casacore::String& simint() { return simint_; };
+  inline String& simint() { return simint_; };
 
   // Simulation info/params, suitable for logging
-  virtual casacore::String siminfo();
+  virtual String siminfo();
 
   // Is this calibration simulated?
-  inline casacore::Bool isSimulated() {return simulated_;};
+  inline Bool isSimulated() {return simulated_;};
 
   // object that can simulate the corruption terms
   CalCorruptor *corruptor_p;
 
   // calculate # required slots to simulate this SVC
-  casacore::Int sizeUpSim(VisSet& vs, casacore::Vector<casacore::Int>& nChunkPerSol, casacore::Vector<casacore::Double>& solTimes);
+  Int sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Double>& solTimes);
 
 
   // VI2-related refactor--------------------------------------
@@ -399,18 +399,18 @@ public:
   // Set "current" meta info, so internals are registered
   //  (VI2: replaces meta-inf part of syncSolveMeta; 
   //   NB: does _NOT_ check sum(wt)>0 older syncSolveMeta!)
-  virtual void setMeta(int obs, int scan, double time,
-		       int spw, const casacore::Vector<double>& freq,
-		       int fld);
+  virtual void setMeta(Int obs, Int scan, Double time,
+		       Int spw, const Vector<Double>& freq,
+		       Int fld);
 
   // Reshape solvePar* arrays for the currSpw()  
   //  (ensitive to freqDepPar())
   //  (VI2: replaces initSolvePar part of sizeUpSolve)
-  virtual int sizeSolveParCurrSpw(int nVisChan);
+  virtual Int sizeSolveParCurrSpw(Int nVisChan);
 
   // Set parameters to def values in the currSpw(), 
   //   and optionally sync everything
-  virtual void setDefSolveParCurrSpw(bool sync=false);
+  virtual void setDefSolveParCurrSpw(Bool sync=False);
 
   // Parse solint in VI2 context
   void reParseSolintForVI2();
@@ -420,13 +420,13 @@ public:
   virtual void createMemCalTable2();
 
   // Set (or verify) freq info in output cal table for specified spw
-  virtual void setOrVerifyCTFrequencies(int spw);
+  virtual void setOrVerifyCTFrequencies(Int spw);
 
 
 protected:
 
   // Set to-be-solved-for flag
-  inline void setSolved(const casacore::Bool& flag) {solved_=flag;};
+  inline void setSolved(const Bool& flag) {solved_=flag;};
 
   // Initialize solve parameters (shape)
   virtual void initSolvePar()=0;
@@ -461,42 +461,42 @@ protected:
   virtual void syncDiffMat()=0;
 
   // Report the SVC-specific state, w/ option for VC::state()
-  virtual void stateSVC(const casacore::Bool& doVC);
+  virtual void stateSVC(const Bool& doVC);
 
   // Normalize a (complex) solution array (generic)
-  void normSolnArray(casacore::Array<casacore::Complex>& sol,
-		     const casacore::Array<casacore::Bool>& solOK,
-		     const casacore::Bool doPhase=false);
+  void normSolnArray(Array<Complex>& sol,
+		     const Array<Bool>& solOK,
+		     const Bool doPhase=False);
 
-  virtual casacore::Float calcPowerNorm(casacore::Array<casacore::Float>& amp, const casacore::Array<casacore::Bool>& ok)=0;
+  virtual Float calcPowerNorm(Array<Float>& amp, const Array<Bool>& ok)=0;
 
   // Logger
-  casacore::LogIO& logSink() { return logsink_p; };
+  LogIO& logSink() { return logsink_p; };
 
   // Check if a cal table is appropriate
-  void verifyCalTable(const casacore::String& caltablename);
+  void verifyCalTable(const String& caltablename);
 
-  void sortVisSet(VisSet& vs, const casacore::Bool verbose=false);
+  void sortVisSet(VisSet& vs, const Bool verbose=False);
 
-  casacore::Int parType_;
+  Int parType_;
 
   // New CalTable 
   NewCalTable *ct_;
   CTPatchedInterp *ci_;
   CLPatchPanel *cpp_;
-  casacore::Vector<casacore::Bool> spwOK_;
+  Vector<Bool> spwOK_;
 
-  casacore::Double maxTimePerSolution_p, minTimePerSolution_p, avgTimePerSolution_p;
-  casacore::Float userPrintActivityInterval_p, userPrintActivityFraction_p;
-  casacore::uInt caiRC_p, cafRC_p;
-  casacore::Timer timer_p;
+  Double maxTimePerSolution_p, minTimePerSolution_p, avgTimePerSolution_p;
+  Float userPrintActivityInterval_p, userPrintActivityFraction_p;
+  uInt caiRC_p, cafRC_p;
+  Timer timer_p;
 
   // Set state flag to simulate cal terms
-  inline void setSimulated(const casacore::Bool& flag) {simulated_=flag;};
+  inline void setSimulated(const Bool& flag) {simulated_=flag;};
 
   // RI todo implement calcOneJones like calcAllMueller
   // calculate terms during apply, or up front during setSim?
-  inline casacore::Bool& simOnTheFly() { 
+  inline Bool& simOnTheFly() { 
     //    cout << "simOTF=" << onthefly_ << endl;
     return onthefly_; };
 
@@ -515,101 +515,100 @@ private:
 
 
   // Cal table name
-  casacore::String calTableName_;
-  casacore::String calTableSelect_;
-  casacore::Bool append_;
+  String calTableName_;
+  String calTableSelect_;
+  Bool append_;
 
   // Interpolation types
-  casacore::String tInterpType_;
-  casacore::String fInterpType_;
+  String tInterpType_;
+  String fInterpType_;
 
   // Spw mapping
-  casacore::Vector<casacore::Int> spwMap_;
+  Vector<Int> spwMap_;
 
   // Refant
-  casacore::Vector<casacore::Int> urefantlist_;
+  Vector<Int> urefantlist_;
 
   // Min baselines per ant for solve
-  casacore::Int minblperant_;
+  Int minblperant_;
 
   // Solved-for flag
-  casacore::Bool solved_;
+  Bool solved_;
 
   // Signal apply by callib
-  casacore::Bool byCallib_;
+  Bool byCallib_;
 
   // Solving mode
-  casacore::String apmode_;
+  String apmode_;
 
   // User-specified full solint string
-  casacore::String usolint_;
+  String usolint_;
 
   // User-specified time-dep solint (string)
-  casacore::String solint_;
+  String solint_;
 
   // Derived time-dep solution interval (s) (VI2)
-  double solTimeInterval_;
+  Double solTimeInterval_;
 
   // User-specified freq-dep solint info
-  casacore::String fsolint_;
+  String fsolint_;
 
   // Derived frequency intervals
-  casacore::Double fintervalHz_;
-  casacore::Vector<casacore::Double> fintervalCh_;   // (nSpw)
-
+  Double fintervalHz_;
+  Vector<Double> fintervalCh_;   // (nSpw)
 
   // Channel averaging bounds
-  casacore::Vector<casacore::Matrix<casacore::Int> > chanAveBounds_;  // (nSpw)(2,nOutChan)
+  Vector<Matrix<Int> > chanAveBounds_;  // (nSpw)(2,nOutChan)
 
   // Preavering interval
-  casacore::Double preavg_;
+  Double preavg_;
 
   // Do solution normalization after a solve
-  casacore::Bool solnorm_;
+  Bool solnorm_;
 
   // SNR threshold
-  casacore::Float minSNR_;
+  Float minSNR_;
 
   // axes to combine for solve
-  casacore::String combine_;
+  String combine_;
 
   // In-focus channel for single-chan solves on multi-chan data
-  casacore::Int focusChan_;
+  Int focusChan_;
 
   // Solving meta-data
-  casacore::Double dataInterval_;
-  casacore::Double fitWt_;
-  casacore::Double fit_;
+  Double dataInterval_;
+  Double fitWt_;
+  Double fit_;
 
 
   // Current parameters
-  casacore::PtrBlock<casacore::Cube<casacore::Complex>*> solveCPar_;  // [nSpw](nPar,1,{1|nElem})
-  casacore::PtrBlock<casacore::Cube<casacore::Float>*>   solveRPar_;  // [nSpw](nPar,1,{1|nElem})
-  casacore::PtrBlock<casacore::Cube<casacore::Bool>*>    solveParOK_; // [nSpw](nPar,1,{1|nElm})
-  casacore::PtrBlock<casacore::Cube<casacore::Float>*>   solveParErr_; // [nSpw](nPar,1,{1|nElm})
-  casacore::PtrBlock<casacore::Cube<casacore::Float>*>   solveParSNR_; // [nSpw](nPar,1,{1|nElm})
+  PtrBlock<Cube<Complex>*> solveCPar_;  // [nSpw](nPar,1,{1|nElem})
+  PtrBlock<Cube<Float>*>   solveRPar_;  // [nSpw](nPar,1,{1|nElem})
+  PtrBlock<Cube<Bool>*>    solveParOK_; // [nSpw](nPar,1,{1|nElm})
+  PtrBlock<Cube<Float>*>   solveParErr_; // [nSpw](nPar,1,{1|nElm})
+  PtrBlock<Cube<Float>*>   solveParSNR_; // [nSpw](nPar,1,{1|nElm})
 
-  casacore::PtrBlock<casacore::Cube<casacore::Complex>*> solveAllCPar_;   // [nSpw](nPar,nChan,{1|nElem})
-  casacore::PtrBlock<casacore::Cube<casacore::Float>*>   solveAllRPar_;   // [nSpw](nPar,nChan,{1|nElem})
-  casacore::PtrBlock<casacore::Cube<casacore::Bool>*>    solveAllParOK_;  // [nSpw](nPar,nChan,{1|nElm})
-  casacore::PtrBlock<casacore::Cube<casacore::Float>*>   solveAllParErr_; // [nSpw](nPar,nChan,{1|nElm})
-  casacore::PtrBlock<casacore::Cube<casacore::Float>*>   solveAllParSNR_; // [nSpw](nPar,nChan,{1|nElm})
+  PtrBlock<Cube<Complex>*> solveAllCPar_;   // [nSpw](nPar,nChan,{1|nElem})
+  PtrBlock<Cube<Float>*>   solveAllRPar_;   // [nSpw](nPar,nChan,{1|nElem})
+  PtrBlock<Cube<Bool>*>    solveAllParOK_;  // [nSpw](nPar,nChan,{1|nElm})
+  PtrBlock<Cube<Float>*>   solveAllParErr_; // [nSpw](nPar,nChan,{1|nElm})
+  PtrBlock<Cube<Float>*>   solveAllParSNR_; // [nSpw](nPar,nChan,{1|nElm})
 
-  casacore::Vector<casacore::Complex> srcPolPar_;
+  Vector<Complex> srcPolPar_;
 
   // A _pointer_ to the external channel mask
-  casacore::PtrBlock<casacore::Vector<casacore::Bool>*> *chanmask_;
+  PtrBlock<Vector<Bool>*> *chanmask_;
 
   // LogIO
-  casacore::LogIO logsink_p;
+  LogIO logsink_p;
 
   // Simulation flag
-  casacore::Bool simulated_;
+  Bool simulated_;
 
   // simulation interval
-  casacore::String simint_;
+  String simint_;
 
-  casacore::Bool onthefly_;  
+  Bool onthefly_;  
 
 };
 
@@ -626,83 +625,83 @@ public:
 
   SolvableVisMueller(VisSet& vs);
 
-  SolvableVisMueller(casacore::String msname,casacore::Int MSnAnt,casacore::Int MSnSpw);
+  SolvableVisMueller(String msname,Int MSnAnt,Int MSnSpw);
 
   SolvableVisMueller(const MSMetaInfoForCal& msmc);
 
-  SolvableVisMueller(const casacore::Int& nAnt);
+  SolvableVisMueller(const Int& nAnt);
 
   virtual ~SolvableVisMueller();
 
   // Total number of (complex) parameters per solve
   //  Mueller version:  just return number of per-Bln parameters
-  virtual casacore::Int nTotalPar() { return nPar(); };
+  virtual Int nTotalPar() { return nPar(); };
 
   // Does normalization by MODEL_DATA commute with this VisCal?
-  virtual casacore::Bool normalizable() { return (this->muellerType() < Mueller::General); };
+  virtual Bool normalizable() { return (this->muellerType() < Mueller::General); };
 
   // Hazard a guess at the parameters (solvePar) given the data
-  virtual void guessPar(VisBuffer& ) { throw(casacore::AipsError("NYI")); };
+  virtual void guessPar(VisBuffer& ) { throw(AipsError("NYI")); };
 
   // Differentiate VB model w.r.t. Mueller parameters (no 2nd derivative yet)
-  virtual void differentiate(CalVisBuffer& ) {throw(casacore::AipsError("SVM::differentiate(CVB): NYI")); };
-  virtual void differentiate(SolveDataBuffer& ) {throw(casacore::AipsError("SVM::differentiate(SDB): NYI")); };  // VI2
+  virtual void differentiate(CalVisBuffer& ) {throw(AipsError("SVM::differentiate(CVB): NYI")); };
+  virtual void differentiate(SolveDataBuffer& ) {throw(AipsError("SVM::differentiate(SDB): NYI")); };  // VI2
   virtual void differentiate(VisBuffer& ,          // input data
-			     casacore::Cube<casacore::Complex>& ,       // trial apply (nCorr,nChan,nRow)
-			     casacore::Array<casacore::Complex>& ,     // 1st deriv   (nCorr,nPar,nChan,nRow)
-			     casacore::Matrix<casacore::Bool>& ) { throw(casacore::AipsError("NYI")); };
+			     Cube<Complex>& ,       // trial apply (nCorr,nChan,nRow)
+			     Array<Complex>& ,     // 1st deriv   (nCorr,nPar,nChan,nRow)
+			     Matrix<Bool>& ) { throw(AipsError("NYI")); };
   using SolvableVisCal::differentiate;
 
   // Differentiate VB model w.r.t. Source parameters
   virtual void diffSrc(VisBuffer& ,
-		       casacore::Array<casacore::Complex>& ) {throw(casacore::AipsError("NYI")); };
+		       Array<Complex>& ) {throw(AipsError("NYI")); };
 
   // Apply refant (no-op for Muellers)
   virtual void reReference() {};
 
   // Accumulate another VisCal onto this one
   virtual void accumulate(SolvableVisCal* ,
-			  const casacore::Vector<casacore::Int>& ) { throw(casacore::AipsError("NYI")); };
+			  const Vector<Int>& ) { throw(AipsError("NYI")); };
 
   // Scale solutions
-  virtual void fluxscale(const casacore::String&,
-                         const casacore::Vector<casacore::Int>& ,
-			 const casacore::Vector<casacore::Int>& ,
-			 const casacore::Vector<casacore::Int>& ,
-			 const casacore::Vector<casacore::String>& ,
-                         const casacore::Float& ,
-                         const casacore::String& ,
-                         const casacore::String& ,
-                         const casacore::String& ,
+  virtual void fluxscale(const String&,
+                         const Vector<Int>& ,
+			 const Vector<Int>& ,
+			 const Vector<Int>& ,
+			 const Vector<String>& ,
+                         const Float& ,
+                         const String& ,
+                         const String& ,
+                         const String& ,
 			 SolvableVisCal::fluxScaleStruct&,
-			 const casacore::String&,
-                         const casacore::Bool&,
-                         const casacore::Int&,
-                         const casacore::Bool&)
-	{ throw(casacore::AipsError("NYI")); };
+			 const String&,
+                         const Bool&,
+                         const Int&,
+                         const Bool&)
+	{ throw(AipsError("NYI")); };
 
   // SVM-specific write to caltable
   virtual void keepNCT();
 
   // Report state:
-  inline virtual void state() { stateSVM(true); };
+  inline virtual void state() { stateSVM(True); };
 
-  // casacore::List calibration solutions in tabular form.
-  virtual void listCal(const casacore::Vector<casacore::Int> ,
-                       const casacore::Vector<casacore::Int> ,
-                       const casacore::Matrix<casacore::Int> ,
-   		               const casacore::String& ,
-                       const casacore::Int& )
-  { throw(casacore::AipsError(casacore::String("Calibration listing not supported for "+typeName()))); };
+  // List calibration solutions in tabular form.
+  virtual void listCal(const Vector<Int> ,
+                       const Vector<Int> ,
+                       const Matrix<Int> ,
+   		               const String& ,
+                       const Int& )
+  { throw(AipsError(String("Calibration listing not supported for "+typeName()))); };
 
 protected:
 
   // Number of Cal Matrices to form on baseline axis
   //  (Mueller, solve context: 1)
-  virtual casacore::Int nCalMat() { return isSolved() ? 1 : nBln(); };
+  virtual Int nCalMat() { return isSolved() ? 1 : nBln(); };
 
   // Are differentiated M matrices constant in chan & bln?
-  virtual casacore::Bool trivialDM() { return false; };
+  virtual Bool trivialDM() { return False; };
 
   // Initialize solve parameter shape
   //  Mueller version:  (nPar(),1,1)   (one chan, one baseline)
@@ -712,15 +711,15 @@ protected:
   inline Mueller& dM() { return *dM_; };
 
   // Access to differentiated Mueller elements
-  inline casacore::Array<casacore::Complex>& diffMElem() {return diffMElem_;};
+  inline Array<Complex>& diffMElem() {return diffMElem_;};
 
   // Invalidate diff cal matrices generically (at this level, just M, dM)
   inline virtual void invalidateDiffCalMat() { invalidateM(); invalidateDM(); };
 
   // Validation of diffMueller matrices
-  inline void invalidateDM() {DMValid_=false;};
-  inline void validateDM()   {DMValid_=true;};
-  inline casacore::Bool DMValid()      {return DMValid_;};
+  inline void invalidateDM() {DMValid_=False;};
+  inline void validateDM()   {DMValid_=True;};
+  inline Bool DMValid()      {return DMValid_;};
 
   // Synchronize the differentiated calibration (specialization for Mueller);
   virtual void syncDiffMat();
@@ -732,7 +731,7 @@ protected:
   virtual void calcAllDiffMueller();
 
   // Calculate one diffMElem 
-  virtual void calcOneDiffMueller(casacore::Matrix<casacore::Complex>& mat, const casacore::Vector<casacore::Complex>& par);
+  virtual void calcOneDiffMueller(Matrix<Complex>& mat, const Vector<Complex>& par);
 
   // Create matrix renderers for dMs
   void createDiffMueller();
@@ -744,11 +743,11 @@ protected:
   virtual void initTrivDM();
 
   // SVM-specific state
-  virtual void stateSVM(const casacore::Bool& doVC);
+  virtual void stateSVM(const Bool& doVC);
 
   // atomic power normalization calculation
   //   Mueller version assumes amp in power units
-  virtual casacore::Float calcPowerNorm(casacore::Array<casacore::Float>& amp, const casacore::Array<casacore::Bool>& ok);
+  virtual Float calcPowerNorm(Array<Float>& amp, const Array<Bool>& ok);
 
 private:
 
@@ -759,10 +758,10 @@ private:
   Mueller *dM_;
 
   // Differentiated Mueller matrix elements
-  casacore::Array<casacore::Complex> diffMElem_;    // (nDMEl,nPar,nChanMat,nBln)
+  Array<Complex> diffMElem_;    // (nDMEl,nPar,nChanMat,nBln)
 
   // diffMueller validation
-  casacore::Bool DMValid_;
+  Bool DMValid_;
 
 
 };
@@ -777,40 +776,40 @@ public:
 
   SolvableVisJones(VisSet& vs);
 
-  SolvableVisJones(casacore::String msname,casacore::Int MSnAnt,casacore::Int MSnSpw);
-
-  SolvableVisJones(const casacore::Int& nAnt);
+  SolvableVisJones(String msname,Int MSnAnt,Int MSnSpw);
 
   SolvableVisJones(const MSMetaInfoForCal& msmc);
+
+  SolvableVisJones(const Int& nAnt);
 
   virtual ~SolvableVisJones();
 
   // Total number of (complex) parameters per solve
   //  Jones version:  nPar()*nAnt()
-  virtual casacore::Int nTotalPar() { return nPar()*nAnt(); };
+  virtual Int nTotalPar() { return nPar()*nAnt(); };
 
   // Does normalization by MODEL_DATA commute with this VisCal?
-  virtual casacore::Bool normalizable() { return (this->jonesType() < Jones::GenLinear); };
+  virtual Bool normalizable() { return (this->jonesType() < Jones::GenLinear); };
 
   // Differentiate VB model w.r.t. Jones parameters
   virtual void differentiate(CalVisBuffer& cvb);
   virtual void differentiate(SolveDataBuffer& sdb);  // VI2
   virtual void differentiate(VisBuffer& vb,          // input data
-			     casacore::Cube<casacore::Complex>& V,       // trial apply (nCorr,nChan,nRow)
-			     casacore::Array<casacore::Complex>& dV,     // 1st deriv   (nCorr,nPar,nChan,nRow,2)
-			     casacore::Matrix<casacore::Bool>& Vflg);
+			     Cube<Complex>& V,       // trial apply (nCorr,nChan,nRow)
+			     Array<Complex>& dV,     // 1st deriv   (nCorr,nPar,nChan,nRow,2)
+			     Matrix<Bool>& Vflg);
   using SolvableVisMueller::differentiate;
 
   // Differentiate VB model w.r.t. Source parameters
   virtual void diffSrc(VisBuffer& vb,        
-		       casacore::Array<casacore::Complex>& dV);
+		       Array<Complex>& dV);
 
   // Apply refant
   virtual void reReference();
 
   // Accumulate another VisCal onto this one
   virtual void accumulate(SolvableVisCal* incr,
-			  const casacore::Vector<casacore::Int>& fields);
+			  const Vector<Int>& fields);
 
   // Post solve tinkering (Jones version: includes refant application)
   virtual void globalPostSolveTinker();
@@ -819,56 +818,56 @@ public:
   virtual void applyRefAnt();
 
   // Fluxscale is implemented here
-  void fluxscale(const casacore::String& outfile,
-                 const casacore::Vector<casacore::Int>& refFieldIn,
-		 const casacore::Vector<casacore::Int>& tranFieldIn,
-		 const casacore::Vector<casacore::Int>& inRefSpwMap,
-		 const casacore::Vector<casacore::String>& fldNames,
-                 const casacore::Float& inGainThres,
-                 const casacore::String& antSel,
-                 const casacore::String& timerangeSel,
-                 const casacore::String& scanSel,
+  void fluxscale(const String& outfile,
+                 const Vector<Int>& refFieldIn,
+		 const Vector<Int>& tranFieldIn,
+		 const Vector<Int>& inRefSpwMap,
+		 const Vector<String>& fldNames,
+                 const Float& inGainThres,
+                 const String& antSel,
+                 const String& timerangeSel,
+                 const String& scanSel,
 		 SolvableVisCal::fluxScaleStruct& oFluxScaleStruct,
-		 const casacore::String& oListFile,
-                 const casacore::Bool& incremental=false,
-                 const casacore::Int& fitorder=1,
-                 const casacore::Bool& display=false);
+		 const String& oListFile,
+                 const Bool& incremental=False,
+                 const Int& fitorder=1,
+                 const Bool& display=False);
 
   // SVJ-specific write to caltable
   virtual void keepNCT();
 
   // Report state:
-  inline virtual void state() { stateSVJ(true); };
+  inline virtual void state() { stateSVJ(True); };
 
   // Write calibration solutions to the terminal
-  virtual void listCal(const casacore::Vector<casacore::Int> ufldids, const casacore::Vector<casacore::Int> uantids,
-                       const casacore::Matrix<casacore::Int> uchanids,
-                       const casacore::String& listfile="",const casacore::Int& pagerows=50);
+  virtual void listCal(const Vector<Int> ufldids, const Vector<Int> uantids,
+                       const Matrix<Int> uchanids,
+                       const String& listfile="",const Int& pagerows=50);
 
   // Write header for listCal output
-  int writeHeader(const casacore::uInt numAntCols, 
-                  const casacore::uInt numAnts,
-                  const casacore::uInt iElem);
+  int writeHeader(const uInt numAntCols, 
+                  const uInt numAnts,
+                  const uInt iElem);
 
-  virtual void nearest(const casacore::Double , casacore::Array<casacore::Float>& ) {};
-  virtual void nearest(const casacore::Double , casacore::Array<casacore::Complex>& ) {};
+  virtual void nearest(const Double , Array<Float>& ) {};
+  virtual void nearest(const Double , Array<Complex>& ) {};
 
   //plotting historgram
   void setupPlotter();
-  void plotHistogram(const casacore::String& title, const casacore::Int index,
-                     const casacore::Vector<casacore::Double>& data, const casacore::Int nbin);
+  void plotHistogram(const String& title, const Int index,
+                     const Vector<Double>& data, const Int nbin);
 
 protected:
  
   // Number of Cal Matrices to form on baseline axis
   //  (Jones, all contexts: nAnt())
-  virtual casacore::Int nCalMat() { return nAnt(); };
+  virtual Int nCalMat() { return nAnt(); };
 
   // DM never trivial for SVJ
-  virtual casacore::Bool trivialDM() { return false; };
+  virtual Bool trivialDM() { return False; };
 
   // Are differentiated J matrices constant in chan & ant?
-  inline virtual casacore::Bool trivialDJ() { return false; };
+  inline virtual Bool trivialDJ() { return False; };
 
   // Initialize solve parameter shape
   //  Jones version:  (nPar(),1,nAnt())   (one chan, all antennas)
@@ -879,16 +878,16 @@ protected:
   inline Jones& dJ2() { return *dJ2_; };
 
   // Access to differentiated Joness
-  casacore::Array<casacore::Complex>& diffJElem() { return diffJElem_; };
+  Array<Complex>& diffJElem() { return diffJElem_; };
 
   // Invalidate diff cal matrices generically (at this level, M, dM, J, dJ)
   inline virtual void invalidateDiffCalMat() { 
     SolvableVisMueller::invalidateDiffCalMat(); invalidateJ(); invalidateDJ(); };
 
   // Validation of Jones matrix derivatives
-  inline void invalidateDJ() {DJValid_=false;};
-  inline void validateDJ()   {DJValid_=true;};
-  inline casacore::Bool DJValid()      {return DJValid_;};
+  inline void invalidateDJ() {DJValid_=False;};
+  inline void validateDJ()   {DJValid_=True;};
+  inline Bool DJValid()      {return DJValid_;};
 
   // Synchronize the differentiated calibration (specialization for Jones)
   virtual void syncDiffMat();
@@ -900,7 +899,7 @@ protected:
   virtual void calcAllDiffJones();
 
   // Calculate one ant/chan's diffJElem w.r.t. each par
-  virtual void calcOneDiffJones(casacore::Matrix<casacore::Complex>& mat, const casacore::Vector<casacore::Complex>& par);
+  virtual void calcOneDiffJones(Matrix<Complex>& mat, const Vector<Complex>& par);
 
   // Create matrix renderers for dJs
   void createDiffJones();
@@ -911,11 +910,11 @@ protected:
   // Initialize trivial diff'd Jones
   virtual void initTrivDJ();
 
-  virtual void stateSVJ(const casacore::Bool& doVC);
+  virtual void stateSVJ(const Bool& doVC);
 
   // atomic power normalization calculation
   //   SVJ version assumes amp in voltage units
-  virtual casacore::Float calcPowerNorm(casacore::Array<casacore::Float>& amp, const casacore::Array<casacore::Bool>& ok);
+  virtual Float calcPowerNorm(Array<Float>& amp, const Array<Bool>& ok);
 			     
 private:
 
@@ -927,26 +926,26 @@ private:
   Jones *dJ2_;
 
   // Differentiated Jones matrix elements
-  casacore::Array<casacore::Complex> diffJElem_;    // (nJME,nPar,nChanMat,nAnt,2)
+  Array<Complex> diffJElem_;    // (nJME,nPar,nChanMat,nAnt,2)
 
   // Validity of Jones matrix derivatives
-  casacore::Bool DJValid_;
+  Bool DJValid_;
 
   // Column widths for listing
-  casacore::uInt wTime_p,  wField_p, wChan_p, wAmp_p, 
+  uInt wTime_p,  wField_p, wChan_p, wAmp_p, 
        wPhase_p, wFlag_p,  wPol_p,  wAntCol_p, 
        wTotal_p, wPreAnt_p;
 
   //for plotting
   PlotServerProxy* plotter_;
-  casacore::Vector<dbus::variant> panels_id_;
+  Vector<dbus::variant> panels_id_;
 
 };
 
 // Global methods
 
 // Discern cal table type from the table itself
-casacore::String calTableType(const casacore::String& tablename);
+String calTableType(const String& tablename);
 
 } //# NAMESPACE CASA - END
 

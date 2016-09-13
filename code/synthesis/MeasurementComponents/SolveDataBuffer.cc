@@ -33,11 +33,9 @@
 #include <casa/Exceptions/Error.h>
 #include <casa/Containers/Block.h>
 #include <casa/Utilities/Assert.h>
-using namespace casacore;
 using namespace casa::vi;
 
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 SolveDataBuffer::SolveDataBuffer() : 
@@ -207,7 +205,7 @@ void SolveDataBuffer::sizeResiduals(const Int& nPar,
   residuals_p.resize(ip1);
   residuals_p.set(0.0);
   residFlagCube_p.resize(ip1);
-  residFlagCube_p.set(false);
+  residFlagCube_p.set(False);
 
   if (nPar>0 && nDiff>0) {
     IPosition ip2(5,ip1(0),nPar,ip1(1),ip1(2),nDiff);
@@ -319,7 +317,7 @@ void SDBList::add(const vi::VisBuffer2& vb)
 {
 
   // Enlarge the list, copying existing SDB pointers
-  SDB_.resize(nSDB_+1,true);
+  SDB_.resize(nSDB_+1,True);
 
   // Generate the new SolveDataBuffer
   SDB_[nSDB_] = new SolveDataBuffer(vb);

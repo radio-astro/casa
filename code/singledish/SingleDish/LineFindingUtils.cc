@@ -35,13 +35,6 @@
 
 using namespace std;
 
-using namespace casacore;
-using namespace casacore;
-using namespace casacore;
-using namespace casacore;
-using namespace casacore;
-using namespace casacore;
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 template <typename DataType> 

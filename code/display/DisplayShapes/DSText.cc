@@ -39,7 +39,6 @@
 #include <display/Display/DLFont.h>
 #include <casa/iostream.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	DSText::DSText() :
@@ -69,7 +68,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		} else if (itsValid) {
 			return (inPolygon(itsHandleLocation, xPos, yPos));
 		}
-		return false;
+		return False;
 	}
 
 	void DSText::setCenter(const Float& xPos, const Float& yPos) {
@@ -79,9 +78,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		} else {
 			itsCenter[0] = xPos;
 			itsCenter[1] = yPos;
-			itsValid = true;
+			itsValid = True;
 		}
-		itsValidPositions = false;
+		itsValidPositions = False;
 	}
 
 	DSText::DSText(const Float& xPos, const Float& yPos, const String& text,
@@ -111,12 +110,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsCenter[1] = yPos;
 
 		itsAlign = Display::AlignBottomLeft;
-		itsValid = true;
+		itsValid = True;
 		setHasHandles(hasHandles);
 		setDrawHandles(drawHandles);
 
-		itsHandlesMade = false;
-		itsValidPositions = false;
+		itsHandlesMade = False;
+		itsValidPositions = False;
 	}
 
 
@@ -175,7 +174,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					setHandlePositions(itsHandleLocation);
 				} else {
 					buildHandles(itsHandleLocation);
-					itsHandlesMade = true;
+					itsHandlesMade = True;
 				}
 			}
 			pix->drawText(static_cast<int>(itsCenter[0]), static_cast<int>(itsCenter[1]), itsString->value(),
@@ -189,7 +188,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsCenter[0] += dX;
 		itsCenter[1] += dY;
 		DisplayShape::move(dX, dY);
-		itsValidPositions = false;
+		itsValidPositions = False;
 	}
 
 	void DSText::rotate(const Float& angle) {
@@ -199,25 +198,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Vector<Float> cent(2);
 		cent=getCenter();
 		DisplayShape::rotateAbout(angle, cent[0], cent[1]);
-		itsValidPositions = false;
+		itsValidPositions = False;
 	}
 
 	Bool DSText::setOptions(const Record& settings) {
-		Bool localChange = false;
+		Bool localChange = False;
 
 		if (settings.isDefined("center")) {
 			Vector<Float> cent(settings.asArrayFloat("center"));
 			setCenter(cent[0], cent[1]);
 		}
 
-		if (itsFontSize->fromRecord(settings)) localChange = true;
-		if (itsFont->fromRecord(settings)) localChange = true;
-		if (itsString->fromRecord(settings)) localChange = true;
-		if (itsAngle->fromRecord(settings)) localChange = true;
-		if (itsAlignment->fromRecord(settings)) localChange = true;
+		if (itsFontSize->fromRecord(settings)) localChange = True;
+		if (itsFont->fromRecord(settings)) localChange = True;
+		if (itsString->fromRecord(settings)) localChange = True;
+		if (itsAngle->fromRecord(settings)) localChange = True;
+		if (itsAlignment->fromRecord(settings)) localChange = True;
 
-		if (DisplayShape::setOptions(settings)) localChange = true;
-		if (localChange) itsValidPositions = false;
+		if (DisplayShape::setOptions(settings)) localChange = True;
+		if (localChange) itsValidPositions = False;
 
 		return localChange;
 	}
@@ -234,11 +233,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Record DSText::getOptions() {
 		Record rec = DisplayShape::getOptions();
 
-		itsString->toRecord(rec, true, true);
-		itsAngle->toRecord(rec, true, true);
-		itsFontSize->toRecord(rec, true, true);
-		itsFont->toRecord(rec, true, true);
-		itsAlignment->toRecord(rec, true, true);
+		itsString->toRecord(rec, True, True);
+		itsAngle->toRecord(rec, True, True);
+		itsFontSize->toRecord(rec, True, True);
+		itsFont->toRecord(rec, True, True);
+		itsAlignment->toRecord(rec, True, True);
 
 		if (rec.isDefined("type")) rec.removeField("type");
 		rec.define("type", "text");
@@ -281,7 +280,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if ((itsFontSize->value() * scaleFactor) > 4)
 			itsFontSize->setValue( static_cast<int>(itsFontSize->value() * scaleFactor));
 
-		itsValidPositions = false;
+		itsValidPositions = False;
 	}
 
 	Display::TextAlign DSText::toEnum(const Int fromInt) {
@@ -355,19 +354,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		itsHandleLocation = rotatePolygon(itsHandleLocation, radAngle,
 		                                  itsCenter[0], itsCenter[1]);
-		itsValidPositions = true;
+		itsValidPositions = True;
 
 	}
 
 	void DSText::setDefaultOptions() {
-		setHasHandles(true);
-		setDrawHandles(true);
+		setHasHandles(True);
+		setDrawHandles(True);
 
 		itsCenter.resize(2);
 		itsAlign = Display::AlignBottomLeft;
-		itsValid = false;
-		itsHandlesMade = false;
-		itsValidPositions = false;
+		itsValid = False;
+		itsHandlesMade = False;
+		itsValidPositions = False;
 	}
 
 

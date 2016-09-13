@@ -39,9 +39,9 @@
 // </summary>
 
 // Control verbosity
-#define CTTIMEINTERP1TEST_VERBOSE false
+#define CTTIMEINTERP1TEST_VERBOSE False
 
-void doTest1 (Bool verbose=false) {
+void doTest1 (Bool verbose=False) {
 
   {  
   // The correctness tolerance
@@ -57,7 +57,7 @@ void doTest1 (Bool verbose=false) {
 		   nObs,nScan,nTime,
 		   nAnt,nSpw,nChan,
 		   nFld,
-                   refTime,tint,disk,false); 
+                   refTime,tint,disk,False); 
 
   // some sanity checks on the test NewCalTable
   if (verbose) cout << "Table::Type: " << tnct.tableType() 
@@ -72,7 +72,7 @@ void doTest1 (Bool verbose=false) {
   // Make a CTInterp
   Matrix<Float> result(2,1);
   result(0,0)=1.0; result(1,0)=0.0;
-  Matrix<Bool> rflag(1,1); rflag.set(false);
+  Matrix<Bool> rflag(1,1); rflag.set(False);
   String itype("nearest");
   CTTimeInterp1 sci(tnct,itype,result,rflag);
 

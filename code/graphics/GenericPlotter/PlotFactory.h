@@ -101,7 +101,7 @@ public:
     // canvas; otherwise it has no canvases.  If showGUI is true then the
     // plotter GUI will be shown after creation.  If log event flags are given
     // (bitwise or of PlotLogger::Event) they are passed to the plotter.
-    virtual PlotterPtr plotter(const casacore::String& windowTitle = "Plotter",
+    virtual PlotterPtr plotter(const String& windowTitle = "Plotter",
             bool showSingleCanvas = true, bool showGUI = true,
             int logEventFlags = PlotLogger::NO_EVENTS,
             bool smartDelete = true) const = 0;
@@ -112,7 +112,7 @@ public:
     // be shown after creation.  If log event flags are given (bitwise or of
     // PlotLogger::Event) they are passed to the plotter.
     virtual PlotterPtr plotter(unsigned int nrows, unsigned int ncols,
-            const casacore::String& windowTitle = "Plotter", bool showGUI = true,
+            const String& windowTitle = "Plotter", bool showGUI = true,
             int logEventFlags = PlotLogger::NO_EVENTS,
             bool smartDelete = true) const = 0;
     
@@ -122,7 +122,7 @@ public:
     // given (bitwise or of PlotLogger::Event) they are passed to the plotter.
     // DEFAULT IMPLEMENTATION.
     virtual PlotterPtr plotter(PlotCanvasPtr canvas,
-            const casacore::String& windowTitle = "Plotter", bool showGUI = true,
+            const String& windowTitle = "Plotter", bool showGUI = true,
             int logEventFlags = PlotLogger::NO_EVENTS,
             bool smartDelete = true);
     
@@ -136,12 +136,12 @@ public:
     // implementation.  If isText is true, the given string should be
     // displayed on the button as text; otherwise it is a path to an image
     // file.  If toggleable is true, then a toggleable button is returned.
-    virtual PlotButtonPtr button(const casacore::String& str, bool isText = true,
+    virtual PlotButtonPtr button(const String& str, bool isText = true,
             bool toggleable = false, bool smartDelete = true) const = 0;
     
     // Return a new instance of a PlotCheckbox with the given text for this
     // implementation.
-    virtual PlotCheckboxPtr checkbox(const casacore::String& str,
+    virtual PlotCheckboxPtr checkbox(const String& str,
             bool smartDelete = true) const = 0;
     
     
@@ -155,7 +155,7 @@ public:
     // ErrorPlot.  If the given data is both masked and error, the returned
     // plot should be able to handle both as well.
     virtual ScatterPlotPtr scatterPlot(PlotPointDataPtr data,
-            const casacore::String& title = "Scatter Plot",
+            const String& title = "Scatter Plot",
             bool smartDelete = true) const = 0;
     
     // Convenience methods for specialized scatter plot and data classes.
@@ -165,29 +165,29 @@ public:
     // DEFAULT IMPLEMENTATION.
     // <group>
     virtual MaskedScatterPlotPtr maskedPlot(PlotMaskedPointDataPtr data,
-            const casacore::String& title = "Masked Plot", bool smartDelete= true) const;
+            const String& title = "Masked Plot", bool smartDelete= true) const;
     virtual ErrorPlotPtr errorPlot(PlotErrorDataPtr data,
-            const casacore::String& title = "Error Plot", bool smartDelete= true) const;
+            const String& title = "Error Plot", bool smartDelete= true) const;
     virtual ColoredPlotPtr coloredPlot(PlotBinnedDataPtr data,
-            const casacore::String& title = "Colored Plot", bool smartDelete=true) const;
+            const String& title = "Colored Plot", bool smartDelete=true) const;
     // </group>
     
     // Returns a new instance of a BarPlot for this implementation with the
     // given PlotPointData and optional title.
     virtual BarPlotPtr barPlot(PlotPointDataPtr data,
-            const casacore::String& title = "Bar Plot", bool smartDelete= true) const= 0;
+            const String& title = "Bar Plot", bool smartDelete= true) const= 0;
     
     // Returns a new instance of a BarPlot set to use histogram data for this
     // implementation with the given PlotSinglePointData and number of bins.
     // DEFAULT IMPLEMENTATION.
     virtual BarPlotPtr histogramPlot(PlotSingleDataPtr data,
-            unsigned int numBins, const casacore::String& title = "Histogram Plot",
+            unsigned int numBins, const String& title = "Histogram Plot",
             bool smartDelete = true) const;
     
     // Returns a new instance of a RasterPlot for this implementation with the
     // given data and optional title and format.
     virtual RasterPlotPtr rasterPlot(PlotRasterDataPtr data,
-            const casacore::String& title = "Raster Plot",
+            const String& title = "Raster Plot",
             PlotRasterData::Format format = PlotRasterData::RGB32,
             bool smartDelete = true) const = 0;
     
@@ -196,7 +196,7 @@ public:
     // DEFAULT IMPLEMENTATION.
     virtual RasterPlotPtr contourPlot(PlotRasterDataPtr data,
             const vector<double>& contours,
-            const casacore::String& title = "Contour Plot",
+            const String& title = "Contour Plot",
             PlotRasterData::Format format = PlotRasterData::RGB32,
             bool smartDelete = true) const;
     
@@ -204,7 +204,7 @@ public:
     // interpreted as a spectrogram with the given data and optional title.
     // DEFAULT IMPLEMENTATION.
     virtual RasterPlotPtr spectrogramPlot(PlotRasterDataPtr data,
-            const casacore::String& title = "Spectrogram", bool smartDelete= true) const;
+            const String& title = "Spectrogram", bool smartDelete= true) const;
     
     // Returns a new instance of a RasterPlot for this implementation
     // interpreted as a spectrogram with the given data and contour levels and
@@ -212,18 +212,18 @@ public:
     // DEFAULT IMPLEMENTATION.
     virtual RasterPlotPtr contouredSpectrogramPlot(PlotRasterDataPtr data,
             const vector<double>& cont,
-            const casacore::String& title = "Spectrogram Contours",
+            const String& title = "Spectrogram Contours",
             bool smartDelete = true) const;
     
     // Return a new instance of a PlotAnnotation for this implementation with
     // the given text and coordinates.
-    virtual PlotAnnotationPtr annotation(const casacore::String& text,
+    virtual PlotAnnotationPtr annotation(const String& text,
             const PlotCoordinate& coord, bool smartDelete = true) const = 0;
     
     // Convenience method for return an annotation with the given world
     // coordinates.
     // DEFAULT IMPLEMENTATION.
-    virtual PlotAnnotationPtr annotation(const casacore::String& text, double x,
+    virtual PlotAnnotationPtr annotation(const String& text, double x,
             double y, bool smartDelete = true) const;
     
     // Return a new instance of a PlotShapeRectangle for this implementation
@@ -324,7 +324,7 @@ public:
     // Customization Objects //
     
     // Color could be a name (i.e. "black") or a hex value (i.e. "000000").
-    virtual PlotColorPtr color(const casacore::String& color,
+    virtual PlotColorPtr color(const String& color,
             bool smartDelete = true) const = 0;
     
     // Make a copy of the given color for this implementation.
@@ -337,12 +337,12 @@ public:
             bool smartDelete = true) const;
     
     // Returns a list of all the named colors that the implementation supports.
-    virtual vector<casacore::String> allNamedColors() const = 0;
+    virtual vector<String> allNamedColors() const = 0;
     
     // Return a new font with the given characteristics.  Color can either be
     // in hexadecimal form or name form.
-    virtual PlotFontPtr font(const casacore::String& family = "Arial",
-            double pointSize = 12, const casacore::String& color = "000000",
+    virtual PlotFontPtr font(const String& family = "Arial",
+            double pointSize = 12, const String& color = "000000",
             bool bold = false, bool italics = false,
             bool underline = false, bool smartDelete = true) const = 0;
     
@@ -357,7 +357,7 @@ public:
     
     // Returns a new area fill with the given color and pattern.  Color can
     // either be in hexadecimal form or name form.
-    virtual PlotAreaFillPtr areaFill(const casacore::String& color,
+    virtual PlotAreaFillPtr areaFill(const String& color,
             PlotAreaFill::Pattern pattern = PlotAreaFill::FILL,
             bool smartDelete = true) const = 0;
     
@@ -372,7 +372,7 @@ public:
     
     // Returns a new line with the given color, style, and width.  Color can
     // either be in hexadecimal form or name form.
-    virtual PlotLinePtr line(const casacore::String& color,
+    virtual PlotLinePtr line(const String& color,
             PlotLine::Style style = PlotLine::SOLID, double width = 1.0,
             bool smartDelete = true) const = 0;
     
@@ -384,8 +384,8 @@ public:
     // DEFAULT IMPLEMENTATION.
     virtual PlotLinePtr line(const PlotLinePtr copy,
             bool smartDelete = true) const;
-    virtual PlotSymbolPtr createSymbol (const casacore::String& descriptor, int size, const casacore::String& color,
-    			const casacore::String& fillPattern, bool outline );
+    virtual PlotSymbolPtr createSymbol (const String& descriptor, int size, const String& color,
+    			const String& fillPattern, bool outline );
     // Returns a new symbol with the given style.
     virtual PlotSymbolPtr symbol(PlotSymbol::Symbol style,
             bool smartDelete = true) const = 0;
@@ -450,26 +450,26 @@ public:
     virtual PlotMutexPtr mutex(bool smartDelete = true) const = 0;
     
     
-    // casacore::Data Objects //
+    // Data Objects //
     
 // Macro for method declarations for different permutations of the default data
 // objects for different types.
 #define PF_DATA_DEC(TYPE)                                                     \
     virtual PlotPointDataPtr data(TYPE *& y, unsigned int n,                  \
             bool shouldDelete = true) const;                                  \
-    virtual PlotPointDataPtr data(casacore::Vector< TYPE >& y,                          \
+    virtual PlotPointDataPtr data(Vector< TYPE >& y,                          \
             bool shouldDelete = false) const;                                 \
     virtual PlotPointDataPtr data(vector< TYPE >& y,                          \
             bool shouldDelete = false) const;                                 \
     virtual PlotPointDataPtr data(TYPE *& x, TYPE *& y, unsigned int n,       \
             bool shouldDelete = true) const;                                  \
-    virtual PlotPointDataPtr data(casacore::Vector< TYPE >& x, casacore::Vector< TYPE >& y,       \
+    virtual PlotPointDataPtr data(Vector< TYPE >& x, Vector< TYPE >& y,       \
             bool shouldDelete = false) const;                                 \
     virtual PlotPointDataPtr data(vector< TYPE >& x, vector< TYPE >& y,       \
             bool shouldDelete = false) const;                                 \
     virtual PlotSingleDataPtr singleData(TYPE *& data, unsigned int n,        \
             bool shouldDelete = true) const;                                  \
-    virtual PlotSingleDataPtr singleData(casacore::Vector< TYPE >& data,                \
+    virtual PlotSingleDataPtr singleData(Vector< TYPE >& data,                \
             bool shouldDelete = false) const;                                 \
     virtual PlotSingleDataPtr singleData(vector< TYPE >& data,                \
             bool shouldDelete = false) const;                                 \
@@ -477,18 +477,18 @@ public:
             unsigned int numBins, bool shouldDel = true) const;               \
     virtual PlotPointDataPtr histogramData(vector< TYPE >& data,              \
             unsigned int numBins, bool shouldDel = false) const;              \
-    virtual PlotPointDataPtr histogramData(casacore::Vector< TYPE >& data,              \
+    virtual PlotPointDataPtr histogramData(Vector< TYPE >& data,              \
             unsigned int numBins, bool shouldDel = false) const;              \
     virtual PlotMaskedPointDataPtr data(TYPE *& x, TYPE*& y, bool*& mask,     \
             unsigned int n, bool shouldDelete = true) const;                  \
-    virtual PlotMaskedPointDataPtr data(casacore::Vector< TYPE >& x, casacore::Vector< TYPE >& y, \
-            casacore::Vector<bool>& mask, bool shouldDelete = true) const;              \
+    virtual PlotMaskedPointDataPtr data(Vector< TYPE >& x, Vector< TYPE >& y, \
+            Vector<bool>& mask, bool shouldDelete = true) const;              \
     virtual PlotMaskedPointDataPtr data(vector< TYPE >& x, vector< TYPE >& y, \
             vector<bool>& mask, bool shouldDelete = true) const;              \
     virtual PlotErrorDataPtr data(TYPE *& x, TYPE *& y, unsigned int n,       \
             TYPE xLeftError, TYPE xRightError, TYPE yBottomError,             \
             TYPE yTopError, bool shouldDelete = true) const;                  \
-    virtual PlotErrorDataPtr data(casacore::Vector< TYPE >& x, casacore::Vector< TYPE >& y,       \
+    virtual PlotErrorDataPtr data(Vector< TYPE >& x, Vector< TYPE >& y,       \
             TYPE xLeftError, TYPE xRightError, TYPE yBottomError,             \
             TYPE yTopError, bool shouldDelete = true) const;                  \
     virtual PlotErrorDataPtr data(vector< TYPE >& x, vector< TYPE >& y,       \
@@ -497,17 +497,17 @@ public:
     virtual PlotErrorDataPtr data(TYPE *& x, TYPE *& y, TYPE *& xLeftError,   \
             TYPE *& xRightError, TYPE *& yBottomError, TYPE *& yTopError,     \
             unsigned int n, bool shouldDelete = true) const;                  \
-    virtual PlotErrorDataPtr data(casacore::Vector< TYPE >& x, casacore::Vector< TYPE >& y,       \
-            casacore::Vector< TYPE >& xLeftError, casacore::Vector< TYPE >& xRightError,          \
-            casacore::Vector< TYPE >& yBottomError, casacore::Vector< TYPE >& yTopError,          \
+    virtual PlotErrorDataPtr data(Vector< TYPE >& x, Vector< TYPE >& y,       \
+            Vector< TYPE >& xLeftError, Vector< TYPE >& xRightError,          \
+            Vector< TYPE >& yBottomError, Vector< TYPE >& yTopError,          \
             bool shouldDelete = false) const;                                 \
     virtual PlotErrorDataPtr data(vector< TYPE >& x, vector< TYPE >& y,       \
             vector< TYPE >& xLeftError, vector< TYPE >& xRightError,          \
             vector< TYPE >& yBottomError, vector< TYPE >& yTopError,          \
             bool shouldDelete = false) const;                                 \
-    virtual PlotRasterDataPtr data(casacore::Matrix< TYPE >& data,                      \
+    virtual PlotRasterDataPtr data(Matrix< TYPE >& data,                      \
             bool shouldDelete = false) const;                                 \
-    virtual PlotRasterDataPtr data(casacore::Matrix< TYPE >& data, double fromX,        \
+    virtual PlotRasterDataPtr data(Matrix< TYPE >& data, double fromX,        \
             double toX, double fromY, double toY,                             \
             bool shouldDelete = false) const;
     
@@ -541,7 +541,7 @@ public:
     virtual PlotPointDataPtr histogramData(PlotSingleDataPtr data,
             unsigned int numBins) const;
 };
-typedef casacore::CountedPtr<PlotFactory> PlotFactoryPtr;
+typedef CountedPtr<PlotFactory> PlotFactoryPtr;
 
 }
 

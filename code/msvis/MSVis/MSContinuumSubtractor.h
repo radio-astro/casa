@@ -31,14 +31,10 @@
 #include <casa/aips.h>
 #include <casa/BasicSL/String.h>
 #include <ms/MeasurementSets/MSColumns.h>
-namespace casacore{
+namespace casa { //# NAMESPACE CASA - BEGIN
 
 class MeasurementSet;
 class LogIO;
-}
-
-namespace casa { //# NAMESPACE CASA - BEGIN
-
 
 // <summary>Fits and subtracts or models the continuum in spectra</summary>
 // <use visibility=export>
@@ -47,7 +43,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </reviewed>
 // 
 // <prerequisite>
-//   <li> <linkto class=casacore::MeasurementSet>MeasurementSet</linkto>
+//   <li> <linkto class=MeasurementSet>MeasurementSet</linkto>
 // </prerequisite>
 //
 // <etymology>
@@ -63,7 +59,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <example>
 // <srcBlock>
-//     casacore::MS inMS(fileName);
+//     MS inMS(fileName);
 //     MSContinuumSubtractor mssub(inMS);
 //     mssub.setDataDescriptionIds(ddIds);
 //     mssub.setFields(fieldIds);
@@ -88,58 +84,58 @@ class MSContinuumSubtractor
 {
 public:
 // Constructor
-   MSContinuumSubtractor (casacore::MeasurementSet& ms);
+   MSContinuumSubtractor (MeasurementSet& ms);
 
-// Assignment (only copies reference to casacore::MS, need to reset selection etc)
+// Assignment (only copies reference to MS, need to reset selection etc)
   MSContinuumSubtractor& operator=(MSContinuumSubtractor& other);
 
 // Destructor
   ~MSContinuumSubtractor();
 
 // Set the required field Ids
-   void setField(const casacore::String& field);
-   void setFields(const casacore::Vector<casacore::Int>& fieldIds);
+   void setField(const String& field);
+   void setFields(const Vector<Int>& fieldIds);
 
 // Set the channels to use in the fit
-   void setFitSpw(const casacore::String& fitspw);
-   void setSubSpw(const casacore::String& subspw);
+   void setFitSpw(const String& fitspw);
+   void setSubSpw(const String& subspw);
 // Set the required spws (ddids)
-   void setDataDescriptionIds(const casacore::Vector<casacore::Int>& ddIds);
+   void setDataDescriptionIds(const Vector<Int>& ddIds);
 
 // Set the solution interval in seconds, the value zero implies scan averaging
-   void setSolutionInterval(casacore::Float solInt);
+   void setSolutionInterval(Float solInt);
 
 // Set the solution interval in seconds, the value zero implies scan averaging
-   void setSolutionInterval(casacore::String solInt);
+   void setSolutionInterval(String solInt);
 
 // Set the order of the fit (1=linear)
-   void setOrder(casacore::Int order);
+   void setOrder(Int order);
 
 // Set the processing mode: subtract, model or replace
-   void setMode(const casacore::String& mode);
+   void setMode(const String& mode);
 
 // Do the subtraction (or save the model)
    void subtract();
 
 private:
 // Pointer to MS
-   casacore::MeasurementSet* ms_p;
+   MeasurementSet* ms_p;
 // DataDescription Ids to process
-   casacore::Vector<casacore::Int> itsDDIds;
+   Vector<Int> itsDDIds;
 // Field Ids to process
-   casacore::Vector<casacore::Int> itsFieldIds;
+   Vector<Int> itsFieldIds;
 // Channels to use in fit
-   casacore::Matrix<casacore::Int> itsFitChans;
+   Matrix<Int> itsFitChans;
 // Channels to subtract from
-   casacore::Matrix<casacore::Int> itsSubChans;
+   Matrix<Int> itsSubChans;
 // Solution interval for fit
-   casacore::Float itsSolInt;
+   Float itsSolInt;
 // Order of the fit
-   casacore::Int itsOrder;
+   Int itsOrder;
 // Processing mode
-   casacore::String itsMode;
+   String itsMode;
 // Number of spws
-   casacore::Int nSpw_;
+   Int nSpw_;
 
 
 };

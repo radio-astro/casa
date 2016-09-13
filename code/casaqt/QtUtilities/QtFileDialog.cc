@@ -30,7 +30,6 @@
 #include <QSortFilterProxyModel>
 #include <QUrl>
 
-using namespace casacore;
 namespace casa {
 
 //////////////////////////////

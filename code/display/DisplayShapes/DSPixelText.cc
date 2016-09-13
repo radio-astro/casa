@@ -33,7 +33,6 @@
 #include <casa/Quanta/QuantumHolder.h>
 #include <casa/Quanta/UnitMap.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	DSPixelText::DSPixelText() :
@@ -129,7 +128,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	Bool DSPixelText::setOptions(const Record& settings) {
 
-		Bool localChange = false;
+		Bool localChange = False;
 		Record toSet = settings;
 
 		if (settings.isDefined("coords")) {
@@ -207,7 +206,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		if (DSText::setOptions(toSet)) {
-			localChange = true;
+			localChange = True;
 		}
 
 		return localChange;

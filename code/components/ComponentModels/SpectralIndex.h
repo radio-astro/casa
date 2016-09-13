@@ -32,16 +32,12 @@
 #include <components/ComponentModels/ComponentType.h>
 #include <components/ComponentModels/SpectralModel.h>
 
-namespace casacore{
+namespace casa { //# NAMESPACE CASA - BEGIN
 
 class MFrequency;
 class RecordInterface;
 class String;
 template <class T> class Vector;
-}
-
-namespace casa { //# NAMESPACE CASA - BEGIN
-
 
 // <summary>Models the spectral variation with a spectral index</summary>
 
@@ -132,22 +128,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Leaving it as is for archeological purposes
 // </Dec-2013>
 //  SpectralIndex siModel;
-//  siModel.setRefFrequency(casacore::MFrequency(casacore::Quantity(1.0, "GHz")));
-//  siModel.setIndex(1.0, casacore::Stokes::I);  
-//  siModel.setIndex(0.5, casacore::Stokes::Q);  
-//  siModel.setIndex(0.5, casacore::Stokes::U);  
-//  siModel.setIndex(-1.0, casacore::Stokes::V);
-//  const Flux<casacore::Double> LBandFlux(1.0, 1.0, 1.0, 1.0);
-//  const casacore::MVFrequency step(casacore::Quantity(100.0, "MHz"));
-//  casacore::MVFrequency sampleFreq = siModel.refFrequency().getValue();
-//  Flux<casacore::Double> sampleFlux;
+//  siModel.setRefFrequency(MFrequency(Quantity(1.0, "GHz")));
+//  siModel.setIndex(1.0, Stokes::I);  
+//  siModel.setIndex(0.5, Stokes::Q);  
+//  siModel.setIndex(0.5, Stokes::U);  
+//  siModel.setIndex(-1.0, Stokes::V);
+//  const Flux<Double> LBandFlux(1.0, 1.0, 1.0, 1.0);
+//  const MVFrequency step(Quantity(100.0, "MHz"));
+//  MVFrequency sampleFreq = siModel.refFrequency().getValue();
+//  Flux<Double> sampleFlux;
 //  cout << "Frequency\t I-Flux\t Q-Flux\t U-Flux\t V-Flux\n";
-//  for (casacore::uInt i = 0; i < 11; i++) {
+//  for (uInt i = 0; i < 11; i++) {
 //    sampleFlux = LBandFlux.copy();
 //    sampleFlux.convertPol(ComponentType::LINEAR);
-//    sampleFlux.convertUnit(casacore::Unit("WU"));
+//    sampleFlux.convertUnit(Unit("WU"));
 //    siModel.sample(sampleFlux,
-//   	             casacore::MFrequency(sampleFreq, siModel.refFrequency().getRef()));
+//   	             MFrequency(sampleFreq, siModel.refFrequency().getRef()));
 //    cout << setprecision(3) << sampleFreq.get("GHz")
 //         << "\t\t " << sampleFlux.value(0u).re
 //         << "\t " << sampleFlux.value(1u).re
@@ -159,15 +155,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //<Dec-2013>
 // Now for an example
 /////////////////////////////////////////////
-// const casacore::MFrequency f1(casacore::Quantity(1.0, "GHz"), casacore::MFrequency::LSRK);
-// const casacore::MFrequency f2(casacore::Quantity(2.0, "GHz"), casacore::MFrequency::LSRK);
+// const MFrequency f1(Quantity(1.0, "GHz"), MFrequency::LSRK);
+// const MFrequency f2(Quantity(2.0, "GHz"), MFrequency::LSRK);
 // SpectralIndex siModel;
 //  siModel.setIndex(1.0);
 // cout << "scale value at 1 GHz for setIndex 1.0 " << siModel.sample(f1) << endl;
-// casacore::Vector<casacore::Double> indices(4);
+// Vector<Double> indices(4);
 // indices(0)=1.0; indices(1)=0.2; indices(2)=0.0005; indices(3)=0.1;     
 // siModel.setStokesIndex(indices);
-// casacore::Vector<casacore::Double> iquv(4);
+// Vector<Double> iquv(4);
 // iquv(0)=10.0; iquv(1)=0.2; iquv(2)=0.4; iquv(3)=0.1;
 // cerr << "iquv in " << iquv << "  indices " << indices << endl;
 // siModel.sampleStokes(f1, iquv);
@@ -201,7 +197,7 @@ public:
 
   // Construct a SpectralIndex with specified reference frequency and
   // exponent.
-  SpectralIndex(const casacore::MFrequency& refFreq, casacore::Double exponent = 0.0);
+  SpectralIndex(const MFrequency& refFreq, Double exponent = 0.0);
 
   // The copy constructor uses copy semantics
   SpectralIndex(const SpectralIndex& other);
@@ -217,29 +213,29 @@ public:
 
   // set/get the spectral index.
   // <group>
-  const casacore::Double& index() const;
-  void setIndex(const casacore::Double& newIndex);
-  const casacore::Vector<casacore::Double>& stokesIndex() const;
-  void setStokesIndex(const casacore::Vector<casacore::Double>& newIndex);
+  const Double& index() const;
+  void setIndex(const Double& newIndex);
+  const Vector<Double>& stokesIndex() const;
+  void setStokesIndex(const Vector<Double>& newIndex);
   // </group>
 
   // Return the scaling factor that indicates what proportion of the flux is at
   // the specified frequency. ie. if the centreFrequency argument is the
   // reference frequency then this function will always return one. At other
   // frequencies it will return a non-negative number.
-  virtual casacore::Double sample(const casacore::MFrequency& centerFrequency) const;
+  virtual Double sample(const MFrequency& centerFrequency) const;
 
-  virtual void sampleStokes(const casacore::MFrequency& centerFrequency, casacore::Vector<casacore::Double>& iquv) const;
+  virtual void sampleStokes(const MFrequency& centerFrequency, Vector<Double>& iquv) const;
   // Same as the previous function except that many frequencies can be sampled
   // at once. The reference frame must be the same for all the specified
   // frequencies. Uses a customised implementation for improved speed.
-  virtual void sample(casacore::Vector<casacore::Double>& scale, 
-                      const casacore::Vector<casacore::MFrequency::MVType>& frequencies, 
-                      const casacore::MFrequency::Ref& refFrame) const;
+  virtual void sample(Vector<Double>& scale, 
+                      const Vector<MFrequency::MVType>& frequencies, 
+                      const MFrequency::Ref& refFrame) const;
 
-  virtual void sampleStokes(casacore::Vector<casacore::Vector<casacore::Double> >& scale,
-			    const casacore::Vector<casacore::MFrequency::MVType>& frequencies, 
-			    const casacore::MFrequency::Ref& refFrame) const;
+  virtual void sampleStokes(Vector<Vector<Double> >& scale, 
+			    const Vector<MFrequency::MVType>& frequencies, 
+			    const MFrequency::Ref& refFrame) const;
 
   // Return a pointer to a copy of this object upcast to a SpectralModel
   // object. The class that uses this function is responsible for deleting the
@@ -249,42 +245,42 @@ public:
   // return the number of parameters. There is one parameter  or 4 for this spectral
   // model, namely the spectral index for I or I,Q,U,V. So you supply a unit length vector 
   // or one 4 element long when
-  // using these functions. Otherwise an exception (casacore::AipsError) may be thrown.
+  // using these functions. Otherwise an exception (AipsError) may be thrown.
   // <group>
-  virtual casacore::uInt nParameters() const;
-  virtual void setParameters(const casacore::Vector<casacore::Double>& newSpectralParms);
-  virtual casacore::Vector<casacore::Double> parameters() const;
-  virtual void setErrors(const casacore::Vector<casacore::Double>& newSpectralErrs);
-  virtual casacore::Vector<casacore::Double> errors() const;
+  virtual uInt nParameters() const;
+  virtual void setParameters(const Vector<Double>& newSpectralParms);
+  virtual Vector<Double> parameters() const;
+  virtual void setErrors(const Vector<Double>& newSpectralErrs);
+  virtual Vector<Double> errors() const;
   // </group>
 
-  // These functions convert between a casacore::Record and a SpectralIndex. These
+  // These functions convert between a Record and a SpectralIndex. These
   // functions define how a SpectralIndex object is represented in glish and
-  // this is detailed in the synopsis above. These functions return false if
+  // this is detailed in the synopsis above. These functions return False if
   // the record is malformed and append an error message to the supplied string
   // giving the reason.
   // <group>
-  virtual casacore::Bool fromRecord(casacore::String& errorMessage, const casacore::RecordInterface& record);
-  virtual casacore::Bool toRecord(casacore::String& errorMessage, casacore::RecordInterface& record) const;
+  virtual Bool fromRecord(String& errorMessage, const RecordInterface& record);
+  virtual Bool toRecord(String& errorMessage, RecordInterface& record) const;
   // </group>
 
   // Convert the parameters of the spectral index object to the specified
   // units. Only one field of the supplied record is used, namely 'index'. This
   // field is optional as the spectral index is a unitless quantity. If the
   // index field is specified it must have the empty string as its value.  This
-  // function always returns true unless the index field is specified and does
+  // function always returns True unless the index field is specified and does
   // not contain an empty string.
-  virtual casacore::Bool convertUnit(casacore::String& errorMessage,
-			   const casacore::RecordInterface& record);
+  virtual Bool convertUnit(String& errorMessage,
+			   const RecordInterface& record);
 
-  // casacore::Function which checks the internal data of this class for consistant
-  // values. Returns true if everything is fine otherwise returns false.
-  virtual casacore::Bool ok() const;
+  // Function which checks the internal data of this class for consistant
+  // values. Returns True if everything is fine otherwise returns False.
+  virtual Bool ok() const;
 
 private:
-  casacore::Double itsIndex;
-  casacore::Vector<casacore::Double> itsStokesIndex;
-  casacore::Double itsError;
+  Double itsIndex;
+  Vector<Double> itsStokesIndex;
+  Double itsError;
 };
 
 } //# NAMESPACE CASA - END

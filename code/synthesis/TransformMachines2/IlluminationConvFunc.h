@@ -42,10 +42,10 @@ namespace casa{
   public:
     IlluminationConvFunc(): 
       TabulatedConvFunc(), ExpTable(), CExpTable(),sigma(0), pa_p(0)
-    {expTableReady=cexpTableReady=sigmaReady=false;pa_p=1000.0;};
-    IlluminationConvFunc(casacore::Int n): 
+    {expTableReady=cexpTableReady=sigmaReady=False;pa_p=1000.0;};
+    IlluminationConvFunc(Int n): 
       TabulatedConvFunc(n), ExpTable(), CExpTable(),sigma(0), pa_p(0)
-    {expTableReady=cexpTableReady=sigmaReady=false;pa_p=1000.0;};
+    {expTableReady=cexpTableReady=sigmaReady=False;pa_p=1000.0;};
     ~IlluminationConvFunc() {};
 
     IlluminationConvFunc& operator=(const IlluminationConvFunc& /*other*/)
@@ -56,72 +56,72 @@ namespace casa{
     {
       return *this;
     }
-    void initExpTable(casacore::Int n, CF_TYPE step)  {ExpTable.build(n,step);expTableReady=true;};
-    void initCExpTable(casacore::Int n)               {CExpTable.build(n);cexpTableReady=true;};
-    void setSigma(casacore::Double s)                 {sigma = s;sigmaReady=true;}
+    void initExpTable(Int n, CF_TYPE step)  {ExpTable.build(n,step);expTableReady=True;};
+    void initCExpTable(Int n)               {CExpTable.build(n);cexpTableReady=True;};
+    void setSigma(Double s)                 {sigma = s;sigmaReady=True;}
 
-    casacore::Bool isReady() {return (expTableReady & cexpTableReady & sigmaReady);}
+    Bool isReady() {return (expTableReady & cexpTableReady & sigmaReady);}
 
-    CF_TYPE area(casacore::Vector<casacore::Int>& convSupport, casacore::Vector<casacore::Double>& uvScale);
-    casacore::Vector<casacore::Int> supportSize(casacore::Vector<casacore::Double>& uvScale);
+    CF_TYPE area(Vector<Int>& convSupport, Vector<Double>& uvScale);
+    Vector<Int> supportSize(Vector<Double>& uvScale);
 
-    CF_TYPE getValue(casacore::Vector<CF_TYPE>& coord, casacore::Vector<CF_TYPE>& offset) 
+    CF_TYPE getValue(Vector<CF_TYPE>& coord, Vector<CF_TYPE>& offset) 
     {
       (void)coord;(void)offset;
-      throw(casacore::AipsError("This version of IlluminationConvFunc::getValue() is not useful."));
+      throw(AipsError("This version of IlluminationConvFunc::getValue() is not useful."));
       return 0;
     };
-    virtual CF_TYPE getValue(casacore::Double *coord,
-			     casacore::Double *raoff1,  casacore::Double *raoff2, 
-			     casacore::Double *decoff1, casacore::Double *decoff2,
-			     casacore::Double *area,
-			     casacore::Int *doGrad,
-			     casacore::Complex& weight,
-			     casacore::Complex& dweight1,
-			     casacore::Complex& dweight2,
-			     casacore::Double& currentCFPA
-			     //		  ,casacore::Double lsigma
+    virtual CF_TYPE getValue(Double *coord,
+			     Double *raoff1,  Double *raoff2, 
+			     Double *decoff1, Double *decoff2,
+			     Double *area,
+			     Int *doGrad,
+			     Complex& weight,
+			     Complex& dweight1,
+			     Complex& dweight2,
+			     Double& currentCFPA
+			     //		  ,Double lsigma
 			     );
-    int getVisParams(const VisBuffer2& vb, const casacore::CoordinateSystem& skyCoord=casacore::CoordinateSystem()) 
+    int getVisParams(const VisBuffer2& vb, const CoordinateSystem& skyCoord=CoordinateSystem()) 
     {(void)vb;(void)skyCoord;return 0;};
-    void makeConvFunction(const casacore::ImageInterface<std::complex<float> >&,
-			  const VisBuffer2&, casacore::Int,
-			  const casacore::CountedPtr<PolOuterProduct>& ,//pop,
-			  casacore::Float, casacore::Float,
-			  const casacore::Vector<casacore::Double>& /*uvScale*/, const casacore::Vector<casacore::Double>& /*uvOffset*/,
-			  const casacore::Matrix<casacore::Double>& /*freqSelection*/,
-			  CFStore2&, CFStore2&, casacore::Bool /*fillCF=true*/ ) {};
-    void setPolMap(const casacore::Vector<int>&polMap) {(void)polMap;};
-    void setFeedStokes(const casacore::Vector<int>&feedStokes) {(void)feedStokes;};
-    void setParams(const casacore::Vector<int>& polMap, const casacore::Vector<int>& feedStokes)
+    void makeConvFunction(const casa::ImageInterface<std::complex<float> >&, 
+			  const VisBuffer2&, casa::Int, 
+			  const CountedPtr<PolOuterProduct>& ,//pop,
+			  casa::Float, casa::Float,
+			  const Vector<Double>& /*uvScale*/, const Vector<Double>& /*uvOffset*/,
+			  const Matrix<Double>& /*freqSelection*/,
+			  CFStore2&, CFStore2&, Bool /*fillCF=True*/ ) {};
+    void setPolMap(const casa::Vector<int>&polMap) {(void)polMap;};
+    void setFeedStokes(const casa::Vector<int>&feedStokes) {(void)feedStokes;};
+    void setParams(const casa::Vector<int>& polMap, const casa::Vector<int>& feedStokes)
     {(void)polMap;(void)feedStokes;};
 
-    casacore::Bool findSupport(casacore::Array<casacore::Complex>&, casacore::Float& ,casacore::Int&, casacore::Int&) 
-    {throw(casacore::AipsError("IlluminationConvFunc::findSupport() not implemented"));};
-    virtual casacore::Vector<casacore::Double> findPointingOffset(const casacore::ImageInterface<casacore::Complex>& /*image*/,
+    Bool findSupport(Array<Complex>&, Float& ,Int&, Int&) 
+    {throw(AipsError("IlluminationConvFunc::findSupport() not implemented"));};
+    virtual Vector<Double> findPointingOffset(const ImageInterface<Complex>& /*image*/,
 					      const VisBuffer2& /*vb*/)
-    {throw(casacore::AipsError("IlluminationConvFunc::findPointingOffset() not implemented"));};
+    {throw(AipsError("IlluminationConvFunc::findPointingOffset() not implemented"));};
     virtual void prepareConvFunction(const VisBuffer2& /*vb*/, VBRow2CFBMapType& /*theMap*/)
-    {throw(casacore::AipsError("IlluminationConvFunc::prepareConvFunction() not implemented"));};
+    {throw(AipsError("IlluminationConvFunc::prepareConvFunction() not implemented"));};
 
-    virtual casacore::Bool makeAverageResponse(const VisBuffer2&,
-				     const casacore::ImageInterface<casacore::Complex>&,
-				     casacore::ImageInterface<casacore::Float>&,
-				     casacore::Bool)
-      {throw(casacore::AipsError("IlluminationConvFunc::makeAverageRes() called"));};
+    virtual Bool makeAverageResponse(const VisBuffer2&,
+				     const ImageInterface<Complex>&,
+				     ImageInterface<Float>&,
+				     Bool)
+      {throw(AipsError("IlluminationConvFunc::makeAverageRes() called"));};
 
-    virtual casacore::Bool makeAverageResponse(const VisBuffer2&,
-				     const casacore::ImageInterface<casacore::Complex>&,
-				     casacore::ImageInterface<casacore::Complex>&,
-				     casacore::Bool)
-      {throw(casacore::AipsError("IlluminationConvFunc::makeAverageRes() called"));};
+    virtual Bool makeAverageResponse(const VisBuffer2&,
+				     const ImageInterface<Complex>&,
+				     ImageInterface<Complex>&,
+				     Bool)
+      {throw(AipsError("IlluminationConvFunc::makeAverageRes() called"));};
 
 		  
   private:
     ExpCache<CF_TYPE> ExpTable;
     CExp3<CF_TYPE> CExpTable;
-    casacore::Double sigma, pa_p;
-    casacore::Bool expTableReady,cexpTableReady,sigmaReady;
+    Double sigma, pa_p;
+    Bool expTableReady,cexpTableReady,sigmaReady;
   };
   };
 };

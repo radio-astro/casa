@@ -30,7 +30,6 @@
 #include <casa/Exceptions/Error.h>
 #include <casa/Utilities/Assert.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 CalVisBuffer::CalVisBuffer() : 
@@ -98,7 +97,7 @@ CalVisBuffer& CalVisBuffer::assign(const VisBuffer& other, Bool copy)
 
 }
 
-void CalVisBuffer::updateCoordInfo(const VisBuffer * /*vb=NULL*/, const Bool /*dirDependent=true*/)
+void CalVisBuffer::updateCoordInfo(const VisBuffer * /*vb=NULL*/, const Bool /*dirDependent=True*/)
 {
   // Just do the nominally non-row-dep values
   arrayId();

@@ -71,7 +71,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </reviewed>
 
 // <prerequisite>
-//   <li> casacore::Table 
+//   <li> Table 
 // </prerequisite>
 
 // <etymology>
@@ -118,7 +118,7 @@ class FlagVersion
 {
    public:
       // Constructor
-      FlagVersion(casacore::String intab, casacore::String dataflagcolname, casacore::String rowflagcolname);  
+      FlagVersion(String intab, String dataflagcolname, String rowflagcolname);  
 
       // Destructor
       virtual ~FlagVersion();
@@ -128,56 +128,56 @@ class FlagVersion
       FlagVersion& operator=(const FlagVersion&){return *this;}
       
       // Get a list of entries from the version-list file for this table 
-      casacore::Vector<casacore::String> getVersionList();
+      Vector<String> getVersionList();
 
-      // Specify the casacore::Table column names to use as flag columns.
-      // For example, for a casacore::MS, they are "FLAG" and "FLAG_ROW". 
-      casacore::Bool attachFlagColumns(casacore::String version, casacore::ScalarColumn<casacore::Bool> &rowflag, 
-                 casacore::ArrayColumn<casacore::Bool> &flags, casacore::Table &subtab);
+      // Specify the Table column names to use as flag columns.
+      // For example, for a MS, they are "FLAG" and "FLAG_ROW". 
+      Bool attachFlagColumns(String version, ScalarColumn<Bool> &rowflag, 
+                 ArrayColumn<Bool> &flags, Table &subtab);
 
       // Save current main table flags into a separate version 
       // These keeps a copy in the main table too. 
       // "merge" can be one of 'or','and','replace'
-      casacore::Bool saveFlagVersion( casacore::String versionname, casacore::String comment, 
-                  casacore::String merge=casacore::String("replace") );
+      Bool saveFlagVersion( String versionname, String comment, 
+                  String merge=String("replace") );
 
       // Copy flags from a flag version, into the main table 
-      casacore::Bool restoreFlagVersion(casacore::String versionname, 
-                     casacore::String merge=casacore::String("replace") );
+      Bool restoreFlagVersion(String versionname, 
+                     String merge=String("replace") );
 
       // Delete a version. This does not touch or update the main table 
-      casacore::Bool deleteFlagVersion( casacore::String versionname );
+      Bool deleteFlagVersion( String versionname );
 
       // Clear all main table flags 
-      casacore::Bool clearAllFlags();
+      Bool clearAllFlags();
 
    private:
-      void FlagVersionError( casacore::String msg );
+      void FlagVersionError( String msg );
       
-      casacore::Bool readVersionList();
-      casacore::Bool saveFlagsInto(casacore::Table &fromFTab, casacore::Table &toFTab, 
-                casacore::String merge = casacore::String("replace"));
-      casacore::Bool doesVersionExist( casacore::String versionname );
+      Bool readVersionList();
+      Bool saveFlagsInto(Table &fromFTab, Table &toFTab, 
+                String merge = String("replace"));
+      Bool doesVersionExist( String versionname );
 
-      /* Variables to be maintained for the root casacore::Table */
-      casacore::String verlistfile_p;
-      casacore::String flagtablename_p;
-      casacore::String dataflagcolname_p;
-      casacore::String rowflagcolname_p;
+      /* Variables to be maintained for the root Table */
+      String verlistfile_p;
+      String flagtablename_p;
+      String dataflagcolname_p;
+      String rowflagcolname_p;
 
-      casacore::Table tab_p;
-      casacore::String tabname_p;
-      casacore::Vector<casacore::String> versionlist_p;
-      casacore::Vector<casacore::String> commentlist_p;
-      casacore::Bool fcol_p, frcol_p;
+      Table tab_p;
+      String tabname_p;
+      Vector<String> versionlist_p;
+      Vector<String> commentlist_p;
+      Bool fcol_p, frcol_p;
       unsigned nrows_p;
 
-      casacore::Table subflagtable_p;
+      Table subflagtable_p;
 
-      casacore::File file_p;
+      File file_p;
       
       SLog* log;
-      static casacore::String clname;
+      static String clname;
 };
 
 } //# NAMESPACE CASA - END 

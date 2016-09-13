@@ -28,7 +28,7 @@
  * | If you do, all changes will be lost when the file is re-generated. |
  *  --------------------------------------------------------------------
  *
- * casacore::File Parser.h
+ * File Parser.h
  */
 #ifndef Parser_CLASS
 #define Parser_CLASS

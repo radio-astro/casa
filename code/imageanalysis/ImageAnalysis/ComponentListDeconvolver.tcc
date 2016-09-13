@@ -49,11 +49,11 @@ ComponentListDeconvolver<T>::~ComponentListDeconvolver() {}
 
 template <class T>
 ComponentList ComponentListDeconvolver<T>::deconvolve(
-	const ComponentList& compList, casacore::Int channel, casacore::Int polarization
+	const ComponentList& compList, Int channel, Int polarization
 ) const {
 	auto n = compList.nelements();
 	vector<SkyComponent> list(n);
-	for (casacore::uInt i = 0; i < n; ++i) {
+	for (uInt i = 0; i < n; ++i) {
 		list[i] = compList.component(i);
 	}
 
@@ -61,8 +61,8 @@ ComponentList ComponentListDeconvolver<T>::deconvolve(
 
 	// Loop over components and deconvolve
 	ComponentList outCL;
-	casacore::LogIO log;
-	for (casacore::uInt i = 0; i < n; ++i) {
+	LogIO log;
+	for (uInt i = 0; i < n; ++i) {
 		outCL.add(SkyComponentFactory::deconvolveSkyComponent(log, list[i], beam));
 	}
 	return outCL;

@@ -33,11 +33,10 @@
 #include <display/DisplayEvents/MWCPositionVelocityTool.h>
 #include <casa/OS/Time.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	MWCPositionVelocityTool::MWCPositionVelocityTool( Display::KeySym keysym, Bool ) :
-		MultiWCTool(keysym), itsActive(false), itsEqualUnits(false), itsRaIndex(-1), itsDecIndex(-1) {
+		MultiWCTool(keysym), itsActive(False), itsEqualUnits(False), itsRaIndex(-1), itsDecIndex(-1) {
 	}
 
 	MWCPositionVelocityTool::~MWCPositionVelocityTool() {
@@ -48,10 +47,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsX1=itsX2=ev.pixX();
 		itsY1=itsY2=ev.pixY();
 		itsCurrentWC = ev.worldCanvas();
-		itsActive = true;
+		itsActive = True;
 		itsRaIndex  = -1;
 		itsDecIndex = -1;
-		itsEqualUnits=true;
+		itsEqualUnits=True;
 
 		// extract the axis names and units
 		Vector<String> aXisNames=itsCurrentWC->worldAxisNames();
@@ -68,9 +67,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// check for equal units
 		if (unitNames.size()>1) {
 			if (!unitNames(0).compare(unitNames(1)) && unitNames(0).size()>0)
-				itsEqualUnits=true;
+				itsEqualUnits=True;
 			else
-				itsEqualUnits=false;
+				itsEqualUnits=False;
 		}
 	}
 
@@ -270,7 +269,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	void MWCPositionVelocityTool::reset(Bool skipRefresh) {
 		Bool wasActive=itsActive;
-		itsActive=false;	// erases pan line (if any) on refresh
+		itsActive=False;	// erases pan line (if any) on refresh
 		if(wasActive && !skipRefresh) refresh();
 	}
 

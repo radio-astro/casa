@@ -45,7 +45,7 @@ namespace casa {
 // </reviewed>
 
 // <prerequisite>
-//   <li> <linkto class=casacore::ImageInterface>ImageInterface</linkto>
+//   <li> <linkto class=ImageInterface>ImageInterface</linkto>
 // </prerequisite>
 
 // <etymology>
@@ -60,18 +60,18 @@ namespace casa {
 // <example>
 // Construct an object of this class by passing the associated image to the constructor.
 // <srcblock>
-// casacore::PagedImage<casacore::Float> myImage("myImage");
-// ImageMetaData<casacore::Float> myImageMetaData(myImage);
+// PagedImage<Float> myImage("myImage");
+// ImageMetaData<Float> myImageMetaData(myImage);
 // </srcblock>
 // </example>
 
 // <motivation> 
 // This class is meant to provide an object-oriented interface for accessing
-// image metadata without polluting the casacore::ImageInterface and CoordinateSystem
+// image metadata without polluting the ImageInterface and CoordinateSystem
 // classes with these methods.
 // </motivation>
 // <todo>
-// Merge casacore::ImageInfo class into this class.
+// Merge ImageInfo class into this class.
 // </todo>
 
 class ImageMetaData : public ImageMetaDataBase {
@@ -86,12 +86,12 @@ public:
 
 	~ImageMetaData() {}
 
-	casacore::Record toRecord(casacore::Bool verbose) const;
+	Record toRecord(Bool verbose) const;
 
 	// For ia.summary() moved from ImageAnalysis
-	casacore::Record summary(
-	    const casacore::String& doppler, const casacore::Bool list,
-	    const casacore::Bool pixelorder, const casacore::Bool verbose
+	Record summary(
+	    const String& doppler, const Bool list,
+	    const Bool pixelorder, const Bool verbose
 	);
 
 protected:
@@ -102,74 +102,74 @@ protected:
 
 	ImageMetaData() : ImageMetaDataBase(), _floatImage(), _complexImage() {}
 
-	const casacore::ImageInfo& _getInfo() const { return _info; }
+	const ImageInfo& _getInfo() const { return _info; }
 
-	const casacore::CoordinateSystem& _getCoords() const { return _csys; }
+	const CoordinateSystem& _getCoords() const { return _csys; }
 
-	casacore::Vector<casacore::String> _getAxisNames() const;
+	Vector<String> _getAxisNames() const;
 
-	casacore::Vector<casacore::String> _getAxisUnits() const;
+	Vector<String> _getAxisUnits() const;
 
-	casacore::GaussianBeam _getBeam() const;
+	GaussianBeam _getBeam() const;
 
-	casacore::String _getBrightnessUnit() const;
+	String _getBrightnessUnit() const;
 
-	casacore::String _getImType() const;
+	String _getImType() const;
 
-	vector<casacore::Quantity> _getIncrements() const;
+	vector<Quantity> _getIncrements() const;
 
-	casacore::Vector<casacore::String> _getMasks() const;
+	Vector<String> _getMasks() const;
 
-	casacore::String _getObject() const;
+	String _getObject() const;
 
-	casacore::String _getEquinox() const;
+	String _getEquinox() const;
 
-	casacore::MEpoch _getObsDate() const;
+	MEpoch _getObsDate() const;
 
-	casacore::String _getObserver() const;
+	String _getObserver() const;
 
-	casacore::String _getProjection() const;
+	String _getProjection() const;
 
-	casacore::String _getRefFreqType() const;
+	String _getRefFreqType() const;
 
-	casacore::Vector<casacore::Double> _getRefPixel() const;
+	Vector<Double> _getRefPixel() const;
 
-	casacore::Vector<casacore::Quantity> _getRefValue() const;
+	Vector<Quantity> _getRefValue() const;
 
-	casacore::Quantity _getRestFrequency() const;
+	Quantity _getRestFrequency() const;
 
-	casacore::Record _getStatistics() const;
+	Record _getStatistics() const;
 
-	casacore::String _getTelescope() const;
+	String _getTelescope() const;
 
-	casacore::Vector<casacore::String> _getStokes() const;
+	Vector<String> _getStokes() const;
 
-	template <class T> casacore::Record _summary(
-	    SPCIIT image, const casacore::String& doppler, const casacore::Bool list,
-        const casacore::Bool pixelorder, const casacore::Bool verbose
+	template <class T> Record _summary(
+	    SPCIIT image, const String& doppler, const Bool list,
+        const Bool pixelorder, const Bool verbose
     );
 
 private:
 
 	SPCIIF _floatImage;
 	SPCIIC _complexImage;
-	const casacore::ImageInfo _info;
-	const casacore::CoordinateSystem _csys;
+	const ImageInfo _info;
+	const CoordinateSystem _csys;
 
 	// These are mutable because they are only to be set once and
 	// then cached. If this contract is broken, and they are set elsewhere
 	// defects will likely occur.
-	mutable casacore::Record _header;
-	mutable casacore::String _bunit, _imtype, _object, _equinox,
+	mutable Record _header;
+	mutable String _bunit, _imtype, _object, _equinox,
 		_projection, _observer, _telescope, _reffreqtype;
-	mutable casacore::MEpoch _obsdate;
-	mutable casacore::Quantity _restFreq;
-	mutable casacore::GaussianBeam _beam;
-	mutable casacore::Vector<casacore::String> _masks, _stokes;
-	mutable casacore::Vector<casacore::String> _axisNames, _axisUnits;
-	mutable casacore::Vector<casacore::Double> _refPixel;
-	mutable vector<casacore::Quantity> _refVal, _increment;
-	mutable casacore::Record _stats;
+	mutable MEpoch _obsdate;
+	mutable Quantity _restFreq;
+	mutable GaussianBeam _beam;
+	mutable Vector<String> _masks, _stokes;
+	mutable Vector<String> _axisNames, _axisUnits;
+	mutable Vector<Double> _refPixel;
+	mutable vector<Quantity> _refVal, _increment;
+	mutable Record _stats;
 };
 
 }

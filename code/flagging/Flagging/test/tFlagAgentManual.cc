@@ -24,7 +24,6 @@
 #include <flagging/Flagging/FlagAgentSummary.h>
 #include <iostream>
 
-using namespace casacore;
 using namespace casa;
 
 void clearFlags(string inputFile,Bool flag)
@@ -631,7 +630,7 @@ void summaryFlags(string inputFile)
 int main(int argc, char **argv)
 {
 	string targetFile;
-	Bool flag = true;
+	Bool flag = True;
 	string nThreadsParam;
 	Int nThreads = 0;
 	string array,scan,timerange,field,spw,antenna,uvrange,observation,intent,correlation;
@@ -654,7 +653,7 @@ int main(int argc, char **argv)
 		}
 		else if (parameter == string("-summary"))
 		{
-			if (value.compare("true") == 0)
+			if (value.compare("True") == 0)
 			{
 				summaryFlagsActivated = true;
 				cout << "Summary flags step activated" << endl;
@@ -678,7 +677,7 @@ int main(int argc, char **argv)
 		}
 		else if (parameter == string("-unflag"))
 		{
-			if (value.compare("true") == 0)
+			if (value.compare("True") == 0)
 			{
 				deleteFlagsActivated = true;
 				cout << "Clean flags step activated" << endl;

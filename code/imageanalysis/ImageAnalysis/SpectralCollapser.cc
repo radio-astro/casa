@@ -45,7 +45,6 @@
 
 #include <imageanalysis/ImageAnalysis/ImageMoments.h>
 
-using namespace casacore;
 namespace casa {
 SpectralCollapser::SpectralCollapser(const SPCIIF image):
 		_image(image), _log(new LogIO()), _storePath(""){
@@ -72,7 +71,7 @@ Bool SpectralCollapser::collapse(const Vector<Float> &specVals, const Float star
 	if (specVals.size() < 1){
 		msg = String("No spectral values provided!");
 		*_log << LogIO::WARN << msg << LogIO::POST;
-		return false;
+		return False;
 	}
 
 	// in the unit, replace a "/" with "_p_"
@@ -81,21 +80,21 @@ Bool SpectralCollapser::collapse(const Vector<Float> &specVals, const Float star
 		unit_.replace(slashPos, 1, String("_p_"));
 	}
 
-	Bool ascending=true;
+	Bool ascending=True;
 	if (specVals(specVals.size()-1)<specVals(0))
-		ascending=false;
+		ascending=False;
 
 	Int startIndex, endIndex;
 	if (ascending){
 		if (endVal < specVals(0)){
 			msg = String("Start value: ") + String::toString(endVal) + String(" is smaller than all spectral values!");
 			*_log << LogIO::WARN << msg << LogIO::POST;
-			return false;
+			return False;
 		}
 		if (startVal > specVals(specVals.size()-1)){
 			msg = String("End value: ") + String::toString(startVal) + String(" is larger than all spectral values!");
 			*_log << LogIO::WARN << msg << LogIO::POST;
-			return false;
+			return False;
 		}
 		startIndex=0;
 		while (specVals(startIndex)<startVal)
@@ -109,12 +108,12 @@ Bool SpectralCollapser::collapse(const Vector<Float> &specVals, const Float star
 		if (endVal < specVals(specVals.size()-1)){
 			msg = String("Start value: ") + String::toString(endVal) + String(" is smaller than all spectral values!");
 			*_log << LogIO::WARN << msg << LogIO::POST;
-			return false;
+			return False;
 		}
 		if (startVal > specVals(0)){
 			msg = String("End value: ") + String::toString(startVal) + String(" is larger than all spectral values!");
 			*_log << LogIO::WARN << msg << LogIO::POST;
-			return false;
+			return False;
 		}
 		startIndex=0;
 		while (specVals(startIndex)>endVal)
@@ -134,7 +133,7 @@ Bool SpectralCollapser::collapse(const Vector<Float> &specVals, const Float star
 	if (startIndex > endIndex){
 		msg = String("Spectral window ") + wcsInp + String(" too narrow!");
 		*_log << LogIO::WARN << msg << LogIO::POST;
-		return false;
+		return False;
 	}
 
 	String dataAggStr, errorAggStr;
@@ -151,9 +150,9 @@ Bool SpectralCollapser::collapse(const Vector<Float> &specVals, const Float star
 		SHARED_PTR<SubImage<Float> > subData;
 		SHARED_PTR<SubImage<Float> > subError;
 		if (!_getQualitySubImgs(_image, subData, subError)){
-			msg = String("Can not split image: ") + _image->name(true) + String(" to data and error array!");
+			msg = String("Can not split image: ") + _image->name(True) + String(" to data and error array!");
 			*_log << LogIO::WARN << msg << LogIO::POST;
-			return false;
+			return False;
 		}
 
 		switch (collError)
@@ -244,7 +243,7 @@ Bool SpectralCollapser::collapse(const Vector<Float> &specVals, const Float star
 	_addMiscInfo(outname, wcsInp, chanInp, collType, collError);
 	msg = String("Collapsed image: ") + outname;
 
-	return true;
+	return True;
 }
 
 String SpectralCollapser::summaryHeader() const {
@@ -403,7 +402,7 @@ void SpectralCollapser::_setUp(){
 	_specAxis = IPosition(1, nPixelSpec(0));
 
 	// check for a quality axis
-	_hasQualAxis = (cSys.findCoordinate(Coordinate::QUALITY) < 0) ? false : true;
+	_hasQualAxis = (cSys.findCoordinate(Coordinate::QUALITY) < 0) ? False : True;
 }
 
 Bool SpectralCollapser::_cleanTmpData(const String &tmpData, const String &tmpError) const {
@@ -431,13 +430,13 @@ Bool SpectralCollapser::_cleanTmpData(const String &tmpFileName) const {
 		// delete it as directory
 		else if (tmpFile.isWritable()){
 			Directory tmpDir(tmpFilePath);
-			tmpDir.removeRecursive(false);
+			tmpDir.removeRecursive(False);
 		}
 		else{
 			*_log << LogIO::EXCEPTION << "Can not remove the tmp-image: " << tmpFilePath.absoluteName() << LogIO::POST;
 		}
 	}
-	return true;
+	return True;
 }
 
 Bool SpectralCollapser::_getQualitySubImg(const ImageInterface<Float>* image, const Bool &getData, SubImage<Float> &qualitySub){
@@ -453,9 +452,9 @@ Bool SpectralCollapser::_getQualitySubImg(const ImageInterface<Float>* image, co
 	lengthPos(nAxisQual) = 1;
 	Slicer subSlicer(startPos, lengthPos, Slicer::endIsLength);
 
-	qualitySub = SubImage<Float>(*image, subSlicer, AxesSpecifier(false));
+	qualitySub = SubImage<Float>(*image, subSlicer, AxesSpecifier(False));
 
-	return true;
+	return True;
 }
 
 Bool SpectralCollapser::_getQualitySubImgs(SPCIIF image, SHARED_PTR<SubImage<Float> > &subData, SHARED_PTR<SubImage<Float> > &subError) const{
@@ -503,7 +502,7 @@ Bool SpectralCollapser::_getQualitySubImgs(SPCIIF image, SHARED_PTR<SubImage<Flo
 		// create the error sub-image
 		subError.reset(new SubImage<Float>(*image, sliceError, axSpec));
 	}
-	return true;
+	return True;
 }
 
 Bool SpectralCollapser::_getOutputName(const String &wcsInp, String &outImg, String &outImgData, String &outImgError)const{
@@ -544,7 +543,7 @@ Bool SpectralCollapser::_getOutputName(const String &wcsInp, String &outImg, Str
 	outImgData  = (imgFileData.path()).absoluteName();
 	outImgError = (imgFileError.path()).absoluteName();
 
-	return true;
+	return True;
 }
 
 Bool SpectralCollapser::_collapse(const SPCIIF image, const String &aggString,
@@ -555,7 +554,7 @@ Bool SpectralCollapser::_collapse(const SPCIIF image, const String &aggString,
 	String stokes = _all;
 	Record myreg = rm.fromBCS(
 		diagnostics, nSelectedChannels, stokes, 0, "", chanInp,
-		CasacRegionManager::USE_ALL_STOKES, "", image->shape(), "", false
+		CasacRegionManager::USE_ALL_STOKES, "", image->shape(), "", False
 	);
 	// create and execute the imcollapse-class
 	ImageCollapser<Float> collapser(
@@ -564,12 +563,12 @@ Bool SpectralCollapser::_collapse(const SPCIIF image, const String &aggString,
 			&myreg,                          // const Record *const regionRec
 			"",                         // const String& maskInp
 			_specAxis,                  // const IPosition& axes
-			false,                      // do not invert axes selection
+			False,                      // do not invert axes selection
 			outname,                    // String& outname
-			true                        // const Bool overwrite
+			True                        // const Bool overwrite
 		);
 		collapser.collapse();
-		return true;
+		return True;
 }
 
 Bool SpectralCollapser::_moments(const ImageInterface<Float> *image, const Vector<Int> &momentVec,
@@ -583,10 +582,10 @@ Bool SpectralCollapser::_moments(const ImageInterface<Float> *image, const Vecto
    //ImageRegion mask = fitsImage.getRegion(fitsImage.getDefaultMask(), RegionHandler::Masks);
    //cout << "after getregion()" << endl;
    SubImage<Float> subImage(*image, ImageRegion(region));
-   ImageMoments<Float> moment(subImage, *_log, true, true);
+   ImageMoments<Float> moment(subImage, *_log, True, True);
    if (!moment.setMoments(momentVec)) {
    	*_log << LogIO::SEVERE << moment.errorMessage() << LogIO::POST;
-      return false;
+      return False;
    }
    try {
 	   moment.setMomentAxis(_specAxis(0));
@@ -594,15 +593,15 @@ Bool SpectralCollapser::_moments(const ImageInterface<Float> *image, const Vecto
    catch (const AipsError& exc) {
 	   String errorMsg = exc.getMesg();
 	   *_log << LogIO::SEVERE << exc.getMesg() << LogIO::POST;
-	   return false;
+	   return False;
    }
    std::vector<SHARED_PTR<MaskedLattice<Float> > > images;
    try {
-	   images = moment.createMoments(false, outname, false);
+	   images = moment.createMoments(False, outname, False);
    }
    catch (const AipsError& exc) {
 	   *_log << LogIO::SEVERE << exc.getMesg() << LogIO::POST;
-	   return false;
+	   return False;
    }
 	for (uInt i=0; i<images.size(); i++) {
 		cout << "out shape: " << images[i]->shape() << endl;
@@ -612,7 +611,7 @@ Bool SpectralCollapser::_moments(const ImageInterface<Float> *image, const Vecto
    //pSubImage2 = new SubImage<Float>(subImage, ImageRegion(region));
 
 
-		return true;
+		return True;
 }
 
 Bool SpectralCollapser::_mergeDataError( const String &outImg, const String &dataImg, const String &errorImg, const Float &normError) const {
@@ -663,14 +662,14 @@ Bool SpectralCollapser::_mergeDataError( const String &outImg, const String &dat
 	// check whether a mask is necessary
 	if (data->hasPixelMask() || error->hasPixelMask()){
 		// create the output mask
-		outMask=Array<Bool>(newShape, true);
+		outMask=Array<Bool>(newShape, True);
 
 		// make the mask for the data values
 		if (data->hasPixelMask()){
 			inDataMask  = (data->pixelMask()).get();
 		}
 		else{
-			inDataMask = Array<Bool>(data->shape(), true);
+			inDataMask = Array<Bool>(data->shape(), True);
 		}
 
 		// make the mask for the error values
@@ -678,7 +677,7 @@ Bool SpectralCollapser::_mergeDataError( const String &outImg, const String &dat
 			inErrorMask  = (error->pixelMask()).get();
 		}
 		else{
-			inErrorMask = Array<Bool>(error->shape(), true);
+			inErrorMask = Array<Bool>(error->shape(), True);
 		}
 	}
 
@@ -686,13 +685,13 @@ Bool SpectralCollapser::_mergeDataError( const String &outImg, const String &dat
 	// TODO: check whether for masked arrays there are problems
 	if (normError==0.0){
 		if (inErrorMask.ndim() > 0){
-			inErrorMask = false;
+			inErrorMask = False;
 		}
 		else{
-			outMask=Array<Bool>(newShape, true);
+			outMask=Array<Bool>(newShape, True);
 
-			inDataMask  = Array<Bool>(data->shape(), true);
-			inErrorMask = Array<Bool>(error->shape(), false);
+			inDataMask  = Array<Bool>(data->shape(), True);
+			inErrorMask = Array<Bool>(error->shape(), False);
 		}
 	}
 	else if (normError>1.0){
@@ -716,7 +715,7 @@ Bool SpectralCollapser::_mergeDataError( const String &outImg, const String &dat
 
 	delete data;
 	delete error;
-	return true;
+	return True;
 }
 
 
@@ -731,7 +730,7 @@ void SpectralCollapser::_addMiscInfo(const String &outName, const String &wcsInp
 
 	// compile and set the miscInfo
 	TableRecord miscInfo=outImg->miscInfo();
-	miscInfo.define("inimage", _image->name(true));
+	miscInfo.define("inimage", _image->name(True));
 	miscInfo.setComment("inimage", "name input image");
 	miscInfo.define("specsel", wcsInput);
 	miscInfo.setComment("specsel", "spectral selection");

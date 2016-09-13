@@ -44,8 +44,9 @@ public:
 
   // Constructor
   FJones(VisSet& vs);
-  FJones(casacore::String msname,casacore::Int MSnAnt,casacore::Int MSnSpw);
+  FJones(String msname,Int MSnAnt,Int MSnSpw);
   FJones(const MSMetaInfoForCal& msmc);
+  //  FJones(const Int& nAnt);  // NYI
 
   virtual ~FJones();
 
@@ -53,40 +54,40 @@ public:
   virtual Type type() { return VisCal::F; };
 
   // Return type name as string
-  virtual casacore::String typeName()     { return "F Jones"; };
-  virtual casacore::String longTypeName() { return "F Jones (Ionosphere)"; };
+  virtual String typeName()     { return "F Jones"; };
+  virtual String longTypeName() { return "F Jones (Ionosphere)"; };
 
   // Report current Jones type (circ=diag, lin=general)
   Jones::JonesType jonesType() { return pjonestype_; };
 
   // Par is freq-INdep, but matrix is freq-dep
-  virtual casacore::Bool freqDepPar() { return false; };
-  virtual casacore::Bool freqDepMat() { return true; };
+  virtual Bool freqDepPar() { return False; };
+  virtual Bool freqDepMat() { return True; };
 
-  // We have casacore::Float parameters
+  // We have Float parameters
   virtual VisCalEnum::VCParType parType() { return VisCalEnum::REAL; };
 
   // Local setapply to enforce calwt=F and spwmap=[0] for FJones
-  virtual void setApply(const casacore::Record& apply);
+  virtual void setApply(const Record& apply);
   using SolvableVisJones::setApply;
 
   // Report apply-related info
-  casacore::String applyinfo();
+  String applyinfo();
 
   // Local specializations for TEC generation
-  virtual void setSpecify(const casacore::Record& specify);
-  virtual void specify(const casacore::Record& specify);
+  virtual void setSpecify(const Record& specify);
+  virtual void specify(const Record& specify);
 
 protected:
 
-  // FJones has one casacore::Float par per ant
-  virtual casacore::Int nPar() { return 1; };
+  // FJones has one Float par per ant
+  virtual Int nPar() { return 1; };
 
   // Jones matrix elements are NOT trivial
-  virtual casacore::Bool trivialJonesElem() { return false; };
+  virtual Bool trivialJonesElem() { return False; };
 
   // Access to z.a. data
-  casacore::Vector<casacore::Double>& za() { return za_; };
+  Vector<Double>& za() { return za_; };
 
   // Detect pol basis and some geometry
   virtual void syncMeta(const VisBuffer& vb);
@@ -101,33 +102,33 @@ protected:
 private:
 
   // TEC specify/retrieval mode
-  casacore::String tectype_;
+  String tectype_;
 
   // Field calculation components
-  casacore::MeasFrame mframe_;
-  casacore::EarthMagneticMachine *emm_;
+  MeasFrame mframe_;
+  EarthMagneticMachine *emm_;
 
   // Fiducial ionosphere height
-  casacore::Quantity ionhgt_;
+  Quantity ionhgt_;
 
   // TEC image filename
-  casacore::String tecimname_;
+  String tecimname_;
 
   // zenith angle per antenna
-  casacore::Vector<casacore::Double> za_;
+  Vector<Double> za_;
 
   // The magnetic field
-  casacore::Vector<casacore::Double> BlosG_;
+  Vector<Double> BlosG_;
 
   // Units
-  casacore::Double radper_;
+  Double radper_;
 
   // Lin (general) or Circ (diag)
   Jones::JonesType pjonestype_;
 
   // Measures geometry
-  casacore::MDirection phasedir_p;
-  casacore::ROScalarMeasColumn<casacore::MPosition> antpos_p;
+  MDirection phasedir_p;
+  ROScalarMeasColumn<MPosition> antpos_p;
 
 };
 

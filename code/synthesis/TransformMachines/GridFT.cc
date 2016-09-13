@@ -75,22 +75,20 @@
 #include <omp.h>
 #endif
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
-using namespace casacore;
   //  using namespace casa::async;
-  GridFT::GridFT() : FTMachine(), padding_p(1.0), imageCache(0), cachesize(1000000), tilesize(1000), gridder(0), isTiled(false), convType("SF"),
+  GridFT::GridFT() : FTMachine(), padding_p(1.0), imageCache(0), cachesize(1000000), tilesize(1000), gridder(0), isTiled(False), convType("SF"),
   maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
-  usezero_p(false), noPadding_p(false), usePut2_p(false), 
+  usezero_p(False), noPadding_p(False), usePut2_p(False), 
 		     machineName_p("GridFT"), timemass_p(0.0), timegrid_p(0.0),  convFunc_p(0), convSampling_p(1), convSupport_p(0) {
 
   }
 GridFT::GridFT(Long icachesize, Int itilesize, String iconvType, Float padding,
 	       Bool usezero, Bool useDoublePrec)
 : FTMachine(), padding_p(padding), imageCache(0), cachesize(icachesize), tilesize(itilesize),
-  gridder(0), isTiled(false), convType(iconvType),
+  gridder(0), isTiled(False), convType(iconvType),
   maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
-  usezero_p(usezero), noPadding_p(false), usePut2_p(false), 
+  usezero_p(usezero), noPadding_p(False), usePut2_p(False), 
   machineName_p("GridFT"), timemass_p(0.0), timegrid_p(0.0),  convFunc_p(0), convSampling_p(1), convSupport_p(0) 
 {
   useDoubleGrid_p=useDoublePrec;  
@@ -100,12 +98,12 @@ GridFT::GridFT(Long icachesize, Int itilesize, String iconvType, Float padding,
 GridFT::GridFT(Long icachesize, Int itilesize, String iconvType,
 	       MPosition mLocation, Float padding, Bool usezero, Bool useDoublePrec)
 : FTMachine(), padding_p(padding), imageCache(0), cachesize(icachesize),
-  tilesize(itilesize), gridder(0), isTiled(false), convType(iconvType), maxAbsData(0.0), centerLoc(IPosition(4,0)),
-  offsetLoc(IPosition(4,0)), usezero_p(usezero), noPadding_p(false), 
-  usePut2_p(false), machineName_p("GridFT"), timemass_p(0.0), timegrid_p(0.0),  convFunc_p(0), convSampling_p(1), convSupport_p(0) 
+  tilesize(itilesize), gridder(0), isTiled(False), convType(iconvType), maxAbsData(0.0), centerLoc(IPosition(4,0)),
+  offsetLoc(IPosition(4,0)), usezero_p(usezero), noPadding_p(False), 
+  usePut2_p(False), machineName_p("GridFT"), timemass_p(0.0), timegrid_p(0.0),  convFunc_p(0), convSampling_p(1), convSupport_p(0) 
 {
   mLocation_p=mLocation;
-  tangentSpecified_p=false;
+  tangentSpecified_p=False;
   useDoubleGrid_p=useDoublePrec;
   //  peek=NULL;
 }
@@ -113,12 +111,12 @@ GridFT::GridFT(Long icachesize, Int itilesize, String iconvType,
 GridFT::GridFT(Long icachesize, Int itilesize, String iconvType,
 	       MDirection mTangent, Float padding, Bool usezero, Bool useDoublePrec)
 : FTMachine(), padding_p(padding), imageCache(0), cachesize(icachesize),
-  tilesize(itilesize), gridder(0), isTiled(false), convType(iconvType), maxAbsData(0.0), centerLoc(IPosition(4,0)),
-  offsetLoc(IPosition(4,0)), usezero_p(usezero), noPadding_p(false), 
-  usePut2_p(false), machineName_p("GridFT"), timemass_p(0.0), timegrid_p(0.0), convFunc_p(0), convSampling_p(1), convSupport_p(0)
+  tilesize(itilesize), gridder(0), isTiled(False), convType(iconvType), maxAbsData(0.0), centerLoc(IPosition(4,0)),
+  offsetLoc(IPosition(4,0)), usezero_p(usezero), noPadding_p(False), 
+  usePut2_p(False), machineName_p("GridFT"), timemass_p(0.0), timegrid_p(0.0), convFunc_p(0), convSampling_p(1), convSupport_p(0)
 {
   mTangent_p=mTangent;
-  tangentSpecified_p=true;
+  tangentSpecified_p=True;
   useDoubleGrid_p=useDoublePrec;
   //  peek=NULL;
 }
@@ -127,13 +125,13 @@ GridFT::GridFT(Long icachesize, Int itilesize, String iconvType,
 	       MPosition mLocation, MDirection mTangent, Float padding,
 	       Bool usezero, Bool useDoublePrec)
 : FTMachine(), padding_p(padding), imageCache(0), cachesize(icachesize),
-  tilesize(itilesize), gridder(0), isTiled(false), convType(iconvType), maxAbsData(0.0), centerLoc(IPosition(4,0)),
-  offsetLoc(IPosition(4,0)), usezero_p(usezero), noPadding_p(false), 
-  usePut2_p(false),machineName_p("GridFT"), timemass_p(0.0), timegrid_p(0.0),  convFunc_p(0), convSampling_p(1), convSupport_p(0) 
+  tilesize(itilesize), gridder(0), isTiled(False), convType(iconvType), maxAbsData(0.0), centerLoc(IPosition(4,0)),
+  offsetLoc(IPosition(4,0)), usezero_p(usezero), noPadding_p(False), 
+  usePut2_p(False),machineName_p("GridFT"), timemass_p(0.0), timegrid_p(0.0),  convFunc_p(0), convSampling_p(1), convSupport_p(0) 
 {
   mLocation_p=mLocation;
   mTangent_p=mTangent;
-  tangentSpecified_p=true;
+  tangentSpecified_p=True;
   useDoubleGrid_p=useDoublePrec;
   //  peek=NULL;
 }
@@ -223,10 +221,10 @@ void GridFT::init() {
   //     // peek->startThread();
   //   }
 
-  /* hardwiring isTiled is false
+  /* hardwiring isTiled is False
   // Padding is possible only for non-tiled processing
   if((padding_p*padding_p*image->shape().product())>cachesize) {
-    isTiled=true;
+    isTiled=True;
     nx    = image->shape()(0);
     ny    = image->shape()(1);
     npol  = image->shape()(2);
@@ -235,7 +233,7 @@ void GridFT::init() {
   else {
   */
     // We are padding.
-    isTiled=false;
+    isTiled=False;
     if(!noPadding_p){
       CompositeNumber cn(uInt(image->shape()(0)*2));    
       nx    = cn.nextLargerEven(Int(padding_p*Float(image->shape()(0))-0.5));
@@ -312,7 +310,7 @@ void GridFT::initializeToVis(ImageInterface<Complex>& iimage,
 			     const VisBuffer& vb)
 {
   image=&iimage;
-  toVis_p=true;
+  toVis_p=True;
 
   ok();
 
@@ -333,7 +331,7 @@ void GridFT::initializeToVis(ImageInterface<Complex>& iimage,
   // If we are memory-based then read the image in and create an
   // ArrayLattice otherwise just use the PagedImage
   /*if(isTiled) {
-    lattice=CountedPtr<Lattice<Complex> >(image, false);
+    lattice=CountedPtr<Lattice<Complex> >(image, False);
   }
   else {
      
@@ -423,7 +421,7 @@ void GridFT::initializeToSky(ImageInterface<Complex>& iimage,
 {
   // image always points to the image
   image=&iimage;
-  toVis_p=false;
+  toVis_p=False;
 
   init();
 
@@ -443,7 +441,7 @@ void GridFT::initializeToSky(ImageInterface<Complex>& iimage,
   if(isTiled) {
     imageCache->flush();
     image->set(Complex(0.0));
-    lattice=CountedPtr<Lattice<Complex> >(image, false);
+    lattice=CountedPtr<Lattice<Complex> >(image, False);
   }
   else {
     IPosition gridShape(4, nx, ny, npol, nchan);
@@ -458,7 +456,7 @@ void GridFT::initializeToSky(ImageInterface<Complex>& iimage,
       griddedData2=DComplex(0.0);
     }
     image->clearCache();
-    //iimage.get(griddedData, false);
+    //iimage.get(griddedData, False);
     //if(arrayLattice) delete arrayLattice; arrayLattice=0;
     
   }
@@ -821,7 +819,7 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 
   Vector<Int> rowFlags(vb.nRow());
   rowFlags=0;
-  rowFlags(vb.flagRow())=true;
+  rowFlags(vb.flagRow())=True;
   if(!usezero_p) {
     for (Int rownr=startRow; rownr<=endRow; rownr++) {
       if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) rowFlags(rownr)=1;
@@ -1117,7 +1115,7 @@ void GridFT::get(VisBuffer& vb, Int row)
 
   Vector<Int> rowFlags(vb.nRow());
   rowFlags=0;
-  rowFlags(vb.flagRow())=true;
+  rowFlags(vb.flagRow())=True;
   //cerr << "rowFlags " << rowFlags << endl;
   if(!usezero_p) {
     for (Int rownr=startRow; rownr<=endRow; rownr++) {
@@ -1227,7 +1225,7 @@ ImageInterface<Complex>& GridFT::getImage(Matrix<Float>& weights, Bool normalize
     // }
 
     // x and y transforms
-    //    LatticeFFT::cfft2d(*lattice,false);
+    //    LatticeFFT::cfft2d(*lattice,False);
     //
     // Retain the double precision grid for FFT as well.  Convert it
     // to single precision just after (since images are still single
@@ -1237,7 +1235,7 @@ ImageInterface<Complex>& GridFT::getImage(Matrix<Float>& weights, Bool normalize
       {
 	ArrayLattice<DComplex> darrayLattice(griddedData2);
 	
-	LatticeFFT::cfft2d(darrayLattice,false);
+	LatticeFFT::cfft2d(darrayLattice,False);
 	griddedData.resize(griddedData2.shape());
 	convertArray(griddedData, griddedData2);
 
@@ -1253,7 +1251,7 @@ ImageInterface<Complex>& GridFT::getImage(Matrix<Float>& weights, Bool normalize
 	cerr << "##### " << griddedData2.shape() << endl;
 	storeArrayAsImage(String("cgrid_ft.im"), image->coordinates(), griddedData);
       lattice=arrayLattice;
-      LatticeFFT::cfft2d(*lattice,false);
+      LatticeFFT::cfft2d(*lattice,False);
     }
 
     
@@ -1343,13 +1341,13 @@ Bool GridFT::toRecord(String& error,
   
 
   // Save the current GridFT object to an output state record
-  Bool retval = true;
+  Bool retval = True;
   Float elpadd=padding_p;
   if(toVis_p && withImage)
     elpadd=1.0;
   //save the base class variables
   if(!FTMachine::toRecord(error, outRec, withImage, diskimage))
-    return false;
+    return False;
 
   //a call to init  will redo imagecache and gridder
   // so no need to save these
@@ -1377,9 +1375,9 @@ Bool GridFT::toRecord(String& error,
 Bool GridFT::fromRecord(String& error,
 			const RecordInterface& inRec)
 {
-  Bool retval = true;
+  Bool retval = True;
   if(!FTMachine::fromRecord(error, inRec))
-    return false;
+    return False;
   gridder=0; imageCache=0; lattice=0; arrayLattice=0;
   //For some reason int64 seems to be getting lost...
   //this is not an important parameter...so filing a jira 
@@ -1413,7 +1411,7 @@ Bool GridFT::fromRecord(String& error,
     // Might be changing the shape of sumWeight
 
     if(isTiled) {
-      lattice=CountedPtr<Lattice<Complex> >(image, false);
+      lattice=CountedPtr<Lattice<Complex> >(image, False);
     }
     else {
       // Make the grid the correct shape and turn it into an array lattice
@@ -1478,30 +1476,30 @@ void GridFT::makeImage(FTMachine::Type type,
       case FTMachine::RESIDUAL:
 	vb.visCube()=vb.correctedVisCube();
 	vb.visCube()-=vb.modelVisCube();
-        put(vb, -1, false);
+        put(vb, -1, False);
         break;
       case FTMachine::MODEL:
 	vb.visCube()=vb.modelVisCube();
-        put(vb, -1, false);
+        put(vb, -1, False);
         break;
       case FTMachine::CORRECTED:
 	vb.visCube()=vb.correctedVisCube();
-        put(vb, -1, false);
+        put(vb, -1, False);
         break;
       case FTMachine::PSF:
 	vb.visCube()=Complex(1.0,0.0);
-        put(vb, -1, true);
+        put(vb, -1, True);
         break;
       case FTMachine::OBSERVED:
       default:
-        put(vb, -1, false);
+        put(vb, -1, False);
         break;
       }
     }
   }
   finalizeToSky();
   // Normalize by dividing out weights, etc.
-  getImage(weight, true);
+  getImage(weight, True);
 }
 
 String GridFT::name() const {

@@ -51,45 +51,45 @@ public:
 
   enum SPType{SWPOW,EVLAGAIN=SWPOW,RQ,SWPOVERRQ,NONE};
   
-  static SPType sptype(casacore::String name);
-  static casacore::String sptype(SPType sptype);
+  static SPType sptype(String name);
+  static String sptype(SPType sptype);
 
   // Constructor
   EVLASwPow(VisSet& vs);
-  EVLASwPow(casacore::String msname,casacore::Int MSnAnt,casacore::Int MSnSpw);
+  EVLASwPow(String msname,Int MSnAnt,Int MSnSpw);
   EVLASwPow(const MSMetaInfoForCal& msmc);
-  EVLASwPow(const casacore::Int& nAnt);
+  EVLASwPow(const Int& nAnt);
 
   virtual ~EVLASwPow();
 
   // Return the type enum (for now, pretend we are G)
   virtual Type type() { return VisCal::G; };
 
-  // EVLA Gain and Tsys are casacore::Float parameters
+  // EVLA Gain and Tsys are Float parameters
   virtual VisCalEnum::VCParType parType() { return VisCalEnum::REAL; };
 
   // Return type name as string (ditto)
-  virtual casacore::String typeName()     { return "G EVLASWPOW"; };
-  virtual casacore::String longTypeName() { return "G EVLASWPOW (Switched-power gain)"; };
+  virtual String typeName()     { return "G EVLASWPOW"; };
+  virtual String longTypeName() { return "G EVLASWPOW (Switched-power gain)"; };
 
   // Local setSpecify
   using GJones::setSpecify;
-  virtual void setSpecify(const casacore::Record& specify);
+  virtual void setSpecify(const Record& specify);
 
   // Specific specify() that reads the SYSCAL subtable
-  virtual void specify(const casacore::Record& specify);
+  virtual void specify(const Record& specify);
 
   // In general, we are freq-dep
-  virtual casacore::Bool freqDepPar() { return false; };
+  virtual Bool freqDepPar() { return False; };
 
 
 protected:
 
   // There are 4 parameters (Gain and Tsys for each pol)
-  virtual casacore::Int nPar() { return 4; };  
+  virtual Int nPar() { return 4; };  
 
   // The parameter array is not (just) the Jones matrix element array
-  virtual casacore::Bool trivialJonesElem() { return false; };
+  virtual Bool trivialJonesElem() { return False; };
 
   // Calculate Jones matrix elements (slice out the gains)
   virtual void calcAllJones();
@@ -99,7 +99,7 @@ protected:
   virtual void syncWtScale();
 
   // Experimenting with updateWt
-  //virtual void updateWt(casacore::Matrix<casacore::Float>& wt,const casacore::Int& a1,const casacore::Int& a2);
+  //virtual void updateWt(Matrix<Float>& wt,const Int& a1,const Int& a2);
 
 private:
 
@@ -107,18 +107,18 @@ private:
   void fillTcals();
 
   // The name of the SYSCAL table
-  casacore::String sysPowTabName_,calDevTabName_;
+  String sysPowTabName_,calDevTabName_;
 
   // Tcal storage
-  casacore::Cube<casacore::Float> tcals_;
+  Cube<Float> tcals_;
 
   // Digital factors for the EVLA
-  casacore::Float correff_;      // net corr efficiency (lossy)
-  casacore::Float frgrotscale_;  // fringe rotation scale (lossless)
-  casacore::Float nyquist_;      // 2*dt*dv
+  Float correff_;      // net corr efficiency (lossy)
+  Float frgrotscale_;  // fringe rotation scale (lossless)
+  Float nyquist_;      // 2*dt*dv
 
   // Effective per-chan BW, per spw for weight calculation
-  casacore::Vector<casacore::Double> effChBW_;
+  Vector<Double> effChBW_;
 
 };
 

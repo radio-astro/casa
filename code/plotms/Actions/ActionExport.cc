@@ -35,7 +35,6 @@
 
 #include <QDebug>
 
-using namespace casacore;
 namespace casa {
 
 ActionExport::ActionExport( Client* client )
@@ -251,5 +250,4 @@ bool ActionExport::doActionSpecific(PlotMSApp* plotms){
 ActionExport::~ActionExport() {
 }
 
-using namespace casacore;
 } /* namespace casa */

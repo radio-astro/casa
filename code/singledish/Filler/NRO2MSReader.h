@@ -15,8 +15,6 @@
 #include <string>
 #include <memory>
 
-using namespace std;
-
 namespace casa { //# NAMESPACE CASA - BEGIN
   
 constexpr double kDay2Sec = 86400.0;
@@ -30,62 +28,62 @@ public:
   // get number of rows
   virtual size_t getNumberOfRows();
 
-  virtual casacore::MDirection::Types getDirectionFrame();
+  virtual MDirection::Types getDirectionFrame();
   
-  virtual casacore::Bool isFloatData() const {
-    return true;
+  virtual Bool isFloatData() const {
+    return True;
   }
 
   // to get OBSERVATION table
-  virtual casacore::Bool getObservationRow(sdfiller::ObservationRecord &record) {
+  virtual Bool getObservationRow(sdfiller::ObservationRecord &record) {
     POST_START;
-    casacore::Bool return_value = (*this.*get_observation_row_)(record);
+    Bool return_value = (*this.*get_observation_row_)(record);
     POST_END;
     return return_value;
   }
 
   // to get ANTENNA table
-  virtual casacore::Bool getAntennaRow(sdfiller::AntennaRecord &record) {
+  virtual Bool getAntennaRow(sdfiller::AntennaRecord &record) {
     POST_START;
-    casacore::Bool return_value = (*this.*get_antenna_row_)(record);
+    Bool return_value = (*this.*get_antenna_row_)(record);
     POST_END;
     return return_value;
   }
 
   // to get PROCESSOR table
-  virtual casacore::Bool getProcessorRow(sdfiller::ProcessorRecord &record) {
+  virtual Bool getProcessorRow(sdfiller::ProcessorRecord &record) {
     POST_START;
-    casacore::Bool return_value = (*this.*get_processor_row_)(record);
+    Bool return_value = (*this.*get_processor_row_)(record);
     POST_END;
     return return_value;
   }
 
   // to get SOURCE table
-  virtual casacore::Bool getSourceRow(sdfiller::SourceRecord &record) {
+  virtual Bool getSourceRow(sdfiller::SourceRecord &record) {
     POST_START;
-    casacore::Bool return_value = (*this.*get_source_row_)(record);
+    Bool return_value = (*this.*get_source_row_)(record);
     POST_END;
     return return_value;
   }
 
   // to get FIELD table
-  virtual casacore::Bool getFieldRow(sdfiller::FieldRecord &record) {
+  virtual Bool getFieldRow(sdfiller::FieldRecord &record) {
     POST_START;
-    casacore::Bool return_value = (*this.*get_field_row_)(record);
+    Bool return_value = (*this.*get_field_row_)(record);
     POST_END;
     return return_value;
   }
 
   // to get SOURCE table
-  virtual casacore::Bool getSpectralWindowRow(sdfiller::SpectralWindowRecord &record) {
+  virtual Bool getSpectralWindowRow(sdfiller::SpectralWindowRecord &record) {
     POST_START;
-    casacore::Bool return_value = (*this.*get_spw_row_)(record);
+    Bool return_value = (*this.*get_spw_row_)(record);
     POST_END;
     return return_value;
   }
 
   // for DataAccumulator
-  virtual casacore::Bool getData(size_t irow, sdfiller::DataRecord &record);
+  virtual Bool getData(size_t irow, sdfiller::DataRecord &record);
 
   virtual int getNROArraySize() {
     return obs_header_.NBEAM * obs_header_.NPOL * obs_header_.NSPWIN;
@@ -153,7 +151,7 @@ private:
   int beam_id_counter_;
   int source_spw_id_counter_;
   int spw_id_counter_;
-  casacore::Vector<casacore::Double> time_range_sec_;
+  Vector<Double> time_range_sec_;
   int const len_obs_header_ = 15136;
   double getMJD(string const &time);
   double getIntMiddleTimeSec(sdfiller::NRODataScanData const &data);
@@ -162,34 +160,34 @@ private:
   void getFullTimeRange();
   double getMiddleOfTimeRangeSec();
 
-  casacore::Double const posx_ = -3.8710235e6;
-  casacore::Double const posy_ =  3.4281068e6;
-  casacore::Double const posz_ =  3.7240395e6;
+  Double const posx_ = -3.8710235e6;
+  Double const posy_ =  3.4281068e6;
+  Double const posz_ =  3.7240395e6;
 
   double getRestFrequency(int const spwno);
   string convertVRefName(string const &vref0);
 
   std::vector<double> getSpectrum(int const irow, sdfiller::NRODataScanData const &data);
-  casacore::Int getPolNo(string const &rx);
+  Int getPolNo(string const &rx);
 
-  casacore::Bool (NRO2MSReader::*get_antenna_row_)(sdfiller::AntennaRecord &);
-  casacore::Bool (NRO2MSReader::*get_field_row_)(sdfiller::FieldRecord &);
-  casacore::Bool (NRO2MSReader::*get_observation_row_)(sdfiller::ObservationRecord &);
-  casacore::Bool (NRO2MSReader::*get_processor_row_)(sdfiller::ProcessorRecord &);
-  casacore::Bool (NRO2MSReader::*get_source_row_)(sdfiller::SourceRecord &);
-  casacore::Bool (NRO2MSReader::*get_spw_row_)(sdfiller::SpectralWindowRecord &);
+  Bool (NRO2MSReader::*get_antenna_row_)(sdfiller::AntennaRecord &);
+  Bool (NRO2MSReader::*get_field_row_)(sdfiller::FieldRecord &);
+  Bool (NRO2MSReader::*get_observation_row_)(sdfiller::ObservationRecord &);
+  Bool (NRO2MSReader::*get_processor_row_)(sdfiller::ProcessorRecord &);
+  Bool (NRO2MSReader::*get_source_row_)(sdfiller::SourceRecord &);
+  Bool (NRO2MSReader::*get_spw_row_)(sdfiller::SpectralWindowRecord &);
 
-  casacore::Bool getAntennaRowImpl(sdfiller::AntennaRecord &record);
-  casacore::Bool getFieldRowImpl(sdfiller::FieldRecord &record);
-  casacore::Bool getObservationRowImpl(sdfiller::ObservationRecord &record);
-  casacore::Bool getProcessorRowImpl(sdfiller::ProcessorRecord &record);
-  casacore::Bool getSourceRowImpl(sdfiller::SourceRecord &record);
-  casacore::Bool getSpectralWindowRowImpl(sdfiller::SpectralWindowRecord &record);
+  Bool getAntennaRowImpl(sdfiller::AntennaRecord &record);
+  Bool getFieldRowImpl(sdfiller::FieldRecord &record);
+  Bool getObservationRowImpl(sdfiller::ObservationRecord &record);
+  Bool getProcessorRowImpl(sdfiller::ProcessorRecord &record);
+  Bool getSourceRowImpl(sdfiller::SourceRecord &record);
+  Bool getSpectralWindowRowImpl(sdfiller::SpectralWindowRecord &record);
 
   template<class _Record>
-  casacore::Bool noMoreRowImpl(_Record &) {
+  Bool noMoreRowImpl(_Record &) {
     POST_START;POST_END;
-    return false;
+    return False;
   }
 };
 

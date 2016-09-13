@@ -108,7 +108,7 @@ try {
 
 // Make images
 
-      PagedImage<Float> inImage(in, true);
+      PagedImage<Float> inImage(in, True);
 //
       {
         IPosition outShape(inImage.shape());
@@ -186,14 +186,14 @@ try {
            PagedImage<Complex> outComplex2(outShape, inImage.coordinates(), "tImageFFT_tmp_complex2.img");
            if (inImage.isMasked()) makeMask(outComplex2);
 //
-           Vector<Bool> which(inImage.ndim(), true);
+           Vector<Bool> which(inImage.ndim(), True);
            if (axes.nelements()==1 && axes[0]==-10) {
               ;
            } else {
               for (uInt i=0; i<inImage.ndim(); i++) {
-                 Bool found = false;
+                 Bool found = False;
                  for (uInt j=0; j<axes.nelements(); j++) {
-                   if (axes[j]==Int(i)) found = true;
+                   if (axes[j]==Int(i)) found = True;
                  }
                  which(i) = found;
               }
@@ -214,17 +214,17 @@ try {
 
 // Delete output files
 
-      Table::deleteTable(String("tImageFFT_tmp_real.img"), true);
-      Table::deleteTable(String("tImageFFT_tmp_imag.img"), true);
-      Table::deleteTable(String("tImageFFT_tmp_amp.img"), true);
-      Table::deleteTable(String("tImageFFT_tmp_phase.img"), true);      
-      Table::deleteTable(String("tImageFFT_tmp_complex.img"), true);
+      Table::deleteTable(String("tImageFFT_tmp_real.img"), True);
+      Table::deleteTable(String("tImageFFT_tmp_imag.img"), True);
+      Table::deleteTable(String("tImageFFT_tmp_amp.img"), True);
+      Table::deleteTable(String("tImageFFT_tmp_phase.img"), True);      
+      Table::deleteTable(String("tImageFFT_tmp_complex.img"), True);
 //
-      Table::deleteTable(String("tImageFFT_tmp_real2.img"), true);
-      Table::deleteTable(String("tImageFFT_tmp_imag2.img"), true);
-      Table::deleteTable(String("tImageFFT_tmp_amp2.img"), true);
-      Table::deleteTable(String("tImageFFT_tmp_phase2.img"), true);      
-      Table::deleteTable(String("tImageFFT_tmp_complex2.img"), true);
+      Table::deleteTable(String("tImageFFT_tmp_real2.img"), True);
+      Table::deleteTable(String("tImageFFT_tmp_imag2.img"), True);
+      Table::deleteTable(String("tImageFFT_tmp_amp2.img"), True);
+      Table::deleteTable(String("tImageFFT_tmp_phase2.img"), True);      
+      Table::deleteTable(String("tImageFFT_tmp_complex2.img"), True);
    } else {
       os << LogIO::NORMAL << "images of type " << Int(imageType)
 	 << " not yet supported" << LogIO::POST;
@@ -262,8 +262,8 @@ void checkNumbers (const ImageInterface<Float>& rIn,
       for (uInt i=0; i<rIn.ndim(); i++) {
          if (i>1) shape(i) = 1;
       }
-      Array<Float> r0 = rIn.getSlice(blc, shape, true);
-      Array<Bool> m0 = rIn.getMaskSlice(blc, shape, true);
+      Array<Float> r0 = rIn.getSlice(blc, shape, True);
+      Array<Bool> m0 = rIn.getMaskSlice(blc, shape, True);
       if (rIn.isMasked()) {
          Bool deleteIt1, deleteIt2;
          Float* pP = r0.getStorage(deleteIt1);
@@ -281,15 +281,15 @@ void checkNumbers (const ImageInterface<Float>& rIn,
 // Make FFT server and FFT
 
       FFTServer<Float,Complex> fftServer(c.shape(),FFTEnums::COMPLEX);
-      fftServer.fft(c, true);
+      fftServer.fft(c, True);
 
 // Check numbers
 
-      AlwaysAssert(allNear(rOut.getSlice(blc,shape,true), real(c), 1e-6), AipsError);
-      AlwaysAssert(allNear(iOut.getSlice(blc,shape,true), imag(c), 1e-6), AipsError);
-      AlwaysAssert(allNear(aOut.getSlice(blc,shape,true), amplitude(c), 1e-6), AipsError);
-      AlwaysAssert(allNear(pOut.getSlice(blc,shape,true), phase(c), 1e-6), AipsError);
-      AlwaysAssert(allNear(cOut.getSlice(blc,shape,true), c, 1e-6), AipsError);
+      AlwaysAssert(allNear(rOut.getSlice(blc,shape,True), real(c), 1e-6), AipsError);
+      AlwaysAssert(allNear(iOut.getSlice(blc,shape,True), imag(c), 1e-6), AipsError);
+      AlwaysAssert(allNear(aOut.getSlice(blc,shape,True), amplitude(c), 1e-6), AipsError);
+      AlwaysAssert(allNear(pOut.getSlice(blc,shape,True), phase(c), 1e-6), AipsError);
+      AlwaysAssert(allNear(cOut.getSlice(blc,shape,True), c, 1e-6), AipsError);
 }
 
 
@@ -331,7 +331,7 @@ void checkNumbers (const ImageInterface<Float>& rIn,
 // Make FFT server and FFT
 
       FFTServer<Float,Complex> fftServer(c.shape(),FFTEnums::COMPLEX);
-      fftServer.fft(c, true);
+      fftServer.fft(c, True);
 
 // Check numbers
 
@@ -346,10 +346,10 @@ void checkNumbers (const ImageInterface<Float>& rIn,
 
 void makeMask(ImageInterface<Float>& out)
 {
-   out.makeMask ("mask0", true, true);
+   out.makeMask ("mask0", True, True);
 }
 
 void makeMask(ImageInterface<Complex>& out)
 {
-   out.makeMask ("mask0", true, true);
+   out.makeMask ("mask0", True, True);
 }

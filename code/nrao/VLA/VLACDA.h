@@ -88,8 +88,8 @@ public:
   // where the CDA starts in the logical record. The number of antennas and
   // channels in this CDA, as well as the size of a baseline record, 
   // must also be specified.
-  VLACDA(casacore::ByteSource& record, casacore::uInt offset, casacore::uInt baselineSize, 
-	 casacore::uInt nant, casacore::uInt nChan);
+  VLACDA(ByteSource& record, uInt offset, uInt baselineSize, 
+	 uInt nant, uInt nChan);
 
   // The copy constructor uses copy semantics
   VLACDA(const VLACDA& other);
@@ -105,54 +105,54 @@ public:
   // where the CDA starts in the logical record. The number of antennas and
   // channels in this CDA, as well as the size of a baseline record, 
   // must also be specified.
-  void attach(casacore::ByteSource& record, casacore::uInt offset, casacore::uInt baselineSize, 
-	      casacore::uInt nant, casacore::uInt nChan);
+  void attach(ByteSource& record, uInt offset, uInt baselineSize, 
+	      uInt nant, uInt nChan);
   
-  // Return true if the CDA contains valid data. This, and the copy functions,
+  // Return True if the CDA contains valid data. This, and the copy functions,
   // will not throw an exception if the CDA does not contain data.
-  casacore::Bool isValid() const;
+  Bool isValid() const;
 
   // return the specified baseline record corresponding to the specified
   // auto-correlation. The index must be less than the number of antennas in
   // this subarray otherwise an exception is thrown.
-  const VLABaselineRecord& autoCorr(casacore::uInt which) const;
+  const VLABaselineRecord& autoCorr(uInt which) const;
 
   // return the specified baseline record corresponding to the specified
   // cross-correlation. The index must be less than NANT*(NANT-1)/2 otherwise
   // an exception is thrown.
-  const VLABaselineRecord& crossCorr(casacore::uInt which) const;
+  const VLABaselineRecord& crossCorr(uInt which) const;
 
 private: 
   //# delete all the auto-correlation baseline pointers
-  void deleteACorr(casacore::uInt startIndex);
+  void deleteACorr(uInt startIndex);
   //# delete all the cross-correlation baseline pointers
-  void deleteXCorr(casacore::uInt startIndex);
+  void deleteXCorr(uInt startIndex);
 
   //# Contains a logical record. It is mutable because functions which do not
   //# changes its contents do change its "location"
-  mutable casacore::ByteSource itsRecord;
+  mutable ByteSource itsRecord;
 
   // the offset to the start of this CDA in the record. An offset of zero means
   // this CDA is not used in this record.
-  casacore::uInt itsOffset;
+  uInt itsOffset;
 
   // A cached value of the size, in bytes, of a baseline record.
-  casacore::uInt itsBaselineSize;
+  uInt itsBaselineSize;
 
   // A cached value of the number of antennas that this CDU has data for.
-  casacore::uInt itsNant;
+  uInt itsNant;
 
   // A cached value of the number of channels that this CDU has data for.
-  casacore::uInt itsNchan;
+  uInt itsNchan;
 
   //# A block containing containing "cached" baseline records for the
   //# autocorrelations. The pointers are null until the data is actually
   //# accessed.
-  mutable casacore::PtrBlock<VLABaselineRecord*> itsACorr; 
+  mutable PtrBlock<VLABaselineRecord*> itsACorr; 
 
   //# A block containing containing "cached" baseline records for the
   //# crosscorrelations. The pointers are null until the data is actually
   //# accessed.
-  mutable casacore::PtrBlock<VLABaselineRecord*> itsXCorr; 
+  mutable PtrBlock<VLABaselineRecord*> itsXCorr; 
 }; 
 #endif

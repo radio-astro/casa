@@ -9,7 +9,6 @@
 #include <display3d/3DViewer/3DController.qo.h>
 #include <display3d/3DViewer/3DPoint.h>
 
-using namespace casacore;
 namespace casa {
 
 GLWidget::GLWidget(QWidget *parent)
@@ -495,7 +494,7 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
 
 void GLWidget::setDD(char* fn, int& pol)
 {
-    Bool ddOk = false;
+    Bool ddOk = False;
     if (fn == 0) {
        qDebug() << "empty image file name";
     }
@@ -506,7 +505,7 @@ void GLWidget::setDD(char* fn, int& pol)
           }
           if (dd3) {
              dd3->getCube(data, pol);
-             ddOk = true;
+             ddOk = True;
           }
        }
        catch (AipsError e) {

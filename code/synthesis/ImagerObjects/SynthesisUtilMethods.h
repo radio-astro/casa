@@ -69,39 +69,39 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     // Partitioning syntax for Selection parameters
     //
-    // casacore::Input casacore::Record (example) :
+    // Input Record (example) :
     //  { 'ms0' : { 'msname':xxx1, 'spw':yyy } ,
     //     'ms1' : { 'msname':xxx2, 'spw':yyy } }
     //
-    //  Output casacore::Record (example for partitioning on spw) : 
+    //  Output Record (example for partitioning on spw) : 
     //  { '0' : { 'ms0' : { 'msname':xxx1, 'spw':yyy1 } ,
     //              'ms1' : { 'msname':xxx2, 'spw':yyy1 }    }
     //    '1' : { 'ms0' : { 'msname':xxx1, 'spw':yyy2 } ,
     //               'ms1' : { 'msname':xxx2, 'spw':yyy2 }   }   }
     
-    // casacore::Data partitioning rules for CONTINUUM imaging
-    casacore::Record continuumDataPartition(casacore::Record &selpars, const casacore::Int npart);
+    // Data partitioning rules for CONTINUUM imaging
+    Record continuumDataPartition(Record &selpars, const Int npart);
     
-    // casacore::Data partitioning rules for CUBE imaging
+    // Data partitioning rules for CUBE imaging
     //uniform contiguous partition in frequency step
     // Note that the spw selection will have a "-1"
     //if there is no overlap in the data selection provided and 
     // frequency range provided
-    static casacore::Record cubeDataPartition(const casacore::Record &selpars, const casacore::Int npart, const casacore::Double freqBeg, const casacore::Double freqEnd, const casacore::MFrequency::Types eltype=casacore::MFrequency::LSRK);
+    static Record cubeDataPartition(const Record &selpars, const Int npart, const Double freqBeg, const Double freqEnd, const MFrequency::Types eltype=MFrequency::LSRK);
 
     // freqBeg and freqEnd are frequency range  of the sub image cubes defined in frame set here
     // number of partions is obviously the length of freqBeg and freqEnd 
     // Use this for non uniform width of imge frequencies
-    static casacore::Record cubeDataPartition(const casacore::Record& selpars, const casacore::Vector<casacore::Double>& freqBeg, const casacore::Vector<casacore::Double>& freqEnd, const casacore::MFrequency::Types frame=casacore::MFrequency::LSRK);
+    static Record cubeDataPartition(const Record& selpars, const Vector<Double>& freqBeg, const Vector<Double>& freqEnd, const MFrequency::Types frame=MFrequency::LSRK);
     
-    //casacore::CoordinateSystem and number of channels of original cube is passed in 
+    //CoordinateSystem and number of channels of original cube is passed in 
     //Output record is the ms's and data selection for each part.
-    // also the casacore::Vector of outCsys and outnChan are the  coordinatesystems
+    // also the Vector of outCsys and outnChan are the  coordinatesystems
     // and nchannel of the sub cube for each part.
     // The image is divided  in n part along spectral channel
     //now if one of the sub cube has no match the  the spw selection will have a "-1"
     //for that part. The caller will have to deal with that for load balancing etc..
-    //  Output casacore::Record (example for partitioning on spw) : 
+    //  Output Record (example for partitioning on spw) : 
     //  { '0' : { 'ms0' : { 'msname':xxx1, 'spw': '0:5~10' } ,
     //              'ms1' : { 'msname':xxx2, 'spw':'0:20~25' },   
     //                 'nchan': 6, 
@@ -111,15 +111,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //               'nchan':6, 
     //                'coordsys': { A record of the coordinatesystem of subcube 1} }
     //   }
-    // the coordsys keyed record can be use in casacore::CoordinateSystem:;restore to reconstrucr
+    // the coordsys keyed record can be use in CoordinateSystem:;restore to reconstrucr
     // it is the same as the parameter outCsys
-    static casacore::Record cubeDataImagePartition(const casacore::Record & selpars, const casacore::CoordinateSystem&
-				    incsys, const casacore::Int npart, const casacore::Int nchannel, 
-				    casacore::Vector<casacore::CoordinateSystem>& outCsys,
-				    casacore::Vector<casacore::Int>& outnChan);
+    static Record cubeDataImagePartition(const Record & selpars, const CoordinateSystem&
+				    incsys, const Int npart, const Int nchannel, 
+				    Vector<CoordinateSystem>& outCsys,
+				    Vector<Int>& outnChan);
 
     // Image cube partitioning rules for CUBE imaging
-    casacore::Record cubeImagePartition(casacore::Record &impars, casacore::Int npart);
+    Record cubeImagePartition(Record &impars, Int npart);
     
     // Validate the supplied VB.  This currently only checks for the
     // existence of at least one non-flagged row and returns the index
@@ -127,19 +127,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // SynthesisUtilMethods::NOVALIDROWS. This static method is called
     // in the vis-iter loops to block invalid VBs from flowing down
     // the pipes.
-    static casacore::Int validate(const VisBuffer& vb);
-    static casacore::Int validate(const vi::VisBuffer2& vb);
+    static Int validate(const VisBuffer& vb);
+    static Int validate(const vi::VisBuffer2& vb);
 
 
-    static casacore::Int getOptimumSize(const casacore::Int npix);
+    static Int getOptimumSize(const Int npix);
 
-    static casacore::Int parseLine(char* line);
-    static void getResource(casacore::String label="",casacore::String fname="");
+    static Int parseLine(char* line);
+    static void getResource(String label="",String fname="");
     
   protected:
-    static casacore::String mergeSpwSel(const casacore::Vector<casacore::Int>& fspw, const casacore::Vector<casacore::Int>& fstart, const casacore::Vector<casacore::Int>& fnchan, const casacore::Matrix<casacore::Int>& spwsel);
+    static String mergeSpwSel(const Vector<Int>& fspw, const Vector<Int>& fstart, const Vector<Int>& fnchan, const Matrix<Int>& spwsel);
 
-    static casacore::Vector<casacore::uInt> primeFactors(casacore::uInt n, casacore::Bool douniq=true);
+    static Vector<uInt> primeFactors(uInt n, Bool douniq=True);
 
   };
 
@@ -150,27 +150,27 @@ public:
   virtual ~SynthesisParams(){};
   ///As there is no state to copy
   virtual SynthesisParams& operator= (const SynthesisParams& /*other*/){ return *this;};
-  virtual void fromRecord(const casacore::Record &inrec)=0;
+  virtual void fromRecord(const Record &inrec)=0;
   virtual void setDefaults()=0;
-  virtual casacore::String verify()const =0 ;
-  virtual casacore::Record toRecord() const =0;
+  virtual String verify()const =0 ;
+  virtual Record toRecord() const =0;
 protected:
   // All return strings are error messages. Null if valid.
-  casacore::String readVal(const casacore::Record &rec, casacore::String id, casacore::String& val) const ;
-  casacore::String readVal(const casacore::Record &rec, casacore::String id, casacore::Int& val) const ;
-  casacore::String readVal(const casacore::Record &rec, casacore::String id, casacore::Float& val) const;
-  casacore::String readVal(const casacore::Record &rec, casacore::String id, casacore::Bool& val) const ;
-  casacore::String readVal(const casacore::Record &rec, casacore::String id, casacore::Vector<casacore::Int>& val) const;
-  casacore::String readVal(const casacore::Record &rec, casacore::String id, casacore::Vector<casacore::Float>& val) const ;
-  casacore::String readVal(const casacore::Record &rec, casacore::String id, casacore::Vector<casacore::String>& val) const ;
-  casacore::String stringToQuantity(casacore::String instr, casacore::Quantity& qa) const;
-  casacore::String stringToMDirection(casacore::String instr, casacore::MDirection& md) const ;
-  casacore::String readVal(const casacore::Record &rec, casacore::String id, casacore::Quantity& val) const;
-  casacore::String readVal(const casacore::Record &rec, casacore::String id, casacore::MDirection& val) const ;
+  String readVal(const Record &rec, String id, String& val) const ;
+  String readVal(const Record &rec, String id, Int& val) const ;
+  String readVal(const Record &rec, String id, Float& val) const;
+  String readVal(const Record &rec, String id, Bool& val) const ;
+  String readVal(const Record &rec, String id, Vector<Int>& val) const;
+  String readVal(const Record &rec, String id, Vector<Float>& val) const ;
+  String readVal(const Record &rec, String id, Vector<String>& val) const ;
+  String stringToQuantity(String instr, Quantity& qa) const;
+  String stringToMDirection(String instr, MDirection& md) const ;
+  String readVal(const Record &rec, String id, Quantity& val) const;
+  String readVal(const Record &rec, String id, MDirection& val) const ;
   // Others..
-  casacore::String MDirectionToString(casacore::MDirection val) const;
-  casacore::String QuantityToString(casacore::Quantity val) const;
-  casacore::String recordQMToString(const casacore::Record &rec) const ;
+  String MDirectionToString(MDirection val) const;
+  String QuantityToString(Quantity val) const;
+  String recordQMToString(const Record &rec) const ;
 };
 
   class SynthesisParamsSelect : public SynthesisParams
@@ -183,17 +183,17 @@ public:
 
   //copy semantics
   virtual SynthesisParamsSelect& operator=(const SynthesisParamsSelect& other);
-  void fromRecord(const casacore::Record &inrec);
+  void fromRecord(const Record &inrec);
   void setDefaults();
-  casacore::String verify() const;
-  casacore::Record toRecord() const;
+  String verify() const;
+  Record toRecord() const;
 
-  casacore::String msname, spw, freqbeg, freqend;
-  casacore::MFrequency::Types freqframe;
-  casacore::String field, antenna, timestr, scan, obs, state, uvdist,taql,intent;
-  casacore::Bool usescratch,readonly,incrmodel;
+  String msname, spw, freqbeg, freqend;
+  MFrequency::Types freqframe;
+  String field, antenna, timestr, scan, obs, state, uvdist,taql,intent;
+  Bool usescratch,readonly,incrmodel;
 
-  casacore::String datacolumn;
+  String datacolumn;
 
 };
 
@@ -206,70 +206,70 @@ public:
   SynthesisParamsImage();
   ~SynthesisParamsImage();
 
-  void fromRecord(const casacore::Record &inrec);
+  void fromRecord(const Record &inrec);
   void setDefaults();
-  casacore::String verify() const;
-  casacore::Record toRecord()const ;
+  String verify() const;
+  Record toRecord()const ;
 
-  // Generate casacore::Coordinate System 
-  casacore::CoordinateSystem buildCoordinateSystem(ROVisibilityIterator* rvi);
-  casacore::CoordinateSystem buildCoordinateSystem(vi::VisibilityIterator2& vi2);
-  casacore::CoordinateSystem buildCoordinateSystemCore(casacore::MeasurementSet& msobj, 
-					     casacore::Vector<casacore::Int> spwids, casacore::Int fld, 
-					     casacore::Double freqmin, casacore::Double freqmax, 
-                                             casacore::Double datafstart, casacore::Double datafend);
+  // Generate Coordinate System 
+  CoordinateSystem buildCoordinateSystem(ROVisibilityIterator* rvi);
+  CoordinateSystem buildCoordinateSystem(vi::VisibilityIterator2& vi2);
+  CoordinateSystem buildCoordinateSystemCore(MeasurementSet& msobj, 
+					     Vector<Int> spwids, Int fld, 
+					     Double freqmin, Double freqmax, 
+                                             Double datafstart, Double datafend);
 
-  casacore::Vector<casacore::Int> decideNPolPlanes(const casacore::String& stokes) const;
-  casacore::IPosition shp() const;
-  casacore::Bool getImFreq(casacore::Vector<casacore::Double>& ChanFreq, casacore::Vector<casacore::Double>& ChanWidth, 
-		 casacore::Double& refPix, casacore::String& specmode,
-		 const casacore::MEpoch& obsEpoch, const casacore::MPosition& obsPosition,
-		 const casacore::Vector<casacore::Double>& dataChanFreqs, const casacore::Vector<casacore::Double>& dataFreqRes,
-		 const casacore::MFrequency::Types& dataFrame, const casacore::Quantity& qrestfreq, 
-		 const casacore::Double& freqmin, const casacore::Double& freqmax,
-		 const casacore::MDirection& phaseCenter );
+  Vector<Int> decideNPolPlanes(const String& stokes) const;
+  IPosition shp() const;
+  Bool getImFreq(Vector<Double>& ChanFreq, Vector<Double>& ChanWidth, 
+		 Double& refPix, String& specmode,
+		 const MEpoch& obsEpoch, const MPosition& obsPosition,
+		 const Vector<Double>& dataChanFreqs, const Vector<Double>& dataFreqRes,
+		 const MFrequency::Types& dataFrame, const Quantity& qrestfreq, 
+		 const Double& freqmin, const Double& freqmax,
+		 const MDirection& phaseCenter );
   
-  casacore::String findSpecMode(const casacore::String& mode) const;
-  casacore::String MDopToVelString(casacore::Record &rec);
-  casacore::Record getcsys() const;
+  String findSpecMode(const String& mode) const;
+  String MDopToVelString(Record &rec);
+  Record getcsys() const;
   // check consistency of image parameters when csys record exists and update 
   // accordingly based on csys record 
-  casacore::Record updateParams(const casacore::Record &impar);
+  Record updateParams(const Record &impar);
 
   // Sky coordinates
-  casacore::String imageName, stokes;
-  casacore::Vector<casacore::String> startModel;
-  casacore::Vector<casacore::Int> imsize;
-  casacore::Vector<casacore::Quantity> cellsize;
-  casacore::Projection projection;
-  casacore::Bool useNCP;
-  casacore::MDirection phaseCenter;
-  casacore::Int phaseCenterFieldId;
+  String imageName, stokes;
+  Vector<String> startModel;
+  Vector<Int> imsize;
+  Vector<Quantity> cellsize;
+  Projection projection;
+  Bool useNCP;
+  MDirection phaseCenter;
+  Int phaseCenterFieldId;
 
   // Spectral coordinates ( TT : Add other params here  )
-  casacore::Int nchan, nTaylorTerms, chanStart, chanStep;
-  casacore::Quantity freqStart, freqStep, refFreq, velStart, velStep;
-  casacore::MFrequency::Types freqFrame;
-  casacore::MFrequency mFreqStart, mFreqStep;
-  casacore::MRadialVelocity mVelStart, mVelStep;
-  casacore::Vector<casacore::Quantity> restFreq;
-  casacore::String start, step, frame, veltype, mode, reffreq, sysvel, sysvelframe;
-  // private variable to store ref frame defined in casacore::Quantity or casacore::Measure 
-  // in start or step parameters and veltype from measure (e.g. casacore::MDoppler)
-  casacore::String qmframe, mveltype;
-  casacore::String tststr;
+  Int nchan, nTaylorTerms, chanStart, chanStep;
+  Quantity freqStart, freqStep, refFreq, velStart, velStep;
+  MFrequency::Types freqFrame;
+  MFrequency mFreqStart, mFreqStep;
+  MRadialVelocity mVelStart, mVelStep;
+  Vector<Quantity> restFreq;
+  String start, step, frame, veltype, mode, reffreq, sysvel, sysvelframe;
+  // private variable to store ref frame defined in Quantity or Measure 
+  // in start or step parameters and veltype from measure (e.g. MDoppler)
+  String qmframe, mveltype;
+  String tststr;
   // for holding quantity or measure records
-  casacore::Record startRecord, stepRecord, reffreqRecord, sysvelRecord, restfreqRecord;
+  Record startRecord, stepRecord, reffreqRecord, sysvelRecord, restfreqRecord;
   // optional coordsys record
-  casacore::Record csysRecord, csys;
-  casacore::Vector<casacore::Int> imshape;
+  Record csysRecord, csys;
+  Vector<Int> imshape;
 
   //freqframe coversion?
-  casacore::Bool freqFrameValid;
+  Bool freqFrameValid;
 
-  casacore::Bool overwrite;
+  Bool overwrite;
 
-  casacore::String deconvolver;
+  String deconvolver;
 
 };
 
@@ -281,40 +281,40 @@ public:
   SynthesisParamsGrid();
   ~SynthesisParamsGrid();
 
-  void fromRecord(const casacore::Record &inrec);
+  void fromRecord(const Record &inrec);
   void setDefaults();
-  casacore::String verify() const;
-  casacore::Record toRecord() const;
+  String verify() const;
+  Record toRecord() const;
 
-  casacore::String imageName;
+  String imageName;
 
   // FTMachine setup
-  casacore::String gridder, ftmachine, convFunc, vpTable;
-  casacore::Int wprojplanes;
-  casacore::Bool useDoublePrec, useAutoCorr; 
-  casacore::Float padding;
+  String gridder, ftmachine, convFunc, vpTable;
+  Int wprojplanes;
+  Bool useDoublePrec, useAutoCorr; 
+  Float padding;
 
   // Facets for gridding.
-  casacore::Int facets;
+  Int facets;
 
-  // casacore::Cube chunks for gridding
-  casacore::Int chanchunks;
+  // Cube chunks for gridding
+  Int chanchunks;
 
   // Spectral axis interpolation
-  casacore::String interpolation;
+  String interpolation;
 
   // Moving phase center ? 
-  casacore::Quantity distance;
-  casacore::MDirection trackDir;
-  casacore::Bool trackSource; 
+  Quantity distance;
+  MDirection trackDir;
+  Bool trackSource; 
   
   // For wb-aprojection ftm.
-  casacore::Bool aTermOn, psTermOn,mTermOn,wbAWP,doPointing, doPBCorr, conjBeams;
-  casacore::String cfCache;
-  casacore::Float computePAStep, rotatePAStep;
+  Bool aTermOn, psTermOn,mTermOn,wbAWP,doPointing, doPBCorr, conjBeams;
+  String cfCache;
+  Float computePAStep, rotatePAStep;
 
   // Mapper Type.
-  casacore::String mType;
+  String mType;
 
 };
 
@@ -326,35 +326,35 @@ public:
   SynthesisParamsDeconv();
   ~SynthesisParamsDeconv();
 
-  void fromRecord(const casacore::Record &inrec);
+  void fromRecord(const Record &inrec);
   void setDefaults();
-  casacore::String verify() const;
-  casacore::Record toRecord() const;
+  String verify() const;
+  Record toRecord() const;
 
-  casacore::String imageName, algorithm;
-  casacore::Vector<casacore::String> startModel;
-  casacore::Int deconvolverId; // maybe remove ? It's only to tag summary info.
-  casacore::Int nTaylorTerms; 
-  casacore::Vector<casacore::Float> scales;
-  casacore::Float scalebias;
-  casacore::String maskString;
-  casacore::String maskType;
-  casacore::Vector<casacore::String> maskList;
-  casacore::String autoMaskAlgorithm;
-  casacore::Float pbMask;
-  casacore::String maskThreshold;
-  casacore::String maskResolution;
-  casacore::Float fracOfPeak;
-  casacore::Float maskResByBeam;
-  int nMask;
-  bool autoAdjust;
+  String imageName, algorithm;
+  Vector<String> startModel;
+  Int deconvolverId; // maybe remove ? It's only to tag summary info.
+  Int nTaylorTerms; 
+  Vector<Float> scales;
+  Float scalebias;
+  String maskString;
+  String maskType;
+  Vector<String> maskList;
+  String autoMaskAlgorithm;
+  Float pbMask;
+  String maskThreshold;
+  String maskResolution;
+  Float fracOfPeak;
+  Float maskResByBeam;
+  Int nMask;
+  Bool autoAdjust;
 
 
  
-  casacore::Bool interactive;
+  Bool interactive;
 
-  casacore::GaussianBeam restoringbeam;
-  casacore::String usebeam;
+  GaussianBeam restoringbeam;
+  String usebeam;
 
   };
 

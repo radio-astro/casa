@@ -29,7 +29,6 @@
 #include <components/SpectralComponents/SpectralFit.h>
 #include <components/SpectralComponents/SpectralElement.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Constructors
@@ -81,7 +80,6 @@ void SpectralFit::clear() {
 #ifdef AIPS_NO_TEMPLATE_SRC
 #include <components/SpectralComponents/SpectralFit2.tcc>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 template Bool SpectralFit::fit<Double>(Vector<Double> const &,
 			       Vector<Double> const &,

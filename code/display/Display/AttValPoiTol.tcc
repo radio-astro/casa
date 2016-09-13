@@ -38,17 +38,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	template <class T>
 	AttributeValuePoiTol<T>::AttributeValuePoiTol(T* value,
 	        const T &tolerance,
-	        const casacore::Bool strict)
+	        const Bool strict)
 		: AttributeValueTol<T>(*value, tolerance, strict),
 		  itsVectorPointerPtr(0),
 		  itsScalarPointerPtr(value),
-		  itsPointerType(casacore::whatType(value))
+		  itsPointerType(whatType(value))
 	{}
 
 	template <class T>
-	AttributeValuePoiTol<T>::AttributeValuePoiTol(casacore::Vector<T> *value,
+	AttributeValuePoiTol<T>::AttributeValuePoiTol(Vector<T> *value,
 	        const T &tolerance,
-	        const casacore::Bool strict)
+	        const Bool strict)
 		: AttributeValueTol<T>(*value, tolerance, strict),
 		  itsVectorPointerPtr(value),
 		  itsScalarPointerPtr(0),
@@ -87,7 +87,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	template <class T>
-	void AttributeValuePoiTol<T>::setValue(const casacore::Vector<T> &value) {
+	void AttributeValuePoiTol<T>::setValue(const Vector<T> &value) {
 		AttributeValueTol<T>::setValue(value);
 		updatePointerValue();
 	}
@@ -104,7 +104,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Check other is of the correct class
 
-		if (other.className() != casacore::String("AttributeValuePoiTol")) return;
+		if (other.className() != String("AttributeValuePoiTol")) return;
 
 //
 		if (getType() != other.getType()) return;
@@ -131,11 +131,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if (itsScalarPointerPtr != 0) {
 			*itsScalarPointerPtr = getValue()(0);
 			if (getValue().nelements() > 1) {
-				std::cerr << "AttValPoiTol::updatePointerValue - discarding vector elements.  This is" << std::endl;
-				std::cerr << "AttValPoiTol::updatePointerValue - a design flaw. Please defect this error" << std::endl;
+				cerr << "AttValPoiTol::updatePointerValue - discarding vector elements.  This is" << endl;
+				cerr << "AttValPoiTol::updatePointerValue - a design flaw. Please defect this error" << endl;
 			}
 		} else {
-			const casacore::Vector<T>& value = getValue();
+			const Vector<T>& value = getValue();
 			itsVectorPointerPtr->resize(0);
 			*itsVectorPointerPtr = value;
 		}
@@ -144,7 +144,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // get the DataType of the aliased variable
 	template <class T>
-	casacore::DataType AttributeValuePoiTol<T>::getPointerType() const {
+	DataType AttributeValuePoiTol<T>::getPointerType() const {
 		return itsPointerType;
 	}
 

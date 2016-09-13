@@ -40,17 +40,13 @@
 #include <synthesis/TransformMachines/FTMachine.h>
 #include <synthesis/TransformMachines2/FTMachine.h>
 
-namespace casacore{
-
-template<class T> class ImageInterface;
-}
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Forward declarations
   class ComponentFTMachine;
   namespace refim{class ComponentFTMachine;}
   class SkyJones;
+template<class T> class ImageInterface;
 
 // <summary> Class that contains functions needed for imager </summary>
 
@@ -59,46 +55,46 @@ namespace casa { //# NAMESPACE CASA - BEGIN
  public:
   // Default constructor
 
-  SIMapper( casacore::CountedPtr<SIImageStore>& imagestore,
-            casacore::CountedPtr<FTMachine>& ftm, 
-	    casacore::CountedPtr<FTMachine>& iftm);
+  SIMapper( CountedPtr<SIImageStore>& imagestore,
+            CountedPtr<FTMachine>& ftm, 
+	    CountedPtr<FTMachine>& iftm);
 
   ///Vi2/VisBuffer2 constructor
-   SIMapper( casacore::CountedPtr<SIImageStore>& imagestore,
-	     casacore::CountedPtr<refim::FTMachine>& ftm, 
-	     casacore::CountedPtr<refim::FTMachine>& iftm);
+   SIMapper( CountedPtr<SIImageStore>& imagestore,
+	     CountedPtr<refim::FTMachine>& ftm, 
+	     CountedPtr<refim::FTMachine>& iftm);
 
   SIMapper(const ComponentList& cl, 
-	   casacore::String& whichMachine);
+	   String& whichMachine);
   virtual ~SIMapper();
 
   ///// Major Cycle Functions
-  virtual void initializeGrid(vi::VisBuffer2& vb, casacore::Bool dopsf, casacore::Bool firstaccess=false);
-  virtual void grid(vi::VisBuffer2& vb, casacore::Bool dopsf, refim::FTMachine::Type col, const casacore::Int whichFTM=-1);
-  virtual void finalizeGrid(vi::VisBuffer2& vb, casacore::Bool dopsf);
-  virtual void initializeDegrid(vi::VisBuffer2& vb, casacore::Int row=-1);
+  virtual void initializeGrid(vi::VisBuffer2& vb, Bool dopsf, Bool firstaccess=False);
+  virtual void grid(vi::VisBuffer2& vb, Bool dopsf, refim::FTMachine::Type col, const Int whichFTM=-1);
+  virtual void finalizeGrid(vi::VisBuffer2& vb, Bool dopsf);
+  virtual void initializeDegrid(vi::VisBuffer2& vb, Int row=-1);
   virtual void degrid(vi::VisBuffer2& vb);
   virtual void addPB(vi::VisBuffer2& vb, PBMath& pbMath);
   /////////////////////// OLD VI/VB versions
-  virtual void initializeGrid(VisBuffer& vb, casacore::Bool dopsf, casacore::Bool firstaccess=false);
-  virtual void grid(VisBuffer& vb, casacore::Bool dopsf, FTMachine::Type col, const casacore::Int whichFTM=-1);
-  virtual void finalizeGrid(VisBuffer& vb, casacore::Bool dopsf);
-  virtual void initializeDegrid(VisBuffer& vb, casacore::Int row=-1);
+  virtual void initializeGrid(VisBuffer& vb, Bool dopsf, Bool firstaccess=False);
+  virtual void grid(VisBuffer& vb, Bool dopsf, FTMachine::Type col, const Int whichFTM=-1);
+  virtual void finalizeGrid(VisBuffer& vb, Bool dopsf);
+  virtual void initializeDegrid(VisBuffer& vb, Int row=-1);
   virtual void degrid(VisBuffer& vb);
   virtual void addPB(VisBuffer& vb, PBMath& pbMath);
 
   virtual void finalizeDegrid();
 
-  //////////////the return value is false if no valid record is being returned
-  casacore::Bool getCLRecord(casacore::Record& rec);
-  casacore::Bool getFTMRecord(casacore::Record& rec, const casacore::String diskimage="");
+  //////////////the return value is False if no valid record is being returned
+  Bool getCLRecord(Record& rec);
+  Bool getFTMRecord(Record& rec, const String diskimage="");
 
-  virtual casacore::String getImageName(){return itsImages->getName();};
-  virtual casacore::CountedPtr<SIImageStore> imageStore(){return itsImages;};
-  virtual casacore::Bool releaseImageLocks(){return itsImages->releaseLocks();};
+  virtual String getImageName(){return itsImages->getName();};
+  virtual CountedPtr<SIImageStore> imageStore(){return itsImages;};
+  virtual Bool releaseImageLocks(){return itsImages->releaseLocks();};
 
-  const casacore::CountedPtr<FTMachine>& getFTM(const casacore::Bool ift=true) {if (ift) return ift_p; else return ft_p;};
-  const casacore::CountedPtr<refim::FTMachine>& getFTM2(const casacore::Bool ift=true) {if (ift) return ift2_p; else return ft2_p;};
+  const CountedPtr<FTMachine>& getFTM(const Bool ift=True) {if (ift) return ift_p; else return ft_p;};
+  const CountedPtr<refim::FTMachine>& getFTM2(const Bool ift=True) {if (ift) return ift2_p; else return ft2_p;};
 
   
   virtual void initPB();
@@ -106,13 +102,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 protected:
 
-  casacore::CountedPtr<FTMachine> ft_p, ift_p; 
-  casacore::CountedPtr<refim::FTMachine> ft2_p, ift2_p; 
-  casacore::CountedPtr<ComponentFTMachine> cft_p;
-  casacore::CountedPtr<refim::ComponentFTMachine> cft2_p;
+  CountedPtr<FTMachine> ft_p, ift_p; 
+  CountedPtr<refim::FTMachine> ft2_p, ift2_p; 
+  CountedPtr<ComponentFTMachine> cft_p;
+  CountedPtr<refim::ComponentFTMachine> cft2_p;
   ComponentList cl_p;
-  casacore::Bool useViVb2_p;
-  casacore::CountedPtr<SIImageStore> itsImages;
+  Bool useViVb2_p;
+  CountedPtr<SIImageStore> itsImages;
 
 };
 

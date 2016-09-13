@@ -33,15 +33,11 @@
 #include <lattices/Lattices/MaskedLattice.h>
 #include <display/DisplayDatas/ActiveCaching2dDD.h>
 
-namespace casacore{
+namespace casa { //# NAMESPACE CASA - BEGIN
 
 	template <class T> class ImageInterface;
 	template <class T> class LatticeStatistics;
 	template <class T> class LatticeHistograms;
-}
-
-namespace casa { //# NAMESPACE CASA - BEGIN
-
 	class Histogram2dDM;
 
 // <summary>
@@ -71,35 +67,35 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Constructor taking a pointer to an already constructed
 		// ImageInterface.
-		Histogram2dDD(const casacore::ImageInterface<casacore::Float> *image);
+		Histogram2dDD(const ImageInterface<Float> *image);
 
-		// Constructor taking a pointer to an already constructed casacore::Table,
-		// and a casacore::String indicating a column name.
-		//Histogram2dDD(const casacore::Table *table, const casacore::String column);
+		// Constructor taking a pointer to an already constructed Table,
+		// and a String indicating a column name.
+		//Histogram2dDD(const Table *table, const String column);
 
 		// Constructor taking a pointer to an Array.
-		//Histogram2dDD(const casacore::Array<casacore::Float> *array);
+		//Histogram2dDD(const Array<Float> *array);
 
 		// Destructor.
 		virtual ~Histogram2dDD();
 
 		// Return the data unit.
-		virtual const casacore::Unit dataUnit();
+		virtual const Unit dataUnit();
 
-		// casacore::Format the histogram value at the given world position.
-		virtual casacore::String showValue(const casacore::Vector<casacore::Double> &world);
+		// Format the histogram value at the given world position.
+		virtual String showValue(const Vector<Double> &world);
 
 		// Install the default options for this DisplayData.
 		virtual void setDefaultOptions();
 
 		// Apply options stored in <src>rec</src> to the DisplayData.  A
-		// return value of <src>true</src> means a refresh is needed.
+		// return value of <src>True</src> means a refresh is needed.
 		// <src>recOut</src> contains any fields which were implicitly
 		// changed as a result of the call to this function.
-		virtual casacore::Bool setOptions(casacore::Record &rec, casacore::Record &recOut);
+		virtual Bool setOptions(Record &rec, Record &recOut);
 
 		// Retrieve the current and default options and parameter types.
-		virtual casacore::Record getOptions( bool scrub=false ) const;
+		virtual Record getOptions( bool scrub=false ) const;
 
 		// Return the type of this DisplayData.
 		virtual Display::DisplayDataType classType() {
@@ -121,12 +117,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual AttributeBuffer optionsAsAttributes();
 
 		// Provide read-only access to the Lattice.
-		const casacore::Lattice<casacore::Float> &lattice() const {
+		const Lattice<Float> &lattice() const {
 			return *itsMaskedLattice;
 		}
 
 		// Provide read-only access to the MaskedLattce.
-		const casacore::MaskedLattice<casacore::Float> &maskedLattice() const {
+		const MaskedLattice<Float> &maskedLattice() const {
 			return *itsMaskedLattice;
 		}
 
@@ -146,17 +142,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		friend class Histogram2dDM;
 
 		// The base image cloned at construction.
-		casacore::ImageInterface<casacore::Float> *itsBaseImage;
+		ImageInterface<Float> *itsBaseImage;
 
 		// The masked lattice, effectively referencing one of itsBaseImage,
 		// ...
-		casacore::MaskedLattice<casacore::Float> *itsMaskedLattice;
+		MaskedLattice<Float> *itsMaskedLattice;
 
 		// Object to use for calculating statistics.
-		casacore::LatticeStatistics<casacore::Float> *itsLatticeStatistics;
+		LatticeStatistics<Float> *itsLatticeStatistics;
 
 		// Object ot use for calculating histograms.
-		casacore::LatticeHistograms<casacore::Float> *itsLatticeHistograms;
+		LatticeHistograms<Float> *itsLatticeHistograms;
 
 	};
 

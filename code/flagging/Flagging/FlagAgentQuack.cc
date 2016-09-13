@@ -22,7 +22,6 @@
 
 #include <flagging/Flagging/FlagAgentQuack.h>
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 FlagAgentQuack::FlagAgentQuack(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube, Bool flag):
@@ -119,7 +118,7 @@ FlagAgentQuack::setAgentParameters(Record config)
 	}
 	else
 	{
-		quackincrement_p = false;
+		quackincrement_p = False;
 	}
 	*logger_p << logLevel_p << " quackincrement is " << quackincrement_p << LogIO::POST;
 

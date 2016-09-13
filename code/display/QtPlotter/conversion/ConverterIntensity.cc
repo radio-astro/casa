@@ -28,7 +28,6 @@
 #include <math.h>
 #include <QDebug>
 
-using namespace casacore;
 namespace casa {
 
 	const QString ConverterIntensity::FRACTION_OF_PEAK = "Fraction of Peak";
@@ -412,5 +411,4 @@ namespace casa {
 	ConverterIntensity::~ConverterIntensity() {
 	}
 
-using namespace casacore;
 } /* namespace casa */

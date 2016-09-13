@@ -54,74 +54,74 @@ public:
     enum MatrixShape {
         COLUMN_MAJOR, ROW_MAJOR
     };
-    PointingDirectionCalculator(casacore::MeasurementSet const &ms);
+    PointingDirectionCalculator(MeasurementSet const &ms);
 
     ~PointingDirectionCalculator() {
     }
 
-    void selectData(casacore::String const &antenna = "", casacore::String const &spw =
-            "", casacore::String const &field = "", casacore::String const &time = "",
-            casacore::String const &scan = "", casacore::String const &feed = "",
-            casacore::String const &intent = "", casacore::String const &observation =
-                    "", casacore::String const &uvrange = "",
-            casacore::String const &msselect = "");
-    void setDirectionColumn(casacore::String const &columnName = "DIRECTION");
-    void setFrame(casacore::String const frameType);
+    void selectData(String const &antenna = "", String const &spw =
+            "", String const &field = "", String const &time = "",
+            String const &scan = "", String const &feed = "",
+            String const &intent = "", String const &observation =
+                    "", String const &uvrange = "",
+            String const &msselect = "");
+    void setDirectionColumn(String const &columnName = "DIRECTION");
+    void setFrame(String const frameType);
     void setDirectionListMatrixShape(
             PointingDirectionCalculator::MatrixShape const shape);
-    void setMovingSource(casacore::String const sourceName);
-    void setMovingSource(casacore::MDirection const &sourceDirection);
+    void setMovingSource(String const sourceName);
+    void setMovingSource(MDirection const &sourceDirection);
     void unsetMovingSource();
 
-    casacore::uInt getNrowForSelectedMS() {return selectedMS_->nrow();}
-    casacore::MDirection::Types const &getDirectionType() {return directionType_;}
-    casacore::MDirection const &getMovingSourceDirection() {return *movingSource_;}
-    casacore::Matrix<casacore::Double> getDirection();
-    casacore::Vector<casacore::Double> getDirection(casacore::uInt irow);
-    casacore::Vector<casacore::uInt> getRowId();
-    casacore::uInt getRowId(casacore::uInt i);
+    uInt getNrowForSelectedMS() {return selectedMS_->nrow();}
+    MDirection::Types const &getDirectionType() {return directionType_;}
+    MDirection const &getMovingSourceDirection() {return *movingSource_;}
+    Matrix<Double> getDirection();
+    Vector<Double> getDirection(uInt irow);
+    Vector<uInt> getRowId();
+    uInt getRowId(uInt i);
 
 private:
     void init();
-    void initPointingTable(casacore::Int const antennaId);
-    void resetAntennaPosition(casacore::Int const antennaId);
-    void resetTime(casacore::Double const timestamp);
+    void initPointingTable(Int const antennaId);
+    void resetAntennaPosition(Int const antennaId);
+    void resetTime(Double const timestamp);
     void inspectAntenna();
     void configureMovingSourceCorrection();
-    casacore::Vector<casacore::Double> doGetDirection(casacore::uInt irow);
+    Vector<Double> doGetDirection(uInt irow);
 
     // table access stuff
-    casacore::CountedPtr<casacore::MeasurementSet> originalMS_;
-    casacore::CountedPtr<casacore::MeasurementSet> selectedMS_;
-    casacore::CountedPtr<casacore::MSPointing> pointingTable_;
-    casacore::CountedPtr<casacore::ROMSPointingColumns> pointingColumns_;
-    casacore::ROScalarMeasColumn<casacore::MEpoch> timeColumn_;
-    casacore::ROScalarColumn<casacore::Double> intervalColumn_;
-    casacore::ROScalarColumn<casacore::Int> antennaColumn_;
-    casacore::String directionColumnName_;
-    casacore::MDirection (*accessor_)(casacore::ROMSPointingColumns &pointingColumns,
-            casacore::uInt rownr);
+    CountedPtr<MeasurementSet> originalMS_;
+    CountedPtr<MeasurementSet> selectedMS_;
+    CountedPtr<MSPointing> pointingTable_;
+    CountedPtr<ROMSPointingColumns> pointingColumns_;
+    ROScalarMeasColumn<MEpoch> timeColumn_;
+    ROScalarColumn<Double> intervalColumn_;
+    ROScalarColumn<Int> antennaColumn_;
+    String directionColumnName_;
+    MDirection (*accessor_)(ROMSPointingColumns &pointingColumns,
+            uInt rownr);
 
     // conversion stuff
-    casacore::MPosition antennaPosition_;
-    casacore::MEpoch referenceEpoch_;
-    casacore::MeasFrame referenceFrame_;
-    casacore::CountedPtr<casacore::MDirection::Convert> directionConvert_;
-    casacore::MDirection::Types directionType_;
-    casacore::CountedPtr<casacore::MDirection> movingSource_;
-    casacore::CountedPtr<casacore::MDirection::Convert> movingSourceConvert_;
+    MPosition antennaPosition_;
+    MEpoch referenceEpoch_;
+    MeasFrame referenceFrame_;
+    CountedPtr<MDirection::Convert> directionConvert_;
+    MDirection::Types directionType_;
+    CountedPtr<MDirection> movingSource_;
+    CountedPtr<MDirection::Convert> movingSourceConvert_;
     void (*movingSourceCorrection_)(
-            casacore::CountedPtr<casacore::MDirection::Convert> &convertToAzel,
-            casacore::CountedPtr<casacore::MDirection::Convert> &convertToCelestial,
-            casacore::Vector<casacore::Double> &direction);
+            CountedPtr<MDirection::Convert> &convertToAzel,
+            CountedPtr<MDirection::Convert> &convertToCelestial,
+            Vector<Double> &direction);
 
     // other
-    casacore::Vector<casacore::uInt> antennaBoundary_;
-    casacore::uInt numAntennaBoundary_;
-    casacore::Vector<casacore::Double> pointingTimeUTC_;
-    casacore::Double lastTimeStamp_;
-    casacore::Int lastAntennaIndex_;
-    casacore::uInt pointingTableIndexCache_;
+    Vector<uInt> antennaBoundary_;
+    uInt numAntennaBoundary_;
+    Vector<Double> pointingTimeUTC_;
+    Double lastTimeStamp_;
+    Int lastAntennaIndex_;
+    uInt pointingTableIndexCache_;
     PointingDirectionCalculator::MatrixShape shape_;
 
     // privatize  default constructor

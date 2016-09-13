@@ -27,7 +27,6 @@
 #include <casaqt/QtBrowser/TBSlicer.qo.h>
 #include <casaqt/QtBrowser/TBConstants.h>
 
-using namespace casacore;
 namespace casa {
 
 ////////////////////////////

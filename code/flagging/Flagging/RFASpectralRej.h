@@ -68,40 +68,40 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 class RFASpectralRej : public RFAFlagCubeBase, public RFDataMapper
 {
 public:
-  RFASpectralRej  ( RFChunkStats &ch,const casacore::RecordInterface &parm ); 
+  RFASpectralRej  ( RFChunkStats &ch,const RecordInterface &parm ); 
   virtual ~RFASpectralRej () {};
   
-  virtual casacore::uInt estimateMemoryUse () { return RFAFlagCubeBase::estimateMemoryUse()+2; }
-  virtual casacore::Bool newChunk (casacore::Int &maxmem);
+  virtual uInt estimateMemoryUse () { return RFAFlagCubeBase::estimateMemoryUse()+2; }
+  virtual Bool newChunk (Int &maxmem);
   virtual void endChunk ();
   virtual void startData (bool verbose);
-  virtual IterMode iterTime (casacore::uInt it);
-  virtual IterMode iterRow  (casacore::uInt ir);
+  virtual IterMode iterTime (uInt it);
+  virtual IterMode iterRow  (uInt ir);
   virtual IterMode endData  ();
 
-  virtual casacore::String getDesc ();
-  static const casacore::RecordInterface & getDefaults ();
+  virtual String getDesc ();
+  static const RecordInterface & getDefaults ();
   
 protected:
-  void addSegment  ( casacore::Int spwid,casacore::Double fq0,casacore::Double fq1,casacore::Int ch0,casacore::Int ch1 );
-  void parseRegion ( const casacore::RecordInterface &parm );
+  void addSegment  ( Int spwid,Double fq0,Double fq1,Int ch0,Int ch1 );
+  void parseRegion ( const RecordInterface &parm );
     
   // spectral region specifications
-  typedef struct Segment { casacore::Int spwid; casacore::Double fq0,fq1; casacore::Int ch0,ch1; } Segment;
+  typedef struct Segment { Int spwid; Double fq0,fq1; Int ch0,ch1; } Segment;
   
-  casacore::Block<Segment> segments;
-  casacore::LogicalVector fitchan;
-  casacore::uInt num_fitchan;
+  Block<Segment> segments;
+  LogicalVector fitchan;
+  uInt num_fitchan;
 
-  casacore::uInt       ndeg,halfwin;
-  casacore::Double     threshold;  
+  uInt       ndeg,halfwin;
+  Double     threshold;  
   
   RFRowClipper rowclipper; // row clipper object
 
-  casacore::Polynomial<casacore::AutoDiff<casacore::Float> > poly; // fitted polynomial
-  casacore::LinearFit<casacore::Float> fitter;     // fitter object
+  Polynomial<AutoDiff<Float> > poly; // fitted polynomial
+  LinearFit<Float> fitter;     // fitter object
   
-  casacore::Double     xnorm;
+  Double     xnorm;
 };
 
 

@@ -3,13 +3,9 @@
 
 #include <iosfwd>
 
-namespace casacore{
-
-class String;
-}
-
 namespace casa {
 
+class String;
 
 namespace cdo {
 
@@ -43,18 +39,10 @@ public:
     ~Subtables ();
 
     void add (Subtable * subtable);
-<<<<<<< .mine
-    const Subtable * get (const casacore::String & name) const;
-    Subtable * get (Subtable::ST subtableType);
-    bool isPresent (Subtable::ST subtableType) const;
-    void set (Subtable::ST subtableType, Subtable * subtable);
-    casacore::uInt size () const;
-=======
     const Subtable * get (SubtableType) const;
     bool isPresent (SubtableType subtableType) const;
     void set (SubtableType subtableType, Subtable * subtable);
     unsigned int size () const;
->>>>>>> .r38222
 
    static String typeToName (SubtableType);
    static SubtableType nameToType (String);
@@ -74,9 +62,5 @@ private:
 } // end namespace cdo
 
 } // end namespace casa
-<<<<<<< .mine
-
-=======
 
 #endif // ! defined (CasaDataObjects_Subtables_H_160222_1045)
->>>>>>> .r38222

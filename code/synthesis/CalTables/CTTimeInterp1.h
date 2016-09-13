@@ -49,36 +49,36 @@ public:
 
   // From NewCalTable
   CTTimeInterp1(NewCalTable& ct,
-		const casacore::String& timetype,
-		casacore::Array<casacore::Float>& result,
-		casacore::Array<casacore::Bool>& rflag);
+		const String& timetype,
+		Array<Float>& result,
+		Array<Bool>& rflag);
 
   // Destructor
   virtual ~CTTimeInterp1();
 
   // Some state info
-  casacore::Double timeRef() { return timeRef_; };
-  casacore::String timeType() { return timeType_; };
-  casacore::Vector<casacore::Double> domain() { return domain_; };
+  Double timeRef() { return timeRef_; };
+  String timeType() { return timeType_; };
+  Vector<Double> domain() { return domain_; };
 
   // Set interpolation type
-  void setInterpType(casacore::String strtype);
+  void setInterpType(String strtype);
 
   // Interpolate, given timestamp; returns T if new result
-  casacore::Bool interpolate(casacore::Double time);
+  Bool interpolate(Double time);
 
   // Interpolate, given timestamp and fiducial freq; returns T if new result
-  casacore::Bool interpolate(casacore::Double newtime, casacore::Double freq);
+  Bool interpolate(Double newtime, Double freq);
 
-  void state(casacore::Bool verbose=false);
+  void state(Bool verbose=False);
 
 private:
   
   // Find 
-  casacore::Bool findTimeRegistration(casacore::Int& idx,casacore::Bool& exact,casacore::Float newtime);
+  Bool findTimeRegistration(Int& idx,Bool& exact,Float newtime);
 
   // 
-  void applyPhaseDelay(casacore::Double freq);
+  void applyPhaseDelay(Double freq);
 
 
   // The CalTable 
@@ -89,32 +89,32 @@ private:
   ROCTMainColumns *mcols_p;
 
   // Interpolation modes
-  casacore::String timeType_;
+  String timeType_;
 
   // Current time, idx
-  casacore::Double currTime_;
-  casacore::Int currIdx_;
-  casacore::Bool lastWasExact_;
+  Double currTime_;
+  Int currIdx_;
+  Bool lastWasExact_;
 
-  // casacore::Time list
-  casacore::Double timeRef_;
-  casacore::Vector<casacore::Float> timelist_;
-  casacore::Vector<casacore::Double> domain_;
+  // Time list
+  Double timeRef_;
+  Vector<Float> timelist_;
+  Vector<Double> domain_;
 
   // Flags list
-  casacore::Cube<casacore::Bool> flaglist_;
+  Cube<Bool> flaglist_;
 
   // Pointer to the time interpolator
-  casacore::Interpolate1D<casacore::Float,casacore::Array<casacore::Float> > *tInterpolator_p;
+  Interpolate1D<Float,Array<Float> > *tInterpolator_p;
 
   // Phase-delay correction info
-  casacore::Double cfreq_;
-  casacore::Cube<casacore::Float> cycles_;   // [npar,nchan,ntime]
+  Double cfreq_;
+  Cube<Float> cycles_;   // [npar,nchan,ntime]
   
   // Arrays in which to deposit results
-  //  (ordinarily, these (CASA-casacore::Array) reference external Arrays)
-  casacore::Array<casacore::Float> result_;
-  casacore::Array<casacore::Bool> rflag_;
+  //  (ordinarily, these (CASA-Array) reference external Arrays)
+  Array<Float> result_;
+  Array<Bool> rflag_;
 
 };
 

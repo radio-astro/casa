@@ -49,21 +49,21 @@ class ClarkCleanAlgorithm : public Algorithm {
   void put();
 
   // Return the name of the algorithm
-  casacore::String &name();
+  String &name();
 
  private:
   // Local copies of the data and input parameters
-  casacore::PagedArray<casacore::Float> *model_sl_p;
-  casacore::Array<casacore::Float>      residual_sl;
-  casacore::Array<casacore::Float>      psf_sf;
-  casacore::Array<casacore::Float>      mask;
-  casacore::Float        gain;
-  casacore::Float        threshold;
-  casacore::Int          numberIterations;
-  casacore::Int          chan;
-  casacore::Int          nchan;
-  casacore::String       myName;
-  casacore::Int cache_p;
+  PagedArray<Float> *model_sl_p;
+  Array<Float>      residual_sl;
+  Array<Float>      psf_sf;
+  Array<Float>      mask;
+  Float        gain;
+  Float        threshold;
+  Int          numberIterations;
+  Int          chan;
+  Int          nchan;
+  String       myName;
+  Int cache_p;
 
   // Do the Clark CLEAN on the assigned data
   void task();

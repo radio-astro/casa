@@ -67,7 +67,6 @@
 using std::vector;
 using std::pair;
 
-using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <summary> 
@@ -282,8 +281,6 @@ void VisSetUtil::HanningSmooth(VisSet &vs, const String& dataCol, const Bool& do
 }
 void VisSetUtil::HanningSmooth(VisIter &vi, const String& dataCol, const Bool& doFlagAndWeight)
 {
-    using casacore::operator*;
-
     LogIO os(LogOrigin("VisSetUtil", "HanningSmooth()"));
 
     VisBuffer vb(vi);
@@ -310,7 +307,7 @@ void VisSetUtil::HanningSmooth(VisIter &vi, const String& dataCol, const Bool& d
                         ///Handle first channel and flag it
                         smoothedData(pol,0,row) = vc(pol,0,row)*0.5 + vc(pol,1,row)*0.5;
                         newWeight(pol,0,row) = 0.0;
-                        newFlag(pol,0,row) = true;
+                        newFlag(pol,0,row) = True;
                         for (chn=1; chn<nChan-1; chn++) {
                             smoothedData(pol,chn,row) =
                                     vc(pol,chn-1,row)*0.25 + vc(pol,chn,row)*0.50 +
@@ -330,7 +327,7 @@ void VisSetUtil::HanningSmooth(VisIter &vi, const String& dataCol, const Bool& d
                         smoothedData(pol,nChan-1,row) =
                                 vc(pol,nChan-2,row)*0.5+vc(pol,nChan-1,row)*0.5;
                         newWeight(pol,nChan-1,row) = 0.0;
-                        newFlag(pol,nChan-1,row) = true;  // flag last channel
+                        newFlag(pol,nChan-1,row) = True;  // flag last channel
                     }
                 }
 
@@ -373,7 +370,7 @@ void VisSetUtil::HanningSmooth(VisIter &vi, const String& dataCol, const Bool& d
                     for (pol=0; pol<nPol; pol++) {
                         ///Handle first channel and flag it
                         smoothedData(pol,0,row) = vc(pol,0,row)*0.5 + vc(pol,1,row)*0.5;
-                        newFlag(pol,0,row) = true;
+                        newFlag(pol,0,row) = True;
                         ///Handle chan-independent weights
                         newWeight(pol, row) = 8.0*wm(pol, row)/3.0;
                         for (chn=1; chn<nChan-1; chn++) {
@@ -386,7 +383,7 @@ void VisSetUtil::HanningSmooth(VisIter &vi, const String& dataCol, const Bool& d
                         //Handle last channel and flag it
                         smoothedData(pol,nChan-1,row) =
                                 vc(pol,nChan-2,row)*0.5+vc(pol,nChan-1,row)*0.5;
-                        newFlag(pol,nChan-1,row) = true;  // flag last channel
+                        newFlag(pol,nChan-1,row) = True;  // flag last channel
                     }
                 }
 
@@ -476,7 +473,7 @@ void VisSetUtil::addScrCols(MeasurementSet& ms, Bool addModel, Bool addCorr,
 
         IPosition dataTileShape;
         Bool tiled = (dataManType.contains("Tiled"));
-        Bool simpleTiling = false;
+        Bool simpleTiling = False;
 
         if (!tiled || !simpleTiling) {
             // Untiled, or tiled at a higher than expected dimensionality
@@ -506,7 +503,7 @@ void VisSetUtil::addScrCols(MeasurementSet& ms, Bool addModel, Bool addCorr,
                 tdModelScale.addColumn(ScalarColumnDesc<Float>(colModel+"_SCALE"));
                 tdModelScale.addColumn(ScalarColumnDesc<Float>(colModel+"_OFFSET"));
                 ccModel = new CompressComplex(colModel, colModel+"_COMPRESSED",
-                                              colModel+"_SCALE", colModel+"_OFFSET", true);
+                                              colModel+"_SCALE", colModel+"_OFFSET", True);
 
                 StandardStMan modelScaleStMan("ModelScaleOffset");
                 ms.addColumn(tdModelScale, modelScaleStMan);
@@ -565,7 +562,7 @@ void VisSetUtil::addScrCols(MeasurementSet& ms, Bool addModel, Bool addCorr,
                 tdCorrScale.addColumn(ScalarColumnDesc<Float>(colCorr+"_SCALE"));
                 tdCorrScale.addColumn(ScalarColumnDesc<Float>(colCorr+"_OFFSET"));
                 ccCorr = new CompressComplex(colCorr, colCorr+"_COMPRESSED",
-                                             colCorr+"_SCALE", colCorr+"_OFFSET", true);
+                                             colCorr+"_SCALE", colCorr+"_OFFSET", True);
 
                 StandardStMan corrScaleStMan("CorrScaleOffset");
                 ms.addColumn(tdCorrScale, corrScaleStMan);
@@ -780,7 +777,7 @@ void VisSetUtil::removeCalSet(MeasurementSet& ms, Bool removeModel) {
     if(removeModel)
         VisSetUtil::remOTFModel(ms);
 
-    VisSetUtil::remScrCols(ms,true,true);
+    VisSetUtil::remScrCols(ms,True,True);
 
 }
 

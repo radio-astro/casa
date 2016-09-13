@@ -76,8 +76,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </prerequisite>
 //
 // <etymology>
-//#! Except when it is obvious (e.g., "casacore::Array") explain how the class name
-//#! expresses the role of this class.  Example: casacore::IPosition is short for
+//#! Except when it is obvious (e.g., "Array") explain how the class name
+//#! expresses the role of this class.  Example: IPosition is short for
 //#! "Integral Position" - a specialized integer vector for specifying
 //#! array dimensions and indices.
 // </etymology>
@@ -106,8 +106,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //#! appear as actual template arguments.  For example:  imagine that you
 //#! are writing a templated sort class, which does a quicksort on a
 //#! list of arbitrary objects.  Anybody who uses your templated class
-//#! must make sure that the actual argument class (say, casacore::Int or
-//#! casacore::String or casacore::Matrix) has comparison operators defined.
+//#! must make sure that the actual argument class (say, Int or
+//#! String or Matrix) has comparison operators defined.
 //#! This tag must be repeated for each template formal argument in the
 //#! template class definition -- that's why this tag has the "arg" attribute.
 //#! (Most templated classes, however, are templated on only a single
@@ -125,7 +125,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </thrown>
 //
 // <todo asof="yyyy/mm/dd">
-//#! A casacore::List of bugs, limitations, extensions or planned refinements.
+//#! A List of bugs, limitations, extensions or planned refinements.
 //#! The programmer should fill in a date in the "asof" field, which
 //#! will usually be the date at which the class is submitted for review.
 //#! If, during the review, new "todo" items come up, then the "asof"
@@ -151,7 +151,7 @@ public:
     oki_(NULL),
     cOne_(1.0), 
     cZero_(0.0), 
-    scalardata_(false)
+    scalardata_(False)
   {}
 
   virtual ~SkyCal() {}
@@ -160,19 +160,19 @@ public:
   // In Mueller series, typesize is defined as "number of polarizations"
   // while SkyCal definition is "number of elements in the DATA cell",
   // which is npol * nchan in practice.
-  casacore::uInt typesize() const { return npol_ * nchan_; }
-  void setNumChannel(casacore::uInt n) { nchan_ = n; }
-  void setNumPolarization(casacore::uInt n) { npol_ = n; }
+  uInt typesize() const { return npol_ * nchan_; }
+  void setNumChannel(uInt n) { nchan_ = n; }
+  void setNumPolarization(uInt n) { npol_ = n; }
 
   // Set scalardata_ 
   //  TBD: Handle this better; for now, we need to set this from
   //       an external call so we handle single-corr data properly
   //       when setting non-corr-dep flags
-  void setScalarData(casacore::Bool scalardata) const { scalardata_=scalardata; }
+  void setScalarData(Bool scalardata) const { scalardata_=scalardata; }
   
   // Synchronize with leading element in external array
   void sync(CalDataType& mat) { m0_=&mat; origin(); }
-  void sync(CalDataType& mat, casacore::Bool& ok) { m0_=&mat; ok0_=&ok; origin(); }
+  void sync(CalDataType& mat, Bool& ok) { m0_=&mat; ok0_=&ok; origin(); }
   
   // Reset to origin
   void origin() {m_=m0_;ok_=ok0_;}
@@ -183,7 +183,7 @@ public:
   void operator++(int) { m_+=typesize(); if (ok_) ok_+=typesize();}
 
   // Advance step matrices forward (according to len)
-  void advance(const casacore::Int& step) { m_+=(step*typesize()); if (ok_) ok_+=(step*typesize());}
+  void advance(const Int& step) { m_+=(step*typesize()); if (ok_) ok_+=(step*typesize());}
 
   // In-place invert
   void invert() {}
@@ -192,7 +192,7 @@ public:
   //  (so we don't have to check ok flags atomically in apply)
   void setMatByOk()
   {
-    throw(casacore::AipsError("Illegal use of SkyCal::setMatByOk"));
+    throw(AipsError("Illegal use of SkyCal::setMatByOk"));
   }
 
   // In-place multiply onto a data with flag information
@@ -200,15 +200,15 @@ public:
   //
   // This processes the data corresponding to each DATA cell
   // (npol * nchan) together in contrast to Mueller series, which
-  // processes one casacore::Stokes vector, i.e., process each channel
+  // processes one Stokes vector, i.e., process each channel
   // individually.
-  void apply(casacore::Matrix<DataType>& v, casacore::Matrix<casacore::Bool> &f)
+  void apply(Matrix<DataType>& v, Matrix<Bool> &f)
   {
     if (f.shape() == v.shape()) {
       flag(f);
     }
     
-    casacore::Bool deleteIt;
+    Bool deleteIt;
     DataType *data = v.getStorage(deleteIt);
     for (size_t i = 0; i < npol_ * nchan_; ++i) {
       // (ON - OFF) / OFF
@@ -217,9 +217,9 @@ public:
     v.putStorage(data, deleteIt);
   }
 
-  void apply(casacore::Matrix<DataType>& v, casacore::Matrix<casacore::Bool> &f, casacore::Vector<casacore::Bool>& vflag)
+  void apply(Matrix<DataType>& v, Matrix<Bool> &f, Vector<Bool>& vflag)
   {
-    if (!ok_) throw(casacore::AipsError("Illegal use of SkyCal::applyFlag."));
+    if (!ok_) throw(AipsError("Illegal use of SkyCal::applyFlag."));
     
     applyFlag(vflag);
     apply(v, f);
@@ -228,9 +228,9 @@ public:
   // Apply only flags according to cal flags
   //
   // Similar to apply, flagging also processes each DATA cell together.
-  void applyFlag(casacore::Vector<casacore::Bool>& vflag)
+  void applyFlag(Vector<Bool>& vflag)
   {
-    if (!ok_) throw(casacore::AipsError("Illegal use of SkyCal::applyFlag(vflag)."));
+    if (!ok_) throw(AipsError("Illegal use of SkyCal::applyFlag(vflag)."));
 
     if (scalardata_) {
       for (size_t i = 0; i < nchan_; ++i) {
@@ -246,19 +246,19 @@ public:
     }
   }
   
-  void flag(casacore::Matrix<casacore::Bool>& v)
+  void flag(Matrix<Bool>& v)
   {
-    casacore::Bool deleteIt;
-    casacore::Bool *data = v.getStorage(deleteIt);
+    Bool deleteIt;
+    Bool *data = v.getStorage(deleteIt);
     for (size_t i = 0; i < typesize(); ++i) {
-      data[i] |= (!ok_[i]); // data: false is valid, ok_: true is valid
+      data[i] |= (!ok_[i]); // data: False is valid, ok_: True is valid
     }
     v.putStorage(data, deleteIt);
   }
 
   // Multiply onto a vis VisVector, preserving input (copy then in-place apply)
-  void apply(casacore::Matrix<DataType>& out, casacore::Matrix<casacore::Bool> &outFlag,
-                     const casacore::Matrix<DataType>& in, const casacore::Matrix<casacore::Bool> &inFlag)
+  void apply(Matrix<DataType>& out, Matrix<Bool> &outFlag,
+                     const Matrix<DataType>& in, const Matrix<Bool> &inFlag)
   {
     out = in;
     outFlag = inFlag;
@@ -266,7 +266,7 @@ public:
   }
 
   // print it out
-  friend std::ostream& operator<<(std::ostream& os, const SkyCal<DataType, CalDataType>& mat)
+  friend ostream& operator<<(ostream& os, const SkyCal<DataType, CalDataType>& mat)
   {
     return os;
   }
@@ -274,21 +274,21 @@ public:
 protected:
 
 private:
-  casacore::uInt npol_;
-  casacore::uInt nchan_;
+  uInt npol_;
+  uInt nchan_;
   
   // Pointer to origin
   CalDataType *m0_;
-  casacore::Bool *ok0_;
+  Bool *ok0_;
 
   // Moving pointer
   CalDataType *m_, *mi_;
-  casacore::Bool *ok_, *oki_;
+  Bool *ok_, *oki_;
 
-  // casacore::Complex unity, zero (for use in invert and similar methods)
+  // Complex unity, zero (for use in invert and similar methods)
   const CalDataType cOne_,cZero_;
 
-  mutable casacore::Bool scalardata_;
+  mutable Bool scalardata_;
 
   // Copy ctor protected 
   SkyCal(const SkyCal<DataType, CalDataType>& mat);

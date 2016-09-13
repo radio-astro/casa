@@ -104,11 +104,11 @@ main(int argc, char **argv) {
 	float res = 100;	// Default is 100dpi.
 	char *name = argv[0];
 	char *file = "test.ps";
-	Bool drawBox = false;
-	Bool doImage = true;
-	Bool doContours = true;
-	Bool doAxes = true;
-	Bool useBBox = false;
+	Bool drawBox = False;
+	Bool doImage = True;
+	Bool doContours = True;
+	Bool doAxes = True;
+	Bool useBBox = False;
 	float bbox[] = {0.0, 0.0, 0.0, 0.0};	// x0, y0, x1, y1
 	argv += 1;
 	argc -= 1;
@@ -121,7 +121,7 @@ main(int argc, char **argv) {
 		while( (arg = *sptr++) != '\0')
 			switch(arg) {
 			case 'a':
-				doAxes = false;
+				doAxes = False;
 				break;
 			case 'b':
 				for(int ib=0; ib<4; ib++) {
@@ -133,13 +133,13 @@ main(int argc, char **argv) {
 						exit(1);
 					}
 				}
-				useBBox = true;
+				useBBox = True;
 				break;
 			case 'B':
-				drawBox = true;
+				drawBox = True;
 				break;
 			case 'c':
-				doContours = false;
+				doContours = False;
 				break;
 			case 'e':
 				if(layout == PSDriver::PORTRAIT)
@@ -161,7 +161,7 @@ main(int argc, char **argv) {
 				exit(0);
 				break;
 			case 'i':
-				doImage = false;
+				doImage = False;
 				break;
 			case 'l': {
 				if(layout & PSDriver::EPS)
@@ -312,7 +312,7 @@ main(int argc, char **argv) {
 		// request axis labels be drawn, and bilinear resampling
 		Record rec, recOut;
 		if(doAxes) {
-			rec.define("axislabelswitch", true);
+			rec.define("axislabelswitch", True);
 		}
 		rec.define("color", "blue");
 		rec.define("line", Int(1));

@@ -29,7 +29,6 @@
 #include <synthesis/ImagerObjects/ParallelImagerAdaptor.h>
 #include <string>
 
-using namespace casacore;
 namespace casa {
 
 ParallelImager *
@@ -112,5 +111,4 @@ ParallelImagerFactory::make(MPI_Comm task_comm,
 	return result;
 }
 
-using namespace casacore;
 } // namespace casa
