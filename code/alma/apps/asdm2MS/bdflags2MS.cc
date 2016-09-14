@@ -1191,7 +1191,7 @@ void processCorrelatorFlagsPerSlices(MainRow*					mR_p,
 
   for (unsigned int j = 0; j < actualSizeInMemory.size(); j++) {
     if (debug) cout << "PLATOON" << endl;
-    numberOfIntegrations = min(actualSizeInMemory[j] / (bdfSize / N), N); // The min to prevent a possible excess when there are very few bytes in the BDF.
+    numberOfIntegrations = min((uint64_t)actualSizeInMemory[j] / (bdfSize / N), (uint64_t)N); // The min to prevent a possible excess when there are very few bytes in the BDF.
     if (debug) cout << "------------> " << numberOfIntegrations << " , " << actualSizeInMemory[j] << endl;
 
     if (numberOfIntegrations) {
