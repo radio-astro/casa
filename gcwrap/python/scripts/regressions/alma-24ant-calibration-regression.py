@@ -65,7 +65,6 @@ import re
 if re.search('^4.', casadef.casa_version) == None:
  sys.exit('ERROR: PLEASE USE CASA 4.x')
 
-from simple_cluster import *
 
 
 totaltime = 0

@@ -268,10 +268,6 @@ def flagdata(vis,
     
     summary_stats={};
     
-#    if pCASA.is_mms(vis):
-#        pCASA.execute("flagdata", orig_locals)
-#        return
-    
     
     # ***************** Input is a normal MS/cal table ****************
     

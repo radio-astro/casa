@@ -101,7 +101,6 @@ test_msmd                       dmehring@nrao.edu
 test_mstransform                jagonzal@eso.org
 test_mstransform_mms            scastro@eso.org
 test_partition                  scastro@eso.org
-test_pcasa                      jkern@nrao.edu
 test_plotants                   jkern@nrao.edu
 test_plotms                     pford@nrao.edu
 test_plotuv                     jkern@nrao.edu
@@ -149,7 +148,6 @@ test_sdscale                    takeshi.nakazato@nao.ac.jp
 test_sdstat                     kana.sugi@nao.ac.jp
 test_setjy			ttsutsum@nrao.edu
 test_simobserve                 kana.sugi@ezweb.ne.jp
-test_simplecluster              jagonzal@eso.org
 test_smoothcal                  gmoellen@aoc.nrao.edu
 test_specfit                    dmehring@nrao.edu
 test_splattotable               dmehring@nrao.edu

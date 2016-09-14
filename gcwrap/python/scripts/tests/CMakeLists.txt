@@ -144,7 +144,6 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_mstool.py
   test_partition.py
   test_partitionHelper.py
-  test_pcasa.py
   test_plotants.py
   test_plotms.py
   test_plotuv.py
@@ -192,7 +191,6 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_sdstat.py
   test_setjy.py
   test_simobserve.py
-  test_simplecluster.py
   test_slsearch.py
   test_smoothcal.py
   test_specfit.py

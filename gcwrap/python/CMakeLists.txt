@@ -45,11 +45,9 @@ scripts/mindpipes.py
 scripts/ngc5921_usecase.py
 scripts/OrderedDictionary.py
 scripts/odict.py
-scripts/parallel_go.py
 scripts/parameter_check.py
 scripts/parameter_dictionary.py
 scripts/partitionhelper.py
-scripts/pCASA.py
 scripts/plotcomp.py
 scripts/pointcal.py
 scripts/predictcomp_helper.py
@@ -224,7 +222,6 @@ scripts/tget.py
 scripts/update_spw.py
 scripts/viewertool.py
 scripts/vishead_util.py
-scripts/simple_cluster.py
 scripts/rasterutil.py
 )
 
