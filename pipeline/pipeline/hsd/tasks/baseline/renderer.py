@@ -14,7 +14,7 @@ class T2_4MDetailsSingleDishBaselineRenderer(basetemplates.T2_4MDetailsDefaultRe
     # Renderer class for stage summary
     def __init__(self, template='hsd_baseline.mako',
                  description='Generate Baseline tables and subtract spectral baseline',
-                 always_rerender=True):
+                 always_rerender=False):
         super(T2_4MDetailsSingleDishBaselineRenderer, self).__init__(template,
                                                                      description,
                                                                    always_rerender)
