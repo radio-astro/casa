@@ -38,7 +38,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: findContinuum.py,v 1.106 2016/09/01 02:59:52 we Exp $" 
+    myversion = "$Id: findContinuum.py,v 1.111 2016/09/14 05:19:59 thunter Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -109,14 +109,14 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
                   invert=False, meanSpectrumMethod='auto',peakFilterFWHM=10,
                   skyTempThreshold=1.5,
                   skyTransmissionThreshold=0.08, maxGroupsForSkyThreshold=5,
-                  minBandwidthFractionForSkyThreshold=0.2):
+                  minBandwidthFractionForSkyThreshold=0.2, regressionTest=False):
     """
     This function calls functions to:
     1) compute the mean spectrum of a dirty cube
     2) find the continuum channels 
     3) plot the results
-    It calls runFindContinuum up to 2 times.  It runs it a second time with a reduced 
-    field size if it finds only one range of continuum channels.
+    It calls runFindContinuum up to 2 times.  It runs it a second time with a 
+    reduced field size if it finds only one range of continuum channels.
 
     Returns:
     * A channel selection string suitable for the spw parameter of clean.
@@ -170,6 +170,7 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
         'auto' currently invokes 'meanAboveThreshold' unless sky temperature range (max-min)
         from the atmospheric model is more than skyTempThreshold
     skyTempThreshold: rms value in Kelvin, above which meanSpectrumMethod is changed in 'auto' mode to peakOverMad
+        for non-TDM spectra. The value is automatically reduced to 2/3 of this value for TDM spectra.
     skyTransmissionThreshold: threshold on (max-min)/mean, above which meanSpectrumMethod is changed in 'auto' mode to peakOverMad
     peakFilterFWHM: value used by 'peakOverRms' and 'peakOverMad' methods to presmooth 
         each plane with a Gaussian kernel of this width (in pixels).  Set to 1 to not do any 
@@ -285,13 +286,19 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
         if (img != ''):
             a,b,c,d,e = atmosphereVariation(img, header, chanInfo, 
                                           airmass=airmass, pwv=pwv)
-#            if (c > skyTempThreshold):
             if (b > skyTransmissionThreshold or e > skyTempThreshold):
                 meanSpectrumMethod = 'peakOverMad'
                 meanSpectrumMethodMessage = "Set meanSpectrumMethod='%s' since atmos. variation %.2f>%.2f or %.3f>%.1fK." % (meanSpectrumMethod,b,skyTransmissionThreshold,e,skyTempThreshold)
+            elif (e > skyTempThreshold*2/3. and tdmSpectrum(channelWidth,nchan)):
+                meanSpectrumMethod = 'peakOverMad'
+                meanSpectrumMethodMessage = "Set meanSpectrumMethod='%s' since atmos. variation %.2f>%.2f or %.3f>%.2fK." % (meanSpectrumMethod,b,skyTransmissionThreshold,e,skyTempThreshold*2/3.)
             else:
                 # Maybe comment this out once thresholds are stable
-                meanSpectrumMethodMessage = "Did not change meanSpectrumMethod since atmos. variation %.2f<%.2f and %.3f<%.1fK." % (b,skyTransmissionThreshold,e,skyTempThreshold)
+                if tdmSpectrum(channelWidth,nchan):
+                    myThreshold = skyTempThreshold*2/3.
+                else:
+                    myThreshold = skyTempThreshold
+                meanSpectrumMethodMessage = "Did not change meanSpectrumMethod since atmos. variation %.2f<%.2f and %.3f<%.1fK." % (b,skyTransmissionThreshold,e,myThreshold)
                 if (checkForTriangularWavePattern(img,header)):
                     meanSpectrumMethod = 'peakOverMad'
                     meanSpectrumMethodMessage = "Set meanSpectrumMethod='%s' since triangular wave pattern was seen." % (meanSpectrumMethod)
@@ -348,7 +355,8 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
                               plotAtmosphere, airmass, pwv, 
                               channelFractionForSlopeRemoval, mask, 
                               invert, meanSpectrumMethod, peakFilterFWHM, 
-                              fullLegend, iteration, meanSpectrumMethodMessage)
+                              fullLegend, iteration, meanSpectrumMethodMessage,
+                              regressionTest=regressionTest)
     if result == None:
         return
     selection, png, slope, channelWidth, nchan, useLowBaseline = result
@@ -385,7 +393,8 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
                                       plotAtmosphere, airmass, pwv, 
                                       channelFractionForSlopeRemoval, mask, 
                                       invert, meanSpectrumMethod, peakFilterFWHM, 
-                                      fullLegend,iteration,meanSpectrumMethodMessage)
+                                      fullLegend,iteration,meanSpectrumMethodMessage,
+                                      regressionTest=regressionTest)
         if result == None:
             return
         selection, png, slope, channelWidth, nchan, useLowBaseline = result
@@ -438,7 +447,9 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
                                   channelFractionForSlopeRemoval, mask, 
                                   invert, meanSpectrumMethod, peakFilterFWHM, 
                                   fullLegend, iteration, 
-                                  meanSpectrumMethodMessage)
+                                  meanSpectrumMethodMessage,
+                                  regressionTest=regressionTest)
+
         selection, png, slope, channelWidth, nchan, useLowBaseline = result
       else:
           casalogPost("Not re-running findContinuum with the other method because the results are deemed acceptable.")
@@ -634,7 +645,8 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
                      invert=False, meanSpectrumMethod='peakOverMad', 
                      peakFilterFWHM=15, fullLegend=False, iteration=0,
                      meanSpectrumMethodMessage='', minSlopeToRemove=1e-8,
-                     minGroupsForSFCAdjustmentInPeakOverMad=10):
+                     minGroupsForSFCAdjustmentInPeakOverMad=10, 
+                     regressionTest=False):
     """
     This function calls functions to:
     1) compute the mean spectrum of a dirty cube
@@ -1158,11 +1170,12 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
 #        a,b,c,d,e = atmosphereVariation(img, header, chanInfo, airmass=airmass, pwv=pwv)
 #        finalLine = 'transmission: %f, %f  skyTemp: %f, %f' % (a,b,c,d)
 #        pl.text(0.5, 0.99-i*inc, finalLine, transform=ax1.transAxes, ha='center', size=fontsize)
-    # Write CVS version
-    pl.text(1.03, -0.005-2*inc, ' '.join(version().split()[1:4]), size=8, 
-            transform=ax1.transAxes, ha='right')
-    # Write CASA version
-    pl.text(-0.03, -0.005-2*inc, "CASA "+casadef.casa_version+" r"+casadef.subversion_revision, 
+    if not regressionTest:
+        # Write CVS version
+        pl.text(1.03, -0.005-2*inc, ' '.join(version().split()[1:4]), size=8, 
+                transform=ax1.transAxes, ha='right')
+        # Write CASA version
+        pl.text(-0.03, -0.005-2*inc, "CASA "+casadef.casa_version+" r"+casadef.subversion_revision, 
              size=8, transform=ax1.transAxes, ha='left')
     if (plotAtmosphere != ''):
         if (plotAtmosphere == 'tsky'):
@@ -2151,7 +2164,10 @@ def avgOverCube(pixels, useAbsoluteValue=False, threshold=None, median=False, ma
         pixels[np.where(mask==False)] = np.nan
     nchan = np.shape(pixels)[-1]
     for i in range(nchan):
-        channel = pixels[:,:,0,i].flatten()
+        if (len(np.shape(pixels)) == 4):
+            channel = pixels[:,:,0,i].flatten()
+        else:
+            channel = pixels[:,:,i].flatten()
         validChan = len(np.where(channel >= threshold)[0])
         if (validChan < 1):
             casalogPost("%4d: none of the %d pixels meet the threshold in this channel" % (i,len(channel)))
