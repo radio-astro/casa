@@ -1397,7 +1397,6 @@ def score_checksources(mses, fieldname, spwid, imagename):
             continue
         if 'CHECK' not in field[0].intents:
             continue
-        fieldid = str(field[0].id)
         refdirection = me.measure(field[0].mdirection, 'ICRS')
         break
 
@@ -1413,8 +1412,7 @@ def score_checksources(mses, fieldname, spwid, imagename):
             mfield = ms.get_fields(field_arg)[0]
             if 'CHECK' not in mfield.intents:
                 continue
-            mfieldid = str(mfield.id)
-            if mfieldid != fieldid:
+            if mfield.name != fieldname:
                 continue
             for measurement in sorted(measurements, key=lambda m: int(m.spw_id)):
                 if int(measurement.spw_id) != spwid:
@@ -1432,7 +1430,6 @@ def score_checksources(mses, fieldname, spwid, imagename):
         refflux = None
     else:
         median_flux = np.median(np.array(reffluxes))
-        #refflux = qa.quantity (max(reffluxes), 'Jy')
         refflux = qa.quantity (median_flux, 'Jy')
 
     # Do the fit and compute positions offsets and flux ratios
