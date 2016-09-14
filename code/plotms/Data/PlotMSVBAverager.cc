@@ -106,7 +106,6 @@ void PlotMSVBAverager::finalizeAverage()
   if (prtlev()>2) cout  << "  PMSVBA::finalizeAverage()" << endl;
 
   Int nBln = ntrue(blnOK_p);
-
   if (nBln>0 && vbWtSum_p>0.0) {
 
     Int obln = 0;
@@ -240,8 +239,13 @@ void PlotMSVBAverager::finalizeAverage()
 
     // Should not be able to reach here
     // (there is always at least one good baseline, even if flagged)
-
-    throw(AipsError("Big problem in finalizeAverage!"));
+    if (nBln==0) 
+        throw(AipsError("Could not finalize average, no good baselines"));
+    // should not happen, they are normalized to FLT_MIN!
+    else if (vbWtSum_p<=0.0) 
+        throw(AipsError("Could not finalize average, weights are zero"));
+    else
+        throw(AipsError("Big problem in finalizeAverage!"));
   }
 };
 
@@ -597,6 +601,7 @@ void PlotMSVBAverager::antAccumulate (vi::VisBuffer2& vb)
     for (Int chn=0; chn<vb.nChannels(); chn++) {
       for (Int cor=0; cor<nCorr_p; ++cor) {
           wt = wtsp(cor, chn, ibln);
+          if (wt < FLT_MIN) wt = FLT_MIN;
 	// Assume we won't accumulate anything in this cell
 	//   (output is unflagged, input is flagged)
 	Bool acc_i(False),acc_j(False);
