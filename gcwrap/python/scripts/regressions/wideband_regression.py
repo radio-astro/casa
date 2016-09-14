@@ -107,7 +107,10 @@ else:
    correct_beta = -0.124552100897;
    ## Added on 13 Sep 2012
    correct_pbcor_intensity = 0.234191760421
-   correct_pbcor_alpha = -0.910139858723
+   #correct_pbcor_alpha = -0.910139858723
+
+   ## Changed to use actual VLA models (not EVLA ones)
+   correct_pbcor_alpha = -0.872
 
    # (5) : (V2.3) This is the truth (for active, 02Mar2010) - included coefficient residuals in alpha/beta calcs.
    # Changes from previous numbers 'active r14198' are within the noise, and only for alpha/beta.
