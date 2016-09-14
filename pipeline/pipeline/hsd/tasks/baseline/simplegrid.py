@@ -295,7 +295,7 @@ class SDMSSimpleGridding(basetask.StandardTaskTemplate):
             ms_colname = utils.get_datacolumn_name(vis)
             rowmap = utils.make_row_map_for_baselined_ms(ms)
             LOG.debug('Start reading data from "{}"', os.path.basename(vis))
-            LOG.debug('There are {} entries', len(bind_to_grid[vis]))
+            LOG.debug('There are {} entries', len(entries))
             with casatools.TableReader(vis) as tb:
                 #get = lambda col, row: tb.getcell(col, row)
                 #for entry in bind_to_grid[AntID]:
