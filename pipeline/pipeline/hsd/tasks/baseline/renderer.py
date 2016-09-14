@@ -14,7 +14,7 @@ class T2_4MDetailsSingleDishBaselineRenderer(basetemplates.T2_4MDetailsDefaultRe
     # Renderer class for stage summary
     def __init__(self, template='hsd_baseline.mako',
                  description='Generate Baseline tables and subtract spectral baseline',
-                 always_rerender=False):
+                 always_rerender=True):
         super(T2_4MDetailsSingleDishBaselineRenderer, self).__init__(template,
                                                                      description,
                                                                    always_rerender)
@@ -29,23 +29,33 @@ class T2_4MDetailsSingleDishBaselineRenderer(basetemplates.T2_4MDetailsDefaultRe
             sparsemap_plots.extend(r.outcome['plots'])
 
         plot_group = self._group_by_axes(plots)
-        plot_detail = [] # keys are 'title', 'html', 'cover_plots'
-        plot_cover = [] # keys are 'title', 'cover_plots'
+        plot_detail = {} # key is field name, subkeys are 'title', 'html', 'cover_plots'
+        plot_cover = {} # key is field name, subkeys are 'title', 'cover_plots'
         # Render stage details pages
         details_title = ["R.A. vs Dec."]
         for (name, _plots) in plot_group.items():
-            group_desc = {'title': name}
+            perfield_plots = self._plots_per_field(_plots)
             if name in details_title:
                 renderer = SingleDishClusterPlotsRenderer(context, results, name, _plots)
                 with renderer.get_file() as fileobj:
                     fileobj.write(renderer.render())
-                group_desc['html'] = os.path.basename(renderer.path)
-                group_desc['cover_plots'] = self._get_a_plot_per_spw(_plots)
-                plot_detail.append(group_desc)
+                for (field, pfplots) in perfield_plots.items():
+                    group_desc = {'title': name}
+                    group_desc['html'] = os.path.basename(renderer.path)
+                    if not plot_detail.has_key(field):
+                        plot_detail[field] = []
+                    group_desc['cover_plots'] = self._get_a_plot_per_spw(pfplots)
+                    plot_detail[field].append(group_desc)
             else:
-                group_desc['cover_plots'] = _plots
-                plot_cover.append(group_desc)
+                for (field, pfplots) in perfield_plots.items():
+                    group_desc = {'title': name}
+                    group_desc['html'] = os.path.basename(renderer.path)
+                    if not plot_cover.has_key(field):
+                        plot_cover[field] = []
+                    group_desc['cover_plots'] = pfplots
+                    plot_cover[field].append(group_desc)
                 
+            
         ctx.update({'detail': plot_detail,
                     'cover_only': plot_cover})
                 
@@ -81,6 +91,16 @@ class T2_4MDetailsSingleDishBaselineRenderer(basetemplates.T2_4MDetailsDefaultRe
                 known_spw.append(p.parameters['spw'])
                 plot_list.append(p)
         return plot_list
+    
+    def _plots_per_field(self, plots):
+        plot_group = {}
+        for p in plots:
+            key = p.field
+            if plot_group.has_key(key):
+                plot_group[key].append(p)
+            else:
+                plot_group[key] = [p]
+        return plot_group
     
     def _plots_per_field_with_type(self, plots, type_string):
         plot_group = {}
