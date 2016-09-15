@@ -216,21 +216,46 @@ class Tclean(cleanbase.CleanBase):
                 result.error = '%s/%s/spw%s clean error: %s' % (inputs.field, inputs.intent, inputs.spw)
                 return result
 
+            # Check for manually supplied values
+            if0_auto = if0
+            if1_auto = if1
+            channel_width_auto = channel_width
+
             if inputs.start != '':
-                LOG.info('Using supplied start frequency %s' % (inputs.start))
                 if0 = qaTool.convert(inputs.start, 'Hz')['value']
+                if if0 < if0_auto:
+                    LOG.error('Supplied start frequency %s < f_low for Field %s SPW %s' % (inputs.start, inputs.field, inputs.spw))
+                    result.error = '%s/%s/spw%s clean error: f_start < f_low_native' % (inputs.field, inputs.intent, inputs.spw)
+                    return result
+                LOG.info('Using supplied start frequency %s' % (inputs.start))
+
+            if (inputs.width != '') and (inputs.nbin != -1):
+                LOG.error('Field %s SPW %s: width and nbin are mutually exclusive' % (inputs.field, inputs.spw))
+                result.error = '%s/%s/spw%s clean error: width and nbin are mutually exclusive' % (inputs.field, inputs.intent, inputs.spw)
+                return result
 
             if inputs.width != '':
+                channel_width_manual = qaTool.convert(inputs.width, 'Hz')['value']
+                if channel_width_manual < channel_width_auto:
+                    LOG.error('User supplied channel width smaller than native value of %s GHz for Field %s SPW %s' % (channel_width_auto, inputs.field, inputs.spw))
+                    result.error = '%s/%s/spw%s clean error: user channel width too small' % (inputs.field, inputs.intent, inputs.spw)
+                    return result
+
                 LOG.info('Using supplied width %s' % (inputs.width))
-                channel_width = qaTool.convert(inputs.width, 'Hz')['value']
-
-            if inputs.nchan != -1:
-                LOG.info('Using supplied nchan %d' % (inputs.nchan))
-                if1 = if0 + channel_width * inputs.nchan
-
-            if inputs.nbin != -1:
+                channel_width = channel_width_manual
+                if channel_width > channel_width_auto:
+                    inputs.nbin = int(round(channel_width / channel_width_auto) + 0.5)
+            elif inputs.nbin != -1:
                 LOG.info('Applying binning factor %d' % (inputs.nbin))
                 channel_width *= inputs.nbin
+
+            if inputs.nchan != -1:
+                if1 = if0 + channel_width * inputs.nchan
+                if if1 > if1_auto:
+                    LOG.error('Calculated stop frequency %s GHz > f_high_native for Field %s SPW %s' % (if1, inputs.field, inputs.spw))
+                    result.error = '%s/%s/spw%s clean error: f_stop > f_high' % (inputs.field, inputs.intent, inputs.spw)
+                    return result
+                LOG.info('Using supplied nchan %d' % (inputs.nchan))
 
             # tclean interprets the start frequency as the center of the
             # first channel. We have, however, an edge to edge range.

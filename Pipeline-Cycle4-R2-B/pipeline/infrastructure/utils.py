@@ -1032,6 +1032,13 @@ def freq_selection_to_channels(img, selection):
             # and subtract 0.5 from the upper channel.
             c0 = (f0 - refFreq) / deltaFreq
             c1 = (f1 - refFreq) / deltaFreq
+
+            # Avoid stepping outside possible channel range
+            c0 = max(c0, 0)
+            c0 = min(c0, numPix - 1)
+            c1 = max(c1, 0)
+            c1 = min(c1, numPix - 1)
+
             if (c0 < c1):
                 channels.append((int(round(c0 + 0.5)), int(round(c1 - 0.5))))
             else:

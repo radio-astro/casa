@@ -9,6 +9,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.contfilehandler as contfilehandler
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.mpihelpers as mpihelpers
 from pipeline.infrastructure import casa_tasks
 from .resultobjects import FindContResult
@@ -50,6 +51,8 @@ class FindCont(basetask.StandardTaskTemplate):
     def prepare(self):
         inputs = self.inputs
         context = self.inputs.context
+
+        qaTool = casatools.quanta
 
         # make sure inputs.vis is a list, even it is one that contains a
         # single measurement set
@@ -137,33 +140,60 @@ class FindCont(basetask.StandardTaskTemplate):
                     # Use only the current spw ID here !
                     if0, if1, channel_width = tclean_heuristics.lsrk_freq_intersection(inputs.vis, target['field'], spwid)
                     if (if0 == -1) or (if1 == -1):
-                        LOG.warning('No LSRK frequency intersect among selected for Field %s SPW %s' % (target['field'], spwid))
+                        LOG.error('No LSRK frequency intersect among selected for Field %s SPW %s' % (target['field'], spwid))
                         continue
 
+                    # Check for manually supplied values
+                    if0_auto = if0
+                    if1_auto = if1
+                    channel_width_auto = channel_width
+
                     if target['start'] != '':
-                        LOG.info('Using supplied start frequency %s' % (target['start']))
                         if0 = qaTool.convert(target['start'], 'Hz')['value']
+                        if if0 < if0_auto:
+                            LOG.error('Supplied start frequency %s < f_low_native for Field %s SPW %s' % (target['start'], target['field'], target['spw']))
+                            continue
+                        LOG.info('Using supplied start frequency %s' % (target['start']))
+
+                    if (target['width'] != '') and (target['nbin'] != -1):
+                        LOG.error('Field %s SPW %s: width and nbin are mutually exclusive' % (target['field'], target['spw']))
+                        continue
 
                     if target['width'] != '':
+                        channel_width_manual = qaTool.convert(target['width'], 'Hz')['value']
+                        if channel_width_manual < channel_width_auto:
+                            LOG.error('User supplied channel width smaller than native value of %s GHz for Field %s SPW %s' % (channel_width_auto, target['field'], target['spw']))
+                            continue
                         LOG.info('Using supplied width %s' % (target['width']))
-                        channel_width = qaTool.convert(target['width'], 'Hz')['value']
-
-                    if target['nchan'] != -1:
-                        LOG.info('Using supplied nchan %d' % (target['nchan']))
-                        if1 = if0 + channel_width * target['nchan']
-
-                    if target['nbin'] != -1:
+                        channel_width = channel_width_manual
+                        if channel_width > channel_width_auto:
+                            target['nbin'] = int(round(channel_width / channel_width_auto) + 0.5)
+                    elif target['nbin'] != -1:
                         LOG.info('Applying binning factor %d' % (target['nbin']))
                         channel_width *= target['nbin']
 
+                    if target['nchan'] != -1:
+                        if1 = if0 + channel_width * target['nchan']
+                        if if1 > if1_auto:
+                            LOG.error('Calculated stop frequency %s GHz > f_high_native for Field %s SPW %s' % (if1, target['field'], target['spw']))
+                            continue
+                        LOG.info('Using supplied nchan %d' % (target['nchan']))
+
                     # tclean interprets the start frequency as the center of the
                     # first channel. We have, however, an edge to edge range.
-                    # Thus shift by 0.5 channels.
-                    start = '%sGHz' % ((if0 + 1.5 * channel_width) / 1e9)
+                    # Thus shift by 0.5 channels if no start is supplied.
+                    if target['start'] != '':
+                        start = '%sGHz' % ((if0 + 1.5 * channel_width) / 1e9)
+                    else:
+                        start = target['start']
+
                     width = '%sMHz' % ((channel_width) / 1e6)
+
                     # Skip edge channels if no nchan is supplied
                     if target['nchan'] == -1:
                         nchan = int(round((if1 - if0 ) / channel_width - 2))
+                    else:
+                        nchan = target['nchan']
 
                     # Estimate memory usage and adjust chanchunks parameter to avoid
                     # exceeding the available memory.
