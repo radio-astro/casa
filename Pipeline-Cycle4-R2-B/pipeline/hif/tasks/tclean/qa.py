@@ -43,18 +43,19 @@ class TcleanQAHandler(pqa.QAResultHandler):
                 LOG.warning('Exception scoring imaging result by RMS: %s. Setting score to -0.1.' % (e))
                 rms_score = -0.1
             if (numpy.isnan(rms_score)):
-                result.qa.pool[:] = [pqa.QAScore(0.0, longmsg='Cleaning diverged. Field: %s SPW: %s' % (result.inputs['field'], result.inputs['spw']), shortmsg='Cleaning diverged')]
+                result.qa.pool[:] = [pqa.QAScore(0.0, longmsg='Cleaning diverged. Field: %s Intent: %s SPW: %s' % (result.inputs['field'], result.intent, resultspw), shortmsg='Cleaning diverged')]
             else:
-                result.qa.pool[:] = [pqa.QAScore(rms_score, longmsg='RMS outside mask vs. threshold. Field: %s SPW: %s' % (result.inputs['field'], result.inputs['spw']), shortmsg='RMS vs. threshold')]
+                result.qa.pool[:] = [pqa.QAScore(rms_score, longmsg='RMS outside mask vs. threshold. Field: %s Intent: %s SPW: %s' % (result.inputs['field'], result.intent, result.spw), shortmsg='RMS vs. threshold')]
 
             # Check source score
             #    Be careful about the source name vs field name issue
             if result.intent == 'CHECK' and result.inputs['specmode'] == 'mfs':
                 mses = [context.observing_run.get_ms(name=vis) for vis in result.inputs['vis']]
                 fieldname = result.sourcename 
+                intent = result.intent
                 spwid = int(result.spw)
                 imagename = result.image 
-                checkscore = scorecalc.score_checksources (mses, fieldname, spwid, imagename) 
+                checkscore = scorecalc.score_checksources (mses, fieldname, intent, spwid, imagename) 
                 result.qa.pool.append (checkscore)
 
 
