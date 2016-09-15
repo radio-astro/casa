@@ -99,6 +99,8 @@ class SkyDisplay(object):
 
         plotfile = plotfilename(image=os.path.basename(result), reportdir=reportdir)
 
+        LOG.info('Plotting %s' % (result))
+
         with casatools.ImageReader(result) as image:
             try:
                 if collapseFunction == 'center':
