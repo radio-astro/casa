@@ -84,12 +84,13 @@ template<class T> ImageCollapser<T>::ImageCollapser(
 }
 
 template<class T> SPIIT ImageCollapser<T>::collapse() const {
-	SPIIT subImage = SubImageFactory<T>::createImage(
-		*this->_getImage(), "", *this->_getRegion(),
-		this->_getMask(), False, False, False, this->_getStretch()
-	);
+    SPCIIT subImage = SubImageFactory<T>::createSubImageRO(
+        *this->_getImage(), *this->_getRegion(), this->_getMask(),
+        this->_getLog().get(), AxesSpecifier(), this->_getStretch()
+    );
 	*this->_getLog() << LogOrigin(getClass(), __func__);
-	ThrowIf(
+    // FIXME the getMask() call may exhaust memory for large images
+    ThrowIf(
 		! anyTrue(subImage->getMask()),
 		"All selected pixels are masked"
 	);
@@ -160,8 +161,10 @@ template<class T> SPIIT ImageCollapser<T>::collapse() const {
 	else {
 		Bool lowPerf = _aggType == ImageCollapserData::FLUX;
 		if (! lowPerf) {
+            // FIXME the getMask() call may exhaust memory for large images
 			Array<Bool> mask = subImage->getMask();
 			if (subImage->hasPixelMask()) {
+                // FIXME the pixelMask() call may exhaust memory for large images
 				mask = mask && subImage->pixelMask().get();
 			}
 			lowPerf = ! allTrue(mask);
@@ -307,7 +310,8 @@ template<class T> SPIIT ImageCollapser<T>::collapse() const {
 		else {
 			// no mask, can use higher performance method
 			T (*function)(const Array<T>&) = _getFuncMap().find(_aggType)->second;
-			Array<T> data = subImage->get(False);
+            // FIXME this can exhaust memory for large images
+            Array<T> data = subImage->get(False);
 			Int64 nelements = outShape.product();
 			for (uInt i=0; i<nelements; i++) {
 				IPosition start = toIPositionInArray(i, outShape);

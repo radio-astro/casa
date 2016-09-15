@@ -247,8 +247,8 @@ template<class T> Record PixelValueManipulator<T>::getProfile(
         Vector<Bool> mask;
 		ret.get("mask", mask);
 		Vector<Double> xvals = ret.asArrayDouble("coords");
-		auto diter = begin(data);
-		auto dend = end(data);
+		auto diter = std::begin(data);
+		auto dend = std::end(data);
 		auto citer = xvals.begin();
         auto miter = mask.begin();
 		for ( ; diter != dend; ++diter, ++citer, ++miter) {
