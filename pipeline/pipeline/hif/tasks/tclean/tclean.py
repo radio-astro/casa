@@ -234,9 +234,13 @@ class Tclean(cleanbase.CleanBase):
 
             # tclean interprets the start frequency as the center of the
             # first channel. We have, however, an edge to edge range.
-            # Thus shift by 0.5 channels.
-            inputs.start = '%sGHz' % ((if0 + 1.5 * channel_width) / 1e9)
+            # Thus shift by 0.5 channels if no start is supplied.
+            if inputs.start == '':
+                inputs.start = '%sGHz' % ((if0 + 1.5 * channel_width) / 1e9)
+
+            # Always adjust width to apply possible binning
             inputs.width = '%sMHz' % ((channel_width) / 1e6)
+
             # Skip edge channels if no nchan is supplied
             if inputs.nchan == -1:
                inputs.nchan = int(round((if1 - if0) / channel_width - 2))
@@ -378,7 +382,7 @@ class Tclean(cleanbase.CleanBase):
 
         # Give the result to the sequence_manager for analysis
         model_sum, residual_cleanmask_rms, residual_non_cleanmask_rms, residual_max, residual_min,\
-            rms2d, nonpbcor_image_non_cleanmask_rms, pbcor_image_min, pbcor_image_max = sequence_manager.iteration_result(iter=0,
+            nonpbcor_image_non_cleanmask_rms, pbcor_image_min, pbcor_image_max = sequence_manager.iteration_result(iter=0,
                     multiterm = result.multiterm, psf = result.psf, model = result.model,
                     restored = result.image, residual = result.residual,
                     flux = result.flux, cleanmask=None, threshold = None,
@@ -540,7 +544,7 @@ class Tclean(cleanbase.CleanBase):
                     sensitivity=sequence_manager.sensitivity, result=result)
 
             # Give the result to the clean 'sequencer'
-            model_sum, residual_cleanmask_rms, residual_non_cleanmask_rms, residual_max, residual_min, rms2d, nonpbcor_image_non_cleanmask_rms, pbcor_image_min, pbcor_image_max = sequence_manager.iteration_result(
+            model_sum, residual_cleanmask_rms, residual_non_cleanmask_rms, residual_max, residual_min, nonpbcor_image_non_cleanmask_rms, pbcor_image_min, pbcor_image_max = sequence_manager.iteration_result(
                 iter=iter, multiterm=result.multiterm, psf=result.psf, model=result.model, restored=result.image, residual=result.residual,
                 flux=result.flux, cleanmask=new_cleanmask, threshold=seq_result.threshold, pblimit_image = self.pblimit_image,
                 pblimit_cleanmask = self.pblimit_cleanmask)

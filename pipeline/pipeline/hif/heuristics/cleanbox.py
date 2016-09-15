@@ -782,11 +782,6 @@ def analyse_clean_result(multiterm, model, restored, residual, flux, cleanmask, 
 
         LOG.info('Residual max: %s min: %s' % (residual_max, residual_min))
 
-        # get 2d rms of residual
-        pixels = image.getregion(axes=[3])
-        rms2d = np.std(pixels)
-        LOG.debug('2d rms of residual: %s' % rms2d)
-
     pbcor_image_min = None
     pbcor_image_max = None
     nonpbcor_image_non_cleanmask_rms = None
@@ -846,4 +841,4 @@ def analyse_clean_result(multiterm, model, restored, residual, flux, cleanmask, 
                 pass
 
     return model_sum, residual_cleanmask_rms, residual_non_cleanmask_rms, residual_max,\
-      residual_min, rms2d, nonpbcor_image_non_cleanmask_rms, pbcor_image_min, pbcor_image_max
+      residual_min, nonpbcor_image_non_cleanmask_rms, pbcor_image_min, pbcor_image_max

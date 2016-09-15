@@ -46,7 +46,7 @@ class BaseCleanSequence:
 
         #if cleanmask is not None and os.path.exists(cleanmask):
         model_sum, residual_cleanmask_rms, residual_non_cleanmask_rms, residual_max, \
-            residual_min, rms2d, nonpbcor_image_non_cleanmask_rms, pbcor_image_min, pbcor_image_max = cbheuristic.analyse_clean_result(
+            residual_min, nonpbcor_image_non_cleanmask_rms, pbcor_image_min, pbcor_image_max = cbheuristic.analyse_clean_result(
             multiterm, model, restored, residual, flux, cleanmask, pblimit_image, pblimit_cleanmask)
 
         # Append the statistics.
@@ -61,7 +61,7 @@ class BaseCleanSequence:
         self.image_non_cleanmask_rms_list.append(nonpbcor_image_non_cleanmask_rms)
 
         return model_sum, residual_cleanmask_rms, residual_non_cleanmask_rms, residual_max, \
-               residual_min, rms2d, nonpbcor_image_non_cleanmask_rms, pbcor_image_min, pbcor_image_max
+               residual_min, nonpbcor_image_non_cleanmask_rms, pbcor_image_min, pbcor_image_max
 
     def iteration(self, new_cleanmask):
         """The base boxworker allows only one iteration.
