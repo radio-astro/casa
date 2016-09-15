@@ -76,9 +76,9 @@ line detection stage.</p>
 <p>Red lines indicate the result of baseline fit that is subtracted from the calibrated spectra.</p>
 
 % for field in sparsemap_subpage_before.keys():
-    <h4><a class="replace"
+    <h3><a class="replace"
            href="${os.path.join(dirname, sparsemap_subpage_before[field])}">${field}</a>
-    </h4>
+    </h3>
     % for plot in sparsemap_before[field]:
         % if os.path.exists(plot.thumbnail):
 	        <div class="col-md-3">
@@ -117,9 +117,9 @@ line detection stage.</p>
 <p>Red lines show zero-level. Spectra that are properly subtracted should be located around red lines.</p>
 
 % for field in sparsemap_subpage_after.keys():
-    <h4><a class="replace"
+    <h3><a class="replace"
            href="${os.path.join(dirname, sparsemap_subpage_after[field])}">${field}</a>
-    </h4>
+    </h3>
     % for plot in sparsemap_after[field]:
         % if os.path.exists(plot.thumbnail):
 	        <div class="col-md-3">
@@ -154,15 +154,18 @@ line detection stage.</p>
 
 <h2>Line Detection by Clustering Analysis</h2>
 
-% if len(detail) > 0 or len(cover_only) > 0:
+% for field in detail.keys():
+  % if len(detail[field]) > 0 or len(cover_only[field]) > 0:
+  
+    <h3>${field}</h3>
 
-<!-- Link to details page -->
-% for plots in detail:
-    <h3><a class="replace"
-    href="${os.path.join(dirname, plots['html'])}">${plots['title']}</h3>
+    <!-- Link to details page -->
+    % for plots in detail[field]:
+      <h4><a class="replace"
+      href="${os.path.join(dirname, plots['html'])}">${plots['title']}</h4>
     
 <!--		href="${os.path.relpath(os.path.join(dirname, plots['html']), pcontext.report_dir)}">${plots['title']}-->
-    % for plot in plots['cover_plots']:
+      % for plot in plots['cover_plots']:
         % if os.path.exists(plot.thumbnail):
 			<div class="col-md-3">
 			  	<div class="thumbnail">
@@ -170,14 +173,15 @@ line detection stage.</p>
                        class="fancybox"
                        rel="thumbs">
                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-                             title="${plots['title']} for Spectral Window ${plot.parameters['spw']}"
+                             title="${plots['title']} for Spectral Window ${plot.parameters['spw']} Field ${plot.field}"
                              data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
                     </a>
                     <div class="caption">
                         <h4>
                             <a href="${os.path.join(dirname, plots['html'])}"
                                class="replace"
-                               data-spw="${plot.parameters['spw']}">
+                               data-spw="${plot.parameters['spw']}"
+                               data-field=${plot.field}>
                                Spectral Window ${plot.parameters['spw']}
                             </a>
                         </h4>
@@ -187,15 +191,15 @@ line detection stage.</p>
                     </div>
                 </div>
            	</div>
-        % endif
+          % endif
+      % endfor
+	  <div class="clearfix"></div><!--  flush plots, break to next row -->
     % endfor
-	<div class="clearfix"></div><!--  flush plots, break to next row -->
-% endfor
 
-<!-- No details -->
-% for plots in cover_only:
-    <h3>${plots['title']}</h3>
-    % for plot in plots['cover_plots']:
+    <!-- No details -->
+    % for plots in cover_only[field]:
+      <h4>${plots['title']}</h4>
+      % for plot in plots['cover_plots']:
 		% if os.path.exists(plot.thumbnail):
 			<div class="col-md-3">
 			  	<div class="thumbnail">
@@ -214,11 +218,11 @@ line detection stage.</p>
 				</div>
 			</div>
         % endif
+      % endfor
+	  <div class="clearfix"></div><!--  flush plots, break to next row -->
     % endfor
-	<div class="clearfix"></div><!--  flush plots, break to next row -->
+
+  % else:
+  <p>No Line detected</p>
+  % endif
 % endfor
-
-% else:
-<p>No Line detected</p>
-% endif
-

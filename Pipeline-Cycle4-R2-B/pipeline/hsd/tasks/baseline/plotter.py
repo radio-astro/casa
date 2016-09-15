@@ -217,7 +217,10 @@ class BaselineSubtractionPlotManager(object):
                                                              integrated_data_storage=self.postfit_storage.integrated_data,
                                                              map_data_storage=self.postfit_storage.map_data,
                                                              map_mask_storage=self.postfit_storage.map_mask)
-        lines_map = get_lines(rwtablename, num_ra, rowlist)
+        if line_range is not None:
+            lines_map = get_lines(rwtablename, num_ra, rowlist)
+        else:
+            lines_map = None
     
         plot_list = {}
     
