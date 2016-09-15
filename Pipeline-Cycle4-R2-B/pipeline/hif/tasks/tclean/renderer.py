@@ -59,6 +59,8 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
                 image_path = r.iterations[maxiter]['image'].replace('.image', '.image%s' % (extension))
 
+                LOG.info('Getting properties of %s for the weblog.' % (image_path))
+
                 with casatools.ImageReader(image_path) as image:
                     info = image.miscinfo()
                     spw = info.get('spw', None)
