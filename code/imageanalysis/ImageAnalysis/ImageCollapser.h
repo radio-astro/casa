@@ -112,6 +112,8 @@ private:
         const IPosition& shape, const IPosition& outShape
     ) const;
 
+    LatticeStatsBase::StatisticsTypes _getStatsType() const;
+
     void _attachOutputMask(
         TempImage<T>& outImage,
         const Array<Bool>& outMask
