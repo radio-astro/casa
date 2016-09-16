@@ -89,9 +89,8 @@ template<class T> SPIIT ImageCollapser<T>::collapse() const {
         this->_getLog().get(), AxesSpecifier(), this->_getStretch()
     );
     *this->_getLog() << LogOrigin(getClass(), __func__);
-    // FIXME the getMask() call may exhaust memory for large images
     ThrowIf(
-        ! anyTrue(subImage->getMask()),
+        ImageMask::isAllMaskFalse(*subImage),
         "All selected pixels are masked"
     );
     CoordinateSystem outCoords = subImage->coordinates();
@@ -161,13 +160,7 @@ template<class T> SPIIT ImageCollapser<T>::collapse() const {
     else {
         Bool lowPerf = _aggType == ImageCollapserData::FLUX;
         if (! lowPerf) {
-            // FIXME the getMask() call may exhaust memory for large images
-            Array<Bool> mask = subImage->getMask();
-            if (subImage->hasPixelMask()) {
-                // FIXME the pixelMask() call may exhaust memory for large images
-                mask = mask && subImage->pixelMask().get();
-            }
-            lowPerf = ! allTrue(mask);
+            lowPerf = ! ImageMask::ImageMask::isAllMaskTrue(*subImage);
         }
         T npixPerBeam = 1;
         if (_aggType == ImageCollapserData::SQRTSUM_NPIX_BEAM) {
@@ -324,6 +317,7 @@ template<class T> SPIIT ImageCollapser<T>::collapse() const {
                 || _aggType == ImageCollapserData::SQRTSUM_NPIX
                 || _aggType == ImageCollapserData::SQRTSUM_NPIX_BEAM
             ) {
+                // FIXME memory check
                 Array<T> arr = tmpIm.get();
                 _zeroNegatives(arr);
                 arr = sqrt(arr);
@@ -459,21 +453,23 @@ template<class T> void ImageCollapser<T>::_doMedian(
         }
     }
     LatticeStepper stepper(image->shape(), cursorShape);
+    // FIXME check memory
     Array<T> ary = image->get(False);
+    // FIXME check memory
     Array<Bool> mask = image->getMask();
     if (image->hasPixelMask()) {
+        // FIXME check memory
         mask = mask && image->pixelMask().get(False);
     }
     std::unique_ptr<Array<Bool> > outMask;
     Bool hasMaskedPixels = ! allTrue(mask);
     for (stepper.reset(); !stepper.atEnd(); stepper++) {
         Slicer slicer(stepper.position(), stepper.endPosition(), Slicer::endIsLast);
-        // Vector<T> kk(ary(slicer).tovector());
         vector<T> data = ary(slicer).tovector();
         if (hasMaskedPixels) {
             Vector<Bool> maskSlice(mask(slicer).tovector());
             if (! anyTrue(maskSlice)) {
-                if (outMask.get() == 0) {
+                if (! outMask) {
                     outMask.reset(new Array<Bool>(outImage.shape(), True));
                 }
                 (*outMask)(stepper.position()) = False;
@@ -512,6 +508,7 @@ template<class T> void ImageCollapser<T>::_doMedian(
         );
     }
     if (outMask.get() != 0) {
+        // FIXME check memory
         _attachOutputMask(outImage, *outMask.get());
     }
 }

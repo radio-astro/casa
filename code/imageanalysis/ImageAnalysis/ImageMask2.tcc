@@ -37,21 +37,9 @@ template <class T> Bool ImageMask::isAllMaskFalse(const ImageInterface<T>& image
 	auto cursorShape = image.niceCursorShape(4096*4096);
 	LatticeStepper stepper(image.shape(), cursorShape, LatticeStepper::RESIZE);
 	RO_MaskedLatticeIterator<T> iter(image, stepper);
-	/*
-    std::unique_ptr<RO_LatticeIterator<Bool>> pmiter;
-	if (image.hasPixelMask()) {
-		pmiter.reset(new RO_LatticeIterator<Bool>(image.pixelMask(), stepper));
-	}
-    */
 	for (iter.reset(); ! iter.atEnd(); ++iter) {
 		auto cursorShape = iter.cursorShape();
 		auto mymask = iter.getMask();
-        /*
-		if (pmiter) {
-			mymask = mymask && pmiter->cursor();
-			pmiter->operator++();
-		}
-        */
 		if (anyTrue(mymask)) {
 			return False;
 		}
