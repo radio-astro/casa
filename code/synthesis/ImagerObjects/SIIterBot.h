@@ -220,6 +220,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			Float itsMaxPsfSidelobe;
 			Float itsPeakResidual;
 	                Float itsPrevPeakResidual;
+	                Float itsInitPeakResidual;
 
 			/* The number of Controllers Currently Connected */
 			int    itsControllerCount;

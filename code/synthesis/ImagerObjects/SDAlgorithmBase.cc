@@ -131,7 +131,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    startpeakresidual = peakresidual;
 	    startmodelflux = modelflux;
 
+	    loopcontrols.setPeakResidual( peakresidual );
+	    loopcontrols.resetMinResidual(); // Set it to current initial peakresidual.
 	    stopCode = checkStop( loopcontrols,  peakresidual );
+
+	    // stopCode=0;
 
 	    if( validMask && stopCode==0 )
 	      {
@@ -139,21 +143,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Record info about the start of the minor cycle iterations
 		loopcontrols.addSummaryMinor( deconvolverid, chanid+polid*nSubChans, 
 					      modelflux, peakresidual );
+		//		loopcontrols.setPeakResidual( peakresidual );
 
 		// Init the deconvolver
 		initializeDeconvolver();
-		
+
+
 		while ( stopCode==0 )
 		  {
-		    
+
+		    Int thisniter = loopcontrols.getCycleNiter() <5000 ? loopcontrols.getCycleNiter() : 2000;
+
+		    loopcontrols.setPeakResidual( peakresidual );
 		    takeOneStep( loopcontrols.getLoopGain(), 
-				 loopcontrols.getCycleNiter(), //1,
+				 //				 loopcontrols.getCycleNiter(),
+				 thisniter,
 				 loopcontrols.getCycleThreshold(),
 				 peakresidual, 
 				 modelflux,
 				 iterdone);
-		    
-		    os << LogIO::NORMAL1 << "SDAlgoBase: After one step, dec : " << deconvolverid << "    residual=" << peakresidual << " model=" << modelflux << " iters=" << iterdone << LogIO::POST; 
+
+		    os << LogIO::NORMAL1  << "SDAlgoBase: After one step, dec : " << deconvolverid << "    residual=" << peakresidual << " model=" << modelflux << " iters=" << iterdone << LogIO::POST; 
+
 		    SynthesisUtilMethods::getResource("In deconvolver : one plane" );
 		    
 		    loopcontrols.incrementMinorCycleCount( iterdone ); // CAS-8767 : add subimageindex and merge with addSummaryMinor call later.
@@ -168,10 +179,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		    /// Later, when you can interrupt minor cycles, takeOneStep will become more
 		    /// fine grained, and then stopCode=0 will be valid.  For now though, check on
                     /// it and handle it (for CAS-7898).
-		    if(stopCode==0)
+		    if(stopCode==0 && iterdone != thisniter)
 		      {
 			os << LogIO::NORMAL1 << "Exited " << itsAlgorithmName << " minor cycle without satisfying stopping criteria " << LogIO::POST;
-			stopCode=4;
+			stopCode=5;
 		      }
 		    
 		  }// end of minor cycle iterations for this subimage.
@@ -189,7 +200,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    Int iterend = loopcontrols.getIterDone();
 	    os << "]"
 	      //	       <<" iters=" << ( (iterend>startiteration) ? startiteration+1 : startiteration )<< "->" << iterend
-	       <<" iters=" << startiteration << "->" << iterend
+	       <<" iters=" << startiteration << "->" << iterend << " [" << iterend-startiteration << "]"
 	       << ", model=" << startmodelflux << "->" << modelflux
 	       << ", peakres=" << startpeakresidual << "->" << peakresidual ;
 
@@ -208,6 +219,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		os << ", Zero iterations performed.";
 		break;
 	      case 4:
+		os << ", Possible divergence. Peak residual increased by 10% from minimum.";
+		break;
+	      case 5:
 		os << ", Exited " << itsAlgorithmName << " minor cycle without reaching any stopping criterion.";
 		break;
 	      default:
@@ -222,12 +236,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      {maxResidualAcrossPlanes=peakresidual; maxResChan=chanid; maxResPol=polid;}
 
 	    totalFluxAcrossPlanes += modelflux;
+
 	    
 	  }// end of polid loop
 	
-	loopcontrols.setPeakResidual( maxResidualAcrossPlanes );
-
       }// end of chanid loop
+    
+    loopcontrols.setPeakResidual( maxResidualAcrossPlanes );
 
     /// Print total flux over all planes (and max res over all planes). IFF there are more than one plane !!
     if( nSubChans>1 || nSubPols>1 )

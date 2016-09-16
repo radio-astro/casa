@@ -55,14 +55,33 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   Int SIMinorCycleController::majorCycleRequired(Float currentPeakResidual)
   {
     LogIO os( LogOrigin("SIMinorCycleController",__FUNCTION__,WHERE) );
-
+    
     Int stopCode=0;
 
+    // Reached iteration limit
     if (itsCycleIterDone >= itsCycleNiter ) {stopCode=1;}
+    // Reached cyclethreshold
     if( fabs(currentPeakResidual) <= itsCycleThreshold ) { stopCode=2; }
+    // Zero iterations done
     if( itsIterDiff==0 ) {stopCode=3;}
+    // Diverged : CAS-8767, CAS-8584
+    //cout << " itsIterDiff : " << itsIterDiff << "  itsPeak : " << itsPeakResidual << " currentPeak : " << currentPeakResidual << " itsMin : " << itsMinResidual << " stopcode so far : " << stopCode ;
+    if( itsIterDiff>0 &&
+	( fabs(itsMinResidual) > 0.0 ) && 
+	( fabs(currentPeakResidual) - fabs(itsMinResidual) )/ fabs(itsMinResidual) >0.1  ) 
+      {stopCode=4;}
+
+    //	cout << " -> " << stopCode << endl;
+
+    /*    // Going nowhere
+    if( itsIterDiff > 1500 && 
+	( fabs(itsPeakResidual) > 0.0 ) && 
+	( fabs(currentPeakResidual) - fabs(itsPeakResidual) )/ fabs(itsPeakResidual) < itsLoopGain  ) 
+      {stopCode=5;}
+    */
 
     return stopCode;
+
 
   }
 
@@ -105,6 +124,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SIMinorCycleController::setPeakResidual(Float peakResidual)
   {
     itsPeakResidual = peakResidual;
+
+    if( itsMinResidual > itsPeakResidual )
+      itsMinResidual = itsPeakResidual;
+
+  }
+
+  void SIMinorCycleController::resetMinResidual()
+  {
+    itsMinResidual = itsPeakResidual;
+    itsIterDiff=-1;
   }
 
   Float SIMinorCycleController::getIntegratedFlux()
