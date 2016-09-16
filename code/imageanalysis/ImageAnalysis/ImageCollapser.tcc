@@ -160,7 +160,7 @@ template<class T> SPIIT ImageCollapser<T>::collapse() const {
     else {
         Bool lowPerf = _aggType == ImageCollapserData::FLUX;
         if (! lowPerf) {
-            lowPerf = ! ImageMask::ImageMask::isAllMaskTrue(*subImage);
+            lowPerf = ! ImageMask::isAllMaskTrue(*subImage);
         }
         T npixPerBeam = 1;
         if (_aggType == ImageCollapserData::SQRTSUM_NPIX_BEAM) {
