@@ -159,184 +159,7 @@ template<class T> SPIIT ImageCollapser<T>::collapse() const {
     }
     else {
         _doOtherStats(tmpIm, subImage, shape, outShape);
-        /*
-        Bool lowPerf = _aggType == ImageCollapserData::FLUX;
-        if (! lowPerf) {
-            lowPerf = ! ImageMask::ImageMask::isAllMaskTrue(*subImage);
-        }
-        T npixPerBeam = 1;
-        if (_aggType == ImageCollapserData::SQRTSUM_NPIX_BEAM) {
-            ImageInfo info = subImage->imageInfo();
-            if (! info.hasBeam()) {
-                *this->_getLog() << LogIO::WARN
-                    << "Image has no beam, will use sqrtsum method"
-                    << LogIO::POST;
-            }
-            else if (info.hasMultipleBeams()) {
-                *this->_getLog() << LogIO::WARN
-                    << "Function sqrtsum_npix_beam does not support multiple beams, will"
-                    << "use sqrtsum method instead"
-                    << LogIO::POST;
-            }
-            else {
-                npixPerBeam = info.getBeamAreaInPixels(
-                    -1, -1, subImage->coordinates().directionCoordinate()
-                );
-            }
-        }
-        if (lowPerf) {
-            // flux or mask with one or more False values, must use lower performance methods
-            LatticeStatsBase::StatisticsTypes lattStatType = LatticeStatsBase::NACCUM;
-            switch(_aggType) {
-            case ImageCollapserData::FLUX:
-                lattStatType = LatticeStatsBase::FLUX;
-                break;
-            case ImageCollapserData::MAX:
-                lattStatType = LatticeStatsBase::MAX;
-                break;
-            case ImageCollapserData::MEAN:
-                lattStatType = LatticeStatsBase::MEAN;
-                break;
-            case ImageCollapserData::MIN:
-                lattStatType = LatticeStatsBase::MIN;
-                break;
-            case ImageCollapserData::NPTS:
-                lattStatType = LatticeStatsBase::NPTS;
-                break;
-            case ImageCollapserData::RMS:
-                lattStatType = LatticeStatsBase::RMS;
-                break;
-            case ImageCollapserData::STDDEV:
-                lattStatType = LatticeStatsBase::SIGMA;
-                break;
-            case ImageCollapserData::SQRTSUM:
-            case ImageCollapserData::SQRTSUM_NPIX:
-            case ImageCollapserData::SQRTSUM_NPIX_BEAM:
-            case ImageCollapserData::SUM:
-                lattStatType = LatticeStatsBase::SUM;
-                break;
-            case ImageCollapserData::VARIANCE:
-                lattStatType = LatticeStatsBase::VARIANCE;
-                break;
-            case ImageCollapserData::MEDIAN:
-            case ImageCollapserData::ZERO:
-            case ImageCollapserData::UNKNOWN:
-            default:
-                ThrowCc(
-                    "Logic error. Should never have gotten the the bottom of the switch statement"
-                );
-                break;
-            }
-            Array<T> data;
-            Array<Bool> mask;
-            if (_aggType == ImageCollapserData::FLUX) {
-                ImageStatistics<T> stats(*subImage, False);
-                stats.setAxes(_axes.asVector());
-                if (
-                    ! stats.getConvertedStatistic(
-                        data, lattStatType, False
-                    )
-                ) {
-                    ostringstream oss;
-                    oss << "Unable to calculate flux density: "
-                    << stats.getMessages();
-                    ThrowCc(oss.str());
-                }
-                mask.resize(data.shape());
-                mask.set(True);
-            }
-            else {
-                LatticeMathUtil::collapse(
-                    data, mask, _axes, *subImage, False,
-                    True, True, lattStatType
-                );
-                if (
-                    _aggType == ImageCollapserData::SQRTSUM
-                    || _aggType == ImageCollapserData::SQRTSUM_NPIX
-                    || _aggType == ImageCollapserData::SQRTSUM_NPIX_BEAM
-                ) {
-                    _zeroNegatives(data);
-                    data = sqrt(data);
-                    if (_aggType == ImageCollapserData::SQRTSUM_NPIX) {
-                        Array<T> npts = data.copy();
-                        LatticeMathUtil::collapse(
-                            npts, mask, _axes, *subImage, False,
-                            True, True, LatticeStatsBase::NPTS
-                        );
-                        data /= npts;
-                    }
-                    else if (_aggType == ImageCollapserData::SQRTSUM_NPIX_BEAM) {
-                        data /= npixPerBeam;
-                    }
-                }
-            }
-            Array<T> dataCopy = (_axes.size() <= 1)
-                ? data
-                : data.addDegenerate(_axes.size() - 1);
-            IPosition newOrder(tmpIm.ndim(), -1);
-            uInt nAltered = _axes.size();
-            uInt nUnaltered = tmpIm.ndim() - nAltered;
-            uInt alteredCount = nUnaltered;
-            uInt unAlteredCount = 0;
-            for (uInt i=0; i<tmpIm.ndim(); i++) {
-                for (uInt j=0; j<_axes.size(); j++) {
-                    if (i == _axes[j]) {
-                        newOrder[i] = alteredCount;
-                        alteredCount++;
-                        break;
-                    }
-                }
-                if (newOrder[i] < 0) {
-                    newOrder[i] = unAlteredCount;
-                    unAlteredCount++;
-                }
-            }
-            tmpIm.put(reorderArray(dataCopy, newOrder));
-            if (! allTrue(mask)) {
-                Array<Bool> maskCopy = (
-                    _axes.size() <= 1)
-                    ? mask
-                    : mask.addDegenerate(_axes.size() - 1
-                );
-                Array<Bool> mCopy = reorderArray(maskCopy, newOrder);
-                _attachOutputMask(tmpIm, mCopy);
-            }
-        }
-        else {
-            // no mask, can use higher performance method
-            T (*function)(const Array<T>&) = _getFuncMap().find(_aggType)->second;
-            // FIXME this can exhaust memory for large images
-            Array<T> data = subImage->get(False);
-            Int64 nelements = outShape.product();
-            for (uInt i=0; i<nelements; i++) {
-                IPosition start = toIPositionInArray(i, outShape);
-                IPosition end = start + shape - 1;
-                Slicer s(start, end, Slicer::endIsLast);
-                tmpIm.putAt(function(data(s)), start);
-            }
-            if (
-                _aggType == ImageCollapserData::SQRTSUM
-                || _aggType == ImageCollapserData::SQRTSUM_NPIX
-                || _aggType == ImageCollapserData::SQRTSUM_NPIX_BEAM
-            ) {
-                // FIXME memory check
-                Array<T> arr = tmpIm.get();
-                _zeroNegatives(arr);
-                arr = sqrt(arr);
-                if (_aggType == ImageCollapserData::SQRTSUM_NPIX) {
-                    T npts = subImage->shape().product()/nelements;
-                    arr /= npts;
-
-                }
-                else if (_aggType == ImageCollapserData::SQRTSUM_NPIX_BEAM) {
-                    arr /= npixPerBeam;
-                }
-                tmpIm.put(arr);
-            }
-        }
-        */
     }
-
     Bool copied = False;
     if (subImage->imageInfo().hasMultipleBeams()) {
         Int naxes = _axes.size();
@@ -435,6 +258,8 @@ template<class T> void ImageCollapser<T>::_doOtherStats(
         }
     }
     if (lowPerf) {
+        _doLowPerf(tmpIm, subImage, npixPerBeam);
+        /*
         // flux or mask with one or more False values, must use lower performance methods
         LatticeStatsBase::StatisticsTypes lattStatType = LatticeStatsBase::NACCUM;
         switch(_aggType) {
@@ -551,6 +376,7 @@ template<class T> void ImageCollapser<T>::_doOtherStats(
             Array<Bool> mCopy = reorderArray(maskCopy, newOrder);
             _attachOutputMask(tmpIm, mCopy);
         }
+        */
     }
     else {
         // no mask, can use higher performance method
@@ -583,6 +409,127 @@ template<class T> void ImageCollapser<T>::_doOtherStats(
             }
             tmpIm.put(arr);
         }
+    }
+}
+
+template<class T> void ImageCollapser<T>::_doLowPerf(
+    TempImage<T>& tmpIm, SPCIIT subImage, T npixPerBeam
+) const {
+    // flux or mask with one or more False values, must use lower performance methods
+    LatticeStatsBase::StatisticsTypes lattStatType = LatticeStatsBase::NACCUM;
+    switch(_aggType) {
+    case ImageCollapserData::FLUX:
+        lattStatType = LatticeStatsBase::FLUX;
+        break;
+    case ImageCollapserData::MAX:
+        lattStatType = LatticeStatsBase::MAX;
+        break;
+    case ImageCollapserData::MEAN:
+        lattStatType = LatticeStatsBase::MEAN;
+        break;
+    case ImageCollapserData::MIN:
+        lattStatType = LatticeStatsBase::MIN;
+        break;
+    case ImageCollapserData::NPTS:
+        lattStatType = LatticeStatsBase::NPTS;
+        break;
+    case ImageCollapserData::RMS:
+        lattStatType = LatticeStatsBase::RMS;
+        break;
+    case ImageCollapserData::STDDEV:
+        lattStatType = LatticeStatsBase::SIGMA;
+        break;
+    case ImageCollapserData::SQRTSUM:
+    case ImageCollapserData::SQRTSUM_NPIX:
+    case ImageCollapserData::SQRTSUM_NPIX_BEAM:
+    case ImageCollapserData::SUM:
+        lattStatType = LatticeStatsBase::SUM;
+        break;
+    case ImageCollapserData::VARIANCE:
+        lattStatType = LatticeStatsBase::VARIANCE;
+        break;
+    case ImageCollapserData::MEDIAN:
+    case ImageCollapserData::ZERO:
+    case ImageCollapserData::UNKNOWN:
+    default:
+        ThrowCc(
+                "Logic error. Should never have gotten the the bottom of the switch statement"
+        );
+        break;
+    }
+    Array<T> data;
+    Array<Bool> mask;
+    if (_aggType == ImageCollapserData::FLUX) {
+        ImageStatistics<T> stats(*subImage, False);
+        stats.setAxes(_axes.asVector());
+        if (
+                ! stats.getConvertedStatistic(
+                        data, lattStatType, False
+                )
+        ) {
+            ostringstream oss;
+            oss << "Unable to calculate flux density: "
+                    << stats.getMessages();
+            ThrowCc(oss.str());
+        }
+        mask.resize(data.shape());
+        mask.set(True);
+    }
+    else {
+        LatticeMathUtil::collapse(
+                data, mask, _axes, *subImage, False,
+                True, True, lattStatType
+        );
+        if (
+                _aggType == ImageCollapserData::SQRTSUM
+                || _aggType == ImageCollapserData::SQRTSUM_NPIX
+                || _aggType == ImageCollapserData::SQRTSUM_NPIX_BEAM
+        ) {
+            _zeroNegatives(data);
+            data = sqrt(data);
+            if (_aggType == ImageCollapserData::SQRTSUM_NPIX) {
+                Array<T> npts = data.copy();
+                LatticeMathUtil::collapse(
+                        npts, mask, _axes, *subImage, False,
+                        True, True, LatticeStatsBase::NPTS
+                );
+                data /= npts;
+            }
+            else if (_aggType == ImageCollapserData::SQRTSUM_NPIX_BEAM) {
+                data /= npixPerBeam;
+            }
+        }
+    }
+    Array<T> dataCopy = (_axes.size() <= 1)
+                        ? data
+                                : data.addDegenerate(_axes.size() - 1);
+    IPosition newOrder(tmpIm.ndim(), -1);
+    uInt nAltered = _axes.size();
+    uInt nUnaltered = tmpIm.ndim() - nAltered;
+    uInt alteredCount = nUnaltered;
+    uInt unAlteredCount = 0;
+    for (uInt i=0; i<tmpIm.ndim(); i++) {
+        for (uInt j=0; j<_axes.size(); j++) {
+            if (i == _axes[j]) {
+                newOrder[i] = alteredCount;
+                alteredCount++;
+                break;
+            }
+        }
+        if (newOrder[i] < 0) {
+            newOrder[i] = unAlteredCount;
+            unAlteredCount++;
+        }
+    }
+    tmpIm.put(reorderArray(dataCopy, newOrder));
+    if (! allTrue(mask)) {
+        Array<Bool> maskCopy = (
+                _axes.size() <= 1)
+                            ? mask
+                                    : mask.addDegenerate(_axes.size() - 1
+                                    );
+        Array<Bool> mCopy = reorderArray(maskCopy, newOrder);
+        _attachOutputMask(tmpIm, mCopy);
     }
 }
 

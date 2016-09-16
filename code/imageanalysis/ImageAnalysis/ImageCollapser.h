@@ -97,6 +97,10 @@ private:
 
     void _finishConstruction();
 
+    void _doLowPerf(
+        TempImage<T>& tmpIm, SPCIIT subImage, T npixPerBeam
+    ) const;
+
     // necessary to improve performance
     void _doMedian(
         SPCIIT image,
