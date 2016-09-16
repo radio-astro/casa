@@ -107,6 +107,12 @@ private:
         TempImage<T>& outImage
     ) const;
 
+    // returns true if miscellaneous info was copied
+    Bool _doMultipleBeams(
+        TempImage<T>& tmpIm, SPCIIT subImage, Bool hasDir,
+        const CoordinateSystem& outCoords
+    ) const;
+
     void _doOtherStats(
         TempImage<T>& tmpIm, SPCIIT subImage,
         const IPosition& shape, const IPosition& outShape
