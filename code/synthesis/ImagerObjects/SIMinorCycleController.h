@@ -111,6 +111,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     void addIntegratedFlux(Float integratedFlux);
     void setMaxPsfSidelobe(Float maxPsfSidelobe);
 
+   void resetMinResidual();
+
  protected:
     /* Control Variables */
     Int    itsCycleNiter;
@@ -134,7 +136,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
    Float itsPeakResidual;
    Float itsIntegratedFlux;
    Float itsMaxPsfSidelobe;
-   
+
+   Float itsMinResidual;
 
     /* Summary Variable */
     Array<Double> itsSummaryMinor;

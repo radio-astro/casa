@@ -66,7 +66,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 						itsMaxPsfFraction(0.8),
 						itsMaxPsfSidelobe(0.0),
 						itsPeakResidual(0.0),
-						itsPrevPeakResidual(0.0),
+						itsPrevPeakResidual(-1.0),
+						itsInitPeakResidual(0.0),
 						itsControllerCount(0),
 						itsNiter(0),
 						itsCycleNiter(0),
@@ -144,7 +145,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		int stopCode=0;
                 
-		//os << "itsMajorDone="<<itsMajorDone<<" itsIterDone="<<itsIterDone<< " itsPrevPeakResidual="<<itsPrevPeakResidual<<" itsPeakResidual="<<itsPeakResidual<<" itsStopFlag="<<itsStopFlag<<LogIO::POST;
+		//cout << "itsMajorDone="<<itsMajorDone<<" itsIterDone="<<itsIterDone<< " itsInitPeakResidual="<<itsInitPeakResidual<<" itsPeakResidual="<<itsPeakResidual <<" itsStopFlag="<<itsStopFlag<<endl;
+
+		if( itsPeakResidual>0 && itsPrevPeakResidual>0 && 
+		    itsPeakResidual > itsPrevPeakResidual )
+		  {
+		    os << LogIO::WARN << "Peak residual increased from " << itsPrevPeakResidual << " to " << itsPeakResidual << endl;
+		  }
+
+		itsPrevPeakResidual = itsPeakResidual;
 
 		/// This may interfere with some other criterion... check.
 		if ( itsMajorDone==0 && itsIterDone==0 ) { stopCode=0; }
@@ -166,13 +175,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  }
 		else // not converged yet... but....if nothing has changed in this round... also stop
 		  {
-		    //cout << "Prev Res : " << itsPrevPeakResidual << "   current res : " << itsPeakResidual << endl;
-		    if( fabs( itsPrevPeakResidual - itsPeakResidual )<1e-10) 
+		    //cout << "Prev Res : " << itsInitPeakResidual << "   current res : " << itsPeakResidual << endl;
+		    if( fabs( itsInitPeakResidual - itsPeakResidual )<1e-10) 
 		      {stopCode = 4;}
 
                     // another non-convergent condition: diverging (if it increases more than by 200%)
-                    else if ( itsIterDone > 0 && fabs( (itsPeakResidual - itsPrevPeakResidual)/itsPrevPeakResidual ) >2.0) 
+                    else if ( itsIterDone > 0 && fabs( (itsPeakResidual - itsInitPeakResidual)/itsInitPeakResidual ) >2.0) 
                       {stopCode = 5;}
+
 		  }
 	        
 		//		os << "Peak residual : " << itsPeakResidual << " and " << itsIterDone << " iterations."<< LogIO::POST;
@@ -200,8 +210,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		/* Now that we have set the threshold, zero the peak residual 
 		   so it can be found again after the minor cycles */
-		itsPrevPeakResidual = itsPeakResidual;
+		itsInitPeakResidual = itsPeakResidual;
 		itsPeakResidual = 0;
+
 
 		/* This returns a record suitable for initializing the minor cycle
 		   controls. */

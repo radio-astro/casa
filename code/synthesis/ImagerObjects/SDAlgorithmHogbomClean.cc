@@ -63,14 +63,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 #define NEED_UNDERSCORES
 #if defined(NEED_UNDERSCORES)
 #define hclean hclean_
-# define maximg maximg_
 #endif
 extern "C" {
   void hclean(Float*, Float*, Float*, int*, Float*, int*, int*, int*,
               int*, int*, int*, int*, int*, int*, int*, Float*, Float*,
               Float*, void *, void *);
-  void maximg(Float*, Int*, Float*, Int*, Int*, Int*, Float*, Float*);
-};
+   };
 
 
 
@@ -200,6 +198,7 @@ void REFHogbomCleanImageSkyModelmsgput(Int *npol, Int* /*pol*/, Int* iter, Int* 
     */
   }
 
+
   void SDAlgorithmHogbomClean::takeOneStep( Float loopgain, 
 					    Int cycleNiter, 
 					    Float cycleThreshold, 
@@ -241,7 +240,7 @@ void REFHogbomCleanImageSkyModelmsgput(Int *npol, Int* /*pol*/, Int* iter, Int* 
     
 
     Int fxbeg=xbeg+1;
-    Int fxend=xend;  //fortran range in do loop is inclusive
+    Int fxend=xend;
     Int fybeg=ybeg+1;
     Int fyend=yend;
     
@@ -250,34 +249,16 @@ void REFHogbomCleanImageSkyModelmsgput(Int *npol, Int* /*pol*/, Int* iter, Int* 
     Int starting_iteration = 0;  
     Int ending_iteration=0;         
     Float cycleSpeedup = -1; // ie, ignore it
-    Bool stop=False;
-    Float maxRes=C::flt_max;
-    Int niterloop= niter < 5000 ? 500: 1000 ;
-    Int numloop = niter%niterloop ? niter/niterloop+1  : niter/niterloop;
-    while (!stop  && ending_iteration < niter && numloop >0 ){
-      Int thisNiter=((numloop==1) && (niter != niterloop)) ? starting_iteration+niter%niterloop : starting_iteration+niterloop;
-      hclean(limage_data, limageStep_data,
+    
+    hclean(limage_data, limageStep_data,
 	   (Float*)lpsf_data, &domaskI, (Float*)lmask_data,
 	   &newNx, &newNy, &npol,
-	   &fxbeg, &fxend, &fybeg, &fyend, &thisNiter,
+	   &fxbeg, &fxend, &fybeg, &fyend, &niter,
 	   &starting_iteration, &ending_iteration,
 	   &g, &thres, &cycleSpeedup,
 	   (void*) &REFHogbomCleanImageSkyModelmsgput,
 	   (void*) &REFHogbomCleanImageSkyModelstopnow);
-      if(ending_iteration < (starting_iteration+niterloop))
-	stop=True;
-      starting_iteration=starting_iteration+niterloop;
-      --numloop;
-      Float fmax, fmin;
-      maximg(limageStep_data, &domaskI, (Float *)lmask_data,  &newNx, &newNy, &npol, &fmin, &fmax);
-      fmax=max(fabs(fmax), fabs(fmin));
-	//	cerr << "ending iter " << ending_iteration << " fmax " << fmax << " max res " <<maxRes << endl;
-      if(maxRes > fmax)
-	maxRes=fmax;
-      else
-	stop=True;
-    }
-  
+    
     iterdone=ending_iteration;
     
     itsMatModel.putStorage( limage_data, delete_iti );
