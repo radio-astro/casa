@@ -103,6 +103,11 @@ private:
         TempImage<T>& outImage
     ) const;
 
+    void _doOtherStats(
+        TempImage<T>& tmpIm, SPCIIT subImage,
+        const IPosition& shape, const IPosition& outShape
+    ) const;
+
     void _attachOutputMask(
         TempImage<T>& outImage,
         const Array<Bool>& outMask
