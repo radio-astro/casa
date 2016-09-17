@@ -55,7 +55,7 @@ class TcleanQAHandler(pqa.QAResultHandler):
                 intent = result.intent
                 spwid = int(result.spw)
                 imagename = result.image 
-                checkscore = scorecalc.score_checksources (mses, fieldname, intent, spwid, imagename) 
+                checkscore = scorecalc.score_checksources (mses, fieldname, spwid, imagename) 
                 result.qa.pool.append (checkscore)
 
 
