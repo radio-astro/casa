@@ -298,7 +298,7 @@ def concatreplaceephem(vis=[], field='', commontime=False):
         os.system('rm -rf '+tmptab)
 
         if type(commontime)==float or commontime==True:
-            casalog.post('Will set FIELD table referene time for field '+str(ephemfield)+' to common value:', 'INFO')
+            casalog.post('Will set FIELD table reference time for field '+str(ephemfield)+' to common value:', 'INFO')
             thecommontime = commontime
             if type(commontime)==float:
                 casalog.post('   '+str(thecommontime), 'INFO')
