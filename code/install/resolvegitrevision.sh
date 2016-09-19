@@ -12,8 +12,9 @@ if [ $branch == "master" ];then
     echo "${masterTag##*-};$CASA_VERSION_DESC"
 else
     #echo "Resolving branch"
-    b1=${branch%/*}
-    b2=${branch##*/}
+    # Using parameter expansion to split the strings
+    b1=${branch%/*} # part before the slash
+    b2=${branch##*/} # rpart after the slash
     tagMatcher=$b1-$b2
     branchTag=`git tag --points-at HEAD | grep \\\-$tagMatcher- | xargs`
     if [ $branchTag == "" ]; then
