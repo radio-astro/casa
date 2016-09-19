@@ -97,6 +97,8 @@ private:
 
     void _finishConstruction();
 
+    void _checkFlux(SPCIIT subImage) const;
+
     void _doLowPerf(
         TempImage<T>& tmpIm, SPCIIT subImage, T npixPerBeam
     ) const;

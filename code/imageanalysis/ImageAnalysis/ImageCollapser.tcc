@@ -97,6 +97,8 @@ template<class T> SPIIT ImageCollapser<T>::collapse() const {
     Bool hasDir = outCoords.hasDirectionCoordinate();
     IPosition inShape = subImage->shape();
     if (_aggType == ImageCollapserData::FLUX) {
+        _checkFlux(subImage);
+        /*
         String cant = " Cannot do flux density calculation";
         ThrowIf(
             ! hasDir,
@@ -116,6 +118,7 @@ template<class T> SPIIT ImageCollapser<T>::collapse() const {
                 + " is not a direction axis but has length > 1." + cant
             );
         }
+        */
     }
     // Set the compressed axis reference pixel and reference value
     Vector<Double> blc, trc;
@@ -183,6 +186,31 @@ template<class T> SPIIT ImageCollapser<T>::collapse() const {
         tmpIm.setUnits(unit);
     }
     return this->_prepareOutputImage(tmpIm);
+}
+
+template<class T> void ImageCollapser<T>::_checkFlux(
+    SPCIIT subImage
+) const {
+    String cant = " Cannot do flux density calculation";
+    const CoordinateSystem& outCoords = subImage->coordinates();
+    ThrowIf(
+        ! outCoords.hasDirectionCoordinate(),
+        "Image has no direction coordinate." + cant
+    );
+    ThrowIf(
+        subImage->units().getName().contains("beam") && ! subImage->imageInfo().hasBeam(),
+        "Image has no beam." + cant
+    );
+    Vector<Int> dirAxes = outCoords.directionAxesNumbers();
+    for (uInt i=0; i<_axes.nelements(); i++) {
+        Int axis = _axes[i];
+        ThrowIf(
+            ! anyTrue(dirAxes == axis)
+            && subImage->shape()[axis] > 1,
+            "Specified axis " + String::toString(axis)
+            + " is not a direction axis but has length > 1." + cant
+        );
+    }
 }
 
 template<class T> Bool ImageCollapser<T>::_doMultipleBeams(
