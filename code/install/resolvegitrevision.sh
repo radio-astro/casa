@@ -6,8 +6,8 @@ if [ $branch == "master" ];then
     if [[ -z "${masterTag// }" ]]; then
         # Get the nearest tag and add Desc
         headCommit=`git rev-parse HEAD`
-        CASA_VERSION_DESC="No tag found for the head commit. Nearest tag: $branchTag, HEAD commit: $headCommit "
         masterTag=`git describe --abbrev=0 | grep \\\-mas- | xargs`
+        CASA_VERSION_DESC="No tag found for the head commit. Nearest tag: $masterTag, HEAD commit: $headCommit "
     fi
     # Return only the revision number
     echo "${masterTag##*-};$CASA_VERSION_DESC"
