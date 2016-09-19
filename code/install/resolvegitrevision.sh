@@ -3,10 +3,11 @@ branch=`git rev-parse --abbrev-ref HEAD`
 if [ $branch == "master" ];then
     #echo "Resolving master"
     masterTag=`git tag --points-at HEAD | grep \\\-mas- | xargs`
-    if [ $masterTag == "" ]; then
+    if [[ -z "${masterTag// }" ]]; then
         # Get the nearest tag and add Desc
-        CASA_VERSION_DESC="No tag found for the current commit. Using nearest tag."
-        masterTag=`git tag --points-at HEAD | grep \\\-mas- | xargs`
+        headCommit=`git rev-parse HEAD`
+        CASA_VERSION_DESC="No tag found for the head commit. Nearest tag: $branchTag, HEAD commit: $headCommit "
+        masterTag=`git describe --abbrev=0 | grep \\\-mas- | xargs`
     fi
     # Return only the revision number
     echo "${masterTag##*-};$CASA_VERSION_DESC"
@@ -17,10 +18,11 @@ else
     b2=${branch##*/} # rpart after the slash
     tagMatcher=$b1-$b2
     branchTag=`git tag --points-at HEAD | grep \\\-$tagMatcher- | xargs`
-    if [ $branchTag == "" ]; then
-        # Get the nearest tag and add Desc
-        branchTag=`git tag --points-at HEAD | grep \\\-$tagMatcher- | xargs`
-        CASA_VERSION_DESC="No tag found for the current commit. Using nearest tag. $branchTag"
+    if [[ -z "${branchTag// }" ]]; then
+        # Get the nearest tag and add Desca
+        headCommit=`git rev-parse HEAD`
+        branchTag=`git describe --abbrev=0 | grep \\\-$tagMatcher- | xargs`
+        CASA_VERSION_DESC="No tag found for the head commit. Nearest tag: $branchTag, HEAD commit: $headCommit "
     else
         CASA_VERSION_DESC="$branchTag"
     fi
