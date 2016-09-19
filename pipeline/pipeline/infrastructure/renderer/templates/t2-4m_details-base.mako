@@ -98,6 +98,7 @@ def format_notification(tr_class, alert, msg, icon_class=None):
 
         <div class="row">
             % for intent, intent_plots in plot_accessor(ms_plots):
+                % if intent_plots is not None:
                 % for plot in intent_plots:
                 <div class="col-md-3 col-sm-4">
                     % if os.path.exists(plot.thumbnail):
@@ -192,6 +193,7 @@ def format_notification(tr_class, alert, msg, icon_class=None):
                     % endif
                 </div>
                 % endfor
+                % endif
             % endfor
         </div><!-- end row -->
 
