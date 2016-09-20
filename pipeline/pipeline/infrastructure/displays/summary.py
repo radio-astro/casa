@@ -683,10 +683,6 @@ class PlotAntsChart(object):
         subpl.set_theta_zero_location('N')
         subpl.set_theta_direction(-1)
         
-        # Set minimum and maximum radius.
-        subpl.set_rmax(rmax)
-        subpl.set_rmin(rmin)
-        
         # Do not show azimuth labels.
         subpl.set_xticklabels([])
         subpl.set_yticklabels([])
@@ -749,4 +745,10 @@ class PlotAntsChart(object):
             # Draw a key in the legend for finding the antenna.
             subpl.annotate(label, xy=(0.5,0.5), xytext=(0.02,0.925-0.90*i/len(antennas)), 
               xycoords='figure fraction', textcoords='figure fraction', weight='bold', 
-              arrowprops=None, color='black', ha='left', va='center', size=8) 
+              arrowprops=None, color='black', ha='left', va='center', size=8)
+
+        # Set minimum and maximum radius.
+        subpl.set_rmax(rmax)
+        subpl.set_rmin(rmin)
+
+
