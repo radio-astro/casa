@@ -1,5 +1,16 @@
 #!/bin/bash
 branch=`git rev-parse --abbrev-ref HEAD`
+# Detached HEAD, should have a tag
+if [ $branch == "HEAD" ];then
+    headTag=`git tag --points-at HEAD`
+    if [[ -z "${headTag// }" ]]; then
+        # Get the nearest tag and add Desc
+        headCommit=`git rev-parse HEAD`
+        headTag=`git tag --points-at HEAD | grep \\\-mas- | xargs`
+        CASA_VERSION_DESC="No tag found for the head commit. Nearest master tag: $masterTag, HEAD commit: $headCommit "
+    fi
+    echo "${headTag##*-};$CASA_VERSION_DESC"
+# Master
 if [ $branch == "master" ];then
     #echo "Resolving master"
     masterTag=`git tag --points-at HEAD | grep \\\-mas- | xargs`
@@ -11,6 +22,7 @@ if [ $branch == "master" ];then
     fi
     # Return only the revision number
     echo "${masterTag##*-};$CASA_VERSION_DESC"
+# Any other branch
 else
     #echo "Resolving branch"
     # Using parameter expansion to split the strings
