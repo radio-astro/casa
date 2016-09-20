@@ -11,7 +11,7 @@ if [ $branch == "HEAD" ];then
     fi
     echo "${headTag##*-};$CASA_VERSION_DESC"
 # Master
-if [ $branch == "master" ];then
+elif [ $branch == "master" ];then
     #echo "Resolving master"
     masterTag=`git tag --points-at HEAD | grep \\\-mas- | xargs`
     if [[ -z "${masterTag// }" ]]; then
