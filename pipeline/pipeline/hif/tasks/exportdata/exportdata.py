@@ -955,7 +955,6 @@ class ExportData(basetask.StandardTaskTemplate):
         task_string = "    hif_restoredata (vis=%s, session=%s, ocorr_mode='%s')" % (tmpvislist, session_list, ocorr_mode)
 
         if context.project_summary.telescope in ('VLA', 'EVLA'):
-            task_string += '\n    hifv_targetflag()'
             task_string += '\n    hifv_statwt()'
 
         template = '''__rethrow_casa_exceptions = True
