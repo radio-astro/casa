@@ -145,15 +145,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		int stopCode=0;
                 
-		//cout << "itsMajorDone="<<itsMajorDone<<" itsIterDone="<<itsIterDone<< " itsInitPeakResidual="<<itsInitPeakResidual<<" itsPeakResidual="<<itsPeakResidual <<" itsStopFlag="<<itsStopFlag<<endl;
+		//		cout << "itsMajorDone="<<itsMajorDone<<" itsIterDone="<<itsIterDone<< " itsInitPeakResidual="<<itsInitPeakResidual<<" itsPeakResidual="<<itsPeakResidual <<" itsPrevPeakResidual : " <<  itsPrevPeakResidual << " itsStopFlag="<<itsStopFlag<<endl;
 
 		if( itsPeakResidual>0 && itsPrevPeakResidual>0 && 
 		    itsPeakResidual > itsPrevPeakResidual )
 		  {
 		    os << LogIO::WARN << "Peak residual increased from " << itsPrevPeakResidual << " to " << itsPeakResidual << endl;
 		  }
-
-		itsPrevPeakResidual = itsPeakResidual;
 
 		/// This may interfere with some other criterion... check.
 		if ( itsMajorDone==0 && itsIterDone==0 ) { stopCode=0; }
@@ -179,14 +177,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		    if( fabs( itsInitPeakResidual - itsPeakResidual )<1e-10) 
 		      {stopCode = 4;}
 
-                    // another non-convergent condition: diverging (if it increases more than by 200%)
-                    else if ( itsIterDone > 0 && fabs( (itsPeakResidual - itsInitPeakResidual)/itsInitPeakResidual ) >2.0) 
+                    // another non-convergent condition: diverging (if it increases more than by 50%)
+                    else if ( itsIterDone > 0 &&  itsPeakResidual/itsPrevPeakResidual  >1.5) 
                       {stopCode = 5;}
 
 		  }
 	        
 		//		os << "Peak residual : " << itsPeakResidual << " and " << itsIterDone << " iterations."<< LogIO::POST;
 		//cout << "cleancomp : stopcode : " << stopCode << endl;
+
+		itsPrevPeakResidual = itsPeakResidual;
 
 		itsStopCode=stopCode;
 		return stopCode;

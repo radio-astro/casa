@@ -1540,7 +1540,7 @@ HPX HEALPix grid.  -->
 
                        niter larger than zero : Run major and minor cycles.
 
-                                  Note : Global stopping criteria vs major-cycle triggers
+                       Note : Global stopping criteria vs major-cycle triggers
 
                                   In addition to global stopping criteria, the following rules are
                                   used to determine when to terminate a set of minor cycle iterations
@@ -1550,6 +1550,8 @@ HPX HEALPix grid.  -->
                                                       plane before triggering a major cycle.
                                   'cyclethreshold' : Automatically computed threshold related to the
                                                               max sidelobe level of the PSF and peak residual.
+                                   Divergence, detected as an increase of 10% in peak residual from the
+                                   minimum so far (during minor cycle iterations) 
 
                                    The first criterion to be satisfied takes precedence.
 
@@ -1564,6 +1566,10 @@ HPX HEALPix grid.  -->
                                    For example, with niter=100, cycleniter=20,nchan=10,threshold=0,
                                    a total of 200 iterations will be done in the first set of minor cycles
                                    before the total is compared with niter=100 and it exits.
+
+                        Note : Additional global stopping criteria include 
+                                  - no change in peak residual across two major cycles
+                                  - a 50% or more increase in peak residual across one major cycle
 
 
 </description>
