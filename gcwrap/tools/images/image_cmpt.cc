@@ -2351,7 +2351,7 @@ template <class T> Record image::_getprofile(
 
 variant* image::getregion(
     const variant& region, const std::vector<int>& axes,
-    const ::casac::variant& mask, bool list, bool dropdeg,
+    const variant& mask, bool list, bool dropdeg,
     bool getmask, bool stretch
 ) {
     try {
