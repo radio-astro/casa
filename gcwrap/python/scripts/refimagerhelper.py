@@ -204,11 +204,12 @@ class PySynthesisImager:
          self.runInteractiveGUI2()
 
         # Check with the iteration controller about convergence.
+         #print "check convergence"
          stopflag = self.IBtool.cleanComplete()
          #print 'Converged : ', stopflag
          if( stopflag>0 ):
              #stopreasons = ['iteration limit', 'threshold', 'force stop','no change in peak residual across two major cycles']
-             stopreasons = ['iteration limit', 'threshold', 'force stop','no change in peak residual across two major cycles', 'diverged']
+             stopreasons = ['iteration limit', 'threshold', 'force stop','no change in peak residual across two major cycles', 'peak residual increased by 50% or more across a major cycle']
              casalog.post("Reached global stopping criterion : " + stopreasons[stopflag-1], "INFO")
 
              # revert the current automask to the previous one 
@@ -1147,7 +1148,7 @@ class PyParallelDeconvolver(PySynthesisImager):
         stopflag = self.IBtool.cleanComplete()
         print 'Converged : ', stopflag
         if( stopflag>0 ):
-            stopreasons = ['iteration limit', 'threshold', 'force stop','no change in peak residual across two major cycles']
+            stopreasons = ['iteration limit', 'threshold', 'force stop','no change in peak residual across two major cycles','peak residual increased by 50% or more across a major cycle']
             casalog.post("Reached global stopping criterion : " + stopreasons[stopflag-1], "INFO")
             if self.iterpars['interactive']:
                 for immod in range(0,self.listOfNodes):
