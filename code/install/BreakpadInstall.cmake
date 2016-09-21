@@ -86,7 +86,7 @@ macro (configure_breakpad Breakpad_Root)
 
     if (APPLE)
 	    message ("Configuring on Mac")
-        execute_process (COMMAND xcodebuild -sdk macosx GCC_VERSION=com.apple.compilers.llvm.clang.1_0 OTHER_CFLAGS=-stdlib=libc++ OTHER_LDFLAGS=-stdlib=libc++
+        execute_process (COMMAND xcodebuild -sdk macosx GCC_VERSION=com.apple.compilers.llvm.clang.1_0 OTHER_CFLAGS=-stdlib=libc++ "OTHER_LDFLAGS=-stdlib=libc++ -headerpad_max_install_names"
 	    WORKING_DIRECTORY "breakpad/breakpad-distro/src/client/mac"
 	    RESULT_VARIABLE status)
         if (NOT ${status} EQUAL 0)
