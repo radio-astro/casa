@@ -37,8 +37,8 @@ import os.path
 import numpy
 
 def specflux(
-    imagename, box, region, chans, stokes, mask,
-    stretch, unit, major, minor, logfile, overwrite
+    imagename, region, box, chans, stokes, mask, stretch,
+    function, unit, major, minor, logfile, overwrite
 ):
     casalog.origin('specflux')
     myia = iatool()
@@ -46,6 +46,12 @@ def specflux(
     try:
         if logfile and not overwrite and os.path.exists(logfile):
             raise Exception(logfile + " exists and overwrite is False")
+        funclower = function.lower()
+        if not (
+            funclower.startswith("f") or funclower.startswith("mea")
+            or funclower.startswith("med") or funclower.startswith("s")
+        ):
+            raise Exception("Unsupported function " + function)
         myia.open(imagename)
         try:
             axis = myia.coordsys().axiscoordinatetypes().index("Spectral")
@@ -96,8 +102,29 @@ def specflux(
         increments = numpy.append(increments, increments[-1])
         increments = numpy.abs(increments)
         fd = rec['values']
+        vals = fd
         flux = numpy.sum(fd*increments)
         header += "# Total flux: " + str(flux) + " " + rec['yUnit'] + "." + xunit + "\n"
+        # now compute the requested function
+        real_func = ""
+        agg_title = "Flux_density"
+        yUnit = rec['yUnit']
+        if funclower.startswith("mea"):
+            real_func = "mean"
+            agg_title = "Mean"
+        elif funclower.startswith("med"):
+            real_func = "median"
+            agg_title = "Median"
+        elif funclower.startswith("s"):
+            real_func = "sum"
+            agg_title = "Sum"
+        if len(real_func) > 0:
+            zz = myia.getprofile(
+                axis=axis, function=real_func, region=reg, 
+                mask=mask, unit=unit, stretch=stretch
+            )
+            vals = zz['values']
+            yUnit = zz['yUnit']
         need_freq = True
         need_vel = True
         myq = qa.quantity("1" + xunit)
@@ -127,19 +154,20 @@ def specflux(
         vel_col = "Velocity_(" + vel_unit + ")"
         vel_width = len(vel_col)
         vel_spec = "%" + str(vel_width) + ".6f"
-        flux_col = "Flux_density_(" + rec['yUnit'] + ")"
-        flux_width = len(flux_col)
+        flux_col = agg_title + "_(" + yUnit + ")"
+        flux_width = max(len(flux_col), 12)
         flux_spec = "%" + str(flux_width) + ".6e"
         header += "# Channel number_of_unmasked_pixels " + freq_col
         header += " " + vel_col
         header += " " + flux_col + "\n"
         planes = rec['planes']
         npix = rec['npix']
+            
         for i in range(len(rec['values'])):
             header += "%9d %25d " % (planes[i], npix[i])
             header += freq_spec % (freqs[i]) + " "
             header += vel_spec % (vels[i]) + " "
-            header += flux_spec % (fd[i])
+            header += flux_spec % (vals[i])
             header += "\n"
         casalog.post(header, "NORMAL")
         if (logfile):

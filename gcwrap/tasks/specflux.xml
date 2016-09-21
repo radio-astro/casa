@@ -9,7 +9,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="specflux" category="analysis">
 
-<shortdescription>Report details of an image spectrum.</shortdescription>
+<shortdescription>Report spectral profile and calculate spectral flux over a user specified region</shortdescription>
 
 <input>
     <param type="string" name="imagename" mustexist="true">
@@ -17,22 +17,22 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     	<value/>
         <example>imagenam='ngc5921.im'</example>
     </param>
-    <param type="string" name="box">
-        <description>Rectangular region to select in direction plane. See "help par.box" for details. Default is to use the entire direction plane.</description>
-        <value/>
-        <example>box="100,100,200,200"</example>
-    </param>
-    <param type="any" name="region" subparam="true">
+    <param type="any" name="region">
         <any type="variant"/>
         <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
         <value type="string"/>
         <example>region="my.rgn"</example>
     </param>
-    <param type="string" name="chans">
+    <param type="string" name="box" subparam="true">
+        <description>Rectangular region to select in direction plane. See "help par.box" for details. Default is to use the entire direction plane.</description>
+        <value/>
+        <example>box="100,100,200,200"</example>
+    </param>
+    <param type="string" name="chans" subparam="true">
         <description>Channels to use. See "help par.chans" for details. Default is to use all channels.</description>
         <value/>
     </param>
-    <param type="string" name="stokes">
+    <param type="string" name="stokes" subparam="true">
         <description>Stokes planes to use. See "help par.stokes" for details. Default is to use all Stokes planes.</description>
         <value/>
         <example>stokes="iq"</example>
@@ -45,8 +45,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <description>Stretch the mask if necessary and possible? See help par.stretch </description>
         <value>False</value>
     </param>
+    <param type="string" name="function">
+        <description>Aggregate function to use for computing per channel values. Supported values are "flux density", "mean", "median", "sum". Minimal match supported.</description>
+        <value>flux density</value>
+    </param>
     <param type="string" name="unit">
-        <description>Unit to use for the abscissa. Must be conformant with a typical spectral axis unit.</description>
+        <description>Unit to use for the spectral flux calculation. Must be conformant with a typical spectral axis unit.</description>
         <value>km/s</value>
     </param>
     <param type="any" name="major">
@@ -77,9 +81,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 </default>
             </notequals>
         </when>
-        <when param="box">
+        <when param="region">
             <equals type="string" value="">
-                <default param="region">
+                <default param="box">
+                    <value>""</value>
+                </default>
+                <default param="chans">
+                    <value>""</value>
+                </default>
+                <default param="stokes">
                     <value>""</value>
                 </default>
             </equals>
@@ -98,10 +108,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <example>
 PARAMETER SUMMARY
 imagename        Name of the input (CASA, FITS, MIRIAD) image
-box              Rectangular region to select in direction plane. See "help par.box"
-                 for details. Default is to use the entire direction plane.
 region           Region selection. See "help par.region" for details. Default is to use
                  the full image.
+box              Rectangular region to select in direction plane. See "help par.box"
+                 for details. Default is to use the entire direction plane.
 chans            Channels to use. See "help par.chans" for details. Default is to use
                  all channels.
 stokes           Stokes planes to use. See "help par.stokes" for details. Default is to use
@@ -109,32 +119,46 @@ stokes           Stokes planes to use. See "help par.stokes" for details. Defaul
 mask             Mask to use. See help par.mask. Default is none.
 stretch          Stretch the input mask if necessary and possible. Only used if a mask is specified.
                  See help par.stretch.
-unit             Unit to use for the abscissa. Must be conformant with a typical spectral axis unit
-                 (ie something conformant with a velocity, frequency, or length). Velocity units may
-                 only be used if the spectral coordinate has a rest frequency and if it is &gt; 0.
+function         Aggregate function to use for computing per channel values. Supported values are
+                 "flux density", "mean", "median", "sum". Minimal match supported.
+unit             Unit to use for the spectral flux calculation. Must be conformant with a typical
+                 spectral axis unit (ie something conformant with a velocity, frequency, or length).
+                 Velocity units may only be used if the spectral coordinate has a rest frequency and
+                 if it is &gt; 0.
+major            Major axis of overriding restoring beam. If specified, must be a valid quantity.
+                 If specified, minor must also be specified. The overriding beam is used for
+                 computing flux and flux density values. Ignored if the image brightness units do not contain
+                 "/beam".
+minor            Minor axis of overriding restoring beam. If specified, must be a valid quantity.
+                 If specified, major must also be specified. See help on parameter major for details.
 logfile          Name of file to which to write tabular output. Default is to not write to a file.
 overwrite        Controls if an already existing log file by the
                  same name can be overwritten. If true, the user is not prompted, the file
                  if it exists is automatically overwritten.
-major            Major axis of overriding restoring beam. If specified, must be a valid quantity.
-                 If specified, minor must also be specified. The overriding beam is used for
-                 computing flux density values. Ignored if the image brightness units do not contain
-                 "/beam".
-minor            Minor axis of overriding restoring beam. If specified, must be a valid quantity.
-                 If specified, major must also be specified. See help on parameter major for details.
 
 This application retrieves details of an image spectrum which has been integrated over a specified
-region (or the entire image if no region has been specified). The spectral flux is reported in
-units flux density consistent with the image brightness unit times the specified spectral unit (eg,
-Jy*km/s, K*arcsec2*km/s). If the units are K*arcsec2..., multiply the reported value by
-2.3504430539098e-8*d*d, where d is the distance in pc, to convert to units of K*pc2... 
+region (or the entire image if no region has been specified). 
+
+One may specify which function to use to aggregate pixel values using the function parameter. Supported
+values are "flux density", "mean", "median", and "sum". Minimal match is supported.
+
+The spectral flux is reported in units flux density consistent with the image brightness unit times the
+specified spectral unit (eg, Jy*km/s, K*arcsec2*km/s). If the units are K*arcsec2..., multiply the
+reported value by 2.3504430539098e-8*d*d, where d is the distance in pc, to convert to units of K*pc2... 
 If provided, major and minor will be used to compute the beam size, and hence the per channel flux
-densities, overriding the input image beam information, if present.
+densities (if function="flux density"), overriding the input image beam information, if present.
 
 # write spectrum to file that has been integrated over
 # rectangular region, using only pixels with non-negative values.
 # if the log file already exists, overwrite it with the new data.
 specflux(imagename="my.im", box="10,10,45,50", mask="my.im>=0", unit="km/s", logfile="my.log", overwrite=True)
+
+# Extract the spectral profile using "sum" as the aggregate function from a cube over a given region:
+specflux(imagename="myimage.image", box="10,10,45,50", mask="my.im>=0", function="sum", unit="km/s", logfile="profile.log", overwrite=True)
+
+# Calculate the integrated line flux over a given region and channel range
+# (this value will be reported as "Total Flux" in the output of specflux)
+specflux(imagename="myimage.image", region="myregion.crtf", chans="14~25", unit="km/s", logfile="integrated_line_flux.log", overwrite=True)
 
 </example>
 
