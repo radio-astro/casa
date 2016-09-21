@@ -525,7 +525,7 @@ HPX HEALPix grid.  -->
     <param type="any" name="width" subparam="true">
      <shortdescription>Channel width (e.g. width=2,width=\'0.1MHz\',width=\'10km/s\')</shortdescription>
 <description>Channel width (e.g. width=2,width=\'0.1MHz\',width=\'10km/s\') of output cube images
-                      specified by data channel number (ingeter), velocity (string with a unit), or
+                      specified by data channel number (integer), velocity (string with a unit), or
                       or frequency (string with a unit).
                       Default:''; data channel width
                       The sign of width defines the direction of the channels to be incremented.
@@ -533,7 +533,7 @@ HPX HEALPix grid.  -->
                       decreasing velocity or frequency, respectively. 
                       For specmode='cube', when velocity or frequency is used it is interpreted with 
                       the reference frame defined in outframe.  
-                      examples: width='2.0km/s'; results in channels with incresing velocity
+                      examples: width='2.0km/s'; results in channels with increasing velocity
                                 width='-2.0km/s';  results in channels with decreasing velocity
                                 width='40kHz'; results in channels with increasing frequency
                                 width=-2; results in channels averaged of 2 data channels incremented from 
@@ -606,14 +606,14 @@ HPX HEALPix grid.  -->
       <value type="stringArray"></value>
     </param>
 
-<!-- sub-param for 'cubesrc' desabled for now
+<!-- sub-param for 'cubesrc' disabled for now
     <param type="any" name="sysvel" subparam="true">
      <shortdescription>Systemic velocity (for mode=cubesrc)</shortdescription>
 <description>Systemic velocity (for mode=cubesrc) </description>
       <value type="string"></value>
     </param>
 -->
-<!-- sub-param for 'cubesrc' desabled for now
+<!-- sub-param for 'cubesrc' disabled for now
     <param type="string" name="sysvelframe" subparam="true">
      <shortdescription>Spectral frame in which sysvel is specified (for mode=cubesrc only)</shortdescription>
 <description>Spectral frame in which sysvel is specified (for mode=cubesrc only)</description>
@@ -1086,7 +1086,7 @@ HPX HEALPix grid.  -->
                                       ( Note : 'clark' maps to imagermode='' in the old clean task.
                                                    'clark_exp' is another implementation that maps to 
                                                     imagermode='mosaic' or 'csclean' in the old clean task
-                                                    but the behaviour is not identical. For now, please
+                                                    but the behavior is not identical. For now, please
                                                     use deconvolver='hogbom' if you encounter problems. )
 
                        clarkstokes : Clark Clean operating separately per Stokes plane
@@ -1206,7 +1206,7 @@ HPX HEALPix grid.  -->
                                      two noisy numbers (alpha = xx.tt1/xx.tt0) where the
                                      'error' on tt1 and tt0 are simply the values picked from 
                                      the corresponding residual images. The absolute value
-                                     of the error is not always accurate and it is best to intepret
+                                     of the error is not always accurate and it is best to interpret
                                      the errors across the image only in a relative sense.)
 
 
@@ -1265,7 +1265,7 @@ HPX HEALPix grid.  -->
                          Use a circular Gaussian of this width for all planes
 
                        - restoringbeam=['8.0arcsec','10.0arcsec','45deg']
-                         Use this elliptical Gaussisn for all planes
+                         Use this elliptical Gaussian for all planes
 
                        - restoringbeam='common'
                          Automatically estimate a common beam shape/size appropriate for
@@ -1587,7 +1587,7 @@ HPX HEALPix grid.  -->
                        distribution is not well represented by the basis functions used by 
                        the chosen deconvolution algorithm. A higher value can be tried when
                        there is a good match between the true sky brightness structure and
-                       the basis function shapes.  For example, for extended emisison, 
+                       the basis function shapes.  For example, for extended emission, 
                        multiscale clean with an appropriate set of scale sizes will tolerate
                        a higher loop gain than Clark clean (for example).
 
@@ -1710,7 +1710,7 @@ HPX HEALPix grid.  -->
                        interactive=True will trigger an interactive GUI at every major cycle
                        boundary (after the major cycle and before the minor cycle).
                        
-                       The interactive mode is currnetly not available for parallel cube imaging (please also
+                       The interactive mode is currently not available for parallel cube imaging (please also
                        refer to the Note under the documentation for 'parallel' below).
 
                        Options for runtime parameter modification are : 
@@ -1783,11 +1783,11 @@ HPX HEALPix grid.  -->
                                              gridders that produce .pb (i.e. mosaic and awproject)
                                              or if an externally produced .pb image exists on disk)
 
-                       auto-thresh: automask by threshold for deconvolution (binned residual imagei is used for
+                       auto-thresh: automask by threshold for deconvolution (binned residual image is used for
                                     to defining masks)
                           subparameters : maskthreshold, maskresolution, pbmask, nmask, autoadjust
                           
-                          if pbmask is >0.0, the region outside the specified pb gain level is exculded from
+                          if pbmask is >0.0, the region outside the specified pb gain level is excluded from
                           image statistics in determination of the threshold. 
                           if nmask > 0, 'pruning' of the found automask regions will be applied. 
                           autoadjust = True will adjust maskthreshold to higher threshold as iteration                          progresses.
@@ -1800,7 +1800,7 @@ HPX HEALPix grid.  -->
                        auto-thresh2: automask  by threshold for deconvolution without binning
                           subparameters : maskthreshold, maskresolution, pbmask, nmask
                           
-                          if pbmask is >0.0, the region outside the specified pb gain level is exculded from
+                          if pbmask is >0.0, the region outside the specified pb gain level is excluded from
                           image statistics in determination of the threshold. 
                           maskresolution and nmask are used to 'prune' the automask regions.
 </description>
@@ -1813,7 +1813,7 @@ HPX HEALPix grid.  -->
 	    </allowed>
     </param>
 
-    <!-- sub-prameters--> 
+    <!-- sub-parameters--> 
     <param type="any" name="mask" subparam="true">
 	   <shortdescription>Mask (a list of image name(s) or region file(s) or region string(s) )</shortdescription>
 <description>Mask (a list of image name(s) or region file(s) or region string(s)
@@ -1914,7 +1914,7 @@ HPX HEALPix grid.  -->
 	    <value type="string"></value>
     </param>
     <param type="any" name="maskresolution" subparam="true">
-	   <shortdescription>resolution for automasking (string, e.g. "10arcsec", or a float value as multicative factor of the beam)</shortdescription>
+	   <shortdescription>resolution for automasking (string, e.g. "10arcsec", or a float value as multiplicative factor of the beam)</shortdescription>
 <description>resolution for automasking
                        The residual image is binned (npix x npix), where npix is maskresolution converted in the number of pixels 
                        Examples : maskresolution='10arcsec'
@@ -1932,7 +1932,7 @@ HPX HEALPix grid.  -->
 	    <value type="int">0</value>
     </param>
     <param type="bool" name="autoadjust" subparam="true">
-	   <shortdescription>Automatically adjust threshold level of automasking at the first itertaion and as iteration progresses </shortdescription>
+	   <shortdescription>Automatically adjust threshold level of automasking at the first iteration and as iteration progresses </shortdescription>
 <description>Automatically adjust automask threshold to a higher value at the begging and when the rms value change from the previous value becomes less than 10%. 
                        Examples : autoadjust = True
                                   (default is False)
