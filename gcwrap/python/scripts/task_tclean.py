@@ -253,6 +253,11 @@ def tclean(
         pcube=True
         parallel=False
 
+    # catch non operational case (parallel cube tclean with interative=T)
+    if pcube and interactive:
+        casalog.post( "Interactive mode is not currently supported with parallel cube CLEANing, please restart by setting interactive=F", "WARN", "task_tclean" )
+        return False
+   
     ## Performance Measures
     perf = PerformanceMeasure()
 
