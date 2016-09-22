@@ -38,8 +38,10 @@ else
     else
         CASA_VERSION_DESC="$branchTag"
     fi
-    # Remove the feature information
+    # Remove the feature/release information
+    # and return a simple version number
     mTag=${branchTag%-feature-*}
+    mTag=${branchTag%-release-*}
     #echo $mTag
     # Return the master tag version
     echo "${mTag##*-};$CASA_VERSION_DESC"
