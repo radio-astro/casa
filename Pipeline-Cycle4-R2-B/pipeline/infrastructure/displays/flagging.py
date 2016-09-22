@@ -36,8 +36,10 @@ class PlotAntsChart(object):
 
         # flagcmd gives no indication of whether it's succeeded or failed, so
         # check for the presence of the output file
-        return [self._get_plot_object(f)
-                for f in result['plotfiles'] if os.path.exists(f)]
+        try:
+            return [self._get_plot_object(f) for f in result['plotfiles'] if os.path.exists(f)]
+        except:
+            return None
 
     def _get_figfiles(self, figfile_root):
         suffix = ['', '-001', '-002', '-003']
