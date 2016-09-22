@@ -108,7 +108,10 @@ void MSCache::loadIt(vector<PMS::Axis>& loadAxes,
     delete selMS;
     Vector<Int> nIterPerAve;
 
-	if ( averaging_.baseline() || averaging_.antenna() || averaging_.scalarAve() ) {
+    // only use scalarAve if other averaging enabled
+    bool useScalarAve = averaging_.scalarAve() && (averaging_.time() ||
+        averaging_.baseline() || averaging_.antenna() ||  averaging_.spw());
+	if ( averaging_.baseline() || averaging_.antenna() || useScalarAve) {
         // Averaging with PlotMSVBAverager
         // Create visibility iterator vi_p
         setUpVisIter(selection_, calibration_, dataColumn_, False, False);
