@@ -67,18 +67,7 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             'filesizes': filesizes
         })
 
-        transmission_plots = utils.OrderedDefaultdict(utils.OrderedDefaultdict)
-        for intents in [['PHASE'], ['BANDPASS'], ['CHECK'], ['AMPLITUDE'], ['TARGET']]:
-            plots, _ = self.create_plots(
-                context,
-                result,
-                plotatmosphere.TransmissionSummaryChart,
-                intents
-            )
-
-            key = utils.commafy(intents, quotes=False)
-            for vis, vis_plots in plots.items():
-                transmission_plots[vis][key] = vis_plots
+        transmission_plots = self.create_transmission_plots(context, result)
 
         # these dicts map vis to the hrefs of the detail pages
         amp_vs_freq_subpages = {}
@@ -278,7 +267,36 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             'phase_vs_time_subpages': phase_vs_time_subpages,
             'transmission_plots': transmission_plots
         })
-        
+
+    def create_transmission_plots(self, context, results):
+        d = {}
+        for intents in [['PHASE'], ['BANDPASS'], ['CHECK'], ['AMPLITUDE']]:
+            plots, _ = self.create_plots(
+                context,
+                results,
+                plotatmosphere.TransmissionSummaryChart,
+                intents
+            )
+
+            key = utils.commafy(intents, quotes=False)
+            for vis, vis_plots in plots.items():
+                d.setdefault(vis, {})[key] = vis_plots
+
+        for result in results:
+            vis = os.path.basename(result.inputs['vis'])
+            ms = context.observing_run.get_ms(vis)
+
+            d.setdefault(vis, {})['TARGET'] = []
+
+            brightest_fields = T2_4MDetailsApplycalRenderer.get_brightest_fields(ms)
+            for source_id, brightest_field in brightest_fields.items():
+                self.result = self.science_plots_for_result(context, result, plotatmosphere.TransmissionSummaryChart,
+                                                            [brightest_field.id])
+                plots = self.result
+                d[vis]['TARGET'].extend(plots)
+
+        return d
+
     def create_science_plots(self, context, results):
         """
         Create plots for the science targets, returning two dictionaries of 
@@ -400,14 +418,15 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
     def science_plots_for_result(self, context, result, plotter_cls, fields, 
                                  uvrange=None, renderer_cls=None,
                                  correlation=''):
-        # override field when plotting amp/phase vs frequency, as otherwise
-        # the field is resolved to a list of all field IDs
-
         overrides = {'coloraxis': 'spw',
                      'correlation': correlation}
         if uvrange is not None:
             overrides['uvrange'] = uvrange
-        
+
+        # remove warning message about coloraxis
+        if plotter_cls is plotatmosphere.TransmissionSummaryChart:
+            del overrides['coloraxis']
+
         plots = []
         for field in fields:
             # override field when plotting amp/phase vs frequency, as otherwise

@@ -109,6 +109,11 @@ def format_notification(tr_class, alert, msg, icon_class=None):
                         if intent in ms_transmission_plots:
                             transmission_plots = [p for p in ms_transmission_plots.get(intent, [])
                                                   if p.parameters['spw'] == plot.parameters['spw']]
+
+                            if intent == 'TARGET':
+                                transmission_plots = [p for p in transmission_plots
+                                                      if p.parameters['field'] == plot.parameters['field']]
+
                             if len(transmission_plots) is 1:
                                 transmission_plot = transmission_plots[0]
                                 if os.path.exists(transmission_plot.thumbnail):
