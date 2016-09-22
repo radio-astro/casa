@@ -1,13 +1,40 @@
 #!/bin/bash
+
+# Get the hint from an environment variable. This is used for detached head builds
+# Default grep is master
+headGrep="\\\-mas-"
+#echo $CASABRANCHHINT
+if [ ! -z $CASABRANCHHINT ]; then
+    if [[ $CASABRANCHHINT =~ ^feature.*CAS.* ]] ; then
+        b1=${CASABRANCHHINT%/*} # part before the slash
+        b2=${CASABRANCHHINT##*/} # part after the slash
+        headGrep=$b1-$b2
+    elif [[ $CASABRANCHHINT =~ .*release.* ]] ; then
+        headGrep=$CASABRANCHHINT
+    fi
+fi
+#echo $headGrep
+
+# Check where the current "HEAD" points to.
 branch=`git rev-parse --abbrev-ref HEAD`
+
 # Detached HEAD, should have a tag
 if [ $branch == "HEAD" ];then
     headTag=`git tag --points-at HEAD`
     if [[ -z "${headTag// }" ]]; then
         # Get the nearest tag and add Desc
         headCommit=`git rev-parse HEAD`
-        headTag=`git tag --points-at HEAD | grep \\\-mas- | xargs`
-        CASA_VERSION_DESC="No tag found for the head commit. Nearest master tag: $masterTag, HEAD commit: $headCommit "
+        headTag=`git tag --points-at HEAD | grep $headGrep | xargs`
+    fi
+    CASA_VERSION_DESC=$headTag
+    # $CASAFORKPOINTHINT is the fork point commit
+    # You can obtain this by executing  "git merge-base --fork-point master"
+    # while in the branch, but before detaching the HEAD
+    if [ ! -z $CASAFORKPOINTHINT ]; then
+        headTag=`git describe --tags $(git rev-parse $CASAFORKPOINTHINT)`
+    else
+        CASAFORKPOINTHINT=`git merge-base --fork-point master`
+        headTag=`git describe --tags $(git rev-parse $CASAFORKPOINTHINT)`
     fi
     echo "${headTag##*-};$CASA_VERSION_DESC"
 # Master
@@ -38,11 +65,21 @@ else
     else
         CASA_VERSION_DESC="$branchTag"
     fi
+    # Do our best to resolve the master tag for revision even when we have
+    # Branch tag
+    if [ ! -z $CASAFORKPOINTHINT ]; then
+        masterTag=`git describe --tags $(git rev-parse $CASAFORKPOINTHINT)`
+    else
+        CASAFORKPOINTHINT=`git merge-base --fork-point master`
+        masterTag=`git describe --tags $(git rev-parse $CASAFORKPOINTHINT)`
+    fi
+    #masterTag=`git describe --tags $(git rev-parse $CASAFORKPOINTHINT)`
+    echo "${masterTag##*-};$CASA_VERSION_DESC"
     # Remove the feature/release information
     # and return a simple version number
-    mTag=${branchTag%-feature-*}
-    mTag=${branchTag%-release-*}
+    #mTag=${branchTag%-feature-*}
+    #mTag=${branchTag%-release-*}
     #echo $mTag
     # Return the master tag version
-    echo "${mTag##*-};$CASA_VERSION_DESC"
+    #echo "${mTag##*-};$CASA_VERSION_DESC"
 fi
