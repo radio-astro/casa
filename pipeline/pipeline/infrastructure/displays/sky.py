@@ -115,7 +115,9 @@ class SkyDisplay(object):
                         collapsed = image.collapse(function=collapseFunction, axes=[2, 3], outfile=result+'.mom8')
                         LOG.info('generated peak line intensity (moment 8) image of %s' % (os.path.basename(result)))
                     else:
+                        LOG.info("_PLOT_PANEL:  Before default collapse")
                         collapsed = image.collapse(function=collapseFunction, axes=[2, 3])
+                        LOG.info("_PLOT_PANEL:  After default collapse")
             except:
                 # All channels flagged or some other error. Make collapsed zero image.
                 LOG.info("_PLOT_PANEL:  Before newimagefromimage")
@@ -126,6 +128,7 @@ class SkyDisplay(object):
                 collapsed = collapsed.collapse(function='mean', axes=[2, 3])
                 LOG.info("_PLOT_PANEL:  collapsed.collapse")
 
+            LOG.info("_PLOT_PANEL:  Before coordsys_stuff")
             name = image.name(strippath=True)
             coordsys = collapsed.coordsys()
             coord_names = coordsys.names()
@@ -135,7 +138,7 @@ class SkyDisplay(object):
             beam = collapsed.restoringbeam()
             brightness_unit = collapsed.brightnessunit()
             miscinfo = collapsed.miscinfo()
-            LOG.info("_PLOT_PANEL:  coordsys_stuff")
+            LOG.info("_PLOT_PANEL:  After coordsys_stuff")
 
             # don't replot if a file of the required name already exists
             if os.path.exists(plotfile):
