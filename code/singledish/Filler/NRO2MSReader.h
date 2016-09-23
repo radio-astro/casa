@@ -166,6 +166,9 @@ private:
 
   double getRestFrequency(int const spwno);
   string convertVRefName(string const &vref0);
+  void shiftFrequency(string const &vdef,
+                      double const v,
+		      std::vector<double> &freqs);
 
   std::vector<double> getSpectrum(int const irow, sdfiller::NRODataScanData const &data);
   Int getPolNo(string const &rx);

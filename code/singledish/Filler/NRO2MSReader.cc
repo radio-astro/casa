@@ -399,6 +399,23 @@ string NRO2MSReader::convertVRefName(string const &vref0) {
   return res;
 }
 
+void NRO2MSReader::shiftFrequency(string const &vdef,
+                                  double const v,
+                                  std::vector<double> &freqs) {
+  double factor = v/2.99792458e8;
+  if (vdef == "RAD") {
+    factor = 1.0 / (1.0 + factor);
+  } else if (vdef == "OPT") {
+    factor += 1.0;
+  } else {
+    cout << "vdef=" << vdef << " is not supported." << endl;
+    factor = 1.0;
+  }
+  for (size_t i = 0; i < 2; ++i) {
+    freqs[i] *= factor;
+  }
+}
+
 std::vector<double> NRO2MSReader::getSpectrum(int const irow, sdfiller::NRODataScanData const &data) {
   // size of spectrum is not (SCNLEN-HEADER_SIZE)*8/IBIT0
   // but obs_header_.NCH0 after binding
@@ -684,12 +701,7 @@ Bool NRO2MSReader::getSpectralWindowRowImpl(
     frame_type = MFrequency::N_Types;
   }
   record.meas_freq_ref = frame_type;
-  /*
-  record.refpix = obs_header_.CHCAL0[spw_id_counter_][0];
-  record.refval = obs_header_.FQCAL0[spw_id_counter_][0];
-  record.increment = obs_header_.CHWID0[spw_id_counter_];
-  */
-  //-----------------------
+
   NRODataScanData scan_data;
   readScanData(spw_id_counter_, scan_data);
   double freq_offset = scan_data.FRQ00 - obs_header_.F0CAL0[spw_id_counter_];
@@ -699,6 +711,9 @@ Bool NRO2MSReader::getSpectralWindowRowImpl(
     freqs[i] += obs_header_.FQCAL0[spw_id_counter_][i];
     chcal[i]  = obs_header_.CHCAL0[spw_id_counter_][i];
   }
+  //-------------(change 2016/9/23)---------
+  shiftFrequency(obs_header_.VDEF0, obs_header_.VEL0, freqs);
+  //-------------(end change 2016/9/23)-----
   double band_width = freqs[1] - freqs[0];
   double chan_width = band_width / (chcal[1] - chcal[0]);
   if (scan_data.FQIF10 > 0.0) { // USB
@@ -710,7 +725,6 @@ Bool NRO2MSReader::getSpectralWindowRowImpl(
   record.refpix = chcal[0] - 1; // 0-based
   record.refval = freqs[0];
   record.increment = chan_width;
-  //-----------------------
   
   spw_id_counter_++;
   if (obs_header_.NSPWIN <= spw_id_counter_) {
