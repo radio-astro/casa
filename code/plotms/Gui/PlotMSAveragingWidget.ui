@@ -1,7 +1,8 @@
-<ui version="4.0" >
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
  <class>AveragingWidget</class>
- <widget class="QWidget" name="AveragingWidget" >
-  <property name="geometry" >
+ <widget class="QWidget" name="AveragingWidget">
+  <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
@@ -9,69 +10,78 @@
     <height>183</height>
    </rect>
   </property>
-  <property name="sizePolicy" >
-   <sizepolicy vsizetype="Fixed" hsizetype="Preferred" >
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
     <horstretch>0</horstretch>
     <verstretch>0</verstretch>
    </sizepolicy>
   </property>
-  <property name="windowTitle" >
+  <property name="windowTitle">
    <string>Averaging Widget</string>
   </property>
-  <layout class="QGridLayout" >
-   <property name="leftMargin" >
+  <layout class="QGridLayout">
+   <property name="margin">
     <number>3</number>
    </property>
-   <property name="topMargin" >
+   <property name="spacing">
     <number>3</number>
    </property>
-   <property name="rightMargin" >
-    <number>3</number>
-   </property>
-   <property name="bottomMargin" >
-    <number>3</number>
-   </property>
-   <property name="horizontalSpacing" >
-    <number>3</number>
-   </property>
-   <property name="verticalSpacing" >
-    <number>3</number>
-   </property>
-   <item row="0" column="0" >
-    <widget class="QCheckBox" name="channel" >
-     <property name="text" >
-      <string>Channel</string>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="1" >
-    <layout class="QHBoxLayout" >
-     <property name="spacing" >
+   <item row="3" column="0" colspan="3">
+    <layout class="QHBoxLayout">
+     <property name="spacing">
       <number>3</number>
      </property>
      <item>
-      <widget class="QLineEdit" name="channelValue" >
-       <property name="enabled" >
+      <widget class="QCheckBox" name="baseline">
+       <property name="text">
+        <string>All Baselines</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="antenna">
+       <property name="text">
+        <string>Per Antenna</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="1" column="0">
+    <widget class="QCheckBox" name="time">
+     <property name="text">
+      <string>Time</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="2">
+    <layout class="QHBoxLayout">
+     <property name="spacing">
+      <number>3</number>
+     </property>
+     <item>
+      <widget class="QLineEdit" name="channelValue">
+       <property name="enabled">
         <bool>false</bool>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QLabel" name="channelLabel" >
-       <property name="enabled" >
+      <widget class="QLabel" name="channelLabel">
+       <property name="enabled">
         <bool>false</bool>
        </property>
-       <property name="text" >
+       <property name="text">
         <string>channels</string>
        </property>
       </widget>
      </item>
      <item>
       <spacer>
-       <property name="orientation" >
+       <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
-       <property name="sizeHint" >
+       <property name="sizeHint" stdset="0">
         <size>
          <width>40</width>
          <height>20</height>
@@ -81,41 +91,41 @@
      </item>
     </layout>
    </item>
-   <item row="1" column="0" >
-    <widget class="QCheckBox" name="time" >
-     <property name="text" >
-      <string>Time</string>
+   <item row="0" column="0">
+    <widget class="QCheckBox" name="channel">
+     <property name="text">
+      <string>Channel</string>
      </property>
     </widget>
    </item>
-   <item row="1" column="1" >
-    <layout class="QHBoxLayout" >
-     <property name="spacing" >
+   <item row="1" column="2">
+    <layout class="QHBoxLayout">
+     <property name="spacing">
       <number>3</number>
      </property>
      <item>
-      <widget class="QLineEdit" name="timeValue" >
-       <property name="enabled" >
+      <widget class="QLineEdit" name="timeValue">
+       <property name="enabled">
         <bool>false</bool>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QLabel" name="timeLabel" >
-       <property name="enabled" >
+      <widget class="QLabel" name="timeLabel">
+       <property name="enabled">
         <bool>false</bool>
        </property>
-       <property name="text" >
+       <property name="text">
         <string>seconds</string>
        </property>
       </widget>
      </item>
      <item>
       <spacer>
-       <property name="orientation" >
+       <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
-       <property name="sizeHint" >
+       <property name="sizeHint" stdset="0">
         <size>
          <width>40</width>
          <height>20</height>
@@ -125,27 +135,27 @@
      </item>
     </layout>
    </item>
-   <item row="2" column="1" >
-    <layout class="QHBoxLayout" >
+   <item row="2" column="2">
+    <layout class="QHBoxLayout">
      <item>
-      <widget class="QCheckBox" name="scan" >
-       <property name="enabled" >
+      <widget class="QCheckBox" name="scan">
+       <property name="enabled">
         <bool>false</bool>
        </property>
-       <property name="text" >
+       <property name="text">
         <string>Scan</string>
        </property>
       </widget>
      </item>
      <item>
       <spacer>
-       <property name="orientation" >
+       <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
-       <property name="sizeType" >
+       <property name="sizeType">
         <enum>QSizePolicy::Fixed</enum>
        </property>
-       <property name="sizeHint" >
+       <property name="sizeHint" stdset="0">
         <size>
          <width>20</width>
          <height>20</height>
@@ -154,21 +164,21 @@
       </spacer>
      </item>
      <item>
-      <widget class="QCheckBox" name="field" >
-       <property name="enabled" >
+      <widget class="QCheckBox" name="field">
+       <property name="enabled">
         <bool>false</bool>
        </property>
-       <property name="text" >
+       <property name="text">
         <string>Field</string>
        </property>
       </widget>
      </item>
      <item>
       <spacer>
-       <property name="orientation" >
+       <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
-       <property name="sizeHint" >
+       <property name="sizeHint" stdset="0">
         <size>
          <width>40</width>
          <height>20</height>
@@ -178,38 +188,27 @@
      </item>
     </layout>
    </item>
-   <item row="3" column="0" colspan="2" >
-    <layout class="QHBoxLayout" >
-     <property name="spacing" >
-      <number>3</number>
-     </property>
-     <item>
-      <widget class="QCheckBox" name="baseline" >
-       <property name="text" >
-        <string>All Baselines</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QCheckBox" name="antenna" >
-       <property name="text" >
-        <string>Per Antenna</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
-   <item row="4" column="0" colspan="2" >
-    <widget class="QCheckBox" name="spw" >
-     <property name="text" >
+   <item row="4" column="0" colspan="3">
+    <widget class="QCheckBox" name="spw">
+     <property name="text">
       <string>All Spectral Windows</string>
      </property>
     </widget>
    </item>
-   <item row="5" column="0" >
-    <widget class="QCheckBox" name="scalarave" >
-     <property name="text" >
+   <item row="5" column="2">
+    <widget class="QRadioButton" name="scalarRadio">
+     <property name="text">
       <string>Scalar</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="0">
+    <widget class="QRadioButton" name="vectorRadio">
+     <property name="text">
+      <string>Vector</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
      </property>
     </widget>
    </item>
@@ -223,11 +222,11 @@
    <receiver>channelValue</receiver>
    <slot>setEnabled(bool)</slot>
    <hints>
-    <hint type="sourcelabel" >
+    <hint type="sourcelabel">
      <x>13</x>
      <y>18</y>
     </hint>
-    <hint type="destinationlabel" >
+    <hint type="destinationlabel">
      <x>82</x>
      <y>16</y>
     </hint>
@@ -239,11 +238,11 @@
    <receiver>channelLabel</receiver>
    <slot>setEnabled(bool)</slot>
    <hints>
-    <hint type="sourcelabel" >
+    <hint type="sourcelabel">
      <x>19</x>
      <y>23</y>
     </hint>
-    <hint type="destinationlabel" >
+    <hint type="destinationlabel">
      <x>179</x>
      <y>15</y>
     </hint>
@@ -255,11 +254,11 @@
    <receiver>timeValue</receiver>
    <slot>setEnabled(bool)</slot>
    <hints>
-    <hint type="sourcelabel" >
+    <hint type="sourcelabel">
      <x>13</x>
      <y>47</y>
     </hint>
-    <hint type="destinationlabel" >
+    <hint type="destinationlabel">
      <x>159</x>
      <y>46</y>
     </hint>
@@ -271,11 +270,11 @@
    <receiver>timeLabel</receiver>
    <slot>setEnabled(bool)</slot>
    <hints>
-    <hint type="sourcelabel" >
+    <hint type="sourcelabel">
      <x>39</x>
      <y>47</y>
     </hint>
-    <hint type="destinationlabel" >
+    <hint type="destinationlabel">
      <x>214</x>
      <y>46</y>
     </hint>
@@ -287,11 +286,11 @@
    <receiver>scan</receiver>
    <slot>setEnabled(bool)</slot>
    <hints>
-    <hint type="sourcelabel" >
+    <hint type="sourcelabel">
      <x>46</x>
      <y>47</y>
     </hint>
-    <hint type="destinationlabel" >
+    <hint type="destinationlabel">
      <x>128</x>
      <y>69</y>
     </hint>
@@ -303,11 +302,11 @@
    <receiver>field</receiver>
    <slot>setEnabled(bool)</slot>
    <hints>
-    <hint type="sourcelabel" >
+    <hint type="sourcelabel">
      <x>59</x>
      <y>47</y>
     </hint>
-    <hint type="destinationlabel" >
+    <hint type="destinationlabel">
      <x>211</x>
      <y>69</y>
     </hint>

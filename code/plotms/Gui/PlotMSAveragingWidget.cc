@@ -50,11 +50,11 @@ PlotMSAveragingWidget::PlotMSAveragingWidget(QWidget* parent) :
     itsFlags_[PlotMSAveraging::BASELINE] = baseline;
     itsFlags_[PlotMSAveraging::ANTENNA] = antenna;
     itsFlags_[PlotMSAveraging::SPW] = spw;
-    itsFlags_[PlotMSAveraging::SCALARAVE] = scalarave;
     
     itsValues_[PlotMSAveraging::CHANNEL] = channelValue;
     itsValues_[PlotMSAveraging::TIME] = timeValue;
     
+
     // Set up mutually exclusive groups.
     QtButtonGroup* buttonGroup;
     QSet<PlotMSAveraging::Field> seenFields;
@@ -87,6 +87,9 @@ PlotMSAveragingWidget::PlotMSAveragingWidget(QWidget* parent) :
         connect(w, SIGNAL(textChanged(const QString&)),
                 SLOT(averagingChanged()));
     }
+
+    connect(vectorRadio, SIGNAL(toggled(bool)), SLOT(averagingChanged()));
+    connect(scalarRadio, SIGNAL(toggled(bool)), SLOT(averagingChanged()));
 }
 
 PlotMSAveragingWidget::~PlotMSAveragingWidget() { }
@@ -108,6 +111,7 @@ PlotMSAveraging PlotMSAveragingWidget::getValue() const {
             }
         }
     }
+    val.setScalarAve(scalarRadio->isChecked());
     
     return val;
 }
@@ -125,6 +129,9 @@ void PlotMSAveragingWidget::setValue(const PlotMSAveraging& val) {
             itsValues_.value(f[i])->setText(
                     QString::number(val.getValue(f[i])));
     }
+    bool scalar = val.scalarAve();
+    vectorRadio->setChecked(!scalar);
+    scalarRadio->setChecked(scalar);
     
     itsFlag_ = oldFlag;
 }
