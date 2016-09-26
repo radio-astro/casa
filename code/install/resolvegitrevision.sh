@@ -30,12 +30,10 @@ if [ $branch == "HEAD" ];then
     # $CASAFORKPOINTHINT is the fork point commit
     # You can obtain this by executing  "git merge-base --fork-point master"
     # while in the branch, but before detaching the HEAD
-    if [ ! -z $CASAFORKPOINTHINT ]; then
-        headTag=`git describe --tags $(git rev-parse $CASAFORKPOINTHINT)`
-    else
-        CASAFORKPOINTHINT=`git merge-base --fork-point master`
-        headTag=`git describe --tags $(git rev-parse $CASAFORKPOINTHINT)`
+    if [ -z $CASAFORKPOINTHINT ]; then
+        CASAFORKPOINTHINT=`git merge-base origin/master $branch`
     fi
+    headTag=`git describe --abbrev=0 --match='[0-9]*.[0-9]*.[0-9]*-mas-[0-9]*' $(git rev-parse $CASAFORKPOINTHINT)`
     echo "${headTag##*-};$CASA_VERSION_DESC"
 # Master
 elif [ $branch == "master" ];then
@@ -67,12 +65,10 @@ else
     fi
     # Do our best to resolve the master tag for revision even when we have
     # Branch tag
-    if [ ! -z $CASAFORKPOINTHINT ]; then
-        masterTag=`git describe --tags $(git rev-parse $CASAFORKPOINTHINT)`
-    else
-        CASAFORKPOINTHINT=`git merge-base --fork-point master`
-        masterTag=`git describe --tags $(git rev-parse $CASAFORKPOINTHINT)`
+    if [ -z $CASAFORKPOINTHINT ]; then
+        CASAFORKPOINTHINT=`git merge-base origin/master origin/$branch`
     fi
+    masterTag=`git describe --abbrev=0 --match='[0-9]*.[0-9]*.[0-9]*-mas-[0-9]*' $(git rev-parse $CASAFORKPOINTHINT)`
     #masterTag=`git describe --tags $(git rev-parse $CASAFORKPOINTHINT)`
     echo "${masterTag##*-};$CASA_VERSION_DESC"
     # Remove the feature/release information
