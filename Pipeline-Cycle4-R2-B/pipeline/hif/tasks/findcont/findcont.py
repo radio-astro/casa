@@ -182,7 +182,7 @@ class FindCont(basetask.StandardTaskTemplate):
                     # tclean interprets the start frequency as the center of the
                     # first channel. We have, however, an edge to edge range.
                     # Thus shift by 0.5 channels if no start is supplied.
-                    if target['start'] != '':
+                    if target['start'] == '':
                         start = '%sGHz' % ((if0 + 1.5 * channel_width) / 1e9)
                     else:
                         start = target['start']
