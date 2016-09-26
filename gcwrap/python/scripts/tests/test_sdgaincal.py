@@ -94,8 +94,10 @@ class sdgaincal_test_base(unittest.TestCase):
             caltype = tb.getkeyword('VisCal')
             self.assertEqual(caltype, "G Jones")
             
-            # paramter must be Float (non-Complex)
-            self.assertIn('FPARAM', tb.colnames())
+            # paramter must be Complex
+            partype = tb.getkeyword('ParType')
+            self.assertEqual(partype, 'Complex')
+            self.assertIn('CPARAM', tb.colnames())
         finally:
             tb.close()
             
@@ -133,7 +135,7 @@ class sdgaincal_test_base(unittest.TestCase):
             for spwid in spwid_list:
                 t = tb.query('SPECTRAL_WINDOW_ID == %s'%(spwid))
                 try:
-                    fparam = t.getcol('FPARAM')
+                    fparam = t.getcol('CPARAM').real
                     flag = t.getcol('FLAG')
                 finally:
                     t.close()
@@ -237,7 +239,7 @@ class sdgaincal_const_test(sdgaincal_test_base):
         
     def _verify_fparam_and_flag(self, table):
         for irow in xrange(table.nrows()):
-            fparam = table.getcell('FPARAM', irow)
+            fparam = table.getcell('CPARAM', irow).real
             self.assertTrue(numpy.all(fparam == 1.0))
                 
             flag = table.getcell('FLAG', irow)
@@ -293,8 +295,8 @@ class sdgaincal_variable_test(sdgaincal_test_base):
             self.assertEqual(nrow, ref_nrow)
             
             for irow in xrange(nrow):
-                ref_fparam = reftable.getcell('FPARAM', irow)
-                fparam = table.getcell('FPARAM', irow)
+                ref_fparam = reftable.getcell('CPARAM', irow).real
+                fparam = table.getcell('CPARAM', irow).real
                 self.assertTrue(numpy.all(ref_fparam == fparam))
                 
                 ref_flag = reftable.getcell('FLAG', irow)
