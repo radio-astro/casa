@@ -157,7 +157,7 @@ inline void updateWeight(casa::NewCalTable &ct) {
 
   // simply copy FPARAM
   for (size_t irow = 0; irow < ct.nrow(); ++irow) {
-    ctmc.weight().put(irow, ctmc.fparam()(irow));
+    ctmc.weight().put(irow, real(ctmc.cparam()(irow)));
   }
 }
 
@@ -230,7 +230,31 @@ String SDDoubleCircleGainCal::solveinfo() {
   return String(o);
 }
 
-void SDDoubleCircleGainCal::selfGatherAndSolve(VisSet& vs, VisEquation& /* ve */) {
+void SDDoubleCircleGainCal::keepNCT() {
+  debuglog << "SDDoubleCircleGainCal::keepNCT" << debugpost;
+  // Call parent to do general stuff
+  GJones::keepNCT();
+
+  if (prtlev()>4)
+    cout << " SVJ::keepNCT" << endl;
+
+  // Set proper antenna id
+  Vector<Int> a1(nAnt());
+  a1 = currAnt_;
+  //indgen(a1);
+
+  debuglog << "antenna is " << a1 << debugpost;
+
+  // We are adding to the most-recently added rows
+  RefRows rows(ct_->nrow()-nElem(),ct_->nrow()-1,1);
+
+  // Write to table
+  CTMainColumns ncmc(*ct_);
+  ncmc.antenna1().putColumnCells(rows,a1);
+}
+
+void SDDoubleCircleGainCal::selfGatherAndSolve(VisSet& vs,
+    VisEquation& /* ve */) {
   SDDoubleCircleGainCalImpl sdcalib;
   debuglog<< "SDDoubleCircleGainCal::selfGatherAndSolve()" << debugpost;
 
@@ -455,6 +479,7 @@ void SDDoubleCircleGainCal::executeDoubleCircleGainCal(
 
     currSpw() = ispw;
     currField() = ifield;
+    currAnt_ = iantenna;
 
     solveAllParErr() = 0.1; // TODO
     solveAllParSNR() = 1.0; // TODO
@@ -464,7 +489,8 @@ void SDDoubleCircleGainCal::executeDoubleCircleGainCal(
     Slice chanSlice(0, numChan);
     for (size_t i = 0; i < numGain; ++i) {
       refTime() = gainTime[i];
-      solveAllRPar() = gain(corrSlice, chanSlice, Slice(i, 1));
+      //solveAllCPar() = gain(corrSlice, chanSlice, Slice(i, 1));
+      convertArray(solveAllCPar(), gain(corrSlice, chanSlice, Slice(i, 1)));
       solveAllParOK() = !gain_flag(corrSlice, chanSlice, Slice(i, 1));
 
       keepNCT();
