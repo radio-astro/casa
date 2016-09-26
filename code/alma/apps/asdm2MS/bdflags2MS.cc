@@ -590,18 +590,13 @@ struct eb_scan_selection : public grammar<eb_scan_selection> {
 */
 void traverseBAB(bool					sameAntenna,
 		 const vector<SDMDataObject::Baseband>& basebands,
-		 const vector<pair<string, string> >&	dataDescriptions,
 		 const pair<unsigned			int, const FLAGSTYPE*> & flagsPair,
 		 BDFFlagConsumer<FLAGSTYPE>&		consumer,
 		 MSFlagEval&				flagEval,
 		 MSFlagAccumulator<char>&               accumulator ) {
 
   LOGENTER("traverseBAB");
-  //vector<pair<string, string> >::const_iterator ddIter = dataDescriptions.begin();
 
-  // vector<SDMDataObject::Baseband>::const_iterator babIter = basebands.begin();
-  // const vector<SDMDataObject::SpectralWindow>& spw = babIter->spectralWindows();
-  // vector<SDMDataObject::SpectralWindow>::const_iterator spwIter = spw.begin();
 
   unsigned int		 numFlags = flagsPair.first;
 
@@ -657,7 +652,6 @@ void traverseBAB(bool					sameAntenna,
 
 void traverseANT(const vector<SDMDataObject::Baseband>& basebands,
 		 const vector<string>&			antennas,
-		 const vector<pair<string, string> >&	dataDescriptions,
 		 const pair<unsigned			int, const FLAGSTYPE*> &			flagsPair,
 		 BDFFlagConsumer<FLAGSTYPE>&            consumer,
 		 MSFlagEval&				flagEval,
@@ -666,7 +660,7 @@ void traverseANT(const vector<SDMDataObject::Baseband>& basebands,
   LOGENTER("traverseANT");
   accumulator.resetBAL();
   for (unsigned int i = 0; i < antennas.size() ; i++) {
-    traverseBAB(true, basebands, dataDescriptions, flagsPair, consumer, flagEval, accumulator);
+    traverseBAB(true, basebands, flagsPair, consumer, flagEval, accumulator);
     accumulator.nextBAL();
   }
   LOGEXIT("traverseANT");
@@ -674,7 +668,6 @@ void traverseANT(const vector<SDMDataObject::Baseband>& basebands,
 
 void traverseBAL(const vector<SDMDataObject::Baseband>& basebands,
 		 const vector<string>&			antennas,
-		 const vector<pair<string, string> >&	dataDescriptions,
 		 const pair<unsigned int, const FLAGSTYPE*> &			flagsPair,
 		 BDFFlagConsumer<FLAGSTYPE>&                   consumer,
 		 MSFlagEval& flagEval,
@@ -685,7 +678,7 @@ void traverseBAL(const vector<SDMDataObject::Baseband>& basebands,
   for (unsigned int i = 1; i < antennas.size(); i++)
     //for (unsigned int j = i+1; j < antennas.size(); j++) {
     for (unsigned int j = 0; j < i; j++) {
-      traverseBAB(false, basebands, dataDescriptions, flagsPair, consumer, flagEval, accumulator);
+      traverseBAB(false, basebands, flagsPair, consumer, flagEval, accumulator);
       accumulator.nextBAL();
     }
   LOGEXIT("traverseBAL");
@@ -693,7 +686,6 @@ void traverseBAL(const vector<SDMDataObject::Baseband>& basebands,
 
 void traverseALMACorrelatorFlagsAxes(const vector<SDMDataObject::Baseband>&	basebands,
 				     const vector<string>&			antennas,
-				     const vector<pair<string, string> >&	dataDescriptions,
 				     const pair<unsigned int, const FLAGSTYPE*>& flagsPair,
 				     MSFlagEval&                               flagEval,
 				     CorrelationModeMod::CorrelationMode        correlationMode,
@@ -707,9 +699,9 @@ void traverseALMACorrelatorFlagsAxes(const vector<SDMDataObject::Baseband>&	base
 
   // Attention the next two calls must be done in *this* order (BAL then ANT) !!!!
   if (correlationMode != CorrelationModeMod::AUTO_ONLY)
-    traverseBAL(basebands, antennas, dataDescriptions, flagsPair, consumer, flagEval, crossAccumulator);
+    traverseBAL(basebands, antennas,  flagsPair, consumer, flagEval, crossAccumulator);
   if (correlationMode != CorrelationModeMod::CROSS_ONLY)
-    traverseANT(basebands, antennas, dataDescriptions, flagsPair, consumer, flagEval, autoAccumulator);
+    traverseANT(basebands, antennas, flagsPair, consumer, flagEval, autoAccumulator);
 
   LOGEXIT("traverseALMACorrelatorFlagsAxes");
 }
@@ -717,7 +709,6 @@ void traverseALMACorrelatorFlagsAxes(const vector<SDMDataObject::Baseband>&	base
 void traverseALMARadiometerFlagsAxes(unsigned int				numTime,
 				     const vector<SDMDataObject::Baseband>&	basebands,
 				     const vector<string>&			antennas,
-				     const vector<pair<string, string> >&	dataDescriptions,
 				     const pair<unsigned int, const FLAGSTYPE*> &                      flagsPair,
 				     MSFlagEval&                               flagEval,
 				     MSFlagAccumulator<char>&                   accumulator) {
@@ -729,7 +720,7 @@ void traverseALMARadiometerFlagsAxes(unsigned int				numTime,
 
   accumulator.resetIntegration();
   for (unsigned int iTime = 0; iTime < numTime; iTime++) {
-    traverseANT(basebands, antennas, dataDescriptions, flagsPair, consumer, flagEval, accumulator);
+    traverseANT(basebands, antennas, flagsPair, consumer, flagEval, accumulator);
     accumulator.nextIntegration();
   }
   LOGEXIT("traverseALMARadiometerFlagsAxes");
@@ -1016,8 +1007,6 @@ vector<uint64_t> sizeInMemory(uint64_t BDFsize, uint64_t approxSizeInMemory) {
 unsigned int flagsSizeIncludingSPWAndPOL(unsigned int numAntenna, CorrelationMode correlationMode, const SDMDataObject::DataStruct & dataStruct) {
   unsigned int autoresult = 0, crossresult = 0;
 
-  unsigned int numBaseline = (numAntenna - 1) * numAntenna / 2;
-
   const vector<SDMDataObject::Baseband>& basebands = dataStruct.basebands();
   for (SDMDataObject::Baseband baseband : basebands)
     for (SDMDataObject::SpectralWindow spw : baseband.spectralWindows()) {
@@ -1100,7 +1089,6 @@ void processCorrelatorFlags(unsigned int numIntegration,
     pair<unsigned int, const FLAGSTYPE *> flagsPair(numFlags, flags_p);
     traverseALMACorrelatorFlagsAxes(sdosr.dataStruct().basebands(),
 				    antennas,
-				    dataDescriptions,
 				    flagsPair,
 				    flagEval,
 				    correlationMode,
@@ -1210,7 +1198,6 @@ void processCorrelatorFlagsPerSlices(MainRow*					mR_p,
 	pair<unsigned int, const FLAGSTYPE *> flagsPair(numFlags, flags_p);
 	traverseALMACorrelatorFlagsAxes(sdosr.dataStruct().basebands(),
 					antennas,
-					dataDescriptions,
 					flagsPair,
 					flagEval,
 					correlationMode,
@@ -1254,7 +1241,6 @@ void processCorrelatorFlagsPerSlices(MainRow*					mR_p,
       pair<unsigned int, const FLAGSTYPE *> flagsPair(numFlags, flags_p);
       traverseALMACorrelatorFlagsAxes(sdosr.dataStruct().basebands(),
 				      antennas,
-				      dataDescriptions,
 				      flagsPair,
 				      flagEval,
 				      correlationMode,
@@ -1802,14 +1788,14 @@ int main (int argC, char * argV[]) {
 	  if (sdo.hasPackedData()) {
 	    numFlags = sdo.tpDataSubset().flags(flags_p);
 	    pair<unsigned int, const FLAGSTYPE *> flagsPair(numFlags, flags_p);
-	    traverseALMARadiometerFlagsAxes(numIntegrations, sdo.dataStruct().basebands(), antennas, dataDescriptions, flagsPair, flagEval, accumulator);
+	    traverseALMARadiometerFlagsAxes(numIntegrations, sdo.dataStruct().basebands(), antennas, flagsPair, flagEval, accumulator);
 	  }
 	  else {
 	    const vector<SDMDataSubset>& sdmDataSubsets = sdo.sdmDataSubsets();
 	    for (unsigned int iIntegration = 0; iIntegration < numIntegrations; iIntegration++) {
 	      numFlags = sdmDataSubsets[iIntegration].flags(flags_p);
 	      pair<unsigned int, const FLAGSTYPE *> flagsPair(numFlags, flags_p);
-	      traverseALMARadiometerFlagsAxes(1, sdo.dataStruct().basebands(), antennas, dataDescriptions, flagsPair, flagEval, accumulator);
+	      traverseALMARadiometerFlagsAxes(1, sdo.dataStruct().basebands(), antennas, flagsPair, flagEval, accumulator);
 	    }
 	  }
 	  infostream.str("");
@@ -1858,6 +1844,12 @@ int main (int argC, char * argV[]) {
       info(infostream.str());
     }
     catch (SDMDataObjectException e) {
+      info(infostream.str());
+      infostream.str("");
+      infostream << e.getMessage() << endl;
+      info(infostream.str());
+    }
+    catch (SDMDataObjectReaderException e) {
       info(infostream.str());
       infostream.str("");
       infostream << e.getMessage() << endl;
