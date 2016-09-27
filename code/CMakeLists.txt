@@ -122,7 +122,7 @@ if( NOT CMAKE_BUILD_TYPE )
 endif()
 
 # Build CrashReporter by default
-if( NOT UseCrashReporter)
+if( NOT DEFINED UseCrashReporter)
     set( UseCrashReporter 1 )
 endif()
  
