@@ -1,4 +1,5 @@
 #include <iostream>
+#include <iomanip>
 #include <sstream>
 #include <bitset>
 #include <vector>
@@ -1309,7 +1310,7 @@ int main (int argC, char * argV[]) {
       ("wvr-corrected-data", po::value<bool>()->default_value(false), "must be set to True (resp. False) whenever the MS to be populated contains corrected (resp. uncorrected) data (default==false)")
       ("lazy", po::value<bool>()->default_value(false), "must be set to True if the measurement set has been produced by asdm2MS run with the option --lazy (default==false")
       ("ocm", po::value<string>(&ocm)->default_value("ca"), "specifies the output correlation mode, i.e. the correlation mode of the ASDM/BDF's data for which the MS flags will be written. The value given to this option must *imperatively* be the same than the one given to the --ocm option for the execution of the filler which produced the MS. Valid values are 'ca' for CROSS_AND_AUTO, 'ao' for AUTO_ONLY and 'co' for CROSS_ONLY.")
-      ("verbose, v",  "logs numerous informations as the application is running.");
+      ("verbose,v",  "logs numerous informations as the application is running.");
 
     po::options_description hidden("Hidden options");
     hidden.add_options()
@@ -1377,7 +1378,7 @@ int main (int argC, char * argV[]) {
 	infostream.str("");
 	infostream << "No flagging condition specified." << endl;
 	info(infostream.str());
-	exit (0);
+	exit (1);
       }
 
       infostream.str("");
@@ -1446,12 +1447,14 @@ int main (int argC, char * argV[]) {
     ds.setFromFile(dsName, parseOpt);
   }
   catch (ConversionException e) {
-    cout << e.getMessage() << endl;
-    exit (1);
+    errstream.str("");
+    errstream << e.getMessage() << endl;
+    error(errstream.str());
   }
   catch (...) {
-    cout << "Unexpected error." << endl;
-    exit (1);
+    errstream.str("");
+    errstream << "Unexpected error while trying to access the dataset." << endl;
+    error(errstream.str());
   }
 
   //
@@ -1659,6 +1662,7 @@ int main (int argC, char * argV[]) {
   uInt	iMSRow	    = 0;	// Row index in the MS Main table.
   uInt	iMSRowBegin = 0;	// Index of the first row in the MS Main table of the slice corresponding to one row in the ASDM Main table.
 
+  unsigned int numFlaggedRowsTotal = 0;
 
   iMSRowBegin = iMSRow;
   unsigned int iASDMIndex = 0;
@@ -1823,6 +1827,7 @@ int main (int argC, char * argV[]) {
 		 << " - BDF '" << bdfPath << "' - Size " << mR->getDataSize() << " bytes,  produced " << numFlaggedRows  << " flagged rows in the MS Main table rows " << iMSRowBegin << " to " << (iMSRow - 1) << endl << endl << endl;
       info(infostream.str());
       iMSRowBegin = iMSRow;
+      numFlaggedRowsTotal += numFlaggedRows;
     }
     catch (AipsError e) {
       info(infostream.str());
@@ -1862,6 +1867,18 @@ int main (int argC, char * argV[]) {
       info(infostream.str());
     }
     iASDMIndex++;
+  }
+  infostream.str("");
+  if (mainTable.nrow() > 0) { // this is a paranoid test...
+    // force verbosity
+    bool verbose_ = verbose;
+    verbose = true;
+    infostream << numFlaggedRowsTotal << " rows have been flagged in the " << mainTable.nrow()
+	       << " of the MS Main table. "
+	       << setprecision(4)
+	       << ((float) numFlaggedRowsTotal) / mainTable.nrow() * 100.0 << "%." << endl;
+    info(infostream.str());
+    verbose = verbose_;
   }
   mainTable.flush();
 
