@@ -114,7 +114,7 @@ macro (configure_breakpad Breakpad_Root)
 	    message ("Extracting full paths for Mac libraries")
 	    message ("Project binary directory: ${PROJECT_BINARY_DIR}")
         execute_process (COMMAND perl fixbreakpadframeworkrefs.pl ${PROJECT_BINARY_DIR} 
-	    WORKING_DIRECTORY "../install"
+	    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/install"
 	    OUTPUT_VARIABLE error_message
 	    ERROR_VARIABLE error_message
 	    RESULT_VARIABLE status)
