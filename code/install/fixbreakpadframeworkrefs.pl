@@ -14,8 +14,7 @@ foreach $file ( @files ) {
           if ($reference =~ m|\@executable_path/../Frameworks|) {
             print "Changing \@executable_path to \@loader_path for $file\n";
             $estring = "\@executable_path/../Frameworks/";
-            $dir = abs_path(getcwd) ; #. "/build";
-            $lstring = "$dir/../build/breakpad/breakpad-distro/src/client/mac/build/Release/";
+            $lstring = "$builddir/breakpad/breakpad-distro/src/client/mac/build/Release/";
             my ($oldref, $reftail) = split / /, $reference, 2;
             $newref = $oldref;
             $newref =~ s/$estring/$lstring/g;
@@ -26,8 +25,7 @@ foreach $file ( @files ) {
           elsif ($reference =~ m|\@executable_path/../Resources|) {
             print "Changing \@executable_path to \@loader_path for $file\n";
             $estring = "\@executable_path/../Resources/";
-            $dir = abs_path(getcwd) ; #. "/build";
-            $lstring = "$dir/../build/breakpad/breakpad-distro/src/client/mac/build/Release/";
+            $lstring = "$builddir/breakpad/breakpad-distro/src/client/mac/build/Release/";
             my ($oldref, $reftail) = split / /, $reference, 2;
             $newref = $oldref;
             $newref =~ s/$estring/$lstring/g;
@@ -49,8 +47,7 @@ foreach $file ( @files ) {
             if ($reference =~ m|\@executable_path/../|) {
             print "Changing id for $file\n";
             $estring = "\@executable_path/../Frameworks/";
-            $dir = abs_path(getcwd) ; #. "/build";
-            $lstring = "$dir/../build/breakpad/breakpad-distro/src/client/mac/build/Release/";
+            $lstring = "$builddir/breakpad/breakpad-distro/src/client/mac/build/Release/";
             my ($oldref, $reftail) = split / /, $reference, 2;
             $newref = $oldref;
             $newref =~ s/$estring/$lstring/g;
