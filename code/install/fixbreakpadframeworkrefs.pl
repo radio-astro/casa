@@ -1,6 +1,7 @@
 use Cwd;
 use Cwd 'abs_path';
-@files = `find ../build/breakpad/breakpad-distro/src/client/mac/build/Release/ -type f`;
+$builddir=$ARGV[0];
+@files = `find $builddir/breakpad/breakpad-distro/src/client/mac/build/Release/ -type f`;
 #print @files;
 # Fix library references
 foreach $file ( @files ) {

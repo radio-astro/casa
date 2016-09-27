@@ -112,7 +112,7 @@ macro (configure_breakpad Breakpad_Root)
     if (APPLE)
 	    message ("Building on and Mac, not trying to copy the breakpad client")
 	    message ("Extracting full paths for Mac libraries")
-        execute_process (COMMAND perl fixbreakpadframeworkrefs.pl
+        execute_process (COMMAND perl fixbreakpadframeworkrefs.pl ${PROJECT_BINARY_DIR} 
 	    WORKING_DIRECTORY "../install"
 	    OUTPUT_VARIABLE error_message
 	    ERROR_VARIABLE error_message
