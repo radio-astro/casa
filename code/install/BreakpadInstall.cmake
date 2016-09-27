@@ -70,9 +70,9 @@ macro (configure_breakpad Breakpad_Root)
     # Perform the configuration step by executing "configure"
 
 	message ("Configuring Breakpad using ${CMAKE_CXX_COMPILER}")
-    set (configCommand "./configure CC=${CMAKE_CXX_COMPILER} CXX=${CMAKE_CXX_COMPILER}")
+    set (configCommand "./configure CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER}")
 	message ("configCommand ${configCommand}")
-    execute_process (COMMAND ./configure CC=${CMAKE_CXX_COMPILER}
+    execute_process (COMMAND ./configure CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER}
 	WORKING_DIRECTORY "breakpad/breakpad-distro"
 	RESULT_VARIABLE status)
     if (NOT ${status} EQUAL 0)
