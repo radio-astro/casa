@@ -446,12 +446,12 @@ class sdimprocess_worker(sdutil.sdtask_interface):
                         if weights[i][ix][iy] == 0.0:
                             weights[i][ix][iy] += eps*0.01
             else:
-                maskw = 0.5 * sqrt( nx * ny ) * masks[i]
+                maskw = 0.5 * numpy.sqrt( nx * ny ) * masks[i]
                 for ix in range(nx):
                     for iy in range(ny):
                         tand = numpy.tan((dirs[i]-90.0)*dtor)
                         dd = abs( ix * tand - iy - 0.5 * (nx-1) * tand + 0.5 * (ny-1) )
-                        dd = dd / sqrt( 1.0 + tand * tand )
+                        dd = dd / numpy.sqrt( 1.0 + tand * tand )
                         if dd < maskw:
                             cosd = numpy.cos(0.5*numpy.pi*dd/maskw)
                             weights[i][ix][iy] = 1.0 - cosd * cosd
