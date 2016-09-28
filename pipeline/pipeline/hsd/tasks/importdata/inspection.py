@@ -432,6 +432,11 @@ class SDMSInspection(object):
         for target in target_fields:
             target_name = target.name
             LOG.debug('target name: \'%s\''%(target_name))
+            
+            if len(reference_fields) == 0:
+                field_map[target.id] = target.id
+                continue
+            
             for reference in reference_fields:
                 reference_name = reference.name
                 LOG.debug('reference name: \'%s\''%(reference_name))
