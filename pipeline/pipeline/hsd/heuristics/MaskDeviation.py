@@ -97,7 +97,7 @@ class MaskDeviation(object):
         ss.set_selection()
         del ss, s, sel
         
-    def ReadDataFromMS(self, vis='', field='', antenna='', colname='CORRECTED_DATA'):
+    def ReadDataFromMS(self, vis='', field='', antenna='', colname=None):
         """
         Reads data from input MS. 
         """
@@ -111,6 +111,18 @@ class MaskDeviation(object):
                  'scanintent': 'OBSERVE_TARGET#ON_SOURCE*'}
         LOG.debug('vis="%s"'%(vis))
         LOG.debug('mssel=%s'%(mssel))
+        
+        if colname is None:
+            with casatools.TableReader(vis) as mytb:
+                colnames = mytb.colnames()
+            if 'CORRECTED_DATA' in colnames:
+                colname = 'CORRECTED_DATA'
+            elif 'FLOAT_DATA' in colnames:
+                colname = 'FLOAT_DATA'
+            elif 'DATA' in colnames:
+                colname = 'DATA'
+            else:
+                raise RuntimeError('{} doesn\'t have any data column (CORRECTED, FLOAT, DATA)'.format(os.path.basename(vis)))
             
         with casatools.MSReader(vis) as myms:
             mssel['baseline'] = '%s&&&'%(antenna)
