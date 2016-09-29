@@ -246,7 +246,8 @@ def _calcTaylorFromCube(imtemplate="",reffreq='1.42GHz',cubename="sim.pb",newtay
    ia.close();
 
    if(csys.axiscoordinatetypes()[3] == 'Spectral'):
-       restfreq = csys.restfrequency()['value'][0]/1e+09; # convert more generally..
+       #restfreq = csys.restfrequency()['value'][0]/1e+09; # convert more generally..
+       restfreq = csys.referencevalue()['numeric'][3]/1e+09; # convert more generally..
        freqincrement = csys.increment()['numeric'][3]/1e+09;
        freqlist = [];
        for chan in range(0,shp[3]): 
