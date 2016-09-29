@@ -375,7 +375,7 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
             + '_blparam_stage{stage}.txt'.format(stage=stage_number)
         work_data = {}
         plot_list = []
-        plot_manager = plotter.BaselineSubtractionPlotManager(self.inputs.context)
+        plot_manager = plotter.BaselineSubtractionPlotManager(self.inputs.context, datatable)
         for (ms, accum) in registry.items():
             vis = ms.basename
             field_id_list = accum.get_field_id_list()

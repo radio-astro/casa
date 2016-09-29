@@ -80,8 +80,9 @@ class BaselineSubtractionPlotManager(object):
         new_table = list(_filter(ms_id, antenna_id, spw_id, polarization_ids, grid_table))
         return new_table
     
-    def __init__(self, context):
+    def __init__(self, context, datatable):
         self.context = context
+        self.datatable = datatable
         stage_number = self.context.task_counter
         self.stage_dir = os.path.join(self.context.report_dir,"stage%d" % stage_number)    
         if not os.path.exists(self.stage_dir):
@@ -177,7 +178,6 @@ class BaselineSubtractionPlotManager(object):
          [0, 1, RA0, DEC1, [IDX10, IDX11, ...]],
          ...]
         """
-        context = self.context
         ms = self.ms
         antid = self.antenna_id
         spwid = self.spw_id
@@ -186,13 +186,9 @@ class BaselineSubtractionPlotManager(object):
         postfit_data = self.postfit_data
         rowmap = self.rowmap
         
-        #datatable = DataTable(context.observing_run.ms_datatable_name)
-        rotablename = DataTable.get_rotable_name(context.observing_run.ms_datatable_name)
-        rwtablename = DataTable.get_rwtable_name(context.observing_run.ms_datatable_name)
-        with casatools.TableReader(rotablename) as tb:
-            dtrows = tb.getcol('ROW')
+        dtrows = self.datatable.tb1.getcol('ROW')
     
-        num_ra, num_dec, num_plane, refpix, refval, increment, rowlist = analyze_plot_table(context, dtrows, ms, antid, spwid, plot_table)
+        num_ra, num_dec, num_plane, refpix, refval, increment, rowlist = analyze_plot_table(self.datatable, dtrows, ms, antid, spwid, plot_table)
             
         plotter = self.pool.create_plotter(num_ra, num_dec, num_plane, refpix, refval, increment)
         LOG.info('vis {} ant {} spw {} plotter figure id {} has {} axes', ms.basename, antid, spwid, plotter.axes.figure_id, len(plotter.axes.figure.axes))
@@ -218,7 +214,7 @@ class BaselineSubtractionPlotManager(object):
                                                              map_data_storage=self.postfit_storage.map_data,
                                                              map_mask_storage=self.postfit_storage.map_mask)
         if line_range is not None:
-            lines_map = get_lines(rwtablename, num_ra, rowlist)
+            lines_map = get_lines(self.datatable, num_ra, rowlist)
         else:
             lines_map = None
     
@@ -282,7 +278,7 @@ class BaselineSubtractionPlotManager(object):
         return plot_list
         
 #@utils.profiler
-def analyze_plot_table(context, dtrows, ms, antid, spwid, plot_table):
+def analyze_plot_table(datatable, dtrows, ms, antid, spwid, plot_table):
     #datatable = context.observing_run.datatable_instance
     num_rows = len(plot_table) # num_plane * num_ra * num_dec
     num_dec = plot_table[-1][1] + 1
@@ -443,19 +439,19 @@ def get_data(infile, dtrows, num_ra, num_dec, num_chan, num_pol, rowlist, rowmap
 
     return integrated_data_masked, map_data_masked
 
-def get_lines(rwtablename, num_ra, rowlist):
+def get_lines(datatable, num_ra, rowlist):
     lines_map = collections.defaultdict(dict)
-    with casatools.TableReader(rwtablename) as tb:
-        for d in rowlist:
-            ix = num_ra - 1 - d['RAID']
-            iy = d['DECID']
-            ids = d['IDS']
-            midx = d['MEDIAN_INDEX']
-            if midx is not None:
-                masklist = tb.getcell('MASKLIST', ids[midx])
-                lines_map[ix][iy] = None if numpy.all(masklist == -1) else masklist
-            else:
-                lines_map[ix][iy] = None
+    #with casatools.TableReader(rwtablename) as tb:
+    for d in rowlist:
+        ix = num_ra - 1 - d['RAID']
+        iy = d['DECID']
+        ids = d['IDS']
+        midx = d['MEDIAN_INDEX']
+        if midx is not None:
+            masklist = datatable.tb2.getcell('MASKLIST', ids[midx])
+            lines_map[ix][iy] = None if numpy.all(masklist == -1) else masklist
+        else:
+            lines_map[ix][iy] = None
     return lines_map
 
 # @utils.profiler
