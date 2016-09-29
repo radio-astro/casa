@@ -338,11 +338,11 @@ class CleanBase(basetask.StandardTaskTemplate):
         if (inputs.niter > 0):
             LOG.info('tclean used %d iterations' % (tclean_result['iterdone']))
             if ((tclean_result['stopcode'] == 1) and (tclean_result['iterdone'] >= tclean_result['niter'])):
-                result.error = CleanBaseError('tclean reached niter limit. Field: %s SPW: %s' % (inputs.field, inputs.spw), 'Reached niter limit')
+                result.warning = CleanBaseError('tclean reached niter limit. Field: %s SPW: %s' % (inputs.field, inputs.spw), 'Reached niter limit')
                 LOG.warning('tclean reached niter limit of %d for %s / spw%s !' % (tclean_result['niter'], utils.dequote(inputs.field), inputs.spw))
 
             if (tclean_result['stopcode'] == 5):
-                result.error = CleanBaseError('tclean diverged. Field: %s SPW: %s' % (inputs.field, inputs.spw), 'tclean diverged')
+                result.warning = CleanBaseError('tclean diverged. Field: %s SPW: %s' % (inputs.field, inputs.spw), 'tclean diverged')
                 LOG.warning('tclean diverged. Field: %s SPW: %s' % (inputs.field, inputs.spw))
 
         if (iter > 0):

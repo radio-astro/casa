@@ -60,6 +60,7 @@ class TcleanResult(basetask.Results):
         # Dummy settings for the weblog renderer
         self.results = [self]
         self.targets = ['']
+        self.warning = ''
         self.error = ''
 
     def empty(self):
