@@ -701,9 +701,16 @@ try{
    }
    
    beam(2)=fmod(beam(2), Float(360.0));
-   while (abs(beam(2)/180.0)> 1) {
-     if (beam(2) > 180.0) beam(2)-=360.0;
-     else beam(2)+=360.0;
+   //while (abs(beam(2)/180.0)> 1) {
+   //  if (beam(2) > 180.0) beam(2)-=360.0;
+   //  else beam(2)+=360.0;
+   //}
+   //CAS-8627: adjust pa to the range -90d, +90d
+   while (abs(beam(2)/90.0)> 1) {
+     if (beam(2) > 270.0) beam(2)-=360.0;
+     else if (beam(2) > 90.0) beam(2) -=180.0;
+     else if (beam(2) < -270.0) beam(2) +=360.0;
+     else beam(2)+=180.0;
    }
    return True;
  }
