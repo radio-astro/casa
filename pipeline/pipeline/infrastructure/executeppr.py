@@ -247,8 +247,6 @@ def executeppr (pprXmlFile, importonly=True, breakpoint='breakpoint',
             or taskname == 'SDImportData':
 	        task_args['vis'] = files
 	        task_args['session'] = sessions
-            elif taskname == 'SDImportDataOld':
-                task_args['infiles'] = files
 	    
 	    remapped_args = argmapper.convert_args(taskname, task_args,
 	        convert_nulls=False)

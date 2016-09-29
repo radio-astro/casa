@@ -41,18 +41,6 @@ CasaTaskDict = {
     'hsd_importdata': 'SDImportData',
     'hsd_k2jycal': 'SDK2JyCal',
     'hsd_skycal': 'SDMSSkyCal',
-    'hsdst_calsky': 'SDCalSky',
-    'hsdst_applycal': 'SDApplyCal',
-    'hsdst_exportdata': 'SDExportData',
-    'hsdst_importdataold': 'SDImportDataOld',
-    'hsdst_mstoscantable': 'SDMsToScantable',
-    'hsdst_inspectdata': 'SDInspectData',
-    'hsdst_imaging': 'SDImaging',
-    'hsdst_baseline': 'SDBaseline',
-    'hsdst_blflag': 'SDBLFlag',
-    'hsdst_flagbaseline': 'SDFlagBaseline',
-    'hsdst_plotflagbaseline': 'SDPlotFlagBaseline',
-    'hsdst_simplescale': 'SDSimpleScale',
     'hifa_importdata': 'ALMAImportData',
     'hifa_antpos': 'ALMAAntpos',
     'hifa_bandpass': 'ALMAPhcorBandpass',
@@ -151,19 +139,6 @@ classToCASATask = {
     hsd_tasks.SDImportData            : 'hsd_importdata',
     hsd_tasks.SDK2JyCal               : 'hsd_k2jycal',
     hsd_tasks.SDMSSkyCal              : 'hsd_skycal',
-    # OLD Single dish tasks ------------------------------------------------------
-    hsd_tasks.SDCalSky                : 'hsdst_calsky',
-    hsd_tasks.SDApplyCal              : 'hsdst_applycal',
-    hsd_tasks.SDExportData            : 'hsdst_exportdata',
-    hsd_tasks.SDImportDataOld         : 'hsdst_importdataold',
-    hsd_tasks.SDMsToScantable         : 'hsdst_mstoscantable',
-    hsd_tasks.SDInspectData           : 'hsdst_inspectdata',
-    hsd_tasks.SDImaging               : 'hsdst_imaging',
-    hsd_tasks.SDBaseline              : 'hsdst_baseline',
-    hsd_tasks.SDBLFlag                : 'hsdst_blflag',
-    hsd_tasks.SDFlagBaseline          : 'hsdst_flagbaseline',
-    hsd_tasks.SDPlotFlagBaseline      : 'hsdst_plotflagbaseline',
-    hsd_tasks.SDSimpleScale           : 'hsdst_simplescale',
     #VLA tasks
     hifv_tasks.VLAImportData          : 'hifv_importdata',
     hifv_tasks.Hanning                : 'hifv_hanning',
@@ -308,70 +283,28 @@ TASK_COMMENTS = {
         'A single target source is cleaned. '
     ),
     (hif_tasks.ExportData,
-     hsd_tasks.SDExportData,
      hsd_tasks.SDMSExportData) : (
         'The output data products are computed. '
     ),
     # Single Dish Tasks
-    (hsd_tasks.SDImportDataOld,) : (
-        'If required, ASDMs are converted to measurement sets. '
-        'Furthermore, measurement sets are converted to scantable '
-        'and split by antenna for single dish data reduction. '
-    ),
-    (hsd_tasks.SDMsToScantable,) : (
-        'Registered measurement sets are converted to scantable and '
-        'split by antenna for single dish data reduction. '
-    ),
-    (hsd_tasks.SDInspectData,) : (
-        'Registered data are inspected to configure calibration strategy '
-        'and to group data for the following processing. \n'
-        '' + SILENT_TASK_COMMENT
-    ),
-    (hsd_tasks.SDCalSky,
-     hsd_tasks.SDMSSkyCal) : (
+    (hsd_tasks.SDMSSkyCal,) : (
         'Generates sky calibration table according to calibration '
         'strategy. '
     ),
-    (hsd_tasks.SDCalTsys,) : (
-        'Generates Tsys calibration table according to calibration '
-        'strategy. '
-    ),
-    (hsd_tasks.SDApplyCal,) : (
-        'Apply calibration tables. '
-    ),
-    (hsd_tasks.SDBaseline,
-     hsd_tasks.SDMSBaseline) : (
+    (hsd_tasks.SDMSBaseline,) : (
         'Subtracts spectral baseline by least-square fitting with '
         'N-sigma clipping. Spectral lines are automatically detected '
         'and examined to determine the region that is masked to protect '
         'these features from the fit. \n'
         '' + SILENT_TASK_COMMENT
     ),
-    (hsd_tasks.SDBLFlag,
-     hsd_tasks.SDMSBLFlag) : (
+    (hsd_tasks.SDMSBLFlag,) : (
         'Perform row-based flagging based on noise level and quality of '
         'spectral baseline subtraction. \n'
         '' + SILENT_TASK_COMMENT
     ),
-    (hsd_tasks.SDImaging,) : (
-        'Executes preparation for imaging: Exports scantables to '
-        'measurement sets, apply row flags, and apply weights. '
-        'Then, perform imaging.'
-    ),
     (hsd_tasks.SDMSImaging,) : (
         'Perform single dish imaging.'
-    ),
-    (hsd_tasks.SDFlagBaseline,) : (
-        'Execute baseline subtraction and flagging iteratively. '
-        '' + SILENT_TASK_COMMENT
-    ),
-    (hsd_tasks.SDPlotFlagBaseline,) : (
-        'Plot whole spectra before and after baseline subtraction. '
-        '' + SILENT_TASK_COMMENT
-    ),
-    (hsd_tasks.SDSimpleScale,) : (
-        'Scale spectra in scantables. This task is used for'
-        'non-linearity correction.'
     ),
     (hsd_tasks.SDK2JyCal,) : (
         'The Kelvin to Jy calibration tables are generated.'
