@@ -14,7 +14,6 @@ from numpy import array
 
 from tsdfit import tsdfit
 from sdutil import tbmanager
-from sdstat import sdstat
 
 
 try:
@@ -252,16 +251,6 @@ class tsdfit_unittest_base(unittest.TestCase):
             else:
                 casalog.post("Could not find '%s'...skipping copy" % from_name, 'WARN')
     
-    """
-    def _getStats(self, filename, spw=None):
-        if not spw:
-            spw=''
-        self._checkfile(filename)
-        sd.rcParams['scantable.storage'] = 'memory'
-        retstat = sdstat(filename, spw=str(spw))
-        return retstat
-    """
-
     def _getUniqList(self, val):
         """Accepts a python list and returns a list of unique values"""
         if not isinstance(val, list):

@@ -16,11 +16,11 @@ try:
 except:
     import tests.selection_syntax as selection_syntax
 
-from sdsave import sdsave
+from sdsaveold import sdsaveold
 from sdutil import tbmanager
 import asap as sd
 
-# Unit test of sdsave task.
+# Unit test of sdsaveold task.
 # 
 # Currently, the test only examine if supported types of data can be
 # read, and if supporeted types of data can be written.
@@ -30,12 +30,12 @@ import asap as sd
 ###
 # Base class for all testing classes
 ###
-class sdsave_unittest_base:
+class sdsaveold_unittest_base:
     """
     Base class for testing classes.
     Implements several methods to compare the results.
     """
-    taskname='sdsave'
+    taskname='sdsaveold'
     datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdsave/'
     basefile='OrionS_rawACSmod_cal2123.asap'
     summaryStr = None
@@ -120,13 +120,13 @@ class sdsave_unittest_base:
 ###
 # Test on bad parameter settings, data selection, data averaging, ...
 ###
-class sdsave_test0(unittest.TestCase,sdsave_unittest_base):
+class sdsaveold_test0(unittest.TestCase,sdsaveold_unittest_base):
     """
     Test on data selection, data averaging...
     """
     # Input and output names
     infile='OrionS_rawACSmod_cal2123.asap'
-    prefix=sdsave_unittest_base.taskname+'Test0'
+    prefix=sdsaveold_unittest_base.taskname+'Test0'
     outfile=prefix+'.asap'
 
     def setUp(self):
@@ -134,7 +134,7 @@ class sdsave_test0(unittest.TestCase,sdsave_unittest_base):
         if (not os.path.exists(self.infile)):
             shutil.copytree(self.datapath+self.infile, self.infile)
 
-        default(sdsave)
+        default(sdsaveold)
 
     def tearDown(self):
         if (os.path.exists(self.infile)):
@@ -144,20 +144,20 @@ class sdsave_test0(unittest.TestCase,sdsave_unittest_base):
     def test000(self):
         """Test 000: Default parameters"""
         # argument verification error
-        self.res=sdsave()
+        self.res=sdsaveold()
         self.assertFalse(self.res)        
 
 
 ###
 # Test to read scantable and write various types of format
 ###
-class sdsave_test1(unittest.TestCase,sdsave_unittest_base):
+class sdsaveold_test1(unittest.TestCase,sdsaveold_unittest_base):
     """
     Read scantable data, write various types of format.
     """
     # Input and output names
     infile='OrionS_rawACSmod_cal2123.asap'
-    prefix=sdsave_unittest_base.taskname+'Test1'
+    prefix=sdsaveold_unittest_base.taskname+'Test1'
     outfile0=prefix+'.asap'
     outfile1=prefix+'.ms'
     outfile2=prefix+'.fits'
@@ -170,7 +170,7 @@ class sdsave_test1(unittest.TestCase,sdsave_unittest_base):
         if (not os.path.exists(self.basefile)):
             shutil.copytree(self.datapath+self.basefile, self.basefile)
 
-        default(sdsave)
+        default(sdsaveold)
         self._setAttributes()
 
     def tearDown(self):
@@ -182,25 +182,25 @@ class sdsave_test1(unittest.TestCase,sdsave_unittest_base):
 
     def test100(self):
         """Test 100: test to read scantable and to write as scantable"""
-        self.res=sdsave(infile=self.infile,outfile=self.outfile0,outform='ASAP')
+        self.res=sdsaveold(infile=self.infile,outfile=self.outfile0,outform='ASAP')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile0))
 
     def test101(self):
         """Test 101: test to read scantable and to write as MS"""
-        self.res=sdsave(infile=self.infile,outfile=self.outfile1,outform='MS2')
+        self.res=sdsaveold(infile=self.infile,outfile=self.outfile1,outform='MS2')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile1))
         
     def test102(self):
         """Test 102: test to read scantable and to write as SDFITS"""
-        self.res=sdsave(infile=self.infile,outfile=self.outfile2,outform='SDFITS')
+        self.res=sdsaveold(infile=self.infile,outfile=self.outfile2,outform='SDFITS')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile2))
 
     def test103(self):
         """Test 103: test to read scantable and to write as ASCII"""
-        self.res=sdsave(infile=self.infile,outfile=self.outfile3,outform='ASCII')
+        self.res=sdsaveold(infile=self.infile,outfile=self.outfile3,outform='ASCII')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile3))
         
@@ -208,13 +208,13 @@ class sdsave_test1(unittest.TestCase,sdsave_unittest_base):
 ###
 # Test to read MS and write various types of format
 ###
-class sdsave_test2(unittest.TestCase,sdsave_unittest_base):
+class sdsaveold_test2(unittest.TestCase,sdsaveold_unittest_base):
     """
     Read MS data, write various types of format.
     """
     # Input and output names
     infile='OrionS_rawACSmod_cal2123.ms'
-    prefix=sdsave_unittest_base.taskname+'Test2'
+    prefix=sdsaveold_unittest_base.taskname+'Test2'
     outfile0=prefix+'.asap'
     outfile1=prefix+'.ms'
     outfile2=prefix+'.fits'
@@ -227,7 +227,7 @@ class sdsave_test2(unittest.TestCase,sdsave_unittest_base):
         if (not os.path.exists(self.basefile)):
             shutil.copytree(self.datapath+self.basefile, self.basefile)
 
-        default(sdsave)
+        default(sdsaveold)
         self._setAttributes()
         self.scanno=1
 
@@ -240,32 +240,32 @@ class sdsave_test2(unittest.TestCase,sdsave_unittest_base):
 
     def test200(self):
         """Test 200: test to read MS and to write as scantable"""
-        self.res=sdsave(infile=self.infile,outfile=self.outfile0,outform='ASAP')
+        self.res=sdsaveold(infile=self.infile,outfile=self.outfile0,outform='ASAP')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile0))
         
     def test201(self):
         """Test 201: test to read MS and to write as MS"""
-        self.res=sdsave(infile=self.infile,outfile=self.outfile1,outform='MS2')
+        self.res=sdsaveold(infile=self.infile,outfile=self.outfile1,outform='MS2')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile1))
         
     def test202(self):
         """Test 202: test to read MS and to write as SDFITS"""
-        self.res=sdsave(infile=self.infile,outfile=self.outfile2,outform='SDFITS')
+        self.res=sdsaveold(infile=self.infile,outfile=self.outfile2,outform='SDFITS')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile2))
 
     def test203(self):
         """Test 203: test to read MS and to write as ASCII"""
-        self.res=sdsave(infile=self.infile,outfile=self.outfile3,outform='ASCII')
+        self.res=sdsaveold(infile=self.infile,outfile=self.outfile3,outform='ASCII')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile3))
 
     def test204(self):
         """Test 204: test failure case that unexisting antenna is specified"""
         try:
-            self.res=sdsave(infile=self.infile,antenna='ROSWELL',outfile=self.outfile0,outform='ASAP')
+            self.res=sdsaveold(infile=self.infile,antenna='ROSWELL',outfile=self.outfile0,outform='ASAP')
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -293,10 +293,10 @@ class sdsave_test2(unittest.TestCase,sdsave_unittest_base):
         self.__spwtest()
 
     def __spwtest(self):
-        self.res=sdsave(infile=self.infile,outfile=self.outfile0,outform='ASAP')
+        self.res=sdsaveold(infile=self.infile,outfile=self.outfile0,outform='ASAP')
         self.assertFalse(self.res,False)
         self.__compareIncrement( self.outfile0, self.infile )
-        self.res=sdsave(infile=self.outfile0,outfile=self.outfile1,outform='MS2')
+        self.res=sdsaveold(infile=self.outfile0,outfile=self.outfile1,outform='MS2')
         self.assertFalse(self.res,False)
         self.__compareIncrement( self.outfile0, self.outfile1 )        
 
@@ -314,13 +314,13 @@ class sdsave_test2(unittest.TestCase,sdsave_unittest_base):
 ###
 # Test to read ATNF SDFITS and write various types of format
 ###
-class sdsave_test3(unittest.TestCase,sdsave_unittest_base):
+class sdsaveold_test3(unittest.TestCase,sdsaveold_unittest_base):
     """
     Read ATNF SDFITS data, write various types of format.
     """
     # Input and output names
     infile='OrionS_rawACSmod_cal2123.fits'
-    prefix=sdsave_unittest_base.taskname+'Test3'
+    prefix=sdsaveold_unittest_base.taskname+'Test3'
     outfile0=prefix+'.asap'
     outfile1=prefix+'.ms'
     outfile2=prefix+'.fits'
@@ -333,7 +333,7 @@ class sdsave_test3(unittest.TestCase,sdsave_unittest_base):
         if (not os.path.exists(self.basefile)):
             shutil.copytree(self.datapath+self.basefile, self.basefile)
 
-        default(sdsave)
+        default(sdsaveold)
         self._setAttributes()
         self.scanno=0
 
@@ -346,25 +346,25 @@ class sdsave_test3(unittest.TestCase,sdsave_unittest_base):
 
     def test300(self):
         """Test 300: test to read ATNF SDFITS and to write as scantable"""
-        self.res=sdsave(infile=self.infile,outfile=self.outfile0,outform='ASAP')
+        self.res=sdsaveold(infile=self.infile,outfile=self.outfile0,outform='ASAP')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile0))
 
     def test301(self):
         """Test 301: test to read ATNF SDFITS and to write as MS"""
-        self.res=sdsave(infile=self.infile,outfile=self.outfile1,outform='MS2')
+        self.res=sdsaveold(infile=self.infile,outfile=self.outfile1,outform='MS2')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile1))
         
     def test302(self):
         """Test 302: test to read ATNF SDFITS and to write as SDFITS"""
-        self.res=sdsave(infile=self.infile,outfile=self.outfile2,outform='SDFITS')
+        self.res=sdsaveold(infile=self.infile,outfile=self.outfile2,outform='SDFITS')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile2))
 
     def test303(self):
         """Test 303: test to read ATNF SDFITS and to write as ASCII"""
-        self.res=sdsave(infile=self.infile,outfile=self.outfile3,outform='ASCII')
+        self.res=sdsaveold(infile=self.infile,outfile=self.outfile3,outform='ASCII')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile3))
         
@@ -372,13 +372,13 @@ class sdsave_test3(unittest.TestCase,sdsave_unittest_base):
 ###
 # Test to read GBT SDFITS and write various types of format
 ###
-class sdsave_test4(unittest.TestCase,sdsave_unittest_base):
+class sdsaveold_test4(unittest.TestCase,sdsaveold_unittest_base):
     """
     Read GBT SDFITS data, write various types of format.
     """
     # Input and output names
     infile='AGBT06A_sliced.fits'
-    prefix=sdsave_unittest_base.taskname+'Test4'
+    prefix=sdsaveold_unittest_base.taskname+'Test4'
     outfile0=prefix+'.asap'
     outfile1=prefix+'.ms'
     outfile2=prefix+'.fits'
@@ -389,7 +389,7 @@ class sdsave_test4(unittest.TestCase,sdsave_unittest_base):
         if (not os.path.exists(self.infile)):
             shutil.copy(self.datapath+self.infile, self.infile)
 
-        default(sdsave)
+        default(sdsaveold)
         #self._setAttributes()
 
     def tearDown(self):
@@ -399,26 +399,26 @@ class sdsave_test4(unittest.TestCase,sdsave_unittest_base):
 
     def test400(self):
         """Test 400: test to read GBT SDFITS and to write as scantable"""
-        self.res=sdsave(infile=self.infile,outfile=self.outfile0,outform='ASAP')
+        self.res=sdsaveold(infile=self.infile,outfile=self.outfile0,outform='ASAP')
         self.assertEqual(self.res,None)
         #self.assertTrue(self._compare(self.outfile0))
         self.assertTrue(self._compare())
 
     def test401(self):
         """Test 401: test to read GBT SDFITS and to write as MS"""
-        self.res=sdsave(infile=self.infile,outfile=self.outfile1,outform='MS2')
+        self.res=sdsaveold(infile=self.infile,outfile=self.outfile1,outform='MS2')
         self.assertEqual(self.res,None)
         #self.assertTrue(self._compare(self.outfile1))
         
     def test402(self):
         """Test 402: test to read GBT SDFITS and to write as SDFITS"""
-        self.res=sdsave(infile=self.infile,outfile=self.outfile2,outform='SDFITS')
+        self.res=sdsaveold(infile=self.infile,outfile=self.outfile2,outform='SDFITS')
         self.assertEqual(self.res,None)
         #self.assertTrue(self._compare(self.outfile2))
 
     def test403(self):
         """Test 403: test to read GBT SDFITS and to write as ASCII"""
-        self.res=sdsave(infile=self.infile,outfile=self.outfile3,outform='ASCII')
+        self.res=sdsaveold(infile=self.infile,outfile=self.outfile3,outform='ASCII')
         self.assertEqual(self.res,None)
         #self.assertTrue(self._compare(self.outfile3))
 
@@ -442,13 +442,13 @@ class sdsave_test4(unittest.TestCase,sdsave_unittest_base):
 ###
 # Test to read NROFITS and write various types of format
 ###
-class sdsave_test5(unittest.TestCase,sdsave_unittest_base):
+class sdsaveold_test5(unittest.TestCase,sdsaveold_unittest_base):
     """
     Read NROFITS data, write various types of format.
     """
     # Input and output names
     infile='B68test.nro'
-    prefix=sdsave_unittest_base.taskname+'Test5'
+    prefix=sdsaveold_unittest_base.taskname+'Test5'
     outfile0=prefix+'.asap'
     outfile1=prefix+'.ms'
     outfile2=prefix+'.fits'
@@ -459,7 +459,7 @@ class sdsave_test5(unittest.TestCase,sdsave_unittest_base):
         if (not os.path.exists(self.infile)):
             shutil.copy(self.datapath+self.infile, self.infile)
 
-        default(sdsave)
+        default(sdsaveold)
         #self._setAttributes()
 
     def tearDown(self):
@@ -469,26 +469,26 @@ class sdsave_test5(unittest.TestCase,sdsave_unittest_base):
 
     def test500(self):
         """Test 500: test to read NROFITS and to write as scantable"""
-        self.res=sdsave(infile=self.infile,outfile=self.outfile0,outform='ASAP')
+        self.res=sdsaveold(infile=self.infile,outfile=self.outfile0,outform='ASAP')
         self.assertEqual(self.res,None)
         #self.assertTrue(self._compare(self.outfile0))
         self.assertTrue(self._compare())
 
     def test501(self):
         """Test 501: test to read NROFITS and to write as MS"""
-        self.res=sdsave(infile=self.infile,outfile=self.outfile1,outform='MS2')
+        self.res=sdsaveold(infile=self.infile,outfile=self.outfile1,outform='MS2')
         self.assertEqual(self.res,None)
         #self.assertTrue(self._compare(self.outfile1))
         
     def test502(self):
         """Test 502: test to read NROFITS and to write as SDFITS"""
-        self.res=sdsave(infile=self.infile,outfile=self.outfile2,outform='SDFITS')
+        self.res=sdsaveold(infile=self.infile,outfile=self.outfile2,outform='SDFITS')
         self.assertEqual(self.res,None)
         #self.assertTrue(self._compare(self.outfile2))
 
     def test503(self):
         """Test 503: test to read NROFITS and to write as ASCII"""
-        self.res=sdsave(infile=self.infile,outfile=self.outfile3,outform='ASCII')
+        self.res=sdsaveold(infile=self.infile,outfile=self.outfile3,outform='ASCII')
         self.assertEqual(self.res,None)
         #self.assertTrue(self._compare(self.outfile3))
         
@@ -511,7 +511,7 @@ class sdsave_test5(unittest.TestCase,sdsave_unittest_base):
 ###
 # Test getpt parameter
 ###
-class sdsave_test6( unittest.TestCase, sdsave_unittest_base ):
+class sdsaveold_test6( unittest.TestCase, sdsaveold_unittest_base ):
     """
     Test getpt parameter
 
@@ -527,7 +527,7 @@ class sdsave_test6( unittest.TestCase, sdsave_unittest_base ):
     """
     # Input and output names
     infile='OrionS_rawACSmod_cal2123.ms'
-    prefix=sdsave_unittest_base.taskname+'Test6'
+    prefix=sdsaveold_unittest_base.taskname+'Test6'
     outfile0=prefix+'.asap'
     outfile1=prefix+'.ms'
 
@@ -536,7 +536,7 @@ class sdsave_test6( unittest.TestCase, sdsave_unittest_base ):
         if (not os.path.exists(self.infile)):
             shutil.copytree(self.datapath+self.infile, self.infile)
 
-        default(sdsave)
+        default(sdsaveold)
         #self._setAttributes()
 
     def tearDown(self):
@@ -546,18 +546,18 @@ class sdsave_test6( unittest.TestCase, sdsave_unittest_base ):
 
     def test600(self):
         """Test 600: test getpt=True"""
-        self.res=sdsave(infile=self.infile,getpt=True,outfile=self.outfile0,outform='ASAP')
+        self.res=sdsaveold(infile=self.infile,getpt=True,outfile=self.outfile0,outform='ASAP')
         self.assertEqual(self.res,None)
         self.assertFalse(self._pointingKeywordExists())
-        self.res=sdsave(infile=self.outfile0,outfile=self.outfile1,outform='MS2')
+        self.res=sdsaveold(infile=self.outfile0,outfile=self.outfile1,outform='MS2')
         self.assertTrue(self._compare())
 
     def test601(self):
         """Test 601: test getpt=False"""
-        self.res=sdsave(infile=self.infile,getpt=False,outfile=self.outfile0,outform='ASAP')
+        self.res=sdsaveold(infile=self.infile,getpt=False,outfile=self.outfile0,outform='ASAP')
         self.assertEqual(self.res,None)
         self.assertTrue(self._pointingKeywordExists())
-        self.res=sdsave(infile=self.outfile0,outfile=self.outfile1,outform='MS2')
+        self.res=sdsaveold(infile=self.outfile0,outfile=self.outfile1,outform='MS2')
         self.assertTrue(self._compare())
 
     def _pointingKeywordExists(self):
@@ -597,9 +597,9 @@ class sdsave_test6( unittest.TestCase, sdsave_unittest_base ):
 ###
 # Test rest frequency
 ###
-class sdsave_test7( sdsave_unittest_base, unittest.TestCase ):
+class sdsaveold_test7( sdsaveold_unittest_base, unittest.TestCase ):
     """
-    Unit tests for task sdsave. Test scantable available restfreq
+    Unit tests for task sdsaveold. Test scantable available restfreq
 
     The list of tests:
     test701-704  --- a value (float, int, quantity w/ and w/o a unit)
@@ -611,7 +611,7 @@ class sdsave_test7( sdsave_unittest_base, unittest.TestCase ):
     """
     # Input and output names
     infile = 'OrionS_rawACSmod_cal2123.asap'
-    outname = sdsave_unittest_base.taskname+'_test'
+    outname = sdsaveold_unittest_base.taskname+'_test'
     iflist = [1,2]
     spw = '1~2'
     frf = [45.301e9,44.075e9]
@@ -628,7 +628,7 @@ class sdsave_test7( sdsave_unittest_base, unittest.TestCase ):
             shutil.rmtree(self.infile)
         shutil.copytree(self.datapath+self.infile, self.infile)
 
-        default(sdsave)
+        default(sdsaveold)
 
     def tearDown( self ):
         if (os.path.exists(self.infile)):
@@ -673,7 +673,7 @@ class sdsave_test7( sdsave_unittest_base, unittest.TestCase ):
         restfreq = self.frf[1]
 
         print "Setting restfreq = %s (%s)" % (str(restfreq), str(type(restfreq)))
-        result = sdsave(infile=infile,outfile=outfile,\
+        result = sdsaveold(infile=infile,outfile=outfile,\
                         spw=self.spw,restfreq=restfreq)
 
         self.assertEqual(result,None)
@@ -690,7 +690,7 @@ class sdsave_test7( sdsave_unittest_base, unittest.TestCase ):
         restfreq = self.irf[1]
 
         print "Setting restfreq = %s (%s)" % (str(restfreq), str(type(restfreq)))
-        result = sdsave(infile=infile,outfile=outfile,\
+        result = sdsaveold(infile=infile,outfile=outfile,\
                         spw=self.spw,restfreq=restfreq)
 
         self.assertEqual(result,None)
@@ -707,7 +707,7 @@ class sdsave_test7( sdsave_unittest_base, unittest.TestCase ):
         restfreq = self.qurf[1]
 
         print "Setting restfreq = %s" % (str(restfreq))
-        result = sdsave(infile=infile,outfile=outfile,\
+        result = sdsaveold(infile=infile,outfile=outfile,\
                         spw=self.spw,restfreq=restfreq)
 
         self.assertEqual(result,None)
@@ -724,7 +724,7 @@ class sdsave_test7( sdsave_unittest_base, unittest.TestCase ):
         restfreq = self.qrf[1]
 
         print "Setting restfreq = %s (%s)" % (str(restfreq), str(type(restfreq)))
-        result = sdsave(infile=infile,outfile=outfile,\
+        result = sdsaveold(infile=infile,outfile=outfile,\
                         spw=self.spw,restfreq=restfreq)
 
         self.assertEqual(result,None)
@@ -741,7 +741,7 @@ class sdsave_test7( sdsave_unittest_base, unittest.TestCase ):
         restfreq = [ self.frf[1] ]
 
         print "Setting restfreq = %s" % (str(restfreq))
-        result = sdsave(infile=infile,outfile=outfile,\
+        result = sdsaveold(infile=infile,outfile=outfile,\
                         spw=self.spw,restfreq=restfreq)
 
         self.assertEqual(result,None)
@@ -758,7 +758,7 @@ class sdsave_test7( sdsave_unittest_base, unittest.TestCase ):
         restfreq = [ self.irf[1] ]
 
         print "Setting restfreq = %s" % (str(restfreq))
-        result = sdsave(infile=infile,outfile=outfile,\
+        result = sdsaveold(infile=infile,outfile=outfile,\
                         spw=self.spw,restfreq=restfreq)
 
         self.assertEqual(result,None)
@@ -775,7 +775,7 @@ class sdsave_test7( sdsave_unittest_base, unittest.TestCase ):
         restfreq = [ self.qurf[1] ]
 
         print "Setting restfreq = %s" % (str(restfreq))
-        result = sdsave(infile=infile,outfile=outfile,\
+        result = sdsaveold(infile=infile,outfile=outfile,\
                         spw=self.spw,restfreq=restfreq)
 
         self.assertEqual(result,None)
@@ -792,7 +792,7 @@ class sdsave_test7( sdsave_unittest_base, unittest.TestCase ):
         restfreq = [ self.qrf[1] ]
 
         print "Setting restfreq = %s" % (str(restfreq))
-        result = sdsave(infile=infile,outfile=outfile,\
+        result = sdsaveold(infile=infile,outfile=outfile,\
                         spw=self.spw,restfreq=restfreq)
 
         self.assertEqual(result,None)
@@ -809,7 +809,7 @@ class sdsave_test7( sdsave_unittest_base, unittest.TestCase ):
         restfreq = [ self.drf[1] ]
 
         print "Setting restfreq = %s" % (str(restfreq))
-        result = sdsave(infile=infile,outfile=outfile,\
+        result = sdsaveold(infile=infile,outfile=outfile,\
                         spw=self.spw,restfreq=restfreq)
 
         self.assertEqual(result,None)
@@ -826,7 +826,7 @@ class sdsave_test7( sdsave_unittest_base, unittest.TestCase ):
         restfreq = self.frf
 
         print "Setting restfreq = %s" % (str(restfreq))
-        result = sdsave(infile=infile,outfile=outfile,\
+        result = sdsaveold(infile=infile,outfile=outfile,\
                         spw=self.spw,restfreq=restfreq)
 
         self.assertEqual(result,None)
@@ -843,7 +843,7 @@ class sdsave_test7( sdsave_unittest_base, unittest.TestCase ):
         restfreq = self.irf
 
         print "Setting restfreq = %s" % (str(restfreq))
-        result = sdsave(infile=infile,outfile=outfile,\
+        result = sdsaveold(infile=infile,outfile=outfile,\
                         spw=self.spw,restfreq=restfreq)
 
         self.assertEqual(result,None)
@@ -860,7 +860,7 @@ class sdsave_test7( sdsave_unittest_base, unittest.TestCase ):
         restfreq = self.qurf
 
         print "Setting restfreq = %s" % (str(restfreq))
-        result = sdsave(infile=infile,outfile=outfile,\
+        result = sdsaveold(infile=infile,outfile=outfile,\
                         spw=self.spw,restfreq=restfreq)
 
         self.assertEqual(result,None)
@@ -877,7 +877,7 @@ class sdsave_test7( sdsave_unittest_base, unittest.TestCase ):
         restfreq = self.qrf
 
         print "Setting restfreq = %s" % (str(restfreq))
-        result = sdsave(infile=infile,outfile=outfile,\
+        result = sdsaveold(infile=infile,outfile=outfile,\
                         spw=self.spw,restfreq=restfreq)
 
         self.assertEqual(result,None)
@@ -894,7 +894,7 @@ class sdsave_test7( sdsave_unittest_base, unittest.TestCase ):
         restfreq = self.drf
 
         print "Setting restfreq = %s" % (str(restfreq))
-        result = sdsave(infile=infile,outfile=outfile,\
+        result = sdsaveold(infile=infile,outfile=outfile,\
                         spw=self.spw,restfreq=restfreq)
 
         self.assertEqual(result,None)
@@ -912,7 +912,7 @@ class sdsave_test7( sdsave_unittest_base, unittest.TestCase ):
 
         print "Setting restfreq = %s" % (str(restfreq))
         try:
-            result = sdsave(infile=infile,outfile=outfile,\
+            result = sdsaveold(infile=infile,outfile=outfile,\
                                 spw=self.spw,restfreq=restfreq)
             self.assertTrue(False,
                             msg='The task must throw exception')
@@ -931,7 +931,7 @@ class sdsave_test7( sdsave_unittest_base, unittest.TestCase ):
 
         print "Setting restfreq = %s" % (str(restfreq))
         try:
-            result = sdsave(infile=infile,outfile=outfile,\
+            result = sdsaveold(infile=infile,outfile=outfile,\
                                 spw=self.spw,restfreq=restfreq)
             self.assertTrue(False,
                             msg='The task must throw exception')
@@ -952,7 +952,7 @@ class sdsave_test7( sdsave_unittest_base, unittest.TestCase ):
 
         print "Setting restfreq = %s" % (str(restfreq))
         try:
-            result = sdsave(infile=infile,outfile=outfile,\
+            result = sdsaveold(infile=infile,outfile=outfile,\
                                 spw=self.spw,restfreq=restfreq)
 
             self.assertTrue(False,
@@ -966,9 +966,9 @@ class sdsave_test7( sdsave_unittest_base, unittest.TestCase ):
 ###
 # Test combinations of scantable.storage='disk'/'memory' and insitu=T/F
 ###
-class sdsave_storageTest( sdsave_unittest_base, unittest.TestCase ):
+class sdsaveold_storageTest( sdsaveold_unittest_base, unittest.TestCase ):
     """
-    Unit tests for task sdsave. Test scantable sotrage and insitu
+    Unit tests for task sdsaveold. Test scantable sotrage and insitu
     parameters
 
     The list of tests:
@@ -987,7 +987,7 @@ class sdsave_storageTest( sdsave_unittest_base, unittest.TestCase ):
     """
     # Input and output names
     infile = 'OrionS_rawACSmod_cal2123.asap'
-    outname = sdsave_unittest_base.taskname+'_test'
+    outname = sdsaveold_unittest_base.taskname+'_test'
     pollist = [1]
     pol = '1'
     iflist = [2]
@@ -1006,7 +1006,7 @@ class sdsave_storageTest( sdsave_unittest_base, unittest.TestCase ):
         self.storage = sd.rcParams['scantable.storage']
         self.insitu = sd.rcParams['insitu']
 
-        default(sdsave)
+        default(sdsaveold)
 
     def tearDown( self ):
         # restore settings
@@ -1074,7 +1074,7 @@ class sdsave_storageTest( sdsave_unittest_base, unittest.TestCase ):
 
     # Actual tests
     def testMT( self ):
-        """Storage Test MT: sdsave on storage='memory' and insitu=T"""
+        """Storage Test MT: sdsaveold on storage='memory' and insitu=T"""
         tid = "MT"
         infile = self.infile
         outfile = self.outname+tid
@@ -1089,7 +1089,7 @@ class sdsave_storageTest( sdsave_unittest_base, unittest.TestCase ):
         sd.rcParams['insitu'] = True
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        result = sdsave(infile=infile,outfile=outfile,\
+        result = sdsaveold(infile=infile,outfile=outfile,\
                         spw=self.spw,pol=self.pol,restfreq=restfreq)
 
         self.assertEqual(result,None)
@@ -1102,7 +1102,7 @@ class sdsave_storageTest( sdsave_unittest_base, unittest.TestCase ):
 
 
     def testMF( self ):
-        """Storage Test MF: sdsave on storage='memory' and insitu=F"""
+        """Storage Test MF: sdsaveold on storage='memory' and insitu=F"""
         tid = "MF"
         infile = self.infile
         outfile = self.outname+tid
@@ -1117,7 +1117,7 @@ class sdsave_storageTest( sdsave_unittest_base, unittest.TestCase ):
         sd.rcParams['insitu'] = False
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        result = sdsave(infile=infile,outfile=outfile,\
+        result = sdsaveold(infile=infile,outfile=outfile,\
                         spw=self.spw,pol=self.pol,restfreq=restfreq)
 
         self.assertEqual(result,None)
@@ -1130,7 +1130,7 @@ class sdsave_storageTest( sdsave_unittest_base, unittest.TestCase ):
 
 
     def testDT( self ):
-        """Storage Test DT: sdsave on storage='disk' and insitu=T"""
+        """Storage Test DT: sdsaveold on storage='disk' and insitu=T"""
         tid = "DT"
         infile = self.infile
         outfile = self.outname+tid
@@ -1145,7 +1145,7 @@ class sdsave_storageTest( sdsave_unittest_base, unittest.TestCase ):
         sd.rcParams['insitu'] = True
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        result = sdsave(infile=infile,outfile=outfile,\
+        result = sdsaveold(infile=infile,outfile=outfile,\
                         spw=self.spw,pol=self.pol,restfreq=restfreq)
 
         self.assertEqual(result,None)
@@ -1158,7 +1158,7 @@ class sdsave_storageTest( sdsave_unittest_base, unittest.TestCase ):
 
 
     def testDF( self ):
-        """Storage Test DF: sdsave on storage='disk' and insitu=F"""
+        """Storage Test DF: sdsaveold on storage='disk' and insitu=F"""
         tid = "DF"
         infile = self.infile
         outfile = self.outname+tid
@@ -1173,7 +1173,7 @@ class sdsave_storageTest( sdsave_unittest_base, unittest.TestCase ):
         sd.rcParams['insitu'] = False
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        result = sdsave(infile=infile,outfile=outfile,\
+        result = sdsaveold(infile=infile,outfile=outfile,\
                         spw=self.spw,pol=self.pol,restfreq=restfreq)
 
         self.assertEqual(result,None)
@@ -1187,13 +1187,13 @@ class sdsave_storageTest( sdsave_unittest_base, unittest.TestCase ):
 ###
 # Test for frequency labeling
 ###
-class sdsave_freq_labeling(unittest.TestCase,sdsave_unittest_base):
+class sdsaveold_freq_labeling(unittest.TestCase,sdsaveold_unittest_base):
     """
     Read MS data, write various types of format.
     """
     # Input and output names
     infile='OrionS_rawACSmod_cal2123.ms'
-    prefix=sdsave_unittest_base.taskname+'Test2'
+    prefix=sdsaveold_unittest_base.taskname+'Test2'
     outfile=prefix+'.ms'
 
     def setUp(self):
@@ -1203,7 +1203,7 @@ class sdsave_freq_labeling(unittest.TestCase,sdsave_unittest_base):
         if (not os.path.exists(self.basefile)):
             shutil.copytree(self.datapath+self.basefile, self.basefile)
 
-        default(sdsave)
+        default(sdsaveold)
         self._setAttributes()
         self.scanno=0
 
@@ -1224,7 +1224,7 @@ class sdsave_freq_labeling(unittest.TestCase,sdsave_unittest_base):
         tb.putcol('MEAS_FREQ_REF',mfr)
         tb.close()
         
-        self.res=sdsave(infile=self.infile,outfile=self.outfile,outform='MS2')
+        self.res=sdsaveold(infile=self.infile,outfile=self.outfile,outform='MS2')
         self.assertEqual(self.res,None)
 
         # compare frequency label
@@ -1244,13 +1244,13 @@ class sdsave_freq_labeling(unittest.TestCase,sdsave_unittest_base):
 ###
 # Test for handling flags in MSWriter
 ###
-class sdsave_flaggingMS(unittest.TestCase,sdsave_unittest_base):
+class sdsaveold_flaggingMS(unittest.TestCase,sdsaveold_unittest_base):
     """
     Read Scantable data, modify flags in various ways, and write as MS.
     """
     # Input and output names
     infile='OrionS_rawACSmod_cal2123.asap'
-    prefix=sdsave_unittest_base.taskname+'Test2'
+    prefix=sdsaveold_unittest_base.taskname+'Test2'
     outfile=prefix+'.ms'
 
     def setUp(self):
@@ -1260,7 +1260,7 @@ class sdsave_flaggingMS(unittest.TestCase,sdsave_unittest_base):
         if (not os.path.exists(self.basefile)):
             shutil.copytree(self.datapath+self.basefile, self.basefile)
 
-        default(sdsave)
+        default(sdsaveold)
         self._setAttributes()
         self.scanno=0
 
@@ -1276,7 +1276,7 @@ class sdsave_flaggingMS(unittest.TestCase,sdsave_unittest_base):
         test_noflag: test for unflagged data. All the flags must be False.
         """
         # execute task
-        sdsave(infile=self.infile, outfile=self.outfile, outform='MS2')
+        sdsaveold(infile=self.infile, outfile=self.outfile, outform='MS2')
 
         # verification
         try:
@@ -1303,7 +1303,7 @@ class sdsave_flaggingMS(unittest.TestCase,sdsave_unittest_base):
         tb.close()
 
         # execute task
-        sdsave(infile=self.infile, outfile=self.outfile, outform='MS2')
+        sdsaveold(infile=self.infile, outfile=self.outfile, outform='MS2')
 
         # verification
         try:
@@ -1338,7 +1338,7 @@ class sdsave_flaggingMS(unittest.TestCase,sdsave_unittest_base):
         tb.close()        
         
         # execute task
-        sdsave(infile=self.infile, outfile=self.outfile, outform='MS2')
+        sdsaveold(infile=self.infile, outfile=self.outfile, outform='MS2')
 
         # verification
         try:
@@ -1367,14 +1367,14 @@ class sdsave_flaggingMS(unittest.TestCase,sdsave_unittest_base):
 ###
 # Test for scan number (CAS-5841)
 ###
-class sdsave_scan_number(unittest.TestCase,sdsave_unittest_base):
+class sdsaveold_scan_number(unittest.TestCase,sdsaveold_unittest_base):
     """
     Check scan number
     """
     # Input and output names
     infile='OrionS_rawACSmod_cal2123.asap'
     vis='OrionS_rawACSmod_cal2123.ms'
-    prefix=sdsave_unittest_base.taskname+'Test2'
+    prefix=sdsaveold_unittest_base.taskname+'Test2'
     outfile=prefix+'.asap'
     outvis=prefix+'.ms'
 
@@ -1385,7 +1385,7 @@ class sdsave_scan_number(unittest.TestCase,sdsave_unittest_base):
         if (not os.path.exists(self.vis)):
             shutil.copytree(self.datapath+self.vis, self.vis)
 
-        default(sdsave)
+        default(sdsaveold)
         #self._setAttributes()
         #self.scanno=0
 
@@ -1398,7 +1398,7 @@ class sdsave_scan_number(unittest.TestCase,sdsave_unittest_base):
 
     def test_import(self):
         """Test if SCANNO is consistent with original MS."""
-        self.res = sdsave(infile=self.vis, outfile=self.outfile,
+        self.res = sdsaveold(infile=self.vis, outfile=self.outfile,
                           outform='ASAP')
 
         # compare scan number
@@ -1415,7 +1415,7 @@ class sdsave_scan_number(unittest.TestCase,sdsave_unittest_base):
 
     def test_export(self):
         """Test if SCAN_NUMBER is consistent with original Scantable."""
-        self.res = sdsave(infile=self.infile, outfile=self.outvis,
+        self.res = sdsaveold(infile=self.infile, outfile=self.outvis,
                           outform='MS2')
 
         # compare scan number
@@ -1433,13 +1433,13 @@ class sdsave_scan_number(unittest.TestCase,sdsave_unittest_base):
 ###
 # Test for splitant (CAS-5842)
 ###
-class sdsave_test_splitant(unittest.TestCase,sdsave_unittest_base):
+class sdsaveold_test_splitant(unittest.TestCase,sdsaveold_unittest_base):
     """
     Read MS data, write various types of format.
     """
     # Input and output names
     infile='uid___A002_X6321c5_X3a7.ms'
-    prefix=sdsave_unittest_base.taskname+'TestSplitant'
+    prefix=sdsaveold_unittest_base.taskname+'TestSplitant'
     outfile=prefix+'.asap'
 
     def setUp(self):
@@ -1449,7 +1449,7 @@ class sdsave_test_splitant(unittest.TestCase,sdsave_unittest_base):
         if (not os.path.exists(self.basefile)):
             shutil.copytree(self.datapath+self.basefile, self.basefile)
 
-        default(sdsave)
+        default(sdsaveold)
         self._setAttributes()
         self.scanno=1
 
@@ -1462,7 +1462,7 @@ class sdsave_test_splitant(unittest.TestCase,sdsave_unittest_base):
 
     def testSplitant(self):
         """Test Splitant: test for splitant"""
-        self.res=sdsave(infile=self.infile,splitant=True,outfile=self.outfile,outform='ASAP')
+        self.res=sdsaveold(infile=self.infile,splitant=True,outfile=self.outfile,outform='ASAP')
         outsplitfile1 = self.prefix+'.PM01.asap'
         outsplitfile2 = self.prefix+'.PM04.asap'
         outputfiles_exist = (os.path.exists(outsplitfile1)) and (os.path.exists(outsplitfile2))
@@ -1485,13 +1485,13 @@ class sdsave_test_splitant(unittest.TestCase,sdsave_unittest_base):
 ###
 # Test data selection
 ###
-class sdsave_selection_syntax(selection_syntax.SelectionSyntaxTest, sdsave_unittest_base):
+class sdsaveold_selection_syntax(selection_syntax.SelectionSyntaxTest, sdsaveold_unittest_base):
     infile = 'data_selection.asap'
     prefix = 'selected.asap'
 
     @property
     def task(self):
-        return sdsave
+        return sdsaveold
 
     @property
     def spw_channel_selection(self):
@@ -1500,7 +1500,7 @@ class sdsave_selection_syntax(selection_syntax.SelectionSyntaxTest, sdsave_unitt
     def setUp(self):
         if (not os.path.exists(self.infile)):
             shutil.copytree(self.datapath+self.infile, self.infile)
-        default(sdsave)
+        default(sdsaveold)
 
     def tearDown(self):
         if (os.path.exists(self.infile)):
@@ -1522,7 +1522,7 @@ class sdsave_selection_syntax(selection_syntax.SelectionSyntaxTest, sdsave_unitt
         if regular_test:
             self.run_task(**kwargs)
         else:
-            sdsave(**kwargs)
+            sdsaveold(**kwargs)
 
         tb.open(outfile)
         cols = [tb.getcol(columns[i]) for i in xrange(num_param)]
@@ -1575,13 +1575,13 @@ class sdsave_selection_syntax(selection_syntax.SelectionSyntaxTest, sdsave_unitt
         #spw = ':0~100;200~400'
 
         try:
-            sdsave(infile=self.infile, spw=spw, outfile=outfile, overwrite=True)
+            sdsaveold(infile=self.infile, spw=spw, outfile=outfile, overwrite=True)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
             self.assertTrue(isinstance(e, SyntaxError),
                             msg='Unexpected exception was thrown: %s'%(str(e)))
-            pos = str(e).find('sdsave doesn\'t support multiple channel range selection for spw.')
+            pos = str(e).find('sdsaveold doesn\'t support multiple channel range selection for spw.')
             self.assertNotEqual(pos, -1,
                                 msg='Unexpected exception was thrown: %s'%(str(e)))        
 
@@ -2234,20 +2234,20 @@ class sdsave_selection_syntax(selection_syntax.SelectionSyntaxTest, sdsave_unitt
         self.__exec_channelrange_test(iflist, channelrange, spw, expected_nrow, regular_test=False)
 
 
-class sdsave_scanrate(unittest.TestCase,sdsave_unittest_base):
+class sdsaveold_scanrate(unittest.TestCase,sdsaveold_unittest_base):
     """
     Verify that MSWriter handles a conversion from DIRECTION and SCANRATE
     columns properly
     """
     infile = 'OrionS_rawACSmod_cal2123.asap'
-    prefix = 'sdsave_scanrate'
+    prefix = 'sdsaveold_scanrate'
 
     def setUp(self):
         self.res=None
         if (not os.path.exists(self.infile)):
             shutil.copytree(self.datapath+self.infile, self.infile)
 
-        default(sdsave)
+        default(sdsaveold)
 
     def tearDown(self):
         if (os.path.exists(self.infile)):
@@ -2256,7 +2256,7 @@ class sdsave_scanrate(unittest.TestCase,sdsave_unittest_base):
 
     def _run_and_verify(self, infile):
         outfile = self.prefix + '.asap'
-        self.res = sdsave(infile=infile, outfile=outfile, outform='MS2', overwrite=True)
+        self.res = sdsaveold(infile=infile, outfile=outfile, outform='MS2', overwrite=True)
         self.assertIsNone(self.res, msg='invalid return value')
 
         tb.open(infile)
@@ -2317,7 +2317,7 @@ class sdsave_scanrate(unittest.TestCase,sdsave_unittest_base):
 
         self._run_and_verify(self.infile)
 
-class sdsave_weighting(sdsave_unittest_base, unittest.TestCase):
+class sdsaveold_weighting(sdsaveold_unittest_base, unittest.TestCase):
     """
     Verify that fillweight option works fine.
     """
@@ -2330,7 +2330,7 @@ class sdsave_weighting(sdsave_unittest_base, unittest.TestCase):
         if (not os.path.exists(self.infile)):
             shutil.copytree(self.datapath+self.infile, self.infile)
 
-        default(sdsave)
+        default(sdsaveold)
 
     def tearDown(self):
         if (os.path.exists(self.infile)):
@@ -2342,14 +2342,14 @@ class sdsave_weighting(sdsave_unittest_base, unittest.TestCase):
         """
         Test fillweight=True
         """
-        sdsave(infile=self.infile,outfile=self.outfile,outform='MS2',fillweight=True)
+        sdsaveold(infile=self.infile,outfile=self.outfile,outform='MS2',fillweight=True)
         self.verify()
 
     def test_noweighting(self):
         """
         Test fillweight=False
         """
-        sdsave(infile=self.infile,outfile=self.outfile,outform='MS2',fillweight=False)
+        sdsaveold(infile=self.infile,outfile=self.outfile,outform='MS2',fillweight=False)
         with tbmanager(self.outfile) as tb:
             weight = tb.getvarcol('WEIGHT')
             sigma  = tb.getvarcol('SIGMA')
@@ -2412,7 +2412,7 @@ class sdsave_weighting(sdsave_unittest_base, unittest.TestCase):
                 self.assertTrue(all(diff_weight < self.tol))
                 self.assertTrue(all(diff_sigma < self.tol))        
                 
-class sdsave_weighting2(sdsave_unittest_base, unittest.TestCase):
+class sdsaveold_weighting2(sdsaveold_unittest_base, unittest.TestCase):
     """
     Verify that fillweight option works fine for data with npol=1
     """
@@ -2425,7 +2425,7 @@ class sdsave_weighting2(sdsave_unittest_base, unittest.TestCase):
         if (not os.path.exists(self.infile)):
             shutil.copytree(self.datapath+self.infile, self.infile)
 
-        default(sdsave)
+        default(sdsaveold)
 
     def tearDown(self):
         if (os.path.exists(self.infile)):
@@ -2437,14 +2437,14 @@ class sdsave_weighting2(sdsave_unittest_base, unittest.TestCase):
         """
         Test fillweight=True
         """
-        sdsave(infile=self.infile,outfile=self.outfile,outform='MS2',fillweight=True)
+        sdsaveold(infile=self.infile,outfile=self.outfile,outform='MS2',fillweight=True)
         self.verify()
 
     def test_noweighting2(self):
         """
         Test fillweight=False
         """
-        sdsave(infile=self.infile,outfile=self.outfile,outform='MS2',fillweight=False)
+        sdsaveold(infile=self.infile,outfile=self.outfile,outform='MS2',fillweight=False)
         with tbmanager(self.outfile) as tb:
             weight = tb.getvarcol('WEIGHT')
             sigma  = tb.getvarcol('SIGMA')
@@ -2509,9 +2509,9 @@ class sdsave_weighting2(sdsave_unittest_base, unittest.TestCase):
                 self.assertTrue(all(diff_sigma < self.tol))        
 
 
-class sdsave_flag(sdsave_unittest_base, unittest.TestCase):
+class sdsaveold_flag(sdsaveold_unittest_base, unittest.TestCase):
     """
-    Verify correct handling of flag information in sdsave for scantable output.
+    Verify correct handling of flag information in sdsaveold for scantable output.
     no changes must be made on any flag information.
 
     the input data has attributes as follows:
@@ -2528,7 +2528,7 @@ class sdsave_flag(sdsave_unittest_base, unittest.TestCase):
         self.res=None
         if (not os.path.exists(self.infile)):
             shutil.copytree(self.datapath+self.infile, self.infile)
-        default(sdsave)
+        default(sdsaveold)
         self._getinfo(self.infile)
 
     def tearDown(self):
@@ -2543,14 +2543,14 @@ class sdsave_flag(sdsave_unittest_base, unittest.TestCase):
         """
         test_flag01: Test for Scantable output
         """
-        sdsave(infile=self.infile,outfile=self.outfile1,outform='ASAP')
+        sdsaveold(infile=self.infile,outfile=self.outfile1,outform='ASAP')
         self._verifyflag(self.outfile1)
 
     def test_flag02(self):
         """
         test_flag02: Test for MS (with npol=1) output
         """
-        sdsave(infile=self.infile,outfile=self.outfile2,outform='MS2')
+        sdsaveold(infile=self.infile,outfile=self.outfile2,outform='MS2')
         self._verifyflag(self.outfile2, False)
 
     def _getinfo(self, infile):
@@ -2589,12 +2589,12 @@ class sdsave_flag(sdsave_unittest_base, unittest.TestCase):
 
 
 def suite():
-    return [sdsave_test0,sdsave_test1,sdsave_test2,
-            sdsave_test3,sdsave_test4,sdsave_test5,
-            sdsave_test6,sdsave_test7,sdsave_storageTest,
-            sdsave_freq_labeling, sdsave_flaggingMS,
-            sdsave_scan_number, sdsave_test_splitant,
-            sdsave_selection_syntax, sdsave_scanrate,
-            sdsave_weighting, sdsave_weighting2,
-            sdsave_flag
+    return [sdsaveold_test0,sdsaveold_test1,sdsaveold_test2,
+            sdsaveold_test3,sdsaveold_test4,sdsaveold_test5,
+            sdsaveold_test6,sdsaveold_test7,sdsaveold_storageTest,
+            sdsaveold_freq_labeling, sdsaveold_flaggingMS,
+            sdsaveold_scan_number, sdsaveold_test_splitant,
+            sdsaveold_selection_syntax, sdsaveold_scanrate,
+            sdsaveold_weighting, sdsaveold_weighting2,
+            sdsaveold_flag
             ]

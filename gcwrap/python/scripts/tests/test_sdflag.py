@@ -15,7 +15,7 @@ except:
     import tests.selection_syntax as selection_syntax
 
 import asap as sd
-from sdflag import sdflag
+from sdflagold import sdflagold
 from sdutil import tbmanager
 
 def selection_to_list(row):
@@ -31,25 +31,25 @@ def selection_to_list(row):
     l = set(_selection_to_list(row))
     return list(l)    
 
-class sdflag_unittest_base:
+class sdflagold_unittest_base:
     """
-    Base class for sdflag unit test
+    Base class for sdflagold unit test
     """
     # Data path of input/output
     datapath = os.environ.get('CASAPATH').split()[0] + \
                '/data/regression/unittest/sdflag/'
     sddatapath = os.environ.get('CASAPATH').split()[0] + \
                  '/data/regression/unittest/singledish/'
-    taskname = "sdflag"
+    taskname = "sdflagold"
 
     def _checkfile( self, name ):
         isthere=os.path.exists(name)
         self.assertTrue(isthere,
                          msg='output file %s was not created because of the task failure'%(name))
 
-class sdflag_test(unittest.TestCase):
+class sdflagold_test(unittest.TestCase):
     """
-    Basic unit tests for task sdflag.
+    Basic unit tests for task sdflagold.
 
     The list of tests:
     test00   --- test channel flagging/unflagging
@@ -73,7 +73,7 @@ class sdflag_test(unittest.TestCase):
             shutil.rmtree(self.infile)
         shutil.copytree(self.datapath+self.infile, self.infile)
 
-        default(sdflag)
+        default(sdflagold)
 
     def tearDown(self):
         if os.path.exists(self.infile):
@@ -87,7 +87,7 @@ class sdflag_test(unittest.TestCase):
         #maskflag = [[1,3],[10,15]]
 
         #flag
-        result = sdflag(infile=infile, mode=mode, spw=spw)
+        result = sdflagold(infile=infile, mode=mode, spw=spw)
 
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
 
@@ -106,7 +106,7 @@ class sdflag_test(unittest.TestCase):
         del scan
 
         #unflag
-        result = sdflag(infile=infile, mode=mode, spw=spw,
+        result = sdflagold(infile=infile, mode=mode, spw=spw,
                          unflag=True)
 
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
@@ -129,7 +129,7 @@ class sdflag_test(unittest.TestCase):
         flagrow = '2,4'
 
         #flag
-        result = sdflag(infile=infile, mode=mode, row=flagrow)
+        result = sdflagold(infile=infile, mode=mode, row=flagrow)
 
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
 
@@ -147,7 +147,7 @@ class sdflag_test(unittest.TestCase):
         del scan
 
         #unflag
-        result = sdflag(infile=infile, mode=mode, row=flagrow,
+        result = sdflagold(infile=infile, mode=mode, row=flagrow,
                          unflag=True)
 
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
@@ -167,7 +167,7 @@ class sdflag_test(unittest.TestCase):
         clipminmax = [-3.5, 3.5] #clip at 3.5-sigma level, i.e., flag channels at which abs(value) exceeds 3.5.
 
         #flag
-        result = sdflag(infile=infile, mode=mode, clipminmax=clipminmax)
+        result = sdflagold(infile=infile, mode=mode, clipminmax=clipminmax)
 
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
 
@@ -193,7 +193,7 @@ class sdflag_test(unittest.TestCase):
         del scan
 
         #unflag
-        result = sdflag(infile=infile, mode=mode, clipminmax=clipminmax,
+        result = sdflagold(infile=infile, mode=mode, clipminmax=clipminmax,
                          unflag=True)
 
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
@@ -216,12 +216,12 @@ class sdflag_test(unittest.TestCase):
         spw = '10' # non-existent IF value
         mode = 'manual'
         try:
-            result = sdflag(infile=infile, mode=mode, spw=spw)
+            result = sdflagold(infile=infile, mode=mode, spw=spw)
         except Exception, e:
             pos = str(e).find('No valid spw.')
             self.assertNotEqual(pos, -1, msg='Unexpected exception was thrown: %s'%(str(e)))
 
-class sdflag_test_flagged_data(unittest.TestCase):
+class sdflagold_test_flagged_data(unittest.TestCase):
     """
     Test for proper handling of channel/row flags.
 
@@ -248,7 +248,7 @@ class sdflag_test_flagged_data(unittest.TestCase):
             shutil.rmtree(self.infile)
         shutil.copytree(self.datapath+self.infile, self.infile)
 
-        default(sdflag)
+        default(sdflagold)
 
         self._preserve_flagstate()
 
@@ -361,7 +361,7 @@ class sdflag_test_flagged_data(unittest.TestCase):
         unflag=False
 
         #flag
-        result = sdflag(infile=infile, mode=mode, spw=spw, unflag=unflag)
+        result = sdflagold(infile=infile, mode=mode, spw=spw, unflag=unflag)
 
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
 
@@ -376,7 +376,7 @@ class sdflag_test_flagged_data(unittest.TestCase):
         unflag=True
 
         #flag
-        result = sdflag(infile=infile, mode=mode, spw=spw, unflag=unflag)
+        result = sdflagold(infile=infile, mode=mode, spw=spw, unflag=unflag)
 
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
 
@@ -391,7 +391,7 @@ class sdflag_test_flagged_data(unittest.TestCase):
         unflag=False
 
         #flag
-        result = sdflag(infile=infile, mode=mode, row=flagrow, unflag=unflag)
+        result = sdflagold(infile=infile, mode=mode, row=flagrow, unflag=unflag)
 
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
 
@@ -405,7 +405,7 @@ class sdflag_test_flagged_data(unittest.TestCase):
         unflag=True
 
         #flag
-        result = sdflag(infile=infile, mode=mode, row=flagrow, unflag=unflag)
+        result = sdflagold(infile=infile, mode=mode, row=flagrow, unflag=unflag)
 
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
 
@@ -421,7 +421,7 @@ class sdflag_test_flagged_data(unittest.TestCase):
         unflag = False
 
         #flag
-        result = sdflag(infile=infile, mode=mode, clipminmax=clipminmax, unflag=unflag)
+        result = sdflagold(infile=infile, mode=mode, clipminmax=clipminmax, unflag=unflag)
 
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
 
@@ -437,15 +437,15 @@ class sdflag_test_flagged_data(unittest.TestCase):
         unflag = True
 
         #flag
-        result = sdflag(infile=infile, mode=mode, clipminmax=clipminmax, unflag=unflag)
+        result = sdflagold(infile=infile, mode=mode, clipminmax=clipminmax, unflag=unflag)
 
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
 
         self._verify_clip(threshold, unflag)
 
-class sdflag_test_timerange(unittest.TestCase):
+class sdflagold_test_timerange(unittest.TestCase):
     """
-    Basic unit tests for task sdflag.
+    Basic unit tests for task sdflagold.
 
     The list of tests:
     test01   --- test row flagging with selection by timerange 'T0~T1'
@@ -490,7 +490,7 @@ class sdflag_test_timerange(unittest.TestCase):
         table.putcol('TIME', time_column)
         table.close()
 
-        default(sdflag)
+        default(sdflagold)
 
     def tearDown(self):
         if os.path.exists(self.infile):
@@ -508,7 +508,7 @@ class sdflag_test_timerange(unittest.TestCase):
         # first two rows should be flagged
         timerange = '2006/01/19/01:50:00~2006/01/19/02:24:00'
         flag_row_expected = numpy.array([True, True, False, False, False, False], dtype=bool)
-        sdflag(infile=self.infile, mode='manual', timerange=timerange)
+        sdflagold(infile=self.infile, mode='manual', timerange=timerange)
 
         # verification
         self.verify(self.infile, flag_row_expected)
@@ -518,7 +518,7 @@ class sdflag_test_timerange(unittest.TestCase):
         # only second row should be flagged
         timerange = '2006/01/19/02:16:45.0'
         flag_row_expected = numpy.array([False, True, False, False, False, False], dtype=bool)
-        sdflag(infile=self.infile, mode='manual', timerange=timerange)
+        sdflagold(infile=self.infile, mode='manual', timerange=timerange)
 
         # verification
         self.verify(self.infile, flag_row_expected)
@@ -528,7 +528,7 @@ class sdflag_test_timerange(unittest.TestCase):
         # second and third rows should be flagged
         timerange = '2006/01/19/02:08:00.0+0:30:00'
         flag_row_expected = numpy.array([False, True, True, False, False, False], dtype=bool)
-        sdflag(infile=self.infile, mode='manual', timerange=timerange)
+        sdflagold(infile=self.infile, mode='manual', timerange=timerange)
 
         # verification
         self.verify(self.infile, flag_row_expected)
@@ -538,7 +538,7 @@ class sdflag_test_timerange(unittest.TestCase):
         # fourth and subsequent rows should be flagged
         timerange = '>2006/01/19/02:42:00'
         flag_row_expected = numpy.array([False, False, False, True, True, True], dtype=bool)
-        sdflag(infile=self.infile, mode='manual', timerange=timerange)
+        sdflagold(infile=self.infile, mode='manual', timerange=timerange)
 
         # verification
         self.verify(self.infile, flag_row_expected)
@@ -548,7 +548,7 @@ class sdflag_test_timerange(unittest.TestCase):
         # only first row should be flagged
         timerange = '<2006/01/19/02:00:00'
         flag_row_expected = numpy.array([True, False, False, False, False, False], dtype=bool)
-        sdflag(infile=self.infile, mode='manual', timerange=timerange)
+        sdflagold(infile=self.infile, mode='manual', timerange=timerange)
 
         # verification
         self.verify(self.infile, flag_row_expected)
@@ -559,7 +559,7 @@ class sdflag_test_timerange(unittest.TestCase):
         timerange = '>2006/01/19/02:42:00'
         flag_row_expected = numpy.array([False, False, False, False, True, False], dtype=bool)
         scanno = '4'
-        sdflag(infile=self.infile, mode='manual', scan=scanno, timerange=timerange)
+        sdflagold(infile=self.infile, mode='manual', scan=scanno, timerange=timerange)
 
         # verification
         self.verify(self.infile, flag_row_expected)
@@ -576,7 +576,7 @@ class sdflag_test_timerange(unittest.TestCase):
         timerange = '>2006/01/19/02:42:00'
         field = 'SDFLAG2*'
         flag_row_expected = numpy.array([False, False, False, True, False, False], dtype=bool)
-        sdflag(infile=self.infile, mode='manual', field=field, timerange=timerange)
+        sdflagold(infile=self.infile, mode='manual', field=field, timerange=timerange)
 
         # verification
         self.verify(self.infile, flag_row_expected)
@@ -586,7 +586,7 @@ class sdflag_test_timerange(unittest.TestCase):
         # first two rows should be flagged
         timerange = '01:50:00~02:24:00'
         flag_row_expected = numpy.array([True, True, False, False, False, False], dtype=bool)
-        sdflag(infile=self.infile, mode='manual', timerange=timerange)
+        sdflagold(infile=self.infile, mode='manual', timerange=timerange)
 
         # verification
         self.verify(self.infile, flag_row_expected)
@@ -596,7 +596,7 @@ class sdflag_test_timerange(unittest.TestCase):
         # fourth and subsequent rows should be flagged
         timerange = '>02:42:00'
         flag_row_expected = numpy.array([False, False, False, True, True, True], dtype=bool)
-        sdflag(infile=self.infile, mode='manual', timerange=timerange)
+        sdflagold(infile=self.infile, mode='manual', timerange=timerange)
 
         # verification
         self.verify(self.infile, flag_row_expected)
@@ -606,7 +606,7 @@ class sdflag_test_timerange(unittest.TestCase):
         # first two rows should be flagged
         timerange = '2006/01/19/01:50:00~02:24:00'
         flag_row_expected = numpy.array([True, True, False, False, False, False], dtype=bool)
-        sdflag(infile=self.infile, mode='manual', timerange=timerange)
+        sdflagold(infile=self.infile, mode='manual', timerange=timerange)
 
         # verification
         self.verify(self.infile, flag_row_expected)
@@ -628,7 +628,7 @@ class sdflag_test_timerange(unittest.TestCase):
         # first two rows should be flagged
         timerange = '%s~%s'%(T0,T1)
         flag_row_expected = numpy.array([True, True, False, False, False, False], dtype=bool)
-        sdflag(infile=self.infile, mode='manual', timerange=timerange)
+        sdflagold(infile=self.infile, mode='manual', timerange=timerange)
 
         # verification
         self.verify(self.infile, flag_row_expected)
@@ -648,16 +648,16 @@ class sdflag_test_timerange(unittest.TestCase):
         T1 = '2006/01/19/02:08:45'
         timerange = '%s~%s'%(T0,T1)
         flag_row_expected = numpy.array([True, True, True, True, True, True], dtype=bool)
-        sdflag(infile=self.infile, mode='manual', timerange=timerange)
+        sdflagold(infile=self.infile, mode='manual', timerange=timerange)
 
         # verification
         self.verify(self.infile, flag_row_expected)
         
         
-class sdflag_selection(selection_syntax.SelectionSyntaxTest,
-                       sdflag_unittest_base,unittest.TestCase):
+class sdflagold_selection(selection_syntax.SelectionSyntaxTest,
+                       sdflagold_unittest_base,unittest.TestCase):
     """
-    Test selection syntax in sdflag.
+    Test selection syntax in sdflagold.
     Selection parameters to test are:
     field, spw (with channel selection), timerange, scan, pol,
     beam, row
@@ -673,7 +673,7 @@ class sdflag_selection(selection_syntax.SelectionSyntaxTest,
     
     @property
     def task(self):
-        return sdflag
+        return sdflagold
     
     @property
     def spw_channel_selection(self):
@@ -686,7 +686,7 @@ class sdflag_selection(selection_syntax.SelectionSyntaxTest,
 
         shutil.copytree(self.sddatapath+self.rawfile, self.rawfile)
 
-        default(sdflag)
+        default(sdflagold)
         self.mode = 'manual'
         self.outfile = ''
 
@@ -766,7 +766,7 @@ class sdflag_selection(selection_syntax.SelectionSyntaxTest,
         spw = '*:20~30;80~90'
         ref_row = [1,2]
         ref_chanlist = ( (20,30), (80,90) )
-        self.res=sdflag(infile=self.rawfile,scan=scan,spw=spw,mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self.res=sdflagold(infile=self.rawfile,scan=scan,spw=spw,mode=self.mode,outfile=self.outfile,outform='ASAP')
         self._test_flag(self.rawfile, ref_row, chanlist=ref_chanlist)
     
     def test_chanflag_pol(self):
@@ -775,7 +775,7 @@ class sdflag_selection(selection_syntax.SelectionSyntaxTest,
         spw = '*:20~30;80~90'
         ref_row = [1,3]
         ref_chanlist = ( (20,30), (80,90) )
-        self.res=sdflag(infile=self.rawfile, pol=pol,spw=spw, mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self.res=sdflagold(infile=self.rawfile, pol=pol,spw=spw, mode=self.mode,outfile=self.outfile,outform='ASAP')
         self._test_flag(self.rawfile, ref_row, chanlist=ref_chanlist)
     
     def test_chanflag_beam(self):
@@ -784,7 +784,7 @@ class sdflag_selection(selection_syntax.SelectionSyntaxTest,
         spw = '*:20~30;80~90'
         ref_row = [2,3]
         ref_chanlist = ( (20,30), (80,90) )
-        self.res=sdflag(infile=self.rawfile, beam=beam,spw=spw, mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self.res=sdflagold(infile=self.rawfile, beam=beam,spw=spw, mode=self.mode,outfile=self.outfile,outform='ASAP')
         self._test_flag(self.rawfile, ref_row, chanlist=ref_chanlist)
     
     def test_chanflag_field(self):
@@ -793,7 +793,7 @@ class sdflag_selection(selection_syntax.SelectionSyntaxTest,
         spw = '*:20~30;80~90'
         ref_row = [0,1,2]
         ref_chanlist = ( (20,30), (80,90) )
-        self.res=sdflag(infile=self.rawfile, field=field,spw=spw, mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self.res=sdflagold(infile=self.rawfile, field=field,spw=spw, mode=self.mode,outfile=self.outfile,outform='ASAP')
         self._test_flag(self.rawfile, ref_row, chanlist=ref_chanlist)
     
     def test_chanflag_timerange(self):
@@ -802,7 +802,7 @@ class sdflag_selection(selection_syntax.SelectionSyntaxTest,
         spw = '*:20~30;80~90'
         ref_row = [1,2]
         ref_chanlist = ( (20,30), (80,90) )
-        self.res=sdflag(infile=self.rawfile, timerange=timerange,spw=spw, mode=self.mode,outfile=self.outfile,outform='ASAP')
+        self.res=sdflagold(infile=self.rawfile, timerange=timerange,spw=spw, mode=self.mode,outfile=self.outfile,outform='ASAP')
         self._test_flag(self.rawfile, ref_row, chanlist=ref_chanlist)
     
     ####################
@@ -1452,5 +1452,5 @@ class sdflag_selection(selection_syntax.SelectionSyntaxTest,
             
         
 def suite():
-    return [sdflag_test, sdflag_test_flagged_data,
-            sdflag_test_timerange, sdflag_selection]
+    return [sdflagold_test, sdflagold_test_flagged_data,
+            sdflagold_test_timerange, sdflagold_selection]

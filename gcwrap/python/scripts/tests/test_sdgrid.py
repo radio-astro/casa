@@ -20,25 +20,25 @@ except:
 import inspect
 g = sys._getframe(len(inspect.stack())-1).f_globals
 g['__rethrow_casa_exceptions'] = True
-from sdgrid import sdgrid
+from sdgridold import sdgridold
 from sdutil import tbmanager
 import asap as sd
 
 #
-# Unit test of sdgrid task.
+# Unit test of sdgridold task.
 # 
 
 ###
 # Base class for sdimaging unit test
 ###
-class sdgrid_unittest_base(object):
+class sdgridold_unittest_base(object):
     """
     """
-    taskname='sdgrid'
+    taskname='sdgridold'
     datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdgrid/'
     data=None
     tolerance=0.01
-    outfile='sdgrid.asap.grid'
+    outfile='sdgridold.asap.grid'
 
     def _checkfile( self, name ):
         isthere=os.path.exists(name)
@@ -122,13 +122,13 @@ class sdgrid_unittest_base(object):
 ###
 # Test on bad parameter settings
 ###
-class sdgrid_failure_case(sdgrid_unittest_base,unittest.TestCase):
+class sdgridold_failure_case(sdgridold_unittest_base,unittest.TestCase):
     """
     Test on bad parameter setting
     """
     # Input and output names
-    #prefix=sdgrid_unittest_base.taskname+'Test0'
-    prefix='sdgridTest0'
+    #prefix=sdgridold_unittest_base.taskname+'Test0'
+    prefix='sdgridoldTest0'
     badid='99'
     rawfile='testimage1chan.1point.asap'
 
@@ -137,7 +137,7 @@ class sdgrid_failure_case(sdgrid_unittest_base,unittest.TestCase):
             shutil.rmtree(self.rawfile)
         shutil.copytree(self.datapath+self.rawfile, self.rawfile)
 
-        default(sdgrid)
+        default(sdgridold)
 
     def tearDown(self):
         if (os.path.exists(self.rawfile)):
@@ -148,13 +148,13 @@ class sdgrid_failure_case(sdgrid_unittest_base,unittest.TestCase):
     def test000(self):
         """Test 000: Default parameters"""
         # argument verification error
-        res=sdgrid()
+        res=sdgridold()
         self.assertFalse(res)
 
     def test001(self):
         """Test001: Invalid SPW"""
         try:
-            res=sdgrid(infiles=self.rawfile,spw=self.badid,npix=16,cell='20arcsec',outfile=self.outfile)
+            res=sdgridold(infiles=self.rawfile,spw=self.badid,npix=16,cell='20arcsec',outfile=self.outfile)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -166,7 +166,7 @@ class sdgrid_failure_case(sdgrid_unittest_base,unittest.TestCase):
     def test002(self):
         """Test002: Invalid POLNO"""
         try:
-            res=sdgrid(infiles=self.rawfile,pol=self.badid,npix=16,cell='20arcsec',outfile=self.outfile)
+            res=sdgridold(infiles=self.rawfile,pol=self.badid,npix=16,cell='20arcsec',outfile=self.outfile)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -177,20 +177,20 @@ class sdgrid_failure_case(sdgrid_unittest_base,unittest.TestCase):
     def test003(self):
         """Test003: Invalid gridfunction"""
         # argument verification error
-        res=sdgrid(infiles=self.rawfile,gridfunction='NONE',npix=16,cell='20arcsec',outfile=self.outfile)
+        res=sdgridold(infiles=self.rawfile,gridfunction='NONE',npix=16,cell='20arcsec',outfile=self.outfile)
         self.assertFalse(res)
 
     def test004(self):
         """Test004: Invalid weight type"""
         # argument verification error
-        res=sdgrid(infiles=self.rawfile,weight='NONE',npix=16,cell='20arcsec',outfile=self.outfile)
+        res=sdgridold(infiles=self.rawfile,weight='NONE',npix=16,cell='20arcsec',outfile=self.outfile)
         self.assertFalse(res)
 
     def test005(self):
         """Test005: Check overwrite option"""
         shutil.copytree(self.rawfile,self.outfile)
         try:
-            res=sdgrid(infiles=self.rawfile,npix=16,cell='20arcsec',outfile=self.outfile,overwrite=False)
+            res=sdgridold(infiles=self.rawfile,npix=16,cell='20arcsec',outfile=self.outfile,overwrite=False)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -201,18 +201,18 @@ class sdgrid_failure_case(sdgrid_unittest_base,unittest.TestCase):
 # Those two tests are meaningless
 #    def test006(self):
 #        """Test006: Invalid npix"""
-#        res=sdgrid(infiles=self.rawfile,npix=-99,cell='',outfile=self.outfile)
+#        res=sdgridold(infiles=self.rawfile,npix=-99,cell='',outfile=self.outfile)
 #        self.assertFalse(res)
 #
 #    def test007(self):
 #        """Test007: Invalid unit for cell"""
-#        res=sdgrid(infiles=self.rawfile,npix=16,cell='20none',outfile=self.outfile)
+#        res=sdgridold(infiles=self.rawfile,npix=16,cell='20none',outfile=self.outfile)
 #        self.assertFalse(res)
 
     def test008(self):
         """Test008: Invalid format for center coordinate"""
         try:
-            res=sdgrid(infiles=self.rawfile,npix=16,cell='20arcsec',outfile=self.outfile,center='Invalid format')
+            res=sdgridold(infiles=self.rawfile,npix=16,cell='20arcsec',outfile=self.outfile,center='Invalid format')
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -225,13 +225,13 @@ class sdgrid_failure_case(sdgrid_unittest_base,unittest.TestCase):
 ###
 # Test simple gridding
 ###
-class sdgrid_single_integ(sdgrid_unittest_base,unittest.TestCase):
+class sdgridold_single_integ(sdgridold_unittest_base,unittest.TestCase):
     """
     Test simple gridding using data containing only one integration.
     """
     # Input and output names
     rawfile='testimage1chan.1point.asap'
-    #prefix=sdgrid_unittest_base.taskname+'Test1'
+    #prefix=sdgridold_unittest_base.taskname+'Test1'
     #outfile=prefix+'.asap'
 
     def setUp(self):
@@ -239,7 +239,7 @@ class sdgrid_single_integ(sdgrid_unittest_base,unittest.TestCase):
             shutil.rmtree(self.rawfile)
         shutil.copytree(self.datapath+self.rawfile, self.rawfile)
 
-        default(sdgrid)
+        default(sdgridold)
 
     def tearDown(self):
         if (os.path.exists(self.rawfile)):
@@ -250,7 +250,7 @@ class sdgrid_single_integ(sdgrid_unittest_base,unittest.TestCase):
     def test100(self):
         """Test 100: Box kernel"""
         npix=17
-        res=sdgrid(infiles=self.rawfile,gridfunction='BOX',npix=npix,cell='20arcsec',outfile=self.outfile,plot=False)
+        res=sdgridold(infiles=self.rawfile,gridfunction='BOX',npix=npix,cell='20arcsec',outfile=self.outfile,plot=False)
         self.assertEqual(res,None,
                          msg='Any error occurred during gridding')
         self.getdata()
@@ -274,7 +274,7 @@ class sdgrid_single_integ(sdgrid_unittest_base,unittest.TestCase):
     def test101(self):
         """Test101: SF kernel"""
         npix=17
-        res=sdgrid(infiles=self.rawfile,gridfunction='SF',npix=npix,cell='20arcsec',outfile=self.outfile,plot=False)
+        res=sdgridold(infiles=self.rawfile,gridfunction='SF',npix=npix,cell='20arcsec',outfile=self.outfile,plot=False)
         self.assertEqual(res,None,
                          msg='Any error occurred during gridding')
         self.getdata()
@@ -297,7 +297,7 @@ class sdgrid_single_integ(sdgrid_unittest_base,unittest.TestCase):
     def test102(self):
         """Test102: Gaussian kernel"""
         npix=17
-        res=sdgrid(infiles=self.rawfile,gridfunction='GAUSS',npix=npix,cell='20arcsec',outfile=self.outfile,plot=False)
+        res=sdgridold(infiles=self.rawfile,gridfunction='GAUSS',npix=npix,cell='20arcsec',outfile=self.outfile,plot=False)
         self.assertEqual(res,None,
                          msg='Any error occurred during gridding')
         self.getdata()
@@ -320,7 +320,7 @@ class sdgrid_single_integ(sdgrid_unittest_base,unittest.TestCase):
     def test103(self):
         """Test103: Gaussian*Jinc kernel"""
         npix=17
-        res=sdgrid(infiles=self.rawfile,gridfunction='GJINC',npix=npix,cell='20arcsec',outfile=self.outfile,plot=False)
+        res=sdgridold(infiles=self.rawfile,gridfunction='GJINC',npix=npix,cell='20arcsec',outfile=self.outfile,plot=False)
         self.assertEqual(res,None,
                          msg='Any error occurred during gridding')
         self.getdata()
@@ -344,7 +344,7 @@ class sdgrid_single_integ(sdgrid_unittest_base,unittest.TestCase):
 ###
 # Test clipminmax
 ###
-class sdgrid_clipping(sdgrid_unittest_base,unittest.TestCase):
+class sdgridold_clipping(sdgridold_unittest_base,unittest.TestCase):
     """
     Test clipminmax
     """
@@ -355,7 +355,7 @@ class sdgrid_clipping(sdgrid_unittest_base,unittest.TestCase):
             shutil.rmtree(self.rawfile)
         shutil.copytree(self.datapath+self.rawfile, self.rawfile)
 
-        default(sdgrid)
+        default(sdgridold)
 
         # modification of input file along with this test
         #   - add row to enable clipping
@@ -376,7 +376,7 @@ class sdgrid_clipping(sdgrid_unittest_base,unittest.TestCase):
     def test200(self):
         """Test 200: test clipping"""
         npix=17
-        res=sdgrid(infiles=self.rawfile,gridfunction='BOX',npix=npix,cell='20arcsec',outfile=self.outfile,plot=False,clipminmax=True)
+        res=sdgridold(infiles=self.rawfile,gridfunction='BOX',npix=npix,cell='20arcsec',outfile=self.outfile,plot=False,clipminmax=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during gridding')
         self.getdata()
@@ -397,7 +397,7 @@ class sdgrid_clipping(sdgrid_unittest_base,unittest.TestCase):
 ###
 # Test for flag
 ###
-class sdgrid_flagging(sdgrid_unittest_base,unittest.TestCase):
+class sdgridold_flagging(sdgridold_unittest_base,unittest.TestCase):
     """
     Test for flag
     test300. test channel flag
@@ -425,7 +425,7 @@ class sdgrid_flagging(sdgrid_unittest_base,unittest.TestCase):
     tb.close()
     """
     rawfile='testgrid4chan.1point.asap'
-    outfile='sdgrid_flagging.asap'
+    outfile='sdgridold_flagging.asap'
     nchan = 4
     
     def setUp(self):
@@ -433,7 +433,7 @@ class sdgrid_flagging(sdgrid_unittest_base,unittest.TestCase):
             shutil.rmtree(self.rawfile)
         shutil.copytree(self.datapath+self.rawfile, self.rawfile)
 
-        default(sdgrid)
+        default(sdgridold)
 
     def tearDown(self):
         if (os.path.exists(self.rawfile)):
@@ -525,7 +525,7 @@ class sdgrid_flagging(sdgrid_unittest_base,unittest.TestCase):
 
     def run_test(self, refdata):
         npix=1
-        res=sdgrid(infiles=self.rawfile,gridfunction='BOX',weight='UNIFORM',
+        res=sdgridold(infiles=self.rawfile,gridfunction='BOX',weight='UNIFORM',
                    npix=npix,cell='20arcsec',outfile=self.outfile,plot=False)
         self.assertEqual(res,None,
                          msg='Any error occurred during gridding')
@@ -569,7 +569,7 @@ class sdgrid_flagging(sdgrid_unittest_base,unittest.TestCase):
 ###
 # Test various weighting
 ###
-class sdgrid_weighting(sdgrid_unittest_base,unittest.TestCase):
+class sdgridold_weighting(sdgridold_unittest_base,unittest.TestCase):
     """
     Test various weighting: UNIFORM, TSYS, TINTSYS
     """
@@ -580,7 +580,7 @@ class sdgrid_weighting(sdgrid_unittest_base,unittest.TestCase):
             shutil.rmtree(self.rawfile)
         shutil.copytree(self.datapath+self.rawfile, self.rawfile)
 
-        default(sdgrid)
+        default(sdgridold)
 
         # modification of input file along with this test
         #   - all polno set to 0
@@ -599,7 +599,7 @@ class sdgrid_weighting(sdgrid_unittest_base,unittest.TestCase):
     def test400(self):
         """Test 400: test UNIFORM weighting"""
         npix=17
-        res=sdgrid(infiles=self.rawfile,gridfunction='BOX',npix=npix,cell='20arcsec',outfile=self.outfile,plot=False,weight='UNIFORM')
+        res=sdgridold(infiles=self.rawfile,gridfunction='BOX',npix=npix,cell='20arcsec',outfile=self.outfile,plot=False,weight='UNIFORM')
         self.assertEqual(res,None,
                          msg='Any error occurred during gridding')
         self.getdata()
@@ -628,7 +628,7 @@ class sdgrid_weighting(sdgrid_unittest_base,unittest.TestCase):
 
         # exec task
         npix=17
-        res=sdgrid(infiles=self.rawfile,gridfunction='BOX',npix=npix,cell='20arcsec',outfile=self.outfile,plot=False,weight='TINT')
+        res=sdgridold(infiles=self.rawfile,gridfunction='BOX',npix=npix,cell='20arcsec',outfile=self.outfile,plot=False,weight='TINT')
         self.assertEqual(res,None,
                          msg='Any error occurred during gridding')
         self.getdata()
@@ -658,7 +658,7 @@ class sdgrid_weighting(sdgrid_unittest_base,unittest.TestCase):
 
         # exec task
         npix=17
-        res=sdgrid(infiles=self.rawfile,gridfunction='BOX',npix=npix,cell='20arcsec',outfile=self.outfile,plot=False,weight='TSYS')
+        res=sdgridold(infiles=self.rawfile,gridfunction='BOX',npix=npix,cell='20arcsec',outfile=self.outfile,plot=False,weight='TSYS')
         self.assertEqual(res,None,
                          msg='Any error occurred during gridding')
         self.getdata()
@@ -692,7 +692,7 @@ class sdgrid_weighting(sdgrid_unittest_base,unittest.TestCase):
 
         # exec task
         npix=17
-        res=sdgrid(infiles=self.rawfile,gridfunction='BOX',npix=npix,cell='20arcsec',outfile=self.outfile,plot=False,weight='TINTSYS')
+        res=sdgridold(infiles=self.rawfile,gridfunction='BOX',npix=npix,cell='20arcsec',outfile=self.outfile,plot=False,weight='TINTSYS')
         self.assertEqual(res,None,
                          msg='Any error occurred during gridding')
         self.getdata()
@@ -712,7 +712,7 @@ class sdgrid_weighting(sdgrid_unittest_base,unittest.TestCase):
 ###
 # Test grid map data
 ###
-class sdgrid_map(sdgrid_unittest_base,unittest.TestCase):
+class sdgridold_map(sdgridold_unittest_base,unittest.TestCase):
     """
     Test grid map data
     """
@@ -723,7 +723,7 @@ class sdgrid_map(sdgrid_unittest_base,unittest.TestCase):
             shutil.rmtree(self.rawfile)
         shutil.copytree(self.datapath+self.rawfile, self.rawfile)
 
-        default(sdgrid)
+        default(sdgridold)
 
     def tearDown(self):
         if (os.path.exists(self.rawfile)):
@@ -734,7 +734,7 @@ class sdgrid_map(sdgrid_unittest_base,unittest.TestCase):
     def test500(self):
         """Test BOX gridding for map data"""
         npix=17
-        res=sdgrid(infiles=self.rawfile,gridfunction='BOX',npix=npix,cell='20arcsec',outfile=self.outfile,plot=False)
+        res=sdgridold(infiles=self.rawfile,gridfunction='BOX',npix=npix,cell='20arcsec',outfile=self.outfile,plot=False)
         self.assertEqual(res,None,
                          msg='Any error occurred during gridding')
         self.getdata()
@@ -759,7 +759,7 @@ class sdgrid_map(sdgrid_unittest_base,unittest.TestCase):
     def test501(self):
         """Test SF gridding for map data"""
         npix=17
-        res=sdgrid(infiles=self.rawfile,gridfunction='SF',npix=npix,cell='20arcsec',outfile=self.outfile,plot=False)
+        res=sdgridold(infiles=self.rawfile,gridfunction='SF',npix=npix,cell='20arcsec',outfile=self.outfile,plot=False)
         self.assertEqual(res,None,
                          msg='Any error occurred during gridding')
         self.getdata()
@@ -796,7 +796,7 @@ class sdgrid_map(sdgrid_unittest_base,unittest.TestCase):
     def test502(self):
         """Test GAUSS gridding for map data"""
         npix=17
-        res=sdgrid(infiles=self.rawfile,gridfunction='GAUSS',npix=npix,cell='20arcsec',outfile=self.outfile,plot=False)
+        res=sdgridold(infiles=self.rawfile,gridfunction='GAUSS',npix=npix,cell='20arcsec',outfile=self.outfile,plot=False)
         self.assertEqual(res,None,
                          msg='Any error occurred during gridding')
         self.getdata()
@@ -830,7 +830,7 @@ class sdgrid_map(sdgrid_unittest_base,unittest.TestCase):
     def test503(self):
         """Test GJINC gridding for map data"""
         npix=17
-        res=sdgrid(infiles=self.rawfile,gridfunction='GJINC',npix=npix,cell='20arcsec',outfile=self.outfile,plot=False)
+        res=sdgridold(infiles=self.rawfile,gridfunction='GJINC',npix=npix,cell='20arcsec',outfile=self.outfile,plot=False)
         self.assertEqual(res,None,
                          msg='Any error occurred during gridding')
         self.getdata()
@@ -854,7 +854,7 @@ class sdgrid_map(sdgrid_unittest_base,unittest.TestCase):
 ###
 # Test DEC correction
 ###
-class sdgrid_dec_correction(sdgrid_unittest_base,unittest.TestCase):
+class sdgridold_dec_correction(sdgridold_unittest_base,unittest.TestCase):
     """
     Test DEC correction factor for horizontal (R.A.) auto grid setting.
     """
@@ -865,7 +865,7 @@ class sdgrid_dec_correction(sdgrid_unittest_base,unittest.TestCase):
             shutil.rmtree(self.rawfile)
         shutil.copytree(self.datapath+self.rawfile, self.rawfile)
 
-        default(sdgrid)
+        default(sdgridold)
 
         # modification of input file along with this test
         #   - declination set to 60deg
@@ -884,7 +884,7 @@ class sdgrid_dec_correction(sdgrid_unittest_base,unittest.TestCase):
     def test600(self):
         """Test 600: Test DEC correction factor"""
         npix=17
-        res=sdgrid(infiles=self.rawfile,gridfunction='BOX',npix=npix,cell='20arcsec',outfile=self.outfile,plot=False)
+        res=sdgridold(infiles=self.rawfile,gridfunction='BOX',npix=npix,cell='20arcsec',outfile=self.outfile,plot=False)
         self.assertEqual(res,None,
                          msg='Any error occurred during gridding')
 
@@ -905,7 +905,7 @@ class sdgrid_dec_correction(sdgrid_unittest_base,unittest.TestCase):
 ###
 # Test to change center for gridding
 ###
-class sdgrid_grid_center(sdgrid_unittest_base,unittest.TestCase):
+class sdgridold_grid_center(sdgridold_unittest_base,unittest.TestCase):
     """
     Test to change center for gridding
     """
@@ -916,7 +916,7 @@ class sdgrid_grid_center(sdgrid_unittest_base,unittest.TestCase):
             shutil.rmtree(self.rawfile)
         shutil.copytree(self.datapath+self.rawfile, self.rawfile)
 
-        default(sdgrid)
+        default(sdgridold)
 
     def tearDown(self):
         if (os.path.exists(self.rawfile)):
@@ -936,7 +936,7 @@ class sdgrid_grid_center(sdgrid_unittest_base,unittest.TestCase):
         dir[1]+=nshift*pix/3600.0*numpy.pi/180.0
 
         npix=17
-        res=sdgrid(infiles=self.rawfile,gridfunction='BOX',npix=npix,cell='%sarcsec'%(pix),outfile=self.outfile,plot=False,center=dir)
+        res=sdgridold(infiles=self.rawfile,gridfunction='BOX',npix=npix,cell='%sarcsec'%(pix),outfile=self.outfile,plot=False,center=dir)
         self.assertEqual(res,None,
                          msg='Any error occurred during gridding')
 
@@ -967,7 +967,7 @@ class sdgrid_grid_center(sdgrid_unittest_base,unittest.TestCase):
         dir[0]+=nshift*pix/3600.0*numpy.pi/180.0
 
         npix=17
-        res=sdgrid(infiles=self.rawfile,gridfunction='BOX',npix=npix,cell='%sarcsec'%(pix),outfile=self.outfile,plot=False,center=dir)
+        res=sdgridold(infiles=self.rawfile,gridfunction='BOX',npix=npix,cell='%sarcsec'%(pix),outfile=self.outfile,plot=False,center=dir)
         self.assertEqual(res,None,
                          msg='Any error occurred during gridding')
 
@@ -986,8 +986,8 @@ class sdgrid_grid_center(sdgrid_unittest_base,unittest.TestCase):
         #print nonzeropix
         self.nonzero(nonzeropix_ref,nonzeropix)
     
-class sdgrid_selection(selection_syntax.SelectionSyntaxTest,
-                       sdgrid_unittest_base,unittest.TestCase):
+class sdgridold_selection(selection_syntax.SelectionSyntaxTest,
+                       sdgridold_unittest_base,unittest.TestCase):
     """
     Test selection syntax. Selection parameters to test are:
     spw (no channel selection), scan, pol
@@ -996,7 +996,7 @@ class sdgrid_selection(selection_syntax.SelectionSyntaxTest,
     rawfile='sd_analytic_type1-3.bl.asap'
     infiles=[rawfile]
     reffile='sd_analytic_type1-3.bl.asap'
-    prefix=sdgrid_unittest_base.taskname+'TestSel'
+    prefix=sdgridold_unittest_base.taskname+'TestSel'
     postfix='.grid.asap'
     outname=prefix+postfix
 
@@ -1005,7 +1005,7 @@ class sdgrid_selection(selection_syntax.SelectionSyntaxTest,
     
     @property
     def task(self):
-        return sdgrid
+        return sdgridold
     
     @property
     def spw_channel_selection(self):
@@ -1015,7 +1015,7 @@ class sdgrid_selection(selection_syntax.SelectionSyntaxTest,
         self.res=None
         if (not os.path.exists(self.rawfile)):
             shutil.copytree(self.datapath+self.rawfile, self.rawfile)
-        default(sdgrid)
+        default(sdgridold)
 
     def tearDown(self):
         if (os.path.exists(self.rawfile)):
@@ -1087,7 +1087,7 @@ class sdgrid_selection(selection_syntax.SelectionSyntaxTest,
     def test_scan_id_default(self):
         """test scan selection (scan='')"""
         scan=''
-        self.res=sdgrid(scan=scan,spw='23',infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
+        self.res=sdgridold(scan=scan,spw='23',infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         tbsel = {'SCANNO': [0], 'IFNO': [23]}
         tbselref = {'SCANNO': [15,16,17], 'IFNO': [23]}
@@ -1096,7 +1096,7 @@ class sdgrid_selection(selection_syntax.SelectionSyntaxTest,
     def test_scan_id_exact(self):
         """ test scan selection (scan='15')"""
         scan = '15'
-        self.res=sdgrid(scan=scan,spw='23',infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
+        self.res=sdgridold(scan=scan,spw='23',infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         tbsel = {'SCANNO': [0], 'IFNO': [23]}
         tbselref = {'SCANNO': [15], 'IFNO': [23]}
@@ -1105,7 +1105,7 @@ class sdgrid_selection(selection_syntax.SelectionSyntaxTest,
     def test_scan_id_lt(self):
         """ test scan selection (scan='<16')"""
         scan = '<16'
-        self.res=sdgrid(scan=scan,spw='23',infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
+        self.res=sdgridold(scan=scan,spw='23',infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         tbsel = {'SCANNO': [0], 'IFNO': [23]}
         tbselref = {'SCANNO': [15], 'IFNO': [23]}
@@ -1114,7 +1114,7 @@ class sdgrid_selection(selection_syntax.SelectionSyntaxTest,
     def test_scan_id_gt(self):
         """ test scan selection (scan='>15')"""
         scan = '>15'
-        self.res=sdgrid(scan=scan,spw='23',infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
+        self.res=sdgridold(scan=scan,spw='23',infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         tbsel = {'SCANNO': [0], 'IFNO': [23]}
         tbselref = {'SCANNO': [16,17], 'IFNO': [23]}
@@ -1123,7 +1123,7 @@ class sdgrid_selection(selection_syntax.SelectionSyntaxTest,
     def test_scan_id_range(self):
         """ test scan selection (scan='15~16')"""
         scan = '15~16'
-        self.res=sdgrid(scan=scan,spw='23',infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
+        self.res=sdgridold(scan=scan,spw='23',infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         tbsel = {'SCANNO': [0], 'IFNO': [23]}
         tbselref = {'SCANNO': [15,16], 'IFNO': [23]}
@@ -1132,7 +1132,7 @@ class sdgrid_selection(selection_syntax.SelectionSyntaxTest,
     def test_scan_id_list(self):
         """ test scan selection (scan='15,17')"""
         scan = '15,17'
-        self.res=sdgrid(scan=scan,infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
+        self.res=sdgridold(scan=scan,infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         tbsel = {'SCANNO': [0], 'IFNO': [23]}
         tbselref = {'SCANNO': [15,17], 'IFNO': [23]}
@@ -1141,7 +1141,7 @@ class sdgrid_selection(selection_syntax.SelectionSyntaxTest,
     def test_scan_id_exprlist(self):
         """ test scan selection (scan='<16, 17')"""
         scan = '<16, 17'
-        self.res=sdgrid(scan=scan,infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
+        self.res=sdgridold(scan=scan,infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         tbsel = {'SCANNO': [0], 'IFNO': [23]}
         tbselref = {'SCANNO': [15,17], 'IFNO': [23]}
@@ -1153,7 +1153,7 @@ class sdgrid_selection(selection_syntax.SelectionSyntaxTest,
     def test_pol_id_default(self):
         """test pol selection (pol='')"""
         pol=''
-        self.res=sdgrid(pol=pol,infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
+        self.res=sdgridold(pol=pol,infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         tbsel = {'POLNO': [0,1], 'IFNO': [23]}
         self._comparecal_with_selection(self.outname, tbsel)
@@ -1161,7 +1161,7 @@ class sdgrid_selection(selection_syntax.SelectionSyntaxTest,
     def test_pol_id_exact(self):
         """ test pol selection (pol='1')"""
         pol = '1'
-        self.res=sdgrid(pol=pol,spw='23',infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
+        self.res=sdgridold(pol=pol,spw='23',infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         tbsel = {'POLNO': [1], 'IFNO': [23]}
         self._comparecal_with_selection(self.outname, tbsel)
@@ -1169,7 +1169,7 @@ class sdgrid_selection(selection_syntax.SelectionSyntaxTest,
     def test_pol_id_lt(self):
         """ test pol selection (pol='<1')"""
         pol = '<1'
-        self.res=sdgrid(pol=pol,spw='23',infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
+        self.res=sdgridold(pol=pol,spw='23',infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         tbsel = {'POLNO': [0], 'IFNO': [23]}
         self._comparecal_with_selection(self.outname, tbsel)
@@ -1177,7 +1177,7 @@ class sdgrid_selection(selection_syntax.SelectionSyntaxTest,
     def test_pol_id_gt(self):
         """ test pol selection (pol='>0')"""
         pol = '>0'
-        self.res=sdgrid(pol=pol,spw='23',infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
+        self.res=sdgridold(pol=pol,spw='23',infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         tbsel = {'POLNO': [1], 'IFNO': [23]}
         self._comparecal_with_selection(self.outname, tbsel)
@@ -1185,7 +1185,7 @@ class sdgrid_selection(selection_syntax.SelectionSyntaxTest,
     def test_pol_id_range(self):
         """ test pol selection (pol='0~1')"""
         pol = '0~1'
-        self.res=sdgrid(pol=pol,spw='23',infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
+        self.res=sdgridold(pol=pol,spw='23',infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         tbsel = {'POLNO': [0,1], 'IFNO': [23]}
         self._comparecal_with_selection(self.outname, tbsel)
@@ -1193,7 +1193,7 @@ class sdgrid_selection(selection_syntax.SelectionSyntaxTest,
     def test_pol_id_list(self):
         """ test pol selection (pol='0,1')"""
         pol = '0,1'
-        self.res=sdgrid(pol=pol,spw='23',infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
+        self.res=sdgridold(pol=pol,spw='23',infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         tbsel = {'POLNO': [0,1], 'IFNO': [23]}
         self._comparecal_with_selection(self.outname, tbsel)
@@ -1201,7 +1201,7 @@ class sdgrid_selection(selection_syntax.SelectionSyntaxTest,
     def test_pol_id_exprlist(self):
         """test pol selection (pol='<1,1')"""
         pol = '<1,1'
-        self.res=sdgrid(pol=pol,spw='23',infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
+        self.res=sdgridold(pol=pol,spw='23',infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         tbsel = {'POLNO': [0,1], 'IFNO': [23]}
         self._comparecal_with_selection(self.outname, tbsel)
@@ -1213,7 +1213,7 @@ class sdgrid_selection(selection_syntax.SelectionSyntaxTest,
     ####################
     def test_spw_id_default_value(self):
         """ test spw selection (when spw not given, spw is set '-1' and ifno of the first row is adopted for spw)"""
-        self.res=sdgrid(infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
+        self.res=sdgridold(infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         tbsel = {'IFNO': [23]}
         self._comparecal_with_selection(self.outname, tbsel)
@@ -1225,7 +1225,7 @@ class sdgrid_selection(selection_syntax.SelectionSyntaxTest,
     def test_spw_id_exact(self):
         """ test spw selection (spw='23')"""
         spw='23'
-        self.res=sdgrid(spw=spw,infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
+        self.res=sdgridold(spw=spw,infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         tbsel = {'IFNO': [23]}
         self._comparecal_with_selection(self.outname, tbsel)
@@ -1257,7 +1257,7 @@ class sdgrid_selection(selection_syntax.SelectionSyntaxTest,
     def test_spw_value_frequency(self):
         """test spw selection (spw='300~400GHz')"""
         spw='300~400GHz'
-        self.res=sdgrid(spw=spw,infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
+        self.res=sdgridold(spw=spw,infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         tbsel = {'IFNO': [25]}
         self._comparecal_with_selection(self.outname, tbsel)
@@ -1265,7 +1265,7 @@ class sdgrid_selection(selection_syntax.SelectionSyntaxTest,
     def test_spw_value_velocity(self):
         """test spw selection (spw='-50~50km/s')"""
         spw='-50~50km/s'
-        self.res=sdgrid(spw=spw,infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
+        self.res=sdgridold(spw=spw,infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         tbsel = {'IFNO': [23]}
         self._comparecal_with_selection(self.outname, tbsel)
@@ -1328,8 +1328,8 @@ class sdgrid_selection(selection_syntax.SelectionSyntaxTest,
         return sp
 
 def suite():
-    return [sdgrid_failure_case, sdgrid_single_integ,
-            sdgrid_clipping, sdgrid_flagging,
-            sdgrid_weighting, sdgrid_map,
-            sdgrid_dec_correction, sdgrid_grid_center,
-            sdgrid_selection]
+    return [sdgridold_failure_case, sdgridold_single_integ,
+            sdgridold_clipping, sdgridold_flagging,
+            sdgridold_weighting, sdgridold_map,
+            sdgridold_dec_correction, sdgridold_grid_center,
+            sdgridold_selection]

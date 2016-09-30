@@ -250,42 +250,45 @@ from tclean2_pg import tclean2_pg as tclean2
 ## asap may not be available with every casa installation
 ##
 try:
-    #import asap as sd
-    from sdbaseline_pg import sdbaseline_pg as sdbaseline
-    from sdbaseline2_pg import sdbaseline2_pg as sdbaseline2
-    from sdcal_pg import sdcal_pg as sdcal
-    from sdcoadd_pg import sdcoadd_pg as sdcoadd
-    from sdflag_pg import sdflag_pg as sdflag
-    from sdflag2_pg import sdflag2_pg as sdflag2
-    from sdflagmanager_pg import sdflagmanager_pg as sdflagmanager
-    from sdfit_pg import sdfit_pg as sdfit
-    from sdgrid_pg import sdgrid_pg as sdgrid
     from sdimaging_pg import sdimaging_pg as sdimaging
     from sdimprocess_pg import sdimprocess_pg as sdimprocess
-    from sdlist_pg import sdlist_pg as sdlist
-    from sdmath_pg import sdmath_pg as sdmath
-    from sdplot_pg import sdplot_pg as sdplot
-    from sdreduce_pg import sdreduce_pg as sdreduce
-    from sdsave_pg import sdsave_pg as sdsave
-    from sdscale_pg import sdscale_pg as sdscale 
-    from sdsmooth_pg import sdsmooth_pg as sdsmooth
-    from sdstat_pg import sdstat_pg as sdstat
+    #import asap as sd
+    from sdaverageold_pg import sdaverageold_pg as sdaverageold
+    from sdbaselineold_pg import sdbaselineold_pg as sdbaselineold
+    from sdbaseline2old_pg import sdbaseline2old_pg as sdbaseline2old
+    from sdcalold_pg import sdcalold_pg as sdcalold
+    from sdcal2old_pg import sdcal2old_pg as sdcal2old
+    from sdcoaddold_pg import sdcoaddold_pg as sdcoaddold
+    from sdfitold_pg import sdfitold_pg as sdfitold
+    from sdflagold_pg import sdflagold_pg as sdflagold
+    from sdflagmanagerold_pg import sdflagmanagerold_pg as sdflagmanagerold
+    from sdgridold_pg import sdgridold_pg as sdgridold
+    from sdlistold_pg import sdlistold_pg as sdlistold
+    from sdmathold_pg import sdmathold_pg as sdmathold
+    from sdplotold_pg import sdplotold_pg as sdplotold
+    from sdreduceold_pg import sdreduceold_pg as sdreduceold
+    from sdsaveold_pg import sdsaveold_pg as sdsaveold
+    from sdscaleold_pg import sdscaleold_pg as sdscaleold 
+    from sdstatold_pg import sdstatold_pg as sdstatold
 except ImportError, e:
     print "failed to load ASAP:\n", e
-    sdcoadd = None
-    sdscale = None
-    sdlist = None
-    sdfit = None
-    sdbaseline = None
-    sdbaseline2 = None
-    sdstat = None
-    sdsave = None
-    sdflag = None
-    sdflag2 = None
-    sdcal = None
-    sdplot = None
-    sdsmooth = None
-    sdreduce = None
+    sdaverageold = None
+    sdbaselineold = None
+    sdbaseline2old = None
+    sdcalold = None
+    sdcal2old = None
+    sdcoaddold = None
+    sdfitold = None
+    sdflagold = None
+    sdflagmanagerold = None
+    sdgridold = None
+    sdlistold = None
+    sdmathold = None
+    sdplotold = None
+    sdreduceold = None
+    sdsaveold = None
+    sdscaleold = None
+    sdstatold = None
      
 
 #from tasks import *
@@ -441,23 +444,24 @@ def go(taskname=None):
 #    import asap as sd
 #    print '*** ... ASAP (%s rev#%s) import complete ***' % (sd.__version__,sd.__revision__)
 #    os.environ['CASAPATH']=casapath
-#    from sdcal_pg import sdcal_pg as sdcal
-#    from sdsmooth_pg import sdsmooth_pg as sdsmooth
-#    from sdbaseline_pg import sdbaseline_pg as sdbaseline
-#    from sdbaseline2_pg import sdbaseline2_pg as sdbaseline2
-#    from sdreduce_pg import sdreduce_pg as sdreduce
-#    from sdcoadd_pg import sdcoadd_pg as sdcoadd
-#    from sdsave_pg import sdsave_pg as sdsave
-#    from sdscale_pg import sdscale_pg as sdscale
-#    from sdfit_pg import sdfit_pg as sdfit
-#    from sdplot_pg import sdplot_pg as sdplot
-#    from sdstat_pg import sdstat_pg as sdstat
-#    from sdlist_pg import sdlist_pg as sdlist
-#    from sdflag_pg import sdflag_pg as sdflag
-#    from sdflag2_pg import sdflag2_pg as sdflag2
+#    from sdaverageold_pg import sdaverageold_pg as sdaverage
+#    from sdbaselineold_pg import sdbaselineold_pg as sdbaseline
+#    from sdbaseline2old_pg import sdbaseline2old_pg as sdbaseline2
+#    from sdcalold_pg import sdcalold_pg as sdcal
+#    from sdcalold_pg import sdcalold_pg as sdcal
+#    from sdreduceold_pg import sdreduceold_pg as sdreduce
+#    from sdcoaddold_pg import sdcoaddold_pg as sdcoadd
+#    from sdsaveold_pg import sdsaveold_pg as sdsave
+#    from sdscaleold_pg import sdscaleold_pg as sdscale
+#    from sdfitold_pg import sdfitold_pg as sdfit
+#    from sdplotold_pg import sdplotold_pg as sdplot
+#    from sdstatold_pg import sdstatold_pg as sdstat
+#    from sdlistold_pg import sdlistold_pg as sdlist
+#    from sdflagold_pg import sdflagold_pg as sdflag
+#    from sdflag2old_pg import sdflag2old_pg as sdflag2
 #    myf['sd']=sd
 #    myf['sdcal']=sdcal
-#    myf['sdsmooth']=sdsmooth
+#    myf['sdaverage']=sdaverage
 #    myf['sdbaseline']=sdbaseline
 #    myf['sdbaseline2']=sdbaseline2
 #    myf['sdreduce']=sdreduce

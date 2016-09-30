@@ -97,43 +97,43 @@ plotms()
 
 print '--Split & Save--'
 
-default(sdsave)
+default(sdsaveold)
 infile= 'uid___A002_X6218fb_X264.ms'
 splitant = True
 #outform = 'asap'
-sdsave()
+sdsaveold()
 
 split_save_proc=time.clock()
 split_save_time=time.time()
 
 
-default(sdlist)
+default(sdlistold)
 infile  = 'uid___A002_X6218fb_X264.ms_saved.PM03'
 outfile = 'uid___A002_X6218fb_X264.ms_saved.PM03.sdlist'
-sdlist()
+sdlistold()
 
 
-default(sdlist)
+default(sdlistold)
 infile  = 'uid___A002_X6218fb_X264.ms_saved.PM04'
 outfile = 'uid___A002_X6218fb_X264.ms_saved.PM04.sdlist'
-sdlist()
+sdlistold()
 
 
-default(sdlist)
+default(sdlistold)
 infile  = 'uid___A002_X6218fb_X264.ms_saved.CM03'
 outfile = 'uid___A002_X6218fb_X264.ms_saved.CM03.sdlist'
-sdlist()
+sdlistold()
 
-default(sdlist)
+default(sdlistold)
 infile  = 'uid___A002_X6218fb_X264.ms_saved.CM05'
 outfile = 'uid___A002_X6218fb_X264.ms_saved.CM05.sdlist'
-sdlist()
+sdlistold()
 
 
 
 # View Spectra #
 
-default(sdplot)
+default(sdplotold)
 infile = 'uid___A002_X6218fb_X264.ms_saved.PM03'
 spw = '15'
 scanaverage = True
@@ -142,9 +142,9 @@ stack = 'pol'
 panel = 'scan'
 outfile = 'uid___A002_X6218fb_X264.ms_saved.PM03.png'
 overwrite = True
-sdplot()
+sdplotold()
 
-default(sdplot)
+default(sdplotold)
 infile = 'uid___A002_X6218fb_X264.ms_saved.PM04'
 spw = '15'
 scanaverage = True
@@ -153,9 +153,9 @@ stack = 'pol'
 panel = 'scan'
 outfile = 'uid___A002_X6218fb_X264.ms_saved.PM04.png'
 overwrite = True
-sdplot()
+sdplotold()
 
-default(sdplot)
+default(sdplotold)
 infile = 'uid___A002_X6218fb_X264.ms_saved.CM03'
 spw = '15'
 scanaverage = True
@@ -164,9 +164,9 @@ stack = 'pol'
 panel = 'scan'
 outfile = 'uid___A002_X6218fb_X264.ms_saved.CM03.png'
 overwrite = True
-sdplot()
+sdplotold()
 
-default(sdplot)
+default(sdplotold)
 infile = 'uid___A002_X6218fb_X264.ms_saved.CM05'
 spw = '15'
 scanaverage = True
@@ -175,36 +175,36 @@ stack = 'pol'
 panel = 'scan'
 outfile = 'uid___A002_X6218fb_X264.ms_saved.CM05.png'
 overwrite = True
-sdplot()
+sdplotold()
 
 
 
 # Flagging #
 print '--Flagging--'
 
-default(sdflag)
+default(sdflagold)
 infile = 'uid___A002_X6218fb_X264.ms_saved.PM03'
 spw = '9; 11; 13; 15: 0~119;3960~4079'
 overwrite = True
-sdflag()
+sdflagold()
 
-default(sdflag)
+default(sdflagold)
 infile = 'uid___A002_X6218fb_X264.ms_saved.PM04'
 spw = '9; 11; 13; 15: 0~119;3960~4079'
 overwrite = True
-sdflag()
+sdflagold()
 
-default(sdflag)
+default(sdflagold)
 infile = 'uid___A002_X6218fb_X264.ms_saved.CM03'
 spw = '9; 11; 13; 15: 0~119;3960~4079'
 overwrite = True
-sdflag()
+sdflagold()
 
-default(sdflag)
+default(sdflagold)
 infile = 'uid___A002_X6218fb_X264.ms_saved.CM05'
 spw = '9; 11; 13; 15: 0~119;3960~4079'
 overwrite = True
-sdflag()
+sdflagold()
 
 
 flagproc = time.clock()
@@ -215,41 +215,41 @@ flagtime = time.time()
 
 print '--Calibration sdcal2--'
 
-default(sdcal2)
+default(sdcal2old)
 infile  = 'uid___A002_X6218fb_X264.ms_saved.PM03'
 calmode = 'ps,tsys,apply'
 tsysspw = '1,3,5,7'
 spwmap  = {'1':[9],'3':[11],'5':[13],'7':[15]}
 outfile = 'uid___A002_X6218fb_X264.ms_saved.PM03.cal'
 overwrite = True
-sdcal2()
+sdcal2old()
 
-default(sdcal2)
+default(sdcal2old)
 infile  = 'uid___A002_X6218fb_X264.ms_saved.PM04'
 calmode = 'ps,tsys,apply'
 tsysspw = '1,3,5,7'
 spwmap  = {'1':[9],'3':[11],'5':[13],'7':[15]}
 outfile = 'uid___A002_X6218fb_X264.ms_saved.PM04.cal'
 overwrite = True
-sdcal2()
+sdcal2old()
 
-default(sdcal2)
+default(sdcal2old)
 infile  = 'uid___A002_X6218fb_X264.ms_saved.CM03'
 calmode = 'ps,tsys,apply'
 tsysspw = '1,3,5,7'
 spwmap  = {'1':[9],'3':[11],'5':[13],'7':[15]}
 outfile = 'uid___A002_X6218fb_X264.ms_saved.CM03.cal'
 overwrite = True
-sdcal2()
+sdcal2old()
 
-default(sdcal2)
+default(sdcal2old)
 infile  = 'uid___A002_X6218fb_X264.ms_saved.CM05'
 calmode = 'ps,tsys,apply'
 tsysspw = '1,3,5,7'
 spwmap  = {'1':[9],'3':[11],'5':[13],'7':[15]}
 outfile = 'uid___A002_X6218fb_X264.ms_saved.CM05.cal'
 overwrite = True
-sdcal2()
+sdcal2old()
 
 
 sdcal2proc=time.clock()
@@ -261,7 +261,7 @@ sdcal2time=time.time()
 
 print '--Caribration Baseline --'
 
-default(sdbaseline)
+default(sdbaselineold)
 infile = 'uid___A002_X6218fb_X264.ms_saved.PM03.cal'
 spw = '9, 11, 13, 15'
 maskmode = 'auto'
@@ -271,9 +271,9 @@ blfunc = 'poly'
 order = 1
 outfile = 'uid___A002_X6218fb_X264.ms_saved.PM03.cal.bl'
 overwrite = True
-sdbaseline()
+sdbaselineold()
 
-default(sdbaseline)
+default(sdbaselineold)
 infile = 'uid___A002_X6218fb_X264.ms_saved.PM04.cal'
 spw = '9, 11, 13, 15'
 maskmode = 'auto'
@@ -283,9 +283,9 @@ blfunc = 'poly'
 order = 1
 outfile = 'uid___A002_X6218fb_X264.ms_saved.PM04.cal.bl'
 overwrite = True
-sdbaseline()
+sdbaselineold()
 
-default(sdbaseline)
+default(sdbaselineold)
 infile = 'uid___A002_X6218fb_X264.ms_saved.CM03.cal'
 spw = '9, 11, 13, 15'
 maskmode = 'auto'
@@ -295,9 +295,9 @@ blfunc = 'poly'
 order = 1
 outfile = 'uid___A002_X6218fb_X264.ms_saved.CM03.cal.bl'
 overwrite = True
-sdbaseline()
+sdbaselineold()
 
-default(sdbaseline)
+default(sdbaselineold)
 infile = 'uid___A002_X6218fb_X264.ms_saved.CM05.cal'
 spw = '9, 11, 13, 15'
 maskmode = 'auto'
@@ -307,7 +307,7 @@ blfunc = 'poly'
 order = 1
 outfile = 'uid___A002_X6218fb_X264.ms_saved.CM05.cal.bl'
 overwrite = True
-sdbaseline()
+sdbaselineold()
 
 
 sdbaselineproc = time.clock()
@@ -331,7 +331,7 @@ os.system('mkdir uid___A002_X6218fb_X264.ms_saved.CM05.cal.plots')
 
 for i in [9, 11, 13, 15]:
 
-    default(sdplot)
+    default(sdplotold)
     infile = 'uid___A002_X6218fb_X264.ms_saved.PM03.cal'
     spw = str(i)
     plottype = 'spectra'
@@ -339,9 +339,9 @@ for i in [9, 11, 13, 15]:
     panel = 'scan'
     outfile = 'uid___A002_X6218fb_X264.ms_saved.PM03.cal.plots/uid___A002_X6218fb_X264.ms_saved.PM03.cal.spectra.spw'+str(i)+'.png'
     overwrite = True
-    sdplot()
+    sdplotold()
 
-    default(sdplot)
+    default(sdplotold)
     infile = 'uid___A002_X6218fb_X264.ms_saved.PM04.cal'
     spw = str(i)
     plottype = 'spectra'
@@ -349,12 +349,12 @@ for i in [9, 11, 13, 15]:
     panel = 'scan'
     outfile = 'uid___A002_X6218fb_X264.ms_saved.PM04.cal.plots/uid___A002_X6218fb_X264.ms_saved.PM04.cal.spectra.spw'+str(i)+'.png'
     overwrite = True
-    sdplot()
+    sdplotold()
 
 
 for i in [9, 11, 13, 15]:
 
-    default(sdplot)
+    default(sdplotold)
     infile = 'uid___A002_X6218fb_X264.ms_saved.CM03.cal'
     spw = str(i)
     plottype = 'spectra'
@@ -362,9 +362,9 @@ for i in [9, 11, 13, 15]:
     panel = 'scan'
     outfile = 'uid___A002_X6218fb_X264.ms_saved.CM03.cal.plots/uid___A002_X6218fb_X264.ms_saved.CM03.cal.spectra.spw'+str(i)+'.png'
     overwrite = True
-    sdplot()
+    sdplotold()
 
-    default(sdplot)
+    default(sdplotold)
     infile = 'uid___A002_X6218fb_X264.ms_saved.CM05.cal'
     spw = str(i)
     plottype = 'spectra'
@@ -372,7 +372,7 @@ for i in [9, 11, 13, 15]:
     panel = 'scan'
     outfile = 'uid___A002_X6218fb_X264.ms_saved.CM05.cal.plots/uid___A002_X6218fb_X264.ms_saved.CM05.cal.spectra.spw'+str(i)+'.png'
     overwrite = True
-    sdplot()
+    sdplotold()
 
 
 
@@ -382,7 +382,7 @@ for i in [9, 11, 13, 15]:
 
 # View Baselined Spectra with the sdplot task #
 
-default(sdplot)
+default(sdplotold)
 infile = 'uid___A002_X6218fb_X264.ms_saved.PM03.cal.bl'
 spw = '15'
 specunit = 'GHz'
@@ -391,9 +391,9 @@ stack = 'pol'
 panel = 'scan'
 outfile = 'uid___A002_X6218fb_X264.ms_saved.PM03.cal.bl.png'
 overwrite = True
-sdplot()
+sdplotold()
 
-default(sdplot)
+default(sdplotold)
 infile = 'uid___A002_X6218fb_X264.ms_saved.PM04.cal.bl'
 spw = '15'
 specunit = 'GHz'
@@ -402,9 +402,9 @@ stack = 'pol'
 panel = 'scan'
 outfile = 'uid___A002_X6218fb_X264.ms_saved.PM04.cal.bl.png'
 overwrite = True
-sdplot()
+sdplotold()
 
-default(sdplot)
+default(sdplotold)
 infile = 'uid___A002_X6218fb_X264.ms_saved.CM03.cal.bl'
 spw = '15'
 specunit = 'GHz'
@@ -413,9 +413,9 @@ stack = 'pol'
 panel = 'scan'
 outfile = 'uid___A002_X6218fb_X264.ms_saved.CM03.cal.bl.png'
 overwrite = True
-sdplot()
+sdplotold()
 
-default(sdplot)
+default(sdplotold)
 infile = 'uid___A002_X6218fb_X264.ms_saved.CM05.cal.bl'
 spw = '15'
 specunit = 'GHz'
@@ -424,7 +424,7 @@ stack = 'pol'
 panel = 'scan'
 outfile = 'uid___A002_X6218fb_X264.ms_saved.CM05.cal.bl.png'
 overwrite = True
-sdplot()
+sdplotold()
 
 
 
@@ -432,29 +432,29 @@ sdplot()
 
 print '--Save calibrated data (from asap to MS2)--'
 
-default(sdsave)
+default(sdsaveold)
 infile = 'uid___A002_X6218fb_X264.ms_saved.PM03.cal.bl'
 outfile = 'uid___A002_X6218fb_X264.ms_saved.PM03.cal.bl.ms'
 outform = 'MS2'
-sdsave()
+sdsaveold()
 
-default(sdsave)
+default(sdsaveold)
 infile = 'uid___A002_X6218fb_X264.ms_saved.PM04.cal.bl'
 outfile = 'uid___A002_X6218fb_X264.ms_saved.PM04.cal.bl.ms'
 outform = 'MS2'
-sdsave()
+sdsaveold()
 
-default(sdsave)
+default(sdsaveold)
 infile = 'uid___A002_X6218fb_X264.ms_saved.CM03.cal.bl'
 outfile = 'uid___A002_X6218fb_X264.ms_saved.CM03.cal.bl.ms'
 outform = 'MS2'
-sdsave()
+sdsaveold()
 
-default(sdsave)
+default(sdsaveold)
 infile = 'uid___A002_X6218fb_X264.ms_saved.CM05.cal.bl'
 outfile = 'uid___A002_X6218fb_X264.ms_saved.CM05.cal.bl.ms'
 outform = 'MS2'
-sdsave()
+sdsaveold()
 
 
 saveproc=time.clock()

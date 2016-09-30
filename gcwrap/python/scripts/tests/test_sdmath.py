@@ -20,23 +20,23 @@ except:
 import inspect
 g = sys._getframe(len(inspect.stack())-1).f_globals
 g['__rethrow_casa_exceptions'] = True
-from sdmath import sdmath
+from sdmathold import sdmathold
 from sdutil import tbmanager
 import asap as sd
 from asap.scantable import is_scantable
 
 #
-# Unit test of sdmath task.
+# Unit test of sdmathold task.
 # 
 
 ###
-# Base class for sdmath unit test
+# Base class for sdmathold unit test
 ###
-class sdmath_unittest_base:
+class sdmathold_unittest_base:
     """
-    Base class for sdmath unit test
+    Base class for sdmathold unit test
     """
-    taskname='sdmath'
+    taskname='sdmathold'
     datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdmath/'
     
     def _checkfile( self, name ):
@@ -197,7 +197,7 @@ class sdmath_unittest_base:
 ###
 # Test on bad parameter settings
 ###
-class sdmath_test0(unittest.TestCase,sdmath_unittest_base):
+class sdmathold_test0(unittest.TestCase,sdmathold_unittest_base):
     """
     Test on bad parameter setting
 
@@ -211,8 +211,8 @@ class sdmath_test0(unittest.TestCase,sdmath_unittest_base):
     """
     # Input and output names
     rawfile='sdmath0.asap'
-    #prefix=sdmath_unittest_base.taskname+'Test0'
-    prefix='sdmathTest0'
+    #prefix=sdmathold_unittest_base.taskname+'Test0'
+    prefix='sdmatholdTest0'
     outfile=prefix+'.asap'
 
     def setUp(self):
@@ -220,7 +220,7 @@ class sdmath_test0(unittest.TestCase,sdmath_unittest_base):
         if (not os.path.exists(self.rawfile)):
             shutil.copytree(self.datapath+self.rawfile, self.rawfile)
 
-        default(sdmath)
+        default(sdmathold)
 
     def tearDown(self):
         if (os.path.exists(self.rawfile)):
@@ -230,7 +230,7 @@ class sdmath_test0(unittest.TestCase,sdmath_unittest_base):
     def test000(self):
         """Test 000: Default parameters"""
         try:
-            res=sdmath()
+            res=sdmathold()
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -243,7 +243,7 @@ class sdmath_test0(unittest.TestCase,sdmath_unittest_base):
         ex='V0+V1'
         v={}
         try:
-            res=sdmath(expr=ex,varnames=v,outfile=self.outfile)
+            res=sdmathold(expr=ex,varnames=v,outfile=self.outfile)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -256,7 +256,7 @@ class sdmath_test0(unittest.TestCase,sdmath_unittest_base):
         ex='V0+V1'
         v={'V0': self.rawfile}
         try:
-            res=sdmath(expr=ex,varnames=v,outfile=self.outfile)
+            res=sdmathold(expr=ex,varnames=v,outfile=self.outfile)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -272,7 +272,7 @@ class sdmath_test0(unittest.TestCase,sdmath_unittest_base):
         v={'V0': self.rawfile,
            'V1': factor}
         try:
-            res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=False)
+            res=sdmathold(expr=ex,varnames=v,outfile=self.outfile,overwrite=False)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -287,7 +287,7 @@ class sdmath_test0(unittest.TestCase,sdmath_unittest_base):
         v={'V0': factor,
            'V1': self.rawfile}
         try:
-            res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+            res=sdmathold(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -303,7 +303,7 @@ class sdmath_test0(unittest.TestCase,sdmath_unittest_base):
         v={'V0': factor,
            'V1': factor}
         try:
-            res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+            res=sdmathold(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -318,7 +318,7 @@ class sdmath_test0(unittest.TestCase,sdmath_unittest_base):
         v={'V0': self.rawfile,
            'V1': factor}
         try:
-            res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+            res=sdmathold(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -334,7 +334,7 @@ class sdmath_test0(unittest.TestCase,sdmath_unittest_base):
         v={'V0': self.rawfile,
            'V1': infile2}
         try:
-            res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+            res=sdmathold(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -351,7 +351,7 @@ class sdmath_test0(unittest.TestCase,sdmath_unittest_base):
         v={'V0': self.rawfile,
            'V1': datafile}
         try:
-            res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+            res=sdmathold(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -363,7 +363,7 @@ class sdmath_test0(unittest.TestCase,sdmath_unittest_base):
 ###
 # Test on scalar/array operation
 ###
-class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
+class sdmathold_test1(unittest.TestCase,sdmathold_unittest_base):
     """
     Test on scalar/array operation
 
@@ -377,8 +377,8 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
     """
     # Input and output names
     rawfile='sdmath0.asap'
-    #prefix=sdmath_unittest_base.taskname+'Test2'
-    prefix='sdmathTest2'
+    #prefix=sdmathold_unittest_base.taskname+'Test2'
+    prefix='sdmatholdTest2'
     outfile=prefix+'.asap'
 
     def setUp(self):
@@ -386,7 +386,7 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
         if (not os.path.exists(self.rawfile)):
             shutil.copytree(self.datapath+self.rawfile, self.rawfile)
 
-        default(sdmath)
+        default(sdmathold)
 
     def tearDown(self):
         if (os.path.exists(self.rawfile)):
@@ -400,7 +400,7 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
         factor=1.0
         v={'V0': self.rawfile,
            'V1': factor}
-        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmathold(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -412,7 +412,7 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
         factor=1.0
         v={'V0': self.rawfile,
            'V1': factor}
-        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmathold(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -424,7 +424,7 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
         factor=2.0
         v={'V0': self.rawfile,
            'V1': factor}
-        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmathold(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -436,7 +436,7 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
         factor=2.0
         v={'V0': self.rawfile,
            'V1': factor}
-        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmathold(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -448,7 +448,7 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
         factor=[0.1,0.2,0.3,0.4]
         v={'V0': self.rawfile,
            'V1': factor}
-        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmathold(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -460,7 +460,7 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
         factor=[0.1,0.2,0.3,0.4]
         v={'V0': self.rawfile,
            'V1': factor}
-        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmathold(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -472,7 +472,7 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
         factor=[0.1,0.2,0.3,0.4]
         v={'V0': self.rawfile,
            'V1': factor}
-        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmathold(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -484,7 +484,7 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
         factor=[0.1,0.2,0.3,0.4]
         v={'V0': self.rawfile,
            'V1': factor}
-        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmathold(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -496,7 +496,7 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
         factor=[[0.1],[0.2]]
         v={'V0': self.rawfile,
            'V1': factor}
-        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmathold(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -508,7 +508,7 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
         factor=[[0.1],[0.2]]
         v={'V0': self.rawfile,
            'V1': factor}
-        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmathold(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -520,7 +520,7 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
         factor=[[0.1],[0.2]]
         v={'V0': self.rawfile,
            'V1': factor}
-        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmathold(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -532,7 +532,7 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
         factor=[[0.1],[0.2]]
         v={'V0': self.rawfile,
            'V1': factor}
-        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmathold(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -544,7 +544,7 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
         factor=[[0.1,0.3,0.5,0.7],[0.2,0.4,0.6,0.8]]
         v={'V0': self.rawfile,
            'V1': factor}
-        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmathold(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -556,7 +556,7 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
         factor=[[0.1,0.3,0.5,0.7],[0.2,0.4,0.6,0.8]]
         v={'V0': self.rawfile,
            'V1': factor}
-        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmathold(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -568,7 +568,7 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
         factor=[[0.1,0.3,0.5,0.7],[0.2,0.4,0.6,0.8]] 
         v={'V0': self.rawfile,
            'V1': factor}
-        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmathold(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -580,7 +580,7 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
         factor=[[0.1,0.3,0.5,0.7],[0.2,0.4,0.6,0.8]]
         v={'V0': self.rawfile,
            'V1': factor}
-        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmathold(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -588,7 +588,7 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
 ###
 # Test on ASCII text data operation
 ###
-class sdmath_test2(unittest.TestCase,sdmath_unittest_base):
+class sdmathold_test2(unittest.TestCase,sdmathold_unittest_base):
     """
     Test on ASCII text data operation
 
@@ -602,8 +602,8 @@ class sdmath_test2(unittest.TestCase,sdmath_unittest_base):
     """
     # Input and output names
     rawfile='sdmath0.asap'
-    #prefix=sdmath_unittest_base.taskname+'Test2'
-    prefix='sdmathTest2'
+    #prefix=sdmathold_unittest_base.taskname+'Test2'
+    prefix='sdmatholdTest2'
     outfile=prefix+'.asap'
     factor=[[0.1,0.3,0.5,0.7],[0.2,0.4,0.6,0.8]]
     datafile=prefix+'.dat'
@@ -614,7 +614,7 @@ class sdmath_test2(unittest.TestCase,sdmath_unittest_base):
             shutil.copytree(self.datapath+self.rawfile, self.rawfile)
         self._makedata(self.datafile,self.factor)
         
-        default(sdmath)
+        default(sdmathold)
 
     def tearDown(self):
         if (os.path.exists(self.rawfile)):
@@ -627,7 +627,7 @@ class sdmath_test2(unittest.TestCase,sdmath_unittest_base):
         ex='V0'+op+'V1'
         v={'V0': self.rawfile,
            'V1': self.datafile}
-        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmathold(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,self.factor,op)
@@ -638,7 +638,7 @@ class sdmath_test2(unittest.TestCase,sdmath_unittest_base):
         ex='V0'+op+'V1'
         v={'V0': self.rawfile,
            'V1': self.datafile}
-        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmathold(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,self.factor,op)
@@ -649,7 +649,7 @@ class sdmath_test2(unittest.TestCase,sdmath_unittest_base):
         ex='V0'+op+'V1'
         v={'V0': self.rawfile,
            'V1': self.datafile}
-        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmathold(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,self.factor,op)
@@ -660,7 +660,7 @@ class sdmath_test2(unittest.TestCase,sdmath_unittest_base):
         ex='V0'+op+'V1'
         v={'V0': self.rawfile,
            'V1': self.datafile}
-        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmathold(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,self.factor,op)
@@ -668,7 +668,7 @@ class sdmath_test2(unittest.TestCase,sdmath_unittest_base):
 ###
 # Test on scantable operation
 ###
-class sdmath_test3(unittest.TestCase,sdmath_unittest_base):
+class sdmathold_test3(unittest.TestCase,sdmathold_unittest_base):
     """
     Test on scantable operation
 
@@ -689,8 +689,8 @@ class sdmath_test3(unittest.TestCase,sdmath_unittest_base):
     # Input and output names
     rawfile0='sdmath0.asap'
     rawfile1='sdmath1.asap'
-    #prefix=sdmath_unittest_base.taskname+'Test3'
-    prefix='sdmathTest3'
+    #prefix=sdmathold_unittest_base.taskname+'Test3'
+    prefix='sdmatholdTest3'
     outfile=prefix+'.asap'
 
     def setUp(self):
@@ -700,7 +700,7 @@ class sdmath_test3(unittest.TestCase,sdmath_unittest_base):
         if (not os.path.exists(self.rawfile1)):
             shutil.copytree(self.datapath+self.rawfile1, self.rawfile1)
         
-        default(sdmath)
+        default(sdmathold)
 
     def tearDown(self):
         if (os.path.exists(self.rawfile0)):
@@ -715,7 +715,7 @@ class sdmath_test3(unittest.TestCase,sdmath_unittest_base):
         ex='V0'+op+'V1'
         v={'V0': self.rawfile0,
            'V1': self.rawfile1}
-        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmathold(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._checkresult(self.outfile,self.rawfile0,self.rawfile1,op)
@@ -726,7 +726,7 @@ class sdmath_test3(unittest.TestCase,sdmath_unittest_base):
         ex='V0'+op+'V1'
         v={'V0': self.rawfile0,
            'V1': self.rawfile1}
-        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmathold(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._checkresult(self.outfile,self.rawfile0,self.rawfile1,op)
@@ -737,7 +737,7 @@ class sdmath_test3(unittest.TestCase,sdmath_unittest_base):
         ex='V0'+op+'V1'
         v={'V0': self.rawfile0,
            'V1': self.rawfile1}
-        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmathold(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._checkresult(self.outfile,self.rawfile0,self.rawfile1,op)
@@ -748,7 +748,7 @@ class sdmath_test3(unittest.TestCase,sdmath_unittest_base):
         ex='V0'+op+'V1'
         v={'V0': self.rawfile0,
            'V1': self.rawfile1}
-        res=sdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmathold(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._checkresult(self.outfile,self.rawfile0,self.rawfile1,op)
@@ -756,7 +756,7 @@ class sdmath_test3(unittest.TestCase,sdmath_unittest_base):
 ###
 # Test on operation of scantable given in infiles
 ###
-class sdmath_test4(unittest.TestCase,sdmath_unittest_base):
+class sdmathold_test4(unittest.TestCase,sdmathold_unittest_base):
     """
     Test on operation of scantable given in infiles
 
@@ -777,7 +777,7 @@ class sdmath_test4(unittest.TestCase,sdmath_unittest_base):
     # Input and output names
     rawfile0='sdmath0.asap'
     rawfile1='sdmath1.asap'
-    prefix='sdmathTest4'
+    prefix='sdmatholdTest4'
     outfile=prefix+'.asap'
     factor=[[0.1,0.3,0.5,0.7],[0.2,0.4,0.6,0.8]]
     datafile=prefix+'.dat'
@@ -790,7 +790,7 @@ class sdmath_test4(unittest.TestCase,sdmath_unittest_base):
             shutil.copytree(self.datapath+self.rawfile1, self.rawfile1)
         self._makedata(self.datafile,self.factor)
         
-        default(sdmath)
+        default(sdmathold)
 
     def tearDown(self):
         if (os.path.exists(self.rawfile0)):
@@ -804,7 +804,7 @@ class sdmath_test4(unittest.TestCase,sdmath_unittest_base):
         op='+'
         ex='IN0'+op+'IN1'
         infiles=[self.rawfile0, self.rawfile1]
-        res=sdmath(expr=ex,infiles=infiles,outfile=self.outfile,overwrite=True)
+        res=sdmathold(expr=ex,infiles=infiles,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._checkresult(self.outfile,self.rawfile0,self.rawfile1,op)
@@ -815,7 +815,7 @@ class sdmath_test4(unittest.TestCase,sdmath_unittest_base):
         ex='IN0'+op+'V0'
         infiles=[self.rawfile0]
         v={'V0':self.rawfile1}
-        res=sdmath(expr=ex,infiles=infiles,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmathold(expr=ex,infiles=infiles,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._checkresult(self.outfile,self.rawfile0,self.rawfile1,op)
@@ -826,7 +826,7 @@ class sdmath_test4(unittest.TestCase,sdmath_unittest_base):
         ex='V0'+op+'IN0'
         infiles=[self.rawfile0]
         v={'V0':self.rawfile1}
-        res=sdmath(expr=ex,infiles=infiles,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmathold(expr=ex,infiles=infiles,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._checkresult(self.outfile,self.rawfile0,self.rawfile1,op)
@@ -838,7 +838,7 @@ class sdmath_test4(unittest.TestCase,sdmath_unittest_base):
         infiles=[self.rawfile0]
         factor403=1.0
         v={'V0':factor403}
-        res=sdmath(expr=ex,infiles=infiles,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmathold(expr=ex,infiles=infiles,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile0,factor403,op)
@@ -850,7 +850,7 @@ class sdmath_test4(unittest.TestCase,sdmath_unittest_base):
         infiles=[self.rawfile0]
         factor404=[0.1,0.2,0.3,0.4]
         v={'V0':factor404}
-        res=sdmath(expr=ex,infiles=infiles,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmathold(expr=ex,infiles=infiles,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile0,factor404,op)
@@ -862,7 +862,7 @@ class sdmath_test4(unittest.TestCase,sdmath_unittest_base):
         infiles=[self.rawfile0]
         factor405=[[0.1],[0.2]]
         v={'V0':factor405}
-        res=sdmath(expr=ex,infiles=infiles,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmathold(expr=ex,infiles=infiles,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile0,factor405,op)
@@ -874,7 +874,7 @@ class sdmath_test4(unittest.TestCase,sdmath_unittest_base):
         infiles=[self.rawfile0]
         factor406=[[0.1,0.3,0.5,0.7],[0.2,0.4,0.6,0.8]]
         v={'V0':factor406}
-        res=sdmath(expr=ex,infiles=infiles,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmathold(expr=ex,infiles=infiles,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile0,factor406,op)
@@ -885,7 +885,7 @@ class sdmath_test4(unittest.TestCase,sdmath_unittest_base):
         ex='IN0'+op+'V0'
         infiles=[self.rawfile0]
         v={'V0':self.datafile}
-        res=sdmath(expr=ex,infiles=infiles,varnames=v,outfile=self.outfile,overwrite=True)
+        res=sdmathold(expr=ex,infiles=infiles,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile0,self.factor,op)
@@ -893,7 +893,7 @@ class sdmath_test4(unittest.TestCase,sdmath_unittest_base):
 ###
 # Test on scantable storage and insitu settings
 ###
-class sdmath_storageTest( unittest.TestCase,sdmath_unittest_base ):
+class sdmathold_storageTest( unittest.TestCase,sdmathold_unittest_base ):
     """
     Test on scantable sotrage and insitu.
 
@@ -928,8 +928,8 @@ class sdmath_storageTest( unittest.TestCase,sdmath_unittest_base ):
     rawfile='sdmath0.asap'
     rawfile1='sdmath1.asap'
     inlist = [rawfile, rawfile1]
-    #outprefix=sdmath_unittest_base.taskname+'.Tstorage'
-    outprefix='sdmath.Tstorage'
+    #outprefix=sdmathold_unittest_base.taskname+'.Tstorage'
+    outprefix='sdmathold.Tstorage'
     outsuffix='.asap'
 
     # specunit is ignored in current task script (CAS-4094)
@@ -945,7 +945,7 @@ class sdmath_storageTest( unittest.TestCase,sdmath_unittest_base ):
                 shutil.rmtree(infile)
             shutil.copytree(self.datapath+infile, infile)
         
-        default(sdmath)
+        default(sdmathold)
 
     def tearDown( self ):
         for infile in [self.rawfile, self.rawfile1]:
@@ -1081,7 +1081,7 @@ class sdmath_storageTest( unittest.TestCase,sdmath_unittest_base ):
         sd.rcParams['insitu'] = True
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        res = sdmath(expr=ex,varnames=v,outfile=outfile,\
+        res = sdmathold(expr=ex,varnames=v,outfile=outfile,\
                      fluxunit=self.out_uc['flunit'])
 
         self.assertEqual(res,None,
@@ -1111,7 +1111,7 @@ class sdmath_storageTest( unittest.TestCase,sdmath_unittest_base ):
         sd.rcParams['insitu'] = True
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        res = sdmath(expr=ex,varnames=v,outfile=outfile,\
+        res = sdmathold(expr=ex,varnames=v,outfile=outfile,\
                      fluxunit=self.out_uc['flunit'],\
                      telescopeparam='FIX')
 
@@ -1142,7 +1142,7 @@ class sdmath_storageTest( unittest.TestCase,sdmath_unittest_base ):
         sd.rcParams['insitu'] = False
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        res = sdmath(expr=ex,varnames=v,outfile=outfile,\
+        res = sdmathold(expr=ex,varnames=v,outfile=outfile,\
                      fluxunit=self.out_uc['flunit'])
 
         self.assertEqual(res,None,
@@ -1172,7 +1172,7 @@ class sdmath_storageTest( unittest.TestCase,sdmath_unittest_base ):
         sd.rcParams['insitu'] = False
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        res = sdmath(expr=ex,varnames=v,outfile=outfile,\
+        res = sdmathold(expr=ex,varnames=v,outfile=outfile,\
                      fluxunit=self.out_uc['flunit'],\
                      telescopeparam='FIX')
 
@@ -1203,7 +1203,7 @@ class sdmath_storageTest( unittest.TestCase,sdmath_unittest_base ):
         sd.rcParams['insitu'] = True
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        res = sdmath(expr=ex,varnames=v,outfile=outfile,\
+        res = sdmathold(expr=ex,varnames=v,outfile=outfile,\
                      fluxunit=self.out_uc['flunit'])
 
         self.assertEqual(res,None,
@@ -1233,7 +1233,7 @@ class sdmath_storageTest( unittest.TestCase,sdmath_unittest_base ):
         sd.rcParams['insitu'] = True
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        res = sdmath(expr=ex,varnames=v,outfile=outfile,\
+        res = sdmathold(expr=ex,varnames=v,outfile=outfile,\
                      fluxunit=self.out_uc['flunit'],\
                      telescopeparam='FIX')
 
@@ -1263,7 +1263,7 @@ class sdmath_storageTest( unittest.TestCase,sdmath_unittest_base ):
         sd.rcParams['insitu'] = False
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        res = sdmath(expr=ex,varnames=v,outfile=outfile,\
+        res = sdmathold(expr=ex,varnames=v,outfile=outfile,\
                      fluxunit=self.out_uc['flunit'])
 
         self.assertEqual(res,None,
@@ -1291,7 +1291,7 @@ class sdmath_storageTest( unittest.TestCase,sdmath_unittest_base ):
         sd.rcParams['insitu'] = False
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        res = sdmath(expr=ex,varnames=v,outfile=outfile,\
+        res = sdmathold(expr=ex,varnames=v,outfile=outfile,\
                      fluxunit=self.out_uc['flunit'],\
                      telescopeparam='FIX')
 
@@ -1303,8 +1303,8 @@ class sdmath_storageTest( unittest.TestCase,sdmath_unittest_base ):
         # Compare units and coords of input scantable before/after run
         self._comp_unit_coord([self.rawfile, self.rawfile1],initval)
 
-class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
-                           sdmath_unittest_base,unittest.TestCase):
+class sdmathold_test_selection(selection_syntax.SelectionSyntaxTest,
+                           sdmathold_unittest_base,unittest.TestCase):
     """
     Test selection syntax. Selection parameters to test are:
     field, spw (no channel selection), scan, pol
@@ -1318,7 +1318,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
     # Input and output names
     rawfile='sd_analytic_type1-3.asap'
     reffile='sdmath_selection.asap.ref'
-    prefix=sdmath_unittest_base.taskname+'TestSel'
+    prefix=sdmathold_unittest_base.taskname+'TestSel'
     postfix='.math.asap'
     field_prefix = 'M100__'
 
@@ -1326,7 +1326,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
     
     @property
     def task(self):
-        return sdmath
+        return sdmathold
     
     @property
     def spw_channel_selection(self):
@@ -1339,7 +1339,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         if (not os.path.exists(self.reffile)):
             shutil.copytree(self.datapath+self.reffile, self.reffile)
 
-        default(sdmath)
+        default(sdmathold)
 
     def tearDown(self):
         if (os.path.exists(self.rawfile)):
@@ -1385,7 +1385,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         """test scan selection (scan='')"""
         outname=self.prefix+self.postfix
         scan=''
-        self.res=sdmath(scan=scan,expr=self.expr,outfile=outname)
+        self.res=sdmathold(scan=scan,expr=self.expr,outfile=outname)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         self._compare(outname, self.reffile)
 
@@ -1393,7 +1393,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         """ test scan selection (scan='15')"""
         outname=self.prefix+self.postfix
         scan = '15'
-        self.res=sdmath(scan=scan,expr=self.expr,outfile=outname)
+        self.res=sdmathold(scan=scan,expr=self.expr,outfile=outname)
         tbsel = {'SCANNO': [15]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
@@ -1403,7 +1403,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         """ test scan selection (scan='<17')"""
         outname=self.prefix+self.postfix
         scan = '<17'
-        self.res=sdmath(scan=scan,expr=self.expr,outfile=outname)
+        self.res=sdmathold(scan=scan,expr=self.expr,outfile=outname)
         tbsel = {'SCANNO': [15,16]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
@@ -1413,7 +1413,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         """ test scan selection (scan='>15')"""
         outname=self.prefix+self.postfix
         scan = '>15'
-        self.res=sdmath(scan=scan,expr=self.expr,outfile=outname)
+        self.res=sdmathold(scan=scan,expr=self.expr,outfile=outname)
         tbsel = {'SCANNO': [16,17]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
@@ -1423,7 +1423,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         """ test scan selection (scan='15~16')"""
         outname=self.prefix+self.postfix
         scan = '15~16'
-        self.res=sdmath(scan=scan,expr=self.expr,outfile=outname)
+        self.res=sdmathold(scan=scan,expr=self.expr,outfile=outname)
         tbsel = {'SCANNO': [15,16]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
@@ -1433,7 +1433,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         """ test scan selection (scan='15,17')"""
         outname=self.prefix+self.postfix
         scan = '15,17'
-        self.res=sdmath(scan=scan,expr=self.expr,outfile=outname)
+        self.res=sdmathold(scan=scan,expr=self.expr,outfile=outname)
         tbsel = {'SCANNO': [15,17]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
@@ -1443,7 +1443,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         """ test scan selection (scan='<16, 17')"""
         outname=self.prefix+self.postfix
         scan = '<16, 17'
-        self.res=sdmath(scan=scan,expr=self.expr,outfile=outname)
+        self.res=sdmathold(scan=scan,expr=self.expr,outfile=outname)
         tbsel = {'SCANNO': [15,17]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
@@ -1456,7 +1456,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         """test pol selection (pol='')"""
         outname=self.prefix+self.postfix
         pol=''
-        self.res=sdmath(pol=pol,expr=self.expr,outfile=outname)
+        self.res=sdmathold(pol=pol,expr=self.expr,outfile=outname)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         self._compare(outname, self.reffile)
 
@@ -1464,7 +1464,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         """ test pol selection (pol='1')"""
         outname=self.prefix+self.postfix
         pol = '1'
-        self.res=sdmath(pol=pol,expr=self.expr,outfile=outname)
+        self.res=sdmathold(pol=pol,expr=self.expr,outfile=outname)
         tbsel = {'POLNO': [1]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
@@ -1474,7 +1474,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         """ test pol selection (pol='<1')"""
         outname=self.prefix+self.postfix
         pol = '<1'
-        self.res=sdmath(pol=pol,expr=self.expr,outfile=outname)
+        self.res=sdmathold(pol=pol,expr=self.expr,outfile=outname)
         tbsel = {'POLNO': [0]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
@@ -1484,7 +1484,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         """ test pol selection (pol='>0')"""
         outname=self.prefix+self.postfix
         pol = '>0'
-        self.res=sdmath(pol=pol,expr=self.expr,outfile=outname)
+        self.res=sdmathold(pol=pol,expr=self.expr,outfile=outname)
         tbsel = {'POLNO': [1]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
@@ -1494,7 +1494,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         """ test pol selection (pol='0~1')"""
         outname=self.prefix+self.postfix
         pol = '0~1'
-        self.res=sdmath(pol=pol,expr=self.expr,outfile=outname)
+        self.res=sdmathold(pol=pol,expr=self.expr,outfile=outname)
         tbsel = {}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
@@ -1504,7 +1504,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         """ test pol selection (pol='0,1')"""
         outname=self.prefix+self.postfix
         pol = '0,1'
-        self.res=sdmath(pol=pol,expr=self.expr,outfile=outname)
+        self.res=sdmathold(pol=pol,expr=self.expr,outfile=outname)
         tbsel = {}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
@@ -1514,7 +1514,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         """test pol selection (pol='<1,1')"""
         outname=self.prefix+self.postfix
         pol = '0,1'
-        self.res=sdmath(pol=pol,expr=self.expr,outfile=outname)
+        self.res=sdmathold(pol=pol,expr=self.expr,outfile=outname)
         tbsel = {}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
@@ -1527,7 +1527,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         """test field selection (field='')"""
         outname=self.prefix+self.postfix
         field=''
-        self.res=sdmath(field=field,expr=self.expr,outfile=outname)
+        self.res=sdmathold(field=field,expr=self.expr,outfile=outname)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         self._compare(outname, self.reffile)
 
@@ -1535,7 +1535,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         """ test field selection (field='6')"""
         outname=self.prefix+self.postfix
         field = '6'
-        self.res=sdmath(field=field,expr=self.expr,outfile=outname)
+        self.res=sdmathold(field=field,expr=self.expr,outfile=outname)
         tbsel = {'FIELDNAME': ['M100__6']}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
@@ -1545,7 +1545,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         """ test field selection (field='<6')"""
         outname=self.prefix+self.postfix
         field = '<6'
-        self.res=sdmath(field=field,expr=self.expr,outfile=outname)
+        self.res=sdmathold(field=field,expr=self.expr,outfile=outname)
         tbsel = {'FIELDNAME': ['M100__5']}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
@@ -1555,7 +1555,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         """ test field selection (field='>7')"""
         outname=self.prefix+self.postfix
         field = '>7'
-        self.res=sdmath(field=field,expr=self.expr,outfile=outname)
+        self.res=sdmathold(field=field,expr=self.expr,outfile=outname)
         tbsel = {'FIELDNAME': ['3C273__8']}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
@@ -1565,7 +1565,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         """ test field selection (field='5~7')"""
         outname=self.prefix+self.postfix
         field = '5~7'
-        self.res=sdmath(field=field,expr=self.expr,outfile=outname)
+        self.res=sdmathold(field=field,expr=self.expr,outfile=outname)
         tbsel = {'FIELDNAME': ['M100__5', 'M100__6', 'M30__7']}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
@@ -1575,7 +1575,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         """ test field selection (field='5,7')"""
         outname=self.prefix+self.postfix
         field = '5,7'
-        self.res=sdmath(field=field,expr=self.expr,outfile=outname)
+        self.res=sdmathold(field=field,expr=self.expr,outfile=outname)
         tbsel = {'FIELDNAME': ['M100__5', 'M30__7']}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
@@ -1585,7 +1585,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         """ test field selection (field='<7,8')"""
         outname=self.prefix+self.postfix
         field = '<7,8'
-        self.res=sdmath(field=field,expr=self.expr,outfile=outname)
+        self.res=sdmathold(field=field,expr=self.expr,outfile=outname)
         tbsel = {'FIELDNAME': ['M100__5', 'M100__6', '3C273__8']}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
@@ -1595,7 +1595,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         """ test field selection (field='M100')"""
         outname=self.prefix+self.postfix
         field = 'M100'
-        self.res=sdmath(field=field,expr=self.expr,outfile=outname)
+        self.res=sdmathold(field=field,expr=self.expr,outfile=outname)
         tbsel = {'FIELDNAME': ['M100__5', 'M100__6']}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
@@ -1605,7 +1605,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         """ test field selection (field='M*')"""
         outname=self.prefix+self.postfix
         field = 'M*'
-        self.res=sdmath(field=field,expr=self.expr,outfile=outname)
+        self.res=sdmathold(field=field,expr=self.expr,outfile=outname)
         tbsel = {'FIELDNAME': ['M100__5', 'M100__6', 'M30__7']}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
@@ -1615,7 +1615,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         """ test field selection (field='M30,3C273')"""
         outname=self.prefix+self.postfix
         field = 'M30,3C273'
-        self.res=sdmath(field=field,expr=self.expr,outfile=outname)
+        self.res=sdmathold(field=field,expr=self.expr,outfile=outname)
         tbsel = {'FIELDNAME': ['M30__7', '3C273__8']}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
@@ -1625,7 +1625,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         """ test field selection (field='<7,3C273')"""
         outname=self.prefix+self.postfix
         field = '<7,3C273'
-        self.res=sdmath(field=field,expr=self.expr,outfile=outname)
+        self.res=sdmathold(field=field,expr=self.expr,outfile=outname)
         tbsel = {'FIELDNAME': ['M100__5', 'M100__6', '3C273__8']}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
@@ -1638,7 +1638,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         """test spw selection (spw='')"""
         outname=self.prefix+self.postfix
         spw=''
-        self.res=sdmath(spw=spw,expr=self.expr,outfile=outname)
+        self.res=sdmathold(spw=spw,expr=self.expr,outfile=outname)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         self._compare(outname, self.reffile)
 
@@ -1646,7 +1646,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         """ test spw selection (spw='21')"""
         outname=self.prefix+self.postfix
         spw = '21'
-        self.res=sdmath(spw=spw,expr=self.expr,outfile=outname)
+        self.res=sdmathold(spw=spw,expr=self.expr,outfile=outname)
         tbsel = {'IFNO': [21]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
@@ -1656,7 +1656,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         """ test spw selection (spw='<25')"""
         outname=self.prefix+self.postfix
         spw = '<25'
-        self.res=sdmath(spw=spw,expr=self.expr,outfile=outname)
+        self.res=sdmathold(spw=spw,expr=self.expr,outfile=outname)
         tbsel = {'IFNO': [20,21,22,23,24]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
@@ -1666,7 +1666,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         """ test spw selection (spw='>21')"""
         outname=self.prefix+self.postfix
         spw = '>21'
-        self.res=sdmath(spw=spw,expr=self.expr,outfile=outname)
+        self.res=sdmathold(spw=spw,expr=self.expr,outfile=outname)
         tbsel = {'IFNO': [22,23,24,25]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
@@ -1676,7 +1676,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         """ test spw selection (spw='21~24')"""
         outname=self.prefix+self.postfix
         spw = '21~24'
-        self.res=sdmath(spw=spw,expr=self.expr,outfile=outname)
+        self.res=sdmathold(spw=spw,expr=self.expr,outfile=outname)
         tbsel = {'IFNO': [21,22,23,24]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
@@ -1686,7 +1686,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         """ test spw selection (spw='21,22,23,25')"""
         outname=self.prefix+self.postfix
         spw = '21,22,23,25'
-        self.res=sdmath(spw=spw,expr=self.expr,outfile=outname)
+        self.res=sdmathold(spw=spw,expr=self.expr,outfile=outname)
         tbsel = {'IFNO': [21,22,23,25]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
@@ -1696,7 +1696,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         """ test spw selection (spw='<22,>24')"""
         outname=self.prefix+self.postfix
         spw = '<22,>24'
-        self.res=sdmath(spw=spw,expr=self.expr,outfile=outname)
+        self.res=sdmathold(spw=spw,expr=self.expr,outfile=outname)
         tbsel = {'IFNO': [20,21,25]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
@@ -1706,7 +1706,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         """test spw selection (spw='*')"""
         outname=self.prefix+self.postfix
         spw='*'
-        self.res=sdmath(spw=spw,expr=self.expr,outfile=outname)
+        self.res=sdmathold(spw=spw,expr=self.expr,outfile=outname)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         self._compare(outname, self.reffile)
 
@@ -1714,7 +1714,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         """test spw selection (spw='299.5~310GHz')"""
         outname=self.prefix+self.postfix
         spw = '299.5~310GHz'
-        self.res=sdmath(spw=spw,expr=self.expr,outfile=outname)
+        self.res=sdmathold(spw=spw,expr=self.expr,outfile=outname)
         tbsel = {'IFNO': [22,23,24,25]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
@@ -1724,7 +1724,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         """test spw selection (spw='-50~50km/s')"""
         outname=self.prefix+self.postfix
         spw = '-50~50km/s'
-        self.res=sdmath(spw=spw,expr=self.expr,outfile=outname)
+        self.res=sdmathold(spw=spw,expr=self.expr,outfile=outname)
         tbsel = {'IFNO': [22,23]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
@@ -1734,7 +1734,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         """test spw selection (spw='150~550km/s,>23')"""
         outname=self.prefix+self.postfix
         spw = '150~550km/s,>23'
-        self.res=sdmath(spw=spw,expr=self.expr,outfile=outname)
+        self.res=sdmathold(spw=spw,expr=self.expr,outfile=outname)
         tbsel = {'IFNO': [20,21,24,25]}
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
@@ -1789,7 +1789,7 @@ class sdmath_test_selection(selection_syntax.SelectionSyntaxTest,
         tb.close()
         return sp
 
-class sdmath_test_flag(sdmath_unittest_base,unittest.TestCase):
+class sdmathold_test_flag(sdmathold_unittest_base,unittest.TestCase):
     """
     Examine if flag information is handled properly.
     
@@ -1799,12 +1799,12 @@ class sdmath_test_flag(sdmath_unittest_base,unittest.TestCase):
     infile1='sdmath_flagtest1.asap'
     infile2='sdmath_flagtest2.asap'
     infiles = [infile1, infile2]
-    prefix=sdmath_unittest_base.taskname+'TestFlag'
+    prefix=sdmathold_unittest_base.taskname+'TestFlag'
     postfix='.math.asap'
 
     @property
     def task(self):
-        return sdmath
+        return sdmathold
     
     @property
     def spw_channel_selection(self):
@@ -1816,7 +1816,7 @@ class sdmath_test_flag(sdmath_unittest_base,unittest.TestCase):
             shutil.copytree(self.datapath+self.infile1, self.infile1)
         if (not os.path.exists(self.infile2)):
             shutil.copytree(self.datapath+self.infile2, self.infile2)
-        default(sdmath)
+        default(sdmathold)
 
     def tearDown(self):
         if (os.path.exists(self.infile1)):
@@ -1829,7 +1829,7 @@ class sdmath_test_flag(sdmath_unittest_base,unittest.TestCase):
         """test flag handling in using two scantables"""
         expr = 'IN0+IN1'
         outname=self.prefix+self.postfix
-        self.res=sdmath(infiles=self.infiles,expr=expr,outfile=outname)
+        self.res=sdmathold(infiles=self.infiles,expr=expr,outfile=outname)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         self._compare(outname)
 
@@ -1838,7 +1838,7 @@ class sdmath_test_flag(sdmath_unittest_base,unittest.TestCase):
         value = 10.0
         expr = 'IN0+'+str(value)
         outname=self.prefix+self.postfix
-        self.res=sdmath(infiles=[self.infile1],expr=expr,outfile=outname)
+        self.res=sdmathold(infiles=[self.infile1],expr=expr,outfile=outname)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         self._compare(outname, value)
         
@@ -1848,7 +1848,7 @@ class sdmath_test_flag(sdmath_unittest_base,unittest.TestCase):
         value = range(nchan)
         expr = 'IN0+'+str(value)
         outname=self.prefix+self.postfix
-        self.res=sdmath(infiles=[self.infile1],expr=expr,outfile=outname)
+        self.res=sdmathold(infiles=[self.infile1],expr=expr,outfile=outname)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         self._compare(outname, value)
 
@@ -1892,8 +1892,8 @@ class sdmath_test_flag(sdmath_unittest_base,unittest.TestCase):
         self.assertTrue((dataref == data[outfile]).all())
 
 def suite():
-    return [sdmath_test0,sdmath_test1,sdmath_test2,
-            sdmath_test3,sdmath_test4,
-            sdmath_storageTest,sdmath_test_selection,
-            sdmath_test_flag
+    return [sdmathold_test0,sdmathold_test1,sdmathold_test2,
+            sdmathold_test3,sdmathold_test4,
+            sdmathold_storageTest,sdmathold_test_selection,
+            sdmathold_test_flag
             ]

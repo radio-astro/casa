@@ -71,28 +71,29 @@ from tclean2_pg import tclean2_pg as tclean2
 from impbcor_pg import impbcor_pg as impbcor
 
 # single dish tasks
-from sdaverage_pg import sdaverage_pg as sdaverage
-from sdbaseline_pg import sdbaseline_pg as sdbaseline
-from sdbaseline2_pg import sdbaseline2_pg as sdbaseline2
-from sdcal_pg import sdcal_pg as sdcal
-from sdcal2_pg import sdcal2_pg as sdcal2
-from sdcoadd_pg import sdcoadd_pg as sdcoadd
-from sdfit_pg import sdfit_pg as sdfit
-from sdflag_pg import sdflag_pg as sdflag
-from sdflagmanager_pg import sdflagmanager_pg as sdflagmanager
-from sdgrid_pg import sdgrid_pg as sdgrid
-from sdimaging_pg import sdimaging_pg as sdimaging
-from sdimprocess_pg import sdimprocess_pg as sdimprocess
-from sdlist_pg import sdlist_pg as sdlist
-from sdmath_pg import sdmath_pg as sdmath
-from sdplot_pg import sdplot_pg as sdplot
-from sdreduce_pg import sdreduce_pg as sdreduce
-from sdsave_pg import sdsave_pg as sdsave
-from sdscale_pg import sdscale_pg as sdscale
-from sdstat_pg import sdstat_pg as sdstat
 from tsdbaseline_pg import  tsdbaseline_pg as tsdbaseline
 from tsdcal_pg import  tsdcal_pg as tsdcal
 from tsdfit_pg import  tsdfit_pg as tsdfit
 from tsdsmooth_pg import  tsdsmooth_pg as tsdsmooth
+from sdimaging_pg import sdimaging_pg as sdimaging
+from sdimprocess_pg import sdimprocess_pg as sdimprocess
+### ASAP tasks ###
+from sdaverageold_pg import sdaverageold_pg as sdaverageold
+from sdbaselineold_pg import sdbaselineold_pg as sdbaselineold
+from sdbaseline2old_pg import sdbaseline2old_pg as sdbaseline2old
+from sdcalold_pg import sdcalold_pg as sdcalold
+from sdcal2old_pg import sdcal2old_pg as sdcal2old
+from sdcoaddold_pg import sdcoaddold_pg as sdcoaddold
+from sdfitold_pg import sdfitold_pg as sdfitold
+from sdflagold_pg import sdflagold_pg as sdflagold
+from sdflagmanagerold_pg import sdflagmanagerold_pg as sdflagmanagerold
+from sdgridold_pg import sdgridold_pg as sdgridold
+from sdlistold_pg import sdlistold_pg as sdlistold
+from sdmathold_pg import sdmathold_pg as sdmathold
+from sdplotold_pg import sdplotold_pg as sdplotold
+from sdreduceold_pg import sdreduceold_pg as sdreduceold
+from sdsaveold_pg import sdsaveold_pg as sdsaveold
+from sdscaleold_pg import sdscaleold_pg as sdscaleold
+from sdstatold_pg import sdstatold_pg as sdstatold
 
 # EOF

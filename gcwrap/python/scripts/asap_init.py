@@ -21,59 +21,42 @@ def asap_init():
     #print('*** ... ASAP (%s rev#%s) import complete ***' % (sd.__version__,sd.__revision__))
     print('*** ... ASAP (rev#%s) import complete ***' % (sd.__revision__))
     os.environ['CASAPATH']=casapath
-    from sdaverage_cli import sdaverage_cli as sdaverage
-    from sdbaseline_cli import sdbaseline_cli as sdbaseline
-    from sdbaseline2_cli import sdbaseline2_cli as sdbaseline2
-    from sdcal_cli import sdcal_cli as sdcal
-    from sdcal2_cli import sdcal2_cli as sdcal2
-    from sdcoadd_cli import sdcoadd_cli as sdcoadd
-    from sdfit_cli import sdfit_cli as sdfit
-    from sdflag_cli import sdflag_cli as sdflag
-    from sdflagmanager_cli import sdflagmanager_cli as sdflagmanager
-    from sdgrid_cli import sdgrid_cli as sdgrid
     from sdimaging_cli import sdimaging_cli as sdimaging
     from sdimprocess_cli import sdimprocess_cli as sdimprocess
-    from sdlist_cli import sdlist_cli as sdlist
-    from sdmath_cli import sdmath_cli as sdmath
-    from sdplot_cli import sdplot_cli as sdplot
-    from sdreduce_cli import sdreduce_cli as sdreduce
-    from sdsave_cli import sdsave_cli as sdsave
-    from sdscale_cli import sdscale_cli as sdscale
-    from sdstat_cli import sdstat_cli as sdstat
+    from sdaverageold_cli import sdaverageold_cli as sdaverageold
+    from sdbaselineold_cli import sdbaselineold_cli as sdbaselineold
+    from sdbaseline2old_cli import sdbaseline2old_cli as sdbaseline2old
+    from sdcalold_cli import sdcalold_cli as sdcalold
+    from sdcal2old_cli import sdcal2old_cli as sdcal2old
+    from sdcoaddold_cli import sdcoaddold_cli as sdcoaddold
+    from sdfitold_cli import sdfitold_cli as sdfitold
+    from sdflagold_cli import sdflagold_cli as sdflagold
+    from sdflagmanagerold_cli import sdflagmanagerold_cli as sdflagmanagerold
+    from sdgridold_cli import sdgridold_cli as sdgridold
+    from sdlistold_cli import sdlistold_cli as sdlistold
+    from sdmathold_cli import sdmathold_cli as sdmathold
+    from sdplotold_cli import sdplotold_cli as sdplotold
+    from sdreduceold_cli import sdreduceold_cli as sdreduceold
+    from sdsaveold_cli import sdsaveold_cli as sdsaveold
+    from sdscaleold_cli import sdscaleold_cli as sdscaleold
+    from sdstatold_cli import sdstatold_cli as sdstatold
     myf['sd']=sd
-    myf['sdaverage']=sdaverage
-    myf['sdbaseline']=sdbaseline
-    myf['sdbaseline2']=sdbaseline2
-    myf['sdcal']=sdcal
-    myf['sdcal2']=sdcal2
-    myf['sdcoadd']=sdcoadd
-    myf['sdfit']=sdfit
-    myf['sdflag']=sdflag
-    myf['sdflagmanager']=sdflagmanager
-    myf['sdgrid']=sdgrid
     myf['sdimaging']=sdimaging
     myf['sdimprocess']=sdimprocess
-    myf['sdlist']=sdlist
-    myf['sdmath']=sdmath
-    myf['sdplot']=sdplot
-    myf['sdreduce']=sdreduce
-    myf['sdsave']=sdsave
-    myf['sdscale']=sdscale
-    myf['sdstat']=sdstat
-#     ### NOTE on interface changes ###
-#     print("#"*50)
-#     print("")
-#     print("Major interface changes to SINGLE DISH tasks have been")
-#     print("taken place in CASA 4.2.2 release")
-#     print("")
-#     print("The interface of the following tasks are modified:")
-#     print("sdbaseline, sdcal, sdcal2, sdfit, sdflag, sdgrid,")
-#     print("sdimaging, sdmath, sdplot, sdreduce, sdsave, and sdstat.")
-#     print("Additionally, a new task called sdaverage is available. Task")
-#     print("sdsmooth has been incorporated in the new task and removed.")
-#     print("")
-#     print("The tasks with old interfaces are available with name")
-#     print("{taskname}old and kept by CASA 4.3 release. Users are")
-#     print("adviced to update existing scripts.")
-#     print("")
-#     print("#"*50)
+    myf['sdaverageold']=sdaverageold
+    myf['sdbaselineold']=sdbaselineold
+    myf['sdbaseline2old']=sdbaseline2old
+    myf['sdcalold']=sdcalold
+    myf['sdcal2old']=sdcal2old
+    myf['sdcoaddold']=sdcoaddold
+    myf['sdfitold']=sdfitold
+    myf['sdflagold']=sdflagold
+    myf['sdflagmanagerold']=sdflagmanagerold
+    myf['sdgridold']=sdgridold
+    myf['sdlistold']=sdlistold
+    myf['sdmathold']=sdmathold
+    myf['sdplotold']=sdplotold
+    myf['sdreduceold']=sdreduceold
+    myf['sdsaveold']=sdsaveold
+    myf['sdscaleold']=sdscaleold
+    myf['sdstatold']=sdstatold

@@ -8,11 +8,11 @@ import unittest
 #
 import listing
 
-from sdlist import sdlist
+from sdlistold import sdlistold
 
-class sdlist_test(unittest.TestCase):
+class sdlistold_test(unittest.TestCase):
     """
-    Unit test for task sdlist.
+    Unit test for task sdlistold.
 
     The list of tests:
     test00   --- default parameters (raises an error)
@@ -28,7 +28,7 @@ class sdlist_test(unittest.TestCase):
     infile2 = 'OrionS_rawACSmod'
     infile_flag = 'sdlist_flagtest.asap'
     infiles = [infile1, infile2, infile_flag]
-    outroot = 'sdlist_test'
+    outroot = 'sdlistold_test'
     reffile = "refsdlist01.txt"
 
     def setUp(self):
@@ -37,7 +37,7 @@ class sdlist_test(unittest.TestCase):
                 shutil.rmtree(infile)
             shutil.copytree(self.datapath+infile, infile)
 
-        default(sdlist)
+        default(sdlistold)
 
 
     def tearDown(self):
@@ -56,7 +56,7 @@ class sdlist_test(unittest.TestCase):
 
     def test00(self):
         """Test 0: Default parameters"""
-        result=sdlist()
+        result=sdlistold()
         self.assertFalse(result)
 
     def test01(self):
@@ -64,7 +64,7 @@ class sdlist_test(unittest.TestCase):
         tid = "01"
         infile = self.infile1
         outfile = self.outroot+tid+".out"
-        result = sdlist(infile=infile,outfile=outfile)
+        result = sdlistold(infile=infile,outfile=outfile)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         self._compareOutFile(outfile,self.datapath+self.reffile)
@@ -74,7 +74,7 @@ class sdlist_test(unittest.TestCase):
         tid = "02"
         infile = self.infile2
         outfile = self.outroot+tid+".out"
-        result = sdlist(infile=infile,outfile=outfile)
+        result = sdlistold(infile=infile,outfile=outfile)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         self.assertTrue(os.path.exists(outfile),
@@ -82,7 +82,7 @@ class sdlist_test(unittest.TestCase):
         # overwrite 'outfile'
         infile = self.infile1
         outfile = self.outroot+tid+".out"
-        result = sdlist(infile=infile,outfile=outfile,overwrite=True)
+        result = sdlistold(infile=infile,outfile=outfile,overwrite=True)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         self._compareOutFile(outfile,self.datapath+self.reffile)
@@ -92,7 +92,7 @@ class sdlist_test(unittest.TestCase):
         tid = "03"
         infile = self.infile2
         outfile = self.outroot+tid+".out"
-        result = sdlist(infile=infile,outfile=outfile)
+        result = sdlistold(infile=infile,outfile=outfile)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         self.assertTrue(os.path.exists(outfile),
@@ -101,7 +101,7 @@ class sdlist_test(unittest.TestCase):
         infile = self.infile1
         outfile = self.outroot+tid+".out"
         try:
-            result = sdlist(infile=infile,outfile=outfile,overwrite=False)
+            result = sdlistold(infile=infile,outfile=outfile,overwrite=False)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -114,7 +114,7 @@ class sdlist_test(unittest.TestCase):
         tid = "04"
         infile = self.infile_flag
         outfile = self.outroot+tid+".out"
-        result = sdlist(infile=infile, outfile=outfile)
+        result = sdlistold(infile=infile, outfile=outfile)
         rowinfo = []
         read_rowinfo = False
         with open(outfile, 'r') as f:
@@ -150,4 +150,4 @@ class sdlist_test(unittest.TestCase):
         self.assertTrue(found_flaggedrow[0] and found_flaggedrow[1])
 
 def suite():
-    return [sdlist_test]
+    return [sdlistold_test]

@@ -16,25 +16,25 @@ except:
     import tests.selection_syntax as selection_syntax
 
 import asap as sd
-from sdaverage import sdaverage
-from sdstat import sdstat
+from sdaverageold import sdaverageold
+from sdstatold import sdstatold
 
 from sdutil import tbmanager
 
 #
-# Unit test of sdaverage task.
+# Unit test of sdaverageold task.
 #
 
-class sdaverage_unittest_base:
+class sdaverageold_unittest_base:
     """
-    Base class for sdaverage unit test
+    Base class for sdaverageold unit test
     """
     # Data path of input/output
     datapath = os.environ.get('CASAPATH').split()[0] + \
                '/data/regression/unittest/sdsmooth/'
     sddatapath = os.environ.get('CASAPATH').split()[0] + \
                  '/data/regression/unittest/singledish/'
-    taskname = "sdaverage"
+    taskname = "sdaverageold"
 
     def _checkfile( self, name ):
         isthere=os.path.exists(name)
@@ -62,7 +62,7 @@ class sdaverage_unittest_base:
         ref_denomi[idx_ref] = almostzero
         return (data_arr-ref_arr)/ref_denomi
 
-class sdaverage_smoothtest_base(sdaverage_unittest_base):
+class sdaverageold_smoothtest_base(sdaverageold_unittest_base):
     """
     Base class for smoothing test
     """
@@ -102,7 +102,7 @@ class sdaverage_smoothtest_base(sdaverage_unittest_base):
 ###
 # Base class for averaging test
 ###
-class sdaverage_avetest_base(sdaverage_unittest_base):
+class sdaverageold_avetest_base(sdaverageold_unittest_base):
     """
     Base class for averaging test
     """
@@ -213,12 +213,12 @@ class sdaverage_avetest_base(sdaverage_unittest_base):
 
 
 
-class sdaverage_badinputs(sdaverage_unittest_base,unittest.TestCase):
+class sdaverageold_badinputs(sdaverageold_unittest_base,unittest.TestCase):
     """
     Tests on bad input parameter setting
     """
     inname = 'OrionS_rawACSmod_if2_calTPave_bl.asap'
-    outname = sdaverage_unittest_base.taskname+'_bad.asap'
+    outname = sdaverageold_unittest_base.taskname+'_bad.asap'
 
     badname = "bad"
     badquant = "5bad"
@@ -230,7 +230,7 @@ class sdaverage_badinputs(sdaverage_unittest_base,unittest.TestCase):
             shutil.rmtree(self.outname)
         shutil.copytree(self.datapath+self.inname, self.inname)
 
-        default(sdaverage)
+        default(sdaverageold)
 
     def tearDown(self):
         if (os.path.exists(self.inname)):
@@ -241,7 +241,7 @@ class sdaverage_badinputs(sdaverage_unittest_base,unittest.TestCase):
         """Test Default parameters (raises an errror)"""
         # argument verification error
         try:
-            res = sdaverage()
+            res = sdaverageold()
             self.fail("The task must throw exception.")
         except Exception, e:
             pos=str(e).find("Neither averaging nor smoothing parameter is set.")
@@ -251,7 +251,7 @@ class sdaverage_badinputs(sdaverage_unittest_base,unittest.TestCase):
         kernel = self.badname
 
         # argument verification error
-        res = sdaverage(infile=self.inname,outfile=self.outname,
+        res = sdaverageold(infile=self.inname,outfile=self.outname,
                        kernel=kernel)
         self.assertFalse(res)
 
@@ -261,7 +261,7 @@ class sdaverage_badinputs(sdaverage_unittest_base,unittest.TestCase):
         chanwidth = self.badquant
 
         try:
-            res = sdaverage(infile=self.inname,outfile=self.outname,
+            res = sdaverageold(infile=self.inname,outfile=self.outname,
                            kernel=kernel,chanwidth=chanwidth)
             self.assertTrue(False,
                             msg='The task must throw exception')
@@ -275,7 +275,7 @@ class sdaverage_badinputs(sdaverage_unittest_base,unittest.TestCase):
         if (not os.path.exists(outfile)):
             shutil.copytree(self.datapath+outfile, outfile)
         try:
-            self.res=sdaverage(infile=outfile,timeaverage=True,
+            self.res=sdaverageold(infile=outfile,timeaverage=True,
                                 outfile=outfile,overwrite=False)
             self.assertTrue(False,
                             msg='The task must throw exception')
@@ -287,9 +287,9 @@ class sdaverage_badinputs(sdaverage_unittest_base,unittest.TestCase):
             os.system( 'rm -rf %s'%outfile )        
 
 
-class sdaverage_smoothTest(sdaverage_smoothtest_base,unittest.TestCase):
+class sdaverageold_smoothTest(sdaverageold_smoothtest_base,unittest.TestCase):
     """
-    Basic unit tests of smoothing by task sdaverage. No interactive testing.
+    Basic unit tests of smoothing by task sdaverageold. No interactive testing.
 
     The list of tests:
     test00    --- default parameters (raises an errror)
@@ -322,7 +322,7 @@ class sdaverage_smoothTest(sdaverage_smoothtest_base,unittest.TestCase):
 
     # Input and output names
     infile = 'OrionS_rawACSmod_if2_calTPave_bl.asap'
-    outroot = sdaverage_unittest_base.taskname+'_test'
+    outroot = sdaverageold_unittest_base.taskname+'_test'
     linechan = [[2951,3088]]
     basechan = [[500,2950],[3089,7692]]
     regridw = 4
@@ -334,7 +334,7 @@ class sdaverage_smoothTest(sdaverage_smoothtest_base,unittest.TestCase):
             shutil.rmtree(self.infile)
         shutil.copytree(self.datapath+self.infile, self.infile)
 
-        default(sdaverage)
+        default(sdaverageold)
 
     def tearDown(self):
         if (os.path.exists(self.infile)):
@@ -345,7 +345,7 @@ class sdaverage_smoothTest(sdaverage_smoothtest_base,unittest.TestCase):
         tid="01"
         outfile = self.outroot+tid+'.asap'
 
-        result = sdaverage(infile=self.infile,kernel='hanning',outfile=outfile)
+        result = sdaverageold(infile=self.infile,kernel='hanning',outfile=outfile)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         ### reference values ( ASAP r2084 + CASA r14498)
@@ -362,7 +362,7 @@ class sdaverage_smoothTest(sdaverage_smoothtest_base,unittest.TestCase):
         outfile = self.outroot+tid+'.asap'
         kernel = 'boxcar'
 
-        result =sdaverage(infile=self.infile,outfile=outfile,kernel=kernel)
+        result =sdaverageold(infile=self.infile,outfile=outfile,kernel=kernel)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         ### reference values ( ASAP r2084 + CASA r14498)
@@ -380,7 +380,7 @@ class sdaverage_smoothTest(sdaverage_smoothtest_base,unittest.TestCase):
         kernel = 'boxcar'
         kwidth = 16
 
-        result =sdaverage(infile=self.infile,outfile=outfile,
+        result =sdaverageold(infile=self.infile,outfile=outfile,
                          kernel=kernel,kwidth=kwidth)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -399,7 +399,7 @@ class sdaverage_smoothTest(sdaverage_smoothtest_base,unittest.TestCase):
         outfile = self.outroot+tid+'.asap'
         kernel = 'gaussian'
 
-        result =sdaverage(infile=self.infile,outfile=outfile,kernel=kernel)
+        result =sdaverageold(infile=self.infile,outfile=outfile,kernel=kernel)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         ### reference values ( ASAP r2084 + CASA r14498)
@@ -417,7 +417,7 @@ class sdaverage_smoothTest(sdaverage_smoothtest_base,unittest.TestCase):
         kernel = 'gaussian'
         kwidth = 16
 
-        result =sdaverage(infile=self.infile,outfile=outfile,
+        result =sdaverageold(infile=self.infile,outfile=outfile,
                          kernel=kernel,kwidth=kwidth)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -435,8 +435,8 @@ class sdaverage_smoothTest(sdaverage_smoothtest_base,unittest.TestCase):
         outfile = self.outroot+tid+'.asap'
 
         # the fist run with hanning smooth
-        print "The 1st run of sdaverage (hanning smooth)"
-        result1 =sdaverage(infile=self.infile,kernel='hanning',outfile=outfile)
+        print "The 1st run of sdaverageold (hanning smooth)"
+        result1 =sdaverageold(infile=self.infile,kernel='hanning',outfile=outfile)
         self.assertEqual(result1,None,
                          msg="The task returned '"+str(result1)+"' instead of None for the 1st run")
         self.assertTrue(os.path.exists(outfile),
@@ -445,8 +445,8 @@ class sdaverage_smoothTest(sdaverage_smoothtest_base,unittest.TestCase):
         # overwrite 'outfile'
         # the second run with kernel = 'gaussian'
         kernel = 'gaussian'
-        print "The 2nd run of sdaverage (OVERWRITE with Gaussian smooth)"
-        result2 =sdaverage(infile=self.infile,outfile=outfile,
+        print "The 2nd run of sdaverageold (OVERWRITE with Gaussian smooth)"
+        result2 =sdaverageold(infile=self.infile,outfile=outfile,
                           kernel=kernel,overwrite=True)
         self.assertEqual(result2,None,
                          msg="The task returned '"+str(result2)+"' instead of None for the 2nd run")
@@ -477,7 +477,7 @@ class sdaverage_smoothTest(sdaverage_smoothtest_base,unittest.TestCase):
         kernel = 'regrid'
         chanwidth = str(self.regridw)
 
-        result =sdaverage(infile=self.infile,outfile=outfile,
+        result =sdaverageold(infile=self.infile,outfile=outfile,
                          kernel=kernel,chanwidth=chanwidth)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -523,7 +523,7 @@ class sdaverage_smoothTest(sdaverage_smoothtest_base,unittest.TestCase):
         kernel = 'regrid'
         chanwidth = qa.tos(qa.quantity(chw_new,unit))
 
-        result =sdaverage(infile=self.infile,outfile=outfile,
+        result =sdaverageold(infile=self.infile,outfile=outfile,
                          kernel=kernel,chanwidth=chanwidth)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -569,7 +569,7 @@ class sdaverage_smoothTest(sdaverage_smoothtest_base,unittest.TestCase):
         kernel = 'regrid'
         chanwidth = qa.tos(qa.quantity(chw_new,unit))
 
-        result =sdaverage(infile=self.infile,outfile=outfile,
+        result =sdaverageold(infile=self.infile,outfile=outfile,
                          kernel=kernel,chanwidth=chanwidth)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -610,7 +610,7 @@ class sdaverage_smoothTest(sdaverage_smoothtest_base,unittest.TestCase):
         kernel = 'regrid'
         chanwidth = str(-self.regridw)
 
-        result =sdaverage(infile=self.infile,outfile=outfile,
+        result =sdaverageold(infile=self.infile,outfile=outfile,
                          kernel=kernel,chanwidth=chanwidth)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -662,7 +662,7 @@ class sdaverage_smoothTest(sdaverage_smoothtest_base,unittest.TestCase):
         kernel = 'regrid'
         chanwidth = qa.tos(qa.quantity(chw_new,unit))
 
-        result =sdaverage(infile=self.infile,outfile=outfile,
+        result =sdaverageold(infile=self.infile,outfile=outfile,
                          kernel=kernel,chanwidth=chanwidth)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -715,7 +715,7 @@ class sdaverage_smoothTest(sdaverage_smoothtest_base,unittest.TestCase):
         kernel = 'regrid'
         chanwidth = qa.tos(qa.quantity(chw_new,unit))
 
-        result =sdaverage(infile=self.infile,outfile=outfile,
+        result =sdaverageold(infile=self.infile,outfile=outfile,
                          kernel=kernel,chanwidth=chanwidth)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -756,7 +756,7 @@ class sdaverage_smoothTest(sdaverage_smoothtest_base,unittest.TestCase):
         kwidth = 16
 
         # flag line channels
-        from sdflag import sdflag
+        from sdflagold import sdflagold
         flag_line = []
         flag_line_str_list = []
         for rg in self.linechan:
@@ -764,9 +764,9 @@ class sdaverage_smoothTest(sdaverage_smoothtest_base,unittest.TestCase):
             flag_line.append(fseg)
             flag_line_str_list.append('%f~%f' % (fseg[0], fseg[1]))
         flag_line_str = '*:'+(str(';').join(flag_line_str_list))
-        sdflag(infile=self.infile, mode='manual', spw=flag_line_str)
+        sdflagold(infile=self.infile, mode='manual', spw=flag_line_str)
 
-        result =sdaverage(infile=self.infile,outfile=outfile,
+        result =sdaverageold(infile=self.infile,outfile=outfile,
                          kernel=kernel,kwidth=kwidth)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -783,7 +783,7 @@ class sdaverage_smoothTest(sdaverage_smoothtest_base,unittest.TestCase):
         
         
         # unflag line channels
-        sdflag(infile=outfile, mode='manual', spw=flag_line_str, unflag=True)
+        sdflagold(infile=outfile, mode='manual', spw=flag_line_str, unflag=True)
 
         ### reference values ( ASAP r2084 + CASA r14498)
         refdic = {'linemax': 0,
@@ -795,9 +795,9 @@ class sdaverage_smoothTest(sdaverage_smoothtest_base,unittest.TestCase):
         self._compareDictVal(testval, refdic)
 
 
-class sdaverage_storageTest( sdaverage_smoothtest_base, unittest.TestCase ):
+class sdaverageold_storageTest( sdaverageold_smoothtest_base, unittest.TestCase ):
     """
-    Unit tests for task sdaverage. Test scantable sotrage and insitu
+    Unit tests for task sdaverageold. Test scantable sotrage and insitu
     parameters
 
     The list of tests:
@@ -817,7 +817,7 @@ class sdaverage_storageTest( sdaverage_smoothtest_base, unittest.TestCase ):
     """
     # Input and output names
     infile = 'OrionS_rawACSmod_if2_calTPave_bl.asap'
-    outroot = sdaverage_unittest_base.taskname+'_test'
+    outroot = sdaverageold_unittest_base.taskname+'_test'
     linechan = [[2951,3088]]
     basechan = [[500,2950],[3089,7692]]
     regridw = 4
@@ -842,7 +842,7 @@ class sdaverage_storageTest( sdaverage_smoothtest_base, unittest.TestCase ):
             shutil.rmtree(self.infile)
         shutil.copytree(self.datapath+self.infile, self.infile)
 
-        default(sdaverage)
+        default(sdaverageold)
 
     def tearDown( self ):
         if (os.path.exists(self.infile)):
@@ -861,7 +861,7 @@ class sdaverage_storageTest( sdaverage_smoothtest_base, unittest.TestCase ):
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
 
         initval = self._getStats(self.infile)
-        result =sdaverage(infile=self.infile,outfile=outfile,
+        result =sdaverageold(infile=self.infile,outfile=outfile,
                          kernel=kernel,kwidth=kwidth)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -887,7 +887,7 @@ class sdaverage_storageTest( sdaverage_smoothtest_base, unittest.TestCase ):
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
 
         initval = self._getStats(self.infile)
-        result =sdaverage(infile=self.infile,outfile=outfile,
+        result =sdaverageold(infile=self.infile,outfile=outfile,
                          kernel=kernel,kwidth=kwidth)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -913,7 +913,7 @@ class sdaverage_storageTest( sdaverage_smoothtest_base, unittest.TestCase ):
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
 
         initval = self._getStats(self.infile)
-        result =sdaverage(infile=self.infile,outfile=outfile,
+        result =sdaverageold(infile=self.infile,outfile=outfile,
                          kernel=kernel,kwidth=kwidth)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -939,7 +939,7 @@ class sdaverage_storageTest( sdaverage_smoothtest_base, unittest.TestCase ):
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
 
         initval = self._getStats(self.infile)
-        result =sdaverage(infile=self.infile,outfile=outfile,
+        result =sdaverageold(infile=self.infile,outfile=outfile,
                          kernel=kernel,kwidth=kwidth)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -978,7 +978,7 @@ class sdaverage_storageTest( sdaverage_smoothtest_base, unittest.TestCase ):
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
 
         initval = self._getStats(self.infile,self.linechan,self.basechan)
-        result =sdaverage(infile=self.infile,outfile=outfile,
+        result =sdaverageold(infile=self.infile,outfile=outfile,
                          kernel=kernel,chanwidth=chanwidth)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -1030,7 +1030,7 @@ class sdaverage_storageTest( sdaverage_smoothtest_base, unittest.TestCase ):
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
 
         initval = self._getStats(self.infile,self.linechan,self.basechan)
-        result =sdaverage(infile=self.infile,outfile=outfile,
+        result =sdaverageold(infile=self.infile,outfile=outfile,
                          kernel=kernel,chanwidth=chanwidth)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -1082,7 +1082,7 @@ class sdaverage_storageTest( sdaverage_smoothtest_base, unittest.TestCase ):
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
 
         initval = self._getStats(self.infile,self.linechan,self.basechan)
-        result =sdaverage(infile=self.infile,outfile=outfile,
+        result =sdaverageold(infile=self.infile,outfile=outfile,
                          kernel=kernel,chanwidth=chanwidth)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -1134,7 +1134,7 @@ class sdaverage_storageTest( sdaverage_smoothtest_base, unittest.TestCase ):
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
 
         initval = self._getStats(self.infile,self.linechan,self.basechan)
-        result =sdaverage(infile=self.infile,outfile=outfile,
+        result =sdaverageold(infile=self.infile,outfile=outfile,
                          kernel=kernel,chanwidth=chanwidth)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -1164,7 +1164,7 @@ class sdaverage_storageTest( sdaverage_smoothtest_base, unittest.TestCase ):
 ###
 # Test polarization averaging with/without scan average
 ###
-class sdaverage_test6(sdaverage_avetest_base,unittest.TestCase):
+class sdaverageold_test6(sdaverageold_avetest_base,unittest.TestCase):
     """
     Test polarization averaging with/without scan average
 
@@ -1178,7 +1178,7 @@ class sdaverage_test6(sdaverage_avetest_base,unittest.TestCase):
 
     # Input and output names
     rawfile='calpsGBT.cal.asap'
-    prefix=sdaverage_unittest_base.taskname+'Test6'
+    prefix=sdaverageold_unittest_base.taskname+'Test6'
     reffiles=['polaverage.ref0',
               'polaverage.ref1',
               'polaverage.ref2',
@@ -1192,7 +1192,7 @@ class sdaverage_test6(sdaverage_avetest_base,unittest.TestCase):
             if (not os.path.exists(reffile)):
                 shutil.copyfile(self.datapath+reffile, reffile)
 
-        default(sdaverage)
+        default(sdaverageold)
 
     def tearDown(self):
         if (os.path.exists(self.rawfile)):
@@ -1205,7 +1205,7 @@ class sdaverage_test6(sdaverage_avetest_base,unittest.TestCase):
     def test600(self):
         """Test 600: test polarization average with pweight='var' (scan average)"""
         outname=self.prefix+self.postfix
-        self.res=sdaverage(infile=self.rawfile,timeaverage=True,scanaverage=True,tweight='var',polaverage=True,pweight='var',outfile=outname,outform='ASAP')
+        self.res=sdaverageold(infile=self.rawfile,timeaverage=True,scanaverage=True,tweight='var',polaverage=True,pweight='var',outfile=outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during polarization averaging')
         self._compare(outname,self.reffiles[0])
@@ -1213,7 +1213,7 @@ class sdaverage_test6(sdaverage_avetest_base,unittest.TestCase):
     def test601(self):
         """Test 601: test polarization average with pweight='var' (no scan average)"""
         outname=self.prefix+self.postfix
-        self.res=sdaverage(infile=self.rawfile,timeaverage=False,polaverage=True,pweight='var',outfile=outname,outform='ASAP')
+        self.res=sdaverageold(infile=self.rawfile,timeaverage=False,polaverage=True,pweight='var',outfile=outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during polarization averaging')
         self._compare(outname,self.reffiles[1])
@@ -1221,7 +1221,7 @@ class sdaverage_test6(sdaverage_avetest_base,unittest.TestCase):
     def test602(self):
         """Test 602: test polarization average with pweight='tsys' (scan average)"""
         outname=self.prefix+self.postfix
-        self.res=sdaverage(infile=self.rawfile,timeaverage=True,scanaverage=True,tweight='tsys',polaverage=True,pweight='tsys',outfile=outname,outform='ASAP')
+        self.res=sdaverageold(infile=self.rawfile,timeaverage=True,scanaverage=True,tweight='tsys',polaverage=True,pweight='tsys',outfile=outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during polarization averaging')
         self._compare(outname,self.reffiles[2])
@@ -1229,7 +1229,7 @@ class sdaverage_test6(sdaverage_avetest_base,unittest.TestCase):
     def test603(self):
         """Test 603: test polarization average with pweight='tsys' (no scan average)"""
         outname=self.prefix+self.postfix
-        self.res=sdaverage(infile=self.rawfile,timeaverage=False,polaverage=True,pweight='tsys',outfile=outname,outform='ASAP')
+        self.res=sdaverageold(infile=self.rawfile,timeaverage=False,polaverage=True,pweight='tsys',outfile=outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during polarization averaging')
         self._compare(outname,self.reffiles[3])
@@ -1238,7 +1238,7 @@ class sdaverage_test6(sdaverage_avetest_base,unittest.TestCase):
 ###
 # Test time averaging with/without scan average
 ###
-class sdaverage_test7(sdaverage_avetest_base,unittest.TestCase):
+class sdaverageold_test7(sdaverageold_avetest_base,unittest.TestCase):
     """
     Test time averaging with/without scan average
 
@@ -1246,7 +1246,7 @@ class sdaverage_test7(sdaverage_avetest_base,unittest.TestCase):
     """
     # Input and output names
     rawfile='calpsGBT.cal.asap'
-    prefix=sdaverage_unittest_base.taskname+'Test7'
+    prefix=sdaverageold_unittest_base.taskname+'Test7'
     reffiles=['timeaverage.ref0',
               'timeaverage.ref1',
               'timeaverage.ref2',
@@ -1266,7 +1266,7 @@ class sdaverage_test7(sdaverage_avetest_base,unittest.TestCase):
             if (not os.path.exists(reffile)):
                 shutil.copyfile(self.datapath+reffile, reffile)
 
-        default(sdaverage)
+        default(sdaverageold)
 
     def tearDown(self):
         if (os.path.exists(self.rawfile)):
@@ -1279,7 +1279,7 @@ class sdaverage_test7(sdaverage_avetest_base,unittest.TestCase):
     def test700(self):
         """Test 700: test time average with tweight='var' (scan average)"""
         outname=self.prefix+self.postfix
-        self.res=sdaverage(infile=self.rawfile,timeaverage=True,scanaverage=True,tweight='var',outfile=outname,outform='ASAP')
+        self.res=sdaverageold(infile=self.rawfile,timeaverage=True,scanaverage=True,tweight='var',outfile=outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during time averaging')
         self._compare(outname,self.reffiles[0])
@@ -1287,7 +1287,7 @@ class sdaverage_test7(sdaverage_avetest_base,unittest.TestCase):
     def test701(self):
         """Test 701: test time average with tweight='var' (no scan average)"""
         outname=self.prefix+self.postfix
-        self.res=sdaverage(infile=self.rawfile,timeaverage=True,scanaverage=False,tweight='var',outfile=outname,outform='ASAP')
+        self.res=sdaverageold(infile=self.rawfile,timeaverage=True,scanaverage=False,tweight='var',outfile=outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during time averaging')
         self._compare(outname,self.reffiles[1])
@@ -1295,7 +1295,7 @@ class sdaverage_test7(sdaverage_avetest_base,unittest.TestCase):
     def test702(self):
         """Test 702: test time average with tweight='tsys' (scan average)"""
         outname=self.prefix+self.postfix
-        self.res=sdaverage(infile=self.rawfile,timeaverage=True,scanaverage=True,tweight='tsys',outfile=outname,outform='ASAP')
+        self.res=sdaverageold(infile=self.rawfile,timeaverage=True,scanaverage=True,tweight='tsys',outfile=outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during time averaging')
         self._compare(outname,self.reffiles[2])
@@ -1303,7 +1303,7 @@ class sdaverage_test7(sdaverage_avetest_base,unittest.TestCase):
     def test703(self):
         """Test 703: test time average with tweight='tsys' (no scan average)"""
         outname=self.prefix+self.postfix
-        self.res=sdaverage(infile=self.rawfile,timeaverage=True,scanaverage=False,tweight='tsys',outfile=outname,outform='ASAP')
+        self.res=sdaverageold(infile=self.rawfile,timeaverage=True,scanaverage=False,tweight='tsys',outfile=outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during time averaging')
         self._compare(outname,self.reffiles[3])
@@ -1311,7 +1311,7 @@ class sdaverage_test7(sdaverage_avetest_base,unittest.TestCase):
     def test704(self):
         """Test 704: test time average with tweight='tint' (scan average)"""
         outname=self.prefix+self.postfix
-        self.res=sdaverage(infile=self.rawfile,timeaverage=True,scanaverage=True,tweight='tint',outfile=outname,outform='ASAP')
+        self.res=sdaverageold(infile=self.rawfile,timeaverage=True,scanaverage=True,tweight='tint',outfile=outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during time averaging')
         self._compare(outname,self.reffiles[4])
@@ -1319,7 +1319,7 @@ class sdaverage_test7(sdaverage_avetest_base,unittest.TestCase):
     def test705(self):
         """Test 705: test time average with tweight='tint' (no scan average)"""
         outname=self.prefix+self.postfix
-        self.res=sdaverage(infile=self.rawfile,timeaverage=True,scanaverage=False,tweight='tint',outfile=outname,outform='ASAP')
+        self.res=sdaverageold(infile=self.rawfile,timeaverage=True,scanaverage=False,tweight='tint',outfile=outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during time averaging')
         self._compare(outname,self.reffiles[5])
@@ -1327,7 +1327,7 @@ class sdaverage_test7(sdaverage_avetest_base,unittest.TestCase):
     def test706(self):
         """Test 706: test time average with tweight='tintsys' (scan average)"""
         outname=self.prefix+self.postfix
-        self.res=sdaverage(infile=self.rawfile,timeaverage=True,scanaverage=True,tweight='tintsys',outfile=outname,outform='ASAP')
+        self.res=sdaverageold(infile=self.rawfile,timeaverage=True,scanaverage=True,tweight='tintsys',outfile=outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during time averaging')
         self._compare(outname,self.reffiles[6])
@@ -1335,7 +1335,7 @@ class sdaverage_test7(sdaverage_avetest_base,unittest.TestCase):
     def test707(self):
         """Test 707: test time average with tweight='tintsys' (no scan average)"""
         outname=self.prefix+self.postfix
-        self.res=sdaverage(infile=self.rawfile,timeaverage=True,scanaverage=False,tweight='tintsys',outfile=outname,outform='ASAP')
+        self.res=sdaverageold(infile=self.rawfile,timeaverage=True,scanaverage=False,tweight='tintsys',outfile=outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during time averaging')
         self._compare(outname,self.reffiles[7])
@@ -1343,7 +1343,7 @@ class sdaverage_test7(sdaverage_avetest_base,unittest.TestCase):
     def test708(self):
         """Test 708: test time average with tweight='median' (scan average)"""
         outname=self.prefix+self.postfix
-        self.res=sdaverage(infile=self.rawfile,timeaverage=True,scanaverage=True,tweight='median',outfile=outname,outform='ASAP')
+        self.res=sdaverageold(infile=self.rawfile,timeaverage=True,scanaverage=True,tweight='median',outfile=outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during time averaging')
         self._compare(outname,self.reffiles[8])
@@ -1351,7 +1351,7 @@ class sdaverage_test7(sdaverage_avetest_base,unittest.TestCase):
     def test709(self):
         """Test 709: test time average with tweight='median' (no scan average)"""
         outname=self.prefix+self.postfix
-        self.res=sdaverage(infile=self.rawfile,timeaverage=True,scanaverage=False,tweight='median',outfile=outname,outform='ASAP')
+        self.res=sdaverageold(infile=self.rawfile,timeaverage=True,scanaverage=False,tweight='median',outfile=outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during time averaging')
         self._compare(outname,self.reffiles[9])
@@ -1360,7 +1360,7 @@ class sdaverage_test7(sdaverage_avetest_base,unittest.TestCase):
 ###
 # Test mixed operation (cal+average,time+pol average,...)
 ###
-class sdaverage_test8(sdaverage_avetest_base,unittest.TestCase):
+class sdaverageold_test8(sdaverageold_avetest_base,unittest.TestCase):
     """
     Test other things including mixed opearation
 
@@ -1373,7 +1373,7 @@ class sdaverage_test8(sdaverage_avetest_base,unittest.TestCase):
     # Input and output names
     rawfile='calpsGBT.asap'
     calfile='calpsGBT.cal.asap'
-    prefix=sdaverage_unittest_base.taskname+'Test8'
+    prefix=sdaverageold_unittest_base.taskname+'Test8'
     reffiles=['polaverage.ref2',
               'timeaverage.ref6',
               'timepolaverage.ref']
@@ -1388,7 +1388,7 @@ class sdaverage_test8(sdaverage_avetest_base,unittest.TestCase):
             if (not os.path.exists(reffile)):
                 shutil.copyfile(self.datapath+reffile, reffile)
 
-        default(sdaverage)
+        default(sdaverageold)
 
     def tearDown(self):
         if (os.path.exists(self.rawfile)):
@@ -1403,7 +1403,7 @@ class sdaverage_test8(sdaverage_avetest_base,unittest.TestCase):
     def test801(self):
         """Test 801: test polarization average with pweight='tsys' + time average with tweight='tintsys' (no scan average)"""
         outname=self.prefix+self.postfix
-        self.res=sdaverage(infile=self.calfile,timeaverage=True,scanaverage=False,tweight='tintsys',polaverage=True,pweight='tsys',outfile=outname,outform='ASAP')
+        self.res=sdaverageold(infile=self.calfile,timeaverage=True,scanaverage=False,tweight='tintsys',polaverage=True,pweight='tsys',outfile=outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during averaging')
         self._compare(outname,self.reffiles[2])
@@ -1411,7 +1411,7 @@ class sdaverage_test8(sdaverage_avetest_base,unittest.TestCase):
 ###
 # Test averageall parameter
 ###
-class sdaverage_test9(sdaverage_avetest_base,unittest.TestCase):
+class sdaverageold_test9(sdaverageold_avetest_base,unittest.TestCase):
     """
     Test averageall parameter that forces to average spectra with
     different spectral resolution.
@@ -1425,7 +1425,7 @@ class sdaverage_test9(sdaverage_avetest_base,unittest.TestCase):
     """
     # Input and output names
     rawfile='averageall.asap'
-    prefix=sdaverage_unittest_base.taskname+'Test9'
+    prefix=sdaverageold_unittest_base.taskname+'Test9'
     reffiles=['averageall.ref']
 
     def setUp(self):
@@ -1436,7 +1436,7 @@ class sdaverage_test9(sdaverage_avetest_base,unittest.TestCase):
             if (not os.path.exists(reffile)):
                 shutil.copyfile(self.datapath+reffile, reffile)
 
-        default(sdaverage)
+        default(sdaverageold)
 
     def tearDown(self):
         if (os.path.exists(self.rawfile)):
@@ -1449,7 +1449,7 @@ class sdaverage_test9(sdaverage_avetest_base,unittest.TestCase):
     def test900(self):
         """Test 900: test averageall parameter"""
         outname=self.prefix+self.postfix
-        self.res=sdaverage(infile=self.rawfile,timeaverage=True,scanaverage=False,tweight='tintsys',averageall=True,polaverage=False,outfile=outname,outform='ASAP')
+        self.res=sdaverageold(infile=self.rawfile,timeaverage=True,scanaverage=False,tweight='tintsys',averageall=True,polaverage=False,outfile=outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during averaging')
         self._compare(outname,self.reffiles[0])
@@ -1485,20 +1485,20 @@ class sdaverage_test9(sdaverage_avetest_base,unittest.TestCase):
 ###
 # Averaging of flagged data
 ###
-class sdaverage_test_flag(sdaverage_avetest_base,unittest.TestCase):
+class sdaverageold_test_flag(sdaverageold_avetest_base,unittest.TestCase):
     """
     Test Averaging of flagged data.
 
     Data varies with tests
     """
     # Input and output names
-    prefix=sdaverage_unittest_base.taskname+'Test7'
+    prefix=sdaverageold_unittest_base.taskname+'Test7'
     filelist = []
 
     def setUp(self):
         self.res=None
         self.filelist = []
-        default(sdaverage)
+        default(sdaverageold)
 
     def tearDown(self):
         for name in self.filelist:
@@ -1535,7 +1535,7 @@ class sdaverage_test_flag(sdaverage_avetest_base,unittest.TestCase):
 
     def _comp_stat(self, data, refstat):
         if type(data)==str:
-            data = sdstat(infile=data)
+            data = sdstatold(infile=data)
         elif type(data)!=dict:
             self.fail(msg="Internal Error: invalid data given to calculate statistics.")
         for key, refvals in refstat.items():
@@ -1562,7 +1562,7 @@ class sdaverage_test_flag(sdaverage_avetest_base,unittest.TestCase):
         self._remove(outname)
 
         # run task
-        self.res=sdaverage(infile=inname,timeaverage=True,scanaverage=False,
+        self.res=sdaverageold(infile=inname,timeaverage=True,scanaverage=False,
                        tweight='tint',outfile=outname,outform='ASAP')
         # verification
         self.assertEqual(self.res,None,
@@ -1581,16 +1581,16 @@ class sdaverage_test_flag(sdaverage_avetest_base,unittest.TestCase):
         self._remove(outname)
 
         # run task
-        self.res=sdaverage(infile=inname,timeaverage=True,scanaverage=False,
+        self.res=sdaverageold(infile=inname,timeaverage=True,scanaverage=False,
                        tweight='tint',outfile=outname,outform='ASAP')
         # verification
         self.assertEqual(self.res,None,
                          msg='Any error occurred during time averaging')
         refedge = {'max': 1.5, 'min': 1.5, 'sum': 9286.5}
         refinner = {'max': 2.0, 'min': 2.0, 'sum': 4002.0}
-        outstat = sdstat(outname, spw='*:3000~5000')
+        outstat = sdstatold(outname, spw='*:3000~5000')
         self._comp_stat(outstat, refinner)
-        outstat = sdstat(outname, spw='*:0~2999;5001~8192')        
+        outstat = sdstatold(outname, spw='*:0~2999;5001~8192')        
         self._comp_stat(outstat, refedge)
 
     def testFlag03(self):
@@ -1604,7 +1604,7 @@ class sdaverage_test_flag(sdaverage_avetest_base,unittest.TestCase):
         self._remove(outname)
 
         # run task
-        self.res=sdaverage(infile=inname,timeaverage=False,scanaverage=False,
+        self.res=sdaverageold(infile=inname,timeaverage=False,scanaverage=False,
                        polaverage=True,pweight='tsys',
                        outfile=outname,outform='ASAP')
         # verification
@@ -1624,7 +1624,7 @@ class sdaverage_test_flag(sdaverage_avetest_base,unittest.TestCase):
         self._remove(outname)
 
         # run task
-        self.res=sdaverage(infile=inname,timeaverage=False,scanaverage=False,
+        self.res=sdaverageold(infile=inname,timeaverage=False,scanaverage=False,
                        polaverage=True,pweight='tsys',
                        outfile=outname,outform='ASAP')
         # verification
@@ -1632,28 +1632,28 @@ class sdaverage_test_flag(sdaverage_avetest_base,unittest.TestCase):
                          msg='Any error occurred during time averaging')
         refedge = {'max': 1.5, 'min': 1.5, 'sum': 9286.5}
         refinner = {'max': 2.0, 'min': 2.0, 'sum': 4002.0}
-        outstat = sdstat(outname, spw='*:3000~5000')
+        outstat = sdstatold(outname, spw='*:3000~5000')
         self._comp_stat(outstat, refinner)
-        outstat = sdstat(outname, spw='*:0~2999;5001~8192')        
+        outstat = sdstatold(outname, spw='*:0~2999;5001~8192')        
         self._comp_stat(outstat, refedge)
 
 
-class sdaverage_avetest_selection(selection_syntax.SelectionSyntaxTest,
-                                  sdaverage_avetest_base,unittest.TestCase):
+class sdaverageold_avetest_selection(selection_syntax.SelectionSyntaxTest,
+                                  sdaverageold_avetest_base,unittest.TestCase):
     """
     Test selection syntax in averaging.
     Selection parameters to test are:
     field, spw (no channel selection), scan, pol
     """
     rawfile = 'sd_analytic_type2-1.asap'
-    prefix = sdaverage_unittest_base.taskname+'TestSel'
+    prefix = sdaverageold_unittest_base.taskname+'TestSel'
     ref_save = ( (5.5,), (1.5,), (3.5,), (10,0.1), (20,-0.1), (20,0.1), (30,-0.1) )
     ref_tave = ( (5.5,), (2.5,), (15,0.1), (25,-0.1) )
     ref_pave = ( (5.5,), (2.5,), (20.,) )
     
     @property
     def task(self):
-        return sdaverage
+        return sdaverageold
     
     @property
     def spw_channel_selection(self):
@@ -1664,7 +1664,7 @@ class sdaverage_avetest_selection(selection_syntax.SelectionSyntaxTest,
         if (not os.path.exists(self.rawfile)):
             shutil.copytree(self.sddatapath+self.rawfile, self.rawfile)
 
-        default(sdaverage)
+        default(sdaverageold)
         self.refdata = None
         self.scanaverage = False
         self.timeaverage = False
@@ -2062,8 +2062,8 @@ class sdaverage_avetest_selection(selection_syntax.SelectionSyntaxTest,
         return yarr
         
 
-class sdaverage_smoothtest_selection(selection_syntax.SelectionSyntaxTest,
-                                     sdaverage_smoothtest_base,
+class sdaverageold_smoothtest_selection(selection_syntax.SelectionSyntaxTest,
+                                     sdaverageold_smoothtest_base,
                                      unittest.TestCase):
     """
     Test selection syntax in smoothing.
@@ -2071,7 +2071,7 @@ class sdaverage_smoothtest_selection(selection_syntax.SelectionSyntaxTest,
     field, spw (no channel selection), scan, pol
     """
     rawfile = 'sd_analytic_type1-3.bl.asap'
-    prefix = sdaverage_unittest_base.taskname+'TestSel'
+    prefix = sdaverageold_unittest_base.taskname+'TestSel'
     kernel = 'boxcar'
     kwidth = 5
     refval = ({'value': 1.0, 'channel': (17,21)},
@@ -2081,7 +2081,7 @@ class sdaverage_smoothtest_selection(selection_syntax.SelectionSyntaxTest,
     
     @property
     def task(self):
-        return sdaverage
+        return sdaverageold
     
     @property
     def spw_channel_selection(self):
@@ -2092,7 +2092,7 @@ class sdaverage_smoothtest_selection(selection_syntax.SelectionSyntaxTest,
         if (not os.path.exists(self.rawfile)):
             shutil.copytree(self.sddatapath+self.rawfile, self.rawfile)
         
-        default(sdaverage)
+        default(sdaverageold)
         self.scanaverage = False
         self.timeaverage = False
         self.polaverage = False
@@ -2423,7 +2423,7 @@ class sdaverage_smoothtest_selection(selection_syntax.SelectionSyntaxTest,
 ###
 # Test weighting by integration time
 ###
-class sdaverage_test_weighting_tint(unittest.TestCase):
+class sdaverageold_test_weighting_tint(unittest.TestCase):
     """
     Test TINT weighting.
 
@@ -2432,14 +2432,14 @@ class sdaverage_test_weighting_tint(unittest.TestCase):
     datapath = os.environ.get('CASAPATH').split()[0] + \
                '/data/regression/unittest/sdaverage/'
     rawfile = 'testaverage.asap'
-    prefix = 'sdaverage_test_weighting_tint'
+    prefix = 'sdaverageold_test_weighting_tint'
 
     def setUp(self):
         self.res=None
         if (not os.path.exists(self.rawfile)):
             shutil.copytree(self.datapath+self.rawfile, self.rawfile)
 
-        default(sdaverage)
+        default(sdaverageold)
 
     def tearDown(self):
         if (os.path.exists(self.rawfile)):
@@ -2468,23 +2468,23 @@ class sdaverage_test_weighting_tint(unittest.TestCase):
     def test_weighting_tint(self):
         """test_weighing_tint: test averaging by tint"""
         outfile = self.prefix + '_tint.asap'
-        res = sdaverage(infile=self.rawfile, outfile=outfile, timeaverage=True, tweight='tint')
+        res = sdaverageold(infile=self.rawfile, outfile=outfile, timeaverage=True, tweight='tint')
         self.verify(outfile, weight_tsys=False)
 
     def test_weighting_tintsys(self):
         """test_weighting_tintsys: test averaging by tintsys"""
         outfile = self.prefix + '_tintsys.asap'
-        res = sdaverage(infile=self.rawfile, outfile=outfile, timeaverage=True, tweight='tint')
+        res = sdaverageold(infile=self.rawfile, outfile=outfile, timeaverage=True, tweight='tint')
         self.verify(outfile, weight_tsys=True)
         
 ###
 # Test flag information handling
 ###
-class sdaverage_test_average_flag(unittest.TestCase):
+class sdaverageold_test_average_flag(unittest.TestCase):
     """
     Test flag information handling.
 
-    Data is sdaverage_testflag.asap
+    Data is sdaverageold_testflag.asap
 
     Summary of the data:
     ROW | FLAGROW    | FLAGTRA          | SPECTRA 
@@ -2509,14 +2509,14 @@ class sdaverage_test_average_flag(unittest.TestCase):
     datapath = os.environ.get('CASAPATH').split()[0] + \
                '/data/regression/unittest/sdaverage/'
     rawfile = 'sdaverage_testflag.asap'
-    prefix = 'sdaverage_test_average_flag'
+    prefix = 'sdaverageold_test_average_flag'
 
     def setUp(self):
         self.res=None
         if (not os.path.exists(self.rawfile)):
             shutil.copytree(self.datapath+self.rawfile, self.rawfile)
 
-        default(sdaverage)
+        default(sdaverageold)
 
     def tearDown(self):
         if (os.path.exists(self.rawfile)):
@@ -2728,7 +2728,7 @@ class sdaverage_test_average_flag(unittest.TestCase):
     def test_average_flag(self):
         """test_average_flag: test if average handles flag information properly"""
         outfile = self.prefix + '.asap'
-        res = sdaverage(infile=self.rawfile, outfile=outfile, timeaverage=True, tweight='tint')
+        res = sdaverageold(infile=self.rawfile, outfile=outfile, timeaverage=True, tweight='tint')
 
         self._verify_average(outfile)
 
@@ -2747,7 +2747,7 @@ class sdaverage_test_average_flag(unittest.TestCase):
 
         outfile = self.prefix + '.asap'
 
-        sdaverage(infile=self.rawfile, outfile=outfile, timeaverage=True, tweight='tint')
+        sdaverageold(infile=self.rawfile, outfile=outfile, timeaverage=True, tweight='tint')
         
         flagrow_in, flagtra_in, spectra_in, interval_in = self._get_data(self.rawfile, ['INTERVAL'])
         flagrow_out, flagtra_out, spectra_out, interval_out = self._get_data(outfile, ['INTERVAL'])
@@ -2779,7 +2779,7 @@ class sdaverage_test_average_flag(unittest.TestCase):
     def test_average_novaliddata_scan(self):
         """test_avearge_novaliddata_scan: test if the task handles the data that has several scans and one scan is fully flagged"""
         outfile = self.prefix + '.asap'
-        res = sdaverage(infile=self.rawfile, outfile=outfile, timeaverage=True, tweight='tint', scanaverage=True)
+        res = sdaverageold(infile=self.rawfile, outfile=outfile, timeaverage=True, tweight='tint', scanaverage=True)
 
         # one row per scan
         # there are three rows that has proper scan number (0, 1, 2)
@@ -2807,14 +2807,14 @@ class sdaverage_test_average_flag(unittest.TestCase):
     def test_smooth_hanning(self):
         """test_smooth_hanning: test if hanning smoothing (direct convolution) handles flag information correctly"""
         outfile = self.prefix + '.asap'
-        res = sdaverage(infile=self.rawfile, outfile=outfile, kernel='hanning')
+        res = sdaverageold(infile=self.rawfile, outfile=outfile, kernel='hanning')
 
         self._verify_smooth(outfile)
 
     def test_smooth_gaussian(self):
         """test_smooth_gaussian: test if gaussian smoothing (FFT convolution) handles flag information correctly"""
         outfile = self.prefix + '.asap'
-        res = sdaverage(infile=self.rawfile, outfile=outfile, kernel='gaussian')
+        res = sdaverageold(infile=self.rawfile, outfile=outfile, kernel='gaussian')
 
         self._verify_smooth(outfile)
 
@@ -2823,14 +2823,14 @@ class sdaverage_test_average_flag(unittest.TestCase):
         """test_smooth_regrid: test if regridding (binning) handles flag information correctly"""
         outfile = self.prefix + '.asap'
         chanwidth = 2
-        res = sdaverage(infile=self.rawfile, outfile=outfile, kernel='regrid', chanwidth=str(chanwidth))
+        res = sdaverageold(infile=self.rawfile, outfile=outfile, kernel='regrid', chanwidth=str(chanwidth))
 
         self._verify_regrid(outfile, chanwidth)
 
     
 
 def suite():
-    return [sdaverage_badinputs, sdaverage_smoothTest, sdaverage_storageTest,
-            sdaverage_test6, sdaverage_test7, sdaverage_test8, sdaverage_test9,
-            sdaverage_test_flag, sdaverage_avetest_selection, sdaverage_smoothtest_selection,
-            sdaverage_test_weighting_tint, sdaverage_test_average_flag]
+    return [sdaverageold_badinputs, sdaverageold_smoothTest, sdaverageold_storageTest,
+            sdaverageold_test6, sdaverageold_test7, sdaverageold_test8, sdaverageold_test9,
+            sdaverageold_test_flag, sdaverageold_avetest_selection, sdaverageold_smoothtest_selection,
+            sdaverageold_test_weighting_tint, sdaverageold_test_average_flag]

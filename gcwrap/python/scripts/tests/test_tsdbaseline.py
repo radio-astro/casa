@@ -13,7 +13,6 @@ from numpy import array
 
 from tsdbaseline import tsdbaseline
 from sdutil import tbmanager
-from sdstat import sdstat
 
 
 try:
@@ -251,16 +250,6 @@ class tsdbaseline_unittest_base(unittest.TestCase):
             else:
                 casalog.post("Could not find '%s'...skipping copy" % from_name, 'WARN')
     
-    """
-    def _getStats(self, filename, spw=None):
-        if not spw:
-            spw=''
-        self._checkfile(filename)
-        sd.rcParams['scantable.storage'] = 'memory'
-        retstat = sdstat(filename, spw=str(spw))
-        return retstat
-    """
-
     def _getUniqList(self, val):
         """Accepts a python list and returns a list of unique values"""
         if not isinstance(val, list):
@@ -1879,7 +1868,6 @@ class tsdbaseline_multi_IF_test(tsdbaseline_unittest_base):
                          'min_abscissa': {'value': 1490.0,
                                           'unit': 'channel'},
                          'stddev': 1.4974949359893799}}
-        # sdstat must run each IF separately
         for ifno in [5,7]:
             currstat = self._getStats(outfile,ifno)
             self._compareStats(currstat,reference[ifno])

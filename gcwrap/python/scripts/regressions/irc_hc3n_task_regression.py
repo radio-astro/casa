@@ -5,11 +5,11 @@
 # Nod data
 # 
 # tasks used
-# sdlist
-# sdreduce (new)
-# sdplot
-# sdstat
-# sdsave
+# sdlistold
+# sdreduceold (new)
+# sdplotold
+# sdstatold
+# sdsaveold
 ###############################
 import time
 import os
@@ -70,9 +70,9 @@ asap_init()                             #load ASAP module
 					#  -- merge spectral windows with tolerance
 
 # summary
-#default(sdlist)
+#default(sdlistold)
 #infile = 'IRC+10216_rawACSmod'
-#sdlist()
+#sdlistold()
 
 if doplot:
    localplotlevel = 1
@@ -81,7 +81,7 @@ else:
 
 # calibartion,averaging, smoothing, and baseline removal
 # calibrate nod scans for CS line (IF=3)
-default(sdreduce)
+default(sdreduceold)
 infile = 'IRC+10216_rawACSmod'
 fluxunit = 'K'
 calmode = 'nod'
@@ -108,36 +108,36 @@ blfunc = 'poly'
 order = 2
 overwrite = True
 plotlevel = localplotlevel
-sdreduce()
+sdreduceold()
 localoutfile = infile+'_cal'
 
 #plotting the reslut
 #plot the spectrum and save to a postscript file
 if doplot:
-   default(sdplot)
+   default(sdplotold)
    infile = localoutfile
    specunit = 'GHz'
    outfile = 'irc_hc3n_reduced.eps'
    #sd.plotter.set_histogram(hist=True)     # draw spectrum using histogram                 # histogram
    #sd.plotter.axhline(color='r',linewidth=2) # zline                                       # zline
-   sdplot()
+   sdplotold()
 else:
    print "Plotting the result is skipped."
 
 # statistics
-default(sdstat)
+default(sdstatold)
 # select line free regions to get rms
 infile = localoutfile
 #masklist = [200,1500]
 spw = '*:200~1500'
-xstat = sdstat()
+xstat = sdstatold()
 curr_rms = xstat['rms']
 #rms=
 #
 # select the line region
 #masklist = [1800,2400]
 spw = '*:1800~2400'
-xstat = sdstat()
+xstat = sdstatold()
 xstat
 curr_max = xstat['max']
 curr_sum = xstat['sum']
@@ -146,15 +146,15 @@ curr_mean = xstat['mean']
 
 # Save the spectrum
 # in different formats
-default(sdsave)
+default(sdsaveold)
 infile = localoutfile
 outfile = 'irc_hc3n_reduced'
 outform = 'ASCII'
 overwrite = True
-sdsave()
+sdsaveold()
 #outfile = 'irc_hc3n_reduced.ms'
 #outform = 'MS2'
-#sdsave()
+#sdsaveold()
 
 #
 endProc = time.clock()

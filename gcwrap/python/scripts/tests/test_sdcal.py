@@ -20,21 +20,21 @@ except:
 import inspect
 g = sys._getframe(len(inspect.stack())-1).f_globals
 g['__rethrow_casa_exceptions'] = True
-from sdcal import sdcal
+from sdcalold import sdcalold
 import asap as sd
 
 #
-# Unit test of sdcal task.
+# Unit test of sdcalold task.
 # 
 
 ###
-# Base class for sdcal unit test
+# Base class for sdcalold unit test
 ###
-class sdcal_unittest_base:
+class sdcalold_unittest_base:
     """
-    Base class for sdcal unit test
+    Base class for sdcalold unit test
     """
-    taskname='sdcal'
+    taskname='sdcalold'
     datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdcal/'
     tolerance=1.0e-15
 
@@ -86,7 +86,7 @@ class sdcal_unittest_base:
 ###
 # Base class for calibration test
 ###
-class sdcal_caltest_base(sdcal_unittest_base):
+class sdcalold_caltest_base(sdcalold_unittest_base):
     """
     Base class for calibration test
     """
@@ -111,7 +111,7 @@ class sdcal_caltest_base(sdcal_unittest_base):
 ###
 # Base class for edgemarker testing
 ###
-class sdcal_edgemarker_base(sdcal_unittest_base):
+class sdcalold_edgemarker_base(sdcalold_unittest_base):
     """
     Base class for edgemarker testing
     """
@@ -151,13 +151,13 @@ class sdcal_edgemarker_base(sdcal_unittest_base):
 ###
 # Test on bad parameter settings
 ###
-class sdcal_test0(sdcal_unittest_base,unittest.TestCase):
+class sdcalold_test0(sdcalold_unittest_base,unittest.TestCase):
     """
     Test on bad parameter setting
     """
     # Input and output names
     rawfile='calpsGBT.asap'
-    prefix=sdcal_unittest_base.taskname+'Test0'
+    prefix=sdcalold_unittest_base.taskname+'Test0'
     outfile=prefix+'.asap'
 
     def setUp(self):
@@ -165,7 +165,7 @@ class sdcal_test0(sdcal_unittest_base,unittest.TestCase):
         if (not os.path.exists(self.rawfile)):
             shutil.copytree(self.datapath+self.rawfile, self.rawfile)
 
-        default(sdcal)
+        default(sdcalold)
 
     def tearDown(self):
         if (os.path.exists(self.rawfile)):
@@ -175,13 +175,13 @@ class sdcal_test0(sdcal_unittest_base,unittest.TestCase):
     def test000(self):
         """Test 000: Default parameters"""
         # argument verification error
-        self.res=sdcal()
+        self.res=sdcalold()
         self.assertFalse(self.res)
         
     def test001(self):
         """Test 001: Invalid calibration mode"""
         # argument verification error
-        self.res=sdcal(infile=self.rawfile,calmode='invalid',outfile=self.outfile)
+        self.res=sdcalold(infile=self.rawfile,calmode='invalid',outfile=self.outfile)
         self.assertFalse(self.res)
 
     def test002(self):
@@ -190,7 +190,7 @@ class sdcal_test0(sdcal_unittest_base,unittest.TestCase):
         if (not os.path.exists(outfile)):
             shutil.copytree(self.datapath+outfile, outfile)
         try:
-            self.res=sdcal(infile=self.rawfile,outfile=outfile,overwrite=False)
+            self.res=sdcalold(infile=self.rawfile,outfile=outfile,overwrite=False)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -205,7 +205,7 @@ class sdcal_test0(sdcal_unittest_base,unittest.TestCase):
 ###
 # Test GBT position switch calibration 
 ###
-class sdcal_test1(sdcal_caltest_base,unittest.TestCase):
+class sdcalold_test1(sdcalold_caltest_base,unittest.TestCase):
     """
     Test GBT position switch calibration 
     
@@ -225,7 +225,7 @@ class sdcal_test1(sdcal_caltest_base,unittest.TestCase):
     # Input and output names
     rawfile='calpsGBT.asap'
     reffile='calpsGBT.cal.asap'
-    prefix=sdcal_unittest_base.taskname+'Test1'
+    prefix=sdcalold_unittest_base.taskname+'Test1'
     calmode='ps'
 
     def setUp(self):
@@ -235,7 +235,7 @@ class sdcal_test1(sdcal_caltest_base,unittest.TestCase):
         if (not os.path.exists(self.reffile)):
             shutil.copytree(self.datapath+self.reffile, self.reffile)
 
-        default(sdcal)
+        default(sdcalold)
 
     def tearDown(self):
         if (os.path.exists(self.rawfile)):
@@ -247,7 +247,7 @@ class sdcal_test1(sdcal_caltest_base,unittest.TestCase):
     def test100(self):
         """Test 100: test to calibrate data (GBT position switch)"""
         outname=self.prefix+self.postfix
-        self.res=sdcal(infile=self.rawfile,calmode=self.calmode,tau=0.09,outfile=outname,outform='ASAP')
+        self.res=sdcalold(infile=self.rawfile,calmode=self.calmode,tau=0.09,outfile=outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal(outname)
@@ -255,7 +255,7 @@ class sdcal_test1(sdcal_caltest_base,unittest.TestCase):
 ###
 # Test GBT nodding calibration 
 ###
-class sdcal_test2(sdcal_caltest_base,unittest.TestCase):
+class sdcalold_test2(sdcalold_caltest_base,unittest.TestCase):
     """
     Test GBT nodding calibration 
     
@@ -276,7 +276,7 @@ class sdcal_test2(sdcal_caltest_base,unittest.TestCase):
     # Input and output names
     rawfile='calnodGBT.asap'
     reffile='calnodGBT.cal.asap'
-    prefix=sdcal_unittest_base.taskname+'Test2'
+    prefix=sdcalold_unittest_base.taskname+'Test2'
     calmode='nod'
 
     def setUp(self):
@@ -286,7 +286,7 @@ class sdcal_test2(sdcal_caltest_base,unittest.TestCase):
         if (not os.path.exists(self.reffile)):
             shutil.copytree(self.datapath+self.reffile, self.reffile)
 
-        default(sdcal)
+        default(sdcalold)
 
     def tearDown(self):
         if (os.path.exists(self.rawfile)):
@@ -298,7 +298,7 @@ class sdcal_test2(sdcal_caltest_base,unittest.TestCase):
     def test200(self):
         """Test 200: test to calibrate data (GBT nod)"""
         outname=self.prefix+self.postfix
-        self.res=sdcal(infile=self.rawfile,calmode=self.calmode,tau=0.09,outfile=outname,outform='ASAP')
+        self.res=sdcalold(infile=self.rawfile,calmode=self.calmode,tau=0.09,outfile=outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal(outname)
@@ -306,7 +306,7 @@ class sdcal_test2(sdcal_caltest_base,unittest.TestCase):
 ###
 # Test GBT frequency switch calibration 
 ###
-class sdcal_test3(sdcal_caltest_base,unittest.TestCase):
+class sdcalold_test3(sdcalold_caltest_base,unittest.TestCase):
     """
     Test GBT frequency switch calibration 
     
@@ -327,7 +327,7 @@ class sdcal_test3(sdcal_caltest_base,unittest.TestCase):
     # Input and output names
     rawfile='calfsGBT.asap'
     reffile='calfsGBT.cal.asap'
-    prefix=sdcal_unittest_base.taskname+'Test3'
+    prefix=sdcalold_unittest_base.taskname+'Test3'
     calmode='fs'
 
     def setUp(self):
@@ -337,7 +337,7 @@ class sdcal_test3(sdcal_caltest_base,unittest.TestCase):
         if (not os.path.exists(self.reffile)):
             shutil.copytree(self.datapath+self.reffile, self.reffile)
 
-        default(sdcal)
+        default(sdcalold)
 
     def tearDown(self):
         if (os.path.exists(self.rawfile)):
@@ -349,7 +349,7 @@ class sdcal_test3(sdcal_caltest_base,unittest.TestCase):
     def test300(self):
         """Test 300: test to calibrate data (GBT frequency switch)"""
         outname=self.prefix+self.postfix
-        self.res=sdcal(infile=self.rawfile,calmode=self.calmode,outfile=outname,outform='ASAP')
+        self.res=sdcalold(infile=self.rawfile,calmode=self.calmode,outfile=outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal(outname)
@@ -357,7 +357,7 @@ class sdcal_test3(sdcal_caltest_base,unittest.TestCase):
 ###
 # Test quotient
 ###
-class sdcal_test4(sdcal_caltest_base,unittest.TestCase):
+class sdcalold_test4(sdcalold_caltest_base,unittest.TestCase):
     """
     Test quotient.
     
@@ -375,7 +375,7 @@ class sdcal_test4(sdcal_caltest_base,unittest.TestCase):
     # Input and output names
     rawfile='quotient.asap'
     reffile='quotient.cal.asap'
-    prefix=sdcal_unittest_base.taskname+'Test4'
+    prefix=sdcalold_unittest_base.taskname+'Test4'
     calmode='quotient'
 
     def setUp(self):
@@ -385,7 +385,7 @@ class sdcal_test4(sdcal_caltest_base,unittest.TestCase):
         if (not os.path.exists(self.reffile)):
             shutil.copytree(self.datapath+self.reffile, self.reffile)
 
-        default(sdcal)
+        default(sdcalold)
 
     def tearDown(self):
         if (os.path.exists(self.rawfile)):
@@ -397,7 +397,7 @@ class sdcal_test4(sdcal_caltest_base,unittest.TestCase):
     def test400(self):
         """Test 400: test to calibrate data (quotient)"""
         outname=self.prefix+self.postfix
-        self.res=sdcal(infile=self.rawfile,calmode=self.calmode,outfile=outname,outform='ASAP')
+        self.res=sdcalold(infile=self.rawfile,calmode=self.calmode,outfile=outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal(outname)
@@ -405,7 +405,7 @@ class sdcal_test4(sdcal_caltest_base,unittest.TestCase):
 ###
 # Test ALMA position switch calibration
 ###
-class sdcal_test5(sdcal_caltest_base,unittest.TestCase):
+class sdcalold_test5(sdcalold_caltest_base,unittest.TestCase):
     """
     Test ALMA position switch calibration (OTF raster with OFF scan)
     
@@ -425,7 +425,7 @@ class sdcal_test5(sdcal_caltest_base,unittest.TestCase):
     # Input and output names
     rawfile='calpsALMA.asap'
     reffile='calpsALMA.cal.asap'
-    prefix=sdcal_unittest_base.taskname+'Test5'
+    prefix=sdcalold_unittest_base.taskname+'Test5'
     calmode='ps'
 
     def setUp(self):
@@ -435,7 +435,7 @@ class sdcal_test5(sdcal_caltest_base,unittest.TestCase):
         if (not os.path.exists(self.reffile)):
             shutil.copytree(self.datapath+self.reffile, self.reffile)
 
-        default(sdcal)
+        default(sdcalold)
 
     def tearDown(self):
         if (os.path.exists(self.rawfile)):
@@ -447,7 +447,7 @@ class sdcal_test5(sdcal_caltest_base,unittest.TestCase):
     def test500(self):
         """Test 500: test to calibrate data (ALMA position switch)"""
         outname=self.prefix+self.postfix
-        self.res=sdcal(infile=self.rawfile,calmode=self.calmode,outfile=outname,outform='ASAP')
+        self.res=sdcalold(infile=self.rawfile,calmode=self.calmode,outfile=outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal(outname)
@@ -456,7 +456,7 @@ class sdcal_test5(sdcal_caltest_base,unittest.TestCase):
 ###
 # Test edgemarker
 ###
-class sdcal_test_edgemarker_generic(sdcal_edgemarker_base,unittest.TestCase):
+class sdcalold_test_edgemarker_generic(sdcalold_edgemarker_base,unittest.TestCase):
     """
     Test edgemarker function that is available for calmode='otf'. 
 
@@ -465,7 +465,7 @@ class sdcal_test_edgemarker_generic(sdcal_edgemarker_base,unittest.TestCase):
     """
     # Input and output names
     rawfile='lissajous.asap'
-    prefix=sdcal_unittest_base.taskname+'TestEdgeMarkerGeneric'
+    prefix=sdcalold_unittest_base.taskname+'TestEdgeMarkerGeneric'
     reffiles = [ 'marker.otf.default.ref',
                  'marker.otf.custom.ref' ]
 
@@ -476,7 +476,7 @@ class sdcal_test_edgemarker_generic(sdcal_edgemarker_base,unittest.TestCase):
         for reffile in self.reffiles:
             if (not os.path.exists(reffile)):
                 shutil.copyfile(self.datapath+reffile, reffile)
-        default(sdcal)
+        default(sdcalold)
 
     def tearDown(self):
         if (os.path.exists(self.rawfile)):
@@ -491,7 +491,7 @@ class sdcal_test_edgemarker_generic(sdcal_edgemarker_base,unittest.TestCase):
         Test default setting for edgemarker
         """
         outname = self.prefix+'.asap'
-        self.res = sdcal(infile=self.rawfile,calmode='otf',markonly=True,outfile=outname,outform='ASAP')
+        self.res = sdcalold(infile=self.rawfile,calmode='otf',markonly=True,outfile=outname,outform='ASAP')
         refdir = self._readref( self.reffiles[0] )
         self._checkfile( outname ) 
         self._checkmarker( outname, refdir )
@@ -501,13 +501,13 @@ class sdcal_test_edgemarker_generic(sdcal_edgemarker_base,unittest.TestCase):
         Test customized edge marking
         """
         outname = self.prefix+'.asap'
-        self.res = sdcal(infile=self.rawfile,calmode='otf',fraction='3%',markonly=True,outfile=outname,outform='ASAP')
+        self.res = sdcalold(infile=self.rawfile,calmode='otf',fraction='3%',markonly=True,outfile=outname,outform='ASAP')
         refdir = self._readref( self.reffiles[1] )
         self._checkfile( outname ) 
         self._checkmarker( outname, refdir )
 
 
-class sdcal_test_edgemarker_raster(sdcal_edgemarker_base,unittest.TestCase):
+class sdcalold_test_edgemarker_raster(sdcalold_edgemarker_base,unittest.TestCase):
     """
     Test edgemarker function that is available for calmode='otfraster'. 
 
@@ -516,7 +516,7 @@ class sdcal_test_edgemarker_raster(sdcal_edgemarker_base,unittest.TestCase):
     """
     # Input and output names
     rawfile='raster.asap'
-    prefix=sdcal_unittest_base.taskname+'TestEdgeMarkerRaster'
+    prefix=sdcalold_unittest_base.taskname+'TestEdgeMarkerRaster'
     reffiles=[ 'marker.raster.default.ref',
                'marker.raster.custom.ref' ]
 
@@ -527,7 +527,7 @@ class sdcal_test_edgemarker_raster(sdcal_edgemarker_base,unittest.TestCase):
         for reffile in self.reffiles:
             if (not os.path.exists(reffile)):
                 shutil.copyfile(self.datapath+reffile, reffile)
-        default(sdcal)
+        default(sdcalold)
 
     def tearDown(self):
         if (os.path.exists(self.rawfile)):
@@ -542,7 +542,7 @@ class sdcal_test_edgemarker_raster(sdcal_edgemarker_base,unittest.TestCase):
         Test default setting for edgemarker
         """
         outname = self.prefix+'.asap'
-        self.res = sdcal(infile=self.rawfile,calmode='otfraster',markonly=True,outfile=outname,outform='ASAP')
+        self.res = sdcalold(infile=self.rawfile,calmode='otfraster',markonly=True,outfile=outname,outform='ASAP')
         refdir = self._readref( self.reffiles[0] )
         self._checkfile( outname ) 
         self._checkmarker( outname, refdir )
@@ -552,13 +552,13 @@ class sdcal_test_edgemarker_raster(sdcal_edgemarker_base,unittest.TestCase):
         Test default setting for edgemarker
         """
         outname = self.prefix+'.asap'
-        self.res = sdcal(infile=self.rawfile,calmode='otfraster',noff=1,markonly=True,outfile=outname,outform='ASAP')
+        self.res = sdcalold(infile=self.rawfile,calmode='otfraster',noff=1,markonly=True,outfile=outname,outform='ASAP')
         refdir = self._readref( self.reffiles[1] )
         self._checkfile( outname ) 
         self._checkmarker( outname, refdir )
 
-class sdcal_test_selection(selection_syntax.SelectionSyntaxTest,
-                               sdcal_caltest_base,unittest.TestCase):
+class sdcalold_test_selection(selection_syntax.SelectionSyntaxTest,
+                               sdcalold_caltest_base,unittest.TestCase):
     """
     Test selection syntax. Selection parameters to test are:
     field, spw (no channel selection), scan, pol
@@ -585,7 +585,7 @@ class sdcal_test_selection(selection_syntax.SelectionSyntaxTest,
     """
     # Input and output names
     rawfile='sd_analytic_type1-3.filltsys.asap'
-    prefix=sdcal_unittest_base.taskname+'TestSel'
+    prefix=sdcalold_unittest_base.taskname+'TestSel'
     calmode='ps'
     line = ({'value': 5,  'channel': (20,20)},
             {'value': 10, 'channel': (40,40)},
@@ -596,7 +596,7 @@ class sdcal_test_selection(selection_syntax.SelectionSyntaxTest,
     
     @property
     def task(self):
-        return sdcal
+        return sdcalold
     
     @property
     def spw_channel_selection(self):
@@ -608,7 +608,7 @@ class sdcal_test_selection(selection_syntax.SelectionSyntaxTest,
             shutil.copytree(self.datapath+self.rawfile, self.rawfile)
         os.system( 'rm -rf '+self.prefix+'*' )
 
-        default(sdcal)
+        default(sdcalold)
         self.outname=self.prefix+self.postfix
         
     def tearDown(self):
@@ -628,7 +628,7 @@ class sdcal_test_selection(selection_syntax.SelectionSyntaxTest,
         """test scan selection (scan='')"""
         scan = ''
         ref_idx = []
-        self.res=sdcal(infile=self.rawfile,calmode=self.calmode,scan=scan,outfile=self.outname,outform='ASAP')
+        self.res=sdcalold(infile=self.rawfile,calmode=self.calmode,scan=scan,outfile=self.outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
@@ -694,7 +694,7 @@ class sdcal_test_selection(selection_syntax.SelectionSyntaxTest,
         """test pol selection (pol='')"""
         pol = ''
         ref_idx = []
-        self.res=sdcal(infile=self.rawfile,calmode=self.calmode,pol=pol,outfile=self.outname,outform='ASAP')
+        self.res=sdcalold(infile=self.rawfile,calmode=self.calmode,pol=pol,outfile=self.outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
@@ -760,7 +760,7 @@ class sdcal_test_selection(selection_syntax.SelectionSyntaxTest,
         """test field selection (field='')"""
         field = ''
         ref_idx = []
-        self.res=sdcal(infile=self.rawfile,calmode=self.calmode,field=field,outfile=self.outname,outform='ASAP')
+        self.res=sdcalold(infile=self.rawfile,calmode=self.calmode,field=field,outfile=self.outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
@@ -862,7 +862,7 @@ class sdcal_test_selection(selection_syntax.SelectionSyntaxTest,
         """test spw selection (spw='')"""
         spw = ''
         ref_idx = []
-        self.res=sdcal(infile=self.rawfile,calmode=self.calmode,spw=spw,outfile=self.outname,outform='ASAP')
+        self.res=sdcalold(infile=self.rawfile,calmode=self.calmode,spw=spw,outfile=self.outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
@@ -929,7 +929,7 @@ class sdcal_test_selection(selection_syntax.SelectionSyntaxTest,
         """test spw selection (spw='*')"""
         spw='*'
         ref_idx = []
-        self.res=sdcal(infile=self.rawfile,calmode=self.calmode,spw=spw,outfile=self.outname,outform='ASAP')
+        self.res=sdcalold(infile=self.rawfile,calmode=self.calmode,spw=spw,outfile=self.outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
@@ -1046,7 +1046,7 @@ class sdcal_test_selection(selection_syntax.SelectionSyntaxTest,
 ###
 # Test flag handling in ALMA position switch calibration
 ###
-class sdcal_testFlagPSALMA(sdcal_caltest_base,unittest.TestCase):
+class sdcalold_testFlagPSALMA(sdcalold_caltest_base,unittest.TestCase):
     """
     Test flag handling in ALMA position switch calibration
     
@@ -1070,7 +1070,7 @@ class sdcal_testFlagPSALMA(sdcal_caltest_base,unittest.TestCase):
       OFF-spectrum has constant values 1.0 and the
       ON-spectrum has constant values 3.0.
 
-    Proper flag handling in sdcal:
+    Proper flag handling in sdcalold:
     (1) ON-spectra
         - if row-flagged, calibration must not be applied
         - if not row-flagged, calibration must be done for
@@ -1091,7 +1091,7 @@ class sdcal_testFlagPSALMA(sdcal_caltest_base,unittest.TestCase):
     raw2file='calpsALMA_flagtest_rowflagged.asap'
     ref1file='calpsALMA_flagtest.cal.asap'
     ref2file='calpsALMA_flagtest_rowflagged.cal.asap'
-    prefix=sdcal_unittest_base.taskname+'TestFlagPSALMA'
+    prefix=sdcalold_unittest_base.taskname+'TestFlagPSALMA'
     calmode='ps'
 
     def setUp(self):
@@ -1105,7 +1105,7 @@ class sdcal_testFlagPSALMA(sdcal_caltest_base,unittest.TestCase):
         if (not os.path.exists(self.ref2file)):
             shutil.copytree(self.datapath+self.ref2file, self.ref2file)
 
-        default(sdcal)
+        default(sdcalold)
 
     def tearDown(self):
         if (os.path.exists(self.raw1file)):
@@ -1147,7 +1147,7 @@ class sdcal_testFlagPSALMA(sdcal_caltest_base,unittest.TestCase):
     def testFlagPSALMA01(self):
         """Test FlagPSALMA01: for non-row-flagged ON-data (ALMA position switch)"""
         outname=self.prefix+self.postfix
-        self.res=sdcal(infile=self.raw1file,calmode=self.calmode,outfile=outname,outform='ASAP')
+        self.res=sdcalold(infile=self.raw1file,calmode=self.calmode,outfile=outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal(outname, self.ref1file)
@@ -1155,7 +1155,7 @@ class sdcal_testFlagPSALMA(sdcal_caltest_base,unittest.TestCase):
     def testFlagPSALMA02(self):
         """Test FlagPSALMA02: for row-flagged ON-data (ALMA position switch)"""
         outname=self.prefix+self.postfix
-        self.res=sdcal(infile=self.raw2file,calmode=self.calmode,outfile=outname,outform='ASAP')
+        self.res=sdcalold(infile=self.raw2file,calmode=self.calmode,outfile=outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal(outname, self.ref2file)
@@ -1165,7 +1165,7 @@ class sdcal_testFlagPSALMA(sdcal_caltest_base,unittest.TestCase):
 ###
 # Test flag handling in GBT position switch calibration
 ###
-class sdcal_testFlagPSGBT(sdcal_caltest_base,unittest.TestCase):
+class sdcalold_testFlagPSGBT(sdcalold_caltest_base,unittest.TestCase):
     #""
     Test flag handling in GBT position switch calibration
     
@@ -1189,7 +1189,7 @@ class sdcal_testFlagPSGBT(sdcal_caltest_base,unittest.TestCase):
       OFF-spectrum has constant values 1.0 and the
       ON-spectrum has constant values 3.0.
 
-    Proper flag handling in sdcal:
+    Proper flag handling in sdcalold:
     (1) ON-spectra
         - if row-flagged, calibration must not be applied
         - if not row-flagged, calibration must be done for
@@ -1210,7 +1210,7 @@ class sdcal_testFlagPSGBT(sdcal_caltest_base,unittest.TestCase):
     raw2file='calpsGBT_flagtest_rowflagged.asap'
     ref1file='calpsGBT_flagtest.cal.asap'
     ref2file='calpsGBT_flagtest_rowflagged.cal.asap'
-    prefix=sdcal_unittest_base.taskname+'TestFlagPSGBT'
+    prefix=sdcalold_unittest_base.taskname+'TestFlagPSGBT'
     calmode='ps'
 
     def setUp(self):
@@ -1224,7 +1224,7 @@ class sdcal_testFlagPSGBT(sdcal_caltest_base,unittest.TestCase):
         if (not os.path.exists(self.ref2file)):
             shutil.copytree(self.datapath+self.ref2file, self.ref2file)
 
-        default(sdcal)
+        default(sdcalold)
 
     def tearDown(self):
         if (os.path.exists(self.raw1file)):
@@ -1255,7 +1255,7 @@ class sdcal_testFlagPSGBT(sdcal_caltest_base,unittest.TestCase):
     def testFlagPSGBT01(self):
         #Test FlagPSGBT01: for non-row-flagged ON-data (GBT position switch)
         outname=self.prefix+self.postfix
-        self.res=sdcal(infile=self.raw1file,calmode=self.calmode,outfile=outname,outform='ASAP')
+        self.res=sdcalold(infile=self.raw1file,calmode=self.calmode,outfile=outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal(outname, self.ref1file)
@@ -1263,7 +1263,7 @@ class sdcal_testFlagPSGBT(sdcal_caltest_base,unittest.TestCase):
     def testFlagPSGBT02(self):
         #Test FlagPSGBT02: for row-flagged ON-data (GBT position switch)
         outname=self.prefix+self.postfix
-        self.res=sdcal(infile=self.raw2file,calmode=self.calmode,outfile=outname,outform='ASAP')
+        self.res=sdcalold(infile=self.raw2file,calmode=self.calmode,outfile=outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal(outname, self.ref2file)
@@ -1272,7 +1272,7 @@ class sdcal_testFlagPSGBT(sdcal_caltest_base,unittest.TestCase):
 ###
 # Test flag handling in calibrating ALMA OTF data
 ###
-class sdcal_testFlagOTF(sdcal_caltest_base,unittest.TestCase):
+class sdcalold_testFlagOTF(sdcalold_caltest_base,unittest.TestCase):
     """
     Test flag handling in calibrating ALMA OTF data (lissajous scan)
     
@@ -1288,7 +1288,7 @@ class sdcal_testFlagOTF(sdcal_caltest_base,unittest.TestCase):
       calibration, so the calibrated spectra must have values
       much smaller than unity (actually smaller than about 0.03).
 
-    Proper flag handling in sdcal:
+    Proper flag handling in sdcalold:
     (1) ON-spectra
         - if row-flagged, calibration must not be applied
         - if not row-flagged, calibration must be done for
@@ -1303,8 +1303,8 @@ class sdcal_testFlagOTF(sdcal_caltest_base,unittest.TestCase):
     # Input and output names
     rawfile='lissajous_flagtest.asap'
     #reffile='lissajous_flagtest.cal.asap'
-    prefix=sdcal_unittest_base.taskname+'TestFlagOTF'
-    outfile=prefix+sdcal_caltest_base.postfix
+    prefix=sdcalold_unittest_base.taskname+'TestFlagOTF'
+    outfile=prefix+sdcalold_caltest_base.postfix
     calmode='otf'
     fraction='10%'
 
@@ -1312,7 +1312,7 @@ class sdcal_testFlagOTF(sdcal_caltest_base,unittest.TestCase):
         self.res=None
         if (not os.path.exists(self.rawfile)):
             shutil.copytree(self.datapath+self.rawfile, self.rawfile)
-        default(sdcal)
+        default(sdcalold)
 
     def tearDown(self):
         if (os.path.exists(self.rawfile)):
@@ -1321,7 +1321,7 @@ class sdcal_testFlagOTF(sdcal_caltest_base,unittest.TestCase):
 
     def testFlagOTF01(self):
         """Test FlagOTF01: for ALMA OTF data"""
-        self.res=sdcal(infile=self.rawfile,calmode=self.calmode,fraction=self.fraction,outfile=self.outfile,outform='ASAP')
+        self.res=sdcalold(infile=self.rawfile,calmode=self.calmode,fraction=self.fraction,outfile=self.outfile,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
 
@@ -1352,7 +1352,7 @@ class sdcal_testFlagOTF(sdcal_caltest_base,unittest.TestCase):
 ###
 # Test flag handling in calibrating ALMA OTF raster data
 ###
-class sdcal_testFlagOTFRASTER(sdcal_caltest_base,unittest.TestCase):
+class sdcalold_testFlagOTFRASTER(sdcalold_caltest_base,unittest.TestCase):
     """
     Test flag handling in calibrating ALMA OTF raster data
     
@@ -1368,7 +1368,7 @@ class sdcal_testFlagOTFRASTER(sdcal_caltest_base,unittest.TestCase):
       calibration, so the calibrated spectra must have values
       much smaller than unity (actually smaller than about 0.01).
 
-    Proper flag handling in sdcal:
+    Proper flag handling in sdcalold:
     (1) ON-spectra
         - if row-flagged, calibration must not be applied
         - if not row-flagged, calibration must be done for
@@ -1383,8 +1383,8 @@ class sdcal_testFlagOTFRASTER(sdcal_caltest_base,unittest.TestCase):
     # Input and output names
     rawfile='raster_flagtest.asap'
     #reffile='raster_flagtest.cal.asap'
-    prefix=sdcal_unittest_base.taskname+'TestFlagOTFRASTER'
-    outfile=prefix+sdcal_caltest_base.postfix
+    prefix=sdcalold_unittest_base.taskname+'TestFlagOTFRASTER'
+    outfile=prefix+sdcalold_caltest_base.postfix
     calmode='otfraster'
     fraction='10%'
 
@@ -1392,7 +1392,7 @@ class sdcal_testFlagOTFRASTER(sdcal_caltest_base,unittest.TestCase):
         self.res=None
         if (not os.path.exists(self.rawfile)):
             shutil.copytree(self.datapath+self.rawfile, self.rawfile)
-        default(sdcal)
+        default(sdcalold)
 
     def tearDown(self):
         if (os.path.exists(self.rawfile)):
@@ -1401,7 +1401,7 @@ class sdcal_testFlagOTFRASTER(sdcal_caltest_base,unittest.TestCase):
 
     def testFlagOTF01(self):
         """Test FlagOTF01: for ALMA OTF raster data"""
-        self.res=sdcal(infile=self.rawfile,calmode=self.calmode,fraction=self.fraction,outfile=self.outfile,outform='ASAP')
+        self.res=sdcalold(infile=self.rawfile,calmode=self.calmode,fraction=self.fraction,outfile=self.outfile,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
 
@@ -1436,13 +1436,13 @@ class sdcal_testFlagOTFRASTER(sdcal_caltest_base,unittest.TestCase):
 
 
 def suite():
-    return [sdcal_test0, sdcal_test1,
-            sdcal_test2, sdcal_test3,
-            sdcal_test4, sdcal_test5,
-            sdcal_test_edgemarker_generic,
-            sdcal_test_edgemarker_raster,
-            sdcal_test_selection,
-            sdcal_testFlagPSALMA,   #sdcal_testFlagPSGBT,
-            sdcal_testFlagOTF,
-            sdcal_testFlagOTFRASTER
+    return [sdcalold_test0, sdcalold_test1,
+            sdcalold_test2, sdcalold_test3,
+            sdcalold_test4, sdcalold_test5,
+            sdcalold_test_edgemarker_generic,
+            sdcalold_test_edgemarker_raster,
+            sdcalold_test_selection,
+            sdcalold_testFlagPSALMA,   #sdcalold_testFlagPSGBT,
+            sdcalold_testFlagOTF,
+            sdcalold_testFlagOTFRASTER
             ]

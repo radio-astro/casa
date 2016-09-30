@@ -16,18 +16,18 @@ except:
     import tests.selection_syntax as selection_syntax
 
 import asap as sd
-from sdstat import sdstat
+from sdstatold import sdstatold
 from sdutil import tbmanager
 from asap.scantable import set_restfreq
 
-class sdstat_unittest_base:
+class sdstatold_unittest_base:
     """
-    Base class for sdstat unit test
+    Base class for sdstatold unit test
     """
     # Data path of input/output
     datapath = os.environ.get('CASAPATH').split()[0] + \
                '/data/regression/unittest/sdstat/'
-    taskname = "sdstat"
+    taskname = "sdstatold"
     outroot = taskname+'_test'
     outsuff = ".out"
     infile = 'OrionS_rawACSmod_calTPave.asap'
@@ -178,7 +178,7 @@ class sdstat_unittest_base:
         else:
             compstats = refstat.keys()
 
-        # Task sdstat returns a dictionary of statistic values
+        # Task sdstatold returns a dictionary of statistic values
         self.assertTrue(isinstance(refstat,dict),
                          msg="The referece statistics are not a dictionary")
         self.assertTrue(isinstance(currstat,dict),
@@ -228,9 +228,9 @@ class sdstat_unittest_base:
         
 
 
-class sdstat_basicTest( sdstat_unittest_base, unittest.TestCase ):
+class sdstatold_basicTest( sdstatold_unittest_base, unittest.TestCase ):
     """
-    Basic unit tests for task sdstat. No interactive testing.
+    Basic unit tests for task sdstatold. No interactive testing.
 
     The list of tests:
     test00    --- default parameters (raises an errror)
@@ -309,7 +309,7 @@ class sdstat_basicTest( sdstat_unittest_base, unittest.TestCase ):
             shutil.rmtree(self.infile)
         shutil.copytree(self.datapath+self.infile, self.infile)
 
-        default(sdstat)
+        default(sdstatold)
 
     def tearDown( self ):
         if (os.path.exists(self.infile)):
@@ -317,7 +317,7 @@ class sdstat_basicTest( sdstat_unittest_base, unittest.TestCase ):
 
     def test00( self ):
         """Test 0: Default parameters"""
-        result = sdstat()
+        result = sdstatold()
         self.assertFalse(result)
 
     def test01( self ):
@@ -325,10 +325,10 @@ class sdstat_basicTest( sdstat_unittest_base, unittest.TestCase ):
         tid="01"
         outfile = self.outroot+tid+self.outsuff
 
-        currstat = sdstat(infile=self.infile,outfile=outfile)
+        currstat = sdstatold(infile=self.infile,outfile=outfile)
         # print "Statistics out of the current run:\n",currstat
 
-        # Task sdstat returns a dictionary of statistic values
+        # Task sdstatold returns a dictionary of statistic values
         self.assertTrue(isinstance(currstat,dict),
                          msg="The returned statistics are not a dictionary")
         self._compareStats(currstat,self.ref_allK)
@@ -343,10 +343,10 @@ class sdstat_basicTest( sdstat_unittest_base, unittest.TestCase ):
         telescopeparam = ""
         outfile = self.outroot+tid+self.outsuff
 
-        currstat = sdstat(infile=self.infile,fluxunit=fluxunit,telescopeparam=telescopeparam,outfile=outfile)
+        currstat = sdstatold(infile=self.infile,fluxunit=fluxunit,telescopeparam=telescopeparam,outfile=outfile)
         # print "Statistics out of the current run:\n",currstat
 
-        # Task sdstat returns a dictionary of statistic values
+        # Task sdstatold returns a dictionary of statistic values
         self.assertTrue(isinstance(currstat,dict),
                          msg="The returned statistics are not a dictionary")
         self._compareStats(currstat,self.ref_allK)
@@ -361,10 +361,10 @@ class sdstat_basicTest( sdstat_unittest_base, unittest.TestCase ):
         telescopeparam = ""
         outfile = self.outroot+tid+self.outsuff
 
-        currstat = sdstat(infile=self.infile,fluxunit=fluxunit,telescopeparam=telescopeparam,outfile=outfile)
+        currstat = sdstatold(infile=self.infile,fluxunit=fluxunit,telescopeparam=telescopeparam,outfile=outfile)
         # print "Statistics out of the current run:\n",currstat
 
-        # Task sdstat returns a dictionary of statistic values
+        # Task sdstatold returns a dictionary of statistic values
         self.assertTrue(isinstance(currstat,dict),
                          msg="The returned statistics are not a dictionary")
         self._compareStats(currstat,self.ref_allJy)
@@ -380,10 +380,10 @@ class sdstat_basicTest( sdstat_unittest_base, unittest.TestCase ):
                                    unit='', ifno=ifno)
         print("Using spw='%s'" % spw)
 
-        currstat = sdstat(infile=self.infile,outfile=outfile,spw=spw)
+        currstat = sdstatold(infile=self.infile,outfile=outfile,spw=spw)
         # print "Statistics out of the current run:\n",currstat
 
-        # Task sdstat returns a dictionary of statistic values
+        # Task sdstatold returns a dictionary of statistic values
         self.assertTrue(isinstance(currstat,dict),
                          msg="The returned statistics are not a dictionary")
         self._compareStats(currstat,self.ref_line2)
@@ -399,8 +399,8 @@ class sdstat_basicTest( sdstat_unittest_base, unittest.TestCase ):
         spw = self._get_spw_string(self.infile, self.linechan2,
                                    unit=specunit, ifno=ifno)
         print("Using spw='%s'" % spw)
-        currstat = sdstat(infile=self.infile,outfile=outfile,spw=spw)
-        # Task sdstat returns a dictionary of statistic values
+        currstat = sdstatold(infile=self.infile,outfile=outfile,spw=spw)
+        # Task sdstatold returns a dictionary of statistic values
         self.assertTrue(isinstance(currstat,dict),
                          msg="The returned statistics are not a dictionary")
         self._compareStats(currstat,self.ref_line2)
@@ -417,8 +417,8 @@ class sdstat_basicTest( sdstat_unittest_base, unittest.TestCase ):
         spw = self._get_spw_string(self.infile, self.linechan2,
                                    unit=specunit, ifno=ifno)
         print("Using spw='%s'" % spw)
-        currstat = sdstat(infile=self.infile,outfile=outfile,spw=spw)
-        # Task sdstat returns a dictionary of statistic values
+        currstat = sdstatold(infile=self.infile,outfile=outfile,spw=spw)
+        # Task sdstatold returns a dictionary of statistic values
         self.assertTrue(isinstance(currstat,dict),
                          msg="The returned statistics are not a dictionary")
         self._compareStats(currstat,self.ref_line2)
@@ -432,16 +432,16 @@ class sdstat_basicTest( sdstat_unittest_base, unittest.TestCase ):
         outfile = self.outroot+tid+self.outsuff
         format = '3.5f'
 
-        currstat = sdstat(infile=self.infile,format=format,outfile=outfile)
+        currstat = sdstatold(infile=self.infile,format=format,outfile=outfile)
 
-        # Task sdstat returns a dictionary of statistic values
+        # Task sdstatold returns a dictionary of statistic values
         self.assertTrue(isinstance(currstat,dict),
                          msg="The returned statistics are not a dictionary")
         self._compareFiles(outfile, reference)
 
-class sdstat_averageTest( sdstat_unittest_base, unittest.TestCase ):
+class sdstatold_averageTest( sdstatold_unittest_base, unittest.TestCase ):
     """
-    Unit tests for task sdstat. Test averaging.
+    Unit tests for task sdstatold. Test averaging.
 
     testAve01 --- scanaverage = True (timeaverage=True)
     testAve02 --- timeaverage = True, scanaverage=False
@@ -461,7 +461,7 @@ class sdstat_averageTest( sdstat_unittest_base, unittest.TestCase ):
             shutil.rmtree(self.infile)
         shutil.copytree(self.datapath+self.infile, self.infile)
 
-        default(sdstat)
+        default(sdstatold)
 
     def tearDown( self ):
         if (os.path.exists(self.infile)):
@@ -479,7 +479,7 @@ class sdstat_averageTest( sdstat_unittest_base, unittest.TestCase ):
         polaverage=False
         pweight = 'tsys'
         
-        currstat = sdstat(infile=self.infile,outfile=outfile,pol=pol,
+        currstat = sdstatold(infile=self.infile,outfile=outfile,pol=pol,
                            scanaverage=scanaverage,
                            timeaverage=timeaverage,tweight=tweight,
                            polaverage=polaverage,pweight=pweight)
@@ -495,7 +495,7 @@ class sdstat_averageTest( sdstat_unittest_base, unittest.TestCase ):
         minmaxchan_all = {'max_abscissa': {'unit': 'channel', 'value': array([ 3044.,  8191.])},
                           'min_abscissa': {'unit': 'channel', 'value': array([ 0.,  0.])}}
 
-        # Task sdstat returns a dictionary of statistic values
+        # Task sdstatold returns a dictionary of statistic values
         self.assertTrue(isinstance(currstat,dict),
                          msg="The returned statistics are not a dictionary")
         self._compareStats(currstat,ref_all)
@@ -514,7 +514,7 @@ class sdstat_averageTest( sdstat_unittest_base, unittest.TestCase ):
         polaverage=False
         pweight = 'tsys'
         
-        currstat = sdstat(infile=self.infile,outfile=outfile,pol=pol,
+        currstat = sdstatold(infile=self.infile,outfile=outfile,pol=pol,
                            scanaverage=scanaverage,
                            timeaverage=timeaverage,tweight=tweight,
                            polaverage=polaverage,pweight=pweight)
@@ -530,7 +530,7 @@ class sdstat_averageTest( sdstat_unittest_base, unittest.TestCase ):
         minmaxchan_all = {'max_abscissa': {'unit': 'channel', 'value': 3045.0},
                           'min_abscissa': {'unit': 'channel', 'value': 0.0}}
 
-        # Task sdstat returns a dictionary of statistic values
+        # Task sdstatold returns a dictionary of statistic values
         self.assertTrue(isinstance(currstat,dict),
                          msg="The returned statistics are not a dictionary")
         self._compareStats(currstat,ref_all)
@@ -548,7 +548,7 @@ class sdstat_averageTest( sdstat_unittest_base, unittest.TestCase ):
         polaverage=True
         pweight = 'tsys'
         
-        currstat = sdstat(infile=self.infile,outfile=outfile,
+        currstat = sdstatold(infile=self.infile,outfile=outfile,
                            scanaverage=scanaverage,
                            timeaverage=timeaverage,tweight=tweight,
                            polaverage=polaverage,pweight=pweight)
@@ -564,7 +564,7 @@ class sdstat_averageTest( sdstat_unittest_base, unittest.TestCase ):
         minmaxchan_all = {'max_abscissa': {'unit': 'channel', 'value': 8186.0},
                           'min_abscissa': {'unit': 'channel', 'value': 8187.0}}
 
-        # Task sdstat returns a dictionary of statistic values
+        # Task sdstatold returns a dictionary of statistic values
         self.assertTrue(isinstance(currstat,dict),
                          msg="The returned statistics are not a dictionary")
         self._compareStats(currstat,ref_all)
@@ -572,9 +572,9 @@ class sdstat_averageTest( sdstat_unittest_base, unittest.TestCase ):
         self._compareStats(minmaxchan_all, currstat,compstats=minmaxchan_all.keys())
 
 
-class sdstat_restfreqTest( sdstat_unittest_base, unittest.TestCase ):
+class sdstatold_restfreqTest( sdstatold_unittest_base, unittest.TestCase ):
     """
-    Unit tests for task sdstat. Test variations of restfreq parameter.
+    Unit tests for task sdstatold. Test variations of restfreq parameter.
 
     The list of tests:
     testRF01 - testRF02 --- a value (float, quantity w/ unit)
@@ -621,7 +621,7 @@ class sdstat_restfreqTest( sdstat_unittest_base, unittest.TestCase ):
             shutil.rmtree(self.infile)
         shutil.copytree(self.datapath+self.infile, self.infile)
 
-        default(sdstat)
+        default(sdstatold)
 
     def tearDown( self ):
         if (os.path.exists(self.infile)):
@@ -643,10 +643,10 @@ class sdstat_restfreqTest( sdstat_unittest_base, unittest.TestCase ):
         print "Using spw = '%s'" % (spw)
         print "Setting restfreq = %s" % (str(restfreq))
 
-        currstat = sdstat(infile=self.infile,outfile=outfile,spw=spw,\
+        currstat = sdstatold(infile=self.infile,outfile=outfile,spw=spw,\
                           restfreq=restfreq)
 
-        # Task sdstat returns a dictionary of statistic values
+        # Task sdstatold returns a dictionary of statistic values
         self.assertTrue(isinstance(currstat,dict),
                          msg="The returned statistics are not a dictionary")
         self._compareStats(currstat,self.ref_line02)
@@ -665,10 +665,10 @@ class sdstat_restfreqTest( sdstat_unittest_base, unittest.TestCase ):
         print "Using spw = '%s'" % (spw)
         print "Setting restfreq = %s" % (str(restfreq))
 
-        currstat = sdstat(infile=self.infile,outfile=outfile,spw=spw,
+        currstat = sdstatold(infile=self.infile,outfile=outfile,spw=spw,
                           restfreq=restfreq)
 
-        # Task sdstat returns a dictionary of statistic values
+        # Task sdstatold returns a dictionary of statistic values
         self.assertTrue(isinstance(currstat,dict),
                          msg="The returned statistics are not a dictionary")
         self._compareStats(currstat,self.ref_line2)
@@ -687,10 +687,10 @@ class sdstat_restfreqTest( sdstat_unittest_base, unittest.TestCase ):
                                    ifno=self.ifno, restfreq=restfreq)
         print "Using spw = '%s'" % (spw)
         print "Setting restfreq = %s" % (str(restfreq))
-        currstat = sdstat(infile=self.infile,outfile=outfile,spw=spw,\
+        currstat = sdstatold(infile=self.infile,outfile=outfile,spw=spw,\
                           restfreq=restfreq)
 
-        # Task sdstat returns a dictionary of statistic values
+        # Task sdstatold returns a dictionary of statistic values
         self.assertTrue(isinstance(currstat,dict),
                          msg="The returned statistics are not a dictionary")
         self._compareStats(currstat,self.ref_line2)
@@ -709,10 +709,10 @@ class sdstat_restfreqTest( sdstat_unittest_base, unittest.TestCase ):
                                    ifno=self.ifno, restfreq=restfreq)
         print "Using spw = '%s'" % (spw)
         print "Setting restfreq = %s" % (str(restfreq))
-        currstat = sdstat(infile=self.infile,outfile=outfile,spw=spw,\
+        currstat = sdstatold(infile=self.infile,outfile=outfile,spw=spw,\
                           restfreq=restfreq)
 
-        # Task sdstat returns a dictionary of statistic values
+        # Task sdstatold returns a dictionary of statistic values
         self.assertTrue(isinstance(currstat,dict),
                          msg="The returned statistics are not a dictionary")
         self._compareStats(currstat,self.ref_line2)
@@ -731,10 +731,10 @@ class sdstat_restfreqTest( sdstat_unittest_base, unittest.TestCase ):
                                    ifno=self.ifno, restfreq=restfreq)
         print "Using spw = '%s'" % (spw)
         print "Setting restfreq = %s" % (str(restfreq))
-        currstat = sdstat(infile=self.infile,outfile=outfile,spw=spw,\
+        currstat = sdstatold(infile=self.infile,outfile=outfile,spw=spw,\
                           restfreq=restfreq)
 
-        # Task sdstat returns a dictionary of statistic values
+        # Task sdstatold returns a dictionary of statistic values
         self.assertTrue(isinstance(currstat,dict),
                          msg="The returned statistics are not a dictionary")
         self._compareStats(currstat,self.ref_line2)
@@ -758,10 +758,10 @@ class sdstat_restfreqTest( sdstat_unittest_base, unittest.TestCase ):
         spw = spw0 + ',' + spw2
         print "Using spw = '%s'" % (spw)
         print "Setting restfreq = %s" % (str(restfreq))
-        currstat = sdstat(infile=self.infile,outfile=outfile,spw=spw,\
+        currstat = sdstatold(infile=self.infile,outfile=outfile,spw=spw,\
                           restfreq=restfreq)
 
-        # Task sdstat returns a dictionary of statistic values
+        # Task sdstatold returns a dictionary of statistic values
         self.assertTrue(isinstance(currstat,dict),
                          msg="The returned statistics are not a dictionary")
         self._compareStats(currstat,self.ref_line02)
@@ -785,10 +785,10 @@ class sdstat_restfreqTest( sdstat_unittest_base, unittest.TestCase ):
         spw = spw0 + ',' + spw2
         print "Using spw = '%s'" % (spw)
         print "Setting restfreq = %s" % (str(restfreq))
-        currstat = sdstat(infile=self.infile,outfile=outfile,spw=spw,\
+        currstat = sdstatold(infile=self.infile,outfile=outfile,spw=spw,\
                           restfreq=restfreq)
 
-        # Task sdstat returns a dictionary of statistic values
+        # Task sdstatold returns a dictionary of statistic values
         self.assertTrue(isinstance(currstat,dict),
                          msg="The returned statistics are not a dictionary")
         self._compareStats(currstat,self.ref_line02)
@@ -813,10 +813,10 @@ class sdstat_restfreqTest( sdstat_unittest_base, unittest.TestCase ):
         spw = spw0 + ',' + spw2
         print "Using spw = '%s'" % (spw)
         print "Setting restfreq = %s" % (str(restfreq))
-        currstat = sdstat(infile=self.infile,outfile=outfile,spw=spw,\
+        currstat = sdstatold(infile=self.infile,outfile=outfile,spw=spw,\
                           restfreq=restfreq)
 
-        # Task sdstat returns a dictionary of statistic values
+        # Task sdstatold returns a dictionary of statistic values
         self.assertTrue(isinstance(currstat,dict),
                          msg="The returned statistics are not a dictionary")
         self._compareStats(currstat,self.ref_line02)
@@ -824,9 +824,9 @@ class sdstat_restfreqTest( sdstat_unittest_base, unittest.TestCase ):
         self._compareStats(self.minmaxchan_line02,currstat,compstats=self.minmaxchan_line2.keys())
 
         
-class sdstat_storageTest( sdstat_unittest_base, unittest.TestCase ):
+class sdstatold_storageTest( sdstatold_unittest_base, unittest.TestCase ):
     """
-    Unit tests for task sdstat. Test scantable sotrage and insitu
+    Unit tests for task sdstatold. Test scantable sotrage and insitu
     parameters
 
     The list of tests:
@@ -857,7 +857,7 @@ class sdstat_storageTest( sdstat_unittest_base, unittest.TestCase ):
         self.storage = sd.rcParams['scantable.storage']
         self.insitu = sd.rcParams['insitu']
 
-        default(sdstat)
+        default(sdstatold)
 
     def tearDown( self ):
         # restore settings
@@ -877,7 +877,7 @@ class sdstat_storageTest( sdstat_unittest_base, unittest.TestCase ):
 
         sd.rcParams['scantable.storage'] = 'memory'
         spw = self._masklist_to_spw_string(self.linechan2,unit='',ifno=ifno)
-        initstat = sdstat(infile=self.infile,outfile=outfile+'.init',
+        initstat = sdstatold(infile=self.infile,outfile=outfile+'.init',
                           spw=spw)
         masklist = self._convert_masklist(self.linechan2,specunit,self.infile,
                                           spw=ifno,restfreq=restfreq[0])
@@ -887,13 +887,13 @@ class sdstat_storageTest( sdstat_unittest_base, unittest.TestCase ):
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
 
         spw = self._masklist_to_spw_string(masklist,unit=specunit,ifno=ifno)
-        currstat = sdstat(infile=self.infile,outfile=outfile,
+        currstat = sdstatold(infile=self.infile,outfile=outfile,
                           spw=spw,restfreq=restfreq)
         # print "Statistics out of the current run:\n",currstat
         
         sd.rcParams['scantable.storage'] = 'memory'
         spw = self._masklist_to_spw_string(self.linechan2, unit='',ifno=ifno)
-        newinstat = sdstat(infile=self.infile,outfile=outfile+'.newin',
+        newinstat = sdstatold(infile=self.infile,outfile=outfile+'.newin',
                           spw=spw)
 
         # Test input data
@@ -921,7 +921,7 @@ class sdstat_storageTest( sdstat_unittest_base, unittest.TestCase ):
 
         sd.rcParams['scantable.storage'] = 'memory'
         spw = self._masklist_to_spw_string(self.linechan2,unit='',ifno=ifno)
-        initstat = sdstat(infile=self.infile,outfile=outfile+'.init',
+        initstat = sdstatold(infile=self.infile,outfile=outfile+'.init',
                           spw=spw)
         masklist = self._convert_masklist(self.linechan2,specunit,self.infile,
                                           spw=ifno,restfreq=restfreq[0])
@@ -932,13 +932,13 @@ class sdstat_storageTest( sdstat_unittest_base, unittest.TestCase ):
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
 
         spw = self._masklist_to_spw_string(masklist,unit=specunit,ifno=ifno)
-        currstat = sdstat(infile=self.infile,outfile=outfile,
+        currstat = sdstatold(infile=self.infile,outfile=outfile,
                           spw=spw,restfreq=restfreq)
         # print "Statistics out of the current run:\n",currstat
         
         sd.rcParams['scantable.storage'] = 'memory'
         spw = self._masklist_to_spw_string(self.linechan2,unit='',ifno=ifno)
-        newinstat = sdstat(infile=self.infile,outfile=outfile+'.newin',
+        newinstat = sdstatold(infile=self.infile,outfile=outfile+'.newin',
                           spw=spw)
 
         # Test input data
@@ -966,7 +966,7 @@ class sdstat_storageTest( sdstat_unittest_base, unittest.TestCase ):
 
         sd.rcParams['scantable.storage'] = 'memory'
         spw = self._masklist_to_spw_string(self.linechan2,unit='',ifno=ifno)
-        initstat = sdstat(infile=self.infile,outfile=outfile+'.init',
+        initstat = sdstatold(infile=self.infile,outfile=outfile+'.init',
                           spw=spw)
         masklist = self._convert_masklist(self.linechan2,specunit,self.infile,
                                           spw=ifno,restfreq=restfreq[0])
@@ -977,13 +977,13 @@ class sdstat_storageTest( sdstat_unittest_base, unittest.TestCase ):
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
 
         spw = self._masklist_to_spw_string(masklist,unit=specunit,ifno=ifno)
-        currstat = sdstat(infile=self.infile,outfile=outfile,
+        currstat = sdstatold(infile=self.infile,outfile=outfile,
                           spw=spw,restfreq=restfreq)
         # print "Statistics out of the current run:\n",currstat
         
         sd.rcParams['scantable.storage'] = 'memory'
         spw = self._masklist_to_spw_string(self.linechan2,unit='',ifno=ifno)
-        newinstat = sdstat(infile=self.infile,outfile=outfile+'.newin',
+        newinstat = sdstatold(infile=self.infile,outfile=outfile+'.newin',
                           spw=spw)
 
         # Test input data
@@ -1011,7 +1011,7 @@ class sdstat_storageTest( sdstat_unittest_base, unittest.TestCase ):
 
         sd.rcParams['scantable.storage'] = 'memory'
         spw = self._masklist_to_spw_string(self.linechan2,unit='',ifno=ifno)
-        initstat = sdstat(infile=self.infile,outfile=outfile+'.init',
+        initstat = sdstatold(infile=self.infile,outfile=outfile+'.init',
                           spw=spw)
         masklist = self._convert_masklist(self.linechan2,specunit,self.infile,
                                           spw=ifno,restfreq=restfreq[0])
@@ -1021,13 +1021,13 @@ class sdstat_storageTest( sdstat_unittest_base, unittest.TestCase ):
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
         spw = self._masklist_to_spw_string(masklist,unit=specunit,ifno=ifno)
-        currstat = sdstat(infile=self.infile,outfile=outfile,
+        currstat = sdstatold(infile=self.infile,outfile=outfile,
                           spw=spw,restfreq=restfreq)
         # print "Statistics out of the current run:\n",currstat
         
         sd.rcParams['scantable.storage'] = 'memory'
         spw = self._masklist_to_spw_string(self.linechan2,unit='',ifno=ifno)
-        newinstat = sdstat(infile=self.infile,outfile=outfile+'.newin',
+        newinstat = sdstatold(infile=self.infile,outfile=outfile+'.newin',
                           spw=spw)
 
         # Test input data
@@ -1094,14 +1094,14 @@ def read_stats(name):
     fff.close()
     return stats
 
-class sdstat_exceptions( sdstat_unittest_base, unittest.TestCase ):
+class sdstatold_exceptions( sdstatold_unittest_base, unittest.TestCase ):
     """
     Test the case when the task throws exception.
     """
     # Data path of input/output
     datapath = os.environ.get('CASAPATH').split()[0] + \
                '/data/regression/unittest/sdstat/'
-    taskname = "sdstat"
+    taskname = "sdstatold"
     outroot = taskname+'_test'
     outsuff = ".out"
     infile = 'OrionS_rawACSmod_calTPave.asap'
@@ -1110,7 +1110,7 @@ class sdstat_exceptions( sdstat_unittest_base, unittest.TestCase ):
         if os.path.exists(self.infile):
             shutil.rmtree(self.infile)
         shutil.copytree(self.datapath+self.infile, self.infile)
-        default(sdstat)
+        default(sdstatold)
 
     def tearDown( self ):
         if (os.path.exists(self.infile)):
@@ -1118,7 +1118,7 @@ class sdstat_exceptions( sdstat_unittest_base, unittest.TestCase ):
 
     def testNoData(self):
         try:
-            res = sdstat(infile=self.infile,spw='99')
+            res = sdstatold(infile=self.infile,spw='99')
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -1126,7 +1126,7 @@ class sdstat_exceptions( sdstat_unittest_base, unittest.TestCase ):
             self.assertNotEqual(pos,-1,
                                 msg='Unexpected exception was thrown: %s'%(str(e)))
 
-class sdstat_selection_syntax( selection_syntax.SelectionSyntaxTest,sdstat_unittest_base, unittest.TestCase ):
+class sdstatold_selection_syntax( selection_syntax.SelectionSyntaxTest,sdstatold_unittest_base, unittest.TestCase ):
     datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/singledish/'
     datapath_ref = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdstat/'
     # Input and output names
@@ -1134,11 +1134,11 @@ class sdstat_selection_syntax( selection_syntax.SelectionSyntaxTest,sdstat_unitt
     refstat_file = 'refstat_sel_new'
     refstat_file_chan = 'refstat_sel_chan'
     refstat_file_2chan = 'refstat_sel_2chan'
-    prefix=sdstat_unittest_base.taskname+'TestSel'
+    prefix=sdstatold_unittest_base.taskname+'TestSel'
     postfix='.stats'
     @property
     def task(self):
-        return sdstat
+        return sdstatold
     
     @property
     def spw_channel_selection(self):
@@ -1152,7 +1152,7 @@ class sdstat_selection_syntax( selection_syntax.SelectionSyntaxTest,sdstat_unitt
         self.refstats = read_stats(self.datapath_ref+self.refstat_file)
         self.refstats_chan = read_stats(self.datapath_ref+self.refstat_file_chan)
         self.refstats_2chan = read_stats(self.datapath_ref+self.refstat_file_2chan)
-        default(sdstat)
+        default(sdstatold)
         self.outname=self.prefix+self.postfix
         
     def tearDown(self):
@@ -1847,13 +1847,13 @@ class sdstat_selection_syntax( selection_syntax.SelectionSyntaxTest,sdstat_unitt
         tb.close()
         return idx
 
-class sdstat_flagTest( sdstat_unittest_base, unittest.TestCase ):
+class sdstatold_flagTest( sdstatold_unittest_base, unittest.TestCase ):
     """
     Unit tests for verifying flag information handling
 
-    Note: the proper flag handling in sdstat is:
+    Note: the proper flag handling in sdstatold is:
           (1) flagged channels are not used for statistics calculation.
-          (2) for flagged rows, sdstat skips statistics calculation
+          (2) for flagged rows, sdstatold skips statistics calculation
               and output.
           (3) no flag informations in the input data are modified.
     """
@@ -1877,7 +1877,7 @@ class sdstat_flagTest( sdstat_unittest_base, unittest.TestCase ):
             shutil.rmtree(self.infile)
         shutil.copytree(self.datapath+self.infile, self.infile)
         shutil.copyfile(self.datapath+self.reffile, self.reffile)
-        default(sdstat)
+        default(sdstatold)
 
         with tbmanager(self.infile) as tb:
             self.ref_flagtra = tb.getcol('FLAGTRA')
@@ -1893,7 +1893,7 @@ class sdstat_flagTest( sdstat_unittest_base, unittest.TestCase ):
         tid = "Flag"
         infile = self.infile
         outfile = self.outroot+tid+self.outsuff
-        retstat = sdstat(infile=infile,outfile=outfile)
+        retstat = sdstatold(infile=infile,outfile=outfile)
 
         self._compareFiles(outfile, self.reffile)
         self.assertTrue(isinstance(retstat,dict),
@@ -1918,6 +1918,6 @@ class sdstat_flagTest( sdstat_unittest_base, unittest.TestCase ):
             self.assertTrue(all(flagrow==self.ref_flagrow))
 
 def suite():
-    return [sdstat_basicTest, sdstat_averageTest, sdstat_restfreqTest,
-            sdstat_storageTest, sdstat_selection_syntax, sdstat_exceptions,
-            sdstat_flagTest]
+    return [sdstatold_basicTest, sdstatold_averageTest, sdstatold_restfreqTest,
+            sdstatold_storageTest, sdstatold_selection_syntax, sdstatold_exceptions,
+            sdstatold_flagTest]

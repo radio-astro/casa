@@ -8,20 +8,20 @@ from taskinit import *
 import unittest
 #
 
-from sdcoadd import sdcoadd
+from sdcoaddold import sdcoaddold
 from sdutil import tbmanager
 import asap as sd
 from asap.scantable import is_scantable, is_ms
 
 
-class sdcoadd_unittest_base:
+class sdcoaddold_unittest_base:
     """
-    Base class for sdcoadd unit test
+    Base class for sdcoaddold unit test
     """
     # Data path of input/output
     datapath=os.environ.get('CASAPATH').split()[0] + \
               '/data/regression/unittest/sdcoadd/'
-    taskname = "sdcoadd"
+    taskname = "sdcoaddold"
 
     mergeids = {"FOCUS_ID": "FOCUS", "FREQ_ID": "FREQUENCIES", \
                 "MOLECULE_ID": "MOLECULES"}
@@ -121,9 +121,9 @@ class sdcoadd_unittest_base:
             return [input]
 
 
-class sdcoadd_basicTest( sdcoadd_unittest_base, unittest.TestCase ):
+class sdcoaddold_basicTest( sdcoaddold_unittest_base, unittest.TestCase ):
     """
-    Basic unit tests for task sdcoadd. No averaging and interactive testing.
+    Basic unit tests for task sdcoaddold. No averaging and interactive testing.
 
     The list of tests:
     test00   --- default parameters (raises an error)
@@ -137,7 +137,7 @@ class sdcoadd_basicTest( sdcoadd_unittest_base, unittest.TestCase ):
     """
     # Input and output names
     inlist = ['orions_calSave_21.asap','orions_calSave_25.asap','orions_calSave_23.asap']
-    outname = "sdcoadd_out.asap"
+    outname = "sdcoaddold_out.asap"
     # Reference data of merged scantable
     # merge result of scan 21 and 25 (no overlap in IF and MOL_ID data
     # but the same IDs are assigned ... requires proper addition of IDs by
@@ -162,7 +162,7 @@ class sdcoadd_basicTest( sdcoadd_unittest_base, unittest.TestCase ):
                 shutil.rmtree(infile)
             shutil.copytree(self.datapath+infile, infile)
 
-        default(sdcoadd)
+        default(sdcoaddold)
 
     def tearDown( self ):
         for thefile in self.inlist + [self.outname]:
@@ -172,7 +172,7 @@ class sdcoadd_basicTest( sdcoadd_unittest_base, unittest.TestCase ):
     def test00( self ):
         """Test 0: Default parameters (raises an error)"""
         try:
-            result = sdcoadd()
+            result = sdcoaddold()
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -183,7 +183,7 @@ class sdcoadd_basicTest( sdcoadd_unittest_base, unittest.TestCase ):
     def test01( self ):
         """Test 1: valid infiles (scantables) WITHOUT outfile"""
         infiles = self.inlist[0:2]
-        result = sdcoadd(infiles=infiles)
+        result = sdcoaddold(infiles=infiles)
 
         self.assertEqual(result,None)
         # test merged scantable
@@ -197,7 +197,7 @@ class sdcoadd_basicTest( sdcoadd_unittest_base, unittest.TestCase ):
         """Test 2: valid infiles (scantable) with outfile"""
         infiles = self.inlist[0:2]
         outfile = self.outname
-        result = sdcoadd(infiles=infiles,outfile=outfile)
+        result = sdcoaddold(infiles=infiles,outfile=outfile)
 
         self.assertEqual(result,None)
         self.assertTrue(os.path.exists(outfile),msg="No output written")
@@ -210,7 +210,7 @@ class sdcoadd_basicTest( sdcoadd_unittest_base, unittest.TestCase ):
         infiles = self.inlist[0:2]
         outfile = self.outname.rstrip('.asap')+'.ms'
         outform = 'MS2'
-        result = sdcoadd(infiles=infiles,outfile=outfile,outform=outform)
+        result = sdcoaddold(infiles=infiles,outfile=outfile,outform=outform)
         self.assertEqual(result,None)
         self.assertTrue(os.path.exists(outfile),msg="No output written")
 
@@ -220,14 +220,14 @@ class sdcoadd_basicTest( sdcoadd_unittest_base, unittest.TestCase ):
         """Test 4: overwrite=False (raises an error)"""
         infiles = self.inlist[1:3]
         outfile = self.outname
-        result = sdcoadd(infiles=infiles,outfile=outfile)
+        result = sdcoaddold(infiles=infiles,outfile=outfile)
         self.assertEqual(result,None)
         self.assertTrue(os.path.exists(outfile),msg="No output written")
 
         infiles = self.inlist[0:2]
         outfile = self.outname
         try:
-            result2 = sdcoadd(infiles=infiles,outfile=outfile)
+            result2 = sdcoaddold(infiles=infiles,outfile=outfile)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -239,13 +239,13 @@ class sdcoadd_basicTest( sdcoadd_unittest_base, unittest.TestCase ):
         """Test 5: overwrite=True"""
         infiles = self.inlist[1:3]
         outfile = self.outname
-        result = sdcoadd(infiles=infiles,outfile=outfile)
+        result = sdcoaddold(infiles=infiles,outfile=outfile)
         self.assertEqual(result,None)
         self.assertTrue(os.path.exists(outfile),msg="No output written")
 
         infiles = self.inlist[0:2]
         overwrite = True
-        result2 = sdcoadd(infiles=infiles,outfile=outfile,overwrite=overwrite)
+        result2 = sdcoaddold(infiles=infiles,outfile=outfile,overwrite=overwrite)
 
         self.assertEqual(result2,None)
         # test merged scantable
@@ -256,7 +256,7 @@ class sdcoadd_basicTest( sdcoadd_unittest_base, unittest.TestCase ):
         """Test 6: Merge 3 scantables"""
         infiles = self.inlist
         outfile = self.outname
-        result = sdcoadd(infiles=infiles,outfile=outfile)
+        result = sdcoaddold(infiles=infiles,outfile=outfile)
 
         self.assertEqual(result,None)
         self.assertTrue(os.path.exists(outfile),msg="No output written")
@@ -269,7 +269,7 @@ class sdcoadd_basicTest( sdcoadd_unittest_base, unittest.TestCase ):
         infiles = self.inlist[0]
         outfile = self.outname
         try:
-            result = sdcoadd(infiles=infiles,outfile=outfile)
+            result = sdcoaddold(infiles=infiles,outfile=outfile)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -278,7 +278,7 @@ class sdcoadd_basicTest( sdcoadd_unittest_base, unittest.TestCase ):
                                 msg='Unexpected exception was thrown: %s'%(str(e)))
 
 
-class sdcoadd_mergeTest( sdcoadd_unittest_base, unittest.TestCase ):
+class sdcoaddold_mergeTest( sdcoaddold_unittest_base, unittest.TestCase ):
     """
     Test capabilities of sd.merge(). No averaging and interactive testing.
 
@@ -294,10 +294,10 @@ class sdcoadd_mergeTest( sdcoadd_unittest_base, unittest.TestCase ):
     # orions_calSave_23.asap: nROW=8, IF=[0-3], scan=[23], MOL=[0], FOC=[0]
     # orions_calSave_2327.asap: nROW=16, IF=[0-7], scan=[23,27], MOL=[0], FOC=[0]
     inlist = []
-    outname = "sdcoadd_out.asap"
+    outname = "sdcoaddold_out.asap"
     
     def setUp( self ):
-        default(sdcoadd)
+        default(sdcoaddold)
 
     def tearDown( self ):
         for thefile in self.inlist + [self.outname]:
@@ -324,7 +324,7 @@ class sdcoadd_mergeTest( sdcoadd_unittest_base, unittest.TestCase ):
             innhist += tb.nrows()
             tb.close()
         outfile = self.outname
-        result = sdcoadd(infiles=infiles,outfile=outfile)
+        result = sdcoaddold(infiles=infiles,outfile=outfile)
         self.assertEqual(result,None)
         self.assertTrue(os.path.exists(outfile),msg="No output written")
 
@@ -340,7 +340,7 @@ class sdcoadd_mergeTest( sdcoadd_unittest_base, unittest.TestCase ):
         
         infiles = self.inlist
         outfile = self.outname
-        result = sdcoadd(infiles=infiles,outfile=outfile)
+        result = sdcoaddold(infiles=infiles,outfile=outfile)
         self.assertEqual(result,None)
         self.assertTrue(os.path.exists(outfile),msg="No output written")
 
@@ -361,7 +361,7 @@ class sdcoadd_mergeTest( sdcoadd_unittest_base, unittest.TestCase ):
 
         infiles = self.inlist
         outfile = self.outname
-        result = sdcoadd(infiles=infiles,outfile=outfile)
+        result = sdcoaddold(infiles=infiles,outfile=outfile)
         self.assertEqual(result,None)
         self.assertTrue(os.path.exists(outfile),msg="No output written")
 
@@ -382,7 +382,7 @@ class sdcoadd_mergeTest( sdcoadd_unittest_base, unittest.TestCase ):
                         (str(merged["FREQ_IDS"]), str(refFID)))
 
 
-class sdcoadd_freqtolTest( sdcoadd_unittest_base, unittest.TestCase ):
+class sdcoaddold_freqtolTest( sdcoaddold_unittest_base, unittest.TestCase ):
     """
     Test capabilities of sd.merge() with freq_tol='1kHz'.
 
@@ -418,14 +418,14 @@ class sdcoadd_freqtolTest( sdcoadd_unittest_base, unittest.TestCase ):
     # orions_calSave_23.asap: nROW=8, IF=[0-3], scan=[23], MOL=[0], FOC=[0]
     # orions_calSave_2327.asap: nROW=16, IF=[0-7], scan=[23,27], MOL=[0], FOC=[0]
     inlist = ['orions_calSave_23.asap','orions_calSave_21if03.asap']
-    outfile = "sdcoadd_out.asap"
+    outfile = "sdcoaddold_out.asap"
     freqtol = '1kHz'
     within_tol = 0.99e3
     equal_tol = 1.0e3
     outof_tol = 1.01e3
     
     def setUp( self ):
-        default(sdcoadd)
+        default(sdcoaddold)
         self._copy_inputs()
 
     def tearDown( self ):
@@ -514,11 +514,11 @@ class sdcoadd_freqtolTest( sdcoadd_unittest_base, unittest.TestCase ):
         tb.close()
 
         # expected nrows for outfile HISTORY (must be evaluated before
-        # running sdcoadd)
+        # running sdcoaddold)
         expected_hist_nrow = self._nrow(infiles, 'HISTORY')
 
-        # run sdcoadd
-        result = sdcoadd(infiles=infiles,outfile=self.outfile,freqtol=self.freqtol)
+        # run sdcoaddold
+        result = sdcoaddold(infiles=infiles,outfile=self.outfile,freqtol=self.freqtol)
         self.assertEqual(result,None)
 
         # verification
@@ -548,8 +548,8 @@ class sdcoadd_freqtolTest( sdcoadd_unittest_base, unittest.TestCase ):
         # expected nrows for outfile HISTORY 
         expected_hist_nrow = self._nrow(infiles, 'HISTORY')
 
-        # run sdcoadd
-        result = sdcoadd(infiles=infiles,outfile=self.outfile,freqtol=self.freqtol)
+        # run sdcoaddold
+        result = sdcoaddold(infiles=infiles,outfile=self.outfile,freqtol=self.freqtol)
         self.assertEqual(result,None)
 
         # verification
@@ -579,8 +579,8 @@ class sdcoadd_freqtolTest( sdcoadd_unittest_base, unittest.TestCase ):
         # expected nrows for outfile HISTORY 
         expected_hist_nrow = self._nrow(infiles, 'HISTORY')
 
-        # run sdcoadd
-        result = sdcoadd(infiles=infiles,outfile=self.outfile,freqtol=self.freqtol)
+        # run sdcoaddold
+        result = sdcoaddold(infiles=infiles,outfile=self.outfile,freqtol=self.freqtol)
         self.assertEqual(result,None)
 
         # verification
@@ -610,8 +610,8 @@ class sdcoadd_freqtolTest( sdcoadd_unittest_base, unittest.TestCase ):
         # expected nrows for outfile HISTORY 
         expected_hist_nrow = self._nrow(infiles, 'HISTORY')
 
-        # run sdcoadd
-        result = sdcoadd(infiles=infiles,outfile=self.outfile,freqtol=self.freqtol)
+        # run sdcoaddold
+        result = sdcoaddold(infiles=infiles,outfile=self.outfile,freqtol=self.freqtol)
         self.assertEqual(result,None)
 
         # verification
@@ -647,8 +647,8 @@ class sdcoadd_freqtolTest( sdcoadd_unittest_base, unittest.TestCase ):
         # expected nrows for outfile HISTORY 
         expected_hist_nrow = self._nrow(infiles, 'HISTORY')
 
-        # run sdcoadd
-        result = sdcoadd(infiles=infiles,outfile=self.outfile,freqtol=self.freqtol)
+        # run sdcoaddold
+        result = sdcoaddold(infiles=infiles,outfile=self.outfile,freqtol=self.freqtol)
         self.assertEqual(result,None)
 
         # verification
@@ -684,8 +684,8 @@ class sdcoadd_freqtolTest( sdcoadd_unittest_base, unittest.TestCase ):
         # expected nrows for outfile HISTORY 
         expected_hist_nrow = self._nrow(infiles, 'HISTORY')
 
-        # run sdcoadd
-        result = sdcoadd(infiles=infiles,outfile=self.outfile,freqtol=self.freqtol)
+        # run sdcoaddold
+        result = sdcoaddold(infiles=infiles,outfile=self.outfile,freqtol=self.freqtol)
         self.assertEqual(result,None)
 
         # verification
@@ -721,8 +721,8 @@ class sdcoadd_freqtolTest( sdcoadd_unittest_base, unittest.TestCase ):
         # expected nrows for outfile HISTORY 
         expected_hist_nrow = self._nrow(infiles, 'HISTORY')
 
-        # run sdcoadd
-        result = sdcoadd(infiles=infiles,outfile=self.outfile,freqtol=self.freqtol)
+        # run sdcoaddold
+        result = sdcoaddold(infiles=infiles,outfile=self.outfile,freqtol=self.freqtol)
         self.assertEqual(result,None)
 
         # verification
@@ -755,8 +755,8 @@ class sdcoadd_freqtolTest( sdcoadd_unittest_base, unittest.TestCase ):
         # expected nrows for outfile HISTORY 
         expected_hist_nrow = self._nrow(infiles, 'HISTORY')
 
-        # run sdcoadd
-        result = sdcoadd(infiles=infiles,outfile=self.outfile,freqtol=self.freqtol)
+        # run sdcoaddold
+        result = sdcoaddold(infiles=infiles,outfile=self.outfile,freqtol=self.freqtol)
         self.assertEqual(result,None)
 
         # verification
@@ -787,8 +787,8 @@ class sdcoadd_freqtolTest( sdcoadd_unittest_base, unittest.TestCase ):
         # expected nrows for outfile HISTORY 
         expected_hist_nrow = self._nrow(infiles, 'HISTORY')
 
-        # run sdcoadd
-        result = sdcoadd(infiles=infiles,outfile=self.outfile,freqtol=self.freqtol)
+        # run sdcoaddold
+        result = sdcoaddold(infiles=infiles,outfile=self.outfile,freqtol=self.freqtol)
         self.assertEqual(result,None)
 
         # verification
@@ -811,11 +811,11 @@ class sdcoadd_freqtolTest( sdcoadd_unittest_base, unittest.TestCase ):
         tb.close()
 
         # expected nrows for outfile HISTORY (must be evaluated before
-        # running sdcoadd)
+        # running sdcoaddold)
         expected_hist_nrow = self._nrow(infiles, 'HISTORY')
 
-        # run sdcoadd
-        result = sdcoadd(infiles=infiles,outfile=self.outfile,freqtol=self.freqtol)
+        # run sdcoaddold
+        result = sdcoaddold(infiles=infiles,outfile=self.outfile,freqtol=self.freqtol)
         self.assertEqual(result,None)
 
         # verification
@@ -843,9 +843,9 @@ class sdcoadd_freqtolTest( sdcoadd_unittest_base, unittest.TestCase ):
         # expected nrows for outfile HISTORY 
         expected_hist_nrow = self._nrow(infiles, 'HISTORY')
 
-        # run sdcoadd
+        # run sdcoaddold
         try:
-            result = sdcoadd(infiles=infiles,outfile=self.outfile,freqtol=self.freqtol)
+            result = sdcoaddold(infiles=infiles,outfile=self.outfile,freqtol=self.freqtol)
         except RuntimeError, e:
             self.assertNotEqual(str(e).find('BASEFRAME is not identical'), -1,
                              msg='Unexpected exception is thrown: \'%s\''%(str(e)))
@@ -871,8 +871,8 @@ class sdcoadd_freqtolTest( sdcoadd_unittest_base, unittest.TestCase ):
         # expected nrows for outfile HISTORY 
         expected_hist_nrow = self._nrow(infiles, 'HISTORY')
 
-        # run sdcoadd
-        result = sdcoadd(infiles=infiles,outfile=self.outfile,freqtol=self.freqtol)
+        # run sdcoaddold
+        result = sdcoaddold(infiles=infiles,outfile=self.outfile,freqtol=self.freqtol)
         self.assertEqual(result,None)
 
         # verification
@@ -912,8 +912,8 @@ class sdcoadd_freqtolTest( sdcoadd_unittest_base, unittest.TestCase ):
         # expected nrows for outfile HISTORY 
         expected_hist_nrow = self._nrow(infiles, 'HISTORY')
 
-        # run sdcoadd
-        result = sdcoadd(infiles=infiles,outfile=self.outfile)
+        # run sdcoaddold
+        result = sdcoaddold(infiles=infiles,outfile=self.outfile)
         self.assertEqual(result,None)
 
         # verification
@@ -935,11 +935,11 @@ class sdcoadd_freqtolTest( sdcoadd_unittest_base, unittest.TestCase ):
         tb.close()
 
         # expected nrows for outfile HISTORY (must be evaluated before
-        # running sdcoadd)
+        # running sdcoaddold)
         expected_hist_nrow = self._nrow(infiles, 'HISTORY')
 
-        # run sdcoadd
-        result = sdcoadd(infiles=infiles,outfile=self.outfile)
+        # run sdcoaddold
+        result = sdcoaddold(infiles=infiles,outfile=self.outfile)
         self.assertEqual(result,None)
 
         # verification
@@ -975,8 +975,8 @@ class sdcoadd_freqtolTest( sdcoadd_unittest_base, unittest.TestCase ):
         # expected nrows for outfile HISTORY 
         expected_hist_nrow = self._nrow(infiles, 'HISTORY')
 
-        # run sdcoadd
-        result = sdcoadd(infiles=infiles,outfile=self.outfile,freqtol=self.equal_tol)
+        # run sdcoaddold
+        result = sdcoaddold(infiles=infiles,outfile=self.outfile,freqtol=self.equal_tol)
         self.assertEqual(result,None)
 
         # verification
@@ -1004,11 +1004,11 @@ class sdcoadd_freqtolTest( sdcoadd_unittest_base, unittest.TestCase ):
         tb.close()
 
         # expected nrows for outfile HISTORY (must be evaluated before
-        # running sdcoadd)
+        # running sdcoaddold)
         expected_hist_nrow = self._nrow(infiles, 'HISTORY')
 
-        # run sdcoadd
-        result = sdcoadd(infiles=infiles,outfile=self.outfile,freqtol=self.freqtol)
+        # run sdcoaddold
+        result = sdcoaddold(infiles=infiles,outfile=self.outfile,freqtol=self.freqtol)
         self.assertEqual(result,None)
 
         # verification
@@ -1036,11 +1036,11 @@ class sdcoadd_freqtolTest( sdcoadd_unittest_base, unittest.TestCase ):
         tb.close()
 
         # expected nrows for outfile HISTORY (must be evaluated before
-        # running sdcoadd)
+        # running sdcoaddold)
         expected_hist_nrow = self._nrow(infiles, 'HISTORY')
 
-        # run sdcoadd
-        result = sdcoadd(infiles=infiles,outfile=self.outfile,freqtol=self.freqtol)
+        # run sdcoaddold
+        result = sdcoaddold(infiles=infiles,outfile=self.outfile,freqtol=self.freqtol)
         self.assertEqual(result,None)
 
         # verification
@@ -1055,9 +1055,9 @@ class sdcoadd_freqtolTest( sdcoadd_unittest_base, unittest.TestCase ):
         """test_freqtol17: fail if invalid value is given"""
         infiles = self.inlist
         
-        # run sdcoadd
+        # run sdcoaddold
         try:
-            result = sdcoadd(infiles=infiles,outfile=self.outfile,freqtol='None')
+            result = sdcoaddold(infiles=infiles,outfile=self.outfile,freqtol='None')
         except RuntimeError, e:
             self.assertNotEqual(str(e).find('Failed to convert freqTol string to quantity'), -1,
                              msg='Unexpected exception is thrown: \'%s\''%(str(e)))
@@ -1067,9 +1067,9 @@ class sdcoadd_freqtolTest( sdcoadd_unittest_base, unittest.TestCase ):
     
 
         
-class sdcoadd_storageTest( sdcoadd_unittest_base, unittest.TestCase ):
+class sdcoaddold_storageTest( sdcoaddold_unittest_base, unittest.TestCase ):
     """
-    Unit tests for task sdcoadd. Test scantable sotrage and insitu
+    Unit tests for task sdcoaddold. Test scantable sotrage and insitu
     parameters
 
     The list of tests:
@@ -1089,7 +1089,7 @@ class sdcoadd_storageTest( sdcoadd_unittest_base, unittest.TestCase ):
     """
     # a list of input scatables to merge
     inlist = ['orions_calSave_21.asap','orions_calSave_25.asap']
-    outname = sdcoadd_unittest_base.taskname+".merged"
+    outname = sdcoaddold_unittest_base.taskname+".merged"
 
     # Reference data of merged scantable
     # merge result of scan 21 and 25 (no overlap in IF and MOL_ID data
@@ -1109,7 +1109,7 @@ class sdcoadd_storageTest( sdcoadd_unittest_base, unittest.TestCase ):
         self.storage = sd.rcParams['scantable.storage']
         self.insitu = sd.rcParams['insitu']
 
-        default(sdcoadd)
+        default(sdcoaddold)
 
         self.merge_uc = self._get_unit_coord(self.inlist[0])
 
@@ -1179,14 +1179,14 @@ class sdcoadd_storageTest( sdcoadd_unittest_base, unittest.TestCase ):
     def _compare_ids(self, out, ref):
         for f in out.keys():
             for k in out[f].keys():
-                casalog.post('%s before sdcoadd: %s = %s'%(f,k,ref[f][k]))
-                casalog.post('%s after sdcoadd: %s = %s'%(f,k,out[f][k]))
+                casalog.post('%s before sdcoaddold: %s = %s'%(f,k,ref[f][k]))
+                casalog.post('%s after sdcoaddold: %s = %s'%(f,k,out[f][k]))
                 self.assertTrue(all(out[f][k]==ref[f][k]),
-                                    msg='%s of %s may be modified by sdcoadd'%(k,f))
+                                    msg='%s of %s may be modified by sdcoaddold'%(k,f))
             
     # Actual tests
     def testMT( self ):
-        """Storage Test MT: sdcoadd on storage='memory' and insitu=T"""
+        """Storage Test MT: sdcoaddold on storage='memory' and insitu=T"""
         tid = "MT"
         infiles = self.inlist
         outfile = self.outname+tid
@@ -1203,7 +1203,7 @@ class sdcoadd_storageTest( sdcoadd_unittest_base, unittest.TestCase ):
         sd.rcParams['insitu'] = True
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        result = sdcoadd(infiles=infiles,outfile=outfile)
+        result = sdcoaddold(infiles=infiles,outfile=outfile)
 
         self.assertEqual(result,None)
         self.assertTrue(os.path.exists(outfile),msg="No output written")
@@ -1219,7 +1219,7 @@ class sdcoadd_storageTest( sdcoadd_unittest_base, unittest.TestCase ):
         self._compare_ids(id_out, id_ref)
 
     def testMF( self ):
-        """Storage Test MF: sdcoadd on storage='memory' and insitu=F"""
+        """Storage Test MF: sdcoaddold on storage='memory' and insitu=F"""
         tid = "MF"
         infiles = self.inlist
         outfile = self.outname+tid
@@ -1236,7 +1236,7 @@ class sdcoadd_storageTest( sdcoadd_unittest_base, unittest.TestCase ):
         sd.rcParams['insitu'] = False
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        result = sdcoadd(infiles=infiles,outfile=outfile)
+        result = sdcoaddold(infiles=infiles,outfile=outfile)
 
         self.assertEqual(result,None)
         self.assertTrue(os.path.exists(outfile),msg="No output written")
@@ -1252,7 +1252,7 @@ class sdcoadd_storageTest( sdcoadd_unittest_base, unittest.TestCase ):
         self._compare_ids(id_out, id_ref)
 
     def testDT( self ):
-        """Storage Test DT: sdcoadd on storage='disk' and insitu=T"""
+        """Storage Test DT: sdcoaddold on storage='disk' and insitu=T"""
         tid = "DT"
         infiles = self.inlist
         outfile = self.outname+tid
@@ -1269,7 +1269,7 @@ class sdcoadd_storageTest( sdcoadd_unittest_base, unittest.TestCase ):
         sd.rcParams['insitu'] = True
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        result = sdcoadd(infiles=infiles,outfile=outfile)
+        result = sdcoaddold(infiles=infiles,outfile=outfile)
         
         self.assertEqual(result,None)
         self.assertTrue(os.path.exists(outfile),msg="No output written")
@@ -1285,7 +1285,7 @@ class sdcoadd_storageTest( sdcoadd_unittest_base, unittest.TestCase ):
         self._compare_ids(id_out, id_ref)
 
     def testDF( self ):
-        """Storage Test DF: sdcoadd on storage='disk' and insitu=F"""
+        """Storage Test DF: sdcoaddold on storage='disk' and insitu=F"""
         tid = "DF"
         infiles = self.inlist
         outfile = self.outname+tid
@@ -1302,7 +1302,7 @@ class sdcoadd_storageTest( sdcoadd_unittest_base, unittest.TestCase ):
         sd.rcParams['insitu'] = False
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        result = sdcoadd(infiles=infiles,outfile=outfile)
+        result = sdcoaddold(infiles=infiles,outfile=outfile)
 
         self.assertEqual(result,None)
         self.assertTrue(os.path.exists(outfile),msg="No output written")
@@ -1317,7 +1317,7 @@ class sdcoadd_storageTest( sdcoadd_unittest_base, unittest.TestCase ):
         id_out = self._get_ids(infiles)
         self._compare_ids(id_out, id_ref)
 
-class sdcoadd_flagTest( sdcoadd_unittest_base, unittest.TestCase ):
+class sdcoaddold_flagTest( sdcoaddold_unittest_base, unittest.TestCase ):
     """
     Test for flag data handling. actually nothing to do with flagtra and flagrows.
     """
@@ -1326,14 +1326,14 @@ class sdcoadd_flagTest( sdcoadd_unittest_base, unittest.TestCase ):
     # Input and output names
     num_repeat = 2
     inlist = ['flagtest.asap'] * num_repeat
-    outname = "sdcoadd_out.asap"
+    outname = "sdcoaddold_out.asap"
     
     def setUp( self ):
         for infile in self.inlist:
             if os.path.exists(infile):
                 shutil.rmtree(infile)
             shutil.copytree(self.datapath+infile, infile)
-        default(sdcoadd)
+        default(sdcoaddold)
         self._getinfo(self.inlist[0], self.num_repeat)
 
     def tearDown( self ):
@@ -1343,7 +1343,7 @@ class sdcoadd_flagTest( sdcoadd_unittest_base, unittest.TestCase ):
 
     def testflag( self ):
         """Flag Test"""
-        result = sdcoadd(infiles=self.inlist,outfile=self.outname)
+        result = sdcoaddold(infiles=self.inlist,outfile=self.outname)
         self.assertEqual(result,None)
         self.assertTrue(os.path.exists(self.outname),msg="No output written")
         self._verifyflag(self.outname)
@@ -1379,6 +1379,6 @@ class sdcoadd_flagTest( sdcoadd_unittest_base, unittest.TestCase ):
             return -1
     
 def suite():
-    return [sdcoadd_basicTest, sdcoadd_mergeTest,
-            sdcoadd_storageTest, sdcoadd_freqtolTest,
-            sdcoadd_flagTest]
+    return [sdcoaddold_basicTest, sdcoaddold_mergeTest,
+            sdcoaddold_storageTest, sdcoaddold_freqtolTest,
+            sdcoaddold_flagTest]

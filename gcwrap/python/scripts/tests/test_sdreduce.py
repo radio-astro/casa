@@ -21,7 +21,7 @@ except:
     import tests.test_sdcal as test_sdcal
 
 import asap as sd
-from sdreduce import sdreduce
+from sdreduceold import sdreduceold
 #from sdstat import sdstat
 
 from sdutil import tbmanager
@@ -138,16 +138,16 @@ def parseRms( txt ):
     t = txt.lstrip().rstrip( '\n' )[6:]
     return float( t )
 
-class sdreduce_unittest_base:
+class sdreduceold_unittest_base:
     """
-    Base class for sdreduce unit test
+    Base class for sdreduceold unit test
     """
     # Data path of input/output
     datapath = os.environ.get('CASAPATH').split()[0] + \
                '/data/regression/unittest/sdreduce/'
     sddatapath = os.environ.get('CASAPATH').split()[0] + \
                  '/data/regression/unittest/singledish/'
-    taskname = "sdreduce"
+    taskname = "sdreduceold"
     postfix='.red.asap'
 
     def _checkfile( self, name ):
@@ -155,9 +155,9 @@ class sdreduce_unittest_base:
         self.assertTrue(isthere,
                          msg='output file %s was not created because of the task failure'%(name))
 
-class sdreduce_test(unittest.TestCase):
+class sdreduceold_test(unittest.TestCase):
     """
-    Basic unit tests for task sdreduce. No interactive testing.
+    Basic unit tests for task sdreduceold. No interactive testing.
 
     The list of tests:
     test00    --- default parameters (raises an errror)
@@ -181,14 +181,14 @@ class sdreduce_test(unittest.TestCase):
     # uncalibrated data
     infile1 = 'OrionS_rawACSmod_cal2123.asap'
     infiles = [infile0, infile1]
-    outroot = 'sdreduce_test'
+    outroot = 'sdreduceold_test'
 
     def setUp(self):
         for file in self.infiles:
             if os.path.exists(file):
                 shutil.rmtree(file)
             shutil.copytree(self.datapath+file, file)
-        default(sdreduce)
+        default(sdreduceold)
 
     def tearDown(self):
         for file in self.infiles:
@@ -223,7 +223,7 @@ class sdreduce_test(unittest.TestCase):
     def test00(self):
         """Test 0: Default parameters (raises an errror)"""
         #print blfunc
-        result = sdreduce()
+        result = sdreduceold()
         self.assertFalse(result)
 
     def test01(self):
@@ -232,7 +232,7 @@ class sdreduce_test(unittest.TestCase):
         infile = self.infile0
         outfile = self.outroot+self.tid+'.asap'
 
-        result = sdreduce(infile=infile,outfile=outfile)
+        result = sdreduceold(infile=infile,outfile=outfile)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         self.assertTrue(os.path.exists(outfile),
@@ -258,7 +258,7 @@ class sdreduce_test(unittest.TestCase):
         blfunc='poly'
 
 
-        result = sdreduce(infile=infile,outfile=outfile,calmode=calmode,
+        result = sdreduceold(infile=infile,outfile=outfile,calmode=calmode,
                        kernel=kernel,blfunc=blfunc)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -282,7 +282,7 @@ class sdreduce_test(unittest.TestCase):
         infile = self.infile0
         outfile = self.outroot+self.tid+'.asap'
 
-        result = sdreduce(infile=infile,
+        result = sdreduceold(infile=infile,
                           antenna=0,
                           fluxunit='K',
                           telescopeparam='',
@@ -350,7 +350,7 @@ class sdreduce_test(unittest.TestCase):
         outfile = self.outroot+self.tid+'.asap'
         calmode = 'ps'
 
-        result = sdreduce(infile=infile,outfile=outfile,calmode=calmode)
+        result = sdreduceold(infile=infile,outfile=outfile,calmode=calmode)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         self.assertTrue(os.path.exists(outfile),
@@ -373,7 +373,7 @@ class sdreduce_test(unittest.TestCase):
         tweight = 'tintsys'
         scanaverage = True
 
-        result = sdreduce(infile=infile,outfile=outfile,
+        result = sdreduceold(infile=infile,outfile=outfile,
                           average=average,timeaverage=timeaverage,
                           tweight = 'tintsys',scanaverage=scanaverage)
 
@@ -395,7 +395,7 @@ class sdreduce_test(unittest.TestCase):
         outfile = self.outroot+self.tid+'.asap'
         kernel = 'hanning'
 
-        result = sdreduce(infile=infile,outfile=outfile,kernel=kernel)
+        result = sdreduceold(infile=infile,outfile=outfile,kernel=kernel)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         self.assertTrue(os.path.exists(outfile),
@@ -414,7 +414,7 @@ class sdreduce_test(unittest.TestCase):
         outfile = self.outroot+self.tid+'.asap'
         blfunc = 'poly'
 
-        result = sdreduce(infile=infile,outfile=outfile,blfunc=blfunc)
+        result = sdreduceold(infile=infile,outfile=outfile,blfunc=blfunc)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         self.assertTrue(os.path.exists(outfile),
@@ -436,7 +436,7 @@ class sdreduce_test(unittest.TestCase):
         kernel = 'hanning'
         blfunc = 'poly'
 
-        result = sdreduce(infile=infile,outfile=outfile,calmode=calmode,
+        result = sdreduceold(infile=infile,outfile=outfile,calmode=calmode,
                        average=average,kernel=kernel,blfunc=blfunc)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -458,7 +458,7 @@ class sdreduce_test(unittest.TestCase):
         kernel = 'none'
         blfunc = 'poly'
 
-        result = sdreduce(infile=infile,outfile=outfile,calmode=calmode,
+        result = sdreduceold(infile=infile,outfile=outfile,calmode=calmode,
                        kernel=kernel,blfunc=blfunc)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -481,7 +481,7 @@ class sdreduce_test(unittest.TestCase):
         kernel = 'hanning'
         blfunc = 'none'
 
-        result = sdreduce(infile=infile,outfile=outfile,calmode=calmode,
+        result = sdreduceold(infile=infile,outfile=outfile,calmode=calmode,
                        kernel=kernel,blfunc=blfunc)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -494,10 +494,10 @@ class sdreduce_test(unittest.TestCase):
         teststat = self._row0_stats(outfile)
         self._teststats0(teststat,refstat)
 
-class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
-                         sdreduce_unittest_base,unittest.TestCase):
+class sdreduceold_selection(selection_syntax.SelectionSyntaxTest,
+                         sdreduceold_unittest_base,unittest.TestCase):
     """
-    Test selection syntax in sdreduce.
+    Test selection syntax in sdreduceold.
     Selection parameters to test are:
     field, spw (with channel selection), timerange, scan, pol
 
@@ -512,7 +512,7 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
     #rawfile_2 = 'sd_analytic_type2-1.asap'
     rawfile_bl = 'sd_analytic_type1-3.bl.asap'
     rawfiles = [rawfile_raw, rawfile_cal, rawfile_bl]
-    prefix = sdreduce_unittest_base.taskname+'TestSel'
+    prefix = sdreduceold_unittest_base.taskname+'TestSel'
 
     refval_sm = ({'value': 1.0, 'channel': (17,21)},
                  {'value': 2.0, 'channel': (37,41)},
@@ -525,7 +525,7 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
 
     @property
     def task(self):
-        return sdreduce
+        return sdreduceold
     
     @property
     def spw_channel_selection(self):
@@ -538,7 +538,7 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
             shutil.copytree(self.sddatapath+name, name)
         os.system( 'rm -rf '+self.prefix+'*' )
         
-        default(sdreduce)
+        default(sdreduceold)
         self.calmode = 'none'
         self.average = False
         self.timeaverage = False
@@ -1297,7 +1297,7 @@ class sdreduce_selection(selection_syntax.SelectionSyntaxTest,
 ###
 # Test flag information handling
 ###
-class sdreduce_test_average_flag(unittest.TestCase):
+class sdreduceold_test_average_flag(unittest.TestCase):
     """
     ### This is a copy of test_sdavearge.sdaverage_test_average_flag ###
     
@@ -1328,14 +1328,14 @@ class sdreduce_test_average_flag(unittest.TestCase):
     datapath = os.environ.get('CASAPATH').split()[0] + \
                '/data/regression/unittest/sdaverage/'
     rawfile = 'sdaverage_testflag.asap'
-    prefix = 'sdreduce_test_average_flag'
+    prefix = 'sdreduceold_test_average_flag'
 
     def setUp(self):
         self.res=None
         if (not os.path.exists(self.rawfile)):
             shutil.copytree(self.datapath+self.rawfile, self.rawfile)
 
-        default(sdreduce)
+        default(sdreduceold)
 
     def tearDown(self):
         if (os.path.exists(self.rawfile)):
@@ -1547,7 +1547,7 @@ class sdreduce_test_average_flag(unittest.TestCase):
     def test_average_flag(self):
         """test_average_flag: test if average handles flag information properly"""
         outfile = self.prefix + '.asap'
-        res = sdreduce(infile=self.rawfile, outfile=outfile, calmode='none', average=True, timeaverage=True, tweight='tint', kernel='none', blfunc='none')
+        res = sdreduceold(infile=self.rawfile, outfile=outfile, calmode='none', average=True, timeaverage=True, tweight='tint', kernel='none', blfunc='none')
 
         self._verify_average(outfile)
 
@@ -1565,7 +1565,7 @@ class sdreduce_test_average_flag(unittest.TestCase):
         self.assertTrue(all(flagrow == 1), msg='Failed to preparing data')
 
         outfile = self.prefix + '.asap'
-        sdreduce(infile=self.rawfile, outfile=outfile, calmode='none', average=True, timeaverage=True, tweight='tint', kernel='none', blfunc='none')
+        sdreduceold(infile=self.rawfile, outfile=outfile, calmode='none', average=True, timeaverage=True, tweight='tint', kernel='none', blfunc='none')
         
         flagrow_in, flagtra_in, spectra_in, interval_in = self._get_data(self.rawfile, ['INTERVAL'])
         flagrow_out, flagtra_out, spectra_out, interval_out = self._get_data(outfile, ['INTERVAL'])
@@ -1594,7 +1594,7 @@ class sdreduce_test_average_flag(unittest.TestCase):
         self.assertEqual(interval_out, interval_in.sum(), msg='INTERVAL: value differ')
         ## # the task must raise RuntimeError with correct message
         ## with self.assertRaises(RuntimeError) as cm:
-        ##     sdreduce(infile=self.rawfile, outfile=outfile, calmode='none', average=True, timeaverage=True, tweight='tint', kernel='none', blfunc='none')
+        ##     sdreduceold(infile=self.rawfile, outfile=outfile, calmode='none', average=True, timeaverage=True, tweight='tint', kernel='none', blfunc='none')
         ## the_exception = cm.exception
         ## message = the_exception.message
         ## expected_message = 'Can\'t average fully flagged data.'
@@ -1603,7 +1603,7 @@ class sdreduce_test_average_flag(unittest.TestCase):
     def test_average_novaliddata_scan(self):
         """test_avearge_novaliddata_scan: test if the task handles the data that has several scans and one scan is fully flagged"""
         outfile = self.prefix + '.asap'
-        res = sdreduce(infile=self.rawfile, outfile=outfile, calmode='none', average=True, timeaverage=True, tweight='tint', scanaverage=True, kernel='none', blfunc='none')
+        res = sdreduceold(infile=self.rawfile, outfile=outfile, calmode='none', average=True, timeaverage=True, tweight='tint', scanaverage=True, kernel='none', blfunc='none')
 
         # one row per scan
         # there are three rows that has proper scan number (0, 1, 2)
@@ -1631,14 +1631,14 @@ class sdreduce_test_average_flag(unittest.TestCase):
     def test_smooth_hanning(self):
         """test_smooth_hanning: test if hanning smoothing (direct convolution) handles flag information correctly"""
         outfile = self.prefix + '.asap'
-        res = sdreduce(infile=self.rawfile, outfile=outfile, calmode='none', average=False, kernel='hanning', blfunc='none')
+        res = sdreduceold(infile=self.rawfile, outfile=outfile, calmode='none', average=False, kernel='hanning', blfunc='none')
 
         self._verify_smooth(outfile)
 
     def test_smooth_gaussian(self):
         """test_smooth_gaussian: test if gaussian smoothing (FFT convolution) handles flag information correctly"""
         outfile = self.prefix + '.asap'
-        res = sdreduce(infile=self.rawfile, outfile=outfile, calmode='none', average=False, kernel='gaussian', blfunc='none')
+        res = sdreduceold(infile=self.rawfile, outfile=outfile, calmode='none', average=False, kernel='gaussian', blfunc='none')
 
         self._verify_smooth(outfile)
 
@@ -1647,14 +1647,14 @@ class sdreduce_test_average_flag(unittest.TestCase):
         """test_smooth_regrid: test if regridding (binning) handles flag information correctly"""
         outfile = self.prefix + '.asap'
         chanwidth = 2
-        res = sdreduce(infile=self.rawfile, outfile=outfile, calmode='none', average=False, kernel='regrid', chanwidth=str(chanwidth), blfunc='none')
+        res = sdreduceold(infile=self.rawfile, outfile=outfile, calmode='none', average=False, kernel='regrid', chanwidth=str(chanwidth), blfunc='none')
 
         self._verify_regrid(outfile, chanwidth)
 
-class sdreduce_test_baseline_flag(sdreduce_unittest_base, unittest.TestCase):
+class sdreduceold_test_baseline_flag(sdreduceold_unittest_base, unittest.TestCase):
     """
     ### This is a copy of test_sdbaseline.sdbaseline_flagTest, plus some
-    modifications for sdreduce ###
+    modifications for sdreduceold ###
     
     Unit tests for task sdbaseline. No interactive testing.
     This test is to verify the proper flag handling in sdbaseline that
@@ -1687,7 +1687,7 @@ class sdreduce_test_baseline_flag(sdreduce_unittest_base, unittest.TestCase):
     infile_02    = 'sdbaseline_flagtest_gauss_plateauxonmask.asap'
     infile_02spk = 'sdbaseline_flagtest_gauss_spikesonmask.asap'
     infile_02int = 'sdbaseline_flagtest_gauss_interponmask.asap'
-    outroot = 'sdreduce_test'
+    outroot = 'sdreduceold_test'
     tid = None
 
     """
@@ -1699,7 +1699,7 @@ class sdreduce_test_baseline_flag(sdreduce_unittest_base, unittest.TestCase):
             shutil.rmtree(self.infile_02)
         shutil.copytree(self.datapath+self.infile_02, self.infile_02)
 
-        default(sdreduce)
+        default(sdreduceold)
 
     def tearDown( self ):
         if os.path.exists(self.infile_01):
@@ -1713,7 +1713,7 @@ class sdreduce_test_baseline_flag(sdreduce_unittest_base, unittest.TestCase):
         for f in [self.infile_01, self.infile_02, self.infile_02spk, self.infile_02int]:
             if os.path.exists(f): shutil.rmtree(f)
             shutil.copytree(self.datapath+f, f)
-        default(sdreduce)
+        default(sdreduceold)
 
     def tearDown( self ):
         for f in [self.infile_01, self.infile_02, self.infile_02spk, self.infile_02int]:
@@ -1727,7 +1727,7 @@ class sdreduce_test_baseline_flag(sdreduce_unittest_base, unittest.TestCase):
         mode = "list"
         outfile = self.outroot+self.tid+".asap"
         
-        result = sdreduce(infile=infile,maskmode=mode,outfile=outfile,blfunc='poly',order=0,calmode='none',average=False,kernel='none')
+        result = sdreduceold(infile=infile,maskmode=mode,outfile=outfile,blfunc='poly',order=0,calmode='none',average=False,kernel='none')
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
         self._checkResult(infile, outfile, self.tol01)
 
@@ -1738,7 +1738,7 @@ class sdreduce_test_baseline_flag(sdreduce_unittest_base, unittest.TestCase):
         mode = "auto"
         outfile = self.outroot+self.tid+".asap"
         
-        result = sdreduce(infile=infile,maskmode=mode,outfile=outfile,blfunc='poly',order=0,calmode='none',average=False,kernel='none')
+        result = sdreduceold(infile=infile,maskmode=mode,outfile=outfile,blfunc='poly',order=0,calmode='none',average=False,kernel='none')
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
         self._checkResult(infile, outfile, self.tol02)
 
@@ -1749,7 +1749,7 @@ class sdreduce_test_baseline_flag(sdreduce_unittest_base, unittest.TestCase):
         mode = "list"
         outfile = self.outroot+self.tid+".asap"
         
-        result = sdreduce(infile=infile,maskmode=mode,outfile=outfile,blfunc='chebyshev',order=0,calmode='none',average=False,kernel='none')
+        result = sdreduceold(infile=infile,maskmode=mode,outfile=outfile,blfunc='chebyshev',order=0,calmode='none',average=False,kernel='none')
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
         self._checkResult(infile, outfile, self.tol01)
 
@@ -1760,7 +1760,7 @@ class sdreduce_test_baseline_flag(sdreduce_unittest_base, unittest.TestCase):
         mode = "auto"
         outfile = self.outroot+self.tid+".asap"
         
-        result = sdreduce(infile=infile,maskmode=mode,outfile=outfile,blfunc='chebyshev',order=0,calmode='none',average=False,kernel='none')
+        result = sdreduceold(infile=infile,maskmode=mode,outfile=outfile,blfunc='chebyshev',order=0,calmode='none',average=False,kernel='none')
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
         self._checkResult(infile, outfile, self.tol02)
 
@@ -1771,7 +1771,7 @@ class sdreduce_test_baseline_flag(sdreduce_unittest_base, unittest.TestCase):
         mode = "list"
         outfile = self.outroot+self.tid+".asap"
         
-        result = sdreduce(infile=infile,maskmode=mode,outfile=outfile,blfunc='cspline',npiece=1,calmode='none',average=False,kernel='none')
+        result = sdreduceold(infile=infile,maskmode=mode,outfile=outfile,blfunc='cspline',npiece=1,calmode='none',average=False,kernel='none')
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
         self._checkResult(infile, outfile, self.tol01)
 
@@ -1782,7 +1782,7 @@ class sdreduce_test_baseline_flag(sdreduce_unittest_base, unittest.TestCase):
         mode = "auto"
         outfile = self.outroot+self.tid+".asap"
         
-        result = sdreduce(infile=infile,maskmode=mode,outfile=outfile,blfunc='cspline',npiece=1,calmode='none',average=False,kernel='none')
+        result = sdreduceold(infile=infile,maskmode=mode,outfile=outfile,blfunc='cspline',npiece=1,calmode='none',average=False,kernel='none')
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
         self._checkResult(infile, outfile, self.tol02)
 
@@ -1793,7 +1793,7 @@ class sdreduce_test_baseline_flag(sdreduce_unittest_base, unittest.TestCase):
         mode = "list"
         outfile = self.outroot+self.tid+".asap"
         
-        result = sdreduce(infile=infile,maskmode=mode,outfile=outfile,blfunc='sinusoid',calmode='none',average=False,kernel='none')
+        result = sdreduceold(infile=infile,maskmode=mode,outfile=outfile,blfunc='sinusoid',calmode='none',average=False,kernel='none')
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
         self._checkResult(infile, outfile, self.tol01)
 
@@ -1804,7 +1804,7 @@ class sdreduce_test_baseline_flag(sdreduce_unittest_base, unittest.TestCase):
         mode = "auto"
         outfile = self.outroot+self.tid+".asap"
         
-        result = sdreduce(infile=infile,maskmode=mode,outfile=outfile,blfunc='sinusoid',calmode='none',average=False,kernel='none')
+        result = sdreduceold(infile=infile,maskmode=mode,outfile=outfile,blfunc='sinusoid',calmode='none',average=False,kernel='none')
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
         self._checkResult(infile, outfile, self.tol02)
 
@@ -1828,10 +1828,10 @@ class sdreduce_test_baseline_flag(sdreduce_unittest_base, unittest.TestCase):
         mode = "list"
         infile_spk = self.infile_02spk
         outfile_spk = self.outroot+"_flagFFT_spk.asap"
-        result = sdreduce(infile=infile_spk,maskmode=mode,outfile=outfile_spk,blfunc='sinusoid',fftthresh='top3',calmode='none',average=False,kernel='none')
+        result = sdreduceold(infile=infile_spk,maskmode=mode,outfile=outfile_spk,blfunc='sinusoid',fftthresh='top3',calmode='none',average=False,kernel='none')
         infile_int = self.infile_02int
         outfile_int = self.outroot+"_flagFFT_int.asap"
-        result = sdreduce(infile=infile_int,maskmode=mode,outfile=outfile_int,blfunc='sinusoid',fftthresh='top3',calmode='none',average=False,kernel='none')
+        result = sdreduceold(infile=infile_int,maskmode=mode,outfile=outfile_int,blfunc='sinusoid',fftthresh='top3',calmode='none',average=False,kernel='none')
         bsuffix = "_blparam.txt"
         self._compareCoefficients(outfile_spk+bsuffix, outfile_int+bsuffix)
 
@@ -1897,16 +1897,16 @@ class sdreduce_test_baseline_flag(sdreduce_unittest_base, unittest.TestCase):
 ###
 # Test flag handling in ALMA position switch calibration
 ###
-class sdreduce_test_cal_psalma_flag(test_sdcal.sdcal_caltest_base,unittest.TestCase):
+class sdreduceold_test_cal_psalma_flag(test_sdcal.sdcalold_caltest_base,unittest.TestCase):
     """
-    This is a copy from sdcal unit test, test_sdcal.sdcal_testFlagPSALMA.
+    This is a copy from sdcal unit test, test_sdcal.sdcalold_testFlagPSALMA.
     """
     # Input and output names
     raw1file='calpsALMA_flagtest.asap'
     raw2file='calpsALMA_flagtest_rowflagged.asap'
     ref1file='calpsALMA_flagtest.cal.asap'
     ref2file='calpsALMA_flagtest_rowflagged.cal.asap'
-    prefix=test_sdcal.sdcal_unittest_base.taskname+'TestFlagPSALMA'
+    prefix=test_sdcal.sdcalold_unittest_base.taskname+'TestFlagPSALMA'
     calmode='ps'
 
     def setUp(self):
@@ -1920,7 +1920,7 @@ class sdreduce_test_cal_psalma_flag(test_sdcal.sdcal_caltest_base,unittest.TestC
         if (not os.path.exists(self.ref2file)):
             shutil.copytree(self.datapath+self.ref2file, self.ref2file)
 
-        default(sdreduce)
+        default(sdreduceold)
 
     def tearDown(self):
         if (os.path.exists(self.raw1file)):
@@ -1951,7 +1951,7 @@ class sdreduce_test_cal_psalma_flag(test_sdcal.sdcal_caltest_base,unittest.TestC
     def testFlagPSALMA01(self):
         """Test FlagPSALMA01: for non-row-flagged ON-data (ALMA position switch)"""
         outname=self.prefix+self.postfix
-        self.res=sdreduce(infile=self.raw1file,calmode=self.calmode,outfile=outname,outform='ASAP',maskmode='list',blfunc='none',average=False,kernel='none')
+        self.res=sdreduceold(infile=self.raw1file,calmode=self.calmode,outfile=outname,outform='ASAP',maskmode='list',blfunc='none',average=False,kernel='none')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal(outname, self.ref1file)
@@ -1959,7 +1959,7 @@ class sdreduce_test_cal_psalma_flag(test_sdcal.sdcal_caltest_base,unittest.TestC
     def testFlagPSALMA02(self):
         """Test FlagPSALMA02: for row-flagged ON-data (ALMA position switch)"""
         outname=self.prefix+self.postfix
-        self.res=sdreduce(infile=self.raw2file,calmode=self.calmode,outfile=outname,outform='ASAP',maskmode='list',blfunc='none',average=False,kernel='none')
+        self.res=sdreduceold(infile=self.raw2file,calmode=self.calmode,outfile=outname,outform='ASAP',maskmode='list',blfunc='none',average=False,kernel='none')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal(outname, self.ref2file)
@@ -1968,14 +1968,14 @@ class sdreduce_test_cal_psalma_flag(test_sdcal.sdcal_caltest_base,unittest.TestC
 ###
 # Test flag handling in calibrating ALMA OTF data
 ###
-class sdreduce_test_cal_otf_flag(test_sdcal.sdcal_caltest_base,unittest.TestCase):
+class sdreduceold_test_cal_otf_flag(test_sdcal.sdcalold_caltest_base,unittest.TestCase):
     """
-    This is a copy of sdcal unit test, test_sdcal.sdcal_testFlagOTF.
+    This is a copy of sdcalold unit test, test_sdcal.sdcalold_testFlagOTF.
     """
     # Input and output names
     rawfile='lissajous_flagtest.asap'
     reffile='lissajous_flagtest.cal.asap'
-    prefix=test_sdcal.sdcal_unittest_base.taskname+'TestFlagOTF'
+    prefix=test_sdcal.sdcalold_unittest_base.taskname+'TestFlagOTF'
     calmode='otf'
     fraction='10%'
 
@@ -1986,7 +1986,7 @@ class sdreduce_test_cal_otf_flag(test_sdcal.sdcal_caltest_base,unittest.TestCase
         if (not os.path.exists(self.reffile)):
             shutil.copytree(self.datapath+self.reffile, self.reffile)
 
-        default(sdreduce)
+        default(sdreduceold)
 
     def tearDown(self):
         if (os.path.exists(self.rawfile)):
@@ -1998,7 +1998,7 @@ class sdreduce_test_cal_otf_flag(test_sdcal.sdcal_caltest_base,unittest.TestCase
     def testFlagOTF01(self):
         """Test FlagOTF01: for ALMA OTF data"""
         outname=self.prefix+self.postfix
-        self.res=sdreduce(infile=self.rawfile,calmode=self.calmode,fraction=self.fraction,outfile=outname,outform='ASAP',maskmode='list',blfunc='none',average=False,kernel='none')
+        self.res=sdreduceold(infile=self.rawfile,calmode=self.calmode,fraction=self.fraction,outfile=outname,outform='ASAP',maskmode='list',blfunc='none',average=False,kernel='none')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
 
@@ -2029,14 +2029,14 @@ class sdreduce_test_cal_otf_flag(test_sdcal.sdcal_caltest_base,unittest.TestCase
 ###
 # Test flag handling in calibrating ALMA OTF raster data
 ###
-class sdreduce_test_cal_otfraster_flag(test_sdcal.sdcal_caltest_base,unittest.TestCase):
+class sdreduceold_test_cal_otfraster_flag(test_sdcal.sdcalold_caltest_base,unittest.TestCase):
     """
-    This is a copy from sdcal unit test, test_sdcal.sdcal_testFlagOTFRASTER.
+    This is a copy from sdcalold unit test, test_sdcal.sdcalold_testFlagOTFRASTER.
     """
     # Input and output names
     rawfile='raster_flagtest.asap'
     reffile='raster_flagtest.cal.asap'
-    prefix=test_sdcal.sdcal_unittest_base.taskname+'TestFlagOTFRASTER'
+    prefix=test_sdcal.sdcalold_unittest_base.taskname+'TestFlagOTFRASTER'
     calmode='otfraster'
     fraction='10%'
 
@@ -2047,7 +2047,7 @@ class sdreduce_test_cal_otfraster_flag(test_sdcal.sdcal_caltest_base,unittest.Te
         if (not os.path.exists(self.reffile)):
             shutil.copytree(self.datapath+self.reffile, self.reffile)
 
-        default(sdreduce)
+        default(sdreduceold)
 
     def tearDown(self):
         if (os.path.exists(self.rawfile)):
@@ -2059,7 +2059,7 @@ class sdreduce_test_cal_otfraster_flag(test_sdcal.sdcal_caltest_base,unittest.Te
     def testFlagOTF01(self):
         """Test FlagOTF01: for ALMA OTF raster data"""
         outname=self.prefix+self.postfix
-        self.res=sdreduce(infile=self.rawfile,calmode=self.calmode,fraction=self.fraction,outfile=outname,outform='ASAP',maskmode='list',blfunc='none',average=False,kernel='none')
+        self.res=sdreduceold(infile=self.rawfile,calmode=self.calmode,fraction=self.fraction,outfile=outname,outform='ASAP',maskmode='list',blfunc='none',average=False,kernel='none')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
 
@@ -2092,6 +2092,6 @@ class sdreduce_test_cal_otfraster_flag(test_sdcal.sdcal_caltest_base,unittest.Te
         self.assertTrue(all(rflag_output == 0))
 
 def suite():
-    return [sdreduce_test, sdreduce_selection, sdreduce_test_average_flag,
-            sdreduce_test_baseline_flag, sdreduce_test_cal_psalma_flag,
-            sdreduce_test_cal_otf_flag, sdreduce_test_cal_otfraster_flag]
+    return [sdreduceold_test, sdreduceold_selection, sdreduceold_test_average_flag,
+            sdreduceold_test_baseline_flag, sdreduceold_test_cal_psalma_flag,
+            sdreduceold_test_cal_otf_flag, sdreduceold_test_cal_otfraster_flag]

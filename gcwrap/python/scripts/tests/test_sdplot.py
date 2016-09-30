@@ -19,15 +19,15 @@ except:
 import inspect
 g = sys._getframe(len(inspect.stack())-1).f_globals
 g['__rethrow_casa_exceptions'] = True
-from sdplot import sdplot
+from sdplotold import sdplotold
 import asap as sd
 from asap.scantable import is_scantable
 
-class sdplot_unittest_base:
+class sdplotold_unittest_base:
     """
-    Base class for sdplot unit test
+    Base class for sdplotold unit test
     """
-    taskname = 'sdplot'
+    taskname = 'sdplotold'
     # Data path of input/output
     #datapath = os.environ.get('CASAPATH').split()[0] + \
     #           '/data/regression/unittest/' + taskname + '/'
@@ -189,7 +189,7 @@ class sdplot_unittest_base:
 #####
 # Tests on bad parameters and exceptions
 #####
-class sdplot_errorTest( sdplot_unittest_base, unittest.TestCase ):
+class sdplotold_errorTest( sdplotold_unittest_base, unittest.TestCase ):
     """
     Test bad input parameters and exceptions
     
@@ -204,8 +204,8 @@ class sdplot_errorTest( sdplot_unittest_base, unittest.TestCase ):
     """
     # Input and output names
     infile = 'OrionS_rawACSmod_cal2123.asap'
-    #outfile = sdplot_unittest_base.taskname + '_testErr.png'
-    outfile = 'sdplot_testErr.png'
+    #outfile = sdplotold_unittest_base.taskname + '_testErr.png'
+    outfile = 'sdplotold_testErr.png'
     badid = '99'
     badstr = "bad"
 
@@ -216,7 +216,7 @@ class sdplot_errorTest( sdplot_unittest_base, unittest.TestCase ):
         if os.path.exists(self.infile):
             shutil.rmtree(self.infile)
         shutil.copytree(self.datapath+self.infile, self.infile)
-        default(sdplot)
+        default(sdplotold)
 
     def tearDown( self ):
         # restore GUI setting
@@ -227,15 +227,15 @@ class sdplot_errorTest( sdplot_unittest_base, unittest.TestCase ):
     # Actual tests
     def test_default( self ):
         """test_default: Default parameters (should Fail)"""
-        result = sdplot()
+        result = sdplotold()
         self.assertFalse(result)
 
     def test_overwrite( self ):
         """test_overwrite: Specify existing output file name with overwrite=False (task script raises Exception)"""
-        res1 = sdplot(infile=self.infile,outfile=self.outfile)
+        res1 = sdplotold(infile=self.infile,outfile=self.outfile)
         self.assertEqual(res1,None)
         try:
-            res2 = sdplot(infile=self.infile,
+            res2 = sdplotold(infile=self.infile,
                           outfile=self.outfile,overwrite=False)
             self.assertTrue(False,
                             msg='The task must throw exception')
@@ -249,7 +249,7 @@ class sdplot_errorTest( sdplot_unittest_base, unittest.TestCase ):
         # the middle of task script
         spw = self.badid
         try:
-            result = sdplot(infile=self.infile,spw=spw)
+            result = sdplotold(infile=self.infile,spw=spw)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, err:
@@ -260,14 +260,14 @@ class sdplot_errorTest( sdplot_unittest_base, unittest.TestCase ):
 
     def test_noTweight( self ):
         """test_noTweight: Time averaging without tweight"""
-        # this error is handled in task interface in sdplot
-        result = sdplot(infile=self.infile,timeaverage=True,tweight='')
+        # this error is handled in task interface in sdplotold
+        result = sdplotold(infile=self.infile,timeaverage=True,tweight='')
         self.assertFalse(result)
 
     def test_noPweight( self ):
         """test_noPweight: Polarization averaging without pweight"""
-        # this error is handled in task interface in sdplot
-        result = sdplot(infile=self.infile,polaverage=True,pweight='')
+        # this error is handled in task interface in sdplotold
+        result = sdplotold(infile=self.infile,polaverage=True,pweight='')
         self.assertFalse(result)
 
     def test_badLincat( self ):
@@ -277,7 +277,7 @@ class sdplot_errorTest( sdplot_unittest_base, unittest.TestCase ):
         type = "spectra"
         linecat = self.badstr
         try:
-            result = sdplot(infile=self.infile,plottype=type,linecat=linecat)
+            result = sdplotold(infile=self.infile,plottype=type,linecat=linecat)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, err:
@@ -290,7 +290,7 @@ class sdplot_errorTest( sdplot_unittest_base, unittest.TestCase ):
         type = "spectra"
         stack = " "
         try:
-            result = sdplot(infile=self.infile,plottype=type,stack=stack)
+            result = sdplotold(infile=self.infile,plottype=type,stack=stack)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, err:
@@ -307,7 +307,7 @@ class sdplot_errorTest( sdplot_unittest_base, unittest.TestCase ):
         header = False
         stack = 'r'
         try:
-            result = sdplot(infile=infile,plottype=plottype,header=header,
+            result = sdplotold(infile=infile,plottype=plottype,header=header,
                             stack=stack)
             self.assertTrue(False,
                             msg='The task must throw exception')
@@ -320,7 +320,7 @@ class sdplot_errorTest( sdplot_unittest_base, unittest.TestCase ):
 #####
 # Tests on basic task parameters
 #####
-class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
+class sdplotold_basicTest( sdplotold_unittest_base, unittest.TestCase ):
     """
     Test plot parameters only. Least data filterings and no averaging.
     
@@ -344,8 +344,8 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
     """
     # Input and output names
     infile = 'OrionS_rawACSmod_cal2123.asap'
-    #figroot = sdplot_unittest_base.taskname + '_test'
-    figroot = 'sdplot_test'
+    #figroot = sdplotold_unittest_base.taskname + '_test'
+    figroot = 'sdplotold_test'
     figsuff = '.png'
     fig=None
     baseinfo = {'npanel': 2, 'nstack': 2,
@@ -370,7 +370,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
                 msg += "Plot figures will remain in "+self.currdir
                 casalog.post(msg,'WARN')
         
-        default(sdplot)
+        default(sdplotold)
 
     def tearDown( self ):
         # restore GUI setting
@@ -386,7 +386,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         outfile = self.figroot+tid+self.figsuff
         plottype = 'azel'
         header = False
-        result = sdplot(infile=self.infile,plottype=plottype,header=header,
+        result = sdplotold(infile=self.infile,plottype=plottype,header=header,
                         outfile=outfile)
         # Tests
         self.assertEqual(result,None)
@@ -403,7 +403,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         outfile = self.figroot+tid+self.figsuff
         plottype = 'pointing'
         header = False
-        result = sdplot(infile=self.infile,plottype=plottype,header=header,
+        result = sdplotold(infile=self.infile,plottype=plottype,header=header,
                         outfile=outfile)
         # Tests
         self.assertEqual(result,None)
@@ -422,7 +422,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         outfile = self.figroot+tid+self.figsuff
         plottype = 'totalpower'
         header = False
-        result = sdplot(infile=infile,plottype=plottype,header=header,
+        result = sdplotold(infile=infile,plottype=plottype,header=header,
                         outfile=outfile, stack='p')
         locinfo = {'npanel': 1, 'nstack': 2,
                    'xlabel': 'Time (UTC)',
@@ -446,7 +446,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         panel = 'i'
         spw = '0,2'
         header = False
-        result = sdplot(infile=infile,specunit=specunit,fluxunit=fluxunit,
+        result = sdplotold(infile=infile,specunit=specunit,fluxunit=fluxunit,
                         stack=stack,panel=panel,spw=spw,
                         header=header,outfile=outfile)
         # Tests
@@ -468,7 +468,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         panel = 'i'
         spw = '0,2'
         header = False
-        result = sdplot(infile=infile,specunit=specunit,fluxunit=fluxunit,
+        result = sdplotold(infile=infile,specunit=specunit,fluxunit=fluxunit,
                         stack=stack,panel=panel,spw=spw,
                         header=header,outfile=outfile)
         locinfo = {'xlabel': 'LSRK Frequency (%s)' % specunit}
@@ -492,7 +492,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         panel = 'i'
         spw = '0,2'
         header = False
-        result = sdplot(infile=infile,specunit=specunit,fluxunit=fluxunit,
+        result = sdplotold(infile=infile,specunit=specunit,fluxunit=fluxunit,
                         stack=stack,panel=panel,spw=spw,
                         header=header,outfile=outfile)
         locinfo = {'xlabel': 'LSRK RADIO velocity (%s)' % (specunit)}
@@ -516,7 +516,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         panel = 'i'
         spw = '0,2'
         header = False
-        result = sdplot(infile=infile,specunit=specunit,fluxunit=fluxunit,
+        result = sdplotold(infile=infile,specunit=specunit,fluxunit=fluxunit,
                         stack=stack,panel=panel,spw=spw,
                         header=header,outfile=outfile)
         locinfo = {'ylabel': 'Flux density (Jy)'}
@@ -537,7 +537,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         panel = 'pol'
         stack = 'scan'
         header = False
-        result = sdplot(infile=infile,stack=stack,panel=panel,
+        result = sdplotold(infile=infile,stack=stack,panel=panel,
                         header=header,outfile=outfile)
         locinfo = {'title0': 'XX', 'label0': 'Scan 21 (OrionS)'}
         refinfo = self._mergeDict(self.baseinfo,locinfo)
@@ -557,7 +557,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         panel = 'scan'
         stack = 'if'
         header = False
-        result = sdplot(infile=infile,stack=stack,panel=panel,
+        result = sdplotold(infile=infile,stack=stack,panel=panel,
                         header=header,outfile=outfile)
         locinfo = {'nstack': 4,
                    'title0': 'Scan 21 (OrionS)', 'label0': 'IF0'}
@@ -578,7 +578,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         panel = 'if'
         stack = 'time'
         header = False
-        result = sdplot(infile=infile,stack=stack,panel=panel,
+        result = sdplotold(infile=infile,stack=stack,panel=panel,
                         header=header,outfile=outfile)
         locinfo = {'npanel': 4, 'nstack': 8,
                    'title0': 'IF0', 'label0': '2006/01/19/01:48:38'}
@@ -599,7 +599,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         panel = 'time'
         stack = 'beam'
         header = False
-        result = sdplot(infile=infile,stack=stack,panel=panel,
+        result = sdplotold(infile=infile,stack=stack,panel=panel,
                         header=header,outfile=outfile)
         locinfo = {'npanel': 8,'nstack': 1,
                    'title0': '2006/01/19/01:48:38','label0': 'Beam 0'}
@@ -620,7 +620,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         panel = 'beam'
         stack = 'pol'
         header = False
-        result = sdplot(infile=infile,stack=stack,panel=panel,
+        result = sdplotold(infile=infile,stack=stack,panel=panel,
                         header=header,outfile=outfile)
         locinfo = {'npanel': 1,'nstack': 2,
                    'title0': 'Beam 0', 'label0': 'XX'}
@@ -641,7 +641,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         spw = '0'
         sprange = [3500,5000]
         header = False
-        result = sdplot(infile=infile,spw=spw,sprange=sprange,
+        result = sdplotold(infile=infile,spw=spw,sprange=sprange,
                         header=header,outfile=outfile)
         locinfo = {'npanel': 1,'nstack': 2,
                    'title0': 'IF0', 'label0': 'XX',
@@ -663,7 +663,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         spw = '0'
         flrange = [0.,6.]
         header = False
-        result = sdplot(infile=infile,spw=spw,flrange=flrange,
+        result = sdplotold(infile=infile,spw=spw,flrange=flrange,
                         header=header,outfile=outfile)
         locinfo = {'npanel': 1, 'ylim': flrange}
         refinfo = self._mergeDict(self.baseinfo,locinfo)
@@ -684,7 +684,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         sprange = [3500,5000]
         flrange = [0.,6.]
         header = False
-        result = sdplot(infile=infile,spw=spw,sprange=sprange,
+        result = sdplotold(infile=infile,spw=spw,sprange=sprange,
                         header=header,flrange=flrange,outfile=outfile)
         locinfo = {'npanel': 1, 'xlim': sprange, 'ylim': flrange}
         refinfo = self._mergeDict(self.baseinfo,locinfo)
@@ -705,7 +705,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         sprange = [3900,4300]
         histogram = True
         header = False
-        result = sdplot(infile=infile,spw=spw,sprange=sprange,
+        result = sdplotold(infile=infile,spw=spw,sprange=sprange,
                         header=header,histogram=histogram,outfile=outfile)
         locinfo = {'npanel': 1, 'xlim': sprange}
         refinfo = self._mergeDict(self.baseinfo,locinfo)
@@ -726,7 +726,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         sprange = [3900,4300]
         colormap = "pink orange"
         header = False
-        result = sdplot(infile=infile,spw=spw,sprange=sprange,
+        result = sdplotold(infile=infile,spw=spw,sprange=sprange,
                         header=header,colormap=colormap,outfile=outfile)
         locinfo = {'npanel': 1, 'xlim': sprange}
         refinfo = self._mergeDict(self.baseinfo,locinfo)
@@ -747,7 +747,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         sprange = [3900,4300]
         linewidth = 3
         header = False
-        result = sdplot(infile=infile,spw=spw,sprange=sprange,
+        result = sdplotold(infile=infile,spw=spw,sprange=sprange,
                         header=header,linewidth=linewidth,outfile=outfile)
         locinfo = {'npanel': 1, 'xlim': sprange}
         refinfo = self._mergeDict(self.baseinfo,locinfo)
@@ -769,7 +769,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         linewidth = 2
         linestyles = "dotted dashdot"
         header = False
-        result = sdplot(infile=infile,spw=spw,sprange=sprange,
+        result = sdplotold(infile=infile,spw=spw,sprange=sprange,
                         linewidth=linewidth,linestyles=linestyles,
                         header=header,outfile=outfile)
         locinfo = {'npanel': 1, 'xlim': sprange}
@@ -789,7 +789,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         infile = self.infile
         spw = '0,2'
         headsize = 11
-        result = sdplot(infile=infile,spw=spw,headsize=headsize,
+        result = sdplotold(infile=infile,spw=spw,headsize=headsize,
                         outfile=outfile)
         # Tests
         self.assertEqual(result,None)
@@ -805,7 +805,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         outfile = self.figroot+tid+self.figsuff
         infile = self.infile
         spw = '0,2'
-        result = sdplot(infile=infile,spw=spw,
+        result = sdplotold(infile=infile,spw=spw,
                         outfile=outfile)
         # Tests
         self.assertEqual(result,None)
@@ -824,7 +824,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         plotstyle = True
         margin = [0.15,0.3,0.85,0.7,0.25,0.25]
         header = False
-        result = sdplot(infile=infile,spw=spw,plotstyle=plotstyle,
+        result = sdplotold(infile=infile,spw=spw,plotstyle=plotstyle,
                         margin=margin,header=header,outfile=outfile)
         # Tests
         self.assertEqual(result,None)
@@ -843,7 +843,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         plotstyle = True
         legendloc = 3
         header = False
-        result = sdplot(infile=infile,spw=spw,plotstyle=plotstyle,
+        result = sdplotold(infile=infile,spw=spw,plotstyle=plotstyle,
                         legendloc=legendloc,header=header,outfile=outfile)
         # Tests
         self.assertEqual(result,None)
@@ -860,7 +860,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         infile = self.infile
         panel = 'row'
         header = False
-        result = sdplot(infile=infile,panel=panel,
+        result = sdplotold(infile=infile,panel=panel,
                         header=header,outfile=outfile)
         locinfo = {'npanel': 16, 'nstack': 1,
                    'title0': 'row 0', 'label0': 'XX'}
@@ -880,7 +880,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         infile = self.infile
         stack = 'row'
         header = False
-        result = sdplot(infile=infile,stack=stack,
+        result = sdplotold(infile=infile,stack=stack,
                         header=header,outfile=outfile)
         locinfo = {'npanel': 1, 'nstack': 16,
                    'title0': '', 'label0': 'row 0'}
@@ -907,7 +907,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         panel = 'row'
         stack = 'scan'
         header = False
-        result = sdplot(infile=infile,panel=panel,stack=stack,
+        result = sdplotold(infile=infile,panel=panel,stack=stack,
                         header=header,outfile=outfile)
         self.assertEqual(result,None)
         self._checkOutFile(outfile,self.compare)
@@ -929,7 +929,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         #
         panel = 'row'
         header = False
-        result = sdplot(infile=infile,panel=panel,
+        result = sdplotold(infile=infile,panel=panel,
                         header=header,outfile=outfile)
         self.assertEqual(result,None)
         self._checkOutFile(outfile,self.compare)
@@ -946,7 +946,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         plotstyle = True
         subplot = 24
         header = False
-        result = sdplot(infile=infile,spw=spw,plotstyle=plotstyle,
+        result = sdplotold(infile=infile,spw=spw,plotstyle=plotstyle,
                         subplot=subplot,header=header,outfile=outfile)
         locinfo = {'rows': 2, 'cols': 4}
         refinfo = self._mergeDict(self.baseinfo,locinfo)
@@ -968,7 +968,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         restfreq = ['45.3GHz', 44.075e9]
         panel = 'i'
         header = False
-        result = sdplot(infile=infile,spw=spw,panel = panel,
+        result = sdplotold(infile=infile,spw=spw,panel = panel,
                         specunit=specunit,restfreq=restfreq,
                         header=header,outfile=outfile)
         locinfo = {'xlim': (-170.62517234590837, 160.27007370505743),
@@ -993,7 +993,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         restfreq = [{'name': 'ch3oh', 'value': 44.075e9}]
         panel = 'i'
         header = False
-        result = sdplot(infile=infile,spw=spw,panel = panel,
+        result = sdplotold(infile=infile,spw=spw,panel = panel,
                         specunit=specunit,restfreq=restfreq,
                         header=header,outfile=outfile)
         locinfo = {'npanel': 1, 'xlabel': 'LSRK RADIO velocity (km/s)',
@@ -1010,9 +1010,9 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
 #####
 # Tests on scantable storage and insitu
 #####
-class sdplot_storageTest( sdplot_unittest_base, unittest.TestCase ):
+class sdplotold_storageTest( sdplotold_unittest_base, unittest.TestCase ):
     """
-    Unit tests of task sdplot. Test scantable sotrage and insitu
+    Unit tests of task sdplotold. Test scantable sotrage and insitu
     parameters
     
     The list of tests:
@@ -1029,8 +1029,8 @@ class sdplot_storageTest( sdplot_unittest_base, unittest.TestCase ):
     """
     # Input and output names
     infile = 'OrionS_rawACSmod_cal2123.asap'
-    #figroot = sdplot_unittest_base.taskname + '_store'
-    figroot = 'sdplot_store'
+    #figroot = sdplotold_unittest_base.taskname + '_store'
+    figroot = 'sdplotold_store'
     figsuff = '.png'
     fig=None
 
@@ -1068,7 +1068,7 @@ class sdplot_storageTest( sdplot_unittest_base, unittest.TestCase ):
                 msg += "Plot figures will remain in "+self.currdir
                 casalog.post(msg,'WARN')
         
-        default(sdplot)
+        default(sdplotold)
 
     def tearDown( self ):
         # restore GUI setting
@@ -1155,7 +1155,7 @@ class sdplot_storageTest( sdplot_unittest_base, unittest.TestCase ):
         sd.rcParams['insitu'] = True
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        result = sdplot(infile=self.infile,specunit=self.specunit,\
+        result = sdplotold(infile=self.infile,specunit=self.specunit,\
                         fluxunit=self.fluxunit,frame=self.frame,\
                         doppler=self.doppler,stack=self.stack,panel=self.panel,\
                         spw=self.spw,header=self.header,outfile=outfile)
@@ -1179,7 +1179,7 @@ class sdplot_storageTest( sdplot_unittest_base, unittest.TestCase ):
         sd.rcParams['insitu'] = False
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        result = sdplot(infile=self.infile,specunit=self.specunit,\
+        result = sdplotold(infile=self.infile,specunit=self.specunit,\
                         fluxunit=self.fluxunit,frame=self.frame,\
                         doppler=self.doppler,stack=self.stack,panel=self.panel,\
                         spw=self.spw,header=self.header,outfile=outfile)
@@ -1203,7 +1203,7 @@ class sdplot_storageTest( sdplot_unittest_base, unittest.TestCase ):
         sd.rcParams['insitu'] = True
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        result = sdplot(infile=self.infile,specunit=self.specunit,\
+        result = sdplotold(infile=self.infile,specunit=self.specunit,\
                         fluxunit=self.fluxunit,frame=self.frame,\
                         doppler=self.doppler,stack=self.stack,panel=self.panel,\
                         spw=self.spw,header=self.header,outfile=outfile)
@@ -1227,7 +1227,7 @@ class sdplot_storageTest( sdplot_unittest_base, unittest.TestCase ):
         sd.rcParams['insitu'] = False
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        result = sdplot(infile=self.infile,specunit=self.specunit,\
+        result = sdplotold(infile=self.infile,specunit=self.specunit,\
                         fluxunit=self.fluxunit,frame=self.frame,\
                         doppler=self.doppler,stack=self.stack,panel=self.panel,\
                         spw=self.spw,header=self.header,outfile=outfile)
@@ -1242,9 +1242,9 @@ class sdplot_storageTest( sdplot_unittest_base, unittest.TestCase ):
 #####
 # Tests on plottype='grid'
 #####
-class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
+class sdplotold_gridTest( sdplotold_unittest_base, unittest.TestCase ):
     """
-    Unit tests of task sdplot. Test plottype='grid'
+    Unit tests of task sdplotold. Test plottype='grid'
     
     The list of tests:
     testgrid01 - 08 --- test gridding
@@ -1261,8 +1261,8 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
     # Input and output names
     infile = 'FLS3a_calfs.6x6.asap'
     #infile = 'FLS3a_calfs.asap'
-    #figroot = sdplot_unittest_base.taskname + '_grid'
-    figroot = 'sdplot_grid'
+    #figroot = sdplotold_unittest_base.taskname + '_grid'
+    figroot = 'sdplotold_grid'
     figsuff = '.png'
     fig=None
 
@@ -1299,7 +1299,7 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
                 msg += "Plot figures will remain in "+self.currdir
                 casalog.post(msg,'WARN')
         
-        default(sdplot)
+        default(sdplotold)
 
     def tearDown( self ):
         # restore GUI setting
@@ -1314,7 +1314,7 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
         """testgrid01: default gridding (1x1)"""
         tid="01"
         outfile = self.figroot+tid+self.figsuff
-        result = sdplot(infile=self.infile, pol=self.pol,
+        result = sdplotold(infile=self.infile, pol=self.pol,
                         plottype=self.type, header=self.header,
                         outfile=outfile)
         locinfo = {'npanel': 1, 'rows': 1, 'cols': 1,
@@ -1333,7 +1333,7 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
         outfile = self.figroot+tid+self.figsuff
         cell = self.cell
         subplot = self.subplot
-        result = sdplot(infile=self.infile, pol=self.pol,
+        result = sdplotold(infile=self.infile, pol=self.pol,
                         plottype=self.type,
                         cell=cell, subplot=subplot,
                         header=self.header, outfile=outfile)
@@ -1351,7 +1351,7 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
         outfile = self.figroot+tid+self.figsuff
         center = self.center
         subplot = self.subplot
-        result = sdplot(infile=self.infile, pol=self.pol,
+        result = sdplotold(infile=self.infile, pol=self.pol,
                         plottype=self.type, center=center,
                         subplot=subplot,
                         header=self.header, outfile=outfile)
@@ -1369,7 +1369,7 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
         outfile = self.figroot+tid+self.figsuff
         center = self.center
         cell = self.cell
-        result = sdplot(infile=self.infile, pol=self.pol,
+        result = sdplotold(infile=self.infile, pol=self.pol,
                         plottype=self.type, center=center,
                         cell=cell,
                         header=self.header, outfile=outfile)
@@ -1387,7 +1387,7 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
         tid="05"
         outfile = self.figroot+tid+self.figsuff
         center = self.center
-        result = sdplot(infile=self.infile, pol=self.pol,
+        result = sdplotold(infile=self.infile, pol=self.pol,
                         plottype=self.type, center=center,
                         header=self.header, outfile=outfile)
         locinfo = {'npanel': 1, 'rows': 1, 'cols': 1,
@@ -1404,7 +1404,7 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
         tid="06"
         outfile = self.figroot+tid+self.figsuff
         cell = self.cell
-        result = sdplot(infile=self.infile, pol=self.pol,
+        result = sdplotold(infile=self.infile, pol=self.pol,
                         plottype=self.type, cell=cell,
                         header=self.header, outfile=outfile)
         locinfo = {'npanel': 1, 'rows': 1, 'cols': 1,
@@ -1421,7 +1421,7 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
         tid="07"
         outfile = self.figroot+tid+self.figsuff
         subplot = self.subplot
-        result = sdplot(infile=self.infile, pol=self.pol,
+        result = sdplotold(infile=self.infile, pol=self.pol,
                         plottype=self.type, subplot=subplot,
                         header=self.header, outfile=outfile)
         locinfo = {}#'title0': 'J2000 17:17:58 +59.30.02.0'}
@@ -1440,7 +1440,7 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
         cell = self.cell
         subplot = self.subplot
 
-        result = sdplot(infile=self.infile, pol=self.pol,
+        result = sdplotold(infile=self.infile, pol=self.pol,
                         plottype=self.type, center=center,
                         cell=cell, subplot=subplot,
                         header=self.header, outfile=outfile)
@@ -1459,7 +1459,7 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
         subplot = self.subplot
         sprange = [200,800]
 
-        result = sdplot(infile=self.infile, pol=self.pol,
+        result = sdplotold(infile=self.infile, pol=self.pol,
                         plottype=self.type, subplot=subplot,
                         sprange=sprange,
                         header=self.header, outfile=outfile)
@@ -1479,7 +1479,7 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
         subplot = self.subplot
         flrange = [-2.,10.]
 
-        result = sdplot(infile=self.infile, pol=self.pol,
+        result = sdplotold(infile=self.infile, pol=self.pol,
                         plottype=self.type, subplot=subplot,
                         flrange=flrange,
                         header=self.header, outfile=outfile)
@@ -1500,7 +1500,7 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
         sprange = [200,800]
         flrange = [-2.,10.]
 
-        result = sdplot(infile=self.infile, pol=self.pol,
+        result = sdplotold(infile=self.infile, pol=self.pol,
                         plottype=self.type, subplot=subplot,
                         sprange=sprange, flrange=flrange,
                         header=self.header, outfile=outfile)
@@ -1520,7 +1520,7 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
         subplot = self.subplot
         colormap = "orange pink"
         
-        result = sdplot(infile=self.infile, pol=self.pol,
+        result = sdplotold(infile=self.infile, pol=self.pol,
                         plottype=self.type, subplot=subplot,
                         colormap=colormap,
                         header=self.header, outfile=outfile)
@@ -1539,7 +1539,7 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
         subplot = self.subplot
         linestyles = "dashdot"
         
-        result = sdplot(infile=self.infile, pol=self.pol,
+        result = sdplotold(infile=self.infile, pol=self.pol,
                         plottype=self.type, subplot=subplot,
                         linestyles=linestyles,
                         header=self.header, outfile=outfile)
@@ -1558,7 +1558,7 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
         subplot = self.subplot
         linewidth=3
         
-        result = sdplot(infile=self.infile, pol=self.pol,
+        result = sdplotold(infile=self.infile, pol=self.pol,
                         plottype=self.type, subplot=subplot,
                         linewidth=linewidth,
                         header=self.header, outfile=outfile)
@@ -1571,7 +1571,7 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
         self._checkOutFile(outfile,self.compare)
 
 
-class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_base,unittest.TestCase):
+class sdplotold_selectionTest(selection_syntax.SelectionSyntaxTest,sdplotold_unittest_base,unittest.TestCase):
     """
     Test selection syntax. Selection parameters to test are:
     field, spw (no channel selection), scan, pol, beam
@@ -1580,7 +1580,7 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
     """
     # Input and output names
     infile='sd_analytic_type1-3.asap'
-    prefix=sdplot_unittest_base.taskname+'TestSel'
+    prefix=sdplotold_unittest_base.taskname+'TestSel'
     postfix='.plot.png'
     outfile=prefix+postfix
 
@@ -1647,7 +1647,7 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
 
     @property
     def task(self):
-        return sdplot
+        return sdplotold
     
     @property
     def spw_channel_selection(self):
@@ -1660,7 +1660,7 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
         if (not os.path.exists(self.infile)):
             shutil.copytree(self.datapath+self.infile, self.infile)
 
-        default(sdplot)
+        default(sdplotold)
 
     def tearDown(self):
         # restore GUI setting
@@ -1675,7 +1675,7 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
     def test_scan_id_default(self):
         """test scan selection (scan='')"""
         scan=''
-        self.res=sdplot(scan=scan,panel='s',infile=self.infile,outfile=self.outfile)
+        self.res=sdplotold(scan=scan,panel='s',infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         outinfo = self._get_selection_plot_info()
         refinfo = self._set_selection_plot_info([15,16,17])
@@ -1684,7 +1684,7 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
     def test_scan_id_exact(self):
         """ test scan selection (scan='15')"""
         scan='15'
-        self.res=sdplot(scan=scan,panel='s',infile=self.infile,outfile=self.outfile)
+        self.res=sdplotold(scan=scan,panel='s',infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         outinfo = self._get_selection_plot_info()
         refinfo = self._set_selection_plot_info([15])
@@ -1693,7 +1693,7 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
     def test_scan_id_lt(self):
         """ test scan selection (scan='<17')"""
         scan = '<17'
-        self.res=sdplot(scan=scan,panel='s',infile=self.infile,outfile=self.outfile)
+        self.res=sdplotold(scan=scan,panel='s',infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         outinfo = self._get_selection_plot_info()
         refinfo = self._set_selection_plot_info([15,16])
@@ -1702,7 +1702,7 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
     def test_scan_id_gt(self):
         """ test scan selection (scan='>15')"""
         scan = '>15'
-        self.res=sdplot(scan=scan,panel='s',infile=self.infile,outfile=self.outfile)
+        self.res=sdplotold(scan=scan,panel='s',infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         outinfo = self._get_selection_plot_info()
         refinfo = self._set_selection_plot_info([16,17])
@@ -1711,7 +1711,7 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
     def test_scan_id_range(self):
         """ test scan selection (scan='15~16')"""
         scan = '15~16'
-        self.res=sdplot(scan=scan,panel='s',infile=self.infile,outfile=self.outfile)
+        self.res=sdplotold(scan=scan,panel='s',infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         outinfo = self._get_selection_plot_info()
         refinfo = self._set_selection_plot_info([15,16])
@@ -1720,7 +1720,7 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
     def test_scan_id_list(self):
         """ test scan selection (scan='15,17')"""
         scan = '15,17'
-        self.res=sdplot(scan=scan,panel='s',infile=self.infile,outfile=self.outfile)
+        self.res=sdplotold(scan=scan,panel='s',infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         outinfo = self._get_selection_plot_info()
         refinfo = self._set_selection_plot_info([15,17])
@@ -1729,7 +1729,7 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
     def test_scan_id_exprlist(self):
         """ test scan selection (scan='<16, 17')"""
         scan = '<16, 17'
-        self.res=sdplot(scan=scan,panel='s',infile=self.infile,outfile=self.outfile)
+        self.res=sdplotold(scan=scan,panel='s',infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         outinfo = self._get_selection_plot_info()
         refinfo = self._set_selection_plot_info([15,17])
@@ -1741,7 +1741,7 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
     def test_pol_id_default(self):
         """test pol selection (pol='')"""
         pol=''
-        self.res=sdplot(pol=pol,panel='p',infile=self.infile,outfile=self.outfile)
+        self.res=sdplotold(pol=pol,panel='p',infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         outinfo = self._get_selection_plot_info()
         refinfo = self._set_selection_plot_info([0,1], 'pol')
@@ -1750,7 +1750,7 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
     def test_pol_id_exact(self):
         """ test pol selection (pol='1')"""
         pol = '1'
-        self.res=sdplot(pol=pol,panel='p',infile=self.infile,outfile=self.outfile)
+        self.res=sdplotold(pol=pol,panel='p',infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         outinfo = self._get_selection_plot_info()
         refinfo = self._set_selection_plot_info([1], 'pol')
@@ -1760,7 +1760,7 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
         """ test pol selection (pol='<1')"""
         outname=self.prefix+self.postfix
         pol = '<1'
-        self.res=sdplot(pol=pol,panel='p',infile=self.infile,outfile=self.outfile)
+        self.res=sdplotold(pol=pol,panel='p',infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         outinfo = self._get_selection_plot_info()
         refinfo = self._set_selection_plot_info([0], 'pol')
@@ -1769,7 +1769,7 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
     def test_pol_id_gt(self):
         """ test pol selection (pol='>0')"""
         pol = '>0'
-        self.res=sdplot(pol=pol,panel='p',infile=self.infile,outfile=self.outfile)
+        self.res=sdplotold(pol=pol,panel='p',infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         outinfo = self._get_selection_plot_info()
         refinfo = self._set_selection_plot_info([1], 'pol')
@@ -1778,7 +1778,7 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
     def test_pol_id_range(self):
         """ test pol selection (pol='0~1')"""
         pol = '0~1'
-        self.res=sdplot(pol=pol,panel='p',infile=self.infile,outfile=self.outfile)
+        self.res=sdplotold(pol=pol,panel='p',infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         outinfo = self._get_selection_plot_info()
         refinfo = self._set_selection_plot_info([0,1], 'pol')
@@ -1787,7 +1787,7 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
     def test_pol_id_list(self):
         """ test pol selection (pol='0,1')"""
         pol = '0,1'
-        self.res=sdplot(pol=pol,panel='p',infile=self.infile,outfile=self.outfile)
+        self.res=sdplotold(pol=pol,panel='p',infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         outinfo = self._get_selection_plot_info()
         refinfo = self._set_selection_plot_info([0,1], 'pol')
@@ -1796,7 +1796,7 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
     def test_pol_id_exprlist(self):
         """test pol selection (pol='<1,1')"""
         pol='<1,1'
-        self.res=sdplot(pol=pol,panel='p',infile=self.infile,outfile=self.outfile)
+        self.res=sdplotold(pol=pol,panel='p',infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         outinfo = self._get_selection_plot_info()
         refinfo = self._set_selection_plot_info([0,1], 'pol')
@@ -1808,7 +1808,7 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
     def test_field_value_default(self):
         """test field selection (field='')"""
         field=''
-        self.res=sdplot(field=field,panel='s',infile=self.infile,outfile=self.outfile)
+        self.res=sdplotold(field=field,panel='s',infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         outinfo = self._get_selection_plot_info(True)
         refinfo = self._set_selection_plot_info([5,6,7,8], 'field')
@@ -1817,7 +1817,7 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
     def test_field_id_exact(self):
         """ test field selection (field='6')"""
         field = '6'
-        self.res=sdplot(field=field,panel='s',infile=self.infile,outfile=self.outfile)
+        self.res=sdplotold(field=field,panel='s',infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         outinfo = self._get_selection_plot_info(True)
         refinfo = self._set_selection_plot_info([6], 'field')
@@ -1826,7 +1826,7 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
     def test_field_id_lt(self):
         """ test field selection (field='<6')"""
         field = '<6'
-        self.res=sdplot(field=field,panel='s',infile=self.infile,outfile=self.outfile)
+        self.res=sdplotold(field=field,panel='s',infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         outinfo = self._get_selection_plot_info(True)
         refinfo = self._set_selection_plot_info([5], 'field')
@@ -1835,7 +1835,7 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
     def test_field_id_gt(self):
         """ test field selection (field='>7')"""
         field = '>7'
-        self.res=sdplot(field=field,panel='s',infile=self.infile,outfile=self.outfile)
+        self.res=sdplotold(field=field,panel='s',infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         outinfo = self._get_selection_plot_info(True)
         refinfo = self._set_selection_plot_info([8], 'field')
@@ -1844,7 +1844,7 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
     def test_field_id_range(self):
         """ test field selection (field='5~7')"""
         field = '5~7'
-        self.res=sdplot(field=field,panel='s',infile=self.infile,outfile=self.outfile)
+        self.res=sdplotold(field=field,panel='s',infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         outinfo = self._get_selection_plot_info(True)
         refinfo = self._set_selection_plot_info([5,6,7], 'field')
@@ -1853,7 +1853,7 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
     def test_field_id_list(self):
         """ test field selection (field='5,7')"""
         field = '5,7'
-        self.res=sdplot(field=field,panel='s',infile=self.infile,outfile=self.outfile)
+        self.res=sdplotold(field=field,panel='s',infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         outinfo = self._get_selection_plot_info(True)
         refinfo = self._set_selection_plot_info([5,7], 'field')
@@ -1862,7 +1862,7 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
     def test_field_id_exprlist(self):
         """ test field selection (field='<7,8')"""
         field = '<7,8'
-        self.res=sdplot(field=field,panel='s',infile=self.infile,outfile=self.outfile)
+        self.res=sdplotold(field=field,panel='s',infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         outinfo = self._get_selection_plot_info(True)
         refinfo = self._set_selection_plot_info([6,8], 'field')
@@ -1871,7 +1871,7 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
     def test_field_value_exact(self):
         """ test field selection (field='M100')"""
         field = 'M100'
-        self.res=sdplot(field=field,panel='s',infile=self.infile,outfile=self.outfile)
+        self.res=sdplotold(field=field,panel='s',infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         outinfo = self._get_selection_plot_info(True)
         refinfo = self._set_selection_plot_info(['M100'], 'field')
@@ -1880,7 +1880,7 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
     def test_field_value_pattern(self):
         """ test field selection (field='M*')"""
         field = 'M*'
-        self.res=sdplot(field=field,panel='s',infile=self.infile,outfile=self.outfile)
+        self.res=sdplotold(field=field,panel='s',infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         outinfo = self._get_selection_plot_info(True)
         refinfo = self._set_selection_plot_info(['M100','M30'], 'field')
@@ -1889,7 +1889,7 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
     def test_field_value_list(self):
         """ test field selection (field='M30,3C273')"""
         field = 'M30,3C273'
-        self.res=sdplot(field=field,panel='s',infile=self.infile,outfile=self.outfile)
+        self.res=sdplotold(field=field,panel='s',infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         outinfo = self._get_selection_plot_info(True)
         refinfo = self._set_selection_plot_info(['M30','3C273'], 'field')
@@ -1898,7 +1898,7 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
     def test_field_mix_exprlist(self):
         """ test field selection (field='<7,3C273')"""
         field = '<7,3C273'
-        self.res=sdplot(field=field,panel='s',infile=self.infile,outfile=self.outfile)
+        self.res=sdplotold(field=field,panel='s',infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         outinfo = self._get_selection_plot_info(True)
         refinfo = self._set_selection_plot_info([6,'3C273'], 'field')
@@ -1910,7 +1910,7 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
     def test_spw_id_default(self):
         """test spw selection (spw='')"""
         spw=''
-        self.res=sdplot(spw=spw,infile=self.infile,outfile=self.outfile)
+        self.res=sdplotold(spw=spw,infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         outinfo = self._get_selection_plot_info()
         refinfo = self._set_selection_plot_info([20,21,22,23,24,25])
@@ -1919,7 +1919,7 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
     def test_spw_id_exact(self):
         """ test spw selection (spw='21')"""
         spw = '21'
-        self.res=sdplot(spw=spw,infile=self.infile,outfile=self.outfile)
+        self.res=sdplotold(spw=spw,infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         outinfo = self._get_selection_plot_info()
         refinfo = self._set_selection_plot_info([21])
@@ -1928,7 +1928,7 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
     def test_spw_id_lt(self):
         """ test spw selection (spw='<25')"""
         spw = '<25'
-        self.res=sdplot(spw=spw,infile=self.infile,outfile=self.outfile)
+        self.res=sdplotold(spw=spw,infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         outinfo = self._get_selection_plot_info()
         refinfo = self._set_selection_plot_info([20,21,22,23,24])
@@ -1937,7 +1937,7 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
     def test_spw_id_gt(self):
         """ test spw selection (spw='>21')"""
         spw = '>21'
-        self.res=sdplot(spw=spw,infile=self.infile,outfile=self.outfile)
+        self.res=sdplotold(spw=spw,infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         outinfo = self._get_selection_plot_info()
         refinfo = self._set_selection_plot_info([22,23,24,25])
@@ -1946,7 +1946,7 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
     def test_spw_id_range(self):
         """ test spw selection (spw='21~24')"""
         spw = '21~24'
-        self.res=sdplot(spw=spw,infile=self.infile,outfile=self.outfile)
+        self.res=sdplotold(spw=spw,infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         outinfo = self._get_selection_plot_info()
         refinfo = self._set_selection_plot_info([21,22,23,24])
@@ -1955,7 +1955,7 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
     def test_spw_id_list(self):
         """ test spw selection (spw='21,22,23,25')"""
         spw = '21,22,23,25'
-        self.res=sdplot(spw=spw,infile=self.infile,outfile=self.outfile)
+        self.res=sdplotold(spw=spw,infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         outinfo = self._get_selection_plot_info()
         refinfo = self._set_selection_plot_info([21,22,23,25])
@@ -1964,7 +1964,7 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
     def test_spw_id_exprlist(self):
         """ test spw selection (spw='<22,>24')"""
         spw = '<22,>24'
-        self.res=sdplot(spw=spw,infile=self.infile,outfile=self.outfile)
+        self.res=sdplotold(spw=spw,infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         outinfo = self._get_selection_plot_info()
         refinfo = self._set_selection_plot_info([20,21,25])
@@ -1973,7 +1973,7 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
     def test_spw_id_pattern(self):
         """test spw selection (spw='*')"""
         spw='*'
-        self.res=sdplot(spw=spw,infile=self.infile,outfile=self.outfile)
+        self.res=sdplotold(spw=spw,infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         outinfo = self._get_selection_plot_info()
         refinfo = self._set_selection_plot_info([20,21,22,23,24,25])
@@ -1982,7 +1982,7 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
     def test_spw_value_frequency(self):
         """test spw selection (spw='299.5~310GHz')"""
         spw = '299.5~310GHz'
-        self.res=sdplot(spw=spw,infile=self.infile,outfile=self.outfile)
+        self.res=sdplotold(spw=spw,infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         outinfo = self._get_selection_plot_info()
         refinfo = self._set_selection_plot_info([22,23,24,25])
@@ -1991,7 +1991,7 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
     def test_spw_value_velocity(self):
         """test spw selection (spw='-50~50km/s')"""
         spw = '-50~50km/s'
-        self.res=sdplot(spw=spw,infile=self.infile,outfile=self.outfile)
+        self.res=sdplotold(spw=spw,infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         outinfo = self._get_selection_plot_info()
         refinfo = self._set_selection_plot_info([22,23])
@@ -2000,7 +2000,7 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
     def test_spw_mix_exprlist(self):
         """test spw selection (spw='150~550km/s,>23')"""
         spw = '150~550km/s,>23'
-        self.res=sdplot(spw=spw,infile=self.infile,outfile=self.outfile)
+        self.res=sdplotold(spw=spw,infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         outinfo = self._get_selection_plot_info()
         refinfo = self._set_selection_plot_info([20,21,24,25])
@@ -2012,7 +2012,7 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
     def test_beam_id_default(self):
         """test beam selection (beam='')"""
         beam=''
-        self.res=sdplot(beam=beam,panel='b',infile=self.infile,outfile=self.outfile)
+        self.res=sdplotold(beam=beam,panel='b',infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         outinfo = self._get_selection_plot_info()
         refinfo = self._set_selection_plot_info([11,12,13])
@@ -2021,7 +2021,7 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
     def test_beam_id_exact(self):
         """ test beam selection (beam='12')"""
         beam='12'
-        self.res=sdplot(beam=beam,panel='b',infile=self.infile,outfile=self.outfile)
+        self.res=sdplotold(beam=beam,panel='b',infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         outinfo = self._get_selection_plot_info()
         refinfo = self._set_selection_plot_info([12])
@@ -2030,7 +2030,7 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
     def test_beam_id_lt(self):
         """test beam selection (beam='<13')"""
         beam='<13'
-        self.res=sdplot(beam=beam,panel='b',infile=self.infile,outfile=self.outfile)
+        self.res=sdplotold(beam=beam,panel='b',infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         outinfo = self._get_selection_plot_info()
         refinfo = self._set_selection_plot_info([11,12])
@@ -2039,7 +2039,7 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
     def test_beam_id_gt(self):
         """test beam selection (beam='>11')"""
         beam='>11'
-        self.res=sdplot(beam=beam,panel='b',infile=self.infile,outfile=self.outfile)
+        self.res=sdplotold(beam=beam,panel='b',infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         outinfo = self._get_selection_plot_info()
         refinfo = self._set_selection_plot_info([12,13])
@@ -2048,7 +2048,7 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
     def test_beam_id_range(self):
         """test beam selection (beam='12~13')"""
         beam='12~13'
-        self.res=sdplot(beam=beam,panel='b',infile=self.infile,outfile=self.outfile)
+        self.res=sdplotold(beam=beam,panel='b',infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         outinfo = self._get_selection_plot_info()
         refinfo = self._set_selection_plot_info([12,13])
@@ -2057,7 +2057,7 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
     def test_beam_id_list(self):
         """test beam selection (beam='11,13')"""
         beam='11,13'
-        self.res=sdplot(beam=beam,panel='b',infile=self.infile,outfile=self.outfile)
+        self.res=sdplotold(beam=beam,panel='b',infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         outinfo = self._get_selection_plot_info()
         refinfo = self._set_selection_plot_info([11,13])
@@ -2066,16 +2066,16 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
     def test_beam_id_exprlist(self):
         """test beam selection (beam='<12,>12')"""
         beam='<12,>12'
-        self.res=sdplot(beam=beam,panel='b',infile=self.infile,outfile=self.outfile)
+        self.res=sdplotold(beam=beam,panel='b',infile=self.infile,outfile=self.outfile)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
         outinfo = self._get_selection_plot_info()
         refinfo = self._set_selection_plot_info([11,13])
         self._compareDictVal(outinfo, refinfo)
 
 
-class sdplot_flagTest(sdplot_unittest_base,unittest.TestCase):
+class sdplotold_flagTest(sdplotold_unittest_base,unittest.TestCase):
     """
-    Test flag handling in sdplot
+    Test flag handling in sdplotold
     
     The dataset used for this test is testgrid4chan.1point.asap
     | ROW | SCAN | POL | SPECTRA (all IF=2, 4chans)
@@ -2104,7 +2104,7 @@ class sdplot_flagTest(sdplot_unittest_base,unittest.TestCase):
         for sp in self.spec:
             self.masked_spec.append(numpy.ma.masked_array(sp, False))
         
-        default(sdplot)
+        default(sdplotold)
 
     def tearDown( self ):
         # restore GUI setting
@@ -2273,7 +2273,7 @@ class sdplot_flagTest(sdplot_unittest_base,unittest.TestCase):
         flagrow_pre = tb.getcol('FLAGROW')
         tb.close()
         # invoke task
-        sdplot(**params)
+        sdplotold(**params)
         # check number of pannels and lines, and data plotted
         fig = pl.gcf()
         panels =  fig.axes
@@ -2325,6 +2325,6 @@ class sdplot_flagTest(sdplot_unittest_base,unittest.TestCase):
 
 
 def suite():
-    return [sdplot_basicTest, sdplot_storageTest,
-            sdplot_gridTest, sdplot_errorTest,
-            sdplot_selectionTest, sdplot_flagTest]
+    return [sdplotold_basicTest, sdplotold_storageTest,
+            sdplotold_gridTest, sdplotold_errorTest,
+            sdplotold_selectionTest, sdplotold_flagTest]

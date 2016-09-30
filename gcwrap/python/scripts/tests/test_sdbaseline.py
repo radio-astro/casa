@@ -11,9 +11,9 @@ import listing
 from numpy import array
 
 import asap as sd
-from sdbaseline import sdbaseline
+from sdbaselineold import sdbaselineold
 from sdutil import tbmanager
-from sdstat import sdstat
+from sdstatold import sdstatold
 
 try:
     import selection_syntax
@@ -133,14 +133,14 @@ def parseRms( txt ):
     t = txt.lstrip().rstrip( '\n' )[6:]
     return float( t )
 
-class sdbaseline_unittest_base:
+class sdbaselineold_unittest_base:
     """
-    Base class for sdbaseline unit test
+    Base class for sdbaselineold unit test
     """
     # Data path of input/output
     datapath = os.environ.get('CASAPATH').split()[0] + \
               '/data/regression/unittest/sdbaseline/'
-    taskname = "sdbaseline"
+    taskname = "sdbaselineold"
 
     #complist = ['max','min','rms','median','stddev']
 
@@ -155,7 +155,7 @@ class sdbaseline_unittest_base:
             spw=''
         self._checkfile(filename)
         sd.rcParams['scantable.storage'] = 'memory'
-        retstat = sdstat(filename, spw=str(spw))
+        retstat = sdstatold(filename, spw=str(spw))
         return retstat
 
     def _compareStats( self, currstat, refstat, reltol=1.0e-2, complist=None ):
@@ -290,9 +290,9 @@ class sdbaseline_unittest_base:
 #                         %(out,reference))
 
 
-class sdbaseline_basicTest( sdbaseline_unittest_base, unittest.TestCase ):
+class sdbaselineold_basicTest( sdbaselineold_unittest_base, unittest.TestCase ):
     """
-    Basic unit tests for task sdbaseline. No interactive testing.
+    Basic unit tests for task sdbaselineold. No interactive testing.
 
     The list of tests:
     test01   --- test polynominal baseline with maskmode = 'auto'
@@ -312,16 +312,16 @@ class sdbaseline_basicTest( sdbaseline_unittest_base, unittest.TestCase ):
     # Input and output names
     #infile = 'OrionS_rawACSmod_calTave.asap'
     infile = 'OrionS_rawACSmod_calave.asap'
-    outroot = sdbaseline_unittest_base.taskname+'_test'
-    blrefroot = sdbaseline_unittest_base.datapath+'refblparam'
-    strefroot = sdbaseline_unittest_base.datapath+'refstats'
+    outroot = sdbaselineold_unittest_base.taskname+'_test'
+    blrefroot = sdbaselineold_unittest_base.datapath+'refblparam'
+    strefroot = sdbaselineold_unittest_base.datapath+'refstats'
 
     def setUp( self ):
         if os.path.exists(self.infile):
             shutil.rmtree(self.infile)
         shutil.copytree(self.datapath+self.infile, self.infile)
 
-        default(sdbaseline)
+        default(sdbaselineold)
 
     def tearDown( self ):
         if (os.path.exists(self.infile)):
@@ -336,9 +336,9 @@ class sdbaseline_basicTest( sdbaseline_unittest_base, unittest.TestCase ):
         mode = "auto"
         spw = '0,2'
         pol = '0'
-        result = sdbaseline(infile=infile,maskmode=mode,outfile=outfile,
+        result = sdbaselineold(infile=infile,maskmode=mode,outfile=outfile,
                             blfunc='poly',spw=spw,pol=pol)
-        # sdbaseline returns None if it runs successfully
+        # sdbaselineold returns None if it runs successfully
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         self._compareBLparam(outfile+"_blparam.txt",self.blrefroot+tid)
@@ -362,9 +362,9 @@ class sdbaseline_basicTest( sdbaseline_unittest_base, unittest.TestCase ):
         mode = "list"
         spw = '2'
         pol = '1'
-        result = sdbaseline(infile=infile,maskmode=mode,outfile=outfile,
+        result = sdbaselineold(infile=infile,maskmode=mode,outfile=outfile,
                             spw=spw,pol=pol)
-        # sdbaseline returns None if it runs successfully
+        # sdbaselineold returns None if it runs successfully
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         self._compareBLparam(outfile+"_blparam.txt",self.blrefroot+tid)
@@ -385,7 +385,7 @@ class sdbaseline_basicTest( sdbaseline_unittest_base, unittest.TestCase ):
         mode = "list"
         os.mkdir(outfile)
         try:
-            result = sdbaseline(infile=infile, outfile=outfile, overwrite=False, maskmode=mode)
+            result = sdbaselineold(infile=infile, outfile=outfile, overwrite=False, maskmode=mode)
         except Exception, e:
             pos = str(e).find("Output file 'Dummy_Empty.asap' exists.")
             self.assertNotEqual(pos, -1, msg='Unexpected exception was thrown: %s'%(str(e)))
@@ -400,7 +400,7 @@ class sdbaseline_basicTest( sdbaseline_unittest_base, unittest.TestCase ):
         spw = '10' # non-existent IF value
         mode = "list"
         try:
-            result = sdbaseline(infile=infile, outfile=outfile, spw=spw, maskmode=mode)
+            result = sdbaselineold(infile=infile, outfile=outfile, spw=spw, maskmode=mode)
         except Exception, e:
             #pos = str(e).find('Invalid spectral window selection. Selection contains no data.')
             pos = str(e).find('No valid spw.')
@@ -409,9 +409,9 @@ class sdbaseline_basicTest( sdbaseline_unittest_base, unittest.TestCase ):
 
 
 
-class sdbaseline_maskTest( sdbaseline_unittest_base, unittest.TestCase ):
+class sdbaselineold_maskTest( sdbaselineold_unittest_base, unittest.TestCase ):
     """
-    Unit tests for task sdbaseline. Test various mask selections.
+    Unit tests for task sdbaselineold. Test various mask selections.
     Polynominal baselining. No interactive testing.
 
     The list of tests:
@@ -432,9 +432,9 @@ class sdbaseline_maskTest( sdbaseline_unittest_base, unittest.TestCase ):
     # Input and output names
     #infile = 'OrionS_rawACSmod_calTave.asap'
     infile = 'OrionS_rawACSmod_calave.asap'
-    outroot = sdbaseline_unittest_base.taskname+'_masktest'
-    blrefroot = sdbaseline_unittest_base.datapath+'refblparam_mask'
-    #strefroot = sdbaseline_unittest_base.datapath+'refstats_mask'
+    outroot = sdbaselineold_unittest_base.taskname+'_masktest'
+    blrefroot = sdbaselineold_unittest_base.datapath+'refblparam_mask'
+    #strefroot = sdbaselineold_unittest_base.datapath+'refstats_mask'
     tid = None
 
     # Channel range excluding bad edge
@@ -477,7 +477,7 @@ class sdbaseline_maskTest( sdbaseline_unittest_base, unittest.TestCase ):
             shutil.rmtree(self.infile)
         shutil.copytree(self.datapath+self.infile, self.infile)
 
-        default(sdbaseline)
+        default(sdbaselineold)
 
 
     def tearDown( self ):
@@ -499,9 +499,9 @@ class sdbaseline_maskTest( sdbaseline_unittest_base, unittest.TestCase ):
 
         print "spw =", spw
 
-        result = sdbaseline(infile=infile,maskmode=mode,
+        result = sdbaselineold(infile=infile,maskmode=mode,
                             outfile=outfile,spw=spw,pol=pol)
-        # sdbaseline returns None if it runs successfully
+        # sdbaselineold returns None if it runs successfully
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF0
@@ -524,9 +524,9 @@ class sdbaseline_maskTest( sdbaseline_unittest_base, unittest.TestCase ):
 
         print "spw =", spw
 
-        result = sdbaseline(infile=infile,maskmode=mode,
+        result = sdbaselineold(infile=infile,maskmode=mode,
                             outfile=outfile,spw=spw,pol=pol)
-        # sdbaseline returns None if it runs successfully
+        # sdbaselineold returns None if it runs successfully
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF2
@@ -548,9 +548,9 @@ class sdbaseline_maskTest( sdbaseline_unittest_base, unittest.TestCase ):
 
         print "spw =", spw
 
-        result = sdbaseline(infile=infile,maskmode=mode,
+        result = sdbaselineold(infile=infile,maskmode=mode,
                             outfile=outfile,spw=spw,pol=pol)
-        # sdbaseline returns None if it runs successfully
+        # sdbaselineold returns None if it runs successfully
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF0
@@ -575,9 +575,9 @@ class sdbaseline_maskTest( sdbaseline_unittest_base, unittest.TestCase ):
         
         pol = '0'
 
-        result = sdbaseline(infile=infile,maskmode=mode,
+        result = sdbaselineold(infile=infile,maskmode=mode,
                             outfile=outfile,spw=spw,pol=pol)
-        # sdbaseline returns None if it runs successfully
+        # sdbaselineold returns None if it runs successfully
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF0
@@ -605,9 +605,9 @@ class sdbaseline_maskTest( sdbaseline_unittest_base, unittest.TestCase ):
         print "spw =", spw
 
         pol = '0'
-        result = sdbaseline(infile=infile,maskmode=mode,
+        result = sdbaselineold(infile=infile,maskmode=mode,
                             outfile=outfile,spw=spw,pol=pol)
-        # sdbaseline returns None if it runs successfully
+        # sdbaselineold returns None if it runs successfully
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF2
@@ -632,9 +632,9 @@ class sdbaseline_maskTest( sdbaseline_unittest_base, unittest.TestCase ):
         pol = '0'
         print "spw =", spw
         
-        result = sdbaseline(infile=infile,maskmode=mode,
+        result = sdbaselineold(infile=infile,maskmode=mode,
                             outfile=outfile,spw=spw,pol=pol)
-        # sdbaseline returns None if it runs successfully
+        # sdbaselineold returns None if it runs successfully
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF2
@@ -667,9 +667,9 @@ class sdbaseline_maskTest( sdbaseline_unittest_base, unittest.TestCase ):
         spw = ','.join(map(lambda x: x + specunit, masklist.split(',')))
         print "spw = ", spw
         
-        result = sdbaseline(infile=infile,maskmode=mode,
+        result = sdbaselineold(infile=infile,maskmode=mode,
                             outfile=outfile,spw=spw,pol=pol)
-        # sdbaseline returns None if it runs successfully
+        # sdbaselineold returns None if it runs successfully
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF0
@@ -705,9 +705,9 @@ class sdbaseline_maskTest( sdbaseline_unittest_base, unittest.TestCase ):
         spw = ','.join([';'.join(map(lambda x: x + specunit, m.split(';'))) for m in masklist.split(',')])
         print "spw = ", spw
 
-        result = sdbaseline(infile=infile,maskmode=mode,
+        result = sdbaselineold(infile=infile,maskmode=mode,
                             outfile=outfile,spw=spw,pol=pol)
-        # sdbaseline returns None if it runs successfully
+        # sdbaselineold returns None if it runs successfully
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF0
@@ -735,9 +735,9 @@ class sdbaseline_maskTest( sdbaseline_unittest_base, unittest.TestCase ):
         
         print "spw =", spw
         
-        result = sdbaseline(infile=infile,maskmode=mode,
+        result = sdbaselineold(infile=infile,maskmode=mode,
                             outfile=outfile,spw=spw,pol=pol)
-        # sdbaseline returns None if it runs successfully
+        # sdbaselineold returns None if it runs successfully
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF2
@@ -764,9 +764,9 @@ class sdbaseline_maskTest( sdbaseline_unittest_base, unittest.TestCase ):
 
         print "spw =", spw
         
-        result = sdbaseline(infile=infile,maskmode=mode,
+        result = sdbaselineold(infile=infile,maskmode=mode,
                             outfile=outfile,spw=spw,pol=pol)
-        # sdbaseline returns None if it runs successfully
+        # sdbaselineold returns None if it runs successfully
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF2
@@ -799,9 +799,9 @@ class sdbaseline_maskTest( sdbaseline_unittest_base, unittest.TestCase ):
         spw = ','.join(map(lambda x: x + specunit, masklist.split(',')))
         print "spw =", spw
 
-        result = sdbaseline(infile=infile,maskmode=mode,
+        result = sdbaselineold(infile=infile,maskmode=mode,
                             outfile=outfile,spw=spw,pol=pol)
-        # sdbaseline returns None if it runs successfully
+        # sdbaselineold returns None if it runs successfully
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF0
@@ -837,9 +837,9 @@ class sdbaseline_maskTest( sdbaseline_unittest_base, unittest.TestCase ):
         spw = ','.join([';'.join(map(lambda x: x + specunit, m.split(';'))) for m in masklist.split(',')])
         print "spw = ", spw
 
-        result = sdbaseline(infile=infile,maskmode=mode,
+        result = sdbaselineold(infile=infile,maskmode=mode,
                             outfile=outfile,spw=spw,pol=pol)
-        # sdbaseline returns None if it runs successfully
+        # sdbaselineold returns None if it runs successfully
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF0
@@ -898,9 +898,9 @@ class sdbaseline_maskTest( sdbaseline_unittest_base, unittest.TestCase ):
         return retdic
  
 
-class sdbaseline_funcTest( unittest.TestCase ):
+class sdbaselineold_funcTest( unittest.TestCase ):
     """
-    Unit tests for task sdbaseline. No interactive testing.
+    Unit tests for task sdbaselineold. No interactive testing.
 
     The list of tests:
     testCSpline01  --- test cubic spline fitting with maskmode = 'list'
@@ -922,7 +922,7 @@ class sdbaseline_funcTest( unittest.TestCase ):
     infile_cspline  = 'Artificial_CubicSpline.asap'
     infile_sinusoid = 'Artificial_Sinusoid.asap'
     blparamfile_suffix = '_blparam.txt'
-    outroot = 'sdbaseline_test'
+    outroot = 'sdbaselineold_test'
     tid = None
 
     def setUp( self ):
@@ -933,7 +933,7 @@ class sdbaseline_funcTest( unittest.TestCase ):
             shutil.rmtree(self.infile_sinusoid)
         shutil.copytree(self.datapath+self.infile_sinusoid, self.infile_sinusoid)
 
-        default(sdbaseline)
+        default(sdbaselineold)
 
     def tearDown( self ):
         if os.path.exists(self.infile_cspline):
@@ -950,7 +950,7 @@ class sdbaseline_funcTest( unittest.TestCase ):
         outfile = self.outroot+self.tid+".asap"
         blparamfile = outfile+self.blparamfile_suffix
         
-        result = sdbaseline(infile=infile,maskmode=mode,outfile=outfile,blfunc='cspline',npiece=35)
+        result = sdbaselineold(infile=infile,maskmode=mode,outfile=outfile,blfunc='cspline',npiece=35)
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
         self.checkRms(blparamfile, 1.038696)   #the actual rms should be 1.02407 though
 
@@ -962,7 +962,7 @@ class sdbaseline_funcTest( unittest.TestCase ):
         outfile = self.outroot+self.tid+".asap"
         blparamfile = outfile+self.blparamfile_suffix
         
-        result = sdbaseline(infile=infile,maskmode=mode,outfile=outfile,blfunc='cspline',npiece=35)
+        result = sdbaselineold(infile=infile,maskmode=mode,outfile=outfile,blfunc='cspline',npiece=35)
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
         self.checkRms(blparamfile, 1.038696)   #the actual rms should be 1.02407 though
 
@@ -974,7 +974,7 @@ class sdbaseline_funcTest( unittest.TestCase ):
         outfile = self.outroot+self.tid+".asap"
         blparamfile = outfile+self.blparamfile_suffix
         
-        result = sdbaseline(infile=infile,maskmode=mode,outfile=outfile,blfunc='sinusoid')
+        result = sdbaselineold(infile=infile,maskmode=mode,outfile=outfile,blfunc='sinusoid')
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
         self.checkRms(blparamfile, 1.10)   #the actual rms should be 1.09705 though
 
@@ -986,7 +986,7 @@ class sdbaseline_funcTest( unittest.TestCase ):
         outfile = self.outroot+self.tid+".asap"
         blparamfile = outfile+self.blparamfile_suffix
         
-        result = sdbaseline(infile=infile,maskmode=mode,outfile=outfile,blfunc='sinusoid')
+        result = sdbaselineold(infile=infile,maskmode=mode,outfile=outfile,blfunc='sinusoid')
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
         self.checkRms(blparamfile, 1.10)   #the actual rms should be 1.09705 though
 
@@ -1003,11 +1003,11 @@ class sdbaseline_funcTest( unittest.TestCase ):
         self.assertTrue((rms <= max_rms), msg = "CSpline fitting failed.")
 
 
-class sdbaseline_multi_IF_test( sdbaseline_unittest_base, unittest.TestCase ):
+class sdbaselineold_multi_IF_test( sdbaselineold_unittest_base, unittest.TestCase ):
     """
-    Unit tests for task sdbaseline. No interactive testing.
+    Unit tests for task sdbaselineold. No interactive testing.
 
-    This test intends to check whether sdbaseline task works fine
+    This test intends to check whether sdbaselineold task works fine
     for data that has multiple IFs whose nchan differ each other. 
 
     The list of tests:
@@ -1018,14 +1018,14 @@ class sdbaseline_multi_IF_test( sdbaseline_unittest_base, unittest.TestCase ):
     # Input and output names
     infile = 'testMultiIF.asap'
     blparamfile_suffix = '_blparam.txt'
-    outroot = sdbaseline_unittest_base.taskname+'_multi'
+    outroot = sdbaselineold_unittest_base.taskname+'_multi'
     refblparamfile = 'refblparam_multiIF'
 
     def setUp( self ):
         if os.path.exists(self.infile):
             shutil.rmtree(self.infile)
         shutil.copytree(self.datapath+self.infile, self.infile)
-        default(sdbaseline)
+        default(sdbaselineold)
 
     def tearDown( self ):
         if os.path.exists(self.infile):
@@ -1041,7 +1041,7 @@ class sdbaseline_multi_IF_test( sdbaseline_unittest_base, unittest.TestCase ):
         outfile = self.outroot+".asap"
         blparamfile = outfile+self.blparamfile_suffix
         
-        result = sdbaseline(infile=infile,maskmode=mode,outfile=outfile,blfunc=blfunc,order=order)
+        result = sdbaselineold(infile=infile,maskmode=mode,outfile=outfile,blfunc=blfunc,order=order)
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
         self._compareBLparam(blparamfile,self.datapath+self.refblparamfile)
         reference = {5: {'rms': 1.4250789880752563,
@@ -1062,14 +1062,14 @@ class sdbaseline_multi_IF_test( sdbaseline_unittest_base, unittest.TestCase ):
                          'min_abscissa': {'value': 1490.0,
                                           'unit': 'channel'},
                          'stddev': 1.4974949359893799}}
-        # sdstat must run each IF separately
+        # sdstatold must run each IF separately
         for ifno in [5,7]:
             currstat = self._getStats(outfile,ifno)
             self._compareStats(currstat,reference[ifno])
 
-class sdbaseline_storageTest( sdbaseline_unittest_base, unittest.TestCase ):
+class sdbaselineold_storageTest( sdbaselineold_unittest_base, unittest.TestCase ):
     """
-    Unit tests for task sdbaseline. Test scantable sotrage and insitu
+    Unit tests for task sdbaselineold. Test scantable sotrage and insitu
     parameters
 
     The list of tests:
@@ -1084,7 +1084,7 @@ class sdbaseline_storageTest( sdbaseline_unittest_base, unittest.TestCase ):
     """
     # Input and output names
     infile = 'OrionS_rawACSmod_calave.asap'
-    outroot = sdbaseline_unittest_base.taskname+'_store'
+    outroot = sdbaselineold_unittest_base.taskname+'_store'
     mode = "list"
     #iflist = [2]
     #pollist = [1]
@@ -1092,7 +1092,7 @@ class sdbaseline_storageTest( sdbaseline_unittest_base, unittest.TestCase ):
     pol = '1'
     
     blparamfile_suffix = '_blparam.txt'
-    blreffile = sdbaseline_unittest_base.datapath+'refblparam02'
+    blreffile = sdbaselineold_unittest_base.datapath+'refblparam02'
 
     # Reference statistic values of IF=2, POL=1
     refstat =  {'rms': 3.4925737380981445,
@@ -1107,7 +1107,7 @@ class sdbaseline_storageTest( sdbaseline_unittest_base, unittest.TestCase ):
         if os.path.exists(self.infile):
             shutil.rmtree(self.infile)
         shutil.copytree(self.datapath+self.infile, self.infile)
-        default(sdbaseline)
+        default(sdbaselineold)
 
     def tearDown( self ):
         if os.path.exists(self.infile):
@@ -1125,10 +1125,10 @@ class sdbaseline_storageTest( sdbaseline_unittest_base, unittest.TestCase ):
         sd.rcParams['insitu'] = True
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        result = sdbaseline(infile=self.infile,maskmode=self.mode,outfile=outfile,
+        result = sdbaselineold(infile=self.infile,maskmode=self.mode,outfile=outfile,
                             spw=self.spw,pol=self.pol)
 
-        # sdbaseline returns None if it runs successfully
+        # sdbaselineold returns None if it runs successfully
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         print "Testing OUTPUT statistics and baseline parameters"
@@ -1150,10 +1150,10 @@ class sdbaseline_storageTest( sdbaseline_unittest_base, unittest.TestCase ):
         sd.rcParams['insitu'] = False
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        result = sdbaseline(infile=self.infile,maskmode=self.mode,outfile=outfile,
+        result = sdbaselineold(infile=self.infile,maskmode=self.mode,outfile=outfile,
                             spw=self.spw,pol=self.pol)
 
-        # sdbaseline returns None if it runs successfully
+        # sdbaselineold returns None if it runs successfully
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         print "Testing OUTPUT statistics and baseline parameters"
@@ -1175,10 +1175,10 @@ class sdbaseline_storageTest( sdbaseline_unittest_base, unittest.TestCase ):
         sd.rcParams['insitu'] = True
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        result = sdbaseline(infile=self.infile,maskmode=self.mode,outfile=outfile,
+        result = sdbaselineold(infile=self.infile,maskmode=self.mode,outfile=outfile,
                             spw=self.spw,pol=self.pol)
 
-        # sdbaseline returns None if it runs successfully
+        # sdbaselineold returns None if it runs successfully
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         print "Testing OUTPUT statistics and baseline parameters"
@@ -1200,10 +1200,10 @@ class sdbaseline_storageTest( sdbaseline_unittest_base, unittest.TestCase ):
         sd.rcParams['insitu'] = False
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        result = sdbaseline(infile=self.infile,maskmode=self.mode,outfile=outfile,
+        result = sdbaselineold(infile=self.infile,maskmode=self.mode,outfile=outfile,
                             spw=self.spw,pol=self.pol)
 
-        # sdbaseline returns None if it runs successfully
+        # sdbaselineold returns None if it runs successfully
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         print "Testing OUTPUT statistics and baseline parameters"
@@ -1226,24 +1226,24 @@ class sdbaseline_storageTest( sdbaseline_unittest_base, unittest.TestCase ):
         sd.rcParams['insitu'] = True
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        result = sdbaseline(infile=infile,maskmode=self.mode,outfile=outfile,
+        result = sdbaselineold(infile=infile,maskmode=self.mode,outfile=outfile,
                             spw=self.spw,pol=self.pol,overwrite=True)
 
-        # sdbaseline returns None if it runs successfully
+        # sdbaselineold returns None if it runs successfully
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         print "Testing OUTPUT statistics and baseline parameters"
         self._compareBLparam(outfile+self.blparamfile_suffix,self.blreffile)
         self._compareStats(outfile,self.refstat)
 
-class sdbaseline_selection_syntax(selection_syntax.SelectionSyntaxTest):
+class sdbaselineold_selection_syntax(selection_syntax.SelectionSyntaxTest):
     
     # Data path of input/output
     datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/singledish/'
     # Input and output names
     infile = 'sd_analytic_type1-3.cal.asap'
     #workfile = 'sd_analytic_type1-3.cal.asap_work'
-    outfile = 'sdbaseline_selection_syntax.asap'
+    outfile = 'sdbaselineold_selection_syntax.asap'
     blparamfile = outfile + '_blparam.txt'
     order = 5
 
@@ -1268,7 +1268,7 @@ class sdbaseline_selection_syntax(selection_syntax.SelectionSyntaxTest):
     
     @property
     def task(self):
-        return sdbaseline
+        return sdbaselineold
 
     @property
     def spw_channel_selection(self):
@@ -1278,7 +1278,7 @@ class sdbaseline_selection_syntax(selection_syntax.SelectionSyntaxTest):
         if os.path.exists(self.infile):
             shutil.rmtree(self.infile)
         shutil.copytree(self.datapath+self.infile, self.infile)
-        default(sdbaseline)
+        default(sdbaselineold)
 
     def tearDown(self):
         if os.path.exists(self.infile):
@@ -1406,7 +1406,7 @@ class sdbaseline_selection_syntax(selection_syntax.SelectionSyntaxTest):
         if regular_test:
             self.run_task(**kwargs)
         else:
-            sdbaseline(**kwargs)
+            sdbaselineold(**kwargs)
 
         tb.open(outfile)
         cols = [tb.getcol(columns[i]) for i in xrange(num_param)]
@@ -1993,11 +1993,11 @@ class sdbaseline_selection_syntax(selection_syntax.SelectionSyntaxTest):
 
         self.__exec_simple_test('pol', pol, pollist, 'POLNO', expected_nrow)
 
-class sdbaseline_flagTest(sdbaseline_unittest_base, unittest.TestCase):
+class sdbaselineold_flagTest(sdbaselineold_unittest_base, unittest.TestCase):
     """
-    Unit tests for task sdbaseline. No interactive testing.
-    This test sees if flag information is properly handled in sdbaseline.
-    Sdbaseline should run with flagged data as the following manner:
+    Unit tests for task sdbaselineold. No interactive testing.
+    This test sees if flag information is properly handled in sdbaselineold.
+    Sdbaselineold should run with flagged data as the following manner:
        (1) for row-flagged spectra, neither fitting nor subtraction should be executed.
        (2) if a channel is flagged, it will not be used for baseline calculation,
            but the baseline subtraction at the channel should be made.
@@ -2015,14 +2015,14 @@ class sdbaseline_flagTest(sdbaseline_unittest_base, unittest.TestCase):
     testFlagFFT        --- check if FFT used in sinusoidal fitting properly handles flag info
 
     The test data:
-    sdbaseline_flagtest_const.asap -- spectra has 1 at all channels except for
+    sdbaselineold_flagtest_const.asap -- spectra has 1 at all channels except for
         channel-flagged areas
-    sdbaseline_flagtest_gauss.asap -- four spectra have the same feature with
+    sdbaselineold_flagtest_gauss.asap -- four spectra have the same feature with
         mean and sigma of 1 and 0.1, respectively.
-    sdbaseline_flagtest_gauss_withplateauxonmask.asap -- same spectra as
-        sdbaseline_flagtest_gauss.asap, plus big values (100) at all flagged channels.
-    sdbaseline_flagtest_gauss_withspikesonmask.asap -- same spectra as
-        sdbaseline_flagtest_gauss.asap, plus huge values (10000) at the channels
+    sdbaselineold_flagtest_gauss_withplateauxonmask.asap -- same spectra as
+        sdbaselineold_flagtest_gauss.asap, plus big values (100) at all flagged channels.
+    sdbaselineold_flagtest_gauss_withspikesonmask.asap -- same spectra as
+        sdbaselineold_flagtest_gauss.asap, plus huge values (10000) at the channels
         2, 42, 82, and 97.
     """
     
@@ -2038,7 +2038,7 @@ class sdbaseline_flagTest(sdbaseline_unittest_base, unittest.TestCase):
     infile_02    = 'sdbaseline_flagtest_gauss.asap'
     infile_02spk = 'sdbaseline_flagtest_gauss_spikesonmask.asap'
     infile_02int = 'sdbaseline_flagtest_gauss_interponmask.asap'
-    outroot = 'sdbaseline_test'
+    outroot = 'sdbaselineold_test'
     tid = None
     alim = 1
 
@@ -2046,7 +2046,7 @@ class sdbaseline_flagTest(sdbaseline_unittest_base, unittest.TestCase):
         for f in [self.infile_01, self.infile_02, self.infile_02pla, self.infile_02spk, self.infile_02int]:
             if os.path.exists(f): shutil.rmtree(f)
             shutil.copytree(self.datapath+f, f)
-        default(sdbaseline)
+        default(sdbaselineold)
 
     def tearDown( self ):
         for f in [self.infile_01, self.infile_02, self.infile_02pla, self.infile_02spk, self.infile_02int]:
@@ -2060,7 +2060,7 @@ class sdbaseline_flagTest(sdbaseline_unittest_base, unittest.TestCase):
         mode = "list"
         outfile = self.outroot+self.tid+".asap"
         
-        result = sdbaseline(infile=infile,maskmode=mode,outfile=outfile,blfunc='poly',order=0)
+        result = sdbaselineold(infile=infile,maskmode=mode,outfile=outfile,blfunc='poly',order=0)
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
         self._checkResult(infile, outfile, self.tol01)
 
@@ -2071,7 +2071,7 @@ class sdbaseline_flagTest(sdbaseline_unittest_base, unittest.TestCase):
         mode = "auto"
         outfile = self.outroot+self.tid+".asap"
         
-        result = sdbaseline(infile=infile,maskmode=mode,avg_limit=self.alim,outfile=outfile,blfunc='poly',order=0)
+        result = sdbaselineold(infile=infile,maskmode=mode,avg_limit=self.alim,outfile=outfile,blfunc='poly',order=0)
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
         self._checkResult(infile, outfile, self.tol02)
 
@@ -2082,7 +2082,7 @@ class sdbaseline_flagTest(sdbaseline_unittest_base, unittest.TestCase):
         mode = "list"
         outfile = self.outroot+self.tid+".asap"
         
-        result = sdbaseline(infile=infile,maskmode=mode,outfile=outfile,blfunc='chebyshev',order=0)
+        result = sdbaselineold(infile=infile,maskmode=mode,outfile=outfile,blfunc='chebyshev',order=0)
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
         self._checkResult(infile, outfile, self.tol01)
 
@@ -2093,7 +2093,7 @@ class sdbaseline_flagTest(sdbaseline_unittest_base, unittest.TestCase):
         mode = "auto"
         outfile = self.outroot+self.tid+".asap"
         
-        result = sdbaseline(infile=infile,maskmode=mode,avg_limit=self.alim,outfile=outfile,blfunc='chebyshev',order=0)
+        result = sdbaselineold(infile=infile,maskmode=mode,avg_limit=self.alim,outfile=outfile,blfunc='chebyshev',order=0)
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
         self._checkResult(infile, outfile, self.tol02)
 
@@ -2104,7 +2104,7 @@ class sdbaseline_flagTest(sdbaseline_unittest_base, unittest.TestCase):
         mode = "list"
         outfile = self.outroot+self.tid+".asap"
         
-        result = sdbaseline(infile=infile,maskmode=mode,outfile=outfile,blfunc='cspline',npiece=1)
+        result = sdbaselineold(infile=infile,maskmode=mode,outfile=outfile,blfunc='cspline',npiece=1)
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
         self._checkResult(infile, outfile, self.tol01)
 
@@ -2115,7 +2115,7 @@ class sdbaseline_flagTest(sdbaseline_unittest_base, unittest.TestCase):
         mode = "auto"
         outfile = self.outroot+self.tid+".asap"
         
-        result = sdbaseline(infile=infile,maskmode=mode,avg_limit=self.alim,outfile=outfile,blfunc='cspline',npiece=1)
+        result = sdbaselineold(infile=infile,maskmode=mode,avg_limit=self.alim,outfile=outfile,blfunc='cspline',npiece=1)
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
         self._checkResult(infile, outfile, self.tol02)
 
@@ -2126,7 +2126,7 @@ class sdbaseline_flagTest(sdbaseline_unittest_base, unittest.TestCase):
         mode = "list"
         outfile = self.outroot+self.tid+".asap"
         
-        result = sdbaseline(infile=infile,maskmode=mode,outfile=outfile,blfunc='sinusoid')
+        result = sdbaselineold(infile=infile,maskmode=mode,outfile=outfile,blfunc='sinusoid')
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
         self._checkResult(infile, outfile, self.tol01)
 
@@ -2137,7 +2137,7 @@ class sdbaseline_flagTest(sdbaseline_unittest_base, unittest.TestCase):
         mode = "auto"
         outfile = self.outroot+self.tid+".asap"
         
-        result = sdbaseline(infile=infile,maskmode=mode,avg_limit=self.alim,outfile=outfile,blfunc='sinusoid')
+        result = sdbaselineold(infile=infile,maskmode=mode,avg_limit=self.alim,outfile=outfile,blfunc='sinusoid')
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
         self._checkResult(infile, outfile, self.tol02)
 
@@ -2161,10 +2161,10 @@ class sdbaseline_flagTest(sdbaseline_unittest_base, unittest.TestCase):
         mode = "list"
         infile_spk = self.infile_02spk
         outfile_spk = self.outroot+"_flagFFT_spk.asap"
-        result = sdbaseline(infile=infile_spk,maskmode=mode,outfile=outfile_spk,blfunc='sinusoid',fftthresh='top3')
+        result = sdbaselineold(infile=infile_spk,maskmode=mode,outfile=outfile_spk,blfunc='sinusoid',fftthresh='top3')
         infile_int = self.infile_02int
         outfile_int = self.outroot+"_flagFFT_int.asap"
-        result = sdbaseline(infile=infile_int,maskmode=mode,outfile=outfile_int,blfunc='sinusoid',fftthresh='top3')
+        result = sdbaselineold(infile=infile_int,maskmode=mode,outfile=outfile_int,blfunc='sinusoid',fftthresh='top3')
         bsuffix = "_blparam.txt"
         self._compareCoefficients(outfile_spk+bsuffix, outfile_int+bsuffix)
 
@@ -2232,7 +2232,7 @@ class sdbaseline_flagTest(sdbaseline_unittest_base, unittest.TestCase):
         self.assertTrue(all(inrowf==outrowf))
 
 def suite():
-    return [sdbaseline_basicTest, sdbaseline_maskTest, sdbaseline_funcTest,
-            sdbaseline_multi_IF_test, sdbaseline_storageTest,
-            sdbaseline_selection_syntax,
-            sdbaseline_flagTest]
+    return [sdbaselineold_basicTest, sdbaselineold_maskTest, sdbaselineold_funcTest,
+            sdbaselineold_multi_IF_test, sdbaselineold_storageTest,
+            sdbaselineold_selection_syntax,
+            sdbaselineold_flagTest]

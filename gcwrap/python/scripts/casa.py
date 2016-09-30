@@ -235,36 +235,41 @@ from widefield import  widefield
 ##
 try:
     import asap as sd
-    from sdcal import sdcal
-    from sdsmooth import sdsmooth
-    from sdbaseline import sdbaseline
-    from sdbaseline2 import sdbaseline2
-    from sdreduce import sdreduce
-    from sdcoadd import sdcoadd
-    from sdsave import sdsave
-    from sdscale import sdscale
-    from sdfit import sdfit
-    from sdplot import sdplot
-    from sdstat import sdstat
-    from sdlist import sdlist
-    from sdflag import sdflag
-    from sdflag2 import sdflag2
-    from sdmath import sdmath
     from sdimaging import sdimaging
     from sdimprocess import sdimprocess
+    from sdaverageold import sdaverageold
+    from sdbaselineold import sdbaselineold
+    from sdbaseline2old import sdbaseline2old
+    from sdcalold import sdcalold
+    from sdcal2old import sdcal2old
+    from sdcoaddold import sdcoaddold
+    from sdfitold import sdfitold
+    from sdflagold import sdflagold
+    from sdflagmanagerold import sdflagmanagerold
+    from sdgridold import sdgridold
+    from sdlistold import sdlistold
+    from sdmathold import sdmathold
+    from sdplotold import sdplotold
+    from sdreduceold import sdreduceold
+    from sdsaveold import sdsaveold
+    from sdscaleold import sdscaleold
+    from sdstatold import sdstatold
 except ImportError:
     sd = None
-    sdcoadd = None
-    sdscale = None
-    sdlist = None
-    sdfit = None
-    sdbaseline = None
-    sdbaseline2 = None
-    sdstat = None
-    sdsave = None
-    sdflag = None
-    sdflag2 = None
-    sdcal = None
-    sdplot = None
-    sdsmooth = None
-    sdreduce = None
+    sdaverageold = None
+    sdbaselineold = None
+    sdbaseline2old = None
+    sdcalold = None
+    sdcal2old = None
+    sdcoaddold = None
+    sdfitold = None
+    sdflagold = None
+    sdflagmanagerold = None
+    sdgridold = None
+    sdlistold = None
+    sdmathold = None
+    sdplotold = None
+    sdreduceold = None
+    sdsaveold = None
+    sdscaleold = None
+    sdstatold = None

@@ -5,13 +5,13 @@
 # Nod data
 # 
 # tasks used
-# sdlist
-# sdcal
-# sdsmooth
-# sdbaseline
-# sdplot
-# sdstat
-# sdsave
+# sdlistold
+# sdcalold
+# sdsmoothold
+# sdbaselineold
+# sdplotold
+# sdstatold
+# sdsaveold
 ###############################
 import time
 import os
@@ -72,9 +72,9 @@ asap_init()                             #load ASAP module
 					#  -- merge spectral windows with tolerance
 
 # summary
-#default(sdlist)
+#default(sdlistold)
 #infile = 'IRC+10216_rawACSmod'
-#sdlist()
+#sdlistold()
 
 if doplot:
    localplotlevel = 1
@@ -83,7 +83,7 @@ else:
 
 # calibartion and averaging
 # calibrate nod scans for CS line (IF=3)
-default(sdcal)
+default(sdcalold)
 infile = 'IRC+10216_rawACSmod'
 fluxunit = 'K'
 calmode = 'nod'
@@ -94,12 +94,12 @@ spw = '3'
 tau = 0.09         # do opacity correction
 overwrite = True
 plotlevel = localplotlevel
-sdcal()
+sdcalold()
 # output
 localoutfile = infile+'_cal'
 
 #  averaging and smoothing
-default(sdaverage)
+default(sdaverageold)
 infile = localoutfile
 # do time and polarization average
 timeaverage = True # average in time
@@ -113,14 +113,14 @@ kernel = 'boxcar'
 kwidth = 5
 overwrite = True
 plotlevel = localplotlevel
-sdaverage()
+sdaverageold()
 localoutfile = infile+'_ave'
 
 #fit and remove baselines
 # do baseline fit with cubic spline with one knot (npiece=2)
 # 3-sigma clipping plus 1 iteration applied.
 # automatically detect lines to exclude from fitting
-default(sdbaseline)
+default(sdbaselineold)
 infile = localoutfile
 maskmode = 'auto'
 #edge = [50]
@@ -134,36 +134,36 @@ clipthresh = 3.0
 clipniter = 1
 overwrite = True
 plotlevel = localplotlevel
-sdbaseline()
+sdbaselineold()
 localoutfile = infile+'_bs'
 
 #plotting the reslut
 #plot the spectrum and save to a postscript file
 if doplot:
-   default(sdplot)
+   default(sdplotold)
    infile = localoutfile
    specunit = 'GHz'
    outfile = 'irc_cs_reduced.eps'
    #sd.plotter.set_histogram(hist=True)     # draw spectrum using histogram                 # histogram
    #sd.plotter.axhline(color='r',linewidth=2) # zline                                       # zline
-   sdplot()
+   sdplotold()
 else:
    print "Plotting the result is skipped."
 
 # statistics
-default(sdstat)
+default(sdstatold)
 # select line free regions to get rms
 infile = localoutfile
 #masklist = [800,1500]
 spw = '*:800~1500'
-xstat = sdstat()
+xstat = sdstatold()
 curr_rms = xstat['rms']
 #rms=
 #
 # select the line region
 #masklist = [1850,2300]
 spw = '*:1850~2300'
-xstat = sdstat()
+xstat = sdstatold()
 xstat
 curr_max = xstat['max']
 curr_sum = xstat['sum']
@@ -172,15 +172,15 @@ curr_mean = xstat['mean']
 
 # Save the spectrum
 # in different formats
-default(sdsave)
+default(sdsaveold)
 infile = localoutfile
 outfile = 'irc_cs_reduced'
 outform = 'ASCII'
 overwrite = True
-sdsave()
+sdsaveold()
 #outfile = 'irc_cs_reduced.ms'
 #outform = 'MS2'
-#sdsave()
+#sdsaveold()
 
 #
 endProc = time.clock()

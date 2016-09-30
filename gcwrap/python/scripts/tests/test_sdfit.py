@@ -13,16 +13,16 @@ import listing
 from numpy import array
 
 import asap as sd
-from sdfit import sdfit
+from sdfitold import sdfitold
 
 try:
     import selection_syntax
 except:
     import tests.selection_syntax as selection_syntax
 
-class sdfit_unittest_base:
+class sdfitold_unittest_base:
     """
-    Base class for sdfit unit test.
+    Base class for sdfitold unit test.
     """
     # Data path of input/output
     datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdfit/'
@@ -34,7 +34,7 @@ class sdfit_unittest_base:
                 if os.path.exists(infile):
                     shutil.rmtree(infile)
                 shutil.copytree(os.path.join(self.datapath, infile), infile)
-        default(sdfit)
+        default(sdfitold)
 
     def tearDown(self):
         if hasattr(self, 'inputs'):
@@ -121,9 +121,9 @@ class sdfit_unittest_base:
                                      msg='%s (%s): result differ (expected %s, actual %s)'%(properties[irow % nprop], irow, e[irow], r[irow]))
 
     
-class sdfit_test(sdfit_unittest_base, unittest.TestCase):
+class sdfitold_test(sdfitold_unittest_base, unittest.TestCase):
     """
-    Unit tests for task sdfit. No interactive testing.
+    Unit tests for task sdfitold. No interactive testing.
 
     The list of tests:
     testGaussian00 --- test fitting a broad Gaussian profile (centre=4000, fwhm=1000, ampl=10)
@@ -158,7 +158,7 @@ class sdfit_test(sdfit_unittest_base, unittest.TestCase):
         fitmode = "list"
         nfit = 1
         
-        res = sdfit(infile=infile,scan=scan,fitfunc=fitfunc,fitmode=fitmode,nfit=nfit)
+        res = sdfitold(infile=infile,scan=scan,fitfunc=fitfunc,fitmode=fitmode,nfit=nfit)
         self.assertNotEqual(res, None, msg="The task returned None. Fit failed.")
 
         ans = {'cent': [[4000.0]],
@@ -184,7 +184,7 @@ class sdfit_test(sdfit_unittest_base, unittest.TestCase):
         #maskline = [0,2000]
         nfit = 1
         
-        res = sdfit(infile=infile,spw=spw,scan=scan,fitfunc=fitfunc,fitmode=fitmode,nfit=nfit)
+        res = sdfitold(infile=infile,spw=spw,scan=scan,fitfunc=fitfunc,fitmode=fitmode,nfit=nfit)
         self.assertNotEqual(res, None, msg="The task returned None. Fit failed.")
 
         ans = {'cent': [[500.0]],
@@ -208,7 +208,7 @@ class sdfit_test(sdfit_unittest_base, unittest.TestCase):
         fitmode = "list"
         nfit = 1
         
-        res = sdfit(infile=infile,scan=scan,fitfunc=fitfunc,fitmode=fitmode,nfit=nfit)
+        res = sdfitold(infile=infile,scan=scan,fitfunc=fitfunc,fitmode=fitmode,nfit=nfit)
         self.assertNotEqual(res, None, msg="The task returned None. Fit failed.")
 
         ans = {'cent': [[4000.0]],
@@ -234,7 +234,7 @@ class sdfit_test(sdfit_unittest_base, unittest.TestCase):
         #maskline = [[2000,4000],[5500,6500]]
         nfit = [1,1]
         
-        res = sdfit(infile=infile,spw=spw,scan=scan,fitfunc=fitfunc,fitmode=fitmode,nfit=nfit)
+        res = sdfitold(infile=infile,spw=spw,scan=scan,fitfunc=fitfunc,fitmode=fitmode,nfit=nfit)
         self.assertNotEqual(res, None, msg="The task returned None. Fit failed.")
 
         ans = {'cent': [[3000.0, 6000.0]],
@@ -263,7 +263,7 @@ class sdfit_test(sdfit_unittest_base, unittest.TestCase):
         #maskline = [[3000,4400],[4500,5000]]
         nfit = [1,1]
         
-        res = sdfit(infile=infile,spw=spw,scan=scan,fitfunc=fitfunc,fitmode=fitmode,nfit=nfit)
+        res = sdfitold(infile=infile,spw=spw,scan=scan,fitfunc=fitfunc,fitmode=fitmode,nfit=nfit)
         self.assertNotEqual(res, None, msg="The task returned None. Fit failed.")
 
         ans = {'cent': [[4000.0, 4700.0]],
@@ -290,7 +290,7 @@ class sdfit_test(sdfit_unittest_base, unittest.TestCase):
         fitmode = "list"
         nfit = 1
         
-        res = sdfit(infile=infile,scan=scan,fitfunc=fitfunc,fitmode=fitmode,nfit=nfit)
+        res = sdfitold(infile=infile,scan=scan,fitfunc=fitfunc,fitmode=fitmode,nfit=nfit)
         self.assertNotEqual(res, None, msg="The task returned None. Fit failed.")
 
         ans = {'cent': [[4000.0]],
@@ -316,7 +316,7 @@ class sdfit_test(sdfit_unittest_base, unittest.TestCase):
         #maskline = [0,2000]
         nfit = 1
         
-        res = sdfit(infile=infile,spw=spw,scan=scan,fitfunc=fitfunc,fitmode=fitmode,nfit=nfit)
+        res = sdfitold(infile=infile,spw=spw,scan=scan,fitfunc=fitfunc,fitmode=fitmode,nfit=nfit)
         self.assertNotEqual(res, None, msg="The task returned None. Fit failed.")
 
         ans = {'cent': [[500.0]],
@@ -340,7 +340,7 @@ class sdfit_test(sdfit_unittest_base, unittest.TestCase):
         fitmode = "list"
         nfit = 1
         
-        res = sdfit(infile=infile,scan=scan,fitfunc=fitfunc,fitmode=fitmode,nfit=nfit)
+        res = sdfitold(infile=infile,scan=scan,fitfunc=fitfunc,fitmode=fitmode,nfit=nfit)
         self.assertNotEqual(res, None, msg="The task returned None. Fit failed.")
 
         ans = {'cent': [[4000.0]],
@@ -366,7 +366,7 @@ class sdfit_test(sdfit_unittest_base, unittest.TestCase):
         #maskline = [[2000,4000],[5500,6500]]
         nfit = [1,1]
         
-        res = sdfit(infile=infile,spw=spw,scan=scan,fitfunc=fitfunc,fitmode=fitmode,nfit=nfit)
+        res = sdfitold(infile=infile,spw=spw,scan=scan,fitfunc=fitfunc,fitmode=fitmode,nfit=nfit)
         self.assertNotEqual(res, None, msg="The task returned None. Fit failed.")
 
         ans = {'cent': [[3000.0, 6000.0]],
@@ -395,7 +395,7 @@ class sdfit_test(sdfit_unittest_base, unittest.TestCase):
         #maskline = [[3000,4400],[4500,5000]]
         nfit = [1,1]
         
-        res = sdfit(infile=infile,spw=spw,scan=scan,fitfunc=fitfunc,fitmode=fitmode,nfit=nfit)
+        res = sdfitold(infile=infile,spw=spw,scan=scan,fitfunc=fitfunc,fitmode=fitmode,nfit=nfit)
         self.assertNotEqual(res, None, msg="The task returned None. Fit failed.")
 
         ans = {'cent': [[4000.0, 4700.0]],
@@ -427,9 +427,9 @@ class sdfit_test(sdfit_unittest_base, unittest.TestCase):
                 within_errorrange = (abs(ans - val) <= abs(err * threshold))
                 self.assertTrue(within_errorrange)
 
-class sdfit_test_exceptions(sdfit_unittest_base, unittest.TestCase):
+class sdfitold_test_exceptions(sdfitold_unittest_base, unittest.TestCase):
     """
-    test the case when sdfit throws exception.
+    test the case when sdfitold throws exception.
     """
     # Input and output names
     infile_gaussian   = 'Artificial_Gaussian.asap'
@@ -437,7 +437,7 @@ class sdfit_test_exceptions(sdfit_unittest_base, unittest.TestCase):
 
     def testNoData(self):
         try:
-            res = sdfit(infile=self.infile_gaussian,spw='99')
+            res = sdfitold(infile=self.infile_gaussian,spw='99')
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -446,7 +446,7 @@ class sdfit_test_exceptions(sdfit_unittest_base, unittest.TestCase):
             self.assertNotEqual(pos,-1,
                                 msg='Unexpected exception was thrown: %s'%(str(e)))
 
-class sdfit_selection_syntax(sdfit_unittest_base, selection_syntax.SelectionSyntaxTest):
+class sdfitold_selection_syntax(sdfitold_unittest_base, selection_syntax.SelectionSyntaxTest):
     
     # Data path of input/output
     datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/singledish/'
@@ -455,7 +455,7 @@ class sdfit_selection_syntax(sdfit_unittest_base, selection_syntax.SelectionSynt
     infile_convolve = 'sd_analytic_type3-1.asap'
     infile_shift = 'sd_analytic_type4-1.asap'
     infile_duplicate = 'sd_analytic_type5-1.asap'
-    prefix = 'sdfit_selection_syntax'
+    prefix = 'sdfitold_selection_syntax'
     inputs = [infile_convolve, infile_shift, infile_duplicate]
     outputs = [prefix+'*']
 
@@ -497,7 +497,7 @@ class sdfit_selection_syntax(sdfit_unittest_base, selection_syntax.SelectionSynt
     
     @property
     def task(self):
-        return sdfit
+        return sdfitold
 
     @property
     def spw_channel_selection(self):
@@ -569,7 +569,7 @@ class sdfit_selection_syntax(sdfit_unittest_base, selection_syntax.SelectionSynt
         if regular_test:
             result = self.run_task(**kwargs)
         else:
-            result = sdfit(**kwargs)
+            result = sdfitold(**kwargs)
 
         # read outfile
         result_out = self.read_result(outfile)
@@ -1068,12 +1068,12 @@ class sdfit_selection_syntax(sdfit_unittest_base, selection_syntax.SelectionSynt
 
         self.__exec_complex_test(infile, ['pol', 'spw'], [pol, spw], rows)
 
-class sdfit_average(sdfit_unittest_base, unittest.TestCase):
+class sdfitold_average(sdfitold_unittest_base, unittest.TestCase):
     """
     """
     infile = 'sdfit_average.asap'
     inputs = [infile]
-    outfile = 'sdfit_average.txt'
+    outfile = 'sdfitold_average.txt'
     outputs = [outfile]
     fitmode = 'list'
     spw = ':0~40'
@@ -1095,7 +1095,7 @@ class sdfit_average(sdfit_unittest_base, unittest.TestCase):
         if polaverage is True:
             kwargs['pweight'] = self.pweight
 
-        return sdfit(**kwargs)
+        return sdfitold(**kwargs)
 
     def _verify(self, expected):
         # dictionary for verification
@@ -1173,9 +1173,9 @@ class sdfit_average(sdfit_unittest_base, unittest.TestCase):
         expected = {(0,0,0): [81.0, 20.0, 5.0]}
         self._verify(expected)
     
-class sdfit_flag(sdfit_unittest_base, unittest.TestCase):
+class sdfitold_flag(sdfitold_unittest_base, unittest.TestCase):
     """
-    Test flag handling in sdfit
+    Test flag handling in sdfitold
     * channel flag with list
     * channel flag with auto (line finder)
     * row flag with list
@@ -1217,7 +1217,7 @@ class sdfit_flag(sdfit_unittest_base, unittest.TestCase):
         flagrow_pre = tb.getcol('FLAGROW')
         tb.close()
         # invoke task
-        retval = sdfit(**kwargs)
+        retval = sdfitold(**kwargs)
         # verify fit results
         self._verify_outfile(refdata, kwargs['outfile'])
         # make sure FLAGTRA and FLAGROW are not changed
@@ -1377,6 +1377,6 @@ class sdfit_flag(sdfit_unittest_base, unittest.TestCase):
 
 
 def suite():
-    return [sdfit_test, sdfit_test_exceptions,
-            sdfit_selection_syntax, sdfit_average,
-            sdfit_flag]
+    return [sdfitold_test, sdfitold_test_exceptions,
+            sdfitold_selection_syntax, sdfitold_average,
+            sdfitold_flag]
