@@ -54,7 +54,8 @@ template<class T> image* _adddegaxes(
 );
 
 void _addHistory(
-    const String& method, const vector<String>& kyes, const vector<variant>& vals
+    const String& method, const vector<String>& kyes, const vector<variant>& vals,
+    const vector<String>& appendMsgs=vector<String>()
 );
 
 template <class T> image* _boxcar(

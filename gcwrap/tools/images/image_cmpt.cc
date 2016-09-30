@@ -3235,7 +3235,7 @@ image* image::moments(
     return nullptr;
 }
 
-string image::name(const bool strippath) {
+string image::name(bool strippath) {
     try {
         _log << _ORIGIN;
         if (detached()) {
@@ -4284,6 +4284,7 @@ bool image::rename(const string& name, bool overwrite) {
             return False;
         }
         _stats.reset();
+        auto oldName = this->name(False);
         if (_imageF) {
             auto myimage = _imageF;
             _imageF.reset();
@@ -4298,7 +4299,8 @@ bool image::rename(const string& name, bool overwrite) {
         }
         vector<String> names = { "name", "overwrite" };
         vector<variant> values = { name, overwrite };
-        _addHistory(__func__, names, values);
+        vector<String> appendMsgs = {"original name was " + oldName};
+        _addHistory(__func__, names, values, appendMsgs);
         return True;
     }
     catch (const AipsError& x) {
@@ -5477,9 +5479,13 @@ bool image::unlock() {
 }
 
 void image::_addHistory(
-    const String& method, const vector<String>& names, const vector<variant>& values
+    const String& method, const vector<String>& names, const vector<variant>& values,
+    const vector<String>& appendMsgs
 ) {
     auto msgs = _newHistory(method, names, values);
+    for (const auto& m: appendMsgs) {
+        msgs.push_back(m);
+    }
     if (_imageC) {
         ImageHistory<Complex> ih(_imageC);
         ih.addHistory(method, msgs);
