@@ -342,7 +342,7 @@ class CleanBase(basetask.StandardTaskTemplate):
                 LOG.warning('tclean reached niter limit of %d for %s / spw%s !' % (tclean_result['niter'], utils.dequote(inputs.field), inputs.spw))
 
             if (tclean_result['stopcode'] == 5):
-                result.warning = CleanBaseError('Peak residual increased by 50%% or more across a major cycle, tclean stopped to prevent divergence. Field: %s SPW: %s' % (inputs.field, inputs.spw), 'Peak residual increased by 50%%')
+                result.warning = CleanBaseError('Peak residual increased by 50%% or more across a major cycle, tclean stopped to prevent divergence. Field: %s SPW: %s' % (inputs.field, inputs.spw), 'Peak residual increased by 50 pct')
                 LOG.warning('Peak residual increased by 50%% or more across a major cycle, tclean stopped to prevent divergence. Field: %s SPW: %s' % (inputs.field, inputs.spw))
 
         if (iter > 0):
