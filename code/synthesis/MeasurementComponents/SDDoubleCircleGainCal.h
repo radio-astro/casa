@@ -32,7 +32,7 @@ public:
 
   // Return the parameter type
   // so far single dish calibration is real
-  virtual VisCalEnum::VCParType parType() { return VisCalEnum::REAL; }
+//  virtual VisCalEnum::VCParType parType() { return VisCalEnum::REAL; }
 
   // Do not use generic data gathering mechanism for solve
   virtual Bool useGenericGatherForSolve() {
@@ -50,12 +50,16 @@ public:
   //  (triggered by useGenericGatherForSolve=F or useGenericSolveOne=F)
   virtual void selfGatherAndSolve(VisSet& vs, VisEquation& ve);
 
+  // specific keepNCT
+  virtual void keepNCT();
+
 private:
   template<class Accessor>
   void executeDoubleCircleGainCal(casacore::MeasurementSet const &ms);
 
   casacore::Double central_disk_size_;
   casacore::Bool smooth_;
+  casacore::uInt currAnt_;
 };
 
 } // namespace casa END
