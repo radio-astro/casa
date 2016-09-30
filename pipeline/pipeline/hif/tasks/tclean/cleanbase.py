@@ -343,10 +343,10 @@ class CleanBase(basetask.StandardTaskTemplate):
 
             if (tclean_result['stopcode'] == 5):
                 result.warning = CleanBaseError(
-                    'Peak residual increased by 50% or more across a major cycle, tclean stopped to prevent divergence. Field: %s SPW: %s' % (
-                    inputs.field, inputs.spw), 'Peak residual increased by 50%')
+                    'Peak residual increased by 50%% or more across a major cycle, tclean stopped to prevent divergence. Field: %s SPW: %s' % (
+                    inputs.field, inputs.spw), 'Peak residual increased by 50 pct')
                 LOG.warning(
-                    'Peak residual increased by 50% or more across a major cycle, tclean stopped to prevent divergence. Field: %s SPW: %s' % (
+                    'Peak residual increased by 50%% or more across a major cycle, tclean stopped to prevent divergence. Field: %s SPW: %s' % (
                     inputs.field, inputs.spw))
 
         if (iter > 0):
