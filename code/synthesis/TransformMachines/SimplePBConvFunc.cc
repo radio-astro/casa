@@ -58,12 +58,13 @@
 #include <lattices/LatticeMath/LatticeFFT.h>
 
 #include <scimath/Mathematics/ConvolveGridder.h>
-
+#include <scimath/Mathematics/MathFunc.h>
 #include <msvis/MSVis/VisBuffer.h>
 #include <msvis/MSVis/VisibilityIterator.h>
 
 #include <synthesis/TransformMachines/SimplePBConvFunc.h>
 #include <synthesis/TransformMachines/SkyJones.h>
+#include <synthesis/TransformMachines/PBMath1DNumeric.h>
 #include <scimath/Mathematics/FFTPack.h>
 #include <scimath/Mathematics/FFTW.h>
 #include <scimath/Mathematics/FFTServer.h>
@@ -177,7 +178,7 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
     	    	  pointFrame_p.resetPosition(pos);
     	}
       MEpoch timenow(Quantity(vb.time()(0), timeUnit_p), timeMType_p);
-      //cerr << "Ref " << vb.direction1()(0).getRefString() <<  " ep " << timenow.getRefString() << " time " << MVTime(timenow.getValue().getTime()).string(MVTime::YMD) << endl; 
+      //cerr << "Ref " << p1.toString() <<  " ep " << timenow.getRefString() << " time " << MVTime(timenow.getValue().getTime()).string(MVTime::YMD) << endl; 
       pointFrame_p.resetEpoch(timenow);
       ///////////////////////////
       //MDirection some=pointToPix_p(vb.direction1()(0));
@@ -192,6 +193,7 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
       //pointToPix holds pointFrame_p by reference...
       //thus good to go for conversion
       direction1_p=pointToPix_p(p1);
+      //cerr << "converted " << direction1_p.toString() << endl;
       //direction2_p=pointToPix_p(vb.direction2()(0));
       direction2_p=direction1_p;
       dc_p.toPixel(thePix_p, direction1_p);
@@ -219,6 +221,7 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
     convSizes_p.resize(0, True);
     convSupportBlock_p.resize(0, True);
     convFunctionMap_p.clear();
+    vbConvIndex_p.clear();
   }
 
 
@@ -250,6 +253,7 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
     Int val=ant1PointingCache_p.nelements();
     ant1PointingCache_p.resize(val+1, True);
     ant1PointingCache_p[val]=vb.firstDirection1();
+    //cerr << "POINTINGDIRANT1 " << vb.firstDirection1() << "   " << vb.direction1()(0) << endl;
     //ant1PointingCache_p[val]=vbUtil_p.getPointingDir(vb, vb.antenna1()(0), 0);
     ant1PointVal_p[elkey]=val;
     return ant1PointingCache_p[val];
@@ -367,7 +371,8 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
       
       //make sure we are using the same units
       fieldDir.set(dc.worldAxisUnits()(0));
-      
+      //cerr << "SPB direction " << fieldDir << endl;
+
       dc.setReferenceValue(fieldDir.getAngle().getValue());
       
       coords.replaceCoordinate(dc, directionIndex);
@@ -426,6 +431,26 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
       //SubImage<Complex> subim(twoDPB, slin, True);
       TempImage<Complex> subim(IPosition(4, convSize_p, convSize_p, 1, 1), coordLastPlane, memtobeused/2.2);
       subim.set(Complex(1.0,0.0));
+     
+
+      /////Let's make a spheroid taper...
+      /* Vector<Float> valsph(300);
+      valsph.set(1.0);
+      Sph_Conv<Float> d(1.0, 1.0);
+       for(Int k=200; k <300; ++k){
+        valsph(k)=d.value((Float)(k-200)/100.0);
+       }
+       Quantity fulrad(27,"arcmin");
+       Quantity lefreq(1.4, "GHz");
+       PBMath1DNumeric taper(valsph,fulrad,lefreq);
+       taper.applyPB(subim, subim, fieldDir); 
+      */
+      ///////////////
+       /*{
+	 PagedImage<Complex> thisScreen(subim.shape(), subim.coordinates(), "ELTAPER");
+	//LatticeExpr<Float> le(abs(twoDPB2));
+	 thisScreen.copyData(subim);
+	 }*/
       //twoDPB.putSlice(screen, start);
       /////////////
       //Double wtime0=omp_get_wtime();
@@ -434,15 +459,18 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
       ///////////////
       //Double wtime1=omp_get_wtime();
       /////////////////
-
+      /*{
+	 PagedImage<Complex> thisScreen(subim.shape(), subim.coordinates(), "BEAM-ELTAPER");
+	//LatticeExpr<Float> le(abs(twoDPB2));
+	 thisScreen.copyData(subim);
+	 }*/
       //LatticeFFT::cfft2d(subim);
       //////
    
 
       ft_p.c2cFFT(subim);
-      
      
-      // cerr << "make pb " << wtime1-wtime0 << " fft " << omp_get_wtime()-wtime1 << endl;
+      //   cerr << "make pb " << wtime1-wtime0 << " fft " << omp_get_wtime()-wtime1 << endl;
 	//  }
       //tim.show("after an apply" );
       //tim.mark();
@@ -689,6 +717,7 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
       Float maxAbsConvFunc=max(amplitude(convFunc_p));
       
       Float minAbsConvFunc=min(amplitude(convFunc_p));
+      //cerr << "min max " << minAbsConvFunc << "  " <<  maxAbsConvFunc << endl;
       convSupport_p=-1;
       Bool found=False;
       //Bool found2=True;
@@ -729,8 +758,7 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
       
       Double pbSum=0.0;
       //Double pbSum2=0.0;
-      
-      
+   
 
       for (Int iy=-convSupport_p;iy<=convSupport_p;iy++) {
 	for (Int ix=-convSupport_p;ix<=convSupport_p;ix++) {
@@ -860,7 +888,6 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
     Double origwidth=freq.nelements()==1 ? 1e12 : (max(freq)-min(freq))/(freq.nelements()-1);
     ///Fractional bandwidth which will trigger mutiple PB in one spw
     Double tol=(max(freq))*0.5/100;
-    
     Int nchan=Int(lround((max(freq)-min(freq))/tol));
    
     //cerr  << "TOLERA " << tol << " nchan " << nchan << " vb.nchan " << vb.nChannel() << endl;
@@ -976,15 +1003,7 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
 	  }
 	}
       }
-      /*
-      if(0) {
-	ostringstream os2;
-	os2 << "ALL_" << "BEAMS" ;
-	PagedImage<Float> thisScreen2(fluxScale_p.shape(), fluxScale_p.coordinates(), String(os2));
-	thisScreen2.copyData(fluxScale_p);
-      }
-      */
-
+      
       filledFluxScale_p=True;
     }
       
@@ -1032,7 +1051,7 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
      
      try{
        if(!rec.isDefined("name") || rec.asString("name") != "SimplePBConvFunc"){
-	 throw(AipsError("Wrong record to recover HetArray from"));
+	 throw(AipsError("Wrong record to recover SimplePBConvFunc from"));
 	}
        rec.get("numconv", numConv);
        convFunctions_p.resize(numConv, True, False);

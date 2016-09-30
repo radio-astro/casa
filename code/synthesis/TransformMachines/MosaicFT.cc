@@ -98,7 +98,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   convSize=0;
   lastIndex_p=0;
   doneWeightImage_p=False;
-  convWeightImage_p=0;
+  convWeightImage_p=nullptr;
   pbConvFunc_p=new SimplePBConvFunc();
     
   mLocation_p=mloc;
@@ -151,10 +151,10 @@ MosaicFT& MosaicFT::operator=(const MosaicFT& other)
       skyCoverage_p=other.skyCoverage_p;
     else
       skyCoverage_p=0;
-    if(other.convWeightImage_p !=0)
+    if(other.convWeightImage_p)
       convWeightImage_p=(TempImage<Complex> *)other.convWeightImage_p->cloneII();
     else
-      convWeightImage_p=0;
+      convWeightImage_p=nullptr;
     if(other.gridder==0)
       gridder=0;
     else{
@@ -516,7 +516,7 @@ void MosaicFT::initializeToSky(ImageInterface<Complex>& iimage,
     //arrayLattice = new ArrayLattice<Complex>(griddedData);
     //lattice=arrayLattice;
       
-    if( !doneWeightImage_p && (convWeightImage_p==0)){
+    if( !doneWeightImage_p && (!convWeightImage_p)){
      
       
  
@@ -552,7 +552,7 @@ void MosaicFT::initializeToSky(ImageInterface<Complex>& iimage,
 void MosaicFT::reset(){
 
   doneWeightImage_p=False;
-  
+  convWeightImage_p=nullptr;
   pbConvFunc_p->reset();
 }
 
@@ -577,7 +577,7 @@ void MosaicFT::finalizeToSky()
   if(!doneWeightImage_p){
     if(useDoubleGrid_p){
       convertArray(griddedWeight, griddedWeight2);
-      //Don't need the double-prec grid anymore...
+      //Don't need the double-prec grid anymore... 
       griddedWeight2.resize();
     }
     LatticeFFT::cfft2d(*weightLattice, False);
@@ -668,8 +668,7 @@ void MosaicFT::finalizeToSky()
     //it can be used for rescaling or shared by other ftmachines that use
     //this pbconvfunc
     pbConvFunc_p->setWeightImage(skyCoverage_p);
-    delete convWeightImage_p;
-    convWeightImage_p=0;
+    convWeightImage_p=nullptr;
     doneWeightImage_p=True;
 
     /*
@@ -1015,7 +1014,6 @@ void MosaicFT::put(const VisBuffer& vb, Int row, Bool dopsf,
     startRow=row;
     endRow=row;
   }
-  
   // Get the uvws in a form that Fortran can use and do that
   // necessary phase rotation. On a Pentium Pro 200 MHz
   // when null, this step takes about 50us per uvw point. This
@@ -1740,13 +1738,14 @@ ImageInterface<Complex>& MosaicFT::getImage(Matrix<Float>& weights,
 	  sincConvY(ix)=sin(x)/x;
 	}
       }
-    
+   
+
 
       IPosition cursorShape(4, inx, 1, 1, 1);
       IPosition axisPath(4, 0, 1, 2, 3);
       LatticeStepper lsx(lattice->shape(), cursorShape, axisPath);
       LatticeIterator<Complex> lix(*lattice, lsx);
-      for(lix.reset();!lix.atEnd();lix++) {
+      for(lix.reset(); !lix.atEnd() ;lix++) {
 	Int pol=lix.position()(2);
 	Int chan=lix.position()(3);
 	if(weights(pol, chan)!=0.0) {
@@ -1906,6 +1905,7 @@ Bool MosaicFT::fromRecord(String& error,
   Bool retval = True;
   pointingToImage=0;
   doneWeightImage_p=False;
+  convWeightImage_p=nullptr;
   machineName_p="MosaicFT";
   if(!FTMachine::fromRecord(error, inRec))
     return False;
@@ -1950,7 +1950,6 @@ Bool MosaicFT::fromRecord(String& error,
     String elname=subRec.asString("name");
     // if we are predicting only ...no need to estimate fluxscale
     if(elname=="HetArrayConvFunc"){
-    
       pbConvFunc_p=new HetArrayConvFunc(subRec, !toVis_p);
     }
     else{
@@ -1962,6 +1961,7 @@ Bool MosaicFT::fromRecord(String& error,
   else{
     pbConvFunc_p=0;
   }
+  gridder=nullptr;
    return retval;
 }
 

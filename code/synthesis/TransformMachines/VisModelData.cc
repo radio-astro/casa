@@ -50,6 +50,7 @@
 #include <synthesis/TransformMachines/GridFT.h>
 #include <synthesis/TransformMachines/rGridFT.h>
 #include <synthesis/TransformMachines/MosaicFT.h>
+#include <synthesis/TransformMachines/MosaicFTNew.h>
 #include <synthesis/TransformMachines/WProjectFT.h>
 #include <synthesis/TransformMachines/MultiTermFT.h>
 #include <synthesis/TransformMachines/MultiTermFTNew.h>
@@ -930,6 +931,8 @@ void VisModelData::modifyDiskImagePath(Record& rec, const VisBuffer& vb){
       return new MultiTermFT(ftrec);
     if(name=="MosaicFT")
       return new MosaicFT(ftrec);
+     if(name=="MosaicFTNew")
+      return new MosaicFTNew(ftrec);
     if(name=="SetJyGridFT")
       return new SetJyGridFT(ftrec);
     if(name=="MultiTermFTNew")

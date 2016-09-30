@@ -45,7 +45,7 @@
 #include <scimath/Mathematics/InterpolateArray1D.h>
 #include <synthesis/TransformMachines/CFCache.h>
 #include <synthesis/TransformMachines/CFStore2.h>
-
+#include <synthesis/Utilities/FFT2D.h>
 #include <synthesis/TransformMachines/ConvolutionFunction.h>
 #include <synthesis/TransformMachines/PolOuterProduct.h>
 
@@ -143,8 +143,8 @@ public:
   
 
   //clone copy
-  //should make it pure virtual forcing every ftm to have a cloner
-  virtual FTMachine* cloneFTM(){return NULL;};
+  //the default cloner clones via a Record copy
+  virtual FTMachine* cloneFTM();
   // Initialize transform to Visibility plane
   virtual void initializeToVis(ImageInterface<Complex>& image, const VisBuffer& vb) = 0;
 
@@ -432,6 +432,7 @@ protected:
 
   // Maps of channels and polarization
   Vector<Int> chanMap, polMap;
+  
 
   // Is Stokes I only? iso XX,XY,YX,YY or LL,LR,RL,RR.
   Bool isIOnly;
@@ -522,6 +523,7 @@ protected:
   //A holder for the complex image if nobody else is keeping it
   CountedPtr<ImageInterface<Complex> > cmplxImage_p;
 
+  FFT2D ft_p;
  private:
   //Some temporary wasteful function for swapping axes because we don't 
   //Interpolation along the second axis...will need to implement 

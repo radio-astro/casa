@@ -88,7 +88,13 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
   FTMachine* MosaicFTNew::cloneFTM(){
-    return new MosaicFTNew(*this);
+    Record rec;
+    String err;
+    if(!(this->toRecord(err, rec)))
+       throw(AipsError("Error in copying FTMachine"));
+    MosaicFTNew *clone=new MosaicFTNew(rec);
+    clone->reset();
+    return clone;
   }
 
 // Finalize the FFT to the Sky. Here we actually do the FFT and

@@ -44,6 +44,7 @@
 #include <scimath/Mathematics/RigidVector.h>
 #include <msvis/MSVis/StokesVector.h>
 #include <synthesis/TransformMachines/StokesImageUtil.h>
+#include <synthesis/TransformMachines/VisModelData.h>
 #include <synthesis/TransformMachines/Utils.h>
 #include <msvis/MSVis/VisBuffer.h>
 #include <msvis/MSVis/VisSet.h>
@@ -86,7 +87,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			   freqInterpMethod_p(InterpolateArray1D<Double,Complex>::nearestNeighbour), 
 			   pointingDirCol_p("DIRECTION"),
 			   cfStokes_p(), cfCache_p(), cfs_p(), cfwts_p(), cfs2_p(), cfwts2_p(),
-			   canComputeResiduals_p(False), numthreads_p(-1),pbLimit_p(0.05), 
+			   canComputeResiduals_p(False), toVis_p(True), numthreads_p(-1),pbLimit_p(0.05), 
 			   sj_p(0),cmplxImage_p()
   {
     spectralCoord_p=SpectralCoordinate();
@@ -204,6 +205,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     };
     return *this;
   };
+
+
+  FTMachine* FTMachine::cloneFTM(){
+    Record rec;
+    String err;
+    if(!(this->toRecord(err, rec)))
+       throw(AipsError("Error in cloning FTMachine"));
+    return VisModelData::NEW_FT(rec);
+  }
 
   //=================
 
@@ -727,7 +737,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     for(uInt k = maxchan + 1; k < imageFreq_p.nelements(); ++k)
       flags.xzPlane(k).set(1);
-    
     interpVisFreq_p.resize(imageFreq_p.nelements());
     convertArray(interpVisFreq_p, imageFreq_p);
     chanMap.resize(imageFreq_p.nelements());

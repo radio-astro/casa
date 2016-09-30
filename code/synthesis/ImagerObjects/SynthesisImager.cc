@@ -2210,9 +2210,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			 dopsf?"Gridding Weights and PSF":"Major Cycle", "","","",True);
 	Int cohDone=0;
 
-	itsMappers.getFTM(gmap, False)->reset();
-	itsMappers.getFTM(gmap, True)->reset();
-
     	if(!dopsf){
 	  itsMappers.initializeDegrid(*vb, gmap);
 		  //itsMappers.getMapper(gmap)->initializeDegrid(*vb);

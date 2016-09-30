@@ -52,8 +52,9 @@ public:
   MosaicFTNew(SkyJones* sj, MPosition mloc, String stokes,
 	    Long cachesize, Int tilesize=16, 
 	      Bool usezero=True, Bool useDoublePrec=False):
-    MosaicFT(sj,mloc,stokes,cachesize,tilesize,usezero,useDoublePrec){}
-
+    MosaicFT(sj,mloc,stokes,cachesize,tilesize,usezero,useDoublePrec){};
+  MosaicFTNew(const RecordInterface& rec):
+    MosaicFT(rec){};
   FTMachine* cloneFTM();
 
 
